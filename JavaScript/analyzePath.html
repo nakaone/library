@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="ja">
+<style type="text/markdown" class="jsdoc"></style>
+<style type="text/markdown" class="doc"></style>
+<style type="text/markdown" class="testDoc"></style>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
+  <title>analyzePath</title>
+  <link rel="stylesheet" href="../CSS/szDefault.css" />
+  <style type="text/css" class="source">
+  </style>
+</head>
+<body>
+</body>
+<script type="text/javascript" class="source">
+/**
+ * @typedef {object} analyzePathObj - パス文字列から構成要素を抽出したオブジェクト
+ * @prop {string} full - 引数の文字列(フルパス)
+ * @prop {string} path - ファイル名を除いたパス文字列
+ * @prop {string} file - ファイル名
+ * @prop {string} base - 拡張子を除いたベースファイル名
+ * @prop {string} suffix - 拡張子
+ */
+/** analyzePath: パス名文字列から構成要素を抽出
+ * @param {string} arg - パス文字列
+ * @returns {analyzePathObj}　構成要素を抽出したオブジェクト
+ * @example
+ * '../tools/library.js' ⇒ {
+ *    full: '../tools/library.js',
+ *    path: '../tools/',
+ *    file: 'library.js',
+ *    base: 'library',
+ *    suffix: 'js'
+ *  }
+ */
+function analyzePath(arg){
+  const v = {v.rv:null};
+  console.log('analyzePath start. arg="'+arg+'"');
+  try {
+
+    v.m1 = arg.match(/^(.*)\/([^\/]+)$/);
+    if( v.m1 ){
+      v.rv.path = v.m1[1] + '/';
+      v.rv.file = v.m1[2];
+    } else {
+      v.rv.path = '';
+      v.rv.file = arg;
+    }
+    v.m2 = v.rv.file.match(/^(.+)\.([^\.]+?)$/);
+    if( v.m2 ){
+      v.rv.base = v.m2[1];
+      v.rv.suffix = v.m2[2];
+    } else {
+      v.rv.base = v.rv.file;
+      v.rv.suffix = '';
+    }
+
+  } catch(e){
+    if( window ) alert(e.stack); // ブラウザで実行する場合はアラート表示
+    //throw e; //以降の処理を全て停止
+    //v.v.rv.stack = e.stack; return v.v.rv; // 処理継続
+  }
+}
+</script>
+
+<script type="text/javascript" class="test"></script>
+
+<script type="text/javascript">
+  window.addEventListener('DOMContentLoaded',() => {
+    const v = {};
+    //analyzePathTest();
+
+    v.doc = document.createElement('div');
+    v.doc.classList.add('sz');
+
+    v.text = document.querySelector('.doc[type="text/markdown"]').textContent;
+    v.md = marked(v.text);
+    console.log(v.md)
+    v.doc.innerHTML = v.md;
+    document.querySelector('body').prepend(v.doc);
+  });
+</script>
+</html>
