@@ -75,7 +75,7 @@ analyzeArg: コマンドライン引数を分析
  */
 function analyzeArg(){
   console.log('===== analyzeArg start.');
-  const v = {rv:{}};
+  const v = {rv:{opt:{},val:[]}};
   try {
 
     for( v.i=2 ; v.i<process.argv.length ; v.i++ ){
@@ -88,7 +88,7 @@ function analyzeArg(){
       }
     }
 
-    console.log('v.rv='+v.rv);
+    console.log('v.rv='+JSON.stringify(v.rv));
     console.log('===== analyzeArg end.');
     return v.rv;
   } catch(e){

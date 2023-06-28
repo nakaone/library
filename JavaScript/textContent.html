@@ -4,6 +4,18 @@
 ================================================-->
 <!-- JSDoc (jsdoc2mdの実行結果を貼付) -->
 <style type="text/markdown" class="jsdoc">/*
+<a name="textContent"></a>
+
+## textContent(content, selectors) ⇒ <code>string</code>
+textContent: 指定CSSセレクタ内のテキストを抽出
+
+**Kind**: global function  
+**Returns**: <code>string</code> - 抽出された指定CSSセレクタ内のテキスト  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| content | <code>string</code> | エレメント(HTML)の全ソース |
+| selectors | <code>Array.&lt;string&gt;</code> | 抽出対象となるCSSセレクタ |
 */</style>
 <!-- 仕様書 (JSDocの補足。Markdownで記述) -->
 <style type="text/markdown" class="doc">/*
@@ -171,13 +183,13 @@ function onNode(){
   const v = {};
 
   // 事前処理：引数チェック、既定値の設定
-  v.argv = textContent();
+  v.argv = analyzeArg();
   if(v.argv.hasOwnProperty('stack')) throw v.argv;
 
   // ファイルの読み込み、textContentの呼び出し
   v.fs = require('fs');
   v.content = v.fs.readFileSync(v.argv.opt.i,'utf-8');
-  v.rv = textContent(v.content);
+  v.rv = textContent(v.content,v.argv.val);
   if( v.rv.hasOwnProperty('stack') ) throw v.rv;  // debug
 
   // 結果の書き出し
@@ -198,7 +210,7 @@ function onNode(){
  */
 function analyzeArg(){
   console.log('===== analyzeArg start.');
-  const v = {rv:{}};
+  const v = {rv:{opt:{},val:[]}};
   try {
 
     for( v.i=2 ; v.i<process.argv.length ; v.i++ ){
@@ -211,7 +223,7 @@ function analyzeArg(){
       }
     }
 
-    console.log('v.rv='+v.rv);
+    console.log('v.rv='+JSON.stringify(v.rv));
     console.log('===== analyzeArg end.');
     return v.rv;
   } catch(e){
