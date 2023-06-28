@@ -4,6 +4,27 @@
 ================================================-->
 <!-- JSDoc (jsdoc2mdの実行結果を貼付) -->
 <style type="text/markdown" class="jsdoc">/*
+analyzeArg: コマンドライン引数を分析
+
+**Kind**: global function  
+**Returns**: [<code>analyzeArg</code>](#analyzeArg) - 分析結果のオブジェクト  
+
+| Param | Type | Description |
+| --- | --- | --- |
+|  | <code>void</code> | なし |
+
+<a name="analyzeArg"></a>
+
+## analyzeArg : <code>object</code>
+コマンドライン引数の分析結果
+
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| opt | <code>Object.&lt;string, number&gt;</code> | スイッチを持つ引数について、スイッチ：値形式にしたオブジェクト |
+| val | <code>Array.&lt;string&gt;</code> | スイッチを持たない引数の配列 |
 */</style>
 <!-- 仕様書 (JSDocの補足。Markdownで記述) -->
 <style type="text/markdown" class="doc">/*
@@ -40,7 +61,6 @@
 <!-- 外部スクリプト -->
 <!-- MarkDownテキストをHTML化するCDN -->
 <script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsdom@22.1.0/lib/jsdom/browser/Window.min.js"></script>
 <script type="text/javascript" class="source">
 /* ここに一元管理対象HTML+CSS+JavaScriptの【JavaScript】部を記述 */
 
