@@ -4,75 +4,65 @@
 ================================================-->
 <!-- JSDoc (jsdoc2mdの実行結果を貼付) -->
 <style type="text/markdown" class="jsdoc">/*
-<a name="executable"></a>
-
-## executable(content) ⇒ <code>string</code>
-executable: コンポーネント(HTML)から必要な部分を抽出、Node.jsで実行可能なJSファイルを作成
-
-**Kind**: global function  
-**Returns**: <code>string</code> - JSファイルの中身(テキスト)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| content | <code>string</code> | コンポーネント(HTML)の全ソース |
 */</style>
 <!-- 仕様書 (JSDocの補足。Markdownで記述) -->
-<style type="text/markdown" class="doc">
-</style>
+<style type="text/markdown" class="doc">/*
+*/</style>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta http-equiv="Content-Style-Type" content="text/css">
   <meta http-equiv="Content-Script-Type" content="text/javascript">
-  <title>executable</title>
+  <title>textContent</title>
   <!--================================================
-    スタイルシート (class="source"は独自拡張分)
+    スタイルシート
   ================================================-->
   <link rel="stylesheet" href="../CSS/szDefault.css" />
-  <style type="text/css" class="source">
-    /* ここに一元管理対象HTML+CSS+JavaScriptの【CSS】部を記述 */
+  <style type="text/css" class="source">  /* textContent特有CSS */
   </style>
 </head>
 <body>
   <select name="mode" onchange="changeMode()">
-    <option value="doc" selected>仕様書</option>
-    <option value="webApp">Webアプリ</option>
+    <option value="doc">仕様書</option>
+    <option value="webApp" selected>Webアプリ</option>
     <!--option value="test">テスト</option-->
   </select>
   <!--================================================
-    HTML (class="source"は独自拡張、"webApp"はOLツール用)
+    HTML
   ================================================-->
-  <div class="source">
-    <!-- ここに一元管理対象HTML+CSS+JavaScriptの【HTML】部を記述 -->
+  <div class="source">  <!-- textContent特有HTML -->
   </div>
-  <div class="doc"></div>
-  <div class="webApp">
-    <h1>executable</h1>
-    <p>コンポーネント(HTML)から必要な部分を抽出、Node.jsで実行可能なJSファイルを作成</p>
-
-    <div><p>コンポーネント(HTML)の全文を貼り付け</p>
-      <textarea name="source"></textarea>
-    </div>
-    <div><button onclick="setText()">変換</button></div>
-    <div><p>`node xxx.js`として実行可能なJSファイルを生成</p>
-      <textarea name="destination"></textarea>
-    </div>
+  <div class="doc"> 
+  </div>
+  <div class="webApp">  <!-- textContent Webアプリ表示画面 -->
+    <h1>textContent</h1>
+    <div>CSS selector:<br><input type="text" name="selector" onchange="webApp()" /></div>
+    <div>html:<br><textarea name="html" onchange="webApp()"></textarea></div>
+    <div>result:<br><textarea name="result"></textarea></div>
   </div>
 </body>
-<!-- 外部スクリプト -->
+<!--================================================
+  外部スクリプト
+================================================-->
 <!-- MarkDownテキストをHTML化するCDN -->
 <script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
+<!-- バッチ処理で読み込んだ内容をDOM化
+  [Node.jsのサーバサイドでDOMを使う](https://moewe-net.com/nodejs/jsdom) -->
 <script src="https://cdn.jsdelivr.net/npm/jsdom@22.1.0/lib/jsdom/browser/Window.min.js"></script>
-<script type="text/javascript" class="source">
-/* ここに一元管理対象HTML+CSS+JavaScriptの【JavaScript】部を記述 */
 
-/** executable: コンポーネント(HTML)から必要な部分を抽出、Node.jsで実行可能なJSファイルを作成
- * @param {string} content - コンポーネント(HTML)の全ソース
- * @returns {string} JSファイルの中身(テキスト)
+<!--================================================
+  textContent コアスクリプト
+================================================-->
+<script type="text/javascript" class="source">
+/** textContent: 指定CSSセレクタ内のテキストを抽出
+ * @param {string} content - エレメント(HTML)の全ソース
+ * @param {string[]} selectors - 抽出対象となるCSSセレクタ
+ * @returns {string} 抽出された指定CSSセレクタ内のテキスト
  */
-function executable(content){
-  console.log('===== executable start.');
+
+function textContent(content,sections){
+  console.log('===== textContent start.');
   const v = {rv:'',
-    section: ['script.source','script.onNode','script.main'],
+    sections: [],
     extract: (document,selector) => {
       console.log('----- extract start.');
       let rv = '';
@@ -82,15 +72,16 @@ function executable(content){
       console.log('----- extract end.');
       return rv;
     }
-  }
+  };
   try {
 
-    // 読み込んだ内容をDOM化
-    // [Node.jsのサーバサイドでDOMを使う](https://moewe-net.com/nodejs/jsdom)
+    // 指定CSSセレクタが単一なら配列化
+    v.sections = typeof sections === 'string' ? [sections] : sections;
+
     if( typeof window === 'undefined' ){
       const { JSDOM } = require("jsdom");
       const { document } = new JSDOM(content).window;
-      v.section.forEach(x => {
+      v.sections.forEach(x => {
         v.r = v.extract(document,x);
         if( v.r.hasOwnProperty('stack') ) throw v.r;
         v.rv += v.r;
@@ -98,7 +89,7 @@ function executable(content){
     } else {
       v.source = document.createElement('div');
       v.source.innerHTML = content;
-      v.section.forEach(x => {
+      v.sections.forEach(x => {
         v.r = v.extract(v.source,x);
         if( v.r.hasOwnProperty('stack') ) throw v.r;
         v.rv += v.r;
@@ -106,11 +97,12 @@ function executable(content){
     }
 
     console.log('v.rv='+v.rv);
-    console.log('===== executable end.');
+    console.log('===== textContent end.');
     return v.rv;
   } catch(e){
     // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
+    if( typeof window !== 'undefined' ) alert(e.stack);
+    console.error(e.stack);
     //throw e; //以降の処理を全て停止
     v.rv.stack = e.stack; return v.rv; // 処理継続
   }
@@ -120,8 +112,8 @@ function executable(content){
 <!--================================================
   Webアプリとして実行する場合の処理
 ================================================-->
-<script type="text/javascript" class="webAPP">
-/** changeMode: 仕様書/webAPP/テスト画面の切り替え */
+<script type="text/javascript" class="webApp">
+/** changeMode: 仕様書/webApp/テスト画面の切り替え */
 function changeMode(){
   console.log('===== changeMode start.');
   const v = {num:0,mode:'doc'};
@@ -145,21 +137,23 @@ function changeMode(){
   }
 }
 
-/** setText: WebAPP画面で入力されたHTMLから単体実行(Node.js)形式のJSを作成 */
-function setText(){
-  console.log('===== setText start.');
-  const v = {};
+/** webApp: HTML欄に入力されたテキストからMarkdownを作成 */
+function webApp(){
+  console.log('===== webApp start.');
+  const v = {rv:{}};
   try {
-    v.source = document.querySelector('div.webApp textarea[name="source"]').value;
-    console.log('source='+v.source);
-    v.rv = executable(v.source);
-    if( v.rv.hasOwnProperty('stack') ) throw v.rv;
-    document.querySelector('div.webApp textarea[name="destination"]').value = v.rv;
 
-    console.log('===== setText end.');
+    v.selector = String(document.querySelector('input[name="selector"]').value).trim();
+    v.html = String(document.querySelector('textarea[name="html"]').value).trim();
+    if( v.selector.length > 0 && v.html.length > 0 ){
+      v.md = textContent(v.html,v.selector);
+      if( v.md.hasOwnProperty('stack') ) throw v.md;
+      document.querySelector('textarea[name="result"]').value = v.md;
+    }
+
+    console.log('===== webApp end.');
     return v.rv;
   } catch(e){
-    // ブラウザで実行する場合はアラート表示
     if( typeof window !== 'undefined' ) alert(e.stack); 
     //throw e; //以降の処理を全て停止
     v.rv.stack = e.stack; return v.rv; // 処理継続
@@ -177,13 +171,13 @@ function onNode(){
   const v = {};
 
   // 事前処理：引数チェック、既定値の設定
-  v.argv = analyzeArg();
+  v.argv = textContent();
   if(v.argv.hasOwnProperty('stack')) throw v.argv;
 
-  // ファイルの読み込み、executableの呼び出し
+  // ファイルの読み込み、textContentの呼び出し
   v.fs = require('fs');
   v.content = v.fs.readFileSync(v.argv.opt.i,'utf-8');
-  v.rv = executable(v.content);
+  v.rv = textContent(v.content);
   if( v.rv.hasOwnProperty('stack') ) throw v.rv;  // debug
 
   // 結果の書き出し
@@ -237,7 +231,7 @@ function analyzeArg(){
 </style>
 <script type="text/javascript" class="test">
 /* ここにテスト用ソースを記述 */
-function executableTest(){
+function textContentTest(){
   const v = {};
 }
 </script>
@@ -267,7 +261,7 @@ if( typeof window === 'undefined' ){
     document.querySelector('body div.doc').prepend(v.doc);
 
     // テスト実行
-    //executableTest();
+    //textContentTest();
 
     // 画面モードに従って初期画面表示
     changeMode();
