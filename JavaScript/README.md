@@ -32,6 +32,18 @@
 
 # 使用方法
 
+# 作成・修正手順
+
+1. JavaScriptフォルダで、参考となるコンポーネントをコピー
+   - 最新：textContent.html
+1. `./createMD.sh xxx`を実行(拡張子は不要)、`tmp/xxx.md`に作成されたMDを`JavaScript/xxx.html`に反映
+
+```mermaid
+flowchart LR
+   source[JavaScript/xxx.html] --> create[[createMD.sh]] --> md[tmp/xxx.md] --> source
+
+```
+
 ## 仕様書の参照(doc)
 
 `JavaScript/xxx.html`を開き、「仕様書」モードを選択
@@ -42,7 +54,11 @@
 
 ## テストの実施
 
-`JavaScript/xxx.html`を開き、「テスト」モードを選択
+以下のテスト仕様書・テストスクリプト・テストデータは`<script class="test">`内部に記述する。
+
+1. テスト仕様書を`xxxTest()`のJSDocに記述
+1. テストデータを準備、`xxxTest()`にテストスクリプトを記述
+1. 開発者コンソールでテスト。画面が必要な場合、`JavaScript/xxx.html`を開き、「テスト」モードを選択
 
 ## 単体実行可能なJSの作成
 
@@ -51,6 +67,12 @@
 - `JavaScript/executable.html`をwebアプリモードで開き、コンポーネントのソースを貼付
 - `node node/executable.js -i:xxx.html -o:node/xxx.js`を実行
 
+```mermaid
+flowchart LR
+   source[JavaScript/xxx.html] --> manual[[JavaScript/executable.html]] -- copy & paste --> js[node/xxx.js]
+   source --> executable[[node/executable.js]] --> js
+```
+
 ## ライブラリの作成
 
 以下を順番に実行。
@@ -58,8 +80,4 @@
 1. createLib.shでどのコンポーネントをどのライブラリに組み込むか指定
 1. `./createLib.sh`を実行。
 
-# 作成・修正手順
-
-1. JavaScriptフォルダで、参考となるコンポーネントをコピー
-   - 最新：textContent.html
-1. `./createMD.sh xxx`を実行(拡張子は不要)、`tmp/xxx.md`に作成されたMDを`JavaScript/xxx.html`に反映
+外部参照が必要なコンポーネントの場合、判明の都度外部参照をライブラリを利用するアプリに記述。
