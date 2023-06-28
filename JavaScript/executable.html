@@ -179,7 +179,6 @@ function changeMode(){
       x.style.display = x.classList.contains(v.mode) ? '' : 'none';
     })
 
-
     console.log('===== changeMode end.');
     return v.rv;
   } catch(e){
@@ -190,6 +189,7 @@ function changeMode(){
   }
 }
 
+/** setText: WebAPP画面で入力されたHTMLから単体実行(Node.js)形式のJSを作成 */
 function setText(){
   console.log('===== setText start.');
   const v = {};
