@@ -1,4 +1,6 @@
 #!/bin/sh
+
+# 自動生成される不要なファイルを削除
 cd /Users/ena.kaon/Desktop/GitHub/library
 rm .DS_Store
 rm CSS/.DS_Store

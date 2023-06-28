@@ -2,7 +2,9 @@
 
 - [JavaScript](JavaScript/README.md)
 
-# フォルダ構成
+# 構成
+
+## フォルダ
 
 GitHub/library/(language)/
 - CSS : ライブラリ共通のCSSファイル(ex.szDefault.css)
@@ -15,3 +17,13 @@ GitHub/library/(language)/
 - lib : コンポーネントを取捨選択して作成された用途別ライブラリ
 - node : コマンドライン(Node.js)で実行な形式のコンポーネント<br>
   ※ nodeで実行可能なら記述言語を問わず、当フォルダに集約する。
+
+## シェルスクリプト
+
+- clean.sh : 自動生成される不要なファイルを削除
+- createLib.sh : 用途別ライブラリの作成
+- createMD.sh : 指定コンポーネントのMarkdownを作成
+
+# ライブラリ
+
+- [localLib](lib/localLib.md) : HTMLまたはバッチ(Node.js)用ライブラリ
