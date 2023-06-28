@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="ja">
+<!--================================================
+  仕様書(Markdown)
+================================================-->
+<!-- JSDoc (jsdoc2mdの実行結果を貼付) -->
+<style type="text/markdown" class="jsdoc">/*
+*/</style>
+<!-- 仕様書 (JSDocの補足。Markdownで記述) -->
+<style type="text/markdown" class="doc">/*
+*/</style>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>analyzeArg</title>
+  <!--================================================
+    スタイルシート (class="source"は独自拡張分)
+  ================================================-->
+  <link rel="stylesheet" href="../CSS/szDefault.css" />
+  <style type="text/css" class="source">  /* analyzeArg特有CSS */
+  </style>
+</head>
+<body>
+  <select name="mode" onchange="changeMode()">
+    <option value="doc" selected>仕様書</option>
+    <option value="webApp">Webアプリ</option>
+    <!--option value="test">テスト</option-->
+  </select>
+  <!--================================================
+    HTML (class="source"は独自拡張、"webApp"はOLツール用)
+  ================================================-->
+  <div class="source">  <!-- analyzeArg特有HTML -->
+  </div>
+  <div class="doc"> 
+  </div>
+  <div class="webApp">  <!-- analyzeArg Webアプリ表示画面 -->
+    <h1>analyzeArg</h1>
+  </div>
+</body>
+<!-- 外部スクリプト -->
+<!-- MarkDownテキストをHTML化するCDN -->
+<script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsdom@22.1.0/lib/jsdom/browser/Window.min.js"></script>
+<script type="text/javascript" class="source">
+/* ここに一元管理対象HTML+CSS+JavaScriptの【JavaScript】部を記述 */
+
+/**
+ * @typedef {object} analyzeArg - コマンドライン引数の分析結果
+ * @prop {Object.<string, number>} opt - スイッチを持つ引数について、スイッチ：値形式にしたオブジェクト
+ * @prop {string[]} val - スイッチを持たない引数の配列
+ */
+/** analyzeArg: コマンドライン引数を分析
+ * @param {void} - なし
+ * @returns {analyzeArg} 分析結果のオブジェクト
+ */
+function analyzeArg(){
+  console.log('===== analyzeArg start.');
+  const v = {rv:{}};
+  try {
+
+    for( v.i=2 ; v.i<process.argv.length ; v.i++ ){
+      // process.argv:コマンドライン引数の配列
+      v.m = process.argv[v.i].match(/^(\-*)([0-9a-zA-Z]+):*(.*)$/);
+      if( v.m && v.m[1].length > 0 ){
+        v.rv.opt[v.m[2]] = v.m[3];
+      } else {
+        v.rv.val.push(process.argv[v.i]);
+      }
+    }
+
+    console.log('v.rv='+v.rv);
+    console.log('===== analyzeArg end.');
+    return v.rv;
+  } catch(e){
+    // ブラウザで実行する場合はアラート表示
+    if( typeof window !== 'undefined' ) alert(e.stack); 
+    //throw e; //以降の処理を全て停止
+    v.rv.stack = e.stack; return v.rv; // 処理継続
+  }
+}
+</script>
+
+<!--================================================
+  Webアプリとして実行する場合の処理
+================================================-->
+<script type="text/javascript" class="webAPP">
+/** changeMode: 仕様書/webAPP/テスト画面の切り替え */
+function changeMode(){
+  console.log('===== changeMode start.');
+  const v = {num:0,mode:'doc'};
+  try {
+    v.element = document.querySelector('select[name="mode"]');
+    v.num = v.element.selectedIndex;
+    v.mode = v.element.options[v.num].value;
+    console.log(v);
+
+    document.querySelectorAll('body > div').forEach(x => {
+      x.style.display = x.classList.contains(v.mode) ? '' : 'none';
+    })
+
+
+    console.log('===== changeMode end.');
+    return v.rv;
+  } catch(e){
+    // ブラウザで実行する場合はアラート表示
+    if( typeof window !== 'undefined' ) alert(e.stack); 
+    //throw e; //以降の処理を全て停止
+    v.rv.stack = e.stack; return v.rv; // 処理継続
+  }
+}
+
+function setText(){
+  console.log('===== setText start.');
+  const v = {};
+  try {
+    v.source = document.querySelector('div.webApp textarea[name="source"]').value;
+    console.log('source='+v.source);
+    v.rv = analyzeArg(v.source);
+    if( v.rv.hasOwnProperty('stack') ) throw v.rv;
+    document.querySelector('div.webApp textarea[name="destination"]').value = v.rv;
+
+    console.log('===== setText end.');
+    return v.rv;
+  } catch(e){
+    // ブラウザで実行する場合はアラート表示
+    if( typeof window !== 'undefined' ) alert(e.stack); 
+    //throw e; //以降の処理を全て停止
+    v.rv.stack = e.stack; return v.rv; // 処理継続
+  }
+}
+</script>
+
+<!--================================================
+  Node.js上で単体実行する場合の処理
+================================================-->
+<script type="text/javascript" class="onNode">
+  /* Node.js上で単体実行する場合の処理 */
+function onNode(){
+  console.log('===== onNode start.');
+  const v = {};
+
+  // 事前処理：引数チェック、既定値の設定
+  v.argv = analyzeArg();
+  if(v.argv.hasOwnProperty('stack')) throw v.argv;
+
+  // ファイルの読み込み、analyzeArgの呼び出し
+  v.fs = require('fs');
+  v.content = v.fs.readFileSync(v.argv.opt.i,'utf-8');
+  v.rv = analyzeArg(v.content);
+  if( v.rv.hasOwnProperty('stack') ) throw v.rv;  // debug
+
+  // 結果の書き出し
+  v.content = v.fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
+
+  console.log('v.rv='+v.rv);
+  console.log('===== onNode end.');
+}
+</script>
+
+<!--================================================
+  テスト関係(仕様書、スクリプト)
+================================================-->
+<style type="text/markdown" class="test">
+  /* テスト仕様書 */
+</style>
+<script type="text/javascript" class="test">
+/* ここにテスト用ソースを記述 */
+function analyzeArgTest(){
+  const v = {};
+}
+</script>
+
+<!--================================================
+  メイン処理
+================================================-->
+<script type="text/javascript" class="main">
+if( typeof window === 'undefined' ){
+  // コンソール(Node.js)で実行する場合の処理
+  onNode();
+} else {
+  // ブラウザ上で実行する場合の処理
+  window.addEventListener('DOMContentLoaded',() => {
+    const v = {mode:{num:1,value:'doc'},text:''};
+
+    // MarkDownで記述された部分をHTML化して表示
+    v.doc = document.createElement('div');
+    v.doc.classList.add('sz');
+    ['style.jsdoc','style.doc'].forEach(selector => {
+      v.inner = document.querySelector(selector).textContent.trim();
+      v.m = v.inner.match(/^\/\*([\s\S]+)\*\//);
+      v.text += v.m ? v.m[1] : v.inner;
+    });
+    v.md = marked(v.text);
+    v.doc.innerHTML = v.md;
+    document.querySelector('body div.doc').prepend(v.doc);
+
+    // テスト実行
+    //analyzeArgTest();
+
+    // 画面モードに従って初期画面表示
+    changeMode();
+  });
+}
+</script>
+</html>
