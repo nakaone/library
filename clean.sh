@@ -1,5 +1,9 @@
 #!/bin/sh
 cd /Users/ena.kaon/Desktop/GitHub/library
 rm .DS_Store
-rm node/rm .DS_Store
+rm CSS/.DS_Store
+rm JavaScript/.DS_Store
+rm lib/.DS_Store
+rm node/.DS_Store
 rm tmp/*
+rm tmp/.DS_Store
