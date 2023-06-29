@@ -1,12 +1,12 @@
-# localLib: HTMLまたはバッチ(Node.js)用ライブラリ
+# jsLib: HTMLまたはバッチ(Node.js)用ライブラリ
 
-<p style='text-align:right'>last update: 2023年 6月28日 水曜日 17時15分37秒 JST</p>
+<p style='text-align:right'>last update: 2023年 6月29日 木曜日 16時30分52秒 JST</p>
 
 ## Functions
 
 <dl>
 <dt><a href="#analyzeArg">analyzeArg()</a> ⇒ <code><a href="#analyzeArg">analyzeArg</a></code></dt>
-<dd><p>analyzeArg: コマンドライン引数を分析</p>
+<dd><p>コマンドラインから<code>node xxx.js aa bb</code>を実行した場合の引数(<code>aa</code>,<code>bb</code>)を取得し、オブジェクトにして返す。<br></p>
 </dd>
 <dt><a href="#executable">executable(content)</a> ⇒ <code>string</code></dt>
 <dd><p>executable: コンポーネント(HTML)から必要な部分を抽出、Node.jsで実行可能なJSファイルを作成</p>
@@ -63,7 +63,7 @@
 <a name="analyzeArg"></a>
 
 ## analyzeArg() ⇒ [<code>analyzeArg</code>](#analyzeArg)
-analyzeArg: コマンドライン引数を分析
+コマンドラインから`node xxx.js aa bb`を実行した場合の引数(`aa`,`bb`)を取得し、オブジェクトにして返す。<br>
 
 **Kind**: global function  
 **Returns**: [<code>analyzeArg</code>](#analyzeArg) - 分析結果のオブジェクト  
@@ -72,6 +72,16 @@ analyzeArg: コマンドライン引数を分析
 | --- | --- | --- |
 |  | <code>void</code> | なし |
 
+**Example**  
+```
+node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
+⇒ {opt:{i:"aaa.html",o:"ccc.json"},val:["bbb","ddd","eee"]}
+```
+
+<caution>注意</caution>
+
+- スイッチは`(\-*)([0-9a-zA-Z]+):*(.*)$`形式であること
+- スイッチに該当しないものは配列`val`にそのまま格納される
 <a name="executable"></a>
 
 ## executable(content) ⇒ <code>string</code>

@@ -35,7 +35,7 @@ cd /Users/ena.kaon/Desktop/GitHub/library
 #   header : Markdownの文頭。行単位にカンマ無し、スペース区切りで指定
 #   createLib xxx yyy : コンポーネントxxx,yyyのコアを抽出して結合
 
-libName="localLib"
+libName="jsLib"
 header=(
   "# ${libName}: HTMLまたはバッチ(Node.js)用ライブラリ"
   ""
