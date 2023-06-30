@@ -31,9 +31,9 @@
 
 /**
  * @typedef {object} querySelector
- * @prop {Object.<string, string>} before - 前タグのタグ名、要素
- * @prop {string} inner - 子要素タグも含む、タグ内のテキスト
- * @prop {Object.<string, string>} after - 後タグのタグ名、要素
+ * @prop {string} tag - タグ名
+ * @prop {Object.<string, string>} attr=null - 属性名：属性値となるオブジェクト
+ * @prop {string} inner='' - 子要素タグも含む、タグ内のテキスト
  */
 
 /** querySelector: HTMLの指定CSSセレクタの内容を抽出
@@ -44,16 +44,29 @@
 
 function querySelector(content,selectors){
   console.log('===== querySelector start.');
-  const v = {rv:'',
+  const v = {rv:[],
     selectors: [],
     extract: (document,selector) => {
       console.log('----- extract start.');
-      let rv = '';
       v.elements = document.querySelectorAll(selector);
-      v.elements.forEach(element => rv+=String(element.innerHTML).trim()+'\n');
-      //console.log('rv='+rv);
+      v.elements.forEach(element => {
+        const o = {
+          tag: element.tagName.toLowerCase(),
+          attr: null,
+          inner: '',
+        };
+        if( element.hasAttributes() ){
+          o.attr = {};
+          v.attr = element.attributes;
+          for( v.i=0 ; v.i<v.attr.length ; v.i++ ){
+            o.attr[v.attr[v.i].name] = v.attr[v.i].value;
+          }
+        }
+        v.inner = String(element.innerHTML).trim();
+        if( v.inner.length > 0 )  o.inner = v.inner;
+        v.rv.push(o);
+      });
       console.log('----- extract end.');
-      return rv;
     }
   };
   try {
@@ -73,13 +86,11 @@ function querySelector(content,selectors){
       v.source = document.createElement('div');
       v.source.innerHTML = content;
       v.selectors.forEach(x => {
-        v.r = v.extract(v.source,x);
-        if( v.r.hasOwnProperty('stack') ) throw v.r;
-        v.rv += v.r;
+        v.extract(v.source,x);
       });
     }
 
-    console.log('v.rv='+v.rv);
+    //console.log('v.rv='+JSON.stringify(v.rv));
     console.log('===== querySelector end.');
     return v.rv;
   } catch(e){
@@ -95,7 +106,8 @@ function querySelector(content,selectors){
 <script type="text/javascript" class="test">
 function querySelectorTest(){
   const content = document.querySelector('html').innerHTML;
-  console.log(content);
+  //console.log(content);
+  //const result = querySelector(content,'script[src]');
   const result = querySelector(content,'script.main');
   console.log(result);
 }
