@@ -103,6 +103,26 @@ function querySelector(content,selectors){
 }
 </script>
 
+<!--================================================
+  Webアプリ
+================================================-->
+<script type="text/javascript" class="webApp">
+function webApp(){
+  const v = {};
+  console.log('webApp start.');
+
+  v.selector = document.querySelector('div.webApp input[name="selector"]').value;
+  v.html = document.querySelector('div.webApp textarea[name="html"]').value;
+
+  if( v.selector.length > 0 && v.html.length > 0 ){
+    document.querySelector('div.webApp textarea[name="result"]').value
+    = JSON.stringify(querySelector(v.html,v.selector));
+  }
+
+  console.log('webApp end.');
+}
+</script>
+
 <script type="text/javascript" class="test">
 function querySelectorTest(){
   const content = document.querySelector('html').innerHTML;
@@ -139,18 +159,16 @@ if( typeof window === 'undefined' ){
 
   window.addEventListener('DOMContentLoaded',() => {
 
-    /*
     // HTML欄に入力されたテキストからMarkdownを作成
     v.selector = String(document.querySelector('input[name="selector"]').value).trim();
     v.html = String(document.querySelector('textarea[name="html"]').value).trim();
     if( v.selector.length > 0 && v.html.length > 0 ){
       v.md = querySelector(v.html,v.selector);
       if( v.md.hasOwnProperty('stack') ) throw v.md;
-      document.querySelector('textarea[name="result"]').value = v.md;
+      document.querySelector('textarea[name="result"]').value = JSON.stringify(v.md);
     }
-    */
 
-    querySelectorTest();
+    //querySelectorTest();
 
   });
 }
