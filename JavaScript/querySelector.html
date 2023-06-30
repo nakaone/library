@@ -3,20 +3,12 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta http-equiv="Content-Style-Type" content="text/css">
   <meta http-equiv="Content-Script-Type" content="text/javascript">
-  <title>textContent</title>
-  <!--================================================
-    スタイルシート
-  ================================================-->
+  <title>querySelector</title>
   <link rel="stylesheet" href="../CSS/szDefault.css" />
-  <style type="text/css" class="page">  /* textContent特有CSS */
-  </style>
 </head>
 <body>
-  <!--================================================
-    HTML
-  ================================================-->
-  <div class="webApp">  <!-- textContent Webアプリ表示画面 -->
-    <h1>textContent</h1>
+  <div class="webApp">  <!-- querySelector Webアプリ表示画面 -->
+    <h1>querySelector</h1>
     <div>CSS selector:<br><input type="text" name="selector" onchange="webApp()" /></div>
     <div>html:<br><textarea name="html" onchange="webApp()"></textarea></div>
     <div>result:<br><textarea name="result"></textarea></div>
@@ -33,20 +25,27 @@
 <script src="https://cdn.jsdelivr.net/npm/jsdom@22.1.0/lib/jsdom/browser/Window.min.js"></script>
 
 <!--================================================
-  textContent コアスクリプト
+  querySelector コアスクリプト
 ================================================-->
 <script type="text/javascript" class="core">
 
-/** textContent: HTMLの指定CSSセレクタの内容を抽出
- * @param {string} content - エレメント(HTML)の全ソース
- * @param {string[]} selectors - 抽出対象となるCSSセレクタ
- * @returns {string} 抽出された指定CSSセレクタ内のテキスト
+/**
+ * @typedef {object} querySelector
+ * @prop {Object.<string, string>} before - 前タグのタグ名、要素
+ * @prop {string} inner - 子要素タグも含む、タグ内のテキスト
+ * @prop {Object.<string, string>} after - 後タグのタグ名、要素
  */
 
-function textContent(content,sections){
-  console.log('===== textContent start.');
+/** querySelector: HTMLの指定CSSセレクタの内容を抽出
+ * @param {string} content - エレメント(HTML)の全ソース
+ * @param {string|string[]} selectors - 抽出対象となるCSSセレクタ
+ * @returns {querySelector[]} 抽出された指定CSSセレクタ内のテキスト
+ */
+
+function querySelector(content,selectors){
+  console.log('===== querySelector start.');
   const v = {rv:'',
-    sections: [],
+    selectors: [],
     extract: (document,selector) => {
       console.log('----- extract start.');
       let rv = '';
@@ -60,12 +59,12 @@ function textContent(content,sections){
   try {
 
     // 指定CSSセレクタが単一なら配列化
-    v.sections = typeof sections === 'string' ? [sections] : sections;
+    v.selectors = typeof selectors === 'string' ? [selectors] : selectors;
 
     if( typeof window === 'undefined' ){
       const { JSDOM } = require("jsdom");
       const { document } = new JSDOM(content).window;
-      v.sections.forEach(x => {
+      v.selectors.forEach(x => {
         v.r = v.extract(document,x);
         if( v.r.hasOwnProperty('stack') ) throw v.r;
         v.rv += v.r;
@@ -73,7 +72,7 @@ function textContent(content,sections){
     } else {
       v.source = document.createElement('div');
       v.source.innerHTML = content;
-      v.sections.forEach(x => {
+      v.selectors.forEach(x => {
         v.r = v.extract(v.source,x);
         if( v.r.hasOwnProperty('stack') ) throw v.r;
         v.rv += v.r;
@@ -81,7 +80,7 @@ function textContent(content,sections){
     }
 
     console.log('v.rv='+v.rv);
-    console.log('===== textContent end.');
+    console.log('===== querySelector end.');
     return v.rv;
   } catch(e){
     // ブラウザで実行する場合はアラート表示
@@ -90,6 +89,15 @@ function textContent(content,sections){
     //throw e; //以降の処理を全て停止
     v.rv.stack = e.stack; return v.rv; // 処理継続
   }
+}
+</script>
+
+<script type="text/javascript" class="test">
+function querySelectorTest(){
+  const content = document.querySelector('html').innerHTML;
+  console.log(content);
+  const result = querySelector(content,'script.main');
+  console.log(result);
 }
 </script>
 
@@ -105,10 +113,10 @@ if( typeof window === 'undefined' ){
   v.argv = analyzeArg();
   if(v.argv.hasOwnProperty('stack')) throw v.argv;
 
-  // ファイルの読み込み、textContentの呼び出し
+  // ファイルの読み込み、querySelectorの呼び出し
   v.fs = require('fs');
   v.content = v.fs.readFileSync(v.argv.opt.i,'utf-8');
-  v.rv = textContent(v.content,v.argv.val);
+  v.rv = querySelector(v.content,v.argv.val);
   if( v.rv.hasOwnProperty('stack') ) throw v.rv;  // debug
 
   // 結果の書き出し
@@ -119,14 +127,18 @@ if( typeof window === 'undefined' ){
 
   window.addEventListener('DOMContentLoaded',() => {
 
+    /*
     // HTML欄に入力されたテキストからMarkdownを作成
     v.selector = String(document.querySelector('input[name="selector"]').value).trim();
     v.html = String(document.querySelector('textarea[name="html"]').value).trim();
     if( v.selector.length > 0 && v.html.length > 0 ){
-      v.md = textContent(v.html,v.selector);
+      v.md = querySelector(v.html,v.selector);
       if( v.md.hasOwnProperty('stack') ) throw v.md;
       document.querySelector('textarea[name="result"]').value = v.md;
     }
+    */
+
+    querySelectorTest();
 
   });
 }
