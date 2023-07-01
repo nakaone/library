@@ -1,6 +1,8 @@
 # jsLib: HTMLまたはバッチ(Node.js)用ライブラリ
 
-<p style='text-align:right'>last update: 2023年 7月 1日 土曜日 13時12分25秒 JST</p>
+<p style='text-align:right'>last update: 2023年 7月 1日 土曜日 14時57分35秒 JST</p>
+
+アンダーバー('_')が含まれる関数名「XXX_yyy()」は、XXX型オブジェクトへのyyyメソッド追加を示す。
 
 ## Functions
 
@@ -9,16 +11,19 @@
 <dd><p>コマンドラインから<code>node xxx.js aa bb</code>を実行した場合の引数(<code>aa</code>,<code>bb</code>)を取得し、オブジェクトにして返す。<br></p>
 </dd>
 <dt><a href="#analyzePath">analyzePath(arg)</a> ⇒ <code><a href="#analyzePath">analyzePath</a></code></dt>
-<dd><p>analyzePath: パス名文字列から構成要素を抽出</p>
+<dd><p>パス名文字列から構成要素を抽出</p>
 </dd>
 <dt><a href="#querySelector">querySelector(content, selectors)</a> ⇒ <code><a href="#querySelector">Array.&lt;querySelector&gt;</a></code></dt>
-<dd><p>querySelector: HTMLの指定CSSセレクタの内容を抽出</p>
+<dd><p>HTMLの指定CSSセレクタの内容を抽出</p>
 </dd>
 <dt><a href="#whichType">whichType(arg, [is])</a> ⇒ <code>string</code> | <code>boolean</code></dt>
 <dd><p>変数の型を判定し、型名を文字列で返す。なお引数&quot;is&quot;が指定された場合、判定対象が&quot;is&quot;と等しいかの真偽値を返す。</p>
 <ul>
 <li>Qiita <a href="https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3">JavaScriptの型などの判定いろいろ</a></li>
 </ul>
+</dd>
+<dt><a href="#Date_toLocale">Date_toLocale([format])</a> ⇒ <code>string</code></dt>
+<dd><p>日時を指定形式の文字列にして返す&quot;toLocale()&quot;メソッドをDate型に追加する。</p>
 </dd>
 </dl>
 
@@ -60,7 +65,7 @@ node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
 <a name="analyzePath"></a>
 
 ## analyzePath(arg) ⇒ [<code>analyzePath</code>](#analyzePath)
-analyzePath: パス名文字列から構成要素を抽出
+パス名文字列から構成要素を抽出
 
 **Kind**: global function  
 **Returns**: [<code>analyzePath</code>](#analyzePath) - 構成要素を抽出したオブジェクト  
@@ -124,7 +129,7 @@ analyzePath: パス名文字列から構成要素を抽出
 <a name="querySelector"></a>
 
 ## querySelector(content, selectors) ⇒ [<code>Array.&lt;querySelector&gt;</code>](#querySelector)
-querySelector: HTMLの指定CSSセレクタの内容を抽出
+HTMLの指定CSSセレクタの内容を抽出
 
 **Kind**: global function  
 **Returns**: [<code>Array.&lt;querySelector&gt;</code>](#querySelector) - 抽出された指定CSSセレクタ内のテキスト  
@@ -178,6 +183,36 @@ whichType(a,'string'); // false
 | Date型 | Date |  |
 | Promise型 | Promise |  |
  
+<a name="Date_toLocale"></a>
+
+## Date\_toLocale([format]) ⇒ <code>string</code>
+日時を指定形式の文字列にして返す"toLocale()"メソッドをDate型に追加する。
+
+**Kind**: global function  
+**Returns**: <code>string</code> - 指定形式に変換された文字列。無効な日付なら長さ0の文字列  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [format] | <code>string</code> | <code>&quot;&#x27;yyyy/MM/dd&#x27;&quot;</code> | 日時を指定する文字列。年:y,月:M,日:d,時:h,分:m,秒:s,ミリ秒:n |
+
+**Example**  
+```
+"1965/9/5"[yy/MM/dd hh:mm:ss.nnn] ⇒ "65/09/05 00:00:00.000"
+"1965/9/5"[yyyy-MM-dd] ⇒ "1965-09-05"
+"1965/9/5"[hh:mm] ⇒ "00:00"
+"1977-03-04"[yy/MM/dd hh:mm:ss.nnn] ⇒ "77/03/04 09:00:00.000"
+"1977-03-04"[yyyy-MM-dd] ⇒ "1977-03-04"
+"1977-03-04"[hh:mm] ⇒ "09:00"
+1688189258262[yy/MM/dd hh:mm:ss.nnn] ⇒ "23/07/01 14:27:38.262"
+1688189258262[yyyy-MM-dd] ⇒ "2023-07-01"
+1688189258262[hh:mm] ⇒ "14:27"
+"Sat Jul 01 2023 14:16:30 GMT+0900"[yy/MM/dd hh:mm:ss.nnn] ⇒ "23/07/01 14:16:30.000"
+"Sat Jul 01 2023 14:16:30 GMT+0900"[yyyy-MM-dd] ⇒ "2023-07-01"
+"Sat Jul 01 2023 14:16:30 GMT+0900"[hh:mm] ⇒ "14:16"
+"12:34"[yy/MM/dd hh:mm:ss.nnn] ⇒ ""
+"12:34"[yyyy-MM-dd] ⇒ ""
+"12:34"[hh:mm] ⇒ ""
+```
 <a name="analyzeArg"></a>
 
 ## analyzeArg : <code>object</code>

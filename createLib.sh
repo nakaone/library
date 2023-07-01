@@ -40,8 +40,10 @@ header=(
   "# ${libName}: HTMLまたはバッチ(Node.js)用ライブラリ"
   ""
   "<p style='text-align:right'>last update: ${dt}</p>"
+  ""
+  "アンダーバー('_')が含まれる関数名「XXX_yyy()」は、XXX型オブジェクトへのyyyメソッド追加を示す。"
 )
-createLib analyzeArg analyzePath querySelector whichType
+createLib analyzeArg analyzePath querySelector whichType Date.toLocale
 
 # 参考 : UNIX & Linux コマンド・シェルスクリプト リファレンス
 # 引数を処理する
