@@ -1,6 +1,6 @@
 # jsLib: HTMLまたはバッチ(Node.js)用ライブラリ
 
-<p style='text-align:right'>last update: 2023年 7月 1日 土曜日 10時50分51秒 JST</p>
+<p style='text-align:right'>last update: 2023年 7月 1日 土曜日 12時37分13秒 JST</p>
 
 ## Functions
 
@@ -10,6 +10,12 @@
 </dd>
 <dt><a href="#querySelector">querySelector(content, selectors)</a> ⇒ <code><a href="#querySelector">Array.&lt;querySelector&gt;</a></code></dt>
 <dd><p>querySelector: HTMLの指定CSSセレクタの内容を抽出</p>
+</dd>
+<dt><a href="#whichType">whichType(arg, [is])</a> ⇒ <code>string</code> | <code>boolean</code></dt>
+<dd><p>変数の型を判定し、型名を文字列で返す。なお引数&quot;is&quot;が指定された場合、判定対象が&quot;is&quot;と等しいかの真偽値を返す。</p>
+<ul>
+<li>Qiita <a href="https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3">JavaScriptの型などの判定いろいろ</a></li>
+</ul>
 </dd>
 </dl>
 
@@ -58,6 +64,50 @@ querySelector: HTMLの指定CSSセレクタの内容を抽出
 | content | <code>string</code> | エレメント(HTML)の全ソース |
 | selectors | <code>string</code> \| <code>Array.&lt;string&gt;</code> | 抽出対象となるCSSセレクタ |
 
+<a name="whichType"></a>
+
+## whichType(arg, [is]) ⇒ <code>string</code> \| <code>boolean</code>
+変数の型を判定し、型名を文字列で返す。なお引数"is"が指定された場合、判定対象が"is"と等しいかの真偽値を返す。
+
+- Qiita [JavaScriptの型などの判定いろいろ](https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3)
+
+**Kind**: global function  
+**Returns**: <code>string</code> \| <code>boolean</code> - - 型の名前。is指定有りなら判定対象が想定型かの真偽値  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| arg | <code>any</code> | 判定対象の変数 |
+| [is] | <code>string</code> | 想定される型(型名の大文字小文字は意識不要) |
+
+**Example**  
+```
+let a = 10;
+whichType(a);  // 'Number'
+whichType(a,'string'); // false
+```
+
+<b>確認済戻り値一覧</b>
+
+オブジェクトは型名が返るので、限定列挙は困難。以下は確認済みの戻り値のみ記載。
+
+| 型名 | 戻り値 | 備考 |
+| :-- | :-- | :-- |
+| 文字列 | String |  |
+| 数値 | Number |  |
+| NaN | NaN |  |
+| 長整数 | BigInt |  |
+| 論理値 | Boolean |  |
+| シンボル | Symbol |  |
+| undefined | Undefined | 先頭大文字 |
+| Null | Null |  |
+| オブジェクト | Object |  |
+| 配列 | Array |  |
+| 関数 | Function |  |
+| アロー関数 | Arrow |  |
+| エラー | Error | RangeError等も'Error' |
+| Date型 | Date |  |
+| Promise型 | Promise |  |
+ 
 <a name="analyzeArg"></a>
 
 ## analyzeArg : <code>object</code>

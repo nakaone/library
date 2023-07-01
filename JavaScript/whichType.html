@@ -1,131 +1,68 @@
 <!DOCTYPE html><html lang="ja">
-<!--================================================
-  仕様書(Markdown)
-================================================-->
-<!-- JSDoc (jsdoc2mdの実行結果を貼付) -->
-<style type="text/markdown" class="jsdoc">/*
-*/</style>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta http-equiv="Content-Style-Type" content="text/css">
   <meta http-equiv="Content-Script-Type" content="text/javascript">
-  <title>textContent</title>
-  <!--================================================
-    スタイルシート
-  ================================================-->
-  <link rel="stylesheet" href="../CSS/szDefault.css" />
+  <title>whichType</title>
 </head>
 <body>
-  <select name="mode" onchange="changeMode()">
-    <option value="doc">仕様書</option>
-    <option value="webApp" selected>Webアプリ</option>
-    <!--option value="test">テスト</option-->
-  </select>
-  <!--================================================
-    HTML
-  ================================================-->
-  <div class="webApp">  <!-- textContent Webアプリ表示画面 -->
-  </div>
+  <p>Webアプリは無し。</p>
+  <p>テストは開発者コンソールで確認。</p>
 </body>
 <!--================================================
-  外部スクリプト
-================================================-->
-<!-- MarkDownテキストをHTML化するCDN -->
-<script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
-
-<!--================================================
-  textContent コアスクリプト
+  whichType コアスクリプト
 ================================================-->
 <script type="text/javascript" class="core">
-</script>
+/** 
+ * 変数の型を判定し、型名を文字列で返す。なお引数"is"が指定された場合、判定対象が"is"と等しいかの真偽値を返す。
+ * 
+ * - Qiita [JavaScriptの型などの判定いろいろ](https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3)
+ * 
+ * @param {any} arg - 判定対象の変数
+ * @param {string} [is] - 想定される型(型名の大文字小文字は意識不要)
+ * @returns {string|boolean} - 型の名前。is指定有りなら判定対象が想定型かの真偽値
+ * 
+ * @example
+ * ```
+ * let a = 10;
+ * whichType(a);  // 'Number'
+ * whichType(a,'string'); // false
+ * ```
+ * 
+ * <b>確認済戻り値一覧</b>
+ * 
+ * オブジェクトは型名が返るので、限定列挙は困難。以下は確認済みの戻り値のみ記載。
+ * 
+ * | 型名 | 戻り値 | 備考 |
+ * | :-- | :-- | :-- |
+ * | 文字列 | String |  |
+ * | 数値 | Number |  |
+ * | NaN | NaN |  |
+ * | 長整数 | BigInt |  |
+ * | 論理値 | Boolean |  |
+ * | シンボル | Symbol |  |
+ * | undefined | Undefined | 先頭大文字 |
+ * | Null | Null |  |
+ * | オブジェクト | Object |  |
+ * | 配列 | Array |  |
+ * | 関数 | Function |  |
+ * | アロー関数 | Arrow |  |
+ * | エラー | Error | RangeError等も'Error' |
+ * | Date型 | Date |  |
+ * | Promise型 | Promise |  |
+ *  
+ */
 
-<!--================================================
-  Webアプリとして実行する場合の処理
-================================================-->
-<script type="text/javascript" class="webApp">
-/** changeMode: 仕様書/webApp/テスト画面の切り替え */
-function changeMode(){
-  console.log('===== changeMode start.');
-  const v = {num:0,mode:'doc'};
-  try {
-    v.element = document.querySelector('select[name="mode"]');
-    v.num = v.element.selectedIndex;
-    v.mode = v.element.options[v.num].value;
-    console.log(v);
-
-    document.querySelectorAll('body > div').forEach(x => {
-      x.style.display = x.classList.contains(v.mode) ? '' : 'none';
-    })
-
-    console.log('===== changeMode end.');
-    return v.rv;
-  } catch(e){
-    // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
-    //throw e; //以降の処理を全て停止
-    v.rv.stack = e.stack; return v.rv; // 処理継続
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
   }
-}
-</script>
-
-<!--================================================
-  Node.js上で単体実行する場合の処理
-================================================-->
-<script type="text/javascript" class="onNode">
-  /* Node.js上で単体実行する場合の処理 */
-function onNode(){
-  console.log('===== onNode start.');
-  const v = {};
-
-  // 事前処理：引数チェック、既定値の設定
-  v.argv = analyzeArg();
-  if(v.argv.hasOwnProperty('stack')) throw v.argv;
-
-  // ファイルの読み込み、textContentの呼び出し
-  v.fs = require('fs');
-  v.content = v.fs.readFileSync(v.argv.opt.i,'utf-8');
-  v.rv = textContent(v.content,v.argv.val);
-  if( v.rv.hasOwnProperty('stack') ) throw v.rv;  // debug
-
-  // 結果の書き出し
-  v.content = v.fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
-
-  console.log('v.rv='+v.rv);
-  console.log('===== onNode end.');
-}
-
-/**
- * @typedef {object} analyzeArg - コマンドライン引数の分析結果
- * @prop {Object.<string, number>} opt - スイッチを持つ引数について、スイッチ：値形式にしたオブジェクト
- * @prop {string[]} val - スイッチを持たない引数の配列
- */
-/** analyzeArg: コマンドライン引数を分析
- * @param {void} - なし
- * @returns {analyzeArg} 分析結果のオブジェクト
- */
-function analyzeArg(){
-  console.log('===== analyzeArg start.');
-  const v = {rv:{opt:{},val:[]}};
-  try {
-
-    for( v.i=2 ; v.i<process.argv.length ; v.i++ ){
-      // process.argv:コマンドライン引数の配列
-      v.m = process.argv[v.i].match(/^(\-*)([0-9a-zA-Z]+):*(.*)$/);
-      if( v.m && v.m[1].length > 0 ){
-        v.rv.opt[v.m[2]] = v.m[3];
-      } else {
-        v.rv.val.push(process.argv[v.i]);
-      }
-    }
-
-    console.log('v.rv='+JSON.stringify(v.rv));
-    console.log('===== analyzeArg end.');
-    return v.rv;
-  } catch(e){
-    // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
-    //throw e; //以降の処理を全て停止
-    v.rv.stack = e.stack; return v.rv; // 処理継続
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
   }
 }
 </script>
@@ -133,13 +70,48 @@ function analyzeArg(){
 <!--================================================
   テスト関係(仕様書、スクリプト)
 ================================================-->
-<style type="text/markdown" class="test">
-  /* テスト仕様書 */
-</style>
 <script type="text/javascript" class="test">
-/* ここにテスト用ソースを記述 */
-function textContentTest(){
-  const v = {};
+function whichTypeTest(){
+  const data = [
+    // 文字列
+    {val:'abc',is:'String'},
+    {val:String('12345'),is:'string'},
+    // 数値
+    {val:10,is:'Number'},
+    {val:Infinity,is:'number'},
+    {val:Number('123'),is:'numBer'},
+    {val:NaN,is:'NaN'}, // NaN
+    {val:BigInt(9007199254740991),is:'BigInt'}, // 長整数
+    {val:BigInt("0x1fffffffffffff"),is:'bigint'},
+    // 論理値
+    {val:true,is:'Boolean'},
+    {val:(10===10),is:'Boolean'},
+    // シンボル
+    {val:Symbol("Sym"),is:'Symbol'},
+    // Null
+    {val:null,is:'Null'},
+    // {val:Null,is:'Null'}, -> Uncaught ReferenceError: Null is not defined
+    // オブジェクト
+    {val:{a:10,b:20},is:'Object'},
+    // 配列
+    {val:[0,1,2],is:'Array'},
+    // 関数
+    {val:(arg) => 'test:'+String(arg),is:'Arrow'},
+    {val:function(){},is:'Function'},
+    // エラー
+    {val:new Error('error test'),is:'Error'},
+    {val:new RangeError('range error test'),is:'Error'},
+    // その他
+    {val:new Date(),is:'Date'},
+    {val:new Promise(()=>{}),is:'Promise'},
+  ];
+  console.log('undefined',whichType());  // -> Undefined
+  console.log('undefined',whichType(undefined));  // -> Undefined
+  console.log('undefined',whichType(undefined,'undefined'));  // -> Undefined
+  data.forEach(x => {
+    console.log(x.val,whichType(x.val));
+    console.log(x.is,whichType(x.val,x.is));
+  })
 }
 </script>
 
@@ -147,32 +119,8 @@ function textContentTest(){
   メイン処理
 ================================================-->
 <script type="text/javascript" class="main">
-if( typeof window === 'undefined' ){
-  // コンソール(Node.js)で実行する場合の処理
-  onNode();
-} else {
-  // ブラウザ上で実行する場合の処理
-  window.addEventListener('DOMContentLoaded',() => {
-    const v = {mode:{num:1,value:'doc'},text:''};
-
-    // MarkDownで記述された部分をHTML化して表示
-    v.doc = document.createElement('div');
-    v.doc.classList.add('sz');
-    ['style.jsdoc','style.doc'].forEach(selector => {
-      v.inner = document.querySelector(selector).textContent.trim();
-      v.m = v.inner.match(/^\/\*([\s\S]+)\*\//);
-      v.text += v.m ? v.m[1] : v.inner;
-    });
-    v.md = marked(v.text);
-    v.doc.innerHTML = v.md;
-    document.querySelector('body div.doc').prepend(v.doc);
-
-    // テスト実行
-    //textContentTest();
-
-    // 画面モードに従って初期画面表示
-    changeMode();
-  });
-}
+window.addEventListener('DOMContentLoaded',() => {
+  whichTypeTest();  // テスト実行
+});
 </script>
 </html>
