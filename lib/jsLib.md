@@ -1,6 +1,6 @@
 # jsLib: HTMLまたはバッチ(Node.js)用ライブラリ
 
-<p style='text-align:right'>last update: 2023年 7月 1日 土曜日 14時57分35秒 JST</p>
+<p style='text-align:right'>last update: 2023年 7月 1日 土曜日 16時52分52秒 JST</p>
 
 アンダーバー('_')が含まれる関数名「XXX_yyy()」は、XXX型オブジェクトへのyyyメソッド追加を示す。
 
@@ -22,6 +22,9 @@
 <li>Qiita <a href="https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3">JavaScriptの型などの判定いろいろ</a></li>
 </ul>
 </dd>
+<dt><a href="#Date_calc">Date_calc(arg)</a> ⇒ <code>string</code></dt>
+<dd><p>指定日に年/月/日/時/分/秒/ミリ秒数を加減した日時を計算する&quot;calc()&quot;メソッドをDate型に追加する。</p>
+</dd>
 <dt><a href="#Date_toLocale">Date_toLocale([format])</a> ⇒ <code>string</code></dt>
 <dd><p>日時を指定形式の文字列にして返す&quot;toLocale()&quot;メソッドをDate型に追加する。</p>
 </dd>
@@ -37,6 +40,8 @@
 <dd><p>パス文字列から構成要素を抽出したオブジェクト</p>
 </dd>
 <dt><a href="#querySelector">querySelector</a> : <code>object</code></dt>
+<dd></dd>
+<dt><a href="#DateCalcArg">DateCalcArg</a> : <code>object</code></dt>
 <dd></dd>
 </dl>
 
@@ -183,6 +188,36 @@ whichType(a,'string'); // false
 | Date型 | Date |  |
 | Promise型 | Promise |  |
  
+<a name="Date_calc"></a>
+
+## Date\_calc(arg) ⇒ <code>string</code>
+指定日に年/月/日/時/分/秒/ミリ秒数を加減した日時を計算する"calc()"メソッドをDate型に追加する。
+
+**Kind**: global function  
+**Returns**: <code>string</code> - 加減したDateオブジェクト(新規、非破壊)。無効な指定ならNull
+
+arg = string -> "+1M"(1ヶ月後)のように、加減する値＋単位で指定
+arg = number[] -> [年,月,日,時,分,秒,ミリ秒]で複数単位での加減を一括指定
+arg = DateCalcArg -> 単位を指定した複数単位での加減。例：1時間10分後なら{h:1,m:10}  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| arg | <code>string</code> \| <code>Array.&lt;number&gt;</code> \| [<code>DateCalcArg</code>](#DateCalcArg) | 加減する年/月/日/時/分/秒/ミリ秒数の指定 |
+
+**Example**  
+```
+base: 2001/01/01 00:00:00.000
+"+3y" ⇒ 2004/01/01 00:00:00.000
+"2M" ⇒ 2001/03/01 00:00:00.000
+"1d" ⇒ 2001/01/02 00:00:00.000
+"-1h" ⇒ 2000/12/31 23:00:00.000
+"-2m" ⇒ 2000/12/31 23:58:00.000
+"-3s" ⇒ 2000/12/31 23:59:57.000
+"-4n" ⇒ 2000/12/31 23:59:59.996
+[3,2,1,-1,-2,-3,-4] ⇒ 2004/03/01 22:57:56.996
+[3,2,1] ⇒ 2004/03/02 00:00:00.000
+{"y":3,"M":2,"d":1} ⇒ 2004/03/02 00:00:00.000
+```
 <a name="Date_toLocale"></a>
 
 ## Date\_toLocale([format]) ⇒ <code>string</code>
@@ -253,4 +288,20 @@ whichType(a,'string'); // false
 | tag | <code>string</code> |  | タグ名 |
 | attr | <code>Object.&lt;string, string&gt;</code> | <code></code> | 属性名：属性値となるオブジェクト |
 | inner | <code>string</code> | <code>&quot;&#x27;&#x27;&quot;</code> | 子要素タグも含む、タグ内のテキスト |
+
+<a name="DateCalcArg"></a>
+
+## DateCalcArg : <code>object</code>
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| [y] | <code>number</code> | 年 |
+| [M] | <code>number</code> | 月 |
+| [d] | <code>number</code> | 日 |
+| [h] | <code>number</code> | 時 |
+| [m] | <code>number</code> | 分 |
+| [s] | <code>number</code> | 秒 |
+| [n] | <code>number</code> | ミリ秒 |
 
