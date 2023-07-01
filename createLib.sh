@@ -5,8 +5,8 @@
 #   useage ./createLib.sh
 #   作成されたライブラリとMarkdownはtmp直下に作成される。
 
-function textContent(){
-  node node/textContent.js -i:JavaScript/$1.html -o:tmp/$1.js script.source
+function querySelector(){
+  node node/querySelector.js -i:JavaScript/$1.html -o:tmp/$1.js script.core
   cat tmp/$1.js >> lib/$libName.js
 }
 
@@ -14,7 +14,7 @@ function createLib(){
   rm lib/$libName.*
   for x in "$@"
   do
-    textContent $x
+    querySelector $x
   done
 
   #echo $header > lib/$libName.md
@@ -41,7 +41,7 @@ header=(
   ""
   "<p style='text-align:right'>last update: ${dt}</p>"
 )
-createLib analyzeArg executable textContent
+createLib analyzeArg querySelector
 
 # 参考 : UNIX & Linux コマンド・シェルスクリプト リファレンス
 # 引数を処理する

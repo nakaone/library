@@ -1,47 +1,3 @@
-<!DOCTYPE html><html lang="ja">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <meta http-equiv="Content-Script-Type" content="text/javascript">
-  <title>querySelector</title>
-  <link rel="stylesheet" href="../CSS/szDefault.css" />
-</head>
-<body>
-  <div class="webApp">  <!-- querySelector Webアプリ表示画面 -->
-    <h1>querySelector</h1>
-    <div>CSS selector:<br><input type="text" name="selector" onchange="webApp()" /></div>
-    <div>html:<br><textarea name="html" onchange="webApp()"></textarea></div>
-    <div>result:<br><textarea name="result"></textarea></div>
-  </div>
-</body>
-<!--================================================
-  外部スクリプト
-================================================-->
-<script src="../lib/jsLib.js"></script>
-<!-- MarkDownテキストをHTML化するCDN -->
-<script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
-<!-- バッチ処理で読み込んだ内容をDOM化
-  [Node.jsのサーバサイドでDOMを使う](https://moewe-net.com/nodejs/jsdom) -->
-<script src="https://cdn.jsdelivr.net/npm/jsdom@22.1.0/lib/jsdom/browser/Window.min.js"></script>
-
-<!--================================================
-  querySelector コアスクリプト
-================================================-->
-<script type="text/javascript" class="core">
-
-/**
- * @typedef {object} querySelector
- * @prop {string} tag - タグ名
- * @prop {Object.<string, string>} attr=null - 属性名：属性値となるオブジェクト
- * @prop {string} inner='' - 子要素タグも含む、タグ内のテキスト
- */
-
-/** querySelector: HTMLの指定CSSセレクタの内容を抽出
- * @param {string} content - エレメント(HTML)の全ソース
- * @param {string|string[]} selectors - 抽出対象となるCSSセレクタ
- * @returns {querySelector[]} 抽出された指定CSSセレクタ内のテキスト
- */
-
 function querySelector(content,selectors){
   console.log('===== querySelector start.');
   const v = {rv:[],
@@ -97,42 +53,8 @@ function querySelector(content,selectors){
     v.rv.stack = e.stack; return v.rv; // 処理継続
   }
 }
-</script>
 
-<!--================================================
-  Webアプリ
-================================================-->
-<script type="text/javascript" class="webApp">
-function webApp(){
-  const v = {};
-  console.log('webApp start.');
 
-  v.selector = document.querySelector('div.webApp input[name="selector"]').value;
-  v.html = document.querySelector('div.webApp textarea[name="html"]').value;
-
-  if( v.selector.length > 0 && v.html.length > 0 ){
-    document.querySelector('div.webApp textarea[name="result"]').value
-    = JSON.stringify(querySelector(v.html,v.selector));
-  }
-
-  console.log('webApp end.');
-}
-</script>
-
-<script type="text/javascript" class="test">
-function querySelectorTest(){
-  const content = document.querySelector('html').innerHTML;
-  //console.log(content);
-  //const result = querySelector(content,'script[src]');
-  const result = querySelector(content,'script.main');
-  console.log(result);
-}
-</script>
-
-<!--================================================
-  メイン処理
-================================================-->
-<script type="text/javascript" class="main">
 const v = {
   analyzeArg: () => { // querySelectorを単体で実行可能とするため定義
     console.log('----- analyzeArg start.');
@@ -226,5 +148,3 @@ if( typeof window === 'undefined' ){
 
   });
 }
-</script>
-</html>

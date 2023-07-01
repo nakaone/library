@@ -1,62 +1,4 @@
 <!DOCTYPE html><html lang="ja">
-<!--================================================
-  仕様書(Markdown)
-================================================-->
-<!-- JSDoc (jsdoc2mdの実行結果を貼付) -->
-<style type="text/markdown" class="jsdoc">/*
-## Functions
-
-<dl>
-<dt><a href="#analyzeArg">analyzeArg()</a> ⇒ <code><a href="#analyzeArg">analyzeArg</a></code></dt>
-<dd><p>コマンドラインから<code>node xxx.js aa bb</code>を実行した場合の引数(<code>aa</code>,<code>bb</code>)を取得し、オブジェクトにして返す。<br></p>
-</dd>
-</dl>
-
-## Typedefs
-
-<dl>
-<dt><a href="#analyzeArg">analyzeArg</a> : <code>object</code></dt>
-<dd><p>コマンドライン引数の分析結果</p>
-</dd>
-</dl>
-
-<a name="analyzeArg"></a>
-
-## analyzeArg() ⇒ [<code>analyzeArg</code>](#analyzeArg)
-コマンドラインから`node xxx.js aa bb`を実行した場合の引数(`aa`,`bb`)を取得し、オブジェクトにして返す。<br>
-
-**Kind**: global function  
-**Returns**: [<code>analyzeArg</code>](#analyzeArg) - 分析結果のオブジェクト  
-**Exsample**: 
-
-```
-node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
-⇒ {opt:{i:"aaa.html",o:"ccc.json"},val:["bbb","ddd","eee"]}
-```
-
-<b>注意</b>
-
-- スイッチは`(\-*)([0-9a-zA-Z]+):*(.*)$`形式であること
-- スイッチに該当しないものは配列`val`にそのまま格納される  
-
-| Param | Type | Description |
-| --- | --- | --- |
-|  | <code>void</code> | なし |
-
-<a name="analyzeArg"></a>
-
-## analyzeArg : <code>object</code>
-コマンドライン引数の分析結果
-
-**Kind**: global typedef  
-**Properties**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| opt | <code>Object.&lt;string, number&gt;</code> | スイッチを持つ引数について、スイッチ：値形式にしたオブジェクト |
-| val | <code>Array.&lt;string&gt;</code> | スイッチを持たない引数の配列 |
-
-*/</style>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta http-equiv="Content-Style-Type" content="text/css">
@@ -98,7 +40,8 @@ node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
  * @param {void} - なし
  * @returns {analyzeArg} 分析結果のオブジェクト
  */
- function analyzeArg(){
+
+function analyzeArg(){
   console.log('===== analyzeArg start.');
   const v = {rv:{opt:{},val:[]}};
   try {
