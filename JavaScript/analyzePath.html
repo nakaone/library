@@ -1,0 +1,149 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>analyzePath</title>
+</head>
+<body>
+  <p>Webアプリは無し。</p>
+  <p>テストは開発者コンソールでおよび以下で確認。</p>
+  <textarea rows="10" cols="40"></textarea>
+</body>
+<!--================================================
+  analyzePath コアスクリプト
+================================================-->
+<script type="text/javascript" class="core">
+/**
+ * @typedef {object} analyzePath - パス文字列から構成要素を抽出したオブジェクト
+ * @prop {string} full - 引数の文字列(フルパス)
+ * @prop {string} path - ファイル名を除いたパス文字列
+ * @prop {string} file - ファイル名
+ * @prop {string} base - 拡張子を除いたベースファイル名
+ * @prop {string} suffix - 拡張子
+ */
+/** analyzePath: パス名文字列から構成要素を抽出
+ * @param {string} arg - パス文字列
+ * @returns {analyzePath}　構成要素を抽出したオブジェクト
+ * @example
+ * 
+ * ```
+ * "/Users/ena.kaon/Desktop/GitHub/library/JavaScript/analyzePath.html" ⇒ {
+ *   "path":"/Users/ena.kaon/Desktop/GitHub/library/JavaScript/",
+ *   "file":"analyzePath.html",
+ *   "base":"analyzePath",
+ *   "suffix":"html"
+ * }
+ * 
+ * "/Users/ena.kaon/Desktop/GitHub/library/JavaScript" ⇒ {
+ *   "path":"/Users/ena.kaon/Desktop/GitHub/library/",
+ *   "file":"JavaScript",
+ *   "base":"JavaScript",
+ *   "suffix":""
+ * }
+ * 
+ * "./analyzePath.html" ⇒ {
+ *   "path":"./",
+ *   "file":"analyzePath.html",
+ *   "base":"analyzePath",
+ *   "suffix":"html"
+ * }
+ * 
+ * "analyzePath.html" ⇒ {
+ *   "path":"",
+ *   "file":"analyzePath.html",
+ *   "base":"analyzePath",
+ *   "suffix":"html"
+ * }
+ * 
+ * "analyzePath.hoge.html" ⇒ {
+ *   "path":"",
+ *   "file":"analyzePath.hoge.html",
+ *   "base":"analyzePath.hoge",
+ *   "suffix":"html"
+ * }
+ * 
+ * "analyzePath.fuga" ⇒ {
+ *   "path":"",
+ *   "file":"analyzePath.fuga",
+ *   "base":"analyzePath",
+ *   "suffix":"fuga"
+ * }
+ * 
+ * "https://qiita.com/analyzePath.html" ⇒ {
+ *   "path":"https://qiita.com/",
+ *   "file":"analyzePath.html",
+ *   "base":"analyzePath",
+ *   "suffix":"html"
+ * }
+ * 
+ * ```
+ */
+
+function analyzePath(arg){
+  console.log('===== analyzePath start.');
+  const v = {rv:{}};
+  try {
+
+    v.m1 = arg.match(/^(.*)\/([^\/]+)$/);
+    if( v.m1 ){
+      v.rv.path = v.m1[1] + '/';
+      v.rv.file = v.m1[2];
+    } else {
+      v.rv.path = '';
+      v.rv.file = arg;
+    }
+    v.m2 = v.rv.file.match(/^(.+)\.([^\.]+?)$/);
+    if( v.m2 ){
+      v.rv.base = v.m2[1];
+      v.rv.suffix = v.m2[2];
+    } else {
+      v.rv.base = v.rv.file;
+      v.rv.suffix = '';
+    }
+
+    //console.log('v.rv='+JSON.stringify(v.rv));
+    console.log('===== analyzePath end.');
+    return v.rv;
+  } catch(e){
+    // ブラウザで実行する場合はアラート表示
+    if( typeof window !== 'undefined' ) alert(e.stack); 
+    //throw e; //以降の処理を全て停止
+    v.rv.stack = e.stack; return v.rv; // 処理継続
+  }
+}
+</script>
+
+<!--================================================
+  テスト関係(仕様書、スクリプト)
+================================================-->
+<script type="text/javascript" class="test">
+function analyzePathTest(){
+  const v = {rv:''};
+  const data = [
+    '/Users/ena.kaon/Desktop/GitHub/library/JavaScript/analyzePath.html',
+    '/Users/ena.kaon/Desktop/GitHub/library/JavaScript',  // pathのみ
+    './analyzePath.html',
+    'analyzePath.html',
+    'analyzePath.hoge.html',
+    'analyzePath.fuga', // 不正な拡張子
+    'https://qiita.com/analyzePath.html',  // ネット上のファイル
+  ];
+  data.forEach(x => {
+    v.result = '"' + x+'" ⇒ '+JSON.stringify(analyzePath(x));
+    console.log(v.result);
+    v.rv += v.result.replaceAll(/([{,])/g,"$1\n  ").replaceAll(/(})/g,"\n$1\n\n");
+  })
+  document.querySelector('textarea').value = v.rv;
+}
+</script>
+
+<!--================================================
+  メイン処理
+================================================-->
+<script type="text/javascript" class="main">
+window.addEventListener('DOMContentLoaded',() => {
+  analyzePathTest();  // テスト実行
+});
+</script>
+</html>

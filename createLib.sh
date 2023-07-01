@@ -41,7 +41,7 @@ header=(
   ""
   "<p style='text-align:right'>last update: ${dt}</p>"
 )
-createLib analyzeArg querySelector whichType
+createLib analyzeArg analyzePath querySelector whichType
 
 # 参考 : UNIX & Linux コマンド・シェルスクリプト リファレンス
 # 引数を処理する

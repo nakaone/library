@@ -1,12 +1,15 @@
 # jsLib: HTMLまたはバッチ(Node.js)用ライブラリ
 
-<p style='text-align:right'>last update: 2023年 7月 1日 土曜日 12時37分13秒 JST</p>
+<p style='text-align:right'>last update: 2023年 7月 1日 土曜日 13時12分25秒 JST</p>
 
 ## Functions
 
 <dl>
 <dt><a href="#analyzeArg">analyzeArg()</a> ⇒ <code><a href="#analyzeArg">analyzeArg</a></code></dt>
 <dd><p>コマンドラインから<code>node xxx.js aa bb</code>を実行した場合の引数(<code>aa</code>,<code>bb</code>)を取得し、オブジェクトにして返す。<br></p>
+</dd>
+<dt><a href="#analyzePath">analyzePath(arg)</a> ⇒ <code><a href="#analyzePath">analyzePath</a></code></dt>
+<dd><p>analyzePath: パス名文字列から構成要素を抽出</p>
 </dd>
 <dt><a href="#querySelector">querySelector(content, selectors)</a> ⇒ <code><a href="#querySelector">Array.&lt;querySelector&gt;</a></code></dt>
 <dd><p>querySelector: HTMLの指定CSSセレクタの内容を抽出</p>
@@ -24,6 +27,9 @@
 <dl>
 <dt><a href="#analyzeArg">analyzeArg</a> : <code>object</code></dt>
 <dd><p>コマンドライン引数の分析結果</p>
+</dd>
+<dt><a href="#analyzePath">analyzePath</a> : <code>object</code></dt>
+<dd><p>パス文字列から構成要素を抽出したオブジェクト</p>
 </dd>
 <dt><a href="#querySelector">querySelector</a> : <code>object</code></dt>
 <dd></dd>
@@ -51,6 +57,70 @@ node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
 
 - スイッチは`(\-*)([0-9a-zA-Z]+):*(.*)$`形式であること
 - スイッチに該当しないものは配列`val`にそのまま格納される
+<a name="analyzePath"></a>
+
+## analyzePath(arg) ⇒ [<code>analyzePath</code>](#analyzePath)
+analyzePath: パス名文字列から構成要素を抽出
+
+**Kind**: global function  
+**Returns**: [<code>analyzePath</code>](#analyzePath) - 構成要素を抽出したオブジェクト  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| arg | <code>string</code> | パス文字列 |
+
+**Example**  
+```
+"/Users/ena.kaon/Desktop/GitHub/library/JavaScript/analyzePath.html" ⇒ {
+  "path":"/Users/ena.kaon/Desktop/GitHub/library/JavaScript/",
+  "file":"analyzePath.html",
+  "base":"analyzePath",
+  "suffix":"html"
+}
+
+"/Users/ena.kaon/Desktop/GitHub/library/JavaScript" ⇒ {
+  "path":"/Users/ena.kaon/Desktop/GitHub/library/",
+  "file":"JavaScript",
+  "base":"JavaScript",
+  "suffix":""
+}
+
+"./analyzePath.html" ⇒ {
+  "path":"./",
+  "file":"analyzePath.html",
+  "base":"analyzePath",
+  "suffix":"html"
+}
+
+"analyzePath.html" ⇒ {
+  "path":"",
+  "file":"analyzePath.html",
+  "base":"analyzePath",
+  "suffix":"html"
+}
+
+"analyzePath.hoge.html" ⇒ {
+  "path":"",
+  "file":"analyzePath.hoge.html",
+  "base":"analyzePath.hoge",
+  "suffix":"html"
+}
+
+"analyzePath.fuga" ⇒ {
+  "path":"",
+  "file":"analyzePath.fuga",
+  "base":"analyzePath",
+  "suffix":"fuga"
+}
+
+"https://qiita.com/analyzePath.html" ⇒ {
+  "path":"https://qiita.com/",
+  "file":"analyzePath.html",
+  "base":"analyzePath",
+  "suffix":"html"
+}
+
+```
 <a name="querySelector"></a>
 
 ## querySelector(content, selectors) ⇒ [<code>Array.&lt;querySelector&gt;</code>](#querySelector)
@@ -120,6 +190,22 @@ whichType(a,'string'); // false
 | --- | --- | --- |
 | opt | <code>Object.&lt;string, number&gt;</code> | スイッチを持つ引数について、スイッチ：値形式にしたオブジェクト |
 | val | <code>Array.&lt;string&gt;</code> | スイッチを持たない引数の配列 |
+
+<a name="analyzePath"></a>
+
+## analyzePath : <code>object</code>
+パス文字列から構成要素を抽出したオブジェクト
+
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| full | <code>string</code> | 引数の文字列(フルパス) |
+| path | <code>string</code> | ファイル名を除いたパス文字列 |
+| file | <code>string</code> | ファイル名 |
+| base | <code>string</code> | 拡張子を除いたベースファイル名 |
+| suffix | <code>string</code> | 拡張子 |
 
 <a name="querySelector"></a>
 
