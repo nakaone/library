@@ -12,6 +12,8 @@
 # ==========================================================
 function querySelector(){
   node node/querySelector.js -i:JavaScript/$1.html -o:tmp/$1.js script.core
+  echo "exports.$1 = $1" >> tmp/$1.js # CommonJS用にexport文を追加
+  echo "" >> tmp/$1.js
   cat tmp/$1.js >> lib/$libName.js
 }
 

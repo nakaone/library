@@ -1,6 +1,6 @@
 # jsLib: HTMLまたはバッチ(Node.js)用ライブラリ
 
-<p style='text-align:right'>last update: 2023年 7月 3日 月曜日 15時51分05秒 JST</p>
+<p style='text-align:right'>last update: 2023年 7月 3日 月曜日 16時57分42秒 JST</p>
 
 アンダーバー('_')が含まれる関数名「XXX_yyy()」は、XXX型オブジェクトへのyyyメソッド追加を示す。
 
@@ -15,6 +15,9 @@
 ## Functions
 
 <dl>
+<dt><a href="#analyzeArg">analyzeArg()</a> ⇒ <code><a href="#AnalyzeArg">AnalyzeArg</a></code></dt>
+<dd><p>コマンドラインから<code>node xxx.js aa bb</code>を実行した場合の引数(<code>aa</code>,<code>bb</code>)を取得し、オブジェクトにして返す。<br></p>
+</dd>
 <dt><a href="#analyzePath">analyzePath(arg)</a> ⇒ <code><a href="#AnalyzePath">AnalyzePath</a></code></dt>
 <dd><p>パス名文字列から構成要素を抽出</p>
 </dd>
@@ -201,6 +204,28 @@ drawLine: ファインダ上に線を描画
 | begin | <code>object</code> | 始点の位置 |
 | end | <code>object</code> | 終点の位置 |
 
+<a name="analyzeArg"></a>
+
+## analyzeArg() ⇒ [<code>AnalyzeArg</code>](#AnalyzeArg)
+コマンドラインから`node xxx.js aa bb`を実行した場合の引数(`aa`,`bb`)を取得し、オブジェクトにして返す。<br>
+
+**Kind**: global function  
+**Returns**: [<code>AnalyzeArg</code>](#AnalyzeArg) - 分析結果のオブジェクト  
+
+| Param | Type | Description |
+| --- | --- | --- |
+|  | <code>void</code> | なし |
+
+**Example**  
+```
+node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
+⇒ {opt:{i:"aaa.html",o:"ccc.json"},val:["bbb","ddd","eee"]}
+```
+
+<caution>注意</caution>
+
+- スイッチは`(\-*)([0-9a-zA-Z]+):*(.*)$`形式であること
+- スイッチに該当しないものは配列`val`にそのまま格納される
 <a name="analyzePath"></a>
 
 ## analyzePath(arg) ⇒ [<code>AnalyzePath</code>](#AnalyzePath)
