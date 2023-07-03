@@ -1,6 +1,6 @@
 # jsLib: HTMLまたはバッチ(Node.js)用ライブラリ
 
-<p style='text-align:right'>last update: 2023年 7月 3日 月曜日 11時36分58秒 JST</p>
+<p style='text-align:right'>last update: 2023年 7月 3日 月曜日 15時51分05秒 JST</p>
 
 アンダーバー('_')が含まれる関数名「XXX_yyy()」は、XXX型オブジェクトへのyyyメソッド追加を示す。
 
@@ -8,26 +8,21 @@
 
 <dl>
 <dt><a href="#webScanner">webScanner</a></dt>
-<dd></dd>
+<dd><p>指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャン</p>
+</dd>
 </dl>
 
 ## Functions
 
 <dl>
-<dt><a href="#analyzeArg">analyzeArg()</a> ⇒ <code><a href="#analyzeArg">analyzeArg</a></code></dt>
-<dd><p>コマンドラインから<code>node xxx.js aa bb</code>を実行した場合の引数(<code>aa</code>,<code>bb</code>)を取得し、オブジェクトにして返す。<br></p>
-</dd>
-<dt><a href="#analyzePath">analyzePath(arg)</a> ⇒ <code><a href="#analyzePath">analyzePath</a></code></dt>
+<dt><a href="#analyzePath">analyzePath(arg)</a> ⇒ <code><a href="#AnalyzePath">AnalyzePath</a></code></dt>
 <dd><p>パス名文字列から構成要素を抽出</p>
 </dd>
-<dt><a href="#querySelector">querySelector(content, selectors)</a> ⇒ <code><a href="#querySelector">Array.&lt;querySelector&gt;</a></code></dt>
+<dt><a href="#querySelector">querySelector(content, selectors)</a> ⇒ <code><a href="#QuerySelector">Array.&lt;QuerySelector&gt;</a></code></dt>
 <dd><p>HTMLの指定CSSセレクタの内容を抽出</p>
 </dd>
 <dt><a href="#whichType">whichType(arg, [is])</a> ⇒ <code>string</code> | <code>boolean</code></dt>
 <dd><p>変数の型を判定し、型名を文字列で返す。なお引数&quot;is&quot;が指定された場合、判定対象が&quot;is&quot;と等しいかの真偽値を返す。</p>
-<ul>
-<li>Qiita <a href="https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3">JavaScriptの型などの判定いろいろ</a></li>
-</ul>
 </dd>
 <dt><a href="#Date_calc">Date_calc(arg)</a> ⇒ <code>string</code></dt>
 <dd><p>指定日に年/月/日/時/分/秒/ミリ秒数を加減した日時を計算する&quot;calc()&quot;メソッドをDate型に追加する。</p>
@@ -40,13 +35,13 @@
 ## Typedefs
 
 <dl>
-<dt><a href="#analyzeArg">analyzeArg</a> : <code>object</code></dt>
+<dt><a href="#AnalyzeArg">AnalyzeArg</a> : <code>object</code></dt>
 <dd><p>コマンドライン引数の分析結果</p>
 </dd>
-<dt><a href="#analyzePath">analyzePath</a> : <code>object</code></dt>
+<dt><a href="#AnalyzePath">AnalyzePath</a> : <code>object</code></dt>
 <dd><p>パス文字列から構成要素を抽出したオブジェクト</p>
 </dd>
-<dt><a href="#querySelector">querySelector</a> : <code>object</code></dt>
+<dt><a href="#QuerySelector">QuerySelector</a> : <code>object</code></dt>
 <dd></dd>
 <dt><a href="#DateCalcArg">DateCalcArg</a> : <code>object</code></dt>
 <dd></dd>
@@ -55,6 +50,8 @@
 <a name="webScanner"></a>
 
 ## webScanner
+指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャン
+
 **Kind**: global class  
 
 * [webScanner](#webScanner)
@@ -72,8 +69,6 @@
 <a name="new_webScanner_new"></a>
 
 ### new webScanner(arg)
-QRコードや文書をスキャン。
-
 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。
 
 参考：[jsQRであっさりQRコードリーダ/メーカ](https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
@@ -206,35 +201,13 @@ drawLine: ファインダ上に線を描画
 | begin | <code>object</code> | 始点の位置 |
 | end | <code>object</code> | 終点の位置 |
 
-<a name="analyzeArg"></a>
-
-## analyzeArg() ⇒ [<code>analyzeArg</code>](#analyzeArg)
-コマンドラインから`node xxx.js aa bb`を実行した場合の引数(`aa`,`bb`)を取得し、オブジェクトにして返す。<br>
-
-**Kind**: global function  
-**Returns**: [<code>analyzeArg</code>](#analyzeArg) - 分析結果のオブジェクト  
-
-| Param | Type | Description |
-| --- | --- | --- |
-|  | <code>void</code> | なし |
-
-**Example**  
-```
-node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
-⇒ {opt:{i:"aaa.html",o:"ccc.json"},val:["bbb","ddd","eee"]}
-```
-
-<caution>注意</caution>
-
-- スイッチは`(\-*)([0-9a-zA-Z]+):*(.*)$`形式であること
-- スイッチに該当しないものは配列`val`にそのまま格納される
 <a name="analyzePath"></a>
 
-## analyzePath(arg) ⇒ [<code>analyzePath</code>](#analyzePath)
+## analyzePath(arg) ⇒ [<code>AnalyzePath</code>](#AnalyzePath)
 パス名文字列から構成要素を抽出
 
 **Kind**: global function  
-**Returns**: [<code>analyzePath</code>](#analyzePath) - 構成要素を抽出したオブジェクト  
+**Returns**: [<code>AnalyzePath</code>](#AnalyzePath) - 構成要素を抽出したオブジェクト  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -294,11 +267,11 @@ node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
 ```
 <a name="querySelector"></a>
 
-## querySelector(content, selectors) ⇒ [<code>Array.&lt;querySelector&gt;</code>](#querySelector)
+## querySelector(content, selectors) ⇒ [<code>Array.&lt;QuerySelector&gt;</code>](#QuerySelector)
 HTMLの指定CSSセレクタの内容を抽出
 
 **Kind**: global function  
-**Returns**: [<code>Array.&lt;querySelector&gt;</code>](#querySelector) - 抽出された指定CSSセレクタ内のテキスト  
+**Returns**: [<code>Array.&lt;QuerySelector&gt;</code>](#QuerySelector) - 抽出された指定CSSセレクタ内のテキスト  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -309,8 +282,6 @@ HTMLの指定CSSセレクタの内容を抽出
 
 ## whichType(arg, [is]) ⇒ <code>string</code> \| <code>boolean</code>
 変数の型を判定し、型名を文字列で返す。なお引数"is"が指定された場合、判定対象が"is"と等しいかの真偽値を返す。
-
-- Qiita [JavaScriptの型などの判定いろいろ](https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3)
 
 **Kind**: global function  
 **Returns**: <code>string</code> \| <code>boolean</code> - - 型の名前。is指定有りなら判定対象が想定型かの真偽値  
@@ -349,6 +320,7 @@ whichType(a,'string'); // false
 | Date型 | Date |  |
 | Promise型 | Promise |  |
  
+- Qiita [JavaScriptの型などの判定いろいろ](https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3)
 <a name="Date_calc"></a>
 
 ## Date\_calc(arg) ⇒ <code>string</code>
@@ -726,9 +698,9 @@ returns {number} 指定月の日数(1〜31)
 "12:34"[yyyy-MM-dd] ⇒ ""
 "12:34"[hh:mm] ⇒ ""
 ```
-<a name="analyzeArg"></a>
+<a name="AnalyzeArg"></a>
 
-## analyzeArg : <code>object</code>
+## AnalyzeArg : <code>object</code>
 コマンドライン引数の分析結果
 
 **Kind**: global typedef  
@@ -739,9 +711,9 @@ returns {number} 指定月の日数(1〜31)
 | opt | <code>Object.&lt;string, number&gt;</code> | スイッチを持つ引数について、スイッチ：値形式にしたオブジェクト |
 | val | <code>Array.&lt;string&gt;</code> | スイッチを持たない引数の配列 |
 
-<a name="analyzePath"></a>
+<a name="AnalyzePath"></a>
 
-## analyzePath : <code>object</code>
+## AnalyzePath : <code>object</code>
 パス文字列から構成要素を抽出したオブジェクト
 
 **Kind**: global typedef  
@@ -755,16 +727,16 @@ returns {number} 指定月の日数(1〜31)
 | base | <code>string</code> | 拡張子を除いたベースファイル名 |
 | suffix | <code>string</code> | 拡張子 |
 
-<a name="querySelector"></a>
+<a name="QuerySelector"></a>
 
-## querySelector : <code>object</code>
+## QuerySelector : <code>object</code>
 **Kind**: global typedef  
 **Properties**
 
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | tag | <code>string</code> |  | タグ名 |
-| attr | <code>Object.&lt;string, string&gt;</code> | <code></code> | 属性名：属性値となるオブジェクト |
+| attr | <code>Object.&lt;string, string&gt;</code> | <code>Null</code> | 属性名：属性値となるオブジェクト |
 | inner | <code>string</code> | <code>&quot;&#x27;&#x27;&quot;</code> | 子要素タグも含む、タグ内のテキスト |
 
 <a name="DateCalcArg"></a>

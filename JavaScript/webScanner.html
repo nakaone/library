@@ -45,16 +45,15 @@
 ================================================-->
 <script type="text/javascript" class="core">
 /**
- * @desc QRコードや文書をスキャン。
- * 
- * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。
- * 
- * 参考：[jsQRであっさりQRコードリーダ/メーカ](https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
+ * @classdesc 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャン
  */
 
 class webScanner {
   /**
-   * webScannerのコンストラクタの説明
+   * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。
+   * 
+   * 参考：[jsQRであっさりQRコードリーダ/メーカ](https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
+   * 
    * @constructor
    * @param {object|HTMLDivElement} arg - HTMLDivElementなら親要素のみ指定と解釈
    * @param {object} arg.parent - 親要素(DOM object)

@@ -30,9 +30,9 @@
 <script type="text/javascript" class="core">
 
 /**
- * @typedef {object} querySelector
+ * @typedef {object} QuerySelector
  * @prop {string} tag - タグ名
- * @prop {Object.<string, string>} attr=null - 属性名：属性値となるオブジェクト
+ * @prop {Object.<string, string>} attr=Null - 属性名：属性値となるオブジェクト
  * @prop {string} inner='' - 子要素タグも含む、タグ内のテキスト
  */
 
@@ -40,7 +40,7 @@
  * @desc HTMLの指定CSSセレクタの内容を抽出
  * @param {string} content - エレメント(HTML)の全ソース
  * @param {string|string[]} selectors - 抽出対象となるCSSセレクタ
- * @returns {querySelector[]} 抽出された指定CSSセレクタ内のテキスト
+ * @returns {QuerySelector[]} 抽出された指定CSSセレクタ内のテキスト
  */
 
 function querySelector(content,selectors){
@@ -223,7 +223,7 @@ if( typeof window === 'undefined' ){
       document.querySelector('textarea[name="result"]').value = JSON.stringify(v.md);
     }
 
-    //querySelectorTest();
+    querySelectorTest();
 
   });
 }

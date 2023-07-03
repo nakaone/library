@@ -18,7 +18,7 @@
 ================================================-->
 <script type="text/javascript" class="core">
 /**
- * @typedef {object} analyzeArg - コマンドライン引数の分析結果
+ * @typedef {object} AnalyzeArg - コマンドライン引数の分析結果
  * @prop {Object.<string, number>} opt - スイッチを持つ引数について、スイッチ：値形式にしたオブジェクト
  * @prop {string[]} val - スイッチを持たない引数の配列
  */
@@ -38,9 +38,9 @@
  * - スイッチに該当しないものは配列`val`にそのまま格納される
  * 
  * @param {void} - なし
- * @returns {analyzeArg} 分析結果のオブジェクト
+ * @returns {AnalyzeArg} 分析結果のオブジェクト
  */
-
+ß
 function analyzeArg(){
   console.log('===== analyzeArg start.');
   const v = {rv:{opt:{},val:[]}};
