@@ -44,13 +44,18 @@
   webScanner コアスクリプト
 ================================================-->
 <script type="text/javascript" class="core">
-/** webScanner: QRコードや文書をスキャン
- * <br>
- * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。<br>
- * 参考：[jsQRであっさりQRコードリーダ/メーカ](@link https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
+/**
+ * @desc QRコードや文書をスキャン。
+ * 
+ * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。
+ * 
+ * 参考：[jsQRであっさりQRコードリーダ/メーカ](https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
  */
- class webScanner {
-  /** constructor
+
+class webScanner {
+  /**
+   * webScannerのコンストラクタの説明
+   * @constructor
    * @param {object|HTMLDivElement} arg - HTMLDivElementなら親要素のみ指定と解釈
    * @param {object} arg.parent - 親要素(DOM object)
    * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の間隔。ミリ秒
