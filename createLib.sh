@@ -12,8 +12,16 @@
 # ==========================================================
 function querySelector(){
   node node/querySelector.js -i:JavaScript/$1.html -o:tmp/$1.js script.core
-  echo "exports.$1 = $1" >> tmp/$1.js # CommonJS用にexport文を追加
-  echo "" >> tmp/$1.js
+
+  # 参考：シェルスクリプト (bash, ksh, yash, zsh) で正規表現を使う方法のまとめ
+  #      https://qiita.com/ko1nksm/items/3d1fd784611620b1bea5
+  if [[ $1 =~ (^[A-Z].+\.[A-Za-z0-9]+$) ]]; then # "\S"は使用不可
+    # 大文字で始まり途中'.'がある場合は既存クラスへのメソッド追加としてexportしない
+    echo "" >> tmp/$1.js # 何も無いと syntax error near unexpected token `else'
+  else
+    # 上記以外はCommonJS用にexport文を追加
+    echo "exports."$1" = "$1"\n\n" >> tmp/$1.js
+  fi
   cat tmp/$1.js >> lib/$libName.js
 }
 

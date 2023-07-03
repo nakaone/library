@@ -1,6 +1,6 @@
 # jsLib: HTMLまたはバッチ(Node.js)用ライブラリ
 
-<p style='text-align:right'>last update: 2023年 7月 3日 月曜日 16時57分42秒 JST</p>
+<p style='text-align:right'>last update: 2023年 7月 3日 月曜日 18時36分54秒 JST</p>
 
 アンダーバー('_')が含まれる関数名「XXX_yyy()」は、XXX型オブジェクトへのyyyメソッド追加を示す。
 
