@@ -1,63 +1,60 @@
-/**
- * @typedef {object} QuerySelector
- * @prop {string} tag - タグ名
- * @prop {Object.<string, string>} attr=Null - 属性名：属性値となるオブジェクト
- * @prop {string} inner='' - 子要素タグも含む、タグ内のテキスト
- */
-
 const { whichType } = require("../lib/jsLib");
 
 /**
- * @desc HTMLの指定CSSセレクタの内容を抽出
- * @param {string} content - エレメント(HTML)の全ソース
- * @param {string|string[]} selectors - 抽出対象となるCSSセレクタ
- * @returns {QuerySelector[]} 抽出された指定CSSセレクタ内のテキスト
+ * @typedef {Object} EmbedElementSelector - embedElementの位置指定オブジェクト
+ * @prop {string} from - 挿入元要素のCSSセレクタ。挿入元は複数箇所でも可
+ * @prop {Function} cmd - 追加する要素の属性変更を行う関数
+ * @prop {string} to - 挿入先箇所のCSSセレクタ。挿入先は一意になるよう指定
+ * @prop {boolean} prepend=false - trueなら挿入先要素の長子に、falseなら末子に追加
+ * 
+ * @example
+ * ```
+ * {
+ *   from   : "script.core",      // 挿入元要素のCSSセレクタ
+ *   cmd    : (o)=>{              // 追加要素のclassに'hoge'を追加
+ *     o.classList.add('hoge');
+ *   },
+ *   to     : "html",             // 挿入先箇所のCSSセレクタ
+ *   prepend: false               // </html>の直前に挿入
+ * }
+ * ```
  */
 
-function embedElement(content,selectors){
+/**
+ * @desc HTMLの指定CSSセレクタの内容を抽出
+ * @param {HTMLElement} dest -  挿入先(HTML)の全ソース
+ * @param {HTMLElement} src - 挿入元の要素が含まれているテキスト(HTML)
+ * @param {EmbedElementSelector[]} selectors - 挿入作業の情報
+ * @returns {string} 挿入先に挿入元の要素を挿入した結果の全ソース
+ */
+
+function embedElement(dest,src,selectors){
   console.log('===== embedElement start.');
-  const v = {rv:[],
-    selectors: [],
-    extract: (document,selector) => {
-      console.log('----- extract start.');
-      v.elements = document.embedElementAll(selector);
-      v.elements.forEach(element => {
-        const o = {
-          tag: element.tagName.toLowerCase(),
-          attr: null,
-          inner: '',
-        };
-        if( element.hasAttributes() ){
-          o.attr = {};
-          v.attr = element.attributes;
-          for( v.i=0 ; v.i<v.attr.length ; v.i++ ){
-            o.attr[v.attr[v.i].name] = v.attr[v.i].value;
-          }
-        }
-        v.inner = String(element.innerHTML).trim();
-        if( v.inner.length > 0 )  o.inner = v.inner;
-        v.rv.push(o);
-      });
-      console.log('----- extract end.');
-    }
-  };
+  //console.log(dest,src,selectors);
+  const v = {rv:dest.cloneNode(true)};
   try {
 
-    // 指定CSSセレクタが単一なら配列化
-    v.selectors = typeof selectors === 'string' ? [selectors] : selectors;
-
-    if( typeof window === 'undefined' ){
-      const { JSDOM } = require("jsdom");
-      const { document } = new JSDOM(content).window;
-      v.selectors.forEach(x => v.extract(document,x));
-    } else {
-      v.source = document.createElement('div');
-      v.source.innerHTML = content;
-      v.selectors.forEach(x => {
-        v.extract(v.source,x);
+    for( v.s of selectors ){  // セレクタ毎に順次処理
+      console.log(v.s);
+      src.querySelectorAll(v.s.from).forEach(element => {  // 挿入する要素を抽出
+        v.element = element.cloneNode(true);
+        console.log('l.41',JSON.stringify(v.element.classList))
+        v.element = v.s.cmd(v.element); // 属性情報を変更
+        console.log('l.43',JSON.stringify(v.element.classList))
+        v.to = v.rv.querySelector(v.s.to);
+        console.log('l.45',v.to)
+        if( v.s.prepend ){  // 要素を追加
+          v.to.prependChild(v.element);
+        } else {
+          v.to.appendChild(v.element);
+        }
       });
     }
 
+    console.log('l.54',v.rv.querySelector('html').innerHTML);
+    //NG console.log('l.54',v.rv.body.innerHTML);
+    //undefined console.log('l.54',v.rv.innerHTML);
+    //NG console.log('l.54',v.rv.querySelector('html').parentElement.innerHTML);
     //console.log('v.rv='+JSON.stringify(v.rv));
     console.log('===== embedElement end.');
     return v.rv;
@@ -70,26 +67,71 @@ function embedElement(content,selectors){
   }
 }
 
-function main(){
-  // コンソール(Node.js)で実行する場合の処理
-  // node embedElement.js -i:(入力ファイル名) -o:(出力ファイル名) -t:(タグ出力) aaa bbb ...
-  //   -f: 'text'(タグ出力無し、内部テキストのみ出力。既定値)
-  //       'html'(タグ出力有り。innerHTMLとして使用可)
-  //       'json'(JSONとして出力)
+/**
+ * @desc コンソール(Node.js)でembedElementを実行
+ * 
+ * 以下はnodeの起動時オプションで指定するパラメータ。
+ * @param {string} [d='prototype.html'] - 入力ファイルのパス＋ファイル名
+ * @param {string} s - 挿入する要素のソースが存在するファイルのパス＋ファイル名
+ * @param {string} [o=Null] - 出力ファイル名。Nullの場合はコンソール出力
+ * @param {EmbedElementSelector[]} (スイッチ無し) - 挿入する要素を特定するCSSセレクタ(JSON)
+ * @returns {void}
+ * 
+ * - 引数無しのパラメータはJSON文字列なので、コマンドライン上はシングルクォーテーションで囲む
+ * - JSON文字列は長くなりがちなので、スイッチのないパラメータは全て結合した上で解釈する
+ * 
+ * @example
+ * ```
+ * node embedElement.js \
+ *    -d:./prototype.html \
+ *    -s:../lib/webScanner.html \
+ *    -o:../JavaScript/webScanner.html '[' \
+ *    '{from:"script.core",cmd:(o)=>o.classList.add("hoge"),to:"html",prepend:false},' \
+ *    ']'
+ * ```
+ * 
+ * - [JSDOMを利用し、HTML + JavaScriptのプログラムをNode.jsで動作させる](https://symfoware.blog.fc2.com/blog-entry-2685.html)
+ */
+
+function onNode(){
+  const v = {
+    fs: require('fs'),  // ファイル操作
+    lib:require('../lib/jsLib'),  // 自作ライブラリ
+  };
+  const { JSDOM } = require("jsdom");
 
   // 事前処理：引数チェック、既定値の設定
-  v.argv = v.analyzeArg();
-  if('stack' in v.argv) throw v.argv;
-  if( !('i' in v.argv.opt) ) throw new Error('入力ファイル指定がありません');
-  if( v.argv.val.length === 0 ) throw new Error('セレクタ指定がありません');
-  if( !('f' in v.argv) ) v.argv.f = 'text';
+  if('stack' in (v.argv = v.lib.analyzeArg())) throw v.argv;
+  if( !('d' in v.argv.opt) ) v.argv.opt.d = 'prototype.html';
+  if( !('o' in v.argv.opt) ) v.argv.opt.o = null;
+  //console.log(v.argv);
 
-  // ファイルの読み込み、embedElementの呼び出し
-  v.fs = require('fs');
-  v.content = v.fs.readFileSync(v.argv.opt.i,'utf-8');
-  v.rv = embedElement(v.content,v.argv.val);
-  if('stack' in v.rv) throw v.rv;
+  // 挿入先・挿入元・入力ファイルの読み込み、embedElementの呼び出し
+  v.dest = new JSDOM(v.fs.readFileSync(v.argv.opt.d,'utf-8')).window.document;  // 挿入先のファイル
+  console.log('l.111',whichType(v.dest),v.dest)
+  v.src = new JSDOM(v.fs.readFileSync(v.argv.opt.s,'utf-8')).window.document;  // 挿入元の要素を持つファイル
+  v.selectors = JSON.parse(v.argv.val.join(''));
+  //console.log('v.selectors='+whichType(v.selectors),v.selectors);
+  console.log('l.114',v.dest,'\n',JSON.stringify(v.dest.querySelector('html').attributes));
+  v.selectors.forEach(o => {
+    o.cmd = eval(o.cmd);  // cmdを関数化
+    o.prepend = o.prepend || false; // 既定値false
+  });
+  v.rv = embedElement(v.dest,v.src,v.selectors);
+  console.log('l.115',v.rv.innerHTML);
 
+  /*
+node embedElement.js -s:../JavaScript/webScanner.html \
+'[{"from":"style.webApp",' \
+'"cmd":"o=>{console.log(o.classList.value);o.classList.add(\"hoge\");console.log(o.classList.value);return o;}",' \
+'"to":"head"}]'
+
+node embedElement.js -s:../JavaScript/webScanner.html \
+'[{"from":"style.webApp",' \
+'"cmd":"(o)=>{return o.classList.add(\"hoge\");}",' \
+'"to":"head"}]'
+*/
+/*
   // 結果の書き出し
   if( v.argv.opt.f === 'j' ){
     v.result = JSON.stringify(v.rv);
@@ -117,11 +159,15 @@ function main(){
   } else {  // 出力ファイル指定が無ければコンソールに出力
     console.log(v.result);
   }
+  */
 }
 
-//main();
+onNode();
+
+/* requireTest -----------------------------
 (()=>{
   const v = {}
   v.lib = require('../lib/jsLib');
   console.log('requireTest',whichType(v));
 })()
+*/

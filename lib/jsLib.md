@@ -1,6 +1,6 @@
 # jsLib: HTMLまたはバッチ(Node.js)用ライブラリ
 
-<p style='text-align:right'>last update: 2023年 7月 3日 月曜日 18時36分54秒 JST</p>
+<p style='text-align:right'>last update: 2023年 7月 4日 火曜日 08時18分31秒 JST</p>
 
 アンダーバー('_')が含まれる関数名「XXX_yyy()」は、XXX型オブジェクトへのyyyメソッド追加を示す。
 
@@ -80,7 +80,7 @@
 
 | Param | Type | Description |
 | --- | --- | --- |
-| arg | <code>object</code> \| <code>HTMLDivElement</code> | HTMLDivElementなら親要素のみ指定と解釈 |
+| arg | <code>object</code> \| <code>HTMLElement</code> | HTMLElementなら親要素のみ指定と解釈 |
 | arg.parent | <code>object</code> | 親要素(DOM object) |
 | arg.interval | <code>number</code> | 動画状態で撮像、読み込めなかった場合の間隔。ミリ秒 |
 | arg.RegExp | <code>object</code> | QRコードスキャン時、内容が適切か判断 |
