@@ -60,6 +60,7 @@ function analyzeArg(){
     console.log('===== analyzeArg end.');
     return v.rv;
   } catch(e){
+    console.error('===== analyzeArg abnormal end.\n',e);
     // ブラウザで実行する場合はアラート表示
     if( typeof window !== 'undefined' ) alert(e.stack); 
     //throw e; //以降の処理を全て停止
