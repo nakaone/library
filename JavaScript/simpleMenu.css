@@ -8,26 +8,26 @@ html, body, div {
   z-index: 0; /* 敢えて指定 */
 }
 div.simpleMenu {
-  --header: 2rem; /* ヘッダの高さ(=メニューアイコンの大きさ) */
+  --header: 50px; /* ヘッダの高さ(=メニューアイコンの大きさ) */
+  --backColor: #bbb;
+  --textColor: #fff;
   grid-template-rows: var(--header) 1fr;
 }
 div.simpleMenu div[name="header"] {
-  background-color: #0f0;
   grid-template-columns: 1fr var(--header);
+  background-color: var(--backColor);
 }
 div.simpleMenu div[name="title"] {
   grid-column: 1/2;
   align-items: center;
-  padding-left: 1rem;
+  padding-left: calc(var(--header) * 0.5);
+  color: var(--textColor);
+  font-size: calc(var(--header) * 0.65);
+  font-weight: 900;
 }
 div.simpleMenu div[name="menuIcon"] {
   grid-column: 2/3;
   place-items: center;
-}
-div.simpleMenu div[name="main"] {
-  grid-row: 2/3;
-  padding: 0.5rem;
-  background-color: #bbb;
 }
 
 /* ハンバーガーアイコン */
@@ -37,11 +37,11 @@ div.simpleMenu div[name="main"] {
   margin: calc(var(--header) * 0.1);
   padding: 0px;
   box-sizing: border-box;
-  width: calc(var(--header) * 0.8);
-  height: calc(var(--header) * 0.8);
+  width: calc(var(--header) * 0.7);
+  height: calc(var(--header) * 0.7);
   border: none;
-  background: rgba(0,0,0,0);
-  z-index: 20; /* navより上の層に */
+  background: rgba(0,0,0,0);  /* 透明 */
+  z-index: 20; /* div[name="navi"]より上の層に */
   position: relative; /* 横棒の位置をtop/left指定可能に */
   /* 以下button標準無効化用 */
   box-shadow: none;
@@ -50,11 +50,11 @@ div.simpleMenu div[name="main"] {
 .simpleMenu div[name="menuIcon"] button span {
   display: block;
   width: 100%;
-  height: calc(var(--header) * 0.2);
-  border-radius: calc(var(--header) * 0.1);
+  height: calc(var(--header) * 0.12);
+  border-radius: calc(var(--header) * 0.06);
   position: absolute;
   left: 0;
-  background: #000;
+  background: var(--textColor);
   transition: top 0.24s, transform 0.24s, opacity 0.24s;
 }
 .simpleMenu div[name="menuIcon"] button span:nth-child(1) {
@@ -82,8 +82,8 @@ div.simpleMenu div[name="main"] {
   transform: translateY(-50%) rotate(-135deg);
 }
 
-/* .simpleMenu nav: ナビゲーション(メニュー)領域 ============== */
-.simpleMenu nav {
+/* .simpleMenu div[name="navi"]: ナビゲーション(メニュー)領域 ============== */
+.simpleMenu div[name="navi"] {
   background: rgba(100,100,100,0);
   color: rgba(255,255,255,0);
   /*opacity: 0;
@@ -91,14 +91,14 @@ div.simpleMenu div[name="main"] {
   transition: opacity 0.24s;
   z-index: -1;
 }
-.simpleMenu nav.is_active {
+.simpleMenu div[name="navi"].is_active {
   /*opacity: 1;
   pointer-events: auto;*/
   background: rgba(127,127,127,0.8);
   color: rgba(255,255,255,1);
   z-index: 10;
 }
-.simpleMenu nav ul {
+.simpleMenu div[name="navi"] ul {
   display: flex;
   flex-direction: column;
   /*padding-left: 0px;  行頭の記号・余白の幅 */
@@ -106,10 +106,10 @@ div.simpleMenu div[name="main"] {
   margin: 0px;
   padding: 0px 1rem;
 }
-.simpleMenu nav > ul:nth-child(1) {
+.simpleMenu div[name="navi"] > ul:nth-child(1) {
   margin-top: calc(70px + 1rem);
 }
-.simpleMenu nav li {
+.simpleMenu div[name="navi"] li {
   list-style-type: none;
   margin: 1rem 0px 0px 0px;
   padding: 0.5rem;
@@ -117,11 +117,11 @@ div.simpleMenu div[name="main"] {
   background: rgba(96,96,96,0.9);
   border: solid 1px white;
 }
-.simpleMenu nav li.open::before {
+.simpleMenu div[name="navi"] li.open::before {
   content: "▼";
   color: white;
 }
-.simpleMenu nav li.close::before {
+.simpleMenu div[name="navi"] li.close::before {
   content: "▶︎";
   color: white;
 }
@@ -132,9 +132,9 @@ div.simpleMenu div[name="main"] {
     <div class="loader">Loading...</div>
 */
 .simpleMenu div[name="loader"] {
-  color: #bbb;
+  color: var(--backColor);
   font-size: 20px;
-  margin: 100px auto;
+  margin: auto;
   width: 1em;
   height: 1em;
   border-radius: 50%;
