@@ -63,7 +63,7 @@ header=(
   "アンダーバー('_')が含まれる関数名「XXX_yyy()」は、XXX型オブジェクトへのyyyメソッド追加を示す。"
 )
 
-createLib webScanner analyzeArg analyzePath querySelector whichType Date.calc Date.toLocale
+createLib webScanner analyzeArg analyzePath mergeDeeply querySelector whichType Date.calc Date.toLocale
 
 # 参考 : UNIX & Linux コマンド・シェルスクリプト リファレンス
 # 引数を処理する

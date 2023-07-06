@@ -1,0 +1,111 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>mergeDeeply</title>
+</head>
+<body>
+  <div class="webApp">  <!-- mergeDeeply Webアプリ表示画面 -->
+    <h1>mergeDeeply</h1>
+    <form>
+      <input type="radio" onchange="webApp(true)">配列の要素を結合する
+      <input type="radio" onchange="webApp(false)" checked>配列の要素は結合しない
+    </form>
+    <div>json1:<br><textarea name="json1" onchange="webApp()"></textarea></div>
+    <div>json2:<br><textarea name="json2" onchange="webApp()"></textarea></div>
+    <div>result:<br><textarea name="result"></textarea></div>
+  </div>
+</body>
+<!--================================================
+  mergeDeeply コアスクリプト
+================================================-->
+<script type="text/javascript" class="core">
+/**
+ * @desc オブジェクトのプロパティを再帰的にマージ
+ * - Qiita [JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法](https://qiita.com/riversun/items/60307d58f9b2f461082a)
+ * 
+ * @param {Object} target - 結合対象のオブジェクト1
+ * @param {Object} source - 結合対象のオブジェクト2。同名のプロパティはこちらで上書き
+ * @param {Object} opts - オプション
+ * @param {boolean} [opts.concatArray=false] - プロパティの値が配列だった場合、結合するならtrue
+ * @returns {Object} 結合されたオブジェクト
+ */
+
+ function mergeDeeply(target, source, opts) {
+  const isObject = obj => obj && typeof obj === 'object' && !Array.isArray(obj);
+  const isConcatArray = opts && opts.concatArray;
+  let result = Object.assign({}, target);
+  if (isObject(target) && isObject(source)) {
+    for (const [sourceKey, sourceValue] of Object.entries(source)) {
+      const targetValue = target[sourceKey];
+      if (isConcatArray && Array.isArray(sourceValue) && Array.isArray(targetValue)) {
+        result[sourceKey] = targetValue.concat(...sourceValue);
+      }
+      else if (isObject(sourceValue) && target.hasOwnProperty(sourceKey)) {
+        result[sourceKey] = mergeDeeply(targetValue, sourceValue, opts);
+      }
+      else {
+        Object.assign(result, {[sourceKey]: sourceValue});
+      }
+    }
+  }
+  return result;
+}
+</script>
+
+<!--================================================
+  テスト関係(仕様書、スクリプト)
+================================================-->
+<script type="text/javascript" class="test">
+function mergeDeeplyTest(){
+  document.querySelector('div.webApp textarea[name="json1"]').value = JSON.stringify({
+    familyName: '織田',
+    firstName: '吉法師', 
+    address: '尾張', 
+    sex: '男',
+    details: {
+      character: {favoriteTactics: '奇襲', favoriteWord: '天下布武', favoritePlace: '京'},
+      ownedCastle: ['清洲城']
+    }
+  });
+  document.querySelector('div.webApp textarea[name="json2"]').value = JSON.stringify({
+    familyName: '織田',
+    firstName: '信長',
+    details: {
+      character: {favoriteTactics: '鉄砲活用'},
+      ownedCastle: ['岐阜城', '安土城']
+    }
+  });
+}
+</script>
+
+<!--================================================
+  Webアプリ
+================================================-->
+<script type="text/javascript" class="webApp">
+  function webApp(isConcat){
+    const v = {};
+    console.log('webApp start.');
+  
+    v.json1 = document.querySelector('div.webApp textarea[name="json1"]').value;
+    v.json2 = document.querySelector('div.webApp textarea[name="json2"]').value;
+    v.opt = {concatArray: isConcat || false};
+    if( v.json1.length > 0 && v.json2.length > 0 ){
+      document.querySelector('div.webApp textarea[name="result"]').value
+      = JSON.stringify(mergeDeeply(JSON.parse(v.json1),JSON.parse(v.json2),v.opt));
+    }
+  
+    console.log('webApp end.');
+  }
+  </script>
+  
+  <!--================================================
+  メイン処理
+================================================-->
+<script type="text/javascript" class="main">
+window.addEventListener('DOMContentLoaded',() => {
+  mergeDeeplyTest();  // テスト実行
+});
+</script>
+</html>

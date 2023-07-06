@@ -1,6 +1,6 @@
 # jsLib: HTMLまたはバッチ(Node.js)用ライブラリ
 
-<p style='text-align:right'>last update: 2023年 7月 4日 火曜日 08時18分31秒 JST</p>
+<p style='text-align:right'>last update: 2023年 7月 6日 木曜日 13時18分56秒 JST</p>
 
 アンダーバー('_')が含まれる関数名「XXX_yyy()」は、XXX型オブジェクトへのyyyメソッド追加を示す。
 
@@ -20,6 +20,12 @@
 </dd>
 <dt><a href="#analyzePath">analyzePath(arg)</a> ⇒ <code><a href="#AnalyzePath">AnalyzePath</a></code></dt>
 <dd><p>パス名文字列から構成要素を抽出</p>
+</dd>
+<dt><a href="#mergeDeeply">mergeDeeply(target, source, opts)</a> ⇒ <code>Object</code></dt>
+<dd><p>オブジェクトのプロパティを再帰的にマージ</p>
+<ul>
+<li>Qiita <a href="https://qiita.com/riversun/items/60307d58f9b2f461082a">JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法</a></li>
+</ul>
 </dd>
 <dt><a href="#querySelector">querySelector(content, selectors)</a> ⇒ <code><a href="#QuerySelector">Array.&lt;QuerySelector&gt;</a></code></dt>
 <dd><p>HTMLの指定CSSセレクタの内容を抽出</p>
@@ -290,6 +296,22 @@ node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
 }
 
 ```
+<a name="mergeDeeply"></a>
+
+## mergeDeeply(target, source, opts) ⇒ <code>Object</code>
+オブジェクトのプロパティを再帰的にマージ
+- Qiita [JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法](https://qiita.com/riversun/items/60307d58f9b2f461082a)
+
+**Kind**: global function  
+**Returns**: <code>Object</code> - 結合されたオブジェクト  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| target | <code>Object</code> |  | 結合対象のオブジェクト1 |
+| source | <code>Object</code> |  | 結合対象のオブジェクト2。同名のプロパティはこちらで上書き |
+| opts | <code>Object</code> |  | オプション |
+| [opts.concatArray] | <code>boolean</code> | <code>false</code> | プロパティの値が配列だった場合、結合するならtrue |
+
 <a name="querySelector"></a>
 
 ## querySelector(content, selectors) ⇒ [<code>Array.&lt;QuerySelector&gt;</code>](#QuerySelector)
