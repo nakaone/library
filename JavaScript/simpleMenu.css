@@ -1,0 +1,202 @@
+html, body, div {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: grid;
+  z-index: 0; /* 敢えて指定 */
+}
+div.simpleMenu {
+  --header: 2rem; /* ヘッダの高さ(=メニューアイコンの大きさ) */
+  grid-template-rows: var(--header) 1fr;
+}
+div.simpleMenu div[name="header"] {
+  background-color: #0f0;
+  grid-template-columns: 1fr var(--header);
+}
+div.simpleMenu div[name="title"] {
+  grid-column: 1/2;
+  align-items: center;
+  padding-left: 1rem;
+}
+div.simpleMenu div[name="menuIcon"] {
+  grid-column: 2/3;
+  place-items: center;
+}
+div.simpleMenu div[name="main"] {
+  grid-row: 2/3;
+  padding: 0.5rem;
+  background-color: #bbb;
+}
+
+/* ハンバーガーアイコン */
+.simpleMenu div[name="menuIcon"] button {
+  place-content: center center;
+  display: block;
+  margin: calc(var(--header) * 0.1);
+  padding: 0px;
+  box-sizing: border-box;
+  width: calc(var(--header) * 0.8);
+  height: calc(var(--header) * 0.8);
+  border: none;
+  background: rgba(0,0,0,0);
+  z-index: 20; /* navより上の層に */
+  position: relative; /* 横棒の位置をtop/left指定可能に */
+  /* 以下button標準無効化用 */
+  box-shadow: none;
+}
+
+.simpleMenu div[name="menuIcon"] button span {
+  display: block;
+  width: 100%;
+  height: calc(var(--header) * 0.2);
+  border-radius: calc(var(--header) * 0.1);
+  position: absolute;
+  left: 0;
+  background: #000;
+  transition: top 0.24s, transform 0.24s, opacity 0.24s;
+}
+.simpleMenu div[name="menuIcon"] button span:nth-child(1) {
+  top: 0;
+}
+.simpleMenu div[name="menuIcon"] button span:nth-child(2) {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.simpleMenu div[name="menuIcon"] button span:nth-child(3) {
+  top: 100%;
+  transform: translateY(-100%);
+}
+
+.simpleMenu div[name="menuIcon"] button span.is_active:nth-child(1) {
+  top: 50%;
+  transform: translateY(-50%) rotate(135deg);
+}
+.simpleMenu div[name="menuIcon"] button span.is_active:nth-child(2) {
+  transform: translate(50%, -50%);
+  opacity: 0;
+}
+.simpleMenu div[name="menuIcon"] button span.is_active:nth-child(3) {
+  top: 50%;
+  transform: translateY(-50%) rotate(-135deg);
+}
+
+/* .simpleMenu nav: ナビゲーション(メニュー)領域 ============== */
+.simpleMenu nav {
+  background: rgba(100,100,100,0);
+  color: rgba(255,255,255,0);
+  /*opacity: 0;
+  pointer-events: none;*/
+  transition: opacity 0.24s;
+  z-index: -1;
+}
+.simpleMenu nav.is_active {
+  /*opacity: 1;
+  pointer-events: auto;*/
+  background: rgba(127,127,127,0.8);
+  color: rgba(255,255,255,1);
+  z-index: 10;
+}
+.simpleMenu nav ul {
+  display: flex;
+  flex-direction: column;
+  /*padding-left: 0px;  行頭の記号・余白の幅 */
+  width: 100%;
+  margin: 0px;
+  padding: 0px 1rem;
+}
+.simpleMenu nav > ul:nth-child(1) {
+  margin-top: calc(70px + 1rem);
+}
+.simpleMenu nav li {
+  list-style-type: none;
+  margin: 1rem 0px 0px 0px;
+  padding: 0.5rem;
+  width: calc(100% - 2rem);
+  background: rgba(96,96,96,0.9);
+  border: solid 1px white;
+}
+.simpleMenu nav li.open::before {
+  content: "▼";
+  color: white;
+}
+.simpleMenu nav li.close::before {
+  content: "▶︎";
+  color: white;
+}
+
+/*
+  Loading Image
+    https://projects.lukehaas.me/css-loaders/
+    <div class="loader">Loading...</div>
+*/
+.simpleMenu div[name="loader"] {
+  color: #bbb;
+  font-size: 20px;
+  margin: 100px auto;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  position: relative;
+  text-indent: -9999em;
+  -webkit-animation: load4 1.3s infinite linear;
+  animation: load4 1.3s infinite linear;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+}
+@-webkit-keyframes load4 {
+  0%,
+  100% {
+    box-shadow: 0 -3em 0 0.2em, 2em -2em 0 0em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 0;
+  }
+  12.5% {
+    box-shadow: 0 -3em 0 0, 2em -2em 0 0.2em, 3em 0 0 0, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
+  }
+  25% {
+    box-shadow: 0 -3em 0 -0.5em, 2em -2em 0 0, 3em 0 0 0.2em, 2em 2em 0 0, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
+  }
+  37.5% {
+    box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 0, 2em 2em 0 0.2em, 0 3em 0 0em, -2em 2em 0 -1em, -3em 0em 0 -1em, -2em -2em 0 -1em;
+  }
+  50% {
+    box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 0em, 0 3em 0 0.2em, -2em 2em 0 0, -3em 0em 0 -1em, -2em -2em 0 -1em;
+  }
+  62.5% {
+    box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 0, -2em 2em 0 0.2em, -3em 0 0 0, -2em -2em 0 -1em;
+  }
+  75% {
+    box-shadow: 0em -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0.2em, -2em -2em 0 0;
+  }
+  87.5% {
+    box-shadow: 0em -3em 0 0, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0, -2em -2em 0 0.2em;
+  }
+}
+@keyframes load4 {
+  0%,
+  100% {
+    box-shadow: 0 -3em 0 0.2em, 2em -2em 0 0em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 0;
+  }
+  12.5% {
+    box-shadow: 0 -3em 0 0, 2em -2em 0 0.2em, 3em 0 0 0, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
+  }
+  25% {
+    box-shadow: 0 -3em 0 -0.5em, 2em -2em 0 0, 3em 0 0 0.2em, 2em 2em 0 0, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
+  }
+  37.5% {
+    box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 0, 2em 2em 0 0.2em, 0 3em 0 0em, -2em 2em 0 -1em, -3em 0em 0 -1em, -2em -2em 0 -1em;
+  }
+  50% {
+    box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 0em, 0 3em 0 0.2em, -2em 2em 0 0, -3em 0em 0 -1em, -2em -2em 0 -1em;
+  }
+  62.5% {
+    box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 0, -2em 2em 0 0.2em, -3em 0 0 0, -2em -2em 0 -1em;
+  }
+  75% {
+    box-shadow: 0em -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0.2em, -2em -2em 0 0;
+  }
+  87.5% {
+    box-shadow: 0em -3em 0 0, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0, -2em -2em 0 0.2em;
+  }
+}

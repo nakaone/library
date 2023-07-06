@@ -1,0 +1,74 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja">
+<!-- 本ページは`/GitHub/EventStaff/r144/pages/menu.html`を継承したものです -->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>simpleMenu</title>
+  <link rel="stylesheet" href="../CSS/szDefault.css" />
+  <link rel="stylesheet" href="simpleMenu.css" />
+</head>
+<body>
+  <div class="webApp simpleMenu">
+    <div name="header">
+      <div name="title">なまえ</div>
+      <div name="menuIcon">
+        <button onclick="simpleMenu.toggle()">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>    
+      </div>
+    </div>
+    <nav></nav>
+
+    <div name="loader"></div>
+    
+    <div name="home">
+      <h1>ホーム画面</h1>
+    </div>
+    <div name="menu01"><h1>Menu01</h1></div>
+    <div name="menu02"><h1>Menu02</h1></div>
+  </div>
+
+<!--================================================
+  外部スクリプト
+================================================-->
+<script src="../lib/jsLib.js"></script>
+
+<!--================================================
+  simpleMenu コアスクリプト
+================================================-->
+<script src="simpleMenu.js"></script>
+
+<!--================================================
+  Webアプリ
+================================================-->
+<script type="text/javascript" class="webApp">
+function webApp(){
+  const v = {};
+  console.log('webApp start.');
+
+
+  console.log('webApp end.');
+}
+</script>
+
+<script type="text/javascript" class="test">
+function simpleMenuTest(){
+  const content = document.querySelector('html').innerHTML;
+  //console.log(content);
+  //const result = simpleMenu(content,'script[src]');
+  const result = simpleMenu(content,'script.main');
+  console.log(result);
+}
+</script>
+
+<!--================================================
+  メイン処理
+================================================-->
+<script type="text/javascript" class="main">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+});
+</script>
+</body>
+</html>
