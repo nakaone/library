@@ -7,25 +7,19 @@
   <link rel="stylesheet" href="simpleMenu.css" />
 </head>
 <body>
-  <div class="webApp simpleMenu">
-    <div name="header">
-      <div name="title">なまえ</div>
-      <div name="menuIcon">
-        <button onclick="simpleMenu.toggle()">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>    
-      </div>
+  <div class="simpleMenu">
+    <div class="Title"></div>
+    <div class="Navicon" onclick="simpleMenu.toggle()">
+      <button>
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
-    <div name="navi" style="display:none" class=""><ul>
-      <li>menu1</li>
-      <li>menu2</li>
-      <li>menu3</li>
-    </ul></div>
-    <div name="loader"></div>
+    <div class="Navi"><div><ul></ul></div></div>
+    <div class="NaviBack" onclick="simpleMenu.toggle()"><div></div></div>
+    <div class="loading"><div></div></div>
   </div>
-
   <!-- 以下テスト画面 -->
   <div name="home"><h1>ホーム画面</h1></div>
   <div name="messageBoard"><h1>messageBoard</h1></div>
@@ -38,6 +32,7 @@
   <div name="timetable"><h1>timetable</h1></div>
   <div name="menu01"><h1>Menu01</h1></div>
   <div name="menu02"><h1>Menu02</h1></div>
+
 
 <!--================================================
   外部スクリプト
@@ -72,9 +67,17 @@ const applicationQR = () => {
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
   const menu = new simpleMenu({
+    Title: `
+      <div style="display:grid;grid-template-rows:15px 1fr;grid-template-columns:50px 1fr;">
+        <div style="grid-row:1/3;grid-column:1/2;place-items:center;">
+          <img src="/Users/ena.kaon/Desktop/GitHub/EventStaff/r144/img/stamp.png" width="40px" height="40px" />
+        </div>
+        <div style="grid-row:1/2;grid-column:2/3;font-size:10px;">下北沢小おやじの会</div>
+        <div style="grid-row:2/3;grid-column:2/3;font-size:22px;">校庭デイキャンプ2023</div>
+      </div>`,
     menu:[
-      {"id":"messageBoard","label":"お知らせ","authority":3,"func":messageBoard},
-      {"id":"reception","label":"参加者検索","authority":2,"func":()=>{console.log('function reception.')}},
+      {"id":"messageBoard","label":"お知らせ","authority":3,"func":"console.log('function messageBoard.');simpleMenu.changeScreen('messageBoard')"},
+      {"id":"reception","label":"参加者検索","authority":2,"func":"()=>{console.log('function reception.')}"},
       {"id":"applicationQR","label":"当日参加(スマホ有)","authority":2,"func":applicationQR},
       {"id":"paperForm","label":"当日参加(申請用紙)","authority":2,"func":"paperForm"},
       {"id":"entryNo","label":"受付番号表示","authority":1,"func":"entryNo"},
@@ -90,6 +93,17 @@ window.addEventListener('DOMContentLoaded',() => {
       {"id":"youtube","label":"ライブ配信(テスト)","authority":3},
       {"id":"system","label":"システム設定","authority":3,"func":"system"},
     ],
+    style: {  // CSS styleを部分的に変更
+      "body": { // ラベルはCSSセレクタ
+        "--simpleMenuHeaderHeight": "50px",
+        // 頭が"--"のラベルは変数を示す。`element.style.setProperty(ラベル,値)`で処理。
+      },
+      "body > div:not(.simpleMenu)": { // ラベルはCSSセレクタ
+        "padding": "1rem",
+        // 頭が"--"以外はJavaScriptで処理する場合のプロパティ名。必ずしもCSSとは一致しない(ex.zIndex≠z-index)
+        // `element.style[ラベル]=値`で処理する。
+      }
+    }
   });
 });
 </script>

@@ -4,12 +4,12 @@ class simpleMenu {
     console.log('----- simpleMenu.constructor start.');
     const v = {};
     try {
-      this.changeScreen('loader');
       this.conf = this.#setDefault(conf);
-      console.log('l.10',v.conf);
-      //this.#setStyle();
+      this.#setStyle();
+      simpleMenu.setTitle(this.conf.Title);
+      this.#setMenu(document.querySelector('.simpleMenu .Navi div ul'),this.conf.menu);
 
-      this.changeScreen('home');
+      simpleMenu.changeScreen('home');
       console.log('----- simpleMenu.constructor end.');
     } catch(e){
       console.error('----- simpleMenu.constructor abnormal end.\n',e);
@@ -22,9 +22,11 @@ class simpleMenu {
 
   }
 
+  /** オブジェクトの構造が複雑なため、constructorから分離 */
   #setDefault(conf){
-    console.log('----- simpleMenu.setDefault.');
-    return mergeDeeply({
+    const rv = mergeDeeply({
+      Title: '(未設定)',
+      authority: null,  // 全メニューを表示
       style: {
         header: { // querySelector(.simpleMenu div[name="header"])
           backgroundColor: "#81d8d0", // Element.style.xxx。xxxはJavaScriptで指定する場合の名称
@@ -33,7 +35,7 @@ class simpleMenu {
           fontWeight: 900,  // 文字の太さ
           zIndex: 1,
         },
-        menuIcon: {
+        Navicon: {
           backgroundColor: "#5bb3b5",  // ハンバーガーメニューの色
         },
         navi: {
@@ -47,46 +49,104 @@ class simpleMenu {
         innerHTML: null,  // <img><span>等、htmlで指定の場合使用
       },
     },conf);
+    console.log('----- simpleMenu.setDefault.\n',rv);
+    return rv;
+  }
+
+  #setMenu(parent,list){
+    const v = {};
+    for( v.o of list ){
+      console.log('l.59',v.o);
+
+      // authority指定のないメニュー項目、または権限がない場合はスキップ
+      if( !('authority' in v.o) 
+      || this.conf.authority !== null && (this.conf.authority & v.o.authority) === 0
+      ) continue;
+
+      v.li = document.createElement('li');
+      v.li.textContent = v.o.label;
+
+      if( 'children' in v.o ){
+        v.p = document.createElement('ul');
+        this.#setMenu(v.p,v.o.children);
+        v.li.appendChild(v.p);
+      } else {
+        console.log('l.74',v.o);
+        if( 'href' in v.o ){
+          console.log('l.76',v.o.href)
+          v.func = new Function('window.open("'+v.o.href+'")');
+        } else {
+          v.func = new Function(`
+          // メニューを非表示
+          document.querySelector('.simpleMenu .Navi div').classList.remove('is_active');
+          document.querySelector('.simpleMenu .NaviBack div').classList.remove('is_active');
+          document.querySelectorAll('.simpleMenu .Navicon button span')
+          .forEach(x => x.classList.remove("is_active"));
+
+          // loading画面を表示
+          simpleMenu.changeScreen('loading');
+
+          // 指定された処理を実行
+          `+v.o.func);
+        }
+        v.li.addEventListener('click',v.func);
+      }
+      parent.appendChild(v.li);
+    }
   }
 
   #setStyle(){
     const v = {};
-    for( v.x in this.conf.style ){
-      v.o = document.querySelector('.simpleMenu div[name="'+v.x+'"]');
-      for( v.y in this.conf.style[v.x] ){
-        console.log('l.57: '+v.x+'.'+v.y+' = '+this.conf.style[v.x][v.y]);
-        v.o.style[v.y] = this.conf.style[v.x][v.y];
+    for( v.sel in this.conf.style ){
+      v.elements = document.querySelectorAll(v.sel);
+      for( v.element of v.elements ){
+        for( v.prop in this.conf.style[v.sel] ){
+          if( v.prop.match(/^--/) ){
+            // CSS変数の設定
+            v.element.style.setProperty(v.prop,this.conf.style[v.sel][v.prop]);
+          } else {
+            // CSS変数以外の設定
+            v.element.style[v.prop] = this.conf.style[v.sel][v.prop];
+          }
+        }
       }
     }
   }
 
-  static toggle(){
-    const v = {toggleView: (element,force) => {
-      console.log('toggleView classList="'+element.classList.value+'", force='+force);
-      const f = typeof force === 'boolean' ? force : ( element.style.display === 'none' ? true : false);
-      element.style.display = f ? '' : 'none';
-    }};
-
-    console.log('simpleMenu toggle start.');
-    document.querySelectorAll('button span').forEach(x => {
-      x.classList.toggle("is_active");
-    });
-    v.navi = document.querySelector('.simpleMenu div[name="navi"]')
-    v.navi.classList.toggle("is_active");
-    v.toggleView(v.navi);
+  static setTitle(title){
+    document.querySelector('.simpleMenu .Title').innerHTML = title;
   }
 
-  changeScreen(scrId='loader'){
+  static toggle(){
+    document.querySelector('.simpleMenu .Navi div').classList.toggle("is_active");
+    document.querySelector('.simpleMenu .NaviBack div').classList.toggle("is_active");
+    document.querySelectorAll('.simpleMenu .Navicon button span')
+    .forEach(x => x.classList.toggle("is_active"));
+  }
+
+  static changeScreen(scrId='loading'){
     console.log('----- simpleMenu.changeScreen start.\nscrId="'+scrId+'"');
     const v = {};
-    // 指定scrIdとヘッダ以外を非表示
-    document.querySelectorAll('body > div[name]').forEach(x => {
-      v.name = x.getAttribute('name');
-      x.style.display = (v.name === scrId || v.name === 'header' ) ? '' : 'none';
-      //console.log('l.85',x,x.style.display);
-    });
+
+    if( scrId === 'loading' ){
+      document.querySelectorAll('body > div:not(.simpleMenu)').forEach(x => x.style.display = 'none');
+      // 待機画面を表示
+      document.querySelector('.simpleMenu .loading').style.display = '';
+    } else {
+      // 指定画面を表示、それ以外は非表示
+      document.querySelectorAll('body > div:not(.simpleMenu)').forEach(x => {
+        v.name = x.getAttribute('name');
+        x.style.display = v.name === scrId ? '' : 'none';
+      });
+      // 待機画面を非表示
+      document.querySelector('.simpleMenu .loading').style.display = 'none';
+    }
+
     // メニューを非表示
-    document.querySelector('.simpleMenu div[name="navi"]').style.display = 'none';
-    console.log('----- simpleMenu.changeScreen end.');
+    document.querySelector('.simpleMenu .Navi div').classList.remove('is_active');
+    document.querySelector('.simpleMenu .NaviBack div').classList.remove('is_active');
+    document.querySelectorAll('.simpleMenu .Navicon button span')
+    .forEach(x => x.classList.remove("is_active"));
+    //console.log('----- simpleMenu.changeScreen end.');
   }
 }
