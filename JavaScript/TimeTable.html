@@ -6,6 +6,7 @@
   <title>timetable</title>
   <link rel="stylesheet" href="../CSS/szDefault.css" />
   <style type="text/css" class="core">
+    .right {text-align: right;}
     .image, .timetable {
       max-width: 100%;
       overflow: scroll;
@@ -88,6 +89,9 @@
       margin-top: 1rem;
       display: none;
     }
+    .timetable .dialog div {
+      padding: 0.5rem;
+    }
     .timetable .dialog input[type="text"] {
       width: 10rem;
     }
@@ -143,6 +147,22 @@
         <div name="fixed">
           <div>担当者<br><sub>(','区切り)</sub></div>
           <textarea class="val"></textarea>
+        </div>
+        <div name="resources">
+          <div>所要資材</div>
+          <table>
+            <thead>
+              <tr>
+                <th>名称</th>
+                <th>数量</th>
+                <th>単位</th>
+                <th>調達方法</th>
+                <th>予算</th>
+                <th>備考</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
         <div name="location">
           <div>作業場所</div>
@@ -447,6 +467,23 @@ class TimeTable {
       }
     });
 
+    // 物的資源(不定繰返)
+    if( 'resources' in v.task ){
+      v.resourcesElement = v.dialogElement.querySelector('[name="resources"] tbody');
+      v.resourcesElement.innerHTML = '';
+      v.str = '';
+      v.task.resources.forEach(x => {
+        v.str += '<tr>'
+          + '<td>' + x.name + '</td>'
+          + '<td class="right">' + x.quantity + '</td>'
+          + '<td>' + x.unit + '</td>'
+          + '<td>' + x.procurement + '</td>'
+          + '<td class="right">' + x.budget + '</td>'
+          + '<td>' + x.note + '</td>'
+          + '</tr>';
+      });
+      v.resourcesElement.innerHTML = v.str;
+    }
     v.dialogElement.style.display = 'grid';
 
   }
