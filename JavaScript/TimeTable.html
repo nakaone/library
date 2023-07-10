@@ -23,6 +23,7 @@
     }
     .timetable span {
       padding-left: 0.3rem;
+      white-space: nowrap;
     }
     /*.timetable .controller {}*/
     .timetable .main {
@@ -126,8 +127,8 @@
 
 <!--================================================
   外部スクリプト
-================================================-->
 <script src="../lib/jsLib.js"></script>
+================================================-->
 
 <!--================================================
   timetable コアスクリプト
@@ -175,6 +176,164 @@
  * 
  */
 
+/**
+ * @classdesc HTMLにタイムテーブルを描画する
+ */
+
+class TimeTable {
+
+  /**
+   * @constructor
+   */
+  constructor(id){
+    console.log('----- TimeTable.constructor start. id='+id);
+    const v = {};
+    this.id = id;
+    v.data = localStorage.getItem(id);
+    this.data = v.data ? JSON.parse(v.data) : {};
+    this.minTime = Infinity; // task.startの最小値。UNIX時刻
+    this.maxTime = -Infinity;
+    this.startHour = Infinity; // minTime以下の正時となるUNIX時刻。表示領域の左端
+    this.endHour = -Infinity;  // maxTime以上の正時となるUNIX時刻。表示領域の右端
+    this.numHour = 0;          // startHour〜endHourまでの時間数    console.log(this.data);
+    this.rootElement = document.querySelector('.timetable[name="'+id+'"]');
+    this.draw();
+  }
+
+  /** 要素にスタイルを設定する
+   * @param {Object} arg
+   * @param {string} arg.apply - 適用するスタイル名
+   * @param {Object.<string>:<string>} arg.addition - 追加適用する属性名：属性値
+   * @returns {void}
+   */
+  applyStyle(arg){
+    // apply,additionの既定値設定
+    const v = Object.assign({apply:'default',addition:{}},arg);
+    // 適用するスタイルのオブジェクトを作成
+    v.style = Object.assign(this.data.design[v.apply],v.addition);
+    for( let a in v.style ){
+      arg.element.style[a] = v.style[a];
+    }
+  }
+
+  /** DIV要素を生成、属性を指定する
+   * @param {string} tag='div' - タグ名
+   * @param {string} [text] - 生成された要素のinnerHTML
+   * @param {Object.<string>:<string>} xxx - 生成された要素に設定するスタイルシート属性名：属性値
+   */
+  createElement(arg={}){
+    let rv = document.createElement(('tag' in arg) ? arg.tag : 'div');
+    for( let x in arg ){
+      switch(x) {
+        case 'tag': break;
+        case 'text': rv.innerHTML = arg.text; break;
+        default: rv.setAttribute(x,arg[x]);
+      }
+    }
+    return rv;
+  }
+  
+  /** タイムテーブルを(再)描画する */
+  draw(){
+    const v = {};
+    // 描画範囲を計算
+    this.timeRange(this.data.tasks);  // minTime, v.maxTimeの取得
+    this.startHour = Math.floor(this.minTime / 3600000) * 3600000;
+    this.endHour = Math.ceil(this.maxTime / 3600000) * 3600000;
+
+    // 1.controllerの要素を作成
+
+    // 2.mainの要素を作成
+
+    // 2.1.main.headerの要素を作成
+    v.headerElement = this.rootElement.querySelector('.main .header');
+    for( v.i=this.startHour ; v.i<=this.endHour ; v.i+=3600000 ){
+      v.o = this.createElement();
+      v.o.innerText = new Date(v.i).getHours() + ':00';
+      v.headerElement.appendChild(v.o);
+      this.numHour++;
+    }
+    v.headerElement.style.gridTemplateColumns = 'repeat('+this.numHour+', 1fr)';
+    
+    // 2.2.main.timelineの要素を作成
+    v.timelineElement = this.rootElement.querySelector('.main .timeline');
+    v.timelineElement.innerHTML = '<div></div>'.repeat(this.numHour*4);
+    v.timelineElement.style.gridTemplateColumns = 'repeat('+(this.numHour*4)+', 1fr)';
+
+    // 2.2.main.tasksの要素を作成
+    v.tasksElement = this.rootElement.querySelector('.main .tasks');
+    for( let i=0 ; i<this.data.tasks.length ; i++ ){
+      this.appendTask(this.data.tasks[i],'',i);
+    }
+
+    // 3.dialogの要素を作成
+
+  }
+
+  /** div.tasks領域にタスク(単体)を追加する
+   * (本関数はdrawから呼ばれるプライベート関数)
+   */
+  appendTask(task,pId,seq){ // ガントチャートの作成
+    const v = {
+      tasksElement: this.rootElement.querySelector('.main .tasks'),
+    };
+    // taskのIDを採番、マップに追加
+    task.id = pId + (seq+1) + '.';
+    this.data.map[task.id] = task;
+
+    if( 'children' in task ){
+      // ラベル行：labelをtasksに追加
+      v.labelElement = this.createElement({class:'label'});
+      v.labelElement.appendChild(this.createElement({tag:'span',text:task.id+task.label}));
+      v.tasksElement.appendChild(v.labelElement);
+      for( let i=0 ; i<task.children.length ; i++ ){
+        this.appendTask(task.children[i],task.id,i);
+      }
+    } else {
+      // タスク：barをtasksに追加
+      v.barElement = this.createElement({class:'bar'});
+      v.barElement.style.gridTemplateColumns = 'repeat('+(this.numHour*12)+', 1fr)';
+      // barSpan: 棒状の部分
+      v.barSpan = this.createElement({tag:'span',name:task.id,text:task.label});
+      v.barStart = ((new Date(task.start).getTime()) - this.startHour) / (this.data.unit*60000) + 1;
+      v.barEnd = ((new Date(task.end).getTime()) - this.startHour) / (this.data.unit*60000) + 1;
+      this.applyStyle({
+        element: v.barSpan,
+        apply: task.style,
+        addition: {gridColumn:v.barStart + '/' + v.barEnd},
+      });
+      v.barSpan.onclick = () => this.showDetail(task.id);
+      v.barElement.appendChild(v.barSpan);
+      v.tasksElement.appendChild(v.barElement);
+    }
+  }
+
+  showDetail(id){
+    console.log('showDetail: '+id);
+  }
+
+  /** v.minTime, v.maxTimeの取得 */
+  timeRange(tasks){
+    const v = {};
+    for( let task of tasks ){
+      if( 'children' in task ){
+        this.timeRange(task.children);
+      } else {
+        v.st = new Date(task.start).getTime();
+        v.ed = new Date(task.end).getTime();
+        if( this.minTime > v.st ) this.minTime = v.st;
+        if( this.maxTime < v.ed ) this.maxTime = v.ed;
+      }
+    }
+  }
+}
+
+</script>
+
+<!--================================================
+  テスト
+================================================-->
+<script type="text/javascript" class="test">
 const ttData = {
   unit: 5,
   map: {},
@@ -239,147 +398,9 @@ const ttData = {
   }]
 };
 
-function timetable(timetableElement,timetableData){
-  const v = {
-    minTime: Infinity, // task.startの最小値。UNIX時刻
-    maxTime: -Infinity,
-    startHour: Infinity, // minTime以下の正時となるUNIX時刻。表示領域の左端
-    endHour: -Infinity,  // maxTime以上の正時となるUNIX時刻。表示領域の右端
-    numHour: 0,          // startHour〜endHourまでの時間数
-    createElement: (arg={}) => { // DIV要素を生成、属性を指定する
-      let rv = document.createElement(('tag' in arg) ? arg.tag : 'div');
-      for( let x in arg ){
-        switch(x) {
-          case 'tag': break;
-          case 'text': rv.innerHTML = arg.text; break;
-          default: rv.setAttribute(x,arg[x]);
-        }
-      }
-      return rv;
-    },
-    timeRange: (dArray) => {  // v.minTime, v.maxTimeの取得
-      for( let task of dArray ){
-        if( 'children' in task ){
-          v.timeRange(task.children);
-        } else {
-          v.st = new Date(task.start).getTime();
-          v.ed = new Date(task.end).getTime();
-          if( v.minTime > v.st ) v.minTime = v.st;
-          if( v.maxTime < v.ed ) v.maxTime = v.ed;
-        }
-      }
-    },
-    applyStyle: (arg) => {
-      // apply,additionの既定値設定
-      const w = Object.assign({apply:'default',addition:{}},arg);
-      // 適用するスタイルのオブジェクトを作成
-      w.style = Object.assign(timetableData.design[w.apply],w.addition);
-      for( let a in w.style ){
-        arg.element.style[a] = w.style[a];
-      }
-    },
-    appendTask: (task,pId,seq) => { // ガントチャートの作成
-      task.id = pId + (seq+1) + '.';
-      timetableData.map[task.id] = task;
-      if( 'children' in task ){
-        // ラベル行：labelをtasksに追加
-        v.labelElement = v.createElement({class:'label'});
-        v.labelElement.appendChild(v.createElement({tag:'span',text:task.id+task.label}));
-        v.tasksElement.appendChild(v.labelElement);
-        for( let i=0 ; i<task.children.length ; i++ ){
-          v.appendTask(task.children[i],task.id,i);
-        }
-      } else {
-        // タスク：barをtasksに追加
-        v.barElement = v.createElement({class:'bar'});
-        v.barElement.style.gridTemplateColumns = 'repeat('+(v.numHour*12)+', 1fr)';
-        // barSpan: 棒状の部分
-        v.barSpan = v.createElement({tag:'span',name:task.id,text:task.label});
-        v.barStart = ((new Date(task.start).getTime()) - v.startHour) / (timetableData.unit*60000) + 1;
-        v.barEnd = ((new Date(task.end).getTime()) - v.startHour) / (timetableData.unit*60000) + 1;
-        v.applyStyle({
-          element: v.barSpan,
-          apply: task.style,
-          addition: {gridColumn:v.barStart + '/' + v.barEnd},
-        });
-        //v.barSpan.addEventListener('click',v.showDetail(task.id));
-        v.barSpan.onclick = () => v.showDetail(task.id);
-        //v.barSpan.style.gridColumn = v.barStart + '/' + v.barEnd;
-        v.barElement.appendChild(v.barSpan);
-        v.tasksElement.appendChild(v.barElement);
-      }
-    },
-    showDetail: (id) => {
-      console.log('showDetail: '+id);
-    }
-  };
-
-  // 事前準備
-  v.timeRange(timetableData.tasks);
-  v.startHour = Math.floor(v.minTime / 3600000) * 3600000;
-  v.endHour = Math.ceil(v.maxTime / 3600000) * 3600000;
-  /*console.log(new Date(v.minTime));
-  console.log(new Date(v.maxTime));
-  console.log(new Date(v.startHour));
-  console.log(new Date(v.endHour));*/
-
-  // 1.controllerの要素を作成
-
-  // 2.mainの要素を作成
-
-  // 2.1.main.headerの要素を作成
-  v.headerElement = document.querySelector('.timetable .main .header');
-  for( v.i=v.startHour ; v.i<=v.endHour ; v.i+=3600000 ){
-    v.o = v.createElement();
-    v.o.innerText = new Date(v.i).getHours() + ':00';
-    v.headerElement.appendChild(v.o);
-    v.numHour++;
-  }
-  v.headerElement.style.gridTemplateColumns = 'repeat('+v.numHour+', 1fr)';
-  
-  // 2.2.main.timelineの要素を作成
-  v.timelineElement = document.querySelector('.timetable .main .timeline');
-  v.timelineElement.innerHTML = '<div></div>'.repeat(v.numHour*4);
-  v.timelineElement.style.gridTemplateColumns = 'repeat('+(v.numHour*4)+', 1fr)';
-
-  // 2.2.main.tasksの要素を作成
-  v.tasksElement = document.querySelector('.timetable .main .tasks');
-  for( let i=0 ; i<timetableData.tasks.length ; i++ ){
-    v.appendTask(timetableData.tasks[i],'',i);
-  }
-
-  // 3.dialogの要素を作成
-
-}
-</script>
-
-<!--================================================
-  Webアプリ
-================================================-->
-<script type="text/javascript" class="webApp">
-function webApp(){
-  const v = {};
-  console.log('webApp start.');
-
-  v.selector = document.querySelector('div.webApp input[name="selector"]').value;
-  v.html = document.querySelector('div.webApp textarea[name="html"]').value;
-
-  if( v.selector.length > 0 && v.html.length > 0 ){
-    document.querySelector('div.webApp textarea[name="result"]').value
-    = JSON.stringify(querySelector(v.html,v.selector));
-  }
-
-  console.log('webApp end.');
-}
-</script>
-
-<script type="text/javascript" class="test">
-function timetableTest(){
-  const content = document.querySelector('html').innerHTML;
-  //console.log(content);
-  //const result = timetable(content,'script[src]');
-  const result = timetable(content,'script.main');
-  console.log(result);
+// テストデータのセット
+if( !localStorage.getItem('tt01') ){
+  localStorage.setItem('tt01',JSON.stringify(ttData));
 }
 </script>
 
@@ -387,8 +408,10 @@ function timetableTest(){
   メイン処理
 ================================================-->
 <script type="text/javascript" class="main">
-console.log('timetable test start.');
-timetable(document.querySelector('div.timetable[name="tt01"]'),ttData);
+window.addEventListener('DOMContentLoaded',() => {
+  console.log('timetable test start.');
+  const tt01 = new TimeTable('tt01');
+});
 </script>
 </body>
 </html>
