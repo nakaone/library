@@ -136,6 +136,14 @@
           <div>終了日時</div>
           <input type="text" class="val" />
         </div>
+        <div name="ideal">
+          <div>所要人数</div>
+          <input type="text" class="val" />
+        </div>
+        <div name="fixed">
+          <div>担当者<br><sub>(','区切り)</sub></div>
+          <textarea class="val"></textarea>
+        </div>
         <div name="location">
           <div>作業場所</div>
           <input type="text" class="val" />
@@ -370,9 +378,24 @@ class TimeTable {
       element: this.rootElement.querySelector('.dialog [name="'+prop+'"] .val'),
       old: taskObj[prop],
     };
-    v.new = !( prop === 'start' || prop === 'end' ) ? v.element.value
-    : new Date(v.element.value).getTime();
-    taskObj[prop] = v.new;
+    switch(prop){
+      case 'start':
+      case 'end':
+        v.new = new Date(v.element.value).getTime();
+        taskObj[prop] = v.new;
+        break;
+      case 'ideal':
+        v.new = Number(v.element.value);
+        taskObj.members[prop] = v.new;
+        break;
+      case 'fixed':
+        v.new = v.element.value.split(',');
+        taskObj.members[prop] = v.new;
+        break;
+      default:
+        v.new = v.element.value;
+        taskObj[prop] = v.new;
+    }
     localStorage.setItem(this.id,JSON.stringify(this.data));
     console.log(this.data);
     this.draw();
@@ -400,7 +423,7 @@ class TimeTable {
     });
 
     // タスク・セクションで異なる項目表示
-    ['start','end','location','output'].forEach(x => {
+    ['start','end','location','output','ideal','fixed'].forEach(x => {
       v.p = v.dialogElement.querySelector('[name="'+x+'"]');
       console.log(v.p)
       if( 'children' in v.task ){
@@ -408,8 +431,18 @@ class TimeTable {
       } else {
         v.p.style.display = 'grid';
         v.o = v.dialogElement.querySelector('[name="'+x+'"] .val');
-        v.o.value = !( x === 'start' || x === 'end' ) ? v.task[x]
-        : new Date(v.task[x]).toLocaleString();
+        switch(x){
+          case 'start':
+          case 'end':
+            v.o.value = new Date(v.task[x]).toLocaleString();
+            break;
+          case 'ideal':
+          case 'fixed':
+            v.o.value = v.task.members[x];
+            break;
+          default:
+            v.o.value = v.task[x];
+        }
         v.o.onchange = (a) => this.editItem(v.task,x,v.o);
       }
     });
