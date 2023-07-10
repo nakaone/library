@@ -1,0 +1,394 @@
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>timetable</title>
+  <link rel="stylesheet" href="../CSS/szDefault.css" />
+  <style type="text/css" class="core">
+    .image, .timetable {
+      max-width: 100%;
+      overflow: scroll;
+    }
+    .timetable, .timetable div {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      display: grid;
+      --color: #ccc;
+      --boldLine : solid 2px var(--color);
+      --thinLine : dotted 1px var(--color);
+    }
+    .timetable span {
+      padding-left: 0.3rem;
+    }
+    /*.timetable .controller {}*/
+    .timetable .main {
+      grid-template-rows: 2rem 1fr;
+      grid-template-columns: 1fr;
+    }
+    .timetable .main .header {
+      grid-row: 1/2;
+      grid-column: 1/2;
+      grid-template-columns: repeat(3, 1fr);
+      border: var(--boldLine);
+    }
+    .timetable .main .header div:nth-child(2n) {
+      background-color: var(--color);
+    }
+    .timetable .main .timeline {
+      grid-row: 2/3;
+      grid-column: 1/2;
+      grid-template-columns: repeat(12, 1fr);
+      border-bottom: var(--boldLine);
+    }
+    .timetable .main .timeline div {
+      min-width: 1rem;
+      min-height: 1rem;
+    }
+    .timetable .main .timeline div:nth-child(2n+1) {
+      border-left: var(--boldLine);
+    }
+    .timetable .main .timeline div:nth-child(2n) {
+      border-left: var(--thinLine);
+    }
+    .timetable .main .timeline div:last-child {
+      border-right: var(--boldLine);
+    }
+    .timetable .main .tasks {
+      grid-row: 2/3;
+      grid-column: 1/2;
+      z-index: 1;
+    }
+    .timetable .main .tasks > div {
+      max-height: 1.6rem;
+      grid-column: 1/37;
+      margin-bottom: 0.5rem;
+    }
+    .timetable .main .tasks > div:first-child {
+      margin-top: 0.5rem;
+    }
+    .timetable .main .tasks .bar {
+      grid-template-columns: repeat(36, 1fr);
+      overflow: visible;
+    }
+    .timetable .main .tasks .bar [name="1.1"]{
+      grid-column: 4/12;
+      background-color: var(--color);
+    }
+    .timetable .main .tasks .bar [name="1.2"]{
+      grid-column: 15/20;
+      background-color: var(--color);
+    }
+
+    .timetable .dialog {
+      border: solid 1px red;
+    }
+  </style>
+</head>
+<body>
+  <div><h1>タイムテーブル</h1>
+    <div class="timetable" name="tt01">
+      <div class="controller"></div>
+      <div class="main">
+        <div class="header"></div>
+        <div class="timeline"></div>
+        <div class="tasks"></div>
+      </div>
+      <div class="dialog"></div>
+    </div>
+
+    <!--div class="timetable" name="tt02">
+      <div class="controller">コントローラ</div>
+      <div class="main">
+        <div class="header">
+          <div><span>8:00</span></div>
+          <div><span>9:00</span></div>
+          <div><span>10:00</span></div>
+        </div>
+        <div class="timeline">
+          <div></div><div></div><div></div><div></div>
+          <div></div><div></div><div></div><div></div>
+          <div></div><div></div><div></div><div></div>
+        </div>
+        <div class="tasks">
+          <div class="label"><span>午前の部</span></div>
+          <div class="bar"><span name="1.1">受付</span></div>
+          <div class="bar"><span name="1.2">挨拶</span></div>
+        </div>
+      </div>
+      <div class="dialog">ダイアログ</div>
+    </div-->
+
+  </div>
+
+<!--================================================
+  外部スクリプト
+================================================-->
+<script src="../lib/jsLib.js"></script>
+
+<!--================================================
+  timetable コアスクリプト
+================================================-->
+<script type="text/javascript" class="core">
+
+/**
+ * @typedef {Object} Member - タスクの達成に必要な人的資源
+ * @prop {number} ideal - 理想的な担当者数
+ * @prop {string[]} fixed - 担当者名の配列
+ * 
+ * @typedef {Object} Resource - タスク達成に必要な資源
+ * @prop {string} name - 資源の名前。ビニール紐、等
+ * @prop {number} quantity - 必要な数量
+ * @prop {string} unit - 単位名。円、個、等
+ * @prop {string} procurement - 調達方法。学校、○○さん持参、購入、等
+ * @prop {number} budget - 必要な予算額(見込)
+ * @prop {string} note - 備考
+ * 
+ * 
+ * @typedef {Object} Task - タスクの定義
+ * @prop {string} id - 親ID＋自No。プログラム内部で自動採番
+ * @prop {string} label - セクションまたはタスクのラベル
+ * @prop {string} [summary] - タスクの概要
+ * @prop {string} [pending] - 要検討事項
+ * @prop {string} [note] - 備考
+ * @prop {Task[]} [children] - 子タスクの配列。指定した場合、以下は指定不可
+ * 
+ * @prop {Date} start - 開始日時
+ * @prop {Date} end - 終了日時
+ * @prop {string} location - 集合場所、作業場所
+ * @prop {Member} members - タスクの担当者(人的資源)
+ * @prop {Resource[]} resources - タスクの達成に必要な物的資源
+ * @prop {string} output - タスクの成果物
+ * @prop {string} style - タスクをバー表示する時の表示スタイル
+ * 
+ * 
+ * @typedef {Object.<string>:<string>} CSSDef - 要素のデザインのオブジェクト。JavaScriptでのプロパティ名：値となるオブジェクト
+ * 
+ * @typedef {Object} Project
+ * @prop {Task[]} tasks - 目標達成に必要なタスクの配列
+ * @prop {Object.<string>:<CSSDef>} design - タスクをバー表示する時のスタイル定義
+ * @prop {number} unit=5 - バーを表示する際の精度(単位：分)
+ * @prop {Object.<string>:<Task>} - task.idをキーにタスクを検索するマップ
+ * 
+ */
+
+const ttData = {
+  unit: 5,
+  map: {},
+  design: {
+    default: {
+      color: "#000",
+      backgroundColor: "rgba(196,196,196,0.6)",
+      border: "solid 1px #aaa",
+    },
+    critical: {
+      color: "#fff",
+      backgroundColor: "rgba(255,96,96,0.6)",
+      border: "solid 1px #f00",
+    },
+  },
+  tasks: [{
+    label: "受付",
+    summary: "参加者の受付",
+    note: "正門近辺の駐輪に注意",
+    start: "2023-09-30T14:00:00",
+    end: "2023-09-30T15:30:00",
+    location: "正門",
+    members: {
+      ideal: 10,
+      fixed: ['嶋津','織田','羽柴','徳川'],
+    },
+    resources: [
+      {name:"参加者名簿",quantity:2,unit:"冊",procurement:"嶋津が持参",budget:0,note:""},
+      {name:"文鎮",quantity:4,unit:"個",procurement:"担当者が持参",budget:0,note:""},
+      {name:"カラーコーン",quantity:12,unit:"本",procurement:"遊び場",budget:0,note:""},
+    ],
+    output: "記入済み名簿",
+    pending: `
+1. 受領した参加費の管理方法
+1. 名簿(紙)で受付した人の名寄せ
+    `,
+    style: "default",
+  },{
+    label: "カレー作成",
+    summary: "",
+    note: "中高生ボランティア参加の可能性あり",
+    children: [
+      {
+        label: "材料買い出し",
+        summary: "青果・肉・ルーを買い出し",
+        note: "事前発注は不要(例年してない)",
+        start: "2023-09-30T09:30:00",
+        end: "2023-09-30T10:50:00",
+        location: "正門",
+        members: {
+          ideal: 4,
+          fixed: ['国生','河合','高井'],
+        },
+        resources: [
+          {name:"牛スネ肉",quantity:10,unit:"kg",procurement:"購入",budget:30000,note:"@250/100g以内"},
+          {name:"玉ねぎ",quantity:4,unit:"kg",procurement:"購入",budget:50000,note:""},
+        ],
+        output: "特になし",
+        style: "critical",
+      },
+    ]
+  }]
+};
+
+function timetable(timetableElement,timetableData){
+  const v = {
+    minTime: Infinity, // task.startの最小値。UNIX時刻
+    maxTime: -Infinity,
+    startHour: Infinity, // minTime以下の正時となるUNIX時刻。表示領域の左端
+    endHour: -Infinity,  // maxTime以上の正時となるUNIX時刻。表示領域の右端
+    numHour: 0,          // startHour〜endHourまでの時間数
+    createElement: (arg={}) => { // DIV要素を生成、属性を指定する
+      let rv = document.createElement(('tag' in arg) ? arg.tag : 'div');
+      for( let x in arg ){
+        switch(x) {
+          case 'tag': break;
+          case 'text': rv.innerHTML = arg.text; break;
+          default: rv.setAttribute(x,arg[x]);
+        }
+      }
+      return rv;
+    },
+    timeRange: (dArray) => {  // v.minTime, v.maxTimeの取得
+      for( let task of dArray ){
+        if( 'children' in task ){
+          v.timeRange(task.children);
+        } else {
+          v.st = new Date(task.start).getTime();
+          v.ed = new Date(task.end).getTime();
+          if( v.minTime > v.st ) v.minTime = v.st;
+          if( v.maxTime < v.ed ) v.maxTime = v.ed;
+        }
+      }
+    },
+    applyStyle: (arg) => {
+      // apply,additionの既定値設定
+      const w = Object.assign({apply:'default',addition:{}},arg);
+      // 適用するスタイルのオブジェクトを作成
+      w.style = Object.assign(timetableData.design[w.apply],w.addition);
+      for( let a in w.style ){
+        arg.element.style[a] = w.style[a];
+      }
+    },
+    appendTask: (task,pId,seq) => { // ガントチャートの作成
+      task.id = pId + (seq+1) + '.';
+      timetableData.map[task.id] = task;
+      if( 'children' in task ){
+        // ラベル行：labelをtasksに追加
+        v.labelElement = v.createElement({class:'label'});
+        v.labelElement.appendChild(v.createElement({tag:'span',text:task.id+task.label}));
+        v.tasksElement.appendChild(v.labelElement);
+        for( let i=0 ; i<task.children.length ; i++ ){
+          v.appendTask(task.children[i],task.id,i);
+        }
+      } else {
+        // タスク：barをtasksに追加
+        v.barElement = v.createElement({class:'bar'});
+        v.barElement.style.gridTemplateColumns = 'repeat('+(v.numHour*12)+', 1fr)';
+        // barSpan: 棒状の部分
+        v.barSpan = v.createElement({tag:'span',name:task.id,text:task.label});
+        v.barStart = ((new Date(task.start).getTime()) - v.startHour) / (timetableData.unit*60000) + 1;
+        v.barEnd = ((new Date(task.end).getTime()) - v.startHour) / (timetableData.unit*60000) + 1;
+        v.applyStyle({
+          element: v.barSpan,
+          apply: task.style,
+          addition: {gridColumn:v.barStart + '/' + v.barEnd},
+        });
+        //v.barSpan.addEventListener('click',v.showDetail(task.id));
+        v.barSpan.onclick = () => v.showDetail(task.id);
+        //v.barSpan.style.gridColumn = v.barStart + '/' + v.barEnd;
+        v.barElement.appendChild(v.barSpan);
+        v.tasksElement.appendChild(v.barElement);
+      }
+    },
+    showDetail: (id) => {
+      console.log('showDetail: '+id);
+    }
+  };
+
+  // 事前準備
+  v.timeRange(timetableData.tasks);
+  v.startHour = Math.floor(v.minTime / 3600000) * 3600000;
+  v.endHour = Math.ceil(v.maxTime / 3600000) * 3600000;
+  /*console.log(new Date(v.minTime));
+  console.log(new Date(v.maxTime));
+  console.log(new Date(v.startHour));
+  console.log(new Date(v.endHour));*/
+
+  // 1.controllerの要素を作成
+
+  // 2.mainの要素を作成
+
+  // 2.1.main.headerの要素を作成
+  v.headerElement = document.querySelector('.timetable .main .header');
+  for( v.i=v.startHour ; v.i<=v.endHour ; v.i+=3600000 ){
+    v.o = v.createElement();
+    v.o.innerText = new Date(v.i).getHours() + ':00';
+    v.headerElement.appendChild(v.o);
+    v.numHour++;
+  }
+  v.headerElement.style.gridTemplateColumns = 'repeat('+v.numHour+', 1fr)';
+  
+  // 2.2.main.timelineの要素を作成
+  v.timelineElement = document.querySelector('.timetable .main .timeline');
+  v.timelineElement.innerHTML = '<div></div>'.repeat(v.numHour*4);
+  v.timelineElement.style.gridTemplateColumns = 'repeat('+(v.numHour*4)+', 1fr)';
+
+  // 2.2.main.tasksの要素を作成
+  v.tasksElement = document.querySelector('.timetable .main .tasks');
+  for( let i=0 ; i<timetableData.tasks.length ; i++ ){
+    v.appendTask(timetableData.tasks[i],'',i);
+  }
+
+  // 3.dialogの要素を作成
+
+}
+</script>
+
+<!--================================================
+  Webアプリ
+================================================-->
+<script type="text/javascript" class="webApp">
+function webApp(){
+  const v = {};
+  console.log('webApp start.');
+
+  v.selector = document.querySelector('div.webApp input[name="selector"]').value;
+  v.html = document.querySelector('div.webApp textarea[name="html"]').value;
+
+  if( v.selector.length > 0 && v.html.length > 0 ){
+    document.querySelector('div.webApp textarea[name="result"]').value
+    = JSON.stringify(querySelector(v.html,v.selector));
+  }
+
+  console.log('webApp end.');
+}
+</script>
+
+<script type="text/javascript" class="test">
+function timetableTest(){
+  const content = document.querySelector('html').innerHTML;
+  //console.log(content);
+  //const result = timetable(content,'script[src]');
+  const result = timetable(content,'script.main');
+  console.log(result);
+}
+</script>
+
+<!--================================================
+  メイン処理
+================================================-->
+<script type="text/javascript" class="main">
+console.log('timetable test start.');
+timetable(document.querySelector('div.timetable[name="tt01"]'),ttData);
+</script>
+</body>
+</html>
