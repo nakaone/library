@@ -11,69 +11,7 @@
 
   <!-- MarkDownテキストをHTML化するCDN -->
   <script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
-  <style type="text/css">
-    .image {
-      max-width: 100%;
-      overflow: scroll;
-    }
-    .timetable, .timetable div {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      display: grid;
-      --color: #ccc;
-    }
-    .timetable .main .header {
-      grid-template-columns: repeat(3, 1fr);
-      border: solid 2px var(--color);
-      padding-left: 0.3rem;
-    }
-    .timetable .main .header div:nth-child(2n) {
-      background-color: var(--color);
-    }
-    .timetable .gantt .task {
-      grid-template-rows: 1fr;
-      grid-template-columns: 1fr;
-    }
-
-    .timetable .gantt .grid {
-      grid-row: 1/2;
-      grid-column: 1/2;
-      grid-template-columns: repeat(12, 1fr);
-    }
-    .timetable .gantt .grid div {
-      min-height: 1rem;
-    }
-    .timetable .gantt .grid div:nth-child(2n+1) {
-      border-left: solid 2px var(--color);
-    }
-    .timetable .gantt .grid div:nth-child(2n) {
-      border-left: dotted 1px var(--color);
-    }
-    .timetable .gantt .grid div:last-child {
-      border-right: solid 2px var(--color);
-    }
-    .timetable .gantt .chart {
-      grid-row: 1/2;
-      grid-column: 1/2;
-      z-index: 1;
-      grid-template-columns: repeat(36, 1fr);
-    }
-    .timetable .gantt .chart div[name="1.1"] {
-      grid-column: 4/12;
-      background-color: var(--color);
-    }
-    .timetable .gantt .chart div[name="1.2"] {
-      grid-column: 9/20;
-      background-color: var(--color);
-    }
-    .timetable .gantt .chart .space {
-      grid-column: 1/37;
-      height: 0.5rem;
-    }
-  </style>
+  <link rel="stylesheet" href="camp2023.css">
 </head>
 <body>
   <div><h1>スケジュール</h1>
@@ -82,36 +20,30 @@
   </div>
 
   <div><h1>タイムテーブル</h1>
-    <div class="timetable" name="tt01">
+    <!--div class="timetable" name="tt02">
       <div class="controller">コントローラ</div>
       <div class="main">
         <div class="header">
-          <div>8:00</div>
-          <div>9:00</div>
-          <div>10:00</div>
+          <div><span>8:00</span></div>
+          <div><span>9:00</span></div>
+          <div><span>10:00</span></div>
         </div>
-        <div class="gantt">
-          <div class="label">午前の部</div>
-          <div class="task">
-            <div class="grid">
-              <div></div><div></div><div></div><div></div>
-              <div></div><div></div><div></div><div></div>
-              <div></div><div></div><div></div><div></div>
-            </div>
-            <div class="chart">
-              <div class="space"></div>
-              <div name="1.1">受付</div>
-              <div class="space"></div>
-              <div name="1.2">挨拶</div>
-              <div class="space"></div>
-            </div>
-          </div>
+        <div class="timeline">
+          <div></div><div></div><div></div><div></div>
+          <div></div><div></div><div></div><div></div>
+          <div></div><div></div><div></div><div></div>
+        </div>
+        <div class="tasks">
+          <div class="label"><span>午前の部</span></div>
+          <div class="bar"><span name="1.1">受付</span></div>
+          <div class="bar"><span name="1.2">挨拶</span></div>
         </div>
       </div>
       <div class="dialog">ダイアログ</div>
-    </div>
+    </div-->
 
-    <div class="timetable" name="tt02"></div>
+    <div class="timetable" name="tt03"></div>
+
   </div>
 
   <div><h1>参考：論議メモ</h1>
@@ -120,9 +52,7 @@
     </details>
   </div>
 
-  <!--
-    スケジュール
-  -->
+  <!-- スケジュール -->
   <script type="text/javascript" class="PlantUML" name="schedule1">/*
     @startgantt
     project starts the 2023/07/08
@@ -241,8 +171,9 @@
      * @typedef {Object} Task - タスクの定義
      * @prop {string} id - 親ID＋自No。プログラム内部で自動採番
      * @prop {string} label - セクションまたはタスクのラベル
-     * @prop {string} summary - タスクの概要
-     * @prop {string} note - 備考
+     * @prop {string} [summary] - タスクの概要
+     * @prop {string} [pending] - 要検討事項
+     * @prop {string} [note] - 備考
      * @prop {Task[]} [children] - 子タスクの配列。指定した場合、以下は指定不可
      * 
      * @prop {Date} start - 開始日時
@@ -260,11 +191,13 @@
      * @prop {Task[]} tasks - 目標達成に必要なタスクの配列
      * @prop {Object.<string>:<CSSDef>} design - タスクをバー表示する時のスタイル定義
      * @prop {number} unit=5 - バーを表示する際の精度(単位：分)
+     * @prop {Object.<string>:<Task>} - task.idをキーにタスクを検索するマップ
      * 
      */
 
     const ttData = {
       unit: 5,
+      map: {},
       design: {
         default: {
           color: "#000",
@@ -294,6 +227,10 @@
           {name:"カラーコーン",quantity:12,unit:"本",procurement:"遊び場",budget:0,note:""},
         ],
         output: "記入済み名簿",
+        pending: `
+1. 受領した参加費の管理方法
+1. 名簿(紙)で受付した人の名寄せ
+        `,
         style: "default",
       },{
         label: "カレー作成",
@@ -322,20 +259,25 @@
       }]
     };
 
-    function timetable(element,data){
+    function timetable(timetableElement,timetableData){
       const v = {
         minTime: Infinity, // task.startの最小値。UNIX時刻
         maxTime: -Infinity,
         startHour: Infinity, // minTime以下の正時となるUNIX時刻。表示領域の左端
         endHour: -Infinity,  // maxTime以上の正時となるUNIX時刻。表示領域の右端
-        createDivElement: (arg) => { // DIV要素を生成、属性を指定する
-          let rv = document.createElement('tag');
-          for( let x in arg )
-            rv.setAttribute(x,arg[x]);
+        numHour: 0,          // startHour〜endHourまでの時間数
+        createElement: (arg={}) => { // DIV要素を生成、属性を指定する
+          let rv = document.createElement(('tag' in arg) ? arg.tag : 'div');
+          for( let x in arg ){
+            switch(x) {
+              case 'tag': break;
+              case 'text': rv.innerHTML = arg.text; break;
+              default: rv.setAttribute(x,arg[x]);
+            }
+          }
           return rv;
         },
         timeRange: (dArray) => {  // v.minTime, v.maxTimeの取得
-          console.log(dArray);
           for( let task of dArray ){
             if( 'children' in task ){
               v.timeRange(task.children);
@@ -347,34 +289,48 @@
             }
           }
         },
-        appendTask: (task,pId,seq) => { // ガントチャートの作成：いまここ
+        applyStyle: (arg) => {
+          // apply,additionの既定値設定
+          const w = Object.assign({apply:'default',addition:{}},arg);
+          // 適用するスタイルのオブジェクトを作成
+          w.style = Object.assign(timetableData.design[w.apply],w.addition);
+          for( let a in w.style ){
+            arg.element.style[a] = w.style[a];
+          }
+        },
+        appendTask: (task,pId,seq) => { // ガントチャートの作成
+          console.log('l.368 pId='+pId+', seq='+seq+'\n',task);
+          task.id = pId + seq + '.';
+          timetableData.map[task.id] = task;
           if( 'children' in task ){
-            // ラベル行：ラベル行を追加
-            v.labelElement = v.createDivElement({class:'label'});
-            v.labelElement.innerText = pId+seq+'.'+task.label;
-            v.ganttElement.appendChild(v.labelElement);
-            for( let i=0 ; i<task.children.length ; i++ )
-              v.appendTask(task.children[i],pId+seq+'.',i);
+            // ラベル行：labelをtasksに追加
+            v.labelElement = v.createElement({class:'label'});
+            v.labelElement.appendChild(v.createElement({tag:'span',text:task.id+task.label}));
+            v.tasksElement.appendChild(v.labelElement);
+            for( let i=0 ; i<task.children.length ; i++ ){
+              v.appendTask(task.children[i],task.id,i);
+            }
           } else {
-            // タスク：gridとchartをまとめたtaskを作成
-            v.taskElement = v.createDivElement({class:'task'});
-            // gridを作成
-            v.gridElement = v.createDivElement({class:'grid'});
-            v.gridElement.innerHTML = '<div></div>'.repeat((v.endHour-v.startHour)/900000);
-            // gridをtaskに追加
-            v.taskElement.appendChild(v.gridElement);
-            // chartを作成
-            v.chartElement = v.createDivElement({class:'chart'});
-            // chartをtaskに追加
-            v.taskElement.appendChild(v.chartElement);
-            // taskをganttに追加
-            v.ganttElement.appendChild(v.taskElement);
+            // タスク：barをtasksに追加
+            v.barElement = v.createElement({class:'bar'});
+            v.barElement.style.gridTemplateColumns = 'repeat('+(v.numHour*12)+', 1fr)';
+            v.barSpan = v.createElement({tag:'span',name:task.id,text:task.label});
+            v.barStart = ((new Date(task.start).getTime()) - v.startHour) / (timetableData.unit*60000) + 1;
+            v.barEnd = ((new Date(task.end).getTime()) - v.startHour) / (timetableData.unit*60000) + 1;
+            v.applyStyle({
+              element: v.barSpan,
+              apply: task.style,
+              addition: {gridColumn:v.barStart + '/' + v.barEnd},
+            });
+            //v.barSpan.style.gridColumn = v.barStart + '/' + v.barEnd;
+            v.barElement.appendChild(v.barSpan);
+            v.tasksElement.appendChild(v.barElement);
           }
         },
       };
 
       // 事前準備
-      v.timeRange(data.tasks);
+      v.timeRange(timetableData.tasks);
       v.startHour = Math.floor(v.minTime / 3600000) * 3600000;
       v.endHour = Math.ceil(v.maxTime / 3600000) * 3600000;
       /*console.log(new Date(v.minTime));
@@ -383,45 +339,51 @@
       console.log(new Date(v.endHour));*/
 
       // 1.controllerの要素を作成
-      v.controllerElement = v.createDivElement({class:"controller"});
-      // controllerの要素を追加
-      element.appendChild(v.controllerElement);
+      v.controllerElement = v.createElement({class:"controller"});
+      // controllerの要素をtimetableに追加
+      timetableElement.appendChild(v.controllerElement);
 
       // 2.mainの要素を作成
-      v.mainElement = v.createDivElement({class:"main"});
+      v.mainElement = v.createElement({class:"main"});
 
       // 2.1.main.headerの要素を作成
-      v.headerElement = v.createDivElement({class:"header"});
-      v.num = 0; // startHour〜endHourまでの時間数
+      v.headerElement = v.createElement({class:"header"});
       for( v.i=v.startHour ; v.i<=v.endHour ; v.i+=3600000 ){
-        v.o = v.createDivElement();
+        v.o = v.createElement();
         v.o.innerText = new Date(v.i).getHours() + ':00';
         v.headerElement.appendChild(v.o);
-        v.num++;
+        v.numHour++;
       }
-      v.headerElement.style.gridTemplateColumns = 'repeat('+v.num+', 1fr)';
+      v.headerElement.style.gridTemplateColumns = 'repeat('+v.numHour+', 1fr)';
       
       // 2.1.main.headerの要素をmainに追加
       v.mainElement.appendChild(v.headerElement);
 
-      // 2.2.main.ganttの要素を作成
-      v.ganttElement = v.createDivElement({class:"gantt"});
+      // 2.2.main.timelineの要素を作成
+      v.timelineElement = v.createElement({class:"timeline"});
+      v.timelineElement.innerHTML = '<div></div>'.repeat(v.numHour*4);
+      v.timelineElement.style.gridTemplateColumns = 'repeat('+(v.numHour*4)+', 1fr)';
+      // 2.2.main.timelineの要素をmainに追加
+      v.mainElement.appendChild(v.timelineElement);
 
-      for( let i=0 ; i<data.tasks.length ; i++ ){
-        v.appendTask(data.tasks[v.i],'',i);
+      // 2.2.main.tasksの要素を作成
+      v.tasksElement = v.createElement({class:"tasks"});
+      for( let i=0 ; i<timetableData.tasks.length ; i++ ){
+        v.appendTask(timetableData.tasks[i],'',i);
       }
 
-      // 2.2.main.ganttの要素をmainに追加
-      v.mainElement.appendChild(v.ganttElement);
+      // 2.2.main.tasksの要素をmainに追加
+      v.mainElement.appendChild(v.tasksElement);
 
-      // mainの要素を追加
-      element.appendChild(v.mainElement);
+
+      // 2.mainの要素をtimetableに追加
+      timetableElement.appendChild(v.mainElement);
 
 
       // dialogの要素を作成
-      v.dialogElement = v.createDivElement({class:"dialog"});
-      // dialogの要素を追加
-      element.appendChild(v.dialogElement);
+      v.dialogElement = v.createElement({class:"dialog"});
+      // dialogの要素をtimetableに追加
+      timetableElement.appendChild(v.dialogElement);
 
       /*
       // 第一階層の要素を作成
@@ -432,13 +394,13 @@
 
       // main.ganttの作成
       v.gantt = v.createElement({tag:'div',class:'gantt'});
-      for( v.i=0 ; v.i<data.tasks.length ; v.i++ ){
+      for( v.i=0 ; v.i<timetableData.tasks.length ; v.i++ ){
         v.appendTask(task,'',v.i);
       }
       v.main.appendChild(v.gantt);
 
       // 第一階層の要素をラッパーに追加
-      ['controller','main','dialog'].forEach(x => element.appendChild(v[x]));
+      ['controller','main','dialog'].forEach(x => timetableElement.appendChild(v[x]));
       */
     }
 
@@ -446,7 +408,7 @@
     window.addEventListener('DOMContentLoaded',() => {
       const v = {};
 
-      timetable(document.querySelector('div.timetable[name="tt02"]'),ttData);
+      timetable(document.querySelector('div.timetable[name="tt03"]'),ttData);
 
       // MarkDownで記述された部分をHTML化して表示
       document.querySelectorAll('script.markdown').forEach(md => {
