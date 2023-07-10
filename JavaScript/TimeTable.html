@@ -9,7 +9,7 @@
     .right {text-align: right;}
     .image, .timetable {
       max-width: 100%;
-      overflow: scroll;
+      overflow-x: scroll;
     }
     .timetable, .timetable div {
       width: 100%;
@@ -74,7 +74,6 @@
     }
     .timetable .main .tasks .bar {
       grid-template-columns: repeat(36, 1fr);
-      overflow: visible;
     }
     .timetable .main .tasks .bar [name="1.1"]{
       grid-column: 4/12;
@@ -92,11 +91,17 @@
     .timetable .dialog div {
       padding: 0.5rem;
     }
+    .timetable .dialog .button {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .timetable .dialog .button button {
+      width: auto;
+    }
     .timetable .dialog input[type="text"] {
       width: 10rem;
     }
     .timetable .dialog > div {
-      grid-template-columns: 5rem 1fr 1fr;
+      grid-template-columns: 5rem 1fr;
     }
   </style>
 </head>
@@ -110,7 +115,11 @@
         <div class="tasks"></div>
       </div>
       <div class="dialog">
-        <div><button name="closeDialog">閉じる</button></div>
+        <div class="button">
+          <button name="appendChild">子タスクの追加</button>
+          <button name="deleteTask">タスクの削除</button>
+          <button name="closeDialog">閉じる</button>
+        </div>
         <div name="id">
           <div>ID</div>
           <div class="val"></div>
@@ -246,7 +255,8 @@
  * @prop {Task[]} tasks - 目標達成に必要なタスクの配列
  * @prop {Object.<string>:<CSSDef>} design - タスクをバー表示する時のスタイル定義
  * @prop {number} unit=5 - バーを表示する際の精度(単位：分)
- * @prop {Object.<string>:<Task>} - task.idをキーにタスクを検索するマップ
+ * @prop {string[]} period - タスクを追加する際の開始/終了日時の既定値
+ * @prop {Object.<string>:<Task>} map - task.idをキーにタスクを検索するマップ。自動生成
  * 
  */
 
@@ -271,12 +281,44 @@ class TimeTable {
       this.rootElement.querySelector('.dialog').style.display = 'none';
     });
     this.draw();
+    this.template = {
+      section: {name:'(未定義)',children:[]},
+      task: {
+        name:'(未定義)',members:{},resources:[],
+        start:new Date(this.data.period[0]).getTime(),
+        end  :new Date(this.data.period[1]).getTime(),
+      },
+      member:{ideal:0,fixed:[]},
+      resource:{name:'(未定義)'},
+    };
+  }
+
+  /** 子要素を追加 */
+  appendChild(id){
+    const v = {self:this.data.map[id]};
+    if( 'children' in v.self ){
+      // childrenがある -> childrenにテンプレートを追加
+      v.self.children.push(JSON.parse(JSON.stringify(this.template.task)));
+    } else {
+      // childrenがない -> 自要素の中身を退避して初期化、childrenに自要素を展開
+      v.json = JSON.stringify(v.self);
+      for( v.x in v.self ){
+        delete v.self[v.x];
+      }
+      for( v.x in this.template.section ){
+        v.self[v.x] = this.template.section[v.x];
+      }
+      v.self.children.push(JSON.parse(v.json));
+
+    }
+    localStorage.setItem(this.id,JSON.stringify(this.data));
+    this.draw();
   }
 
   /** div.tasks領域にタスク(単体)を追加する
    * (本関数はdrawから呼ばれるプライベート関数)
    */
-   appendTask(task,pId,seq){ // ガントチャートの作成
+  appendTask(task,pId,seq){ // ガントチャートの作成
     const v = {
       tasksElement: this.rootElement.querySelector('.main .tasks'),
     };
@@ -430,6 +472,11 @@ class TimeTable {
     }
     console.log('showDetail: '+id);
     console.log(v.task);
+
+    // タスクの追加・削除
+    v.dialogElement.querySelector('button[name="appendChild"]')
+    .onclick = () => this.appendChild(id);
+
     // 表示項目の設定
     ['id'].forEach(x => {
       v.dialogElement.querySelector('[name="'+x+'"] .val')
@@ -468,9 +515,8 @@ class TimeTable {
     });
 
     // 物的資源(不定繰返)
-    if( 'resources' in v.task ){
-      v.resourcesElement = v.dialogElement.querySelector('[name="resources"] tbody');
-      v.resourcesElement.innerHTML = '';
+    v.resourcesElement = v.dialogElement.querySelector('[name="resources"]');
+    if( !('children' in v.task) && ('resources' in v.task) ){
       v.str = '';
       v.task.resources.forEach(x => {
         v.str += '<tr>'
@@ -482,10 +528,13 @@ class TimeTable {
           + '<td>' + x.note + '</td>'
           + '</tr>';
       });
-      v.resourcesElement.innerHTML = v.str;
+      v.resourcesElement.querySelector('tbody').innerHTML = v.str;
+      v.resourcesElement.style.display = 'grid';
+    } else {
+      v.resourcesElement.style.display = 'none';
     }
+    // ダイアログを表示
     v.dialogElement.style.display = 'grid';
-
   }
 
   /** v.minTime, v.maxTimeの取得 */
@@ -525,6 +574,7 @@ const ttData = {
       border: "solid 1px #f00",
     },
   },
+  period: ['2023/09/30 09:00','2023/09/30 18:00'],
   tasks: [{
     name: "受付",
     summary: "参加者の受付",
@@ -584,6 +634,44 @@ if( !localStorage.getItem('tt01') ){
   メイン処理
 ================================================-->
 <script type="text/javascript" class="main">
+
+async function download(arg){ // 文字列をファイルにしてダウンロード
+  console.log("download start.",arg);
+  let v = {};
+
+  // base name
+  v.fn = typeof arg.f === 'undefined'
+    ? new DateEx().toLocale('yyyyMMdd')
+    : arg.f;
+
+  // mime, suffix
+  if( typeof arg.m === 'undefined' ){
+    v.mime = 'text/csv';
+    v.fn += '.csv';
+  } else {
+    if( arg.m === 'json' ){
+      v.mime = 'application/json';
+      v.fn += '.json';
+    } else {
+      v.mime = 'text/csv';
+      v.fn += '.csv';
+    }
+  }
+
+  // ファイルの生成、ダウンロード
+  const blob = new Blob([arg.d], {type: v.mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  document.body.appendChild(a);
+  a.download = v.fn;
+  a.href = url;
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+
+}  // function download end.
+
+
 window.addEventListener('DOMContentLoaded',() => {
   console.log('timetable test start.');
   const tt01 = new TimeTable('tt01');
