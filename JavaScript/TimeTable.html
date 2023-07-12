@@ -94,6 +94,19 @@
     .timetable .detail > div {
       grid-template-columns: 5rem 1fr;
     }
+    /*
+      テーブル関係
+    */
+    .timetable th {
+      padding: 0.3em;
+      background-color: #888;
+      color: white;
+    }
+    .timetable td {
+      padding: 0.3em;
+      border-bottom: solid 1px #aaa;
+      border-right: solid 1px #aaa;
+    }
   </style>
 </head>
 <body>
@@ -196,7 +209,6 @@ class TimeTable {
     this.map = {};
     this.#makeMap(this.tasks);
     this.draw();
-    Date.prototype.toLocale = Date_toLocale;
   }
 
   /** div.tasks領域にタスク(単体)を追加する
@@ -444,31 +456,24 @@ class TimeTable {
     console.log('showDetail start. id='+id);
     const v = {
       task:this.map[id],  // 表示するタスクのオブジェクト
-      conf:this.opt.sheetDef.timetable, // 項目ごとの定義
-      detail: this.rootElement.querySelector('.detail'),
-      resource: (conf,data) => {
-        const iv = {list:[],rv:this.createElement('table')};
-        iv.thead = this.createElement('thead');
-        iv.tbody = this.createElement('tbody')
-        Object.keys(conf).forEach(x => {
-          if( conf[x].display > 0 ) iv.list.push(conf[x]);
+      detail: this.rootElement.querySelector('.detail'),  // 詳細領域の要素
+      /** 非表示項目を排除しながら表示順に項目をソート
+       * @param {Object} columnDef - 欄名:{column,label,type,memo,must,display,note}をメンバとするオブジェクト
+       */
+      listColumns: (columnDef) => { // 
+        const list = [];
+        Object.keys(columnDef).forEach(x => {
+          if( columnDef[x].display > 0 ) list.push(columnDef[x]);
         });
-        iv.list.sort((a,b) => a.display < b.display ? -1 : 1);
-        for( iv.i = 0 ; iv.i<iv.list.length ; iv.i++ ){
-
-        }
-        return iv.rv;
+        list.sort((a,b) => a.display < b.display ? -1 : 1);
+        return list;
       },
     };
 
     // 非表示項目を排除しながら表示順に項目をソート
     // オブジェクトをdateでソートする例
     // https://keizokuma.com/js-array-object-sort/
-    v.list = [];
-    Object.keys(v.conf).forEach(x => {
-      if( v.conf[x].display > 0 ) v.list.push(v.conf[x]);
-    });
-    v.list.sort((a,b) => a.display < b.display ? -1 : 1);
+    v.list = v.listColumns(this.opt.sheetDef.timetable);
     console.log(v.list);
 
     // 表示順にタスクの項目をtbodyに追加
@@ -478,29 +483,47 @@ class TimeTable {
       // 項目ラベル欄
       v.o = {tag:'td',text:v.list[v.i].label};
       v.tr.appendChild(this.createElement(v.o));
-      // 値欄
-      v.value =  v.task[v.list[v.i].column];
-      switch( v.list[v.i].type ){
-        case 'Number':  // number : toLocaleして右寄せ
-          v.o.class = 'right';
-          v.o.text = v.value.toLocaleString();
-          v.tr.appendChild(this.createElement(v.o));
-          break;
-        case 'Date':  // 表示形式を整形
-          console.log(new Date(v.value));
-          v.o.text = new Date(v.value).toLocale(this.opt.detailDateFormat);
-          v.tr.appendChild(this.createElement(v.o));
-          break;
-        case 'Resource':
-          v.tr.appendChild(v.resource(this.opt.sheetDef.resources,v.task.resources));
-          break;
-        default:
-          v.o.text = String(v.value);
-          v.tr.appendChild(this.createElement(v.o));
+      // 値・備考欄
+      v.value =  v.task[v.list[v.i].column] || '';
+      if( v.list[v.i].type !== 'Resource'){
+        // Resource(表内表)以外
+        switch( v.list[v.i].type ){
+          case 'Number':  // number : toLocaleして右寄せ
+            v.o.class = 'right';
+            v.o.text = v.value.toLocaleString();
+            break;
+          case 'Date':  // 表示形式を整形
+            console.log(new Date(v.value));
+            v.o.text = new Date(v.value).toLocale(this.opt.detailDateFormat);
+            break;
+          default:
+            v.o.text = String(v.value);
+        }
+        v.tr.appendChild(this.createElement(v.o));
+        // 備考欄
+        v.o.text = v.task[v.list[v.i].memo] || '';
+        v.tr.appendChild(this.createElement(v.o));
+      } else {
+        // Resource
+        v.rList = v.listColumns(this.opt.sheetDef.resources);
+        console.log(v.rList)
+        v.rData = [v.rList.map(x => x.label)];
+        for( v.r=0 ; v.r<v.task.resources.length ; v.r++ ){
+          v.a = [];
+          v.l = v.task.resources[v.r];
+          console.log(v.l);
+          for( v.c=0 ; v.c<v.rList.length ; v.c++ ){
+            v.a.push(v.rList[v.c].type === 'Date'
+            ? new Date(v.l[v.rList[v.c].column])
+            : v.l[v.rList[v.c].column]);
+          }
+          v.rData.push(v.a);
+        }
+        console.log(v.rData);
+        v.td = this.createElement({tag:'td',colspan:"2"});
+        v.td.appendChild(v.rData.tabulize({dateFormat:this.opt.detailDateFormat}));
+        v.tr.appendChild(v.td);
       }
-      // 備考欄
-      v.o.text = v.task[v.list[v.i].memo];
-      v.tr.appendChild(this.createElement(v.o));
       console.log(v.tr);
 
       v.detail.querySelector('tbody').appendChild(v.tr);
@@ -514,77 +537,6 @@ class TimeTable {
     v.detail.style.display = 'block';
     console.log('showDetail end.');
 
-    /*
-    const v = {
-      detailElement: this.rootElement.querySelector('.detail'),
-      task: this.data.map[id],
-    }
-    console.log('showDetail: '+id);
-    console.log(v.task);
-
-    // タスクの追加・削除
-    v.detailElement.querySelector('button[name="appendChild"]')
-    .onclick = () => this.appendChild(id);
-
-    // 表示項目の設定
-    ['id'].forEach(x => {
-      v.detailElement.querySelector('[name="'+x+'"] .val')
-      .innerText = v.task[x];
-    });
-    // 編集項目の設定
-    ['name','summary','pending','note'].forEach(x => {
-      v.o = v.detailElement.querySelector('[name="'+x+'"] .val');
-      v.o.value = v.task[x];
-      v.o.onchange = (a) => this.editItem(v.task,x,v.o);
-    });
-
-    // タスク・セクションで異なる項目表示
-    ['start','end','location','output','ideal','fixed'].forEach(x => {
-      v.p = v.detailElement.querySelector('[name="'+x+'"]');
-      console.log(v.p)
-      if( 'children' in v.task ){
-        v.p.style.display = 'none';
-      } else {
-        v.p.style.display = 'grid';
-        v.o = v.detailElement.querySelector('[name="'+x+'"] .val');
-        switch(x){
-          case 'start':
-          case 'end':
-            v.o.value = new Date(v.task[x]).toLocaleString();
-            break;
-          case 'ideal':
-          case 'fixed':
-            v.o.value = v.task.members[x];
-            break;
-          default:
-            v.o.value = v.task[x];
-        }
-        v.o.onchange = (a) => this.editItem(v.task,x,v.o);
-      }
-    });
-
-    // 物的資源(不定繰返)
-    v.resourcesElement = v.detailElement.querySelector('[name="resources"]');
-    if( !('children' in v.task) && ('resources' in v.task) ){
-      v.str = '';
-      v.task.resources.forEach(x => {
-        v.str += '<tr>'
-          + '<td>' + x.name + '</td>'
-          + '<td class="right">' + x.quantity + '</td>'
-          + '<td>' + x.unit + '</td>'
-          + '<td>' + x.procurement + '</td>'
-          + '<td class="right">' + x.budget + '</td>'
-          + '<td>' + x.note + '</td>'
-          + '</tr>';
-      });
-      v.resourcesElement.querySelector('tbody').innerHTML = v.str;
-      v.resourcesElement.style.display = 'grid';
-    } else {
-      v.resourcesElement.style.display = 'none';
-    }
-    // ダイアログを表示
-    v.detailElement.style.display = 'grid';
-    */
   }
 
   /** v.minTime, v.maxTimeの取得 */
@@ -617,6 +569,69 @@ class TimeTable {
   メイン処理
 ================================================-->
 <script type="text/javascript" class="main">
+/**
+ * @typedef {Object} tabulate2Darry
+ * @prop {any[[]]} data - 
+
+/** 2次元配列からHTMLの表(table)を作成
+ * opt.dateFormat {string} - 日付を表示する形式
+ */
+function Array_tabulize(opt){
+  console.log('tabulyze start.');
+  const v = {
+    table: document.createElement('table'),
+    thead: document.createElement('thead'),
+    tbody: document.createElement('tbody'),
+    createElement: (tag,text='',opt={}) => {
+      let rv = document.createElement(tag);
+      rv.innerHTML = text;
+      for( let x in opt ){
+        rv.setAttribute(x,opt[x]);
+      }
+      return rv;
+    },
+  };
+  console.log('tabulyze end.');
+
+  v.tr = v.createElement('tr');
+  console.log(this[0]);
+  for( v.i=0 ; v.i<this[0].length ; v.i++ ){
+    v.tr.appendChild(v.createElement('th',this[0][v.i]));
+  }
+  v.thead.appendChild(v.tr);
+
+  for( v.r=1 ; v.r<this.length ; v.r++ ){
+    v.tr = v.createElement('tr');
+    console.log(this[v.r]);
+    for( v.c=0 ; v.c<this[v.r].length ; v.c++ ){
+      v.raw = this[v.r][v.c];
+      v.opt = {};
+      switch( whichType(v.raw) ){
+        case 'BigInt':
+        case 'Number':
+          v.text = Number(v.raw).toLocaleString();
+          v.opt.style = 'text-align:right';
+          break;
+        case 'Date':
+          v.text = v.raw.toLocale(opt.dateFormat);
+        default:
+          v.text = String(v.raw);
+      }
+      v.tr.appendChild(v.createElement('td',v.text,v.opt));
+    }
+    v.tbody.appendChild(v.tr);
+  }
+
+
+  v.table.appendChild(v.thead);
+  v.table.appendChild(v.tbody);
+  console.log(v.table)
+  return v.table;
+}
+Array.prototype.tabulize = Array_tabulize;
+Date.prototype.toLocale = Date_toLocale;
+
+
 window.addEventListener('DOMContentLoaded',() => {
   console.log('timetable test start.');
   fetch("https://script.google.com/macros/s/AKfycbxNJm9X2Dse9brDmCWFTsg9WoQ6vyE8QXYcUPUq8aXELXP7RRbmz5gepaqU25ZvOGx3/exec")
