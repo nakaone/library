@@ -1,0 +1,409 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja">
+<head>
+  <title>校庭キャンプ2023</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <!-- UML: PlantUML
+    参考：JavaScriptを用いてPlantUMLを呼び出す
+    https://168iroha.net/blog/topic/?id=202206081036&sorting=post_date
+  -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js"></script>
+
+  <!-- MarkDownテキストをHTML化するCDN -->
+  <script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
+  <link rel="stylesheet" href="camp2023.css">
+</head>
+<body>
+  <div><h1>スケジュール</h1>
+    <div class="image"><img name="schedule1"></img></div>
+    <div name="schedule2"></div>
+  </div>
+
+  <div><h1>タイムテーブル</h1>
+    <!--div class="timetable" name="tt02">
+      <div class="controller">コントローラ</div>
+      <div class="main">
+        <div class="header">
+          <div><span>8:00</span></div>
+          <div><span>9:00</span></div>
+          <div><span>10:00</span></div>
+        </div>
+        <div class="timeline">
+          <div></div><div></div><div></div><div></div>
+          <div></div><div></div><div></div><div></div>
+          <div></div><div></div><div></div><div></div>
+        </div>
+        <div class="tasks">
+          <div class="label"><span>午前の部</span></div>
+          <div class="bar"><span name="1.1">受付</span></div>
+          <div class="bar"><span name="1.2">挨拶</span></div>
+        </div>
+      </div>
+      <div class="dialog">ダイアログ</div>
+    </div-->
+
+    <div class="timetable" name="tt03">
+      <div class="controller"></div>
+      <div class="main">
+        <div class="header"></div>
+        <div class="timeline"></div>
+        <div class="tasks"></div>
+      </div>
+      <div class="dialog"></div>
+    </div>
+
+  </div>
+
+  <div><h1>参考：論議メモ</h1>
+    <details><summary>2023/06/10 定例会</summary>
+      <div name="20230610"></div>
+    </details>
+  </div>
+
+  <!-- スケジュール -->
+  <script type="text/javascript" class="PlantUML" name="schedule1">/*
+    @startgantt
+    project starts the 2023/07/08
+    saturday are closed
+    sunday are closed
+    2023/07/08 is open
+    2023/09/09 is open
+    2023/09/23 is open
+    2023/09/30 is open
+    2023/10/01 is open
+    hide ressources footbox
+
+    [終業式] happens 2023/07/20
+    [夏休み] starts at [終業式]'s end and ends 2023/08/31
+
+    -- 参加者募集：夏休み前予告 --
+    [7月定例会] starts 2023/07/08 and ends 2023/07/08
+    then [予告サイト作成] as [site] on {嶋津} lasts 2 days
+    [QRコード送付①] happens at [site]'s end
+    [予告チラシ作成] starts 2023-07-10 and lasts 3 days
+    then [内部レビュー] lasts 2 days
+    then [学校側確認①] lasts 2 days
+    then [印刷・配布①] ends 2023-07-20
+
+    -- 参加者募集：本番 --
+    [9月定例会] starts 2023/9/9 and lasts 1 days
+    [手伝募集メール発信] on {嶋津} starts at [9月定例会]'s end and lasts 1 days
+    [調理器具他、不足資材の手配] starts at [9月定例会]'s end and lasts 2 weeks
+    [臨時会] starts 2023/9/23 and lasts 1 days
+    then [テント区画図・案内板作成] lasts 1 weeks
+    [サイト・申込フォーム作成] starts 2023/08/30 and lasts 5 days
+    then [申込状況参照サイト作成] on {嶋津} lasts 4 days
+    [QRコード送付②] on {嶋津} happens 2023/09/01
+    [チラシ・しおり作成] starts 2023/08/30 and lasts 5 days
+    then [学校側確認②] lasts 4 days
+    then [印刷・配布②] lasts 1 days
+    [参加申し込み] starts at [印刷・配布②]'s end and lasts 2 weeks
+    [抽選・調整] starts at [参加申し込み]'s end and lasts 1 weeks
+    [リマインドメール発信] on {嶋津} happens 2023/09/29
+    [しおり印刷] starts at [参加申し込み]'s end and ends 2023/09/29
+    [本番] starts at [抽選・調整]'s end and ends 2023/10/01
+
+    -- アンケート・撮影・まとめ --
+    [アンケート叩き台・写真保存手順作成] on {嶋津} starts at [申込状況参照サイト作成]'s end and lasts 5 days
+    then [レビュー・修正] lasts 5 days
+    [撮影] starts 2023/09/30 and ends 2023/10/01
+    then [写真保存] on {スタッフ} lasts 3 days
+    [参加者アンケート回答依頼メール発信] on {嶋津} happens 2023/10/01
+    then [参加者アンケート回答] lasts 5 days
+    [当日スタッフアンケート回答依頼メール発信] on {嶋津} happens 2023/10/01
+    then [当日スタッフアンケート回答] on {当日スタッフ} lasts 5 days
+    [次回申送事項シート記入] on {おやじ常連} starts at [当日スタッフアンケート回答依頼メール発信]'s end and lasts 5 days
+    [まとめ] starts at [参加者アンケート回答]'s end and lasts 10 days
+
+    @endgantt
+  */</script>
+
+  <script type="text/javascript" class="markdown" name="schedule2">/*
+1. 予備日の作業内容
+    1. 欠席連絡があった場合、待機者の繰上当選連絡[嶋津]
+    1. 参加者名簿の作成[嶋津]
+    1. 参加のしおり印刷[未定]
+
+1. 調査および成果物
+    1. 校庭・体育館区画 -> 区画図
+    1. トイレ他、要案内箇所 -> 案内図
+  
+  */</script>
+
+  <script type="text/javascript" class="markdown" name="20230610">/*
+1. 日程：9/23〜24 or **9/30〜10/01**(第一候補) or 10/07〜08(第二候補) or 10/08〜09(第三候補)
+1. 人数制限を設けるか
+   - 親父の会の人員でカバーできる範囲で
+   - 当日参加不可(昨年度キャパオーバーした)
+   - 予約を人数制限する
+1. イベント数を絞る
+1. 料金：500円/人(小学生以上)
+1. お手伝いを必須にする<br>
+  予約サイトのチェック必須にする
+1. テントの設置数、大きさの制限<br>
+  学年ごと<br>
+  区画の大きさ、テントの大きさ、タープNG<br>
+  おやじが張る場所を指定(当日対応)
+1. 体育館の利用<br>
+  テントの無い児童
+1. 未就学児のスペース
+1. ビオトープなどの安全管理
+1. 飯田さん(スノーピーク)の進捗
+1. カレーの配布方法：学年ごと
+   - 同学年の親が手伝う
+   - 小鍋を準備する
+1. 担当を明確にする
+1. 開始時刻 -> 14:00〜
+1. ボールを片付けておく
+1. 児童の怪我などは自己責任を明文化しておく
+1. お化け
+   - 中学生の評判良かったが、大人がもう一人必要(安全確保のため)
+  */</script>
+
+  <script type="text/javascript" class="main">
+
+    /**
+     * @typedef {Object} Member - タスクの達成に必要な人的資源
+     * @prop {number} ideal - 理想的な担当者数
+     * @prop {string[]} fixed - 担当者名の配列
+     * 
+     * @typedef {Object} Resource - タスク達成に必要な資源
+     * @prop {string} name - 資源の名前。ビニール紐、等
+     * @prop {number} quantity - 必要な数量
+     * @prop {string} unit - 単位名。円、個、等
+     * @prop {string} procurement - 調達方法。学校、○○さん持参、購入、等
+     * @prop {number} budget - 必要な予算額(見込)
+     * @prop {string} note - 備考
+     * 
+     * 
+     * @typedef {Object} Task - タスクの定義
+     * @prop {string} id - 親ID＋自No。プログラム内部で自動採番
+     * @prop {string} label - セクションまたはタスクのラベル
+     * @prop {string} [summary] - タスクの概要
+     * @prop {string} [pending] - 要検討事項
+     * @prop {string} [note] - 備考
+     * @prop {Task[]} [children] - 子タスクの配列。指定した場合、以下は指定不可
+     * 
+     * @prop {Date} start - 開始日時
+     * @prop {Date} end - 終了日時
+     * @prop {string} location - 集合場所、作業場所
+     * @prop {Member} members - タスクの担当者(人的資源)
+     * @prop {Resource[]} resources - タスクの達成に必要な物的資源
+     * @prop {string} output - タスクの成果物
+     * @prop {string} style - タスクをバー表示する時の表示スタイル
+     * 
+     * 
+     * @typedef {Object.<string>:<string>} CSSDef - 要素のデザインのオブジェクト。JavaScriptでのプロパティ名：値となるオブジェクト
+     * 
+     * @typedef {Object} Project
+     * @prop {Task[]} tasks - 目標達成に必要なタスクの配列
+     * @prop {Object.<string>:<CSSDef>} design - タスクをバー表示する時のスタイル定義
+     * @prop {number} unit=5 - バーを表示する際の精度(単位：分)
+     * @prop {Object.<string>:<Task>} - task.idをキーにタスクを検索するマップ
+     * 
+     */
+
+    const ttData = {
+      unit: 5,
+      map: {},
+      design: {
+        default: {
+          color: "#000",
+          backgroundColor: "rgba(196,196,196,0.6)",
+          border: "solid 1px #aaa",
+        },
+        critical: {
+          color: "#fff",
+          backgroundColor: "rgba(255,96,96,0.6)",
+          border: "solid 1px #f00",
+        },
+      },
+      tasks: [{
+        label: "受付",
+        summary: "参加者の受付",
+        note: "正門近辺の駐輪に注意",
+        start: "2023-09-30T14:00:00",
+        end: "2023-09-30T15:30:00",
+        location: "正門",
+        members: {
+          ideal: 10,
+          fixed: ['嶋津','織田','羽柴','徳川'],
+        },
+        resources: [
+          {name:"参加者名簿",quantity:2,unit:"冊",procurement:"嶋津が持参",budget:0,note:""},
+          {name:"文鎮",quantity:4,unit:"個",procurement:"担当者が持参",budget:0,note:""},
+          {name:"カラーコーン",quantity:12,unit:"本",procurement:"遊び場",budget:0,note:""},
+        ],
+        output: "記入済み名簿",
+        pending: `
+1. 受領した参加費の管理方法
+1. 名簿(紙)で受付した人の名寄せ
+        `,
+        style: "default",
+      },{
+        label: "カレー作成",
+        summary: "",
+        note: "中高生ボランティア参加の可能性あり",
+        children: [
+          {
+            label: "材料買い出し",
+            summary: "青果・肉・ルーを買い出し",
+            note: "事前発注は不要(例年してない)",
+            start: "2023-09-30T09:30:00",
+            end: "2023-09-30T10:50:00",
+            location: "正門",
+            members: {
+              ideal: 4,
+              fixed: ['国生','河合','高井'],
+            },
+            resources: [
+              {name:"牛スネ肉",quantity:10,unit:"kg",procurement:"購入",budget:30000,note:"@250/100g以内"},
+              {name:"玉ねぎ",quantity:4,unit:"kg",procurement:"購入",budget:50000,note:""},
+            ],
+            output: "特になし",
+            style: "critical",
+          },
+        ]
+      }]
+    };
+
+    function timetable(timetableElement,timetableData){
+      const v = {
+        minTime: Infinity, // task.startの最小値。UNIX時刻
+        maxTime: -Infinity,
+        startHour: Infinity, // minTime以下の正時となるUNIX時刻。表示領域の左端
+        endHour: -Infinity,  // maxTime以上の正時となるUNIX時刻。表示領域の右端
+        numHour: 0,          // startHour〜endHourまでの時間数
+        createElement: (arg={}) => { // DIV要素を生成、属性を指定する
+          let rv = document.createElement(('tag' in arg) ? arg.tag : 'div');
+          for( let x in arg ){
+            switch(x) {
+              case 'tag': break;
+              case 'text': rv.innerHTML = arg.text; break;
+              default: rv.setAttribute(x,arg[x]);
+            }
+          }
+          return rv;
+        },
+        timeRange: (dArray) => {  // v.minTime, v.maxTimeの取得
+          for( let task of dArray ){
+            if( 'children' in task ){
+              v.timeRange(task.children);
+            } else {
+              v.st = new Date(task.start).getTime();
+              v.ed = new Date(task.end).getTime();
+              if( v.minTime > v.st ) v.minTime = v.st;
+              if( v.maxTime < v.ed ) v.maxTime = v.ed;
+            }
+          }
+        },
+        applyStyle: (arg) => {
+          // apply,additionの既定値設定
+          const w = Object.assign({apply:'default',addition:{}},arg);
+          // 適用するスタイルのオブジェクトを作成
+          w.style = Object.assign(timetableData.design[w.apply],w.addition);
+          for( let a in w.style ){
+            arg.element.style[a] = w.style[a];
+          }
+        },
+        appendTask: (task,pId,seq) => { // ガントチャートの作成
+          task.id = pId + (seq+1) + '.';
+          timetableData.map[task.id] = task;
+          if( 'children' in task ){
+            // ラベル行：labelをtasksに追加
+            v.labelElement = v.createElement({class:'label'});
+            v.labelElement.appendChild(v.createElement({tag:'span',text:task.id+task.label}));
+            v.tasksElement.appendChild(v.labelElement);
+            for( let i=0 ; i<task.children.length ; i++ ){
+              v.appendTask(task.children[i],task.id,i);
+            }
+          } else {
+            // タスク：barをtasksに追加
+            v.barElement = v.createElement({class:'bar'});
+            v.barElement.style.gridTemplateColumns = 'repeat('+(v.numHour*12)+', 1fr)';
+            // barSpan: 棒状の部分
+            v.barSpan = v.createElement({tag:'span',name:task.id,text:task.label});
+            v.barStart = ((new Date(task.start).getTime()) - v.startHour) / (timetableData.unit*60000) + 1;
+            v.barEnd = ((new Date(task.end).getTime()) - v.startHour) / (timetableData.unit*60000) + 1;
+            v.applyStyle({
+              element: v.barSpan,
+              apply: task.style,
+              addition: {gridColumn:v.barStart + '/' + v.barEnd},
+            });
+            //v.barSpan.addEventListener('click',v.showDetail(task.id));
+            v.barSpan.onclick = () => v.showDetail(task.id);
+            //v.barSpan.style.gridColumn = v.barStart + '/' + v.barEnd;
+            v.barElement.appendChild(v.barSpan);
+            v.tasksElement.appendChild(v.barElement);
+          }
+        },
+        showDetail: (id) => {
+          console.log('showDetail: '+id);
+        }
+      };
+
+      // 事前準備
+      v.timeRange(timetableData.tasks);
+      v.startHour = Math.floor(v.minTime / 3600000) * 3600000;
+      v.endHour = Math.ceil(v.maxTime / 3600000) * 3600000;
+      /*console.log(new Date(v.minTime));
+      console.log(new Date(v.maxTime));
+      console.log(new Date(v.startHour));
+      console.log(new Date(v.endHour));*/
+
+      // 1.controllerの要素を作成
+
+      // 2.mainの要素を作成
+
+      // 2.1.main.headerの要素を作成
+      v.headerElement = document.querySelector('.timetable .main .header');
+      for( v.i=v.startHour ; v.i<=v.endHour ; v.i+=3600000 ){
+        v.o = v.createElement();
+        v.o.innerText = new Date(v.i).getHours() + ':00';
+        v.headerElement.appendChild(v.o);
+        v.numHour++;
+      }
+      v.headerElement.style.gridTemplateColumns = 'repeat('+v.numHour+', 1fr)';
+      
+      // 2.2.main.timelineの要素を作成
+      v.timelineElement = document.querySelector('.timetable .main .timeline');
+      v.timelineElement.innerHTML = '<div></div>'.repeat(v.numHour*4);
+      v.timelineElement.style.gridTemplateColumns = 'repeat('+(v.numHour*4)+', 1fr)';
+
+      // 2.2.main.tasksの要素を作成
+      v.tasksElement = document.querySelector('.timetable .main .tasks');
+      for( let i=0 ; i<timetableData.tasks.length ; i++ ){
+        v.appendTask(timetableData.tasks[i],'',i);
+      }
+
+      // 3.dialogの要素を作成
+
+    }
+
+    // ブラウザ上で実行する場合の処理
+    window.addEventListener('DOMContentLoaded',() => {
+      const v = {};
+
+      timetable(document.querySelector('div.timetable[name="tt03"]'),ttData);
+
+      // MarkDownで記述された部分をHTML化して表示
+      document.querySelectorAll('script.markdown').forEach(md => {
+        v.name = md.getAttribute('name');
+        v.content = document.querySelector('script[name="'+v.name+'"]').textContent.trim();
+        if( v.m = v.content.match(/^\/\*([\s\S]+)\*\//) )  v.content = v.m[1];
+        document.querySelector('div[name="'+v.name+'"]').innerHTML = marked(v.content);
+        //console.log(v);
+      });
+
+      // PlantUMLで記述された部分をHTML化して表示
+      document.querySelectorAll('script.PlantUML').forEach(pu => {
+        v.name = pu.getAttribute('name');
+        v.content = document.querySelector('script[name="'+v.name+'"]').textContent.trim();
+        if( v.m = v.content.match(/^\/\*([\s\S]+)\*\//) )  v.content = v.m[1];
+        document.querySelector('.image img[name="'+v.name+'"]').src
+        = "http://www.plantuml.com/plantuml/svg/"+plantumlEncoder.encode(v.content);
+        //console.log(v);
+      });
+    });
+  </script>
+</body></html>
