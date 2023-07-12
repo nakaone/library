@@ -94,6 +94,15 @@
     .timetable .detail > div {
       grid-template-columns: 5rem 1fr;
     }
+    .timetable .detail .button {
+      height: 3rem;
+      margin-bottom: 1rem;
+      display: flex;
+    }
+    .timetable .detail .button button {
+      margin-left: 2rem;
+      height: 2rem;
+    }
     /*
       テーブル関係
     */
@@ -119,7 +128,10 @@
         <div class="tasks"></div>
       </div>
       <div class="detail">
-        <button>閉じる</button>
+        <div class="button">
+          <button name="close">閉じる</button>
+          <button name="edit">編集</button>
+        </div>
         <table>
           <thead>
             <tr><th>項目</th><th>値</th><th>備考</th></tr>
@@ -200,6 +212,7 @@ class TimeTable {
         },
       },
       detailDateFormat: 'M/dd hh:mm', // 詳細画面に表示する日時の形式
+      dataSheet: null,  // 元データを格納したGoogle SpreadのURL
     },opt);
     console.log(this.opt);
     // タスクのセット
@@ -530,8 +543,13 @@ class TimeTable {
     }
     
     // 詳細画面の「閉じる」ボタン動作設定
-    v.detail.querySelector('button').onclick
+    v.detail.querySelector('button[name="close"]').onclick
     = () => v.detail.style.display = 'none';
+    // 「編集」ボタン動作設定
+    if( this.opt.dataSheet !== null ){
+      v.detail.querySelector('button[name="edit"]').onclick
+      = () => window.open(this.opt.dataSheet,'_blank');
+    }
 
     // 詳細画面表示
     v.detail.style.display = 'block';
@@ -622,7 +640,6 @@ function Array_tabulize(opt){
     v.tbody.appendChild(v.tr);
   }
 
-
   v.table.appendChild(v.thead);
   v.table.appendChild(v.tbody);
   console.log(v.table)
@@ -634,10 +651,14 @@ Date.prototype.toLocale = Date_toLocale;
 
 window.addEventListener('DOMContentLoaded',() => {
   console.log('timetable test start.');
-  fetch("https://script.google.com/macros/s/AKfycbxNJm9X2Dse9brDmCWFTsg9WoQ6vyE8QXYcUPUq8aXELXP7RRbmz5gepaqU25ZvOGx3/exec")
+  const url = {
+    GAS:'https://script.google.com/macros/s/AKfycbxNJm9X2Dse9brDmCWFTsg9WoQ6vyE8QXYcUPUq8aXELXP7RRbmz5gepaqU25ZvOGx3/exec',
+    sheet: 'https://tinyurl.com/2ahyly3l',
+  }
+  fetch(url.GAS)
   .then(response => response.json()).then(r => {
     const v = {raw:r};
-    const tt01 = new TimeTable('div.timetable[name="tt01"]',v.raw,{datatype:'sheet'});
+    const tt01 = new TimeTable('div.timetable[name="tt01"]',v.raw,{datatype:'sheet',dataSheet:url.sheet});
 });
 });
 </script>
