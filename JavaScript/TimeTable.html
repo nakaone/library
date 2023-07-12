@@ -471,6 +471,7 @@ class TimeTable {
       task:this.map[id],  // 表示するタスクのオブジェクト
       detail: this.rootElement.querySelector('.detail'),  // 詳細領域の要素
       /** 非表示項目を排除しながら表示順に項目をソート
+       * - [オブジェクトをdateでソートする例](https://keizokuma.com/js-array-object-sort/)
        * @param {Object} columnDef - 欄名:{column,label,type,memo,must,display,note}をメンバとするオブジェクト
        */
       listColumns: (columnDef) => { // 
@@ -483,9 +484,10 @@ class TimeTable {
       },
     };
 
+    // 前回の表示結果をクリア
+    v.detail.querySelector('tbody').innerHTML = '';
+
     // 非表示項目を排除しながら表示順に項目をソート
-    // オブジェクトをdateでソートする例
-    // https://keizokuma.com/js-array-object-sort/
     v.list = v.listColumns(this.opt.sheetDef.timetable);
     console.log(v.list);
 
