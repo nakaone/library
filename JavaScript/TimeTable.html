@@ -116,44 +116,9 @@
       border-bottom: solid 1px #aaa;
       border-right: solid 1px #aaa;
     }
-    /*
-      開閉アイコン
-    */
-    .opencloseIcon {
-      --opencloseIconColor : #888;
-      --opencloseIconSize : 0.9rem;
-      --thickness : calc(var(--opencloseIconSize) * 0.15);
-      --insize : calc(var(--opencloseIconSize) - (var(--thickness) * 2));
-      display: inline-block;
-      position: relative; /* 横棒の位置をtop/left指定可能に */
-      box-sizing: border-box;
-      width: var(--opencloseIconSize);
-      height: var(--opencloseIconSize);
-      border: solid var(--thickness) var(--opencloseIconColor);
-      background: rgba(0,0,0,0);  /* 透明 */
-      border-radius: calc(var(--thickness) / 2);
-    }
-    .opencloseIcon span {
-      display: block;
-      width: calc(var(--insize) * 0.9);
-      height: var(--thickness);
-      border-radius: calc(var(--thickness) / 2);
-      position: absolute;
-      left: calc(var(--insize) * 0.05);
-      top: calc((var(--insize) - var(--thickness)) / 2);
-      background: var(--opencloseIconColor);
-    }
-    .opencloseIcon span:nth-child(2) {
-      left: calc((var(--insize) - var(--thickness)) / 2);
-      top: calc(var(--insize) * 0.05);
-      width: var(--thickness);
-      height: calc(var(--insize) * 0.9);
-    }
   </style>
 </head>
 <body>
-  <div>これは<div class="opencloseIcon"><span></span><span></span></div>のテストです。</div>
-  
   <div><h1>タイムテーブル</h1>
     <div class="timetable" name="tt01">
       <div class="controller"></div>
@@ -700,7 +665,7 @@ Date.prototype.toLocale = Date_toLocale;
 window.addEventListener('DOMContentLoaded',() => {
   console.log('timetable test start.');
   const url = {
-    GAS:'https://script.google.com/macros/s/AKfycbxNJm9X2Dse9brDmCWFTsg9WoQ6vyE8QXYcUPUq8aXELXP7RRbmz5gepaqU25ZvOGx3/exec',
+    GAS:'https://script.google.com/macros/s/AKfycbwm3R0FbnhGALwO1J8G0yxNBvGAL6kPKewyypoz3OFIwIaB56D9XKAjkbopwpOEYdFm/exec',
     sheet: 'https://tinyurl.com/2ahyly3l',
   }
   fetch(url.GAS)
