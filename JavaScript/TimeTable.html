@@ -410,7 +410,7 @@ class TimeTable {
       v.l = raw.timetable[v.i];
       // 有効な行データをオブジェクト化する
       if( Number(v.l[0]) > 0 ){ // 空白行スキップ
-        v.o = {};
+        v.o = {resources:[]}; // 必要資機材のみtimetableシート上にないので足しておく
         for( v.j=0 ; v.j<v.l.length ; v.j++ ){
           v.colType = this.opt.sheetDef.timetable[v.header[v.j]].type.toLowerCase();
           switch( v.colType ){
