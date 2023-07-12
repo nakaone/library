@@ -262,8 +262,7 @@ class TimeTable {
   /** div.tasks領域にタスク(単体)を追加する
    * (本関数はdrawから呼ばれるプライベート関数)
    */
-  //appendTask(task,pId,seq){ // ガントチャートの作成
-  appendTask(task){ // ガントチャートの作成
+  appendTask(task,pId=''){ // ガントチャートの作成
     const v = {
       tasksElement: this.rootElement.querySelector('.main .tasks'),
     };
@@ -276,16 +275,19 @@ class TimeTable {
     if( 'children' in task ){
       // childrenが存在⇒セクション(ラベル)行
       v.labelElement = this.createElement({class:'label'});
-      v.labelSpan = this.createElement({tag:'span',text:task.name});
-      v.labelSpan.onclick = () => this.showDetail(task.id);
+      //v.labelSpan = this.createElement({tag:'span',text:task.name});
+      //v.labelSpan.onclick = () => this.showDetail(task.id);
+      v.labelSpan = this.createElement('span');
+      v.labelSpan.innerText = '▼'+task.name;
+      v.labelSpan.onclick = () => this.toggleChildren(task.id,v.labelSpan);
       v.labelElement.appendChild(v.labelSpan);
       v.tasksElement.appendChild(v.labelElement);
       for( let i=0 ; i<task.children.length ; i++ ){
-        this.appendTask(task.children[i]);
+        this.appendTask(task.children[i],task.id);
       }
     } else {
       // childrenが不存在⇒タスク行
-      v.barElement = this.createElement({class:'bar'});
+      v.barElement = this.createElement({class:'bar pId'+pId});
       v.barElement.style.gridTemplateColumns
         = 'repeat('+(this.numHour*12)+', 1fr)';
       // barSpan: 棒状の部分
@@ -390,7 +392,7 @@ class TimeTable {
     v.tasksElement = this.rootElement.querySelector('.main .tasks');
     v.tasksElement.innerHTML = '';
     for( let i=0 ; i<this.tasks.length ; i++ ){
-      this.appendTask(this.tasks[i],'',i);
+      this.appendTask(this.tasks[i],'');
     }
 
     // 3.detailの要素を作成
@@ -609,6 +611,15 @@ class TimeTable {
     }
   }
 
+  /** セクション名クリックで配下のタスクの表示/非表示切り替え */
+  toggleChildren(id,label){
+    this.rootElement.querySelectorAll('.pId'+id).forEach(x => 
+      x.style.display = x.style.display === 'none' ? '' : 'none');
+    // ラベルの前の三角を交換
+    let m = label.innerText.match(/^([▶️|▼])(.+)$/);
+    console.log(m)
+    label.innerText = (( m[1] === '▼' ) ? '▶️' : '▼') + m[2];
+  }
 
 }
 
