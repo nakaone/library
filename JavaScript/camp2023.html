@@ -168,19 +168,24 @@
       https://qiita.com/TechnoKuRo/items/622c3dcc2ff3f7e09474
     NG <img width="100%" src="https://drive.google.com/file/d/1upIJfpTWpZtX9mRkRpVqhNny9Dy1FAaq/view" />
     -->
-    <div><h2>全体図</h2>
-      <img width="60%" src="https://drive.google.com/uc?export=view&id=1upIJfpTWpZtX9mRkRpVqhNny9Dy1FAaq&usp=sharing" />
-    </div>
-    <div><h2>肝試しルート</h2>
-      <img width="80%" src="https://drive.google.com/uc?export=view&usp=sharing&id=1x3W6T0qpTaI7nlmCwFwWcIz12qtbTVdu" />
-    </div>
+    <img width="60%" src="https://drive.google.com/uc?export=view&id=1upIJfpTWpZtX9mRkRpVqhNny9Dy1FAaq&usp=sharing" />
+  </div>
 
-    
+  <div><h1>肝試し</h1>
+    <img width="80%" src="https://drive.google.com/uc?export=view&usp=sharing&id=1x3W6T0qpTaI7nlmCwFwWcIz12qtbTVdu" />
+    <div class="markdown" name="kimodameshi"></div>
+  </div>
+
+  <div><h1>関連サイト</h1>
+    <div class="markdown" name="RelatedSites"></div>
   </div>
 
   <div><h1>参考：論議メモ</h1>
     <details><summary>2023/06/10 定例会</summary>
       <div class="markdown" name="20230610"></div>
+    </details>
+    <details><summary>2023/07/08 定例会</summary>
+      <div class="markdown" name="20230708"></div>
     </details>
   </div>
 
@@ -250,6 +255,19 @@ function Date_toLocale(format='yyyy/MM/dd'){
     if( typeof window !== 'undefined' ) alert(e.stack); 
     //throw e; //以降の処理を全て停止
     v.rv.stack = e.stack; return v.rv; // 処理継続
+  }
+}
+
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
   }
 }
 
@@ -738,7 +756,7 @@ Date.prototype.toLocale = Date_toLocale;
   }
   
 </script>
-  
+
 <script type="text/javascript" class="main">
 
 
@@ -768,66 +786,16 @@ window.addEventListener('DOMContentLoaded',() => {
     // MarkDownで記述された部分をHTML化して表示
     console.log(document.querySelectorAll('div.markdown'));
     document.querySelectorAll('div.markdown').forEach(x => {
-      console.log(v.docs.markdown[x.getAttribute('name')])
+      //console.log(v.docs.markdown[x.getAttribute('name')])
       x.innerHTML = marked(v.docs.markdown[x.getAttribute('name')]);
     });
-    /*
-    document.querySelectorAll('script.markdown').forEach(md => {
-      v.name = md.getAttribute('name');
-      v.content = document.querySelector('script[name="'+v.name+'"]').textContent.trim();
-      if( v.m = v.content.match(/^\/\*([\s\S]+)\*\//) )  v.content = v.m[1];
-      document.querySelector('div[name="'+v.name+'"]').innerHTML = marked(v.content);
-      //console.log(v);
-    });
-    */
 
     // PlantUMLで記述された部分をHTML化して表示
     document.querySelectorAll('img.PlantUML').forEach(x => {
-      console.log(v.docs.PlantUML[x.getAttribute('name')])
+      //console.log(v.docs.PlantUML[x.getAttribute('name')])
       x.src = "http://www.plantuml.com/plantuml/svg/"+plantumlEncoder.encode(v.docs.PlantUML[x.getAttribute('name')]);
     });
-    /*
-    document.querySelectorAll('script.PlantUML').forEach(pu => {
-      v.name = pu.getAttribute('name');
-      v.content = document.querySelector('script[name="'+v.name+'"]').textContent.trim();
-      if( v.m = v.content.match(/^\/\*([\s\S]+)\*\//) )  v.content = v.m[1];
-      document.querySelector('.image img[name="'+v.name+'"]').src
-      = "http://www.plantuml.com/plantuml/svg/"+plantumlEncoder.encode(v.content);
-      //console.log(v);
-    });
-    */
   });
 });
-
-
-
-
-
-/*
-    window.addEventListener('DOMContentLoaded',() => {
-      const v = {};
-
-      timetable(document.querySelector('div.timetable[name="tt03"]'),ttData);
-
-      // MarkDownで記述された部分をHTML化して表示
-      document.querySelectorAll('script.markdown').forEach(md => {
-        v.name = md.getAttribute('name');
-        v.content = document.querySelector('script[name="'+v.name+'"]').textContent.trim();
-        if( v.m = v.content.match(/^\/\*([\s\S]+)\*\//) )  v.content = v.m[1];
-        document.querySelector('div[name="'+v.name+'"]').innerHTML = marked(v.content);
-        //console.log(v);
-      });
-
-      // PlantUMLで記述された部分をHTML化して表示
-      document.querySelectorAll('script.PlantUML').forEach(pu => {
-        v.name = pu.getAttribute('name');
-        v.content = document.querySelector('script[name="'+v.name+'"]').textContent.trim();
-        if( v.m = v.content.match(/^\/\*([\s\S]+)\*\//) )  v.content = v.m[1];
-        document.querySelector('.image img[name="'+v.name+'"]').src
-        = "http://www.plantuml.com/plantuml/svg/"+plantumlEncoder.encode(v.content);
-        //console.log(v);
-      });
-    });
-*/
-  </script>
+</script>
 </body></html>
