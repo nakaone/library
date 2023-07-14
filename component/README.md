@@ -16,3 +16,4 @@
 | 既存型 | メソッド名 | 概要 |
 | :-- | :-- | :-- |
 | Array | [tabulize](Array_tabulize.md) | Array型の変数に2次元配列からHTMLの表を作成してtable要素として返す |
+| Date  | [calc](Date.calc.md) | 指定日に年/月/日/時/分/秒/ミリ秒数を加減した日時を計算する"calc()"メソッドをDate型に追加 |
