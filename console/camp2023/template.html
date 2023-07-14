@@ -13,6 +13,7 @@
 
   <!-- TabDesign用CSS -->
   <style type="text/css" data-embed="">
+    /*
     .TabDesign .tabs {
       width: 100%;
       height: 100%;
@@ -28,7 +29,7 @@
     .TabDesign .tabs div.act {
       border-bottom: solid 4px #0ff;
     }
-
+    */
   </style>
 </head>
 <body class="TabDesign" name="main">
@@ -108,8 +109,35 @@ class TabDesign {
       name: null, // 対象となるページ全体のname属性。nullなら単一で特定不要と解釈
       initial: null,  // 初期表示ページの名前
       direction: 'x', // タブを並べる方向。x:横並び, y:縦並び
+      style: {
+        tabs: {
+          selector: ".TabDesign .tabs",
+          css: {
+            width: "100%",
+            height: "100%",
+            margin: "0px",
+            padding: "0px",
+            boxSizing: "border-box",
+            display: "grid",
+          },
+        },
+        tab: {
+          selector: ".TabDesign .tabs div",
+          css: {
+            paddingLeft: "1rem",
+            borderBottom: "solid 4px #ccc",
+          },
+        },
+        act: {
+          //selector: ".TabDesign .tabs div.act",
+          css: {
+            paddingLeft: "1rem",
+            borderBottom: "solid 4px #000",
+          },
+        }
+      },
     },opt);
-    console.log(this.option);
+    //console.log(this.option);
 
     // 全体の親要素をthis.wrapper、タブ表示領域をthis.tabsに保存
     this.wrapperSelector = '.TabDesign'
@@ -117,6 +145,15 @@ class TabDesign {
     this.wrapper = document.querySelector(this.wrapperSelector);
     this.tabs = document.querySelector(this.wrapperSelector+' > .tabs');
     //console.log(this.wrapper);
+
+    // スタイルの適用
+    for( v.x of ['tabs','tab'] ){ // actは不要
+      document.querySelectorAll(this.option.style[v.x].selector).forEach(element => {
+        for( v.y in this.option.style[v.x].css ){
+          element.style[v.y] = this.option.style[v.x].css[v.y];
+        }
+      });
+    }
 
     // ページ名のリストを作成
     this.pageList = [];
@@ -146,13 +183,21 @@ class TabDesign {
   changePage(page=null){
     console.log('TabDesign.changePage start.');
     this.activePage = page === null ? this.pageList[0] : page;
+    console.log(this.activePage,this.pageList,this.tab)
     this.pageList.forEach(x => {
-      console.log(this.tab[x]);
       if( x === this.activePage ){
-        this.tab[x].classList.add('act');
+        console.log('activate:',this.tab[x]);
+        //this.tab[x].classList.add('act');
+        for( let y in this.option.style.act.css ){
+          this.tab[x].style[y] = this.option.style.act.css[y];
+        }
         this.page[x].style.display = '';
       } else {
-        this.tab[x].classList.remove('act');
+        console.log('in-activate:',this.tab[x]);
+        //this.tab[x].classList.remove('act');
+        for( let y in this.option.style.tab.css ){
+          this.tab[x].style[y] = this.option.style.tab.css[y];
+        }
         this.page[x].style.display = 'none';
       }
     })
@@ -163,7 +208,7 @@ class TabDesign {
 // ブラウザ上で実行する場合の処理
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
-  console.log('timetable test start.');
+  //console.log('timetable test start.');
 
   v.main = new TabDesign({name:"main"});
   v.map = new TabDesign({name:"map"});
