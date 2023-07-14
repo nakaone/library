@@ -1,5 +1,4 @@
-<!DOCTYPE html><html xml:lang="ja" lang="ja">
-<head>
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
   <title>校庭キャンプ2023</title>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
@@ -12,16 +11,44 @@
   <!-- MarkDownテキストをHTML化するCDN -->
   <script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
 
-  <!-- TimeTable用CSS -->
-  <style type="text/css" data-embed=""></style>
+  <!-- TabDesign用CSS -->
+  <style type="text/css" data-embed="">
+    .TabDesign {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+    }
+    .TabDesign div {
+      padding-left: 1rem;
+      border-bottom: solid 4px #ccc;
+    }
+    .TabDesign div.act {
+      border-bottom: solid 4px #0ff;
+    }
+
+  </style>
 </head>
 <body>
-  <div><h1>スケジュール</h1>
+  <div class="TabDesign">
+    <div name="schedule">schedule</div>
+    <div name="timetable">time table</div>
+    <div name="map">map</div>
+    <div name="expedition">expedition</div>
+    <div name="RelatedSites">Related Sites</div>
+    <div name="minutes">minutes</div>
+  </div>
+
+
+  <div name="schedule"><h1>スケジュール</h1>
     <div class="image"><div class="wrapPlantUML"><img class="PlantUML" name="schedule1"></img></div></div>
     <div class="markdown" name="schedule2"></div>
   </div>
 
-  <div><h1>タイムテーブル</h1>
+  <div name="timetable"><h1>タイムテーブル</h1>
     <ul>
       <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
       <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
@@ -30,20 +57,20 @@
     </div>
   </div>
 
-  <div><h1>マップ</h1>
+  <div name="map"><h1>マップ</h1>
     <img width="60%" data-embed="" />
   </div>
 
-  <div><h1>肝試し</h1>
+  <div name="expedition"><h1>肝試し</h1>
     <img width="80%" data-embed="" />
     <div class="markdown" name="kimodameshi"></div>
   </div>
 
-  <div><h1>関連サイト</h1>
+  <div name="RelatedSites"><h1>関連サイト</h1>
     <div class="markdown" name="RelatedSites" data-embed=""></div>
   </div>
 
-  <div><h1>参考：論議メモ</h1>
+  <div name="minutes"><h1>参考：論議メモ</h1>
     <details><summary>2023/06/10 定例会</summary>
       <div class="markdown" name="20230610" data-embed=""></div>
     </details>
@@ -56,11 +83,63 @@
 
 <script type="text/javascript" class="main">
 
+/**
+ * @classdesc タブ切り替えのHTMLページを作成する
+ */
+
+class TabDesign {
+
+  /**
+   * @constructor
+   * @param {string[]} list - ページ名のリスト
+   * @param {string} [act] - 初期表示するページ名
+   * @returns {void}
+   * 
+   * - タブは`
+   */
+  constructor(list,act){
+    console.log('TabDesign.constructor start.\n',list,act);
+    this.pageList = list;
+    this.tab = {};
+    this.page = {};
+    this.pageList.forEach(x => {
+      this.tab[x] = document.querySelector('.TabDesign div[name="'+x+'"]');
+      this.page[x] = document.querySelector('body > div[name="'+x+'"]');
+      //console.log(x,this.tab[x],this.page[x]);
+      this.tab[x].addEventListener('click',()=>this.changePage(x));
+    });
+
+    this.changePage(act); // 初期ページ
+    console.log('TabDesign.constructor end.');
+  }
+
+  changePage(page){
+    console.log('TabDesign.changePage start.');
+    this.activePage = page;
+    this.pageList.forEach(x => {
+      if( x === this.activePage ){
+        this.tab[x].classList.add('act');
+        this.page[x].style.display = '';
+      } else {
+        this.tab[x].classList.remove('act');
+        this.page[x].style.display = 'none';
+      }
+    })
+    console.log('TabDesign.changePage end.');
+  }
+}
 
 // ブラウザ上で実行する場合の処理
 window.addEventListener('DOMContentLoaded',() => {
-  console.log('timetable test start.');
   const v = {};
+  console.log('timetable test start.');
+
+  v.menu = new TabDesign(
+    ['schedule', 'timetable', 'map', 'expedition', 'RelatedSites', 'minutes'],
+    'schedule'
+  );
+
+  /*
   const url = {
     GAS:'https://script.google.com/macros/s/AKfycbwm3R0FbnhGALwO1J8G0yxNBvGAL6kPKewyypoz3OFIwIaB56D9XKAjkbopwpOEYdFm/exec',
     sheet: 'https://tinyurl.com/2ahyly3l',
@@ -93,6 +172,7 @@ window.addEventListener('DOMContentLoaded',() => {
       x.src = "http://www.plantuml.com/plantuml/svg/"+plantumlEncoder.encode(v.docs.PlantUML[x.getAttribute('name')]);
     });
   });
+  */
 });
 </script>
 </body></html>
