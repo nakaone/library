@@ -39,24 +39,33 @@
 
 # フォルダ・ファイル構成
 
-- component：xxx.html, xxx.js, xxx.css等。言語不問。未テストは".js"のまま保存
-  - szLib.css：共通CSS
-  - szLib.js：ブラウザでの動作確認のため、ブラウザで使用する全コンポーネントを集めたライブラリ
-  - CommonJS.js：コンソールでの動作確認のため、コンソールで使用する全コンポーネントを集めたライブラリ
-  - GASLib.js：GASでの動作確認のため、GASで使用する全コンポーネントを集めたライブラリ
-- tools：libraryの運用で使用するツール類
-  - generator.js：テンプレートに指定componentを埋め込む
-- GAS：Google Apps Scriptで使用
+- archive：旧版保存用。継承する機能が作成されたら削除
+- browser：ブラウザ(html)で使用。
   - README.MD：GASフォルダ配下の目録
   - xxx：
     - xxx.sh：generator.jsを使用し、xxx.yyを生成するツール
     - xxx.template.yy：componentを埋め込むテンプレート。拡張子(yy)はhtml,js,gs等
     - xxx.md：jsdoc2mdで生成されたドキュメント
     - xxx.yy：xxx.shによって生成された成果物
-- console：コンソール(Node.js)で使用。配下の構成はGASと同じ
-- browser：ブラウザ(html)で使用。配下の構成はGASと同じ
+  - szLib.css：共通CSS(console,GASには無し)
+- component：xxx.html, xxx.js, xxx.css等。言語不問。未テストは".js"のまま保存
+  - szLib.css：共通CSS
+  - szLib.js：ブラウザでの動作確認のため、ブラウザで使用する全コンポーネントを集めたライブラリ
+  - CommonJS.js：コンソールでの動作確認のため、コンソールで使用する全コンポーネントを集めたライブラリ
+  - GASLib.js：GASでの動作確認のため、GASで使用する全コンポーネントを集めたライブラリ
+- console：コンソール(Node.js)で使用。配下の構成はbrowserと同じ
+  - CommonJS.js：component/CommonJS.jsのハードリンク
+- GAS：Google Apps Scriptで使用。配下の構成はbrowserと同じ
+- tools：libraryの運用で使用するツール類
+  - embedComponent.js：テンプレートに指定componentを埋め込む
+  - CommonJS.js：component/CommonJS.jsのハードリンク
 - README.MD：運用手順等、library横断の情報とGAS/console/htmlへのリンクを記載
-- archive：旧版保存用
+
+参考：ハードリンクされているファイルを探す
+
+```
+find . -samefile console/szLib/szLib.js
+```
 
 # コンポーネントの作成手順
 

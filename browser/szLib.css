@@ -1,0 +1,71 @@
+.sz * {
+  margin: 0;
+  padding: 0;
+}
+.sz div {
+  font:helvetica,arial,freesans,clean,sans-serif;
+  color: black;
+  line-height: 1.5em;
+  background-color: #f8f8f8;
+  padding: 0.75em;
+}
+.sz .right, .sz .num {
+  text-align: right;
+}
+/*
+  ヘッダ関係
+*/
+.sz h1,.sz h2,.sz h3,.sz h4,.sz h5,.sz h6 {
+  border: 0;
+}
+.sz h1 {
+  font-size: 170%;
+  border-top: 4px solid #aaa;
+  padding-top: 0.5em;
+  margin-top: 1.5em;
+}
+.sz h2, h3 {
+  margin: 1em 0;
+}
+.sz h2 {
+  font-size: 150%;
+  margin-top: 1.5em;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5em;
+}
+/*
+  テーブル関係
+*/
+.sz th {
+  padding: 0.3em;
+  background-color: #888;
+  color: white;
+}
+.sz td {
+  padding: 0.3em;
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+/*
+  リスト関係
+*/
+.sz ul, .sz ol {
+  margin: 1em 0 1em 2em;
+}
+.sz li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+/*
+  ソース表示
+*/
+.sz code {
+  background-color: #f8f8ff;
+  color: #444;
+  padding: 0 0.2em;
+  border: 1px solid #dedede;
+}
+
+.sz pre {
+  border: solid 5px #999;
+}
