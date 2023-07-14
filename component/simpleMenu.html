@@ -1,0 +1,517 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>simpleMenu</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css" class="core">/* コアCSS */
+html, body, div {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: grid;
+}
+body {
+  --simpleMenuHeaderHeight: 50px; /* ヘッダの高さ(=メニューアイコンの大きさ) */
+  --textR: 176;
+  --textG: 176;
+  --textB: 176;
+  --textA: 1;
+  --textColor: rgba(var(--textR),var(--textG),var(--textB),var(--textA));
+  --backR: 255;
+  --backG: 255;
+  --backB: 255;
+  --backA: 1;
+  --backColor: rgba(var(--backR),var(--backG),var(--backB),var(--backA));
+  grid-template-rows: var(--simpleMenuHeaderHeight) 1fr;
+  grid-template-columns: 1fr;
+}
+
+/* メニュー関係(simpleMenu)以外の要素 */
+body > div:not(.simpleMenu) {
+  grid-row: 2/3;
+  grid-column: 1/2;
+  padding: 0.5rem;
+}
+
+body > .simpleMenu {
+  grid-row: 1/3;
+  grid-column: 1/2;
+  grid-template-rows: var(--simpleMenuHeaderHeight) 1fr;
+  grid-template-columns: 2fr 3fr var(--simpleMenuHeaderHeight);
+}
+
+.simpleMenu > .Title {
+  grid-row: 1/2;
+  grid-column: 1/3;
+  align-items: center;
+  color: var(--textColor);
+  font-size: calc(var(--simpleMenuHeaderHeight) * 0.65);
+  font-weight: 900;
+}
+
+/* ハンバーガーアイコン */
+.simpleMenu > .Navicon {
+  grid-row: 1/2;
+  grid-column: 3/4;
+  place-items: center;
+}
+
+.simpleMenu > .Navicon > button {
+  place-content: center center;
+  display: block;
+  margin: calc(var(--simpleMenuHeaderHeight) * 0.1);
+  padding: 0px;
+  box-sizing: border-box;
+  width: calc(var(--simpleMenuHeaderHeight) * 0.7);
+  height: calc(var(--simpleMenuHeaderHeight) * 0.7);
+  border: none;
+  background: rgba(0,0,0,0);  /* 透明 */
+  z-index: 4; /* div[name="navi"]より上の層に */
+  position: relative; /* 横棒の位置をtop/left指定可能に */
+  /* 以下button標準無効化用 */
+  box-shadow: none;
+}
+
+.simpleMenu > .Navicon button span {
+  display: block;
+  width: 100%;
+  height: calc(var(--simpleMenuHeaderHeight) * 0.12);
+  border-radius: calc(var(--simpleMenuHeaderHeight) * 0.06);
+  position: absolute;
+  left: 0;
+  background: var(--textColor);
+  transition: top 0.24s, transform 0.24s, opacity 0.24s;
+}
+.simpleMenu > .Navicon button span:nth-child(1) {
+  top: 0;
+}
+.simpleMenu > .Navicon button span:nth-child(2) {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.simpleMenu > .Navicon button span:nth-child(3) {
+  top: 100%;
+  transform: translateY(-100%);
+}
+
+.simpleMenu > .Navicon button span.is_active:nth-child(1) {
+  top: 50%;
+  transform: translateY(-50%) rotate(135deg);
+}
+.simpleMenu > .Navicon button span.is_active:nth-child(2) {
+  transform: translate(50%, -50%);
+  opacity: 0;
+}
+.simpleMenu > .Navicon button span.is_active:nth-child(3) {
+  top: 50%;
+  transform: translateY(-50%) rotate(-135deg);
+}
+
+/* メニュー領域 */
+.simpleMenu .Navi {
+  grid-row: 2/3;
+  grid-column: 2/4;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr;
+  z-index: 2;
+  --NaviBG: rgba(var(--textR),var(--textG),var(--textB),0.6);
+  --ItemBG: rgba(96,96,96,0.8);
+  --ItemText: white;
+}
+
+.simpleMenu .Navi div {
+  display: none;
+}
+
+.simpleMenu .Navi div.is_active {
+  display: grid;
+  grid-column: 1/2;
+}
+
+.simpleMenu .Navi div ul {
+  width: 100%;
+  margin: 0px;
+  background-color: var(--NaviBG);
+}
+
+.simpleMenu .Navi div ul li {
+  width: 100%;
+  margin: 1rem 0;
+  padding: 0.3rem;
+  list-style-type: none;
+  color: var(--ItemText);
+  background: var(--ItemBG);
+  text-decoration: none;
+  border: solid 1px var(--ItemText);
+}
+.simpleMenu .Navi div li.open::before {
+  content: "▼";
+  color: var(--ItemText);
+}
+.simpleMenu .Navi div li.close::before {
+  content: "▶︎";
+  color: var(--ItemText);
+}
+
+.simpleMenu .NaviBack {
+  grid-row: 1/3;
+  grid-column: 1/4;
+  z-index: 1;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr;
+}
+
+.simpleMenu > .NaviBack > div {
+  display: none;
+}
+
+.simpleMenu > .NaviBack > div.is_active {
+  display: grid;
+  grid-row: 1/2;
+  grid-column: 1/2;
+}
+
+
+/*
+  Loading Image
+    https://projects.lukehaas.me/css-loaders/
+    <div class="loader">Loading...</div>
+*/
+.simpleMenu > .loading {
+  grid-column: 1/4;
+  place-items: center;
+}
+.simpleMenu > .loading > div {
+  margin: 100px auto;
+  font-size: 25px;
+  width: 1.4em;
+  height: 1.4em;
+  border-radius: 50%;
+  position: relative;
+  text-indent: -9999em;
+  -webkit-animation: load5 1.1s infinite ease;
+  animation: load5 1.1s infinite ease;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  --paleColor: rgba(var(--textR),var(--textG),var(--textB),0.2);
+  --middleColor: rgba(var(--textR),var(--textG),var(--textB),0.5);
+  --darkColor: rgba(var(--textR),var(--textG),var(--textB),0.7)
+}
+@-webkit-keyframes load5 {
+  0%,
+  100% {
+    box-shadow: 0em -2.6em 0em 0em var(--backColor), 1.8em -1.8em 0 0em var(--paleColor), 2.5em 0em 0 0em var(--paleColor), 1.75em 1.75em 0 0em var(--paleColor), 0em 2.5em 0 0em var(--paleColor), -1.8em 1.8em 0 0em var(--paleColor), -2.6em 0em 0 0em var(--middleColor), -1.8em -1.8em 0 0em var(--darkColor);
+  }
+  12.5% {
+    box-shadow: 0em -2.6em 0em 0em var(--darkColor), 1.8em -1.8em 0 0em var(--backColor), 2.5em 0em 0 0em var(--paleColor), 1.75em 1.75em 0 0em var(--paleColor), 0em 2.5em 0 0em var(--paleColor), -1.8em 1.8em 0 0em var(--paleColor), -2.6em 0em 0 0em var(--paleColor), -1.8em -1.8em 0 0em var(--middleColor);
+  }
+  25% {
+    box-shadow: 0em -2.6em 0em 0em var(--middleColor), 1.8em -1.8em 0 0em var(--darkColor), 2.5em 0em 0 0em var(--backColor), 1.75em 1.75em 0 0em var(--paleColor), 0em 2.5em 0 0em var(--paleColor), -1.8em 1.8em 0 0em var(--paleColor), -2.6em 0em 0 0em var(--paleColor), -1.8em -1.8em 0 0em var(--paleColor);
+  }
+  37.5% {
+    box-shadow: 0em -2.6em 0em 0em var(--paleColor), 1.8em -1.8em 0 0em var(--middleColor), 2.5em 0em 0 0em var(--darkColor), 1.75em 1.75em 0 0em var(--backColor), 0em 2.5em 0 0em var(--paleColor), -1.8em 1.8em 0 0em var(--paleColor), -2.6em 0em 0 0em var(--paleColor), -1.8em -1.8em 0 0em var(--paleColor);
+  }
+  50% {
+    box-shadow: 0em -2.6em 0em 0em var(--paleColor), 1.8em -1.8em 0 0em var(--paleColor), 2.5em 0em 0 0em var(--middleColor), 1.75em 1.75em 0 0em var(--darkColor), 0em 2.5em 0 0em var(--backColor), -1.8em 1.8em 0 0em var(--paleColor), -2.6em 0em 0 0em var(--paleColor), -1.8em -1.8em 0 0em var(--paleColor);
+  }
+  62.5% {
+    box-shadow: 0em -2.6em 0em 0em var(--paleColor), 1.8em -1.8em 0 0em var(--paleColor), 2.5em 0em 0 0em var(--paleColor), 1.75em 1.75em 0 0em var(--middleColor), 0em 2.5em 0 0em var(--darkColor), -1.8em 1.8em 0 0em var(--backColor), -2.6em 0em 0 0em var(--paleColor), -1.8em -1.8em 0 0em var(--paleColor);
+  }
+  75% {
+    box-shadow: 0em -2.6em 0em 0em var(--paleColor), 1.8em -1.8em 0 0em var(--paleColor), 2.5em 0em 0 0em var(--paleColor), 1.75em 1.75em 0 0em var(--paleColor), 0em 2.5em 0 0em var(--middleColor), -1.8em 1.8em 0 0em var(--darkColor), -2.6em 0em 0 0em var(--backColor), -1.8em -1.8em 0 0em var(--paleColor);
+  }
+  87.5% {
+    box-shadow: 0em -2.6em 0em 0em var(--paleColor), 1.8em -1.8em 0 0em var(--paleColor), 2.5em 0em 0 0em var(--paleColor), 1.75em 1.75em 0 0em var(--paleColor), 0em 2.5em 0 0em var(--paleColor), -1.8em 1.8em 0 0em var(--middleColor), -2.6em 0em 0 0em var(--darkColor), -1.8em -1.8em 0 0em var(--backColor);
+  }
+}
+@keyframes load5 {
+  0%,
+  100% {
+    box-shadow: 0em -2.6em 0em 0em var(--backColor), 1.8em -1.8em 0 0em var(--paleColor), 2.5em 0em 0 0em var(--paleColor), 1.75em 1.75em 0 0em var(--paleColor), 0em 2.5em 0 0em var(--paleColor), -1.8em 1.8em 0 0em var(--paleColor), -2.6em 0em 0 0em var(--middleColor), -1.8em -1.8em 0 0em var(--darkColor);
+  }
+  12.5% {
+    box-shadow: 0em -2.6em 0em 0em var(--darkColor), 1.8em -1.8em 0 0em var(--backColor), 2.5em 0em 0 0em var(--paleColor), 1.75em 1.75em 0 0em var(--paleColor), 0em 2.5em 0 0em var(--paleColor), -1.8em 1.8em 0 0em var(--paleColor), -2.6em 0em 0 0em var(--paleColor), -1.8em -1.8em 0 0em var(--middleColor);
+  }
+  25% {
+    box-shadow: 0em -2.6em 0em 0em var(--middleColor), 1.8em -1.8em 0 0em var(--darkColor), 2.5em 0em 0 0em var(--backColor), 1.75em 1.75em 0 0em var(--paleColor), 0em 2.5em 0 0em var(--paleColor), -1.8em 1.8em 0 0em var(--paleColor), -2.6em 0em 0 0em var(--paleColor), -1.8em -1.8em 0 0em var(--paleColor);
+  }
+  37.5% {
+    box-shadow: 0em -2.6em 0em 0em var(--paleColor), 1.8em -1.8em 0 0em var(--middleColor), 2.5em 0em 0 0em var(--darkColor), 1.75em 1.75em 0 0em var(--backColor), 0em 2.5em 0 0em var(--paleColor), -1.8em 1.8em 0 0em var(--paleColor), -2.6em 0em 0 0em var(--paleColor), -1.8em -1.8em 0 0em var(--paleColor);
+  }
+  50% {
+    box-shadow: 0em -2.6em 0em 0em var(--paleColor), 1.8em -1.8em 0 0em var(--paleColor), 2.5em 0em 0 0em var(--middleColor), 1.75em 1.75em 0 0em var(--darkColor), 0em 2.5em 0 0em var(--backColor), -1.8em 1.8em 0 0em var(--paleColor), -2.6em 0em 0 0em var(--paleColor), -1.8em -1.8em 0 0em var(--paleColor);
+  }
+  62.5% {
+    box-shadow: 0em -2.6em 0em 0em var(--paleColor), 1.8em -1.8em 0 0em var(--paleColor), 2.5em 0em 0 0em var(--paleColor), 1.75em 1.75em 0 0em var(--middleColor), 0em 2.5em 0 0em var(--darkColor), -1.8em 1.8em 0 0em var(--backColor), -2.6em 0em 0 0em var(--paleColor), -1.8em -1.8em 0 0em var(--paleColor);
+  }
+  75% {
+    box-shadow: 0em -2.6em 0em 0em var(--paleColor), 1.8em -1.8em 0 0em var(--paleColor), 2.5em 0em 0 0em var(--paleColor), 1.75em 1.75em 0 0em var(--paleColor), 0em 2.5em 0 0em var(--middleColor), -1.8em 1.8em 0 0em var(--darkColor), -2.6em 0em 0 0em var(--backColor), -1.8em -1.8em 0 0em var(--paleColor);
+  }
+  87.5% {
+    box-shadow: 0em -2.6em 0em 0em var(--paleColor), 1.8em -1.8em 0 0em var(--paleColor), 2.5em 0em 0 0em var(--paleColor), 1.75em 1.75em 0 0em var(--paleColor), 0em 2.5em 0 0em var(--paleColor), -1.8em 1.8em 0 0em var(--middleColor), -2.6em 0em 0 0em var(--darkColor), -1.8em -1.8em 0 0em var(--backColor);
+  }
+}
+</style>
+</head><body>
+<div class="core simpleMenu"><!-- コアHTML -->
+  <div class="Title"></div>
+  <div class="Navicon" onclick="simpleMenu.toggle()">
+    <button>
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+  <div class="Navi"><div><ul></ul></div></div>
+  <div class="NaviBack" onclick="simpleMenu.toggle()"><div></div></div>
+  <div class="loading"><div></div></div>
+</div>
+<!-- 以下テスト画面 -->
+<div name="home"><h1>ホーム画面</h1></div>
+<div name="messageBoard"><h1>messageBoard</h1></div>
+<div name="reception"><h1>reception</h1></div>
+<div name="applicationQR"><h1>applicationQR</h1></div>
+<div name="paperForm"><h1>paperForm</h1></div>
+<div name="entryNo"><h1>entryNo</h1></div>
+<div name="editURL"><h1>editURL</h1></div>
+<div name="reservation"><h1>reservation</h1></div>
+<div name="timetable"><h1>timetable</h1></div>
+<div name="menu01"><h1>Menu01</h1></div>
+<div name="menu02"><h1>Menu02</h1></div>
+
+<div class="webApp"><!-- webアプリHTML -->
+</div>
+
+<!-- 外部スクリプト -->
+<script src="szLib.js"></script>
+
+<script type="text/javascript" class="core">/* コアスクリプト */
+
+/**
+ * @classdesc HTMLにメニューを作成する
+ * 
+ * - [画面分割のレイアウト](simpleMenu.grid.md)
+ */
+
+class simpleMenu {
+
+  /**
+   * @constructor
+   * @param {string} conf
+   * @returns {void}
+   */
+
+  constructor(conf){
+    console.log('----- simpleMenu.constructor start.');
+    const v = {};
+    try {
+      this.conf = this.#setDefault(conf);
+      this.#setStyle();
+      simpleMenu.setTitle(this.conf.Title);
+      this.#setMenu(document.querySelector('.simpleMenu .Navi div ul'),this.conf.menu);
+
+      simpleMenu.changeScreen('home');
+      console.log('----- simpleMenu.constructor end.');
+    } catch(e){
+      console.error('----- simpleMenu.constructor abnormal end.\n',e);
+      // ブラウザで実行する場合はアラート表示
+      if( typeof window !== 'undefined' ) alert(e.stack); 
+      throw e; //以降の処理を全て停止
+      //v.rv.stack = e.stack; return v.rv; // 処理継続
+    }
+
+
+  }
+
+  /** オブジェクトの構造が複雑なため、constructorから分離 */
+  #setDefault(conf){
+    const rv = mergeDeeply({
+      Title: '(未設定)',
+      authority: null,  // 全メニューを表示
+      style: {
+        header: { // querySelector(.simpleMenu div[name="header"])
+          backgroundColor: "#81d8d0", // Element.style.xxx。xxxはJavaScriptで指定する場合の名称
+          color: "#fff",
+          fontSize: "1.6rem",
+          fontWeight: 900,  // 文字の太さ
+          zIndex: 1,
+        },
+        Navicon: {
+          backgroundColor: "#5bb3b5",  // ハンバーガーメニューの色
+        },
+        navi: {
+          backgroundColor: "#81d8d0",
+          color: "#fff",
+          size: "1rem",
+          weight: 400, // normal  
+        }
+      },
+      header: {
+        innerHTML: null,  // <img><span>等、htmlで指定の場合使用
+      },
+    },conf);
+    console.log('----- simpleMenu.setDefault.\n',rv);
+    return rv;
+  }
+
+  #setMenu(parent,list){
+    const v = {};
+    for( v.o of list ){
+      console.log('l.59',v.o);
+
+      // authority指定のないメニュー項目、または権限がない場合はスキップ
+      if( !('authority' in v.o) 
+      || this.conf.authority !== null && (this.conf.authority & v.o.authority) === 0
+      ) continue;
+
+      v.li = document.createElement('li');
+      v.li.textContent = v.o.label;
+
+      if( 'children' in v.o ){
+        v.p = document.createElement('ul');
+        this.#setMenu(v.p,v.o.children);
+        v.li.appendChild(v.p);
+      } else {
+        console.log('l.74',v.o);
+        if( 'href' in v.o ){
+          console.log('l.76',v.o.href)
+          v.func = new Function('window.open("'+v.o.href+'")');
+        } else {
+          v.func = new Function(`
+          // メニューを非表示
+          document.querySelector('.simpleMenu .Navi div').classList.remove('is_active');
+          document.querySelector('.simpleMenu .NaviBack div').classList.remove('is_active');
+          document.querySelectorAll('.simpleMenu .Navicon button span')
+          .forEach(x => x.classList.remove("is_active"));
+
+          // loading画面を表示
+          simpleMenu.changeScreen('loading');
+
+          // 指定された処理を実行
+          `+v.o.func);
+        }
+        v.li.addEventListener('click',v.func);
+      }
+      parent.appendChild(v.li);
+    }
+  }
+
+  #setStyle(){
+    const v = {};
+    for( v.sel in this.conf.style ){
+      v.elements = document.querySelectorAll(v.sel);
+      for( v.element of v.elements ){
+        for( v.prop in this.conf.style[v.sel] ){
+          if( v.prop.match(/^--/) ){
+            // CSS変数の設定
+            v.element.style.setProperty(v.prop,this.conf.style[v.sel][v.prop]);
+          } else {
+            // CSS変数以外の設定
+            v.element.style[v.prop] = this.conf.style[v.sel][v.prop];
+          }
+        }
+      }
+    }
+  }
+
+  static setTitle(title){
+    document.querySelector('.simpleMenu .Title').innerHTML = title;
+  }
+
+  static toggle(){
+    document.querySelector('.simpleMenu .Navi div').classList.toggle("is_active");
+    document.querySelector('.simpleMenu .NaviBack div').classList.toggle("is_active");
+    document.querySelectorAll('.simpleMenu .Navicon button span')
+    .forEach(x => x.classList.toggle("is_active"));
+  }
+
+  static changeScreen(scrId='loading'){
+    console.log('----- simpleMenu.changeScreen start.\nscrId="'+scrId+'"');
+    const v = {};
+
+    if( scrId === 'loading' ){
+      document.querySelectorAll('body > div:not(.simpleMenu)').forEach(x => x.style.display = 'none');
+      // 待機画面を表示
+      document.querySelector('.simpleMenu .loading').style.display = '';
+    } else {
+      // 指定画面を表示、それ以外は非表示
+      document.querySelectorAll('body > div:not(.simpleMenu)').forEach(x => {
+        v.name = x.getAttribute('name');
+        x.style.display = v.name === scrId ? '' : 'none';
+      });
+      // 待機画面を非表示
+      document.querySelector('.simpleMenu .loading').style.display = 'none';
+    }
+
+    // メニューを非表示
+    document.querySelector('.simpleMenu .Navi div').classList.remove('is_active');
+    document.querySelector('.simpleMenu .NaviBack div').classList.remove('is_active');
+    document.querySelectorAll('.simpleMenu .Navicon button span')
+    .forEach(x => x.classList.remove("is_active"));
+    //console.log('----- simpleMenu.changeScreen end.');
+  }
+}
+</script>
+
+<script type="text/javascript" class="webApp">/* webアプリ */
+</script>
+
+<script type="text/javascript" class="test">/* テスト用 */
+// 画面表示テスト用
+const messageBoard = () => {console.log('function messageBoard.')}
+//const reception = () => {console.log('function reception.')}
+const applicationQR = () => {
+  menu.changeScreen('loader');
+  setInterval(()=>{
+    menu.changeScreen('applicationQR');
+    console.log('function applicationQR.');
+  },5000);
+}
+</script>
+
+<script type="text/javascript" class="main">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+  const menu = new simpleMenu({
+    Title: `
+      <div style="display:grid;grid-template-rows:15px 1fr;grid-template-columns:50px 1fr;">
+        <div style="grid-row:1/3;grid-column:1/2;place-items:center;">
+          <img src="/Users/ena.kaon/Desktop/GitHub/EventStaff/r144/img/stamp.png" width="40px" height="40px" />
+        </div>
+        <div style="grid-row:1/2;grid-column:2/3;font-size:10px;">下北沢小おやじの会</div>
+        <div style="grid-row:2/3;grid-column:2/3;font-size:22px;">校庭デイキャンプ2023</div>
+      </div>`,
+    menu:[
+      {"id":"messageBoard","label":"お知らせ","authority":3,"func":"console.log('function messageBoard.');simpleMenu.changeScreen('messageBoard')"},
+      {"id":"reception","label":"参加者検索","authority":2,"func":"()=>{console.log('function reception.')}"},
+      {"id":"applicationQR","label":"当日参加(スマホ有)","authority":2,"func":applicationQR},
+      {"id":"paperForm","label":"当日参加(申請用紙)","authority":2,"func":"paperForm"},
+      {"id":"entryNo","label":"受付番号表示","authority":1,"func":"entryNo"},
+      {"id":"editURL","label":"参加者の変更","authority":1,"func":"editURL"},
+      {"id":"reservation","label":"各コーナー予約状況","authority":3},
+      {"id":"utilities","label":"お役立ち情報","authority":3,"children":[
+        {"id":"timetable","label":"進行予定","authority":3,"href":"lib/timetable/WBS.html"},
+        {"id":"map","label":"校内案内図","authority":3,"func":"map"},
+        {"id":"requirements","label":"募集要項","authority":3,"href":"https://sites.google.com/view/shimokita-oyaji/home/archives/20221001-%E6%A0%A1%E5%BA%AD%E3%83%87%E3%82%A4%E3%82%AD%E3%83%A3%E3%83%B3%E3%83%97"},
+        {"id":"statistics","label":"参加者数集計","authority":2,"func":"tallyParticipants"},
+      ]},
+      {"id":"enquete","label":"参加者アンケート","authority":1,"href":"https://docs.google.com/forms/d/e/1FAIpQLSfec0EKItdsGKrJJVvdjWtt1TQBoU6u6L11EV3LGyHv4c7HCw/viewform"},
+      {"id":"youtube","label":"ライブ配信(テスト)","authority":3},
+      {"id":"system","label":"システム設定","authority":3,"func":"system"},
+    ],
+    style: {  // CSS styleを部分的に変更
+      "body": { // ラベルはCSSセレクタ
+        "--simpleMenuHeaderHeight": "50px",
+        // 頭が"--"のラベルは変数を示す。`element.style.setProperty(ラベル,値)`で処理。
+      },
+      "body > div:not(.simpleMenu)": { // ラベルはCSSセレクタ
+        "padding": "1rem",
+        // 頭が"--"以外はJavaScriptで処理する場合のプロパティ名。必ずしもCSSとは一致しない(ex.zIndex≠z-index)
+        // `element.style[ラベル]=値`で処理する。
+      }
+    }
+  });
+});
+</script>
+</body></html>

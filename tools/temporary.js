@@ -1,119 +1,166 @@
 /* コアスクリプト */
-const fs = require('fs');  // ファイル操作
-const lib = require('./jsLib');  // 自作ライブラリ
-const { JSDOM } = require("jsdom");
 
 /**
- * テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入する
- * @param {Document} doc - 編集対象となるDocumentオブジェクト
- * @returns {HTMLElement} 挿入済みのHTML文書(但、doctype,htmlタグは含まない)
+ * @classdesc HTMLにメニューを作成する
+ * 
+ * - [画面分割のレイアウト](simpleMenu.grid.md)
  */
-function embedComponent(doc){
-  console.log('===== embedComponent start.');
-  const v = {rv:doc.querySelector('html'),base:''};
-  try {
 
-    v.rv.querySelectorAll('[data-embed]').forEach(o => {
-      v.tagName = o.tagName.toLowerCase();
-      v.embed = o.getAttribute('data-embed');
-      //console.log(lib.whichType(v.embed)+'->'+v.embed);
-      if( v.tagName === 'meta' ){
-        v.base = v.embed;
-      } else {
-        v.embed = JSON.parse(v.embed);
-        v.content = fs.readFileSync(v.base+v.embed.src,'utf-8');
-        v.doc = new JSDOM(v.content).window.document;
-        v.node = v.doc.querySelector(v.embed.sel);
-        //console.log('l.21',v.node.innerHTML);
-        if( v.tagName === 'style' || v.tagName === 'script' ){
-          o.innerHTML = v.node.innerHTML;
-        } else {
-          o.appendChild(v.node);
+class simpleMenu {
+
+  /**
+   * @constructor
+   * @param {string} conf
+   * @returns {void}
+   */
+
+  constructor(conf){
+    console.log('----- simpleMenu.constructor start.');
+    const v = {};
+    try {
+      this.conf = this.#setDefault(conf);
+      this.#setStyle();
+      simpleMenu.setTitle(this.conf.Title);
+      this.#setMenu(document.querySelector('.simpleMenu .Navi div ul'),this.conf.menu);
+
+      simpleMenu.changeScreen('home');
+      console.log('----- simpleMenu.constructor end.');
+    } catch(e){
+      console.error('----- simpleMenu.constructor abnormal end.\n',e);
+      // ブラウザで実行する場合はアラート表示
+      if( typeof window !== 'undefined' ) alert(e.stack); 
+      throw e; //以降の処理を全て停止
+      //v.rv.stack = e.stack; return v.rv; // 処理継続
+    }
+
+
+  }
+
+  /** オブジェクトの構造が複雑なため、constructorから分離 */
+  #setDefault(conf){
+    const rv = mergeDeeply({
+      Title: '(未設定)',
+      authority: null,  // 全メニューを表示
+      style: {
+        header: { // querySelector(.simpleMenu div[name="header"])
+          backgroundColor: "#81d8d0", // Element.style.xxx。xxxはJavaScriptで指定する場合の名称
+          color: "#fff",
+          fontSize: "1.6rem",
+          fontWeight: 900,  // 文字の太さ
+          zIndex: 1,
+        },
+        Navicon: {
+          backgroundColor: "#5bb3b5",  // ハンバーガーメニューの色
+        },
+        navi: {
+          backgroundColor: "#81d8d0",
+          color: "#fff",
+          size: "1rem",
+          weight: 400, // normal  
         }
-        o.removeAttribute('data-embed');
-      }
-      //console.log('l.10',v.tagName,v.embed);
-    });
+      },
+      header: {
+        innerHTML: null,  // <img><span>等、htmlで指定の場合使用
+      },
+    },conf);
+    console.log('----- simpleMenu.setDefault.\n',rv);
+    return rv;
+  }
 
-    console.log('===== embedComponent end.');
-    return v.rv;
-  } catch(e){
-    console.error('===== embedComponent abnormal end.\n',e);
-    // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
-    //throw e; //以降の処理を全て停止
-    v.rv.stack = e.stack; return v.rv; // 処理継続
+  #setMenu(parent,list){
+    const v = {};
+    for( v.o of list ){
+      console.log('l.59',v.o);
+
+      // authority指定のないメニュー項目、または権限がない場合はスキップ
+      if( !('authority' in v.o) 
+      || this.conf.authority !== null && (this.conf.authority & v.o.authority) === 0
+      ) continue;
+
+      v.li = document.createElement('li');
+      v.li.textContent = v.o.label;
+
+      if( 'children' in v.o ){
+        v.p = document.createElement('ul');
+        this.#setMenu(v.p,v.o.children);
+        v.li.appendChild(v.p);
+      } else {
+        console.log('l.74',v.o);
+        if( 'href' in v.o ){
+          console.log('l.76',v.o.href)
+          v.func = new Function('window.open("'+v.o.href+'")');
+        } else {
+          v.func = new Function(`
+          // メニューを非表示
+          document.querySelector('.simpleMenu .Navi div').classList.remove('is_active');
+          document.querySelector('.simpleMenu .NaviBack div').classList.remove('is_active');
+          document.querySelectorAll('.simpleMenu .Navicon button span')
+          .forEach(x => x.classList.remove("is_active"));
+
+          // loading画面を表示
+          simpleMenu.changeScreen('loading');
+
+          // 指定された処理を実行
+          `+v.o.func);
+        }
+        v.li.addEventListener('click',v.func);
+      }
+      parent.appendChild(v.li);
+    }
+  }
+
+  #setStyle(){
+    const v = {};
+    for( v.sel in this.conf.style ){
+      v.elements = document.querySelectorAll(v.sel);
+      for( v.element of v.elements ){
+        for( v.prop in this.conf.style[v.sel] ){
+          if( v.prop.match(/^--/) ){
+            // CSS変数の設定
+            v.element.style.setProperty(v.prop,this.conf.style[v.sel][v.prop]);
+          } else {
+            // CSS変数以外の設定
+            v.element.style[v.prop] = this.conf.style[v.sel][v.prop];
+          }
+        }
+      }
+    }
+  }
+
+  static setTitle(title){
+    document.querySelector('.simpleMenu .Title').innerHTML = title;
+  }
+
+  static toggle(){
+    document.querySelector('.simpleMenu .Navi div').classList.toggle("is_active");
+    document.querySelector('.simpleMenu .NaviBack div').classList.toggle("is_active");
+    document.querySelectorAll('.simpleMenu .Navicon button span')
+    .forEach(x => x.classList.toggle("is_active"));
+  }
+
+  static changeScreen(scrId='loading'){
+    console.log('----- simpleMenu.changeScreen start.\nscrId="'+scrId+'"');
+    const v = {};
+
+    if( scrId === 'loading' ){
+      document.querySelectorAll('body > div:not(.simpleMenu)').forEach(x => x.style.display = 'none');
+      // 待機画面を表示
+      document.querySelector('.simpleMenu .loading').style.display = '';
+    } else {
+      // 指定画面を表示、それ以外は非表示
+      document.querySelectorAll('body > div:not(.simpleMenu)').forEach(x => {
+        v.name = x.getAttribute('name');
+        x.style.display = v.name === scrId ? '' : 'none';
+      });
+      // 待機画面を非表示
+      document.querySelector('.simpleMenu .loading').style.display = 'none';
+    }
+
+    // メニューを非表示
+    document.querySelector('.simpleMenu .Navi div').classList.remove('is_active');
+    document.querySelector('.simpleMenu .NaviBack div').classList.remove('is_active');
+    document.querySelectorAll('.simpleMenu .Navicon button span')
+    .forEach(x => x.classList.remove("is_active"));
+    //console.log('----- simpleMenu.changeScreen end.');
   }
 }
-
-/**
- * @desc コンソール(Node.js)でembedComponentを実行
- * 
- * ```
- * data-embed="{
- *   from: {
- *     filename: {string} - 参照先のファイル名
- *     selector: {string} - CSSセレクタ文字列。省略時はファイル全文と解釈
- *   },
- *   to: {string} [innerHTML|innerText|xxx|child],
- *     innerHTML : data-embedが記載された要素のinnerHTMLとする
- *     innerText : data-embedが記載された要素のinnerTextとする
- *     xxx : 属性名xxxの値とする
- *   type: {string} [pu,md,mmd]
- *     pu : PlantUMLとして子要素を生成して追加
- *     md : MarkDownとして子要素を生成して追加
- *     mmd : Mermaidとして子要素を生成して追加
- * }"
- * ```
- * 
- * window.onLoadで以下を呼び出して使用。
- * 
- * ```
- * document.querySelectorAll('[data-embed]').forEach(element => {
- *  embedComponent(element.getAttribute('data-embed'));
- * });
- * ```
- * 
- * **注意**
- * 
- * JavaScriptのライブラリ等、テンプレートが非HTMLの場合は処理できない。<br>
- * この場合、テンプレートを強引にHTML化して処理後、querySelector.jsで必要な部分を抽出するか、grep等で不要な部分を削除する。
- * 
- * 
- * 以下はコンソールで使用する際、nodeの起動時オプションで指定するパラメータ。
- * @param {string} [d='prototype.html'] - 入力ファイルのパス＋ファイル名
- * @param {string} i - 挿入先となるベースファイルのパス＋ファイル名
- * @param {string} o - 挿入後の結果を出力するファイルのパス＋ファイル名
- * @returns {void}
- * 
- * - 引数無しのパラメータはJSON文字列なので、コマンドライン上はシングルクォーテーションで囲む
- * - JSON文字列は長くなりがちなので、スイッチのないパラメータは全て結合した上で解釈する
- * 
- * @example
- * 
- * 
- * 
- * 
- * 
- * - [JSDOMを利用し、HTML + JavaScriptのプログラムをNode.jsで動作させる](https://symfoware.blog.fc2.com/blog-entry-2685.html)
- */
-
-function onNode(){
-  const v = {};
-
-  // 事前処理：引数チェック、既定値の設定
-  if('stack' in (v.argv = lib.analyzeArg())) throw v.argv;
-
-  // ベース(挿入先)ファイルの読み込み
-  v.text = fs.readFileSync(v.argv.opt.i,'utf-8');
-  v.m = v.text.match(/(^.*<html.*?>)([\s\S]*)(<\/html.+)$/);
-  v.header = v.m[1] || '<!DOCTYPE html><html xml:lang="ja" lang="ja">';
-  v.footer = v.m[3] || '</html>';
-
-  v.rv = v.header + embedComponent(new JSDOM(v.text).window.document).innerHTML + v.footer;
-  console.log(v.rv);
-  fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
-
-}
-
-onNode();
