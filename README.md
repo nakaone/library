@@ -1,6 +1,6 @@
 <p style="font-size:2rem;text-shadow:2px 2px 4px #888;">独自ライブラリ</p>
 
-| [component](component/README.md) | GAS | console | browser |
+| [component](component/README.md) | GAS | console | browser | [szLib](console/szLib/szLib.md) | [CommonJS](console/CommonJS/CommonJS.md)
 
 # 開発・運用方針
 
@@ -55,6 +55,8 @@
   - GASLib.js：GASでの動作確認のため、GASで使用する全コンポーネントを集めたライブラリ
 - console：コンソール(Node.js)で使用。配下の構成はbrowserと同じ
   - CommonJS.js：component/CommonJS.jsのハードリンク
+  - szLib/：szLib.js作成用フォルダ。中のszLib.sh実行でszLib.jsが更新される
+  - CommonJS/：CommonJS.js作成用フォルダ。中のCommonJS.sh実行でCommonJS.jsが更新される
 - GAS：Google Apps Scriptで使用。配下の構成はbrowserと同じ
 - tools：libraryの運用で使用するツール類
   - embedComponent.js：テンプレートに指定componentを埋め込む
