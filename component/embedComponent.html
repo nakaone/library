@@ -1,4 +1,18 @@
-/* コアスクリプト */
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>embedComponent</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css" class="core">/* コアCSS */
+</style>
+</head><body>
+<div class="core"><!-- コアHTML -->
+</div>
+
+<div class="webApp"><!-- webアプリHTML -->
+</div>
+
+<!-- 外部スクリプト -->
+
+<script type="text/javascript" class="core">/* コアスクリプト */
 const fs = require('fs');  // ファイル操作
 const lib = require('./jsLib');  // 自作ライブラリ
 const { JSDOM } = require("jsdom");
@@ -117,3 +131,17 @@ function onNode(){
 }
 
 onNode();
+</script>
+
+<script type="text/javascript" class="webApp">/* webアプリ */
+</script>
+
+<script type="text/javascript" class="test">/* テスト用 */
+</script>
+
+<script type="text/javascript" class="main">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+});
+</script>
+</body></html>
