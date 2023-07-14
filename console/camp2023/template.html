@@ -91,7 +91,6 @@ class TabDesign {
 
   /**
    * @constructor
-   * @param {string[]} list - ページ名のリスト
    * @param {string} [act] - 初期表示するページ名
    * @returns {void}
    * 
@@ -99,7 +98,9 @@ class TabDesign {
    */
   constructor(list,act){
     console.log('TabDesign.constructor start.\n',list,act);
-    this.pageList = list;
+    this.pageList = [];
+    document.querySelectorAll('.TabDesign div[name]')
+    .forEach(x => this.pageList.push(x.getAttribute('name')));
     this.tab = {};
     this.page = {};
     this.pageList.forEach(x => {
@@ -115,7 +116,7 @@ class TabDesign {
 
   changePage(page){
     console.log('TabDesign.changePage start.');
-    this.activePage = page;
+    this.activePage = page || this.pageList[0];
     this.pageList.forEach(x => {
       if( x === this.activePage ){
         this.tab[x].classList.add('act');
@@ -134,10 +135,7 @@ window.addEventListener('DOMContentLoaded',() => {
   const v = {};
   console.log('timetable test start.');
 
-  v.menu = new TabDesign(
-    ['schedule', 'timetable', 'map', 'expedition', 'RelatedSites', 'minutes'],
-    'schedule'
-  );
+  v.menu = new TabDesign();
 
   /*
   const url = {
