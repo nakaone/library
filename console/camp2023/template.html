@@ -12,25 +12,7 @@
   <script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
 
   <!-- TabDesign用CSS -->
-  <style type="text/css" data-embed="">
-    /*
-    .TabDesign .tabs {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      display: grid;
-    }
-    .TabDesign .tabs div {
-      padding-left: 1rem;
-      border-bottom: solid 4px #ccc;
-    }
-    .TabDesign .tabs div.act {
-      border-bottom: solid 4px #0ff;
-    }
-    */
-  </style>
+  <style type="text/css" data-embed=""></style>
 </head>
 <body class="TabDesign" name="main">
   <div class="tabs">
@@ -90,6 +72,26 @@
 <script data-embed="szLib.js"></script>
 
 <script type="text/javascript" class="main">
+function mergeDeeply(target, source, opts) {
+  const isObject = obj => obj && typeof obj === 'object' && !Array.isArray(obj);
+  const isConcatArray = opts && opts.concatArray;
+  let result = Object.assign({}, target);
+  if (isObject(target) && isObject(source)) {
+    for (const [sourceKey, sourceValue] of Object.entries(source)) {
+      const targetValue = target[sourceKey];
+      if (isConcatArray && Array.isArray(sourceValue) && Array.isArray(targetValue)) {
+        result[sourceKey] = targetValue.concat(...sourceValue);
+      }
+      else if (isObject(sourceValue) && target.hasOwnProperty(sourceKey)) {
+        result[sourceKey] = mergeDeeply(targetValue, sourceValue, opts);
+      }
+      else {
+        Object.assign(result, {[sourceKey]: sourceValue});
+      }
+    }
+  }
+  return result;
+}
 
 /**
  * @classdesc タブ切り替えのHTMLページを作成する
@@ -105,7 +107,7 @@ class TabDesign {
   constructor(opt={}){
     console.log('TabDesign.constructor start.');
     const v = {};
-    this.option = Object.assign({
+    this.option = mergeDeeply({
       name: null, // 対象となるページ全体のname属性。nullなら単一で特定不要と解釈
       initial: null,  // 初期表示ページの名前
       direction: 'x', // タブを並べる方向。x:横並び, y:縦並び
