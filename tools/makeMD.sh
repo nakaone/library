@@ -16,4 +16,4 @@ tfn="temporary"
 
 node querySelector.js -i:../component/$1.html -o:$tfn.js script.core
 jsdoc2md $tfn.js > ../component/$1.md
-rm $tfn.js
+#rm $tfn.js
