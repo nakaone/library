@@ -1,6 +1,6 @@
 <p style="font-size:2rem;text-shadow:2px 2px 4px #888;">独自ライブラリ</p>
 
-| [component](component/README.md) | GAS | console | browser | [szLib](console/szLib/szLib.md) | [CommonJS](console/CommonJS/CommonJS.md)
+| [component](component/README.md) | GAS | [console](console/README.md) | browser | [szLib](console/szLib/szLib.md) | [CommonJS](console/CommonJS/CommonJS.md)
 
 # 開発・運用方針
 
