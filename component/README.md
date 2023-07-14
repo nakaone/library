@@ -4,6 +4,8 @@
 | :-- | :-- |
 | [analyzeArg](analyzeArg.md) | コマンドラインから`node xxx.js aa bb`を実行した場合の引数(`aa`,`bb`)を取得し、オブジェクトにして返す |
 | [analyzePath](analyzePath.md) | パス名文字列から構成要素を抽出 |
+| [mergeDeeply](mergeDeeply.md) | オブジェクトのプロパティを再帰的にマージ |
+| [querySelector](querySelector.md) | HTMLの指定CSSセレクタの内容を抽出 |
 
 # クラス
 
