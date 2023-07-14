@@ -120,9 +120,13 @@ function onNode(){
   if( v.argv.opt.t === 'html' ){
     v.rv = '<!DOCTYPE html><html xml:lang="ja" lang="ja">'
       + String(v.result.querySelector('html').innerHTML).trim()
+        // HTML文字はエスケープされるので戻す
+        .replaceAll('&lt;','<').replaceAll('&gt;','>').replaceAll('&amp;','&')
       + '</html>';
   } else {
-    v.rv = String(v.result.querySelector('body').innerHTML).trim();
+    v.rv = String(v.result.querySelector('body').innerHTML).trim()
+      // HTML文字はエスケープされるので戻す
+      .replaceAll('&lt;','<').replaceAll('&gt;','>').replaceAll('&amp;','&');
   }
   fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
 
