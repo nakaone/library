@@ -6,6 +6,7 @@
 | [analyzePath](analyzePath.md) | パス名文字列から構成要素を抽出 |
 | [mergeDeeply](mergeDeeply.md) | オブジェクトのプロパティを再帰的にマージ |
 | [querySelector](querySelector.md) | HTMLの指定CSSセレクタの内容を抽出 |
+| [whichType](whichType.md) | 変数の型を判定し、型名を文字列で返す |
 
 # クラス
 
