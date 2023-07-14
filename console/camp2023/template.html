@@ -20,7 +20,6 @@
       padding: 0;
       box-sizing: border-box;
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
     }
     .TabDesign .tabs div {
       padding-left: 1rem;
@@ -112,28 +111,33 @@ class TabDesign {
     },opt);
     console.log(this.option);
 
-    // 全体の親要素をwrapperとする
+    // 全体の親要素をthis.wrapper、タブ表示領域をthis.tabsに保存
     this.wrapperSelector = '.TabDesign'
       +( this.option.name === null ? '' : '[name="' + this.option.name + '"]');
     this.wrapper = document.querySelector(this.wrapperSelector);
-    console.log(this.wrapper);
+    this.tabs = document.querySelector(this.wrapperSelector+' > .tabs');
+    //console.log(this.wrapper);
 
     // ページ名のリストを作成
     this.pageList = [];
-    document.querySelectorAll(this.wrapperSelector+' > .tabs [name]')
+    this.tabs.querySelectorAll('[name]')
     .forEach(x => this.pageList.push(x.getAttribute('name')));
-    console.log(this.pageList);
+    //console.log(this.pageList);
 
     // 各タブ・ページの要素をthis.tab/pageに保存
     this.tab = {};
     this.page = {};
+    this.tabNum = 0;
     this.pageList.forEach(x => {
       this.tab[x] = this.wrapper.querySelector('.tabs [name="'+x+'"]');
       // ページは「TabDesignクラス直下のDIV」に限定
       this.page[x] = this.wrapper.querySelector('.TabDesign > div[name="'+x+'"]');
       //console.log(x,this.tab[x],this.page[x]);
       this.tab[x].addEventListener('click',()=>this.changePage(x));
+      this.tabNum++;
     });
+    // タブの数をタブ領域に設定
+    this.tabs.style.gridTemplateColumns = 'repeat('+this.tabNum+',1fr)';
 
     this.changePage(this.option.initial); // 初期ページ
     console.log('TabDesign.constructor end.');
