@@ -1,47 +1,96 @@
 /**
- * @typedef {object} AnalyzeArg - コマンドライン引数の分析結果
- * @prop {Object.<string, number>} opt - スイッチを持つ引数について、スイッチ：値形式にしたオブジェクト
- * @prop {string[]} val - スイッチを持たない引数の配列
+ * @typedef {object} AnalyzePath - パス文字列から構成要素を抽出したオブジェクト
+ * @prop {string} full - 引数の文字列(フルパス)
+ * @prop {string} path - ファイル名を除いたパス文字列
+ * @prop {string} file - ファイル名
+ * @prop {string} base - 拡張子を除いたベースファイル名
+ * @prop {string} suffix - 拡張子
  */
 /**
- * @desc コマンドラインから`node xxx.js aa bb`を実行した場合の引数(`aa`,`bb`)を取得し、オブジェクトにして返す。<br>
- * 
+ * @desc パス名文字列から構成要素を抽出
+ * @param {string} arg - パス文字列
+ * @returns {AnalyzePath}　構成要素を抽出したオブジェクト
  * @example
  * 
  * ```
- * node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
- * ⇒ {opt:{i:"aaa.html",o:"ccc.json"},val:["bbb","ddd","eee"]}
+ * "/Users/ena.kaon/Desktop/GitHub/library/JavaScript/analyzePath.html" ⇒ {
+ *   "path":"/Users/ena.kaon/Desktop/GitHub/library/JavaScript/",
+ *   "file":"analyzePath.html",
+ *   "base":"analyzePath",
+ *   "suffix":"html"
+ * }
+ * 
+ * "/Users/ena.kaon/Desktop/GitHub/library/JavaScript" ⇒ {
+ *   "path":"/Users/ena.kaon/Desktop/GitHub/library/",
+ *   "file":"JavaScript",
+ *   "base":"JavaScript",
+ *   "suffix":""
+ * }
+ * 
+ * "./analyzePath.html" ⇒ {
+ *   "path":"./",
+ *   "file":"analyzePath.html",
+ *   "base":"analyzePath",
+ *   "suffix":"html"
+ * }
+ * 
+ * "analyzePath.html" ⇒ {
+ *   "path":"",
+ *   "file":"analyzePath.html",
+ *   "base":"analyzePath",
+ *   "suffix":"html"
+ * }
+ * 
+ * "analyzePath.hoge.html" ⇒ {
+ *   "path":"",
+ *   "file":"analyzePath.hoge.html",
+ *   "base":"analyzePath.hoge",
+ *   "suffix":"html"
+ * }
+ * 
+ * "analyzePath.fuga" ⇒ {
+ *   "path":"",
+ *   "file":"analyzePath.fuga",
+ *   "base":"analyzePath",
+ *   "suffix":"fuga"
+ * }
+ * 
+ * "https://qiita.com/analyzePath.html" ⇒ {
+ *   "path":"https://qiita.com/",
+ *   "file":"analyzePath.html",
+ *   "base":"analyzePath",
+ *   "suffix":"html"
+ * }
+ * 
  * ```
- * 
- * <caution>注意</caution>
- * 
- * - スイッチは`(\-*)([0-9a-zA-Z]+):*(.*)$`形式であること
- * - スイッチに該当しないものは配列`val`にそのまま格納される
- * 
- * @param {void} - なし
- * @returns {AnalyzeArg} 分析結果のオブジェクト
  */
 
-function analyzeArg(){
-  console.log('===== analyzeArg start.');
-  const v = {rv:{opt:{},val:[]}};
+function analyzePath(arg){
+  console.log('===== analyzePath start.');
+  const v = {rv:{}};
   try {
 
-    for( v.i=2 ; v.i<process.argv.length ; v.i++ ){
-      // process.argv:コマンドライン引数の配列
-      v.m = process.argv[v.i].match(/^(\-*)([0-9a-zA-Z]+):*(.*)$/);
-      if( v.m && v.m[1].length > 0 ){
-        v.rv.opt[v.m[2]] = v.m[3];
-      } else {
-        v.rv.val.push(process.argv[v.i]);
-      }
+    v.m1 = arg.match(/^(.*)\/([^\/]+)$/);
+    if( v.m1 ){
+      v.rv.path = v.m1[1] + '/';
+      v.rv.file = v.m1[2];
+    } else {
+      v.rv.path = '';
+      v.rv.file = arg;
+    }
+    v.m2 = v.rv.file.match(/^(.+)\.([^\.]+?)$/);
+    if( v.m2 ){
+      v.rv.base = v.m2[1];
+      v.rv.suffix = v.m2[2];
+    } else {
+      v.rv.base = v.rv.file;
+      v.rv.suffix = '';
     }
 
-    console.log('v.rv='+JSON.stringify(v.rv));
-    console.log('===== analyzeArg end.');
+    //console.log('v.rv='+JSON.stringify(v.rv));
+    console.log('===== analyzePath end.');
     return v.rv;
   } catch(e){
-    console.error('===== analyzeArg abnormal end.\n',e);
     // ブラウザで実行する場合はアラート表示
     if( typeof window !== 'undefined' ) alert(e.stack); 
     //throw e; //以降の処理を全て停止

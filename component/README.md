@@ -3,6 +3,7 @@
 | 関数名 | 概要 |
 | :-- | :-- |
 | [analyzeArg](analyzeArg.md) | コマンドラインから`node xxx.js aa bb`を実行した場合の引数(`aa`,`bb`)を取得し、オブジェクトにして返す |
+| [analyzePath](analyzePath.md) | パス名文字列から構成要素を抽出 |
 
 # クラス
 
