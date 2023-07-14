@@ -12,6 +12,7 @@
 | クラス名 | 概要 |
 | :-- | :-- |
 | [TimeTable](TimeTable.md) | HTMLにタイムテーブルを描画する |
+| [webScanner](webScanner.md) | 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す |
 
 # 既存型へのメソッド追加
 
