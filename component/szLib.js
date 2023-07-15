@@ -1,9 +1,13 @@
-/** 既存の型に新たなメソッドを追加する場合、以下に追記 */
+/*
+  既存の型に新たなメソッドを追加する場合、以下に追記。
+  外部ファイルのライブラリとして参照されただけだと呼ばれないため。
+*/
 function initializeSzLib(){
   Array.prototype.tabulize = Array_tabulize;
   Date.prototype.calc = Date_calc;
   Date.prototype.toLocale = Date_toLocale;
 }
+/* 以下、script.coreは読み込まれるが、style.core, div.coreは読み込まれていないので注意 */
 
 /**
  * @typedef {object} AnalyzeArg - コマンドライン引数の分析結果
@@ -624,7 +628,6 @@ function Date_calc(arg){
     v.rv.stack = e.stack; return v.rv; // 処理継続
   }
 }
-Date.prototype.calc = Date_calc;
 
 
 /** 日時を指定形式の文字列にして返す"toLocale()"メソッドをDate型に追加する。
@@ -692,7 +695,105 @@ function Date_toLocale(format='yyyy/MM/dd'){
 }
 Date.prototype.toLocale = Date_toLocale;
 
-/* embedComponentはブラウザで実行しないので割愛 */
+/* コアスクリプト */
+/**
+ * @desc テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入する。
+ * 
+ * JavaScriptのライブラリ等、テンプレートが非HTMLの場合は処理できない。<br>
+ * この場合、テンプレートを強引にHTML化して処理後、querySelector.jsで必要な部分を抽出するか、grep等で不要な部分を削除する。
+ * 
+ * - [JSDOMを利用し、HTML + JavaScriptのプログラムをNode.jsで動作させる](https://symfoware.blog.fc2.com/blog-entry-2685.html)
+ * 
+ * @param {Document} doc - 編集対象となるDocumentオブジェクト
+ * @returns {Document} 挿入済みのDocumentオブジェクト
+ * 
+ * @example テンプレートのdata-embed書式
+ * 
+ * 1. JSON.parseするので、メンバ名もダブルクォーテーションで囲む
+ * 1. 属性値全体はシングルクォーテーションで囲む
+ * 
+ * ```
+ * data-embed="{
+ *   from: {
+ *     filename: {string} - 参照先のファイル名
+ *     selector: {string} - CSSセレクタ文字列。省略時はファイル全文と解釈
+ *   },
+ *   to: {string} [innerHTML|innerText|xxx|child],
+ *     innerHTML : data-embedが記載された要素のinnerHTMLとする
+ *     innerText : data-embedが記載された要素のinnerTextとする
+ *     xxx : 属性名xxxの値とする
+ *     replace : data-embedを持つ要素を置換する
+ *   type: {string} [html,pu,md,mmd,text]
+ *     html : テンプレート(HTML)同様、HTMLとして出力(既定値)
+ *     pu : PlantUMLとして子要素を生成して追加
+ *     md : MarkDownとして子要素を生成して追加
+ *     mmd : Mermaidとして子要素を生成して追加
+ *     text : bodyの中のみを、テキストとして出力
+ * }"
+ * 
+ * 例：
+ * <div data-embed='{"from":{"filename":"../../component/analyzeArg.html","selector":"script.core"},"to":"replace"}'></div>
+ * ```
+ * 
+ */
+
+const fs = require('fs'); // ファイル操作
+const { JSDOM } = require("jsdom");
+function embedComponent(doc){
+  const v = {
+    /**
+     * 内部関数extract: 指定ファイルの指定箇所から文字列を抽出
+     * @param {string} filename 
+     * @param {string} selector 
+     * @returns {string}
+     */
+    extract: (filename,selector) => {
+      v.refText = fs.readFileSync(filename,'utf-8').trim();
+      // HTMLでなければbodyタグを付加
+      v.isHTML = v.refText.toLowerCase()
+      .match(/^<!doctype html.*?>|^<html.*?>[\s\S]+<\/html>/);
+      if( !v.isHTML ){
+        v.refText = '<!DOCTYPE html><html xml:lang="ja" lang="ja"><body>'
+          + v.refText + '</body></html>';
+      }
+      v.refDoc = new JSDOM(v.refText).window.document;
+      v.extracted = '';
+      // 複数ある場合があるので、querySelectorAllで順次追加
+      v.refDoc.querySelectorAll(selector).forEach(element => {
+        v.extracted += element.innerHTML;
+      });
+      return v.extracted;
+    },
+  };
+
+  console.log('embedComponent start.');
+
+  // data-embed属性を持つ要素をリスト化、順次処理
+  doc.querySelectorAll('[data-embed]').forEach(element => {
+    v.embed = JSON.parse(element.getAttribute('data-embed'));
+    v.content = v.extract(v.embed.from.filename,v.embed.from.selector);
+
+    // 置換ルールに従って処理
+    switch( v.embed.to ){
+      case 'innerHTML':
+        element.innerHTML = v.content; break;
+      case 'innerText':
+        element.innerText = v.content; break;
+      case 'replace':
+        element.replaceWith(doc.createTextNode(v.content));
+        break;
+      default:
+        element.setAttribute(v.embed.to,v.content);
+        break;
+    }
+    // テンプレートのembed属性は削除
+    element.removeAttribute('data-embed');
+  });
+
+  console.log('embedComponent end.');
+  return doc;
+}
+
 
 /**
  * @desc オブジェクトのプロパティを再帰的にマージ
