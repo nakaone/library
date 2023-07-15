@@ -1,7 +1,4 @@
-const fs = require('fs'); // ファイル操作
-const { JSDOM } = require("jsdom");
-const lib = require('./CommonJS'); // 自作ライブラリ
-
+/* コアスクリプト */
 /**
  * @desc テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入する。
  * 
@@ -43,9 +40,10 @@ const lib = require('./CommonJS'); // 自作ライブラリ
  * 
  */
 
-
-
-function embedComponent(doc){
+ function embedComponent(doc){
+  const fs = require('fs'); // ファイル操作
+  const { JSDOM } = require("jsdom");
+  const lib = require('./CommonJS'); // 自作ライブラリ
   const v = {
     /**
      * 内部関数extract: 指定ファイルの指定箇所から文字列を抽出
@@ -99,6 +97,11 @@ function embedComponent(doc){
   console.log('embedComponent end.');
   return doc;
 }
+
+/* embedComponentはブラウザ上での動作を想定しない
+  window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+});*/
 
 /**
  * コンソールで起動された際のパラメータ処理
