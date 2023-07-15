@@ -54,7 +54,14 @@ function embedComponent(doc){
      * @returns {string}
      */
     extract: (filename,selector) => {
-      v.refText = fs.readFileSync(filename,'utf-8');
+      v.refText = fs.readFileSync(filename,'utf-8').trim();
+      // HTMLでなければbodyタグを付加
+      v.isHTML = v.refText.toLowerCase()
+      .match(/^<!doctype html.*?>|^<html.*?>[\s\S]+<\/html>/);
+      if( !v.isHTML ){
+        v.refText = '<!DOCTYPE html><html xml:lang="ja" lang="ja"><body>'
+          + v.refText + '</body></html>';
+      }
       v.refDoc = new JSDOM(v.refText).window.document;
       v.extracted = '';
       // 複数ある場合があるので、querySelectorAllで順次追加

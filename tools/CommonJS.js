@@ -1926,53 +1926,11 @@ function embedComponent(doc){
   return doc;
 }
 
-/**
- * コンソールで起動された際のパラメータ処理
- * @param {string} i - テンプレートファイル名。カレントフォルダからの相対パスで指定
- * @param {string} o - 出力ファイル名
- * @param {string} [t] - 出力タイプ
- * 
- * | 記号 | 出力タイプ |
- * | :--: | :-- |
- * | html | テンプレート(HTML)同様、HTMLとして出力(既定値) |
- * | text | bodyの中のみを、テキストとして出力 |
- * 
- */
-
-function onNode(){
-  console.log('onNode start.');
-  const v = {};
-
-  // テンプレートの読み込み、embedComponentの呼び出し
-  v.argv = lib.analyzeArg();
-  v.argv.opt.t = v.argv.opt.t || 'html';
-  v.template = fs.readFileSync(v.argv.opt.i,'utf-8');
-  v.doc = new JSDOM(v.template).window.document;
-  v.result = embedComponent(v.doc);
-
-  if( v.argv.opt.t === 'html' ){
-    v.rv = '<!DOCTYPE html><html xml:lang="ja" lang="ja">'
-      + String(v.result.querySelector('html').innerHTML).trim()
-        // HTML文字はエスケープされるので戻す
-        .replaceAll('&lt;','<').replaceAll('&gt;','>').replaceAll('&amp;','&')
-      + '</html>';
-  } else {
-    v.rv = String(v.result.querySelector('body').innerHTML).trim()
-      // HTML文字はエスケープされるので戻す
-      .replaceAll('&lt;','<').replaceAll('&gt;','>').replaceAll('&amp;','&');
-  }
-  fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
-
-  console.log('onNode end.');
-}
-
-onNode();
-
 exports.analyzeArg = analyzeArg;
 exports.analyzePath = analyzePath;
-exports.Array_tabulize = Array_tabulize;
-exports.Date.calc = Date.calc;
-exports.Date.toLocale = Date.toLocale;
+Array.prototype.tabulize = Array_tabulize;
+Date.prototype.calc = Date_calc;
+Date.prototype.toLocale = Date_toLocale;
 exports.embedComponent = embedComponent;
 exports.mergeDeeply = mergeDeeply;
 exports.querySelector = querySelector;

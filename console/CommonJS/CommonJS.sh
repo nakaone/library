@@ -15,8 +15,8 @@ cat <<EOD >> CommonJS.js
 exports.analyzeArg = analyzeArg;
 exports.analyzePath = analyzePath;
 exports.Array_tabulize = Array_tabulize;
-exports.Date.calc = Date.calc;
-exports.Date.toLocale = Date.toLocale;
+exports.Date.calc = Date_calc;
+exports.Date.toLocale = Date_toLocale;
 exports.embedComponent = embedComponent;
 exports.mergeDeeply = mergeDeeply;
 exports.querySelector = querySelector;

@@ -11,11 +11,10 @@
   <!-- MarkDownテキストをHTML化するCDN -->
   <script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
 
-  <!-- TabDesign用CSS -->
-  <style type="text/css" data-embed=""></style>
 </head>
 <body class="TabDesign" name="main">
-  <div class="tabs">
+
+  <div class="tabs"><!-- タグメニュー -->
     <div name="schedule">schedule</div>
     <div name="timetable">time table</div>
     <div name="map">map</div>
@@ -35,7 +34,7 @@
       <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
       <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
     </ul>
-    <div class="timetable" name="tt01" data-embed="">
+    <div class="timetable" name="tt01">
     </div>
   </div>
 
@@ -48,24 +47,24 @@
       <div name="test01"><h1>test01</h1></div>
       <div name="test02"><h1>test02</h1></div>
     </div>
-    <img width="60%" data-embed="" />
+    <div data-embed='{"from":{"filename":"map2023.svg"},"to":"replace"}' />
   </div>
 
   <div name="expedition"><h1>肝試し</h1>
-    <img width="80%" data-embed="" />
+    <div data-embed='{"from":{"filename":"肝試しルート.svg"},"to":"replace"}'></div>
     <div class="markdown" name="kimodameshi"></div>
   </div>
 
   <div name="RelatedSites"><h1>関連サイト</h1>
-    <div class="markdown" name="RelatedSites" data-embed=""></div>
+    <div class="markdown" name="RelatedSites" data-embed='{"from":{"filename":"RelatedSites.md"},"to":"innerHTML","type":"md"}'></div>
   </div>
 
   <div name="minutes"><h1>参考：論議メモ</h1>
     <details><summary>2023/06/10 定例会</summary>
-      <div class="markdown" name="20230610" data-embed=""></div>
+      <div class="markdown" name="20230610" data-embed='{"from":{"filename":"20230610.md"},"to":"innerHTML","type":"md"}'></div>
     </details>
     <details><summary>2023/07/08 定例会</summary>
-      <div class="markdown" name="20230708" data-embed=""></div>
+      <div class="markdown" name="20230708" data-embed='{"from":{"filename":"20230708.md"},"to":"innerHTML","type":"md"}'></div>
     </details>
   </div>
 
