@@ -1,7 +1,4 @@
-const fs = require('fs'); // ファイル操作
-const { JSDOM } = require("jsdom");
-const lib = require('./CommonJS'); // 自作ライブラリ
-
+/* コアスクリプト */
 /**
  * @desc テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入する。
  * 
@@ -43,9 +40,10 @@ const lib = require('./CommonJS'); // 自作ライブラリ
  * 
  */
 
-
-
 function embedComponent(doc){
+  const fs = require('fs'); // ファイル操作
+  const { JSDOM } = require("jsdom");
+  const lib = require('../CommonJS'); // 自作ライブラリ
   const v = {
     /**
      * 内部関数extract: 指定ファイルの指定箇所から文字列を抽出
@@ -100,6 +98,38 @@ function embedComponent(doc){
   return doc;
 }
 
+function analyzeArg(){
+  console.log('===== analyzeArg start.');
+  const v = {rv:{opt:{},val:[]}};
+  try {
+
+    for( v.i=2 ; v.i<process.argv.length ; v.i++ ){
+      // process.argv:コマンドライン引数の配列
+      v.m = process.argv[v.i].match(/^(\-*)([0-9a-zA-Z]+):*(.*)$/);
+      if( v.m && v.m[1].length > 0 ){
+        v.rv.opt[v.m[2]] = v.m[3];
+      } else {
+        v.rv.val.push(process.argv[v.i]);
+      }
+    }
+
+    console.log('v.rv='+JSON.stringify(v.rv));
+    console.log('===== analyzeArg end.');
+    return v.rv;
+  } catch(e){
+    console.error('===== analyzeArg abnormal end.\n',e);
+    // ブラウザで実行する場合はアラート表示
+    if( typeof window !== 'undefined' ) alert(e.stack); 
+    //throw e; //以降の処理を全て停止
+    v.rv.stack = e.stack; return v.rv; // 処理継続
+  }
+}
+
+/* embedComponentはブラウザ上での動作を想定しない
+  window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+});*/
+
 /**
  * コンソールで起動された際のパラメータ処理
  * @param {string} i - テンプレートファイル名。カレントフォルダからの相対パスで指定
@@ -115,10 +145,11 @@ function embedComponent(doc){
 
 function onNode(){
   console.log('onNode start.');
+  const lib = require('../CommonJS'); // 自作ライブラリ
   const v = {};
 
   // テンプレートの読み込み、embedComponentの呼び出し
-  v.argv = lib.analyzeArg();
+  v.argv = analyzeArg();
   v.argv.opt.t = v.argv.opt.t || 'html';
   v.template = fs.readFileSync(v.argv.opt.i,'utf-8');
   v.doc = new JSDOM(v.template).window.document;

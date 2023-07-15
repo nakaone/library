@@ -60,14 +60,13 @@
 - GAS：Google Apps Scriptで使用。配下の構成はbrowserと同じ
 - tools：libraryの運用で使用するツール類
   - embedComponent.js：テンプレートに指定componentを埋め込む
-  - CommonJS.js：component/CommonJS.jsのハードリンク
 - README.MD：運用手順等、library横断の情報とGAS/console/htmlへのリンクを記載
 
-参考：ハードリンクされているファイルを探す
+## 注意事項
 
-```
-find . -samefile console/szLib/szLib.js
-```
+- tools直下の更新に必要なツールは他のライブラリを参照せず、またハードリンクも行わない<br>
+  ∵ツール自身や参照先ライブラリの更新に使用すると、ツール自身が更新されてしまい動作が不安定になる場合がある
+- [参考]ハードリンクされているファイルを探す：`find . -samefile console/szLib/szLib.js`
 
 # コンポーネントの作成手順
 

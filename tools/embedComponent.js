@@ -1,50 +1,5 @@
 const fs = require('fs'); // ファイル操作
 const { JSDOM } = require("jsdom");
-const lib = require('./CommonJS'); // 自作ライブラリ
-
-/**
- * @desc テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入する。
- * 
- * JavaScriptのライブラリ等、テンプレートが非HTMLの場合は処理できない。<br>
- * この場合、テンプレートを強引にHTML化して処理後、querySelector.jsで必要な部分を抽出するか、grep等で不要な部分を削除する。
- * 
- * - [JSDOMを利用し、HTML + JavaScriptのプログラムをNode.jsで動作させる](https://symfoware.blog.fc2.com/blog-entry-2685.html)
- * 
- * @param {Document} doc - 編集対象となるDocumentオブジェクト
- * @returns {Document} 挿入済みのDocumentオブジェクト
- * 
- * @example テンプレートのdata-embed書式
- * 
- * 1. JSON.parseするので、メンバ名もダブルクォーテーションで囲む
- * 1. 属性値全体はシングルクォーテーションで囲む
- * 
- * ```
- * data-embed="{
- *   from: {
- *     filename: {string} - 参照先のファイル名
- *     selector: {string} - CSSセレクタ文字列。省略時はファイル全文と解釈
- *   },
- *   to: {string} [innerHTML|innerText|xxx|child],
- *     innerHTML : data-embedが記載された要素のinnerHTMLとする
- *     innerText : data-embedが記載された要素のinnerTextとする
- *     xxx : 属性名xxxの値とする
- *     replace : data-embedを持つ要素を置換する
- *   type: {string} [html,pu,md,mmd,text]
- *     html : テンプレート(HTML)同様、HTMLとして出力(既定値)
- *     pu : PlantUMLとして子要素を生成して追加
- *     md : MarkDownとして子要素を生成して追加
- *     mmd : Mermaidとして子要素を生成して追加
- *     text : bodyの中のみを、テキストとして出力
- * }"
- * 
- * 例：
- * <div data-embed='{"from":{"filename":"../../component/analyzeArg.html","selector":"script.core"},"to":"replace"}'></div>
- * ```
- * 
- */
-
-
-
 function embedComponent(doc){
   const v = {
     /**
@@ -100,6 +55,38 @@ function embedComponent(doc){
   return doc;
 }
 
+function analyzeArg(){
+  console.log('===== analyzeArg start.');
+  const v = {rv:{opt:{},val:[]}};
+  try {
+
+    for( v.i=2 ; v.i<process.argv.length ; v.i++ ){
+      // process.argv:コマンドライン引数の配列
+      v.m = process.argv[v.i].match(/^(\-*)([0-9a-zA-Z]+):*(.*)$/);
+      if( v.m && v.m[1].length > 0 ){
+        v.rv.opt[v.m[2]] = v.m[3];
+      } else {
+        v.rv.val.push(process.argv[v.i]);
+      }
+    }
+
+    console.log('v.rv='+JSON.stringify(v.rv));
+    console.log('===== analyzeArg end.');
+    return v.rv;
+  } catch(e){
+    console.error('===== analyzeArg abnormal end.\n',e);
+    // ブラウザで実行する場合はアラート表示
+    if( typeof window !== 'undefined' ) alert(e.stack); 
+    //throw e; //以降の処理を全て停止
+    v.rv.stack = e.stack; return v.rv; // 処理継続
+  }
+}
+
+/* embedComponentはブラウザ上での動作を想定しない
+  window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+});*/
+
 /**
  * コンソールで起動された際のパラメータ処理
  * @param {string} i - テンプレートファイル名。カレントフォルダからの相対パスで指定
@@ -118,7 +105,7 @@ function onNode(){
   const v = {};
 
   // テンプレートの読み込み、embedComponentの呼び出し
-  v.argv = lib.analyzeArg();
+  v.argv = analyzeArg();
   v.argv.opt.t = v.argv.opt.t || 'html';
   v.template = fs.readFileSync(v.argv.opt.i,'utf-8');
   v.doc = new JSDOM(v.template).window.document;
