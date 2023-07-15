@@ -11,6 +11,12 @@
   <!-- MarkDownテキストをHTML化するCDN -->
   <script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
 
+  <style type="text/css">
+    .img {
+      width: 80%;
+      overflow: scroll;
+    }
+  </style>
 </head>
 <body class="TabDesign" name="main">
 
@@ -18,7 +24,6 @@
     <div name="schedule">schedule</div>
     <div name="timetable">time table</div>
     <div name="map">map</div>
-    <div name="expedition">expedition</div>
     <div name="RelatedSites">Related Sites</div>
     <div name="minutes">minutes</div>
   </div>
@@ -41,18 +46,22 @@
   <div name="map"><h1>マップ</h1>
     <div class="TabDesign" name="map">
       <div class="tabs">
-        <div name="test01">test01</div>
-        <div name="test02">test02</div>
+        <div name="outline">outline</div>
+        <div name="expedition">expedition</div>
+        <div name="test">test</div>
       </div>
-      <div name="test01"><h1>test01</h1></div>
-      <div name="test02"><h1>test02</h1></div>
+      <div name="outline"><h1>校内全体図</h1>
+        <div class="img" data-embed='{"from":{"filename":"map2023.svg"},"to":"innerHTML"}'></div>
+      </div>
+      <div name="expedition"><h1>肝試しルート</h1>
+        <div class="img" data-embed='{"from":{"filename":"肝試しルート.svg"},"to":"innerHTML"}'></div>
+      </div>
+      <div name="test" class="mermaid">
+        sequenceDiagram
+          太郎->>花子: おはよう
+          花子->>太郎: こんにちは！！
+      </div>
     </div>
-    <div data-embed='{"from":{"filename":"map2023.svg"},"to":"replace"}' />
-  </div>
-
-  <div name="expedition"><h1>肝試し</h1>
-    <div data-embed='{"from":{"filename":"肝試しルート.svg"},"to":"replace"}'></div>
-    <div class="markdown" name="kimodameshi"></div>
   </div>
 
   <div name="RelatedSites"><h1>関連サイト</h1>
@@ -68,8 +77,9 @@
     </details>
   </div>
 
-<script data-embed="szLib.js"></script>
+<!--script data-embed="szLib.js"></script-->
 
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
 <script type="text/javascript" class="main">
 function mergeDeeply(target, source, opts) {
   const isObject = obj => obj && typeof obj === 'object' && !Array.isArray(obj);
@@ -209,6 +219,7 @@ class TabDesign {
 // ブラウザ上で実行する場合の処理
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
+  mermaid.initialize({startOnLoad: true}); // mermaid描画
   //console.log('timetable test start.');
 
   v.main = new TabDesign({name:"main"});
