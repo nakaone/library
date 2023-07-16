@@ -7,6 +7,9 @@
 <li><a href="BurgerMenu.grid.md">画面分割のレイアウト</a></li>
 </ul>
 </dd>
+<dt><a href="#TabMenu">TabMenu</a></dt>
+<dd><p>タブ切り替えのHTMLページを作成する</p>
+</dd>
 <dt><a href="#TimeTable">TimeTable</a></dt>
 <dd><p>HTMLにタイムテーブルを描画する</p>
 </dd>
@@ -15,12 +18,22 @@
 </dd>
 </dl>
 
+## Constants
+
+<dl>
+<dt><a href="#fs">fs</a> ⇒ <code>Document</code></dt>
+<dd><p>テンプレート(HTML)のタグに含まれる&#39;data-embed&#39;属性に基づき、他文書から該当箇所を挿入する。</p>
+<p>JavaScriptのライブラリ等、テンプレートが非HTMLの場合は処理できない。<br>
+この場合、テンプレートを強引にHTML化して処理後、querySelector.jsで必要な部分を抽出するか、grep等で不要な部分を削除する。</p>
+<ul>
+<li><a href="https://symfoware.blog.fc2.com/blog-entry-2685.html">JSDOMを利用し、HTML + JavaScriptのプログラムをNode.jsで動作させる</a></li>
+</ul>
+</dd>
+</dl>
+
 ## Functions
 
 <dl>
-<dt><a href="#initializeSzLib">initializeSzLib()</a></dt>
-<dd><p>既存の型に新たなメソッドを追加する場合、以下に追記</p>
-</dd>
 <dt><a href="#analyzeArg">analyzeArg()</a> ⇒ <code><a href="#AnalyzeArg">AnalyzeArg</a></code></dt>
 <dd><p>コマンドラインから<code>node xxx.js aa bb</code>を実行した場合の引数(<code>aa</code>,<code>bb</code>)を取得し、オブジェクトにして返す。<br></p>
 </dd>
@@ -48,17 +61,6 @@
 </dd>
 <dt><a href="#whichType">whichType(arg, [is])</a> ⇒ <code>string</code> | <code>boolean</code></dt>
 <dd><p>変数の型を判定し、型名を文字列で返す。なお引数&quot;is&quot;が指定された場合、判定対象が&quot;is&quot;と等しいかの真偽値を返す。</p>
-</dd>
-<dt><a href="#embedComponent">embedComponent(doc)</a> ⇒ <code>Document</code></dt>
-<dd><p>テンプレート(HTML)のタグに含まれる&#39;data-embed&#39;属性に基づき、他文書から該当箇所を挿入する。</p>
-<p>JavaScriptのライブラリ等、テンプレートが非HTMLの場合は処理できない。<br>
-この場合、テンプレートを強引にHTML化して処理後、querySelector.jsで必要な部分を抽出するか、grep等で不要な部分を削除する。</p>
-<ul>
-<li><a href="https://symfoware.blog.fc2.com/blog-entry-2685.html">JSDOMを利用し、HTML + JavaScriptのプログラムをNode.jsで動作させる</a></li>
-</ul>
-</dd>
-<dt><a href="#onNode">onNode(i, o, [t])</a></dt>
-<dd><p>コンソールで起動された際のパラメータ処理</p>
 </dd>
 </dl>
 
@@ -94,6 +96,20 @@ HTMLにメニューを作成する
 | Param | Type |
 | --- | --- |
 | conf | <code>string</code> | 
+
+<a name="TabMenu"></a>
+
+## TabMenu
+タブ切り替えのHTMLページを作成する
+
+**Kind**: global class  
+<a name="new_TabMenu_new"></a>
+
+### new TabMenu([opt])
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [opt] | <code>string</code> | <code>&quot;{}&quot;</code> | オプション |
 
 <a name="TimeTable"></a>
 
@@ -397,12 +413,51 @@ drawLine: ファインダ上に線を描画
 | begin | <code>object</code> | 始点の位置 |
 | end | <code>object</code> | 終点の位置 |
 
-<a name="initializeSzLib"></a>
+<a name="fs"></a>
 
-## initializeSzLib()
-既存の型に新たなメソッドを追加する場合、以下に追記
+## fs ⇒ <code>Document</code>
+テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入する。
 
-**Kind**: global function  
+JavaScriptのライブラリ等、テンプレートが非HTMLの場合は処理できない。<br>
+この場合、テンプレートを強引にHTML化して処理後、querySelector.jsで必要な部分を抽出するか、grep等で不要な部分を削除する。
+
+- [JSDOMを利用し、HTML + JavaScriptのプログラムをNode.jsで動作させる](https://symfoware.blog.fc2.com/blog-entry-2685.html)
+
+**Kind**: global constant  
+**Returns**: <code>Document</code> - 挿入済みのDocumentオブジェクト  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| doc | <code>Document</code> | 編集対象となるDocumentオブジェクト |
+
+**Example**  
+テンプレートのdata-embed書式
+
+1. JSON.parseするので、メンバ名もダブルクォーテーションで囲む
+1. 属性値全体はシングルクォーテーションで囲む
+
+```
+data-embed="{
+  from: {
+    filename: {string} - 参照先のファイル名
+    selector: {string} - CSSセレクタ文字列。省略時はファイル全文と解釈
+  },
+  to: {string} [innerHTML|innerText|xxx|child],
+    innerHTML : data-embedが記載された要素のinnerHTMLとする
+    innerText : data-embedが記載された要素のinnerTextとする
+    xxx : 属性名xxxの値とする
+    replace : data-embedを持つ要素を置換する
+  type: {string} [html,pu,md,mmd,text]
+    html : テンプレート(HTML)同様、HTMLとして出力(既定値)
+    pu : PlantUMLとして子要素を生成して追加
+    md : MarkDownとして子要素を生成して追加
+    mmd : Mermaidとして子要素を生成して追加
+    text : bodyの中のみを、テキストとして出力
+}"
+
+例：
+<div data-embed='{"from":{"filename":"../../component/analyzeArg.html","selector":"script.core"},"to":"replace"}'></div>
+```
 <a name="analyzeArg"></a>
 
 ## analyzeArg() ⇒ [<code>AnalyzeArg</code>](#AnalyzeArg)
@@ -952,64 +1007,6 @@ whichType(a,'string'); // false
 | Promise型 | Promise |  |
  
 - Qiita [JavaScriptの型などの判定いろいろ](https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3)
-<a name="embedComponent"></a>
-
-## embedComponent(doc) ⇒ <code>Document</code>
-テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入する。
-
-JavaScriptのライブラリ等、テンプレートが非HTMLの場合は処理できない。<br>
-この場合、テンプレートを強引にHTML化して処理後、querySelector.jsで必要な部分を抽出するか、grep等で不要な部分を削除する。
-
-- [JSDOMを利用し、HTML + JavaScriptのプログラムをNode.jsで動作させる](https://symfoware.blog.fc2.com/blog-entry-2685.html)
-
-**Kind**: global function  
-**Returns**: <code>Document</code> - 挿入済みのDocumentオブジェクト  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| doc | <code>Document</code> | 編集対象となるDocumentオブジェクト |
-
-**Example**  
-テンプレートのdata-embed書式
-
-1. JSON.parseするので、メンバ名もダブルクォーテーションで囲む
-1. 属性値全体はシングルクォーテーションで囲む
-
-```
-data-embed="{
-  from: {
-    filename: {string} - 参照先のファイル名
-    selector: {string} - CSSセレクタ文字列。省略時はファイル全文と解釈
-  },
-  to: {string} [innerHTML|innerText|xxx|child],
-    innerHTML : data-embedが記載された要素のinnerHTMLとする
-    innerText : data-embedが記載された要素のinnerTextとする
-    xxx : 属性名xxxの値とする
-    replace : data-embedを持つ要素を置換する
-  type: {string} [html,pu,md,mmd,text]
-    html : テンプレート(HTML)同様、HTMLとして出力(既定値)
-    pu : PlantUMLとして子要素を生成して追加
-    md : MarkDownとして子要素を生成して追加
-    mmd : Mermaidとして子要素を生成して追加
-    text : bodyの中のみを、テキストとして出力
-}"
-
-例：
-<div data-embed='{"from":{"filename":"../../component/analyzeArg.html","selector":"script.core"},"to":"replace"}'></div>
-```
-<a name="onNode"></a>
-
-## onNode(i, o, [t])
-コンソールで起動された際のパラメータ処理
-
-**Kind**: global function  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| i | <code>string</code> | テンプレートファイル名。カレントフォルダからの相対パスで指定 |
-| o | <code>string</code> | 出力ファイル名 |
-| [t] | <code>string</code> | 出力タイプ | 記号 | 出力タイプ | | :--: | :-- | | html | テンプレート(HTML)同様、HTMLとして出力(既定値) | | text | bodyの中のみを、テキストとして出力 | |
-
 <a name="AnalyzeArg"></a>
 
 ## AnalyzeArg : <code>object</code>

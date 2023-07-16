@@ -150,6 +150,173 @@ function analyzePath(arg){
   }
 }
 
+/* コアスクリプト */
+
+/**
+ * @classdesc HTMLにメニューを作成する
+ * 
+ * - [画面分割のレイアウト](BurgerMenu.grid.md)
+ */
+
+class BurgerMenu {
+
+  /**
+   * @constructor
+   * @param {string} conf
+   * @returns {void}
+   */
+
+  constructor(conf){
+    console.log('----- BurgerMenu.constructor start.');
+    const v = {};
+    try {
+      this.conf = this.#setDefault(conf);
+      this.#setStyle();
+      BurgerMenu.setTitle(this.conf.Title);
+      this.#setMenu(document.querySelector('.BurgerMenu .Navi div ul'),this.conf.menu);
+
+      BurgerMenu.changeScreen('home');
+      console.log('----- BurgerMenu.constructor end.');
+    } catch(e){
+      console.error('----- BurgerMenu.constructor abnormal end.\n',e);
+      // ブラウザで実行する場合はアラート表示
+      if( typeof window !== 'undefined' ) alert(e.stack); 
+      throw e; //以降の処理を全て停止
+      //v.rv.stack = e.stack; return v.rv; // 処理継続
+    }
+
+
+  }
+
+  /** オブジェクトの構造が複雑なため、constructorから分離 */
+  #setDefault(conf){
+    const rv = mergeDeeply({
+      Title: '(未設定)',
+      authority: null,  // 全メニューを表示
+      style: {
+        header: { // querySelector(.BurgerMenu div[name="header"])
+          backgroundColor: "#81d8d0", // Element.style.xxx。xxxはJavaScriptで指定する場合の名称
+          color: "#fff",
+          fontSize: "1.6rem",
+          fontWeight: 900,  // 文字の太さ
+          zIndex: 1,
+        },
+        Navicon: {
+          backgroundColor: "#5bb3b5",  // ハンバーガーメニューの色
+        },
+        navi: {
+          backgroundColor: "#81d8d0",
+          color: "#fff",
+          size: "1rem",
+          weight: 400, // normal  
+        }
+      },
+      header: {
+        innerHTML: null,  // <img><span>等、htmlで指定の場合使用
+      },
+    },conf);
+    console.log('----- BurgerMenu.setDefault.\n',rv);
+    return rv;
+  }
+
+  #setMenu(parent,list){
+    const v = {};
+    for( v.o of list ){
+      console.log('l.59',v.o);
+
+      // authority指定のないメニュー項目、または権限がない場合はスキップ
+      if( !('authority' in v.o) 
+      || this.conf.authority !== null && (this.conf.authority & v.o.authority) === 0
+      ) continue;
+
+      v.li = document.createElement('li');
+      v.li.textContent = v.o.label;
+
+      if( 'children' in v.o ){
+        v.p = document.createElement('ul');
+        this.#setMenu(v.p,v.o.children);
+        v.li.appendChild(v.p);
+      } else {
+        console.log('l.74',v.o);
+        if( 'href' in v.o ){
+          console.log('l.76',v.o.href)
+          v.func = new Function('window.open("'+v.o.href+'")');
+        } else {
+          v.func = new Function(`
+          // メニューを非表示
+          document.querySelector('.BurgerMenu .Navi div').classList.remove('is_active');
+          document.querySelector('.BurgerMenu .NaviBack div').classList.remove('is_active');
+          document.querySelectorAll('.BurgerMenu .Navicon button span')
+          .forEach(x => x.classList.remove("is_active"));
+
+          // loading画面を表示
+          BurgerMenu.changeScreen('loading');
+
+          // 指定された処理を実行
+          `+v.o.func);
+        }
+        v.li.addEventListener('click',v.func);
+      }
+      parent.appendChild(v.li);
+    }
+  }
+
+  #setStyle(){
+    const v = {};
+    for( v.sel in this.conf.style ){
+      v.elements = document.querySelectorAll(v.sel);
+      for( v.element of v.elements ){
+        for( v.prop in this.conf.style[v.sel] ){
+          if( v.prop.match(/^--/) ){
+            // CSS変数の設定
+            v.element.style.setProperty(v.prop,this.conf.style[v.sel][v.prop]);
+          } else {
+            // CSS変数以外の設定
+            v.element.style[v.prop] = this.conf.style[v.sel][v.prop];
+          }
+        }
+      }
+    }
+  }
+
+  static setTitle(title){
+    document.querySelector('.BurgerMenu .Title').innerHTML = title;
+  }
+
+  static toggle(){
+    document.querySelector('.BurgerMenu .Navi div').classList.toggle("is_active");
+    document.querySelector('.BurgerMenu .NaviBack div').classList.toggle("is_active");
+    document.querySelectorAll('.BurgerMenu .Navicon button span')
+    .forEach(x => x.classList.toggle("is_active"));
+  }
+
+  static changeScreen(scrId='loading'){
+    console.log('----- BurgerMenu.changeScreen start.\nscrId="'+scrId+'"');
+    const v = {};
+
+    if( scrId === 'loading' ){
+      document.querySelectorAll('body > div:not(.BurgerMenu)').forEach(x => x.style.display = 'none');
+      // 待機画面を表示
+      document.querySelector('.BurgerMenu .loading').style.display = '';
+    } else {
+      // 指定画面を表示、それ以外は非表示
+      document.querySelectorAll('body > div:not(.BurgerMenu)').forEach(x => {
+        v.name = x.getAttribute('name');
+        x.style.display = v.name === scrId ? '' : 'none';
+      });
+      // 待機画面を非表示
+      document.querySelector('.BurgerMenu .loading').style.display = 'none';
+    }
+
+    // メニューを非表示
+    document.querySelector('.BurgerMenu .Navi div').classList.remove('is_active');
+    document.querySelector('.BurgerMenu .NaviBack div').classList.remove('is_active');
+    document.querySelectorAll('.BurgerMenu .Navicon button span')
+    .forEach(x => x.classList.remove("is_active"));
+    //console.log('----- BurgerMenu.changeScreen end.');
+  }
+}
+
 
 /**
  * Array型の変数に2次元配列からHTMLの表を作成してtable要素として返すメソッドを追加する。
@@ -889,169 +1056,113 @@ function querySelector(content,selectors){
 }
 
 /* コアスクリプト */
-
 /**
- * @classdesc HTMLにメニューを作成する
- * 
- * - [画面分割のレイアウト](BurgerMenu.grid.md)
+ * @classdesc タブ切り替えのHTMLページを作成する
  */
 
-class BurgerMenu {
+class TabMenu {
 
   /**
    * @constructor
-   * @param {string} conf
+   * @param {string} [opt={}] - オプション
    * @returns {void}
    */
-
-  constructor(conf){
-    console.log('----- BurgerMenu.constructor start.');
+  constructor(opt={}){
+    console.log('TabMenu.constructor start.');
     const v = {};
-    try {
-      this.conf = this.#setDefault(conf);
-      this.#setStyle();
-      BurgerMenu.setTitle(this.conf.Title);
-      this.#setMenu(document.querySelector('.BurgerMenu .Navi div ul'),this.conf.menu);
-
-      BurgerMenu.changeScreen('home');
-      console.log('----- BurgerMenu.constructor end.');
-    } catch(e){
-      console.error('----- BurgerMenu.constructor abnormal end.\n',e);
-      // ブラウザで実行する場合はアラート表示
-      if( typeof window !== 'undefined' ) alert(e.stack); 
-      throw e; //以降の処理を全て停止
-      //v.rv.stack = e.stack; return v.rv; // 処理継続
-    }
-
-
-  }
-
-  /** オブジェクトの構造が複雑なため、constructorから分離 */
-  #setDefault(conf){
-    const rv = mergeDeeply({
-      Title: '(未設定)',
-      authority: null,  // 全メニューを表示
+    this.option = mergeDeeply({
+      name: null, // 対象となるページ全体のname属性。nullなら単一で特定不要と解釈
+      initial: null,  // 初期表示ページの名前
+      direction: 'x', // タブを並べる方向。x:横並び, y:縦並び
       style: {
-        header: { // querySelector(.BurgerMenu div[name="header"])
-          backgroundColor: "#81d8d0", // Element.style.xxx。xxxはJavaScriptで指定する場合の名称
-          color: "#fff",
-          fontSize: "1.6rem",
-          fontWeight: 900,  // 文字の太さ
-          zIndex: 1,
+        tabs: {
+          selector: ".TabMenu .tabs",
+          css: {
+            width: "100%",
+            height: "100%",
+            margin: "0px",
+            padding: "0px",
+            boxSizing: "border-box",
+            display: "grid",
+          },
         },
-        Navicon: {
-          backgroundColor: "#5bb3b5",  // ハンバーガーメニューの色
+        tab: {
+          selector: ".TabMenu .tabs div",
+          css: {
+            paddingLeft: "1rem",
+            borderBottom: "solid 4px #ccc",
+          },
         },
-        navi: {
-          backgroundColor: "#81d8d0",
-          color: "#fff",
-          size: "1rem",
-          weight: 400, // normal  
+        act: {
+          //selector: ".TabMenu .tabs div.act",
+          css: {
+            paddingLeft: "1rem",
+            borderBottom: "solid 4px #000",
+          },
         }
       },
-      header: {
-        innerHTML: null,  // <img><span>等、htmlで指定の場合使用
-      },
-    },conf);
-    console.log('----- BurgerMenu.setDefault.\n',rv);
-    return rv;
-  }
+    },opt);
+    //console.log(this.option);
 
-  #setMenu(parent,list){
-    const v = {};
-    for( v.o of list ){
-      console.log('l.59',v.o);
+    // 全体の親要素をthis.wrapper、タブ表示領域をthis.tabsに保存
+    this.wrapperSelector = '.TabMenu'
+      +( this.option.name === null ? '' : '[name="' + this.option.name + '"]');
+    this.wrapper = document.querySelector(this.wrapperSelector);
+    this.tabs = document.querySelector(this.wrapperSelector+' > .tabs');
+    //console.log(this.wrapper);
 
-      // authority指定のないメニュー項目、または権限がない場合はスキップ
-      if( !('authority' in v.o) 
-      || this.conf.authority !== null && (this.conf.authority & v.o.authority) === 0
-      ) continue;
-
-      v.li = document.createElement('li');
-      v.li.textContent = v.o.label;
-
-      if( 'children' in v.o ){
-        v.p = document.createElement('ul');
-        this.#setMenu(v.p,v.o.children);
-        v.li.appendChild(v.p);
-      } else {
-        console.log('l.74',v.o);
-        if( 'href' in v.o ){
-          console.log('l.76',v.o.href)
-          v.func = new Function('window.open("'+v.o.href+'")');
-        } else {
-          v.func = new Function(`
-          // メニューを非表示
-          document.querySelector('.BurgerMenu .Navi div').classList.remove('is_active');
-          document.querySelector('.BurgerMenu .NaviBack div').classList.remove('is_active');
-          document.querySelectorAll('.BurgerMenu .Navicon button span')
-          .forEach(x => x.classList.remove("is_active"));
-
-          // loading画面を表示
-          BurgerMenu.changeScreen('loading');
-
-          // 指定された処理を実行
-          `+v.o.func);
+    // スタイルの適用
+    for( v.x of ['tabs','tab'] ){ // actは不要
+      document.querySelectorAll(this.option.style[v.x].selector).forEach(element => {
+        for( v.y in this.option.style[v.x].css ){
+          element.style[v.y] = this.option.style[v.x].css[v.y];
         }
-        v.li.addEventListener('click',v.func);
-      }
-      parent.appendChild(v.li);
-    }
-  }
-
-  #setStyle(){
-    const v = {};
-    for( v.sel in this.conf.style ){
-      v.elements = document.querySelectorAll(v.sel);
-      for( v.element of v.elements ){
-        for( v.prop in this.conf.style[v.sel] ){
-          if( v.prop.match(/^--/) ){
-            // CSS変数の設定
-            v.element.style.setProperty(v.prop,this.conf.style[v.sel][v.prop]);
-          } else {
-            // CSS変数以外の設定
-            v.element.style[v.prop] = this.conf.style[v.sel][v.prop];
-          }
-        }
-      }
-    }
-  }
-
-  static setTitle(title){
-    document.querySelector('.BurgerMenu .Title').innerHTML = title;
-  }
-
-  static toggle(){
-    document.querySelector('.BurgerMenu .Navi div').classList.toggle("is_active");
-    document.querySelector('.BurgerMenu .NaviBack div').classList.toggle("is_active");
-    document.querySelectorAll('.BurgerMenu .Navicon button span')
-    .forEach(x => x.classList.toggle("is_active"));
-  }
-
-  static changeScreen(scrId='loading'){
-    console.log('----- BurgerMenu.changeScreen start.\nscrId="'+scrId+'"');
-    const v = {};
-
-    if( scrId === 'loading' ){
-      document.querySelectorAll('body > div:not(.BurgerMenu)').forEach(x => x.style.display = 'none');
-      // 待機画面を表示
-      document.querySelector('.BurgerMenu .loading').style.display = '';
-    } else {
-      // 指定画面を表示、それ以外は非表示
-      document.querySelectorAll('body > div:not(.BurgerMenu)').forEach(x => {
-        v.name = x.getAttribute('name');
-        x.style.display = v.name === scrId ? '' : 'none';
       });
-      // 待機画面を非表示
-      document.querySelector('.BurgerMenu .loading').style.display = 'none';
     }
 
-    // メニューを非表示
-    document.querySelector('.BurgerMenu .Navi div').classList.remove('is_active');
-    document.querySelector('.BurgerMenu .NaviBack div').classList.remove('is_active');
-    document.querySelectorAll('.BurgerMenu .Navicon button span')
-    .forEach(x => x.classList.remove("is_active"));
-    //console.log('----- BurgerMenu.changeScreen end.');
+    // ページ名のリストを作成
+    this.pageList = [];
+    this.tabs.querySelectorAll('[name]')
+    .forEach(x => this.pageList.push(x.getAttribute('name')));
+    //console.log(this.pageList);
+
+    // 各タブ・ページの要素をthis.tab/pageに保存
+    this.tab = {};
+    this.page = {};
+    this.tabNum = 0;
+    this.pageList.forEach(x => {
+      this.tab[x] = this.wrapper.querySelector('.tabs [name="'+x+'"]');
+      // ページは「TabMenuクラス直下のDIV」に限定
+      this.page[x] = this.wrapper.querySelector('.TabMenu > div[name="'+x+'"]');
+      //console.log(x,this.tab[x],this.page[x]);
+      this.tab[x].addEventListener('click',()=>this.changePage(x));
+      this.tabNum++;
+    });
+    // タブの数をタブ領域に設定
+    this.tabs.style.gridTemplateColumns = 'repeat('+this.tabNum+',1fr)';
+
+    this.changePage(this.option.initial); // 初期ページ
+    console.log('TabMenu.constructor end.');
+  }
+
+  changePage(page=null){
+    console.log('TabMenu.changePage start.');
+    this.activePage = page === null ? this.pageList[0] : page;
+    console.log(this.activePage,this.pageList,this.tab)
+    this.pageList.forEach(x => {
+      if( x === this.activePage ){
+        for( let y in this.option.style.act.css ){
+          this.tab[x].style[y] = this.option.style.act.css[y];
+        }
+        this.page[x].style.display = '';
+      } else {
+        for( let y in this.option.style.tab.css ){
+          this.tab[x].style[y] = this.option.style.tab.css[y];
+        }
+        this.page[x].style.display = 'none';
+      }
+    })
+    console.log('TabMenu.changePage end.');
   }
 }
 
@@ -1926,13 +2037,14 @@ function whichType(arg,is){
 
 exports.analyzeArg = analyzeArg;
 exports.analyzePath = analyzePath;
+exports.BurgerMenu = BurgerMenu;
 Array.prototype.tabulize = Array_tabulize;
 Date.prototype.calc = Date_calc;
 Date.prototype.toLocale = Date_toLocale;
 exports.embedComponent = embedComponent;
 exports.mergeDeeply = mergeDeeply;
 exports.querySelector = querySelector;
-exports.BurgerMenu = BurgerMenu;
+exports.TabMenu = TabMenu;
 exports.TimeTable = TimeTable;
 exports.webScanner = webScanner;
 exports.whichType = whichType;

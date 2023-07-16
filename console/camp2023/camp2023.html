@@ -161,10 +161,20 @@
     </details-->
   </div>
 
-<!--script data-embed="szLib.js"></script-->
-
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
-<script type="text/javascript" class="main">
+
+<script type="text/javascript">
+/**
+ * @desc オブジェクトのプロパティを再帰的にマージ
+ * - Qiita [JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法](https://qiita.com/riversun/items/60307d58f9b2f461082a)
+ * 
+ * @param {Object} target - 結合対象のオブジェクト1
+ * @param {Object} source - 結合対象のオブジェクト2。同名のプロパティはこちらで上書き
+ * @param {Object} opts - オプション
+ * @param {boolean} [opts.concatArray=false] - プロパティの値が配列だった場合、結合するならtrue
+ * @returns {Object} 結合されたオブジェクト
+ */
+
 function mergeDeeply(target, source, opts) {
   const isObject = obj => obj && typeof obj === 'object' && !Array.isArray(obj);
   const isConcatArray = opts && opts.concatArray;
@@ -185,7 +195,8 @@ function mergeDeeply(target, source, opts) {
   }
   return result;
 }
-
+</script>
+<script type="text/javascript">/* コアスクリプト */
 /**
  * @classdesc タブ切り替えのHTMLページを作成する
  */
@@ -295,26 +306,13 @@ class TabMenu {
     console.log('TabMenu.changePage end.');
   }
 }
-
+</script>
+<script type="text/javascript" class="main">
 // ブラウザ上で実行する場合の処理
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
-  mermaid.initialize({startOnLoad: true}); // mermaid描画
-  //console.log('timetable test start.');
-
   v.main = new TabMenu({name:"main"});
   v.map = new TabMenu({name:"map"});
-
-  // MarkDownで記述された部分をHTML化して表示
-  document.querySelectorAll('div.markdown').forEach(x => {
-    x.innerHTML = marked(x.innerHTML);
-  });
-
-  // PlantUMLで記述された部分をHTML化して表示
-  document.querySelectorAll('img.PlantUML').forEach(x => {
-    x.src = "http://www.plantuml.com/plantuml/svg/"
-      + plantumlEncoder.encode(x.innerHTML);
-  });
 
   // Google Spreadからデータを取得してタイムテーブル表示
   const url = {
@@ -325,7 +323,22 @@ window.addEventListener('DOMContentLoaded',() => {
   .then(response => response.json()).then(r => {
     // タイムテーブルの表示
     const tt01 = new TimeTable('div.timetable[name="tt01"]',v.raw,{datatype:'sheet',dataSheet:url.sheet});
+
   });
+
+    // MarkDownで記述された部分をHTML化して表示
+    document.querySelectorAll('div.markdown').forEach(x => {
+      x.innerHTML = marked(x.innerHTML);
+    });
+
+    // PlantUMLで記述された部分をHTML化して表示
+    document.querySelectorAll('img.PlantUML').forEach(x => {
+      x.src = "http://www.plantuml.com/plantuml/svg/"
+        + plantumlEncoder.encode(x.innerHTML);
+    });
+
+    // Mermaidで記述された部分をHTML化して表示
+    mermaid.initialize({startOnLoad: true});
 });
 </script>
 </body></html>

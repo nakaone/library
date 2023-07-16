@@ -6,3 +6,5 @@ echo `TZ='Asia/Tokyo' date`
 
 node ../../tools/embedComponent.js \
     -i:template.html -o:CommonJS.js -t:text
+
+jsdoc2md CommonJS.js > CommonJS.md
