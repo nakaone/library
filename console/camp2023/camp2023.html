@@ -73,7 +73,11 @@
   </div>
 
   <div name="minutes"><h1>参考：論議メモ</h1>
-    <details><summary>2023/06/10 定例会</summary>
+    <div class="TabDesign" name="minutes">
+      <div class="tabs">
+        <div name="20230610">6/10定例会</div>
+        <div name="20230708">7/08定例会</div>
+      </div>
       <div class="markdown" name="20230610">1. 日程：9/23〜24 or **9/30〜10/01**(第一候補) or 10/07〜08(第二候補) or 10/08〜09(第三候補)
 1. 人数制限を設けるか
    - 親父の会の人員でカバーできる範囲で
@@ -101,8 +105,6 @@
 1. 児童の怪我などは自己責任を明文化しておく
 1. お化け
    - 中学生の評判良かったが、大人がもう一人必要(安全確保のため)</div>
-    </details>
-    <details><summary>2023/07/08 定例会</summary>
       <div class="markdown" name="20230708">## 参加者多数の場合の抽選ロジック
 
 1. 申込単位にスコア付与(RND関数。0≦n<1)
@@ -148,7 +150,15 @@
 ## 以前に開催した際のTips
 
 1. 朝は適当に片付けて帰る人が多い</div>
+    </div>
+
+
+    <!--details><summary>2023/06/10 定例会</summary>
+      <div class="markdown" name="20230610" data-embed="20230610.md"></div>
     </details>
+    <details><summary>2023/07/08 定例会</summary>
+      <div class="markdown" name="20230708" data-embed="20230708.md"></div>
+    </details-->
   </div>
 
 <!--script data-embed="szLib.js"></script-->
@@ -271,15 +281,11 @@ class TabDesign {
     console.log(this.activePage,this.pageList,this.tab)
     this.pageList.forEach(x => {
       if( x === this.activePage ){
-        console.log('activate:',this.tab[x]);
-        //this.tab[x].classList.add('act');
         for( let y in this.option.style.act.css ){
           this.tab[x].style[y] = this.option.style.act.css[y];
         }
         this.page[x].style.display = '';
       } else {
-        console.log('in-activate:',this.tab[x]);
-        //this.tab[x].classList.remove('act');
         for( let y in this.option.style.tab.css ){
           this.tab[x].style[y] = this.option.style.tab.css[y];
         }
@@ -299,40 +305,27 @@ window.addEventListener('DOMContentLoaded',() => {
   v.main = new TabDesign({name:"main"});
   v.map = new TabDesign({name:"map"});
 
-  /*
+  // MarkDownで記述された部分をHTML化して表示
+  document.querySelectorAll('div.markdown').forEach(x => {
+    x.innerHTML = marked(x.innerHTML);
+  });
+
+  // PlantUMLで記述された部分をHTML化して表示
+  document.querySelectorAll('img.PlantUML').forEach(x => {
+    x.src = "http://www.plantuml.com/plantuml/svg/"
+      + plantumlEncoder.encode(x.innerHTML);
+  });
+
+  // Google Spreadからデータを取得してタイムテーブル表示
   const url = {
     GAS:'https://script.google.com/macros/s/AKfycbwm3R0FbnhGALwO1J8G0yxNBvGAL6kPKewyypoz3OFIwIaB56D9XKAjkbopwpOEYdFm/exec',
     sheet: 'https://tinyurl.com/2ahyly3l',
   }
   fetch(url.GAS)
   .then(response => response.json()).then(r => {
-    const v = {raw:r,docs:{}};
-
     // タイムテーブルの表示
     const tt01 = new TimeTable('div.timetable[name="tt01"]',v.raw,{datatype:'sheet',dataSheet:url.sheet});
-
-    // docsのオブジェクト化
-    for( v.i=1 ; v.i<v.raw.docs.length ; v.i++ ){
-      v.l = v.raw.docs[v.i];
-      if( !(v.l[1] in v.docs) ) v.docs[v.l[1]] = {};  // type不存在
-      v.docs[v.l[1]][v.l[2]] = v.l[3];
-    }
-    console.log(v.docs);
-
-    // MarkDownで記述された部分をHTML化して表示
-    console.log(document.querySelectorAll('div.markdown'));
-    document.querySelectorAll('div.markdown').forEach(x => {
-      //console.log(v.docs.markdown[x.getAttribute('name')])
-      x.innerHTML = marked(v.docs.markdown[x.getAttribute('name')]);
-    });
-
-    // PlantUMLで記述された部分をHTML化して表示
-    document.querySelectorAll('img.PlantUML').forEach(x => {
-      //console.log(v.docs.PlantUML[x.getAttribute('name')])
-      x.src = "http://www.plantuml.com/plantuml/svg/"+plantumlEncoder.encode(v.docs.PlantUML[x.getAttribute('name')]);
-    });
   });
-  */
 });
 </script>
 </body></html>
