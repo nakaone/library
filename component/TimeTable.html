@@ -3,13 +3,10 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <style type="text/css" class="core">/* コアCSS */
 .right {text-align: right;}
-.image, .timetable {
+.image, .TimeTable {
   max-width: 100%;
 }
-.wrapPlantUML {
-  overflow-x: auto;
-}
-.timetable, .timetable div {
+.TimeTable, .TimeTable div {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -20,97 +17,97 @@
   --boldLine : solid 2px var(--color);
   --thinLine : dotted 1px var(--color);
 }
-.timetable span {
+.TimeTable span {
   padding-left: 0.3rem;
   white-space: nowrap;
 }
-/*.timetable .controller {}*/
-.timetable .main {
+/*.TimeTable .controller {}*/
+.TimeTable .main {
   grid-template-rows: 2rem 1fr;
   grid-template-columns: 1fr;
   overflow: auto;
 }
-.timetable .main .header {
+.TimeTable .main .header {
   grid-row: 1/2;
   grid-column: 1/2;
   grid-template-columns: repeat(3, 1fr);
   border: var(--boldLine);
 }
-.timetable .main .header div:nth-child(2n) {
+.TimeTable .main .header div:nth-child(2n) {
   background-color: var(--color);
 }
-.timetable .main .timeline {
+.TimeTable .main .timeline {
   grid-row: 2/3;
   grid-column: 1/2;
   grid-template-columns: repeat(12, 1fr);
   border-bottom: var(--boldLine);
 }
-.timetable .main .timeline div {
+.TimeTable .main .timeline div {
   min-width: 1rem;
   min-height: 1rem;
 }
-.timetable .main .timeline div:nth-child(2n+1) {
+.TimeTable .main .timeline div:nth-child(2n+1) {
   border-left: var(--boldLine);
 }
-.timetable .main .timeline div:nth-child(2n) {
+.TimeTable .main .timeline div:nth-child(2n) {
   border-left: var(--thinLine);
 }
-.timetable .main .timeline div:last-child {
+.TimeTable .main .timeline div:last-child {
   border-right: var(--boldLine);
 }
-.timetable .main .tasks {
+.TimeTable .main .tasks {
   grid-row: 2/3;
   grid-column: 1/2;
   z-index: 1;
 }
-.timetable .main .tasks > div {
+.TimeTable .main .tasks > div {
   max-height: 1.6rem;
   grid-column: 1/37;
   margin-bottom: 0.5rem;
 }
-.timetable .main .tasks > div:first-child {
+.TimeTable .main .tasks > div:first-child {
   margin-top: 0.5rem;
 }
-.timetable .main .tasks .bar {
+.TimeTable .main .tasks .bar {
   grid-template-columns: repeat(36, 1fr);
 }
-.timetable .main .tasks .bar [name="1.1"]{
+.TimeTable .main .tasks .bar [name="1.1"]{
   grid-column: 4/12;
   background-color: var(--color);
 }
-.timetable .main .tasks .bar [name="1.2"]{
+.TimeTable .main .tasks .bar [name="1.2"]{
   grid-column: 15/20;
   background-color: var(--color);
 }
 
-.timetable .detail {
+.TimeTable .detail {
   margin-top: 1rem;
   display: none;
 }
-.timetable .detail div {
+.TimeTable .detail div {
   padding: 0.5rem;
 }
-.timetable .detail > div {
+.TimeTable .detail > div {
   grid-template-columns: 5rem 1fr;
 }
-.timetable .detail .button {
+.TimeTable .detail .button {
   height: 3rem;
   margin-bottom: 1rem;
   display: flex;
 }
-.timetable .detail .button button {
+.TimeTable .detail .button button {
   margin-left: 2rem;
   height: 2rem;
 }
 /*
   テーブル関係
 */
-.timetable th {
+.TimeTable th {
   padding: 0.3em;
   background-color: #888;
   color: white;
 }
-.timetable td {
+.TimeTable td {
   padding: 0.3em;
   border-bottom: solid 1px #aaa;
   border-right: solid 1px #aaa;
@@ -118,7 +115,7 @@
 </style>
 </head><body>
 <div class="core"><!-- コアHTML -->
-  <div class="timetable" name="tt01">
+  <div class="TimeTable" name="tt01">
     <div class="controller"></div>
     <div class="main">
       <div class="header"></div>
@@ -176,7 +173,7 @@ class TimeTable {
    * - 薄緑：同任意項目
    * - 赤：算式が設定された項目
    * 
-   * <h3>timetable</h3>
+   * <h3>TimeTable</h3>
    * <table calss="tt"><tr>
    * <th style="background:#ff0000;color:white">id</th>
    * <th style="background:#0000ff;color:white;">pId</th>
@@ -235,6 +232,26 @@ class TimeTable {
 
   constructor(selector,data,opt){
     this.rootElement = document.querySelector(selector);
+    this.rootElement.innerHTML = `
+      <div class="controller"></div>
+      <div class="main">
+        <div class="header"></div>
+        <div class="timeline"></div>
+        <div class="tasks"></div>
+      </div>
+      <div class="detail">
+        <div class="button">
+          <button name="close">閉じる</button>
+          <button name="edit">編集</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>項目</th><th>値</th><th>備考</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    `;
     // オプションの既定値設定
     this.opt = mergeDeeply({
       datatype: null, // dataが加工済ならnull
@@ -447,18 +464,18 @@ class TimeTable {
     }
     console.log(this.opt.sheetDef);
 
-    // 02.timetableシート
-    v.header = raw.timetable[0]; // ヘッダ行
+    // 02.TimeTableシート
+    v.header = raw.TimeTable[0]; // ヘッダ行
     v.idmapIndex = 0; // v.idmapの添字
     console.log(v.header)
     // 02.1. v.sheetにリニアに追加する
-    for( v.i=1 ; v.i<raw.timetable.length ; v.i++ ){
-      v.l = raw.timetable[v.i];
+    for( v.i=1 ; v.i<raw.TimeTable.length ; v.i++ ){
+      v.l = raw.TimeTable[v.i];
       // 有効な行データをオブジェクト化する
       if( Number(v.l[0]) > 0 ){ // 空白行スキップ
-        v.o = {resources:[]}; // 必要資機材のみtimetableシート上にないので足しておく
+        v.o = {resources:[]}; // 必要資機材のみTimeTableシート上にないので足しておく
         for( v.j=0 ; v.j<v.l.length ; v.j++ ){
-          v.colType = this.opt.sheetDef.timetable[v.header[v.j]].type.toLowerCase();
+          v.colType = this.opt.sheetDef.TimeTable[v.header[v.j]].type.toLowerCase();
           switch( v.colType ){
             case 'Date':
               v.o[v.header[v.j]] = new Date(v.l[v.j]).getTime();
@@ -534,7 +551,7 @@ class TimeTable {
     v.detail.querySelector('tbody').innerHTML = '';
 
     // 非表示項目を排除しながら表示順に項目をソート
-    v.list = v.listColumns(this.opt.sheetDef.timetable);
+    v.list = v.listColumns(this.opt.sheetDef.TimeTable);
     console.log(v.list);
 
     // 表示順にタスクの項目をtbodyに追加
@@ -652,7 +669,7 @@ window.addEventListener('DOMContentLoaded',() => {
     const v = {raw:r,docs:{}};
 
     // タイムテーブルの表示
-    const tt01 = new TimeTable('div.timetable[name="tt01"]',v.raw,{datatype:'sheet',dataSheet:url.sheet});
+    const tt01 = new TimeTable('div.TimeTable[name="tt01"]',v.raw,{datatype:'sheet',dataSheet:url.sheet});
 
   });
 });

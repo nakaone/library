@@ -40,9 +40,9 @@
 <dt><a href="#analyzePath">analyzePath(arg)</a> ⇒ <code><a href="#AnalyzePath">AnalyzePath</a></code></dt>
 <dd><p>パス名文字列から構成要素を抽出</p>
 </dd>
-<dt><a href="#Array_tabulize">Array_tabulize([opt])</a> ⇒ <code>HTMLTableObject</code></dt>
+<dt><a href="#Array.tabulize">Array.tabulize([opt])</a> ⇒ <code>HTMLTableObject</code></dt>
 <dd><p>Array型の変数に2次元配列からHTMLの表を作成してtable要素として返すメソッドを追加する。</p>
-<p>使用前<code>Array.prototype.tabulize = Array_tabulize;</code>実行のこと。</p>
+<p>使用前<code>Array.prototype.tabulize = Array.tabulize;</code>実行のこと。</p>
 </dd>
 <dt><a href="#Date_calc">Date_calc(arg)</a> ⇒ <code>string</code></dt>
 <dd><p>指定日に年/月/日/時/分/秒/ミリ秒数を加減した日時を計算する&quot;calc()&quot;メソッドをDate型に追加する。</p>
@@ -544,12 +544,12 @@ node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
 }
 
 ```
-<a name="Array_tabulize"></a>
+<a name="Array.tabulize"></a>
 
 ## Array\_tabulize([opt]) ⇒ <code>HTMLTableObject</code>
 Array型の変数に2次元配列からHTMLの表を作成してtable要素として返すメソッドを追加する。
 
-使用前`Array.prototype.tabulize = Array_tabulize;`実行のこと。
+使用前`Array.prototype.tabulize = Array.tabulize;`実行のこと。
 
 **Kind**: global function  
 

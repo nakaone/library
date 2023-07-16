@@ -7,14 +7,14 @@
   外部ファイルのライブラリとして参照されただけだと呼ばれないため。
 */
 function initializeSzLib(){
-  Array.prototype.tabulize = Array_tabulize;
+  Array.prototype.tabulize = Array.tabulize;
   Date.prototype.calc = Date_calc;
   Date.prototype.toLocale = Date_toLocale;
 }
 /* 以下、script.coreは読み込まれるが、style.core, div.coreは読み込まれていないので注意 */
 <div data-embed='{"from":{"filename":"../../component/analyzeArg.html","selector":"script.core"},"to":"replace"}'></div>
 <div data-embed='{"from":{"filename":"../../component/analyzePath.html","selector":"script.core"},"to":"replace"}'></div>
-<div data-embed='{"from":{"filename":"../../component/Array_tabulize.html","selector":"script.core"},"to":"replace"}'></div>
+<div data-embed='{"from":{"filename":"../../component/Array.tabulize.html","selector":"script.core"},"to":"replace"}'></div>
 <div data-embed='{"from":{"filename":"../../component/BurgerMenu.html","selector":"script.core"},"to":"replace"}'></div>
 <div data-embed='{"from":{"filename":"../../component/Date.calc.html","selector":"script.core"},"to":"replace"}'></div>
 <div data-embed='{"from":{"filename":"../../component/Date.toLocale.html","selector":"script.core"},"to":"replace"}'></div>

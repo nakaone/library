@@ -29,7 +29,7 @@
  * @returns {HTMLTableObject}
  */
 
-function Array.tabulize(opt){
+function Array_tabulize(opt){
  console.log('tabulize start.');
   const v = {
     table: document.createElement('table'),
@@ -80,6 +80,7 @@ function Array.tabulize(opt){
   console.log(v.table)
   return v.table;
 }
+Array.prototype.tabulize = Array_tabulize;
 </script>
 
 <!--================================================

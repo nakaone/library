@@ -89,10 +89,10 @@
 - 既存型に独自メソッドを追加する場合、'.'を'_'にした別関数として定義した上で既存型に追加する。<br>
   (∵下の例で`Array.prototype.tabulize = function(opt){〜`とすると動作はするがjsdoc2mdでMDが生成されない)
   ```
-  function Array_tabulyze(opt){
+  function Array.tabulyze(opt){
     (中略)
   }
-  Array.prototype.tabulize = Array_tabulyze;
+  Array.prototype.tabulize = Array.tabulyze;
   ```
 
 1. 

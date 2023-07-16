@@ -16,6 +16,9 @@
       width: 80%;
       overflow: scroll;
     }
+    .PlantUML {
+      overflow-x: auto;
+    }
   </style>
 </head>
 <body class="TabMenu" name="main">
@@ -36,7 +39,7 @@
     <div class="TabMenu" name="info">
       <div class="tabs">
         <div name="schedule">schedule</div>
-        <div name="timetable">table</div>
+        <div name="TimeTable">table</div>
         <div name="map">map</div>
         <div name="expedition">expedition</div>
         <div name="sites">sites</div>
@@ -45,19 +48,19 @@
       </div>
 
       <div name="schedule"><h2>スケジュール</h2>
-        <div class="PlantUML"  data-embed="schedule.pu" name="schedule1"><img /></div>
+        <div class="PlantUML"  data-embed="schedule.pu"><img /></div>
         <div class="markdown" name="schedule2"></div>
         <!--
           遊び場保険、スケジュールに追加
         -->
       </div>
     
-      <div name="timetable"><h2>タイムテーブル</h2>
+      <div name="TimeTable"><h2>タイムテーブル</h2>
         <ul>
           <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
           <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
         </ul>
-        <div class="timetable" name="tt01">
+        <div class="TimeTable" name="tt01">
         </div>
         <!--
           詳細は別ページ？　別ペイン？
@@ -103,8 +106,14 @@
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
 
 <!-- 自作ライブラリ -->
+<script type="text/javascript" data-embed='{"from":{"filename":"../../component/Array.tabulize.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='{"from":{"filename":"../../component/Date.toLocale.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/mergeDeeply.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/TabMenu.html","selector":"script.core"},"to":"js"}'></script>
+<style type="text/css" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"style.core"},"to":"css"}'></style>
+<script type="text/javascript" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='{"from":{"filename":"../../component/whichType.html","selector":"script.core"},"to":"js"}'></script>
+
 <script type="text/javascript" class="main">
 // ブラウザ上で実行する場合の処理
 window.addEventListener('DOMContentLoaded',() => {
@@ -116,18 +125,16 @@ window.addEventListener('DOMContentLoaded',() => {
     console.log(v.menuName,v.arg);
     v[v.menuName] = new TabMenu(v.arg);
   });
-  //v.main = new TabMenu({name:"main"});
-  //v.map = new TabMenu({name:"info"});
 
   // Google Spreadからデータを取得してタイムテーブル表示
   const url = {
-    GAS:'https://script.google.com/macros/s/AKfycbwm3R0FbnhGALwO1J8G0yxNBvGAL6kPKewyypoz3OFIwIaB56D9XKAjkbopwpOEYdFm/exec',
+    GAS:'https://script.google.com/macros/s/AKfycby1symD7PQwa9qJX1oPSg7qqrKeDPxgrYLWevR1CLuVQYzOpRD8Vk2OvWjUoWrQN0ow/exec',
     sheet: 'https://tinyurl.com/2ahyly3l',
   }
   fetch(url.GAS)
   .then(response => response.json()).then(r => {
     // タイムテーブルの表示
-    const tt01 = new TimeTable('div.timetable[name="tt01"]',v.raw,{datatype:'sheet',dataSheet:url.sheet});
+    const tt01 = new TimeTable('div.TimeTable[name="tt01"]',r,{datatype:'sheet',dataSheet:url.sheet});
 
   });
 

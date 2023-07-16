@@ -3,7 +3,7 @@
   外部ファイルのライブラリとして参照されただけだと呼ばれないため。
 */
 function initializeSzLib(){
-  Array.prototype.tabulize = Array_tabulize;
+  Array.prototype.tabulize = Array.tabulize;
   Date.prototype.calc = Date_calc;
   Date.prototype.toLocale = Date_toLocale;
 }
@@ -165,14 +165,14 @@ function analyzePath(arg){
 /**
  * Array型の変数に2次元配列からHTMLの表を作成してtable要素として返すメソッドを追加する。
  * 
- * 使用前`Array.prototype.tabulize = Array_tabulize;`実行のこと。
+ * 使用前`Array.prototype.tabulize = Array.tabulize;`実行のこと。
  * 
  * @param {Object} [opt]
  * @param {string} opt.dateFormat {string} - 配列内のDateを表示する日時形式指定文字列(yMdhms.n)
  * @returns {HTMLTableObject}
  */
 
-function Array_tabulize(opt){
+function Array.tabulize(opt){
  console.log('tabulize start.');
   const v = {
     table: document.createElement('table'),

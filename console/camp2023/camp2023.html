@@ -16,6 +16,9 @@
       width: 80%;
       overflow: scroll;
     }
+    .PlantUML {
+      overflow-x: auto;
+    }
   </style>
 </head>
 <body class="TabMenu" name="main">
@@ -36,7 +39,7 @@
     <div class="TabMenu" name="info">
       <div class="tabs">
         <div name="schedule">schedule</div>
-        <div name="timetable">table</div>
+        <div name="TimeTable">table</div>
         <div name="map">map</div>
         <div name="expedition">expedition</div>
         <div name="sites">sites</div>
@@ -45,7 +48,7 @@
       </div>
 
       <div name="schedule"><h2>スケジュール</h2>
-        <div class="PlantUML" name="schedule1"><img><div style="display:none">@startgantt
+        <div class="PlantUML"><img><div style="display:none">@startgantt
 project starts the 2023/07/08
 saturday are closed
 sunday are closed
@@ -106,12 +109,12 @@ then [当日スタッフアンケート回答] on {当日スタッフ} lasts 5 d
         -->
       </div>
     
-      <div name="timetable"><h2>タイムテーブル</h2>
+      <div name="TimeTable"><h2>タイムテーブル</h2>
         <ul>
           <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
           <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
         </ul>
-        <div class="timetable" name="tt01">
+        <div class="TimeTable" name="tt01">
         </div>
         <!--
           詳細は別ページ？　別ペイン？
@@ -231,6 +234,136 @@ then [当日スタッフアンケート回答] on {当日スタッフ} lasts 5 d
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
 
 <!-- 自作ライブラリ -->
+<script type="text/javascript">
+/**
+ * Array型の変数に2次元配列からHTMLの表を作成してtable要素として返すメソッドを追加する。
+ * 
+ * 使用前`Array.prototype.tabulize = Array.tabulize;`実行のこと。
+ * 
+ * @param {Object} [opt]
+ * @param {string} opt.dateFormat {string} - 配列内のDateを表示する日時形式指定文字列(yMdhms.n)
+ * @returns {HTMLTableObject}
+ */
+
+function Array_tabulize(opt){
+ console.log('tabulize start.');
+  const v = {
+    table: document.createElement('table'),
+    thead: document.createElement('thead'),
+    tbody: document.createElement('tbody'),
+    createElement: (tag,text='',opt={}) => {
+      let rv = document.createElement(tag);
+      rv.innerHTML = text;
+      for( let x in opt ){
+        rv.setAttribute(x,opt[x]);
+      }
+      return rv;
+    },
+  };
+  console.log('tabulize end.');
+
+  v.tr = v.createElement('tr');
+  console.log(this[0]);
+  for( v.i=0 ; v.i<this[0].length ; v.i++ ){
+    v.tr.appendChild(v.createElement('th',this[0][v.i]));
+  }
+  v.thead.appendChild(v.tr);
+
+  for( v.r=1 ; v.r<this.length ; v.r++ ){
+    v.tr = v.createElement('tr');
+    console.log(this[v.r]);
+    for( v.c=0 ; v.c<this[v.r].length ; v.c++ ){
+      v.raw = this[v.r][v.c];
+      v.opt = {};
+      switch( whichType(v.raw) ){
+        case 'BigInt':
+        case 'Number':
+          v.text = Number(v.raw).toLocaleString();
+          v.opt.style = 'text-align:right';
+          break;
+        case 'Date':
+          v.text = v.raw.toLocale(opt.dateFormat);
+        default:
+          v.text = String(v.raw);
+      }
+      v.tr.appendChild(v.createElement('td',v.text,v.opt));
+    }
+    v.tbody.appendChild(v.tr);
+  }
+
+  v.table.appendChild(v.thead);
+  v.table.appendChild(v.tbody);
+  console.log(v.table)
+  return v.table;
+}
+Array.prototype.tabulize = Array_tabulize;
+</script>
+<script type="text/javascript">
+/** 日時を指定形式の文字列にして返す"toLocale()"メソッドをDate型に追加する。
+ * @param {string} [format='yyyy/MM/dd'] - 日時を指定する文字列。年:y,月:M,日:d,時:h,分:m,秒:s,ミリ秒:n
+ * @returns {string} 指定形式に変換された文字列。無効な日付なら長さ0の文字列
+ * 
+ * @example
+ * ```
+ * "1965/9/5"[yy/MM/dd hh:mm:ss.nnn] ⇒ "65/09/05 00:00:00.000"
+ * "1965/9/5"[yyyy-MM-dd] ⇒ "1965-09-05"
+ * "1965/9/5"[hh:mm] ⇒ "00:00"
+ * "1977-03-04"[yy/MM/dd hh:mm:ss.nnn] ⇒ "77/03/04 09:00:00.000"
+ * "1977-03-04"[yyyy-MM-dd] ⇒ "1977-03-04"
+ * "1977-03-04"[hh:mm] ⇒ "09:00"
+ * 1688189258262[yy/MM/dd hh:mm:ss.nnn] ⇒ "23/07/01 14:27:38.262"
+ * 1688189258262[yyyy-MM-dd] ⇒ "2023-07-01"
+ * 1688189258262[hh:mm] ⇒ "14:27"
+ * "Sat Jul 01 2023 14:16:30 GMT+0900"[yy/MM/dd hh:mm:ss.nnn] ⇒ "23/07/01 14:16:30.000"
+ * "Sat Jul 01 2023 14:16:30 GMT+0900"[yyyy-MM-dd] ⇒ "2023-07-01"
+ * "Sat Jul 01 2023 14:16:30 GMT+0900"[hh:mm] ⇒ "14:16"
+ * "12:34"[yy/MM/dd hh:mm:ss.nnn] ⇒ ""
+ * "12:34"[yyyy-MM-dd] ⇒ ""
+ * "12:34"[hh:mm] ⇒ ""
+ * ```
+ */
+
+function Date_toLocale(format='yyyy/MM/dd'){
+  console.log('===== Date.toLocale start.');
+  const v = {rv:format};
+  try {
+
+    // 無効な日付なら空文字列を返して終了
+    if( isNaN(this.getTime()) ) return '';
+
+    v.l = { // 地方時ベース
+      y: this.getFullYear(),
+      M: this.getMonth()+1,
+      d: this.getDate(),
+      h: this.getHours(),
+      m: this.getMinutes(),
+      s: this.getSeconds(),
+      n: this.getMilliseconds()
+    };
+
+    //v.rv = typeof format === 'undefined' ? 'yyyy/MM/dd' : format;
+    for( v.x in v.l ){
+      v.m = v.rv.match(new RegExp(v.x+'+'));
+      if( v.m ){
+        v.str = v.m[0].length > 1
+          ? ('000'+v.l[v.x]).slice(-v.m[0].length)
+          : String(v.l[v.x]);
+        v.rv = v.rv.replace(v.m[0],v.str);
+      }
+    }
+
+    //console.log('v.rv='+JSON.stringify(v.rv));
+    console.log('===== Date.toLocale end.');
+    return v.rv;
+  } catch(e){
+    // ブラウザで実行する場合はアラート表示
+    if( typeof window !== 'undefined' ) alert(e.stack); 
+    //throw e; //以降の処理を全て停止
+    v.rv.stack = e.stack; return v.rv; // 処理継続
+  }
+}
+Date.prototype.toLocale = Date_toLocale;
+</script>
 <script type="text/javascript">
 /**
  * @desc オブジェクトのプロパティを再帰的にマージ
@@ -375,6 +508,679 @@ class TabMenu {
   }
 }
 </script>
+<style type="text/css">/* コアCSS */
+.right {text-align: right;}
+.image, .TimeTable {
+  max-width: 100%;
+}
+.TimeTable, .TimeTable div {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: grid;
+  --color: #ccc;
+  --boldLine : solid 2px var(--color);
+  --thinLine : dotted 1px var(--color);
+}
+.TimeTable span {
+  padding-left: 0.3rem;
+  white-space: nowrap;
+}
+/*.TimeTable .controller {}*/
+.TimeTable .main {
+  grid-template-rows: 2rem 1fr;
+  grid-template-columns: 1fr;
+  overflow: auto;
+}
+.TimeTable .main .header {
+  grid-row: 1/2;
+  grid-column: 1/2;
+  grid-template-columns: repeat(3, 1fr);
+  border: var(--boldLine);
+}
+.TimeTable .main .header div:nth-child(2n) {
+  background-color: var(--color);
+}
+.TimeTable .main .timeline {
+  grid-row: 2/3;
+  grid-column: 1/2;
+  grid-template-columns: repeat(12, 1fr);
+  border-bottom: var(--boldLine);
+}
+.TimeTable .main .timeline div {
+  min-width: 1rem;
+  min-height: 1rem;
+}
+.TimeTable .main .timeline div:nth-child(2n+1) {
+  border-left: var(--boldLine);
+}
+.TimeTable .main .timeline div:nth-child(2n) {
+  border-left: var(--thinLine);
+}
+.TimeTable .main .timeline div:last-child {
+  border-right: var(--boldLine);
+}
+.TimeTable .main .tasks {
+  grid-row: 2/3;
+  grid-column: 1/2;
+  z-index: 1;
+}
+.TimeTable .main .tasks > div {
+  max-height: 1.6rem;
+  grid-column: 1/37;
+  margin-bottom: 0.5rem;
+}
+.TimeTable .main .tasks > div:first-child {
+  margin-top: 0.5rem;
+}
+.TimeTable .main .tasks .bar {
+  grid-template-columns: repeat(36, 1fr);
+}
+.TimeTable .main .tasks .bar [name="1.1"]{
+  grid-column: 4/12;
+  background-color: var(--color);
+}
+.TimeTable .main .tasks .bar [name="1.2"]{
+  grid-column: 15/20;
+  background-color: var(--color);
+}
+
+.TimeTable .detail {
+  margin-top: 1rem;
+  display: none;
+}
+.TimeTable .detail div {
+  padding: 0.5rem;
+}
+.TimeTable .detail > div {
+  grid-template-columns: 5rem 1fr;
+}
+.TimeTable .detail .button {
+  height: 3rem;
+  margin-bottom: 1rem;
+  display: flex;
+}
+.TimeTable .detail .button button {
+  margin-left: 2rem;
+  height: 2rem;
+}
+/*
+  テーブル関係
+*/
+.TimeTable th {
+  padding: 0.3em;
+  background-color: #888;
+  color: white;
+}
+.TimeTable td {
+  padding: 0.3em;
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+</style>
+<script type="text/javascript">/* コアスクリプト */
+/**
+ * @typedef {Object} opt
+ * @prop {string} datatype - データのタイプ。sheet:シートデータ
+ */
+
+/**
+ * @classdesc HTMLにタイムテーブルを描画する
+ */
+
+class TimeTable {
+  
+  /**
+   * @constructor
+   * @param {string} selector - タイムテーブルを描画する要素のCSSセレクタ
+   * @param {Object} data - タイムテーブル用のデータ
+   * @param {Object} opt - オプションを指定するオブジェクト
+   * @returns {void}
+   * 
+   * @desc 既定値の設定、タスクデータ他のデータ加工を行い、タイムテーブルを描画する
+   * 
+   * <details><summary>入力シートイメージ</summary>
+   * 
+   * - start/endが赤字：マイルストーン(非導出項目、要手動設定)
+   * - 背景色群青：セクション・タスク共通の必須項目
+   * - 薄青：同任意項目
+   * - 濃緑：タスクのみの必須項目
+   * - 薄緑：同任意項目
+   * - 赤：算式が設定された項目
+   * 
+   * <h3>TimeTable</h3>
+   * <table calss="tt"><tr>
+   * <th style="background:#ff0000;color:white">id</th>
+   * <th style="background:#0000ff;color:white;">pId</th>
+   * <th style="background:#0000ff;color:white;">name</th>
+   * <th style="background:#cfe2f3;">summary</th>
+   * <th style="background:#cfe2f3;">pending</th>
+   * <th style="background:#cfe2f3;">note</th>
+   * <th style="background:#38761d;color:white;">start</th>
+   * <th style="background:#d9ead3;">lasts</th>
+   * <th style="background:#38761d;color:white;">end</th>
+   * <th style="background:#d9ead3;">location</th>
+   * <th style="background:#d9ead3;">ideal</th>
+   * <th style="background:#d9ead3;">fixed</th>
+   * <th style="background:#d9ead3;">output</th>
+   * <th style="background:#d9ead3;">style</th>
+   * </tr><tr>
+   * <td>2</td><td>0</td><td>イベント(大線表)</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+   * </tr><tr>
+   * <td>3</td><td>2</td><td>受付</td><td></td><td></td><td></td><td style="color:#f00;">9/30 13:30</td><td>30</td><td>9/30 14:00</td><td>正門</td><td></td><td></td><td></td><td></td>
+   * </tr><tr>
+   * <td>4</td><td>2</td><td>テント設営</td><td></td><td></td><td>子供達は体育館で遊ぶ</td><td>9/30 14:00</td><td></td><td>9/30 17:00</td><td>校庭</td><td></td><td></td><td></td><td></td>
+   * </tr><tr>
+   * <td>5</td><td>2</td><td>夕食</td><td></td><td></td><td></td><td style="color:#f00;">9/30 17:00</td><td>90</td><td>9/30 18:30</td><td>テントor喫食コーナ</td><td></td><td></td><td></td><td></td>
+   * </tr><tr>
+   * <td>6</td><td>2</td><td>肝試し</td><td></td><td></td><td></td><td>9/30 18:30</td><td>120</td><td>9/30 20:30</td><td>校内</td><td></td><td></td><td></td><td></td>
+   * </tr><tr>
+   * <td>7</td><td>2</td><td>宿泊</td><td></td><td></td><td></td><td>9/30 20:30</td><td></td><td style="color:#f00;">10/01 07:30</td><td>テントor体育館</td><td></td><td></td><td></td><td></td>
+   * </tr><tr>
+   * <td>8</td><td>2</td><td>朝食</td><td>素麺提供</td><td></td><td></td><td>10/01 07:30</td><td>30</td><td>10/01 08:00</td><td>テントor体育館</td><td></td><td></td><td></td><td></td>
+   * </tr><tr>
+   * <td>9</td><td>2</td><td>テント撤去</td><td></td><td></td><td></td><td>10/01 08:00</td><td>60</td><td>10/01 09:00</td><td>校庭</td><td></td><td></td><td></td><td></td>
+   * </tr></table>
+   * 
+   * <h3>resources</h3>
+   * <table><tr>
+   * <th style="background:#0000ff;color:white;">tId</th>
+   * <th style="background:#ff0000;color:white;">tName</th>
+   * <th style="background:#ff0000;color:white;">id</th>
+   * <th style="background:#0000ff;color:white;">name</th>
+   * <th style="background:#cfe2f3;">quantity</th>
+   * <th style="background:#cfe2f3;">unit</th>
+   * <th style="background:#cfe2f3;">procure</th>
+   * <th style="background:#cfe2f3;">budget</th>
+   * <th style="background:#cfe2f3;">note</th>
+   * </tr>
+   * <tr><td>17</td><td>参加者受付</td><td>2</td><td>参加者名簿</td><td>3</td><td>冊</td><td>嶋津作成</td><td>0</td><td></td></tr>
+   * <tr><td>17</td><td>参加者受付</td><td>3</td><td>文鎮</td><td>3</td><td>個</td><td></td><td></td><td></td></tr>
+   * <tr><td>17</td><td>参加者受付</td><td>4</td><td>貯金箱</td><td>1</td><td>個</td><td></td><td></td><td></td></tr>
+   * <tr><td>17</td><td>参加者受付</td><td>5</td><td>トレイ</td><td>3</td><td>個</td><td></td><td></td><td></td></tr>
+   * <tr><td>17</td><td>参加者受付</td><td>6</td><td>ガムテープ</td><td>2</td><td>個</td><td></td><td></td><td>テントの有無で色を変える</td></tr>
+   * <tr><td>17</td><td>参加者受付</td><td>7</td><td>おやじの会入会申込書</td><td>20</td><td>枚</td><td></td><td></td><td></td></tr>
+   * </table>
+   * </details>
+   * 
+   */
+
+  constructor(selector,data,opt){
+    this.rootElement = document.querySelector(selector);
+    this.rootElement.innerHTML = `
+      <div class="controller"></div>
+      <div class="main">
+        <div class="header"></div>
+        <div class="timeline"></div>
+        <div class="tasks"></div>
+      </div>
+      <div class="detail">
+        <div class="button">
+          <button name="close">閉じる</button>
+          <button name="edit">編集</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>項目</th><th>値</th><th>備考</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    `;
+    // オプションの既定値設定
+    this.opt = mergeDeeply({
+      datatype: null, // dataが加工済ならnull
+      unit: 5,
+      design: {
+        default: {
+          color: "#000",
+          backgroundColor: "rgba(196,196,196,0.6)",
+          border: "solid 1px #aaa",
+        },
+        critical: {
+          color: "#fff",
+          backgroundColor: "rgba(255,96,96,0.6)",
+          border: "solid 1px #f00",
+        },
+      },
+      detailDateFormat: 'M/dd hh:mm', // 詳細画面に表示する日時の形式
+      dataSheet: null,  // 元データを格納したGoogle SpreadのURL
+    },opt);
+    console.log(this.opt);
+
+    // シート形式のデータだった場合、加工してthis.tasksにセット
+    this.tasks = this.opt.datatype === null ? data : this.#process(data);
+    console.log(this.tasks);
+
+    // map(id->タスク)の作成
+    this.map = {};
+    this.#makeMap(this.tasks);
+
+    // タイムテーブルを描画
+    this.draw();
+  }
+
+  /** div.tasks領域にタスク(単体)を追加する
+   * (本関数はdrawから呼ばれるプライベート関数)
+   */
+  #appendTask(task,pId=''){ // ガントチャートの作成
+    const v = {
+      tasksElement: this.rootElement.querySelector('.main .tasks'),
+    };
+    /*
+    // taskのIDを採番、マップに追加
+    task.id = pId + (seq+1) + '.';
+    this.data.map[task.id] = task;
+    */
+
+    if( 'children' in task ){
+      // childrenが存在⇒セクション(ラベル)行
+      v.labelElement = this.createElement({class:'label'});
+      //v.labelSpan = this.createElement({tag:'span',text:task.name});
+      //v.labelSpan.onclick = () => this.showDetail(task.id);
+      v.labelSpan = this.createElement('span');
+      v.labelSpan.innerText = '▼'+task.name;
+      v.labelSpan.onclick = () => this.toggleChildren(task.id,v.labelSpan);
+      v.labelElement.appendChild(v.labelSpan);
+      v.tasksElement.appendChild(v.labelElement);
+      for( let i=0 ; i<task.children.length ; i++ ){
+        this.#appendTask(task.children[i],task.id);
+      }
+    } else {
+      // childrenが不存在⇒タスク行
+      v.barElement = this.createElement({class:'bar pId'+pId});
+      v.barElement.style.gridTemplateColumns
+        = 'repeat('+(this.numHour*12)+', 1fr)';
+      // barSpan: 棒状の部分
+      v.barSpan = this.createElement(
+        {tag:'span',name:task.id,text:task.name});
+      v.barStart = ((new Date(task.start).getTime())
+        - this.startHour) / (this.opt.unit*60000) + 1;
+      v.barEnd = ((new Date(task.end).getTime())
+        - this.startHour) / (this.opt.unit*60000) + 1;
+      this.applyStyle({
+        element: v.barSpan,
+        apply: task.style,
+        addition: {gridColumn:v.barStart + '/' + v.barEnd},
+      });
+      v.barSpan.onclick = () => this.showDetail(task.id);
+      v.barElement.appendChild(v.barSpan);
+      v.tasksElement.appendChild(v.barElement);
+    }
+  }
+
+  /** 要素にスタイルを設定する
+   * @param {Object} arg
+   * @param {string} arg.apply - 適用するスタイル名
+   * @param {Object.<string, string>} arg.addition - 追加適用する属性名：属性値
+   * @returns {void}
+   */
+  applyStyle(arg){
+    // apply,additionの既定値設定
+    if( arg.apply.length === 0 ) arg.apply = 'default';
+    const v = Object.assign({apply:'default',addition:{}},arg);
+    // 適用するスタイルのオブジェクトを作成
+    v.style = Object.assign(this.opt.design[v.apply],v.addition);
+    for( let a in v.style ){
+      arg.element.style[a] = v.style[a];
+    }
+  }
+
+  /** DIV要素を生成、属性を指定する
+   * @param {string} tag='div' - タグ名
+   * @param {string} [text] - 生成された要素のinnerHTML
+   * @param {Object.<string, string>} xxx - 生成された要素に設定するスタイルシート属性名：属性値
+   */
+  createElement(arg='div'){
+    const v = {tag:'div',opt:arg};
+    if( typeof arg === 'string' ){
+      v.tag = arg;
+      v.opt = {};
+    } else {
+      if( 'tag' in arg ){
+        v.tag = arg.tag;
+      } 
+    }
+    let rv = document.createElement(v.tag);
+    for( let x in v.opt ){
+      switch(x) {
+        case 'tag': break;
+        case 'text': rv.innerHTML = arg.text; break;
+        default: rv.setAttribute(x,arg[x]);
+      }
+    }
+    return rv;
+  }
+
+  /** タイムテーブルを(再)描画する */
+  draw(){
+    console.log("draw start.");
+
+    const v = {};
+    this.minTime = Infinity; // task.startの最小値。UNIX時刻
+    this.maxTime = -Infinity;
+    this.startHour = Infinity; // minTime以下の正時となるUNIX時刻。表示領域の左端
+    this.endHour = -Infinity;  // maxTime以上の正時となるUNIX時刻。表示領域の右端
+    this.numHour = 0;          // startHour〜endHourまでの時間数    console.log(this.data);
+
+    // 描画範囲を計算
+    this.timeRange(this.tasks);  // minTime, v.maxTimeの取得
+    this.startHour = Math.floor(this.minTime / 3600000) * 3600000;
+    this.endHour = Math.ceil(this.maxTime / 3600000) * 3600000;
+
+    // 1.controllerの要素を作成
+
+    // 2.mainの要素を作成
+
+    // 2.1.main.headerの要素を作成
+    v.headerElement = this.rootElement.querySelector('.main .header');
+    v.headerElement.innerHTML = '';
+    for( v.i=this.startHour ; v.i<=this.endHour ; v.i+=3600000 ){
+      v.o = this.createElement();
+      v.o.innerText = new Date(v.i).getHours() + ':00';
+      v.headerElement.appendChild(v.o);
+      this.numHour++;
+    }
+    v.headerElement.style.gridTemplateColumns = 'repeat('+this.numHour+', 1fr)';
+
+    // 2.2.main.timelineの要素を作成
+    v.timelineElement = this.rootElement.querySelector('.main .timeline');
+    v.timelineElement.innerHTML = '';
+    v.timelineElement.innerHTML = '<div></div>'.repeat(this.numHour*4);
+    v.timelineElement.style.gridTemplateColumns = 'repeat('+(this.numHour*4)+', 1fr)';
+
+    // 2.2.main.tasksの要素を作成
+    v.tasksElement = this.rootElement.querySelector('.main .tasks');
+    v.tasksElement.innerHTML = '';
+    for( let i=0 ; i<this.tasks.length ; i++ ){
+      this.#appendTask(this.tasks[i],'');
+    }
+
+    // 3.detailの要素を作成
+
+
+    console.log("draw end.");
+  }
+
+  /** タスクID->タスク取得用のthis.mapを作成 */
+  #makeMap(tasks){
+    console.log('makeMap start.');
+    const v = {};
+    for( v.i=0 ; v.i<tasks.length ; v.i++ ){
+      this.map[tasks[v.i].id] = tasks[v.i];
+      if( 'children' in tasks[v.i] ){
+        this.#makeMap(tasks[v.i].children );
+      }
+    }
+    console.log('makeMap end.');
+  }
+
+  #process(raw){
+    const v = {sheet:[{children:[]}],idmap:{0:0}};
+    console.log('process start.');
+
+    this.tasks = [];
+    // 01.configシート
+    this.opt.sheetDef = {};
+    v.header = raw.config[0]; // ヘッダ行
+    for( v.i=1 ; v.i<raw.config.length ; v.i++ ){
+      v.l = raw.config[v.i];
+      if( String(v.l[0]).length > 0 ){ // 空白行スキップ
+        v.o = {};
+        for( v.j=1 ; v.j<v.l.length ; v.j++ ){
+          v.o[v.header[v.j]] = v.l[v.j];
+        }
+        if( !(v.l[0] in this.opt.sheetDef) ){
+          // シートのオブジェクトが未定義なら追加
+          this.opt.sheetDef[v.l[0]] = {};
+        }
+        this.opt.sheetDef[v.l[0]][v.l[1]] = v.o;
+      }
+    }
+    console.log(this.opt.sheetDef);
+
+    // 02.TimeTableシート
+    v.header = raw.TimeTable[0]; // ヘッダ行
+    v.idmapIndex = 0; // v.idmapの添字
+    console.log(v.header)
+    // 02.1. v.sheetにリニアに追加する
+    for( v.i=1 ; v.i<raw.TimeTable.length ; v.i++ ){
+      v.l = raw.TimeTable[v.i];
+      // 有効な行データをオブジェクト化する
+      if( Number(v.l[0]) > 0 ){ // 空白行スキップ
+        v.o = {resources:[]}; // 必要資機材のみTimeTableシート上にないので足しておく
+        for( v.j=0 ; v.j<v.l.length ; v.j++ ){
+          v.colType = this.opt.sheetDef.TimeTable[v.header[v.j]].type.toLowerCase();
+          switch( v.colType ){
+            case 'Date':
+              v.o[v.header[v.j]] = new Date(v.l[v.j]).getTime();
+              break;
+            default:
+              v.o[v.header[v.j]] = v.l[v.j];
+          }
+        }
+        // 戻り値用のデータをセット
+        v.idmapIndex++;
+        v.idmap[v.o.id] = v.idmapIndex;
+        v.sheet.push(v.o);
+      }
+    }
+    console.log(v.sheet);
+    console.log(v.idmap);
+
+    // 02.2.親子関係を設定
+    for( v.i=1 ; v.i<v.sheet.length ; v.i++ ){ // 0はrootなので飛ばす
+      //console.log('v.sheet[v.i]=',v.sheet[v.i])
+      //console.log('v.sheet[v.i].pId='+v.sheet[v.i].pId);
+      //console.log('v.idmap[v.sheet[v.i].pId]='+v.idmap[v.sheet[v.i].pId]);
+      //console.log('v.sheet['+v.idmap[v.sheet[v.i].pId]+']=',v.sheet[v.idmap[v.sheet[v.i].pId]]);
+      v.parent = v.sheet[v.idmap[v.sheet[v.i].pId]];
+      if( !('children' in v.parent) ) v.parent.children = [];
+      v.parent.children.push(v.sheet[v.i]);
+      console.log('v.sheet['+v.i+']=',v.sheet[v.i],'\nv.parent=',v.parent);
+    }
+    console.log(v.sheet);
+
+    // [03] resourcesシート
+    v.header = raw.resources[0];  // ヘッダ行
+    for( v.i=1 ; v.i<raw.resources.length ; v.i++ ){
+      v.o = {};
+      for( v.j=0 ; v.j<v.header.length ; v.j++ ){
+        v.o[v.header[v.j]] = raw.resources[v.i][v.j];
+      }
+      console.log('v.o=',v.o);
+      console.log('v.idmap[v.o.tId]=',v.idmap[v.o.tId]);
+      console.log('v.sheet[v.idmap[v.o.tId]]=',v.sheet[v.idmap[v.o.tId]]);
+      v.parent = v.sheet[v.idmap[v.o.tId]];
+      if( !('resources' in v.parent) ) v.parent.resources = [];
+      v.parent.resources.push(v.o);
+    }
+
+    console.log('process end.');
+    return v.sheet[0].children;
+  }
+
+  /** ダイアログに詳細情報を表示
+   * @prop {string} id - 表示するタスクのID
+   */
+  showDetail(id){
+    console.log('showDetail start. id='+id);
+    const v = {
+      task:this.map[id],  // 表示するタスクのオブジェクト
+      detail: this.rootElement.querySelector('.detail'),  // 詳細領域の要素
+      /** 非表示項目を排除しながら表示順に項目をソート
+       * - [オブジェクトをdateでソートする例](https://keizokuma.com/js-array-object-sort/)
+       * @param {Object} columnDef - 欄名:{column,label,type,memo,must,display,note}をメンバとするオブジェクト
+       */
+      listColumns: (columnDef) => { // 
+        const list = [];
+        Object.keys(columnDef).forEach(x => {
+          if( columnDef[x].display > 0 ) list.push(columnDef[x]);
+        });
+        list.sort((a,b) => a.display < b.display ? -1 : 1);
+        return list;
+      },
+    };
+
+    // 前回の表示結果をクリア
+    v.detail.querySelector('tbody').innerHTML = '';
+
+    // 非表示項目を排除しながら表示順に項目をソート
+    v.list = v.listColumns(this.opt.sheetDef.TimeTable);
+    console.log(v.list);
+
+    // 表示順にタスクの項目をtbodyに追加
+    for( v.i=0 ; v.i<v.list.length ; v.i++ ){
+      v.tr = this.createElement('tr');
+
+      // 項目ラベル欄
+      v.o = {tag:'td',text:v.list[v.i].label};
+      v.tr.appendChild(this.createElement(v.o));
+      // 値・備考欄
+      v.value =  v.task[v.list[v.i].column] || '';
+      if( v.list[v.i].type !== 'Resource'){
+        // Resource(表内表)以外
+        switch( v.list[v.i].type ){
+          case 'Number':  // number : toLocaleして右寄せ
+            v.o.class = 'right';
+            v.o.text = v.value.toLocaleString();
+            break;
+          case 'Date':  // 表示形式を整形
+            console.log(new Date(v.value));
+            v.o.text = new Date(v.value).toLocale(this.opt.detailDateFormat);
+            break;
+          default:
+            v.o.text = String(v.value);
+        }
+        v.tr.appendChild(this.createElement(v.o));
+        // 備考欄
+        v.o.text = v.task[v.list[v.i].memo] || '';
+        v.tr.appendChild(this.createElement(v.o));
+      } else {
+        // Resource
+        v.rList = v.listColumns(this.opt.sheetDef.resources);
+        console.log(v.rList)
+        v.rData = [v.rList.map(x => x.label)];
+        for( v.r=0 ; v.r<v.task.resources.length ; v.r++ ){
+          v.a = [];
+          v.l = v.task.resources[v.r];
+          console.log(v.l);
+          for( v.c=0 ; v.c<v.rList.length ; v.c++ ){
+            v.a.push(v.rList[v.c].type === 'Date'
+            ? new Date(v.l[v.rList[v.c].column])
+            : v.l[v.rList[v.c].column]);
+          }
+          v.rData.push(v.a);
+        }
+        console.log(v.rData);
+        v.td = this.createElement({tag:'td',colspan:"2"});
+        v.td.appendChild(v.rData.tabulize({dateFormat:this.opt.detailDateFormat}));
+        v.tr.appendChild(v.td);
+      }
+      console.log(v.tr);
+
+      v.detail.querySelector('tbody').appendChild(v.tr);
+    }
+    
+    // 詳細画面の「閉じる」ボタン動作設定
+    v.detail.querySelector('button[name="close"]').onclick
+    = () => v.detail.style.display = 'none';
+    // 「編集」ボタン動作設定
+    if( this.opt.dataSheet !== null ){
+      v.detail.querySelector('button[name="edit"]').onclick
+      = () => window.open(this.opt.dataSheet,'_blank');
+    }
+
+    // 詳細画面表示
+    v.detail.style.display = 'block';
+    console.log('showDetail end.');
+
+  }
+
+  /** v.minTime, v.maxTimeの取得 */
+  timeRange(tasks){
+    const v = {};
+    for( let task of tasks ){
+      if( 'children' in task ){
+        this.timeRange(task.children);
+      } else {
+        v.st = new Date(task.start).getTime();
+        v.ed = new Date(task.end).getTime();
+        if( this.minTime > v.st ) this.minTime = v.st;
+        if( this.maxTime < v.ed ) this.maxTime = v.ed;
+      }
+    }
+  }
+
+  /** セクション名クリックで配下のタスクの表示/非表示切り替え */
+  toggleChildren(id,label){
+    this.rootElement.querySelectorAll('.pId'+id).forEach(x => 
+      x.style.display = x.style.display === 'none' ? '' : 'none');
+    // ラベルの前の三角を交換
+    let m = label.innerText.match(/^([▶️|▼])(.+)$/);
+    console.log(m)
+    label.innerText = (( m[1] === '▼' ) ? '▶️' : '▼') + m[2];
+  }
+
+}
+</script>
+<script type="text/javascript">
+/** 
+ * 変数の型を判定し、型名を文字列で返す。なお引数"is"が指定された場合、判定対象が"is"と等しいかの真偽値を返す。
+ * 
+ * @param {any} arg - 判定対象の変数
+ * @param {string} [is] - 想定される型(型名の大文字小文字は意識不要)
+ * @returns {string|boolean} - 型の名前。is指定有りなら判定対象が想定型かの真偽値
+ * 
+ * @example
+ * ```
+ * let a = 10;
+ * whichType(a);  // 'Number'
+ * whichType(a,'string'); // false
+ * ```
+ * 
+ * <b>確認済戻り値一覧</b>
+ * 
+ * オブジェクトは型名が返るので、限定列挙は困難。以下は確認済みの戻り値のみ記載。
+ * 
+ * | 型名 | 戻り値 | 備考 |
+ * | :-- | :-- | :-- |
+ * | 文字列 | String |  |
+ * | 数値 | Number |  |
+ * | NaN | NaN |  |
+ * | 長整数 | BigInt |  |
+ * | 論理値 | Boolean |  |
+ * | シンボル | Symbol |  |
+ * | undefined | Undefined | 先頭大文字 |
+ * | Null | Null |  |
+ * | オブジェクト | Object |  |
+ * | 配列 | Array |  |
+ * | 関数 | Function |  |
+ * | アロー関数 | Arrow |  |
+ * | エラー | Error | RangeError等も'Error' |
+ * | Date型 | Date |  |
+ * | Promise型 | Promise |  |
+ *  
+ * - Qiita [JavaScriptの型などの判定いろいろ](https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3)
+ * 
+ */
+
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
+  }
+}
+</script>
+
 <script type="text/javascript" class="main">
 // ブラウザ上で実行する場合の処理
 window.addEventListener('DOMContentLoaded',() => {
@@ -386,18 +1192,16 @@ window.addEventListener('DOMContentLoaded',() => {
     console.log(v.menuName,v.arg);
     v[v.menuName] = new TabMenu(v.arg);
   });
-  //v.main = new TabMenu({name:"main"});
-  //v.map = new TabMenu({name:"info"});
 
   // Google Spreadからデータを取得してタイムテーブル表示
   const url = {
-    GAS:'https://script.google.com/macros/s/AKfycbwm3R0FbnhGALwO1J8G0yxNBvGAL6kPKewyypoz3OFIwIaB56D9XKAjkbopwpOEYdFm/exec',
+    GAS:'https://script.google.com/macros/s/AKfycby1symD7PQwa9qJX1oPSg7qqrKeDPxgrYLWevR1CLuVQYzOpRD8Vk2OvWjUoWrQN0ow/exec',
     sheet: 'https://tinyurl.com/2ahyly3l',
   }
   fetch(url.GAS)
   .then(response => response.json()).then(r => {
     // タイムテーブルの表示
-    const tt01 = new TimeTable('div.timetable[name="tt01"]',v.raw,{datatype:'sheet',dataSheet:url.sheet});
+    const tt01 = new TimeTable('div.TimeTable[name="tt01"]',r,{datatype:'sheet',dataSheet:url.sheet});
 
   });
 

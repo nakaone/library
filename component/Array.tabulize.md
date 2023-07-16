@@ -1,9 +1,9 @@
-<a name="Array_tabulize"></a>
+<a name="Array.tabulize"></a>
 
 ## Array\_tabulize([opt]) ⇒ <code>HTMLTableObject</code>
 Array型の変数に2次元配列からHTMLの表を作成してtable要素として返すメソッドを追加する。
 
-使用前`Array.prototype.tabulize = Array_tabulize;`実行のこと。
+使用前`Array.prototype.tabulize = Array.tabulize;`実行のこと。
 
 **Kind**: global function  
 

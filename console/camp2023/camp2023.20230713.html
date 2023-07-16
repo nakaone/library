@@ -281,7 +281,7 @@ function whichType(arg,is){
 /** 2次元配列からHTMLの表(table)を作成
  * opt.dateFormat {string} - 日付を表示する形式
  */
-function Array_tabulize(opt){
+function Array.tabulize(opt){
   console.log('tabulyze start.');
   const v = {
     table: document.createElement('table'),
@@ -333,7 +333,7 @@ function Array_tabulize(opt){
   return v.table;
 }
 
-Array.prototype.tabulize = Array_tabulize;
+Array.prototype.tabulize = Array.tabulize;
 Date.prototype.toLocale = Date_toLocale;
 </script>
 
