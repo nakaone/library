@@ -21,74 +21,88 @@
 <body class="TabMenu" name="main">
 
   <div class="tabs"><!-- タグメニュー -->
-    <div name="schedule">schedule</div>
-    <div name="timetable">time table</div>
-    <div name="map">map</div>
-    <div name="RelatedSites">Related Sites</div>
-    <div name="minutes">minutes</div>
+    <div name="notice">notice</div>
+    <div name="passport">passport</div>
+    <div name="scanner">scanner</div>
+    <div name="notes">notes</div>
+    <div name="info">information</div>
   </div>
 
-
-  <div name="schedule"><h1>スケジュール</h1>
-    <div class="image"><div class="wrapPlantUML"><img class="PlantUML" name="schedule1"></img></div></div>
-    <div class="markdown" name="schedule2"></div>
-  </div>
-
-  <div name="timetable"><h1>タイムテーブル</h1>
-    <ul>
-      <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
-      <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
-    </ul>
-    <div class="timetable" name="tt01">
-    </div>
-  </div>
-
-  <div name="map"><h1>マップ</h1>
-    <div class="TabMenu" name="map">
+  <div name="notice"><h1>お知らせ</h1></div>
+  <div name="passport"><h1>パスポート</h1></div><!-- 参加者/スタッフ択一 -->
+  <div name="scanner"><h1>QRコード受付</h1></div><!-- 参加者/スタッフ択一 -->
+  <div name="notes"><h1>注意事項</h1></div>
+  <div name="info">
+    <div class="TabMenu" name="info">
       <div class="tabs">
-        <div name="outline">outline</div>
+        <div name="schedule">schedule</div>
+        <div name="timetable">table</div>
+        <div name="map">map</div>
         <div name="expedition">expedition</div>
-        <div name="test">test</div>
+        <div name="sites">sites</div>
+        <div name="minutes">minutes</div>
+        <div name="summary">summary</div>
       </div>
-      <div name="outline"><h1>校内全体図</h1>
+
+      <div name="schedule"><h1>スケジュール</h1>
+        <div class="image"><div class="wrapPlantUML"><img class="PlantUML" name="schedule1"></img></div></div>
+        <div class="markdown" name="schedule2"></div>
+        <!--
+          遊び場保険、スケジュールに追加
+        -->
+      </div>
+    
+      <div name="timetable"><h1>タイムテーブル</h1>
+        <ul>
+          <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
+          <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
+        </ul>
+        <div class="timetable" name="tt01">
+        </div>
+        <!--
+          詳細は別ページ？　別ペイン？
+          表示範囲絞り込み
+          所要物一覧
+        -->
+      </div>
+    
+      <div name="map"><h1>校内全体図</h1>
         <div class="img" data-embed="map2023.svg"></div>
       </div>
+
       <div name="expedition"><h1>肝試しルート</h1>
-        <div class="img" data-embed="肝試しルート.svg"></div>
+        <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
       </div>
-      <div name="test" class="mermaid">
-        sequenceDiagram
-          太郎->>花子: おはよう
-          花子->>太郎: こんにちは！！
+
+      <div name="sites"><h1>関連サイト</h1>
+        <div class="markdown" name="RelatedSites" data-embed="RelatedSites.md"></div>
+      </div>
+    
+      <div name="minutes"><h1>論議メモ</h1>
+        <div class="TabMenu" name="minutes">
+          <div class="tabs">
+            <div name="20230610">6/10定例会</div>
+            <div name="20230708">7/08定例会</div>
+          </div>
+          <div class="markdown" name="20230610" data-embed="20230610.md"></div>
+          <div class="markdown" name="20230708" data-embed="20230708.md"></div>
+        </div>
+      </div>
+
+      <div name="summary"><h1>参加者数集計</h1>
+        <div name="test" class="mermaid">
+          sequenceDiagram
+            太郎->>花子: おはよう
+            花子->>太郎: こんにちは！！
+        </div>
       </div>
     </div>
   </div>
 
-  <div name="RelatedSites"><h1>関連サイト</h1>
-    <div class="markdown" name="RelatedSites" data-embed="RelatedSites.md"></div>
-  </div>
-
-  <div name="minutes"><h1>参考：論議メモ</h1>
-    <div class="TabMenu" name="minutes">
-      <div class="tabs">
-        <div name="20230610">6/10定例会</div>
-        <div name="20230708">7/08定例会</div>
-      </div>
-      <div class="markdown" name="20230610" data-embed="20230610.md"></div>
-      <div class="markdown" name="20230708" data-embed="20230708.md"></div>
-    </div>
-
-
-    <!--details><summary>2023/06/10 定例会</summary>
-      <div class="markdown" name="20230610" data-embed="20230610.md"></div>
-    </details>
-    <details><summary>2023/07/08 定例会</summary>
-      <div class="markdown" name="20230708" data-embed="20230708.md"></div>
-    </details-->
-  </div>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
 
+<!-- 自作ライブラリ -->
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/mergeDeeply.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/TabMenu.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" class="main">
@@ -96,7 +110,7 @@
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
   v.main = new TabMenu({name:"main"});
-  v.map = new TabMenu({name:"map"});
+  v.map = new TabMenu({name:"info"});
 
   // Google Spreadからデータを取得してタイムテーブル表示
   const url = {
