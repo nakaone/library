@@ -23,84 +23,62 @@
 </head>
 <body class="TabMenu" name="main">
 
-  <div class="tabs"><!-- タグメニュー -->
-    <div name="notice">notice</div>
-    <div name="passport">passport</div>
-    <div name="scanner">scanner</div>
-    <div name="notes">notes</div>
-    <div name="info">information</div>
-  </div>
+  <div class="TabMenu" name="お知らせ">
+    <!--div name="掲示板"></div-->
+    <div name="注意事項"><!-- サブメニューで詳細化 -->
+      <!--div name="">当日の持ち物</div-->
 
-  <div name="notice"><h1>お知らせ</h1></div>
-  <div name="passport"><h1>パスポート</h1></div><!-- 参加者/スタッフ択一 -->
-  <div name="scanner"><h1>QRコード受付</h1></div><!-- 参加者/スタッフ択一 -->
-  <div name="notes"><h1>注意事項</h1></div>
-  <div name="info"><h1>お役立ち情報</h1>
-    <div class="TabMenu" name="info">
-      <div class="tabs">
-        <div name="schedule">schedule</div>
-        <div name="TimeTable">table</div>
-        <div name="map">map</div>
-        <div name="expedition">expedition</div>
-        <div name="sites">sites</div>
-        <div name="minutes">minutes</div>
-        <div name="summary">summary</div>
-      </div>
-
-      <div name="schedule"><h2>スケジュール</h2>
-        <div class="PlantUML"  data-embed="schedule.pu"><img /></div>
-        <div class="markdown" name="schedule2"></div>
-        <!--
-          遊び場保険、スケジュールに追加
-        -->
-      </div>
-    
-      <div name="TimeTable"><h2>タイムテーブル</h2>
-        <ul>
-          <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
-          <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
-        </ul>
-        <div class="TimeTable" name="tt01">
-        </div>
-        <!--
-          詳細は別ページ？　別ペイン？
-          表示範囲絞り込み
-          所要物一覧
-        -->
-      </div>
-    
-      <div name="map"><h2>校内全体図</h2>
-        <div class="img" data-embed="map2023.svg"></div>
-      </div>
-
-      <div name="expedition"><h2>肝試しルート</h2>
-        <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
-      </div>
-
-      <div name="sites"><h2>関連サイト</h2>
-        <div class="markdown" name="RelatedSites" data-embed="RelatedSites.md"></div>
-      </div>
-    
-      <div name="minutes"><h2>論議メモ</h2>
-        <div class="TabMenu" name="minutes">
-          <div class="tabs">
-            <div name="20230610">6/10定例会</div>
-            <div name="20230708">7/08定例会</div>
-          </div>
-          <div class="markdown" name="20230610" data-embed="20230610.md"></div>
-          <div class="markdown" name="20230708" data-embed="20230708.md"></div>
-        </div>
-      </div>
-
-      <div name="summary"><h2>参加者数集計</h2>
-        <div name="test" class="mermaid">
-          sequenceDiagram
-            太郎->>花子: おはよう
-            花子->>太郎: こんにちは！！
-        </div>
-      </div>
     </div>
   </div>
+
+  <!--div name="passport"><h1>パスポート</h1></div-->
+
+  <div name="案内図"><div class="img" data-embed="map2023.svg"></div></div>
+
+  <div class="TimeTable" name="予定表">
+    <!--
+    <ul>
+      <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
+      <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
+    </ul>
+      詳細は別ページ？　別ペイン？
+      表示範囲絞り込み
+      所要物一覧
+    -->
+  </div>
+
+  <div class="TabMenu" name="スタッフ">
+    <div name="日程表">
+      <div class="PlantUML"  data-embed="schedule.pu"><img /></div>
+      <div class="markdown" name="schedule2"></div>
+      <!--
+        遊び場保険、スケジュールに追加
+      -->
+    </div>
+
+    <!--div name="scanner"><h1>QRコード受付</h1></div-->
+
+    <div name="校内探検">
+      <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
+    </div>
+
+    <div name="参加者数集計">
+      <div name="test" class="mermaid">
+        sequenceDiagram
+          太郎->>花子: おはよう
+          花子->>太郎: こんにちは！！
+      </div>
+    </div>
+
+    <div class="TabMenu" name="論議メモ">
+        <div class="markdown" name="6/10定例会" data-embed="20230610.md"></div>
+        <div class="markdown" name="7/08定例会" data-embed="20230708.md"></div>
+      </div>
+    </div>
+
+    <div class="markdown" name="関連サイト" data-embed="RelatedSites.md"></div>
+  
+    </div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
@@ -134,7 +112,7 @@ window.addEventListener('DOMContentLoaded',() => {
   fetch(url.GAS)
   .then(response => response.json()).then(r => {
     // タイムテーブルの表示
-    const tt01 = new TimeTable('div.TimeTable[name="tt01"]',r,{datatype:'sheet',dataSheet:url.sheet});
+    const tt01 = new TimeTable('div.TimeTable',r,{datatype:'sheet',dataSheet:url.sheet});
 
   });
 
