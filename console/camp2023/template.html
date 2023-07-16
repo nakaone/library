@@ -32,7 +32,7 @@
   <div name="passport"><h1>パスポート</h1></div><!-- 参加者/スタッフ択一 -->
   <div name="scanner"><h1>QRコード受付</h1></div><!-- 参加者/スタッフ択一 -->
   <div name="notes"><h1>注意事項</h1></div>
-  <div name="info">
+  <div name="info"><h1>お役立ち情報</h1>
     <div class="TabMenu" name="info">
       <div class="tabs">
         <div name="schedule">schedule</div>
@@ -44,7 +44,7 @@
         <div name="summary">summary</div>
       </div>
 
-      <div name="schedule"><h1>スケジュール</h1>
+      <div name="schedule"><h2>スケジュール</h2>
         <div class="image"><div class="wrapPlantUML"><img class="PlantUML" name="schedule1"></img></div></div>
         <div class="markdown" name="schedule2"></div>
         <!--
@@ -52,7 +52,7 @@
         -->
       </div>
     
-      <div name="timetable"><h1>タイムテーブル</h1>
+      <div name="timetable"><h2>タイムテーブル</h2>
         <ul>
           <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
           <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
@@ -66,19 +66,19 @@
         -->
       </div>
     
-      <div name="map"><h1>校内全体図</h1>
+      <div name="map"><h2>校内全体図</h2>
         <div class="img" data-embed="map2023.svg"></div>
       </div>
 
-      <div name="expedition"><h1>肝試しルート</h1>
+      <div name="expedition"><h2>肝試しルート</h2>
         <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
       </div>
 
-      <div name="sites"><h1>関連サイト</h1>
+      <div name="sites"><h2>関連サイト</h2>
         <div class="markdown" name="RelatedSites" data-embed="RelatedSites.md"></div>
       </div>
     
-      <div name="minutes"><h1>論議メモ</h1>
+      <div name="minutes"><h2>論議メモ</h2>
         <div class="TabMenu" name="minutes">
           <div class="tabs">
             <div name="20230610">6/10定例会</div>
@@ -89,7 +89,7 @@
         </div>
       </div>
 
-      <div name="summary"><h1>参加者数集計</h1>
+      <div name="summary"><h2>参加者数集計</h2>
         <div name="test" class="mermaid">
           sequenceDiagram
             太郎->>花子: おはよう
@@ -109,8 +109,15 @@
 // ブラウザ上で実行する場合の処理
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
-  v.main = new TabMenu({name:"main"});
-  v.map = new TabMenu({name:"info"});
+  // メニューを定義
+  document.querySelectorAll('.TabMenu[name]').forEach(x => {
+    v.menuName = x.getAttribute('name');
+    v.arg = {name:v.menuName};
+    console.log(v.menuName,v.arg);
+    v[v.menuName] = new TabMenu(v.arg);
+  });
+  //v.main = new TabMenu({name:"main"});
+  //v.map = new TabMenu({name:"info"});
 
   // Google Spreadからデータを取得してタイムテーブル表示
   const url = {
