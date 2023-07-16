@@ -45,7 +45,61 @@
       </div>
 
       <div name="schedule"><h2>スケジュール</h2>
-        <div class="image"><div class="wrapPlantUML"><img class="PlantUML" name="schedule1"></div></div>
+        <div class="PlantUML" name="schedule1"><img><div style="display:none">@startgantt
+project starts the 2023/07/08
+saturday are closed
+sunday are closed
+2023/07/08 is open
+2023/09/09 is open
+2023/09/23 is open
+2023/09/30 is open
+2023/10/01 is open
+hide ressources footbox
+
+[終業式] happens 2023/07/20
+[夏休み] starts at [終業式]'s end and ends 2023/08/31
+
+-- 参加者募集：夏休み前予告 --
+[7月定例会] starts 2023/07/08 and ends 2023/07/08
+then [予告サイト作成] as [site] on {嶋津} lasts 2 days
+[QRコード送付①] happens at [site]'s end
+[予告チラシ作成] starts 2023-07-10 and lasts 3 days
+then [内部レビュー] lasts 2 days
+then [学校側確認①] lasts 2 days
+then [印刷・配布①] ends 2023-07-20
+
+-- 参加者募集：本番 --
+[LINEグループ作成] starts 2023/9/2 and lasts 1 weeks
+[9月定例会] starts 2023/9/9 and lasts 1 days
+[手伝募集メール発信] on {嶋津} starts at [9月定例会]'s end and lasts 1 days
+[調理器具他、不足資材の手配] starts at [9月定例会]'s end and lasts 2 weeks
+[臨時会] starts 2023/9/23 and lasts 1 days
+then [テント区画図・案内板作成] lasts 1 weeks
+[サイト・申込フォーム作成] starts 2023/08/30 and lasts 5 days
+then [申込状況参照サイト作成] on {嶋津} lasts 4 days
+[QRコード送付②] on {嶋津} happens 2023/09/01
+[チラシ・しおり作成] starts 2023/08/30 and lasts 5 days
+then [学校側確認②] lasts 4 days
+then [印刷・配布②] lasts 1 days
+[参加申し込み] starts at [印刷・配布②]'s end and lasts 2 weeks
+[抽選・調整] starts at [参加申し込み]'s end and lasts 1 weeks
+[リマインドメール発信] on {嶋津} happens 2023/09/29
+[しおり印刷] starts at [参加申し込み]'s end and ends 2023/09/29
+[本番] starts at [抽選・調整]'s end and ends 2023/10/01
+
+-- アンケート・撮影・まとめ --
+[アンケート叩き台・写真保存手順作成] on {嶋津} starts at [申込状況参照サイト作成]'s end and lasts 5 days
+then [レビュー・修正] lasts 5 days
+[撮影] starts 2023/09/30 and ends 2023/10/01
+then [写真保存] on {スタッフ} lasts 3 days
+[参加者アンケート回答依頼メール発信] on {嶋津} happens 2023/10/01
+then [参加者アンケート回答] lasts 5 days
+[当日スタッフアンケート回答依頼メール発信] on {嶋津} happens 2023/10/01
+then [当日スタッフアンケート回答] on {当日スタッフ} lasts 5 days
+[次回申送事項シート記入] on {おやじ常連} starts at [当日スタッフアンケート回答依頼メール発信]'s end and lasts 5 days
+[まとめ] starts at [参加者アンケート回答]'s end and lasts 10 days
+
+@endgantt</div></div>
         <div class="markdown" name="schedule2"></div>
         <!--
           遊び場保険、スケジュールに追加
@@ -353,9 +407,10 @@ window.addEventListener('DOMContentLoaded',() => {
     });
 
     // PlantUMLで記述された部分をHTML化して表示
-    document.querySelectorAll('img.PlantUML').forEach(x => {
-      x.src = "http://www.plantuml.com/plantuml/svg/"
-        + plantumlEncoder.encode(x.innerHTML);
+    document.querySelectorAll('div.PlantUML').forEach(x => {
+      v.src = x.querySelector('div').innerHTML;
+      x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
+        + plantumlEncoder.encode(v.src);
     });
 
     // Mermaidで記述された部分をHTML化して表示

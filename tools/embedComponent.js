@@ -113,11 +113,11 @@ function embedComponent(doc){
           break;
 
         case 'png':
-          console.log(v.embed);
           element.setAttribute('src','data:image/png;base64,'+v.content);
           break;
-        case 'pu': // PlantUML -> img srcにセット(自要素保持)
-          v.embed.to = 'src';
+        case 'pu': // PlantUML -> 隠蔽されたdiv.PlantUMLを子要素に追加(自要素保持)
+          element.innerHTML += '<div style="display:none">' + v.content + '</div>';
+          break;
         default:  // 上記以外は設定すべき自要素の属性名
           // 属性の値として設定
           element.setAttribute(v.embed.to,v.content);

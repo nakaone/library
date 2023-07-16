@@ -45,7 +45,7 @@
       </div>
 
       <div name="schedule"><h2>スケジュール</h2>
-        <div class="image"><div class="wrapPlantUML"><img class="PlantUML" name="schedule1"></img></div></div>
+        <div class="PlantUML"  data-embed="schedule.pu" name="schedule1"><img /></div>
         <div class="markdown" name="schedule2"></div>
         <!--
           遊び場保険、スケジュールに追加
@@ -137,9 +137,10 @@ window.addEventListener('DOMContentLoaded',() => {
     });
 
     // PlantUMLで記述された部分をHTML化して表示
-    document.querySelectorAll('img.PlantUML').forEach(x => {
-      x.src = "http://www.plantuml.com/plantuml/svg/"
-        + plantumlEncoder.encode(x.innerHTML);
+    document.querySelectorAll('div.PlantUML').forEach(x => {
+      v.src = x.querySelector('div').innerHTML;
+      x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
+        + plantumlEncoder.encode(v.src);
     });
 
     // Mermaidで記述された部分をHTML化して表示
