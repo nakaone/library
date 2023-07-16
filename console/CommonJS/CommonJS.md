@@ -1,10 +1,10 @@
 ## Classes
 
 <dl>
-<dt><a href="#simpleMenu">simpleMenu</a></dt>
+<dt><a href="#BurgerMenu">BurgerMenu</a></dt>
 <dd><p>HTMLにメニューを作成する</p>
 <ul>
-<li><a href="simpleMenu.grid.md">画面分割のレイアウト</a></li>
+<li><a href="BurgerMenu.grid.md">画面分割のレイアウト</a></li>
 </ul>
 </dd>
 <dt><a href="#TimeTable">TimeTable</a></dt>
@@ -79,17 +79,17 @@
 <dd></dd>
 </dl>
 
-<a name="simpleMenu"></a>
+<a name="BurgerMenu"></a>
 
-## simpleMenu
+## BurgerMenu
 HTMLにメニューを作成する
 
-- [画面分割のレイアウト](simpleMenu.grid.md)
+- [画面分割のレイアウト](BurgerMenu.grid.md)
 
 **Kind**: global class  
-<a name="new_simpleMenu_new"></a>
+<a name="new_BurgerMenu_new"></a>
 
-### new simpleMenu(conf)
+### new BurgerMenu(conf)
 
 | Param | Type |
 | --- | --- |

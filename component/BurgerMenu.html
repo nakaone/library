@@ -1,5 +1,5 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-<title>simpleMenu</title>
+<title>BurgerMenu</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <style type="text/css" class="core">/* コアCSS */
 html, body, div {
@@ -11,7 +11,7 @@ html, body, div {
   display: grid;
 }
 body {
-  --simpleMenuHeaderHeight: 50px; /* ヘッダの高さ(=メニューアイコンの大きさ) */
+  --BurgerMenuHeaderHeight: 50px; /* ヘッダの高さ(=メニューアイコンの大きさ) */
   --textR: 176;
   --textG: 176;
   --textB: 176;
@@ -22,48 +22,48 @@ body {
   --backB: 255;
   --backA: 1;
   --backColor: rgba(var(--backR),var(--backG),var(--backB),var(--backA));
-  grid-template-rows: var(--simpleMenuHeaderHeight) 1fr;
+  grid-template-rows: var(--BurgerMenuHeaderHeight) 1fr;
   grid-template-columns: 1fr;
 }
 
-/* メニュー関係(simpleMenu)以外の要素 */
-body > div:not(.simpleMenu) {
+/* メニュー関係(BurgerMenu)以外の要素 */
+body > div:not(.BurgerMenu) {
   grid-row: 2/3;
   grid-column: 1/2;
   padding: 0.5rem;
 }
 
-body > .simpleMenu {
+body > .BurgerMenu {
   grid-row: 1/3;
   grid-column: 1/2;
-  grid-template-rows: var(--simpleMenuHeaderHeight) 1fr;
-  grid-template-columns: 2fr 3fr var(--simpleMenuHeaderHeight);
+  grid-template-rows: var(--BurgerMenuHeaderHeight) 1fr;
+  grid-template-columns: 2fr 3fr var(--BurgerMenuHeaderHeight);
 }
 
-.simpleMenu > .Title {
+.BurgerMenu > .Title {
   grid-row: 1/2;
   grid-column: 1/3;
   align-items: center;
   color: var(--textColor);
-  font-size: calc(var(--simpleMenuHeaderHeight) * 0.65);
+  font-size: calc(var(--BurgerMenuHeaderHeight) * 0.65);
   font-weight: 900;
 }
 
 /* ハンバーガーアイコン */
-.simpleMenu > .Navicon {
+.BurgerMenu > .Navicon {
   grid-row: 1/2;
   grid-column: 3/4;
   place-items: center;
 }
 
-.simpleMenu > .Navicon > button {
+.BurgerMenu > .Navicon > button {
   place-content: center center;
   display: block;
-  margin: calc(var(--simpleMenuHeaderHeight) * 0.1);
+  margin: calc(var(--BurgerMenuHeaderHeight) * 0.1);
   padding: 0px;
   box-sizing: border-box;
-  width: calc(var(--simpleMenuHeaderHeight) * 0.7);
-  height: calc(var(--simpleMenuHeaderHeight) * 0.7);
+  width: calc(var(--BurgerMenuHeaderHeight) * 0.7);
+  height: calc(var(--BurgerMenuHeaderHeight) * 0.7);
   border: none;
   background: rgba(0,0,0,0);  /* 透明 */
   z-index: 4; /* div[name="navi"]より上の層に */
@@ -72,43 +72,43 @@ body > .simpleMenu {
   box-shadow: none;
 }
 
-.simpleMenu > .Navicon button span {
+.BurgerMenu > .Navicon button span {
   display: block;
   width: 100%;
-  height: calc(var(--simpleMenuHeaderHeight) * 0.12);
-  border-radius: calc(var(--simpleMenuHeaderHeight) * 0.06);
+  height: calc(var(--BurgerMenuHeaderHeight) * 0.12);
+  border-radius: calc(var(--BurgerMenuHeaderHeight) * 0.06);
   position: absolute;
   left: 0;
   background: var(--textColor);
   transition: top 0.24s, transform 0.24s, opacity 0.24s;
 }
-.simpleMenu > .Navicon button span:nth-child(1) {
+.BurgerMenu > .Navicon button span:nth-child(1) {
   top: 0;
 }
-.simpleMenu > .Navicon button span:nth-child(2) {
+.BurgerMenu > .Navicon button span:nth-child(2) {
   top: 50%;
   transform: translateY(-50%);
 }
-.simpleMenu > .Navicon button span:nth-child(3) {
+.BurgerMenu > .Navicon button span:nth-child(3) {
   top: 100%;
   transform: translateY(-100%);
 }
 
-.simpleMenu > .Navicon button span.is_active:nth-child(1) {
+.BurgerMenu > .Navicon button span.is_active:nth-child(1) {
   top: 50%;
   transform: translateY(-50%) rotate(135deg);
 }
-.simpleMenu > .Navicon button span.is_active:nth-child(2) {
+.BurgerMenu > .Navicon button span.is_active:nth-child(2) {
   transform: translate(50%, -50%);
   opacity: 0;
 }
-.simpleMenu > .Navicon button span.is_active:nth-child(3) {
+.BurgerMenu > .Navicon button span.is_active:nth-child(3) {
   top: 50%;
   transform: translateY(-50%) rotate(-135deg);
 }
 
 /* メニュー領域 */
-.simpleMenu .Navi {
+.BurgerMenu .Navi {
   grid-row: 2/3;
   grid-column: 2/4;
   grid-template-rows: 1fr;
@@ -119,22 +119,22 @@ body > .simpleMenu {
   --ItemText: white;
 }
 
-.simpleMenu .Navi div {
+.BurgerMenu .Navi div {
   display: none;
 }
 
-.simpleMenu .Navi div.is_active {
+.BurgerMenu .Navi div.is_active {
   display: grid;
   grid-column: 1/2;
 }
 
-.simpleMenu .Navi div ul {
+.BurgerMenu .Navi div ul {
   width: 100%;
   margin: 0px;
   background-color: var(--NaviBG);
 }
 
-.simpleMenu .Navi div ul li {
+.BurgerMenu .Navi div ul li {
   width: 100%;
   margin: 1rem 0;
   padding: 0.3rem;
@@ -144,16 +144,16 @@ body > .simpleMenu {
   text-decoration: none;
   border: solid 1px var(--ItemText);
 }
-.simpleMenu .Navi div li.open::before {
+.BurgerMenu .Navi div li.open::before {
   content: "▼";
   color: var(--ItemText);
 }
-.simpleMenu .Navi div li.close::before {
+.BurgerMenu .Navi div li.close::before {
   content: "▶︎";
   color: var(--ItemText);
 }
 
-.simpleMenu .NaviBack {
+.BurgerMenu .NaviBack {
   grid-row: 1/3;
   grid-column: 1/4;
   z-index: 1;
@@ -161,11 +161,11 @@ body > .simpleMenu {
   grid-template-columns: 1fr;
 }
 
-.simpleMenu > .NaviBack > div {
+.BurgerMenu > .NaviBack > div {
   display: none;
 }
 
-.simpleMenu > .NaviBack > div.is_active {
+.BurgerMenu > .NaviBack > div.is_active {
   display: grid;
   grid-row: 1/2;
   grid-column: 1/2;
@@ -177,11 +177,11 @@ body > .simpleMenu {
     https://projects.lukehaas.me/css-loaders/
     <div class="loader">Loading...</div>
 */
-.simpleMenu > .loading {
+.BurgerMenu > .loading {
   grid-column: 1/4;
   place-items: center;
 }
-.simpleMenu > .loading > div {
+.BurgerMenu > .loading > div {
   margin: 100px auto;
   font-size: 25px;
   width: 1.4em;
@@ -254,9 +254,9 @@ body > .simpleMenu {
 }
 </style>
 </head><body>
-<div class="core simpleMenu"><!-- コアHTML -->
+<div class="core BurgerMenu"><!-- コアHTML -->
   <div class="Title"></div>
-  <div class="Navicon" onclick="simpleMenu.toggle()">
+  <div class="Navicon" onclick="BurgerMenu.toggle()">
     <button>
       <span></span>
       <span></span>
@@ -264,7 +264,7 @@ body > .simpleMenu {
     </button>
   </div>
   <div class="Navi"><div><ul></ul></div></div>
-  <div class="NaviBack" onclick="simpleMenu.toggle()"><div></div></div>
+  <div class="NaviBack" onclick="BurgerMenu.toggle()"><div></div></div>
   <div class="loading"><div></div></div>
 </div>
 <!-- 以下テスト画面 -->
@@ -291,10 +291,10 @@ body > .simpleMenu {
 /**
  * @classdesc HTMLにメニューを作成する
  * 
- * - [画面分割のレイアウト](simpleMenu.grid.md)
+ * - [画面分割のレイアウト](BurgerMenu.grid.md)
  */
 
-class simpleMenu {
+class BurgerMenu {
 
   /**
    * @constructor
@@ -303,18 +303,18 @@ class simpleMenu {
    */
 
   constructor(conf){
-    console.log('----- simpleMenu.constructor start.');
+    console.log('----- BurgerMenu.constructor start.');
     const v = {};
     try {
       this.conf = this.#setDefault(conf);
       this.#setStyle();
-      simpleMenu.setTitle(this.conf.Title);
-      this.#setMenu(document.querySelector('.simpleMenu .Navi div ul'),this.conf.menu);
+      BurgerMenu.setTitle(this.conf.Title);
+      this.#setMenu(document.querySelector('.BurgerMenu .Navi div ul'),this.conf.menu);
 
-      simpleMenu.changeScreen('home');
-      console.log('----- simpleMenu.constructor end.');
+      BurgerMenu.changeScreen('home');
+      console.log('----- BurgerMenu.constructor end.');
     } catch(e){
-      console.error('----- simpleMenu.constructor abnormal end.\n',e);
+      console.error('----- BurgerMenu.constructor abnormal end.\n',e);
       // ブラウザで実行する場合はアラート表示
       if( typeof window !== 'undefined' ) alert(e.stack); 
       throw e; //以降の処理を全て停止
@@ -330,7 +330,7 @@ class simpleMenu {
       Title: '(未設定)',
       authority: null,  // 全メニューを表示
       style: {
-        header: { // querySelector(.simpleMenu div[name="header"])
+        header: { // querySelector(.BurgerMenu div[name="header"])
           backgroundColor: "#81d8d0", // Element.style.xxx。xxxはJavaScriptで指定する場合の名称
           color: "#fff",
           fontSize: "1.6rem",
@@ -351,7 +351,7 @@ class simpleMenu {
         innerHTML: null,  // <img><span>等、htmlで指定の場合使用
       },
     },conf);
-    console.log('----- simpleMenu.setDefault.\n',rv);
+    console.log('----- BurgerMenu.setDefault.\n',rv);
     return rv;
   }
 
@@ -380,13 +380,13 @@ class simpleMenu {
         } else {
           v.func = new Function(`
           // メニューを非表示
-          document.querySelector('.simpleMenu .Navi div').classList.remove('is_active');
-          document.querySelector('.simpleMenu .NaviBack div').classList.remove('is_active');
-          document.querySelectorAll('.simpleMenu .Navicon button span')
+          document.querySelector('.BurgerMenu .Navi div').classList.remove('is_active');
+          document.querySelector('.BurgerMenu .NaviBack div').classList.remove('is_active');
+          document.querySelectorAll('.BurgerMenu .Navicon button span')
           .forEach(x => x.classList.remove("is_active"));
 
           // loading画面を表示
-          simpleMenu.changeScreen('loading');
+          BurgerMenu.changeScreen('loading');
 
           // 指定された処理を実行
           `+v.o.func);
@@ -416,40 +416,40 @@ class simpleMenu {
   }
 
   static setTitle(title){
-    document.querySelector('.simpleMenu .Title').innerHTML = title;
+    document.querySelector('.BurgerMenu .Title').innerHTML = title;
   }
 
   static toggle(){
-    document.querySelector('.simpleMenu .Navi div').classList.toggle("is_active");
-    document.querySelector('.simpleMenu .NaviBack div').classList.toggle("is_active");
-    document.querySelectorAll('.simpleMenu .Navicon button span')
+    document.querySelector('.BurgerMenu .Navi div').classList.toggle("is_active");
+    document.querySelector('.BurgerMenu .NaviBack div').classList.toggle("is_active");
+    document.querySelectorAll('.BurgerMenu .Navicon button span')
     .forEach(x => x.classList.toggle("is_active"));
   }
 
   static changeScreen(scrId='loading'){
-    console.log('----- simpleMenu.changeScreen start.\nscrId="'+scrId+'"');
+    console.log('----- BurgerMenu.changeScreen start.\nscrId="'+scrId+'"');
     const v = {};
 
     if( scrId === 'loading' ){
-      document.querySelectorAll('body > div:not(.simpleMenu)').forEach(x => x.style.display = 'none');
+      document.querySelectorAll('body > div:not(.BurgerMenu)').forEach(x => x.style.display = 'none');
       // 待機画面を表示
-      document.querySelector('.simpleMenu .loading').style.display = '';
+      document.querySelector('.BurgerMenu .loading').style.display = '';
     } else {
       // 指定画面を表示、それ以外は非表示
-      document.querySelectorAll('body > div:not(.simpleMenu)').forEach(x => {
+      document.querySelectorAll('body > div:not(.BurgerMenu)').forEach(x => {
         v.name = x.getAttribute('name');
         x.style.display = v.name === scrId ? '' : 'none';
       });
       // 待機画面を非表示
-      document.querySelector('.simpleMenu .loading').style.display = 'none';
+      document.querySelector('.BurgerMenu .loading').style.display = 'none';
     }
 
     // メニューを非表示
-    document.querySelector('.simpleMenu .Navi div').classList.remove('is_active');
-    document.querySelector('.simpleMenu .NaviBack div').classList.remove('is_active');
-    document.querySelectorAll('.simpleMenu .Navicon button span')
+    document.querySelector('.BurgerMenu .Navi div').classList.remove('is_active');
+    document.querySelector('.BurgerMenu .NaviBack div').classList.remove('is_active');
+    document.querySelectorAll('.BurgerMenu .Navicon button span')
     .forEach(x => x.classList.remove("is_active"));
-    //console.log('----- simpleMenu.changeScreen end.');
+    //console.log('----- BurgerMenu.changeScreen end.');
   }
 }
 </script>
@@ -473,7 +473,7 @@ const applicationQR = () => {
 <script type="text/javascript" class="main">
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
-  const menu = new simpleMenu({
+  const menu = new BurgerMenu({
     Title: `
       <div style="display:grid;grid-template-rows:15px 1fr;grid-template-columns:50px 1fr;">
         <div style="grid-row:1/3;grid-column:1/2;place-items:center;">
@@ -483,7 +483,7 @@ window.addEventListener('DOMContentLoaded',() => {
         <div style="grid-row:2/3;grid-column:2/3;font-size:22px;">校庭デイキャンプ2023</div>
       </div>`,
     menu:[
-      {"id":"messageBoard","label":"お知らせ","authority":3,"func":"console.log('function messageBoard.');simpleMenu.changeScreen('messageBoard')"},
+      {"id":"messageBoard","label":"お知らせ","authority":3,"func":"console.log('function messageBoard.');BurgerMenu.changeScreen('messageBoard')"},
       {"id":"reception","label":"参加者検索","authority":2,"func":"()=>{console.log('function reception.')}"},
       {"id":"applicationQR","label":"当日参加(スマホ有)","authority":2,"func":applicationQR},
       {"id":"paperForm","label":"当日参加(申請用紙)","authority":2,"func":"paperForm"},
@@ -502,10 +502,10 @@ window.addEventListener('DOMContentLoaded',() => {
     ],
     style: {  // CSS styleを部分的に変更
       "body": { // ラベルはCSSセレクタ
-        "--simpleMenuHeaderHeight": "50px",
+        "--BurgerMenuHeaderHeight": "50px",
         // 頭が"--"のラベルは変数を示す。`element.style.setProperty(ラベル,値)`で処理。
       },
-      "body > div:not(.simpleMenu)": { // ラベルはCSSセレクタ
+      "body > div:not(.BurgerMenu)": { // ラベルはCSSセレクタ
         "padding": "1rem",
         // 頭が"--"以外はJavaScriptで処理する場合のプロパティ名。必ずしもCSSとは一致しない(ex.zIndex≠z-index)
         // `element.style[ラベル]=値`で処理する。

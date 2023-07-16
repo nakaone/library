@@ -43,12 +43,12 @@
   <div class="screen">
     <div style="grid-row:1/2;grid-column:1/4"></div>
     <div style="grid-row:2/3;grid-column:1/4"></div>
-    <div style="grid-row:2/3;grid-column:1/4" class="checked">body > div:not(.simpleMenu)<br>(z=0)</div>
+    <div style="grid-row:2/3;grid-column:1/4" class="checked">body > div:not(.BurgerMenu)<br>(z=0)</div>
   </div>
 
 </div>
 
-# simpleMenu画面領域
+# BurgerMenu画面領域
 
 <div style="grid-template-columns:repeat(4, 1fr);border:none">
   <div class="screen">

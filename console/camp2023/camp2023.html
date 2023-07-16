@@ -18,7 +18,7 @@
     }
   </style>
 </head>
-<body class="TabDesign" name="main">
+<body class="TabMenu" name="main">
 
   <div class="tabs"><!-- タグメニュー -->
     <div name="schedule">schedule</div>
@@ -44,7 +44,7 @@
   </div>
 
   <div name="map"><h1>マップ</h1>
-    <div class="TabDesign" name="map">
+    <div class="TabMenu" name="map">
       <div class="tabs">
         <div name="outline">outline</div>
         <div name="expedition">expedition</div>
@@ -73,7 +73,7 @@
   </div>
 
   <div name="minutes"><h1>参考：論議メモ</h1>
-    <div class="TabDesign" name="minutes">
+    <div class="TabMenu" name="minutes">
       <div class="tabs">
         <div name="20230610">6/10定例会</div>
         <div name="20230708">7/08定例会</div>
@@ -190,7 +190,7 @@ function mergeDeeply(target, source, opts) {
  * @classdesc タブ切り替えのHTMLページを作成する
  */
 
-class TabDesign {
+class TabMenu {
 
   /**
    * @constructor
@@ -198,7 +198,7 @@ class TabDesign {
    * @returns {void}
    */
   constructor(opt={}){
-    console.log('TabDesign.constructor start.');
+    console.log('TabMenu.constructor start.');
     const v = {};
     this.option = mergeDeeply({
       name: null, // 対象となるページ全体のname属性。nullなら単一で特定不要と解釈
@@ -206,7 +206,7 @@ class TabDesign {
       direction: 'x', // タブを並べる方向。x:横並び, y:縦並び
       style: {
         tabs: {
-          selector: ".TabDesign .tabs",
+          selector: ".TabMenu .tabs",
           css: {
             width: "100%",
             height: "100%",
@@ -217,14 +217,14 @@ class TabDesign {
           },
         },
         tab: {
-          selector: ".TabDesign .tabs div",
+          selector: ".TabMenu .tabs div",
           css: {
             paddingLeft: "1rem",
             borderBottom: "solid 4px #ccc",
           },
         },
         act: {
-          //selector: ".TabDesign .tabs div.act",
+          //selector: ".TabMenu .tabs div.act",
           css: {
             paddingLeft: "1rem",
             borderBottom: "solid 4px #000",
@@ -235,7 +235,7 @@ class TabDesign {
     //console.log(this.option);
 
     // 全体の親要素をthis.wrapper、タブ表示領域をthis.tabsに保存
-    this.wrapperSelector = '.TabDesign'
+    this.wrapperSelector = '.TabMenu'
       +( this.option.name === null ? '' : '[name="' + this.option.name + '"]');
     this.wrapper = document.querySelector(this.wrapperSelector);
     this.tabs = document.querySelector(this.wrapperSelector+' > .tabs');
@@ -262,8 +262,8 @@ class TabDesign {
     this.tabNum = 0;
     this.pageList.forEach(x => {
       this.tab[x] = this.wrapper.querySelector('.tabs [name="'+x+'"]');
-      // ページは「TabDesignクラス直下のDIV」に限定
-      this.page[x] = this.wrapper.querySelector('.TabDesign > div[name="'+x+'"]');
+      // ページは「TabMenuクラス直下のDIV」に限定
+      this.page[x] = this.wrapper.querySelector('.TabMenu > div[name="'+x+'"]');
       //console.log(x,this.tab[x],this.page[x]);
       this.tab[x].addEventListener('click',()=>this.changePage(x));
       this.tabNum++;
@@ -272,11 +272,11 @@ class TabDesign {
     this.tabs.style.gridTemplateColumns = 'repeat('+this.tabNum+',1fr)';
 
     this.changePage(this.option.initial); // 初期ページ
-    console.log('TabDesign.constructor end.');
+    console.log('TabMenu.constructor end.');
   }
 
   changePage(page=null){
-    console.log('TabDesign.changePage start.');
+    console.log('TabMenu.changePage start.');
     this.activePage = page === null ? this.pageList[0] : page;
     console.log(this.activePage,this.pageList,this.tab)
     this.pageList.forEach(x => {
@@ -292,7 +292,7 @@ class TabDesign {
         this.page[x].style.display = 'none';
       }
     })
-    console.log('TabDesign.changePage end.');
+    console.log('TabMenu.changePage end.');
   }
 }
 
@@ -302,8 +302,8 @@ window.addEventListener('DOMContentLoaded',() => {
   mermaid.initialize({startOnLoad: true}); // mermaid描画
   //console.log('timetable test start.');
 
-  v.main = new TabDesign({name:"main"});
-  v.map = new TabDesign({name:"map"});
+  v.main = new TabMenu({name:"main"});
+  v.map = new TabMenu({name:"map"});
 
   // MarkDownで記述された部分をHTML化して表示
   document.querySelectorAll('div.markdown').forEach(x => {
