@@ -1,6 +1,6 @@
 <p style="font-size:2rem;text-shadow:2px 2px 4px #888;">独自ライブラリ</p>
 
-| [component](component/README.md) | GAS | [console](console/README.md) | browser | [szLib](console/szLib/szLib.md) | [CommonJS](console/CommonJS/CommonJS.md)
+| [component](component/README.md) | GAS | [console](console/README.md) | browser | [external](external/README.md) | [szLib](console/szLib/szLib.md) | [CommonJS](console/CommonJS/CommonJS.md)
 
 # 開発・運用方針
 
@@ -57,6 +57,7 @@
   - CommonJS.js：component/CommonJS.jsのハードリンク
   - szLib/：szLib.js作成用フォルダ。中のszLib.sh実行でszLib.jsが更新される
   - CommonJS/：CommonJS.js作成用フォルダ。中のCommonJS.sh実行でCommonJS.jsが更新される
+- external：外部から導入したライブラリ
 - GAS：Google Apps Scriptで使用。配下の構成はbrowserと同じ
 - tools：libraryの運用で使用するツール類
   - embedComponent.js：テンプレートに指定componentを埋め込む
