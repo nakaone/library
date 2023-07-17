@@ -24,7 +24,11 @@
 <body class="TabMenu" name="main">
 
   <div class="TabMenu" name="お知らせ">
-    <!--div name="掲示板"></div-->
+    <div name="掲示板">
+      <button onclick="redraw()">更新</button>
+      ※ 自動更新されません。また更新は3分程度の間隔をあけてください
+      <div name="board"></div>
+    </div>
     <div name="注意事項" class="markdown" data-embed="注意事項.md"></div>
     <div name="持ち物" class="markdown" data-embed="持ち物リスト.md"></div>
   </div>
@@ -58,9 +62,12 @@
 
     <div name="校内探検">
       <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
+      <div class="markdown" data-embed="肝試し配置.md"></div>
     </div>
 
     <div name="参加者数集計">
+      <h1>工事中</h1>
+      <p>以下はMermaid出力テスト画面(完成時のイメージとは関係ありません)</p>
       <div name="test" class="mermaid">
         sequenceDiagram
           太郎->>花子: おはよう
@@ -91,6 +98,61 @@
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/whichType.html","selector":"script.core"},"to":"js"}'></script>
 
 <script type="text/javascript" class="main">
+function redraw(){
+  const url = {
+    GAS:'https://script.google.com/macros/s/AKfycbxtxS_u1BVahosczLxtt9yFS8Lh97lXEj4t7xmzCp4v1qgDft4RaSZUrbv-cMR0k03I/exec',
+    sheet: 'https://tinyurl.com/2ahyly3l',
+  };
+
+  fetch(url.GAS)
+  .then(response => response.json()).then(r => {
+    const v = {};
+
+    // Google Spreadからデータを取得してタイムテーブル表示
+    v.TimeTable = new TimeTable('div.TimeTable',r,{datatype:'sheet',dataSheet:url.sheet});
+
+    // 掲示板の表示
+    console.log(r.notice);
+    v.notice = {
+      raw: r.notice,
+      element: document.querySelector('.TabMenu > [name="掲示板"] [name="board"]'),
+      disp:[],
+    }
+    // rowデータをdipsとしてコピー
+    v.notice.disp.push(['日時','メッセージ']); // ヘッダを変更
+    for( v.i=1 ; v.i<v.notice.raw.length ; v.i++ ){
+      v.r = v.notice.raw[v.i];
+      if( v.r[0].length > 0 ){
+        if( v.r[0] === '—' ){ // 時刻を表示しないメッセージ
+          v.notice.disp.push(v.r);
+        } else {  // 時刻の表示形式を変更
+          v.notice.disp.push([new Date(v.r[0]).toLocale('M/dd hh:mm'),v.r[1]]);
+        }
+      }
+    }
+    v.notice.element.innerHTML = '';  // ボード領域をクリア
+    v.notice.element.appendChild(v.notice.disp.tabulize());
+    console.log(v);
+  });
+
+  // MarkDownで記述された部分をHTML化して表示
+  document.querySelectorAll('div.markdown').forEach(x => {
+    x.innerHTML = marked(x.innerHTML);
+  });
+
+  // PlantUMLで記述された部分をHTML化して表示
+  document.querySelectorAll('div.PlantUML').forEach(x => {
+    let src = x.querySelector('div').innerHTML;
+    x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
+      + plantumlEncoder.encode(src);
+  });
+
+  // Mermaidで記述された部分をHTML化して表示
+  mermaid.initialize({startOnLoad: true});
+
+}
+
+
 // ブラウザ上で実行する場合の処理
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
@@ -102,32 +164,8 @@ window.addEventListener('DOMContentLoaded',() => {
     v[v.menuName] = new TabMenu(v.arg);
   });
 
-  // Google Spreadからデータを取得してタイムテーブル表示
-  const url = {
-    GAS:'https://script.google.com/macros/s/AKfycby1symD7PQwa9qJX1oPSg7qqrKeDPxgrYLWevR1CLuVQYzOpRD8Vk2OvWjUoWrQN0ow/exec',
-    sheet: 'https://tinyurl.com/2ahyly3l',
-  }
-  fetch(url.GAS)
-  .then(response => response.json()).then(r => {
-    // タイムテーブルの表示
-    const tt01 = new TimeTable('div.TimeTable',r,{datatype:'sheet',dataSheet:url.sheet});
-
-  });
-
-    // MarkDownで記述された部分をHTML化して表示
-    document.querySelectorAll('div.markdown').forEach(x => {
-      x.innerHTML = marked(x.innerHTML);
-    });
-
-    // PlantUMLで記述された部分をHTML化して表示
-    document.querySelectorAll('div.PlantUML').forEach(x => {
-      v.src = x.querySelector('div').innerHTML;
-      x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
-        + plantumlEncoder.encode(v.src);
-    });
-
-    // Mermaidで記述された部分をHTML化して表示
-    mermaid.initialize({startOnLoad: true});
+  // 画面を描画
+  redraw();
 });
 </script>
 </body></html>
