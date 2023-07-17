@@ -172,7 +172,7 @@ function analyzePath(arg){
  * @returns {HTMLTableObject}
  */
 
-function Array.tabulize(opt){
+function Array_tabulize(opt){
  console.log('tabulize start.');
   const v = {
     table: document.createElement('table'),
@@ -223,6 +223,7 @@ function Array.tabulize(opt){
   console.log(v.table)
   return v.table;
 }
+Array.prototype.tabulize = Array_tabulize;
 
 /* コアスクリプト */
 
@@ -876,36 +877,58 @@ Date.prototype.toLocale = Date_toLocale;
  * 
  * @example テンプレートのdata-embed書式
  * 
- * 1. JSON.parseするので、メンバ名もダブルクォーテーションで囲む
- * 1. 属性値全体はシングルクォーテーションで囲む
+ * ```
+ * // SVG：embed指定要素の子要素としてSVG追加
+ * <div name="案内図"><div class="img" data-embed="map2023.svg"></div></div>
+ * -> <div name="案内図"><div class="img"><svg id="exportSVG"〜
+ * 
+ * // PlantUML：指定要素の子要素として、隠蔽された要素を追加。兄弟にIMG要素が必要
+ * <div name="日程表"><div class="PlantUML"  data-embed="schedule.pu"><img /></div></div>
+ * -> <div name="日程表"><div class="PlantUML"><img><div style="display:none">@startgantt〜
+ * 
+ * // PNG：自要素(IMG)のsrc属性の値としてbase64文字列を追加
+ * <div name="校内探検"><img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' /></div>
+ * -> <div name="校内探検"><img width="600px" src="data:image/png;base64,iVBORw0KG〜
+ * 
+ * // MarkDown：自要素のinnerTextとして追加
+ * <div class="markdown" name="6/10定例会" data-embed="20230610.md"></div>
+ * -> <div class="markdown" name="6/10定例会">1. 日程：9/23〜24 or **9/30〜10/01**(第一候補)
+ * 
+ * // 自作ライブラリ(通常関数)
+ * <script type="text/javascript" data-embed='{"from":{"filename":"../../component/mergeDeeply.html","selector":"script.core"},"to":"js"}'><／script>
+ * 
+ * // 既存クラスの拡張
+ * <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Array.tabulize.html","selector":"script.core"},"to":"js"}'><／script>
+ * 
+ * // CSS指定付きのクラス(style,script両方を指定)
+ * <style type="text/css" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"style.core"},"to":"css"}'></style>
+ * <script type="text/javascript" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"script.core"},"to":"js"}'><／script>
+ * ```
+ * 
+ * **data-embedに指定する文字列**
  * 
  * ```
- * data-embed="{
- *   from: {
- *     filename: {string} - 参照先のファイル名
- *     selector: {string} - CSSセレクタ文字列。省略時はファイル全文と解釈
+ * data-embed="ファイル名"  // 文字列だった場合はfrom.filename(ファイル全文)と解釈。拡張子でtoを指定
+ * or
+ * data-embed='{  // JSON形式だった場合、囲み記号はシングルクォーテーション
+ *   "from": {    // メンバ名・値ともダブルクォーテーションで囲む
+ *     "filename": "{string}" - 参照先のファイル名
+ *     "selector": "{string}" - CSSセレクタ文字列。省略時はファイル全文と解釈
  *   },
- *   to: {string} [innerHTML|innerText|xxx|child],
- *     innerHTML : data-embedが記載された要素のinnerHTMLとする
- *     innerText : data-embedが記載された要素のinnerTextとする
- *     xxx : 属性名xxxの値とする
- *     replace : data-embedを持つ要素を置換する
- *   type: {string} [html,pu,md,mmd,text]
- *     html : テンプレート(HTML)同様、HTMLとして出力(既定値)
- *     pu : PlantUMLとして子要素を生成して追加
- *     md : MarkDownとして子要素を生成して追加
- *     mmd : Mermaidとして子要素を生成して追加
- *     text : bodyの中のみを、テキストとして出力
- * }"
- * 
- * 例：
- * <div data-embed='{"from":{"filename":"../../component/analyzeArg.html","selector":"script.core"},"to":"replace"}'></div>
+ *   "to": "{string}" - 出力先に対する指定
+ *      replace:自要素を中身で代替(embed要素は削除)
+ *      svg: SVG画像(embed要素の子要素として追加)
+ *      js: JavaScript(同上)
+ *      css: CSS(同上)
+ *      md: MarkDown(同上)
+ *      mmd: Mermaid(同上)
+ *      txt: その他形式のテキスト(同上)
+ *      pu: PlantUMLのソースとしてIMGタグのsrc属性の値として設定
+ *      その他: embed要素のその他属性の値として設定
+ * }'
  * ```
- * 
  */
 
-const fs = require('fs'); // ファイル操作
-const { JSDOM } = require("jsdom");
 function embedComponent(doc){
   const v = {
     /**
@@ -914,7 +937,8 @@ function embedComponent(doc){
      * @param {string} selector 
      * @returns {string}
      */
-    extract: (filename,selector) => {
+    extract: (filename,selector='body') => {
+      v.selector = selector;  // 変更の可能性があるので変数化
       v.refText = fs.readFileSync(filename,'utf-8').trim();
       // HTMLでなければbodyタグを付加
       v.isHTML = v.refText.toLowerCase()
@@ -922,11 +946,13 @@ function embedComponent(doc){
       if( !v.isHTML ){
         v.refText = '<!DOCTYPE html><html xml:lang="ja" lang="ja"><body>'
           + v.refText + '</body></html>';
+        v.selector = 'body';
       }
+      //console.log("v.refText="+v.refText);
       v.refDoc = new JSDOM(v.refText).window.document;
       v.extracted = '';
       // 複数ある場合があるので、querySelectorAllで順次追加
-      v.refDoc.querySelectorAll(selector).forEach(element => {
+      v.refDoc.querySelectorAll(v.selector).forEach(element => {
         v.extracted += element.innerHTML;
       });
       return v.extracted;
@@ -935,30 +961,64 @@ function embedComponent(doc){
 
   console.log('embedComponent start.');
 
-  // data-embed属性を持つ要素をリスト化、順次処理
-  doc.querySelectorAll('[data-embed]').forEach(element => {
-    v.embed = JSON.parse(element.getAttribute('data-embed'));
-    v.content = v.extract(v.embed.from.filename,v.embed.from.selector);
+  try {
+    // data-embed属性を持つ要素をリスト化、順次処理
+    doc.querySelectorAll('[data-embed]').forEach(element => {
+      //console.log('l.35',element.getAttribute('data-embed'))
+      // 既定値の設定
+      v.embed = element.getAttribute('data-embed');
+      if( v.embed.slice(0,1) === '{' ){
+        v.embed = JSON.parse(v.embed);
+      } else {
+        v.embed = {from:{filename:v.embed}};
+      }
+      v.content = v.extract(v.embed.from.filename,v.embed.from.selector);
 
-    // 置換ルールに従って処理
-    switch( v.embed.to ){
-      case 'innerHTML':
-        element.innerHTML = v.content; break;
-      case 'innerText':
-        element.innerText = v.content; break;
-      case 'replace':
-        element.replaceWith(doc.createTextNode(v.content));
-        break;
-      default:
-        element.setAttribute(v.embed.to,v.content);
-        break;
-    }
-    // テンプレートのembed属性は削除
-    element.removeAttribute('data-embed');
-  });
+      // 処理タイプの判定
+      v.suffix = analyzePath(v.embed.from.filename).suffix.toLowerCase() || 'txt';
+      v.type = v.embed.to || v.suffix;
 
-  console.log('embedComponent end.');
-  return doc;
+      // タイプ別に処理
+      switch( v.type ){
+        case 'replace': // 自要素を中身で代替(自要素削除)
+          element.replaceWith(doc.createTextNode(v.content));
+          break;
+        
+        case 'svg': // SVG画像
+          // svg[position]を削除、imageタグを削除？
+          // MDN position
+          // https://developer.mozilla.org/ja/docs/Web/CSS/position
+        case 'js': // JavaScript
+        case 'css': // CSS
+        case 'md': // MarkDown
+        case 'mmd': // Mermaid
+        case 'txt': // [既定値]その他形式のテキスト
+          // v.contentを自要素のinnerHTMLにセット(自要素保持)
+          element.innerHTML = v.content;
+          break;
+
+        case 'png':
+          element.setAttribute('src','data:image/png;base64,'+v.content);
+          break;
+        case 'pu': // PlantUML -> 隠蔽されたdiv.PlantUMLを子要素に追加(自要素保持)
+          element.innerHTML += '<div style="display:none">' + v.content + '</div>';
+          break;
+        default:  // 上記以外は設定すべき自要素の属性名
+          // 属性の値として設定
+          element.setAttribute(v.embed.to,v.content);
+      }
+      // テンプレートのembed属性は削除
+      element.removeAttribute('data-embed');
+    });
+
+    console.log('embedComponent end.');
+    return doc;
+
+  } catch(e) {
+    console.error(e);
+    console.error("v="+JSON.stringify(v));
+  }
+
 }
 
 
@@ -1091,10 +1151,11 @@ class TabMenu {
           css: {
             width: "100%",
             height: "100%",
-            margin: "0px",
+            margin: "0px 0px 1rem 0px",
             padding: "0px",
             boxSizing: "border-box",
             display: "grid",
+            fontSize: "1rem",
           },
         },
         tab: {
@@ -1119,7 +1180,18 @@ class TabMenu {
     this.wrapperSelector = '.TabMenu'
       +( this.option.name === null ? '' : '[name="' + this.option.name + '"]');
     this.wrapper = document.querySelector(this.wrapperSelector);
-    this.tabs = document.querySelector(this.wrapperSelector+' > .tabs');
+
+    // タブ表示領域を生成
+    this.tabs = document.createElement('div');
+    this.tabs.classList.add('tabs');
+    this.wrapper.querySelectorAll(this.wrapperSelector+' > div[name]').forEach(x => {
+      v.item = document.createElement('div');
+      v.name = x.getAttribute('name');
+      v.item.setAttribute('name',v.name);
+      v.item.innerText = v.name;
+      this.tabs.appendChild(v.item);
+    });
+    this.wrapper.prepend(this.tabs);
     //console.log(this.wrapper);
 
     // スタイルの適用
@@ -1207,7 +1279,7 @@ class TimeTable {
    * - 薄緑：同任意項目
    * - 赤：算式が設定された項目
    * 
-   * <h3>timetable</h3>
+   * <h3>TimeTable</h3>
    * <table calss="tt"><tr>
    * <th style="background:#ff0000;color:white">id</th>
    * <th style="background:#0000ff;color:white;">pId</th>
@@ -1266,6 +1338,26 @@ class TimeTable {
 
   constructor(selector,data,opt){
     this.rootElement = document.querySelector(selector);
+    this.rootElement.innerHTML = `
+      <div class="controller"></div>
+      <div class="main">
+        <div class="header"></div>
+        <div class="timeline"></div>
+        <div class="tasks"></div>
+      </div>
+      <div class="detail">
+        <div class="button">
+          <button name="close">閉じる</button>
+          <button name="edit">編集</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>項目</th><th>値</th><th>備考</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    `;
     // オプションの既定値設定
     this.opt = mergeDeeply({
       datatype: null, // dataが加工済ならnull
@@ -1478,18 +1570,18 @@ class TimeTable {
     }
     console.log(this.opt.sheetDef);
 
-    // 02.timetableシート
-    v.header = raw.timetable[0]; // ヘッダ行
+    // 02.TimeTableシート
+    v.header = raw.TimeTable[0]; // ヘッダ行
     v.idmapIndex = 0; // v.idmapの添字
     console.log(v.header)
     // 02.1. v.sheetにリニアに追加する
-    for( v.i=1 ; v.i<raw.timetable.length ; v.i++ ){
-      v.l = raw.timetable[v.i];
+    for( v.i=1 ; v.i<raw.TimeTable.length ; v.i++ ){
+      v.l = raw.TimeTable[v.i];
       // 有効な行データをオブジェクト化する
       if( Number(v.l[0]) > 0 ){ // 空白行スキップ
-        v.o = {resources:[]}; // 必要資機材のみtimetableシート上にないので足しておく
+        v.o = {resources:[]}; // 必要資機材のみTimeTableシート上にないので足しておく
         for( v.j=0 ; v.j<v.l.length ; v.j++ ){
-          v.colType = this.opt.sheetDef.timetable[v.header[v.j]].type.toLowerCase();
+          v.colType = this.opt.sheetDef.TimeTable[v.header[v.j]].type.toLowerCase();
           switch( v.colType ){
             case 'Date':
               v.o[v.header[v.j]] = new Date(v.l[v.j]).getTime();
@@ -1565,7 +1657,7 @@ class TimeTable {
     v.detail.querySelector('tbody').innerHTML = '';
 
     // 非表示項目を排除しながら表示順に項目をソート
-    v.list = v.listColumns(this.opt.sheetDef.timetable);
+    v.list = v.listColumns(this.opt.sheetDef.TimeTable);
     console.log(v.list);
 
     // 表示順にタスクの項目をtbodyに追加
@@ -1661,334 +1753,6 @@ class TimeTable {
     label.innerText = (( m[1] === '▼' ) ? '▶️' : '▼') + m[2];
   }
 
-}
-
-
-/**
- * @classdesc 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャン
- */
-
-class webScanner {
-  /**
-   * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。
-   * 
-   * 参考：[jsQRであっさりQRコードリーダ/メーカ](https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
-   * 
-   * @constructor
-   * @param {object|HTMLElement} arg - HTMLElementなら親要素のみ指定と解釈
-   * @param {object} arg.parent - 親要素(DOM object)
-   * @param {number} arg.interval - 動画状態で撮像、読み込めなかった場合の間隔。ミリ秒
-   * @param {object} arg.RegExp - QRコードスキャン時、内容が適切か判断
-   * @param {number} arg.lifeTime - 一定時間操作がない場合の停止までのミリ秒。既定値60000
-   * @param {boolean} arg.alert - 読み込み完了時に内容をalert表示するか
-   * @returns {void} なし
-   */
-  constructor(arg={}){
-    console.log('webScanner.constructor start. opt='+JSON.stringify(arg));
-
-    // デバイスがサポートされているか確認
-    if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
-      const msg = 'デバイス(カメラ)がサポートされていません';
-      console.error('webScanner.constructor: '+msg);
-      alert(msg);
-      return;
-    }
-
-    // メンバ(既定値)の設定
-    if( whichType(arg) === 'HTMLElement' ){
-      this.parent = arg;
-      this.interval = 250;
-      this.RegExp = /.+/;
-      this.alert = false;
-    } else {
-      this.parent = arg.parent;
-      this.interval = arg.interval || 250;
-      this.RegExp = arg.RegExp || /.+/;
-      this.alert = arg.alert || false;
-    }
-    this.lastGoing = 0;   // 前回カメラ起動した時刻(Date.now())
-    this.lifeTime = arg.lifeTime || 60000;
-    this.scanned = null;  // 動画を読み込んだ際の処理
-    this.callback = null; // 適切な画像が選択された際、それを使用して行う後続処理
-
-    // 親要素をwebScannerクラスとして指定
-    this.parent.classList.add('webScanner');
-    console.log('webScanner.constructor end.');
-  }
-
-  /** start: カメラを起動する(private関数)
-   * @param {void} - なし
-   * @returns {void} なし
-   */
-  start(){
-    console.log('webScanner start start.');
-
-    // 動画撮影用Webカメラを起動
-    navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "environment",
-      },
-      audio: false
-    }).then((stream) => {
-      this.video.srcObject = stream;
-      this.video.setAttribute("playsinline", true);
-      this.video.play();
-      this.onGoing(true);  // カメラ動作中フラグを立てる
-      this.drawFinder();  // キャンパスへの描画をスタート
-    }).catch(e => {
-      alert('カメラを使用できません\n'+e.message);
-    });
-  }
-
-  /** stop: カメラを停止する(private関数)
-   * @param {void} - なし
-   * @returns {void} なし
-   */
-  stop(){
-    console.log('webScanner.stop',this.video);
-    this.video.srcObject.getVideoTracks().forEach((track) => {
-      track.stop();
-    });
-    this.parent.innerHTML = ''; // 作業用DIVを除去
-    this.lastGoing = 0;
-  }
-
-  /** onGoing: カメラの起動・停止の制御と状態参照
-   * @param {boolean} - true:起動、false:停止、undefind:状態参照
-   * @returns {boolean} true:起動中、false:停止中
-   */
-  onGoing(arg){
-    console.log('webScanner.onGoing: typeof arg='+(typeof arg)+', arg='+arg);
-    let rv = null;
-    const now = Date.now();
-    if( typeof arg === 'boolean' ){  // 引数あり ⇒ 状態制御
-      this.lastGoing = arg ? now : 0;
-      rv = arg;
-    } else {    // 引数無し ⇒ 状態参照
-      if( (now - this.lastGoing) < this.lifeTime ){
-        // 指定時間(lifeTime)内ならtrue
-        rv = true;
-      } else {
-        // 指定時間を超えていたらfalse
-        rv = false;
-        // 一定時間以上操作がなかった場合(システムで停止された場合を除く)
-        if( this.lastGoing > 0 ){
-          alert((this.lifeTime/1000)+'秒以上操作がなかったためカメラを停止しました');
-          this.stop();
-        }
-      }
-    }
-    return rv;
-  }
-
-  /** scanDoc: 文書のスキャン
-   * @param {function} callback - 後続処理
-   * @param {object} opt - オプション指定
-   * @param {number} opt.maxImageSize - 画像をbase64化した後の最大文字長。既定値500K
-   * @returns {void} 無し
-   * callbackにはbase64化したpng(文字列)が渡される。
-  */
-  scanDoc(callback,opt={maxImageSize:500000}){
-
-    // 1.既定値の設定
-    this.callback = callback; // 後続処理をメンバとして保存
-
-    // 2.カメラやファインダ等の作業用DIVを追加
-    this.parent.innerHTML
-    = '<video autoplay class="hide"></video>'
-    + '<canvas></canvas>'  // 撮影結果
-    + '<div class="buttons hide">'  // カメラ操作ボタン
-    + '<div><input type="button" name="undo" value="◀" /></div>'
-    + '<div><input type="button" name="shutter" value="[ ● ]" /></div>'
-    + '<div><input type="button" name="adopt" value="▶" /></div>'
-    + '</div>';
-    this.video = this.parent.querySelector('video');
-    this.canvas = this.parent.querySelector('canvas');
-    this.ctx = this.canvas.getContext('2d');
-
-    // 3.カメラ操作ボタン関係の定義
-    this.buttons = this.parent.querySelector('div.buttons');
-    this.undo = this.buttons.querySelector('input[name="undo"]');
-    this.undo.disabled = true;  // 再撮影
-    this.shutter = this.buttons.querySelector('input[name="shutter"]');
-    this.shutter.disabled = false;  // シャッター
-    this.adopt = this.buttons.querySelector('input[name="adopt"]');
-    this.adopt.disabled = true;  // 採用
-
-    // (1) 再撮影ボタンクリック時
-    this.undo.addEventListener('click',() => {
-      console.log('webScanner.scanDoc undo clicked.');
-      this.onGoing(true);  // カメラ動作中フラグを立てる
-      this.drawFinder();  // キャンパスへの描画をスタート
-      this.undo.disabled = true;
-      this.shutter.disabled = false;
-      this.adopt.disabled = true;
-    });
-    // (2) シャッタークリック時
-    this.shutter.addEventListener('click',() => {
-      console.log('webScanner.scanDoc shutter clicked.');
-      this.onGoing(false);  // カメラを一時停止
-      this.undo.disabled = false;
-      this.shutter.disabled = true;
-      this.adopt.disabled = false;
-    });
-    // (3) 採用ボタンクリック時
-    this.adopt.addEventListener('click',() => {
-      console.log('webScanner.scanDoc adopt clicked.');
-      // canvasからイメージをBASE64で取得
-      // なお圧縮はpng不可なので、jpegとする
-      let imageData = '';
-      for( let i=0.9 ; i>0 ; i -= 0.1 ){
-        imageData = this.canvas.toDataURL('image/jpeg',i);
-        if( imageData.length < opt.maxImageSize ){
-          i = -1;
-        }
-      }
-      //console.log('l.181\n'+imageData);
-      this.callback(imageData);  // base64化したpngを後続処理に渡す
-      this.stop();  // スキャナを停止
-    })
-
-    // 4.動画を1フレーム読み込んだ際の処理を指定
-    this.scanned = () => {};  // フレームごとの処理は無し
-
-    // 5.カメラ操作ボタンを表示してカメラを起動
-    this.buttons.classList.remove('hide');
-    this.start();
-  }
-
-  /** scanQR: QRコードスキャン
-   * @param {function} callback - 後続処理
-   * @param {object} opt - オプション
-   * @param {object} opt.RegExp - スキャン結果が適切か判断。RegExpオブジェクト
-   * @param {boolean} opt.alert - true:読み込み完了時に内容をalert表示
-   * @returns {void} なし
-   * callbackにはQRコードの文字列が渡される。
-   */
-  scanQR(callback,opt={}){
-    console.log('webScanner.scanQR start. opt='+JSON.stringify(opt)+'\n',callback);
-
-    // 1.既定値の設定
-    this.RegExp = opt.RegExp || this.RegExp;
-    this.alert = opt.alert || this.alert;
-    this.callback = callback; // 後続処理をメンバとして保存
-
-    // 2.カメラやファインダ等の作業用DIVを追加
-    this.parent.innerHTML = '<canvas></canvas>';
-    this.video = document.createElement('video');
-    this.canvas = this.parent.querySelector('canvas');
-    this.ctx = this.canvas.getContext('2d');
-
-    // 3.カメラ操作ボタン関係の定義
-    // QRコードスキャンでは操作ボタンは無いので定義不要
-
-    // 4.動画を1フレーム読み込んだ際の処理を定義
-    this.scanned = this.drawFrame;
-
-    // 5.動画撮影用Webカメラを起動
-    this.start();
-  }
-
-  /** drawFinder: 動画をキャンバスに描画する
-   * @param {void} - 無し
-   * @returns {void} 無し
-   * 1フレーム読み込むごとにthis.scannedに読み込んだイメージを渡す。
-  */
-  drawFinder(){
-    const onGoing = this.onGoing();
-    console.log('webScanner.drawFinder start.',onGoing,this.video);
-
-    // スキャン実行フラグが立っていなかったら終了
-    if( !onGoing ) return;
-
-    if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
-
-      // 親要素の横幅に合わせて表示する
-      const ratio = this.parent.clientWidth / this.video.videoWidth;
-      //console.log('l.196 this.parent.clientWidth='+this.parent.clientWidth+', this.video.videoWidth='+this.video.videoWidth+' -> ratio='+ratio);
-      const w = this.video.videoWidth * ratio;
-      const h = this.video.videoHeight * ratio;
-      //console.log('l.199 w ='+w+', h='+h);
-      this.video.width = this.canvas.width = w;
-      this.video.height = this.canvas.height = h;
-
-      this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-      let img;
-      try { // canvasを含む要素が削除済の場合にエラーとなるので回避
-        img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      } catch(e) {
-        console.error(e.message);
-        this.stop();
-        return;
-      }
-      // 1フレーム読み込み時の処理
-      // 　※scanQRならdrawFrame, scanDocならなにもしない
-      this.scanned(img);
-    }
-    setTimeout(()=>this.drawFinder(), this.interval);
-  }
-
-  /** drawFrame: 動画の1フレームからQRコードを抽出、後続処理に渡す
-   * @param {object} img - 読み込んだ画像
-   * @returns {void} なし
-   */
-  drawFrame(img){
-    console.log('webScanner.drawFrame start. img=',img);
-    try {
-      // スキャン実行フラグが立っていなかったら終了
-      if( !this.onGoing() ) return;
-
-      // このタイミングでQRコードを判定
-      let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
-			if(code){
-        //console.log('drawFinder: code='+JSON.stringify(code));
-        // QRコード読み取り成功
-				this.drawRect(code.location);// ファインダ上のQRコードに枠を表示
-        if( this.alert ) alert(code.data);  // alert出力指定があれば出力
-        if( code.data.match(this.RegExp) ){  // 正しい内容が読み込まれた場合
-          this.stop();
-          this.callback(code.data); // 読み込んだQRコードを引数にコールバック
-        } else {
-          // 不適切な、別のQRコードが読み込まれた場合
-          alert('不適切なQRコードです。再読込してください。');
-          console.error('webScanner.drawFinder: not match pattern. code='+code.data);
-          // 再読込。drawFinderはクラス内のメソッドなのでアロー関数で呼び出す
-          // MDN setTimeout() thisの問題
-          // https://developer.mozilla.org/ja/docs/Web/API/setTimeout#this_%E3%81%AE%E5%95%8F%E9%A1%8C
-        }
-      }
-    } catch(e) {
-      console.error('webScanner.drawFrame: '+e.message);
-    }
-  }
-
-  /** drawRect: ファインダ上のQRコードに枠を表示
-   * @param {object} location - QRコード位置情報
-   * @returns {void} なし
-   */
-  drawRect(location){
-    console.log('webScanner.drawRect location='+JSON.stringifylocation);
-    this.drawLine(location.topLeftCorner,     location.topRightCorner);
-		this.drawLine(location.topRightCorner,    location.bottomRightCorner);
-		this.drawLine(location.bottomRightCorner, location.bottomLeftCorner);
-		this.drawLine(location.bottomLeftCorner,  location.topLeftCorner);
-  }
-
-  /** drawLine: ファインダ上に線を描画
-   * @param {object} begin - 始点の位置
-   * @param {object} end - 終点の位置
-   * @returns {void} なし
-   */
-  drawLine(begin, end){
-    console.log('webScanner.drawLine begin='
-      + JSON.stringify(begin) + ', end=' + JSON.stringify(end));
-		this.ctx.lineWidth = 4;
-		this.ctx.strokeStyle = "#FF3B58";
-		this.ctx.beginPath();
-		this.ctx.moveTo(begin.x, begin.y);
-		this.ctx.lineTo(end.x, end.y);
-		this.ctx.stroke();
-	}
 }
 
 

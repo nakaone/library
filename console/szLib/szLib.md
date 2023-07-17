@@ -13,22 +13,6 @@
 <dt><a href="#TimeTable">TimeTable</a></dt>
 <dd><p>HTMLにタイムテーブルを描画する</p>
 </dd>
-<dt><a href="#webScanner">webScanner</a></dt>
-<dd><p>指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャン</p>
-</dd>
-</dl>
-
-## Constants
-
-<dl>
-<dt><a href="#fs">fs</a> ⇒ <code>Document</code></dt>
-<dd><p>テンプレート(HTML)のタグに含まれる&#39;data-embed&#39;属性に基づき、他文書から該当箇所を挿入する。</p>
-<p>JavaScriptのライブラリ等、テンプレートが非HTMLの場合は処理できない。<br>
-この場合、テンプレートを強引にHTML化して処理後、querySelector.jsで必要な部分を抽出するか、grep等で不要な部分を削除する。</p>
-<ul>
-<li><a href="https://symfoware.blog.fc2.com/blog-entry-2685.html">JSDOMを利用し、HTML + JavaScriptのプログラムをNode.jsで動作させる</a></li>
-</ul>
-</dd>
 </dl>
 
 ## Functions
@@ -40,7 +24,7 @@
 <dt><a href="#analyzePath">analyzePath(arg)</a> ⇒ <code><a href="#AnalyzePath">AnalyzePath</a></code></dt>
 <dd><p>パス名文字列から構成要素を抽出</p>
 </dd>
-<dt><a href="#Array.tabulize">Array.tabulize([opt])</a> ⇒ <code>HTMLTableObject</code></dt>
+<dt><a href="#Array_tabulize">Array_tabulize([opt])</a> ⇒ <code>HTMLTableObject</code></dt>
 <dd><p>Array型の変数に2次元配列からHTMLの表を作成してtable要素として返すメソッドを追加する。</p>
 <p>使用前<code>Array.prototype.tabulize = Array.tabulize;</code>実行のこと。</p>
 </dd>
@@ -49,6 +33,14 @@
 </dd>
 <dt><a href="#Date_toLocale">Date_toLocale([format])</a> ⇒ <code>string</code></dt>
 <dd><p>日時を指定形式の文字列にして返す&quot;toLocale()&quot;メソッドをDate型に追加する。</p>
+</dd>
+<dt><a href="#embedComponent">embedComponent(doc)</a> ⇒ <code>Document</code></dt>
+<dd><p>テンプレート(HTML)のタグに含まれる&#39;data-embed&#39;属性に基づき、他文書から該当箇所を挿入する。</p>
+<p>JavaScriptのライブラリ等、テンプレートが非HTMLの場合は処理できない。<br>
+この場合、テンプレートを強引にHTML化して処理後、querySelector.jsで必要な部分を抽出するか、grep等で不要な部分を削除する。</p>
+<ul>
+<li><a href="https://symfoware.blog.fc2.com/blog-entry-2685.html">JSDOMを利用し、HTML + JavaScriptのプログラムをNode.jsで動作させる</a></li>
+</ul>
 </dd>
 <dt><a href="#mergeDeeply">mergeDeeply(target, source, opts)</a> ⇒ <code>Object</code></dt>
 <dd><p>オブジェクトのプロパティを再帰的にマージ</p>
@@ -141,7 +133,7 @@ HTMLにタイムテーブルを描画する
 - 薄緑：同任意項目
 - 赤：算式が設定された項目
 
-<h3>timetable</h3>
+<h3>TimeTable</h3>
 <table calss="tt"><tr>
 <th style="background:#ff0000;color:white">id</th>
 <th style="background:#0000ff;color:white;">pId</th>
@@ -259,205 +251,6 @@ v.minTime, v.maxTimeの取得
 セクション名クリックで配下のタスクの表示/非表示切り替え
 
 **Kind**: instance method of [<code>TimeTable</code>](#TimeTable)  
-<a name="webScanner"></a>
-
-## webScanner
-指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャン
-
-**Kind**: global class  
-
-* [webScanner](#webScanner)
-    * [new webScanner(arg)](#new_webScanner_new)
-    * [.start()](#webScanner+start) ⇒ <code>void</code>
-    * [.stop()](#webScanner+stop) ⇒ <code>void</code>
-    * [.onGoing(arg)](#webScanner+onGoing) ⇒ <code>boolean</code>
-    * [.scanDoc(callback, opt)](#webScanner+scanDoc) ⇒ <code>void</code>
-    * [.scanQR(callback, opt)](#webScanner+scanQR) ⇒ <code>void</code>
-    * [.drawFinder()](#webScanner+drawFinder) ⇒ <code>void</code>
-    * [.drawFrame(img)](#webScanner+drawFrame) ⇒ <code>void</code>
-    * [.drawRect(location)](#webScanner+drawRect) ⇒ <code>void</code>
-    * [.drawLine(begin, end)](#webScanner+drawLine) ⇒ <code>void</code>
-
-<a name="new_webScanner_new"></a>
-
-### new webScanner(arg)
-指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。
-
-参考：[jsQRであっさりQRコードリーダ/メーカ](https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
-
-**Returns**: <code>void</code> - なし  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| arg | <code>object</code> \| <code>HTMLElement</code> | HTMLElementなら親要素のみ指定と解釈 |
-| arg.parent | <code>object</code> | 親要素(DOM object) |
-| arg.interval | <code>number</code> | 動画状態で撮像、読み込めなかった場合の間隔。ミリ秒 |
-| arg.RegExp | <code>object</code> | QRコードスキャン時、内容が適切か判断 |
-| arg.lifeTime | <code>number</code> | 一定時間操作がない場合の停止までのミリ秒。既定値60000 |
-| arg.alert | <code>boolean</code> | 読み込み完了時に内容をalert表示するか |
-
-<a name="webScanner+start"></a>
-
-### webScanner.start() ⇒ <code>void</code>
-start: カメラを起動する(private関数)
-
-**Kind**: instance method of [<code>webScanner</code>](#webScanner)  
-**Returns**: <code>void</code> - なし  
-
-| Param | Type | Description |
-| --- | --- | --- |
-|  | <code>void</code> | なし |
-
-<a name="webScanner+stop"></a>
-
-### webScanner.stop() ⇒ <code>void</code>
-stop: カメラを停止する(private関数)
-
-**Kind**: instance method of [<code>webScanner</code>](#webScanner)  
-**Returns**: <code>void</code> - なし  
-
-| Param | Type | Description |
-| --- | --- | --- |
-|  | <code>void</code> | なし |
-
-<a name="webScanner+onGoing"></a>
-
-### webScanner.onGoing(arg) ⇒ <code>boolean</code>
-onGoing: カメラの起動・停止の制御と状態参照
-
-**Kind**: instance method of [<code>webScanner</code>](#webScanner)  
-**Returns**: <code>boolean</code> - true:起動中、false:停止中  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| arg | <code>boolean</code> | true:起動、false:停止、undefind:状態参照 |
-
-<a name="webScanner+scanDoc"></a>
-
-### webScanner.scanDoc(callback, opt) ⇒ <code>void</code>
-scanDoc: 文書のスキャン
-
-**Kind**: instance method of [<code>webScanner</code>](#webScanner)  
-**Returns**: <code>void</code> - 無し
-callbackにはbase64化したpng(文字列)が渡される。  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| callback | <code>function</code> | 後続処理 |
-| opt | <code>object</code> | オプション指定 |
-| opt.maxImageSize | <code>number</code> | 画像をbase64化した後の最大文字長。既定値500K |
-
-<a name="webScanner+scanQR"></a>
-
-### webScanner.scanQR(callback, opt) ⇒ <code>void</code>
-scanQR: QRコードスキャン
-
-**Kind**: instance method of [<code>webScanner</code>](#webScanner)  
-**Returns**: <code>void</code> - なし
-callbackにはQRコードの文字列が渡される。  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| callback | <code>function</code> | 後続処理 |
-| opt | <code>object</code> | オプション |
-| opt.RegExp | <code>object</code> | スキャン結果が適切か判断。RegExpオブジェクト |
-| opt.alert | <code>boolean</code> | true:読み込み完了時に内容をalert表示 |
-
-<a name="webScanner+drawFinder"></a>
-
-### webScanner.drawFinder() ⇒ <code>void</code>
-drawFinder: 動画をキャンバスに描画する
-
-**Kind**: instance method of [<code>webScanner</code>](#webScanner)  
-**Returns**: <code>void</code> - 無し
-1フレーム読み込むごとにthis.scannedに読み込んだイメージを渡す。  
-
-| Param | Type | Description |
-| --- | --- | --- |
-|  | <code>void</code> | 無し |
-
-<a name="webScanner+drawFrame"></a>
-
-### webScanner.drawFrame(img) ⇒ <code>void</code>
-drawFrame: 動画の1フレームからQRコードを抽出、後続処理に渡す
-
-**Kind**: instance method of [<code>webScanner</code>](#webScanner)  
-**Returns**: <code>void</code> - なし  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| img | <code>object</code> | 読み込んだ画像 |
-
-<a name="webScanner+drawRect"></a>
-
-### webScanner.drawRect(location) ⇒ <code>void</code>
-drawRect: ファインダ上のQRコードに枠を表示
-
-**Kind**: instance method of [<code>webScanner</code>](#webScanner)  
-**Returns**: <code>void</code> - なし  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| location | <code>object</code> | QRコード位置情報 |
-
-<a name="webScanner+drawLine"></a>
-
-### webScanner.drawLine(begin, end) ⇒ <code>void</code>
-drawLine: ファインダ上に線を描画
-
-**Kind**: instance method of [<code>webScanner</code>](#webScanner)  
-**Returns**: <code>void</code> - なし  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| begin | <code>object</code> | 始点の位置 |
-| end | <code>object</code> | 終点の位置 |
-
-<a name="fs"></a>
-
-## fs ⇒ <code>Document</code>
-テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入する。
-
-JavaScriptのライブラリ等、テンプレートが非HTMLの場合は処理できない。<br>
-この場合、テンプレートを強引にHTML化して処理後、querySelector.jsで必要な部分を抽出するか、grep等で不要な部分を削除する。
-
-- [JSDOMを利用し、HTML + JavaScriptのプログラムをNode.jsで動作させる](https://symfoware.blog.fc2.com/blog-entry-2685.html)
-
-**Kind**: global constant  
-**Returns**: <code>Document</code> - 挿入済みのDocumentオブジェクト  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| doc | <code>Document</code> | 編集対象となるDocumentオブジェクト |
-
-**Example**  
-テンプレートのdata-embed書式
-
-1. JSON.parseするので、メンバ名もダブルクォーテーションで囲む
-1. 属性値全体はシングルクォーテーションで囲む
-
-```
-data-embed="{
-  from: {
-    filename: {string} - 参照先のファイル名
-    selector: {string} - CSSセレクタ文字列。省略時はファイル全文と解釈
-  },
-  to: {string} [innerHTML|innerText|xxx|child],
-    innerHTML : data-embedが記載された要素のinnerHTMLとする
-    innerText : data-embedが記載された要素のinnerTextとする
-    xxx : 属性名xxxの値とする
-    replace : data-embedを持つ要素を置換する
-  type: {string} [html,pu,md,mmd,text]
-    html : テンプレート(HTML)同様、HTMLとして出力(既定値)
-    pu : PlantUMLとして子要素を生成して追加
-    md : MarkDownとして子要素を生成して追加
-    mmd : Mermaidとして子要素を生成して追加
-    text : bodyの中のみを、テキストとして出力
-}"
-
-例：
-<div data-embed='{"from":{"filename":"../../component/analyzeArg.html","selector":"script.core"},"to":"replace"}'></div>
-```
 <a name="analyzeArg"></a>
 
 ## analyzeArg() ⇒ [<code>AnalyzeArg</code>](#AnalyzeArg)
@@ -544,7 +337,7 @@ node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
 }
 
 ```
-<a name="Array.tabulize"></a>
+<a name="Array_tabulize"></a>
 
 ## Array\_tabulize([opt]) ⇒ <code>HTMLTableObject</code>
 Array型の変数に2次元配列からHTMLの表を作成してtable要素として返すメソッドを追加する。
@@ -934,6 +727,76 @@ returns {number} 指定月の日数(1〜31)
 "12:34"[yy/MM/dd hh:mm:ss.nnn] ⇒ ""
 "12:34"[yyyy-MM-dd] ⇒ ""
 "12:34"[hh:mm] ⇒ ""
+```
+<a name="embedComponent"></a>
+
+## embedComponent(doc) ⇒ <code>Document</code>
+テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入する。
+
+JavaScriptのライブラリ等、テンプレートが非HTMLの場合は処理できない。<br>
+この場合、テンプレートを強引にHTML化して処理後、querySelector.jsで必要な部分を抽出するか、grep等で不要な部分を削除する。
+
+- [JSDOMを利用し、HTML + JavaScriptのプログラムをNode.jsで動作させる](https://symfoware.blog.fc2.com/blog-entry-2685.html)
+
+**Kind**: global function  
+**Returns**: <code>Document</code> - 挿入済みのDocumentオブジェクト  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| doc | <code>Document</code> | 編集対象となるDocumentオブジェクト |
+
+**Example**  
+テンプレートのdata-embed書式
+
+```
+// SVG：embed指定要素の子要素としてSVG追加
+<div name="案内図"><div class="img" data-embed="map2023.svg"></div></div>
+-> <div name="案内図"><div class="img"><svg id="exportSVG"〜
+
+// PlantUML：指定要素の子要素として、隠蔽された要素を追加。兄弟にIMG要素が必要
+<div name="日程表"><div class="PlantUML"  data-embed="schedule.pu"><img /></div></div>
+-> <div name="日程表"><div class="PlantUML"><img><div style="display:none">@startgantt〜
+
+// PNG：自要素(IMG)のsrc属性の値としてbase64文字列を追加
+<div name="校内探検"><img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' /></div>
+-> <div name="校内探検"><img width="600px" src="data:image/png;base64,iVBORw0KG〜
+
+// MarkDown：自要素のinnerTextとして追加
+<div class="markdown" name="6/10定例会" data-embed="20230610.md"></div>
+-> <div class="markdown" name="6/10定例会">1. 日程：9/23〜24 or **9/30〜10/01**(第一候補)
+
+// 自作ライブラリ(通常関数)
+<script type="text/javascript" data-embed='{"from":{"filename":"../../component/mergeDeeply.html","selector":"script.core"},"to":"js"}'><／script>
+
+// 既存クラスの拡張
+<script type="text/javascript" data-embed='{"from":{"filename":"../../component/Array.tabulize.html","selector":"script.core"},"to":"js"}'><／script>
+
+// CSS指定付きのクラス(style,script両方を指定)
+<style type="text/css" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"style.core"},"to":"css"}'></style>
+<script type="text/javascript" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"script.core"},"to":"js"}'><／script>
+```
+
+**data-embedに指定する文字列**
+
+```
+data-embed="ファイル名"  // 文字列だった場合はfrom.filename(ファイル全文)と解釈。拡張子でtoを指定
+or
+data-embed='{  // JSON形式だった場合、囲み記号はシングルクォーテーション
+  "from": {    // メンバ名・値ともダブルクォーテーションで囲む
+    "filename": "{string}" - 参照先のファイル名
+    "selector": "{string}" - CSSセレクタ文字列。省略時はファイル全文と解釈
+  },
+  "to": "{string}" - 出力先に対する指定
+     replace:自要素を中身で代替(embed要素は削除)
+     svg: SVG画像(embed要素の子要素として追加)
+     js: JavaScript(同上)
+     css: CSS(同上)
+     md: MarkDown(同上)
+     mmd: Mermaid(同上)
+     txt: その他形式のテキスト(同上)
+     pu: PlantUMLのソースとしてIMGタグのsrc属性の値として設定
+     その他: embed要素のその他属性の値として設定
+}'
 ```
 <a name="mergeDeeply"></a>
 
