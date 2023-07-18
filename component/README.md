@@ -10,6 +10,7 @@
 | :-- | :-- |
 | [analyzeArg](analyzeArg.md) | コマンドラインから`node xxx.js aa bb`を実行した場合の引数(`aa`,`bb`)を取得し、オブジェクトにして返す |
 | [analyzePath](analyzePath.md) | パス名文字列から構成要素を抽出 |
+| [createElement](createElement.md) | HTMLの要素を生成 |
 | [embedComponent](embedComponent.md) | テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入 |
 | [mergeDeeply](mergeDeeply.md) | オブジェクトのプロパティを再帰的にマージ |
 | [querySelector](querySelector.md) | HTMLの指定CSSセレクタの内容を抽出 |
