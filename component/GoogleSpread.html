@@ -1,0 +1,240 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>GoogleSpread</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css" class="core">/* コアCSS */
+</style>
+</head><body>
+<div class="core"><!-- コアHTML -->
+</div>
+
+<div class="webApp"><!-- webアプリHTML -->
+<h2>GAS output</h2>
+<textarea id="json">{"spreadId":"1Eac8wGN2UZObhUbcn5G2TXmDmV4ST9stXZ4DkWezJSA","spreadName":"管理局(文書化用)","sheetId":1814378662,"sheetName":"master","firstRow":1,"lastRow":6,"firstColumn":1,"lastColumn":4,"value":[["タイムスタンプ","メールアドレス","参加者①氏名","参加者①学年"],["2023-03-14T02:04:20.026Z","nakaone.kunihiro@gmail.com","テスト　太郎",2],["2023-03-14T02:06:53.484Z","nakaone.kunihiro@gmail.com","テスト　二郎",3],["2023-03-14T02:11:55.148Z","nakaone.kunihiro@gmail.com","テスト　さぶろう",3],["2023-03-14T02:21:00.059Z","nakaone.kunihiro@gmail.com","テスト　士郎",4],["2023-03-14T02:22:53.448Z","nakaone.kunihiro@gmail.com","手酢兎　五郎",5]],"type":[["String","String","String","String"],["Date","String","String","Number"],["Date","String","String","Number"],["Date","String","String","Number"],["Date","String","String","Number"],["Date","String","String","Number"]],"formula":[["","","",""],["","","",""],["","","",""],["","","",""],["","","",""],["","","",""]],"R1C1":[["","","",""],["","","",""],["","","",""],["","","",""],["","","",""],["","","",""]],"note":[["紫：フォームから引用される項目<br>青：GASで設定・修正される項目<br>桃：導出項目(arrayformula)<br>白：手動で設定する項目<br>※紫・青・桃色の項目は手動設定不可<br>※紫・青は配置を固めて一箇所にしておく<br>∵szSheet.update()は一箇所に対して更新をかけるので、分散していると更新不要な項目にも値が入り、arrayfomulaを壊す等の副作用があるため","","",""],["","","","返信システムがこの値を更新しました。"],["","","",""],["","","",""],["","","",""],["","","",""]],"background":[["#d9d2e9","#d9d2e9","#d9d2e9","#d9d2e9"],["#ffffff","#ffffff","#ffffff","#ffffff"],["#ffffff","#ffffff","#ffffff","#ffffff"],["#ffffff","#ffffff","#ffffff","#ffffff"],["#ffffff","#ffffff","#ffffff","#ffffff"],["#ffffff","#ffffff","#ffffff","#ffffff"]],"fontColor":[["#000000","#000000","#000000","#000000"],["#000000","#000000","#000000","#000000"],["#000000","#000000","#000000","#000000"],["#000000","#000000","#000000","#000000"],["#000000","#000000","#000000","#000000"],["#000000","#000000","#000000","#000000"]],"fontWeight":[["normal","normal","normal","normal"],["normal","normal","normal","normal"],["normal","normal","normal","normal"],["normal","normal","normal","normal"],["normal","normal","normal","normal"],["normal","normal","normal","normal"]],"horizontalAlign":[["general-left","general-left","general-left","general-left"],["general-right","general-left","general-left","general-right"],["general-right","general-left","general-left","general-right"],["general-right","general-left","general-left","general-right"],["general-right","general-left","general-left","general-right"],["general-right","general-left","general-left","general-right"]],"verticalAlign":[["bottom","bottom","bottom","bottom"],["bottom","bottom","bottom","bottom"],["bottom","bottom","bottom","bottom"],["bottom","bottom","bottom","bottom"],["bottom","bottom","bottom","bottom"],["bottom","bottom","bottom","bottom"]],"width":[128,183,114,87],"height":[21,21,21,21,21,21],"border":[]}</textarea>
+
+<div id="result"></div>
+
+<h2>HTML source</h2>
+<textarea id="html"></textarea>
+</div>
+
+<!-- 外部スクリプト -->
+<script src="createElement.js"></script>
+<script src="mergeDeeply.js"></script>
+
+<script type="text/javascript" class="GAS">/* GAS側スクリプト */
+function onOpen() {
+  // 最初にトリガー(起動時)として要追加
+  var ui = SpreadsheetApp.getUi();
+  var menu = ui.createMenu('道具箱')
+  .addItem("選択範囲をJSON化","jsonRange");
+  // サブメニュー使用時はaddSubMenuを使用
+  menu.addToUi();
+}
+
+/**
+ * 選択範囲のセル情報をJSON化してmsgBoxに表示
+ * @param {void}
+ * @returns {void}
+ */
+function jsonRange(){
+  const v = {rv:{}};
+  console.log('jsonRange start.');
+  // アクティブなセル範囲
+  v.spread = SpreadsheetApp.getActiveSpreadsheet();
+  v.sheet = v.spread.getActiveSheet();
+  v.active = v.sheet.getActiveRange();
+  v.rv = {
+    spreadId: v.spread.getId(),  // スプレッド(ファイル)のID
+    spreadName: v.spread.getName(), // スプレッドの名前
+    sheetId: v.sheet.getSheetId(),  // シートのID
+    sheetName: v.sheet.getSheetName(),  // シート名
+    firstRow: v.active.getRow(),  // 最上行。自然数
+    lastRow: v.active.getLastRow(), // 最下行
+    firstColumn: v.active.getColumn(),  // 左端列。自然数
+    lastColumn: v.active.getLastColumn(), // 右端列
+    value: v.active.getValues(), // セルの値
+    type: [], // データ型
+    format: v.active.getNumberFormats(), // 表示形式
+    formula: v.active.getFormulas(),  // 数式
+    R1C1: v.active.getFormulasR1C1(), // R1C1形式の数式
+    note: v.active.getNotes(), // メモ
+    background: v.active.getBackgrounds(),  // 背景色
+    fontColor: v.active.getFontColors(),  // 文字色
+    fontWeight: v.active.getFontWeights(),  // 太さ　[bold/normal]
+    horizontalAlign: v.active.getHorizontalAlignments(),  // 水平位置
+    verticalAlign: v.active.getVerticalAlignments(), // 垂直位置
+    width: [],  // 列の幅
+    height: [], // 行の高さ
+    border: [], // 罫線。未対応
+  }
+
+  // データ型
+  for( v.r=0 ; v.r<v.rv.value.length ; v.r++ ){
+    v.l = [];
+    for( v.c=0 ; v.c<v.rv.value[v.r].length ; v.c++ ){
+      v.l.push(whichType(v.rv.value[v.r][v.c]));
+    }
+    v.rv.type.push(v.l);
+  }
+
+  // 列・行の幅
+  for( v.c=v.rv.firstColumn ; v.c<=v.rv.lastColumn ; v.c++ ){
+    v.rv.width.push(v.sheet.getColumnWidth(v.c));
+  }
+  for( v.r = v.rv.firstRow ; v.r<=v.rv.lastRow ; v.r++ ){
+    v.rv.height.push(v.sheet.getRowHeight(v.r));
+  }
+
+  // 改行は<br>に置換
+  v.rv = JSON.stringify(v.rv).replaceAll('\\n','<br>');
+
+  console.log(v.rv);
+  console.log('jsonRange end.');
+  Browser.msgBox(v.rv);
+}
+
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
+  }
+}
+</script>
+
+<script type="text/javascript" class="core">/* コアスクリプト */
+/**
+ * 
+ */
+
+class GoogleSpread{
+  constructor(json,opt={msg:'#message'}){
+    const v = {rv:{}};
+    this.data = JSON.parse(json); // GASで出力されたJSONをオブジェクト化
+    this.css = {tag:'style',attr:{type:'text/css'},text:`
+      .GoogleSpread div {
+        display: grid;
+        margin: 2px;
+        padding: 0px 0.3rem;
+        box-sizing: border-box;
+      }
+      .GoogleSpread .table {display: grid;}
+      .GoogleSpread .th {
+        background: #ccc;
+        font-weight: bold;
+        text-align: center;
+      }
+      .GoogleSpread .td {
+        border-bottom: solid 1px #ccc;
+        border-right: solid 1px #ccc;
+      }
+    `.replaceAll('\n','').replaceAll(/ +/g,' ').trim()}; // tn:行番号欄
+    this.table = {  // テーブル領域
+      style:{display:'grid'},
+      attr:{class:"GoogleSpread"},
+      children:[]
+    };
+    this.note = {};  // メモ、算式表示域
+
+    // 列数・幅の設定
+    this.table.style.gridTemplateColumns  // 最初の項は行番号記号列の幅
+    = '4rem ' + this.data.width.join('fr ')+'fr';
+
+    // 列記号行の生成
+    this.columnSymbol = (()=>{
+      let rv = [''];
+      for( let i=0 ; i<702 ; i++ ){
+        let l1 = i<26 ? '' : String.fromCharCode(64+Math.floor(i/26));
+        let l2 = String.fromCharCode(65+(i%26));
+        rv.push(l1+l2);
+      }
+      return rv;
+    })();
+    this.table.children.push({attr:{class:'th'}});  // 左上隅の行列記号欄(空白セル)
+    for( let c=this.data.firstColumn ; c<=this.data.lastColumn ; c++ ){
+      this.table.children.push({attr:{class:'th'},text:this.columnSymbol[c]});
+    }
+
+    // データ領域の作成
+    for( let r=0 ; r<this.data.value.length ; r++ ){
+      // 行番号欄
+      this.table.children.push({attr:{class:'th'},text:r+this.data.firstRow});
+      // データ欄
+      for( let c=0 ; c<this.data.value[r].length ; c++ ){
+        v.cell = {
+          attr:{class:'td'},
+          html:'<span>' + this.data.value[r][c]
+            + ((this.data.formula[r][c].length > 0 || this.data.note[r][c].length > 0)
+            ? '<sup style="color:red">※</sup>' : '') + '</span>',
+          style:{
+            textAlign: this.data.horizontalAlign[r][c].replace('general-',''),
+            background: this.data.background[r][c],
+          },
+          event:{
+            'mouseenter':()=>this.showNote(r,c),
+            'mouseleave':()=>this.hideNote(),
+          }
+        };
+        this.table.children.push(v.cell);
+      }
+    }
+
+    // 戻り値の作成
+    ['css','table','note'].forEach(x => {
+      this[x] = createElement(this[x]);
+      v.rv[x] = this[x];
+    })
+    return(v.rv);
+  }
+
+  showNote(r,c){
+    console.log('showNote: r='+r+', c='+c);
+    let msg = '';
+    if( this.data.formula[r][c] ){
+      msg += 'formula: ' + this.data.formula[r][c] + '<br>';
+    }
+    if( this.data.note[r][c]){
+      msg += 'note: ' + this.data.note[r][c] + '<br>';
+    }
+    if( msg.length > 0 ){
+      this.note.style.display = '';
+      this.note.innerHTML = msg;
+    }
+  }
+
+  hideNote(){
+    this.note.style.display = 'none';
+  }
+}
+</script>
+
+<script type="text/javascript" class="webApp">/* webアプリ */
+</script>
+
+<script type="text/javascript" class="test">/* テスト用 */
+</script>
+
+<script type="text/javascript" class="main">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {
+    json: document.getElementById('json'),
+    html: document.getElementById('html'),
+    result: document.getElementById('result'),
+  };
+  v.json.addEventListener('change',() => {
+    v.html.value = GoogleSpread(v.json.value);
+  });
+  v.rv = new GoogleSpread(v.json.value);
+  v.result.appendChild(v.rv.css);
+  v.result.appendChild(v.rv.table);
+  v.result.appendChild(v.rv.note);
+  console.log(v.rv);
+});
+</script>
+</body>
+</html>
