@@ -38,5 +38,6 @@ HTMLの要素を生成
 | [style] | <code>Object.&lt;string, string&gt;</code> |  | 〃スタイル。ex.style:{display:'none'} |
 | [event] | <code>Object.&lt;string, string&gt;</code> |  | 〃イベント。ex.event:{onclick:()=>{〜}} |
 | [text] | <code>string</code> |  | タグ内にセットする文字列 |
+| [html] | <code>string</code> |  | タグ内にセットするhtml文字列 |
 | [children] | [<code>Array.&lt;createElementDef&gt;</code>](#createElementDef) |  | 子要素の配列 |
 

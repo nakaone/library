@@ -6,6 +6,7 @@
  * @prop {Object.<string,string>} [style] - 〃スタイル。ex.style:{display:'none'}
  * @prop {Object.<string,string>} [event] - 〃イベント。ex.event:{onclick:()=>{〜}}
  * @prop {string} [text] - タグ内にセットする文字列
+ * @prop {string} [html] - タグ内にセットするhtml文字列
  * @prop {createElementDef[]} [children] - 子要素の配列
  */
 
@@ -20,7 +21,7 @@ function createElement(arg={}){
 
   // 既定値の設定
   v.arg = mergeDeeply(
-    {tag: 'div',attr: {},style:{},event:{},text: '',children:[]},
+    {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[]},
     (typeof arg === 'string' ? {tag:arg} : arg));
   console.log(v.arg);
 
@@ -36,7 +37,11 @@ function createElement(arg={}){
     v.rv.addEventListener(v.i,v.arg.event[v.i],false);
     console.log(v.i,v.arg.event[v.i],v.rv);
   }
-  v.rv.innerText = v.arg.text;  // 内部文字列
+  if( v.arg.html.length > 0 ){
+    v.rv.innerHTML = v.arg.html;
+  } else {
+    v.rv.innerText = v.arg.text;  // 内部文字列
+  }
   for( v.i=0 ; v.i<v.arg.children.length ; v.i++ ){
     // 子要素の追加
     v.rv.appendChild(createElement(v.arg.children[v.i]));
