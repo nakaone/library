@@ -1,6 +1,18 @@
 <p style="font-size:2rem;text-shadow:2px 2px 4px #888;">独自ライブラリ</p>
 
+# ショートカット
+
 | [component](component/README.md) | GAS | [console](console/README.md) | browser | [external](external/README.md) | [szLib](console/szLib/szLib.md) | [CommonJS](console/CommonJS/CommonJS.md)
+
+## webアプリ
+
+| 名称 | 概要 |
+| :-- | :-- |
+| [cryptico](external/cryptico.html) | 鍵ペアの生成 |
+| [gSpreadTabulize](component/gSpreadTabulize.html) | GAS関数jsonRangeの出力からHTMLのテーブルを作成 |
+| [mergeDeeply](component/mergeDeeply.html) | オブジェクトのプロパティを再帰的にマージ |
+| [querySelector](component/querySelector.html) | HTMLの指定CSSセレクタの内容を抽出 |
+| [webScanner](component/webScanner.html) | QRコードや文書をスキャン |
 
 # 開発・運用方針
 
