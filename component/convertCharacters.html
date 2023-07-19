@@ -1,0 +1,181 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>convertCharacters</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css" class="core">/* コアCSS */
+  html {font-size:10pt;  /* 基本となる文字サイズ */}
+  body {box-sizing: border-box;}  /* 枠線は要素サイズに含める */
+  div {margin:0px;padding:0px;}
+</style>
+<style type="text/css" class="webApp">
+.dli-chevron-down {
+  display: inline-block;
+  vertical-align: middle;
+  color: #333;
+  line-height: 1;
+  width: 1em;
+  height: 1em;
+  border: 0.1em solid currentColor;
+  border-left: 0;
+  border-bottom: 0;
+  box-sizing: border-box;
+  transform: translateY(-25%) rotate(135deg);
+}
+.center {
+  display: flex;
+  justify-content: center;
+  margin: 1rem auto;
+}
+textarea {
+  width: 100%;
+  height: 5rem;
+}
+</style>
+</head><body>
+<div class="core"><!-- コアHTML -->
+</div>
+
+<div class="webApp"><!-- webアプリHTML -->
+  <h1>convertCharacters</h1>
+  <p>全角英数字は半角、半角カナは全角、ひらがな・カタカナは指定の方に変換</p>
+  <textarea id="source">ＡＢＣａｂｃ０１２ABCabc012ｱｲｳあいうアイウ</textarea>
+  <div class="center">
+    <input type="radio" name="kana" value="true" checked>ひらがな
+    <input type="radio" name="kana" value="false">カタカナ
+  </div>
+  <div class="center">
+    <div class="dli-chevron-down"></div>
+  </div>
+  <textarea id="result"></textarea>
+</div>
+
+<!-- 外部スクリプト -->
+
+<script type="text/javascript" class="core">/* コアスクリプト */
+/**
+ * 全角英数字は半角、半角カナは全角、ひらがな・カタカナは指定の方に変換
+ * @param {string} str - 変換対象文字列
+ * @param {string} kana - true:ひらがな、false:カタカナ
+ * @returns {string} 変換結果
+ *
+ * - [全角ひらがな⇔全角カタカナの文字列変換](https://neko-note.org/javascript-hiragana-katakana/1024)
+ * - [全角⇔半角の変換を行う（英数字、カタカナ）](https://www.yoheim.net/blog.php?q=20191101)
+ */
+ function convertCharacters(str,kana=true){
+  let rv = str;
+  // 全角英数字 -> 半角英数字
+  rv = rv.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
+    return String.fromCharCode(s.charCodeAt(0) - 65248);
+  });
+
+  // 半角カタカナ -> 全角カタカナ
+  const hankaku = (arg) => {
+    const kanaMap = {
+      'ｶﾞ': 'ガ', 'ｷﾞ': 'ギ', 'ｸﾞ': 'グ', 'ｹﾞ': 'ゲ', 'ｺﾞ': 'ゴ',
+      'ｻﾞ': 'ザ', 'ｼﾞ': 'ジ', 'ｽﾞ': 'ズ', 'ｾﾞ': 'ゼ', 'ｿﾞ': 'ゾ',
+      'ﾀﾞ': 'ダ', 'ﾁﾞ': 'ヂ', 'ﾂﾞ': 'ヅ', 'ﾃﾞ': 'デ', 'ﾄﾞ': 'ド',
+      'ﾊﾞ': 'バ', 'ﾋﾞ': 'ビ', 'ﾌﾞ': 'ブ', 'ﾍﾞ': 'ベ', 'ﾎﾞ': 'ボ',
+      'ﾊﾟ': 'パ', 'ﾋﾟ': 'ピ', 'ﾌﾟ': 'プ', 'ﾍﾟ': 'ペ', 'ﾎﾟ': 'ポ',
+      'ｳﾞ': 'ヴ', 'ﾜﾞ': 'ヷ', 'ｦﾞ': 'ヺ',
+      'ｱ': 'ア', 'ｲ': 'イ', 'ｳ': 'ウ', 'ｴ': 'エ', 'ｵ': 'オ',
+      'ｶ': 'カ', 'ｷ': 'キ', 'ｸ': 'ク', 'ｹ': 'ケ', 'ｺ': 'コ',
+      'ｻ': 'サ', 'ｼ': 'シ', 'ｽ': 'ス', 'ｾ': 'セ', 'ｿ': 'ソ',
+      'ﾀ': 'タ', 'ﾁ': 'チ', 'ﾂ': 'ツ', 'ﾃ': 'テ', 'ﾄ': 'ト',
+      'ﾅ': 'ナ', 'ﾆ': 'ニ', 'ﾇ': 'ヌ', 'ﾈ': 'ネ', 'ﾉ': 'ノ',
+      'ﾊ': 'ハ', 'ﾋ': 'ヒ', 'ﾌ': 'フ', 'ﾍ': 'ヘ', 'ﾎ': 'ホ',
+      'ﾏ': 'マ', 'ﾐ': 'ミ', 'ﾑ': 'ム', 'ﾒ': 'メ', 'ﾓ': 'モ',
+      'ﾔ': 'ヤ', 'ﾕ': 'ユ', 'ﾖ': 'ヨ',
+      'ﾗ': 'ラ', 'ﾘ': 'リ', 'ﾙ': 'ル', 'ﾚ': 'レ', 'ﾛ': 'ロ',
+      'ﾜ': 'ワ', 'ｦ': 'ヲ', 'ﾝ': 'ン',
+      'ｧ': 'ァ', 'ｨ': 'ィ', 'ｩ': 'ゥ', 'ｪ': 'ェ', 'ｫ': 'ォ',
+      'ｯ': 'ッ', 'ｬ': 'ャ', 'ｭ': 'ュ', 'ｮ': 'ョ',
+      '｡': '。', '､': '、', 'ｰ': 'ー', '｢': '「', '｣': '」', '･': '・'
+    };
+
+    const reg = new RegExp('(' + Object.keys(kanaMap).join('|') + ')', 'g');
+    return arg
+      .replace(reg, function (match) {
+          return kanaMap[match];
+      })
+      .replace(/ﾞ/g, '゛')
+      .replace(/ﾟ/g, '゜');
+  };
+  rv = hankaku(rv);
+
+  // 全角カタカナ <-> 全角ひらがな
+  const hRep = (x,offset,string) => { // offset:マッチした位置 string:文字列全部
+    //console.log('hRep start.',x,offset,string);
+    let rv = String.fromCharCode(x.charCodeAt(0) - 0x60);
+    //console.log('hRep end.',rv);
+    return rv;
+  }
+  const toHiragana = (t) => {
+    //console.log('toHiragana start.',typeof t, t);
+    let rv = t.replace(/[\u30A1-\u30FA]/g,hRep);
+    //console.log('toHiragana end.',typeof(rv),rv);
+    return rv;
+  };
+
+  const kRep = (x,offset,string) => {
+    //console.log('kRep start.',x,offset,string);
+    let rv = String.fromCharCode(x.charCodeAt(0) + 0x60);
+    //console.log('kRep end.',rv);
+    return rv;
+  }
+  const toKatakana = (t) => {
+    //console.log('toKatakana start.',typeof t, t);
+    let rv = t.replace(/[\u3041-\u3096]/g,kRep);
+    //console.log('toKatakana end.',typeof(rv),rv);
+    return rv;
+  };
+
+  rv = kana ? toHiragana(rv) : toKatakana(rv);
+  //console.log('convertCharacters end. rv=',rv);
+  return rv;
+}
+</script>
+
+<script type="text/javascript" class="webApp">/* webアプリ */
+document.getElementById('source').addEventListener('change',() => webApp());
+document.querySelectorAll('input[name="kana"]').forEach(x => {
+  x.addEventListener('change',() => webApp());
+});
+
+function webApp(){
+  const v = {};
+  console.log('webApp start.');
+
+  // 変換前の文字列
+  v.source = document.getElementById('source').value
+
+  // ラジオボタンの値を取得
+  document.querySelectorAll('input[name="kana"]').forEach(x => {
+    if( x.checked ) v.opt = JSON.parse(x.value);
+  });
+
+  // 変換結果をセット
+  document.getElementById('result').value = convertCharacters(v.source,v.opt);
+  console.log('webApp end.',v);
+}
+
+</script>
+
+<script type="text/javascript" class="test">/* テスト用 */
+const test = () => {
+  const testData = [
+    'ＡＢＣａｂｃ０１２ABCabc012ｱｲｳあいうアイウ'
+  ];
+  for( let i=0 ; i<testData.length ; i++ ){
+    const msg = testData[i] + ' -> ';
+    console.log(msg + convertCharacters(testData[i],true));
+    console.log(msg + convertCharacters(testData[i],false));
+  }
+}
+</script>
+
+<script type="text/javascript" class="main">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+  test();
+});
+</script>
+</body></html>
