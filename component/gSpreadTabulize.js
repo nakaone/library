@@ -27,6 +27,25 @@
 
 /**
  * GAS関数jsonRangeの出力からHTMLのテーブルを作成
+ * 
+ * **使用方法**
+ * 
+ * 1. Google SpreadでjsonRange()を準備
+ *    1. Google Spreadのスクリプトに本ファイルのscript.GASの内容をコピー
+ *    1. onOpen()を起動時トリガーに登録
+ *    1. 権限を付与(jsonRangeを試行)
+ *    1. Google Spreadを再起動
+ * 1. Google SpreadからJSONを出力
+ *    1. 出力したい範囲を選択
+ *    1. メニューバーの「道具箱 > 選択範囲をJSON化」を実行
+ *    1. ダイアログにJSONが表示されるのでコピー
+ * 1. JSONをHTML化
+ *    1. gSpreadTabulize.html(本ファイル)を開く
+ *    1. 「GAS output」欄にコピーしたJSONを貼り付け
+ *    1. 画面の表示内容で問題ないか確認
+ *    1. 「HTML source」欄の内容をコピー
+ *    1. JSDoc等、適切な部分にペースト
+ * 
  * @param {gSpreadTabulizeArg} data - GAS関数jsonRangeから出力されたJSON文字列
  * @returns {HTMLDivElement} 作成されたHTMLのテーブル
  */

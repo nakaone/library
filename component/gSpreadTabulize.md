@@ -3,6 +3,30 @@
 <dl>
 <dt><a href="#gSpreadTabulize">gSpreadTabulize(data)</a> ⇒ <code>HTMLDivElement</code></dt>
 <dd><p>GAS関数jsonRangeの出力からHTMLのテーブルを作成</p>
+<p><strong>使用方法</strong></p>
+<ol>
+<li>Google SpreadでjsonRange()を準備<ol>
+<li>Google Spreadのスクリプトに本ファイルのscript.GASの内容をコピー</li>
+<li>onOpen()を起動時トリガーに登録</li>
+<li>権限を付与(jsonRangeを試行)</li>
+<li>Google Spreadを再起動</li>
+</ol>
+</li>
+<li>Google SpreadからJSONを出力<ol>
+<li>出力したい範囲を選択</li>
+<li>メニューバーの「道具箱 &gt; 選択範囲をJSON化」を実行</li>
+<li>ダイアログにJSONが表示されるのでコピー</li>
+</ol>
+</li>
+<li>JSONをHTML化<ol>
+<li>gSpreadTabulize.html(本ファイル)を開く</li>
+<li>「GAS output」欄にコピーしたJSONを貼り付け</li>
+<li>画面の表示内容で問題ないか確認</li>
+<li>「HTML source」欄の内容をコピー</li>
+<li>JSDoc等、適切な部分にペースト</li>
+</ol>
+</li>
+</ol>
 </dd>
 </dl>
 
@@ -17,6 +41,24 @@
 
 ## gSpreadTabulize(data) ⇒ <code>HTMLDivElement</code>
 GAS関数jsonRangeの出力からHTMLのテーブルを作成
+
+**使用方法**
+
+1. Google SpreadでjsonRange()を準備
+   1. Google Spreadのスクリプトに本ファイルのscript.GASの内容をコピー
+   1. onOpen()を起動時トリガーに登録
+   1. 権限を付与(jsonRangeを試行)
+   1. Google Spreadを再起動
+1. Google SpreadからJSONを出力
+   1. 出力したい範囲を選択
+   1. メニューバーの「道具箱 > 選択範囲をJSON化」を実行
+   1. ダイアログにJSONが表示されるのでコピー
+1. JSONをHTML化
+   1. gSpreadTabulize.html(本ファイル)を開く
+   1. 「GAS output」欄にコピーしたJSONを貼り付け
+   1. 画面の表示内容で問題ないか確認
+   1. 「HTML source」欄の内容をコピー
+   1. JSDoc等、適切な部分にペースト
 
 **Kind**: global function  
 **Returns**: <code>HTMLDivElement</code> - 作成されたHTMLのテーブル  
@@ -89,6 +131,25 @@ GAS関数jsonRangeの出力からHTMLのテーブルを作成
 
 /**
  * GAS関数jsonRangeの出力からHTMLのテーブルを作成
+ * 
+ * **使用方法**
+ * 
+ * 1. Google SpreadでjsonRange()を準備
+ *    1. Google Spreadのスクリプトに本ファイルのscript.GASの内容をコピー
+ *    1. onOpen()を起動時トリガーに登録
+ *    1. 権限を付与(jsonRangeを試行)
+ *    1. Google Spreadを再起動
+ * 1. Google SpreadからJSONを出力
+ *    1. 出力したい範囲を選択
+ *    1. メニューバーの「道具箱 > 選択範囲をJSON化」を実行
+ *    1. ダイアログにJSONが表示されるのでコピー
+ * 1. JSONをHTML化
+ *    1. gSpreadTabulize.html(本ファイル)を開く
+ *    1. 「GAS output」欄にコピーしたJSONを貼り付け
+ *    1. 画面の表示内容で問題ないか確認
+ *    1. 「HTML source」欄の内容をコピー
+ *    1. JSDoc等、適切な部分にペースト
+ * 
  * @param {gSpreadTabulizeArg} data - GAS関数jsonRangeから出力されたJSON文字列
  * @returns {HTMLDivElement} 作成されたHTMLのテーブル
  */

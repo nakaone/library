@@ -12,6 +12,7 @@
 | [analyzePath](analyzePath.md) | パス名文字列から構成要素を抽出 |
 | [createElement](createElement.md) | HTMLの要素を生成 |
 | [embedComponent](embedComponent.md) | テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入 |
+| [gSpreadTabulize](gSpreadTabulize.md) | GAS関数jsonRangeの出力からHTMLのテーブルを作成 |
 | [mergeDeeply](mergeDeeply.md) | オブジェクトのプロパティを再帰的にマージ |
 | [querySelector](querySelector.md) | HTMLの指定CSSセレクタの内容を抽出 |
 | [whichType](whichType.md) | 変数の型を判定し、型名を文字列で返す |
