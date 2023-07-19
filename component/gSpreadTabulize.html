@@ -20,6 +20,7 @@
 <!-- 外部スクリプト -->
 <script src="createElement.js"></script>
 <script src="mergeDeeply.js"></script>
+<script src="whichType.js"></script>
 
 <script type="text/javascript" class="GAS">/* GAS側スクリプト */
 function onOpen() {
@@ -91,19 +92,6 @@ function jsonRange(){
   console.log(v.rv);
   console.log('jsonRange end.');
   Browser.msgBox(v.rv);
-}
-
-function whichType(arg,is){
-  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
-  switch(rv){
-    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
-    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
-  }
-  if( typeof is === 'string' ){
-    return rv.toLowerCase() === is.toLowerCase();
-  } else {
-    return rv;
-  }
 }
 </script>
 
@@ -192,9 +180,9 @@ function gSpreadTabulize(data){
   .trim()};
 
   // テーブル要素の定義
-  v.table = {style:{},
-    //style:{display:'grid'},
-    //attr:{class:"gSpreadTabulize"},
+  v.table = {
+    attr:{class:"gSpreadTabulize"},
+    style:{display:"grid"},
     children:[]
   };
   // テーブルの列数・幅を設定
@@ -268,27 +256,30 @@ function gSpreadTabulize(data){
 </script>
 
 <script type="text/javascript" class="webApp">/* webアプリ */
+function webApp(){
+  const v = {
+    json: document.getElementById('json'),
+    html: document.getElementById('html'),
+    result: document.getElementById('result'),
+  };
+
+  v.rv = gSpreadTabulize(v.json.value);
+  v.result.innerHTML = '';
+  v.result.appendChild(v.rv);
+  v.html.value = v.rv.innerHTML;
+}
 </script>
 
 <script type="text/javascript" class="test">/* テスト用 */
 </script>
 
 <script type="text/javascript" class="main">
-window.addEventListener('DOMContentLoaded',() => {
-  const v = {
-    json: document.getElementById('json'),
-    html: document.getElementById('html'),
-    result: document.getElementById('result'),
-  };
-  v.json.addEventListener('change',() => {
-    v.html.value = gSpreadTabulize(v.json.value);
-  });
-  v.result.innerHTML = '';
+document.querySelector('#json').addEventListener('change',() => {
+  webApp();
+});
 
-  v.rv = gSpreadTabulize(v.json.value);
-  console.log(v.rv);
-  v.result.appendChild(v.rv);
-  v.html.value = v.result.innerHTML;
+window.addEventListener('DOMContentLoaded',() => {
+  webApp();
 });
 </script>
 </body>
