@@ -21,6 +21,7 @@
 
 | クラス名 | 概要 |
 | :-- | :-- |
+| [Auth](Auth.readme.md) | ブラウザで認証を行い、Webアプリから設定情報(config)を取得、後続処理を行う |
 | [BurgerMenu](BurgerMenu.md) | HTMLにハンバーガーメニューを作成する |
 | [TabMenu](TabMenu.md) | HTMLにタブメニューを作成する |
 | [TimeTable](TimeTable.md) | HTMLにタイムテーブルを描画する |
