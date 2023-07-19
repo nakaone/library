@@ -173,6 +173,12 @@ function gSpreadTabulize(data){
       border-bottom: solid 1px #ccc;
       border-right: solid 1px #ccc;
     }
+    .gSpreadTabulize .memo {
+      background: #ff0;
+      padding: 0.5rem;
+      text-align: left;
+      font-size: 0.7rem;
+    }
   `.replaceAll('\n','')
   .replaceAll(/ +/g,' ')
   .replaceAll(/{\s+/g,'{').replaceAll(/\s+}/g,'}')
@@ -208,10 +214,9 @@ function gSpreadTabulize(data){
   }
 
   // データ領域の作成
-  v.template = '<sup style="color:red"'
-    + ' onclick="alert(\'_\')">※</sup>';
-  v.formula = '=== formula ========\\n_\\n\\n';
-  v.note = '=== note ========\\n_\\n\\n';
+  v.template = '<div class="memo">_</div>'
+  v.formula = '<strong>formula:</strong>_';
+  v.note = '<strong>note:</strong>_';
   for( let r=0 ; r<v.data.value.length ; r++ ){
     v.table.children.push(  // 行番号欄
       {attr:{class:'th'},text:r+v.data.firstRow});
@@ -224,21 +229,20 @@ function gSpreadTabulize(data){
           background: v.data.background[r][c],
         },
       };
-      // メモ、算式のポップアップ
-      v.popup = '';
+      // メモ、算式欄の作成
+      v.memo = '';
       if( v.data.formula[r][c].length > 0 ){
-        v.popup += v.formula.replace('_',v.data.formula[r][c]);
+        v.memo += v.formula.replace('_',v.data.formula[r][c]);
       }
       if( v.data.note[r][c].length > 0 ){
-        v.popup += v.note.replace('_',v.data.note[r][c]);
+        v.memo += (v.memo.length > 0 ? '<br><br>' : '')
+          + v.note.replace('_',v.data.note[r][c]);
       }
-      if( v.popup.length > 0 ){
-        // GAS側出力時、エラー回避のため改行を<br>に変換しているので戻す
-        v.popup = v.popup.replaceAll('<br>','\\n');
-        v.cell.html += v.template.replace('_',v.popup);
+      if( v.memo.length > 0 ){
+        v.cell.html += v.template.replace('_',v.memo);
       }
 
-      // spanで囲まないとpopupがdiv内で縦並びになるので追加
+      // spanで囲まないとmemoがdiv内で縦並びになるので追加
       v.cell.html = '<span>'+v.cell.html+'</span>';
       v.table.children.push(v.cell);
     }
