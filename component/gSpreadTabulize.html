@@ -1,5 +1,5 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-<title>GoogleSpread</title>
+<title>gSpreadTabulize</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <style type="text/css" class="core">/* コアCSS */
 </style>
@@ -109,107 +109,142 @@ function whichType(arg,is){
 
 <script type="text/javascript" class="core">/* コアスクリプト */
 /**
- * 
+ * @typedef {Object} gSpreadTabulizeArg
+ * @prop {string} spreadId - スプレッド(ファイル)のID
+ * @prop {string} spreadName - スプレッドの名前
+ * @prop {number} sheetId - シートのID
+ * @prop {string} sheetName - シート名
+ * @prop {number} firstRow - 最上行。自然数
+ * @prop {number} lastRow - 最下行
+ * @prop {number} firstColumn - 左端列。自然数
+ * @prop {number} lastColumn - 右端列
+ * @prop {string[][]} value - セルの値
+ * @prop {string[][]} type - データ型
+ * @prop {string[][]} format - 表示形式
+ * @prop {string[][]} formula - 数式
+ * @prop {string[][]} R1C1 - R1C1形式の数式
+ * @prop {string[][]} note - メモ
+ * @prop {string[][]} background - 背景色
+ * @prop {string[][]} fontColor - 文字色
+ * @prop {string[][]} fontWeight - 太さ　[bold/normal]
+ * @prop {string[][]} horizontalAlign - 水平位置
+ * @prop {string[][]} verticalAlign - 垂直位置
+ * @prop {number[]} width - 列の幅
+ * @prop {number[]} height - 行の高さ
+ * @prop {void} border - 罫線。未対応
  */
 
-class GoogleSpread{
-  constructor(json,opt={msg:'#message'}){
-    const v = {rv:{}};
-    this.data = JSON.parse(json); // GASで出力されたJSONをオブジェクト化
-    this.css = {tag:'style',attr:{type:'text/css'},text:`
-      .GoogleSpread div {
-        display: grid;
-        margin: 2px;
-        padding: 0px 0.3rem;
-        box-sizing: border-box;
-      }
-      .GoogleSpread .table {display: grid;}
-      .GoogleSpread .th {
-        background: #ccc;
-        font-weight: bold;
-        text-align: center;
-      }
-      .GoogleSpread .td {
-        border-bottom: solid 1px #ccc;
-        border-right: solid 1px #ccc;
-      }
-    `.replaceAll('\n','').replaceAll(/ +/g,' ').trim()}; // tn:行番号欄
-    this.table = {  // テーブル領域
-      style:{display:'grid'},
-      attr:{class:"GoogleSpread"},
-      children:[]
-    };
-    this.note = {};  // メモ、算式表示域
+/**
+ * GAS関数jsonRangeの出力からHTMLのテーブルを作成
+ * @param {gSpreadTabulizeArg} data - GAS関数jsonRangeから出力されたJSON文字列
+ * @returns {HTMLDivElement} 作成されたHTMLのテーブル
+ */
+function gSpreadTabulize(data){
+  const v = {};
+  console.log('gSpreadTabulize start.');
 
-    // 列数・幅の設定
-    this.table.style.gridTemplateColumns  // 最初の項は行番号記号列の幅
-    = '4rem ' + this.data.width.join('fr ')+'fr';
+  // 変換元データをオブジェクト化
+  v.data = JSON.parse(data);
 
-    // 列記号行の生成
-    this.columnSymbol = (()=>{
-      let rv = [''];
-      for( let i=0 ; i<702 ; i++ ){
-        let l1 = i<26 ? '' : String.fromCharCode(64+Math.floor(i/26));
-        let l2 = String.fromCharCode(65+(i%26));
-        rv.push(l1+l2);
-      }
-      return rv;
-    })();
-    this.table.children.push({attr:{class:'th'}});  // 左上隅の行列記号欄(空白セル)
-    for( let c=this.data.firstColumn ; c<=this.data.lastColumn ; c++ ){
-      this.table.children.push({attr:{class:'th'},text:this.columnSymbol[c]});
+  // CSS要素の定義
+  v.css = {tag:'style',attr:{type:'text/css'},text:`
+    .gSpreadTabulize div {
+      display: grid;
+      margin: 2px;
+      padding: 0px 0.3rem;  /* test
+      box-sizing: border-box; */
     }
-
-    // データ領域の作成
-    for( let r=0 ; r<this.data.value.length ; r++ ){
-      // 行番号欄
-      this.table.children.push({attr:{class:'th'},text:r+this.data.firstRow});
-      // データ欄
-      for( let c=0 ; c<this.data.value[r].length ; c++ ){
-        v.cell = {
-          attr:{class:'td'},
-          html:'<span>' + this.data.value[r][c]
-            + ((this.data.formula[r][c].length > 0 || this.data.note[r][c].length > 0)
-            ? '<sup style="color:red">※</sup>' : '') + '</span>',
-          style:{
-            textAlign: this.data.horizontalAlign[r][c].replace('general-',''),
-            background: this.data.background[r][c],
-          },
-          event:{
-            'mouseenter':()=>this.showNote(r,c),
-            'mouseleave':()=>this.hideNote(),
-          }
-        };
-        this.table.children.push(v.cell);
-      }
+    .gSpreadTabulize .table {
+      display: grid;
     }
+    .gSpreadTabulize .th {
+      background: #ccc;
+      font-weight: bold;
+      text-align: center;
+    }
+    .gSpreadTabulize .td {
+      border-bottom: solid 1px #ccc;
+      border-right: solid 1px #ccc;
+    }
+  `.replaceAll('\n','')
+  .replaceAll(/ +/g,' ')
+  .replaceAll(/{\s+/g,'{').replaceAll(/\s+}/g,'}')
+  .replaceAll(/\/\*.+?\*\//g,'')  // コメント削除
+  .trim()};
 
-    // 戻り値の作成
-    ['css','table','note'].forEach(x => {
-      this[x] = createElement(this[x]);
-      v.rv[x] = this[x];
-    })
-    return(v.rv);
+  // テーブル要素の定義
+  v.table = {style:{},
+    //style:{display:'grid'},
+    //attr:{class:"gSpreadTabulize"},
+    children:[]
+  };
+  // テーブルの列数・幅を設定
+  v.table.style.gridTemplateColumns
+  = '4rem '  // 最初の項は行番号記号列の幅
+  + v.data.width.join('fr ')+'fr';
+
+  // 列記号行の生成
+  v.columnSymbol = (()=>{
+    let rv = [''];
+    for( let i=0 ; i<702 ; i++ ){
+      let l1 = i<26 ? '' : String.fromCharCode(64+Math.floor(i/26));
+      let l2 = String.fromCharCode(65+(i%26));
+      rv.push(l1+l2);
+    }
+    return rv;
+  })();
+  // 左上隅の行列記号欄(空白セル)
+  v.table.children.push({attr:{class:'th'}});
+  // 対象領域の列記号セル(必ずしもA列からではない)
+  for( let c=v.data.firstColumn ; c<=v.data.lastColumn ; c++ ){
+    v.table.children.push({attr:{class:'th'},text:v.columnSymbol[c]});
   }
 
-  showNote(r,c){
-    console.log('showNote: r='+r+', c='+c);
-    let msg = '';
-    if( this.data.formula[r][c] ){
-      msg += 'formula: ' + this.data.formula[r][c] + '<br>';
-    }
-    if( this.data.note[r][c]){
-      msg += 'note: ' + this.data.note[r][c] + '<br>';
-    }
-    if( msg.length > 0 ){
-      this.note.style.display = '';
-      this.note.innerHTML = msg;
+  // データ領域の作成
+  v.template = '<sup style="color:red"'
+    + ' onclick="alert(\'_\')">※</sup>';
+  v.formula = '=== formula ========\\n_\\n\\n';
+  v.note = '=== note ========\\n_\\n\\n';
+  for( let r=0 ; r<v.data.value.length ; r++ ){
+    v.table.children.push(  // 行番号欄
+      {attr:{class:'th'},text:r+v.data.firstRow});
+    for( let c=0 ; c<v.data.value[r].length ; c++ ){
+      v.cell = {  // データ欄
+        attr: {class:'td'},
+        html: v.data.value[r][c],
+        style:{
+          textAlign: v.data.horizontalAlign[r][c].replace('general-',''),
+          background: v.data.background[r][c],
+        },
+      };
+      // メモ、算式のポップアップ
+      v.popup = '';
+      if( v.data.formula[r][c].length > 0 ){
+        v.popup += v.formula.replace('_',v.data.formula[r][c]);
+      }
+      if( v.data.note[r][c].length > 0 ){
+        v.popup += v.note.replace('_',v.data.note[r][c]);
+      }
+      if( v.popup.length > 0 ){
+        // GAS側出力時、エラー回避のため改行を<br>に変換しているので戻す
+        v.popup = v.popup.replaceAll('<br>','\\n');
+        v.cell.html += v.template.replace('_',v.popup);
+      }
+
+      // spanで囲まないとpopupがdiv内で縦並びになるので追加
+      v.cell.html = '<span>'+v.cell.html+'</span>';
+      v.table.children.push(v.cell);
     }
   }
 
-  hideNote(){
-    this.note.style.display = 'none';
-  }
+  // 戻り値の作成
+  v.rv = createElement({
+    attr:{class:"gSpreadTabulize"},
+    children:[v.css,v.table]
+  });
+
+  console.log('gSpreadTabulize end.');
+  return v.rv;
 }
 </script>
 
@@ -227,13 +262,14 @@ window.addEventListener('DOMContentLoaded',() => {
     result: document.getElementById('result'),
   };
   v.json.addEventListener('change',() => {
-    v.html.value = GoogleSpread(v.json.value);
+    v.html.value = gSpreadTabulize(v.json.value);
   });
-  v.rv = new GoogleSpread(v.json.value);
-  v.result.appendChild(v.rv.css);
-  v.result.appendChild(v.rv.table);
-  v.result.appendChild(v.rv.note);
+  v.result.innerHTML = '';
+
+  v.rv = gSpreadTabulize(v.json.value);
   console.log(v.rv);
+  v.result.appendChild(v.rv);
+  v.html.value = v.result.innerHTML;
 });
 </script>
 </body>
