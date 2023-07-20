@@ -1,0 +1,196 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>prototype</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css" class="core">/* コアCSS */
+</style>
+</head><body>
+<div class="core"><!-- コアHTML -->
+</div>
+
+<div class="webApp"><!-- webアプリHTML -->
+</div>
+
+<!-- 外部スクリプト -->
+
+<script type="text/javascript" class="core">/* コアスクリプト */
+/** objectize: 階層形式の二次元配列をオブジェクト化
+ * @param {Array.any[]} arr - シートの二次元配列。先頭行はヘッダ(固定)
+ * @param {number|string} stCol - 分類の開始列番号(自然数)、または項目名
+ * @param {number|string} edCol - 分類の終了列番号(自然数)、または項目名
+ * @param {string|string[]} [valid] - データとして取得したい項目名。省略すると分類範囲列以外の全項目。
+ * 文字列の場合は単一と見做し、戻り値もオブジェクトではなく当該項目の値となる。
+ * なお「rowNumberYYYYMMDD」が指定された場合、当該項目の添字をセットする(ヘッダ=0,データ=1〜)
+ * ※末尾の「YYYYMMDD」は項目名の重複回避のためのサフィックスなので、数値の並びなら適宜変更可
+ * @returns {Object.<string, any>} 変換結果
+ * @example 
+ * 
+ * lv01   | lv02  | lv03  | value | note
+ * :--    | :--   | :--   | :--   |
+ * public |       |       |       | 
+ *        | inter |       | 30000 | 定期配信の間隔
+ *        |       | inter | 30000 | NGのサンプル
+ * なお上の最下行のように階層が飛ぶことはNG(lv01:あり/lv02:なし/lv03:ありはNG)。
+ * 
+ * objectize(arr,1,3) ⇒ {public:{inter:{value:30000,note:'定期配信の間隔'}}}
+ * objectize(arr,'lv01','lv03','value') ⇒ {public:{inter:30000}}}
+ * objectize(arr,'lv01','lv03','rowNumber20230302')
+ * ⇒ {public:{inter:{value:30000,note:'定期配信の間隔',rowNumber20230302:2}}}}
+ * 
+ */
+function objectize(arr,stCol,edCol,valid){
+  const v = {whois:'objectize',rv:{}};
+  try {
+    // 1.事前準備
+    // 1.1.操作対象表(二次元配列)のバックアップ
+    v.step = '1.1';
+    v.arr = JSON.parse(JSON.stringify(arr));  // 破壊しないようコピー
+    // 1.2.分類列範囲の設定
+    v.step = '1.2';
+    if( typeof stCol === 'number' ){
+      v.stCol = stCol - 1;  // ループで回すために添字化(0オリジン)
+    } else {  // 文字列指定の場合
+      v.stCol = v.arr[0].findIndex(x => x == stCol );
+    }
+    if( typeof edCol === 'number' ){
+      v.edCol = edCol;      // 終了位置は「未満」用にマイナスなし
+    } else {  // 文字列指定の場合
+      v.edCol = v.arr[0].findIndex(x => x == edCol ) + 1;
+    }
+    // 1.3.取得したい列名を配列に格納
+    v.step = '1.3';
+    v.valid = valid || [];
+    if( typeof valid === 'string' ){
+      v.valid = [valid];
+    }
+    // valid指定なしの場合、分類範囲列以外の全項目を追加
+    if( v.valid.length === 0 ){
+      for( v.i=0 ; v.i<v.arr[0].length ; v.i++ ){
+        if( v.i<v.stCol || v.edCol <= v.i ){
+          v.valid.push(v.arr[0][v.i]);
+        }
+      }
+    }
+    // 1.4.行番号を取得するか判断、取得なら各行末尾に行番号欄を追加
+    for( v.i=0 ; v.i<v.valid.length ; v.i++ ){
+      if( v.valid[v.i].match(/rowNumber[0-9]+/) ){
+        v.arr[0].push(v.valid[v.i]);
+        for( v.j=1 ; v.j<v.arr.length ; v.j++ )
+          v.arr[v.j].push(v.j);
+        break;
+      }
+    }
+    // 1.5.項目名->添字のインデックスをmapとして作成
+    v.map = {};
+    for( v.i=0 ; v.i<v.arr[0].length ; v.i++ ){
+      v.map[v.arr[0][v.i]] = v.i;
+    }
+
+    // 2.内部関数の定義
+    // 分類列範囲の開始〜終了(親〜子)を順次舐め、子があれば再起呼出
+    v.step = '2';
+    recursive = (
+      stack,  // 一行分の配列
+      col,    // 処理対象となる分類列のstack上の添字
+      vObj,   // メンバに設定するデータ(variable object)
+      pObj    // 格納するオブジェクト(parent object)
+    ) => {
+      let rv = null;  // 戻り値。正常終了ならnull
+      try {
+        // 2.1.格納先オブジェクトにメンバ未登録なら空オブジェクトを作成
+        v.step = '2.1';
+        //console.log('v.i='+v.i+', stack['+col+']='+stack[col]+', vObj='+JSON.stringify(vObj)+', pObj='+JSON.stringify(pObj));
+        if( typeof pObj[stack[col]] === 'undefined' )
+          pObj[stack[col]] = {};
+        v.step = '2.2';
+        if( col === (v.edCol - 1) || String(stack[col+1]).length === 0 ){
+          // 2.2a.子分類がないなら値を格納
+          // ※子分類がない＝処理対象が分類列右端または右横の分類列が空白
+          v.step = '2.2a';
+          pObj[stack[col]] = vObj;
+        } else {
+          // 2.2b.子分類があるなら再起呼出
+          v.step = '2.2b';
+          const r = recursive(stack,col+1,vObj,pObj[stack[col]]);
+          if( r instanceof Error ) throw r;
+        }
+        rv = null;
+      } catch(e) {
+        console.error('objectize.recursive Error.\n',e);
+        rv = e;
+      } finally {
+        return rv;
+      }
+    };
+
+    // 以降、一行ずつ処理
+    v.lastRow = v.arr[1];  // データ領域の先頭行を前行の初期値とする
+    for( v.i=1 ; v.i<v.arr.length ; v.i++ ){
+      // 3.分類列範囲の上位が空欄なら前行の値をコピー
+      v.step = '3';
+      for( v.j=v.stCol ; v.j<v.edCol ; v.j++ ){
+        if( String(v.arr[v.i][v.j]).length === 0 ){
+          // 分類列範囲の上位が未設定なら前行の設定値をコピー
+          v.arr[v.i][v.j] = v.lastRow[v.j];
+        } else {
+          // 分類列範囲の上位が設定されてたら以降はスキップ
+          break;
+        }
+      }
+      v.lastRow = [...v.arr[v.i]];
+
+      // 4.分類列範囲外を出力用にオブジェクト化
+      // 4.1.取得項目名：値となるオブジェクトを作成
+      v.step = '4.1';
+      v.vObj = {};
+      for( v.j=0 ; v.j<v.valid.length ; v.j++ ){
+        v.a = v.arr[v.i][v.map[v.valid[v.j]]];
+        if( typeof v.a !== undefined && String(v.a).length > 0 ){
+          v.vObj[v.valid[v.j]] = v.a;
+        }
+      }
+      // 4.2.有効なデータ項目が無ければ以降の処理をスキップ
+      v.step = '4.2';
+      v.b = Object.keys(v.vObj);
+      if( v.b.length === 0 ) continue;
+      // 4.3.データ項目が一つだけなら値として設定
+      v.step = '4.3';
+      if( v.valid.length === 1 && v.b.length === 1 ){
+        v.vObj = v.vObj[v.b[0]];
+      }
+
+      // 5.戻り値となるオブジェクトにvObjを追加
+      v.step = '5';
+      v.r = recursive(v.arr[v.i],v.stCol,v.vObj,v.rv);
+      if( v.r instanceof Error ) throw v.r;
+    }
+
+    v.step = '6'; // 終了処理    
+  } catch(e) {
+    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
+    v.rv = e;
+  } finally {
+    return v.rv;
+  }
+}
+</script>
+
+<script type="text/javascript" class="webApp">/* webアプリ */
+</script>
+
+<script type="text/javascript" class="test">/* テスト用 */
+const objectizeTest = () => {
+  //const c = szSheet('TEST');
+  const c = szSheet({sheetName:'config',headerRow:2});
+  //console.log('objectizeTest: '+JSON.stringify(c.objectize(1,3)));
+  //console.log('objectizeTest: '+JSON.stringify(c.objectize(1,3,'value')));
+  console.log('objectizeTest: '+JSON.stringify(c.objectize('lv01','lv03','value')));
+  //console.log('objectizeTest: '+JSON.stringify(c.objectize('lv01','lv03',['value','rowNumber20230302'])));
+}
+</script>
+
+<script type="text/javascript" class="main">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+});
+</script>
+</body></html>
