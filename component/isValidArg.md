@@ -1,0 +1,163 @@
+## Functions
+
+<dl>
+<dt><a href="#isValidArg">isValidArg(arg, [fm])</a> ⇒ <code>string</code></dt>
+<dd><p>isValidArg: GASのdoPostで引数として渡されたトークンが適切か判定</p>
+</dd>
+</dl>
+
+## Typedefs
+
+<dl>
+<dt><a href="#token">token</a> : <code>object</code></dt>
+<dd></dd>
+</dl>
+
+<a name="isValidArg"></a>
+
+## isValidArg(arg, [fm]) ⇒ <code>string</code>
+isValidArg: GASのdoPostで引数として渡されたトークンが適切か判定
+
+**Kind**: global function  
+**Returns**: <code>string</code> - 分岐先処理名  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| arg | <code>object</code> | doPostの引数(JSON.parse(e.postData.contents)の結果) |
+| arg.token | <code>string</code> | token(Obj)を発信元秘密鍵で署名、宛先公開鍵で暗号化した文字列 |
+| arg.data | <code>any</code> | 分岐先処理に渡すデータ |
+| [fm] | <code>string</code> \| <code>RegExp</code> | 発信者の署名がなかった場合、token.fmが一致しないとエラー |
+
+<a name="token"></a>
+
+## token : <code>object</code>
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| fm | <code>string</code> | 発信者名。gateway,front,clientなら受付番号 |
+| to | <code>string</code> | 宛先名 |
+| fc | <code>string</code> | 宛先における分岐先処理名 |
+| ts | <code>number</code> | 発信時刻(Date.now()) |
+
+
+## source
+
+```
+/* コアスクリプト */
+/**
+ * @typedef {object} token
+ * @prop {string} fm - 発信者名。gateway,front,clientなら受付番号
+ * @prop {string} to - 宛先名
+ * @prop {string} fc - 宛先における分岐先処理名
+ * @prop {number} ts - 発信時刻(Date.now())
+ */
+/** isValidArg: GASのdoPostで引数として渡されたトークンが適切か判定
+ * @param {object} arg - doPostの引数(JSON.parse(e.postData.contents)の結果)
+ * @param {string} arg.token - token(Obj)を発信元秘密鍵で署名、宛先公開鍵で暗号化した文字列
+ * @param {any} arg.data - 分岐先処理に渡すデータ
+ * @param {string|RegExp} [fm] - 発信者の署名がなかった場合、token.fmが一致しないとエラー
+ * @returns {string} 分岐先処理名
+ */
+ function isValidArg(arg,fm){
+  const v = {whois:'GAS.isValidArg',arg:arg,rv:''};
+  try {
+    console.log(v.whois+' start.\n',arg,fm);
+
+    v.step = '1'; // 引数がオブジェクトであることを確認
+    if( whichType(arg) !== 'Object' )
+      throw new Error('Argument is not a Object.');
+
+    v.step = '2'; // tokenが存在することを確認
+    if( !arg.hasOwnProperty('token') )
+      throw new Error('Argument does not have Token.');
+
+    v.step = '3'; // token以外にはdataのみであることを確認
+    v.len = Object.keys(arg).length;
+    v.flag = arg.hasOwnProperty('data');
+    if( !(v.flag && v.len === 2 || v.len < 2) )
+      throw new Error('Argument has unnecessary member.\n'+JSON.stringify(arg));
+
+    v.step = '4'; // 復号
+    v.decrypt = cryptico.decrypt(arg.token,config.myself.RSAkey);
+    if( v.decrypt.status !== 'success' )
+      throw new Error('decrypt error: '+v.decrypt.status);
+
+    v.step = '5'; // tokenがオブジェクトであることを確認
+    v.token = JSON.parse(v.decrypt.plaintext);
+    if( whichType(v.token) !== 'Object' )
+      throw new Error('Token is not a Object.');
+
+    v.step = '6'; // tokenのメンバを確認
+    if( Object.keys(v.token).length !== 4
+    || !v.token.hasOwnProperty('fm')
+    || !v.token.hasOwnProperty('to')
+    || !v.token.hasOwnProperty('fc')
+    || !v.token.hasOwnProperty('ts') )
+      throw new Error('Token does not have nessessary member'
+      +' or has unnecessary member.\n'+JSON.stringify(v.token));
+
+    v.step = '7.1'; // tokenメンバのフォーマットを確認
+    if( (typeof v.token.fm).toLowerCase() !== 'string'
+    || v.token.fm.match(/^([0-9]+|front|gateway)$/) === null )
+      throw new Error('Value of Token.fm is incorrect. fm='+v.token.fm);
+    v.step = '7.2';
+    if( (typeof v.token.to).toLowerCase() !== 'string'
+    || v.token.to.match(/^([0-9]+|front|gateway)$/) === null )
+      throw new Error('Value of Token.to is incorrect. to='+v.token.to);
+    v.step = '7.3';
+    if( (typeof v.token.fc).toLowerCase() !== 'string'
+    || v.token.fc.match(/^[0-9a-zA-Z]+$/) === null )
+      throw new Error('Value of Token.fc is incorrect. fc='+v.token.fc);
+
+    v.step = '8'; // トークンが有効時間内であることを確認
+    v.timestamp = new Date(v.token.ts);
+    if( v.timestamp == 'Invalid Date' )
+      throw new Error('Token.ts is not a timestamp. ts='+v.token.ts);
+    if( (Date.now() - v.timestamp.getTime()) > config.system.validTime )
+      throw new Error('Expired token.');
+
+    v.step = '9'; // 発信者の署名を検証
+    if( v.decrypt.signature == 'unsigned' ){
+      v.step = '9.1a';
+      // 発信者の署名がなかった場合、以下の①〜④を満たさないとエラー
+      if( v.token.fc !== 'auth1B' // ①参加者の初期登録(auth1B)
+      || Object.keys(arg.data).length !== 2 // ②dataのメンバが2個
+      || !arg.data.hasOwnProperty('entryNo')  // ③entryNoとpublicKeyのみ
+      || !arg.data.hasOwnProperty('publicKey')
+      || Number(arg.data.entryNo) !== Number(v.token.fm) // ④受付番号が一致
+      ){
+        throw new Error('no signature.\n'+v.decrypt);
+      }
+    } else {
+      v.step = '9.1b';
+      // 発信者の署名を検証
+      if( v.decrypt.publicKeyString !== config[v.token.fm].publicKey )
+        throw new Error('unauthorized access (publicKey unmatch).'
+        + '\ndecrypted publicKey=' + v.decrypt.publicKeyString
+        + '\ntoken.fm.publicKey=' + config[v.token.fm].publicKey);
+    }
+
+    v.step = '10.1'; // 自局宛でないとエラー
+    v.toName = isNaN(config.myself.name) ? config.myself.name : 'front'; // 自局名が数字なら配信局(front)
+    if( v.token.to != v.toName )
+      throw new Error('wrong delivery: token.to='+v.token.to+', myself.name='+config.myself.name);
+    v.step = '10.2'; // fmが指定されている時、token.fmが一致しないとエラー
+    if( typeof fm !== 'undefined' ){
+      if( typeof fm === 'string' && v.token.fm != fm
+      || v.token.fm.match(fm) === null )
+        throw new Error('inappropriate source.');
+    }
+
+    v.step = '11'; // 分岐先処理名を戻り値とする
+    v.rv = v.token.fc;
+    console.log(v.whois+' normal end.\n',arg);
+  } catch(e) {
+    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
+    v.rv = e;
+  } finally {
+    return v.rv;
+  }
+}
+```

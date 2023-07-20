@@ -16,6 +16,7 @@
 | [deserializeRSAKey](deserializeRSAKey.md) | 文字列化されたRSAキーを復元 |
 | [embedComponent](embedComponent.md) | テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入 |
 | [gSpreadTabulize](gSpreadTabulize.md) | GAS関数jsonRangeの出力からHTMLのテーブルを作成 |
+| [isValidArg](isValidArg.md) | GASのdoPostで引数として渡されたトークンが適切か判定 |
 | [jsonRange](jsonRange.md) | Googleスプレッド上で、選択範囲のセル情報をJSON化してmsgBoxに表示 |
 | [mergeDeeply](mergeDeeply.md) | オブジェクトのプロパティを再帰的にマージ |
 | [objectize](objectize.md) | 階層形式の二次元配列をオブジェクト化 |
