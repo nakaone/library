@@ -21,6 +21,7 @@
 | [jsonRange](jsonRange.md) | Googleスプレッド上で、選択範囲のセル情報をJSON化してmsgBoxに表示 |
 | [mergeDeeply](mergeDeeply.md) | オブジェクトのプロパティを再帰的にマージ |
 | [objectize](objectize.md) | 階層形式の二次元配列をオブジェクト化 |
+| [postMails](postMails.md) | GAS上の管理局等の発信局でメールを発信、通数制限を超える場合は配信局を変更 |
 | [serializeRSAKey](serializeRSAKey.md) | RSAキーを文字列化 |
 | [toolbox](toolbox.md) | Googleスプレッドのメニューに「道具箱」を追加 |
 | [urlFetch](urlFetch.md) | GAS上で他のwebアプリのdoPostを呼び出す |
