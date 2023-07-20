@@ -23,6 +23,7 @@
 | [objectize](objectize.md) | 階層形式の二次元配列をオブジェクト化 |
 | [serializeRSAKey](serializeRSAKey.md) | RSAキーを文字列化 |
 | [toolbox](toolbox.md) | Googleスプレッドのメニューに「道具箱」を追加 |
+| [urlFetch](urlFetch.md) | GAS上で他のwebアプリのdoPostを呼び出す |
 | [querySelector](querySelector.md) | HTMLの指定CSSセレクタの内容を抽出 |
 | [whichType](whichType.md) | 変数の型を判定し、型名を文字列で返す |
 
