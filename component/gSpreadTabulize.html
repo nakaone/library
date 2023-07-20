@@ -97,7 +97,7 @@ function jsonRange(){
 
 <script type="text/javascript" class="core">/* コアスクリプト */
 /**
- * @typedef {Object} gSpreadTabulizeArg
+ * @typedef {Object} jsonRange
  * @prop {string} spreadId - スプレッド(ファイル)のID
  * @prop {string} spreadName - スプレッドの名前
  * @prop {number} sheetId - シートのID
@@ -143,7 +143,7 @@ function jsonRange(){
  *    1. 「HTML source」欄の内容をコピー
  *    1. JSDoc等、適切な部分にペースト
  * 
- * @param {gSpreadTabulizeArg} data - GAS関数jsonRangeから出力されたJSON文字列
+ * @param {jsonRange} data - GAS関数jsonRangeから出力されたJSON文字列
  * @returns {HTMLDivElement} 作成されたHTMLのテーブル
  */
 function gSpreadTabulize(data){

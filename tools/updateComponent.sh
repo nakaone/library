@@ -1,14 +1,14 @@
 #!/bin/sh
 # -x  つけるとverbose
 
-# makeMD
+# updateComponent
 #   component以下の指定htmlから<script class="core">を抽出、
 #   MarkDown文書をcomponent配下に作成する。
 #
 #   なおJSファイルは本ツールを使用せず、直接jsdoc2mdでMD化する。
 #
 #   [useage]
-#   ./makeMD (拡張子無しの)コンポーネント名
+#   ./updateComponent (拡張子無しの)コンポーネント名
 
 # ==========================================================
 #   主処理

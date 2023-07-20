@@ -1,4 +1,6 @@
-# console/ : コンソールで実行するコマンドを集めたフォルダ
+[library](../README.md) > console
+
+<p style="font-size:2rem;text-shadow:2px 2px 4px #888;">コンソールで実行するコマンド</p>
 
 | ファイル名 | 概要 |
 | :-- | :-- |

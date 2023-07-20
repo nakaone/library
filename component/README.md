@@ -14,7 +14,9 @@
 | [convertCharacters](convertCharacters.md) | 全角英数字は半角、半角カナは全角、ひらがな・カタカナは指定の方に変換 |
 | [embedComponent](embedComponent.md) | テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入 |
 | [gSpreadTabulize](gSpreadTabulize.md) | GAS関数jsonRangeの出力からHTMLのテーブルを作成 |
+| [jsonRange](jsonRange.md) | Googleスプレッド上で、選択範囲のセル情報をJSON化してmsgBoxに表示 |
 | [mergeDeeply](mergeDeeply.md) | オブジェクトのプロパティを再帰的にマージ |
+| [toolbox](toolbox.md) | Googleスプレッドのメニューに「道具箱」を追加 |
 | [querySelector](querySelector.md) | HTMLの指定CSSセレクタの内容を抽出 |
 | [whichType](whichType.md) | 変数の型を判定し、型名を文字列で返す |
 

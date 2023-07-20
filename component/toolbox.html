@@ -1,0 +1,61 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>toolbox</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css" class="core">/* コアCSS */
+</style>
+</head><body>
+<div class="core"><!-- コアHTML -->
+</div>
+
+<div class="webApp"><!-- webアプリHTML -->
+</div>
+
+<!-- 外部スクリプト -->
+
+<script type="text/javascript" class="core">/* コアスクリプト */
+/**
+ * Googleスプレッドのメニューに「道具箱」を追加
+ * 
+ * @param {void} - なし
+ * @returns {void} なし
+ * 
+ * **使用方法**
+ * 
+ * 1. libraty/GAS/toolbox/toolbox.shを実行<br>
+ *    ⇒ libraty/GAS/toolbox/toolbox.gsが生成される
+ * 2. toolbox.gsのソースをスプレッドシートに登録
+ *    1. Apps Script > 「ファイル」を追加、スクリプトを選択
+ *    2. 追加したスクリプト名をtoolbox.gsに変更
+ *    3. toolbox.gsに1.で生成されたtoolbox.gsの内容をコピー&ペースト
+ * 3. 認証と権限付与<br>
+ *    jsonRange()を実行、認証して実行権限を付与
+ * 4. トリガーを設定<br>
+ *    Apps Script > トリガー(目覚まし時計アイコン) > トリガーを追加
+ *    - 実行する関数：onOpen
+ *    - 実行するデプロイ：Head
+ *    - イベントのソース：スプレッドシート
+ *    - イベントの種類：起動時
+ *    - エラー通知：毎日通知を受け取る
+ * 5. シートを再起動
+ */
+function onOpen() {
+  var ui = SpreadsheetApp.getUi();
+  var menu = ui.createMenu('道具箱')
+  .addItem("選択範囲をJSON化","jsonRange");
+  // サブメニュー使用時はaddSubMenuを使用
+  menu.addToUi();
+}
+</script>
+
+<script type="text/javascript" class="webApp">/* webアプリ */
+</script>
+
+<script type="text/javascript" class="test">/* テスト用 */
+</script>
+
+<script type="text/javascript" class="main">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+});
+</script>
+</body></html>
