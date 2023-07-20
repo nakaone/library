@@ -1,11 +1,26 @@
-# 配信局の構成
+[class Auth README](Auth.readme.md) >
 
-## RSAシート
+<p style="font-size:2rem;text-shadow:2px 2px 4px #888;">配信局(front)の構成</p>
 
-<style type="text/css">.gSpreadTabulize div {display: grid; margin: 2px; padding: 0px 0.3rem; } .gSpreadTabulize .table {display: grid;} .gSpreadTabulize .th {background: #ccc; font-weight: bold; text-align: center;} .gSpreadTabulize .td {border-bottom: solid 1px #ccc; border-right: solid 1px #ccc;} .gSpreadTabulize .memo {background: #ff0; padding: 0.5rem; text-align: left; font-size: 0.7rem;}</style><div class="gSpreadTabulize" style="display: grid; grid-template-columns: 4rem 100fr 389fr;"><div class="th"></div><div class="th">A</div><div class="th">B</div><div class="th">1</div><div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>name<div class="memo"><strong>note:</strong>認証局なら'gateway'、配信局なら管理局configシートに登録されたfrontの添字</div></span></div><div class="td" style="text-align: right; background: rgb(255, 255, 255);"><span>0</span></div><div class="th">2</div><div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>passPhrase<div class="memo"><strong>note:</strong>自局RSAkeyのパスフレーズ</div></span></div><div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>zuyDNiMS[=RM|N9p</span></div><div class="th">3</div><div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>publicKey</span></div><div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>hAkcsd〜ZO7k=</span></div><div class="th">4</div><div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>masterId<div class="memo"><strong>note:</strong>管理局シートのID(平文)</div></span></div><div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>10OPr_〜vnjHM</span></div></div>
+要求者の検証を行い、メールおよび各種情報を配信する。
 
-## dummyシート
+- アカウント：サブアカウント(申込フォーム・管理局・認証局とは異なる複数のアカウント)
+- シートの共有：なし(開発時のみ管理局とRASシートを共有)
+- デプロイ：webアプリ(実行ユーザ：自分、アクセス可能：全員)
+- シート：[RSA](Auth.gateway.md#sheet.rsa), [dummy](Auth.gateway.md#sheet.dummy)
+  - 共通部分
+    1. [lib.gs](Auth.master.md#script.lib) : ライブラリから引用したコンポーネント集
+    1. [cryptico.gs](Auth.master.md#script.cryptico) : crypticoをGAS用にアレンジしたソース
+    1. [toolbox.gs](Auth.master.md#script.toolbox) : 「道具箱」メニューで使用するツール集
+  - 認証局独自
+    1. [main.gs](#script.main) : auth1A,1B他
 
-表示するシート数は0にできない。RSAシート隠蔽のために作成するダミー。
+**【注意事項】**
 
-<style type="text/css">.gSpreadTabulize div {display: grid; margin: 2px; padding: 0px 0.3rem; } .gSpreadTabulize .table {display: grid;} .gSpreadTabulize .th {background: #ccc; font-weight: bold; text-align: center;} .gSpreadTabulize .td {border-bottom: solid 1px #ccc; border-right: solid 1px #ccc;} .gSpreadTabulize .memo {background: #ff0; padding: 0.5rem; text-align: left; font-size: 0.7rem;}</style><div class="gSpreadTabulize" style="display: grid; grid-template-columns: 4rem 100fr 100fr;"><div class="th"></div><div class="th">A</div><div class="th">B</div><div class="th">1</div><div class="td" style="background: rgb(255, 255, 255);"><span></span></div><div class="td" style="background: rgb(255, 255, 255);"><span></span></div><div class="th">2</div><div class="td" style="background: rgb(255, 255, 255);"><span></span></div><div class="td" style="background: rgb(255, 255, 255);"><span></span></div></div>
+1. 配信局(front)は複数を想定するが、鍵ペアは同一のものを使用
+
+# スクリプト
+
+## main.gs : echo, broadcast他<a name="script.main"></a>
+
+

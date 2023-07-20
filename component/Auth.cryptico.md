@@ -1,4 +1,19 @@
-# 署名・暗号化処理
+[class Auth README](Auth.readme.md) >
+
+<p style="font-size:2rem;text-shadow:2px 2px 4px #888;">署名・暗号化処理</p>
+
+# トークン
+
+- 各局の秘密鍵は(GASのソースでは無く)RSA(またはconfig)シートに記載
+
+| Name | Type | Description |
+| --- | --- | --- |
+| fm | <code>string</code> \| <code>number</code> | 発信者名(gateway/front/master)。参加者の場合は受付番号 |
+| to | <code>string</code> | 受信者名 |
+| fc | <code>string</code> | 受信者側の処理名 |
+| ts | <code>number</code> | 発信日時(new Date().getTime()) |
+
+# cryptico
 
 署名および暗号化・復号では、ローカルのjavascriptおよびGASで共通に使える"[cryptico](https://wwwtyro.github.io/cryptico/)"を使用する。
 
