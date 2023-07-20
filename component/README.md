@@ -16,6 +16,7 @@
 | [gSpreadTabulize](gSpreadTabulize.md) | GAS関数jsonRangeの出力からHTMLのテーブルを作成 |
 | [jsonRange](jsonRange.md) | Googleスプレッド上で、選択範囲のセル情報をJSON化してmsgBoxに表示 |
 | [mergeDeeply](mergeDeeply.md) | オブジェクトのプロパティを再帰的にマージ |
+| [serializeRSAKey](serializeRSAKey.md) | RSAキーを文字列化 |
 | [toolbox](toolbox.md) | Googleスプレッドのメニューに「道具箱」を追加 |
 | [querySelector](querySelector.md) | HTMLの指定CSSセレクタの内容を抽出 |
 | [whichType](whichType.md) | 変数の型を判定し、型名を文字列で返す |
@@ -26,6 +27,7 @@
 | :-- | :-- |
 | [Auth](Auth.readme.md) | ブラウザで認証を行い、Webアプリから設定情報(config)を取得、後続処理を行う |
 | [BurgerMenu](BurgerMenu.md) | HTMLにハンバーガーメニューを作成する |
+| [szSheet](szSheet.md) | Googleスプレッドでデータ/行のCRUDを行う擬似クラス |
 | [TabMenu](TabMenu.md) | HTMLにタブメニューを作成する |
 | [TimeTable](TimeTable.md) | HTMLにタイムテーブルを描画する |
 | [webScanner](webScanner.md) | 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す |
