@@ -15,6 +15,7 @@
 | [createPassword](createPassword.md) | パスワード文字列の生成 |
 | [deserializeRSAKey](deserializeRSAKey.md) | 文字列化されたRSAキーを復元 |
 | [embedComponent](embedComponent.md) | テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入 |
+| [genToken](genToken.md) | GASのdoPostで投げるトークンを作成 |
 | [gSpreadTabulize](gSpreadTabulize.md) | GAS関数jsonRangeの出力からHTMLのテーブルを作成 |
 | [isValidArg](isValidArg.md) | GASのdoPostで引数として渡されたトークンが適切か判定 |
 | [jsonRange](jsonRange.md) | Googleスプレッド上で、選択範囲のセル情報をJSON化してmsgBoxに表示 |
