@@ -30,6 +30,7 @@
 | [Auth](Auth.readme.md) | ブラウザで認証を行い、Webアプリから設定情報(config)を取得、後続処理を行う |
 | [BurgerMenu](BurgerMenu.md) | HTMLにハンバーガーメニューを作成する |
 | [szSheet](szSheet.md) | Googleスプレッドでデータ/行のCRUDを行う擬似クラス |
+| [szTree](szTree.md) | Googleスプレッド上でツリー構造を持つ二次元配列の検索 |
 | [TabMenu](TabMenu.md) | HTMLにタブメニューを作成する |
 | [TimeTable](TimeTable.md) | HTMLにタイムテーブルを描画する |
 | [webScanner](webScanner.md) | 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す |
