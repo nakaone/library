@@ -97,8 +97,13 @@ en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
 
   <style type="text/css">
     h1 {
-      font-size: 1.3rem;
-      border-top: solid 5px #ccc;
+      font-size: 1.6rem;
+      text-shadow:2px 2px 4px #888;
+    }
+    .tag, .list {
+      margin: 1rem 0px;
+      padding: 1rem;
+      border: double 3px #ddd;
     }
     .prop {
       font-size: 0.8rem;
@@ -107,10 +112,10 @@ en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
   </style>
 </head>
 <body>
-
+<h1>Tips</h1>
 <div id="key">
   <input type="text" placeholder="検索キーワード">
-  <button onclick="clearKeyword()">✖️</button>
+  <button onclick="clearKeyword()">clear</button>
   <div class="tag"></div><!-- タグの一覧 -->
   <div class="list"></div><!-- 候補記事のリスト -->
 </div>
@@ -121,6 +126,9 @@ en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
 <script src="component/mergeDeeply.js"></script>
 
 <script type="text/javascript" class="main">
+/**
+ * 検索キーワード欄をクリア
+ */
 function clearKeyword(){
   console.log('clear');
   document.querySelector('input').value='';
@@ -134,9 +142,13 @@ function clearKeyword(){
 function showDetail(arg){
   const v = {
     detail:document.querySelector('.detail'),
+    list: document.querySelector('.list'),
     arg: content[arg],  // 記事のオブジェクト
   };
   console.log('showDetail start.');
+
+  // リスト表示域をクリア
+  v.list.innerHTML = '';
 
   // 詳細表示域の内容作成
   v.detail.innerHTML = ''; // 詳細表示域をクリア
@@ -153,7 +165,7 @@ function showDetail(arg){
     },
   ]});
   // 参照文献を追加
-  if( v.arg.ref.length > 0 ){
+  if( v.arg.ref && v.arg.ref.length > 0 ){
     v.ol = createElement({tag:'ol'});
     v.arg.ref.forEach(x => {v.ol.appendChild(
       createElement({tag:'li',
@@ -165,16 +177,6 @@ function showDetail(arg){
   }
   v.detail.appendChild(v.element);
 
-  // MarkDownで記述された部分をHTML化して表示
-  //document.querySelectorAll('div.markdown').forEach(x => {
-  //  x.innerHTML = marked(x.innerHTML);
-  //});
-  // PlantUMLで記述された部分をHTML化して表示
-  document.querySelectorAll('div.PlantUML').forEach(x => {
-    let src = x.querySelector('div').innerHTML;
-    x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
-      + plantumlEncoder.encode(src);
-  });
   // Mermaidで記述された部分をHTML化して表示
   mermaid.initialize({startOnLoad: true});
 
@@ -183,7 +185,7 @@ function showDetail(arg){
 
 /**
  * 候補記事リストを表示
- * @param {string} arg - 検索キーワード
+ * @param {string} [arg=''] - 検索キーワード(タグ名)
  * @returns {void}
  */
 function showList(arg=''){
@@ -191,81 +193,120 @@ function showList(arg=''){
     key: document.querySelector('input'),
     list: document.querySelector('.list'),
     detail: document.querySelector('.detail'),
-    result: [],
+    keyword: [],  // 検索キーワード集
+    result: JSON.parse(JSON.stringify(content)),
   }
   console.log('showList: '+arg);
 
   // 詳細表示領域をクリア
   v.detail.innerHTML = '';
 
-  v.keyword = arg.length > 0 ? arg
-  : ( v.key.value.length > 0 ? v.key.value : null);
-  console.log(v.keyword)
+  // 検索キーワードをv.keyword配列に格納
+  v.keyword = arg.length > 0 ? [arg.toLowerCase()]
+  : v.key.value.toLowerCase().split(/\s+/);
+  console.log(v.keyword);
 
-  for( v.a of content ){
-    v.str = String(v.a.title + v.a.tag.join() + v.a.content);
-    console.log(v.str.indexOf(v.keyword),v.str)
-    if( !v.keyword || v.str.indexOf(v.keyword) >= 0 ){
-      v.result.push(v.a);
+  // キーワードが存在した記事はフラグを立てる
+  if( v.keyword.length === 0 ){
+    // キーワード指定無しなら全件表示
+    content.forEach(x => x.flag = true);
+    v.cnt = content.length;
+  } else {
+    v.cnt = 0;  // 該当件数
+    content.forEach(x => {
+      x.flag = true;
+      for( v.k of v.keyword ){
+        console.log(x,'\nk='+v.k+', str='+x.str);
+        if( x.str.indexOf(v.k) < 0 ) x.flag = false;
+      }
+      v.cnt += x.flag ? 1 : 0;
+      v.lastHit = x.no; // 1件のみ該当の場合に使用
+    });
+  }
+
+  // 該当件数に応じて処理分岐
+  if( v.cnt === 0 ){
+    alert('該当無し');
+  } else if( v.cnt === 1 ){
+    showDetail(v.lastHit);
+  } else {
+    // リスト領域に結果を一覧表示
+    v.list.innerHTML = '';
+    for( v.i=0 ; v.i<content.length ; v.i++ ){
+      if( content[v.i].flag ){
+        v.list.appendChild(createElement({
+        style:{
+          display: "grid",
+          gridTemplateColumns: "10rem 1fr"},
+          children:[
+            {text:(content[v.i].updated || content[v.i].created)},
+            {tag:'a',text: content[v.i].title,
+              attr:{onclick:"showDetail("+content[v.i].no+")"}},
+          ]
+        }));
+      }
     }
   }
-  if( v.result.length === 0 ) alert('該当無し');
-  if( v.result.length === 1 ) showDetail(v.result[0].no);
-
-  v.list.innerHTML = '';
-  for( v.a of v.result ){
-    v.list.appendChild(createElement({
-      style:{display:"grid",gridTemplateColumns:"10rem 1fr"},children:[
-        {text:(v.a.updated || v.a.created)},
-        {
-          tag:'a',
-          text: v.a.title,
-          attr:{
-            onclick:"showDetail("+v.a.no+")"
-          }
-        }
-      ]
-    }));
-  }
-  console.log(v.result);
-
 }
-function redraw(){
-  const v = {tag:[]}
-  console.log("redraw start.");
-  //console.log(content);
 
-  // タグのリストを作成
-  v.a = [];
-  for( v.i=0 ; v.i<content.length ; v.i++ ){
-    v.a = v.a.concat(content[v.i].tag);
+/**
+ * データの初期処理
+ */
+function initialize(){
+  const v = {tag:[]}
+  console.log("initialize start.");
+
+  // Noと検索対象文字列を設定
+  for( let i=0 ; i<content.length ; i++ ){
+    // 既定値の設定
+    content[i] = mergeDeeply({
+      title:'',
+      created:null,
+      updated:null,
+      tag:[],
+      ref:[],
+      content:''
+    },content[i]);
+
+    // Noを設定
+    content[i].no = i;
+
+    // 被検査文字列を作成
+    content[i].str = content[i].title + content[i].tag.join() + content[i].content;
+    if( content[i].ref.length > 0 ){
+      content[i].ref.forEach(y => {
+        y.site = y.site || '';
+        content[i].str += y.site + y.title; // 参考サイトのタイトルも追加
+      });
+    }
+    content[i].str = content[i].str.toLowerCase();  // 小文字に統一
+
+    // 各記事のタグを単純に集めた配列
+    v.tag = v.tag.concat(content[i].tag);
   }
-  console.log(v.a);
-  v.tag = v.a.filter((value,index) => {
-    return index === v.a.indexOf(value);
+
+  // 重複を排除して整列
+  v.tag = v.tag.filter((value,index) => {
+    return index === v.tag.indexOf(value);
   }).sort();
+  // タグリストを表示
   v.tagList = document.querySelector('.tag');
   v.tagList.innerHTML = '';
   for( v.i=0 ; v.i<v.tag.length ; v.i++ ){
     v.tagList.innerHTML +=
-      '<a onclick="showList(\''+v.tag[v.i]+'\')">'
+      '<a onclick="showList(\''
+      + v.tag[v.i].toLowerCase()  // キーワードは小文字に統一
+      + '\')">'
       + v.tag[v.i] + "</a> "
   }
-  console.log(v.tag);  
 
-
-
-
-
-  console.log("redraw end.");
+  console.log("initialize end.");
 }
 
 window.addEventListener('DOMContentLoaded',() => {
-  for( let i=0 ; i<content.length ; i++ ){
-    content[i].no = i;
-  }
   document.querySelector('input')
-    .addEventListener('change',()=>showList());
-  redraw();  // 画面を描画
+    .addEventListener('keyup',()=>showList());
+  initialize();
+  showList();  // 画面を描画
 });
 </script></body></html>
