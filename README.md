@@ -2,7 +2,7 @@
 
 # ショートカット
 
-| [component](component/README.md) | [GAS](GAS/README.md) | [console](console/README.md) | browser | [external](external/README.md) | [szLib](console/szLib/szLib.md) | [CommonJS](console/CommonJS/CommonJS.md)
+| [component](component/README.md) | [GAS](GAS/README.md) | [console](console/README.md) | browser | [external](external/README.md) | [szLib](console/szLib/szLib.md) | [CommonJS](console/CommonJS/CommonJS.md) | [Tips](tips.html)
 
 ## webアプリ
 

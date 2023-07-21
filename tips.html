@@ -1,0 +1,247 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+  <title>Tips</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <!-- UML: PlantUML
+    参考：JavaScriptを用いてPlantUMLを呼び出す
+    https://168iroha.net/blog/topic/?id=202206081036&sorting=post_date  -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js"></script>
+  <!-- MarkDownテキストをHTML化するCDN -->
+  <script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
+  <!-- MermaidテキストをHTML化するCDN -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
+
+  <style type="text/css">
+    h1 {
+      font-size: 1.3rem;
+      border-top: solid 5px #ccc;
+    }
+    .prop {
+      font-size: 0.8rem;
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+
+<!-- search, tag, list -->
+<div id="key">
+  <input type="text" placeholder="検索キーワード">
+  <div class="tag"></div>
+  <div class="list"></div>
+</div>
+<div class="detail"></div>
+
+<!-- 自作ライブラリ -->
+<script src="component/createElement.js"></script>
+<script src="component/mergeDeeply.js"></script>
+
+<script type="text/javascript" class="main">
+function showDetail(arg){
+  const v = {
+    detail:document.querySelector('.detail'),
+    arg: content[arg],
+  };
+  console.log('showDetail start.');
+
+  v.detail.innerHTML = '';
+  v.element = createElement({children:[
+    {tag:'h1',attr:{name:"title"},text:v.arg.title},
+    {attr:{class:"prop"},children:[
+      {attr:{name:"created"},text:'created: '+v.arg.created},
+      {attr:{name:"updated"},text:'updated: '+v.arg.updated},
+      {attr:{name:"tag"},text:'tag: '+v.arg.tag.join(', ')},
+      {attr:{name:"ref"}},
+    ]},
+    {
+      attr:{name:"content",class:"markdown"},
+      html:marked(v.arg.content)
+    },
+  ]});
+
+  v.detail.appendChild(v.element);
+
+  // MarkDownで記述された部分をHTML化して表示
+  //document.querySelectorAll('div.markdown').forEach(x => {
+  //  x.innerHTML = marked(x.innerHTML);
+  //});
+  // PlantUMLで記述された部分をHTML化して表示
+  document.querySelectorAll('div.PlantUML').forEach(x => {
+    let src = x.querySelector('div').innerHTML;
+    x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
+      + plantumlEncoder.encode(src);
+  });
+  // Mermaidで記述された部分をHTML化して表示
+  mermaid.initialize({startOnLoad: true});
+
+  console.log('showDetail end.');
+}
+
+
+function showList(arg=''){
+  const v = {
+    key: document.querySelector('input'),
+    list: document.querySelector('.list'),
+    detail: document.querySelector('.detail'),
+    result: [],
+  }
+  console.log('showList: '+arg);
+
+  // 詳細表示領域をクリア
+  v.detail.innerHTML = '';
+
+  v.keyword = arg.length > 0 ? arg
+  : ( v.key.value.length > 0 ? v.key.value : null);
+  console.log(v.keyword)
+
+  for( v.a of content ){
+    v.str = String(v.a.title + v.a.tag.join() + v.a.content);
+    console.log(v.str.indexOf(v.keyword),v.str)
+    if( !v.keyword || v.str.indexOf(v.keyword) >= 0 ){
+      v.result.push(v.a);
+    }
+  }
+  if( v.result.length === 1 ) showDetail(v.result[0].no);
+
+  v.list.innerHTML = '';
+  for( v.a of v.result ){
+    v.list.appendChild(createElement({
+      style:{display:"grid",gridTemplateColumns:"10rem 1fr"},children:[
+        {text:(v.a.updated || v.a.created)},
+        {
+          tag:'a',
+          text: v.a.title,
+          attr:{
+            onclick:"showDetail("+v.a.no+")"
+          }
+        }
+      ]
+    }));
+  }
+  console.log(v.result);
+
+}
+function redraw(){
+  const v = {tag:[]}
+  console.log("redraw start.");
+  //console.log(content);
+
+  // タグのリストを作成
+  v.a = [];
+  for( v.i=0 ; v.i<content.length ; v.i++ ){
+    v.a = v.a.concat(content[v.i].tag);
+  }
+  console.log(v.a);
+  v.tag = v.a.filter((value,index) => {
+    return index === v.a.indexOf(value);
+  }).sort();
+  v.tagList = document.querySelector('.tag');
+  v.tagList.innerHTML = '';
+  for( v.i=0 ; v.i<v.tag.length ; v.i++ ){
+    v.tagList.innerHTML +=
+      '<a onclick="showList(\''+v.tag[v.i]+'\')">'
+      + v.tag[v.i] + "</a> "
+  }
+  console.log(v.tag);  
+
+
+
+
+
+  console.log("redraw end.");
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  for( let i=0 ; i<content.length ; i++ ){
+    content[i].no = i;
+  }
+  document.querySelector('input')
+    .addEventListener('change',()=>showList());
+  redraw();  // 画面を描画
+});
+</script></body>
+<script type="text/javascript" class="content">
+const content = [
+{
+title: "mac OS標準Apache httpdの起動と終了",
+created: "2023/07/21 08:00",
+tag: ['Apache','httpd','mac OS標準','起動','停止'],
+content: 
+`\`\`\`
+% which httpd   # httpdがインストールされているパスの確認
+/usr/sbin/httpd
+% which apachectl #apachectlがインストールされているパスの確認
+/usr/sbin/apachectl
+% /usr/sbin/httpd -version  # httpdのバージョン
+Server version: Apache/2.4.56 (Unix)
+Server built:   Apr 15 2023 04:26:33
+% sudo /usr/sbin/apachectl start  # httpdの起動
+Password:
+/System/Library/LaunchDaemons/org.apache.httpd.plist: service already loaded
+Load failed: 37: Operation already in progress
+% sudo /usr/sbin/apachectl stop # httpdの停止
+\`\`\`
+`,
+},{ // --------------------------------------------------------
+title: "DocumentRootの確認",
+created: "2023/07/21 08:00",
+tag: ['Apache','httpd','mac OS標準','DocumentRoot'],
+content: 
+`\`\`\`
+% cd /etc/apache2 # httpd.confの格納場所
+% ls -la
+total 88
+drwxr-xr-x   9 root  wheel    288  6 15 19:08 .
+drwxr-xr-x  79 root  wheel   2528  7 20 18:17 ..
+drwxr-xr-x  14 root  wheel    448  6 15 19:08 extra
+-rw-r--r--   1 root  wheel  21648  6 15 19:08 httpd.conf
+-rw-r--r--   1 root  wheel  13064  6 15 19:08 magic
+-rw-r--r--   1 root  wheel  61118  6 15 19:08 mime.types
+drwxr-xr-x   4 root  wheel    128  6 15 19:08 original
+drwxr-xr-x   4 root  wheel    128  6 15 19:08 other
+drwxr-xr-x   2 root  wheel     64  6 15 19:08 users
+% vi httpd.conf # 以降viの画面
+-------------------------
+# DocumentRoot: The directory out of which you will serve your
+# documents. By default, all requests are taken from this directory, but
+# symbolic links and aliases may be used to point to other locations.
+# 
+DocumentRoot "/Library/WebServer/Documents"  <-- ここ
+-------------------------
+:/DocumentRoot
+-------------------------
+% cd /Library/WebServer/Documents # 現状の内容確認(2023/7/20)
+% ls 
+css		index.html	js
+img		index.html.en	src
+\`\`\`
+`},
+{ // =====================================================================
+  title: "MacのLocalhostで起動中のサーバにAndroidスマートフォンからアクセスする",
+  created: "2023/07/21 08:00",
+  tag: ['Apache','httpd','mac OS標準','スマホ','開発'],
+  ref: [{
+    site: "",
+    title:"MacのLocalhostで起動中のサーバにAndroidスマートフォンからアクセスする",
+    url:"https://knmts.com/as-a-engineer-38/",
+  }], content:
+  // =====================================================================
+`通常は\`http://localhost/\`または\`http://127.0.0.1/\`。
+
+\`\`\`
+% ifconfig en0
+en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	options=6463<RXCSUM,TXCSUM,TSO4,TSO6,CHANNEL_IO,PARTIAL_CSUM,ZEROINVERT_CSUM>
+	ether 0c:e4:41:e8:71:85 
+	inet6 fe80::4b8:8c63:f0e5:60cb%en0 prefixlen 64 secured scopeid 0xc 
+	inet6 2404:7a80:2301:2b00:1014:c9e8:5021:1907 prefixlen 64 autoconf secured 
+	inet6 2404:7a80:2301:2b00:6d66:9e73:e45d:1308 prefixlen 64 autoconf temporary 
+	inet 192.168.1.7 netmask 0xffffff00 broadcast 192.168.1.255
+	nat64 prefix 2001:260:306:b:: prefixlen 96
+	nd6 options=201<PERFORMNUD,DAD>
+	media: autoselect
+	status: active
+\`\`\`
+`},
+]
+</script>
+</html>
