@@ -1,6 +1,12 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
 <script type="text/javascript" class="content">
-/* 新しい記事が上に来るようにする。以下はテンプレート。秒以下は入力しない(IDは切り捨てで計算)
+/* 
+1. 基本的に新しい記事が上に来るようにする
+1. contentの中の"`"は"\`"に置換する(content終了記号と誤解される)
+1. URLクエリで`/tips.html?id=xxxx`(xxxxは記事のID)とすると直接記事を呼び出せる
+1. createdの秒以下は入力しない(∵ここから導出されるIDは分未満切捨で自動計算)
+1. refが一つもないならテンプレート内のオブジェクトは削除
+▼▼▼▼▼▼▼▼▼▼▼ テンプレートここから
 { // =====================================================================
   title: "",
   created: "2023// :",
@@ -11,8 +17,9 @@
     url:"",
   }], content:
   // =====================================================================
-`本文ここから
+`
 `},
+▲▲▲▲▲▲▲▲▲▲▲ テンプレートここまで
 */
 const content = [
 { // =====================================================================
@@ -349,9 +356,17 @@ function showDetail(arg){
   const v = {
     detail:document.querySelector('.detail'),
     list: document.querySelector('.list'),
-    arg: content[arg],  // 記事のオブジェクト
   };
   console.log('showDetail start.');
+
+  // 対象となる記事を特定
+  // 10,000,000以上(1970/01/01以降に生成) ⇒ IDと解釈
+  // 10,000,000未満 ⇒ content配列の添字と解釈
+  if( arg < 10000000 ){
+    v.arg = content[arg];  // 記事のオブジェクト
+  } else {
+    v.arg = content.find(x => x.id === arg);
+  }
 
   // リスト表示域をクリア
   v.list.style.display = 'none';
@@ -528,10 +543,20 @@ function initialize(){
 }
 
 window.addEventListener('DOMContentLoaded',() => {
+  // 検索ワード欄にトリガ設定
   document.querySelector('input')
     .addEventListener('keyup',()=>showList());
+
+  // 初期化
   initialize();
-  console.log(content);
-  showList();  // 画面を描画
+
+  // 記事のIDを指定された場合
+  if( window.location.search.length > 0 ){
+    // URL からクエリ文字列を取り出す
+    const contentId = Number(window.location.search.match(/(\d+)$/)[1]);
+    showDetail(contentId);
+  } else {
+    showList();  // 画面を描画
+  }
 });
 </script></body></html>
