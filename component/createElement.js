@@ -23,7 +23,7 @@ function createElement(arg={}){
   v.arg = mergeDeeply(
     {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[]},
     (typeof arg === 'string' ? {tag:arg} : arg));
-  console.log(v.arg);
+  //console.log(v.arg);
 
   v.rv = document.createElement(v.arg.tag);
   for( v.i in v.arg.attr ){ // 属性の設定
@@ -35,7 +35,7 @@ function createElement(arg={}){
   }
   for( v.i in v.arg.event ){ // イベントの設定
     v.rv.addEventListener(v.i,v.arg.event[v.i],false);
-    console.log(v.i,v.arg.event[v.i],v.rv);
+    //console.log(v.i,v.arg.event[v.i],v.rv);
   }
   if( v.arg.html.length > 0 ){
     v.rv.innerHTML = v.arg.html;

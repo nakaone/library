@@ -1,12 +1,75 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
 <script type="text/javascript" class="content">
+/* 新しい記事が上に来るようにする。以下はテンプレート
+{ // =====================================================================
+  title: "",
+  created: "2023// :",
+  tag: [],
+  ref: [{
+    site: "",
+    title: "",
+    url:"",
+  }], content:
+  // =====================================================================
+`本文ここから
+`},
+*/
 const content = [
-{
-title: "mac OS標準Apache httpdの起動と終了",
-created: "2023/07/21 08:00",
-tag: ['Apache','httpd','mac OS標準','起動','停止'],
-content: 
-`\`\`\`
+{ // =====================================================================
+  title: "mac標準httpdのSSL通信化(https対応)",
+  created: "2023/7/21 14:30",
+  tag: ['Apache','httpd','mac OS標準','SSL','https'],
+  ref: [{
+    site: "",
+    title: "Macに最初から入っているApacheでSSL通信する環境を整えた",
+    url:"https://www.karakaram.com/mac-apache-ssl/",
+  }], content:
+  // =====================================================================
+`# 事前確認：httpd-ssl.confの存在
+
+\`\`\`
+cd /etc/apache2 
+% ls 
+extra		magic		original	users
+httpd.conf	mime.types	other
+% vi httpd.conf
+-------------------------
+# Secure (SSL/TLS) connections 
+#Include /private/etc/apache2/extra/httpd-ssl.conf
+# 
+# Note: The following must must be present to support
+#       starting without SSL on platforms with no /dev/random equivalent
+#       but a statically compiled-in mod_ssl.
+# 
+-------------------------
+:/httpd-ssl.conf
+-------------------------
+% ls /private/etc/apache2/extra
+httpd-autoindex.conf		httpd-mpm.conf
+httpd-dav.conf			httpd-multilang-errordoc.conf
+httpd-default.conf		httpd-ssl.conf <-- ちゃんとあった
+httpd-info.conf			httpd-userdir.conf
+httpd-languages.conf		httpd-vhosts.conf
+httpd-manual.conf		proxy-html.conf
+\`\`\`
+
+# 実作業
+
+1. サーバ秘密鍵を作成する
+2. 証明書署名要求(CSR)を作成する
+3. 自己署名証明書(CRT)を作成する
+4. 秘密鍵と証明書を Apache から参照できる場所に設置
+5. Apache が SSL 設定ファイルを読み込めるようにする
+6. Apache を再起動して動作確認
+
+`},{ // =====================================================================
+  title: "mac OS標準Apache httpdの起動と終了",
+  created: "2023/07/21 08:00",
+  tag: ['Apache','httpd','mac OS標準','起動','停止'],
+  ref: [], content:
+  // =====================================================================
+`
+\`\`\`
 % which httpd   # httpdがインストールされているパスの確認
 /usr/sbin/httpd
 % which apachectl #apachectlがインストールされているパスの確認
@@ -20,13 +83,14 @@ Password:
 Load failed: 37: Operation already in progress
 % sudo /usr/sbin/apachectl stop # httpdの停止
 \`\`\`
-`,
-},{ // --------------------------------------------------------
-title: "DocumentRootの確認",
-created: "2023/07/21 08:00",
-tag: ['Apache','httpd','mac OS標準','DocumentRoot'],
-content: 
-`\`\`\`
+`},{ // =====================================================================
+  title: "DocumentRootの確認",
+  created: "2023/07/21 08:00",
+  tag: ['Apache','httpd','mac OS標準','DocumentRoot'],
+  ref: [], content:
+  // =====================================================================
+`
+\`\`\`
 % cd /etc/apache2 # httpd.confの格納場所
 % ls -la
 total 88
@@ -54,8 +118,7 @@ DocumentRoot "/Library/WebServer/Documents"  <-- ここ
 css		index.html	js
 img		index.html.en	src
 \`\`\`
-`},
-{ // =====================================================================
+`},{ // =====================================================================
   title: "MacのLocalhostで起動中のサーバにAndroidスマートフォンからアクセスする",
   created: "2023/07/21 08:00",
   tag: ['Apache','httpd','mac OS標準','スマホ','開発'],
@@ -81,8 +144,7 @@ en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
   media: autoselect
   status: active
 \`\`\`
-`},
-];
+`}];
   </script>
   <title>Tips</title>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -148,7 +210,8 @@ function showDetail(arg){
   console.log('showDetail start.');
 
   // リスト表示域をクリア
-  v.list.innerHTML = '';
+  v.list.style.display = 'none';
+  v.detail.style.display = '';
 
   // 詳細表示域の内容作成
   v.detail.innerHTML = ''; // 詳細表示域をクリア
@@ -199,12 +262,13 @@ function showList(arg=''){
   console.log('showList: '+arg);
 
   // 詳細表示領域をクリア
-  v.detail.innerHTML = '';
+  v.detail.style.display = 'none';
+  v.list.style.display = '';
 
   // 検索キーワードをv.keyword配列に格納
   v.keyword = arg.length > 0 ? [arg.toLowerCase()]
   : v.key.value.toLowerCase().split(/\s+/);
-  console.log(v.keyword);
+  console.log(v.keyword)
 
   // キーワードが存在した記事はフラグを立てる
   if( v.keyword.length === 0 ){
@@ -216,11 +280,12 @@ function showList(arg=''){
     content.forEach(x => {
       x.flag = true;
       for( v.k of v.keyword ){
-        console.log(x,'\nk='+v.k+', str='+x.str);
         if( x.str.indexOf(v.k) < 0 ) x.flag = false;
       }
-      v.cnt += x.flag ? 1 : 0;
-      v.lastHit = x.no; // 1件のみ該当の場合に使用
+      if( x.flag ){
+        v.cnt++;
+        v.lastHit = x.no; // 1件のみ該当の場合に使用
+      }
     });
   }
 
@@ -307,6 +372,7 @@ window.addEventListener('DOMContentLoaded',() => {
   document.querySelector('input')
     .addEventListener('keyup',()=>showList());
   initialize();
+  console.log(content);
   showList();  // 画面を描画
 });
 </script></body></html>
