@@ -23,7 +23,7 @@
  */
 
 function Date_toLocale(format='yyyy/MM/dd'){
-  console.log('===== Date.toLocale start.');
+  //console.log('===== Date.toLocale start.');
   const v = {rv:format};
   try {
 
@@ -52,7 +52,7 @@ function Date_toLocale(format='yyyy/MM/dd'){
     }
 
     //console.log('v.rv='+JSON.stringify(v.rv));
-    console.log('===== Date.toLocale end.');
+    //console.log('===== Date.toLocale end.');
     return v.rv;
   } catch(e){
     // ブラウザで実行する場合はアラート表示
