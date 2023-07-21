@@ -1,6 +1,6 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
 <script type="text/javascript" class="content">
-/* 新しい記事が上に来るようにする。以下はテンプレート
+/* 新しい記事が上に来るようにする。以下はテンプレート。秒以下は入力しない(IDは切り捨てで計算)
 { // =====================================================================
   title: "",
   created: "2023// :",
@@ -185,6 +185,7 @@ en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
 
 <!-- 自作ライブラリ -->
 <script src="component/createElement.js"></script>
+<script src="component/Date.toLocale.js"></script>
 <script src="component/mergeDeeply.js"></script>
 
 <script type="text/javascript" class="main">
@@ -218,6 +219,7 @@ function showDetail(arg){
   v.element = createElement({children:[
     {tag:'h1',attr:{name:"title"},text:v.arg.title},
     {attr:{class:"prop"},children:[ // 属性情報
+      {attr:{name:"id"},text:'ID: '+v.arg.id},
       {attr:{name:"created"},text:'created: '+v.arg.created},
       {attr:{name:"updated"},text:'updated: '+v.arg.updated},
       {attr:{name:"tag"},text:'tag: '+v.arg.tag.join(', ')},
@@ -335,6 +337,18 @@ function initialize(){
 
     // Noを設定
     content[i].no = i;
+
+    // 登録日時からIDを採番
+    v.created = new Date(content[i].created);
+    content[i].created = v.created.toLocale('yyyy/MM/dd');
+    // IDは作成日時のUNIX時刻、但し桁数が多いので分単位に切り捨て
+    content[i].id = Math.floor(v.created.getTime()/60000);
+    if( content[i].updated ){
+      v.updated = new Date(content[i].updated);
+      content[i].updated = v.updated.toLocale('yyyy/MM/dd');
+    } else {
+      content[i].updated = '';
+    }
 
     // 被検査文字列を作成
     content[i].str = content[i].title + content[i].tag.join() + content[i].content;
