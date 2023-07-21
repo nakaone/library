@@ -23,6 +23,66 @@
 */
 const content = [
 { // =====================================================================
+  title: "検証：CSSは動的に追加した要素にも適用される",
+  created: "2023/7/21 17:25",
+  tag: ['html','css','element'],
+  ref: [], content:
+  // =====================================================================
+`結論：読み込み時点で不在で動的に追加した要素にも、事前に定義されていたCSSは適用される。
+
+<details><summary>検証したソース</summary>
+
+\`\`\`html
+<!--
+<!DOCTYPE html><html lang="ja">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <meta http-equiv="Content-Script-Type" content="text/javascript">
+  <title>CSS適用テスト</title>
+  <style>
+    #scanner {
+      background-color: aqua;
+      width: 80vw;
+      height: 80vw;
+      padding: 10vw;
+    }
+    #scanner .video {
+      background-color: brown;
+      width: 80%;
+      height: 80%;
+    }
+  </style>
+</head>
+
+<body>
+  <button onclick="addDiv()">add</button>
+  <button onclick="delDiv()">del</button>
+  <div id="test"></div>
+</body>
+<script>
+const addDiv = () => {
+  const e1 = document.createElement('div');
+  e1.id = 'scanner';
+
+  const e2 = document.createElement('div');
+  e2.className = 'video';
+
+  e1.appendChild(e2);
+  document.getElementById('test').appendChild(e1);
+}
+
+const delDiv = () => {
+  document.getElementById('scanner').remove();
+}
+</script>
+</html>
+-->
+\`\`\`
+
+</details>
+
+`},{ // =====================================================================
   title: "Android開発者画面の参照方法",
   created: "2023/7/21 17:30",
   tag: ['Android','開発','USB','デバッグ','debug'],
