@@ -394,6 +394,8 @@ en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
     .tag, .list {
       margin: 1rem 0px;
       padding: 1rem;
+    }
+    .list {
       border: double 3px #ddd;
     }
     .prop {
@@ -407,7 +409,9 @@ en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
 <div id="key">
   <input type="text" placeholder="検索キーワード">
   <button onclick="clearKeyword()">clear</button>
-  <div class="tag"></div><!-- タグの一覧 -->
+  <details><summary>タグ</summary>
+    <div class="tag"></div><!-- タグの一覧 -->
+  </details>
   <div class="list"></div><!-- 候補記事のリスト -->
 </div>
 <div class="detail"></div><!-- 詳細(記事本文) -->
