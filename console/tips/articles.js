@@ -43,6 +43,7 @@ function prototype(){
     console.log('prototype end.');
     return v.rv;
   } catch(e){
+    console.error('prototype abnormal end.',e);
     // ブラウザで実行する場合はアラート表示
     if( typeof window !== 'undefined' ) alert(e.stack); 
     //throw e; //以降の処理を全て停止する場合
@@ -55,10 +56,14 @@ function prototype(){
 { // =====================================================================
   title: "HTMLテンプレート(ライブラリコンポーネント用)",
   created: "2023/7/22 11:00",
-  tag: ['html','template','prototype','library','component'],
+  updated: "2023/7/22 13:46",
+  tag: ['html','template','prototype','library','component','console','webApp'],
   ref: [], article:
   // =====================================================================
-`
+`# 使用上の注意
+
+1. コア部分に加え、webアプリ・テストにも対応。適宜不要部分は削除して使用。
+1. 文中の'prototype'は最初に一括置換
 
 \`\`\`
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
@@ -69,30 +74,128 @@ function prototype(){
 </head><body>
 <div><!-- 開始：HTML -->
 <h1>prototype</h1>
+<p>開発者コンソールの「Uncaught ReferenceError: require is not defined」は無視して問題無し</p>
 
 <div class="core"><!-- コアHTML -->
 </div>
 
 <div class="webApp"><!-- webアプリHTML -->
+  <div>
+    <label for="inputData">入力</label>
+    <textarea id="inputData">テストデータ</textarea>
+  </div>
+  <div>
+    <label for="outputData">出力</label>
+    <textarea id="outputData"></textarea>
+  </div>
+
 </div>
 </div><!-- 終了：HTML領域 -->
 
 <div><!-- 開始：Script領域 -->
 <!-- 外部Script -->
 <!-- 自作ライブラリ -->
+<script type="text/javascript" class="onConsole"
+  data-embed='{"from":{"filename":"../../component/analyzeArg.html","selector":"script.core"},"to":"js"}'>
+</script>
 
 <script type="text/javascript" class="core">/* コアScript */
+function prototype(arg){
+  const v = {rv:null};
+  console.log('prototype start.');
+  try {
+
+    v.rv = arg;
+    //console.log('v.rv='+JSON.stringify(v.rv));
+    console.log('prototype end.');
+    return v.rv;
+  } catch(e){
+    // ブラウザで実行する場合はアラート表示
+    if( typeof window !== 'undefined' ) alert(e.stack); 
+    //throw e; //以降の処理を全て停止する場合
+    v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+  }
+}
+</script>
+
+<script type="text/javascript" class="onConsole">/* コンソール実行用 */
+const fs = require('fs'); // ファイル操作
+function onConsole(){
+  console.log('prototype.onConsole start.');
+  const v = {rv:null};
+  try {
+
+    // 事前処理：引数チェック、既定値の設定
+    v.argv = analyzeArg();
+    console.log(v.argv)
+    if(v.argv.hasOwnProperty('stack')) throw v.argv;
+
+    v.readFile = fs.readFileSync(v.argv.opt.i,'utf-8').trim();
+    v.rv = prototype(v.readFile);
+    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
+
+    //console.log('v.rv='+JSON.stringify(v.rv));
+    console.log('prototype.onConsole end.');
+  } catch(e){
+    console.error('prototype.onConsole abnormal end.',e);
+  }
+}
+onConsole();
 </script>
 
 <script type="text/javascript" class="webApp">/* webアプリ */
+function onKeyup(event=null){
+  const v = {
+    in: document.getElementById('inputData'),
+    out: document.getElementById('outputData'),
+  };
+  console.log('onKeyup start.');
+  try {
+
+    console.log(event,v.in.value);
+    v.out.value = prototype(v.in.value);
+    console.log('onKeyup end.');
+
+  } catch(e){
+    console.error('onKeyup abnormal end.',e);
+    alert(e.stack); 
+    v.rv.stack = e.stack; return v.rv;
+  }
+}
 </script>
 
 <script type="text/javascript" class="test">/* テスト用 */
+function prototypeTest(){
+  const v = {data:[
+    'fuga','hoge',
+  ]};
+  console.log('prototypeTest start.');
+  try {
+
+    for( let i=0 ; i<v.data.length ; i++ ){
+      v.result = prototype(v.data[i]);
+      console.log(v.result);
+    }
+    console.log('prototypeTest end.');
+
+  } catch(e){
+    console.error('prototypeTest abnormal end.',e);
+  }
+}
 </script>
 
 <script type="text/javascript" class="main">
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
+
+  // webアプリの入力欄変更時のイベントを定義
+  document.getElementById('inputData')
+    .addEventListener('keyup',event => onKeyup(event));
+  // テストデータを表示するため、キー入力時の処理を呼び出す
+  onKeyup();
+
+  // 開発者コンソール上でテスト
+  prototypeTest();
 });
 </script>
 </div><!-- 終了：Script領域 -->
