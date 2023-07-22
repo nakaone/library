@@ -83,14 +83,8 @@ function embedComponent(doc){
       v.isHTML = v.refText.toLowerCase()
       .match(/^<!doctype html.*?>|^<html.*?>[\s\S]+<\/html>/);
       if( !v.isHTML ){
-        /*
-        v.refText = '<!DOCTYPE html><html xml:lang="ja" lang="ja"><body>'
-          + v.refText + '</body></html>';
-        v.selector = 'body';
-        */
         v.extracted = v.refText;  // HTML以外は読み込んだ内容がそのまま戻り値
       } else {
-        //console.log("v.refText="+v.refText);
         v.refDoc = new JSDOM(v.refText).window.document;
         v.extracted = '';
         // 複数ある場合があるので、querySelectorAllで順次追加
@@ -137,7 +131,7 @@ function embedComponent(doc){
         case 'mmd': // Mermaid
         case 'txt': // [既定値]その他形式のテキスト
           // v.contentを自要素のinnerHTMLにセット(自要素保持)
-          element.innerHTML = v.content;
+          element.appendChild(doc.createTextNode(v.content));
           break;
 
         case 'png':
