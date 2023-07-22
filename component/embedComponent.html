@@ -83,17 +83,21 @@ function embedComponent(doc){
       v.isHTML = v.refText.toLowerCase()
       .match(/^<!doctype html.*?>|^<html.*?>[\s\S]+<\/html>/);
       if( !v.isHTML ){
+        /*
         v.refText = '<!DOCTYPE html><html xml:lang="ja" lang="ja"><body>'
           + v.refText + '</body></html>';
         v.selector = 'body';
+        */
+        v.extracted = v.refText;  // HTML以外は読み込んだ内容がそのまま戻り値
+      } else {
+        //console.log("v.refText="+v.refText);
+        v.refDoc = new JSDOM(v.refText).window.document;
+        v.extracted = '';
+        // 複数ある場合があるので、querySelectorAllで順次追加
+        v.refDoc.querySelectorAll(v.selector).forEach(element => {
+          v.extracted += element.innerHTML;
+        });
       }
-      //console.log("v.refText="+v.refText);
-      v.refDoc = new JSDOM(v.refText).window.document;
-      v.extracted = '';
-      // 複数ある場合があるので、querySelectorAllで順次追加
-      v.refDoc.querySelectorAll(v.selector).forEach(element => {
-        v.extracted += element.innerHTML;
-      });
       return v.extracted;
     },
   };

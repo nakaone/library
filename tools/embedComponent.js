@@ -78,21 +78,26 @@ function embedComponent(doc){
     extract: (filename,selector='body') => {
       v.selector = selector;  // 変更の可能性があるので変数化
       v.refText = fs.readFileSync(filename,'utf-8').trim();
+      console.log('filename='+filename+'\nselector='+v.selector+'\nrefText='+v.refText);
       // HTMLでなければbodyタグを付加
       v.isHTML = v.refText.toLowerCase()
       .match(/^<!doctype html.*?>|^<html.*?>[\s\S]+<\/html>/);
       if( !v.isHTML ){
+        /*
         v.refText = '<!DOCTYPE html><html xml:lang="ja" lang="ja"><body>'
           + v.refText + '</body></html>';
         v.selector = 'body';
+        */
+        v.extracted = v.refText;  // HTML以外は読み込んだ内容がそのまま戻り値
+      } else {
+        //console.log("v.refText="+v.refText);
+        v.refDoc = new JSDOM(v.refText).window.document;
+        v.extracted = '';
+        // 複数ある場合があるので、querySelectorAllで順次追加
+        v.refDoc.querySelectorAll(v.selector).forEach(element => {
+          v.extracted += element.innerHTML;
+        });
       }
-      //console.log("v.refText="+v.refText);
-      v.refDoc = new JSDOM(v.refText).window.document;
-      v.extracted = '';
-      // 複数ある場合があるので、querySelectorAllで順次追加
-      v.refDoc.querySelectorAll(v.selector).forEach(element => {
-        v.extracted += element.innerHTML;
-      });
       return v.extracted;
     },
   };
@@ -111,6 +116,7 @@ function embedComponent(doc){
         v.embed = {from:{filename:v.embed}};
       }
       v.content = v.extract(v.embed.from.filename,v.embed.from.selector);
+      console.log('l.118 v.content='+v.content);
 
       // 処理タイプの判定
       v.suffix = analyzePath(v.embed.from.filename).suffix.toLowerCase() || 'txt';
@@ -132,7 +138,10 @@ function embedComponent(doc){
         case 'mmd': // Mermaid
         case 'txt': // [既定値]その他形式のテキスト
           // v.contentを自要素のinnerHTMLにセット(自要素保持)
-          element.innerHTML = v.content;
+          element.appendChild(doc.createTextNode(v.content));
+          //element.innerText = v.content; 空白になる
+          console.log("content="+v.content+"\nelement=",element)
+          //element.innerHTML = v.content;
           break;
 
         case 'png':
