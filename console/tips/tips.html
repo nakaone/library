@@ -1,0 +1,418 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+  <title>Tips</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <style type="text/css">
+    h1 {
+      font-size: 1.6rem;
+      text-shadow:2px 2px 4px #888;
+    }
+    .tag, .list {
+      margin: 1rem 0px;
+      padding: 1rem;
+    }
+    .list {
+      border: double 3px #ddd;
+    }
+    .prop {
+      font-size: 0.8rem;
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+<div><!-- HTML領域 -->
+  <h1>Tips</h1>
+  <div id="key">
+    <input type="text" placeholder="検索キーワード">
+    <button onclick="clearKeyword()">clear</button>
+    <details><summary>タグ</summary>
+      <div class="tag"></div><!-- タグの一覧 -->
+    </details>
+    <div class="list"></div><!-- 候補記事のリスト -->
+  </div>
+  <div class="detail"></div><!-- 詳細(記事本文) -->
+</div>
+<div><!-- Script領域 -->
+<!-- MarkDownテキストをHTML化するCDN -->
+<script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
+<!-- 自作ライブラリ -->
+<script type="text/javascript">/* コアスクリプト */
+/**
+ * @typedef {Object} createElementDef
+ * @prop {string} tag='div' - タグ名
+ * @prop {Object.<string,string>} [attr] - タグに設定する属性。ex.attr:{name:'hoge'}
+ * @prop {Object.<string,string>} [style] - 〃スタイル。ex.style:{display:'none'}
+ * @prop {Object.<string,string>} [event] - 〃イベント。ex.event:{onclick:()=>{〜}}
+ * @prop {string} [text] - タグ内にセットする文字列
+ * @prop {string} [html] - タグ内にセットするhtml文字列
+ * @prop {createElementDef[]} [children] - 子要素の配列
+ */
+
+/**
+ * HTMLの要素を生成
+ * @param {createElementDef|string} arg - 生成する要素の定義
+ * @returns {HTMLElement} 生成された要素
+ */
+function createElement(arg={}){
+  const v = {rv:null,arg:{}};
+  //console.log('createElement start.');
+
+  // 既定値の設定
+  v.arg = mergeDeeply(
+    {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[]},
+    (typeof arg === 'string' ? {tag:arg} : arg));
+  //console.log(v.arg);
+
+  v.rv = document.createElement(v.arg.tag);
+  for( v.i in v.arg.attr ){ // 属性の設定
+    v.rv.setAttribute(v.i,v.x = v.arg.attr[v.i]);
+  }
+  for( v.i in v.arg.style ){ // スタイルの設定
+    v.rv.style[v.i] = v.arg.style[v.i];
+    //console.log(v.i,v.arg.style[v.i],v.rv.style);
+  }
+  for( v.i in v.arg.event ){ // イベントの設定
+    v.rv.addEventListener(v.i,v.arg.event[v.i],false);
+    //console.log(v.i,v.arg.event[v.i],v.rv);
+  }
+  if( v.arg.html.length > 0 ){
+    v.rv.innerHTML = v.arg.html;
+  } else {
+    v.rv.innerText = v.arg.text;  // 内部文字列
+  }
+  for( v.i=0 ; v.i<v.arg.children.length ; v.i++ ){
+    // 子要素の追加
+    v.rv.appendChild(createElement(v.arg.children[v.i]));
+  }
+  //console.log('createElement end.',v.rv);
+  return v.rv;
+}
+</script>
+<script type="text/javascript">
+/** 日時を指定形式の文字列にして返す"toLocale()"メソッドをDate型に追加する。
+ * @param {string} [format='yyyy/MM/dd'] - 日時を指定する文字列。年:y,月:M,日:d,時:h,分:m,秒:s,ミリ秒:n
+ * @returns {string} 指定形式に変換された文字列。無効な日付なら長さ0の文字列
+ * 
+ * @example
+ * ```
+ * "1965/9/5"[yy/MM/dd hh:mm:ss.nnn] ⇒ "65/09/05 00:00:00.000"
+ * "1965/9/5"[yyyy-MM-dd] ⇒ "1965-09-05"
+ * "1965/9/5"[hh:mm] ⇒ "00:00"
+ * "1977-03-04"[yy/MM/dd hh:mm:ss.nnn] ⇒ "77/03/04 09:00:00.000"
+ * "1977-03-04"[yyyy-MM-dd] ⇒ "1977-03-04"
+ * "1977-03-04"[hh:mm] ⇒ "09:00"
+ * 1688189258262[yy/MM/dd hh:mm:ss.nnn] ⇒ "23/07/01 14:27:38.262"
+ * 1688189258262[yyyy-MM-dd] ⇒ "2023-07-01"
+ * 1688189258262[hh:mm] ⇒ "14:27"
+ * "Sat Jul 01 2023 14:16:30 GMT+0900"[yy/MM/dd hh:mm:ss.nnn] ⇒ "23/07/01 14:16:30.000"
+ * "Sat Jul 01 2023 14:16:30 GMT+0900"[yyyy-MM-dd] ⇒ "2023-07-01"
+ * "Sat Jul 01 2023 14:16:30 GMT+0900"[hh:mm] ⇒ "14:16"
+ * "12:34"[yy/MM/dd hh:mm:ss.nnn] ⇒ ""
+ * "12:34"[yyyy-MM-dd] ⇒ ""
+ * "12:34"[hh:mm] ⇒ ""
+ * ```
+ */
+
+function Date_toLocale(format='yyyy/MM/dd'){
+  //console.log('===== Date.toLocale start.');
+  const v = {rv:format};
+  try {
+
+    // 無効な日付なら空文字列を返して終了
+    if( isNaN(this.getTime()) ) return '';
+
+    v.l = { // 地方時ベース
+      y: this.getFullYear(),
+      M: this.getMonth()+1,
+      d: this.getDate(),
+      h: this.getHours(),
+      m: this.getMinutes(),
+      s: this.getSeconds(),
+      n: this.getMilliseconds()
+    };
+
+    //v.rv = typeof format === 'undefined' ? 'yyyy/MM/dd' : format;
+    for( v.x in v.l ){
+      v.m = v.rv.match(new RegExp(v.x+'+'));
+      if( v.m ){
+        v.str = v.m[0].length > 1
+          ? ('000'+v.l[v.x]).slice(-v.m[0].length)
+          : String(v.l[v.x]);
+        v.rv = v.rv.replace(v.m[0],v.str);
+      }
+    }
+
+    //console.log('v.rv='+JSON.stringify(v.rv));
+    //console.log('===== Date.toLocale end.');
+    return v.rv;
+  } catch(e){
+    // ブラウザで実行する場合はアラート表示
+    if( typeof window !== 'undefined' ) alert(e.stack); 
+    //throw e; //以降の処理を全て停止
+    v.rv.stack = e.stack; return v.rv; // 処理継続
+  }
+}
+Date.prototype.toLocale = Date_toLocale;
+</script>
+<script type="text/javascript">
+/**
+ * @desc オブジェクトのプロパティを再帰的にマージ
+ * - Qiita [JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法](https://qiita.com/riversun/items/60307d58f9b2f461082a)
+ * 
+ * @param {Object} target - 結合対象のオブジェクト1
+ * @param {Object} source - 結合対象のオブジェクト2。同名のプロパティはこちらで上書き
+ * @param {Object} opts - オプション
+ * @param {boolean} [opts.concatArray=false] - プロパティの値が配列だった場合、結合するならtrue
+ * @returns {Object} 結合されたオブジェクト
+ */
+
+function mergeDeeply(target, source, opts) {
+  const isObject = obj => obj && typeof obj === 'object' && !Array.isArray(obj);
+  const isConcatArray = opts && opts.concatArray;
+  let result = Object.assign({}, target);
+  if (isObject(target) && isObject(source)) {
+    for (const [sourceKey, sourceValue] of Object.entries(source)) {
+      const targetValue = target[sourceKey];
+      if (isConcatArray && Array.isArray(sourceValue) && Array.isArray(targetValue)) {
+        result[sourceKey] = targetValue.concat(...sourceValue);
+      }
+      else if (isObject(sourceValue) && target.hasOwnProperty(sourceKey)) {
+        result[sourceKey] = mergeDeeply(targetValue, sourceValue, opts);
+      }
+      else {
+        Object.assign(result, {[sourceKey]: sourceValue});
+      }
+    }
+  }
+  return result;
+}
+</script>
+<!-- 記事ファイル。tips.htmlと同一フォルダに保存 -->
+<script src="articles.js"></script>
+
+<script type="text/javascript" class="main">
+const article = getArticles();  // 記事の読み込み
+
+/**
+ * 検索キーワード欄をクリア
+ */
+function clearKeyword(){
+  console.log('clear');
+  document.querySelector('input').value='';
+}
+
+/**
+ * 詳細(記事本文)の表示
+ * @param {number} arg - 記事のNo(DOMContentLoadedで採番)
+ * @returns {void}
+ */
+function showDetail(arg){
+  const v = {
+    detail:document.querySelector('.detail'),
+    list: document.querySelector('.list'),
+  };
+  console.log('showDetail start.');
+
+  // 対象となる記事を特定
+  // 10,000,000以上(1970/01/01以降に生成) ⇒ IDと解釈
+  // 10,000,000未満 ⇒ article配列の添字と解釈
+  if( arg < 10000000 ){
+    v.arg = article[arg];  // 記事のオブジェクト
+  } else {
+    v.arg = article.find(x => x.id === arg);
+  }
+
+  // リスト表示域をクリア
+  v.list.style.display = 'none';
+  v.detail.style.display = '';
+
+  // 詳細表示域の内容作成
+  v.detail.innerHTML = ''; // 詳細表示域をクリア
+  v.element = createElement({children:[
+    {tag:'h1',attr:{name:"title"},text:v.arg.title},
+    {attr:{class:"prop"},children:[ // 属性情報
+      {attr:{name:"id"},text:'ID: '+v.arg.id},
+      {attr:{name:"created"},text:'created: '+v.arg.created},
+      {attr:{name:"updated"},text:'updated: '+v.arg.updated},
+      {attr:{name:"tag"},text:'tag: '+v.arg.tag.join(', ')},
+      {attr:{name:"ref"}},
+    ]},{  // 記事本文
+      attr:{name:"article",class:"markdown"},
+      html:marked(v.arg.article)
+    },
+  ]});
+  // 参照文献を追加
+  if( v.arg.ref && v.arg.ref.length > 0 ){
+    v.ol = createElement({tag:'ol'});
+    v.arg.ref.forEach(x => {v.ol.appendChild(
+      createElement({tag:'li',
+        text:((x.site && x.site.length>0) ? x.site+': ' : ''),
+        children:[
+        {tag:'a',attr:{href:x.url},text:x.title}
+    ]}))});
+    v.element.querySelector('[name="ref"]').appendChild(v.ol);
+  }
+  v.detail.appendChild(v.element);
+
+  // Mermaidで記述された部分をHTML化して表示
+  mermaid.initialize({startOnLoad: true});
+
+  console.log('showDetail end.');
+}
+
+/**
+ * 候補記事リストを表示
+ * @param {string} [arg=''] - 検索キーワード(タグ名)
+ * @returns {void}
+ */
+function showList(arg=''){
+  const v = {
+    key: document.querySelector('input'),
+    list: document.querySelector('.list'),
+    detail: document.querySelector('.detail'),
+    keyword: [],  // 検索キーワード集
+    result: JSON.parse(JSON.stringify(article)),
+  }
+  console.log('showList: '+arg);
+
+  // 詳細表示領域をクリア
+  v.detail.style.display = 'none';
+  v.list.style.display = '';
+
+  // 検索キーワードをv.keyword配列に格納
+  v.keyword = arg.length > 0 ? [arg.toLowerCase()]
+  : v.key.value.toLowerCase().split(/\s+/);
+  console.log(v.keyword)
+
+  // キーワードが存在した記事はフラグを立てる
+  if( v.keyword.length === 0 ){
+    // キーワード指定無しなら全件表示
+    article.forEach(x => x.flag = true);
+    v.cnt = article.length;
+  } else {
+    v.cnt = 0;  // 該当件数
+    article.forEach(x => {
+      x.flag = true;
+      for( v.k of v.keyword ){
+        if( x.str.indexOf(v.k) < 0 ) x.flag = false;
+      }
+      if( x.flag ){
+        v.cnt++;
+        v.lastHit = x.no; // 1件のみ該当の場合に使用
+      }
+    });
+  }
+
+  // 該当件数に応じて処理分岐
+  if( v.cnt === 0 ){
+    alert('該当無し');
+  } else if( v.cnt === 1 ){
+    showDetail(v.lastHit);
+  } else {
+    // リスト領域に結果を一覧表示
+    v.list.innerHTML = '';
+    for( v.i=0 ; v.i<article.length ; v.i++ ){
+      if( article[v.i].flag ){
+        v.list.appendChild(createElement({
+        style:{
+          display: "grid",
+          gridTemplateColumns: "10rem 1fr"},
+          children:[
+            {text:(article[v.i].updated || article[v.i].created)},
+            {tag:'a',text: article[v.i].title,
+              attr:{onclick:"showDetail("+article[v.i].no+")"}},
+          ]
+        }));
+      }
+    }
+  }
+}
+
+/**
+ * データの初期処理
+ */
+function initialize(){
+  const v = {tag:[]}
+  console.log("initialize start.");
+
+  // Noと検索対象文字列を設定
+  for( let i=0 ; i<article.length ; i++ ){
+    // 既定値の設定
+    article[i] = mergeDeeply({
+      title:'',
+      created:null,
+      updated:null,
+      tag:[],
+      ref:[],
+      article:''
+    },article[i]);
+
+    // Noを設定
+    article[i].no = i;
+
+    // 登録日時からIDを採番
+    v.created = new Date(article[i].created);
+    article[i].created = v.created.toLocale('yyyy/MM/dd');
+    // IDは作成日時のUNIX時刻、但し桁数が多いので分単位に切り捨て
+    article[i].id = Math.floor(v.created.getTime()/60000);
+    if( article[i].updated ){
+      v.updated = new Date(article[i].updated);
+      article[i].updated = v.updated.toLocale('yyyy/MM/dd');
+    } else {
+      article[i].updated = '';
+    }
+
+    // 被検査文字列を作成
+    article[i].str = article[i].title + article[i].tag.join() + article[i].article;
+    if( article[i].ref.length > 0 ){
+      article[i].ref.forEach(y => {
+        y.site = y.site || '';
+        article[i].str += y.site + y.title; // 参考サイトのタイトルも追加
+      });
+    }
+    article[i].str = article[i].str.toLowerCase();  // 小文字に統一
+
+    // 各記事のタグを単純に集めた配列
+    article[i].tag.forEach(x => {
+      v.tag = v.tag.concat(x.split(/\s+/));
+    })
+  }
+
+  // 重複を排除して整列
+  v.tag = v.tag.filter((value,index) => {
+    return index === v.tag.indexOf(value);
+  }).sort();
+  // タグリストを表示
+  v.tagList = document.querySelector('.tag');
+  v.tagList.innerHTML = '';
+  for( v.i=0 ; v.i<v.tag.length ; v.i++ ){
+    v.tagList.innerHTML +=
+      '<a onclick="showList(\''
+      + v.tag[v.i].toLowerCase()  // キーワードは小文字に統一
+      + '\')">'
+      + v.tag[v.i] + "</a> "
+  }
+
+  console.log("initialize end.");
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  // 検索ワード欄にトリガ設定
+  document.querySelector('input')
+    .addEventListener('keyup',()=>showList());
+
+  // 初期化
+  initialize();
+
+  // 記事のIDを指定された場合
+  if( window.location.search.length > 0 ){
+    // URL からクエリ文字列を取り出す
+    const articleId = Number(window.location.search.match(/(\d+)$/)[1]);
+    showDetail(articleId);
+  } else {
+    showList();  // 画面を描画
+  }
+});
+</script>
+</div></body></html>

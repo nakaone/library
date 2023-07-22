@@ -1,0 +1,270 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+  <title>Tips</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <style type="text/css">
+    h1 {
+      font-size: 1.6rem;
+      text-shadow:2px 2px 4px #888;
+    }
+    .tag, .list {
+      margin: 1rem 0px;
+      padding: 1rem;
+    }
+    .list {
+      border: double 3px #ddd;
+    }
+    .prop {
+      font-size: 0.8rem;
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+<div><!-- HTML領域 -->
+  <h1>Tips</h1>
+  <div id="key">
+    <input type="text" placeholder="検索キーワード">
+    <button onclick="clearKeyword()">clear</button>
+    <details><summary>タグ</summary>
+      <div class="tag"></div><!-- タグの一覧 -->
+    </details>
+    <div class="list"></div><!-- 候補記事のリスト -->
+  </div>
+  <div class="detail"></div><!-- 詳細(記事本文) -->
+</div>
+<div><!-- Script領域 -->
+<!-- MarkDownテキストをHTML化するCDN -->
+<script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
+<!-- 自作ライブラリ -->
+<script type="text/javascript" data-embed='{"from":{"filename":"../../component/createElement.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='{"from":{"filename":"../../component/Date.toLocale.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='{"from":{"filename":"../../component/mergeDeeply.html","selector":"script.core"},"to":"js"}'></script>
+<!-- 記事ファイル。tips.htmlと同一フォルダに保存 -->
+<script src="articles.js"></script>
+
+<script type="text/javascript" class="main">
+const article = getArticles();  // 記事の読み込み
+
+/**
+ * 検索キーワード欄をクリア
+ */
+function clearKeyword(){
+  console.log('clear');
+  document.querySelector('input').value='';
+}
+
+/**
+ * 詳細(記事本文)の表示
+ * @param {number} arg - 記事のNo(DOMContentLoadedで採番)
+ * @returns {void}
+ */
+function showDetail(arg){
+  const v = {
+    detail:document.querySelector('.detail'),
+    list: document.querySelector('.list'),
+  };
+  console.log('showDetail start.');
+
+  // 対象となる記事を特定
+  // 10,000,000以上(1970/01/01以降に生成) ⇒ IDと解釈
+  // 10,000,000未満 ⇒ article配列の添字と解釈
+  if( arg < 10000000 ){
+    v.arg = article[arg];  // 記事のオブジェクト
+  } else {
+    v.arg = article.find(x => x.id === arg);
+  }
+
+  // リスト表示域をクリア
+  v.list.style.display = 'none';
+  v.detail.style.display = '';
+
+  // 詳細表示域の内容作成
+  v.detail.innerHTML = ''; // 詳細表示域をクリア
+  v.element = createElement({children:[
+    {tag:'h1',attr:{name:"title"},text:v.arg.title},
+    {attr:{class:"prop"},children:[ // 属性情報
+      {attr:{name:"id"},text:'ID: '+v.arg.id},
+      {attr:{name:"created"},text:'created: '+v.arg.created},
+      {attr:{name:"updated"},text:'updated: '+v.arg.updated},
+      {attr:{name:"tag"},text:'tag: '+v.arg.tag.join(', ')},
+      {attr:{name:"ref"}},
+    ]},{  // 記事本文
+      attr:{name:"article",class:"markdown"},
+      html:marked(v.arg.article)
+    },
+  ]});
+  // 参照文献を追加
+  if( v.arg.ref && v.arg.ref.length > 0 ){
+    v.ol = createElement({tag:'ol'});
+    v.arg.ref.forEach(x => {v.ol.appendChild(
+      createElement({tag:'li',
+        text:((x.site && x.site.length>0) ? x.site+': ' : ''),
+        children:[
+        {tag:'a',attr:{href:x.url},text:x.title}
+    ]}))});
+    v.element.querySelector('[name="ref"]').appendChild(v.ol);
+  }
+  v.detail.appendChild(v.element);
+
+  // Mermaidで記述された部分をHTML化して表示
+  mermaid.initialize({startOnLoad: true});
+
+  console.log('showDetail end.');
+}
+
+/**
+ * 候補記事リストを表示
+ * @param {string} [arg=''] - 検索キーワード(タグ名)
+ * @returns {void}
+ */
+function showList(arg=''){
+  const v = {
+    key: document.querySelector('input'),
+    list: document.querySelector('.list'),
+    detail: document.querySelector('.detail'),
+    keyword: [],  // 検索キーワード集
+    result: JSON.parse(JSON.stringify(article)),
+  }
+  console.log('showList: '+arg);
+
+  // 詳細表示領域をクリア
+  v.detail.style.display = 'none';
+  v.list.style.display = '';
+
+  // 検索キーワードをv.keyword配列に格納
+  v.keyword = arg.length > 0 ? [arg.toLowerCase()]
+  : v.key.value.toLowerCase().split(/\s+/);
+  console.log(v.keyword)
+
+  // キーワードが存在した記事はフラグを立てる
+  if( v.keyword.length === 0 ){
+    // キーワード指定無しなら全件表示
+    article.forEach(x => x.flag = true);
+    v.cnt = article.length;
+  } else {
+    v.cnt = 0;  // 該当件数
+    article.forEach(x => {
+      x.flag = true;
+      for( v.k of v.keyword ){
+        if( x.str.indexOf(v.k) < 0 ) x.flag = false;
+      }
+      if( x.flag ){
+        v.cnt++;
+        v.lastHit = x.no; // 1件のみ該当の場合に使用
+      }
+    });
+  }
+
+  // 該当件数に応じて処理分岐
+  if( v.cnt === 0 ){
+    alert('該当無し');
+  } else if( v.cnt === 1 ){
+    showDetail(v.lastHit);
+  } else {
+    // リスト領域に結果を一覧表示
+    v.list.innerHTML = '';
+    for( v.i=0 ; v.i<article.length ; v.i++ ){
+      if( article[v.i].flag ){
+        v.list.appendChild(createElement({
+        style:{
+          display: "grid",
+          gridTemplateColumns: "10rem 1fr"},
+          children:[
+            {text:(article[v.i].updated || article[v.i].created)},
+            {tag:'a',text: article[v.i].title,
+              attr:{onclick:"showDetail("+article[v.i].no+")"}},
+          ]
+        }));
+      }
+    }
+  }
+}
+
+/**
+ * データの初期処理
+ */
+function initialize(){
+  const v = {tag:[]}
+  console.log("initialize start.");
+
+  // Noと検索対象文字列を設定
+  for( let i=0 ; i<article.length ; i++ ){
+    // 既定値の設定
+    article[i] = mergeDeeply({
+      title:'',
+      created:null,
+      updated:null,
+      tag:[],
+      ref:[],
+      article:''
+    },article[i]);
+
+    // Noを設定
+    article[i].no = i;
+
+    // 登録日時からIDを採番
+    v.created = new Date(article[i].created);
+    article[i].created = v.created.toLocale('yyyy/MM/dd');
+    // IDは作成日時のUNIX時刻、但し桁数が多いので分単位に切り捨て
+    article[i].id = Math.floor(v.created.getTime()/60000);
+    if( article[i].updated ){
+      v.updated = new Date(article[i].updated);
+      article[i].updated = v.updated.toLocale('yyyy/MM/dd');
+    } else {
+      article[i].updated = '';
+    }
+
+    // 被検査文字列を作成
+    article[i].str = article[i].title + article[i].tag.join() + article[i].article;
+    if( article[i].ref.length > 0 ){
+      article[i].ref.forEach(y => {
+        y.site = y.site || '';
+        article[i].str += y.site + y.title; // 参考サイトのタイトルも追加
+      });
+    }
+    article[i].str = article[i].str.toLowerCase();  // 小文字に統一
+
+    // 各記事のタグを単純に集めた配列
+    article[i].tag.forEach(x => {
+      v.tag = v.tag.concat(x.split(/\s+/));
+    })
+  }
+
+  // 重複を排除して整列
+  v.tag = v.tag.filter((value,index) => {
+    return index === v.tag.indexOf(value);
+  }).sort();
+  // タグリストを表示
+  v.tagList = document.querySelector('.tag');
+  v.tagList.innerHTML = '';
+  for( v.i=0 ; v.i<v.tag.length ; v.i++ ){
+    v.tagList.innerHTML +=
+      '<a onclick="showList(\''
+      + v.tag[v.i].toLowerCase()  // キーワードは小文字に統一
+      + '\')">'
+      + v.tag[v.i] + "</a> "
+  }
+
+  console.log("initialize end.");
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  // 検索ワード欄にトリガ設定
+  document.querySelector('input')
+    .addEventListener('keyup',()=>showList());
+
+  // 初期化
+  initialize();
+
+  // 記事のIDを指定された場合
+  if( window.location.search.length > 0 ){
+    // URL からクエリ文字列を取り出す
+    const articleId = Number(window.location.search.match(/(\d+)$/)[1]);
+    showDetail(articleId);
+  } else {
+    showList();  // 画面を描画
+  }
+});
+</script>
+</div></body></html>
