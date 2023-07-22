@@ -96,9 +96,10 @@ function prototype(){
 <div><!-- 開始：Script領域 -->
 <!-- 外部Script -->
 <!-- 自作ライブラリ -->
-<script type="text/javascript" class="onConsole"
-  data-embed='{"from":{"filename":"../../component/analyzeArg.html","selector":"script.core"},"to":"js"}'>
-</script>
+<!-- webApp利用時： srcのみ必要。パスはcomponentが起点
+  コンソール利用時：class="onConsole" data-embedが必要。data-embedの起点はtools -->
+<script type="text/javascript" src="analyzeArg.js" class="onConsole"
+  data-embed="../component/analyzeArg.js"></script>
 
 <script type="text/javascript" class="core">/* コアScript */
 function prototype(arg){
@@ -144,27 +145,6 @@ function onConsole(){
 onConsole();
 </script>
 
-<script type="text/javascript" class="webApp">/* webアプリ */
-function onKeyup(event=null){
-  const v = {
-    in: document.getElementById('inputData'),
-    out: document.getElementById('outputData'),
-  };
-  console.log('onKeyup start.');
-  try {
-
-    console.log(event,v.in.value);
-    v.out.value = prototype(v.in.value);
-    console.log('onKeyup end.');
-
-  } catch(e){
-    console.error('onKeyup abnormal end.',e);
-    alert(e.stack); 
-    v.rv.stack = e.stack; return v.rv;
-  }
-}
-</script>
-
 <script type="text/javascript" class="test">/* テスト用 */
 function prototypeTest(){
   const v = {data:[
@@ -185,7 +165,26 @@ function prototypeTest(){
 }
 </script>
 
-<script type="text/javascript" class="main">
+<script type="text/javascript">
+function onKeyup(event=null){
+  const v = {
+    in: document.getElementById('inputData'),
+    out: document.getElementById('outputData'),
+  };
+  console.log('onKeyup start.');
+  try {
+
+    console.log(event,v.in.value);
+    v.out.value = prototype(v.in.value);
+    console.log('onKeyup end.');
+
+  } catch(e){
+    console.error('onKeyup abnormal end.',e);
+    alert(e.stack); 
+    v.rv.stack = e.stack; return v.rv;
+  }
+}
+
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
 
