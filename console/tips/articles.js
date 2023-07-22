@@ -36,11 +36,11 @@ function getArticles(){
 \`\`\`
 function prototype(){
   const v = {rv:null};
-  console.log('===== prototype start.');
+  console.log('prototype start.');
   try {
 
     //console.log('v.rv='+JSON.stringify(v.rv));
-    console.log('===== prototype end.');
+    console.log('prototype end.');
     return v.rv;
   } catch(e){
     // ブラウザで実行する場合はアラート表示
