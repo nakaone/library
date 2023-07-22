@@ -16,11 +16,113 @@
   }], article:
   // =====================================================================
 `
+
+\`\`\`
+\`\`\`
+
 `},
 ▲▲▲▲▲▲▲▲▲▲▲ テンプレートここまで
 */
 function getArticles(){
   return [
+{ // =====================================================================
+  title: "JavaScriptテンプレート",
+  created: "2023/7/22 11:50",
+  tag: ['JavaScript','template','prototype'],
+  ref: [], article:
+  // =====================================================================
+`
+
+\`\`\`
+function prototype(){
+  const v = {rv:null};
+  console.log('===== prototype start.');
+  try {
+
+    //console.log('v.rv='+JSON.stringify(v.rv));
+    console.log('===== prototype end.');
+    return v.rv;
+  } catch(e){
+    // ブラウザで実行する場合はアラート表示
+    if( typeof window !== 'undefined' ) alert(e.stack); 
+    //throw e; //以降の処理を全て停止する場合
+    v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+  }
+}
+\`\`\`
+
+`},
+{ // =====================================================================
+  title: "HTMLテンプレート(ライブラリコンポーネント用)",
+  created: "2023/7/22 11:00",
+  tag: ['html','template','prototype','library','component'],
+  ref: [], article:
+  // =====================================================================
+`
+
+\`\`\`
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>prototype</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css" class="core">/* コアCSS */
+</style>
+</head><body>
+<div><!-- 開始：HTML -->
+<h1>prototype</h1>
+
+<div class="core"><!-- コアHTML -->
+</div>
+
+<div class="webApp"><!-- webアプリHTML -->
+</div>
+</div><!-- 終了：HTML領域 -->
+
+<div><!-- 開始：Script領域 -->
+<!-- 外部Script -->
+<!-- 自作ライブラリ -->
+
+<script type="text/javascript" class="core">/* コアScript */
+</script>
+
+<script type="text/javascript" class="webApp">/* webアプリ */
+</script>
+
+<script type="text/javascript" class="test">/* テスト用 */
+</script>
+
+<script type="text/javascript" class="main">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+});
+</script>
+</div><!-- 終了：Script領域 -->
+</body></html>
+\`\`\`
+
+`},{ // =====================================================================
+  title: "HTMLテンプレート(最小構成)",
+  created: "2023/7/22 10:50",
+  tag: ['html','template','prototype'],
+  ref: [], article:
+  // =====================================================================
+`最小構成
+
+\`\`\`html
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css"></style>
+</head><body>
+
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+});
+</script>
+</body></html>
+\`\`\`
+
+`},
 { // =====================================================================
   title: "検証：CSSは動的に追加した要素にも適用される",
   created: "2023/7/21 17:25",
