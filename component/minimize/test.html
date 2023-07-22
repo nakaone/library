@@ -1,0 +1,155 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>minimize</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css" class="core">
+</style>
+</head><body>
+<div>
+<h1>minimize</h1>
+<p>開発者コンソールの「Uncaught ReferenceError: require is not defined」は無視して問題無し</p>
+<div class="core">
+</div>
+<div class="webApp">
+  <div>
+    <label for="inputData">入力</label>
+    <textarea id="inputData">テストデータ</textarea>
+  </div>
+  <div>
+    <label for="outputData">出力</label>
+    <textarea id="outputData"></textarea>
+  </div>
+</div>
+</div>
+<div>
+<script type="text/javascript" class="onConsole">
+function analyzeArg(){
+  console.log('===== analyzeArg start.');
+  const v = {rv:{opt:{},val:[]}};
+  try {
+    for( v.i=2 ; v.i<process.argv.length ; v.i++ ){
+      v.m = process.argv[v.i].match(/^(\-*)([0-9a-zA-Z]+):*(.*)$/);
+      if( v.m && v.m[1].length > 0 ){
+        v.rv.opt[v.m[2]] = v.m[3];
+      } else {
+        v.rv.val.push(process.argv[v.i]);
+      }
+    }
+    console.log('v.rv='+JSON.stringify(v.rv));
+    console.log('===== analyzeArg end.');
+    return v.rv;
+  } catch(e){
+    console.error('===== analyzeArg abnormal end.\n',e);
+    if( typeof window !== 'undefined' ) alert(e.stack);
+    v.rv.stack = e.stack; return v.rv;
+  }
+}
+</script>
+<script type="text/javascript" class="core">
+function minimize(str,opt={}){
+  const v = {
+    rv:str,
+    rex:{
+      jsdoc: /\s*?\/\*\*[\s\S]+?\*\/\s*?/g,
+      js: /\s*\/\/.+\n/g,
+      css: /\s*?\/\*[\s\S]+?\*\/\s*?/g,
+      html: /\s*?<!\-\-[\s\S]+?\-\->\s*?/g,
+    },
+  };
+  console.log('minimize start.');
+  try {
+    v.opt = Object.assign({
+      all: false,
+      jsdoc:false,
+      js: false,
+      css: false,
+      html: false,
+    },opt);
+    console.log('opt='+JSON.stringify(v.opt));
+    if( v.opt.jsdoc || v.opt.all ){
+      v.rv = v.rv.replaceAll(v.rex.jsdoc,'');
+    }
+    if( v.opt.js || v.opt.all ){
+      v.rv = v.rv.replaceAll(v.rex.css,'');
+      v.rv = v.rv.replaceAll(v.rex.js,'\n');
+    }
+    if( v.opt.css || v.opt.all ){
+      v.rv = v.rv.replaceAll(v.rex.css,'');
+    }
+    if( v.opt.html || v.opt.all ){
+      v.rv = v.rv.replaceAll(v.rex.html,'');
+    }
+    v.rv = v.rv.replaceAll(/\n+/g,'\n');
+    console.log('minimize end.');
+    return v.rv;
+  } catch(e){
+    if( typeof window !== 'undefined' ) alert(e.stack);
+    v.rv.stack = e.stack; return v.rv;
+  }
+}
+</script>
+<script type="text/javascript" class="onConsole">
+const fs = require('fs');
+function onConsole(){
+  console.log('minimize.onConsole start.');
+  const v = {rv:null,opt:{}};
+  try {
+    v.argv = analyzeArg();
+    console.log('argv='+JSON.stringify(v.argv));
+    if(v.argv.hasOwnProperty('stack')) throw v.argv;
+    v.argv.val.forEach(x => v.opt[x]=true);
+    v.readFile = fs.readFileSync(v.argv.opt.i,'utf-8').trim();
+    v.rv = minimize(v.readFile,v.opt);
+    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');
+    console.log('minimize.onConsole end.');
+  } catch(e){
+    console.error('minimize.onConsole abnormal end.',e);
+  }
+}
+onConsole();
+</script>
+<script type="text/javascript" class="webApp">
+function onKeyup(event=null){
+  const v = {
+    in: document.getElementById('inputData'),
+    out: document.getElementById('outputData'),
+  };
+  console.log('onKeyup start.');
+  try {
+    console.log(event,v.in.value);
+    v.out.value = minimize(v.in.value);
+    console.log('onKeyup end.');
+  } catch(e){
+    console.error('onKeyup abnormal end.',e);
+    alert(e.stack); 
+    v.rv.stack = e.stack; return v.rv;
+  }
+}
+</script>
+<script type="text/javascript" class="test">
+function minimizeTest(){
+  const v = {data:[
+    'fuga','hoge',
+  ]};
+  console.log('minimizeTest start.');
+  try {
+    for( let i=0 ; i<v.data.length ; i++ ){
+      v.result = minimize(v.data[i]);
+      console.log(v.result);
+    }
+    console.log('minimizeTest end.');
+  } catch(e){
+    console.error('minimizeTest abnormal end.',e);
+  }
+}
+</script>
+<script type="text/javascript" class="main">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+  document.getElementById('inputData')
+    .addEventListener('keyup',event => onKeyup(event));
+  onKeyup();
+  minimizeTest();
+});
+</script>
+</div>
+</body></html>

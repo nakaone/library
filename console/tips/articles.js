@@ -64,6 +64,7 @@ function prototype(){
 
 1. コア部分に加え、webアプリ・テストにも対応。適宜不要部分は削除して使用。
 1. 文中の'prototype'は最初に一括置換
+1. JSDocは作成中に適宜追加すること
 
 \`\`\`
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
