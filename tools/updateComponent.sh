@@ -17,7 +17,7 @@
 # カレントディレクトリはtools/の想定
 cd /Users/ena.kaon/Desktop/GitHub/library/tools
 
-# 1.作業用フォルダを作成
+# 1.作業用フォルダを作成、外部ファイルを埋め込み
 mkdir tmp
 node embedComponent.js \
   -i:../component/$1.html -o:tmp/$1.html -t:html
@@ -45,8 +45,8 @@ cat <<EOD2 >> ../component/$1.md
 EOD2
 
 # 4.ライブラリに使用するコンポーネントを作成
-# node minimize.js -i:tmp/$1.core.js -o:../component/$1.js all
-cp tmp/$1.core.js ../component/$1.js
+node minimize.js -i:tmp/$1.core.js -o:../component/$1.js all
+# cp tmp/$1.core.js ../component/$1.js
 
 # 5.コンソール実行用JavaScript
 #   なお実行時に参照する可能性があるので、敢えてminimizeは行わない
@@ -62,5 +62,5 @@ if [ $SIZE -gt 0 ]; then
 fi
 
 # 6.tmpの内容を削除
-#rm tmp/*
-#rmdir tmp
+rm tmp/*
+rmdir tmp
