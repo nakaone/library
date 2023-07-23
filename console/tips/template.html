@@ -25,6 +25,7 @@
   <div id="key">
     <input type="text" placeholder="検索キーワード">
     <button onclick="clearKeyword()">clear</button>
+    <span name="msg"></span>
     <details><summary>タグ</summary>
       <div class="tag"></div><!-- タグの一覧 -->
     </details>
@@ -52,6 +53,7 @@ const article = getArticles();  // 記事の読み込み
 function clearKeyword(){
   console.log('clear');
   document.querySelector('input').value='';
+  showList();
 }
 
 /**
@@ -158,24 +160,28 @@ function showList(arg=''){
 
   // 該当件数に応じて処理分岐
   if( v.cnt === 0 ){
-    alert('該当無し');
-  } else if( v.cnt === 1 ){
-    showDetail(v.lastHit);
+    document.querySelector('#key [name="msg"]').innerText = '該当無し';
+    //alert('該当無し');
   } else {
-    // リスト領域に結果を一覧表示
-    v.list.innerHTML = '';
-    for( v.i=0 ; v.i<article.length ; v.i++ ){
-      if( article[v.i].flag ){
-        v.list.appendChild(createElement({
-        style:{
-          display: "grid",
-          gridTemplateColumns: "10rem 1fr"},
-          children:[
-            {text:(article[v.i].updated || article[v.i].created)},
-            {tag:'a',text: article[v.i].title,
-              attr:{onclick:"showDetail("+article[v.i].no+")"}},
-          ]
-        }));
+    document.querySelector('#key [name="msg"]').innerText = '';
+    if( v.cnt === 1 ){
+      showDetail(v.lastHit);
+    } else {
+      // リスト領域に結果を一覧表示
+      v.list.innerHTML = '';
+      for( v.i=0 ; v.i<article.length ; v.i++ ){
+        if( article[v.i].flag ){
+          v.list.appendChild(createElement({
+          style:{
+            display: "grid",
+            gridTemplateColumns: "10rem 1fr"},
+            children:[
+              {text:(article[v.i].updated || article[v.i].created)},
+              {tag:'a',text: article[v.i].title,
+                attr:{onclick:"showDetail("+article[v.i].no+")"}},
+            ]
+          }));
+        }
       }
     }
   }
@@ -252,7 +258,7 @@ function initialize(){
 window.addEventListener('DOMContentLoaded',() => {
   // 検索ワード欄にトリガ設定
   document.querySelector('input')
-    .addEventListener('keyup',()=>showList());
+    .addEventListener('input',()=>showList());
 
   // 初期化
   initialize();
