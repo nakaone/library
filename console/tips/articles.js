@@ -27,6 +27,202 @@ function getArticles(){
   return [
 // この直後に追加
 { // =====================================================================
+  title: "[失敗]Mac標準ApacheのSSL通信化(https対応)",
+  created: "2023/7/21 14:30",
+  updated: "2023/7/23 14:51",
+  tag: ['Apache','httpd','mac OS標準','SSL','https'],
+  ref: [{
+    site: "",
+    title: "Macに最初から入っているApacheでSSL通信する環境を整えた",
+    url:"https://www.karakaram.com/mac-apache-ssl/",
+  }], article:
+  // =====================================================================
+`# 結論
+
+後掲の作業を実施しても接続拒否で失敗。
+
+現状(camp2023)のソースはGoogle Driveへの保存でhttps接続できるので、必要性は高くないと判断、これ以上の調査・作業は中止。
+
+以下は事前調査と作業記録。
+
+# 事前確認：httpd-ssl.confの存在
+
+\`\`\`
+cd /etc/apache2 
+% ls 
+extra		magic		original	users
+httpd.conf	mime.types	other
+% vi httpd.conf
+-------------------------
+# Secure (SSL/TLS) connections 
+#Include /private/etc/apache2/extra/httpd-ssl.conf
+# 
+# Note: The following must must be present to support
+#       starting without SSL on platforms with no /dev/random equivalent
+#       but a statically compiled-in mod_ssl.
+# 
+-------------------------
+:/httpd-ssl.conf
+-------------------------
+% ls /private/etc/apache2/extra
+httpd-autoindex.conf		httpd-mpm.conf
+httpd-dav.conf			httpd-multilang-errordoc.conf
+httpd-default.conf		httpd-ssl.conf <-- ちゃんとあった
+httpd-info.conf			httpd-userdir.conf
+httpd-languages.conf		httpd-vhosts.conf
+httpd-manual.conf		proxy-html.conf
+\`\`\`
+
+# 実作業
+
+1. サーバ秘密鍵を作成する
+2. 証明書署名要求(CSR)を作成する
+3. 自己署名証明書(CRT)を作成する
+4. 秘密鍵と証明書を Apache から参照できる場所に設置
+5. Apache が SSL 設定ファイルを読み込めるようにする
+6. Apache を再起動して動作確認
+
+## サーバ秘密鍵を作成する
+
+最初サイト記載通り\`openssl genrsa -des3 -rand rand.dat 1024 > server.pem\`を行ったが、「"-rand"なんてパラメータはない」と言われたのでスキップ
+
+\`\`\`
+% openssl genrsa -des3 1024 > server.pem 
+Generating RSA private key, 1024 bit long modulus
+...................+++++
+........................+++++
+e is 65537 (0x10001)
+Enter pass phrase:[skz.oyaji]
+Verifying - Enter pass phrase:[skz.oyaji]
+% openssl rsa -in server.pem -out server.pem
+Enter pass phrase for server.pem:[skz.oyaji]
+writing RSA key
+%
+\`\`\`
+
+## 証明書署名要求(CSR)を作成する
+
+\`\`\`
+% openssl req -new -key server.pem -out csr.pem
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) []:jp
+State or Province Name (full name) []:Tokyo
+Locality Name (eg, city) []:Setageya
+Organization Name (eg, company) []:Shimokitazawa
+Organizational Unit Name (eg, section) []:Oyaji
+Common Name (eg, fully qualified host name) []:
+Email Address []:shimokitasho.oyaji@gmail.com
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:skz.oyaji
+%
+\`\`\`
+
+## 自己署名証明書(CRT)を作成する
+
+\`\`\`
+% openssl req -days 365 -in csr.pem -key server.pem -x509 -out crt.pem 
+% ls -la
+total 24
+drwxr-xr-x   5 ena.kaon  staff  160  7 23 14:21 .
+drwxr-xr-x  12 ena.kaon  staff  384  7 23 10:31 ..
+-rw-r--r--   1 ena.kaon  staff  932  7 23 14:21 crt.pem
+-rw-r--r--   1 ena.kaon  staff  729  7 23 14:19 csr.pem
+-rw-r--r--   1 ena.kaon  staff  887  7 23 14:16 server.pem
+% 
+\`\`\`
+
+## 秘密鍵と証明書を Apache から参照できる場所に設置
+
+\`\`\`
+sudo vi /private/etc/apache2/extra/httpd-ssl.conf
+\`\`\`
+
+以下viの画面
+
+\`\`\`
+#   Server Certificate:
+#   (中略)
+SSLCertificateFile "/private/etc/apache2/server.crt"
+#SSLCertificateFile "/private/etc/apache2/server-dsa.crt"
+#SSLCertificateFile "/private/etc/apache2/server-ecc.crt"
+
+#   Server Private Key:
+#   (中略)
+SSLCertificateKeyFile "/private/etc/apache2/server.key"
+#SSLCertificateKeyFile "/private/etc/apache2/server-dsa.key"
+#SSLCertificateKeyFile "/private/etc/apache2/server-ecc.key"
+\`\`\`
+
+念の為にバックアップしようとしたら、実態がなかった
+
+\`\`\`
+% mkdir backup
+% cd backup 
+ena.kaon@enakaonnoMacBook-Air backup % sudo cp /private/etc/apache2/server.crt ./
+sudo cp /private/etc/apache2/server.key ./
+Password:
+cp: /private/etc/apache2/server.crt: No such file or directory
+cp: /private/etc/apache2/server.key: No such file or directory
+\`\`\`
+
+安心して作成したファイルをコピー
+
+\`\`\`
+% sudo cp server.pem /private/etc/apache2/server.key
+sudo cp crt.pem /private/etc/apache2/server.crt
+% ls -la /private/etc/apache2 
+total 104
+drwxr-xr-x  11 root  wheel    352  7 23 14:31 .
+drwxr-xr-x  79 root  wheel   2528  7 20 18:17 ..
+drwxr-xr-x  14 root  wheel    448  7 23 14:28 extra
+-rw-r--r--   1 root  wheel  21648  6 15 19:08 httpd.conf
+-rw-r--r--   1 root  wheel  13064  6 15 19:08 magic
+-rw-r--r--   1 root  wheel  61118  6 15 19:08 mime.types
+drwxr-xr-x   4 root  wheel    128  6 15 19:08 original
+drwxr-xr-x   4 root  wheel    128  6 15 19:08 other
+-rw-r--r--   1 root  wheel    932  7 23 14:31 server.crt
+-rw-r--r--   1 root  wheel    887  7 23 14:31 server.key
+drwxr-xr-x   2 root  wheel     64  6 15 19:08 users
+% 
+\`\`\`
+
+## Apache が SSL 設定ファイルを読み込めるようにする
+
+修正前
+
+\`\`\`
+# Secure (SSL/TLS) connections
+#Include /private/etc/apache2/extra/httpd-ssl.conf
+\`\`\`
+
+修正後
+
+\`\`\`
+# Secure (SSL/TLS) connections
+Include /private/etc/apache2/extra/httpd-ssl.conf
+\`\`\`
+
+## Apache を再起動して動作確認
+
+
+http://localhost/
+-> Failed to load resource: 
+
+https://localhost/
+-> このサイトにアクセスできませんlocalhost で接続が拒否されました。
+
+https://192.168.1.7/
+このサイトにアクセスできません192.168.1.7 で接続が拒否されました。
+
+`},{ // =====================================================================
   title: "スプレッドシート上でQRコード作成時の注意",
   created: "2023/7/23 13:38",
   tag: ['Google Spread','QR','JSON'],
@@ -669,53 +865,6 @@ jsdoc js/library.js -d doc/library
 1. 説明欄に「公開URL」を設定
 
 なお適宜不要なバージョンはアーカイブする。
-`},{ // =====================================================================
-  title: "mac標準httpdのSSL通信化(https対応)",
-  created: "2023/7/21 14:30",
-  tag: ['Apache','httpd','mac OS標準','SSL','https'],
-  ref: [{
-    site: "",
-    title: "Macに最初から入っているApacheでSSL通信する環境を整えた",
-    url:"https://www.karakaram.com/mac-apache-ssl/",
-  }], article:
-  // =====================================================================
-`# 事前確認：httpd-ssl.confの存在
-
-\`\`\`
-cd /etc/apache2 
-% ls 
-extra		magic		original	users
-httpd.conf	mime.types	other
-% vi httpd.conf
--------------------------
-# Secure (SSL/TLS) connections 
-#Include /private/etc/apache2/extra/httpd-ssl.conf
-# 
-# Note: The following must must be present to support
-#       starting without SSL on platforms with no /dev/random equivalent
-#       but a statically compiled-in mod_ssl.
-# 
--------------------------
-:/httpd-ssl.conf
--------------------------
-% ls /private/etc/apache2/extra
-httpd-autoindex.conf		httpd-mpm.conf
-httpd-dav.conf			httpd-multilang-errordoc.conf
-httpd-default.conf		httpd-ssl.conf <-- ちゃんとあった
-httpd-info.conf			httpd-userdir.conf
-httpd-languages.conf		httpd-vhosts.conf
-httpd-manual.conf		proxy-html.conf
-\`\`\`
-
-# 実作業
-
-1. サーバ秘密鍵を作成する
-2. 証明書署名要求(CSR)を作成する
-3. 自己署名証明書(CRT)を作成する
-4. 秘密鍵と証明書を Apache から参照できる場所に設置
-5. Apache が SSL 設定ファイルを読み込めるようにする
-6. Apache を再起動して動作確認
-
 `},{ // =====================================================================
   title: "mac OS標準Apache httpdの起動と終了",
   created: "2023/07/21 08:00",
