@@ -585,20 +585,20 @@ function prototypeTest(){
 </script>
 
 <script type="text/javascript">
-function onKeyup(event=null){
+function onInput(event=null){
   const v = {
     in: document.getElementById('inputData'),
     out: document.getElementById('outputData'),
   };
-  console.log('onKeyup start.');
+  console.log('onInput start.');
   try {
 
     console.log(event,v.in.value);
     v.out.value = prototype(v.in.value);
-    console.log('onKeyup end.');
+    console.log('onInput end.');
 
   } catch(e){
-    console.error('onKeyup abnormal end.',e);
+    console.error('onInput abnormal end.',e);
     alert(e.stack); 
     v.rv.stack = e.stack; return v.rv;
   }
@@ -609,9 +609,9 @@ window.addEventListener('DOMContentLoaded',() => {
 
   // webアプリの入力欄変更時のイベントを定義
   document.getElementById('inputData')
-    .addEventListener('keyup',event => onKeyup(event));
+    .addEventListener('input',event => onInput(event));
   // テストデータを表示するため、キー入力時の処理を呼び出す
-  onKeyup();
+  onInput();
 
   // 開発者コンソール上でテスト
   prototypeTest();
