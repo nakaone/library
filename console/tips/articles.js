@@ -25,6 +25,229 @@
 */
 function getArticles(){
   return [
+// この直後に追加
+{ // =====================================================================
+  title: "スプレッドシート上でQRコード作成時の注意",
+  created: "2023/7/23 13:38",
+  tag: ['Google Spread','QR','JSON'],
+  ref: [{
+    site: "MDN",
+    title: "JSON.parse() は末尾のカンマを許容しない",
+    url:"https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#json.parse_%E3%81%AF%E6%9C%AB%E5%B0%BE%E3%81%AE%E3%82%AB%E3%83%B3%E3%83%9E%E3%82%92%E8%A8%B1%E5%AE%B9%E3%81%97%E3%81%AA%E3%81%84",
+  }], article:
+  // =====================================================================
+`JSONのQRコードを作成する場合、最後のメンバの後ろには','を付けてはならない。
+
+⇒ d列に"label:'value',"の文字列を作成し、arrayformula(concatenate(d:d))とすると末尾にカンマが入る。
+ついでに単一引用符も許されないので、要注意。
+
+`},{ // =====================================================================
+  title: "VSCodeでGASを編集",
+  created: "2023/7/23 13:32",
+  tag: ['VSCode','Google Apps Script','編集','clasp'],
+  ref: [{
+    site: "",
+    title: "claspを使ってGoogle Apps Scriptをローカルで開発・編集する その1 - claspを使ってみる",
+    url:"https://qiita.com/croquette0212/items/f78cc42d328131c3db43",
+  },{
+    site: "",
+    title: "clasp公式",
+    url:"https://github.com/google/clasp",
+  }], article:
+  // =====================================================================
+`コンソールでGASフォルダに移動、以下のコマンドを実行
+
+- Googleから新規取得：\`clasp clone 1lWxD〜Jau3L\`
+- Googleからソースを複写：\`clasp pull\`
+- ローカルの編集結果をGoogleに反映：\`clasp push\` (ファイル毎に実行)
+
+GASフォルダに複数ソースを集めようとすると\`.clasp.json already exist\`エラーでうまく行かない。取り敢えず以下で対応。
+
+\`\`\`
+cd 〜/GAS
+mkdir szLib
+clasp clone "1lWxDf〜Jau3L" --rootDir ./szLib
+mkdir broad
+clasp clone "1xmqZ〜wMkJr" --rootDir ./broad
+\`\`\`
+
+以下は一括クローンのスクリプト
+
+\`\`\`
+cd ~/Desktop/GitHub/EventStaff/GAS/
+rm -rf *
+
+mkdir auth
+cd auth
+clasp clone "1tpNOGYh0oK_jI13xMCdB6oFMHyfB9fd1pij22fOR0Md_l3PdAP98d5A7"
+
+mkdir broad
+cd broad
+clasp clone "1xmqZLk3MuTkqy2Fy_J4_1y3dVQns1PJ_YN0V4eTKQkMsjtlcjvzwMkJr"
+
+mkdir delivery
+cd delivery
+clasp clone "1njRQbqxYhzGdK2Q-XQtyZB4vW0LUl1gWawnkr_TCmkwsq_hNJd-LUYdI"
+
+mkdir master
+cd master
+clasp clone "1ZTPbqoESlBE0saH22f3aUlbIOobg0iUjLkXlAoyojuJ4JTV4Q-bBz7TO"
+
+mkdir post
+cd post
+clasp clone "105XhDZdUMmC6ZhvUERs01J5gTYA2be065mGnlW4RZDvblr8mHIvrNz1P"
+
+mkdir szLib
+cd szLib
+clasp clone "1lWxDf1fpXFP0TzbvNo1AyTLpzWmrP3nOJPNgFskTQyOaaSKbcpHJau3L"
+\`\`\`
+
+## 一括クローン
+
+\`\`\`
+cd ~/Desktop/GitHub/EventStaff/GAS/
+rm -rf *
+
+mkdir auth
+cd auth
+clasp clone "1tpNOGYh0oK_jI13xMCdB6oFMHyfB9fd1pij22fOR0Md_l3PdAP98d5A7"
+cd ..
+
+mkdir broad
+cd broad
+clasp clone "1xmqZLk3MuTkqy2Fy_J4_1y3dVQns1PJ_YN0V4eTKQkMsjtlcjvzwMkJr"
+cd ..
+
+mkdir delivery
+cd delivery
+clasp clone "1njRQbqxYhzGdK2Q-XQtyZB4vW0LUl1gWawnkr_TCmkwsq_hNJd-LUYdI"
+cd ..
+
+mkdir master
+cd master
+clasp clone "1ZTPbqoESlBE0saH22f3aUlbIOobg0iUjLkXlAoyojuJ4JTV4Q-bBz7TO"
+cd ..
+
+mkdir post
+cd post
+clasp clone "105XhDZdUMmC6ZhvUERs01J5gTYA2be065mGnlW4RZDvblr8mHIvrNz1P"
+cd ..
+
+mkdir szLib
+cd szLib
+clasp clone "1lWxDf1fpXFP0TzbvNo1AyTLpzWmrP3nOJPNgFskTQyOaaSKbcpHJau3L"
+cd ..
+\`\`\`
+
+`},{ // =====================================================================
+  title: "[旧版]GASから他API呼び出しのテンプレート",
+  created: "2023/7/23 13:30",
+  tag: ['Google Apps Script','fetch','template','prototype'],
+  ref: [], article:
+  // =====================================================================
+`
+
+\`\`\`
+const options = {
+  'method': 'post',
+  'headers': {
+    'contentType': 'application/json',
+  },
+  'payload': {
+    passPhrase  : config.MasterKey,  // 相手先APIの秘密鍵
+    func: 'auth1B',   // 相手先APIのdoPostで分岐させる際のキーワード
+    entryNo: entryNo, // 以下、相手に渡したいキー・値の組み合わせ
+  },
+}
+const r0 = UrlFetchApp.fetch(config.MasterURL,options);
+const r1 = r0.getContentText();
+const res = JSON.parse(r1);
+console.log('■■局.res='+r1);
+if( res.isErr ){
+  rv = {isErr:true,message:res.message};
+} else {
+  rv = {isErr:false};
+}
+\`\`\`
+
+`},
+{ // =====================================================================
+  title: "[旧版]GASのdoPost関数テンプレート",
+  created: "2023/7/23 13:27",
+  tag: ['Google Apps Script','doPost','template','prototype'],
+  ref: [], article:
+  // =====================================================================
+`旧版。参考のため暫定的に掲載。
+
+\`\`\`
+const elaps = {account:'shimokitasho.oyaji@gmail.com',department:'■■局'};
+const conf = szLib.getConf();
+
+/** doPost: パラメータに応じて処理を分岐
+ * @param {object} e - Class UrlFetchApp <a href="https://developers.google.com/apps-script/reference/url-fetch/url-fetch-app#fetchurl,-params">fetch(url, params)</a>の"Make a POST request with a JSON payload"参照
+ * @param {object} arg - データ部分。JSON.parse(e.postData.getDataAsString())の結果
+ * @param {string} arg.passPhrase - 共通鍵。szLib.getUrl()で取得
+ * @param {string} arg.from       - 送信元
+ * @param {string} arg.to         - 送信先(自分)
+ * @param {string} arg.func       - 分岐する処理名
+ * @param {string} arg.data       - 処理対象データ
+ * @return {object} 正常終了の場合は分岐先処理の戻り値、エラーの場合は以下。
+ * <ul>
+ * <li>isErr {boolean}  - true(固定)
+ * <li>message {string} - エラーメッセージ
+ * </ul>
+ */
+function doPost(e){
+  elaps.startTime = Date.now();  // 開始時刻をセット
+  console.log('■■局.doPost start.',e);
+
+  const arg = JSON.parse(e.postData.contents);
+  let rv = null;
+  if( arg.passPhrase === conf.Master.key ){
+    try {
+      elaps.func = arg.func; // 処理名をセット
+    
+      switch( arg.func ){
+        case 'auth1B':
+          rv = auth1B(arg.data);
+          break;
+      }
+    } catch(e) {
+      // Errorオブジェクトをrvとするとmessageが欠落するので再作成
+      rv = {isErr:true, message:e.name+': '+e.message};
+    } finally {
+      console.log('■■局.doPost end. rv='+JSON.stringify(rv));
+      szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');  // 結果を渡して書き込み
+      return ContentService
+      .createTextOutput(JSON.stringify(rv,null,2))
+      .setMimeType(ContentService.MimeType.JSON);
+    }
+  } else {
+    rv = {isErr:true,message:'invalid passPhrase :'+e.parameter.passPhrase};
+    console.error('■■局.doPost end. '+rv.message);
+    console.log('end',elaps);
+    szLib.elaps(elaps, rv.isErr ? rv.message : 'OK');
+  }
+}
+\`\`\`
+
+`},{ // =====================================================================
+  title: "PandocでOPMLをMDに変換する",
+  created: "2023/7/23 13:21",
+  tag: ['workflowy','opml','pandoc','md','markdown'],
+  ref: [{
+    site: "",
+    title: "Pandoc で OPML ファイルを markdown に変換する",
+    url:"https://www.d-wood.com/blog/2015/07/24_7583.html",
+  }], article:
+  // =====================================================================
+`
+(未検証)
+
+\`\`\`
+\`\`\`
+
+`},
 { // =====================================================================
   title: "JavaScriptテンプレート",
   created: "2023/7/22 11:50",
