@@ -48,3 +48,30 @@
 | Array | [tabulize](Array.tabulize.md) | Array型の変数に2次元配列からHTMLの表を作成してtable要素として返す |
 | Date  | [calc](Date.calc.md) | 指定日に年/月/日/時/分/秒/ミリ秒数を加減した日時を計算する"calc()"メソッドをDate型に追加 |
 | Date  | [toLocale](Date.toLocale.md) | 日時を指定形式の文字列にして返す"toLocale()"メソッドをDate型に追加 |
+
+# コンポーネントの作成手順
+
+## componentUpdate.shでの処理
+
+![](../tools/updateComponent.drawio.svg)
+
+## 実施手順
+
+1. componentをHTML形式で作成
+   1. 原則本体・テスト・Webアプリをまとめてhtml形式で作成<br>
+      時間がとれない場合、スクリプトのみ".js"での保存も可
+   1. tipsの[HTMLテンプレート(ライブラリコンポーネント用)](console/tips/tips.html?id=28166520)をコピー
+   1. ドキュメントをJSDoc形式で記述
+1. JSDoc/部品用/コンソール用を作成
+   - `tools/updateComponent.sh xxx`(xxxはコンポーネントの拡張子を除いたベースファイル名)
+   - jsは`jsdoc2md xxx.js > ../component/xxx.md`
+1. 作成したドキュメントをcomponent/README.mdに登録
+
+- 既存型に独自メソッドを追加する場合、'.'を'_'にした別関数として定義した上で既存型に追加する。<br>
+  (∵下の例で`Array.prototype.tabulize = function(opt){〜`とすると動作はするがjsdoc2mdでMDが生成されない)
+  ```
+  function Array.tabulyze(opt){
+    (中略)
+  }
+  Array.prototype.tabulize = Array.tabulyze;
+  ```
