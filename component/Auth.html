@@ -1,0 +1,171 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>Auth</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css" class="core">/* コアCSS */
+</style>
+</head><body>
+<div><!-- 開始：HTML -->
+  <h1>だみぃ</h1>
+  <p>これはログイン後に表示される初期画面です。</p>
+<!--div class="authorize">
+  <div class="area entryNo">
+    <p>受付番号を入力してください</p>
+    <div>
+      <input type="text" name="entryNo" />
+      <input type="button" name="sendEntryNo" value="送信" disabled />
+    </div>
+  </div>
+
+  <div class="area loading" style="display:none">
+    <img src="img/loading.gif" width="100%" />
+  </div>
+
+  <div class="area passCode" style="display:none">
+    <p>確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>
+    ※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。</p>
+    <input type="text" name="passCode" />
+    <input type="button" name="sendPassCode" value="送信" disabled />
+    <p>※パスコードの有効期限は1時間です</p>
+  </div>
+  <div class="area message" style="display:none"></div>
+</div-->
+</div><!-- 終了：HTML領域 -->
+
+<div><!-- 開始：Script領域 -->
+<!-- 外部Script -->
+<!-- 自作ライブラリ -->
+<!-- webApp利用時： srcのみ必要。パスはcomponentが起点
+  コンソール利用時：class="onConsole" data-embedが必要。data-embedの起点はtools -->
+<script type="text/javascript" src="createElement.js" class="onConsole"
+  data-embed="../component/createElement.js"></script>
+  <script type="text/javascript" src="mergeDeeply.js" class="onConsole"
+  data-embed="../component/mergeDeeply.js"></script>
+
+<script type="text/javascript" class="core">/* コアScript */
+/**
+ * @typedef {Object} AuthOpt
+ * @prop {string} [header=''] - 受付番号入力画面に表示するheaderのinnerHTML
+ * @prop {string} [entryNoMessage='受付番号を入力してください'] - 受付番号入力画面に表示するメッセージ
+ * @prop {string} [entryNoButton='送信'] - 受付番号入力画面のボタンのラベル
+ * @prop {RegExp} [entryNoRegExp=/^[0-9]{1,4}$/] - 受付番号チェック用正規表現
+ */
+
+/**
+ * @classdesc 入力されたID/PWと登録情報を突合し、IDに紐づく各種情報を返す
+ */
+class Auth {
+  /**
+   * @constructor
+   * @param {string} [parentSelector='body'] - 親要素のCSSセレクタ
+   * @param {AuthOpt} [opt={}] - 生成時オプション
+   */
+  constructor(parentSelector,opt={}){
+    const v = {rv:null};
+    console.log('Auth.constructor start.');
+    try {
+
+      // 1.メンバの初期化
+      // ID/PW入力画面を作成
+      this.authDiv = this.#setupScreen();
+      document.querySelector(parentSelector).appendChild(this.authDiv);
+
+      //console.log('v.rv='+JSON.stringify(v.rv));
+      console.log('Auth.constructor end.');
+      return v.rv;
+    } catch(e){
+      console.error('Auth.constructor abnormal end.',e);
+      // ブラウザで実行する場合はアラート表示
+      if( typeof window !== 'undefined' ) alert(e.stack); 
+      throw e; //以降の処理を全て停止
+    }
+  }
+
+  /**
+   * 既定値を設定する
+   * @param {AuthOpt} opt - 生成時オプションとして渡された値
+   * @returns {void}
+   */
+  #setDefault(opt){
+    const v = {};
+    console.log('Auth.#setDefault start.');
+    try {
+
+      //console.log('v.rv='+JSON.stringify(v.rv));
+      console.log('Auth.#setDefault end.');
+      return v.rv;
+    } catch(e){
+      console.error('Auth.#setDefault abnormal end.',e);
+      if( typeof window !== 'undefined' ) alert(e.stack); 
+      v.rv.stack = e.stack; return v.rv;
+    }
+  }
+
+  /** ID/PW入力画面を作成する
+   * @param {void}
+   * @returns {void}
+   */
+  #setupScreen(){
+    const v = {rv:null};
+    console.log('Auth.#setupScreen start.');
+    try {
+
+      v.rv = createElement({
+        style:{
+          // CSSで全画面オーバーレイを実装する方法＆コード例
+          // https://pisuke-code.com/css-fullscreen-overlay/
+          position: "absolute",
+          left: 0, top: 0,
+          width: "100%", height:"100%",
+          background:"#8ff",
+          zIndex:2147483647,  // z-indexの最大値
+        },
+        children:[
+          {tag:'p',text:'受付番号を入力してください'},
+          {children:[
+            {
+              tag:'input',
+              attr:{type:'text',name:'entryNo'},
+              event:{'input':()=>{
+
+              }},
+            },
+            {tag:'input',attr:{type:'button',name:'entryNoButton',
+              value:'送信',disabled:true}},
+          ]},
+        ],
+      });
+
+      console.log('Auth.#setupScreen end.');
+      return v.rv;
+    } catch(e){
+      console.error('Auth.#setupScreen abnormal end.',e);
+      // ブラウザで実行する場合はアラート表示
+      if( typeof window !== 'undefined' ) alert(e.stack); 
+      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+    }
+  }
+}
+
+</script>
+
+<script type="text/javascript" class="test">/* テスト用 */
+function AuthTest(){
+  const v = {data:[]};
+  console.log('AuthTest start.');
+  try {
+    v.conf = new Auth('body',{});
+    console.log('AuthTest end.');
+
+  } catch(e){
+    console.error('AuthTest abnormal end.',e);
+  }
+}
+</script>
+
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded',() => {
+  AuthTest();  // 開発者コンソール上でテスト
+});
+</script>
+</div><!-- 終了：Script領域 -->
+</body></html>
