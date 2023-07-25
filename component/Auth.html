@@ -50,7 +50,7 @@
 /**
  * @typedef {Object} AuthOpt
  * @prop {string} [entryNo] - 受付番号(ID)
- * @prop {string} [password] - パスワード
+ * @prop {string} [passWord] - パスワード
  * @prop {string} [header=''] - 受付番号入力画面に表示するheaderのinnerHTML
  * @prop {string} [entryNoMessage='受付番号を入力してください'] - 受付番号入力画面に表示するメッセージ
  * @prop {string} [entryNoButton='送信'] - 受付番号入力画面のボタンのラベル
@@ -59,6 +59,9 @@
 
 /**
  * @classdesc 入力されたID/PWと登録情報を突合し、IDに紐づく各種情報を返す
+ * 
+ * - パスコード(passCode) : 受付番号入力後受信したメールに記載された番号
+ * - パスワード(passWord) : 鍵ペア生成の際、秘密鍵の基となる文字列
  */
 class Auth {
   /**
@@ -76,11 +79,25 @@ class Auth {
         parentWindow: document.querySelector(parentSelector), // 親画面
         parentSelector: parentSelector, // 親画面のCSSセレクタ
         entryNo: null,  // {string} - 受付番号
-        password: null, // {string} - パスワード
-        entryNoWindow: {   // 受付番号入力画面関係
+        passWord: null, // {string} - パスワード
+        entryNo:{ // 受付番号関係
+          element: null, // {HTMLElement} - 画面の要素
+          value: null,  // {string} - 受付番号
           header:'',    // {string} - 受付番号入力画面に表示するheaderのinnerHTML
-          msg:'受付番号を入力してください', // {string} - 受付番号入力画面に表示するメッセージ
+          msg1:'受付番号を入力してください', // {string} - 入力欄の前に表示するメッセージ
           button:'送信',  // {string} - 受付番号入力画面のボタンのラベル
+          msg2:'',      // {string} - 入力欄の後に表示するメッセージ
+          rex:/^[0-9]{1,4}$/, // {RegExp} - 受付番号チェック用正規表現
+        },
+        passCode:{
+          element: null, // {HTMLElement} - 画面の要素
+          value: null,  // {string} - パスコード
+          header:'',    // {string} - パスコード入力画面に表示するheaderのinnerHTML
+          msg1:'確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>'
+          + '※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。',
+                        // {string} - 入力欄の前に表示するメッセージ
+          button:'送信',  // {string} - 受付番号入力画面のボタンのラベル
+          msg2: '※パスコードの有効期限は1時間です',
           rex:/^[0-9]{1,4}$/, // {RegExp} - 受付番号チェック用正規表現
         },
       },opt);
@@ -90,7 +107,7 @@ class Auth {
       this.#setWindows();
 
       // 2.entryNo(ID)が未定義なら画面から入力
-      if( this.entryNo === null )
+      if( this.entryNo.value === null )
         this.#getEntryNo();
 
       // 2.ID/PW入力画面を作成
@@ -157,10 +174,10 @@ class Auth {
       });
 
       // 受付番号入力画面
-      this.entryNoWindow = createElement({
+      this.entryNo.element = createElement({
         children:[
-          {html:this.entryNoWindow.header}, // タイトル
-          {tag:'p',text:this.entryNoWindow.msg},  // 入力メッセージ
+          {html:this.entryNo.header}, // タイトル
+          {tag:'p',html:this.entryNo.msg1},  // 入力欄前メッセージ
           { // inputBox
             tag:'input',
             attr:{type:'text',name:'entryNo'},
@@ -171,14 +188,15 @@ class Auth {
             attr:{
               type:'button',
               name:'entryNoButton',
-              value:this.entryNoWindow.button,disabled:true
+              value:this.entryNo.button,disabled:true
             },
           },
+          {tag:'p',html:this.entryNo.msg2},  // 入力欄後メッセージ
         ],
       });
 
       // ローディング画面
-      this.loadingWindow = createElement({
+      this.loading = {element:createElement({
         style:{
           display:"flex",
           justifyContent:"center",
@@ -198,12 +216,35 @@ class Auth {
             text:'loading...'
           },
         ],
+      })};
+
+      // パスコード入力画面
+      this.passCode.element = createElement({
+        children:[
+          {html:this.passCode.header}, // タイトル
+          {tag:'p',html:this.passCode.msg1},  // 入力欄前メッセージ
+          { // inputBox
+            tag:'input',
+            attr:{type:'text',name:'passCode'},
+            event:{'input':()=>{}},
+          },
+          { // 送信ボタン
+            tag:'input',
+            attr:{
+              type:'button',
+              name:'passCodeButton',
+              value:this.passCode.button,disabled:true
+            },
+          },
+          {tag:'p',html:this.passCode.msg2},  // 入力欄後メッセージ
+        ],
       });
 
       // 画面をセット
       this.parentWindow.appendChild(this.AuthWindow);
-      this.AuthWindow.appendChild(this.entryNoWindow);
-      this.AuthWindow.appendChild(this.loadingWindow);
+      this.AuthWindow.appendChild(this.entryNo.element);
+      this.AuthWindow.appendChild(this.loading.element);
+      this.AuthWindow.appendChild(this.passCode.element);
 
       // 入力された受付番号をプロパティに登録
 
@@ -236,28 +277,6 @@ class Auth {
     }
 
   }
-
-  /** ID/PW入力画面を作成する
-   * @param {void}
-   * @returns {void}
-   */
-  #setupScreen(){
-    const v = {rv:null};
-    console.log('Auth.#setupScreen start.');
-    try {
-
-
-      console.log('Auth.#setupScreen end.');
-      return v.rv;
-    } catch(e){
-      console.error('Auth.#setupScreen abnormal end.',e);
-      // ブラウザで実行する場合はアラート表示
-      //if( typeof window !== 'undefined' ) alert(e.stack); 
-      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
-    }
-  }
-
-
 
 }
 
