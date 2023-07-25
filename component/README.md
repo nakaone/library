@@ -3,6 +3,7 @@
 | ファイル名 | 概要 |
 | :-- | :-- |
 | [szLib.css](szLib.css) | 独自作成標準CSS |
+| [loading.css](loading.css) | 待機中(loading)画面作成 |
 
 # 関数
 

@@ -136,40 +136,48 @@ class Auth {
     }
   }
 
+  /** Auth関係画面をセットする
+   * 
+   */
   #setWindows(){
     const v = {rv:null};
     console.log('Auth.#setWindows start.');
     try {
-      // 受付番号入力画面
-      this.entryNoWindow = createElement({
+      // Auth関係画面のwrapper
+      this.AuthWindow = createElement({
         style:{
           // CSSで全画面オーバーレイを実装する方法＆コード例
           // https://pisuke-code.com/css-fullscreen-overlay/
           position: "absolute",
           left: 0, top: 0,
           width: "100%", height:"100%",
-          background:"#8ff",
+          background:"#fff",
           zIndex:2147483647,  // z-indexの最大値
         },
-        /*
+      });
+
+      // 受付番号入力画面
+      this.entryNoWindow = createElement({
         children:[
           {html:this.entryNoWindow.header}, // タイトル
           {tag:'p',text:this.entryNoWindow.msg},  // 入力メッセージ
-          {children:[
-            {
-              tag:'input',
-              attr:{type:'text',name:'entryNo'},
-              event:{'input':()=>{
-
-              }},
+          { // inputBox
+            tag:'input',
+            attr:{type:'text',name:'entryNo'},
+            event:{'input':()=>{}},
+          },
+          { // 送信ボタン
+            tag:'input',
+            attr:{
+              type:'button',
+              name:'entryNoButton',
+              value:this.entryNoWindow.button,disabled:true
             },
-            {tag:'input',attr:{type:'button',name:'entryNoButton',
-              value:this.entryNoWindow.button,disabled:true}},
-          ]},
+          },
         ],
-        */
       });
 
+      // ローディング画面
       this.loadingWindow = createElement({
         style:{
           display:"flex",
@@ -177,16 +185,25 @@ class Auth {
           alignItems:"center",
           height:"100%",
           width:"100%",
-          background:"#000",
         },
         children:[
-          {attr:{class:'loading5'},style:{color:"#fff"},text:'loading...'}
+          {
+            attr:{class:'loading5'},
+            style:{ // 点の大きさと色
+              "--dot-size":"2rem",
+              "--R":0,
+              "--G":0,
+              "--B":0,
+            },
+            text:'loading...'
+          },
         ],
       });
 
       // 画面をセット
-      this.parentWindow.appendChild(this.entryNoWindow);
-      this.entryNoWindow.appendChild(this.loadingWindow);
+      this.parentWindow.appendChild(this.AuthWindow);
+      this.AuthWindow.appendChild(this.entryNoWindow);
+      this.AuthWindow.appendChild(this.loadingWindow);
 
       // 入力された受付番号をプロパティに登録
 

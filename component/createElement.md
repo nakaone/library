@@ -1,3 +1,5 @@
+lastUpdate: 2023年 7月25日 火曜日 14時33分37秒 JST
+
 ## Functions
 
 <dl>
@@ -77,7 +79,11 @@ function createElement(arg={}){
     v.rv.setAttribute(v.i,v.x = v.arg.attr[v.i]);
   }
   for( v.i in v.arg.style ){ // スタイルの設定
-    v.rv.style[v.i] = v.arg.style[v.i];
+    if( v.i.match(/^\-\-/) ){ // CSS変数の場合
+      v.rv.style.setProperty(v.i,v.arg.style[v.i]);
+    } else {
+      v.rv.style[v.i] = v.arg.style[v.i];
+    }
     //console.log(v.i,v.arg.style[v.i],v.rv.style);
   }
   for( v.i in v.arg.event ){ // イベントの設定

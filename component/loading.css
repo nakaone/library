@@ -1,12 +1,14 @@
 /*
   ローディングアイコン集
   https://projects.lukehaas.me/css-loaders/
+
+  ex. <div class="loading5">loading...</div>
 */
 .loading5 {
-  --size: 1.4rem;
-  --R: 255;
-  --G: 255;
-  --B: 255;
+  --dot-size: 1.4rem;
+  --R: 0;
+  --G: 0;
+  --B: 0;
   --back: rgba(var(--R),var(--G),var(--B),1);
   --pale: rgba(var(--R),var(--G),var(--B),0.2);
   --middle: rgba(var(--R),var(--G),var(--B),0.5);
@@ -14,8 +16,8 @@
 
   margin: 100px auto;
   font-size: 25px;
-  width: 1em;
-  height: 1em;
+  width: var(--dot-size);
+  height: var(--dot-size);
   border-radius: 50%;
   position: relative;
   text-indent: -9999em;
