@@ -1,6 +1,9 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
 <title>Auth</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- 自作CSS -->
+<link rel="stylesheet" type="text/css" href="loading.css" class="core"
+  data-embed="../component/loading.css" />
 <style type="text/css" class="core">/* コアCSS */
 </style>
 </head><body>
@@ -38,12 +41,16 @@
   コンソール利用時：class="onConsole" data-embedが必要。data-embedの起点はtools -->
 <script type="text/javascript" src="createElement.js" class="onConsole"
   data-embed="../component/createElement.js"></script>
-  <script type="text/javascript" src="mergeDeeply.js" class="onConsole"
+<script type="text/javascript" src="mergeDeeply.js" class="onConsole"
   data-embed="../component/mergeDeeply.js"></script>
+<script type="text/javascript" src="whichType.js" class="onConsole"
+  data-embed="../component/whichType.js"></script>
 
 <script type="text/javascript" class="core">/* コアScript */
 /**
  * @typedef {Object} AuthOpt
+ * @prop {string} [entryNo] - 受付番号(ID)
+ * @prop {string} [password] - パスワード
  * @prop {string} [header=''] - 受付番号入力画面に表示するheaderのinnerHTML
  * @prop {string} [entryNoMessage='受付番号を入力してください'] - 受付番号入力画面に表示するメッセージ
  * @prop {string} [entryNoButton='送信'] - 受付番号入力画面のボタンのラベル
@@ -64,10 +71,31 @@ class Auth {
     console.log('Auth.constructor start.');
     try {
 
-      // 1.メンバの初期化
-      // ID/PW入力画面を作成
-      this.authDiv = this.#setupScreen();
-      document.querySelector(parentSelector).appendChild(this.authDiv);
+      // 1.オプション未定義項目の既定値をプロパティにセット
+      this.#setProperties(this,{
+        parentWindow: document.querySelector(parentSelector), // 親画面
+        parentSelector: parentSelector, // 親画面のCSSセレクタ
+        entryNo: null,  // {string} - 受付番号
+        password: null, // {string} - パスワード
+        entryNoWindow: {   // 受付番号入力画面関係
+          header:'',    // {string} - 受付番号入力画面に表示するheaderのinnerHTML
+          msg:'受付番号を入力してください', // {string} - 受付番号入力画面に表示するメッセージ
+          button:'送信',  // {string} - 受付番号入力画面のボタンのラベル
+          rex:/^[0-9]{1,4}$/, // {RegExp} - 受付番号チェック用正規表現
+        },
+      },opt);
+      console.log('this:',this);
+
+      // 2.各種画面を用意する
+      this.#setWindows();
+
+      // 2.entryNo(ID)が未定義なら画面から入力
+      if( this.entryNo === null )
+        this.#getEntryNo();
+
+      // 2.ID/PW入力画面を作成
+      //this.authDiv = this.#setupScreen();
+      //document.querySelector(parentSelector).appendChild(this.authDiv);
 
       //console.log('v.rv='+JSON.stringify(v.rv));
       console.log('Auth.constructor end.');
@@ -75,29 +103,121 @@ class Auth {
     } catch(e){
       console.error('Auth.constructor abnormal end.',e);
       // ブラウザで実行する場合はアラート表示
-      if( typeof window !== 'undefined' ) alert(e.stack); 
+      //if( typeof window !== 'undefined' ) alert(e.stack); 
       throw e; //以降の処理を全て停止
     }
   }
 
-  /**
-   * 既定値を設定する
+  /** 既定値を設定する
    * @param {AuthOpt} opt - 生成時オプションとして渡された値
    * @returns {void}
    */
-  #setDefault(opt){
-    const v = {};
-    console.log('Auth.#setDefault start.');
+  #setProperties(dest,def,opt){
+    const v = {rv:true};
+    console.log('Auth.#setProperties start.');
+    try {
+
+      for( let key in def ){
+        if( whichType(def[key]) !== 'Object' ){
+          dest[key] = opt[key] || def[key]; // 配列はマージしない
+        } else {
+          if( !dest.hasOwnProperty(key) ) dest[key] = {};
+          this.#setProperties(dest[key],def[key],opt[key]||{});
+        }
+      }
+
+      //console.log('this='+JSON.stringify(this));
+      console.log('Auth.#setProperties end.');
+      return v.rv;
+    } catch(e){
+      console.error('Auth.#setProperties abnormal end.',e);
+      //if( typeof window !== 'undefined' ) alert(e.stack); 
+      v.rv.stack = e.stack; return v.rv;
+    }
+  }
+
+  #setWindows(){
+    const v = {rv:null};
+    console.log('Auth.#setWindows start.');
+    try {
+      // 受付番号入力画面
+      this.entryNoWindow = createElement({
+        style:{
+          // CSSで全画面オーバーレイを実装する方法＆コード例
+          // https://pisuke-code.com/css-fullscreen-overlay/
+          position: "absolute",
+          left: 0, top: 0,
+          width: "100%", height:"100%",
+          background:"#8ff",
+          zIndex:2147483647,  // z-indexの最大値
+        },
+        /*
+        children:[
+          {html:this.entryNoWindow.header}, // タイトル
+          {tag:'p',text:this.entryNoWindow.msg},  // 入力メッセージ
+          {children:[
+            {
+              tag:'input',
+              attr:{type:'text',name:'entryNo'},
+              event:{'input':()=>{
+
+              }},
+            },
+            {tag:'input',attr:{type:'button',name:'entryNoButton',
+              value:this.entryNoWindow.button,disabled:true}},
+          ]},
+        ],
+        */
+      });
+
+      this.loadingWindow = createElement({
+        style:{
+          display:"flex",
+          justifyContent:"center",
+          alignItems:"center",
+          height:"100%",
+          width:"100%",
+          background:"#000",
+        },
+        children:[
+          {attr:{class:'loading5'},style:{color:"#fff"},text:'loading...'}
+        ],
+      });
+
+      // 画面をセット
+      this.parentWindow.appendChild(this.entryNoWindow);
+      this.entryNoWindow.appendChild(this.loadingWindow);
+
+      // 入力された受付番号をプロパティに登録
+
+      //console.log('v.rv='+JSON.stringify(v.rv));
+      console.log('Auth.#setWindows end.');
+      return v.rv;
+    } catch(e){
+      console.error('Auth.#setWindows abnormal end.',e);
+      // ブラウザで実行する場合はアラート表示
+      //if( typeof window !== 'undefined' ) alert(e.stack); 
+      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+    }
+
+  }
+
+  #getEntryNo(){
+    const v = {rv:null};
+    console.log('Auth.#getEntryNo start.');
     try {
 
       //console.log('v.rv='+JSON.stringify(v.rv));
-      console.log('Auth.#setDefault end.');
+      console.log('Auth.#getEntryNo end.');
       return v.rv;
     } catch(e){
-      console.error('Auth.#setDefault abnormal end.',e);
+      console.error('Auth.#getEntryNo abnormal end.',e);
+      // ブラウザで実行する場合はアラート表示
       if( typeof window !== 'undefined' ) alert(e.stack); 
-      v.rv.stack = e.stack; return v.rv;
+      //throw e; //以降の処理を全て停止する場合
+      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
     }
+
   }
 
   /** ID/PW入力画面を作成する
@@ -109,41 +229,19 @@ class Auth {
     console.log('Auth.#setupScreen start.');
     try {
 
-      v.rv = createElement({
-        style:{
-          // CSSで全画面オーバーレイを実装する方法＆コード例
-          // https://pisuke-code.com/css-fullscreen-overlay/
-          position: "absolute",
-          left: 0, top: 0,
-          width: "100%", height:"100%",
-          background:"#8ff",
-          zIndex:2147483647,  // z-indexの最大値
-        },
-        children:[
-          {tag:'p',text:'受付番号を入力してください'},
-          {children:[
-            {
-              tag:'input',
-              attr:{type:'text',name:'entryNo'},
-              event:{'input':()=>{
-
-              }},
-            },
-            {tag:'input',attr:{type:'button',name:'entryNoButton',
-              value:'送信',disabled:true}},
-          ]},
-        ],
-      });
 
       console.log('Auth.#setupScreen end.');
       return v.rv;
     } catch(e){
       console.error('Auth.#setupScreen abnormal end.',e);
       // ブラウザで実行する場合はアラート表示
-      if( typeof window !== 'undefined' ) alert(e.stack); 
+      //if( typeof window !== 'undefined' ) alert(e.stack); 
       v.rv.stack = e.stack; return v.rv; // 処理継続する場合
     }
   }
+
+
+
 }
 
 </script>
@@ -153,7 +251,11 @@ function AuthTest(){
   const v = {data:[]};
   console.log('AuthTest start.');
   try {
-    v.conf = new Auth('body',{});
+    v.conf = new Auth('body',{
+      entryNoWindow:{
+        header:'<h1>受付番号入力</h1>',
+      }
+    });
     console.log('AuthTest end.');
 
   } catch(e){
