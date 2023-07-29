@@ -1,3 +1,5 @@
+lastUpdate: 2023年 7月30日 日曜日 07時58分43秒 JST
+
 <a name="createPassword"></a>
 
 ## createPassword([len]) ⇒ <code>string</code>

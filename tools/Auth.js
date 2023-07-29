@@ -1,56 +1,4 @@
-<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-<title>Auth</title>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<!-- 自作CSS -->
-<link rel="stylesheet" type="text/css" href="loading.css" class="core"
-  data-embed="../component/loading.css" />
-<style type="text/css" class="core">/* コアCSS */
-</style>
-</head><body>
-<div><!-- 開始：HTML -->
-  <h1>だみぃ</h1>
-  <p>これはログイン後に表示される初期画面です。</p>
-<!--div class="authorize">
-  <div class="area entryNo">
-    <p>受付番号を入力してください</p>
-    <div>
-      <input type="text" name="entryNo" />
-      <input type="button" name="sendEntryNo" value="送信" disabled />
-    </div>
-  </div>
-
-  <div class="area loading" style="display:none">
-    <img src="img/loading.gif" width="100%" />
-  </div>
-
-  <div class="area passCode" style="display:none">
-    <p>確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>
-    ※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。</p>
-    <input type="text" name="passCode" />
-    <input type="button" name="sendPassCode" value="送信" disabled />
-    <p>※パスコードの有効期限は1時間です</p>
-  </div>
-  <div class="area message" style="display:none"></div>
-</div-->
-</div><!-- 終了：HTML領域 -->
-
-<div><!-- 開始：Script領域 -->
-<!-- 外部Script -->
-<!-- 自作ライブラリ -->
-<!-- webApp利用時： srcのみ必要。パスはcomponentが起点
-  コンソール利用時：class="onConsole" data-embedが必要。data-embedの起点はtools -->
-<script type="text/javascript" src="createElement.js"
-  data-embed="../component/createElement.js"></script>
-<script type="text/javascript" src="createPassword.js"
-  data-embed="../component/createPassword.js"></script>
-<script type="text/javascript" src="../external/cryptico.min.js"
-  data-embed="../external/cryptico.min.js"></script>
-<script type="text/javascript" src="mergeDeeply.js"
-  data-embed="../component/mergeDeeply.js"></script>
-<script type="text/javascript" src="whichType.js"
-  data-embed="../component/whichType.js"></script>
-
-<script type="text/javascript" class="core">/* コアScript */
+/* コアScript */
 /**
  * @typedef {Object} AuthOpt
  * @prop {string} [entryNo] - 受付番号(ID)
@@ -83,9 +31,7 @@ class Auth {
         parentWindow: document.querySelector(parentSelector), // 親画面
         parentSelector: parentSelector, // 親画面のCSSセレクタ
         keys:{  // 自他局のRSAキー関係情報
-          bits: 2048,
           passWord: null, // {string} - パスワード
-          pwLength: 32,   // {number} - 自動生成する場合のパスワード文字数
           secret: null,
           public: { // {string} - 公開鍵
             self: null,
@@ -116,10 +62,7 @@ class Auth {
       },opt);
       console.log('this:',this);
 
-      // 2.秘密鍵・公開鍵を作成し、プロパティに格納する
-      this.#setupKeys();
-
-      // 3.各種画面を用意する
+      // 2.各種画面を用意する
       this.#setWindows();
 
       // 3.entryNo(ID)を認証局に送信、パスコードメールを受け取る
@@ -172,19 +115,10 @@ class Auth {
     const v = {rv:null};
     console.log('Auth.#setupKeys start.');
     try {
-      // パスワード未指定なら作成
-      if( this.keys.passWord === null ){
-        this.keys.passWord = createPassword(this.keys.pwLength);
-      }
-
       // 鍵ペアの生成
-      this.keys.secret = cryptico.generateRSAKey(this.keys.passWord, this.keys.bits);
-      this.keys.public.self = cryptico.publicKeyString(this.keys.secret);
-      console.log(this.keys);
+      // this.keys.passWordが設定されていたらそれを使用
 
-      // 秘密鍵の保存
-      //Fs.writeFileSync('./private.json', JSON.stringify(key.toJSON()));
-
+      
       //console.log('v.rv='+JSON.stringify(v.rv));
       console.log('Auth.#setupKeys end.');
       return v.rv;
@@ -325,6 +259,8 @@ class Auth {
 
   }
 
+
+
   #getEntryNo(){
     const v = {rv:null};
     console.log('Auth.#getEntryNo start.');
@@ -346,31 +282,75 @@ class Auth {
   }
 
 }
+function createElement(arg={}){
+  const v = {rv:null,arg:{}};
+  v.arg = mergeDeeply(
+    {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[]},
+    (typeof arg === 'string' ? {tag:arg} : arg));
+  v.rv = document.createElement(v.arg.tag);
+  for( v.i in v.arg.attr ){
+    v.rv.setAttribute(v.i,v.x = v.arg.attr[v.i]);
+  }
+  for( v.i in v.arg.style ){
+    if( v.i.match(/^\-\-/) ){
+      v.rv.style.setProperty(v.i,v.arg.style[v.i]);
+    } else {
+      v.rv.style[v.i] = v.arg.style[v.i];
+    }
+  }
+  for( v.i in v.arg.event ){
+    v.rv.addEventListener(v.i,v.arg.event[v.i],false);
+  }
+  if( v.arg.html.length > 0 ){
+    v.rv.innerHTML = v.arg.html;
+  } else {
+    v.rv.innerText = v.arg.text;
+  }
+  for( v.i=0 ; v.i<v.arg.children.length ; v.i++ ){
+    v.rv.appendChild(createElement(v.arg.children[v.i]));
+  }
+  return v.rv;
+}
+/**
+ * @desc オブジェクトのプロパティを再帰的にマージ
+ * - Qiita [JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法](https://qiita.com/riversun/items/60307d58f9b2f461082a)
+ * 
+ * @param {Object} target - 結合対象のオブジェクト1
+ * @param {Object} source - 結合対象のオブジェクト2。同名のプロパティはこちらで上書き
+ * @param {Object} opts - オプション
+ * @param {boolean} [opts.concatArray=false] - プロパティの値が配列だった場合、結合するならtrue
+ * @returns {Object} 結合されたオブジェクト
+ */
 
-</script>
-
-<script type="text/javascript" class="test">/* テスト用 */
-function AuthTest(){
-  const v = {data:[]};
-  console.log('AuthTest start.');
-  try {
-    v.conf = new Auth('body',{
-      entryNoWindow:{
-        header:'<h1>受付番号入力</h1>',
+function mergeDeeply(target, source, opts) {
+  const isObject = obj => obj && typeof obj === 'object' && !Array.isArray(obj);
+  const isConcatArray = opts && opts.concatArray;
+  let result = Object.assign({}, target);
+  if (isObject(target) && isObject(source)) {
+    for (const [sourceKey, sourceValue] of Object.entries(source)) {
+      const targetValue = target[sourceKey];
+      if (isConcatArray && Array.isArray(sourceValue) && Array.isArray(targetValue)) {
+        result[sourceKey] = targetValue.concat(...sourceValue);
       }
-    });
-    console.log('AuthTest end.');
-
-  } catch(e){
-    console.error('AuthTest abnormal end.',e);
+      else if (isObject(sourceValue) && target.hasOwnProperty(sourceKey)) {
+        result[sourceKey] = mergeDeeply(targetValue, sourceValue, opts);
+      }
+      else {
+        Object.assign(result, {[sourceKey]: sourceValue});
+      }
+    }
+  }
+  return result;
+}
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
   }
 }
-</script>
-
-<script type="text/javascript">
-window.addEventListener('DOMContentLoaded',() => {
-  AuthTest();  // 開発者コンソール上でテスト
-});
-</script>
-</div><!-- 終了：Script領域 -->
-</body></html>

@@ -34,7 +34,7 @@
 
 | クラス名 | 概要 |
 | :-- | :-- |
-| [Auth](Auth.readme.md) | ブラウザで認証を行い、Webアプリから設定情報(config)を取得、後続処理を行う |
+| [Auth](Auth.md) | ブラウザで認証を行い、Webアプリから設定情報(config)を取得、後続処理を行う |
 | [BurgerMenu](BurgerMenu.md) | HTMLにハンバーガーメニューを作成する |
 | [szSheet](szSheet.md) | Googleスプレッドでデータ/行のCRUDを行う擬似クラス |
 | [szTree](szTree.md) | Googleスプレッド上でツリー構造を持つ二次元配列の検索 |

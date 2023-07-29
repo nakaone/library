@@ -1,56 +1,62 @@
-<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-<title>Auth</title>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<!-- 自作CSS -->
-<link rel="stylesheet" type="text/css" href="loading.css" class="core"
-  data-embed="../component/loading.css" />
-<style type="text/css" class="core">/* コアCSS */
-</style>
-</head><body>
-<div><!-- 開始：HTML -->
-  <h1>だみぃ</h1>
-  <p>これはログイン後に表示される初期画面です。</p>
-<!--div class="authorize">
-  <div class="area entryNo">
-    <p>受付番号を入力してください</p>
-    <div>
-      <input type="text" name="entryNo" />
-      <input type="button" name="sendEntryNo" value="送信" disabled />
-    </div>
-  </div>
+lastUpdate: 2023年 7月30日 日曜日 07時26分22秒 JST
 
-  <div class="area loading" style="display:none">
-    <img src="img/loading.gif" width="100%" />
-  </div>
+## Classes
 
-  <div class="area passCode" style="display:none">
-    <p>確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>
-    ※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。</p>
-    <input type="text" name="passCode" />
-    <input type="button" name="sendPassCode" value="送信" disabled />
-    <p>※パスコードの有効期限は1時間です</p>
-  </div>
-  <div class="area message" style="display:none"></div>
-</div-->
-</div><!-- 終了：HTML領域 -->
+<dl>
+<dt><a href="#Auth">Auth</a></dt>
+<dd><p>入力されたID/PWと登録情報を突合し、IDに紐づく各種情報を返す</p>
+<ul>
+<li>パスコード(passCode) : 受付番号入力後受信したメールに記載された番号</li>
+<li>パスワード(passWord) : 鍵ペア生成の際、秘密鍵の基となる文字列</li>
+</ul>
+</dd>
+</dl>
 
-<div><!-- 開始：Script領域 -->
-<!-- 外部Script -->
-<!-- 自作ライブラリ -->
-<!-- webApp利用時： srcのみ必要。パスはcomponentが起点
-  コンソール利用時：class="onConsole" data-embedが必要。data-embedの起点はtools -->
-<script type="text/javascript" src="createElement.js"
-  data-embed="../component/createElement.js"></script>
-<script type="text/javascript" src="createPassword.js"
-  data-embed="../component/createPassword.js"></script>
-<script type="text/javascript" src="../external/cryptico.min.js"
-  data-embed="../external/cryptico.min.js"></script>
-<script type="text/javascript" src="mergeDeeply.js"
-  data-embed="../component/mergeDeeply.js"></script>
-<script type="text/javascript" src="whichType.js"
-  data-embed="../component/whichType.js"></script>
+## Typedefs
 
-<script type="text/javascript" class="core">/* コアScript */
+<dl>
+<dt><a href="#AuthOpt">AuthOpt</a> : <code>Object</code></dt>
+<dd></dd>
+</dl>
+
+<a name="Auth"></a>
+
+## Auth
+入力されたID/PWと登録情報を突合し、IDに紐づく各種情報を返す
+
+- パスコード(passCode) : 受付番号入力後受信したメールに記載された番号
+- パスワード(passWord) : 鍵ペア生成の際、秘密鍵の基となる文字列
+
+**Kind**: global class  
+<a name="new_Auth_new"></a>
+
+### new Auth([parentSelector], [opt])
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [parentSelector] | <code>string</code> | <code>&quot;&#x27;body&#x27;&quot;</code> | 親要素のCSSセレクタ |
+| [opt] | [<code>AuthOpt</code>](#AuthOpt) | <code>{}</code> | 生成時オプション |
+
+<a name="AuthOpt"></a>
+
+## AuthOpt : <code>Object</code>
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| [entryNo] | <code>string</code> |  | 受付番号(ID) |
+| [passWord] | <code>string</code> |  | パスワード |
+| [header] | <code>string</code> | <code>&quot;&#x27;&#x27;&quot;</code> | 受付番号入力画面に表示するheaderのinnerHTML |
+| [entryNoMessage] | <code>string</code> | <code>&quot;&#x27;受付番号を入力してください&#x27;&quot;</code> | 受付番号入力画面に表示するメッセージ |
+| [entryNoButton] | <code>string</code> | <code>&quot;&#x27;送信&#x27;&quot;</code> | 受付番号入力画面のボタンのラベル |
+| [entryNoRegExp] | <code>RegExp</code> | <code>/^[0-9]{1,4}$/</code> | 受付番号チェック用正規表現 |
+
+
+## source
+
+```
+/* コアScript */
 /**
  * @typedef {Object} AuthOpt
  * @prop {string} [entryNo] - 受付番号(ID)
@@ -83,9 +89,7 @@ class Auth {
         parentWindow: document.querySelector(parentSelector), // 親画面
         parentSelector: parentSelector, // 親画面のCSSセレクタ
         keys:{  // 自他局のRSAキー関係情報
-          bits: 2048,
           passWord: null, // {string} - パスワード
-          pwLength: 32,   // {number} - 自動生成する場合のパスワード文字数
           secret: null,
           public: { // {string} - 公開鍵
             self: null,
@@ -116,10 +120,7 @@ class Auth {
       },opt);
       console.log('this:',this);
 
-      // 2.秘密鍵・公開鍵を作成し、プロパティに格納する
-      this.#setupKeys();
-
-      // 3.各種画面を用意する
+      // 2.各種画面を用意する
       this.#setWindows();
 
       // 3.entryNo(ID)を認証局に送信、パスコードメールを受け取る
@@ -172,19 +173,10 @@ class Auth {
     const v = {rv:null};
     console.log('Auth.#setupKeys start.');
     try {
-      // パスワード未指定なら作成
-      if( this.keys.passWord === null ){
-        this.keys.passWord = createPassword(this.keys.pwLength);
-      }
-
       // 鍵ペアの生成
-      this.keys.secret = cryptico.generateRSAKey(this.keys.passWord, this.keys.bits);
-      this.keys.public.self = cryptico.publicKeyString(this.keys.secret);
-      console.log(this.keys);
+      // this.keys.passWordが設定されていたらそれを使用
 
-      // 秘密鍵の保存
-      //Fs.writeFileSync('./private.json', JSON.stringify(key.toJSON()));
-
+      
       //console.log('v.rv='+JSON.stringify(v.rv));
       console.log('Auth.#setupKeys end.');
       return v.rv;
@@ -325,6 +317,8 @@ class Auth {
 
   }
 
+
+
   #getEntryNo(){
     const v = {rv:null};
     console.log('Auth.#getEntryNo start.');
@@ -346,31 +340,4 @@ class Auth {
   }
 
 }
-
-</script>
-
-<script type="text/javascript" class="test">/* テスト用 */
-function AuthTest(){
-  const v = {data:[]};
-  console.log('AuthTest start.');
-  try {
-    v.conf = new Auth('body',{
-      entryNoWindow:{
-        header:'<h1>受付番号入力</h1>',
-      }
-    });
-    console.log('AuthTest end.');
-
-  } catch(e){
-    console.error('AuthTest abnormal end.',e);
-  }
-}
-</script>
-
-<script type="text/javascript">
-window.addEventListener('DOMContentLoaded',() => {
-  AuthTest();  // 開発者コンソール上でテスト
-});
-</script>
-</div><!-- 終了：Script領域 -->
-</body></html>
+```
