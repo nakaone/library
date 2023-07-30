@@ -51,23 +51,22 @@
 class Auth {
   /**
    * @constructor
-   * @param {string} [parentSelector='body'] - 親要素のCSSセレクタ
+   * @param {string} gatewayUrl - 認証局APIのURL
    * @param {AuthOpt} [opt={}] - 生成時オプション
    */
-  constructor(parentSelector,opt={}){
+  constructor(gatewayUrl,opt={}){
     const v = {rv:null};
     console.log('Auth.constructor start.');
     try {
       this.constructorStart = Date.now();
 
-      // 1.親画面の情報をプロパティに保存
-      this.parentSelector = parentSelector; // 親画面のCSSセレクタ
-      this.parentWindow = document.querySelector(parentSelector); // 親画面
-      console.log(Date.now()-this.constructorStart);
-
-      // 2.オプション未定義項目の既定値をプロパティにセット
+      // 1.オプション未定義項目の既定値をプロパティにセット
       this.#setProperties(this,null,opt);
       console.log('this:',this);
+      console.log(Date.now()-this.constructorStart);
+
+      // 2.必須項目をプロパティに保存
+      this.gateway.url = gatewayUrl;  // 認証局のURL
       console.log(Date.now()-this.constructorStart);
 
       // 3.各種画面を用意する
@@ -82,7 +81,7 @@ class Auth {
       console.log(Date.now()-this.constructorStart);
 
       // 5.entryNo(ID)を認証局に送信、パスコードメールを受け取る
-      //this.#getEntryNo();
+      this.#getEntryNo();
       console.log(Date.now()-this.constructorStart);
 
       //console.log('v.rv='+JSON.stringify(v.rv));
@@ -102,16 +101,21 @@ class Auth {
    */
   #setProperties(dest,def,opt){
     const v = {rv:true,def:{
-      keys:{  // 自他局のRSAキー関係情報
+      parentSelector: "body", // {string} - 親要素のCSSセレクタ
+      RSA:{  // 自局のRSAキー関係情報
         bits: 2048,     // {number} - RSAキー長
         passWord: null, // {string} - パスワード
         pwLength: 32,   // {number} - 自動生成する場合のパスワード文字数
-        secret: null,   // {RSAKey} - 秘密鍵
-        public: { // {string} - 公開鍵
-          self: null,
-          gateway: null,
-          front: null,
-        }
+        sKey: null,     // {RSAKey} - 秘密鍵
+        pKey: null,     // {string} - 公開鍵
+      },
+      gateway:{ // 認証局関連情報
+        url: null,  // {string} - APIのURL
+        pKey: null, // {string} - 公開鍵
+      },
+      front: {  // 配信局関連情報
+        url: null,  // {string} - APIのURL
+        pKey: null, // {string} - 公開鍵
       },
       AuthWindow: {
         element: null, // {HTMLElement} - 受付番号入力画面の要素。setWindowsで設定。
@@ -144,8 +148,10 @@ class Auth {
     }};
     console.log('Auth.#setProperties start.');
     try {
-      // 最初は既定値定義Obj(v.def)を使用、再起呼出の場合は呼出元指定を使用
-      if( def !== null ) v.def = def;
+      if( def !== null ){ // 2回目以降の呼出(再起呼出)
+        // 再起呼出の場合、呼出元から渡された定義Objを使用
+        v.def = def;
+      }
 
       for( let key in v.def ){
         if( whichType(v.def[key]) !== 'Object' ){
@@ -154,6 +160,11 @@ class Auth {
           if( !dest.hasOwnProperty(key) ) dest[key] = {};
           this.#setProperties(dest[key],v.def[key],opt[key]||{});
         }
+      }
+
+      if( def === null ){ // 初回呼出(非再帰)
+        // 親画面のHTML要素を保存
+        this.parentWindow = document.querySelector(this.parentSelector);
       }
 
       //console.log('this='+JSON.stringify(this));
@@ -175,14 +186,14 @@ class Auth {
     console.log('Auth.#setupKeys start.');
     try {
       // パスワード未指定なら作成
-      if( this.keys.passWord === null ){
-        this.keys.passWord = createPassword(this.keys.pwLength);
+      if( this.RSA.passWord === null ){
+        this.RSA.passWord = createPassword(this.RSA.pwLength);
       }
 
       // 鍵ペアの生成
-      this.keys.secret = cryptico.generateRSAKey(this.keys.passWord, this.keys.bits);
-      this.keys.public.self = cryptico.publicKeyString(this.keys.secret);
-      console.log(this.keys);
+      this.RSA.sKey = cryptico.generateRSAKey(this.RSA.passWord, this.RSA.bits);
+      this.RSA.pKey = cryptico.publicKeyString(this.RSA.sKey);
+      console.log(this.RSA);
 
       // 秘密鍵の保存
       //Fs.writeFileSync('./private.json', JSON.stringify(key.toJSON()));
@@ -319,6 +330,10 @@ class Auth {
 
   }
 
+  /** Auth関係画面の切り替え
+   * @param {string} screenId - 画面ID
+   * @returns {void}
+   */
   #changeScreen(screenId){
     const v = {rv:true};
     console.log('Auth.#changeScreen start.');
@@ -340,12 +355,23 @@ class Auth {
 
   }
 
+  /** entryNo(ID)を認証局に送信
+   * @param {void}
+   * @returns {void}
+   */
   #getEntryNo(){
-    const v = {rv:null};
+    const v = {rv:null,data:{cp:this.RSA.pKey}};
     console.log('Auth.#getEntryNo start.');
     try {
 
-      this.#changeScreen('entryNo');
+      if( this.entryNo.value !== null ){
+        // 受付番号取得済の場合、すぐにGAS.auth1Aに送信
+        v.data.entryNo = this.entryNo.value;
+
+      } else {
+        this.#changeScreen('entryNo');
+
+      }
       
       //console.log('v.rv='+JSON.stringify(v.rv));
       console.log('Auth.#getEntryNo end.');
@@ -360,6 +386,49 @@ class Auth {
 
   }
 
+  #fetchGAS(to,mode,data){
+    const v = {rv:null};
+    console.log('Auth.#fetchGAS start.');
+    try {
+
+      v.url = this.
+      //console.log('v.rv='+JSON.stringify(v.rv));
+      console.log('Auth.#fetchGAS end.');
+      return v.rv;
+    } catch(e){
+      console.error('Auth.#fetchGAS abnormal end.',e);
+      // ブラウザで実行する場合はアラート表示
+      if( typeof window !== 'undefined' ) alert(e.stack); 
+      //throw e; //以降の処理を全て停止する場合
+      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+    }
+
+
+
+
+    fetch('https://ipinfo.io?callback')
+    .then(res => res.json())
+    .then(json => {
+      config.handleName = json.ip;
+      
+      // 3.2.テスト対応
+      console.log('Auth.constructor step.3.2 start.');
+      if( config.debugMode === 0 ){
+        // 本番時は認証画面を表示
+        this.dom.style.display = '';
+      } else {
+        // デバッグ時はテスト用configセット後、後処理を実行
+        this.setTestData(config.debugMode);
+        this.callback();
+      }
+
+      // 4.終了処理
+      console.log('Auth.constructor step.4 start.');
+      this.changeArea('entryNo','受付番号入力');
+      console.log('Auth.constructor end.');
+    });
+
+  }
 }
 
 </script>
