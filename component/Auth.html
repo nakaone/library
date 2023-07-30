@@ -82,7 +82,7 @@ class Auth {
       console.log(Date.now()-this.constructorStart);
 
       // 5.entryNo(ID)を認証局に送信、パスコードメールを受け取る
-      this.#getEntryNo();
+      //this.#getEntryNo();
       console.log(Date.now()-this.constructorStart);
 
       //console.log('v.rv='+JSON.stringify(v.rv));
@@ -258,15 +258,16 @@ class Auth {
               display:"flex",
               width:"100%",
               height:"100%",
-              background:"#ff0",
+              background:"#fff",
               justifyContent:"center",
               alignItems:"center",
             },
             children:[
               {
                 attr:{class:'loading5'},
-                style:{ // 点の大きさと色
-                  "--dot-size":"1.25rem",
+                style:{ // 点の軌道/大きさ/色
+                  //"--dot-size":"4rem",
+                  //"--m0:3.2rem",
                   "--R":0,
                   "--G":0,
                   "--B":0,
