@@ -5,7 +5,7 @@
   ex. <div class="loading5">loading...</div>
 */
 .loading5 {
-  --dot-size: 1.4rem;
+  --dot-size: 1.25rem;
   --R: 0;
   --G: 0;
   --B: 0;

@@ -2,62 +2,35 @@
 <title>Auth</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <!-- 自作CSS -->
+<link rel="stylesheet" type="text/css" href="szLib.css" />
 <link rel="stylesheet" type="text/css" href="loading.css" class="core"
   data-embed="../component/loading.css" />
 <style type="text/css" class="core">/* コアCSS */
 </style>
-</head><body>
-<div><!-- 開始：HTML -->
-  <h1>だみぃ</h1>
-  <p>これはログイン後に表示される初期画面です。</p>
-<!--div class="authorize">
-  <div class="area entryNo">
-    <p>受付番号を入力してください</p>
-    <div>
-      <input type="text" name="entryNo" />
-      <input type="button" name="sendEntryNo" value="送信" disabled />
-    </div>
-  </div>
-
-  <div class="area loading" style="display:none">
-    <img src="img/loading.gif" width="100%" />
-  </div>
-
-  <div class="area passCode" style="display:none">
-    <p>確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>
-    ※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。</p>
-    <input type="text" name="passCode" />
-    <input type="button" name="sendPassCode" value="送信" disabled />
-    <p>※パスコードの有効期限は1時間です</p>
-  </div>
-  <div class="area message" style="display:none"></div>
-</div-->
-</div><!-- 終了：HTML領域 -->
-
-<div><!-- 開始：Script領域 -->
 <!-- 外部Script -->
 <!-- 自作ライブラリ -->
 <!-- webApp利用時： srcのみ必要。パスはcomponentが起点
   コンソール利用時：class="onConsole" data-embedが必要。data-embedの起点はtools -->
-<script type="text/javascript" src="createElement.js"
-  data-embed="../component/createElement.js"></script>
-<script type="text/javascript" src="createPassword.js"
-  data-embed="../component/createPassword.js"></script>
-<script type="text/javascript" src="../external/cryptico.min.js"
-  data-embed="../external/cryptico.min.js"></script>
-<script type="text/javascript" src="mergeDeeply.js"
-  data-embed="../component/mergeDeeply.js"></script>
-<script type="text/javascript" src="whichType.js"
-  data-embed="../component/whichType.js"></script>
+<script type="text/javascript" src="createElement.js" data-embed="../component/createElement.js"></script>
+<script type="text/javascript" src="createPassword.js" data-embed="../component/createPassword.js"></script>
+<script type="text/javascript" src="../external/cryptico.min.js" data-embed="../external/cryptico.min.js"></script>
+<script type="text/javascript" src="mergeDeeply.js" data-embed="../component/mergeDeeply.js"></script>
+<script type="text/javascript" src="whichType.js" data-embed="../component/whichType.js"></script>
+</head><body>
+  <div>
+    <h1>だみぃ</h1>
+    <p>これはログイン後に表示される初期画面です。</p>  
+  </div>
 
 <script type="text/javascript" class="core">/* コアScript */
 /**
- * @typedef {Object} AuthProp
+ * @typedef {Object} AuthProp - AuthOpt以外のAuthクラスプロパティ
+ * @prop {number} constructorStart - constructor開始時刻(UNIX時間)
  * @prop {string} parentSelector - 親画面のCSSセレクタ
  * @prop {HTMLElement} parentWindow - 親画面のHTML要素
  * @prop {HTMLElement} AuthWindow - Auth関係画面のwrapper
  * @prop {HTMLElement} loading - ローディング画面のHTML要素
-
+ */
 
 /**
  * @typedef {Object} AuthOpt
@@ -85,23 +58,32 @@ class Auth {
     const v = {rv:null};
     console.log('Auth.constructor start.');
     try {
+      this.constructorStart = Date.now();
+
       // 1.親画面の情報をプロパティに保存
       this.parentSelector = parentSelector; // 親画面のCSSセレクタ
       this.parentWindow = document.querySelector(parentSelector); // 親画面
+      console.log(Date.now()-this.constructorStart);
 
       // 2.オプション未定義項目の既定値をプロパティにセット
       this.#setProperties(this,null,opt);
       console.log('this:',this);
+      console.log(Date.now()-this.constructorStart);
 
       // 3.各種画面を用意する
       //   ※鍵ペア生成で時間がかかるので、先に待機画面を表示
       this.#setWindows();
+      // 初期画面として待機画面を表示
+      this.#changeScreen('loading');
+      console.log(Date.now()-this.constructorStart);
 
       // 4.秘密鍵・公開鍵を作成し、プロパティに格納する
       this.#setupKeys();
+      console.log(Date.now()-this.constructorStart);
 
       // 5.entryNo(ID)を認証局に送信、パスコードメールを受け取る
       this.#getEntryNo();
+      console.log(Date.now()-this.constructorStart);
 
       //console.log('v.rv='+JSON.stringify(v.rv));
       console.log('Auth.constructor end.');
@@ -131,6 +113,10 @@ class Auth {
           front: null,
         }
       },
+      AuthWindow: {
+        element: null, // {HTMLElement} - 受付番号入力画面の要素。setWindowsで設定。
+        zIndex: 2147483646,  // z-indexの最大値-1
+      },
       entryNo:{ // 受付番号関係
         element: null, // {HTMLElement} - 受付番号入力画面の要素。setWindowsで設定。
         value: null,  // {string} - 受付番号
@@ -139,6 +125,10 @@ class Auth {
         button:'送信',  // {string} - 受付番号入力画面のボタンのラベル
         msg2:'',      // {string} - 入力欄の後に表示するメッセージ
         rex:/^[0-9]{1,4}$/, // {RegExp} - 受付番号チェック用正規表現
+      },
+      loading: {
+        element: null,
+        zIndex: 2147483647,  // z-indexの最大値
       },
       passCode:{
         element: null, // {HTMLElement} - パスコード入力画面の要素。setWindowsで設定。
@@ -217,7 +207,7 @@ class Auth {
     console.log('Auth.#setWindows start.');
     try {
       // Auth関係画面のwrapper
-      this.AuthWindow = createElement({
+      this.AuthWindow.element = createElement({
         style:{
           // CSSで全画面オーバーレイを実装する方法＆コード例
           // https://pisuke-code.com/css-fullscreen-overlay/
@@ -225,7 +215,7 @@ class Auth {
           left: 0, top: 0,
           width: "100%", height:"100%",
           background:"#fff",
-          zIndex:2147483647,  // z-indexの最大値
+          zIndex:this.AuthWindow.zIndex,
         },
       });
 
@@ -252,25 +242,39 @@ class Auth {
       });
 
       // ローディング画面
+      // ※ 受付番号・パスコード入力を隠蔽するため
+      //   loading.zIndex > AuthWindow.zIndex とする。
       this.loading = {element:createElement({
         style:{
-          display:"flex",
-          justifyContent:"center",
-          alignItems:"center",
-          height:"100%",
-          width:"100%",
+          position: "absolute",
+          left: 0, top: 0,
+          width: "100%", height:"100%",
+          background:"#fff",
+          zIndex:this.loading.zIndex,
         },
         children:[
           {
-            attr:{class:'loading5'},
-            style:{ // 点の大きさと色
-              "--dot-size":"2rem",
-              "--R":0,
-              "--G":0,
-              "--B":0,
+            style:{
+              display:"flex",
+              width:"100%",
+              height:"100%",
+              background:"#ff0",
+              justifyContent:"center",
+              alignItems:"center",
             },
-            text:'loading...'
-          },
+            children:[
+              {
+                attr:{class:'loading5'},
+                style:{ // 点の大きさと色
+                  "--dot-size":"1.25rem",
+                  "--R":0,
+                  "--G":0,
+                  "--B":0,
+                },
+                text:'loading...'
+              },
+            ],
+          }
         ],
       })};
 
@@ -297,13 +301,10 @@ class Auth {
       });
 
       // 画面をセット
-      this.parentWindow.appendChild(this.AuthWindow);
-      this.AuthWindow.appendChild(this.entryNo.element);
-      this.AuthWindow.appendChild(this.loading.element);
-      this.AuthWindow.appendChild(this.passCode.element);
-
-      // 初期画面として待機画面を表示
-      this.#changeScreen('loading');
+      this.parentWindow.appendChild(this.AuthWindow.element);
+      this.AuthWindow.element.appendChild(this.entryNo.element);
+      this.AuthWindow.element.appendChild(this.loading.element);
+      this.AuthWindow.element.appendChild(this.passCode.element);
 
       //console.log('v.rv='+JSON.stringify(v.rv));
       console.log('Auth.#setWindows end.');
@@ -343,7 +344,7 @@ class Auth {
     console.log('Auth.#getEntryNo start.');
     try {
 
-      //this.#changeScreen('entryNo');
+      this.#changeScreen('entryNo');
       
       //console.log('v.rv='+JSON.stringify(v.rv));
       console.log('Auth.#getEntryNo end.');
@@ -385,5 +386,4 @@ window.addEventListener('DOMContentLoaded',() => {
   AuthTest();  // 開発者コンソール上でテスト
 });
 </script>
-</div><!-- 終了：Script領域 -->
 </body></html>
