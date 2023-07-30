@@ -80,10 +80,6 @@ class Auth {
       this.#setupKeys();
       console.log(Date.now()-this.constructorStart);
 
-      // 5.entryNo(ID)を認証局に送信、パスコードメールを受け取る
-      this.#getEntryNo();
-      console.log(Date.now()-this.constructorStart);
-
       //console.log('v.rv='+JSON.stringify(v.rv));
       console.log('Auth.constructor end.');
       return v.rv;
@@ -355,11 +351,20 @@ class Auth {
 
   }
 
+  /** 初期化作業の内、非同期となる処理の実行
+   * 
+   */
+  async build(){
+    // 5.entryNo(ID)を認証局に送信、パスコードメールを受け取る
+    await this.#getEntryNo();
+    console.log(Date.now()-this.constructorStart);
+  }
+
   /** entryNo(ID)を認証局に送信
    * @param {void}
    * @returns {void}
    */
-  #getEntryNo(){
+  async #getEntryNo(){
     const v = {rv:null,data:{cp:this.RSA.pKey}};
     console.log('Auth.#getEntryNo start.');
     try {
@@ -367,7 +372,11 @@ class Auth {
       if( this.entryNo.value !== null ){
         // 受付番号取得済の場合、すぐにGAS.auth1Aに送信
         v.data.entryNo = this.entryNo.value;
-
+        v.rv = await this.#fetchFromClient('gateway','auth1A',{
+          entryNo: this.entryNo.value,
+          pKey: this.RSA.pKey,
+        });
+        console.log(v.rv);
       } else {
         this.#changeScreen('entryNo');
 
@@ -383,149 +392,122 @@ class Auth {
       //throw e; //以降の処理を全て停止する場合
       v.rv.stack = e.stack; return v.rv; // 処理継続する場合
     }
-
   }
 
-  #fetchGAS(to,mode,data){
-    const v = {rv:null};
-    console.log('Auth.#fetchGAS start.');
+  /** GASのAPI(doPost)を呼び出す
+   * @param {string} to - 呼び先(gateway or front)
+   * @param {string} func - 呼び先関数名(auth1A等)
+   * @param {Object} data - 呼び先関数に渡すデータオブジェクト
+   * @returns {Object} 呼び先からの戻り値
+   * 
+   * - JS: [Async/await](https://ja.javascript.info/async-await)
+   * - MDN: [フェッチが成功したかの確認](https://developer.mozilla.org/ja/docs/Web/API/Fetch_API/Using_Fetch#%E3%83%95%E3%82%A7%E3%83%83%E3%83%81%E3%81%8C%E6%88%90%E5%8A%9F%E3%81%97%E3%81%9F%E3%81%8B%E3%81%AE%E7%A2%BA%E8%AA%8D)
+   * - MDN: [fetch()](https://developer.mozilla.org/ja/docs/Web/API/fetch)
+   * - MDN: [Response Object](https://developer.mozilla.org/ja/docs/Web/API/Response)
+   * - Qiita: [Fetch APIでネットワークエラーも含めてエラーハンドリングする](https://qiita.com/IzumiSy/items/031df1df4f4541e536b4)
+   */
+  async #fetchFromClient(to,func,data){
+    const v = {rv:null,data:{cp:this.RSA.pKey}};
+    console.log('Auth.#fetchFromClient start.');
     try {
 
-      v.url = this[to].url;
+      v.fetch = await fetch(this[to].url,{
+        "method": "POST",
+        "body": JSON.stringify({
+          fc: func,
+          dt: data,
+        }),
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      });
+      v.rv = await v.fetch.json();
+      console.log(v.rv);
 
-      //console.log('v.rv='+JSON.stringify(v.rv));
-      console.log('Auth.#fetchGAS end.');
+      console.log('Auth.#fetchFromClient end.');
       return v.rv;
     } catch(e){
-      console.error('Auth.#fetchGAS abnormal end.',e);
+      console.error('Auth.#fetchFromClient abnormal end.',e);
       // ブラウザで実行する場合はアラート表示
-      if( typeof window !== 'undefined' ) alert(e.stack); 
+      if( typeof window !== 'undefined' ) alert(e.stack);
       //throw e; //以降の処理を全て停止する場合
       v.rv.stack = e.stack; return v.rv; // 処理継続する場合
     }
-
-
-
-
-    fetch('https://ipinfo.io?callback')
-    .then(res => res.json())
-    .then(json => {
-      config.handleName = json.ip;
-      
-      // 3.2.テスト対応
-      console.log('Auth.constructor step.3.2 start.');
-      if( config.debugMode === 0 ){
-        // 本番時は認証画面を表示
-        this.dom.style.display = '';
-      } else {
-        // デバッグ時はテスト用configセット後、後処理を実行
-        this.setTestData(config.debugMode);
-        this.callback();
-      }
-
-      // 4.終了処理
-      console.log('Auth.constructor step.4 start.');
-      this.changeArea('entryNo','受付番号入力');
-      console.log('Auth.constructor end.');
-    });
-
   }
 }
 
 </script>
 
 <script type="text/javascript" class="gateway">/* 認証局用スクリプト */
+/**
+ * @typedef {Object} gatewayDoPostArg
+ * @prop {string} fc - 機能
+ * @prop {string} dt - データ
+ */
+
 function doPost(e){
-  const v = {whois:'gateway.doPost',arg:JSON.parse(e.postData.contents)};
+  console.log(e);
+  const v = {whois:'gateway.doPost',arg:JSON.parse(e.postData.contents),rv:null};
   try {
     console.log(v.whois+' start.\n'+JSON.stringify(v.arg));
 
-    v.step = '1'; // 設定の読み込み
-    lib.config = lib.setupConfig();
-
-    /** clientからの最初の要求は署名・暗号化されていない以下のObj
-     * @prop {string} fc - 'auth1B'固定
-     * @prop {number} ts - client発信時刻(Date.now())
-     * @prop {object} data
-     * @prop {string} data.entryNo - 受付番号
-     * @prop {string} data.publicKey - clientの公開鍵
-     */
-    if( v.arg.hasOwnProperty('fc') && v.arg.fc === 'auth1B' ){
-      v.step = '2a'; // auth1Bの場合
-      if( (Date.now() - v.arg.ts) > lib.config.system.validTime )
-        throw new Error('timeover');
-      v.r = v.arg.fc;
-    } else {
-      v.step = '2b'; // auth1B以外の場合、引数の正当性検証
-      v.r = lib.isValidArg(v.arg);
-      if( v.r instanceof Error ) throw v.r;  
-    }
-
-    v.step = '3'; // 処理分岐
-    switch( v.r ){
+    switch( v.arg.fc ){
+      case 'auth1A':
+        v.rv = auth1A(v.arg.dt);
+        break;
       case 'auth1B':
-        v.rv = lib.convResObj(lib.auth1B(v.arg.data));
         break;
-      case 'auth2B':
-        v.rv = lib.convResObj(lib.auth2B(v.arg.data));
-        break;
-      default:
-        throw new Error('Invalid function.');
     }
 
-    console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
-    return ContentService
-    .createTextOutput(JSON.stringify(v.rv,null,2))
-    .setMimeType(ContentService.MimeType.JSON);
+    // 処理が行われた場合は返信
+    if( v.rv !== null ){
+      console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
+      return ContentService
+      .createTextOutput(JSON.stringify(v.rv,null,2))
+      .setMimeType(ContentService.MimeType.JSON);
+    }
+    console.log(v.whois+' end.');
 
   } catch(e) {
     console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
   }
 }
 
-/** auth1A: 参加者からのログイン情報を検証、auth1Bに問合せ
- * @param {object} arg - 引数オブジェクト
- * @param {string} arg.entryNo - 入力された受付番号
- * @param {string} arg.publicKey - 参加者公開鍵
- * @return {string} - gatewayの公開鍵
+/**
+ * @typedef {Object} auth1Adata
+ * @prop {string} entryNo - 受付番号
+ * @prop {string} pKey - クライアント公開鍵
+ * @returns {string} 認証局公開鍵
  */
-function auth1A(arg){
-  const v = {whois:'GASLib.auth.auth1A',rv:{}};
+function auth1A(data){
+  const v = {rv:{}};
   try {
-    console.log(v.whois+' start.\n',arg);
+    // auth2Aに問い合わせ、OKなら以下を実行
+    // v.rv = auth2A();
 
-    // 参加者からの情報を検証
-    v.step = '1';
-    if( whichType(arg) !== 'Object' ) // 引数はオブジェクト
-      throw new Error('Argument is not a Object.');
-    if( Object.keys(arg).length !== 2 ) // メンバは2つ
-      throw new Error('Invalid argument object.');
-    if( !arg.hasOwnProperty('entryNo') || !arg.entryNo.match(/^[0-9]+$/) )
-      throw new Error('Invalid entryNo.');
-    if( !arg.hasOwnProperty('publicKey') || !arg.publicKey.match(/^[a-zA-Z0-9\+\/]+=*$/) )
-      throw new Error('Invalid public key.');    
-
-    v.step = '2'; // 配信局に検証とパスコード通知メール発行を依頼
-    v.auth1B = {
-      to: 'front',
-      fc: 'auth1B',
-      data: {
-        entryNo: String(arg.entryNo),
-        publicKey: arg.publicKey
+    // 認証局の公開鍵を返信
+    v.sheet = SpreadsheetApp.getActive().getSheetByName('RSA').getDataRange().getValues();
+    for( let i=1 ; i<v.sheet.length ; i++ ){
+      if( v.sheet[i][0] == 'publicKey' ){
+        v.rv = v.sheet[i][1];
       }
-    };
-    console.log(v.whois+' auth1B='+JSON.stringify(v.auth1B));
-    v.step = '2.3'; // fetchの実行
-    if((v.r = fetchGAS(v.auth1B)) instanceof Error ) throw v.r;
-
-    v.step = '3'; // auth1Bの結果がOKなら認証局公開鍵を返す
-    v.rv = config.gateway.publicKey;
-    console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
+    }
   } catch(e) {
     console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
-    v.rv = e;
   } finally {
     return v.rv;
+  }
+}
+
+function doPostTest(){
+  const v = {postData:{},tData:[
+    //'abcdefg',
+    {fc:'auth1A',dt:{entryNo:'1234',pKey:'deUHmHi3ihAS9DoE9bS/ubTqAISuU7Garuwt2iJvqgfBGK7qy6wFLrbcJmaTX986JW44QyJqOt98DFa7tTNdxBTJqCV2YWX42210B3ttQqNSt8d4ZnoqHBrHeNpqwPKyCP+VM/1+ZvTYy+Ecol8IpLPZ/6dlVGsjjyxTaDhs21k='}},
+  ]};
+
+  for( let i=0 ; i<v.tData.length ; i++ ){
+    v.postData.contents = JSON.stringify(v.tData[i]);
+    v.r = JSON.parse(doPost(v).getContent());
+    console.log('result'+i+': ',v.r);
   }
 }
 
@@ -536,7 +518,7 @@ function auth1A(arg){
  * @return {object} 処理結果
  */
 function auth2A(arg){
-  const v = {whois:'GASLib.auth.auth2A',rv:null};
+  const v = {whois:'Auth.auth2A',rv:null};
   try {
     console.log(v.whois+' start.\n',arg);
   
@@ -551,7 +533,7 @@ function auth2A(arg){
       throw new Error('Invalid passCode.');    
 
     v.step = '2'; // auth2Bに問合せ
-    if((v.rv = fetchGAS({fc:'auth2B',data:{
+    if((v.rv = fetchFromClient({fc:'auth2B',data:{
       entryNo: String(arg.entryNo),
       passCode: arg.passCode
     }})) instanceof Error ) throw v.rv;
@@ -594,7 +576,7 @@ function auth2A(arg){
  * </ol>
  */
 function auth1B(arg){
-  const v = {whois:'GASLib.auth.auth1B',rv:null};
+  const v = {whois:'Auth.auth1B',rv:null};
   try {
     console.log(v.whois+' start.\n',arg);
   
@@ -664,7 +646,7 @@ function auth1B(arg){
  * </ol>
  */
 function auth2B(arg){
-  const v = {whois:'GASLib.auth.auth2B',arg:arg,rv:null};
+  const v = {whois:'Auth.auth2B',arg:arg,rv:null};
   try {
     console.log(v.whois+' start.\n',arg);
 
@@ -712,16 +694,15 @@ function auth2B(arg){
 </script>
 
 <script type="text/javascript" class="test">/* テスト用 */
-function AuthTest(){
+async function AuthTest(){
   const v = {data:[]};
   console.log('AuthTest start.');
   try {
-    v.conf = new Auth('body',{
-      entryNoWindow:{
-        header:'<h1>受付番号入力</h1>',
-      }
-    });
-    console.log('AuthTest end.');
+    v.conf = new Auth('https://script.google.com/macros/s/AKfycbzAEJorJYq5ydzbn5cGHO6tB8zEUjXtomMiCMlTYchuoKP7j40QX5gzDWT-5oIYg4rD/exec',
+      {entryNo:{value:"1234"}}
+    );
+    await v.conf.build();
+    console.log('AuthTest end.',v.conf);
 
   } catch(e){
     console.error('AuthTest abnormal end.',e);
