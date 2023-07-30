@@ -391,7 +391,8 @@ class Auth {
     console.log('Auth.#fetchGAS start.');
     try {
 
-      v.url = this.
+      v.url = this[to].url;
+
       //console.log('v.rv='+JSON.stringify(v.rv));
       console.log('Auth.#fetchGAS end.');
       return v.rv;
@@ -431,6 +432,283 @@ class Auth {
   }
 }
 
+</script>
+
+<script type="text/javascript" class="gateway">/* 認証局用スクリプト */
+function doPost(e){
+  const v = {whois:'gateway.doPost',arg:JSON.parse(e.postData.contents)};
+  try {
+    console.log(v.whois+' start.\n'+JSON.stringify(v.arg));
+
+    v.step = '1'; // 設定の読み込み
+    lib.config = lib.setupConfig();
+
+    /** clientからの最初の要求は署名・暗号化されていない以下のObj
+     * @prop {string} fc - 'auth1B'固定
+     * @prop {number} ts - client発信時刻(Date.now())
+     * @prop {object} data
+     * @prop {string} data.entryNo - 受付番号
+     * @prop {string} data.publicKey - clientの公開鍵
+     */
+    if( v.arg.hasOwnProperty('fc') && v.arg.fc === 'auth1B' ){
+      v.step = '2a'; // auth1Bの場合
+      if( (Date.now() - v.arg.ts) > lib.config.system.validTime )
+        throw new Error('timeover');
+      v.r = v.arg.fc;
+    } else {
+      v.step = '2b'; // auth1B以外の場合、引数の正当性検証
+      v.r = lib.isValidArg(v.arg);
+      if( v.r instanceof Error ) throw v.r;  
+    }
+
+    v.step = '3'; // 処理分岐
+    switch( v.r ){
+      case 'auth1B':
+        v.rv = lib.convResObj(lib.auth1B(v.arg.data));
+        break;
+      case 'auth2B':
+        v.rv = lib.convResObj(lib.auth2B(v.arg.data));
+        break;
+      default:
+        throw new Error('Invalid function.');
+    }
+
+    console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
+    return ContentService
+    .createTextOutput(JSON.stringify(v.rv,null,2))
+    .setMimeType(ContentService.MimeType.JSON);
+
+  } catch(e) {
+    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
+  }
+}
+
+/** auth1A: 参加者からのログイン情報を検証、auth1Bに問合せ
+ * @param {object} arg - 引数オブジェクト
+ * @param {string} arg.entryNo - 入力された受付番号
+ * @param {string} arg.publicKey - 参加者公開鍵
+ * @return {string} - gatewayの公開鍵
+ */
+function auth1A(arg){
+  const v = {whois:'GASLib.auth.auth1A',rv:{}};
+  try {
+    console.log(v.whois+' start.\n',arg);
+
+    // 参加者からの情報を検証
+    v.step = '1';
+    if( whichType(arg) !== 'Object' ) // 引数はオブジェクト
+      throw new Error('Argument is not a Object.');
+    if( Object.keys(arg).length !== 2 ) // メンバは2つ
+      throw new Error('Invalid argument object.');
+    if( !arg.hasOwnProperty('entryNo') || !arg.entryNo.match(/^[0-9]+$/) )
+      throw new Error('Invalid entryNo.');
+    if( !arg.hasOwnProperty('publicKey') || !arg.publicKey.match(/^[a-zA-Z0-9\+\/]+=*$/) )
+      throw new Error('Invalid public key.');    
+
+    v.step = '2'; // 配信局に検証とパスコード通知メール発行を依頼
+    v.auth1B = {
+      to: 'front',
+      fc: 'auth1B',
+      data: {
+        entryNo: String(arg.entryNo),
+        publicKey: arg.publicKey
+      }
+    };
+    console.log(v.whois+' auth1B='+JSON.stringify(v.auth1B));
+    v.step = '2.3'; // fetchの実行
+    if((v.r = fetchGAS(v.auth1B)) instanceof Error ) throw v.r;
+
+    v.step = '3'; // auth1Bの結果がOKなら認証局公開鍵を返す
+    v.rv = config.gateway.publicKey;
+    console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
+  } catch(e) {
+    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
+    v.rv = e;
+  } finally {
+    return v.rv;
+  }
+}
+
+/** auth2A: 参加者入力情報を検証、auth2Bに問合せ
+ * @param {object} arg - 以下のメンバを持つオブジェクト
+ * @param {string} arg.entryNo - 受付番号
+ * @param {string} arg.passCode - パスコード
+ * @return {object} 処理結果
+ */
+function auth2A(arg){
+  const v = {whois:'GASLib.auth.auth2A',rv:null};
+  try {
+    console.log(v.whois+' start.\n',arg);
+  
+    v.step = '1'; // 参加者からの情報を検証
+    if( whichType(arg) !== 'Object' ) // 引数はオブジェクト
+      throw new Error('Argument is not a Object.');
+    if( Object.keys(arg).length !== 2 ) // メンバは2つ
+      throw new Error('Invalid argument object.');
+    if( !arg.hasOwnProperty('entryNo') || !arg.entryNo.match(/^[0-9]+$/) )
+      throw new Error('Invalid entryNo.');
+    if( !arg.hasOwnProperty('passCode') || !arg.publicKey.match(/^[0-9]{6}$/) )
+      throw new Error('Invalid passCode.');    
+
+    v.step = '2'; // auth2Bに問合せ
+    if((v.rv = fetchGAS({fc:'auth2B',data:{
+      entryNo: String(arg.entryNo),
+      passCode: arg.passCode
+    }})) instanceof Error ) throw v.rv;
+
+    v.step = '3'; // 終了処理
+    console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
+  } catch(e) {
+    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
+    v.rv = e;
+  } finally {
+    return v.rv;
+  }
+}
+</script>
+
+<script type="text/javascript" class="master">/* 管理局用スクリプト */
+/** auth1B: 受付番号と参加者公開鍵を記録、パスコードをメールで送付
+ * @param {object} arg - 引数オブジェクト
+ * @param {string} arg.entryNo - 入力された受付番号
+ * @param {string} arg.publicKey - 参加者公開鍵
+ * @return {boolean} - 処理結果。OKならtrue
+ * @desc 【処理概要】
+ * <ol>
+ * <li>試行NG日時に空欄あり(前回試行が通っていた場合) ⇒ 受付OK
+ * <li>試行NG日時に空欄なし(前回試行回数上限を超えた結果、通っていなかった場合)
+ *   <ol>
+ *   <li>判定日時が空欄、または一定時間経過(再試行OK) ⇒ 受付OK
+ *   <li>判定日時から一定時間経過していない(再試行NG) ⇒ 受付NG
+ *   </ol>
+ * </ol>
+ * @desc 【受付OK時の処理】
+ * <ol>
+ * <li>パスコード、パスコード生成日時、参加者公開鍵を記録<br>
+ * <li>判定日時と試行NG日時をクリア
+ * <li>処理結果としてtrueを返す
+ * </ol>
+ * @desc 【受付NG時の処理】
+ * <ol>
+ * <li>処理結果としてfalseを返す
+ * </ol>
+ */
+function auth1B(arg){
+  const v = {whois:'GASLib.auth.auth1B',rv:null};
+  try {
+    console.log(v.whois+' start.\n',arg);
+  
+    v.step = '1.1'; // masterシートの読み込み
+    v.sheetArg = {spreadId:config.master.spreadId,sheetName:'master'};
+    v.master = szSheet(v.sheetArg);
+    if( v.master instanceof Error ) throw v.master;
+    v.step = '1.2'; // 該当者情報の検索
+    v.private = v.master.lookup(arg.entryNo,'entryNo')
+    if( v.private instanceof Error ) throw v.private;
+
+    v.step = '2'; // 試行NG日時に空欄があるか判定
+    v.rv = false;
+    if( v.private.NG3 == '' // 試行NG日時に空欄あり(前回試行が通っていた)
+    || v.private.certificate == '' // 試行したことがない
+    || (Date.now() - new Date(v.private.certificate).getTime()) > config.system.retryInterval
+    ) v.rv = true;
+
+    v.step = '3'; // 試行OKだった場合の処理
+    if( v.rv ){
+      v.step = '3.1'; // パスコードの生成
+      v.passCode = ('00000' + Math.floor(Math.random() * 1000000)).slice(-6);
+      console.log(v.whois+' v='+JSON.stringify(v));
+      v.step = '3.2'; // masterシートを更新
+      v.r = v.master.update({
+        publicKey: arg.publicKey,
+        passCode: v.passCode,
+        genPassCode: Date.now(),
+        NG1:'',NG2:'',NG3:'',certificate:''
+      },{key:'entryNo',value:arg.entryNo});
+      if( v.r instanceof Error ) throw v.r;
+      v.step = '3.3'; // パスコード通知メールを発信
+      if((v.r = postMails({...config.template.passCode,to:{
+        address: v.private['メールアドレス'],
+        data: v.private
+      }})) instanceof Error ) throw v.r;
+    }
+
+    console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
+  } catch(e) {
+    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
+    v.rv = e;
+  } finally {
+    return v.rv;
+  }
+}
+
+/** auth2B: パスコードを基にログイン可否を判断、OKなら参加者情報を返す
+ * @param {object} arg - 以下のメンバを持つオブジェクト
+ * @param {string} arg.entryNo - 受付番号
+ * @param {string} arg.passCode - パスコード
+ * @returns {object} 参加者情報を含むconfig
+ * @desc 【処理概要】
+ * <ol>
+ * <li>試行NG日時に空欄あり(前回試行が通っていた場合) ⇒ 試行OK
+ * <li>試行NG日時に空欄なし(前回試行回数上限を超えた結果、通っていなかった場合)
+ *   <ol>
+ *   <li>判定日時が空欄、または一定時間経過(再試行OK) ⇒ 試行OK
+ *   <li>判定日時から一定時間経過していない(再試行NG) ⇒ 「一定時間後に再試行を」エラー
+ *   </ol>
+ * </ol>
+ * 
+ * @desc 【試行OK時の処理】
+ * <ol>
+ * <li>パスコードが一致 ⇒ 判定日時をセットしてconfig＋参加者情報を返す
+ * <li>パスコードが不一致 ⇒ NG欄に処理日時を追加、パスコード不一致エラー
+ * </ol>
+ */
+function auth2B(arg){
+  const v = {whois:'GASLib.auth.auth2B',arg:arg,rv:null};
+  try {
+    console.log(v.whois+' start.\n',arg);
+
+    v.step = '1.1'; // masterシートの読み込み
+    v.sheetArg = {spreadId:config.master.spreadId,sheetName:'master'};
+    v.master = szSheet(v.sheetArg);
+    if( v.master instanceof Error ) throw v.master;
+    v.step = '1.2'; // 該当者情報の検索
+    v.private = v.master.lookup(arg.entryNo,'entryNo')
+    if( v.private instanceof Error ) throw v.private;
+
+    v.step = '2'; // 試行NG日時に空欄があるか判定
+    v.rv = false;
+    if( v.private.NG3 == '' // 試行NG日時に空欄あり(前回試行が通っていた)
+    || v.private.certificate == '' // 試行したことがない
+    || (Date.now() - new Date(v.private.certificate).getTime()) > config.system.retryInterval
+    ) v.rv = true;
+
+    if( v.rv ){
+      v.step = '3a'; // 試行OKだった場合の処理
+      // 参加者に渡す情報(private)を作成
+      v.rv = {private:v.private};
+      // config情報を追加
+      Object.keys(config).forEach(x => {
+        // lv02にauthority定義があり、かつ申請者のauthorityもあれば追加
+        if( config[x].hasOwnProperty(authority)
+        && (config[x].authority & v.private.authority) > 0 ){
+          v.rv[x] = config[x];
+        }
+      });
+    } else {
+      v.step = '3b'; // 試行NGだった場合の処理
+      throw new Error('前回ログイン失敗から規定時間経過していません');
+    }
+
+    v.step = '4'; // 終了処理
+    console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
+  } catch(e) {
+    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
+    v.rv = e;
+  } finally {
+    return v.rv;
+  }
+}
 </script>
 
 <script type="text/javascript" class="test">/* テスト用 */
