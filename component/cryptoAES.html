@@ -1,0 +1,215 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>cryptoAES</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+  div {
+    margin: 1rem 0px;
+  }
+</style>
+</head><body>
+<div><!-- 開始：HTML -->
+<h1>cryptoAES</h1>
+<p>開発者コンソールの「Uncaught ReferenceError: require is not defined」は無視して問題無し</p>
+
+<div class="core"><!-- コアHTML -->
+</div>
+
+<div class="webApp"><!-- webアプリHTML -->
+  <div>
+    <div>
+      <label for="password">パスワード</label>
+      <input type="text" id="password" value="AKfycbznH5XFhPmi" />
+    </div>
+    <div>
+      <label for="inputData">入力</label>
+      <textarea id="inputData">テストデータ</textarea>
+    </div>
+  </div>
+  <div>
+    <div id="salt">salt: "<span></span>"</div>
+    <div id="iv">iv: "<span></span>"</div>
+    <div id="encrypted">encrypted: "<span></span>"</div>
+    <div id="decrypted">decrypted: "<span></span>"</div>
+  </div>
+
+</div>
+</div><!-- 終了：HTML領域 -->
+
+<div><!-- 開始：Script領域 -->
+<!-- 外部Script -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/enc-base64.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/cipher-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/sha256.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/sha1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/aes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/hmac.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/pbkdf2.min.js"></script>
+<!-- 自作ライブラリ -->
+<!-- webApp利用時： srcのみ必要。パスはcomponentが起点
+  コンソール利用時：class="onConsole" data-embedが必要。data-embedの起点はtools -->
+<script type="text/javascript" src="analyzeArg.js" class="onConsole"
+  data-embed="../component/analyzeArg.js"></script>
+
+<script type="text/javascript" class="core">/* コアScript */
+/**
+ * @typedef {Object} encryptAES
+ * @prop {string} salt - ソルト
+ * @prop {string} iv - 初期ベクトル
+ * @prop {string} encrypted - 暗号化された文字列
+ */
+
+/** 共通鍵(AES)による暗号化処理
+ * @param {string} text - 暗号化対象の文字列
+ * @param {string} pass - パスワード
+ * @returns {encryptAES}
+ * 
+ * - [JavaScript AES暗号・復号](https://chigusa-web.com/blog/js-aes/)
+ */
+function encryptAES(text, pass) {
+  // ソルト
+  const salt = CryptoJS.lib.WordArray.random(128 / 8);
+
+  // 初期ベクトル
+  const iv = CryptoJS.lib.WordArray.random(128 / 8);
+
+  // AESキーの生成(128bit、5万回)
+  const key = CryptoJS.PBKDF2(pass, salt, {
+    keySize: 128 / 32,
+    iterations: 50000,
+    hasher: CryptoJS.algo.SHA256,
+  });
+
+  // AESキーで暗号化
+  const encrypted = CryptoJS.AES.encrypt(text, key, {
+    iv: iv,
+  });
+
+  return {
+    salt: salt,
+    iv: iv,
+    encrypted: encrypted,
+  };
+}
+
+/** 共通鍵(AES)による復号化処理
+ * @param {encryptAES} encryptedData - 暗号化の際の出力結果
+ * @param {string} pass - パスワード
+ * @returns {string} 復号された文字列
+ */
+function decryptAES(encryptedData, pass) {
+  // AESキーの生成(128bit、5万回)
+  const key = CryptoJS.PBKDF2(pass, encryptedData.salt, {
+    keySize: 128 / 32,
+    iterations: 50000,
+    hasher: CryptoJS.algo.SHA256,
+  });
+
+  // AESキーで復号
+  const decrypted = CryptoJS.AES.decrypt(encryptedData.encrypted, key, {
+    iv: encryptedData.iv,
+  });
+
+  return decrypted.toString(CryptoJS.enc.Utf8);
+}
+</script>
+
+<script type="text/javascript" class="onConsole">/* コンソール実行用 */
+const fs = require('fs'); // ファイル操作
+function onConsole(){
+  console.log('cryptoAES.onConsole start.');
+  const v = {rv:null};
+  try {
+
+    // 事前処理：引数チェック、既定値の設定
+    v.argv = analyzeArg();
+    console.log(v.argv)
+    if(v.argv.hasOwnProperty('stack')) throw v.argv;
+
+    v.readFile = fs.readFileSync(v.argv.opt.i,'utf-8').trim();
+    v.rv = cryptoAES(v.readFile);
+    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
+
+    //console.log('v.rv='+JSON.stringify(v.rv));
+    console.log('cryptoAES.onConsole end.');
+  } catch(e){
+    console.error('cryptoAES.onConsole abnormal end.',e);
+  }
+}
+onConsole();
+</script>
+
+<script type="text/javascript" class="test">/* テスト用 */
+function cryptoAESTest(){
+  const v = {data:[
+    {pass:'adklfdka;doifgkdj',text:'jyugemu jyugemu'},
+    // ↑と↓でencryptedの内容が異なることを確認
+    {pass:'adklfdka;doifgkdj',text:'jyugemu jyugemu'},
+    {pass:'adklfdka;doifgkdj',text:'じゅげむ'},
+  ]};
+  console.log('cryptoAESTest start.');
+  try {
+
+    for( let i=0 ; i<v.data.length ; i++ ){
+      v.d = v.data[i];
+      v.encrypted = encryptAES(v.d.text,v.d.pass);
+      v.decrypted = decryptAES(v.encrypted, v.d.pass);
+      console.log(
+        'data: "'+JSON.stringify(v.d)+'"\n'
+        +'encrypted: {salt:"'+v.encrypted.salt+'", iv:"'+v.encrypted.iv+'", encrypted:"'+v.encrypted.encrypted+'"}\n'
+        +'decrypted: "'+v.decrypted+'"'
+      );
+    }
+
+    console.log('cryptoAESTest end.');
+  } catch(e){
+    console.error('cryptoAESTest abnormal end.',e);
+  }
+}
+</script>
+
+<script type="text/javascript">
+function onInput(event=null){
+  const v = {
+    password: document.getElementById('password').value,
+    inputData: document.getElementById('inputData').value,
+    salt: document.querySelector('#salt span'),
+    iv: document.querySelector('#iv span'),
+    encrypted: document.querySelector('#encrypted span'),
+    decrypted: document.querySelector('#decrypted span'),
+  };
+  console.log('onInput start.');
+  try {
+
+    v.enc = encryptAES(v.inputData,v.password);
+    v.dec = decryptAES(v.enc, v.password);
+
+    v.salt.innerText = v.enc.salt;
+    v.iv.innerText = v.enc.iv;
+    v.encrypted.innerText = v.enc.encrypted;
+    v.decrypted.innerText = v.dec;
+
+    console.log('onInput end.');
+
+  } catch(e){
+    console.error('onInput abnormal end.',e);
+    alert(e.stack); 
+    v.rv.stack = e.stack; return v.rv;
+  }
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+
+  // webアプリの入力欄変更時のイベントを定義
+  document.getElementById('inputData')
+    .addEventListener('input',event => onInput(event));
+  // テストデータを表示するため、キー入力時の処理を呼び出す
+  onInput();
+
+  // 開発者コンソール上でテスト
+  cryptoAESTest();
+});
+</script>
+</div><!-- 終了：Script領域 -->
+</body></html>

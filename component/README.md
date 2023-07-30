@@ -14,8 +14,10 @@
 | [convertCharacters](convertCharacters.md) | 全角英数字は半角、半角カナは全角、ひらがな・カタカナは指定の方に変換 |
 | [createElement](createElement.md) | HTMLの要素を生成 |
 | [createPassword](createPassword.md) | パスワード文字列の生成 |
+| [decryptAES](cryptoAES.md) | 共通鍵(AES)による復号化処理 |
 | [deserializeRSAKey](deserializeRSAKey.md) | 文字列化されたRSAキーを復元 |
 | [embedComponent](embedComponent.md) | テンプレート(HTML)のタグに含まれる'data-embed'属性に基づき、他文書から該当箇所を挿入 |
+| [encryptAES](cryptoAES.md) | 共通鍵(AES)による暗号化処理 |
 | [genToken](genToken.md) | GASのdoPostで投げるトークンを作成 |
 | [gSpreadTabulize](gSpreadTabulize.md) | GAS関数jsonRangeの出力からHTMLのテーブルを作成 |
 | [isValidArg](isValidArg.md) | GASのdoPostで引数として渡されたトークンが適切か判定 |
