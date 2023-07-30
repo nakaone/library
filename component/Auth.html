@@ -52,6 +52,14 @@
 
 <script type="text/javascript" class="core">/* コアScript */
 /**
+ * @typedef {Object} AuthProp
+ * @prop {string} parentSelector - 親画面のCSSセレクタ
+ * @prop {HTMLElement} parentWindow - 親画面のHTML要素
+ * @prop {HTMLElement} AuthWindow - Auth関係画面のwrapper
+ * @prop {HTMLElement} loading - ローディング画面のHTML要素
+
+
+/**
  * @typedef {Object} AuthOpt
  * @prop {string} [entryNo] - 受付番号(ID)
  * @prop {string} [passWord] - パスワード
@@ -77,52 +85,22 @@ class Auth {
     const v = {rv:null};
     console.log('Auth.constructor start.');
     try {
+      // 1.親画面の情報をプロパティに保存
+      this.parentSelector = parentSelector; // 親画面のCSSセレクタ
+      this.parentWindow = document.querySelector(parentSelector); // 親画面
 
-      // 1.オプション未定義項目の既定値をプロパティにセット
-      this.#setProperties(this,{
-        parentWindow: document.querySelector(parentSelector), // 親画面
-        parentSelector: parentSelector, // 親画面のCSSセレクタ
-        keys:{  // 自他局のRSAキー関係情報
-          bits: 2048,
-          passWord: null, // {string} - パスワード
-          pwLength: 32,   // {number} - 自動生成する場合のパスワード文字数
-          secret: null,
-          public: { // {string} - 公開鍵
-            self: null,
-            gateway: null,
-            front: null,
-          }
-        },
-        entryNo:{ // 受付番号関係
-          element: null, // {HTMLElement} - 画面の要素
-          value: null,  // {string} - 受付番号
-          header:'',    // {string} - 受付番号入力画面に表示するheaderのinnerHTML
-          msg1:'受付番号を入力してください', // {string} - 入力欄の前に表示するメッセージ
-          button:'送信',  // {string} - 受付番号入力画面のボタンのラベル
-          msg2:'',      // {string} - 入力欄の後に表示するメッセージ
-          rex:/^[0-9]{1,4}$/, // {RegExp} - 受付番号チェック用正規表現
-        },
-        passCode:{
-          element: null, // {HTMLElement} - 画面の要素
-          value: null,  // {string} - パスコード
-          header:'',    // {string} - パスコード入力画面に表示するheaderのinnerHTML
-          msg1:'確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>'
-          + '※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。',
-                        // {string} - 入力欄の前に表示するメッセージ
-          button:'送信',  // {string} - 受付番号入力画面のボタンのラベル
-          msg2: '※パスコードの有効期限は1時間です',
-          rex:/^[0-9]{1,4}$/, // {RegExp} - 受付番号チェック用正規表現
-        },
-      },opt);
+      // 2.オプション未定義項目の既定値をプロパティにセット
+      this.#setProperties(this,null,opt);
       console.log('this:',this);
 
-      // 2.秘密鍵・公開鍵を作成し、プロパティに格納する
-      this.#setupKeys();
-
       // 3.各種画面を用意する
+      //   ※鍵ペア生成で時間がかかるので、先に待機画面を表示
       this.#setWindows();
 
-      // 3.entryNo(ID)を認証局に送信、パスコードメールを受け取る
+      // 4.秘密鍵・公開鍵を作成し、プロパティに格納する
+      this.#setupKeys();
+
+      // 5.entryNo(ID)を認証局に送信、パスコードメールを受け取る
       this.#getEntryNo();
 
       //console.log('v.rv='+JSON.stringify(v.rv));
@@ -141,16 +119,50 @@ class Auth {
    * @returns {void}
    */
   #setProperties(dest,def,opt){
-    const v = {rv:true};
+    const v = {rv:true,def:{
+      keys:{  // 自他局のRSAキー関係情報
+        bits: 2048,     // {number} - RSAキー長
+        passWord: null, // {string} - パスワード
+        pwLength: 32,   // {number} - 自動生成する場合のパスワード文字数
+        secret: null,   // {RSAKey} - 秘密鍵
+        public: { // {string} - 公開鍵
+          self: null,
+          gateway: null,
+          front: null,
+        }
+      },
+      entryNo:{ // 受付番号関係
+        element: null, // {HTMLElement} - 受付番号入力画面の要素。setWindowsで設定。
+        value: null,  // {string} - 受付番号
+        header:'',    // {string} - 受付番号入力画面に表示するheaderのinnerHTML
+        msg1:'受付番号を入力してください', // {string} - 入力欄の前に表示するメッセージ
+        button:'送信',  // {string} - 受付番号入力画面のボタンのラベル
+        msg2:'',      // {string} - 入力欄の後に表示するメッセージ
+        rex:/^[0-9]{1,4}$/, // {RegExp} - 受付番号チェック用正規表現
+      },
+      passCode:{
+        element: null, // {HTMLElement} - パスコード入力画面の要素。setWindowsで設定。
+        value: null,  // {string} - パスコード
+        header:'',    // {string} - パスコード入力画面に表示するheaderのinnerHTML
+        msg1:'確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>'
+        + '※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。',
+                      // {string} - 入力欄の前に表示するメッセージ
+        button:'送信',  // {string} - 受付番号入力画面のボタンのラベル
+        msg2: '※パスコードの有効期限は1時間です',
+        rex:/^[0-9]{1,4}$/, // {RegExp} - 受付番号チェック用正規表現
+      },
+    }};
     console.log('Auth.#setProperties start.');
     try {
+      // 最初は既定値定義Obj(v.def)を使用、再起呼出の場合は呼出元指定を使用
+      if( def !== null ) v.def = def;
 
-      for( let key in def ){
-        if( whichType(def[key]) !== 'Object' ){
-          dest[key] = opt[key] || def[key]; // 配列はマージしない
+      for( let key in v.def ){
+        if( whichType(v.def[key]) !== 'Object' ){
+          dest[key] = opt[key] || v.def[key]; // 配列はマージしない
         } else {
           if( !dest.hasOwnProperty(key) ) dest[key] = {};
-          this.#setProperties(dest[key],def[key],opt[key]||{});
+          this.#setProperties(dest[key],v.def[key],opt[key]||{});
         }
       }
 
@@ -290,7 +302,8 @@ class Auth {
       this.AuthWindow.appendChild(this.loading.element);
       this.AuthWindow.appendChild(this.passCode.element);
 
-      // 入力された受付番号をプロパティに登録
+      // 初期画面として待機画面を表示
+      this.#changeScreen('loading');
 
       //console.log('v.rv='+JSON.stringify(v.rv));
       console.log('Auth.#setWindows end.');
@@ -330,7 +343,7 @@ class Auth {
     console.log('Auth.#getEntryNo start.');
     try {
 
-      this.#changeScreen('entryNo');
+      //this.#changeScreen('entryNo');
       
       //console.log('v.rv='+JSON.stringify(v.rv));
       console.log('Auth.#getEntryNo end.');
