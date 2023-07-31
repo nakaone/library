@@ -8,6 +8,11 @@ function createElement(arg={}){
   for( v.i in v.arg.attr ){
     v.rv.setAttribute(v.i,v.x = v.arg.attr[v.i]);
   }
+  for( v.i in v.arg.logical ){
+    if( v.arg.logical[v.i] ){
+      v.rv.setAttribute(v.i);
+    }
+  }
   for( v.i in v.arg.style ){
     if( v.i.match(/^\-\-/) ){
       v.rv.style.setProperty(v.i,v.arg.style[v.i]);

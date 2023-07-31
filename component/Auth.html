@@ -80,6 +80,10 @@ class Auth {
       this.#setupKeys();
       console.log(Date.now()-this.constructorStart);
 
+      // 5.非同期の初期化処理を呼出
+      this.#changeScreen('entryNo');
+      //this.build();
+
       //console.log('v.rv='+JSON.stringify(v.rv));
       console.log('Auth.constructor end.');
       return v.rv;
@@ -119,7 +123,7 @@ class Auth {
       },
       entryNo:{ // 受付番号関係
         element: null, // {HTMLElement} - 受付番号入力画面の要素。setWindowsで設定。
-        value: null,  // {string} - 受付番号
+        value: '',  // {string} - 受付番号
         header:'',    // {string} - 受付番号入力画面に表示するheaderのinnerHTML
         msg1:'受付番号を入力してください', // {string} - 入力欄の前に表示するメッセージ
         button:'送信',  // {string} - 受付番号入力画面のボタンのラベル
@@ -189,7 +193,7 @@ class Auth {
       // 鍵ペアの生成
       this.RSA.sKey = cryptico.generateRSAKey(this.RSA.passWord, this.RSA.bits);
       this.RSA.pKey = cryptico.publicKeyString(this.RSA.sKey);
-      console.log(this.RSA);
+      //console.log(this.RSA);
 
       // 秘密鍵の保存
       //Fs.writeFileSync('./private.json', JSON.stringify(key.toJSON()));
@@ -215,6 +219,7 @@ class Auth {
     try {
       // Auth関係画面のwrapper
       this.AuthWindow.element = createElement({
+        attr:{name:"AuthWindow"},
         style:{
           // CSSで全画面オーバーレイを実装する方法＆コード例
           // https://pisuke-code.com/css-fullscreen-overlay/
@@ -233,16 +238,30 @@ class Auth {
           {tag:'p',html:this.entryNo.msg1},  // 入力欄前メッセージ
           { // inputBox
             tag:'input',
-            attr:{type:'text',name:'entryNo'},
-            event:{'input':()=>{}},
+            attr:{type:'text',name:'entryNo',value:this.entryNo.value},
+            event:{'input':(event)=>{
+              // 入力値チェック
+              const m = event.target.value.match(this.entryNo.rex);
+              console.log('m',m);
+              const b = document.querySelector('div[name="AuthWindow"] input[name="entryNoButton"]');
+              if( m ){
+                b.removeAttribute('disabled');
+              } else {
+                b.setAttribute('disabled',true);
+              }
+            }},
           },
           { // 送信ボタン
             tag:'input',
             attr:{
               type:'button',
               name:'entryNoButton',
-              value:this.entryNo.button,disabled:true
+              value:this.entryNo.button,
             },
+            logical:{
+              disabled: this.entryNo.value.match(this.entryNo.rex) ? false : true,
+            },
+            event:{'click':()=>this.getEntryNo()},
           },
           {tag:'p',html:this.entryNo.msg2},  // 入力欄後メッセージ
         ],
@@ -293,7 +312,7 @@ class Auth {
           {tag:'p',html:this.passCode.msg1},  // 入力欄前メッセージ
           { // inputBox
             tag:'input',
-            attr:{type:'text',name:'passCode'},
+            attr:{type:'text',name:'passCode',value:''},
             event:{'input':()=>{}},
           },
           { // 送信ボタン
@@ -351,42 +370,30 @@ class Auth {
 
   }
 
-  /** 初期化作業の内、非同期となる処理の実行
-   * 
-   */
-  async build(){
-    // 5.entryNo(ID)を認証局に送信、パスコードメールを受け取る
-    await this.#getEntryNo();
-    console.log(Date.now()-this.constructorStart);
-  }
-
   /** entryNo(ID)を認証局に送信
    * @param {void}
    * @returns {void}
    */
-  async #getEntryNo(){
+  async getEntryNo(){
     const v = {rv:null,data:{cp:this.RSA.pKey}};
-    console.log('Auth.#getEntryNo start.');
+    console.log('Auth.getEntryNo start.');
     try {
 
-      if( this.entryNo.value !== null ){
-        // 受付番号取得済の場合、すぐにGAS.auth1Aに送信
-        v.data.entryNo = this.entryNo.value;
-        v.rv = await this.#fetchFromClient('gateway','auth1A',{
-          entryNo: this.entryNo.value,
-          pKey: this.RSA.pKey,
-        });
-        console.log(v.rv);
-      } else {
-        this.#changeScreen('entryNo');
-
-      }
-      
+      // 入力フォームから値を取得
+      this.#changeScreen('loading');
+      v.rv = await this.#fetchFromClient('gateway','auth1A',{
+        entryNo: this.entryNo.element.querySelector('input').value,
+        pKey: this.RSA.pKey,
+      });
       //console.log('v.rv='+JSON.stringify(v.rv));
-      console.log('Auth.#getEntryNo end.');
+
+      this.gateway.pKey = v.rv;
+      this.#changeScreen('passCode');
+
+      console.log('Auth.getEntryNo end.');
       return v.rv;
     } catch(e){
-      console.error('Auth.#getEntryNo abnormal end.',e);
+      console.error('Auth.getEntryNo abnormal end.',e);
       // ブラウザで実行する場合はアラート表示
       if( typeof window !== 'undefined' ) alert(e.stack);
       //throw e; //以降の処理を全て停止する場合
@@ -421,7 +428,7 @@ class Auth {
         "Content-Type": "application/json",
       });
       v.rv = await v.fetch.json();
-      console.log(v.rv);
+      //console.log(v.rv);
 
       console.log('Auth.#fetchFromClient end.');
       return v.rv;
@@ -698,10 +705,11 @@ async function AuthTest(){
   const v = {data:[]};
   console.log('AuthTest start.');
   try {
-    v.conf = new Auth('https://script.google.com/macros/s/AKfycbzAEJorJYq5ydzbn5cGHO6tB8zEUjXtomMiCMlTYchuoKP7j40QX5gzDWT-5oIYg4rD/exec',
+    v.conf = new Auth(
+      'https://script.google.com/macros/s/AKfycbzAEJorJYq5ydzbn5cGHO6tB8zEUjXtomMiCMlTYchuoKP7j40QX5gzDWT-5oIYg4rD/exec',
       {entryNo:{value:"1234"}}
     );
-    await v.conf.build();
+    //await v.conf.build();
     console.log('AuthTest end.',v.conf);
 
   } catch(e){

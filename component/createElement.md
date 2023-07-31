@@ -1,4 +1,4 @@
-lastUpdate: 2023年 7月25日 火曜日 14時33分37秒 JST
+lastUpdate: 2023年 7月31日 月曜日 09時41分57秒 JST
 
 ## Functions
 
@@ -37,6 +37,7 @@ HTMLの要素を生成
 | --- | --- | --- | --- |
 | tag | <code>string</code> | <code>&quot;&#x27;div&#x27;&quot;</code> | タグ名 |
 | [attr] | <code>Object.&lt;string, string&gt;</code> |  | タグに設定する属性。ex.attr:{name:'hoge'} |
+| [logical] | <code>Object.&lt;string, boolean&gt;</code> |  | 論理属性(ex.disabled)。trueなら追加 |
 | [style] | <code>Object.&lt;string, string&gt;</code> |  | 〃スタイル。ex.style:{display:'none'} |
 | [event] | <code>Object.&lt;string, string&gt;</code> |  | 〃イベント。ex.event:{onclick:()=>{〜}} |
 | [text] | <code>string</code> |  | タグ内にセットする文字列 |
@@ -52,6 +53,7 @@ HTMLの要素を生成
  * @typedef {Object} createElementDef
  * @prop {string} tag='div' - タグ名
  * @prop {Object.<string,string>} [attr] - タグに設定する属性。ex.attr:{name:'hoge'}
+ * @prop {Object.<string,boolean>} [logical] - 論理属性(ex.disabled)。trueなら追加
  * @prop {Object.<string,string>} [style] - 〃スタイル。ex.style:{display:'none'}
  * @prop {Object.<string,string>} [event] - 〃イベント。ex.event:{onclick:()=>{〜}}
  * @prop {string} [text] - タグ内にセットする文字列
@@ -77,6 +79,11 @@ function createElement(arg={}){
   v.rv = document.createElement(v.arg.tag);
   for( v.i in v.arg.attr ){ // 属性の設定
     v.rv.setAttribute(v.i,v.x = v.arg.attr[v.i]);
+  }
+  for( v.i in v.arg.logical ){  // 論理属性の設定
+    if( v.arg.logical[v.i] ){
+      v.rv.setAttribute(v.i);
+    }
   }
   for( v.i in v.arg.style ){ // スタイルの設定
     if( v.i.match(/^\-\-/) ){ // CSS変数の場合
