@@ -1,0 +1,141 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>onFormSubmit</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css" class="core">/* コアCSS */
+</style>
+</head><body>
+<div><!-- 開始：HTML -->
+<h1>onFormSubmit</h1>
+<p>開発者コンソールの「Uncaught ReferenceError: require is not defined」は無視して問題無し</p>
+</div><!-- 終了：HTML領域 -->
+
+<div><!-- 開始：Script領域 -->
+<!-- 外部Script -->
+
+<script type="text/javascript" class="core">/* コアScript */
+/** フォーム申込み時のメールの自動返信
+ * 
+ * ### 導入時の注意
+ * 
+ * 以下の手順でトリガーを設定すること。<br>
+ * AppsScript > 時計アイコン > トリガーを追加 > 「Masterのトリガーを追加」
+ * 
+ * - 実行する関数を選択：onFormSubmit
+ * - 実行するデプロイを選択：Head
+ * - イベントのソースを選択：スプレッドシートから
+ * - イベントの種類を選択：フォーム送信時
+ * - エラー通知設定：今すぐ通知を受け取る
+ * 
+ * ### スプレッドシート上のonFormSubmitに渡される引数
+ * 
+ * <ul>
+ * <li><a href="https://tgg.jugani-japan.com/tsujike/2021/05/gas-form4/#toc2">スプレッドシートのコンテナバインドのフォーム送信時イベントオブジェクト</a>
+ * <li>GAS公式 Google スプレッドシートのイベント<a href="https://developers.google.com/apps-script/guides/triggers/events#form-submit">フォーム送信</a>
+ * </ul>
+ * <img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210426-001.png?w=1256&ssl=1" width="80%" />
+ * <ul>
+ * <li>range : <a href="https://developers.google.com/apps-script/reference/spreadsheet/range">Range</a> Object
+ * </ul>
+ * 
+ * ### 参考：フォーム上のonFormSubmitに渡される引数
+ * 
+ * <ul>
+ * <li>GAS公式 <a href="https://developers.google.com/apps-script/guides/triggers/events#google_forms_events">Google フォームのイベント</a>
+ * <li><a href="https://tgg.jugani-japan.com/tsujike/2021/05/gas-form5/#toc2">フォームのコンテナバインドのフォーム送信時イベントオブジェクト</a>
+ * </ul>
+ * <img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210427-001.png?w=1256&ssl=1" width="80%" />
+ * <ul>
+ * <li>response : <a href="https://developers.google.com/apps-script/reference/forms/form-response">Form Response</a> Object
+ * <ul>
+ * <li><a href="https://developers.google.com/apps-script/reference/forms/form-response#geteditresponseurl">getEditResponseUrl()</a>
+ * <li><a href="https://developers.google.com/apps-script/reference/forms/form-response#gettimestamp">getTimestamp()</a>
+ * </ul>
+ * <li>source : <a href="https://developers.google.com/apps-script/reference/forms/form">Form</a>
+ * </ul>
+ * 
+ * ### フォーム編集用URLの取得
+ * 
+ * 参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。
+ * 
+ * そこで①フォームの登録情報を全件取得し、②Google Spreadの登録日時＋e-mailから特定し、③特定された登録情報から編集用URLを取得、という手順を踏む。
+ * 
+ * ※回答シートとフォームで添字が一致しないかと考えたが、結果的には一致していない。よって「タイムスタンプのgetTime()＋e-mail」を検索キーとする。
+ * 
+ * @param {Object} e - スプレッドシート上のonFormSubmitに渡される引数
+ * @returns {object} 郵便局.doPostで処理された結果
+ */
+function onFormSubmit(e){
+  const v = {whois:'管理局.onFormSubmit',rv:null,e:e,data:{}};
+  try {
+    console.log(v.whois+' start.'); // onFormSubmit開始ログ
+
+    // 1.引数からシート上の行番号を取得、併せて受付番号他を補完
+    v.step = '1.1';
+    v.sheet = szSheet('master');
+    v.step = '1.2';
+    v.r = v.sheet.complement();
+    if( v.r instanceof Error ) throw v.r;
+    v.step = '1.3';
+    v.rowNum = e.range.rowStart - v.sheet.headerRow - 1;
+    v.tObj = v.sheet.data[v.rowNum];  // target object
+    //console.log('l.68 '+v.rowNum+'\n'+JSON.stringify(v.tObj))
+
+    // 2.返信メールを送信
+    v.step = '2';
+    v.rv = postMails({
+      from: szConf.mailTemplate.confirmation.name || szConf.public.whois,
+      to: {
+        address: v.tObj['メールアドレス'],
+        data: v.tObj,
+      },
+      subject: szConf.mailTemplate.confirmation.subject,
+      body: szConf.mailTemplate.confirmation.body,
+      html: szConf.mailTemplate.confirmation.html,
+    });
+    if( v.rv instanceof Error ) throw v.rv;
+    
+    v.step = '3'; // 3.終了処理
+    console.log(v.whois+' end.'); // onFormSubmit正常終了ログ
+  } catch(e) {
+    console.error(v.whois+' abnormal end.\n',e);
+    v.rv = e;  // szCatch: catch節の標準処理
+  } finally {
+    return v.rv;
+  }
+}
+</script>
+
+<script type="text/javascript" class="test">/* テスト用 */
+/*
+const onFormSubmitTest = () => {
+  // e = {range:{rowStart:3}}
+  e={"authMode":"FULL","namedValues":{"ボランティア":[""],"参加する時間帯":[""],"メールアドレス":["nakaone.kunihiro@gmail.com"],"キャンセル":[""],"参加者②氏名":[""],"参加者②学年":[""],"折り紙希望":[""],"備考":[""],"タイムスタンプ":["2023/03/01 17:13:12"],"参加者①学年":["","3"],"参加者①氏名":["てすと　さぶろう"],"参加者③学年":[""],"ML配信":["可"],"保護者の同伴":[""],"参加者③氏名":[""]},"range":{"columnEnd":15,"columnStart":1,"rowEnd":6,"rowStart":6},"source":{},"triggerUid":"14956232","values":["2023/03/01 17:13:12","nakaone.kunihiro@gmail.com","てすと　さぶろう","","","","","可","","","","3","","","",""]};
+  onFormSubmit(e);
+}
+*/
+
+function onFormSubmitTest(){
+  const v = {data:[
+    'fuga','hoge',
+  ]};
+  console.log('onFormSubmitTest start.');
+  try {
+
+    for( let i=0 ; i<v.data.length ; i++ ){
+      v.result = onFormSubmit(v.data[i]);
+      console.log(v.result);
+    }
+    console.log('onFormSubmitTest end.');
+
+  } catch(e){
+    console.error('onFormSubmitTest abnormal end.',e);
+  }
+}
+</script>
+
+<!-- 自作ライブラリ -->
+<script type="text/javascript" class="core" data-embed="../component/postMails.js"></script>
+<script type="text/javascript" class="core" data-embed="../component/szSheet.js"></script>
+
+</div><!-- 終了：Script領域 -->
+</body></html>

@@ -24,6 +24,7 @@
 | [jsonRange](jsonRange.md) | Googleスプレッド上で、選択範囲のセル情報をJSON化してmsgBoxに表示 |
 | [mergeDeeply](mergeDeeply.md) | オブジェクトのプロパティを再帰的にマージ |
 | [objectize](objectize.md) | 階層形式の二次元配列をオブジェクト化 |
+| [onFormSubmit](onFormSubmit.md) | [GAS]フォーム申込み時のメールの自動返信 |
 | [postMails](postMails.md) | GAS上の管理局等の発信局でメールを発信、通数制限を超える場合は配信局を変更 |
 | [sendMails](sendMails.md) | GAS上の配信局でテンプレートに個別メールのデータを差し込み、送信する |
 | [serializeRSAKey](serializeRSAKey.md) | RSAキーを文字列化 |
