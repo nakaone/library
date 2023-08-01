@@ -26,6 +26,7 @@
 | [objectize](objectize.md) | 階層形式の二次元配列をオブジェクト化 |
 | [onFormSubmit](onFormSubmit.md) | [GAS]フォーム申込み時のメールの自動返信 |
 | [postMails](postMails.md) | GAS上の管理局等の発信局でメールを発信、通数制限を超える場合は配信局を変更 |
+| [qrcode](qrcode.md) | 指定されたDIV要素にQRコードを作成 |
 | [sendMails](sendMails.md) | GAS上の配信局でテンプレートに個別メールのデータを差し込み、送信する |
 | [serializeRSAKey](serializeRSAKey.md) | RSAキーを文字列化 |
 | [toolbox](toolbox.md) | Googleスプレッドのメニューに「道具箱」を追加 |

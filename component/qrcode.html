@@ -1,0 +1,163 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>qrcode</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css" class="core">/* コアCSS */
+</style>
+</head><body>
+<div><!-- 開始：HTML -->
+<h1>qrcode</h1>
+<p>開発者コンソールの「Uncaught ReferenceError: require is not defined」は無視して問題無し</p>
+
+<div class="core"><!-- コアHTML -->
+</div>
+
+<div class="webApp"><!-- webアプリHTML -->
+  <div>
+    <label for="inputData">入力</label>
+    <textarea id="inputData">テストデータ</textarea>
+  </div>
+  <div name="QRCode"></div>
+  <div>
+    <label for="outputData">出力</label>
+    <textarea id="outputData"></textarea>
+  </div>
+
+</div>
+</div><!-- 終了：HTML領域 -->
+
+<div><!-- 開始：Script領域 -->
+<!-- 外部ライブラリ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- 自作ライブラリ -->
+<!-- webApp利用時： srcのみ必要。パスはcomponentが起点
+  コンソール利用時：class="onConsole" data-embedが必要。data-embedの起点はtools -->
+<script type="text/javascript" src="analyzeArg.js" class="onConsole"
+  data-embed="../component/analyzeArg.js"></script>
+
+<script type="text/javascript" class="core">/* コアScript */
+/** 指定されたDIV要素にQRコードを作成
+ * 
+ * 作成時オプションについては[公式](https://github.com/davidshimjs/qrcodejs)参照。
+ * 
+ * @param {string} selector - QRコード作成先Div要素のCSSセレクタ
+ * @param {Object|string} opt - 作成時オプション。文字列の場合、QRコードの内容
+ */
+function qrcode(selector,opt){
+  const v = {rv:null};
+  console.log('qrcode start.');
+  try {
+    // 前回の結果をクリア
+    v.element = document.querySelector(selector);
+    v.element.innerHTML = '';
+
+    v.opt = {
+      text: '(undefined)',
+      width: 200,
+      height: 200,
+      colorDark: "#000",
+      colorLight: "#fff",
+      correctLevel : QRCode.CorrectLevel.H,
+    };
+    if( typeof opt === 'string' ){
+      v.opt.text = opt;
+    } else {
+      v.opt = Object.assign(v.opt,opt);
+    }
+    console.log(v.opt);
+    const qr = new QRCode(v.element,v.opt);
+
+    //console.log('v.rv='+JSON.stringify(v.rv));
+    console.log('qrcode end.');
+    return v.rv;
+  } catch(e){
+    // ブラウザで実行する場合はアラート表示
+    //if( typeof window !== 'undefined' ) alert(e.stack); 
+    //throw e; //以降の処理を全て停止する場合
+    v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+  }
+}
+</script>
+
+<script type="text/javascript" class="onConsole">/* コンソール実行用 */
+const fs = require('fs'); // ファイル操作
+function onConsole(){
+  console.log('qrcode.onConsole start.');
+  const v = {rv:null};
+  try {
+
+    // 事前処理：引数チェック、既定値の設定
+    v.argv = analyzeArg();
+    console.log(v.argv)
+    if(v.argv.hasOwnProperty('stack')) throw v.argv;
+
+    v.readFile = fs.readFileSync(v.argv.opt.i,'utf-8').trim();
+    v.rv = qrcode(v.readFile);
+    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
+
+    //console.log('v.rv='+JSON.stringify(v.rv));
+    console.log('qrcode.onConsole end.');
+  } catch(e){
+    console.error('qrcode.onConsole abnormal end.',e);
+  }
+}
+onConsole();
+</script>
+
+<script type="text/javascript" class="test">/* テスト用 */
+function qrcodeTest(){
+  const v = {data:[
+    'fuga','hoge',
+  ]};
+  console.log('qrcodeTest start.');
+  try {
+
+    /*
+    for( let i=0 ; i<v.data.length ; i++ ){
+      v.result = qrcode(v.data[i]);
+      console.log(v.result);
+    }
+    */
+    console.log('qrcodeTest end.');
+
+  } catch(e){
+    console.error('qrcodeTest abnormal end.',e);
+  }
+}
+</script>
+
+<script type="text/javascript">
+function onInput(event=null){
+  const v = {
+    in: document.getElementById('inputData'),
+    out: document.getElementById('outputData'),
+  };
+  console.log('onInput start.');
+  try {
+
+    console.log(event,v.in.value);
+    v.out.value = qrcode('div[name="QRCode"]',v.in.value);
+    console.log('onInput end.');
+
+  } catch(e){
+    console.error('onInput abnormal end.',e);
+    //alert(e.stack); 
+    v.rv.stack = e.stack; return v.rv;
+  }
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+
+  // webアプリの入力欄変更時のイベントを定義
+  document.getElementById('inputData')
+    .addEventListener('input',event => onInput(event));
+  // テストデータを表示するため、キー入力時の処理を呼び出す
+  onInput();
+
+  // 開発者コンソール上でテスト
+  qrcodeTest();
+});
+</script>
+</div><!-- 終了：Script領域 -->
+</body></html>
