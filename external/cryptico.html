@@ -1,152 +1,204 @@
-<!DOCTYPE html><html lang="ja">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <meta http-equiv="Content-Script-Type" content="text/javascript">
-  <title>cryptico</title>
-  <style type="text/css" title="EventStaff">
-    table {
-      width: 100%;
-    }
-    th {
-      text-align: left;
-      white-space: nowrap;
-    }
-    td {
-      word-break: break-all;
-    }
-    .variable {
-      background-color: aqua;
-    }
-  </style>
-</head>
-<body>
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>cryptico</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css" class="webApp">/* webアプリCSS */
+  html {
+    font-size: 12pt;
+  }
+  div.webApp {
+    display: grid;
+    grid-template-columns: 10rem 1fr 1fr;
+    column-gap: 1rem;
+    row-gap: 1rem;
+    font-size: 1rem;
+    --border: solid 1px green;
+  }
+  .th {
+    padding: 0.5rem;
+    color: white;
+    background-color: green;
+  }
+  textarea {
+    width: calc(100% - 1rem);
+  }
+  div.webApp > div {
+    border-right: var(--border);
+    border-bottom: var(--border);
+    word-break: break-all;
+  }
+  sub {
+    display: block;
+    line-height: 0.8rem;
+    font-size: 0.6rem;
+  }
+  span {
+    font-weight: 900;
+  }
+</style>
+</head><body>
+<div><!-- 開始：HTML -->
 <h1>cryptico</h1>
-<p>背景水色の項目を変更すると各値を計算します。<br>
-なおencrypt/decryptのオブジェクトは開発者コンソールに表示されます。</p>
-<table>
-  <tr>
-    <th class="variable">bit length</th>
-    <td>
-      <select id="bits">
-        <option value="512">512</option>
-        <option value="1024" selected>1024</option>
-        <option value="2048">2048</option>
-        <option value="4096">4096</option>
-        <option value="8192">8192</option>
-      </select>
-    </td>
-  </tr>
-  <tr>
-    <th class="variable">pass phrase</th>
-    <td>
-      <input type="text" id="passPhrase" width="20rem" />
-      <button name="passPhrase">再設定</button>
-    </td>
-    <td name="passPhrase"></td>
-  </tr>
-  <tr>
-    <th class="variable">plain text</th>
-    <td><textarea id="plainText"></textarea></td>
-    <td name="plainText"></td>
-  </tr>
-  <tr>
-    <th class="variable">cipher</th>
-    <td><textarea id="cipher"></textarea></td>
-    <td name="cipher"></td>
-  </tr>
-  <tr>
-    <th>RSA key<br>(secret key)</th>
-    <td><textarea id="RSAkey"></textarea></td>
-    <td name="RSAkey"></td>
-  </tr>
-  <tr>
-    <th>Public key</th>
-    <td><textarea id="publicKey"></textarea></td>
-    <td name="publicKey"></td>
-  </tr>
-</table>
-<hr>
-<ol>
-  <li>plain textはマルチバイト文字使用不可<br>ex.寿限無 -&gt; úåE</li>
-</ol>
 
-<!-- ::deploy.ignore.start:: -->
-<script type="text/javascript" src="cryptico.min.js"></script>
-<!-- ::deploy.ignore.end:: -->
-</body>
-<script type="text/javascript">
-const crypticoRecalc = (arg) => {
-  console.log('crypticoRecalc start: '+arg);
-  const v = {arg:arg};
-  // 各欄の値を取得
-  boxes.forEach(x => {
-    v[x] = document.getElementById(x).value;
-  });
-  v.bits = Number(v.bits);
+<div class="webApp"><!-- webアプリHTML -->
+  <div style="grid-column: 2 / 3" class="th">Sam</div>
+  <div style="grid-column: 3 / 4" class="th">Matt</div>
 
-  // plainTextとcipherの変化は排他なので
-  // 変更されていない方は空欄扱いとする
-  if( v.arg === 'plainText' ) v.cipher = '';
-  if( v.arg === 'cipher' ) v.plainText = '';
+  <div style="grid-column: 1 / 2" class="th">bit length</div>
+  <div style="grid-column: 2 / 4">
+    <select id="bits">
+      <option value="512">512</option>
+      <option value="1024" selected>1024</option>
+      <option value="2048">2048</option>
+      <option value="4096">4096</option>
+      <option value="8192">8192</option>
+    </select>
+  </div>
 
-  if( v.passPhrase.length > 0 ){
-    v.rsa = cryptico.generateRSAKey(v.passPhrase,v.bits);
-    console.log(whichType(v.rsa));
-    v.rv = {
-      RSAkey: serializeRSAKey(v.rsa),
-      publicKey: cryptico.publicKeyString(v.rsa)
-    }
-    if( v.plainText.length > 0 ){
-      v.encrypt = cryptico.encrypt(v.plainText,v.rv.publicKey);
-      v.rv.cipher = v.encrypt.cipher;
-      console.log('v.encrypt',v.encrypt);
-      // 復元(確認用)
-      v.reRSA = deserializeRSAKey(serializeRSAKey(v.rsa));
-      console.log('reRSA',v.reRSA);
-    } else if( v.cipher.length > 0 ){
-      v.decrypt = cryptico.decrypt(v.cipher,v.rsa);
-      v.rv.plainText = v.decrypt.plaintext;
-      console.log('v.decrypt',v.decrypt);
-    }
+  <div style="grid-column: 1 / 2" class="th">passPhrase</div>
+  <div style="grid-column: 2 / 3">
+    <input type=text name="ppA" value="q;0YZR6_wk!R8DNM" />
+    <button name="A" onclick="resetPassPhrase()">reset</button>
+  </div>
+  <div style="grid-column: 3 / 4">
+    <input type=text name="ppB" value="g#efdOJ5QFYRx|JR" />
+    <button name="B" onclick="resetPassPhrase()">reset</button>
+  </div>
 
-    // 値が変更された欄は書き換え
-    Object.keys(v.rv).forEach(x => {
-      document.getElementById(x).value = v.rv[x];
-    })
+  <div style="grid-column: 1 / 2" class="th">
+    RSA key
+    <sub>cryptico.generateRSAKey(passPhrase, Bits)</sub>
+  </div>
+  <div style="grid-column: 2 / 3" name="skA"></div>
+  <div style="grid-column: 3 / 4" name="skB"></div>
 
-    // 各欄の文字列の長さを表示
-    for( v.i=1 ; v.i<boxes.length ; v.i++ ){
-      document.querySelector('td[name="'+boxes[v.i]+'"]').innerText
-      = 'length: ' + document.getElementById(boxes[v.i]).value.length;
-    }
+  <div style="grid-column: 1 / 2" class="th">
+    Public key
+    <sub>cryptico.publicKeyString(RSAkey)</sub>
+  </div>
+  <div style="grid-column: 2 / 3" name="pkA"></div>
+  <div style="grid-column: 3 / 4" name="pkB"></div>
+
+  <div style="grid-column: 1 / 2" class="th">
+    plain text
+  </div>
+  <div style="grid-column: 2 / 3">
+    <textarea name="ptA">寿限無寿限無五劫の擦り切れ海砂利水魚水行末雲来末風来末</textarea>
+  </div>
+  <div style="grid-column: 3 / 4" name="ptB"></div>
+
+  <div style="grid-column: 1 / 2" class="th">
+    base64 encode
+    <sub>btoa(unescape(encodeURIComponent(plaintext)))</sub>
+  </div>
+  <div style="grid-column: 2 / 3" name="beA"></div>
+  <div style="grid-column: 3 / 4" name="beB"></div>
+  
+  <div style="grid-column: 1 / 2" class="th">
+    encrypt/decrypt
+    <sub>cryptico.encrypt(plainText,MattsPubKey)</sub>
+    <sub>cryptico.decrypt(cipher,MattsRSAkey)</sub>
+  </div>
+  <div style="grid-column: 2 / 3" name="e1A"></div>
+  <div style="grid-column: 3 / 4" name="e1B"></div>
+  <div style="grid-column: 1 / 2" class="th">
+    signature
+    <sub>cryptico.encrypt(plainText,MattsPubKey<span>,SamsRSAkey</span>)</sub>
+    <sub>cryptico.decrypt(cipher,MattsRSAkey)</sub>
+  </div>
+  <div style="grid-column: 2 / 3" name="e2A"></div>
+  <div style="grid-column: 3 / 4" name="e2B"></div>
+
+  <div style="grid-column: 1 / 2" class="th">
+    base64 decode
+    <sub>decodeURIComponent(escape(window.atob(plaintext)))</sub>
+  </div>
+  <div style="grid-column: 2 / 3" name="bdA"></div>
+  <div style="grid-column: 3 / 4" name="bdB"></div>
+
+</div>
+</div><!-- 終了：HTML領域 -->
+
+<div><!-- 開始：Script領域 -->
+<!-- 外部Script -->
+<script src="cryptico.min.js"></script>
+
+<!-- 自作ライブラリ -->
+<!-- webApp利用時： srcのみ必要。パスはcomponentが起点
+  コンソール利用時：class="onConsole" data-embedが必要。data-embedの起点はtools -->
+<!--script type="text/javascript" src="../component/analyzeArg.js" class="onConsole"
+  data-embed="../component/analyzeArg.js"></script-->
+
+<script type="text/javascript" class="webApp">
+/**
+ * - [Base64変換(エンコード/デコード)で日本語文字列に対応する](https://www.petitmonte.com/javascript/base64.html)
+ */
+function onInput(event=null){
+  const v = {};
+  console.log('onInput start.');
+  try {
+    v.bits = Number(d.bits.value);
+    v.ppA = d.ppA.value;
+    v.ppB = d.ppB.value;
+    v.ptA = d.ptA.value;
+    console.log(v,event);
+
+    // RSA : cryptico.generateRSAKey(PassPhrase, Bits);
+    v.skA = cryptico.generateRSAKey(v.ppA,v.bits);
+    d.skA.innerText = v.skA; //JSON.stringify(v.skA);
+    v.skB = cryptico.generateRSAKey(v.ppB,v.bits);
+    d.skB.innerText = v.skB; //JSON.stringify(v.skB);
+
+    // public key : cryptico.publicKeyString(MattsRSAkey)
+    v.pkA = cryptico.publicKeyString(v.skA);
+    v.pkB = cryptico.publicKeyString(v.skB);
+    d.pkA.innerText = v.pkA;
+    d.pkB.innerText = v.pkB;
+
+    // plain text
+    v.ptA = d.ptB.innerText = d.ptA.value;
+    console.log(v.ptA);
+
+    // base64 encode
+    v.beA = d.beA.innerText
+    = btoa(unescape(encodeURIComponent(v.ptA)))
+    console.log(v.beA);
+
+    // 暗号化
+    v.e1A = cryptico.encrypt(v.beA, v.pkB);
+    d.e1A.innerText = JSON.stringify(v.e1A);
+    console.log(JSON.stringify(v.e1A));
+
+    // 復号
+    v.e1B = cryptico.decrypt(v.e1A.cipher,v.skB);
+    d.e1B.innerText = JSON.stringify(v.e1B);
+    console.log(JSON.stringify(v.e1B));
+
+    // 暗号化
+    v.e2A = cryptico.encrypt(v.beA, v.pkB, v.skA);
+    d.e2A.innerText = JSON.stringify(v.e1A);
+
+    // 復号
+    v.e2B = cryptico.decrypt(v.e2A.cipher,v.skB);
+    d.e2B.innerText = JSON.stringify(v.e2B);
+
+    // base64 decode
+    console.log(v.e2B);
+    v.bdB = d.bdB.innerText
+    = decodeURIComponent(escape(atob(v.e2B.plaintext))); 
+
+    console.log('onInput end.');
+
+  } catch(e){
+    console.error('onInput abnormal end.',e);
+    v.rv.stack = e.stack; return v.rv;
   }
 }
 
-// ::deploy.ignore.start::
-// 以下はlocalLib.jsに定義済みなので、デプロイ時には外す
-
-// RSAkeyを文字列化
-// store javascript object rsa private key #28
-// https://github.com/wwwtyro/cryptico/issues/28
-function serializeRSAKey(key) {
-  return JSON.stringify({
-    coeff: key.coeff.toString(16),
-    d: key.d.toString(16),
-    dmp1: key.dmp1.toString(16),
-    dmq1: key.dmq1.toString(16),
-    e: key.e.toString(16),
-    n: key.n.toString(16),
-    p: key.p.toString(16),
-    q: key.q.toString(16)
-  })
-}
-
-function deserializeRSAKey(key) {
-  let json = JSON.parse(key);
-  let rsa = new RSAKey();
-  rsa.setPrivateEx(json.n, json.e, json.d, json.p, json.q, json.dmp1, json.dmq1, json.coeff);
-  return rsa;
+/** パスフレーズの変更 */
+function resetPassPhrase(){
+  console.log('resetPassPhrase: target='+event.target.name);
+  d['pp'+event.target.name].value = createPassword();
+  onInput();  // 再計算
 }
 
 /** createPassword: パスワード文字列の生成
@@ -157,7 +209,7 @@ function deserializeRSAKey(key) {
  * @param {boolean} [opt.numeric=true] - 数字を使用するならtrue 
  * @returns 
  */
-const createPassword = (len=16,opt={lower:true,upper:true,symbol:true,numeric:true}) => {
+ const createPassword = (len=16,opt={lower:true,upper:true,symbol:true,numeric:true}) => {
   const v = {
     lower: 'abcdefghijklmnopqrstuvwxyz',
     upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
@@ -181,25 +233,30 @@ const createPassword = (len=16,opt={lower:true,upper:true,symbol:true,numeric:tr
   }
 }
 
-/** whichType: 変数の型を判定
- * @param {any} arg - 判定対象の変数
- * @returns {string} - 型の名前
- */
-const whichType = (arg = undefined) => {
-  return arg === undefined ? 'undefined'
-   : Object.prototype.toString.call(arg).match(/^\[object\s(.*)\]$/)[1];
-}
-// ::deploy.ignore.end::
+const d = {domlist:['ppA','ppB','skA','skB','pkA','pkB',
+  'ptA','ptB','beA','beB','e1A','e1B','e2A','e2B','bdA','bdB']};
+window.addEventListener('DOMContentLoaded',() => {
+  // 使用する要素をグローバルに事前取得
+  d.domlist.forEach(x => d[x]=document.querySelector('[name="'+x+'"]'));
+  d.bits = document.getElementById('bits');
+  console.log(d);
 
+  ['bits','ppA','ppB','ptA'].forEach(x => {
+    d[x].addEventListener('change',event => onInput(event));
+  })
 
-// ボタン動作の定義
-const boxes = ['bits','passPhrase','plainText','cipher','RSAkey','publicKey'];
-for( let i=0 ; i<4 ; i++ ){
-  document.getElementById(boxes[i]).onchange = () => crypticoRecalc(boxes[i]);
-}
-document.querySelector('button[name="passPhrase"]').onclick = () => {
-  document.getElementById('passPhrase').value = createPassword();
-  crypticoRecalc();
-}
+  onInput();
+  /*
+  // webアプリの入力欄変更時のイベントを定義
+  document.getElementById('inputData')
+    .addEventListener('input',event => onInput(event));
+  // テストデータを表示するため、キー入力時の処理を呼び出す
+  onInput();
+
+  // 開発者コンソール上でテスト
+  crypticoTest();
+  */
+});
 </script>
-</html>
+</div><!-- 終了：Script領域 -->
+</body></html>
