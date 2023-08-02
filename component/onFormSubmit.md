@@ -1,49 +1,13 @@
-lastUpdate: 2023年 7月31日 月曜日 17時26分18秒 JST
+lastUpdate: 2023年 8月 2日 水曜日 11時32分48秒 JST
 
 ## Functions
 
 <dl>
-<dt><a href="#onFormSubmit">onFormSubmit(e)</a> ⇒ <code>object</code></dt>
-<dd><p>フォーム申込み時のメールの自動返信</p>
-<h3 id="導入時の注意">導入時の注意</h3>
-<p>以下の手順でトリガーを設定すること。<br>
-AppsScript &gt; 時計アイコン &gt; トリガーを追加 &gt; 「Masterのトリガーを追加」</p>
-<ul>
-<li>実行する関数を選択：onFormSubmit</li>
-<li>実行するデプロイを選択：Head</li>
-<li>イベントのソースを選択：スプレッドシートから</li>
-<li>イベントの種類を選択：フォーム送信時</li>
-<li>エラー通知設定：今すぐ通知を受け取る</li>
-</ul>
-<h3 id="スプレッドシート上のonformsubmitに渡される引数">スプレッドシート上のonFormSubmitに渡される引数</h3>
-<ul>
-<li><a href="https://tgg.jugani-japan.com/tsujike/2021/05/gas-form4/#toc2">スプレッドシートのコンテナバインドのフォーム送信時イベントオブジェクト</a>
-<li>GAS公式 Google スプレッドシートのイベント<a href="https://developers.google.com/apps-script/guides/triggers/events#form-submit">フォーム送信</a>
-</ul>
-<img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210426-001.png?w=1256&ssl=1" width="80%" />
-<ul>
-<li>range : <a href="https://developers.google.com/apps-script/reference/spreadsheet/range">Range</a> Object
-</ul>
-
-<h3 id="参考：フォーム上のonformsubmitに渡される引数">参考：フォーム上のonFormSubmitに渡される引数</h3>
-<ul>
-<li>GAS公式 <a href="https://developers.google.com/apps-script/guides/triggers/events#google_forms_events">Google フォームのイベント</a>
-<li><a href="https://tgg.jugani-japan.com/tsujike/2021/05/gas-form5/#toc2">フォームのコンテナバインドのフォーム送信時イベントオブジェクト</a>
-</ul>
-<img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210427-001.png?w=1256&ssl=1" width="80%" />
-<ul>
-<li>response : <a href="https://developers.google.com/apps-script/reference/forms/form-response">Form Response</a> Object
-<ul>
-<li><a href="https://developers.google.com/apps-script/reference/forms/form-response#geteditresponseurl">getEditResponseUrl()</a>
-<li><a href="https://developers.google.com/apps-script/reference/forms/form-response#gettimestamp">getTimestamp()</a>
-</ul>
-<li>source : <a href="https://developers.google.com/apps-script/reference/forms/form">Form</a>
-</ul>
-
-<h3 id="フォーム編集用urlの取得">フォーム編集用URLの取得</h3>
-<p>参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。</p>
-<p>そこで①フォームの登録情報を全件取得し、②Google Spreadの登録日時＋e-mailから特定し、③特定された登録情報から編集用URLを取得、という手順を踏む。</p>
-<p>※回答シートとフォームで添字が一致しないかと考えたが、結果的には一致していない。よって「タイムスタンプのgetTime()＋e-mail」を検索キーとする。</p>
+<dt><a href="#initMaster">initMaster()</a> ⇒ <code>void</code></dt>
+<dd><p>管理局として必要な権限を要求</p>
+</dd>
+<dt><a href="#onFormSubmit">onFormSubmit(e)</a> ⇒ <code>void</code></dt>
+<dd><p>申込フォームの入力を受け、シートの更新＋受付メールの発信を行う</p>
 </dd>
 <dt><a href="#postMails">postMails(arg, attachments, bcc, cc, inlineImages, name, noReply, replyTo)</a> ⇒ <code>null</code> | <code>Error</code></dt>
 <dd><p>postMails: GAS上の管理局等の発信局でメールを発信、通数制限を超える場合は配信局を変更</p>
@@ -82,10 +46,56 @@ update/append/complementの対象にしない。∵GAS側で書き換えると�
 </dd>
 </dl>
 
+<a name="initMaster"></a>
+
+## initMaster() ⇒ <code>void</code>
+管理局として必要な権限を要求
+
+**Kind**: global function  
+
+| Param | Type |
+| --- | --- |
+|  | <code>void</code> | 
+
 <a name="onFormSubmit"></a>
 
-## onFormSubmit(e) ⇒ <code>object</code>
-フォーム申込み時のメールの自動返信
+## onFormSubmit(e) ⇒ <code>void</code>
+申込フォームの入力を受け、シートの更新＋受付メールの発信を行う
+
+**Kind**: global function  
+**Returns**: <code>void</code> - なし
+
+### 処理概要
+
+参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。
+
+そこで①フォームの登録情報を全件取得し、②引数から何行目に書かれたか特定し、③タイムスタンプをキーに編集用URLを取得、という手順を踏む。
+
+<img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210426-001.png?w=1256&ssl=1" width="80%" />
+
+※回答シートとフォームで添字が一致しないかと考えたが、結果的には一致していない。よって「タイムスタンプのgetTime()」を検索キーとする。
+
+1. フォームから渡されるオブジェクトから以下の情報を取得
+   1. "range"から書き込まれた行(e.range.getRow())
+   2. "namedValues"からメールアドレス(e.namedValues["メールアドレス"][0])
+2. フォームの情報を取得
+   1. 全回答情報を取得(FormApp.openById(v.formId).getResponses())
+   2. {UNIX時刻:editURL}のマップを作成
+3. シート"master"に追加情報を記入
+   1. 要既定値設定項目(entryNo/editURL/authority)の空欄に既定値を設定
+   2. "range"から書き込まれた行の情報はメール送信用に保存
+4. 回答者にメールを送信
+
+### 参考
+
+- [GASでGoogleフォームの値を取得する](https://walking-elephant.blogspot.com/2021/01/gas.formapp.html)
+- GAS公式 [Class FormApp](https://developers.google.com/apps-script/reference/forms/form-app?hl=ja)
+- GAS公式 [Class Form](https://developers.google.com/apps-script/reference/forms/form?hl=ja)
+
+メール送信については以下を参照。
+
+- [Google App Script メモ（メール送信制限 回避術）](https://zenn.dev/tatsuya_okzk/articles/259203cc416328)
+- GAS公式[createDraft](https://developers.google.com/apps-script/reference/gmail/gmail-app?hl=ja#createdraftrecipient,-subject,-body,-options)
 
 ### 導入時の注意
 
@@ -97,17 +107,6 @@ AppsScript > 時計アイコン > トリガーを追加 > 「Masterのトリガ�
 - イベントのソースを選択：スプレッドシートから
 - イベントの種類を選択：フォーム送信時
 - エラー通知設定：今すぐ通知を受け取る
-
-### スプレッドシート上のonFormSubmitに渡される引数
-
-<ul>
-<li><a href="https://tgg.jugani-japan.com/tsujike/2021/05/gas-form4/#toc2">スプレッドシートのコンテナバインドのフォーム送信時イベントオブジェクト</a>
-<li>GAS公式 Google スプレッドシートのイベント<a href="https://developers.google.com/apps-script/guides/triggers/events#form-submit">フォーム送信</a>
-</ul>
-<img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210426-001.png?w=1256&ssl=1" width="80%" />
-<ul>
-<li>range : <a href="https://developers.google.com/apps-script/reference/spreadsheet/range">Range</a> Object
-</ul>
 
 ### 参考：フォーム上のonFormSubmitに渡される引数
 
@@ -123,22 +122,11 @@ AppsScript > 時計アイコン > トリガーを追加 > 「Masterのトリガ�
 <li><a href="https://developers.google.com/apps-script/reference/forms/form-response#gettimestamp">getTimestamp()</a>
 </ul>
 <li>source : <a href="https://developers.google.com/apps-script/reference/forms/form">Form</a>
-</ul>
-
-### フォーム編集用URLの取得
-
-参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。
-
-そこで①フォームの登録情報を全件取得し、②Google Spreadの登録日時＋e-mailから特定し、③特定された登録情報から編集用URLを取得、という手順を踏む。
-
-※回答シートとフォームで添字が一致しないかと考えたが、結果的には一致していない。よって「タイムスタンプのgetTime()＋e-mail」を検索キーとする。
-
-**Kind**: global function  
-**Returns**: <code>object</code> - 郵便局.doPostで処理された結果  
+</ul>  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| e | <code>Object</code> | スプレッドシート上のonFormSubmitに渡される引数 |
+| e | <code>Object</code> | [イベント](https://developers.google.com/apps-script/guides/triggers/events?hl=ja#form-submit)オブジェクト |
 
 <a name="postMails"></a>
 
@@ -285,7 +273,57 @@ szSheet.update/appendの一行分の更新・追加結果
 
 ```
 /* コアScript */
-/** フォーム申込み時のメールの自動返信
+/** 管理局として必要な権限を要求
+ * @param {void}
+ * @returns {void}
+ */
+ function initMaster(){
+  // シートへのアクセス権
+  const s = szSheet('master');
+  console.log(s.data.length);
+
+  // メール発信
+  console.log(MailApp.getRemainingDailyQuota());
+  MailApp.sendEmail("nakaone.kunihiro@gmail.com", "test", String(new Date()));
+  console.log(MailApp.getRemainingDailyQuota());
+}
+
+/** 申込フォームの入力を受け、シートの更新＋受付メールの発信を行う
+ * 
+ * @param {Object} e - [イベント](https://developers.google.com/apps-script/guides/triggers/events?hl=ja#form-submit)オブジェクト
+ * @returns {void} なし
+ * 
+ * ### 処理概要
+ * 
+ * 参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。
+ * 
+ * そこで①フォームの登録情報を全件取得し、②引数から何行目に書かれたか特定し、③タイムスタンプをキーに編集用URLを取得、という手順を踏む。
+ * 
+ * <img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210426-001.png?w=1256&ssl=1" width="80%" />
+ * 
+ * ※回答シートとフォームで添字が一致しないかと考えたが、結果的には一致していない。よって「タイムスタンプのgetTime()」を検索キーとする。
+ * 
+ * 1. フォームから渡されるオブジェクトから以下の情報を取得
+ *    1. "range"から書き込まれた行(e.range.getRow())
+ *    2. "namedValues"からメールアドレス(e.namedValues["メールアドレス"][0])
+ * 2. フォームの情報を取得
+ *    1. 全回答情報を取得(FormApp.openById(v.formId).getResponses())
+ *    2. {UNIX時刻:editURL}のマップを作成
+ * 3. シート"master"に追加情報を記入
+ *    1. 要既定値設定項目(entryNo/editURL/authority)の空欄に既定値を設定
+ *    2. "range"から書き込まれた行の情報はメール送信用に保存
+ * 4. 回答者にメールを送信
+ * 
+ * ### 参考
+ * 
+ * - [GASでGoogleフォームの値を取得する](https://walking-elephant.blogspot.com/2021/01/gas.formapp.html)
+ * - GAS公式 [Class FormApp](https://developers.google.com/apps-script/reference/forms/form-app?hl=ja)
+ * - GAS公式 [Class Form](https://developers.google.com/apps-script/reference/forms/form?hl=ja)
+ * 
+ * メール送信については以下を参照。
+ * 
+ * - [Google App Script メモ（メール送信制限 回避術）](https://zenn.dev/tatsuya_okzk/articles/259203cc416328)
+ * - GAS公式[createDraft](https://developers.google.com/apps-script/reference/gmail/gmail-app?hl=ja#createdraftrecipient,-subject,-body,-options)
  * 
  * ### 導入時の注意
  * 
@@ -297,17 +335,6 @@ szSheet.update/appendの一行分の更新・追加結果
  * - イベントのソースを選択：スプレッドシートから
  * - イベントの種類を選択：フォーム送信時
  * - エラー通知設定：今すぐ通知を受け取る
- * 
- * ### スプレッドシート上のonFormSubmitに渡される引数
- * 
- * <ul>
- * <li><a href="https://tgg.jugani-japan.com/tsujike/2021/05/gas-form4/#toc2">スプレッドシートのコンテナバインドのフォーム送信時イベントオブジェクト</a>
- * <li>GAS公式 Google スプレッドシートのイベント<a href="https://developers.google.com/apps-script/guides/triggers/events#form-submit">フォーム送信</a>
- * </ul>
- * <img src="https://i0.wp.com/tgg.jugani-japan.com/tsujike/wp-content/uploads/210426-001.png?w=1256&ssl=1" width="80%" />
- * <ul>
- * <li>range : <a href="https://developers.google.com/apps-script/reference/spreadsheet/range">Range</a> Object
- * </ul>
  * 
  * ### 参考：フォーム上のonFormSubmitに渡される引数
  * 
@@ -324,55 +351,139 @@ szSheet.update/appendの一行分の更新・追加結果
  * </ul>
  * <li>source : <a href="https://developers.google.com/apps-script/reference/forms/form">Form</a>
  * </ul>
- * 
- * ### フォーム編集用URLの取得
- * 
- * 参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。
- * 
- * そこで①フォームの登録情報を全件取得し、②Google Spreadの登録日時＋e-mailから特定し、③特定された登録情報から編集用URLを取得、という手順を踏む。
- * 
- * ※回答シートとフォームで添字が一致しないかと考えたが、結果的には一致していない。よって「タイムスタンプのgetTime()＋e-mail」を検索キーとする。
- * 
- * @param {Object} e - スプレッドシート上のonFormSubmitに渡される引数
- * @returns {object} 郵便局.doPostで処理された結果
  */
 function onFormSubmit(e){
-  const v = {whois:'管理局.onFormSubmit',rv:null,e:e,data:{}};
+  const v = {rv:null,form:{},
+    whois:'管理局.onFormSubmit',
+
+    // formId: フォーム編集画面のURL(下の「〜」の部分)
+    // https://docs.google.com/forms/d/〜/edit
+    // log > fy2023 > 20230930_校庭キャンプ > サイト・フォーム > 申込フォーム
+    formId:'1wsEtp-SdI0ypsoIzaWFXH6rPEn9G5ywL98OSUqJHCyQ',
+
+    // content: メール本文
+    content: `<p>To: _name 様</p>
+
+<p>下北沢小おやじの会です。<br>
+この度は「校庭キャンプ2023」にお申し込みいただき、ありがとうございました。</p>
+
+<p>昨年度大変多くの参加をいただいたため、今回定員オーバーの場合は申込締切日に抽選させていただき、結果はメールでご連絡差し上げることとしました。<br>
+お申し込み即参加可能とはならず誠に恐縮ですが、何卒ご理解いただけますようお願い申し上げます。</p>
+
+<p>参加要項を以下に掲載しています。持ち物や注意事項を記載しており、またイベント当日の受付で必要になりますので、事前にご確認いただけますようお願い申し上げます。<br>
+_camp2023</p>
+
+<p>なお申込〜イベント当日の間に何らかの事情でお申し込み内容に変更がある場合、またはお申し込み自体をキャンセルする場合、以下から申込内容を修正いただけますようお願いいたします。<br>
+_editURL</p>
+
+<p>尚ご不明な点がございましたら、以下までご連絡お願いいたします。<br>
+shimokitasho.oyaji@gmail.com</p>`,
+
+    // button: ボタンに適用するCSS
+    button: 'style="'
+      + 'display : inline-block;'
+      + 'text-decoration: none;'
+      + 'font-size : 18pt;'
+      + 'text-align : center;'
+      + 'cursor : pointer;'
+      + 'padding : 12px 12px;'
+      + 'background : #1a1aff;'
+      + 'color : #ffffff;'
+      + 'line-height : 1em;'
+      + 'transition : .3s;'
+      + 'box-shadow : 6px 6px 5px #666666;'
+      + 'border : 2px solid #1a1aff;'
+    + '" onMouseOver="'
+      + 'box-shadow: none;'
+      + 'color: #1a1aff;'
+      + 'background: #ffffff;'
+    + '" onMouseOut="'
+      + 'box-shadow: 6px 6px 5px #666666;'
+      + 'color: #ffffff;'
+      + 'background: #1a1aff;'
+    + '"',
+  };
   try {
-    console.log(v.whois+' start.'); // onFormSubmit開始ログ
+    console.log(v.whois+' start.',e.response); // onFormSubmit開始ログ
 
-    // 1.引数からシート上の行番号を取得、併せて受付番号他を補完
-    v.step = '1.1';
-    v.sheet = szSheet('master');
-    v.step = '1.2';
-    v.r = v.sheet.complement();
-    if( v.r instanceof Error ) throw v.r;
-    v.step = '1.3';
-    v.rowNum = e.range.rowStart - v.sheet.headerRow - 1;
-    v.tObj = v.sheet.data[v.rowNum];  // target object
-    //console.log('l.68 '+v.rowNum+'\n'+JSON.stringify(v.tObj))
+    v.step = '1';  // フォームから渡されるオブジェクトから行番号とメアドを取得
+    v.lineNum = e.range.getRow();
+    v.email = e.namedValues["メールアドレス"][0];
+    console.log('lineNum:%s, email:%s',v.lineNum,v.email);
 
-    // 2.返信メールを送信
-    v.step = '2';
-    v.rv = postMails({
-      from: szConf.mailTemplate.confirmation.name || szConf.public.whois,
-      to: {
-        address: v.tObj['メールアドレス'],
-        data: v.tObj,
-      },
-      subject: szConf.mailTemplate.confirmation.subject,
-      body: szConf.mailTemplate.confirmation.body,
-      html: szConf.mailTemplate.confirmation.html,
-    });
-    if( v.rv instanceof Error ) throw v.rv;
-    
-    v.step = '3'; // 3.終了処理
+    v.step = '2'; // フォームの情報を取得
+    v.responses = FormApp.openById(v.formId).getResponses();
+    for( v.i=0 ; v.i<v.responses.length ; v.i++ ){
+      v.timestamp = v.responses[v.i].getTimestamp().getTime();
+      console.log('2.1. timestamp='+v.timestamp);
+      v.form[String(v.timestamp)] = {
+        timestamp: v.timestamp,
+        email: v.responses[v.i].getRespondentEmail(),
+        editURL: v.responses[v.i].getEditResponseUrl()
+      }
+    }
+    console.log('v.form='+JSON.stringify(v.form));
+
+    v.step = '3'; // シート"master"に追加情報を記入
+    v.sheet = szSheet('master','タイムスタンプ');
+    for( v.i=0 ; v.i<v.sheet.data.length ; v.i++ ){
+      v.d = v.sheet.data[v.i];
+      v.stamp = new Date(v.d['タイムスタンプ']).getTime();
+      if( !v.d.entryNo || !v.d.editURL || !v.d.authority ){
+        v.updateResult = v.sheet.update({
+          entryNo: v.i+1,
+          editURL: v.form[String(v.stamp)].editURL,
+          authority: 1,
+        },{num:v.i,append:false});
+        //console.log('updateResult:'+JSON.stringify(v.updateResult));
+      }
+      if( v.i === (v.lineNum - 2) ){
+        v.entryData = v.sheet.data[v.i];
+        console.log('entryData:'+JSON.stringify(v.entryData));
+      }
+    }
+
+    v.step = '4';   // 回答者にメールを送信
+    v.step = '4.1'; // プレーン・html共通部分の置換
+    v.content = v.content.replace('_name',v.entryData['申込者氏名']);
+    v.camp2023 = 'https://shimokitazawashooyajinokai.on.drv.tw'
+      + '/public/camp2023.html?id=' + v.entryData.entryNo;
+    console.log('4.1 content='+v.content);
+
+    v.step = '4.2'; // プレーンの作成
+    v.plane = v.content
+      .replaceAll(/<.+?>/g,'')  // htmlタグの削除
+      .replace('_camp2023',v.camp2023)
+      .replace('_editURL',v.entryData.entryNo);
+    console.log("4.2 plane="+v.plane);
+
+    v.step = '4.3'; // htmlの作成
+    v.html = v.content
+      .replace('_camp2023','<a ' + v.button + ' href="'
+        + v.camp2023 + '" class="button">参加案内</a>')
+      .replace('_editURL','<a ' + v.button + ' href="'
+        + v.entryData.editURL + '" class="button">回答を編集</a>');
+    v.html = '<!DOCTYPE html><html xml:lang="ja" lang="ja">'
+      + '<head></head><body>' + v.html + '</body></html>';
+    console.log("4.3 html="+v.html);
+
+    v.draft = GmailApp.createDraft(
+      v.entryData['メールアドレス'],
+      '[受付]校庭キャンプ2023 申込',
+      v.plane,
+      {
+        htmlBody: v.html,
+        name: '下北沢小おやじの会',
+      }
+    );
+    v.draftId = v.draft.getId();
+    GmailApp.getDraft(v.draftId).send();
+
+    console.log('Mail Remaining Daily Quota:'+MailApp.getRemainingDailyQuota());
+
     console.log(v.whois+' end.'); // onFormSubmit正常終了ログ
   } catch(e) {
-    console.error(v.whois+' abnormal end.\n',e);
-    v.rv = e;  // szCatch: catch節の標準処理
-  } finally {
-    return v.rv;
+    console.error(v.whois+' abnormal end.\n',e,v);
   }
 }
 /* コアスクリプト */

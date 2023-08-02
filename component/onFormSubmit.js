@@ -1,36 +1,120 @@
 
+ function initMaster(){
+  const s = szSheet('master');
+  console.log(s.data.length);
+  console.log(MailApp.getRemainingDailyQuota());
+  MailApp.sendEmail("nakaone.kunihiro@gmail.com", "test", String(new Date()));
+  console.log(MailApp.getRemainingDailyQuota());
+}
 function onFormSubmit(e){
-  const v = {whois:'管理局.onFormSubmit',rv:null,e:e,data:{}};
+  const v = {rv:null,form:{},
+    whois:'管理局.onFormSubmit',
+    formId:'1wsEtp-SdI0ypsoIzaWFXH6rPEn9G5ywL98OSUqJHCyQ',
+    content: `<p>To: _name 様</p>
+<p>下北沢小おやじの会です。<br>
+この度は「校庭キャンプ2023」にお申し込みいただき、ありがとうございました。</p>
+<p>昨年度大変多くの参加をいただいたため、今回定員オーバーの場合は申込締切日に抽選させていただき、結果はメールでご連絡差し上げることとしました。<br>
+お申し込み即参加可能とはならず誠に恐縮ですが、何卒ご理解いただけますようお願い申し上げます。</p>
+<p>参加要項を以下に掲載しています。持ち物や注意事項を記載しており、またイベント当日の受付で必要になりますので、事前にご確認いただけますようお願い申し上げます。<br>
+_camp2023</p>
+<p>なお申込〜イベント当日の間に何らかの事情でお申し込み内容に変更がある場合、またはお申し込み自体をキャンセルする場合、以下から申込内容を修正いただけますようお願いいたします。<br>
+_editURL</p>
+<p>尚ご不明な点がございましたら、以下までご連絡お願いいたします。<br>
+shimokitasho.oyaji@gmail.com</p>`,
+    button: 'style="'
+      + 'display : inline-block;'
+      + 'text-decoration: none;'
+      + 'font-size : 18pt;'
+      + 'text-align : center;'
+      + 'cursor : pointer;'
+      + 'padding : 12px 12px;'
+      + 'background : #1a1aff;'
+      + 'color : #ffffff;'
+      + 'line-height : 1em;'
+      + 'transition : .3s;'
+      + 'box-shadow : 6px 6px 5px #666666;'
+      + 'border : 2px solid #1a1aff;'
+    + '" onMouseOver="'
+      + 'box-shadow: none;'
+      + 'color: #1a1aff;'
+      + 'background: #ffffff;'
+    + '" onMouseOut="'
+      + 'box-shadow: 6px 6px 5px #666666;'
+      + 'color: #ffffff;'
+      + 'background: #1a1aff;'
+    + '"',
+  };
   try {
-    console.log(v.whois+' start.');
-    v.step = '1.1';
-    v.sheet = szSheet('master');
-    v.step = '1.2';
-    v.r = v.sheet.complement();
-    if( v.r instanceof Error ) throw v.r;
-    v.step = '1.3';
-    v.rowNum = e.range.rowStart - v.sheet.headerRow - 1;
-    v.tObj = v.sheet.data[v.rowNum];
+    console.log(v.whois+' start.',e.response);
+    v.step = '1';
+    v.lineNum = e.range.getRow();
+    v.email = e.namedValues["メールアドレス"][0];
+    console.log('lineNum:%s, email:%s',v.lineNum,v.email);
     v.step = '2';
-    v.rv = postMails({
-      from: szConf.mailTemplate.confirmation.name || szConf.public.whois,
-      to: {
-        address: v.tObj['メールアドレス'],
-        data: v.tObj,
-      },
-      subject: szConf.mailTemplate.confirmation.subject,
-      body: szConf.mailTemplate.confirmation.body,
-      html: szConf.mailTemplate.confirmation.html,
-    });
-    if( v.rv instanceof Error ) throw v.rv;
-    
+    v.responses = FormApp.openById(v.formId).getResponses();
+    for( v.i=0 ; v.i<v.responses.length ; v.i++ ){
+      v.timestamp = v.responses[v.i].getTimestamp().getTime();
+      console.log('2.1. timestamp='+v.timestamp);
+      v.form[String(v.timestamp)] = {
+        timestamp: v.timestamp,
+        email: v.responses[v.i].getRespondentEmail(),
+        editURL: v.responses[v.i].getEditResponseUrl()
+      }
+    }
+    console.log('v.form='+JSON.stringify(v.form));
     v.step = '3';
+    v.sheet = szSheet('master','タイムスタンプ');
+    for( v.i=0 ; v.i<v.sheet.data.length ; v.i++ ){
+      v.d = v.sheet.data[v.i];
+      v.stamp = new Date(v.d['タイムスタンプ']).getTime();
+      if( !v.d.entryNo || !v.d.editURL || !v.d.authority ){
+        v.updateResult = v.sheet.update({
+          entryNo: v.i+1,
+          editURL: v.form[String(v.stamp)].editURL,
+          authority: 1,
+        },{num:v.i,append:false});
+      }
+      if( v.i === (v.lineNum - 2) ){
+        v.entryData = v.sheet.data[v.i];
+        console.log('entryData:'+JSON.stringify(v.entryData));
+      }
+    }
+    v.step = '4';
+    v.step = '4.1';
+    v.content = v.content.replace('_name',v.entryData['申込者氏名']);
+    v.camp2023 = 'https:
+      + '/public/camp2023.html?id=' + v.entryData.entryNo;
+    console.log('4.1 content='+v.content);
+    v.step = '4.2';
+    v.plane = v.content
+      .replaceAll(/<.+?>/g,'')
+      .replace('_camp2023',v.camp2023)
+      .replace('_editURL',v.entryData.entryNo);
+    console.log("4.2 plane="+v.plane);
+    v.step = '4.3';
+    v.html = v.content
+      .replace('_camp2023','<a ' + v.button + ' href="'
+        + v.camp2023 + '" class="button">参加案内</a>')
+      .replace('_editURL','<a ' + v.button + ' href="'
+        + v.entryData.editURL + '" class="button">回答を編集</a>');
+    v.html = '<!DOCTYPE html><html xml:lang="ja" lang="ja">'
+      + '<head></head><body>' + v.html + '</body></html>';
+    console.log("4.3 html="+v.html);
+    v.draft = GmailApp.createDraft(
+      v.entryData['メールアドレス'],
+      '[受付]校庭キャンプ2023 申込',
+      v.plane,
+      {
+        htmlBody: v.html,
+        name: '下北沢小おやじの会',
+      }
+    );
+    v.draftId = v.draft.getId();
+    GmailApp.getDraft(v.draftId).send();
+    console.log('Mail Remaining Daily Quota:'+MailApp.getRemainingDailyQuota());
     console.log(v.whois+' end.');
   } catch(e) {
-    console.error(v.whois+' abnormal end.\n',e);
-    v.rv = e;
-  } finally {
-    return v.rv;
+    console.error(v.whois+' abnormal end.\n',e,v);
   }
 }
  function postMails(arg){
