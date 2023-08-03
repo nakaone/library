@@ -87,8 +87,13 @@
   <div style="grid-column: 3 / 4" name="ptB"></div>
 
   <div style="grid-column: 1 / 2" class="th">
+    encodeURI
+    <sub>encodeURI(plaintext)</sub>
+    <!-- 当初以下でやってみたが、GAS側でエラーが出たので変更
+    Exception: Could not decode string.
     base64 encode
     <sub>btoa(unescape(encodeURIComponent(plaintext)))</sub>
+    -->
   </div>
   <div style="grid-column: 2 / 3" name="beA"></div>
   <div style="grid-column: 3 / 4" name="beB"></div>
@@ -109,8 +114,12 @@
   <div style="grid-column: 3 / 4" name="e2B"></div>
 
   <div style="grid-column: 1 / 2" class="th">
+    decodeURI
+    <sub>decodeURI(plaintext)</sub>
+    <!--
     base64 decode
     <sub>decodeURIComponent(escape(window.atob(plaintext)))</sub>
+    -->
   </div>
   <div style="grid-column: 2 / 3" name="bdA"></div>
   <div style="grid-column: 3 / 4" name="bdB"></div>
@@ -158,9 +167,9 @@ function onInput(event=null){
     v.ptA = d.ptB.innerText = d.ptA.value;
     console.log(v.ptA);
 
-    // base64 encode
-    v.beA = d.beA.innerText
-    = btoa(unescape(encodeURIComponent(v.ptA)))
+    // encodeURI (old:base64 encode)
+    v.beA = d.beA.innerText = encodeURI(v.ptA);
+    //= btoa(unescape(encodeURIComponent(v.ptA)))
     console.log(v.beA);
 
     // 暗号化
@@ -173,7 +182,7 @@ function onInput(event=null){
     d.e1B.innerText = JSON.stringify(v.e1B);
     console.log(JSON.stringify(v.e1B));
 
-    // 暗号化
+    // 署名付き暗号化
     v.e2A = cryptico.encrypt(v.beA, v.pkB, v.skA);
     d.e2A.innerText = JSON.stringify(v.e1A);
 
@@ -181,10 +190,10 @@ function onInput(event=null){
     v.e2B = cryptico.decrypt(v.e2A.cipher,v.skB);
     d.e2B.innerText = JSON.stringify(v.e2B);
 
-    // base64 decode
+    // decodeURI (old:base64 decode)
     console.log(v.e2B);
-    v.bdB = d.bdB.innerText
-    = decodeURIComponent(escape(atob(v.e2B.plaintext))); 
+    v.bdB = d.bdB.innerText = decodeURI(v.e2B.plaintext);
+    //= decodeURIComponent(escape(atob(v.e2B.plaintext))); 
 
     console.log('onInput end.');
 
