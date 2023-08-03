@@ -580,7 +580,7 @@ function auth1A(entryNo,publicKey){
 
     // 問合せ結果に問題無ければ認証局の公開鍵を返信
     if( v.res instanceof Error ) throw v.res;
-    if( !v.res.result ) throw new Error(v.res.message);
+    if( v.res.isErr ) throw new Error(v.res.message);
 
     v.rv = conf.publicKey;
     console.log(v.whois+' end.\n'+JSON.stringify(v.rv));
@@ -592,17 +592,48 @@ function auth1A(entryNo,publicKey){
   }
 }
 
-
 /** 管理局での認証の第一段階
  * @param {string} entryNo - クライアントの受付番号
  * @param {string} publicKey - クライアントの公開鍵
  * @returns {string} - 認証局の公開鍵
  */
 function auth1B(entryNo,publicKey){
-  const v = {whois:'管理局.auth1B',rv:{result:true,message:''}};
+  const v = {whois:'管理局.auth1B',rv:{isErr:false,message:''}};
   try {
     console.log(v.whois+' start.',entryNo,publicKey);
 
+    // クライアント情報を抽出
+    v.master = szSheet('master');
+    v.client = v.master.lookup(entryNo,'entryNo');
+
+    // 3回連続失敗後1時間以内ならチャレンジ不可判定
+    if( String(v.client.NG3).length > 0 &&
+      (Date.now() - new Date(v.client.NG3).getTime()) < 3600000 ){
+      v.rv = {isErr:true,message:'3回連続ログイン失敗後、1時間経過していません'};
+      return v.rv;
+    }
+
+    // 該当受付番号にpassCode,publicKey登録
+    v.update = {
+      publicKey: publicKey,
+      passCode: ('000000'+Math.random()*1000000).slice(-6),
+      genPassCode: Date.now(),
+    };
+    v.master.update(v.update,{key:'entryNo',value:entryNo});
+
+    // 申請者にpassCode連絡メール送信
+    v.draft = GmailApp.createDraft(
+      v.client['メールアドレス'],
+      '[連絡]校庭キャンプ2023 パスコード',
+      "パスコードは以下の通りです。\n\n" + v.update.passCode,
+      {
+        //htmlBody: v.html,
+        name: '下北沢小おやじの会',
+      }
+    );
+    v.draftId = v.draft.getId();
+    GmailApp.getDraft(v.draftId).send();
+    console.log('Mail Remaining Daily Quota:'+MailApp.getRemainingDailyQuota());
 
     console.log(v.whois+' end.\n'+JSON.stringify(v.rv));
     return v.rv;
@@ -612,54 +643,6 @@ function auth1B(entryNo,publicKey){
     return e;
   }
 }
-
-
-/*
-const auth1A = (arg) => {
-  console.log('認証局.auth1A start. arg='+JSON.stringify(arg));
-  let rv = null;
-  try {
-
-    // 受付番号の取得
-    const entryNo = Number(arg)
-  
-    // ログから受付番号が一致するデータをtimestampの降順に取得
-    const dObj = szLib.szSheet('log');
-    const list = dObj.data.filter(x => {
-      return Number(x.entryNo) === entryNo;
-    }).sort((x,y) => {
-      return x.timestamp <= y.timestamp ? 1 : -1;
-    });
-    console.log('認証局.list='+JSON.stringify(list));
-  
-    // 3回連続失敗後1時間以内ならチャレンジ不可判定
-    rv = {isErr:true};
-    if( list.length < 3 ){
-      // 挑戦回数が3回未満
-      rv.isErr = false;
-    } else if( list[0].result === 'OK' || list[1].result === 'OK' || list[2].result === 'OK' ){
-      // 直近の成功からの失敗が3回未満(=3回連続失敗ではない)
-      rv.isErr = false;
-    } else if( new Date(list[2].timestamp).getTime() + 10800000 < new Date().getTime() ){
-      // 3回連続失敗後、1時間以上経過
-      rv.isErr = false;
-    }
-  
-    if( rv.isErr ){
-      rv.message = '3回連続ログイン失敗後、1時間経過していません';
-    } else {  // 管理局APIのauth1Bの呼び出し
-      rv = szLib.fetchGAS({from:'Auth',to:'Master',func:'auth1B',data:entryNo});
-    }
-
-  } catch(e) {
-    // Errorオブジェクトをrvとするとmessageが欠落するので再作成
-    rv = {isErr:true, message:e.name+': '+e.message};
-  } finally {
-    console.log('認証局.auth1A end. rv='+JSON.stringify(rv));
-    return rv;
-  }
-}
-*/
 </script>
 
 <script type="text/javascript" class="test">/* テスト用 */
@@ -669,7 +652,7 @@ async function AuthTest(){
   try {
     v.conf = new Auth(
       'https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',
-      {entryNo:{value:"1234"}}
+      {entryNo:{value:"16"}}
     );
     //await v.conf.build();
     console.log('AuthTest end.',v.conf);
