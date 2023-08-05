@@ -531,7 +531,7 @@ class Auth {
  * @prop {string} master/gateway - 相手局の公開鍵
  * @prop {string} common - 共通鍵
  */
- const conf = {};
+const conf = {};
 
 /** doPostの内容を受けて処理を分岐 */
 function preProcess(token){
@@ -548,14 +548,16 @@ function preProcess(token){
 
     // confの作成
     // RSAシートの読み込み
-    v.sheet = SpreadsheetApp.getActive()
-      .getSheetByName('RSA').getDataRange().getValues();
-    for( v.i=0 ; v.i<v.sheet.length ; v.i++ ){
-      if( String(v.sheet[v.i][0]).length > 0 ){
-        conf[v.sheet[v.i][0]] = v.sheet[v.i][1];
+    v.sheet = SpreadsheetApp.getActive().getSheetByName('RSA');
+    v.sheet.getRange('b1').setValue(new Date());  // 再計算用にセル値を更新
+    v.values = v.sheet.getDataRange().getValues();
+    for( v.i=0 ; v.i<v.values.length ; v.i++ ){
+      if( String(v.values[v.i][0]).length > 0 ){
+        conf[v.values[v.i][0]] = v.values[v.i][1];
       }
     }
     conf.RSAkey = cryptico.generateRSAKey(conf.passPhrase,1024);
+    console.log('conf',conf);
 
     // 暗号化されていた場合は復号
     if( token.md > 0 ){
@@ -577,30 +579,6 @@ function preProcess(token){
         console.log('RSA',token.dt);
       }
     }
-
-/*
-    // 暗号化されていた場合は復号
-    if( token.md > 0 ){
-      if( token.md === 1 ){ // 共通鍵方式
-        token.dt = JSON.parse(decryptAES(token.dt,conf.common));
-      } else {              // RSA方式
-        v.decrypt = cryptico.decrypt(token.dt,conf.RSAkey);
-        if( token.md === 3 && (  // 署名の検証
-          v.decrypt.signature !== 'verified' ||
-          v.decrypt.publicKeyString !== conf[token.fm])){
-          throw new Error(
-            "Invalid Token: improper signature"
-            + "\ndecrypt: " + JSON.stringify(v.decript)
-            + "\nconf["+token.fm+"]: " + conf[token.fm]
-          );
-        } else {
-          token.dt = decodeURI(v.decrypt.plaintext);
-          token.dt = JSON.parse(token.dt);
-        }
-      }
-    }
-*/
-
 
     // auth1A: クライアントから認証局への接続要求
     if( token.to === 'gateway' && token.dt.fc === 'auth1A' ){
@@ -706,7 +684,7 @@ function auth1B(entryNo,publicKey){
     // 該当受付番号にpassCode,publicKey登録
     v.update = {
       publicKey: publicKey,
-      passCode: ('000000'+Math.floor(Math.random()*1000000)).slice(-6),
+      passCode: conf.random,
       genPassCode: Date.now(),
       certificate: '',
     };
