@@ -1,4 +1,4 @@
-lastUpdate: 2023年 8月 2日 水曜日 11時32分48秒 JST
+lastUpdate: 2023年 8月 5日 土曜日 16時25分36秒 JST
 
 ## Functions
 
@@ -66,6 +66,26 @@ update/append/complementの対象にしない。∵GAS側で書き換えると�
 **Returns**: <code>void</code> - なし
 
 ### 処理概要
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor camera as カメラ
+  actor browser as ブラウザ
+  actor mail as メーラ
+  participant Form as 申込受付<br>(フォーム)
+  participant master as 管理局
+
+  camera ->> Form : QRコードから参加申請フォームへ誘導
+  Form ->> browser : 参加申請フォーム表示
+  browser ->> Form : 入力、送信
+  Form ->> master : 送信内容、編集用URL
+  activate master
+  Note right of master : onFormSubmit()
+  master ->> master : 受付番号採番、編集用URL保存
+  master ->> mail : 受付番号、URL
+  deactivate master
+```
 
 参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。
 
@@ -294,6 +314,26 @@ szSheet.update/appendの一行分の更新・追加結果
  * @returns {void} なし
  * 
  * ### 処理概要
+ * 
+ * ```mermaid
+ * sequenceDiagram
+ *   autonumber
+ *   actor camera as カメラ
+ *   actor browser as ブラウザ
+ *   actor mail as メーラ
+ *   participant Form as 申込受付<br>(フォーム)
+ *   participant master as 管理局
+ * 
+ *   camera ->> Form : QRコードから参加申請フォームへ誘導
+ *   Form ->> browser : 参加申請フォーム表示
+ *   browser ->> Form : 入力、送信
+ *   Form ->> master : 送信内容、編集用URL
+ *   activate master
+ *   Note right of master : onFormSubmit()
+ *   master ->> master : 受付番号採番、編集用URL保存
+ *   master ->> mail : 受付番号、URL
+ *   deactivate master
+ * ```
  * 
  * 参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。
  * 

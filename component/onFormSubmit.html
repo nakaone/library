@@ -35,6 +35,26 @@
  * 
  * ### 処理概要
  * 
+ * ```mermaid
+ * sequenceDiagram
+ *   autonumber
+ *   actor camera as カメラ
+ *   actor browser as ブラウザ
+ *   actor mail as メーラ
+ *   participant Form as 申込受付<br>(フォーム)
+ *   participant master as 管理局
+ * 
+ *   camera ->> Form : QRコードから参加申請フォームへ誘導
+ *   Form ->> browser : 参加申請フォーム表示
+ *   browser ->> Form : 入力、送信
+ *   Form ->> master : 送信内容、編集用URL
+ *   activate master
+ *   Note right of master : onFormSubmit()
+ *   master ->> master : 受付番号採番、編集用URL保存
+ *   master ->> mail : 受付番号、URL
+ *   deactivate master
+ * ```
+ * 
  * 参加者の追加・削除やキャンセル登録のため、登録者(参加者)がフォームを編集する必要があるが、編集用URLはGoogle Spreadには記録されず、フォームの登録情報にしか存在しない。
  * 
  * そこで①フォームの登録情報を全件取得し、②引数から何行目に書かれたか特定し、③タイムスタンプをキーに編集用URLを取得、という手順を踏む。
