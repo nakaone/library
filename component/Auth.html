@@ -8,11 +8,21 @@
 <style type="text/css" class="core">/* コアCSS */
 </style>
 <!-- 外部Script -->
+<!-- 共通鍵暗号化：cryptoJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/enc-base64.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/cipher-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/sha256.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/sha1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/aes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/hmac.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/pbkdf2.min.js"></script>
 <!-- 自作ライブラリ -->
 <!-- webApp利用時： srcのみ必要。パスはcomponentが起点
   コンソール利用時：class="onConsole" data-embedが必要。data-embedの起点はtools -->
 <script type="text/javascript" src="createElement.js" data-embed="../component/createElement.js"></script>
 <script type="text/javascript" src="createPassword.js" data-embed="../component/createPassword.js"></script>
+<script type="text/javascript" src="cryptoAES.js" data-embed="../component/cryptoAES.js"></script>
 <script type="text/javascript" src="../external/cryptico.min.js" data-embed="../external/cryptico.min.js"></script>
 <script type="text/javascript" src="mergeDeeply.js" data-embed="../component/mergeDeeply.js"></script>
 <script type="text/javascript" src="whichType.js" data-embed="../component/whichType.js"></script>
@@ -206,6 +216,7 @@ class Auth {
         sKey: null,     // {RSAKey} - 秘密鍵
         pKey: null,     // {string} - 公開鍵
       },
+      commonKey: null,  // 共通鍵
       info: null, // 管理局から取得する参加者情報
       gateway:{ // 認証局関連情報
         url: null,  // {string} - APIのURL
@@ -473,6 +484,9 @@ class Auth {
         });
       }
 
+      // 前回のパスコードをクリア
+      this.passCode.element.querySelector('input').value = '';
+
       console.log('Auth.#changeScreen end.');
       return v.rv;
     } catch(e){
@@ -494,23 +508,36 @@ class Auth {
     console.log('Auth.getEntryNo start.');
     try {
 
-      // 入力フォームから値を取得
+      v.step = '1'; // 入力フォームから値を取得
       this.#changeScreen('loading');
-      v.rv = await this.#fetchFromClient('auth1A',this.RSA.pKey,0);
-      if( v.rv instanceof Error ) throw v.rv;
+      this.entryNo.value = this.entryNo.element.querySelector('input').value;
+      v.arg = { // auth1Aに渡す引数
+        entryNo: this.entryNo.value,
+        publicKey: this.RSA.pKey,
+      }
+      console.log('arg',v.arg);
 
-      this.gateway.pKey = v.rv;
-      this.#changeScreen('passCode');
+      v.step = '2'; // fetch
+      v.rv = await this.#fetchFromClient('auth1A',v.arg,0);
+      //if( v.rv instanceof Error ) throw v.rv;
+      if( v.rv.isErr ){
+        this.#changeScreen('entryNo');
+      } else {
+        this.gateway.pKey = v.rv.result;
+        console.log('this.gateway.pKey='
+          + JSON.stringify(this.gateway.pKey));
+        this.#changeScreen('passCode');
+      }
 
-      console.log('this.gateway.pKey='+JSON.stringify(this.gateway.pKey));
       console.log('Auth.getEntryNo end.');
       return v.rv;
     } catch(e){
       console.error('Auth.getEntryNo abnormal end.',e);
+      return e;
       // ブラウザで実行する場合はアラート表示
-      if( typeof window !== 'undefined' ) alert(e.stack);
+      //if( typeof window !== 'undefined' ) alert(e.stack);
       //throw e; //以降の処理を全て停止する場合
-      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+      //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
     }
   }
 
@@ -525,20 +552,26 @@ class Auth {
 
       // 入力フォームから値を取得
       this.#changeScreen('loading');
-      v.arg = {
+      v.arg = { // auth1Bに渡す引数
         entryNo: this.entryNo.value,
         passCode: this.passCode.element.querySelector('input').value,
       }
       console.log('arg',v.arg);
       v.rv = await this.#fetchFromClient('auth2A',v.arg,3);
       if( v.rv instanceof Error ) throw v.rv;
-
-      // パスコード入力画面を閉じる
       if( v.rv.isErr ){
-        throw new Error(v.rv.message);
+        console.log(v.rv);
+        if( v.rv.result ){
+          this.#changeScreen('entryNo');
+        } else {
+          this.#changeScreen('passCode');
+        }
       } else {
-        this.info = v.rv.info;
-        console.log('info',this.info);
+        // 申請者情報と共通鍵を格納
+        this.commonKey = v.rv.result.common;
+        this.info = v.rv.result.info;
+        console.log('commonKey='+this.commonKey,'info',this.info);
+        // パスコード入力画面を閉じる
         this.#changeScreen('close');
       }
 
@@ -546,10 +579,11 @@ class Auth {
       return v.rv;
     } catch(e){
       console.error('Auth.getPassCode abnormal end.',e);
+      return e;
       // ブラウザで実行する場合はアラート表示
-      if( typeof window !== 'undefined' ) alert(e.stack);
+      //if( typeof window !== 'undefined' ) alert(e.stack);
       //throw e; //以降の処理を全て停止する場合
-      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+      //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
     }
   }
 
@@ -570,7 +604,7 @@ class Auth {
     console.log('Auth.#fetchFromClient start.');
     try {
 
-      // 送信するトークンを生成
+      v.step = '1'; // 送信するトークンを生成
       v.token = {
         fm: this.entryNo.value,
         to: 'gateway',
@@ -581,19 +615,26 @@ class Auth {
           arg: arg,
         }
       };
+      console.log('v.token',v.token);
 
-      // 認証局の公開鍵を入手済みなら暗号化
-      if( this.gateway.pKey !== null ){
+      v.step = '2'; // 暗号化・署名
+      if( md === 1 ){ // 共通鍵で暗号化
+        v.token.dt = encryptAES(
+          JSON.stringify(v.token.dt),this.commonKey);
+      } else if( md === 2 || md === 3 ){
         v.plaintext = JSON.stringify(v.token.dt);
         v.encode = encodeURI(v.plaintext);
-        v.encrypt = cryptico.encrypt(v.encode,this.gateway.pKey,this.RSA.sKey);
+        v.encrypt = md === 2  // 2:署名無し暗号化、3:署名付き暗号化
+        ? cryptico.encrypt(v.encode,this.gateway.pKey)
+        : cryptico.encrypt(v.encode,this.gateway.pKey,this.RSA.sKey);
         console.log('encrypt',v.encrypt);
         if( v.encrypt.status !== 'success' )
           throw new Error(JSON.stringify(v.encrypt));
         v.token.dt = v.encrypt.cipher;
-        v.token.md = 3; // 署名付き暗号化
       }
+      console.log('v.token',v.token);
 
+      v.step = '3'; // fetch
       v.fetch = await fetch(this.gateway.url,{
         "method": "POST",
         "body": JSON.stringify(v.token),
@@ -601,17 +642,26 @@ class Auth {
         "Content-Type": "application/json",
       });
       v.rv = await v.fetch.json();
+      console.log(v.rv);
       if( v.rv instanceof Error ) throw v.rv;
-      //console.log(v.rv);
+      if( v.rv.isErr ){
+        console.error(
+          'Auth.#fetchFromClient abnormal end.'
+          + '\n' + v.rv.message
+          + '\n' + v.rv.stack
+        );
+        alert(v.rv.message);
+      }
 
-      console.log('Auth.#fetchFromClient end.');
+      console.log('Auth.#fetchFromClient normal end.');
       return v.rv;
     } catch(e){
       console.error('Auth.#fetchFromClient abnormal end.',e);
+      return e;
       // ブラウザで実行する場合はアラート表示
-      if( typeof window !== 'undefined' ) alert(e.stack);
+      //if( typeof window !== 'undefined' ) alert(e.stack);
       //throw e; //以降の処理を全て停止する場合
-      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+      //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
     }
   }
 }
@@ -619,19 +669,8 @@ class Auth {
 </script>
 
 <script type="text/javascript" class="GAS">/* GAS用スクリプト */
-/** RSAシートの内容を読み込み、オブジェクト化
- * @typedef {Object} conf
- * @prop {string} name - 自局名
- * @prop {string} passPhrase - 自局のパスワード
- * @prop {string} publicKey - 自局の公開鍵
- * @prop {string} masterAPI/gatewayAPI - 相手局のAPI
- * @prop {string} master/gateway - 相手局の公開鍵
- * @prop {string} common - 共通鍵
- */
- const conf = {};
-
 /**
- * @typedef {Object} token
+ * @typedef {Object} token - doPostからpreProcessに渡されるオブジェクト
  * @prop {string} fm - 発信者名(gateway/master/受付番号)
  * @prop {string} to - 宛先名(gateway/master)
  * @prop {number} md - モード。0:平文、1:共通鍵、2:RSA署名無し、3:RSA署名有り
@@ -642,21 +681,27 @@ class Auth {
  */
 
 /**
- * @typedef {Object} AuthArg
+ * @typedef {Object} AuthArg - preProcessからauth1A/1B/2A/2Bに渡されるオブジェクト
  * @prop {string} fm - 発信者名(gateway/master/受付番号)
  * @prop {string} to - 宛先名(gateway/master)
  * @prop {number} md - モード。0:平文、1:共通鍵、2:RSA署名無し、3:RSA署名有り
  * @prop {number} ts - 発信日時(new Date().getTime())
  * @prop {string} fc - 復号化済の呼出先の処理名(ex."auth1A")
- * @prop {any} dt - 呼出先の処理に渡す引数。復号化済のtoken.dt.arg
+ * @prop {any}    dt - 呼出先の処理に渡す引数。復号化済のtoken.dt.arg
  * @prop {string} signature - 以下はpreProcessでの追加項目。署名付き暗号化だった場合、"verified" or "undefined"
  * @prop {string} pKey - 署名付き暗号化だった場合、署名検証で取得した発信者の公開鍵
- * @prop {Object} RSA - RSAシートの記述内容
- * @prop {Date} lastAccess - 最終アクセス日時
+ * @prop {Date}   lastAccess - 最終アクセス日時(RASシート再計算用再設定項目)
+ * @prop {string} name - 自局名
+ * @prop {string} passPhrase - 自局のパスワード
+ * @prop {string} publicKey - 自局の公開鍵
+ * @prop {string} masterAPI/gatewayAPI - 相手局のAPI
+ * @prop {string} master/gateway - 相手局の公開鍵
+ * @prop {string} common - 共通鍵(認証局のみ)
+ * @prop {string} random - パスコード(管理局のみ)
  */
 
 /**
- * @typedef {Object} fetchResponse
+ * @typedef {Object} fetchResponse - auth1A/1B/2A/2BからpreProcess経由で呼出元に返されるオブジェクト
  * @prop {boolean} isErr - エラーならtrue
  * @prop {string} message='' - 処理結果に対するメッセージ
  * @prop {string} stack='' - エラーオブジェクトのスタック
@@ -664,323 +709,395 @@ class Auth {
  */
 
 /** doPostの内容を受けて処理を分岐
- * @param {token} token - doPostに渡されたトークン
+ * @param {token} token - doPostから渡されたトークン
  * @returns {fetchResponse} 処理結果
  */
-function preProcess(token){
-  const v = {whois:'preProcess',rv:null};
+ function preProcess(token){
+  const v = {whois:'preProcess',step:'0',arg:{},rv:null};
   console.log(v.whois+' start.',whichType(token),token);
   try {
-    token = JSON.parse(token);
+    v.arg = JSON.parse(token);
 
-    // 発信から3分以内でないとエラー
+    v.step = '1'; // 発信から3分以内でないとエラー
     v.now = Date.now();
-    if( token.ts > v.now || (v.now - token.ts) > 180000 ){
+    if( v.arg.ts > v.now || (v.now - v.arg.ts) > 180000 ){
       throw new Error("Invalid Token: timeout");
     }
 
-    // confの作成
-    // RSAシートの読み込み
+    v.step = '2'; // RSAシートの読み込み
     v.sheet = SpreadsheetApp.getActive().getSheetByName('RSA');
-    v.sheet.getRange('b1').setValue(new Date());  // 再計算用にセル値を更新
+    v.step = '2.1'; // 再計算用にセル値を更新
+    v.sheet.getRange('b1').setValue(new Date());
+    SpreadsheetApp.flush();
+    v.step = '2.2'; // RSAシートの値をv.argにセット
     v.values = v.sheet.getDataRange().getValues();
     for( v.i=0 ; v.i<v.values.length ; v.i++ ){
       if( String(v.values[v.i][0]).length > 0 ){
-        conf[v.values[v.i][0]] = v.values[v.i][1];
+        v.arg[v.values[v.i][0]] = v.values[v.i][1];
       }
     }
-    conf.RSAkey = cryptico.generateRSAKey(conf.passPhrase,1024);
-    console.log('conf',conf);
+    v.arg.RSAkey = cryptico.generateRSAKey(v.arg.passPhrase,1024);
+    console.log('v.arg',v.arg);
 
-    // 暗号化されていた場合は復号
-    if( token.md > 0 ){
-      if( token.md === 1 ){ // 共通鍵方式
-        token.dt = JSON.parse(decryptAES(token.dt,conf.common));
-        console.log('common',token.dt);
-      } else {              // RSA方式
-        v.decrypt = cryptico.decrypt(token.dt,conf.RSAkey);
+    v.step = '3'; // 暗号化されていた場合は復号
+    if( v.arg.md > 0 ){
+      if( v.arg.md === 1 ){ // 共通鍵方式
+        v.arg.dt = JSON.parse(decryptAES(v.arg.dt,v.arg.common));
+      } else {
+        v.decrypt = cryptico.decrypt(v.arg.dt,v.arg.RSAkey);
         if( v.decrypt.signature !== 'verified' ){
           throw new Error("Invalid Token: decrypt failed."
           + "\ndecrypt: " + JSON.stringify(v.decript)
-          + "\nconf["+token.fm+"]: " + conf[token.fm]
+          + "\nv.arg["+v.arg.fm+"]: " + v.arg[v.arg.fm]
           );
         }
-        token.signature = v.decrypt.signature;
-        token.pKey = v.decrypt.publicKeyString;
-        token.dt = decodeURI(v.decrypt.plaintext);
-        token.dt = JSON.parse(token.dt);
-        console.log('RSA',token.dt);
+        v.arg.signature = v.decrypt.signature;
+        v.arg.pKey = v.decrypt.publicKeyString;
+        v.arg.dt = JSON.parse(decodeURI(v.decrypt.plaintext));
       }
     }
+    v.arg.fc = v.arg.dt.fc;
+    v.arg.dt = v.arg.dt.arg;
+
+    /*
+    v.arg.fc = v.arg.dt.fc;
+    v.arg.dt = v.arg.dt.arg;
+    if( v.arg.md > 0 ){
+      if( v.arg.md === 1 ){ // 共通鍵方式
+        v.arg.dt = JSON.parse(decryptAES(v.arg.dt,v.arg.common));
+      } else {              // RSA方式
+        v.decrypt = cryptico.decrypt(v.arg.dt,v.arg.RSAkey);
+        if( v.decrypt.signature !== 'verified' ){
+          throw new Error("Invalid Token: decrypt failed."
+          + "\ndecrypt: " + JSON.stringify(v.decript)
+          + "\nv.arg["+v.arg.fm+"]: " + v.arg[v.arg.fm]
+          );
+        }
+        v.arg.signature = v.decrypt.signature;
+        v.arg.pKey = v.decrypt.publicKeyString;
+        v.arg.dt = JSON.parse(decodeURI(v.decrypt.plaintext));
+      }
+    }*/
+    console.log('v.arg.dt',v.arg.dt);
 
     // auth1A: クライアントから認証局への接続要求
-    if( token.to === 'gateway' && token.dt.fc === 'auth1A' ){
-      console.log('auth1A arg',token.fm,token.dt.arg);
-      v.rv = auth1A(token.fm,token.dt.arg);
-      if( v.rv instanceof Error ) throw v.rv;
+    v.step = '4.1';
+    if( v.arg.to === 'gateway' && v.arg.fc === 'auth1A' ){
+      v.step = 'call auth1A';
+      v.rv = auth1A(v.arg);
     }
 
     // auth1B: 認証局から管理局にパスコード通知依頼
-    if( token.to === 'master' && token.dt.fc === 'auth1B' ){
-      v.rv = auth1B(token.dt.arg.entryNo, token.dt.arg.publicKey);
-      if( v.rv instanceof Error ) throw v.rv;
+    v.step = '4.2';
+    if( v.arg.to === 'master' && v.arg.fc === 'auth1B' ){
+      v.step = 'call auth1B';
+      v.rv = auth1B(v.arg);
     }
 
     // auth2A: クライアントから認証局にパスコード入力
-    if( token.to === 'gateway' && token.dt.fc === 'auth2A' ){
-      v.rv = auth2A(token);
-      if( v.rv instanceof Error ) throw v.rv;
+    v.step = '4.3';
+    if( v.arg.to === 'gateway' && v.arg.fc === 'auth2A' ){
+      v.step = 'call auth2A';
+      v.rv = auth2A(v.arg);
     }
 
     // auth2B: 認証局から管理局にパスコード連絡、管理局で判定
-    if( token.to === 'master' && token.dt.fc === 'auth2B' ){
-      v.rv = auth2B(token);
-      if( v.rv instanceof Error ) throw v.rv;
+    v.step = '4.4';
+    if( v.arg.to === 'master' && v.arg.fc === 'auth2B' ){
+      v.step = 'call auth2B';
+      v.rv = auth2B(v.arg);
     }
 
+    v.step = '5';
     console.log(v.whois+' normal end.',v.rv);
     return v.rv;
   } catch(e){
-    console.error(v.whois+' abnormal end',e.stack,v);
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e.stack,v);
   }
 }
 
 /** 認証局での認証の第一段階
- * @param {string} entryNo - クライアントの受付番号
- * @param {string} publicKey - クライアントの公開鍵
- * @returns {string} - 認証局の公開鍵
+ * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
+ * @returns {string} 認証局の公開鍵(fetchResponse.result)
  */
-function auth1A(entryNo,publicKey){
-  const v = {whois:'認証局.auth1A',rv:{}};
+function auth1A(arg){
+  const v = {whois:'認証局.auth1A',
+    rv:{isErr:false,message:'',stack:'',result:null}};
   try {
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',arg.dt);
 
-    // auth1B問合せ用にデータを暗号化
-    v.dt = {fc:'auth1B',arg:{entryNo:entryNo,publicKey:publicKey}};
-    // 暗号化。受付番号＋公開鍵なのでbase64化は省略
-    console.log(conf);
-    v.dt = cryptico.encrypt(JSON.stringify(v.dt),conf.master,conf.RSAkey);
+    v.step = '1.1'; // auth1B問合せ用にデータを暗号化
+    v.dt = JSON.stringify({
+      fc : 'auth1B',
+      arg: {  // auth1B()に渡す引数
+        entryNo  : arg.dt.entryNo,    // クライアントの受付番号
+        publicKey: arg.dt.publicKey,  // 同公開鍵
+      }
+    });
+    console.log('v.dt='+v.dt);
+    
+    v.step = '1.2'; // 暗号化。受付番号＋公開鍵なのでencodeURIは省略
+    v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
     if( v.dt.status !== 'success' )
       throw new Error("auth1A encrypt failed.\n"+JSON.stringify(v.dt));
 
-    // auth1Bに問い合わせ
-    v.res = UrlFetchApp.fetch(conf.masterAPI,{
+    v.step = '2.1'; // auth1Bに問い合わせ
+    v.res = UrlFetchApp.fetch(arg.masterAPI,{
       'method': 'post',
       'contentType': 'application/json',
       'muteHttpExceptions': true, // https://teratail.com/questions/64619
       'payload' : JSON.stringify({
         fm: 'gateway',
         to: 'master',
-        md: 3,
+        md: 3,  // 署名付き暗号化
         ts: Date.now(),
         dt: v.dt.cipher,
       }),  
     }).getContentText();
     console.log('res='+v.res);
-    v.res = JSON.parse(v.res);
+    v.step = '2.2';
+    v.rv = JSON.parse(v.res);
 
-    // 問合せ結果に問題無ければ認証局の公開鍵を返信
-    if( v.res instanceof Error ) throw v.res;
-    if( v.res.isErr ) throw new Error(v.res.message);
+    if( !v.rv.isErr ){
+      v.step = '3'; // auth1B正常終了なら認証局の公開鍵を返信
+      v.rv.result = arg.publicKey;
+    }
 
-    v.rv = conf.publicKey;
-    console.log(v.whois+' end.\n'+JSON.stringify(v.rv));
+    v.step = '4';
+    console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
     return v.rv;
 
   } catch(e) {
-    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
-    return e;
+    console.error(v.whois+' abnormal end.(at step.'+v.step+')\n'
+    + e.message + '\n' + e.stack);
+    console.error(JSON.stringify(v));
+    v.rv.isErr = true;
+    v.rv.message = e.message;
+    v.rv.stack = e.stack;
+    return v.rv;
   }
 }
 
 /** 管理局での認証の第一段階
- * @param {string} entryNo - クライアントの受付番号
- * @param {string} publicKey - クライアントの公開鍵
- * @returns {string} - 認証局の公開鍵
+ * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
+ * @returns {void} 特に無し(fetchResponse.isErrのみ必要)
  */
-function auth1B(entryNo,publicKey){
-  const v = {whois:'管理局.auth1B',rv:{isErr:false,message:''}};
+function auth1B(arg){
+  const v = {whois:'管理局.auth1B',
+    rv:{isErr:false,message:'',stack:'',result:null}};
   try {
-    console.log(v.whois+' start.',entryNo,publicKey);
+    console.log(v.whois+' start.',arg.dt);
 
-    // クライアント情報を抽出
+    v.step = '1'; // クライアント情報を抽出
     v.master = szSheet('master');
-    v.client = v.master.lookup(entryNo,'entryNo');
+    v.client = v.master.lookup(arg.dt.entryNo,'entryNo');
 
-    // 3回連続失敗後1時間以内ならチャレンジ不可判定
-    if( String(v.client.NG3).length > 0 &&
-      (Date.now() - v.client.NG3) < 3600000 ){
-      v.rv = {isErr:true,message:'3回連続ログイン失敗後、1時間経過していません'};
+    v.step = '2'; // 3回連続失敗後1時間以内ならチャレンジ不可判定
+    if( String(v.client.NG2).length > 0 &&
+      (Date.now() - v.client.NG2) < 3600000 ){
+      v.rv = {
+        isErr: true,
+        message:'3回連続ログイン失敗後、1時間経過していません',
+      };
       return v.rv;
     }
 
-    // 該当受付番号にpassCode,publicKey登録
-    v.update = {
-      publicKey: publicKey,
-      passCode: conf.random,
-      genPassCode: Date.now(),
-      certificate: '',
-    };
-    console.log('v.update',v.update);
-    v.master.update(v.update,{key:'entryNo',value:entryNo});
+    v.step = '3'; // 該当受付番号にpassCode,publicKey登録
+    v.master.update({
+      publicKey: arg.dt.publicKey,  // クライアントの公開鍵
+      passCode: arg.random, // パスコード
+      genPassCode: new Date(),  // パスコード生成日時
+      NG1:'',NG2:'',            // 不適切パスコード入力時刻をクリア
+      certificate: '',  // 認証正常終了日時はクリア
+    },{key:'entryNo',value:arg.dt.entryNo});
 
-    // 申請者にpassCode連絡メール送信
+    v.step = '4'; // 申請者にpassCode連絡メール送信
     v.draft = GmailApp.createDraft(
       v.client['メールアドレス'],
       '[連絡]校庭キャンプ2023 パスコード',
-      "パスコードは以下の通りです。\n\n" + v.update.passCode,
+      "パスコードは以下の通りです。\n\n" + arg.random,
       {
         //htmlBody: v.html,
         name: '下北沢小おやじの会',
       }
     );
-    v.draftId = v.draft.getId();
-    GmailApp.getDraft(v.draftId).send();
-    console.log('Mail Remaining Daily Quota:'+MailApp.getRemainingDailyQuota());
+    v.step = '4.1';
+    GmailApp.getDraft(v.draft.getId()).send();
+    console.log('Mail Remaining Daily Quota:'
+      + MailApp.getRemainingDailyQuota());
 
-    console.log(v.whois+' end.\n'+JSON.stringify(v.rv));
+    v.step = '5';
+    console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
     return v.rv;
 
   } catch(e) {
-    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
-    return e;
+    console.error(v.whois+' abnormal end.(at step.'+v.step+')\n'
+    + e.message + '\n' + e.stack);
+    console.error(JSON.stringify(v));
+    v.rv.isErr = true;
+    v.rv.message = e.message;
+    v.rv.stack = e.stack;
+    return v.rv;
   }
 }
 
-/** auth2Aからの戻り値
- * @typedef {Object} auth2A
- * @prop {boolean} isErr=true - trueならエラー発生
- * @prop {string} message='' - エラー発生時のメッセージ
- * @prop {string} common=null - 共通鍵
- * @prop {Object.<string, any>} info=null - 利用者情報
- */
 /** 認証局での認証の第二段階
- * @param {string} entryNo - クライアントの受付番号
- * @param {string} passCode - クライアントが入力したパスコード
+ * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
+ * @returns {Object} - fetchResponse.result={common:共通鍵,info:クライアント情報}
  * 
  * ## 注意事項
  * 
  * clientからのtokenは署名されているが、認証局はclientのpublicKeyを
  * 持たないので検証は省略し、そのまま管理局に送って管理局側で検証する。
  */
-function auth2A(token){
+function auth2A(arg){
   const v = {whois:'認証局.auth2A',
-    rv:{isErr: true,message: '',common: null,info: null},
-  };
+    rv:{isErr:false,message:'',stack:'',result:null}};
   try {
-    console.log(v.whois+' start.',token);
+    console.log(v.whois+' start.',arg.dt);
 
-    // auth2B問合せ用にデータを暗号化
-    v.dt = {fc:'auth2B',arg:{
-      entryNo  : token.dt.arg.entryNo,
-      passCode : token.dt.arg.passCode,
-      timestamp: token.ts,
-      publicKey: token.pKey,
-    }};
-    // 暗号化。受付番号＋パスコードなのでbase64化は省略
-    v.dt = cryptico.encrypt(JSON.stringify(v.dt),conf.master,conf.RSAkey);
+    v.step = '1.1'; // auth2B問合せ用にデータを暗号化
+    v.dt = JSON.stringify({
+      fc : 'auth2B',
+      arg: {  // auth2B()に渡す引数
+        entryNo  : arg.dt.entryNo,  // クライアントから送られた受付番号
+        passCode : arg.dt.passCode, // 同パスコード
+        timestamp: arg.ts,    // 同送付日時
+        publicKey: arg.pKey,  // 同公開鍵
+      }
+    });
+    v.step = '1.2'; // 暗号化。受付番号＋パスコードなのでencodeURIは省略
+    v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
     if( v.dt.status !== 'success' )
       throw new Error("auth2A encrypt failed.\n"+JSON.stringify(v.dt));
 
-    // auth2Bに問い合わせ
-    v.res = UrlFetchApp.fetch(conf.masterAPI,{
+    v.step = '2.1'; // auth2Bに問い合わせ
+    v.res = UrlFetchApp.fetch(arg.masterAPI,{
       'method': 'post',
       'contentType': 'application/json',
       'muteHttpExceptions': true, // https://teratail.com/questions/64619
       'payload' : JSON.stringify({
         fm: 'gateway',
         to: 'master',
-        md: 3,
+        md: 3,  // 署名付き暗号化
         ts: Date.now(),
         dt: v.dt.cipher,
       }),  
     }).getContentText();
     console.log('res='+v.res);
+    v.step = '2.2';
     v.res = JSON.parse(v.res);
 
-    // 問合せ結果に問題無ければ認証局の公開鍵を返信
-    if( v.res instanceof Error ) throw v.res;
-    if( v.res.isErr ) throw new Error(v.res.message);
+    v.step = '3'; // 問合せ結果により処理分岐
+    if( v.res.isErr ){
+      v.step = '3.1'; // auth2Bでエラー発生ならそのまま返す
+      return v.res;
+    } else {
+      v.step = '3.2'; // auth2B正常終了なら情報提供
+      v.rv.result = {
+        common: arg.common, // 共通鍵
+        info  : v.res.result, // クライアントの登録情報
+      }
+    }
 
-    v.rv.isErr = false;
-    v.rv.common = conf.common;
-    v.rv.info = v.res.info;
-
-    console.log(v.whois+' end.\n'+JSON.stringify(v.rv));
+    v.step = '4';
+    console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
     return v.rv;
 
   } catch(e) {
-    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
-    return e;
+    console.error(v.whois+' abnormal end.(at step.'+v.step+')\n'
+    + e.message + '\n' + e.stack);
+    console.error(JSON.stringify(v));
+    v.rv.isErr = true;
+    v.rv.message = e.message;
+    v.rv.stack = e.stack;
+    return v.rv;
   }
 }
 
 /** 管理局での認証の第二段階
- * @param {string} entryNo - クライアントの受付番号
- * @param {string} passCode - クライアントの入力したパスコード
- * @returns {Object.<string,any>} - クライアントの情報
+ * @param {AuthArg} arg - クライアントの受付番号、パスコード、送信日時、公開鍵他
+ * @returns {Object} - fetchResponse.result=クライアントの登録情報
  */
-function auth2B(token){
-  const v = {whois:'管理局.auth2B',rv:{isErr:false,message:''},
-    entryNo: token.dt.arg.entryNo,
-    passCode: token.dt.arg.passCode,
-    timestamp: token.dt.arg.timestamp,
-    publicKey: token.dt.arg.publicKey,
-  };
+function auth2B(arg){
+  const v = {whois:'管理局.auth2B',
+  rv:{isErr:true,message:'',stack:'',result:null}};
   try {
-    console.log(v.whois+' start.',token);
+    console.log(v.whois+' start.',arg.dt);
 
-    // クライアント情報を抽出
+    v.step = '1'; // クライアント情報を抽出
     v.master = szSheet('master');
-    v.client = v.master.lookup(v.entryNo,'entryNo');
+    v.client = v.master.lookup(arg.dt.entryNo,'entryNo');
+    console.log('v.client',v.client);
 
     // 正しいパスコードが入力されたか判定
-    console.log('isCorrectPassCode',v.client.passCode, whichType(v.client.passCode), v.passCode,whichType(v.passCode),v.client.passCode === v.passCode);
-    v.isCorrectPassCode = v.client.passCode === v.passCode;
-    v.withinDeadline = (Date.now() - v.timestamp) < 3600000;
-    v.isCorrectPublicKey = v.client.publicKey === v.publicKey;
-    if( v.isCorrectPassCode && v.withinDeadline && v.isCorrectPublicKey ){
-      // クライアントの情報を提供
-      v.rv.info = v.client;
-      // パスコード確認日時を更新、NGnをクリア
-      v.update = {certificate: Date.now(),NG1:'',NG2:'',NG3:''};
-    } else {
-      // 不適切なパスコードだった場合はNGnに記録
-      if( String(v.client.NG1).length === 0 ){
-        v.update = {NG1: Date.now()};
-      } else if( String(v.client.NG2).length === 0 ){
-        v.update = {NG2: Date.now()};
+    v.update = null;
+    if( (Date.now() - new Date(v.client.genPassCode).getTime()) > 3600000 ){
+      v.step = '2.1'; // 有効期限切れ
+      v.rv.message = 'パスコードの有効期限(発行後1時間)を過ぎています。';
+      v.rv.result = true;  // クライアント側のパスコード入力画面を閉じ、受付番号入力画面に遷移
+    } else if( v.client.passCode !== arg.dt.passCode ){
+      v.step = '2.2'; // パスコード不一致
+      if( String(v.client.NG2).length > 0 ){
+        v.step = '2.2.1'; // 連続3回不適切
+        v.rv.message = '3回連続で不適切なパスコードが入力されました。1時間ロックアウトされます';
+        v.rv.result = true;  // クライアント側のパスコード入力画面を閉じ、受付番号入力画面に遷移
       } else {
-        v.update = {NG3: Date.now()};
+        v.step = '2.2.2'; // 連続3回未満
+        v.rv.message = 'パスコードが不適切です';
+        v.rv.result = false;
+        if( String(v.client.NG1).length === 0 ){
+          v.update = {NG1: Date.now()};
+        } else {
+          v.update = {NG2: Date.now()};
+        }
       }
-      v.rv.isErr = true;
-      v.rv.message = !v.isCorrectPassCode ? 'パスコードが不適切です'
-      : (!v.withinDeadline ? '3回連続で不適切なパスコード入力後、1時間経過していません'
-      : '不適切な公開鍵です' );
+    } else if( v.client.publicKey !== arg.dt.publicKey ){
+      v.step = '2.3'; // 公開鍵不一致
+      v.rv.message = '不適切な公開鍵です';
+      v.rv.result = true;
+    } else {
+      v.step = '2.4'; // 全条件をクリア
+      v.rv.isErr = false;
+      // クライアントの情報を提供
+      v.rv.result = v.client;
+      v.rv.message = '正常に認証されました';
+      // パスコード確認日時を更新、NGnをクリア
+      v.update = {certificate: new Date()};
     }
-    v.master.update(v.update,{key:'entryNo',value:v.entryNo});
+    v.step = '2.5'; // masterシートの更新
+    if( v.master !== null ){
+      v.master.update(v.update,{key:'entryNo',value:arg.dt.entryNo});
+    }
 
-    console.log(v.whois+' end.\n'+JSON.stringify(v.rv));
+    v.step = '3';
+    console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
     return v.rv;
 
   } catch(e) {
-    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
-    return e;
+    console.error(v.whois+' abnormal end.(at step.'+v.step+')\n'
+    + e.message + '\n' + e.stack);
+    console.error(JSON.stringify(v));
+    v.rv.isErr = true;
+    v.rv.message = e.message;
+    v.rv.stack = e.stack;
+    return v.rv;
   }
 }
 </script>
 
 <script type="text/javascript" class="test">/* テスト用 */
+let config = null;
 async function AuthTest(){
   const v = {data:[]};
   console.log('AuthTest start.');
   try {
-    v.conf = new Auth(
+    config = new Auth(
       'https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',
       {entryNo:{value:"16"}}
     );
     //await v.conf.build();
-    console.log('AuthTest end.',v.conf);
+    console.log('AuthTest end.',config);
 
   } catch(e){
     console.error('AuthTest abnormal end.',e);
