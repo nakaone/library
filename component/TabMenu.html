@@ -4,13 +4,40 @@
 <style type="text/css" class="core">/* コアCSS */
 </style>
 </head><body>
-<div class="core"><!-- コアHTML -->
+
+<p>これはTabMenuクラスのサンプルです</p>
+
+<div class="TabMenu" name="main">
+  <div name="処理概要">
+    <h1>処理概要</h1>
+  </div>
+  <div name="使用方法">
+    <h1>使用方法</h1>
+  </div>
 </div>
 
-<div class="webApp"><!-- webアプリHTML -->
+<!--
+<div class="TabMenu" name="main">
+  <div name="使用方法" class="TabMenu">
+    <div name="html">html</div>
+    <div name="認証局">認証局</div>
+    <div name="管理局">管理局</div>
+  </div>
+  <div name="処理概要">
+    <h1>処理概要</h1>
+  </div>
 </div>
 
-<!-- 外部スクリプト -->
+<div class="TabMenu" name="main">
+  <div name="使用方法" class="TabMenu">
+    <h1>使用方法</h1>
+  </div>
+  <div name="処理概要">
+    <h1>処理概要</h1>
+  </div>
+</div>
+
+-->
 
 <script type="text/javascript" class="core">/* コアスクリプト */
 /**
@@ -28,10 +55,10 @@ class TabMenu {
     console.log('TabMenu.constructor start.');
     const v = {};
     this.option = mergeDeeply({
-      name: null, // 対象となるページ全体のname属性。nullなら単一で特定不要と解釈
-      initial: null,  // 初期表示ページの名前
-      direction: 'x', // タブを並べる方向。x:横並び, y:縦並び
-      style: {
+      name: null, // {string} 対象となるページ全体のname属性。nullなら単一で特定不要と解釈
+      initial: null,  // {string} 初期表示ページの名前
+      direction: 'x', // {string} タブを並べる方向。x:横並び, y:縦並び
+      style: {  // {Object} CSSスタイル定義
         tabs: {
           selector: ".TabMenu .tabs",
           css: {
@@ -110,16 +137,21 @@ class TabMenu {
     // タブの数をタブ領域に設定
     this.tabs.style.gridTemplateColumns = 'repeat('+this.tabNum+',1fr)';
 
+    // 特に指定がない場合、初期ページは最初の要素とする
+    if( this.option.initial === null ) this.option.initial = this.pageList[0];
     this.changePage(this.option.initial); // 初期ページ
     console.log('TabMenu.constructor end.');
   }
 
-  changePage(page=null){
-    console.log('TabMenu.changePage start.');
-    this.activePage = page === null ? this.pageList[0] : page;
-    console.log(this.activePage,this.pageList,this.tab)
+  changePage(page){
+    console.log('TabMenu.changePage start. page='+page);
+  //changePage(page=null){
+    //console.log('TabMenu.changePage start.');
+    //this.activePage = page === null ? this.pageList[0] : page;
+    //console.log(this.activePage,this.pageList,this.tab)
     this.pageList.forEach(x => {
-      if( x === this.activePage ){
+      if( x === page ){
+      //if( x === this.activePage ){
         for( let y in this.option.style.act.css ){
           this.tab[x].style[y] = this.option.style.act.css[y];
         }
@@ -136,15 +168,21 @@ class TabMenu {
 }
 </script>
 
-<script type="text/javascript" class="webApp">/* webアプリ */
-</script>
-
-<script type="text/javascript" class="test">/* テスト用 */
-</script>
-
+<!-- CDN -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.3.0/dist/mermaid.min.js"></script>
+<!-- 自作ライブラリ -->
+<script src="mergeDeeply.js"></script>
+<!-- 起動時処理 -->
 <script type="text/javascript" class="main">
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
+  // メニューを定義
+  document.querySelectorAll('.TabMenu[name]').forEach(x => {
+    v.menuName = x.getAttribute('name');
+    v.arg = {name:v.menuName};
+    console.log(v.menuName,v.arg);
+    v[v.menuName] = new TabMenu(v.arg);
+  });
 });
 </script>
 </body></html>
