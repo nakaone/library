@@ -23,11 +23,23 @@
  * @classdesc タブ切り替えのHTMLページを作成する
  */
 
+/**
+ * @typedef {Object} TabMenuMembers
+ * @prop {TabMenuArg} option - オプション
+ * @prop {string} wrapperSelector - 全体の親要素を特定するCSSセレクタ文字列
+ * @prop {HTMLElement} wrapper - 全体の親要素
+ * @prop {HTMLElement} tabs - タブ表示領域の要素
+ * @prop {Object.<string,HTMLElement>} tab - タブ領域内の個々のタブ
+ * @prop {string[]} pageList - ページ名のリスト
+ * @prop {Object.<string,HTMLElement>} page - タブに対応した個々のページ
+ * @prop {number} tabNum - タブ表示領域に表示するタブの数
+ */
+
 class TabMenu {
 
   /**
    * @constructor
-   * @param {string} [opt={}] - オプション
+   * @param {string} [opt={}] - オプション。内容はthis.option参照
    * @returns {void}
    */
   constructor(opt={}){
