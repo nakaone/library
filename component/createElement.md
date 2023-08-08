@@ -1,4 +1,4 @@
-lastUpdate: 2023年 7月31日 月曜日 09時41分57秒 JST
+lastUpdate: 2023年 8月 8日 火曜日 15時44分17秒 JST
 
 ## Functions
 
@@ -82,7 +82,7 @@ function createElement(arg={}){
   }
   for( v.i in v.arg.logical ){  // 論理属性の設定
     if( v.arg.logical[v.i] ){
-      v.rv.setAttribute(v.i);
+      v.rv.setAttribute(v.i,true);
     }
   }
   for( v.i in v.arg.style ){ // スタイルの設定

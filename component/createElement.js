@@ -10,7 +10,7 @@ function createElement(arg={}){
   }
   for( v.i in v.arg.logical ){
     if( v.arg.logical[v.i] ){
-      v.rv.setAttribute(v.i);
+      v.rv.setAttribute(v.i,true);
     }
   }
   for( v.i in v.arg.style ){
