@@ -211,7 +211,12 @@ let config = null;
 async function setupConfig(){
   try {
     console.log('setupConfig start.');
-    config = new Auth('https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec');
+    const opt = {};
+    const searchParams = new URLSearchParams(window.location.search);
+    if( searchParams.has('id') ){
+      opt.entryNo = {value:searchParams.get('id')};
+    }
+    config = new Auth('https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',opt);
     console.log('setupConfig normal end.',config);
   } catch(e){
     console.error('setupConfig abnormal end.',e);
