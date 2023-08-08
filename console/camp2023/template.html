@@ -45,75 +45,77 @@
     }
   </style>
 </head>
-<body class="TabMenu" name="main">
+<body>
 
-  <div name="パスポート"><div></div></div>
+  <div class="TabMenu" name="main">
+    <div name="パスポート"><div></div></div>
 
-  <div class="TabMenu" name="お知らせ">
-    <div name="掲示板">
-      <button onclick="redraw()">更新</button>
-      ※ 自動更新されません。また更新は3分程度の間隔をあけてください
-      <div name="board"></div>
-    </div>
-    <div name="注意事項" class="markdown" data-embed="注意事項.md"></div>
-    <div name="持ち物" class="markdown" data-embed="持ち物リスト.md"></div>
-  </div>
-
-  <!--div name="passport"><h1>パスポート</h1></div-->
-
-  <div name="案内図"><div class="img" data-embed="map2023.svg"></div></div>
-
-  <div class="TimeTable" name="予定表">
-    <!--
-    <ul>
-      <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
-      <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
-    </ul>
-      詳細は別ページ？　別ペイン？
-      表示範囲絞り込み
-      所要物一覧
-    -->
-  </div>
-
-  <!--
-    遊び場保険、スケジュールに追加
-  -->
-  <!-- div class="TabMenu" name="スタッフ">
-    <div name="日程表">
-      <div class="PlantUML"  data-embed="schedule.pu"><img /></div>
-      <div class="markdown" name="schedule2"></div>
-    </div>
-
-    <div name="scanner"><h1>QRコード受付</h1></div>
-
-    <div name="校内探検">
-      <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
-      <div class="markdown" data-embed="肝試し配置.md"></div>
-    </div>
-
-    <div name="参加者数集計">
-      <h1>工事中</h1>
-      <p>以下はMermaid出力テスト画面(完成時のイメージとは関係ありません)</p>
-      <div name="test" class="mermaid">
-        sequenceDiagram
-          太郎->>花子: おはよう
-          花子->>太郎: こんにちは！！
+    <div class="TabMenu" name="お知らせ">
+      <div name="掲示板">
+        <button onclick="redraw()">更新</button>
+        ※ 自動更新されません。また更新は3分程度の間隔をあけてください
+        <div name="board"></div>
       </div>
+      <div name="注意事項" class="markdown" data-embed="注意事項.md"></div>
+      <div name="持ち物" class="markdown" data-embed="持ち物リスト.md"></div>
     </div>
 
-    <div class="TabMenu" name="論議メモ">
-      <div class="markdown" name="6/10定例会" data-embed="20230610.md"></div>
-      <div class="markdown" name="7/08定例会" data-embed="20230708.md"></div>
+    <!--div name="passport"><h1>パスポート</h1></div-->
+
+    <div name="案内図"><div class="img" data-embed="map2023.svg"></div></div>
+
+    <div class="TimeTable" name="予定表">
+      <!--
+      <ul>
+        <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
+        <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
+      </ul>
+        詳細は別ページ？　別ペイン？
+        表示範囲絞り込み
+        所要物一覧
+      -->
     </div>
 
-    <div class="markdown" name="関連サイト" data-embed="RelatedSites.md"></div>
+    <!--
+      遊び場保険、スケジュールに追加
+    -->
+    <!-- div class="TabMenu" name="スタッフ">
+      <div name="日程表">
+        <div class="PlantUML"  data-embed="schedule.pu"><img /></div>
+        <div class="markdown" name="schedule2"></div>
+      </div>
 
-    <div class="TabMenu" name="参考資料">
-      <div class="markdown" name="申込フォーム作成手順" data-embed="makeForm.md"></div>
-    </div>
-    
-  </div -->
+      <div name="scanner"><h1>QRコード受付</h1></div>
 
+      <div name="校内探検">
+        <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
+        <div class="markdown" data-embed="肝試し配置.md"></div>
+      </div>
+
+      <div name="参加者数集計">
+        <h1>工事中</h1>
+        <p>以下はMermaid出力テスト画面(完成時のイメージとは関係ありません)</p>
+        <div name="test" class="mermaid">
+          sequenceDiagram
+            太郎->>花子: おはよう
+            花子->>太郎: こんにちは！！
+        </div>
+      </div>
+
+      <div class="TabMenu" name="論議メモ">
+        <div class="markdown" name="6/10定例会" data-embed="20230610.md"></div>
+        <div class="markdown" name="7/08定例会" data-embed="20230708.md"></div>
+      </div>
+
+      <div class="markdown" name="関連サイト" data-embed="RelatedSites.md"></div>
+
+      <div class="TabMenu" name="参考資料">
+        <div class="markdown" name="申込フォーム作成手順" data-embed="makeForm.md"></div>
+      </div>
+      
+    </div -->
+
+  </div>
 
 <!-- 自作ライブラリ -->
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Auth.html","selector":"script.core"},"to":"js"}'></script>
