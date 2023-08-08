@@ -1,0 +1,2956 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>class Auth</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- CDN -->
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.3.0/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.2/marked.min.js"></script>
+<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=css&skin=default"></script>
+<!-- 自作ライブラリ -->
+<script src="mergeDeeply.js"></script>
+<script src="TabMenu.js"></script>
+
+<style type="text/css">
+.gSpreadTabulize div {display: grid; margin: 2px; padding: 0px 0.3rem; }
+.gSpreadTabulize .table {display: grid;}
+.gSpreadTabulize .th {background: #ccc; font-weight: bold; text-align: center;}
+.gSpreadTabulize .td {border-bottom: solid 1px #ccc; border-right: solid 1px #ccc;}
+.gSpreadTabulize .memo {background: #ff0; padding: 0.5rem; text-align: left; font-size: 0.7rem;}
+</style>
+
+</style>
+<script>
+const md = function(html) {
+  const div = document.createElement("div")
+  div.innerHTML = marked(html);
+  console.log(div.innerHTML);
+  // 背景色の変更追加
+  //div.style.backgroundColor = 'DimGray'; 
+  document.body.appendChild(div);
+}
+</script>
+</head><body>
+<div class="TabMenu" name="main">
+  <div name="処理概要">
+    <div class="mermaid">
+      sequenceDiagram
+        autonumber
+        actor mailer as メーラ
+        actor browser as ブラウザ
+        participant gateway as 認証局
+        participant master as 管理局
+        participant httpd as httpd
+  
+        %% 受付番号入力
+        mailer ->> httpd : 事前に送信された案内メールのリンクをクリック
+        httpd ->> browser : ページファイル(index.html)
+        activate browser
+        Note right of browser: constructor()
+        Note right of browser: getEntryNo()
+  
+        browser ->> gateway : 受付番号、CP(平文)
+        activate gateway
+        Note right of gateway : auth1A()
+  
+        gateway ->> master : 受付番号、CP(GS/MP)
+        activate master
+        Note right of master : auth1B()
+        master ->> mailer : パスコード
+        activate mailer
+  
+        master ->> gateway : 申請登録結果
+        deactivate master
+  
+        gateway ->> browser : 申請登録結果
+        deactivate gateway
+        browser ->> browser : GP格納、パスコード入力画面表示
+        deactivate browser
+  
+  
+        %% パスコード入力
+        mailer ->> browser : パスコード入力
+        deactivate mailer
+        activate browser
+        Note right of browser : getPassCode()
+        browser ->> gateway : 受付番号、パスコード(CS/GP)
+        activate gateway
+        Note right of gateway : auth2A
+        gateway ->> master : 受付番号、パスコード、CP(GS/MP)
+        activate master
+        Note right of master : auth2B
+        master ->> gateway : 利用者情報
+        deactivate master
+        gateway ->> browser : 利用者情報,CK
+        deactivate gateway
+        browser ->> browser : 初期画面表示
+        deactivate browser
+    </div>
+  </div>
+  <div name="使用方法" class="TabMenu">
+  </div>
+
+  <div name="html" class="TabMenu">
+    <div name="役割、設定"></div>
+    <div name="スクリプト"><pre class="prettyprint lang-js linenums">&lt;!DOCTYPE html&gt;&lt;html xml:lang=&quot;ja&quot; lang=&quot;ja&quot;&gt;&lt;head&gt;
+      &lt;title&gt;Auth&lt;/title&gt;
+      &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=UTF-8&quot;&gt;
+      &lt;!-- 自作CSS --&gt;
+      &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;szLib.css&quot; /&gt;
+      &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;loading.css&quot; class=&quot;core&quot;
+        data-embed=&quot;../component/loading.css&quot; /&gt;
+      &lt;style type=&quot;text/css&quot; class=&quot;core&quot;&gt;/* コアCSS */
+      &lt;/style&gt;
+      &lt;!-- 外部Script --&gt;
+      &lt;!-- 共通鍵暗号化：cryptoJS --&gt;
+      &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js&quot;&gt;&lt;/script&gt;
+      &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/enc-base64.min.js&quot;&gt;&lt;/script&gt;
+      &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/cipher-core.min.js&quot;&gt;&lt;/script&gt;
+      &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/sha256.min.js&quot;&gt;&lt;/script&gt;
+      &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/sha1.min.js&quot;&gt;&lt;/script&gt;
+      &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/aes.min.js&quot;&gt;&lt;/script&gt;
+      &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/hmac.min.js&quot;&gt;&lt;/script&gt;
+      &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/pbkdf2.min.js&quot;&gt;&lt;/script&gt;
+      &lt;!-- 自作ライブラリ --&gt;
+      &lt;!-- webApp利用時： srcのみ必要。パスはcomponentが起点
+        コンソール利用時：class=&quot;onConsole&quot; data-embedが必要。data-embedの起点はtools --&gt;
+      &lt;script type=&quot;text/javascript&quot; src=&quot;createElement.js&quot; data-embed=&quot;../component/createElement.js&quot;&gt;&lt;/script&gt;
+      &lt;script type=&quot;text/javascript&quot; src=&quot;createPassword.js&quot; data-embed=&quot;../component/createPassword.js&quot;&gt;&lt;/script&gt;
+      &lt;script type=&quot;text/javascript&quot; src=&quot;cryptoAES.js&quot; data-embed=&quot;../component/cryptoAES.js&quot;&gt;&lt;/script&gt;
+      &lt;script type=&quot;text/javascript&quot; src=&quot;../external/cryptico.min.js&quot; data-embed=&quot;../external/cryptico.min.js&quot;&gt;&lt;/script&gt;
+      &lt;script type=&quot;text/javascript&quot; src=&quot;mergeDeeply.js&quot; data-embed=&quot;../component/mergeDeeply.js&quot;&gt;&lt;/script&gt;
+      &lt;script type=&quot;text/javascript&quot; src=&quot;whichType.js&quot; data-embed=&quot;../component/whichType.js&quot;&gt;&lt;/script&gt;
+      &lt;/head&gt;&lt;body&gt;
+        &lt;div&gt;
+          &lt;h1&gt;だみぃ&lt;/h1&gt;
+          &lt;p&gt;これはログイン後に表示される初期画面です。&lt;/p&gt;  
+        &lt;/div&gt;
+      
+      &lt;script type=&quot;text/javascript&quot; class=&quot;core&quot;&gt;/* コアScript */
+      /**
+       * @typedef {Object} AuthProp - AuthOpt以外のAuthクラスプロパティ
+       * @prop {number} constructorStart - constructor開始時刻(UNIX時間)
+       * @prop {string} parentSelector - 親画面のCSSセレクタ
+       * @prop {HTMLElement} parentWindow - 親画面のHTML要素
+       * @prop {HTMLElement} AuthWindow - Auth関係画面のwrapper
+       * @prop {HTMLElement} loading - ローディング画面のHTML要素
+       */
+      
+      /**
+       * @typedef {Object} AuthOpt
+       * @prop {string} [entryNo] - 受付番号(ID)
+       * @prop {string} [passWord] - パスワード
+       * @prop {string} [header=&#039;&#039;] - 受付番号入力画面に表示するheaderのinnerHTML
+       * @prop {string} [entryNoMessage=&#039;受付番号を入力してください&#039;] - 受付番号入力画面に表示するメッセージ
+       * @prop {string} [entryNoButton=&#039;送信&#039;] - 受付番号入力画面のボタンのラベル
+       * @prop {RegExp} [entryNoRegExp=/^[0-9]{1,4}$/] - 受付番号チェック用正規表現
+       */
+      
+      /**
+       * @classdesc 入力されたID/PWと登録情報を突合し、IDに紐づく各種情報を返す
+       *
+       * - パスコード(passCode) : 受付番号入力後受信したメールに記載された番号
+       * - パスワード(passWord) : 鍵ペア生成の際、秘密鍵の基となる文字列
+       * 
+       */
+      class Auth {
+        /**
+         * @constructor
+         * @param {string} gatewayUrl - 認証局APIのURL
+         * @param {AuthOpt} [opt={}] - 生成時オプション
+         * @returns {void} なし
+         * 
+         * ## 処理概要
+         * 
+         * ```mermaid
+         * sequenceDiagram
+         *   autonumber
+         *   actor mailer as メーラ
+         *   actor browser as ブラウザ
+         *   participant gateway as 認証局
+         *   participant master as 管理局
+         *   participant httpd as httpd
+         * 
+         *   %% 受付番号入力
+         *   mailer -&gt;&gt; httpd : 事前に送信された案内メールのリンクをクリック
+         *   httpd -&gt;&gt; browser : ページファイル(index.html)
+         *   activate browser
+         *   Note right of browser: constructor()
+         *   Note right of browser: getEntryNo()
+         * 
+         *   browser -&gt;&gt; gateway : 受付番号、CP(平文)
+         *   activate gateway
+         *   Note right of gateway : auth1A()
+         * 
+         *   gateway -&gt;&gt; master : 受付番号、CP(GS/MP)
+         *   activate master
+         *   Note right of master : auth1B()
+         *   master -&gt;&gt; mailer : パスコード
+         *   activate mailer
+         * 
+         *   master -&gt;&gt; gateway : 申請登録結果
+         *   deactivate master
+         * 
+         *   gateway -&gt;&gt; browser : 申請登録結果
+         *   deactivate gateway
+         *   browser -&gt;&gt; browser : GP格納、パスコード入力画面表示
+         *   deactivate browser
+         * 
+         * 
+         *   %% パスコード入力
+         *   mailer -&gt;&gt; browser : パスコード入力
+         *   deactivate mailer
+         *   activate browser
+         *   Note right of browser : getPassCode()
+         *   browser -&gt;&gt; gateway : 受付番号、パスコード(CS/GP)
+         *   activate gateway
+         *   Note right of gateway : auth2A
+         *   gateway -&gt;&gt; master : 受付番号、パスコード、CP(GS/MP)
+         *   activate master
+         *   Note right of master : auth2B
+         *   master -&gt;&gt; gateway : 利用者情報
+         *   deactivate master
+         *   gateway -&gt;&gt; browser : 利用者情報,CK
+         *   deactivate gateway
+         *   browser -&gt;&gt; browser : 初期画面表示
+         *   deactivate browser
+         * 
+         * ```
+         * 
+         * - 文中の記号は以下の通り
+         *   - CK:共通鍵(Common Key)
+         *   - CP:利用者公開鍵(Client Public key)、CS:利用者秘密鍵(Client Secret key)
+         *   - GP:認証局公開鍵(Gateway Public key)、GS:認証局秘密鍵(Gateway Secret key)
+         *   - FP:配信局公開鍵(Front Public key)、FS:配信局秘密鍵(Front Secret key)
+         *   - MP:管理局公開鍵(Master Public key)、MS:管理局秘密鍵(Master Secret key)
+         *   - (xS/yP) = XX局秘密鍵で署名、YY局公開鍵で暗号化した、XX-&gt;YY宛の通信&lt;br&gt;
+         *     例：(GS/MP) ⇒ GS(認証局秘密鍵)で署名、MP(管理局公開鍵)で暗号化
+         * - (02) constructor() : DOMContentLoaded時、以下の処理を実行
+         *   1. 利用者の秘密鍵(以下CSkey)・公開鍵(以下CPkey)を生成
+         *   1. getEntryNo()を呼び出し
+         * - (02) getEntryNo() : 受付番号入力
+         *   1. 受付番号入力画面を表示(z-indexを最大にして他の画面を触らせない)
+         *   1. 入力後待機画面表示、レスポンスがあったらgetPassCode()を呼び出し
+         * - (03) auth1A() : 認証申請の受付
+         *   1. 受付番号とCPをauth1Bに送信
+         *   1. auth1Bの申請結果を受けたらブラウザに結果を送信&lt;br&gt;
+         *      申請OKの場合はGPも併せて送信
+         * - (04) auth1B() : 認証申請の登録
+         *   1. 受付番号とCPをシートに書き込み
+         *   1. 正当性を検証
+         *      - パスコードが一致
+         *      - パスコード発行日時から1時間以内
+         *      - 3回連続失敗後1時間以上経過
+         *   1. 正当だった場合はパスコードを生成、シートに書き込み
+         *   1. 申請者にパスコードを通知(05)
+         *   1. 申請登録の結果をauth1Aに返す
+         * - (09) getPassCode() : パスコード入力
+         *   1. パスコード入力画面を表示
+         *   1. パスコードが入力されたらauth2Aに送信
+         *   1. auth2Aからレスポンスがあったらthisに保存、初期画面を表示
+         * - (10) auth2A
+         *   1. 受付番号・パスコード・CPkeyを管理局に送信
+         *   1. 利用者情報をauth2Bから受けたらFPを追加して利用者に返す
+         * - (12) auth2B
+         *   1. 送信された受付番号・パスコード・CPkeyが有効か、シートの申請登録と突合
+         *   1. OKなら利用者情報をauth2Aに返す
+         */
+        constructor(gatewayUrl,opt={}){
+          const v = {rv:null};
+          console.log(&#039;Auth.constructor start.&#039;);
+          try {
+            this.constructorStart = Date.now();
+      
+            // 1.オプション未定義項目の既定値をプロパティにセット
+            this.#setProperties(this,null,opt);
+            console.log(&#039;this:&#039;,this);
+            console.log(Date.now()-this.constructorStart);
+      
+            // 2.必須項目をプロパティに保存
+            this.gateway.url = gatewayUrl;  // 認証局のURL
+            console.log(Date.now()-this.constructorStart);
+      
+            // 3.各種画面を用意する
+            //   ※鍵ペア生成で時間がかかるので、先に待機画面を表示
+            this.#setWindows();
+            // 初期画面として待機画面を表示
+            this.#changeScreen(&#039;loading&#039;);
+            console.log(Date.now()-this.constructorStart);
+      
+            // 4.秘密鍵・公開鍵を作成し、プロパティに格納する
+            this.#setupKeys();
+            console.log(Date.now()-this.constructorStart);
+      
+            // 5.非同期の初期化処理を呼出
+            this.#changeScreen(&#039;entryNo&#039;);
+            //this.build();
+      
+            //console.log(&#039;v.rv=&#039;+JSON.stringify(v.rv));
+            console.log(&#039;Auth.constructor end.&#039;);
+            return v.rv;
+          } catch(e){
+            console.error(&#039;Auth.constructor abnormal end.&#039;,e);
+            // ブラウザで実行する場合はアラート表示
+            //if( typeof window !== &#039;undefined&#039; ) alert(e.stack);
+            throw e; //以降の処理を全て停止
+          }
+        }
+      
+        /** 既定値を設定する
+         * @param {AuthOpt} opt - 生成時オプションとして渡された値
+         * @returns {void}
+         */
+        #setProperties(dest,def,opt){
+          const v = {rv:true,def:{
+            parentSelector: &quot;body&quot;, // {string} - 親要素のCSSセレクタ
+            RSA:{  // 自局のRSAキー関係情報
+              bits: 1024,     // {number} - RSAキー長
+              passWord: null, // {string} - パスワード
+              pwLength: 32,   // {number} - 自動生成する場合のパスワード文字数
+              sKey: null,     // {RSAKey} - 秘密鍵
+              pKey: null,     // {string} - 公開鍵
+            },
+            commonKey: null,  // 共通鍵
+            info: null, // 管理局から取得する参加者情報
+            gateway:{ // 認証局関連情報
+              url: null,  // {string} - APIのURL
+              pKey: null, // {string} - 公開鍵
+            },
+            front: {  // 配信局関連情報
+              url: null,  // {string} - APIのURL
+              pKey: null, // {string} - 公開鍵
+            },
+            AuthWindow: {
+              element: null, // {HTMLElement} - 受付番号入力画面の要素。setWindowsで設定。
+              zIndex: 2147483646,  // z-indexの最大値-1
+            },
+            entryNo:{ // 受付番号関係
+              element: null, // {HTMLElement} - 受付番号入力画面の要素。setWindowsで設定。
+              value: &#039;&#039;,  // {string} - 受付番号
+              header:&#039;&#039;,    // {string} - 受付番号入力画面に表示するheaderのinnerHTML
+              msg1:&#039;受付番号を入力してください&#039;, // {string} - 入力欄の前に表示するメッセージ
+              button:&#039;送信&#039;,  // {string} - 受付番号入力画面のボタンのラベル
+              msg2:&#039;&#039;,      // {string} - 入力欄の後に表示するメッセージ
+              rex:/^[0-9]{1,4}$/, // {RegExp} - 受付番号チェック用正規表現
+            },
+            loading: {
+              element: null,
+              zIndex: 2147483647,  // z-indexの最大値
+            },
+            passCode:{
+              element: null, // {HTMLElement} - パスコード入力画面の要素。setWindowsで設定。
+              //value: null,  // {string} - パスコード
+              header:&#039;&#039;,    // {string} - パスコード入力画面に表示するheaderのinnerHTML
+              msg1:&#039;確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。&lt;br&gt;&#039;
+              + &#039;※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。&#039;,
+                            // {string} - 入力欄の前に表示するメッセージ
+              button:&#039;送信&#039;,  // {string} - パスコード入力画面のボタンのラベル
+              msg2: &#039;※パスコードの有効期限は1時間です&#039;,
+              rex:/^[0-9]{6}$/, // {RegExp} - パスコードチェック用正規表現
+            },
+          }};
+          console.log(&#039;Auth.#setProperties start.&#039;);
+          try {
+            if( def !== null ){ // 2回目以降の呼出(再起呼出)
+              // 再起呼出の場合、呼出元から渡された定義Objを使用
+              v.def = def;
+            }
+      
+            for( let key in v.def ){
+              if( whichType(v.def[key]) !== &#039;Object&#039; ){
+                dest[key] = opt[key] || v.def[key]; // 配列はマージしない
+              } else {
+                if( !dest.hasOwnProperty(key) ) dest[key] = {};
+                this.#setProperties(dest[key],v.def[key],opt[key]||{});
+              }
+            }
+      
+            if( def === null ){ // 初回呼出(非再帰)
+              // 親画面のHTML要素を保存
+              this.parentWindow = document.querySelector(this.parentSelector);
+            }
+      
+            //console.log(&#039;this=&#039;+JSON.stringify(this));
+            console.log(&#039;Auth.#setProperties end.&#039;);
+            return v.rv;
+          } catch(e){
+            console.error(&#039;Auth.#setProperties abnormal end.&#039;,e);
+            //if( typeof window !== &#039;undefined&#039; ) alert(e.stack);
+            v.rv.stack = e.stack; return v.rv;
+          }
+        }
+      
+        /** 秘密鍵・公開鍵を作成し、プロパティに格納する
+         * @param {void}
+         * @returns {void}
+         */
+        #setupKeys(){
+          const v = {rv:null};
+          console.log(&#039;Auth.#setupKeys start.&#039;);
+          try {
+            // パスワード未指定なら作成
+            if( this.RSA.passWord === null ){
+              this.RSA.passWord = createPassword(this.RSA.pwLength);
+            }
+      
+            // 鍵ペアの生成
+            this.RSA.sKey = cryptico.generateRSAKey(this.RSA.passWord, this.RSA.bits);
+            this.RSA.pKey = cryptico.publicKeyString(this.RSA.sKey);
+            //console.log(this.RSA);
+      
+            // 秘密鍵の保存
+            //Fs.writeFileSync(&#039;./private.json&#039;, JSON.stringify(key.toJSON()));
+      
+            //console.log(&#039;v.rv=&#039;+JSON.stringify(v.rv));
+            console.log(&#039;Auth.#setupKeys end.&#039;);
+            return v.rv;
+          } catch(e){
+            console.error(&#039;Auth.#setupKeys abnormal end.&#039;,e);
+            // ブラウザで実行する場合はアラート表示
+            if( typeof window !== &#039;undefined&#039; ) alert(e.stack); 
+            //throw e; //以降の処理を全て停止する場合
+            v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+          }
+        }
+      
+        /** Auth関係画面をセットする
+         *
+         */
+        #setWindows(){
+          const v = {rv:null};
+          console.log(&#039;Auth.#setWindows start.&#039;);
+          try {
+            // Auth関係画面のwrapper
+            this.AuthWindow.element = createElement({
+              attr:{name:&quot;AuthWindow&quot;},
+              style:{
+                // CSSで全画面オーバーレイを実装する方法＆コード例
+                // https://pisuke-code.com/css-fullscreen-overlay/
+                position: &quot;absolute&quot;,
+                left: 0, top: 0,
+                width: &quot;100%&quot;, height:&quot;100%&quot;,
+                background:&quot;#fff&quot;,
+                zIndex:this.AuthWindow.zIndex,
+              },
+            });
+      
+            // 受付番号入力画面
+            this.entryNo.element = createElement({
+              children:[
+                {html:this.entryNo.header}, // タイトル
+                {tag:&#039;p&#039;,html:this.entryNo.msg1},  // 入力欄前メッセージ
+                { // inputBox
+                  tag:&#039;input&#039;,
+                  attr:{type:&#039;text&#039;,name:&#039;entryNo&#039;,value:this.entryNo.value},
+                  event:{&#039;input&#039;:(event)=&gt;{
+                    // 入力値チェック
+                    const m = event.target.value.match(this.entryNo.rex);
+                    console.log(&#039;m&#039;,m);
+                    const b = document.querySelector(&#039;div[name=&quot;AuthWindow&quot;] input[name=&quot;entryNoButton&quot;]&#039;);
+                    if( m ){
+                      b.removeAttribute(&#039;disabled&#039;);
+                    } else {
+                      b.setAttribute(&#039;disabled&#039;,true);
+                    }
+                  }},
+                },
+                { // 送信ボタン
+                  tag:&#039;input&#039;,
+                  attr:{
+                    type:&#039;button&#039;,
+                    name:&#039;entryNoButton&#039;,
+                    value:this.entryNo.button,
+                  },
+                  logical:{
+                    disabled: this.entryNo.value.match(this.entryNo.rex) ? false : true,
+                  },
+                  event:{&#039;click&#039;:()=&gt;this.getEntryNo()},
+                },
+                {tag:&#039;p&#039;,html:this.entryNo.msg2},  // 入力欄後メッセージ
+              ],
+            });
+      
+            // ローディング画面
+            // ※ 受付番号・パスコード入力を隠蔽するため
+            //   loading.zIndex &gt; AuthWindow.zIndex とする。
+            this.loading = {element:createElement({
+              style:{
+                position: &quot;absolute&quot;,
+                left: 0, top: 0,
+                width: &quot;100%&quot;, height:&quot;100%&quot;,
+                background:&quot;#fff&quot;,
+                zIndex:this.loading.zIndex,
+              },
+              children:[
+                {
+                  style:{
+                    display:&quot;flex&quot;,
+                    width:&quot;100%&quot;,
+                    height:&quot;100%&quot;,
+                    background:&quot;#fff&quot;,
+                    justifyContent:&quot;center&quot;,
+                    alignItems:&quot;center&quot;,
+                  },
+                  children:[
+                    {
+                      attr:{class:&#039;loading5&#039;},
+                      style:{ // 点の軌道/大きさ/色
+                        //&quot;--dot-size&quot;:&quot;4rem&quot;,
+                        //&quot;--m0:3.2rem&quot;,
+                        &quot;--R&quot;:0,
+                        &quot;--G&quot;:0,
+                        &quot;--B&quot;:0,
+                      },
+                      text:&#039;loading...&#039;
+                    },
+                  ],
+                }
+              ],
+            })};
+      
+            // パスコード入力画面
+            this.passCode.element = createElement({
+              children:[
+                {html:this.passCode.header}, // タイトル
+                {tag:&#039;p&#039;,html:this.passCode.msg1},  // 入力欄前メッセージ
+                { // inputBox
+                  tag:&#039;input&#039;,
+                  attr:{type:&#039;text&#039;,name:&#039;passCode&#039;,value:&#039;&#039;},
+                  event:{&#039;input&#039;:(event)=&gt;{
+                    // 入力値チェック
+                    const m = event.target.value.match(this.passCode.rex);
+                    console.log(&#039;m&#039;,m);
+                    const b = document.querySelector(&#039;div[name=&quot;AuthWindow&quot;] input[name=&quot;passCodeButton&quot;]&#039;);
+                    if( m ){
+                      b.removeAttribute(&#039;disabled&#039;);
+                    } else {
+                      b.setAttribute(&#039;disabled&#039;,true);
+                    }
+                  }},
+                },
+                { // 送信ボタン
+                  tag:&#039;input&#039;,
+                  attr:{
+                    type:&#039;button&#039;,
+                    name:&#039;passCodeButton&#039;,
+                    value:this.passCode.button,disabled:true
+                  },
+                  event:{&#039;click&#039;:()=&gt;this.getPassCode()},
+                },
+                {tag:&#039;p&#039;,html:this.passCode.msg2},  // 入力欄後メッセージ
+              ],
+            });
+      
+            // 画面をセット
+            this.parentWindow.appendChild(this.AuthWindow.element);
+            this.AuthWindow.element.appendChild(this.entryNo.element);
+            this.AuthWindow.element.appendChild(this.loading.element);
+            this.AuthWindow.element.appendChild(this.passCode.element);
+      
+            //console.log(&#039;v.rv=&#039;+JSON.stringify(v.rv));
+            console.log(&#039;Auth.#setWindows end.&#039;);
+            return v.rv;
+          } catch(e){
+            console.error(&#039;Auth.#setWindows abnormal end.&#039;,e);
+            // ブラウザで実行する場合はアラート表示
+            //if( typeof window !== &#039;undefined&#039; ) alert(e.stack);
+            v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+          }
+      
+        }
+      
+        /** Auth関係画面の切り替え
+         * @param {string} screenId - 画面ID。open/close-&gt;AuthWindowの開閉、他は指定ウィンドウの表示
+         * @returns {void}
+         */
+        #changeScreen(screenId){
+          const v = {rv:true};
+          console.log(&#039;Auth.#changeScreen start.&#039;);
+          try {
+      
+            if( screenId === &#039;close&#039; ){
+              this.AuthWindow.element.style.display = &#039;none&#039;;
+            } else if( screenId === &#039;open&#039; ){
+              this.AuthWindow.element.style.display = &#039;&#039;;
+            } else {
+              [&#039;entryNo&#039;,&#039;loading&#039;,&#039;passCode&#039;].forEach(x =&gt; {
+                this[x].element.style.display = x === screenId ? &#039;&#039; : &#039;none&#039;;
+              });
+            }
+      
+            // 前回のパスコードをクリア
+            this.passCode.element.querySelector(&#039;input&#039;).value = &#039;&#039;;
+      
+            console.log(&#039;Auth.#changeScreen end.&#039;);
+            return v.rv;
+          } catch(e){
+            console.error(&#039;Auth.#changeScreen abnormal end.&#039;,e);
+            // ブラウザで実行する場合はアラート表示
+            //if( typeof window !== &#039;undefined&#039; ) alert(e.stack);
+            //throw e; //以降の処理を全て停止する場合
+            v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+          }
+      
+        }
+      
+        /** entryNo(ID)を認証局に送信
+         * @param {void}
+         * @returns {void}
+         */
+        async getEntryNo(){
+          const v = {rv:null,data:{cp:this.RSA.pKey}};
+          console.log(&#039;Auth.getEntryNo start.&#039;);
+          try {
+      
+            v.step = &#039;1&#039;; // 入力フォームから値を取得
+            this.#changeScreen(&#039;loading&#039;);
+            this.entryNo.value = this.entryNo.element.querySelector(&#039;input&#039;).value;
+            v.arg = { // auth1Aに渡す引数
+              entryNo: this.entryNo.value,
+              publicKey: this.RSA.pKey,
+            }
+            console.log(&#039;arg&#039;,v.arg);
+      
+            v.step = &#039;2&#039;; // fetch
+            v.rv = await this.#fetchFromClient(&#039;auth1A&#039;,v.arg,0);
+            //if( v.rv instanceof Error ) throw v.rv;
+            if( v.rv.isErr ){
+              this.#changeScreen(&#039;entryNo&#039;);
+            } else {
+              this.gateway.pKey = v.rv.result;
+              console.log(&#039;this.gateway.pKey=&#039;
+                + JSON.stringify(this.gateway.pKey));
+              this.#changeScreen(&#039;passCode&#039;);
+            }
+      
+            console.log(&#039;Auth.getEntryNo end.&#039;);
+            return v.rv;
+          } catch(e){
+            console.error(&#039;Auth.getEntryNo abnormal end.&#039;,e);
+            return e;
+            // ブラウザで実行する場合はアラート表示
+            //if( typeof window !== &#039;undefined&#039; ) alert(e.stack);
+            //throw e; //以降の処理を全て停止する場合
+            //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+          }
+        }
+      
+        /** メールから入力したpassCodeを認証局に送信
+         * @param {void}
+         * @returns {void}
+         */
+        async getPassCode(){
+          const v = {rv:null,data:{cp:this.RSA.pKey}};
+          console.log(&#039;Auth.getPassCode start.&#039;);
+          try {
+      
+            // 入力フォームから値を取得
+            this.#changeScreen(&#039;loading&#039;);
+            v.arg = { // auth1Bに渡す引数
+              entryNo: this.entryNo.value,
+              passCode: this.passCode.element.querySelector(&#039;input&#039;).value,
+            }
+            console.log(&#039;arg&#039;,v.arg);
+            v.rv = await this.#fetchFromClient(&#039;auth2A&#039;,v.arg,3);
+            if( v.rv instanceof Error ) throw v.rv;
+            if( v.rv.isErr ){
+              console.log(v.rv);
+              if( v.rv.result ){
+                this.#changeScreen(&#039;entryNo&#039;);
+              } else {
+                this.#changeScreen(&#039;passCode&#039;);
+              }
+            } else {
+              // 申請者情報と共通鍵を格納
+              this.commonKey = v.rv.result.common;
+              this.info = v.rv.result.info;
+              console.log(&#039;commonKey=&#039;+this.commonKey,&#039;info&#039;,this.info);
+              // パスコード入力画面を閉じる
+              this.#changeScreen(&#039;close&#039;);
+            }
+      
+            console.log(&#039;Auth.getPassCode end.&#039;);
+            return v.rv;
+          } catch(e){
+            console.error(&#039;Auth.getPassCode abnormal end.&#039;,e);
+            return e;
+            // ブラウザで実行する場合はアラート表示
+            //if( typeof window !== &#039;undefined&#039; ) alert(e.stack);
+            //throw e; //以降の処理を全て停止する場合
+            //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+          }
+        }
+      
+        /** GASのAPI(doPost)を呼び出す
+         * @param {string} to - 呼び先(gateway or front)
+         * @param {string} func - 呼び先関数名(auth1A等)
+         * @param {Object} data - 呼び先関数に渡すデータオブジェクト
+         * @returns {Object} 呼び先からの戻り値
+         * 
+         * - JS: [Async/await](https://ja.javascript.info/async-await)
+         * - MDN: [フェッチが成功したかの確認](https://developer.mozilla.org/ja/docs/Web/API/Fetch_API/Using_Fetch#%E3%83%95%E3%82%A7%E3%83%83%E3%83%81%E3%81%8C%E6%88%90%E5%8A%9F%E3%81%97%E3%81%9F%E3%81%8B%E3%81%AE%E7%A2%BA%E8%AA%8D)
+         * - MDN: [fetch()](https://developer.mozilla.org/ja/docs/Web/API/fetch)
+         * - MDN: [Response Object](https://developer.mozilla.org/ja/docs/Web/API/Response)
+         * - Qiita: [Fetch APIでネットワークエラーも含めてエラーハンドリングする](https://qiita.com/IzumiSy/items/031df1df4f4541e536b4)
+         */
+        async #fetchFromClient(fc,arg,md=0){
+          const v = {rv:null,data:{cp:this.RSA.pKey}};
+          console.log(&#039;Auth.#fetchFromClient start.&#039;);
+          try {
+      
+            v.step = &#039;1&#039;; // 送信するトークンを生成
+            v.token = {
+              fm: this.entryNo.value,
+              to: &#039;gateway&#039;,
+              md: md,
+              ts: Date.now(),
+              dt: {
+                fc: fc,
+                arg: arg,
+              }
+            };
+            console.log(&#039;v.token&#039;,v.token);
+      
+            v.step = &#039;2&#039;; // 暗号化・署名
+            if( md === 1 ){ // 共通鍵で暗号化
+              v.token.dt = encryptAES(
+                JSON.stringify(v.token.dt),this.commonKey);
+            } else if( md === 2 || md === 3 ){
+              v.plaintext = JSON.stringify(v.token.dt);
+              v.encode = encodeURI(v.plaintext);
+              v.encrypt = md === 2  // 2:署名無し暗号化、3:署名付き暗号化
+              ? cryptico.encrypt(v.encode,this.gateway.pKey)
+              : cryptico.encrypt(v.encode,this.gateway.pKey,this.RSA.sKey);
+              console.log(&#039;encrypt&#039;,v.encrypt);
+              if( v.encrypt.status !== &#039;success&#039; )
+                throw new Error(JSON.stringify(v.encrypt));
+              v.token.dt = v.encrypt.cipher;
+            }
+            console.log(&#039;v.token&#039;,v.token);
+      
+            v.step = &#039;3&#039;; // fetch
+            v.fetch = await fetch(this.gateway.url,{
+              &quot;method&quot;: &quot;POST&quot;,
+              &quot;body&quot;: JSON.stringify(v.token),
+              &quot;Accept&quot;: &quot;application/json&quot;,
+              &quot;Content-Type&quot;: &quot;application/json&quot;,
+            });
+            v.rv = await v.fetch.json();
+            console.log(v.rv);
+            if( v.rv instanceof Error ) throw v.rv;
+            if( v.rv.isErr ){
+              console.error(
+                &#039;Auth.#fetchFromClient abnormal end.&#039;
+                + &#039;\n&#039; + v.rv.message
+                + &#039;\n&#039; + v.rv.stack
+              );
+              alert(v.rv.message);
+            }
+      
+            console.log(&#039;Auth.#fetchFromClient normal end.&#039;);
+            return v.rv;
+          } catch(e){
+            console.error(&#039;Auth.#fetchFromClient abnormal end.&#039;,e);
+            return e;
+            // ブラウザで実行する場合はアラート表示
+            //if( typeof window !== &#039;undefined&#039; ) alert(e.stack);
+            //throw e; //以降の処理を全て停止する場合
+            //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+          }
+        }
+      }
+      
+      &lt;/script&gt;
+      
+      &lt;script type=&quot;text/javascript&quot; class=&quot;GAS&quot;&gt;/* GAS用スクリプト */
+      /**
+       * @typedef {Object} token - doPostからpreProcessに渡されるオブジェクト
+       * @prop {string} fm - 発信者名(gateway/master/受付番号)
+       * @prop {string} to - 宛先名(gateway/master)
+       * @prop {number} md - モード。0:平文、1:共通鍵、2:RSA署名無し、3:RSA署名有り
+       * @prop {number} ts - 発信日時(new Date().getTime())
+       * @prop {string} dt - 以下の要素をJSON化した上で暗号化した文字列(cipher)
+       * @prop {string} dt.fc - 呼出先の処理名(ex.&quot;auth1A&quot;)
+       * @prop {any} dt.arg - 呼出先の処理に渡す引数
+       */
+      
+      /**
+       * @typedef {Object} AuthArg - preProcessからauth1A/1B/2A/2Bに渡されるオブジェクト
+       * @prop {string} fm - 発信者名(gateway/master/受付番号)
+       * @prop {string} to - 宛先名(gateway/master)
+       * @prop {number} md - モード。0:平文、1:共通鍵、2:RSA署名無し、3:RSA署名有り
+       * @prop {number} ts - 発信日時(new Date().getTime())
+       * @prop {string} fc - 復号化済の呼出先の処理名(ex.&quot;auth1A&quot;)
+       * @prop {any}    dt - 呼出先の処理に渡す引数。復号化済のtoken.dt.arg
+       * @prop {string} signature - 以下はpreProcessでの追加項目。署名付き暗号化だった場合、&quot;verified&quot; or &quot;undefined&quot;
+       * @prop {string} pKey - 署名付き暗号化だった場合、署名検証で取得した発信者の公開鍵
+       * @prop {Date}   lastAccess - 最終アクセス日時(RASシート再計算用再設定項目)
+       * @prop {string} name - 自局名
+       * @prop {string} passPhrase - 自局のパスワード
+       * @prop {string} publicKey - 自局の公開鍵
+       * @prop {string} masterAPI/gatewayAPI - 相手局のAPI
+       * @prop {string} master/gateway - 相手局の公開鍵
+       * @prop {string} common - 共通鍵(認証局のみ)
+       * @prop {string} random - パスコード(管理局のみ)
+       */
+      
+      /**
+       * @typedef {Object} fetchResponse - auth1A/1B/2A/2BからpreProcess経由で呼出元に返されるオブジェクト
+       * @prop {boolean} isErr - エラーならtrue
+       * @prop {string} message=&#039;&#039; - 処理結果に対するメッセージ
+       * @prop {string} stack=&#039;&#039; - エラーオブジェクトのスタック
+       * @prop {any} result - 処理結果
+       */
+      
+      /** doPostの内容を受けて処理を分岐
+       * @param {token} token - doPostから渡されたトークン
+       * @returns {fetchResponse} 処理結果
+       */
+       function preProcess(token){
+        const v = {whois:&#039;preProcess&#039;,step:&#039;0&#039;,arg:{},rv:null};
+        console.log(v.whois+&#039; start.&#039;,whichType(token),token);
+        try {
+          v.arg = JSON.parse(token);
+      
+          v.step = &#039;1&#039;; // 発信から3分以内でないとエラー
+          v.now = Date.now();
+          if( v.arg.ts &gt; v.now || (v.now - v.arg.ts) &gt; 180000 ){
+            throw new Error(&quot;Invalid Token: timeout&quot;);
+          }
+      
+          v.step = &#039;2&#039;; // RSAシートの読み込み
+          v.sheet = SpreadsheetApp.getActive().getSheetByName(&#039;RSA&#039;);
+          v.step = &#039;2.1&#039;; // 再計算用にセル値を更新
+          v.sheet.getRange(&#039;b1&#039;).setValue(new Date());
+          SpreadsheetApp.flush();
+          v.step = &#039;2.2&#039;; // RSAシートの値をv.argにセット
+          v.values = v.sheet.getDataRange().getValues();
+          for( v.i=0 ; v.i&lt;v.values.length ; v.i++ ){
+            if( String(v.values[v.i][0]).length &gt; 0 ){
+              v.arg[v.values[v.i][0]] = v.values[v.i][1];
+            }
+          }
+          v.arg.RSAkey = cryptico.generateRSAKey(v.arg.passPhrase,1024);
+          console.log(&#039;v.arg&#039;,v.arg);
+      
+          v.step = &#039;3&#039;; // 暗号化されていた場合は復号
+          if( v.arg.md &gt; 0 ){
+            if( v.arg.md === 1 ){ // 共通鍵方式
+              v.arg.dt = JSON.parse(decryptAES(v.arg.dt,v.arg.common));
+            } else {
+              v.decrypt = cryptico.decrypt(v.arg.dt,v.arg.RSAkey);
+              if( v.decrypt.signature !== &#039;verified&#039; ){
+                throw new Error(&quot;Invalid Token: decrypt failed.&quot;
+                + &quot;\ndecrypt: &quot; + JSON.stringify(v.decript)
+                + &quot;\nv.arg[&quot;+v.arg.fm+&quot;]: &quot; + v.arg[v.arg.fm]
+                );
+              }
+              v.arg.signature = v.decrypt.signature;
+              v.arg.pKey = v.decrypt.publicKeyString;
+              v.arg.dt = JSON.parse(decodeURI(v.decrypt.plaintext));
+            }
+          }
+          v.arg.fc = v.arg.dt.fc;
+          v.arg.dt = v.arg.dt.arg;
+      
+          /*
+          v.arg.fc = v.arg.dt.fc;
+          v.arg.dt = v.arg.dt.arg;
+          if( v.arg.md &gt; 0 ){
+            if( v.arg.md === 1 ){ // 共通鍵方式
+              v.arg.dt = JSON.parse(decryptAES(v.arg.dt,v.arg.common));
+            } else {              // RSA方式
+              v.decrypt = cryptico.decrypt(v.arg.dt,v.arg.RSAkey);
+              if( v.decrypt.signature !== &#039;verified&#039; ){
+                throw new Error(&quot;Invalid Token: decrypt failed.&quot;
+                + &quot;\ndecrypt: &quot; + JSON.stringify(v.decript)
+                + &quot;\nv.arg[&quot;+v.arg.fm+&quot;]: &quot; + v.arg[v.arg.fm]
+                );
+              }
+              v.arg.signature = v.decrypt.signature;
+              v.arg.pKey = v.decrypt.publicKeyString;
+              v.arg.dt = JSON.parse(decodeURI(v.decrypt.plaintext));
+            }
+          }*/
+          console.log(&#039;v.arg.dt&#039;,v.arg.dt);
+      
+          // auth1A: クライアントから認証局への接続要求
+          v.step = &#039;4.1&#039;;
+          if( v.arg.to === &#039;gateway&#039; &amp;&amp; v.arg.fc === &#039;auth1A&#039; ){
+            v.step = &#039;call auth1A&#039;;
+            v.rv = auth1A(v.arg);
+          }
+      
+          // auth1B: 認証局から管理局にパスコード通知依頼
+          v.step = &#039;4.2&#039;;
+          if( v.arg.to === &#039;master&#039; &amp;&amp; v.arg.fc === &#039;auth1B&#039; ){
+            v.step = &#039;call auth1B&#039;;
+            v.rv = auth1B(v.arg);
+          }
+      
+          // auth2A: クライアントから認証局にパスコード入力
+          v.step = &#039;4.3&#039;;
+          if( v.arg.to === &#039;gateway&#039; &amp;&amp; v.arg.fc === &#039;auth2A&#039; ){
+            v.step = &#039;call auth2A&#039;;
+            v.rv = auth2A(v.arg);
+          }
+      
+          // auth2B: 認証局から管理局にパスコード連絡、管理局で判定
+          v.step = &#039;4.4&#039;;
+          if( v.arg.to === &#039;master&#039; &amp;&amp; v.arg.fc === &#039;auth2B&#039; ){
+            v.step = &#039;call auth2B&#039;;
+            v.rv = auth2B(v.arg);
+          }
+      
+          v.step = &#039;5&#039;;
+          console.log(v.whois+&#039; normal end.&#039;,v.rv);
+          return v.rv;
+        } catch(e){
+          console.error(v.whois+&#039; abnormal end(step.&#039;+v.step+&#039;).&#039;,e.stack,v);
+        }
+      }
+      
+      /** 認証局での認証の第一段階
+       * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
+       * @returns {string} 認証局の公開鍵(fetchResponse.result)
+       */
+      function auth1A(arg){
+        const v = {whois:&#039;認証局.auth1A&#039;,
+          rv:{isErr:false,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
+        try {
+          console.log(v.whois+&#039; start.&#039;,arg.dt);
+      
+          v.step = &#039;1.1&#039;; // auth1B問合せ用にデータを暗号化
+          v.dt = JSON.stringify({
+            fc : &#039;auth1B&#039;,
+            arg: {  // auth1B()に渡す引数
+              entryNo  : arg.dt.entryNo,    // クライアントの受付番号
+              publicKey: arg.dt.publicKey,  // 同公開鍵
+            }
+          });
+          console.log(&#039;v.dt=&#039;+v.dt);
+          
+          v.step = &#039;1.2&#039;; // 暗号化。受付番号＋公開鍵なのでencodeURIは省略
+          v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
+          if( v.dt.status !== &#039;success&#039; )
+            throw new Error(&quot;auth1A encrypt failed.\n&quot;+JSON.stringify(v.dt));
+      
+          v.step = &#039;2.1&#039;; // auth1Bに問い合わせ
+          v.res = UrlFetchApp.fetch(arg.masterAPI,{
+            &#039;method&#039;: &#039;post&#039;,
+            &#039;contentType&#039;: &#039;application/json&#039;,
+            &#039;muteHttpExceptions&#039;: true, // https://teratail.com/questions/64619
+            &#039;payload&#039; : JSON.stringify({
+              fm: &#039;gateway&#039;,
+              to: &#039;master&#039;,
+              md: 3,  // 署名付き暗号化
+              ts: Date.now(),
+              dt: v.dt.cipher,
+            }),  
+          }).getContentText();
+          console.log(&#039;res=&#039;+v.res);
+          v.step = &#039;2.2&#039;;
+          v.rv = JSON.parse(v.res);
+      
+          if( !v.rv.isErr ){
+            v.step = &#039;3&#039;; // auth1B正常終了なら認証局の公開鍵を返信
+            v.rv.result = arg.publicKey;
+          }
+      
+          v.step = &#039;4&#039;;
+          console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+          return v.rv;
+      
+        } catch(e) {
+          console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
+          + e.message + &#039;\n&#039; + e.stack);
+          console.error(JSON.stringify(v));
+          v.rv.isErr = true;
+          v.rv.message = e.message;
+          v.rv.stack = e.stack;
+          return v.rv;
+        }
+      }
+      
+      /** 管理局での認証の第一段階
+       * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
+       * @returns {void} 特に無し(fetchResponse.isErrのみ必要)
+       */
+      function auth1B(arg){
+        const v = {whois:&#039;管理局.auth1B&#039;,
+          rv:{isErr:false,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
+        try {
+          console.log(v.whois+&#039; start.&#039;,arg.dt);
+      
+          v.step = &#039;1&#039;; // クライアント情報を抽出
+          v.master = szSheet(&#039;master&#039;);
+          v.client = v.master.lookup(arg.dt.entryNo,&#039;entryNo&#039;);
+      
+          v.step = &#039;2&#039;; // 3回連続失敗後1時間以内ならチャレンジ不可判定
+          if( String(v.client.NG2).length &gt; 0 &amp;&amp;
+            (Date.now() - v.client.NG2) &lt; 3600000 ){
+            v.rv = {
+              isErr: true,
+              message:&#039;3回連続ログイン失敗後、1時間経過していません&#039;,
+            };
+            return v.rv;
+          }
+      
+          v.step = &#039;3&#039;; // 該当受付番号にpassCode,publicKey登録
+          v.master.update({
+            publicKey: arg.dt.publicKey,  // クライアントの公開鍵
+            passCode: arg.random, // パスコード
+            genPassCode: new Date(),  // パスコード生成日時
+            NG1:&#039;&#039;,NG2:&#039;&#039;,            // 不適切パスコード入力時刻をクリア
+            certificate: &#039;&#039;,  // 認証正常終了日時はクリア
+          },{key:&#039;entryNo&#039;,value:arg.dt.entryNo});
+      
+          v.step = &#039;4&#039;; // 申請者にpassCode連絡メール送信
+          v.draft = GmailApp.createDraft(
+            v.client[&#039;メールアドレス&#039;],
+            &#039;[連絡]校庭キャンプ2023 パスコード&#039;,
+            &quot;パスコードは以下の通りです。\n\n&quot; + arg.random,
+            {
+              //htmlBody: v.html,
+              name: &#039;下北沢小おやじの会&#039;,
+            }
+          );
+          v.step = &#039;4.1&#039;;
+          GmailApp.getDraft(v.draft.getId()).send();
+          console.log(&#039;Mail Remaining Daily Quota:&#039;
+            + MailApp.getRemainingDailyQuota());
+      
+          v.step = &#039;5&#039;;
+          console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+          return v.rv;
+      
+        } catch(e) {
+          console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
+          + e.message + &#039;\n&#039; + e.stack);
+          console.error(JSON.stringify(v));
+          v.rv.isErr = true;
+          v.rv.message = e.message;
+          v.rv.stack = e.stack;
+          return v.rv;
+        }
+      }
+      
+      /** 認証局での認証の第二段階
+       * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
+       * @returns {Object} - fetchResponse.result={common:共通鍵,info:クライアント情報}
+       * 
+       * ## 注意事項
+       * 
+       * clientからのtokenは署名されているが、認証局はclientのpublicKeyを
+       * 持たないので検証は省略し、そのまま管理局に送って管理局側で検証する。
+       */
+      function auth2A(arg){
+        const v = {whois:&#039;認証局.auth2A&#039;,
+          rv:{isErr:false,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
+        try {
+          console.log(v.whois+&#039; start.&#039;,arg.dt);
+      
+          v.step = &#039;1.1&#039;; // auth2B問合せ用にデータを暗号化
+          v.dt = JSON.stringify({
+            fc : &#039;auth2B&#039;,
+            arg: {  // auth2B()に渡す引数
+              entryNo  : arg.dt.entryNo,  // クライアントから送られた受付番号
+              passCode : arg.dt.passCode, // 同パスコード
+              timestamp: arg.ts,    // 同送付日時
+              publicKey: arg.pKey,  // 同公開鍵
+            }
+          });
+          v.step = &#039;1.2&#039;; // 暗号化。受付番号＋パスコードなのでencodeURIは省略
+          v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
+          if( v.dt.status !== &#039;success&#039; )
+            throw new Error(&quot;auth2A encrypt failed.\n&quot;+JSON.stringify(v.dt));
+      
+          v.step = &#039;2.1&#039;; // auth2Bに問い合わせ
+          v.res = UrlFetchApp.fetch(arg.masterAPI,{
+            &#039;method&#039;: &#039;post&#039;,
+            &#039;contentType&#039;: &#039;application/json&#039;,
+            &#039;muteHttpExceptions&#039;: true, // https://teratail.com/questions/64619
+            &#039;payload&#039; : JSON.stringify({
+              fm: &#039;gateway&#039;,
+              to: &#039;master&#039;,
+              md: 3,  // 署名付き暗号化
+              ts: Date.now(),
+              dt: v.dt.cipher,
+            }),  
+          }).getContentText();
+          console.log(&#039;res=&#039;+v.res);
+          v.step = &#039;2.2&#039;;
+          v.res = JSON.parse(v.res);
+      
+          v.step = &#039;3&#039;; // 問合せ結果により処理分岐
+          if( v.res.isErr ){
+            v.step = &#039;3.1&#039;; // auth2Bでエラー発生ならそのまま返す
+            return v.res;
+          } else {
+            v.step = &#039;3.2&#039;; // auth2B正常終了なら情報提供
+            v.rv.result = {
+              common: arg.common, // 共通鍵
+              info  : v.res.result, // クライアントの登録情報
+            }
+          }
+      
+          v.step = &#039;4&#039;;
+          console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+          return v.rv;
+      
+        } catch(e) {
+          console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
+          + e.message + &#039;\n&#039; + e.stack);
+          console.error(JSON.stringify(v));
+          v.rv.isErr = true;
+          v.rv.message = e.message;
+          v.rv.stack = e.stack;
+          return v.rv;
+        }
+      }
+      
+      /** 管理局での認証の第二段階
+       * @param {AuthArg} arg - クライアントの受付番号、パスコード、送信日時、公開鍵他
+       * @returns {Object} - fetchResponse.result=クライアントの登録情報
+       */
+      function auth2B(arg){
+        const v = {whois:&#039;管理局.auth2B&#039;,
+        rv:{isErr:true,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
+        try {
+          console.log(v.whois+&#039; start.&#039;,arg.dt);
+      
+          v.step = &#039;1&#039;; // クライアント情報を抽出
+          v.master = szSheet(&#039;master&#039;);
+          v.client = v.master.lookup(arg.dt.entryNo,&#039;entryNo&#039;);
+          console.log(&#039;v.client&#039;,v.client);
+      
+          // 正しいパスコードが入力されたか判定
+          v.update = null;
+          if( (Date.now() - new Date(v.client.genPassCode).getTime()) &gt; 3600000 ){
+            v.step = &#039;2.1&#039;; // 有効期限切れ
+            v.rv.message = &#039;パスコードの有効期限(発行後1時間)を過ぎています。&#039;;
+            v.rv.result = true;  // クライアント側のパスコード入力画面を閉じ、受付番号入力画面に遷移
+          } else if( v.client.passCode !== arg.dt.passCode ){
+            v.step = &#039;2.2&#039;; // パスコード不一致
+            if( String(v.client.NG2).length &gt; 0 ){
+              v.step = &#039;2.2.1&#039;; // 連続3回不適切
+              v.rv.message = &#039;3回連続で不適切なパスコードが入力されました。1時間ロックアウトされます&#039;;
+              v.rv.result = true;  // クライアント側のパスコード入力画面を閉じ、受付番号入力画面に遷移
+            } else {
+              v.step = &#039;2.2.2&#039;; // 連続3回未満
+              v.rv.message = &#039;パスコードが不適切です&#039;;
+              v.rv.result = false;
+              if( String(v.client.NG1).length === 0 ){
+                v.update = {NG1: Date.now()};
+              } else {
+                v.update = {NG2: Date.now()};
+              }
+            }
+          } else if( v.client.publicKey !== arg.dt.publicKey ){
+            v.step = &#039;2.3&#039;; // 公開鍵不一致
+            v.rv.message = &#039;不適切な公開鍵です&#039;;
+            v.rv.result = true;
+          } else {
+            v.step = &#039;2.4&#039;; // 全条件をクリア
+            v.rv.isErr = false;
+            // クライアントの情報を提供
+            v.rv.result = v.client;
+            v.rv.message = &#039;正常に認証されました&#039;;
+            // パスコード確認日時を更新、NGnをクリア
+            v.update = {certificate: new Date()};
+          }
+          v.step = &#039;2.5&#039;; // masterシートの更新
+          if( v.master !== null ){
+            v.master.update(v.update,{key:&#039;entryNo&#039;,value:arg.dt.entryNo});
+          }
+      
+          v.step = &#039;3&#039;;
+          console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+          return v.rv;
+      
+        } catch(e) {
+          console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
+          + e.message + &#039;\n&#039; + e.stack);
+          console.error(JSON.stringify(v));
+          v.rv.isErr = true;
+          v.rv.message = e.message;
+          v.rv.stack = e.stack;
+          return v.rv;
+        }
+      }
+      &lt;/script&gt;
+      
+      &lt;script type=&quot;text/javascript&quot; class=&quot;test&quot;&gt;/* テスト用 */
+      let config = null;
+      async function AuthTest(){
+        const v = {data:[]};
+        console.log(&#039;AuthTest start.&#039;);
+        try {
+          config = new Auth(
+            &#039;https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec&#039;,
+            {entryNo:{value:&quot;16&quot;}}
+          );
+          //await v.conf.build();
+          console.log(&#039;AuthTest end.&#039;,config);
+      
+        } catch(e){
+          console.error(&#039;AuthTest abnormal end.&#039;,e);
+        }
+      }
+      &lt;/script&gt;
+      
+      &lt;script type=&quot;text/javascript&quot;&gt;
+      window.addEventListener(&#039;DOMContentLoaded&#039;,() =&gt; {
+        AuthTest();  // 開発者コンソール上でテスト
+      });
+      &lt;/script&gt;
+      &lt;/body&gt;&lt;/html&gt;</pre></div>
+  </div>
+
+  <div name="認証局" class="TabMenu">
+    <div name="役割、設定"></div>
+    <div name="シート" class="TabMenu">
+      <div name="RSA">
+        <div class="gSpreadTabulize" style="display: grid; grid-template-columns: 4rem 100fr 364fr;"><div class="th"></div>
+        <div class="th">A</div>
+        <div class="th">B</div>
+        <div class="th">1</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>lastAccess</span></div>
+        <div class="td" style="text-align: right; background: rgb(255, 255, 255);"><span>2023-08-07T06:57:26.091Z</span></div>
+        <div class="th">2</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>name<div class="memo"><strong>note:</strong>認証局なら'gateway'、配信局なら管理局configシートに登録されたfrontの添字</div>
+        </span></div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>gateway</span></div>
+        <div class="th">3</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>passPhrase<div class="memo"><strong>note:</strong>自局RSAkeyのパスフレーズ</div>
+        </span></div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>m--o+&gt;ZHZ_YnBCFz</span></div>
+        <div class="th">4</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>publicKey</span></div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>deUH〜21k=</span></div>
+        <div class="th">5</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>masterAPI</span></div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>https://script.google.com/macros/s/〜/exec</span></div>
+        <div class="th">6</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>master<div class="memo"><strong>note:</strong>管理局の公開鍵</div>
+        </span></div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>ht0T〜giU=</span></div>
+        <div class="th">7</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>common</span></div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>4%INz5RdZ_H<aww*< span=""></aww*<></span></div>
+        </div>
+      </div>
+    </div>
+    <div name="スクリプト">
+      <div name="doPost"><pre class="prettyprint lang-js linenums">/**
+        * @typedef {Object} gatewayDoPostArg
+        * @prop {string} fc - 機能
+        * @prop {string} dt - データ
+        */
+       function doPost(e){
+         console.log(&#039;認証局.doPost start.&#039;,e);
+         const rv = GASLib.preProcess(e.postData.contents);
+         if( rv instanceof Error ){
+           console.error(&#039;認証局.doPost abnormal end.&#039;);
+         } else {
+           console.log(&#039;認証局.doPost normal end.&#039;);
+           return ContentService
+           .createTextOutput(JSON.stringify(rv))
+           .setMimeType(ContentService.MimeType.JSON);
+         }
+       }</pre></div>
+      <div name="toolbox"><pre class="prettyprint lang-js linenums">function onOpen() {
+        // 最初にトリガー(起動時)として要追加
+        var ui = SpreadsheetApp.getUi();
+        var menu = ui.createMenu(&#039;道具箱&#039;)
+        .addItem(&quot;選択範囲をJSON化&quot;,&quot;jsonRange&quot;);
+        // サブメニュー使用時はaddSubMenuを使用
+        menu.addToUi();
+      }
+      
+      /**
+       * 選択範囲のセル情報をJSON化してmsgBoxに表示
+       * @param {void}
+       * @returns {void}
+       */
+      function jsonRange(){
+        const v = {rv:{}};
+        console.log(&#039;jsonRange start.&#039;);
+        // アクティブなセル範囲
+        v.spread = SpreadsheetApp.getActiveSpreadsheet();
+        v.sheet = v.spread.getActiveSheet();
+        v.active = v.sheet.getActiveRange();
+        v.rv = {
+          spreadId: v.spread.getId(),  // スプレッド(ファイル)のID
+          spreadName: v.spread.getName(), // スプレッドの名前
+          sheetId: v.sheet.getSheetId(),  // シートのID
+          sheetName: v.sheet.getSheetName(),  // シート名
+          firstRow: v.active.getRow(),  // 最上行。自然数
+          lastRow: v.active.getLastRow(), // 最下行
+          firstColumn: v.active.getColumn(),  // 左端列。自然数
+          lastColumn: v.active.getLastColumn(), // 右端列
+          value: v.active.getValues(), // セルの値
+          type: [], // データ型
+          format: v.active.getNumberFormats(),
+          formula: v.active.getFormulas(),  // 数式
+          R1C1: v.active.getFormulasR1C1(), // R1C1形式の数式
+          note: v.active.getNotes(), // メモ
+          background: v.active.getBackgrounds(),  // 背景色
+          fontColor: v.active.getFontColors(),  // 文字色
+          fontWeight: v.active.getFontWeights(),  // 太さ　[bold/normal]
+          horizontalAlign: v.active.getHorizontalAlignments(),  // 水平位置
+          verticalAlign: v.active.getVerticalAlignments(), // 垂直位置
+          width: [],  // 列の幅
+          height: [], // 行の高さ
+          border: [], // 罫線。未対応
+        }
+      
+        // データ型
+        for( v.r=0 ; v.r&lt;v.rv.value.length ; v.r++ ){
+          v.l = [];
+          for( v.c=0 ; v.c&lt;v.rv.value[v.r].length ; v.c++ ){
+            v.l.push(whichType(v.rv.value[v.r][v.c]));
+          }
+          v.rv.type.push(v.l);
+        }
+      
+        // 列・行の幅
+        for( v.c=v.rv.firstColumn ; v.c&lt;=v.rv.lastColumn ; v.c++ ){
+          v.rv.width.push(v.sheet.getColumnWidth(v.c));
+        }
+        for( v.r = v.rv.firstRow ; v.r&lt;=v.rv.lastRow ; v.r++ ){
+          v.rv.height.push(v.sheet.getRowHeight(v.r));
+        }
+      
+        // 改行は&lt;br&gt;に置換
+        v.rv = JSON.stringify(v.rv).replaceAll(&#039;\\n&#039;,&#039;&lt;br&gt;&#039;);
+      
+        console.log(v.rv);
+        console.log(&#039;jsonRange end.&#039;);
+        Browser.msgBox(v.rv);
+      }
+      
+      function whichType(arg,is){
+        let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+        switch(rv){
+          case &#039;Number&#039;: if(Number.isNaN(arg)) rv = &#039;NaN&#039;; break;
+          case &#039;Function&#039;: if(!(&#039;prototype&#039; in arg)) rv = &#039;Arrow&#039;; break;
+        }
+        if( typeof is === &#039;string&#039; ){
+          return rv.toLowerCase() === is.toLowerCase();
+        } else {
+          return rv;
+        }
+      }</pre></div>
+    </div>
+  </div>
+
+  <div name="管理局" class="TabMenu">
+    <div name="役割、設定">
+      <p>受付メール返信、参加者・システム設定情報全般の保管。<br>
+      なお本スプレッドシートはフォームの回答用のスプレッドシートを使用する想定。</p>
+      <ul>
+        <li>アカウント：メインアカウント(申込フォーム、認証局と同一のアカウント)</li>
+        <li>シートの共有：なし</li>
+        <li>デプロイ：webアプリ(実行ユーザ：自分、アクセス可能：全員)</li>
+        <li>使用するライブラリ：無し</li>
+      </ul>
+    </div>
+    <div name="シート" class="TabMenu">
+      <div name="master">
+        <div class="gSpreadTabulize" style="display: grid; grid-template-columns: 4rem 43fr 43fr 43fr 43fr 43fr 43fr 43fr 43fr;">
+          <div class="th"></div><div class="th">AF</div><div class="th">AG</div><div class="th">AH</div><div class="th">AI</div><div class="th">AJ</div><div class="th">AK</div><div class="th">AL</div><div class="th">AM</div><div class="th">1</div>
+          <div class="td" style="text-align: left; background: rgb(175, 234, 249);"><span>entryNo
+            <!-- div class="memo"><strong>note:</strong>受付番号<br>primary key</div -->
+          </span></div>
+          <div class="td" style="text-align: left; background: rgb(175, 234, 249);"><span>publicKey</span></div>
+          <div class="td" style="text-align: left; background: rgb(175, 234, 249);"><span>editURL
+            <!-- div class="memo"><strong>note:</strong>default: =editFormId(1jzXiboGuqq7nAdVBN312us-KHk1VRT42_qOd_HaRqbc).url</div -->
+          </span></div>
+          <div class="td" style="text-align: left; background: rgb(175, 234, 249);"><span>passCode
+            <!-- div class="memo"><strong>note:</strong>パスコード</div -->
+          </span></div>
+          <div class="td" style="text-align: left; background: rgb(175, 234, 249);"><span>genPassCode
+            <!-- div class="memo"><strong>note:</strong>パスコード発行日時</div -->
+          </span></div>
+          <div class="td" style="text-align: left; background: rgb(175, 234, 249);"><span>NG1
+            <!-- div class="memo"><strong>note:</strong>試行NG日時1〜3</div -->
+          </span></div>
+          <div class="td" style="text-align: left; background: rgb(175, 234, 249);"><span>NG2</span></div>
+          <div class="td" style="text-align: left; background: rgb(175, 234, 249);"><span>certificate
+            <!-- div class="memo"><strong>note:</strong>判定日時</div -->
+          </span></div>
+          <div class="th">2</div>
+          <div class="td" style="text-align: right; background: rgb(255, 255, 255);"><span>1</span></div>
+          <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>X8Jr〜aMfk=</span></div>
+          <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>https://docs.google.com/forms/d/e/1FAI〜wQrY</span></div>
+          <div class="td" style="text-align: right; background: rgb(255, 255, 255);"><span>822671</span></div>
+          <div class="td" style="text-align: right; background: rgb(255, 255, 255);"><span>2023-08-07T03:43:55.992Z</span></div>
+          <div class="td" style="background: rgb(255, 255, 255);"><span></span></div>
+          <div class="td" style="background: rgb(255, 255, 255);"><span></span></div>
+          <div class="td" style="text-align: right; background: rgb(255, 255, 255);"><span>2023-08-07T03:44:40.353Z</span></div>
+          <div class="th">3</div>
+          <div class="td" style="text-align: right; background: rgb(255, 255, 255);"><span>2</span></div>
+          <div class="td" style="background: rgb(255, 255, 255);"><span></span></div>
+          <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>https://docs.google.com/forms/d/e/1FAI〜ooQ4</span></div>
+          <div class="td" style="background: rgb(255, 255, 255);"><span></span></div>
+          <div class="td" style="background: rgb(255, 255, 255);"><span></span></div>
+          <div class="td" style="background: rgb(255, 255, 255);"><span></span></div>
+          <div class="td" style="background: rgb(255, 255, 255);"><span></span></div>
+          <div class="td" style="background: rgb(255, 255, 255);"><span></span></div>
+          </div>
+
+      </div>
+      <div name="RSA">
+        <p>本シートは保護(アクセスは自分のみ)＋非表示設定を行う</p>
+        <div class="gSpreadTabulize" style="display: grid; grid-template-columns: 4rem 100fr 387fr;"><div class="th"></div>
+        <div class="th">A</div>
+        <div class="th">B</div>
+        <div class="th">1</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>lastAccess</span></div>
+        <div class="td" style="text-align: right; background: rgb(255, 255, 255);"><span>2023-08-07T06:57:27.983Z</span></div>
+        <div class="th">2</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>name</span></div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>master</span></div>
+        <div class="th">3</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>passPhrase<div class="memo"><strong>note:</strong>自局RSAkeyのパスフレーズ</div>
+        </span></div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>~3bb@F&lt;3qS5l*DDc</span></div>
+        <div class="th">4</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>publicKey</span></div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>ht0T〜ZgiU=</span></div>
+        <div class="th">5</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>gatewayAPI</span></div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>https://script.google.com/macros/s/〜/exec</span></div>
+        <div class="th">6</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>gateway<div class="memo"><strong>note:</strong>認証局の公開鍵</div>
+        </span></div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>deUH〜s21k=</span></div>
+        <div class="th">7</div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>random</span></div>
+        <div class="td" style="text-align: left; background: rgb(255, 255, 255);"><span>411578<div class="memo"><strong>formula:</strong>=text(round(rand()*1000000),"000000")</div>
+        </span></div>
+        </div>
+
+      </div>
+    </div>
+    <div name="スクリプト" class="TabMenu">
+      <div name="onFormSubmit">
+        <pre class="prettyprint lang-js linenums">/** 管理局として必要な権限を要求
+* @param {void}
+* @returns {void}
+*/
+function initMaster(){
+// シートへのアクセス権
+const s = GASLib.szSheet(&#039;master&#039;);
+console.log(s.data.length);
+
+// メール発信
+console.log(MailApp.getRemainingDailyQuota());
+MailApp.sendEmail(&quot;nakaone.kunihiro@gmail.com&quot;, &quot;test&quot;, String(new Date()));
+console.log(MailApp.getRemainingDailyQuota());
+}
+
+/** 申込フォームの入力を受け、シートの更新＋受付メールの発信を行う
+* @param {Object} e - [イベント](https://developers.google.com/apps-script/guides/triggers/events?hl=ja#form-submit)オブジェクト
+* @returns {void}
+* 
+* ## 処理概要
+* 
+* 1. フォームから渡されるオブジェクトから以下の情報を取得
+*    1. &quot;range&quot;から書き込まれた行(e.range.getRow())
+*    2. &quot;namedValues&quot;からメールアドレス(e.namedValues[&quot;メールアドレス&quot;][0])
+* 2. フォームの情報を取得
+*    1. 全回答情報を取得(FormApp.openById(v.formId).getResponses())
+*    2. {UNIX時刻:editURL}のマップを作成
+* 3. シート&quot;master&quot;に追加情報を記入
+*    1. 要既定値設定項目(entryNo/editURL/authority)の空欄に既定値を設定
+*    2. &quot;range&quot;から書き込まれた行の情報はメール送信用に保存
+* 4. 回答者にメールを送信
+* 
+* ## 参考
+* 
+* - [GASでGoogleフォームの値を取得する](https://walking-elephant.blogspot.com/2021/01/gas.formapp.html)
+* - GAS公式 [Class FormApp](https://developers.google.com/apps-script/reference/forms/form-app?hl=ja)
+* - GAS公式 [Class Form](https://developers.google.com/apps-script/reference/forms/form?hl=ja)
+* 
+* メール送信については以下を参照。
+* 
+* - [Google App Script メモ（メール送信制限 回避術）](https://zenn.dev/tatsuya_okzk/articles/259203cc416328)
+* - GAS公式[createDraft](https://developers.google.com/apps-script/reference/gmail/gmail-app?hl=ja#createdraftrecipient,-subject,-body,-options)
+*/
+function onFormSubmit(e){
+const v = {rv:null,form:{},
+  whois:&#039;管理局.onFormSubmit&#039;,
+
+  // formId: フォーム編集画面のURL(下の「〜」の部分)
+  // https://docs.google.com/forms/d/〜/edit
+  // log &gt; fy2023 &gt; 20230930_校庭キャンプ &gt; サイト・フォーム &gt; 申込フォーム
+  formId:&#039;1wsEtp-SdI0ypsoIzaWFXH6rPEn9G5ywL98OSUqJHCyQ&#039;,
+
+  // content: メール本文
+  content: `&lt;p&gt;To: _name 様&lt;/p&gt;
+
+&lt;p&gt;下北沢小おやじの会です。&lt;br&gt;
+この度は「校庭キャンプ2023」にお申し込みいただき、ありがとうございました。&lt;/p&gt;
+
+&lt;p&gt;昨年度大変多くの参加をいただいたため、今回定員オーバーの場合は申込締切日に抽選させていただき、結果はメールでご連絡差し上げることとしました。&lt;br&gt;
+お申し込み即参加可能とはならず誠に恐縮ですが、何卒ご理解いただけますようお願い申し上げます。&lt;/p&gt;
+
+&lt;p&gt;参加要項を以下に掲載しています。持ち物や注意事項を記載しており、またイベント当日の受付で必要になりますので、事前にご確認いただけますようお願い申し上げます。&lt;br&gt;
+_camp2023&lt;/p&gt;
+
+&lt;p&gt;なお申込〜イベント当日の間に何らかの事情でお申し込み内容に変更がある場合、またはお申し込み自体をキャンセルする場合、以下から申込内容を修正いただけますようお願いいたします。&lt;br&gt;
+_editURL&lt;/p&gt;
+
+&lt;p&gt;尚ご不明な点がございましたら、以下までご連絡お願いいたします。&lt;br&gt;
+shimokitasho.oyaji@gmail.com&lt;/p&gt;`,
+
+  // button: ボタンに適用するCSS
+  button: &#039;style=&quot;&#039;
+    + &#039;display : inline-block;&#039;
+    + &#039;text-decoration: none;&#039;
+    + &#039;font-size : 18pt;&#039;
+    + &#039;text-align : center;&#039;
+    + &#039;cursor : pointer;&#039;
+    + &#039;padding : 12px 12px;&#039;
+    + &#039;background : #1a1aff;&#039;
+    + &#039;color : #ffffff;&#039;
+    + &#039;line-height : 1em;&#039;
+    + &#039;transition : .3s;&#039;
+    + &#039;box-shadow : 6px 6px 5px #666666;&#039;
+    + &#039;border : 2px solid #1a1aff;&#039;
+  + &#039;&quot; onMouseOver=&quot;&#039;
+    + &#039;box-shadow: none;&#039;
+    + &#039;color: #1a1aff;&#039;
+    + &#039;background: #ffffff;&#039;
+  + &#039;&quot; onMouseOut=&quot;&#039;
+    + &#039;box-shadow: 6px 6px 5px #666666;&#039;
+    + &#039;color: #ffffff;&#039;
+    + &#039;background: #1a1aff;&#039;
+  + &#039;&quot;&#039;,
+};
+try {
+  console.log(v.whois+&#039; start.&#039;,e.response); // onFormSubmit開始ログ
+
+  v.step = &#039;1&#039;;  // フォームから渡されるオブジェクトから行番号とメアドを取得
+  v.lineNum = e.range.getRow();
+  v.email = e.namedValues[&quot;メールアドレス&quot;][0];
+  console.log(&#039;lineNum:%s, email:%s&#039;,v.lineNum,v.email);
+
+  v.step = &#039;2&#039;; // フォームの情報を取得
+  v.responses = FormApp.openById(v.formId).getResponses();
+  for( v.i=0 ; v.i&lt;v.responses.length ; v.i++ ){
+    v.timestamp = v.responses[v.i].getTimestamp().getTime();
+    console.log(&#039;2.1. timestamp=&#039;+v.timestamp);
+    v.form[String(v.timestamp)] = {
+      timestamp: v.timestamp,
+      email: v.responses[v.i].getRespondentEmail(),
+      editURL: v.responses[v.i].getEditResponseUrl()
+    }
+  }
+  console.log(&#039;v.form=&#039;+JSON.stringify(v.form));
+
+  v.step = &#039;3&#039;; // シート&quot;master&quot;に追加情報を記入
+  v.sheet = GASLib.szSheet(&#039;master&#039;,&#039;タイムスタンプ&#039;);
+  for( v.i=0 ; v.i&lt;v.sheet.data.length ; v.i++ ){
+    v.d = v.sheet.data[v.i];
+    v.stamp = new Date(v.d[&#039;タイムスタンプ&#039;]).getTime();
+    if( !v.d.entryNo || !v.d.editURL || !v.d.authority ){
+      v.updateResult = v.sheet.update({
+        entryNo: v.i+1,
+        editURL: v.form[String(v.stamp)].editURL,
+        authority: 1,
+      },{num:v.i,append:false});
+      //console.log(&#039;updateResult:&#039;+JSON.stringify(v.updateResult));
+    }
+    if( v.i === (v.lineNum - 2) ){
+      v.entryData = v.sheet.data[v.i];
+      console.log(&#039;entryData:&#039;+JSON.stringify(v.entryData));
+    }
+  }
+
+  v.step = &#039;4&#039;;   // 回答者にメールを送信
+  v.step = &#039;4.1&#039;; // プレーン・html共通部分の置換
+  v.content = v.content.replace(&#039;_name&#039;,v.entryData[&#039;申込者氏名&#039;]);
+  v.camp2023 = &#039;https://shimokitazawashooyajinokai.on.drv.tw&#039;
+    + &#039;/public/camp2023.html?id=&#039; + v.entryData.entryNo;
+  console.log(&#039;4.1 content=&#039;+v.content);
+
+  v.step = &#039;4.2&#039;; // プレーンの作成
+  v.plane = v.content
+    .replaceAll(/&lt;.+?&gt;/g,&#039;&#039;)  // htmlタグの削除
+    .replace(&#039;_camp2023&#039;,v.camp2023)
+    .replace(&#039;_editURL&#039;,v.entryData.entryNo);
+  console.log(&quot;4.2 plane=&quot;+v.plane);
+
+  v.step = &#039;4.3&#039;; // htmlの作成
+  v.html = v.content
+    .replace(&#039;_camp2023&#039;,&#039;&lt;a &#039; + v.button + &#039; href=&quot;&#039;
+      + v.camp2023 + &#039;&quot; class=&quot;button&quot;&gt;参加案内&lt;/a&gt;&#039;)
+    .replace(&#039;_editURL&#039;,&#039;&lt;a &#039; + v.button + &#039; href=&quot;&#039;
+      + v.entryData.editURL + &#039;&quot; class=&quot;button&quot;&gt;回答を編集&lt;/a&gt;&#039;);
+  v.html = &#039;&lt;!DOCTYPE html&gt;&lt;html xml:lang=&quot;ja&quot; lang=&quot;ja&quot;&gt;&#039;
+    + &#039;&lt;head&gt;&lt;/head&gt;&lt;body&gt;&#039; + v.html + &#039;&lt;/body&gt;&lt;/html&gt;&#039;;
+  console.log(&quot;4.3 html=&quot;+v.html);
+
+  v.draft = GmailApp.createDraft(
+    v.entryData[&#039;メールアドレス&#039;],
+    &#039;[受付]校庭キャンプ2023 申込&#039;,
+    v.plane,
+    {
+      htmlBody: v.html,
+      name: &#039;下北沢小おやじの会&#039;,
+    }
+  );
+  v.draftId = v.draft.getId();
+  GmailApp.getDraft(v.draftId).send();
+
+  console.log(&#039;Mail Remaining Daily Quota:&#039;+MailApp.getRemainingDailyQuota());
+
+  console.log(v.whois+&#039; end.&#039;); // onFormSubmit正常終了ログ
+} catch(e) {
+  console.error(v.whois+&#039; abnormal end.\n&#039;,e,v);
+}
+}</pre>
+      </div>
+      <div name="doPost"><pre class="prettyprint lang-js linenums">function doPost(e){
+        console.log(&#039;管理局.doPost start.&#039;,e);
+        const rv = GASLib.preProcess(e.postData.contents);
+        if( rv instanceof Error ){
+          console.error(&#039;管理局.doPost abnormal end.&#039;);
+        } else {
+          console.log(&#039;管理局.doPost normal end.&#039;);
+          return ContentService
+          .createTextOutput(JSON.stringify(rv))
+          .setMimeType(ContentService.MimeType.JSON);
+        }
+      }</pre></div>
+      <div name="toolbox"><pre class="prettyprint lang-js linenums">function onOpen() {
+        // 最初にトリガー(起動時)として要追加
+        var ui = SpreadsheetApp.getUi();
+        var menu = ui.createMenu(&#039;道具箱&#039;)
+        .addItem(&quot;選択範囲をJSON化&quot;,&quot;jsonRange&quot;);
+        // サブメニュー使用時はaddSubMenuを使用
+        menu.addToUi();
+      }
+      
+      /**
+       * 選択範囲のセル情報をJSON化してmsgBoxに表示
+       * @param {void}
+       * @returns {void}
+       */
+      function jsonRange(){
+        const v = {rv:{}};
+        console.log(&#039;jsonRange start.&#039;);
+        // アクティブなセル範囲
+        v.spread = SpreadsheetApp.getActiveSpreadsheet();
+        v.sheet = v.spread.getActiveSheet();
+        v.active = v.sheet.getActiveRange();
+        v.rv = {
+          spreadId: v.spread.getId(),  // スプレッド(ファイル)のID
+          spreadName: v.spread.getName(), // スプレッドの名前
+          sheetId: v.sheet.getSheetId(),  // シートのID
+          sheetName: v.sheet.getSheetName(),  // シート名
+          firstRow: v.active.getRow(),  // 最上行。自然数
+          lastRow: v.active.getLastRow(), // 最下行
+          firstColumn: v.active.getColumn(),  // 左端列。自然数
+          lastColumn: v.active.getLastColumn(), // 右端列
+          value: v.active.getValues(), // セルの値
+          type: [], // データ型
+          format: v.active.getNumberFormats(),
+          formula: v.active.getFormulas(),  // 数式
+          R1C1: v.active.getFormulasR1C1(), // R1C1形式の数式
+          note: v.active.getNotes(), // メモ
+          background: v.active.getBackgrounds(),  // 背景色
+          fontColor: v.active.getFontColors(),  // 文字色
+          fontWeight: v.active.getFontWeights(),  // 太さ　[bold/normal]
+          horizontalAlign: v.active.getHorizontalAlignments(),  // 水平位置
+          verticalAlign: v.active.getVerticalAlignments(), // 垂直位置
+          width: [],  // 列の幅
+          height: [], // 行の高さ
+          border: [], // 罫線。未対応
+        }
+      
+        // データ型
+        for( v.r=0 ; v.r&lt;v.rv.value.length ; v.r++ ){
+          v.l = [];
+          for( v.c=0 ; v.c&lt;v.rv.value[v.r].length ; v.c++ ){
+            v.l.push(whichType(v.rv.value[v.r][v.c]));
+          }
+          v.rv.type.push(v.l);
+        }
+      
+        // 列・行の幅
+        for( v.c=v.rv.firstColumn ; v.c&lt;=v.rv.lastColumn ; v.c++ ){
+          v.rv.width.push(v.sheet.getColumnWidth(v.c));
+        }
+        for( v.r = v.rv.firstRow ; v.r&lt;=v.rv.lastRow ; v.r++ ){
+          v.rv.height.push(v.sheet.getRowHeight(v.r));
+        }
+      
+        // 改行は&lt;br&gt;に置換
+        v.rv = JSON.stringify(v.rv).replaceAll(&#039;\\n&#039;,&#039;&lt;br&gt;&#039;);
+      
+        console.log(v.rv);
+        console.log(&#039;jsonRange end.&#039;);
+        Browser.msgBox(v.rv);
+      }
+      
+      function whichType(arg,is){
+        let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+        switch(rv){
+          case &#039;Number&#039;: if(Number.isNaN(arg)) rv = &#039;NaN&#039;; break;
+          case &#039;Function&#039;: if(!(&#039;prototype&#039; in arg)) rv = &#039;Arrow&#039;; break;
+        }
+        if( typeof is === &#039;string&#039; ){
+          return rv.toLowerCase() === is.toLowerCase();
+        } else {
+          return rv;
+        }
+      }</pre></div>
+    </div>
+  </div>
+
+  <div name="GASLib" class="TabMenu">
+    <div name="auth"><pre class="prettyprint lang-js linenums">/**
+      * @typedef {Object} token - doPostからpreProcessに渡されるオブジェクト
+      * @prop {string} fm - 発信者名(gateway/master/受付番号)
+      * @prop {string} to - 宛先名(gateway/master)
+      * @prop {number} md - モード。0:平文、1:共通鍵、2:RSA署名無し、3:RSA署名有り
+      * @prop {number} ts - 発信日時(new Date().getTime())
+      * @prop {string} dt - 以下の要素をJSON化した上で暗号化した文字列(cipher)
+      * @prop {string} dt.fc - 呼出先の処理名(ex.&quot;auth1A&quot;)
+      * @prop {any} dt.arg - 呼出先の処理に渡す引数
+      */
+     
+     /**
+      * @typedef {Object} AuthArg - preProcessからauth1A/1B/2A/2Bに渡されるオブジェクト
+      * @prop {string} fm - 発信者名(gateway/master/受付番号)
+      * @prop {string} to - 宛先名(gateway/master)
+      * @prop {number} md - モード。0:平文、1:共通鍵、2:RSA署名無し、3:RSA署名有り
+      * @prop {number} ts - 発信日時(new Date().getTime())
+      * @prop {string} fc - 復号化済の呼出先の処理名(ex.&quot;auth1A&quot;)
+      * @prop {any}    dt - 呼出先の処理に渡す引数。復号化済のtoken.dt.arg
+      * @prop {string} signature - 以下はpreProcessでの追加項目。署名付き暗号化だった場合、&quot;verified&quot; or &quot;undefined&quot;
+      * @prop {string} pKey - 署名付き暗号化だった場合、署名検証で取得した発信者の公開鍵
+      * @prop {Date}   lastAccess - 最終アクセス日時(RASシート再計算用再設定項目)
+      * @prop {string} name - 自局名
+      * @prop {string} passPhrase - 自局のパスワード
+      * @prop {string} publicKey - 自局の公開鍵
+      * @prop {string} masterAPI/gatewayAPI - 相手局のAPI
+      * @prop {string} master/gateway - 相手局の公開鍵
+      * @prop {string} common - 共通鍵(認証局のみ)
+      * @prop {string} random - パスコード(管理局のみ)
+      */
+     
+     /**
+      * @typedef {Object} fetchResponse - auth1A/1B/2A/2BからpreProcess経由で呼出元に返されるオブジェクト
+      * @prop {boolean} isErr - エラーならtrue
+      * @prop {string} message=&#039;&#039; - 処理結果に対するメッセージ
+      * @prop {string} stack=&#039;&#039; - エラーオブジェクトのスタック
+      * @prop {any} result - 処理結果
+      */
+     
+     /** doPostの内容を受けて処理を分岐
+      * @param {token} token - doPostから渡されたトークン
+      * @returns {fetchResponse} 処理結果
+      */
+     function preProcess(token){
+       const v = {whois:&#039;preProcess&#039;,step:&#039;0&#039;,arg:{},rv:null};
+       console.log(v.whois+&#039; start.&#039;,whichType(token),token);
+       try {
+         v.arg = JSON.parse(token);
+     
+         v.step = &#039;1&#039;; // 発信から3分以内でないとエラー
+         v.now = Date.now();
+         if( v.arg.ts &gt; v.now || (v.now - v.arg.ts) &gt; 180000 ){
+           throw new Error(&quot;Invalid Token: timeout&quot;);
+         }
+     
+         v.step = &#039;2&#039;; // RSAシートの読み込み
+         v.sheet = SpreadsheetApp.getActive().getSheetByName(&#039;RSA&#039;);
+         v.step = &#039;2.1&#039;; // 再計算用にセル値を更新
+         v.sheet.getRange(&#039;b1&#039;).setValue(new Date());
+         SpreadsheetApp.flush();
+         v.step = &#039;2.2&#039;; // RSAシートの値をv.argにセット
+         v.values = v.sheet.getDataRange().getValues();
+         for( v.i=0 ; v.i&lt;v.values.length ; v.i++ ){
+           if( String(v.values[v.i][0]).length &gt; 0 ){
+             v.arg[v.values[v.i][0]] = v.values[v.i][1];
+           }
+         }
+         v.arg.RSAkey = cryptico.generateRSAKey(v.arg.passPhrase,1024);
+         console.log(&#039;v.arg&#039;,v.arg);
+     
+         v.step = &#039;3&#039;; // 暗号化されていた場合は復号
+         if( v.arg.md &gt; 0 ){
+           if( v.arg.md === 1 ){ // 共通鍵方式
+             v.arg.dt = JSON.parse(decryptAES(v.arg.dt,v.arg.common));
+           } else {
+             v.decrypt = cryptico.decrypt(v.arg.dt,v.arg.RSAkey);
+             if( v.decrypt.signature !== &#039;verified&#039; ){
+               throw new Error(&quot;Invalid Token: decrypt failed.&quot;
+               + &quot;\ndecrypt: &quot; + JSON.stringify(v.decript)
+               + &quot;\nv.arg[&quot;+v.arg.fm+&quot;]: &quot; + v.arg[v.arg.fm]
+               );
+             }
+             v.arg.signature = v.decrypt.signature;
+             v.arg.pKey = v.decrypt.publicKeyString;
+             v.arg.dt = JSON.parse(decodeURI(v.decrypt.plaintext));
+           }
+         }
+         v.arg.fc = v.arg.dt.fc;
+         v.arg.dt = v.arg.dt.arg;
+     
+         /*
+         v.arg.fc = v.arg.dt.fc;
+         v.arg.dt = v.arg.dt.arg;
+         if( v.arg.md &gt; 0 ){
+           if( v.arg.md === 1 ){ // 共通鍵方式
+             v.arg.dt = JSON.parse(decryptAES(v.arg.dt,v.arg.common));
+           } else {              // RSA方式
+             v.decrypt = cryptico.decrypt(v.arg.dt,v.arg.RSAkey);
+             if( v.decrypt.signature !== &#039;verified&#039; ){
+               throw new Error(&quot;Invalid Token: decrypt failed.&quot;
+               + &quot;\ndecrypt: &quot; + JSON.stringify(v.decript)
+               + &quot;\nv.arg[&quot;+v.arg.fm+&quot;]: &quot; + v.arg[v.arg.fm]
+               );
+             }
+             v.arg.signature = v.decrypt.signature;
+             v.arg.pKey = v.decrypt.publicKeyString;
+             v.arg.dt = JSON.parse(decodeURI(v.decrypt.plaintext));
+           }
+         }*/
+         console.log(&#039;v.arg.dt&#039;,v.arg.dt);
+     
+         // auth1A: クライアントから認証局への接続要求
+         v.step = &#039;4.1&#039;;
+         if( v.arg.to === &#039;gateway&#039; &amp;&amp; v.arg.fc === &#039;auth1A&#039; ){
+           v.step = &#039;call auth1A&#039;;
+           v.rv = auth1A(v.arg);
+         }
+     
+         // auth1B: 認証局から管理局にパスコード通知依頼
+         v.step = &#039;4.2&#039;;
+         if( v.arg.to === &#039;master&#039; &amp;&amp; v.arg.fc === &#039;auth1B&#039; ){
+           v.step = &#039;call auth1B&#039;;
+           v.rv = auth1B(v.arg);
+         }
+     
+         // auth2A: クライアントから認証局にパスコード入力
+         v.step = &#039;4.3&#039;;
+         if( v.arg.to === &#039;gateway&#039; &amp;&amp; v.arg.fc === &#039;auth2A&#039; ){
+           v.step = &#039;call auth2A&#039;;
+           v.rv = auth2A(v.arg);
+         }
+     
+         // auth2B: 認証局から管理局にパスコード連絡、管理局で判定
+         v.step = &#039;4.4&#039;;
+         if( v.arg.to === &#039;master&#039; &amp;&amp; v.arg.fc === &#039;auth2B&#039; ){
+           v.step = &#039;call auth2B&#039;;
+           v.rv = auth2B(v.arg);
+         }
+     
+         v.step = &#039;5&#039;;
+         console.log(v.whois+&#039; normal end.&#039;,v.rv);
+         return v.rv;
+       } catch(e){
+         console.error(v.whois+&#039; abnormal end(step.&#039;+v.step+&#039;).&#039;,e.stack,v);
+       }
+     }
+     
+     /** 認証局での認証の第一段階
+      * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
+      * @returns {string} 認証局の公開鍵(fetchResponse.result)
+      */
+     function auth1A(arg){
+       const v = {whois:&#039;認証局.auth1A&#039;,
+         rv:{isErr:false,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
+       try {
+         console.log(v.whois+&#039; start.&#039;,arg.dt);
+     
+         v.step = &#039;1.1&#039;; // auth1B問合せ用にデータを暗号化
+         v.dt = JSON.stringify({
+           fc : &#039;auth1B&#039;,
+           arg: {  // auth1B()に渡す引数
+             entryNo  : arg.dt.entryNo,    // クライアントの受付番号
+             publicKey: arg.dt.publicKey,  // 同公開鍵
+           }
+         });
+         console.log(&#039;v.dt=&#039;+v.dt);
+         
+         v.step = &#039;1.2&#039;; // 暗号化。受付番号＋公開鍵なのでencodeURIは省略
+         v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
+         if( v.dt.status !== &#039;success&#039; )
+           throw new Error(&quot;auth1A encrypt failed.\n&quot;+JSON.stringify(v.dt));
+     
+         v.step = &#039;2.1&#039;; // auth1Bに問い合わせ
+         v.res = UrlFetchApp.fetch(arg.masterAPI,{
+           &#039;method&#039;: &#039;post&#039;,
+           &#039;contentType&#039;: &#039;application/json&#039;,
+           &#039;muteHttpExceptions&#039;: true, // https://teratail.com/questions/64619
+           &#039;payload&#039; : JSON.stringify({
+             fm: &#039;gateway&#039;,
+             to: &#039;master&#039;,
+             md: 3,  // 署名付き暗号化
+             ts: Date.now(),
+             dt: v.dt.cipher,
+           }),  
+         }).getContentText();
+         console.log(&#039;res=&#039;+v.res);
+         v.step = &#039;2.2&#039;;
+         v.rv = JSON.parse(v.res);
+     
+         if( !v.rv.isErr ){
+           v.step = &#039;3&#039;; // auth1B正常終了なら認証局の公開鍵を返信
+           v.rv.result = arg.publicKey;
+         }
+     
+         v.step = &#039;4&#039;;
+         console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+         return v.rv;
+     
+       } catch(e) {
+         console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
+         + e.message + &#039;\n&#039; + e.stack);
+         console.error(JSON.stringify(v));
+         v.rv.isErr = true;
+         v.rv.message = e.message;
+         v.rv.stack = e.stack;
+         return v.rv;
+       }
+     }
+     
+     /** 管理局での認証の第一段階
+      * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
+      * @returns {void} 特に無し(fetchResponse.isErrのみ必要)
+      */
+     function auth1B(arg){
+       const v = {whois:&#039;管理局.auth1B&#039;,
+         rv:{isErr:false,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
+       try {
+         console.log(v.whois+&#039; start.&#039;,arg.dt);
+     
+         v.step = &#039;1&#039;; // クライアント情報を抽出
+         v.master = szSheet(&#039;master&#039;);
+         v.client = v.master.lookup(arg.dt.entryNo,&#039;entryNo&#039;);
+     
+         v.step = &#039;2&#039;; // 3回連続失敗後1時間以内ならチャレンジ不可判定
+         if( String(v.client.NG2).length &gt; 0 &amp;&amp;
+           (Date.now() - v.client.NG2) &lt; 3600000 ){
+           v.rv = {
+             isErr: true,
+             message:&#039;3回連続ログイン失敗後、1時間経過していません&#039;,
+           };
+           return v.rv;
+         }
+     
+         v.step = &#039;3&#039;; // 該当受付番号にpassCode,publicKey登録
+         v.master.update({
+           publicKey: arg.dt.publicKey,  // クライアントの公開鍵
+           passCode: arg.random, // パスコード
+           genPassCode: new Date(),  // パスコード生成日時
+           NG1:&#039;&#039;,NG2:&#039;&#039;,            // 不適切パスコード入力時刻をクリア
+           certificate: &#039;&#039;,  // 認証正常終了日時はクリア
+         },{key:&#039;entryNo&#039;,value:arg.dt.entryNo});
+     
+         v.step = &#039;4&#039;; // 申請者にpassCode連絡メール送信
+         v.draft = GmailApp.createDraft(
+           v.client[&#039;メールアドレス&#039;],
+           &#039;[連絡]校庭キャンプ2023 パスコード&#039;,
+           &quot;パスコードは以下の通りです。\n\n&quot; + arg.random,
+           {
+             //htmlBody: v.html,
+             name: &#039;下北沢小おやじの会&#039;,
+           }
+         );
+         v.step = &#039;4.1&#039;;
+         GmailApp.getDraft(v.draft.getId()).send();
+         console.log(&#039;Mail Remaining Daily Quota:&#039;
+           + MailApp.getRemainingDailyQuota());
+     
+         v.step = &#039;5&#039;;
+         console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+         return v.rv;
+     
+       } catch(e) {
+         console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
+         + e.message + &#039;\n&#039; + e.stack);
+         console.error(JSON.stringify(v));
+         v.rv.isErr = true;
+         v.rv.message = e.message;
+         v.rv.stack = e.stack;
+         return v.rv;
+       }
+     }
+     
+     /** 認証局での認証の第二段階
+      * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
+      * @returns {Object} - fetchResponse.result={common:共通鍵,info:クライアント情報}
+      * 
+      * ## 注意事項
+      * 
+      * clientからのtokenは署名されているが、認証局はclientのpublicKeyを
+      * 持たないので検証は省略し、そのまま管理局に送って管理局側で検証する。
+      */
+     function auth2A(arg){
+       const v = {whois:&#039;認証局.auth2A&#039;,
+         rv:{isErr:false,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
+       try {
+         console.log(v.whois+&#039; start.&#039;,arg.dt);
+     
+         v.step = &#039;1.1&#039;; // auth2B問合せ用にデータを暗号化
+         v.dt = JSON.stringify({
+           fc : &#039;auth2B&#039;,
+           arg: {  // auth2B()に渡す引数
+             entryNo  : arg.dt.entryNo,  // クライアントから送られた受付番号
+             passCode : arg.dt.passCode, // 同パスコード
+             timestamp: arg.ts,    // 同送付日時
+             publicKey: arg.pKey,  // 同公開鍵
+           }
+         });
+         v.step = &#039;1.2&#039;; // 暗号化。受付番号＋パスコードなのでencodeURIは省略
+         v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
+         if( v.dt.status !== &#039;success&#039; )
+           throw new Error(&quot;auth2A encrypt failed.\n&quot;+JSON.stringify(v.dt));
+     
+         v.step = &#039;2.1&#039;; // auth2Bに問い合わせ
+         v.res = UrlFetchApp.fetch(arg.masterAPI,{
+           &#039;method&#039;: &#039;post&#039;,
+           &#039;contentType&#039;: &#039;application/json&#039;,
+           &#039;muteHttpExceptions&#039;: true, // https://teratail.com/questions/64619
+           &#039;payload&#039; : JSON.stringify({
+             fm: &#039;gateway&#039;,
+             to: &#039;master&#039;,
+             md: 3,  // 署名付き暗号化
+             ts: Date.now(),
+             dt: v.dt.cipher,
+           }),  
+         }).getContentText();
+         console.log(&#039;res=&#039;+v.res);
+         v.step = &#039;2.2&#039;;
+         v.res = JSON.parse(v.res);
+     
+         v.step = &#039;3&#039;; // 問合せ結果により処理分岐
+         if( v.res.isErr ){
+           v.step = &#039;3.1&#039;; // auth2Bでエラー発生ならそのまま返す
+           return v.res;
+         } else {
+           v.step = &#039;3.2&#039;; // auth2B正常終了なら情報提供
+           v.rv.result = {
+             common: arg.common, // 共通鍵
+             info  : v.res.result, // クライアントの登録情報
+           }
+         }
+     
+         v.step = &#039;4&#039;;
+         console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+         return v.rv;
+     
+       } catch(e) {
+         console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
+         + e.message + &#039;\n&#039; + e.stack);
+         console.error(JSON.stringify(v));
+         v.rv.isErr = true;
+         v.rv.message = e.message;
+         v.rv.stack = e.stack;
+         return v.rv;
+       }
+     }
+     
+     /** 管理局での認証の第二段階
+      * @param {AuthArg} arg - クライアントの受付番号、パスコード、送信日時、公開鍵他
+      * @returns {Object} - fetchResponse.result=クライアントの登録情報
+      */
+     function auth2B(arg){
+       const v = {whois:&#039;管理局.auth2B&#039;,
+       rv:{isErr:true,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
+       try {
+         console.log(v.whois+&#039; start.&#039;,arg.dt);
+     
+         v.step = &#039;1&#039;; // クライアント情報を抽出
+         v.master = szSheet(&#039;master&#039;);
+         v.client = v.master.lookup(arg.dt.entryNo,&#039;entryNo&#039;);
+         console.log(&#039;v.client&#039;,v.client);
+     
+         // 正しいパスコードが入力されたか判定
+         v.update = null;
+         if( (Date.now() - new Date(v.client.genPassCode).getTime()) &gt; 3600000 ){
+           v.step = &#039;2.1&#039;; // 有効期限切れ
+           v.rv.message = &#039;パスコードの有効期限(発行後1時間)を過ぎています。&#039;;
+           v.rv.result = true;  // クライアント側のパスコード入力画面を閉じ、受付番号入力画面に遷移
+         } else if( v.client.passCode !== arg.dt.passCode ){
+           v.step = &#039;2.2&#039;; // パスコード不一致
+           if( String(v.client.NG2).length &gt; 0 ){
+             v.step = &#039;2.2.1&#039;; // 連続3回不適切
+             v.rv.message = &#039;3回連続で不適切なパスコードが入力されました。1時間ロックアウトされます&#039;;
+             v.rv.result = true;  // クライアント側のパスコード入力画面を閉じ、受付番号入力画面に遷移
+           } else {
+             v.step = &#039;2.2.2&#039;; // 連続3回未満
+             v.rv.message = &#039;パスコードが不適切です&#039;;
+             v.rv.result = false;
+             if( String(v.client.NG1).length === 0 ){
+               v.update = {NG1: Date.now()};
+             } else {
+               v.update = {NG2: Date.now()};
+             }
+           }
+         } else if( v.client.publicKey !== arg.dt.publicKey ){
+           v.step = &#039;2.3&#039;; // 公開鍵不一致
+           v.rv.message = &#039;不適切な公開鍵です&#039;;
+           v.rv.result = true;
+         } else {
+           v.step = &#039;2.4&#039;; // 全条件をクリア
+           v.rv.isErr = false;
+           // クライアントの情報を提供
+           v.rv.result = v.client;
+           v.rv.message = &#039;正常に認証されました&#039;;
+           // パスコード確認日時を更新、NGnをクリア
+           v.update = {certificate: new Date()};
+         }
+         v.step = &#039;2.5&#039;; // masterシートの更新
+         if( v.master !== null ){
+           v.master.update(v.update,{key:&#039;entryNo&#039;,value:arg.dt.entryNo});
+         }
+     
+         v.step = &#039;3&#039;;
+         console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+         return v.rv;
+     
+       } catch(e) {
+         console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
+         + e.message + &#039;\n&#039; + e.stack);
+         console.error(JSON.stringify(v));
+         v.rv.isErr = true;
+         v.rv.message = e.message;
+         v.rv.stack = e.stack;
+         return v.rv;
+       }
+     }</pre></div>
+    <div name="library"><pre class="prettyprint lang-js linenums">function encryptAES(text, pass) {
+      // ソルト
+      const salt = CryptoJS.lib.WordArray.random(128 / 8);
+    
+      // 初期ベクトル
+      const iv = CryptoJS.lib.WordArray.random(128 / 8);
+    
+      // AESキーの生成(128bit、5万回)
+      const key = CryptoJS.PBKDF2(pass, salt, {
+        keySize: 128 / 32,
+        iterations: 50000,
+        hasher: CryptoJS.algo.SHA256,
+      });
+    
+      // AESキーで暗号化
+      const encrypted = CryptoJS.AES.encrypt(text, key, {
+        iv: iv,
+      });
+    
+      return {
+        salt: salt,
+        iv: iv,
+        encrypted: encrypted,
+      };
+    }
+    
+    /** 共通鍵(AES)による復号化処理
+     * @param {encryptAES} encryptedData - 暗号化の際の出力結果
+     * @param {string} pass - パスワード
+     * @returns {string} 復号された文字列
+     */
+    function decryptAES(encryptedData, pass) {
+      // AESキーの生成(128bit、5万回)
+      const key = CryptoJS.PBKDF2(pass, encryptedData.salt, {
+        keySize: 128 / 32,
+        iterations: 50000,
+        hasher: CryptoJS.algo.SHA256,
+      });
+    
+      // AESキーで復号
+      const decrypted = CryptoJS.AES.decrypt(encryptedData.encrypted, key, {
+        iv: encryptedData.iv,
+      });
+    
+      return decrypted.toString(CryptoJS.enc.Utf8);
+    }
+    
+    function szSheet(arg,key=null){
+      const v = {whois:&#039;szSheet&#039;,rv:{}};
+      try {
+        console.log(v.whois+&#039; start.\n&#039;,arg,key);
+    
+        // 1.既定値の設定
+        if( typeof arg === &#039;string&#039; ){  // 文字列のみ ⇒ シート名の指定
+          v.step = &#039;1a&#039;;
+          v.rv.sheetName = arg;
+          v.rv.spreadId = null;
+          v.rv.sheet = SpreadsheetApp.getActive().getSheetByName(arg);
+          v.rv.headerRow = 1; // ヘッダ行は1行目(固定)
+        } else {
+          v.step = &#039;1b&#039;;
+          v.rv.sheetName = arg.sheetName;
+          v.rv.spreadId = null;
+          if( &#039;spreadId&#039; in arg ){
+            v.step = &#039;1ba&#039;;
+            v.rv.spreadId = arg.spreadId;
+            v.rv.sheet = SpreadsheetApp.openById(arg.spreadId).getSheetByName(arg.sheetName);
+            if( v.rv.sheet instanceof Error ) throw v.rv.sheet;
+          } else {
+            v.step = &#039;1bb&#039;;
+            v.rv.sheet = SpreadsheetApp.getActive().getSheetByName(arg.sheetName);
+          }
+          v.rv.headerRow = arg.headerRow || 1;  // ヘッダ行の既定値は1行目
+          if( v.rv.headerRow &lt; 1 ){
+            throw new Error(&#039;ヘッダ行は自然数で指定してください&#039;);
+          }
+        }
+        if( v.rv.sheet === null ) throw new Error(&#039;指定された&quot;&#039;+v.rv.sheetName+&#039;&quot;シートは存在しません&#039;);
+        v.rv.key = key;
+        
+        // 2.データの取得・加工
+        v.step = &#039;2.1&#039;;
+        v.dRange = v.rv.sheet.getDataRange();
+        v.rv.raw = v.dRange.getValues();
+        const raw = JSON.parse(JSON.stringify(v.rv.raw));
+        v.rv.keys = raw.splice(v.rv.headerRow-1,1)[0];
+        if( v.rv.key !== null &amp;&amp; v.rv.keys.findIndex(x =&gt; x === v.rv.key ) &lt; 0 ){
+          throw new Error(&#039;キーとして指定された項目が存在しません&#039;);
+        }
+        v.rv.colIdx = {};
+        for( v.i=0 ; v.i&lt;v.rv.keys.length ; v.i++ ){
+          v.rv.colIdx[v.rv.keys[v.i]] = v.i + 1;
+        }
+        v.rv.data = raw.splice(v.rv.headerRow-1).map(row =&gt; {
+          const obj = {};
+          row.map((item, index) =&gt; {
+            obj[String(v.rv.keys[index])] = String(item);
+          });
+          return obj;
+        });
+        v.rv.lastRow = v.rv.raw.length;
+    
+        // 2.2.primary key, defaultの取得
+        v.step = &#039;2.2&#039;;
+        v.rv.default = {};
+        v.dRange.getNotes()[v.rv.headerRow-1].forEach((x,i) =&gt; {
+          if( x.match(/primary key/) &amp;&amp; v.rv.key === null )
+            v.rv.key = v.rv.keys[i];  // &quot;primary key&quot;指定があればkeyとする
+          v.m = x.match(/default\s*:?\s*(\S+)/);
+          if( v.m ) v.rv.default[v.rv.keys[i]] = v.m[1];
+        });
+        // 2.3.defaultにFormのeditURLの指定があれば、事前にFormのデータを取得
+        v.step = &#039;2.3&#039;;
+        v.rv.formObj = {m:[]};
+        for( v.i in v.rv.default ){
+          v.m = v.rv.default[v.i].match(/^=editFormId\((.+?)\)/);
+          v.rv.formObj.m.push(v.m);
+          if( v.m !== null ){
+            v.step = &#039;2.3a&#039;;
+            // 2.3a.全フォームデータを読み込み、登録日時をキーにformDataに登録
+            v.formData = FormApp.openById(v.m[1]).getResponses();
+            for( v.j=0 ; v.j&lt;v.formData.length ; v.j++ ){
+              v.rv.formObj[String(v.formData[v.j].getTimestamp().getTime())] = v.formData[v.j];
+            }
+          }
+        }
+    
+        // 3.内部関数の定義
+        /** isEqual: 引数とシート上の値が等価か判断
+         * @param {any} a - 引数
+         * @param {any} s - シート上の値
+         * @returns {boolean} true:等価
+         */
+        v.rv.isEqual = (a,b) =&gt; {
+          return a == b || new Date(a).getTime() === new Date(b).getTime()
+        }
+    
+        /**
+         * @typedef {object} complementedRow - 行単位の補完結果
+         * @prop {number} dataNum - rv.data上の添字
+         * @prop {Object.&lt;string, string|number&gt;} changed - 補完した項目と設定値
+         */
+        /** complement: 主キー及び既定値設定項目の補完を行う
+         * @desc 主キーは数値のみ、空欄は位置に関わらず最大値＋1を設定。既定値はメモにある文字列をセット
+         * @param {void} - なし
+         * @returns {complementedRow[]} 補完結果の配列
+         */
+        v.rv.complement = () =&gt; {return ((p)=&gt;{
+          const v = {whois:p.whois+&#039;.complement&#039;,rv:[]};
+          try {
+            console.log(v.whois+&#039; start.&#039;);
+    
+            // 1.主キーの最大値を取得
+            v.step = &#039;1&#039;;
+            v.pMax = -999999;
+            for( v.i=0 ; v.i&lt;p.data.length ; v.i++ ){
+              if( v.pMax &lt; Number(p.data[v.i][p.key]) ){
+                v.pMax = Number(p.data[v.i][p.key]);
+              }
+            }
+    
+            // 2.rv.dataを順次検索、主キー・既定値設定項目に空欄があればセット
+            v.step = &#039;2&#039;;
+            v.dMap = Object.keys(p.default);  // 補完項目名のリスト
+            for( v.i=0 ; v.i&lt;p.data.length ; v.i++ ){
+              // 2.1.行単位更新の事前準備
+              v.step = &#039;2.1&#039;;
+              v.t = String(new Date(p.data[v.i][&#039;タイムスタンプ&#039;]).getTime());
+              v.obj = {}; // 更新項目：値のオブジェクト
+              // 2.2.キー項目が空欄なら最大値をセット
+              v.step = &#039;2.2&#039;;
+              if( p.data[v.i][p.key] == &#039;&#039; ){
+                v.obj[p.key] = ++v.pMax;
+              }
+              // 2.3.既定値項目のセット
+              v.step = &#039;2.3&#039;;
+              for( v.j=0 ; v.j&lt;v.dMap.length ; v.j++ ){
+                if( String(p.data[v.i][v.dMap[v.j]]).length === 0 ){
+                  // 2.3a.要補完項目に未入力(空白セル)が存在した場合
+                  v.step = &#039;2.3a&#039;;
+                  v.m = p.default[v.dMap[v.j]].match(/^=editFormId\(.+?\)\.([a-z]+)/);
+                  if( v.m === null ){
+                    // 2.3aa.要補完項目がFormから引用する項目ではない場合、既定値をそのまま設定
+                    v.step = &#039;2.3aa&#039;;
+                    v.obj[v.dMap[v.j]] = p.default[v.dMap[v.j]];
+                  } else {
+                    // 2.3ab.要補完項目がFormから引用する項目の場合、formObjから引用
+                    if( typeof p.formObj[v.t] === &#039;undefined&#039; ){
+                      v.step = &#039;2.3aba&#039;;  // フォームデータが見つからなければ空白セルのまま
+                      v.obj[v.dMap[v.j]] = &#039;&#039;;
+                    } else {
+                      v.step = &#039;2.3abb&#039;;  // 指定項目をフォームデータから引用してセット
+                      switch( v.m[1] ){
+                        case &#039;url&#039;:
+                          v.obj[v.dMap[v.j]] = p.formObj[v.t].getEditResponseUrl();
+                          break;
+                        case &#039;id&#039;:
+                          v.obj[v.dMap[v.j]] = p.formObj[v.t].getId();
+                          break;
+                        case &#039;email&#039;:
+                          v.obj[v.dMap[v.j]] = p.formObj[v.t].getRespondentEmail();
+                          break;
+                        case &#039;timestamp&#039;:
+                          v.obj[v.dMap[v.j]] = p.formObj[v.t].getTimestamp();
+                          break;
+                      }
+                    }
+                  }
+                }
+              }
+              // 2.4.補完すべき項目があればupdate
+              v.step = &#039;2.4&#039;;
+              if( Object.keys(v.obj).length &gt; 0 ){
+                v.r = p.update(v.obj,{num:v.i});
+                if( v.r instanceof Error ) throw v.r;
+                v.rv.push({dataNum:v.i,changed:v.obj});
+              }
+            }
+    
+            v.step = &#039;3&#039;; // 終了処理
+            console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+          } catch(e) {
+            console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
+            v.rv = e;
+          } finally {
+            return v.rv;
+          }
+        })(v.rv.members)};  // complement終了
+    
+        // 4.メソッドの定義
+        /**
+         * @typedef {object} szSheetSearch - szSheet.search()の戻り値
+         * @prop {Object.&lt;string, any&gt;} obj - 行オブジェクト({項目名1:値1,項目名2:値2,..}形式)
+         * @prop {number} dataNum - data上の添字
+         * @prop {number} rawNum - raw上の添字
+         * @prop {number} rowNum - スプレッドシート上の行番号
+         */
+        /** search: 項目名&#039;key&#039;の値がvalueである行Objを全て検索する
+         * @param {any}    value - キー値
+         * @param {string} [key] - キーとなる項目名。既定値はキー項目名(rv.key)
+         * @returns {szSheetSearch[]} 検索結果。マッチしなければ空配列
+         */
+        v.step = &#039;4.1 search&#039;;
+        v.rv.search = (value,key=v.rv.key) =&gt; {return ((p,value,key)=&gt;{
+          const v = {whois:p.whois+&#039;.search&#039;,rv:[]};
+          try {
+            console.log(v.whois+&#039; start. value=&#039;+value+&#039;, key=&#039;+key);
+    
+            if( p.keys.findIndex(x =&gt; x === key) &lt; 0 ){
+              throw new Error(&#039;指定された欄名がヘッダ行にありません&#039;);
+            }
+    
+            for( v.i=0 ; v.i&lt;p.data.length ; v.i++ ){
+              if( p.isEqual(value,p.data[v.i][key]) ){
+                v.rv.push({
+                  obj: p.data[v.i],
+                  dataNum: v.i,
+                  rawNum: v.i + p.headerRow,
+                  rowNum: v.i + p.headerRow + 1,
+                });
+              }
+            }
+    
+            console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+          } catch(e) {
+            console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
+            v.rv = e;
+          } finally {
+            return v.rv;
+          }
+        })(v.rv.members,value,key)};  // search終了
+    
+        /** lookup: 項目名&#039;key&#039;の値がvalueである最初の行Objを返す
+         * @param {any}    value - キー値
+         * @param {string} key   - キーとなる項目名。既定値はキー項目名
+         * @returns {szSheetSearch|null} 行オブジェクト({項目名1:値1,項目名2:値2,..}形式)またはnull
+         */
+        v.step = &#039;4.2 lookup&#039;;
+        v.rv.lookup = (value,key) =&gt; {return ((p,value,key)=&gt;{
+          const v = {whois:p.whois+&#039;.lookup&#039;,rv:{}};
+          try {
+            console.log(v.whois+&#039; start. value=&#039;+value+&#039;, key=&#039;+key);
+    
+            v.searchResult = p.search(value,key);
+            v.rv = v.searchResult.length &gt; 0 ? v.searchResult[0].obj : null;
+    
+            console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+          } catch(e) {
+            console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
+            v.rv = e;
+          } finally {
+            return v.rv;
+          }
+        })(v.rv.members,value,key)};  // lookup終了
+    
+        /**
+         * @typedef {object} changedColumns - szSheet.update/appendで更新・追加により変化した欄とその値
+         * @prop {string} colName - 更新・追加により値が変化した項目名
+         * @prop {number} colNum - 同列番号(自然数)
+         * @prop {any} before - 修正前の値
+         * @prop {any} after - 修正後の値
+         */
+        /**
+         * @typedef {object} szSheetChanged - szSheet.update/appendの一行分の更新・追加結果
+         * @prop {string} func - append/update/deleteのいずれか
+         * @prop {number} dataNum - 更新・追加行のrv.data上の添字
+         * @prop {number} rawNum - 更新・追加行のrv.raw上の添字
+         * @prop {number} rowNum - 更新・追加行のスプレッドシート上の行番号
+         * @prop {changedColumns[]|Object.&lt;string, any&gt;} changed - 更新・追加により変化した欄とその値。削除の場合は削除行のdata
+         */
+        /** update: 該当する行の値を変更する
+         * @desc key/valueにマッチする行が複数あった場合、最初の行のみ更新。
+         * @desc 同一条件・複数変更は対応しているが、複数条件・複数対応は非対応(複数回updateを呼び出す)。
+         * 例：「参加=&quot;参加する&quot;-&gt;&quot;true&quot;」は対応、「&quot;ID&quot;=1-&gt;参加=&quot;true&quot;,&quot;ID&quot;=2-&gt;参加=&quot;false&quot;」は非対応
+         * @desc any[]型の更新データには対応しない(修正位置が不明確になるため)
+         * @desc &lt;caption&gt;戻り値に関する注意&lt;/caption&gt;
+         * 引数のkey,valueにマッチするものがなかったら空配列、
+         * マッチするものがあったが変更がない場合szSheetChangedオブジェクトの配列が返るが、そのchangedは空配列になる。
+         * 
+         * @param {Object.&lt;string, any&gt;} data - 更新データ。{項目名：設定値,..}形式
+         * @param {object|any} opt - オプション指定。非objならkey=rv.key,value=opt,append=trueと看做す
+         * @param {string} [opt.key=rv.key] - キーとなる項目名
+         * @param {any}    opt.value - キー値
+         * @param {number} [opt.num=null] - 更新対象のrv.data上の添字。complementで使用、key/value指定と排他
+         * @param {boolean} opt.append - true(既定値)ならキー値が存在しない場合は追加
+         * @returns {szSheetChanged[]} 修正前後の値
+         */
+        v.step = &#039;4.3 update&#039;;
+        v.rv.update = (data,opt) =&gt; {return ((p,data,opt)=&gt;{
+          const v = {whois:p.whois+&#039;.update&#039;,rv:[]};
+          try {
+            console.log(v.whois+&#039; start.\ndata=&#039;+JSON.stringify(data)+&#039;\nopt=&#039;+JSON.stringify(opt));
+            // 1.オプションに既定値セット、検索キー・検索値を明確化
+            v.step = &#039;1&#039;;
+            if( whichType(opt).toLocaleLowerCase() === &#039;object&#039; ){
+              opt.key = typeof opt.key !== &#039;undefined&#039; ? opt.key : p.key;
+              opt.append = typeof opt.append === &#039;undefined&#039; ? true : opt.append;
+              opt.num = typeof opt.num === &#039;undefined&#039; ? null : opt.num;
+            } else {
+              opt = {key:p.key,value:opt,append:true,num:null};
+            }
+            if( opt.num === null &amp;&amp; (p.keys.findIndex(x =&gt; x === opt.key) &lt; 0) )
+              throw new Error(&#039;キー項目が不適切です&#039;);
+    
+            // 2.現状のシートデータ(raw,data)を修正
+            //   - 該当なし且つopt.appendの場合、appendメソッドに振る
+            //   - 併せて更新範囲の特定、ログ作成を行う
+            // 2.1.各種変数の初期化
+            v.step = &#039;2.1&#039;;
+            v.maxRow = v.maxCol = -Infinity;
+            v.minRow = v.minCol = Infinity;
+            v.isExist = false; // 更新対象行が存在すればtrue。ループ後falseならappend呼び出し
+            v.isUpdated = false; // 更新を行なったらtrue。更新対象行が存在しても既に更新済の場合はfalseのまま。ループ後trueならシート更新
+            v.map = Object.keys(data); // 更新対象項目名の配列
+    
+            // 2.2.行単位に修正対象か判断、対象なら行データを修正
+            v.step = &#039;2.2&#039;;
+            for( v.i=0 ; v.i&lt;p.data.length ; v.i++ ){
+              v.step = &#039;2.2.1&#039;; // 修正対象外なら後続処理はスキップ
+              // 比較は厳密等価ではない等価で判断
+              // opt.numはcomplementで指定されたrv.dataの添字
+              if( (opt.num === null &amp;&amp; (!p.isEqual(p.data[v.i][opt.key],opt.value)))
+               || (opt.num !== null &amp;&amp; opt.num !== v.i )) continue;
+    
+              v.step = &#039;2.2.2&#039;; // 行単位の処理結果Obj作成(単独のszSheetChanged作成)
+              v.isExist = true;
+              v.l = p.headerRow + v.i;  // raw上の添字。シートの行番号はこれに＋1
+              v.log = {func:&#039;update&#039;,dataNum:v.i,rawNum:v.l,rowNum:v.l+1,changed:[]};
+    
+              v.step = &#039;2.2.3&#039;; // 更新範囲(行)の更新
+              v.a = v.l + 1;  // v.lは添字(0以上の整数)なので行番号(自然数)に変換
+              v.maxRow = v.maxRow &lt; v.a ? v.a : v.maxRow;
+              v.minRow = v.minRow &gt; v.a ? v.a : v.minRow;
+    
+              v.step = &#039;2.2.4&#039;; // 項目(raw,data)の更新
+              for( v.j=0 ; v.j&lt;v.map.length ; v.j++ ){
+                v.step = &#039;2.2.4.1&#039;;
+                v.o = {colName: v.map[v.j]};
+                v.o.colNum = p.colIdx[v.o.colName];
+                v.o.before = p.data[v.i][v.o.colName];
+                v.o.after = data[v.o.colName];
+                if( v.o.before != v.o.after ){
+                  v.step = &#039;2.2.4.2&#039;;
+                  p.raw[v.l][v.o.colNum-1] = v.o.after;
+                  p.data[v.i][v.o.colName] = v.o.after;
+                  v.maxCol = v.maxCol &lt; v.o.colNum ? v.o.colNum : v.maxCol;
+                  v.minCol = v.minCol &gt; v.o.colNum ? v.o.colNum : v.minCol;
+                  v.isUpdated = true;
+                  v.log.changed.push(v.o);
+                }
+              }
+    
+              v.step = &#039;2.2.5&#039;; // ログに行単位の更新記録を追加
+              v.rv.push(v.log);
+            }
+    
+            // 2.3.該当なし且つopt.appendの場合、appendメソッドに振る
+            v.step = &#039;2.3&#039;;
+            if( v.isExist === false &amp;&amp; opt.append ){
+              opt.update = false;
+              return p.append(data,opt);
+            }
+    
+            // 3.更新範囲についてシートを更新
+            v.step = &#039;3&#039;;
+            if( v.isUpdated ){
+              v.range = p.sheet.getRange(v.minRow, v.minCol, (v.maxRow-v.minRow+1), (v.maxCol-v.minCol+1));
+              v.sv = [];
+              p.raw.slice(v.minRow-1,v.maxRow).forEach(x =&gt; v.sv.push(x.slice(v.minCol-1,v.maxCol)));
+              v.range.setValues(v.sv);
+            }
+    
+            console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+          } catch(e) {
+            console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
+            v.rv = e;
+          } finally {
+            return v.rv;
+          }
+        })(v.rv.members,data,opt)};  // update終了
+    
+        /** append: 行の追加
+         * @param {any[]|any[][]|Object.&lt;string, any&gt;|Array.Object.&lt;string, any&gt;} data
+         *  - 追加行の一次元配列または{項目名:値}形式のオブジェクト、またはその配列
+         * @param {object|any} opt - オプション指定。非objならkey=rv.key,value=opt,append=trueと看做す
+         * @param {string} [opt.key=rv.key] - キーとなる項目名
+         * @param {any}    opt.value - キー値
+         * @param {boolean} [opt.update=true] - trueならキー値が存在するならupdate
+         * @returns {szSheetChanged[]} 更新結果
+         */
+        v.step = &#039;4.4 append&#039;;
+        v.rv.append = (data,opt) =&gt; {return ((p,data,opt)=&gt;{
+          const v = {whois:p.whois+&#039;.append&#039;,rv:[]};
+          try {
+            console.log(v.whois+&#039; start.\n&#039;,data);
+    
+            // 1.事前処理
+            // 1.1.パラメータの既定値設定
+            v.step = &#039;1.1&#039;;
+            if( !opt || typeof opt === &#039;string&#039; ){
+              v.opt = {
+                key: p.key,
+                value: opt,
+                update: true,
+              }
+            } else {
+              v.opt = opt;
+              v.opt.key = typeof opt.key === &#039;undefined&#039; ? p.key : opt.key;
+              v.opt.update = typeof opt.value === &#039;undefined&#039; ? true : opt.update;
+            }
+            // 1.2.追加データを強制的に二次元に変換
+            v.step = &#039;1.2&#039;;
+            switch(whichType(data)){
+              case &#039;Object&#039;: v.data = [data]; break;
+              case &#039;Array&#039;:
+                v.type = whichType(data[0]);
+                v.data = v.type !== &#039;Array&#039; &amp;&amp; v.type !== &#039;Object&#039;? v.data = [data] : data;
+                break;
+              default: 
+                throw new Error(&#039;行データの形式が不適切です&#039;);
+            }
+    
+            // 2.追加データが配列ならオブジェクトに変換
+            v.step = &#039;2&#039;;
+            for( v.i=0 ; v.i&lt;v.data.length ; v.i++ ){
+              v.obj = v.data[v.i];
+              if( whichType(v.obj) === &#039;Array&#039; ){
+                v.obj = {};
+                for( v.j=0 ; v.j&lt;v.data[v.i].length ; v.j++ ){
+                  if( v.data[v.i][v.j] ){ // nullや空文字列は除外
+                    v.obj[p.keys[v.j]] = v.data[v.i][v.j];
+                  }
+                }
+              }
+    
+              // 3.既定値設定項目が空なら既定値を追加
+              v.step = &#039;3&#039;;
+              v.dMap = Object.keys(p.default);
+              for( v.j=0 ; v.j&lt;v.dMap.length ; v.j++ ){
+                if( typeof v.obj[v.dMap[v.j]] === &#039;undefined&#039; ){
+                  v.obj[v.dMap[v.j]] = p.default[v.dMap[v.j]];
+                }
+              }
+    
+              // 4.追加データにキー項目が指定されているか判断
+              v.step = &#039;4&#039;;
+              if( v.opt.key === null || typeof v.obj[v.opt.key] === &#039;undefined&#039; ){
+                // 4a.キー項目の値が追加データ(引数&#039;data&#039;)に不在
+                v.step = &#039;4a&#039;;
+                // 4aa.rv.key === null -&gt; そのまま追加(何もしない)
+                // 4ab.rv.key !== null -&gt; キー項目の値を補完して追加
+                if( v.opt.key !== null ){
+                  v.step = &#039;4ab&#039;;
+                  v.obj[v.opt.key] = 0;
+                  for( v.j=0 ; v.j&lt;p.data.length ; v.j++ ){
+                    v.n = Number(p.data[v.j][v.opt.key]);
+                    if( v.obj[v.opt.key] &lt; v.n ){
+                      v.obj[v.opt.key] = v.n;
+                    }
+                  }
+                  v.obj[v.opt.key] += 1;
+                }
+              } else {
+                // 4b.キー項目の値が追加データに存在するかチェック
+                v.step = &#039;4b&#039;;
+                v.flag = false;
+                for( v.j=0 ; v.j&lt;p.data.length ; v.j++ ){
+                  if( v.obj[v.opt.key] == p.data[v.j][v.opt.key] ) v.flag = true;
+                }
+                if( v.flag ){
+                  // 4ba.キー項目の値が未登録 -&gt; そのまま追加(何もしない)
+                  // 4bb.キー項目の値が登録済(シートのキー項目欄に存在)
+                  v.step = &#039;4bb&#039;;
+                  if( v.opt.update ){
+                    // 4bba. v.opt.update === true -&gt; updateとして処理
+                    v.step = &#039;4bba&#039;;
+                    v.opt.value = v.obj[v.opt.key];
+                    v.opt.append = false;
+                    if((v.r=p.update(v.obj,v.opt)) instanceof Error) throw v.r;
+                    v.rv.push(v.r);
+                    continue;
+                  } else {
+                    // 4bbb. v.opt.update === false -&gt; エラー
+                    v.step = &#039;4bbb&#039;;
+                    throw new Error(&#039;指定されたキーで既に登録されています&#039;);
+                  }
+                }
+              }
+    
+              // 5. 作成したオブジェクトを追加
+              // 5.1.append用配列を作成、シートに追加
+              v.step = &#039;5.1&#039;;
+              v.arr = [];
+              for( v.j=0 ; v.j&lt;p.keys.length ; v.j++ ){
+                v.arr.push(v.obj[p.keys[v.j]] || null);
+              }
+              p.sheet.appendRow(v.arr);
+              // 5.2.結果オブジェクト(szSheetChanged)を作成
+              v.step = &#039;5.2&#039;;
+              v.rv.push({
+                func: &#039;append&#039;,
+                dataNum: p.data.length, // 更新・追加行のrv.data上の添字
+                rawNum: p.raw.length, // 更新・追加行のrv.raw上の添字
+                rowNum: p.raw.length + p.headerRow + 1, // 更新・追加行のスプレッドシート上の行番号
+                changed: ((obj)=&gt;{ // 更新・追加により変化した欄とその値
+                  const rv = [];
+                  Object.keys(obj).forEach(x =&gt; {
+                    rv.push({ // changedColumns - szSheet.update/appendで更新・追加により変化した欄とその値
+                      colName: x, // 更新・追加により値が変化した項目名
+                      colNum: p.colIdx[x],  // 同列番号(自然数)
+                      before: &#039;&#039;, // 修正前の値
+                      after: obj[x],  // 修正後の値
+                    });
+                  });
+                  return rv;
+                })(v.obj),
+              });
+              // 5.3.関連するメンバを更新
+              v.step = &#039;5.3&#039;;
+              p.lastRow += 1;
+              p.raw.push(v.arr);
+              p.data.push(v.obj);
+            }
+    
+            console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+          } catch(e) {
+            console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
+            v.rv = e;
+          } finally {
+            return v.rv;
+          }
+        })(v.rv.members,data,opt)};  // append終了
+    
+        /** delete: 行の削除
+         * @param {Object.&lt;string, any&gt;} cond - 削除条件。項目名:値が「全て」該当する行を削除
+         * @returns {szSheetChanged[]} 更新結果
+         */
+        v.step = &#039;4.5 delete&#039;;
+        v.rv.delete = (cond) =&gt; {return ((p,cond)=&gt;{
+          const v = {whois:p.whois+&#039;.delete&#039;,rv:[]};
+          try {
+            console.log(v.whois+&#039; start.\ncond=&#039;+JSON.stringify(cond));
+    
+            // 1.事前準備
+            v.step = &#039;1&#039;;
+            v.cond = cond;
+            v.map = Object.keys(v.cond);
+    
+            // 2.逆順に一件ずつ確認
+            for( v.i=p.data.length-1 ; v.i&gt;=0 ; v.i-- ){
+              // 2.1.該当するか判断
+              v.step = &#039;2.1&#039;;
+              v.flag = true;
+              for( v.j=0 ; v.j&lt;v.map.length ; v.j++ ){
+                v.r = p.isEqual(v.cond[v.map[v.j]],p.data[v.i][v.map[v.j]]);
+                if( v.r instanceof Error ) throw v.r;
+                if( v.r === false ) v.flag = false;
+              }
+              if( v.flag === true ){
+                // 2.2.該当した場合、削除処理
+                v.step = &#039;2.2&#039;;
+                v.rObj = {
+                  func: &#039;delete&#039;,
+                  dataNum: v.i,
+                  rawNum: p.headerRow+v.i,
+                  rowNum: p.headerRow+v.i+1,
+                  changed: {...p.data[v.i]}
+                }
+                v.rv.push(v.rObj);
+                p.sheet.deleteRow(v.rObj.rowNum);
+                p.lastRow -= 1;
+                p.raw.splice(v.rObj.rawNum,1);
+                p.data.splice(v.rObj.dataNum,1);
+              }
+            }
+    
+            console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+          } catch(e) {
+            console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
+            v.rv = e;
+          } finally {
+            return v.rv;
+          }
+        })(v.rv.members,cond)};  // delete終了
+    
+        /** objectize: 階層形式のシートをオブジェクト化
+         * @param {number|string} stCol - 分類の開始列番号(自然数)、または項目名
+         * @param {number|string} edCol - 分類の終了列番号(自然数)、または項目名
+         * @param {string|string[]} [valid] - データとして取得したい項目名。省略すると分類範囲列以外の全項目。
+         * @returns {Object.&lt;string, any&gt;} 変換結果
+         */
+        v.step = &#039;4.6 objectize&#039;;
+        v.rv.objectize = (stCol,edCol,valid) =&gt; {return ((p,stCol,edCol,valid)=&gt;{
+          const v = {whois:p.whois+&#039;.objectize&#039;,rv:{}};
+          try {
+            console.log(v.whois+&#039; start.\nstCol=&#039;+stCol+&#039;, edCol=&#039;+edCol+&#039;, valid=&#039;+valid);
+    
+            v.arr = [p.keys];
+            for( v.i=p.headerRow ; v.i&lt;p.raw.length ; v.i++ ){
+              v.arr.push(p.raw[v.i]);
+            }
+            v.rv = objectize(v.arr,stCol,edCol,valid);
+            if( v.rv instanceof Error ) throw v.rv;
+    
+            console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+          } catch(e) {
+            console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
+            v.rv = e;
+          } finally {
+            return v.rv;
+          }
+        })(v.rv.members,stCol,edCol,valid)};  // objectize終了
+    
+        // 5.メソッドへの受渡用のメンバ変数のオブジェクトを作成
+        v.step = &#039;5&#039;;
+        const members = {whois:v.whois};
+        Object.keys(v.rv).forEach(x =&gt; members[x] = v.rv[x]);
+        v.rv.members = members;
+    
+        console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
+      } catch(e) {
+        console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
+        v.rv = e;
+      } finally {
+        return v.rv;
+      }
+    }
+    
+    function whichType(arg,is){
+      let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+      switch(rv){
+        case &#039;Number&#039;: if(Number.isNaN(arg)) rv = &#039;NaN&#039;; break;
+        case &#039;Function&#039;: if(!(&#039;prototype&#039; in arg)) rv = &#039;Arrow&#039;; break;
+      }
+      if( typeof is === &#039;string&#039; ){
+        return rv.toLowerCase() === is.toLowerCase();
+      } else {
+        return rv;
+      }
+    }</pre></div>
+    <div name="cryptico"><pre class="prettyprint lang-js linenums">/** GASLib.cryptico: crypticoをGASで動作するようカスタマイズ
+      * https://wwwtyro.github.io/cryptico/  cryptico.min.js
+      * ※navigatorは動作のために追加したブラウザの動作環境
+      */
+     
+     const navigator = {
+       appName: &quot;Netscape&quot;,
+       appVersion: &#039;5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36&#039;
+     };
+     
+     var dbits,canary=244837814094590,j_lm=(canary&amp;16777215)==15715070;function BigInteger(a,b,c){a!=null&amp;&amp;(&quot;number&quot;==typeof a?this.fromNumber(a,b,c):b==null&amp;&amp;&quot;string&quot;!=typeof a?this.fromString(a,256):this.fromString(a,b))}function nbi(){return new BigInteger(null)}function am1(a,b,c,d,e,g){for(;--g&gt;=0;){var h=b*this[a++]+c[d]+e,e=Math.floor(h/67108864);c[d++]=h&amp;67108863}return e}
+     function am2(a,b,c,d,e,g){var h=b&amp;32767;for(b&gt;&gt;=15;--g&gt;=0;){var f=this[a]&amp;32767,o=this[a++]&gt;&gt;15,p=b*f+o*h,f=h*f+((p&amp;32767)&lt;&lt;15)+c[d]+(e&amp;1073741823),e=(f&gt;&gt;&gt;30)+(p&gt;&gt;&gt;15)+b*o+(e&gt;&gt;&gt;30);c[d++]=f&amp;1073741823}return e}function am3(a,b,c,d,e,g){var h=b&amp;16383;for(b&gt;&gt;=14;--g&gt;=0;){var f=this[a]&amp;16383,o=this[a++]&gt;&gt;14,p=b*f+o*h,f=h*f+((p&amp;16383)&lt;&lt;14)+c[d]+e,e=(f&gt;&gt;28)+(p&gt;&gt;14)+b*o;c[d++]=f&amp;268435455}return e}
+     j_lm&amp;&amp;navigator.appName==&quot;Microsoft Internet Explorer&quot;?(BigInteger.prototype.am=am2,dbits=30):j_lm&amp;&amp;navigator.appName!=&quot;Netscape&quot;?(BigInteger.prototype.am=am1,dbits=26):(BigInteger.prototype.am=am3,dbits=28);BigInteger.prototype.DB=dbits;BigInteger.prototype.DM=(1&lt;&lt;dbits)-1;BigInteger.prototype.DV=1&lt;&lt;dbits;var BI_FP=52;BigInteger.prototype.FV=Math.pow(2,BI_FP);BigInteger.prototype.F1=BI_FP-dbits;BigInteger.prototype.F2=2*dbits-BI_FP;var BI_RM=&quot;0123456789abcdefghijklmnopqrstuvwxyz&quot;,BI_RC=[],rr,vv;
+     rr=&quot;0&quot;.charCodeAt(0);for(vv=0;vv&lt;=9;++vv)BI_RC[rr++]=vv;rr=&quot;a&quot;.charCodeAt(0);for(vv=10;vv&lt;36;++vv)BI_RC[rr++]=vv;rr=&quot;A&quot;.charCodeAt(0);for(vv=10;vv&lt;36;++vv)BI_RC[rr++]=vv;function int2char(a){return BI_RM.charAt(a)}function intAt(a,b){var c=BI_RC[a.charCodeAt(b)];return c==null?-1:c}function bnpCopyTo(a){for(var b=this.t-1;b&gt;=0;--b)a[b]=this[b];a.t=this.t;a.s=this.s}function bnpFromInt(a){this.t=1;this.s=a&lt;0?-1:0;a&gt;0?this[0]=a:a&lt;-1?this[0]=a+DV:this.t=0}
+     function nbv(a){var b=nbi();b.fromInt(a);return b}
+     function bnpFromString(a,b){var c;if(b==16)c=4;else if(b==8)c=3;else if(b==256)c=8;else if(b==2)c=1;else if(b==32)c=5;else if(b==4)c=2;else{this.fromRadix(a,b);return}this.s=this.t=0;for(var d=a.length,e=!1,g=0;--d&gt;=0;){var h=c==8?a[d]&amp;255:intAt(a,d);h&lt;0?a.charAt(d)==&quot;-&quot;&amp;&amp;(e=!0):(e=!1,g==0?this[this.t++]=h:g+c&gt;this.DB?(this[this.t-1]|=(h&amp;(1&lt;&lt;this.DB-g)-1)&lt;&lt;g,this[this.t++]=h&gt;&gt;this.DB-g):this[this.t-1]|=h&lt;&lt;g,g+=c,g&gt;=this.DB&amp;&amp;(g-=this.DB))}if(c==8&amp;&amp;(a[0]&amp;128)!=0)this.s=-1,g&gt;0&amp;&amp;(this[this.t-1]|=(1&lt;&lt;
+     this.DB-g)-1&lt;&lt;g);this.clamp();e&amp;&amp;BigInteger.ZERO.subTo(this,this)}function bnpClamp(){for(var a=this.s&amp;this.DM;this.t&gt;0&amp;&amp;this[this.t-1]==a;)--this.t}
+     function bnToString(a){if(this.s&lt;0)return&quot;-&quot;+this.negate().toString(a);if(a==16)a=4;else if(a==8)a=3;else if(a==2)a=1;else if(a==32)a=5;else if(a==64)a=6;else if(a==4)a=2;else return this.toRadix(a);var b=(1&lt;&lt;a)-1,c,d=!1,e=&quot;&quot;,g=this.t,h=this.DB-g*this.DB%a;if(g-- &gt;0){if(h&lt;this.DB&amp;&amp;(c=this[g]&gt;&gt;h)&gt;0)d=!0,e=int2char(c);for(;g&gt;=0;)h&lt;a?(c=(this[g]&amp;(1&lt;&lt;h)-1)&lt;&lt;a-h,c|=this[--g]&gt;&gt;(h+=this.DB-a)):(c=this[g]&gt;&gt;(h-=a)&amp;b,h&lt;=0&amp;&amp;(h+=this.DB,--g)),c&gt;0&amp;&amp;(d=!0),d&amp;&amp;(e+=int2char(c))}return d?e:&quot;0&quot;}
+     function bnNegate(){var a=nbi();BigInteger.ZERO.subTo(this,a);return a}function bnAbs(){return this.s&lt;0?this.negate():this}function bnCompareTo(a){var b=this.s-a.s;if(b!=0)return b;var c=this.t,b=c-a.t;if(b!=0)return b;for(;--c&gt;=0;)if((b=this[c]-a[c])!=0)return b;return 0}function nbits(a){var b=1,c;if((c=a&gt;&gt;&gt;16)!=0)a=c,b+=16;if((c=a&gt;&gt;8)!=0)a=c,b+=8;if((c=a&gt;&gt;4)!=0)a=c,b+=4;if((c=a&gt;&gt;2)!=0)a=c,b+=2;a&gt;&gt;1!=0&amp;&amp;(b+=1);return b}
+     function bnBitLength(){return this.t&lt;=0?0:this.DB*(this.t-1)+nbits(this[this.t-1]^this.s&amp;this.DM)}function bnpDLShiftTo(a,b){var c;for(c=this.t-1;c&gt;=0;--c)b[c+a]=this[c];for(c=a-1;c&gt;=0;--c)b[c]=0;b.t=this.t+a;b.s=this.s}function bnpDRShiftTo(a,b){for(var c=a;c&lt;this.t;++c)b[c-a]=this[c];b.t=Math.max(this.t-a,0);b.s=this.s}
+     function bnpLShiftTo(a,b){var c=a%this.DB,d=this.DB-c,e=(1&lt;&lt;d)-1,g=Math.floor(a/this.DB),h=this.s&lt;&lt;c&amp;this.DM,f;for(f=this.t-1;f&gt;=0;--f)b[f+g+1]=this[f]&gt;&gt;d|h,h=(this[f]&amp;e)&lt;&lt;c;for(f=g-1;f&gt;=0;--f)b[f]=0;b[g]=h;b.t=this.t+g+1;b.s=this.s;b.clamp()}
+     function bnpRShiftTo(a,b){b.s=this.s;var c=Math.floor(a/this.DB);if(c&gt;=this.t)b.t=0;else{var d=a%this.DB,e=this.DB-d,g=(1&lt;&lt;d)-1;b[0]=this[c]&gt;&gt;d;for(var h=c+1;h&lt;this.t;++h)b[h-c-1]|=(this[h]&amp;g)&lt;&lt;e,b[h-c]=this[h]&gt;&gt;d;d&gt;0&amp;&amp;(b[this.t-c-1]|=(this.s&amp;g)&lt;&lt;e);b.t=this.t-c;b.clamp()}}
+     function bnpSubTo(a,b){for(var c=0,d=0,e=Math.min(a.t,this.t);c&lt;e;)d+=this[c]-a[c],b[c++]=d&amp;this.DM,d&gt;&gt;=this.DB;if(a.t&lt;this.t){for(d-=a.s;c&lt;this.t;)d+=this[c],b[c++]=d&amp;this.DM,d&gt;&gt;=this.DB;d+=this.s}else{for(d+=this.s;c&lt;a.t;)d-=a[c],b[c++]=d&amp;this.DM,d&gt;&gt;=this.DB;d-=a.s}b.s=d&lt;0?-1:0;d&lt;-1?b[c++]=this.DV+d:d&gt;0&amp;&amp;(b[c++]=d);b.t=c;b.clamp()}
+     function bnpMultiplyTo(a,b){var c=this.abs(),d=a.abs(),e=c.t;for(b.t=e+d.t;--e&gt;=0;)b[e]=0;for(e=0;e&lt;d.t;++e)b[e+c.t]=c.am(0,d[e],b,e,0,c.t);b.s=0;b.clamp();this.s!=a.s&amp;&amp;BigInteger.ZERO.subTo(b,b)}function bnpSquareTo(a){for(var b=this.abs(),c=a.t=2*b.t;--c&gt;=0;)a[c]=0;for(c=0;c&lt;b.t-1;++c){var d=b.am(c,b[c],a,2*c,0,1);if((a[c+b.t]+=b.am(c+1,2*b[c],a,2*c+1,d,b.t-c-1))&gt;=b.DV)a[c+b.t]-=b.DV,a[c+b.t+1]=1}a.t&gt;0&amp;&amp;(a[a.t-1]+=b.am(c,b[c],a,2*c,0,1));a.s=0;a.clamp()}
+     function bnpDivRemTo(a,b,c){var d=a.abs();if(!(d.t&lt;=0)){var e=this.abs();if(e.t&lt;d.t)b!=null&amp;&amp;b.fromInt(0),c!=null&amp;&amp;this.copyTo(c);else{c==null&amp;&amp;(c=nbi());var g=nbi(),h=this.s,a=a.s,f=this.DB-nbits(d[d.t-1]);f&gt;0?(d.lShiftTo(f,g),e.lShiftTo(f,c)):(d.copyTo(g),e.copyTo(c));d=g.t;e=g[d-1];if(e!=0){var o=e*(1&lt;&lt;this.F1)+(d&gt;1?g[d-2]&gt;&gt;this.F2:0),p=this.FV/o,o=(1&lt;&lt;this.F1)/o,q=1&lt;&lt;this.F2,n=c.t,k=n-d,j=b==null?nbi():b;g.dlShiftTo(k,j);c.compareTo(j)&gt;=0&amp;&amp;(c[c.t++]=1,c.subTo(j,c));BigInteger.ONE.dlShiftTo(d,
+     j);for(j.subTo(g,g);g.t&lt;d;)g[g.t++]=0;for(;--k&gt;=0;){var l=c[--n]==e?this.DM:Math.floor(c[n]*p+(c[n-1]+q)*o);if((c[n]+=g.am(0,l,c,k,0,d))&lt;l){g.dlShiftTo(k,j);for(c.subTo(j,c);c[n]&lt;--l;)c.subTo(j,c)}}b!=null&amp;&amp;(c.drShiftTo(d,b),h!=a&amp;&amp;BigInteger.ZERO.subTo(b,b));c.t=d;c.clamp();f&gt;0&amp;&amp;c.rShiftTo(f,c);h&lt;0&amp;&amp;BigInteger.ZERO.subTo(c,c)}}}}function bnMod(a){var b=nbi();this.abs().divRemTo(a,null,b);this.s&lt;0&amp;&amp;b.compareTo(BigInteger.ZERO)&gt;0&amp;&amp;a.subTo(b,b);return b}function Classic(a){this.m=a}
+     function cConvert(a){return a.s&lt;0||a.compareTo(this.m)&gt;=0?a.mod(this.m):a}function cRevert(a){return a}function cReduce(a){a.divRemTo(this.m,null,a)}function cMulTo(a,b,c){a.multiplyTo(b,c);this.reduce(c)}function cSqrTo(a,b){a.squareTo(b);this.reduce(b)}Classic.prototype.convert=cConvert;Classic.prototype.revert=cRevert;Classic.prototype.reduce=cReduce;Classic.prototype.mulTo=cMulTo;Classic.prototype.sqrTo=cSqrTo;
+     function bnpInvDigit(){if(this.t&lt;1)return 0;var a=this[0];if((a&amp;1)==0)return 0;var b=a&amp;3,b=b*(2-(a&amp;15)*b)&amp;15,b=b*(2-(a&amp;255)*b)&amp;255,b=b*(2-((a&amp;65535)*b&amp;65535))&amp;65535,b=b*(2-a*b%this.DV)%this.DV;return b&gt;0?this.DV-b:-b}function Montgomery(a){this.m=a;this.mp=a.invDigit();this.mpl=this.mp&amp;32767;this.mph=this.mp&gt;&gt;15;this.um=(1&lt;&lt;a.DB-15)-1;this.mt2=2*a.t}
+     function montConvert(a){var b=nbi();a.abs().dlShiftTo(this.m.t,b);b.divRemTo(this.m,null,b);a.s&lt;0&amp;&amp;b.compareTo(BigInteger.ZERO)&gt;0&amp;&amp;this.m.subTo(b,b);return b}function montRevert(a){var b=nbi();a.copyTo(b);this.reduce(b);return b}
+     function montReduce(a){for(;a.t&lt;=this.mt2;)a[a.t++]=0;for(var b=0;b&lt;this.m.t;++b){var c=a[b]&amp;32767,d=c*this.mpl+((c*this.mph+(a[b]&gt;&gt;15)*this.mpl&amp;this.um)&lt;&lt;15)&amp;a.DM,c=b+this.m.t;for(a[c]+=this.m.am(0,d,a,b,0,this.m.t);a[c]&gt;=a.DV;)a[c]-=a.DV,a[++c]++}a.clamp();a.drShiftTo(this.m.t,a);a.compareTo(this.m)&gt;=0&amp;&amp;a.subTo(this.m,a)}function montSqrTo(a,b){a.squareTo(b);this.reduce(b)}function montMulTo(a,b,c){a.multiplyTo(b,c);this.reduce(c)}Montgomery.prototype.convert=montConvert;
+     Montgomery.prototype.revert=montRevert;Montgomery.prototype.reduce=montReduce;Montgomery.prototype.mulTo=montMulTo;Montgomery.prototype.sqrTo=montSqrTo;function bnpIsEven(){return(this.t&gt;0?this[0]&amp;1:this.s)==0}function bnpExp(a,b){if(a&gt;4294967295||a&lt;1)return BigInteger.ONE;var c=nbi(),d=nbi(),e=b.convert(this),g=nbits(a)-1;for(e.copyTo(c);--g&gt;=0;)if(b.sqrTo(c,d),(a&amp;1&lt;&lt;g)&gt;0)b.mulTo(d,e,c);else var h=c,c=d,d=h;return b.revert(c)}
+     function bnModPowInt(a,b){var c;c=a&lt;256||b.isEven()?new Classic(b):new Montgomery(b);return this.exp(a,c)}BigInteger.prototype.copyTo=bnpCopyTo;BigInteger.prototype.fromInt=bnpFromInt;BigInteger.prototype.fromString=bnpFromString;BigInteger.prototype.clamp=bnpClamp;BigInteger.prototype.dlShiftTo=bnpDLShiftTo;BigInteger.prototype.drShiftTo=bnpDRShiftTo;BigInteger.prototype.lShiftTo=bnpLShiftTo;BigInteger.prototype.rShiftTo=bnpRShiftTo;BigInteger.prototype.subTo=bnpSubTo;
+     BigInteger.prototype.multiplyTo=bnpMultiplyTo;BigInteger.prototype.squareTo=bnpSquareTo;BigInteger.prototype.divRemTo=bnpDivRemTo;BigInteger.prototype.invDigit=bnpInvDigit;BigInteger.prototype.isEven=bnpIsEven;BigInteger.prototype.exp=bnpExp;BigInteger.prototype.toString=bnToString;BigInteger.prototype.negate=bnNegate;BigInteger.prototype.abs=bnAbs;BigInteger.prototype.compareTo=bnCompareTo;BigInteger.prototype.bitLength=bnBitLength;BigInteger.prototype.mod=bnMod;BigInteger.prototype.modPowInt=bnModPowInt;
+     BigInteger.ZERO=nbv(0);BigInteger.ONE=nbv(1);function bnClone(){var a=nbi();this.copyTo(a);return a}function bnIntValue(){if(this.s&lt;0)if(this.t==1)return this[0]-this.DV;else{if(this.t==0)return-1}else if(this.t==1)return this[0];else if(this.t==0)return 0;return(this[1]&amp;(1&lt;&lt;32-this.DB)-1)&lt;&lt;this.DB|this[0]}function bnByteValue(){return this.t==0?this.s:this[0]&lt;&lt;24&gt;&gt;24}function bnShortValue(){return this.t==0?this.s:this[0]&lt;&lt;16&gt;&gt;16}
+     function bnpChunkSize(a){return Math.floor(Math.LN2*this.DB/Math.log(a))}function bnSigNum(){return this.s&lt;0?-1:this.t&lt;=0||this.t==1&amp;&amp;this[0]&lt;=0?0:1}function bnpToRadix(a){a==null&amp;&amp;(a=10);if(this.signum()==0||a&lt;2||a&gt;36)return&quot;0&quot;;var b=this.chunkSize(a),b=Math.pow(a,b),c=nbv(b),d=nbi(),e=nbi(),g=&quot;&quot;;for(this.divRemTo(c,d,e);d.signum()&gt;0;)g=(b+e.intValue()).toString(a).substr(1)+g,d.divRemTo(c,d,e);return e.intValue().toString(a)+g}
+     function bnpFromRadix(a,b){this.fromInt(0);b==null&amp;&amp;(b=10);for(var c=this.chunkSize(b),d=Math.pow(b,c),e=!1,g=0,h=0,f=0;f&lt;a.length;++f){var o=intAt(a,f);o&lt;0?a.charAt(f)==&quot;-&quot;&amp;&amp;this.signum()==0&amp;&amp;(e=!0):(h=b*h+o,++g&gt;=c&amp;&amp;(this.dMultiply(d),this.dAddOffset(h,0),h=g=0))}g&gt;0&amp;&amp;(this.dMultiply(Math.pow(b,g)),this.dAddOffset(h,0));e&amp;&amp;BigInteger.ZERO.subTo(this,this)}
+     function bnpFromNumber(a,b,c){if(&quot;number&quot;==typeof b)if(a&lt;2)this.fromInt(1);else{this.fromNumber(a,c);this.testBit(a-1)||this.bitwiseTo(BigInteger.ONE.shiftLeft(a-1),op_or,this);for(this.isEven()&amp;&amp;this.dAddOffset(1,0);!this.isProbablePrime(b);)this.dAddOffset(2,0),this.bitLength()&gt;a&amp;&amp;this.subTo(BigInteger.ONE.shiftLeft(a-1),this)}else{var c=[],d=a&amp;7;c.length=(a&gt;&gt;3)+1;b.nextBytes(c);d&gt;0?c[0]&amp;=(1&lt;&lt;d)-1:c[0]=0;this.fromString(c,256)}}
+     function bnToByteArray(){var a=this.t,b=[];b[0]=this.s;var c=this.DB-a*this.DB%8,d,e=0;if(a-- &gt;0){if(c&lt;this.DB&amp;&amp;(d=this[a]&gt;&gt;c)!=(this.s&amp;this.DM)&gt;&gt;c)b[e++]=d|this.s&lt;&lt;this.DB-c;for(;a&gt;=0;)if(c&lt;8?(d=(this[a]&amp;(1&lt;&lt;c)-1)&lt;&lt;8-c,d|=this[--a]&gt;&gt;(c+=this.DB-8)):(d=this[a]&gt;&gt;(c-=8)&amp;255,c&lt;=0&amp;&amp;(c+=this.DB,--a)),(d&amp;128)!=0&amp;&amp;(d|=-256),e==0&amp;&amp;(this.s&amp;128)!=(d&amp;128)&amp;&amp;++e,e&gt;0||d!=this.s)b[e++]=d}return b}function bnEquals(a){return this.compareTo(a)==0}function bnMin(a){return this.compareTo(a)&lt;0?this:a}
+     function bnMax(a){return this.compareTo(a)&gt;0?this:a}function bnpBitwiseTo(a,b,c){var d,e,g=Math.min(a.t,this.t);for(d=0;d&lt;g;++d)c[d]=b(this[d],a[d]);if(a.t&lt;this.t){e=a.s&amp;this.DM;for(d=g;d&lt;this.t;++d)c[d]=b(this[d],e);c.t=this.t}else{e=this.s&amp;this.DM;for(d=g;d&lt;a.t;++d)c[d]=b(e,a[d]);c.t=a.t}c.s=b(this.s,a.s);c.clamp()}function op_and(a,b){return a&amp;b}function bnAnd(a){var b=nbi();this.bitwiseTo(a,op_and,b);return b}function op_or(a,b){return a|b}
+     function bnOr(a){var b=nbi();this.bitwiseTo(a,op_or,b);return b}function op_xor(a,b){return a^b}function bnXor(a){var b=nbi();this.bitwiseTo(a,op_xor,b);return b}function op_andnot(a,b){return a&amp;~b}function bnAndNot(a){var b=nbi();this.bitwiseTo(a,op_andnot,b);return b}function bnNot(){for(var a=nbi(),b=0;b&lt;this.t;++b)a[b]=this.DM&amp;~this[b];a.t=this.t;a.s=~this.s;return a}function bnShiftLeft(a){var b=nbi();a&lt;0?this.rShiftTo(-a,b):this.lShiftTo(a,b);return b}
+     function bnShiftRight(a){var b=nbi();a&lt;0?this.lShiftTo(-a,b):this.rShiftTo(a,b);return b}function lbit(a){if(a==0)return-1;var b=0;(a&amp;65535)==0&amp;&amp;(a&gt;&gt;=16,b+=16);(a&amp;255)==0&amp;&amp;(a&gt;&gt;=8,b+=8);(a&amp;15)==0&amp;&amp;(a&gt;&gt;=4,b+=4);(a&amp;3)==0&amp;&amp;(a&gt;&gt;=2,b+=2);(a&amp;1)==0&amp;&amp;++b;return b}function bnGetLowestSetBit(){for(var a=0;a&lt;this.t;++a)if(this[a]!=0)return a*this.DB+lbit(this[a]);return this.s&lt;0?this.t*this.DB:-1}function cbit(a){for(var b=0;a!=0;)a&amp;=a-1,++b;return b}
+     function bnBitCount(){for(var a=0,b=this.s&amp;this.DM,c=0;c&lt;this.t;++c)a+=cbit(this[c]^b);return a}function bnTestBit(a){var b=Math.floor(a/this.DB);return b&gt;=this.t?this.s!=0:(this[b]&amp;1&lt;&lt;a%this.DB)!=0}function bnpChangeBit(a,b){var c=BigInteger.ONE.shiftLeft(a);this.bitwiseTo(c,b,c);return c}function bnSetBit(a){return this.changeBit(a,op_or)}function bnClearBit(a){return this.changeBit(a,op_andnot)}function bnFlipBit(a){return this.changeBit(a,op_xor)}
+     function bnpAddTo(a,b){for(var c=0,d=0,e=Math.min(a.t,this.t);c&lt;e;)d+=this[c]+a[c],b[c++]=d&amp;this.DM,d&gt;&gt;=this.DB;if(a.t&lt;this.t){for(d+=a.s;c&lt;this.t;)d+=this[c],b[c++]=d&amp;this.DM,d&gt;&gt;=this.DB;d+=this.s}else{for(d+=this.s;c&lt;a.t;)d+=a[c],b[c++]=d&amp;this.DM,d&gt;&gt;=this.DB;d+=a.s}b.s=d&lt;0?-1:0;d&gt;0?b[c++]=d:d&lt;-1&amp;&amp;(b[c++]=this.DV+d);b.t=c;b.clamp()}function bnAdd(a){var b=nbi();this.addTo(a,b);return b}function bnSubtract(a){var b=nbi();this.subTo(a,b);return b}
+     function bnMultiply(a){var b=nbi();this.multiplyTo(a,b);return b}function bnSquare(){var a=nbi();this.squareTo(a);return a}function bnDivide(a){var b=nbi();this.divRemTo(a,b,null);return b}function bnRemainder(a){var b=nbi();this.divRemTo(a,null,b);return b}function bnDivideAndRemainder(a){var b=nbi(),c=nbi();this.divRemTo(a,b,c);return[b,c]}function bnpDMultiply(a){this[this.t]=this.am(0,a-1,this,0,0,this.t);++this.t;this.clamp()}
+     function bnpDAddOffset(a,b){if(a!=0){for(;this.t&lt;=b;)this[this.t++]=0;for(this[b]+=a;this[b]&gt;=this.DV;)this[b]-=this.DV,++b&gt;=this.t&amp;&amp;(this[this.t++]=0),++this[b]}}function NullExp(){}function nNop(a){return a}function nMulTo(a,b,c){a.multiplyTo(b,c)}function nSqrTo(a,b){a.squareTo(b)}NullExp.prototype.convert=nNop;NullExp.prototype.revert=nNop;NullExp.prototype.mulTo=nMulTo;NullExp.prototype.sqrTo=nSqrTo;function bnPow(a){return this.exp(a,new NullExp)}
+     function bnpMultiplyLowerTo(a,b,c){var d=Math.min(this.t+a.t,b);c.s=0;for(c.t=d;d&gt;0;)c[--d]=0;var e;for(e=c.t-this.t;d&lt;e;++d)c[d+this.t]=this.am(0,a[d],c,d,0,this.t);for(e=Math.min(a.t,b);d&lt;e;++d)this.am(0,a[d],c,d,0,b-d);c.clamp()}function bnpMultiplyUpperTo(a,b,c){--b;var d=c.t=this.t+a.t-b;for(c.s=0;--d&gt;=0;)c[d]=0;for(d=Math.max(b-this.t,0);d&lt;a.t;++d)c[this.t+d-b]=this.am(b-d,a[d],c,0,0,this.t+d-b);c.clamp();c.drShiftTo(1,c)}
+     function Barrett(a){this.r2=nbi();this.q3=nbi();BigInteger.ONE.dlShiftTo(2*a.t,this.r2);this.mu=this.r2.divide(a);this.m=a}function barrettConvert(a){if(a.s&lt;0||a.t&gt;2*this.m.t)return a.mod(this.m);else if(a.compareTo(this.m)&lt;0)return a;else{var b=nbi();a.copyTo(b);this.reduce(b);return b}}function barrettRevert(a){return a}
+     function barrettReduce(a){a.drShiftTo(this.m.t-1,this.r2);if(a.t&gt;this.m.t+1)a.t=this.m.t+1,a.clamp();this.mu.multiplyUpperTo(this.r2,this.m.t+1,this.q3);for(this.m.multiplyLowerTo(this.q3,this.m.t+1,this.r2);a.compareTo(this.r2)&lt;0;)a.dAddOffset(1,this.m.t+1);for(a.subTo(this.r2,a);a.compareTo(this.m)&gt;=0;)a.subTo(this.m,a)}function barrettSqrTo(a,b){a.squareTo(b);this.reduce(b)}function barrettMulTo(a,b,c){a.multiplyTo(b,c);this.reduce(c)}Barrett.prototype.convert=barrettConvert;
+     Barrett.prototype.revert=barrettRevert;Barrett.prototype.reduce=barrettReduce;Barrett.prototype.mulTo=barrettMulTo;Barrett.prototype.sqrTo=barrettSqrTo;
+     function bnModPow(a,b){var c=a.bitLength(),d,e=nbv(1),g;if(c&lt;=0)return e;else d=c&lt;18?1:c&lt;48?3:c&lt;144?4:c&lt;768?5:6;g=c&lt;8?new Classic(b):b.isEven()?new Barrett(b):new Montgomery(b);var h=[],f=3,o=d-1,p=(1&lt;&lt;d)-1;h[1]=g.convert(this);if(d&gt;1){c=nbi();for(g.sqrTo(h[1],c);f&lt;=p;)h[f]=nbi(),g.mulTo(c,h[f-2],h[f]),f+=2}for(var q=a.t-1,n,k=!0,j=nbi(),c=nbits(a[q])-1;q&gt;=0;){c&gt;=o?n=a[q]&gt;&gt;c-o&amp;p:(n=(a[q]&amp;(1&lt;&lt;c+1)-1)&lt;&lt;o-c,q&gt;0&amp;&amp;(n|=a[q-1]&gt;&gt;this.DB+c-o));for(f=d;(n&amp;1)==0;)n&gt;&gt;=1,--f;if((c-=f)&lt;0)c+=this.DB,--q;if(k)h[n].copyTo(e),
+     k=!1;else{for(;f&gt;1;)g.sqrTo(e,j),g.sqrTo(j,e),f-=2;f&gt;0?g.sqrTo(e,j):(f=e,e=j,j=f);g.mulTo(j,h[n],e)}for(;q&gt;=0&amp;&amp;(a[q]&amp;1&lt;&lt;c)==0;)g.sqrTo(e,j),f=e,e=j,j=f,--c&lt;0&amp;&amp;(c=this.DB-1,--q)}return g.revert(e)}
+     function bnGCD(a){var b=this.s&lt;0?this.negate():this.clone(),a=a.s&lt;0?a.negate():a.clone();if(b.compareTo(a)&lt;0)var c=b,b=a,a=c;var c=b.getLowestSetBit(),d=a.getLowestSetBit();if(d&lt;0)return b;c&lt;d&amp;&amp;(d=c);d&gt;0&amp;&amp;(b.rShiftTo(d,b),a.rShiftTo(d,a));for(;b.signum()&gt;0;)(c=b.getLowestSetBit())&gt;0&amp;&amp;b.rShiftTo(c,b),(c=a.getLowestSetBit())&gt;0&amp;&amp;a.rShiftTo(c,a),b.compareTo(a)&gt;=0?(b.subTo(a,b),b.rShiftTo(1,b)):(a.subTo(b,a),a.rShiftTo(1,a));d&gt;0&amp;&amp;a.lShiftTo(d,a);return a}
+     function bnpModInt(a){if(a&lt;=0)return 0;var b=this.DV%a,c=this.s&lt;0?a-1:0;if(this.t&gt;0)if(b==0)c=this[0]%a;else for(var d=this.t-1;d&gt;=0;--d)c=(b*c+this[d])%a;return c}
+     function bnModInverse(a){var b=a.isEven();if(this.isEven()&amp;&amp;b||a.signum()==0)return BigInteger.ZERO;for(var c=a.clone(),d=this.clone(),e=nbv(1),g=nbv(0),h=nbv(0),f=nbv(1);c.signum()!=0;){for(;c.isEven();){c.rShiftTo(1,c);if(b){if(!e.isEven()||!g.isEven())e.addTo(this,e),g.subTo(a,g);e.rShiftTo(1,e)}else g.isEven()||g.subTo(a,g);g.rShiftTo(1,g)}for(;d.isEven();){d.rShiftTo(1,d);if(b){if(!h.isEven()||!f.isEven())h.addTo(this,h),f.subTo(a,f);h.rShiftTo(1,h)}else f.isEven()||f.subTo(a,f);f.rShiftTo(1,
+     f)}c.compareTo(d)&gt;=0?(c.subTo(d,c),b&amp;&amp;e.subTo(h,e),g.subTo(f,g)):(d.subTo(c,d),b&amp;&amp;h.subTo(e,h),f.subTo(g,f))}if(d.compareTo(BigInteger.ONE)!=0)return BigInteger.ZERO;if(f.compareTo(a)&gt;=0)return f.subtract(a);if(f.signum()&lt;0)f.addTo(a,f);else return f;return f.signum()&lt;0?f.add(a):f}
+     var lowprimes=[2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,673,677,683,691,701,709,719,727,
+     733,739,743,751,757,761,769,773,787,797,809,811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,941,947,953,967,971,977,983,991,997],lplim=67108864/lowprimes[lowprimes.length-1];
+     function bnIsProbablePrime(a){var b,c=this.abs();if(c.t==1&amp;&amp;c[0]&lt;=lowprimes[lowprimes.length-1]){for(b=0;b&lt;lowprimes.length;++b)if(c[0]==lowprimes[b])return!0;return!1}if(c.isEven())return!1;for(b=1;b&lt;lowprimes.length;){for(var d=lowprimes[b],e=b+1;e&lt;lowprimes.length&amp;&amp;d&lt;lplim;)d*=lowprimes[e++];for(d=c.modInt(d);b&lt;e;)if(d%lowprimes[b++]==0)return!1}return c.millerRabin(a)}
+     function bnpMillerRabin(a){var b=this.subtract(BigInteger.ONE),c=b.getLowestSetBit();if(c&lt;=0)return!1;var d=b.shiftRight(c),a=a+1&gt;&gt;1;if(a&gt;lowprimes.length)a=lowprimes.length;for(var e=nbi(),g=0;g&lt;a;++g){e.fromInt(lowprimes[Math.floor(Math.random()*lowprimes.length)]);var h=e.modPow(d,this);if(h.compareTo(BigInteger.ONE)!=0&amp;&amp;h.compareTo(b)!=0){for(var f=1;f++&lt;c&amp;&amp;h.compareTo(b)!=0;)if(h=h.modPowInt(2,this),h.compareTo(BigInteger.ONE)==0)return!1;if(h.compareTo(b)!=0)return!1}}return!0}
+     BigInteger.prototype.chunkSize=bnpChunkSize;BigInteger.prototype.toRadix=bnpToRadix;BigInteger.prototype.fromRadix=bnpFromRadix;BigInteger.prototype.fromNumber=bnpFromNumber;BigInteger.prototype.bitwiseTo=bnpBitwiseTo;BigInteger.prototype.changeBit=bnpChangeBit;BigInteger.prototype.addTo=bnpAddTo;BigInteger.prototype.dMultiply=bnpDMultiply;BigInteger.prototype.dAddOffset=bnpDAddOffset;BigInteger.prototype.multiplyLowerTo=bnpMultiplyLowerTo;BigInteger.prototype.multiplyUpperTo=bnpMultiplyUpperTo;
+     BigInteger.prototype.modInt=bnpModInt;BigInteger.prototype.millerRabin=bnpMillerRabin;BigInteger.prototype.clone=bnClone;BigInteger.prototype.intValue=bnIntValue;BigInteger.prototype.byteValue=bnByteValue;BigInteger.prototype.shortValue=bnShortValue;BigInteger.prototype.signum=bnSigNum;BigInteger.prototype.toByteArray=bnToByteArray;BigInteger.prototype.equals=bnEquals;BigInteger.prototype.min=bnMin;BigInteger.prototype.max=bnMax;BigInteger.prototype.and=bnAnd;BigInteger.prototype.or=bnOr;
+     BigInteger.prototype.xor=bnXor;BigInteger.prototype.andNot=bnAndNot;BigInteger.prototype.not=bnNot;BigInteger.prototype.shiftLeft=bnShiftLeft;BigInteger.prototype.shiftRight=bnShiftRight;BigInteger.prototype.getLowestSetBit=bnGetLowestSetBit;BigInteger.prototype.bitCount=bnBitCount;BigInteger.prototype.testBit=bnTestBit;BigInteger.prototype.setBit=bnSetBit;BigInteger.prototype.clearBit=bnClearBit;BigInteger.prototype.flipBit=bnFlipBit;BigInteger.prototype.add=bnAdd;BigInteger.prototype.subtract=bnSubtract;
+     BigInteger.prototype.multiply=bnMultiply;BigInteger.prototype.divide=bnDivide;BigInteger.prototype.remainder=bnRemainder;BigInteger.prototype.divideAndRemainder=bnDivideAndRemainder;BigInteger.prototype.modPow=bnModPow;BigInteger.prototype.modInverse=bnModInverse;BigInteger.prototype.pow=bnPow;BigInteger.prototype.gcd=bnGCD;BigInteger.prototype.isProbablePrime=bnIsProbablePrime;BigInteger.prototype.square=bnSquare;
+     (function(a,b,c,d,e,g,h){function f(a){var b,d,e=this,g=a.length,f=0,h=e.i=e.j=e.m=0;e.S=[];e.c=[];for(g||(a=[g++]);f&lt;c;)e.S[f]=f++;for(f=0;f&lt;c;f++)b=e.S[f],h=h+b+a[f%g]&amp;c-1,d=e.S[h],e.S[f]=d,e.S[h]=b;e.g=function(a){var b=e.S,d=e.i+1&amp;c-1,g=b[d],f=e.j+g&amp;c-1,h=b[f];b[d]=h;b[f]=g;for(var k=b[g+h&amp;c-1];--a;)d=d+1&amp;c-1,g=b[d],f=f+g&amp;c-1,h=b[f],b[d]=h,b[f]=g,k=k*c+b[g+h&amp;c-1];e.i=d;e.j=f;return k};e.g(c)}function o(a,b,c,d,e){c=[];e=typeof a;if(b&amp;&amp;e==&quot;object&quot;)for(d in a)if(d.indexOf(&quot;S&quot;)&lt;5)try{c.push(o(a[d],
+     b-1))}catch(g){}return c.length?c:a+(e!=&quot;string&quot;?&quot;\x00&quot;:&quot;&quot;)}function p(a,b,d,e){a+=&quot;&quot;;for(e=d=0;e&lt;a.length;e++){var g=b,f=e&amp;c-1,h=(d^=b[e&amp;c-1]*19)+a.charCodeAt(e);g[f]=h&amp;c-1}a=&quot;&quot;;for(e in b)a+=String.fromCharCode(b[e]);return a}b.seedrandom=function(q,n){var k=[],j,q=p(o(n?[q,a]:arguments.length?q:[(new Date).getTime(),a,window],3),k);j=new f(k);p(j.S,a);b.random=function(){for(var a=j.g(d),b=h,f=0;a&lt;e;)a=(a+f)*c,b*=c,f=j.g(1);for(;a&gt;=g;)a/=2,b/=2,f&gt;&gt;&gt;=1;return(a+f)/b};return q};h=b.pow(c,d);e=b.pow(2,
+     e);g=e*2;p(b.random(),a)})([],Math,256,6,52);function SeededRandom(){}function SRnextBytes(a){var b;for(b=0;b&lt;a.length;b++)a[b]=Math.floor(Math.random()*256)}SeededRandom.prototype.nextBytes=SRnextBytes;function Arcfour(){this.j=this.i=0;this.S=[]}function ARC4init(a){var b,c,d;for(b=0;b&lt;256;++b)this.S[b]=b;for(b=c=0;b&lt;256;++b)c=c+this.S[b]+a[b%a.length]&amp;255,d=this.S[b],this.S[b]=this.S[c],this.S[c]=d;this.j=this.i=0}
+     function ARC4next(){var a;this.i=this.i+1&amp;255;this.j=this.j+this.S[this.i]&amp;255;a=this.S[this.i];this.S[this.i]=this.S[this.j];this.S[this.j]=a;return this.S[a+this.S[this.i]&amp;255]}Arcfour.prototype.init=ARC4init;Arcfour.prototype.next=ARC4next;function prng_newstate(){return new Arcfour}var rng_psize=256,rng_state,rng_pool,rng_pptr;
+     function rng_seed_int(a){rng_pool[rng_pptr++]^=a&amp;255;rng_pool[rng_pptr++]^=a&gt;&gt;8&amp;255;rng_pool[rng_pptr++]^=a&gt;&gt;16&amp;255;rng_pool[rng_pptr++]^=a&gt;&gt;24&amp;255;rng_pptr&gt;=rng_psize&amp;&amp;(rng_pptr-=rng_psize)}function rng_seed_time(){rng_seed_int((new Date).getTime())}
+     if(rng_pool==null){rng_pool=[];rng_pptr=0;var t;if(navigator.appName==&quot;Netscape&quot;&amp;&amp;navigator.appVersion&lt;&quot;5&quot;&amp;&amp;window.crypto){var z=window.crypto.random(32);for(t=0;t&lt;z.length;++t)rng_pool[rng_pptr++]=z.charCodeAt(t)&amp;255}for(;rng_pptr&lt;rng_psize;)t=Math.floor(65536*Math.random()),rng_pool[rng_pptr++]=t&gt;&gt;&gt;8,rng_pool[rng_pptr++]=t&amp;255;rng_pptr=0;rng_seed_time()}
+     function rng_get_byte(){if(rng_state==null){rng_seed_time();rng_state=prng_newstate();rng_state.init(rng_pool);for(rng_pptr=0;rng_pptr&lt;rng_pool.length;++rng_pptr)rng_pool[rng_pptr]=0;rng_pptr=0}return rng_state.next()}function rng_get_bytes(a){var b;for(b=0;b&lt;a.length;++b)a[b]=rng_get_byte()}function SecureRandom(){}SecureRandom.prototype.nextBytes=rng_get_bytes;
+     function SHA256(a){function b(a,b){var c=(a&amp;65535)+(b&amp;65535);return(a&gt;&gt;16)+(b&gt;&gt;16)+(c&gt;&gt;16)&lt;&lt;16|c&amp;65535}function c(a,b){return a&gt;&gt;&gt;b|a&lt;&lt;32-b}a=function(a){for(var a=a.replace(/\r\n/g,&quot;\n&quot;),b=&quot;&quot;,c=0;c&lt;a.length;c++){var h=a.charCodeAt(c);h&lt;128?b+=String.fromCharCode(h):(h&gt;127&amp;&amp;h&lt;2048?b+=String.fromCharCode(h&gt;&gt;6|192):(b+=String.fromCharCode(h&gt;&gt;12|224),b+=String.fromCharCode(h&gt;&gt;6&amp;63|128)),b+=String.fromCharCode(h&amp;63|128))}return b}(a);return function(a){for(var b=&quot;&quot;,c=0;c&lt;a.length*4;c++)b+=&quot;0123456789abcdef&quot;.charAt(a[c&gt;&gt;
+     2]&gt;&gt;(3-c%4)*8+4&amp;15)+&quot;0123456789abcdef&quot;.charAt(a[c&gt;&gt;2]&gt;&gt;(3-c%4)*8&amp;15);return b}(function(a,e){var g=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,
+     2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298],h=[1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225],f=Array(64),o,p,q,n,k,j,l,m,s,r,u,w;a[e&gt;&gt;5]|=128&lt;&lt;24-e%32;a[(e+64&gt;&gt;9&lt;&lt;4)+15]=e;for(s=0;s&lt;a.length;s+=16){o=h[0];p=h[1];q=h[2];n=h[3];
+     k=h[4];j=h[5];l=h[6];m=h[7];for(r=0;r&lt;64;r++)f[r]=r&lt;16?a[r+s]:b(b(b(c(f[r-2],17)^c(f[r-2],19)^f[r-2]&gt;&gt;&gt;10,f[r-7]),c(f[r-15],7)^c(f[r-15],18)^f[r-15]&gt;&gt;&gt;3),f[r-16]),u=b(b(b(b(m,c(k,6)^c(k,11)^c(k,25)),k&amp;j^~k&amp;l),g[r]),f[r]),w=b(c(o,2)^c(o,13)^c(o,22),o&amp;p^o&amp;q^p&amp;q),m=l,l=j,j=k,k=b(n,u),n=q,q=p,p=o,o=b(u,w);h[0]=b(o,h[0]);h[1]=b(p,h[1]);h[2]=b(q,h[2]);h[3]=b(n,h[3]);h[4]=b(k,h[4]);h[5]=b(j,h[5]);h[6]=b(l,h[6]);h[7]=b(m,h[7])}return h}(function(a){for(var b=[],c=0;c&lt;a.length*8;c+=8)b[c&gt;&gt;5]|=(a.charCodeAt(c/
+     8)&amp;255)&lt;&lt;24-c%32;return b}(a),a.length*8))}var sha256={hex:function(a){return SHA256(a)}};
+     function SHA1(a){function b(a,b){return a&lt;&lt;b|a&gt;&gt;&gt;32-b}function c(a){var b=&quot;&quot;,c,d;for(c=7;c&gt;=0;c--)d=a&gt;&gt;&gt;c*4&amp;15,b+=d.toString(16);return b}var d,e,g=Array(80),h=1732584193,f=4023233417,o=2562383102,p=271733878,q=3285377520,n,k,j,l,m,a=function(a){for(var a=a.replace(/\r\n/g,&quot;\n&quot;),b=&quot;&quot;,c=0;c&lt;a.length;c++){var d=a.charCodeAt(c);d&lt;128?b+=String.fromCharCode(d):(d&gt;127&amp;&amp;d&lt;2048?b+=String.fromCharCode(d&gt;&gt;6|192):(b+=String.fromCharCode(d&gt;&gt;12|224),b+=String.fromCharCode(d&gt;&gt;6&amp;63|128)),b+=String.fromCharCode(d&amp;
+     63|128))}return b}(a);n=a.length;var s=[];for(d=0;d&lt;n-3;d+=4)e=a.charCodeAt(d)&lt;&lt;24|a.charCodeAt(d+1)&lt;&lt;16|a.charCodeAt(d+2)&lt;&lt;8|a.charCodeAt(d+3),s.push(e);switch(n%4){case 0:d=2147483648;break;case 1:d=a.charCodeAt(n-1)&lt;&lt;24|8388608;break;case 2:d=a.charCodeAt(n-2)&lt;&lt;24|a.charCodeAt(n-1)&lt;&lt;16|32768;break;case 3:d=a.charCodeAt(n-3)&lt;&lt;24|a.charCodeAt(n-2)&lt;&lt;16|a.charCodeAt(n-1)&lt;&lt;8|128}for(s.push(d);s.length%16!=14;)s.push(0);s.push(n&gt;&gt;&gt;29);s.push(n&lt;&lt;3&amp;4294967295);for(a=0;a&lt;s.length;a+=16){for(d=0;d&lt;16;d++)g[d]=
+     s[a+d];for(d=16;d&lt;=79;d++)g[d]=b(g[d-3]^g[d-8]^g[d-14]^g[d-16],1);e=h;n=f;k=o;j=p;l=q;for(d=0;d&lt;=19;d++)m=b(e,5)+(n&amp;k|~n&amp;j)+l+g[d]+1518500249&amp;4294967295,l=j,j=k,k=b(n,30),n=e,e=m;for(d=20;d&lt;=39;d++)m=b(e,5)+(n^k^j)+l+g[d]+1859775393&amp;4294967295,l=j,j=k,k=b(n,30),n=e,e=m;for(d=40;d&lt;=59;d++)m=b(e,5)+(n&amp;k|n&amp;j|k&amp;j)+l+g[d]+2400959708&amp;4294967295,l=j,j=k,k=b(n,30),n=e,e=m;for(d=60;d&lt;=79;d++)m=b(e,5)+(n^k^j)+l+g[d]+3395469782&amp;4294967295,l=j,j=k,k=b(n,30),n=e,e=m;h=h+e&amp;4294967295;f=f+n&amp;4294967295;o=o+k&amp;4294967295;
+     p=p+j&amp;4294967295;q=q+l&amp;4294967295}m=c(h)+c(f)+c(o)+c(p)+c(q);return m.toLowerCase()}
+     var sha1={hex:function(a){return SHA1(a)}},MD5=function(a){function b(a,b){var c,d,e,f,g;e=a&amp;2147483648;f=b&amp;2147483648;c=a&amp;1073741824;d=b&amp;1073741824;g=(a&amp;1073741823)+(b&amp;1073741823);return c&amp;d?g^2147483648^e^f:c|d?g&amp;1073741824?g^3221225472^e^f:g^1073741824^e^f:g^e^f}function c(a,c,d,e,f,g,h){a=b(a,b(b(c&amp;d|~c&amp;e,f),h));return b(a&lt;&lt;g|a&gt;&gt;&gt;32-g,c)}function d(a,c,d,e,f,g,h){a=b(a,b(b(c&amp;e|d&amp;~e,f),h));return b(a&lt;&lt;g|a&gt;&gt;&gt;32-g,c)}function e(a,c,d,e,f,g,h){a=b(a,b(b(c^d^e,f),h));return b(a&lt;&lt;g|a&gt;&gt;&gt;32-g,c)}function g(a,
+     c,d,e,f,g,h){a=b(a,b(b(d^(c|~e),f),h));return b(a&lt;&lt;g|a&gt;&gt;&gt;32-g,c)}function h(a){var b=&quot;&quot;,c=&quot;&quot;,d;for(d=0;d&lt;=3;d++)c=a&gt;&gt;&gt;d*8&amp;255,c=&quot;0&quot;+c.toString(16),b+=c.substr(c.length-2,2);return b}var f=[],o,p,q,n,k,j,l,m,a=function(a){for(var a=a.replace(/\r\n/g,&quot;\n&quot;),b=&quot;&quot;,c=0;c&lt;a.length;c++){var d=a.charCodeAt(c);d&lt;128?b+=String.fromCharCode(d):(d&gt;127&amp;&amp;d&lt;2048?b+=String.fromCharCode(d&gt;&gt;6|192):(b+=String.fromCharCode(d&gt;&gt;12|224),b+=String.fromCharCode(d&gt;&gt;6&amp;63|128)),b+=String.fromCharCode(d&amp;63|128))}return b}(a),
+     f=function(a){var b,c=a.length;b=c+8;for(var d=((b-b%64)/64+1)*16,e=Array(d-1),f=0,g=0;g&lt;c;)b=(g-g%4)/4,f=g%4*8,e[b]|=a.charCodeAt(g)&lt;&lt;f,g++;e[(g-g%4)/4]|=128&lt;&lt;g%4*8;e[d-2]=c&lt;&lt;3;e[d-1]=c&gt;&gt;&gt;29;return e}(a);k=1732584193;j=4023233417;l=2562383102;m=271733878;for(a=0;a&lt;f.length;a+=16)o=k,p=j,q=l,n=m,k=c(k,j,l,m,f[a+0],7,3614090360),m=c(m,k,j,l,f[a+1],12,3905402710),l=c(l,m,k,j,f[a+2],17,606105819),j=c(j,l,m,k,f[a+3],22,3250441966),k=c(k,j,l,m,f[a+4],7,4118548399),m=c(m,k,j,l,f[a+5],12,1200080426),l=c(l,
+     m,k,j,f[a+6],17,2821735955),j=c(j,l,m,k,f[a+7],22,4249261313),k=c(k,j,l,m,f[a+8],7,1770035416),m=c(m,k,j,l,f[a+9],12,2336552879),l=c(l,m,k,j,f[a+10],17,4294925233),j=c(j,l,m,k,f[a+11],22,2304563134),k=c(k,j,l,m,f[a+12],7,1804603682),m=c(m,k,j,l,f[a+13],12,4254626195),l=c(l,m,k,j,f[a+14],17,2792965006),j=c(j,l,m,k,f[a+15],22,1236535329),k=d(k,j,l,m,f[a+1],5,4129170786),m=d(m,k,j,l,f[a+6],9,3225465664),l=d(l,m,k,j,f[a+11],14,643717713),j=d(j,l,m,k,f[a+0],20,3921069994),k=d(k,j,l,m,f[a+5],5,3593408605),
+     m=d(m,k,j,l,f[a+10],9,38016083),l=d(l,m,k,j,f[a+15],14,3634488961),j=d(j,l,m,k,f[a+4],20,3889429448),k=d(k,j,l,m,f[a+9],5,568446438),m=d(m,k,j,l,f[a+14],9,3275163606),l=d(l,m,k,j,f[a+3],14,4107603335),j=d(j,l,m,k,f[a+8],20,1163531501),k=d(k,j,l,m,f[a+13],5,2850285829),m=d(m,k,j,l,f[a+2],9,4243563512),l=d(l,m,k,j,f[a+7],14,1735328473),j=d(j,l,m,k,f[a+12],20,2368359562),k=e(k,j,l,m,f[a+5],4,4294588738),m=e(m,k,j,l,f[a+8],11,2272392833),l=e(l,m,k,j,f[a+11],16,1839030562),j=e(j,l,m,k,f[a+14],23,4259657740),
+     k=e(k,j,l,m,f[a+1],4,2763975236),m=e(m,k,j,l,f[a+4],11,1272893353),l=e(l,m,k,j,f[a+7],16,4139469664),j=e(j,l,m,k,f[a+10],23,3200236656),k=e(k,j,l,m,f[a+13],4,681279174),m=e(m,k,j,l,f[a+0],11,3936430074),l=e(l,m,k,j,f[a+3],16,3572445317),j=e(j,l,m,k,f[a+6],23,76029189),k=e(k,j,l,m,f[a+9],4,3654602809),m=e(m,k,j,l,f[a+12],11,3873151461),l=e(l,m,k,j,f[a+15],16,530742520),j=e(j,l,m,k,f[a+2],23,3299628645),k=g(k,j,l,m,f[a+0],6,4096336452),m=g(m,k,j,l,f[a+7],10,1126891415),l=g(l,m,k,j,f[a+14],15,2878612391),
+     j=g(j,l,m,k,f[a+5],21,4237533241),k=g(k,j,l,m,f[a+12],6,1700485571),m=g(m,k,j,l,f[a+3],10,2399980690),l=g(l,m,k,j,f[a+10],15,4293915773),j=g(j,l,m,k,f[a+1],21,2240044497),k=g(k,j,l,m,f[a+8],6,1873313359),m=g(m,k,j,l,f[a+15],10,4264355552),l=g(l,m,k,j,f[a+6],15,2734768916),j=g(j,l,m,k,f[a+13],21,1309151649),k=g(k,j,l,m,f[a+4],6,4149444226),m=g(m,k,j,l,f[a+11],10,3174756917),l=g(l,m,k,j,f[a+2],15,718787259),j=g(j,l,m,k,f[a+9],21,3951481745),k=b(k,o),j=b(j,p),l=b(l,q),m=b(m,n);return(h(k)+h(j)+h(l)+
+     h(m)).toLowerCase()};function parseBigInt(a,b){return new BigInteger(a,b)}function linebrk(a,b){for(var c=&quot;&quot;,d=0;d+b&lt;a.length;)c+=a.substring(d,d+b)+&quot;\n&quot;,d+=b;return c+a.substring(d,a.length)}function byte2Hex(a){return a&lt;16?&quot;0&quot;+a.toString(16):a.toString(16)}
+     function pkcs1pad2(a,b){if(b&lt;a.length+11)throw&quot;Message too long for RSA (n=&quot;+b+&quot;, l=&quot;+a.length+&quot;)&quot;;for(var c=[],d=a.length-1;d&gt;=0&amp;&amp;b&gt;0;){var e=a.charCodeAt(d--);e&lt;128?c[--b]=e:e&gt;127&amp;&amp;e&lt;2048?(c[--b]=e&amp;63|128,c[--b]=e&gt;&gt;6|192):(c[--b]=e&amp;63|128,c[--b]=e&gt;&gt;6&amp;63|128,c[--b]=e&gt;&gt;12|224)}c[--b]=0;d=new SecureRandom;for(e=[];b&gt;2;){for(e[0]=0;e[0]==0;)d.nextBytes(e);c[--b]=e[0]}c[--b]=2;c[--b]=0;return new BigInteger(c)}
+     function RSAKey(){this.n=null;this.e=0;this.coeff=this.dmq1=this.dmp1=this.q=this.p=this.d=null}function RSASetPublic(a,b){a!=null&amp;&amp;b!=null&amp;&amp;a.length&gt;0&amp;&amp;b.length&gt;0?(this.n=parseBigInt(a,16),this.e=parseInt(b,16)):alert(&quot;Invalid RSA public key&quot;)}function RSADoPublic(a){return a.modPowInt(this.e,this.n)}function RSAEncrypt(a){a=pkcs1pad2(a,this.n.bitLength()+7&gt;&gt;3);if(a==null)return null;a=this.doPublic(a);if(a==null)return null;a=a.toString(16);return(a.length&amp;1)==0?a:&quot;0&quot;+a}
+     RSAKey.prototype.doPublic=RSADoPublic;RSAKey.prototype.setPublic=RSASetPublic;RSAKey.prototype.encrypt=RSAEncrypt;function pkcs1unpad2(a,b){for(var c=a.toByteArray(),d=0;d&lt;c.length&amp;&amp;c[d]==0;)++d;if(c.length-d!=b-1||c[d]!=2)return null;for(++d;c[d]!=0;)if(++d&gt;=c.length)return null;for(var e=&quot;&quot;;++d&lt;c.length;){var g=c[d]&amp;255;g&lt;128?e+=String.fromCharCode(g):g&gt;191&amp;&amp;g&lt;224?(e+=String.fromCharCode((g&amp;31)&lt;&lt;6|c[d+1]&amp;63),++d):(e+=String.fromCharCode((g&amp;15)&lt;&lt;12|(c[d+1]&amp;63)&lt;&lt;6|c[d+2]&amp;63),d+=2)}return e}
+     function RSASetPrivate(a,b,c){a!=null&amp;&amp;b!=null&amp;&amp;a.length&gt;0&amp;&amp;b.length&gt;0?(this.n=parseBigInt(a,16),this.e=parseInt(b,16),this.d=parseBigInt(c,16)):alert(&quot;Invalid RSA private key&quot;)}
+     function RSASetPrivateEx(a,b,c,d,e,g,h,f){a!=null&amp;&amp;b!=null&amp;&amp;a.length&gt;0&amp;&amp;b.length&gt;0?(this.n=parseBigInt(a,16),this.e=parseInt(b,16),this.d=parseBigInt(c,16),this.p=parseBigInt(d,16),this.q=parseBigInt(e,16),this.dmp1=parseBigInt(g,16),this.dmq1=parseBigInt(h,16),this.coeff=parseBigInt(f,16)):alert(&quot;Invalid RSA private key&quot;)}
+     function RSAGenerate(a,b){var c=new SeededRandom,d=a&gt;&gt;1;this.e=parseInt(b,16);for(var e=new BigInteger(b,16);;){for(;;)if(this.p=new BigInteger(a-d,1,c),this.p.subtract(BigInteger.ONE).gcd(e).compareTo(BigInteger.ONE)==0&amp;&amp;this.p.isProbablePrime(10))break;for(;;)if(this.q=new BigInteger(d,1,c),this.q.subtract(BigInteger.ONE).gcd(e).compareTo(BigInteger.ONE)==0&amp;&amp;this.q.isProbablePrime(10))break;if(this.p.compareTo(this.q)&lt;=0){var g=this.p;this.p=this.q;this.q=g}var g=this.p.subtract(BigInteger.ONE),
+     h=this.q.subtract(BigInteger.ONE),f=g.multiply(h);if(f.gcd(e).compareTo(BigInteger.ONE)==0){this.n=this.p.multiply(this.q);this.d=e.modInverse(f);this.dmp1=this.d.mod(g);this.dmq1=this.d.mod(h);this.coeff=this.q.modInverse(this.p);break}}}
+     function RSADoPrivate(a){if(this.p==null||this.q==null)return a.modPow(this.d,this.n);for(var b=a.mod(this.p).modPow(this.dmp1,this.p),a=a.mod(this.q).modPow(this.dmq1,this.q);b.compareTo(a)&lt;0;)b=b.add(this.p);return b.subtract(a).multiply(this.coeff).mod(this.p).multiply(this.q).add(a)}function RSADecrypt(a){a=this.doPrivate(parseBigInt(a,16));return a==null?null:pkcs1unpad2(a,this.n.bitLength()+7&gt;&gt;3)}RSAKey.prototype.doPrivate=RSADoPrivate;RSAKey.prototype.setPrivate=RSASetPrivate;
+     RSAKey.prototype.setPrivateEx=RSASetPrivateEx;RSAKey.prototype.generate=RSAGenerate;RSAKey.prototype.decrypt=RSADecrypt;var _RSASIGN_DIHEAD=[];_RSASIGN_DIHEAD.sha1=&quot;3021300906052b0e03021a05000414&quot;;_RSASIGN_DIHEAD.sha256=&quot;3031300d060960864801650304020105000420&quot;;var _RSASIGN_HASHHEXFUNC=[];_RSASIGN_HASHHEXFUNC.sha1=sha1.hex;_RSASIGN_HASHHEXFUNC.sha256=sha256.hex;
+     function _rsasign_getHexPaddedDigestInfoForString(a,b,c){b/=4;for(var a=(0,_RSASIGN_HASHHEXFUNC[c])(a),c=&quot;00&quot;+_RSASIGN_DIHEAD[c]+a,a=&quot;&quot;,b=b-4-c.length,d=0;d&lt;b;d+=2)a+=&quot;ff&quot;;return sPaddedMessageHex=&quot;0001&quot;+a+c}function _rsasign_signString(a,b){var c=_rsasign_getHexPaddedDigestInfoForString(a,this.n.bitLength(),b);return this.doPrivate(parseBigInt(c,16)).toString(16)}
+     function _rsasign_signStringWithSHA1(a){a=_rsasign_getHexPaddedDigestInfoForString(a,this.n.bitLength(),&quot;sha1&quot;);return this.doPrivate(parseBigInt(a,16)).toString(16)}function _rsasign_signStringWithSHA256(a){a=_rsasign_getHexPaddedDigestInfoForString(a,this.n.bitLength(),&quot;sha256&quot;);return this.doPrivate(parseBigInt(a,16)).toString(16)}function _rsasign_getDecryptSignatureBI(a,b,c){var d=new RSAKey;d.setPublic(b,c);return d.doPublic(a)}
+     function _rsasign_getHexDigestInfoFromSig(a,b,c){return _rsasign_getDecryptSignatureBI(a,b,c).toString(16).replace(/^1f+00/,&quot;&quot;)}function _rsasign_getAlgNameAndHashFromHexDisgestInfo(a){for(var b in _RSASIGN_DIHEAD){var c=_RSASIGN_DIHEAD[b],d=c.length;if(a.substring(0,d)==c)return[b,a.substring(d)]}return[]}
+     function _rsasign_verifySignatureWithArgs(a,b,c,d){b=_rsasign_getHexDigestInfoFromSig(b,c,d);c=_rsasign_getAlgNameAndHashFromHexDisgestInfo(b);if(c.length==0)return!1;b=c[1];a=(0,_RSASIGN_HASHHEXFUNC[c[0]])(a);return b==a}function _rsasign_verifyHexSignatureForMessage(a,b){var c=parseBigInt(a,16);return _rsasign_verifySignatureWithArgs(b,c,this.n.toString(16),this.e.toString(16))}
+     function _rsasign_verifyString(a,b){var b=b.replace(/[ \n]+/g,&quot;&quot;),c=this.doPublic(parseBigInt(b,16)).toString(16).replace(/^1f+00/,&quot;&quot;),d=_rsasign_getAlgNameAndHashFromHexDisgestInfo(c);if(d.length==0)return!1;c=d[1];d=(0,_RSASIGN_HASHHEXFUNC[d[0]])(a);return c==d}RSAKey.prototype.signString=_rsasign_signString;RSAKey.prototype.signStringWithSHA1=_rsasign_signStringWithSHA1;RSAKey.prototype.signStringWithSHA256=_rsasign_signStringWithSHA256;RSAKey.prototype.verifyString=_rsasign_verifyString;
+     RSAKey.prototype.verifyHexSignatureForMessage=_rsasign_verifyHexSignatureForMessage;
+     var aes=function(){var a={Sbox:[99,124,119,123,242,107,111,197,48,1,103,43,254,215,171,118,202,130,201,125,250,89,71,240,173,212,162,175,156,164,114,192,183,253,147,38,54,63,247,204,52,165,229,241,113,216,49,21,4,199,35,195,24,150,5,154,7,18,128,226,235,39,178,117,9,131,44,26,27,110,90,160,82,59,214,179,41,227,47,132,83,209,0,237,32,252,177,91,106,203,190,57,74,76,88,207,208,239,170,251,67,77,51,133,69,249,2,127,80,60,159,168,81,163,64,143,146,157,56,245,188,182,218,33,16,255,243,210,205,12,19,236,
+     95,151,68,23,196,167,126,61,100,93,25,115,96,129,79,220,34,42,144,136,70,238,184,20,222,94,11,219,224,50,58,10,73,6,36,92,194,211,172,98,145,149,228,121,231,200,55,109,141,213,78,169,108,86,244,234,101,122,174,8,186,120,37,46,28,166,180,198,232,221,116,31,75,189,139,138,112,62,181,102,72,3,246,14,97,53,87,185,134,193,29,158,225,248,152,17,105,217,142,148,155,30,135,233,206,85,40,223,140,161,137,13,191,230,66,104,65,153,45,15,176,84,187,22],ShiftRowTab:[0,5,10,15,4,9,14,3,8,13,2,7,12,1,6,11]};a.Init=
+     function(){a.Sbox_Inv=Array(256);for(var b=0;b&lt;256;b++)a.Sbox_Inv[a.Sbox[b]]=b;a.ShiftRowTab_Inv=Array(16);for(b=0;b&lt;16;b++)a.ShiftRowTab_Inv[a.ShiftRowTab[b]]=b;a.xtime=Array(256);for(b=0;b&lt;128;b++)a.xtime[b]=b&lt;&lt;1,a.xtime[128+b]=b&lt;&lt;1^27};a.Done=function(){delete a.Sbox_Inv;delete a.ShiftRowTab_Inv;delete a.xtime};a.ExpandKey=function(b){var c=b.length,d,e=1;switch(c){case 16:d=176;break;case 24:d=208;break;case 32:d=240;break;default:alert(&quot;my.ExpandKey: Only key lengths of 16, 24 or 32 bytes allowed!&quot;)}for(var g=
+     c;g&lt;d;g+=4){var h=b.slice(g-4,g);if(g%c==0){if(h=[a.Sbox[h[1]]^e,a.Sbox[h[2]],a.Sbox[h[3]],a.Sbox[h[0]]],(e&lt;&lt;=1)&gt;=256)e^=283}else c&gt;24&amp;&amp;g%c==16&amp;&amp;(h=[a.Sbox[h[0]],a.Sbox[h[1]],a.Sbox[h[2]],a.Sbox[h[3]]]);for(var f=0;f&lt;4;f++)b[g+f]=b[g+f-c]^h[f]}};a.Encrypt=function(b,c){var d=c.length;a.AddRoundKey(b,c.slice(0,16));for(var e=16;e&lt;d-16;e+=16)a.SubBytes(b,a.Sbox),a.ShiftRows(b,a.ShiftRowTab),a.MixColumns(b),a.AddRoundKey(b,c.slice(e,e+16));a.SubBytes(b,a.Sbox);a.ShiftRows(b,a.ShiftRowTab);a.AddRoundKey(b,
+     c.slice(e,d))};a.Decrypt=function(b,c){var d=c.length;a.AddRoundKey(b,c.slice(d-16,d));a.ShiftRows(b,a.ShiftRowTab_Inv);a.SubBytes(b,a.Sbox_Inv);for(d-=32;d&gt;=16;d-=16)a.AddRoundKey(b,c.slice(d,d+16)),a.MixColumns_Inv(b),a.ShiftRows(b,a.ShiftRowTab_Inv),a.SubBytes(b,a.Sbox_Inv);a.AddRoundKey(b,c.slice(0,16))};a.SubBytes=function(a,c){for(var d=0;d&lt;16;d++)a[d]=c[a[d]]};a.AddRoundKey=function(a,c){for(var d=0;d&lt;16;d++)a[d]^=c[d]};a.ShiftRows=function(a,c){for(var d=[].concat(a),e=0;e&lt;16;e++)a[e]=d[c[e]]};
+     a.MixColumns=function(b){for(var c=0;c&lt;16;c+=4){var d=b[c+0],e=b[c+1],g=b[c+2],h=b[c+3],f=d^e^g^h;b[c+0]^=f^a.xtime[d^e];b[c+1]^=f^a.xtime[e^g];b[c+2]^=f^a.xtime[g^h];b[c+3]^=f^a.xtime[h^d]}};a.MixColumns_Inv=function(b){for(var c=0;c&lt;16;c+=4){var d=b[c+0],e=b[c+1],g=b[c+2],h=b[c+3],f=d^e^g^h,o=a.xtime[f],p=a.xtime[a.xtime[o^d^g]]^f;f^=a.xtime[a.xtime[o^e^h]];b[c+0]^=p^a.xtime[d^e];b[c+1]^=f^a.xtime[e^g];b[c+2]^=p^a.xtime[g^h];b[c+3]^=f^a.xtime[h^d]}};return a}(),cryptico=function(){var a={};aes.Init();
+     a.b256to64=function(a){var c,d,e,g=&quot;&quot;,h=0,f=0,o=a.length;for(e=0;e&lt;o;e++)d=a.charCodeAt(e),f==0?(g+=&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;.charAt(d&gt;&gt;2&amp;63),c=(d&amp;3)&lt;&lt;4):f==1?(g+=&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;.charAt(c|d&gt;&gt;4&amp;15),c=(d&amp;15)&lt;&lt;2):f==2&amp;&amp;(g+=&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;.charAt(c|d&gt;&gt;6&amp;3),h+=1,g+=&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;.charAt(d&amp;63)),h+=1,f+=1,f==3&amp;&amp;
+     (f=0);f&gt;0&amp;&amp;(g+=&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;.charAt(c),g+=&quot;=&quot;);f==1&amp;&amp;(g+=&quot;=&quot;);return g};a.b64to256=function(a){var c,d,e=&quot;&quot;,g=0,h=0,f=a.length;for(d=0;d&lt;f;d++)c=&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;.indexOf(a.charAt(d)),c&gt;=0&amp;&amp;(g&amp;&amp;(e+=String.fromCharCode(h|c&gt;&gt;6-g&amp;255)),g=g+2&amp;7,h=c&lt;&lt;g&amp;255);return e};a.b16to64=function(a){var c,d,e=&quot;&quot;;a.length%2==1&amp;&amp;(a=&quot;0&quot;+a);for(c=0;c+3&lt;=a.length;c+=3)d=parseInt(a.substring(c,c+3),16),e+=&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;.charAt(d&gt;&gt;
+     6)+&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;.charAt(d&amp;63);c+1==a.length?(d=parseInt(a.substring(c,c+1),16),e+=&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;.charAt(d&lt;&lt;2)):c+2==a.length&amp;&amp;(d=parseInt(a.substring(c,c+2),16),e+=&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;.charAt(d&gt;&gt;2)+&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;.charAt((d&amp;3)&lt;&lt;4));for(;(e.length&amp;3)&gt;0;)e+=&quot;=&quot;;return e};a.b64to16=function(a){var c=&quot;&quot;,
+     d,e=0,g;for(d=0;d&lt;a.length;++d){if(a.charAt(d)==&quot;=&quot;)break;v=&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/&quot;.indexOf(a.charAt(d));v&lt;0||(e==0?(c+=int2char(v&gt;&gt;2),g=v&amp;3,e=1):e==1?(c+=int2char(g&lt;&lt;2|v&gt;&gt;4),g=v&amp;15,e=2):e==2?(c+=int2char(g),c+=int2char(v&gt;&gt;2),g=v&amp;3,e=3):(c+=int2char(g&lt;&lt;2|v&gt;&gt;4),c+=int2char(v&amp;15),e=0))}e==1&amp;&amp;(c+=int2char(g&lt;&lt;2));return c};a.string2bytes=function(a){for(var c=[],d=0;d&lt;a.length;d++)c.push(a.charCodeAt(d));return c};a.bytes2string=function(a){for(var c=&quot;&quot;,d=0;d&lt;
+     a.length;d++)c+=String.fromCharCode(a[d]);return c};a.blockXOR=function(a,c){for(var d=Array(16),e=0;e&lt;16;e++)d[e]=a[e]^c[e];return d};a.blockIV=function(){var a=new SecureRandom,c=Array(16);a.nextBytes(c);return c};a.pad16=function(a){var c=a.slice(0),d=(16-a.length%16)%16;for(i=a.length;i&lt;a.length+d;i++)c.push(0);return c};a.depad=function(a){for(a=a.slice(0);a[a.length-1]==0;)a=a.slice(0,a.length-1);return a};a.encryptAESCBC=function(b,c){var d=c.slice(0);aes.ExpandKey(d);for(var e=a.string2bytes(b),
+     e=a.pad16(e),g=a.blockIV(),h=0;h&lt;e.length/16;h++){var f=e.slice(h*16,h*16+16),o=g.slice(h*16,h*16+16),f=a.blockXOR(o,f);aes.Encrypt(f,d);g=g.concat(f)}d=a.bytes2string(g);return a.b256to64(d)};a.decryptAESCBC=function(b,c){var d=c.slice(0);aes.ExpandKey(d);for(var b=a.b64to256(b),e=a.string2bytes(b),g=[],h=1;h&lt;e.length/16;h++){var f=e.slice(h*16,h*16+16),o=e.slice((h-1)*16,(h-1)*16+16);aes.Decrypt(f,d);f=a.blockXOR(o,f);g=g.concat(f)}g=a.depad(g);return a.bytes2string(g)};a.wrap60=function(a){for(var c=
+     &quot;&quot;,d=0;d&lt;a.length;d++)d%60==0&amp;&amp;d!=0&amp;&amp;(c+=&quot;\n&quot;),c+=a[d];return c};a.generateAESKey=function(){var a=Array(32);(new SecureRandom).nextBytes(a);return a};a.generateRSAKey=function(a,c){Math.seedrandom(sha256.hex(a));var d=new RSAKey;d.generate(c,&quot;03&quot;);return d};a.publicKeyString=function(b){return pubkey=a.b16to64(b.n.toString(16))};a.publicKeyID=function(a){return MD5(a)};a.publicKeyFromString=function(b){var b=a.b64to16(b.split(&quot;|&quot;)[0]),c=new RSAKey;c.setPublic(b,&quot;03&quot;);return c};a.encrypt=function(b,
+     c,d){var e=&quot;&quot;,g=a.generateAESKey();try{var h=a.publicKeyFromString(c);e+=a.b16to64(h.encrypt(a.bytes2string(g)))+&quot;?&quot;}catch(f){return{status:&quot;Invalid public key&quot;}}d&amp;&amp;(signString=cryptico.b16to64(d.signString(b,&quot;sha256&quot;)),b+=&quot;::52cee64bb3a38f6403386519a39ac91c::&quot;,b+=cryptico.publicKeyString(d),b+=&quot;::52cee64bb3a38f6403386519a39ac91c::&quot;,b+=signString);e+=a.encryptAESCBC(b,g);return{status:&quot;success&quot;,cipher:e}};a.decrypt=function(b,c){var d=b.split(&quot;?&quot;),e=c.decrypt(a.b64to16(d[0]));if(e==null)return{status:&quot;failure&quot;};
+     e=a.string2bytes(e);d=a.decryptAESCBC(d[1],e).split(&quot;::52cee64bb3a38f6403386519a39ac91c::&quot;);if(d.length==3){var e=a.publicKeyFromString(d[1]),g=a.b64to16(d[2]);return e.verifyString(d[0],g)?{status:&quot;success&quot;,plaintext:d[0],signature:&quot;verified&quot;,publicKeyString:a.publicKeyString(e)}:{status:&quot;success&quot;,plaintext:d[0],signature:&quot;forged&quot;,publicKeyString:a.publicKeyString(e)}}else return{status:&quot;success&quot;,plaintext:d[0],signature:&quot;unsigned&quot;}};return a}();</pre></div>
+  </div>
+
+</div>
+
+
+
+
+
+
+
+<script type="text/javascript">
+
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+
+  // メニューを定義
+  document.querySelectorAll('.TabMenu[name]').forEach(x => {
+    v.menuName = x.getAttribute('name');
+    v.arg = {name:v.menuName};
+    console.log(v.menuName,v.arg);
+    v[v.menuName] = new TabMenu(v.arg);
+  });
+
+  mermaid.initialize({
+      startOnLoad: true, 
+      theme: 'defalt'
+  });
+});
+</script>
+</body></html>
