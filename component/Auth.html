@@ -449,7 +449,7 @@ class Auth {
       });
 
       // 画面をセット
-      this.parentWindow.appendChild(this.AuthWindow.element);
+      this.parentWindow.prepend(this.AuthWindow.element);
       this.AuthWindow.element.appendChild(this.entryNo.element);
       this.AuthWindow.element.appendChild(this.loading.element);
       this.AuthWindow.element.appendChild(this.passCode.element);
@@ -756,25 +756,6 @@ class Auth {
     v.arg.fc = v.arg.dt.fc;
     v.arg.dt = v.arg.dt.arg;
 
-    /*
-    v.arg.fc = v.arg.dt.fc;
-    v.arg.dt = v.arg.dt.arg;
-    if( v.arg.md > 0 ){
-      if( v.arg.md === 1 ){ // 共通鍵方式
-        v.arg.dt = JSON.parse(decryptAES(v.arg.dt,v.arg.common));
-      } else {              // RSA方式
-        v.decrypt = cryptico.decrypt(v.arg.dt,v.arg.RSAkey);
-        if( v.decrypt.signature !== 'verified' ){
-          throw new Error("Invalid Token: decrypt failed."
-          + "\ndecrypt: " + JSON.stringify(v.decript)
-          + "\nv.arg["+v.arg.fm+"]: " + v.arg[v.arg.fm]
-          );
-        }
-        v.arg.signature = v.decrypt.signature;
-        v.arg.pKey = v.decrypt.publicKeyString;
-        v.arg.dt = JSON.parse(decodeURI(v.decrypt.plaintext));
-      }
-    }*/
     console.log('v.arg.dt',v.arg.dt);
 
     // auth1A: クライアントから認証局への接続要求

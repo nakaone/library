@@ -211,12 +211,16 @@ let config = null;
 async function setupConfig(){
   try {
     console.log('setupConfig start.');
+
+    // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
     const opt = {};
     const searchParams = new URLSearchParams(window.location.search);
     if( searchParams.has('id') ){
       opt.entryNo = {value:searchParams.get('id')};
     }
+
     config = new Auth('https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',opt);
+
     console.log('setupConfig normal end.',config);
   } catch(e){
     console.error('setupConfig abnormal end.',e);
@@ -226,6 +230,10 @@ async function setupConfig(){
 // ブラウザ上で実行する場合の処理
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
+
+  // 認証、結果をconfigに格納
+  setupConfig();
+
   // メニューを定義
   document.querySelectorAll('.TabMenu[name]').forEach(x => {
     v.menuName = x.getAttribute('name');
@@ -233,9 +241,6 @@ window.addEventListener('DOMContentLoaded',() => {
     console.log(v.menuName,v.arg);
     v[v.menuName] = new TabMenu(v.arg);
   });
-
-  // 認証、結果をconfigに格納
-  setupConfig();
 
   // 画面を描画
   redraw();
