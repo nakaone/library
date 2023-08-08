@@ -332,6 +332,7 @@ class Auth {
         style:{
           // CSSで全画面オーバーレイを実装する方法＆コード例
           // https://pisuke-code.com/css-fullscreen-overlay/
+          display: "block",
           position: "absolute",
           left: 0, top: 0,
           width: "100%", height:"100%",
@@ -471,21 +472,17 @@ class Auth {
    */
   #changeScreen(screenId){
     const v = {rv:true};
-    console.log('Auth.#changeScreen start.');
+    console.log('Auth.#changeScreen start. screenId='+screenId);
     try {
 
       if( screenId === 'close' ){
         this.AuthWindow.element.style.display = 'none';
-      } else if( screenId === 'open' ){
-        this.AuthWindow.element.style.display = '';
       } else {
+        this.AuthWindow.element.style.display = '';
         ['entryNo','loading','passCode'].forEach(x => {
           this[x].element.style.display = x === screenId ? '' : 'none';
         });
       }
-
-      // 前回のパスコードをクリア
-      this.passCode.element.querySelector('input').value = '';
 
       console.log('Auth.#changeScreen end.');
       return v.rv;
@@ -1036,7 +1033,7 @@ function auth2B(arg){
       v.step = '2.1'; // 有効期限切れ
       v.rv.message = 'パスコードの有効期限(発行後1時間)を過ぎています。';
       v.rv.result = true;  // クライアント側のパスコード入力画面を閉じ、受付番号入力画面に遷移
-    } else if( v.client.passCode !== arg.dt.passCode ){
+    } else if( ('000000'+v.client.passCode).slice(-6) !== arg.dt.passCode ){
       v.step = '2.2'; // パスコード不一致
       if( String(v.client.NG2).length > 0 ){
         v.step = '2.2.1'; // 連続3回不適切
