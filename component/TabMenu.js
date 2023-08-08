@@ -1,28 +1,3 @@
-<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-<title>TabMenu</title>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<style type="text/css" class="core">/* コアCSS */
-</style>
-</head><body>
-
-<p>これはTabMenuクラスのサンプルです</p>
-
-<div class="TabMenu" name="main">
-  <div name="処理概要">
-    <h1>処理概要</h1>
-  </div>
-  <div name="使用方法" class="TabMenu">
-    <div name="html">html</div>
-    <div name="認証局">認証局</div>
-    <div name="管理局">管理局</div>
-  </div>
-</div>
-
-<script type="text/javascript" class="core">/* コアスクリプト */
-/**
- * @classdesc タブ切り替えのHTMLページを作成する
- */
-
 class TabMenu {
 
   /**
@@ -140,23 +115,3 @@ class TabMenu {
     console.log('TabMenu.changePage end.');
   }
 }
-</script>
-
-<!-- CDN -->
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10.3.0/dist/mermaid.min.js"></script>
-<!-- 自作ライブラリ -->
-<script src="mergeDeeply.js"></script>
-<!-- 起動時処理 -->
-<script type="text/javascript" class="main">
-window.addEventListener('DOMContentLoaded',() => {
-  const v = {};
-  // メニューを定義
-  document.querySelectorAll('.TabMenu[name]').forEach(x => {
-    v.menuName = x.getAttribute('name');
-    v.arg = {name:v.menuName};
-    console.log(v.menuName,v.arg);
-    v[v.menuName] = new TabMenu(v.arg);
-  });
-});
-</script>
-</body></html>
