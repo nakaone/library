@@ -1,0 +1,47 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>Auth</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--
+  Qiita [非同期な自作 confirm を作ってみた](https://qiita.com/naoki-funawatari/items/4de792bfefe5eab909cc)
+-->
+<!-- 自作CSS -->
+<link rel="stylesheet" type="text/css" href="szLib.css" />
+</head>
+<body>
+  <dialog id="dialog">
+    <p id="message"></p>
+    <button id="button-ok">ＯＫ</button>
+    <button id="button-cancel">キャンセル</button>
+  </dialog>
+</body>
+<script type="text/javascript">
+const confirmAsync = async message => {
+  document.getElementById("message").innerText = message;
+  document.getElementById("dialog").showModal();
+
+  return new Promise(resolve => {
+    const eventBase = flag => () => {
+      document.getElementById("dialog").close();
+      document.getElementById("button-ok").removeEventListener("click", okEvent);
+      document.getElementById("button-cancel").removeEventListener("click", cancelEvent);
+      resolve(flag);
+    };
+    const okEvent = eventBase(true);
+    const cancelEvent = eventBase(false);
+
+    document.getElementById("button-ok").addEventListener("click", okEvent);
+    document.getElementById("button-cancel").addEventListener("click", cancelEvent);
+  });
+};
+
+const handleClicked = async () => {
+  if (await confirmAsync("よろしいですか？")) {
+    alert("ＯＫが押されました。");
+  } else {
+    alert("キャンセルが押されました。");
+  }
+};
+
+handleClicked();
+</script>
+</html>
