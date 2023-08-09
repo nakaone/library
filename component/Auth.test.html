@@ -8,34 +8,213 @@
 <link rel="stylesheet" type="text/css" href="szLib.css" />
 </head>
 <body>
-  <dialog id="dialog">
-    <p id="message"></p>
-    <button id="button-ok">ＯＫ</button>
-    <button id="button-cancel">キャンセル</button>
-  </dialog>
-
 </body>
+<!-- 共通鍵暗号化：cryptoJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/enc-base64.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/cipher-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/sha256.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/sha1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/aes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/hmac.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/pbkdf2.min.js"></script>
+
 <script type="text/javascript" src="createElement.js" data-embed="../component/createElement.js"></script>
+<script type="text/javascript" src="createPassword.js" data-embed="../component/createPassword.js"></script>
+<script type="text/javascript" src="cryptoAES.js" data-embed="../component/cryptoAES.js"></script>
+<script type="text/javascript" src="../external/cryptico.min.js" data-embed="../external/cryptico.min.js"></script>
 <script type="text/javascript" src="mergeDeeply.js" data-embed="../component/mergeDeeply.js"></script>
+<script type="text/javascript" src="whichType.js" data-embed="../component/whichType.js"></script>
 
 <script type="text/javascript">
 class Auth {
-  constructor(){
-    this.entryNo = {};
-    this.passCode = {};
+  /**
+   * @constructor
+   * @param {string} gatewayUrl - 認証局APIのURL
+   * @param {AuthOpt} [opt={}] - 生成時オプション
+   * @returns {void} なし
+   * 
+   * ## 処理概要
+   * 
+   * ```mermaid
+   * sequenceDiagram
+   *   autonumber
+   *   actor mailer as メーラ
+   *   actor browser as ブラウザ
+   *   participant gateway as 認証局
+   *   participant master as 管理局
+   *   participant httpd as httpd
+   * 
+   *   %% 受付番号入力
+   *   mailer ->> httpd : 事前に送信された案内メールのリンクをクリック
+   *   httpd ->> browser : ページファイル(index.html)
+   *   activate browser
+   *   Note right of browser: constructor()
+   *   Note right of browser: getEntryNo()
+   * 
+   *   browser ->> gateway : 受付番号、CP(平文)
+   *   activate gateway
+   *   Note right of gateway : auth1A()
+   * 
+   *   gateway ->> master : 受付番号、CP(GS/MP)
+   *   activate master
+   *   Note right of master : auth1B()
+   *   master ->> mailer : パスコード
+   *   activate mailer
+   * 
+   *   master ->> gateway : 申請登録結果
+   *   deactivate master
+   * 
+   *   gateway ->> browser : 申請登録結果
+   *   deactivate gateway
+   *   browser ->> browser : GP格納、パスコード入力画面表示
+   *   deactivate browser
+   * 
+   * 
+   *   %% パスコード入力
+   *   mailer ->> browser : パスコード入力
+   *   deactivate mailer
+   *   activate browser
+   *   Note right of browser : getPassCode()
+   *   browser ->> gateway : 受付番号、パスコード(CS/GP)
+   *   activate gateway
+   *   Note right of gateway : auth2A
+   *   gateway ->> master : 受付番号、パスコード、CP(GS/MP)
+   *   activate master
+   *   Note right of master : auth2B
+   *   master ->> gateway : 利用者情報
+   *   deactivate master
+   *   gateway ->> browser : 利用者情報,CK
+   *   deactivate gateway
+   *   browser ->> browser : 初期画面表示
+   *   deactivate browser
+   * 
+   * ```
+   * 
+   * - 文中の記号は以下の通り
+   *   - CK:共通鍵(Common Key)
+   *   - CP:利用者公開鍵(Client Public key)、CS:利用者秘密鍵(Client Secret key)
+   *   - GP:認証局公開鍵(Gateway Public key)、GS:認証局秘密鍵(Gateway Secret key)
+   *   - FP:配信局公開鍵(Front Public key)、FS:配信局秘密鍵(Front Secret key)
+   *   - MP:管理局公開鍵(Master Public key)、MS:管理局秘密鍵(Master Secret key)
+   *   - (xS/yP) = XX局秘密鍵で署名、YY局公開鍵で暗号化した、XX->YY宛の通信<br>
+   *     例：(GS/MP) ⇒ GS(認証局秘密鍵)で署名、MP(管理局公開鍵)で暗号化
+   * - (02) constructor() : DOMContentLoaded時、以下の処理を実行
+   *   1. 利用者の秘密鍵(以下CSkey)・公開鍵(以下CPkey)を生成
+   *   1. getEntryNo()を呼び出し
+   * - (02) getEntryNo() : 受付番号入力
+   *   1. 受付番号入力画面を表示(z-indexを最大にして他の画面を触らせない)
+   *   1. 入力後待機画面表示、レスポンスがあったらgetPassCode()を呼び出し
+   * - (03) auth1A() : 認証申請の受付
+   *   1. 受付番号とCPをauth1Bに送信
+   *   1. auth1Bの申請結果を受けたらブラウザに結果を送信<br>
+   *      申請OKの場合はGPも併せて送信
+   * - (04) auth1B() : 認証申請の登録
+   *   1. 受付番号とCPをシートに書き込み
+   *   1. 正当性を検証
+   *      - パスコードが一致
+   *      - パスコード発行日時から1時間以内
+   *      - 3回連続失敗後1時間以上経過
+   *   1. 正当だった場合はパスコードを生成、シートに書き込み
+   *   1. 申請者にパスコードを通知(05)
+   *   1. 申請登録の結果をauth1Aに返す
+   * - (09) getPassCode() : パスコード入力
+   *   1. パスコード入力画面を表示<br>
+   *      ※パスコードは数値6桁を想定。変更する場合、auth2Bのパスコード正当性ロジック見直しのこと。
+   *   1. パスコードが入力されたらauth2Aに送信
+   *   1. auth2Aからレスポンスがあったらthisに保存、初期画面を表示
+   * - (10) auth2A
+   *   1. 受付番号・パスコード・CPkeyを管理局に送信
+   *   1. 利用者情報をauth2Bから受けたらFPを追加して利用者に返す
+   * - (12) auth2B
+   *   1. 送信された受付番号・パスコード・CPkeyが有効か、シートの申請登録と突合
+   *   1. OKなら利用者情報をauth2Aに返す
+   */
+   constructor(gatewayUrl,opt={}){
+    const v = {whois:'Auth.constructor'};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = '1'; // オプション未定義項目の既定値をプロパティにセット
+      this.#setProperties(this,null,opt);
+
+      v.step = '2'; // 必須項目をプロパティに保存
+      this.gateway.url = gatewayUrl;  // 認証局のURL
+
+      v.step = '3'; // 各種画面を用意する
+      //   ※鍵ペア生成で時間がかかるので、先に待機画面を表示
+      //this.#setWindows();
+      v.step = '4'; // 初期画面として待機画面を表示
+      //this.#changeScreen('loading');
+
+      v.step = '5'; // 秘密鍵・公開鍵を作成し、プロパティに格納する
+      this.#setupKeys();
+
+      console.log(v.whois+' normal end.');
+    } catch(e){
+      v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
+      console.error(v.msg);
+      alert(v.msg);
+    }
   }
 
   async build(){
     const v = {rv:null};
     console.log('Auth.build start.');
     try {
-      do  // 受付番号が指定形式になるまでループ
+      v.step = '1.1'; do  // 受付番号をダイアログから取得
         this.entryNo.value = await this.#getEntryNo();
       while( this.entryNo.value.match(/^[0-9]{1,4}$/) === null );
 
-      do  // 受付番号が指定形式になるまでループ
+      v.step = '1.2'; v.arg = { // auth1Aに渡す引数をセット
+        entryNo: this.entryNo.value,
+        publicKey: this.RSA.pKey,
+      }
+      console.log('arg',v.arg);
+
+      v.step = '1.3'; // fetch
+      v.rv = await this.#fetchFromClient('auth1A',v.arg,0);
+      if( v.rv.isErr ){
+        alert(v.rv.message);
+        return null;
+      } else {
+        this.gateway.pKey = v.rv.result;
+      }
+
+      v.step = '2.1'; do  // 受付番号が指定形式になるまでループ
         this.passCode.value = await this.#getPassCode();
       while( this.passCode.value.match(/^[0-9]{6}$/) === null );
+
+      // 入力フォームから値を取得
+      //this.#changeScreen('loading');
+      v.step = '2.2'; v.arg = { // auth1Bに渡す引数
+        entryNo: this.entryNo.value,
+        passCode: this.passCode.value,
+      }
+      console.log('arg',v.arg);
+
+      v.step = '2.3'; // fetch
+      v.rv = await this.#fetchFromClient('auth2A',v.arg,3);
+      if( v.rv.isErr ){
+        console.error(v.rv);
+        /*
+        if( v.rv.result ){
+          this.#changeScreen('entryNo');
+        } else {
+          this.#changeScreen('passCode');
+        }
+        */
+      } else {
+        // 申請者情報と共通鍵を格納
+        this.commonKey = v.rv.result.common;
+        this.info = v.rv.result.info;
+        console.log('commonKey='+this.commonKey,'info',this.info);
+      }
+
+
+
+
+      //this.loading.style.display = 'none';
 
       console.log('Auth.build normal end.');
       return v.rv;
@@ -44,6 +223,146 @@ class Auth {
     }
   }
 
+  /** 既定値を設定する
+   * @param {AuthOpt} opt - 生成時オプションとして渡された値
+   * @returns {void}
+   */
+  #setProperties(dest,def,opt){
+    const v = {whois:'Auth.#setProperties',rv:true,def:{
+      parentSelector: "body", // {string} - 親要素のCSSセレクタ
+      RSA:{  // 自局のRSAキー関係情報
+        bits: 1024,     // {number} - RSAキー長
+        passWord: null, // {string} - パスワード
+        pwLength: 32,   // {number} - 自動生成する場合のパスワード文字数
+        sKey: null,     // {RSAKey} - 秘密鍵
+        pKey: null,     // {string} - 公開鍵
+      },
+      commonKey: null,  // {string} - 共通鍵
+      info: null, // {Object.<string, any>} - 管理局.masterシートの参加者情報
+      gateway:{ // 認証局関連情報
+        url: null,  // {string} - APIのURL
+        pKey: null, // {string} - 公開鍵
+      },
+      front: {  // 配信局関連情報
+        url: null,  // {string} - APIのURL
+        pKey: null, // {string} - 公開鍵
+      },
+      entryNo:{ // 受付番号関係
+        element: null, // {HTMLElement} - 受付番号入力画面の要素。setWindowsで設定。
+        value: '',  // {string} - 受付番号
+        header:'',    // {string} - 受付番号入力画面に表示するheaderのinnerHTML
+        msg1:'受付番号を入力してください', // {string} - 入力欄の前に表示するメッセージ
+        button:'送信',  // {string} - 受付番号入力画面のボタンのラベル
+        msg2:'',      // {string} - 入力欄の後に表示するメッセージ
+        rex:/^[0-9]{1,4}$/, // {RegExp} - 受付番号チェック用正規表現
+      },
+      loading: {
+        element: null,
+        zIndex: 2147483647,  // z-indexの最大値
+      },
+      passCode:{
+        element: null, // {HTMLElement} - パスコード入力画面の要素。setWindowsで設定。
+        value: null,  // {string} - パスコード
+        header:'',    // {string} - パスコード入力画面に表示するheaderのinnerHTML
+        msg1:'確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>'
+        + '※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。',
+                      // {string} - 入力欄の前に表示するメッセージ
+        button:'送信',  // {string} - パスコード入力画面のボタンのラベル
+        msg2: '※パスコードの有効期限は1時間です',
+        rex:/^[0-9]{6}$/, // {RegExp} - パスコードチェック用正規表現
+      },
+    }};
+    console.log(v.whois+' start.');
+    try {
+      if( def !== null ){ // 2回目以降の呼出(再起呼出)
+        // 再起呼出の場合、呼出元から渡された定義Objを使用
+        v.def = def;
+      }
+
+      for( let key in v.def ){
+        if( whichType(v.def[key]) !== 'Object' ){
+          dest[key] = opt[key] || v.def[key]; // 配列はマージしない
+        } else {
+          if( !dest.hasOwnProperty(key) ) dest[key] = {};
+          this.#setProperties(dest[key],v.def[key],opt[key]||{});
+        }
+      }
+
+      if( def === null ){ // 初回呼出(非再帰)
+        // 親画面のHTML要素を保存
+        this.parentWindow = document.querySelector(this.parentSelector);
+      }
+
+      console.log(v.whois+' normal end.');
+      return v.rv;
+    } catch(e){
+      v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
+      console.error(v.msg);
+      return e;
+    }
+  }
+
+  /** 秘密鍵・公開鍵を作成し、プロパティに格納する
+   * @param {void}
+   * @returns {void}
+   */
+  #setupKeys(){
+    const v = {whois:'Auth.#setupKeys',rv:null};
+    console.log(v.whois+' start.');
+    try {
+      // パスワード未指定なら作成
+      if( this.RSA.passWord === null ){
+        this.RSA.passWord = createPassword(this.RSA.pwLength);
+      }
+
+      // 鍵ペアの生成
+      this.RSA.sKey = cryptico.generateRSAKey(this.RSA.passWord, this.RSA.bits);
+      this.RSA.pKey = cryptico.publicKeyString(this.RSA.sKey);
+      //console.log(this.RSA);
+
+      console.log(v.whois+' normal end.');
+      return v.rv;
+    } catch(e){
+      v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
+      console.error(v.msg);
+      return e;
+    }
+  }
+
+  /** Auth関係画面の切り替え
+   * @param {string} screenId - 画面ID。open/close->AuthWindowの開閉、他は指定ウィンドウの表示
+   * @returns {void}
+   */
+  #changeScreen(screenId){
+    const v = {rv:true};
+    console.log('Auth.#changeScreen start. screenId='+screenId);
+    try {
+
+      if( screenId === 'close' ){
+        this.AuthWindow.element.style.display = 'none';
+      } else {
+        this.AuthWindow.element.style.display = '';
+        ['entryNo','loading','passCode'].forEach(x => {
+          this[x].element.style.display = x === screenId ? '' : 'none';
+        });
+      }
+
+      console.log('Auth.#changeScreen end.');
+      return v.rv;
+    } catch(e){
+      console.error('Auth.#changeScreen abnormal end.',e);
+      // ブラウザで実行する場合はアラート表示
+      //if( typeof window !== 'undefined' ) alert(e.stack);
+      //throw e; //以降の処理を全て停止する場合
+      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+    }
+
+  }
+
+  /** entryNo(ID)を認証局に送信
+   * @param {void}
+   * @returns {void}
+   */
   #getEntryNo(){
     const v = {};
     console.log('Auth.getEntryNo start.');
@@ -71,6 +390,10 @@ class Auth {
     });
   }
 
+  /** メールから入力したpassCodeを認証局に送信
+   * @param {void}
+   * @returns {void}
+   */
   #getPassCode(){
     const v = {};
     console.log('Auth.getPassCode start.');
@@ -98,44 +421,94 @@ class Auth {
     });
   }
 
-}
+  /** GASのAPI(doPost)を呼び出す
+   * @param {string} to - 呼び先(gateway or front)
+   * @param {string} func - 呼び先関数名(auth1A等)
+   * @param {Object} data - 呼び先関数に渡すデータオブジェクト
+   * @returns {Object} 呼び先からの戻り値
+   * 
+   * - JS: [Async/await](https://ja.javascript.info/async-await)
+   * - MDN: [フェッチが成功したかの確認](https://developer.mozilla.org/ja/docs/Web/API/Fetch_API/Using_Fetch#%E3%83%95%E3%82%A7%E3%83%83%E3%83%81%E3%81%8C%E6%88%90%E5%8A%9F%E3%81%97%E3%81%9F%E3%81%8B%E3%81%AE%E7%A2%BA%E8%AA%8D)
+   * - MDN: [fetch()](https://developer.mozilla.org/ja/docs/Web/API/fetch)
+   * - MDN: [Response Object](https://developer.mozilla.org/ja/docs/Web/API/Response)
+   * - Qiita: [Fetch APIでネットワークエラーも含めてエラーハンドリングする](https://qiita.com/IzumiSy/items/031df1df4f4541e536b4)
+   */
+  async #fetchFromClient(fc,arg,md=0){
+    const v = {rv:null,data:{cp:this.RSA.pKey}};
+    console.log('Auth.#fetchFromClient start.');
+    try {
 
+      v.step = '1'; // 送信するトークンを生成
+      v.token = {
+        fm: this.entryNo.value,
+        to: 'gateway',
+        md: md,
+        ts: Date.now(),
+        dt: {
+          fc: fc,
+          arg: arg,
+        }
+      };
+      console.log('v.token',v.token);
 
-const confirmAsync = async message => {
-  document.getElementById("message").innerText = message;
-  document.getElementById("dialog").showModal();
+      v.step = '2'; // 暗号化・署名
+      if( md === 1 ){ // 共通鍵で暗号化
+        v.token.dt = encryptAES(
+          JSON.stringify(v.token.dt),this.commonKey);
+      } else if( md === 2 || md === 3 ){
+        v.plaintext = JSON.stringify(v.token.dt);
+        v.encode = encodeURI(v.plaintext);
+        v.encrypt = md === 2  // 2:署名無し暗号化、3:署名付き暗号化
+        ? cryptico.encrypt(v.encode,this.gateway.pKey)
+        : cryptico.encrypt(v.encode,this.gateway.pKey,this.RSA.sKey);
+        console.log('encrypt',v.encrypt);
+        if( v.encrypt.status !== 'success' )
+          throw new Error(JSON.stringify(v.encrypt));
+        v.token.dt = v.encrypt.cipher;
+      }
+      console.log('v.token',v.token);
 
-  return new Promise(resolve => {
-    const eventBase = flag => () => {
-      document.getElementById("dialog").close();
-      document.getElementById("button-ok").removeEventListener("click", okEvent);
-      document.getElementById("button-cancel").removeEventListener("click", cancelEvent);
-      resolve(flag);
-    };
-    const okEvent = eventBase(true);
-    const cancelEvent = eventBase(false);
+      v.step = '3'; // fetch
+      v.fetch = await fetch(this.gateway.url,{
+        "method": "POST",
+        "body": JSON.stringify(v.token),
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      });
+      v.rv = await v.fetch.json();
+      console.log(v.rv);
+      if( v.rv instanceof Error ) throw v.rv;
+      if( v.rv.isErr ){
+        console.error(
+          'Auth.#fetchFromClient abnormal end.'
+          + '\n' + v.rv.message
+          + '\n' + v.rv.stack
+        );
+        alert(v.rv.message);
+      }
 
-    document.getElementById("button-ok").addEventListener("click", okEvent);
-    document.getElementById("button-cancel").addEventListener("click", cancelEvent);
-  });
-};
-
-const handleClicked = async () => {
-  if (await confirmAsync("よろしいですか？")) {
-    alert("ＯＫが押されました。");
-  } else {
-    alert("キャンセルが押されました。");
+      console.log('Auth.#fetchFromClient normal end.');
+      return v.rv;
+    } catch(e){
+      console.error('Auth.#fetchFromClient abnormal end.',e);
+      return e;
+      // ブラウザで実行する場合はアラート表示
+      //if( typeof window !== 'undefined' ) alert(e.stack);
+      //throw e; //以降の処理を全て停止する場合
+      //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+    }
   }
-};
+
+}
 
 let config;
 window.addEventListener('DOMContentLoaded',async () => {
   const v = {};
   console.log('DOMContentLoaded start.');
-  //handleClicked();
-  v.auth = new Auth();
+  v.auth = new Auth('https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec');
   await v.auth.build();
   console.log(v.auth);
+
   console.log('DOMContentLoaded end.');
 });
 
