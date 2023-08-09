@@ -2,32 +2,6 @@
   <title>校庭キャンプ2023</title>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
-  <!-- UML: PlantUML
-    参考：JavaScriptを用いてPlantUMLを呼び出す
-    https://168iroha.net/blog/topic/?id=202206081036&sorting=post_date
-  -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js"></script>
-
-  <!-- MarkDownテキストをHTML化するCDN -->
-  <script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
-
-  <!-- 共通鍵暗号化：cryptoJS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/enc-base64.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/cipher-core.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/sha256.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/sha1.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/aes.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/hmac.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/pbkdf2.min.js"></script>
-
-  <!-- cryptico -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cryptico/0.0.1343522940/cryptico.min.js" integrity="sha512-C7GGRhFRn7F7hsLH1oCH2kX9ls61kx33wAgTZ6xJDwGvvgULcIZpwKqxG1+Kj/KOD2jWPxjNQYHi4BopPJPxVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-
     <!-- link rel="stylesheet" type="text/css" href="../../component/szLib.css" -->
   <style type="text/css" data-embed="../../component/szLib.css"></style>
   <style type="text/css" data-embed="../../component/loading.css"></style>
@@ -43,6 +17,7 @@
     .PlantUML {
       overflow-x: auto;
     }
+    li {font-size: 1rem;}
   </style>
 </head>
 <body>
@@ -116,8 +91,39 @@
     </div -->
 
   </div>
+</body>
+<!-- =====================================================
+  CDN
+===================================================== -->
+<!-- UML: PlantUML
+  参考：JavaScriptを用いてPlantUMLを呼び出す
+  https://168iroha.net/blog/topic/?id=202206081036&sorting=post_date
+-->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/plantuml-encoder@1.4.0/dist/plantuml-encoder.min.js"></script>
 
-<!-- 自作ライブラリ -->
+<!-- MarkDownテキストをHTML化するCDN -->
+<script src="https://taisukef.github.io/marked_md/marked.min.js"></script>
+
+<!-- 共通鍵暗号化：cryptoJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/enc-base64.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/cipher-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/sha256.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/sha1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/aes.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/hmac.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/pbkdf2.min.js"></script>
+
+<!-- cryptico -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cryptico/0.0.1343522940/cryptico.min.js" integrity="sha512-C7GGRhFRn7F7hsLH1oCH2kX9ls61kx33wAgTZ6xJDwGvvgULcIZpwKqxG1+Kj/KOD2jWPxjNQYHi4BopPJPxVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+
+<!-- =====================================================
+  自作ライブラリ
+===================================================== -->
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Auth.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Array.tabulize.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/createElement.html","selector":"script.core"},"to":"js"}'></script>
@@ -215,14 +221,22 @@ async function setupConfig(){
   try {
     console.log('setupConfig start.');
 
+    // デバッグ用：リリース時はlocalStorage.setItemと併せて削除
+    let ls = localStorage.getItem('camp2023');
+    if( ls !== null ){
+      config = JSON.parse(ls);
+      console.log('setupConfig normal end.',config);
+      return;
+    }
+
     // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
     const opt = {};
     const searchParams = new URLSearchParams(window.location.search);
     if( searchParams.has('id') ){
       opt.entryNo = {value:searchParams.get('id')};
     }
-
     config = new Auth('https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',opt);
+    localStorage.setItem('camp2023',JSON.stringify(config));
 
     console.log('setupConfig normal end.',config);
   } catch(e){
@@ -249,4 +263,4 @@ window.addEventListener('DOMContentLoaded',() => {
   redraw();
 });
 </script>
-</body></html>
+</html>
