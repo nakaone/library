@@ -9,6 +9,13 @@
   line-height: 1.5rem;
   color: black;
   box-sizing: border-box;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
 }
 
 * {
@@ -81,7 +88,33 @@ pre {
   https://projects.lukehaas.me/css-loaders/
 
   ex. <div class="loading5">loading...</div>
+
+  全画面表示で中央に配置する場合：
+  <div name="loading">
+    <div><div class="loading5">loading...</div></div>
+  </div>
+
 */
+div[name="loading"] {
+  /* CSSで全画面オーバーレイを実装する方法＆コード例
+     https://pisuke-code.com/css-fullscreen-overlay/ */
+  display: block;
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height:100vh;
+  background: #fff;
+  z-index: 2147483647;
+}
+
+div[name="loading"] > div {
+  display:flex;
+  width:100%;
+  height:100vh;
+  background:#fff;
+  justify-content:center;
+  align-items:center;
+}
+
 .loading5 {
   --dot-size: 4rem;
   --R: 0;
@@ -188,6 +221,7 @@ pre {
   </style>
 </head>
 <body>
+  <div name="loading"><div><div class="loading5">loading...</div></div></div>
 
   <div class="TabMenu" name="main">
 
@@ -513,7 +547,6 @@ then [当日スタッフアンケート回答] on {当日スタッフ} lasts 5 d
  *
  * - パスコード(passCode) : 受付番号入力後受信したメールに記載された番号
  * - パスワード(passWord) : 鍵ペア生成の際、秘密鍵の基となる文字列
- * 
  */
 class Auth {
   /**
@@ -617,45 +650,107 @@ class Auth {
    * - (12) auth2B
    *   1. 送信された受付番号・パスコード・CPkeyが有効か、シートの申請登録と突合
    *   1. OKなら利用者情報をauth2Aに返す
+   * 
+   * ## 使用方法
+   * 
+   * ```
+   * let config;
+   * window.addEventListener('DOMContentLoaded',async () => {
+   *   const v = {};
+   *   console.log('DOMContentLoaded start.');
+   *   v.auth = new Auth('https://script.google.com/macros/s/〜/exec');
+   *   await v.auth.build();
+   *   // ローディング画面解除
+   *   document.querySelector('div[name="loading"]').style.display = 'none';
+   * 
+   *   console.log(v.auth);
+   *   console.log('DOMContentLoaded end.');
+   * });
+   * ```
+   * 
+   * - `new Auth()`実行後、必ず`.build()`を実行する
+   * 
    */
   constructor(gatewayUrl,opt={}){
-    const v = {rv:null};
-    console.log('Auth.constructor start.');
+    const v = {whois:'Auth.constructor'};
+    console.log(v.whois+' start.');
     try {
-      this.constructorStart = Date.now();
 
-      // 1.オプション未定義項目の既定値をプロパティにセット
+      v.step = '1'; // オプション未定義項目の既定値をプロパティにセット
       this.#setProperties(this,null,opt);
-      console.log('this:',this);
-      console.log(Date.now()-this.constructorStart);
 
-      // 2.必須項目をプロパティに保存
+      v.step = '2'; // 必須項目をプロパティに保存
       this.gateway.url = gatewayUrl;  // 認証局のURL
-      console.log(Date.now()-this.constructorStart);
 
-      // 3.各種画面を用意する
+      v.step = '3'; // 各種画面を用意する
       //   ※鍵ペア生成で時間がかかるので、先に待機画面を表示
       this.#setWindows();
-      // 初期画面として待機画面を表示
-      this.#changeScreen('loading');
-      console.log(Date.now()-this.constructorStart);
 
-      // 4.秘密鍵・公開鍵を作成し、プロパティに格納する
+      v.step = '4'; // 秘密鍵・公開鍵を作成し、プロパティに格納する
       this.#setupKeys();
-      console.log(Date.now()-this.constructorStart);
 
-      // 5.非同期の初期化処理を呼出
-      this.#changeScreen('entryNo');
-      //this.build();
+      console.log(v.whois+' normal end.');
+    } catch(e){
+      v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
+      console.error(v.msg);
+      alert(v.msg);
+    }
+  }
 
-      //console.log('v.rv='+JSON.stringify(v.rv));
-      console.log('Auth.constructor end.');
+  /** 初期化時に必要な一連の非同期処理を実施
+   * @param {void} - 無し
+   * @returns {void} 無し
+   */
+  async build(){
+    const v = {whois:'Auth.build',rv:null};
+    console.log(v.whois+' start.');
+    try {
+      v.step = '1.1'; do  // 受付番号をダイアログから取得
+        this.entryNo.value = await this.#getEntryNo();
+      while( this.entryNo.value.match(/^[0-9]{1,4}$/) === null );
+
+      v.step = '1.2'; v.arg = { // auth1Aに渡す引数をセット
+        entryNo: this.entryNo.value,
+        publicKey: this.RSA.pKey,
+      }
+      console.log('arg',v.arg);
+
+      v.step = '1.3'; // fetch
+      v.rv = await this.fetch('auth1A',v.arg,0);
+      if( v.rv.isErr ){
+        alert(v.rv.message);
+        return null;
+      } else {
+        this.gateway.pKey = v.rv.result;
+      }
+
+      v.step = '2.1'; do  // 受付番号が指定形式になるまでループ
+        this.passCode.value = await this.#getPassCode();
+      while( this.passCode.value.match(/^[0-9]{6}$/) === null );
+
+      // 入力フォームから値を取得
+      //this.#changeScreen('loading');
+      v.step = '2.2'; v.arg = { // auth1Bに渡す引数
+        entryNo: this.entryNo.value,
+        passCode: this.passCode.value,
+      }
+      console.log('arg',v.arg);
+
+      v.step = '2.3'; // fetch
+      v.rv = await this.fetch('auth2A',v.arg,3);
+      if( v.rv.isErr ){
+        console.error(v.rv);
+      } else {
+        // 申請者情報と共通鍵を格納
+        this.commonKey = v.rv.result.common;
+        this.info = v.rv.result.info;
+        console.log('commonKey='+this.commonKey,'info',this.info);
+      }
+
+      console.log(v.whois+' normal end.');
       return v.rv;
     } catch(e){
-      console.error('Auth.constructor abnormal end.',e);
-      // ブラウザで実行する場合はアラート表示
-      //if( typeof window !== 'undefined' ) alert(e.stack);
-      throw e; //以降の処理を全て停止
+      console.error(v.whois+' abnormal end.\n',e);
     }
   }
 
@@ -664,7 +759,7 @@ class Auth {
    * @returns {void}
    */
   #setProperties(dest,def,opt){
-    const v = {rv:true,def:{
+    const v = {whois:'Auth.#setProperties',rv:true,def:{
       parentSelector: "body", // {string} - 親要素のCSSセレクタ
       RSA:{  // 自局のRSAキー関係情報
         bits: 1024,     // {number} - RSAキー長
@@ -673,8 +768,8 @@ class Auth {
         sKey: null,     // {RSAKey} - 秘密鍵
         pKey: null,     // {string} - 公開鍵
       },
-      commonKey: null,  // 共通鍵
-      info: null, // 管理局から取得する参加者情報
+      commonKey: null,  // {string} - 共通鍵
+      info: null, // {Object.<string, any>} - 管理局.masterシートの参加者情報
       gateway:{ // 認証局関連情報
         url: null,  // {string} - APIのURL
         pKey: null, // {string} - 公開鍵
@@ -683,17 +778,45 @@ class Auth {
         url: null,  // {string} - APIのURL
         pKey: null, // {string} - 公開鍵
       },
-      AuthWindow: {
-        element: null, // {HTMLElement} - 受付番号入力画面の要素。setWindowsで設定。
-        zIndex: 2147483646,  // z-indexの最大値-1
-      },
       entryNo:{ // 受付番号関係
         element: null, // {HTMLElement} - 受付番号入力画面の要素。setWindowsで設定。
         value: '',  // {string} - 受付番号
+        css: [
+          {sel:'dialog.Auth',prop:{
+            'margin':'auto',
+            'padding':'1rem',
+            'box-shadow':'0 0 1rem black',
+          }},
+          {sel:'dialog.Auth::backdrop',prop:{
+            'background-color':'#ddd',
+          }},
+          {sel:'dialog.Auth p',prop:{
+            'font-size':'1.5rem',
+            'margin':'0.5rem 0',  
+          }},
+          {sel:'dialog.Auth li',prop:{
+            'font-size':'1rem',
+            'margin':'0.5rem 0',  
+          }},
+          {sel:'dialog.Auth > input[type="text"]',prop:{
+            'font-size':'1.5rem',
+            'border':'solid 2px #888',
+            'height':'2rem',
+            'width':'6rem',    
+          }},
+          {sel:'dialog.Auth > input[type="button"]',prop:{
+            'font-size':'1rem',
+            'padding':'0.25rem 1rem',
+            'margin-left':'1rem',
+          }},
+        ],
+        dialog: `<p>受付番号を入力してください</p>`,
+        /*
         header:'',    // {string} - 受付番号入力画面に表示するheaderのinnerHTML
         msg1:'受付番号を入力してください', // {string} - 入力欄の前に表示するメッセージ
         button:'送信',  // {string} - 受付番号入力画面のボタンのラベル
         msg2:'',      // {string} - 入力欄の後に表示するメッセージ
+        */
         rex:/^[0-9]{1,4}$/, // {RegExp} - 受付番号チェック用正規表現
       },
       loading: {
@@ -702,17 +825,18 @@ class Auth {
       },
       passCode:{
         element: null, // {HTMLElement} - パスコード入力画面の要素。setWindowsで設定。
-        //value: null,  // {string} - パスコード
-        header:'',    // {string} - パスコード入力画面に表示するheaderのinnerHTML
-        msg1:'確認のメールを送信しました。記載されているパスコード(数字6桁)を入力してください。<br>'
-        + '※まれに迷惑メールと判定される場合があります。メールが来ない場合、そちらもご確認ください。',
-                      // {string} - 入力欄の前に表示するメッセージ
-        button:'送信',  // {string} - パスコード入力画面のボタンのラベル
-        msg2: '※パスコードの有効期限は1時間です',
+        value: null,  // {string} - パスコード
+        dialog: `<p>確認のメールを送信しました。<br>
+          記載されているパスコード(数字6桁)を入力してください。</p>
+          <ol>
+            <li>パスコードの有効期限は1時間です</li>
+            <li>まれに迷惑メールと判定される場合があります。<br>メールが来ない場合、そちらもご確認ください。</li>
+            <li>3回連続誤入力で1時間ロックアウトされます。</li>
+          </ol>`,
         rex:/^[0-9]{6}$/, // {RegExp} - パスコードチェック用正規表現
       },
     }};
-    console.log('Auth.#setProperties start.');
+    console.log(v.whois+' start.');
     try {
       if( def !== null ){ // 2回目以降の呼出(再起呼出)
         // 再起呼出の場合、呼出元から渡された定義Objを使用
@@ -733,13 +857,12 @@ class Auth {
         this.parentWindow = document.querySelector(this.parentSelector);
       }
 
-      //console.log('this='+JSON.stringify(this));
-      console.log('Auth.#setProperties end.');
+      console.log(v.whois+' normal end.');
       return v.rv;
     } catch(e){
-      console.error('Auth.#setProperties abnormal end.',e);
-      //if( typeof window !== 'undefined' ) alert(e.stack);
-      v.rv.stack = e.stack; return v.rv;
+      v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
+      console.error(v.msg);
+      return e;
     }
   }
 
@@ -748,8 +871,8 @@ class Auth {
    * @returns {void}
    */
   #setupKeys(){
-    const v = {rv:null};
-    console.log('Auth.#setupKeys start.');
+    const v = {whois:'Auth.#setupKeys',rv:null};
+    console.log(v.whois+' start.');
     try {
       // パスワード未指定なら作成
       if( this.RSA.passWord === null ){
@@ -761,283 +884,123 @@ class Auth {
       this.RSA.pKey = cryptico.publicKeyString(this.RSA.sKey);
       //console.log(this.RSA);
 
-      // 秘密鍵の保存
-      //Fs.writeFileSync('./private.json', JSON.stringify(key.toJSON()));
-
-      //console.log('v.rv='+JSON.stringify(v.rv));
-      console.log('Auth.#setupKeys end.');
+      console.log(v.whois+' normal end.');
       return v.rv;
     } catch(e){
-      console.error('Auth.#setupKeys abnormal end.',e);
-      // ブラウザで実行する場合はアラート表示
-      if( typeof window !== 'undefined' ) alert(e.stack); 
-      //throw e; //以降の処理を全て停止する場合
-      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+      v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
+      console.error(v.msg);
+      return e;
     }
   }
 
   /** Auth関係画面をセットする
-   *
+   * @param {void} - 無し
+   * @returns {void} 無し
    */
   #setWindows(){
-    const v = {rv:null};
-    console.log('Auth.#setWindows start.');
+    const v = {whois:'Auth.#setWindows',rv:null};
+    console.log(v.whois+' start.');
     try {
-      // Auth関係画面のwrapper
-      this.AuthWindow.element = createElement({
-        attr:{name:"AuthWindow"},
-        style:{
-          // CSSで全画面オーバーレイを実装する方法＆コード例
-          // https://pisuke-code.com/css-fullscreen-overlay/
-          display: "block",
-          position: "absolute",
-          left: 0, top: 0,
-          width: "100%", height:"100%",
-          background:"#fff",
-          zIndex:this.AuthWindow.zIndex,
-        },
-      });
+
+      // dialog用のCSS定義を追加(getPassCodeと共通)
+      v.style = createElement('style');
+      document.head.appendChild(v.style);
+      for( v.i=0 ; v.i<this.entryNo.css.length ; v.i++ ){
+        v.x = this.entryNo.css[v.i];
+        for( v.y in v.x.prop ){
+          v.prop = v.x.sel+' { '+v.y+' : '+v.x.prop[v.y]+'; }\n';
+          console.log(v.prop);
+          v.style.sheet.insertRule(v.prop,
+            v.style.sheet.cssRules.length,
+          );
+        }
+      }
 
       // 受付番号入力画面
       this.entryNo.element = createElement({
+        tag:'dialog',
+        attr:{name:'entryNo',class:'Auth'},
         children:[
-          {html:this.entryNo.header}, // タイトル
-          {tag:'p',html:this.entryNo.msg1},  // 入力欄前メッセージ
-          { // inputBox
-            tag:'input',
-            attr:{type:'text',name:'entryNo',value:this.entryNo.value},
-            event:{'input':(event)=>{
-              // 入力値チェック
-              const m = event.target.value.match(this.entryNo.rex);
-              console.log('m',m);
-              const b = document.querySelector('div[name="AuthWindow"] input[name="entryNoButton"]');
-              if( m ){
-                b.removeAttribute('disabled');
-              } else {
-                b.setAttribute('disabled',true);
-              }
-            }},
-          },
-          { // 送信ボタン
-            tag:'input',
-            attr:{
-              type:'button',
-              name:'entryNoButton',
-              value:this.entryNo.button,
-            },
-            logical:{
-              disabled: this.entryNo.value.match(this.entryNo.rex) ? false : true,
-            },
-            event:{'click':()=>this.getEntryNo()},
-          },
-          {tag:'p',html:this.entryNo.msg2},  // 入力欄後メッセージ
+          {tag:'div',html:this.entryNo.dialog},
+          {tag:'input',attr:{type:'text'}},
+          {tag:'input',attr:{type:'button',value:'送信'}},
         ],
       });
-
-      // ローディング画面
-      // ※ 受付番号・パスコード入力を隠蔽するため
-      //   loading.zIndex > AuthWindow.zIndex とする。
-      this.loading = {element:createElement({
-        style:{
-          position: "absolute",
-          left: 0, top: 0,
-          width: "100%", height:"100%",
-          background:"#fff",
-          zIndex:this.loading.zIndex,
-        },
-        children:[
-          {
-            style:{
-              display:"flex",
-              width:"100%",
-              height:"100%",
-              background:"#fff",
-              justifyContent:"center",
-              alignItems:"center",
-            },
-            children:[
-              {
-                attr:{class:'loading5'},
-                style:{ // 点の軌道/大きさ/色
-                  //"--dot-size":"4rem",
-                  //"--m0:3.2rem",
-                  "--R":0,
-                  "--G":0,
-                  "--B":0,
-                },
-                text:'loading...'
-              },
-            ],
-          }
-        ],
-      })};
+      document.querySelector('body').prepend(this.entryNo.element);
 
       // パスコード入力画面
       this.passCode.element = createElement({
+        tag:'dialog',
+        attr:{name:'passCode',class:'Auth'},
         children:[
-          {html:this.passCode.header}, // タイトル
-          {tag:'p',html:this.passCode.msg1},  // 入力欄前メッセージ
-          { // inputBox
-            tag:'input',
-            attr:{type:'text',name:'passCode',value:''},
-            event:{'input':(event)=>{
-              // 入力値チェック
-              const m = event.target.value.match(this.passCode.rex);
-              console.log('m',m);
-              const b = document.querySelector('div[name="AuthWindow"] input[name="passCodeButton"]');
-              if( m ){
-                b.removeAttribute('disabled');
-              } else {
-                b.setAttribute('disabled',true);
-              }
-            }},
-          },
-          { // 送信ボタン
-            tag:'input',
-            attr:{
-              type:'button',
-              name:'passCodeButton',
-              value:this.passCode.button,disabled:true
-            },
-            event:{'click':()=>this.getPassCode()},
-          },
-          {tag:'p',html:this.passCode.msg2},  // 入力欄後メッセージ
+          {tag:'div',html:this.passCode.dialog},
+          {tag:'input',attr:{type:'text'}},
+          {tag:'input',attr:{type:'button',value:'送信'}},
         ],
       });
-
-      // 画面をセット
-      this.parentWindow.prepend(this.AuthWindow.element);
-      this.AuthWindow.element.appendChild(this.entryNo.element);
-      this.AuthWindow.element.appendChild(this.loading.element);
-      this.AuthWindow.element.appendChild(this.passCode.element);
+      document.querySelector('body').prepend(this.passCode.element);
 
       //console.log('v.rv='+JSON.stringify(v.rv));
-      console.log('Auth.#setWindows end.');
+      console.log(v.whois+' normal end.');
       return v.rv;
     } catch(e){
-      console.error('Auth.#setWindows abnormal end.',e);
-      // ブラウザで実行する場合はアラート表示
-      //if( typeof window !== 'undefined' ) alert(e.stack);
-      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+      console.error(v.whois+' abnormal end.',e,v);
+      return (e);
     }
 
   }
 
-  /** Auth関係画面の切り替え
-   * @param {string} screenId - 画面ID。open/close->AuthWindowの開閉、他は指定ウィンドウの表示
+  /** entryNo(ID)をダイアログに入力
+   * @param {void}
    * @returns {void}
+   * 
+   * - Qiita [非同期な自作 confirm を作ってみた](https://qiita.com/naoki-funawatari/items/4de792bfefe5eab909cc)
    */
-  #changeScreen(screenId){
-    const v = {rv:true};
-    console.log('Auth.#changeScreen start. screenId='+screenId);
+  #getEntryNo(){
+    const v = {whois:'Auth.#getEntryNo'};
+    console.log(v.whois+' start.');
     try {
 
-      if( screenId === 'close' ){
-        this.AuthWindow.element.style.display = 'none';
-      } else {
-        this.AuthWindow.element.style.display = '';
-        ['entryNo','loading','passCode'].forEach(x => {
-          this[x].element.style.display = x === screenId ? '' : 'none';
+      this.entryNo.element.showModal();
+
+      return new Promise(resolve => {
+        document.querySelector('dialog[name="entryNo"] input[type="button"]')
+        .addEventListener('click',() => {
+          this.entryNo.element.close();
+          let rv = event.target.parentElement.querySelector('input[type="text"]').value;
+          console.log('Auth.#getEntryNo normal end.',rv);
+          resolve(rv);
         });
-      }
+      });
 
-      console.log('Auth.#changeScreen end.');
-      return v.rv;
     } catch(e){
-      console.error('Auth.#changeScreen abnormal end.',e);
-      // ブラウザで実行する場合はアラート表示
-      //if( typeof window !== 'undefined' ) alert(e.stack);
-      //throw e; //以降の処理を全て停止する場合
-      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
-    }
-
-  }
-
-  /** entryNo(ID)を認証局に送信
-   * @param {void}
-   * @returns {void}
-   */
-  async getEntryNo(){
-    const v = {rv:null,data:{cp:this.RSA.pKey}};
-    console.log('Auth.getEntryNo start.');
-    try {
-
-      v.step = '1'; // 入力フォームから値を取得
-      this.#changeScreen('loading');
-      this.entryNo.value = this.entryNo.element.querySelector('input').value;
-      v.arg = { // auth1Aに渡す引数
-        entryNo: this.entryNo.value,
-        publicKey: this.RSA.pKey,
-      }
-      console.log('arg',v.arg);
-
-      v.step = '2'; // fetch
-      v.rv = await this.#fetchFromClient('auth1A',v.arg,0);
-      //if( v.rv instanceof Error ) throw v.rv;
-      if( v.rv.isErr ){
-        this.#changeScreen('entryNo');
-      } else {
-        this.gateway.pKey = v.rv.result;
-        console.log('this.gateway.pKey='
-          + JSON.stringify(this.gateway.pKey));
-        this.#changeScreen('passCode');
-      }
-
-      console.log('Auth.getEntryNo end.');
-      return v.rv;
-    } catch(e){
-      console.error('Auth.getEntryNo abnormal end.',e);
-      return e;
-      // ブラウザで実行する場合はアラート表示
-      //if( typeof window !== 'undefined' ) alert(e.stack);
-      //throw e; //以降の処理を全て停止する場合
-      //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+      console.error(v.whois+' abnormal end.\n',e,v);
+      return(e);
     }
   }
 
-  /** メールから入力したpassCodeを認証局に送信
+  /** メールから入力したpassCodeをダイアログに入力
    * @param {void}
    * @returns {void}
    */
-  async getPassCode(){
-    const v = {rv:null,data:{cp:this.RSA.pKey}};
-    console.log('Auth.getPassCode start.');
+  #getPassCode(){
+    const v = {whois:'Auth.#getPassCode'};
+    console.log(v.whois+' start.');
     try {
+      this.passCode.element.showModal();
 
-      // 入力フォームから値を取得
-      this.#changeScreen('loading');
-      v.arg = { // auth1Bに渡す引数
-        entryNo: this.entryNo.value,
-        passCode: this.passCode.element.querySelector('input').value,
-      }
-      console.log('arg',v.arg);
-      v.rv = await this.#fetchFromClient('auth2A',v.arg,3);
-      if( v.rv instanceof Error ) throw v.rv;
-      if( v.rv.isErr ){
-        console.log(v.rv);
-        if( v.rv.result ){
-          this.#changeScreen('entryNo');
-        } else {
-          this.#changeScreen('passCode');
-        }
-      } else {
-        // 申請者情報と共通鍵を格納
-        this.commonKey = v.rv.result.common;
-        this.info = v.rv.result.info;
-        console.log('commonKey='+this.commonKey,'info',this.info);
-        // パスコード入力画面を閉じる
-        this.#changeScreen('close');
-      }
-
-      console.log('Auth.getPassCode end.');
-      return v.rv;
+      return new Promise(resolve => {
+        document.querySelector('dialog[name="passCode"] input[type="button"]')
+        .addEventListener('click',() => {
+          this.passCode.element.close();
+          let rv = event.target.parentElement.querySelector('input[type="text"]').value;
+          console.log('Auth.#getPassCode normal end.',rv);
+          resolve(rv);
+        });
+      });
     } catch(e){
-      console.error('Auth.getPassCode abnormal end.',e);
-      return e;
-      // ブラウザで実行する場合はアラート表示
-      //if( typeof window !== 'undefined' ) alert(e.stack);
-      //throw e; //以降の処理を全て停止する場合
-      //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
+      console.error(v.whois+' abnormal end.\n',e,v);
+      return(e);
     }
   }
 
@@ -1053,9 +1016,9 @@ class Auth {
    * - MDN: [Response Object](https://developer.mozilla.org/ja/docs/Web/API/Response)
    * - Qiita: [Fetch APIでネットワークエラーも含めてエラーハンドリングする](https://qiita.com/IzumiSy/items/031df1df4f4541e536b4)
    */
-  async #fetchFromClient(fc,arg,md=0){
-    const v = {rv:null,data:{cp:this.RSA.pKey}};
-    console.log('Auth.#fetchFromClient start.');
+  async fetch(fc,arg,md=0){
+    const v = {whois:'Auth.fetch',rv:null,data:{cp:this.RSA.pKey}};
+    console.log(v.whois+' start.');
     try {
 
       v.step = '1'; // 送信するトークンを生成
@@ -1069,7 +1032,6 @@ class Auth {
           arg: arg,
         }
       };
-      console.log('v.token',v.token);
 
       v.step = '2'; // 暗号化・署名
       if( md === 1 ){ // 共通鍵で暗号化
@@ -1086,7 +1048,6 @@ class Auth {
           throw new Error(JSON.stringify(v.encrypt));
         v.token.dt = v.encrypt.cipher;
       }
-      console.log('v.token',v.token);
 
       v.step = '3'; // fetch
       v.fetch = await fetch(this.gateway.url,{
@@ -1100,26 +1061,22 @@ class Auth {
       if( v.rv instanceof Error ) throw v.rv;
       if( v.rv.isErr ){
         console.error(
-          'Auth.#fetchFromClient abnormal end.'
+          v.whois+' abnormal end.'
           + '\n' + v.rv.message
           + '\n' + v.rv.stack
         );
         alert(v.rv.message);
       }
 
-      console.log('Auth.#fetchFromClient normal end.');
+      console.log(v.whois+' normal end.');
       return v.rv;
     } catch(e){
-      console.error('Auth.#fetchFromClient abnormal end.',e);
+      console.error(v.whois+' abnormal end.',e,v);
       return e;
-      // ブラウザで実行する場合はアラート表示
-      //if( typeof window !== 'undefined' ) alert(e.stack);
-      //throw e; //以降の処理を全て停止する場合
-      //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
     }
   }
-}
 
+}
 </script>
 <script type="text/javascript">
 /**
@@ -2252,109 +2209,80 @@ function whichType(arg,is){
 </script>
 
 <script type="text/javascript" class="main">
-async function auth(){
-  console.log('auth start.');
-  try {
-    const opt = {};
-    const searchParams = new URLSearchParams(window.location.search);
-    if( searchParams.has('id') ){
-      opt.entryNo = {value:searchParams.get('id')};
+let config;
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {opt:{}};
+  console.log('DOMContentLoaded start.');
+
+  v.step = '1'; // 認証
+  v.ls = localStorage.getItem('conf');
+  if( v.debug && v.ls !== null ){
+    v.step = '1.1';
+    // デバッグ用：リリース時はlocalStorage.setItemと併せて削除
+    config = JSON.parse(v.ls);
+    console.log(v.step+':',config);
+  } else {
+    v.step = '1.2';
+    // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
+    v.searchParams = new URLSearchParams(window.location.search);
+    if( v.searchParams.has('id') ){
+      v.opt.entryNo = {value:v.searchParams.get('id')};
     }
-    const rv = new Auth();
-    await Auth.build('https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',opt);
-    console.log('auth normal end.',rv);
-    return rv;
-  } catch(e){
-    console.error('auth abnormal end.',e);
-    alert(e.message);
+    config = new Auth('https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec');
+    await config.build();
+    localStorage.setItem('conf',JSON.stringify(config));
+    console.log(v.step+':',config);
   }
-}
 
-let config = null;
-async function initialize(){
-  const v = {debug:false};
-  console.log('initialize start.');
-  try {
+  v.step = '2'; // メニューを定義
+  document.querySelectorAll('.TabMenu[name]').forEach(x => {
+    v.menuName = x.getAttribute('name');
+    v.arg = {name:v.menuName};
+    console.log(v.menuName,v.arg);
+    v[v.menuName] = new TabMenu(v.arg);
+  });
+  console.log(v.step+':',v);
 
-    v.ls = localStorage.getItem('conf');
-    if( v.debug && v.ls !== null ){
-      v.step = '1.1'; // デバッグ用：リリース時はlocalStorage.setItemと併せて削除
-      config = JSON.parse(v.ls);
-      console.log(v.step+':',config);
-    } else {
-      v.step = '1.2'; // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
-      config = await auth();
-      localStorage.setItem('conf',JSON.stringify(config));
-      console.log(v.step+':',config);
-    }
+  v.step = '3'; // MarkDownで記述された部分をHTML化して表示
+  document.querySelectorAll('div.markdown').forEach(x => {
+    x.innerHTML = marked(x.innerHTML);
+  });
 
-    v.step = '2'; // メニューを定義
-    document.querySelectorAll('.TabMenu[name]').forEach(x => {
-      v.menuName = x.getAttribute('name');
-      v.arg = {name:v.menuName};
-      console.log(v.menuName,v.arg);
-      v[v.menuName] = new TabMenu(v.arg);
-    });
-    console.log(v.step+':',v);
+  v.step = '4'; // PlantUMLで記述された部分をHTML化して表示
+  document.querySelectorAll('div.PlantUML').forEach(x => {
+    let src = x.querySelector('div').innerHTML;
+    x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
+      + plantumlEncoder.encode(src);
+  });
 
+  v.step = '5'; // Mermaidで記述された部分をHTML化して表示
+  mermaid.initialize({startOnLoad: true});
 
-    // 画面を描画
-    //redraw();
-    // MarkDownで記述された部分をHTML化して表示
-    document.querySelectorAll('div.markdown').forEach(x => {
-      x.innerHTML = marked(x.innerHTML);
-    });
+  v.step = '6'; // パスポートの内容描画
+  const passportDiv = document.querySelector('div[name="パスポート"] div');
+  v.entryNo = ('000'+config.entryNo.value).slice(-4);
+  passportDiv.appendChild(createElement({
+    tag:'p',
+    text:'No.'+v.entryNo,
+    style: {margin:"1rem 0",fontSize:"2rem"}
+  }));
+  qrcodeDiv = document.createElement('div');
+  const qr = new QRCode(qrcodeDiv,{
+    text: v.entryNo,
+    width: 400,
+    height: 400,
+    colorDark: "#000",
+    colorLight: "#fff",
+    correctLevel : QRCode.CorrectLevel.H,
+  });
+  passportDiv.appendChild(qrcodeDiv);
 
-    // PlantUMLで記述された部分をHTML化して表示
-    document.querySelectorAll('div.PlantUML').forEach(x => {
-      let src = x.querySelector('div').innerHTML;
-      x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
-        + plantumlEncoder.encode(src);
-    });
-
-    // Mermaidで記述された部分をHTML化して表示
-    mermaid.initialize({startOnLoad: true});
-
-    // パスポートの内容描画
-    let entryNo = new URLSearchParams(window.location.search).get('id');
-    console.log("entryNo="+entryNo);
-    const passportDiv = document.querySelector('div[name="パスポート"] div');
-    if( entryNo === null ){
-      passportDiv.appendChild(createElement({tag:'p',text:'受付番号の情報がありません'}));
-    } else {
-      entryNo = ('000'+entryNo).slice(-4);
-      console.log("entryNo="+entryNo);
-      passportDiv.appendChild(createElement({
-        tag:'p',
-        text:'No.'+entryNo,
-        style: {margin:"1rem 0",fontSize:"2rem"}
-      }));
-      qrcodeDiv = document.createElement('div');
-      const qr = new QRCode(qrcodeDiv,{
-        text: entryNo,
-        width: 400,
-        height: 400,
-        colorDark: "#000",
-        colorLight: "#fff",
-        correctLevel : QRCode.CorrectLevel.H,
-      });
-      passportDiv.appendChild(qrcodeDiv);
-    }
-
-
-
-
-    console.log('initialize normal end.');
-  } catch(e){
-    console.error('initialize abnormal end.',e);
-    alert(e.message);
-  }
-}
-
-// ブラウザ上で実行する場合の処理
-window.addEventListener('DOMContentLoaded',() => {
-  initialize();
+  v.step = '7'; // ローディング画面解除
+  document.querySelector('div[name="loading"]').style.display = 'none';
+  console.log('DOMContentLoaded end.');
 });
+
+
 </script>
 </body><!-- =====================================================
   CDN

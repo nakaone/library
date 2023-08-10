@@ -21,6 +21,7 @@
   </style>
 </head>
 <body>
+  <div name="loading"><div><div class="loading5">loading...</div></div></div>
 
   <div class="TabMenu" name="main">
 
@@ -134,108 +135,79 @@
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/whichType.html","selector":"script.core"},"to":"js"}'></script>
 
 <script type="text/javascript" class="main">
-async function auth(){
-  console.log('auth start.');
-  try {
-    const opt = {};
-    const searchParams = new URLSearchParams(window.location.search);
-    if( searchParams.has('id') ){
-      opt.entryNo = {value:searchParams.get('id')};
+let config;
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {opt:{}};
+  console.log('DOMContentLoaded start.');
+
+  v.step = '1'; // 認証
+  v.ls = localStorage.getItem('conf');
+  if( v.debug && v.ls !== null ){
+    v.step = '1.1';
+    // デバッグ用：リリース時はlocalStorage.setItemと併せて削除
+    config = JSON.parse(v.ls);
+    console.log(v.step+':',config);
+  } else {
+    v.step = '1.2';
+    // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
+    v.searchParams = new URLSearchParams(window.location.search);
+    if( v.searchParams.has('id') ){
+      v.opt.entryNo = {value:v.searchParams.get('id')};
     }
-    const rv = new Auth();
-    await Auth.build('https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',opt);
-    console.log('auth normal end.',rv);
-    return rv;
-  } catch(e){
-    console.error('auth abnormal end.',e);
-    alert(e.message);
+    config = new Auth('https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec');
+    await config.build();
+    localStorage.setItem('conf',JSON.stringify(config));
+    console.log(v.step+':',config);
   }
-}
 
-let config = null;
-async function initialize(){
-  const v = {debug:false};
-  console.log('initialize start.');
-  try {
+  v.step = '2'; // メニューを定義
+  document.querySelectorAll('.TabMenu[name]').forEach(x => {
+    v.menuName = x.getAttribute('name');
+    v.arg = {name:v.menuName};
+    console.log(v.menuName,v.arg);
+    v[v.menuName] = new TabMenu(v.arg);
+  });
+  console.log(v.step+':',v);
 
-    v.ls = localStorage.getItem('conf');
-    if( v.debug && v.ls !== null ){
-      v.step = '1.1'; // デバッグ用：リリース時はlocalStorage.setItemと併せて削除
-      config = JSON.parse(v.ls);
-      console.log(v.step+':',config);
-    } else {
-      v.step = '1.2'; // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
-      config = await auth();
-      localStorage.setItem('conf',JSON.stringify(config));
-      console.log(v.step+':',config);
-    }
+  v.step = '3'; // MarkDownで記述された部分をHTML化して表示
+  document.querySelectorAll('div.markdown').forEach(x => {
+    x.innerHTML = marked(x.innerHTML);
+  });
 
-    v.step = '2'; // メニューを定義
-    document.querySelectorAll('.TabMenu[name]').forEach(x => {
-      v.menuName = x.getAttribute('name');
-      v.arg = {name:v.menuName};
-      console.log(v.menuName,v.arg);
-      v[v.menuName] = new TabMenu(v.arg);
-    });
-    console.log(v.step+':',v);
+  v.step = '4'; // PlantUMLで記述された部分をHTML化して表示
+  document.querySelectorAll('div.PlantUML').forEach(x => {
+    let src = x.querySelector('div').innerHTML;
+    x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
+      + plantumlEncoder.encode(src);
+  });
 
+  v.step = '5'; // Mermaidで記述された部分をHTML化して表示
+  mermaid.initialize({startOnLoad: true});
 
-    // 画面を描画
-    //redraw();
-    // MarkDownで記述された部分をHTML化して表示
-    document.querySelectorAll('div.markdown').forEach(x => {
-      x.innerHTML = marked(x.innerHTML);
-    });
+  v.step = '6'; // パスポートの内容描画
+  const passportDiv = document.querySelector('div[name="パスポート"] div');
+  v.entryNo = ('000'+config.entryNo.value).slice(-4);
+  passportDiv.appendChild(createElement({
+    tag:'p',
+    text:'No.'+v.entryNo,
+    style: {margin:"1rem 0",fontSize:"2rem"}
+  }));
+  qrcodeDiv = document.createElement('div');
+  const qr = new QRCode(qrcodeDiv,{
+    text: v.entryNo,
+    width: 400,
+    height: 400,
+    colorDark: "#000",
+    colorLight: "#fff",
+    correctLevel : QRCode.CorrectLevel.H,
+  });
+  passportDiv.appendChild(qrcodeDiv);
 
-    // PlantUMLで記述された部分をHTML化して表示
-    document.querySelectorAll('div.PlantUML').forEach(x => {
-      let src = x.querySelector('div').innerHTML;
-      x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
-        + plantumlEncoder.encode(src);
-    });
-
-    // Mermaidで記述された部分をHTML化して表示
-    mermaid.initialize({startOnLoad: true});
-
-    // パスポートの内容描画
-    let entryNo = new URLSearchParams(window.location.search).get('id');
-    console.log("entryNo="+entryNo);
-    const passportDiv = document.querySelector('div[name="パスポート"] div');
-    if( entryNo === null ){
-      passportDiv.appendChild(createElement({tag:'p',text:'受付番号の情報がありません'}));
-    } else {
-      entryNo = ('000'+entryNo).slice(-4);
-      console.log("entryNo="+entryNo);
-      passportDiv.appendChild(createElement({
-        tag:'p',
-        text:'No.'+entryNo,
-        style: {margin:"1rem 0",fontSize:"2rem"}
-      }));
-      qrcodeDiv = document.createElement('div');
-      const qr = new QRCode(qrcodeDiv,{
-        text: entryNo,
-        width: 400,
-        height: 400,
-        colorDark: "#000",
-        colorLight: "#fff",
-        correctLevel : QRCode.CorrectLevel.H,
-      });
-      passportDiv.appendChild(qrcodeDiv);
-    }
-
-
-
-
-    console.log('initialize normal end.');
-  } catch(e){
-    console.error('initialize abnormal end.',e);
-    alert(e.message);
-  }
-}
-
-// ブラウザ上で実行する場合の処理
-window.addEventListener('DOMContentLoaded',() => {
-  initialize();
+  v.step = '7'; // ローディング画面解除
+  document.querySelector('div[name="loading"]').style.display = 'none';
+  console.log('DOMContentLoaded end.');
 });
+
+
 </script>
 </html>
