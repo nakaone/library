@@ -5,35 +5,10 @@
 <link rel="stylesheet" type="text/css" href="szLib.css" />
 <link rel="stylesheet" type="text/css" href="loading.css" class="core"
   data-embed="../component/loading.css" />
-
-<style type="text/css">
-dialog {
-  margin:auto;
-  padding: 1rem 0;
-  box-shadow: 0 0 1rem black;
-}
-dialog::backdrop {
-  /* 背景を半透明のブラックにする background-color: rgba(0, 0, 0, 0.4);*/
-  background-color: #ddd; /*rgba(0,0,0,0.2);*/
-}
-dialog > * {
-  font-size: 1.5rem;
-  margin: 0.5rem 1rem;
-}
-dialog > input[type="text"] {
-  border: solid 2px #888;
-  height: 2.6rem;
-  width: 6rem;
-}
-dialog > input[type="button"] {
-  padding: 0.3rem 0.6rem;
-}
-</style>
-
 </head>
 <body>
   <div name="loading"><div><div class="loading5">loading...</div></div></div>
-  <p style="font-size:5rem">本番画面</p>
+  <h1>本番画面</h1>
 </body>
 <!-- 共通鍵暗号化：cryptoJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/core.min.js"></script>
@@ -264,6 +239,28 @@ class Auth {
       entryNo:{ // 受付番号関係
         element: null, // {HTMLElement} - 受付番号入力画面の要素。setWindowsで設定。
         value: '',  // {string} - 受付番号
+        css: [
+          {sel:'dialog.Auth',prop:{
+            'margin':'auto',
+            'padding':'1rem 0',
+            'box-shadow':'0 0 1rem black',
+          }},
+          {sel:'dialog.Auth::backdrop',prop:{
+            'background-color':'#ddd',
+          }},
+          {sel:'dialog.Auth > *',prop:{
+            'font-size':'1.5rem',
+            'margin':'0.5rem 1rem',  
+          }},
+          {sel:'dialog.Auth > input[type="text"]',prop:{
+            'border':'solid 2px #888',
+            'height':'2.6rem',
+            'width':'6rem',    
+          }},
+          {sel:'dialog.Auth > input[type="button"]',prop:{
+            'padding':'0.3rem 0.6rem',
+          }},
+        ],
         dialog: `<p>受付番号を入力してください<p>`,
         /*
         header:'',    // {string} - 受付番号入力画面に表示するheaderのinnerHTML
@@ -395,27 +392,48 @@ class Auth {
     const v = {};
     console.log('Auth.getEntryNo start.');
 
-    this.entryNo.element = createElement({
-      tag:'dialog',
-      attr:{name:'entryNo'},
-      children:[
-        {tag:'div',html:this.entryNo.dialog},
-        {tag:'input',attr:{type:'text'}},
-        {tag:'input',attr:{type:'button',value:'送信'}},
-      ],
-    });
-    document.querySelector('body').prepend(this.entryNo.element);
-    document.querySelector('dialog[name="entryNo"]').showModal();
+    try {
 
-    return new Promise(resolve => {
-      document.querySelector('dialog[name="entryNo"] input[type="button"]')
-      .addEventListener('click',() => {
-        document.querySelector('dialog[name="entryNo"]').close();
-        let rv = event.target.parentElement.querySelector('input[type="text"]').value;
-        console.log('Auth.getEntryNo end.',rv);
-        resolve(rv);
+      // dialog用のCSS定義を追加(getPassCodeと共通)
+      v.style = createElement('style');
+      document.head.appendChild(v.style);
+      for( v.i=0 ; v.i<this.entryNo.css.length ; v.i++ ){
+        v.x = this.entryNo.css[v.i];
+        for( v.y in v.x.prop ){
+          v.prop = v.x.sel+' { '+v.y+' : '+v.x.prop[v.y]+'; }\n';
+          console.log(v.prop);
+          v.style.sheet.insertRule(v.prop,
+            v.style.sheet.cssRules.length,
+          );
+        }
+      }
+
+      this.entryNo.element = createElement({
+        tag:'dialog',
+        attr:{name:'entryNo',class:'Auth'},
+        children:[
+          {tag:'div',html:this.entryNo.dialog},
+          {tag:'input',attr:{type:'text'}},
+          {tag:'input',attr:{type:'button',value:'送信'}},
+        ],
       });
-    });
+      document.querySelector('body').prepend(this.entryNo.element);
+      document.querySelector('dialog[name="entryNo"]').showModal();
+
+      return new Promise(resolve => {
+        document.querySelector('dialog[name="entryNo"] input[type="button"]')
+        .addEventListener('click',() => {
+          document.querySelector('dialog[name="entryNo"]').close();
+          let rv = event.target.parentElement.querySelector('input[type="text"]').value;
+          console.log('Auth.getEntryNo end.',rv);
+          resolve(rv);
+        });
+      });
+
+    } catch(e){
+      console.error(e,v);
+    }
+
   }
 
   /** メールから入力したpassCodeをダイアログに入力
@@ -428,7 +446,7 @@ class Auth {
 
     this.passCode.element = createElement({
       tag:'dialog',
-      attr:{name:'passCode'},
+      attr:{name:'passCode',class:'Auth'},
       children:[
         {tag:'div',html:this.passCode.dialog},
         {tag:'input',attr:{type:'text'}},
@@ -520,10 +538,6 @@ class Auth {
     } catch(e){
       console.error('Auth.fetch abnormal end.',e);
       return e;
-      // ブラウザで実行する場合はアラート表示
-      //if( typeof window !== 'undefined' ) alert(e.stack);
-      //throw e; //以降の処理を全て停止する場合
-      //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
     }
   }
 
@@ -538,7 +552,12 @@ window.addEventListener('DOMContentLoaded',async () => {
   document.querySelector('div[name="loading"]').style.display = 'none';
 
   console.log(v.auth);
-
+  /*
+  v.sheets = document.styleSheets;
+  for( v.i=0 ; v.i<v.sheets.length ; v.i++ ){
+    console.log(v.sheets[v.i]);
+  }
+  */
   console.log('DOMContentLoaded end.');
 });
 
