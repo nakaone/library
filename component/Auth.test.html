@@ -199,7 +199,7 @@ class Auth {
       console.log('arg',v.arg);
 
       v.step = '1.3'; // fetch
-      v.rv = await this.fetchFromClient('auth1A',v.arg,0);
+      v.rv = await this.fetch('auth1A',v.arg,0);
       if( v.rv.isErr ){
         alert(v.rv.message);
         return null;
@@ -220,7 +220,7 @@ class Auth {
       console.log('arg',v.arg);
 
       v.step = '2.3'; // fetch
-      v.rv = await this.fetchFromClient('auth2A',v.arg,3);
+      v.rv = await this.fetch('auth2A',v.arg,3);
       if( v.rv.isErr ){
         console.error(v.rv);
       } else {
@@ -461,9 +461,9 @@ class Auth {
    * - MDN: [Response Object](https://developer.mozilla.org/ja/docs/Web/API/Response)
    * - Qiita: [Fetch APIでネットワークエラーも含めてエラーハンドリングする](https://qiita.com/IzumiSy/items/031df1df4f4541e536b4)
    */
-  async fetchFromClient(fc,arg,md=0){
+  async fetch(fc,arg,md=0){
     const v = {rv:null,data:{cp:this.RSA.pKey}};
-    console.log('Auth.fetchFromClient start.');
+    console.log('Auth.fetch start.');
     try {
 
       v.step = '1'; // 送信するトークンを生成
@@ -508,17 +508,17 @@ class Auth {
       if( v.rv instanceof Error ) throw v.rv;
       if( v.rv.isErr ){
         console.error(
-          'Auth.fetchFromClient abnormal end.'
+          'Auth.fetch abnormal end.'
           + '\n' + v.rv.message
           + '\n' + v.rv.stack
         );
         alert(v.rv.message);
       }
 
-      console.log('Auth.fetchFromClient normal end.');
+      console.log('Auth.fetch normal end.');
       return v.rv;
     } catch(e){
-      console.error('Auth.fetchFromClient abnormal end.',e);
+      console.error('Auth.fetch abnormal end.',e);
       return e;
       // ブラウザで実行する場合はアラート表示
       //if( typeof window !== 'undefined' ) alert(e.stack);
