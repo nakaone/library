@@ -2211,7 +2211,13 @@ function whichType(arg,is){
 <script type="text/javascript" class="main">
 let config;
 window.addEventListener('DOMContentLoaded',async () => {
-  const v = {opt:{}};
+  const v = {opt:{},debug:true,
+    // 認証局
+    gwURL:'https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',
+    // 資料集
+    docURL:'https://script.google.com/macros/s/AKfycbxtxS_u1BVahosczLxtt9yFS8Lh97lXEj4t7xmzCp4v1qgDft4RaSZUrbv-cMR0k03I/exec',
+    docSheet: 'https://tinyurl.com/2ahyly3l',
+  };
   console.log('DOMContentLoaded start.');
 
   v.step = '1'; // 認証
@@ -2228,7 +2234,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     if( v.searchParams.has('id') ){
       v.opt.entryNo = {value:v.searchParams.get('id')};
     }
-    config = new Auth('https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec');
+    config = new Auth(v.gwURL);
     await config.build();
     localStorage.setItem('conf',JSON.stringify(config));
     console.log(v.step+':',config);
@@ -2277,12 +2283,16 @@ window.addEventListener('DOMContentLoaded',async () => {
   });
   passportDiv.appendChild(qrcodeDiv);
 
-  v.step = '7'; // ローディング画面解除
+  v.step = '7'; // Google Spreadからデータを取得してタイムテーブル表示
+  v.res = await fetch(v.docURL);
+  v.res = await v.res.json();
+  v.TimeTable = new TimeTable('div.TimeTable',v.res,{datatype:'sheet',dataSheet:v.docSheet});
+
+  v.step = '8'; // 最終処理：ローディング画面解除
   document.querySelector('div[name="loading"]').style.display = 'none';
+
   console.log('DOMContentLoaded end.');
 });
-
-
 </script>
 </body><!-- =====================================================
   CDN
