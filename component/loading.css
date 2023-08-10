@@ -3,7 +3,33 @@
   https://projects.lukehaas.me/css-loaders/
 
   ex. <div class="loading5">loading...</div>
+
+  全画面表示で中央に配置する場合：
+  <div name="loading">
+    <div><div class="loading5">loading...</div></div>
+  </div>
+
 */
+div[name="loading"] {
+  /* CSSで全画面オーバーレイを実装する方法＆コード例
+     https://pisuke-code.com/css-fullscreen-overlay/ */
+  display: block;
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height:100vh;
+  background: #fff;
+  z-index: 2147483647;
+}
+
+div[name="loading"] > div {
+  display:flex;
+  width:100%;
+  height:100vh;
+  background:#fff;
+  justify-content:center;
+  align-items:center;
+}
+
 .loading5 {
   --dot-size: 4rem;
   --R: 0;
