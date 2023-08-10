@@ -144,7 +144,7 @@ class Auth {
 
       v.step = '3'; // 各種画面を用意する
       //   ※鍵ペア生成で時間がかかるので、先に待機画面を表示
-      //this.#setWindows();
+      this.#setWindows();
       v.step = '4'; // 初期画面として待機画面を表示
       //this.#changeScreen('loading');
 
@@ -352,46 +352,12 @@ class Auth {
     }
   }
 
-  /** Auth関係画面の切り替え
-   * @param {string} screenId - 画面ID。open/close->AuthWindowの開閉、他は指定ウィンドウの表示
-   * @returns {void}
+  /** Auth関係画面をセットする
+   *
    */
-  #changeScreen(screenId){
-    const v = {rv:true};
-    console.log('Auth.#changeScreen start. screenId='+screenId);
-    try {
-
-      if( screenId === 'close' ){
-        this.AuthWindow.element.style.display = 'none';
-      } else {
-        this.AuthWindow.element.style.display = '';
-        ['entryNo','loading','passCode'].forEach(x => {
-          this[x].element.style.display = x === screenId ? '' : 'none';
-        });
-      }
-
-      console.log('Auth.#changeScreen end.');
-      return v.rv;
-    } catch(e){
-      console.error('Auth.#changeScreen abnormal end.',e);
-      // ブラウザで実行する場合はアラート表示
-      //if( typeof window !== 'undefined' ) alert(e.stack);
-      //throw e; //以降の処理を全て停止する場合
-      v.rv.stack = e.stack; return v.rv; // 処理継続する場合
-    }
-
-  }
-
-  /** entryNo(ID)をダイアログに入力
-   * @param {void}
-   * @returns {void}
-   * 
-   * - Qiita [非同期な自作 confirm を作ってみた](https://qiita.com/naoki-funawatari/items/4de792bfefe5eab909cc)
-   */
-  #getEntryNo(){
-    const v = {};
-    console.log('Auth.getEntryNo start.');
-
+  #setWindows(){
+    const v = {rv:null};
+    console.log('Auth.#setWindows start.');
     try {
 
       // dialog用のCSS定義を追加(getPassCodeと共通)
@@ -408,6 +374,7 @@ class Auth {
         }
       }
 
+      // 受付番号入力画面
       this.entryNo.element = createElement({
         tag:'dialog',
         attr:{name:'entryNo',class:'Auth'},
@@ -418,12 +385,46 @@ class Auth {
         ],
       });
       document.querySelector('body').prepend(this.entryNo.element);
-      document.querySelector('dialog[name="entryNo"]').showModal();
+
+      // パスコード入力画面
+      this.passCode.element = createElement({
+        tag:'dialog',
+        attr:{name:'passCode',class:'Auth'},
+        children:[
+          {tag:'div',html:this.passCode.dialog},
+          {tag:'input',attr:{type:'text'}},
+          {tag:'input',attr:{type:'button',value:'送信'}},
+        ],
+      });
+      document.querySelector('body').prepend(this.passCode.element);
+
+      //console.log('v.rv='+JSON.stringify(v.rv));
+      console.log('Auth.#setWindows end.');
+      return v.rv;
+    } catch(e){
+      console.error('Auth.#setWindows abnormal end.',e,v);
+      return (e);
+    }
+
+  }
+
+  /** entryNo(ID)をダイアログに入力
+   * @param {void}
+   * @returns {void}
+   * 
+   * - Qiita [非同期な自作 confirm を作ってみた](https://qiita.com/naoki-funawatari/items/4de792bfefe5eab909cc)
+   */
+  #getEntryNo(){
+    const v = {};
+    console.log('Auth.getEntryNo start.');
+    try {
+
+      this.entryNo.element.showModal();
 
       return new Promise(resolve => {
         document.querySelector('dialog[name="entryNo"] input[type="button"]')
         .addEventListener('click',() => {
-          document.querySelector('dialog[name="entryNo"]').close();
+          this.entryNo.element.close();
           let rv = event.target.parentElement.querySelector('input[type="text"]').value;
           console.log('Auth.getEntryNo end.',rv);
           resolve(rv);
@@ -432,8 +433,8 @@ class Auth {
 
     } catch(e){
       console.error(e,v);
+      return(e);
     }
-
   }
 
   /** メールから入力したpassCodeをダイアログに入力
@@ -443,28 +444,22 @@ class Auth {
   #getPassCode(){
     const v = {};
     console.log('Auth.getPassCode start.');
+    try {
+      this.passCode.element.showModal();
 
-    this.passCode.element = createElement({
-      tag:'dialog',
-      attr:{name:'passCode',class:'Auth'},
-      children:[
-        {tag:'div',html:this.passCode.dialog},
-        {tag:'input',attr:{type:'text'}},
-        {tag:'input',attr:{type:'button',value:'送信'}},
-      ],
-    });
-    document.querySelector('body').prepend(this.passCode.element);
-    document.querySelector('dialog[name="passCode"]').showModal();
-
-    return new Promise(resolve => {
-      document.querySelector('dialog[name="passCode"] input[type="button"]')
-      .addEventListener('click',() => {
-        document.querySelector('dialog[name="passCode"]').close();
-        let rv = event.target.parentElement.querySelector('input[type="text"]').value;
-        console.log('Auth.getPassCode end.',rv);
-        resolve(rv);
+      return new Promise(resolve => {
+        document.querySelector('dialog[name="passCode"] input[type="button"]')
+        .addEventListener('click',() => {
+          this.passCode.element.close();
+          let rv = event.target.parentElement.querySelector('input[type="text"]').value;
+          console.log('Auth.getPassCode end.',rv);
+          resolve(rv);
+        });
       });
-    });
+    } catch(e){
+      console.error(e,v);
+      return(e);
+    }
   }
 
   /** GASのAPI(doPost)を呼び出す
