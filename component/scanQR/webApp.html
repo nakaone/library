@@ -7,12 +7,13 @@
 <body>
 
   <div id="result" style="min-height: 20px;"></div>
-  <div>
+  <!--div>
     <div style="position:relative;">
       <video style="position: absolute; z-index: -100;"></video>
       <div id="overlay" style="position: absolute; border: 1px solid #F00;"></div>
     </div>
-  </div>
+  </div-->
+  <div id="webScanner"></div>
 
 </body>
 <!-- =====================================================
@@ -37,7 +38,7 @@ window.addEventListener('DOMContentLoaded',async () => {
   const v = {};
   console.log('DOMContentLoaded start.');
 
-  const rv = await scanQR();
+  const rv = await scanQR('#webScanner');
   console.log(rv);
 
   console.log('DOMContentLoaded end.');
