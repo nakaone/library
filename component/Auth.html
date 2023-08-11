@@ -266,8 +266,10 @@ class Auth {
     }
   }
 
-  /** 既定値を設定する
-   * @param {AuthOpt} opt - 生成時オプションとして渡された値
+  /** 設定先のオブジェクトに起動時パラメータを優先して既定値を設定する
+   * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
+   * @param {def} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
+   * @param {AuthOpt} opt - 起動時にオプションとして渡されたオブジェクト
    * @returns {void}
    */
   #setProperties(dest,def,opt){
