@@ -1,0 +1,46 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+  <title>scanQR</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <style type="text/css"></style>
+</head>
+<body>
+
+  <div id="result" style="min-height: 20px;"></div>
+  <div>
+    <div style="position:relative;">
+      <video style="position: absolute; z-index: -100;"></video>
+      <div id="overlay" style="position: absolute; border: 1px solid #F00;"></div>
+    </div>
+  </div>
+
+</body>
+<!-- =====================================================
+  CDN
+===================================================== -->
+<!-- QRコード検出 -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" class="core"></script>
+
+<!-- =====================================================
+  自作ライブラリ
+===================================================== -->
+<script src="core.js"></script>
+<script src="../../component/createElement.js"></script>
+<script src="../../component/mergeDeeply.js"></script>
+<script src="../../component/whichType.js"></script>
+
+<!-- =====================================================
+  主処理
+===================================================== -->
+<script type="text/javascript" class="main">
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {};
+  console.log('DOMContentLoaded start.');
+
+  const rv = await scanQR();
+  console.log(rv);
+
+  console.log('DOMContentLoaded end.');
+});
+</script>
+</html>
