@@ -14,6 +14,11 @@
     .PlantUML {
       overflow-x: auto;
     }
+    .TabMenu .page {
+      padding: 1rem;
+      width: calc(100% - 2rem);
+      height: calc(100% - 2rem);
+    }
   </style>
 </head>
 <body>
@@ -23,9 +28,11 @@
 
     <div class="TabMenu" name="お知らせ">
       <div name="掲示板">
-        <button onclick="redraw()">更新</button>
-        ※ 自動更新されません。また更新は3分程度の間隔をあけてください
-        <div name="board"></div>
+        <div class="page">
+          <button onclick="redraw()">更新</button>
+          ※ 自動更新されません。また更新は3分程度の間隔をあけてください
+          <div name="board"></div>
+        </div>
       </div>
       <div name="注意事項" class="markdown" data-embed="注意事項.md"></div>
       <div name="持ち物" class="markdown" data-embed="持ち物リスト.md"></div>
@@ -33,7 +40,11 @@
 
     <div name="パスポート"><div></div></div>
 
-    <div name="案内図"><div class="img" data-embed="map2023.svg"></div></div>
+    <div name="案内図">
+      <div class="page">
+        <div class="img" data-embed="map2023.svg"></div>
+      </div>
+    </div>
 
     <div class="TimeTable" name="予定表">
       <!--
@@ -51,22 +62,29 @@
     <div class="TabMenu" name="スタッフ">
 
       <div name="参加者数">
-        <h1>工事中</h1>
-        <p>以下はMermaid出力テスト画面(完成時のイメージとは関係ありません)</p>
-        <div name="test" class="mermaid">
-          sequenceDiagram
-            太郎->>花子: おはよう
-            花子->>太郎: こんにちは！！
+        <div class="page">
+          <h1>工事中</h1>
+          <p>以下はMermaid出力テスト画面(完成時のイメージとは関係ありません)</p>
+          <div name="test" class="mermaid">
+            sequenceDiagram
+              太郎->>花子: おはよう
+              花子->>太郎: こんにちは！！
+          </div>
         </div>
       </div>
 
       <div name="受付">
-        <div class="webScanner"></div>
+        <div class="page">
+          <input type="button" onclick="scanQR('.webScanner')" value="スキャナ起動" />
+          <div class="webScanner"></div>
+        </div>
       </div>
 
       <div name="校内探検">
-        <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
-        <div class="markdown" data-embed="肝試し配置.md"></div>
+        <div class="page">
+          <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
+          <div class="markdown" data-embed="肝試し配置.md"></div>
+        </div>
       </div>
 
       <div class="TabMenu" name="参考資料">
@@ -113,9 +131,11 @@
 <!-- cryptico -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cryptico/0.0.1343522940/cryptico.min.js" integrity="sha512-C7GGRhFRn7F7hsLH1oCH2kX9ls61kx33wAgTZ6xJDwGvvgULcIZpwKqxG1+Kj/KOD2jWPxjNQYHi4BopPJPxVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+<!-- mermaid -->
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
+<!-- QRコード検出/生成 -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <!-- =====================================================
   自作ライブラリ
@@ -127,6 +147,7 @@
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/cryptoAES.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Date.toLocale.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/mergeDeeply.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='../../component/scanQR/core.js'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/TabMenu.html","selector":"script.core"},"to":"js"}'></script>
 <style type="text/css" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"style.core"},"to":"css"}'></style>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"script.core"},"to":"js"}'></script>
@@ -212,9 +233,6 @@ window.addEventListener('DOMContentLoaded',async () => {
   v.res = await fetch(v.docURL);
   v.res = await v.res.json();
   v.TimeTable = new TimeTable('div.TimeTable',v.res,{datatype:'sheet',dataSheet:v.docSheet});
-
-  v.ws = new webScanner('div[name="受付"] div.webScanner');
-  v.ws.scanQR(r=>console.log('scanned QR Code = '+r)); 
 
   v.step = '8'; // 最終処理：ローディング画面解除
   document.querySelector('div[name="loading"]').style.display = 'none';
