@@ -4,23 +4,26 @@
 class Reception {
   /**
    * @constructor
-   * @param {string} area - 表示領域となる要素のCSSセレクタ
-   * @param {string} boot - スキャナ起動のトリガーとなる要素のCSSセレクタ
-   * @param {Object} [opt={}] - オプション
+   * @param {Auth} auth - 認証局他のAuthインスタンス
+   * @param {Object} area - 表示領域に関する定義
+   * @param {string} area.selector - CSSセレクタ
+   * @param {Object} boot - スキャナ起動のトリガーとなる要素に関する定義
+   * @param {string} boot.selector - CSSセレクタ
+   * @param {Object} loading - 待機画面
+   * @param {string} loading.selector - CSSセレクタ
    * @returns {void}
    */
-  constructor(area,boot,opt={}){
+  constructor(opt){
     const v = {whois:'Reception.constructor',step:'0',rv:null};
     console.log(v.whois+' start.');
     try {
 
       v.step = '1'; // オプション未定義項目の既定値をプロパティにセット
       this.#setProperties(this,null,opt);
-      this.area.selector = area;
-      this.area.element = document.querySelector(area);
-      this.boot.selector = boot;
-      this.boot.element = document.querySelector(boot);
-      console.log('step.'+v.step+' : ',this.area,this.boot);
+      this.area.element = document.querySelector(this.area.selector);
+      this.boot.element = document.querySelector(this.boot.selector);
+      this.loading.element = document.querySelector(this.loading.selector);
+      console.log('step.'+v.step+' : ',this.area,this.boot,this.loading);
 
       v.step = '2'; // 入力・検索・編集画面の生成
       ['entry','list','edit'].forEach(x => {
@@ -48,6 +51,7 @@ class Reception {
    */
   #setProperties(dest,def,opt){
     const v = {whois:'Reception.#setProperties',rv:true,def:{
+      auth: null, // {Auth} 認証局他のAuthインスタンス
       area:{  // 表示領域となる要素
         selector: '',     // {string} CSSセレクタ
         element : null,   // {HTMLElement} 要素本体
@@ -57,9 +61,9 @@ class Reception {
         selector: '',     // {string} CSSセレクタ
         element : null,   // {HTMLElement} 要素本体
       },
-      wrapper: {  // 入力・選択・編集画面のラッパー
-        element: null,   // {HTMLElement} 要素本体
-        design: {attr:{class:'page'}},
+      loading:{  // 待機画面
+        selector: '',     // {string} CSSセレクタ
+        element : null,   // {HTMLElement} 要素本体
       },
       entry: {  // 入力画面(スキャナ＋氏名)
         element: null,   // {HTMLElement} 要素本体

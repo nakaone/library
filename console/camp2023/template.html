@@ -231,7 +231,12 @@ window.addEventListener('DOMContentLoaded',async () => {
   v.TimeTable = new TimeTable('div.TimeTable',v.res,{datatype:'sheet',dataSheet:v.docSheet});
 
   v.step = '8'; // 受付画面を準備
-  v.reception = new Reception('[name="受付"] .page','[name="受付"]');
+  v.reception = new Reception({
+    auth: config, // 認証局他のAuthインスタンス
+    area:{selector:'[name="受付"] .page'},  // 受付画面表示エリアのCSSセレクタ
+    boot:{selector:'[name="受付"]'}, // スキャナ起動のトリガーとなる要素のCSSセレクタ
+    loading: {selector:'div[name="loading"]'},  // ローディング画面のCSSセレクタ
+  });
 
   v.step = '9'; // 最終処理：ローディング画面解除
   document.querySelector('div[name="loading"]').style.display = 'none';
