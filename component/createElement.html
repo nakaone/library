@@ -59,7 +59,7 @@ function createElement(arg={}){
     //console.log(v.i,v.arg.style[v.i],v.rv.style);
   }
   for( v.i in v.arg.event ){ // イベントの設定
-    v.rv.addEventListener(v.i,v.arg.event[v.i],false);
+    v.rv.addEventListener(v.i,v.arg.event[v.i]);
     //console.log(v.i,v.arg.event[v.i],v.rv);
   }
   if( v.arg.html.length > 0 ){

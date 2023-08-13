@@ -73,12 +73,7 @@
         </div>
       </div>
 
-      <div name="受付">
-        <div class="page">
-          <input type="button" onclick="scanQR('.webScanner')" value="スキャナ起動" />
-          <div class="webScanner"></div>
-        </div>
-      </div>
+      <div name="受付"></div>
 
       <div name="校内探検">
         <div class="page">
@@ -147,6 +142,7 @@
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/cryptoAES.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Date.toLocale.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/mergeDeeply.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='Reception.js'></script>
 <script type="text/javascript" data-embed='../../component/scanQR/core.js'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/TabMenu.html","selector":"script.core"},"to":"js"}'></script>
 <style type="text/css" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"style.core"},"to":"css"}'></style>
@@ -234,7 +230,10 @@ window.addEventListener('DOMContentLoaded',async () => {
   v.res = await v.res.json();
   v.TimeTable = new TimeTable('div.TimeTable',v.res,{datatype:'sheet',dataSheet:v.docSheet});
 
-  v.step = '8'; // 最終処理：ローディング画面解除
+  v.step = '8'; // 受付画面を準備
+  v.reception = new Reception('[name="受付"] .page','[name="受付"]');
+
+  v.step = '9'; // 最終処理：ローディング画面解除
   document.querySelector('div[name="loading"]').style.display = 'none';
 
   console.log('DOMContentLoaded end.');
