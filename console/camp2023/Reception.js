@@ -23,16 +23,14 @@ class Reception {
       console.log('step.'+v.step+' : ',this.area,this.boot);
 
       v.step = '2'; // 入力・検索・編集画面の生成
-      this.wrapper.element = createElement(this.wrapper.design);
       ['entry','list','edit'].forEach(x => {
         this[x].element = createElement(this[x].design);
-        this.wrapper.element.appendChild(this[x].element);
+        this.area.element.appendChild(this[x].element);
       });
-      this.area.element.appendChild(this.wrapper.element);
       console.log('step.'+v.step+' : ',this.area.element);
 
       v.step = '3'; // スキャナ起動イベントの定義(「受付」タグのクリック)
-      //this.boot.element.addEventListener('click',this.bootScanner);
+      this.boot.element.addEventListener('click',this.bootScanner);
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -72,7 +70,7 @@ class Reception {
             {
               tag:'input',
               attr:{type:'button',value:'検索'},
-              //event:{click: this.main},
+              event:{click: this.main},
             },
           ],
         },
@@ -126,16 +124,17 @@ class Reception {
   }
 
   /** search, list, editを順次呼び出す(全体制御)
-   * @param {string} [keyword=null] - 参加者の検索キー 
+   * @param {string|Event} arg - 受付番号(スキャン結果文字列) or clickイベント
    * @returns {void}
    */
-  main(keyword=null){
+  main = async (arg) => {
     const v = {whois:'Reception.main',step:'0',rv:null};
     console.log(v.whois+' start.');
     try {
 
-      v.keyword = keyword !== null ? keyword
-      : this.entry.element.querySelector('input[type="text"]').value;
+      console.log(arg,whichType(arg));
+      v.keyword = whichType(arg) === 'String' ? arg
+      : arg.target.parentElement.querySelector('input[type="text"]').value;
 
       console.log('keyword='+v.keyword);
 
@@ -147,9 +146,25 @@ class Reception {
     }
   }
 
-  async bootScanner(){
-    const code = await scanQR(this.boot.selector+' [name="entry"] .webScanner');
-    this.main(code);
+  /** スキャナを起動、読み込んだQRデータをsearchに渡す
+   * 
+   * @returns 
+   */
+  bootScanner = async () => {
+    const v = {whois:'Reception.bootScanner',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      const sel = this.area.selector+' [name="entry"] .webScanner';
+      const code = await scanQR(sel);
+      v.rv = this.main(code); // 後続のmainにスキャン文字列を渡す
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end.',e,v);
+      return e;        
+    }
   }
 
   /** 認証局経由で管理局に該当者情報を問合せ
