@@ -132,22 +132,24 @@ class Reception {
     console.log(v.whois+' start.');
     try {
 
+      v.step = '1'; // スキャン結果でない場合、入力文字列を取得
       console.log(arg,whichType(arg));
       v.keyword = whichType(arg) === 'String' ? arg
       : arg.target.parentElement.querySelector('input[type="text"]').value;
-
       console.log('keyword='+v.keyword);
+
+      // entry画面を閉じてloading表示
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;        
     }
   }
 
   /** スキャナを起動、読み込んだQRデータをsearchに渡す
-   * 
+   * @param {void}
    * @returns 
    */
   bootScanner = async () => {
@@ -157,7 +159,11 @@ class Reception {
 
       const sel = this.area.selector+' [name="entry"] .webScanner';
       const code = await scanQR(sel);
-      v.rv = this.main(code); // 後続のmainにスキャン文字列を渡す
+      if( code !== null ){
+        v.rv = this.main(code); // 後続のmainにスキャン文字列を渡す
+        // 文字入力された⇒スキャン結果無しでタイムアウト(code=null)の場合
+        // mainを呼び出さずに終了する
+      }
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
