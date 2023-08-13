@@ -27,6 +27,61 @@ function getArticles(){
   return [
 // この直後に追加
 { // =====================================================================
+  title: "JavaScriptのclassで自分のメソッドを呼び出せない",
+  created: "2023/8/13 15:35",
+  tag: ['class','this'],
+  ref: [{
+    site: "",
+    title: "JavaScriptのコールバックで クラスthis が参照できないの解決策",
+    url:"https://pisuke-code.com/javascript-class-this-in-callback/",
+  }], article:
+  // =====================================================================
+`## 現象
+
+JavaScript classでメソッドを定義し、イベントリスナに追加する。
+
+\`\`\`
+class Reception {
+  constructor(area,boot,opt={}){
+    (中略)
+    v.step = '3'; // スキャナ起動イベントの定義(「受付」タグのクリック)
+    this.boot.element.addEventListener('click',this.bootScanner);
+  }
+
+  async bootScanner(){
+    (中略)
+    const sel = this.area.selector+' [name="entry"] .webScanner';
+    (中略)
+  }
+}
+\`\`\`
+
+以下のようなエラーが発生
+
+\`\`\`
+Reception.bootScanner abnormal end.
+TypeError: Cannot read properties of undefined (reading 'selector')
+\`\`\`
+
+これはbootScannerの中でクラスメンバ(this)が参照できないのが原因(thisがundefinedになっている)。
+
+## 対応
+
+この場合、bootScannerを**アロー関数で定義**すると回避できる。
+
+\`\`\`
+class Reception {
+  constructor(area,boot,opt={}){
+    (中略)
+  }
+
+  bootScanner = async () => {
+    (中略)
+    const sel = this.area.selector+' [name="entry"] .webScanner';
+\`\`\`
+
+`},
+{ // =====================================================================
   title: "[失敗]Mac標準ApacheのSSL通信化(https対応)",
   created: "2023/7/21 14:30",
   updated: "2023/7/23 14:51",
