@@ -73,16 +73,17 @@ async function scanQR(parent,opt={}){
       if (code) {
         console.log(code);
         v.rv = code.data;
-        // 終了処理
-        v.video.srcObject.getVideoTracks().forEach((track) => {
-          track.stop();
-        });
-        v.parent.innerHTML = ''; // 作業用DIVを除去
       }
       await v.sleep(v.interval);
       console.log(v.cnt);
       v.cnt += v.interval;
     } while( v.rv === null && v.cnt < v.max );
+
+    // 終了処理
+    v.video.srcObject.getVideoTracks().forEach((track) => {
+      track.stop();
+    });
+    v.parent.innerHTML = ''; // 作業用DIVを除去
 
     console.log(v.whois+' normal end.\n'+v.rv);
     return v.rv;
