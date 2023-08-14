@@ -1756,7 +1756,7 @@ const RegFiles = (files) => {
 
 /** transport: 交通費一覧を表示 */
 const transport = (transport) => {
-  const v = {};
+  const v = {total:0};
   // 親要素(ラッパー)を取得
   v.table = document.getElementById('交通費');
 
@@ -1768,7 +1768,8 @@ const transport = (transport) => {
     // 日付
     v.d = new Date(v.list[v.i].date);
     v.tr.appendChild(genElement({
-      class: 'td date' + (v.list[v.i].status == 'steady' ? '' : ' '+v.list[v.i].status),
+      class: 'td date',
+      //class: 'td date' + (v.list[v.i].status == 'steady' ? '' : ' '+v.list[v.i].status),
       iText:('0'+(v.d.getMonth()+1)).slice(-2)
       + '/' + ('0'+v.d.getDate()).slice(-2)
     }));
@@ -1786,8 +1787,10 @@ const transport = (transport) => {
         iText: v.list[v.i][x].toLocaleString()
       }));
     });
+    v.total += v.list[v.i].amount;
     v.table.appendChild(v.tr);
   }
+  v.table.innerHTML += '<p style="text-align:right">合計 : '+v.total.toLocaleString()+'円</p>';
 }
 
 window.addEventListener('DOMContentLoaded',() => {
