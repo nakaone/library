@@ -1,5 +1,33 @@
 <p style="font-size:2rem;text-shadow:2px 2px 4px #888;">独自ライブラリ</p>
 
+<details><summary>今後の改訂案</summary>
+
+- browser/component/consoleに分ける必要はない<br>
+  - 一つのcoreでwebAppやconsoleが有ったり無かったりして、管理が煩雑
+- ビルダの処理が想定以上にコンポーネントにより幅があり、一律updateComponent.shでは処理しきれない
+- 無理に一つのhtmlにする必要はない
+
+⇒ コンポーネント毎にフォルダを作成、以下に役割毎のファイルを作成する
+
+```
+/library/component/zeimu
+┣ readme.md(.html) - 仕様書
+┣ webApp.html - サンプル、Webアプリ
+┣ core.js - コアとなるスクリプト
+┣ GAS.js - コアとなるスクリプト(GAS側の処理)
+┣ GASLib.js - GAS.jsから参照するGASライブラリ
+┣ console.js - コンソール実行形式(使用するコンポーネントは参照する)
+┣ update.sh/js - Markdown等の文書、Webアプリ(SPA)、コンソール実行形式の更新
+┣ xxx.html - Webアプリ(ライブラリ埋込版)
+┣ xxx.js - コンソール実行形式(ライブラリ埋込版)
+┣ doc/ - readmdから参照する仕様書(部分)
+┃ ┣ GAS.md - jsdoc2md GAS.js の出力結果
+┃ ┗ GASLib.md - jsdoc2md GASLib.js の出力結果
+┗ ref/ - 画像等、使用する外部ファイル
+```
+
+</details>
+
 # ショートカット
 
 | [component](component/README.md) | [GAS](GAS/README.md) | [console](console/README.md) | browser | [external](external/README.md) | [szLib](console/szLib/szLib.md) | [CommonJS](console/CommonJS/CommonJS.md) | [Tips](console/tips/tips.html)
