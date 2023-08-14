@@ -1,9 +1,10 @@
 /**
- * @typedef {Object} responseObj - 税務定期作業(ローカルhtml)の要求に対して返されるオブジェクト
- * @prop {number} fy - 会計年度
- * @prop {string} last - 前回更新日(ローカルでの差分チェックに使用)
- * @prop {fileInfo[]} files - ファイル属性情報の配列
- * @prop {transportInfo[]} transport - 交通費情報の配列
+ * @typedef {Object} descObj - Googleドライブ上のファイル詳細情報内「説明」欄の設定項目
+ * @property {string} date - 取引日
+ * @property {string} summary - 品名(摘要)
+ * @property {string} price - 価格
+ * @property {string} method - 支払方法。AMEX, 役員借入金, SMBCから振込, 等
+ * @property {string} note - 備考 
  */
 
 /**
@@ -18,15 +19,6 @@
  */
 
 /**
- * @typedef {Object} descObj - Googleドライブ上のファイル詳細情報内「説明」欄の設定項目
- * @property {string} date - 取引日
- * @property {string} summary - 品名(摘要)
- * @property {string} price - 価格
- * @property {string} method - 支払方法。AMEX, 役員借入金, SMBCから振込, 等
- * @property {string} note - 備考 
- */
-
-/**
  * @typedef {Object} transportInfo - 交通費情報
  * @prop {string} date - 日付
  * @prop {string} perpose - 目的
@@ -37,6 +29,14 @@
  * @prop {number} amount - 金額
  * @prop {string} note - 備考
  * @prop {string} status - 前回提出分からの状態変化。append/update/delete/steady
+ */
+
+/**
+ * @typedef {Object} responseObj - 税務定期作業(ローカルhtml)の要求に対して返されるオブジェクト
+ * @prop {number} fy - 会計年度
+ * @prop {string} last - 前回更新日(ローカルでの差分チェックに使用)
+ * @prop {fileInfo[]} files - ファイル属性情報の配列
+ * @prop {transportInfo[]} transport - 交通費情報の配列
  */
 
 /** 税務定期作業(ローカルhtml)の要求に対して各種証憑データを返す

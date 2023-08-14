@@ -1,6 +1,5 @@
 /*
-  GASLib: 証憑台帳用ライブラリ
-    改版の都度デプロイの手間を省くため、証憑台帳の主要ロジックを外出ししたライブラリ
+  証憑台帳用ライブラリ
 */
 
 /** descObj: Googleドライブ上のファイル詳細情報内「説明」欄の設定項目
@@ -32,7 +31,7 @@
  * 証憑台帳「履歴」シート上で不要な行は削除しておく
  */
 function main(){
-  const v = {whois:'main',rv:null,
+  const v = {whois:'main',rv:null,step:'',
     sheet:{ // シート関係の定義、オブジェクト
       spread: SpreadsheetApp.getActiveSpreadsheet(), 
       list: ['folder','log','transport'], // 作業対象シート名のリスト
@@ -77,37 +76,35 @@ function main(){
     },
   };
   console.log(v.whois+' start.');
-
   try {
-    v.rv = {test:'hoge'};
-    console.log(v.whois+' normal end.',v.rv);
-    return v.rv;
-    /*
-    // 事前準備
+    v.step = '1'; // 事前準備
     preparation(v);
+    //console.log('step.'+v.step,v);
 
-    // 前回送信データの特定、v.lastへのセット
+    v.step = '2'; // 前回送信データの特定、v.lastへのセット
     setLast(v);
     console.log('l.78',v.current.last,v.sheet.log.current);
 
-    // ファイル情報の取得
+    v.step = '3'; // ファイル情報の取得
     setFiles(v);
     console.log('l.82',v.current.files.length,v.current.files[0])
 
-    // 交通費の取得
+    v.step = '4'; // 交通費の取得
     setTransport(v);
     console.log('l.86',v.current.transport.length,v.current.transport[0])
 
-    // 今回送信結果の記録
+    v.step = '5'; // 今回送信結果の記録
     v.range = 'a' + v.sheet.log.current + ':b' + v.sheet.log.current;
     v.data = [v.today, JSON.stringify(v.current)];
     v.sheet.log.obj.getRange(v.range).setValues([v.data]);
     
-    console.log('main end.');
-    return v.current;
-    */
+    v.step = '6'; // 終了処理
+    v.rv = v.current;
+    console.log(v.whois+' normal end.',v.rv);
+    return v.rv;
   } catch(e) {
-    console.error(e.stack);
+    console.error(v.whois+' abnormal end(step.'+v.step+').\n',e.stack,v);
+    return {isErr:true,message:e.message,stack:e.stack};
   }
 }
 
@@ -124,28 +121,35 @@ function dateStr(date=new Date()){
 
 /** preparation: 事前準備 */
 function preparation(mainV){
-  console.log('preparation start.');
-  const v = {};
+  const v = {whois:'preparation',rv:null,step:''};
+  console.log(v.whois+' start.');
+  try {
 
-  // シートデータの一括読み込み
-  mainV.sheet.list.forEach(n => {
-    mainV.sheet[n].obj = mainV.sheet.spread.getSheetByName(mainV.sheet[n].name);
-    mainV.range = mainV.sheet[n].range + mainV.sheet[n].obj.getLastRow();
-    mainV[n] = mainV.sheet[n].obj.getRange(mainV.range).getValues();
-  });
+    v.step = '1'; // シートデータの一括読み込み
+    mainV.sheet.list.forEach(n => {
+      mainV.sheet[n].obj = mainV.sheet.spread.getSheetByName(mainV.sheet[n].name);
+      mainV.range = mainV.sheet[n].range + mainV.sheet[n].obj.getLastRow();
+      mainV[n] = mainV.sheet[n].obj.getRange(mainV.range).getValues();
+    });
 
-  // 会計年度の計算
-  mainV.current.fy = mainV.getFY();
+    v.step = '2'; // 会計年度の計算
+    mainV.current.fy = mainV.getFY();
 
-  console.log('preparation end.');
+    console.log(v.whois+' normal end.',v.rv);
+    return v.rv;
+  } catch(e) {
+    console.error(v.whois+' abnormal end(step.'+v.step+').\n',e.stack,v);
+    return e;
+  }
 }
 
 /** setLast: 前回送信日および送信内容の取得 */
 function setLast(mainV){
-  console.log('setLast start.');
-  const v = {last:null,data:null};
+  const v = {whois:'setLast',rv:null,step:'',last:null,data:null};
+  console.log(v.whois+' start.');
   try {
-    // 履歴シート上で追加する場合の行番号
+
+    v.step = '1'; // 履歴シート上で追加する場合の行番号
     mainV.sheet.log.current = mainV.sheet.log.obj.getLastRow() + 1;
 
     // 本日より前の最新の作成日を持つ行のデータを取得
@@ -161,7 +165,7 @@ function setLast(mainV){
       }
     });
 
-    // 前回のファイル情報
+    v.step = '2'; // 前回のファイル情報
     v.data.files.forEach(o => {
       // 前回送信のファイル情報内で、前回時点で削除済だったものは除外
       if( !o.hasOwnProperty('status') || o.status !== 'delete' ){
@@ -170,7 +174,7 @@ function setLast(mainV){
       }
     });
 
-    // 前回の交通費
+    v.step = '3'; // 前回の交通費
     v.data.transport.forEach(o => {
       v.fy = mainV.getFY(o.date);
       // 会計年度が異なる行は除外
@@ -185,8 +189,12 @@ function setLast(mainV){
       }
     });
 
-    console.log('setLast end.');
-  } catch(e){throw e;}
+    console.log(v.whois+' normal end.',v.rv);
+    return v.rv;
+  } catch(e) {
+    console.error(v.whois+' abnormal end(step.'+v.step+').\n',e.stack,v);
+    return e;
+  }
 }
 
 /** setFiles: 指定フォルダ配下のファイル情報を取得
@@ -200,9 +208,12 @@ function setLast(mainV){
  *   https://mebee.info/2022/11/08/post-79806/
  */
 function setFiles(mainV){
-  console.log('setFiles start.');
-  const v = {current:[] /* 今回送信されるファイルIDの配列 */};
+  const v = {whois:'setFiles',rv:null,step:'',
+  current:[]};  // 今回送信されるファイルIDの配列
+  console.log(v.whois+' start.');
   try {
+
+    v.step = '1';
     mainV.folder.forEach(x => {
       v.isReg = x[mainV.sheet.folder.isReg];
       v.folderId = x[mainV.sheet.folder.id];
@@ -250,7 +261,7 @@ function setFiles(mainV){
       }
     });
 
-    // 前回提出以降に削除されたファイル情報を追加
+    v.step = '2'; // 前回提出以降に削除されたファイル情報を追加
     for( v.lastId in mainV.last.files ){
       if( !v.current.includes(v.lastId) ){
         v.obj = Object.assign(mainV.last.files[v.lastId],{status:'delete'});
@@ -258,16 +269,21 @@ function setFiles(mainV){
       }
     }
 
-    console.log('setFiles end.');
-  } catch(e){throw e;}
+    console.log(v.whois+' normal end.',v.rv);
+    return v.rv;
+  } catch(e) {
+    console.error(v.whois+' abnormal end(step.'+v.step+').\n',e.stack,v);
+    return e;
+  }
 }
 
 /** setTransport: 交通費オブジェクトを取得 */
 function setTransport(mainV){
-  console.log('setTransport start.');
-  const v = {current:[]};
+  const v = {whois:'setTransport',rv:null,step:'',current:[]};
+  console.log(v.whois+' start.');
   try {
-    // 現在の交通費シートの行を順次処理
+
+    v.step = '1'; // 現在の交通費シートの行を順次処理
     mainV.transport.forEach(o => {
       v.fy = mainV.getFY(o[mainV.sheet.transport.map.date]);
       // 会計年度が異なる行は除外
@@ -294,7 +310,7 @@ function setTransport(mainV){
       }
     });
 
-    // 前回提出以降に削除された交通費情報を追加
+    v.step = '2'; // 前回提出以降に削除された交通費情報を追加
     for( v.lastId in mainV.last.transport ){
       if( !v.current.includes(v.lastId) ){
         v.obj = Object.assign(mainV.last.transport[v.lastId],{status:'delete'});
@@ -302,6 +318,10 @@ function setTransport(mainV){
       }
     }
 
-    console.log('setTransport end.');
-  } catch(e){throw e;}
+    console.log(v.whois+' normal end.',v.rv);
+    return v.rv;
+  } catch(e) {
+    console.error(v.whois+' abnormal end(step.'+v.step+').\n',e.stack,v);
+    return e;
+  }
 }
