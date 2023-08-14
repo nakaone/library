@@ -1803,8 +1803,10 @@ window.addEventListener('DOMContentLoaded',() => {
 
   // 証憑台帳のdoGet()で前回および最新のファイル情報を取得
   // Googleドライブ > マイドライブ > ena.kaon > masters > 証憑 > 証憑台帳
-  const api_url = 'https://script.google.com/macros/s/AKfycbztJjeFfGGMJtqP-yi1o_5q0Tav_SfYk_9X9oKaR27vrcUmzaTIFAmniYcCqzVb5WI3Kg/exec';
+  const api_url = 'https://script.google.com/macros/s/AKfycbxCF1k1CmBEHC8Jk_cV8Qbml6NqDGqwcaOEy2_fFRMEcjH7bz5vhOBysiAAxs9oD9ea3A/exec';
   fetch(api_url).then(d => d.json()).then(res => {
+    console.log(res);
+    /*
     const v = {};
     console.log(res);
 
@@ -1822,6 +1824,7 @@ window.addEventListener('DOMContentLoaded',() => {
 
     // 4.交通費一覧の作成
     transport(res.transport);
+    */
 
   });
 });
