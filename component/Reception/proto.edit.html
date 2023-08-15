@@ -72,7 +72,7 @@ const setWindows = () => {
   }
 }
 
-const edit = (data) => {
+const edit = async (data) => {
   const v = {whois:'Reception.edit',rv:null,step:'0'};
   console.log(v.whois+' start.\n'+JSON.stringify(data));
   try {
@@ -124,7 +124,7 @@ const edit = (data) => {
       });
       conf.edit.table.appendChild(createElement({attr:{class:'td'},children:[{
         tag: 'select',
-        attr: {name:'fee0'+v.i},
+        attr: {class:'fee',name:'fee0'+v.i},
         children:v.options,
       }]}));
     }
@@ -132,8 +132,19 @@ const edit = (data) => {
     v.step = 3; // 編集用ダイアログの表示
     conf.edit.element.showModal();
 
-    console.log(v.whois+' normal end.',v.rv);
-    return v.rv;
+    v.step = 4; // 「送信」クリック時に値を返すよう定義
+    return new Promise(resolve => {
+      document.querySelector('dialog[name="edit"] input[type="button"]')
+      .addEventListener('click',() => {
+        conf.edit.element.close();
+        const rv = {};
+        conf.edit.element.querySelectorAll('select.fee').forEach(x => {
+          rv[x.getAttribute('name')] = x.value;
+        });
+        console.log('Reception.edit normal end.',rv);
+        resolve(rv);
+      });
+    });
 
   } catch(e){
     console.error(v.whois+' abnormal end(step.'+v.step+')\n',e,v);
@@ -141,10 +152,11 @@ const edit = (data) => {
   }
 }
 
-window.addEventListener('DOMContentLoaded',() => {
-  const v = {};
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {whois:'DOMContentLoaded'};
   setWindows();
-  edit(conf.mami);
+  v.rv = await edit(conf.mami);
+  console.log(v.whois+' normal end.\n',v.rv);
 });
 </script>
 </body></html>
