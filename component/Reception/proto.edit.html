@@ -2,27 +2,7 @@
 <title>[proto] edit/select dialog</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link rel="stylesheet" href="../szLib.css" />
-<!-- style type="text/css">
-.Reception[name="edit"] {
-  padding: 1rem;
-}
-.Reception[name="edit"] [name="table"] {
-  display: grid;
-  grid-template-columns: 2fr 10fr 8fr 6fr;
-  grid-gap: 0.2rem;
-}
-.Reception ruby rt {
-  font-size: 0.6rem;
-}
-</style -->
 </head><body>
-
-<!-- div class="Reception" name="edit">
-  <div name="table">
-    <div class="th">No</div><div class="th">氏名</div><div class="th">所属</div><div class="th">参加費</div>
-  </div>
-  <div name="details"></div>
-</div -->
 
 <script src="../createElement.js"></script>
 <script src="../mergeDeeply.js"></script>
@@ -147,7 +127,6 @@ const edit = (data) => {
         attr: {name:'fee0'+v.i},
         children:v.options,
       }]}));
-      //conf.edit.table.appendChild(createElement({attr:{class:'td'},text: data['fee0'+v.i]}));
     }
 
     v.step = 3; // 編集用ダイアログの表示
@@ -166,57 +145,6 @@ window.addEventListener('DOMContentLoaded',() => {
   const v = {};
   setWindows();
   edit(conf.mami);
-
-  /*
-  const v = {edit:document.querySelector('.Reception[name="edit"]')};
-  v.table = v.edit.querySelector('[name="table"]');
-
-  // データクレンジング
-  mami['申込者所属'] = '申込者';  // 未定義なので追加しておく
-  for( v.i=0 ; v.i<6 ; v.i++ ){
-    if( mami['fee0'+v.i].length === 0 ){
-      mami['fee0'+v.i] = (mami['参加者0'+v.i+'所属'] === '未就学児') ? '無し' : '未収';
-    }
-  }
-
-  for( v.i=0 ; v.i<6 ; v.i++ ){
-    v.pre = v.i === 0 ? '申込者' : ('参加者0' + v.i);
-    // 申込者が不参加、または氏名・所属とも未登録の場合は表示しない
-    if( v.i === 0 && mami['申込者の参加'] === '不参加'
-    || mami[v.pre+'氏名'].length === 0 && mami[v.pre+'所属'].length === 0 ){
-      continue;
-    }
-    // No
-    v.table.appendChild(createElement({attr:{class:'td'},text: ('0'+v.i)}));
-    // 氏名＋カナ
-    v.table.appendChild(createElement({attr:{class:'td'},children:[{
-      tag: 'ruby',
-      html: mami[v.pre+'氏名'], 
-      children: [{
-        tag: 'rt',
-        text: mami[v.pre+'カナ']
-      }]
-    }]}));
-    // 所属
-    v.table.appendChild(createElement({attr:{class:'td'},text: mami[v.pre+'所属']}));
-    // 参加費
-    v.options = [];
-    ['無し','未収','既収'].forEach(x => {
-      v.options.push({
-        tag:'option',
-        value:x,
-        text:x,
-        logical:{selected:(mami['fee0'+v.i] === x)},
-      });
-    });
-    v.table.appendChild(createElement({attr:{class:'td'},children:[{
-      tag: 'select',
-      attr: {name:'fee0'+v.i},
-      children:v.options,
-    }]}));
-    //v.table.appendChild(createElement({attr:{class:'td'},text: mami['fee0'+v.i]}));
-  }
-  */
 });
 </script>
 </body></html>
