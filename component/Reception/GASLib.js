@@ -290,7 +290,10 @@ function recept2B(arg){
 
     v.step = '3'; // 検索キーに合致する参加者情報を抽出
     v.rv.result = v.master.update(arg.dt.data,
-      {key:'entryNo',value:arg.dt.entryNo});
+      {key:'entryNo',value:arg.dt.data.entryNo});
+    if( !v.rv.isErr ){
+      v.rv.message = '更新が正常終了しました';
+    }
 
     v.step = '4';
     console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
