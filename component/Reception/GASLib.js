@@ -174,7 +174,7 @@ function recept1B(arg){
         || d['参加者04カナ'].indexOf(arg.dt.keyword) >= 0
         || d['参加者05氏名'].indexOf(arg.dt.keyword) >= 0
         || d['参加者05カナ'].indexOf(arg.dt.keyword) >= 0
-      ) v.rv.push(d);
+      ) v.rv.result.push(d);
     });
 
     v.step = '4';
