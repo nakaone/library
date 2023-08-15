@@ -10,7 +10,7 @@
  */
 
 /**
- * @typedef {Object} AuthArg - preProcessからauth1A/1B/2A/2Bに渡されるオブジェクト
+ * @typedef {Object} AuthArg - preProcessからauth/recept1A/1B/2A/2Bに渡されるオブジェクト
  * @prop {string} fm - 発信者名(gateway/master/受付番号)
  * @prop {string} to - 宛先名(gateway/master)
  * @prop {number} md - モード。0:平文、1:共通鍵、2:RSA署名無し、3:RSA署名有り
@@ -50,7 +50,7 @@ function recept1A(arg){
   const v = {whois:'認証局.recept1A',
     rv:{isErr:false,message:'',stack:'',result:null}};
   try {
-    console.log(v.whois+' start.',arg.dt);
+    console.log(v.whois+' start.',arg);
 
     v.step = '1.1'; // recept1B問合せ用にデータを暗号化
     v.dt = JSON.stringify({
@@ -58,10 +58,10 @@ function recept1A(arg){
       arg: {  // recept1B()に渡す引数
         keyword  : arg.dt,    // 検索キー文字列
         entryNo  : arg.fm,    // クライアントの受付番号
-        publicKey: arg.publicKey,  // 同公開鍵
+        publicKey: arg.pKey,  // 同公開鍵
       }
     });
-    console.log('v.dt='+v.dt);
+    console.log(v.whois+'.'+v.step+': v.dt='+v.dt);
     
     v.step = '1.2'; // 暗号化
     v.dt = encodeURI(v.dt); // カナ漢字が入るのでencode
@@ -82,7 +82,7 @@ function recept1A(arg){
         dt: v.dt.cipher,
       }),  
     }).getContentText();
-    console.log('res='+v.res);
+    console.log(v.whois+'.'+v.step+': res='+v.res);
     v.step = '2.2';
     v.rv = JSON.parse(v.res);
 
@@ -103,8 +103,8 @@ function recept1A(arg){
 
 /** 問合せの正当性を確認、問題なければ検索キーに該当する参加者情報を返す
  * @param {Object} arg 
- * @param {string} arg.keyword - 検索キー文字列(受付番号または氏名)
- * @param {string} arg.entryNo - 問合せ元の受付番号
+ * @param {string} arg.keyword - 検索キー文字列(参加者の受付番号または氏名)
+ * @param {string} arg.entryNo - 問合せ元(スタッフ)の受付番号
  * @param {string} arg.publicKey - 問合せ元の公開鍵
  * @returns {Object[]} 該当者情報の配列
  * 
@@ -118,7 +118,7 @@ function recept1B(arg){
   const v = {whois:'管理局.recept1B',
     rv:{isErr:false,message:'',stack:'',result:null}};
   try {
-    console.log(v.whois+' start.',arg.dt);
+    console.log(v.whois+' start.',arg);
 
     v.step = '1'; // クライアント情報を抽出
     v.master = szSheet('master');
@@ -129,11 +129,18 @@ function recept1B(arg){
     if( (v.client.authority & 2) === 0 ){
       v.rv.isErr = true;
       v.rv.message = '検索権限がありません';
+      console.error(v.whois+'.'+v.step+': '+v.rv.message
+        +'\nv.client.authority='+v.client.authority
+      );
     }
     v.step = '2.2'; // 問合せ元の公開鍵が登録されているpublicKeyと一致
     if( v.client.publicKey !== arg.dt.publicKey ){
       v.rv.isErr = true;
       v.rv.message = '問合せ元が不適切です';
+      console.error(v.whois+'.'+v.step+': '+v.rv.message
+        + '\nv.client.publicKey='+v.client.publicKey
+        + '\narg.dt.publicKey='+arg.dt.publicKey
+      );
     }
     v.step = '2.3'; // 検索キー文字列が①数字のみ②カナ漢字のみのいずれか
     v.ja = /^[\p{scx=Hiragana}\p{scx=Katakana}\p{scx=Han}]+$/u;
@@ -141,6 +148,11 @@ function recept1B(arg){
     if( !v.ja.test(arg.dt.keyword) && !v.num.test(arg.dt.keyword) ){
       v.rv.isErr = true;
       v.rv.message = '検索キー文字列が不適切です';
+      console.error(v.whois+'.'+v.step+': '+v.rv.message
+        + '\narg.dt.keyword='+arg.dt.keyword
+        + '\n!v.ja.test(arg.dt.keyword)='+!v.ja.test(arg.dt.keyword)
+        + ', !v.num.test(arg.dt.keyword)='+!v.num.test(arg.dt.keyword)
+      );
     }
     v.step = '2.4';
     if( v.rv.isErr ) return v.rv;
@@ -188,7 +200,7 @@ function recept2A(arg){
   const v = {whois:'認証局.recept2A',
     rv:{isErr:false,message:'',stack:'',result:null}};
   try {
-    console.log(v.whois+' start.',arg.dt);
+    console.log(v.whois+' start.',arg);
 
     v.step = '1.1'; // recept2B問合せ用にデータを暗号化
     v.dt = JSON.stringify({
@@ -199,7 +211,7 @@ function recept2A(arg){
         data     : arg.dt,    // 変更された参加者情報
       }
     });
-    console.log('v.dt='+v.dt);
+    console.log(v.whois+'.'+v.step+': v.dt='+v.dt);
     
     v.step = '1.2'; // 暗号化
     v.dt = encodeURI(v.dt); // カナ漢字が入るのでencode
@@ -220,7 +232,7 @@ function recept2A(arg){
         dt: v.dt.cipher,
       }),  
     }).getContentText();
-    console.log('res='+v.res);
+    console.log(v.whois+'.'+v.step+': res='+v.res);
     v.step = '2.2';
     v.rv = JSON.parse(v.res);
 
@@ -256,7 +268,7 @@ function recept2B(arg){
   const v = {whois:'管理局.recept2B',
     rv:{isErr:false,message:'',stack:'',result:null}};
   try {
-    console.log(v.whois+' start.',arg.dt);
+    console.log(v.whois+' start.',arg);
 
     v.step = '1'; // クライアント情報を抽出
     v.master = szSheet('master');
