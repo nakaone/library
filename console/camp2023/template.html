@@ -158,11 +158,16 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 資料集
     docURL:'https://script.google.com/macros/s/AKfycbxtxS_u1BVahosczLxtt9yFS8Lh97lXEj4t7xmzCp4v1qgDft4RaSZUrbv-cMR0k03I/exec',
     docSheet: 'https://tinyurl.com/2ahyly3l',
+    searchParams: new URLSearchParams(window.location.search),
   };
   console.log(v.whois+' start.');
 
   v.step = '1'; // 認証
   v.ls = localStorage.getItem('conf');
+  // クエリ文字列のデバッグモード指定を確認
+  if( v.searchParams.has('debug') ){
+    v.debug = v.searchParams.get('debug').toLowerCase() === 'true';
+  }
   if( v.debug && v.ls !== null ){
     v.step = '1.1';
     // デバッグ用：リリース時はlocalStorage.setItemと併せて削除
@@ -171,7 +176,6 @@ window.addEventListener('DOMContentLoaded',async () => {
   } else {
     v.step = '1.2';
     // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
-    v.searchParams = new URLSearchParams(window.location.search);
     if( v.searchParams.has('id') ){
       v.opt.entryNo = {value:v.searchParams.get('id')};
     }
