@@ -151,24 +151,23 @@
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/whichType.html","selector":"script.core"},"to":"js"}'></script>
 
 <script type="text/javascript" class="main">
-let config;
 window.addEventListener('DOMContentLoaded',async () => {
-  const v = {opt:{},debug:true,
+  const v = {whois:'DOMContentLoaded',opt:{},debug:true,
     // 認証局
     gwURL:'https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',
     // 資料集
     docURL:'https://script.google.com/macros/s/AKfycbxtxS_u1BVahosczLxtt9yFS8Lh97lXEj4t7xmzCp4v1qgDft4RaSZUrbv-cMR0k03I/exec',
     docSheet: 'https://tinyurl.com/2ahyly3l',
   };
-  console.log('DOMContentLoaded start.');
+  console.log(v.whois+' start.');
 
   v.step = '1'; // 認証
   v.ls = localStorage.getItem('conf');
   if( v.debug && v.ls !== null ){
     v.step = '1.1';
     // デバッグ用：リリース時はlocalStorage.setItemと併せて削除
-    config = JSON.parse(v.ls);
-    console.log(v.step+':',config);
+    v.opt = JSON.parse(v.ls);
+    v.config = new Auth(v.gwURL,v.opt);
   } else {
     v.step = '1.2';
     // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
@@ -176,11 +175,11 @@ window.addEventListener('DOMContentLoaded',async () => {
     if( v.searchParams.has('id') ){
       v.opt.entryNo = {value:v.searchParams.get('id')};
     }
-    config = new Auth(v.gwURL);
-    await config.build();
-    localStorage.setItem('conf',JSON.stringify(config));
-    console.log(v.step+':',config);
+    v.config = new Auth(v.gwURL,v.opt);
+    await v.config.build();
+    localStorage.setItem('conf',JSON.stringify(v.config));
   }
+  console.log(v.whois+'.'+v.step+':',v.config);
 
   v.step = '2'; // メニューを定義
   document.querySelectorAll('.TabMenu[name]').forEach(x => {
@@ -189,7 +188,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     console.log(v.menuName,v.arg);
     v[v.menuName] = new TabMenu(v.arg);
   });
-  console.log(v.step+':',v);
+  console.log(v.whois+'.'+v.step+':',v);
 
   v.step = '3'; // MarkDownで記述された部分をHTML化して表示
   document.querySelectorAll('div.markdown').forEach(x => {
@@ -208,7 +207,7 @@ window.addEventListener('DOMContentLoaded',async () => {
 
   v.step = '6'; // パスポートの内容描画
   const passportDiv = document.querySelector('div[name="パスポート"] div');
-  v.entryNo = ('000'+config.entryNo.value).slice(-4);
+  v.entryNo = ('000'+v.config.entryNo.value).slice(-4);
   passportDiv.appendChild(createElement({
     tag:'p',
     text:'No.'+v.entryNo,
@@ -228,11 +227,15 @@ window.addEventListener('DOMContentLoaded',async () => {
   v.step = '7'; // Google Spreadからデータを取得してタイムテーブル表示
   v.res = await fetch(v.docURL);
   v.res = await v.res.json();
-  v.TimeTable = new TimeTable('div.TimeTable',v.res,{datatype:'sheet',dataSheet:v.docSheet});
+  v.TimeTable = new TimeTable(
+    'div.TimeTable',
+    v.res,
+    {datatype:'sheet',dataSheet:v.docSheet}
+  );
 
   v.step = '8'; // 受付画面を準備
   v.reception = new Reception({
-    auth: config, // 認証局他のAuthインスタンス
+    auth: v.config, // 認証局他のAuthインスタンス
     area:{selector:'[name="受付"] .page'},  // 受付画面表示エリアのCSSセレクタ
     boot:{selector:'[name="受付"]'}, // スキャナ起動のトリガーとなる要素のCSSセレクタ
     loading: {selector:'div[name="loading"]'},  // ローディング画面のCSSセレクタ
@@ -241,7 +244,7 @@ window.addEventListener('DOMContentLoaded',async () => {
   v.step = '9'; // 最終処理：ローディング画面解除
   document.querySelector('div[name="loading"]').style.display = 'none';
 
-  console.log('DOMContentLoaded end.');
+  console.log(v.whois+' end.');
 });
 </script>
 </html>
