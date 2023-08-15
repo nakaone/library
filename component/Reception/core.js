@@ -137,12 +137,33 @@ class Reception {
     try {
 
       v.step = '1'; // スキャン結果でない場合、入力文字列を取得
-      console.log(arg,whichType(arg));
       v.keyword = whichType(arg) === 'String' ? arg
       : arg.target.parentElement.querySelector('input[type="text"]').value;
-      console.log('keyword='+v.keyword);
+      console.log('step.'+v.step+': keyword='+v.keyword);
 
-      // entry画面を閉じてloading表示
+      // 認証局経由で管理局に該当者情報を問合せ
+      v.rv = await this.#search(v.keyword);
+      console.log(v.rv);
+      /*
+      if( v.rv.isErr || v.rv.result.length === 0 ){
+        // 検索画面でメッセージをポップアップ
+        alert( v.rv.message );
+      } else {
+        v.target = v.rv.result[0];
+        if( v.rv.result.length > 1 ){
+          // 該当者一覧画面に遷移、編集対象者を特定
+          v.target = await this.#list(v.rv.result);
+        }
+        // 編集画面を表示し、変更箇所を取得
+        v.data = await this.#edit(v.target);
+        // auth.fetchで変更箇所を管理局に送信
+        v.rv = await this.#search(v.data);
+        // 編集結果のメッセージを表示
+        alert(v.rv.message);
+      }
+      // 検索画面を再表示(bootScanner)
+      this.bootScanner();
+      */
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -181,10 +202,20 @@ class Reception {
    * @param {string} keyword - 参加者の検索キー
    * @returns {Object[]} 検索キーに該当する参加者情報の配列
    */
-  #search(keyword){
+  #search = async (keyword) => {
     const v = {whois:'Reception.search',step:'0',rv:null};
     console.log(v.whois+' start.');
     try {
+
+      // entry画面を閉じてloading表示
+      this.loading.element.style.display = 'block';
+
+      // Auth.fetchで認証局に問い合わせ
+      console.log(this.auth);
+      v.rv = await this.auth.fetch('recept1A',keyword,3);
+
+      // loading画面を閉じる
+      this.loading.element.style.display = 'none';
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
