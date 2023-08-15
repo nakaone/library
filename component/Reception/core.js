@@ -26,10 +26,7 @@ class Reception {
       console.log('step.'+v.step+' : ',this.area,this.boot,this.loading);
 
       v.step = '2'; // 入力・検索・編集画面の生成
-      ['entry','list','edit'].forEach(x => {
-        this[x].element = createElement(this[x].design);
-        this.area.element.appendChild(this[x].element);
-      });
+      this.#setWindows();
       console.log('step.'+v.step+' : ',this.area.element);
 
       v.step = '3'; // スキャナ起動イベントの定義(「受付」タグのクリック)
@@ -67,17 +64,6 @@ class Reception {
       },
       entry: {  // 入力画面(スキャナ＋氏名)
         element: null,   // {HTMLElement} 要素本体
-        design: {
-          attr:{name:'entry'},children:[
-            {attr:{class:'webScanner'}},  // スキャン画像表示領域
-            {tag:'input',attr:{type:'text'}},
-            {
-              tag:'input',
-              attr:{type:'button',value:'検索'},
-              event:{click: this.main},
-            },
-          ],
-        },
       },
       list: {   // 複数候補選択画面
         element: null,   // {HTMLElement} 要素本体
@@ -89,15 +75,42 @@ class Reception {
       },
       edit: {   // 編集画面
         element: null,   // {HTMLElement} 要素本体
-        design: {
-          attr:{name:'edit'},
-          style:{display:'none'},
-          children:[],
-        },
+        css: [
+          {sel:'dialog.Reception',prop:{
+            'margin':'auto',
+            'padding': '1rem',
+          }},
+          {sel:'dialog.Reception [name="table"]',prop:{
+            'display': 'grid',
+            'grid-template-columns': '2fr 10fr 8fr 6fr',
+            'grid-gap': '0.2rem',
+          }},
+          {sel:'dialog.Reception input[type="button"]',prop:{
+            'margin': '0.5rem 1rem',
+            'font-size': '1.5rem',
+            'padding': '0.2rem 1rem',
+          }},
+          {sel:'dialog.Reception ruby rt',prop:{
+            'font-size': '0.6rem',
+          }},
+          {sel:'dialog.Reception [name="details"]',prop:{
+            'display': 'grid',
+            'grid-template-columns': '1fr 3fr',
+            'grid-gap': '0.2rem',
+            'overflow-wrap': 'anywhere',
+          }},
+          {sel:'dialog.Reception sub',prop:{
+            'font-size': '0.7rem',
+          }},
+          {sel:'dialog.Reception [name="details"] [name="memo"]',prop:{
+            'width': '95%',
+            'height': '5rem',
+          }},
+        ],    
       },
     }};
 
-    //console.log(v.whois+' start.');
+    console.log(v.whois+' start.');
     try {
       if( def !== null ){ // 2回目以降の呼出(再起呼出)
         // 再起呼出の場合、呼出元から渡された定義Objを使用
@@ -127,6 +140,89 @@ class Reception {
     }
   }
 
+  /** Reception関係画面をセットする
+   * @param {void} - 無し
+   * @returns {void} 無し
+   */
+  #setWindows(){
+    const v = {whois:'Reception.#setWindows',rv:null,step:'0'};
+    console.log(v.whois+' start.');
+    try {
+  
+      v.step = 1; // dialog用のCSS定義を追加(getPassCodeと共通)
+      v.style = createElement('style');
+      document.head.appendChild(v.style);
+      for( v.i=0 ; v.i<this.edit.css.length ; v.i++ ){
+        v.x = this.edit.css[v.i];
+        for( v.y in v.x.prop ){
+          v.prop = v.x.sel+' { '+v.y+' : '+v.x.prop[v.y]+'; }\n';
+          console.log(v.prop);
+          v.style.sheet.insertRule(v.prop,
+            v.style.sheet.cssRules.length,
+          );
+        }
+      }
+
+      v.step = 2; // 検索キー文字列入力画面
+      this.entry.element = createElement({
+        attr:{name:'entry'},children:[
+          {attr:{class:'webScanner'}},  // スキャン画像表示領域
+          {tag:'input',attr:{type:'text'}},
+          {
+            tag:'input',
+            attr:{type:'button',value:'検索'},
+            event:{click: this.main},
+          },
+        ],
+      });
+      this.area.element.appendChild(this.entry.element);
+
+      v.step = 3; // 編集用ダイアログを定義
+      this.edit.element = createElement({
+        tag:'dialog',
+        attr:{class:'Reception',name:'edit'},
+        html: `<div name="table">
+          <div class="th">No</div>
+          <div class="th">氏名</div>
+          <div class="th">所属</div>
+          <div class="th">参加費</div>
+        </div>
+        <input type="button" name="cancel" value="キャンセル" />
+        <input type="button" name="submit" value="送信" />
+        <div name="details">
+          <div class="th">申込</div><div class="td">
+            No.<span name="entryNo"></span>
+            &emsp;
+            <ruby>
+              <span name="申込者氏名"></span>
+              <rt name="申込者カナ"></rt>
+            </ruby>
+            &emsp;(<span name="申込者の参加"></span>)
+          </div>
+          <div class="th">宿泊、テント</div><div class="td" name="宿泊、テント"></div>
+          <div class="th">引取者</div><div class="td" name="引取者氏名"></div>
+          <div class="th">e-mail</div><div class="td" name="メールアドレス"></div>
+          <div class="th">緊急連絡先</div><div class="td" name="緊急連絡先"></div>
+          <div class="th">ボランティア</div><div class="td" name="ボランティア募集"></div>
+          <div class="th">備考</div><div class="td" name="備考"></div>
+          <div class="th">キャンセル</div><div class="td" name="キャンセル"></div>
+          <div class="th">申込URL</div><div class="td" name="editURL"></div>
+          <div class="th">メモ<br><sub>※スタッフ記入欄</sub></div>
+          <div class="td"><textarea name="memo"></textarea></div>
+        </div>`,
+      });
+      document.querySelector('body').prepend(this.edit.element);
+      this.edit.table = this.edit.element.querySelector('[name="table"]');
+  
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+  
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+')\n',e,v);
+      return e;
+    }
+  }
+
   /** search, list, editを順次呼び出す(全体制御)
    * @param {string|Event} arg - 受付番号(スキャン結果文字列) or clickイベント
    * @returns {void}
@@ -144,7 +240,8 @@ class Reception {
       // 認証局経由で管理局に該当者情報を問合せ
       v.rv = await this.#search(v.keyword);
       console.log(v.rv);
-      /*
+      console.log(JSON.stringify(v.rv.result));
+
       if( v.rv.isErr || v.rv.result.length === 0 ){
         // 検索画面でメッセージをポップアップ
         alert( v.rv.message );
@@ -157,13 +254,14 @@ class Reception {
         // 編集画面を表示し、変更箇所を取得
         v.data = await this.#edit(v.target);
         // auth.fetchで変更箇所を管理局に送信
-        v.rv = await this.#search(v.data);
-        // 編集結果のメッセージを表示
-        alert(v.rv.message);
+        if( v.data !== null ){
+          v.rv = await this.#update(v.data);
+          // 編集結果のメッセージを表示
+          alert(v.rv.message);
+        }
       }
       // 検索画面を再表示(bootScanner)
       this.bootScanner();
-      */
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -203,7 +301,7 @@ class Reception {
    * @returns {Object[]} 検索キーに該当する参加者情報の配列
    */
   #search = async (keyword) => {
-    const v = {whois:'Reception.search',step:'0',rv:null};
+    const v = {whois:'Reception.#search',step:'0',rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -230,7 +328,7 @@ class Reception {
    * @returns {Object} 対象者情報
    */
   #list(applicables){
-    const v = {whois:'Reception.list',step:'0',rv:null};
+    const v = {whois:'Reception.#list',step:'0',rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -246,10 +344,136 @@ class Reception {
    * @param {Object} participant - 対象者情報
    * @returns {Object} 管理局からの戻り値
    */
-  #edit(participant){
-    const v = {whois:'Reception.edit',step:'0',rv:null};
+  #edit = async (data) => {
+    const v = {whois:'Reception.#edit',rv:null,step:'0'};
+    console.log(v.whois+' start.\n'+JSON.stringify(data));
+    try {
+  
+      v.step = 1; // データクレンジング
+      data['申込者所属'] = '申込者';  // 未定義なので追加しておく
+      for( v.i=0 ; v.i<6 ; v.i++ ){
+        if( data['fee0'+v.i].length === 0 ){
+          data['fee0'+v.i] = (data['参加者0'+v.i+'所属'] === '未就学児') ? '無し' : '未収';
+        }
+      }
+  
+      v.step = 2; // 参加者一覧の表示
+      for( v.i=0 ; v.i<6 ; v.i++ ){
+        v.step = 2.1; // 項目名の接頭辞
+        v.pre = v.i === 0 ? '申込者' : ('参加者0' + v.i);
+  
+        v.step = 2.2; // 申込者が不参加、または氏名・所属とも未登録の参加者は表示しない
+        if( v.i === 0 && data['申込者の参加'] === '不参加'
+        || data[v.pre+'氏名'].length === 0 && data[v.pre+'所属'].length === 0 ){
+          continue;
+        }
+  
+        v.step = 2.3; // No
+        this.edit.table.appendChild(createElement({attr:{class:'td'},text: ('0'+v.i)}));
+  
+        v.step = 2.4; // 氏名＋カナ
+        this.edit.table.appendChild(createElement({attr:{class:'td'},children:[{
+          tag: 'ruby',
+          html: data[v.pre+'氏名'], 
+          children: [{
+            tag: 'rt',
+            text: data[v.pre+'カナ']
+          }]
+        }]}));
+  
+        v.step = 2.5; // 所属
+        this.edit.table.appendChild(createElement({attr:{class:'td'},text: data[v.pre+'所属']}));
+  
+        v.step = 2.6; // 参加費
+        v.options = [];
+        ['無し','未収','既収'].forEach(x => {
+          v.options.push({
+            tag:'option',
+            value:x,
+            text:x,
+            logical:{selected:(data['fee0'+v.i] === x)},
+          });
+        });
+        this.edit.table.appendChild(createElement({attr:{class:'td'},children:[{
+          tag: 'select',
+          attr: {class:'fee',name:'fee0'+v.i},
+          children:v.options,
+        }]}));
+      }
+  
+      v.step = 3.1; // 詳細情報のセット
+      ['メールアドレス', '申込者氏名', '申込者カナ', '申込者の参加',
+      '宿泊、テント', '引取者氏名', '緊急連絡先',
+      'ボランティア募集', '備考', 'キャンセル',
+      'entryNo','memo'].forEach(x => {
+        console.log(x,data[x]);
+        let e = this.edit.element.querySelector('[name="details"] [name="'+x+'"]');
+        console.log(e);
+        e.innerText = data[x];
+      });
+      v.step = 3.2; // 申込フォーム修正URL(QRコード)
+      v.qr = new QRCode(this.edit.element.querySelector('[name="details"] [name="editURL"]'),{
+        text: data.editURL,
+        width: 300, height: 300,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      
+  
+      v.step = 4; // 編集用ダイアログの表示
+      this.edit.element.showModal();
+  
+      return new Promise(resolve => {
+        v.step = 5.1; // 「キャンセル」クリック時はnullを返す
+        document.querySelector('dialog[name="edit"] input[name="cancel"]')
+        .addEventListener('click',() => {
+          this.edit.element.close();
+          console.log('Reception.edit normal end.');
+          resolve(null);
+        });
+        v.step = 5.2; // 「送信」クリック時に値を返すよう定義
+        document.querySelector('dialog[name="edit"] input[name="submit"]')
+        .addEventListener('click',() => {
+          this.edit.element.close();
+          const rv = {};
+          // 受付番号
+          rv.entryNo = this.edit.element.querySelector('[name="entryNo"]').innerText;
+          // 参加費
+          this.edit.element.querySelectorAll('select.fee').forEach(x => {
+            rv[x.getAttribute('name')] = x.value;
+          });
+          // スタッフメモ欄
+          rv.memo = this.edit.element.querySelector('[name="memo"]').value;
+          console.log('Reception.edit normal end.',rv);
+          resolve(rv);
+        });
+      });
+  
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+')\n',e,v);
+      return e;
+    }
+  }
+
+  /** 認証局経由で管理局の参加者情報を更新
+   * @param {Object} data - 参加者情報
+   * @returns {Object} 更新結果
+   */
+  #update = async (data) => {
+    const v = {whois:'Reception.#update',step:'0',rv:null};
     console.log(v.whois+' start.');
     try {
+
+      // loading表示
+      this.loading.element.style.display = 'block';
+
+      // Auth.fetchで認証局に問い合わせ
+      //console.log(this.auth);
+      v.rv = await this.auth.fetch('recept2A',data,3);
+
+      // loading画面を閉じる
+      this.loading.element.style.display = 'none';
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -258,4 +482,5 @@ class Reception {
       return e;        
     }
   }
+
 }
