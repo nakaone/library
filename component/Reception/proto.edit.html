@@ -4,6 +4,9 @@
 <link rel="stylesheet" href="../szLib.css" />
 </head><body>
 
+<!-- QRコード生成 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 <script src="../createElement.js"></script>
 <script src="../mergeDeeply.js"></script>
 <script type="text/javascript">
@@ -15,17 +18,35 @@ const conf = {  // thisに相当
         'margin':'auto',
         'padding': '1rem',
       }},
-      {sel:'.Reception [name="table"]',prop:{
+      {sel:'dialog.Reception [name="table"]',prop:{
         'display': 'grid',
         'grid-template-columns': '2fr 10fr 8fr 6fr',
         'grid-gap': '0.2rem',
       }},
-      {sel:'.Reception ruby rt',prop:{
+      {sel:'dialog.Reception input[type="button"]',prop:{
+        'margin': '0.5rem 1rem',
+        'font-size': '1.5rem',
+        'padding': '0.2rem 1rem',
+      }},
+      {sel:'dialog.Reception ruby rt',prop:{
         'font-size': '0.6rem',
+      }},
+      {sel:'dialog.Reception [name="details"]',prop:{
+        'display': 'grid',
+        'grid-template-columns': '1fr 3fr',
+        'grid-gap': '0.2rem',
+        'overflow-wrap': 'anywhere',
+      }},
+      {sel:'dialog.Reception sub',prop:{
+        'font-size': '0.7rem',
+      }},
+      {sel:'dialog.Reception [name="details"] [name="memo"]',prop:{
+        'width': '95%',
+        'height': '5rem',
       }},
     ],
   },
-  mami:JSON.parse('{"タイムスタンプ":"2023-08-01T09:05:16.616Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"高井　麻巳子","申込者カナ":"タカイ　マミコ","申込者の参加":"不参加","宿泊、テント":"宿泊する(テントなし)","引取者氏名":"申込者が参加して帰宅時の付添もするのでお迎えは不要","参加者01氏名":"高井　真美","参加者01カナ":"タカイ　マミ","参加者01所属":"卒業生","参加者02氏名":"高井　雄介","参加者02カナ":"タカイ　ユウスケ","参加者02所属":"未就学児","参加者03氏名":"","参加者03カナ":"","参加者03所属":"","参加者04氏名":"","参加者04カナ":"","参加者04所属":"","参加者05カナ":"","参加者05氏名":"","参加者05所属":"","緊急連絡先":"","ボランティア募集":"","備考":"","キャンセル":"","":"","name":"","entryStr":"","authority":"2","cancel":"","entryNo":"16","publicKey":"Wn2Ka6MGMwuMbsDhX+xXgLc7AWt8UR3JYmdyg206vFDz3MmS/cJ7mqmKbEwVRRLPIUuEDJ5UM5i+wGvH1H+kFXkPBG2FPsWtotKuUzIM7bYVX/FLDF1z4sdis09OKysWu6jFbu8dToGsvXQMoUbLxqfVLWHb1skoiTFPbtGbSgU=","editURL":"https://docs.google.com/forms/d/e/1FAIpQLScEzS8-uNgeM40rZvGl60uZewwHZhyPeQJAicS_LjMEYrMqfQ/viewform?edit2=2_ABaOnudN4rJMPqj2nj7P1M4FCr2sFz0i9TTUF4iPzK_wxu9CW0kFOuP10yNGKlJnQLwgNIo","passCode":"730259","genPassCode":"2023-08-09T07:21:55.827Z","NG1":"","NG2":"","certificate":"2023-08-09T07:22:20.520Z","fee00":"","fee01":"","fee02":"","fee03":"","fee04":"","fee05":""}'),
+  mami:JSON.parse('{"タイムスタンプ":"2023-08-01T09:05:16.616Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"高井　麻巳子","申込者カナ":"タカイ　マミコ","申込者の参加":"不参加","宿泊、テント":"宿泊する(テントなし)","引取者氏名":"申込者が参加して帰宅時の付添もするのでお迎えは不要","参加者01氏名":"高井　真美","参加者01カナ":"タカイ　マミ","参加者01所属":"卒業生","参加者02氏名":"高井　雄介","参加者02カナ":"タカイ　ユウスケ","参加者02所属":"未就学児","参加者03氏名":"","参加者03カナ":"","参加者03所属":"","参加者04氏名":"","参加者04カナ":"","参加者04所属":"","参加者05カナ":"","参加者05氏名":"","参加者05所属":"","緊急連絡先":"","ボランティア募集":"","備考":"","キャンセル":"","":"","name":"","entryStr":"","authority":"2","cancel":"","entryNo":"16","publicKey":"Wn2Ka6MGMwuMbsDhX+xXgLc7AWt8UR3JYmdyg206vFDz3MmS/cJ7mqmKbEwVRRLPIUuEDJ5UM5i+wGvH1H+kFXkPBG2FPsWtotKuUzIM7bYVX/FLDF1z4sdis09OKysWu6jFbu8dToGsvXQMoUbLxqfVLWHb1skoiTFPbtGbSgU=","editURL":"https://docs.google.com/forms/d/e/1FAIpQLScEzS8-uNgeM40rZvGl60uZewwHZhyPeQJAicS_LjMEYrMqfQ/viewform?edit2=2_ABaOnudN4rJMPqj2nj7P1M4FCr2sFz0i9TTUF4iPzK_wxu9CW0kFOuP10yNGKlJnQLwgNIo","passCode":"730259","genPassCode":"2023-08-09T07:21:55.827Z","NG1":"","NG2":"","certificate":"2023-08-09T07:22:20.520Z","fee00":"","fee01":"","fee02":"","fee03":"","fee04":"","fee05":"","memo":"fugahoge"}'),
 }
 
 const setWindows = () => {
@@ -57,8 +78,29 @@ const setWindows = () => {
         <div class="th">所属</div>
         <div class="th">参加費</div>
       </div>
-      <div name="details"></div>
-      <input type="button" value="送信" />`,
+      <input type="button" name="cancel" value="キャンセル" />
+      <input type="button" name="submit" value="送信" />
+      <div name="details">
+        <div class="th">申込</div><div class="td">
+          No.<span name="entryNo"></span>
+          &emsp;
+          <ruby>
+            <span name="申込者氏名"></span>
+            <rt name="申込者カナ"></rt>
+          </ruby>
+          &emsp;(<span name="申込者の参加"></span>)
+        </div>
+        <div class="th">宿泊、テント</div><div class="td" name="宿泊、テント"></div>
+        <div class="th">引取者</div><div class="td" name="引取者氏名"></div>
+        <div class="th">e-mail</div><div class="td" name="メールアドレス"></div>
+        <div class="th">緊急連絡先</div><div class="td" name="緊急連絡先"></div>
+        <div class="th">ボランティア</div><div class="td" name="ボランティア募集"></div>
+        <div class="th">備考</div><div class="td" name="備考"></div>
+        <div class="th">キャンセル</div><div class="td" name="キャンセル"></div>
+        <div class="th">申込URL</div><div class="td" name="editURL"></div>
+        <div class="th">メモ<br><sub>※スタッフ記入欄</sub></div>
+        <div class="td"><textarea name="memo"></textarea></div>
+      </div>`,
     });
     document.querySelector('body').prepend(conf.edit.element);
     conf.edit.table = conf.edit.element.querySelector('[name="table"]');
@@ -129,18 +171,50 @@ const edit = async (data) => {
       }]}));
     }
 
-    v.step = 3; // 編集用ダイアログの表示
+    v.step = 3.1; // 詳細情報のセット
+    ['メールアドレス', '申込者氏名', '申込者カナ', '申込者の参加',
+    '宿泊、テント', '引取者氏名', '緊急連絡先',
+    'ボランティア募集', '備考', 'キャンセル',
+    'entryNo','memo'].forEach(x => {
+      console.log(x,data[x]);
+      let e = conf.edit.element.querySelector('[name="details"] [name="'+x+'"]');
+      console.log(e);
+      e.innerText = data[x];
+    });
+    v.step = 3.2; // 申込フォーム修正URL(QRコード)
+    v.qr = new QRCode(conf.edit.element.querySelector('[name="details"] [name="editURL"]'),{
+			text: data.editURL,
+			width: 300, height: 300,
+			colorDark: "#000000",
+			colorLight: "#ffffff",
+			correctLevel: QRCode.CorrectLevel.H
+    });
+    
+
+    v.step = 4; // 編集用ダイアログの表示
     conf.edit.element.showModal();
 
-    v.step = 4; // 「送信」クリック時に値を返すよう定義
     return new Promise(resolve => {
-      document.querySelector('dialog[name="edit"] input[type="button"]')
+      v.step = 5.1; // 「キャンセル」クリック時はnullを返す
+      document.querySelector('dialog[name="edit"] input[name="cancel"]')
+      .addEventListener('click',() => {
+        conf.edit.element.close();
+        console.log('Reception.edit normal end.');
+        resolve(null);
+      });
+      v.step = 5.2; // 「送信」クリック時に値を返すよう定義
+      document.querySelector('dialog[name="edit"] input[name="submit"]')
       .addEventListener('click',() => {
         conf.edit.element.close();
         const rv = {};
+        // 受付番号
+        rv.entryNo = conf.edit.element.querySelector('[name="entryNo"]').innerText;
+        // 参加費
         conf.edit.element.querySelectorAll('select.fee').forEach(x => {
           rv[x.getAttribute('name')] = x.value;
         });
+        // スタッフメモ
+        rv.memo = conf.edit.element.querySelector('[name="memo"]').value;
         console.log('Reception.edit normal end.',rv);
         resolve(rv);
       });
