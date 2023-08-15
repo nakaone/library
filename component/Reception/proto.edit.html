@@ -213,7 +213,7 @@ const edit = async (data) => {
         conf.edit.element.querySelectorAll('select.fee').forEach(x => {
           rv[x.getAttribute('name')] = x.value;
         });
-        // スタッフメモ
+        // スタッフメモ欄
         rv.memo = conf.edit.element.querySelector('[name="memo"]').value;
         console.log('Reception.edit normal end.',rv);
         resolve(rv);

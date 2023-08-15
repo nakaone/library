@@ -207,7 +207,7 @@ function recept2A(arg){
       fc : 'recept2B',
       arg: {  // recept2B()に渡す引数
         entryNo  : arg.fm,    // クライアントの受付番号
-        publicKey: arg.publicKey,  // 同公開鍵
+        publicKey: arg.pKey,  // 同公開鍵
         data     : arg.dt,    // 変更された参加者情報
       }
     });
@@ -289,8 +289,8 @@ function recept2B(arg){
     if( v.rv.isErr ) return v.rv;
 
     v.step = '3'; // 検索キーに合致する参加者情報を抽出
-    v.rv.result = v.master.update(arg.dt,
-      {key:'entryNo',value:arg.data.entryNo});
+    v.rv.result = v.master.update(arg.dt.data,
+      {key:'entryNo',value:arg.dt.entryNo});
 
     v.step = '4';
     console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
