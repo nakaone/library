@@ -79,6 +79,9 @@ class Reception {
             'margin':'auto',
             'padding': '1rem',
           }},
+          {sel:'dialog.Reception::backdrop',prop:{
+            'background-color': 'rgba(127,127,127,0.8)',
+          }},
           {sel:'dialog.Reception [name="table"]',prop:{
             'display': 'grid',
             'grid-template-columns': '2fr 10fr 8fr 6fr',
