@@ -73,8 +73,10 @@ class Reception {
           children:[],
         },
       },
-      edit: {   // 編集画面
+      edit: {   // 編集画面(ダイアログ)
         element: null,   // {HTMLElement} 要素本体
+        table: null,     // {HTMLElement} 編集画面のテーブル部
+        details: null,   // {HTMLElement} 編集画面の詳細情報部
         css: [
           {sel:'dialog.Reception',prop:{
             'margin':'auto',
@@ -213,6 +215,7 @@ class Reception {
       });
       document.querySelector('body').prepend(this.edit.element);
       this.edit.table = this.edit.element.querySelector('[name="table"]');
+      this.edit.details = this.edit.element.querySelector('[name="details"]');
   
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -358,6 +361,8 @@ class Reception {
       }
   
       v.step = 2; // 参加者一覧の表示
+      // 前回参加者一覧の削除
+      this.edit.table.querySelectorAll('div.td').forEach(x => x.remove());
       for( v.i=0 ; v.i<6 ; v.i++ ){
         v.step = 2.1; // 項目名の接頭辞
         v.pre = v.i === 0 ? '申込者' : ('参加者0' + v.i);
@@ -407,12 +412,14 @@ class Reception {
       'ボランティア募集', '備考', 'キャンセル',
       'entryNo','memo'].forEach(x => {
         console.log(x,data[x]);
-        let e = this.edit.element.querySelector('[name="details"] [name="'+x+'"]');
+        let e = this.edit.details.querySelector('[name="'+x+'"]');
         console.log(e);
         e.innerText = data[x];
       });
       v.step = 3.2; // 申込フォーム修正URL(QRコード)
-      v.qr = new QRCode(this.edit.element.querySelector('[name="details"] [name="editURL"]'),{
+      v.qrDiv = this.edit.details.querySelector('[name="editURL"]');
+      v.qrDiv.innerHTML = '';
+      v.qr = new QRCode(v.qrDiv,{
         text: data.editURL,
         width: 300, height: 300,
         colorDark: "#000000",
