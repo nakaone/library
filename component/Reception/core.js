@@ -67,11 +67,8 @@ class Reception {
       },
       list: {   // 複数候補選択画面
         element: null,   // {HTMLElement} 要素本体
-        design: {
-          attr:{name:'list'},
-          style:{display:'none'},
-          children:[],
-        },
+        table: null,     // {HTMLElement} 選択画面のテーブル部
+        candidates: [],  // {Object[]} 候補となった参加者情報の配列
       },
       edit: {   // 編集画面(ダイアログ)
         element: null,   // {HTMLElement} 要素本体
@@ -107,6 +104,12 @@ class Reception {
           {sel:'dialog.Reception [name="details"] [name="memo"]',prop:{
             'width': '95%',
             'height': '5rem',
+          }},
+          // 複数候補者一覧(list)用
+          {sel:'dialog.Reception[name="list"] [name="table"]',prop:{
+            'display': 'grid',
+            'grid-template-columns': '8rem 1fr',
+            'grid-gap': '0.2rem',
           }},
         ],    
       },
@@ -179,7 +182,20 @@ class Reception {
       });
       this.area.element.appendChild(this.entry.element);
 
-      v.step = 3; // 編集用ダイアログを定義
+      v.step = 3; // 一覧用ダイアログを定義
+      this.list.element = createElement({
+        tag:'dialog',
+        attr:{class:'Reception',name:'list'},
+        html: `<p>複数の候補が見つかりました。該当者名をクリックしてください。</p>
+        <div name="table">
+          <div class="th">申込者名</div>
+          <div class="th">e-mail</div>
+        </div>`,
+      });
+      document.querySelector('body').prepend(this.list.element);
+      this.list.table = this.list.element.querySelector('[name="table"]');
+
+      v.step = 4; // 編集用ダイアログを定義
       this.edit.element = createElement({
         tag:'dialog',
         attr:{class:'Reception',name:'edit'},
@@ -251,7 +267,9 @@ class Reception {
       } else {
         v.target = v.rv.result[0];
         if( v.rv.result.length > 1 ){
+          console.log(JSON.stringify(v.rv));
           // 該当者一覧画面に遷移、編集対象者を特定
+          this.list.candidates = v.rv.result; // 候補者リストに格納
           v.target = await this.#list(v.rv.result);
         }
         // 編集画面を表示し、変更箇所を取得
@@ -327,16 +345,65 @@ class Reception {
   }
 
   /** 該当者リストの表示、対象者の選択
-   * @param {Object[]} applicables - 検索キーに該当する参加者情報の配列
-   * @returns {Object} 対象者情報
+   * @param {Object[]} data - 検索キーに該当する参加者情報の配列
+   * @returns {Object} 選択された対象者情報
    */
-  #list(applicables){
+  #list(data){
     const v = {whois:'Reception.#list',step:'0',rv:null};
     console.log(v.whois+' start.');
     try {
 
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
+      v.step = 1; // 前回候補者一覧の削除
+      this.list.table.querySelectorAll('div.td').forEach(x => x.remove());
+
+      v.step = 2; // 候補者の表示
+      data.forEach(d => {
+        v.step = 2.1; // 氏名＋カナ
+        this.list.table.appendChild(createElement({
+          attr:{class:'td'},
+          children:[{
+            tag:'a',  // 氏名＋カナはaタグで囲む
+            attr:{name:d.entryNo}, // 受付番号をname属性で持たせる
+            children:[{
+              tag: 'ruby',
+              html: d['申込者氏名'], 
+              children: [{
+                tag: 'rt',
+                text: d['申込者カナ'],
+              }],
+            }],
+          }],
+        }));
+
+        v.step = 2.2; // e-mail
+        this.list.table.appendChild(createElement({
+          attr:{class:'td'},
+          text: d['メールアドレス'],
+        }));
+      });
+
+      v.step = 3.1; // 一覧用ダイアログの表示
+      this.list.element.showModal();
+
+      v.step = 3.2; // 戻り値を設定
+      return new Promise(resolve => {
+        document.querySelectorAll('dialog.Reception[name="list"] a').forEach(x => {
+          // 一覧表の氏名(aタグ)全てにclickイベントリスナを付与
+          x.addEventListener('click',(element) => {
+            this.list.element.close();  // ダイアログを閉じる
+            // aタグから受付番号を取得
+            let entryNo = element.target.parentElement.getAttribute('name');
+            for( let i=0 ; i<this.list.candidates.length ; i++ ){
+              // 事前に保存しておいた候補者配列から該当者を選択して返す
+              if( this.list.candidates[i].entryNo === entryNo ){
+                console.log('Reception.#list normal end.',entryNo);
+                resolve(this.list.candidates[i]);
+              }
+            }
+          });
+        });
+      });
+
     } catch(e){
       console.error(v.whois+' abnormal end.',e,v);
       return e;        
@@ -428,9 +495,10 @@ class Reception {
       });
       
   
-      v.step = 4; // 編集用ダイアログの表示
+      v.step = 4.1; // 編集用ダイアログの表示
       this.edit.element.showModal();
   
+      v.step = 4.2; // 戻り値を設定
       return new Promise(resolve => {
         v.step = 5.1; // 「キャンセル」クリック時はnullを返す
         document.querySelector('dialog[name="edit"] input[name="cancel"]')
