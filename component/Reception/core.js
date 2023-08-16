@@ -305,6 +305,7 @@ class Reception {
     try {
 
       const sel = this.area.selector+' [name="entry"] .webScanner';
+      document.querySelector(sel).innerHTML = '';
       const code = await scanQR(sel);
       if( code !== null ){
         v.rv = this.main(code); // 後続のmainにスキャン文字列を渡す
