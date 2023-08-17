@@ -32,8 +32,6 @@
     <div class="TabMenu" name="お知らせ">
       <div name="掲示板">
         <div class="page">
-          <button onclick="redraw()">更新</button>
-          ※ 自動更新されません。また更新は3分程度の間隔をあけてください
           <div name="board"></div>
         </div>
       </div>
@@ -140,6 +138,7 @@
 ===================================================== -->
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Auth.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Array.tabulize.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='../../component/BulletinBoard/core.js'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/createElement.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/createPassword.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/cryptoAES.html","selector":"script.core"},"to":"js"}'></script>
@@ -248,7 +247,15 @@ window.addEventListener('DOMContentLoaded',async () => {
     loading: {selector:'div[name="loading"]'},  // ローディング画面のCSSセレクタ
   });
 
-  v.step = '9'; // 最終処理：権限により表示画面制御
+  v.step = '9'; // 掲示板の表示
+  v.board = new BulletinBoard({
+    auth: v.config, // 認証局他のAuthインスタンス
+    parent: {selector:'[name="お知らせ"] [name="掲示板"] [name="board"]'},
+  });
+  await v.board.delivery();
+  console.log(v.whois+'.'+v.step,v.board);
+
+  v.step = '10'; // 最終処理：権限により表示画面制御
   // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生
   // ⇒ 最終段階で実行する
   v.authority = Number(v.config.info.authority)
