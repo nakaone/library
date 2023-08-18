@@ -11,28 +11,29 @@
     id   : 省略時はlabelを引用。labelだとユニークにならない場合に設定
   -->
   <!-- 子メニューを持つ(=ブランチ)の場合、label,authority以外は持たない -->
-  <div data-BurgerMenu="label:'お知らせ',authority:3">
+  <div data-BurgerMenu="label:'お知らせ'">
     <!-- h1>お知らせ画面</h1> ノードは子メニュー以外の要素は不可 -->
     <!--div--><!-- BurgerMenu親子の間にBurgerMenuを持たない要素は介在不可 -->
       <div data-BurgerMenu="label:'掲示板',func:g.test('board')">
         <h1>掲示板画面</h1><!-- リーフは自らのコンテンツを持つ -->
       </div>
     <!--/div-->
-    <div data-BurgerMenu="label:'注意事項',func:g.test('caution'),authority:3">
+    <div data-BurgerMenu="label:'注意事項',func:g.test('caution')">
       <h1>注意事項画面</h1>
     </div>
-    <div data-BurgerMenu="label:'その他',func:g.test('others'),authority:3"></div>
+    <div data-BurgerMenu="label:'その他',func:g.test('others')"></div>
   </div>
   <!-- メニュークリック時の動作が対象画面の表示のみならfunc指定不要 -->
-  <div data-BurgerMenu="label:'パスポート',authority:3">
+  <div data-BurgerMenu="label:'パスポート'">
     <h1>パスポート画面</h1>
   </div>
-  <div data-BurgerMenu="label:'案内図',authority:3">
+  <div data-BurgerMenu="label:'案内図'">
     <h1>案内図画面</h1>
   </div>
-  <div data-BurgerMenu="label:'予定表',authority:3">
+  <div data-BurgerMenu="label:'予定表'">
     <h1>予定表画面</h1>
   </div>
+  <!-- authorityの既定値は「閲覧制限なし」 -->
   <div data-BurgerMenu="label:'スタッフ',authority:2">
     <!-- 上位メニューがauthorityを持つ場合、子メニューはauthorityを省略可 -->
     <div data-BurgerMenu="label:'参加者数'">
@@ -54,7 +55,7 @@
       </div>
     </div>
   </div>
-  <div data-BurgerMenu="label:'システム設定',authority:3">
+  <div data-BurgerMenu="label:'システム設定'">
     <h1>システム設定画面</h1>
   </div>
 </body>
