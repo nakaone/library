@@ -1,0 +1,84 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>sample</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css"></style>
+</head><body>
+  <!-- data-BurgerMenuの書き方
+    オブジェクトの記述に準ずる。但し短縮するため前後の"{","}"は省略する。
+    label: メニュー化する時の名称
+    func : メニュー選択時に実行する関数。グローバルのみ、プライベートは不明(面倒なので検証略)
+    authority: 実行権限。生成時に表示制御
+    id   : 省略時はlabelを引用。labelだとユニークにならない場合に設定
+  -->
+  <!-- 子メニューを持つ(=ブランチ)の場合、label,authority以外は持たない -->
+  <div data-BurgerMenu="label:'お知らせ',authority:3">
+    <!-- h1>お知らせ画面</h1> ノードは子メニュー以外の要素は不可 -->
+    <!--div--><!-- BurgerMenu親子の間にBurgerMenuを持たない要素は介在不可 -->
+      <div data-BurgerMenu="label:'掲示板',func:g.test('board')">
+        <h1>掲示板画面</h1><!-- リーフは自らのコンテンツを持つ -->
+      </div>
+    <!--/div-->
+    <div data-BurgerMenu="label:'注意事項',func:g.test('caution'),authority:3">
+      <h1>注意事項画面</h1>
+    </div>
+    <div data-BurgerMenu="label:'その他',func:g.test('others'),authority:3"></div>
+  </div>
+  <!-- メニュークリック時の動作が対象画面の表示のみならfunc指定不要 -->
+  <div data-BurgerMenu="label:'パスポート',authority:3">
+    <h1>パスポート画面</h1>
+  </div>
+  <div data-BurgerMenu="label:'案内図',authority:3">
+    <h1>案内図画面</h1>
+  </div>
+  <div data-BurgerMenu="label:'予定表',authority:3">
+    <h1>予定表画面</h1>
+  </div>
+  <div data-BurgerMenu="label:'スタッフ',authority:2">
+    <!-- 上位メニューがauthorityを持つ場合、子メニューはauthorityを省略可 -->
+    <div data-BurgerMenu="label:'参加者数'">
+      <h1>参加者数画面</h1>
+    </div>
+    <!-- ダイアログ等、表示画面が不要な場合はfunc指定 -->
+    <div data-BurgerMenu="label:'受付業務',func:'g.recept'"></div>
+    <div data-BurgerMenu="label:'校内探検'">
+      <h1>校内探検画面</h1>
+    </div>
+    <div data-BurgerMenu="label:'参考資料'">
+      <div data-BurgerMenu="label:'日程表'"><h1>日程表画面</h1></div>
+      <div data-BurgerMenu="label:'論議メモ'">
+        <div data-BurgerMenu="label:'20230610'"><h1>20230610画面</h1></div>
+        <div data-BurgerMenu="label:'20230707'"><h1>20230707画面</h1></div>
+      </div>
+      <div data-BurgerMenu="label:'関連サイト'">
+        <h1>関連サイト画面</h1>
+      </div>
+    </div>
+  </div>
+  <div data-BurgerMenu="label:'システム設定',authority:3">
+    <h1>システム設定画面</h1>
+  </div>
+</body>
+<!-- =====================================================
+  自作ライブラリ
+===================================================== -->
+<script type="text/javascript" src="core.js"></script>
+<script type="text/javascript" src="../setupInstance/core.js"></script>
+<script type="text/javascript" src="../whichType.js"></script>
+
+<!-- =====================================================
+  主処理
+===================================================== -->
+<script type="text/javascript">
+const g = {
+  test:(arg)=>{console.log('gTest:'+arg)},
+  recept:()=>{console.log('dummy function recept.')},
+  authority: 2,
+};
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {test:(arg)=>{console.log('vTest:'+arg)}};
+  v.test('DOMContentLoaded');
+
+  g.menu = new BurgerMenu();
+  console.log(g.menu);
+});
+</script></html>
