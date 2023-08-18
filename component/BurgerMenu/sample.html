@@ -40,7 +40,7 @@
       <h1>参加者数画面</h1>
     </div>
     <!-- ダイアログ等、表示画面が不要な場合はfunc指定 -->
-    <div data-BurgerMenu="label:'受付業務',func:'g.recept'"></div>
+    <div data-BurgerMenu="label:'受付業務',func:'g.recept()'"></div>
     <div data-BurgerMenu="label:'校内探検'">
       <h1>校内探検画面</h1>
     </div>
@@ -63,6 +63,8 @@
   自作ライブラリ
 ===================================================== -->
 <script type="text/javascript" src="core.js"></script>
+<script type="text/javascript" src="../createElement.js"></script>
+<script type="text/javascript" src="../mergeDeeply.js"></script>
 <script type="text/javascript" src="../setupInstance/core.js"></script>
 <script type="text/javascript" src="../whichType.js"></script>
 
@@ -70,11 +72,16 @@
   主処理
 ===================================================== -->
 <script type="text/javascript">
+
+const registar = (name,arg) => {
+  name(arg);
+}
 const g = {
   test:(arg)=>{console.log('gTest:'+arg)},
   recept:()=>{console.log('dummy function recept.')},
   authority: 2,
 };
+
 window.addEventListener('DOMContentLoaded',() => {
   const v = {test:(arg)=>{console.log('vTest:'+arg)}};
   v.test('DOMContentLoaded');

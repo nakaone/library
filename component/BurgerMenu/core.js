@@ -1,16 +1,18 @@
 class BurgerMenu {
   constructor(opt={}){
-    const v = {whois:'BurgerMenu.#analyze',step:0,rv:null};
+    const v = {whois:'BurgerMenu.constructor',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
       setupInstance(this,opt,{
         parent: 'body', // 親要素のCSSセレクタ
         map: [],      // 親要素配下要素のBurgerMenuマップ
+        navi: null,   // ナビゲーション要素
       });
+      this.navi = createElement({tag:'nav'}); // nav
+      this.parent.element.appendChild(this.navi);
+      this.#genNavi();
   
-      this.#analyze(this.parent.element);
-
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
       
@@ -20,27 +22,28 @@ class BurgerMenu {
     }
   }
 
-  #analyze = () => {
-    const v = {whois:'BurgerMenu.#analyze',step:0,rv:null,
-      recursive: (parent,map) => {
-        for( let i=0 ; i<parent.childElementCount ; i++ ){
-          let d = parent.children[i];
-          let attr = d.getAttribute('data-BurgerMenu');
-          console.log('attr='+attr);
-          if( attr ){
-            let obj = (new Function('return {'+attr+'}'))();
-            obj.children = [];
-            map.push(obj);
-            v.recursive(d,obj.children);
-          }
-        }
-      },
-    };
-    console.log(v.whois+' start.');
+  #genNavi = (parent=this.parent.element,navi=this.navi) => {
+    const v = {whois:'BurgerMenu.#genNavi',step:0,rv:null};
     try {
-
-      v.max = 1000;
-      v.recursive(this.parent.element,this.map);
+      for( let i=0 ; i<parent.childElementCount ; i++ ){
+        let d = parent.children[i];
+        console.log(d)
+        let attr = d.getAttribute('data-BurgerMenu');
+        if( attr ){
+          let obj = (new Function('return {'+attr+'}'))();
+          let ul = navi.querySelector('ul');
+          if( ul === null ){
+            ul = createElement('ul');
+            navi.appendChild(ul);
+          }
+          let li = createElement({
+            tag:'li',
+            text: obj.label,
+          });
+          ul.appendChild(li);
+          this.#genNavi(d,li);
+        }
+      }
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -50,4 +53,5 @@ class BurgerMenu {
       return e;
     }
   }
+
 }
