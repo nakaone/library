@@ -53,12 +53,12 @@ h2 {
 /*
   テーブル関係
 */
-th {
+th, .th {
   padding: 0.3em;
   background-color: #888;
   color: white;
 }
-td {
+td, .td {
   padding: 0.3em;
   border-bottom: solid 1px #aaa;
   border-right: solid 1px #aaa;
@@ -217,6 +217,9 @@ div[name="loading"] > div {
     .PlantUML {
       overflow-x: auto;
     }
+    .TabMenu[name="main"] {
+      margin-top: 1rem; /* 最上位メニューの上に余白設定 */
+    }
     .TabMenu .page {
       padding: 1rem;
       width: calc(100% - 2rem);
@@ -232,8 +235,6 @@ div[name="loading"] > div {
     <div class="TabMenu" name="お知らせ">
       <div name="掲示板">
         <div class="page">
-          <button onclick="redraw()">更新</button>
-          ※ 自動更新されません。また更新は3分程度の間隔をあけてください
           <div name="board"></div>
         </div>
       </div>
@@ -337,7 +338,7 @@ div[name="loading"] > div {
         </div>
       </div>
 
-      <div name="受付"></div>
+      <div name="受付"><div class="page"></div></div>
 
       <div name="校内探検">
         <div class="page">
@@ -1160,6 +1161,250 @@ function Array_tabulize(opt){
 }
 Array.prototype.tabulize = Array_tabulize;
 </script>
+<script type="text/javascript">/**
+ * @classdesc 掲示板
+ */
+class BulletinBoard {
+  /**
+   * @constructor
+   * @param {Object} opt - オプション
+   * @returns {void}
+   */
+  constructor(opt){
+    const v = {whois:'BulletinBoard.constructor',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = '1'; // オプション未定義項目の既定値をプロパティにセット
+      this.#setProperties(this,null,opt);
+      this.parent.element = document.querySelector(this.parent.selector);
+
+      v.step = '2'; // CSS定義を追加(getPassCodeと共通)
+      v.style = createElement('style');
+      document.head.appendChild(v.style);
+      for( v.i=0 ; v.i<this.css.length ; v.i++ ){
+        v.x = this.css[v.i];
+        for( v.y in v.x.prop ){
+          v.prop = this.parent.selector + ' ' + v.x.sel
+            + ' { ' + v.y + ' : ' + v.x.prop[v.y] + '; }\n';
+          v.style.sheet.insertRule(v.prop,
+            v.style.sheet.cssRules.length,
+          );
+        }
+      }
+
+      v.step = '3'; // 新規のお知らせが来たら末尾を表示するよう設定
+      // https://at.sachi-web.com/blog-entry-1516.html
+      this.mo = new MutationObserver(() => {
+        console.log('mutation detected');
+        this.parent.element.scrollTop = this.parent.element.scrollHeight;
+      });
+      this.mo.observe(this.parent.element,{
+        childList: true,
+        attributes: true,
+        characterData: true,
+        subtree: true,//孫以降のノードの変化も検出
+        attributeOldValue: true,//変化前の属性データを記録する
+        characterDataOldValue: true,//変化前のテキストノードを記録する
+        attributeFilter: [],//配列で記述した属性だけを見張る
+      });
+
+      v.step = '4'; // インターバルをセット
+      this.start();
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end.',e,v);
+      return e;
+    }
+  }
+
+  /** 設定先のオブジェクトに起動時パラメータを優先して既定値を設定する
+   * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
+   * @param {def} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
+   * @param {AuthOpt} opt - 起動時にオプションとして渡されたオブジェクト
+   * @returns {void}
+   */
+  #setProperties(dest,def,opt){
+    const v = {whois:'Reception.#setProperties',rv:true,def:{
+      auth: null, // {Auth} 認証局他のAuthインスタンス
+      parent: {
+        selector: '',
+        element: null,
+      },
+      interval: 60000,
+      intervalId: null, // インターバルID
+      posts: [],  // 投稿メッセージ一覧
+      css: [
+        {sel:'.date',prop:{
+          'margin-top':'1rem',
+          'padding-left': '1rem',
+          'font-family': 'fantasy',
+          'font-size': '1.5rem',
+          'border-bottom': 'solid 4px #ddd'
+        }},
+        {sel:'.header',prop:{
+          'margin-top': '1rem',
+          'display': 'grid',
+          'grid-template-columns': '3rem 1fr',
+          'grid-gap': '0.5rem',
+          'background-color': '#ddd',
+          'padding-left': '0.5rem',
+        }},
+        {sel:'.fromto',prop:{
+          'font-size': '0.8rem',
+        }},
+        {sel:'.time',prop:{
+          'font-size': '0.8rem',
+          'font-family': 'cursive',
+        }},
+        {sel:'.message',prop:{}},
+      ],
+    }};
+
+    console.log(v.whois+' start.');
+    try {
+      if( def !== null ){ // 2回目以降の呼出(再起呼出)
+        // 再起呼出の場合、呼出元から渡された定義Objを使用
+        v.def = def;
+      }
+
+      for( let key in v.def ){
+        if( whichType(v.def[key]) !== 'Object' ){
+          dest[key] = opt[key] || v.def[key]; // 配列はマージしない
+        } else {
+          if( !dest.hasOwnProperty(key) ) dest[key] = {};
+          this.#setProperties(dest[key],v.def[key],opt[key]||{});
+        }
+      }
+
+      if( def === null ){ // 初回呼出(非再帰)
+        // 親画面のHTML要素を保存
+        this.parentWindow = document.querySelector(this.parentSelector);
+      }
+
+      //console.log(v.whois+' normal end.');
+      return v.rv;
+    } catch(e){
+      v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
+      console.error(v.msg);
+      return e;
+    }
+  }
+
+  post(){
+    const v = {whois:'BulletinBoard.constructor',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end.',e,v);
+      return e;        
+    }
+  }
+
+  /**
+   * @param {void}
+   * @returns 
+   */
+  delivery = async() => {
+    const v = {whois:'BulletinBoard.delivery',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      // Auth.fetchで認証局に問い合わせ
+      console.log(this.auth);
+      v.rv = await this.auth.fetch('delivery',{
+        entryNo: this.auth.info.entryNo,
+        publicKey: this.auth.RSA.pKey,
+      },3);
+      if( v.rv.isErr ){
+        alert(v.rv.message);
+        return null;
+      }
+
+      // 親領域に描画
+      this.parent.element.innerHTML = '';
+      // timestamp順にソート
+      this.posts = v.rv.result;
+      this.posts.sort((a,b) => a.timestamp < b.timestamp ? -1 : 1);
+      console.log(this.posts);
+      // 日付型に変更
+      this.posts.forEach(x => x.timestamp = new Date(x.timestamp));
+
+      v.lastDate = new Date('1900/1/1');
+      this.posts.forEach(post => {
+        if( post.timestamp.getFullYear() !== v.lastDate.getFullYear()
+         || post.timestamp.getMonth()    !== v.lastDate.getMonth()
+         || post.timestamp.getDate()     !== v.lastDate.getDate()
+        ){
+          // 投稿日が変わったら日付を表示
+          this.parent.element.appendChild(createElement({
+            attr: {class:'date'},
+            text: new Intl.DateTimeFormat('en', { month: 'long'}).format(post.timestamp)
+              + ' ' + ('00'+post.timestamp.getDate()).slice(-2)
+              + ', ' + post.timestamp.getFullYear(),
+          }));
+          // 前行の日付を書き換え
+          v.lastDate = post.timestamp;
+        }
+        // From / To
+        this.parent.element.appendChild(createElement({
+          attr: {class:'header'},
+          children: [{
+            attr: {class:'time'},
+            text: ('0'+post.timestamp.getHours()).slice(-2) + ':' +
+                  ('0'+post.timestamp.getMinutes()).slice(-2)
+          },{
+            attr: {class:'fromto'},
+            text: post.from + ' ▶️ ' + post.to
+          }],
+        }));
+        // メッセージ
+        this.parent.element.appendChild(createElement({
+          attr: {class:'message'},
+          text: post.message,
+        }));
+      });
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end.',e,v);
+      this.stop();
+      return e;        
+    }
+  }
+
+  start = () => {
+    if( this.intervalId !== null ){
+      this.stop();
+    }
+    this.intervalId = setInterval(this.delivery, this.interval);
+  }
+
+  stop = () => {
+    clearInterval(this.intervalId);
+    this.intervalId = null;
+  }
+
+  /** 設定内容の変更(主に時間間隔の修正を想定)
+   * @param {Object} opt 
+   * @returns {void}
+   */
+  change = (opt) => {
+    this.#setProperties(this,null,opt);
+    // 変更された内容でリスタート
+    if( this.intervalId !== null ){
+      this.stop();
+      this.start();
+    }
+  }
+
+}</script>
 <script type="text/javascript">/* コアスクリプト */
 /**
  * @typedef {Object} createElementDef
@@ -1418,211 +1663,6 @@ function mergeDeeply(target, source, opts) {
   return result;
 }
 </script>
-<script type="text/javascript">/**
- * @classdesc タブ切り替えのHTMLページを作成する
- */
-class Reception {
-  /**
-   * @constructor
-   * @param {string} area - 表示領域となる要素のCSSセレクタ
-   * @param {string} boot - スキャナ起動のトリガーとなる要素のCSSセレクタ
-   * @param {Object} [opt={}] - オプション
-   * @returns {void}
-   */
-  constructor(area,boot,opt={}){
-    const v = {whois:'Reception.constructor',step:'0',rv:null};
-    console.log(v.whois+' start.');
-    try {
-
-      v.step = '1'; // オプション未定義項目の既定値をプロパティにセット
-      this.#setProperties(this,null,opt);
-      this.area.selector = area;
-      this.area.element = document.querySelector(area);
-      this.boot.selector = boot;
-      this.boot.element = document.querySelector(boot);
-      console.log('step.'+v.step+' : ',this.area,this.boot);
-
-      v.step = '2'; // 入力・検索・編集画面の生成
-      this.wrapper.element = createElement(this.wrapper.design);
-      ['entry','list','edit'].forEach(x => {
-        this[x].element = createElement(this[x].design);
-        this.wrapper.element.appendChild(this[x].element);
-      });
-      this.area.element.appendChild(this.wrapper.element);
-      console.log('step.'+v.step+' : ',this.area.element);
-
-      v.step = '3'; // スキャナ起動イベントの定義(「受付」タグのクリック)
-      //this.boot.element.addEventListener('click',this.bootScanner);
-
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-    } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
-      return e;        
-    }
-  }
-
-  /** 設定先のオブジェクトに起動時パラメータを優先して既定値を設定する
-   * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
-   * @param {def} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
-   * @param {AuthOpt} opt - 起動時にオプションとして渡されたオブジェクト
-   * @returns {void}
-   */
-  #setProperties(dest,def,opt){
-    const v = {whois:'Reception.#setProperties',rv:true,def:{
-      area:{  // 表示領域となる要素
-        selector: '',     // {string} CSSセレクタ
-        element : null,   // {HTMLElement} 要素本体
-        design  : {},     // {Object} createElementに渡す定義
-      },
-      boot:{  // 受付タグ等、スキャナ起動のトリガーとなる要素
-        selector: '',     // {string} CSSセレクタ
-        element : null,   // {HTMLElement} 要素本体
-      },
-      wrapper: {  // 入力・選択・編集画面のラッパー
-        element: null,   // {HTMLElement} 要素本体
-        design: {attr:{class:'page'}},
-      },
-      entry: {  // 入力画面(スキャナ＋氏名)
-        element: null,   // {HTMLElement} 要素本体
-        design: {
-          attr:{name:'entry'},children:[
-            {attr:{class:'webScanner'}},  // スキャン画像表示領域
-            {tag:'input',attr:{type:'text'}},
-            {
-              tag:'input',
-              attr:{type:'button',value:'検索'},
-              //event:{click: this.main},
-            },
-          ],
-        },
-      },
-      list: {   // 複数候補選択画面
-        element: null,   // {HTMLElement} 要素本体
-        design: {
-          attr:{name:'list'},
-          style:{display:'none'},
-          children:[],
-        },
-      },
-      edit: {   // 編集画面
-        element: null,   // {HTMLElement} 要素本体
-        design: {
-          attr:{name:'edit'},
-          style:{display:'none'},
-          children:[],
-        },
-      },
-    }};
-
-    //console.log(v.whois+' start.');
-    try {
-      if( def !== null ){ // 2回目以降の呼出(再起呼出)
-        // 再起呼出の場合、呼出元から渡された定義Objを使用
-        v.def = def;
-      }
-
-      for( let key in v.def ){
-        if( whichType(v.def[key]) !== 'Object' ){
-          dest[key] = opt[key] || v.def[key]; // 配列はマージしない
-        } else {
-          if( !dest.hasOwnProperty(key) ) dest[key] = {};
-          this.#setProperties(dest[key],v.def[key],opt[key]||{});
-        }
-      }
-
-      if( def === null ){ // 初回呼出(非再帰)
-        // 親画面のHTML要素を保存
-        this.parentWindow = document.querySelector(this.parentSelector);
-      }
-
-      //console.log(v.whois+' normal end.');
-      return v.rv;
-    } catch(e){
-      v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
-      console.error(v.msg);
-      return e;
-    }
-  }
-
-  /** search, list, editを順次呼び出す(全体制御)
-   * @param {string} [keyword=null] - 参加者の検索キー 
-   * @returns {void}
-   */
-  main(keyword=null){
-    const v = {whois:'Reception.main',step:'0',rv:null};
-    console.log(v.whois+' start.');
-    try {
-
-      v.keyword = keyword !== null ? keyword
-      : this.entry.element.querySelector('input[type="text"]').value;
-
-      console.log('keyword='+v.keyword);
-
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-    } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
-      return e;        
-    }
-  }
-
-  async bootScanner(){
-    const code = await scanQR(this.boot.selector+' [name="entry"] .webScanner');
-    this.main(code);
-  }
-
-  /** 認証局経由で管理局に該当者情報を問合せ
-   * @param {string} keyword - 参加者の検索キー
-   * @returns {Object[]} 検索キーに該当する参加者情報の配列
-   */
-  #search(keyword){
-    const v = {whois:'Reception.search',step:'0',rv:null};
-    console.log(v.whois+' start.');
-    try {
-
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-    } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
-      return e;        
-    }
-  }
-
-  /** 該当者リストの表示、対象者の選択
-   * @param {Object[]} applicables - 検索キーに該当する参加者情報の配列
-   * @returns {Object} 対象者情報
-   */
-  #list(applicables){
-    const v = {whois:'Reception.list',step:'0',rv:null};
-    console.log(v.whois+' start.');
-    try {
-
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-    } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
-      return e;        
-    }
-  }
-
-  /** 対象となる参加者情報の表示と編集、結果を管理局に反映
-   * @param {Object} participant - 対象者情報
-   * @returns {Object} 管理局からの戻り値
-   */
-  #edit(participant){
-    const v = {whois:'Reception.edit',step:'0',rv:null};
-    console.log(v.whois+' start.');
-    try {
-
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-    } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
-      return e;        
-    }
-  }
-}</script>
 <script type="text/javascript">/** QRコードをスキャン
  * @param {string} parent - 親要素のCSSセレクタ
  * @param {Object} [opt={}] - オプション
@@ -1698,16 +1738,17 @@ async function scanQR(parent,opt={}){
       if (code) {
         console.log(code);
         v.rv = code.data;
-        // 終了処理
-        v.video.srcObject.getVideoTracks().forEach((track) => {
-          track.stop();
-        });
-        v.parent.innerHTML = ''; // 作業用DIVを除去
       }
       await v.sleep(v.interval);
       console.log(v.cnt);
       v.cnt += v.interval;
     } while( v.rv === null && v.cnt < v.max );
+
+    // 終了処理
+    v.video.srcObject.getVideoTracks().forEach((track) => {
+      track.stop();
+    });
+    v.parent.innerHTML = ''; // 作業用DIVを除去
 
     console.log(v.whois+' normal end.\n'+v.rv);
     return v.rv;
@@ -1717,6 +1758,571 @@ async function scanQR(parent,opt={}){
     return error;
   }
 };</script>
+<script type="text/javascript">/**
+ * @classdesc タブ切り替えのHTMLページを作成する
+ */
+class Reception {
+  /**
+   * @constructor
+   * @param {Auth} auth - 認証局他のAuthインスタンス
+   * @param {Object} area - 表示領域に関する定義
+   * @param {string} area.selector - CSSセレクタ
+   * @param {Object} boot - スキャナ起動のトリガーとなる要素に関する定義
+   * @param {string} boot.selector - CSSセレクタ
+   * @param {Object} loading - 待機画面
+   * @param {string} loading.selector - CSSセレクタ
+   * @returns {void}
+   */
+  constructor(opt){
+    const v = {whois:'Reception.constructor',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = '1'; // オプション未定義項目の既定値をプロパティにセット
+      this.#setProperties(this,null,opt);
+      this.area.element = document.querySelector(this.area.selector);
+      this.boot.element = document.querySelector(this.boot.selector);
+      this.loading.element = document.querySelector(this.loading.selector);
+      console.log('step.'+v.step+' : ',this.area,this.boot,this.loading);
+
+      v.step = '2'; // 入力・検索・編集画面の生成
+      this.#setWindows();
+      console.log('step.'+v.step+' : ',this.area.element);
+
+      v.step = '3'; // スキャナ起動イベントの定義(「受付」タグのクリック)
+      this.boot.element.addEventListener('click',this.bootScanner);
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end.',e,v);
+      return e;        
+    }
+  }
+
+  /** 設定先のオブジェクトに起動時パラメータを優先して既定値を設定する
+   * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
+   * @param {def} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
+   * @param {AuthOpt} opt - 起動時にオプションとして渡されたオブジェクト
+   * @returns {void}
+   */
+  #setProperties(dest,def,opt){
+    const v = {whois:'Reception.#setProperties',rv:true,def:{
+      auth: null, // {Auth} 認証局他のAuthインスタンス
+      area:{  // 表示領域となる要素
+        selector: '',     // {string} CSSセレクタ
+        element : null,   // {HTMLElement} 要素本体
+        design  : {},     // {Object} createElementに渡す定義
+      },
+      boot:{  // 受付タグ等、スキャナ起動のトリガーとなる要素
+        selector: '',     // {string} CSSセレクタ
+        element : null,   // {HTMLElement} 要素本体
+      },
+      loading:{  // 待機画面
+        selector: '',     // {string} CSSセレクタ
+        element : null,   // {HTMLElement} 要素本体
+      },
+      entry: {  // 入力画面(スキャナ＋氏名)
+        element: null,   // {HTMLElement} 要素本体
+      },
+      list: {   // 複数候補選択画面
+        element: null,   // {HTMLElement} 要素本体
+        table: null,     // {HTMLElement} 選択画面のテーブル部
+        candidates: [],  // {Object[]} 候補となった参加者情報の配列
+      },
+      edit: {   // 編集画面(ダイアログ)
+        element: null,   // {HTMLElement} 要素本体
+        table: null,     // {HTMLElement} 編集画面のテーブル部
+        details: null,   // {HTMLElement} 編集画面の詳細情報部
+        css: [
+          {sel:'dialog.Reception',prop:{
+            'margin':'auto',
+            'padding': '1rem',
+          }},
+          {sel:'dialog.Reception::backdrop',prop:{
+            'background-color': 'rgba(127,127,127,0.8)',
+          }},
+          {sel:'dialog.Reception [name="table"]',prop:{
+            'display': 'grid',
+            'grid-template-columns': '2fr 10fr 8fr 6fr',
+            'grid-gap': '0.2rem',
+          }},
+          {sel:'dialog.Reception input[type="button"]',prop:{
+            'margin': '0.5rem 1rem',
+            'font-size': '1.5rem',
+            'padding': '0.2rem 1rem',
+          }},
+          {sel:'dialog.Reception ruby rt',prop:{
+            'font-size': '0.6rem',
+          }},
+          {sel:'dialog.Reception [name="details"]',prop:{
+            'display': 'grid',
+            'grid-template-columns': '1fr 3fr',
+            'grid-gap': '0.2rem',
+            'overflow-wrap': 'anywhere',
+          }},
+          {sel:'dialog.Reception sub',prop:{
+            'font-size': '0.7rem',
+          }},
+          {sel:'dialog.Reception [name="details"] [name="memo"]',prop:{
+            'width': '95%',
+            'height': '5rem',
+          }},
+          // 複数候補者一覧(list)用
+          {sel:'dialog.Reception[name="list"] [name="table"]',prop:{
+            'display': 'grid',
+            'grid-template-columns': '8rem 1fr',
+            'grid-gap': '0.2rem',
+          }},
+        ],    
+      },
+    }};
+
+    console.log(v.whois+' start.');
+    try {
+      if( def !== null ){ // 2回目以降の呼出(再起呼出)
+        // 再起呼出の場合、呼出元から渡された定義Objを使用
+        v.def = def;
+      }
+
+      for( let key in v.def ){
+        if( whichType(v.def[key]) !== 'Object' ){
+          dest[key] = opt[key] || v.def[key]; // 配列はマージしない
+        } else {
+          if( !dest.hasOwnProperty(key) ) dest[key] = {};
+          this.#setProperties(dest[key],v.def[key],opt[key]||{});
+        }
+      }
+
+      if( def === null ){ // 初回呼出(非再帰)
+        // 親画面のHTML要素を保存
+        this.parentWindow = document.querySelector(this.parentSelector);
+      }
+
+      //console.log(v.whois+' normal end.');
+      return v.rv;
+    } catch(e){
+      v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
+      console.error(v.msg);
+      return e;
+    }
+  }
+
+  /** Reception関係画面をセットする
+   * @param {void} - 無し
+   * @returns {void} 無し
+   */
+  #setWindows(){
+    const v = {whois:'Reception.#setWindows',rv:null,step:'0'};
+    console.log(v.whois+' start.');
+    try {
+  
+      v.step = 1; // dialog用のCSS定義を追加(getPassCodeと共通)
+      v.style = createElement('style');
+      document.head.appendChild(v.style);
+      for( v.i=0 ; v.i<this.edit.css.length ; v.i++ ){
+        v.x = this.edit.css[v.i];
+        for( v.y in v.x.prop ){
+          v.prop = v.x.sel+' { '+v.y+' : '+v.x.prop[v.y]+'; }\n';
+          console.log(v.prop);
+          v.style.sheet.insertRule(v.prop,
+            v.style.sheet.cssRules.length,
+          );
+        }
+      }
+
+      v.step = 2; // 検索キー文字列入力画面
+      this.entry.element = createElement({
+        attr:{name:'entry'},children:[
+          {attr:{class:'webScanner'}},  // スキャン画像表示領域
+          {tag:'input',attr:{type:'text'}},
+          {
+            tag:'input',
+            attr:{type:'button',value:'検索'},
+            event:{click: this.main},
+          },
+        ],
+      });
+      this.area.element.appendChild(this.entry.element);
+
+      v.step = 3; // 一覧用ダイアログを定義
+      this.list.element = createElement({
+        tag:'dialog',
+        attr:{class:'Reception',name:'list'},
+        html: `<p>複数の候補が見つかりました。該当者名をクリックしてください。</p>
+        <div name="table">
+          <div class="th">申込者名</div>
+          <div class="th">e-mail</div>
+        </div>`,
+      });
+      document.querySelector('body').prepend(this.list.element);
+      this.list.table = this.list.element.querySelector('[name="table"]');
+
+      v.step = 4; // 編集用ダイアログを定義
+      this.edit.element = createElement({
+        tag:'dialog',
+        attr:{class:'Reception',name:'edit'},
+        html: `<div name="table">
+          <div class="th">No</div>
+          <div class="th">氏名</div>
+          <div class="th">所属</div>
+          <div class="th">参加費</div>
+        </div>
+        <input type="button" name="cancel" value="キャンセル" />
+        <input type="button" name="submit" value="送信" />
+        <div name="details">
+          <div class="th">申込</div><div class="td">
+            No.<span name="entryNo"></span>
+            &emsp;
+            <ruby>
+              <span name="申込者氏名"></span>
+              <rt name="申込者カナ"></rt>
+            </ruby>
+            &emsp;(<span name="申込者の参加"></span>)
+          </div>
+          <div class="th">宿泊、テント</div><div class="td" name="宿泊、テント"></div>
+          <div class="th">引取者</div><div class="td" name="引取者氏名"></div>
+          <div class="th">e-mail</div><div class="td" name="メールアドレス"></div>
+          <div class="th">緊急連絡先</div><div class="td" name="緊急連絡先"></div>
+          <div class="th">ボランティア</div><div class="td" name="ボランティア募集"></div>
+          <div class="th">備考</div><div class="td" name="備考"></div>
+          <div class="th">キャンセル</div><div class="td" name="キャンセル"></div>
+          <div class="th">申込URL</div><div class="td" name="editURL"></div>
+          <div class="th">メモ<br><sub>※スタッフ記入欄</sub></div>
+          <div class="td"><textarea name="memo"></textarea></div>
+        </div>`,
+      });
+      document.querySelector('body').prepend(this.edit.element);
+      this.edit.table = this.edit.element.querySelector('[name="table"]');
+      this.edit.details = this.edit.element.querySelector('[name="details"]');
+  
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+  
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+')\n',e,v);
+      return e;
+    }
+  }
+
+  /** search, list, editを順次呼び出す(全体制御)
+   * @param {string|Event} arg - 受付番号(スキャン結果文字列) or clickイベント
+   * @returns {void}
+   */
+  main = async (arg) => {
+    const v = {whois:'Reception.main',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = '1'; // スキャン結果でない場合、入力文字列を取得
+      v.keyword = whichType(arg) === 'String' ? arg
+      : arg.target.parentElement.querySelector('input[type="text"]').value;
+      console.log('step.'+v.step+': keyword='+v.keyword);
+
+      // 認証局経由で管理局に該当者情報を問合せ
+      v.rv = await this.#search(v.keyword);
+      console.log(v.rv);
+      console.log(JSON.stringify(v.rv.result));
+
+      if( v.rv.isErr || v.rv.result.length === 0 ){
+        // 検索画面でメッセージをポップアップ
+        alert( v.rv.message );
+      } else {
+        v.target = v.rv.result[0];
+        if( v.rv.result.length > 1 ){
+          console.log(JSON.stringify(v.rv));
+          // 該当者一覧画面に遷移、編集対象者を特定
+          this.list.candidates = v.rv.result; // 候補者リストに格納
+          v.target = await this.#list(v.rv.result);
+        }
+        // 編集画面を表示し、変更箇所を取得
+        v.data = await this.#edit(v.target);
+        // auth.fetchで変更箇所を管理局に送信
+        if( v.data !== null ){
+          v.rv = await this.#update(v.data);
+          // 編集結果のメッセージを表示
+          alert(v.rv.message);
+        }
+      }
+      // 検索画面を再表示(bootScanner)
+      this.bootScanner();
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;        
+    }
+  }
+
+  /** スキャナを起動、読み込んだQRデータをsearchに渡す
+   * @param {void}
+   * @returns 
+   */
+  bootScanner = async () => {
+    const v = {whois:'Reception.bootScanner',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      const sel = this.area.selector+' [name="entry"] .webScanner';
+      document.querySelector(sel).innerHTML = '';
+      const code = await scanQR(sel);
+      if( code !== null ){
+        v.rv = this.main(code); // 後続のmainにスキャン文字列を渡す
+        // 文字入力された⇒スキャン結果無しでタイムアウト(code=null)の場合
+        // mainを呼び出さずに終了する
+      }
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end.',e,v);
+      return e;        
+    }
+  }
+
+  /** 認証局経由で管理局に該当者情報を問合せ
+   * @param {string} keyword - 参加者の検索キー
+   * @returns {Object[]} 検索キーに該当する参加者情報の配列
+   */
+  #search = async (keyword) => {
+    const v = {whois:'Reception.#search',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      // entry画面を閉じてloading表示
+      this.loading.element.style.display = 'block';
+
+      // Auth.fetchで認証局に問い合わせ
+      console.log(this.auth);
+      v.rv = await this.auth.fetch('recept1A',keyword,3);
+
+      // loading画面を閉じる
+      this.loading.element.style.display = 'none';
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end.',e,v);
+      return e;        
+    }
+  }
+
+  /** 該当者リストの表示、対象者の選択
+   * @param {Object[]} data - 検索キーに該当する参加者情報の配列
+   * @returns {Object} 選択された対象者情報
+   */
+  #list(data){
+    const v = {whois:'Reception.#list',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1; // 前回候補者一覧の削除
+      this.list.table.querySelectorAll('div.td').forEach(x => x.remove());
+
+      v.step = 2; // 候補者の表示
+      data.forEach(d => {
+        v.step = 2.1; // 氏名＋カナ
+        this.list.table.appendChild(createElement({
+          attr:{class:'td'},
+          children:[{
+            tag:'a',  // 氏名＋カナはaタグで囲む
+            attr:{name:d.entryNo}, // 受付番号をname属性で持たせる
+            children:[{
+              tag: 'ruby',
+              html: d['申込者氏名'], 
+              children: [{
+                tag: 'rt',
+                text: d['申込者カナ'],
+              }],
+            }],
+          }],
+        }));
+
+        v.step = 2.2; // e-mail
+        this.list.table.appendChild(createElement({
+          attr:{class:'td'},
+          text: d['メールアドレス'],
+        }));
+      });
+
+      v.step = 3.1; // 一覧用ダイアログの表示
+      this.list.element.showModal();
+
+      v.step = 3.2; // 戻り値を設定
+      return new Promise(resolve => {
+        document.querySelectorAll('dialog.Reception[name="list"] a').forEach(x => {
+          // 一覧表の氏名(aタグ)全てにclickイベントリスナを付与
+          x.addEventListener('click',(element) => {
+            this.list.element.close();  // ダイアログを閉じる
+            // aタグから受付番号を取得
+            let entryNo = element.target.parentElement.getAttribute('name');
+            for( let i=0 ; i<this.list.candidates.length ; i++ ){
+              // 事前に保存しておいた候補者配列から該当者を選択して返す
+              if( this.list.candidates[i].entryNo === entryNo ){
+                console.log('Reception.#list normal end.',entryNo);
+                resolve(this.list.candidates[i]);
+              }
+            }
+          });
+        });
+      });
+
+    } catch(e){
+      console.error(v.whois+' abnormal end.',e,v);
+      return e;        
+    }
+  }
+
+  /** 対象となる参加者情報の表示と編集、結果を管理局に反映
+   * @param {Object} participant - 対象者情報
+   * @returns {Object} 管理局からの戻り値
+   */
+  #edit = async (data) => {
+    const v = {whois:'Reception.#edit',rv:null,step:'0'};
+    console.log(v.whois+' start.\n'+JSON.stringify(data));
+    try {
+  
+      v.step = 1; // データクレンジング
+      data['申込者所属'] = '申込者';  // 未定義なので追加しておく
+      for( v.i=0 ; v.i<6 ; v.i++ ){
+        if( data['fee0'+v.i].length === 0 ){
+          data['fee0'+v.i] = (data['参加者0'+v.i+'所属'] === '未就学児') ? '無し' : '未収';
+        }
+      }
+  
+      v.step = 2; // 参加者一覧の表示
+      // 前回参加者一覧の削除
+      this.edit.table.querySelectorAll('div.td').forEach(x => x.remove());
+      for( v.i=0 ; v.i<6 ; v.i++ ){
+        v.step = 2.1; // 項目名の接頭辞
+        v.pre = v.i === 0 ? '申込者' : ('参加者0' + v.i);
+  
+        v.step = 2.2; // 申込者が不参加、または氏名・所属とも未登録の参加者は表示しない
+        if( v.i === 0 && data['申込者の参加'] === '不参加'
+        || data[v.pre+'氏名'].length === 0 && data[v.pre+'所属'].length === 0 ){
+          continue;
+        }
+  
+        v.step = 2.3; // No
+        this.edit.table.appendChild(createElement({attr:{class:'td'},text: ('0'+v.i)}));
+  
+        v.step = 2.4; // 氏名＋カナ
+        this.edit.table.appendChild(createElement({attr:{class:'td'},children:[{
+          tag: 'ruby',
+          html: data[v.pre+'氏名'], 
+          children: [{
+            tag: 'rt',
+            text: data[v.pre+'カナ']
+          }]
+        }]}));
+  
+        v.step = 2.5; // 所属
+        this.edit.table.appendChild(createElement({attr:{class:'td'},text: data[v.pre+'所属']}));
+  
+        v.step = 2.6; // 参加費
+        v.options = [];
+        ['無し','未収','既収'].forEach(x => {
+          v.options.push({
+            tag:'option',
+            value:x,
+            text:x,
+            logical:{selected:(data['fee0'+v.i] === x)},
+          });
+        });
+        this.edit.table.appendChild(createElement({attr:{class:'td'},children:[{
+          tag: 'select',
+          attr: {class:'fee',name:'fee0'+v.i},
+          children:v.options,
+        }]}));
+      }
+  
+      v.step = 3.1; // 詳細情報のセット
+      ['メールアドレス', '申込者氏名', '申込者カナ', '申込者の参加',
+      '宿泊、テント', '引取者氏名', '緊急連絡先',
+      'ボランティア募集', '備考', 'キャンセル',
+      'entryNo','memo'].forEach(x => {
+        console.log(x,data[x]);
+        let e = this.edit.details.querySelector('[name="'+x+'"]');
+        console.log(e);
+        e.innerText = data[x];
+      });
+      v.step = 3.2; // 申込フォーム修正URL(QRコード)
+      v.qrDiv = this.edit.details.querySelector('[name="editURL"]');
+      v.qrDiv.innerHTML = '';
+      v.qr = new QRCode(v.qrDiv,{
+        text: data.editURL,
+        width: 300, height: 300,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+      
+  
+      v.step = 4.1; // 編集用ダイアログの表示
+      this.edit.element.showModal();
+  
+      v.step = 4.2; // 戻り値を設定
+      return new Promise(resolve => {
+        v.step = 5.1; // 「キャンセル」クリック時はnullを返す
+        document.querySelector('dialog[name="edit"] input[name="cancel"]')
+        .addEventListener('click',() => {
+          this.edit.element.close();
+          console.log('Reception.edit normal end.');
+          resolve(null);
+        });
+        v.step = 5.2; // 「送信」クリック時に値を返すよう定義
+        document.querySelector('dialog[name="edit"] input[name="submit"]')
+        .addEventListener('click',() => {
+          this.edit.element.close();
+          const rv = {};
+          // 受付番号
+          rv.entryNo = this.edit.element.querySelector('[name="entryNo"]').innerText;
+          // 参加費
+          this.edit.element.querySelectorAll('select.fee').forEach(x => {
+            rv[x.getAttribute('name')] = x.value;
+          });
+          // スタッフメモ欄
+          rv.memo = this.edit.element.querySelector('[name="memo"]').value;
+          console.log('Reception.edit normal end.',rv);
+          resolve(rv);
+        });
+      });
+  
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+')\n',e,v);
+      return e;
+    }
+  }
+
+  /** 認証局経由で管理局の参加者情報を更新
+   * @param {Object} data - 参加者情報
+   * @returns {Object} 更新結果
+   */
+  #update = async (data) => {
+    const v = {whois:'Reception.#update',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      // loading表示
+      this.loading.element.style.display = 'block';
+
+      // Auth.fetchで認証局に問い合わせ
+      //console.log(this.auth);
+      v.rv = await this.auth.fetch('recept2A',data,3);
+
+      // loading画面を閉じる
+      this.loading.element.style.display = 'none';
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end.',e,v);
+      return e;        
+    }
+  }
+
+}</script>
 <script type="text/javascript">/* コアスクリプト */
 /**
  * @classdesc タブ切り替えのHTMLページを作成する
@@ -2877,36 +3483,39 @@ function whichType(arg,is){
 </script>
 
 <script type="text/javascript" class="main">
-let config;
 window.addEventListener('DOMContentLoaded',async () => {
-  const v = {opt:{},debug:true,
+  const v = {whois:'DOMContentLoaded',opt:{},debug:true,
     // 認証局
     gwURL:'https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',
     // 資料集
     docURL:'https://script.google.com/macros/s/AKfycbxtxS_u1BVahosczLxtt9yFS8Lh97lXEj4t7xmzCp4v1qgDft4RaSZUrbv-cMR0k03I/exec',
     docSheet: 'https://tinyurl.com/2ahyly3l',
+    searchParams: new URLSearchParams(window.location.search),
   };
-  console.log('DOMContentLoaded start.');
+  console.log(v.whois+' start.');
 
   v.step = '1'; // 認証
   v.ls = localStorage.getItem('conf');
+  // クエリ文字列のデバッグモード指定を確認
+  if( v.searchParams.has('debug') ){
+    v.debug = v.searchParams.get('debug').toLowerCase() === 'true';
+  }
   if( v.debug && v.ls !== null ){
     v.step = '1.1';
     // デバッグ用：リリース時はlocalStorage.setItemと併せて削除
-    config = JSON.parse(v.ls);
-    console.log(v.step+':',config);
+    v.opt = JSON.parse(v.ls);
+    v.config = new Auth(v.gwURL,v.opt);
   } else {
     v.step = '1.2';
     // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
-    v.searchParams = new URLSearchParams(window.location.search);
     if( v.searchParams.has('id') ){
       v.opt.entryNo = {value:v.searchParams.get('id')};
     }
-    config = new Auth(v.gwURL);
-    await config.build();
-    localStorage.setItem('conf',JSON.stringify(config));
-    console.log(v.step+':',config);
+    v.config = new Auth(v.gwURL,v.opt);
+    await v.config.build();
+    localStorage.setItem('conf',JSON.stringify(v.config));
   }
+  console.log(v.whois+'.'+v.step+':',v.config);
 
   v.step = '2'; // メニューを定義
   document.querySelectorAll('.TabMenu[name]').forEach(x => {
@@ -2915,7 +3524,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     console.log(v.menuName,v.arg);
     v[v.menuName] = new TabMenu(v.arg);
   });
-  console.log(v.step+':',v);
+  console.log(v.whois+'.'+v.step+':',v);
 
   v.step = '3'; // MarkDownで記述された部分をHTML化して表示
   document.querySelectorAll('div.markdown').forEach(x => {
@@ -2934,7 +3543,7 @@ window.addEventListener('DOMContentLoaded',async () => {
 
   v.step = '6'; // パスポートの内容描画
   const passportDiv = document.querySelector('div[name="パスポート"] div');
-  v.entryNo = ('000'+config.entryNo.value).slice(-4);
+  v.entryNo = ('000'+v.config.entryNo.value).slice(-4);
   passportDiv.appendChild(createElement({
     tag:'p',
     text:'No.'+v.entryNo,
@@ -2954,15 +3563,51 @@ window.addEventListener('DOMContentLoaded',async () => {
   v.step = '7'; // Google Spreadからデータを取得してタイムテーブル表示
   v.res = await fetch(v.docURL);
   v.res = await v.res.json();
-  v.TimeTable = new TimeTable('div.TimeTable',v.res,{datatype:'sheet',dataSheet:v.docSheet});
+  v.TimeTable = new TimeTable(
+    'div.TimeTable',
+    v.res,
+    {datatype:'sheet',dataSheet:v.docSheet}
+  );
 
   v.step = '8'; // 受付画面を準備
-  v.reception = new Reception('[name="受付"] .page','[name="受付"]');
+  v.reception = new Reception({
+    auth: v.config, // 認証局他のAuthインスタンス
+    area:{selector:'[name="受付"] .page'},  // 受付画面表示エリアのCSSセレクタ
+    boot:{selector:'[name="受付"]'}, // スキャナ起動のトリガーとなる要素のCSSセレクタ
+    loading: {selector:'div[name="loading"]'},  // ローディング画面のCSSセレクタ
+  });
 
-  v.step = '9'; // 最終処理：ローディング画面解除
-  document.querySelector('div[name="loading"]').style.display = 'none';
+  v.step = '9'; // 掲示板の表示
+  v.board = new BulletinBoard({
+    auth: v.config, // 認証局他のAuthインスタンス
+    parent: {selector:'[name="お知らせ"] [name="掲示板"] [name="board"]'},
+  });
+  await v.board.delivery();
+  console.log(v.whois+'.'+v.step,v.board);
 
-  console.log('DOMContentLoaded end.');
+  v.step = '10'; // 最終処理：権限により表示画面制御
+  // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生
+  // ⇒ 最終段階で実行する
+  v.authority = Number(v.config.info.authority)
+  if( (v.authority & 3) === 0 ){
+    v.step = '9.1'; // 1(参加者)、2(スタッフ)、3(管理者)いずれでもない
+    alert('参加資格を確認してください');
+    document.querySelectorAll('body > div').forEach(x => x.remove());
+    return;
+  } else {
+    if( (v.authority & 2) === 0 ){
+      v.step = '9.2'; // スタッフではない ⇒ スタッフ画面を削除
+      document.querySelectorAll('div[name="スタッフ"]')
+      .forEach(x => x.remove());
+      // タブの数を減らす
+      document.querySelector('.TabMenu[name="main"] .tabs')
+      .style.gridTemplateColumns = 'repeat(4, 1fr)';
+    }
+    // ローディング画面解除
+    document.querySelector('div[name="loading"]').style.display = 'none';
+  } 
+
+  console.log(v.whois+' end.');
 });
 </script>
 </body><!-- =====================================================
