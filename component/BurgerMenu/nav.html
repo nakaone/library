@@ -19,8 +19,10 @@
   right: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(100,100,100,0.8);
   z-index: var(--zIndex);
+  /*
+  background: rgba(100,100,100,0.8);
+  */
 }
 
 /* ハンバーガーアイコン */
@@ -97,10 +99,13 @@
   background-color: var(--back);
 }
 .BurgerMenu nav ul ul { /* 2階層以降のulにのみ適用 */
+  display: none;
+}
+.BurgerMenu nav ul ul.is_open { /* 2階層以降のulにのみ適用 */
+  display: block;
   border-top: solid 0.2rem var(--fore);
   border-left: solid 0.7rem var(--fore);
 }
-
 .BurgerMenu nav li {
   margin: 0.3rem 0rem 0.3rem 0.5rem;
   padding: 0.2rem 0rem 0rem 0rem;
@@ -121,7 +126,7 @@
   </div>
   <nav>
     <ul>
-      <li>お知らせ
+      <li><a onclick="showChildren()">▶️お知らせ</a>
         <ul>
           <li>掲示板</li>
           <li>注意事項</li>
@@ -131,15 +136,15 @@
       <li>パスポート</li>
       <li>案内図</li>
       <li>予定表</li>
-      <li>スタッフ
+      <li><a onclick="showChildren()">▶️スタッフ</a>
         <ul>
           <li>参加者数</li>
           <li>受付業務</li>
           <li>校内探検</li>
-          <li>参考資料
+          <li><a onclick="showChildren()">▶️参考資料</a>
             <ul>
               <li>日程表</li>
-              <li>論議メモ
+              <li><a onclick="showChildren()">▶️論議メモ</a>
                 <ul>
                   <li>20230610</li>
                   <li>20230707</li>
@@ -161,7 +166,16 @@ const toggle = () => {
   document.querySelector('.BurgerMenu nav').classList.toggle('is_active');
   document.querySelectorAll('.BurgerMenu button span')
   .forEach(x => x.classList.toggle('is_active'));
+}
 
+const showChildren = () => {
+  console.log(event.target);
+  event.target.parentNode.querySelector('ul').classList.toggle('is_open');
+  let m = event.target.innerText.match(/^([▶️▼])(.+)/);
+  console.log(m);
+  const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
+  console.log(m[1],m[1] === '▼',text);
+  event.target.innerText = text;
 }
 
 window.addEventListener('DOMContentLoaded',() => {
