@@ -1,4 +1,5 @@
 class BurgerMenu {
+
   constructor(opt={}){
     const v = {whois:'BurgerMenu.constructor',step:0,rv:null};
     console.log(v.whois+' start.');
@@ -162,13 +163,19 @@ class BurgerMenu {
       });
 
       v.step = 2; // ラッパーおよび必須要素の作成
-      this.menu = createElement({attr:{class:'BurgerMenu'},children:[
-        {attr:{class:'icon'},event:this.toggle,children:[
-          {tag:'button',children:[
-            {tag:'span'},{tag:'span'},{tag:'span'}
-          ]},
-        ]},
-      ]});
+      this.menu = createElement({
+        attr:{class:'BurgerMenu'},
+        children:[{
+          attr:{class:'icon'},
+          event:{click:this.toggle},
+          children:[{
+            tag:'button',
+            children:[
+              {tag:'span'},{tag:'span'},{tag:'span'}
+            ]
+          }]
+        }]
+      });
       this.navi = createElement({tag:'nav'}); // nav
       this.menu.appendChild(this.navi);
       this.parent.element.appendChild(this.menu);
@@ -224,26 +231,59 @@ class BurgerMenu {
   }
 
   dispatch = (arg) => {
-    console.log(arg,event)
-    const funcMap = {
-      annai: test,
+    const v = {whois:'BurgerMenu.toggle',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+      console.log(arg,event)
+      const funcMap = {
+        annai: test,
+      }
+      funcMap[arg](event);
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
     }
-    funcMap[arg](event);
   }
 
   toggle = () => {
-    document.querySelector('.BurgerMenu nav').classList.toggle('is_active');
-    document.querySelectorAll('.BurgerMenu button span')
-    .forEach(x => x.classList.toggle('is_active'));
+    const v = {whois:'BurgerMenu.toggle',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+      document.querySelector('.BurgerMenu nav').classList.toggle('is_active');
+      document.querySelectorAll('.BurgerMenu button span')
+      .forEach(x => x.classList.toggle('is_active'));
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
   }
 
   showChildren = () => {
-    console.log(event.target);
-    event.target.parentNode.querySelector('ul').classList.toggle('is_open');
-    let m = event.target.innerText.match(/^([▶️▼])(.+)/);
-    console.log(m);
-    const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
-    console.log(m[1],m[1] === '▼',text);
-    event.target.innerText = text;
+    const v = {whois:'BurgerMenu.showChildren',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+      console.log(event.target);
+      event.target.parentNode.querySelector('ul').classList.toggle('is_open');
+      let m = event.target.innerText.match(/^([▶️▼])(.+)/);
+      console.log(m);
+      const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
+      console.log(m[1],m[1] === '▼',text);
+      event.target.innerText = text;
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
   }
 }
