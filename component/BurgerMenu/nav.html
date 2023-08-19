@@ -23,28 +23,6 @@
   z-index: var(--zIndex);
 }
 
-.BurgerMenu nav {
-  margin: 0 0 0 auto;
-  font-size: 1rem;
-  width: calc(100% * var(--navWidth));
-}
-.BurgerMenu nav ul {
-  margin: 0rem 0rem 1rem 0rem;
-  padding: 0rem 0rem 0rem 0rem;
-  background-color: var(--back);
-}
-.BurgerMenu nav ul ul { /* 2階層以降のulにのみ適用 */
-  border-top: solid 0.2rem var(--fore);
-  border-left: solid 0.7rem var(--fore);
-}
-
-.BurgerMenu nav li {
-  margin: 0.3rem 0rem 0.3rem 0.5rem;
-  padding: 0.2rem 0rem 0rem 0rem;
-  list-style: none;
-  background-color: var(--back);
-}
-
 /* ハンバーガーアイコン */
 .BurgerMenu .icon {
   display: flex;
@@ -103,6 +81,33 @@
   transform: translateY(-50%) rotate(-135deg);
 }
 
+/* ナビゲーション領域 */
+.BurgerMenu nav {
+  display: none;
+}
+.BurgerMenu nav.is_active {
+  display: block;
+  margin: 0 0 0 auto;
+  font-size: 1rem;
+  width: calc(100% * var(--navWidth));
+}
+.BurgerMenu nav ul {
+  margin: 0rem 0rem 1rem 0rem;
+  padding: 0rem 0rem 0rem 0rem;
+  background-color: var(--back);
+}
+.BurgerMenu nav ul ul { /* 2階層以降のulにのみ適用 */
+  border-top: solid 0.2rem var(--fore);
+  border-left: solid 0.7rem var(--fore);
+}
+
+.BurgerMenu nav li {
+  margin: 0.3rem 0rem 0.3rem 0.5rem;
+  padding: 0.2rem 0rem 0rem 0rem;
+  list-style: none;
+  background-color: var(--back);
+}
+
 
 </style>
 </head><body>
@@ -153,6 +158,9 @@
 
 <script type="text/javascript">
 const toggle = () => {
+  document.querySelector('.BurgerMenu nav').classList.toggle('is_active');
+  document.querySelectorAll('.BurgerMenu button span')
+  .forEach(x => x.classList.toggle('is_active'));
 
 }
 
