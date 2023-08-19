@@ -133,8 +133,8 @@
           <li>その他</li>
         </ul>
       </li>
-      <li>パスポート</li>
-      <li>案内図</li>
+      <li onclick="window.open('https://qiita.com/TK-C/items/c64ca54b634b0cae0059','_blank')">パスポート</li>
+      <li onclick="dispatch('annai')">案内図</li>
       <li>予定表</li>
       <li><a onclick="showChildren()">▶️スタッフ</a>
         <ul>
@@ -162,6 +162,18 @@
 </div>
 
 <script type="text/javascript">
+const test = (event) => {
+  console.log('test',event);
+}
+
+const dispatch = (arg) => {
+  console.log(arg,event)
+  const funcMap = {
+    annai: test,
+  }
+  funcMap[arg](event);
+}
+
 const toggle = () => {
   document.querySelector('.BurgerMenu nav').classList.toggle('is_active');
   document.querySelectorAll('.BurgerMenu button span')
