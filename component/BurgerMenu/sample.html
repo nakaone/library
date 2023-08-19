@@ -14,14 +14,14 @@
   <div data-BurgerMenu="label:'お知らせ'">
     <!-- h1>お知らせ画面</h1> ノードは子メニュー以外の要素は不可 -->
     <!--div--><!-- BurgerMenu親子の間にBurgerMenuを持たない要素は介在不可 -->
-      <div data-BurgerMenu="label:'掲示板',func:g.test('board')">
+      <div data-BurgerMenu="label:'掲示板',show:'board'">
         <h1>掲示板画面</h1><!-- リーフは自らのコンテンツを持つ -->
       </div>
     <!--/div-->
-    <div data-BurgerMenu="label:'注意事項',func:g.test('caution')">
+    <div data-BurgerMenu="label:'注意事項',show:'caution'">
       <h1>注意事項画面</h1>
     </div>
-    <div data-BurgerMenu="label:'その他',func:g.test('others')"></div>
+    <div data-BurgerMenu="label:'持ち物',show:'itemList'"></div>
   </div>
   <!-- メニュークリック時の動作が対象画面の表示のみならfunc指定不要 -->
   <div data-BurgerMenu="label:'パスポート'">
@@ -73,18 +73,9 @@
 ===================================================== -->
 <script type="text/javascript">
 
-const registar = (name,arg) => {
-  name(arg);
-}
-const g = {
-  test:(arg)=>{console.log('gTest:'+arg)},
-  recept:()=>{console.log('dummy function recept.')},
-  authority: 2,
-};
-
+const g = {};
 window.addEventListener('DOMContentLoaded',() => {
-  const v = {test:(arg)=>{console.log('vTest:'+arg)}};
-  v.test('DOMContentLoaded');
+  const v = {};
 
   g.menu = new BurgerMenu();
   console.log(g.menu);
