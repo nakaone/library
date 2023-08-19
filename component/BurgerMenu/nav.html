@@ -1,0 +1,163 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../szLib.css">
+<!--
+  - [CSSで全画面オーバーレイを実装する方法＆コード例](https://pisuke-code.com/css-fullscreen-overlay/)
+-->
+<style type="text/css">
+.BurgerMenu {
+  --text: #000;
+  --fore: #fff;
+  --back: #ddd;
+  --debug: rgba(255,0,0,1);
+  --height: 50px;
+  --zIndex: 2147483647;
+  --navWidth: 0.7;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(100,100,100,0.8);
+  z-index: var(--zIndex);
+}
+
+.BurgerMenu nav {
+  margin: 0 0 0 auto;
+  font-size: 1rem;
+  width: calc(100% * var(--navWidth));
+}
+.BurgerMenu nav ul {
+  margin: 0rem 0rem 1rem 0rem;
+  padding: 0rem 0rem 0rem 0rem;
+  background-color: var(--back);
+}
+.BurgerMenu nav ul ul { /* 2階層以降のulにのみ適用 */
+  border-top: solid 0.2rem var(--fore);
+  border-left: solid 0.7rem var(--fore);
+}
+
+.BurgerMenu nav li {
+  margin: 0.3rem 0rem 0.3rem 0.5rem;
+  padding: 0.2rem 0rem 0rem 0rem;
+  list-style: none;
+  background-color: var(--back);
+}
+
+/* ハンバーガーアイコン */
+.BurgerMenu .icon {
+  display: flex;
+  justify-content: flex-end;
+  place-items: center;
+}
+
+.BurgerMenu .icon > button {
+  place-content: center center;
+  display: block;
+  margin: calc(var(--height) * 0.1);
+  padding: 0px;
+  box-sizing: border-box;
+  width: calc(var(--height) * 0.7);
+  height: calc(var(--height) * 0.7);
+  border: none;
+  background: rgba(0,0,0,0);  /* 透明 */
+  z-index: 4; /* div[name="navi"]より上の層に */
+  position: relative; /* 横棒の位置をtop/left指定可能に */
+  /* 以下button標準無効化用 */
+  box-shadow: none;
+}
+
+.BurgerMenu .icon button span {
+  display: block;
+  width: 100%;
+  height: calc(var(--height) * 0.12);
+  border-radius: calc(var(--height) * 0.06);
+  position: absolute;
+  left: 0;
+  background: var(--text);
+  transition: top 0.24s, transform 0.24s, opacity 0.24s;
+}
+.BurgerMenu .icon button span:nth-child(1) {
+  top: 0;
+}
+.BurgerMenu .icon button span:nth-child(2) {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.BurgerMenu .icon button span:nth-child(3) {
+  top: 100%;
+  transform: translateY(-100%);
+}
+
+.BurgerMenu .icon button span.is_active:nth-child(1) {
+  top: 50%;
+  transform: translateY(-50%) rotate(135deg);
+}
+.BurgerMenu .icon button span.is_active:nth-child(2) {
+  transform: translate(50%, -50%);
+  opacity: 0;
+}
+.BurgerMenu .icon button span.is_active:nth-child(3) {
+  top: 50%;
+  transform: translateY(-50%) rotate(-135deg);
+}
+
+
+</style>
+</head><body>
+<div class="BurgerMenu">
+  <div class="icon" onclick="toggle()">
+    <button>
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+  <nav>
+    <ul>
+      <li>お知らせ
+        <ul>
+          <li>掲示板</li>
+          <li>注意事項</li>
+          <li>その他</li>
+        </ul>
+      </li>
+      <li>パスポート</li>
+      <li>案内図</li>
+      <li>予定表</li>
+      <li>スタッフ
+        <ul>
+          <li>参加者数</li>
+          <li>受付業務</li>
+          <li>校内探検</li>
+          <li>参考資料
+            <ul>
+              <li>日程表</li>
+              <li>論議メモ
+                <ul>
+                  <li>20230610</li>
+                  <li>20230707</li>
+                </ul>
+              </li>
+              <li>関連サイト</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>システム設定</li>
+    </ul>
+  </nav>
+  <div class="back" onclick="toggle()"></div>  
+</div>
+
+<script type="text/javascript">
+const toggle = () => {
+
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+});
+</script>
+</body></html>
