@@ -199,7 +199,7 @@ class BurgerMenu {
    * @returns 
    */
   #genNavi = (parent=this.parent.element,navi=this.navi) => {
-    const v = {whois:'BurgerMenu.#genNavi',step:0,rv:null,id:1000,
+    const v = {whois:'BurgerMenu.#genNavi',step:0,rv:null,idnum:1000,
       tree:(parent,navi) => { // メニューのツリーを作成
         for( let i=0 ; i<parent.childElementCount ; i++ ){
           v.step = 1; // 子要素を順次走査
@@ -209,7 +209,8 @@ class BurgerMenu {
             // data-BurgerMenuをもつ要素のみ以下の処理を実施
 
             v.step = 2; // IDを採番、クラスに保存
-            d.classList.add(String(++v.id));
+            v.id = 'c'+String(++v.idnum);
+            d.classList.add(v.id);
 
             v.step = 3; // data-BurgerMenuの文字列をオブジェクト化
             let obj = (new Function('return {'+attr+'}'))();
@@ -258,15 +259,11 @@ class BurgerMenu {
       },
       branch: (li) => {  // tree内のブランチはshowChildrenに変更
         // 自分自身がブランチかを判定
-        // 1. name=/[0-9]+/ ※指定画面表示用の設定。
-        //    遷移ならnameなし、指定関数なら関数名(数字以外も有り)
-        // 2. 子要素としてulを持つ(⇒下位階層のメニュー)
-
-        // 子孫にulが無ければ処理終了
+        // 「子要素としてul(下位階層)を持つ ⇒ ブランチ」
         // 尚「自分はulを持たないが子孫はulを持つ」は有り得ない。
         // ∵子はulが無いと保持できない
-        let ul = li.querySelector('ul');
-        let a = li.querySelector('a');
+        let ul = li.querySelector(':scope > ul');
+        let a = li.querySelector(':scope > a');
 
         if( ul ){
           // ulを持つ ⇒ 子孫あり ⇒ ブランチ
@@ -302,11 +299,31 @@ class BurgerMenu {
 
   /** 表示画面の変更 */
   change = (event) => {
-    const v = {whois:'BurgerMenu.change',step:0,rv:null};
+    const v = {whois:'BurgerMenu.change',step:0,rv:null,
+      showElement: (d) => { // 対象領域を表示
+        d.style.display = '';
+        if( d.parentElement.tagName.toLowerCase() !== 'body' )
+          v.showElement(d.parentElement);
+      },
+    };
     console.log(v.whois+' start.');
     try {
       console.log(event.target);
 
+      // data-BurgerMenu属性を持つ要素を全て非表示に
+      v.selector = '[data-BurgerMenu]';
+      this.parent.element.querySelectorAll(v.selector)
+      .forEach(x => x.style.display = 'none');
+
+      // 対象領域を特定
+      v.selector = '.' + event.target.name + v.selector;
+      v.target = this.parent.element.querySelector(v.selector);
+      // 対象領域〜body迄を表示
+      v.showElement(v.target);
+
+      // ナビゲーションを非表示
+      this.toggle();
+      
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -339,6 +356,10 @@ class BurgerMenu {
     }
   }
 
+  /** ナビゲーション領域の表示/非表示切り替え
+   * @param {void}
+   * @returns {void}
+   */
   toggle = () => {
     const v = {whois:'BurgerMenu.toggle',step:0,rv:null};
     console.log(v.whois+' start.');
@@ -356,6 +377,7 @@ class BurgerMenu {
     }
   }
 
+  /** ブランチの下位階層メニュー表示/非表示切り替え */
   showChildren = (event) => {
     const v = {whois:'BurgerMenu.showChildren',step:0,rv:null};
     console.log(v.whois+' start.');
