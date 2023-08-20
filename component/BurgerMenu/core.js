@@ -18,7 +18,7 @@ class BurgerMenu {
           {
             sel:'.BurgerMenu',
             prop: {
-              '--text' : '#000',
+              '--text' : '#000',  // テキストおよびハンバーガーアイコンの線の色
               '--fore' : '#fff',
               '--back' : '#ddd',
               '--debug' : 'rgba(255,0,0,1)',
@@ -161,6 +161,13 @@ class BurgerMenu {
               'background-color' : 'var(--back)',
             },
           },
+          {
+            sel:'.BurgerMenu nav li a',
+            prop: {
+              'color' : 'var(--text)',
+              'text-decoration' : 'none',
+            },
+          },
         ],
       });
 
@@ -240,7 +247,8 @@ class BurgerMenu {
               li = createElement({tag:'li',children:[{
                 tag:'a',
                 text: obj.label,
-                attr:{href:obj.href,target:'_blank'},
+                attr:{name:obj.func,href:obj.href,target:'_blank'},
+                event:{click:this.toggle},  // 遷移後メニューを閉じる
               }]});
             } else if( obj.hasOwnProperty('func') ){
               v.step = 6.2;
@@ -272,7 +280,7 @@ class BurgerMenu {
         }
       },
       branch: (li) => {  // tree内のブランチはshowChildrenに変更
-        // 自分自身がブランチかを判定
+        v.step = 10; // 自分自身がブランチかを判定
         // 「子要素としてul(下位階層)を持つ ⇒ ブランチ」
         // 尚「自分はulを持たないが子孫はulを持つ」は有り得ない。
         // ∵子はulが無いと保持できない
@@ -280,6 +288,7 @@ class BurgerMenu {
         let a = li.querySelector(':scope > a');
 
         if( ul ){
+          v.step = 11;
           // ulを持つ ⇒ 子孫あり ⇒ ブランチ
           a.innerText = '▶︎' + a.innerText;
           a.addEventListener('click',this.showChildren);
@@ -287,8 +296,11 @@ class BurgerMenu {
           // ※直下の要素のみ対象なので':scope >'を付加
           ul.querySelectorAll(':scope > li').forEach(x => v.branch(x));
         } else {
+          v.step = 12;
+          console.log(a);
           let m = a.getAttribute('name').match(/^_(.+)$/);
           if( m ){
+            v.step = 13;
             // getNavi.treeで「暫定」と判別されていたリーフの場合。
             // ※暫定では無い場合は処理不要(=遷移指定/指定関数実行)
 
@@ -296,6 +308,7 @@ class BurgerMenu {
             a.addEventListener('click',this.change);
             a.setAttribute('name',m[1]);
             if( this.home === null ){
+              v.step = 14;
               // ホーム画面未定の場合、最初のリーフとする
               this.home = a.getAttribute('name');
             }
