@@ -7,11 +7,12 @@ class BurgerMenu {
 
       v.step = 1; // メンバの設定
       setupInstance(this,opt,{
-        parent: 'body', // 親要素のCSSセレクタ
-        menu: null,     // メニュー全体のラッパー
-        map: {},        // funcで指定された名称と実関数の紐付けマップ
-        navi: null,     // ナビゲーション要素
+        parent: 'body',   // 親要素のCSSセレクタ
+        menu: null,       // メニュー全体のラッパー
+        map: {},          // funcで指定された名称と実関数の紐付けマップ
+        navi: null,       // ナビゲーション要素
         home: null,       // ホーム画面のID
+        authority: 4294967295,  // 実行権限。既定値2^32-1
         css: [
           // 親要素(ラッパー) ---------------------
           {
@@ -218,17 +219,23 @@ class BurgerMenu {
             v.step = 3; // data-BurgerMenuの文字列をオブジェクト化
             let obj = (new Function('return {'+attr+'}'))();
 
-            v.step = 4; // 1階層上のliタグがまだulを持っていなければ追加しておく
+            v.step = 4; // 実行権限がない機能・画面はナビに追加しない
+            if( obj.hasOwnProperty('authority')
+             && (this.authority & Number(obj.authority)) === 0 ){
+              continue;
+            }
+
+            v.step = 5; // 1階層上のliタグがまだulを持っていなければ追加しておく
             let ul = navi.querySelector('ul');
             if( ul === null ){
               ul = createElement('ul');
               navi.appendChild(ul);
             }
 
-            v.step = 5; // 1階層上のliが持つulに追加登録
+            v.step = 6; // 1階層上のliが持つulに追加登録
             let li = null;
             if( obj.hasOwnProperty('href') ){
-              v.step = 5.1;
+              v.step = 6.1;
               // 他サイトへの遷移指定の場合
               li = createElement({tag:'li',children:[{
                 tag:'a',
@@ -236,7 +243,7 @@ class BurgerMenu {
                 attr:{href:obj.href,target:'_blank'},
               }]});
             } else if( obj.hasOwnProperty('func') ){
-              v.step = 5.2;
+              v.step = 6.2;
               // 指定関数実行の場合
               li = createElement({tag:'li',children:[{
                 tag:'a',
@@ -245,6 +252,7 @@ class BurgerMenu {
                 event:{click:this.dispatch}
               }]});
             } else {
+              v.step = 6.3;
               // 指定画面表示のリーフ or 子階層を持つブランチ
               // 暫定的に前者とみなし、全部作成後に子階層有無で修正
               v.step = 2.6;
@@ -256,6 +264,8 @@ class BurgerMenu {
                 //event:{click:this.change},
               }]});
             }
+
+            v.step = 7; // ulに自分を追加後、自分を親として再帰呼出
             ul.appendChild(li);
             v.tree(d,li);
           }
