@@ -72,28 +72,16 @@
  * 
  */
 const setupInstance = (dest,opt,def) => {
-  const v = {whois:'setupInstance',rv:true,step:0,
-    // ディープコピー。但し配列は置換
-    deepcopy: (dest,opt,def,depth=0) => {
-      for( let key in def ){
-        if( whichType(def[key]) !== 'Object' ){
-          // オブジェクト以外は設定先に値をコピー
-          dest[key] = opt[key] || def[key]; // 配列はマージしない
-        } else {
-          // オブジェクトの場合、設定先にオブジェクトが無ければ空オブジェクトを作成
-          if( !dest.hasOwnProperty(key) ) dest[key] = {};
-          // オブジェクトを引数にして再起呼出
-          v.deepcopy(dest[key],opt[key]||{},def[key],depth+1);
-        }
-      }  
-    },
-  };
+  const v = {whois:'setupInstance',rv:true,step:0};
 
   console.log(v.whois+' start.');
   try {
 
     v.step = 1; // ディープコピー。但し配列は置換
-    v.deepcopy(dest,opt,def);
+    v.merged = mergeDeeply(def,opt);
+    for( let key in v.merged ){
+      dest[key] = v.merged[key];
+    }
 
     v.step = 2; // parentの処理
     if( dest.hasOwnProperty('parent') ){
