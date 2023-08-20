@@ -33,7 +33,7 @@ class BurgerMenu {
             },
           },
           // ハンバーガーアイコン --------------------
-          { 
+          {
             sel:'.BurgerMenu .icon',
             prop: {
               'display' : 'flex',
@@ -186,10 +186,10 @@ class BurgerMenu {
 
       v.step = 4; // ホーム画面表示
       this.change(this.home);
-  
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
-      
+
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
@@ -197,9 +197,9 @@ class BurgerMenu {
   }
 
   /** 親要素を走査してナビゲーションを作成
-   * @param {*} parent 
-   * @param {*} navi 
-   * @returns 
+   * @param {*} parent
+   * @param {*} navi
+   * @returns
    */
   #genNavi = (parent=this.parent.element,navi=this.navi) => {
     const v = {whois:'BurgerMenu.#genNavi',step:0,rv:null,idnum:1000,
@@ -251,7 +251,8 @@ class BurgerMenu {
               li = createElement({tag:'li',children:[{
                 tag:'a',
                 text: obj.label,
-                attr: {name:v.id},
+                // 暫定とわかるよう、nameには'_'をつける
+                attr: {name:'_'+v.id},
                 //event:{click:this.change},
               }]});
             }
@@ -276,11 +277,18 @@ class BurgerMenu {
           // ※直下の要素のみ対象なので':scope >'を付加
           ul.querySelectorAll(':scope > li').forEach(x => v.branch(x));
         } else {
-          // ulを持たない ⇒ 子孫なし ⇒ リーフ
-          a.addEventListener('click',this.change);
-          if( this.home === null ){
-            // ホーム画面未定の場合、最初のリーフとする
-            this.home = a.getAttribute('name');
+          let m = a.getAttribute('name').match(/^_(.+)$/);
+          if( m ){
+            // getNavi.treeで「暫定」と判別されていたリーフの場合。
+            // ※暫定では無い場合は処理不要(=遷移指定/指定関数実行)
+
+            // ulを持たない ⇒ 子孫なし ⇒ リーフ
+            a.addEventListener('click',this.change);
+            a.setAttribute('name',m[1]);
+            if( this.home === null ){
+              // ホーム画面未定の場合、最初のリーフとする
+              this.home = a.getAttribute('name');
+            }
           }
         }
       },
@@ -334,7 +342,7 @@ class BurgerMenu {
       if( typeof event !== 'string' ){
         this.toggle();
       }
-      
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -360,6 +368,9 @@ class BurgerMenu {
       // 選択された関数を実行
       console.log(this.map);
       this.map[v.funcName]();
+
+      // ナビゲーションを非表示
+      this.toggle();
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
