@@ -11,6 +11,7 @@ class BurgerMenu {
         menu: null,     // メニュー全体のラッパー
         map: {},        // funcで指定された名称と実関数の紐付けマップ
         navi: null,     // ナビゲーション要素
+        home: null,       // ホーム画面のID
         css: [
           // 親要素(ラッパー) ---------------------
           {
@@ -183,6 +184,8 @@ class BurgerMenu {
       v.step = 3; // 親要素を走査してナビゲーションを作成
       this.#genNavi();
 
+      v.step = 4; // ホーム画面表示
+      this.change(this.home);
   
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -275,6 +278,10 @@ class BurgerMenu {
         } else {
           // ulを持たない ⇒ 子孫なし ⇒ リーフ
           a.addEventListener('click',this.change);
+          if( this.home === null ){
+            // ホーム画面未定の場合、最初のリーフとする
+            this.home = a.getAttribute('name');
+          }
         }
       },
     };
@@ -308,7 +315,7 @@ class BurgerMenu {
     };
     console.log(v.whois+' start.');
     try {
-      console.log(event.target);
+      console.log(event,typeof event);
 
       // data-BurgerMenu属性を持つ要素を全て非表示に
       v.selector = '[data-BurgerMenu]';
@@ -316,13 +323,17 @@ class BurgerMenu {
       .forEach(x => x.style.display = 'none');
 
       // 対象領域を特定
-      v.selector = '.' + event.target.name + v.selector;
+      v.selector = '.'
+      + (typeof event === 'string' ? event : event.target.name)
+      + v.selector;
       v.target = this.parent.element.querySelector(v.selector);
       // 対象領域〜body迄を表示
       v.showElement(v.target);
 
       // ナビゲーションを非表示
-      this.toggle();
+      if( typeof event !== 'string' ){
+        this.toggle();
+      }
       
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -333,12 +344,14 @@ class BurgerMenu {
     }
   }
 
-  /** 選択された関数の実行 */
+  /** 選択された関数の実行
+   * @param {Event} event - ナビ領域で発生したイベントオブジェクト
+   */
   dispatch = (event) => {
     const v = {whois:'BurgerMenu.toggle',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
-      console.log(event.target);
+      console.log(event);
       /*
       const funcMap = {
         annai: test,
