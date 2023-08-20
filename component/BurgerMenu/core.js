@@ -345,20 +345,21 @@ class BurgerMenu {
   }
 
   /** 選択された関数の実行
-   * @param {Event} event - ナビ領域で発生したイベントオブジェクト
+   * @param {PointerEvent} event - ナビ領域で発生したイベントオブジェクト
    */
   dispatch = (event) => {
-    const v = {whois:'BurgerMenu.toggle',step:0,rv:null};
+    const v = {whois:'BurgerMenu.dispatch',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
       console.log(event);
-      /*
-      const funcMap = {
-        annai: test,
-      }
-      funcMap[arg](event);
-      */
-      //this.map[arg](event);
+
+      // 選択された関数名を取得
+      v.funcName = event.target.getAttribute('name');
+      console.log('v.funcName='+v.funcName);
+
+      // 選択された関数を実行
+      console.log(this.map);
+      this.map[v.funcName]();
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;

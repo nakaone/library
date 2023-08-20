@@ -79,7 +79,13 @@ const g = {};
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
 
-  g.menu = new BurgerMenu({map:{recept:()=>console.log('function recept')}});
+  g.menu = new BurgerMenu({
+    map:{
+      recept:()=>console.log('function recept'),
+    },
+    home:'c1005',  // setupInstance動作確認用
+    fuga:'hoge',
+  });
   console.log(g.menu);
 });
 </script></html>
