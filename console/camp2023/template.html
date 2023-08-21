@@ -22,6 +22,10 @@
       width: calc(100% - 2rem);
       height: calc(100% - 2rem);
     }
+    [data-BurgerMenu] {
+      padding: 1rem;
+      width: calc(100% - 2rem);
+    }
   </style>
 </head>
 <body>
@@ -36,6 +40,7 @@
     <div data-BurgerMenu="label:'注意事項'" class="markdown" data-embed="注意事項.md"></div>
     <div data-BurgerMenu="label:'持ち物'" class="markdown" data-embed="持ち物リスト.md"></div>
   </div>
+  <div data-BurgerMenu="label:'パスポート'"></div>
 
 </body>
 <!-- =====================================================
@@ -89,6 +94,8 @@
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/webScanner.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/whichType.html","selector":"script.core"},"to":"js"}'></script>
 
+<script type="text/javascript" data-embed="camp2023.drawPassport.js"></script>
+
 <script type="text/javascript" class="main">
 window.addEventListener('DOMContentLoaded',async () => {
   const v = {whois:'DOMContentLoaded',opt:{},debug:true,
@@ -127,6 +134,7 @@ window.addEventListener('DOMContentLoaded',async () => {
   v.step = '2'; // メニューを定義
   v.menu = new BurgerMenu({
     authority: v.config.info.authority,
+    home: 'c1005',  // パスポート画面
   });
   console.log(v.whois+'.'+v.step+':',v);
 
@@ -145,8 +153,9 @@ window.addEventListener('DOMContentLoaded',async () => {
   v.step = '5'; // Mermaidで記述された部分をHTML化して表示
   mermaid.initialize({startOnLoad: true});
 
-  /*
   v.step = '6'; // パスポートの内容描画
+  drawPassport('div[data-BurgerMenu="label:\'パスポート\'"]',v.config);
+  /*
   const passportDiv = document.querySelector('div[name="パスポート"] div');
   v.entryNo = ('000'+v.config.entryNo.value).slice(-4);
   passportDiv.appendChild(createElement({
