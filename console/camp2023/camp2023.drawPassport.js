@@ -82,7 +82,7 @@ const drawPassport = (parent,config) => {
     },
     { // editURL(申込フォーム修正)ボタン
       sel : '[name="button"] a',
-      prop: {/*
+      prop: {
         'text-decoration' : 'none',
         'margin' : '1rem',
         'display'       : 'inline-block',
@@ -96,7 +96,7 @@ const drawPassport = (parent,config) => {
         'transition'    : '.3s',
         'box-shadow'    : '3px 3px 3px #666666',
         'border'        : '2px solid #000066',
-    */}
+      }
     },
     { // 
       sel : '',
@@ -193,7 +193,8 @@ const drawPassport = (parent,config) => {
 
     v.step = 4; // その他参加者情報
     v.detail = createElement({attr:{name:'detail'}});
-    ['申込者の参加','宿泊、テント','引取者氏名','緊急連絡先','ボランティア募集','備考','キャンセル'].forEach(x => {
+    ['メールアドレス','申込者の参加','宿泊、テント','引取者氏名',
+    '緊急連絡先','ボランティア募集','備考','キャンセル'].forEach(x => {
       v.detail.appendChild(createElement({
         attr:{class:'th'},text:x
       }));
