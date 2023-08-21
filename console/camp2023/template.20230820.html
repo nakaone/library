@@ -14,10 +14,10 @@
     .PlantUML {
       overflow-x: auto;
     }
-    .BurgerMenu[name="main"] {
+    .TabMenu[name="main"] {
       margin-top: 1rem; /* 最上位メニューの上に余白設定 */
     }
-    .BurgerMenu .page {
+    .TabMenu .page {
       padding: 1rem;
       width: calc(100% - 2rem);
       height: calc(100% - 2rem);
@@ -27,16 +27,80 @@
 <body>
   <div name="loading"><div><div class="loading5">loading...</div></div></div>
 
-  <div data-BurgerMenu="label:'お知らせ'">
-    <div data-BurgerMenu="label:'掲示板'">
+  <div class="TabMenu" name="main">
+
+    <div class="TabMenu" name="お知らせ">
+      <div name="掲示板">
+        <div class="page">
+          <div name="board"></div>
+        </div>
+      </div>
+      <div name="注意事項" class="markdown" data-embed="注意事項.md"></div>
+      <div name="持ち物" class="markdown" data-embed="持ち物リスト.md"></div>
+    </div>
+
+    <div name="パスポート"><div></div></div>
+
+    <div name="案内図">
       <div class="page">
-        <div name="board"></div>
+        <div class="img" data-embed="map2023.svg"></div>
       </div>
     </div>
-    <div data-BurgerMenu="label:'注意事項'" class="markdown" data-embed="注意事項.md"></div>
-    <div data-BurgerMenu="label:'持ち物'" class="markdown" data-embed="持ち物リスト.md"></div>
-  </div>
 
+    <div class="TimeTable" name="予定表">
+      <!--
+      <ul>
+        <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
+        <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
+      </ul>
+        詳細は別ページ？　別ペイン？
+        表示範囲絞り込み
+        所要物一覧
+        遊び場保険、スケジュールに追加
+      -->
+    </div>
+
+    <div class="TabMenu" name="スタッフ">
+
+      <div name="参加者数">
+        <div class="page">
+          <h1>工事中</h1>
+          <p>以下はMermaid出力テスト画面(完成時のイメージとは関係ありません)</p>
+          <div name="test" class="mermaid">
+            sequenceDiagram
+              太郎->>花子: おはよう
+              花子->>太郎: こんにちは！！
+          </div>
+        </div>
+      </div>
+
+      <div name="受付"><div class="page"></div></div>
+
+      <div name="校内探検">
+        <div class="page">
+          <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
+          <div class="markdown" data-embed="肝試し配置.md"></div>
+        </div>
+      </div>
+
+      <div class="TabMenu" name="参考資料">
+
+        <div name="日程表">
+          <div class="PlantUML"  data-embed="schedule.pu"><img /></div>
+          <div class="markdown" name="schedule2"></div>
+        </div>
+  
+        <div class="TabMenu" name="論議メモ">
+          <div class="markdown" name="6/10定例会" data-embed="20230610.md"></div>
+          <div class="markdown" name="7/08定例会" data-embed="20230708.md"></div>
+        </div>
+  
+        <div class="markdown" name="関連サイト" data-embed="RelatedSites.md"></div>
+
+      </div>
+    </div>
+
+  </div>
 </body>
 <!-- =====================================================
   CDN
@@ -75,15 +139,14 @@
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Auth.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Array.tabulize.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='../../component/BulletinBoard/core.js'></script>
-<script type="text/javascript" data-embed='../../component/BurgerMenu/core.js'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/createElement.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/createPassword.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/cryptoAES.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Date.toLocale.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/mergeDeeply.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='../../component/scanQR/core.js'></script>
-<script type="text/javascript" data-embed='../../component/setupInstance/core.js'></script>
 <script type="text/javascript" data-embed='../../component/Reception/core.js'></script>
+<script type="text/javascript" data-embed='{"from":{"filename":"../../component/TabMenu.html","selector":"script.core"},"to":"js"}'></script>
 <style type="text/css" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"style.core"},"to":"css"}'></style>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/webScanner.html","selector":"script.core"},"to":"js"}'></script>
@@ -125,8 +188,11 @@ window.addEventListener('DOMContentLoaded',async () => {
   console.log(v.whois+'.'+v.step+':',v.config);
 
   v.step = '2'; // メニューを定義
-  v.menu = new BurgerMenu({
-    authority: v.config.info.authority,
+  document.querySelectorAll('.TabMenu[name]').forEach(x => {
+    v.menuName = x.getAttribute('name');
+    v.arg = {name:v.menuName};
+    console.log(v.menuName,v.arg);
+    v[v.menuName] = new TabMenu(v.arg);
   });
   console.log(v.whois+'.'+v.step+':',v);
 
@@ -145,7 +211,6 @@ window.addEventListener('DOMContentLoaded',async () => {
   v.step = '5'; // Mermaidで記述された部分をHTML化して表示
   mermaid.initialize({startOnLoad: true});
 
-  /*
   v.step = '6'; // パスポートの内容描画
   const passportDiv = document.querySelector('div[name="パスポート"] div');
   v.entryNo = ('000'+v.config.entryNo.value).slice(-4);
@@ -189,7 +254,7 @@ window.addEventListener('DOMContentLoaded',async () => {
   });
   await v.board.delivery();
   console.log(v.whois+'.'+v.step,v.board);
- 
+
   v.step = '10'; // 最終処理：権限により表示画面制御
   // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生
   // ⇒ 最終段階で実行する
@@ -205,15 +270,12 @@ window.addEventListener('DOMContentLoaded',async () => {
       document.querySelectorAll('div[name="スタッフ"]')
       .forEach(x => x.remove());
       // タブの数を減らす
-      document.querySelector('.BurgerMenu[name="main"] .tabs')
+      document.querySelector('.TabMenu[name="main"] .tabs')
       .style.gridTemplateColumns = 'repeat(4, 1fr)';
     }
     // ローディング画面解除
     document.querySelector('div[name="loading"]').style.display = 'none';
   } 
-  */
-  // ローディング画面解除
-  document.querySelector('div[name="loading"]').style.display = 'none';
 
   console.log(v.whois+' end.');
 });
