@@ -9,7 +9,7 @@ class BurgerMenu {
       setupInstance(this,opt,{
         parent: 'body',   // 親要素のCSSセレクタ
         menu: null,       // メニュー全体のラッパー
-        map: {},          // funcで指定された名称と実関数の紐付けマップ
+        func: {},         // funcで指定された名称と実関数の紐付けマップ
         navi: null,       // ナビゲーション要素
         home: null,       // ホーム画面のID
         authority: 4294967295,  // 実行権限。既定値2^32-1
@@ -389,8 +389,8 @@ class BurgerMenu {
       console.log('v.funcName='+v.funcName);
 
       // 選択された関数を実行
-      console.log(this.map);
-      this.map[v.funcName]();
+      console.log(this.func);
+      this.func[v.funcName]();
 
       // ナビゲーションを非表示
       this.toggle();
