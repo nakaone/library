@@ -23,7 +23,8 @@ class BurgerMenu {
               '--back' : '#ddd',
               '--debug' : 'rgba(255,0,0,1)',
               '--iconSize' : '100px',
-              '--maxIndex' : '2147483647',
+              // ローディング画面優先なので、最大値2147483647-1
+              '--maxIndex' : '2147483646',
               '--navWidth' : '0.7',
             }
           },
