@@ -8,65 +8,66 @@ class BurgerMenu {
       v.step = 1; // メンバの設定
       setupInstance(this,opt,{
         parent: 'body',   // 親要素のCSSセレクタ
-        menu: null,       // メニュー全体のラッパー
+        //menu: null,       // メニュー全体のラッパー
         func: {},         // funcで指定された名称と実関数の紐付けマップ
-        navi: null,       // ナビゲーション要素
+        icon: null,       // {HTMLElement} ハンバーガーアイコン要素
+        navi: null,       // {HTMLElement} ナビゲーション要素
+        back: null,       // {HTMLElement} ナビゲーション背景要素
         home: null,       // ホーム画面のID
         authority: 4294967295,  // 実行権限。既定値2^32-1
         css: [
-          // 親要素(ラッパー) ---------------------
-          {
-            sel:'.BurgerMenu',
+          { sel : '.BurgerMenu',
             prop: {
               '--text' : '#000',  // テキストおよびハンバーガーアイコンの線の色
               '--fore' : '#fff',
               '--back' : '#ddd',
               '--debug' : 'rgba(255,0,0,1)',
-              '--height' : '50px',
-              '--zIndex' : '2147483647',
+              '--iconSize' : '100px',
+              '--maxIndex' : '2147483647',
               '--navWidth' : '0.7',
-              'position' : 'absolute',
-              'top' : '0',
-              'right' : '0',
-              'width' : '100vw',
-              'height' : '100vh',
-              'z-index' : 'var(--zIndex)',
-            },
+            }
           },
           // ハンバーガーアイコン --------------------
           {
-            sel:'.BurgerMenu .icon',
+            sel:'.BurgerMenu.icon',
             prop: {
               'display' : 'flex',
               'justify-content' : 'flex-end',
               'place-items' : 'center',
+              'position' : 'absolute',
+              // icon周囲にiconSizeの40%の余白が必要
+              'top' : 'calc(var(--iconSize) * 0.4)',//'0',
+              'right' : 'calc(var(--iconSize) * 0.4)',//'0',
+              'width' : 'var(--iconSize)',
+              'height' : 'var(--iconSize)',
+              'z-index' : 'var(--maxIndex)',
             },
           },
           {
-            sel:'.BurgerMenu .icon > button',
+            sel:'.BurgerMenu.icon > button',
             prop: {
               'place-content' : 'center center',
               'display' : 'block',
-              'margin' : 'calc(var(--height) * 0.4)',
+              'margin' : '0',
               'padding' : '0px',
               'box-sizing' : 'border-box',
-              'width' : 'calc(var(--height) * 0.7)',
-              'height' : 'calc(var(--height) * 0.7)',
+              'width' : 'calc(var(--iconSize) * 0.7)',
+              'height' : 'calc(var(--iconSize) * 0.7)',
               'border' : 'none',
               'background' : 'rgba(0,0,0,0)',  // 透明
-              'z-index' : '4', // navより上に
+              //'z-index' : '4', // navより上に
               'position' : 'relative', // 横棒の位置をtop/left指定可能に
               // 以下button標準無効化用
               'box-shadow' : 'none',
             },
           },
           {
-            sel:'.BurgerMenu .icon button span',
+            sel:'.BurgerMenu.icon button span',
             prop: {
               'display' : 'block',
               'width' : '100%',
-              'height' : 'calc(var(--height) * 0.12)',
-              'border-radius' : 'calc(var(--height) * 0.06)',
+              'height' : 'calc(var(--iconSize) * 0.12)',
+              'border-radius' : 'calc(var(--iconSize) * 0.06)',
               'position' : 'absolute',
               'left' : '0',
               'background' : 'var(--text)',
@@ -74,41 +75,41 @@ class BurgerMenu {
             },
           },
           {
-            sel:'.BurgerMenu .icon button span:nth-child(1)',
+            sel:'.BurgerMenu.icon button span:nth-child(1)',
             prop: {
             'top' : '0',
             },
           },
           {
-            sel:'.BurgerMenu .icon button span:nth-child(2)',
+            sel:'.BurgerMenu.icon button span:nth-child(2)',
             prop: {
               'top' : '50%',
               'transform' : 'translateY(-50%)',
             },
           },
           {
-            sel:'.BurgerMenu .icon button span:nth-child(3)',
+            sel:'.BurgerMenu.icon button span:nth-child(3)',
             prop: {
               'top' : '100%',
               'transform' : 'translateY(-100%)',
             },
           },
           {
-            sel:'.BurgerMenu .icon button span.is_active:nth-child(1)',
+            sel:'.BurgerMenu.icon button span.is_active:nth-child(1)',
             prop: {
               'top' : '50%',
               'transform' : 'translateY(-50%) rotate(135deg)',
             },
           },
           {
-            sel:'.BurgerMenu .icon button span.is_active:nth-child(2)',
+            sel:'.BurgerMenu.icon button span.is_active:nth-child(2)',
             prop: {
               'transform' : 'translate(50%, -50%)',
               'opacity' : '0',
             },
           },
           {
-            sel:'.BurgerMenu .icon button span.is_active:nth-child(3)',
+            sel:'.BurgerMenu.icon button span.is_active:nth-child(3)',
             prop: {
               'top' : '50%',
               'transform' : 'translateY(-50%) rotate(-135deg)',
@@ -116,22 +117,27 @@ class BurgerMenu {
           },
           // ナビゲーション領域 ---------------------
           {
-            sel:'.BurgerMenu nav',
+            sel:'nav.BurgerMenu',
             prop: {
               'display' : 'none',
             },
           },
           {
-            sel:'.BurgerMenu nav.is_active',
+            sel:'nav.BurgerMenu.is_active',
             prop: {
               'display' : 'block',
               'margin' : '0 0 0 auto',
               'font-size' : '1rem',
+              'position' : 'absolute',
+              'top' : 'calc(var(--iconSize) * 1.8)',
+              'right' : '0',
               'width' : 'calc(100% * var(--navWidth))',
+              'height' : 'var(--iconSize)',
+              'z-index' : 'var(--maxIndex)',
             },
           },
           {
-            sel:'.BurgerMenu nav ul',
+            sel:'nav.BurgerMenu ul',
             prop: {
               'margin' : '0rem 0rem 1rem 0rem',
               'padding' : '0rem 0rem 0rem 0rem',
@@ -139,13 +145,13 @@ class BurgerMenu {
             },
           },
           { // 2階層以降のulにのみ適用
-            sel:'.BurgerMenu nav ul ul',
+            sel:'nav.BurgerMenu ul ul',
             prop: {
               'display' : 'none',
             },
           },
           { // 2階層以降のulにのみ適用
-            sel:'.BurgerMenu nav ul ul.is_open',
+            sel:'nav.BurgerMenu ul ul.is_open',
             prop: {
               'display' : 'block',
               'border-top' : 'solid 0.2rem var(--fore)',
@@ -153,7 +159,7 @@ class BurgerMenu {
             },
           },
           {
-            sel:'.BurgerMenu nav li',
+            sel:'nav.BurgerMenu li',
             prop: {
               'margin' : '0.3rem 0rem 0.3rem 0.5rem',
               'padding' : '0.2rem 0rem 0rem 0rem',
@@ -162,35 +168,63 @@ class BurgerMenu {
             },
           },
           {
-            sel:'.BurgerMenu nav li a',
+            sel:'nav.BurgerMenu li a',
             prop: {
               'color' : 'var(--text)',
               'text-decoration' : 'none',
             },
           },
+          // 背景 ---------------------
+          {
+            sel:'.BurgerMenu.back',
+            prop: {
+              'display' : 'none',
+            },
+          },
+          {
+            sel:'.BurgerMenu.back.is_active',
+            prop: {
+              'display' : 'block',
+              'position' : 'absolute',
+              'top' : '0',
+              'right' : '0',
+              'width' : '100vw',
+              'height' : '100vh',
+              'z-index' : 'calc(var(--maxIndex) - 1)',
+              'background' : 'rgba(100,100,100,0.8)',
+            },
+          },
         ],
       });
 
-      v.step = 2; // ラッパーおよび必須要素の作成
-      this.menu = createElement({
-        attr:{class:'BurgerMenu'},
+      v.step = 2.1; // アイコンの作成
+      this.icon = createElement({
+        attr:{class:'BurgerMenu icon'},
+        event:{click:this.toggle},
         children:[{
-          attr:{class:'icon'},
-          event:{click:this.toggle},
-          children:[{
-            tag:'button',
-            children:[
-              {tag:'span'},{tag:'span'},{tag:'span'}
-            ]
-          }]
+          tag:'button',
+          children:[
+            {tag:'span'},{tag:'span'},{tag:'span'}
+          ]
         }]
       });
-      this.navi = createElement({tag:'nav'}); // nav
-      this.menu.appendChild(this.navi);
-      this.parent.element.appendChild(this.menu);
+      this.parent.element.appendChild(this.icon);
+      v.step = 2.2; // ナビゲータの作成
+      this.navi = createElement({
+        tag:'nav',
+        attr:{class:'BurgerMenu'},
+      });
+      this.parent.element.appendChild(this.navi);
+      v.step = 2.3; // ナビゲータ背景の作成
+      this.back = createElement({
+        attr:{class:'BurgerMenu back'},
+        event:{click:this.toggle},
+      });
+      this.parent.element.appendChild(this.back);
 
       v.step = 3; // 親要素を走査してナビゲーションを作成
-      this.#genNavi();
+      v.rv = this.#genNavi();
+      if( v.rv instanceof Error ) throw v.rv;
 
       v.step = 4; // ホーム画面表示
       this.change(this.home);
@@ -212,6 +246,7 @@ class BurgerMenu {
   #genNavi = (parent=this.parent.element,navi=this.navi) => {
     const v = {whois:'BurgerMenu.#genNavi',step:0,rv:null,idnum:1000,
       tree:(parent,navi) => { // メニューのツリーを作成
+        console.log(v.whois+' tree start:',parent,navi);
         for( let i=0 ; i<parent.childElementCount ; i++ ){
           v.step = 1; // 子要素を順次走査
           let d = parent.children[i];
@@ -323,7 +358,7 @@ class BurgerMenu {
       v.tree(parent,navi);
 
       // ブランチを検出し、イベントを設定
-      this.menu.querySelectorAll('nav > ul > li')
+      this.parent.element.querySelectorAll('nav.BurgerMenu > ul > li')
       .forEach(x => v.branch(x));
 
       console.log(v.whois+' normal end.',v.rv);
@@ -412,8 +447,9 @@ class BurgerMenu {
     const v = {whois:'BurgerMenu.toggle',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
-      document.querySelector('.BurgerMenu nav').classList.toggle('is_active');
-      document.querySelectorAll('.BurgerMenu button span')
+      document.querySelector('nav.BurgerMenu').classList.toggle('is_active');
+      document.querySelector('.BurgerMenu.back').classList.toggle('is_active');
+      document.querySelectorAll('.BurgerMenu.icon button span')
       .forEach(x => x.classList.toggle('is_active'));
 
       console.log(v.whois+' normal end.',v.rv);
