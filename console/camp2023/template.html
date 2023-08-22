@@ -50,6 +50,8 @@
     遊び場保険、スケジュールに追加
   -->
   <div data-BurgerMenu="label:'スタッフ'">
+    <!--div data-BurgerMenu="label:'参加者数'"></div-->
+    <div data-BurgerMenu="label:'受付業務'"></div>
     <div data-BurgerMenu="label:'校内探険'">
       <div class="page">
         <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
@@ -65,8 +67,9 @@
         <div data-BurgerMenu="label:'6/10定例会'" class="markdown" data-embed="20230610.md"></div>
         <div data-BurgerMenu="label:'7/08定例会'" class="markdown" data-embed="20230708.md"></div>
       </div>
-
+      <div data-BurgerMenu="label:'関連サイト'" class="markdown" data-embed="RelatedSites.md"></div>
     </div><!-- 参考資料ここまで -->
+    <!--div data-BurgerMenu="label:'システム設定'"></div-->
   </div>
 
 </body>
@@ -218,7 +221,19 @@ window.addEventListener('DOMContentLoaded',async () => {
 
     // 2.5 スタッフ
     // 2.5.1 参加者数
-    // 2.5.2 受付業務
+
+    v.step = '2.5.2'; // 受付業務
+    v.receptPage = '[data-BurgerMenu="label:\'受付業務\'"]';
+    v.id = document.querySelector(v.receptPage).classList.item(0);
+    v.boot = 'nav.BurgerMenu a[name="'+v.id+'"]';
+    v.reception = new Reception({
+      auth: v.config, // 認証局他のAuthインスタンス
+      area:{selector:v.receptPage},  // 受付画面表示エリアのCSSセレクタ
+      boot:{selector:v.boot}, // スキャナ起動のトリガーとなる要素のCSSセレクタ
+      loading: {selector:'div[name="loading"]'},  // ローディング画面のCSSセレクタ
+    });
+    if( v.reception instanceof Error ) throw v.reception;
+
     // 2.5.3 校内探険
     // 2.5.4 参考資料
     // 2.5.4.1 日程表
@@ -227,14 +242,6 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 2.6 システム設定
 
     /*
-    v.step = '8'; // 受付画面を準備
-    v.reception = new Reception({
-      auth: v.config, // 認証局他のAuthインスタンス
-      area:{selector:'[name="受付"] .page'},  // 受付画面表示エリアのCSSセレクタ
-      boot:{selector:'[name="受付"]'}, // スキャナ起動のトリガーとなる要素のCSSセレクタ
-      loading: {selector:'div[name="loading"]'},  // ローディング画面のCSSセレクタ
-    });
-
     v.step = '10'; // 最終処理：権限により表示画面制御
     // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生
     // ⇒ 最終段階で実行する
