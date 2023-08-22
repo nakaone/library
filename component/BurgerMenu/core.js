@@ -323,29 +323,27 @@ class BurgerMenu {
         let ul = li.querySelector(':scope > ul');
         let a = li.querySelector(':scope > a');
 
-        if( ul ){
-          v.step = 11;
-          // ulを持つ ⇒ 子孫あり ⇒ ブランチ
-          a.innerText = '▶︎' + a.innerText;
-          a.addEventListener('click',this.showChildren);
-          // 子要素にもブランチがないか再帰呼出
-          // ※直下の要素のみ対象なので':scope >'を付加
-          ul.querySelectorAll(':scope > li').forEach(x => v.branch(x));
-        } else {
-          v.step = 12;
-          console.log(a);
-          let m = a.getAttribute('name').match(/^_(.+)$/);
-          if( m ){
-            v.step = 13;
-            // getNavi.treeで「暫定」と判別されていたリーフの場合。
-            // ※暫定では無い場合は処理不要(=遷移指定/指定関数実行)
-
+        let m = a.getAttribute('name').match(/^_(.+)$/);
+        if( m ){
+          // nameが'_'で始まる ⇒ v.treeのstep.6.3で「暫定」と判別された
+          // 指定画面表示のリーフ or 子階層を持つブランチ
+          // ※暫定では無い場合は処理不要(=遷移指定/指定関数実行)
+          a.setAttribute('name',m[1]);
+          if( ul ){
+            v.step = 11;
+            // ulを持つ ⇒ 子孫あり ⇒ ブランチ
+            a.innerText = '▶︎' + a.innerText;
+            a.addEventListener('click',this.showChildren);
+            // 子要素にもブランチがないか再帰呼出
+            // ※直下の要素のみ対象なので':scope >'を付加
+            ul.querySelectorAll(':scope > li').forEach(x => v.branch(x));
+          } else {
+            v.step = 12;
             // ulを持たない ⇒ 子孫なし ⇒ リーフ
             a.addEventListener('click',this.change);
-            a.setAttribute('name',m[1]);
             if( this.home === null ){
-              v.step = 14;
-              // ホーム画面未定の場合、最初のリーフとする
+              v.step = 13;
+              // ホーム画面未定の場合、最初のリーフをホーム画面とする
               this.home = a.getAttribute('name');
             }
           }
