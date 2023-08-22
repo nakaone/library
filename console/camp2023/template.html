@@ -38,6 +38,17 @@
   </div>
   <div data-BurgerMenu="label:'パスポート'"></div>
   <div data-BurgerMenu="label:'案内図'" class="img" data-embed="map2023.svg"></div>
+  <div data-BurgerMenu="label:'予定表'" class="TimeTable"></div>
+  <!-- 予定表関連メモ
+  <ul>
+    <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
+    <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
+  </ul>
+    詳細は別ページ？　別ペイン？
+    表示範囲絞り込み
+    所要物一覧
+    遊び場保険、スケジュールに追加
+  -->
 
 </body>
 <!-- =====================================================
@@ -146,6 +157,9 @@ window.addEventListener('DOMContentLoaded',async () => {
     v.step = '1.5'; // Mermaidで記述された部分をHTML化して表示
     mermaid.initialize({startOnLoad: true});
 
+    // ================================================
+    // 個別メニュー画面の設定
+    // ================================================
     v.step = '2'; // メニューを定義
     v.menu = new BurgerMenu({
       authority: v.config.info.authority,
@@ -154,7 +168,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     if( v.menu instanceof Error ) throw v.menu;
     console.log(v.whois+'.'+v.step+':',v);
 
-    v.step = 3; // 掲示板の表示
+    v.step = 3; // 掲示板
     v.board = new BulletinBoard({
       auth: v.config, // 認証局他のAuthインスタンス
       parent: {selector:'[data-BurgerMenu="label:\'掲示板\'"]'},
@@ -163,12 +177,11 @@ window.addEventListener('DOMContentLoaded',async () => {
     v.rv = await v.board.delivery();
     if( v.rv instanceof Error ) throw v.rv;
   
-    v.step = '6'; // パスポートの内容描画
+    v.step = '6'; // パスポート
     drawPassport('div[data-BurgerMenu="label:\'パスポート\'"]',v.config);
 
-
-    /*
-    v.step = '7'; // Google Spreadからデータを取得してタイムテーブル表示
+    v.step = '7'; // 予定表(TimeTable)
+    // Google Spreadからデータを取得してタイムテーブル表示
     v.res = await fetch(v.docURL);
     v.res = await v.res.json();
     v.TimeTable = new TimeTable(
@@ -178,6 +191,8 @@ window.addEventListener('DOMContentLoaded',async () => {
     );
     if( v.TimeTable instanceof Error ) throw v.TimeTable;
 
+
+    /*
     v.step = '8'; // 受付画面を準備
     v.reception = new Reception({
       auth: v.config, // 認証局他のAuthインスタンス
