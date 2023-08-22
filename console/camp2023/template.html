@@ -49,6 +49,15 @@
     所要物一覧
     遊び場保険、スケジュールに追加
   -->
+  <div data-BurgerMenu="label:'スタッフ'">
+    <div data-BurgerMenu="label:'校内探険'">
+      <div class="page">
+        <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
+        <div class="markdown" data-embed="肝試し配置.md"></div>
+      </div>
+    </div>
+
+  </div>
 
 </body>
 <!-- =====================================================
@@ -168,7 +177,8 @@ window.addEventListener('DOMContentLoaded',async () => {
     if( v.menu instanceof Error ) throw v.menu;
     console.log(v.whois+'.'+v.step+':',v);
 
-    v.step = 3; // 掲示板
+    v.step = '2.1'; // お知らせ
+    v.step = '2.1.1'; // 掲示板
     v.board = new BulletinBoard({
       auth: v.config, // 認証局他のAuthインスタンス
       parent: {selector:'[data-BurgerMenu="label:\'掲示板\'"]'},
@@ -177,10 +187,15 @@ window.addEventListener('DOMContentLoaded',async () => {
     v.rv = await v.board.delivery();
     if( v.rv instanceof Error ) throw v.rv;
   
-    v.step = '6'; // パスポート
+    // 2.1.2 注意事項
+    // 2.1.3 持ち物
+
+    v.step = '2.2'; // パスポート
     drawPassport('div[data-BurgerMenu="label:\'パスポート\'"]',v.config);
 
-    v.step = '7'; // 予定表(TimeTable)
+    // 2.3 案内図
+
+    v.step = '2.4'; // 予定表(TimeTable)
     // Google Spreadからデータを取得してタイムテーブル表示
     v.res = await fetch(v.docURL);
     v.res = await v.res.json();
@@ -191,6 +206,15 @@ window.addEventListener('DOMContentLoaded',async () => {
     );
     if( v.TimeTable instanceof Error ) throw v.TimeTable;
 
+    // 2.5 スタッフ
+    // 2.5.1 参加者数
+    // 2.5.2 受付業務
+    // 2.5.3 校内探険
+    // 2.5.4 参考資料
+    // 2.5.4.1 日程表
+    // 2.5.4.2 論議メモ
+    // 2.5.4.3 関連サイト
+    // 2.6 システム設定
 
     /*
     v.step = '8'; // 受付画面を準備
