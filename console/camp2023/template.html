@@ -157,6 +157,15 @@ window.addEventListener('DOMContentLoaded',async () => {
     if( v.menu instanceof Error ) throw v.menu;
     console.log(v.whois+'.'+v.step+':',v);
 
+    v.step = 3; // 掲示板の表示
+    v.board = new BulletinBoard({
+      auth: v.config, // 認証局他のAuthインスタンス
+      parent: {selector:'[data-BurgerMenu="label:\'掲示板\'"]'},
+    });
+    if( v.board instanceof Error ) throw v.board;
+    v.rv = await v.board.delivery();
+    if( v.rv instanceof Error ) throw v.rv;
+  
     v.step = '6'; // パスポートの内容描画
     drawPassport('div[data-BurgerMenu="label:\'パスポート\'"]',v.config);
 
@@ -180,14 +189,6 @@ window.addEventListener('DOMContentLoaded',async () => {
       loading: {selector:'div[name="loading"]'},  // ローディング画面のCSSセレクタ
     });
 
-    v.step = '9'; // 掲示板の表示
-    v.board = new BulletinBoard({
-      auth: v.config, // 認証局他のAuthインスタンス
-      parent: {selector:'[name="お知らせ"] [name="掲示板"] [name="board"]'},
-    });
-    await v.board.delivery();
-    console.log(v.whois+'.'+v.step,v.board);
-  
     v.step = '10'; // 最終処理：権限により表示画面制御
     // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生
     // ⇒ 最終段階で実行する
