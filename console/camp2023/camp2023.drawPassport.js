@@ -90,12 +90,12 @@ const drawPassport = (parent,config) => {
         'text-align'    : 'center',
         'cursor'        : 'pointer',
         'padding'       : '12px 12px',
-        'background'    : '#000066',
+        'background'    : '#888888',
         'color'         : '#ffffff',
-        'line-height'   : '1em',
+        'line-height'   : '1rem',
         'transition'    : '.3s',
-        'box-shadow'    : '3px 3px 3px #666666',
-        'border'        : '2px solid #000066',
+        'box-shadow'    : '3px 3px 3px #444444',
+        'border'        : '2px solid #888888',
       }
     },
     { // 
