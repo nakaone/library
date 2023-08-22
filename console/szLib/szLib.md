@@ -758,8 +758,8 @@ JavaScriptのライブラリ等、テンプレートが非HTMLの場合は処理
 -> <div name="日程表"><div class="PlantUML"><img><div style="display:none">@startgantt〜
 
 // PNG：自要素(IMG)のsrc属性の値としてbase64文字列を追加
-<div name="校内探検"><img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' /></div>
--> <div name="校内探検"><img width="600px" src="data:image/png;base64,iVBORw0KG〜
+<div name="校内探険"><img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' /></div>
+-> <div name="校内探険"><img width="600px" src="data:image/png;base64,iVBORw0KG〜
 
 // MarkDown：自要素のinnerTextとして追加
 <div class="markdown" name="6/10定例会" data-embed="20230610.md"></div>
