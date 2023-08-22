@@ -134,31 +134,33 @@ window.addEventListener('DOMContentLoaded',async () => {
     }
     console.log(v.whois+'.'+v.step+':',v.config);
 
-    v.step = '2'; // メニューを定義
-    v.menu = new BurgerMenu({
-      authority: v.config.info.authority,
-      home: 'c1005',  // パスポート画面
-    });
-    if( v.menu instanceof Error ) throw v.menu;
-    console.log(v.whois+'.'+v.step+':',v);
-
-    v.step = '3'; // MarkDownで記述された部分をHTML化して表示
+    v.step = '1.3'; // MarkDownで記述された部分をHTML化して表示
     document.querySelectorAll('div.markdown').forEach(x => {
       x.innerHTML = marked(x.innerHTML);
     });
 
-    v.step = '4'; // PlantUMLで記述された部分をHTML化して表示
+    v.step = '1.4'; // PlantUMLで記述された部分をHTML化して表示
     document.querySelectorAll('div.PlantUML').forEach(x => {
       let src = x.querySelector('div').innerHTML;
       x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
         + plantumlEncoder.encode(src);
     });
 
-    v.step = '5'; // Mermaidで記述された部分をHTML化して表示
+    v.step = '1.5'; // Mermaidで記述された部分をHTML化して表示
     mermaid.initialize({startOnLoad: true});
+
+    v.step = '2'; // メニューを定義
+    v.menu = new BurgerMenu({
+      authority: v.config.info.authority,
+      home: 'c1005',  // パスポート画面をホームに設定(暫定)
+    });
+    if( v.menu instanceof Error ) throw v.menu;
+    console.log(v.whois+'.'+v.step+':',v);
 
     v.step = '6'; // パスポートの内容描画
     drawPassport('div[data-BurgerMenu="label:\'パスポート\'"]',v.config);
+
+
     /*
     v.step = '7'; // Google Spreadからデータを取得してタイムテーブル表示
     v.res = await fetch(v.docURL);
@@ -168,6 +170,7 @@ window.addEventListener('DOMContentLoaded',async () => {
       v.res,
       {datatype:'sheet',dataSheet:v.docSheet}
     );
+    if( v.TimeTable instanceof Error ) throw v.TimeTable;
 
     v.step = '8'; // 受付画面を準備
     v.reception = new Reception({
