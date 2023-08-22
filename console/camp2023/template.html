@@ -106,125 +106,117 @@ window.addEventListener('DOMContentLoaded',async () => {
     docSheet: 'https://tinyurl.com/2ahyly3l',
     searchParams: new URLSearchParams(window.location.search),
   };
-  console.log(v.whois+' start.');
+  try {
 
-  v.step = '1'; // 認証
-  v.ls = localStorage.getItem('conf');
-  // クエリ文字列のデバッグモード指定を確認
-  if( v.searchParams.has('debug') ){
-    v.debug = v.searchParams.get('debug').toLowerCase() === 'true';
-  }
-  if( v.debug && v.ls !== null ){
-    v.step = '1.1';
-    // デバッグ用：リリース時はlocalStorage.setItemと併せて削除
-    v.opt = JSON.parse(v.ls);
-    v.config = new Auth(v.gwURL,v.opt);
-  } else {
-    v.step = '1.2';
-    // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
-    if( v.searchParams.has('id') ){
-      v.opt.entryNo = {value:v.searchParams.get('id')};
+    console.log(v.whois+' start.');
+
+    v.step = '1'; // 認証
+    v.ls = localStorage.getItem('conf');
+    // クエリ文字列のデバッグモード指定を確認
+    if( v.searchParams.has('debug') ){
+      v.debug = v.searchParams.get('debug').toLowerCase() === 'true';
     }
-    v.config = new Auth(v.gwURL,v.opt);
-    await v.config.build();
-    localStorage.setItem('conf',JSON.stringify(v.config));
-  }
-  console.log(v.whois+'.'+v.step+':',v.config);
-
-  v.step = '2'; // メニューを定義
-  v.menu = new BurgerMenu({
-    authority: v.config.info.authority,
-    home: 'c1005',  // パスポート画面
-  });
-  console.log(v.whois+'.'+v.step+':',v);
-
-  v.step = '3'; // MarkDownで記述された部分をHTML化して表示
-  document.querySelectorAll('div.markdown').forEach(x => {
-    x.innerHTML = marked(x.innerHTML);
-  });
-
-  v.step = '4'; // PlantUMLで記述された部分をHTML化して表示
-  document.querySelectorAll('div.PlantUML').forEach(x => {
-    let src = x.querySelector('div').innerHTML;
-    x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
-      + plantumlEncoder.encode(src);
-  });
-
-  v.step = '5'; // Mermaidで記述された部分をHTML化して表示
-  mermaid.initialize({startOnLoad: true});
-
-  v.step = '6'; // パスポートの内容描画
-  drawPassport('div[data-BurgerMenu="label:\'パスポート\'"]',v.config);
-  /*
-  const passportDiv = document.querySelector('div[name="パスポート"] div');
-  v.entryNo = ('000'+v.config.entryNo.value).slice(-4);
-  passportDiv.appendChild(createElement({
-    tag:'p',
-    text:'No.'+v.entryNo,
-    style: {margin:"1rem 0",fontSize:"2rem"}
-  }));
-  qrcodeDiv = document.createElement('div');
-  const qr = new QRCode(qrcodeDiv,{
-    text: v.entryNo,
-    width: 400,
-    height: 400,
-    colorDark: "#000",
-    colorLight: "#fff",
-    correctLevel : QRCode.CorrectLevel.H,
-  });
-  passportDiv.appendChild(qrcodeDiv);
-
-  v.step = '7'; // Google Spreadからデータを取得してタイムテーブル表示
-  v.res = await fetch(v.docURL);
-  v.res = await v.res.json();
-  v.TimeTable = new TimeTable(
-    'div.TimeTable',
-    v.res,
-    {datatype:'sheet',dataSheet:v.docSheet}
-  );
-
-  v.step = '8'; // 受付画面を準備
-  v.reception = new Reception({
-    auth: v.config, // 認証局他のAuthインスタンス
-    area:{selector:'[name="受付"] .page'},  // 受付画面表示エリアのCSSセレクタ
-    boot:{selector:'[name="受付"]'}, // スキャナ起動のトリガーとなる要素のCSSセレクタ
-    loading: {selector:'div[name="loading"]'},  // ローディング画面のCSSセレクタ
-  });
-
-  v.step = '9'; // 掲示板の表示
-  v.board = new BulletinBoard({
-    auth: v.config, // 認証局他のAuthインスタンス
-    parent: {selector:'[name="お知らせ"] [name="掲示板"] [name="board"]'},
-  });
-  await v.board.delivery();
-  console.log(v.whois+'.'+v.step,v.board);
- 
-  v.step = '10'; // 最終処理：権限により表示画面制御
-  // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生
-  // ⇒ 最終段階で実行する
-  v.authority = Number(v.config.info.authority)
-  if( (v.authority & 3) === 0 ){
-    v.step = '9.1'; // 1(参加者)、2(スタッフ)、3(管理者)いずれでもない
-    alert('参加資格を確認してください');
-    document.querySelectorAll('body > div').forEach(x => x.remove());
-    return;
-  } else {
-    if( (v.authority & 2) === 0 ){
-      v.step = '9.2'; // スタッフではない ⇒ スタッフ画面を削除
-      document.querySelectorAll('div[name="スタッフ"]')
-      .forEach(x => x.remove());
-      // タブの数を減らす
-      document.querySelector('.BurgerMenu[name="main"] .tabs')
-      .style.gridTemplateColumns = 'repeat(4, 1fr)';
+    if( v.debug && v.ls !== null ){
+      v.step = '1.1';
+      // デバッグ用：リリース時はlocalStorage.setItemと併せて削除
+      v.opt = JSON.parse(v.ls);
+      v.config = new Auth(v.gwURL,v.opt);
+    } else {
+      v.step = '1.2';
+      // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
+      if( v.searchParams.has('id') ){
+        v.opt.entryNo = {value:v.searchParams.get('id')};
+      }
+      v.config = new Auth(v.gwURL,v.opt);
+      if( v.config instanceof Error ) throw v.config;
+      await v.config.build();
+      localStorage.setItem('conf',JSON.stringify(v.config));
     }
+    console.log(v.whois+'.'+v.step+':',v.config);
+
+    v.step = '2'; // メニューを定義
+    v.menu = new BurgerMenu({
+      authority: v.config.info.authority,
+      home: 'c1005',  // パスポート画面
+    });
+    if( v.menu instanceof Error ) throw v.menu;
+    console.log(v.whois+'.'+v.step+':',v);
+
+    v.step = '3'; // MarkDownで記述された部分をHTML化して表示
+    document.querySelectorAll('div.markdown').forEach(x => {
+      x.innerHTML = marked(x.innerHTML);
+    });
+
+    v.step = '4'; // PlantUMLで記述された部分をHTML化して表示
+    document.querySelectorAll('div.PlantUML').forEach(x => {
+      let src = x.querySelector('div').innerHTML;
+      x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
+        + plantumlEncoder.encode(src);
+    });
+
+    v.step = '5'; // Mermaidで記述された部分をHTML化して表示
+    mermaid.initialize({startOnLoad: true});
+
+    v.step = '6'; // パスポートの内容描画
+    drawPassport('div[data-BurgerMenu="label:\'パスポート\'"]',v.config);
+    /*
+    v.step = '7'; // Google Spreadからデータを取得してタイムテーブル表示
+    v.res = await fetch(v.docURL);
+    v.res = await v.res.json();
+    v.TimeTable = new TimeTable(
+      'div.TimeTable',
+      v.res,
+      {datatype:'sheet',dataSheet:v.docSheet}
+    );
+
+    v.step = '8'; // 受付画面を準備
+    v.reception = new Reception({
+      auth: v.config, // 認証局他のAuthインスタンス
+      area:{selector:'[name="受付"] .page'},  // 受付画面表示エリアのCSSセレクタ
+      boot:{selector:'[name="受付"]'}, // スキャナ起動のトリガーとなる要素のCSSセレクタ
+      loading: {selector:'div[name="loading"]'},  // ローディング画面のCSSセレクタ
+    });
+
+    v.step = '9'; // 掲示板の表示
+    v.board = new BulletinBoard({
+      auth: v.config, // 認証局他のAuthインスタンス
+      parent: {selector:'[name="お知らせ"] [name="掲示板"] [name="board"]'},
+    });
+    await v.board.delivery();
+    console.log(v.whois+'.'+v.step,v.board);
+  
+    v.step = '10'; // 最終処理：権限により表示画面制御
+    // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生
+    // ⇒ 最終段階で実行する
+    v.authority = Number(v.config.info.authority)
+    if( (v.authority & 3) === 0 ){
+      v.step = '9.1'; // 1(参加者)、2(スタッフ)、3(管理者)いずれでもない
+      alert('参加資格を確認してください');
+      document.querySelectorAll('body > div').forEach(x => x.remove());
+      return;
+    } else {
+      if( (v.authority & 2) === 0 ){
+        v.step = '9.2'; // スタッフではない ⇒ スタッフ画面を削除
+        document.querySelectorAll('div[name="スタッフ"]')
+        .forEach(x => x.remove());
+        // タブの数を減らす
+        document.querySelector('.BurgerMenu[name="main"] .tabs')
+        .style.gridTemplateColumns = 'repeat(4, 1fr)';
+      }
+      // ローディング画面解除
+      document.querySelector('div[name="loading"]').style.display = 'none';
+    } 
+    */
     // ローディング画面解除
     document.querySelector('div[name="loading"]').style.display = 'none';
-  } 
-  */
-  // ローディング画面解除
-  document.querySelector('div[name="loading"]').style.display = 'none';
 
-  console.log(v.whois+' end.');
+    console.log(v.whois+' normal end.');
+
+  } catch(e){
+    const msg = v.whois+' abnormal end(step.'+v.step+').\n'+e.message;
+    console.error(msg,e.stack,v);
+    alert(msg);
+  }
 });
 </script>
 </html>
