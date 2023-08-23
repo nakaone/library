@@ -70,18 +70,71 @@
  * </style>
  * ```
  * 
+ * ### デシジョンテーブル
+ * 
+ * | 優先(a) | 劣後(b) | 結果 | 備考 |
+ * | :--: | :--: | :--: | :-- |
+ * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
+ * |  A  |  B  |  A  | |
+ * |  A  | [B] |  A  | |
+ * |  A  | {B} |  A  | |
+ * | [A] |  -  | [A] | |
+ * | [A] |  B  | [A] | |
+ * | [A] | [B] | [A+B] | 配列は置換ではなく結合。但し重複不可 |
+ * | [A] | {B} | [A] | |
+ * | {A} |  -  | {A} | |
+ * | {A} |  B  | {A} | |
+ * | {A} | [B] | {A} | |
+ * | {A} | {B} | {A+B} | オブジェクトも置換ではなく結合する |
+ * |  -  |  -  |  -  | |
+ * |  -  |  B  |  B  | |
+ * |  -  | [B] | [B] | |
+ * |  -  | {B} | {B} | |
+ * 
  */
 const setupInstance = (dest,opt,def) => {
-  const v = {whois:'setupInstance',rv:true,step:0};
+  const v = {whois:'setupInstance',rv:true,step:0,
+    // 配列・オブジェクトの判定式
+    isObj: obj => obj && typeof obj === 'object' && !Array.isArray(obj),
+    isArr: obj => obj && typeof obj === 'object' && Array.isArray(obj),
+    // ディープコピー。値の設定ロジックは上記デシジョンテーブル参照
+    deepcopy: (dest,opt) => {
+      Object.keys(opt).forEach(x => {
+        if( !dest.hasOwnProperty(x) ){
+          // コピー先に存在しなければ追加
+          dest[x] = opt[x];
+        } else {
+          if( v.isObj(dest[x]) && v.isObj(opt[x]) ){
+            // 両方オブジェクト -> メンバをマージ
+            v.deepcopy(dest[x],opt[x]);
+          } else if( v.isArr(dest[x]) && v.isArr(opt[x]) ){
+            // 両方配列 -> 配列をマージ
+            // Setで重複を排除しているが、配列・オブジェクトは重複(中身もマージされない)
+            dest[x] = [...new Set([...dest[x],...opt[x]])];
+          } else {
+            // optの値でdestの値を置換
+            dest[x] = opt[x];
+          }
+        }
+      });
+    },
+  };
 
-  console.log(v.whois+' start.');
+  console.log(v.whois+' start.',dest,opt,def);
   try {
 
+    v.step = 1; // ディープコピー
+    dest = Object.assign(dest,def); // 既定値をセット
+    v.deepcopy(dest,opt);
+
+/*
     v.step = 1; // ディープコピー。但し配列は置換
     v.merged = mergeDeeply(def,opt);
     for( let key in v.merged ){
       dest[key] = v.merged[key];
     }
+    console.log(v.whois+' step.'+v.step+'\n',v.merged);
+*/
 
     v.step = 2; // parentの処理
     if( dest.hasOwnProperty('parent') ){
@@ -94,6 +147,7 @@ const setupInstance = (dest,opt,def) => {
         };
       }
     }
+    console.log(v.whois+' step.'+v.step+'\n',dest.parent);
 
     v.step = 3; // CSS定義に基づき新たなstyleを生成
     if( dest.hasOwnProperty('css') ){
@@ -111,7 +165,7 @@ const setupInstance = (dest,opt,def) => {
       }
     }
 
-    console.log(v.whois+' normal end.');
+    console.log(v.whois+' normal end.\n',dest);
     return v.rv;
   } catch(e){
     console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
