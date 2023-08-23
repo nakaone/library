@@ -25,27 +25,52 @@
  * @desc オブジェクトのプロパティを再帰的にマージ
  * - Qiita [JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法](https://qiita.com/riversun/items/60307d58f9b2f461082a)
  * 
- * @param {Object} target - 結合対象のオブジェクト1
- * @param {Object} source - 結合対象のオブジェクト2。同名のプロパティはこちらで上書き
+ * @param {Object} target - 結合対象のオブジェクト1(劣後Obj)
+ * @param {Object} source - 結合対象のオブジェクト2。同名のプロパティはこちらで上書き(優先Obj)
  * @param {Object} opts - オプション
  * @param {boolean} [opts.concatArray=false] - プロパティの値が配列だった場合、結合するならtrue
+ * @param {boolean} [opts.overwirte=false] - target自身を書き換えるならtrue
  * @returns {Object} 結合されたオブジェクト
+ * 
+ * ### デシジョンテーブル
+ * 
+ * | 優先(a) | 劣後(b) | 結果 | 備考 |
+ * | :--: | :--: | :--: | :-- |
+ * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
+ * |  A  |  B  |  A  | |
+ * |  A  | [B] |  A  | |
+ * |  A  | {B} |  A  | |
+ * | [A] |  -  | [A] | |
+ * | [A] |  B  | [A] | |
+ * | [A] | [B] | [A] | concatArray=trueなら[A+B] |
+ * | [A] | {B} | [A] | |
+ * | {A} |  -  | {A} | |
+ * | {A} |  B  | {A} | |
+ * | {A} | [B] | {A} | |
+ * | {A} | {B} | {A+B} | |
+ * 
  */
 
 function mergeDeeply(target, source, opts) {
   const isObject = obj => obj && typeof obj === 'object' && !Array.isArray(obj);
   const isConcatArray = opts && opts.concatArray;
+  // resultは劣後Objをコピー
   let result = Object.assign({}, target);
   if (isObject(target) && isObject(source)) {
+    // target(劣後)もsource(優先)もオブジェクトの場合
     for (const [sourceKey, sourceValue] of Object.entries(source)) {
-      const targetValue = target[sourceKey];
+      // source(優先)のキー(sourceKey)と値(sourceValue)
+      const targetValue = target[sourceKey];  // 劣後の該当値
       if (isConcatArray && Array.isArray(sourceValue) && Array.isArray(targetValue)) {
+        // ①優先・劣後ともに配列で、オプションが「配列は優先と劣後の和」の場合
         result[sourceKey] = targetValue.concat(...sourceValue);
       }
       else if (isObject(sourceValue) && target.hasOwnProperty(sourceKey)) {
+        // ②優先の値がオブジェクト型で劣後が当該キーの値を持っている場合は再帰呼出
         result[sourceKey] = mergeDeeply(targetValue, sourceValue, opts);
       }
       else {
+        // ①②に該当しない場合
         Object.assign(result, {[sourceKey]: sourceValue});
       }
     }
