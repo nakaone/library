@@ -201,7 +201,7 @@ class Auth {
       v.step = '4'; // 秘密鍵・公開鍵を作成し、プロパティに格納する
       this.#setupKeys();
 
-      console.log(v.whois+' normal end.');
+      console.log(v.whois+' normal end.',this);
     } catch(e){
       v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
       console.error(v.msg);
@@ -532,7 +532,7 @@ class Auth {
    */
   async fetch(fc,arg,md=0){
     const v = {whois:'Auth.fetch',rv:null,data:{cp:this.RSA.pKey}};
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.\n',fc,arg,md);
     try {
 
       v.step = '1'; // 送信するトークンを生成

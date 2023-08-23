@@ -159,9 +159,9 @@ window.addEventListener('DOMContentLoaded',async () => {
       }
       v.config = new Auth(v.gwURL,v.opt);
       if( v.config instanceof Error ) throw v.config;
-      await v.config.build();
-      localStorage.setItem('conf',JSON.stringify(v.config));
     }
+    await v.config.build();
+    localStorage.setItem('conf',JSON.stringify(v.config));
     console.log(v.whois+'.'+v.step+':',v.config);
 
     v.step = '1.3'; // MarkDownで記述された部分をHTML化して表示
@@ -194,7 +194,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     v.step = '2.1.1'; // 掲示板
     v.board = new BulletinBoard({
       auth: v.config, // 認証局他のAuthインスタンス
-      parent: {selector:'[data-BurgerMenu="label:\'掲示板\'"]'},
+      parent: '[data-BurgerMenu="label:\'掲示板\'"]',
     });
     if( v.board instanceof Error ) throw v.board;
     v.rv = await v.board.delivery();
@@ -222,6 +222,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 2.5 スタッフ
     // 2.5.1 参加者数
 
+    /*
     v.step = '2.5.2'; // 受付業務
     v.receptPage = '[data-BurgerMenu="label:\'受付業務\'"]';
     v.id = document.querySelector(v.receptPage).classList.item(0);
@@ -233,6 +234,7 @@ window.addEventListener('DOMContentLoaded',async () => {
       loading: {selector:'div[name="loading"]'},  // ローディング画面のCSSセレクタ
     });
     if( v.reception instanceof Error ) throw v.reception;
+    */
 
     // 2.5.3 校内探険
     // 2.5.4 参考資料
@@ -241,7 +243,6 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 2.5.4.3 関連サイト
     // 2.6 システム設定
 
-    /*
     v.step = '10'; // 最終処理：権限により表示画面制御
     // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生
     // ⇒ 最終段階で実行する
@@ -263,9 +264,6 @@ window.addEventListener('DOMContentLoaded',async () => {
       // ローディング画面解除
       document.querySelector('div[name="loading"]').style.display = 'none';
     } 
-    */
-    // ローディング画面解除
-    document.querySelector('div[name="loading"]').style.display = 'none';
 
     console.log(v.whois+' normal end.');
 

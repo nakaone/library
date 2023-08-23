@@ -9,10 +9,48 @@ class BulletinBoard {
    */
   constructor(opt){
     const v = {whois:'BulletinBoard.constructor',step:'0',rv:null};
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',opt);
     try {
 
       v.step = '1'; // オプション未定義項目の既定値をプロパティにセット
+      v.rv = setupInstance(this,opt,{
+        //auth: null, // {Auth} 認証局他のAuthインスタンス
+        parent: {
+          selector: '',
+          element: null,
+        },
+        interval: 60000,
+        intervalId: null, // インターバルID
+        posts: [],  // 投稿メッセージ一覧
+        css: [
+          {sel:'.date',prop:{
+            'margin-top':'1rem',
+            'padding-left': '1rem',
+            'font-family': 'fantasy',
+            'font-size': '1.5rem',
+            'border-bottom': 'solid 4px #ddd'
+          }},
+          {sel:'.header',prop:{
+            'margin-top': '1rem',
+            'display': 'grid',
+            'grid-template-columns': '3rem 1fr',
+            'grid-gap': '0.5rem',
+            'background-color': '#ddd',
+            'padding-left': '0.5rem',
+          }},
+          {sel:'.fromto',prop:{
+            'font-size': '0.8rem',
+          }},
+          {sel:'.time',prop:{
+            'font-size': '0.8rem',
+            'font-family': 'cursive',
+          }},
+          {sel:'.message',prop:{}},
+        ],
+      });
+      console.log('l.51',v.rv,this.auth);
+      if( v.rv instanceof Error ) throw v.rv;
+      /*
       this.#setProperties(this,null,opt);
       this.parent.element = document.querySelector(this.parent.selector);
 
@@ -29,6 +67,7 @@ class BulletinBoard {
           );
         }
       }
+      */
 
       v.step = '3'; // 新規のお知らせが来たら末尾を表示するよう設定
       // https://at.sachi-web.com/blog-entry-1516.html
@@ -52,7 +91,7 @@ class BulletinBoard {
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
     }
   }
@@ -63,6 +102,7 @@ class BulletinBoard {
    * @param {AuthOpt} opt - 起動時にオプションとして渡されたオブジェクト
    * @returns {void}
    */
+  /*
   #setProperties(dest,def,opt){
     const v = {whois:'Reception.#setProperties',rv:true,def:{
       auth: null, // {Auth} 認証局他のAuthインスタンス
@@ -129,22 +169,30 @@ class BulletinBoard {
       return e;
     }
   }
+  */
 
-  post(){
-    const v = {whois:'BulletinBoard.constructor',step:'0',rv:null};
+  /** 掲示板にポストする
+   * 
+   */
+  post = async () => {
+    const v = {whois:'BulletinBoard.post',step:'0',rv:null};
     console.log(v.whois+' start.');
     try {
 
 
+      
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      this.stop();
       return e;        
     }
   }
 
-  /**
+  /** 掲示板から配信を受ける
+   * 
+   * this.startにより定期的に起動されるよう設定される。
    * @param {void}
    * @returns 
    */
@@ -156,7 +204,7 @@ class BulletinBoard {
       // Auth.fetchで認証局に問い合わせ
       console.log(this.auth);
       v.rv = await this.auth.fetch('delivery',{
-        entryNo: this.auth.info.entryNo,
+        entryNo: this.auth.entryNo.value,
         publicKey: this.auth.RSA.pKey,
       },3);
       if( v.rv.isErr ){
@@ -207,25 +255,57 @@ class BulletinBoard {
           text: post.message,
         }));
       });
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       this.stop();
       return e;        
     }
   }
 
+  /** 定期的な配信(受信)を開始する
+   * @param {void}
+   * @returns {void}
+   */
   start = () => {
-    if( this.intervalId !== null ){
-      this.stop();
+    const v = {whois:'BulletinBoard.start',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      if( this.intervalId !== null ){
+        this.stop();
+      }
+      this.intervalId = setInterval(this.delivery, this.interval);
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
     }
-    this.intervalId = setInterval(this.delivery, this.interval);
   }
 
+  /** 定期的な配信(受信)を終了する
+   * @param {void}
+   * @returns {void}
+   */
   stop = () => {
-    clearInterval(this.intervalId);
-    this.intervalId = null;
+    const v = {whois:'BulletinBoard.stop',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
   }
 
   /** 設定内容の変更(主に時間間隔の修正を想定)
@@ -233,12 +313,24 @@ class BulletinBoard {
    * @returns {void}
    */
   change = (opt) => {
-    this.#setProperties(this,null,opt);
-    // 変更された内容でリスタート
-    if( this.intervalId !== null ){
-      this.stop();
+    const v = {whois:'BulletinBoard.change',step:'0',rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      v.current = JSON.parse(JSON.stringify(this));
+      v.rv = setupInstance(this,opt,v.current);
+      if( v.rv instanceof Error ) throw v.rv;
+      // 変更された内容でリスタート
+      if( this.intervalId !== null ){
+        this.stop();
+      }
       this.start();
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
     }
   }
-
 }
