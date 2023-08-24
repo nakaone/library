@@ -95,7 +95,7 @@
 const setupInstance = (dest,opt,def) => {
   const v = {whois:'setupInstance',rv:true,step:0,
     // 配列・オブジェクトの判定式
-    isObj: obj => obj && typeof obj === 'object' && !Array.isArray(obj),
+    isObj: obj => obj && typeof obj === 'object' && !Array.isArray(obj) && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
     isArr: obj => obj && typeof obj === 'object' && Array.isArray(obj),
     // ディープコピー。値の設定ロジックは上記デシジョンテーブル参照
     deepcopy: (dest,opt) => {
@@ -126,15 +126,6 @@ const setupInstance = (dest,opt,def) => {
     v.step = 1; // ディープコピー
     dest = Object.assign(dest,def); // 既定値をセット
     v.deepcopy(dest,opt);
-
-/*
-    v.step = 1; // ディープコピー。但し配列は置換
-    v.merged = mergeDeeply(def,opt);
-    for( let key in v.merged ){
-      dest[key] = v.merged[key];
-    }
-    console.log(v.whois+' step.'+v.step+'\n',v.merged);
-*/
 
     v.step = 2; // parentの処理
     if( dest.hasOwnProperty('parent') ){
