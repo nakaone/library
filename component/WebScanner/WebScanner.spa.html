@@ -1,0 +1,673 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>WebScanner</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style>html {
+  font-size: 24pt;
+  font:helvetica,arial,freesans,clean,sans-serif;
+  line-height: 1.5rem;
+  color: black;
+  box-sizing: border-box;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  -webkit-text-size-adjust: none;
+  -moz-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+.right, .num {
+  text-align: right;
+}
+/*
+  ヘッダ関係
+*/
+h1,h2,h3,h4,h5,h6 {
+  border: 0;
+}
+h1 {
+  font-size: 170%;
+  border-top: 4px solid #aaa;
+  padding-top: 0.5em;
+  margin-top: 1.5em;
+}
+h2, h3 {
+  margin: 1em 0;
+}
+h2 {
+  font-size: 150%;
+  margin-top: 1.5em;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5em;
+}
+/*
+  テーブル関係
+*/
+th, .th {
+  padding: 0.3em;
+  background-color: #888;
+  color: white;
+}
+td, .td {
+  padding: 0.3em;
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+/*
+  リスト関係
+*/
+ul, ol {
+  margin: 1em 0 1em 2em;
+}
+li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+/*
+  ソース表示
+*/
+code {
+  background-color: #f8f8ff;
+  color: #444;
+  padding: 0 0.2em;
+  border: 1px solid #dedede;
+}
+
+pre {
+  border: solid 5px #999;
+}</style>
+<style type="text/css">
+  html, body, #wrapper {
+    width: 100%;
+  }
+  #wrapper {
+    margin: 0 auto;
+    width: 80%;
+    display: flex;
+    flex-flow: column;
+    /*
+    display: grid;
+    grid-template-rows: 160vw 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
+    */
+  }
+  #wrapper > div {
+    margin: 1rem;
+  }
+</style>
+</head><body>
+  <div id="wrapper">
+    <div id="scanner"></div>
+    <div><input type="text" value="(undefined)"></div>
+    <div><a></a></div>
+    <div id="qr"></div>
+  </div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<!-- QRコード生成 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script type="text/javascript">function createElement(arg={}){
+  const v = {rv:null,arg:{}};
+  v.arg = mergeDeeply(
+    {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[]},
+    (typeof arg === 'string' ? {tag:arg} : arg));
+  v.rv = document.createElement(v.arg.tag);
+  for( v.i in v.arg.attr ){
+    v.rv.setAttribute(v.i,v.x = v.arg.attr[v.i]);
+  }
+  for( v.i in v.arg.logical ){
+    if( v.arg.logical[v.i] ){
+      v.rv.setAttribute(v.i,true);
+    }
+  }
+  for( v.i in v.arg.style ){
+    if( v.i.match(/^\-\-/) ){
+      v.rv.style.setProperty(v.i,v.arg.style[v.i]);
+    } else {
+      v.rv.style[v.i] = v.arg.style[v.i];
+    }
+  }
+  for( v.i in v.arg.event ){
+    v.rv.addEventListener(v.i,v.arg.event[v.i],false);
+  }
+  if( v.arg.html.length > 0 ){
+    v.rv.innerHTML = v.arg.html;
+  } else {
+    v.rv.innerText = v.arg.text;
+  }
+  for( v.i=0 ; v.i<v.arg.children.length ; v.i++ ){
+    v.rv.appendChild(createElement(v.arg.children[v.i]));
+  }
+  return v.rv;
+}</script>
+<script type="text/javascript">/**
+ * @desc オブジェクトのプロパティを再帰的にマージ
+ * - Qiita [JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法](https://qiita.com/riversun/items/60307d58f9b2f461082a)
+ * 
+ * @param {Object} target - 結合対象のオブジェクト1
+ * @param {Object} source - 結合対象のオブジェクト2。同名のプロパティはこちらで上書き
+ * @param {Object} opts - オプション
+ * @param {boolean} [opts.concatArray=false] - プロパティの値が配列だった場合、結合するならtrue
+ * @returns {Object} 結合されたオブジェクト
+ */
+
+function mergeDeeply(target, source, opts) {
+  const isObject = obj => obj && typeof obj === 'object' && !Array.isArray(obj);
+  const isConcatArray = opts && opts.concatArray;
+  let result = Object.assign({}, target);
+  if (isObject(target) && isObject(source)) {
+    for (const [sourceKey, sourceValue] of Object.entries(source)) {
+      const targetValue = target[sourceKey];
+      if (isConcatArray && Array.isArray(sourceValue) && Array.isArray(targetValue)) {
+        result[sourceKey] = targetValue.concat(...sourceValue);
+      }
+      else if (isObject(sourceValue) && target.hasOwnProperty(sourceKey)) {
+        result[sourceKey] = mergeDeeply(targetValue, sourceValue, opts);
+      }
+      else {
+        Object.assign(result, {[sourceKey]: sourceValue});
+      }
+    }
+  }
+  return result;
+}</script>
+<script type="text/javascript">/** constructor共通の初期処理として①オプション・既定値をメンバに設定、②wrapper(parent)要素取得、③スタイルシート作成を行う
+ * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
+ * @param {Object} opt - 起動時にオプションとして渡されたオブジェクト
+ * @param {Object} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
+ * @param {number} [depth=0] - 再起呼出時の階層。開始・終了メッセージ制御用なので指定不要
+ * @returns {void}
+ * 
+ * ## 使用方法
+ * 
+ * 1. 主にclass内constructorで冒頭に使用することを想定。
+ * 1. 第一階層にメンバ"css"が存在すると、新規styleを生成
+ * 1. 第一階層にメンバ"parent"が存在する場合、
+ *    - 文字列型ならCSSセレクタと解して`parent:{selector:(string),element:(HTMLElement)}`を生成
+ *    - HTMLElement型ならそのまま`parent:(HTMLElement)}`として設定
+ * 
+ * ### 入力例
+ * 
+ * ```
+ * const menu = new BurgerMenu({parent:'body',auth:confObj,fuga:{a:10}})
+ * 
+ * class BurgerMenu {
+ *   constructor(opt){
+ *     setupInstance(
+ *       this,  // 第一引数はthis(固定)
+ *       opt,   // 第二引数はconstructorに渡されたオプション
+ *       {      // 第三引数は既定値のオブジェクト
+ *         css: [  // このクラスに適用するCSS定義の配列
+ *           {
+ *             sel:'.date', // CSSセレクタ
+ *             prop:{       // 設定する値。ラベル・値ともクォーテーションで囲む
+ *               'margin-top':'1rem',
+ *               'padding-left': '1rem',
+ *             }
+ *           },
+ *         ],
+ *         parent: '',  // 親要素のCSSセレクタ or HTMLElementの既定値
+ *         auth: null,
+ *         hoge: 'Hello World',
+ *         fuga: {
+ *           a: null,
+ *           b: 20,
+ *         },
+ *       });
+ *     // 以降、constructorの処理
+ * ```
+ * 
+ * ### 出力例
+ * 
+ * ```
+ * this = {
+ *   parent: {
+ *     selector: 'body',  // optより導出
+ *     element : (body element),  // optより導出
+ *   },
+ *   auth: confObj, // optの値を設定
+ *   hoge: 'Hello World',  // 既定値を設定
+ *   fuga: {
+ *     a:10,  // optの値を設定
+ *     b:20,  // 既定値を設定
+ *   },
+ * }
+ * ```
+ * 
+ * ```
+ * <style type="text/css">
+ * .date {
+ *   margin-top: 1rem;
+ *   padding-left: 1rem;
+ * }
+ * </style>
+ * ```
+ * 
+ * ### デシジョンテーブル
+ * 
+ * | 優先(a) | 劣後(b) | 結果 | 備考 |
+ * | :--: | :--: | :--: | :-- |
+ * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
+ * |  A  |  B  |  A  | |
+ * |  A  | [B] |  A  | |
+ * |  A  | {B} |  A  | |
+ * | [A] |  -  | [A] | |
+ * | [A] |  B  | [A] | |
+ * | [A] | [B] | [A+B] | 配列は置換ではなく結合。但し重複不可 |
+ * | [A] | {B} | [A] | |
+ * | {A} |  -  | {A} | |
+ * | {A} |  B  | {A} | |
+ * | {A} | [B] | {A} | |
+ * | {A} | {B} | {A+B} | オブジェクトも置換ではなく結合する |
+ * |  -  |  -  |  -  | |
+ * |  -  |  B  |  B  | |
+ * |  -  | [B] | [B] | |
+ * |  -  | {B} | {B} | |
+ * 
+ */
+const setupInstance = (dest,opt,def) => {
+  const v = {whois:'setupInstance',rv:true,step:0,
+    // 配列・オブジェクトの判定式
+    isObj: obj => obj && typeof obj === 'object' && !Array.isArray(obj) && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
+    isArr: obj => obj && typeof obj === 'object' && Array.isArray(obj),
+    // ディープコピー。値の設定ロジックは上記デシジョンテーブル参照
+    deepcopy: (dest,opt) => {
+      Object.keys(opt).forEach(x => {
+        if( !dest.hasOwnProperty(x) ){
+          // コピー先に存在しなければ追加
+          dest[x] = opt[x];
+        } else {
+          if( v.isObj(dest[x]) && v.isObj(opt[x]) ){
+            // 両方オブジェクト -> メンバをマージ
+            v.deepcopy(dest[x],opt[x]);
+          } else if( v.isArr(dest[x]) && v.isArr(opt[x]) ){
+            // 両方配列 -> 配列をマージ
+            // Setで重複を排除しているが、配列・オブジェクトは重複(中身もマージされない)
+            dest[x] = [...new Set([...dest[x],...opt[x]])];
+          } else {
+            // optの値でdestの値を置換
+            dest[x] = opt[x];
+          }
+        }
+      });
+    },
+  };
+
+  console.log(v.whois+' start.',dest,opt,def);
+  try {
+
+    v.step = 1; // ディープコピー
+    dest = Object.assign(dest,def); // 既定値をセット
+    v.deepcopy(dest,opt);
+
+/*
+    v.step = 1; // ディープコピー。但し配列は置換
+    v.merged = mergeDeeply(def,opt);
+    for( let key in v.merged ){
+      dest[key] = v.merged[key];
+    }
+    console.log(v.whois+' step.'+v.step+'\n',v.merged);
+*/
+
+    v.step = 2; // parentの処理
+    if( dest.hasOwnProperty('parent') ){
+      if( typeof dest.parent === 'string' ){
+        // CSSセレクタだった場合
+        v.parent = dest.parent;
+        dest.parent = {
+          selector: v.parent,
+          element : document.querySelector(v.parent),
+        };
+      }
+    }
+    console.log(v.whois+' step.'+v.step+'\n',dest.parent);
+
+    v.step = 3; // CSS定義に基づき新たなstyleを生成
+    if( dest.hasOwnProperty('css') ){
+      v.style = document.createElement('style');
+      document.head.appendChild(v.style);
+      for( v.i=0 ; v.i<dest.css.length ; v.i++ ){
+        v.x = dest.css[v.i];
+        for( v.y in v.x.prop ){
+          v.prop = dest.parent.selector + ' ' + v.x.sel
+            + ' { ' + v.y + ' : ' + v.x.prop[v.y] + '; }\n';
+          v.style.sheet.insertRule(v.prop,
+            v.style.sheet.cssRules.length,
+          );
+        }
+      }
+    }
+
+    console.log(v.whois+' normal end.\n',dest);
+    return v.rv;
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}</script>
+<script type="text/javascript">/**
+ * @classdesc デバイスのカメラで文書/コードのスキャンを行う
+ */
+
+/**
+ * @classdesc 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャン
+ * 
+ * **残課題**
+ * 
+ * 1. scanDoc稼働未確認
+ * 
+ * @example
+ * 
+ * ```
+ * <div class="webScanner"></div>
+ * 〜
+ * const ws = new webScanner('.webScanner');
+ * ws.scanQR(r=>console.log('scanned QR Code = '+r));   // QRコードの読み込み
+ * ws.scanDoc();  // 文書の撮影
+ * ```
+ */
+class WebScanner {
+  /**
+   * @constructor
+   * @param {string} [parent='body'] - 親要素のCSSセレクタ
+   * @param {Object} [opt={}] - オプション
+   * 
+   * - [Promiseでsleep機能を作る](https://www.sejuku.net/blog/24629#index_id5)
+   */
+  constructor(parent='body',opt={}){
+    const v = {whois:'WebScanner.constructor',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1; // 引数(opt)・既定値を基にメンバの値を設定
+      if( !opt.hasOwnProperty('parent') ) opt.parent = parent;
+      v.rv = setupInstance(this,opt,{
+        constraints:{ // video.getUserMediaで指定するオプション
+          audio: false,
+          video: {
+            facingMode: 'environment',
+            width: {min: 500},
+            height: {min: 500},
+          },
+        },
+        showVideo: false, // scanQR実行時、video領域を表示するならtrue
+        showCanvas: true, // scanQR実行時、canvas領域を表示するならtrue
+        closeFinder: true, // scanQR実行後、video/canvas領域を残すならfalse
+        RegExp: /.+/, // scanQR実行時、読込結果を評価する正規表現
+        maxWaiting: 90000, // 最大待機時間。単位：ミリ秒
+        interval: 300, // 動画撮像間隔。ミリ秒
+        size: null,  // 撮像領域(ファインダ)のサイズ。px。nullなら親要素の大きさから判断
+        minSize : 500, // 最小撮像サイズ。px
+        sleep: (sec) =>  // 指定時間待機
+          {return new Promise(resolve => setTimeout(resolve,sec))},
+        wrapper: null,  // {HTMLElement} - 親直下のラッパー
+        video: null,  // {HTMLElement} - videoで撮影している画像領域
+        canvas: null, // {HTMLElement} - 撮影画像を描画する領域
+        context: null, // {CanvasRenderingContext2D} - 描画コンテキスト
+        switches: null,  // {HTMLElement} - 各種ボタンのラッパー
+        retake: null,  // {HTMLElement} - 再撮影ボタン
+        shutter: null, // {HTMLElement} - シャッターボタン
+        adopt: null,  // {HTMLElement} - 撮影OK、次へボタン
+        css: [{
+          sel: '.WebScanner',
+          prop: {
+            'display': 'none',
+          }
+        },{
+          sel: '.WebScanner.act',
+          prop: {
+            '--videoSize': '300px',
+            '--buttonSize': '100px',
+            'display': 'grid',
+            'grid-template-rows': 'var(--videoSize) var(--videoSize) var(--buttonSize)',
+            'row-gap': '1rem',
+            'justify-items': 'center',
+            'align-items': 'center',
+          }
+        },{
+          sel: '.WebScanner video',
+          prop: {
+            'display': 'none',
+          }
+        },{
+          sel: '.WebScanner video.act',
+          prop: {
+            'display': 'block',
+            'width': 'var(--videoSize)',
+            'height': 'var(--videoSize)',
+          }
+        },{
+          sel: '.WebScanner canvas',
+          prop: {
+            'display': 'none',
+          }
+        },{
+          sel: '.WebScanner canvas.act',
+          prop: {
+            'display': 'block',
+          }
+        },{
+          sel: '.WebScanner .switches',
+          prop: {
+            'display': 'none',
+          }
+        },{
+          sel: '.WebScanner .switches.act',
+          prop: {
+            'width': '80%',
+            'display': 'grid',
+            'grid-template-columns': 'repeat(3, 1fr)',
+            'column-gap': 'calc((100% - var(--buttonSize) * 3) / 2)',
+          }
+        },{
+          sel: '.WebScanner .switches button',
+          prop: {
+            'width': 'var(--buttonSize)',
+            'height': 'var(--buttonSize)',
+            'text-align': 'center',
+            'vertical-align': 'middle',
+            'font-size': 'calc(var(--buttonSize) * 0.7)',
+          }
+        }],
+      });
+      if( v.rv instanceof Error ) throw v.rv;
+
+      v.step = 2; // HTML要素の作成
+      this.wrapper = createElement({attr:{class:'WebScanner'}});
+      this.parent.element.appendChild(this.wrapper);
+      ['video','canvas'].forEach(x => {
+        this[x] = createElement({tag:x});
+        this.wrapper.appendChild(this[x]);
+      });
+      ['switches'].forEach(x => {
+        this[x] = createElement({attr:{class:x}});
+        this.wrapper.appendChild(this[x]);
+      });
+      ['retake','shutter','adopt'].forEach(x => {
+        this[x] = createElement({tab:'button',attr:{name:x}});
+        this.switches.appendChild(this[x]);
+      });
+
+      v.step = 3; // デバイスがサポートされているか確認
+      if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
+        throw new Error('デバイス(カメラ)がサポートされていません');
+      } else {
+        console.log("%s step.%s: device supported.",v.whois,v.step);
+      }
+
+      v.step = 4; // 描画コンテキストの取得とクリア
+      this.context = this.canvas.getContext('2d');
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      v.step = 5; // 撮像(video)領域のサイズ変更
+      // 親要素の高さを最大に変更
+      this.parent.element.style.width
+      = this.parent.element.style.height = '100%';
+      // 撮像領域を親要素の幅・高さ、いずれか小さい方の正方形に設定
+      if( this.size === null ){
+        v.pw = this.parent.element.clientWidth;
+        v.ph = this.parent.element.clientHeight;
+        if( v.pw < v.ph ){
+          this.size = v.pw < this.minSize ? this.minSize : v.pw;
+          this.parent.element.style.height = this.size + 'px';
+        } else {
+          this.size = v.ph < this.minSize ? this.minSize : v.ph;
+          this.parent.element.style.width = this.size + 'px';
+        }
+      }
+      this.wrapper.style.setProperty('--videoSize',this.size+'px');
+
+      // 以下の手順はawaitが必要なので、scanQRで実行
+
+      console.log(v.whois+' normal end.\n',this);
+      return v.rv;
+      
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** QRコードをスキャン
+   * @param {void}
+   * @returns {string} スキャンしたQRコードの文字列
+   * 
+   * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
+   */
+  scanQR = async () => {
+    const v = {whois:'WebScanner.scanQR',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1; // カメラの準備(videoタグに表示)
+      this.video.srcObject = await navigator.mediaDevices
+      .getUserMedia(this.constraints);
+      this.video.onloadedmetadata = () => {
+        this.video.play();
+      };
+
+      v.step = 2; // video,canvasの表示
+      this.wrapper.classList.add('act');
+      if( this.showVideo ){
+        this.video.classList.add('act');
+      } else {
+        this.video.classList.remove('act');
+      };
+      if( this.showCanvas ){
+        this.canvas.classList.add('act');
+      } else {
+        this.canvas.classList.remove('act');
+      };
+
+      v.step = 3; // 定期的にスキャン実行
+      v.cnt = 0;
+      do {
+        await this.sleep(this.interval);
+        if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
+
+          v.step = 3.1; // canvasのサイズを撮像サイズに合わせて変更
+          v.vw = this.video.videoWidth;
+          v.vh = this.video.videoHeight;
+          this.canvas.width = v.cw
+          = this.size * (v.vw > v.vh ? 1 : (v.vw / v.vh));
+          this.canvas.height = v.ch
+          = this.size * (v.vh > v.vw ? 1 : (v.vh / v.vw));
+  
+          v.step = 3.2; // キャンバスへの描画
+          this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
+          v.imageData = this.context.getImageData(0, 0, v.cw, v.ch);
+          v.code = jsQR(v.imageData.data, v.imageData.width, v.imageData.height);
+          if ( v.code ) {
+            v.step = 3.3;
+            console.log(v.code);
+            // スキャン結果の判定
+            if( typeof v.code.data === 'string' && v.code.data.match(this.RegExp) ){
+              v.rv = v.code.data;
+            }
+          }
+        }
+        console.log(v.cnt);
+        v.cnt += this.interval;
+      } while( v.rv === null && v.cnt < this.maxWaiting );
+
+      // 終了処理
+      this.stop(v.rv === null);
+
+      console.log(v.whois+' normal end.\n',v.rv);
+      return v.rv;
+  
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 終了処理
+   * @param {boolean} [endStatus=false] - 終了時のステータス。異常終了ならtrue
+   * @returns {void}
+   */
+  stop = (endStatus=false) => {
+    if( endStatus ){
+      alert('一定時間('+(this.maxWaiting/1000)+'秒)経過に伴いスキャナを停止しました')
+    }
+    this.video.srcObject.getVideoTracks().forEach((track) => {
+      track.stop();
+    });
+    if( this.closeFinder ){
+      this.wrapper.classList.remove('act');
+      this.video.classList.remove('act');
+      this.canvas.classList.remove('act');
+    }
+  }
+}</script>
+<script type="text/javascript">
+const changed = () => {
+  const v = {};
+  console.log('input changed.');
+
+  v.text = document.querySelector('input').value;
+
+  // QRコードの作成
+  v.qr = document.querySelector('#qr');
+  v.qr.innerHTML = '';
+  v.rv = new QRCode(v.qr,{
+    text: v.text,
+    width: 300, height: 300,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  // リンクの更新
+  v.a = document.querySelector('a');
+  v.a.setAttribute('href',v.text);
+  v.a.innerText = v.text;
+}
+
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {};
+
+  document.querySelector('input').addEventListener('input',changed);
+
+  v.scanner = new WebScanner('#scanner',{showVideo:true,closeFinder:false,RegExp:/^[0-9]+$/});
+  v.rv = await v.scanner.scanQR();
+  document.querySelector('input').value = v.rv;
+  console.log(v.rv);
+
+  changed();
+
+});
+</script>
+</body><!-- QRコード検出 --></html>
