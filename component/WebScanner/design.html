@@ -7,19 +7,24 @@
     --videoSize: 300px;
     --buttonSize: 100px;
     background-color: royalblue;
+    display: grid;
+    grid-template-rows: var(--videoSize) var(--videoSize) var(--buttonSize);
+    row-gap: 1rem;
+    justify-items: center;
+    align-items: center;
   }
-  .WebScanner .video {
+  .WebScanner video {
     background-color: aqua;
     width: var(--videoSize);
     height: var(--videoSize);
-    margin: 0 auto;
   }
-  .WebScanner .canvas {
-    background-color: blue;
+  .WebScanner canvas {
+    width: var(--videoSize);
+    height: var(--videoSize);
+    background-color: #ffff00;
   }
   .WebScanner .switches {
     width: 80%;
-    margin: calc(var(--videoSize) * 0.2) 10%;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     column-gap: calc((100% - var(--buttonSize) * 3) / 2);
@@ -47,8 +52,8 @@
 </head><body>
 
 <div class="WebScanner">
-  <div class="video"></div>
-  <div class="canvas"></div>
+  <video></video>
+  <canvas></canvas>
   <div class="switches">
     <button name="retake">◀︎</button>
     <button name="shutter">●</button>

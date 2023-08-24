@@ -513,7 +513,7 @@ prototype = () => {
   console.log(v.whois+' start.');
   try {
 
-    console.log("%s step.%s\n",v.whois,v.step,this);
+    console.log("%s step.%s\\n",v.whois,v.step,this);
 
     console.log(v.whois+' normal end.\\n',v.rv);
     return v.rv;
