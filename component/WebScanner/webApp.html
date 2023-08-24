@@ -1,0 +1,25 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>WebScanner</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="../szLib.css" rel="stylesheet" />
+<style type="text/css">
+  html {
+    height: 100%;
+  }
+  body {
+    height: 100%;
+  }
+</style>
+</head><body>
+
+<script type="text/javascript" src="../createElement.js"></script>
+<script type="text/javascript" src="../mergeDeeply.js"></script>
+<script type="text/javascript" src="../setupInstance/core.js"></script>
+<script type="text/javascript" src="core.js"></script>
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+  v.scanner = new WebScanner('body');
+});
+</script>
+</body></html>

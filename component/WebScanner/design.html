@@ -1,0 +1,64 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>design</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="../szLib.css" rel="stylesheet" />
+<style type="text/css">
+  .WebScanner {
+    --videoSize: 300px;
+    --buttonSize: 100px;
+    background-color: royalblue;
+  }
+  .WebScanner .video {
+    background-color: aqua;
+    width: var(--videoSize);
+    height: var(--videoSize);
+    margin: 0 auto;
+  }
+  .WebScanner .canvas {
+    background-color: blue;
+  }
+  .WebScanner .switches {
+    width: 80%;
+    margin: calc(var(--videoSize) * 0.2) 10%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: calc((100% - var(--buttonSize) * 3) / 2);
+    background-color: pink;
+    box-sizing: border-box;
+    border: solid 1px red;
+  }
+  .WebScanner .switches button {
+    width: var(--buttonSize);
+    height: var(--buttonSize);
+    text-align: center;
+    vertical-align: middle;
+    font-size: calc(var(--buttonSize) * 0.7);
+  }
+  .WebScanner .switches [name="retake"] {
+    background-color: blueviolet;
+  }
+  .WebScanner .switches [name="shutter"] {
+    background-color: chartreuse;
+  }
+  .WebScanner .switches [name="adopt"] {
+    background-color: lightcoral;
+  }
+</style>
+</head><body>
+
+<div class="WebScanner">
+  <div class="video"></div>
+  <div class="canvas"></div>
+  <div class="switches">
+    <button name="retake">◀︎</button>
+    <button name="shutter">●</button>
+    <button name="adopt">▶︎</button>
+  </div>
+</div>
+
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+});
+</script>
+</body></html>
