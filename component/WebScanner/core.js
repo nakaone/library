@@ -45,6 +45,8 @@ class WebScanner {
         },
         showVideo: false, // scanQR実行時、video領域を表示するならtrue
         showCanvas: true, // scanQR実行時、canvas領域を表示するならtrue
+        closeFinder: true, // scanQR実行後、video/canvas領域を残すならfalse
+        RegExp: /.+/, // scanQR実行時、読込結果を評価する正規表現
         maxWaiting: 90000, // 最大待機時間。単位：ミリ秒
         interval: 300, // 動画撮像間隔。ミリ秒
         size: null,  // 撮像領域(ファインダ)のサイズ。px。nullなら親要素の大きさから判断
@@ -122,7 +124,6 @@ class WebScanner {
         }],
       });
       if( v.rv instanceof Error ) throw v.rv;
-      console.log("%s step.%s\n",v.whois,v.step,this);
 
       v.step = 2; // HTML要素の作成
       this.wrapper = createElement({attr:{class:'WebScanner'}});
@@ -150,7 +151,6 @@ class WebScanner {
       v.step = 4; // 描画コンテキストの取得とクリア
       this.context = this.canvas.getContext('2d');
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      console.log("%s step.%s\n",v.whois,v.step,this.context);
 
       v.step = 5; // 撮像(video)領域のサイズ変更
       // 親要素の高さを最大に変更
@@ -168,12 +168,11 @@ class WebScanner {
           this.parent.element.style.width = this.size + 'px';
         }
       }
-      console.log("w=%s, h=%s, s=%s",v.pw,v.ph,this.size);
       this.wrapper.style.setProperty('--videoSize',this.size+'px');
 
       // 以下の手順はawaitが必要なので、scanQRで実行
 
-      console.log(v.whois+' normal end.\n',v.rv);
+      console.log(v.whois+' normal end.\n',this);
       return v.rv;
       
     } catch(e){
@@ -183,11 +182,7 @@ class WebScanner {
   }
 
   /** QRコードをスキャン
-   * @param {string} parent - 親要素のCSSセレクタ
-   * @param {Object} [opt={}] - オプション
-   * @param {number} opt.size - ファインダ領域のサイズ
-   * @param {number} opt.interval=300 - 撮像間隔。ミリ秒
-   * @param {number} opt.maxWaiting=90000 - 最大待機時間。単位：ミリ秒
+   * @param {void}
    * @returns {string} スキャンしたQRコードの文字列
    * 
    * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
@@ -235,10 +230,13 @@ class WebScanner {
           this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
           v.imageData = this.context.getImageData(0, 0, v.cw, v.ch);
           v.code = jsQR(v.imageData.data, v.imageData.width, v.imageData.height);
-          if (v.code) {
+          if ( v.code ) {
             v.step = 3.3;
             console.log(v.code);
-            v.rv = v.code.data;
+            // スキャン結果の判定
+            if( typeof v.code.data === 'string' && v.code.data.match(this.RegExp) ){
+              v.rv = v.code.data;
+            }
           }
         }
         console.log(v.cnt);
@@ -246,7 +244,7 @@ class WebScanner {
       } while( v.rv === null && v.cnt < this.maxWaiting );
 
       // 終了処理
-      this.stop();
+      this.stop(v.rv === null);
 
       console.log(v.whois+' normal end.\n',v.rv);
       return v.rv;
@@ -257,12 +255,21 @@ class WebScanner {
     }
   }
 
-  stop = () => {
+  /** 終了処理
+   * @param {boolean} [endStatus=false] - 終了時のステータス。異常終了ならtrue
+   * @returns {void}
+   */
+  stop = (endStatus=false) => {
+    if( endStatus ){
+      alert('一定時間('+(this.maxWaiting/1000)+'秒)経過に伴いスキャナを停止しました')
+    }
     this.video.srcObject.getVideoTracks().forEach((track) => {
       track.stop();
     });
-    this.wrapper.classList.remove('act');
-    this.video.classList.remove('act');
-    this.canvas.classList.remove('act');
+    if( this.closeFinder ){
+      this.wrapper.classList.remove('act');
+      this.video.classList.remove('act');
+      this.canvas.classList.remove('act');
+    }
   }
 }
