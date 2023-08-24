@@ -505,7 +505,27 @@ function doPost(e){
   tag: ['JavaScript','template','prototype'],
   ref: [], article:
   // =====================================================================
-`
+`2023.8.24
+
+\`\`\`
+prototype = () => {
+  const v = {whois:'prototype',rv:null,step:0};
+  console.log(v.whois+' start.');
+  try {
+
+    console.log("%s step.%s\n",v.whois,v.step,this);
+
+    console.log(v.whois+' normal end.\\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+\`\`\`
+
+2023.7.22
 
 \`\`\`
 function prototype(){
@@ -688,6 +708,7 @@ window.addEventListener('DOMContentLoaded',() => {
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
 <title></title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="../szLib.css" rel="stylesheet" />
 <style type="text/css"></style>
 </head><body>
 
