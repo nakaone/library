@@ -15,6 +15,7 @@ class BurgerMenu {
         back: null,       // {HTMLElement} ナビゲーション背景要素
         home: null,       // ホーム画面のID
         authority: 4294967295,  // 実行権限。既定値2^32-1
+        onLeave: [],      // 別ページに遷移する際に実行する関数群(dispatchで使用)
         css: [
           { sel : '.BurgerMenu',
             prop: {
@@ -382,12 +383,12 @@ class BurgerMenu {
     try {
       console.log(event,typeof event);
 
-      // data-BurgerMenu属性を持つ要素を全て非表示に
+      v.step = 1; // data-BurgerMenu属性を持つ要素を全て非表示に
       v.selector = '[data-BurgerMenu]';
       this.parent.element.querySelectorAll(v.selector)
       .forEach(x => x.style.display = 'none');
 
-      // 対象領域を特定
+      v.step = 2; // 対象領域を特定
       v.selector = '.'
       + (typeof event === 'string' ? event : event.target.name)
       + v.selector;
@@ -395,11 +396,16 @@ class BurgerMenu {
       // 対象領域〜body迄を表示
       v.showElement(v.target);
 
-      // ナビゲーションを非表示
+      // ナビゲーションから呼ばれた場合の処理
+      // ※constructorから呼ばれた場合(引数が文字列の場合)は対象外
       if( typeof event !== 'string' ){
+        v.step = 3; // ナビゲーションを非表示
         this.toggle();
+        // 別ページに遷移する際に実行する関数群を実行
+        this.onLeave.forEach(x => x());
       }
 
+      v.step = 4; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -418,16 +424,19 @@ class BurgerMenu {
     try {
       console.log(event);
 
-      // 選択された関数名を取得
+      v.step = 1; // ナビゲーションを非表示
+      this.toggle();
+
+      v.step = 2; // 別ページに遷移する際に実行する関数群を実行
+      this.onLeave.forEach(x => x());
+
+      v.step = 3; // 選択された関数名を取得
       v.funcName = event.target.getAttribute('name');
       console.log('v.funcName='+v.funcName);
 
-      // 選択された関数を実行
+      v.step = 4; // 選択された関数を実行
       console.log(this.func);
       this.func[v.funcName]();
-
-      // ナビゲーションを非表示
-      this.toggle();
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;

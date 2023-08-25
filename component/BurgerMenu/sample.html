@@ -136,6 +136,9 @@ window.addEventListener('DOMContentLoaded',() => {
     fuga:'hoge',   // setupInstance動作確認用
     authority: 2,  // Authインスタンス.authorityの使用を想定
   });
+  // ナビゲーションで別メニューに遷移する際の処理を定義
+  // 例：scanQRのカメラ停止、定期配信の停止、等
+  g.menu.onLeave.push(()=>console.log('onLeave'));
   console.log(g.menu);
 });
 </script></html>
