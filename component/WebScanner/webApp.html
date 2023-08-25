@@ -69,8 +69,8 @@ window.addEventListener('DOMContentLoaded',async () => {
 
   document.querySelector('input').addEventListener('input',changed);
 
-  v.scanner = new WebScanner('#scanner',{showVideo:true,closeFinder:false,RegExp:/^[0-9]+$/});
-  v.rv = await v.scanner.scanQR();
+  v.scanner = new WebScanner('#scanner',{showVideo:true,closeFinder:false,});
+  v.rv = await v.scanner.scanQR({RegExp:/^[0-9]+$/});
   document.querySelector('input').value = v.rv;
   console.log(v.rv);
 

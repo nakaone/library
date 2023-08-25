@@ -35,22 +35,6 @@ class WebScanner {
       v.step = 1; // 引数(opt)・既定値を基にメンバの値を設定
       if( !opt.hasOwnProperty('parent') ) opt.parent = parent;
       v.rv = setupInstance(this,opt,{
-        constraints:{ // video.getUserMediaで指定するオプション
-          audio: false,
-          video: {
-            facingMode: 'environment',
-            width: {min: 500},
-            height: {min: 500},
-          },
-        },
-        showVideo: false, // scanQR実行時、video領域を表示するならtrue
-        showCanvas: true, // scanQR実行時、canvas領域を表示するならtrue
-        closeFinder: true, // scanQR実行後、video/canvas領域を残すならfalse
-        RegExp: /.+/, // scanQR実行時、読込結果を評価する正規表現
-        maxWaiting: 90000, // 最大待機時間。単位：ミリ秒
-        interval: 300, // 動画撮像間隔。ミリ秒
-        size: null,  // 撮像領域(ファインダ)のサイズ。px。nullなら親要素の大きさから判断
-        minSize : 500, // 最小撮像サイズ。px
         sleep: (sec) =>  // 指定時間待機
           {return new Promise(resolve => setTimeout(resolve,sec))},
         wrapper: null,  // {HTMLElement} - 親直下のラッパー
@@ -122,6 +106,25 @@ class WebScanner {
             'font-size': 'calc(var(--buttonSize) * 0.7)',
           }
         }],
+        // === scanQR専用パラメータ ==========================
+        // 以下はscanQRの起動時引数として指定されたらそちらを優先する
+        // ================================================
+        constraints:{ // video.getUserMediaで指定するオプション
+          audio: false,
+          video: {
+            facingMode: 'environment',
+            width: {min: 500},
+            height: {min: 500},
+          },
+        },
+        showVideo: false, // scanQR実行時、video領域を表示するならtrue
+        showCanvas: true, // scanQR実行時、canvas領域を表示するならtrue
+        closeFinder: true, // scanQR実行後、video/canvas領域を残すならfalse
+        RegExp: /.+/, // scanQR実行時、読込結果を評価する正規表現
+        maxWaiting: 90000, // 最大待機時間。単位：ミリ秒
+        interval: 300, // 動画撮像間隔。ミリ秒
+        size: null,  // 撮像領域(ファインダ)のサイズ。px。nullなら親要素の大きさから判断
+        minSize : 500, // 最小撮像サイズ。px
       });
       if( v.rv instanceof Error ) throw v.rv;
 
@@ -182,24 +185,27 @@ class WebScanner {
   }
 
   /** QRコードをスキャン
-   * @param {void}
+   * @param {Object} opt - scanQR専用パラメータ。詳細はconstructor参照
    * @returns {string} スキャンしたQRコードの文字列
    * 
    * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
    */
-  scanQR = async () => {
+  scanQR = async (opt={}) => {
     const v = {whois:'WebScanner.scanQR',rv:null,step:0};
     console.log(v.whois+' start.');
     try {
 
-      v.step = 1; // カメラの準備(videoタグに表示)
+      v.step = 1; // パラメータの設定
+      Object.keys(opt).forEach(x => this[x] = opt[x]);
+
+      v.step = 2; // カメラの準備(videoタグに表示)
       this.video.srcObject = await navigator.mediaDevices
       .getUserMedia(this.constraints);
       this.video.onloadedmetadata = () => {
         this.video.play();
       };
 
-      v.step = 2; // video,canvasの表示
+      v.step = 3; // video,canvasの表示
       this.wrapper.classList.add('act');
       if( this.showVideo ){
         this.video.classList.add('act');
@@ -212,13 +218,13 @@ class WebScanner {
         this.canvas.classList.remove('act');
       };
 
-      v.step = 3; // 定期的にスキャン実行
+      v.step = 4; // 定期的にスキャン実行
       v.cnt = 0;
       do {
         await this.sleep(this.interval);
         if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
 
-          v.step = 3.1; // canvasのサイズを撮像サイズに合わせて変更
+          v.step = 4.1; // canvasのサイズを撮像サイズに合わせて変更
           v.vw = this.video.videoWidth;
           v.vh = this.video.videoHeight;
           this.canvas.width = v.cw
@@ -226,12 +232,12 @@ class WebScanner {
           this.canvas.height = v.ch
           = this.size * (v.vh > v.vw ? 1 : (v.vh / v.vw));
   
-          v.step = 3.2; // キャンバスへの描画
+          v.step = 4.2; // キャンバスへの描画
           this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
           v.imageData = this.context.getImageData(0, 0, v.cw, v.ch);
           v.code = jsQR(v.imageData.data, v.imageData.width, v.imageData.height);
           if ( v.code ) {
-            v.step = 3.3;
+            v.step = 4.3;
             console.log(v.code);
             // スキャン結果の判定
             if( typeof v.code.data === 'string' && v.code.data.match(this.RegExp) ){
@@ -243,7 +249,7 @@ class WebScanner {
         v.cnt += this.interval;
       } while( v.rv === null && v.cnt < this.maxWaiting );
 
-      // 終了処理
+      v.step = 5; // 終了処理
       this.stop(v.rv === null);
 
       console.log(v.whois+' normal end.\n',v.rv);
