@@ -1486,6 +1486,7 @@ class BulletinBoard {
         back: null,       // {HTMLElement} ナビゲーション背景要素
         home: null,       // ホーム画面のID
         authority: 4294967295,  // 実行権限。既定値2^32-1
+        onLeave: [],      // 別ページに遷移する際に実行する関数群(dispatchで使用)
         css: [
           { sel : '.BurgerMenu',
             prop: {
@@ -1853,12 +1854,12 @@ class BulletinBoard {
     try {
       console.log(event,typeof event);
 
-      // data-BurgerMenu属性を持つ要素を全て非表示に
+      v.step = 1; // data-BurgerMenu属性を持つ要素を全て非表示に
       v.selector = '[data-BurgerMenu]';
       this.parent.element.querySelectorAll(v.selector)
       .forEach(x => x.style.display = 'none');
 
-      // 対象領域を特定
+      v.step = 2; // 対象領域を特定
       v.selector = '.'
       + (typeof event === 'string' ? event : event.target.name)
       + v.selector;
@@ -1866,11 +1867,16 @@ class BulletinBoard {
       // 対象領域〜body迄を表示
       v.showElement(v.target);
 
-      // ナビゲーションを非表示
+      // ナビゲーションから呼ばれた場合の処理
+      // ※constructorから呼ばれた場合(引数が文字列の場合)は対象外
       if( typeof event !== 'string' ){
+        v.step = 3; // ナビゲーションを非表示
         this.toggle();
+        // 別ページに遷移する際に実行する関数群を実行
+        this.onLeave.forEach(x => x());
       }
 
+      v.step = 4; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -1889,16 +1895,19 @@ class BulletinBoard {
     try {
       console.log(event);
 
-      // 選択された関数名を取得
+      v.step = 1; // ナビゲーションを非表示
+      this.toggle();
+
+      v.step = 2; // 別ページに遷移する際に実行する関数群を実行
+      this.onLeave.forEach(x => x());
+
+      v.step = 3; // 選択された関数名を取得
       v.funcName = event.target.getAttribute('name');
       console.log('v.funcName='+v.funcName);
 
-      // 選択された関数を実行
+      v.step = 4; // 選択された関数を実行
       console.log(this.func);
       this.func[v.funcName]();
-
-      // ナビゲーションを非表示
-      this.toggle();
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -2236,101 +2245,6 @@ function mergeDeeply(target, source, opts) {
   return result;
 }
 </script>
-<script type="text/javascript">/** QRコードをスキャン
- * @param {string} parent - 親要素のCSSセレクタ
- * @param {Object} [opt={}] - オプション
- * @param {number} opt.size - ファインダ領域のサイズ
- * @param {number} opt.interval=300 - 撮像間隔。ミリ秒
- * @param {number} opt.max=90000 - 最大待機時間。単位：ミリ秒
- * @returns {string} スキャンしたQRコードの文字列
- * 
- * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
- * - [Promiseでsleep機能を作る](https://www.sejuku.net/blog/24629#index_id5)
- * 
- * @typedef scanQRopt
- * @prop {number} [size=500] - ファインダのサイズ
- */
-async function scanQR(parent,opt={}){
-  const v = {whois:'scanQR',rv:null,
-    constraints:{
-      audio: false,
-      video: {
-        facingMode: 'environment',
-        //width: opt.size || 500,
-        //height: opt.size || 500,
-      },
-    },
-    max: opt.max || 90000, // 最大待機時間。単位：ミリ秒
-    interval: opt.interval || 300, // 撮像間隔。ミリ秒
-    minSize : opt.minSize || 640, // 最小撮像サイズ。px
-    sleep: (sec) =>  // 指定時間待機
-      {return new Promise(resolve => setTimeout(resolve,sec))},
-  };
-  console.log(v.whois+' start.');
-  try {
-
-    // ファインダ領域の作成
-    v.step = '1.1'; // 親要素の高さを最大に
-    v.parent = document.querySelector(parent);
-    v.parent.style.width = v.parent.style.height = '100%';
-    v.step = '1.2'; // 撮像領域を親要素の幅・高さ、いずれか小さい方の正方形に設定
-    if( opt.hasOwnProperty('size') ){
-      v.ps = opt.size;
-    } else {
-      v.pw = v.parent.clientWidth;
-      v.ph = v.parent.clientHeight;
-      if( v.pw < v.ph ){
-        v.ps = v.pw < v.minSize ? v.minSize : v.pw;
-        v.parent.style.height = v.ps + 'px';
-      } else {
-        v.ps = v.ph < v.minSize ? v.minSize : v.ph;
-        v.parent.style.width = v.ps + 'px';
-      }
-    }
-    v.constraints.video.width = v.constraints.video.height = v.ps;
-    v.step = '1.3'; // video要素の生成
-    v.video = createElement({tag:'video',style:{margin:'auto'}});
-    v.parent.append(v.video);
-
-    v.step = '2';
-    const stream = await navigator.mediaDevices.getUserMedia(v.constraints);
-    v.video.srcObject = stream;
-    v.video.play();
-
-    v.step = '3';
-    const { width, height } = v.constraints.video;
-    v.canvas = new OffscreenCanvas(width, height);
-    const context = v.canvas.getContext('2d');
-
-    v.step = '4'; // 定期的にスキャン実行
-    v.cnt = 0;
-    do {
-      context.drawImage(v.video, 0, 0, width, height);
-      const imageData = context.getImageData(0, 0, width, height);
-      const code = jsQR(imageData.data, imageData.width, imageData.height);
-      if (code) {
-        console.log(code);
-        v.rv = code.data;
-      }
-      await v.sleep(v.interval);
-      console.log(v.cnt);
-      v.cnt += v.interval;
-    } while( v.rv === null && v.cnt < v.max );
-
-    // 終了処理
-    v.video.srcObject.getVideoTracks().forEach((track) => {
-      track.stop();
-    });
-    v.parent.innerHTML = ''; // 作業用DIVを除去
-
-    console.log(v.whois+' normal end.\n'+v.rv);
-    return v.rv;
-
-  } catch(error) {
-    console.error(v.whois+' abnormal end.',error,v);
-    return error;
-  }
-};</script>
 <script type="text/javascript">/** constructor共通の初期処理として①オプション・既定値をメンバに設定、②wrapper(parent)要素取得、③スタイルシート作成を行う
  * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
  * @param {Object} opt - 起動時にオプションとして渡されたオブジェクト
@@ -2428,7 +2342,7 @@ async function scanQR(parent,opt={}){
 const setupInstance = (dest,opt,def) => {
   const v = {whois:'setupInstance',rv:true,step:0,
     // 配列・オブジェクトの判定式
-    isObj: obj => obj && typeof obj === 'object' && !Array.isArray(obj),
+    isObj: obj => obj && typeof obj === 'object' && !Array.isArray(obj) && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
     isArr: obj => obj && typeof obj === 'object' && Array.isArray(obj),
     // ディープコピー。値の設定ロジックは上記デシジョンテーブル参照
     deepcopy: (dest,opt) => {
@@ -2459,15 +2373,6 @@ const setupInstance = (dest,opt,def) => {
     v.step = 1; // ディープコピー
     dest = Object.assign(dest,def); // 既定値をセット
     v.deepcopy(dest,opt);
-
-/*
-    v.step = 1; // ディープコピー。但し配列は置換
-    v.merged = mergeDeeply(def,opt);
-    for( let key in v.merged ){
-      dest[key] = v.merged[key];
-    }
-    console.log(v.whois+' step.'+v.step+'\n',v.merged);
-*/
 
     v.step = 2; // parentの処理
     if( dest.hasOwnProperty('parent') ){
@@ -3688,14 +3593,8 @@ class TimeTable {
 
 }
 </script>
-<script type="text/javascript">
-
-/**
- * @typedef {Object} webScannerOpt
- * @prop {number} interval - 動画状態で撮像、読み込めなかった場合の間隔。ミリ秒
- * @prop {object} RegExp - QRコードスキャン時、内容が適切か判断
- * @prop {number} lifeTime - 一定時間操作がない場合の停止までのミリ秒。既定値60000
- * @prop {boolean} alert - 読み込み完了時に内容をalert表示するか
+<script type="text/javascript">/**
+ * @classdesc デバイスのカメラで文書/コードのスキャンを行う
  */
 
 /**
@@ -3715,330 +3614,266 @@ class TimeTable {
  * ws.scanDoc();  // 文書の撮影
  * ```
  */
-
-class webScanner {
+class WebScanner {
   /**
-   * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。
-   * 
-   * - [jsQRであっさりQRコードリーダ/メーカ](https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
-   * - [PCにおける内蔵/webカメラの切り替え](webScanner.html#switchCamera)
-   * 
    * @constructor
-   * @param {string|HTMLElement} parent - 親要素(ラッパー)。文字列ならCSSセレクタと解釈
-   * @param {webScannerOpt} [opt={}] - オプション
-   * @returns {void} なし
+   * @param {string} [parent='body'] - 親要素のCSSセレクタ
+   * @param {Object} [opt={}] - オプション
+   * 
+   * - [Promiseでsleep機能を作る](https://www.sejuku.net/blog/24629#index_id5)
    */
-  constructor(parent,opt){
-    const v = {opt:{}};
-    console.log('webScanner.constructor start.');
+  constructor(parent='body',opt={}){
+    const v = {whois:'WebScanner.constructor',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
 
-    // 親要素(ラッパー。HTMLElement)をthis.parentにセット
-    this.parent = typeof parent !== 'string' ? parent
-      : document.querySelector(parent);
-    console.log(this.parent); 
+      v.step = 1; // 引数(opt)・既定値を基にメンバの値を設定
+      if( !opt.hasOwnProperty('parent') ) opt.parent = parent;
+      v.rv = setupInstance(this,opt,{
+        sleep: (sec) =>  // 指定時間待機
+          {return new Promise(resolve => setTimeout(resolve,sec))},
+        wrapper: null,  // {HTMLElement} - 親直下のラッパー
+        video: null,  // {HTMLElement} - videoで撮影している画像領域
+        canvas: null, // {HTMLElement} - 撮影画像を描画する領域
+        context: null, // {CanvasRenderingContext2D} - 描画コンテキスト
+        switches: null,  // {HTMLElement} - 各種ボタンのラッパー
+        retake: null,  // {HTMLElement} - 再撮影ボタン
+        shutter: null, // {HTMLElement} - シャッターボタン
+        adopt: null,  // {HTMLElement} - 撮影OK、次へボタン
+        css: [{
+          sel: '.WebScanner',
+          prop: {
+            'display': 'none',
+          }
+        },{
+          sel: '.WebScanner.act',
+          prop: {
+            '--videoSize': '300px',
+            '--buttonSize': '100px',
+            'display': 'grid',
+            'grid-template-rows': 'var(--videoSize) var(--videoSize) var(--buttonSize)',
+            'row-gap': '1rem',
+            'justify-items': 'center',
+            'align-items': 'center',
+          }
+        },{
+          sel: '.WebScanner video',
+          prop: {
+            'display': 'none',
+          }
+        },{
+          sel: '.WebScanner video.act',
+          prop: {
+            'display': 'block',
+            'width': 'var(--videoSize)',
+            'height': 'var(--videoSize)',
+          }
+        },{
+          sel: '.WebScanner canvas',
+          prop: {
+            'display': 'none',
+          }
+        },{
+          sel: '.WebScanner canvas.act',
+          prop: {
+            'display': 'block',
+          }
+        },{
+          sel: '.WebScanner .switches',
+          prop: {
+            'display': 'none',
+          }
+        },{
+          sel: '.WebScanner .switches.act',
+          prop: {
+            'width': '80%',
+            'display': 'grid',
+            'grid-template-columns': 'repeat(3, 1fr)',
+            'column-gap': 'calc((100% - var(--buttonSize) * 3) / 2)',
+          }
+        },{
+          sel: '.WebScanner .switches button',
+          prop: {
+            'width': 'var(--buttonSize)',
+            'height': 'var(--buttonSize)',
+            'text-align': 'center',
+            'vertical-align': 'middle',
+            'font-size': 'calc(var(--buttonSize) * 0.7)',
+          }
+        }],
+        // === scanQR専用パラメータ ==========================
+        // 以下はscanQRの起動時引数として指定されたらそちらを優先する
+        // ================================================
+        constraints:{ // video.getUserMediaで指定するオプション
+          audio: false,
+          video: {
+            facingMode: 'environment',
+            width: {min: 500},
+            height: {min: 500},
+          },
+        },
+        showVideo: false, // scanQR実行時、video領域を表示するならtrue
+        showCanvas: true, // scanQR実行時、canvas領域を表示するならtrue
+        closeFinder: true, // scanQR実行後、video/canvas領域を残すならfalse
+        RegExp: /.+/, // scanQR実行時、読込結果を評価する正規表現
+        maxWaiting: 90000, // 最大待機時間。単位：ミリ秒
+        interval: 300, // 動画撮像間隔。ミリ秒
+        size: null,  // 撮像領域(ファインダ)のサイズ。px。nullなら親要素の大きさから判断
+        minSize : 500, // 最小撮像サイズ。px
+      });
+      if( v.rv instanceof Error ) throw v.rv;
 
-    // デバイスがサポートされているか確認
-    if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
-      const msg = 'デバイス(カメラ)がサポートされていません';
-      console.error('webScanner.constructor: '+msg);
-      alert(msg);
-      return;
-    } else {
-      console.log('device is supported.');
-    }
+      v.step = 2; // HTML要素の作成
+      this.wrapper = createElement({attr:{class:'WebScanner'}});
+      this.parent.element.appendChild(this.wrapper);
+      ['video','canvas'].forEach(x => {
+        this[x] = createElement({tag:x});
+        this.wrapper.appendChild(this[x]);
+      });
+      ['switches'].forEach(x => {
+        this[x] = createElement({attr:{class:x}});
+        this.wrapper.appendChild(this[x]);
+      });
+      ['retake','shutter','adopt'].forEach(x => {
+        this[x] = createElement({tab:'button',attr:{name:x}});
+        this.switches.appendChild(this[x]);
+      });
 
-    // メンバ(既定値)の設定
-    v.opt = Object.assign({
-      interval: 250,    // 動画状態で撮像、読み込めなかった場合の間隔。ミリ秒
-      lifeTime: 60000,  // 一定時間操作がない場合の停止までのミリ秒。既定値60000
-      lastGoing: 0,     // 前回カメラ起動したUNIX時刻。onGoingで状態制御に使用(一定時間操作無しなら停止)
-    },opt);
-    for( v.x in v.opt ){
-      this[v.x] = v.opt[v.x];
-      console.log(v.x+' = '+this[v.x]);
-    }
-
-    console.log('webScanner.constructor end.');
-  }
-
-  /** scanQR: QRコードスキャン
-   * @param {Function} callback - 後続処理
-   * @param {object} [opt={}] - オプション
-   * @param {RegExp} [opt.RegExp=/.+/] - スキャン結果が適切か判断
-   * @param {boolean} [opt.alert=false] - true:読み込み完了時に内容をalert表示
-   * @returns {void} なし
-   * callbackにはQRコードの文字列が渡される。
-   */
-  scanQR(callback,opt={}){
-    console.log('webScanner.scanQR start. opt='+JSON.stringify(opt)+'\n',callback);
-
-    // 1.既定値の設定
-    this.RegExp = opt.RegExp || /.+/;
-    this.alert = opt.alert || false;
-    this.callback = callback; // 後続処理をメンバとして保存
-
-    // 2.カメラやファインダ等の作業用DIVを追加
-    this.parent.innerHTML = '';
-    this.canvas = createElement({tag:'canvas'});
-    this.parent.appendChild(this.canvas);
-    this.video = createElement('video');
-    this.ctx = this.canvas.getContext('2d');
-
-    // 3.カメラ操作ボタン関係の定義
-    // QRコードスキャンでは操作ボタンは無いので定義不要
-
-    // 4.動画を1フレーム読み込んだ際の処理を定義
-    this.scanned = this.#drawFrame;
-
-    // 5.動画撮影用Webカメラを起動
-    this.#start();
-  }
-
-  /** start: カメラを起動する(private関数)
-   * @param {void} - なし
-   * @returns {void} なし
-   */
-  #start(){
-    console.log('webScanner.start start.');
-
-    // 動画撮影用Webカメラを起動
-    navigator.mediaDevices.getUserMedia({
-      video: true,
-      /*video: {  PCだと内蔵カメラではなくwebカメラを呼び出してしまう
-        facingMode: "environment",
-        //facingMode: "user",
-        //facingMode: {exact:"environment"},
-      },*/
-      audio: false
-    }).then((stream) => {
-      this.video.srcObject = stream;
-      this.video.setAttribute("playsinline", true);
-      this.video.play();
-      this.#onGoing(true);  // カメラ動作中フラグを立てる
-      this.#drawFinder();  // キャンパスへの描画をスタート
-    }).catch(e => {
-      alert('カメラを使用できません\n'+e.message);
-    });
-  }
-
-  /** onGoing: カメラの起動・停止の制御と状態参照
-   * @param {boolean} - true:起動、false:停止、undefind:状態参照
-   * @returns {boolean} true:起動中、false:停止中
-   */
-  #onGoing(arg){
-    console.log('webScanner.onGoing: typeof arg='+(typeof arg)+', arg='+arg);
-    let rv = null;
-    const now = Date.now();
-    if( typeof arg === 'boolean' ){  // 引数あり ⇒ 状態制御
-      this.lastGoing = arg ? now : 0;
-      rv = arg;
-    } else {    // 引数無し ⇒ 状態参照
-      if( (now - this.lastGoing) < this.lifeTime ){
-        // 指定時間(lifeTime)内ならtrue
-        rv = true;
+      v.step = 3; // デバイスがサポートされているか確認
+      if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
+        throw new Error('デバイス(カメラ)がサポートされていません');
       } else {
-        // 指定時間を超えていたらfalse
-        rv = false;
-        // 一定時間以上操作がなかった場合(システムで停止された場合を除く)
-        if( this.lastGoing > 0 ){
-          alert((this.lifeTime/1000)+'秒以上操作がなかったためカメラを停止しました');
-          this.#stop();
+        console.log("%s step.%s: device supported.",v.whois,v.step);
+      }
+
+      v.step = 4; // 描画コンテキストの取得とクリア
+      this.context = this.canvas.getContext('2d');
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      v.step = 5; // 撮像(video)領域のサイズ変更
+      // 親要素の高さを最大に変更
+      this.parent.element.style.width
+      = this.parent.element.style.height = '100%';
+      // 撮像領域を親要素の幅・高さ、いずれか小さい方の正方形に設定
+      if( this.size === null ){
+        v.pw = this.parent.element.clientWidth;
+        v.ph = this.parent.element.clientHeight;
+        if( v.pw < v.ph ){
+          this.size = v.pw < this.minSize ? this.minSize : v.pw;
+          this.parent.element.style.height = this.size + 'px';
+        } else {
+          this.size = v.ph < this.minSize ? this.minSize : v.ph;
+          this.parent.element.style.width = this.size + 'px';
         }
       }
+      this.wrapper.style.setProperty('--videoSize',this.size+'px');
+
+      // 以下の手順はawaitが必要なので、scanQRで実行
+
+      console.log(v.whois+' normal end.\n',this);
+      return v.rv;
+      
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
     }
-    return rv;
   }
 
-  /** stop: カメラを停止する(private関数)
-   * @param {void} - なし
-   * @returns {void} なし
+  /** QRコードをスキャン
+   * @param {Object} opt - scanQR専用パラメータ。詳細はconstructor参照
+   * @returns {string} スキャンしたQRコードの文字列
+   * 
+   * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
    */
-  #stop(){
-    console.log('webScanner.stop',this.video);
+  scanQR = async (opt={}) => {
+    const v = {whois:'WebScanner.scanQR',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1; // パラメータの設定
+      Object.keys(opt).forEach(x => this[x] = opt[x]);
+
+      v.step = 2; // カメラの準備(videoタグに表示)
+      this.video.srcObject = await navigator.mediaDevices
+      .getUserMedia(this.constraints);
+      this.video.onloadedmetadata = () => {
+        this.video.play();
+      };
+
+      v.step = 3; // video,canvasの表示
+      this.wrapper.classList.add('act');
+      if( this.showVideo ){
+        this.video.classList.add('act');
+      } else {
+        this.video.classList.remove('act');
+      };
+      if( this.showCanvas ){
+        this.canvas.classList.add('act');
+      } else {
+        this.canvas.classList.remove('act');
+      };
+
+      v.step = 4; // 定期的にスキャン実行
+      v.cnt = 0;
+      do {
+        await this.sleep(this.interval);
+        if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
+
+          v.step = 4.1; // canvasのサイズを撮像サイズに合わせて変更
+          v.vw = this.video.videoWidth;
+          v.vh = this.video.videoHeight;
+          this.canvas.width = v.cw
+          = this.size * (v.vw > v.vh ? 1 : (v.vw / v.vh));
+          this.canvas.height = v.ch
+          = this.size * (v.vh > v.vw ? 1 : (v.vh / v.vw));
+  
+          v.step = 4.2; // キャンバスへの描画
+          this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
+          v.imageData = this.context.getImageData(0, 0, v.cw, v.ch);
+          v.code = jsQR(v.imageData.data, v.imageData.width, v.imageData.height);
+          if ( v.code ) {
+            v.step = 4.3;
+            console.log(v.code);
+            // スキャン結果の判定
+            if( typeof v.code.data === 'string' && v.code.data.match(this.RegExp) ){
+              v.rv = v.code.data;
+            }
+          }
+        }
+        console.log(v.cnt);
+        v.cnt += this.interval;
+      } while( v.rv === null && v.cnt < this.maxWaiting );
+
+      v.step = 5; // 終了処理
+      this.stop(v.rv === null);
+
+      console.log(v.whois+' normal end.\n',v.rv);
+      return v.rv;
+  
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 終了処理
+   * @param {boolean} [endStatus=false] - 終了時のステータス。異常終了ならtrue
+   * @returns {void}
+   */
+  stop = (endStatus=false) => {
+    if( endStatus ){
+      alert('一定時間('+(this.maxWaiting/1000)+'秒)経過に伴いスキャナを停止しました')
+    }
     this.video.srcObject.getVideoTracks().forEach((track) => {
       track.stop();
     });
-    this.parent.innerHTML = ''; // 作業用DIVを除去
-    this.lastGoing = 0;
-  }
-
-  /** drawFinder: 動画をキャンバスに描画する
-   * @param {void} - 無し
-   * @returns {void} 無し
-   * 1フレーム読み込むごとにthis.scannedに読み込んだイメージを渡す。
-  */
-  #drawFinder(){
-    console.log('webScanner.drawFinder start.',this.video);
-
-    // スキャン実行フラグが立っていなかったら終了
-    if( !this.#onGoing() ) return;
-
-    if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
-
-      // 親要素の横幅に合わせて表示する
-      const ratio = this.parent.clientWidth / this.video.videoWidth;
-      //console.log('l.196 this.parent.clientWidth='+this.parent.clientWidth+', this.video.videoWidth='+this.video.videoWidth+' -> ratio='+ratio);
-      const w = this.video.videoWidth * ratio;
-      const h = this.video.videoHeight * ratio;
-      //console.log('l.199 w ='+w+', h='+h);
-      this.video.width = this.canvas.width = w;
-      this.video.height = this.canvas.height = h;
-
-      this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-      let img;
-      try { // canvasを含む要素が削除済の場合にエラーとなるので回避
-        img = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      } catch(e) {
-        console.error(e.message);
-        this.#stop();
-        return;
-      }
-      // 1フレーム読み込み時の処理
-      // 　※scanQRならdrawFrame, scanDocならなにもしない
-      this.scanned(img);
-    }
-    setTimeout(()=>this.#drawFinder(), this.interval);
-  }
-
-  /** drawFrame: 動画の1フレームからQRコードを抽出、後続処理に渡す
-   * @param {object} img - 読み込んだ画像
-   * @returns {void} なし
-   */
-  #drawFrame(img){
-    console.log('webScanner.drawFrame start. img=',img);
-    try {
-      // スキャン実行フラグが立っていなかったら終了
-      if( !this.#onGoing() ) return;
-
-      // このタイミングでQRコードを判定
-      let code = jsQR(img.data, img.width, img.height, {inversionAttempts: "dontInvert"});
-			if(code){
-        //console.log('drawFinder: code='+JSON.stringify(code));
-        // QRコード読み取り成功
-				this.#drawRect(code.location);// ファインダ上のQRコードに枠を表示
-        if( this.alert ) alert(code.data);  // alert出力指定があれば出力
-        if( code.data.match(this.RegExp) ){  // 正しい内容が読み込まれた場合
-          this.#stop();
-          this.callback(code.data); // 読み込んだQRコードを引数にコールバック
-        } else {
-          // 不適切な、別のQRコードが読み込まれた場合
-          alert('不適切なQRコードです。再読込してください。');
-          console.error('webScanner.drawFinder: not match pattern. code='+code.data);
-          // 再読込。drawFinderはクラス内のメソッドなのでアロー関数で呼び出す
-          // MDN setTimeout() thisの問題
-          // https://developer.mozilla.org/ja/docs/Web/API/setTimeout#this_%E3%81%AE%E5%95%8F%E9%A1%8C
-        }
-      }
-    } catch(e) {
-      console.error('webScanner.drawFrame: '+e.message);
+    if( this.closeFinder ){
+      this.wrapper.classList.remove('act');
+      this.video.classList.remove('act');
+      this.canvas.classList.remove('act');
     }
   }
-
-  /** drawRect: ファインダ上のQRコードに枠を表示
-   * @param {object} location - QRコード位置情報
-   * @returns {void} なし
-   */
-  #drawRect(location){
-    console.log('webScanner.drawRect location='+JSON.stringifylocation);
-    this.#drawLine(location.topLeftCorner,     location.topRightCorner);
-		this.#drawLine(location.topRightCorner,    location.bottomRightCorner);
-		this.#drawLine(location.bottomRightCorner, location.bottomLeftCorner);
-		this.#drawLine(location.bottomLeftCorner,  location.topLeftCorner);
-  }
-
-  /** drawLine: ファインダ上に線を描画
-   * @param {object} begin - 始点の位置
-   * @param {object} end - 終点の位置
-   * @returns {void} なし
-   */
-  #drawLine(begin, end){
-    console.log('webScanner.drawLine begin='
-      + JSON.stringify(begin) + ', end=' + JSON.stringify(end));
-		this.ctx.lineWidth = 4;
-		this.ctx.strokeStyle = "#FF3B58";
-		this.ctx.beginPath();
-		this.ctx.moveTo(begin.x, begin.y);
-		this.ctx.lineTo(end.x, end.y);
-		this.ctx.stroke();
-	}
-
-  /** scanDoc: 文書のスキャン
-   * @param {function} callback - 後続処理
-   * @param {object} opt - オプション指定
-   * @param {number} opt.maxImageSize - 画像をbase64化した後の最大文字長。既定値500K
-   * @returns {void} 無し
-   * callbackにはbase64化したpng(文字列)が渡される。
-  */
-  scanDoc(callback,opt={maxImageSize:500000}){
-
-    // 1.既定値の設定
-    this.callback = callback; // 後続処理をメンバとして保存
-
-    // 2.カメラやファインダ等の作業用DIVを追加
-    this.parent.innerHTML
-    = '<video autoplay class="hide"></video>'
-    + '<canvas></canvas>'  // 撮影結果
-    + '<div class="buttons hide">'  // カメラ操作ボタン
-    + '<div><input type="button" name="undo" value="◀" /></div>'
-    + '<div><input type="button" name="shutter" value="[ ● ]" /></div>'
-    + '<div><input type="button" name="adopt" value="▶" /></div>'
-    + '</div>';
-    this.video = this.parent.querySelector('video');
-    this.canvas = this.parent.querySelector('canvas');
-    this.ctx = this.canvas.getContext('2d');
-
-    // 3.カメラ操作ボタン関係の定義
-    this.buttons = this.parent.querySelector('div.buttons');
-    this.undo = this.buttons.querySelector('input[name="undo"]');
-    this.undo.disabled = true;  // 再撮影
-    this.shutter = this.buttons.querySelector('input[name="shutter"]');
-    this.shutter.disabled = false;  // シャッター
-    this.adopt = this.buttons.querySelector('input[name="adopt"]');
-    this.adopt.disabled = true;  // 採用
-
-    // (1) 再撮影ボタンクリック時
-    this.undo.addEventListener('click',() => {
-      console.log('webScanner.scanDoc undo clicked.');
-      this.#onGoing(true);  // カメラ動作中フラグを立てる
-      this.drawFinder();  // キャンパスへの描画をスタート
-      this.undo.disabled = true;
-      this.shutter.disabled = false;
-      this.adopt.disabled = true;
-    });
-    // (2) シャッタークリック時
-    this.shutter.addEventListener('click',() => {
-      console.log('webScanner.scanDoc shutter clicked.');
-      this.#onGoing(false);  // カメラを一時停止
-      this.undo.disabled = false;
-      this.shutter.disabled = true;
-      this.adopt.disabled = false;
-    });
-    // (3) 採用ボタンクリック時
-    this.adopt.addEventListener('click',() => {
-      console.log('webScanner.scanDoc adopt clicked.');
-      // canvasからイメージをBASE64で取得
-      // なお圧縮はpng不可なので、jpegとする
-      let imageData = '';
-      for( let i=0.9 ; i>0 ; i -= 0.1 ){
-        imageData = this.canvas.toDataURL('image/jpeg',i);
-        if( imageData.length < opt.maxImageSize ){
-          i = -1;
-        }
-      }
-      //console.log('l.181\n'+imageData);
-      this.callback(imageData);  // base64化したpngを後続処理に渡す
-      this.stop();  // スキャナを停止
-    })
-
-    // 4.動画を1フレーム読み込んだ際の処理を指定
-    this.scanned = () => {};  // フレームごとの処理は無し
-
-    // 5.カメラ操作ボタンを表示してカメラを起動
-    this.buttons.classList.remove('hide');
-    this.#start();
-  }
-}
-</script>
+}</script>
 <script type="text/javascript">
 /** 
  * 変数の型を判定し、型名を文字列で返す。なお引数"is"が指定された場合、判定対象が"is"と等しいかの真偽値を返す。
@@ -4379,14 +4214,6 @@ window.addEventListener('DOMContentLoaded',async () => {
     // ================================================
     // 個別メニュー画面の設定
     // ================================================
-    v.step = '2'; // メニューを定義
-    v.menu = new BurgerMenu({
-      authority: v.config.info.authority,
-      home: 'c1005',  // パスポート画面をホームに設定(暫定)
-    });
-    if( v.menu instanceof Error ) throw v.menu;
-    console.log(v.whois+'.'+v.step+':',v);
-
     v.step = '2.1'; // お知らせ
     v.step = '2.1.1'; // 掲示板
     v.board = new BulletinBoard({
@@ -4439,6 +4266,15 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 2.5.4.2 論議メモ
     // 2.5.4.3 関連サイト
     // 2.6 システム設定
+
+    v.step = '3'; // メニューを定義
+    v.menu = new BurgerMenu({
+      authority: v.config.info.authority,
+      home: 'c1005',  // パスポート画面をホームに設定(暫定)
+    });
+    if( v.menu instanceof Error ) throw v.menu;
+    // メニュー遷移時、定期配信の停止を追加定義
+    v.menu.onLeave.push(v.board.stop);
 
     v.step = '10'; // 最終処理：権限により表示画面制御
     // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生

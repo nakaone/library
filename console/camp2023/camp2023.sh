@@ -1,7 +1,7 @@
 #!/bin/sh
 # -x  つけるとverbose
 
-echo "\n\n===== camp2023.sh start ============================"
+echo "\n\n\n\n\n\n\n\n===== camp2023.sh start ============================"
 echo `TZ='Asia/Tokyo' date`
 
 # フォルダ内のpngを減色

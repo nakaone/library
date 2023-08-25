@@ -78,7 +78,7 @@ function embedComponent(doc){
     extract: (filename,selector='body') => {
       v.selector = selector;  // 変更の可能性があるので変数化
       v.refText = fs.readFileSync(filename,'utf-8').trim();
-      console.log('filename='+filename+'\nselector='+v.selector+'\nrefText='+v.refText);
+      //console.log('filename='+filename+'\nselector='+v.selector+'\nrefText='+v.refText);
       // HTMLでなければbodyタグを付加
       v.isHTML = v.refText.toLowerCase()
       .match(/^<!doctype html.*?>|^<html.*?>[\s\S]+<\/html>/);
@@ -102,7 +102,7 @@ function embedComponent(doc){
     },
   };
 
-  console.log('embedComponent start.');
+  //console.log('embedComponent start.');
 
   try {
     // data-embed属性を持つ要素をリスト化、順次処理
@@ -116,7 +116,7 @@ function embedComponent(doc){
         v.embed = {from:{filename:v.embed}};
       }
       v.content = v.extract(v.embed.from.filename,v.embed.from.selector);
-      console.log('l.118 v.content='+v.content);
+      //console.log('l.118 v.content='+v.content);
 
       // 処理タイプの判定
       v.suffix = analyzePath(v.embed.from.filename).suffix.toLowerCase() || 'txt';
@@ -140,7 +140,7 @@ function embedComponent(doc){
           // v.contentを自要素のinnerHTMLにセット(自要素保持)
           element.appendChild(doc.createTextNode(v.content));
           //element.innerText = v.content; 空白になる
-          console.log("content="+v.content+"\nelement=",element)
+          //console.log("content="+v.content+"\nelement=",element)
           //element.innerHTML = v.content;
           break;
 
@@ -158,7 +158,7 @@ function embedComponent(doc){
       element.removeAttribute('data-embed');
     });
 
-    console.log('embedComponent end.');
+    //console.log('embedComponent end.');
     return doc;
 
   } catch(e) {
@@ -193,7 +193,7 @@ const { JSDOM } = require("jsdom");
  */
 
 function onNode(){
-  console.log('onNode start.');
+  //console.log('onNode start.');
   const v = {};
 
   // テンプレートの読み込み、embedComponentの呼び出し
@@ -216,7 +216,7 @@ function onNode(){
   }
   fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
 
-  console.log('onNode end.');
+  //console.log('onNode end.');
 }
 
 onNode();
@@ -225,7 +225,7 @@ onNode();
   script.mainの内、既存ライブラリからの引用部分
 ============================================ */
 function analyzeArg(){
-  console.log('===== analyzeArg start.');
+  //console.log('===== analyzeArg start.');
   const v = {rv:{opt:{},val:[]}};
   try {
 
@@ -239,8 +239,8 @@ function analyzeArg(){
       }
     }
 
-    console.log('v.rv='+JSON.stringify(v.rv));
-    console.log('===== analyzeArg end.');
+    //console.log('v.rv='+JSON.stringify(v.rv));
+    //console.log('===== analyzeArg end.');
     return v.rv;
   } catch(e){
     console.error('===== analyzeArg abnormal end.\n',e);
@@ -252,8 +252,8 @@ function analyzeArg(){
 }
 
 function analyzePath(arg){
-  console.log('===== analyzePath start.');
-  const v = {rv:{}};
+  //console.log('===== analyzePath start.');
+  const v = {whois:'analyzePath',rv:{}};
   try {
 
     v.m1 = arg.match(/^(.*)\/([^\/]+)$/);
@@ -274,12 +274,14 @@ function analyzePath(arg){
     }
 
     //console.log('v.rv='+JSON.stringify(v.rv));
-    console.log('===== analyzePath end.');
+    //console.log('===== analyzePath end.');
     return v.rv;
   } catch(e){
+    console.error(v.whois+' abnormal end.\n',e,v);
+    return e;
     // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
+    //if( typeof window !== 'undefined' ) alert(e.stack); 
     //throw e; //以降の処理を全て停止
-    v.rv.stack = e.stack; return v.rv; // 処理継続
+    //v.rv.stack = e.stack; return v.rv; // 処理継続
   }
 }

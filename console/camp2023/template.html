@@ -116,12 +116,11 @@
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/cryptoAES.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Date.toLocale.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/mergeDeeply.html","selector":"script.core"},"to":"js"}'></script>
-<script type="text/javascript" data-embed='../../component/scanQR/core.js'></script>
 <script type="text/javascript" data-embed='../../component/setupInstance/core.js'></script>
 <script type="text/javascript" data-embed='../../component/Reception/core.js'></script>
 <style type="text/css" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"style.core"},"to":"css"}'></style>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"script.core"},"to":"js"}'></script>
-<script type="text/javascript" data-embed='{"from":{"filename":"../../component/webScanner.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='../../component/WebScanner/core.js'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/whichType.html","selector":"script.core"},"to":"js"}'></script>
 
 <script type="text/javascript" data-embed="camp2023.drawPassport.js"></script>
@@ -182,14 +181,6 @@ window.addEventListener('DOMContentLoaded',async () => {
     // ================================================
     // 個別メニュー画面の設定
     // ================================================
-    v.step = '2'; // メニューを定義
-    v.menu = new BurgerMenu({
-      authority: v.config.info.authority,
-      home: 'c1005',  // パスポート画面をホームに設定(暫定)
-    });
-    if( v.menu instanceof Error ) throw v.menu;
-    console.log(v.whois+'.'+v.step+':',v);
-
     v.step = '2.1'; // お知らせ
     v.step = '2.1.1'; // 掲示板
     v.board = new BulletinBoard({
@@ -242,6 +233,16 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 2.5.4.2 論議メモ
     // 2.5.4.3 関連サイト
     // 2.6 システム設定
+
+    v.step = '3'; // メニューを定義
+    v.menu = new BurgerMenu({
+      authority: v.config.info.authority,
+      home: 'c1005',  // パスポート画面をホームに設定(暫定)
+    });
+    if( v.menu instanceof Error ) throw v.menu;
+    // メニュー遷移時、定期配信の停止を追加定義
+    //v.menu.onLeave.push(v.board.stop);
+    // -> 止めるとdelivery自体止まってしまうので停止しない
 
     v.step = '10'; // 最終処理：権限により表示画面制御
     // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生
