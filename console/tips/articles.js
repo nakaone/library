@@ -712,12 +712,14 @@ window.addEventListener('DOMContentLoaded',() => {
 <style type="text/css"></style>
 </head><body>
 
+
+</body>
 <script type="text/javascript">
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
 });
 </script>
-</body></html>
+</html>
 \`\`\`
 
 `},
