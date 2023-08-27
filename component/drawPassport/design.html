@@ -10,21 +10,31 @@
     padding: 1rem;
     font-size: 1rem;
   }
-  .drawPassport > div {
+  .drawPassport rt {
+    font-size: 50%;
+  }
+  .drawPassport .label {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+  .drawPassport .label p {
+    grid-column: 1 / 3;
+    font-size: 1.4rem;
+  }
+  .drawPassport .label button {
+    grid-column: 3 / 4;
+  }
+
+  /* QRコード、受付番号、申込者名 */
+  .drawPassport .summary {
     width: 100%;
     margin: 1rem 0px;
     display: grid;
     grid-template-columns: repeat(12, 1fr);
     gap: 1rem;
   }
-  .drawPassport rt {
-    font-size: 50%;
-  }
-  .drawPassport > div > * {
-    background-color: pink;
-  }
-
-  /* QRコード、受付番号、申込者名 */
   .drawPassport .summary [name="qrcode"]{
     padding: 0rem;
     grid-row: 1 / 3;
@@ -48,8 +58,50 @@
     font-size: 1rem;
   }
 
+  /* 参加者リスト */
+  .drawPassport .list .content {
+    width: 100%;
+    margin: 1rem 0px;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 0.2rem;
+  }
+  .drawPassport .list .content.hide {
+    display: none;
+  }
+  .drawPassport .list .content div:nth-child(4n+1) {
+    grid-column: 1 / 3;
+  }
+  .drawPassport .list .content div:nth-child(4n+2) {
+    grid-column: 3 / 7;
+  }
+  .drawPassport .list .content div:nth-child(4n+3) {
+    grid-column: 7 / 10;
+  }
+  .drawPassport .list .content div:nth-child(4n+4) {
+    grid-column: 10 / 13;
+  }
+
+  /* 詳細 */
+  .drawPassport .detail {
+
+  }
+  .drawPassport .detail .content {
+    width: 100%;
+    margin: 1rem 0px;
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+    gap: 0.2rem;
+  }
+  .drawPassport .detail .content.hide {
+    display: none;
+  }
+
   /* ボタン領域 */
   .drawPassport .buttons {
+    width: 100%;
+    margin: 1rem 0px;
+    display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 2rem;
   }
@@ -66,34 +118,6 @@
     display: none;
   }
 
-  /* 参加者リスト */
-  .drawPassport .list {
-    gap: 0.2rem;
-  }
-  .drawPassport .list.hide {
-    display: none;
-  }
-  .drawPassport .list div:nth-child(4n+1) {
-    grid-column: 1 / 3;
-  }
-  .drawPassport .list div:nth-child(4n+2) {
-    grid-column: 3 / 7;
-  }
-  .drawPassport .list div:nth-child(4n+3) {
-    grid-column: 7 / 10;
-  }
-  .drawPassport .list div:nth-child(4n+4) {
-    grid-column: 10 / 13;
-  }
-
-  /* 詳細 */
-  .drawPassport .detail {
-    grid-template-columns: 2fr 3fr;
-    gap: 0.2rem;
-  }
-  .drawPassport .detail.hide {
-    display: none;
-  }
 </style>
 </head><body>
   <div class="drawPassport"></div>
@@ -114,27 +138,40 @@
  * @param {boolean} [opt.showDetail=false] - 詳細を表示するならtrue
  * @returns {Object.<string, any>} 修正された項目ラベルと値
  * 
- * ## モードと表示内容
- * | | 編集 | 参照 |
- * | :-- | :-- | :-- |
- * | 表示ボタン | 表示 | 表示 |
- * | 参加者一覧 | 参加費プルダウン | 参加費テキスト |
- * | 詳細情報 | 非表示 | 非表示 |
  */
 const drawPassport = async (parent,info,opt={}) => {
   const v = {whois:'drawPassport',step:0,rv:null,
-    toggle: (selector,showCondition) => { // showCondition:表示条件
-      let element = parent.querySelector(selector);
-      if( showCondition ){
-        element.classList.remove('hide');
+    parent: parent,
+    toggle: (
+      event, // {PointerEvent|string} - クリック時のイベントまたはセレクタ
+      show   // {boolean} - trueなら開く
+    ) => {
+      console.log('toggle start.\n',event,show);
+      let content;  // 表示/非表示を行う対象となる要素
+      let button;   // ボタンの要素
+      if( typeof event === 'string' ){
+        content = v.parent.querySelector(event+' .content');
+        button = v.parent.querySelector(event+' button');
       } else {
-        element.classList.add('hide');
+        content = event.target.parentElement.parentElement
+        .querySelector('.content');
+        button = event.target;
       }
-    },
+      console.log(content,button);
+      // 表示->非表示 or 非表示->表示 を判断
+      let toOpen = show ? show : (button.innerText === '表示');
+      if( toOpen ){ // 表示に変更する場合
+        button.innerText = '非表示';
+        content.classList.remove('hide');
+      } else {      // 非表示に変更する場合
+        button.innerText = '表示';
+        content.classList.add('hide');
+      }
+    }
   };
   console.log(v.whois+' start.');
   try {
-      // 描画領域をクリア
+    // 描画領域をクリア
     parent.innerHTML = `
     <div class="summary">
       <div name="qrcode"></div>
@@ -144,14 +181,11 @@ const drawPassport = async (parent,info,opt={}) => {
       </ruby></div>
     </div>
 
-    <div class="buttons">
-      <button name="取消">取消</button>
-      <button name="決定">決定</button>
-      <button name="詳細">詳細</button>  
-    </div>
-
     <div class="list">
-      <div class="label">参加者一覧</div>
+      <div class="label">
+        <p>参加者一覧</p>
+        <button>表示</button>
+      </div>
       <div class="content">
         <div class="th">No</div>
         <div class="th">氏名</div>
@@ -161,8 +195,17 @@ const drawPassport = async (parent,info,opt={}) => {
     </div>
 
     <div class="detail">
-      <div class="label">詳細情報</div>
+      <div class="label">
+        <p>詳細情報</p>
+        <button>非表示</button>
+      </div>
       <div class="content"></div>
+    </div>
+
+    <div class="buttons">
+      <button name="取消">取消</button>
+      <button name="決定">決定</button>
+      <button name="詳細">詳細</button>  
     </div>
     `;
 
@@ -171,11 +214,15 @@ const drawPassport = async (parent,info,opt={}) => {
     opt.showDetail = opt.showDetail || false;
     console.log(opt);
 
-    v.toggle('.buttons [name="取消"]',opt.edit);
-    v.toggle('.buttons [name="決定"]',opt.edit);
-    v.toggle('.buttons [name="詳細"]',!opt.edit);
-    v.toggle('div.list',opt.showList);
-    v.toggle('div.detail',opt.showDetail);
+    // ボタンの初期状態設定
+    // 参加者一覧開閉ボタン
+    v.toggle('.list',opt.showList);
+    v.parent.querySelector('.list .label button')
+    .addEventListener('click',v.toggle);
+    // 詳細情報開閉ボタン
+    v.toggle('.detail',opt.showDetail);
+    v.parent.querySelector('.detail .label button')
+    .addEventListener('click',v.toggle);
 
     parent.querySelector('.buttons [name="詳細"]')
     .addEventListener('click',(event)=>{
@@ -200,9 +247,8 @@ const drawPassport = async (parent,info,opt={}) => {
       v.element.innerText = info[v.x];
     });
 
-    // ボタン領域
     // 参加者リスト
-    v.list = parent.querySelector('div.list');
+    v.list = parent.querySelector('div.list .content');
     for( v.i=1 ; v.i<6 ; v.i++ ){
       v.prefix = '参加者0' + v.i;
       if( info[v.prefix+'氏名'].length === 0 )
@@ -228,7 +274,7 @@ const drawPassport = async (parent,info,opt={}) => {
     }
 
     // 詳細
-    v.detail = parent.querySelector('div.detail');
+    v.detail = parent.querySelector('div.detail .content');
     ["メールアドレス","申込者の参加","宿泊、テント","引取者氏名","緊急連絡先",
     "ボランティア募集","キャンセル","備考"].forEach(x => {
       v.detail.appendChild(createElement({
@@ -250,6 +296,12 @@ const drawPassport = async (parent,info,opt={}) => {
       text: '申込フォームを開く',
       event: {'click':()=>window.open(info.editURL,'_blank')},
     }));
+
+    // 参加者一覧・詳細情報開閉ボタン
+    parent.querySelector('.label button')
+    .addEventListener('click',v.toggle);
+
+    // ボタン領域
 
     console.log(v.whois+' normal end.',v.rv);
     return v.rv;
