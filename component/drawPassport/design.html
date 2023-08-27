@@ -116,28 +116,33 @@
 /*
 - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
 */
-window.addEventListener('DOMContentLoaded',() => {
-  const v = {
-    wrapper: document.querySelector('div.drawPassport'),
+/** 参加者情報の表示・編集を行い、編集結果を返す
+ * @param {HTMLElement} parent - 親要素
+ * @param {Object} info - 参加者情報
+ * @returns {Object.<string, any>} 修正された項目ラベルと値
+ */
+const drawPassport = async (parent,info) => {
+  const v = {whois:'drawPassport',step:0,rv:null,
     calcSize:(n) => { // 画面のfr数(n)からサイズ(px)を計算
       v.fontSize = getComputedStyle(document.documentElement).fontSize;
       v.remSize = parseFloat(v.fontSize); // 1remのサイズ(px)
       v.gapSize = 0.5 * v.remSize;  // gridのgapのサイズ(px。CSS参照)
       v.frNum = 12; // 画面の横幅分割数(fr。CSS参照)
-      v.cWidth = v.wrapper.clientWidth - 2 * v.remSize;
+      v.cWidth = parent.clientWidth - 2 * v.remSize;
       // 親画面サイズ(px) - 2rem(padding)
       v.frSize = (v.cWidth - (v.frNum - 1) * v.gapSize) / v.frNum;
       return v.frSize * n + v.gapSize * (n-1);
     },
   };
+  console.log(v.whois+' start.');
   try {
 
     // QRコード、受付番号、申込者名
-    config.entryStr = String('0000'+config.entryNo).slice(-4);
+    info.entryStr = String('0000'+info.entryNo).slice(-4);
     v.qrSize = v.calcSize(4);
     console.log(v);
-    new QRCode(v.wrapper.querySelector('[name="qrcode"]'),{
-      text: config.entryStr,
+    new QRCode(parent.querySelector('[name="qrcode"]'),{
+      text: info.entryStr,
       width: v.qrSize,
       height: v.qrSize,
       colorDark: "#000",
@@ -147,16 +152,16 @@ window.addEventListener('DOMContentLoaded',() => {
 
     ['entryNo','申込者氏名','申込者カナ'].forEach(x => {
       v.x = x;
-      v.element = v.wrapper.querySelector('[name="'+x+'"] .v');
-      v.element.innerText = config[v.x];
+      v.element = parent.querySelector('[name="'+x+'"] .v');
+      v.element.innerText = info[v.x];
     });
 
     // ボタン領域
     // 参加者リスト
-    v.list = v.wrapper.querySelector('div.list');
+    v.list = parent.querySelector('div.list');
     for( v.i=1 ; v.i<6 ; v.i++ ){
       v.prefix = '参加者0' + v.i;
-      if( config[v.prefix+'氏名'].length === 0 )
+      if( info[v.prefix+'氏名'].length === 0 )
         continue;
       v.list.appendChild(createElement({
         attr: {class:'td'},
@@ -165,21 +170,21 @@ window.addEventListener('DOMContentLoaded',() => {
       }));
       v.list.appendChild(createElement(
         {attr: {class:'td'},children:[
-          {tag:'ruby',text:config[v.prefix+'氏名'],children:[
-            {tag:'rt',text:config[v.prefix+'カナ']}
+          {tag:'ruby',text:info[v.prefix+'氏名'],children:[
+            {tag:'rt',text:info[v.prefix+'カナ']}
       ]}]}));
       v.list.appendChild(createElement({
         attr: {class:'td'},
-        text: config[v.prefix+'所属'],
+        text: info[v.prefix+'所属'],
       }));
       v.list.appendChild(createElement({
         attr: {class:'td'},
-        text: config['fee0'+v.i],
+        text: info['fee0'+v.i],
       }));
     }
 
     // 詳細
-    v.detail = v.wrapper.querySelector('div.detail');
+    v.detail = parent.querySelector('div.detail');
     ["メールアドレス","申込者の参加","宿泊、テント","引取者氏名","緊急連絡先",
     "ボランティア募集","キャンセル","備考"].forEach(x => {
       v.detail.appendChild(createElement({
@@ -188,7 +193,7 @@ window.addEventListener('DOMContentLoaded',() => {
       }));
       v.detail.appendChild(createElement({
         attr: {class:'td'},
-        text: config[x],
+        text: info[x],
       }));
     });
     // 編集用URL
@@ -199,14 +204,34 @@ window.addEventListener('DOMContentLoaded',() => {
     v.detail.appendChild(createElement({
       tag:'button',
       text: '申込フォームを開く',
-      event: {'click':()=>window.open(config.editURL,'_blank')},
+      event: {'click':()=>window.open(info.editURL,'_blank')},
     }));
+
+    console.log(v.whois+' normal end.',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {whois:'DOMContentLoaded'};
+  console.log(v.whois+' start.');
+  try {
+
+    v.rv = await drawPassport(
+      document.querySelector('div.drawPassport'),
+      kokusho,
+    );
+    if( v.rv instanceof Error ) throw v.rv;
+    console.log(v.whois+' normal end.',v.rv);
 
   } catch(e){
     console.error(e,v);
   }
 });
 
-const config = {"タイムスタンプ":"2023-08-01T06:36:48.485Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"国生　さゆり","申込者カナ":"コクショウ　サユリ","申込者の参加":"参加予定(宿泊あり)","宿泊、テント":"宿泊する(テントなし)","引取者氏名":"申込者が参加して帰宅時の付添もするのでお迎えは不要","参加者01氏名":"国生　二郎","参加者01カナ":"コクショウ　ジロウ","参加者01所属":"未就学児","参加者02氏名":"","参加者02カナ":"","参加者02所属":"","参加者03氏名":"","参加者03カナ":"","参加者03所属":"","参加者04氏名":"","参加者04カナ":"","参加者04所属":"","参加者05カナ":"","参加者05氏名":"","参加者05所属":"","緊急連絡先":"","ボランティア募集":"","備考":"","キャンセル":"","":"","name":"","entryStr":"","authority":"2","cancel":"","entryNo":"8","publicKey":"iPUMOS7fuuwQngJys2i1C+5D6bvmjrW82a0PXfyGYAyCyrlqSv8LXQdlHqwQeyrwoOv41SOaAVmLKFIFNpBBjmplfFFIxg4f6GAiVikHCMigqmCg+0XvHUEsQMSO5VHze9Sd1Tml/kcmpUEPg8zsIVSK6oFKQWLe69VFKMKt7T8=","editURL":"https://docs.google.com/forms/d/e/1FAIpQLScEzS8-uNgeM40rZvGl60uZewwHZhyPeQJAicS_LjMEYrMqfQ/viewform?edit2=2_ABaOnueEf0MZp9TyeRuVRGK6toYaRDxYmY5_-w_psQH_VRBlAkAfIB2h8Kay9qRUUITM98E","passCode":"868670","genPassCode":"2023-08-25T04:43:06.611Z","NG1":"","NG2":"","certificate":"2023-08-25T04:43:33.237Z","fee00":"","fee01":"","fee02":"","fee03":"","fee04":"","fee05":"","memo":""};
+const kokusho = {"タイムスタンプ":"2023-08-01T06:36:48.485Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"国生　さゆり","申込者カナ":"コクショウ　サユリ","申込者の参加":"参加予定(宿泊あり)","宿泊、テント":"宿泊する(テントなし)","引取者氏名":"申込者が参加して帰宅時の付添もするのでお迎えは不要","参加者01氏名":"国生　二郎","参加者01カナ":"コクショウ　ジロウ","参加者01所属":"未就学児","参加者02氏名":"","参加者02カナ":"","参加者02所属":"","参加者03氏名":"","参加者03カナ":"","参加者03所属":"","参加者04氏名":"","参加者04カナ":"","参加者04所属":"","参加者05カナ":"","参加者05氏名":"","参加者05所属":"","緊急連絡先":"","ボランティア募集":"","備考":"","キャンセル":"","":"","name":"","entryStr":"","authority":"2","cancel":"","entryNo":"8","publicKey":"iPUMOS7fuuwQngJys2i1C+5D6bvmjrW82a0PXfyGYAyCyrlqSv8LXQdlHqwQeyrwoOv41SOaAVmLKFIFNpBBjmplfFFIxg4f6GAiVikHCMigqmCg+0XvHUEsQMSO5VHze9Sd1Tml/kcmpUEPg8zsIVSK6oFKQWLe69VFKMKt7T8=","editURL":"https://docs.google.com/forms/d/e/1FAIpQLScEzS8-uNgeM40rZvGl60uZewwHZhyPeQJAicS_LjMEYrMqfQ/viewform?edit2=2_ABaOnueEf0MZp9TyeRuVRGK6toYaRDxYmY5_-w_psQH_VRBlAkAfIB2h8Kay9qRUUITM98E","passCode":"868670","genPassCode":"2023-08-25T04:43:06.611Z","NG1":"","NG2":"","certificate":"2023-08-25T04:43:33.237Z","fee00":"","fee01":"","fee02":"","fee03":"","fee04":"","fee05":"","memo":""};
 </script>
 </html>
