@@ -107,6 +107,8 @@
   }
   .drawPassport .buttons button {
     display: block;
+    width: 100%;
+    font-size: 2rem;
   }
   .drawPassport .buttons [name="取消"].hide {
     display: none;
@@ -114,7 +116,7 @@
   .drawPassport .buttons [name="決定"].hide {
     display: none;
   }
-  .drawPassport .buttons [name="詳細"].hide {
+  .drawPassport .buttons [name="全員"].hide {
     display: none;
   }
 
@@ -171,7 +173,7 @@ const drawPassport = async (parent,info,opt={}) => {
   };
   console.log(v.whois+' start.');
   try {
-    // 描画領域をクリア
+    v.step = 1.1; // 描画領域をクリア
     parent.innerHTML = `
     <div class="summary">
       <div name="qrcode"></div>
@@ -205,16 +207,17 @@ const drawPassport = async (parent,info,opt={}) => {
     <div class="buttons">
       <button name="取消">取消</button>
       <button name="決定">決定</button>
-      <button name="詳細">詳細</button>  
+      <button name="全員">全員<br>受領</button>  
     </div>
     `;
 
+    v.step = 1.2; // モード(編集/参照)を特定
     opt.edit = opt.edit || false; //  既定値は参照モード
     opt.showList = opt.edit || opt.showList || false;
     opt.showDetail = opt.showDetail || false;
     console.log(opt);
 
-    // ボタンの初期状態設定
+    v.step = 1.3; // ボタンの初期状態設定
     // 参加者一覧開閉ボタン
     v.toggle('.list',opt.showList);
     v.parent.querySelector('.list .label button')
@@ -224,11 +227,7 @@ const drawPassport = async (parent,info,opt={}) => {
     v.parent.querySelector('.detail .label button')
     .addEventListener('click',v.toggle);
 
-    parent.querySelector('.buttons [name="詳細"]')
-    .addEventListener('click',(event)=>{
-      console.log('詳細',event);
-    });
-    // QRコード、受付番号、申込者名
+    v.step = 2; // QRコード、受付番号、申込者名
     info.entryStr = String('0000'+info.entryNo).slice(-4);
     v.qrcode = parent.querySelector('[name="qrcode"]');
     v.qrSize = v.qrcode.clientWidth;
@@ -247,7 +246,7 @@ const drawPassport = async (parent,info,opt={}) => {
       v.element.innerText = info[v.x];
     });
 
-    // 参加者リスト
+    v.step = 3; // 参加者一覧
     v.list = parent.querySelector('div.list .content');
     for( v.i=1 ; v.i<6 ; v.i++ ){
       v.prefix = '参加者0' + v.i;
@@ -273,7 +272,7 @@ const drawPassport = async (parent,info,opt={}) => {
       }));
     }
 
-    // 詳細
+    v.step = 4.1; // 詳細情報
     v.detail = parent.querySelector('div.detail .content');
     ["メールアドレス","申込者の参加","宿泊、テント","引取者氏名","緊急連絡先",
     "ボランティア募集","キャンセル","備考"].forEach(x => {
@@ -286,7 +285,7 @@ const drawPassport = async (parent,info,opt={}) => {
         text: info[x],
       }));
     });
-    // 編集用URL
+    v.step = 4.2; // 編集用URL
     v.detail.appendChild(createElement({
       attr: {class:'th'},
       text:'申込内容修正',
@@ -297,11 +296,22 @@ const drawPassport = async (parent,info,opt={}) => {
       event: {'click':()=>window.open(info.editURL,'_blank')},
     }));
 
-    // 参加者一覧・詳細情報開閉ボタン
+    // ボタン領域の定義、ボタンクリック時の動作定義
+    v.step = 5.1; // ボタンの幅を取得、高さにも適用して正方形に
+    v.buttonSize = v.parent.querySelector('.buttons button').clientWidth;
+    console.log(v.buttonSize);
+    v.parent.querySelectorAll('.buttons button').forEach(x => {
+      x.style.height = v.buttonSize + 'px';
+      console.log(x.style.height,x);
+    });
+    v.step = 5.2; // 取消ボタンクリック時の動作定義
+    v.step = 5.3; // 決定ボタンクリック時の動作定義
+    v.step = 5.4; // 全員受領ボタンクリック時の動作定義
+
+    v.step = 5.5; // 参加者一覧・詳細情報開閉ボタン
     parent.querySelector('.label button')
     .addEventListener('click',v.toggle);
 
-    // ボタン領域
 
     console.log(v.whois+' normal end.',v.rv);
     return v.rv;
