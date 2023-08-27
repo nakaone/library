@@ -143,7 +143,6 @@
  */
 const drawPassport = async (parent,info,opt={}) => {
   const v = {whois:'drawPassport',step:0,rv:null,
-    parent: parent,
     toggle: (
       event, // {PointerEvent|string} - クリック時のイベントまたはセレクタ
       show   // {boolean} - trueなら開く
@@ -152,8 +151,8 @@ const drawPassport = async (parent,info,opt={}) => {
       let content;  // 表示/非表示を行う対象となる要素
       let button;   // ボタンの要素
       if( typeof event === 'string' ){
-        content = v.parent.querySelector(event+' .content');
-        button = v.parent.querySelector(event+' button');
+        content = parent.querySelector(event+' .content');
+        button = parent.querySelector(event+' button');
       } else {
         content = event.target.parentElement.parentElement
         .querySelector('.content');
@@ -202,6 +201,12 @@ const drawPassport = async (parent,info,opt={}) => {
         <button>非表示</button>
       </div>
       <div class="content"></div>
+      <div class="message">
+        <div name="editURL">
+          <p>参加者一覧・詳細情報に誤謬・変更がある場合、以下のボタンをクリックして申込フォームを開いて修正してください。</p>
+          <button>申込フォームを開く</button>
+        </div>
+      </div>
     </div>
 
     <div class="buttons">
@@ -220,11 +225,11 @@ const drawPassport = async (parent,info,opt={}) => {
     v.step = 1.3; // ボタンの初期状態設定
     // 参加者一覧開閉ボタン
     v.toggle('.list',opt.showList);
-    v.parent.querySelector('.list .label button')
+    parent.querySelector('.list .label button')
     .addEventListener('click',v.toggle);
     // 詳細情報開閉ボタン
     v.toggle('.detail',opt.showDetail);
-    v.parent.querySelector('.detail .label button')
+    parent.querySelector('.detail .label button')
     .addEventListener('click',v.toggle);
 
     v.step = 2; // QRコード、受付番号、申込者名
@@ -298,9 +303,9 @@ const drawPassport = async (parent,info,opt={}) => {
 
     // ボタン領域の定義、ボタンクリック時の動作定義
     v.step = 5.1; // ボタンの幅を取得、高さにも適用して正方形に
-    v.buttonSize = v.parent.querySelector('.buttons button').clientWidth;
+    v.buttonSize = parent.querySelector('.buttons button').clientWidth;
     console.log(v.buttonSize);
-    v.parent.querySelectorAll('.buttons button').forEach(x => {
+    parent.querySelectorAll('.buttons button').forEach(x => {
       x.style.height = v.buttonSize + 'px';
       console.log(x.style.height,x);
     });
