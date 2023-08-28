@@ -17,8 +17,11 @@ class drawPassport {
     console.log(v.whois+' start.');
     try {
 
-      v.step = '1'; // オプション未定義項目の既定値をプロパティにセット
+      v.step = 1.1; // オプション未定義項目の既定値をプロパティにセット
       v.rv = setupInstance(this,opt,{
+        edit: false,  // {boolean} trueなら編集モード、falseなら参照モード
+        showList: false,  // {boolean} 参加者一覧を表示するならtrue
+        showDetail: false,  // {boolean} 詳細情報を表示するならtrue
         css:[{
           // drawPassport全体
           sel :'.drawPassport',
@@ -205,6 +208,22 @@ class drawPassport {
         }],        
       });
       if( v.rv instanceof Error ) throw v.rv;
+      v.step = 1.2; // 編集モードなら参加者一覧は必ず表示する
+      this.showList = this.edit || this.showList;
+  
+      v.step = 1.3; // 描画領域をクリアし、必要な要素をセット
+      this.#setupElements();
+
+      v.step = 1.4; // ボタンの初期状態設定
+      // 参加者一覧開閉ボタン
+      this.toggle('.list',opt.showList);
+      this.parent.element.querySelector('.list .label button')
+      .addEventListener('click',this.toggle);
+      // 詳細情報開閉ボタン
+      this.toggle('.detail',opt.showDetail);
+      this.parent.element.querySelector('.detail .label button')
+      .addEventListener('click',this.toggle);
+  
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -215,8 +234,115 @@ class drawPassport {
     }    
   }
 
+  /** 描画領域をクリアし、必要な要素をセットする
+   * @param {void}
+   * @returns {void}
+   */
+  #setupElements = () => {
+    const v = {whois:'drawPassport.#setupElements',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      this.parent.element.innerHTML = `
+      <div class="summary">
+        <div name="qrcode"></div>
+        <div name="entryNo">No.<span class="v"></span></div>
+        <div name="申込者氏名"><ruby><span class="v"></span>
+          <rt name="申込者カナ"><span class="v"></span></rt>
+        </ruby></div>
+      </div>
+  
+      <div class="list">
+        <div class="label">
+          <p>参加者一覧</p>
+          <button>表示</button>
+        </div>
+        <div class="content">
+          <div class="th">No</div>
+          <div class="th">氏名</div>
+          <div class="th">所属</div>
+          <div class="th">参加費</div>
+        </div>
+      </div>
+  
+      <div class="detail">
+        <div class="label">
+          <p>詳細情報</p>
+          <button>非表示</button>
+        </div>
+        <div class="content"></div>
+        <div class="message">
+          <div name="editURL">
+            <p>参加者一覧・詳細情報に誤謬・変更がある場合、以下のボタンをクリックして申込フォームを開いて修正してください。</p>
+            <button>申込フォームを開く</button>
+          </div>
+        </div>
+      </div>
+  
+      <div class="buttons">
+        <button name="取消">取消</button>
+        <button name="決定">決定</button>
+        <button name="全員">全員<br>受領</button>  
+      </div>
+      `;
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 表示/非表示ボタンクリック時の処理を定義
+   * @param {PointerEvent|string} event - クリック時のイベントまたはボタンのCSSセレクタ
+   * @param {boolean} show - trueなら開く
+   * @returns {void}
+   */
+  toggle = (event,show) => {
+    const v = {whois:'drawPassport.toggle',step:1,rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      let content;  // 表示/非表示を行う対象となる要素
+      let button;   // クリックされたボタンの要素
+      if( typeof event === 'string' ){
+        v.step = 1.1; // 初期設定時(引数がPointerEventではなくstring)
+        content = this.parent.element.querySelector(event+' .content');
+        button = this.parent.element.querySelector(event+' button');
+      } else {
+        v.step = 1.2; // ボタンクリック時
+        content = event.target.parentElement.parentElement
+        .querySelector('.content');
+        button = event.target;
+      }
+      console.log(content,button);
+
+      v.step = 2; // 表示->非表示 or 非表示->表示 を判断
+      let toOpen = show ? show : (button.innerText === '表示');
+      if( toOpen ){
+        v.step = 2.1; // 表示に変更する場合
+        button.innerText = '非表示';
+        content.classList.remove('hide');
+      } else {
+        v.step = 2.2; // 非表示に変更する場合
+        button.innerText = '表示';
+        content.classList.add('hide');
+      }
+
+      v.step = 3;
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
   edit = async () => {
-    const v = {whois:'drawPassport.constructor',step:0,rv:null};
+    const v = {whois:'drawPassport.edit',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
       console.log(v.whois+' normal end.',v.rv);
