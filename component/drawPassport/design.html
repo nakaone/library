@@ -14,6 +14,7 @@
     font-size: 50%;
   }
   .drawPassport .label {
+    margin-top: 1rem;
     width: 100%;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -96,6 +97,12 @@
   .drawPassport .detail .content.hide {
     display: none;
   }
+  .drawPassport .message {
+    display: block;
+  }
+  .drawPassport .message.hide {
+    display: none;
+  }
 
   /* ボタン領域 */
   .drawPassport .buttons {
@@ -143,17 +150,20 @@
  */
 const drawPassport = async (parent,info,opt={}) => {
   const v = {whois:'drawPassport',step:0,rv:null,
+    // toggle: ボタンクリック時の要素表示/非表示変更
     toggle: (
       event, // {PointerEvent|string} - クリック時のイベントまたはセレクタ
       show   // {boolean} - trueなら開く
     ) => {
       console.log('toggle start.\n',event,show);
       let content;  // 表示/非表示を行う対象となる要素
-      let button;   // ボタンの要素
+      let button;   // クリックされたボタンの要素
       if( typeof event === 'string' ){
+        // 初期設定時(引数がPointerEventではなくstring)
         content = parent.querySelector(event+' .content');
         button = parent.querySelector(event+' button');
       } else {
+        // ボタンクリック時
         content = event.target.parentElement.parentElement
         .querySelector('.content');
         button = event.target;

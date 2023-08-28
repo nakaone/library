@@ -1,0 +1,46 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>design(drawPassport)</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="../szLib.css" rel="stylesheet" />
+<style type="text/css"></style>
+</head><body>
+  <div class="drawPassport"></div>
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script type="text/javascript" src="core.js"></script>
+<script type="text/javascript" src="../createElement.js"></script>
+<script type="text/javascript" src="../mergeDeeply.js"></script>
+<script type="text/javascript" src="../setupInstance/core.js"></script>
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {whois:'DOMContentLoaded',opt:[
+    {}, // 既定値の動作確認
+    {edit:true},
+    {edit:false},
+  ]};
+  console.log(v.whois+' start.');
+  try {
+
+    v.testOpt = {
+      parent: 'div.drawPassport',
+      data: kokusho,
+      ...v.opt[2] // テストパターンの指定
+    };
+    v.drawPassport = new drawPassport(v.testOpt);
+    if( v.rv instanceof Error ) throw v.drawPassport;
+    console.log(v.drawPassport);
+
+    if( v.testOpt.edit ){
+      v.rv = v.drawPassport.edit();
+      console.log(v.rv);
+    }
+
+    console.log(v.whois+' normal end.',v.rv);
+  } catch(e){
+    console.error(e,v);
+  }
+});
+
+const kokusho = {"タイムスタンプ":"2023-08-01T06:36:48.485Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"国生　さゆり","申込者カナ":"コクショウ　サユリ","申込者の参加":"参加予定(宿泊あり)","宿泊、テント":"宿泊する(テントなし)","引取者氏名":"申込者が参加して帰宅時の付添もするのでお迎えは不要","参加者01氏名":"国生　二郎","参加者01カナ":"コクショウ　ジロウ","参加者01所属":"未就学児","参加者02氏名":"","参加者02カナ":"","参加者02所属":"","参加者03氏名":"","参加者03カナ":"","参加者03所属":"","参加者04氏名":"","参加者04カナ":"","参加者04所属":"","参加者05カナ":"","参加者05氏名":"","参加者05所属":"","緊急連絡先":"","ボランティア募集":"","備考":"","キャンセル":"","":"","name":"","entryStr":"","authority":"2","cancel":"","entryNo":"8","publicKey":"iPUMOS7fuuwQngJys2i1C+5D6bvmjrW82a0PXfyGYAyCyrlqSv8LXQdlHqwQeyrwoOv41SOaAVmLKFIFNpBBjmplfFFIxg4f6GAiVikHCMigqmCg+0XvHUEsQMSO5VHze9Sd1Tml/kcmpUEPg8zsIVSK6oFKQWLe69VFKMKt7T8=","editURL":"https://docs.google.com/forms/d/e/1FAIpQLScEzS8-uNgeM40rZvGl60uZewwHZhyPeQJAicS_LjMEYrMqfQ/viewform?edit2=2_ABaOnueEf0MZp9TyeRuVRGK6toYaRDxYmY5_-w_psQH_VRBlAkAfIB2h8Kay9qRUUITM98E","passCode":"868670","genPassCode":"2023-08-25T04:43:06.611Z","NG1":"","NG2":"","certificate":"2023-08-25T04:43:33.237Z","fee00":"","fee01":"","fee02":"","fee03":"","fee04":"","fee05":"","memo":""};
+</script>
+</html>
