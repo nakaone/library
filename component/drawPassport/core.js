@@ -3,7 +3,7 @@
 */
 /** 参加者情報の表示・編集を行い、編集結果を返す
  * @param {HTMLElement} parent - 親要素
- * @param {Object} info - 参加者情報
+ * @param {Object} this.data - 参加者情報
  * @param {Object} [opt={}] - オプション
  * @param {boolean} [opt.edit=false] - 編集モードならtrue, 参照モードならfalse
  * @param {boolean} [opt.showList=false] - リスト表示ならtrue、但し編集モードなら強制表示
@@ -215,15 +215,23 @@ class drawPassport {
       this.#setupElements();
 
       v.step = 1.4; // ボタンの初期状態設定
-      // 参加者一覧開閉ボタン
+      // 参加者一覧開閉ボタンの初期状態設定
       this.toggle('.list',opt.showList);
       this.parent.element.querySelector('.list .label button')
       .addEventListener('click',this.toggle);
-      // 詳細情報開閉ボタン
+      // 詳細情報開閉ボタンの初期状態設定
       this.toggle('.detail',opt.showDetail);
       this.parent.element.querySelector('.detail .label button')
       .addEventListener('click',this.toggle);
-  
+    
+      v.step = 2; // QRコード、受付番号、申込者名
+      this.#setupSummary();
+
+      v.step = 3; // 参加者一覧
+      this.#setupList();
+
+      v.step = 4; // 詳細情報
+      this.#setupDetail();
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -294,6 +302,127 @@ class drawPassport {
       return e;
     }
   }
+
+  /** 概要欄作成(QRコード、受付番号、申込者名)
+   * @param {void}
+   * @returns {void}
+   */
+  #setupSummary = () => {
+    const v = {whois:'drawPassport.#setupSummary',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      this.data.entryStr = String('0000'+this.data.entryNo).slice(-4);
+      v.qrcode = this.parent.element.querySelector('[name="qrcode"]');
+      v.qrSize = v.qrcode.clientWidth;
+      new QRCode(v.qrcode,{
+        text: this.data.entryStr,
+        width: v.qrSize,
+        height: v.qrSize,
+        colorDark: "#000",
+        colorLight: "#fff",
+        correctLevel : QRCode.CorrectLevel.H,
+      });
+  
+      ['entryNo','申込者氏名','申込者カナ'].forEach(x => {
+        v.x = x;
+        v.element = this.parent.element.querySelector('[name="'+x+'"] .v');
+        v.element.innerText = this.data[v.x];
+      });
+  
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 参加者一覧作成
+   * @param {void}
+   * @returns {void}
+   */
+  #setupList = () => {
+    const v = {whois:'drawPassport.#setupList',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      v.list = this.parent.element.querySelector('div.list .content');
+      for( v.i=1 ; v.i<6 ; v.i++ ){
+        v.prefix = '参加者0' + v.i;
+        if( this.data[v.prefix+'氏名'].length === 0 )
+          continue;
+        v.list.appendChild(createElement({
+          attr: {class:'td'},
+          style: {textAlign:'right'},
+          text: v.i,
+        }));
+        v.list.appendChild(createElement(
+          {attr: {class:'td'},children:[
+            {tag:'ruby',text:this.data[v.prefix+'氏名'],children:[
+              {tag:'rt',text:this.data[v.prefix+'カナ']}
+        ]}]}));
+        v.list.appendChild(createElement({
+          attr: {class:'td'},
+          text: this.data[v.prefix+'所属'],
+        }));
+        v.list.appendChild(createElement({
+          attr: {class:'td'},
+          text: this.data['fee0'+v.i],
+        }));
+      }
+    
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 詳細情報作成
+   * @param {void}
+   * @returns {void}
+   */
+  #setupDetail = () => {
+    const v = {whois:'drawPassport.#setupDetail',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      v.detail = this.parent.element.querySelector('div.detail .content');
+      ["メールアドレス","申込者の参加","宿泊、テント","引取者氏名","緊急連絡先",
+      "ボランティア募集","キャンセル","備考"].forEach(x => {
+        v.detail.appendChild(createElement({
+          attr: {class:'th'},
+          text: x,
+        }));
+        v.detail.appendChild(createElement({
+          attr: {class:'td'},
+          text: this.data[x],
+        }));
+      });
+      v.step = 4.2; // 編集用URL
+      v.detail.appendChild(createElement({
+        attr: {class:'th'},
+        text:'申込内容修正',
+      }));
+      v.detail.appendChild(createElement({
+        tag:'button',
+        text: '申込フォームを開く',
+        event: {'click':()=>window.open(this.data.editURL,'_blank')},
+      }));
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
 
   /** 表示/非表示ボタンクリック時の処理を定義
    * @param {PointerEvent|string} event - クリック時のイベントまたはボタンのCSSセレクタ
