@@ -24,16 +24,16 @@ window.addEventListener('DOMContentLoaded',async () => {
     v.testOpt = {
       //parent: 'div.drawPassport',
       //data: kokusho,
-      ...v.opt[2] // テストパターンの指定
+      ...v.opt[1] // テストパターンの指定
     };
     v.drawPassport = new drawPassport('div.drawPassport',kokusho,v.testOpt);
     if( v.rv instanceof Error ) throw v.drawPassport;
     console.log(v.drawPassport);
 
-    if( v.testOpt.edit ){
-      v.rv = v.drawPassport.edit();
-      console.log(v.rv);
-    }
+    //if( v.testOpt.edit ){
+    //  v.rv = v.drawPassport.edit();
+    //  console.log(v.rv);
+    //}
 
     console.log(v.whois+' normal end.',v.rv);
   } catch(e){

@@ -7,7 +7,7 @@ class drawPassport {
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
-   * @param {Object} data - 参加者情報
+   * @param {Object} data - Authから返された参加者情報(Auth.info)
    * @param {Object} [opt={}] - オプション
    * @returns {void}
    */
@@ -289,24 +289,48 @@ class drawPassport {
         // 氏名が未登録の場合はスキップ
         if( this.data[v.prefix+'氏名'].length === 0 )
           continue;
+        v.step = 4.1; // No
         v.content.appendChild(createElement({
           attr: {class:'td'},
           style: {textAlign:'right'},
           text: v.i,
         }));
+        v.step = 4.2; // 氏名
         v.content.appendChild(createElement(
           {attr: {class:'td'},children:[
             {tag:'ruby',text:this.data[v.prefix+'氏名'],children:[
               {tag:'rt',text:this.data[v.prefix+'カナ']}
         ]}]}));
+        v.step = 4.3; // 所属
         v.content.appendChild(createElement({
           attr: {class:'td'},
           text: this.data[v.prefix+'所属'],
         }));
-        v.content.appendChild(createElement({
-          attr: {class:'td'},
-          text: this.data['fee0'+v.i],
-        }));
+        v.step = 4.4; // 参加費
+        if( this.edit ){
+          v.step = '4.4a';  // 編集モード⇒プルダウンで表示
+          v.options = [];
+          ['未入場','無料','未収','既収','退場済'].forEach(x => {
+            v.options.push({
+              tag:'option',
+              value:x,
+              text:x,
+              logical:{selected:(this.data['fee0'+v.i] === x)},
+            });
+          });
+          v.content.appendChild(createElement(
+            {attr:{class:'td'},children:[{
+              tag: 'select',
+              attr: {class:'fee',name:'fee0'+v.i},
+              children:v.options,
+          }]}));
+        } else {
+          v.step = '4.4b';  // 参照モード⇒テキストで表示
+          v.content.appendChild(createElement({
+            attr: {class:'td'},
+            text: this.data['fee0'+v.i] || '未入場',
+          }));
+        }
       }
     
       console.log(v.whois+' normal end.',v.rv);
