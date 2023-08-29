@@ -22,6 +22,7 @@ class drawPassport {
         edit: false,  // {boolean} trueなら編集モード、falseなら参照モード
         showList: false,  // {boolean} 参加者一覧を表示するならtrue
         showDetail: false,  // {boolean} 詳細情報を表示するならtrue
+        /*
         css:[{
           // drawPassport全体
           sel :'.drawPassport',
@@ -205,7 +206,8 @@ class drawPassport {
           prop:{
             'display': 'none',
           }
-        }],        
+        }],
+        */
       });
       if( v.rv instanceof Error ) throw v.rv;
       v.step = 1.2; // 編集モードなら参加者一覧は必ず表示する
@@ -251,6 +253,134 @@ class drawPassport {
     console.log(v.whois+' start.');
     try {
 
+      this.style = document.createElement('style');
+      document.head.appendChild(this.style);
+      this.style.innerText = `
+        .drawPassport {
+          width: calc(100% - 2rem);
+          display: grid;
+          grid-template-columns: 1fr;
+          padding: 1rem;
+          font-size: 1rem;
+        }
+        .drawPassport rt {
+          font-size: 50%;
+        }
+        .drawPassport .label {
+          margin-top: 1rem;
+          width: 100%;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 2rem;
+        }
+        .drawPassport .label p {
+          grid-column: 1 / 3;
+          font-size: 1.4rem;
+        }
+        .drawPassport .label button {
+          grid-column: 3 / 4;
+        }
+      
+        /* QRコード、受付番号、申込者名 */
+        .drawPassport .summary {
+          width: 100%;
+          margin: 1rem 0px;
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          gap: 1rem;
+        }
+        .drawPassport .summary [name="qrcode"]{
+          padding: 0rem;
+          grid-row: 1 / 3;
+          grid-column: 1 / 5;
+        }
+        .drawPassport .summary [name="entryNo"]{
+          grid-row: 1 / 2;
+          grid-column: 5 / 13;
+        }
+        .drawPassport .summary [name="entryNo"] span {
+          font-size: 2rem;
+        }
+        .drawPassport .summary [name="申込者氏名"]{
+          grid-row: 2 / 3;
+          grid-column: 5 / 13;
+        }
+        .drawPassport .summary ruby span {
+          font-size: 2rem;
+        }
+        .drawPassport .summary rt span {
+          font-size: 1rem;
+        }
+      
+        /* 参加者リスト */
+        .drawPassport .list .content {
+          width: 100%;
+          margin: 1rem 0px;
+          display: grid;
+          grid-template-columns: repeat(12, 1fr);
+          gap: 0.2rem;
+        }
+        .drawPassport .list .content.hide {
+          display: none;
+        }
+        .drawPassport .list .content div:nth-child(4n+1) {
+          grid-column: 1 / 3;
+        }
+        .drawPassport .list .content div:nth-child(4n+2) {
+          grid-column: 3 / 7;
+        }
+        .drawPassport .list .content div:nth-child(4n+3) {
+          grid-column: 7 / 10;
+        }
+        .drawPassport .list .content div:nth-child(4n+4) {
+          grid-column: 10 / 13;
+        }
+      
+        /* 詳細 */
+        .drawPassport .detail {
+      
+        }
+        .drawPassport .detail .content {
+          width: 100%;
+          margin: 1rem 0px;
+          display: grid;
+          grid-template-columns: 2fr 3fr;
+          gap: 0.2rem;
+        }
+        .drawPassport .detail .content.hide {
+          display: none;
+        }
+        .drawPassport .message {
+          display: block;
+        }
+        .drawPassport .message.hide {
+          display: none;
+        }
+      
+        /* ボタン領域 */
+        .drawPassport .buttons {
+          width: 100%;
+          margin: 1rem 0px;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 2rem;
+        }
+        .drawPassport .buttons button {
+          display: block;
+          width: 100%;
+          font-size: 2rem;
+        }
+        .drawPassport .buttons [name="取消"].hide {
+          display: none;
+        }
+        .drawPassport .buttons [name="決定"].hide {
+          display: none;
+        }
+        .drawPassport .buttons [name="全員"].hide {
+          display: none;
+        }
+      `;
+
       this.parent.element.innerHTML = `
       <div class="summary">
         <div name="qrcode"></div>
@@ -293,6 +423,10 @@ class drawPassport {
         <button name="全員">全員<br>受領</button>  
       </div>
       `;
+      this.summary = this.parent.element.querySelector(':scope > .summary');
+      this.list = this.parent.element.querySelector(':scope > .list');
+      this.detail = this.parent.element.querySelector(':scope > .detail');
+      this.buttons = this.parent.element.querySelector(':scope > .buttons');
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -313,8 +447,9 @@ class drawPassport {
     try {
 
       this.data.entryStr = String('0000'+this.data.entryNo).slice(-4);
-      v.qrcode = this.parent.element.querySelector('[name="qrcode"]');
+      v.qrcode = this.summary.querySelector('[name="qrcode"]');
       v.qrSize = v.qrcode.clientWidth;
+      console.log('l.322',v.qrSize);
       new QRCode(v.qrcode,{
         text: this.data.entryStr,
         width: v.qrSize,
@@ -326,7 +461,7 @@ class drawPassport {
   
       ['entryNo','申込者氏名','申込者カナ'].forEach(x => {
         v.x = x;
-        v.element = this.parent.element.querySelector('[name="'+x+'"] .v');
+        v.element = this.summary.querySelector('[name="'+x+'"] .v');
         v.element.innerText = this.data[v.x];
       });
   
