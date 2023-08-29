@@ -40,6 +40,9 @@ class drawPassport {
       v.step = 4; // 詳細情報
       this.#setupDetail();
 
+      v.step = 5; // 編集
+      this.#setupEdit();
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
@@ -400,6 +403,60 @@ class drawPassport {
     }
   }
 
+  /** 参加者情報の表示・編集を行い、編集結果を返す
+   * @param {void} - 無し
+   * @returns {Object.<string, any>} 修正された項目ラベルと値
+   */
+  #setupEdit = () => {
+    const v = {whois:'drawPassport.#setupEdit',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1; // CSS定義
+      this.style.innerText = (this.style.innerText + `
+      .drawPassport .buttons {
+        width: 100%;
+        margin: 1rem 0px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+      }
+      .drawPassport .buttons button {
+        display: block;
+        width: 100%;
+        font-size: 2rem;
+      }
+      .drawPassport .buttons [name="取消"].hide {
+        display: none;
+      }
+      .drawPassport .buttons [name="決定"].hide {
+        display: none;
+      }
+      .drawPassport .buttons [name="全員"].hide {
+        display: none;
+      }
+      `).replaceAll(/\n/g,'').replaceAll(/\s+/g,' ');
+
+      v.step = 2; // HTML定義
+      this.buttons = createElement(
+        {attr:{class:'buttons'},children:[
+          {tag:'button',attr:{name:'取消'},text:'取消'},
+          {tag:'button',attr:{name:'決定'},text:'決定'},
+          {tag:'button',attr:{name:'全員'},html:'全員<br>受領'},
+        ]}
+      );
+      this.parent.appendChild(this.buttons);
+
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
   /** 表示/非表示ボタンクリック時の処理を定義
    * @param {PointerEvent|string} event - クリック時のイベントまたはボタンのCSSセレクタ
    * @param {boolean} show - trueなら開く
@@ -446,20 +503,4 @@ class drawPassport {
     }
   }
 
-  /** 参加者情報の表示・編集を行い、編集結果を返す
-   * @param {void} - 無し
-   * @returns {Object.<string, any>} 修正された項目ラベルと値
-   */
-  edit = async () => {
-    const v = {whois:'drawPassport.edit',step:0,rv:null};
-    console.log(v.whois+' start.');
-    try {
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-      return e;
-    }
-  }
 }
