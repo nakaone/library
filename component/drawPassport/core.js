@@ -38,7 +38,7 @@ class drawPassport {
       this.#setupList();
 
       v.step = 4; // 詳細情報
-      //this.#setupDetail();
+      this.#setupDetail();
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -270,10 +270,12 @@ class drawPassport {
       );
       this.parent.appendChild(this.list);
 
-      v.step = 3; // 参加者一覧開閉ボタン
-      // 初期状態設定
+      // 参加者一覧開閉ボタン
+      v.step = 3.1; // 編集モードなら参加者一覧は必ず表示するよう設定
+      this.showList = this.edit || this.showList;
+      v.step = 3.2; // 初期状態設定
       this.toggle('.list',this.showList);
-      // イベントリスナ設定
+      v.step = 3.3; // イベントリスナ設定
       this.list.querySelector('.label button')
       .addEventListener('click',this.toggle);
 
@@ -304,6 +306,91 @@ class drawPassport {
         }));
       }
     
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 詳細情報作成
+   * @param {void}
+   * @returns {void}
+   */
+  #setupDetail = () => {
+    const v = {whois:'drawPassport.#setupDetail',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1; // CSS定義
+      this.style.innerText = (this.style.innerText + `
+      .drawPassport .detail .content {
+        width: 100%;
+        margin: 1rem 0px;
+        display: grid;
+        grid-template-columns: 2fr 3fr;
+        gap: 0.2rem;
+      }
+      .drawPassport .detail .content.hide {
+        display: none;
+      }
+      .drawPassport .message {
+        display: block;
+      }
+      .drawPassport .message button {
+        margin-top: 1rem;
+        padding: 0.5rem 2rem;
+      }
+      .drawPassport .message.hide {
+        display: none;
+      }
+      `).replaceAll(/\n/g,'').replaceAll(/\s+/g,' ');
+
+      v.step = 2; // HTML定義
+      this.detail = createElement(
+        {attr:{class:'detail'},children:[
+          {attr:{class:'label'},children:[
+            {tag:'p',text:'詳細情報'},
+            {tag:'button',text:'表示'},
+          ]},
+          {attr:{class:'content'}},
+          {attr:{class:'message'},children:[
+            {attr:{name:'editURL'},children:[
+              {tag:'p',text:'参加者一覧・詳細情報に誤謬・変更がある場合、以下のボタンをクリックして申込フォームを開いて修正してください。'},
+              {tag:'button',text:'申込フォームを開く'},
+            ]}
+          ]},
+        ]}
+      );
+      this.parent.appendChild(this.detail);
+
+      // 詳細情報開閉ボタン
+      v.step = 3.1; // 初期状態設定
+      this.toggle('.detail',this.showDetail);
+      v.step = 3.3; // イベントリスナ設定
+      this.detail.querySelector('.label button')
+      .addEventListener('click',this.toggle);
+
+      v.step = 4; // 詳細情報をセット
+      v.detail = this.detail.querySelector('.content');
+      ["メールアドレス","申込者の参加","宿泊、テント","引取者氏名","緊急連絡先",
+      "ボランティア募集","キャンセル","備考"].forEach(x => {
+        v.detail.appendChild(createElement({
+          attr: {class:'th'},
+          text: x,
+        }));
+        v.detail.appendChild(createElement({
+          attr: {class:'td'},
+          text: this.data[x],
+        }));
+      });
+
+      v.step = 5; // 編集用URL
+      this.detail.querySelector('.message button')
+      .addEventListener('click',()=>window.open(this.data.editURL,'_blank'));
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
