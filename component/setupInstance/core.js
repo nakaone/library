@@ -138,7 +138,7 @@ const setupInstance = (dest,opt,def) => {
         };
       }
     }
-    console.log(v.whois+' step.'+v.step+'\n',dest.parent);
+    //console.log(v.whois+' step.'+v.step+'\n',dest.parent);
 
     v.step = 3; // CSS定義に基づき新たなstyleを生成
     if( dest.hasOwnProperty('css') ){

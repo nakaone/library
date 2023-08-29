@@ -22,195 +22,14 @@ class drawPassport {
         edit: false,  // {boolean} trueなら編集モード、falseなら参照モード
         showList: false,  // {boolean} 参加者一覧を表示するならtrue
         showDetail: false,  // {boolean} 詳細情報を表示するならtrue
-        /*
-        css:[{
-          // drawPassport全体
-          sel :'.drawPassport',
-          prop:{
-            'width': 'calc(100% - 2rem)',
-            'display': 'grid',
-            'grid-template-columns': '1fr',
-            'padding': '1rem',
-            'font-size': '1rem',
-          }
-        },{
-          sel :'.drawPassport rt',
-          prop:{
-            'font-size': '50%',
-          }
-        },{
-          sel :'.drawPassport .label',
-          prop:{
-            'margin-top': '1rem',
-            'width': '100%',
-            'display': 'grid',
-            'grid-template-columns': 'repeat(3, 1fr)',
-            'gap': '2rem',
-          }
-        },{
-          sel :'.drawPassport .label p',
-          prop:{
-            'grid-column': '1 / 3',
-            'font-size': '1.4rem',
-          }
-        },{
-          sel :'.drawPassport .label button',
-          prop:{
-            'grid-column': '3 / 4',
-          }
-        },
-
-        // summary: QRコード、受付番号、申込者名
-        {
-          sel :'.drawPassport .summary',
-          prop:{
-            'width': '100%',
-            'margin': '1rem 0px',
-            'display': 'grid',
-            'grid-template-columns': 'repeat(12, 1fr)',
-            'gap': '1rem',
-          }
-        },{
-          sel :'.drawPassport .summary [name="qrcode"]',
-          prop:{
-            'padding': '0rem',
-            'grid-row': '1 / 3',
-            'grid-column': '1 / 5',
-          }
-        },{
-          sel :'.drawPassport .summary [name="entryNo"]',
-          prop:{
-            'grid-row': '1 / 2',
-            'grid-column': '5 / 13',
-          }
-        },{
-          sel :'.drawPassport .summary [name="entryNo"] span',
-          prop:{
-            'font-size': '2rem',
-          }
-        },{
-          sel :'.drawPassport .summary [name="申込者氏名"]',
-          prop:{
-            'grid-row': '2 / 3',
-            'grid-column': '5 / 13',
-          }
-        },{
-          sel :'.drawPassport .summary ruby span',
-          prop:{
-            'font-size': '2rem',
-          }
-        },{
-          sel :'.drawPassport .summary rt span',
-          prop:{
-            'font-size': '1rem',
-          }
-        },
-        
-        // list: 参加者リスト
-        {
-          sel :'.drawPassport .list .content',
-          prop:{
-            'width': '100%',
-            'margin': '1rem 0px',
-            'display': 'grid',
-            'grid-template-columns': 'repeat(12, 1fr)',
-            'gap': '0.2rem',
-          }
-        },{
-          sel :'.drawPassport .list .content.hide',
-          prop:{
-            'display': 'none',
-          }
-        },{
-          sel :'.drawPassport .list .content div:nth-child(4n+1)',
-          prop:{
-            'grid-column': '1 / 3',
-          }
-        },{
-          sel :'.drawPassport .list .content div:nth-child(4n+2)',
-          prop:{
-            'grid-column': '3 / 7',
-          }
-        },{
-          sel :'.drawPassport .list .content div:nth-child(4n+3)',
-          prop:{
-            'grid-column': '7 / 10',
-          }
-        },{
-          sel :'.drawPassport .list .content div:nth-child(4n+4)',
-          prop:{
-            'grid-column': '10 / 13',
-          }
-        },
-        
-        // detail: 詳細情報
-        {
-          sel :'.drawPassport .detail',
-          prop:{
-          }
-        },{
-          sel :'.drawPassport .detail .content',
-          prop:{
-            'width': '100%',
-            'margin': '1rem 0px',
-            'display': 'grid',
-            'grid-template-columns': '2fr 3fr',
-            'gap': '0.2rem',
-          }
-        },{
-          sel :'.drawPassport .detail .content.hide',
-          prop:{
-            'display': 'none',
-          }
-        },{
-          sel :'.drawPassport .message',
-          prop:{
-            'display': 'block',
-          }
-        },{
-          sel :'.drawPassport .message.hide',
-          prop:{
-            'display': 'none',
-          }
-        },
-        
-        // buttons: ボタン領域
-        {
-          sel :'.drawPassport .buttons',
-          prop:{
-            'width': '100%',
-            'margin': '1rem 0px',
-            'display': 'grid',
-            'grid-template-columns': 'repeat(3, 1fr)',
-            'gap': '2rem',
-          }
-        },{
-          sel :'.drawPassport .buttons button',
-          prop:{
-            'display': 'block',
-            'width': '100%',
-            'font-size': '2rem',
-          }
-        },{
-          sel :'.drawPassport .buttons [name="取消"].hide',
-          prop:{
-            'display': 'none',
-          }
-        },{
-          sel :'.drawPassport .buttons [name="決定"].hide',
-          prop:{
-            'display': 'none',
-          }
-        },{
-          sel :'.drawPassport .buttons [name="全員"].hide',
-          prop:{
-            'display': 'none',
-          }
-        }],
-        */
+        style: null,  // {HTMLStyleElement} CSS定義
+        summary: null, // {HTMLElement} 概要領域のDIV要素
+        list: null, // {HTMLElement} 参加者一覧領域のDIV要素
+        detail: null, // {HTMLElement} 詳細領域のDIV要素
+        buttons: null, // {HTMLElement} ボタン領域のDIV要素
       });
       if( v.rv instanceof Error ) throw v.rv;
-      v.step = 1.2; // 編集モードなら参加者一覧は必ず表示する
+      v.step = 1.2; // 編集モードなら参加者一覧は必ず表示するよう設定
       this.showList = this.edit || this.showList;
   
       v.step = 1.3; // 描画領域をクリアし、必要な要素をセット
@@ -253,6 +72,7 @@ class drawPassport {
     console.log(v.whois+' start.');
     try {
 
+      v.step = 1; // CSSの定義
       this.style = document.createElement('style');
       document.head.appendChild(this.style);
       this.style.innerText = `
@@ -381,6 +201,7 @@ class drawPassport {
         }
       `;
 
+      v.step = 2; // HTMLの定義
       this.parent.element.innerHTML = `
       <div class="summary">
         <div name="qrcode"></div>
@@ -449,7 +270,6 @@ class drawPassport {
       this.data.entryStr = String('0000'+this.data.entryNo).slice(-4);
       v.qrcode = this.summary.querySelector('[name="qrcode"]');
       v.qrSize = v.qrcode.clientWidth;
-      console.log('l.322',v.qrSize);
       new QRCode(v.qrcode,{
         text: this.data.entryStr,
         width: v.qrSize,
