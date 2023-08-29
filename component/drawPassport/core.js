@@ -41,7 +41,9 @@ class drawPassport {
       this.#setupDetail();
 
       v.step = 5; // 編集
-      this.#setupEdit();
+      if( this.edit ){
+        this.#setupEdit();
+      }
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -471,9 +473,15 @@ class drawPassport {
       );
       this.parent.appendChild(this.buttons);
 
+      v.step = 3;
+  
+      /*
+      this.buttons.querySelector('[name="取消"]')
+      .addEventListener('click',this.onEdit);
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
+      */
 
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
@@ -525,6 +533,17 @@ class drawPassport {
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
     }
+  }
+
+  onEdit = async (event) => {
+    console.log('onEdit start.');
+    return new Promise(resolve => {
+      this.buttons.querySelector('[name="取消"]')
+      .addEventListener('click',element => {
+        console.log('edit button clicked.',element.target);
+        resolve('test result');
+      });
+    });
   }
 
 }
