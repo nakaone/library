@@ -27,6 +27,148 @@ function getArticles(){
   return [
 // この直後に追加
 { // =====================================================================
+  title: "class用テンプレート",
+  created: "2023/08/29 12:40",
+  tag: ['class','proto','template'],
+  ref: [], article:
+  // =====================================================================
+`JavaScript class用のテンプレート
+
+\`\`\`
+/**
+ * @classdesc 参加者情報の表示・編集
+ * 
+ * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
+ */
+class drawPassport {
+  /**
+   * @constructor
+   * @param {Object} opt - オプション
+   * @returns {void}
+   */
+  constructor(parent,opt={}){
+    const v = {whois:'drawPassport.constructor',rv:true,step:0};
+    console.log(v.whois+' start.',opt);
+    try {
+
+      v.step = 1; // メンバに既定値をセット、オプションがあれば上書き
+      v.rv = this.#setup(parent,opt,{
+        parent: null, // {HTMLElement} 親要素(ラッパー)
+        style: null, // {HTMLElement} CSS(style)要素
+      });
+      if( v.rv instanceof Error ) throw v.rv;
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** メンバに既定値をセット、オプションがあれば上書き
+   * @param {HTMLElement|string} [parent=null] - 親要素(ラッパー)またはCSSセレクタ
+   * @param {Object} opt - constructorに渡されたオプションオブジェクト
+   * @param {*} def - 事前に定義してある既定値のオブジェクト
+   * @returns {null|Error} 正常終了ならNull
+   */
+  #setup = (parent=null,opt,def) => {
+    const v = {whois:'drawPassport.#setup',rv:true,step:0,
+      isObj: obj => obj && typeof obj === 'object' && !Array.isArray(obj)
+        && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
+      isArr: obj => obj && typeof obj === 'object' && Array.isArray(obj),
+      deepcopy: (opt,dest=this) => { Object.keys(opt).forEach(x => {
+        if( !dest.hasOwnProperty(x) ){ dest[x] = opt[x] } else {
+          if( v.isObj(dest[x]) && v.isObj(opt[x]) ){
+            v.deepcopy(dest[x],opt[x]);
+          } else if( v.isArr(dest[x]) && v.isArr(opt[x]) ){
+            dest[x] = [...new Set([...dest[x],...opt[x]])];
+          } else { dest[x] = opt[x] }
+    }})}};
+    console.log(v.whois+' start.',opt,def);
+    try {
+
+      v.step = 1; // オプションをメンバとして登録
+      v.deepcopy(opt,Object.assign(this,def));
+
+      v.step = 2; // CSSの作成
+      this.style = document.createElement('style');
+      document.head.appendChild(this.style);
+      this.style.innerText = \`\`;
+
+      v.step = 3; // HTMLの作成
+      this.parent = parent instanceof HTMLElement ? parent :
+      ( typeof parent === 'string' ? document.querySelector(parent) : null);
+      if( this.parent !== null ){
+        this.parent.innerHTML = \`\`;
+      }
+
+      console.log(v.whois+' normal end.\\n',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+}
+\`\`\`
+
+## #setup内deepcopy詳説
+
+「優先」はclassに与えられた引数オブジェクト、劣後は事前にclass内で設定済の既定値オブジェクト
+
+| 優先(a) | 劣後(b) | 結果 | 備考 |
+| :--: | :--: | :--: | :-- |
+|  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
+|  A  |  B  |  A  | |
+|  A  | [B] |  A  | |
+|  A  | {B} |  A  | |
+| [A] |  -  | [A] | |
+| [A] |  B  | [A] | |
+| [A] | [B] | [A+B] | 配列は置換ではなく結合。但し重複不可 |
+| [A] | {B} | [A] | |
+| {A} |  -  | {A} | |
+| {A} |  B  | {A} | |
+| {A} | [B] | {A} | |
+| {A} | {B} | {A+B} | オブジェクトも置換ではなく結合する |
+|  -  |  -  |  -  | |
+|  -  |  B  |  B  | |
+|  -  | [B] | [B] | |
+|  -  | {B} | {B} | |
+
+\`\`\`
+const v = {whois:'drawPassport.#setup',rv:true,step:0,
+  // 配列・オブジェクトの判定式
+  isObj: obj => obj && typeof obj === 'object' && !Array.isArray(obj)
+    && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
+  isArr: obj => obj && typeof obj === 'object' && Array.isArray(obj),
+  // ディープコピー。値の設定ロジックは上記デシジョンテーブル参照
+  deepcopy: (opt,dest=this) => {
+    Object.keys(opt).forEach(x => {
+      if( !dest.hasOwnProperty(x) ){
+        // コピー先に存在しなければ追加
+        dest[x] = opt[x];
+      } else {
+        if( v.isObj(dest[x]) && v.isObj(opt[x]) ){
+          // 両方オブジェクト -> メンバをマージ
+          v.deepcopy(dest[x],opt[x]);
+        } else if( v.isArr(dest[x]) && v.isArr(opt[x]) ){
+          // 両方配列 -> 配列をマージ
+          // Setで重複を排除しているが、配列・オブジェクトは重複(中身もマージされない)
+          dest[x] = [...new Set([...dest[x],...opt[x]])];
+        } else {
+          // optの値でdestの値を置換
+          dest[x] = opt[x];
+        }
+      }
+    });
+  },
+};
+\`\`\`
+
+
+`},
+{ // =====================================================================
   title: "JavaScriptでのファイル加工",
   created: "2023/08/28 11:55",
   tag: ['proto','テンプレート','node','css'],

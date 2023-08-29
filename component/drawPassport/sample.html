@@ -22,11 +22,11 @@ window.addEventListener('DOMContentLoaded',async () => {
   try {
 
     v.testOpt = {
-      parent: 'div.drawPassport',
-      data: kokusho,
+      //parent: 'div.drawPassport',
+      //data: kokusho,
       ...v.opt[2] // テストパターンの指定
     };
-    v.drawPassport = new drawPassport(v.testOpt);
+    v.drawPassport = new drawPassport('div.drawPassport',kokusho,v.testOpt);
     if( v.rv instanceof Error ) throw v.drawPassport;
     console.log(v.drawPassport);
 
