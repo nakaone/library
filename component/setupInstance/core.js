@@ -147,8 +147,8 @@ const setupInstance = (dest,opt,def) => {
 
     v.step = 3; // CSS定義に基づき新たなstyleを生成
     if( dest.hasOwnProperty('css') ){
-      v.style = document.createElement('style');
-      document.head.appendChild(v.style);
+      dest.style = document.createElement('style');
+      document.head.appendChild(dest.style);
       for( v.i=0 ; v.i<dest.css.length ; v.i++ ){
         v.x = dest.css[v.i];
         if( v.isObj(v.x) ){
@@ -156,8 +156,8 @@ const setupInstance = (dest,opt,def) => {
           for( v.y in v.x.prop ){
             v.prop = dest.parent.selector + ' ' + v.x.sel
               + ' { ' + v.y + ' : ' + v.x.prop[v.y] + '; }\n';
-            v.style.sheet.insertRule(v.prop,
-              v.style.sheet.cssRules.length,
+            dest.style.sheet.insertRule(v.prop,
+              dest.style.sheet.cssRules.length,
             );
           }
         } else {
@@ -166,7 +166,7 @@ const setupInstance = (dest,opt,def) => {
         }
       }
       if( v.cssDefs.length > 0 ){
-        v.style.innerText = v.cssDefs.replaceAll(/\n/g,'').replaceAll(/\s+/g,' ');
+        dest.style.innerText = v.cssDefs.replaceAll(/\n/g,'').replaceAll(/\s+/g,' ');
       }
     }
 
