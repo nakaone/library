@@ -41,9 +41,7 @@ class drawPassport {
       this.#setupDetail();
 
       v.step = 5; // 編集
-      if( this.edit ){
-        this.#setupEdit();
-      }
+      this.#setupEdit();
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -463,25 +461,10 @@ class drawPassport {
       }
       `).replaceAll(/\n/g,'').replaceAll(/\s+/g,' ');
 
-      v.step = 2; // HTML定義
-      this.buttons = createElement(
-        {attr:{class:'buttons'},children:[
-          {tag:'button',attr:{name:'取消'},text:'取消'},
-          {tag:'button',attr:{name:'決定'},text:'決定'},
-          {tag:'button',attr:{name:'全員'},html:'全員<br>受領'},
-        ]}
-      );
-      this.parent.appendChild(this.buttons);
-
-      v.step = 3;
-  
-      /*
-      this.buttons.querySelector('[name="取消"]')
-      .addEventListener('click',this.onEdit);
+      // 注：HTML定義はonEdit()で都度実行
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
-      */
 
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
@@ -535,15 +518,66 @@ class drawPassport {
     }
   }
 
-  onEdit = async (event) => {
-    console.log('onEdit start.');
-    return new Promise(resolve => {
-      this.buttons.querySelector('[name="取消"]')
-      .addEventListener('click',element => {
-        console.log('edit button clicked.',element.target);
-        resolve('test result');
-      });
-    });
-  }
+  /** 参加費の編集を行い、編集結果を返す
+   * @param {void} 
+   * @returns {void}
+   */
+  onEdit = async () => {
+    const v = {whois:'drawPassport.onEdit',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
 
+      v.step = 1; // HTML定義
+      if( this.buttons !== null ){
+        // 誤動作しないよう一度内容をクリア
+        this.buttons.remove();
+      }
+      this.buttons = createElement(
+        {attr:{class:'buttons'},children:[
+          {tag:'button',attr:{name:'取消'},text:'取消'},
+          {tag:'button',attr:{name:'決定'},text:'決定'},
+          {tag:'button',attr:{name:'全員'},html:'全員<br>受領'},
+        ]}
+      );
+      this.parent.appendChild(this.buttons);
+
+      v.step = 2;
+      return new Promise(resolve => {
+        this.buttons.querySelector('[name="取消"]')
+        .addEventListener('click',element => {
+          console.log('取消 button clicked.',element.target);
+          console.log('drawPassport.onEdit normal end.');
+          resolve({entryNo:this.data.entryNo,result:null});
+        });
+
+        this.buttons.querySelector('[name="決定"]')
+        .addEventListener('click',element => {
+          console.log('決定 button clicked.',element.target);
+          const rv = {entryNo:this.data.entryNo};
+          this.list.querySelectorAll('.fee').forEach(x => {
+            rv[x.getAttribute('name')] = x.value;
+          });
+          // 要confirm
+          console.log('drawPassport.onEdit normal end.');
+          resolve(rv);
+        });
+
+        this.buttons.querySelector('[name="全員"]')
+        .addEventListener('click',element => {
+          console.log('全員受領 button clicked.',element.target);
+          const rv = {entryNo:this.data.entryNo};
+          this.list.querySelectorAll('.fee').forEach(x => {
+            rv[x.getAttribute('name')] = '既収';
+          });
+          // 要confirm
+          console.log('drawPassport.onEdit normal end.');
+          resolve(rv);
+        });
+      });
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
 }
