@@ -1,19 +1,17 @@
-/** クラス(constructor)共通の初期処理を行う。
- * 1. オプション・既定値をメンバに設定
- * 1. オプション(Object)の第一階層にメンバ"css"が存在すると、新規styleを生成
- * 1. 第一階層にメンバ"html"が存在すると、親要素内に指定のHTML要素を生成
- * 1. 第一階層にメンバ"parent"が存在する場合、
- *    - HTMLElement型ならそのまま`parent:(HTMLElement)}`として設定
- *    - 文字列型ならCSSセレクタと解して`parent:{selector:(string),element:(HTMLElement)}`を生成
- * 
+/** constructor共通の初期処理として①オプション・既定値をメンバに設定、②wrapper(parent)要素取得、③スタイルシート作成を行う
  * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
  * @param {Object} opt - 起動時にオプションとして渡されたオブジェクト
  * @param {Object} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
+ * @param {number} [depth=0] - 再起呼出時の階層。開始・終了メッセージ制御用なので指定不要
  * @returns {void}
  * 
  * ## 使用方法
  * 
  * 1. 主にclass内constructorで冒頭に使用することを想定。
+ * 1. 第一階層にメンバ"css"が存在すると、新規styleを生成
+ * 1. 第一階層にメンバ"parent"が存在する場合、
+ *    - 文字列型ならCSSセレクタと解して`parent:{selector:(string),element:(HTMLElement)}`を生成
+ *    - HTMLElement型ならそのまま`parent:(HTMLElement)}`として設定
  * 
  * ### 入力例
  * 
@@ -97,8 +95,8 @@
 const setupInstance = (dest,opt,def) => {
   const v = {whois:'setupInstance',rv:true,step:0,
     // 配列・オブジェクトの判定式
-    isObj: obj => obj && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
-    isArr: obj => obj && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Array',
+    isObj: obj => obj && typeof obj === 'object' && !Array.isArray(obj) && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
+    isArr: obj => obj && typeof obj === 'object' && Array.isArray(obj),
     // ディープコピー。値の設定ロジックは上記デシジョンテーブル参照
     deepcopy: (dest,opt) => {
       Object.keys(opt).forEach(x => {
@@ -120,7 +118,6 @@ const setupInstance = (dest,opt,def) => {
         }
       });
     },
-    cssDefs: '',  // CSS定義文字列による指定の場合、その結合した文字列
   };
 
   console.log(v.whois+' start.',dest,opt,def);
@@ -139,11 +136,9 @@ const setupInstance = (dest,opt,def) => {
           selector: v.parent,
           element : document.querySelector(v.parent),
         };
-        v.parent = dest.parent.element;
-      } else {
-        v.parent = dest.parent;
       }
     }
+    //console.log(v.whois+' step.'+v.step+'\n',dest.parent);
 
     v.step = 3; // CSS定義に基づき新たなstyleを生成
     if( dest.hasOwnProperty('css') ){
@@ -151,48 +146,12 @@ const setupInstance = (dest,opt,def) => {
       document.head.appendChild(v.style);
       for( v.i=0 ; v.i<dest.css.length ; v.i++ ){
         v.x = dest.css[v.i];
-        if( v.isObj(v.x) ){
-          // {sel,prop}による指定の場合(将来的に廃止予定)
-          for( v.y in v.x.prop ){
-            v.prop = dest.parent.selector + ' ' + v.x.sel
-              + ' { ' + v.y + ' : ' + v.x.prop[v.y] + '; }\n';
-            v.style.sheet.insertRule(v.prop,
-              v.style.sheet.cssRules.length,
-            );
-          }
-        } else {
-          // CSS定義文字列による指定の場合
-          v.cssDefs = v.cssDefs + v.x;
-        }
-      }
-      if( v.cssDefs.length > 0 ){
-        v.style.innerText = v.cssDefs.replaceAll(/\n/g,'').replaceAll(/\s+/g,' ');
-      }
-    }
-
-    v.step = 4; // HTML定義に基づき親要素内のHTML要素を生成
-    if( dest.hasOwnProperty('html') ){
-      if( v.isObj(dest.html) ){
-        v.step = 4.1; // オブジェクトならcreateElementの引数
-        v.html = createElement(dest.html);
-        if( v.html instanceof Error ) throw v.html;
-        v.parent.appendChild(v.html);
-      } else {
-        v.step = 4.2;
-        if( v.isArr(dest.html) ){
-          v.step = 4.21;
-          if( typeof dest.html[0] === 'string' ){
-            v.step = 4.211;
-            // 配列の最初の要素が文字列なら結合してinnerHTML
-            v.parent.innerHTML = dest.html.join('');
-          } else {
-            v.step = 4.212;
-            // オブジェクトならcreateElementして親要素に追加
-            dest.html.forEach(x => v.parent.appendChild(createElement(x)));
-          }
-        } else {
-          v.step = 4.22;  // 文字列ならinnerHTMLそのもの
-          v.parent.innerHTML = dest.html;
+        for( v.y in v.x.prop ){
+          v.prop = dest.parent.selector + ' ' + v.x.sel
+            + ' { ' + v.y + ' : ' + v.x.prop[v.y] + '; }\n';
+          v.style.sheet.insertRule(v.prop,
+            v.style.sheet.cssRules.length,
+          );
         }
       }
     }
