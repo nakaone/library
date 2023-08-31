@@ -21,7 +21,8 @@ window.addEventListener('DOMContentLoaded',async () => {
     if( v.rv instanceof Error ) throw v.drawPassport;
     console.log(v.drawPassport);
 
-    console.log(await v.drawPassport.edit());
+    //console.log(await v.drawPassport.edit());
+    console.log(v.drawPassport.view());
 
     console.log(v.whois+' normal end.',v.rv);
   } catch(e){

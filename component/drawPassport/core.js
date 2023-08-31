@@ -243,7 +243,13 @@ class drawPassport {
         this[x] = this.parent.querySelector('.'+x);
       });
 
-      v.step = 3; // 画面を非表示に
+      v.step = 3; // 参加者情報があればセット
+      if( this.data !== null ){
+        v.r = this.#setData();
+        if( v.r instanceof Error ) throw v.r;
+      }
+
+      v.step = 4; // 画面を非表示に
       this.close();
 
       console.log(v.whois+' normal end.',v.rv);
@@ -464,10 +470,10 @@ class drawPassport {
   }
 
   /** 参加者情報を表示する
-   * @param {void}
+   * @param {Object} [data=null] - 表示対象となる参加者情報 
    * @returns {void}
    */
-  view = () => {
+  view = (data=null) => {
     const v = {whois:'drawPassport.view',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
