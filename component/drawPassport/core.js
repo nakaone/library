@@ -125,14 +125,17 @@ class drawPassport {
           }`,
           /* 詳細情報 */`
           .drawPassport .detail .content {
+            display: block;
+          }
+          .drawPassport .detail .content.hide {
+            display: none;
+          }
+          .drawPassport .detail .content .table {
             width: 100%;
             margin: 1rem 0px;
             display: grid;
             grid-template-columns: 2fr 3fr;
             gap: 0.2rem;
-          }
-          .drawPassport .detail .content.hide {
-            display: none;
           }
           .drawPassport .message {
             display: block;
@@ -202,16 +205,18 @@ class drawPassport {
               {tag:'p',text:'詳細情報'},
               {tag:'button',text:'非表示',event:{click:this.toggle}},
             ]},
-            {attr:{class:'content'}},
-            {attr:{class:'message'},children:[
-              {attr:{name:'editURL'},children:[
-                {tag:'p',text:'参加者一覧・詳細情報に誤謬・変更がある場合、以下のボタンをクリックして申込フォームを開いて修正してください。'},
-                {
-                  tag:'button',
-                  text:'申込フォームを開く',
-                  event:{click:()=>window.open(this.data.editURL,'_blank')},
-                },
-              ]}
+            {attr:{class:'content'},children:[
+              {attr:{class:'table'}},
+              {attr:{class:'message'},children:[
+                {attr:{name:'editURL'},children:[
+                  {tag:'p',text:'参加者一覧・詳細情報に誤謬・変更がある場合、以下のボタンをクリックして申込フォームを開いて修正してください。'},
+                  {
+                    tag:'button',
+                    text:'申込フォームを開く',
+                    event:{click:()=>window.open(this.data.editURL,'_blank')},
+                  },
+                ]}
+              ]},
             ]},
           ]},
           // 取消・決定・全員受領ボタン
@@ -340,7 +345,7 @@ class drawPassport {
       // 3. 詳細情報
       // ---------------------------------------------
       v.step = 3.1; // 詳細情報をセット
-      v.detail = this.detail.querySelector('.content');
+      v.detail = this.detail.querySelector('.content .table');
       ["メールアドレス","申込者の参加","宿泊、テント","引取者氏名","緊急連絡先",
       "ボランティア募集","キャンセル","備考"].forEach(x => {
         v.detail.appendChild(createElement({
