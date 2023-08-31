@@ -13,24 +13,15 @@
 <script type="text/javascript" src="../setupInstance/core.js"></script>
 <script type="text/javascript">
 window.addEventListener('DOMContentLoaded',async () => {
-  const v = {whois:'DOMContentLoaded',opt:[
-    {}, // 既定値の動作確認
-    {edit:true},
-    {edit:false},
-  ]};
+  const v = {whois:'DOMContentLoaded'};
   console.log(v.whois+' start.');
   try {
 
-    v.testOpt = {
-      //parent: 'div.drawPassport',
-      //data: kokusho,
-      ...v.opt[1] // テストパターンの指定
-    };
-    v.drawPassport = new drawPassport('div.drawPassport',kokusho,v.testOpt);
+    v.drawPassport = new drawPassport('div.drawPassport',kokusho,{});
     if( v.rv instanceof Error ) throw v.drawPassport;
     console.log(v.drawPassport);
 
-    //console.log(await v.drawPassport.onEdit());
+    console.log(await v.drawPassport.edit());
 
     console.log(v.whois+' normal end.',v.rv);
   } catch(e){

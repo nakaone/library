@@ -39,6 +39,9 @@ class drawPassport {
             width: calc(100% - 2rem);
             */
           }
+          .drawPassport.hide {
+            display: none;
+          }
           .drawPassport > div {
             width: 100%;
             display: grid;
@@ -92,6 +95,9 @@ class drawPassport {
             font-size: 1rem;
           }`,
           /* 参加者一覧 */`
+          .drawPassport .list .label button.hide {
+            display: none;
+          }
           .drawPassport .list .content {
             width: 100%;
             margin: 1rem 0px;
@@ -113,6 +119,9 @@ class drawPassport {
           }
           .drawPassport .list .content div:nth-child(4n+4) {
             grid-column: 9 / 11;
+          }
+          .drawPassport .list .content .td[name="fee"] div.hide{
+            display: none;
           }`,
           /* 詳細情報 */`
           .drawPassport .detail .content {
@@ -232,6 +241,9 @@ class drawPassport {
         if( v.rv instanceof Error ) throw v.rv;
       }
 
+      v.step = 4; // 画面を非表示に
+      this.close();
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
@@ -313,7 +325,7 @@ class drawPassport {
           });
         });
         v.content.appendChild(createElement(
-          {attr:{class:'td'},children:[
+          {attr:{class:'td',name:'fee'},children:[
             {text: this.data['fee0'+v.i]},
             {
               tag     : 'select',
@@ -351,6 +363,67 @@ class drawPassport {
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  edit = (data=null) => {
+    const v = {whois:'drawPassport.',rv:true,step:0};
+    console.log(v.whois+' start.');
+    try {
+      // 参加者情報を渡された場合、セット
+      if( data !== null ) this.data = data;
+
+      // 参加者情報をボタンを削除(非表示)
+      this.list.querySelector('.label button').classList.add('hide');
+
+      // 参加者一覧・参加費欄でプルダウン以外は非表示
+      this.list.querySelectorAll('.content .td[name="fee"] div').forEach(x => {
+        x.classList.add('hide');
+      });
+
+      // 詳細情報を非表示状態に変更
+      v.rv = this.toggle('.detail',false);
+
+      // 親要素を表示
+      this.open();
+
+      // 取消・決定・全員収納ボタンを表示
+      return new Promise(resolve => {
+        this.buttons.querySelector('[name="取消"]')
+        .addEventListener('click',element => {
+          console.log('取消 button clicked.',element.target);
+          console.log('drawPassport.edit normal end.');
+          resolve({entryNo:this.data.entryNo,result:null});
+        });
+
+        this.buttons.querySelector('[name="決定"]')
+        .addEventListener('click',element => {
+          console.log('決定 button clicked.',element.target);
+          const rv = {entryNo:this.data.entryNo};
+          this.list.querySelectorAll('.fee').forEach(x => {
+            rv[x.getAttribute('name')] = x.value;
+          });
+          // 要confirm
+          console.log('drawPassport.edit normal end.');
+          resolve(rv);
+        });
+
+        this.buttons.querySelector('[name="全員"]')
+        .addEventListener('click',element => {
+          console.log('全員受領 button clicked.',element.target);
+          const rv = {entryNo:this.data.entryNo};
+          this.list.querySelectorAll('.fee').forEach(x => {
+            rv[x.getAttribute('name')] = '既収';
+          });
+          // 要confirm
+          console.log('drawPassport.edit normal end.');
+          resolve(rv);
+        });
+      });
+
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
@@ -401,6 +474,16 @@ class drawPassport {
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
     }
+  }
+
+  /** 親要素(parent)内を表示 */
+  open = () => {
+    this.parent.classList.remove('hide');
+  }
+
+  /** 親要素(parent)内を隠蔽 */
+  close = () => {
+    this.parent.classList.add('hide');
   }
 
   template = () => {
