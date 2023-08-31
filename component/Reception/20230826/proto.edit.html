@@ -1,0 +1,328 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>[proto] edit/select dialog</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../szLib.css" />
+</head><body>
+  <h1>class Reception.#edit, #list Test</h1>
+
+<!-- QRコード生成 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script src="../createElement.js"></script>
+<script src="../mergeDeeply.js"></script>
+<script type="text/javascript">
+const conf = {  // thisに相当
+  edit:{  // setPropertiesでセット
+    element:null,
+    css: [
+      {sel:'dialog.Reception',prop:{
+        'margin':'auto',
+        'padding': '1rem',
+      }},
+      {sel:'dialog.Reception::backdrop',prop:{
+        'background-color': 'rgba(127,127,127,0.8)',
+      }},
+      {sel:'dialog.Reception[name="edit"] [name="table"]',prop:{
+        'display': 'grid',
+        'grid-template-columns': '2fr 10fr 8fr 6fr',
+        'grid-gap': '0.2rem',
+      }},
+      {sel:'dialog.Reception input[type="button"]',prop:{
+        'margin': '0.5rem 1rem',
+        'font-size': '1.5rem',
+        'padding': '0.2rem 1rem',
+      }},
+      {sel:'dialog.Reception ruby rt',prop:{
+        'font-size': '0.6rem',
+      }},
+      {sel:'dialog.Reception [name="details"]',prop:{
+        'display': 'grid',
+        'grid-template-columns': '1fr 3fr',
+        'grid-gap': '0.2rem',
+        'overflow-wrap': 'anywhere',
+      }},
+      {sel:'dialog.Reception sub',prop:{
+        'font-size': '0.7rem',
+      }},
+      {sel:'dialog.Reception [name="details"] [name="memo"]',prop:{
+        'width': '95%',
+        'height': '5rem',
+      }},
+      // 複数候補選択画面(list)用
+      {sel:'dialog.Reception[name="list"] [name="table"]',prop:{
+        'display': 'grid',
+        'grid-template-columns': '8rem 1fr',
+        'grid-gap': '0.2rem',
+      }},
+    ],
+  },
+  list:{
+    element: null,
+    table: null,
+  },
+  mami:JSON.parse('{"タイムスタンプ":"2023-08-01T09:05:16.616Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"高井　麻巳子","申込者カナ":"タカイ　マミコ","申込者の参加":"不参加","宿泊、テント":"宿泊する(テントなし)","引取者氏名":"申込者が参加して帰宅時の付添もするのでお迎えは不要","参加者01氏名":"高井　真美","参加者01カナ":"タカイ　マミ","参加者01所属":"卒業生","参加者02氏名":"高井　雄介","参加者02カナ":"タカイ　ユウスケ","参加者02所属":"未就学児","参加者03氏名":"","参加者03カナ":"","参加者03所属":"","参加者04氏名":"","参加者04カナ":"","参加者04所属":"","参加者05カナ":"","参加者05氏名":"","参加者05所属":"","緊急連絡先":"","ボランティア募集":"","備考":"","キャンセル":"","":"","name":"","entryStr":"","authority":"2","cancel":"","entryNo":"16","publicKey":"Wn2Ka6MGMwuMbsDhX+xXgLc7AWt8UR3JYmdyg206vFDz3MmS/cJ7mqmKbEwVRRLPIUuEDJ5UM5i+wGvH1H+kFXkPBG2FPsWtotKuUzIM7bYVX/FLDF1z4sdis09OKysWu6jFbu8dToGsvXQMoUbLxqfVLWHb1skoiTFPbtGbSgU=","editURL":"https://docs.google.com/forms/d/e/1FAIpQLScEzS8-uNgeM40rZvGl60uZewwHZhyPeQJAicS_LjMEYrMqfQ/viewform?edit2=2_ABaOnudN4rJMPqj2nj7P1M4FCr2sFz0i9TTUF4iPzK_wxu9CW0kFOuP10yNGKlJnQLwgNIo","passCode":"730259","genPassCode":"2023-08-09T07:21:55.827Z","NG1":"","NG2":"","certificate":"2023-08-09T07:22:20.520Z","fee00":"","fee01":"","fee02":"","fee03":"","fee04":"","fee05":"","memo":"fugahoge"}'),
+  kokusho:JSON.parse('[{"タイムスタンプ":"2023-08-01T05:01:16.322Z","メールアドレス":"shimokitasho.oyaji@gmail.com","申込者氏名":"奥田　美香","申込者カナ":"オクダ　ミカ","申込者の参加":"参加予定(宿泊なし)","宿泊、テント":"宿泊する(テントあり)","引取者氏名":"宿泊予定なので不要","参加者01氏名":"奥田　太郎","参加者01カナ":"オクダ　タロウ","参加者01所属":"1年生","参加者02氏名":"","参加者02カナ":"","参加者02所属":"","参加者03氏名":"","参加者03カナ":"","参加者03所属":"","参加者04氏名":"","参加者04カナ":"","参加者04所属":"","参加者05カナ":"","参加者05氏名":"","参加者05所属":"","緊急連絡先":"080-1234-5678","ボランティア募集":"できる","備考":"特に無し","キャンセル":"","":"","name":"","entryStr":"","authority":"1","cancel":"","entryNo":"1","publicKey":"X8Jru3fWW1mk2uN34rLhgJo6HwK/mwIeJKTCuLkCLtwyyL0DeQAeE/z8DGZVPfhwr59FWJIUVr8r2ur/ZkDr9H6A5/+yKZ8F5F48c+XzFUtC/6J36cyqQR8scxHZlR4JNAAebWcKHho1OSjL1OE4QB8zrVJAijymwJ1SyyHaMfk=","editURL":"https://docs.google.com/forms/d/e/1FAIpQLScEzS8-uNgeM40rZvGl60uZewwHZhyPeQJAicS_LjMEYrMqfQ/viewform?edit2=2_ABaOnuew4t6M0JPqsw2SkTJ_EheCSyDmJ21IAv0qeMux59jLWfjzsIppeLHg6bF0dnQwQrY","passCode":"822671","genPassCode":"2023-08-07T03:43:55.992Z","NG1":"","NG2":"","certificate":"2023-08-07T03:44:40.353Z","fee00":"","fee01":"","fee02":"","fee03":"","fee04":"","fee05":"","memo":""},{"タイムスタンプ":"2023-08-01T05:42:06.866Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"榎田　道子","申込者カナ":"エノキダ　ミチコ","申込者の参加":"参加予定(宿泊なし)","宿泊、テント":"宿泊しない","引取者氏名":"その他","参加者01氏名":"榎田　花子","参加者01カナ":"エノキダ　ハナコ","参加者01所属":"2年生","参加者02氏名":"","参加者02カナ":"","参加者02所属":"","参加者03氏名":"","参加者03カナ":"","参加者03所属":"","参加者04氏名":"","参加者04カナ":"","参加者04所属":"","参加者05カナ":"","参加者05氏名":"","参加者05所属":"","緊急連絡先":"","ボランティア募集":"","備考":"","キャンセル":"","":"","name":"","entryStr":"","authority":"1","cancel":"","entryNo":"2","publicKey":"","editURL":"https://docs.google.com/forms/d/e/1FAIpQLScEzS8-uNgeM40rZvGl60uZewwHZhyPeQJAicS_LjMEYrMqfQ/viewform?edit2=2_ABaOnucafzo5i5qfO4VP-o-iPp8cGv8hn1EuaM7EAVpmANtUCPNf0Y6pd8q-NTJ5cjzooQ4","passCode":"","genPassCode":"","NG1":"","NG2":"","certificate":"","fee00":"","fee01":"","fee02":"","fee03":"","fee04":"","fee05":"","memo":""},{"タイムスタンプ":"2023-08-01T05:54:47.079Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"新田　恵利","申込者カナ":"ニッタ　エリ","申込者の参加":"参加予定(宿泊あり)","宿泊、テント":"宿泊する(テントなし)","引取者氏名":"申込者は参加しないが、申込者がお迎えに行く","参加者01氏名":"新田　義貞","参加者01カナ":"ニッタ　ヨシサダ","参加者01所属":"4年生","参加者02氏名":"","参加者02カナ":"","参加者02所属":"","参加者03氏名":"","参加者03カナ":"","参加者03所属":"","参加者04氏名":"","参加者04カナ":"","参加者04所属":"","参加者05カナ":"","参加者05氏名":"","参加者05所属":"","緊急連絡先":"","ボランティア募集":"","備考":"","キャンセル":"","":"","name":"","entryStr":"","authority":"1","cancel":"","entryNo":"4","publicKey":"V23Tfre2OCXWmflJPJmcKBI4vhZhVIOFY0zj+3rgLeF3hu7H8U7X4shoDGx2heYUV8BoRXhCY+i/nb9rwohy6TpvdzMGJWzoQewwiVryUyQlNQZy//aw9e8SpB8noIaaF0mfD8k1nmAGNhOO11XL7QIT7lPX8b9rez+8BtkO7w8=","editURL":"https://docs.google.com/forms/d/e/1FAIpQLScEzS8-uNgeM40rZvGl60uZewwHZhyPeQJAicS_LjMEYrMqfQ/viewform?edit2=2_ABaOnudQ4iiZU-_BcgOZkyXCuzV62fXSq95IfeJOpGJ7vnXdDCKOacsHG07UtEu3L6xDu7Y","passCode":"130103","genPassCode":"2023-08-10T01:12:26.027Z","NG1":"","NG2":"","certificate":"2023-08-10T01:13:01.053Z","fee00":"","fee01":"","fee02":"","fee03":"","fee04":"","fee05":"","memo":""},{"タイムスタンプ":"2023-08-01T06:16:43.865Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"友田　麻美子","申込者カナ":"トモダ　マミコ","申込者の参加":"参加予定(宿泊なし)","宿泊、テント":"宿泊しない","引取者氏名":"宿泊予定なので不要","参加者01氏名":"友田　えり","参加者01カナ":"トモダ　エリ","参加者01所属":"卒業生","参加者02氏名":"","参加者02カナ":"","参加者02所属":"","参加者03氏名":"","参加者03カナ":"","参加者03所属":"","参加者04氏名":"","参加者04カナ":"","参加者04所属":"","参加者05カナ":"","参加者05氏名":"","参加者05所属":"","緊急連絡先":"","ボランティア募集":"","備考":"","キャンセル":"","":"","name":"","entryStr":"","authority":"1","cancel":"","entryNo":"7","publicKey":"V4P9hq/C6UdiuQd15pC4/NtnamxkLSOVTxKi1cHH9qYz9E6jWmo/sDMzmkEg2MlR4VLegRCMJfe9ZwndGP2Vo/IWebs9e7ljRTM6IXv78/R+V07cS1wXquI9yOkpi3BT/qCBbhcB1zp7Sm96qQKhjh2xI0CaMMrjy1INwKNGU7s=","editURL":"https://docs.google.com/forms/d/e/1FAIpQLScEzS8-uNgeM40rZvGl60uZewwHZhyPeQJAicS_LjMEYrMqfQ/viewform?edit2=2_ABaOnucRDyCmjenpZrGzVJvzIAOluPBg4alB7TVL-6BNGs-PJYQo2QSq_u11UDL7EukgC6k","passCode":"730440","genPassCode":"2023-08-10T05:54:51.494Z","NG1":"","NG2":"","certificate":"2023-08-10T05:58:51.224Z","fee00":"","fee01":"","fee02":"","fee03":"","fee04":"","fee05":"","memo":""},{"タイムスタンプ":"2023-08-01T09:17:59.464Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"永田　ルリ子","申込者カナ":"ナガタ　ルリコ","申込者の参加":"参加予定(宿泊なし)","宿泊、テント":"宿泊する(テントあり)","引取者氏名":"宿泊予定なので不要","参加者01氏名":"永田　萌","参加者01カナ":"ナガタ　モエ","参加者01所属":"保護者","参加者02氏名":"","参加者02カナ":"","参加者02所属":"","参加者03氏名":"","参加者03カナ":"","参加者03所属":"","参加者04氏名":"","参加者04カナ":"","参加者04所属":"","参加者05カナ":"","参加者05氏名":"","参加者05所属":"","緊急連絡先":"","ボランティア募集":"","備考":"","キャンセル":"","":"","name":"","entryStr":"","authority":"1","cancel":"","entryNo":"18","publicKey":"","editURL":"https://docs.google.com/forms/d/e/1FAIpQLScEzS8-uNgeM40rZvGl60uZewwHZhyPeQJAicS_LjMEYrMqfQ/viewform?edit2=2_ABaOnufvuz9yVJkvYbn7nd2h-KjCC0V69DuLvBK0JXkZML_NeEiFMBAWhqTNatBV8gSMJFY","passCode":"","genPassCode":"","NG1":"","NG2":"","certificate":"","fee00":"","fee01":"","fee02":"","fee03":"","fee04":"","fee05":"","memo":""},{"タイムスタンプ":"2023-08-02T01:36:52.966Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"三田　文代","申込者カナ":"ミタ　フミヨ","申込者の参加":"参加予定(宿泊あり)","宿泊、テント":"宿泊する(テントなし)","引取者氏名":"申込者は参加しないが、申込者がお迎えに行く","参加者01氏名":"三田　家政婦","参加者01カナ":"ミタ　カセイフ","参加者01所属":"6年生","参加者02氏名":"","参加者02カナ":"","参加者02所属":"","参加者03氏名":"","参加者03カナ":"","参加者03所属":"","参加者04氏名":"","参加者04カナ":"","参加者04所属":"","参加者05カナ":"","参加者05氏名":"","参加者05所属":"","緊急連絡先":"","ボランティア募集":"","備考":"","キャンセル":"","":"","name":"","entryStr":"","authority":"1","cancel":"","entryNo":"24","publicKey":"","editURL":"https://docs.google.com/forms/d/e/1FAIpQLScEzS8-uNgeM40rZvGl60uZewwHZhyPeQJAicS_LjMEYrMqfQ/viewform?edit2=2_ABaOnuc2JvQ4Pbz-7rQwegtChIdudrreVMSKuE7UUBFYx5jfy0Jxmc1YHEaP0u5gota2vT8","passCode":"","genPassCode":"","NG1":"","NG2":"","certificate":"","fee00":"","fee01":"","fee02":"","fee03":"","fee04":"","fee05":"","memo":""}]'),
+}
+
+const setWindows = () => {
+  const v = {whois:'Reception.#setWindows',rv:null,step:'0'};
+  console.log(v.whois+' start.');
+  try {
+
+    v.step = 1; // dialog用のCSS定義を追加(getPassCodeと共通)
+    v.style = createElement('style');
+    document.head.appendChild(v.style);
+    for( v.i=0 ; v.i<conf.edit.css.length ; v.i++ ){
+      v.x = conf.edit.css[v.i];
+      for( v.y in v.x.prop ){
+        v.prop = v.x.sel+' { '+v.y+' : '+v.x.prop[v.y]+'; }\n';
+        console.log(v.prop);
+        v.style.sheet.insertRule(v.prop,
+          v.style.sheet.cssRules.length,
+        );
+      }
+    }
+
+    // 一覧用ダイアログを定義
+    conf.list.element = createElement({
+      tag:'dialog',
+      attr:{class:'Reception',name:'list'},
+      html: `<p>複数の候補が見つかりました。該当者名をクリックしてください。</p>
+      <div name="table">
+        <div class="th">申込者名</div>
+        <div class="th">e-mail</div>
+      </div>`,
+    });
+    document.querySelector('body').prepend(conf.list.element);
+    conf.list.table = conf.list.element.querySelector('[name="table"]');
+
+    // 編集用ダイアログを定義
+    conf.edit.element = createElement({
+      tag:'dialog',
+      attr:{class:'Reception',name:'edit'},
+      html: `<div name="table">
+        <div class="th">No</div>
+        <div class="th">氏名</div>
+        <div class="th">所属</div>
+        <div class="th">参加費</div>
+      </div>
+      <input type="button" name="cancel" value="キャンセル" />
+      <input type="button" name="submit" value="送信" />
+      <div name="details">
+        <div class="th">申込</div><div class="td">
+          No.<span name="entryNo"></span>
+          &emsp;
+          <ruby>
+            <span name="申込者氏名"></span>
+            <rt name="申込者カナ"></rt>
+          </ruby>
+          &emsp;(<span name="申込者の参加"></span>)
+        </div>
+        <div class="th">宿泊、テント</div><div class="td" name="宿泊、テント"></div>
+        <div class="th">引取者</div><div class="td" name="引取者氏名"></div>
+        <div class="th">e-mail</div><div class="td" name="メールアドレス"></div>
+        <div class="th">緊急連絡先</div><div class="td" name="緊急連絡先"></div>
+        <div class="th">ボランティア</div><div class="td" name="ボランティア募集"></div>
+        <div class="th">備考</div><div class="td" name="備考"></div>
+        <div class="th">キャンセル</div><div class="td" name="キャンセル"></div>
+        <div class="th">申込URL</div><div class="td" name="editURL"></div>
+        <div class="th">メモ<br><sub>※スタッフ記入欄</sub></div>
+        <div class="td"><textarea name="memo"></textarea></div>
+      </div>`,
+    });
+    document.querySelector('body').prepend(conf.edit.element);
+    conf.edit.table = conf.edit.element.querySelector('[name="table"]');
+
+    console.log(v.whois+' normal end.',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+')\n',e,v);
+    return e;
+  }
+}
+
+const edit = async (data) => {
+  const v = {whois:'Reception.edit',rv:null,step:'0'};
+  console.log(v.whois+' start.\n'+JSON.stringify(data));
+  try {
+
+    v.step = 1; // データクレンジング
+    data['申込者所属'] = '申込者';  // 未定義なので追加しておく
+    for( v.i=0 ; v.i<6 ; v.i++ ){
+      if( data['fee0'+v.i].length === 0 ){
+        data['fee0'+v.i] = (data['参加者0'+v.i+'所属'] === '未就学児') ? '無し' : '未収';
+      }
+    }
+
+    v.step = 2; // 参加者一覧の表示
+    for( v.i=0 ; v.i<6 ; v.i++ ){
+      v.step = 2.1; // 項目名の接頭辞
+      v.pre = v.i === 0 ? '申込者' : ('参加者0' + v.i);
+
+      v.step = 2.2; // 申込者が不参加、または氏名・所属とも未登録の参加者は表示しない
+      if( v.i === 0 && data['申込者の参加'] === '不参加'
+      || data[v.pre+'氏名'].length === 0 && data[v.pre+'所属'].length === 0 ){
+        continue;
+      }
+
+      v.step = 2.3; // No
+      conf.edit.table.appendChild(createElement({attr:{class:'td'},text: ('0'+v.i)}));
+
+      v.step = 2.4; // 氏名＋カナ
+      conf.edit.table.appendChild(createElement({attr:{class:'td'},children:[{
+        tag: 'ruby',
+        html: data[v.pre+'氏名'], 
+        children: [{
+          tag: 'rt',
+          text: data[v.pre+'カナ']
+        }]
+      }]}));
+
+      v.step = 2.5; // 所属
+      conf.edit.table.appendChild(createElement({attr:{class:'td'},text: data[v.pre+'所属']}));
+
+      v.step = 2.6; // 参加費
+      v.options = [];
+      ['無し','未収','既収'].forEach(x => {
+        v.options.push({
+          tag:'option',
+          value:x,
+          text:x,
+          logical:{selected:(data['fee0'+v.i] === x)},
+        });
+      });
+      conf.edit.table.appendChild(createElement({attr:{class:'td'},children:[{
+        tag: 'select',
+        attr: {class:'fee',name:'fee0'+v.i},
+        children:v.options,
+      }]}));
+    }
+
+    v.step = 3.1; // 詳細情報のセット
+    ['メールアドレス', '申込者氏名', '申込者カナ', '申込者の参加',
+    '宿泊、テント', '引取者氏名', '緊急連絡先',
+    'ボランティア募集', '備考', 'キャンセル',
+    'entryNo','memo'].forEach(x => {
+      console.log(x,data[x]);
+      let e = conf.edit.element.querySelector('[name="details"] [name="'+x+'"]');
+      console.log(e);
+      e.innerText = data[x];
+    });
+    v.step = 3.2; // 申込フォーム修正URL(QRコード)
+    v.qr = new QRCode(conf.edit.element.querySelector('[name="details"] [name="editURL"]'),{
+			text: data.editURL,
+			width: 300, height: 300,
+			colorDark: "#000000",
+			colorLight: "#ffffff",
+			correctLevel: QRCode.CorrectLevel.H
+    });
+    
+
+    v.step = 4; // 編集用ダイアログの表示
+    conf.edit.element.showModal();
+
+    return new Promise(resolve => {
+      v.step = 5.1; // 「キャンセル」クリック時はnullを返す
+      document.querySelector('dialog[name="edit"] input[name="cancel"]')
+      .addEventListener('click',() => {
+        conf.edit.element.close();
+        console.log('Reception.edit normal end.');
+        resolve(null);
+      });
+      v.step = 5.2; // 「送信」クリック時に値を返すよう定義
+      document.querySelector('dialog[name="edit"] input[name="submit"]')
+      .addEventListener('click',() => {
+        conf.edit.element.close();
+        const rv = {};
+        // 受付番号
+        rv.entryNo = conf.edit.element.querySelector('[name="entryNo"]').innerText;
+        // 参加費
+        conf.edit.element.querySelectorAll('select.fee').forEach(x => {
+          rv[x.getAttribute('name')] = x.value;
+        });
+        // スタッフメモ欄
+        rv.memo = conf.edit.element.querySelector('[name="memo"]').value;
+        console.log('Reception.edit normal end.',rv);
+        resolve(rv);
+      });
+    });
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+')\n',e,v);
+    return e;
+  }
+}
+
+const list = async (data) => {
+  const v = {whois:'Reception.#list',rv:null,step:'0'};
+  console.log(v.whois+' start.\n'+JSON.stringify(data));
+  try {
+
+    v.step = 1; // 前回候補者一覧の削除
+    conf.list.table.querySelectorAll('div.td').forEach(x => x.remove());
+
+    v.step = 2; // 候補者の表示
+    data.forEach(d => {
+      v.step = 2.1; // 氏名＋カナ
+      console.log(d);
+      conf.list.table.appendChild(createElement({
+        attr:{class:'td'},
+        children:[{
+          tag:'a',  // 氏名＋カナはaタグで囲む
+          attr:{name:d.entryNo}, // 受付番号をname属性で持たせる
+          children:[{
+            tag: 'ruby',
+            html: d['申込者氏名'], 
+            children: [{
+              tag: 'rt',
+              text: d['申込者カナ'],
+            }],
+          }],
+        }],
+      }));
+
+      v.step = 2.2; // e-mail
+      conf.list.table.appendChild(createElement({
+        attr:{class:'td'},
+        text: d['メールアドレス'],
+      }));
+    });
+
+    v.step = 3; // 一覧用ダイアログの表示
+    conf.list.element.showModal();
+
+    return new Promise(resolve => {
+      document.querySelectorAll('dialog.Reception[name="list"] a').forEach(x => {
+        // 一覧表の氏名(aタグ)全てにclickイベントリスナを付与
+        x.addEventListener('click',(element) => {
+          conf.list.element.close();  // ダイアログを閉じる
+          // aタグから受付番号を取得
+          let entryNo = element.target.parentElement.getAttribute('name');
+          for( let i=0 ; i<conf.list.candidates.length ; i++ ){
+            // 事前に保存しておいた候補者配列から該当者を選択して返す
+            if( conf.list.candidates[i].entryNo === entryNo ){
+              console.log('Reception.list normal end.',entryNo);
+              resolve(conf.list.candidates[i]);
+            }
+          }
+        });
+      });
+    });
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+')\n',e,v);
+    return e;
+  }
+}
+
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {whois:'DOMContentLoaded'};
+  setWindows();
+  //v.rv = await edit(conf.mami);
+  conf.list.candidates = conf.kokusho;  // 候補者を事前に配列に保存
+  v.rv = await list(conf.kokusho);
+  console.log(v.whois+' normal end.\n',v.rv);
+});
+</script>
+</body></html>
