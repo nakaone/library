@@ -33,11 +33,6 @@ class drawPassport {
             display: grid;
             row-gap: 1rem;
             grid-template-columns: 1fr;
-            /*
-            width: 100%;
-            margin: 1rem;
-            width: calc(100% - 2rem);
-            */
           }
           .drawPassport.hide {
             display: none;
@@ -46,10 +41,6 @@ class drawPassport {
             width: 100%;
             display: grid;
             gap: 1rem;
-            /*
-            width: calc(100% - 6rem);
-            margin: 1rem 0px;
-            */
           }
           .drawPassport rt {
             font-size: 50%;
