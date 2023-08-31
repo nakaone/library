@@ -120,7 +120,7 @@ class drawPassport {
           .drawPassport .list .content div:nth-child(4n+4) {
             grid-column: 9 / 11;
           }
-          .drawPassport .list .content .td[name="fee"] div.hide{
+          .drawPassport .list .content .td[name="fee"] > .hide {
             display: none;
           }`,
           /* 詳細情報 */`
@@ -154,6 +154,9 @@ class drawPassport {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
+          }
+          .drawPassport .buttons.hide {
+            display: none;
           }
           .drawPassport .buttons button {
             display: block;
@@ -375,7 +378,7 @@ class drawPassport {
    * @param {Object} [data=null] - 編集対象となる参加者情報 
    * @returns {Object} {entryNo:{string},fee0n:'未入場/無料/未収/既収/退場済'}
    */
-  edit = (data=null) => {
+  edit = async (data=null) => {
     const v = {whois:'drawPassport.edit',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
@@ -411,6 +414,7 @@ class drawPassport {
           // 終了処理
           console.log('取消 -> '+JSON.stringify(rv)
           + '\ndrawPassport.edit normal end.\n');
+          this.close();
           resolve({entryNo:this.data.entryNo,result:rv});
         });
 
@@ -429,6 +433,7 @@ class drawPassport {
           // 終了処理
           console.log('決定 -> '+JSON.stringify(rv)
           + '\ndrawPassport.edit normal end.\n');
+          this.close();
           resolve(rv);
         });
 
@@ -447,6 +452,7 @@ class drawPassport {
           // 終了処理
           console.log('全員受領 -> '+JSON.stringify(rv)
           + '\ndrawPassport.edit normal end.\n');
+          this.close();
           resolve(rv);
         });
       });
@@ -457,10 +463,36 @@ class drawPassport {
     }
   }
 
+  /** 参加者情報を表示する
+   * @param {void}
+   * @returns {void}
+   */
   view = () => {
     const v = {whois:'drawPassport.view',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
+      // 親要素を表示
+      // ※display:noneのままだと内部要素のサイズが全て0に
+      this.open();
+
+      // 参加者情報を渡された場合、セット
+      if( data !== null ) this.data = data;
+
+      // 編集対象となる参加者情報を表示
+      v.rv = this.#setData();
+      if( v.rv instanceof Error ) throw v.rv;
+
+      // 参加者一覧・参加費欄でプルダウンは非表示
+      this.list.querySelectorAll('.content .td[name="fee"] select').forEach(x => {
+        x.classList.add('hide');        
+      });
+
+      // 参加者一覧・詳細情報を非表示状態に変更
+      v.rv = this.toggle('.list',false);
+      v.rv = this.toggle('.detail',false);
+
+      // 取消・決定・全員収納ボタンは非表示
+      this.buttons.classList.add('hide');
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
