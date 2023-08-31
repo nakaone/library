@@ -158,7 +158,7 @@ class drawPassport {
             display: none;
           }`,
         ],
-        html:[
+        html:[  // イベント定義を複数回行わないようにするため、eventで定義
           // 概要欄(QRコード、受付番号、申込者名)
           {attr:{class:'summary'},children:[
             {attr:{name:'qrcode'}},
@@ -178,7 +178,7 @@ class drawPassport {
           {attr:{class:'list'},children:[
             {attr:{class:'label'},children:[
               {tag:'p',text:'参加者一覧'},
-              {tag:'button',text:'非表示'},
+              {tag:'button',text:'非表示',event:{click:this.toggle}},
             ]},
             {attr:{class:'content'},children:[
               {attr:{class:'th'},text:'No'},
@@ -191,13 +191,17 @@ class drawPassport {
           {attr:{class:'detail'},children:[
             {attr:{class:'label'},children:[
               {tag:'p',text:'詳細情報'},
-              {tag:'button',text:'非表示'},
+              {tag:'button',text:'非表示',event:{click:this.toggle}},
             ]},
             {attr:{class:'content'}},
             {attr:{class:'message'},children:[
               {attr:{name:'editURL'},children:[
                 {tag:'p',text:'参加者一覧・詳細情報に誤謬・変更がある場合、以下のボタンをクリックして申込フォームを開いて修正してください。'},
-                {tag:'button',text:'申込フォームを開く'},
+                {
+                  tag:'button',
+                  text:'申込フォームを開く',
+                  event:{click:()=>window.open(this.data.editURL,'_blank')},
+                },
               ]}
             ]},
           ]},
@@ -272,35 +276,31 @@ class drawPassport {
       // ---------------------------------------------
       // 2. 参加者一覧
       // ---------------------------------------------
-      v.step = 2.1; // 参加者一覧開閉ボタンにイベントリスナ設定
-      this.list.querySelector('.label button')
-      .addEventListener('click',this.toggle);
-
-      v.step = 2.2; // 参加者情報をセット
+      v.step = 2.1; // 参加者情報をセット
       v.content = this.list.querySelector('.content');
       for( v.i=1 ; v.i<6 ; v.i++ ){
         v.prefix = '参加者0' + v.i;
         // 氏名が未登録の場合はスキップ
         if( this.data[v.prefix+'氏名'].length === 0 )
           continue;
-        v.step = 2.21; // No
+        v.step = 2.2; // No
         v.content.appendChild(createElement({
           attr: {class:'td'},
           style: {textAlign:'right'},
           text: v.i,
         }));
-        v.step = 2.22; // 氏名
+        v.step = 2.3; // 氏名
         v.content.appendChild(createElement(
           {attr: {class:'td'},children:[
             {tag:'ruby',text:this.data[v.prefix+'氏名'],children:[
               {tag:'rt',text:this.data[v.prefix+'カナ']}
         ]}]}));
-        v.step = 2.23; // 所属
+        v.step = 2.4; // 所属
         v.content.appendChild(createElement({
           attr: {class:'td'},
           text: this.data[v.prefix+'所属'],
         }));
-        v.step = 2.24; // 参加費
+        v.step = 2.5; // 参加費
         // 参加費欄はプルダウンとテキストと両方作成
         v.options = [];
         this.data['fee0'+v.i] = this.data['fee0'+v.i] || '未入場';
@@ -327,11 +327,7 @@ class drawPassport {
       // ---------------------------------------------
       // 3. 詳細情報
       // ---------------------------------------------
-      v.step = 3.1; // 詳細情報開閉ボタンイベントリスナ設定
-      this.detail.querySelector('.label button')
-      .addEventListener('click',this.toggle);
-
-      v.step = 3.2; // 詳細情報をセット
+      v.step = 3.1; // 詳細情報をセット
       v.detail = this.detail.querySelector('.content');
       ["メールアドレス","申込者の参加","宿泊、テント","引取者氏名","緊急連絡先",
       "ボランティア募集","キャンセル","備考"].forEach(x => {
@@ -344,10 +340,6 @@ class drawPassport {
           text: this.data[x],
         }));
       });
-
-      v.step = 3.3; // 編集用URL
-      this.detail.querySelector('.message button')
-      .addEventListener('click',()=>window.open(this.data.editURL,'_blank'));
 
       // ---------------------------------------------
       // 4. 取消・決定・全員受領ボタン
