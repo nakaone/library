@@ -1,0 +1,51 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>LoadingIcon sample</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="../szLib.css" rel="stylesheet" />
+<style type="text/css"></style>
+</head><body>
+  <div name="loading"></div>
+  <h1>これはサンプル画面です</h1>
+
+</body>
+
+<!-- =====================================================
+  自作ライブラリ
+===================================================== -->
+<script type="text/javascript" src="core.js"></script>
+
+<script type="text/javascript" src="../createElement.js"></script>
+<script type="text/javascript" src="../mergeDeeply.js"></script>
+<script type="text/javascript" src="../setupInstance/core.js"></script>
+
+<!--
+<script type="text/javascript" src="../itemSelector/core.js"></script>
+<script type="text/javascript" src="../drawPassport/core.js"></script>
+
+-->
+
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {whois:'DOMContentLoaded',
+    sleep: (sec) =>  // 指定時間待機
+      {return new Promise(resolve => setTimeout(resolve,sec))}
+  };
+  console.log(v.whois+' start.');
+  try {
+
+    v.LoadingIcon = new LoadingIcon('[name="loading"]');
+    if( v.rv instanceof Error ) throw v.LoadingIcon;
+    console.log(v.LoadingIcon);
+
+    await v.sleep(5000);
+    v.LoadingIcon.show();
+    await v.sleep(5000);
+    v.LoadingIcon.hide();
+
+    console.log(v.whois+' normal end.',v.LoadingIcon);
+  } catch(e){
+    console.error(e,v);
+  }
+});
+</script>
+</html>
