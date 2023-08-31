@@ -240,13 +240,7 @@ class drawPassport {
         this[x] = this.parent.querySelector('.'+x);
       });
 
-      v.step = 3; // 参加者情報の表示
-      if( this.data !== null ){
-        v.rv = this.#setData();
-        if( v.rv instanceof Error ) throw v.rv;
-      }
-
-      v.step = 4; // 画面を非表示に
+      v.step = 3; // 画面を非表示に
       this.close();
 
       console.log(v.whois+' normal end.',v.rv);
@@ -272,8 +266,8 @@ class drawPassport {
       v.step = 1.1; // QRコード表示
       this.data.entryStr = String('0000'+this.data.entryNo).slice(-4);
       v.qrcode = this.summary.querySelector('[name="qrcode"]');
-      v.qrcode.innerHTML = '';  // 一度クリア
       v.qrSize = v.qrcode.clientWidth;
+      v.qrcode.innerHTML = '';  // 一度クリア
       new QRCode(v.qrcode,{
         text: this.data.entryStr,
         width: v.qrSize,
@@ -295,6 +289,8 @@ class drawPassport {
       // ---------------------------------------------
       v.step = 2.1; // 参加者情報をセット
       v.content = this.list.querySelector('.content');
+      // 過去の参加者情報をクリア
+      v.content.querySelectorAll('.td').forEach(x => x.remove());
       for( v.i=1 ; v.i<6 ; v.i++ ){
         v.prefix = '参加者0' + v.i;
         // 氏名が未登録の場合はスキップ
@@ -346,6 +342,7 @@ class drawPassport {
       // ---------------------------------------------
       v.step = 3.1; // 詳細情報をセット
       v.detail = this.detail.querySelector('.content .table');
+      v.detail.innerHTML = '';  // 過去の詳細情報をクリア
       ["メールアドレス","申込者の参加","宿泊、テント","引取者氏名","緊急連絡先",
       "ボランティア募集","キャンセル","備考"].forEach(x => {
         v.detail.appendChild(createElement({
@@ -366,7 +363,7 @@ class drawPassport {
         x.style.height = x.clientWidth+'px';
       });
 
-      console.log(v.whois+' normal end.',v.rv);
+      console.log(v.whois+' normal end.');
       return v.rv;
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
@@ -374,12 +371,24 @@ class drawPassport {
     }
   }
 
+  /** 参加費の編集を行い、編集結果を返す
+   * @param {Object} [data=null] - 編集対象となる参加者情報 
+   * @returns {Object} {entryNo:{string},fee0n:'未入場/無料/未収/既収/退場済'}
+   */
   edit = (data=null) => {
-    const v = {whois:'drawPassport.',rv:true,step:0};
+    const v = {whois:'drawPassport.edit',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
+      // 親要素を表示
+      // ※display:noneのままだと内部要素のサイズが全て0に
+      this.open();
+
       // 参加者情報を渡された場合、セット
       if( data !== null ) this.data = data;
+
+      // 編集対象となる参加者情報を表示
+      v.rv = this.#setData();
+      if( v.rv instanceof Error ) throw v.rv;
 
       // 参加者情報をボタンを削除(非表示)
       this.list.querySelector('.label button').classList.add('hide');
@@ -392,43 +401,69 @@ class drawPassport {
       // 詳細情報を非表示状態に変更
       v.rv = this.toggle('.detail',false);
 
-      // 親要素を表示
-      this.open();
-
       // 取消・決定・全員収納ボタンを表示
       return new Promise(resolve => {
+        // 取消 -> 戻り値はnull
         this.buttons.querySelector('[name="取消"]')
-        .addEventListener('click',element => {
-          console.log('取消 button clicked.',element.target);
-          console.log('drawPassport.edit normal end.');
-          resolve({entryNo:this.data.entryNo,result:null});
+        .addEventListener('click',() => {
+          // 戻り値の作成
+          const rv = null;
+          // 終了処理
+          console.log('取消 -> '+JSON.stringify(rv)
+          + '\ndrawPassport.edit normal end.\n');
+          resolve({entryNo:this.data.entryNo,result:rv});
         });
 
+        // 決定 -> {Object.<string, string>}、キャンセルなら{}
         this.buttons.querySelector('[name="決定"]')
-        .addEventListener('click',element => {
-          console.log('決定 button clicked.',element.target);
-          const rv = {entryNo:this.data.entryNo};
+        .addEventListener('click',() => {
+          // 戻り値の作成
+          let rv = {entryNo:this.data.entryNo};
           this.list.querySelectorAll('.fee').forEach(x => {
             rv[x.getAttribute('name')] = x.value;
           });
-          // 要confirm
-          console.log('drawPassport.edit normal end.');
+          /* 入力内容の確認
+          if( !window.confirm(
+            '参加費を画面のように登録します。\nよろしいですか？'
+          ) ) rv = {};*/
+          // 終了処理
+          console.log('決定 -> '+JSON.stringify(rv)
+          + '\ndrawPassport.edit normal end.\n');
           resolve(rv);
         });
 
+        // 全員受領 -> {Object.<string, string>}、キャンセルなら{}
         this.buttons.querySelector('[name="全員"]')
-        .addEventListener('click',element => {
-          console.log('全員受領 button clicked.',element.target);
-          const rv = {entryNo:this.data.entryNo};
+        .addEventListener('click',() => {
+          // 戻り値の作成
+          let rv = {entryNo:this.data.entryNo};
           this.list.querySelectorAll('.fee').forEach(x => {
             rv[x.getAttribute('name')] = '既収';
           });
-          // 要confirm
-          console.log('drawPassport.edit normal end.');
+          /* 入力内容の確認
+          if( !window.confirm(
+            '全参加者の参加費を「受領」にします。\nよろしいですか？'
+          ) ) rv = {};*/
+          // 終了処理
+          console.log('全員受領 -> '+JSON.stringify(rv)
+          + '\ndrawPassport.edit normal end.\n');
           resolve(rv);
         });
       });
 
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  view = () => {
+    const v = {whois:'drawPassport.view',rv:true,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
@@ -489,18 +524,5 @@ class drawPassport {
   /** 親要素(parent)内を隠蔽 */
   close = () => {
     this.parent.classList.add('hide');
-  }
-
-  template = () => {
-    const v = {whois:'drawPassport.',rv:true,step:0};
-    console.log(v.whois+' start.');
-    try {
-
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-      return e;
-    }
   }
 }
