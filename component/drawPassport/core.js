@@ -243,6 +243,7 @@ class drawPassport {
       v.step = 4; // 画面を非表示に
       this.close();
 
+      v.step = 5; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
