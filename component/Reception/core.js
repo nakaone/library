@@ -40,7 +40,9 @@ class Reception {
 
       // スキャナの準備
       this.WebScanner = new WebScanner(
-        '.Reception [name="WebScanner"]'
+        this.parent.querySelector('.Reception [name="WebScanner"]',{
+          showVideo:true, // debug: canvasだけでなくvideoも表示
+        })
       );
 
       // 候補者選択画面の準備
@@ -69,6 +71,7 @@ class Reception {
       v.step = 1; // QRコードをスキャン or 氏名(一部)の入力
       v.rv = await this.WebScanner.scanQR();
       if( v.rv instanceof Error ) throw v.rv;
+      //if( v.rv === null ) 読込失敗orタイムアウト
 
       v.step = 2; // 入力された検索キーで認証局経由・管理局に該当者情報を問合せ
       this.LoadingIcon.show();

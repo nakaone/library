@@ -119,7 +119,7 @@ class WebScanner {
         v.w = this.parent.clientWidth;
         this.size = v.w < this.minSize ? this.minSize : v.w;
       }
-      console.log("w=%s, h=%s, size=%s",v.w,v.h,this.size);
+      console.log("w=%s, size=%s",v.w,this.size);
 
       // 以下の手順はawaitが必要なので、scanQRで実行
 
@@ -137,7 +137,7 @@ class WebScanner {
 
   /** QRコードをスキャン
    * @param {Object} opt - scanQR専用パラメータ。詳細はconstructor参照
-   * @returns {string} スキャンしたQRコードの文字列
+   * @returns {string|null} スキャンしたQRコードの文字列。読込失敗ならnull
    * 
    * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
    */
@@ -163,22 +163,20 @@ class WebScanner {
       if( this.showVideo ){
         this.wrapper.querySelector('.video').classList.add('act');
       }
+      this.canvas.width  = v.cw = 
+      this.canvas.height = v.ch = this.size;
 
       v.step = 4; // 定期的にスキャン実行
       v.cnt = 0;
       do {
         if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
-
-          v.step = 4.1; // canvasのサイズを撮像サイズに合わせて変更
-          this.canvas.width  = v.cw = 
-          this.canvas.height = v.ch = this.size;
-  
-          v.step = 4.2; // キャンバスへの描画
+          
+          v.step = 4.1; // キャンバスへの描画
           this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
           v.imageData = this.context.getImageData(0, 0, v.cw, v.ch);
           v.code = jsQR(v.imageData.data, v.imageData.width, v.imageData.height);
           if ( v.code ) {
-            v.step = 4.3;
+            v.step = 4.2;
             console.log(v.code);
             // スキャン結果の判定
             if( typeof v.code.data === 'string' && v.code.data.match(this.RegExp) ){
