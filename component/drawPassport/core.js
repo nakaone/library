@@ -7,7 +7,7 @@ class drawPassport {
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
-   * @param {Object} data - Authから返された参加者情報(Auth.info)
+   * @param {Object} [data=null] - Authから返された参加者情報(Auth.info)
    * @param {Object} [opt={}] - オプション
    * @returns {true|Error}
    */
@@ -548,11 +548,13 @@ class drawPassport {
 
   /** 親要素(parent)内を表示 */
   open = () => {
-    this.parent.classList.remove('hide');
+    //this.parent.classList.remove('hide');
+    this.parent.style.display = '';
   }
 
   /** 親要素(parent)内を隠蔽 */
   close = () => {
-    this.parent.classList.add('hide');
+    //this.parent.classList.add('hide');
+    this.parent.style.display = 'none';
   }
 }
