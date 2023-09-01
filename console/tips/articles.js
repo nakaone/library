@@ -82,10 +82,18 @@ window.addEventListener('DOMContentLoaded',async () => {
 class drawPassport {
   /**
    * @constructor
+   * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
+   * @param {Object} [opt={}] - オプション
+   * @returns {true|Error}
    */
   constructor(opt={}){
     const v = {whois:'drawPassport.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
+        // メンバとして持つHTMLElementの定義
+        parent: typeof parent !== 'string' ? parent :
+          document.querySelector(parent), // {HTMLElement} 親要素(ラッパー)
+        parentSelector: typeof parent === 'string' ? parent : null,
+        style: null,  // {HTMLStyleElement} CSS定義
         // CSS/HTML定義
         css:[
           /* drawPassport共通部分 */ \`\`,
