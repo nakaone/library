@@ -1,9 +1,7 @@
 /**
  * @classdesc デバイスのカメラで文書/コードのスキャンを行う
- */
-
-/**
- * @classdesc 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャン
+ * 
+ * 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャンする。
  * 
  * **残課題**
  * 
@@ -22,21 +20,18 @@
 class WebScanner {
   /**
    * @constructor
-   * @param {string} [parent='body'] - 親要素のCSSセレクタ
+   * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
    * @param {Object} [opt={}] - オプション
-   * 
-   * - [Promiseでsleep機能を作る](https://www.sejuku.net/blog/24629#index_id5)
+   * @returns {true|Error}
    */
-  constructor(parent='body',opt={}){
-    const v = {whois:'WebScanner.constructor',rv:null,step:0};
-    console.log(v.whois+' start.');
-    try {
-
-      v.step = 1; // 引数(opt)・既定値を基にメンバの値を設定
-      if( !opt.hasOwnProperty('parent') ) opt.parent = parent;
-      v.rv = setupInstance(this,opt,{
-        sleep: (sec) =>  // 指定時間待機
-          {return new Promise(resolve => setTimeout(resolve,sec))},
+  constructor(parent,opt={}){
+    const v = {whois:'WebScanner.constructor',rv:true,step:0,
+      default:{
+        // === メンバとして持つHTMLElementの定義 ==============
+        parent: typeof parent !== 'string' ? parent :
+          document.querySelector(parent), // {HTMLElement} 親要素(ラッパー)
+        parentSelector: typeof parent === 'string' ? parent : null,
+        style: null,  // {HTMLStyleElement} CSS定義
         wrapper: null,  // {HTMLElement} - 親直下のラッパー
         video: null,  // {HTMLElement} - videoで撮影している画像領域
         canvas: null, // {HTMLElement} - 撮影画像を描画する領域
@@ -45,104 +40,67 @@ class WebScanner {
         retake: null,  // {HTMLElement} - 再撮影ボタン
         shutter: null, // {HTMLElement} - シャッターボタン
         adopt: null,  // {HTMLElement} - 撮影OK、次へボタン
-        css: [{
-          sel: '.WebScanner',
-          prop: {
-            'display': 'none',
-          }
-        },{
-          sel: '.WebScanner.act',
-          prop: {
-            '--videoSize': '300px',
-            '--buttonSize': '100px',
-            'display': 'grid',
-            'grid-template-rows': 'var(--videoSize) var(--videoSize) var(--buttonSize)',
-            'row-gap': '1rem',
-            'justify-items': 'center',
-            'align-items': 'center',
-          }
-        },{
-          sel: '.WebScanner video',
-          prop: {
-            'display': 'none',
-          }
-        },{
-          sel: '.WebScanner video.act',
-          prop: {
-            'display': 'block',
-            'width': 'var(--videoSize)',
-            'height': 'var(--videoSize)',
-          }
-        },{
-          sel: '.WebScanner canvas',
-          prop: {
-            'display': 'none',
-          }
-        },{
-          sel: '.WebScanner canvas.act',
-          prop: {
-            'display': 'block',
-          }
-        },{
-          sel: '.WebScanner .switches',
-          prop: {
-            'display': 'none',
-          }
-        },{
-          sel: '.WebScanner .switches.act',
-          prop: {
-            'width': '80%',
-            'display': 'grid',
-            'grid-template-columns': 'repeat(3, 1fr)',
-            'column-gap': 'calc((100% - var(--buttonSize) * 3) / 2)',
-          }
-        },{
-          sel: '.WebScanner .switches button',
-          prop: {
-            'width': 'var(--buttonSize)',
-            'height': 'var(--buttonSize)',
-            'text-align': 'center',
-            'vertical-align': 'middle',
-            'font-size': 'calc(var(--buttonSize) * 0.7)',
-          }
-        }],
+
         // === scanQR専用パラメータ ==========================
-        // 以下はscanQRの起動時引数として指定されたらそちらを優先する
-        // ================================================
         constraints:{ // video.getUserMediaで指定するオプション
           audio: false,
           video: {
             facingMode: 'environment',
-            width: {min: 500},
-            height: {min: 500},
+            width: {min: 300},
+            height: {min: 300},
           },
         },
         showVideo: false, // scanQR実行時、video領域を表示するならtrue
-        showCanvas: true, // scanQR実行時、canvas領域を表示するならtrue
         closeFinder: true, // scanQR実行後、video/canvas領域を残すならfalse
         RegExp: /.+/, // scanQR実行時、読込結果を評価する正規表現
         maxWaiting: 90000, // 最大待機時間。単位：ミリ秒
         interval: 300, // 動画撮像間隔。ミリ秒
         size: null,  // 撮像領域(ファインダ)のサイズ。px。nullなら親要素の大きさから判断
-        minSize : 500, // 最小撮像サイズ。px
-      });
+        minSize : 300, // 最小撮像サイズ。px
+
+        // === CSS/HTML定義 ================================
+        css:[
+          /* WebScanner共通部分(wrapper) */ `
+          .WebScanner {
+            display: none;
+          }
+          .WebScanner.act {
+            width: 100%;
+            display: grid;
+            place-items: center;
+          }`,
+          /* video */`
+          .WebScanner .video {
+            display: none;
+          }
+          .WebScanner .video.act {
+            display: block;
+          }`,
+        ],
+        html:[  // イベント定義を複数回行わないようにするため、eventで定義
+          {attr:{class:'WebScanner'},children:[
+            {attr:{class:'video'},children:[
+              {tag:'video'}
+            ]},
+            {tag:'canvas'},
+          ]},
+        ],
+      },
+    };
+    console.log(v.whois+' start.',opt);
+    try {
+
+      v.step = 1; // メンバの値セット、HTML/CSSの生成
+      v.rv = setupInstance(this,opt,v.default);
       if( v.rv instanceof Error ) throw v.rv;
 
-      v.step = 2; // HTML要素の作成
-      this.wrapper = createElement({attr:{class:'WebScanner'}});
-      this.parent.element.appendChild(this.wrapper);
-      ['video','canvas'].forEach(x => {
-        this[x] = createElement({tag:x});
-        this.wrapper.appendChild(this[x]);
-      });
-      ['switches'].forEach(x => {
-        this[x] = createElement({attr:{class:x}});
-        this.wrapper.appendChild(this[x]);
-      });
-      ['retake','shutter','adopt'].forEach(x => {
-        this[x] = createElement({tab:'button',attr:{name:x}});
-        this.switches.appendChild(this[x]);
-      });
+      v.step = 2; // 各領域をメンバとして保存
+      this.wrapper = this.parent.querySelector('.WebScanner');
+      this.video = this.parent.querySelector('video');
+      this.canvas = this.parent.querySelector('canvas');
+      this.retake = this.parent.querySelector('button[name="retake"]');
+      this.shutter = this.parent.querySelector('button[name="shutter"]');
+      this.adopt = this.parent.querySelector('button[name="adopt"]');
 
       v.step = 3; // デバイスがサポートされているか確認
       if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
@@ -156,33 +114,26 @@ class WebScanner {
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
       v.step = 5; // 撮像(video)領域のサイズ変更
-      // 親要素の高さを最大に変更
-      this.parent.element.style.width
-      = this.parent.element.style.height = '100%';
-      // 撮像領域を親要素の幅・高さ、いずれか小さい方の正方形に設定
+      // wrapper縦横の小さい方をthis.sizeに格納
       if( this.size === null ){
-        v.pw = this.parent.element.clientWidth;
-        v.ph = this.parent.element.clientHeight;
-        if( v.pw < v.ph ){
-          this.size = v.pw < this.minSize ? this.minSize : v.pw;
-          this.parent.element.style.height = this.size + 'px';
-        } else {
-          this.size = v.ph < this.minSize ? this.minSize : v.ph;
-          this.parent.element.style.width = this.size + 'px';
-        }
+        v.w = this.parent.clientWidth;
+        this.size = v.w < this.minSize ? this.minSize : v.w;
       }
-      this.wrapper.style.setProperty('--videoSize',this.size+'px');
+      console.log("w=%s, h=%s, size=%s",v.w,v.h,this.size);
 
       // 以下の手順はawaitが必要なので、scanQRで実行
 
-      console.log(v.whois+' normal end.\n',this);
+      console.log(v.whois+' normal end.',v.rv);
       return v.rv;
-      
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
     }
   }
+
+  /** 指定時間待機 */
+  sleep = (sec) =>
+    {return new Promise(resolve => setTimeout(resolve,sec))};
 
   /** QRコードをスキャン
    * @param {Object} opt - scanQR専用パラメータ。詳細はconstructor参照
@@ -199,6 +150,8 @@ class WebScanner {
       Object.keys(opt).forEach(x => this[x] = opt[x]);
 
       v.step = 2; // カメラの準備(videoタグに表示)
+      this.constraints.video.width =
+      this.constraints.video.height = this.size;
       this.video.srcObject = await navigator.mediaDevices
       .getUserMedia(this.constraints);
       this.video.onloadedmetadata = () => {
@@ -208,29 +161,17 @@ class WebScanner {
       v.step = 3; // video,canvasの表示
       this.wrapper.classList.add('act');
       if( this.showVideo ){
-        this.video.classList.add('act');
-      } else {
-        this.video.classList.remove('act');
-      };
-      if( this.showCanvas ){
-        this.canvas.classList.add('act');
-      } else {
-        this.canvas.classList.remove('act');
-      };
+        this.wrapper.querySelector('.video').classList.add('act');
+      }
 
       v.step = 4; // 定期的にスキャン実行
       v.cnt = 0;
       do {
-        await this.sleep(this.interval);
         if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
 
           v.step = 4.1; // canvasのサイズを撮像サイズに合わせて変更
-          v.vw = this.video.videoWidth;
-          v.vh = this.video.videoHeight;
-          this.canvas.width = v.cw
-          = this.size * (v.vw > v.vh ? 1 : (v.vw / v.vh));
-          this.canvas.height = v.ch
-          = this.size * (v.vh > v.vw ? 1 : (v.vh / v.vw));
+          this.canvas.width  = v.cw = 
+          this.canvas.height = v.ch = this.size;
   
           v.step = 4.2; // キャンバスへの描画
           this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
@@ -247,6 +188,7 @@ class WebScanner {
         }
         console.log(v.cnt);
         v.cnt += this.interval;
+        await this.sleep(this.interval);
       } while( v.rv === null && v.cnt < this.maxWaiting );
 
       v.step = 5; // 終了処理
@@ -274,8 +216,7 @@ class WebScanner {
     });
     if( this.closeFinder ){
       this.wrapper.classList.remove('act');
-      this.video.classList.remove('act');
-      this.canvas.classList.remove('act');
+      this.wrapper.querySelector('.video').classList.remove('act');
     }
   }
 }
