@@ -109,6 +109,8 @@ class Reception {
       return v.rv;
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      this.LoadingIcon.hide();
+      alert(e.message);
       return e;
     }
   }
