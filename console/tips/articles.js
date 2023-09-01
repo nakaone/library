@@ -27,6 +27,44 @@ function getArticles(){
   return [
 // この直後に追加
 { // =====================================================================
+  title: "JavaScriptでsleep機能",
+  created: "2023/09/01 08:54",
+  tag: ['sleep'],
+  ref: [{
+    site: "",
+    title: "Promiseでsleep機能を作る",
+    url:"https://www.sejuku.net/blog/24629#index_id5",
+  }], article:
+  // =====================================================================
+`以下の「指定時間待機」の部分を参照。secの単位はミリ秒
+
+\`\`\`
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {whois:'DOMContentLoaded',
+    sleep: (sec) =>  // 指定時間待機
+      {return new Promise(resolve => setTimeout(resolve,sec))}
+  };
+  console.log(v.whois+' start.');
+  try {
+
+    v.LoadingIcon = new LoadingIcon('[name="loading"]');
+    if( v.rv instanceof Error ) throw v.LoadingIcon;
+    console.log(v.LoadingIcon);
+
+    await v.sleep(5000);
+    v.LoadingIcon.show();
+    await v.sleep(5000);
+    v.LoadingIcon.hide();
+
+    console.log(v.whois+' normal end.',v.LoadingIcon);
+  } catch(e){
+    console.error(e,v);
+  }
+});
+\`\`\`
+
+`},
+{ // =====================================================================
   title: "class用テンプレート",
   created: "2023/08/29 12:40",
   tag: ['class','proto','template'],
