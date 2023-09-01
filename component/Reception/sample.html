@@ -6,21 +6,28 @@
 </head><body>
   <div class="Reception"></div>
 </body>
+<!-- =====================================================
+  CDN
+===================================================== -->
 <!-- QRコード検出/生成 -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- cryptico -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cryptico/0.0.1343522940/cryptico.min.js" integrity="sha512-C7GGRhFRn7F7hsLH1oCH2kX9ls61kx33wAgTZ6xJDwGvvgULcIZpwKqxG1+Kj/KOD2jWPxjNQYHi4BopPJPxVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <!-- =====================================================
   自作ライブラリ
 ===================================================== -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="text/javascript" src="core.js"></script>
+<script type="text/javascript" src="../Auth.js"></script>
 <script type="text/javascript" src="../WebScanner/core.js"></script>
 <script type="text/javascript" src="../itemSelector/core.js"></script>
 <script type="text/javascript" src="../LoadingIcon/core.js"></script>
 <script type="text/javascript" src="../drawPassport/core.js"></script>
 <script type="text/javascript" src="../createElement.js"></script>
+<script type="text/javascript" src="../createPassword.js"></script>
 <script type="text/javascript" src="../mergeDeeply.js"></script>
+<script type="text/javascript" src="../whichType.js"></script>
 <script type="text/javascript" src="../setupInstance/core.js"></script>
 <script type="text/javascript">
 window.addEventListener('DOMContentLoaded',async () => {
@@ -29,7 +36,7 @@ window.addEventListener('DOMContentLoaded',async () => {
   try {
 
     v.Reception = new Reception(
-      testData, // auth object
+      new Auth(testData), // auth object
       document.querySelector('div.Reception'), // parent
       {}
     );
