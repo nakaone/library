@@ -1,0 +1,144 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>sample</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--
+  szLib.cssは指定した方がベター。
+  特に'text-size-adjust:none'の指定は必須
+
+  body {
+  -webkit-text-size-adjust: none;
+  -moz-text-size-adjust: none;
+  text-size-adjust: none;
+}
+-->
+<link rel="stylesheet" type="text/css" href="../szLib.css">
+<style type="text/css"></style>
+</head><body>
+  <!-- 【用語解説】
+
+    ブランチ：下位の表示画面を持つ要素。下位画面のラッパーとして
+        のみ機能し、自らの表示画面は持てない。
+    リーフ：自分自身の表示画面のみ持ち、下位画面を持たない要素。
+    遷移指定：ナビで選択することで、指定サイトへの遷移する
+        画面は指定時の画面のまま、変化しない。
+    指定関数：ナビで選択することで、指定された関数を実行する
+        画面は指定時の画面のまま、変化しない。
+
+  -->
+  <!-- 【全体の構成】
+
+    1. 表示部は<div data-BurgerMenu>の階層内で定義する。
+       階層外の要素はメニューで選択しても表示されない。
+
+    2. 下位の階層を持つ場合、自分自身の表示内容は持たせない(以下はNG)
+       <div data-BurgerMenu="label:'お知らせ'">
+        !!NG!! <p>お知らせのページです</p>
+         <div data-BurgerMenu="label:'掲示板'">〜</div>
+         <div data-BurgerMenu="label:'注意事項'">〜</div>
+       </div>
+
+       「お知らせ」は「掲示板」「注意事項」のブランチとして扱われるので、
+       「<p>お知らせのページです</p>」というお知らせページ自身の表示内容は
+       定義不可。
+       
+  -->
+  <!-- 【data-BurgerMenuの書き方】
+    
+    オブジェクトの記述に準ずる。但し短縮するため前後の"{","}"は省略する。
+    {string} label - メニュー化する時の名称
+    {string} [func] - メニュー選択時に実行する関数名。
+      関数名と実際の関数はBurgerMenuインスタンス生成時に定義。
+    {string} [href] - 遷移先のURL。別タブが開かれる。
+    {number} [authority] - 表示権限。BurgerMenuインスタンス生成時の
+      authorityとの論理積>0なら表示する。
+      ex: 一般参加者1、スタッフ2として
+          data-BurgerMenu="authrotiry:2"とされた要素は、
+          new BurgerMenu({authority:1})の一般参加者は非表示、
+          new BurgerMenu({authority:2})のスタッフは表示となる。
+
+  -->
+
+  <!-- 子画面を持つ要素(=ブランチ)の場合、label,authority以外は持たない -->
+  <div data-BurgerMenu="label:'お知らせ'">
+    <!-- h1>お知らせ画面</h1> ノードは子メニュー以外の要素は不可 -->
+    <!--div-->
+      <div data-BurgerMenu="label:'掲示板'">
+        <!-- 子画面(=リーフ)は自らのコンテンツを持つ -->
+        <h1>掲示板画面</h1>
+      </div>
+    <!--/div-->
+    <div data-BurgerMenu="label:'注意事項'">
+      <h1>注意事項画面</h1>
+    </div>
+    <div data-BurgerMenu="label:'持ち物'">
+      <h1>持ち物一覧</h1>
+    </div>
+  </div>
+  <!-- メニュークリック時の動作が対象画面の表示のみならfunc指定不要 -->
+  <div data-BurgerMenu="label:'パスポート'">
+    <h1>パスポート画面</h1>
+  </div>
+  <div data-BurgerMenu="label:'案内図'">
+    <h1>案内図画面</h1>
+  </div>
+  <div data-BurgerMenu="label:'予定表'">
+    <h1>予定表画面</h1>
+  </div>
+  <!-- authorityを指定しない場合「閲覧制限なし」となる -->
+  <div data-BurgerMenu="label:'スタッフ',authority:2">
+    <!-- 上位メニューがauthorityを持つ場合、子メニューはauthorityを省略可 -->
+    <div data-BurgerMenu="label:'参加者数'">
+      <h1>参加者数画面</h1>
+    </div>
+    <!-- ダイアログ表示等、関数を呼び出す場合はfunc指定 -->
+    <div data-BurgerMenu="label:'受付業務',func:'recept'"></div>
+    <div data-BurgerMenu="label:'校内探険'">
+      <h1>校内探険画面</h1>
+    </div>
+    <div data-BurgerMenu="label:'参考資料'">
+      <div data-BurgerMenu="label:'日程表'"><h1>日程表画面</h1></div>
+      <div data-BurgerMenu="label:'論議メモ'">
+        <div data-BurgerMenu="label:'20230610'"><h1>20230610画面</h1></div>
+        <div data-BurgerMenu="label:'20230707'"><h1>20230707画面</h1></div>
+      </div>
+      <div data-BurgerMenu="label:'関連サイト'">
+        <div data-BurgerMenu="label:'直下の要素指定',href:'https://hokaccha.hatenablog.com/entry/2017/01/18/080836'"></div>
+      </div>
+    </div>
+  </div>
+  <div data-BurgerMenu="label:'システム設定'">
+    <h1>システム設定画面</h1>
+  </div>
+</body>
+<!-- =====================================================
+  自作ライブラリ
+===================================================== -->
+<script type="text/javascript" src="core.js"></script>
+<script type="text/javascript" src="../createElement.js"></script>
+<script type="text/javascript" src="../mergeDeeply.js"></script>
+<script type="text/javascript" src="../setupInstance/core.js"></script>
+<script type="text/javascript" src="../whichType.js"></script>
+
+<!-- =====================================================
+  主処理
+===================================================== -->
+<script type="text/javascript">
+const g = {};
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+
+  g.menu = new BurgerMenu({
+    // 指定関数を実行する場合、funcは指定必須
+    func:{
+      recept:()=>console.log('function recept'),
+    },
+    home:'c1005',  // ホーム画面は通常最初のリーフだが、指定したい場合
+    fuga:'hoge',   // setupInstance動作確認用
+    authority: 2,  // Authインスタンス.authorityの使用を想定
+  });
+  // ナビゲーションで別メニューに遷移する際の処理を定義
+  // 例：scanQRのカメラ停止、定期配信の停止、等
+  g.menu.onLeave.push(()=>console.log('onLeave'));
+  console.log(g.menu);
+});
+</script></html>
