@@ -15,9 +15,7 @@ class Reception {
         parent: parent, // {HTMLElement} 親要素(ラッパー)
         parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
         // CSS/HTML定義
-        css:[
-          /* Reception共通部分 */ ``,
-        ],
+        // css:[],
         html:[  // イベント定義を複数回行わないようにするため、eventで定義
           {attr:{class:'Reception',name:'LoadingIcon'}},
           {attr:{class:'Reception',name:'WebScanner'}},
