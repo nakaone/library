@@ -151,7 +151,10 @@ const setupInstance = (dest,opt,def) => {
     v.destName = dest.constructor.name || 'undef';
     if( dest.hasOwnProperty('css') && // dest.cssがあり、未定義なら追加
     document.head.querySelector('style[name="'+v.destName+'"]') === null ){
-      dest.style = createElement({tag:'style',attr:{name:v.destName}});
+      dest.style = createElement({
+        tag:'style',
+        attr:{type:'text/css',name:v.destName}
+      });
       document.head.appendChild(dest.style);
       for( v.i=0 ; v.i<dest.css.length ; v.i++ ){
         v.x = dest.css[v.i];
