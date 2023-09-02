@@ -204,7 +204,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     v.step = '1.5'; // Reception: 参加者情報の検索・表示・編集(受付業務)
     v.Reception = new Reception(
       v.Auth, // 認証局他のAuthインスタンス
-      '[data-BurgerMenu="label:\'受付業務\'"]', // parent
+      '[data-BurgerMenu="label:\'受付業務\',func:\'recept\'"]', // parent
     );
     if( v.Reception instanceof Error ) throw v.Reception;
 
