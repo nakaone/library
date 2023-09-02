@@ -1754,8 +1754,12 @@ class BulletinBoard {
     }
   }
 
-  /** 表示画面の変更 */
-  change = (event) => {
+  /** 表示画面の変更
+   * @param {string|PointerEvent} event - クリックされたナビゲーションアイテムのイベント
+   * またはclassで定義された表示領域のID
+   * @returns {null|Error}
+   */
+  change = (event=this.home) => {
     const v = {whois:'BurgerMenu.change',step:0,rv:null,
       showElement: (d) => { // 対象領域を表示
         d.style.display = '';
@@ -1763,7 +1767,7 @@ class BulletinBoard {
           v.showElement(d.parentElement);
       },
     };
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',event);
     try {
       console.log(event,typeof event);
 
@@ -2962,7 +2966,6 @@ class LoadingIcon {
       },
     };
     console.log(v.whois+' start.',parent,opt);
-    console.log(v.default);
     try {
 
       v.step = 1; // メンバの値セット、HTML/CSSの生成
@@ -3178,16 +3181,11 @@ const setupInstance = (dest,opt,def) => {
   try {
 
     v.step = 1; // ディープコピー
-    console.log(dest,def);
     dest = Object.assign(dest,def); // 既定値をセット
-    console.log(dest,def);
     v.deepcopy(dest,opt);
-    console.log(dest,opt);
 
     v.step = 2; // parentの処理
-    console.log(dest)
     if( dest.hasOwnProperty('parent') ){
-      console.log(dest.parent)
       if( typeof dest.parent === 'string' ){
         // CSSセレクタだった場合
         dest.parentSelector = dest.parent;
@@ -3363,7 +3361,6 @@ class Reception {
         if( v.rv.result.length > 1 ){
           v.step = 3.21; // 該当者が複数
           // ⇒ 該当者一覧画面に遷移、編集対象者を特定
-          console.log(JSON.stringify(v.rv.result));
           v.target = await this.itemSelector(v.rv.result);
           if( v.target instanceof Error ) throw v.target;
         }
@@ -3389,19 +3386,6 @@ class Reception {
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       this.LoadingIcon.hide();
       alert(e.message);
-      return e;
-    }
-  }
-
-  template = () => {
-    const v = {whois:'Reception.template',rv:true,step:0};
-    console.log(v.whois+' start.');
-    try {
-
-      console.log(v.whois+' normal end.');
-      return v.rv;
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
     }
   }
@@ -4448,7 +4432,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 2.5.4.3 関連サイト
     // 2.6 システム設定
 
-    v.step = '10'; // 最終処理：権限により表示画面制御
+    v.step = '10'; // 権限により表示画面制御
     // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生
     // ⇒ 最終段階で実行する
     v.authority = Number(v.config.info.authority)
@@ -4470,6 +4454,8 @@ window.addEventListener('DOMContentLoaded',async () => {
       document.querySelector('div[name="loading"]').style.display = 'none';
     } 
 
+    v.step = '11'; // 終了処理
+    v.menu.change();  // ホーム画面を表示
     console.log(v.whois+' normal end.');
 
   } catch(e){

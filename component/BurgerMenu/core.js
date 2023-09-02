@@ -376,8 +376,12 @@ class BurgerMenu {
     }
   }
 
-  /** 表示画面の変更 */
-  change = (event) => {
+  /** 表示画面の変更
+   * @param {string|PointerEvent} event - クリックされたナビゲーションアイテムのイベント
+   * またはclassで定義された表示領域のID
+   * @returns {null|Error}
+   */
+  change = (event=this.home) => {
     const v = {whois:'BurgerMenu.change',step:0,rv:null,
       showElement: (d) => { // 対象領域を表示
         d.style.display = '';
@@ -385,7 +389,7 @@ class BurgerMenu {
           v.showElement(d.parentElement);
       },
     };
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',event);
     try {
       console.log(event,typeof event);
 

@@ -276,7 +276,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 2.5.4.3 関連サイト
     // 2.6 システム設定
 
-    v.step = '10'; // 最終処理：権限により表示画面制御
+    v.step = '10'; // 権限により表示画面制御
     // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生
     // ⇒ 最終段階で実行する
     v.authority = Number(v.config.info.authority)
@@ -298,6 +298,8 @@ window.addEventListener('DOMContentLoaded',async () => {
       document.querySelector('div[name="loading"]').style.display = 'none';
     } 
 
+    v.step = '11'; // 終了処理
+    v.menu.change();  // ホーム画面を表示
     console.log(v.whois+' normal end.');
 
   } catch(e){
