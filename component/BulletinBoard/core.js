@@ -15,10 +15,8 @@ class BulletinBoard {
       v.step = '1'; // オプション未定義項目の既定値をプロパティにセット
       v.rv = setupInstance(this,opt,{
         //auth: null, // {Auth} 認証局他のAuthインスタンス
-        parent: {
-          selector: '',
-          element: null,
-        },
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
         interval: 60000,
         intervalId: null, // インターバルID
         posts: [],  // 投稿メッセージ一覧
@@ -50,32 +48,14 @@ class BulletinBoard {
       });
       console.log('l.51',v.rv,this.auth);
       if( v.rv instanceof Error ) throw v.rv;
-      /*
-      this.#setProperties(this,null,opt);
-      this.parent.element = document.querySelector(this.parent.selector);
-
-      v.step = '2'; // CSS定義を追加(getPassCodeと共通)
-      v.style = createElement('style');
-      document.head.appendChild(v.style);
-      for( v.i=0 ; v.i<this.css.length ; v.i++ ){
-        v.x = this.css[v.i];
-        for( v.y in v.x.prop ){
-          v.prop = this.parent.selector + ' ' + v.x.sel
-            + ' { ' + v.y + ' : ' + v.x.prop[v.y] + '; }\n';
-          v.style.sheet.insertRule(v.prop,
-            v.style.sheet.cssRules.length,
-          );
-        }
-      }
-      */
 
       v.step = '3'; // 新規のお知らせが来たら末尾を表示するよう設定
       // https://at.sachi-web.com/blog-entry-1516.html
       this.mo = new MutationObserver(() => {
         console.log('mutation detected');
-        this.parent.element.scrollTop = this.parent.element.scrollHeight;
+        this.parent.scrollTop = this.parent.scrollHeight;
       });
-      this.mo.observe(this.parent.element,{
+      this.mo.observe(this.parent,{
         childList: true,
         attributes: true,
         characterData: true,
@@ -95,81 +75,6 @@ class BulletinBoard {
       return e;
     }
   }
-
-  /** 設定先のオブジェクトに起動時パラメータを優先して既定値を設定する
-   * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
-   * @param {def} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
-   * @param {AuthOpt} opt - 起動時にオプションとして渡されたオブジェクト
-   * @returns {void}
-   */
-  /*
-  #setProperties(dest,def,opt){
-    const v = {whois:'Reception.#setProperties',rv:true,def:{
-      auth: null, // {Auth} 認証局他のAuthインスタンス
-      parent: {
-        selector: '',
-        element: null,
-      },
-      interval: 60000,
-      intervalId: null, // インターバルID
-      posts: [],  // 投稿メッセージ一覧
-      css: [
-        {sel:'.date',prop:{
-          'margin-top':'1rem',
-          'padding-left': '1rem',
-          'font-family': 'fantasy',
-          'font-size': '1.5rem',
-          'border-bottom': 'solid 4px #ddd'
-        }},
-        {sel:'.header',prop:{
-          'margin-top': '1rem',
-          'display': 'grid',
-          'grid-template-columns': '3rem 1fr',
-          'grid-gap': '0.5rem',
-          'background-color': '#ddd',
-          'padding-left': '0.5rem',
-        }},
-        {sel:'.fromto',prop:{
-          'font-size': '0.8rem',
-        }},
-        {sel:'.time',prop:{
-          'font-size': '0.8rem',
-          'font-family': 'cursive',
-        }},
-        {sel:'.message',prop:{}},
-      ],
-    }};
-
-    console.log(v.whois+' start.');
-    try {
-      if( def !== null ){ // 2回目以降の呼出(再起呼出)
-        // 再起呼出の場合、呼出元から渡された定義Objを使用
-        v.def = def;
-      }
-
-      for( let key in v.def ){
-        if( whichType(v.def[key]) !== 'Object' ){
-          dest[key] = opt[key] || v.def[key]; // 配列はマージしない
-        } else {
-          if( !dest.hasOwnProperty(key) ) dest[key] = {};
-          this.#setProperties(dest[key],v.def[key],opt[key]||{});
-        }
-      }
-
-      if( def === null ){ // 初回呼出(非再帰)
-        // 親画面のHTML要素を保存
-        this.parentWindow = document.querySelector(this.parentSelector);
-      }
-
-      //console.log(v.whois+' normal end.');
-      return v.rv;
-    } catch(e){
-      v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
-      console.error(v.msg);
-      return e;
-    }
-  }
-  */
 
   /** 掲示板にポストする
    * 
@@ -213,7 +118,7 @@ class BulletinBoard {
       }
 
       // 親領域に描画
-      this.parent.element.innerHTML = '';
+      this.parent.innerHTML = '';
       // timestamp順にソート
       this.posts = v.rv.result;
       this.posts.sort((a,b) => a.timestamp < b.timestamp ? -1 : 1);
@@ -228,7 +133,7 @@ class BulletinBoard {
          || post.timestamp.getDate()     !== v.lastDate.getDate()
         ){
           // 投稿日が変わったら日付を表示
-          this.parent.element.appendChild(createElement({
+          this.parent.appendChild(createElement({
             attr: {class:'date'},
             text: new Intl.DateTimeFormat('en', { month: 'long'}).format(post.timestamp)
               + ' ' + ('00'+post.timestamp.getDate()).slice(-2)
@@ -238,7 +143,7 @@ class BulletinBoard {
           v.lastDate = post.timestamp;
         }
         // From / To
-        this.parent.element.appendChild(createElement({
+        this.parent.appendChild(createElement({
           attr: {class:'header'},
           children: [{
             attr: {class:'time'},
@@ -250,7 +155,7 @@ class BulletinBoard {
           }],
         }));
         // メッセージ
-        this.parent.element.appendChild(createElement({
+        this.parent.appendChild(createElement({
           attr: {class:'message'},
           text: post.message,
         }));

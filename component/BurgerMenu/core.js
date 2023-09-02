@@ -1,14 +1,20 @@
 class BurgerMenu {
 
-  constructor(opt={}){
+  /**
+   * @constructor
+   * @param {string|HTMLElement} parent - 親要素(wrapper)またはそのCSSセレクタ
+   * @param {Object} [opt={}] - オプション 
+   * @returns {null|Error}
+   */
+  constructor(parent,opt={}){
     const v = {whois:'BurgerMenu.constructor',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
       v.step = 1; // メンバの設定
       setupInstance(this,opt,{
-        parent: 'body',   // 親要素のCSSセレクタ
-        //menu: null,       // メニュー全体のラッパー
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
         func: {},         // funcで指定された名称と実関数の紐付けマップ
         icon: null,       // {HTMLElement} ハンバーガーアイコン要素
         navi: null,       // {HTMLElement} ナビゲーション要素
@@ -210,19 +216,19 @@ class BurgerMenu {
           ]
         }]
       });
-      this.parent.element.appendChild(this.icon);
+      this.parent.appendChild(this.icon);
       v.step = 2.2; // ナビゲータの作成
       this.navi = createElement({
         tag:'nav',
         attr:{class:'BurgerMenu'},
       });
-      this.parent.element.appendChild(this.navi);
+      this.parent.appendChild(this.navi);
       v.step = 2.3; // ナビゲータ背景の作成
       this.back = createElement({
         attr:{class:'BurgerMenu back'},
         event:{click:this.toggle},
       });
-      this.parent.element.appendChild(this.back);
+      this.parent.appendChild(this.back);
 
       v.step = 3; // 親要素を走査してナビゲーションを作成
       v.rv = this.#genNavi();
@@ -245,7 +251,7 @@ class BurgerMenu {
    * @param {*} navi
    * @returns
    */
-  #genNavi = (parent=this.parent.element,navi=this.navi) => {
+  #genNavi = (parent=this.parent,navi=this.navi) => {
     const v = {whois:'BurgerMenu.#genNavi',step:0,rv:null,idnum:1000,
       tree:(parent,navi) => { // メニューのツリーを作成
         console.log(v.whois+' tree start:',parent,navi);
@@ -358,7 +364,7 @@ class BurgerMenu {
       v.tree(parent,navi);
 
       // ブランチを検出し、イベントを設定
-      this.parent.element.querySelectorAll('nav.BurgerMenu > ul > li')
+      this.parent.querySelectorAll('nav.BurgerMenu > ul > li')
       .forEach(x => v.branch(x));
 
       console.log(v.whois+' normal end.',v.rv);
@@ -385,14 +391,14 @@ class BurgerMenu {
 
       v.step = 1; // data-BurgerMenu属性を持つ要素を全て非表示に
       v.selector = '[data-BurgerMenu]';
-      this.parent.element.querySelectorAll(v.selector)
+      this.parent.querySelectorAll(v.selector)
       .forEach(x => x.style.display = 'none');
 
       v.step = 2; // 対象領域を特定
       v.selector = '.'
       + (typeof event === 'string' ? event : event.target.name)
       + v.selector;
-      v.target = this.parent.element.querySelector(v.selector);
+      v.target = this.parent.querySelector(v.selector);
       // 対象領域〜body迄を表示
       v.showElement(v.target);
 

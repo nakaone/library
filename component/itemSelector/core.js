@@ -14,9 +14,8 @@ class itemSelector {
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
         data: data, // {Object[]} 選択肢の配列
         // メンバとして持つHTMLElementの定義
-        parent: typeof parent !== 'string' ? parent :
-          document.querySelector(parent), // {HTMLElement} 親要素(ラッパー)
-        parentSelector: typeof parent === 'string' ? parent : null,
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
         style: null,  // {HTMLStyleElement} CSS定義
         // CSS/HTML定義
         css:[

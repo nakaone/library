@@ -12,8 +12,8 @@ class Reception {
     const v = {whois:'Reception.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
         auth: auth, // 認証局他のAuthインスタンス
-        parent: typeof parent !== 'string' ? parent
-          : document.querySelector(parent),
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
         // CSS/HTML定義
         css:[
           /* Reception共通部分 */ ``,
@@ -35,24 +35,24 @@ class Reception {
 
       // 待機画面の準備
       this.LoadingIcon = new LoadingIcon(
-        this.parent.querySelector('.Reception [name="LoadingIcon"]')
+        this.parent.querySelector('[name="LoadingIcon"]')
       );
 
       // スキャナの準備
       this.WebScanner = new WebScanner(
-        this.parent.querySelector('.Reception [name="WebScanner"]',{
+        this.parent.querySelector('[name="WebScanner"]',{
           showVideo:true, // debug: canvasだけでなくvideoも表示
         })
       );
 
       // 候補者選択画面の準備
       this.itemSelector = new itemSelector(
-        this.parent.querySelector('.Reception [name="itemSelector"]')
+        this.parent.querySelector('[name="itemSelector"]')
       );
 
       // 参加費入力画面の準備
       this.drawPassport = new drawPassport(
-        this.parent.querySelector('.Reception [name="drawPassport"]')
+        this.parent.querySelector('[name="drawPassport"]')
       );
 
       console.log(v.whois+' normal end.',v.rv);
@@ -88,7 +88,6 @@ class Reception {
         if( v.rv.result.length > 1 ){
           v.step = 3.21; // 該当者が複数
           // ⇒ 該当者一覧画面に遷移、編集対象者を特定
-          console.log(JSON.stringify(v.rv.result));
           v.target = await this.itemSelector(v.rv.result);
           if( v.target instanceof Error ) throw v.target;
         }
@@ -114,19 +113,6 @@ class Reception {
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       this.LoadingIcon.hide();
       alert(e.message);
-      return e;
-    }
-  }
-
-  template = () => {
-    const v = {whois:'Reception.template',rv:true,step:0};
-    console.log(v.whois+' start.');
-    try {
-
-      console.log(v.whois+' normal end.');
-      return v.rv;
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
     }
   }

@@ -111,7 +111,8 @@ const setupInstance = (dest,opt,def) => {
             v.deepcopy(dest[x],opt[x]);
           } else if( v.isArr(dest[x]) && v.isArr(opt[x]) ){
             // 両方配列 -> 配列をマージ
-            // Setで重複を排除しているが、配列・オブジェクトは重複(中身もマージされない)
+            // Setで配列要素の重複を排除しているが、
+            // 配列要素が配列型・オブジェクト型の場合は重複する(中身もマージされない)
             dest[x] = [...new Set([...dest[x],...opt[x]])];
           } else {
             // optの値でdestの値を置換
@@ -134,6 +135,18 @@ const setupInstance = (dest,opt,def) => {
     if( dest.hasOwnProperty('parent') ){
       if( typeof dest.parent === 'string' ){
         // CSSセレクタだった場合
+        dest.parentSelector = dest.parent;
+        v.parent = dest.parent = document.querySelector(dest.parent);
+      } else if( dest.parent instanceof HTMLElement ){
+        // HTML要素だった場合
+        dest.parentSelector = null;
+        v.parent = dest.parent;
+      } else {
+        throw new Error(v.whois+': parent is not string or HTMLElement.');
+      }
+      /*
+      if( typeof dest.parent === 'string' ){
+        // CSSセレクタだった場合
         v.parent = dest.parent;
         dest.parent = {
           selector: v.parent,
@@ -143,6 +156,7 @@ const setupInstance = (dest,opt,def) => {
       } else {
         v.parent = dest.parent;
       }
+      */
     }
 
     v.step = 3; // CSS定義に基づき新たなstyleを生成

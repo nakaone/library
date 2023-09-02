@@ -14,8 +14,8 @@ class LoadingIcon {
   constructor(parent,opt={}){
     const v = {whois:'LoadingIcon.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
-        parent: typeof parent !== 'string' ? parent
-          : document.querySelector(parent),
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
         screen: null, // 待機画面
         // CSS/HTML定義
         css:[
@@ -131,7 +131,7 @@ class LoadingIcon {
         ],
       },
     };
-    console.log(v.whois+' start.',opt);
+    console.log(v.whois+' start.',parent,opt);
     try {
 
       v.step = 1; // メンバの値セット、HTML/CSSの生成

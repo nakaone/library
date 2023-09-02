@@ -115,6 +115,9 @@
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/createPassword.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/cryptoAES.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Date.toLocale.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='../../component/drawPassport/core.js'></script>
+<script type="text/javascript" data-embed='../../component/itemSelector/core.js'></script>
+<script type="text/javascript" data-embed='../../component/LoadingIcon/core.js'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/mergeDeeply.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='../../component/setupInstance/core.js'></script>
 <script type="text/javascript" data-embed='../../component/Reception/core.js'></script>
@@ -123,7 +126,7 @@
 <script type="text/javascript" data-embed='../../component/WebScanner/core.js'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/whichType.html","selector":"script.core"},"to":"js"}'></script>
 
-<script type="text/javascript" data-embed="camp2023.drawPassport.js"></script>
+<!--script type="text/javascript" data-embed="camp2023.drawPassport.js"></script -->
 
 <script type="text/javascript" class="main">
 window.addEventListener('DOMContentLoaded',async () => {
@@ -183,7 +186,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 個別メニュー画面の設定
     // ================================================
     v.step = '2'; // メニューを定義
-    v.menu = new BurgerMenu({
+    v.menu = new BurgerMenu('body',{
       authority: v.config.info.authority,
       home: 'c1005',  // パスポート画面をホームに設定(暫定)
     });
@@ -205,8 +208,15 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 2.1.2 注意事項
     // 2.1.3 持ち物
 
-    v.step = '2.2'; // パスポート
-    drawPassport('div[data-BurgerMenu="label:\'パスポート\'"]',v.config);
+    v.step = '2.2.1'; // パスポート
+    v.rv = v.drawPassport = new drawPassport(
+      'div[data-BurgerMenu="label:\'パスポート\'"]',
+      v.config.info
+    );
+    if( v.rv instanceof Error ) throw v.rv;
+    v.step = '2.2.2';
+    v.rv = v.drawPassport.view();
+    if( v.rv instanceof Error ) throw v.rv;
 
     // 2.3 案内図
 
@@ -225,6 +235,13 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 2.5.1 参加者数
 
     v.step = '2.5.2'; // 受付業務
+    v.reception = new Reception(
+      v.config, // 認証局他のAuthインスタンス
+      '[data-BurgerMenu="label:\'受付業務\'"]', // parent
+    );
+    if( v.reception instanceof Error ) throw v.reception;
+
+    /*
     v.receptPage = '[data-BurgerMenu="label:\'受付業務\'"]';
     v.rp1 = document.querySelector(v.receptPage);
     console.log('l.222',v.rp1);
@@ -241,7 +258,8 @@ window.addEventListener('DOMContentLoaded',async () => {
 
     v.id = document.querySelector(v.receptPage).classList;
     v.boot = 'nav.BurgerMenu a[name="'+v.id+'"]';
-    /*
+    
+
     v.reception = new Reception({
       auth: v.config, // 認証局他のAuthインスタンス
       area:{selector:v.receptPage},  // 受付画面表示エリアのCSSセレクタ

@@ -9,12 +9,14 @@
   line-height: 1.5rem;
   color: black;
   box-sizing: border-box;
+  width: 100vw;
   height: 100%;
   margin: 0;
   padding: 0;
 }
 
 body {
+  width: 100%;
   min-height: 100vh;
   -webkit-text-size-adjust: none;
   -moz-text-size-adjust: none;
@@ -1150,10 +1152,8 @@ class BulletinBoard {
       v.step = '1'; // オプション未定義項目の既定値をプロパティにセット
       v.rv = setupInstance(this,opt,{
         //auth: null, // {Auth} 認証局他のAuthインスタンス
-        parent: {
-          selector: '',
-          element: null,
-        },
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
         interval: 60000,
         intervalId: null, // インターバルID
         posts: [],  // 投稿メッセージ一覧
@@ -1185,32 +1185,14 @@ class BulletinBoard {
       });
       console.log('l.51',v.rv,this.auth);
       if( v.rv instanceof Error ) throw v.rv;
-      /*
-      this.#setProperties(this,null,opt);
-      this.parent.element = document.querySelector(this.parent.selector);
-
-      v.step = '2'; // CSS定義を追加(getPassCodeと共通)
-      v.style = createElement('style');
-      document.head.appendChild(v.style);
-      for( v.i=0 ; v.i<this.css.length ; v.i++ ){
-        v.x = this.css[v.i];
-        for( v.y in v.x.prop ){
-          v.prop = this.parent.selector + ' ' + v.x.sel
-            + ' { ' + v.y + ' : ' + v.x.prop[v.y] + '; }\n';
-          v.style.sheet.insertRule(v.prop,
-            v.style.sheet.cssRules.length,
-          );
-        }
-      }
-      */
 
       v.step = '3'; // 新規のお知らせが来たら末尾を表示するよう設定
       // https://at.sachi-web.com/blog-entry-1516.html
       this.mo = new MutationObserver(() => {
         console.log('mutation detected');
-        this.parent.element.scrollTop = this.parent.element.scrollHeight;
+        this.parent.scrollTop = this.parent.scrollHeight;
       });
-      this.mo.observe(this.parent.element,{
+      this.mo.observe(this.parent,{
         childList: true,
         attributes: true,
         characterData: true,
@@ -1230,81 +1212,6 @@ class BulletinBoard {
       return e;
     }
   }
-
-  /** 設定先のオブジェクトに起動時パラメータを優先して既定値を設定する
-   * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
-   * @param {def} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
-   * @param {AuthOpt} opt - 起動時にオプションとして渡されたオブジェクト
-   * @returns {void}
-   */
-  /*
-  #setProperties(dest,def,opt){
-    const v = {whois:'Reception.#setProperties',rv:true,def:{
-      auth: null, // {Auth} 認証局他のAuthインスタンス
-      parent: {
-        selector: '',
-        element: null,
-      },
-      interval: 60000,
-      intervalId: null, // インターバルID
-      posts: [],  // 投稿メッセージ一覧
-      css: [
-        {sel:'.date',prop:{
-          'margin-top':'1rem',
-          'padding-left': '1rem',
-          'font-family': 'fantasy',
-          'font-size': '1.5rem',
-          'border-bottom': 'solid 4px #ddd'
-        }},
-        {sel:'.header',prop:{
-          'margin-top': '1rem',
-          'display': 'grid',
-          'grid-template-columns': '3rem 1fr',
-          'grid-gap': '0.5rem',
-          'background-color': '#ddd',
-          'padding-left': '0.5rem',
-        }},
-        {sel:'.fromto',prop:{
-          'font-size': '0.8rem',
-        }},
-        {sel:'.time',prop:{
-          'font-size': '0.8rem',
-          'font-family': 'cursive',
-        }},
-        {sel:'.message',prop:{}},
-      ],
-    }};
-
-    console.log(v.whois+' start.');
-    try {
-      if( def !== null ){ // 2回目以降の呼出(再起呼出)
-        // 再起呼出の場合、呼出元から渡された定義Objを使用
-        v.def = def;
-      }
-
-      for( let key in v.def ){
-        if( whichType(v.def[key]) !== 'Object' ){
-          dest[key] = opt[key] || v.def[key]; // 配列はマージしない
-        } else {
-          if( !dest.hasOwnProperty(key) ) dest[key] = {};
-          this.#setProperties(dest[key],v.def[key],opt[key]||{});
-        }
-      }
-
-      if( def === null ){ // 初回呼出(非再帰)
-        // 親画面のHTML要素を保存
-        this.parentWindow = document.querySelector(this.parentSelector);
-      }
-
-      //console.log(v.whois+' normal end.');
-      return v.rv;
-    } catch(e){
-      v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
-      console.error(v.msg);
-      return e;
-    }
-  }
-  */
 
   /** 掲示板にポストする
    * 
@@ -1348,7 +1255,7 @@ class BulletinBoard {
       }
 
       // 親領域に描画
-      this.parent.element.innerHTML = '';
+      this.parent.innerHTML = '';
       // timestamp順にソート
       this.posts = v.rv.result;
       this.posts.sort((a,b) => a.timestamp < b.timestamp ? -1 : 1);
@@ -1363,7 +1270,7 @@ class BulletinBoard {
          || post.timestamp.getDate()     !== v.lastDate.getDate()
         ){
           // 投稿日が変わったら日付を表示
-          this.parent.element.appendChild(createElement({
+          this.parent.appendChild(createElement({
             attr: {class:'date'},
             text: new Intl.DateTimeFormat('en', { month: 'long'}).format(post.timestamp)
               + ' ' + ('00'+post.timestamp.getDate()).slice(-2)
@@ -1373,7 +1280,7 @@ class BulletinBoard {
           v.lastDate = post.timestamp;
         }
         // From / To
-        this.parent.element.appendChild(createElement({
+        this.parent.appendChild(createElement({
           attr: {class:'header'},
           children: [{
             attr: {class:'time'},
@@ -1385,7 +1292,7 @@ class BulletinBoard {
           }],
         }));
         // メッセージ
-        this.parent.element.appendChild(createElement({
+        this.parent.appendChild(createElement({
           attr: {class:'message'},
           text: post.message,
         }));
@@ -1471,15 +1378,21 @@ class BulletinBoard {
 }</script>
 <script type="text/javascript">class BurgerMenu {
 
-  constructor(opt={}){
+  /**
+   * @constructor
+   * @param {string|HTMLElement} parent - 親要素(wrapper)またはそのCSSセレクタ
+   * @param {Object} [opt={}] - オプション 
+   * @returns {null|Error}
+   */
+  constructor(parent,opt={}){
     const v = {whois:'BurgerMenu.constructor',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
       v.step = 1; // メンバの設定
       setupInstance(this,opt,{
-        parent: 'body',   // 親要素のCSSセレクタ
-        //menu: null,       // メニュー全体のラッパー
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
         func: {},         // funcで指定された名称と実関数の紐付けマップ
         icon: null,       // {HTMLElement} ハンバーガーアイコン要素
         navi: null,       // {HTMLElement} ナビゲーション要素
@@ -1681,19 +1594,19 @@ class BulletinBoard {
           ]
         }]
       });
-      this.parent.element.appendChild(this.icon);
+      this.parent.appendChild(this.icon);
       v.step = 2.2; // ナビゲータの作成
       this.navi = createElement({
         tag:'nav',
         attr:{class:'BurgerMenu'},
       });
-      this.parent.element.appendChild(this.navi);
+      this.parent.appendChild(this.navi);
       v.step = 2.3; // ナビゲータ背景の作成
       this.back = createElement({
         attr:{class:'BurgerMenu back'},
         event:{click:this.toggle},
       });
-      this.parent.element.appendChild(this.back);
+      this.parent.appendChild(this.back);
 
       v.step = 3; // 親要素を走査してナビゲーションを作成
       v.rv = this.#genNavi();
@@ -1716,7 +1629,7 @@ class BulletinBoard {
    * @param {*} navi
    * @returns
    */
-  #genNavi = (parent=this.parent.element,navi=this.navi) => {
+  #genNavi = (parent=this.parent,navi=this.navi) => {
     const v = {whois:'BurgerMenu.#genNavi',step:0,rv:null,idnum:1000,
       tree:(parent,navi) => { // メニューのツリーを作成
         console.log(v.whois+' tree start:',parent,navi);
@@ -1829,7 +1742,7 @@ class BulletinBoard {
       v.tree(parent,navi);
 
       // ブランチを検出し、イベントを設定
-      this.parent.element.querySelectorAll('nav.BurgerMenu > ul > li')
+      this.parent.querySelectorAll('nav.BurgerMenu > ul > li')
       .forEach(x => v.branch(x));
 
       console.log(v.whois+' normal end.',v.rv);
@@ -1856,14 +1769,14 @@ class BulletinBoard {
 
       v.step = 1; // data-BurgerMenu属性を持つ要素を全て非表示に
       v.selector = '[data-BurgerMenu]';
-      this.parent.element.querySelectorAll(v.selector)
+      this.parent.querySelectorAll(v.selector)
       .forEach(x => x.style.display = 'none');
 
       v.step = 2; // 対象領域を特定
       v.selector = '.'
       + (typeof event === 'string' ? event : event.target.name)
       + v.selector;
-      v.target = this.parent.element.querySelector(v.selector);
+      v.target = this.parent.querySelector(v.selector);
       // 対象領域〜body迄を表示
       v.showElement(v.target);
 
@@ -2187,6 +2100,896 @@ function Date_toLocale(format='yyyy/MM/dd'){
 }
 Date.prototype.toLocale = Date_toLocale;
 </script>
+<script type="text/javascript">/**
+ * @classdesc 参加者情報の表示・編集
+ * 
+ * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
+ */
+class drawPassport {
+  /**
+   * @constructor
+   * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
+   * @param {Object} [data=null] - Authから返された参加者情報(Auth.info)
+   * @param {Object} [opt={}] - オプション
+   * @returns {true|Error}
+   */
+  constructor(parent,data=null,opt={}){
+    const v = {whois:'drawPassport.constructor',rv:true,step:0,
+      default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
+        data: data, // {Object} 参加者情報
+        // メンバとして持つHTMLElementの定義
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
+        style: null,  // {HTMLStyleElement} CSS定義
+        summary: null, // {HTMLElement} 概要領域のDIV要素
+        list: null, // {HTMLElement} 参加者一覧領域のDIV要素
+        detail: null, // {HTMLElement} 詳細領域のDIV要素
+        buttons: null, // {HTMLElement} ボタン領域のDIV要素
+        // CSS/HTML定義
+        css:[
+          /* drawPassport共通部分 */ `
+          .drawPassport {
+            margin: 1rem;
+            width: calc(100% - 2rem);
+            display: grid;
+            row-gap: 1rem;
+            grid-template-columns: 1fr;
+          }
+          .drawPassport.hide {
+            display: none;
+          }
+          .drawPassport > div {
+            width: 100%;
+            display: grid;
+            gap: 1rem;
+          }
+          .drawPassport rt {
+            font-size: 50%;
+          }
+          .drawPassport .label {
+            margin-top: 1rem;
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+          }
+          .drawPassport .label p {
+            grid-column: 1 / 3;
+            font-size: 1.4rem;
+          }
+          .drawPassport .label button {
+            grid-column: 3 / 4;
+          }`,
+          /* 概要欄(QRコード、受付番号、申込者名) */`
+          .drawPassport .summary {
+            grid-template-columns: repeat(12, 1fr);
+          }
+          .drawPassport .summary [name="qrcode"]{
+            padding: 0rem;
+            grid-row: 1 / 3;
+            grid-column: 1 / 5;
+          }
+          .drawPassport .summary [name="entryStr"]{
+            grid-row: 1 / 2;
+            grid-column: 5 / 13;
+          }
+          .drawPassport .summary [name="entryStr"] span {
+            font-size: 2rem;
+          }
+          .drawPassport .summary [name="申込者氏名"]{
+            grid-row: 2 / 3;
+            grid-column: 5 / 13;
+          }
+          .drawPassport .summary ruby span {
+            font-size: 2rem;
+          }
+          .drawPassport .summary rt span {
+            font-size: 1rem;
+          }`,
+          /* 参加者一覧 */`
+          .drawPassport .list .label button.hide {
+            display: none;
+          }
+          .drawPassport .list .content {
+            width: 100%;
+            margin: 1rem 0px;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 0.2rem;
+          }
+          .drawPassport .list .content.hide {
+            display: none;
+          }
+          .drawPassport .list .content div:nth-child(4n+1) {
+            grid-column: 1 / 2;
+          }
+          .drawPassport .list .content div:nth-child(4n+2) {
+            grid-column: 2 / 7;
+          }
+          .drawPassport .list .content div:nth-child(4n+3) {
+            grid-column: 7 / 9;
+          }
+          .drawPassport .list .content div:nth-child(4n+4) {
+            grid-column: 9 / 11;
+          }
+          .drawPassport .list .content .td[name="fee"] > .hide {
+            display: none;
+          }`,
+          /* 詳細情報 */`
+          .drawPassport .detail .content {
+            display: block;
+          }
+          .drawPassport .detail .content.hide {
+            display: none;
+          }
+          .drawPassport .detail .content .table {
+            width: 100%;
+            margin: 1rem 0px;
+            display: grid;
+            grid-template-columns: 2fr 3fr;
+            gap: 0.2rem;
+          }
+          .drawPassport .message {
+            display: block;
+          }
+          .drawPassport .message button {
+            margin-top: 1rem;
+            padding: 0.5rem 2rem;
+          }
+          .drawPassport .message.hide {
+            display: none;
+          }`,
+          /* 取消・決定・全員受領ボタン */`
+          .drawPassport .buttons {
+            width: 100%;
+            margin: 1rem 0px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+          }
+          .drawPassport .buttons.hide {
+            display: none;
+          }
+          .drawPassport .buttons button {
+            display: block;
+            width: 100%;
+            font-size: 2rem;
+          }
+          .drawPassport .buttons [name="取消"].hide {
+            display: none;
+          }
+          .drawPassport .buttons [name="決定"].hide {
+            display: none;
+          }
+          .drawPassport .buttons [name="全員"].hide {
+            display: none;
+          }`,
+        ],
+        html:[  // イベント定義を複数回行わないようにするため、eventで定義
+          // 概要欄(QRコード、受付番号、申込者名)
+          {attr:{class:'summary'},children:[
+            {attr:{name:'qrcode'}},
+            {attr:{name:'entryStr'},text:'No.',children:[
+              {tag:'span',attr:{class:'v'}},
+            ]},
+            {attr:{name:'申込者氏名'},children:[
+              {tag:'ruby',children:[
+                {tag:'span',attr:{class:'v'}},
+                {tag:'rt',attr:{name:'申込者カナ'},children:[
+                  {tag:'span',attr:{class:'v'}}
+                ]},
+              ]}
+            ]},
+          ]},
+          // 参加者一覧
+          {attr:{class:'list'},children:[
+            {attr:{class:'label'},children:[
+              {tag:'p',text:'参加者一覧'},
+              {tag:'button',text:'非表示',event:{click:this.toggle}},
+            ]},
+            {attr:{class:'content'},children:[
+              {attr:{class:'th'},text:'No'},
+              {attr:{class:'th'},text:'氏名'},
+              {attr:{class:'th'},text:'所属'},
+              {attr:{class:'th'},text:'参加費'},
+            ]},
+          ]},
+          // 詳細情報
+          {attr:{class:'detail'},children:[
+            {attr:{class:'label'},children:[
+              {tag:'p',text:'詳細情報'},
+              {tag:'button',text:'非表示',event:{click:this.toggle}},
+            ]},
+            {attr:{class:'content'},children:[
+              {attr:{class:'table'}},
+              {attr:{class:'message'},children:[
+                {attr:{name:'editURL'},children:[
+                  {tag:'p',text:'参加者一覧・詳細情報に誤謬・変更がある場合、以下のボタンをクリックして申込フォームを開いて修正してください。'},
+                  {
+                    tag:'button',
+                    text:'申込フォームを開く',
+                    event:{click:()=>window.open(this.data.editURL,'_blank')},
+                  },
+                ]}
+              ]},
+            ]},
+          ]},
+          // 取消・決定・全員受領ボタン
+          {attr:{class:'buttons'},children:[
+            {tag:'button',attr:{name:'取消'},text:'取消'},
+            {tag:'button',attr:{name:'決定'},text:'決定'},
+            {tag:'button',attr:{name:'全員'},html:'全員<br>受領'},
+          ]},
+        ],
+      },
+    };
+    console.log(v.whois+' start.',opt);
+    try {
+
+      v.step = 1; // メンバの値セット、HTML/CSSの生成
+      v.rv = setupInstance(this,opt,v.default);
+      if( v.rv instanceof Error ) throw v.rv;
+
+      v.step = 2; // メンバとして持つHTMLElementを設定
+      ['summary','list','detail','buttons'].forEach(x => {
+        this[x] = this.parent.querySelector('.'+x);
+      });
+
+      v.step = 3; // 参加者情報があればセット
+      if( this.data !== null ){
+        v.r = this.#setData();
+        if( v.r instanceof Error ) throw v.r;
+      }
+
+      v.step = 4; // 画面を非表示に
+      this.close();
+
+      v.step = 5; // 終了処理
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 参加者情報(this.data)を画面にセット
+   * @param {void}
+   * @returns {void}
+   */
+  #setData = () => {
+    const v = {whois:'drawPassport.#setData',rv:true,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      // ---------------------------------------------
+      // 1. QRコード、受付番号、申込者名
+      // ---------------------------------------------
+      v.step = 1.1; // QRコード表示
+      this.data.entryStr = String('0000'+this.data.entryNo).slice(-4);
+      v.qrcode = this.summary.querySelector('[name="qrcode"]');
+      v.qrSize = v.qrcode.clientWidth;
+      v.qrcode.innerHTML = '';  // 一度クリア
+      new QRCode(v.qrcode,{
+        text: this.data.entryStr,
+        width: v.qrSize,
+        height: v.qrSize,
+        colorDark: "#000",
+        colorLight: "#fff",
+        correctLevel : QRCode.CorrectLevel.H,
+      });
+  
+      v.step = 1.2; // その他文字情報表示
+      ['entryStr','申込者氏名','申込者カナ'].forEach(x => {
+        v.x = x;
+        v.element = this.summary.querySelector('[name="'+x+'"] .v');
+        v.element.innerText = this.data[v.x];
+      });
+
+      // ---------------------------------------------
+      // 2. 参加者一覧
+      // ---------------------------------------------
+      v.step = 2.1; // 参加者情報をセット
+      v.content = this.list.querySelector('.content');
+      // 過去の参加者情報をクリア
+      v.content.querySelectorAll('.td').forEach(x => x.remove());
+      for( v.i=1 ; v.i<6 ; v.i++ ){
+        v.prefix = '参加者0' + v.i;
+        // 氏名が未登録の場合はスキップ
+        if( this.data[v.prefix+'氏名'].length === 0 )
+          continue;
+        v.step = 2.2; // No
+        v.content.appendChild(createElement({
+          attr: {class:'td'},
+          style: {textAlign:'right'},
+          text: v.i,
+        }));
+        v.step = 2.3; // 氏名
+        v.content.appendChild(createElement(
+          {attr: {class:'td'},children:[
+            {tag:'ruby',text:this.data[v.prefix+'氏名'],children:[
+              {tag:'rt',text:this.data[v.prefix+'カナ']}
+        ]}]}));
+        v.step = 2.4; // 所属
+        v.content.appendChild(createElement({
+          attr: {class:'td'},
+          text: this.data[v.prefix+'所属'],
+        }));
+        v.step = 2.5; // 参加費
+        // 参加費欄はプルダウンとテキストと両方作成
+        v.options = [];
+        this.data['fee0'+v.i] = this.data['fee0'+v.i] || '未入場';
+        ['未入場','無料','未収','既収','退場済'].forEach(x => {
+          v.options.push({
+            tag:'option',
+            value:x,
+            text:x,
+            logical:{selected:(this.data['fee0'+v.i] === x)},
+          });
+        });
+        v.content.appendChild(createElement(
+          {attr:{class:'td',name:'fee'},children:[
+            {text: this.data['fee0'+v.i]},
+            {
+              tag     : 'select',
+              attr    : {class:'fee',name:'fee0'+v.i},
+              children: v.options
+            },
+          ]},
+        ));
+      }
+
+      // ---------------------------------------------
+      // 3. 詳細情報
+      // ---------------------------------------------
+      v.step = 3.1; // 詳細情報をセット
+      v.detail = this.detail.querySelector('.content .table');
+      v.detail.innerHTML = '';  // 過去の詳細情報をクリア
+      ["メールアドレス","申込者の参加","宿泊、テント","引取者氏名","緊急連絡先",
+      "ボランティア募集","キャンセル","備考"].forEach(x => {
+        v.detail.appendChild(createElement({
+          attr: {class:'th'},
+          text: x,
+        }));
+        v.detail.appendChild(createElement({
+          attr: {class:'td'},
+          text: this.data[x],
+        }));
+      });
+
+      // ---------------------------------------------
+      // 4. 取消・決定・全員受領ボタン
+      // ---------------------------------------------
+      v.step = 4.1; // ボタンを正方形に
+      this.buttons.querySelectorAll('button').forEach(x => {
+        x.style.height = x.clientWidth+'px';
+      });
+
+      console.log(v.whois+' normal end.');
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 参加費の編集を行い、編集結果を返す
+   * @param {Object} [data=null] - 編集対象となる参加者情報 
+   * @returns {Object} {entryNo:{string},fee0n:'未入場/無料/未収/既収/退場済'}
+   */
+  edit = async (data=null) => {
+    const v = {whois:'drawPassport.edit',rv:true,step:0};
+    console.log(v.whois+' start.');
+    try {
+      // 親要素を表示
+      // ※display:noneのままだと内部要素のサイズが全て0に
+      this.open();
+
+      // 参加者情報を渡された場合、セット
+      if( data !== null ) this.data = data;
+
+      // 編集対象となる参加者情報を表示
+      v.rv = this.#setData();
+      if( v.rv instanceof Error ) throw v.rv;
+
+      // 参加者情報をボタンを削除(非表示)
+      this.list.querySelector('.label button').classList.add('hide');
+
+      // 参加者一覧・参加費欄でプルダウン以外は非表示
+      this.list.querySelectorAll('.content .td[name="fee"] div').forEach(x => {
+        x.classList.add('hide');
+      });
+
+      // 詳細情報を非表示状態に変更
+      v.rv = this.toggle('.detail',false);
+
+      // 取消・決定・全員収納ボタンを表示
+      return new Promise(resolve => {
+        // 取消 -> 戻り値はnull
+        this.buttons.querySelector('[name="取消"]')
+        .addEventListener('click',() => {
+          // 戻り値の作成
+          const rv = null;
+          // 終了処理
+          console.log('取消 -> '+JSON.stringify(rv)
+          + '\ndrawPassport.edit normal end.\n');
+          this.close();
+          resolve({entryNo:this.data.entryNo,result:rv});
+        });
+
+        // 決定 -> {Object.<string, string>}、キャンセルなら{}
+        this.buttons.querySelector('[name="決定"]')
+        .addEventListener('click',() => {
+          // 戻り値の作成
+          let rv = {entryNo:this.data.entryNo};
+          this.list.querySelectorAll('.fee').forEach(x => {
+            rv[x.getAttribute('name')] = x.value;
+          });
+          /* 入力内容の確認
+          if( !window.confirm(
+            '参加費を画面のように登録します。\nよろしいですか？'
+          ) ) rv = {};*/
+          // 終了処理
+          console.log('決定 -> '+JSON.stringify(rv)
+          + '\ndrawPassport.edit normal end.\n');
+          this.close();
+          resolve(rv);
+        });
+
+        // 全員受領 -> {Object.<string, string>}、キャンセルなら{}
+        this.buttons.querySelector('[name="全員"]')
+        .addEventListener('click',() => {
+          // 戻り値の作成
+          let rv = {entryNo:this.data.entryNo};
+          this.list.querySelectorAll('.fee').forEach(x => {
+            rv[x.getAttribute('name')] = '既収';
+          });
+          /* 入力内容の確認
+          if( !window.confirm(
+            '全参加者の参加費を「受領」にします。\nよろしいですか？'
+          ) ) rv = {};*/
+          // 終了処理
+          console.log('全員受領 -> '+JSON.stringify(rv)
+          + '\ndrawPassport.edit normal end.\n');
+          this.close();
+          resolve(rv);
+        });
+      });
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 参加者情報を表示する
+   * @param {Object} [data=null] - 表示対象となる参加者情報 
+   * @returns {void}
+   */
+  view = (data=null) => {
+    const v = {whois:'drawPassport.view',rv:true,step:0};
+    console.log(v.whois+' start.');
+    try {
+      // 親要素を表示
+      // ※display:noneのままだと内部要素のサイズが全て0に
+      this.open();
+
+      // 参加者情報を渡された場合、セット
+      if( data !== null ) this.data = data;
+
+      // 編集対象となる参加者情報を表示
+      v.rv = this.#setData();
+      if( v.rv instanceof Error ) throw v.rv;
+
+      // 参加者一覧・参加費欄でプルダウンは非表示
+      this.list.querySelectorAll('.content .td[name="fee"] select').forEach(x => {
+        x.classList.add('hide');        
+      });
+
+      // 参加者一覧・詳細情報を非表示状態に変更
+      v.rv = this.toggle('.list',false);
+      v.rv = this.toggle('.detail',false);
+
+      // 取消・決定・全員収納ボタンは非表示
+      this.buttons.classList.add('hide');
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 表示/非表示ボタンクリック時の処理を定義
+   * @param {PointerEvent|string} event - クリック時のイベントまたはボタンのCSSセレクタ
+   * @param {boolean} show - trueなら開く
+   * @returns {void}
+   */
+  toggle = (event,show) => {
+    const v = {whois:'drawPassport.toggle',step:1,rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      let content;  // 表示/非表示を行う対象となる要素
+      let button;   // クリックされたボタンの要素
+      if( typeof event === 'string' ){
+        v.step = 1.1; // 初期設定時(引数がPointerEventではなくstring)
+        content = this.parent.querySelector(event+' .content');
+        button = this.parent.querySelector(event+' button');
+      } else {
+        v.step = 1.2; // ボタンクリック時
+        content = event.target.parentElement.parentElement
+        .querySelector('.content');
+        button = event.target;
+      }
+      console.log(content,button);
+
+      v.step = 2; // 表示->非表示 or 非表示->表示 を判断
+      let toOpen = show ? show : (button.innerText === '表示');
+      if( toOpen ){
+        v.step = 2.1; // 表示に変更する場合
+        button.innerText = '非表示';
+        content.classList.remove('hide');
+      } else {
+        v.step = 2.2; // 非表示に変更する場合
+        button.innerText = '表示';
+        content.classList.add('hide');
+      }
+
+      v.step = 3;
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 親要素(parent)内を表示 */
+  open = () => {
+    //this.parent.classList.remove('hide');
+    this.parent.style.display = '';
+  }
+
+  /** 親要素(parent)内を隠蔽 */
+  close = () => {
+    //this.parent.classList.add('hide');
+    this.parent.style.display = 'none';
+  }
+}</script>
+<script type="text/javascript">/**
+ * @classdesc 配列から表を作成、対象を選択して配列の要素を返す
+ */
+class itemSelector {
+  /**
+   * @constructor
+   * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
+   * @param {Object[]} [data=null] - 選択肢の配列
+   * @param {Object} [opt={}] - オプション
+   * @returns {true|Error}
+   */
+  constructor(parent,data=null,opt={}){
+    const v = {whois:'itemSelector.constructor',rv:true,step:0,
+      default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
+        data: data, // {Object[]} 選択肢の配列
+        // メンバとして持つHTMLElementの定義
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
+        style: null,  // {HTMLStyleElement} CSS定義
+        // CSS/HTML定義
+        css:[
+          /* itemSelector共通部分 */ `
+          .itemSelector {
+            --fontSize: 1.5rem;
+            --circle: calc(var(--fontSize) * 3);
+            --bgColor: #ddd;
+            width: 100%;
+          }
+          .itemSelector.hide {
+            display: none;
+          }`,
+          /* tr:行単位の定義 */`
+          .itemSelector .tr {
+            width: 100%;
+            display: grid;
+            grid-template-columns: var(--circle) 1fr;
+            align-items: center;
+            margin-bottom: var(--fontSize);
+          }`,
+          /* icon: 背景のアイコン */`
+          .itemSelector .icon {
+            grid-row: 1 / 2;
+            grid-column: 1 / 3;
+            width: 0px;
+            height: 0px;
+            border-top: calc(var(--circle) / 2) solid transparent;
+            border-left: calc(var(--circle) * 3) solid var(--bgColor);
+            border-bottom: calc(var(--circle) / 2) solid transparent;
+            border-right: calc(var(--circle) / 2) solid transparent;
+          }`,
+          /* item: 選択肢の情報(氏名、メアド) */`
+          .itemSelector .item {
+            grid-row: 1 / 2;
+            grid-column: 1 / 3;
+            z-index: 10;
+            padding-left: calc(var(--fontSize) / 2);
+            display: grid;
+            grid-template-columns: 4fr 6fr;
+            align-items: center;
+          }
+          .itemSelector ruby {
+            font-size: var(--fontSize);
+          }
+          .itemSelector rt {
+            font-size: 50%;
+          }`,
+        ],
+        html:[  // イベント定義を複数回行わないようにするため、eventで定義
+        ],
+      },
+    };
+    console.log(v.whois+' start.',opt);
+    try {
+
+      v.step = 1; // メンバの値セット、HTML/CSSの生成
+      v.rv = setupInstance(this,opt,v.default);
+      if( v.rv instanceof Error ) throw v.rv;
+
+      v.step = 2; // 画面を非表示に
+      this.close();
+
+      v.step = 3; // 終了処理
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 参加者情報(this.data)を画面にセット
+   * @param {void}
+   * @returns {void}
+   * 
+   * trのnameが欲しいのに子要素のrubyやrtのnameを探してしまう問題が発生。<br>
+   * ⇒ ×target ○currentTarget
+   * 
+   * - [子要素クリック時の親要素のクリックイベントの挙動](https://www.sunapro.com/currenttarget/)
+   */
+  #setData = (data=null) => {
+    const v = {whois:'drawPassport.#setData',rv:true,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      if( data !== null ) this.data = data;
+
+      this.data.forEach(x => {
+        v.tr = createElement(
+          {attr:{class:'tr',name:x.entryNo},children:[
+            {attr:{class:'icon'}},
+            {attr:{class:'item'},children:[
+              {tag:'ruby',text:x['申込者氏名'],children:[
+                {tag:'rt',text:x['申込者カナ']}
+              ]},
+              {text:x['メールアドレス']},
+            ]}
+          ]}
+        );
+        this.parent.appendChild(v.tr);
+      });
+
+      console.log(v.whois+' normal end.');
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  select = (data=null) => {
+    const v = {whois:'itemSelector.template',rv:true,step:0};
+    console.log(v.whois+' start.');
+    try {
+      // 親要素を表示
+      this.open();
+
+      // 編集対象となる参加者情報を表示
+      v.rv = this.#setData(data);
+      if( v.rv instanceof Error ) throw v.rv;
+
+      return new Promise(resolve => {
+        this.parent.querySelectorAll('div.tr').forEach(x => {
+          x.addEventListener('click',event => {
+            // 戻り値の作成(×target ○currentTarget)
+            const rv = event.currentTarget.getAttribute('name');
+            // 終了処理
+            console.log('itemSelector.select normal end.\n',rv);
+            this.close();
+            resolve(rv);
+          });
+        });
+      });
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 親要素(parent)内を表示 */
+  open = () => {
+    this.parent.classList.remove('hide');
+  }
+
+  /** 親要素(parent)内を隠蔽 */
+  close = () => {
+    this.parent.classList.add('hide');
+  }
+}</script>
+<script type="text/javascript">/**
+ * @classdesc 待機画面を表示する
+ */
+class LoadingIcon {
+  /**
+   * @constructor
+   * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
+   * @param {Object} [opt={}] - オプション
+   * @returns {true|Error}
+   * 
+   * - [ローディングアイコン集](https://projects.lukehaas.me/css-loaders/)
+   * - [CSSで全画面オーバーレイを実装する方法＆コード例](https://pisuke-code.com/css-fullscreen-overlay/)
+   */
+  constructor(parent,opt={}){
+    const v = {whois:'LoadingIcon.constructor',rv:true,step:0,
+      default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
+        screen: null, // 待機画面
+        // CSS/HTML定義
+        css:[
+          /* LoadingIcon共通部分 */ `
+          div.LoadingIcon.act {
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height:100vh;
+            background: #fff;
+            z-index: 2147483647;
+            display: grid;
+            place-items: center;
+          }
+          div.LoadingIcon {
+            display: none;
+          }`,
+          /* pattern.5 */`
+          .loading5 {
+            --dot-size: 4rem;
+            --R: 0;
+            --G: 0;
+            --B: 0;
+            --back: rgba(var(--R),var(--G),var(--B),1);
+            --pale: rgba(var(--R),var(--G),var(--B),0.2);
+            --middle: rgba(var(--R),var(--G),var(--B),0.5);
+            --dark: rgba(var(--R),var(--G),var(--B),0.7);
+            --m0: calc(var(--dot-size) * 0.8); /* 軌道の大きさ */
+            --m1: calc(var(--m0) * -2.6);
+            --m2: calc(var(--m0) * -1.8);
+            --m3: calc(var(--m0) * 1.75);
+            --m4: calc(var(--m0) * 1.8);
+            --m5: calc(var(--m0) * 2.5);
+          
+            margin: 100px auto;
+            font-size: 25px;
+            width: var(--dot-size);
+            height: var(--dot-size);
+            border-radius: 50%;
+            position: relative;
+            text-indent: -9999em;
+            -webkit-animation: load5 1.1s infinite ease;
+            animation: load5 1.1s infinite ease;
+            -webkit-transform: translateZ(0);
+            -ms-transform: translateZ(0);
+            transform: translateZ(0);
+          }
+          @-webkit-keyframes load5 {
+            0%,
+            100% {box-shadow:
+              0em var(--m1) 0em 0em var(--back),
+              var(--m4) var(--m2) 0 0em var(--pale),
+              var(--m5) 0em 0 0em var(--pale),
+              var(--m3) var(--m3) 0 0em var(--pale),
+              0em var(--m5) 0 0em var(--pale),
+              var(--m2) var(--m4) 0 0em var(--pale),
+              var(--m1) 0em 0 0em var(--middle),
+              var(--m2) var(--m2) 0 0em var(--dark);
+            }
+            12.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--dark), var(--m4) var(--m2) 0 0em var(--back), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--middle);
+            }
+            25% {
+              box-shadow: 0em var(--m1) 0em 0em var(--middle), var(--m4) var(--m2) 0 0em var(--dark), var(--m5) 0em 0 0em var(--back), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            37.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--middle), var(--m5) 0em 0 0em var(--dark), var(--m3) var(--m3) 0 0em var(--back), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            50% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--middle), var(--m3) var(--m3) 0 0em var(--dark), 0em var(--m5) 0 0em var(--back), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            62.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--middle), 0em var(--m5) 0 0em var(--dark), var(--m2) var(--m4) 0 0em var(--back), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            75% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--middle), var(--m2) var(--m4) 0 0em var(--dark), var(--m1) 0em 0 0em var(--back), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            87.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--middle), var(--m1) 0em 0 0em var(--dark), var(--m2) var(--m2) 0 0em var(--back);
+            }
+          }
+          @keyframes load5 {
+            0%,
+            100% {
+              box-shadow: 0em var(--m1) 0em 0em var(--back), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--middle), var(--m2) var(--m2) 0 0em var(--dark);
+            }
+            12.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--dark), var(--m4) var(--m2) 0 0em var(--back), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--middle);
+            }
+            25% {
+              box-shadow: 0em var(--m1) 0em 0em var(--middle), var(--m4) var(--m2) 0 0em var(--dark), var(--m5) 0em 0 0em var(--back), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            37.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--middle), var(--m5) 0em 0 0em var(--dark), var(--m3) var(--m3) 0 0em var(--back), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            50% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--middle), var(--m3) var(--m3) 0 0em var(--dark), 0em var(--m5) 0 0em var(--back), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            62.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--middle), 0em var(--m5) 0 0em var(--dark), var(--m2) var(--m4) 0 0em var(--back), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            75% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--middle), var(--m2) var(--m4) 0 0em var(--dark), var(--m1) 0em 0 0em var(--back), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            87.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--middle), var(--m1) 0em 0 0em var(--dark), var(--m2) var(--m2) 0 0em var(--back);
+            }
+          }`,
+        ],
+        html:[  // イベント定義を複数回行わないようにするため、eventで定義
+          {attr:{class:'LoadingIcon'},children:[
+            {attr:{class:'loading5'},text:'loading...'}
+          ]}
+        ],
+      },
+    };
+    console.log(v.whois+' start.',parent,opt);
+    console.log(v.default);
+    try {
+
+      v.step = 1; // メンバの値セット、HTML/CSSの生成
+      v.rv = setupInstance(this,opt,v.default);
+      if( v.rv instanceof Error ) throw v.rv;
+
+      // 待機画面をセット
+      this.screen = this.parent.querySelector(':scope > .LoadingIcon');
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 待機画面を表示する */
+  show = () => {
+    this.screen.classList.add('act');
+  }
+
+  /** 待機画面を隠蔽する */
+  hide = () => {
+    this.screen.classList.remove('act');
+  }
+}</script>
 <script type="text/javascript">
 /**
  * @desc オブジェクトのプロパティを再帰的にマージ
@@ -2245,20 +3048,22 @@ function mergeDeeply(target, source, opts) {
   return result;
 }
 </script>
-<script type="text/javascript">/** constructor共通の初期処理として①オプション・既定値をメンバに設定、②wrapper(parent)要素取得、③スタイルシート作成を行う
+<script type="text/javascript">/** クラス(constructor)共通の初期処理を行う。
+ * 1. オプション・既定値をメンバに設定
+ * 1. オプション(Object)の第一階層にメンバ"css"が存在すると、新規styleを生成
+ * 1. 第一階層にメンバ"html"が存在すると、親要素内に指定のHTML要素を生成
+ * 1. 第一階層にメンバ"parent"が存在する場合、
+ *    - HTMLElement型ならそのまま`parent:(HTMLElement)}`として設定
+ *    - 文字列型ならCSSセレクタと解して`parent:{selector:(string),element:(HTMLElement)}`を生成
+ * 
  * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
  * @param {Object} opt - 起動時にオプションとして渡されたオブジェクト
  * @param {Object} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
- * @param {number} [depth=0] - 再起呼出時の階層。開始・終了メッセージ制御用なので指定不要
  * @returns {void}
  * 
  * ## 使用方法
  * 
  * 1. 主にclass内constructorで冒頭に使用することを想定。
- * 1. 第一階層にメンバ"css"が存在すると、新規styleを生成
- * 1. 第一階層にメンバ"parent"が存在する場合、
- *    - 文字列型ならCSSセレクタと解して`parent:{selector:(string),element:(HTMLElement)}`を生成
- *    - HTMLElement型ならそのまま`parent:(HTMLElement)}`として設定
  * 
  * ### 入力例
  * 
@@ -2342,8 +3147,8 @@ function mergeDeeply(target, source, opts) {
 const setupInstance = (dest,opt,def) => {
   const v = {whois:'setupInstance',rv:true,step:0,
     // 配列・オブジェクトの判定式
-    isObj: obj => obj && typeof obj === 'object' && !Array.isArray(obj) && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
-    isArr: obj => obj && typeof obj === 'object' && Array.isArray(obj),
+    isObj: obj => obj && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
+    isArr: obj => obj && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Array',
     // ディープコピー。値の設定ロジックは上記デシジョンテーブル参照
     deepcopy: (dest,opt) => {
       Object.keys(opt).forEach(x => {
@@ -2356,7 +3161,8 @@ const setupInstance = (dest,opt,def) => {
             v.deepcopy(dest[x],opt[x]);
           } else if( v.isArr(dest[x]) && v.isArr(opt[x]) ){
             // 両方配列 -> 配列をマージ
-            // Setで重複を排除しているが、配列・オブジェクトは重複(中身もマージされない)
+            // Setで配列要素の重複を排除しているが、
+            // 配列要素が配列型・オブジェクト型の場合は重複する(中身もマージされない)
             dest[x] = [...new Set([...dest[x],...opt[x]])];
           } else {
             // optの値でdestの値を置換
@@ -2365,17 +3171,35 @@ const setupInstance = (dest,opt,def) => {
         }
       });
     },
+    cssDefs: '',  // CSS定義文字列による指定の場合、その結合した文字列
   };
 
   console.log(v.whois+' start.',dest,opt,def);
   try {
 
     v.step = 1; // ディープコピー
+    console.log(dest,def);
     dest = Object.assign(dest,def); // 既定値をセット
+    console.log(dest,def);
     v.deepcopy(dest,opt);
+    console.log(dest,opt);
 
     v.step = 2; // parentの処理
+    console.log(dest)
     if( dest.hasOwnProperty('parent') ){
+      console.log(dest.parent)
+      if( typeof dest.parent === 'string' ){
+        // CSSセレクタだった場合
+        dest.parentSelector = dest.parent;
+        v.parent = dest.parent = document.querySelector(dest.parent);
+      } else if( dest.parent instanceof HTMLElement ){
+        // HTML要素だった場合
+        dest.parentSelector = null;
+        v.parent = dest.parent;
+      } else {
+        throw new Error(v.whois+': parent is not string or HTMLElement.');
+      }
+      /*
       if( typeof dest.parent === 'string' ){
         // CSSセレクタだった場合
         v.parent = dest.parent;
@@ -2383,22 +3207,61 @@ const setupInstance = (dest,opt,def) => {
           selector: v.parent,
           element : document.querySelector(v.parent),
         };
+        v.parent = dest.parent.element;
+      } else {
+        v.parent = dest.parent;
       }
+      */
     }
-    console.log(v.whois+' step.'+v.step+'\n',dest.parent);
 
     v.step = 3; // CSS定義に基づき新たなstyleを生成
     if( dest.hasOwnProperty('css') ){
-      v.style = document.createElement('style');
-      document.head.appendChild(v.style);
+      dest.style = document.createElement('style');
+      document.head.appendChild(dest.style);
       for( v.i=0 ; v.i<dest.css.length ; v.i++ ){
         v.x = dest.css[v.i];
-        for( v.y in v.x.prop ){
-          v.prop = dest.parent.selector + ' ' + v.x.sel
-            + ' { ' + v.y + ' : ' + v.x.prop[v.y] + '; }\n';
-          v.style.sheet.insertRule(v.prop,
-            v.style.sheet.cssRules.length,
-          );
+        if( v.isObj(v.x) ){
+          // {sel,prop}による指定の場合(将来的に廃止予定)
+          for( v.y in v.x.prop ){
+            v.prop = dest.parent.selector + ' ' + v.x.sel
+              + ' { ' + v.y + ' : ' + v.x.prop[v.y] + '; }\n';
+            dest.style.sheet.insertRule(v.prop,
+              dest.style.sheet.cssRules.length,
+            );
+          }
+        } else {
+          // CSS定義文字列による指定の場合
+          v.cssDefs = v.cssDefs + v.x;
+        }
+      }
+      if( v.cssDefs.length > 0 ){
+        dest.style.innerText = v.cssDefs.replaceAll(/\n/g,'').replaceAll(/\s+/g,' ');
+      }
+    }
+
+    v.step = 4; // HTML定義に基づき親要素内のHTML要素を生成
+    if( dest.hasOwnProperty('html') ){
+      if( v.isObj(dest.html) ){
+        v.step = 4.1; // オブジェクトならcreateElementの引数
+        v.html = createElement(dest.html);
+        if( v.html instanceof Error ) throw v.html;
+        v.parent.appendChild(v.html);
+      } else {
+        v.step = 4.2;
+        if( v.isArr(dest.html) ){
+          v.step = 4.21;
+          if( typeof dest.html[0] === 'string' ){
+            v.step = 4.211;
+            // 配列の最初の要素が文字列なら結合してinnerHTML
+            v.parent.innerHTML = dest.html.join('');
+          } else {
+            v.step = 4.212;
+            // オブジェクトならcreateElementして親要素に追加
+            dest.html.forEach(x => v.parent.appendChild(createElement(x)));
+          }
+        } else {
+          v.step = 4.22;  // 文字列ならinnerHTMLそのもの
+          v.parent.innerHTML = dest.html;
         }
       }
     }
@@ -2411,569 +3274,137 @@ const setupInstance = (dest,opt,def) => {
   }
 }</script>
 <script type="text/javascript">/**
- * @classdesc タブ切り替えのHTMLページを作成する
+ * @classdesc クラスの概要説明
  */
 class Reception {
   /**
    * @constructor
    * @param {Auth} auth - 認証局他のAuthインスタンス
-   * @param {Object} area - 表示領域に関する定義
-   * @param {string} area.selector - CSSセレクタ
-   * @param {Object} boot - スキャナ起動のトリガーとなる要素に関する定義
-   * @param {string} boot.selector - CSSセレクタ
-   * @param {Object} loading - 待機画面
-   * @param {string} loading.selector - CSSセレクタ
-   * @returns {void}
+   * @param {string|HTMLElement} parent - 親要素(wrapper)またはそのCSSセレクタ
+   * @returns {true|Error}
    */
-  constructor(opt){
-    const v = {whois:'Reception.constructor',step:'0',rv:null};
-    console.log(v.whois+' start.');
-    try {
-
-      v.step = '1'; // オプション未定義項目の既定値をプロパティにセット
-      this.#setProperties(this,null,opt);
-      this.area.element = document.querySelector(this.area.selector);
-      this.boot.element = document.querySelector(this.boot.selector);
-      this.loading.element = document.querySelector(this.loading.selector);
-      console.log('step.'+v.step+' : ',this.area,this.boot,this.loading);
-
-      v.step = '2'; // 入力・検索・編集画面の生成
-      this.#setWindows();
-      console.log('step.'+v.step+' : ',this.area.element);
-
-      v.step = '3'; // スキャナ起動イベントの定義(「受付」タグのクリック)
-      this.boot.element.addEventListener('click',this.bootScanner);
-
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-    } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
-      return e;        
-    }
-  }
-
-  /** 設定先のオブジェクトに起動時パラメータを優先して既定値を設定する
-   * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
-   * @param {def} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
-   * @param {AuthOpt} opt - 起動時にオプションとして渡されたオブジェクト
-   * @returns {void}
-   */
-  #setProperties(dest,def,opt){
-    const v = {whois:'Reception.#setProperties',rv:true,def:{
-      auth: null, // {Auth} 認証局他のAuthインスタンス
-      area:{  // 表示領域となる要素
-        selector: '',     // {string} CSSセレクタ
-        element : null,   // {HTMLElement} 要素本体
-        design  : {},     // {Object} createElementに渡す定義
-      },
-      boot:{  // 受付タグ等、スキャナ起動のトリガーとなる要素
-        selector: '',     // {string} CSSセレクタ
-        element : null,   // {HTMLElement} 要素本体
-      },
-      loading:{  // 待機画面
-        selector: '',     // {string} CSSセレクタ
-        element : null,   // {HTMLElement} 要素本体
-      },
-      entry: {  // 入力画面(スキャナ＋氏名)
-        element: null,   // {HTMLElement} 要素本体
-      },
-      list: {   // 複数候補選択画面
-        element: null,   // {HTMLElement} 要素本体
-        table: null,     // {HTMLElement} 選択画面のテーブル部
-        candidates: [],  // {Object[]} 候補となった参加者情報の配列
-      },
-      edit: {   // 編集画面(ダイアログ)
-        element: null,   // {HTMLElement} 要素本体
-        table: null,     // {HTMLElement} 編集画面のテーブル部
-        details: null,   // {HTMLElement} 編集画面の詳細情報部
-        css: [
-          {sel:'dialog.Reception',prop:{
-            'margin':'auto',
-            'padding': '1rem',
-          }},
-          {sel:'dialog.Reception::backdrop',prop:{
-            'background-color': 'rgba(127,127,127,0.8)',
-          }},
-          {sel:'dialog.Reception [name="table"]',prop:{
-            'display': 'grid',
-            'grid-template-columns': '2fr 10fr 8fr 6fr',
-            'grid-gap': '0.2rem',
-          }},
-          {sel:'dialog.Reception input[type="button"]',prop:{
-            'margin': '0.5rem 1rem',
-            'font-size': '1.5rem',
-            'padding': '0.2rem 1rem',
-          }},
-          {sel:'dialog.Reception ruby rt',prop:{
-            'font-size': '0.6rem',
-          }},
-          {sel:'dialog.Reception [name="details"]',prop:{
-            'display': 'grid',
-            'grid-template-columns': '1fr 3fr',
-            'grid-gap': '0.2rem',
-            'overflow-wrap': 'anywhere',
-          }},
-          {sel:'dialog.Reception sub',prop:{
-            'font-size': '0.7rem',
-          }},
-          {sel:'dialog.Reception [name="details"] [name="memo"]',prop:{
-            'width': '95%',
-            'height': '5rem',
-          }},
-          // 複数候補者一覧(list)用
-          {sel:'dialog.Reception[name="list"] [name="table"]',prop:{
-            'display': 'grid',
-            'grid-template-columns': '8rem 1fr',
-            'grid-gap': '0.2rem',
-          }},
-        ],    
-      },
-    }};
-
-    console.log(v.whois+' start.');
-    try {
-      if( def !== null ){ // 2回目以降の呼出(再起呼出)
-        // 再起呼出の場合、呼出元から渡された定義Objを使用
-        v.def = def;
-      }
-
-      for( let key in v.def ){
-        if( whichType(v.def[key]) !== 'Object' ){
-          dest[key] = opt[key] || v.def[key]; // 配列はマージしない
-        } else {
-          if( !dest.hasOwnProperty(key) ) dest[key] = {};
-          this.#setProperties(dest[key],v.def[key],opt[key]||{});
-        }
-      }
-
-      if( def === null ){ // 初回呼出(非再帰)
-        // 親画面のHTML要素を保存
-        this.parentWindow = document.querySelector(this.parentSelector);
-      }
-
-      //console.log(v.whois+' normal end.');
-      return v.rv;
-    } catch(e){
-      v.msg = v.whois + ' abnormal end(step.'+v.step+').' + e.message;
-      console.error(v.msg);
-      return e;
-    }
-  }
-
-  /** Reception関係画面をセットする
-   * @param {void} - 無し
-   * @returns {void} 無し
-   */
-  #setWindows(){
-    const v = {whois:'Reception.#setWindows',rv:null,step:'0'};
-    console.log(v.whois+' start.');
-    try {
-  
-      v.step = 1; // dialog用のCSS定義を追加(getPassCodeと共通)
-      v.style = createElement('style');
-      document.head.appendChild(v.style);
-      for( v.i=0 ; v.i<this.edit.css.length ; v.i++ ){
-        v.x = this.edit.css[v.i];
-        for( v.y in v.x.prop ){
-          v.prop = v.x.sel+' { '+v.y+' : '+v.x.prop[v.y]+'; }\n';
-          console.log(v.prop);
-          v.style.sheet.insertRule(v.prop,
-            v.style.sheet.cssRules.length,
-          );
-        }
-      }
-
-      v.step = 2; // 検索キー文字列入力画面
-      this.entry.element = createElement({
-        attr:{name:'entry'},children:[
-          {attr:{class:'webScanner'}},  // スキャン画像表示領域
-          {tag:'input',attr:{type:'text'}},
-          {
-            tag:'input',
-            attr:{type:'button',value:'検索'},
-            event:{click: this.main},
-          },
+  constructor(auth,parent,opt={}){
+    const v = {whois:'Reception.constructor',rv:true,step:0,
+      default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
+        auth: auth, // 認証局他のAuthインスタンス
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
+        // CSS/HTML定義
+        css:[
+          /* Reception共通部分 */ ``,
         ],
-      });
-      this.area.element.appendChild(this.entry.element);
-
-      v.step = 3; // 一覧用ダイアログを定義
-      this.list.element = createElement({
-        tag:'dialog',
-        attr:{class:'Reception',name:'list'},
-        html: `<p>複数の候補が見つかりました。該当者名をクリックしてください。</p>
-        <div name="table">
-          <div class="th">申込者名</div>
-          <div class="th">e-mail</div>
-        </div>`,
-      });
-      document.querySelector('body').prepend(this.list.element);
-      this.list.table = this.list.element.querySelector('[name="table"]');
-
-      v.step = 4; // 編集用ダイアログを定義
-      this.edit.element = createElement({
-        tag:'dialog',
-        attr:{class:'Reception',name:'edit'},
-        html: `<div name="table">
-          <div class="th">No</div>
-          <div class="th">氏名</div>
-          <div class="th">所属</div>
-          <div class="th">参加費</div>
-        </div>
-        <input type="button" name="cancel" value="キャンセル" />
-        <input type="button" name="submit" value="送信" />
-        <div name="details">
-          <div class="th">申込</div><div class="td">
-            No.<span name="entryNo"></span>
-            &emsp;
-            <ruby>
-              <span name="申込者氏名"></span>
-              <rt name="申込者カナ"></rt>
-            </ruby>
-            &emsp;(<span name="申込者の参加"></span>)
-          </div>
-          <div class="th">宿泊、テント</div><div class="td" name="宿泊、テント"></div>
-          <div class="th">引取者</div><div class="td" name="引取者氏名"></div>
-          <div class="th">e-mail</div><div class="td" name="メールアドレス"></div>
-          <div class="th">緊急連絡先</div><div class="td" name="緊急連絡先"></div>
-          <div class="th">ボランティア</div><div class="td" name="ボランティア募集"></div>
-          <div class="th">備考</div><div class="td" name="備考"></div>
-          <div class="th">キャンセル</div><div class="td" name="キャンセル"></div>
-          <div class="th">申込URL</div><div class="td" name="editURL"></div>
-          <div class="th">メモ<br><sub>※スタッフ記入欄</sub></div>
-          <div class="td"><textarea name="memo"></textarea></div>
-        </div>`,
-      });
-      document.querySelector('body').prepend(this.edit.element);
-      this.edit.table = this.edit.element.querySelector('[name="table"]');
-      this.edit.details = this.edit.element.querySelector('[name="details"]');
-  
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-  
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+')\n',e,v);
-      return e;
-    }
-  }
-
-  /** search, list, editを順次呼び出す(全体制御)
-   * @param {string|Event} arg - 受付番号(スキャン結果文字列) or clickイベント
-   * @returns {void}
-   */
-  main = async (arg) => {
-    const v = {whois:'Reception.main',step:'0',rv:null};
+        html:[  // イベント定義を複数回行わないようにするため、eventで定義
+          {attr:{class:'Reception',name:'LoadingIcon'}},
+          {attr:{class:'Reception',name:'WebScanner'}},
+          {attr:{class:'Reception',name:'itemSelector'}},
+          {attr:{class:'Reception',name:'drawPassport'}},
+        ],
+      },
+    };
     console.log(v.whois+' start.');
     try {
 
-      v.step = '1'; // スキャン結果でない場合、入力文字列を取得
-      v.keyword = whichType(arg) === 'String' ? arg
-      : arg.target.parentElement.querySelector('input[type="text"]').value;
-      console.log('step.'+v.step+': keyword='+v.keyword);
+      v.step = 1; // メンバの値セット、HTML/CSSの生成
+      v.rv = setupInstance(this,opt,v.default);
+      if( v.rv instanceof Error ) throw v.rv;
 
-      // 認証局経由で管理局に該当者情報を問合せ
-      v.rv = await this.#search(v.keyword);
-      console.log(v.rv);
-      console.log(JSON.stringify(v.rv.result));
+      // 待機画面の準備
+      this.LoadingIcon = new LoadingIcon(
+        this.parent.querySelector('[name="LoadingIcon"]')
+      );
 
-      if( v.rv.isErr || v.rv.result.length === 0 ){
-        // 検索画面でメッセージをポップアップ
-        alert( v.rv.message );
-      } else {
-        v.target = v.rv.result[0];
-        if( v.rv.result.length > 1 ){
-          console.log(JSON.stringify(v.rv));
-          // 該当者一覧画面に遷移、編集対象者を特定
-          this.list.candidates = v.rv.result; // 候補者リストに格納
-          v.target = await this.#list(v.rv.result);
-        }
-        // 編集画面を表示し、変更箇所を取得
-        v.data = await this.#edit(v.target);
-        // auth.fetchで変更箇所を管理局に送信
-        if( v.data !== null ){
-          v.rv = await this.#update(v.data);
-          // 編集結果のメッセージを表示
-          alert(v.rv.message);
-        }
-      }
-      // 検索画面を再表示(bootScanner)
-      this.bootScanner();
+      // スキャナの準備
+      this.WebScanner = new WebScanner(
+        this.parent.querySelector('[name="WebScanner"]',{
+          showVideo:true, // debug: canvasだけでなくvideoも表示
+        })
+      );
+
+      // 候補者選択画面の準備
+      this.itemSelector = new itemSelector(
+        this.parent.querySelector('[name="itemSelector"]')
+      );
+
+      // 参加費入力画面の準備
+      this.drawPassport = new drawPassport(
+        this.parent.querySelector('[name="drawPassport"]')
+      );
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-      return e;        
-    }
-  }
-
-  /** スキャナを起動、読み込んだQRデータをsearchに渡す
-   * @param {void}
-   * @returns 
-   */
-  bootScanner = async () => {
-    const v = {whois:'Reception.bootScanner',step:'0',rv:null};
-    console.log(v.whois+' start.');
-    try {
-
-      const sel = this.area.selector+' [name="entry"] .webScanner';
-      document.querySelector(sel).innerHTML = '';
-      const code = await scanQR(sel);
-      if( code !== null ){
-        v.rv = this.main(code); // 後続のmainにスキャン文字列を渡す
-        // 文字入力された⇒スキャン結果無しでタイムアウト(code=null)の場合
-        // mainを呼び出さずに終了する
-      }
-
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-    } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
-      return e;        
-    }
-  }
-
-  /** 認証局経由で管理局に該当者情報を問合せ
-   * @param {string} keyword - 参加者の検索キー
-   * @returns {Object[]} 検索キーに該当する参加者情報の配列
-   */
-  #search = async (keyword) => {
-    const v = {whois:'Reception.#search',step:'0',rv:null};
-    console.log(v.whois+' start.');
-    try {
-
-      // entry画面を閉じてloading表示
-      this.loading.element.style.display = 'block';
-
-      // Auth.fetchで認証局に問い合わせ
-      console.log(this.auth);
-      v.rv = await this.auth.fetch('recept1A',keyword,3);
-
-      // loading画面を閉じる
-      this.loading.element.style.display = 'none';
-
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-    } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
-      return e;        
-    }
-  }
-
-  /** 該当者リストの表示、対象者の選択
-   * @param {Object[]} data - 検索キーに該当する参加者情報の配列
-   * @returns {Object} 選択された対象者情報
-   */
-  #list(data){
-    const v = {whois:'Reception.#list',step:'0',rv:null};
-    console.log(v.whois+' start.');
-    try {
-
-      v.step = 1; // 前回候補者一覧の削除
-      this.list.table.querySelectorAll('div.td').forEach(x => x.remove());
-
-      v.step = 2; // 候補者の表示
-      data.forEach(d => {
-        v.step = 2.1; // 氏名＋カナ
-        this.list.table.appendChild(createElement({
-          attr:{class:'td'},
-          children:[{
-            tag:'a',  // 氏名＋カナはaタグで囲む
-            attr:{name:d.entryNo}, // 受付番号をname属性で持たせる
-            children:[{
-              tag: 'ruby',
-              html: d['申込者氏名'], 
-              children: [{
-                tag: 'rt',
-                text: d['申込者カナ'],
-              }],
-            }],
-          }],
-        }));
-
-        v.step = 2.2; // e-mail
-        this.list.table.appendChild(createElement({
-          attr:{class:'td'},
-          text: d['メールアドレス'],
-        }));
-      });
-
-      v.step = 3.1; // 一覧用ダイアログの表示
-      this.list.element.showModal();
-
-      v.step = 3.2; // 戻り値を設定
-      return new Promise(resolve => {
-        document.querySelectorAll('dialog.Reception[name="list"] a').forEach(x => {
-          // 一覧表の氏名(aタグ)全てにclickイベントリスナを付与
-          x.addEventListener('click',(element) => {
-            this.list.element.close();  // ダイアログを閉じる
-            // aタグから受付番号を取得
-            let entryNo = element.target.parentElement.getAttribute('name');
-            for( let i=0 ; i<this.list.candidates.length ; i++ ){
-              // 事前に保存しておいた候補者配列から該当者を選択して返す
-              if( this.list.candidates[i].entryNo === entryNo ){
-                console.log('Reception.#list normal end.',entryNo);
-                resolve(this.list.candidates[i]);
-              }
-            }
-          });
-        });
-      });
-
-    } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
-      return e;        
-    }
-  }
-
-  /** 対象となる参加者情報の表示と編集、結果を管理局に反映
-   * @param {Object} participant - 対象者情報
-   * @returns {Object} 管理局からの戻り値
-   */
-  #edit = async (data) => {
-    const v = {whois:'Reception.#edit',rv:null,step:'0'};
-    console.log(v.whois+' start.\n'+JSON.stringify(data));
-    try {
-  
-      v.step = 1; // データクレンジング
-      data['申込者所属'] = '申込者';  // 未定義なので追加しておく
-      for( v.i=0 ; v.i<6 ; v.i++ ){
-        if( data['fee0'+v.i].length === 0 ){
-          data['fee0'+v.i] = (data['参加者0'+v.i+'所属'] === '未就学児') ? '無し' : '未収';
-        }
-      }
-  
-      v.step = 2; // 参加者一覧の表示
-      // 前回参加者一覧の削除
-      this.edit.table.querySelectorAll('div.td').forEach(x => x.remove());
-      for( v.i=0 ; v.i<6 ; v.i++ ){
-        v.step = 2.1; // 項目名の接頭辞
-        v.pre = v.i === 0 ? '申込者' : ('参加者0' + v.i);
-  
-        v.step = 2.2; // 申込者が不参加、または氏名・所属とも未登録の参加者は表示しない
-        if( v.i === 0 && data['申込者の参加'] === '不参加'
-        || data[v.pre+'氏名'].length === 0 && data[v.pre+'所属'].length === 0 ){
-          continue;
-        }
-  
-        v.step = 2.3; // No
-        this.edit.table.appendChild(createElement({attr:{class:'td'},text: ('0'+v.i)}));
-  
-        v.step = 2.4; // 氏名＋カナ
-        this.edit.table.appendChild(createElement({attr:{class:'td'},children:[{
-          tag: 'ruby',
-          html: data[v.pre+'氏名'], 
-          children: [{
-            tag: 'rt',
-            text: data[v.pre+'カナ']
-          }]
-        }]}));
-  
-        v.step = 2.5; // 所属
-        this.edit.table.appendChild(createElement({attr:{class:'td'},text: data[v.pre+'所属']}));
-  
-        v.step = 2.6; // 参加費
-        v.options = [];
-        ['無し','未収','既収'].forEach(x => {
-          v.options.push({
-            tag:'option',
-            value:x,
-            text:x,
-            logical:{selected:(data['fee0'+v.i] === x)},
-          });
-        });
-        this.edit.table.appendChild(createElement({attr:{class:'td'},children:[{
-          tag: 'select',
-          attr: {class:'fee',name:'fee0'+v.i},
-          children:v.options,
-        }]}));
-      }
-  
-      v.step = 3.1; // 詳細情報のセット
-      ['メールアドレス', '申込者氏名', '申込者カナ', '申込者の参加',
-      '宿泊、テント', '引取者氏名', '緊急連絡先',
-      'ボランティア募集', '備考', 'キャンセル',
-      'entryNo','memo'].forEach(x => {
-        console.log(x,data[x]);
-        let e = this.edit.details.querySelector('[name="'+x+'"]');
-        console.log(e);
-        e.innerText = data[x];
-      });
-      v.step = 3.2; // 申込フォーム修正URL(QRコード)
-      v.qrDiv = this.edit.details.querySelector('[name="editURL"]');
-      v.qrDiv.innerHTML = '';
-      v.qr = new QRCode(v.qrDiv,{
-        text: data.editURL,
-        width: 300, height: 300,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-      });
-      
-  
-      v.step = 4.1; // 編集用ダイアログの表示
-      this.edit.element.showModal();
-  
-      v.step = 4.2; // 戻り値を設定
-      return new Promise(resolve => {
-        v.step = 5.1; // 「キャンセル」クリック時はnullを返す
-        document.querySelector('dialog[name="edit"] input[name="cancel"]')
-        .addEventListener('click',() => {
-          this.edit.element.close();
-          console.log('Reception.edit normal end.');
-          resolve(null);
-        });
-        v.step = 5.2; // 「送信」クリック時に値を返すよう定義
-        document.querySelector('dialog[name="edit"] input[name="submit"]')
-        .addEventListener('click',() => {
-          this.edit.element.close();
-          const rv = {};
-          // 受付番号
-          rv.entryNo = this.edit.element.querySelector('[name="entryNo"]').innerText;
-          // 参加費
-          this.edit.element.querySelectorAll('select.fee').forEach(x => {
-            rv[x.getAttribute('name')] = x.value;
-          });
-          // スタッフメモ欄
-          rv.memo = this.edit.element.querySelector('[name="memo"]').value;
-          console.log('Reception.edit normal end.',rv);
-          resolve(rv);
-        });
-      });
-  
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+')\n',e,v);
       return e;
     }
   }
 
-  /** 認証局経由で管理局の参加者情報を更新
-   * @param {Object} data - 参加者情報
-   * @returns {Object} 更新結果
-   */
-  #update = async (data) => {
-    const v = {whois:'Reception.#update',step:'0',rv:null};
+  main = async () => {
+    const v = {whois:'Reception.main',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
 
-      // loading表示
-      this.loading.element.style.display = 'block';
+      v.step = 1; // QRコードをスキャン or 氏名(一部)の入力
+      v.rv = await this.WebScanner.scanQR();
+      if( v.rv instanceof Error ) throw v.rv;
+      //if( v.rv === null ) 読込失敗orタイムアウト
 
-      // Auth.fetchで認証局に問い合わせ
-      //console.log(this.auth);
-      v.rv = await this.auth.fetch('recept2A',data,3);
+      v.step = 2; // 入力された検索キーで認証局経由・管理局に該当者情報を問合せ
+      this.LoadingIcon.show();
+      v.rv = await this.auth.fetch('recept1A',v.keyword,3);
+      if( v.rv instanceof Error ) throw v.rv;
+      this.LoadingIcon.hide();
 
-      // loading画面を閉じる
-      this.loading.element.style.display = 'none';
+      if( v.rv.isErr || v.rv.result.length === 0 ){
+        v.step = 3.1; // 検索画面でメッセージをポップアップ
+        alert( v.rv.message );
+      } else {
+        v.step = 3.2; // 検索成功(該当者あり)
+        v.target = v.rv.result[0];
+        if( v.rv.result.length > 1 ){
+          v.step = 3.21; // 該当者が複数
+          // ⇒ 該当者一覧画面に遷移、編集対象者を特定
+          console.log(JSON.stringify(v.rv.result));
+          v.target = await this.itemSelector(v.rv.result);
+          if( v.target instanceof Error ) throw v.target;
+        }
+        v.step = 3.3; // 編集画面を表示し、変更箇所を取得
+        v.data = await this.drawPassport.edit(v.target);
+        if( v.data instanceof Error ) throw v.data;
+        // auth.fetchで変更箇所を管理局に送信
+        if( v.data !== null ){
+          this.LoadingIcon.show();
+          v.rv = await this.auth.fetch('recept2A',v.data,3);
+          this.LoadingIcon.hide();
+          // 編集結果のメッセージを表示
+          alert(v.rv.message);
+        }
+      }
+      // 検索画面を再表示(bootScanner)
+      //this.bootScanner();
 
-      console.log(v.whois+' normal end.',v.rv);
+      // 終了処理
+      console.log(v.whois+' normal end.');
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end.',e,v);
-      return e;        
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      this.LoadingIcon.hide();
+      alert(e.message);
+      return e;
     }
   }
 
+  template = () => {
+    const v = {whois:'Reception.template',rv:true,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      console.log(v.whois+' normal end.');
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
 }</script>
 <style type="text/css">/* コアCSS */
 .right {text-align: right;}
@@ -3595,10 +4026,8 @@ class TimeTable {
 </script>
 <script type="text/javascript">/**
  * @classdesc デバイスのカメラで文書/コードのスキャンを行う
- */
-
-/**
- * @classdesc 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャン
+ * 
+ * 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャンする。
  * 
  * **残課題**
  * 
@@ -3617,21 +4046,17 @@ class TimeTable {
 class WebScanner {
   /**
    * @constructor
-   * @param {string} [parent='body'] - 親要素のCSSセレクタ
+   * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
    * @param {Object} [opt={}] - オプション
-   * 
-   * - [Promiseでsleep機能を作る](https://www.sejuku.net/blog/24629#index_id5)
+   * @returns {true|Error}
    */
-  constructor(parent='body',opt={}){
-    const v = {whois:'WebScanner.constructor',rv:null,step:0};
-    console.log(v.whois+' start.');
-    try {
-
-      v.step = 1; // 引数(opt)・既定値を基にメンバの値を設定
-      if( !opt.hasOwnProperty('parent') ) opt.parent = parent;
-      v.rv = setupInstance(this,opt,{
-        sleep: (sec) =>  // 指定時間待機
-          {return new Promise(resolve => setTimeout(resolve,sec))},
+  constructor(parent,opt={}){
+    const v = {whois:'WebScanner.constructor',rv:true,step:0,
+      default:{
+        // === メンバとして持つHTMLElementの定義 ==============
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
+        style: null,  // {HTMLStyleElement} CSS定義
         wrapper: null,  // {HTMLElement} - 親直下のラッパー
         video: null,  // {HTMLElement} - videoで撮影している画像領域
         canvas: null, // {HTMLElement} - 撮影画像を描画する領域
@@ -3640,104 +4065,67 @@ class WebScanner {
         retake: null,  // {HTMLElement} - 再撮影ボタン
         shutter: null, // {HTMLElement} - シャッターボタン
         adopt: null,  // {HTMLElement} - 撮影OK、次へボタン
-        css: [{
-          sel: '.WebScanner',
-          prop: {
-            'display': 'none',
-          }
-        },{
-          sel: '.WebScanner.act',
-          prop: {
-            '--videoSize': '300px',
-            '--buttonSize': '100px',
-            'display': 'grid',
-            'grid-template-rows': 'var(--videoSize) var(--videoSize) var(--buttonSize)',
-            'row-gap': '1rem',
-            'justify-items': 'center',
-            'align-items': 'center',
-          }
-        },{
-          sel: '.WebScanner video',
-          prop: {
-            'display': 'none',
-          }
-        },{
-          sel: '.WebScanner video.act',
-          prop: {
-            'display': 'block',
-            'width': 'var(--videoSize)',
-            'height': 'var(--videoSize)',
-          }
-        },{
-          sel: '.WebScanner canvas',
-          prop: {
-            'display': 'none',
-          }
-        },{
-          sel: '.WebScanner canvas.act',
-          prop: {
-            'display': 'block',
-          }
-        },{
-          sel: '.WebScanner .switches',
-          prop: {
-            'display': 'none',
-          }
-        },{
-          sel: '.WebScanner .switches.act',
-          prop: {
-            'width': '80%',
-            'display': 'grid',
-            'grid-template-columns': 'repeat(3, 1fr)',
-            'column-gap': 'calc((100% - var(--buttonSize) * 3) / 2)',
-          }
-        },{
-          sel: '.WebScanner .switches button',
-          prop: {
-            'width': 'var(--buttonSize)',
-            'height': 'var(--buttonSize)',
-            'text-align': 'center',
-            'vertical-align': 'middle',
-            'font-size': 'calc(var(--buttonSize) * 0.7)',
-          }
-        }],
+
         // === scanQR専用パラメータ ==========================
-        // 以下はscanQRの起動時引数として指定されたらそちらを優先する
-        // ================================================
         constraints:{ // video.getUserMediaで指定するオプション
           audio: false,
           video: {
             facingMode: 'environment',
-            width: {min: 500},
-            height: {min: 500},
+            width: {min: 300},
+            height: {min: 300},
           },
         },
         showVideo: false, // scanQR実行時、video領域を表示するならtrue
-        showCanvas: true, // scanQR実行時、canvas領域を表示するならtrue
         closeFinder: true, // scanQR実行後、video/canvas領域を残すならfalse
         RegExp: /.+/, // scanQR実行時、読込結果を評価する正規表現
         maxWaiting: 90000, // 最大待機時間。単位：ミリ秒
         interval: 300, // 動画撮像間隔。ミリ秒
         size: null,  // 撮像領域(ファインダ)のサイズ。px。nullなら親要素の大きさから判断
-        minSize : 500, // 最小撮像サイズ。px
-      });
+        minSize : 300, // 最小撮像サイズ。px
+
+        // === CSS/HTML定義 ================================
+        css:[
+          /* WebScanner共通部分(wrapper) */ `
+          .WebScanner {
+            display: none;
+          }
+          .WebScanner.act {
+            width: 100%;
+            display: grid;
+            place-items: center;
+          }`,
+          /* video */`
+          .WebScanner .video {
+            display: none;
+          }
+          .WebScanner .video.act {
+            display: block;
+          }`,
+        ],
+        html:[  // イベント定義を複数回行わないようにするため、eventで定義
+          {attr:{class:'WebScanner'},children:[
+            {attr:{class:'video'},children:[
+              {tag:'video'}
+            ]},
+            {tag:'canvas'},
+          ]},
+        ],
+      },
+    };
+    console.log(v.whois+' start.',opt);
+    try {
+
+      v.step = 1; // メンバの値セット、HTML/CSSの生成
+      v.rv = setupInstance(this,opt,v.default);
       if( v.rv instanceof Error ) throw v.rv;
 
-      v.step = 2; // HTML要素の作成
-      this.wrapper = createElement({attr:{class:'WebScanner'}});
-      this.parent.element.appendChild(this.wrapper);
-      ['video','canvas'].forEach(x => {
-        this[x] = createElement({tag:x});
-        this.wrapper.appendChild(this[x]);
-      });
-      ['switches'].forEach(x => {
-        this[x] = createElement({attr:{class:x}});
-        this.wrapper.appendChild(this[x]);
-      });
-      ['retake','shutter','adopt'].forEach(x => {
-        this[x] = createElement({tab:'button',attr:{name:x}});
-        this.switches.appendChild(this[x]);
-      });
+      v.step = 2; // 各領域をメンバとして保存
+      this.wrapper = this.parent.querySelector('.WebScanner');
+      this.video = this.parent.querySelector('video');
+      this.canvas = this.parent.querySelector('canvas');
+      this.retake = this.parent.querySelector('button[name="retake"]');
+      this.shutter = this.parent.querySelector('button[name="shutter"]');
+      this.adopt = this.parent.querySelector('button[name="adopt"]');
 
       v.step = 3; // デバイスがサポートされているか確認
       if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
@@ -3751,37 +4139,30 @@ class WebScanner {
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
       v.step = 5; // 撮像(video)領域のサイズ変更
-      // 親要素の高さを最大に変更
-      this.parent.element.style.width
-      = this.parent.element.style.height = '100%';
-      // 撮像領域を親要素の幅・高さ、いずれか小さい方の正方形に設定
+      // wrapper縦横の小さい方をthis.sizeに格納
       if( this.size === null ){
-        v.pw = this.parent.element.clientWidth;
-        v.ph = this.parent.element.clientHeight;
-        if( v.pw < v.ph ){
-          this.size = v.pw < this.minSize ? this.minSize : v.pw;
-          this.parent.element.style.height = this.size + 'px';
-        } else {
-          this.size = v.ph < this.minSize ? this.minSize : v.ph;
-          this.parent.element.style.width = this.size + 'px';
-        }
+        v.w = this.parent.clientWidth;
+        this.size = v.w < this.minSize ? this.minSize : v.w;
       }
-      this.wrapper.style.setProperty('--videoSize',this.size+'px');
+      console.log("w=%s, size=%s",v.w,this.size);
 
       // 以下の手順はawaitが必要なので、scanQRで実行
 
-      console.log(v.whois+' normal end.\n',this);
+      console.log(v.whois+' normal end.',v.rv);
       return v.rv;
-      
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
     }
   }
 
+  /** 指定時間待機 */
+  sleep = (sec) =>
+    {return new Promise(resolve => setTimeout(resolve,sec))};
+
   /** QRコードをスキャン
    * @param {Object} opt - scanQR専用パラメータ。詳細はconstructor参照
-   * @returns {string} スキャンしたQRコードの文字列
+   * @returns {string|null} スキャンしたQRコードの文字列。読込失敗ならnull
    * 
    * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
    */
@@ -3794,6 +4175,8 @@ class WebScanner {
       Object.keys(opt).forEach(x => this[x] = opt[x]);
 
       v.step = 2; // カメラの準備(videoタグに表示)
+      this.constraints.video.width =
+      this.constraints.video.height = this.size;
       this.video.srcObject = await navigator.mediaDevices
       .getUserMedia(this.constraints);
       this.video.onloadedmetadata = () => {
@@ -3803,36 +4186,22 @@ class WebScanner {
       v.step = 3; // video,canvasの表示
       this.wrapper.classList.add('act');
       if( this.showVideo ){
-        this.video.classList.add('act');
-      } else {
-        this.video.classList.remove('act');
-      };
-      if( this.showCanvas ){
-        this.canvas.classList.add('act');
-      } else {
-        this.canvas.classList.remove('act');
-      };
+        this.wrapper.querySelector('.video').classList.add('act');
+      }
+      this.canvas.width  = v.cw = 
+      this.canvas.height = v.ch = this.size;
 
       v.step = 4; // 定期的にスキャン実行
       v.cnt = 0;
       do {
-        await this.sleep(this.interval);
         if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
-
-          v.step = 4.1; // canvasのサイズを撮像サイズに合わせて変更
-          v.vw = this.video.videoWidth;
-          v.vh = this.video.videoHeight;
-          this.canvas.width = v.cw
-          = this.size * (v.vw > v.vh ? 1 : (v.vw / v.vh));
-          this.canvas.height = v.ch
-          = this.size * (v.vh > v.vw ? 1 : (v.vh / v.vw));
-  
-          v.step = 4.2; // キャンバスへの描画
+          
+          v.step = 4.1; // キャンバスへの描画
           this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
           v.imageData = this.context.getImageData(0, 0, v.cw, v.ch);
           v.code = jsQR(v.imageData.data, v.imageData.width, v.imageData.height);
           if ( v.code ) {
-            v.step = 4.3;
+            v.step = 4.2;
             console.log(v.code);
             // スキャン結果の判定
             if( typeof v.code.data === 'string' && v.code.data.match(this.RegExp) ){
@@ -3842,6 +4211,7 @@ class WebScanner {
         }
         console.log(v.cnt);
         v.cnt += this.interval;
+        await this.sleep(this.interval);
       } while( v.rv === null && v.cnt < this.maxWaiting );
 
       v.step = 5; // 終了処理
@@ -3869,8 +4239,7 @@ class WebScanner {
     });
     if( this.closeFinder ){
       this.wrapper.classList.remove('act');
-      this.video.classList.remove('act');
-      this.canvas.classList.remove('act');
+      this.wrapper.querySelector('.video').classList.remove('act');
     }
   }
 }</script>
@@ -3929,234 +4298,7 @@ function whichType(arg,is){
 }
 </script>
 
-<script type="text/javascript">/** camp2023でパスポート画面を作成する
- * @param {string} parent - 親要素のCSSセレクタ
- * @param {Object} config - Authから返された参加者情報
- * @returns {void}
- */
-const drawPassport = (parent,config) => {
-  const v = {whois:'drawPassport',step:0,rv:null,css:[
-    /*
-    { // 親要素
-      sel : '',
-      prop: {
-        'width' : 'calc(100% - 2rem)',
-        'height': '100%',
-      }
-    },
-    */
-    { // QRコード＋受付番号＋申込者名
-      sel : '[name="entry"]',
-      prop: {
-        'width':'100%',
-        'display'    : 'grid',
-        'grid-template-columns': '300px 1fr',
-        'grid-gap'   : '1rem',
-      }
-    },
-    { // QRコード
-      sel: '[name="qrcode"]',
-      prop: {
-        'grid-column': '1 / 2',
-        'grid-row'   : '1 / 3',
-      }
-    },
-    { // 受付番号
-      sel : '[name="entryNo"]',
-      prop: {
-        'font-size'  : '2rem',
-        'grid-column': '2 / 3',
-        'grid-row'   : '1 / 2',
-      }
-    },
-    { // 申込者氏名＋カナ
-      sel : '[name="applicant"]',
-      prop: {
-        'grid-column': '2 / 3',
-        'grid-row'   : '2 / 3',
-      }
-    },
-    { // 申込者氏名
-      sel : '[name="applicant"] ruby',
-      prop: {
-        'font-size'  : '2rem',
-      }
-    },
-    { // 申込者カナ
-      sel : '[name="applicant"] rt',
-      prop: {
-        'font-size'  : '0.8rem'
-      }
-    },
-    { // 参加者一覧
-      sel : '[name="list"]',
-      prop: {
-        'width':'100%',
-        'margin' : '1rem 0rem',
-        'display'    : 'grid',
-        'grid-template-columns' : '3fr 2fr',
-      }
-    },
-    { // 参加者名カナ
-      sel : '[name="list"] rt',
-      prop: {
-        'font-size'  : '0.7rem',
-      }
-    },
-    { // 詳細情報
-      sel : '[name="detail"]',
-      prop: {
-        'margin' : '1rem 0rem',
-        'display'    : 'grid',
-        'grid-template-columns' : '8rem 1fr',
-      }
-    },
-    { // editURL(申込フォーム修正)ボタン
-      sel : '[name="button"] a',
-      prop: {
-        'text-decoration' : 'none',
-        'margin' : '1rem',
-        'display'       : 'inline-block',
-        'font-size'     : '18pt',
-        'text-align'    : 'center',
-        'cursor'        : 'pointer',
-        'padding'       : '12px 12px',
-        'background'    : '#888888',
-        'color'         : '#ffffff',
-        'line-height'   : '1rem',
-        'transition'    : '.3s',
-        'box-shadow'    : '3px 3px 3px #444444',
-        'border'        : '2px solid #888888',
-      }
-    },
-    { // 
-      sel : '',
-      prop: {
-
-      }
-    },
-
-  ]};
-  console.log(v.whois+' start.');
-  try {
-
-    // 前準備
-    v.step = 1.1; // 親要素を取得、内容を消去
-    v.parent = document.querySelector(parent);
-    v.parent.innerHTML = '';
-
-    v.step = 1.2; // CSS定義
-    v.style = document.createElement('style');
-    document.head.appendChild(v.style);
-    for( v.i=0 ; v.i<v.css.length ; v.i++ ){
-      v.x = v.css[v.i];
-      for( v.y in v.x.prop ){
-        v.prop = parent + ' ' + v.x.sel
-          + ' { ' + v.y + ' : ' + v.x.prop[v.y] + '; }\n';
-        v.style.sheet.insertRule(v.prop,
-          v.style.sheet.cssRules.length,
-        );
-      }
-    }
-
-    v.step = 2; // 受付番号(QR付)＋申込者氏名＋カナ
-    v.div = createElement({
-      attr:{name:'entry'},
-      children: [
-        {attr:{name:'qrcode'}}, // QRコード
-        { // 受付番号
-          attr:{name:'entryNo'},
-          text: 'No.' + String(config.entryNo.value).slice(-4),
-        },
-        { // 申込者氏名＋カナ
-          attr:{name:'applicant'},
-          children:[{
-            tag:'ruby',
-            text: config.info['申込者氏名'],
-            children:[{tag:'rt',text:config.info['申込者カナ']}]
-          }]
-        },
-      ],
-    });
-    new QRCode(v.div.querySelector('[name="qrcode"]'),{
-      text: String(config.entryNo.value).slice(-4),
-      width: 300,
-      height: 300,
-      colorDark: "#000",
-      colorLight: "#fff",
-      correctLevel : QRCode.CorrectLevel.H,
-    });
-    v.parent.appendChild(v.div);
-
-    v.step = 3; // 参加者一覧
-    v.list = createElement({attr:{name:'list'}});
-    v.step = 3.1; // 参加者一覧ヘッダ
-    ['参加者氏名','所属'].forEach(x => {
-      v.list.appendChild(createElement({
-        attr:{class:'th'},text: x
-      }));
-    });
-    v.step = 3.2; // データ(参加者氏名・所属)
-    for( v.i=1 ; v.i<6 ; v.i++ ){
-      v.name = '参加者0'+v.i;
-      if( config.info[v.name+'氏名'].length > 0 ){
-        v.list.appendChild(createElement({
-          attr: {class:'td'},
-          text: config.info[v.name+'氏名']
-          + ' (' + config.info[v.name+'カナ'] + ')',
-          /*
-          children:[{
-            tag:'ruby',
-            text:config.info[v.name+'氏名'],
-            children:[{
-              tag:'rt',
-              text:config.info[v.name+'カナ'],
-            }]
-          }]
-          */
-        }));
-        v.list.appendChild(createElement({children:[
-          {attr:{class:'td'},text:config.info[v.name+'所属']}
-        ]}));
-      }
-    }
-    v.parent.appendChild(v.list);
-
-    v.step = 4; // その他参加者情報
-    v.detail = createElement({attr:{name:'detail'}});
-    ['メールアドレス','申込者の参加','宿泊、テント','引取者氏名',
-    '緊急連絡先','ボランティア募集','備考','キャンセル'].forEach(x => {
-      v.detail.appendChild(createElement({
-        attr:{class:'th'},text:x
-      }));
-      v.detail.appendChild(createElement({
-        attr:{class:'td'},text:config.info[x]
-      }));
-    });
-    v.parent.appendChild(v.detail);
-
-    v.step = 5; // editURL(申込フォーム修正)ボタン
-    v.parent.appendChild(createElement({
-      attr:{name:'button'},
-      children:[
-        {tag:'p',text:'上記内容に誤りがあれば下のボタンから修正してください。'},
-        {
-          tag:'a',
-          attr:{href:config.info.editURL,target:'_blank'},
-          text: '申込フォームの編集',
-        }
-      ]}
-    ));
-
-    console.log(v.whois+' normal end.',v.rv);
-    return v.rv;
-
-  } catch(e){
-    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-    return e;
-  }
-
-}</script>
+<!--script type="text/javascript" data-embed="camp2023.drawPassport.js"></script -->
 
 <script type="text/javascript" class="main">
 window.addEventListener('DOMContentLoaded',async () => {
@@ -4216,7 +4358,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 個別メニュー画面の設定
     // ================================================
     v.step = '2'; // メニューを定義
-    v.menu = new BurgerMenu({
+    v.menu = new BurgerMenu('body',{
       authority: v.config.info.authority,
       home: 'c1005',  // パスポート画面をホームに設定(暫定)
     });
@@ -4238,8 +4380,15 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 2.1.2 注意事項
     // 2.1.3 持ち物
 
-    v.step = '2.2'; // パスポート
-    drawPassport('div[data-BurgerMenu="label:\'パスポート\'"]',v.config);
+    v.step = '2.2.1'; // パスポート
+    v.rv = v.drawPassport = new drawPassport(
+      'div[data-BurgerMenu="label:\'パスポート\'"]',
+      v.config.info
+    );
+    if( v.rv instanceof Error ) throw v.rv;
+    v.step = '2.2.2';
+    v.rv = v.drawPassport.view();
+    if( v.rv instanceof Error ) throw v.rv;
 
     // 2.3 案内図
 
@@ -4258,6 +4407,13 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 2.5.1 参加者数
 
     v.step = '2.5.2'; // 受付業務
+    v.reception = new Reception(
+      v.config, // 認証局他のAuthインスタンス
+      '[data-BurgerMenu="label:\'受付業務\'"]', // parent
+    );
+    if( v.reception instanceof Error ) throw v.reception;
+
+    /*
     v.receptPage = '[data-BurgerMenu="label:\'受付業務\'"]';
     v.rp1 = document.querySelector(v.receptPage);
     console.log('l.222',v.rp1);
@@ -4272,9 +4428,10 @@ window.addEventListener('DOMContentLoaded',async () => {
     //v.rp3 = v.rp2.item(0);
     console.log('l.222 rp2=%s, rp3=%s',v.rp2,v.rp3);
 
-    v.id = document.querySelector(v.receptPage).classList.item(0);
+    v.id = document.querySelector(v.receptPage).classList;
     v.boot = 'nav.BurgerMenu a[name="'+v.id+'"]';
-    /*
+    
+
     v.reception = new Reception({
       auth: v.config, // 認証局他のAuthインスタンス
       area:{selector:v.receptPage},  // 受付画面表示エリアのCSSセレクタ
