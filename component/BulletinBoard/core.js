@@ -63,9 +63,7 @@ class BulletinBoard {
         attributeFilter: [],//配列で記述した属性だけを見張る
       });
 
-      v.step = '4'; // インターバルをセット
-      this.start();
-
+      v.step = '4'; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){

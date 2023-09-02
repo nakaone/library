@@ -51,7 +51,7 @@
   -->
   <div data-BurgerMenu="label:'スタッフ',authority:2">
     <!--div data-BurgerMenu="label:'参加者数'"></div-->
-    <div data-BurgerMenu="label:'受付業務'"></div>
+    <div data-BurgerMenu="label:'受付業務',func:'recept'"></div>
     <div data-BurgerMenu="label:'校内探険'">
       <div class="page">
         <img width="600px" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
@@ -214,7 +214,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     v.BurgerMenu = new BurgerMenu('body',{
       authority: v.Auth.info.authority,
       home: 'c1005',  // パスポート画面をホームに設定(暫定)
-      func: {recept:()=>{return v.Reception.main()}},
+      func: {recept:v.Reception.main},
     });
     if( v.BurgerMenu instanceof Error ) throw v.BurgerMenu;
     // メニュー遷移時、定期配信の停止を追加定義
@@ -301,10 +301,12 @@ window.addEventListener('DOMContentLoaded',async () => {
 
     v.step = '4.2'; // 終了処理
     v.BurgerMenu.change();  // ホーム画面を表示
+    v.BulletinBoard.start(); // 掲示板定期受信を開始
     console.log(v.whois+' normal end.');
 
   } catch(e){
-    const msg = v.whois+' abnormal end(step.'+v.step+').\n'+e.message;
+    const msg = v.whois+' abnormal end(step.'+v.step+').\n'
+      + e.message + '\n' + e.stack;
     console.error(msg,e.stack,v);
     alert(msg);
   }
