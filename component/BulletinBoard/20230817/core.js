@@ -20,29 +20,31 @@ class BulletinBoard {
         interval: 60000,
         intervalId: null, // インターバルID
         posts: [],  // 投稿メッセージ一覧
-        css: `
-          .date {
-            margin-top : 1rem;
-            padding-left : 1rem;
-            font-family : fantasy;
-            font-size : 1.5rem;
-            border-bottom : solid 4px #ddd;
-          }
-          .header {
-            margin-top : 1rem;
-            display : grid;
-            grid-template-columns : 3rem 1fr;
-            grid-gap : 0.5rem;
-            background-color : #ddd;
-            padding-left : 0.5rem;
-          }
-          .fromto {
-            font-size : 0.8rem;
-          }
-          .time {
-            font-size : 0.8rem;
-            font-family : cursive;
-          }`,
+        css: [
+          {sel:'.date',prop:{
+            'margin-top':'1rem',
+            'padding-left': '1rem',
+            'font-family': 'fantasy',
+            'font-size': '1.5rem',
+            'border-bottom': 'solid 4px #ddd'
+          }},
+          {sel:'.header',prop:{
+            'margin-top': '1rem',
+            'display': 'grid',
+            'grid-template-columns': '3rem 1fr',
+            'grid-gap': '0.5rem',
+            'background-color': '#ddd',
+            'padding-left': '0.5rem',
+          }},
+          {sel:'.fromto',prop:{
+            'font-size': '0.8rem',
+          }},
+          {sel:'.time',prop:{
+            'font-size': '0.8rem',
+            'font-family': 'cursive',
+          }},
+          {sel:'.message',prop:{}},
+        ],
       });
       console.log('l.51',v.rv,this.auth);
       if( v.rv instanceof Error ) throw v.rv;

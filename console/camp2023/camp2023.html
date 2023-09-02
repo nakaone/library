@@ -1157,31 +1157,29 @@ class BulletinBoard {
         interval: 60000,
         intervalId: null, // インターバルID
         posts: [],  // 投稿メッセージ一覧
-        css: [
-          {sel:'.date',prop:{
-            'margin-top':'1rem',
-            'padding-left': '1rem',
-            'font-family': 'fantasy',
-            'font-size': '1.5rem',
-            'border-bottom': 'solid 4px #ddd'
-          }},
-          {sel:'.header',prop:{
-            'margin-top': '1rem',
-            'display': 'grid',
-            'grid-template-columns': '3rem 1fr',
-            'grid-gap': '0.5rem',
-            'background-color': '#ddd',
-            'padding-left': '0.5rem',
-          }},
-          {sel:'.fromto',prop:{
-            'font-size': '0.8rem',
-          }},
-          {sel:'.time',prop:{
-            'font-size': '0.8rem',
-            'font-family': 'cursive',
-          }},
-          {sel:'.message',prop:{}},
-        ],
+        css: `
+          .date {
+            margin-top : 1rem;
+            padding-left : 1rem;
+            font-family : fantasy;
+            font-size : 1.5rem;
+            border-bottom : solid 4px #ddd;
+          }
+          .header {
+            margin-top : 1rem;
+            display : grid;
+            grid-template-columns : 3rem 1fr;
+            grid-gap : 0.5rem;
+            background-color : #ddd;
+            padding-left : 0.5rem;
+          }
+          .fromto {
+            font-size : 0.8rem;
+          }
+          .time {
+            font-size : 0.8rem;
+            font-family : cursive;
+          }`,
       });
       console.log('l.51',v.rv,this.auth);
       if( v.rv instanceof Error ) throw v.rv;
@@ -3227,9 +3225,7 @@ class Reception {
         parent: parent, // {HTMLElement} 親要素(ラッパー)
         parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
         // CSS/HTML定義
-        css:[
-          /* Reception共通部分 */ ``,
-        ],
+        // css:[],
         html:[  // イベント定義を複数回行わないようにするため、eventで定義
           {attr:{class:'Reception',name:'LoadingIcon'}},
           {attr:{class:'Reception',name:'WebScanner'}},
