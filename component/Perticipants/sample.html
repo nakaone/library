@@ -1,10 +1,10 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-<title>design(drawPassport)</title>
+<title>design(Perticipants)</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link href="../szLib.css" rel="stylesheet" />
 <style type="text/css"></style>
 </head><body>
-  <div class="drawPassport"></div>
+  <div class="Perticipants"></div>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="text/javascript" src="core.js"></script>
@@ -17,12 +17,12 @@ window.addEventListener('DOMContentLoaded',async () => {
   console.log(v.whois+' start.');
   try {
 
-    v.drawPassport = new drawPassport('div.drawPassport',kokusho,{});
-    if( v.rv instanceof Error ) throw v.drawPassport;
-    console.log(v.drawPassport);
+    v.Perticipants = new Perticipants('div.Perticipants',kokusho,{});
+    if( v.rv instanceof Error ) throw v.Perticipants;
+    console.log(v.Perticipants);
 
-    //console.log(await v.drawPassport.edit());
-    console.log(v.drawPassport.view());
+    //console.log(await v.Perticipants.edit());
+    console.log(v.Perticipants.view());
 
     console.log(v.whois+' normal end.',v.rv);
   } catch(e){

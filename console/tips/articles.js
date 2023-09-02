@@ -79,7 +79,7 @@ window.addEventListener('DOMContentLoaded',async () => {
 /**
  * @classdesc クラスの概要説明
  */
-class drawPassport {
+class Perticipants {
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
@@ -87,7 +87,7 @@ class drawPassport {
    * @returns {true|Error}
    */
   constructor(opt={}){
-    const v = {whois:'drawPassport.constructor',rv:true,step:0,
+    const v = {whois:'Perticipants.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
         // メンバとして持つHTMLElementの定義
         parent: typeof parent !== 'string' ? parent :
@@ -96,7 +96,7 @@ class drawPassport {
         style: null,  // {HTMLStyleElement} CSS定義
         // CSS/HTML定義
         css:[
-          /* drawPassport共通部分 */ \`\`,
+          /* Perticipants共通部分 */ \`\`,
         ],
         html:[  // イベント定義を複数回行わないようにするため、eventで定義
         ],
@@ -118,7 +118,7 @@ class drawPassport {
   }
 
   template = () => {
-    const v = {whois:'drawPassport.template',rv:true,step:0};
+    const v = {whois:'Perticipants.template',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
 
@@ -142,7 +142,7 @@ class drawPassport {
  * 
  * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
  */
-class drawPassport {
+class Perticipants {
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
@@ -151,7 +151,7 @@ class drawPassport {
    * @returns {void}
    */
   constructor(parent,data=null,opt={}){
-    const v = {whois:'drawPassport.constructor',rv:true,step:0,
+    const v = {whois:'Perticipants.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
         data: data, // {Object} 参加者情報
         // メンバとして持つHTMLElementの定義
@@ -165,8 +165,8 @@ class drawPassport {
         buttons: null, // {HTMLElement} ボタン領域のDIV要素
         // CSS/HTML定義
         css:[
-          /* drawPassport共通部分 */ \`
-          .drawPassport {
+          /* Perticipants共通部分 */ \`
+          .Perticipants {
             margin: 1rem;
             width: calc(100% - 2rem);
             display: grid;
@@ -178,10 +178,10 @@ class drawPassport {
             width: calc(100% - 2rem);
             */
           }
-          .drawPassport.hide {
+          .Perticipants.hide {
             display: none;
           }
-          .drawPassport > div {
+          .Perticipants > div {
             width: 100%;
             display: grid;
             gap: 1rem;
@@ -190,125 +190,125 @@ class drawPassport {
             margin: 1rem 0px;
             */
           }
-          .drawPassport rt {
+          .Perticipants rt {
             font-size: 50%;
           }
-          .drawPassport .label {
+          .Perticipants .label {
             margin-top: 1rem;
             width: 100%;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
           }
-          .drawPassport .label p {
+          .Perticipants .label p {
             grid-column: 1 / 3;
             font-size: 1.4rem;
           }
-          .drawPassport .label button {
+          .Perticipants .label button {
             grid-column: 3 / 4;
           }\`,
           /* 概要欄(QRコード、受付番号、申込者名) */\`
-          .drawPassport .summary {
+          .Perticipants .summary {
             grid-template-columns: repeat(12, 1fr);
           }
-          .drawPassport .summary [name="qrcode"]{
+          .Perticipants .summary [name="qrcode"]{
             padding: 0rem;
             grid-row: 1 / 3;
             grid-column: 1 / 5;
           }
-          .drawPassport .summary [name="entryStr"]{
+          .Perticipants .summary [name="entryStr"]{
             grid-row: 1 / 2;
             grid-column: 5 / 13;
           }
-          .drawPassport .summary [name="entryStr"] span {
+          .Perticipants .summary [name="entryStr"] span {
             font-size: 2rem;
           }
-          .drawPassport .summary [name="申込者氏名"]{
+          .Perticipants .summary [name="申込者氏名"]{
             grid-row: 2 / 3;
             grid-column: 5 / 13;
           }
-          .drawPassport .summary ruby span {
+          .Perticipants .summary ruby span {
             font-size: 2rem;
           }
-          .drawPassport .summary rt span {
+          .Perticipants .summary rt span {
             font-size: 1rem;
           }\`,
           /* 参加者一覧 */\`
-          .drawPassport .list .label button.hide {
+          .Perticipants .list .label button.hide {
             display: none;
           }
-          .drawPassport .list .content {
+          .Perticipants .list .content {
             width: 100%;
             margin: 1rem 0px;
             display: grid;
             grid-template-columns: repeat(10, 1fr);
             gap: 0.2rem;
           }
-          .drawPassport .list .content.hide {
+          .Perticipants .list .content.hide {
             display: none;
           }
-          .drawPassport .list .content div:nth-child(4n+1) {
+          .Perticipants .list .content div:nth-child(4n+1) {
             grid-column: 1 / 2;
           }
-          .drawPassport .list .content div:nth-child(4n+2) {
+          .Perticipants .list .content div:nth-child(4n+2) {
             grid-column: 2 / 7;
           }
-          .drawPassport .list .content div:nth-child(4n+3) {
+          .Perticipants .list .content div:nth-child(4n+3) {
             grid-column: 7 / 9;
           }
-          .drawPassport .list .content div:nth-child(4n+4) {
+          .Perticipants .list .content div:nth-child(4n+4) {
             grid-column: 9 / 11;
           }
-          .drawPassport .list .content .td[name="fee"] > .hide {
+          .Perticipants .list .content .td[name="fee"] > .hide {
             display: none;
           }\`,
           /* 詳細情報 */\`
-          .drawPassport .detail .content {
+          .Perticipants .detail .content {
             display: block;
           }
-          .drawPassport .detail .content.hide {
+          .Perticipants .detail .content.hide {
             display: none;
           }
-          .drawPassport .detail .content .table {
+          .Perticipants .detail .content .table {
             width: 100%;
             margin: 1rem 0px;
             display: grid;
             grid-template-columns: 2fr 3fr;
             gap: 0.2rem;
           }
-          .drawPassport .message {
+          .Perticipants .message {
             display: block;
           }
-          .drawPassport .message button {
+          .Perticipants .message button {
             margin-top: 1rem;
             padding: 0.5rem 2rem;
           }
-          .drawPassport .message.hide {
+          .Perticipants .message.hide {
             display: none;
           }\`,
           /* 取消・決定・全員受領ボタン */\`
-          .drawPassport .buttons {
+          .Perticipants .buttons {
             width: 100%;
             margin: 1rem 0px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
           }
-          .drawPassport .buttons.hide {
+          .Perticipants .buttons.hide {
             display: none;
           }
-          .drawPassport .buttons button {
+          .Perticipants .buttons button {
             display: block;
             width: 100%;
             font-size: 2rem;
           }
-          .drawPassport .buttons [name="取消"].hide {
+          .Perticipants .buttons [name="取消"].hide {
             display: none;
           }
-          .drawPassport .buttons [name="決定"].hide {
+          .Perticipants .buttons [name="決定"].hide {
             display: none;
           }
-          .drawPassport .buttons [name="全員"].hide {
+          .Perticipants .buttons [name="全員"].hide {
             display: none;
           }\`,
         ],
@@ -404,7 +404,7 @@ class drawPassport {
    * @returns {void}
    */
   #setData = () => {
-    const v = {whois:'drawPassport.#setData',rv:true,step:0};
+    const v = {whois:'Perticipants.#setData',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
 
@@ -524,7 +524,7 @@ class drawPassport {
    * @returns {Object} {entryNo:{string},fee0n:'未入場/無料/未収/既収/退場済'}
    */
   edit = async (data=null) => {
-    const v = {whois:'drawPassport.edit',rv:true,step:0};
+    const v = {whois:'Perticipants.edit',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
       // 親要素を表示
@@ -558,7 +558,7 @@ class drawPassport {
           const rv = null;
           // 終了処理
           console.log('取消 -> '+JSON.stringify(rv)
-          + '\\ndrawPassport.edit normal end.\\n');
+          + '\\nPerticipants.edit normal end.\\n');
           this.close();
           resolve({entryNo:this.data.entryNo,result:rv});
         });
@@ -577,7 +577,7 @@ class drawPassport {
           ) ) rv = {};*/
           // 終了処理
           console.log('決定 -> '+JSON.stringify(rv)
-          + '\\ndrawPassport.edit normal end.\\n');
+          + '\\nPerticipants.edit normal end.\\n');
           this.close();
           resolve(rv);
         });
@@ -596,7 +596,7 @@ class drawPassport {
           ) ) rv = {};*/
           // 終了処理
           console.log('全員受領 -> '+JSON.stringify(rv)
-          + '\\ndrawPassport.edit normal end.\\n');
+          + '\\nPerticipants.edit normal end.\\n');
           this.close();
           resolve(rv);
         });
@@ -613,7 +613,7 @@ class drawPassport {
    * @returns {void}
    */
   view = (data=null) => {
-    const v = {whois:'drawPassport.view',rv:true,step:0};
+    const v = {whois:'Perticipants.view',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
       // 親要素を表示
@@ -653,7 +653,7 @@ class drawPassport {
    * @returns {void}
    */
   toggle = (event,show) => {
-    const v = {whois:'drawPassport.toggle',step:1,rv:null};
+    const v = {whois:'Perticipants.toggle',step:1,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -711,12 +711,12 @@ class drawPassport {
 
 \`\`\`
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-<title>design(drawPassport)</title>
+<title>design(Perticipants)</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link href="../szLib.css" rel="stylesheet" />
 <style type="text/css"></style>
 </head><body>
-  <div class="drawPassport"></div>
+  <div class="Perticipants"></div>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="text/javascript" src="core.js"></script>
@@ -729,12 +729,12 @@ window.addEventListener('DOMContentLoaded',async () => {
   console.log(v.whois+' start.');
   try {
 
-    v.drawPassport = new drawPassport('div.drawPassport',kokusho,{});
-    if( v.rv instanceof Error ) throw v.drawPassport;
-    console.log(v.drawPassport);
+    v.Perticipants = new Perticipants('div.Perticipants',kokusho,{});
+    if( v.rv instanceof Error ) throw v.Perticipants;
+    console.log(v.Perticipants);
 
-    //console.log(await v.drawPassport.edit());
-    console.log(v.drawPassport.view());
+    //console.log(await v.Perticipants.edit());
+    console.log(v.Perticipants.view());
 
     console.log(v.whois+' normal end.',v.rv);
   } catch(e){
@@ -759,7 +759,7 @@ const kokusho = {"タイムスタンプ":"2023-08-01T06:36:48.485Z","メール�
   // =====================================================================
 `コンソールでちょっとしたファイル加工を行う場合のサンプル。
 
-以下はdrawPassport開発でCSSファイルからsetupInstance()に渡すCSS定義オブジェクトを作成した例。
+以下はPerticipants開発でCSSファイルからsetupInstance()に渡すCSS定義オブジェクトを作成した例。
 
 \`\`\`
 // useage:

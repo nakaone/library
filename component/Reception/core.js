@@ -20,7 +20,7 @@ class Reception {
           {attr:{class:'Reception',name:'LoadingIcon'}},
           {attr:{class:'Reception',name:'WebScanner'}},
           {attr:{class:'Reception',name:'itemSelector'}},
-          {attr:{class:'Reception',name:'drawPassport'}},
+          {attr:{class:'Reception',name:'Perticipants'}},
         ],
       },
     };
@@ -49,8 +49,8 @@ class Reception {
       );
 
       // 参加費入力画面の準備
-      this.drawPassport = new drawPassport(
-        this.parent.querySelector('[name="drawPassport"]')
+      this.Perticipants = new Perticipants(
+        this.parent.querySelector('[name="Perticipants"]')
       );
 
       console.log(v.whois+' normal end.',v.rv);
@@ -90,7 +90,7 @@ class Reception {
           if( v.target instanceof Error ) throw v.target;
         }
         v.step = 3.3; // 編集画面を表示し、変更箇所を取得
-        v.data = await this.drawPassport.edit(v.target);
+        v.data = await this.Perticipants.edit(v.target);
         if( v.data instanceof Error ) throw v.data;
         // auth.fetchで変更箇所を管理局に送信
         if( v.data !== null ){

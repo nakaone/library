@@ -11,9 +11,9 @@
  * @returns {Object.<string, any>} 修正された項目ラベルと値
  * 
  */
-class drawPassport {
+class Perticipants {
   constructor(opt={}){
-    const v = {whois:'drawPassport.constructor',step:0,rv:null};
+    const v = {whois:'Perticipants.constructor',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -68,7 +68,7 @@ class drawPassport {
    * @returns {void}
    */
   #setupElements = () => {
-    const v = {whois:'drawPassport.#setupElements',step:0,rv:null};
+    const v = {whois:'Perticipants.#setupElements',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -76,127 +76,127 @@ class drawPassport {
       this.style = document.createElement('style');
       document.head.appendChild(this.style);
       this.style.innerText = `
-        .drawPassport {
+        .Perticipants {
           width: calc(100% - 2rem);
           display: grid;
           grid-template-columns: 1fr;
           padding: 1rem;
           font-size: 1rem;
         }
-        .drawPassport rt {
+        .Perticipants rt {
           font-size: 50%;
         }
-        .drawPassport .label {
+        .Perticipants .label {
           margin-top: 1rem;
           width: 100%;
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 2rem;
         }
-        .drawPassport .label p {
+        .Perticipants .label p {
           grid-column: 1 / 3;
           font-size: 1.4rem;
         }
-        .drawPassport .label button {
+        .Perticipants .label button {
           grid-column: 3 / 4;
         }
       
         /* QRコード、受付番号、申込者名 */
-        .drawPassport .summary {
+        .Perticipants .summary {
           width: 100%;
           margin: 1rem 0px;
           display: grid;
           grid-template-columns: repeat(12, 1fr);
           gap: 1rem;
         }
-        .drawPassport .summary [name="qrcode"]{
+        .Perticipants .summary [name="qrcode"]{
           padding: 0rem;
           grid-row: 1 / 3;
           grid-column: 1 / 5;
         }
-        .drawPassport .summary [name="entryNo"]{
+        .Perticipants .summary [name="entryNo"]{
           grid-row: 1 / 2;
           grid-column: 5 / 13;
         }
-        .drawPassport .summary [name="entryNo"] span {
+        .Perticipants .summary [name="entryNo"] span {
           font-size: 2rem;
         }
-        .drawPassport .summary [name="申込者氏名"]{
+        .Perticipants .summary [name="申込者氏名"]{
           grid-row: 2 / 3;
           grid-column: 5 / 13;
         }
-        .drawPassport .summary ruby span {
+        .Perticipants .summary ruby span {
           font-size: 2rem;
         }
-        .drawPassport .summary rt span {
+        .Perticipants .summary rt span {
           font-size: 1rem;
         }
       
         /* 参加者リスト */
-        .drawPassport .list .content {
+        .Perticipants .list .content {
           width: 100%;
           margin: 1rem 0px;
           display: grid;
           grid-template-columns: repeat(12, 1fr);
           gap: 0.2rem;
         }
-        .drawPassport .list .content.hide {
+        .Perticipants .list .content.hide {
           display: none;
         }
-        .drawPassport .list .content div:nth-child(4n+1) {
+        .Perticipants .list .content div:nth-child(4n+1) {
           grid-column: 1 / 3;
         }
-        .drawPassport .list .content div:nth-child(4n+2) {
+        .Perticipants .list .content div:nth-child(4n+2) {
           grid-column: 3 / 7;
         }
-        .drawPassport .list .content div:nth-child(4n+3) {
+        .Perticipants .list .content div:nth-child(4n+3) {
           grid-column: 7 / 10;
         }
-        .drawPassport .list .content div:nth-child(4n+4) {
+        .Perticipants .list .content div:nth-child(4n+4) {
           grid-column: 10 / 13;
         }
       
         /* 詳細 */
-        .drawPassport .detail {
+        .Perticipants .detail {
       
         }
-        .drawPassport .detail .content {
+        .Perticipants .detail .content {
           width: 100%;
           margin: 1rem 0px;
           display: grid;
           grid-template-columns: 2fr 3fr;
           gap: 0.2rem;
         }
-        .drawPassport .detail .content.hide {
+        .Perticipants .detail .content.hide {
           display: none;
         }
-        .drawPassport .message {
+        .Perticipants .message {
           display: block;
         }
-        .drawPassport .message.hide {
+        .Perticipants .message.hide {
           display: none;
         }
       
         /* ボタン領域 */
-        .drawPassport .buttons {
+        .Perticipants .buttons {
           width: 100%;
           margin: 1rem 0px;
           display: grid;
           grid-template-columns: repeat(3, 1fr);
           gap: 2rem;
         }
-        .drawPassport .buttons button {
+        .Perticipants .buttons button {
           display: block;
           width: 100%;
           font-size: 2rem;
         }
-        .drawPassport .buttons [name="取消"].hide {
+        .Perticipants .buttons [name="取消"].hide {
           display: none;
         }
-        .drawPassport .buttons [name="決定"].hide {
+        .Perticipants .buttons [name="決定"].hide {
           display: none;
         }
-        .drawPassport .buttons [name="全員"].hide {
+        .Perticipants .buttons [name="全員"].hide {
           display: none;
         }
       `;
@@ -263,7 +263,7 @@ class drawPassport {
    * @returns {void}
    */
   #setupSummary = () => {
-    const v = {whois:'drawPassport.#setupSummary',step:0,rv:null};
+    const v = {whois:'Perticipants.#setupSummary',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -299,7 +299,7 @@ class drawPassport {
    * @returns {void}
    */
   #setupList = () => {
-    const v = {whois:'drawPassport.#setupList',step:0,rv:null};
+    const v = {whois:'Perticipants.#setupList',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -342,7 +342,7 @@ class drawPassport {
    * @returns {void}
    */
   #setupDetail = () => {
-    const v = {whois:'drawPassport.#setupDetail',step:0,rv:null};
+    const v = {whois:'Perticipants.#setupDetail',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -385,7 +385,7 @@ class drawPassport {
    * @returns {void}
    */
   toggle = (event,show) => {
-    const v = {whois:'drawPassport.toggle',step:1,rv:null};
+    const v = {whois:'Perticipants.toggle',step:1,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -426,7 +426,7 @@ class drawPassport {
   }
 
   edit = async () => {
-    const v = {whois:'drawPassport.edit',step:0,rv:null};
+    const v = {whois:'Perticipants.edit',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
       console.log(v.whois+' normal end.',v.rv);

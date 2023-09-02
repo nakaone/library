@@ -3,7 +3,7 @@
  * 
  * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
  */
-class drawPassport {
+class Perticipants {
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
@@ -12,7 +12,7 @@ class drawPassport {
    * @returns {void}
    */
   constructor(parent,data,opt={}){
-    const v = {whois:'drawPassport.constructor',rv:true,step:0};
+    const v = {whois:'Perticipants.constructor',rv:true,step:0};
     console.log(v.whois+' start.',opt);
     try {
 
@@ -58,7 +58,7 @@ class drawPassport {
    * @returns {null|Error} 正常終了ならNull
    */
   #setup = (parent=null,opt,def) => {
-    const v = {whois:'drawPassport.#setup',rv:null,step:0,
+    const v = {whois:'Perticipants.#setup',rv:null,step:0,
       isObj: obj => obj && typeof obj === 'object' && !Array.isArray(obj)
         && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
       isArr: obj => obj && typeof obj === 'object' && Array.isArray(obj),
@@ -76,11 +76,11 @@ class drawPassport {
       v.step = 1; // オプションをメンバとして登録
       v.deepcopy(opt,Object.assign(this,def));
 
-      v.step = 2; // drawPassport共通部分のCSS作成
+      v.step = 2; // Perticipants共通部分のCSS作成
       this.style = document.createElement('style');
       document.head.appendChild(this.style);
       this.style.innerText = `
-      .drawPassport {
+      .Perticipants {
         margin: 1rem;
         width: calc(100% - 2rem);
         display: grid;
@@ -92,7 +92,7 @@ class drawPassport {
         width: calc(100% - 2rem);
         */
       }
-      .drawPassport > div {
+      .Perticipants > div {
         width: 100%;
         display: grid;
         gap: 1rem;
@@ -101,21 +101,21 @@ class drawPassport {
         margin: 1rem 0px;
         */
       }
-      .drawPassport rt {
+      .Perticipants rt {
         font-size: 50%;
       }
-      .drawPassport .label {
+      .Perticipants .label {
         margin-top: 1rem;
         width: 100%;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 2rem;
       }
-      .drawPassport .label p {
+      .Perticipants .label p {
         grid-column: 1 / 3;
         font-size: 1.4rem;
       }
-      .drawPassport .label button {
+      .Perticipants .label button {
         grid-column: 3 / 4;
       }
       `;
@@ -140,35 +140,35 @@ class drawPassport {
    * @returns {void}
    */
   #setupSummary = () => {
-    const v = {whois:'drawPassport.#setupSummary',step:0,rv:null};
+    const v = {whois:'Perticipants.#setupSummary',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
       v.step = 1; // CSS定義
       this.style.innerText = (this.style.innerText + `
-      .drawPassport .summary {
+      .Perticipants .summary {
         grid-template-columns: repeat(12, 1fr);
       }
-      .drawPassport .summary [name="qrcode"]{
+      .Perticipants .summary [name="qrcode"]{
         padding: 0rem;
         grid-row: 1 / 3;
         grid-column: 1 / 5;
       }
-      .drawPassport .summary [name="entryStr"]{
+      .Perticipants .summary [name="entryStr"]{
         grid-row: 1 / 2;
         grid-column: 5 / 13;
       }
-      .drawPassport .summary [name="entryStr"] span {
+      .Perticipants .summary [name="entryStr"] span {
         font-size: 2rem;
       }
-      .drawPassport .summary [name="申込者氏名"]{
+      .Perticipants .summary [name="申込者氏名"]{
         grid-row: 2 / 3;
         grid-column: 5 / 13;
       }
-      .drawPassport .summary ruby span {
+      .Perticipants .summary ruby span {
         font-size: 2rem;
       }
-      .drawPassport .summary rt span {
+      .Perticipants .summary rt span {
         font-size: 1rem;
       }
       `).replaceAll(/\n/g,'').replaceAll(/\s+/g,' ');
@@ -226,32 +226,32 @@ class drawPassport {
    * @returns {void}
    */
   #setupList = () => {
-    const v = {whois:'drawPassport.#setupList',step:0,rv:null};
+    const v = {whois:'Perticipants.#setupList',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
       v.step = 1; // CSS定義
       this.style.innerText = (this.style.innerText + `
-      .drawPassport .list .content {
+      .Perticipants .list .content {
         width: 100%;
         margin: 1rem 0px;
         display: grid;
         grid-template-columns: repeat(10, 1fr);
         gap: 0.2rem;
       }
-      .drawPassport .list .content.hide {
+      .Perticipants .list .content.hide {
         display: none;
       }
-      .drawPassport .list .content div:nth-child(4n+1) {
+      .Perticipants .list .content div:nth-child(4n+1) {
         grid-column: 1 / 2;
       }
-      .drawPassport .list .content div:nth-child(4n+2) {
+      .Perticipants .list .content div:nth-child(4n+2) {
         grid-column: 2 / 7;
       }
-      .drawPassport .list .content div:nth-child(4n+3) {
+      .Perticipants .list .content div:nth-child(4n+3) {
         grid-column: 7 / 9;
       }
-      .drawPassport .list .content div:nth-child(4n+4) {
+      .Perticipants .list .content div:nth-child(4n+4) {
         grid-column: 9 / 11;
       }
       `).replaceAll(/\n/g,'').replaceAll(/\s+/g,' ');
@@ -347,30 +347,30 @@ class drawPassport {
    * @returns {void}
    */
   #setupDetail = () => {
-    const v = {whois:'drawPassport.#setupDetail',step:0,rv:null};
+    const v = {whois:'Perticipants.#setupDetail',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
       v.step = 1; // CSS定義
       this.style.innerText = (this.style.innerText + `
-      .drawPassport .detail .content {
+      .Perticipants .detail .content {
         width: 100%;
         margin: 1rem 0px;
         display: grid;
         grid-template-columns: 2fr 3fr;
         gap: 0.2rem;
       }
-      .drawPassport .detail .content.hide {
+      .Perticipants .detail .content.hide {
         display: none;
       }
-      .drawPassport .message {
+      .Perticipants .message {
         display: block;
       }
-      .drawPassport .message button {
+      .Perticipants .message button {
         margin-top: 1rem;
         padding: 0.5rem 2rem;
       }
-      .drawPassport .message.hide {
+      .Perticipants .message.hide {
         display: none;
       }
       `).replaceAll(/\n/g,'').replaceAll(/\s+/g,' ');
@@ -432,31 +432,31 @@ class drawPassport {
    * @returns {Object.<string, any>} 修正された項目ラベルと値
    */
   #setupEdit = () => {
-    const v = {whois:'drawPassport.#setupEdit',step:0,rv:null};
+    const v = {whois:'Perticipants.#setupEdit',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
       v.step = 1; // CSS定義
       this.style.innerText = (this.style.innerText + `
-      .drawPassport .buttons {
+      .Perticipants .buttons {
         width: 100%;
         margin: 1rem 0px;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 2rem;
       }
-      .drawPassport .buttons button {
+      .Perticipants .buttons button {
         display: block;
         width: 100%;
         font-size: 2rem;
       }
-      .drawPassport .buttons [name="取消"].hide {
+      .Perticipants .buttons [name="取消"].hide {
         display: none;
       }
-      .drawPassport .buttons [name="決定"].hide {
+      .Perticipants .buttons [name="決定"].hide {
         display: none;
       }
-      .drawPassport .buttons [name="全員"].hide {
+      .Perticipants .buttons [name="全員"].hide {
         display: none;
       }
       `).replaceAll(/\n/g,'').replaceAll(/\s+/g,' ');
@@ -478,7 +478,7 @@ class drawPassport {
    * @returns {void}
    */
   toggle = (event,show) => {
-    const v = {whois:'drawPassport.toggle',step:1,rv:null};
+    const v = {whois:'Perticipants.toggle',step:1,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -523,7 +523,7 @@ class drawPassport {
    * @returns {void}
    */
   onEdit = async () => {
-    const v = {whois:'drawPassport.onEdit',step:0,rv:null};
+    const v = {whois:'Perticipants.onEdit',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -546,7 +546,7 @@ class drawPassport {
         this.buttons.querySelector('[name="取消"]')
         .addEventListener('click',element => {
           console.log('取消 button clicked.',element.target);
-          console.log('drawPassport.onEdit normal end.');
+          console.log('Perticipants.onEdit normal end.');
           resolve({entryNo:this.data.entryNo,result:null});
         });
 
@@ -558,7 +558,7 @@ class drawPassport {
             rv[x.getAttribute('name')] = x.value;
           });
           // 要confirm
-          console.log('drawPassport.onEdit normal end.');
+          console.log('Perticipants.onEdit normal end.');
           resolve(rv);
         });
 
@@ -570,7 +570,7 @@ class drawPassport {
             rv[x.getAttribute('name')] = '既収';
           });
           // 要confirm
-          console.log('drawPassport.onEdit normal end.');
+          console.log('Perticipants.onEdit normal end.');
           resolve(rv);
         });
       });

@@ -1,7 +1,7 @@
 /**
  * @classdesc 受付業務の画面を生成、受付番号のスキャン/入力から該当参加者情報の表示・編集を行う
  * 
- * なおスキャンはclass WebScanner.scanQRで、該当参加者情報の表示はdrawPassportで行う。
+ * なおスキャンはclass WebScanner.scanQRで、該当参加者情報の表示はPerticipantsで行う。
  */
 class Reception {
   /**
