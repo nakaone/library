@@ -144,24 +144,14 @@ const setupInstance = (dest,opt,def) => {
       } else {
         throw new Error(v.whois+': parent is not string or HTMLElement.');
       }
-      /*
-      if( typeof dest.parent === 'string' ){
-        // CSSセレクタだった場合
-        v.parent = dest.parent;
-        dest.parent = {
-          selector: v.parent,
-          element : document.querySelector(v.parent),
-        };
-        v.parent = dest.parent.element;
-      } else {
-        v.parent = dest.parent;
-      }
-      */
     }
 
     v.step = 3; // CSS定義に基づき新たなstyleを生成
-    if( dest.hasOwnProperty('css') ){
-      dest.style = document.createElement('style');
+    // style.nameに設定するため、呼出元のクラス名を取得
+    v.destName = dest.constructor.name || 'undef';
+    if( dest.hasOwnProperty('css') && // dest.cssがあり、未定義なら追加
+    document.head.querySelector('style[name="'+v.destName+'"]') === null ){
+      dest.style = createElement({tag:'style',attr:{name:v.destName}});
       document.head.appendChild(dest.style);
       for( v.i=0 ; v.i<dest.css.length ; v.i++ ){
         v.x = dest.css[v.i];
