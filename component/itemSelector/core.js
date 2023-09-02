@@ -98,7 +98,7 @@ class itemSelector {
    * - [子要素クリック時の親要素のクリックイベントの挙動](https://www.sunapro.com/currenttarget/)
    */
   #setData = (data=null) => {
-    const v = {whois:'drawPassport.#setData',rv:true,step:0};
+    const v = {whois:'itemSelector.#setData',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
 
