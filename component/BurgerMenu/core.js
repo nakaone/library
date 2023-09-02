@@ -1,3 +1,6 @@
+/**
+ * @classdesc 階層化された要素に基づきハンバーガーメニューを作成
+ */
 class BurgerMenu {
 
   /**
@@ -23,185 +26,131 @@ class BurgerMenu {
         authority: 4294967295,  // 実行権限。既定値2^32-1
         onLeave: [],      // 別ページに遷移する際に実行する関数群(dispatchで使用)
         css: [
-          { sel : '.BurgerMenu',
-            prop: {
-              '--text' : '#000',  // テキストおよびハンバーガーアイコンの線の色
-              '--fore' : '#fff',
-              '--back' : '#ddd',
-              '--debug' : 'rgba(255,0,0,1)',
-              '--iconSize' : '100px',
-              // ローディング画面優先なので、最大値2147483647-1
-              '--maxIndex' : '2147483646',
-              '--navWidth' : '0.7',
-            }
-          },
-          // ハンバーガーアイコン --------------------
-          {
-            sel:'.BurgerMenu.icon',
-            prop: {
-              'display' : 'flex',
-              'justify-content' : 'flex-end',
-              'place-items' : 'center',
-              'position' : 'absolute',
-              // icon周囲にiconSizeの40%の余白が必要
-              'top' : 'calc(var(--iconSize) * 0.4)',//'0',
-              'right' : 'calc(var(--iconSize) * 0.4)',//'0',
-              'width' : 'var(--iconSize)',
-              'height' : 'var(--iconSize)',
-              'z-index' : 'var(--maxIndex)',
-            },
-          },
-          {
-            sel:'.BurgerMenu.icon > button',
-            prop: {
-              'place-content' : 'center center',
-              'display' : 'block',
-              'margin' : '0',
-              'padding' : '0px',
-              'box-sizing' : 'border-box',
-              'width' : 'calc(var(--iconSize) * 0.7)',
-              'height' : 'calc(var(--iconSize) * 0.7)',
-              'border' : 'none',
-              'background' : 'rgba(0,0,0,0)',  // 透明
-              //'z-index' : '4', // navより上に
-              'position' : 'relative', // 横棒の位置をtop/left指定可能に
-              // 以下button標準無効化用
-              'box-shadow' : 'none',
-            },
-          },
-          {
-            sel:'.BurgerMenu.icon button span',
-            prop: {
-              'display' : 'block',
-              'width' : '100%',
-              'height' : 'calc(var(--iconSize) * 0.12)',
-              'border-radius' : 'calc(var(--iconSize) * 0.06)',
-              'position' : 'absolute',
-              'left' : '0',
-              'background' : 'var(--text)',
-              'transition' : 'top 0.24s, transform 0.24s, opacity 0.24s',
-            },
-          },
-          {
-            sel:'.BurgerMenu.icon button span:nth-child(1)',
-            prop: {
-            'top' : '0',
-            },
-          },
-          {
-            sel:'.BurgerMenu.icon button span:nth-child(2)',
-            prop: {
-              'top' : '50%',
-              'transform' : 'translateY(-50%)',
-            },
-          },
-          {
-            sel:'.BurgerMenu.icon button span:nth-child(3)',
-            prop: {
-              'top' : '100%',
-              'transform' : 'translateY(-100%)',
-            },
-          },
-          {
-            sel:'.BurgerMenu.icon button span.is_active:nth-child(1)',
-            prop: {
-              'top' : '50%',
-              'transform' : 'translateY(-50%) rotate(135deg)',
-            },
-          },
-          {
-            sel:'.BurgerMenu.icon button span.is_active:nth-child(2)',
-            prop: {
-              'transform' : 'translate(50%, -50%)',
-              'opacity' : '0',
-            },
-          },
-          {
-            sel:'.BurgerMenu.icon button span.is_active:nth-child(3)',
-            prop: {
-              'top' : '50%',
-              'transform' : 'translateY(-50%) rotate(-135deg)',
-            },
-          },
-          // ナビゲーション領域 ---------------------
-          {
-            sel:'nav.BurgerMenu',
-            prop: {
-              'display' : 'none',
-            },
-          },
-          {
-            sel:'nav.BurgerMenu.is_active',
-            prop: {
-              'display' : 'block',
-              'margin' : '0 0 0 auto',
-              'font-size' : '1rem',
-              'position' : 'absolute',
-              'top' : 'calc(var(--iconSize) * 1.8)',
-              'right' : '0',
-              'width' : 'calc(100% * var(--navWidth))',
-              'height' : 'var(--iconSize)',
-              'z-index' : 'var(--maxIndex)',
-            },
-          },
-          {
-            sel:'nav.BurgerMenu ul',
-            prop: {
-              'margin' : '0rem 0rem 1rem 0rem',
-              'padding' : '0rem 0rem 0rem 0rem',
-              'background-color' : 'var(--back)',
-            },
-          },
-          { // 2階層以降のulにのみ適用
-            sel:'nav.BurgerMenu ul ul',
-            prop: {
-              'display' : 'none',
-            },
-          },
-          { // 2階層以降のulにのみ適用
-            sel:'nav.BurgerMenu ul ul.is_open',
-            prop: {
-              'display' : 'block',
-              'border-top' : 'solid 0.2rem var(--fore)',
-              'border-left' : 'solid 0.7rem var(--fore)',
-            },
-          },
-          {
-            sel:'nav.BurgerMenu li',
-            prop: {
-              'margin' : '0.3rem 0rem 0.3rem 0.5rem',
-              'padding' : '0.2rem 0rem 0rem 0rem',
-              'list-style' : 'none',
-              'background-color' : 'var(--back)',
-            },
-          },
-          {
-            sel:'nav.BurgerMenu li a',
-            prop: {
-              'color' : 'var(--text)',
-              'text-decoration' : 'none',
-            },
-          },
-          // 背景 ---------------------
-          {
-            sel:'.BurgerMenu.back',
-            prop: {
-              'display' : 'none',
-            },
-          },
-          {
-            sel:'.BurgerMenu.back.is_active',
-            prop: {
-              'display' : 'block',
-              'position' : 'absolute',
-              'top' : '0',
-              'right' : '0',
-              'width' : '100vw',
-              'height' : '100vh',
-              'z-index' : 'calc(var(--maxIndex) - 1)',
-              'background' : 'rgba(100,100,100,0.8)',
-            },
-          },
+          /* BurgerMenu共通
+            --text: テキストおよびハンバーガーアイコンの線の色
+            --maxIndex: ローディング画面優先なので、最大値2147483647-1
+          */`
+          .BurgerMenu {
+            --text : #000;
+            --fore : #fff;
+            --back : #ddd;
+            --debug : rgba(255,0,0,1);
+            --iconSize : 100px;
+            --maxIndex : 2147483646;
+            --navWidth : 0.7;
+          }`,
+          /* ハンバーガーアイコン
+            icon周囲にiconSizeの40%程度の余白が必要なのでtop,rightを指定
+          */`
+          .BurgerMenu.icon {
+            display : flex;
+            justify-content : flex-end;
+            place-items : center;
+            position : absolute;
+            top : calc(var(--iconSize) * 0.4);
+            right : calc(var(--iconSize) * 0.4);
+            width : var(--iconSize);
+            height : var(--iconSize);
+            z-index : var(--maxIndex);
+          }
+          .BurgerMenu.icon > button {
+            place-content : center center;
+            display : block;
+            margin : 0;
+            padding : 0px;
+            box-sizing : border-box;
+            width : calc(var(--iconSize) * 0.7);
+            height : calc(var(--iconSize) * 0.7);
+            border : none;
+            background : rgba(0,0,0,0);
+            position : relative;
+            box-shadow : none;
+          }
+          .BurgerMenu.icon button span {
+            display : block;
+            width : 100%;
+            height : calc(var(--iconSize) * 0.12);
+            border-radius : calc(var(--iconSize) * 0.06);
+            position : absolute;
+            left : 0;
+            background : var(--text);
+            transition : top 0.24s, transform 0.24s, opacity 0.24s;
+          }
+          .BurgerMenu.icon button span:nth-child(1) {
+            top : 0;
+          }
+          .BurgerMenu.icon button span:nth-child(2) {
+            top : 50%;
+            transform : translateY(-50%);
+          }
+          .BurgerMenu.icon button span:nth-child(3) {
+            top : 100%;
+            transform : translateY(-100%);
+          }
+          .BurgerMenu.icon button span.is_active:nth-child(1) {
+            top : 50%;
+            transform : translateY(-50%) rotate(135deg);
+          }
+          .BurgerMenu.icon button span.is_active:nth-child(2) {
+            transform : translate(50%, -50%);
+            opacity : 0;
+          }
+          .BurgerMenu.icon button span.is_active:nth-child(3) {
+            top : 50%;
+            transform : translateY(-50%) rotate(-135deg);
+          }`,
+          /* ナビゲーション領域 */`
+          nav.BurgerMenu {
+            display : none;
+          }
+          nav.BurgerMenu.is_active {
+            display : block;
+            margin : 0 0 0 auto;
+            font-size : 1rem;
+            position : absolute;
+            top : calc(var(--iconSize) * 1.8);
+            right : 0;
+            width : calc(100% * var(--navWidth));
+            height : var(--iconSize);
+            z-index : var(--maxIndex);
+          }
+          nav.BurgerMenu ul {
+            margin : 0rem 0rem 1rem 0rem;
+            padding : 0rem 0rem 0rem 0rem;
+            background-color : var(--back);
+          }
+          nav.BurgerMenu ul ul { /* 2階層以降のulにのみ適用 */
+            display : none;
+          }
+          nav.BurgerMenu ul ul.is_open {
+            display : block;
+            border-top : solid 0.2rem var(--fore);
+            border-left : solid 0.7rem var(--fore);
+          }
+          nav.BurgerMenu li {
+            margin : 0.3rem 0rem 0.3rem 0.5rem;
+            padding : 0.2rem 0rem 0rem 0rem;
+            list-style : none;
+            background-color : var(--back);
+          }
+          nav.BurgerMenu li a {
+            color : var(--text);
+            text-decoration : none;
+          }`,
+          /* 背景 */`
+          .BurgerMenu.back {
+            display : none;
+          }
+          .BurgerMenu.back.is_active {
+            display : block;
+            position : absolute;
+            top : 0;
+            right : 0;
+            width : 100vw;
+            height : 100vh;
+            z-index : calc(var(--maxIndex) - 1);
+            background : rgba(100,100,100,0.8);
+          }`,
         ],
       });
 
