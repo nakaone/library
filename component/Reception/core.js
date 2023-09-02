@@ -1,5 +1,5 @@
 /**
- * @classdesc クラスの概要説明
+ * @classdesc 受付番号等の参加者特定キーを基に参加者を検索、参加費等の編集を行う
  */
 class Reception {
   /**
@@ -61,6 +61,10 @@ class Reception {
     }
   }
 
+  /** 受付番号等の参加者特定キーを基に参加者を検索、参加費等の編集を行う
+   * @param {void}
+   * @returns {true|Error}
+   */
   main = async () => {
     const v = {whois:'Reception.main',rv:true,step:0};
     console.log(v.whois+' start.');
