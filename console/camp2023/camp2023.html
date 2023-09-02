@@ -2217,59 +2217,61 @@ class drawPassport {
           }`,
         ],
         html:[  // イベント定義を複数回行わないようにするため、eventで定義
-          // 概要欄(QRコード、受付番号、申込者名)
-          {attr:{class:'summary'},children:[
-            {attr:{name:'qrcode'}},
-            {attr:{name:'entryStr'},text:'No.',children:[
-              {tag:'span',attr:{class:'v'}},
-            ]},
-            {attr:{name:'申込者氏名'},children:[
-              {tag:'ruby',children:[
+          {attr:{class:'drawPassport'},children:[
+            // 概要欄(QRコード、受付番号、申込者名)
+            {attr:{class:'summary'},children:[
+              {attr:{name:'qrcode'}},
+              {attr:{name:'entryStr'},text:'No.',children:[
                 {tag:'span',attr:{class:'v'}},
-                {tag:'rt',attr:{name:'申込者カナ'},children:[
-                  {tag:'span',attr:{class:'v'}}
-                ]},
-              ]}
-            ]},
-          ]},
-          // 参加者一覧
-          {attr:{class:'list'},children:[
-            {attr:{class:'label'},children:[
-              {tag:'p',text:'参加者一覧'},
-              {tag:'button',text:'非表示',event:{click:this.toggle}},
-            ]},
-            {attr:{class:'content'},children:[
-              {attr:{class:'th'},text:'No'},
-              {attr:{class:'th'},text:'氏名'},
-              {attr:{class:'th'},text:'所属'},
-              {attr:{class:'th'},text:'参加費'},
-            ]},
-          ]},
-          // 詳細情報
-          {attr:{class:'detail'},children:[
-            {attr:{class:'label'},children:[
-              {tag:'p',text:'詳細情報'},
-              {tag:'button',text:'非表示',event:{click:this.toggle}},
-            ]},
-            {attr:{class:'content'},children:[
-              {attr:{class:'table'}},
-              {attr:{class:'message'},children:[
-                {attr:{name:'editURL'},children:[
-                  {tag:'p',text:'参加者一覧・詳細情報に誤謬・変更がある場合、以下のボタンをクリックして申込フォームを開いて修正してください。'},
-                  {
-                    tag:'button',
-                    text:'申込フォームを開く',
-                    event:{click:()=>window.open(this.data.editURL,'_blank')},
-                  },
+              ]},
+              {attr:{name:'申込者氏名'},children:[
+                {tag:'ruby',children:[
+                  {tag:'span',attr:{class:'v'}},
+                  {tag:'rt',attr:{name:'申込者カナ'},children:[
+                    {tag:'span',attr:{class:'v'}}
+                  ]},
                 ]}
               ]},
             ]},
-          ]},
-          // 取消・決定・全員受領ボタン
-          {attr:{class:'buttons'},children:[
-            {tag:'button',attr:{name:'取消'},text:'取消'},
-            {tag:'button',attr:{name:'決定'},text:'決定'},
-            {tag:'button',attr:{name:'全員'},html:'全員<br>受領'},
+            // 参加者一覧
+            {attr:{class:'list'},children:[
+              {attr:{class:'label'},children:[
+                {tag:'p',text:'参加者一覧'},
+                {tag:'button',text:'非表示',event:{click:this.toggle}},
+              ]},
+              {attr:{class:'content'},children:[
+                {attr:{class:'th'},text:'No'},
+                {attr:{class:'th'},text:'氏名'},
+                {attr:{class:'th'},text:'所属'},
+                {attr:{class:'th'},text:'参加費'},
+              ]},
+            ]},
+            // 詳細情報
+            {attr:{class:'detail'},children:[
+              {attr:{class:'label'},children:[
+                {tag:'p',text:'詳細情報'},
+                {tag:'button',text:'非表示',event:{click:this.toggle}},
+              ]},
+              {attr:{class:'content'},children:[
+                {attr:{class:'table'}},
+                {attr:{class:'message'},children:[
+                  {attr:{name:'editURL'},children:[
+                    {tag:'p',text:'参加者一覧・詳細情報に誤謬・変更がある場合、以下のボタンをクリックして申込フォームを開いて修正してください。'},
+                    {
+                      tag:'button',
+                      text:'申込フォームを開く',
+                      event:{click:()=>window.open(this.data.editURL,'_blank')},
+                    },
+                  ]}
+                ]},
+              ]},
+            ]},
+            // 取消・決定・全員受領ボタン
+            {attr:{class:'buttons'},children:[
+              {tag:'button',attr:{name:'取消'},text:'取消'},
+              {tag:'button',attr:{name:'決定'},text:'決定'},
+              {tag:'button',attr:{name:'全員'},html:'全員<br>受領'},
+            ]},
           ]},
         ],
       },
@@ -3151,7 +3153,10 @@ const setupInstance = (dest,opt,def) => {
     v.destName = dest.constructor.name || 'undef';
     if( dest.hasOwnProperty('css') && // dest.cssがあり、未定義なら追加
     document.head.querySelector('style[name="'+v.destName+'"]') === null ){
-      dest.style = createElement({tag:'style',attr:{name:v.destName}});
+      dest.style = createElement({
+        tag:'style',
+        attr:{type:'text/css',name:v.destName}
+      });
       document.head.appendChild(dest.style);
       for( v.i=0 ; v.i<dest.css.length ; v.i++ ){
         v.x = dest.css[v.i];
