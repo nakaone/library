@@ -340,7 +340,6 @@ class BurgerMenu {
     };
     console.log(v.whois+' start.',event);
     try {
-      console.log(event,typeof event);
 
       v.step = 1; // data-BurgerMenu属性を持つ要素を全て非表示に
       v.selector = '[data-BurgerMenu]';
@@ -379,9 +378,8 @@ class BurgerMenu {
    */
   dispatch = (event) => {
     const v = {whois:'BurgerMenu.dispatch',step:0,rv:null};
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',event);
     try {
-      console.log(event);
 
       v.step = 1; // ナビゲーションを非表示
       this.toggle();
@@ -391,10 +389,8 @@ class BurgerMenu {
 
       v.step = 3; // 選択された関数名を取得
       v.funcName = event.target.getAttribute('name');
-      console.log('v.funcName='+v.funcName);
 
       v.step = 4; // 選択された関数を実行
-      console.log(this.func);
       this.func[v.funcName]();
 
       console.log(v.whois+' normal end.',v.rv);
@@ -431,14 +427,11 @@ class BurgerMenu {
   /** ブランチの下位階層メニュー表示/非表示切り替え */
   showChildren = (event) => {
     const v = {whois:'BurgerMenu.showChildren',step:0,rv:null};
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',event);
     try {
-      console.log(event.target);
       event.target.parentNode.querySelector('ul').classList.toggle('is_open');
       let m = event.target.innerText.match(/^([▶️▼])(.+)/);
-      console.log(m);
       const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
-      console.log(m[1],m[1] === '▼',text);
       event.target.innerText = text;
 
       console.log(v.whois+' normal end.',v.rv);
