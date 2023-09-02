@@ -142,86 +142,55 @@ window.addEventListener('DOMContentLoaded',async () => {
 
     console.log(v.whois+' start.');
 
-    v.step = '1'; // 認証
+    // ================================================
+    // 1. 利用する各種クラスのインスタンス化
+    // ================================================
+
+    // ----------------------------------------------------
+    v.step = '1.1'; // Auth: 認証
     v.ls = localStorage.getItem('conf');
     // クエリ文字列のデバッグモード指定を確認
     if( v.searchParams.has('debug') ){
       v.debug = v.searchParams.get('debug').toLowerCase() === 'true';
     }
     if( v.debug && v.ls !== null ){
-      v.step = '1.1';
+      v.step = '1.1.1';
       // デバッグ用：リリース時はlocalStorage.setItemと併せて削除
       v.opt = JSON.parse(v.ls);
-      v.config = new Auth(v.gwURL,v.opt);
-      if( v.config instanceof Error ) throw v.config;
+      v.Auth = new Auth(v.gwURL,v.opt);
+      if( v.Auth instanceof Error ) throw v.Auth;
     } else {
-      v.step = '1.2';
+      v.step = '1.1.2';
       // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
       if( v.searchParams.has('id') ){
         v.opt.entryNo = {value:v.searchParams.get('id')};
       }
-      v.config = new Auth(v.gwURL,v.opt);
-      if( v.config instanceof Error ) throw v.config;
-      await v.config.build();
+      v.Auth = new Auth(v.gwURL,v.opt);
+      if( v.Auth instanceof Error ) throw v.Auth;
+      await v.Auth.build();
     }
-    localStorage.setItem('conf',JSON.stringify(v.config));
-    console.log(v.whois+'.'+v.step+':',v.config);
+    localStorage.setItem('conf',JSON.stringify(v.Auth));
+    console.log(v.whois+'.'+v.step+':',v.Auth);
 
-    v.step = '1.3'; // MarkDownで記述された部分をHTML化して表示
-    document.querySelectorAll('div.markdown').forEach(x => {
-      x.innerHTML = marked(x.innerHTML);
-    });
-
-    v.step = '1.4'; // PlantUMLで記述された部分をHTML化して表示
-    document.querySelectorAll('div.PlantUML').forEach(x => {
-      let src = x.querySelector('div').innerHTML;
-      x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
-        + plantumlEncoder.encode(src);
-    });
-
-    v.step = '1.5'; // Mermaidで記述された部分をHTML化して表示
-    mermaid.initialize({startOnLoad: true});
-
-    // ================================================
-    // 個別メニュー画面の設定
-    // ================================================
-    v.step = '2'; // メニューを定義
-    v.menu = new BurgerMenu('body',{
-      authority: v.config.info.authority,
-      home: 'c1005',  // パスポート画面をホームに設定(暫定)
-    });
-    if( v.menu instanceof Error ) throw v.menu;
-    // メニュー遷移時、定期配信の停止を追加定義
-    //v.menu.onLeave.push(v.board.stop);
-    // -> 止めるとdelivery自体止まってしまうので停止しない
-
-    v.step = '2.1'; // お知らせ
-    v.step = '2.1.1'; // 掲示板
-    v.board = new BulletinBoard({
-      auth: v.config, // 認証局他のAuthインスタンス
+    // ----------------------------------------------------
+    v.step = '1.2'; // BulletinBoard: 掲示板
+    v.BulletinBoard = new BulletinBoard({
+      auth: v.Auth, // 認証局他のAuthインスタンス
       parent: '[data-BurgerMenu="label:\'掲示板\'"]',
     });
-    if( v.board instanceof Error ) throw v.board;
-    v.rv = await v.board.delivery();
-    if( v.rv instanceof Error ) throw v.rv;
-  
-    // 2.1.2 注意事項
-    // 2.1.3 持ち物
+    if( v.BulletinBoard instanceof Error ) throw v.BulletinBoard;
 
-    v.step = '2.2.1'; // パスポート
-    v.rv = v.Perticipants = new Perticipants(
+    // ----------------------------------------------------
+    v.step = '1.3'; // Perticipants: 参加者情報の表示
+    v.Perticipants = new Perticipants(
       'div[data-BurgerMenu="label:\'パスポート\'"]',
-      v.config.info
+      v.Auth.info
     );
-    if( v.rv instanceof Error ) throw v.rv;
-    v.step = '2.2.2';
-    v.rv = v.Perticipants.view();
-    if( v.rv instanceof Error ) throw v.rv;
+    if( v.Perticipants instanceof Error ) throw v.Perticipants;
 
-    // 2.3 案内図
-
-    v.step = '2.4'; // 予定表(TimeTable)
-    // Google Spreadからデータを取得してタイムテーブル表示
+    // ----------------------------------------------------
+    v.step = '1.4'; // TimeTable: タイムテーブル
+    // データはGoogle Spreadから取得
     v.res = await fetch(v.docURL);
     v.res = await v.res.json();
     v.TimeTable = new TimeTable(
@@ -231,55 +200,87 @@ window.addEventListener('DOMContentLoaded',async () => {
     );
     if( v.TimeTable instanceof Error ) throw v.TimeTable;
 
-    // 2.5 スタッフ
-    // 2.5.1 参加者数
-
-    v.step = '2.5.2'; // 受付業務
-    v.reception = new Reception(
-      v.config, // 認証局他のAuthインスタンス
+    // ----------------------------------------------------
+    v.step = '1.5'; // Reception: 参加者情報の検索・表示・編集(受付業務)
+    v.Reception = new Reception(
+      v.Auth, // 認証局他のAuthインスタンス
       '[data-BurgerMenu="label:\'受付業務\'"]', // parent
     );
-    if( v.reception instanceof Error ) throw v.reception;
+    if( v.Reception instanceof Error ) throw v.Reception;
 
-    /*
-    v.receptPage = '[data-BurgerMenu="label:\'受付業務\'"]';
-    v.rp1 = document.querySelector(v.receptPage);
-    console.log('l.222',v.rp1);
-    v.rp2 = v.rp1.getAttribute('class');
-    v.rp3 = null;
-    console.log('l.222 rp2=%s, rp3=%s',v.rp2,v.rp3);
-    v.rp2 = v.rp1.className;
-    v.rp3 = v.rp2.split(' ');
-    console.log('l.222 rp2=%s, rp3=%s',v.rp2,v.rp3);
-    v.rp2 = v.rp1.classList;
-    v.rp3 = v.rp2[0];
-    //v.rp3 = v.rp2.item(0);
-    console.log('l.222 rp2=%s, rp3=%s',v.rp2,v.rp3);
-
-    v.id = document.querySelector(v.receptPage).classList;
-    v.boot = 'nav.BurgerMenu a[name="'+v.id+'"]';
-    
-
-    v.reception = new Reception({
-      auth: v.config, // 認証局他のAuthインスタンス
-      area:{selector:v.receptPage},  // 受付画面表示エリアのCSSセレクタ
-      boot:{selector:v.boot}, // スキャナ起動のトリガーとなる要素のCSSセレクタ
-      loading: {selector:'div[name="loading"]'},  // ローディング画面のCSSセレクタ
+    // ----------------------------------------------------
+    v.step = '1.6'; // BurgerMenu: ナビゲーションメニュー
+    // 他インスタンスのメソッドをfuncとして使用するので最後に定義
+    v.BurgerMenu = new BurgerMenu('body',{
+      authority: v.Auth.info.authority,
+      home: 'c1005',  // パスポート画面をホームに設定(暫定)
+      func: {recept:()=>{return v.Reception.main()}},
     });
-    if( v.reception instanceof Error ) throw v.reception;
-    */
+    if( v.BurgerMenu instanceof Error ) throw v.BurgerMenu;
+    // メニュー遷移時、定期配信の停止を追加定義
+    //v.BurgerMenu.onLeave.push(v.BulletinBoard.stop);
+    // -> 止めるとdelivery自体止まってしまうので停止しない
 
-    // 2.5.3 校内探険
-    // 2.5.4 参考資料
-    // 2.5.4.1 日程表
-    // 2.5.4.2 論議メモ
-    // 2.5.4.3 関連サイト
-    // 2.6 システム設定
 
-    v.step = '10'; // 権限により表示画面制御
+    // ================================================
+    // 2. 他言語記述部分のHTML化
+    // ================================================
+
+    v.step = '2.1'; // MarkDownで記述された部分をHTML化して表示
+    document.querySelectorAll('div.markdown').forEach(x => {
+      x.innerHTML = marked(x.innerHTML);
+    });
+
+    v.step = '2.2'; // PlantUMLで記述された部分をHTML化して表示
+    document.querySelectorAll('div.PlantUML').forEach(x => {
+      let src = x.querySelector('div').innerHTML;
+      x.querySelector('img').src = "http://www.plantuml.com/plantuml/svg/"
+        + plantumlEncoder.encode(src);
+    });
+
+    v.step = '2.3'; // Mermaidで記述された部分をHTML化して表示
+    mermaid.initialize({startOnLoad: true});
+
+    // ================================================
+    // 3. 個別メニュー画面の作成・表示
+    // ================================================
+
+    v.step = '3.1'; // お知らせ
+    v.step = '3.1.1'; // 掲示板
+    v.rv = await v.BulletinBoard.delivery();
+    if( v.rv instanceof Error ) throw v.rv;
+  
+    // 3.1.2 注意事項
+    // 3.1.3 持ち物
+
+    v.step = '3.2'; // パスポート
+    v.rv = v.Perticipants.view();
+    if( v.rv instanceof Error ) throw v.rv;
+
+    // 3.3 案内図
+
+    v.step = '3.4'; // 予定表(TimeTable)
+    v.rv = v.TimeTable.draw();
+    if( v.rv instanceof Error ) throw v.rv;
+
+    // 3.5 スタッフ
+    // 3.5.1 参加者数
+    // 3.5.2 受付業務
+    // 3.5.3 校内探険
+    // 3.5.4 参考資料
+    // 3.5.4.1 日程表
+    // 3.5.4.2 論議メモ
+    // 3.5.4.3 関連サイト
+    // 3.6 システム設定
+
+    // ================================================
+    // 4. 権限による表示制御、終了処理
+    // ================================================
+
+    v.step = '4.1'; // 権限により表示画面制御
     // 最終段階以前で不要な要素を削除すると「要素が見つからない」エラーが発生
     // ⇒ 最終段階で実行する
-    v.authority = Number(v.config.info.authority)
+    v.authority = Number(v.Auth.info.authority)
     if( (v.authority & 3) === 0 ){
       v.step = '9.1'; // 1(参加者)、2(スタッフ)、3(管理者)いずれでもない
       alert('参加資格を確認してください');
@@ -298,8 +299,8 @@ window.addEventListener('DOMContentLoaded',async () => {
       document.querySelector('div[name="loading"]').style.display = 'none';
     } 
 
-    v.step = '11'; // 終了処理
-    v.menu.change();  // ホーム画面を表示
+    v.step = '4.2'; // 終了処理
+    v.BurgerMenu.change();  // ホーム画面を表示
     console.log(v.whois+' normal end.');
 
   } catch(e){
