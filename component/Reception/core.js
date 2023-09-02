@@ -31,30 +31,36 @@ class Reception {
       v.rv = setupInstance(this,opt,v.default);
       if( v.rv instanceof Error ) throw v.rv;
 
-      // 待機画面の準備
+      v.step = 2; // 待機画面の準備
       this.LoadingIcon = new LoadingIcon(
         this.parent.querySelector('[name="LoadingIcon"]')
       );
+      if( this.LoadingIcon instanceof Error ) throw this.LoadingIcon;
 
-      // スキャナの準備
+      v.step = 3; // スキャナの準備
       this.WebScanner = new WebScanner(
         this.parent.querySelector('[name="WebScanner"]',{
           showVideo:true, // debug: canvasだけでなくvideoも表示
         })
       );
+      if( this.WebScanner instanceof Error ) throw this.WebScanner;
 
-      // 候補者選択画面の準備
+      v.step = 4; // 候補者選択画面の準備
       this.itemSelector = new itemSelector(
         this.parent.querySelector('[name="itemSelector"]')
       );
+      if( this.itemSelector instanceof Error ) throw this.itemSelector;
 
-      // 参加費入力画面の準備
+      v.step = 5; // 参加費入力画面の準備
       this.Perticipants = new Perticipants(
         this.parent.querySelector('[name="Perticipants"]')
       );
+      if( this.Perticipants instanceof Error ) throw this.Perticipants;
 
+      v.step = 6; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
+      
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
