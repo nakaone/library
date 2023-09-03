@@ -249,7 +249,7 @@ class BurgerMenu {
               li = createElement({tag:'li',children:[{
                 tag:'a',
                 text: obj.label,
-                attr: {name:v.id+','+obj.func},
+                attr: {name:v.id+'\t'+obj.func},
                 //attr: {name:obj.func},
                 event:{click:this.dispatch}
               }]});
@@ -390,7 +390,7 @@ class BurgerMenu {
       this.onLeave.forEach(x => x());
 
       v.step = 3; // name属性から画面IDと選択された関数名を取得
-      v.name = event.target.getAttribute('name').split(',');
+      v.name = event.target.getAttribute('name').split('\t');
 
       v.step = 4; // 画面を切り替え
       this.change(v.name[0]);
