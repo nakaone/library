@@ -3283,47 +3283,55 @@ class Reception {
    * @returns {true|Error}
    */
   main = async () => {
-    const v = {whois:'Reception.main',rv:true,step:0};
+    const v = {whois:'Reception.main',rv:true,step:0,loop:true};
     console.log(v.whois+' start.');
     try {
 
-      v.step = 1; // QRコードをスキャン or 氏名(一部)の入力
-      v.rv = await this.WebScanner.scanQR();
-      if( v.rv instanceof Error ) throw v.rv;
-      //if( v.rv === null ) 読込失敗orタイムアウト
+      while(v.loop){  // v.loopがtrueの間、繰り返し
 
-      v.step = 2; // 入力された検索キーで認証局経由・管理局に該当者情報を問合せ
-      this.LoadingIcon.show();
-      v.rv = await this.auth.fetch('recept1A',v.rv,3);
-      if( v.rv instanceof Error ) throw v.rv;
-      this.LoadingIcon.hide();
+        v.step = 1; // QRコードをスキャン or 氏名(一部)の入力
+        v.keyword = null;
+        v.keyword = await this.WebScanner.scanQR();
+        if( v.keyword instanceof Error ) throw v.keyword;
+        if( v.keyword === null ) continue; // 読込失敗orタイムアウト
+  
+        v.step = 2; // 入力された検索キーで認証局経由・管理局に該当者情報を問合せ
+        this.LoadingIcon.show();
+        v.rv = await this.auth.fetch('recept1A',v.keyword,3);
+        if( v.rv instanceof Error ) throw v.rv;
+        this.LoadingIcon.hide();
+  
+        v.step = 3; // 無権限・不正公開鍵・不適切検索キー文字列のエラー
+        if( v.rv.isErr ){
+          throw new Error(v.rv.message);
+        }
 
-      if( v.rv.isErr || v.rv.result.length === 0 ){
-        v.step = 3.1; // 検索画面でメッセージをポップアップ
-        alert( v.rv.message );
-      } else {
-        v.step = 3.2; // 検索成功(該当者あり)
-        v.target = v.rv.result[0];
-        if( v.rv.result.length > 1 ){
-          v.step = 3.21; // 該当者が複数
-          // ⇒ 該当者一覧画面に遷移、編集対象者を特定
-          v.target = await this.itemSelector(v.rv.result);
-          if( v.target instanceof Error ) throw v.target;
-        }
-        v.step = 3.3; // 編集画面を表示し、変更箇所を取得
-        v.data = await this.Perticipants.edit(v.target);
-        if( v.data instanceof Error ) throw v.data;
-        // auth.fetchで変更箇所を管理局に送信
-        if( v.data !== null ){
-          this.LoadingIcon.show();
-          v.rv = await this.auth.fetch('recept2A',v.data,3);
-          this.LoadingIcon.hide();
-          // 編集結果のメッセージを表示
-          alert(v.rv.message);
-        }
+        if( v.rv.result.length === 0 ){
+          v.step = 3.1; // エラーまたは該当無し
+          // ⇒ 検索画面でメッセージをポップアップ
+          alert( v.rv.message );
+        } else {
+          v.step = 3.2; // 検索成功(該当者あり)
+          v.target = v.rv.result[0];
+          if( v.rv.result.length > 1 ){
+            v.step = 3.21; // 該当者が複数
+            // ⇒ 該当者一覧画面に遷移、編集対象者を特定
+            v.target = await this.itemSelector.select(v.rv.result);
+            if( v.target instanceof Error ) throw v.target;
+          }
+          v.step = 3.3; // 編集画面を表示し、変更箇所を取得
+          v.data = await this.Perticipants.edit(v.target);
+          if( v.data instanceof Error ) throw v.data;
+          // auth.fetchで変更箇所を管理局に送信
+          if( v.data !== null ){
+            this.LoadingIcon.show();
+            v.rv = await this.auth.fetch('recept2A',v.data,3);
+            this.LoadingIcon.hide();
+            // 編集結果のメッセージを表示
+            alert(v.rv.message);
+          }
+        }        
       }
-      // 検索画面を再表示(bootScanner)
-      //this.bootScanner();
 
       // 終了処理
       console.log(v.whois+' normal end.');
