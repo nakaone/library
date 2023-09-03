@@ -24,7 +24,7 @@ class Reception {
         ],
       },
     };
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',auth,parent,opt);
     try {
 
       v.step = 1; // メンバの値セット、HTML/CSSの生成
@@ -40,7 +40,7 @@ class Reception {
       v.step = 3; // スキャナの準備
       this.WebScanner = new WebScanner(
         this.parent.querySelector('[name="WebScanner"]',{
-          showVideo:true, // debug: canvasだけでなくvideoも表示
+          //showVideo:true, // debug用。canvasだけでなくvideoも表示
         })
       );
       if( this.WebScanner instanceof Error ) throw this.WebScanner;
@@ -60,7 +60,7 @@ class Reception {
       v.step = 6; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
-      
+
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;

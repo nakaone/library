@@ -196,8 +196,8 @@ class BurgerMenu {
   }
 
   /** 親要素を走査してナビゲーションを作成
-   * @param {*} parent
-   * @param {*} navi
+   * @param {HTMLElement} parent - body等の親要素。
+   * @param {HTMLElement} navi - nav等のナビゲーション領域
    * @returns
    */
   #genNavi = (parent=this.parent,navi=this.navi) => {
@@ -239,7 +239,8 @@ class BurgerMenu {
               li = createElement({tag:'li',children:[{
                 tag:'a',
                 text: obj.label,
-                attr:{name:obj.func,href:obj.href,target:'_blank'},
+                attr:{name:v.id,href:obj.href,target:'_blank'},
+                //attr:{name:obj.func,href:obj.href,target:'_blank'},
                 event:{click:this.toggle},  // 遷移後メニューを閉じる
               }]});
             } else if( obj.hasOwnProperty('func') ){
@@ -248,7 +249,8 @@ class BurgerMenu {
               li = createElement({tag:'li',children:[{
                 tag:'a',
                 text: obj.label,
-                attr: {name:obj.func},
+                attr: {name:v.id+','+obj.func},
+                //attr: {name:obj.func},
                 event:{click:this.dispatch}
               }]});
             } else {
@@ -387,11 +389,14 @@ class BurgerMenu {
       v.step = 2; // 別ページに遷移する際に実行する関数群を実行
       this.onLeave.forEach(x => x());
 
-      v.step = 3; // 選択された関数名を取得
-      v.funcName = event.target.getAttribute('name');
+      v.step = 3; // name属性から画面IDと選択された関数名を取得
+      v.name = event.target.getAttribute('name').split(',');
+
+      v.step = 4; // 画面を切り替え
+      this.change(v.name[0]);
 
       v.step = 4; // 選択された関数を実行
-      this.func[v.funcName]();
+      this.func[v.name[1]]();
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
