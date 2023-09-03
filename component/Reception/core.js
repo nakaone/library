@@ -83,7 +83,7 @@ class Reception {
 
       v.step = 2; // 入力された検索キーで認証局経由・管理局に該当者情報を問合せ
       this.LoadingIcon.show();
-      v.rv = await this.auth.fetch('recept1A',v.keyword,3);
+      v.rv = await this.auth.fetch('recept1A',v.rv,3);
       if( v.rv instanceof Error ) throw v.rv;
       this.LoadingIcon.hide();
 
