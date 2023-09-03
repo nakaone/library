@@ -27,18 +27,27 @@ class WebScanner {
   constructor(parent,opt={}){
     const v = {whois:'WebScanner.constructor',rv:true,step:0,
       default:{
+        display:{ // entry実行時に表示する領域
+          wrapper: true,
+          video: true,
+          canvas: true,
+          description: true,
+          input: true,
+          button: true,
+          qrcode: true,
+        },
         // === メンバとして持つHTMLElementの定義 ==============
-        parent: parent, // {HTMLElement} 親要素(ラッパー)
-        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
+        parent: parent, // {HTMLElement} 親要素
+        parentSelector: null, // {string} 親要素のCSSセレクタ
         style: null,  // {HTMLStyleElement} CSS定義
         wrapper: null,  // {HTMLElement} - 親直下のラッパー
         video: null,  // {HTMLElement} - videoで撮影している画像領域
         canvas: null, // {HTMLElement} - 撮影画像を描画する領域
         context: null, // {CanvasRenderingContext2D} - 描画コンテキスト
-        switches: null,  // {HTMLElement} - 各種ボタンのラッパー
-        retake: null,  // {HTMLElement} - 再撮影ボタン
-        shutter: null, // {HTMLElement} - シャッターボタン
-        adopt: null,  // {HTMLElement} - 撮影OK、次へボタン
+        description: null, // {HTMLElement} - 説明文
+        input: null, // {HTMLElement} - 入力欄
+        button: null, // {HTMLElement} - 決定ボタン
+        qrcode: null, // {HTMLElement} - QRコード生成用領域
 
         // === scanQR専用パラメータ ==========================
         constraints:{ // video.getUserMediaで指定するオプション
@@ -66,22 +75,74 @@ class WebScanner {
           .WebScanner.act {
             width: 100%;
             display: grid;
+            grid-template-columns: 1fr;
             place-items: center;
+            gap: 2rem;
           }`,
-          /* video */`
-          .WebScanner .video {
+          /* video, canvas */`
+          .WebScanner video {
             display: none;
           }
-          .WebScanner .video.act {
+          .WebScanner video.act {
             display: block;
+            width: 100%;
+          }
+          .WebScanner canvas {
+            display: none;
+          }
+          .WebScanner canvas.act {
+            display: block;
+            width: 100%;
+          }`,
+          /* keyword */`
+          .WebScanner .description {
+            display: none;
+          }
+          .WebScanner .description.act {
+            display: block;
+          }
+          .WebScanner input {
+            display: none;
+          }
+          .WebScanner input.act {
+            display: block;
+            width: 80%;
+            margin: 0 auto;
+            height: 7vw;
+            font-size: 5vw;
+          }
+          .WebScanner button {
+            display: none;
+          }
+          .WebScanner button.act {
+            display: block;
+            width: 80%;
+            height: 15vw;
+            font-size: 5vw;
+            margin: 0 auto;
+          }
+          .WebScanner .value {
+            display: none;
+          }`,
+          /* qrcode */`
+          .WebScanner .qrcode {
+            display: none;
+          }
+          .WebScanner .qrcode.act {
+            display: block;
+            width: 60%;
+            margin: 0 auto;
           }`,
         ],
         html:[  // イベント定義を複数回行わないようにするため、eventで定義
           {attr:{class:'WebScanner'},children:[
-            {attr:{class:'video'},children:[
-              {tag:'video'}
-            ]},
+            {tag:'video'},
             {tag:'canvas'},
+            {attr:{class:'description'}},
+            {tag:'input',attr:{type:'text'}},
+            {tag:'button',text:'検索'},
+            {attr:{class:'value'}},
+            {attr:{class:'qrcode'}},
           ]},
         ],
       },
@@ -95,11 +156,12 @@ class WebScanner {
 
       v.step = 2; // 各領域をメンバとして保存
       this.wrapper = this.parent.querySelector('.WebScanner');
-      this.video = this.parent.querySelector('video');
-      this.canvas = this.parent.querySelector('canvas');
-      this.retake = this.parent.querySelector('button[name="retake"]');
-      this.shutter = this.parent.querySelector('button[name="shutter"]');
-      this.adopt = this.parent.querySelector('button[name="adopt"]');
+      this.video = this.wrapper.querySelector('video');
+      this.canvas = this.wrapper.querySelector('canvas');
+      this.description = this.wrapper.querySelector('.description');
+      this.input = this.wrapper.querySelector('input');
+      this.button = this.wrapper.querySelector('button');
+      this.qrcode = this.wrapper.querySelector('.qrcode');
 
       v.step = 3; // デバイスがサポートされているか確認
       if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
@@ -122,6 +184,7 @@ class WebScanner {
 
       // 以下の手順はawaitが必要なので、scanQRで実行
 
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
@@ -130,18 +193,8 @@ class WebScanner {
     }
   }
 
-  /** 指定時間待機 */
-  sleep = (sec) =>
-    {return new Promise(resolve => setTimeout(resolve,sec))};
-
-  /** QRコードをスキャン
-   * @param {Object} opt - scanQR専用パラメータ。詳細はconstructor参照
-   * @returns {string|null} スキャンしたQRコードの文字列。読込失敗ならnull
-   * 
-   * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
-   */
-  scanQR = async (opt={}) => {
-    const v = {whois:'WebScanner.scanQR',rv:null,step:0};
+  entry = async (opt={}) => {
+    const v = {whois:'WebScanner.entry',rv:null,step:0};
     console.log(v.whois+' start.');
     try {
 
@@ -157,11 +210,12 @@ class WebScanner {
         this.video.play();
       };
 
-      v.step = 3; // video,canvasの表示
-      this.wrapper.classList.add('act');
-      if( this.showVideo ){
-        this.wrapper.querySelector('.video').classList.add('act');
-      }
+      v.step = 3; // video,canvas他要素の表示
+      Object.keys(this.display).forEach(x => {
+        if( this.display[x] ){
+          this[x].classList.add('act');
+        }
+      });
       this.canvas.width  = v.cw = 
       this.canvas.height = v.ch = this.size;
 
@@ -200,6 +254,10 @@ class WebScanner {
     }
   }
 
+  /** 指定時間待機 */
+  sleep = (sec) =>
+    {return new Promise(resolve => setTimeout(resolve,sec))};
+
   /** 終了処理
    * @param {boolean} [endStatus=false] - 終了時のステータス。異常終了ならtrue
    * @returns {void}
@@ -212,8 +270,9 @@ class WebScanner {
       track.stop();
     });
     if( this.closeFinder ){
-      this.wrapper.classList.remove('act');
-      this.wrapper.querySelector('.video').classList.remove('act');
+      Object.keys(this.display).forEach(x => {
+        this[x].classList.remove('act');
+      })
     }
   }
 }
