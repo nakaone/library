@@ -311,7 +311,7 @@ class BurgerMenu {
     console.log(v.whois+'start.');
     try {
 
-      // とりあえずツリー全体を作成
+      // parent(body内部)の要素を再起的に全て呼び出し
       v.tree(parent,navi);
 
       // ブランチを検出し、イベントを設定
