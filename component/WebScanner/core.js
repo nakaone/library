@@ -296,7 +296,7 @@ class WebScanner {
 
       v.step = 6.1; // 終了処理
       if( this.closeWhenFinished ){
-        this.close();
+        this.stop();
       } else {
         // videoの撮影停止(closeWhenFinishedならthis.close内で実行)
         this.video.srcObject.getVideoTracks().forEach((track) => {
