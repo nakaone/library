@@ -3296,6 +3296,9 @@ class Reception {
     console.log(v.whois+' start.');
     try {
 
+      this.itemSelector.close();
+      this.Perticipants.close();
+      
       while(v.loop){  // v.loopがtrueの間、繰り返し
         // 停止条件①：エラー発生
 
