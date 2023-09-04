@@ -5,6 +5,7 @@
 <style type="text/css"></style>
 </head><body>
   <div id="WebScanner"></div>
+  <div id="qrcode"></div>
 </body>
 <!-- QRコード検出 -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
@@ -20,7 +21,14 @@
 <script type="text/javascript">
 window.addEventListener('DOMContentLoaded',async () => {
   const v = {};
-  v.WebScanner = new WebScanner('#WebScanner');
+  v.WebScanner = new WebScanner('#WebScanner',{
+    display:{
+      link: true,
+      qrcode: true,
+    },
+    description: '受付番号または氏名(ヨミ)の一部を入力してください',
+    closeWhenFinished:false,
+  });
   v.rv = await v.WebScanner.entry();
 });
 </script>
