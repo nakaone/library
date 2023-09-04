@@ -5,12 +5,14 @@ class itemSelector {
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
+   * @param {Object[]} [data=null] - 選択肢の配列
    * @param {Object} [opt={}] - オプション
    * @returns {true|Error}
    */
-  constructor(parent,opt={}){
+  constructor(parent,data=null,opt={}){
     const v = {whois:'itemSelector.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
+        data: data, // {Object[]} 選択肢の配列
         // メンバとして持つHTMLElementの定義
         parent: parent, // {HTMLElement} 親要素(ラッパー)
         parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
@@ -18,14 +20,13 @@ class itemSelector {
         // CSS/HTML定義
         css:[
           /* itemSelector共通部分 */ `
-          .itemSelector.act {
+          .itemSelector {
             --fontSize: 1.5rem;
             --circle: calc(var(--fontSize) * 3);
             --bgColor: #ddd;
-            display: block;
             width: 100%;
           }
-          .itemSelector {
+          .itemSelector.hide {
             display: none;
           }`,
           /* tr:行単位の定義 */`
@@ -65,7 +66,6 @@ class itemSelector {
           }`,
         ],
         html:[  // イベント定義を複数回行わないようにするため、eventで定義
-          {attr:{class:'itemSelector'}},
         ],
       },
     };
@@ -75,8 +75,6 @@ class itemSelector {
       v.step = 1; // メンバの値セット、HTML/CSSの生成
       v.rv = setupInstance(this,opt,v.default);
       if( v.rv instanceof Error ) throw v.rv;
-
-      this.wrapper = this.parent.querySelector(':scope > .itemSelector');
 
       v.step = 2; // 画面を非表示に
       this.close();
@@ -99,15 +97,16 @@ class itemSelector {
    * 
    * - [子要素クリック時の親要素のクリックイベントの挙動](https://www.sunapro.com/currenttarget/)
    */
-  #setData = () => {
+  #setData = (data=null) => {
     const v = {whois:'itemSelector.#setData',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
 
+      if( data !== null ) this.data = data;
+
       this.data.forEach(x => {
         v.tr = createElement(
-          //{attr:{class:'tr',name:x.entryNo},children:[
-          {attr:{class:'tr',name:JSON.stringify(x)},children:[
+          {attr:{class:'tr',name:x.entryNo},children:[
             {attr:{class:'icon'}},
             {attr:{class:'item'},children:[
               {tag:'ruby',text:x['申込者氏名'],children:[
@@ -117,7 +116,7 @@ class itemSelector {
             ]}
           ]}
         );
-        this.wrapper.appendChild(v.tr);
+        this.parent.appendChild(v.tr);
       });
 
       console.log(v.whois+' normal end.');
@@ -128,16 +127,10 @@ class itemSelector {
     }
   }
 
-  /** 選択肢を表示、結果のオブジェクトを返す
-   * @param {Object[]} [data=null] - 選択肢の配列
-   * @returns {true|Error}
-   */
   select = (data=null) => {
     const v = {whois:'itemSelector.template',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
-      if( data !== null ) this.data = data;
-
       // 親要素を表示
       this.open();
 
@@ -149,8 +142,7 @@ class itemSelector {
         this.parent.querySelectorAll('div.tr').forEach(x => {
           x.addEventListener('click',event => {
             // 戻り値の作成(×target ○currentTarget)
-            const rv = JSON.parse(event.currentTarget.getAttribute('name'));
-            //const rv = event.currentTarget.getAttribute('name');
+            const rv = event.currentTarget.getAttribute('name');
             // 終了処理
             console.log('itemSelector.select normal end.\n',rv);
             this.close();
@@ -167,11 +159,11 @@ class itemSelector {
 
   /** 親要素(parent)内を表示 */
   open = () => {
-    this.wrapper.classList.add('act');
+    this.parent.classList.remove('hide');
   }
 
   /** 親要素(parent)内を隠蔽 */
   close = () => {
-    this.wrapper.classList.remove('act');
+    this.parent.classList.add('hide');
   }
 }

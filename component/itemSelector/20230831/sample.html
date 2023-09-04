@@ -2,14 +2,9 @@
 <title>itemSelector sample</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link href="../szLib.css" rel="stylesheet" />
-<style type="text/css">
-  #itemSelector {
-    width: 100%;
-    height: auto;
-  }
-</style>
+<style type="text/css"></style>
 </head><body>
-  <div id="itemSelector"></div>
+  <div class="itemSelector"></div>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="text/javascript" src="core.js"></script>
@@ -22,11 +17,11 @@ window.addEventListener('DOMContentLoaded',async () => {
   console.log(v.whois+' start.');
   try {
 
-    v.itemSelector = new itemSelector('#itemSelector');
+    v.itemSelector = new itemSelector('div.itemSelector',testArray,{});
     if( v.rv instanceof Error ) throw v.itemSelector;
     console.log(v.itemSelector);
 
-    console.log(await v.itemSelector.select(testArray));
+    console.log(await v.itemSelector.select());
 
     console.log(v.whois+' normal end.',v.rv);
   } catch(e){

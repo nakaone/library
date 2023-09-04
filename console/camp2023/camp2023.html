@@ -2451,6 +2451,7 @@ class Perticipants {
 
       // 詳細情報を非表示状態に変更
       v.rv = this.toggle('.detail',false);
+      if( v.rv instanceof Error ) throw v.rv;
 
       // 取消・決定・全員収納ボタンを表示
       return new Promise(resolve => {
@@ -2615,14 +2616,12 @@ class itemSelector {
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
-   * @param {Object[]} [data=null] - 選択肢の配列
    * @param {Object} [opt={}] - オプション
    * @returns {true|Error}
    */
-  constructor(parent,data=null,opt={}){
+  constructor(parent,opt={}){
     const v = {whois:'itemSelector.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
-        data: data, // {Object[]} 選択肢の配列
         // メンバとして持つHTMLElementの定義
         parent: parent, // {HTMLElement} 親要素(ラッパー)
         parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
@@ -2630,13 +2629,14 @@ class itemSelector {
         // CSS/HTML定義
         css:[
           /* itemSelector共通部分 */ `
-          .itemSelector {
+          .itemSelector.act {
             --fontSize: 1.5rem;
             --circle: calc(var(--fontSize) * 3);
             --bgColor: #ddd;
+            display: block;
             width: 100%;
           }
-          .itemSelector.hide {
+          .itemSelector {
             display: none;
           }`,
           /* tr:行単位の定義 */`
@@ -2676,6 +2676,7 @@ class itemSelector {
           }`,
         ],
         html:[  // イベント定義を複数回行わないようにするため、eventで定義
+          {attr:{class:'itemSelector'}},
         ],
       },
     };
@@ -2685,6 +2686,8 @@ class itemSelector {
       v.step = 1; // メンバの値セット、HTML/CSSの生成
       v.rv = setupInstance(this,opt,v.default);
       if( v.rv instanceof Error ) throw v.rv;
+
+      this.wrapper = this.parent.querySelector(':scope > .itemSelector');
 
       v.step = 2; // 画面を非表示に
       this.close();
@@ -2707,16 +2710,15 @@ class itemSelector {
    * 
    * - [子要素クリック時の親要素のクリックイベントの挙動](https://www.sunapro.com/currenttarget/)
    */
-  #setData = (data=null) => {
+  #setData = () => {
     const v = {whois:'itemSelector.#setData',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
 
-      if( data !== null ) this.data = data;
-
       this.data.forEach(x => {
         v.tr = createElement(
-          {attr:{class:'tr',name:x.entryNo},children:[
+          //{attr:{class:'tr',name:x.entryNo},children:[
+          {attr:{class:'tr',name:JSON.stringify(x)},children:[
             {attr:{class:'icon'}},
             {attr:{class:'item'},children:[
               {tag:'ruby',text:x['申込者氏名'],children:[
@@ -2726,7 +2728,7 @@ class itemSelector {
             ]}
           ]}
         );
-        this.parent.appendChild(v.tr);
+        this.wrapper.appendChild(v.tr);
       });
 
       console.log(v.whois+' normal end.');
@@ -2737,10 +2739,16 @@ class itemSelector {
     }
   }
 
+  /** 選択肢を表示、結果のオブジェクトを返す
+   * @param {Object[]} [data=null] - 選択肢の配列
+   * @returns {true|Error}
+   */
   select = (data=null) => {
     const v = {whois:'itemSelector.template',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
+      if( data !== null ) this.data = data;
+
       // 親要素を表示
       this.open();
 
@@ -2752,7 +2760,8 @@ class itemSelector {
         this.parent.querySelectorAll('div.tr').forEach(x => {
           x.addEventListener('click',event => {
             // 戻り値の作成(×target ○currentTarget)
-            const rv = event.currentTarget.getAttribute('name');
+            const rv = JSON.parse(event.currentTarget.getAttribute('name'));
+            //const rv = event.currentTarget.getAttribute('name');
             // 終了処理
             console.log('itemSelector.select normal end.\n',rv);
             this.close();
@@ -2769,12 +2778,12 @@ class itemSelector {
 
   /** 親要素(parent)内を表示 */
   open = () => {
-    this.parent.classList.remove('hide');
+    this.wrapper.classList.add('act');
   }
 
   /** 親要素(parent)内を隠蔽 */
   close = () => {
-    this.parent.classList.add('hide');
+    this.wrapper.classList.remove('act');
   }
 }</script>
 <script type="text/javascript">/**
@@ -3251,7 +3260,7 @@ class Reception {
       v.step = 3; // スキャナの準備
       this.WebScanner = new WebScanner(
         this.parent.querySelector('[name="WebScanner"]',{
-          //showVideo:true, // debug用。canvasだけでなくvideoも表示
+          description: '受付番号または氏名(ヨミ)の一部を入力してください',
         })
       );
       if( this.WebScanner instanceof Error ) throw this.WebScanner;
@@ -3288,10 +3297,11 @@ class Reception {
     try {
 
       while(v.loop){  // v.loopがtrueの間、繰り返し
+        // 停止条件①：エラー発生
 
         v.step = 1; // QRコードをスキャン or 氏名(一部)の入力
         v.keyword = null;
-        v.keyword = await this.WebScanner.scanQR();
+        v.keyword = await this.WebScanner.entry();
         if( v.keyword instanceof Error ) throw v.keyword;
         if( v.keyword === null ) continue; // 読込失敗orタイムアウト
   
@@ -3964,15 +3974,15 @@ class TimeTable {
 </script>
 <script type="text/javascript">/**
  * @classdesc デバイスのカメラで文書/コードのスキャンを行う
- * 
+ *
  * 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャンする。
- * 
+ *
  * **残課題**
- * 
+ *
  * 1. scanDoc稼働未確認
- * 
+ *
  * @example
- * 
+ *
  * ```
  * <div class="webScanner"></div>
  * 〜
@@ -3987,22 +3997,37 @@ class WebScanner {
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
    * @param {Object} [opt={}] - オプション
    * @returns {true|Error}
+   *
+   * オプション「description」は起動時は説明文(html)として渡され、
+   * 処理中にそれを内容とするHTMLElementに変換される(constructor step 1.2)
    */
   constructor(parent,opt={}){
     const v = {whois:'WebScanner.constructor',rv:true,step:0,
       default:{
+        display:{ // entry実行時に表示する領域
+          wrapper: true,  // 常時true
+          video: false,
+          canvas: true,
+          description: true,
+          input: true,
+          button: true,
+          link: false,
+          qrcode: false,
+        },
+        closeWhenFinished: true,  // スキャン・入力終了時、領域を閉じるならtrue
         // === メンバとして持つHTMLElementの定義 ==============
-        parent: parent, // {HTMLElement} 親要素(ラッパー)
-        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
+        parent: parent, // {HTMLElement} 親要素
+        parentSelector: null, // {string} 親要素のCSSセレクタ
         style: null,  // {HTMLStyleElement} CSS定義
         wrapper: null,  // {HTMLElement} - 親直下のラッパー
         video: null,  // {HTMLElement} - videoで撮影している画像領域
         canvas: null, // {HTMLElement} - 撮影画像を描画する領域
         context: null, // {CanvasRenderingContext2D} - 描画コンテキスト
-        switches: null,  // {HTMLElement} - 各種ボタンのラッパー
-        retake: null,  // {HTMLElement} - 再撮影ボタン
-        shutter: null, // {HTMLElement} - シャッターボタン
-        adopt: null,  // {HTMLElement} - 撮影OK、次へボタン
+        description: null, // {HTMLElement} - 説明文
+        input: null, // {HTMLElement} - 入力欄
+        button: null, // {HTMLElement} - 決定ボタン
+        link: null, // {HTMLElement} - 入力された内容(リンク)
+        qrcode: null, // {HTMLElement} - QRコード生成用領域
 
         // === scanQR専用パラメータ ==========================
         constraints:{ // video.getUserMediaで指定するオプション
@@ -4030,22 +4055,89 @@ class WebScanner {
           .WebScanner.act {
             width: 100%;
             display: grid;
+            grid-template-columns: 1fr;
             place-items: center;
+            gap: 2rem;
           }`,
-          /* video */`
-          .WebScanner .video {
+          /* video, canvas */`
+          .WebScanner video {
             display: none;
           }
-          .WebScanner .video.act {
+          .WebScanner video.act {
+            display: block;
+            width: 100%;
+          }
+          .WebScanner canvas {
+            display: none;
+          }
+          .WebScanner canvas.act {
+            display: block;
+            width: 100%;
+          }`,
+          /* keyword */`
+          .WebScanner .description {
+            display: none;
+          }
+          .WebScanner .description.act {
+            display: block;
+          }
+          .WebScanner input {
+            display: none;
+          }
+          .WebScanner input.act {
+            display: block;
+            width: 80%;
+            margin: 0 auto;
+            height: 7vw;
+            font-size: 5vw;
+          }
+          .WebScanner button {
+            display: none;
+          }
+          .WebScanner button.act {
+            display: block;
+            width: 80%;
+            height: 15vw;
+            font-size: 5vw;
+            margin: 0 auto;
+          }
+          .WebScanner .value {
+            display: none;
+          }
+          .WebScanner .link {
+            display: none;
+          }
+          .WebScanner .link.act {
+            display: block;
+            width: 80%;
+          }`,
+          /* qrcode */`
+          .WebScanner .qrcode {
+            display: none;
+          }
+          .WebScanner .qrcode.act {
+            display: block;
+            width: 40%;
+            height: 300px;
+            margin: 0 auto;
+          }
+          .WebScanner .qrcode.act canvas {
             display: block;
           }`,
         ],
         html:[  // イベント定義を複数回行わないようにするため、eventで定義
           {attr:{class:'WebScanner'},children:[
-            {attr:{class:'video'},children:[
-              {tag:'video'}
-            ]},
+            {tag:'video'},
             {tag:'canvas'},
+            {attr:{class:'description'}},
+            {tag:'input',attr:{type:'text'}},
+            {tag:'button',text:'検索',event:{click:(event)=>{
+              event.target.parentNode.querySelector('.value').innerText
+              = event.target.parentNode.querySelector('input').value;
+            }}},
+            {attr:{class:'value'}},
+            {attr:{class:'link'}},
+            {attr:{class:'qrcode'}},
           ]},
         ],
       },
@@ -4053,17 +4145,23 @@ class WebScanner {
     console.log(v.whois+' start.',opt);
     try {
 
-      v.step = 1; // メンバの値セット、HTML/CSSの生成
+      v.step = 1.1; // メンバの値セット、HTML/CSSの生成
       v.rv = setupInstance(this,opt,v.default);
       if( v.rv instanceof Error ) throw v.rv;
+      v.step = 1.2; // 説明文の処理
+      v.description = this.description;
+      this.wrapper = this.parent.querySelector('.WebScanner');
+      this.description = this.wrapper.querySelector('.description');
+      this.description.innerHTML = v.description;
 
       v.step = 2; // 各領域をメンバとして保存
-      this.wrapper = this.parent.querySelector('.WebScanner');
-      this.video = this.parent.querySelector('video');
-      this.canvas = this.parent.querySelector('canvas');
-      this.retake = this.parent.querySelector('button[name="retake"]');
-      this.shutter = this.parent.querySelector('button[name="shutter"]');
-      this.adopt = this.parent.querySelector('button[name="adopt"]');
+      this.video = this.wrapper.querySelector('video');
+      this.canvas = this.wrapper.querySelector('canvas');
+      this.input = this.wrapper.querySelector('input');
+      this.button = this.wrapper.querySelector('button');
+      this.value = this.wrapper.querySelector('.value');
+      this.link = this.wrapper.querySelector('.link');
+      this.qrcode = this.wrapper.querySelector('.qrcode');
 
       v.step = 3; // デバイスがサポートされているか確認
       if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
@@ -4086,6 +4184,7 @@ class WebScanner {
 
       // 以下の手順はawaitが必要なので、scanQRで実行
 
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
@@ -4094,23 +4193,20 @@ class WebScanner {
     }
   }
 
-  /** 指定時間待機 */
-  sleep = (sec) =>
-    {return new Promise(resolve => setTimeout(resolve,sec))};
-
-  /** QRコードをスキャン
+  /** スキャンまたは入力欄への手入力で文字列を取得
    * @param {Object} opt - scanQR専用パラメータ。詳細はconstructor参照
-   * @returns {string|null} スキャンしたQRコードの文字列。読込失敗ならnull
-   * 
-   * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
+   * @returns {string|null} 取得した文字列。読込失敗ならnull
    */
-  scanQR = async (opt={}) => {
-    const v = {whois:'WebScanner.scanQR',rv:null,step:0};
+  entry = async (opt={}) => {
+    const v = {whois:'WebScanner.entry',rv:null,step:0};
     console.log(v.whois+' start.');
     try {
 
-      v.step = 1; // パラメータの設定
+      v.step = 1.1; // パラメータの設定
       Object.keys(opt).forEach(x => this[x] = opt[x]);
+      v.step = 1.2; // 作業用要素の内容を初期化
+      this.input.value = '';
+      this.value.innerText = '';
 
       v.step = 2; // カメラの準備(videoタグに表示)
       this.constraints.video.width =
@@ -4121,48 +4217,118 @@ class WebScanner {
         this.video.play();
       };
 
-      v.step = 3; // video,canvasの表示
-      this.wrapper.classList.add('act');
-      if( this.showVideo ){
-        this.wrapper.querySelector('.video').classList.add('act');
-      }
-      this.canvas.width  = v.cw = 
+      v.step = 3; // video,canvas他要素の表示
+      Object.keys(this.display).forEach(x => {
+        if( this.display[x] ){
+          this[x].classList.add('act');
+        }
+      });
+      this.canvas.width  = v.cw =
       this.canvas.height = v.ch = this.size;
 
       v.step = 4; // 定期的にスキャン実行
       v.cnt = 0;
       do {
-        if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
-          
-          v.step = 4.1; // キャンバスへの描画
-          this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
-          v.imageData = this.context.getImageData(0, 0, v.cw, v.ch);
-          v.code = jsQR(v.imageData.data, v.imageData.width, v.imageData.height);
-          if ( v.code ) {
-            v.step = 4.2;
-            console.log(v.code);
-            // スキャン結果の判定
-            if( typeof v.code.data === 'string' && v.code.data.match(this.RegExp) ){
-              v.rv = v.code.data;
-            }
-          }
+        v.rv = this.scanQR();
+        // div.valueをチェック、入力されていたらそれを利用
+        if( v.rv === null && this.value.innerText !== '' ){
+          v.rv =  this.value.innerText;
         }
         console.log(v.cnt);
         v.cnt += this.interval;
         await this.sleep(this.interval);
       } while( v.rv === null && v.cnt < this.maxWaiting );
 
-      v.step = 5; // 終了処理
-      this.stop(v.rv === null);
+      v.step = 5; // スキャンまたは入力結果の処理
+      if( v.rv !== null ){
+        v.step = 5.1; // 入力欄・ボタンを非表示
+        ['input','button','description'].forEach(x => {
+          this[x].classList.remove('act');
+        });
 
+        v.step = 5.2; // スキャンした文字列の表示
+        if( this.display.link ){
+          this.link.innerHTML = '<a target="_blank" href="'
+          + v.rv + '">' + v.rv + '</a>';
+        }
+
+        v.step = 5.3; // QRコードの表示
+        if( this.display.qrcode ){
+          this.qrcode.innerHTML = '';
+          v.qrSize = this.qrcode.clientWidth;
+          console.log(this.qrcode);
+          //v.qr = new QRCode(this.qrcode,v.rv);
+          v.qr = new QRCode(this.qrcode,{
+            text: v.rv,
+            width: v.qrSize, height: v.qrSize,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+          });
+        }
+      }
+
+      v.step = 6.1; // 終了処理
+      if( this.closeWhenFinished ){
+        this.stop();
+      } else {
+        // videoの撮影停止(closeWhenFinishedならthis.close内で実行)
+        this.video.srcObject.getVideoTracks().forEach((track) => {
+          track.stop();
+        });  
+      }
       console.log(v.whois+' normal end.\n',v.rv);
       return v.rv;
-  
+
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
     }
   }
+
+  /** QRコードをスキャン
+   * @param {Object} opt - scanQR専用パラメータ。詳細はconstructor参照
+   * @returns {string|null} スキャンしたQRコードの文字列。読込失敗ならnull
+   *
+   * ※このメソッドは一コマ分の撮影および解析(jsQR)しか行わない。
+   *
+   * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
+   */
+  scanQR = () => {
+    const v = {whois:'WebScanner.scanQR',rv:null,step:0};
+    //console.log(v.whois+' start.');
+    try {
+
+      if(this.video.readyState !== this.video.HAVE_ENOUGH_DATA)
+        return null;
+
+      v.cw = v.ch = this.size;
+
+      v.step = 4.1; // キャンバスへの描画
+      this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
+      v.imageData = this.context.getImageData(0, 0, v.cw, v.ch);
+      v.code = jsQR(v.imageData.data, v.imageData.width, v.imageData.height);
+      if ( v.code ) {
+        v.step = 4.2;
+        console.log(v.code);
+        // スキャン結果の判定
+        if( typeof v.code.data === 'string' && v.code.data.match(this.RegExp) ){
+          v.rv = v.code.data;
+        }
+      }
+
+      //console.log(v.whois+' normal end.\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 指定時間待機 */
+  sleep = (sec) =>
+    {return new Promise(resolve => setTimeout(resolve,sec))};
 
   /** 終了処理
    * @param {boolean} [endStatus=false] - 終了時のステータス。異常終了ならtrue
@@ -4176,8 +4342,9 @@ class WebScanner {
       track.stop();
     });
     if( this.closeFinder ){
-      this.wrapper.classList.remove('act');
-      this.wrapper.querySelector('.video').classList.remove('act');
+      Object.keys(this.display).forEach(x => {
+        this[x].classList.remove('act');
+      })
     }
   }
 }</script>
