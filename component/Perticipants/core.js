@@ -402,6 +402,7 @@ class Perticipants {
 
       // 詳細情報を非表示状態に変更
       v.rv = this.toggle('.detail',false);
+      if( v.rv instanceof Error ) throw v.rv;
 
       // 取消・決定・全員収納ボタンを表示
       return new Promise(resolve => {
