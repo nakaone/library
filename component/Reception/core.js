@@ -40,7 +40,7 @@ class Reception {
       v.step = 3; // スキャナの準備
       this.WebScanner = new WebScanner(
         this.parent.querySelector('[name="WebScanner"]',{
-          //showVideo:true, // debug用。canvasだけでなくvideoも表示
+          description: '受付番号または氏名(ヨミ)の一部を入力してください',
         })
       );
       if( this.WebScanner instanceof Error ) throw this.WebScanner;
@@ -81,7 +81,7 @@ class Reception {
 
         v.step = 1; // QRコードをスキャン or 氏名(一部)の入力
         v.keyword = null;
-        v.keyword = await this.WebScanner.scanQR();
+        v.keyword = await this.WebScanner.entry();
         if( v.keyword instanceof Error ) throw v.keyword;
         if( v.keyword === null ) continue; // 読込失敗orタイムアウト
   
