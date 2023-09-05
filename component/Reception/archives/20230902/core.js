@@ -12,14 +12,8 @@ class Reception {
     const v = {whois:'Reception.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
         auth: auth, // 認証局他のAuthインスタンス
-
-        // メンバとして持つHTMLElementの定義
-        parent: parent, // {HTMLElement} 親要素
-        parentSelector: null, // {string} 親要素のCSSセレクタ
-        wrapper: null, // {HTMLElement} ラッパー
-        wrapperSelector: null, // {string} ラッパーのCSSセレクタ
-        style: null,  // {HTMLStyleElement} CSS定義
-
+        parent: parent, // {HTMLElement} 親要素(ラッパー)
+        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
         // CSS/HTML定義
         // css:[],
         html:[  // イベント定義を複数回行わないようにするため、eventで定義
@@ -82,7 +76,6 @@ class Reception {
     console.log(v.whois+' start.');
     try {
 
-      this.wrapper.classList.add('act');
       this.itemSelector.close();
       this.Perticipants.close();
       
