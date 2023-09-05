@@ -72,12 +72,21 @@ window.addEventListener('DOMContentLoaded',async () => {
   // =====================================================================
 `JavaScript class用のテンプレート
 
+1. 基本的に表示するページ単位でクラスを作成する
+1. 以下は予約語とする
+   - parent (string|HTMLElement) : 呼出元のhtmlの要素。constructorの引数。
+     文字列で渡された場合、CSSセレクタとして扱う。
+   - wrapper(HTMLElement) : parent直下でクラスで構成する要素全てを包含する要素
 1. constructorでページのCSS/HTMLの定義を全て行う<br>
    ∵複数回呼び出すと要素やスタイルシートの重複が起きる
+1. opt.cssは「通常隠蔽、actクラスが追加された表示」という形で定義
+1. 複数回追加されないよう、必要な要素はopt.htmlで定義し、constructorで一括生成する
 
 \`\`\`
 /**
- * @classdesc クラスの概要説明
+ * @classdesc 参加者情報の表示・編集
+ * 
+ * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
  */
 class Perticipants {
   /**
@@ -86,20 +95,30 @@ class Perticipants {
    * @param {Object} [opt={}] - オプション
    * @returns {true|Error}
    */
-  constructor(opt={}){
+  constructor(parent,opt={}){
     const v = {whois:'Perticipants.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
         // メンバとして持つHTMLElementの定義
-        parent: typeof parent !== 'string' ? parent :
-          document.querySelector(parent), // {HTMLElement} 親要素(ラッパー)
-        parentSelector: typeof parent === 'string' ? parent : null,
+        parent: parent, // {HTMLElement} 親要素
+        parentSelector: null, // {string} 親要素のCSSセレクタ
+        wrapper: null, // {HTMLElement} ラッパー
+        wrapperSelector: null, // {string} ラッパーのCSSセレクタ
         style: null,  // {HTMLStyleElement} CSS定義
         // CSS/HTML定義
         css:[
-          /* Perticipants共通部分 */ \`\`,
+          /* Perticipants共通部分 */ \`
+          .Perticipants.act {
+            margin: 1rem;
+            width: calc(100% - 2rem);
+            display: grid;
+            row-gap: 1rem;
+            grid-template-columns: 1fr;
+          }
+          .Perticipants {
+            display: none;
+          }\`,
         ],
-        html:[  // イベント定義を複数回行わないようにするため、eventで定義
-        ],
+        html:[],
       },
     };
     console.log(v.whois+' start.',opt);
@@ -109,26 +128,89 @@ class Perticipants {
       v.rv = setupInstance(this,opt,v.default);
       if( v.rv instanceof Error ) throw v.rv;
 
+
+      v.step = 4; // 終了処理
+      this.close();
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').\\n',e,v);
       return e;
     }
   }
 
-  template = () => {
-    const v = {whois:'Perticipants.template',rv:true,step:0};
+  /** 表示/非表示ボタンクリック時の処理を定義
+   * @param {PointerEvent|string} event - クリック時のイベントまたはボタンのCSSセレクタ
+   * @param {boolean} show - trueなら開く
+   * @returns {void}
+   */
+  toggle = (event,show) => {
+    const v = {whois:'Perticipants.toggle',step:1,rv:null};
     console.log(v.whois+' start.');
     try {
 
-      console.log(v.whois+' normal end.');
+      let content;  // 表示/非表示を行う対象となる要素
+      let button;   // クリックされたボタンの要素
+      if( typeof event === 'string' ){
+        v.step = 1.1; // 初期設定時(引数がPointerEventではなくstring)
+        content = this.wrapper.querySelector(event+' .content');
+        button = this.wrapper.querySelector(event+' button');
+      } else {
+        v.step = 1.2; // ボタンクリック時
+        content = event.target.parentElement.parentElement
+        .querySelector('.content');
+        button = event.target;
+      }
+
+      v.step = 2; // 表示->非表示 or 非表示->表示 を判断
+      let toOpen = show ? show : (button.innerText === '表示');
+      if( toOpen ){
+        v.step = 2.1; // 表示に変更する場合
+        button.innerText = '非表示';
+        content.classList.add('act');
+      } else {
+        v.step = 2.2; // 非表示に変更する場合
+        button.innerText = '表示';
+        content.classList.remove('act');
+      }
+
+      v.step = 3;
+      console.log(v.whois+' normal end.',v.rv);
       return v.rv;
+
     } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').\\n',e,v);
       return e;
     }
   }
+
+  /** 親要素内を表示 */
+  open = () => {
+    this.wrapper.classList.add('act');
+  }
+
+  /** 親要素内を隠蔽 */
+  close = () => {
+    this.wrapper.classList.remove('act');
+  }
+
+  /**
+   * @returns {null|Error}
+   */
+  template = () => {
+    const v = {whois:'Perticipants.template',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 3; // 終了処理
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').\\n',e,v);
+      return e;
+    }
+  }  
 }
 \`\`\`
 
@@ -146,18 +228,18 @@ class Perticipants {
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
-   * @param {Object} data - Authから返された参加者情報(Auth.info)
    * @param {Object} [opt={}] - オプション
-   * @returns {void}
+   * @returns {true|Error}
    */
-  constructor(parent,data=null,opt={}){
+  constructor(parent,opt={}){
     const v = {whois:'Perticipants.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
-        data: data, // {Object} 参加者情報
         // メンバとして持つHTMLElementの定義
-        parent: typeof parent !== 'string' ? parent : 
-        document.querySelector(parent), // {HTMLElement} 親要素(ラッパー)
-        parentSelector: typeof parent === 'string' ? parent : null,
+        parent: parent, // {HTMLElement} 親要素
+        parentSelector: null, // {string} 親要素のCSSセレクタ
+        wrapper: null, // {HTMLElement} ラッパー
+        wrapperSelector: null, // {string} ラッパーのCSSセレクタ
+
         style: null,  // {HTMLStyleElement} CSS定義
         summary: null, // {HTMLElement} 概要領域のDIV要素
         list: null, // {HTMLElement} 参加者一覧領域のDIV要素
@@ -166,29 +248,20 @@ class Perticipants {
         // CSS/HTML定義
         css:[
           /* Perticipants共通部分 */ \`
-          .Perticipants {
+          .Perticipants.act {
             margin: 1rem;
             width: calc(100% - 2rem);
             display: grid;
             row-gap: 1rem;
             grid-template-columns: 1fr;
-            /*
-            width: 100%;
-            margin: 1rem;
-            width: calc(100% - 2rem);
-            */
           }
-          .Perticipants.hide {
+          .Perticipants {
             display: none;
           }
           .Perticipants > div {
             width: 100%;
             display: grid;
             gap: 1rem;
-            /*
-            width: calc(100% - 6rem);
-            margin: 1rem 0px;
-            */
           }
           .Perticipants rt {
             font-size: 50%;
@@ -234,18 +307,21 @@ class Perticipants {
             font-size: 1rem;
           }\`,
           /* 参加者一覧 */\`
-          .Perticipants .list .label button.hide {
+          .Perticipants .list .label button {
             display: none;
           }
+          .Perticipants .list .label button.act {
+            display: block;
+          }
           .Perticipants .list .content {
+            display: none;
+          }
+          .Perticipants .list .content.act {
             width: 100%;
             margin: 1rem 0px;
             display: grid;
             grid-template-columns: repeat(10, 1fr);
             gap: 0.2rem;
-          }
-          .Perticipants .list .content.hide {
-            display: none;
           }
           .Perticipants .list .content div:nth-child(4n+1) {
             grid-column: 1 / 2;
@@ -259,15 +335,18 @@ class Perticipants {
           .Perticipants .list .content div:nth-child(4n+4) {
             grid-column: 9 / 11;
           }
-          .Perticipants .list .content .td[name="fee"] > .hide {
+          .Perticipants .list .content .td[name="fee"] > * {
             display: none;
+          }
+          .Perticipants .list .content .td[name="fee"] > *.act {
+            display: block;
           }\`,
           /* 詳細情報 */\`
           .Perticipants .detail .content {
-            display: block;
-          }
-          .Perticipants .detail .content.hide {
             display: none;
+          }
+          .Perticipants .detail .content.act {
+            display: block;
           }
           .Perticipants .detail .content .table {
             width: 100%;
@@ -277,42 +356,33 @@ class Perticipants {
             gap: 0.2rem;
           }
           .Perticipants .message {
+            display: none;
+          }
+          .Perticipants .message.act {
             display: block;
           }
           .Perticipants .message button {
             margin-top: 1rem;
             padding: 0.5rem 2rem;
-          }
-          .Perticipants .message.hide {
-            display: none;
           }\`,
           /* 取消・決定・全員受領ボタン */\`
           .Perticipants .buttons {
+            display: none;
+          }
+          .Perticipants .buttons.act {
             width: 100%;
             margin: 1rem 0px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
           }
-          .Perticipants .buttons.hide {
-            display: none;
-          }
           .Perticipants .buttons button {
             display: block;
             width: 100%;
             font-size: 2rem;
-          }
-          .Perticipants .buttons [name="取消"].hide {
-            display: none;
-          }
-          .Perticipants .buttons [name="決定"].hide {
-            display: none;
-          }
-          .Perticipants .buttons [name="全員"].hide {
-            display: none;
           }\`,
         ],
-        html:[  // イベント定義を複数回行わないようにするため、eventで定義
+        html:[
           // 概要欄(QRコード、受付番号、申込者名)
           {attr:{class:'summary'},children:[
             {attr:{name:'qrcode'}},
@@ -355,7 +425,6 @@ class Perticipants {
                   {
                     tag:'button',
                     text:'申込フォームを開く',
-                    event:{click:()=>window.open(this.data.editURL,'_blank')},
                   },
                 ]}
               ]},
@@ -379,31 +448,26 @@ class Perticipants {
 
       v.step = 2; // メンバとして持つHTMLElementを設定
       ['summary','list','detail','buttons'].forEach(x => {
-        this[x] = this.parent.querySelector('.'+x);
+        this[x] = this.wrapper.querySelector('.'+x);
       });
 
-      v.step = 3; // 参加者情報があればセット
-      if( this.data !== null ){
-        v.r = this.#setData();
-        if( v.r instanceof Error ) throw v.r;
-      }
-
-      v.step = 4; // 画面を非表示に
+      v.step = 3; // 画面を非表示に
       this.close();
 
+      v.step = 4; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').\\n',e,v);
       return e;
     }
   }
 
-  /** 参加者情報(this.data)を画面にセット
-   * @param {void}
+  /** 参加者情報を画面にセット
+   * @param {Object} data - Authから返された参加者情報(Auth.info)
    * @returns {void}
    */
-  #setData = () => {
+  #setData = (data) => {
     const v = {whois:'Perticipants.#setData',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
@@ -412,12 +476,12 @@ class Perticipants {
       // 1. QRコード、受付番号、申込者名
       // ---------------------------------------------
       v.step = 1.1; // QRコード表示
-      this.data.entryStr = String('0000'+this.data.entryNo).slice(-4);
+      data.entryStr = String('0000'+data.entryNo).slice(-4);
       v.qrcode = this.summary.querySelector('[name="qrcode"]');
       v.qrSize = v.qrcode.clientWidth;
       v.qrcode.innerHTML = '';  // 一度クリア
       new QRCode(v.qrcode,{
-        text: this.data.entryStr,
+        text: data.entryStr,
         width: v.qrSize,
         height: v.qrSize,
         colorDark: "#000",
@@ -429,7 +493,7 @@ class Perticipants {
       ['entryStr','申込者氏名','申込者カナ'].forEach(x => {
         v.x = x;
         v.element = this.summary.querySelector('[name="'+x+'"] .v');
-        v.element.innerText = this.data[v.x];
+        v.element.innerText = data[v.x];
       });
 
       // ---------------------------------------------
@@ -439,10 +503,20 @@ class Perticipants {
       v.content = this.list.querySelector('.content');
       // 過去の参加者情報をクリア
       v.content.querySelectorAll('.td').forEach(x => x.remove());
-      for( v.i=1 ; v.i<6 ; v.i++ ){
+
+      v.step = 2.2; // 申請者を「参加者00」としてコピー
+      if( data['申込者の参加'] === '不参加' ){
+        data['参加者00氏名'] = '';
+      } else {
+        data['参加者00氏名'] = data['申込者氏名'];
+        data['参加者00カナ'] = data['申込者カナ'];
+        data['参加者00所属'] = '保護者';
+      }
+
+      for( v.i=0 ; v.i<6 ; v.i++ ){
         v.prefix = '参加者0' + v.i;
         // 氏名が未登録の場合はスキップ
-        if( this.data[v.prefix+'氏名'].length === 0 )
+        if( data[v.prefix+'氏名'].length === 0 )
           continue;
         v.step = 2.2; // No
         v.content.appendChild(createElement({
@@ -453,29 +527,29 @@ class Perticipants {
         v.step = 2.3; // 氏名
         v.content.appendChild(createElement(
           {attr: {class:'td'},children:[
-            {tag:'ruby',text:this.data[v.prefix+'氏名'],children:[
-              {tag:'rt',text:this.data[v.prefix+'カナ']}
+            {tag:'ruby',text:data[v.prefix+'氏名'],children:[
+              {tag:'rt',text:data[v.prefix+'カナ']}
         ]}]}));
         v.step = 2.4; // 所属
         v.content.appendChild(createElement({
           attr: {class:'td'},
-          text: this.data[v.prefix+'所属'],
+          text: data[v.prefix+'所属'],
         }));
         v.step = 2.5; // 参加費
         // 参加費欄はプルダウンとテキストと両方作成
         v.options = [];
-        this.data['fee0'+v.i] = this.data['fee0'+v.i] || '未入場';
+        data['fee0'+v.i] = data['fee0'+v.i] || '未入場';
         ['未入場','無料','未収','既収','退場済'].forEach(x => {
           v.options.push({
             tag:'option',
             value:x,
             text:x,
-            logical:{selected:(this.data['fee0'+v.i] === x)},
+            logical:{selected:(data['fee0'+v.i] === x)},
           });
         });
         v.content.appendChild(createElement(
           {attr:{class:'td',name:'fee'},children:[
-            {text: this.data['fee0'+v.i]},
+            {text: data['fee0'+v.i]},
             {
               tag     : 'select',
               attr    : {class:'fee',name:'fee0'+v.i},
@@ -499,57 +573,79 @@ class Perticipants {
         }));
         v.detail.appendChild(createElement({
           attr: {class:'td'},
-          text: this.data[x],
+          text: data[x],
         }));
       });
+      v.step = 3.2; // editURLボタンにイベント定義
+      this.detail.querySelector('[name="editURL"] button')
+      .addEventListener('click',()=>window.open(this.data.editURL,'_blank'));
 
       // ---------------------------------------------
       // 4. 取消・決定・全員受領ボタン
       // ---------------------------------------------
-      v.step = 4.1; // ボタンを正方形に
-      this.buttons.querySelectorAll('button').forEach(x => {
-        x.style.height = x.clientWidth+'px';
-      });
 
       console.log(v.whois+' normal end.');
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').\\n',e,v);
       return e;
     }
   }
 
   /** 参加費の編集を行い、編集結果を返す
-   * @param {Object} [data=null] - 編集対象となる参加者情報 
+   * @param {Object} data - Authから返された参加者情報(Auth.info)
    * @returns {Object} {entryNo:{string},fee0n:'未入場/無料/未収/既収/退場済'}
    */
-  edit = async (data=null) => {
+  edit = async (data) => {
     const v = {whois:'Perticipants.edit',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
-      // 親要素を表示
+
+      v.step = 1; // 親要素を表示
       // ※display:noneのままだと内部要素のサイズが全て0に
       this.open();
 
-      // 参加者情報を渡された場合、セット
-      if( data !== null ) this.data = data;
-
-      // 編集対象となる参加者情報を表示
-      v.rv = this.#setData();
+      v.step = 2; // 編集対象となる参加者情報を表示
+      this.data = data; // イベント発生時に参照するため保存
+      v.rv = this.#setData(data);
       if( v.rv instanceof Error ) throw v.rv;
 
-      // 参加者情報をボタンを削除(非表示)
-      this.list.querySelector('.label button').classList.add('hide');
+      /* 表示・非表示制御
+        '.list .label button' : 参加者一覧表示/非表示ボタン
+        '.list .content' : 参加者一覧(表)
+        '.list .content .td[name="fee"] div' : 参加費欄(テキスト)
+        '.list .content .td[name="fee"] select' : 参加費欄(プルダウン)
+        '.detail .label button' : 詳細情報表示/非表示ボタン
+        '.detail .content' : 詳細情報
+        '.detail .content .message' : メッセージ(editURLへの誘導)
+        '.buttons' : 取消・決定・全員受領ボタン
+        '.buttons [name="取消"]' : 取消ボタン
+        '.buttons [name="決定"]' : 決定ボタン
+        '.buttons [name="全員"]' : 全員受領ボタン
+      */
+      v.step = 3.1; // 参加者一覧表示/非表示ボタン -> ボタンは非表示
+      this.list.querySelector('.label button').classList.remove('act');
+      v.step = 3.2; // 参加者一覧(表) -> 「表示」モードに設定
+      this.toggle('.list',true);
+      v.step = 3.3; // 参加費欄(テキスト) -> 非表示
+      this.list.querySelectorAll('.content .td[name="fee"] div')
+      .forEach(x => x.classList.remove('act'));
+      v.step = 3.4; // 参加費欄(プルダウン) -> 表示
+      this.list.querySelectorAll('.content .td[name="fee"] select')
+      .forEach(x => x.classList.add('act'));
+      v.step = 3.5; // 詳細情報表示/非表示ボタン -> ボタンは表示して「非表示」モードに設定
+      this.detail.querySelector('.label button').classList.add('act');
+      this.toggle('.detail',false);
+      v.step = 3.6; // メッセージ(editURLへの誘導) -> 表示
+      this.detail.querySelector('.content .message').classList.add('act');
+      // 取消・決定・全員受領ボタン -> 表示
+      this.buttons.classList.add('act');
 
-      // 参加者一覧・参加費欄でプルダウン以外は非表示
-      this.list.querySelectorAll('.content .td[name="fee"] div').forEach(x => {
-        x.classList.add('hide');
+      v.step = 4.1; // ボタンを正方形に
+      this.buttons.querySelectorAll('button').forEach(x => {
+        x.style.height = x.getBoundingClientRect().width + 'px';
       });
-
-      // 詳細情報を非表示状態に変更
-      v.rv = this.toggle('.detail',false);
-
-      // 取消・決定・全員収納ボタンを表示
+      v.step = 4.2; // 取消・決定・全員受領ボタンクリックで値を返すよう設定
       return new Promise(resolve => {
         // 取消 -> 戻り値はnull
         this.buttons.querySelector('[name="取消"]')
@@ -603,46 +699,64 @@ class Perticipants {
       });
 
     } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').\\n',e,v);
       return e;
     }
   }
 
   /** 参加者情報を表示する
-   * @param {Object} [data=null] - 表示対象となる参加者情報 
+   * @param {Object} data - Authから返された参加者情報(Auth.info)
    * @returns {void}
    */
-  view = (data=null) => {
+  view = (data) => {
     const v = {whois:'Perticipants.view',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
-      // 親要素を表示
+
+      v.step = 1; // 親要素を表示
       // ※display:noneのままだと内部要素のサイズが全て0に
       this.open();
 
-      // 参加者情報を渡された場合、セット
-      if( data !== null ) this.data = data;
-
-      // 編集対象となる参加者情報を表示
-      v.rv = this.#setData();
+      v.step = 2; // 編集対象となる参加者情報を表示
+      this.data = data; // イベント発生時に参照するため保存
+      v.rv = this.#setData(data);
       if( v.rv instanceof Error ) throw v.rv;
 
-      // 参加者一覧・参加費欄でプルダウンは非表示
-      this.list.querySelectorAll('.content .td[name="fee"] select').forEach(x => {
-        x.classList.add('hide');        
-      });
+      /* 表示・非表示制御
+        '.list .label button' : 参加者一覧表示/非表示ボタン
+        '.list .content' : 参加者一覧(表)
+        '.list .content .td[name="fee"] div' : 参加費欄(テキスト)
+        '.list .content .td[name="fee"] select' : 参加費欄(プルダウン)
+        '.detail .label button' : 詳細情報表示/非表示ボタン
+        '.detail .content' : 詳細情報
+        '.detail .content .message' : メッセージ(editURLへの誘導)
+        '.buttons' : 取消・決定・全員受領ボタン
+        '.buttons [name="取消"]' : 取消ボタン
+        '.buttons [name="決定"]' : 決定ボタン
+        '.buttons [name="全員"]' : 全員受領ボタン
+      */
+      v.step = 3.1; // 参加者一覧表示/非表示ボタン -> ボタンは表示
+      this.list.querySelector('.label button').classList.add('act');
+      v.step = 3.2; // 参加者一覧(表) -> 「非表示」モードに設定
+      this.toggle('.list',false);
+      v.step = 3.3; // 参加費欄(テキスト) -> 表示
+      this.list.querySelectorAll('.content .td[name="fee"] div')
+      .forEach(x => x.classList.add('act'));
+      v.step = 3.4; // 参加費欄(プルダウン) -> 非表示
+      this.list.querySelectorAll('.content .td[name="fee"] select')
+      .forEach(x => x.classList.remove('act'));
+      v.step = 3.5; // 詳細情報表示/非表示ボタン -> ボタンは表示して「非表示」モードに設定
+      this.detail.querySelector('.label button').classList.add('act');
+      this.toggle('.detail',false);
+      v.step = 3.6; // メッセージ(editURLへの誘導) -> 表示
+      this.detail.querySelector('.content .message').classList.add('act');
+      // 取消・決定・全員受領ボタン -> 非表示(操作不要)
 
-      // 参加者一覧・詳細情報を非表示状態に変更
-      v.rv = this.toggle('.list',false);
-      v.rv = this.toggle('.detail',false);
-
-      // 取消・決定・全員収納ボタンは非表示
-      this.buttons.classList.add('hide');
-
+      v.step = 4; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').\\n',e,v);
       return e;
     }
   }
@@ -661,26 +775,25 @@ class Perticipants {
       let button;   // クリックされたボタンの要素
       if( typeof event === 'string' ){
         v.step = 1.1; // 初期設定時(引数がPointerEventではなくstring)
-        content = this.parent.querySelector(event+' .content');
-        button = this.parent.querySelector(event+' button');
+        content = this.wrapper.querySelector(event+' .content');
+        button = this.wrapper.querySelector(event+' button');
       } else {
         v.step = 1.2; // ボタンクリック時
         content = event.target.parentElement.parentElement
         .querySelector('.content');
         button = event.target;
       }
-      console.log(content,button);
 
       v.step = 2; // 表示->非表示 or 非表示->表示 を判断
       let toOpen = show ? show : (button.innerText === '表示');
       if( toOpen ){
         v.step = 2.1; // 表示に変更する場合
         button.innerText = '非表示';
-        content.classList.remove('hide');
+        content.classList.add('act');
       } else {
         v.step = 2.2; // 非表示に変更する場合
         button.innerText = '表示';
-        content.classList.add('hide');
+        content.classList.remove('act');
       }
 
       v.step = 3;
@@ -688,19 +801,19 @@ class Perticipants {
       return v.rv;
 
     } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').\\n',e,v);
       return e;
     }
   }
 
-  /** 親要素(parent)内を表示 */
+  /** 親要素内を表示 */
   open = () => {
-    this.parent.classList.remove('hide');
+    this.wrapper.classList.add('act');
   }
 
-  /** 親要素(parent)内を隠蔽 */
+  /** 親要素内を隠蔽 */
   close = () => {
-    this.parent.classList.add('hide');
+    this.wrapper.classList.remove('act');
   }
 }
 \`\`\`
