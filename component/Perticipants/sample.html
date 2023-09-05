@@ -1,11 +1,9 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-<title>design(Perticipants)</title>
+<title>Perticipants sample</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link href="../szLib.css" rel="stylesheet" />
 <style type="text/css"></style>
-</head><body>
-  <div class="Perticipants"></div>
-</body>
+</head><body></body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="text/javascript" src="core.js"></script>
 <script type="text/javascript" src="../createElement.js"></script>
@@ -17,12 +15,12 @@ window.addEventListener('DOMContentLoaded',async () => {
   console.log(v.whois+' start.');
   try {
 
-    v.Perticipants = new Perticipants('div.Perticipants',kokusho,{});
+    v.Perticipants = new Perticipants('body',{});
     if( v.rv instanceof Error ) throw v.Perticipants;
     console.log(v.Perticipants);
 
-    //console.log(await v.Perticipants.edit());
-    console.log(v.Perticipants.view());
+    //console.log(await v.Perticipants.edit(kokusho));
+    console.log(v.Perticipants.view(kokusho));
 
     console.log(v.whois+' normal end.',v.rv);
   } catch(e){

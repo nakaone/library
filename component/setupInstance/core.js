@@ -1,19 +1,26 @@
 /** クラス(constructor)共通の初期処理を行う。
- * 1. オプション・既定値をメンバに設定
- * 1. オプション(Object)の第一階層にメンバ"css"が存在すると、新規styleを生成
- * 1. 第一階層にメンバ"html"が存在すると、親要素内に指定のHTML要素を生成
- * 1. 第一階層にメンバ"parent"が存在する場合、
- *    - HTMLElement型ならそのまま`parent:(HTMLElement)}`として設定
- *    - 文字列型ならCSSセレクタと解して`parent:{selector:(string),element:(HTMLElement)}`を生成
  * 
  * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
  * @param {Object} opt - 起動時にオプションとして渡されたオブジェクト
  * @param {Object} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
  * @returns {void}
  * 
- * ## 使用方法
+ * ## 処理概要
  * 
- * 1. 主にclass内constructorで冒頭に使用することを想定。
+ * 1. オプション・既定値をメンバに設定
+ * 1. オプション(Object)の第一階層にメンバ"parent"が存在する場合、
+ *    1. メンバ"parent"がHTMLElement型の場合、
+ *       - this.parentにメンバ"parent"をそのまま登録
+ *       - this.parentSelectorにnullを設定
+ *    1. メンバ"parent"が文字列型の場合、
+ *       - this.parentにdocument.querySelector(opt.parent)を登録
+ *       - this.parentSelectorにメンバ"parent"を設定
+ *    1. this.parent直下にthis.wrapperを作成<br>
+ *       `div class="呼出元クラス名" name="wrapper"`
+ * 1. オプション(Object)の第一階層にメンバ"css"が存在する場合、
+ *    呼出元クラスで作成されたスタイルシートが存在しないなら新規作成する
+ * 1. オプション(Object)の第一階層にメンバ"html"が存在する場合、
+ *    this.wrapper内に指定のHTML要素を生成
  * 
  * ### 入力例
  * 
@@ -96,6 +103,7 @@
  */
 const setupInstance = (dest,opt,def) => {
   const v = {whois:'setupInstance',rv:true,step:0,
+    destName: null,  // 呼出元クラス名
     // 配列・オブジェクトの判定式
     isObj: obj => obj && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
     isArr: obj => obj && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Array',
@@ -127,28 +135,38 @@ const setupInstance = (dest,opt,def) => {
   console.log(v.whois+' start.',dest,opt,def);
   try {
 
-    v.step = 1; // ディープコピー
+    v.step = 1; // 呼出元の確認、呼出元クラス名の取得
+    if( !dest.constructor ){
+      throw new Error('呼出元がクラスではありません');
+    } else {
+      v.destName = dest.constructor.name; // 呼出元クラス名
+    }
+
+    v.step = 2; // オプションをメンバにディープコピー
     dest = Object.assign(dest,def); // 既定値をセット
     v.deepcopy(dest,opt);
 
-    v.step = 2; // parentの処理
+    v.step = 3; // parent,wrapperの処理
     if( dest.hasOwnProperty('parent') ){
-      if( typeof dest.parent === 'string' ){
-        // CSSセレクタだった場合
-        dest.parentSelector = dest.parent;
-        v.parent = dest.parent = document.querySelector(dest.parent);
-      } else if( dest.parent instanceof HTMLElement ){
-        // HTML要素だった場合
+      if( (typeof dest.parent === 'string') || (dest.parent instanceof HTMLElement)){
         dest.parentSelector = null;
-        v.parent = dest.parent;
+        if( typeof dest.parent === 'string' ){
+          // CSSセレクタだった場合
+          dest.parentSelector = dest.parent;
+          dest.parent = document.querySelector(dest.parentSelector);
+        }
+        // wrapperをparentに追加
+        dest.wrapper = createElement({attr:{class:v.destName,name:'wrapper'}});
+        dest.parent.appendChild(dest.wrapper);
+        dest.wrapperSelector = 
+        (dest.parentSelector === null ? null : dest.parentSelector + ' > ')
+        + 'div.' + v.destName + '[name="wrapper"]';
       } else {
         throw new Error(v.whois+': parent is not string or HTMLElement.');
       }
     }
 
-    v.step = 3; // CSS定義に基づき新たなstyleを生成
-    // style.nameに設定するため、呼出元のクラス名を取得
-    v.destName = dest.constructor.name || 'undef';
+    v.step = 4; // CSS定義に基づき新たなstyleを生成
     if( dest.hasOwnProperty('css') && // dest.cssがあり、未定義なら追加
     document.head.querySelector('style[name="'+v.destName+'"]') === null ){
       dest.style = createElement({
@@ -177,13 +195,13 @@ const setupInstance = (dest,opt,def) => {
       }
     }
 
-    v.step = 4; // HTML定義に基づき親要素内のHTML要素を生成
+    v.step = 5; // HTML定義に基づき親要素内のHTML要素を生成
     if( dest.hasOwnProperty('html') ){
       if( v.isObj(dest.html) ){
         v.step = 4.1; // オブジェクトならcreateElementの引数
         v.html = createElement(dest.html);
         if( v.html instanceof Error ) throw v.html;
-        v.parent.appendChild(v.html);
+        dest.wrapper.appendChild(v.html);
       } else {
         v.step = 4.2;
         if( v.isArr(dest.html) ){
@@ -191,21 +209,23 @@ const setupInstance = (dest,opt,def) => {
           if( typeof dest.html[0] === 'string' ){
             v.step = 4.211;
             // 配列の最初の要素が文字列なら結合してinnerHTML
-            v.parent.innerHTML = dest.html.join('');
+            dest.wrapper.innerHTML = dest.html.join('');
           } else {
             v.step = 4.212;
             // オブジェクトならcreateElementして親要素に追加
-            dest.html.forEach(x => v.parent.appendChild(createElement(x)));
+            dest.html.forEach(x => dest.wrapper.appendChild(createElement(x)));
           }
         } else {
           v.step = 4.22;  // 文字列ならinnerHTMLそのもの
-          v.parent.innerHTML = dest.html;
+          dest.wrapper.innerHTML = dest.html;
         }
       }
     }
 
+    v.step = 6; // 終了処理
     console.log(v.whois+' normal end.\n',dest);
     return v.rv;
+
   } catch(e){
     console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
     return e;
