@@ -20,7 +20,7 @@ class LoadingIcon {
         // CSS/HTML定義
         css:[
           /* LoadingIcon共通部分 */ `
-          .LoadingIcon .LoadingIcon.act {
+          div.LoadingIcon.act {
             position: absolute;
             left: 0; top: 0;
             width: 100%; height:100vh;
@@ -29,7 +29,7 @@ class LoadingIcon {
             display: grid;
             place-items: center;
           }
-          .LoadingIcon .LoadingIcon {
+          div.LoadingIcon {
             display: none;
           }`,
           /* pattern.5 */`
@@ -139,7 +139,7 @@ class LoadingIcon {
       if( v.rv instanceof Error ) throw v.rv;
 
       // 待機画面をセット
-      this.screen = this.wrapper.querySelector('.LoadingIcon');
+      this.screen = this.parent.querySelector(':scope > .LoadingIcon');
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
