@@ -1,26 +1,31 @@
 /**
- * @classdesc 掲示板
+ * @classdesc 掲示板への投稿、表示
  */
 class BulletinBoard {
   /**
    * @constructor
-   * @param {Object} opt - オプション
-   * @returns {void}
+   * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
+   * @param {Object} [opt={}] - オプション
+   * @returns {true|Error}
    */
-  constructor(opt){
-    const v = {whois:'BulletinBoard.constructor',step:'0',rv:null};
-    console.log(v.whois+' start.',opt);
-    try {
-
-      v.step = '1'; // オプション未定義項目の既定値をプロパティにセット
-      v.rv = setupInstance(this,opt,{
-        //auth: null, // {Auth} 認証局他のAuthインスタンス
-        parent: parent, // {HTMLElement} 親要素(ラッパー)
-        parentSelector: null, // {string} 親要素(ラッパー)のCSSセレクタ
-        interval: 60000,
+  constructor(parent,auth,opt={}){
+    const v = {whois:'BulletinBoard.constructor',rv:true,step:0,
+      default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
+        interval: 60000,  // 掲示板の更新間隔。ミリ秒
         intervalId: null, // インターバルID
         posts: [],  // 投稿メッセージ一覧
-        css: `
+        auth: auth, // 認証局他のAuthインスタンス
+
+        // メンバとして持つHTMLElementの定義
+        parent: parent, // {HTMLElement} 親要素
+        parentSelector: null, // {string} 親要素のCSSセレクタ
+        wrapper: null, // {HTMLElement} ラッパー
+        wrapperSelector: null, // {string} ラッパーのCSSセレクタ
+        style: null,  // {HTMLStyleElement} CSS定義
+
+        // CSS/HTML定義
+        css:[
+          /* BulletinBoard共通部分 */ `
           .date {
             margin-top : 1rem;
             padding-left : 1rem;
@@ -43,14 +48,21 @@ class BulletinBoard {
             font-size : 0.8rem;
             font-family : cursive;
           }`,
-      });
-      console.log('l.51',v.rv,this.auth);
+        ],
+        html:[],
+      },
+    };
+    console.log(v.whois+' start.',parent,auth,opt);
+    try {
+
+      v.step = 1; // メンバの値セット、HTML/CSSの生成
+      v.rv = setupInstance(this,opt,v.default);
       if( v.rv instanceof Error ) throw v.rv;
 
       v.step = '3'; // 新規のお知らせが来たら末尾を表示するよう設定
       // https://at.sachi-web.com/blog-entry-1516.html
       this.mo = new MutationObserver(() => {
-        console.log('mutation detected');
+        console.log('BulletinBoard: mutation detected');
         this.parent.scrollTop = this.parent.scrollHeight;
       });
       this.mo.observe(this.parent,{
@@ -63,31 +75,13 @@ class BulletinBoard {
         attributeFilter: [],//配列で記述した属性だけを見張る
       });
 
-      v.step = '4'; // 終了処理
+      v.step = 4; // 終了処理
+      this.close();
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
-    }
-  }
-
-  /** 掲示板にポストする
-   * 
-   */
-  post = async () => {
-    const v = {whois:'BulletinBoard.post',step:'0',rv:null};
-    console.log(v.whois+' start.');
-    try {
-
-
-      
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-      this.stop();
-      return e;        
     }
   }
 
@@ -97,13 +91,12 @@ class BulletinBoard {
    * @param {void}
    * @returns 
    */
-  delivery = async() => {
-    const v = {whois:'BulletinBoard.delivery',step:'0',rv:null};
+  receive = async() => {
+    const v = {whois:'BulletinBoard.receive',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
       // Auth.fetchで認証局に問い合わせ
-      console.log(this.auth);
       v.rv = await this.auth.fetch('delivery',{
         entryNo: this.auth.entryNo.value,
         publicKey: this.auth.RSA.pKey,
@@ -118,7 +111,6 @@ class BulletinBoard {
       // timestamp順にソート
       this.posts = v.rv.result;
       this.posts.sort((a,b) => a.timestamp < b.timestamp ? -1 : 1);
-      console.log(this.posts);
       // 日付型に変更
       this.posts.forEach(x => x.timestamp = new Date(x.timestamp));
 
@@ -157,14 +149,15 @@ class BulletinBoard {
         }));
       });
 
+      v.step = 3; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
+
     } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-      this.stop();
-      return e;        
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
+      return e;
     }
-  }
+  }  
 
   /** 定期的な配信(受信)を開始する
    * @param {void}
@@ -178,12 +171,12 @@ class BulletinBoard {
       if( this.intervalId !== null ){
         this.stop();
       }
-      this.intervalId = setInterval(this.delivery, this.interval);
+      this.intervalId = setInterval(this.receive, this.interval);
 
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
   }
@@ -204,7 +197,7 @@ class BulletinBoard {
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
   }
@@ -215,7 +208,7 @@ class BulletinBoard {
    */
   change = (opt) => {
     const v = {whois:'BulletinBoard.change',step:'0',rv:null};
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',opt);
     try {
 
       v.current = JSON.parse(JSON.stringify(this));
@@ -230,8 +223,36 @@ class BulletinBoard {
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
   }
+
+  /** 親要素内を表示 */
+  open = () => {
+    this.wrapper.classList.add('act');
+  }
+
+  /** 親要素内を隠蔽 */
+  close = () => {
+    this.wrapper.classList.remove('act');
+  }
+
+  /**
+   * @returns {null|Error}
+   */
+  template = () => {
+    const v = {whois:'BulletinBoard.template',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 3; // 終了処理
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
+      return e;
+    }
+  }  
 }

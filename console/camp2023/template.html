@@ -174,10 +174,10 @@ window.addEventListener('DOMContentLoaded',async () => {
 
     // ----------------------------------------------------
     v.step = '1.2'; // BulletinBoard: 掲示板
-    v.BulletinBoard = new BulletinBoard({
-      auth: v.Auth, // 認証局他のAuthインスタンス
-      parent: '[data-BurgerMenu="label:\'掲示板\'"]',
-    });
+    v.BulletinBoard = new BulletinBoard(
+      '[data-BurgerMenu="label:\'掲示板\'"]',
+      v.Auth, // 認証局他のAuthインスタンス
+    );
     if( v.BulletinBoard instanceof Error ) throw v.BulletinBoard;
 
     // ----------------------------------------------------
@@ -247,7 +247,7 @@ window.addEventListener('DOMContentLoaded',async () => {
 
     v.step = '3.1'; // お知らせ
     v.step = '3.1.1'; // 掲示板
-    v.rv = await v.BulletinBoard.delivery();
+    v.rv = await v.BulletinBoard.receive();
     if( v.rv instanceof Error ) throw v.rv;
   
     // 3.1.2 注意事項
