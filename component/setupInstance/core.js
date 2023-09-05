@@ -17,12 +17,21 @@
  *       - this.parentSelectorにメンバ"parent"を設定
  *    1. this.parent直下にthis.wrapperを作成<br>
  *       `div class="呼出元クラス名" name="wrapper"`
+ *    1. this.wrapperに"act"クラスを追加、既定値表示の状態とする
  * 1. オプション(Object)の第一階層にメンバ"css"が存在する場合、
  *    呼出元クラスで作成されたスタイルシートが存在しないなら新規作成する
  * 1. オプション(Object)の第一階層にメンバ"html"が存在する場合、
  *    this.wrapper内に指定のHTML要素を生成
  * 
- * ### 入力例
+ * ## 領域開閉制御に関するメモ
+ * 
+ * 1. 領域全体の開閉制御はhtml側(BurgerMenu.change())で行う<br>
+ *    ※displayの書き換えになっているが、将来的にはactクラスの加除に修正。<br>
+ *    　現段階では影響が大きいため見送り。
+ * 1. wrapperの既定値は「開いた状態(actあり)」とする
+ * 1. wrapper内の要素の表示/非表示制御はメソッドで行う
+ * 
+ * ## 入力例
  * 
  * ```
  * const menu = new BurgerMenu({parent:'body',auth:confObj,fuga:{a:10}})
@@ -53,7 +62,7 @@
  *     // 以降、constructorの処理
  * ```
  * 
- * ### 出力例
+ * ## 出力例
  * 
  * ```
  * this = {
@@ -79,7 +88,7 @@
  * </style>
  * ```
  * 
- * ### デシジョンテーブル
+ * ## デシジョンテーブル
  * 
  * | 優先(a) | 劣後(b) | 結果 | 備考 |
  * | :--: | :--: | :--: | :-- |
@@ -163,6 +172,7 @@ const setupInstance = (dest,opt,def) => {
         throw new Error(v.whois+': parent is not string or HTMLElement.');
       }
     }
+    dest.wrapper.classList.add('act'); // wrapperはact状態にしておく
 
     v.step = 4; // CSS定義に基づき新たなstyleを生成
     if( dest.hasOwnProperty('css') && // dest.cssがあり、未定義なら追加
