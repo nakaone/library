@@ -159,12 +159,6 @@ class Perticipants {
             display: block;
             width: 100%;
             font-size: 2rem;
-          }
-          .Perticipants .buttons button {
-            display: none;
-          }
-          .Perticipants .buttons button.act {
-            display: block;
           }`,
         ],
         html:[
@@ -368,10 +362,6 @@ class Perticipants {
       // ---------------------------------------------
       // 4. 取消・決定・全員受領ボタン
       // ---------------------------------------------
-      v.step = 4.1; // ボタンを正方形に
-      this.buttons.querySelectorAll('button').forEach(x => {
-        x.style.height = x.clientWidth+'px';
-      });
 
       console.log(v.whois+' normal end.');
       return v.rv;
@@ -389,28 +379,52 @@ class Perticipants {
     const v = {whois:'Perticipants.edit',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
-      // 親要素を表示
+
+      v.step = 1; // 親要素を表示
       // ※display:noneのままだと内部要素のサイズが全て0に
       this.open();
 
-      // 編集対象となる参加者情報を表示
+      v.step = 2; // 編集対象となる参加者情報を表示
       this.data = data; // イベント発生時に参照するため保存
       v.rv = this.#setData(data);
       if( v.rv instanceof Error ) throw v.rv;
 
-      // 参加者情報をボタンを削除(非表示)
-      this.list.querySelector('.label button').classList.add('hide');
+      /* 表示・非表示制御
+        '.list .label button' : 参加者一覧表示/非表示ボタン
+        '.list .content' : 参加者一覧(表)
+        '.list .content .td[name="fee"] div' : 参加費欄(テキスト)
+        '.list .content .td[name="fee"] select' : 参加費欄(プルダウン)
+        '.detail .label button' : 詳細情報表示/非表示ボタン
+        '.detail .content' : 詳細情報
+        '.detail .content .message' : メッセージ(editURLへの誘導)
+        '.buttons' : 取消・決定・全員受領ボタン
+        '.buttons [name="取消"]' : 取消ボタン
+        '.buttons [name="決定"]' : 決定ボタン
+        '.buttons [name="全員"]' : 全員受領ボタン
+      */
+      v.step = 3.1; // 参加者一覧表示/非表示ボタン -> ボタンは非表示
+      this.list.querySelector('.label button').classList.remove('act');
+      v.step = 3.2; // 参加者一覧(表) -> 「表示」モードに設定
+      this.toggle('.list',true);
+      v.step = 3.3; // 参加費欄(テキスト) -> 非表示
+      this.list.querySelectorAll('.content .td[name="fee"] div')
+      .forEach(x => x.classList.remove('act'));
+      v.step = 3.4; // 参加費欄(プルダウン) -> 表示
+      this.list.querySelectorAll('.content .td[name="fee"] select')
+      .forEach(x => x.classList.add('act'));
+      v.step = 3.5; // 詳細情報表示/非表示ボタン -> ボタンは表示して「非表示」モードに設定
+      this.detail.querySelector('.label button').classList.add('act');
+      this.toggle('.detail',false);
+      v.step = 3.6; // メッセージ(editURLへの誘導) -> 表示
+      this.detail.querySelector('.content .message').classList.add('act');
+      // 取消・決定・全員受領ボタン -> 表示
+      this.buttons.classList.add('act');
 
-      // 参加者一覧・参加費欄でプルダウン以外は非表示
-      this.list.querySelectorAll('.content .td[name="fee"] div').forEach(x => {
-        x.classList.add('hide');
+      v.step = 4.1; // ボタンを正方形に
+      this.buttons.querySelectorAll('button').forEach(x => {
+        x.style.height = x.getBoundingClientRect().width + 'px';
       });
-
-      // 詳細情報を非表示状態に変更
-      v.rv = this.toggle('.detail',false);
-      if( v.rv instanceof Error ) throw v.rv;
-
-      // 取消・決定・全員収納ボタンを表示
+      v.step = 4.2; // 取消・決定・全員受領ボタンクリックで値を返すよう設定
       return new Promise(resolve => {
         // 取消 -> 戻り値はnull
         this.buttons.querySelector('[name="取消"]')
