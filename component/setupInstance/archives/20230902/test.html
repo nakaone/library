@@ -1,0 +1,59 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>setupInstance</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css"></style>
+</head><body>
+  <div id="test"></div>
+
+<script type="text/javascript" src="../createElement.js"></script>
+<script type="text/javascript" src="../mergeDeeply.js"></script>
+<script type="text/javascript" src="core.js"></script>
+<script type="text/javascript">
+class Test {
+
+  constructor(opt){
+    const def = {
+      a:10,
+      b:'abc',
+      c:BigInt(Number.MAX_SAFE_INTEGER),
+      d:true,
+      e:undefined,
+      f:Symbol('xyz1'),
+      g:null,
+      h:(arg) => console.log(arg),
+      i:new Date(),
+      j:new Error('test'),
+      k:['z',1,[2,3],{a:'a'},{b:'b'}],
+      l:{a:10,b:20},
+      //html: "<p>hoge</p>",
+      //html: ["<p>hoge1</p>","<p>hoge2</p>"],
+      //html: {tag:'p',text:'fuga'},
+      html: [{tag:'p',text:'fuga1'},{tag:'p',text:'fuga2'}],
+      css: 'p {color:#f00;font-size:50px;}',
+      parent: '#test',
+    };
+    def.lv2 = def;
+
+    const rv = setupInstance(this,opt,def);
+    console.log(rv,this);
+  }
+
+  dump = () => {
+    console.log('dump',this);
+  }
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+  v.rv = new Test({
+    a: {a:20,b:30},
+    aa: 40,
+    f: Symbol('xyz2'),
+    k:['z',3,[4,5],6,{a:'a'}],      // 3は重複
+    l:{a:20,c:30},  // aは置換、cは追加
+  });
+  console.log(v.rv);
+  v.rv.dump();
+});
+</script>
+</body></html>
