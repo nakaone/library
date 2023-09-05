@@ -152,17 +152,19 @@ class WebScanner {
           }`,
         ],
         html:[  // イベント定義を複数回行わないようにするため、eventで定義
-          {tag:'video'},
-          {tag:'canvas'},
-          {attr:{class:'description'}},
-          {tag:'input',attr:{type:'text'}},
-          {tag:'button',text:'検索',event:{click:(event)=>{
-            event.target.parentNode.querySelector('.value').innerText
-            = event.target.parentNode.querySelector('input').value;
-          }}},
-          {attr:{class:'value'}},
-          {attr:{class:'link'}},
-          {attr:{class:'qrcode'}},
+          {attr:{class:'WebScanner'},children:[
+            {tag:'video'},
+            {tag:'canvas'},
+            {attr:{class:'description'}},
+            {tag:'input',attr:{type:'text'}},
+            {tag:'button',text:'検索',event:{click:(event)=>{
+              event.target.parentNode.querySelector('.value').innerText
+              = event.target.parentNode.querySelector('input').value;
+            }}},
+            {attr:{class:'value'}},
+            {attr:{class:'link'}},
+            {attr:{class:'qrcode'}},
+          ]},
         ],
       },
     };
