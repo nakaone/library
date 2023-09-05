@@ -254,7 +254,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 3.1.3 持ち物
 
     v.step = '3.2'; // パスポート
-    v.rv = v.Perticipants.view();
+    v.rv = v.Perticipants.view(v.Auth.info);
     if( v.rv instanceof Error ) throw v.rv;
 
     // 3.3 案内図

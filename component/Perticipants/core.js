@@ -218,7 +218,7 @@ class Perticipants {
         ],
       },
     };
-    console.log(v.whois+' start.',opt);
+    console.log(v.whois+' start.',parent,opt);
     try {
 
       v.step = 1; // メンバの値セット、HTML/CSSの生成
@@ -248,7 +248,7 @@ class Perticipants {
    */
   #setData = (data) => {
     const v = {whois:'Perticipants.#setData',rv:true,step:0};
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',data);
     try {
 
       // ---------------------------------------------
@@ -377,7 +377,7 @@ class Perticipants {
    */
   edit = async (data) => {
     const v = {whois:'Perticipants.edit',rv:true,step:0};
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',data);
     try {
 
       v.step = 1; // 親要素を表示
@@ -489,7 +489,7 @@ class Perticipants {
    */
   view = (data) => {
     const v = {whois:'Perticipants.view',rv:true,step:0};
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',data);
     try {
 
       v.step = 1; // 親要素を表示
@@ -547,7 +547,7 @@ class Perticipants {
    */
   toggle = (event,show) => {
     const v = {whois:'Perticipants.toggle',step:1,rv:null};
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',event,show);
     try {
 
       let content;  // 表示/非表示を行う対象となる要素

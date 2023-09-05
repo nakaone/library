@@ -103,7 +103,7 @@
  */
 const setupInstance = (dest,opt,def) => {
   const v = {whois:'setupInstance',rv:true,step:0,
-    destName: null,  // 呼出元クラス名
+    constructor: dest.constructor ? dest.constructor.name : null,  // 呼出元クラス名
     // 配列・オブジェクトの判定式
     isObj: obj => obj && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
     isArr: obj => obj && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Array',
@@ -131,15 +131,13 @@ const setupInstance = (dest,opt,def) => {
     },
     cssDefs: '',  // CSS定義文字列による指定の場合、その結合した文字列
   };
-
+  v.whois = v.constructor + '.' + v.whois;
   console.log(v.whois+' start.',dest,opt,def);
   try {
 
     v.step = 1; // 呼出元の確認、呼出元クラス名の取得
     if( !dest.constructor ){
       throw new Error('呼出元がクラスではありません');
-    } else {
-      v.destName = dest.constructor.name; // 呼出元クラス名
     }
 
     v.step = 2; // オプションをメンバにディープコピー
@@ -156,11 +154,11 @@ const setupInstance = (dest,opt,def) => {
           dest.parent = document.querySelector(dest.parentSelector);
         }
         // wrapperをparentに追加
-        dest.wrapper = createElement({attr:{class:v.destName,name:'wrapper'}});
+        dest.wrapper = createElement({attr:{class:v.constructor,name:'wrapper'}});
         dest.parent.appendChild(dest.wrapper);
         dest.wrapperSelector = 
         (dest.parentSelector === null ? null : dest.parentSelector + ' > ')
-        + 'div.' + v.destName + '[name="wrapper"]';
+        + 'div.' + v.constructor + '[name="wrapper"]';
       } else {
         throw new Error(v.whois+': parent is not string or HTMLElement.');
       }
@@ -168,10 +166,10 @@ const setupInstance = (dest,opt,def) => {
 
     v.step = 4; // CSS定義に基づき新たなstyleを生成
     if( dest.hasOwnProperty('css') && // dest.cssがあり、未定義なら追加
-    document.head.querySelector('style[name="'+v.destName+'"]') === null ){
+    document.head.querySelector('style[name="'+v.constructor+'"]') === null ){
       dest.style = createElement({
         tag:'style',
-        attr:{type:'text/css',name:v.destName}
+        attr:{type:'text/css',name:v.constructor}
       });
       document.head.appendChild(dest.style);
       for( v.i=0 ; v.i<dest.css.length ; v.i++ ){

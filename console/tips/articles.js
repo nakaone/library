@@ -121,7 +121,7 @@ class Perticipants {
         html:[],
       },
     };
-    console.log(v.whois+' start.',opt);
+    console.log(v.whois+' start.',parent,opt);
     try {
 
       v.step = 1; // メンバの値セット、HTML/CSSの生成
@@ -146,7 +146,7 @@ class Perticipants {
    */
   toggle = (event,show) => {
     const v = {whois:'Perticipants.toggle',step:1,rv:null};
-    console.log(v.whois+' start.');
+    console.log(v.whois+' start.',event,show);
     try {
 
       let content;  // 表示/非表示を行う対象となる要素
