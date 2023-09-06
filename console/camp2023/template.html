@@ -51,7 +51,6 @@
   -->
   <div data-BurgerMenu="label:'スタッフ',authority:2">
     <!--div data-BurgerMenu="label:'参加者数'"></div-->
-    <div data-BurgerMenu="label:'掲示板投稿',func:'post'"></div>
     <div data-BurgerMenu="label:'受付業務',func:'recept'"></div>
     <div data-BurgerMenu="label:'校内探険'">
       <div class="page">
@@ -218,7 +217,6 @@ window.addEventListener('DOMContentLoaded',async () => {
       //home: 'c1005',  // パスポート画面をホームに設定(暫定)
       func: {
         recept: v.Reception.main,     // 受付業務
-        post  : v.BulletinBoard.announce, // 掲示板への投稿
       },
     });
     if( v.BurgerMenu instanceof Error ) throw v.BurgerMenu;

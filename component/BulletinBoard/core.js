@@ -15,6 +15,7 @@ class BulletinBoard {
         intervalId: null, // インターバルID
         posts: [],  // 投稿メッセージ一覧
         auth: auth, // 認証局他のAuthインスタンス
+        authority: 2, // 投稿権限
 
         // メンバとして持つHTMLElementの定義
         parent: parent, // {HTMLElement} 親要素
@@ -26,22 +27,31 @@ class BulletinBoard {
         // CSS/HTML定義
         css:[
           /* BulletinBoard共通部分 */
-          /* 掲示板領域 */`
+          /* 掲示板領域
+            .board height: 100vh - 上下余白(2rem×2)
+            .display height: 100vh - 上下余白(2rem×2) - ボタン高さ4rem - ボタン上余白2rem
+          */`
           .BulletinBoard .board {
             display: none;
           }
           .BulletinBoard .board.act {
-            display: block;
             width: 100%;
+            max-height: calc(100vh - 4rem);
+            display: block;
           }
-          .BulletinBoard .board .date {
+          .BulletinBoard .board .display {
+            width: 100%;
+            max-height: calc(100vh - 10rem);
+            display: block;
+          }
+          .BulletinBoard .board .display .date {
             margin-top : 1rem;
             padding-left : 1rem;
             font-family : fantasy;
             font-size : 1.5rem;
             border-bottom : solid 4px #ddd;
           }
-          .BulletinBoard .board .header {
+          .BulletinBoard .board .display .header {
             margin-top : 1rem;
             display : grid;
             grid-template-columns : 3rem 1fr;
@@ -49,16 +59,26 @@ class BulletinBoard {
             background-color : #ddd;
             padding-left : 0.5rem;
           }
-          .BulletinBoard .board .fromto {
+          .BulletinBoard .board .display .fromto {
             font-size : 0.8rem;
           }
-          .BulletinBoard .board .time {
+          .BulletinBoard .board .display .time {
             font-size : 0.8rem;
             font-family : cursive;
+          }
+          .BulletinBoard .board button {
+            display: block;
+            margin: 2rem auto 0 auto;
+            width: 100%;
+            height: 4rem;
+            font-size: 2rem;
           }`,
         ],
         html:[
-          {attr:{class:'board act'}},
+          {attr:{class:'board act'},children:[
+            {attr:{class:'display'}},
+            {tag:'button',text:'投稿画面を開く'},
+          ]},
           {attr:{class:'post'}},
         ],
       },
@@ -71,14 +91,25 @@ class BulletinBoard {
       if( v.rv instanceof Error ) throw v.rv;
 
       v.step = 2; // 作業領域をメンバに登録
-      this.board = this.wrapper.querySelector('.board');
+      this.display = this.wrapper.querySelector('.board .display');
       this.post = this.wrapper.querySelector('.post');
 
-      v.step = 3; // 新規のお知らせが来たら末尾を表示するよう設定
+      v.step = 3; // 投稿権限があればボタン表示
+      v.postButton = this.wrapper.querySelector('.board button');
+      v.authority = Number(this.auth.info.authority);
+      if( (v.authority & this.authority) > 0 ){
+        v.postButton.addEventListener('click',this.announce);
+      } else {
+        // 投稿権限が無ければボタン非表示
+        v.postButton.style.display = 'none';
+      }
+
+      v.step = 4; // 新規のお知らせが来たら末尾を表示するよう設定
       // https://at.sachi-web.com/blog-entry-1516.html
       this.mo = new MutationObserver(() => {
         console.log('BulletinBoard: mutation detected');
-        this.parent.scrollTop = this.parent.scrollHeight;
+        this.display.scrollTop = this.display.scrollHeight;
+        //this.parent.scrollTop = this.parent.scrollHeight;
       });
       this.mo.observe(this.parent,{
         childList: true,
@@ -90,7 +121,7 @@ class BulletinBoard {
         attributeFilter: [],//配列で記述した属性だけを見張る
       });
 
-      v.step = 4; // 終了処理
+      v.step = 5; // 終了処理
       this.close();
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -123,7 +154,7 @@ class BulletinBoard {
       }
 
       // 掲示板領域をクリア
-      this.board.innerHTML = '';
+      this.display.innerHTML = '';
 
       // timestamp順にソート
       this.posts = v.rv.result;
@@ -138,7 +169,7 @@ class BulletinBoard {
          || post.timestamp.getDate()     !== v.lastDate.getDate()
         ){
           // 投稿日が変わったら日付を表示
-          this.board.appendChild(createElement({
+          this.display.appendChild(createElement({
             attr: {class:'date'},
             text: new Intl.DateTimeFormat('en', { month: 'long'}).format(post.timestamp)
               + ' ' + ('00'+post.timestamp.getDate()).slice(-2)
@@ -148,7 +179,7 @@ class BulletinBoard {
           v.lastDate = post.timestamp;
         }
         // From / To
-        this.board.appendChild(createElement({
+        this.display.appendChild(createElement({
           attr: {class:'header'},
           children: [{
             attr: {class:'time'},
@@ -160,7 +191,7 @@ class BulletinBoard {
           }],
         }));
         // メッセージ
-        this.board.appendChild(createElement({
+        this.display.appendChild(createElement({
           attr: {class:'message'},
           text: post.message,
         }));
