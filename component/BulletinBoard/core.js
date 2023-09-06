@@ -25,15 +25,23 @@ class BulletinBoard {
 
         // CSS/HTML定義
         css:[
-          /* BulletinBoard共通部分 */ `
-          .date {
+          /* BulletinBoard共通部分 */
+          /* 掲示板領域 */`
+          .BulletinBoard .board {
+            display: none;
+          }
+          .BulletinBoard .board.act {
+            display: block;
+            width: 100%;
+          }
+          .BulletinBoard .board .date {
             margin-top : 1rem;
             padding-left : 1rem;
             font-family : fantasy;
             font-size : 1.5rem;
             border-bottom : solid 4px #ddd;
           }
-          .header {
+          .BulletinBoard .board .header {
             margin-top : 1rem;
             display : grid;
             grid-template-columns : 3rem 1fr;
@@ -41,15 +49,18 @@ class BulletinBoard {
             background-color : #ddd;
             padding-left : 0.5rem;
           }
-          .fromto {
+          .BulletinBoard .board .fromto {
             font-size : 0.8rem;
           }
-          .time {
+          .BulletinBoard .board .time {
             font-size : 0.8rem;
             font-family : cursive;
           }`,
         ],
-        html:[],
+        html:[
+          {attr:{class:'board act'}},
+          {attr:{class:'post'}},
+        ],
       },
     };
     console.log(v.whois+' start.',parent,auth,opt);
@@ -59,7 +70,11 @@ class BulletinBoard {
       v.rv = setupInstance(this,opt,v.default);
       if( v.rv instanceof Error ) throw v.rv;
 
-      v.step = '3'; // 新規のお知らせが来たら末尾を表示するよう設定
+      v.step = 2; // 作業領域をメンバに登録
+      this.board = this.wrapper.querySelector('.board');
+      this.post = this.wrapper.querySelector('.post');
+
+      v.step = 3; // 新規のお知らせが来たら末尾を表示するよう設定
       // https://at.sachi-web.com/blog-entry-1516.html
       this.mo = new MutationObserver(() => {
         console.log('BulletinBoard: mutation detected');
@@ -96,18 +111,20 @@ class BulletinBoard {
     console.log(v.whois+' start.');
     try {
 
-      // Auth.fetchで認証局に問い合わせ
+      v.step = 1; // Auth.fetchで認証局に問い合わせ
       v.rv = await this.auth.fetch('delivery',{
         entryNo: this.auth.entryNo.value,
         publicKey: this.auth.RSA.pKey,
       },3);
+      if( v.rv instanceof Error ) throw v.rv;
       if( v.rv.isErr ){
         alert(v.rv.message);
         return null;
       }
 
-      // 親領域に描画
-      this.parent.innerHTML = '';
+      // 掲示板領域をクリア
+      this.board.innerHTML = '';
+
       // timestamp順にソート
       this.posts = v.rv.result;
       this.posts.sort((a,b) => a.timestamp < b.timestamp ? -1 : 1);
@@ -121,7 +138,7 @@ class BulletinBoard {
          || post.timestamp.getDate()     !== v.lastDate.getDate()
         ){
           // 投稿日が変わったら日付を表示
-          this.parent.appendChild(createElement({
+          this.board.appendChild(createElement({
             attr: {class:'date'},
             text: new Intl.DateTimeFormat('en', { month: 'long'}).format(post.timestamp)
               + ' ' + ('00'+post.timestamp.getDate()).slice(-2)
@@ -131,7 +148,7 @@ class BulletinBoard {
           v.lastDate = post.timestamp;
         }
         // From / To
-        this.parent.appendChild(createElement({
+        this.board.appendChild(createElement({
           attr: {class:'header'},
           children: [{
             attr: {class:'time'},
@@ -143,11 +160,29 @@ class BulletinBoard {
           }],
         }));
         // メッセージ
-        this.parent.appendChild(createElement({
+        this.board.appendChild(createElement({
           attr: {class:'message'},
           text: post.message,
         }));
       });
+
+      v.step = 3; // 終了処理
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
+      return e;
+    }
+  }  
+
+  /** 掲示板に投稿する
+   * @returns {null|Error}
+   */
+  post = () => {
+    const v = {whois:'BulletinBoard.post',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
 
       v.step = 3; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
@@ -237,22 +272,4 @@ class BulletinBoard {
   close = () => {
     this.wrapper.classList.remove('act');
   }
-
-  /**
-   * @returns {null|Error}
-   */
-  template = () => {
-    const v = {whois:'BulletinBoard.template',step:0,rv:null};
-    console.log(v.whois+' start.');
-    try {
-
-      v.step = 3; // 終了処理
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
-      return e;
-    }
-  }  
 }

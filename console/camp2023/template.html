@@ -213,7 +213,8 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 他インスタンスのメソッドをfuncとして使用するので最後に定義
     v.BurgerMenu = new BurgerMenu('body',{
       authority: v.Auth.info.authority,
-      home: 'c1005',  // パスポート画面をホームに設定(暫定)
+      home: 'c1002',  // 掲示板画面をホームに設定(暫定)
+      //home: 'c1005',  // パスポート画面をホームに設定(暫定)
       func: {recept:v.Reception.main},
     });
     if( v.BurgerMenu instanceof Error ) throw v.BurgerMenu;
