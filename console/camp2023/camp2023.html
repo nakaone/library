@@ -1167,7 +1167,12 @@ class BulletinBoard {
 
         // CSS/HTML定義
         css:[
-          /* BulletinBoard共通部分 */
+          /* BulletinBoard共通部分 */`
+          .BulletinBoard .wrapper {
+            width: 100%;
+            height: calc(100vh - 4rem);
+          }
+          `,
           /* 掲示板領域
             .board height: 100vh - 上下余白(2rem×2)
             .display height: 100vh - 上下余白(2rem×2) - ボタン高さ4rem - ボタン上余白2rem
@@ -1177,12 +1182,12 @@ class BulletinBoard {
           }
           .BulletinBoard .board.act {
             width: 100%;
-            max-height: calc(100vh - 4rem);
-            display: block;
+            max-height: calc(100vh - 2rem);
+            display: grid;
+            grit-template-rows: 1fr minmax(0rem, 7rem);
           }
           .BulletinBoard .board .display {
             width: 100%;
-            max-height: calc(100vh - 10rem);
             display: block;
           }
           .BulletinBoard .board .display .date {
@@ -1209,9 +1214,9 @@ class BulletinBoard {
           }
           .BulletinBoard .board button {
             display: block;
-            margin: 2rem auto 0 auto;
+            margin: 2rem 0rem 1rem 0rem;
             width: 100%;
-            height: 4rem;
+            height: 7rem;
             font-size: 2rem;
           }`,
           /* 投稿用画面 */`
@@ -1239,8 +1244,7 @@ class BulletinBoard {
           .BulletinBoard button {
             font-size: 2rem;
             padding: 0.5rem 0rem;
-          }
-          `,
+          }`,
         ],
         html:[
           {attr:{class:'board act'},children:[
