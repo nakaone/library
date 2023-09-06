@@ -115,6 +115,7 @@ class BulletinBoard {
             {tag:'button',attr:{name:'cancel'},text:'取消'},
             {tag:'button',attr:{name:'post'},text:'投稿'},
           ]},
+          {attr:{class:'BulletinBoard',name:'LoadingIcon'}},
         ],
       },
     };
@@ -157,7 +158,13 @@ class BulletinBoard {
         attributeFilter: [],//配列で記述した属性だけを見張る
       });
 
-      v.step = 5; // 終了処理
+      v.step = 5; // 待機画面の準備
+      this.LoadingIcon = new LoadingIcon(
+        this.parent.querySelector('[name="LoadingIcon"]')
+      );
+      if( this.LoadingIcon instanceof Error ) throw this.LoadingIcon;
+
+      v.step = 6; // 終了処理
       this.close();
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -285,13 +292,15 @@ class BulletinBoard {
     console.log(v.whois+' start.',event);
     try {
 
-      // 取消ボタンと投稿ボタンを識別
+      v.step = 1; // 待機画面表示
+      this.LoadingIcon.show();
+
+      v.step = 2; // 取消ボタンと投稿ボタンを識別
       v.name = event.target.getAttribute('name');
 
       if( v.name === 'post' ){
+        v.step = 3.1; // 投稿処理
         v.data = {
-          //entryNo  : this.auth.entryNo.value,
-          //publicKey: this.auth.RSA.pKey,
           from     : this.post.querySelector('[name="from"]').value,
           to       : this.post.querySelector('[name="to"]').value,
           message  : this.post.querySelector('textarea').value,
@@ -300,16 +309,17 @@ class BulletinBoard {
         v.rv = await this.auth.fetch('post',v.data,3);
         if( v.rv instanceof Error ) throw v.rv;
         if( v.rv.isErr ) throw new Error(v.rv.message);
-        // 掲示板を最新の状態に更新する
+        v.step = 3.2; // 掲示板を最新の状態に更新する
         v.rv = await this.receive();
         if( v.rv instanceof Error ) throw v.rv;
       }
 
-      // 表示領域を表示、投稿領域を閉鎖
+      v.step = 4; // 表示領域を表示、投稿領域を閉鎖
       this.board.classList.add('act');
       this.post.classList.remove('act');
 
-      // 終了処理
+      v.step = 5; // 終了処理
+      this.LoadingIcon.hide();
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
