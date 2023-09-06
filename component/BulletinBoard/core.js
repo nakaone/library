@@ -79,15 +79,25 @@ class BulletinBoard {
           }
           .BulletinBoard .post.act {
             width: 100%;
+            margin-top: 5rem;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+            column-gap: 2rem;
           }
           .BulletinBoard .post > * {
             width: 100%;
           }
+          .BulletinBoard input {
+            font-size: 1.5rem;
+          }
           .BulletinBoard textarea {
             grid-column: 1 / 3;
+            margin: 2rem 0px;
+            height: 6rem;
+          }
+          .BulletinBoard button {
+            font-size: 2rem;
+            padding: 0.5rem 0rem;
           }
           `,
         ],
@@ -100,7 +110,7 @@ class BulletinBoard {
             {tag:'p',text:'From:'},
             {tag:'p',text:'To:'},
             {tag:'input',attr:{name:'from'}},
-            {tag:'input',attr:{name:'to'}},
+            {tag:'input',attr:{name:'to',value:'参加者各位'}},
             {tag:'textarea'},
             {tag:'button',attr:{name:'cancel'},text:'取消'},
             {tag:'button',attr:{name:'post'},text:'投稿'},
@@ -241,9 +251,15 @@ class BulletinBoard {
     console.log(v.whois+' start.');
     try {
 
+      v.step = '1'; // from欄に申込者氏名をセット
+      this.post.querySelector('[name="from"]').value
+      = this.auth.info['申込者氏名'];
+
+      v.step = '2'; // 掲示板を閉じ、投稿用領域を開く
       this.board.classList.remove('act');
       this.post.classList.add('act');
 
+      v.step = '3';
       return new Promise(resolve => {
         // 取消 -> 戻り値はnull
         this.post.querySelector('[name="cancel"]')
