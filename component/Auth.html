@@ -519,9 +519,9 @@ class Auth {
   }
 
   /** GASのAPI(doPost)を呼び出す
-   * @param {string} to - 呼び先(gateway or front)
-   * @param {string} func - 呼び先関数名(auth1A等)
-   * @param {Object} data - 呼び先関数に渡すデータオブジェクト
+   * @param {string} fc - 呼び先関数名(auth1A等)
+   * @param {Object} arg - 呼び先関数に渡すデータオブジェクト
+   * @param {number} [md=0] - モード。0:平文、1:共通鍵で暗号化、2:署名無し暗号化、3:署名付き暗号化
    * @returns {Object} 呼び先からの戻り値
    * 
    * - JS: [Async/await](https://ja.javascript.info/async-await)
@@ -549,9 +549,11 @@ class Auth {
 
       v.step = '2'; // 暗号化・署名
       if( md === 1 ){ // 共通鍵で暗号化
+        v.step = 2.1;
         v.token.dt = encryptAES(
           JSON.stringify(v.token.dt),this.commonKey);
       } else if( md === 2 || md === 3 ){
+        v.step = 2.2;
         v.plaintext = JSON.stringify(v.token.dt);
         v.encode = encodeURI(v.plaintext);
         v.encrypt = md === 2  // 2:署名無し暗号化、3:署名付き暗号化
@@ -563,16 +565,18 @@ class Auth {
         v.token.dt = v.encrypt.cipher;
       }
 
-      v.step = '3'; // fetch
+      v.step = '3.1'; // fetch
       v.fetch = await fetch(this.gateway.url,{
         "method": "POST",
         "body": JSON.stringify(v.token),
         "Accept": "application/json",
         "Content-Type": "application/json",
       });
+      v.step = '3.2';
       v.rv = await v.fetch.json();
       console.log(v.rv);
       if( v.rv instanceof Error ) throw v.rv;
+      v.step = '3.3';
       if( v.rv.isErr ){
         console.error(
           v.whois+' abnormal end.'

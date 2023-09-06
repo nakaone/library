@@ -73,13 +73,38 @@ class BulletinBoard {
             height: 4rem;
             font-size: 2rem;
           }`,
+          /* 投稿用画面 */`
+          .BulletinBoard .post {
+            display: none;
+          }
+          .BulletinBoard .post.act {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+          }
+          .BulletinBoard .post > * {
+            width: 100%;
+          }
+          .BulletinBoard textarea {
+            grid-column: 1 / 3;
+          }
+          `,
         ],
         html:[
           {attr:{class:'board act'},children:[
             {attr:{class:'display'}},
-            {tag:'button',text:'投稿画面を開く'},
+            {tag:'button',text:'投稿用画面を開く'},
           ]},
-          {attr:{class:'post'}},
+          {attr:{class:'post'},children:[
+            {tag:'p',text:'From:'},
+            {tag:'p',text:'To:'},
+            {tag:'input',attr:{name:'from'}},
+            {tag:'input',attr:{name:'to'}},
+            {tag:'textarea'},
+            {tag:'button',attr:{name:'cancel'},text:'取消'},
+            {tag:'button',attr:{name:'post'},text:'投稿'},
+          ]},
         ],
       },
     };
@@ -91,7 +116,8 @@ class BulletinBoard {
       if( v.rv instanceof Error ) throw v.rv;
 
       v.step = 2; // 作業領域をメンバに登録
-      this.display = this.wrapper.querySelector('.board .display');
+      this.board = this.wrapper.querySelector('.board');
+      this.display = this.board.querySelector('.display');
       this.post = this.wrapper.querySelector('.post');
 
       v.step = 3; // 投稿権限があればボタン表示
@@ -210,20 +236,72 @@ class BulletinBoard {
   /** 掲示板に投稿する
    * @returns {null|Error}
    */
-  announce = () => {
+  announce = async() => {
     const v = {whois:'BulletinBoard.announce',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
-      v.step = 3; // 終了処理
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
+      this.board.classList.remove('act');
+      this.post.classList.add('act');
+
+      return new Promise(resolve => {
+        // 取消 -> 戻り値はnull
+        this.post.querySelector('[name="cancel"]')
+        .addEventListener('click',(e) => resolve(this.upload(e)));
+
+        // 決定 -> GASに投稿内容をアップロード
+        this.post.querySelector('[name="post"]')
+        .addEventListener('click',(e) => resolve(this.upload(e)));
+      });
 
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
   }  
+
+  /** 投稿内容をGASにアップロード
+   * @param {Object} data - アップロードするデータオブジェクト 
+   * @returns {void}
+   */
+  upload = async(event) => {
+    const v = {whois:'BulletinBoard.upload',step:'0',rv:null};
+    console.log(v.whois+' start.',event);
+    try {
+
+      // 取消ボタンと投稿ボタンを識別
+      v.name = event.target.getAttribute('name');
+
+      if( v.name === 'post' ){
+        v.data = {
+          //entryNo  : this.auth.entryNo.value,
+          //publicKey: this.auth.RSA.pKey,
+          from     : this.post.querySelector('[name="from"]').value,
+          to       : this.post.querySelector('[name="to"]').value,
+          message  : this.post.querySelector('textarea').value,
+          timestamp: new Date().toLocaleString(),
+        };
+        v.rv = await this.auth.fetch('post',v.data,3);
+        if( v.rv instanceof Error ) throw v.rv;
+        if( v.rv.isErr ) throw new Error(v.rv.message);
+        // 掲示板を最新の状態に更新する
+        v.rv = await this.receive();
+        if( v.rv instanceof Error ) throw v.rv;
+      }
+
+      // 表示領域を表示、投稿領域を閉鎖
+      this.board.classList.add('act');
+      this.post.classList.remove('act');
+
+      // 終了処理
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
+      return e;
+    }
+  }
+
 
   /** 定期的な配信(受信)を開始する
    * @param {void}
