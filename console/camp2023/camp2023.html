@@ -318,6 +318,7 @@ div[name="loading"] > div {
   -->
   <div data-burgermenu="label:'スタッフ',authority:2">
     <!--div data-BurgerMenu="label:'参加者数'"></div-->
+    <div data-burgermenu="label:'掲示板投稿',func:'post'"></div>
     <div data-burgermenu="label:'受付業務',func:'recept'"></div>
     <div data-burgermenu="label:'校内探険'">
       <div class="page">
@@ -1316,8 +1317,8 @@ class BulletinBoard {
   /** 掲示板に投稿する
    * @returns {null|Error}
    */
-  post = () => {
-    const v = {whois:'BulletinBoard.post',step:0,rv:null};
+  announce = () => {
+    const v = {whois:'BulletinBoard.announce',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -1598,7 +1599,7 @@ class BurgerMenu {
       v.step = 4; // ホーム画面表示
       this.change(this.home);
 
-      console.log(v.whois+' normal end.',v.rv);
+      console.log(v.whois+' normal end.',v.rv,this);
       return v.rv;
 
     } catch(e){
@@ -1807,9 +1808,11 @@ class BurgerMenu {
       v.step = 4; // 画面を切り替え
       this.change(v.name[0]);
 
-      v.step = 4; // 選択された関数を実行
+      v.step = 5; // 選択された関数を実行
+      console.log(this.func);
       this.func[v.name[1]]();
 
+      v.step = 6; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -4601,7 +4604,10 @@ window.addEventListener('DOMContentLoaded',async () => {
       authority: v.Auth.info.authority,
       home: 'c1002',  // 掲示板画面をホームに設定(暫定)
       //home: 'c1005',  // パスポート画面をホームに設定(暫定)
-      func: {recept:v.Reception.main},
+      func: {
+        recept: v.Reception.main,     // 受付業務
+        post  : v.BulletinBoard.announce, // 掲示板への投稿
+      },
     });
     if( v.BurgerMenu instanceof Error ) throw v.BurgerMenu;
     // メニュー遷移時、定期配信の停止を追加定義

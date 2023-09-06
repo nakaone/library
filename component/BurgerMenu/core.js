@@ -186,7 +186,7 @@ class BurgerMenu {
       v.step = 4; // ホーム画面表示
       this.change(this.home);
 
-      console.log(v.whois+' normal end.',v.rv);
+      console.log(v.whois+' normal end.',v.rv,this);
       return v.rv;
 
     } catch(e){
@@ -395,9 +395,11 @@ class BurgerMenu {
       v.step = 4; // 画面を切り替え
       this.change(v.name[0]);
 
-      v.step = 4; // 選択された関数を実行
+      v.step = 5; // 選択された関数を実行
+      console.log(this.func);
       this.func[v.name[1]]();
 
+      v.step = 6; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 

@@ -179,8 +179,8 @@ class BulletinBoard {
   /** 掲示板に投稿する
    * @returns {null|Error}
    */
-  post = () => {
-    const v = {whois:'BulletinBoard.post',step:0,rv:null};
+  announce = () => {
+    const v = {whois:'BulletinBoard.announce',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
