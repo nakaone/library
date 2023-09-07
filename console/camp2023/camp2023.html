@@ -4687,7 +4687,6 @@ window.addEventListener('DOMContentLoaded',async () => {
   try {
 
     console.log(v.whois+' start.');
-    console.log('searchParams.id',v.searchParams.has('id'),v.searchParams.get('id'));
 
     // ================================================
     // 1. 利用する各種クラスのインスタンス化
@@ -4717,7 +4716,6 @@ window.addEventListener('DOMContentLoaded',async () => {
       await v.Auth.build();
     }
     localStorage.setItem('conf',JSON.stringify(v.Auth));
-    console.log(v.whois+'.'+v.step+':',v.Auth);
 
     // ----------------------------------------------------
     v.step = '1.2'; // BulletinBoard: 掲示板
@@ -4832,19 +4830,11 @@ window.addEventListener('DOMContentLoaded',async () => {
     // ⇒ 最終段階で実行する
     v.authority = Number(v.Auth.info.authority)
     if( (v.authority & 3) === 0 ){
-      v.step = '9.1'; // 1(参加者)、2(スタッフ)、3(管理者)いずれでもない
+      v.step = '4.1a'; // 1(参加者)、2(スタッフ)、3(管理者)いずれでもない
       alert('参加資格を確認してください');
       document.querySelectorAll('body > div').forEach(x => x.remove());
       return;
     } else {
-      if( (v.authority & 2) === 0 ){
-        v.step = '9.2'; // スタッフではない ⇒ スタッフ画面を削除
-        document.querySelectorAll('div[name="スタッフ"]')
-        .forEach(x => x.remove());
-        // タブの数を減らす
-        document.querySelector('.BurgerMenu[name="main"] .tabs')
-        .style.gridTemplateColumns = 'repeat(4, 1fr)';
-      }
       // ローディング画面解除
       document.querySelector('div[name="loading"]').style.display = 'none';
     } 
