@@ -2504,7 +2504,16 @@ class Perticipants {
       v.step = 1.1; // QRコード表示
       data.entryStr = String('0000'+data.entryNo).slice(-4);
       v.qrcode = this.summary.querySelector('[name="qrcode"]');
-      v.qrSize = v.qrcode.clientWidth;
+      /* 開発時メモ：v.qrSizeが取得できない
+      plan.1
+      v.qrcode.clientWidth -> 0
+      plan.2
+      v.qrcode.getBoundingClientRect() -> DOMRect {x:0, y:0, width:0, height:0, ...}
+      plan.3
+      v.cs1 = window.getComputedStyle(v.qrcode); // CSSStyleDecoration width:"262.664px"
+      v.cs2 = JSON.parse(JSON.stringify(v.cs1));  // width:autoになってしまう
+      */
+      v.qrSize = 250; // 暫定的に固定値にする
       v.qrcode.innerHTML = '';  // 一度クリア
       new QRCode(v.qrcode,{
         text: data.entryStr,
