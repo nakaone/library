@@ -274,11 +274,17 @@ class BulletinBoard {
       return new Promise(resolve => {
         // 取消 -> 戻り値はnull
         this.post.querySelector('[name="cancel"]')
-        .addEventListener('click',(e) => resolve(this.upload(e)));
+        .addEventListener('click',(event) => {
+          event.stopPropagation();
+          resolve(this.upload(event));
+        });
 
         // 決定 -> GASに投稿内容をアップロード
         this.post.querySelector('[name="post"]')
-        .addEventListener('click',(e) => resolve(this.upload(e)));
+        .addEventListener('click',(event) => {
+          event.stopPropagation();
+          resolve(this.upload(event));
+        });
       });
 
     } catch(e){

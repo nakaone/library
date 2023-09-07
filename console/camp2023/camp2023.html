@@ -480,7 +480,10 @@ then [当日スタッフアンケート回答] on {当日スタッフ} lasts 5 d
 1. [「校庭キャンプ2023」サイト](https://tinyurl.com/2aeqv5f5)：https://tinyurl.com/2aeqv5f5
    <img width="200px" src="https://drive.google.com/uc?export=view&usp=sharing&id=1RM9yjxNy5rY2_L83OCg6pGw0SvZSnQiP" /></div>
     </div><!-- 参考資料ここまで -->
-    <!--div data-BurgerMenu="label:'システム設定'"></div-->
+    <div data-burgermenu="label:'システム設定'">
+      <h3>「おまつり奉行」について</h3>
+      <p>2023.09.07 - Version.1.0.0 release</p>
+    </div>
   </div>
 
 
@@ -1415,11 +1418,17 @@ class BulletinBoard {
       return new Promise(resolve => {
         // 取消 -> 戻り値はnull
         this.post.querySelector('[name="cancel"]')
-        .addEventListener('click',(e) => resolve(this.upload(e)));
+        .addEventListener('click',(event) => {
+          event.stopPropagation();
+          resolve(this.upload(event));
+        });
 
         // 決定 -> GASに投稿内容をアップロード
         this.post.querySelector('[name="post"]')
-        .addEventListener('click',(e) => resolve(this.upload(e)));
+        .addEventListener('click',(event) => {
+          event.stopPropagation();
+          resolve(this.upload(event));
+        });
       });
 
     } catch(e){
@@ -4661,7 +4670,7 @@ function whichType(arg,is){
 
 <script type="text/javascript" class="main">
 window.addEventListener('DOMContentLoaded',async () => {
-  const v = {whois:'DOMContentLoaded',opt:{},debug:true,
+  const v = {whois:'DOMContentLoaded',opt:{},debug:false,
     // 認証局
     gwURL:'https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',
     // 資料集
