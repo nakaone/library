@@ -217,7 +217,13 @@ class Auth {
     const v = {whois:'Auth.build',rv:null};
     console.log(v.whois+' start.');
     try {
-      v.step = '1.1'; do  // 受付番号をダイアログから取得
+      v.step = '1.1';  // 受付番号をダイアログから取得
+      console.log('l.221',this.entryNo.value)
+      if( this.entryNo.value !== null ){  // 起動時に取得済みならダイアログにセット
+        document.querySelector('dialog[name="entryNo"] input[type="text"]')
+        .value = this.entryNo.value;
+      }
+      do
         this.entryNo.value = await this.#getEntryNo();
       while( this.entryNo.value.match(/^[0-9]{1,4}$/) === null );
 

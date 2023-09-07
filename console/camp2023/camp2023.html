@@ -699,7 +699,13 @@ class Auth {
     const v = {whois:'Auth.build',rv:null};
     console.log(v.whois+' start.');
     try {
-      v.step = '1.1'; do  // 受付番号をダイアログから取得
+      v.step = '1.1';  // 受付番号をダイアログから取得
+      console.log('l.221',this.entryNo.value)
+      if( this.entryNo.value !== null ){  // 起動時に取得済みならダイアログにセット
+        document.querySelector('dialog[name="entryNo"] input[type="text"]')
+        .value = this.entryNo.value;
+      }
+      do
         this.entryNo.value = await this.#getEntryNo();
       while( this.entryNo.value.match(/^[0-9]{1,4}$/) === null );
 
@@ -4681,6 +4687,7 @@ window.addEventListener('DOMContentLoaded',async () => {
   try {
 
     console.log(v.whois+' start.');
+    console.log('searchParams.id',v.searchParams.has('id'),v.searchParams.get('id'));
 
     // ================================================
     // 1. 利用する各種クラスのインスタンス化
@@ -4695,7 +4702,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     }
     if( v.debug && v.ls !== null ){
       v.step = '1.1.1';
-      // デバッグ用：リリース時はlocalStorage.setItemと併せて削除
+      // デバッグ用
       v.opt = JSON.parse(v.ls);
       v.Auth = new Auth(v.gwURL,v.opt);
       if( v.Auth instanceof Error ) throw v.Auth;
@@ -4703,7 +4710,7 @@ window.addEventListener('DOMContentLoaded',async () => {
       v.step = '1.1.2';
       // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
       if( v.searchParams.has('id') ){
-        v.opt.entryNo = {value:v.searchParams.get('id')};
+        v.opt.entryNo = {value:String(v.searchParams.get('id'))};
       }
       v.Auth = new Auth(v.gwURL,v.opt);
       if( v.Auth instanceof Error ) throw v.Auth;
