@@ -1607,6 +1607,7 @@ class BurgerMenu {
         home: null,       // ホーム画面のID
         authority: 4294967295,  // 実行権限。既定値2^32-1
         onLeave: [],      // 別ページに遷移する際に実行する関数群(dispatchで使用)
+        initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
         css: [
           /* BurgerMenu共通
             --text: テキストおよびハンバーガーアイコンの線の色
@@ -1873,7 +1874,14 @@ class BurgerMenu {
           if( ul ){
             v.step = 11;
             // ulを持つ ⇒ 子孫あり ⇒ ブランチ
-            a.innerText = '▶︎' + a.innerText;
+            if( this.initialSubMenu ){
+              // サブメニューの初期状態を開いた状態とする場合
+              a.innerText = '▼' + a.innerText;
+              ul.classList.add('is_open');
+            } else {
+              // サブメニューの初期状態を閉じた状態とする場合
+              a.innerText = '▶︎' + a.innerText;
+            }
             a.addEventListener('click',this.showChildren);
             // 子要素にもブランチがないか再帰呼出
             // ※直下の要素のみ対象なので':scope >'を付加
