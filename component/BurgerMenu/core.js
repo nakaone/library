@@ -128,14 +128,15 @@ class BurgerMenu {
             border-left : solid 0.7rem var(--fore);
           }
           nav.BurgerMenu li {
-            margin : 0.3rem 0rem 0.3rem 0.5rem;
-            padding : 0.2rem 0rem 0rem 0rem;
+            margin : 0.6rem 0rem 0.3rem 0.5rem;
+            padding : 0.5rem 0rem 0rem 0rem;
             list-style : none;
             background-color : var(--back);
           }
           nav.BurgerMenu li a {
             color : var(--text);
             text-decoration : none;
+            font-size: 1.5rem;
           }`,
           /* 背景 */`
           .BurgerMenu.back {
