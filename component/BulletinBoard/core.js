@@ -53,7 +53,7 @@ class BulletinBoard {
             margin-top : 1rem;
             padding-left : 1rem;
             font-family : fantasy;
-            font-size : 1.5rem;
+            font-size : 2rem;
             border-bottom : solid 4px #ddd;
           }
           .BulletinBoard .board .display .header {
@@ -64,8 +64,12 @@ class BulletinBoard {
             background-color : #ddd;
             padding-left : 0.5rem;
           }
+          .BulletinBoard .board .display .message {
+            font-size: 1.3rem;
+            line-height: 2rem;
+          }
           .BulletinBoard .board .display .fromto {
-            font-size : 0.8rem;
+            font-size : 1rem;
           }
           .BulletinBoard .board .display .time {
             font-size : 0.8rem;
@@ -216,12 +220,20 @@ class BulletinBoard {
          || post.timestamp.getDate()     !== v.lastDate.getDate()
         ){
           // 投稿日が変わったら日付を表示
+          // 月日のみ(ex 9/30)
+          this.display.appendChild(createElement({
+            attr: {class:'date'},
+            text: (post.timestamp.getMonth() + 1)
+                + ' / ' +post.timestamp.getDate()
+          }));
+          /* 英式(ex September 30,2023)
           this.display.appendChild(createElement({
             attr: {class:'date'},
             text: new Intl.DateTimeFormat('en', { month: 'long'}).format(post.timestamp)
               + ' ' + ('00'+post.timestamp.getDate()).slice(-2)
               + ', ' + post.timestamp.getFullYear(),
           }));
+          */
           // 前行の日付を書き換え
           v.lastDate = post.timestamp;
         }
