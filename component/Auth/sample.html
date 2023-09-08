@@ -1,0 +1,27 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>Auth</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="../szLib.css" rel="stylesheet" />
+<style type="text/css"></style>
+</head><body>
+
+
+</body>
+<script type="text/javascript" src="core.js"></script>
+<script type="text/javascript" src="../setupInstance/core.js"></script>
+<script type="text/javascript" src="../createElement.js"></script>
+<script type="text/javascript" src="../mergeDeeply.js"></script>
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {whois:'DOMContentLoaded',opt:{},debug:true,
+    // 認証局
+    gwURL:'https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',
+    // URLクエリパラメータ
+    searchParams: new URLSearchParams(window.location.search),
+  };
+
+  v.Auth = new Auth(v.gwURL);
+  console.log(v.Auth);
+});
+</script>
+</html>
