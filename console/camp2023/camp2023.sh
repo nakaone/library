@@ -20,6 +20,7 @@ function compress(){
 }
 
 compress expedition
+compress map2023
 
 node ../../tools/embedComponent.js \
     -i:template.html -o:camp2023.html -t:html
