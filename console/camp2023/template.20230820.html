@@ -39,7 +39,7 @@
       <div name="持ち物" class="markdown" data-embed="持ち物リスト.md"></div>
     </div>
 
-    <div name="パスポート"><div></div></div>
+    <div name="参加者パス"><div></div></div>
 
     <div name="案内図">
       <div class="page">
@@ -211,8 +211,8 @@ window.addEventListener('DOMContentLoaded',async () => {
   v.step = '5'; // Mermaidで記述された部分をHTML化して表示
   mermaid.initialize({startOnLoad: true});
 
-  v.step = '6'; // パスポートの内容描画
-  const passportDiv = document.querySelector('div[name="パスポート"] div');
+  v.step = '6'; // 参加者パスの内容描画
+  const passportDiv = document.querySelector('div[name="参加者パス"] div');
   v.entryNo = ('000'+v.config.entryNo.value).slice(-4);
   passportDiv.appendChild(createElement({
     tag:'p',

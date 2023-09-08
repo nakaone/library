@@ -107,7 +107,7 @@ BurgerMenuのインスタンス生成時、オプションで指定する
 <script type="text/javascript">
 v.BurgerMenu = new BurgerMenu('body',{
   authority: v.Auth.info.authority,
-  home: 'c1005',  // パスポート画面をホームに設定(暫定)
+  home: 'c1005',  // 参加者パス画面をホームに設定(暫定)
   func: {recept:v.Reception.main},
 });
 </script>

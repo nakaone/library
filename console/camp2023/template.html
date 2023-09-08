@@ -36,7 +36,7 @@
     <div data-BurgerMenu="label:'注意事項'" class="markdown" data-embed="注意事項.md"></div>
     <div data-BurgerMenu="label:'持ち物'" class="markdown" data-embed="持ち物リスト.md"></div>
   </div>
-  <div data-BurgerMenu="label:'パスポート'"></div>
+  <div data-BurgerMenu="label:'参加者パス'"></div>
   <div data-BurgerMenu="label:'案内図'" class="img" data-embed="map2023.svg"></div>
   <div data-BurgerMenu="label:'予定表'" class="TimeTable"></div>
   <!-- 予定表関連メモ
@@ -185,7 +185,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     // ----------------------------------------------------
     v.step = '1.3'; // Perticipants: 参加者情報の表示
     v.Perticipants = new Perticipants(
-      'div[data-BurgerMenu="label:\'パスポート\'"]',
+      'div[data-BurgerMenu="label:\'参加者パス\'"]',
       v.Auth.info
     );
     if( v.Perticipants instanceof Error ) throw v.Perticipants;
@@ -216,7 +216,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     v.BurgerMenu = new BurgerMenu('body',{
       authority: v.Auth.info.authority,
       home: 'c1002',  // 掲示板画面をホームに設定(暫定)
-      //home: 'c1005',  // パスポート画面をホームに設定(暫定)
+      //home: 'c1005',  // 参加者パス画面をホームに設定(暫定)
       func: {
         recept: v.Reception.main,     // 受付業務
       },
@@ -258,7 +258,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 3.1.2 注意事項
     // 3.1.3 持ち物
 
-    v.step = '3.2'; // パスポート
+    v.step = '3.2'; // 参加者パス
     v.rv = v.Perticipants.view(v.Auth.info);
     if( v.rv instanceof Error ) throw v.rv;
 

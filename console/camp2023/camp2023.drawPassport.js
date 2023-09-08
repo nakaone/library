@@ -1,4 +1,4 @@
-/** camp2023でパスポート画面を作成する
+/** camp2023で参加者パス画面を作成する
  * @param {string} parent - 親要素のCSSセレクタ
  * @param {Object} config - Authから返された参加者情報
  * @returns {void}
