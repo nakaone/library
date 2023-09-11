@@ -1,0 +1,50 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="../szLib.css" rel="stylesheet" />
+<style type="text/css" name="TimeTable"></style>
+</head><body>
+<div id="TimeTable"></div>
+
+</div>
+</body>
+<!--
+  {title:"",start:"",end:"",place:"",charge:"",summary:"",note:"",resources:[]},
+  {name:"",quantity:0,unit:"",procure:"",note:""}
+  endがnull ⇒ マイルストーン
+-->
+<script type="text/javascript" src="core.js"></script>
+<script type="text/javascript" src="../setupInstance/core.js"></script>
+<script type="text/javascript" src="../createElement.js"></script>
+<script type="text/javascript" src="../createPassword.js"></script>
+<script type="text/javascript" src="../mergeDeeply.js"></script>
+<script type="text/javascript" src="../Auth/Auth.js"></script>
+<script type="text/javascript" src="../whichType.js"></script>
+<script type="text/javascript">
+
+
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {};
+
+  v.TimeTable = new TimeTable('#TimeTable',{
+    config:{
+      start: '2023/09/30 08:00:00', // 表示範囲の開始時刻
+      end:   '2023/10/01 12:00:00', // 表示範囲の終了時刻
+    },
+    data:[
+      {section:{title:'',description:''},list:[
+        {title:"スタッフ集合",start:"8:30",end:null,  // 単一行コメント
+        place:"",charge:"",summary:"",note:"",resources:[]},
+        {'title':'オリエンテーション',start:"8:30",end:"8:40",
+        place:"",charge:"",summary:"",note:"",resources:[]},
+        {title:"テント設営",start:"8:40",end:"9:10",
+        place:"",charge:"",summary:"",note:"",resources:[]},
+      ]},
+    ],
+  });
+  console.log(v.TimeTable);
+
+});
+</script>
+</html>

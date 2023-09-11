@@ -1,0 +1,148 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>proto2</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--
+<link href="../szLib.css" rel="stylesheet" />
+-->
+<style type="text/css">
+.wrapper {
+  --unitNum : 153; /* 8:30〜10:00 -> 25:30 -> 10min x 153 */
+  --unitSize: 1rem;
+  --rowNum : 10;
+  --rowSize: 3rem;
+
+  display: grid;
+  grid-template-columns: repeat(var(--unitNum), var(--unitSize)); 
+  padding: 1rem;
+  width: calc(var(--unitSize) * var(--unitNum) + 2rem);
+  height: calc(var(--rowSize) * var(--rowNum) + 2rem);
+}
+.wrapper div {
+  margin: 0px;
+  padding: 0px;
+}
+.unit {
+  z-index: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 0.7rem 1.2rem;
+}
+.bar {
+  grid-row: 1 / 2;
+  grid-column: 1 / 4;
+  background-color: #8ff;
+  height: 0.9rem;
+}
+.start, .end {
+  grid-row: 1 / 2;
+  padding: 0px;
+  font-size: 0.7rem;
+  overflow: visible;
+  white-space: nowrap;
+  z-index: 1;
+}
+.start {
+  grid-column: 1 / 2;
+}
+.end {
+  grid-column: 3 / 4;
+  text-align: right;
+}
+.title {
+  grid-row: 2 / 3;
+  grid-column: 1 / 4;
+  padding: 0;
+  overflow: visible;
+  white-space: nowrap;
+  z-index: 1;
+}
+</style>
+</head><body>
+<div id="TimeTable" class="wrapper">
+  <!--
+  <div class="unit" style="grid-column: 1 / 2;grid-row: 1 / 2;">
+    <div class="bar"></div>
+    <div class="start">8:30</div><div class="end"></div>
+    <div class="title">スタッフオリエン</div>
+  </div>
+  <div class="unit" style="grid-column: 2 / 5;grid-row: 2 / 3;">
+    <div class="bar"></div>
+    <div class="start">8:40</div><div class="end">9:10</div>
+    <div class="title">テント設営</div>
+  </div>
+  <div class="unit" style="grid-column: 5 / 16;grid-row: 3 / 4;">
+    <div class="bar"></div>
+    <div class="start">9:10</div><div class="end">11:00</div>
+    <div class="title">灯油買い出し、鍋準備<sub>(岩佐氏)</sub></div>
+  </div>
+
+  <div class="unit" style="grid-column: 2 / 10;grid-row: 4 / 5;">
+    <div class="bar"></div>
+    <div class="start">8:40</div><div class="end">10:00</div>
+    <div class="title">カレー材料買い出し</div>
+  </div>
+  -->
+</div>
+
+</body>
+<script type="text/javascript" src="../createElement.js"></script>
+<script type="text/javascript" src="../mergeDeeply.js"></script>
+<script type="text/javascript" src="../whichType.js"></script>
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {
+    canvasStart: new Date('2023/09/30 08:30:00').getTime(),
+    calc: (dStr) => {
+      dStr = '2023/' + (dStr.indexOf(' ') >= 0 ? '10/1' : '9/30 ') + dStr;
+      const dObj = new Date(dStr);
+      //console.log(dStr,dObj);
+      // 1unit = 10min, 8:30=>1
+      return {
+        str: ('0'+dObj.getHours()).slice(-2) + ':' + ('0'+dObj.getMinutes()).slice(-2),
+        col: (dObj.getTime() - v.canvasStart) / 600000 + 1,
+      };
+    },
+    line : 1,
+  };
+  [
+    // 10/1分は先頭か末尾に半角スペースを追加して識別
+    {start:'8:30',end:'8:40',title:'オリエンテーション'},
+    {start:'8:40',end:'9:10',title:'テント設営'},
+    // 本部：岩佐
+    {start:'9:10',end:'11:00',title:'灯油買い出し、鍋準備<sub>(岩佐氏、他1名)</sub>'},
+    {start:'14:00',end:'14:10',title:'開始挨拶<sub>(岩佐氏、校長)</sub>'},
+    // 受付：嶋津
+    {start:'9:10',end:'11:00',title:'受付練習、ポスター・案内標識設置<sub>(受付班：嶋津、他2名)</sub>'},
+    {start:'13:30',end:'16:00',title:'受付<sub>(受付班)</sub>'},
+    {start:'19:00',end:'21:30',title:'当日帰宅組の送り出し'},
+    // 設営班：窪田
+    {start:'9:10',end:'11:00',title:'体育館ブルーシート敷き、区画線引き<sub>(テント班、2〜3名)</sub>'},
+    {start:'14:00',end:'17:00',title:'校内探検準備'},
+    {start:'17:00',end:'18:00',title:'おばけ集合、説明'},
+    {start:'18:30',end:'20:30',title:'校内探検実施'},
+    // カレー班：陣内
+    {start:'8:40',end:'10:00',title:'カレー材料買い出し<sub>(カレー班：陣内氏、飯田氏[車]、他1名)</sub>'},
+  ].forEach(x => {
+    v.st = v.calc(x.start);
+    v.ed = v.calc(x.end);
+    // st〜edが20分以下の場合、v.ed.str = null
+    if( (v.ed.col - v.st.col) < 2 ) v.ed.str = '';
+    document.getElementById('TimeTable').appendChild(
+      createElement({
+        attr:{class:'unit'},
+        style:{
+          gridColumn : v.st.col + ' / ' + v.ed.col,
+          gridRow : v.line + ' / ' + (++v.line),
+        },
+        children: [
+          {attr:{class:'bar'}},
+          {attr:{class:'start'},text:v.st.str},
+          {attr:{class:'end'},text:v.ed.str},
+          {attr:{class:'title'},html:x.title},
+        ]
+      })
+    );
+  });
+});
+</script>
+</html>
