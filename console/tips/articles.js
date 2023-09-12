@@ -88,7 +88,7 @@ window.addEventListener('DOMContentLoaded',async () => {
  * 
  * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
  */
-class Perticipants {
+class Participants {
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
@@ -96,7 +96,7 @@ class Perticipants {
    * @returns {true|Error}
    */
   constructor(parent,opt={}){
-    const v = {whois:'Perticipants.constructor',rv:true,step:0,
+    const v = {whois:'Participants.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
         // メンバとして持つHTMLElementの定義
         parent: parent, // {HTMLElement} 親要素
@@ -106,15 +106,15 @@ class Perticipants {
         style: null,  // {HTMLStyleElement} CSS定義
         // CSS/HTML定義
         css:[
-          /* Perticipants共通部分 */ \`
-          .Perticipants.act {
+          /* Participants共通部分 */ \`
+          .Participants.act {
             margin: 1rem;
             width: calc(100% - 2rem);
             display: grid;
             row-gap: 1rem;
             grid-template-columns: 1fr;
           }
-          .Perticipants {
+          .Participants {
             display: none;
           }\`,
         ],
@@ -145,7 +145,7 @@ class Perticipants {
    * @returns {void}
    */
   toggle = (event,show) => {
-    const v = {whois:'Perticipants.toggle',step:1,rv:null};
+    const v = {whois:'Participants.toggle',step:1,rv:null};
     console.log(v.whois+' start.',event,show);
     try {
 
@@ -198,7 +198,7 @@ class Perticipants {
    * @returns {null|Error}
    */
   template = () => {
-    const v = {whois:'Perticipants.template',step:0,rv:null};
+    const v = {whois:'Participants.template',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -224,7 +224,7 @@ class Perticipants {
  * 
  * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
  */
-class Perticipants {
+class Participants {
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
@@ -232,7 +232,7 @@ class Perticipants {
    * @returns {true|Error}
    */
   constructor(parent,opt={}){
-    const v = {whois:'Perticipants.constructor',rv:true,step:0,
+    const v = {whois:'Participants.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
         // メンバとして持つHTMLElementの定義
         parent: parent, // {HTMLElement} 親要素
@@ -247,136 +247,136 @@ class Perticipants {
         buttons: null, // {HTMLElement} ボタン領域のDIV要素
         // CSS/HTML定義
         css:[
-          /* Perticipants共通部分 */ \`
-          .Perticipants.act {
+          /* Participants共通部分 */ \`
+          .Participants.act {
             margin: 1rem;
             width: calc(100% - 2rem);
             display: grid;
             row-gap: 1rem;
             grid-template-columns: 1fr;
           }
-          .Perticipants {
+          .Participants {
             display: none;
           }
-          .Perticipants > div {
+          .Participants > div {
             width: 100%;
             display: grid;
             gap: 1rem;
           }
-          .Perticipants rt {
+          .Participants rt {
             font-size: 50%;
           }
-          .Perticipants .label {
+          .Participants .label {
             margin-top: 1rem;
             width: 100%;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
           }
-          .Perticipants .label p {
+          .Participants .label p {
             grid-column: 1 / 3;
             font-size: 1.4rem;
           }
-          .Perticipants .label button {
+          .Participants .label button {
             grid-column: 3 / 4;
           }\`,
           /* 概要欄(QRコード、受付番号、申込者名) */\`
-          .Perticipants .summary {
+          .Participants .summary {
             grid-template-columns: repeat(12, 1fr);
           }
-          .Perticipants .summary [name="qrcode"]{
+          .Participants .summary [name="qrcode"]{
             padding: 0rem;
             grid-row: 1 / 3;
             grid-column: 1 / 5;
           }
-          .Perticipants .summary [name="entryStr"]{
+          .Participants .summary [name="entryStr"]{
             grid-row: 1 / 2;
             grid-column: 5 / 13;
           }
-          .Perticipants .summary [name="entryStr"] span {
+          .Participants .summary [name="entryStr"] span {
             font-size: 2rem;
           }
-          .Perticipants .summary [name="申込者氏名"]{
+          .Participants .summary [name="申込者氏名"]{
             grid-row: 2 / 3;
             grid-column: 5 / 13;
           }
-          .Perticipants .summary ruby span {
+          .Participants .summary ruby span {
             font-size: 2rem;
           }
-          .Perticipants .summary rt span {
+          .Participants .summary rt span {
             font-size: 1rem;
           }\`,
           /* 参加者一覧 */\`
-          .Perticipants .list .label button {
+          .Participants .list .label button {
             display: none;
           }
-          .Perticipants .list .label button.act {
+          .Participants .list .label button.act {
             display: block;
           }
-          .Perticipants .list .content {
+          .Participants .list .content {
             display: none;
           }
-          .Perticipants .list .content.act {
+          .Participants .list .content.act {
             width: 100%;
             margin: 1rem 0px;
             display: grid;
             grid-template-columns: repeat(10, 1fr);
             gap: 0.2rem;
           }
-          .Perticipants .list .content div:nth-child(4n+1) {
+          .Participants .list .content div:nth-child(4n+1) {
             grid-column: 1 / 2;
           }
-          .Perticipants .list .content div:nth-child(4n+2) {
+          .Participants .list .content div:nth-child(4n+2) {
             grid-column: 2 / 7;
           }
-          .Perticipants .list .content div:nth-child(4n+3) {
+          .Participants .list .content div:nth-child(4n+3) {
             grid-column: 7 / 9;
           }
-          .Perticipants .list .content div:nth-child(4n+4) {
+          .Participants .list .content div:nth-child(4n+4) {
             grid-column: 9 / 11;
           }
-          .Perticipants .list .content .td[name="fee"] > * {
+          .Participants .list .content .td[name="fee"] > * {
             display: none;
           }
-          .Perticipants .list .content .td[name="fee"] > *.act {
+          .Participants .list .content .td[name="fee"] > *.act {
             display: block;
           }\`,
           /* 詳細情報 */\`
-          .Perticipants .detail .content {
+          .Participants .detail .content {
             display: none;
           }
-          .Perticipants .detail .content.act {
+          .Participants .detail .content.act {
             display: block;
           }
-          .Perticipants .detail .content .table {
+          .Participants .detail .content .table {
             width: 100%;
             margin: 1rem 0px;
             display: grid;
             grid-template-columns: 2fr 3fr;
             gap: 0.2rem;
           }
-          .Perticipants .message {
+          .Participants .message {
             display: none;
           }
-          .Perticipants .message.act {
+          .Participants .message.act {
             display: block;
           }
-          .Perticipants .message button {
+          .Participants .message button {
             margin-top: 1rem;
             padding: 0.5rem 2rem;
           }\`,
           /* 取消・決定・全員受領ボタン */\`
-          .Perticipants .buttons {
+          .Participants .buttons {
             display: none;
           }
-          .Perticipants .buttons.act {
+          .Participants .buttons.act {
             width: 100%;
             margin: 1rem 0px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
           }
-          .Perticipants .buttons button {
+          .Participants .buttons button {
             display: block;
             width: 100%;
             font-size: 2rem;
@@ -468,7 +468,7 @@ class Perticipants {
    * @returns {void}
    */
   #setData = (data) => {
-    const v = {whois:'Perticipants.#setData',rv:true,step:0};
+    const v = {whois:'Participants.#setData',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
 
@@ -597,7 +597,7 @@ class Perticipants {
    * @returns {Object} {entryNo:{string},fee0n:'未入場/無料/未収/既収/退場済'}
    */
   edit = async (data) => {
-    const v = {whois:'Perticipants.edit',rv:true,step:0};
+    const v = {whois:'Participants.edit',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
 
@@ -654,7 +654,7 @@ class Perticipants {
           const rv = null;
           // 終了処理
           console.log('取消 -> '+JSON.stringify(rv)
-          + '\\nPerticipants.edit normal end.\\n');
+          + '\\nParticipants.edit normal end.\\n');
           this.close();
           resolve({entryNo:this.data.entryNo,result:rv});
         });
@@ -673,7 +673,7 @@ class Perticipants {
           ) ) rv = {};*/
           // 終了処理
           console.log('決定 -> '+JSON.stringify(rv)
-          + '\\nPerticipants.edit normal end.\\n');
+          + '\\nParticipants.edit normal end.\\n');
           this.close();
           resolve(rv);
         });
@@ -692,7 +692,7 @@ class Perticipants {
           ) ) rv = {};*/
           // 終了処理
           console.log('全員受領 -> '+JSON.stringify(rv)
-          + '\\nPerticipants.edit normal end.\\n');
+          + '\\nParticipants.edit normal end.\\n');
           this.close();
           resolve(rv);
         });
@@ -709,7 +709,7 @@ class Perticipants {
    * @returns {void}
    */
   view = (data) => {
-    const v = {whois:'Perticipants.view',rv:true,step:0};
+    const v = {whois:'Participants.view',rv:true,step:0};
     console.log(v.whois+' start.');
     try {
 
@@ -767,7 +767,7 @@ class Perticipants {
    * @returns {void}
    */
   toggle = (event,show) => {
-    const v = {whois:'Perticipants.toggle',step:1,rv:null};
+    const v = {whois:'Participants.toggle',step:1,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -824,12 +824,12 @@ class Perticipants {
 
 \`\`\`
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-<title>design(Perticipants)</title>
+<title>design(Participants)</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link href="../szLib.css" rel="stylesheet" />
 <style type="text/css"></style>
 </head><body>
-  <div class="Perticipants"></div>
+  <div class="Participants"></div>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script type="text/javascript" src="core.js"></script>
@@ -842,12 +842,12 @@ window.addEventListener('DOMContentLoaded',async () => {
   console.log(v.whois+' start.');
   try {
 
-    v.Perticipants = new Perticipants('div.Perticipants',kokusho,{});
-    if( v.rv instanceof Error ) throw v.Perticipants;
-    console.log(v.Perticipants);
+    v.Participants = new Participants('div.Participants',kokusho,{});
+    if( v.rv instanceof Error ) throw v.Participants;
+    console.log(v.Participants);
 
-    //console.log(await v.Perticipants.edit());
-    console.log(v.Perticipants.view());
+    //console.log(await v.Participants.edit());
+    console.log(v.Participants.view());
 
     console.log(v.whois+' normal end.',v.rv);
   } catch(e){
@@ -872,7 +872,7 @@ const kokusho = {"タイムスタンプ":"2023-08-01T06:36:48.485Z","メール�
   // =====================================================================
 `コンソールでちょっとしたファイル加工を行う場合のサンプル。
 
-以下はPerticipants開発でCSSファイルからsetupInstance()に渡すCSS定義オブジェクトを作成した例。
+以下はParticipants開発でCSSファイルからsetupInstance()に渡すCSS定義オブジェクトを作成した例。
 
 \`\`\`
 // useage:

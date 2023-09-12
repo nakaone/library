@@ -1,7 +1,7 @@
 /**
- * @classdesc 参加者数の集計(total number of perticipants)
+ * @classdesc 参加者数の集計(total number of participants)
  */
-class TNoPerticipants {
+class TNoParticipants {
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
@@ -10,7 +10,7 @@ class TNoPerticipants {
    * @returns {true|Error}
    */
   constructor(parent,auth,opt={}){
-    const v = {whois:'TNoPerticipants.constructor',rv:true,step:0,
+    const v = {whois:'TNoParticipants.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
         auth: auth,
         colLabel: ['A','B','C','D','E'],  // 列記号
@@ -32,32 +32,32 @@ class TNoPerticipants {
 
         // CSS/HTML定義
         css:[
-          /* TNoPerticipants共通部分 */ `
-          .TNoPerticipants[name="wrapper"] {
+          /* TNoParticipants共通部分 */ `
+          .TNoParticipants[name="wrapper"] {
             display: none;
           }
-          .TNoPerticipants[name="wrapper"].act {
+          .TNoParticipants[name="wrapper"].act {
             display: block;
           }
-          .TNoPerticipants .control {
+          .TNoParticipants .control {
             padding: 1rem;
           }
-          .TNoPerticipants select {
+          .TNoParticipants select {
             margin-right: 2rem;
           }
-          .TNoPerticipants .table {
+          .TNoParticipants .table {
             margin: 1rem;
             display: grid;
             grid-template-columns: 6rem repeat(5, 4rem);
             gap: 0.2rem;
           }
-          .TNoPerticipants .td {
+          .TNoParticipants .td {
             text-align: right;
           }
-          .TNoPerticipants .color {
+          .TNoParticipants .color {
             background: #8ff;
           }
-          .TNoPerticipants li li {
+          .TNoParticipants li li {
             font-size: 0.8rem;
           }`,
         ],
@@ -154,7 +154,7 @@ class TNoPerticipants {
    * @returns {null|Error}
    */
   build = async() => {
-    const v = {whois:'TNoPerticipants.build',step:0,rv:null};
+    const v = {whois:'TNoParticipants.build',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
 
@@ -308,7 +308,7 @@ class TNoPerticipants {
    * @returns {null|Error}
    */
   setValues = () => {
-    const v = {whois:'TNoPerticipants.setValues',step:0,rv:null,
+    const v = {whois:'TNoParticipants.setValues',step:0,rv:null,
       cond: {
         // テーブル領域の各列の抽出条件
         A: 'stay=1 and tent=1',

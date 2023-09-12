@@ -1,5 +1,5 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-<title>TNoPerticipants</title>
+<title>TNoParticipants</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link href="../szLib.css" rel="stylesheet" />
 <style type="text/css"></style>
@@ -53,8 +53,8 @@ window.addEventListener('DOMContentLoaded',async () => {
   }
   localStorage.setItem('conf',JSON.stringify(v.Auth));
 
-  v.TNoPerticipants = new TNoPerticipants('#statistics',v.Auth);
-  v.rv = await v.TNoPerticipants.build();
+  v.TNoParticipants = new TNoParticipants('#statistics',v.Auth);
+  v.rv = await v.TNoParticipants.build();
 
   console.log(v.rv);
 });

@@ -52,7 +52,7 @@
     遊び場保険、スケジュールに追加
   -->
   <div data-BurgerMenu="label:'スタッフ',authority:2">
-    <!--div data-BurgerMenu="label:'参加者数'"></div-->
+    <div data-BurgerMenu="label:'参加者数'"></div>
     <div data-BurgerMenu="label:'受付業務',func:'recept'"></div>
     <div data-BurgerMenu="label:'校内探険'">
       <div class="page">
@@ -99,15 +99,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/aes.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/hmac.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/pbkdf2.min.js"></script>
-
 <!-- cryptico -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cryptico/0.0.1343522940/cryptico.min.js" integrity="sha512-C7GGRhFRn7F7hsLH1oCH2kX9ls61kx33wAgTZ6xJDwGvvgULcIZpwKqxG1+Kj/KOD2jWPxjNQYHi4BopPJPxVA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
 <!-- mermaid -->
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.2.4/dist/mermaid.min.js"></script>
 <!-- QRコード検出/生成 -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- alaSQL -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.1.7/alasql.min.js" integrity="sha512-xdGKK8okKKREuKT6V7QYlXVJ+jIZQC9zOEGzeiF2tHOMXdMMXQESDXlpn8FDGKdIUOkJYI0IO3q6JoMWoR6XAg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <!-- =====================================================
   自作ライブラリ
@@ -121,7 +121,7 @@
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/createPassword.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/cryptoAES.html","selector":"script.core"},"to":"js"}'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/Date.toLocale.html","selector":"script.core"},"to":"js"}'></script>
-<script type="text/javascript" data-embed='../../component/Perticipants/core.js'></script>
+<script type="text/javascript" data-embed='../../component/Participants/core.js'></script>
 <script type="text/javascript" data-embed='../../component/itemSelector/core.js'></script>
 <script type="text/javascript" data-embed='../../component/LoadingIcon/core.js'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/mergeDeeply.html","selector":"script.core"},"to":"js"}'></script>
@@ -129,10 +129,11 @@
 <script type="text/javascript" data-embed='../../component/Reception/core.js'></script>
 <style type="text/css" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"style.core"},"to":"css"}'></style>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='../../component/TNoParticipants/core.js'></script>
 <script type="text/javascript" data-embed='../../component/WebScanner/core.js'></script>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/whichType.html","selector":"script.core"},"to":"js"}'></script>
 
-<!--script type="text/javascript" data-embed="camp2023.Perticipants.js"></script -->
+<!--script type="text/javascript" data-embed="camp2023.Participants.js"></script -->
 
 <script type="text/javascript" class="main">
 window.addEventListener('DOMContentLoaded',async () => {
@@ -186,12 +187,12 @@ window.addEventListener('DOMContentLoaded',async () => {
     if( v.BulletinBoard instanceof Error ) throw v.BulletinBoard;
 
     // ----------------------------------------------------
-    v.step = '1.3'; // Perticipants: 参加者情報の表示
-    v.Perticipants = new Perticipants(
+    v.step = '1.3'; // Participants: 参加者情報の表示
+    v.Participants = new Participants(
       'div[data-BurgerMenu="label:\'参加者パス\'"]',
       v.Auth.info
     );
-    if( v.Perticipants instanceof Error ) throw v.Perticipants;
+    if( v.Participants instanceof Error ) throw v.Participants;
 
     // ----------------------------------------------------
     v.step = '1.4'; // TimeTable: タイムテーブル
@@ -214,7 +215,15 @@ window.addEventListener('DOMContentLoaded',async () => {
     if( v.Reception instanceof Error ) throw v.Reception;
 
     // ----------------------------------------------------
-    v.step = '1.6'; // BurgerMenu: ナビゲーションメニュー
+    v.step = '1.6'; // TNoParticipants: 参加者数集計
+    v.TNoParticipants = new TNoParticipants(
+      'div[data-BurgerMenu="label:\'参加者数\'"]',
+      v.Auth
+    );
+    if( v.TNoParticipants instanceof Error ) throw v.TNoParticipants;
+
+    // ----------------------------------------------------
+    v.step = '1.7'; // BurgerMenu: ナビゲーションメニュー
     // 他インスタンスのメソッドをfuncとして使用するので最後に定義
     v.BurgerMenu = new BurgerMenu('body',{
       authority: v.Auth.info.authority,
@@ -262,7 +271,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     // 3.1.3 持ち物
 
     v.step = '3.2'; // 参加者パス
-    v.rv = v.Perticipants.view(v.Auth.info);
+    v.rv = v.Participants.view(v.Auth.info);
     if( v.rv instanceof Error ) throw v.rv;
 
     // 3.3 案内図
@@ -273,6 +282,9 @@ window.addEventListener('DOMContentLoaded',async () => {
 
     // 3.5 スタッフ
     // 3.5.1 参加者数
+    v.rv = await v.TNoParticipants.build();
+    if( v.rv instanceof Error ) throw v.rv;
+
     // 3.5.2 受付業務
     // 3.5.3 校内探険
     // 3.5.4 参考資料

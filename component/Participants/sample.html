@@ -1,5 +1,5 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-<title>Perticipants sample</title>
+<title>Participants sample</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link href="../szLib.css" rel="stylesheet" />
 <style type="text/css"></style>
@@ -15,12 +15,12 @@ window.addEventListener('DOMContentLoaded',async () => {
   console.log(v.whois+' start.');
   try {
 
-    v.Perticipants = new Perticipants('body',{});
-    if( v.rv instanceof Error ) throw v.Perticipants;
-    console.log(v.Perticipants);
+    v.Participants = new Participants('body',{});
+    if( v.rv instanceof Error ) throw v.Participants;
+    console.log(v.Participants);
 
-    v.rv = await v.Perticipants.edit(kokusho);
-    //console.log(v.Perticipants.view(kokusho));
+    v.rv = await v.Participants.edit(kokusho);
+    //console.log(v.Participants.view(kokusho));
 
     console.log(v.whois+' normal end.',v.rv);
   } catch(e){

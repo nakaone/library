@@ -26,7 +26,7 @@ class Reception {
           {attr:{class:'Reception',name:'LoadingIcon'}},
           {attr:{class:'Reception',name:'WebScanner'}},
           {attr:{class:'Reception',name:'itemSelector'}},
-          {attr:{class:'Reception',name:'Perticipants'}},
+          {attr:{class:'Reception',name:'Participants'}},
         ],
       },
     };
@@ -58,10 +58,10 @@ class Reception {
       if( this.itemSelector instanceof Error ) throw this.itemSelector;
 
       v.step = 5; // 参加費入力画面の準備
-      this.Perticipants = new Perticipants(
-        this.parent.querySelector('[name="Perticipants"]')
+      this.Participants = new Participants(
+        this.parent.querySelector('[name="Participants"]')
       );
-      if( this.Perticipants instanceof Error ) throw this.Perticipants;
+      if( this.Participants instanceof Error ) throw this.Participants;
 
       v.step = 6; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
@@ -84,7 +84,7 @@ class Reception {
 
       this.wrapper.classList.add('act');
       this.itemSelector.close();
-      this.Perticipants.close();
+      this.Participants.close();
       
       while(v.loop){  // v.loopがtrueの間、繰り返し
         // 停止条件①：エラー発生
@@ -120,7 +120,7 @@ class Reception {
             if( v.target instanceof Error ) throw v.target;
           }
           v.step = 3.3; // 編集画面を表示し、変更箇所を取得
-          v.data = await this.Perticipants.edit(v.target);
+          v.data = await this.Participants.edit(v.target);
           if( v.data instanceof Error ) throw v.data;
           // auth.fetchで変更箇所を管理局に送信
           if( v.data !== null ){

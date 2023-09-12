@@ -3,8 +3,8 @@
  * @param {Object} config - Authから返された参加者情報
  * @returns {void}
  */
-const Perticipants = (parent,config) => {
-  const v = {whois:'Perticipants',step:0,rv:null,css:[
+const Participants = (parent,config) => {
+  const v = {whois:'Participants',step:0,rv:null,css:[
     /*
     { // 親要素
       sel : '',
