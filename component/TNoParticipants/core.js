@@ -55,11 +55,15 @@ class TNoPerticipants {
           }
           .TNoPerticipants .color {
             background: #8ff;
+          }
+          .TNoPerticipants li li {
+            font-size: 0.8rem;
           }`,
         ],
         html:[
           {attr:{class:'control'},children:[
             // 母集団
+            {tag:'label',text:'母集団：'},
             {tag:'select',attr:{name:'population'},event:{'change':this.setValues},children:[
               {tag:'option',attr:{value:'auth<>2'},text:'応募者'},
               {tag:'option',attr:{value:'auth=1 or auth=3 or auth=5'},text:'当選者'},
@@ -67,10 +71,30 @@ class TNoPerticipants {
               {tag:'option',attr:{value:'auth=2 or auth=5'},text:'スタッフ'},
             ]},
             // 状態
+            {tag:'label',text:'抽出条件：'},
             {tag:'select',attr:{name:'status'},event:{'change':this.setValues},children:[
               {tag:'option',attr:{value:"fee<>''"},text:'全件'},
               {tag:'option',attr:{value:"fee='未入場'"},text:'未入場'},
               {tag:'option',attr:{value:"fee<>'未入場'"},text:'入場済'},
+            ]},
+            {tag:'ol',children:[
+              {tag:'li',text:'「母集団」は集計対象範囲を指します。',children:[
+                {tag:'ul',children:[
+                  {tag:'li',text:'応募者：募集に応募している人。おやじの会メンバを除く'},
+                  {tag:'li',text:'当選者：応募締切前は応募者と同じ。締切後は当選した人'},
+                  {tag:'li',text:'落選者：応募締切前はゼロ、締切後は落選した人'},
+                  {tag:'li',text:'スタッフ：おやじの会メンバまたは応募者のうち手伝い可の人'},
+                ]},
+              ]},
+              {tag:'li',text:'「抽出条件」は母集団からの抽出条件を指します。',children:[
+                {tag:'ul',children:[
+                  {tag:'li',text:'全件：条件を設定せず、母集団全体を対象とする'},
+                  {tag:'li',text:'未入場：イベント当日、当選者のうち受付を済ませていない人'},
+                  {tag:'li',text:'入場済：イベント当日、当選者のうち受付を済ませた人'}
+
+                ]},
+              ]},
+              {tag:'li',text:'「申込単位」のみ応募口数での集計、他は人数ベース'},
             ]},
           ]},
           {attr:{class:'table'},children:[
@@ -109,6 +133,10 @@ class TNoPerticipants {
           ));
         }
       }
+
+      this.LoadingIcon = new LoadingIcon(this.parent);
+      if( v.rv instanceof Error ) throw this.LoadingIcon;
+      this.LoadingIcon.show(); 
 
       v.step = 4; // 終了処理
       this.close();
@@ -263,6 +291,7 @@ class TNoPerticipants {
 
       v.step = 3; // 終了処理
       this.wrapper.classList.add('act');
+      this.LoadingIcon.hide();
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
