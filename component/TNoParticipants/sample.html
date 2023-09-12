@@ -54,10 +54,6 @@ window.addEventListener('DOMContentLoaded',async () => {
   console.log('l.51',v.Auth);
 
   v.TNoPerticipants = new TNoPerticipants('#statistics',v.Auth);
-  if( v.TNoPerticipants instanceof Error ){
-    console.error(v.TNoPerticipants);
-    throw v.TNoPerticipants;
-  }
   v.rv = await v.TNoPerticipants.build();
 
   console.log(v.rv);

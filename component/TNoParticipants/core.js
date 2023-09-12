@@ -12,6 +12,15 @@ class TNoPerticipants {
     const v = {whois:'TNoPerticipants.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
         auth: auth, // 認証局のURL
+        colLabel: ['A','B','C','D','E'],  // 列記号
+        colCond: ['stay=1 and tent=1','stay=1 and tent=0','stay=1','stay=0','stay<99'],
+        rowLabel: ['申込単位','1年生','2年生','3年生',
+          '4年生','5年生','6年生','在校生計',
+          '卒業生','未就学児','保護者','関係者計','総計'],
+        rowCond: ['',"mem='1年生'","mem='2年生'","mem='3年生'",
+          "mem='4年生'","mem='5年生'","mem='6年生'","mem like '%年生'",
+          "mem='卒業生'","mem='未就学児'","mem='保護者'",
+          "mem='卒業生' or mem='未就学児' or mem='保護者'","mem<>'dummy'"],
 
         // メンバとして持つHTMLElementの定義
         parent: parent, // {HTMLElement} 親要素
@@ -23,90 +32,56 @@ class TNoPerticipants {
         // CSS/HTML定義
         css:[
           /* TNoPerticipants共通部分 */ `
-          .TNoPerticipants {
-            margin: 1rem;
-            width: calc(100% - 2rem);
-            display: grid;
-            row-gap: 1rem;
-            grid-template-columns: 1fr;
-          }
-          .TNoPerticipants.hide {
+          .TNoPerticipants[name="wrapper"] {
             display: none;
           }
-          .TNoPerticipants .right {
+          .TNoPerticipants[name="wrapper"].act {
+            display: block;
+          }
+          .TNoPerticipants .control {
+            padding: 1rem;
+          }
+          .TNoPerticipants select {
+            margin-right: 2rem;
+          }
+          .TNoPerticipants .table {
+            margin: 1rem;
+            display: grid;
+            grid-template-columns: 6rem repeat(5, 4rem);
+            gap: 0.2rem;
+          }
+          .TNoPerticipants .td {
             text-align: right;
           }
-          .TNoPerticipants .group {
-            display: grid;
-            grid-template-areas:
-              "a1   b1   c1   d1"
-              "a2a6 b2b4 c2   d2"
-              "a2a6 b2b4 c3   d3"
-              "a2a6 b2b4 c4   d4"
-              "a2a6 b5c5 b5c5 d5"
-              "a2a6 b6c6 b6c6 d6"
-              "a7c7 a7c7 a7c7 d7"
-              "a8c8 a8c8 a8c8 d8";
-            grid-template-rows: repeat(8, 1.5rem);
-            grid-template-columns: repeat(3, 4rem) 5rem;
-            gap: 0.2rem;
-          }
-          .TNoPerticipants .person {
-            display: grid;
-            grid-template-areas:
-              "a1   b1   c1   d11 d12 d13 d14 d15 d16 d17 d18 d19 d10"
-              "a2a6 b2b4 c2   d21 d22 d23 d24 d25 d26 d27 d28 d29 d20"
-              "a2a6 b2b4 c3   d31 d32 d33 d34 d35 d36 d37 d38 d39 d30"
-              "a2a6 b2b4 c4   d41 d42 d43 d44 d45 d46 d47 d48 d49 d40"
-              "a2a6 b5c5 b5c5 d51 d52 d53 d54 d55 d56 d57 d58 d59 d50"
-              "a2a6 b6c6 b6c6 d61 d62 d63 d64 d65 d66 d67 d68 d69 d60"
-              "a7c7 a7c7 a7c7 d71 d72 d73 d74 d75 d76 d77 d78 d79 d70"
-              "a8c8 a8c8 a8c8 d81 d82 d83 d84 d85 d86 d87 d88 d89 d80";
-            grid-template-rows: repeat(8, 1.5rem);
-            grid-template-columns: repeat(3, 4rem) repeat(10, 5rem);
-            gap: 0.2rem;
-          }
-          `,
+          .TNoPerticipants .color {
+            background: #8ff;
+          }`,
         ],
         html:[
-          {attr:{class:'group'},children:[
-            {attr:{class:'th'},style:{'grid-area':'a1'},text:'取消'},
-            {attr:{class:'th'},style:{'grid-area':'b1'},text:'宿泊'},
-            {attr:{class:'th'},style:{'grid-area':'c1'},text:'テント'},
-            {attr:{class:'th'},style:{'grid-area':'d1'},text:'口数'},
-            {attr:{class:'th'},style:{'grid-area':'a2a6'},text:'なし'},
-            {attr:{class:'th'},style:{'grid-area':'a7c7'},text:'あり'},
-            {attr:{class:'th'},style:{'grid-area':'a8c8'},text:'合計'},
-            {attr:{class:'th'},style:{'grid-area':'b2b4'},text:'あり'},
-            {attr:{class:'th'},style:{'grid-area':'b5c5'},text:'なし'},
-            {attr:{class:'th'},style:{'grid-area':'b6c6'},text:'小計'},
-            {attr:{class:'th'},style:{'grid-area':'c2'},text:'あり'},
-            {attr:{class:'th'},style:{'grid-area':'c3'},text:'なし'},
-            {attr:{class:'th'},style:{'grid-area':'c4'},text:'小計'},
+          {attr:{class:'control'},children:[
+            // 母集団
+            {tag:'select',attr:{name:'population'},event:{'change':this.setValues},children:[
+              {tag:'option',attr:{value:'auth<>2'},text:'応募者'},
+              {tag:'option',attr:{value:'auth=1 or auth=3 or auth=5'},text:'当選者'},
+              {tag:'option',attr:{value:'auth=0 or auth=4'},text:'落選者'},
+              {tag:'option',attr:{value:'auth=2 or auth=5'},text:'スタッフ'},
+            ]},
+            // 状態
+            {tag:'select',attr:{name:'status'},event:{'change':this.setValues},children:[
+              {tag:'option',attr:{value:"fee<>''"},text:'全件'},
+              {tag:'option',attr:{value:"fee='未入場'"},text:'未入場'},
+              {tag:'option',attr:{value:"fee<>'未入場'"},text:'入場済'},
+            ]},
           ]},
-          {attr:{class:'person'},children:[
-            {attr:{class:'th'},style:{'grid-area':'a1'},text:'取消'},
-            {attr:{class:'th'},style:{'grid-area':'b1'},text:'宿泊'},
-            {attr:{class:'th'},style:{'grid-area':'c1'},text:'テント'},
-            {attr:{class:'th'},style:{'grid-area':'a2a6'},text:'なし'},
-            {attr:{class:'th'},style:{'grid-area':'a7c7'},text:'あり'},
-            {attr:{class:'th'},style:{'grid-area':'a8c8'},text:'合計'},
-            {attr:{class:'th'},style:{'grid-area':'b2b4'},text:'あり'},
-            {attr:{class:'th'},style:{'grid-area':'b5c5'},text:'なし'},
-            {attr:{class:'th'},style:{'grid-area':'b6c6'},text:'小計'},
-            {attr:{class:'th'},style:{'grid-area':'c2'},text:'あり'},
-            {attr:{class:'th'},style:{'grid-area':'c3'},text:'なし'},
-            {attr:{class:'th'},style:{'grid-area':'c4'},text:'小計'},
-            {attr:{class:'th'},style:{'grid-area':'d11'},text:'1年'},
-            {attr:{class:'th'},style:{'grid-area':'d12'},text:'2年'},
-            {attr:{class:'th'},style:{'grid-area':'d13'},text:'3年'},
-            {attr:{class:'th'},style:{'grid-area':'d14'},text:'4年'},
-            {attr:{class:'th'},style:{'grid-area':'d15'},text:'5年'},
-            {attr:{class:'th'},style:{'grid-area':'d16'},text:'6年'},
-            {attr:{class:'th'},style:{'grid-area':'d17'},text:'卒業生'},
-            {attr:{class:'th'},style:{'grid-area':'d18'},text:'未就学児'},
-            {attr:{class:'th'},style:{'grid-area':'d19'},text:'保護者'},
-            {attr:{class:'th'},style:{'grid-area':'d10'},text:'合計'},
+          {attr:{class:'table'},children:[
+            {attr:{class:'th'},style:{'grid-column':'1 / 2','grid-row':'1 / 2'},text:'宿泊'},
+            {attr:{class:'th'},style:{'grid-column':'2 / 5','grid-row':'1 / 2'},text:'あり'},
+            {attr:{class:'th'},style:{'grid-column':'5 / 6','grid-row':'1 / 3'},text:'なし'},
+            {attr:{class:'th'},style:{'grid-column':'6 / 7','grid-row':'1 / 3'},text:'参加計'},
+            {attr:{class:'th'},style:{'grid-column':'1 / 2','grid-row':'2 / 3'},text:'テント'},
+            {attr:{class:'th'},style:{'grid-column':'2 / 3','grid-row':'2 / 3'},text:'あり'},
+            {attr:{class:'th'},style:{'grid-column':'3 / 4','grid-row':'2 / 3'},text:'なし'},
+            {attr:{class:'th'},style:{'grid-column':'4 / 5','grid-row':'2 / 3'},text:'宿泊計'},
           ]},
         ],
       },
@@ -118,22 +93,21 @@ class TNoPerticipants {
       v.rv = setupInstance(this,opt,v.default);
       if( v.rv instanceof Error ) throw v.rv;
 
-      // tdの追加
-      for( v.i=2 ; v.i<9 ; v.i++ ){
-        this.wrapper.querySelector('.group').appendChild(createElement(
-          {attr:{class:'td right'},style:{'grid-area':'d'+v.i},children:[
-            {tag:'span',attr:{name:'a'+v.i},text:'0'},
-            {tag:'span',attr:{name:'b'+v.i},text:' / 0'},
-          ]}
+      // テーブル領域(td部分)の追加
+      for( v.r=0 ; v.r<this.rowLabel.length ; v.r++ ){
+        // 右端のラベル項目
+        this.wrapper.querySelector('.table').appendChild(createElement(
+          {attr:{class:'th'},text:this.rowLabel[v.r]}
         ));
-      }
-      for( v.i=20 ; v.i<90 ; v.i++ ){
-        this.wrapper.querySelector('.person').appendChild(createElement(
-          {attr:{class:'td right'},style:{'grid-area':'d'+(('0'+v.i).slice(-2))},children:[
-            {tag:'span',attr:{name:'a'+(('0'+v.i).slice(-2))},text:'0'},
-            {tag:'span',attr:{name:'b'+(('0'+v.i).slice(-2))},text:' / 0'},
-          ]}
-        ));
+        // 値項目
+        for( v.c=0 ; v.c<this.colLabel.length ; v.c++ ){
+          this.wrapper.querySelector('.table').appendChild(createElement(
+            {attr:{class:'td '
+              + this.colLabel[v.c]+('0'+v.r).slice(-2) // セルアドレス
+              + ((v.r === 0 || v.r === 7 || v.r > 10) ? ' color' : '')
+            }}
+          ));
+        }
       }
 
       v.step = 4; // 終了処理
@@ -155,7 +129,6 @@ class TNoPerticipants {
     try {
 
       v.step = '1';
-      /*
       v.rv = await this.auth.fetch('getTNoParticipants',{
         entryNo: this.auth.entryNo.value,
         publicKey: this.auth.RSA.pKey,
@@ -164,12 +137,12 @@ class TNoPerticipants {
       if( v.rv.isErr ){
         alert(v.rv.message);
         return null;
-      }*/
-      v.rv = JSON.parse('{"isErr":false,"message":"","stack":"","result":[["entryNo","キャンセル","宿泊、テント","申込者の参加","参加者01所属","参加者02所属","参加者03所属","参加者04所属","参加者05所属","fee00","fee01","fee02","fee03","fee04","fee05"],[1,"キャンセル","宿泊する(テントあり)","参加予定(宿泊なし)","1年生","3年生","","","","既収","未収","","","",""],[2,"キャンセル","宿泊しない","参加予定(宿泊なし)","2年生","","","","","","","","","",""],[3,"キャンセル","宿泊しない","不参加","3年生","","","","","","","","","",""],[4,"","宿泊する(テントなし)","参加予定(宿泊あり)","4年生","","","","","既収","未収","","","",""],[5,"","宿泊する(テントなし)","参加予定(宿泊あり)","5年生","","","","","","","","","",""],[6,"","宿泊する(テントなし)","参加予定(宿泊あり)","6年生","","","","","","","","","",""],[7,"","宿泊しない","参加予定(宿泊なし)","卒業生","","","","","","","","","",""],[8,"","宿泊する(テントなし)","参加予定(宿泊あり)","未就学児","","","","","","","","","",""],[9,"","宿泊する(テントあり)","不参加","保護者","","","","","","","","","",""],[10,"","宿泊する(テントなし)","参加予定(宿泊あり)","1年生","","","","","","","","","",""],[11,"","宿泊する(テントなし)","参加予定(宿泊あり)","2年生","","","","","","","","","",""],[12,"","宿泊しない","参加予定(宿泊なし)","3年生","","","","","","","","","",""],[13,"","宿泊しない","参加予定(宿泊なし)","4年生","","","","","","","","","",""],[14,"","宿泊する(テントなし)","参加予定(宿泊あり)","5年生","","","","","","","","","",""],[15,"","宿泊する(テントあり)","不参加","6年生","","","","","","","","","",""],[16,"","宿泊する(テントなし)","参加予定(宿泊あり)","卒業生","","","","","既収","既収","","","",""],[17,"","宿泊する(テントあり)","参加予定(宿泊なし)","未就学児","","","","","","","","","",""],[18,"","宿泊する(テントあり)","参加予定(宿泊なし)","保護者","","","","","","","","","",""],[19,"","宿泊する(テントなし)","参加予定(宿泊あり)","1年生","","","","","","","","","",""],[20,"","宿泊する(テントなし)","不参加","2年生","","","","","","","","","",""],[21,"","宿泊する(テントあり)","参加予定(宿泊あり)","3年生","","","","","","","","","",""],[22,"","宿泊する(テントなし)","参加予定(宿泊あり)","4年生","","","","","","","","","",""],[23,"","宿泊する(テントあり)","参加予定(宿泊なし)","5年生","","","","","","","","","",""],[24,"","宿泊する(テントなし)","参加予定(宿泊あり)","6年生","","","","","","","","","",""],[25,"","宿泊する(テントなし)","参加予定(宿泊あり)","卒業生","","","","","","","","","",""],[26,"","宿泊しない","参加予定(宿泊なし)","未就学児","保護者","","","","","","","","",""],[27,"","宿泊する(テントあり)","参加予定(宿泊あり)","5年生","","","","","","","","","",""],[28,"","宿泊する(テントなし)","参加予定(宿泊あり)","保護者","","","","","","","","","",""],[29,"","宿泊しない","参加予定(宿泊なし)","卒業生","","","","","","","","","",""],[30,"","宿泊する(テントあり)","参加予定(宿泊あり)","6年生","3年生","","","","","","","","",""],[31,"","宿泊する(テントなし)","参加予定(宿泊あり)","2年生","","","","","","","","","",""],[32,"","宿泊する(テントなし)","参加予定(宿泊あり)","3年生","","","","","","","","","",""],[33,"","宿泊する(テントあり)","参加予定(宿泊あり)","2年生","卒業生","卒業生","","","","","","","",""],[34,"","宿泊する(テントなし)","参加予定(宿泊あり)","3年生","","","","","","","","","",""],[35,"","宿泊する(テントなし)","参加予定(宿泊あり)","2年生","保護者","","","","","","","","",""],["","","","","","","","","","","","","","",""],["","","","","","","","","","","","","","",""],["","","","","","","","","","","","","","",""],["","","","","","","","","","","","","","",""],["","","","","","","","","","","","","","",""],["","","","","","","","","","","","","","",""],["","","","","","","","","","","","","","",""],["","","","","","","","","","","","","","",""],["","","","","","","","","","","","","","",""],["","","","","","","","","","","","","","",""],["","","","","","","","","","","","","","",""]]}');
+      }
+      console.log(JSON.stringify(v.rv));
 
-      // 取得したデータをrawテーブルに格納
+      // raw: 取得したデータをそのままテーブルに格納
       alasql(`create table raw (
-        id INT, cancel string, tent string, 
+        id INT, auth INT, cancel string, tent string, 
         mem00 string, mem01 string, mem02 string, 
         mem03 string, mem04 string, mem05 string, 
         fee00 string, fee01 string, fee02 string, 
@@ -183,10 +156,18 @@ class TNoPerticipants {
           alasql(v.sql);
         }
       }
-      //console.log('raw\n',JSON.stringify(alasql('select * from raw')));
+      console.log('raw\n',JSON.stringify(alasql('select * from raw')));
 
-      /* m01: 申込単位のマスタテーブル
+      // おやじの会コアスタッフ(auth=2)のダミーメンバは消去
+      v.sql = "update raw"
+      + " set mem01='', mem02='', mem03='', mem04='', mem05=''"
+      + ", tent='宿泊する(テントなし)'"
+      + " where auth=2";
+      alasql(v.sql);
+
+      /* this.master: 申込単位のマスタテーブル
         id      受付番号
+        auth
         cancel  0:キャンセル無し、1:キャンセル
         stay    0:宿泊しない、1:宿泊する
         tent    0:テント無し、1:テントあり
@@ -196,7 +177,7 @@ class TNoPerticipants {
         memNN   参加者の所属
         feeNN   '未入場','無料','未収','既収','退場済'
       */
-      v.sql = "select id"
+      v.sql = "select id, auth"
         /* cancel: キャンセル */
         + ", case when g00.cancel = '' then 0 else 1 end as cancel"
         /* stay,tent: 宿泊、テント */
@@ -215,7 +196,6 @@ class TNoPerticipants {
         + ", case when g00.mem01 = '不参加' then '' else '保護者' end as mem00"
         + ", mem01, mem02, mem03, mem04, mem05"
         + ", fee00, fee01, fee02, fee03, fee04, fee05"
-        /* 作業用クエリg00の定義 */
 
         + " from (select *"
         /* 参加人数カウント用 */
@@ -237,24 +217,138 @@ class TNoPerticipants {
         case when fee05 = '' or fee05 = '未入場' then 0 else 1 end as f05
         `
         + 'from raw) as g00';
-      v.m01 = alasql(v.sql);
-      console.log(v.m01);
+      this.master = alasql(v.sql);
+      console.log('master',this.master);
 
-      /* g01: グループ単位の集計
+      /* this.group: グループ単位の集計用マスタ
+        auth    
         cancel  0:キャンセル無し、1:キャンセル
         stay    0:宿泊しない、1:宿泊する
         tent    0:テント無し、1:テントあり
         member  参加登録口数
         enter   入場済口数
       */
-      v.sql = //"select * from ? where cancel > 0";
-      "select cancel, stay, tent, count(*) as member, sum(isEnter) as enter from ?"
-      + " group by cancel, stay, tent"
+      v.sql = "select auth, cancel, stay, tent"
+      + ", count(*) as member, sum(isEnter) as enter"
+      + " from ? group by auth, cancel, stay, tent"
       ;
-      v.g01 = alasql(v.sql,[v.m01]);
-      console.log(v.g01);
-      v.rv = {group:v.g01};
+      this.group = alasql(v.sql,[this.master]);
+      console.log('group',this.group);
 
+      /* this.person: 個人単位の集計用マスタ
+        id      受付番号
+        auth
+        cancel  0:キャンセル無し、1:キャンセル
+        stay    0:宿泊しない、1:宿泊する
+        tent    0:テント無し、1:テントあり
+        mem     '1年生'〜'6年生','卒業生','未就学児','保護者'
+        sts     '未入場','無料','未収','既収','退場済'
+      */
+      v.template = "select id, auth, cancel, stay, tent"
+      + ", mem0X as mem"
+      + ", case"
+      + " when fee0X = '' then '未入場'"
+      + " else fee0X"
+      + " end as fee"
+      + " from ? where mem0X<>''";
+      v.sql = v.template.replaceAll(/X/g,'0');
+      for( v.i=1 ; v.i<6 ; v.i++ ){
+        v.sql += ' union ' + v.template.replaceAll(/X/g,String(v.i));
+      }
+      this.person = alasql(v.sql,[this.master,this.master,this.master,this.master,this.master,this.master]);
+      console.log('person',this.person);
+
+      v.rv = this.setValues();
+      if( v.rv instanceof Error ) throw v.rv;
+
+      v.step = 3; // 終了処理
+      this.wrapper.classList.add('act');
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
+      return e;
+    }
+  }  
+
+  /**
+   * @returns {null|Error}
+   */
+  setValues = () => {
+    const v = {whois:'TNoPerticipants.setValues',step:0,rv:null,
+      cond: {
+        A: 'stay=1 and tent=1',
+        B: 'stay=1 and tent=0',
+        C: 'stay=1',
+        D: 'stay=0',
+        E: 'stay<99', // 全件対象
+        1: "mem='1年生'",
+        2: "mem='2年生'",
+        3: "mem='3年生'",
+        4: "mem='4年生'",
+        5: "mem='5年生'",
+        6: "mem='6年生'",
+        7: "mem like '%年生'",  // 在校生計
+        8: "mem='卒業生'",
+        9: "mem='未就学児'",
+        10: "mem='保護者'",
+        11: "mem='卒業生' or mem='未就学児' or mem='保護者'", // 関係者計
+        12: "mem<>''",  // 総計
+      },
+      group: "select sum(member) as s00, sum(enter) as s01 from ?"
+      + " where (_C) and (_P)",
+      person: "select count(*) as cnt from ?"
+      + " where (_R) and (_C) and (_P) and (_S)",
+    };
+    console.log(v.whois+' start.');
+    try {
+
+      v.population = this.wrapper.querySelector('.control [name="population"]').value;
+      v.status = this.wrapper.querySelector('.control [name="status"]');
+      v.group = v.group.replace('_P',v.population);
+      v.person = v.person.replace('_P',v.population).replace('_S',v.status.value);
+      console.log("group=%s, person=%s",v.group,v.person);
+
+      // グループの集計
+      console.log('this.colCond',this.colCond);
+      for( v.c=0 ; v.c<this.colCond.length ; v.c++ ){
+        v.sql = v.group.replace('_C',this.colCond[v.c]);
+        v.rv = alasql(v.sql,[this.group])[0];
+        console.log(JSON.stringify(v.rv));
+        v.sts = v.status.selectedOptions[0].innerText;
+        v.val = v.sts === '全件' ? v.rv.s00
+        : ( v.sts === '入場済' ? v.rv.s01 : (v.rv.s00 - v.rv.s01));
+        this.wrapper.querySelector('.table .'+this.colLabel[v.c]+'00')
+        .innerText = v.val;
+      }
+
+      // 個人単位の集計
+      for( v.r=1 ; v.r<this.rowCond.length ; v.r++ ){
+        for( v.c=0 ; v.c<this.colCond.length ; v.c++ ){
+          v.sql = v.person.replace('_R',this.rowCond[v.r])
+          .replace('_C',this.colCond[v.c]);
+          v.rv = alasql(v.sql,[this.person])[0];
+          this.wrapper.querySelector('.table .'+this.colLabel[v.c]+('0'+v.r).slice(-2)).innerText = v.rv.cnt;
+        }
+      }
+      /*
+      v.mode = mode !== null ? mode
+      : this.wrapper.querySelector('.control select').value;
+      console.log(v.mode);
+
+      switch( v.mode ){
+        case '応募者数': v.cond = ''; break;
+        case '参加予定'
+      }
+      if( v.mode === '応募者数' ){
+        for( v.r=0 ; v.r<this.rowLabel.length ; v.r++ ){
+          for( v.c=0 ; v.c<this.colLabel.length ; v.c++ ){
+
+          }
+        }
+      }
+      */
 
       v.step = 3; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
