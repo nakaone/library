@@ -52,7 +52,6 @@ window.addEventListener('DOMContentLoaded',async () => {
     await v.Auth.build();
   }
   localStorage.setItem('conf',JSON.stringify(v.Auth));
-  console.log('l.51',v.Auth);
 
   v.TNoPerticipants = new TNoPerticipants('#statistics',v.Auth);
   v.rv = await v.TNoPerticipants.build();

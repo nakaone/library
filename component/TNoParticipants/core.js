@@ -5,13 +5,14 @@ class TNoPerticipants {
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
+   * @param {Object} auth - class Authのインスタンス。データ取得等で使用
    * @param {Object} [opt={}] - オプション
    * @returns {true|Error}
    */
   constructor(parent,auth,opt={}){
     const v = {whois:'TNoPerticipants.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
-        auth: auth, // 認証局のURL
+        auth: auth,
         colLabel: ['A','B','C','D','E'],  // 列記号
         colCond: ['stay=1 and tent=1','stay=1 and tent=0','stay=1','stay=0','stay<99'],
         rowLabel: ['申込単位','1年生','2年生','3年生',
@@ -117,7 +118,7 @@ class TNoPerticipants {
       v.rv = setupInstance(this,opt,v.default);
       if( v.rv instanceof Error ) throw v.rv;
 
-      // テーブル領域(td部分)の追加
+      v.step = 2; // テーブル領域(td部分)の追加
       for( v.r=0 ; v.r<this.rowLabel.length ; v.r++ ){
         // 右端のラベル項目
         this.wrapper.querySelector('.table').appendChild(createElement(
@@ -134,6 +135,7 @@ class TNoPerticipants {
         }
       }
 
+      v.step = 3; // 待機画面の用意
       this.LoadingIcon = new LoadingIcon(this.parent);
       if( v.rv instanceof Error ) throw this.LoadingIcon;
       this.LoadingIcon.show(); 
@@ -148,7 +150,7 @@ class TNoPerticipants {
     }
   }
 
-  /**
+  /** 非同期処理で管理局から最新の人数を取得、alasqlでテーブルを準備
    * @returns {null|Error}
    */
   build = async() => {
@@ -156,7 +158,7 @@ class TNoPerticipants {
     console.log(v.whois+' start.');
     try {
 
-      v.step = '1';
+      v.step = '1'; // 最新の人数を管理局から取得
       v.rv = await this.auth.fetch('getTNoParticipants',{
         entryNo: this.auth.entryNo.value,
         publicKey: this.auth.RSA.pKey,
@@ -166,9 +168,8 @@ class TNoPerticipants {
         alert(v.rv.message);
         return null;
       }
-      console.log(JSON.stringify(v.rv));
 
-      // raw: 取得したデータをそのままテーブルに格納
+      v.step = 2; // raw: 取得したデータをそのままテーブルに格納
       alasql(`create table raw (
         id INT, auth INT, cancel string, tent string, 
         mem00 string, mem01 string, mem02 string, 
@@ -186,14 +187,14 @@ class TNoPerticipants {
       }
       console.log('raw\n',JSON.stringify(alasql('select * from raw')));
 
-      // おやじの会コアスタッフ(auth=2)のダミーメンバは消去
+      v.step = 3; // おやじの会コアスタッフ(auth=2)のダミーメンバは消去
       v.sql = "update raw"
       + " set mem01='', mem02='', mem03='', mem04='', mem05=''"
       + ", tent='宿泊する(テントなし)'"
       + " where auth=2";
       alasql(v.sql);
 
-      /* this.master: 申込単位のマスタテーブル
+      v.step = 4; /* this.master: 申込単位のマスタテーブルを作成
         id      受付番号
         auth
         cancel  0:キャンセル無し、1:キャンセル
@@ -248,7 +249,7 @@ class TNoPerticipants {
       this.master = alasql(v.sql);
       console.log('master',this.master);
 
-      /* this.group: グループ単位の集計用マスタ
+      v.step = 5; /* this.group: グループ単位の集計用マスタを作成
         auth    
         cancel  0:キャンセル無し、1:キャンセル
         stay    0:宿泊しない、1:宿泊する
@@ -263,7 +264,7 @@ class TNoPerticipants {
       this.group = alasql(v.sql,[this.master]);
       console.log('group',this.group);
 
-      /* this.person: 個人単位の集計用マスタ
+      v.step = 6; /* this.person: 個人単位の集計用マスタを作成
         id      受付番号
         auth
         cancel  0:キャンセル無し、1:キャンセル
@@ -286,12 +287,13 @@ class TNoPerticipants {
       this.person = alasql(v.sql,[this.master,this.master,this.master,this.master,this.master,this.master]);
       console.log('person',this.person);
 
+      v.step = 7; // データをセット
       v.rv = this.setValues();
       if( v.rv instanceof Error ) throw v.rv;
 
-      v.step = 3; // 終了処理
-      this.wrapper.classList.add('act');
-      this.LoadingIcon.hide();
+      v.step = 8; // 終了処理
+      this.open();  // 画面表示
+      this.LoadingIcon.hide();  // 待機画面をクローズ
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -301,17 +303,20 @@ class TNoPerticipants {
     }
   }  
 
-  /**
+  /** 指定条件に応じた集計結果を表示
+   * @param {void}
    * @returns {null|Error}
    */
   setValues = () => {
     const v = {whois:'TNoPerticipants.setValues',step:0,rv:null,
       cond: {
+        // テーブル領域の各列の抽出条件
         A: 'stay=1 and tent=1',
         B: 'stay=1 and tent=0',
         C: 'stay=1',
         D: 'stay=0',
         E: 'stay<99', // 全件対象
+        // テーブル領域の各行の抽出条件
         1: "mem='1年生'",
         2: "mem='2年生'",
         3: "mem='3年生'",
@@ -325,6 +330,7 @@ class TNoPerticipants {
         11: "mem='卒業生' or mem='未就学児' or mem='保護者'", // 関係者計
         12: "mem<>''",  // 総計
       },
+      // SQLテンプレート
       group: "select sum(member) as s00, sum(enter) as s01 from ?"
       + " where (_C) and (_P)",
       person: "select count(*) as cnt from ?"
@@ -333,14 +339,13 @@ class TNoPerticipants {
     console.log(v.whois+' start.');
     try {
 
+      v.step = 1; // 母集団、抽出条件欄の値を取得、SQLテンプレートに反映
       v.population = this.wrapper.querySelector('.control [name="population"]').value;
       v.status = this.wrapper.querySelector('.control [name="status"]');
       v.group = v.group.replace('_P',v.population);
       v.person = v.person.replace('_P',v.population).replace('_S',v.status.value);
-      console.log("group=%s, person=%s",v.group,v.person);
 
-      // グループの集計
-      console.log('this.colCond',this.colCond);
+      v.step = 2; // グループの集計
       for( v.c=0 ; v.c<this.colCond.length ; v.c++ ){
         v.sql = v.group.replace('_C',this.colCond[v.c]);
         v.rv = alasql(v.sql,[this.group])[0];
@@ -352,7 +357,7 @@ class TNoPerticipants {
         .innerText = v.val;
       }
 
-      // 個人単位の集計
+      v.step = 3; // 個人単位の集計
       for( v.r=1 ; v.r<this.rowCond.length ; v.r++ ){
         for( v.c=0 ; v.c<this.colCond.length ; v.c++ ){
           v.sql = v.person.replace('_R',this.rowCond[v.r])
@@ -361,25 +366,8 @@ class TNoPerticipants {
           this.wrapper.querySelector('.table .'+this.colLabel[v.c]+('0'+v.r).slice(-2)).innerText = v.rv.cnt;
         }
       }
-      /*
-      v.mode = mode !== null ? mode
-      : this.wrapper.querySelector('.control select').value;
-      console.log(v.mode);
 
-      switch( v.mode ){
-        case '応募者数': v.cond = ''; break;
-        case '参加予定'
-      }
-      if( v.mode === '応募者数' ){
-        for( v.r=0 ; v.r<this.rowLabel.length ; v.r++ ){
-          for( v.c=0 ; v.c<this.colLabel.length ; v.c++ ){
-
-          }
-        }
-      }
-      */
-
-      v.step = 3; // 終了処理
+      v.step = 4; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -399,22 +387,4 @@ class TNoPerticipants {
   close = () => {
     this.wrapper.classList.remove('act');
   }
-
-  /**
-   * @returns {null|Error}
-   */
-  template = () => {
-    const v = {whois:'TNoPerticipants.template',step:0,rv:null};
-    console.log(v.whois+' start.');
-    try {
-
-      v.step = 3; // 終了処理
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
-      return e;
-    }
-  }  
 }
