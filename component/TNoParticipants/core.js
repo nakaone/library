@@ -138,7 +138,6 @@ class TNoParticipants {
       v.step = 3; // 待機画面の用意
       this.LoadingIcon = new LoadingIcon(this.parent);
       if( v.rv instanceof Error ) throw this.LoadingIcon;
-      this.LoadingIcon.show(); 
 
       v.step = 4; // 終了処理
       this.close();
@@ -159,6 +158,7 @@ class TNoParticipants {
     try {
 
       v.step = '1'; // 最新の人数を管理局から取得
+      this.LoadingIcon.show(); 
       v.rv = await this.auth.fetch('getTNoParticipants',{
         entryNo: this.auth.entryNo.value,
         publicKey: this.auth.RSA.pKey,
@@ -378,12 +378,12 @@ class TNoParticipants {
   }  
 
 
-  /** 親要素内を表示 */
+  /** wrapper内を表示 */
   open = () => {
     this.wrapper.classList.add('act');
   }
 
-  /** 親要素内を隠蔽 */
+  /** wrapper内を隠蔽 */
   close = () => {
     this.wrapper.classList.remove('act');
   }

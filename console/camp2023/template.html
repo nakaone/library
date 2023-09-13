@@ -41,18 +41,8 @@
     <img width="100%" data-embed='{"from":{"filename":"map2023.txt"},"to":"png"}' />
   </div>
   <div data-BurgerMenu="label:'予定表'" class="TimeTable"></div>
-  <!-- 予定表関連メモ
-  <ul>
-    <li>図中の「▼」「▶️」をクリックすると下位項目が開閉されます</li>
-    <li>作業項目名をクリックすると詳細が表の下に表示されます</li>
-  </ul>
-    詳細は別ページ？　別ペイン？
-    表示範囲絞り込み
-    所要物一覧
-    遊び場保険、スケジュールに追加
-  -->
   <div data-BurgerMenu="label:'スタッフ',authority:2">
-    <div data-BurgerMenu="label:'参加者数'"></div>
+    <div data-BurgerMenu="label:'参加者数',fucn:'statistics'"></div>
     <div data-BurgerMenu="label:'受付業務',func:'recept'"></div>
     <div data-BurgerMenu="label:'校内探険'">
       <div class="page">
@@ -73,8 +63,22 @@
     </div><!-- 参考資料ここまで -->
   </div>
   <div data-BurgerMenu="label:'システム設定'">
-    <h3>「おまつり奉行」について</h3>
-    <p>2023.09.07 - Version.1.0.1 release</p>
+    <div>
+      <h3>システムツール</h3>
+      <p>以下のツールは運営から連絡があった場合に使用してください</p>
+      <button onclick="localStorage.removeItem('conf')">localStorage消去</button><br clear="all" />
+      <button onclick="window.open('https://shimokitazawashooyajinokai.on.drv.tw/public/camp2023.html?debug=true','_self')">認証の省略</button><br clear="all" />
+    </div>
+    <hr>
+    <div>
+      <h3>「おまつり奉行」について</h3>
+      <p>OMATSURI Bugyo: JavaScript SPA to support event participants and stakeholders.</p>
+      <ul>
+        <li>Version.1.0.1 : 2023.09.07 release</li>
+      </ul>
+      <p>author: Shimazu Kunihiro</p>
+      <p>contact: shimokitasho.oyaji@gmail.com</p>
+    </div>
   </div>
 
 </body>
@@ -137,7 +141,7 @@
 
 <script type="text/javascript" class="main">
 window.addEventListener('DOMContentLoaded',async () => {
-  const v = {whois:'DOMContentLoaded',opt:{},debug:true,
+  const v = {whois:'DOMContentLoaded',opt:{},debug:false,
     // 認証局
     gwURL:'https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',
     // 資料集
@@ -217,7 +221,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     // ----------------------------------------------------
     v.step = '1.6'; // TNoParticipants: 参加者数集計
     v.TNoParticipants = new TNoParticipants(
-      'div[data-BurgerMenu="label:\'参加者数\'"]',
+      'div[data-BurgerMenu="label:\'参加者数\',fucn:\'statistics\'"]',
       v.Auth
     );
     if( v.TNoParticipants instanceof Error ) throw v.TNoParticipants;
@@ -231,6 +235,7 @@ window.addEventListener('DOMContentLoaded',async () => {
       //home: 'c1005',  // 参加者パス画面をホームに設定(暫定)
       func: {
         recept: v.Reception.main,     // 受付業務
+        statistics: v.TNoParticipants.build, // 参加者数集計
       },
     });
     if( v.BurgerMenu instanceof Error ) throw v.BurgerMenu;
@@ -282,9 +287,6 @@ window.addEventListener('DOMContentLoaded',async () => {
 
     // 3.5 スタッフ
     // 3.5.1 参加者数
-    v.rv = await v.TNoParticipants.build();
-    if( v.rv instanceof Error ) throw v.rv;
-
     // 3.5.2 受付業務
     // 3.5.3 校内探険
     // 3.5.4 参考資料
