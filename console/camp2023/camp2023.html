@@ -2345,10 +2345,17 @@ class Participants {
           }
           .Participants .summary [name="entryStr"]{
             grid-row: 1 / 2;
-            grid-column: 5 / 13;
+            grid-column: 5 / 10;
           }
           .Participants .summary [name="entryStr"] span {
             font-size: 2rem;
+          }
+          .Participants .summary [name="tent"] {
+            grid-area: 1 / 10 / 2 / 13;
+            font-size: 1.5rem;
+          }
+          .Participants .summary [name="tent"].failed {
+            color: red;
           }
           .Participants .summary [name="申込者氏名"]{
             grid-row: 2 / 3;
@@ -2440,6 +2447,7 @@ class Participants {
           // 概要欄(QRコード、受付番号、申込者名)
           {attr:{class:'summary'},children:[
             {attr:{name:'qrcode'}},
+            {attr:{name:'tent'}},
             {attr:{name:'entryStr'},text:'No.',children:[
               {tag:'span',attr:{class:'v'}},
             ]},
@@ -2558,6 +2566,20 @@ class Participants {
         v.element = this.summary.querySelector('[name="'+x+'"] .v');
         v.element.innerText = data[v.x];
       });
+
+      v.step = 1.3; // 「落選/テント/体育館/日帰り」の表示
+      if( Number(data.authority) === 0 ){
+        this.summary.querySelector('[name="tent"]').classList.add('failed');
+        v.tent = '落選';
+      } else {
+        this.summary.querySelector('[name="tent"]').classList.remove('failed');
+        switch( data['宿泊、テント']){
+          case '宿泊する(テントあり)': v.tent = 'テント'; break;
+          case '宿泊する(テントなし)': v.tent = '体育館'; break;
+          case '宿泊しない': v.tent = '日帰り'; break;
+        }
+      }
+      this.summary.querySelector('[name="tent"]').innerText = v.tent;
 
       // ---------------------------------------------
       // 2. 参加者一覧
