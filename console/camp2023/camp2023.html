@@ -480,7 +480,7 @@ then [当日スタッフアンケート回答] on {当日スタッフ} lasts 5 d
       <p>現在使用されている「おまつり奉行」関係の情報をlocalStorageに保存します。<br>
       保存することにより、リロードの都度必要になる認証を省略できます。<br>
       ※ localStorage: cookieのように、ユーザーのデータをWebブラウザ(ローカル環境)に保存することができる仕組み</p>
-      <button onclick="localStorage.removeItem('conf')">認証を消去</button>
+      <button onclick="clearAuth()">認証を消去</button>
       <p>localStorageに保存されている「おまつり奉行」関係の情報を全て消去します。
       </p>
     </div>
@@ -5133,8 +5133,18 @@ const saveAuth = () => {
   try {
     localStorage.removeItem('conf');
     localStorage.setItem('conf',authString);
+    alert('「おまつり奉行」関係の情報を保存しました');
   } catch(e) {
     alert('Error: failed to save authString.\n' + e.message + '\n' + e.stack);
+    console.error(e);
+  }
+}
+const clearAuth = () => {
+  try {
+    localStorage.removeItem('conf');
+    alert('「おまつり奉行」関係の情報を消去しました');
+  } catch(e) {
+    alert('Error: failed to clear authString.\n' + e.message + '\n' + e.stack);
     console.error(e);
   }
 }
