@@ -42,7 +42,7 @@
   </div>
   <div data-BurgerMenu="label:'予定表'" class="TimeTable"></div>
   <div data-BurgerMenu="label:'スタッフ',authority:2">
-    <div data-BurgerMenu="label:'参加者数',fucn:'statistics'"></div>
+    <div data-BurgerMenu="label:'参加者数',func:'statistics'"></div>
     <div data-BurgerMenu="label:'受付業務',func:'recept'"></div>
     <div data-BurgerMenu="label:'校内探険'">
       <div class="page">
@@ -221,7 +221,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     // ----------------------------------------------------
     v.step = '1.6'; // TNoParticipants: 参加者数集計
     v.TNoParticipants = new TNoParticipants(
-      'div[data-BurgerMenu="label:\'参加者数\',fucn:\'statistics\'"]',
+      'div[data-BurgerMenu="label:\'参加者数\',func:\'statistics\'"]',
       v.Auth
     );
     if( v.TNoParticipants instanceof Error ) throw v.TNoParticipants;
