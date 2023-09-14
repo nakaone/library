@@ -155,7 +155,7 @@ const saveAuth = () => {
   }
 }
 window.addEventListener('DOMContentLoaded',async () => {
-  const v = {whois:'DOMContentLoaded',opt:{},debug:false,
+  const v = {whois:'DOMContentLoaded',opt:{},
     // 認証局
     gwURL:'https://script.google.com/macros/s/AKfycbwSvy450w3Bu3GhbBlNFGS5bJAHWi91_gEC42tTtWScAkJUjdZ35SncfXi2slktGH9h/exec',
     // 資料集
@@ -174,27 +174,43 @@ window.addEventListener('DOMContentLoaded',async () => {
     // ----------------------------------------------------
     v.step = '1.1'; // Auth: 認証
     v.ls = localStorage.getItem('conf');
+    v.flag = true;  // entryNo/passCode入力(Auth.build)が要実行ならtrue
+    // 注：Authが旧版(2023.8.5版)のため、v.optにcreatedを設定してもconstructorで反映されない。
+    // ただしv.optに設定する方が正しく、悪影響もないため、createdについては以下のように記述しておく
     if( v.ls !== null ){
-      v.step = '1.1.1';
-      // デバッグ用
       v.opt = JSON.parse(v.ls);
-      if( (Date.now() - v.opt.created) > 172800000 ){
-        v.opt = {}; // 有効期限切れ
+      // createdが未定義だった場合、大過去を設定してflag=trueにする
+      v.opt.created = v.opt.created || 0;
+      if((Date.now() - v.opt.created) < 172800000){
+        // localStorageに存在し、かつ有効期限内
+        // ⇒ Auth.build実行不要(falseにする)
+        v.flag = false;
+        // created(作成時刻)は更新しない
+      } else {
+        // localStorageに存在するが有効期限切れ
+        // ⇒ Auth.build要実行(trueのままにする)
+        v.n = v.opt.entryNo.value;
+        v.opt = {
+          created: Date.now(),  // 作成時刻を更新
+          entryNo: {value:v.n}, // 受付番号は引き継ぐ
+        }
       }
-      v.Auth = new Auth(v.gwURL,v.opt);
-      if( v.Auth instanceof Error ) throw v.Auth;
     } else {
-      v.step = '1.1.2';
+      // localStorageに存在しない
+      // ⇒ Auth.constructor+build両方実行
+      v.opt.created = Date.now();
       // クエリ文字列で受付番号が与えられた場合、受付番号欄にセット
       if( v.searchParams.has('id') ){
         v.opt.entryNo = {value:String(v.searchParams.get('id'))};
       }
-      v.opt.created = Date.now();
-      v.Auth = new Auth(v.gwURL,v.opt);
-      if( v.Auth instanceof Error ) throw v.Auth;
-      await v.Auth.build();
     }
-    authString = JSON.stringify(v.Auth);
+    v.Auth = new Auth(v.gwURL,v.opt);
+    if( v.Auth instanceof Error ) throw v.Auth;
+    if( v.flag ) await v.Auth.build();
+    v.a = JSON.parse(JSON.stringify(v.Auth));
+    v.a.created = Date.now();
+    authString = JSON.stringify(v.a);
+
 
     // ----------------------------------------------------
     v.step = '1.2'; // BulletinBoard: 掲示板
