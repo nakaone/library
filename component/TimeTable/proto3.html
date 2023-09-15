@@ -1,0 +1,196 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>proto3</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--
+<link href="../szLib.css" rel="stylesheet" />
+-->
+<style type="text/css">
+.TimeTable[name="wrapper"] {
+  display: block;
+}
+.TimeTable .table {
+  display: grid;
+  grid-template-columns: 4rem repeat(3, 1px 5px) 1px repeat(5, 1fr);
+}
+.TimeTable .st, .TimeTable .ed {
+  grid-column: 1 / 2;
+}
+.TimeTable .bar1 {
+  grid-column: 3 / 4;
+  background-color: blueviolet;
+}
+.TimeTable .bar2 {
+  grid-column: 5 / 6;
+  background-color: red;
+}
+.TimeTable .bar3 {
+  grid-column: 7 / 8;
+  background-color: green;
+}
+.TimeTable .label {
+  grid-column: 9 / 14;
+}
+</style>
+</head><body>
+<div id="TimeTable" class="TimeTable" name="wrapper">
+  <div class="control">
+    <select>
+      <option value="31">スタッフ・参加者全員</option>
+      <option value="16">参加者</option>
+      <option value="1">設営関係</option>
+      <option value="2" selected>受付関係</option>
+      <option value="4">校内探検関係</option>
+      <option value="8">カレー関係</option>
+    </select>  
+  </div>
+  <div class="table"></div>
+</div>
+
+</body>
+<script type="text/javascript" src="../createElement.js"></script>
+<script type="text/javascript" src="../mergeDeeply.js"></script>
+<script type="text/javascript" src="../whichType.js"></script>
+<script type="text/javascript">
+class TimeTable {
+  constructor(data){
+    const v = {};
+    this.data = data;
+    this.wrapper = document.querySelector('.TimeTable[name="wrapper"]');
+    this.table = this.wrapper.querySelector('.table');
+
+    v.step = 1; // 起算オブジェクトの計算
+    // this.base.date: {number[]} - 起算点年月日を[y, M, d]形式にした配列
+    this.base = {date:this.data.base.match(/\d{4}\/\d{2}\/\d{2}/)[0].split('/')};
+    this.base.date[1] -= 1;  // 月は0オリジンなので修正
+    // this.base.time: {number} - (時刻を含む)起算点のUNIX時刻
+    this.base.time = new Date(
+      ...this.base.date,
+      ...this.data.base.match(/\d{2}:\d{2}/)[0].split(':')
+    ).getTime();
+    console.log('this.base=%s',JSON.stringify(this.base));
+
+    this.wrapper.querySelector('select')
+    .addEventListener('change',this.drawTable);
+  }
+
+  calc = (tm) => { // 時刻tmのgrid-rowとラベルを返す
+    const dObj = new Date(...this.base.date, ...tm.split(':'));
+    return {
+      row: (dObj.getTime() - this.base.time) / this.data.span,
+      label: ('0'+dObj.getHours()).slice(-2)
+        + ':' + ('0'+dObj.getMinutes()).slice(-2)
+    };
+  }
+
+  drawTable = () => {
+    const v = {whois:'drawTable',step:0,rv:null};
+    console.log(v.whois+' start.',this.data);
+    try {
+
+      v.step = 2; // 表示対象フラグを取得
+      v.flag = Number(this.wrapper.querySelector('select').selectedOptions[0].value);
+      console.log('v.flag=%s',v.flag);
+
+      this.table.innerHTML = '';
+
+      v.step = 3; // 表示対象となるタスクを表示
+      for( v.i=0 ; v.i<this.data.list.length ; v.i++ ){
+        v.x = this.data.list[v.i];
+        if( (v.flag & v.x.tag) === 0 ) continue;
+
+        v.st = this.calc(v.x.st);
+        v.ed = this.calc(v.x.ed);
+        this.table.appendChild(createElement({
+          attr:{class:'st'},
+          text:v.st.label,
+          style:{'grid-row': (v.st.row * 2 + 1) + ' / ' + (v.st.row * 2 + 3)},
+        }));
+        this.table.appendChild(createElement({
+          attr:{class:'bar'+(v.x.bar || 1)},
+          style:{'grid-row': (v.st.row * 2 + 2) + ' / ' + (v.ed.row * 2 + 2)},
+        }));
+        this.table.appendChild(createElement({
+          attr:{class:'label'},
+          text:v.x.label,
+          style:{'grid-row': (v.st.row * 2 + 2) + ' / ' + (v.ed.row * 2 + 2)},
+        }));
+        this.table.appendChild(createElement({
+          attr:{class:'ed'},
+          text:v.ed.label,
+          style:{'grid-row': (v.ed.row * 2 + 1) + ' / ' + (v.ed.row * 2 + 3)},
+        }));
+
+      }
+
+
+
+      v.step = 9;
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
+      return e;
+    }
+  }
+
+}
+
+
+
+
+window.addEventListener('DOMContentLoaded',() => {
+  const data = {
+    base: '2023/09/30 08:30', // 表示領域左端の時刻
+    span: 10 * 60 * 1000, // 10分間隔をミリ秒表記
+    list: [
+      {st:'08:30', ed:'08:40', label:'集合、オリエンテーション', tag:15, PIC:''},
+      {st:'08:40', ed:'09:10', label:'本部・受付テント設営', tag:1, PIC:'', note:[
+        '本部にランタンと電源準備(できれば受付も欲しい...by嶋津)',
+        '受付は机2椅子4＋カラーコーン5,6個',
+        '本部にウォーターサーバ設置、麦茶＋コップ(スタッフ用)を用意',
+      ]},
+      {st:'08:40', ed:'10:00', label:'買い出し', tag:8, PIC:'', note:[
+        '買い出し用に飯田氏が車提供',
+      ]},
+      {st:'09:10', ed:'11:00', label:'灯油買い出し、鍋等準備', tag:8, PIC:'岩佐氏'},
+      {st:'09:10', ed:'10:00', label:'案内標識設置', tag:2, PIC:'',note:[
+        '東門に「正門に回ってください」の標識',
+      ]},
+      {st:'09:10', ed:'10:00', label:'ブルーシート敷設、区画線引', tag:1, PIC:''},
+      {st:'13:30', ed:'16:00', label:'受付', tag:2, PIC:'嶋津＋2,3名',note:[
+        '「受付開始以降、校庭遊び禁止」を注意書きに付記',
+        '「遊んだものは片付けよう」の注意書き(＋標識？)',
+      ]},
+      {st:'14:00', ed:'14:10', label:'開会式', tag:31, PIC:'会長、校長or副校長', bar:2},
+      {st:'14:00', ed:'17:00', label:'校内探検準備', tag:4, PIC:'八木氏＋3,4名'},
+      {st:'13:00', ed:'17:30', label:'カレー準備', tag:8, PIC:'神内氏、鐘江氏、＋8名位'},
+      {st:'17:30', ed:'18:30', label:'夕食', tag:8, PIC:''},
+      {st:'17:00', ed:'17:30', label:'お化け集合、打ち合わせ', tag:4, PIC:''},
+      {st:'18:30', ed:'20:30', label:'校内探検', tag:4, PIC:''},
+      {st:'19:00', ed:'21:00', label:'お迎え対応', tag:2, PIC:'',note:[
+        'お迎えの個別確認はしない(声かけのみ)',
+      ]},
+      {st:'20:30', ed:'21:00', label:'就寝準備', tag:1, PIC:''},
+      {st:'21:00', ed:'29:00', label:'夜間巡回', tag:15, PIC:'', bar:3},
+      {st:'29:00', ed:'30:30', label:'朝食準備', tag:8, PIC:'',note:[
+        '「紙コップ、箸の準備」を注意書きに付記',
+        '紙コップ・箸は各自準備だが、不足に備え多少購入しておく',
+        '素麺つゆはおやじで準備',
+      ]},
+      {st:'30:30', ed:'31:00', label:'起床', tag:31, PIC:''},
+      {st:'31:00', ed:'31:10', label:'ラジオ体操', tag:31, PIC:''},
+      {st:'31:30', ed:'32:00', label:'朝食', tag:31, PIC:''},
+      {st:'32:00', ed:'34:00', label:'片付け', tag:15, PIC:''},
+      {st:'33:00', ed:'33:10', label:'閉会式', tag:31, PIC:''},
+    ],
+  };
+  const v = {};
+
+  v.TimeTable = new TimeTable(data);
+  v.TimeTable.drawTable();
+
+
+});
+</script>
+</html>
