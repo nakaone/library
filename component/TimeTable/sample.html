@@ -1,49 +1,99 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
-<title></title>
+<title>TimeTable sample</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link href="../szLib.css" rel="stylesheet" />
-<style type="text/css" name="TimeTable"></style>
 </head><body>
 <div id="TimeTable"></div>
 
 </div>
 </body>
-<!--
-  {title:"",start:"",end:"",place:"",charge:"",summary:"",note:"",resources:[]},
-  {name:"",quantity:0,unit:"",procure:"",note:""}
-  endがnull ⇒ マイルストーン
--->
 <script type="text/javascript" src="core.js"></script>
 <script type="text/javascript" src="../setupInstance/core.js"></script>
 <script type="text/javascript" src="../createElement.js"></script>
-<script type="text/javascript" src="../createPassword.js"></script>
 <script type="text/javascript" src="../mergeDeeply.js"></script>
-<script type="text/javascript" src="../Auth/Auth.js"></script>
 <script type="text/javascript" src="../whichType.js"></script>
+<!--
+<script type="text/javascript" src="../createPassword.js"></script>
+<script type="text/javascript" src="../Auth/Auth.js"></script>
+-->
+
+
 <script type="text/javascript">
-
-
-
 window.addEventListener('DOMContentLoaded',() => {
   const v = {};
 
   v.TimeTable = new TimeTable('#TimeTable',{
-    config:{
-      start: '2023/09/30 08:00:00', // 表示範囲の開始時刻
-      end:   '2023/10/01 12:00:00', // 表示範囲の終了時刻
-    },
-    data:[
-      {section:{title:'',description:''},list:[
-        {title:"スタッフ集合",start:"8:30",end:null,  // 単一行コメント
-        place:"",charge:"",summary:"",note:"",resources:[]},
-        {'title':'オリエンテーション',start:"8:30",end:"8:40",
-        place:"",charge:"",summary:"",note:"",resources:[]},
-        {title:"テント設営",start:"8:40",end:"9:10",
-        place:"",charge:"",summary:"",note:"",resources:[]},
-      ]},
+    base: '2023/09/30 08:30', // 表示領域左端の時刻
+    span: 10 * 60 * 1000, // 時刻目盛の最小単位。既定値は10分(ミリ秒表記)
+    list: [
+      {st:'08:30', ed:'09:00', label:'集合、オリエンテーション', tag:15, PIC:'', remain:[]},
+
+      // 本部・設営班 (v.flag=1)
+      {st:'09:00', ed:'09:20', label:'本部テント設営', tag:1, PIC:'', note:[
+        'ランタンと電源準備',
+        '受付は机2椅子4',
+        'ウォーターサーバ設置、麦茶＋コップ(スタッフ用)を用意',
+      ], remain:[]},
+      {st:'09:20', ed:'09:40', label:'受付テント設営', tag:3, PIC:'', note:[
+        '受付は机2椅子4＋カラーコーン5,6個',
+      ], remain:[]},
+      {st:'09:40', ed:'10:30', label:'ブルーシート敷設、区画線引', tag:1, PIC:'', remain:[]},
+      {st:'13:40', ed:'17:30', label:'参加者テント設営対応', tag:1, PIC:'', remain:[]},
+      {st:'20:30', ed:'21:00', label:'就寝準備', tag:17, PIC:'', remain:[]},
+      {st:'21:00', ed:'29:00', label:'夜間巡回', tag:15, PIC:'', remain:[]},
+      {st:'32:00', ed:'34:00', label:'片付け', tag:15, PIC:'', remain:[]},
+      {st:'33:00', ed:'33:10', label:'閉会式', tag:16, PIC:'', remain:[]},
+
+      // 受付班 (v.flag=2)
+      {st:'09:40', ed:'10:00', label:'案内標識設置', tag:2, PIC:'',note:[
+        '東門に「正門に回ってください」の標識',
+      ], remain:[]},
+      {st:'10:00', ed:'11:00', label:'予行演習', tag:2, PIC:'',note:[], remain:[]},
+      {st:'13:30', ed:'16:00', label:'受付', tag:18, PIC:'嶋津＋2,3名',note:[
+        '「受付開始以降、校庭遊び禁止」を注意書きに付記',
+        '「遊んだものは片付けよう」の注意書き(＋標識？)',
+      ], remain:[]},
+      {st:'19:00', ed:'21:00', label:'お迎え対応', tag:2, PIC:'',note:[
+        'お迎えの個別確認はしない(声かけのみ)',
+      ], remain:[]},
+
+      // 校内探検班 (v.flag=4)
+      {st:'14:00', ed:'17:00', label:'校内探検準備', tag:4, PIC:'八木氏＋3,4名', remain:[]},
+      {st:'17:00', ed:'17:30', label:'お化け集合、打ち合わせ', tag:4, PIC:'', remain:[]},
+      {st:'18:30', ed:'20:30', label:'校内探検', tag:21, PIC:'', remain:[]},
+
+      // カレー班 (v.flag=8)
+      {st:'09:00', ed:'09:30', label:'灯油買い出し', tag:8, PIC:'岩佐氏', remain:[]},
+      {st:'09:20', ed:'10:20', label:'カレー鍋設営', tag:8, PIC:'岩佐氏', remain:[]},
+      {st:'09:30', ed:'11:00', label:'材料買い出し', tag:8, PIC:'', note:[
+        '買い出し用に飯田氏が車提供',
+      ], remain:[]},
+      {st:'13:00', ed:'17:30', label:'カレー準備', tag:8, PIC:'神内氏、鐘江氏、＋8名位', remain:[]},
+      {st:'29:00', ed:'30:30', label:'朝食準備', tag:8, PIC:'',note:[
+        '「紙コップ、箸の準備」を注意書きに付記',
+        '紙コップ・箸は各自準備だが、不足に備え多少購入しておく',
+        '素麺つゆはおやじで準備',
+      ], remain:[]},
+
+      // 一般参加者 (v.flag=16)
+      {st:'14:00', ed:'14:10', label:'開会式', tag:17, PIC:'会長、校長or副校長', remain:[]},
+      {st:'13:40', ed:'17:30', label:'テント設営、自由行動(遊戯)', tag:16, PIC:'', remain:[]},
+      {st:'17:30', ed:'18:30', label:'カレー配膳、夕食', tag:24, PIC:'', remain:[]},
+      {st:'19:00', ed:'21:00', label:'日帰り組帰宅(要お迎え)', tag:16, PIC:'', remain:[]},
+
+      //{st:'21:00', ed:'30:30', label:'就寝', tag:16, PIC:''},
+      {st:'30:30', ed:'31:00', label:'起床', tag:16, PIC:'', remain:[]},
+      {st:'31:00', ed:'31:10', label:'ラジオ体操', tag:16, PIC:'', remain:[]},
+      {st:'31:10', ed:'33:00', label:'片付け', tag:16, PIC:'', remain:[]},
+      {st:'31:30', ed:'32:00', label:'朝食', tag:16, PIC:'', remain:[]},
     ],
-  });
-  console.log(v.TimeTable);
+  },{options: [
+    {label:'参加者',value:16},
+    {label:'設営関係',value:1},
+    {label:'受付関係',value:2},
+    {label:'校内探検関係',value:4},
+    {label:'カレー関係',value:8},
+  ]});
 
 });
 </script>
