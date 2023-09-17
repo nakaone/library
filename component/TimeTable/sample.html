@@ -20,10 +20,23 @@ window.addEventListener('DOMContentLoaded',() => {
   v.TimeTable = new TimeTable('#TimeTable',{
     base: '2023/09/30 08:30', // 表示領域左端の時刻
     span: 10 * 60 * 1000, // 時刻目盛の最小単位。既定値は10分(ミリ秒表記)
+    options: [  // ドロップダウンの選択肢(select内のoption)
+      {label:'全て',value:31},
+      {label:'参加者',value:16},
+      {label:'設営関係',value:1},
+      {label:'受付関係',value:2},
+      {label:'校内探検関係',value:4},
+      {label:'カレー関係',value:8},
+    ],
+    // 以降の開始/終了時刻表記は①上記span単位、②hh:mm形式、③日付を跨る場合、hhは+24H
     list: [
       {st:'08:30', ed:'09:00', label:'集合、オリエンテーション', tag:15, PIC:'', remain:[
         '所要時間の不足を懸念、10->30分間に修正。これに伴い、オリエンテーション後の各種作業の開始時刻を繰り下げ'
       ]},
+/*
+      {st:'08:40', ed:'10:00', label:'dummy', tag:15},
+      {st:'08:40', ed:'11:00', label:'dummy2', tag:15},
+*/
 
       // 本部・設営班 (v.flag=1)
       {st:'09:00', ed:'09:20', label:'本部テント設営', tag:1, PIC:'', note:[
@@ -38,7 +51,7 @@ window.addEventListener('DOMContentLoaded',() => {
       {st:'13:40', ed:'17:30', label:'参加者テント設営対応', tag:1, PIC:'', remain:[]},
       {st:'20:30', ed:'21:00', label:'就寝準備', tag:17, PIC:'', remain:[]},
       {st:'21:00', ed:'29:00', label:'夜間巡回', tag:15, PIC:'', remain:[]},
-      {st:'32:00', ed:'34:00', label:'片付け', tag:15, PIC:'', remain:[]},
+      {st:'32:00', ed:'34:00', label:'片付け(スタッフ)', tag:15, PIC:'', remain:[]},
       {st:'33:00', ed:'33:10', label:'閉会式', tag:16, PIC:'', remain:[]},
 
       // 受付班 (v.flag=2)
@@ -84,16 +97,12 @@ window.addEventListener('DOMContentLoaded',() => {
       //{st:'21:00', ed:'30:30', label:'就寝', tag:16, PIC:''},
       {st:'30:30', ed:'31:00', label:'起床', tag:16, PIC:'', remain:[]},
       {st:'31:00', ed:'31:10', label:'ラジオ体操', tag:16, PIC:'', remain:[]},
-      {st:'31:10', ed:'33:00', label:'片付け', tag:16, PIC:'', remain:[]},
+      {st:'31:10', ed:'33:00', label:'参加者テント片付け', tag:16, PIC:'', remain:[]},
       {st:'31:30', ed:'32:00', label:'朝食', tag:16, PIC:'', remain:[]},
+/*
+*/
     ],
-  },{options: [
-    {label:'参加者',value:16},
-    {label:'設営関係',value:1},
-    {label:'受付関係',value:2},
-    {label:'校内探検関係',value:4},
-    {label:'カレー関係',value:8},
-  ]});
+  });
 
 });
 </script>
