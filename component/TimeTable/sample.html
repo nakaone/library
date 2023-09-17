@@ -12,11 +12,6 @@
 <script type="text/javascript" src="../createElement.js"></script>
 <script type="text/javascript" src="../mergeDeeply.js"></script>
 <script type="text/javascript" src="../whichType.js"></script>
-<!--
-<script type="text/javascript" src="../createPassword.js"></script>
-<script type="text/javascript" src="../Auth/Auth.js"></script>
--->
-
 
 <script type="text/javascript">
 window.addEventListener('DOMContentLoaded',() => {
@@ -26,7 +21,9 @@ window.addEventListener('DOMContentLoaded',() => {
     base: '2023/09/30 08:30', // 表示領域左端の時刻
     span: 10 * 60 * 1000, // 時刻目盛の最小単位。既定値は10分(ミリ秒表記)
     list: [
-      {st:'08:30', ed:'09:00', label:'集合、オリエンテーション', tag:15, PIC:'', remain:[]},
+      {st:'08:30', ed:'09:00', label:'集合、オリエンテーション', tag:15, PIC:'', remain:[
+        '所要時間の不足を懸念、10->30分間に修正。これに伴い、オリエンテーション後の各種作業の開始時刻を繰り下げ'
+      ]},
 
       // 本部・設営班 (v.flag=1)
       {st:'09:00', ed:'09:20', label:'本部テント設営', tag:1, PIC:'', note:[
@@ -47,8 +44,11 @@ window.addEventListener('DOMContentLoaded',() => {
       // 受付班 (v.flag=2)
       {st:'09:40', ed:'10:00', label:'案内標識設置', tag:2, PIC:'',note:[
         '東門に「正門に回ってください」の標識',
+        '正門に「参加者パスを表示してください」の標識',
       ], remain:[]},
-      {st:'10:00', ed:'11:00', label:'予行演習', tag:2, PIC:'',note:[], remain:[]},
+      {st:'10:00', ed:'11:00', label:'予行演習', tag:2, PIC:'',note:[], remain:[
+        '予行演習用のマニュアル整備(嶋津)'
+      ]},
       {st:'13:30', ed:'16:00', label:'受付', tag:18, PIC:'嶋津＋2,3名',note:[
         '「受付開始以降、校庭遊び禁止」を注意書きに付記',
         '「遊んだものは片付けよう」の注意書き(＋標識？)',

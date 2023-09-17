@@ -32,6 +32,9 @@ class TimeTable {
           .TimeTable {
             display: none;
           }
+          .TimeTable .red {
+            color: #f00;
+          }
           .TimeTable .table {
             display: grid;
             grid-template-columns: 4rem repeat(20, 0.5rem) repeat(77, 1fr)
@@ -51,6 +54,22 @@ class TimeTable {
             grid-column: 2 / 99;
             background-color: #eee;
             z-index: 1;
+          }
+          .TimeTable .detail > div {
+            display: grid;
+            grid-template-columns: 5rem 1fr;
+          }
+          .TimeTable .detail .th {
+            grid-column: 1 / 2;
+          }
+          .TimeTable .detail .td {
+            grid-column: 2 / 3;
+          }
+          .TimeTable .detail button {
+            grid-column: 1 / 3;
+            margin-top: 1rem;
+            font-size: 1.4rem;
+            padding: 0.5rem auto;
           }`,
           /* 印刷用
           .TimeTable .line {
@@ -65,6 +84,7 @@ class TimeTable {
             {tag:'select'}
           ]},
           {attr:{class:'table'}},
+          {attr:{class:'detail'}},
         ],
       },
     };
@@ -78,6 +98,7 @@ class TimeTable {
       v.step = 2; // DOMをメンバとして登録
       this.table = this.wrapper.querySelector('.table');
       this.select = this.wrapper.querySelector('.control select');
+      this.detail = this.wrapper.querySelector('.detail');
 
       v.step = 3; // プルダウンを設定
       this.options.forEach(x => {
@@ -89,6 +110,16 @@ class TimeTable {
       v.step = 4; // 開始時刻順にソート
       this.data = data;
       this.data.list = this.data.list.sort((a,b) => a.st < b.st ? -1 : 1);
+      for( v.i=0 ; v.i<this.data.list.length ; v.i++ ){
+        this.data.list[v.i].id = v.i; // IDを採番
+        // 詳細表示項目が未定義なら追加
+        if( !this.data.list[v.i].hasOwnProperty('PIC') )
+          this.data.list[v.i].PIC = '';
+        if( !this.data.list[v.i].hasOwnProperty('note') )
+          this.data.list[v.i].note = [];
+        if( !this.data.list[v.i].hasOwnProperty('remain') )
+          this.data.list[v.i].remain = [];
+      }
       console.log(this.data);
 
       v.step = 5; // 起算オブジェクト(this.base)の計算
@@ -173,14 +204,20 @@ class TimeTable {
         }));
 
         v.step = 4.3; // ラベルを表示
-        this.table.appendChild(createElement({
-          attr:{class:'label'},
+        v.label = createElement({
+          attr:{class:'label',name:v.list[v.i].id},
           text:v.list[v.i].label,
+          event:{'click':this.showDetail},
           style:{
             'grid-column': (v.list[v.i].level + 2) + ' / 99',
             'grid-row': (v.st.row * 2 + 2) + ' / ' + (v.ed.row * 2 + 2),
           },
-        }));
+        });
+        // 残課題があれば赤字で表示
+        if( v.list[v.i].remain.length > 0 ){
+          v.label.classList.add('red');
+        }
+        this.table.appendChild(v.label);
         // 「上に」補助線を引く要素のgrid-rowを保存
         v.line.push(v.st.row * 2 + 2);
         v.line.push(v.ed.row * 2 + 2);
@@ -202,6 +239,43 @@ class TimeTable {
       }
 
       v.step = 6;
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
+      return e;
+    }
+  }
+
+  showDetail = (event) => {
+    const v = {whois:'TimeTable.showDetail',step:0,rv:null,note:[],remain:[]};
+    console.log(v.whois+' start.',event);
+    try {
+
+      this.detail.innerHTML = '';
+      v.id = Number(event.target.getAttribute('name'));
+      v.dObj = this.data.list[v.id];
+
+      v.dObj.note.forEach(x => v.note.push({tag:'li',html:x}));
+      v.dObj.remain.forEach(x => v.remain.push({tag:'li',html:x}));
+      this.detail.appendChild(createElement({children:[
+        {attr:{class:'th'},text:'項目名'},
+        {attr:{class:'td'},text:v.dObj.label},
+        {attr:{class:'th'},text:'担当'},
+        {attr:{class:'td'},text:(v.dObj.PIC || '(未定)')},
+        {attr:{class:'th'},text:'備考'},
+        {attr:{class:'td'},children:[{tag:'ol',children:v.note}]},
+        {attr:{class:'th'},text:'課題'},
+        {attr:{class:'td'},children:[{tag:'ol',children:v.remain}]},
+        {tag:'button',text:'閉じる',event:{'click':
+          () => {this.detail.innerHTML = ''}
+        }}
+      ]}));
+
+      console.log(this.data.list[v.id]);
+
+      v.step = 3; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
