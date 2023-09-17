@@ -55,7 +55,7 @@ class TimeTable {
           .TimeTable .line:nth-child(2n) {
             grid-column: 2 / 99;
             background-color: #eee;
-            z-index: 1;
+            z-index: 0;
           }
           .TimeTable .detail > div {
             display: grid;
@@ -77,7 +77,7 @@ class TimeTable {
           .TimeTable .line {
             grid-column: 2 / 99;
             border-top: dashed 1px #aaa;
-            z-index: 1;
+            z-index: 0;
           }
           */
         ],
@@ -176,6 +176,10 @@ class TimeTable {
     };
   }
 
+  /** 線表を描画する
+   * @param {void}
+   * @returns {null|Error}
+   */
   drawTable = () => {
     const v = {whois:'TimeTable.drawTable',step:0,rv:null,
       list:[],line:[],timeline:[]};
@@ -194,16 +198,12 @@ class TimeTable {
         if( (v.flag & x.tag) > 0 ){
           v.timeline.push(x.st);
           v.timeline.push(x.ed);
-          /*
-          x.st = this.calc(x.st); v.timeline.push(x.st);
-          x.ed = this.calc(x.ed); v.timeline.push(x.ed);
-          */
           v.list.push(x);
         }
       });
       //console.log('v.list=%s',JSON.stringify(v.list));
 
-      v.step = 4; // タイムラインと補助線を表示
+      v.step = 4; // 時刻(タイムライン)と補助線を表示
       v.step = 4.1; // v.timelineを時刻順にソート
       v.timeline = v.timeline.sort((a,b) => a.row < b.row ? -1 : 1);
 
@@ -233,19 +233,7 @@ class TimeTable {
       v.step = 5; // タスクを表示
       for( v.i=0 ; v.i<v.list.length ; v.i++ ){
 
-        v.step = 5.1; /* 表示レベルを計算
-          開始〜終了時刻の重複なし => v.level = 0
-          開始〜終了時刻の重複あり
-            開始時刻の重複あり(=ラベルの重複あり)
-              => 直近の重複イベントのラベルからgrid-columnを計算
-                 v.level = 直近の重複イベントのv.level + 1
-            開始時刻の重複なし(=ラベルの重複なし)
-              => 重複イベント開始時刻の配列を作成、重複を排除
-                 v.level = 配列の長さ
-          ※重複イベント内で同一開始時刻があった場合の無用な
-           レベル下げ(インデント)を排除するため、開始時刻の重複排除を行う
-        */
-
+        v.step = 5.1; // 表示対象イベントと開催時間が重なる先行開始イベントの洗い出し
         v.dup = []; // 表示対象イベントと開催時間が重なる先行開始イベントの配列
         v.dupStart = false; // 開始時刻が同一のイベントがあればtrue
         for( v.j=0 ; v.j<v.i ; v.j++ ){
@@ -260,16 +248,66 @@ class TimeTable {
             }
           }
         }
-        //console.log('v.dup=%s',JSON.stringify(v.dup));
+        console.log('%s: v.dup=%s',v.list[v.i].label,JSON.stringify(v.dup));
 
-        v.step = 5.2; // 重複および同一開始時刻の有無からlevelを計算
+        v.step = 5.2; /* 重複および同一開始時刻の有無からlevelを計算
+          開始〜終了時刻の重複なし => v.level = 0
+          開始〜終了時刻の重複あり
+            => v.level = 直近の重複イベントのv.level + 1
+            開始時刻の重複あり(=ラベルの重複あり)
+              => 直近の重複イベントのラベルからgrid-columnを計算
+          ※重複イベント内で同一開始時刻があった場合の無用な
+           レベル下げ(インデント)を排除するため、開始時刻の重複排除を行う
+
+
+          開始〜終了時刻の重複あり
+            開始時刻の重複なし(=ラベルの重複なし)
+              => 重複イベント開始時刻の配列を作成、重複を排除
+                 v.level = 配列の長さ
+            開始時刻の重複あり(=ラベルの重複あり)
+              => 直近の重複イベントのラベルからgrid-columnを計算
+                 v.level = 直近の重複イベントのv.level + 1
+          ※重複イベント内で同一開始時刻があった場合の無用な
+           レベル下げ(インデント)を排除するため、開始時刻の重複排除を行う
+        */
         v.gridColumn = null;
         if( v.dup.length === 0 ){
           // 開始〜終了時刻の重複なし => v.level = 0
           v.list[v.i].level = 0;
         } else {
           // 開始〜終了時刻の重複あり
+          // 直近の開始時刻重複イベントを特定、v.nearestに格納
+          for( v.j=0 ; v.j<v.dup.length ; v.j++ ){
+            if( v.dup[v.j].st.row === v.list[v.i].st.row ){
+              v.nearest = v.dup[v.j];
+              v.j = v.dup.length;
+            }
+          }
+          v.list[v.i].level = v.nearest.level + 1;
+
           if( v.dupStart ){
+            // 開始時刻重複イベントのoffsetRightを取得
+            v.span = this.table.querySelector('.label[name="'+v.nearest.id+'"] span');
+            v.offsetRight = v.span.offsetLeft + v.span.offsetWidth;
+            // this.mapからoffsetRight以上の最小値を持つ要素の添字を取得、
+            // v.gridColumnを設定
+            for( v.j=0 ; v.j<this.map.length ; v.j++ ){
+              if( this.map[v.j] > v.offsetRight ){
+                v.gridColumn = (v.j+1) + ' / 99';
+                //console.log('v.j=%s, v.gridColumn=%s, this.map[v.j]=%s',v.j,v.gridColumn,this.map[v.j]);
+                v.j = this.map.length;
+              }
+            }
+          }
+          /*
+          if( !v.dupStart ){
+            // 開始時刻の重複なし(=ラベルの重複なし)
+            // => 重複イベント開始時刻の配列を作成、重複を排除
+            //    v.level = 配列の長さ
+            v.stMap = v.dup.map(x => x.st.row);
+            v.stMap = [...new Set(v.stMap)];
+            v.list[v.i].level = v.stMap.length;
+          } else {
             // 開始時刻の重複あり(=ラベルの重複あり)
             // => 直近の重複イベントのラベルからgrid-columnを計算
             //    v.level = 直近の重複イベントのv.level + 1
@@ -295,14 +333,8 @@ class TimeTable {
                 v.j = this.map.length;
               }
             }
-          } else {
-            // 開始時刻の重複なし(=ラベルの重複なし)
-            // => 重複イベント開始時刻の配列を作成、重複を排除
-            //    v.level = 配列の長さ
-            v.stMap = v.dup.map(x => x.st.row);
-            v.stMap = [...new Set(v.stMap)];
-            v.list[v.i].level = v.stMap.length;
           }
+          */
         }
         //console.log('level=%s',v.list[v.i].level);
 
@@ -341,6 +373,10 @@ class TimeTable {
     }
   }
 
+  /** クリックされたタスクの詳細を表示する
+   * @param {PointerEvent} event 
+   * @returns {null|Error}
+   */
   showDetail = (event) => {
     const v = {whois:'TimeTable.showDetail',step:0,rv:null,note:[],remain:[]};
     console.log(v.whois+' start.',event);
