@@ -45,6 +45,7 @@ class TimeTable {
             margin: auto 0.5rem auto auto;
             padding: 0.3rem 0;
             font-size: 0.8rem;
+            z-index: -1;
           }
           .TimeTable .label {
             border-left: solid 4px #666;
@@ -52,10 +53,10 @@ class TimeTable {
             padding-left: 2px;
             z-index: 2;
           }
-          .TimeTable .line:nth-child(2n) {
+          .TimeTable .line {
             grid-column: 2 / 99;
-            background-color: #eee;
-            z-index: 0;
+            border-top: dashed 1px #aaa;
+            z-index: -1;
           }
           .TimeTable .detail > div {
             display: grid;
@@ -74,6 +75,11 @@ class TimeTable {
             padding: 0.5rem auto;
           }`,
           /* 印刷用
+          .TimeTable .line:nth-child(2n) {
+            grid-column: 2 / 99;
+            background-color: #eee;
+            z-index: -1;
+          }
           .TimeTable .line {
             grid-column: 2 / 99;
             border-top: dashed 1px #aaa;
@@ -182,7 +188,7 @@ class TimeTable {
    */
   drawTable = () => {
     const v = {whois:'TimeTable.drawTable',step:0,rv:null,
-      list:[],line:[],timeline:[]};
+      list:[],line:[],tl:[],timeline:[]};
     console.log(v.whois+' start.',this.list);
     try {
 
@@ -196,8 +202,8 @@ class TimeTable {
       v.step = 3; // 表示対象となるタスクを抽出
       this.list.forEach(x => {
         if( (v.flag & x.tag) > 0 ){
-          v.timeline.push(x.st);
-          v.timeline.push(x.ed);
+          v.tl.push(x.st);
+          v.tl.push(x.ed);
           v.list.push(x);
         }
       });
@@ -205,28 +211,43 @@ class TimeTable {
 
       v.step = 4; // 時刻(タイムライン)と補助線を表示
       v.step = 4.1; // v.timelineを時刻順にソート
-      v.timeline = v.timeline.sort((a,b) => a.row < b.row ? -1 : 1);
+      v.tl = v.tl.sort((a,b) => a.row < b.row ? -1 : 1);
+      // 時刻の重複を削除
+      v.timeline = [v.tl[0]];
+      for( v.i=1 ; v.i<v.tl.length ; v.i++ ){
+        if( v.tl[v.i-1].row < v.tl[v.i].row ){
+          v.timeline.push(v.tl[v.i]);
+        }
+      }
+      console.log('v.timeline=%s',JSON.stringify(v.timeline));
 
       v.step = 4.2; // 最初の時刻表示
+      /*
       this.table.appendChild(createElement({
         attr:{class:'time'},
         text:v.timeline[0].label,
         style:{'grid-row': (v.timeline[0].row * 2 + 1) + ' / ' + (v.timeline[0].row * 2 + 3)},
       }));
+      // 最初の補助線を追加
+      this.table.appendChild(createElement({
+        attr:{class:'line'},
+        style:{'grid-row': '1 / ' + (v.timeline[0].row * 2 + 2)},
+      }));
+      */
 
       v.step = 4.3; // 2番目以降の時刻表示
-      for( v.i=1 ; v.i<v.timeline.length ; v.i++ ){
-        if( v.timeline[v.i-1].row === v.timeline[v.i].row ) continue;
+      for( v.i=0 ; v.i<(v.timeline.length-1) ; v.i++ ){
         // 開始・終了時刻を表示
         this.table.appendChild(createElement({
           attr:{class:'time'},
           text:v.timeline[v.i].label,
-          style:{'grid-row': (v.timeline[v.i].row * 2 + 1) + ' / ' + (v.timeline[v.i].row * 2 + 3)},
+          style:{'grid-row': (v.timeline[v.i].row * 2 + 1) + ' / ' + (v.timeline[v.i+1].row * 2 + 1)},
         }));
         // 補助線を表示
         this.table.appendChild(createElement({
           attr:{class:'line'},
-          style:{'grid-row':v.timeline[v.i-1].row+' / '+v.timeline[v.i].row},
+          style:{'grid-row': (v.timeline[v.i].row * 2 + 2) + ' / ' + (v.timeline[v.i+1].row * 2 + 2)},
+          //style:{'grid-row':v.timeline[v.i-1].row+' / '+v.timeline[v.i].row},
         }));
       }
 
@@ -248,7 +269,7 @@ class TimeTable {
             }
           }
         }
-        console.log('%s: v.dup=%s',v.list[v.i].label,JSON.stringify(v.dup));
+        //console.log('%s: v.dup=%s',v.list[v.i].label,JSON.stringify(v.dup));
 
         v.step = 5.2; /* 重複および同一開始時刻の有無からlevelを計算
           開始〜終了時刻の重複なし => v.level = 0
