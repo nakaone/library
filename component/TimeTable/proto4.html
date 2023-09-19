@@ -85,7 +85,29 @@ class TimeTable {
           .TimeTable[name="wrapper"].act {
             display: block;
           }
+          .TimeTable .table {
+            display: grid;
+            grid-template-columns: repeat(var(--colNum), 1rem) 1fr;
+            grid-template-rows: 1.5rem 3rem repeat(var(--rowNum), 1.5rem);
+          }
+          .TimeTable .table .time {
+            grid-row: 2 / 3;
+            font-size: 0.8rem;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            transform-origin: center;
+          }
+          .TimeTable .table .task {
+            background-color: #bbb;
+          }
+          .TimeTable .table .zone {
+            grid-row: 3 / calc(var(--rowNum) + 3);
+            border: solid 1px red;
+          }
           `,
+          /*
+            transform: rotate(-90deg);
+          */
         ],
         html:[
           {attr:{class:'control'},children:[{tag:'select'}]},
@@ -123,7 +145,7 @@ class TimeTable {
         this.baseObj.getDate()
       ];
 
-      v.step = 5; // 表示する時間帯の計算
+      v.step = 5.1; // 表示する時間帯の計算
       ['st','ed'].forEach(x => {
         this.tasks.forEach(y => {
           y[x] = this.objectizeTime(y[x]);
@@ -132,6 +154,9 @@ class TimeTable {
           this.max = this.max > y[x].unix ? this.max : y[x].unix;
         });
       });
+      v.step = 5.2; // CSS変数colNumに値をセット
+      v.num = (this.max - this.min) / this.span;
+      document.documentElement.style.setProperty('--colNum',v.num);
 
       v.step = 6; // 開始時刻・終了時刻順にソート
       this.tasks = this.tasks.sort(
@@ -177,9 +202,8 @@ class TimeTable {
    * @prop {number} unix - 日時オブジェクトのUNIX時刻
    * @prop {string} dateStr - 表示用日付文字列。yyyy/MM/dd形式
    * @prop {string} timeStr - 表示用時刻文字列。hh:mm形式
-   * @prop {number} timeL - 時刻表示の左側のグリッドライン
-   * @prop {number} timeR - 時刻表示の右側のグリッドライン
-   * @prop {number} task - タスク表示のグリッドライン
+   * @prop {number} time - 時刻表示の左側のグリッドライン
+   * @prop {number} task - タスク表示の左側のグリッドライン
    */
 
   /** 時刻文字列をオブジェクトに変換
@@ -240,8 +264,7 @@ class TimeTable {
 
       v.step = 2;
       v.rv = Object.assign(arg,{
-        timeL: v.n * 2 + 1,
-        timeR: v.n * 2 + 3,
+        time: v.n * 2 + 1,
         task: v.n * 2 + 2,
       });
 
@@ -256,9 +279,57 @@ class TimeTable {
   }  
 
   drawGantt = () => {
-    const v = {whois:'TimeTable.drawGantt',step:0,rv:null};
+    const v = {whois:'TimeTable.drawGantt',step:0,rv:null,
+      tasks:[],tl:[],timeline:[]};
     console.log(v.whois+' start.');
     try {
+
+      v.step = 1; // 前処理
+      this.table.innerHTML = '';
+
+      v.step = 2; // 表示対象フラグを取得
+      v.flag = Number(this.select.selectedOptions[0].value);
+      console.log('v.flag=%s',v.flag);
+
+      v.step = 3; // 表示対象となるタスクを抽出
+      this.tasks.forEach(x => {
+        if( (v.flag & x.tag) > 0 ){
+          v.tl.push(x.st);
+          v.tl.push(x.ed);
+          v.tasks.push(x);
+        }
+      });
+      console.log('v.tl=%s',JSON.stringify(v.tl));
+      // テーブル領域の行数をセット
+      document.documentElement.style.setProperty('--rowNum',v.tasks.length);
+
+      // 時刻(タイムライン)と補助線を表示
+      v.step = 4.1; // v.timelineを時刻順にソート
+      v.tl = v.tl.sort((a,b) => a.unix < b.unix ? -1 : 1);
+      // 時刻の重複を削除
+      v.timeline = [v.tl[0]];
+      for( v.i=1 ; v.i<v.tl.length ; v.i++ ){
+        if( v.tl[v.i-1].unix < v.tl[v.i].unix ){
+          v.timeline.push(v.tl[v.i]);
+        }
+      }
+      console.log('v.timeline=%s',JSON.stringify(v.timeline));
+
+      for( v.i=0 ; v.i<(v.timeline.length - 1) ; v.i++ ){
+        this.table.appendChild(createElement({
+          attr: {class:'time'},
+          text: v.timeline[v.i].timeStr,
+          style: {
+            'grid-column': v.timeline[v.i].time
+            + ' / ' + v.timeline[v.i+1].time
+        }}));
+        this.table.appendChild(createElement({
+          attr: {class:'zone'},
+          style: {
+            'grid-column': v.timeline[v.i].task
+            + ' / ' + v.timeline[v.i+1].task
+        }}));
+      }
 
       v.step = 3; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
@@ -313,7 +384,7 @@ window.addEventListener('DOMContentLoaded',() => {
         '所要時間の不足を懸念、10->30分間に修正。これに伴い、オリエンテーション後の各種作業の開始時刻を繰り下げ'
       ]},
       {st:'08:40', ed:'10:00', label:'dummy', tag:15},
-      {st:'08:40', ed:'32:00', label:'dummy2', tag:15},
+      {st:'08:40', ed:'10:10', label:'dummy2', tag:15},
 /*
       // 本部・設営班 (v.flag=1)
       {st:'09:00', ed:'09:20', label:'本部設営', tag:1, PIC:'', note:[
