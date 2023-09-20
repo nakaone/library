@@ -12,9 +12,7 @@
 <script type="text/javascript" src="../whichType.js"></script>
 <script type="text/javascript">
 /**
- * @classdesc 参加者情報の表示・編集
- *
- * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
+ * @classdesc タイムテーブルの表示
  */
 class TimeTable {
 
@@ -90,12 +88,15 @@ class TimeTable {
           }`,
           /* テーブル領域 */`
           .TimeTable .table {
+            margin: 1rem 0px;
             display: grid;
             grid-template-columns: repeat(var(--colNum), 0.5rem) 1fr;
-            grid-template-rows: 1.5rem 3rem repeat(var(--rowNum), var(--taskHeight));
+            grid-template-rows: 1rem 3rem repeat(var(--rowNum), var(--taskHeight));
           }
           .TimeTable .table .date {
             grid-row: 1 / 2;
+            white-space: nowrap;
+            padding-left: 0.3rem;
           }
           .TimeTable .table .time {
             grid-row: 2 / 3;
@@ -122,8 +123,9 @@ class TimeTable {
             background: #eee;
           }`,
           /* 詳細情報 */`
-          .TimeTable .detail > div {
+          .TimeTable .detail {
             display: grid;
+            gap: 0.2rem;
             grid-template-columns: 5rem 1fr;
           }
           .TimeTable .detail .th {
@@ -175,7 +177,7 @@ class TimeTable {
         this.baseObj.getDate()
       ];
 
-      v.step = 7; // タスクの初期値を設定
+      v.step = 5; // タスクの初期値を設定
       for( v.i=0 ; v.i<this.tasks.length ; v.i++ ){
         this.tasks[v.i].st = this.objectizeTime(this.tasks[v.i].st);
         if( this.tasks[v.i].st instanceof Error )
@@ -202,12 +204,12 @@ class TimeTable {
         this.tasks[v.i].id = v.i; // idは連番で採番
       }
 
-      v.step = 8; // イベント定義、初期画面表示
+      v.step = 7; // イベント定義、初期画面表示
       this.select.addEventListener('change',this.drawGantt);
       v.rv = this.drawGantt();
       if( v.rv instanceof Error ) throw v.rv;
 
-      v.step = 9; // 終了処理
+      v.step = 8; // 終了処理
       console.log(v.whois+' normal end.',this);
       return v.rv;
     } catch(e){
@@ -220,7 +222,7 @@ class TimeTable {
    * @typedef TimeLine - タイムラインオブジェクト
    * @prop {Date} obj - 日時オブジェクト
    * @prop {number} unix - 日時オブジェクトのUNIX時刻
-   * @prop {string} dateStr - 表示用日付文字列。yyyy/MM/dd形式
+   * @prop {string} dateStr - 表示用日付文字列。M/dd(日〜土)形式
    * @prop {string} timeStr - 表示用時刻文字列。hh:mm形式
    */
 
@@ -247,14 +249,16 @@ class TimeTable {
       v.rv = {
         obj: v.d,
         unix: v.d.getTime(),
-        dateStr: v.d.getFullYear()
-          + '/' + ('0'+(v.d.getMonth()+1)).slice(-2)
-          + '/' + ('0'+v.d.getDate()).slice(-2),
+        dateStr: //v.d.getFullYear()
+          //+ '/' + ('0'+(v.d.getMonth()+1)).slice(-2)
+          (v.d.getMonth() + 1)
+          + '/' + ('0'+v.d.getDate()).slice(-2)
+          + '(' + ['日','月','火','水','木','金','土'][v.d.getDay()] + ')',
         timeStr: ('0'+v.d.getHours()).slice(-2)
           + ':' + ('0'+v.d.getMinutes()).slice(-2),
       };
 
-      v.step = 3; // 終了処理
+      v.step = 4; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -264,6 +268,10 @@ class TimeTable {
     }
   }
 
+  /** ガントチャートを描画
+   * @param {void}
+   * @returns {null|Error}
+   */
   drawGantt = () => {
     const v = {whois:'TimeTable.drawGantt',step:0,rv:null,
       tasks:[],t:{raw:[],list:[],map:{}}};
@@ -271,15 +279,16 @@ class TimeTable {
         {TimeLine[]} raw - 出力対象タスクの開始・終了時刻。重複あり、順序不問
         {TimeLine[]} list - rawの重複を削除、時刻順にソート
         {Object.<string, number>} map - UNIX時刻から何番目の時刻か(listの添字)を引用 */
-  console.log(v.whois+' start.');
+    console.log(v.whois+' start.');
     try {
 
       v.step = 1; // 前処理
-      v.step = 1.1; // テーブル領域のクリア
+      v.step = 1.1; // 表示領域のクリア
       this.table.innerHTML = '';
+      this.detail.innerHTML = '';
       v.step = 1.2; // 表示モードをプルダウンから取得
       v.flag = Number(this.select.selectedOptions[0].value);
-      console.log('v.flag=%s',v.flag);
+      //console.log('v.flag=%s',v.flag);
 
       v.step = 2; // 表示対象となるタスクを抽出
       this.tasks.forEach(x => {
@@ -304,15 +313,15 @@ class TimeTable {
           v.listIndex++;
         }
       }
-      console.log(v.t);
+      //console.log(v.t);
       v.step = 3.3; // テーブル領域の列数をセット
       document.documentElement.style.setProperty('--rowNum',v.tasks.length);
       document.documentElement.style.setProperty('--colNum',v.t.list.length*2);
 
-      // 時刻(タイムライン)と補助線を表示
+      v.step = 4; // 時刻(タイムライン)と補助線を表示
       v.currentDate = '';
       for( v.i=0 ; v.i<v.t.list.length ; v.i++ ){
-        // 日付の表示
+        v.step = 4.1; // 日付の表示
         if( v.currentDate !== v.t.list[v.i].dateStr ){
           v.currentDate = v.t.list[v.i].dateStr;
           this.table.appendChild(createElement(
@@ -320,12 +329,12 @@ class TimeTable {
               style:{'grid-column':(v.i*2+1)+' / '+(v.i*2+2)}}
           ));
         }
-        // 時刻の表示
+        v.step = 4.2; // 時刻の表示
         this.table.appendChild(createElement(
           {attr:{class:'time'},text:v.t.list[v.i].timeStr,
             style:{'grid-column':(v.i*2+1)+' / '+(v.i*2+3)}}
         ));
-        // 帯の表示
+        v.step = 4.3; // 帯の表示
         if( v.i %2 === 0 ){
           this.table.appendChild(createElement(
             {attr:{class:'zone'},
@@ -334,17 +343,18 @@ class TimeTable {
         }
       }
 
-      // タスクを表示
+      v.step = 5; // タスクを表示
       for( v.i=0 ; v.i<v.tasks.length ; v.i++ ){
+        v.step = 5.1;
         v.st = v.t.map[v.tasks[v.i].st.unix] * 2 + 2;
         v.ed = v.t.map[v.tasks[v.i].ed.unix] * 2 + 2;
-        // バーチャート
+        v.step = 5.2; // バーチャート
         this.table.appendChild(createElement({
           attr:{class:'task'},
           style:{'grid-column': v.st + ' / ' + v.ed,
             'grid-row': (v.i + 3) + ' / ' + (v.i + 4)}
         }));
-        // ラベル
+        v.step = 5.3; // ラベル
         this.table.appendChild(createElement({
           attr:{
             class:'label' + (v.tasks[v.i].pending.length === 0 ? '' : ' red'),
@@ -356,7 +366,7 @@ class TimeTable {
         }));
       }
 
-      v.step = 99; // 終了処理
+      v.step = 6; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -371,29 +381,52 @@ class TimeTable {
    * @returns {null|Error}
    */
   showDetail = (event) => {
-    const v = {whois:'TimeTable.showDetail',step:0,rv:null,note:[],pending:[]};
+    const v = {whois:'TimeTable.showDetail',step:0,rv:null,note:[],pending:[],
+      add:(h,d) => {
+        this.detail.appendChild(createElement({attr:{class:'th'},text:h}));
+        this.detail.appendChild(createElement({attr:{class:'td'},html:d}));
+      },
+    };
     console.log(v.whois+' start.',event);
     try {
 
+      v.step = 1; // 前処理
       this.detail.innerHTML = '';
       v.id = Number(event.target.getAttribute('name'));
-      v.dObj = this.tasks[v.id];
-      console.log(v.id,v.dObj)
+      v.dObj = this.tasks[v.id];  // 対象タスクをv.dObjに保存
+      //console.log(v.id,v.dObj)
 
-      v.dObj.pending.forEach(x => v.pending.push({tag:'li',html:x}));
-      this.detail.appendChild(createElement({children:[
-        {attr:{class:'th'},text:'項目名'},
-        {attr:{class:'td'},text:v.dObj.label},
-        {attr:{class:'th'},text:'担当'},
-        {attr:{class:'td'},text:(v.dObj.PIC || '(未定)')},
-        {attr:{class:'th'},text:'備考'},
-        {attr:{class:'td'},html:v.dObj.note},
-        {attr:{class:'th'},text:'課題'},
-        {attr:{class:'td'},children:[{tag:'ol',children:v.pending}]},
-        {tag:'button',text:'閉じる',event:{'click':
-          () => {this.detail.innerHTML = ''}
-        }}
-      ]}));
+      v.step = 2.1; // 開始・終了時刻
+      v.add('時間',v.dObj.st.dateStr + ' ' + v.dObj.st.timeStr
+      + ' 〜 ' + v.dObj.ed.dateStr + ' ' + v.dObj.ed.timeStr)
+      v.step = 2.2; // タスク名称
+      v.add('項目名',v.dObj.label);
+      v.step = 2.3; // 作業概要
+      if( v.dObj.summary.length > 0 )
+        v.add('概要',v.dObj.summary);
+      v.step = 2.4; // 担当者名
+      if( v.dObj.PIC.length > 0 )
+        v.add('担当',v.dObj.PIC);
+      v.step = 2.5; // 場所
+      if( v.dObj.location.length > 0 )
+        v.add('場所',v.dObj.location);
+      v.step = 2.6; // 必要資機材
+      if( v.dObj.resources.length > 0 ){
+        v.str = '<ol>';
+        v.dObj.resources.forEach(x => v.str + '<li>' + x + '</li>');
+        v.str += '</ol>';
+        v.add('資機材',v.str);
+      }
+      v.step = 2.7; // 残課題
+      if( v.dObj.pending.length > 0 ){
+        v.str = '<ol>';
+        v.dObj.pending.forEach(x => v.str + '<li>' + x + '</li>');
+        v.str += '</ol>';
+        v.add('資機材',v.str);
+      }
+      v.step = 2.8; // 備考
+      if( v.dObj.note.length > 0 )
+        v.add('備考',v.dObj.note);
 
       v.step = 3; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
@@ -413,39 +446,39 @@ window.addEventListener('DOMContentLoaded',() => {
     base: '2023/9/30', // 基準日
     span: 10 * 60 * 1000, // 時刻目盛の最小単位。既定値は10分(ミリ秒表記)
     options: [  // ドロップダウンの選択肢(select内のoption)
-      {label:'全て',value:31},
       {label:'参加者',value:16},
-      {label:'設営関係',value:1},
+      {label:'設営関係、他',value:1},
       {label:'受付関係',value:2},
       {label:'校内探検関係',value:4},
-      {label:'カレー関係',value:8},
+      {label:'カレー＋朝食関係',value:8},
+      {label:'全項目表示',value:31},
     ],
     // 以降の開始/終了時刻表記は①上記span単位、②hh:mm形式、③日付を跨る場合、hhは+24H
     tasks: [
-      {st:'8:30', ed:'09:00', label:'集合、オリエンテーション', mode:15, PIC:'', pending:[
-        '所要時間の不足を懸念、10->30分間に修正。これに伴い、オリエンテーション後の各種作業の開始時刻を繰り下げ'
-      ]},
-/*
-      {st:'08:40', ed:'10:00', label:'dummy', mode:15},
-      {st:'08:40', ed:'10:10', label:'dummy2', mode:15},
-*/
+      {st:'8:30', ed:'08:40', label:'オリエンテーション', mode:15, PIC:'', note: `<ol>
+        <li>各自の役割確認</li>
+        <li>各作業開始時刻・集合場所の確認</li>
+        <li>買出する材料・資材および担当の確認</li>
+        <li>受付用小銭の両替</li>
+      </ol>`,
+      pending:[]},
       // 本部・設営班 (v.flag=1)
-      {st:'09:00', ed:'09:20', label:'本部設営', mode:1, PIC:'', note:`<ol>
+      {st:'08:40', ed:'09:00', label:'本部設営', mode:1, PIC:'', note:`<ol>
         <li>ランタンと電源準備</li>
         <li>受付は机2椅子4</li>
         <li>ウォーターサーバ設置、麦茶＋コップ(スタッフ用)を用意</li>
       </ol>`, pending:[]},
-      {st:'09:20', ed:'09:40', label:'受付設営', mode:3, PIC:'',
+      {st:'09:00', ed:'09:20', label:'受付設営', mode:3, PIC:'',
         note: '受付は机2椅子4＋カラーコーン5,6個', pending:[]},
-      {st:'09:40', ed:'10:30', label:'ブルーシート敷設、区画線引', mode:1, PIC:'', pending:[]},
+      {st:'09:20', ed:'10:00', label:'ブルーシート敷設、区画線引', mode:1, PIC:'', pending:[]},
       {st:'13:40', ed:'17:30', label:'参加者テント設営対応', mode:1, PIC:'', pending:[]},
       {st:'20:30', ed:'21:00', label:'就寝準備', mode:17, PIC:'', pending:[]},
-      {st:'21:00', ed:'29:00', label:'夜間巡回', mode:15, PIC:'', pending:[]},
-      {st:'32:00', ed:'34:00', label:'片付け(スタッフ)', mode:15, PIC:'', pending:[]},
-      {st:'33:00', ed:'33:10', label:'閉会式', mode:16, PIC:'', pending:[]},
+      {st:'21:00', ed:'29:00', label:'夜間巡回', mode:1, PIC:'', pending:[]},
+      {st:'32:00', ed:'34:00', label:'片付け(スタッフ)', mode:1, PIC:'', pending:[]},
+      {st:'33:00', ed:'33:10', label:'閉会式', mode:17, PIC:'', pending:[]},
 
       // 受付班 (v.flag=2)
-      {st:'09:40', ed:'10:00', label:'案内標識設置', mode:2, PIC:'',note:`<ol>
+      {st:'09:20', ed:'09:40', label:'案内標識設置', mode:2, PIC:'',note:`<ol>
         <li>東門に「正門に回ってください」の標識</li>
         <li>正門に「参加者パスを表示してください」の標識</li>
       </ol>`, pending:[]},
@@ -459,17 +492,19 @@ window.addEventListener('DOMContentLoaded',() => {
         note: 'お迎えの個別確認はしない(声かけのみ)', pending:[]},
 
       // 校内探検班 (v.flag=4)
-      {st:'14:00', ed:'17:00', label:'校内探検準備', mode:4, PIC:'八木氏＋3,4名', pending:[]},
+      {st:'14:00', ed:'17:00', label:'校内探検準備', mode:4, PIC:'八木氏＋3,4名', pending:[
+        '必要機材の搬入は？'
+      ]},
       {st:'17:00', ed:'17:30', label:'お化け集合、打ち合わせ', mode:4, PIC:'', pending:[]},
       {st:'18:30', ed:'20:30', label:'校内探検', mode:21, PIC:'', pending:[]},
 
       // カレー班 (v.flag=8)
-      {st:'09:00', ed:'09:30', label:'灯油買い出し', mode:8, PIC:'岩佐氏', pending:[]},
-      {st:'09:20', ed:'10:20', label:'カレー鍋設営', mode:8, PIC:'岩佐氏', pending:[]},
+      {st:'08:40', ed:'09:40', label:'灯油買い出し', mode:8, PIC:'岩佐氏', pending:[]},
+      {st:'09:20', ed:'10:20', label:'カレー鍋設営', mode:8, PIC:'', pending:[]},
       {st:'09:30', ed:'11:00', label:'材料買い出し', mode:8, PIC:'',
         note: '買い出し用に飯田氏が車提供', pending:[]},
       {st:'13:00', ed:'17:30', label:'カレー準備', mode:8, PIC:'神内氏、鐘江氏、＋8名位', pending:[]},
-      {st:'29:00', ed:'30:30', label:'朝食準備', mode:8, PIC:'',note:`<ol>
+      {st:'29:00', ed:'31:30', label:'朝食準備', mode:8, PIC:'',note:`<ol>
         <li>「紙コップ、箸の準備」を注意書きに付記</li>
         <li>紙コップ・箸は各自準備だが、不足に備え多少購入しておく</li>
         <li>素麺つゆはおやじで準備</li>
@@ -481,7 +516,7 @@ window.addEventListener('DOMContentLoaded',() => {
       {st:'17:30', ed:'18:30', label:'カレー配膳、夕食', mode:24, PIC:'', pending:[]},
       {st:'19:00', ed:'21:00', label:'日帰り組帰宅(要お迎え)', mode:16, PIC:'', pending:[]},
 
-      //{st:'21:00', ed:'30:30', label:'就寝', mode:16, PIC:''},
+      {st:'21:00', ed:'30:30', label:'就寝', mode:16, PIC:''},
       {st:'30:30', ed:'31:00', label:'起床', mode:16, PIC:'', pending:[]},
       {st:'31:00', ed:'31:10', label:'ラジオ体操', mode:16, PIC:'', pending:[]},
       {st:'31:10', ed:'33:00', label:'参加者テント片付け', mode:16, PIC:'', pending:[]},
