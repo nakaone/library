@@ -139,6 +139,12 @@ class TimeTable {
             margin-top: 1rem;
             font-size: 1.4rem;
             padding: 0.5rem auto;
+          }
+          .TimeTable .detail button {
+            grid-column: 1 / 3;
+            margin: 1rem 2rem 0rem 2rem;
+            font-size: 1.4rem;
+            padding: 0.5rem auto;
           }`,
         ],
         html:[
@@ -428,6 +434,12 @@ class TimeTable {
       if( v.dObj.note.length > 0 )
         v.add('備考',v.dObj.note);
 
+      v.step = 2.9; // 「閉じる」ボタン
+      this.detail.appendChild(createElement(
+        {tag:'button',text:'閉じる',event:{'click':
+          () => {this.detail.innerHTML = ''}}}
+      ));
+
       v.step = 3; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -521,8 +533,6 @@ window.addEventListener('DOMContentLoaded',() => {
       {st:'31:00', ed:'31:10', label:'ラジオ体操', mode:16, PIC:'', pending:[]},
       {st:'31:10', ed:'33:00', label:'参加者テント片付け', mode:16, PIC:'', pending:[]},
       {st:'31:30', ed:'32:00', label:'朝食', mode:16, PIC:'', pending:[]},
-/*
-*/
     ],
   });
 
