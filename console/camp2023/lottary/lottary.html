@@ -17,7 +17,7 @@ td, .td {
 }
 </style>
 </head><body>
-
+<button onclick="save()">download</button>
 </body>
 <script type="text/javascript">
 
@@ -28,45 +28,6 @@ td, .td {
  * @param {Object[]} opt - alasqlの第二引数
  * @param {string} [inputData=''] - 入力データ名。ex.t01(=t01のアウトプットを入力とする)
  * @returns {Object.<string,any>|Error} - alasqlの実行結果
-const viewTable = (sql,data,title='',desc='') => {
-  const v = {
-    table: createElement({tag:'table'}),
-    wrapper: createElement({tag:'details'}),
-    rv: alasql(sql,[data]),
-  };
-
-  // summary部の作成
-  v.cnt = alasql('select count(*) as cnt from ?',[v.rv]);
-  v.wrapper.appendChild(createElement({tag:'summary',
-    text : title + '　[in:' + data.length + ' -> out:' + v.cnt[0].cnt + ']'}));
-  if( desc.length > 0 ){
-    v.wrapper.appendChild(createElement({html:desc}));
-  }
-
-  // tableの作成
-  if( v.rv.length > 0 ){
-    v.header = Object.keys(v.rv[0]);
-    v.tr = createElement({tag:'tr'});
-    v.tr.appendChild(createElement({tag:'th',text:'No'}));
-    v.header.forEach(x => v.tr.appendChild(createElement(
-      {tag:'th',text:x}
-    )));
-    v.table.appendChild(v.tr);
-
-    for( v.r=0 ; v.r<v.rv.length ; v.r++ ){
-      v.tr = createElement({tag:'tr'});
-      v.tr.appendChild(createElement({tag:'th',text:(v.r+1),style:{'text-align':'right'}}));
-      for( v.c=0 ; v.c<v.header.length ; v.c++ ){
-        v.tr.appendChild(createElement({tag:'td',text:v.rv[v.r][v.header[v.c]]}));
-      }
-      v.table.appendChild(v.tr);
-    }
-    v.wrapper.appendChild(v.table);
-  }
-
-  document.querySelector('body').appendChild(v.wrapper);
-  return v.rv;
-}
  */
 
 const viewTable = (arg) => {
@@ -123,8 +84,23 @@ const viewTable = (arg) => {
   }
 }
 
+const save = (evt) => {
+  //evt.preventDefault();
+
+  const blob = new Blob([JSON.stringify(v)], {type: 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  document.body.appendChild(a);
+  a.download = 'result.json';
+  a.href = url;
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+
+const v = {body:document.querySelector('body')};
 window.addEventListener('DOMContentLoaded',() => {
-  const v = {body:document.querySelector('body')};
   v.d1 = tsv.split('\n');
   v.d2 = [];
   v.header = v.d1[0].split('\t');
@@ -165,24 +141,156 @@ window.addEventListener('DOMContentLoaded',() => {
   });
 
   // t03: 重複申込を削除
-  v.t03 = viewTable({title:'t03: 重複申込を削除',
+  v.t03a = viewTable({title:'t03a: メアドごとにグループ化、件数カウント(重複⇒dup>1)',
     desc:'',
-    sql:'select num, email'
-    + ' from (select count(*) as num, first([メールアドレス]) as email from ? group by [メールアドレス]) as t01'
-    + ' where num > 1',
+    sql:'select count(*) as dup,[メールアドレス] from ?'
+    + ' group by [メールアドレス]',
     opt:[v.t02],
     inputData:'t02'
   });
-  /*= viewTable({title:'',
+  v.t03b = viewTable({title:'t03b: 重複無しの申込',
     desc:'',
-    sql:'',
-    opt:[],
-    inputData:''
+    sql:'select * from ?'
+    + ' where [メールアドレス] in (select [メールアドレス] from ? where dup = 1)'
+    + ' order by [メールアドレス]',
+    opt:[v.t02,v.t03a],
+    inputData:'t02'
   });
-  */
+  v.t03c = viewTable({title:'t03c: 重複ありの申込',
+    desc:'',
+    sql:'select * from ?'
+    + ' where [メールアドレス] in (select [メールアドレス] from ? where dup > 1)'
+    + ' order by [メールアドレス]',
+    opt:[v.t02,v.t03a],
+    inputData:'t02'
+  });
+  v.t03d = viewTable({title:'t03d: 重複ありの申込をメアドごとにグループ化',
+    desc:'',
+    sql:'select * from ?'
+    + ' group by [メールアドレス]',
+    opt:[v.t03c],
+    inputData:'t03c'
+  });
+  v.t03e = viewTable({title:'t03e: 申込全件から重複申込を排除(t03b+t03d)',
+    desc:'',
+    sql:'select * from ? union select * from ?',
+    opt:[v.t03b,v.t03d],
+    inputData:'t03b,t03d'
+  });
 
-  // t03: 
-  v.sql = 'select [申込者氏名], [参加者01氏名] from ? where [申込者氏名]=[参加者01氏名]';
+  // t04: 作業用項目追加
+  v.t04a = viewTable({title:'t04a: 作業用項目追加(stay,参加者00所属,mem00〜05)',
+    desc:'',
+    sql:'select random() as score,'
+    + ' case when [宿泊、テント] = "宿泊しない" then 0 when [宿泊、テント] = "宿泊する(テントなし)" then 1 else 2 end as stay,'
+    + ' case when [申込者の参加]="不参加" then "" else "保護者" end as [参加者00所属],'
+    + ' case when [申込者の参加]="不参加" then 0 else 1 end as mem00,'
+    + ' case when [参加者01氏名]="" then 0 else 1 end as mem01,'
+    + ' case when [参加者02氏名]="" then 0 else 1 end as mem02,'
+    + ' case when [参加者03氏名]="" then 0 else 1 end as mem03,'
+    + ' case when [参加者04氏名]="" then 0 else 1 end as mem04,'
+    + ' case when [参加者05氏名]="" then 0 else 1 end as mem05,'
+    + ' * from ?',
+    opt:[v.t03e],
+    inputData:'t03e'
+  });
+  v.t04b = viewTable({title:'t04b: 作業用項目追加(memTotal)',
+    desc:'',
+    sql:'select mem00+mem01+mem02+mem03+mem04+mem05 as memTotal, * from ?',
+    opt:[v.t04a],
+    inputData:'t04a'
+  });
+
+  v.t05 = viewTable({title:'t05: 優先当選',
+    desc:'',
+    sql:'select "winning" as template, * from ?'
+    + ' where authority="3" or authority="5"'
+    + ' or entryNo="175" or entryNo="132" or entryNo="193"', // 仲良しバンドル
+    opt:[v.t04b],
+    inputData:'t04b'
+  });
+
+  v.t06 = viewTable({title:'t06: 抽選対象',
+    desc:'',
+    sql:'select * from ?'
+    + ' where not(authority="3" or authority="5"'
+    + ' or entryNo="175" or entryNo="132" or entryNo="193")' // 仲良しバンドル
+
+    + ' order by score desc',
+    opt:[v.t04b],
+    inputData:'t04b'
+  });
+
+  // 抽選結果を付記
+  v.sum = alasql('select sum(memTotal) as s from ?',[v.t05])[0].s;
+  for( v.i=0 ; v.i<v.t06.length ; v.i++ ){
+    v.sum += v.t06[v.i].memTotal;
+    v.t06[v.i].template = v.sum < 350 ? 'winning' : 'failed';
+  }
+  v.t07 = viewTable({title:'t07: 統合版',
+    desc:'',
+    sql:'select * from ? union select * from ?',
+    opt:[v.t05,v.t06],
+    inputData:'t05,t06'
+  });
+
+
+  v.note = [
+    {entryNo:"73",note:"夜に様子を見に行けるかとのご質問ですが、夜間は校門が閉鎖されますので、20:30頃までに来校いただき、運営にお声がけください。"},
+    {entryNo:"80",note:"受付時間のご質問をいただきました。一応16:00までは受付に人がいます。それより遅くても対応しますが、17:00から夕食なので、それまでにはおいでください。"},
+    {entryNo:"132",note:"中高生のボランティアは歓迎します(受付時にお知らせください)。<br>また体育館内はかなり混雑が予想されますので、テントのご利用は周囲の状況を見てご迷惑にならないようにお願いします。"},
+    {entryNo:"152",note:"締切後確認したところ、テントの利用希望が想定を下回ったため、個別区画は設けず係員が設置場所を指示することになりました。よって4m x 4mを大きく超えないなら多少はみ出てもご利用いただけます。"},
+    {entryNo:"172",note:"メンバの追加、了解しました。"},
+    {entryNo:"175",note:"中高生のボランティアは歓迎します(受付時にお知らせください)。<br>また体育館内はかなり混雑が予想されますので、テントのご利用は周囲の状況を見てご迷惑にならないようにお願いします。<br>一応16:00までは受付に人がいます。それより遅くても対応しますが、17:00から夕食なので、それまでにはおいでください。"},
+    {entryNo:"233",note:"一応16:00までは受付に人がいます。それより遅くても対応しますが、17:00から夕食なので、それまでにはおいでください。"}
+  ];
+  v.t08a = viewTable({title:'t08a: 当選者',
+  desc:'',
+    sql:'select t02.note, t01.* from ? as t01'
+    + ' left join ? as t02'
+    + ' on t01.entryNo = t02.entryNo'
+    + ' where t01.template="winning"',
+    opt:[v.t07,v.note],
+    inputData:'t07'
+  });
+  v.t08b = viewTable({title:'t08b: 落選者',
+    desc:'',
+    sql:'select "" as note, * from ? where template="failed"',
+    opt:[v.t07],
+    inputData:'t07'
+  });
+  v.t08c = viewTable({title:'t08c: 当落数集計(検算)',
+    desc:'',
+    sql:'select template as [結果], count(*) as [口数], sum(memTotal) as [人数] from ? group by template',
+    opt:[v.t07],
+    inputData:'t07'
+  });
+
+  // 落選者の受付番号一覧
+  // 結果を管理局 lottaryシートのA列に貼付
+  v.body.appendChild(createElement({tag:'details',children:[
+    {tag:'summary',text:'=== 落選者受付番号(Google Spread反映用)'},
+    {text:JSON.stringify(v.t08b.map(x => Number(x.entryNo)).sort((a,b)=>{return Number(a)<Number(b)?-1:1}))}
+  ]}));
+
+  v.t09 = viewTable({title:'t09: 統合版(コメント付き)',
+    desc: '',
+    sql:'select * from ? union select * from ?',
+    opt:[v.t08a,v.t08b],
+    inputData:'t08a,t08b'
+  })
+  v.body.appendChild(createElement({tag:'details',children:[
+    {tag:'summary',text:'=== 通知データ(JSON)'},
+    {text:JSON.stringify(v.t09.map(x => {
+      return {
+        template: x.template,
+        recipient: x['メールアドレス'],
+        entryNo: x.entryNo,
+        name: x.name,
+        note: x.note || '',
+      };
+    }))}
+  ]}));
 
 });
 
