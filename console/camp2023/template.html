@@ -273,6 +273,85 @@ window.addEventListener('DOMContentLoaded',async () => {
     // ----------------------------------------------------
     v.step = '1.4'; // TimeTable: タイムテーブル
     v.TimeTable = new TimeTable('div[data-BurgerMenu="label:\'予定表\'"]',{
+    base: '2023/9/30', // 基準日
+    span: 10 * 60 * 1000, // 時刻目盛の最小単位。既定値は10分(ミリ秒表記)
+    options: [  // ドロップダウンの選択肢(select内のoption)
+      {label:'参加者',value:16},
+      {label:'設営関係、他',value:1},
+      {label:'受付関係',value:2},
+      {label:'校内探検関係',value:4},
+      {label:'カレー＋朝食関係',value:8},
+      {label:'全項目表示',value:31},
+    ],
+    // 以降の開始/終了時刻表記は①上記span単位、②hh:mm形式、③日付を跨る場合、hhは+24H
+    tasks: [
+      {st:'8:30', ed:'08:40', label:'オリエンテーション', mode:15, PIC:'', note: `<ol>
+        <li>各自の役割確認</li>
+        <li>各作業開始時刻・集合場所の確認</li>
+        <li>買出する材料・資材および担当の確認</li>
+        <li>受付用小銭の両替</li>
+      </ol>`,
+      pending:[]},
+      // 本部・設営班 (v.flag=1)
+      {st:'08:40', ed:'09:00', label:'本部設営', mode:1, PIC:'', note:`<ol>
+        <li>ランタンと電源準備</li>
+        <li>受付は机2椅子4</li>
+        <li>ウォーターサーバ設置、麦茶＋コップ(スタッフ用)を用意</li>
+      </ol>`, pending:[]},
+      {st:'09:00', ed:'09:20', label:'受付設営', mode:3, PIC:'',
+        note: '受付は机2椅子4＋カラーコーン5,6個', pending:[]},
+      {st:'09:20', ed:'10:00', label:'ブルーシート敷設、区画線引', mode:1, PIC:'', pending:[]},
+      {st:'13:40', ed:'17:30', label:'参加者テント設営対応', mode:1, PIC:'', pending:[]},
+      {st:'20:30', ed:'21:00', label:'就寝準備', mode:17, PIC:'', pending:[]},
+      {st:'21:00', ed:'29:00', label:'夜間巡回', mode:1, PIC:'', pending:[]},
+      {st:'32:00', ed:'34:00', label:'片付け(スタッフ)', mode:1, PIC:'', pending:[]},
+      {st:'33:00', ed:'33:10', label:'閉会式', mode:17, PIC:'', pending:[]},
+
+      // 受付班 (v.flag=2)
+      {st:'09:20', ed:'09:40', label:'案内標識設置', mode:2, PIC:'',note:`<ol>
+        <li>東門に「正門に回ってください」の標識</li>
+        <li>正門に「参加者パスを表示してください」の標識</li>
+      </ol>`, pending:[]},
+      {st:'10:00', ed:'11:00', label:'予行演習', mode:2, PIC:'',note:[], pending:[]},
+      {st:'13:30', ed:'16:00', label:'受付', mode:18, PIC:'嶋津＋2,3名',
+        note: '<p>「受付開始以降、校庭遊び禁止」を注意書きに付記</p>'
+        + '<p>「遊んだものは片付けよう」の注意書き(＋標識？)</p>', pending:[]},
+      {st:'19:00', ed:'21:00', label:'お迎え対応', mode:2, PIC:'',
+        note: 'お迎えの個別確認はしない(声かけのみ)', pending:[]},
+
+      // 校内探検班 (v.flag=4)
+      {st:'07:30', ed:'08:00', label:'機材搬入', mode:4, PIC:'', pending:[]},
+      {st:'14:00', ed:'17:00', label:'校内探検準備', mode:4, PIC:'八木氏＋3,4名', pending:[]},
+      {st:'17:00', ed:'17:30', label:'お化け集合、打ち合わせ', mode:4, PIC:'', pending:[]},
+      {st:'18:30', ed:'20:30', label:'校内探検', mode:21, PIC:'', pending:[]},
+
+      // カレー班 (v.flag=8)
+      {st:'08:40', ed:'09:40', label:'灯油買い出し', mode:8, PIC:'岩佐氏', pending:[]},
+      {st:'09:20', ed:'10:20', label:'カレー鍋設営', mode:8, PIC:'', pending:[]},
+      {st:'09:30', ed:'11:00', label:'材料買い出し', mode:8, PIC:'',
+        note: '買い出し用に飯田氏が車提供', pending:[]},
+      {st:'13:00', ed:'17:30', label:'カレー準備', mode:8, PIC:'神内氏、鐘江氏、＋8名位', pending:[]},
+      {st:'29:00', ed:'31:30', label:'朝食準備', mode:8, PIC:'',note:`<ol>
+        <li>紙コップ・箸は各自準備だが、不足に備え多少購入しておく</li>
+        <li>素麺つゆはおやじで準備</li>
+      </ol>`, pending:[]},
+
+      // 一般参加者 (v.flag=16)
+      {st:'14:00', ed:'14:10', label:'開会式', mode:17, PIC:'会長、校長or副校長', pending:[]},
+      {st:'13:40', ed:'17:30', label:'テント設営、自由行動(遊戯)', mode:16, PIC:'', pending:[]},
+      {st:'17:30', ed:'18:30', label:'カレー配膳、夕食', mode:24, PIC:'', pending:[]},
+      {st:'19:00', ed:'21:00', label:'日帰り組帰宅(要お迎え)', mode:16, PIC:'', pending:[]},
+
+      {st:'21:00', ed:'30:30', label:'就寝', mode:16, PIC:''},
+      {st:'30:30', ed:'31:00', label:'起床', mode:16, PIC:'', pending:[]},
+      {st:'31:00', ed:'31:10', label:'ラジオ体操', mode:16, PIC:'', pending:[]},
+      {st:'31:10', ed:'33:00', label:'参加者テント片付け', mode:16, PIC:'', pending:[]},
+      {st:'31:30', ed:'32:00', label:'朝食', mode:16, PIC:'', pending:[]},
+    ],
+  });
+
+    /*
+    v.TimeTable = new TimeTable('div[data-BurgerMenu="label:\'予定表\'"]',{
       base: '2023/09/30 08:30', // 表示領域左端の時刻
       span: 10 * 60 * 1000, // 時刻目盛の最小単位。既定値は10分(ミリ秒表記)
       list: [
@@ -344,6 +423,7 @@ window.addEventListener('DOMContentLoaded',async () => {
       {label:'校内探検関係',value:4},
       {label:'カレー関係',value:8},
     ]});
+    */
     /*
     // データはGoogle Spreadから取得
     v.res = await fetch(v.docURL);

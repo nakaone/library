@@ -1,7 +1,41 @@
 /**
- * @classdesc 参加者情報の表示・編集
+ * @classdesc タイムテーブルの表示
  */
 class TimeTable {
+
+  /** Resource: 必要資材型定義
+   * @typedef Resource
+   * @prop {string} name - 資材名
+   * @prop {number} [quantity] - 数量
+   * @prop {string} [unit] - 単位
+   * @prop {string} [procure] - 調達方法
+   * @prop {number} [budget] - 予算
+   * @prop {string} [note] - 備考
+   */
+
+  /** Task: 作業項目型定義
+   * 開始・終了時刻はbaseの日付。翌日以降にまたがる場合、+24n時間する
+   * @typedef Task
+   * @prop {string} st - 開始時刻。constructorでTimeLineに変換
+   * @prop {string} ed - 終了時刻。constructorでTimeLineに変換
+   * @prop {string} label - タスク名称
+   * @prop {string} [summary=''] - 作業概要
+   * @prop {number} mode - 表示モード。options.valueとの論理積>0のタスクのみ表示
+   * @prop {string} [PIC=''] - 担当者名
+   * @prop {string} [location=''] - 場所
+   * @prop {string} [note] - 備考。htmlで記述
+   * @prop {string[]} [pending=[]] - 懸念点、残課題事項
+   * @prop {Resource[]} [resources=[]] - 必要な物
+   * 以下はconstructor内で追加される導出項目
+   * @prop {number} id - 0からの連番(this.tasksの添字)
+   */
+
+  /** ドロップダウンオプション(作業班)
+   * @typedef DropDownOpt
+   * @prop {string} label - ラベル
+   * @prop {number} value - 表示制御フラグ
+   */
+
   /**
    * @constructor
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
@@ -11,8 +45,12 @@ class TimeTable {
   constructor(parent,opt={}){
     const v = {whois:'TimeTable.constructor',rv:true,step:0,
       default:{ // メンバ一覧、各種オプションの既定値、CSS/HTML定義
+        base: '', // {string} - 基準日。yyyy/MM/dd形式
+        baseObj: null, // {Date} - 基準日の日付オブジェクト
+        baseArr: [], // {number[]} - 基準日の[y,M,d]
         span: 10 * 60 * 1000, // 時刻目盛の最小単位。既定値は10分(ミリ秒表記)
-        options: [],  // スタッフグループ単位
+        options: [],  // ドロップダウンの選択肢(select内のoption)
+        tasks: [], // {Task[]} - 開始・終了時刻順に並べたタスク配列
 
         // メンバとして持つHTMLElementの定義
         parent: parent, // {HTMLElement} 親要素
@@ -23,43 +61,58 @@ class TimeTable {
 
         // CSS/HTML定義
         css:[
-          /* TimeTable共通部分 */`
-          .TimeTable.act[name="wrapper"] {
-            display: block;
-            width: 100%;
-            z-index: 0;
-          }
-          .TimeTable {
+          /* TimeTable共通部分 */ `
+          .TimeTable[name="wrapper"] {
             display: none;
-            --lineWidth: 4px;
+            z-index: 0;
+            --taskHeight: 1.8rem;
+          }
+          .TimeTable[name="wrapper"].act {
+            display: block;
           }
           .TimeTable .red {
-            color: #f00;
-          }
+            color: red;
+          }`,
+          /* テーブル領域 */`
           .TimeTable .table {
+            margin: 1rem 0px;
             display: grid;
-            grid-template-columns: 4rem repeat(20, calc(var(--lineWidth) * 3)) repeat(77, 1fr)
+            grid-template-columns: repeat(var(--colNum), 0.5rem) 1fr;
+            grid-template-rows: 1rem 3rem repeat(var(--rowNum), var(--taskHeight));
           }
-          .TimeTable .time {
-            grid-column: 1 / 2;
-            margin: auto 0.5rem auto auto;
-            padding: 0.3rem 0;
+          .TimeTable .table .date {
+            grid-row: 1 / 2;
+            white-space: nowrap;
+            padding-left: 0.3rem;
+          }
+          .TimeTable .table .time {
+            grid-row: 2 / 3;
             font-size: 0.8rem;
-            z-index: -1;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            transform-origin: center;
+            z-index: 1;
           }
-          .TimeTable .label {
-            border-left: solid 4px #666;
-            margin: var(--lineWidth) 0px;
-            padding-left: 2px;
+          .TimeTable .table .task {
+            margin: 1.2rem 0rem 0.3rem 0rem;
+            box-sizing: border-box;
+            border: solid 1px #666;
+            background-color: #ccc;
+            z-index: 1;
+          }
+          .TimeTable .table .label {
+            white-space: nowrap;
+            vertical-align: middle;
             z-index: 2;
           }
-          .TimeTable .line {
-            grid-column: 2 / 99;
-            border-top: dashed 1px #aaa;
-            z-index: -1;
-          }
-          .TimeTable .detail > div {
+          .TimeTable .table .zone {
+            grid-row: 3 / calc(var(--rowNum) + 3);
+            background: #eee;
+          }`,
+          /* 詳細情報 */`
+          .TimeTable .detail {
             display: grid;
+            gap: 0.2rem;
             grid-template-columns: 5rem 1fr;
           }
           .TimeTable .detail .th {
@@ -73,24 +126,16 @@ class TimeTable {
             margin-top: 1rem;
             font-size: 1.4rem;
             padding: 0.5rem auto;
+          }
+          .TimeTable .detail button {
+            grid-column: 1 / 3;
+            margin: 1rem 2rem 0rem 2rem;
+            font-size: 1.4rem;
+            padding: 0.5rem auto;
           }`,
-          /* 印刷用
-          .TimeTable .line:nth-child(2n) {
-            grid-column: 2 / 99;
-            background-color: #eee;
-            z-index: -1;
-          }
-          .TimeTable .line {
-            grid-column: 2 / 99;
-            border-top: dashed 1px #aaa;
-            z-index: 0;
-          }
-          */
         ],
         html:[
-          {attr:{class:'control'},children:[
-            {tag:'select'}
-          ]},
+          {attr:{class:'control'},children:[{tag:'select'}]},
           {attr:{class:'table'}},
           {attr:{class:'detail'}},
         ],
@@ -99,24 +144,14 @@ class TimeTable {
     console.log(v.whois+' start.',parent,opt);
     try {
 
-      v.step = 1; // メンバの値セット、HTML/CSSの生成
+      v.step = 1; // メンバの値セット、フレーム部分のHTML/CSSの生成
       v.rv = setupInstance(this,opt,v.default);
       if( v.rv instanceof Error ) throw v.rv;
-      
+
       v.step = 2; // DOMをメンバとして登録
       this.table = this.wrapper.querySelector('.table');
       this.select = this.wrapper.querySelector('.control select');
       this.detail = this.wrapper.querySelector('.detail');
-
-      // 98個の列に分けられたtable領域の各列の左端位置をthis.mapに格納
-      this.map = [];
-      for( v.i=1 ; v.i<98 ; v.i++ ){
-        v.test = createElement({style:{'grid-column':(v.i + ' / ' + (v.i+1))}});
-        this.table.appendChild(v.test);
-        this.map.push(v.test.offsetLeft);
-        v.test.remove();
-      }
-      //console.log('this.map=%s',JSON.stringify(this.map));
 
       v.step = 3; // プルダウンを設定
       this.options.forEach(x => {
@@ -125,40 +160,98 @@ class TimeTable {
         ))
       });
 
-      v.step = 4; // 起算オブジェクト(this.base)の計算
-      // this.base.date: {number[]} - 起算点年月日を[y, M, d]形式にした配列
-      v.base = this.base;
-      this.base = {date:v.base.match(/\d{4}\/\d{2}\/\d{2}/)[0].split('/')};
-      this.base.date[1] -= 1;  // 月は0オリジンなので修正
-      // this.base.time: {number} - (時刻を含む)起算点のUNIX時刻
-      this.base.time = new Date(
-        ...this.base.date,
-        ...v.base.match(/\d{2}:\d{2}/)[0].split(':')
-      ).getTime();
-      //console.log('this.base=%s',JSON.stringify(this.base));
+      v.step = 4; // base文字列からbaseObj, baseArrを作成
+      this.baseObj = new Date(this.base);
+      if( isNaN(this.baseObj.getTime()) )
+        throw new Error('"'+this.base+'" is invalid datetime.');
+      this.baseArr = [
+        this.baseObj.getFullYear(),
+        this.baseObj.getMonth(),
+        this.baseObj.getDate()
+      ];
 
-      v.step = 5; // 開始時刻・終了時刻順にソート
-      this.list = this.list.sort((a,b) => a.st === b.st
-        ? (a.ed <= b.ed ? -1 : 1) : (a.st < b.st ? -1 : 1));
-      for( v.i=0 ; v.i<this.list.length ; v.i++ ){
-        this.list[v.i].id = v.i; // IDを採番
-        // 詳細表示項目が未定義なら追加
-        if( !this.list[v.i].hasOwnProperty('PIC') )
-          this.list[v.i].PIC = '';
-        if( !this.list[v.i].hasOwnProperty('note') )
-          this.list[v.i].note = [];
-        if( !this.list[v.i].hasOwnProperty('remain') )
-          this.list[v.i].remain = [];
-        // 開始・終了時刻を文字列からオブジェクトに変換
-        this.list[v.i].st = this.calc(this.list[v.i].st);
-        this.list[v.i].ed = this.calc(this.list[v.i].ed);
+      v.step = 5; // タスクの初期値を設定
+      for( v.i=0 ; v.i<this.tasks.length ; v.i++ ){
+        this.tasks[v.i].st = this.objectizeTime(this.tasks[v.i].st);
+        if( this.tasks[v.i].st instanceof Error )
+          throw new Error('"' + JSON.stringify(this.tasks[v.i]) + '" is invalid start time.');
+        this.tasks[v.i].ed = this.objectizeTime(this.tasks[v.i].ed);
+        if( this.tasks[v.i].ed instanceof Error )
+          throw new Error('"' + JSON.stringify(this.tasks[v.i]) + '" is invalid end time.');
+        this.tasks[v.i].summary = this.tasks[v.i].summary || '';
+        this.tasks[v.i].PIC = this.tasks[v.i].PIC || '';
+        this.tasks[v.i].location = this.tasks[v.i].location || '';
+        this.tasks[v.i].pending = this.tasks[v.i].pending || [];
+        this.tasks[v.i].resources = this.tasks[v.i].resources || [];
+        this.tasks[v.i].note = this.tasks[v.i].note || '';
       }
 
-      v.step = 6; // イベント定義
-      this.select.addEventListener('change',this.drawTable);
+      v.step = 6; // 開始時刻・終了時刻順にソート
+      this.tasks = this.tasks.sort(
+        (a,b) => a.st.unix === b.st.unix
+        ? (a.ed.unix <= b.ed.unix ? -1 : 1)
+        : (a.st.unix < b.st.unix ? -1 : 1)
+      );
 
-      v.step = 7; // 終了処理
-      this.drawTable(); // 初期画面表示
+      for( v.i=0 ; v.i<this.tasks.length ; v.i++ ){
+        this.tasks[v.i].id = v.i; // idは連番で採番
+      }
+
+      v.step = 7; // イベント定義、初期画面表示
+      this.select.addEventListener('change',this.drawGantt);
+      v.rv = this.drawGantt();
+      if( v.rv instanceof Error ) throw v.rv;
+
+      v.step = 8; // 終了処理
+      console.log(v.whois+' normal end.',this);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
+      return e;
+    }
+  }
+
+  /** TimeLine: タイムラインオブジェクト型定義
+   * @typedef TimeLine - タイムラインオブジェクト
+   * @prop {Date} obj - 日時オブジェクト
+   * @prop {number} unix - 日時オブジェクトのUNIX時刻
+   * @prop {string} dateStr - 表示用日付文字列。M/dd(日〜土)形式
+   * @prop {string} timeStr - 表示用時刻文字列。hh:mm形式
+   */
+
+  /** 時刻文字列をオブジェクトに変換
+   * @param {string} arg - 時刻文字列
+   * @returns {TimeLine|Error}
+   */
+  objectizeTime = (arg) => {
+    const v = {whois:'TimeTable.objectizeTime',step:0,rv:{}};
+    console.log(v.whois+' start.',arg);
+    try {
+
+      v.step = 1; // 引数をDate型に変換
+      v.m = arg.match(/^([0-9]+):([0-9]+)$/);
+      if( v.m === null )
+        throw new Error('"'+arg+'" is invalid time string.');
+
+      v.step = 2;
+      v.d = new Date(...this.baseArr,v.m[1],v.m[2]);
+      if( isNaN(v.d.getTime()) )
+        throw new Error('"'+arg+'" is invalid time string.');
+
+      v.step = 3; // 戻り値の作成
+      v.rv = {
+        obj: v.d,
+        unix: v.d.getTime(),
+        dateStr: //v.d.getFullYear()
+          //+ '/' + ('0'+(v.d.getMonth()+1)).slice(-2)
+          (v.d.getMonth() + 1)
+          + '/' + ('0'+v.d.getDate()).slice(-2)
+          + '(' + ['日','月','火','水','木','金','土'][v.d.getDay()] + ')',
+        timeStr: ('0'+v.d.getHours()).slice(-2)
+          + ':' + ('0'+v.d.getMinutes()).slice(-2),
+      };
+
+      v.step = 4; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -168,223 +261,105 @@ class TimeTable {
     }
   }
 
-  /** 時刻tmのgrid-rowとラベルを返す
-   * @param {string} tm - 換算対象時刻文字列(hh:mm形式)
-   * @returns {null|Error}
-   */
-  calc = (tm) => {
-    //console.log('tm=%s',JSON.stringify(tm));
-    const dObj = new Date(...this.base.date, ...tm.split(':'));
-    return {
-      row: (dObj.getTime() - this.base.time) / this.span,
-      label: ('0'+dObj.getHours()).slice(-2)
-        + ':' + ('0'+dObj.getMinutes()).slice(-2)
-    };
-  }
-
-  /** 線表を描画する
+  /** ガントチャートを描画
    * @param {void}
    * @returns {null|Error}
    */
-  drawTable = () => {
-    const v = {whois:'TimeTable.drawTable',step:0,rv:null,
-      list:[],line:[],tl:[],timeline:[]};
-    console.log(v.whois+' start.',this.list);
+  drawGantt = () => {
+    const v = {whois:'TimeTable.drawGantt',step:0,rv:null,
+      tasks:[],t:{raw:[],list:[],map:{}}};
+      /* v.t : タイムライン関係
+        {TimeLine[]} raw - 出力対象タスクの開始・終了時刻。重複あり、順序不問
+        {TimeLine[]} list - rawの重複を削除、時刻順にソート
+        {Object.<string, number>} map - UNIX時刻から何番目の時刻か(listの添字)を引用 */
+    console.log(v.whois+' start.');
     try {
 
       v.step = 1; // 前処理
+      v.step = 1.1; // 表示領域のクリア
       this.table.innerHTML = '';
-
-      v.step = 2; // 表示対象フラグを取得
-      v.flag = Number(this.wrapper.querySelector('select').selectedOptions[0].value);
+      this.detail.innerHTML = '';
+      v.step = 1.2; // 表示モードをプルダウンから取得
+      v.flag = Number(this.select.selectedOptions[0].value);
       //console.log('v.flag=%s',v.flag);
 
-      v.step = 3; // 表示対象となるタスクを抽出
-      this.list.forEach(x => {
-        if( (v.flag & x.tag) > 0 ){
-          v.tl.push(x.st);
-          v.tl.push(x.ed);
-          v.list.push(x);
+      v.step = 2; // 表示対象となるタスクを抽出
+      this.tasks.forEach(x => {
+        if( (v.flag & x.mode) > 0 ){
+          v.t.raw.push(x.st);
+          v.t.raw.push(x.ed);
+          v.tasks.push(x);
         }
       });
-      //console.log('v.list=%s',JSON.stringify(v.list));
 
-      v.step = 4; // 時刻(タイムライン)と補助線を表示
-      v.step = 4.1; // v.timelineを時刻順にソート
-      v.tl = v.tl.sort((a,b) => a.row < b.row ? -1 : 1);
-      // 時刻の重複を削除
-      v.timeline = [v.tl[0]];
-      for( v.i=1 ; v.i<v.tl.length ; v.i++ ){
-        if( v.tl[v.i-1].row < v.tl[v.i].row ){
-          v.timeline.push(v.tl[v.i]);
+      v.step = 3; // タイムライン関係情報を整理
+      v.step = 3.1; // v.t.rawを時刻順にソート
+      v.t.raw = v.t.raw.sort((a,b) => a.unix < b.unix ? -1 : 1);
+      v.step = 3.2; // 時刻の重複を削除
+      v.lastUnix = 0;
+      v.listIndex = 0;
+      for( v.i=0 ; v.i<v.t.raw.length ; v.i++ ){
+        if( v.lastUnix < v.t.raw[v.i].unix ){
+          v.lastUnix = v.t.raw[v.i].unix;
+          v.t.list[v.listIndex] = v.t.raw[v.i];
+          v.t.map[v.t.raw[v.i].unix] = v.listIndex;
+          v.listIndex++;
         }
       }
-      console.log('v.timeline=%s',JSON.stringify(v.timeline));
+      //console.log(v.t);
+      v.step = 3.3; // テーブル領域の列数をセット
+      document.documentElement.style.setProperty('--rowNum',v.tasks.length);
+      document.documentElement.style.setProperty('--colNum',v.t.list.length*2);
 
-      v.step = 4.2; // 最初の時刻表示
-      /*
-      this.table.appendChild(createElement({
-        attr:{class:'time'},
-        text:v.timeline[0].label,
-        style:{'grid-row': (v.timeline[0].row * 2 + 1) + ' / ' + (v.timeline[0].row * 2 + 3)},
-      }));
-      // 最初の補助線を追加
-      this.table.appendChild(createElement({
-        attr:{class:'line'},
-        style:{'grid-row': '1 / ' + (v.timeline[0].row * 2 + 2)},
-      }));
-      */
-
-      v.step = 4.3; // 2番目以降の時刻表示
-      for( v.i=0 ; v.i<(v.timeline.length-1) ; v.i++ ){
-        // 開始・終了時刻を表示
-        this.table.appendChild(createElement({
-          attr:{class:'time'},
-          text:v.timeline[v.i].label,
-          style:{'grid-row': (v.timeline[v.i].row * 2 + 1) + ' / ' + (v.timeline[v.i+1].row * 2 + 1)},
-        }));
-        // 補助線を表示
-        this.table.appendChild(createElement({
-          attr:{class:'line'},
-          style:{'grid-row': (v.timeline[v.i].row * 2 + 2) + ' / ' + (v.timeline[v.i+1].row * 2 + 2)},
-          //style:{'grid-row':v.timeline[v.i-1].row+' / '+v.timeline[v.i].row},
-        }));
+      v.step = 4; // 時刻(タイムライン)と補助線を表示
+      v.currentDate = '';
+      for( v.i=0 ; v.i<v.t.list.length ; v.i++ ){
+        v.step = 4.1; // 日付の表示
+        if( v.currentDate !== v.t.list[v.i].dateStr ){
+          v.currentDate = v.t.list[v.i].dateStr;
+          this.table.appendChild(createElement(
+            {attr:{class:'date'},text:v.currentDate,
+              style:{'grid-column':(v.i*2+1)+' / '+(v.i*2+2)}}
+          ));
+        }
+        v.step = 4.2; // 時刻の表示
+        this.table.appendChild(createElement(
+          {attr:{class:'time'},text:v.t.list[v.i].timeStr,
+            style:{'grid-column':(v.i*2+1)+' / '+(v.i*2+3)}}
+        ));
+        v.step = 4.3; // 帯の表示
+        if( v.i %2 === 0 ){
+          this.table.appendChild(createElement(
+            {attr:{class:'zone'},
+              style:{'grid-column':(v.i*2+2)+' / '+(v.i*2+(v.i===(v.t.list.length-1)?3:4))}}
+          ));
+        }
       }
 
       v.step = 5; // タスクを表示
-      for( v.i=0 ; v.i<v.list.length ; v.i++ ){
-
-        v.step = 5.1; // 表示対象イベントと開催時間が重なる先行開始イベントの洗い出し
-        v.dup = []; // 表示対象イベントと開催時間が重なる先行開始イベントの配列
-        v.dupStart = false; // 開始時刻が同一のイベントがあればtrue
-        for( v.j=0 ; v.j<v.i ; v.j++ ){
-          if( v.list[v.j].ed.row > v.list[v.i].st.row ){
-            // 先行イベント終了時刻>表示対象イベント開始時刻の場合、重複イベントと看做す
-            // なおconstructorで開始時刻順にソート済のため、
-            // 先行イベント開始時刻<対象イベント終了時刻は考慮不要
-            v.dup.unshift(v.list[v.j]);
-            // 開始時刻が同一のイベントがあればtrueをセット
-            if( v.list[v.j].st.row === v.list[v.i].st.row ){
-              v.dupStart = true;
-            }
-          }
-        }
-        //console.log('%s: v.dup=%s',v.list[v.i].label,JSON.stringify(v.dup));
-
-        v.step = 5.2; /* 重複および同一開始時刻の有無からlevelを計算
-          開始〜終了時刻の重複なし => v.level = 0
-          開始〜終了時刻の重複あり
-            => v.level = 直近の重複イベントのv.level + 1
-            開始時刻の重複あり(=ラベルの重複あり)
-              => 直近の重複イベントのラベルからgrid-columnを計算
-          ※重複イベント内で同一開始時刻があった場合の無用な
-           レベル下げ(インデント)を排除するため、開始時刻の重複排除を行う
-
-
-          開始〜終了時刻の重複あり
-            開始時刻の重複なし(=ラベルの重複なし)
-              => 重複イベント開始時刻の配列を作成、重複を排除
-                 v.level = 配列の長さ
-            開始時刻の重複あり(=ラベルの重複あり)
-              => 直近の重複イベントのラベルからgrid-columnを計算
-                 v.level = 直近の重複イベントのv.level + 1
-          ※重複イベント内で同一開始時刻があった場合の無用な
-           レベル下げ(インデント)を排除するため、開始時刻の重複排除を行う
-        */
-        v.gridColumn = null;
-        if( v.dup.length === 0 ){
-          // 開始〜終了時刻の重複なし => v.level = 0
-          v.list[v.i].level = 0;
-        } else {
-          // 開始〜終了時刻の重複あり
-          // 直近の開始時刻重複イベントを特定、v.nearestに格納
-          for( v.j=0 ; v.j<v.dup.length ; v.j++ ){
-            if( v.dup[v.j].st.row === v.list[v.i].st.row ){
-              v.nearest = v.dup[v.j];
-              v.j = v.dup.length;
-            }
-          }
-          v.list[v.i].level = v.nearest.level + 1;
-
-          if( v.dupStart ){
-            // 開始時刻重複イベントのoffsetRightを取得
-            v.span = this.table.querySelector('.label[name="'+v.nearest.id+'"] span');
-            v.offsetRight = v.span.offsetLeft + v.span.offsetWidth;
-            // this.mapからoffsetRight以上の最小値を持つ要素の添字を取得、
-            // v.gridColumnを設定
-            for( v.j=0 ; v.j<this.map.length ; v.j++ ){
-              if( this.map[v.j] > v.offsetRight ){
-                v.gridColumn = (v.j+1) + ' / 99';
-                //console.log('v.j=%s, v.gridColumn=%s, this.map[v.j]=%s',v.j,v.gridColumn,this.map[v.j]);
-                v.j = this.map.length;
-              }
-            }
-          }
-          /*
-          if( !v.dupStart ){
-            // 開始時刻の重複なし(=ラベルの重複なし)
-            // => 重複イベント開始時刻の配列を作成、重複を排除
-            //    v.level = 配列の長さ
-            v.stMap = v.dup.map(x => x.st.row);
-            v.stMap = [...new Set(v.stMap)];
-            v.list[v.i].level = v.stMap.length;
-          } else {
-            // 開始時刻の重複あり(=ラベルの重複あり)
-            // => 直近の重複イベントのラベルからgrid-columnを計算
-            //    v.level = 直近の重複イベントのv.level + 1
-
-            // 直近の開始時刻重複イベントを特定、v.nearestに格納
-            for( v.j=0 ; v.j<v.dup.length ; v.j++ ){
-              if( v.dup[v.j].st.row === v.list[v.i].st.row ){
-                v.nearest = v.dup[v.j];
-                v.j = v.dup.length;
-              }
-            }
-            v.list[v.i].level = v.nearest.level + 1;
-
-            // 開始時刻重複イベントのoffsetRightを取得
-            v.span = this.table.querySelector('.label[name="'+v.nearest.id+'"] span');
-            v.offsetRight = v.span.offsetLeft + v.span.offsetWidth;
-            // this.mapからoffsetRight以上の最小値を持つ要素の添字を取得、
-            // v.gridColumnを設定
-            for( v.j=0 ; v.j<this.map.length ; v.j++ ){
-              if( this.map[v.j] > v.offsetRight ){
-                v.gridColumn = (v.j+1) + ' / 99';
-                //console.log('v.j=%s, v.gridColumn=%s, this.map[v.j]=%s',v.j,v.gridColumn,this.map[v.j]);
-                v.j = this.map.length;
-              }
-            }
-          }
-          */
-        }
-        //console.log('level=%s',v.list[v.i].level);
-
-        v.step = 5.3; // levelからgrid-columnを計算
-        if( v.gridColumn === null ){
-          v.gridColumn = (v.list[v.i].level + 2) + ' / 99';
-        }
-
-        v.step = 5.4; // this.tableにラベル要素を追加
-        v.label = createElement({
-          attr:{class:'label',name:v.list[v.i].id},
+      for( v.i=0 ; v.i<v.tasks.length ; v.i++ ){
+        v.step = 5.1;
+        v.st = v.t.map[v.tasks[v.i].st.unix] * 2 + 2;
+        v.ed = v.t.map[v.tasks[v.i].ed.unix] * 2 + 2;
+        v.step = 5.2; // バーチャート
+        this.table.appendChild(createElement({
+          attr:{class:'task'},
+          style:{'grid-column': v.st + ' / ' + v.ed,
+            'grid-row': (v.i + 3) + ' / ' + (v.i + 4)}
+        }));
+        v.step = 5.3; // ラベル
+        this.table.appendChild(createElement({
+          attr:{
+            class:'label' + (v.tasks[v.i].pending.length === 0 ? '' : ' red'),
+            name:v.tasks[v.i].id},
+          text: v.tasks[v.i].label,
           event:{'click':this.showDetail},
-          style:{
-            'grid-column': v.gridColumn,
-            'grid-row': (v.list[v.i].st.row * 2 + 2) + ' / ' + (v.list[v.i].ed.row * 2 + 2),
-            'z-index': v.list[v.i].level
-          },
-          children:[{tag:'span',text:v.list[v.i].label}]
-        });
-        // 残課題があれば赤字で表示
-        if( v.list[v.i].remain.length > 0 ){
-          v.label.classList.add('red');
-        }
-        this.table.appendChild(v.label);
-
+          style:{'grid-column': v.st + ' / ' + v.ed,
+            'grid-row': (v.i + 3) + ' / ' + (v.i + 4)}
+        }));
       }
 
-
-      v.step = 6;
+      v.step = 6; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -395,35 +370,62 @@ class TimeTable {
   }
 
   /** クリックされたタスクの詳細を表示する
-   * @param {PointerEvent} event 
+   * @param {PointerEvent} event
    * @returns {null|Error}
    */
   showDetail = (event) => {
-    const v = {whois:'TimeTable.showDetail',step:0,rv:null,note:[],remain:[]};
+    const v = {whois:'TimeTable.showDetail',step:0,rv:null,note:[],pending:[],
+      add:(h,d) => {
+        this.detail.appendChild(createElement({attr:{class:'th'},text:h}));
+        this.detail.appendChild(createElement({attr:{class:'td'},html:d}));
+      },
+    };
     console.log(v.whois+' start.',event);
     try {
 
+      v.step = 1; // 前処理
       this.detail.innerHTML = '';
-      v.id = Number(event.target.parentNode.getAttribute('name'));
-      v.dObj = this.list[v.id];
+      v.id = Number(event.target.getAttribute('name'));
+      v.dObj = this.tasks[v.id];  // 対象タスクをv.dObjに保存
+      //console.log(v.id,v.dObj)
 
-      v.dObj.note.forEach(x => v.note.push({tag:'li',html:x}));
-      v.dObj.remain.forEach(x => v.remain.push({tag:'li',html:x}));
-      this.detail.appendChild(createElement({children:[
-        {attr:{class:'th'},text:'項目名'},
-        {attr:{class:'td'},text:v.dObj.label},
-        {attr:{class:'th'},text:'担当'},
-        {attr:{class:'td'},text:(v.dObj.PIC || '(未定)')},
-        {attr:{class:'th'},text:'備考'},
-        {attr:{class:'td'},children:[{tag:'ol',children:v.note}]},
-        {attr:{class:'th'},text:'課題'},
-        {attr:{class:'td'},children:[{tag:'ol',children:v.remain}]},
+      v.step = 2.1; // 開始・終了時刻
+      v.add('時間',v.dObj.st.dateStr + ' ' + v.dObj.st.timeStr
+      + ' 〜 ' + v.dObj.ed.dateStr + ' ' + v.dObj.ed.timeStr)
+      v.step = 2.2; // タスク名称
+      v.add('項目名',v.dObj.label);
+      v.step = 2.3; // 作業概要
+      if( v.dObj.summary.length > 0 )
+        v.add('概要',v.dObj.summary);
+      v.step = 2.4; // 担当者名
+      if( v.dObj.PIC.length > 0 )
+        v.add('担当',v.dObj.PIC);
+      v.step = 2.5; // 場所
+      if( v.dObj.location.length > 0 )
+        v.add('場所',v.dObj.location);
+      v.step = 2.6; // 必要資機材
+      if( v.dObj.resources.length > 0 ){
+        v.str = '<ol>';
+        v.dObj.resources.forEach(x => v.str + '<li>' + x + '</li>');
+        v.str += '</ol>';
+        v.add('資機材',v.str);
+      }
+      v.step = 2.7; // 残課題
+      if( v.dObj.pending.length > 0 ){
+        v.str = '<ol>';
+        v.dObj.pending.forEach(x => v.str + '<li>' + x + '</li>');
+        v.str += '</ol>';
+        v.add('資機材',v.str);
+      }
+      v.step = 2.8; // 備考
+      if( v.dObj.note.length > 0 )
+        v.add('備考',v.dObj.note);
+
+      v.step = 2.9; // 「閉じる」ボタン
+      this.detail.appendChild(createElement(
         {tag:'button',text:'閉じる',event:{'click':
-          () => {this.detail.innerHTML = ''}
-        }}
-      ]}));
-
-      //console.log(this.list[v.id]);
+          () => {this.detail.innerHTML = ''}}}
+      ));
 
       v.step = 3; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
