@@ -282,7 +282,7 @@ class TNoParticipants {
       + " from ? where mem0X<>''";
       v.sql = v.template.replaceAll(/X/g,'0');
       for( v.i=1 ; v.i<6 ; v.i++ ){
-        v.sql += ' union ' + v.template.replaceAll(/X/g,String(v.i));
+        v.sql += ' union all ' + v.template.replaceAll(/X/g,String(v.i));
       }
       this.person = alasql(v.sql,[this.master,this.master,this.master,this.master,this.master,this.master]);
       console.log('person',this.person);
