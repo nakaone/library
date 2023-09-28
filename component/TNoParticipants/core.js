@@ -56,24 +56,42 @@ class TNoParticipants {
         html:[
           {attr:{class:'subscription'},children:[
             {tag:'h1',text:'申込別集計'},
-            {tag:'table'},
+            {tag:'table',children:[
+              {tag:'thead',children:[
+                {tag:'tr',children:[
+                  {tag:'th',text:'取消',attr:{rowspan:'2'}},
+                  {tag:'th',text:'抽選',attr:{rowspan:'2'}},
+                  {tag:'th',text:'宿泊',attr:{colspan:'3'}},
+                  {tag:'th',text:'日帰り',attr:{rowspan:'2'}},
+                  {tag:'th',text:'合計',attr:{rowspan:'2'}},
+                ]},
+                {tag:'tr',children:[
+                  {tag:'th',text:'テント'},
+                  {tag:'th',text:'体育館'},
+                  {tag:'th',text:'宿泊計'},
+                ]}
+              ]},
+              {tag:'tbody',children:[]},
+            ]},
+            //{tag:'table'},
           ]},
           {attr:{class:'person'},children:[
             {tag:'h1',text:'参加者別集計'},
             {attr:{class:'control'},children:[
               {tag:'label',text:'母集団：'},
               {tag:'select',attr:{name:'population'},event:{'change':this.drawTable},children:[
-                {tag:'option',attr:{value:'auth<9999'},text:'応募者'},
-                {tag:'option',attr:{value:'auth>0'},text:'当選者'},
-                {tag:'option',attr:{value:'auth=0'},text:'落選者'},
+                {tag:'option',attr:{value:'cancel=0'},text:'応募者(除、取消)'},
+                {tag:'option',attr:{value:''},text:'応募者(含、取消)'},
+                {tag:'option',attr:{value:'cancel=0 and lot=1'},text:'当選者'},
+                {tag:'option',attr:{value:'cancel=0 and lot=0'},text:'落選者'},
               ]},
               {tag:'label',text:'抽出条件：'},
               {tag:'select',attr:{name:'status'},event:{'change':this.drawTable},children:[
-                {tag:'option',attr:{value:"fee<>''"},text:'全件'},
-                {tag:'option',attr:{value:"fee='未入場'"},text:'未入場'},
-                {tag:'option',attr:{value:"fee<>'未入場'"},text:'入場済'},
+                {tag:'option',attr:{value:""},text:'全件'},
+                {tag:'option',attr:{value:"status=0"},text:'未入場'},
+                {tag:'option',attr:{value:"status=1"},text:'入場済'},
               ]},
-              {tag:'p',text:'※ 応募者はキャンセル分を含まず'},
+              {tag:'p',text:'※ 当選者/落選者は取消(キャンセル)分を含まず'},
             ]},
             {tag:'table',children:[
               {tag:'thead',children:[
@@ -180,38 +198,17 @@ class TNoParticipants {
     }
   }
 
-  /** 申込別集計
-   * @returns {null|Error}
-   */
-  drawSubscription = () => {
-    const v = {whois:'TNoParticipants.drawSubscription',step:0,rv:null};
+  drawTable = () => {
+    const v = {whois:'TNoParticipants.drawTable',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
+      // 申込別集計を作成
+      v.rv = this.drawSubscription();
+      if( v.rv instanceof Error ) throw v.rv;
 
-      v.step = 1.1; // キャンセル・当落別に集計
-      v.t01 = alasql('select * from ('
-      + ' select isCancel, isWin, count(*) as cnt'
-      + ' from (select'
-      + ' case when [キャンセル]<>"" then "1.キャンセル" else "2.その他" end as isCancel,'
-      + ' case when authority>0 then "a.当選" else "b.落選" end as isWin'
-      + ' from ?)'
-      + ' group by isCancel, isWin'
-      + ' union select "3.合計" as isCancel, "" as isWin, count(*) as cnt from ?)'
-      + ' order by isCancel, isWin'
-      ,[this.master,this.master]);
-
-      v.step = 1.2; // テーブルの描画
-      v.table = this.wrapper.querySelector('.subscription table');
-      v.table.innerHTML = '';
-      v.t01.forEach(x => {
-        v.table.appendChild(createElement(
-          {tag:'tr',children:[
-            {tag:'td',text:x.isCancel},
-            {tag:'td',text:x.isWin},
-            {tag:'td',text:x.cnt,attr:{class:'num'}},
-          ]}
-        ));
-      });
+      // 参加者別集計の作成
+      v.rv = this.drawPerson();
+      if( v.rv instanceof Error ) throw v.rv;
 
       v.step = 3; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
@@ -221,21 +218,152 @@ class TNoParticipants {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  }    
+  } 
 
-  drawTable = () => {
-    const v = {whois:'TNoParticipants.drawTable',step:0,rv:null};
+  /** 申込別集計
+   * @returns {null|Error}
+   */
+  drawSubscription = () => {
+    const v = {whois:'TNoParticipants.drawSubscription',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
-      // ---------------------------------------------
-      // 申込別集計を作成
-      // ---------------------------------------------
-      v.rv = this.drawSubscription();
-      if( v.rv instanceof Error ) throw v.rv;
 
-      // ---------------------------------------------
-      // 参加者別集計の作成
-      // ---------------------------------------------
+      v.step = 1; // クロス集計用を作成
+      v.t01 = alasql('select'
+      + ' case when [キャンセル]<>"" then "あり" else "なし" end as [取消],'
+      + ' case when authority=0 then "落選" else "当選" end as [抽選],'
+      + ' case when [宿泊、テント]="宿泊する(テントあり)" then 1 else 0 end as tent,'
+      + ' case when [宿泊、テント]="宿泊する(テントなし)" then 1 else 0 end as gym,'
+      + ' case when [宿泊、テント] like "宿泊する%" then 1 else 0 end as stay,'
+      + ' case when [宿泊、テント]="宿泊しない" then 1 else 0 end as dayuse,'
+      + ' 1 as totalnum'
+      + ' from ?'
+      ,[this.master]);
+      //console.log(v.t01);
+
+      v.step = 2; // クロス集計
+      v.t02 = alasql('select [取消],[抽選],'
+      + ' sum(tent) as [テント],'
+      + ' sum(gym) as [体育館],'
+      + ' sum(stay) as [宿泊計],'
+      + ' sum(dayuse) as [日帰り],'
+      + ' sum(totalnum) as [合計]'
+      + ' from ? group by [取消],[抽選] order by [取消] desc,[抽選]'
+      ,[v.t01]);
+      //console.log(v.t02);
+
+      v.step = 3; // 集計行を追加
+      v.t03 = alasql('select "総計" as [取消], "" as [抽選],'
+      + ' sum(tent) as [テント],'
+      + ' sum(gym) as [体育館],'
+      + ' sum(stay) as [宿泊計],'
+      + ' sum(dayuse) as [日帰り],'
+      + ' sum(totalnum) as [合計]'
+      + ' from ?'
+      ,[v.t01]);
+      v.t04 = v.t02.concat(v.t03);
+      //console.log(v.t04);
+
+      v.step = 4; // テーブルの描画
+      v.tbody = this.wrapper.querySelector('.subscription tbody');
+      v.tbody.innerHTML = '';
+      v.t04.forEach(x => {
+        v.tbody.appendChild(createElement(
+          {tag:'tr',children:[
+            {tag:'th',text:x['取消']},
+            {tag:'th',text:x['抽選']},
+            {tag:'td',text:x['テント'],attr:{class:'num'}},
+            {tag:'td',text:x['体育館'],attr:{class:'num'}},
+            {tag:'td',text:x['宿泊計'],attr:{class:'num'}},
+            {tag:'td',text:x['日帰り'],attr:{class:'num'}},
+            {tag:'td',text:x['合計'],attr:{class:'num'}},
+          ]}
+        ));
+      });
+
+      v.step = 5; // 終了処理
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
+      return e;
+    }
+  }    
+
+  /**
+   * @returns {null|Error}
+   */
+  drawPerson = () => {
+    const v = {whois:'TNoParticipants.drawPerson',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1.1; // クロス集計用を作成
+      v.sql = ' case when authority=0 then 0 else 1 end as lot,'
+      + ' case when [キャンセル]<>"" then 1 else 0 end as cancel,'
+      + ' case when [宿泊、テント]="宿泊する(テントあり)" then 1 else 0 end as tent,'
+      + ' case when [宿泊、テント]="宿泊する(テントなし)" then 1 else 0 end as gym,'
+      + ' case when [宿泊、テント] like "宿泊する%" then 1 else 0 end as stay,'
+      + ' case when [宿泊、テント]="宿泊しない" then 1 else 0 end as dayuse,'
+      + ' 1 as totalnum from ? where ';
+      v.sql1 = ' union all select [参加者0_所属] as belonging, fee0_ as status,'
+      + v.sql + '[参加者0_所属]<>""'
+      v.t01 = alasql('select "保護者" as belonging, fee00 as status,'
+      + v.sql + '[申込者の参加] like "参加予定%"'
+      + v.sql1.replaceAll(/_/g,'1')
+      + v.sql1.replaceAll(/_/g,'2')
+      + v.sql1.replaceAll(/_/g,'3')
+      + v.sql1.replaceAll(/_/g,'4')
+      + v.sql1.replaceAll(/_/g,'5')
+      ,[this.master,this.master,this.master,this.master,this.master,this.master]);
+
+      v.step = 1.2; // ステータスの文言を書き換え
+      // '未入場','無料','未収','既収','退場済'
+      v.t01.forEach(x => {
+        x.status = x.status === '未入場' || x.status === '' ? 0 : 1;  // true:未入場
+      });
+      console.log(v.t01);
+
+      v.step = 2; // クロス集計
+      v.sql = ' sum(tent) as [テント],'
+      + ' sum(gym) as [体育館],'
+      + ' sum(stay) as [宿泊計],'
+      + ' sum(dayuse) as [日帰り],'
+      + ' sum(totalnum) as [合計]'
+      + ' from ?';
+      v.cond1 = this.wrapper.querySelector('.person .control [name="population"]')
+      .selectedOptions[0].value;
+      v.cond2 = this.wrapper.querySelector('.person .control [name="status"]')
+      .selectedOptions[0].value;
+      if( v.cond1.length > 0 ){
+        v.sql += ' where ' + v.cond1 + ( v.cond2.length > 0 ? ' and ' + v.cond2 : '');
+      } else {
+        v.sql += v.cond2.length > 0 ? ' where ' + v.cond2 : '';
+      }
+      v.t02 = alasql('select first(belonging) as [所属],'
+      + v.sql + ' group by belonging order by [所属]'
+      ,[v.t01]);
+      v.t03 = alasql('select "総計" as [所属],' + v.sql,[v.t01]);
+      v.t04 = v.t02.concat(v.t03);
+
+      v.step = 4; // テーブルの描画
+      v.tbody = this.wrapper.querySelector('.person tbody');
+      v.tbody.innerHTML = '';
+      v.t04.forEach(x => {
+        v.tbody.appendChild(createElement(
+          {tag:'tr',children:[
+            {tag:'th',text:x['所属']},
+            {tag:'td',text:x['テント'],attr:{class:'num'}},
+            {tag:'td',text:x['体育館'],attr:{class:'num'}},
+            {tag:'td',text:x['宿泊計'],attr:{class:'num'}},
+            {tag:'td',text:x['日帰り'],attr:{class:'num'}},
+            {tag:'td',text:x['合計'],attr:{class:'num'}},
+          ]}
+        ));
+      });
+
+      /*
       v.step = 2.1; // 非キャンセルかつ当選を抽出
       v.t01 = alasql('select * from ?'
       + ' where [キャンセル]="" and authority>0'
@@ -349,25 +477,7 @@ class TNoParticipants {
           ]}
         ));
       });
-
-      v.step = 3; // 終了処理
-      console.log(v.whois+' normal end.',v.rv);
-      return v.rv;
-
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
-      return e;
-    }
-  } 
-
-
-  /**
-   * @returns {null|Error}
-   */
-  template = () => {
-    const v = {whois:'TNoParticipants.template',step:0,rv:null};
-    console.log(v.whois+' start.');
-    try {
+      */
 
       v.step = 3; // 終了処理
       console.log(v.whois+' normal end.',v.rv);
