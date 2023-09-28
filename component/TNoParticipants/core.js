@@ -63,9 +63,9 @@ class TNoParticipants {
             {attr:{class:'control'},children:[
               {tag:'label',text:'母集団：'},
               {tag:'select',attr:{name:'population'},event:{'change':this.drawTable},children:[
-                {tag:'option',attr:{value:'auth<>2'},text:'応募者'},
-                {tag:'option',attr:{value:'auth=1 or auth=3 or auth=5'},text:'当選者'},
-                {tag:'option',attr:{value:'auth=1 or auth=3 or auth=5'},text:'落選者'},
+                {tag:'option',attr:{value:'auth<9999'},text:'応募者'},
+                {tag:'option',attr:{value:'auth>0'},text:'当選者'},
+                {tag:'option',attr:{value:'auth=0'},text:'落選者'},
               ]},
               {tag:'label',text:'抽出条件：'},
               {tag:'select',attr:{name:'status'},event:{'change':this.drawTable},children:[
@@ -73,6 +73,7 @@ class TNoParticipants {
                 {tag:'option',attr:{value:"fee='未入場'"},text:'未入場'},
                 {tag:'option',attr:{value:"fee<>'未入場'"},text:'入場済'},
               ]},
+              {tag:'p',text:'※ 応募者はキャンセル分を含まず'},
             ]},
             {tag:'table',children:[
               {tag:'thead',children:[
@@ -179,14 +180,14 @@ class TNoParticipants {
     }
   }
 
-
-  drawTable = () => {
-    const v = {whois:'TNoParticipants.drawTable',step:0,rv:null};
+  /** 申込別集計
+   * @returns {null|Error}
+   */
+  drawSubscription = () => {
+    const v = {whois:'TNoParticipants.drawSubscription',step:0,rv:null};
     console.log(v.whois+' start.');
     try {
-      // ---------------------------------------------
-      // 申込別集計を作成
-      // ---------------------------------------------
+
       v.step = 1.1; // キャンセル・当落別に集計
       v.t01 = alasql('select * from ('
       + ' select isCancel, isWin, count(*) as cnt'
@@ -212,10 +213,30 @@ class TNoParticipants {
         ));
       });
 
+      v.step = 3; // 終了処理
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
+      return e;
+    }
+  }    
+
+  drawTable = () => {
+    const v = {whois:'TNoParticipants.drawTable',step:0,rv:null};
+    console.log(v.whois+' start.');
+    try {
+      // ---------------------------------------------
+      // 申込別集計を作成
+      // ---------------------------------------------
+      v.rv = this.drawSubscription();
+      if( v.rv instanceof Error ) throw v.rv;
+
       // ---------------------------------------------
       // 参加者別集計の作成
       // ---------------------------------------------
-      v.step = 4.1; // 非キャンセルかつ当選を抽出
+      v.step = 2.1; // 非キャンセルかつ当選を抽出
       v.t01 = alasql('select * from ?'
       + ' where [キャンセル]="" and authority>0'
       ,[v.rv]);
