@@ -4649,7 +4649,7 @@ class WebScanner {
       v.description = this.description;
       this.wrapper = this.parent.querySelector('.WebScanner');
       this.description = this.wrapper.querySelector('.description');
-      this.description.innerHTML = v.description;
+      this.description.innerHTML = '受付番号または氏名(ヨミ)の一部を入力してください';
 
       v.step = 2; // 各領域をメンバとして保存
       this.video = this.wrapper.querySelector('video');
