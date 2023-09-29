@@ -164,6 +164,8 @@ function recept1B(arg){
         Number(d.entryNo) === Number(arg.dt.keyword)
         || d['申込者氏名'].indexOf(arg.dt.keyword) >= 0
         || d['申込者カナ'].indexOf(arg.dt.keyword) >= 0
+        /* 「参加者も検索対象」は運用上わかりづらいので対象から外す。
+           また参加者02以降は任意入力、不正な比較結果が帰る可能性があるので使用不可
         || d['参加者01氏名'].indexOf(arg.dt.keyword) >= 0
         || d['参加者01カナ'].indexOf(arg.dt.keyword) >= 0
         || d['参加者02氏名'].indexOf(arg.dt.keyword) >= 0
@@ -174,7 +176,11 @@ function recept1B(arg){
         || d['参加者04カナ'].indexOf(arg.dt.keyword) >= 0
         || d['参加者05氏名'].indexOf(arg.dt.keyword) >= 0
         || d['参加者05カナ'].indexOf(arg.dt.keyword) >= 0
-      ) v.rv.result.push(d);
+        */
+      ){
+        v.rv.result.push(d);
+        console.log(v.whois+' step.'+v.step+': '+d.entryNo+', '+d['申込者氏名']);
+      }
     });
 
     v.step = '4';

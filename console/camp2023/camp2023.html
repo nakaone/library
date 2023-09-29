@@ -395,7 +395,7 @@ div[name="loading"] > div {
       <h3>「おまつり奉行」について</h3>
       <p>OMATSURI Bugyo: JavaScript SPA to support event participants and stakeholders.</p>
       <ul>
-        <li>Version.1.0.2 : 2023.09.25 release</li>
+        <li>Version.1.0.3 : 2023.09.29 release</li>
       </ul>
       <p>author: Shimazu Kunihiro</p>
       <p>contact: shimokitasho.oyaji@gmail.com</p>
@@ -432,28 +432,7 @@ div[name="loading"] > div {
 <!-- =====================================================
   自作ライブラリ
 ===================================================== -->
-<!--script type="text/javascript" data-embed='../../component/Auth/core.js'></script-->
-<script type="text/javascript">/* コアScript */
-/**
- * @typedef {Object} AuthProp - AuthOpt以外のAuthクラスプロパティ
- * @prop {number} constructorStart - constructor開始時刻(UNIX時間)
- * @prop {string} parentSelector - 親画面のCSSセレクタ
- * @prop {HTMLElement} parentWindow - 親画面のHTML要素
- * @prop {HTMLElement} AuthWindow - Auth関係画面のwrapper
- * @prop {HTMLElement} loading - ローディング画面のHTML要素
- */
-
-/**
- * @typedef {Object} AuthOpt
- * @prop {string} [entryNo] - 受付番号(ID)
- * @prop {string} [passWord] - パスワード
- * @prop {string} [header=''] - 受付番号入力画面に表示するheaderのinnerHTML
- * @prop {string} [entryNoMessage='受付番号を入力してください'] - 受付番号入力画面に表示するメッセージ
- * @prop {string} [entryNoButton='送信'] - 受付番号入力画面のボタンのラベル
- * @prop {RegExp} [entryNoRegExp=/^[0-9]{1,4}$/] - 受付番号チェック用正規表現
- */
-
-/**
+<script type="text/javascript">/**
  * @classdesc 入力されたID/PWと登録情報を突合し、IDに紐づく各種情報を返す
  *
  * - パスコード(passCode) : 受付番号入力後受信したメールに記載された番号
@@ -884,7 +863,7 @@ class Auth {
 
       return new Promise(resolve => {
         document.querySelector('dialog[name="entryNo"] input[type="button"]')
-        .addEventListener('click',() => {
+        .addEventListener('click',(event) => {
           this.entryNo.element.close();
           let rv = event.target.parentElement.querySelector('input[type="text"]').value;
           console.log('Auth.#getEntryNo normal end.',rv);
@@ -999,8 +978,7 @@ class Auth {
     }
   }
 
-}
-</script>
+}</script>
 <script type="text/javascript">
 /**
  * Array型の変数に2次元配列からHTMLの表を作成してtable要素として返すメソッドを追加する。
@@ -1957,6 +1935,88 @@ class BurgerMenu {
       return e;
     }
   }
+}</script>
+<script type="text/javascript">/* コアスクリプト */
+/**
+ * 全角英数字は半角、半角カナは全角、ひらがな・カタカナは指定の方に変換
+ * @param {string} str - 変換対象文字列
+ * @param {string} kana - true:ひらがな、false:カタカナ
+ * @returns {string} 変換結果
+ *
+ * - [全角ひらがな⇔全角カタカナの文字列変換](https://neko-note.org/javascript-hiragana-katakana/1024)
+ * - [全角⇔半角の変換を行う（英数字、カタカナ）](https://www.yoheim.net/blog.php?q=20191101)
+ */
+ function convertCharacters(str,kana=true){
+  let rv = str;
+  // 全角英数字 -> 半角英数字
+  rv = rv.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
+    return String.fromCharCode(s.charCodeAt(0) - 65248);
+  });
+
+  // 半角カタカナ -> 全角カタカナ
+  const hankaku = (arg) => {
+    const kanaMap = {
+      'ｶﾞ': 'ガ', 'ｷﾞ': 'ギ', 'ｸﾞ': 'グ', 'ｹﾞ': 'ゲ', 'ｺﾞ': 'ゴ',
+      'ｻﾞ': 'ザ', 'ｼﾞ': 'ジ', 'ｽﾞ': 'ズ', 'ｾﾞ': 'ゼ', 'ｿﾞ': 'ゾ',
+      'ﾀﾞ': 'ダ', 'ﾁﾞ': 'ヂ', 'ﾂﾞ': 'ヅ', 'ﾃﾞ': 'デ', 'ﾄﾞ': 'ド',
+      'ﾊﾞ': 'バ', 'ﾋﾞ': 'ビ', 'ﾌﾞ': 'ブ', 'ﾍﾞ': 'ベ', 'ﾎﾞ': 'ボ',
+      'ﾊﾟ': 'パ', 'ﾋﾟ': 'ピ', 'ﾌﾟ': 'プ', 'ﾍﾟ': 'ペ', 'ﾎﾟ': 'ポ',
+      'ｳﾞ': 'ヴ', 'ﾜﾞ': 'ヷ', 'ｦﾞ': 'ヺ',
+      'ｱ': 'ア', 'ｲ': 'イ', 'ｳ': 'ウ', 'ｴ': 'エ', 'ｵ': 'オ',
+      'ｶ': 'カ', 'ｷ': 'キ', 'ｸ': 'ク', 'ｹ': 'ケ', 'ｺ': 'コ',
+      'ｻ': 'サ', 'ｼ': 'シ', 'ｽ': 'ス', 'ｾ': 'セ', 'ｿ': 'ソ',
+      'ﾀ': 'タ', 'ﾁ': 'チ', 'ﾂ': 'ツ', 'ﾃ': 'テ', 'ﾄ': 'ト',
+      'ﾅ': 'ナ', 'ﾆ': 'ニ', 'ﾇ': 'ヌ', 'ﾈ': 'ネ', 'ﾉ': 'ノ',
+      'ﾊ': 'ハ', 'ﾋ': 'ヒ', 'ﾌ': 'フ', 'ﾍ': 'ヘ', 'ﾎ': 'ホ',
+      'ﾏ': 'マ', 'ﾐ': 'ミ', 'ﾑ': 'ム', 'ﾒ': 'メ', 'ﾓ': 'モ',
+      'ﾔ': 'ヤ', 'ﾕ': 'ユ', 'ﾖ': 'ヨ',
+      'ﾗ': 'ラ', 'ﾘ': 'リ', 'ﾙ': 'ル', 'ﾚ': 'レ', 'ﾛ': 'ロ',
+      'ﾜ': 'ワ', 'ｦ': 'ヲ', 'ﾝ': 'ン',
+      'ｧ': 'ァ', 'ｨ': 'ィ', 'ｩ': 'ゥ', 'ｪ': 'ェ', 'ｫ': 'ォ',
+      'ｯ': 'ッ', 'ｬ': 'ャ', 'ｭ': 'ュ', 'ｮ': 'ョ',
+      '｡': '。', '､': '、', 'ｰ': 'ー', '｢': '「', '｣': '」', '･': '・'
+    };
+
+    const reg = new RegExp('(' + Object.keys(kanaMap).join('|') + ')', 'g');
+    return arg
+      .replace(reg, function (match) {
+          return kanaMap[match];
+      })
+      .replace(/ﾞ/g, '゛')
+      .replace(/ﾟ/g, '゜');
+  };
+  rv = hankaku(rv);
+
+  // 全角カタカナ <-> 全角ひらがな
+  const hRep = (x,offset,string) => { // offset:マッチした位置 string:文字列全部
+    //console.log('hRep start.',x,offset,string);
+    let rv = String.fromCharCode(x.charCodeAt(0) - 0x60);
+    //console.log('hRep end.',rv);
+    return rv;
+  }
+  const toHiragana = (t) => {
+    //console.log('toHiragana start.',typeof t, t);
+    let rv = t.replace(/[\u30A1-\u30FA]/g,hRep);
+    //console.log('toHiragana end.',typeof(rv),rv);
+    return rv;
+  };
+
+  const kRep = (x,offset,string) => {
+    //console.log('kRep start.',x,offset,string);
+    let rv = String.fromCharCode(x.charCodeAt(0) + 0x60);
+    //console.log('kRep end.',rv);
+    return rv;
+  }
+  const toKatakana = (t) => {
+    //console.log('toKatakana start.',typeof t, t);
+    let rv = t.replace(/[\u3041-\u3096]/g,kRep);
+    //console.log('toKatakana end.',typeof(rv),rv);
+    return rv;
+  };
+
+  rv = kana ? toHiragana(rv) : toKatakana(rv);
+  //console.log('convertCharacters end. rv=',rv);
+  return rv;
 }</script>
 <script type="text/javascript">/* コアスクリプト */
 /**
@@ -3539,11 +3599,15 @@ class Reception {
       while(v.loop){  // v.loopがtrueの間、繰り返し
         // 停止条件①：エラー発生
 
-        v.step = 1; // QRコードをスキャン or 氏名(一部)の入力
+        v.step = 1.1; // QRコードをスキャン or 氏名(一部)の入力
         v.keyword = null;
         v.keyword = await this.WebScanner.entry();
         if( v.keyword instanceof Error ) throw v.keyword;
-        if( v.keyword === null ) continue; // 読込失敗orタイムアウト
+        v.step = 1.2; // 入力された内容チェック、文字種変更
+        v.keyword = convertCharacters(v.keyword,false);
+        console.log(v.whois+' step.%s: ',v.step,v.keyword);
+        // 文字列長が0、または読込失敗orタイムアウトならGAS問合せを行わずリトライ
+        if( v.keyword.length === 0 || v.keyword === null ) continue;
   
         v.step = 2; // 入力された検索キーで認証局経由・管理局に該当者情報を問合せ
         this.LoadingIcon.show();

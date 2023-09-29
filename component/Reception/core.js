@@ -89,11 +89,15 @@ class Reception {
       while(v.loop){  // v.loopがtrueの間、繰り返し
         // 停止条件①：エラー発生
 
-        v.step = 1; // QRコードをスキャン or 氏名(一部)の入力
+        v.step = 1.1; // QRコードをスキャン or 氏名(一部)の入力
         v.keyword = null;
         v.keyword = await this.WebScanner.entry();
         if( v.keyword instanceof Error ) throw v.keyword;
-        if( v.keyword === null ) continue; // 読込失敗orタイムアウト
+        v.step = 1.2; // 入力された内容チェック、文字種変更
+        v.keyword = convertCharacters(v.keyword,false);
+        console.log(v.whois+' step.%s: ',v.step,v.keyword);
+        // 文字列長が0、または読込失敗orタイムアウトならGAS問合せを行わずリトライ
+        if( v.keyword.length === 0 || v.keyword === null ) continue;
   
         v.step = 2; // 入力された検索キーで認証局経由・管理局に該当者情報を問合せ
         this.LoadingIcon.show();

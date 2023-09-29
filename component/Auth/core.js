@@ -429,7 +429,7 @@ class Auth {
 
       return new Promise(resolve => {
         document.querySelector('dialog[name="entryNo"] input[type="button"]')
-        .addEventListener('click',() => {
+        .addEventListener('click',(event) => {
           this.entryNo.element.close();
           let rv = event.target.parentElement.querySelector('input[type="text"]').value;
           console.log('Auth.#getEntryNo normal end.',rv);
