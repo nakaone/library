@@ -113,7 +113,7 @@ class Reception {
         if( v.rv.result.length === 0 ){
           v.step = 3.1; // エラーまたは該当無し
           // ⇒ 検索画面でメッセージをポップアップ
-          alert( v.rv.message );
+          alert('該当する参加者が見つかりませんでした');
         } else {
           v.step = 3.2; // 検索成功(該当者あり)
           v.target = v.rv.result[0];
