@@ -127,7 +127,7 @@ class Reception {
           v.data = await this.Participants.edit(v.target);
           if( v.data instanceof Error ) throw v.data;
           // auth.fetchで変更箇所を管理局に送信
-          if( v.data !== null ){
+          if( v.data.result !== null ){
             this.LoadingIcon.show();
             v.rv = await this.auth.fetch('recept2A',v.data,3);
             this.LoadingIcon.hide();
