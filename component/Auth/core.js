@@ -164,7 +164,7 @@ class Auth {
       v.step = '1.1';  // 受付番号をダイアログから取得
       console.log('l.221',this.entryNo.value)
       if( this.entryNo.value !== null ){  // 起動時に取得済みならダイアログにセット
-        document.querySelector('dialog[name="entryNo"] input[type="text"]')
+        document.querySelector('dialog[name="entryNo"] input[type="number"]')
         .value = this.entryNo.value;
       }
       do
@@ -262,7 +262,7 @@ class Auth {
             'font-size':'1rem',
             'margin':'0.5rem 0',  
           }},
-          {sel:'dialog.Auth > input[type="text"]',prop:{
+          {sel:'dialog.Auth > input[type="number"]',prop:{
             'font-size':'1.5rem',
             'border':'solid 2px #888',
             'height':'2rem',
@@ -386,7 +386,7 @@ class Auth {
         attr:{name:'entryNo',class:'Auth'},
         children:[
           {tag:'div',html:this.entryNo.dialog},
-          {tag:'input',attr:{type:'text'}},
+          {tag:'input',attr:{type:'number'}},
           {tag:'input',attr:{type:'button',value:'送信'}},
         ],
       });
@@ -398,7 +398,7 @@ class Auth {
         attr:{name:'passCode',class:'Auth'},
         children:[
           {tag:'div',html:this.passCode.dialog},
-          {tag:'input',attr:{type:'text'}},
+          {tag:'input',attr:{type:'number'}},
           {tag:'input',attr:{type:'button',value:'送信'}},
         ],
       });
@@ -431,7 +431,7 @@ class Auth {
         document.querySelector('dialog[name="entryNo"] input[type="button"]')
         .addEventListener('click',(event) => {
           this.entryNo.element.close();
-          let rv = event.target.parentElement.querySelector('input[type="text"]').value;
+          let rv = event.target.parentElement.querySelector('input[type="number"]').value;
           console.log('Auth.#getEntryNo normal end.',rv);
           resolve(rv);
         });
@@ -455,9 +455,9 @@ class Auth {
 
       return new Promise(resolve => {
         document.querySelector('dialog[name="passCode"] input[type="button"]')
-        .addEventListener('click',() => {
+        .addEventListener('click',(event) => {
           this.passCode.element.close();
-          let rv = event.target.parentElement.querySelector('input[type="text"]').value;
+          let rv = event.target.parentElement.querySelector('input[type="number"]').value;
           console.log('Auth.#getPassCode normal end.',rv);
           resolve(rv);
         });
