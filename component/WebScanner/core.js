@@ -116,6 +116,7 @@ class WebScanner {
             margin: 0 auto;
             height: 7vw;
             font-size: 5vw;
+            border: solid 5px #888;
           }
           .WebScanner button {
             display: none;

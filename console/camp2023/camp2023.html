@@ -3635,7 +3635,6 @@ class Reception {
           }
           v.step = 3.3; // 編集画面を表示し、変更箇所を取得
           v.data = await this.Participants.edit(v.target);
-          console.log('l.128',v.data)
           if( v.data instanceof Error ) throw v.data;
           // auth.fetchで変更箇所を管理局に送信
           if( v.data.result !== null ){
@@ -4590,6 +4589,7 @@ class WebScanner {
             margin: 0 auto;
             height: 7vw;
             font-size: 5vw;
+            border: solid 5px #888;
           }
           .WebScanner button {
             display: none;
