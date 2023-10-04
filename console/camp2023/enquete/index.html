@@ -25,8 +25,8 @@ table[name="summary"] th {
 <div name="Summary"></div>
 <div name="TimeTable"><h1>タイムテーブル</h1><div></div></div>
 <div name="TotalOfParticipants"></div>
-<div name="AnalisysOfEachQuestions"></div>
-<div name="FreeEntryField"></div>
+<div name="AnalisysOfEachQuestions"><h1>設問ごとの分析</h1><div></div></div>
+<div name="FreeEntryField"><h1>自由記入欄の意見</h1><ol></ol></div>
 <div name="AnalisysOfWhole">
   <!-- 標準偏差の平均からの設問ごとの乖離、どのイベントが一番受けたか、等 -->
 </div>
@@ -87,6 +87,14 @@ window.addEventListener('DOMContentLoaded',() => {
         console.log(v.questions[v.i])
         //draw(v.questions[v.i]);
       }
+
+      // 自由記入欄
+      v.FreeEntryField = document.querySelector('div[name="FreeEntryField"] ol');
+      v.ans.forEach(x => {
+        console.log('l.94',x)
+        if( x['自由記入欄'].length > 0 )
+          createElement({tag:'li',text:x['自由記入欄']},v.FreeEntryField);
+      });
 
       // 全体通じた集計
     });
@@ -194,11 +202,11 @@ const drawPage = (q,a) => {
   console.log(v.whois+' start.',q.label,a);
   try {
     v.step = 1; // parent,pageを作成し、タイトルと問題文を追記
-    v.parent = document.querySelector('div[name="AnalisysOfEachQuestions"]');
+    v.parent = document.querySelector('div[name="AnalisysOfEachQuestions"] div');
     v.page = createElement({attr:{name:q.name},children:[
-      {tag:'h1',text:q.label},
+      {tag:'h2',text:q.label},
       {attr:{class:'question'},children:[
-        {tag:'h2',text:'設問'},
+        {tag:'h3',text:'設問'},
         {tag:'p',text:q.question},
         {tag:'ul'},
       ]},
