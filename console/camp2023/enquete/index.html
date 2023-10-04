@@ -75,6 +75,7 @@ window.addEventListener('DOMContentLoaded',() => {
 
       // 設問ごとに集計
       for( v.i=0 ; v.i<v.questions.length ; v.i++ ){
+        if( v.questions[v.i].label === '宿泊形態') continue;
         drawPage(v.questions[v.i],v.ans);
         console.log(v.questions[v.i])
         //draw(v.questions[v.i]);
@@ -169,6 +170,7 @@ const drawPage = (q,a) => {
     + ', case when ['+q.label+']=3 then 1 else 0 end as a3'
     + ', case when ['+q.label+']=4 then 1 else 0 end as a4'
     + ', case when ['+q.label+']=5 then 1 else 0 end as a5'
+    + ', [宿泊形態] as stay'
     + ' from ?';
     v.master = alasql(v.sql,[a]);
 
@@ -209,86 +211,74 @@ const drawPage = (q,a) => {
     });
 
 
-    v.t3 = alasql('select ans'
-    + ', case when [宿泊形態]=3 then 1 else 0 end as t'
-    + ', case when [宿泊形態]=2 then 1 else 0 end as g'
-    + ', case when [宿泊形態]=1 then 1 else 0 end as d'
-    + ', case when [宿泊形態] is null then 1 else 0 end as u'
-    + ' from ?'
-    ,[v.master]);
-    console.log('v.t3',v.t3);
+
+
+
+
+
 
     v.data = {
-      labels: ['テント泊','体育館泊','日帰り','不明'],
-      datasets: [],
-    }
-    for( v.i=q.ropt.length-1 ; v.i>0 ; v.i-- ){
-      v.t4 = alasql('select'
-      + ' ' + v.i + ' as ans'
-      + ', sum(t) as tent'
-      + ', sum(g) as gym'
-      + ', sum(d) as dayuse'
-      + ', sum(u) as unknown'
-      + ' from ?'
-      + ' where ans=' + v.i
-      ,[v.t3])[0];
-      console.log('v.t4',v.i,v.t4);
-
-      v.sum = v.t4.tent + v.t4.gym + v.t4.dayuse + v.t4.unknown;
-      v.data.datasets.push({
-        label: q.ropt[v.i],
-        data:[v.t4.tent/v.sum,v.t4.gym/v.sum,v.t4.dayuse/v.sum,v.t4.unknown/v.sum],
-        borderColor: 'rgba('+v.palette[v.i]+', 0.8)',
-        borderWidth: 1,
-        backgroundColor:'rgba('+v.palette[v.i]+', 0.2)',
-      });
-    }
-
-    new Chart(v.page.querySelector('.chart canvas[name="all"]').getContext('2d'),{
       type: 'bar',
-      data: v.data,
+      data: {
+        labels: ['全体','テント泊','体育館泊','日帰り'],  // y軸ラベル
+        datasets: [
+          {label:'楽しい',data:[50,40,30,20]},
+          {label:'少し',data:[50,40,30,20]},
+          {label:'ふつう',data:[50,40,30,20]},
+          {label:'あまり',data:[50,40,30,20]},
+          {label:'楽しくない',data:[50,40,30,20]},
+          {label:'無回答',data:[50,40,30,20]},
+        ],
+      },
       options: {
         indexAxis: 'y',
         //plugins: {title: {display: true,text: 'Chart.js Bar Chart - Stacked'}},
         responsive: true,
         scales: {x:{stacked: true},y:{stacked: true}},
       }        
-    });
-
-
-    /*
-    // 全体グラフ
-    v.data = {
-      labels: ['全体','テント'],
-      datasets: [
-        {label:'楽しかった',data:[10,20], // [テント,体育館,日帰り,不明]
-          borderColor: 'rgba('+v.palette[0]+', 0.8)',
-          borderWidth: 1,
-          backgroundColor:'rgba('+v.palette[0]+', 0.2)'},
-        {label:'少し楽しかった',data:[20,10],
-          borderColor: 'rgba('+v.palette[1]+', 0.8)',
-          borderWidth: 1,
-          backgroundColor:'rgba('+v.palette[1]+', 0.2)'},
-        {label:'普通',data:[10,20],
-          borderColor: 'rgba('+v.palette[2]+', 0.8)',
-          borderWidth: 1,
-          backgroundColor:'rgba('+v.palette[2]+', 0.2)'},
-        {label:'あまり楽しくなかった',data:[20,10],
-          borderColor: 'rgba('+v.palette[3]+', 0.8)',
-          borderWidth: 1,
-          backgroundColor:'rgba('+v.palette[3]+', 0.2)'},
-        {label:'楽しくなかった',data:[10,20],
-          borderColor: 'rgba('+v.palette[4]+', 0.8)',
-          borderWidth: 1,
-          backgroundColor:'rgba('+v.palette[4]+', 0.2)'},
-        {label:'無回答',data:[30,20],
-          borderColor: 'rgba('+v.palette[5]+', 0.8)',
-          borderWidth: 1,
-          backgroundColor:'rgba('+v.palette[5]+', 0.2)'},
-      ]
     };
-    */
-
+    // データセットのリセット
+    v.data.data.labels = [];  // debug用。上の仮データを消去
+    v.data.data.datasets = [];
+    console.log('ropt',JSON.stringify(q.ropt));
+    for( v.i=(q.ropt.length-1) ; v.i>0 ; v.i-- ){
+      v.data.data.datasets.push({
+        label: q.ropt[v.i],
+        data: [],
+        borderColor: 'rgba('+v.palette[5-v.i]+', 0.8)',
+        borderWidth: 1,
+        backgroundColor: 'rgba('+v.palette[5-v.i]+', 0.2)',
+      });
+    }
+    /* 色指定の追加
+    for( v.i=0 ; v.i<v.data.data.datasets.length ; v.i++ ){
+      v.data.data.datasets[v.i].borderColor = 'rgba('+v.palette[v.i]+', 0.8)';
+      v.data.data.datasets[v.i].borderWidth = 1;
+      v.data.data.datasets[v.i].backgroundColor = 'rgba('+v.palette[v.i]+', 0.2)';
+    }*/
+    [
+      {label:'全体',cond:''},
+      {label:'テント泊',cond:'[宿泊形態]=3'},
+      {label:'体育館泊',cond:'[宿泊形態]=2'},
+      {label:'日帰り',cond:'[宿泊形態]=1'},
+    ].forEach(x => {
+      v.data.data.labels.push(x.label);
+      v.t4 = alasql('select'
+      + ' sum(a1) as o1'
+      + ', sum(a2) as o2'
+      + ', sum(a3) as o3'
+      + ', sum(a4) as o4'
+      + ', sum(a5) as o5'
+      + ' from ?'
+      + (x.cond.length > 0 ? ' where '+x.cond : '')
+      ,[v.master])[0];
+      console.log(v.t4)
+      v.sum = v.t4.o1 + v.t4.o2 + v.t4.o3 + v.t4.o4 + v.t4.o5;
+      for( v.i=5 ; v.i>0 ; v.i-- ){
+        v.data.data.datasets[5-v.i].data.push(v.t4['o'+v.i]/v.sum);
+      }
+    });
+    new Chart(v.page.querySelector('.chart canvas[name="all"]').getContext('2d'),v.data);
 
     v.step = 99; // 終了処理
     v.parent.appendChild(v.page);
