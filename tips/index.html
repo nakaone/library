@@ -1,0 +1,103 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>tips</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--link href="../szLib.css" rel="stylesheet" /-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.1.9/alasql.min.js" integrity="sha512-IzHzpfkI8XohefrAjzVVXmvPS84vIe9VtcXq1JPK9nkgcB9/mjs41T0QaAiTlHRk49Si3ydIf2i82D/f4FSoGQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.0/marked.min.js" integrity="sha512-4+zFvAejSGVlybiAKYyAz3KMjmbIT7I+wXgx190ZAsT19L2z8S4htBy1scR7CyP9pDKNSaolJMLedCigA/gFVg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.5.0/mermaid.min.js" integrity="sha512-8tJiFwaX7ssyuxi5wrre7/LSLg94WKrYZpXUt55ptI5kXbVgmzUH+HRBBMJt+vwoxLS3TMn9uJnlqKk1OWZpCA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script type="text/javascript">
+// Markdown文中のMermaid表示
+// Qiita [MarkedとMermaidを連携ができずうがー！ってなって微調整した](https://qiita.com/gat3ta/items/1e9ada8d81d423d60493)
+mermaid.initialize({startOnLoad:false});
+</script>
+<style type="text/css">
+th, .th {
+  padding: 0.3em;
+  background-color: #888;
+  color: white;
+}
+td, .td {
+  padding: 0.3em;
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+</style>
+</head><body>
+<div id="marked"></div>
+<!--
+<h1>コンポーネント一覧</h1>
+  <table>
+    <thead>
+      <th>ID</th><th>型</th><th>名称</th><th>概要</th><th>備考</th>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+-->
+</body>
+<!--
+<script type="text/javascript" src="../../createElement/20231004/core.js"></script>
+-->
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded',async() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0,
+    // ena.kaon@gmail.com > マイドライブ > projects > library.sheet 全データ取得API
+    api: 'https://script.google.com/macros/s/AKfycbz0Yt6Iwr1XVbLw9VEsNSw0IpvTY-6LzOguXNGr4EJ996PKiQaFNPWFkfn0dL31n9AySg/exec',
+  };
+  console.log(v.whois+' start.');
+  try {
+    document.querySelector('body').style.display = 'none';
+
+    v.md = `
+# たいとる
+
+ほんぶん
+
+## たいとるに
+
+| a | b |
+| :-- | --: |
+| abc | 0 |
+
+\`\`\`mermaid
+
+sequenceDiagram
+    Alice->>+John: Hello John, how are you?
+    Alice->>+John: John, can you hear me?
+    John-->>-Alice: Hi Alice, I can hear you!
+    John-->>-Alice: I feel great!
+
+\`\`\`
+
+<div class="mermaid">
+sequenceDiagram
+  Alice->>+John: Hello John, how are you?
+  Alice->>+John: John, can you hear me?
+  John-->>-Alice: Hi Alice, I can hear you!
+  John-->>-Alice: I feel great!
+</div>
+
+
+    `;
+    /*
+    v.step = 1; // シートからデータを取得
+    v.res = await fetch(v.api);
+    v.json = await v.res.json();
+    v.list = v.json.com;  // com(=components)シートのデータ
+    console.log("%s step.%s\n%s",v.whois,v.step,JSON.stringify(v.list));
+    */
+    document.querySelector('#marked').innerHTML = marked.parse(v.md);
+
+    console.log(v.md);
+    mermaid.init();
+    console.log(v.whois+' normal end.\n',v.rv);
+    document.querySelector('body').style.display = 'block';
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+});
+</script>
+</html>
