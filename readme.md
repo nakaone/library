@@ -1,6 +1,7 @@
 # 自作ライブラリ集
 
-[コンポーネント一覧](readme/20231005/index.html)
+[コンポーネント一覧](readme/20231005/index.html) |
+[tips](tips/index.html)
 
 # ルール
 

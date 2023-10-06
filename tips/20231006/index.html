@@ -1,0 +1,189 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<!--
+  Mermaidで記述する場合、```mermaid 〜 ```ではなく<div class="mermaid">〜</div>で記述する
+-->
+<title>tips</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--link href="../szLib.css" rel="stylesheet" /-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.1.9/alasql.min.js" integrity="sha512-IzHzpfkI8XohefrAjzVVXmvPS84vIe9VtcXq1JPK9nkgcB9/mjs41T0QaAiTlHRk49Si3ydIf2i82D/f4FSoGQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.0/marked.min.js" integrity="sha512-4+zFvAejSGVlybiAKYyAz3KMjmbIT7I+wXgx190ZAsT19L2z8S4htBy1scR7CyP9pDKNSaolJMLedCigA/gFVg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.5.0/mermaid.min.js" integrity="sha512-8tJiFwaX7ssyuxi5wrre7/LSLg94WKrYZpXUt55ptI5kXbVgmzUH+HRBBMJt+vwoxLS3TMn9uJnlqKk1OWZpCA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script type="text/javascript">
+// Markdown文中のMermaid表示
+// Qiita [MarkedとMermaidを連携ができずうがー！ってなって微調整した](https://qiita.com/gat3ta/items/1e9ada8d81d423d60493)
+mermaid.initialize({startOnLoad:false});
+</script>
+<style type="text/css">
+h1 {
+  font-size: 1.6rem;
+  text-shadow:2px 2px 4px #888;
+}
+th, .th {
+  padding: 0.3em;
+  background-color: #888;
+  color: white;
+}
+td, .td {
+  padding: 0.3em;
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+div[name="list"].hide {
+  display: none;
+}
+div[name="article"].hide {
+  display: none;
+}
+</style>
+</head><body>
+<div name="ctrl">
+</div>
+<div name="list">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>タイトル</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+<div name="article" class="hide"></div>
+</body>
+<script type="text/javascript" src="../../createElement/20231004/core.js"></script>
+<script type="text/javascript">
+class Tips {
+  constructor(api){
+    const v = {whois:'Tips.constructor',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 2; // APIのURLをthis.apiに保存
+      this.api = api;
+      v.rv = this.api;
+
+      v.step = 3;
+      console.log(v.whois+' normal end.\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** データを取得、メンバに格納 */
+  async build(){
+    const v = {whois:'Tips.build',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+      v.step = 1; // 画面を隠蔽
+      document.querySelector('body').style.display = 'none';
+
+      v.step = 2; // シートからデータを取得
+      v.res = await fetch(this.api);
+      //console.log("%s step.%s\n%s",v.whois,v.step,JSON.stringify(v.res));
+      v.step = 3; // 取得したデータをオブジェクト化してthis.dataに保存
+      this.data = await v.res.json();
+      v.rv = this.data; // ログ出力用にデータセット
+
+      v.step = 4; // キーワード文字列を作成(タイトル＋タグ)
+      this.data.tips.forEach(x => {
+        x.key = (x.title + x.tag).toLowerCase();
+      });
+
+      v.step = 5; // 隠蔽していた画面を表示
+      document.querySelector('body').style.display = 'block';
+      console.log(v.whois+' normal end.\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** tips一覧表示 */
+  drawList(){
+    const v = {whois:'Tips.drawList',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+      v.step = 1;
+
+      this.data.tips.forEach(x => {
+        createElement({tag:'tr',children:[
+          {tag:'td',text:x.id},
+          {tag:'td',text:x.title,attr:{name:x.id},event:{click:this.drawItem}},
+        ]},document.querySelector('[name="list"] tbody'))
+      });
+
+      console.log(v.whois+' normal end.\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 選択されたtipを表示 */
+  drawItem = (e) => {
+    const v = {whois:'Tips.drawItem',rv:null,step:0,
+      wrapper:document.querySelector('[name="article"]')};
+    console.log(v.whois+' start.',e);
+    try {
+      this.toggle();
+      v.step = 1;
+      v.tip = alasql('select'
+      + ' * from ? where id=' + e.target.getAttribute('name')
+      ,[this.data.tips])[0];
+
+      v.wrapper.innerHTML = '';
+      createElement([
+        {tag:'button',text:'戻る',event:{click:this.toggle}},
+        {tag:'h1',text:v.tip.title},
+        {html:marked.parse(v.tip.article)},
+      ],v.wrapper);
+
+      console.log(v.whois+' normal end.\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  toggle = () => {
+    document.querySelector('[name="list"]').classList.toggle('hide');
+    document.querySelector('[name="article"]').classList.toggle('hide');
+  }
+}
+
+window.addEventListener('DOMContentLoaded',async() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0,
+    // ena.kaon@gmail.com > マイドライブ > projects > library.sheet 全データ取得API
+    api: 'https://script.google.com/macros/s/AKfycbz0Yt6Iwr1XVbLw9VEsNSw0IpvTY-6LzOguXNGr4EJ996PKiQaFNPWFkfn0dL31n9AySg/exec',
+  };
+  console.log(v.whois+' start.');
+  try {
+
+    v.tips = new Tips(v.api);
+    v.rv = await v.tips.build();
+    if( v.rv instanceof Error ) throw v.rv;
+
+    v.rv = v.tips.drawList();
+    if( v.rv instanceof Error ) throw v.rv;
+
+    v.step = 99;
+    console.log(v.whois+' normal end.\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+});
+</script>
+</html>
