@@ -4,6 +4,10 @@
 <!--link href="../szLib.css" rel="stylesheet" /-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.1.9/alasql.min.js" integrity="sha512-IzHzpfkI8XohefrAjzVVXmvPS84vIe9VtcXq1JPK9nkgcB9/mjs41T0QaAiTlHRk49Si3ydIf2i82D/f4FSoGQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style type="text/css">
+h1 {
+  font-size: 1.6rem;
+  text-shadow:2px 2px 4px #888;
+}
 th, .th {
   padding: 0.3em;
   background-color: #888;
@@ -14,48 +18,29 @@ td, .td {
   border-bottom: solid 1px #aaa;
   border-right: solid 1px #aaa;
 }
+.hide {
+  display: none;
+}
+span {
+  font-size: 0.7rem;
+}
 </style>
-</head><body>
-<h1>コンポーネント一覧</h1>
-  <table>
-    <thead>
-      <th>ID</th><th>型</th><th>名称</th><th>概要</th><th>備考</th>
-    </thead>
-    <tbody></tbody>
-  </table>
-</body>
+</head><body></body>
+<script type="text/javascript" src="core.js"></script>
 <script type="text/javascript" src="../../createElement/1.1.0/core.js"></script>
 <script type="text/javascript">
+// ena.kaon@gmail.com > マイドライブ > projects > library.sheet 全データ取得API
+const readme = new Readme('https://script.google.com/macros/s/AKfycbz0Yt6Iwr1XVbLw9VEsNSw0IpvTY-6LzOguXNGr4EJ996PKiQaFNPWFkfn0dL31n9AySg/exec');
 window.addEventListener('DOMContentLoaded',async() => {
-  const v = {whois:'DOMContentLoaded',rv:null,step:0,
-    // ena.kaon@gmail.com > マイドライブ > projects > library.sheet 全データ取得API
-    api: 'https://script.google.com/macros/s/AKfycbz0Yt6Iwr1XVbLw9VEsNSw0IpvTY-6LzOguXNGr4EJ996PKiQaFNPWFkfn0dL31n9AySg/exec',
-  };
-  console.log(v.whois+' start.');
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(v.whois+' start.',readme);
   try {
-    document.querySelector('body').style.display = 'none';
 
-    v.step = 1; // シートからデータを取得
-    v.res = await fetch(v.api);
-    v.json = await v.res.json();
-    v.list = v.json.com;  // com(=components)シートのデータ
-    console.log("%s step.%s\n%s",v.whois,v.step,JSON.stringify(v.list));
+    v.step = 1; // コンポーネント一覧インスタンスを生成
+    v.rv = await readme.build();
+    if( v.rv instanceof Error ) throw v.rv;
 
-    v.t01 = alasql('select *'
-    + ' from ?'
-    + ' where EOD=false'  // EOD(End of Development)=true -> 開発中止
-    + ' order by type, name'
-    ,[v.list]);
-    v.tbody = document.querySelector('tbody');
-    v.t01.forEach(x => {
-      createElement({tag:'tr',children:[
-        {tag:'td',text:x.id},
-        {tag:'td',text:x.type},
-        {tag:'td',text:x.name},
-        {tag:'td',text:x.summary},
-        {tag:'td',text:x.note},
-      ]},v.tbody);
-    });
+    v.step = 2; // 終了処理
     console.log(v.whois+' normal end.\n',v.rv);
     document.querySelector('body').style.display = 'block';
     return v.rv;
