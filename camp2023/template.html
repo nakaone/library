@@ -3,8 +3,8 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   
   <!-- link rel="stylesheet" type="text/css" href="../../component/szLib.css" -->
-  <style type="text/css" data-embed="../../component/szLib.css"></style>
-  <style type="text/css" data-embed="../../component/loading.css"></style>
+  <style type="text/css" data-embed="../CSS/szLib.css"></style>
+  <style type="text/css" data-embed="../LoadingIcon/1.0.0/loading.css"></style>
 
   <style type="text/css">
     .img {
@@ -33,15 +33,15 @@
 
   <div data-BurgerMenu="label:'お知らせ'">
     <div data-BurgerMenu="label:'掲示板'"></div>
-    <div data-BurgerMenu="label:'注意事項'" class="markdown" data-embed="注意事項.md"></div>
-    <div data-BurgerMenu="label:'持ち物'" class="markdown" data-embed="持ち物リスト.md"></div>
+    <div data-BurgerMenu="label:'注意事項'" class="markdown" data-embed="doc/注意事項.md"></div>
+    <div data-BurgerMenu="label:'持ち物'" class="markdown" data-embed="doc/持ち物リスト.md"></div>
     <div data-BurgerMenu="label:'校内探険'">
-      <img width="100%" data-embed='{"from":{"filename":"expedition.txt"},"to":"png"}' />
+      <img width="100%" data-embed='{"from":{"filename":"doc/expedition.txt"},"to":"png"}' />
     </div>
   </div>
   <div data-BurgerMenu="label:'参加者パス'"></div>
   <div data-BurgerMenu="label:'案内図'">
-    <img width="100%" data-embed='{"from":{"filename":"map2023.txt"},"to":"png"}' />
+    <img width="100%" data-embed='{"from":{"filename":"doc/map2023.txt"},"to":"png"}' />
   </div>
   <div data-BurgerMenu="label:'予定表'"></div>
   <div data-BurgerMenu="label:'参加者アンケート',authority:1,href:'https://tinyurl.com/2bruynm8'"></div>
@@ -172,27 +172,27 @@
 <!-- =====================================================
   自作ライブラリ
 ===================================================== -->
-<script type="text/javascript" data-embed='../../component/Auth/core.js'></script>
-<script type="text/javascript" data-embed='{"from":{"filename":"../../component/Array.tabulize.html","selector":"script.core"},"to":"js"}'></script>
-<script type="text/javascript" data-embed='../../component/BulletinBoard/core.js'></script>
-<script type="text/javascript" data-embed='../../component/BurgerMenu/core.js'></script>
-<script type="text/javascript" data-embed='../../component/convertCharacters.js'></script>
-<script type="text/javascript" data-embed='{"from":{"filename":"../../component/createElement.html","selector":"script.core"},"to":"js"}'></script>
-<script type="text/javascript" data-embed='{"from":{"filename":"../../component/createPassword.html","selector":"script.core"},"to":"js"}'></script>
-<script type="text/javascript" data-embed='{"from":{"filename":"../../component/cryptoAES.html","selector":"script.core"},"to":"js"}'></script>
-<script type="text/javascript" data-embed='{"from":{"filename":"../../component/Date.toLocale.html","selector":"script.core"},"to":"js"}'></script>
-<script type="text/javascript" data-embed='../../component/Participants/core.js'></script>
-<script type="text/javascript" data-embed='../../component/itemSelector/core.js'></script>
-<script type="text/javascript" data-embed='../../component/LoadingIcon/core.js'></script>
-<script type="text/javascript" data-embed='{"from":{"filename":"../../component/mergeDeeply.html","selector":"script.core"},"to":"js"}'></script>
-<script type="text/javascript" data-embed='../../component/setupInstance/core.js'></script>
-<script type="text/javascript" data-embed='../../component/Reception/core.js'></script>
-<script type="text/javascript" data-embed='../../component/TimeTable/core.js'></script>
+<script type="text/javascript" data-embed='Auth/core.js'></script>
+<script type="text/javascript" data-embed='{"from":{"filename":"../ArrayEx/1.0.0/Array.tabulize.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='BulletinBoard/core.js'></script>
+<script type="text/javascript" data-embed='BurgerMenu/core.js'></script>
+<script type="text/javascript" data-embed='../convertCharacters/1.0.0/convertCharacters.js'></script>
+<script type="text/javascript" data-embed='{"from":{"filename":"../createElement/1.0.0/createElement.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='{"from":{"filename":"../createPassword/1.0.0/createPassword.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='{"from":{"filename":"../cryptoAES/1.0.0/cryptoAES.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='{"from":{"filename":"../DateEx/1.0.0/Date.toLocale.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='Participants/core.js'></script>
+<script type="text/javascript" data-embed='itemSelector/core.js'></script>
+<script type="text/javascript" data-embed='../LoadingIcon/1.0.0/core.js'></script>
+<script type="text/javascript" data-embed='{"from":{"filename":"../mergeDeeply/1.0.0/mergeDeeply.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='../setupInstance/1.0.0/core.js'></script>
+<script type="text/javascript" data-embed='Reception/core.js'></script>
+<script type="text/javascript" data-embed='TimeTable/core.js'></script>
 <!--style type="text/css" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"style.core"},"to":"css"}'></style>
 <script type="text/javascript" data-embed='{"from":{"filename":"../../component/TimeTable.html","selector":"script.core"},"to":"js"}'></script-->
-<script type="text/javascript" data-embed='../../component/TNoParticipants/core.js'></script>
-<script type="text/javascript" data-embed='../../component/WebScanner/core.js'></script>
-<script type="text/javascript" data-embed='{"from":{"filename":"../../component/whichType.html","selector":"script.core"},"to":"js"}'></script>
+<script type="text/javascript" data-embed='TNoParticipants/core.js'></script>
+<script type="text/javascript" data-embed='WebScanner/core.js'></script>
+<script type="text/javascript" data-embed='{"from":{"filename":"../whichType/1.0.0/whichType.html","selector":"script.core"},"to":"js"}'></script>
 
 <!--script type="text/javascript" data-embed="camp2023.Participants.js"></script -->
 
