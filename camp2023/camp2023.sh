@@ -24,3 +24,4 @@ compress map2023
 
 node ../embedComponent/1.0.0/embedComponent.js \
     -i:template.html -o:camp2023.html -t:html
+rm *.txt
