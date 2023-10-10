@@ -1,9 +1,9 @@
 <template>
-  <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+  <Bank msg="Welcome to Your Vue.js + TypeScript App"/>
 </template>
 
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue';
+import Bank from './components/Bank.vue';
 </script>
 
 <style></style>
