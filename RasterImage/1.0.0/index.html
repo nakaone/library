@@ -3,19 +3,22 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <!--
 <link href="../szLib.css" rel="stylesheet" />
-<style type="text/css"></style>
 -->
+<style type="text/css">
+  body {background-color: dodgerblue;}
+</style>
+<script src="core.js"></script>
 </head><body>
   <div id="RasterImage"></div>
-</body>
-<script src="core.js"></script>
 <script type="text/javascript">
-window.addEventListener('DOMContentLoaded',() => {
+window.addEventListener('DOMContentLoaded',async () => {
   const v = {whois:'DOMContentLoaded',rv:null,step:0};
   console.log(v.whois+' start.');
   try {
 
-    v.rv = new RasterImage({a:-1,c:10});
+    v.rv = new RasterImage({a:-1,c:10,home:'loading',parent:'#RasterImage'});
+    await v.rv.sleep(5000);
+    v.rv.changeScreen('dropImage');
 
     /*
     v.step = 1; // 前処理
@@ -31,4 +34,5 @@ window.addEventListener('DOMContentLoaded',() => {
   }
 });
 </script>
+</body>
 </html>
