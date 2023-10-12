@@ -5,7 +5,7 @@
 <link href="../szLib.css" rel="stylesheet" />
 -->
 <style type="text/css">
-  body {background-color: dodgerblue;}
+  html, body {width:100%}
 </style>
 <script src="core.js"></script>
 </head><body>
@@ -16,14 +16,7 @@ window.addEventListener('DOMContentLoaded',async () => {
   console.log(v.whois+' start.');
   try {
 
-    v.rv = new RasterImage({a:-1,c:10,home:'loading',parent:'#RasterImage'});
-    await v.rv.sleep(5000);
-    v.rv.changeScreen('dropImage');
-
-    /*
-    v.step = 1; // 前処理
-    console.log("%s step.%s\\n",v.whois,v.step,v);
-    */
+    v.rv = new RasterImage({home:'dropImage',parent:'#RasterImage'});
 
     v.step = 99; // 終了処理
     console.log(v.whois+' normal end.\n',v.rv);

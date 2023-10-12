@@ -532,21 +532,78 @@ class BasePage {
 }
 
 class RasterImage extends BasePage {
+  /**
+   * @constructor
+   * @param {*} opt 
+   * @returns {null|Error}
+   * 
+   * ## 参考
+   * 
+   * - [【JavaScript】ブラウザ画面にドラッグ＆ドロップされた画像をimg要素で表示する](https://www.softel.co.jp/blogs/tech/archives/5679)
+   */
   constructor(opt){
     const v = {whois:'RasterImage.constructor',rv:null,step:0,def:{
       parent: 'body',
-      css: ["#target {border: solid 5px #ccc; padding:2em; text-align:center;}"],
+      css: [`
+        .source > div {
+          border: solid 5px #ccc;
+          margin: 1rem;
+          padding:2em;
+          text-align:center;
+        }
+        .source img {
+          width: 80%;
+        }
+      `],
       html: [
-        {attr:{id:'target'},name:'dropImage',text:'ここに画像ファイルをドロップします。'},
-        {tag:'img',attr:{id:'preview'}},
+        {attr:{class:'source'},name:'source',children:[
+          {text:'ここに画像ファイルをドロップ',event:{
+            dragover: (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              e.dataTransfer.dropEffect = 'copy';      
+            },
+            drop: (e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              const reader = new FileReader();
+              reader.onload = this.onDrop;
+              reader.readAsDataURL(e.dataTransfer.files[0]);      
+            },
+          }},
+          {tag:'img',attr:{class:'preview'}},  
+        ]},
       ],
     }};
     console.log(v.whois+' start.',opt);
     try {
       super(v.def,opt);
+      this.changeScreen('source');
   
       v.step = 99; // 終了処理
       console.log(v.whois+' normal end.\n',v.rv);
+  
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 画像がドロップされた際の処理
+   * @param {ProgressEvent} arg 
+   * @returns {null|Error}
+   */
+  onDrop = (arg) => {
+    const v = {whois:this.className+'.onDrop',rv:null,step:0};
+    console.log(v.whois+' start.',arg);
+    try {
+  
+      document.querySelector('.source img.preview').src
+      = arg.target.result;
+
+      v.step = 99; // 終了処理
+      console.log(v.whois+' normal end.\\n',v.rv);
+      return v.rv;
   
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
