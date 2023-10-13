@@ -1,0 +1,108 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>compressor</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script src="https://cdn.jsdelivr.net/gh/fengyuanchen/compressorjs/dist/compressor.min.js"></script>
+<!--
+<link href="../szLib.css" rel="stylesheet" />
+-->
+<style type="text/css">
+.imgInput {
+    padding: 5px;
+    background: #ddd;
+    margin-bottom: 15px;
+    border-radius: 2px;
+}
+
+.imgInput input {
+    display: block;
+    width: 100%;
+    color: #707070;
+}
+
+img#preview {
+    display: none;
+    margin-bottom: 15px;
+}
+
+img#preview.show {
+    display: block;
+    animation: fadeIn 0.7s ease 0s 1 normal;
+}
+
+/* img出現時のアニメーション */
+@keyframes fadeIn {
+  0% {
+      opacity: 0;
+      transform: translateY(-30px);
+  }
+     100% {
+     opacity: 1;
+  }
+}  
+</style>
+</head><body>
+<h1>Compressor.jsサンプル：最大高400pxに変換</h1>
+<div class="imgInput">
+  <input id="file" type="file">
+</div>
+<img src="" id="preview" />
+
+<button id="changeBtn">画像をpngに変換</button>
+
+<script type="text/javascript">
+/**
+ * 
+ * ## 参考
+ * 
+ * - [Compressor.jsを使ってWebページ上で画像をpngに変換・圧縮](https://dubdesign.net/javascript/compressor-js-img/)
+ */
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(v.whois+' start.');
+  try {
+
+    v.step = 1; // 前処理
+    //console.log("%s step.%s\\n",v.whois,v.step,v);
+
+    document.getElementById('file').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      // ボタンクリックで画像変換
+      document.getElementById('changeBtn').addEventListener('click', () => {
+        // ファイルが存在するかどうか
+        if (!file) {
+          return;
+        }
+        console.log('start', file)
+        console.time()
+        new Compressor(file, {
+          // Compressorのオプション
+          maxHeight: 400,
+          convertSize: Infinity,
+          success(result) {
+            console.timeEnd()
+            console.log(result)
+            const url = URL.createObjectURL(result)
+            // imgタグに出力
+            document.getElementById('preview').src = url
+            console.log(url)
+          },
+          error(err) {
+            // エラー時のメッセージ
+            console.log(err.message);
+          },
+        });
+        // imgmタグに「show」のclassを付けて表示
+        const fileImg = document.getElementById('preview');
+        fileImg.classList.add('show');
+      });
+    });
+
+    v.step = 99; // 終了処理
+    console.log(v.whois+' normal end.\\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+  }
+});
+</script></body></html>
