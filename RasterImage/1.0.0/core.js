@@ -590,18 +590,30 @@ class RasterImage extends BasePage {
     try {
 
       for( v.i=0 ; v.i<files.length ; v.i++ ){
+        v.file = new Compressor(files[v.i],{
+          maxHeight: 400,
+          maxWidth: 400,
+          convertSize: Infinity,
+          success(result){
+            let img = document.createElement('img');
+            img.src = URL.createObjectURL(result);
+            document.querySelector('.multi').appendChild(img);
+          }
+        });
+      }
 
-        var reader = new FileReader();
-        reader.readAsDataURL(files[v.i]); // データURLスキーム取得処理を非同期で開始する
-      
-        // データURLスキームを取得後に実行される処理
-        reader.onload = function(evt) {
-          // img要素にデータURLスキームをセットし、画像表示する。
-          v.img = document.createElement('img');
-          v.img.src = evt.target.result;
-          document.querySelector('.multi').appendChild(v.img);
-        }
+      /*
+      for( v.i=0 ; v.i<files.length ; v.i++ ){
+        v.file = files[v.i]
+        v.fObj = {};
+        ['lastModified','name','size','type'].forEach(x => v.fObj[x]=v.file[x]);
+        this.tmp = JSON.stringify(v.fObj);
+
+        v.reader = new FileReader();
+        v.reader.readAsDataURL(v.file);
+        v.reader.onload = this.processImage;
       }      
+      */
 
       v.step = 99; // 終了処理
       console.log(v.whois+' normal end.\\n',v.rv);
@@ -612,4 +624,26 @@ class RasterImage extends BasePage {
       return e;
     }
   }
+
+  processImage = (e) => {
+    const v = {whois:this.className+'.processImage',rv:null,step:0};
+    console.log(v.whois+' start.',e);
+    try {
+  
+      console.log(JSON.parse(this.tmp))
+      // img要素にデータURLスキームをセットし、画像表示する。
+      v.img = document.createElement('img');
+      v.img.src = e.target.result;
+      document.querySelector('.multi').appendChild(v.img);
+  
+      v.step = 99; // 終了処理
+      console.log(v.whois+' normal end.\\n',v.rv);
+      return v.rv;
+  
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }  
+
 }
