@@ -546,15 +546,6 @@ class RasterImage extends BasePage {
     const v = {whois:'RasterImage.constructor',rv:null,step:0,def:{
       parent: 'body',
       css: [`
-        .source > div {
-          border: solid 5px #ccc;
-          margin: 1rem;
-          padding:2em;
-          text-align:center;
-        }
-        .source img {
-          width: 80%;
-        }
         img {max-width:400px;max-height:400px}
         .multi > div {
           border: solid 5px #ccc;
@@ -564,29 +555,11 @@ class RasterImage extends BasePage {
         }
       `],
       html: [
-        {attr:{class:'source'},name:'source',children:[
-          {text:'ここに画像ファイルをドロップ',event:{
-            dragover: (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              e.dataTransfer.dropEffect = 'copy';      
-            },
-            drop: (e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              const reader = new FileReader();
-              reader.onload = this.onDrop;
-              reader.readAsDataURL(e.dataTransfer.files[0]);      
-            },
-          }},
-          {tag:'img',attr:{class:'preview'}},  
-        ]},
-
         {attr:{class:'multi'},name:'multi',children:[
           {attr:{class:'multiInput'},text:'画像ファイルをドロップ(複数可)',event:{drop:(e)=>{
             e.stopPropagation();
             e.preventDefault();
-            this.img_preview(e.dataTransfer.files); // 画像プレビューを表示する
+            this.onDrop(e.dataTransfer.files);
           },dragover:(e)=>{
             e.preventDefault();
           }}},
@@ -608,16 +581,27 @@ class RasterImage extends BasePage {
   }
 
   /** 画像がドロップされた際の処理
-   * @param {ProgressEvent} arg 
+   * @param {ProgressEvent} files 
    * @returns {null|Error}
    */
-  onDrop = (arg) => {
+  onDrop = (files) => {
     const v = {whois:this.className+'.onDrop',rv:null,step:0};
-    console.log(v.whois+' start.',arg);
+    console.log(v.whois+' start.',files);
     try {
-  
-      document.querySelector('.source img.preview').src
-      = arg.target.result;
+
+      for( v.i=0 ; v.i<files.length ; v.i++ ){
+
+        var reader = new FileReader();
+        reader.readAsDataURL(files[v.i]); // データURLスキーム取得処理を非同期で開始する
+      
+        // データURLスキームを取得後に実行される処理
+        reader.onload = function(evt) {
+          // img要素にデータURLスキームをセットし、画像表示する。
+          v.img = document.createElement('img');
+          v.img.src = evt.target.result;
+          document.querySelector('.multi').appendChild(v.img);
+        }
+      }      
 
       v.step = 99; // 終了処理
       console.log(v.whois+' normal end.\\n',v.rv);
@@ -628,24 +612,4 @@ class RasterImage extends BasePage {
       return e;
     }
   }
-
-  img_preview(files){
-    console.log(files);
-    const v = {};
-		//$('#test1_init').hide();
-		
-    for( v.i=0 ; v.i<files.length ; v.i++ ){
-
-      var reader = new FileReader();
-      reader.readAsDataURL(files[v.i]); // データURLスキーム取得処理を非同期で開始する
-    
-      // データURLスキームを取得後に実行される処理
-      reader.onload = function(evt) {
-        // img要素にデータURLスキームをセットし、画像表示する。
-        v.img = document.createElement('img');
-        v.img.src = evt.target.result;
-        document.querySelector('.multi').appendChild(v.img);
-      }
-    };
-	}
 }
