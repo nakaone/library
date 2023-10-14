@@ -545,6 +545,7 @@ class RasterImage extends BasePage {
   constructor(opt){
     const v = {whois:'RasterImage.constructor',rv:null,step:0,def:{
       parent: 'body',
+      files: [],  // {File[]} - DnDされたファイルオブジェクトの配列
       css: [`
         img {max-width:400px;max-height:400px}
         .multi > div {
@@ -580,28 +581,61 @@ class RasterImage extends BasePage {
     }
   }
 
-  /** 画像がドロップされた際の処理
+  /** 画像(複数)がドロップされた際の処理
    * @param {ProgressEvent} files 
    * @returns {null|Error}
    */
-  onDrop = (files) => {
+  onDrop = async (files) => {
     const v = {whois:this.className+'.onDrop',rv:null,step:0};
     console.log(v.whois+' start.',files);
     try {
 
       for( v.i=0 ; v.i<files.length ; v.i++ ){
-        v.file = new Compressor(files[v.i],{
-          maxHeight: 400,
-          maxWidth: 400,
-          convertSize: Infinity,
-          success(result){
-            let img = document.createElement('img');
-            img.src = URL.createObjectURL(result);
-            document.querySelector('.multi').appendChild(img);
-          }
+        v.file = {origin:files[v.i]};
+        v.file.png = await this.compress(files[v.i],{
+          maxHeight: 640,
+          maxWidth: 640,
+          mimeType: 'image/png',
         });
+        /*
+        v.file.png = new Compressor(files[v.i],{
+          maxHeight: 640,
+          maxWidth: 640,
+          mimeType: 'image/png',
+        });
+        v.file.webp = new Compressor(files[v.i],{
+          maxHeight: 640,
+          maxWidth: 640,
+          mimeType: 'image/webp',
+        });
+        */
+        // 変換前はthis.files[n].file, 変換後はthis.files[n].resultで参照可
+        // ['lastModified','name','size','type']
+        this.files.push(v.file);
+        console.log(v.file);
+
+        this.createElement({children:[
+          {text:'origin',children:[
+            {tag:'img',attr:{src:URL.createObjectURL(v.file.origin)}},
+            {tag:'p',text:v.file.origin.name+'('+v.file.origin.size+')'},
+          ]},
+          {text:'png',children:[
+            {tag:'img',attr:{src:URL.createObjectURL(v.file.png)}},
+            {tag:'p',text:v.file.png.name+'('+v.file.png.size+')'},
+          ]},
+          /*
+          {text:'webp',children:[
+            {tag:'img',attr:{src:URL.createObjectURL(v.file.webp.result)}},
+            {tag:'p',text:v.file.webp.result.name+'('+v.file.webp.result.size+')'},
+          ]},
+          */
+        ]},this.multi)
+  
+
+
       }
 
+      console.log(this.files);
       /*
       for( v.i=0 ; v.i<files.length ; v.i++ ){
         v.file = files[v.i]
@@ -625,17 +659,38 @@ class RasterImage extends BasePage {
     }
   }
 
-  processImage = (e) => {
+
+  compress = (file,opt) => {
+    return new Promise((resolve,reject) => {
+      opt.success = resolve;
+      opt.error = reject;
+      new Compressor(file,opt);
+    });
+  }
+
+
+  /** (単一)画像に対する処理
+   * @param {*} result 
+   * @returns 
+   */
+  processImage = (result) => {
     const v = {whois:this.className+'.processImage',rv:null,step:0};
-    console.log(v.whois+' start.',e);
+    console.log(v.whois+' start.',result);
     try {
-  
-      console.log(JSON.parse(this.tmp))
-      // img要素にデータURLスキームをセットし、画像表示する。
-      v.img = document.createElement('img');
-      v.img.src = e.target.result;
-      document.querySelector('.multi').appendChild(v.img);
-  
+
+      v.fileInfo = JSON.parse(this.fileInfo);
+      console.log(v.fileInfo);
+
+      this.createElement({children:[
+        {tag:'img',attr:{src:URL.createObjectURL(result)}},
+        {text:String(v.fileInfo.name)}
+      ]},this.multi)
+      /*
+      let img = document.createElement('img');
+      img.src = URL.createObjectURL(result);
+      document.querySelector('.multi').appendChild(img);
+      */
+
       v.step = 99; // 終了処理
       console.log(v.whois+' normal end.\\n',v.rv);
       return v.rv;
