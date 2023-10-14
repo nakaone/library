@@ -597,20 +597,24 @@ class RasterImage extends BasePage {
     console.log(v.whois+' start.',files);
     try {
 
+      v.step = 1; // zipを生成
+      this.zip = new JSZip();
+
       for( v.i=0 ; v.i<files.length ; v.i++ ){
+        v.step = 2; // DnDされたファイルを順次処理
         // 変換前はthis.files[n].origin, 変換後はthis.files[n].compressで参照可
-        v.step = 1.1; // 変換前をoriginに保存
+        v.step = 2.1; // 変換前をoriginに保存
         v.file = {origin:files[v.i]};
-        v.step = 1.2; // 変換後をcompressに保存
+        v.step = 2.2; // 変換後をcompressに保存
         console.log(this.compressor);
         v.file.compress = await this.compress(files[v.i],this.compressor);
         console.log(v.file);
-        v.step = 1.3; // 変換結果をメンバ変数に格納
+        v.step = 2.3; // 変換結果をメンバ変数に格納
         this.files.push(v.file);
-        v.step = 1.4; // 比率計算
+        v.step = 2.4; // 圧縮比率計算
         v.file.compress.ratio = v.file.compress.size / v.file.origin.size;
 
-        v.step = 2; // プレビュー表示
+        v.step = 3; // プレビュー表示
         this.createElement({style:{
           margin: '1rem',
           padding: '1rem',
@@ -630,12 +634,18 @@ class RasterImage extends BasePage {
           {text:v.file.compress.type},
         ]},this.multi);
 
-        // 圧縮したファイルのダウンロード
-        v.rv = this.download(v.file.compress);
-        if( v.rv instanceof Error ) throw v.rv;
+        v.step = 4;
+        // 圧縮されたファイルをzipに保存
+        v.zip = this.zip.file(v.file.compress.name,v.file.compress,{binary:true});
       }
 
-      v.step = 99; // 終了処理
+      v.step = 5; // zipファイルをダウンロード
+      console.log(this.zip)
+      v.blob = await this.zip.generateAsync({ type: 'blob' }); // Blob の取得
+      v.rv = this.download(v.blob);
+      if( v.rv instanceof Error ) throw v.rv;
+
+      v.step = 6; // 終了処理
       console.log(v.whois+' normal end.\\n',this.files);
       return v.rv;
   
@@ -663,6 +673,14 @@ class RasterImage extends BasePage {
     });
   }
 
+  /** ファイル(Blob)のダウンロード
+   * @param {Blob} blob - ダウンロード対象のBlob
+   * @returns {null|Error}
+   * 
+   * ## 参考
+   * 
+   * - [ファイルをダウンロード保存する方法](https://javascript.keicode.com/newjs/download-files.php)
+   */
   download = (blob) => {
     const v = {whois:this.className+'.download',rv:null,step:0};
     console.log(v.whois+' start.');
@@ -671,7 +689,7 @@ class RasterImage extends BasePage {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       document.body.appendChild(a);
-      a.download = blob.name;
+      a.download = 'RasterImage.zip';
       a.href = url;
       a.click();
       a.remove();
