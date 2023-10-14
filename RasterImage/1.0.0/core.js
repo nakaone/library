@@ -539,16 +539,23 @@ class RasterImage extends BasePage {
    * 
    * ## 参考
    * 
+   * - GitHub [Compressor.js Options](https://github.com/fengyuanchen/compressorjs#options)
    * - [【JavaScript】ブラウザ画面にドラッグ＆ドロップされた画像をimg要素で表示する](https://www.softel.co.jp/blogs/tech/archives/5679)
    * - DnDで複数ファイルをアップロード [画像ファイルアップロード | プレビュー,DnD](https://amaraimusi.sakura.ne.jp/note_prg/JavaScript/file_note.html)
    */
   constructor(opt){
     const v = {whois:'RasterImage.constructor',rv:null,step:0,def:{
       parent: 'body',
+      compressor: { // compressor.jsオプションの既定値
+        maxWidth: 640,
+        maxHeight: 640,
+        quality: 0.80,
+        mimeType: 'image/webp',
+      },
       files: [],  // {File[]} - DnDされたファイルオブジェクトの配列
       css: [`
         img {max-width:400px;max-height:400px}
-        .multi > div {
+        .multiInput {
           border: solid 5px #ccc;
           margin: 1rem;
           padding:2em;
@@ -582,7 +589,7 @@ class RasterImage extends BasePage {
   }
 
   /** 画像(複数)がドロップされた際の処理
-   * @param {ProgressEvent} files 
+   * @param {ProgressEvent} files
    * @returns {null|Error}
    */
   onDrop = async (files) => {
@@ -591,66 +598,40 @@ class RasterImage extends BasePage {
     try {
 
       for( v.i=0 ; v.i<files.length ; v.i++ ){
+        // 変換前はthis.files[n].origin, 変換後はthis.files[n].compressで参照可
+        v.step = 1.1; // 変換前をoriginに保存
         v.file = {origin:files[v.i]};
-        v.file.png = await this.compress(files[v.i],{
-          maxHeight: 640,
-          maxWidth: 640,
-          mimeType: 'image/png',
-        });
-        /*
-        v.file.png = new Compressor(files[v.i],{
-          maxHeight: 640,
-          maxWidth: 640,
-          mimeType: 'image/png',
-        });
-        v.file.webp = new Compressor(files[v.i],{
-          maxHeight: 640,
-          maxWidth: 640,
-          mimeType: 'image/webp',
-        });
-        */
-        // 変換前はthis.files[n].file, 変換後はthis.files[n].resultで参照可
-        // ['lastModified','name','size','type']
-        this.files.push(v.file);
+        v.step = 1.2; // 変換後をcompressに保存
+        console.log(this.compressor);
+        v.file.compress = await this.compress(files[v.i],this.compressor);
         console.log(v.file);
+        v.step = 1.3; // 変換結果をメンバ変数に格納
+        this.files.push(v.file);
+        v.step = 1.4; // 比率計算
+        v.file.compress.ratio = v.file.compress.size / v.file.origin.size;
 
-        this.createElement({children:[
-          {text:'origin',children:[
-            {tag:'img',attr:{src:URL.createObjectURL(v.file.origin)}},
-            {tag:'p',text:v.file.origin.name+'('+v.file.origin.size+')'},
-          ]},
-          {text:'png',children:[
-            {tag:'img',attr:{src:URL.createObjectURL(v.file.png)}},
-            {tag:'p',text:v.file.png.name+'('+v.file.png.size+')'},
-          ]},
-          /*
-          {text:'webp',children:[
-            {tag:'img',attr:{src:URL.createObjectURL(v.file.webp.result)}},
-            {tag:'p',text:v.file.webp.result.name+'('+v.file.webp.result.size+')'},
-          ]},
-          */
-        ]},this.multi)
-  
-
-
+        this.createElement({style:{
+          margin: '1rem',
+          padding: '1rem',
+          width:'80%',
+          display:'grid',
+          'grid-template-columns': '1fr 1fr',
+          'grid-gap': '2rem',
+        },children:[
+          {style:{'font-size':'1.2rem'},text:v.file.origin.name},
+          {style:{'font-size':'1.2rem'},text:v.file.compress.name},
+          {tag:'img',attr:{src:URL.createObjectURL(v.file.origin)}},
+          {tag:'img',attr:{src:URL.createObjectURL(v.file.compress)}},
+          {style:{'text-align':'right'},text:v.file.origin.size+' bytes'},
+          {style:{'text-align':'right'},text:v.file.compress.size+' bytes ('
+          + Math.round(v.file.compress.ratio * 10000) / 100 + ' %)'},
+          {text:v.file.origin.type},
+          {text:v.file.compress.type},
+        ]},this.multi);
       }
 
-      console.log(this.files);
-      /*
-      for( v.i=0 ; v.i<files.length ; v.i++ ){
-        v.file = files[v.i]
-        v.fObj = {};
-        ['lastModified','name','size','type'].forEach(x => v.fObj[x]=v.file[x]);
-        this.tmp = JSON.stringify(v.fObj);
-
-        v.reader = new FileReader();
-        v.reader.readAsDataURL(v.file);
-        v.reader.onload = this.processImage;
-      }      
-      */
-
       v.step = 99; // 終了処理
-      console.log(v.whois+' normal end.\\n',v.rv);
+      console.log(v.whois+' normal end.\\n',this.files);
       return v.rv;
   
     } catch(e){
@@ -659,7 +640,16 @@ class RasterImage extends BasePage {
     }
   }
 
-
+  /** 画像ファイルを圧縮
+   * @param {File} file - 圧縮対象ファイル
+   * @param {Object} opt - compressorのオプション
+   * @returns 
+   * 
+   * ## 参考
+   * 
+   * - GitHub [Compressor.js Options](https://github.com/fengyuanchen/compressorjs#options)
+   * - [Callback to Async Await](https://stackoverflow.com/questions/49800374/callback-to-async-await)
+   */
   compress = (file,opt) => {
     return new Promise((resolve,reject) => {
       opt.success = resolve;
@@ -667,38 +657,5 @@ class RasterImage extends BasePage {
       new Compressor(file,opt);
     });
   }
-
-
-  /** (単一)画像に対する処理
-   * @param {*} result 
-   * @returns 
-   */
-  processImage = (result) => {
-    const v = {whois:this.className+'.processImage',rv:null,step:0};
-    console.log(v.whois+' start.',result);
-    try {
-
-      v.fileInfo = JSON.parse(this.fileInfo);
-      console.log(v.fileInfo);
-
-      this.createElement({children:[
-        {tag:'img',attr:{src:URL.createObjectURL(result)}},
-        {text:String(v.fileInfo.name)}
-      ]},this.multi)
-      /*
-      let img = document.createElement('img');
-      img.src = URL.createObjectURL(result);
-      document.querySelector('.multi').appendChild(img);
-      */
-
-      v.step = 99; // 終了処理
-      console.log(v.whois+' normal end.\\n',v.rv);
-      return v.rv;
-  
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-      return e;
-    }
-  }  
 
 }
