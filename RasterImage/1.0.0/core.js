@@ -610,6 +610,7 @@ class RasterImage extends BasePage {
         v.step = 1.4; // 比率計算
         v.file.compress.ratio = v.file.compress.size / v.file.origin.size;
 
+        v.step = 2; // プレビュー表示
         this.createElement({style:{
           margin: '1rem',
           padding: '1rem',
@@ -628,6 +629,10 @@ class RasterImage extends BasePage {
           {text:v.file.origin.type},
           {text:v.file.compress.type},
         ]},this.multi);
+
+        // 圧縮したファイルのダウンロード
+        v.rv = this.download(v.file.compress);
+        if( v.rv instanceof Error ) throw v.rv;
       }
 
       v.step = 99; // 終了処理
@@ -658,4 +663,27 @@ class RasterImage extends BasePage {
     });
   }
 
+  download = (blob) => {
+    const v = {whois:this.className+'.download',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+  
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      a.download = blob.name;
+      a.href = url;
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      v.step = 99; // 終了処理
+      console.log(v.whois+' normal end.\\n',v.rv);
+      return v.rv;
+  
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }  
 }
