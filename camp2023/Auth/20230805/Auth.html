@@ -11,7 +11,7 @@
 
   <div>
     <h1>だみぃ</h1>
-    <p>これはログイン後に表示される初期画面です。</p>  
+    <p>これはログイン後に表示される初期画面です。</p>
   </div>
 </body>
 <!-- 共通鍵暗号化：cryptoJS -->
@@ -66,9 +66,9 @@ class Auth {
    * @param {string} gatewayUrl - 認証局APIのURL
    * @param {AuthOpt} [opt={}] - 生成時オプション
    * @returns {void} なし
-   * 
-   * ## 処理概要
-   * 
+   *
+   * #### 処理概要
+   *
    * ```mermaid
    * sequenceDiagram
    *   autonumber
@@ -77,33 +77,33 @@ class Auth {
    *   participant gateway as 認証局
    *   participant master as 管理局
    *   participant httpd as httpd
-   * 
+   *
    *   %% 受付番号入力
    *   mailer ->> httpd : 事前に送信された案内メールのリンクをクリック
    *   httpd ->> browser : ページファイル(index.html)
    *   activate browser
    *   Note right of browser: constructor()
    *   Note right of browser: getEntryNo()
-   * 
+   *
    *   browser ->> gateway : 受付番号、CP(平文)
    *   activate gateway
    *   Note right of gateway : auth1A()
-   * 
+   *
    *   gateway ->> master : 受付番号、CP(GS/MP)
    *   activate master
    *   Note right of master : auth1B()
    *   master ->> mailer : パスコード
    *   activate mailer
-   * 
+   *
    *   master ->> gateway : 申請登録結果
    *   deactivate master
-   * 
+   *
    *   gateway ->> browser : 申請登録結果
    *   deactivate gateway
    *   browser ->> browser : GP格納、パスコード入力画面表示
    *   deactivate browser
-   * 
-   * 
+   *
+   *
    *   %% パスコード入力
    *   mailer ->> browser : パスコード入力
    *   deactivate mailer
@@ -121,9 +121,9 @@ class Auth {
    *   deactivate gateway
    *   browser ->> browser : 初期画面表示
    *   deactivate browser
-   * 
+   *
    * ```
-   * 
+   *
    * - 文中の記号は以下の通り
    *   - CK:共通鍵(Common Key)
    *   - CP:利用者公開鍵(Client Public key)、CS:利用者秘密鍵(Client Secret key)
@@ -162,9 +162,9 @@ class Auth {
    * - (12) auth2B
    *   1. 送信された受付番号・パスコード・CPkeyが有効か、シートの申請登録と突合
    *   1. OKなら利用者情報をauth2Aに返す
-   * 
-   * ## 使用方法
-   * 
+   *
+   * #### 使用方法
+   *
    * ```
    * let config;
    * window.addEventListener('DOMContentLoaded',async () => {
@@ -174,14 +174,14 @@ class Auth {
    *   await v.auth.build();
    *   // ローディング画面解除
    *   document.querySelector('div[name="loading"]').style.display = 'none';
-   * 
+   *
    *   console.log(v.auth);
    *   console.log('DOMContentLoaded end.');
    * });
    * ```
-   * 
+   *
    * - `new Auth()`実行後、必ず`.build()`を実行する
-   * 
+   *
    */
   constructor(gatewayUrl,opt={}){
     const v = {whois:'Auth.constructor'};
@@ -312,17 +312,17 @@ class Auth {
           }},
           {sel:'dialog.Auth p',prop:{
             'font-size':'1.5rem',
-            'margin':'0.5rem 0',  
+            'margin':'0.5rem 0',
           }},
           {sel:'dialog.Auth li',prop:{
             'font-size':'1rem',
-            'margin':'0.5rem 0',  
+            'margin':'0.5rem 0',
           }},
           {sel:'dialog.Auth > input[type="text"]',prop:{
             'font-size':'1.5rem',
             'border':'solid 2px #888',
             'height':'2rem',
-            'width':'6rem',    
+            'width':'6rem',
           }},
           {sel:'dialog.Auth > input[type="button"]',prop:{
             'font-size':'1rem',
@@ -473,7 +473,7 @@ class Auth {
   /** entryNo(ID)をダイアログに入力
    * @param {void}
    * @returns {void}
-   * 
+   *
    * - Qiita [非同期な自作 confirm を作ってみた](https://qiita.com/naoki-funawatari/items/4de792bfefe5eab909cc)
    */
   #getEntryNo(){
@@ -529,7 +529,7 @@ class Auth {
    * @param {Object} arg - 呼び先関数に渡すデータオブジェクト
    * @param {number} [md=0] - モード。0:平文、1:共通鍵で暗号化、2:署名無し暗号化、3:署名付き暗号化
    * @returns {Object} 呼び先からの戻り値
-   * 
+   *
    * - JS: [Async/await](https://ja.javascript.info/async-await)
    * - MDN: [フェッチが成功したかの確認](https://developer.mozilla.org/ja/docs/Web/API/Fetch_API/Using_Fetch#%E3%83%95%E3%82%A7%E3%83%83%E3%83%81%E3%81%8C%E6%88%90%E5%8A%9F%E3%81%97%E3%81%9F%E3%81%8B%E3%81%AE%E7%A2%BA%E8%AA%8D)
    * - MDN: [fetch()](https://developer.mozilla.org/ja/docs/Web/API/fetch)
@@ -614,7 +614,7 @@ class Auth {
    * @prop {string} dt.fc - 呼出先の処理名(ex."auth1A")
    * @prop {any} dt.arg - 呼出先の処理に渡す引数
    */
-  
+
   /**
    * @typedef {Object} AuthArg - preProcessからauth1A/1B/2A/2Bに渡されるオブジェクト
    * @prop {string} fm - 発信者名(gateway/master/受付番号)
@@ -634,7 +634,7 @@ class Auth {
    * @prop {string} common - 共通鍵(認証局のみ)
    * @prop {string} random - パスコード(管理局のみ)
    */
-  
+
   /**
    * @typedef {Object} fetchResponse - auth1A/1B/2A/2BからpreProcess経由で呼出元に返されるオブジェクト
    * @prop {boolean} isErr - エラーならtrue
@@ -642,24 +642,24 @@ class Auth {
    * @prop {string} stack='' - エラーオブジェクトのスタック
    * @prop {any} result - 処理結果
    */
-  
+
   /** doPostの内容を受けて処理を分岐
    * @param {token} token - doPostから渡されたトークン
    * @returns {fetchResponse} 処理結果
    */
-  
+
   function preProcess(token){
     const v = {whois:'preProcess',step:'0',arg:{},rv:null};
     console.log(v.whois+' start.',whichType(token),token);
     try {
       v.arg = JSON.parse(token);
-  
+
       v.step = '1'; // 発信から3分以内でないとエラー
       v.now = Date.now();
       if( v.arg.ts > v.now || (v.now - v.arg.ts) > 180000 ){
         throw new Error("Invalid Token: timeout");
       }
-  
+
       v.step = '2'; // RSAシートの読み込み
       v.sheet = SpreadsheetApp.getActive().getSheetByName('RSA');
       v.step = '2.1'; // 再計算用にセル値を更新
@@ -674,7 +674,7 @@ class Auth {
       }
       v.arg.RSAkey = cryptico.generateRSAKey(v.arg.passPhrase,1024);
       console.log('v.arg',v.arg);
-  
+
       v.step = '3'; // 暗号化されていた場合は復号
       if( v.arg.md > 0 ){
         if( v.arg.md === 1 ){ // 共通鍵方式
@@ -694,37 +694,37 @@ class Auth {
       }
       v.arg.fc = v.arg.dt.fc;
       v.arg.dt = v.arg.dt.arg;
-  
+
       console.log('v.arg.dt',v.arg.dt);
-  
+
       // auth1A: クライアントから認証局への接続要求
       v.step = '4.1';
       if( v.arg.to === 'gateway' && v.arg.fc === 'auth1A' ){
         v.step = 'call auth1A';
         v.rv = auth1A(v.arg);
       }
-  
+
       // auth1B: 認証局から管理局にパスコード通知依頼
       v.step = '4.2';
       if( v.arg.to === 'master' && v.arg.fc === 'auth1B' ){
         v.step = 'call auth1B';
         v.rv = auth1B(v.arg);
       }
-  
+
       // auth2A: クライアントから認証局にパスコード入力
       v.step = '4.3';
       if( v.arg.to === 'gateway' && v.arg.fc === 'auth2A' ){
         v.step = 'call auth2A';
         v.rv = auth2A(v.arg);
       }
-  
+
       // auth2B: 認証局から管理局にパスコード連絡、管理局で判定
       v.step = '4.4';
       if( v.arg.to === 'master' && v.arg.fc === 'auth2B' ){
         v.step = 'call auth2B';
         v.rv = auth2B(v.arg);
       }
-  
+
       v.step = '5';
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -732,7 +732,7 @@ class Auth {
       console.error(v.whois+' abnormal end(step.'+v.step+').',e.stack,v);
     }
   }
-  
+
   /** 認証局での認証の第一段階
    * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
    * @returns {string} 認証局の公開鍵(fetchResponse.result)
@@ -742,7 +742,7 @@ class Auth {
       rv:{isErr:false,message:'',stack:'',result:null}};
     try {
       console.log(v.whois+' start.',arg.dt);
-  
+
       v.step = '1.1'; // auth1B問合せ用にデータを暗号化
       v.dt = JSON.stringify({
         fc : 'auth1B',
@@ -752,12 +752,12 @@ class Auth {
         }
       });
       console.log('v.dt='+v.dt);
-      
+
       v.step = '1.2'; // 暗号化。受付番号＋公開鍵なのでencodeURIは省略
       v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
       if( v.dt.status !== 'success' )
         throw new Error("auth1A encrypt failed.\n"+JSON.stringify(v.dt));
-  
+
       v.step = '2.1'; // auth1Bに問い合わせ
       v.res = UrlFetchApp.fetch(arg.masterAPI,{
         'method': 'post',
@@ -769,21 +769,21 @@ class Auth {
           md: 3,  // 署名付き暗号化
           ts: Date.now(),
           dt: v.dt.cipher,
-        }),  
+        }),
       }).getContentText();
       console.log('res='+v.res);
       v.step = '2.2';
       v.rv = JSON.parse(v.res);
-  
+
       if( !v.rv.isErr ){
         v.step = '3'; // auth1B正常終了なら認証局の公開鍵を返信
         v.rv.result = arg.publicKey;
       }
-  
+
       v.step = '4';
       console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
       return v.rv;
-  
+
     } catch(e) {
       console.error(v.whois+' abnormal end.(at step.'+v.step+')\n'
       + e.message + '\n' + e.stack);
@@ -794,7 +794,7 @@ class Auth {
       return v.rv;
     }
   }
-  
+
   /** 管理局での認証の第一段階
    * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
    * @returns {void} 特に無し(fetchResponse.isErrのみ必要)
@@ -804,11 +804,11 @@ class Auth {
       rv:{isErr:false,message:'',stack:'',result:null}};
     try {
       console.log(v.whois+' start.',arg.dt);
-  
+
       v.step = '1'; // クライアント情報を抽出
       v.master = szSheet('master');
       v.client = v.master.lookup(arg.dt.entryNo,'entryNo');
-  
+
       v.step = '2'; // 3回連続失敗後1時間以内ならチャレンジ不可判定
       if( String(v.client.NG2).length > 0 &&
         (Date.now() - v.client.NG2) < 3600000 ){
@@ -818,7 +818,7 @@ class Auth {
         };
         return v.rv;
       }
-  
+
       v.step = '3'; // 該当受付番号にpassCode,publicKey登録
       v.master.update({
         publicKey: arg.dt.publicKey,  // クライアントの公開鍵
@@ -827,7 +827,7 @@ class Auth {
         NG1:'',NG2:'',            // 不適切パスコード入力時刻をクリア
         certificate: '',  // 認証正常終了日時はクリア
       },{key:'entryNo',value:arg.dt.entryNo});
-  
+
       v.step = '4'; // 申請者にpassCode連絡メール送信
       v.draft = GmailApp.createDraft(
         v.client['メールアドレス'],
@@ -842,11 +842,11 @@ class Auth {
       GmailApp.getDraft(v.draft.getId()).send();
       console.log('Mail Remaining Daily Quota:'
         + MailApp.getRemainingDailyQuota());
-  
+
       v.step = '5';
       console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
       return v.rv;
-  
+
     } catch(e) {
       console.error(v.whois+' abnormal end.(at step.'+v.step+')\n'
       + e.message + '\n' + e.stack);
@@ -857,13 +857,13 @@ class Auth {
       return v.rv;
     }
   }
-  
+
   /** 認証局での認証の第二段階
    * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
    * @returns {Object} - fetchResponse.result={common:共通鍵,info:クライアント情報}
-   * 
-   * ## 注意事項
-   * 
+   *
+   * #### 注意事項
+   *
    * clientからのtokenは署名されているが、認証局はclientのpublicKeyを
    * 持たないので検証は省略し、そのまま管理局に送って管理局側で検証する。
    */
@@ -872,7 +872,7 @@ class Auth {
       rv:{isErr:false,message:'',stack:'',result:null}};
     try {
       console.log(v.whois+' start.',arg.dt);
-  
+
       v.step = '1.1'; // auth2B問合せ用にデータを暗号化
       v.dt = JSON.stringify({
         fc : 'auth2B',
@@ -887,7 +887,7 @@ class Auth {
       v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
       if( v.dt.status !== 'success' )
         throw new Error("auth2A encrypt failed.\n"+JSON.stringify(v.dt));
-  
+
       v.step = '2.1'; // auth2Bに問い合わせ
       v.res = UrlFetchApp.fetch(arg.masterAPI,{
         'method': 'post',
@@ -899,12 +899,12 @@ class Auth {
           md: 3,  // 署名付き暗号化
           ts: Date.now(),
           dt: v.dt.cipher,
-        }),  
+        }),
       }).getContentText();
       console.log('res='+v.res);
       v.step = '2.2';
       v.res = JSON.parse(v.res);
-  
+
       v.step = '3'; // 問合せ結果により処理分岐
       if( v.res.isErr ){
         v.step = '3.1'; // auth2Bでエラー発生ならそのまま返す
@@ -916,11 +916,11 @@ class Auth {
           info  : v.res.result, // クライアントの登録情報
         }
       }
-  
+
       v.step = '4';
       console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
       return v.rv;
-  
+
     } catch(e) {
       console.error(v.whois+' abnormal end.(at step.'+v.step+')\n'
       + e.message + '\n' + e.stack);
@@ -931,7 +931,7 @@ class Auth {
       return v.rv;
     }
   }
-  
+
   /** 管理局での認証の第二段階
    * @param {AuthArg} arg - クライアントの受付番号、パスコード、送信日時、公開鍵他
    * @returns {Object} - fetchResponse.result=クライアントの登録情報
@@ -941,12 +941,12 @@ class Auth {
     rv:{isErr:true,message:'',stack:'',result:null}};
     try {
       console.log(v.whois+' start.',arg.dt);
-  
+
       v.step = '1'; // クライアント情報を抽出
       v.master = szSheet('master');
       v.client = v.master.lookup(arg.dt.entryNo,'entryNo');
       console.log('v.client',v.client);
-  
+
       // 正しいパスコードが入力されたか判定
       v.update = null;
       if( (Date.now() - new Date(v.client.genPassCode).getTime()) > 3600000 ){
@@ -986,11 +986,11 @@ class Auth {
       if( v.master !== null ){
         v.master.update(v.update,{key:'entryNo',value:arg.dt.entryNo});
       }
-  
+
       v.step = '3';
       console.log(v.whois+' normal end.\n'+JSON.stringify(v.rv));
       return v.rv;
-  
+
     } catch(e) {
       console.error(v.whois+' abnormal end.(at step.'+v.step+')\n'
       + e.message + '\n' + e.stack);

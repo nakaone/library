@@ -24,16 +24,16 @@
 /**
  * @desc オブジェクトのプロパティを再帰的にマージ
  * - Qiita [JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法](https://qiita.com/riversun/items/60307d58f9b2f461082a)
- * 
+ *
  * @param {Object} target - 結合対象のオブジェクト1(劣後Obj)
  * @param {Object} source - 結合対象のオブジェクト2。同名のプロパティはこちらで上書き(優先Obj)
  * @param {Object} opts - オプション
  * @param {boolean} [opts.concatArray=false] - プロパティの値が配列だった場合、結合するならtrue
  * @param {boolean} [opts.overwirte=false] - target自身を書き換えるならtrue
  * @returns {Object} 結合されたオブジェクト
- * 
+ *
  * ### デシジョンテーブル
- * 
+ *
  * | 優先(a) | 劣後(b) | 結果 | 備考 |
  * | :--: | :--: | :--: | :-- |
  * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
@@ -48,7 +48,7 @@
  * | {A} |  B  | {A} | |
  * | {A} | [B] | {A} | |
  * | {A} | {B} | {A+B} | |
- * 
+ *
  */
 
 function mergeDeeply(target, source, opts) {
@@ -86,8 +86,8 @@ function mergeDeeply(target, source, opts) {
 function mergeDeeplyTest(){
   document.querySelector('div.webApp textarea[name="json1"]').value = JSON.stringify({
     familyName: '織田',
-    firstName: '吉法師', 
-    address: '尾張', 
+    firstName: '吉法師',
+    address: '尾張',
     sex: '男',
     details: {
       character: {favoriteTactics: '奇襲', favoriteWord: '天下布武', favoritePlace: '京'},
@@ -112,7 +112,7 @@ function mergeDeeplyTest(){
   function webApp(isConcat){
     const v = {};
     console.log('webApp start.');
-  
+
     v.json1 = document.querySelector('div.webApp textarea[name="json1"]').value;
     v.json2 = document.querySelector('div.webApp textarea[name="json2"]').value;
     v.opt = {concatArray: isConcat || false};
@@ -120,11 +120,11 @@ function mergeDeeplyTest(){
       document.querySelector('div.webApp textarea[name="result"]').value
       = JSON.stringify(mergeDeeply(JSON.parse(v.json1),JSON.parse(v.json2),v.opt));
     }
-  
+
     console.log('webApp end.');
   }
   </script>
-  
+
   <!--================================================
   メイン処理
 ================================================-->

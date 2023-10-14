@@ -1,6 +1,6 @@
 /**
  * @classdesc 参加者情報の表示・編集
- * 
+ *
  * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
  */
 class Participants {
@@ -284,7 +284,7 @@ class Participants {
         colorLight: "#fff",
         correctLevel : QRCode.CorrectLevel.H,
       });
-  
+
       v.step = 1.2; // その他文字情報表示
       ['entryStr','申込者氏名','申込者カナ'].forEach(x => {
         v.x = x;

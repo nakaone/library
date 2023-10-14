@@ -300,7 +300,7 @@ class WebScanner {
         // videoの撮影停止(closeWhenFinishedならthis.close内で実行)
         this.video.srcObject.getVideoTracks().forEach((track) => {
           track.stop();
-        });  
+        });
       }
       console.log(v.whois+' normal end.\n',v.rv);
       return v.rv;

@@ -69,7 +69,7 @@ class Tips {
     try {
       v.step = 1; // 前処理
       v.tbody.innerHTML = ''; // 表示領域のクリア
-      
+
       v.step = 2; // 表示対象となるTipsをv.listに格納
       v.list = list === null ? this.data.tips : list;
 

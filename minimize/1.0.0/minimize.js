@@ -50,7 +50,7 @@ function minimize(str,opt={}){
       v.rv = v.rv.replaceAll(v.rex.html,'');
     }
 
-    // 複数の改行は一つに    
+    // 複数の改行は一つに
     v.rv = v.rv.replaceAll(/\n+/g,'\n');
 
     //console.log('v.rv='+JSON.stringify(v.rv));
@@ -58,7 +58,7 @@ function minimize(str,opt={}){
     return v.rv;
   } catch(e){
     // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
+    if( typeof window !== 'undefined' ) alert(e.stack);
     //throw e; //以降の処理を全て停止する場合
     v.rv.stack = e.stack; return v.rv; // 処理継続する場合
   }

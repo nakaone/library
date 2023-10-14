@@ -5,21 +5,21 @@
  * 1. 第一階層にメンバ"parent"が存在する場合、
  *    - HTMLElement型ならそのまま`parent:(HTMLElement)}`として設定
  *    - 文字列型ならCSSセレクタと解して`parent:{selector:(string),element:(HTMLElement)}`を生成
- * 
+ *
  * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
  * @param {Object} opt - 起動時にオプションとして渡されたオブジェクト
  * @param {Object} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
  * @returns {void}
- * 
+ *
  * ## 使用方法
- * 
+ *
  * 1. 主にclass内constructorで冒頭に使用することを想定。
- * 
+ *
  * ### 入力例
- * 
+ *
  * ```
  * const menu = new BurgerMenu({parent:'body',auth:confObj,fuga:{a:10}})
- * 
+ *
  * class BurgerMenu {
  *   constructor(opt){
  *     setupInstance(
@@ -45,9 +45,9 @@
  *       });
  *     // 以降、constructorの処理
  * ```
- * 
+ *
  * ### 出力例
- * 
+ *
  * ```
  * this = {
  *   parent: {
@@ -62,7 +62,7 @@
  *   },
  * }
  * ```
- * 
+ *
  * ```
  * <style type="text/css">
  * .date {
@@ -71,9 +71,9 @@
  * }
  * </style>
  * ```
- * 
+ *
  * ### デシジョンテーブル
- * 
+ *
  * | 優先(a) | 劣後(b) | 結果 | 備考 |
  * | :--: | :--: | :--: | :-- |
  * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
@@ -92,7 +92,7 @@
  * |  -  |  B  |  B  | |
  * |  -  | [B] | [B] | |
  * |  -  | {B} | {B} | |
- * 
+ *
  */
 const setupInstance = (dest,opt,def) => {
   const v = {whois:'setupInstance',rv:true,step:0,

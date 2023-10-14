@@ -98,7 +98,7 @@ const Participants = (parent,config) => {
         'border'        : '2px solid #888888',
       }
     },
-    { // 
+    { //
       sel : '',
       prop: {
 

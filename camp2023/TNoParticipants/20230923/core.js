@@ -158,7 +158,7 @@ class TNoParticipants {
     try {
 
       v.step = '1'; // 最新の人数を管理局から取得
-      this.LoadingIcon.show(); 
+      this.LoadingIcon.show();
       v.rv = await this.auth.fetch('getTNoParticipants',{
         entryNo: this.auth.entryNo.value,
         publicKey: this.auth.RSA.pKey,
@@ -171,10 +171,10 @@ class TNoParticipants {
 
       v.step = 2; // raw: 取得したデータをそのままテーブルに格納
       alasql(`create table raw (
-        id INT, auth INT, cancel string, tent string, 
-        mem00 string, mem01 string, mem02 string, 
-        mem03 string, mem04 string, mem05 string, 
-        fee00 string, fee01 string, fee02 string, 
+        id INT, auth INT, cancel string, tent string,
+        mem00 string, mem01 string, mem02 string,
+        mem03 string, mem04 string, mem05 string,
+        fee00 string, fee01 string, fee02 string,
         fee03 string, fee04 string, fee05 string
       )`);
       for( v.i=1 ; v.i<v.rv.result.length ; v.i++ ){
@@ -250,7 +250,7 @@ class TNoParticipants {
       console.log('master',this.master);
 
       v.step = 5; /* this.group: グループ単位の集計用マスタを作成
-        auth    
+        auth
         cancel  0:キャンセル無し、1:キャンセル
         stay    0:宿泊しない、1:宿泊する
         tent    0:テント無し、1:テントあり
@@ -301,7 +301,7 @@ class TNoParticipants {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  }  
+  }
 
   /** 指定条件に応じた集計結果を表示
    * @param {void}
@@ -375,7 +375,7 @@ class TNoParticipants {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  }  
+  }
 
 
   /** wrapper内を表示 */

@@ -72,13 +72,13 @@
 
 /**
  * @classdesc 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャン
- * 
+ *
  * **残課題**
- * 
+ *
  * 1. scanDoc稼働未確認
- * 
+ *
  * @example
- * 
+ *
  * ```
  * <div class="webScanner"></div>
  * 〜
@@ -91,10 +91,10 @@
 class webScanner {
   /**
    * 指定セレクタ以下にcanvas他の必要な要素を作成してスキャン実行、指定の後続処理を呼び出す。
-   * 
+   *
    * - [jsQRであっさりQRコードリーダ/メーカ](https://zenn.dev/sdkfz181tiger/articles/096dfb74d485db)
    * - [PCにおける内蔵/webカメラの切り替え](webScanner.html#switchCamera)
-   * 
+   *
    * @constructor
    * @param {string|HTMLElement} parent - 親要素(ラッパー)。文字列ならCSSセレクタと解釈
    * @param {webScannerOpt} [opt={}] - オプション
@@ -107,7 +107,7 @@ class webScanner {
     // 親要素(ラッパー。HTMLElement)をthis.parentにセット
     this.parent = typeof parent !== 'string' ? parent
       : document.querySelector(parent);
-    console.log(this.parent); 
+    console.log(this.parent);
 
     // デバイスがサポートされているか確認
     if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {

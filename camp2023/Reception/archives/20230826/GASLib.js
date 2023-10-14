@@ -62,7 +62,7 @@ function recept1A(arg){
       }
     });
     console.log(v.whois+'.'+v.step+': v.dt='+v.dt);
-    
+
     v.step = '1.2'; // 暗号化
     v.dt = encodeURI(v.dt); // カナ漢字が入るのでencode
     v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
@@ -80,7 +80,7 @@ function recept1A(arg){
         md: 3,  // 署名付き暗号化
         ts: Date.now(),
         dt: v.dt.cipher,
-      }),  
+      }),
     }).getContentText();
     console.log(v.whois+'.'+v.step+': res='+v.res);
     v.step = '2.2';
@@ -102,14 +102,14 @@ function recept1A(arg){
 }
 
 /** 問合せの正当性を確認、問題なければ検索キーに該当する参加者情報を返す
- * @param {Object} arg 
+ * @param {Object} arg
  * @param {string} arg.keyword - 検索キー文字列(参加者の受付番号または氏名)
  * @param {string} arg.entryNo - 問合せ元(スタッフ)の受付番号
  * @param {string} arg.publicKey - 問合せ元の公開鍵
  * @returns {Object[]} 該当者情報の配列
- * 
+ *
  * ## 正当性のチェックポイント
- * 
+ *
  * 1. 問合せ元のentryNoはauthrityを持つ
  * 1. 問合せ元の公開鍵が登録されているpublicKeyと一致
  * 1. 検索キー文字列が①数字のみ②カナ漢字のみのいずれか
@@ -212,7 +212,7 @@ function recept2A(arg){
       }
     });
     console.log(v.whois+'.'+v.step+': v.dt='+v.dt);
-    
+
     v.step = '1.2'; // 暗号化
     v.dt = encodeURI(v.dt); // カナ漢字が入るのでencode
     v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
@@ -230,7 +230,7 @@ function recept2A(arg){
         md: 3,  // 署名付き暗号化
         ts: Date.now(),
         dt: v.dt.cipher,
-      }),  
+      }),
     }).getContentText();
     console.log(v.whois+'.'+v.step+': res='+v.res);
     v.step = '2.2';
@@ -252,15 +252,15 @@ function recept2A(arg){
 }
 
 /** 変更要求の正当性を確認、問題なければ変更結果を返す
- * 
- * @param {Object} arg 
+ *
+ * @param {Object} arg
  * @param {string} arg.entryNo - 問合せ元の受付番号
  * @param {string} arg.publicKey - 問合せ元の公開鍵
  * @param {Object} arg.data - 変更された参加者情報(recept2Aの引数)
  * @returns {fetchResponse} 変更結果
- * 
+ *
  * ## 正当性のチェックポイント
- * 
+ *
  * 1. 問合せ元のentryNoはauthrityを持つ
  * 1. 問合せ元の公開鍵が登録されているpublicKeyと一致
  */

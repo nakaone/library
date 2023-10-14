@@ -1,6 +1,6 @@
 /**
  * @classdesc 参加者情報の表示・編集
- * 
+ *
  * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
  */
 class Perticipants {
@@ -204,14 +204,14 @@ class Perticipants {
         colorLight: "#fff",
         correctLevel : QRCode.CorrectLevel.H,
       });
-  
+
       v.step = 4; // その他文字情報表示
       ['entryStr','申込者氏名','申込者カナ'].forEach(x => {
         v.x = x;
         v.element = this.summary.querySelector('[name="'+x+'"] .v');
         v.element.innerText = this.data[v.x];
       });
-  
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -332,7 +332,7 @@ class Perticipants {
           }));
         }
       }
-    
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -519,7 +519,7 @@ class Perticipants {
   }
 
   /** 参加費の編集を行い、編集結果を返す
-   * @param {void} 
+   * @param {void}
    * @returns {void}
    */
   onEdit = async () => {

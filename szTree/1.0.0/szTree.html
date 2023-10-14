@@ -34,10 +34,10 @@
  * @prop {function} nearest - メソッド。ベースノードの最寄の指定ノードを検索
  */
 /** szTree: Googleスプレッド上でツリー構造を持つ二次元配列の検索
- * 
+ *
  * 1. search: 項目名'key'の値がvalueである行Objを全て検索
  * 2. nearest: ベースノードの最寄の指定ノードを検索
- * 
+ *
  * @desc <caption>シート作成上の注意</caption>
  * <ol>
  * <li>子孫を持つノードは値を持っていてはならない(下表の"a","aa")
@@ -49,19 +49,19 @@
  * @param {number|string} arg.edCol - 分類の終了列番号(≧0)、または項目名
  * @param {string|string[]} [arg.valid] - データとして取得したい項目名。省略すると分類範囲列以外の全項目。
  * 文字列の場合は単一と見做し、戻り値もオブジェクトではなく当該項目の値となる。
- * 
+ *
  * @returns {szTreeObj} 変換結果
- * @example 
- * 
+ * @example
+ *
  * lv01 | lv02 | lv03 | value | note
  * :--  | :--  | :--  | --:   | :--
- * a    |      |      |       | 
+ * a    |      |      |       |
  *      | aa   |      |       | aa_note
- *      |      | aaa  | 1     | 
- *      |      | aab  | 2     | 
+ *      |      | aaa  | 1     |
+ *      |      | aab  | 2     |
  * b    |      |      | 3     | b_note
  *      |      | ba   | 4     | NGのサンプル(実際は削除して実行)
- * 
+ *
  * const c = szSheet('TEST');
  * const raw = JSON.parse(JSON.stringify(c.raw));
  * raw.splice(0,1);　※データ部のみ抽出
@@ -241,7 +241,7 @@ function szTree(arg){
         v.rex = new RegExp([...path].join('\\t(\\S+\\t)*'));
         for( v.i=0 ; v.i<p.path.length ; v.i++ ){
           // ノードで無ければスキップ
-          if( p.path[v.i] === null ) continue;  
+          if( p.path[v.i] === null ) continue;
           // pathがマッチするか判定
           if( String(p.path[v.i]).match(v.rex) ){
             // value指定が無ければ候補に入れる

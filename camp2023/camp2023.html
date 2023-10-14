@@ -1,7 +1,7 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
   <title>校庭キャンプ2023</title>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  
+
   <!-- link rel="stylesheet" type="text/css" href="../../component/szLib.css" -->
   <style type="text/css">html {
   font-size: 24pt;
@@ -450,9 +450,9 @@ class Auth {
    * @param {string} gatewayUrl - 認証局APIのURL
    * @param {AuthOpt} [opt={}] - 生成時オプション
    * @returns {void} なし
-   * 
-   * ## 処理概要
-   * 
+   *
+   * #### 処理概要
+   *
    * ```mermaid
    * sequenceDiagram
    *   autonumber
@@ -461,33 +461,33 @@ class Auth {
    *   participant gateway as 認証局
    *   participant master as 管理局
    *   participant httpd as httpd
-   * 
+   *
    *   %% 受付番号入力
    *   mailer ->> httpd : 事前に送信された案内メールのリンクをクリック
    *   httpd ->> browser : ページファイル(index.html)
    *   activate browser
    *   Note right of browser: constructor()
    *   Note right of browser: getEntryNo()
-   * 
+   *
    *   browser ->> gateway : 受付番号、CP(平文)
    *   activate gateway
    *   Note right of gateway : auth1A()
-   * 
+   *
    *   gateway ->> master : 受付番号、CP(GS/MP)
    *   activate master
    *   Note right of master : auth1B()
    *   master ->> mailer : パスコード
    *   activate mailer
-   * 
+   *
    *   master ->> gateway : 申請登録結果
    *   deactivate master
-   * 
+   *
    *   gateway ->> browser : 申請登録結果
    *   deactivate gateway
    *   browser ->> browser : GP格納、パスコード入力画面表示
    *   deactivate browser
-   * 
-   * 
+   *
+   *
    *   %% パスコード入力
    *   mailer ->> browser : パスコード入力
    *   deactivate mailer
@@ -505,9 +505,9 @@ class Auth {
    *   deactivate gateway
    *   browser ->> browser : 初期画面表示
    *   deactivate browser
-   * 
+   *
    * ```
-   * 
+   *
    * - 文中の記号は以下の通り
    *   - CK:共通鍵(Common Key)
    *   - CP:利用者公開鍵(Client Public key)、CS:利用者秘密鍵(Client Secret key)
@@ -546,9 +546,9 @@ class Auth {
    * - (12) auth2B
    *   1. 送信された受付番号・パスコード・CPkeyが有効か、シートの申請登録と突合
    *   1. OKなら利用者情報をauth2Aに返す
-   * 
-   * ## 使用方法
-   * 
+   *
+   * #### 使用方法
+   *
    * ```
    * let config;
    * window.addEventListener('DOMContentLoaded',async () => {
@@ -558,14 +558,14 @@ class Auth {
    *   await v.auth.build();
    *   // ローディング画面解除
    *   document.querySelector('div[name="loading"]').style.display = 'none';
-   * 
+   *
    *   console.log(v.auth);
    *   console.log('DOMContentLoaded end.');
    * });
    * ```
-   * 
+   *
    * - `new Auth()`実行後、必ず`.build()`を実行する
-   * 
+   *
    */
   constructor(gatewayUrl,opt={}){
     const v = {whois:'Auth.constructor'};
@@ -696,17 +696,17 @@ class Auth {
           }},
           {sel:'dialog.Auth p',prop:{
             'font-size':'1.5rem',
-            'margin':'0.5rem 0',  
+            'margin':'0.5rem 0',
           }},
           {sel:'dialog.Auth li',prop:{
             'font-size':'1rem',
-            'margin':'0.5rem 0',  
+            'margin':'0.5rem 0',
           }},
           {sel:'dialog.Auth > input[type="number"]',prop:{
             'font-size':'1.5rem',
             'border':'solid 2px #888',
             'height':'2rem',
-            'width':'6rem',    
+            'width':'6rem',
           }},
           {sel:'dialog.Auth > input[type="button"]',prop:{
             'font-size':'1rem',
@@ -857,7 +857,7 @@ class Auth {
   /** entryNo(ID)をダイアログに入力
    * @param {void}
    * @returns {void}
-   * 
+   *
    * - Qiita [非同期な自作 confirm を作ってみた](https://qiita.com/naoki-funawatari/items/4de792bfefe5eab909cc)
    */
   #getEntryNo(){
@@ -913,7 +913,7 @@ class Auth {
    * @param {Object} arg - 呼び先関数に渡すデータオブジェクト
    * @param {number} [md=0] - モード。0:平文、1:共通鍵で暗号化、2:署名無し暗号化、3:署名付き暗号化
    * @returns {Object} 呼び先からの戻り値
-   * 
+   *
    * - JS: [Async/await](https://ja.javascript.info/async-await)
    * - MDN: [フェッチが成功したかの確認](https://developer.mozilla.org/ja/docs/Web/API/Fetch_API/Using_Fetch#%E3%83%95%E3%82%A7%E3%83%83%E3%83%81%E3%81%8C%E6%88%90%E5%8A%9F%E3%81%97%E3%81%9F%E3%81%8B%E3%81%AE%E7%A2%BA%E8%AA%8D)
    * - MDN: [fetch()](https://developer.mozilla.org/ja/docs/Web/API/fetch)
@@ -988,9 +988,9 @@ class Auth {
 <script type="text/javascript">
 /**
  * Array型の変数に2次元配列からHTMLの表を作成してtable要素として返すメソッドを追加する。
- * 
+ *
  * 使用前`Array.prototype.tabulize = Array.tabulize;`実行のこと。
- * 
+ *
  * @param {Object} [opt]
  * @param {string} opt.dateFormat {string} - 配列内のDateを表示する日時形式指定文字列(yMdhms.n)
  * @returns {HTMLTableObject}
@@ -1234,10 +1234,10 @@ class BulletinBoard {
   }
 
   /** 掲示板から配信を受ける
-   * 
+   *
    * this.startにより定期的に起動されるよう設定される。
    * @param {void}
-   * @returns 
+   * @returns
    */
   receive = async() => {
     const v = {whois:'BulletinBoard.receive',step:0,rv:null};
@@ -1315,7 +1315,7 @@ class BulletinBoard {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  }  
+  }
 
   /** 掲示板に投稿する
    * @returns {null|Error}
@@ -1354,10 +1354,10 @@ class BulletinBoard {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  }  
+  }
 
   /** 投稿内容をGASにアップロード
-   * @param {Object} data - アップロードするデータオブジェクト 
+   * @param {Object} data - アップロードするデータオブジェクト
    * @returns {void}
    */
   upload = async(event) => {
@@ -1446,7 +1446,7 @@ class BulletinBoard {
   }
 
   /** 設定内容の変更(主に時間間隔の修正を想定)
-   * @param {Object} opt 
+   * @param {Object} opt
    * @returns {void}
    */
   change = (opt) => {
@@ -1489,7 +1489,7 @@ class BurgerMenu {
   /**
    * @constructor
    * @param {string|HTMLElement} parent - 親要素(wrapper)またはそのCSSセレクタ
-   * @param {Object} [opt={}] - オプション 
+   * @param {Object} [opt={}] - オプション
    * @returns {null|Error}
    */
   constructor(parent,opt={}){
@@ -2090,10 +2090,10 @@ function createElement(arg={}){
 /** createPassword: パスワード文字列の生成
  * @desc シングル/ダブルクォーテーションはJavaScript上文字列として扱う際にエスケープが必要になるので除外
  * @param {number} [len=16] - パスワードの文字長
- * @param {boolean} [opt.lower=true] - 小文字を使用するならtrue 
- * @param {boolean} [opt.upper=true] - 大文字を使用するならtrue 
- * @param {boolean} [opt.symbol=true] - 記号を使用するならtrue 
- * @param {boolean} [opt.numeric=true] - 数字を使用するならtrue 
+ * @param {boolean} [opt.lower=true] - 小文字を使用するならtrue
+ * @param {boolean} [opt.upper=true] - 大文字を使用するならtrue
+ * @param {boolean} [opt.symbol=true] - 記号を使用するならtrue
+ * @param {boolean} [opt.numeric=true] - 数字を使用するならtrue
  * @returns {string} 生成されたパスワード文字列
  */
  function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:true}){
@@ -2133,7 +2133,7 @@ function createElement(arg={}){
  * @param {string} text - 暗号化対象の文字列
  * @param {string} pass - パスワード
  * @returns {encryptAES}
- * 
+ *
  * - [JavaScript AES暗号・復号](https://chigusa-web.com/blog/js-aes/)
  */
 function encryptAES(text, pass) {
@@ -2187,7 +2187,7 @@ function decryptAES(encryptedData, pass) {
 /** 日時を指定形式の文字列にして返す"toLocale()"メソッドをDate型に追加する。
  * @param {string} [format='yyyy/MM/dd'] - 日時を指定する文字列。年:y,月:M,日:d,時:h,分:m,秒:s,ミリ秒:n
  * @returns {string} 指定形式に変換された文字列。無効な日付なら長さ0の文字列
- * 
+ *
  * @example
  * ```
  * "1965/9/5"[yy/MM/dd hh:mm:ss.nnn] ⇒ "65/09/05 00:00:00.000"
@@ -2242,7 +2242,7 @@ function Date_toLocale(format='yyyy/MM/dd'){
     return v.rv;
   } catch(e){
     // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
+    if( typeof window !== 'undefined' ) alert(e.stack);
     //throw e; //以降の処理を全て停止
     v.rv.stack = e.stack; return v.rv; // 処理継続
   }
@@ -2251,7 +2251,7 @@ Date.prototype.toLocale = Date_toLocale;
 </script>
 <script type="text/javascript">/**
  * @classdesc 参加者情報の表示・編集
- * 
+ *
  * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
  */
 class Participants {
@@ -2535,7 +2535,7 @@ class Participants {
         colorLight: "#fff",
         correctLevel : QRCode.CorrectLevel.H,
       });
-  
+
       v.step = 1.2; // その他文字情報表示
       ['entryStr','申込者氏名','申込者カナ'].forEach(x => {
         v.x = x;
@@ -2972,10 +2972,10 @@ class itemSelector {
   /** 参加者情報(this.data)を画面にセット
    * @param {void}
    * @returns {void}
-   * 
+   *
    * trのnameが欲しいのに子要素のrubyやrtのnameを探してしまう問題が発生。<br>
    * ⇒ ×target ○currentTarget
-   * 
+   *
    * - [子要素クリック時の親要素のクリックイベントの挙動](https://www.sunapro.com/currenttarget/)
    */
   #setData = () => {
@@ -3063,7 +3063,7 @@ class LoadingIcon {
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
    * @param {Object} [opt={}] - オプション
    * @returns {true|Error}
-   * 
+   *
    * - [ローディングアイコン集](https://projects.lukehaas.me/css-loaders/)
    * - [CSSで全画面オーバーレイを実装する方法＆コード例](https://pisuke-code.com/css-fullscreen-overlay/)
    */
@@ -3104,7 +3104,7 @@ class LoadingIcon {
             --m3: calc(var(--m0) * 1.75);
             --m4: calc(var(--m0) * 1.8);
             --m5: calc(var(--m0) * 2.5);
-          
+
             margin: 100px auto;
             font-size: 25px;
             width: var(--dot-size);
@@ -3219,16 +3219,16 @@ class LoadingIcon {
 /**
  * @desc オブジェクトのプロパティを再帰的にマージ
  * - Qiita [JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法](https://qiita.com/riversun/items/60307d58f9b2f461082a)
- * 
+ *
  * @param {Object} target - 結合対象のオブジェクト1(劣後Obj)
  * @param {Object} source - 結合対象のオブジェクト2。同名のプロパティはこちらで上書き(優先Obj)
  * @param {Object} opts - オプション
  * @param {boolean} [opts.concatArray=false] - プロパティの値が配列だった場合、結合するならtrue
  * @param {boolean} [opts.overwirte=false] - target自身を書き換えるならtrue
  * @returns {Object} 結合されたオブジェクト
- * 
+ *
  * ### デシジョンテーブル
- * 
+ *
  * | 優先(a) | 劣後(b) | 結果 | 備考 |
  * | :--: | :--: | :--: | :-- |
  * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
@@ -3243,7 +3243,7 @@ class LoadingIcon {
  * | {A} |  B  | {A} | |
  * | {A} | [B] | {A} | |
  * | {A} | {B} | {A+B} | |
- * 
+ *
  */
 
 function mergeDeeply(target, source, opts) {
@@ -3274,14 +3274,14 @@ function mergeDeeply(target, source, opts) {
 }
 </script>
 <script type="text/javascript">/** クラス(constructor)共通の初期処理を行う。
- * 
+ *
  * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
  * @param {Object} opt - 起動時にオプションとして渡されたオブジェクト
  * @param {Object} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
  * @returns {void}
- * 
+ *
  * ## 処理概要
- * 
+ *
  * 1. オプション・既定値をメンバに設定
  * 1. オプション(Object)の第一階層にメンバ"parent"が存在する場合、
  *    1. メンバ"parent"がHTMLElement型の場合、
@@ -3297,20 +3297,20 @@ function mergeDeeply(target, source, opts) {
  *    呼出元クラスで作成されたスタイルシートが存在しないなら新規作成する
  * 1. オプション(Object)の第一階層にメンバ"html"が存在する場合、
  *    this.wrapper内に指定のHTML要素を生成
- * 
+ *
  * ## 領域開閉制御に関するメモ
- * 
+ *
  * 1. 領域全体の開閉制御はhtml側(BurgerMenu.change())で行う<br>
  *    ※displayの書き換えになっているが、将来的にはactクラスの加除に修正。<br>
  *    　現段階では影響が大きいため見送り。
  * 1. wrapperの既定値は「開いた状態(actあり)」とする
  * 1. wrapper内の要素の表示/非表示制御はメソッドで行う
- * 
+ *
  * ## 入力例
- * 
+ *
  * ```
  * const menu = new BurgerMenu({parent:'body',auth:confObj,fuga:{a:10}})
- * 
+ *
  * class BurgerMenu {
  *   constructor(opt){
  *     setupInstance(
@@ -3336,9 +3336,9 @@ function mergeDeeply(target, source, opts) {
  *       });
  *     // 以降、constructorの処理
  * ```
- * 
+ *
  * ## 出力例
- * 
+ *
  * ```
  * this = {
  *   parent: {
@@ -3353,7 +3353,7 @@ function mergeDeeply(target, source, opts) {
  *   },
  * }
  * ```
- * 
+ *
  * ```
  * <style type="text/css">
  * .date {
@@ -3362,9 +3362,9 @@ function mergeDeeply(target, source, opts) {
  * }
  * </style>
  * ```
- * 
+ *
  * ## デシジョンテーブル
- * 
+ *
  * | 優先(a) | 劣後(b) | 結果 | 備考 |
  * | :--: | :--: | :--: | :-- |
  * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
@@ -3383,7 +3383,7 @@ function mergeDeeply(target, source, opts) {
  * |  -  |  B  |  B  | |
  * |  -  | [B] | [B] | |
  * |  -  | {B} | {B} | |
- * 
+ *
  */
 const setupInstance = (dest,opt,def) => {
   const v = {whois:'setupInstance',rv:true,step:0,
@@ -3440,7 +3440,7 @@ const setupInstance = (dest,opt,def) => {
         // wrapperをparentに追加
         dest.wrapper = createElement({attr:{class:v.constructor,name:'wrapper'}});
         dest.parent.appendChild(dest.wrapper);
-        dest.wrapperSelector = 
+        dest.wrapperSelector =
         (dest.parentSelector === null ? null : dest.parentSelector + ' > ')
         + 'div.' + v.constructor + '[name="wrapper"]';
       } else {
@@ -3601,7 +3601,7 @@ class Reception {
       this.wrapper.classList.add('act');
       this.itemSelector.close();
       this.Participants.close();
-      
+
       while(v.loop){  // v.loopがtrueの間、繰り返し
         // 停止条件①：エラー発生
 
@@ -3614,13 +3614,13 @@ class Reception {
         console.log(v.whois+' step.%s: ',v.step,v.keyword);
         // 文字列長が0、または読込失敗orタイムアウトならGAS問合せを行わずリトライ
         if( v.keyword.length === 0 || v.keyword === null ) continue;
-  
+
         v.step = 2; // 入力された検索キーで認証局経由・管理局に該当者情報を問合せ
         this.LoadingIcon.show();
         v.rv = await this.auth.fetch('recept1A',v.keyword,3);
         if( v.rv instanceof Error ) throw v.rv;
         this.LoadingIcon.hide();
-  
+
         v.step = 3; // 無権限・不正公開鍵・不適切検索キー文字列のエラー
         if( v.rv.isErr ){
           throw new Error(v.rv.message);
@@ -3650,7 +3650,7 @@ class Reception {
             // 編集結果のメッセージを表示
             alert(v.rv.message);
           }
-        }        
+        }
       }
 
       // 終了処理
@@ -4262,7 +4262,7 @@ class TNoParticipants {
     try {
 
       v.step = 0; // 最新の人数を管理局から取得
-      this.LoadingIcon.show(); 
+      this.LoadingIcon.show();
       v.rv = await this.auth.fetch('getTNoParticipants',{
         entryNo: this.auth.entryNo.value,
         publicKey: this.auth.RSA.pKey,
@@ -4322,7 +4322,7 @@ class TNoParticipants {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  } 
+  }
 
   /** 申込別集計
    * @returns {null|Error}
@@ -4393,7 +4393,7 @@ class TNoParticipants {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  }    
+  }
 
   /**
    * @returns {null|Error}
@@ -4475,7 +4475,7 @@ class TNoParticipants {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  }  
+  }
 }</script>
 <script type="text/javascript">/**
  * @classdesc デバイスのカメラで文書/コードのスキャンを行う
@@ -4779,7 +4779,7 @@ class WebScanner {
         // videoの撮影停止(closeWhenFinishedならthis.close内で実行)
         this.video.srcObject.getVideoTracks().forEach((track) => {
           track.stop();
-        });  
+        });
       }
       console.log(v.whois+' normal end.\n',v.rv);
       return v.rv;
@@ -4853,24 +4853,24 @@ class WebScanner {
   }
 }</script>
 <script type="text/javascript">
-/** 
+/**
  * 変数の型を判定し、型名を文字列で返す。なお引数"is"が指定された場合、判定対象が"is"と等しいかの真偽値を返す。
- * 
+ *
  * @param {any} arg - 判定対象の変数
  * @param {string} [is] - 想定される型(型名の大文字小文字は意識不要)
  * @returns {string|boolean} - 型の名前。is指定有りなら判定対象が想定型かの真偽値
- * 
+ *
  * @example
  * ```
  * let a = 10;
  * whichType(a);  // 'Number'
  * whichType(a,'string'); // false
  * ```
- * 
+ *
  * <b>確認済戻り値一覧</b>
- * 
+ *
  * オブジェクトは型名が返るので、限定列挙は困難。以下は確認済みの戻り値のみ記載。
- * 
+ *
  * | 型名 | 戻り値 | 備考 |
  * | :-- | :-- | :-- |
  * | 文字列 | String |  |
@@ -4888,9 +4888,9 @@ class WebScanner {
  * | エラー | Error | RangeError等も'Error' |
  * | Date型 | Date |  |
  * | Promise型 | Promise |  |
- *  
+ *
  * - Qiita [JavaScriptの型などの判定いろいろ](https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3)
- * 
+ *
  */
 
 function whichType(arg,is){
@@ -5231,7 +5231,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     v.step = '3.1.1'; // 掲示板
     v.rv = await v.BulletinBoard.receive();
     if( v.rv instanceof Error ) throw v.rv;
-  
+
     // 3.1.2 注意事項
     // 3.1.3 持ち物
 
@@ -5267,7 +5267,7 @@ window.addEventListener('DOMContentLoaded',async () => {
     } else {
       // ローディング画面解除
       document.querySelector('div[name="loading"]').style.display = 'none';
-    } 
+    }
 
     v.step = '4.2'; // 終了処理
     v.BurgerMenu.change();  // ホーム画面を表示

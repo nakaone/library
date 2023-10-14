@@ -1,14 +1,14 @@
 /**
  * @classdesc デバイスのカメラで文書/コードのスキャンを行う
- * 
+ *
  * 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャンする。
- * 
+ *
  * **残課題**
- * 
+ *
  * 1. scanDoc稼働未確認
- * 
+ *
  * @example
- * 
+ *
  * ```
  * <div class="webScanner"></div>
  * 〜
@@ -137,7 +137,7 @@ class WebScanner {
   /** QRコードをスキャン
    * @param {Object} opt - scanQR専用パラメータ。詳細はconstructor参照
    * @returns {string|null} スキャンしたQRコードの文字列。読込失敗ならnull
-   * 
+   *
    * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
    */
   scanQR = async (opt={}) => {
@@ -162,14 +162,14 @@ class WebScanner {
       if( this.showVideo ){
         this.wrapper.querySelector('.video').classList.add('act');
       }
-      this.canvas.width  = v.cw = 
+      this.canvas.width  = v.cw =
       this.canvas.height = v.ch = this.size;
 
       v.step = 4; // 定期的にスキャン実行
       v.cnt = 0;
       do {
         if(this.video.readyState === this.video.HAVE_ENOUGH_DATA){
-          
+
           v.step = 4.1; // キャンバスへの描画
           this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
           v.imageData = this.context.getImageData(0, 0, v.cw, v.ch);
@@ -193,7 +193,7 @@ class WebScanner {
 
       console.log(v.whois+' normal end.\n',v.rv);
       return v.rv;
-  
+
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;

@@ -8,7 +8,7 @@
  * @property {string} summary - 品名(摘要)
  * @property {string} price - 価格
  * @property {string} method - 支払方法。AMEX, 役員借入金, SMBCから振込, 等
- * @property {string} note - 備考 
+ * @property {string} note - 備考
  */
 
 /** fileInfo: ファイル属性情報のオブジェクト
@@ -27,13 +27,13 @@
  * 【事前準備】
  * 対象フォルダ配下の各ファイルは事前に「詳細 > 説明欄」にJSON形式で情報を追加しておく。
  * テンプレート：{"date":"2023//","summary":"","price":0,"method":"役員借入金"}
- * 
+ *
  * 証憑台帳「履歴」シート上で不要な行は削除しておく
  */
 function main(){
   const v = {whois:'main',rv:null,step:'',
     sheet:{ // シート関係の定義、オブジェクト
-      spread: SpreadsheetApp.getActiveSpreadsheet(), 
+      spread: SpreadsheetApp.getActiveSpreadsheet(),
       list: ['folder','log','transport'], // 作業対象シート名のリスト
       folder:{name:'フォルダ',range:'a3:j',obj:null,
         isReg: 8,id: 9  // 規則、フォルダID列の配列上の添字
@@ -58,8 +58,8 @@ function main(){
     last:{  // 前回送信データ
       files:{}, // {ファイルID:ファイル情報オブジェクト}
       transport:{}, // {ID:交通費行データ}
-    }, 
-    // 今回送信分current:{range:null,data:[]}, 
+    },
+    // 今回送信分current:{range:null,data:[]},
     current: { // main()の戻り値＝今回送信データ
       fy: null, // 処理対象の会計年度
       last: null, // 前回送信日
@@ -97,7 +97,7 @@ function main(){
     v.range = 'a' + v.sheet.log.current + ':b' + v.sheet.log.current;
     v.data = [v.today, JSON.stringify(v.current)];
     v.sheet.log.obj.getRange(v.range).setValues([v.data]);
-    
+
     v.step = '6'; // 終了処理
     v.rv = v.current;
     console.log(v.whois+' normal end.',v.rv);
@@ -198,7 +198,7 @@ function setLast(mainV){
 }
 
 /** setFiles: 指定フォルダ配下のファイル情報を取得
- * @param {*} mainV 
+ * @param {*} mainV
  * @returns {void}
 
  * 【参考】
@@ -234,14 +234,14 @@ function setFiles(mainV){
           };
           v.id = v.file.getId();
           v.current.push(v.id);
-      
+
           // 「説明」に設定されたJSONの全項目を追加
           v.desc = v.file.getDescription() || '';
           if( v.desc.length > 0 ){
             v.desc = JSON.parse(v.desc);
             v.obj = Object.assign(v.obj,v.desc);
           }
-      
+
           // statusの判定
           //   説明欄に「status='delete'」が設定されている ⇒ status='delete'
           //     ※前回提出後、重複に気づいて削除した場合等を想定
@@ -304,7 +304,7 @@ function setTransport(mainV){
         //   前回提出分に同一IDが不在 ⇒ 'append'
         v.obj.status = mainV.last.transport.hasOwnProperty(v.md5)
           ? 'steady' : 'append';
-        
+
         // 交通費情報を登録
         mainV.current.transport.push(v.obj);
       }

@@ -37,9 +37,9 @@
 
 <script type="text/javascript" class="core">/* コアScript */
 /** 指定されたDIV要素にQRコードを作成
- * 
+ *
  * 作成時オプションについては[公式](https://github.com/davidshimjs/qrcodejs)参照。
- * 
+ *
  * @param {string} selector - QRコード作成先Div要素のCSSセレクタ
  * @param {Object|string} opt - 作成時オプション。文字列の場合、QRコードの内容
  */
@@ -72,7 +72,7 @@ function qrcode(selector,opt){
     return v.rv;
   } catch(e){
     // ブラウザで実行する場合はアラート表示
-    //if( typeof window !== 'undefined' ) alert(e.stack); 
+    //if( typeof window !== 'undefined' ) alert(e.stack);
     //throw e; //以降の処理を全て停止する場合
     v.rv.stack = e.stack; return v.rv; // 処理継続する場合
   }
@@ -93,7 +93,7 @@ function onConsole(){
 
     v.readFile = fs.readFileSync(v.argv.opt.i,'utf-8').trim();
     v.rv = qrcode(v.readFile);
-    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
+    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');
 
     //console.log('v.rv='+JSON.stringify(v.rv));
     console.log('qrcode.onConsole end.');
@@ -141,7 +141,7 @@ function onInput(event=null){
 
   } catch(e){
     console.error('onInput abnormal end.',e);
-    //alert(e.stack); 
+    //alert(e.stack);
     v.rv.stack = e.stack; return v.rv;
   }
 }

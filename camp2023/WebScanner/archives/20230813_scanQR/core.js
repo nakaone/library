@@ -5,10 +5,10 @@
  * @param {number} opt.interval=300 - 撮像間隔。ミリ秒
  * @param {number} opt.max=90000 - 最大待機時間。単位：ミリ秒
  * @returns {string} スキャンしたQRコードの文字列
- * 
+ *
  * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
  * - [Promiseでsleep機能を作る](https://www.sejuku.net/blog/24629#index_id5)
- * 
+ *
  * @typedef scanQRopt
  * @prop {number} [size=500] - ファインダのサイズ
  */

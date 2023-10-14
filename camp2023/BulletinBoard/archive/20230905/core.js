@@ -73,7 +73,7 @@ class BulletinBoard {
   }
 
   /** 掲示板にポストする
-   * 
+   *
    */
   post = async () => {
     const v = {whois:'BulletinBoard.post',step:'0',rv:null};
@@ -81,21 +81,21 @@ class BulletinBoard {
     try {
 
 
-      
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       this.stop();
-      return e;        
+      return e;
     }
   }
 
   /** 掲示板から配信を受ける
-   * 
+   *
    * this.startにより定期的に起動されるよう設定される。
    * @param {void}
-   * @returns 
+   * @returns
    */
   delivery = async() => {
     const v = {whois:'BulletinBoard.delivery',step:'0',rv:null};
@@ -162,7 +162,7 @@ class BulletinBoard {
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       this.stop();
-      return e;        
+      return e;
     }
   }
 
@@ -210,7 +210,7 @@ class BulletinBoard {
   }
 
   /** 設定内容の変更(主に時間間隔の修正を想定)
-   * @param {Object} opt 
+   * @param {Object} opt
    * @returns {void}
    */
   change = (opt) => {

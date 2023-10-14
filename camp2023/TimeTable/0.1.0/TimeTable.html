@@ -154,25 +154,25 @@
  */
 
 class TimeTable {
-  
+
   /**
    * @constructor
    * @param {string} selector - タイムテーブルを描画する要素のCSSセレクタ
    * @param {Object} data - タイムテーブル用のデータ
    * @param {Object} opt - オプションを指定するオブジェクト
    * @returns {void}
-   * 
+   *
    * @desc 既定値の設定、タスクデータ他のデータ加工を行い、タイムテーブルを描画する
-   * 
+   *
    * <details><summary>入力シートイメージ</summary>
-   * 
+   *
    * - start/endが赤字：マイルストーン(非導出項目、要手動設定)
    * - 背景色群青：セクション・タスク共通の必須項目
    * - 薄青：同任意項目
    * - 濃緑：タスクのみの必須項目
    * - 薄緑：同任意項目
    * - 赤：算式が設定された項目
-   * 
+   *
    * <h3>TimeTable</h3>
    * <table calss="tt"><tr>
    * <th style="background:#ff0000;color:white">id</th>
@@ -206,7 +206,7 @@ class TimeTable {
    * </tr><tr>
    * <td>9</td><td>2</td><td>テント撤去</td><td></td><td></td><td></td><td>10/01 08:00</td><td>60</td><td>10/01 09:00</td><td>校庭</td><td></td><td></td><td></td><td></td>
    * </tr></table>
-   * 
+   *
    * <h3>resources</h3>
    * <table><tr>
    * <th style="background:#0000ff;color:white;">tId</th>
@@ -227,7 +227,7 @@ class TimeTable {
    * <tr><td>17</td><td>参加者受付</td><td>7</td><td>おやじの会入会申込書</td><td>20</td><td>枚</td><td></td><td></td><td></td></tr>
    * </table>
    * </details>
-   * 
+   *
    */
 
   constructor(selector,data,opt){
@@ -364,7 +364,7 @@ class TimeTable {
     } else {
       if( 'tag' in arg ){
         v.tag = arg.tag;
-      } 
+      }
     }
     let rv = document.createElement(v.tag);
     for( let x in v.opt ){
@@ -537,7 +537,7 @@ class TimeTable {
        * - [オブジェクトをdateでソートする例](https://keizokuma.com/js-array-object-sort/)
        * @param {Object} columnDef - 欄名:{column,label,type,memo,must,display,note}をメンバとするオブジェクト
        */
-      listColumns: (columnDef) => { // 
+      listColumns: (columnDef) => { //
         const list = [];
         Object.keys(columnDef).forEach(x => {
           if( columnDef[x].display > 0 ) list.push(columnDef[x]);
@@ -606,7 +606,7 @@ class TimeTable {
 
       v.detail.querySelector('tbody').appendChild(v.tr);
     }
-    
+
     // 詳細画面の「閉じる」ボタン動作設定
     v.detail.querySelector('button[name="close"]').onclick
     = () => v.detail.style.display = 'none';
@@ -639,7 +639,7 @@ class TimeTable {
 
   /** セクション名クリックで配下のタスクの表示/非表示切り替え */
   toggleChildren(id,label){
-    this.rootElement.querySelectorAll('.pId'+id).forEach(x => 
+    this.rootElement.querySelectorAll('.pId'+id).forEach(x =>
       x.style.display = x.style.display === 'none' ? '' : 'none');
     // ラベルの前の三角を交換
     let m = label.innerText.match(/^([▶️|▼])(.+)$/);

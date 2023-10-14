@@ -32,7 +32,7 @@
  * </ol>
  * @param {mailObj|mailObj[]} arg - 送信するメールのオブジェクトまたはその配列
  * @returns {sendMailsResult} 送信結果
- * 
+ *
  * @desc <caption>参考</caption>
  * <ul>
  * <li>[Class MailApp]{@link https://developers.google.com/apps-script/reference/mail/mail-app?hl=ja}
@@ -44,7 +44,7 @@
   const v = {whois:'GAS.sendMails',arg:arg,rv:{OK:[],NG:[]}};
   try {
     console.log(v.whois+' start.\n',arg);
-  
+
     v.step = '1'; // 引数を強制的に配列化
     v.arg = whichType(arg) === 'Object' ? [arg] : arg;
 

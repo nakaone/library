@@ -16,7 +16,7 @@
  * @param {String} name - メールの送信者の名前。デフォルトは送信者のユーザー名。
  * @param {Boolean} noReply - 受信者からの発信元メールアドレスへの返信を抑止
  * @param {String} replyTo - デフォルトの返信先アドレス。noReply=trueなら無視される
- * @returns {null|Error} 配信結果。正常ならnull 
+ * @returns {null|Error} 配信結果。正常ならnull
  */
  function postMails(arg){
   const v = {whois:'GAS.postMails',arg:arg,rv:null,post:[],to:[]};
@@ -163,7 +163,7 @@
       }
     }
 
-    v.step = '5'; // 終了処理    
+    v.step = '5'; // 終了処理
     console.log(v.whois+' normal end.\n',arg);
   } catch(e) {
     console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));

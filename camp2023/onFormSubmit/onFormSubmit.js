@@ -16,9 +16,9 @@ function initMaster(){
 /** 申込フォームの入力を受け、シートの更新＋受付メールの発信を行う
  * @param {Object} e - [イベント](https://developers.google.com/apps-script/guides/triggers/events?hl=ja#form-submit)オブジェクト
  * @returns {void}
- * 
+ *
  * ## 処理概要
- * 
+ *
  * 1. フォームから渡されるオブジェクトから以下の情報を取得
  *    1. "range"から書き込まれた行(e.range.getRow())
  *    2. "namedValues"からメールアドレス(e.namedValues["メールアドレス"][0])
@@ -29,15 +29,15 @@ function initMaster(){
  *    1. 要既定値設定項目(entryNo/editURL/authority)の空欄に既定値を設定
  *    2. "range"から書き込まれた行の情報はメール送信用に保存
  * 4. 回答者にメールを送信
- * 
+ *
  * ## 参考
- * 
+ *
  * - [GASでGoogleフォームの値を取得する](https://walking-elephant.blogspot.com/2021/01/gas.formapp.html)
  * - GAS公式 [Class FormApp](https://developers.google.com/apps-script/reference/forms/form-app?hl=ja)
  * - GAS公式 [Class Form](https://developers.google.com/apps-script/reference/forms/form?hl=ja)
- * 
+ *
  * メール送信については以下を参照。
- * 
+ *
  * - [Google App Script メモ（メール送信制限 回避術）](https://zenn.dev/tatsuya_okzk/articles/259203cc416328)
  * - GAS公式[createDraft](https://developers.google.com/apps-script/reference/gmail/gmail-app?hl=ja#createdraftrecipient,-subject,-body,-options)
  */

@@ -1,7 +1,7 @@
 /**
  * @desc オブジェクトのプロパティを再帰的にマージ
  * - Qiita [JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法](https://qiita.com/riversun/items/60307d58f9b2f461082a)
- * 
+ *
  * @param {Object} target - 結合対象のオブジェクト1
  * @param {Object} source - 結合対象のオブジェクト2。同名のプロパティはこちらで上書き
  * @param {Object} opts - オプション

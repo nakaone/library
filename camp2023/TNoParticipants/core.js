@@ -155,7 +155,7 @@ class TNoParticipants {
     try {
 
       v.step = 0; // 最新の人数を管理局から取得
-      this.LoadingIcon.show(); 
+      this.LoadingIcon.show();
       v.rv = await this.auth.fetch('getTNoParticipants',{
         entryNo: this.auth.entryNo.value,
         publicKey: this.auth.RSA.pKey,
@@ -215,7 +215,7 @@ class TNoParticipants {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  } 
+  }
 
   /** 申込別集計
    * @returns {null|Error}
@@ -286,7 +286,7 @@ class TNoParticipants {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  }    
+  }
 
   /**
    * @returns {null|Error}
@@ -368,5 +368,5 @@ class TNoParticipants {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  }  
+  }
 }

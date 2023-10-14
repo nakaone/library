@@ -60,7 +60,7 @@ const v = {
     console.log('----- analyzeArg start.');
     const v = {rv:{opt:{},val:[]}};
     try {
-  
+
       for( v.i=2 ; v.i<process.argv.length ; v.i++ ){
         // process.argv:コマンドライン引数の配列
         v.m = process.argv[v.i].match(/^(\-*)([0-9a-zA-Z]+):*(.*)$/);
@@ -70,17 +70,17 @@ const v = {
           v.rv.val.push(process.argv[v.i]);
         }
       }
-  
+
       console.log('v.rv='+JSON.stringify(v.rv));
       console.log('----- analyzeArg end.');
       return v.rv;
     } catch(e){
       // ブラウザで実行する場合はアラート表示
-      if( typeof window !== 'undefined' ) alert(e.stack); 
+      if( typeof window !== 'undefined' ) alert(e.stack);
       //throw e; //以降の処理を全て停止
       v.rv.stack = e.stack; return v.rv; // 処理継続
     }
-  }  
+  }
 };
 if( typeof window === 'undefined' ){
   // コンソール(Node.js)で実行する場合の処理
@@ -125,7 +125,7 @@ if( typeof window === 'undefined' ){
     }
   }
   if( 'o' in v.argv.opt ){
-    v.content = v.fs.writeFileSync(v.argv.opt.o,v.result,'utf-8');  
+    v.content = v.fs.writeFileSync(v.argv.opt.o,v.result,'utf-8');
   } else {  // 出力ファイル指定が無ければコンソールに出力
     console.log(v.result);
   }

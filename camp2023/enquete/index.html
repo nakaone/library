@@ -401,7 +401,7 @@ const drawPage = (q,a) => {
         //plugins: {title: {display: true,text: 'Chart.js Bar Chart - Stacked'}},
         responsive: true,
         scales: {x:{stacked: true},y:{stacked: true}},
-      }        
+      }
     };
     // データセットのリセット
     v.data.data.labels = [];  // debug用。上の仮データを消去
@@ -1028,7 +1028,7 @@ const setupInstance = (dest,opt,def) => {
         // wrapperをparentに追加
         dest.wrapper = createElement({attr:{class:v.constructor,name:'wrapper'}});
         dest.parent.appendChild(dest.wrapper);
-        dest.wrapperSelector = 
+        dest.wrapperSelector =
         (dest.parentSelector === null ? null : dest.parentSelector + ' > ')
         + 'div.' + v.constructor + '[name="wrapper"]';
       } else {

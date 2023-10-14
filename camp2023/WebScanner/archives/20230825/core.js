@@ -4,13 +4,13 @@
 
 /**
  * @classdesc 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャン
- * 
+ *
  * **残課題**
- * 
+ *
  * 1. scanDoc稼働未確認
- * 
+ *
  * @example
- * 
+ *
  * ```
  * <div class="webScanner"></div>
  * 〜
@@ -24,7 +24,7 @@ class WebScanner {
    * @constructor
    * @param {string} [parent='body'] - 親要素のCSSセレクタ
    * @param {Object} [opt={}] - オプション
-   * 
+   *
    * - [Promiseでsleep機能を作る](https://www.sejuku.net/blog/24629#index_id5)
    */
   constructor(parent='body',opt={}){
@@ -177,7 +177,7 @@ class WebScanner {
 
       console.log(v.whois+' normal end.\n',this);
       return v.rv;
-      
+
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
@@ -187,7 +187,7 @@ class WebScanner {
   /** QRコードをスキャン
    * @param {Object} opt - scanQR専用パラメータ。詳細はconstructor参照
    * @returns {string} スキャンしたQRコードの文字列
-   * 
+   *
    * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
    */
   scanQR = async (opt={}) => {
@@ -231,7 +231,7 @@ class WebScanner {
           = this.size * (v.vw > v.vh ? 1 : (v.vw / v.vh));
           this.canvas.height = v.ch
           = this.size * (v.vh > v.vw ? 1 : (v.vh / v.vw));
-  
+
           v.step = 4.2; // キャンバスへの描画
           this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
           v.imageData = this.context.getImageData(0, 0, v.cw, v.ch);
@@ -254,7 +254,7 @@ class WebScanner {
 
       console.log(v.whois+' normal end.\n',v.rv);
       return v.rv;
-  
+
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;

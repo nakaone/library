@@ -10,9 +10,9 @@ class Auth {
    * @param {string} gatewayUrl - 認証局APIのURL
    * @param {AuthOpt} [opt={}] - 生成時オプション
    * @returns {void} なし
-   * 
-   * ## 処理概要
-   * 
+   *
+   * #### 処理概要
+   *
    * ```mermaid
    * sequenceDiagram
    *   autonumber
@@ -21,33 +21,33 @@ class Auth {
    *   participant gateway as 認証局
    *   participant master as 管理局
    *   participant httpd as httpd
-   * 
+   *
    *   %% 受付番号入力
    *   mailer ->> httpd : 事前に送信された案内メールのリンクをクリック
    *   httpd ->> browser : ページファイル(index.html)
    *   activate browser
    *   Note right of browser: constructor()
    *   Note right of browser: getEntryNo()
-   * 
+   *
    *   browser ->> gateway : 受付番号、CP(平文)
    *   activate gateway
    *   Note right of gateway : auth1A()
-   * 
+   *
    *   gateway ->> master : 受付番号、CP(GS/MP)
    *   activate master
    *   Note right of master : auth1B()
    *   master ->> mailer : パスコード
    *   activate mailer
-   * 
+   *
    *   master ->> gateway : 申請登録結果
    *   deactivate master
-   * 
+   *
    *   gateway ->> browser : 申請登録結果
    *   deactivate gateway
    *   browser ->> browser : GP格納、パスコード入力画面表示
    *   deactivate browser
-   * 
-   * 
+   *
+   *
    *   %% パスコード入力
    *   mailer ->> browser : パスコード入力
    *   deactivate mailer
@@ -65,9 +65,9 @@ class Auth {
    *   deactivate gateway
    *   browser ->> browser : 初期画面表示
    *   deactivate browser
-   * 
+   *
    * ```
-   * 
+   *
    * - 文中の記号は以下の通り
    *   - CK:共通鍵(Common Key)
    *   - CP:利用者公開鍵(Client Public key)、CS:利用者秘密鍵(Client Secret key)
@@ -106,9 +106,9 @@ class Auth {
    * - (12) auth2B
    *   1. 送信された受付番号・パスコード・CPkeyが有効か、シートの申請登録と突合
    *   1. OKなら利用者情報をauth2Aに返す
-   * 
-   * ## 使用方法
-   * 
+   *
+   * #### 使用方法
+   *
    * ```
    * let config;
    * window.addEventListener('DOMContentLoaded',async () => {
@@ -118,14 +118,14 @@ class Auth {
    *   await v.auth.build();
    *   // ローディング画面解除
    *   document.querySelector('div[name="loading"]').style.display = 'none';
-   * 
+   *
    *   console.log(v.auth);
    *   console.log('DOMContentLoaded end.');
    * });
    * ```
-   * 
+   *
    * - `new Auth()`実行後、必ず`.build()`を実行する
-   * 
+   *
    */
   constructor(gatewayUrl,opt={}){
     const v = {whois:'Auth.constructor'};
@@ -256,17 +256,17 @@ class Auth {
           }},
           {sel:'dialog.Auth p',prop:{
             'font-size':'1.5rem',
-            'margin':'0.5rem 0',  
+            'margin':'0.5rem 0',
           }},
           {sel:'dialog.Auth li',prop:{
             'font-size':'1rem',
-            'margin':'0.5rem 0',  
+            'margin':'0.5rem 0',
           }},
           {sel:'dialog.Auth > input[type="number"]',prop:{
             'font-size':'1.5rem',
             'border':'solid 2px #888',
             'height':'2rem',
-            'width':'6rem',    
+            'width':'6rem',
           }},
           {sel:'dialog.Auth > input[type="button"]',prop:{
             'font-size':'1rem',
@@ -417,7 +417,7 @@ class Auth {
   /** entryNo(ID)をダイアログに入力
    * @param {void}
    * @returns {void}
-   * 
+   *
    * - Qiita [非同期な自作 confirm を作ってみた](https://qiita.com/naoki-funawatari/items/4de792bfefe5eab909cc)
    */
   #getEntryNo(){
@@ -473,7 +473,7 @@ class Auth {
    * @param {Object} arg - 呼び先関数に渡すデータオブジェクト
    * @param {number} [md=0] - モード。0:平文、1:共通鍵で暗号化、2:署名無し暗号化、3:署名付き暗号化
    * @returns {Object} 呼び先からの戻り値
-   * 
+   *
    * - JS: [Async/await](https://ja.javascript.info/async-await)
    * - MDN: [フェッチが成功したかの確認](https://developer.mozilla.org/ja/docs/Web/API/Fetch_API/Using_Fetch#%E3%83%95%E3%82%A7%E3%83%83%E3%83%81%E3%81%8C%E6%88%90%E5%8A%9F%E3%81%97%E3%81%9F%E3%81%8B%E3%81%AE%E7%A2%BA%E8%AA%8D)
    * - MDN: [fetch()](https://developer.mozilla.org/ja/docs/Web/API/fetch)

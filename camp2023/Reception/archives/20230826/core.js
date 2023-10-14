@@ -1,6 +1,6 @@
 /**
  * @classdesc 受付業務の画面を生成、受付番号のスキャン/入力から該当参加者情報の表示・編集を行う
- * 
+ *
  * なおスキャンはclass WebScanner.scanQRで、該当参加者情報の表示はPerticipantsで行う。
  */
 class Reception {
@@ -38,7 +38,7 @@ class Reception {
       return v.rv;
     } catch(e){
       console.error(v.whois+' abnormal end.',e,v);
-      return e;        
+      return e;
     }
   }
 
@@ -116,7 +116,7 @@ class Reception {
             'grid-template-columns': '8rem 1fr',
             'grid-gap': '0.2rem',
           }},
-        ],    
+        ],
       },
     }};
 
@@ -158,7 +158,7 @@ class Reception {
     const v = {whois:'Reception.#setWindows',rv:null,step:'0'};
     console.log(v.whois+' start.');
     try {
-  
+
       v.step = 1; // dialog用のCSS定義を追加(getPassCodeと共通)
       v.style = createElement('style');
       document.head.appendChild(v.style);
@@ -237,10 +237,10 @@ class Reception {
       document.querySelector('body').prepend(this.edit.element);
       this.edit.table = this.edit.element.querySelector('[name="table"]');
       this.edit.details = this.edit.element.querySelector('[name="details"]');
-  
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
-  
+
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+')\n',e,v);
       return e;
@@ -293,13 +293,13 @@ class Reception {
       return v.rv;
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-      return e;        
+      return e;
     }
   }
 
   /** スキャナを起動、読み込んだQRデータをsearchに渡す
    * @param {void}
-   * @returns 
+   * @returns
    */
   bootScanner = async () => {
     const v = {whois:'Reception.bootScanner',step:'0',rv:null};
@@ -319,7 +319,7 @@ class Reception {
       return v.rv;
     } catch(e){
       console.error(v.whois+' abnormal end.',e,v);
-      return e;        
+      return e;
     }
   }
 
@@ -346,7 +346,7 @@ class Reception {
       return v.rv;
     } catch(e){
       console.error(v.whois+' abnormal end.',e,v);
-      return e;        
+      return e;
     }
   }
 
@@ -372,7 +372,7 @@ class Reception {
             attr:{name:d.entryNo}, // 受付番号をname属性で持たせる
             children:[{
               tag: 'ruby',
-              html: d['申込者氏名'], 
+              html: d['申込者氏名'],
               children: [{
                 tag: 'rt',
                 text: d['申込者カナ'],
@@ -412,7 +412,7 @@ class Reception {
 
     } catch(e){
       console.error(v.whois+' abnormal end.',e,v);
-      return e;        
+      return e;
     }
   }
 
@@ -424,7 +424,7 @@ class Reception {
     const v = {whois:'Reception.#edit',rv:null,step:'0'};
     console.log(v.whois+' start.\n'+JSON.stringify(data));
     try {
-  
+
       v.step = 1; // データクレンジング
       data['申込者所属'] = '申込者';  // 未定義なので追加しておく
       for( v.i=0 ; v.i<6 ; v.i++ ){
@@ -432,36 +432,36 @@ class Reception {
           data['fee0'+v.i] = (data['参加者0'+v.i+'所属'] === '未就学児') ? '無し' : '未収';
         }
       }
-  
+
       v.step = 2; // 参加者一覧の表示
       // 前回参加者一覧の削除
       this.edit.table.querySelectorAll('div.td').forEach(x => x.remove());
       for( v.i=0 ; v.i<6 ; v.i++ ){
         v.step = 2.1; // 項目名の接頭辞
         v.pre = v.i === 0 ? '申込者' : ('参加者0' + v.i);
-  
+
         v.step = 2.2; // 申込者が不参加、または氏名・所属とも未登録の参加者は表示しない
         if( v.i === 0 && data['申込者の参加'] === '不参加'
         || data[v.pre+'氏名'].length === 0 && data[v.pre+'所属'].length === 0 ){
           continue;
         }
-  
+
         v.step = 2.3; // No
         this.edit.table.appendChild(createElement({attr:{class:'td'},text: ('0'+v.i)}));
-  
+
         v.step = 2.4; // 氏名＋カナ
         this.edit.table.appendChild(createElement({attr:{class:'td'},children:[{
           tag: 'ruby',
-          html: data[v.pre+'氏名'], 
+          html: data[v.pre+'氏名'],
           children: [{
             tag: 'rt',
             text: data[v.pre+'カナ']
           }]
         }]}));
-  
+
         v.step = 2.5; // 所属
         this.edit.table.appendChild(createElement({attr:{class:'td'},text: data[v.pre+'所属']}));
-  
+
         v.step = 2.6; // 参加費
         v.options = [];
         ['無し','未収','既収'].forEach(x => {
@@ -478,7 +478,7 @@ class Reception {
           children:v.options,
         }]}));
       }
-  
+
       v.step = 3.1; // 詳細情報のセット
       ['メールアドレス', '申込者氏名', '申込者カナ', '申込者の参加',
       '宿泊、テント', '引取者氏名', '緊急連絡先',
@@ -499,11 +499,11 @@ class Reception {
         colorLight: "#ffffff",
         correctLevel: QRCode.CorrectLevel.H
       });
-      
-  
+
+
       v.step = 4.1; // 編集用ダイアログの表示
       this.edit.element.showModal();
-  
+
       v.step = 4.2; // 戻り値を設定
       return new Promise(resolve => {
         v.step = 5.1; // 「キャンセル」クリック時はnullを返す
@@ -530,7 +530,7 @@ class Reception {
           resolve(rv);
         });
       });
-  
+
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+')\n',e,v);
       return e;
@@ -560,7 +560,7 @@ class Reception {
       return v.rv;
     } catch(e){
       console.error(v.whois+' abnormal end.',e,v);
-      return e;        
+      return e;
     }
   }
 

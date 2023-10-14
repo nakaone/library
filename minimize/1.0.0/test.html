@@ -120,7 +120,7 @@ function onKeyup(event=null){
     console.log('onKeyup end.');
   } catch(e){
     console.error('onKeyup abnormal end.',e);
-    alert(e.stack); 
+    alert(e.stack);
     v.rv.stack = e.stack; return v.rv;
   }
 }

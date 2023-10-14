@@ -24,19 +24,19 @@
  */
 /**
  * @desc コマンドラインから`node xxx.js aa bb`を実行した場合の引数(`aa`,`bb`)を取得し、オブジェクトにして返す。<br>
- * 
+ *
  * @example
- * 
+ *
  * ```
  * node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
  * ⇒ {opt:{i:"aaa.html",o:"ccc.json"},val:["bbb","ddd","eee"]}
  * ```
- * 
+ *
  * <caution>注意</caution>
- * 
+ *
  * - スイッチは`(\-*)([0-9a-zA-Z]+):*(.*)$`形式であること
  * - スイッチに該当しないものは配列`val`にそのまま格納される
- * 
+ *
  * @param {void} - なし
  * @returns {AnalyzeArg} 分析結果のオブジェクト
  */
@@ -62,7 +62,7 @@ function analyzeArg(){
   } catch(e){
     console.error('===== analyzeArg abnormal end.\n',e);
     // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
+    if( typeof window !== 'undefined' ) alert(e.stack);
     //throw e; //以降の処理を全て停止
     v.rv.stack = e.stack; return v.rv; // 処理継続
   }

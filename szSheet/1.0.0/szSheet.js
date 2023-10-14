@@ -29,7 +29,7 @@
 
 /** szSheet: Googleスプレッドでデータ/行のCRUDを行う擬似クラス
  * @desc GAS用擬似クラス。CRUD用メソッドを持つオブジェクトを生成する。
- * 
+ *
  * 1. isEqual: 引数とシート上の値が等価か判断
  * 1. complement: 主キー及び既定値設定項目の補完を行う
  * 1. search: 項目名'key'の値がvalueである行Objを全て検索する
@@ -38,7 +38,7 @@
  * 1. append: 行の追加
  * 1. delete: 行の削除
  * 1. objectize: 階層形式のシートをオブジェクト化
- * 
+ *
  * @function
  * @param {object|string} arg - 文字列の場合「コンテナのシートでヘッダ行は1行目」と看做す
  * @param {string} arg.spreadId - 外部スプレッドシートのID
@@ -46,9 +46,9 @@
  * @param {number} arg.headerRow - ヘッダ行の行番号(>0)。既定値1。項目名は重複不可
  * @param {string} [key=null] - プライマリキーとなる項目名
  * @returns {szSheetObj} 取得したシートのデータ
- * 
+ *
  * @desc <caption>シート記述時の注意</caption>
- * 
+ *
  * 1. 引数のキー指定は「primary key」のメモより優先される
  * 2. 「default:〜」はcomplement・append時、空欄に「〜」を設定。実データだけでなく算式も可。<br>
  *    例：「default: =indirect("RC[-1]",false)」は一列左の値が設定される<br>
@@ -88,7 +88,7 @@ function szSheet(arg,key=null){
     }
     if( v.rv.sheet === null ) throw new Error('指定された"'+v.rv.sheetName+'"シートは存在しません');
     v.rv.key = key;
-    
+
     // 2.データの取得・加工
     v.step = '2.1';
     v.dRange = v.rv.sheet.getDataRange();
@@ -327,7 +327,7 @@ function szSheet(arg,key=null){
      * @desc <caption>戻り値に関する注意</caption>
      * 引数のkey,valueにマッチするものがなかったら空配列、
      * マッチするものがあったが変更がない場合szSheetChangedオブジェクトの配列が返るが、そのchangedは空配列になる。
-     * 
+     *
      * @param {Object.<string, any>} data - 更新データ。{項目名：設定値,..}形式
      * @param {object|any} opt - オプション指定。非objならkey=rv.key,value=opt,append=trueと看做す
      * @param {string} [opt.key=rv.key] - キーとなる項目名
@@ -467,7 +467,7 @@ function szSheet(arg,key=null){
             v.type = whichType(data[0]);
             v.data = v.type !== 'Array' && v.type !== 'Object'? v.data = [data] : data;
             break;
-          default: 
+          default:
             throw new Error('行データの形式が不適切です');
         }
 

@@ -93,10 +93,10 @@ class itemSelector {
   /** 参加者情報(this.data)を画面にセット
    * @param {void}
    * @returns {void}
-   * 
+   *
    * trのnameが欲しいのに子要素のrubyやrtのnameを探してしまう問題が発生。<br>
    * ⇒ ×target ○currentTarget
-   * 
+   *
    * - [子要素クリック時の親要素のクリックイベントの挙動](https://www.sunapro.com/currenttarget/)
    */
   #setData = () => {

@@ -179,10 +179,10 @@ class BulletinBoard {
   }
 
   /** 掲示板から配信を受ける
-   * 
+   *
    * this.startにより定期的に起動されるよう設定される。
    * @param {void}
-   * @returns 
+   * @returns
    */
   receive = async() => {
     const v = {whois:'BulletinBoard.receive',step:0,rv:null};
@@ -252,7 +252,7 @@ class BulletinBoard {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  }  
+  }
 
   /** 掲示板に投稿する
    * @returns {null|Error}
@@ -291,10 +291,10 @@ class BulletinBoard {
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  }  
+  }
 
   /** 投稿内容をGASにアップロード
-   * @param {Object} data - アップロードするデータオブジェクト 
+   * @param {Object} data - アップロードするデータオブジェクト
    * @returns {void}
    */
   upload = async(event) => {
@@ -383,7 +383,7 @@ class BulletinBoard {
   }
 
   /** 設定内容の変更(主に時間間隔の修正を想定)
-   * @param {Object} opt 
+   * @param {Object} opt
    * @returns {void}
    */
   change = (opt) => {

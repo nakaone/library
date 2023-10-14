@@ -7,7 +7,7 @@ class LoadingIcon {
    * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
    * @param {Object} [opt={}] - オプション
    * @returns {true|Error}
-   * 
+   *
    * - [ローディングアイコン集](https://projects.lukehaas.me/css-loaders/)
    * - [CSSで全画面オーバーレイを実装する方法＆コード例](https://pisuke-code.com/css-fullscreen-overlay/)
    */
@@ -48,7 +48,7 @@ class LoadingIcon {
             --m3: calc(var(--m0) * 1.75);
             --m4: calc(var(--m0) * 1.8);
             --m5: calc(var(--m0) * 2.5);
-          
+
             margin: 100px auto;
             font-size: 25px;
             width: var(--dot-size);

@@ -4,7 +4,7 @@
  * @property {string} summary - 品名(摘要)
  * @property {string} price - 価格
  * @property {string} method - 支払方法。AMEX, 役員借入金, SMBCから振込, 等
- * @property {string} note - 備考 
+ * @property {string} note - 備考
  */
 
 /**
@@ -48,5 +48,5 @@ function doGet() {
   const response = ContentService.createTextOutput();
   response.setMimeType(ContentService.MimeType.JSON);
   response.setContent(JSON.stringify(data));
-  return response;  
+  return response;
 }

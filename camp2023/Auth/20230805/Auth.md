@@ -233,7 +233,7 @@ class Auth {
    * @param {AuthOpt} [opt={}] - 生成時オプション
    * @returns {void} なし
    * 
-   * ## 処理概要
+   * #### 処理概要
    * 
    * ```mermaid
    * sequenceDiagram

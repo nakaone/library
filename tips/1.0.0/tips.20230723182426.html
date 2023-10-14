@@ -94,7 +94,7 @@ function createElement(arg={}){
 /** 日時を指定形式の文字列にして返す"toLocale()"メソッドをDate型に追加する。
  * @param {string} [format='yyyy/MM/dd'] - 日時を指定する文字列。年:y,月:M,日:d,時:h,分:m,秒:s,ミリ秒:n
  * @returns {string} 指定形式に変換された文字列。無効な日付なら長さ0の文字列
- * 
+ *
  * @example
  * ```
  * "1965/9/5"[yy/MM/dd hh:mm:ss.nnn] ⇒ "65/09/05 00:00:00.000"
@@ -149,7 +149,7 @@ function Date_toLocale(format='yyyy/MM/dd'){
     return v.rv;
   } catch(e){
     // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
+    if( typeof window !== 'undefined' ) alert(e.stack);
     //throw e; //以降の処理を全て停止
     v.rv.stack = e.stack; return v.rv; // 処理継続
   }
@@ -160,7 +160,7 @@ Date.prototype.toLocale = Date_toLocale;
 /**
  * @desc オブジェクトのプロパティを再帰的にマージ
  * - Qiita [JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法](https://qiita.com/riversun/items/60307d58f9b2f461082a)
- * 
+ *
  * @param {Object} target - 結合対象のオブジェクト1
  * @param {Object} source - 結合対象のオブジェクト2。同名のプロパティはこちらで上書き
  * @param {Object} opts - オプション

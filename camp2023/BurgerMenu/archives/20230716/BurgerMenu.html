@@ -290,7 +290,7 @@ body > .BurgerMenu {
 
 /**
  * @classdesc HTMLにメニューを作成する
- * 
+ *
  * - [画面分割のレイアウト](BurgerMenu.grid.md)
  */
 
@@ -316,7 +316,7 @@ class BurgerMenu {
     } catch(e){
       console.error('----- BurgerMenu.constructor abnormal end.\n',e);
       // ブラウザで実行する場合はアラート表示
-      if( typeof window !== 'undefined' ) alert(e.stack); 
+      if( typeof window !== 'undefined' ) alert(e.stack);
       throw e; //以降の処理を全て停止
       //v.rv.stack = e.stack; return v.rv; // 処理継続
     }
@@ -344,7 +344,7 @@ class BurgerMenu {
           backgroundColor: "#81d8d0",
           color: "#fff",
           size: "1rem",
-          weight: 400, // normal  
+          weight: 400, // normal
         }
       },
       header: {
@@ -361,7 +361,7 @@ class BurgerMenu {
       console.log('l.59',v.o);
 
       // authority指定のないメニュー項目、または権限がない場合はスキップ
-      if( !('authority' in v.o) 
+      if( !('authority' in v.o)
       || this.conf.authority !== null && (this.conf.authority & v.o.authority) === 0
       ) continue;
 

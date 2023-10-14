@@ -97,7 +97,7 @@
   </div>
   <div style="grid-column: 2 / 3" name="beA"></div>
   <div style="grid-column: 3 / 4" name="beB"></div>
-  
+
   <div style="grid-column: 1 / 2" class="th">
     encrypt/decrypt
     <sub>cryptico.encrypt(plainText,MattsPubKey)</sub>
@@ -193,7 +193,7 @@ function onInput(event=null){
     // decodeURI (old:base64 decode)
     console.log(v.e2B);
     v.bdB = d.bdB.innerText = decodeURI(v.e2B.plaintext);
-    //= decodeURIComponent(escape(atob(v.e2B.plaintext))); 
+    //= decodeURIComponent(escape(atob(v.e2B.plaintext)));
 
     console.log('onInput end.');
 
@@ -212,11 +212,11 @@ function resetPassPhrase(){
 
 /** createPassword: パスワード文字列の生成
  * @param {number} [len=16] - パスワードの文字長
- * @param {boolean} [opt.lower=true] - 小文字を使用するならtrue 
- * @param {boolean} [opt.upper=true] - 大文字を使用するならtrue 
- * @param {boolean} [opt.symbol=true] - 記号を使用するならtrue 
- * @param {boolean} [opt.numeric=true] - 数字を使用するならtrue 
- * @returns 
+ * @param {boolean} [opt.lower=true] - 小文字を使用するならtrue
+ * @param {boolean} [opt.upper=true] - 大文字を使用するならtrue
+ * @param {boolean} [opt.symbol=true] - 記号を使用するならtrue
+ * @param {boolean} [opt.numeric=true] - 数字を使用するならtrue
+ * @returns
  */
  const createPassword = (len=16,opt={lower:true,upper:true,symbol:true,numeric:true}) => {
   const v = {

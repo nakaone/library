@@ -24,7 +24,7 @@ const md = function(html) {
   div.innerHTML = marked(html);
   console.log(div.innerHTML);
   // 背景色の変更追加
-  //div.style.backgroundColor = 'DimGray'; 
+  //div.style.backgroundColor = 'DimGray';
   document.body.appendChild(div);
 }
 </script>
@@ -39,33 +39,33 @@ const md = function(html) {
         participant gateway as 認証局
         participant master as 管理局
         participant httpd as httpd
-  
+
         %% 受付番号入力
         mailer ->> httpd : 事前に送信された案内メールのリンクをクリック
         httpd ->> browser : ページファイル(index.html)
         activate browser
         Note right of browser: constructor()
         Note right of browser: getEntryNo()
-  
+
         browser ->> gateway : 受付番号、CP(平文)
         activate gateway
         Note right of gateway : auth1A()
-  
+
         gateway ->> master : 受付番号、CP(GS/MP)
         activate master
         Note right of master : auth1B()
         master ->> mailer : パスコード
         activate mailer
-  
+
         master ->> gateway : 申請登録結果
         deactivate master
-  
+
         gateway ->> browser : 申請登録結果
         deactivate gateway
         browser ->> browser : GP格納、パスコード入力画面表示
         deactivate browser
-  
-  
+
+
         %% パスコード入力
         mailer ->> browser : パスコード入力
         deactivate mailer
@@ -121,9 +121,9 @@ const md = function(html) {
       &lt;/head&gt;&lt;body&gt;
         &lt;div&gt;
           &lt;h1&gt;だみぃ&lt;/h1&gt;
-          &lt;p&gt;これはログイン後に表示される初期画面です。&lt;/p&gt;  
+          &lt;p&gt;これはログイン後に表示される初期画面です。&lt;/p&gt;
         &lt;/div&gt;
-      
+
       &lt;script type=&quot;text/javascript&quot; class=&quot;core&quot;&gt;/* コアScript */
       /**
        * @typedef {Object} AuthProp - AuthOpt以外のAuthクラスプロパティ
@@ -133,7 +133,7 @@ const md = function(html) {
        * @prop {HTMLElement} AuthWindow - Auth関係画面のwrapper
        * @prop {HTMLElement} loading - ローディング画面のHTML要素
        */
-      
+
       /**
        * @typedef {Object} AuthOpt
        * @prop {string} [entryNo] - 受付番号(ID)
@@ -143,13 +143,13 @@ const md = function(html) {
        * @prop {string} [entryNoButton=&#039;送信&#039;] - 受付番号入力画面のボタンのラベル
        * @prop {RegExp} [entryNoRegExp=/^[0-9]{1,4}$/] - 受付番号チェック用正規表現
        */
-      
+
       /**
        * @classdesc 入力されたID/PWと登録情報を突合し、IDに紐づく各種情報を返す
        *
        * - パスコード(passCode) : 受付番号入力後受信したメールに記載された番号
        * - パスワード(passWord) : 鍵ペア生成の際、秘密鍵の基となる文字列
-       * 
+       *
        */
       class Auth {
         /**
@@ -157,9 +157,9 @@ const md = function(html) {
          * @param {string} gatewayUrl - 認証局APIのURL
          * @param {AuthOpt} [opt={}] - 生成時オプション
          * @returns {void} なし
-         * 
-         * ## 処理概要
-         * 
+         *
+         * #### 処理概要
+         *
          * ```mermaid
          * sequenceDiagram
          *   autonumber
@@ -168,33 +168,33 @@ const md = function(html) {
          *   participant gateway as 認証局
          *   participant master as 管理局
          *   participant httpd as httpd
-         * 
+         *
          *   %% 受付番号入力
          *   mailer -&gt;&gt; httpd : 事前に送信された案内メールのリンクをクリック
          *   httpd -&gt;&gt; browser : ページファイル(index.html)
          *   activate browser
          *   Note right of browser: constructor()
          *   Note right of browser: getEntryNo()
-         * 
+         *
          *   browser -&gt;&gt; gateway : 受付番号、CP(平文)
          *   activate gateway
          *   Note right of gateway : auth1A()
-         * 
+         *
          *   gateway -&gt;&gt; master : 受付番号、CP(GS/MP)
          *   activate master
          *   Note right of master : auth1B()
          *   master -&gt;&gt; mailer : パスコード
          *   activate mailer
-         * 
+         *
          *   master -&gt;&gt; gateway : 申請登録結果
          *   deactivate master
-         * 
+         *
          *   gateway -&gt;&gt; browser : 申請登録結果
          *   deactivate gateway
          *   browser -&gt;&gt; browser : GP格納、パスコード入力画面表示
          *   deactivate browser
-         * 
-         * 
+         *
+         *
          *   %% パスコード入力
          *   mailer -&gt;&gt; browser : パスコード入力
          *   deactivate mailer
@@ -212,9 +212,9 @@ const md = function(html) {
          *   deactivate gateway
          *   browser -&gt;&gt; browser : 初期画面表示
          *   deactivate browser
-         * 
+         *
          * ```
-         * 
+         *
          * - 文中の記号は以下の通り
          *   - CK:共通鍵(Common Key)
          *   - CP:利用者公開鍵(Client Public key)、CS:利用者秘密鍵(Client Secret key)
@@ -258,31 +258,31 @@ const md = function(html) {
           console.log(&#039;Auth.constructor start.&#039;);
           try {
             this.constructorStart = Date.now();
-      
+
             // 1.オプション未定義項目の既定値をプロパティにセット
             this.#setProperties(this,null,opt);
             console.log(&#039;this:&#039;,this);
             console.log(Date.now()-this.constructorStart);
-      
+
             // 2.必須項目をプロパティに保存
             this.gateway.url = gatewayUrl;  // 認証局のURL
             console.log(Date.now()-this.constructorStart);
-      
+
             // 3.各種画面を用意する
             //   ※鍵ペア生成で時間がかかるので、先に待機画面を表示
             this.#setWindows();
             // 初期画面として待機画面を表示
             this.#changeScreen(&#039;loading&#039;);
             console.log(Date.now()-this.constructorStart);
-      
+
             // 4.秘密鍵・公開鍵を作成し、プロパティに格納する
             this.#setupKeys();
             console.log(Date.now()-this.constructorStart);
-      
+
             // 5.非同期の初期化処理を呼出
             this.#changeScreen(&#039;entryNo&#039;);
             //this.build();
-      
+
             //console.log(&#039;v.rv=&#039;+JSON.stringify(v.rv));
             console.log(&#039;Auth.constructor end.&#039;);
             return v.rv;
@@ -293,7 +293,7 @@ const md = function(html) {
             throw e; //以降の処理を全て停止
           }
         }
-      
+
         /** 既定値を設定する
          * @param {AuthOpt} opt - 生成時オプションとして渡された値
          * @returns {void}
@@ -353,7 +353,7 @@ const md = function(html) {
               // 再起呼出の場合、呼出元から渡された定義Objを使用
               v.def = def;
             }
-      
+
             for( let key in v.def ){
               if( whichType(v.def[key]) !== &#039;Object&#039; ){
                 dest[key] = opt[key] || v.def[key]; // 配列はマージしない
@@ -362,12 +362,12 @@ const md = function(html) {
                 this.#setProperties(dest[key],v.def[key],opt[key]||{});
               }
             }
-      
+
             if( def === null ){ // 初回呼出(非再帰)
               // 親画面のHTML要素を保存
               this.parentWindow = document.querySelector(this.parentSelector);
             }
-      
+
             //console.log(&#039;this=&#039;+JSON.stringify(this));
             console.log(&#039;Auth.#setProperties end.&#039;);
             return v.rv;
@@ -377,7 +377,7 @@ const md = function(html) {
             v.rv.stack = e.stack; return v.rv;
           }
         }
-      
+
         /** 秘密鍵・公開鍵を作成し、プロパティに格納する
          * @param {void}
          * @returns {void}
@@ -390,27 +390,27 @@ const md = function(html) {
             if( this.RSA.passWord === null ){
               this.RSA.passWord = createPassword(this.RSA.pwLength);
             }
-      
+
             // 鍵ペアの生成
             this.RSA.sKey = cryptico.generateRSAKey(this.RSA.passWord, this.RSA.bits);
             this.RSA.pKey = cryptico.publicKeyString(this.RSA.sKey);
             //console.log(this.RSA);
-      
+
             // 秘密鍵の保存
             //Fs.writeFileSync(&#039;./private.json&#039;, JSON.stringify(key.toJSON()));
-      
+
             //console.log(&#039;v.rv=&#039;+JSON.stringify(v.rv));
             console.log(&#039;Auth.#setupKeys end.&#039;);
             return v.rv;
           } catch(e){
             console.error(&#039;Auth.#setupKeys abnormal end.&#039;,e);
             // ブラウザで実行する場合はアラート表示
-            if( typeof window !== &#039;undefined&#039; ) alert(e.stack); 
+            if( typeof window !== &#039;undefined&#039; ) alert(e.stack);
             //throw e; //以降の処理を全て停止する場合
             v.rv.stack = e.stack; return v.rv; // 処理継続する場合
           }
         }
-      
+
         /** Auth関係画面をセットする
          *
          */
@@ -431,7 +431,7 @@ const md = function(html) {
                 zIndex:this.AuthWindow.zIndex,
               },
             });
-      
+
             // 受付番号入力画面
             this.entryNo.element = createElement({
               children:[
@@ -467,7 +467,7 @@ const md = function(html) {
                 {tag:&#039;p&#039;,html:this.entryNo.msg2},  // 入力欄後メッセージ
               ],
             });
-      
+
             // ローディング画面
             // ※ 受付番号・パスコード入力を隠蔽するため
             //   loading.zIndex &gt; AuthWindow.zIndex とする。
@@ -505,7 +505,7 @@ const md = function(html) {
                 }
               ],
             })};
-      
+
             // パスコード入力画面
             this.passCode.element = createElement({
               children:[
@@ -538,13 +538,13 @@ const md = function(html) {
                 {tag:&#039;p&#039;,html:this.passCode.msg2},  // 入力欄後メッセージ
               ],
             });
-      
+
             // 画面をセット
             this.parentWindow.appendChild(this.AuthWindow.element);
             this.AuthWindow.element.appendChild(this.entryNo.element);
             this.AuthWindow.element.appendChild(this.loading.element);
             this.AuthWindow.element.appendChild(this.passCode.element);
-      
+
             //console.log(&#039;v.rv=&#039;+JSON.stringify(v.rv));
             console.log(&#039;Auth.#setWindows end.&#039;);
             return v.rv;
@@ -554,9 +554,9 @@ const md = function(html) {
             //if( typeof window !== &#039;undefined&#039; ) alert(e.stack);
             v.rv.stack = e.stack; return v.rv; // 処理継続する場合
           }
-      
+
         }
-      
+
         /** Auth関係画面の切り替え
          * @param {string} screenId - 画面ID。open/close-&gt;AuthWindowの開閉、他は指定ウィンドウの表示
          * @returns {void}
@@ -565,7 +565,7 @@ const md = function(html) {
           const v = {rv:true};
           console.log(&#039;Auth.#changeScreen start.&#039;);
           try {
-      
+
             if( screenId === &#039;close&#039; ){
               this.AuthWindow.element.style.display = &#039;none&#039;;
             } else if( screenId === &#039;open&#039; ){
@@ -575,10 +575,10 @@ const md = function(html) {
                 this[x].element.style.display = x === screenId ? &#039;&#039; : &#039;none&#039;;
               });
             }
-      
+
             // 前回のパスコードをクリア
             this.passCode.element.querySelector(&#039;input&#039;).value = &#039;&#039;;
-      
+
             console.log(&#039;Auth.#changeScreen end.&#039;);
             return v.rv;
           } catch(e){
@@ -588,9 +588,9 @@ const md = function(html) {
             //throw e; //以降の処理を全て停止する場合
             v.rv.stack = e.stack; return v.rv; // 処理継続する場合
           }
-      
+
         }
-      
+
         /** entryNo(ID)を認証局に送信
          * @param {void}
          * @returns {void}
@@ -599,7 +599,7 @@ const md = function(html) {
           const v = {rv:null,data:{cp:this.RSA.pKey}};
           console.log(&#039;Auth.getEntryNo start.&#039;);
           try {
-      
+
             v.step = &#039;1&#039;; // 入力フォームから値を取得
             this.#changeScreen(&#039;loading&#039;);
             this.entryNo.value = this.entryNo.element.querySelector(&#039;input&#039;).value;
@@ -608,7 +608,7 @@ const md = function(html) {
               publicKey: this.RSA.pKey,
             }
             console.log(&#039;arg&#039;,v.arg);
-      
+
             v.step = &#039;2&#039;; // fetch
             v.rv = await this.#fetchFromClient(&#039;auth1A&#039;,v.arg,0);
             //if( v.rv instanceof Error ) throw v.rv;
@@ -620,7 +620,7 @@ const md = function(html) {
                 + JSON.stringify(this.gateway.pKey));
               this.#changeScreen(&#039;passCode&#039;);
             }
-      
+
             console.log(&#039;Auth.getEntryNo end.&#039;);
             return v.rv;
           } catch(e){
@@ -632,7 +632,7 @@ const md = function(html) {
             //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
           }
         }
-      
+
         /** メールから入力したpassCodeを認証局に送信
          * @param {void}
          * @returns {void}
@@ -641,7 +641,7 @@ const md = function(html) {
           const v = {rv:null,data:{cp:this.RSA.pKey}};
           console.log(&#039;Auth.getPassCode start.&#039;);
           try {
-      
+
             // 入力フォームから値を取得
             this.#changeScreen(&#039;loading&#039;);
             v.arg = { // auth1Bに渡す引数
@@ -666,7 +666,7 @@ const md = function(html) {
               // パスコード入力画面を閉じる
               this.#changeScreen(&#039;close&#039;);
             }
-      
+
             console.log(&#039;Auth.getPassCode end.&#039;);
             return v.rv;
           } catch(e){
@@ -678,13 +678,13 @@ const md = function(html) {
             //v.rv.stack = e.stack; return v.rv; // 処理継続する場合
           }
         }
-      
+
         /** GASのAPI(doPost)を呼び出す
          * @param {string} to - 呼び先(gateway or front)
          * @param {string} func - 呼び先関数名(auth1A等)
          * @param {Object} data - 呼び先関数に渡すデータオブジェクト
          * @returns {Object} 呼び先からの戻り値
-         * 
+         *
          * - JS: [Async/await](https://ja.javascript.info/async-await)
          * - MDN: [フェッチが成功したかの確認](https://developer.mozilla.org/ja/docs/Web/API/Fetch_API/Using_Fetch#%E3%83%95%E3%82%A7%E3%83%83%E3%83%81%E3%81%8C%E6%88%90%E5%8A%9F%E3%81%97%E3%81%9F%E3%81%8B%E3%81%AE%E7%A2%BA%E8%AA%8D)
          * - MDN: [fetch()](https://developer.mozilla.org/ja/docs/Web/API/fetch)
@@ -695,7 +695,7 @@ const md = function(html) {
           const v = {rv:null,data:{cp:this.RSA.pKey}};
           console.log(&#039;Auth.#fetchFromClient start.&#039;);
           try {
-      
+
             v.step = &#039;1&#039;; // 送信するトークンを生成
             v.token = {
               fm: this.entryNo.value,
@@ -708,7 +708,7 @@ const md = function(html) {
               }
             };
             console.log(&#039;v.token&#039;,v.token);
-      
+
             v.step = &#039;2&#039;; // 暗号化・署名
             if( md === 1 ){ // 共通鍵で暗号化
               v.token.dt = encryptAES(
@@ -725,7 +725,7 @@ const md = function(html) {
               v.token.dt = v.encrypt.cipher;
             }
             console.log(&#039;v.token&#039;,v.token);
-      
+
             v.step = &#039;3&#039;; // fetch
             v.fetch = await fetch(this.gateway.url,{
               &quot;method&quot;: &quot;POST&quot;,
@@ -744,7 +744,7 @@ const md = function(html) {
               );
               alert(v.rv.message);
             }
-      
+
             console.log(&#039;Auth.#fetchFromClient normal end.&#039;);
             return v.rv;
           } catch(e){
@@ -757,9 +757,9 @@ const md = function(html) {
           }
         }
       }
-      
+
       &lt;/script&gt;
-      
+
       &lt;script type=&quot;text/javascript&quot; class=&quot;GAS&quot;&gt;/* GAS用スクリプト */
       /**
        * @typedef {Object} token - doPostからpreProcessに渡されるオブジェクト
@@ -771,7 +771,7 @@ const md = function(html) {
        * @prop {string} dt.fc - 呼出先の処理名(ex.&quot;auth1A&quot;)
        * @prop {any} dt.arg - 呼出先の処理に渡す引数
        */
-      
+
       /**
        * @typedef {Object} AuthArg - preProcessからauth1A/1B/2A/2Bに渡されるオブジェクト
        * @prop {string} fm - 発信者名(gateway/master/受付番号)
@@ -791,7 +791,7 @@ const md = function(html) {
        * @prop {string} common - 共通鍵(認証局のみ)
        * @prop {string} random - パスコード(管理局のみ)
        */
-      
+
       /**
        * @typedef {Object} fetchResponse - auth1A/1B/2A/2BからpreProcess経由で呼出元に返されるオブジェクト
        * @prop {boolean} isErr - エラーならtrue
@@ -799,7 +799,7 @@ const md = function(html) {
        * @prop {string} stack=&#039;&#039; - エラーオブジェクトのスタック
        * @prop {any} result - 処理結果
        */
-      
+
       /** doPostの内容を受けて処理を分岐
        * @param {token} token - doPostから渡されたトークン
        * @returns {fetchResponse} 処理結果
@@ -809,13 +809,13 @@ const md = function(html) {
         console.log(v.whois+&#039; start.&#039;,whichType(token),token);
         try {
           v.arg = JSON.parse(token);
-      
+
           v.step = &#039;1&#039;; // 発信から3分以内でないとエラー
           v.now = Date.now();
           if( v.arg.ts &gt; v.now || (v.now - v.arg.ts) &gt; 180000 ){
             throw new Error(&quot;Invalid Token: timeout&quot;);
           }
-      
+
           v.step = &#039;2&#039;; // RSAシートの読み込み
           v.sheet = SpreadsheetApp.getActive().getSheetByName(&#039;RSA&#039;);
           v.step = &#039;2.1&#039;; // 再計算用にセル値を更新
@@ -830,7 +830,7 @@ const md = function(html) {
           }
           v.arg.RSAkey = cryptico.generateRSAKey(v.arg.passPhrase,1024);
           console.log(&#039;v.arg&#039;,v.arg);
-      
+
           v.step = &#039;3&#039;; // 暗号化されていた場合は復号
           if( v.arg.md &gt; 0 ){
             if( v.arg.md === 1 ){ // 共通鍵方式
@@ -850,7 +850,7 @@ const md = function(html) {
           }
           v.arg.fc = v.arg.dt.fc;
           v.arg.dt = v.arg.dt.arg;
-      
+
           /*
           v.arg.fc = v.arg.dt.fc;
           v.arg.dt = v.arg.dt.arg;
@@ -871,35 +871,35 @@ const md = function(html) {
             }
           }*/
           console.log(&#039;v.arg.dt&#039;,v.arg.dt);
-      
+
           // auth1A: クライアントから認証局への接続要求
           v.step = &#039;4.1&#039;;
           if( v.arg.to === &#039;gateway&#039; &amp;&amp; v.arg.fc === &#039;auth1A&#039; ){
             v.step = &#039;call auth1A&#039;;
             v.rv = auth1A(v.arg);
           }
-      
+
           // auth1B: 認証局から管理局にパスコード通知依頼
           v.step = &#039;4.2&#039;;
           if( v.arg.to === &#039;master&#039; &amp;&amp; v.arg.fc === &#039;auth1B&#039; ){
             v.step = &#039;call auth1B&#039;;
             v.rv = auth1B(v.arg);
           }
-      
+
           // auth2A: クライアントから認証局にパスコード入力
           v.step = &#039;4.3&#039;;
           if( v.arg.to === &#039;gateway&#039; &amp;&amp; v.arg.fc === &#039;auth2A&#039; ){
             v.step = &#039;call auth2A&#039;;
             v.rv = auth2A(v.arg);
           }
-      
+
           // auth2B: 認証局から管理局にパスコード連絡、管理局で判定
           v.step = &#039;4.4&#039;;
           if( v.arg.to === &#039;master&#039; &amp;&amp; v.arg.fc === &#039;auth2B&#039; ){
             v.step = &#039;call auth2B&#039;;
             v.rv = auth2B(v.arg);
           }
-      
+
           v.step = &#039;5&#039;;
           console.log(v.whois+&#039; normal end.&#039;,v.rv);
           return v.rv;
@@ -907,7 +907,7 @@ const md = function(html) {
           console.error(v.whois+&#039; abnormal end(step.&#039;+v.step+&#039;).&#039;,e.stack,v);
         }
       }
-      
+
       /** 認証局での認証の第一段階
        * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
        * @returns {string} 認証局の公開鍵(fetchResponse.result)
@@ -917,7 +917,7 @@ const md = function(html) {
           rv:{isErr:false,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
         try {
           console.log(v.whois+&#039; start.&#039;,arg.dt);
-      
+
           v.step = &#039;1.1&#039;; // auth1B問合せ用にデータを暗号化
           v.dt = JSON.stringify({
             fc : &#039;auth1B&#039;,
@@ -927,12 +927,12 @@ const md = function(html) {
             }
           });
           console.log(&#039;v.dt=&#039;+v.dt);
-          
+
           v.step = &#039;1.2&#039;; // 暗号化。受付番号＋公開鍵なのでencodeURIは省略
           v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
           if( v.dt.status !== &#039;success&#039; )
             throw new Error(&quot;auth1A encrypt failed.\n&quot;+JSON.stringify(v.dt));
-      
+
           v.step = &#039;2.1&#039;; // auth1Bに問い合わせ
           v.res = UrlFetchApp.fetch(arg.masterAPI,{
             &#039;method&#039;: &#039;post&#039;,
@@ -944,21 +944,21 @@ const md = function(html) {
               md: 3,  // 署名付き暗号化
               ts: Date.now(),
               dt: v.dt.cipher,
-            }),  
+            }),
           }).getContentText();
           console.log(&#039;res=&#039;+v.res);
           v.step = &#039;2.2&#039;;
           v.rv = JSON.parse(v.res);
-      
+
           if( !v.rv.isErr ){
             v.step = &#039;3&#039;; // auth1B正常終了なら認証局の公開鍵を返信
             v.rv.result = arg.publicKey;
           }
-      
+
           v.step = &#039;4&#039;;
           console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
           return v.rv;
-      
+
         } catch(e) {
           console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
           + e.message + &#039;\n&#039; + e.stack);
@@ -969,7 +969,7 @@ const md = function(html) {
           return v.rv;
         }
       }
-      
+
       /** 管理局での認証の第一段階
        * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
        * @returns {void} 特に無し(fetchResponse.isErrのみ必要)
@@ -979,11 +979,11 @@ const md = function(html) {
           rv:{isErr:false,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
         try {
           console.log(v.whois+&#039; start.&#039;,arg.dt);
-      
+
           v.step = &#039;1&#039;; // クライアント情報を抽出
           v.master = szSheet(&#039;master&#039;);
           v.client = v.master.lookup(arg.dt.entryNo,&#039;entryNo&#039;);
-      
+
           v.step = &#039;2&#039;; // 3回連続失敗後1時間以内ならチャレンジ不可判定
           if( String(v.client.NG2).length &gt; 0 &amp;&amp;
             (Date.now() - v.client.NG2) &lt; 3600000 ){
@@ -993,7 +993,7 @@ const md = function(html) {
             };
             return v.rv;
           }
-      
+
           v.step = &#039;3&#039;; // 該当受付番号にpassCode,publicKey登録
           v.master.update({
             publicKey: arg.dt.publicKey,  // クライアントの公開鍵
@@ -1002,7 +1002,7 @@ const md = function(html) {
             NG1:&#039;&#039;,NG2:&#039;&#039;,            // 不適切パスコード入力時刻をクリア
             certificate: &#039;&#039;,  // 認証正常終了日時はクリア
           },{key:&#039;entryNo&#039;,value:arg.dt.entryNo});
-      
+
           v.step = &#039;4&#039;; // 申請者にpassCode連絡メール送信
           v.draft = GmailApp.createDraft(
             v.client[&#039;メールアドレス&#039;],
@@ -1017,11 +1017,11 @@ const md = function(html) {
           GmailApp.getDraft(v.draft.getId()).send();
           console.log(&#039;Mail Remaining Daily Quota:&#039;
             + MailApp.getRemainingDailyQuota());
-      
+
           v.step = &#039;5&#039;;
           console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
           return v.rv;
-      
+
         } catch(e) {
           console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
           + e.message + &#039;\n&#039; + e.stack);
@@ -1032,13 +1032,13 @@ const md = function(html) {
           return v.rv;
         }
       }
-      
+
       /** 認証局での認証の第二段階
        * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
        * @returns {Object} - fetchResponse.result={common:共通鍵,info:クライアント情報}
-       * 
-       * ## 注意事項
-       * 
+       *
+       * #### 注意事項
+       *
        * clientからのtokenは署名されているが、認証局はclientのpublicKeyを
        * 持たないので検証は省略し、そのまま管理局に送って管理局側で検証する。
        */
@@ -1047,7 +1047,7 @@ const md = function(html) {
           rv:{isErr:false,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
         try {
           console.log(v.whois+&#039; start.&#039;,arg.dt);
-      
+
           v.step = &#039;1.1&#039;; // auth2B問合せ用にデータを暗号化
           v.dt = JSON.stringify({
             fc : &#039;auth2B&#039;,
@@ -1062,7 +1062,7 @@ const md = function(html) {
           v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
           if( v.dt.status !== &#039;success&#039; )
             throw new Error(&quot;auth2A encrypt failed.\n&quot;+JSON.stringify(v.dt));
-      
+
           v.step = &#039;2.1&#039;; // auth2Bに問い合わせ
           v.res = UrlFetchApp.fetch(arg.masterAPI,{
             &#039;method&#039;: &#039;post&#039;,
@@ -1074,12 +1074,12 @@ const md = function(html) {
               md: 3,  // 署名付き暗号化
               ts: Date.now(),
               dt: v.dt.cipher,
-            }),  
+            }),
           }).getContentText();
           console.log(&#039;res=&#039;+v.res);
           v.step = &#039;2.2&#039;;
           v.res = JSON.parse(v.res);
-      
+
           v.step = &#039;3&#039;; // 問合せ結果により処理分岐
           if( v.res.isErr ){
             v.step = &#039;3.1&#039;; // auth2Bでエラー発生ならそのまま返す
@@ -1091,11 +1091,11 @@ const md = function(html) {
               info  : v.res.result, // クライアントの登録情報
             }
           }
-      
+
           v.step = &#039;4&#039;;
           console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
           return v.rv;
-      
+
         } catch(e) {
           console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
           + e.message + &#039;\n&#039; + e.stack);
@@ -1106,7 +1106,7 @@ const md = function(html) {
           return v.rv;
         }
       }
-      
+
       /** 管理局での認証の第二段階
        * @param {AuthArg} arg - クライアントの受付番号、パスコード、送信日時、公開鍵他
        * @returns {Object} - fetchResponse.result=クライアントの登録情報
@@ -1116,12 +1116,12 @@ const md = function(html) {
         rv:{isErr:true,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
         try {
           console.log(v.whois+&#039; start.&#039;,arg.dt);
-      
+
           v.step = &#039;1&#039;; // クライアント情報を抽出
           v.master = szSheet(&#039;master&#039;);
           v.client = v.master.lookup(arg.dt.entryNo,&#039;entryNo&#039;);
           console.log(&#039;v.client&#039;,v.client);
-      
+
           // 正しいパスコードが入力されたか判定
           v.update = null;
           if( (Date.now() - new Date(v.client.genPassCode).getTime()) &gt; 3600000 ){
@@ -1161,11 +1161,11 @@ const md = function(html) {
           if( v.master !== null ){
             v.master.update(v.update,{key:&#039;entryNo&#039;,value:arg.dt.entryNo});
           }
-      
+
           v.step = &#039;3&#039;;
           console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
           return v.rv;
-      
+
         } catch(e) {
           console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
           + e.message + &#039;\n&#039; + e.stack);
@@ -1177,7 +1177,7 @@ const md = function(html) {
         }
       }
       &lt;/script&gt;
-      
+
       &lt;script type=&quot;text/javascript&quot; class=&quot;test&quot;&gt;/* テスト用 */
       let config = null;
       async function AuthTest(){
@@ -1190,13 +1190,13 @@ const md = function(html) {
           );
           //await v.conf.build();
           console.log(&#039;AuthTest end.&#039;,config);
-      
+
         } catch(e){
           console.error(&#039;AuthTest abnormal end.&#039;,e);
         }
       }
       &lt;/script&gt;
-      
+
       &lt;script type=&quot;text/javascript&quot;&gt;
       window.addEventListener(&#039;DOMContentLoaded&#039;,() =&gt; {
         AuthTest();  // 開発者コンソール上でテスト
@@ -1265,7 +1265,7 @@ const md = function(html) {
         // サブメニュー使用時はaddSubMenuを使用
         menu.addToUi();
       }
-      
+
       /**
        * 選択範囲のセル情報をJSON化してmsgBoxに表示
        * @param {void}
@@ -1302,7 +1302,7 @@ const md = function(html) {
           height: [], // 行の高さ
           border: [], // 罫線。未対応
         }
-      
+
         // データ型
         for( v.r=0 ; v.r&lt;v.rv.value.length ; v.r++ ){
           v.l = [];
@@ -1311,7 +1311,7 @@ const md = function(html) {
           }
           v.rv.type.push(v.l);
         }
-      
+
         // 列・行の幅
         for( v.c=v.rv.firstColumn ; v.c&lt;=v.rv.lastColumn ; v.c++ ){
           v.rv.width.push(v.sheet.getColumnWidth(v.c));
@@ -1319,15 +1319,15 @@ const md = function(html) {
         for( v.r = v.rv.firstRow ; v.r&lt;=v.rv.lastRow ; v.r++ ){
           v.rv.height.push(v.sheet.getRowHeight(v.r));
         }
-      
+
         // 改行は&lt;br&gt;に置換
         v.rv = JSON.stringify(v.rv).replaceAll(&#039;\\n&#039;,&#039;&lt;br&gt;&#039;);
-      
+
         console.log(v.rv);
         console.log(&#039;jsonRange end.&#039;);
         Browser.msgBox(v.rv);
       }
-      
+
       function whichType(arg,is){
         let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
         switch(rv){
@@ -1452,9 +1452,9 @@ console.log(MailApp.getRemainingDailyQuota());
 /** 申込フォームの入力を受け、シートの更新＋受付メールの発信を行う
 * @param {Object} e - [イベント](https://developers.google.com/apps-script/guides/triggers/events?hl=ja#form-submit)オブジェクト
 * @returns {void}
-* 
+*
 * ## 処理概要
-* 
+*
 * 1. フォームから渡されるオブジェクトから以下の情報を取得
 *    1. &quot;range&quot;から書き込まれた行(e.range.getRow())
 *    2. &quot;namedValues&quot;からメールアドレス(e.namedValues[&quot;メールアドレス&quot;][0])
@@ -1465,15 +1465,15 @@ console.log(MailApp.getRemainingDailyQuota());
 *    1. 要既定値設定項目(entryNo/editURL/authority)の空欄に既定値を設定
 *    2. &quot;range&quot;から書き込まれた行の情報はメール送信用に保存
 * 4. 回答者にメールを送信
-* 
+*
 * ## 参考
-* 
+*
 * - [GASでGoogleフォームの値を取得する](https://walking-elephant.blogspot.com/2021/01/gas.formapp.html)
 * - GAS公式 [Class FormApp](https://developers.google.com/apps-script/reference/forms/form-app?hl=ja)
 * - GAS公式 [Class Form](https://developers.google.com/apps-script/reference/forms/form?hl=ja)
-* 
+*
 * メール送信については以下を参照。
-* 
+*
 * - [Google App Script メモ（メール送信制限 回避術）](https://zenn.dev/tatsuya_okzk/articles/259203cc416328)
 * - GAS公式[createDraft](https://developers.google.com/apps-script/reference/gmail/gmail-app?hl=ja#createdraftrecipient,-subject,-body,-options)
 */
@@ -1632,7 +1632,7 @@ try {
         // サブメニュー使用時はaddSubMenuを使用
         menu.addToUi();
       }
-      
+
       /**
        * 選択範囲のセル情報をJSON化してmsgBoxに表示
        * @param {void}
@@ -1669,7 +1669,7 @@ try {
           height: [], // 行の高さ
           border: [], // 罫線。未対応
         }
-      
+
         // データ型
         for( v.r=0 ; v.r&lt;v.rv.value.length ; v.r++ ){
           v.l = [];
@@ -1678,7 +1678,7 @@ try {
           }
           v.rv.type.push(v.l);
         }
-      
+
         // 列・行の幅
         for( v.c=v.rv.firstColumn ; v.c&lt;=v.rv.lastColumn ; v.c++ ){
           v.rv.width.push(v.sheet.getColumnWidth(v.c));
@@ -1686,15 +1686,15 @@ try {
         for( v.r = v.rv.firstRow ; v.r&lt;=v.rv.lastRow ; v.r++ ){
           v.rv.height.push(v.sheet.getRowHeight(v.r));
         }
-      
+
         // 改行は&lt;br&gt;に置換
         v.rv = JSON.stringify(v.rv).replaceAll(&#039;\\n&#039;,&#039;&lt;br&gt;&#039;);
-      
+
         console.log(v.rv);
         console.log(&#039;jsonRange end.&#039;);
         Browser.msgBox(v.rv);
       }
-      
+
       function whichType(arg,is){
         let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
         switch(rv){
@@ -1721,7 +1721,7 @@ try {
       * @prop {string} dt.fc - 呼出先の処理名(ex.&quot;auth1A&quot;)
       * @prop {any} dt.arg - 呼出先の処理に渡す引数
       */
-     
+
      /**
       * @typedef {Object} AuthArg - preProcessからauth1A/1B/2A/2Bに渡されるオブジェクト
       * @prop {string} fm - 発信者名(gateway/master/受付番号)
@@ -1741,7 +1741,7 @@ try {
       * @prop {string} common - 共通鍵(認証局のみ)
       * @prop {string} random - パスコード(管理局のみ)
       */
-     
+
      /**
       * @typedef {Object} fetchResponse - auth1A/1B/2A/2BからpreProcess経由で呼出元に返されるオブジェクト
       * @prop {boolean} isErr - エラーならtrue
@@ -1749,7 +1749,7 @@ try {
       * @prop {string} stack=&#039;&#039; - エラーオブジェクトのスタック
       * @prop {any} result - 処理結果
       */
-     
+
      /** doPostの内容を受けて処理を分岐
       * @param {token} token - doPostから渡されたトークン
       * @returns {fetchResponse} 処理結果
@@ -1759,13 +1759,13 @@ try {
        console.log(v.whois+&#039; start.&#039;,whichType(token),token);
        try {
          v.arg = JSON.parse(token);
-     
+
          v.step = &#039;1&#039;; // 発信から3分以内でないとエラー
          v.now = Date.now();
          if( v.arg.ts &gt; v.now || (v.now - v.arg.ts) &gt; 180000 ){
            throw new Error(&quot;Invalid Token: timeout&quot;);
          }
-     
+
          v.step = &#039;2&#039;; // RSAシートの読み込み
          v.sheet = SpreadsheetApp.getActive().getSheetByName(&#039;RSA&#039;);
          v.step = &#039;2.1&#039;; // 再計算用にセル値を更新
@@ -1780,7 +1780,7 @@ try {
          }
          v.arg.RSAkey = cryptico.generateRSAKey(v.arg.passPhrase,1024);
          console.log(&#039;v.arg&#039;,v.arg);
-     
+
          v.step = &#039;3&#039;; // 暗号化されていた場合は復号
          if( v.arg.md &gt; 0 ){
            if( v.arg.md === 1 ){ // 共通鍵方式
@@ -1800,7 +1800,7 @@ try {
          }
          v.arg.fc = v.arg.dt.fc;
          v.arg.dt = v.arg.dt.arg;
-     
+
          /*
          v.arg.fc = v.arg.dt.fc;
          v.arg.dt = v.arg.dt.arg;
@@ -1821,35 +1821,35 @@ try {
            }
          }*/
          console.log(&#039;v.arg.dt&#039;,v.arg.dt);
-     
+
          // auth1A: クライアントから認証局への接続要求
          v.step = &#039;4.1&#039;;
          if( v.arg.to === &#039;gateway&#039; &amp;&amp; v.arg.fc === &#039;auth1A&#039; ){
            v.step = &#039;call auth1A&#039;;
            v.rv = auth1A(v.arg);
          }
-     
+
          // auth1B: 認証局から管理局にパスコード通知依頼
          v.step = &#039;4.2&#039;;
          if( v.arg.to === &#039;master&#039; &amp;&amp; v.arg.fc === &#039;auth1B&#039; ){
            v.step = &#039;call auth1B&#039;;
            v.rv = auth1B(v.arg);
          }
-     
+
          // auth2A: クライアントから認証局にパスコード入力
          v.step = &#039;4.3&#039;;
          if( v.arg.to === &#039;gateway&#039; &amp;&amp; v.arg.fc === &#039;auth2A&#039; ){
            v.step = &#039;call auth2A&#039;;
            v.rv = auth2A(v.arg);
          }
-     
+
          // auth2B: 認証局から管理局にパスコード連絡、管理局で判定
          v.step = &#039;4.4&#039;;
          if( v.arg.to === &#039;master&#039; &amp;&amp; v.arg.fc === &#039;auth2B&#039; ){
            v.step = &#039;call auth2B&#039;;
            v.rv = auth2B(v.arg);
          }
-     
+
          v.step = &#039;5&#039;;
          console.log(v.whois+&#039; normal end.&#039;,v.rv);
          return v.rv;
@@ -1857,7 +1857,7 @@ try {
          console.error(v.whois+&#039; abnormal end(step.&#039;+v.step+&#039;).&#039;,e.stack,v);
        }
      }
-     
+
      /** 認証局での認証の第一段階
       * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
       * @returns {string} 認証局の公開鍵(fetchResponse.result)
@@ -1867,7 +1867,7 @@ try {
          rv:{isErr:false,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
        try {
          console.log(v.whois+&#039; start.&#039;,arg.dt);
-     
+
          v.step = &#039;1.1&#039;; // auth1B問合せ用にデータを暗号化
          v.dt = JSON.stringify({
            fc : &#039;auth1B&#039;,
@@ -1877,12 +1877,12 @@ try {
            }
          });
          console.log(&#039;v.dt=&#039;+v.dt);
-         
+
          v.step = &#039;1.2&#039;; // 暗号化。受付番号＋公開鍵なのでencodeURIは省略
          v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
          if( v.dt.status !== &#039;success&#039; )
            throw new Error(&quot;auth1A encrypt failed.\n&quot;+JSON.stringify(v.dt));
-     
+
          v.step = &#039;2.1&#039;; // auth1Bに問い合わせ
          v.res = UrlFetchApp.fetch(arg.masterAPI,{
            &#039;method&#039;: &#039;post&#039;,
@@ -1894,21 +1894,21 @@ try {
              md: 3,  // 署名付き暗号化
              ts: Date.now(),
              dt: v.dt.cipher,
-           }),  
+           }),
          }).getContentText();
          console.log(&#039;res=&#039;+v.res);
          v.step = &#039;2.2&#039;;
          v.rv = JSON.parse(v.res);
-     
+
          if( !v.rv.isErr ){
            v.step = &#039;3&#039;; // auth1B正常終了なら認証局の公開鍵を返信
            v.rv.result = arg.publicKey;
          }
-     
+
          v.step = &#039;4&#039;;
          console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
          return v.rv;
-     
+
        } catch(e) {
          console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
          + e.message + &#039;\n&#039; + e.stack);
@@ -1919,7 +1919,7 @@ try {
          return v.rv;
        }
      }
-     
+
      /** 管理局での認証の第一段階
       * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
       * @returns {void} 特に無し(fetchResponse.isErrのみ必要)
@@ -1929,11 +1929,11 @@ try {
          rv:{isErr:false,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
        try {
          console.log(v.whois+&#039; start.&#039;,arg.dt);
-     
+
          v.step = &#039;1&#039;; // クライアント情報を抽出
          v.master = szSheet(&#039;master&#039;);
          v.client = v.master.lookup(arg.dt.entryNo,&#039;entryNo&#039;);
-     
+
          v.step = &#039;2&#039;; // 3回連続失敗後1時間以内ならチャレンジ不可判定
          if( String(v.client.NG2).length &gt; 0 &amp;&amp;
            (Date.now() - v.client.NG2) &lt; 3600000 ){
@@ -1943,7 +1943,7 @@ try {
            };
            return v.rv;
          }
-     
+
          v.step = &#039;3&#039;; // 該当受付番号にpassCode,publicKey登録
          v.master.update({
            publicKey: arg.dt.publicKey,  // クライアントの公開鍵
@@ -1952,7 +1952,7 @@ try {
            NG1:&#039;&#039;,NG2:&#039;&#039;,            // 不適切パスコード入力時刻をクリア
            certificate: &#039;&#039;,  // 認証正常終了日時はクリア
          },{key:&#039;entryNo&#039;,value:arg.dt.entryNo});
-     
+
          v.step = &#039;4&#039;; // 申請者にpassCode連絡メール送信
          v.draft = GmailApp.createDraft(
            v.client[&#039;メールアドレス&#039;],
@@ -1967,11 +1967,11 @@ try {
          GmailApp.getDraft(v.draft.getId()).send();
          console.log(&#039;Mail Remaining Daily Quota:&#039;
            + MailApp.getRemainingDailyQuota());
-     
+
          v.step = &#039;5&#039;;
          console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
          return v.rv;
-     
+
        } catch(e) {
          console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
          + e.message + &#039;\n&#039; + e.stack);
@@ -1982,13 +1982,13 @@ try {
          return v.rv;
        }
      }
-     
+
      /** 認証局での認証の第二段階
       * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
       * @returns {Object} - fetchResponse.result={common:共通鍵,info:クライアント情報}
-      * 
-      * ## 注意事項
-      * 
+      *
+      * #### 注意事項
+      *
       * clientからのtokenは署名されているが、認証局はclientのpublicKeyを
       * 持たないので検証は省略し、そのまま管理局に送って管理局側で検証する。
       */
@@ -1997,7 +1997,7 @@ try {
          rv:{isErr:false,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
        try {
          console.log(v.whois+&#039; start.&#039;,arg.dt);
-     
+
          v.step = &#039;1.1&#039;; // auth2B問合せ用にデータを暗号化
          v.dt = JSON.stringify({
            fc : &#039;auth2B&#039;,
@@ -2012,7 +2012,7 @@ try {
          v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
          if( v.dt.status !== &#039;success&#039; )
            throw new Error(&quot;auth2A encrypt failed.\n&quot;+JSON.stringify(v.dt));
-     
+
          v.step = &#039;2.1&#039;; // auth2Bに問い合わせ
          v.res = UrlFetchApp.fetch(arg.masterAPI,{
            &#039;method&#039;: &#039;post&#039;,
@@ -2024,12 +2024,12 @@ try {
              md: 3,  // 署名付き暗号化
              ts: Date.now(),
              dt: v.dt.cipher,
-           }),  
+           }),
          }).getContentText();
          console.log(&#039;res=&#039;+v.res);
          v.step = &#039;2.2&#039;;
          v.res = JSON.parse(v.res);
-     
+
          v.step = &#039;3&#039;; // 問合せ結果により処理分岐
          if( v.res.isErr ){
            v.step = &#039;3.1&#039;; // auth2Bでエラー発生ならそのまま返す
@@ -2041,11 +2041,11 @@ try {
              info  : v.res.result, // クライアントの登録情報
            }
          }
-     
+
          v.step = &#039;4&#039;;
          console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
          return v.rv;
-     
+
        } catch(e) {
          console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
          + e.message + &#039;\n&#039; + e.stack);
@@ -2056,7 +2056,7 @@ try {
          return v.rv;
        }
      }
-     
+
      /** 管理局での認証の第二段階
       * @param {AuthArg} arg - クライアントの受付番号、パスコード、送信日時、公開鍵他
       * @returns {Object} - fetchResponse.result=クライアントの登録情報
@@ -2066,12 +2066,12 @@ try {
        rv:{isErr:true,message:&#039;&#039;,stack:&#039;&#039;,result:null}};
        try {
          console.log(v.whois+&#039; start.&#039;,arg.dt);
-     
+
          v.step = &#039;1&#039;; // クライアント情報を抽出
          v.master = szSheet(&#039;master&#039;);
          v.client = v.master.lookup(arg.dt.entryNo,&#039;entryNo&#039;);
          console.log(&#039;v.client&#039;,v.client);
-     
+
          // 正しいパスコードが入力されたか判定
          v.update = null;
          if( (Date.now() - new Date(v.client.genPassCode).getTime()) &gt; 3600000 ){
@@ -2111,11 +2111,11 @@ try {
          if( v.master !== null ){
            v.master.update(v.update,{key:&#039;entryNo&#039;,value:arg.dt.entryNo});
          }
-     
+
          v.step = &#039;3&#039;;
          console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
          return v.rv;
-     
+
        } catch(e) {
          console.error(v.whois+&#039; abnormal end.(at step.&#039;+v.step+&#039;)\n&#039;
          + e.message + &#039;\n&#039; + e.stack);
@@ -2129,29 +2129,29 @@ try {
     <div name="library"><pre class="prettyprint lang-js linenums">function encryptAES(text, pass) {
       // ソルト
       const salt = CryptoJS.lib.WordArray.random(128 / 8);
-    
+
       // 初期ベクトル
       const iv = CryptoJS.lib.WordArray.random(128 / 8);
-    
+
       // AESキーの生成(128bit、5万回)
       const key = CryptoJS.PBKDF2(pass, salt, {
         keySize: 128 / 32,
         iterations: 50000,
         hasher: CryptoJS.algo.SHA256,
       });
-    
+
       // AESキーで暗号化
       const encrypted = CryptoJS.AES.encrypt(text, key, {
         iv: iv,
       });
-    
+
       return {
         salt: salt,
         iv: iv,
         encrypted: encrypted,
       };
     }
-    
+
     /** 共通鍵(AES)による復号化処理
      * @param {encryptAES} encryptedData - 暗号化の際の出力結果
      * @param {string} pass - パスワード
@@ -2164,20 +2164,20 @@ try {
         iterations: 50000,
         hasher: CryptoJS.algo.SHA256,
       });
-    
+
       // AESキーで復号
       const decrypted = CryptoJS.AES.decrypt(encryptedData.encrypted, key, {
         iv: encryptedData.iv,
       });
-    
+
       return decrypted.toString(CryptoJS.enc.Utf8);
     }
-    
+
     function szSheet(arg,key=null){
       const v = {whois:&#039;szSheet&#039;,rv:{}};
       try {
         console.log(v.whois+&#039; start.\n&#039;,arg,key);
-    
+
         // 1.既定値の設定
         if( typeof arg === &#039;string&#039; ){  // 文字列のみ ⇒ シート名の指定
           v.step = &#039;1a&#039;;
@@ -2205,7 +2205,7 @@ try {
         }
         if( v.rv.sheet === null ) throw new Error(&#039;指定された&quot;&#039;+v.rv.sheetName+&#039;&quot;シートは存在しません&#039;);
         v.rv.key = key;
-        
+
         // 2.データの取得・加工
         v.step = &#039;2.1&#039;;
         v.dRange = v.rv.sheet.getDataRange();
@@ -2227,7 +2227,7 @@ try {
           return obj;
         });
         v.rv.lastRow = v.rv.raw.length;
-    
+
         // 2.2.primary key, defaultの取得
         v.step = &#039;2.2&#039;;
         v.rv.default = {};
@@ -2252,7 +2252,7 @@ try {
             }
           }
         }
-    
+
         // 3.内部関数の定義
         /** isEqual: 引数とシート上の値が等価か判断
          * @param {any} a - 引数
@@ -2262,7 +2262,7 @@ try {
         v.rv.isEqual = (a,b) =&gt; {
           return a == b || new Date(a).getTime() === new Date(b).getTime()
         }
-    
+
         /**
          * @typedef {object} complementedRow - 行単位の補完結果
          * @prop {number} dataNum - rv.data上の添字
@@ -2277,7 +2277,7 @@ try {
           const v = {whois:p.whois+&#039;.complement&#039;,rv:[]};
           try {
             console.log(v.whois+&#039; start.&#039;);
-    
+
             // 1.主キーの最大値を取得
             v.step = &#039;1&#039;;
             v.pMax = -999999;
@@ -2286,7 +2286,7 @@ try {
                 v.pMax = Number(p.data[v.i][p.key]);
               }
             }
-    
+
             // 2.rv.dataを順次検索、主キー・既定値設定項目に空欄があればセット
             v.step = &#039;2&#039;;
             v.dMap = Object.keys(p.default);  // 補完項目名のリスト
@@ -2344,7 +2344,7 @@ try {
                 v.rv.push({dataNum:v.i,changed:v.obj});
               }
             }
-    
+
             v.step = &#039;3&#039;; // 終了処理
             console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
           } catch(e) {
@@ -2354,7 +2354,7 @@ try {
             return v.rv;
           }
         })(v.rv.members)};  // complement終了
-    
+
         // 4.メソッドの定義
         /**
          * @typedef {object} szSheetSearch - szSheet.search()の戻り値
@@ -2373,11 +2373,11 @@ try {
           const v = {whois:p.whois+&#039;.search&#039;,rv:[]};
           try {
             console.log(v.whois+&#039; start. value=&#039;+value+&#039;, key=&#039;+key);
-    
+
             if( p.keys.findIndex(x =&gt; x === key) &lt; 0 ){
               throw new Error(&#039;指定された欄名がヘッダ行にありません&#039;);
             }
-    
+
             for( v.i=0 ; v.i&lt;p.data.length ; v.i++ ){
               if( p.isEqual(value,p.data[v.i][key]) ){
                 v.rv.push({
@@ -2388,7 +2388,7 @@ try {
                 });
               }
             }
-    
+
             console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
           } catch(e) {
             console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
@@ -2397,7 +2397,7 @@ try {
             return v.rv;
           }
         })(v.rv.members,value,key)};  // search終了
-    
+
         /** lookup: 項目名&#039;key&#039;の値がvalueである最初の行Objを返す
          * @param {any}    value - キー値
          * @param {string} key   - キーとなる項目名。既定値はキー項目名
@@ -2408,10 +2408,10 @@ try {
           const v = {whois:p.whois+&#039;.lookup&#039;,rv:{}};
           try {
             console.log(v.whois+&#039; start. value=&#039;+value+&#039;, key=&#039;+key);
-    
+
             v.searchResult = p.search(value,key);
             v.rv = v.searchResult.length &gt; 0 ? v.searchResult[0].obj : null;
-    
+
             console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
           } catch(e) {
             console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
@@ -2420,7 +2420,7 @@ try {
             return v.rv;
           }
         })(v.rv.members,value,key)};  // lookup終了
-    
+
         /**
          * @typedef {object} changedColumns - szSheet.update/appendで更新・追加により変化した欄とその値
          * @prop {string} colName - 更新・追加により値が変化した項目名
@@ -2444,7 +2444,7 @@ try {
          * @desc &lt;caption&gt;戻り値に関する注意&lt;/caption&gt;
          * 引数のkey,valueにマッチするものがなかったら空配列、
          * マッチするものがあったが変更がない場合szSheetChangedオブジェクトの配列が返るが、そのchangedは空配列になる。
-         * 
+         *
          * @param {Object.&lt;string, any&gt;} data - 更新データ。{項目名：設定値,..}形式
          * @param {object|any} opt - オプション指定。非objならkey=rv.key,value=opt,append=trueと看做す
          * @param {string} [opt.key=rv.key] - キーとなる項目名
@@ -2469,7 +2469,7 @@ try {
             }
             if( opt.num === null &amp;&amp; (p.keys.findIndex(x =&gt; x === opt.key) &lt; 0) )
               throw new Error(&#039;キー項目が不適切です&#039;);
-    
+
             // 2.現状のシートデータ(raw,data)を修正
             //   - 該当なし且つopt.appendの場合、appendメソッドに振る
             //   - 併せて更新範囲の特定、ログ作成を行う
@@ -2480,7 +2480,7 @@ try {
             v.isExist = false; // 更新対象行が存在すればtrue。ループ後falseならappend呼び出し
             v.isUpdated = false; // 更新を行なったらtrue。更新対象行が存在しても既に更新済の場合はfalseのまま。ループ後trueならシート更新
             v.map = Object.keys(data); // 更新対象項目名の配列
-    
+
             // 2.2.行単位に修正対象か判断、対象なら行データを修正
             v.step = &#039;2.2&#039;;
             for( v.i=0 ; v.i&lt;p.data.length ; v.i++ ){
@@ -2489,17 +2489,17 @@ try {
               // opt.numはcomplementで指定されたrv.dataの添字
               if( (opt.num === null &amp;&amp; (!p.isEqual(p.data[v.i][opt.key],opt.value)))
                || (opt.num !== null &amp;&amp; opt.num !== v.i )) continue;
-    
+
               v.step = &#039;2.2.2&#039;; // 行単位の処理結果Obj作成(単独のszSheetChanged作成)
               v.isExist = true;
               v.l = p.headerRow + v.i;  // raw上の添字。シートの行番号はこれに＋1
               v.log = {func:&#039;update&#039;,dataNum:v.i,rawNum:v.l,rowNum:v.l+1,changed:[]};
-    
+
               v.step = &#039;2.2.3&#039;; // 更新範囲(行)の更新
               v.a = v.l + 1;  // v.lは添字(0以上の整数)なので行番号(自然数)に変換
               v.maxRow = v.maxRow &lt; v.a ? v.a : v.maxRow;
               v.minRow = v.minRow &gt; v.a ? v.a : v.minRow;
-    
+
               v.step = &#039;2.2.4&#039;; // 項目(raw,data)の更新
               for( v.j=0 ; v.j&lt;v.map.length ; v.j++ ){
                 v.step = &#039;2.2.4.1&#039;;
@@ -2517,18 +2517,18 @@ try {
                   v.log.changed.push(v.o);
                 }
               }
-    
+
               v.step = &#039;2.2.5&#039;; // ログに行単位の更新記録を追加
               v.rv.push(v.log);
             }
-    
+
             // 2.3.該当なし且つopt.appendの場合、appendメソッドに振る
             v.step = &#039;2.3&#039;;
             if( v.isExist === false &amp;&amp; opt.append ){
               opt.update = false;
               return p.append(data,opt);
             }
-    
+
             // 3.更新範囲についてシートを更新
             v.step = &#039;3&#039;;
             if( v.isUpdated ){
@@ -2537,7 +2537,7 @@ try {
               p.raw.slice(v.minRow-1,v.maxRow).forEach(x =&gt; v.sv.push(x.slice(v.minCol-1,v.maxCol)));
               v.range.setValues(v.sv);
             }
-    
+
             console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
           } catch(e) {
             console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
@@ -2546,7 +2546,7 @@ try {
             return v.rv;
           }
         })(v.rv.members,data,opt)};  // update終了
-    
+
         /** append: 行の追加
          * @param {any[]|any[][]|Object.&lt;string, any&gt;|Array.Object.&lt;string, any&gt;} data
          *  - 追加行の一次元配列または{項目名:値}形式のオブジェクト、またはその配列
@@ -2561,7 +2561,7 @@ try {
           const v = {whois:p.whois+&#039;.append&#039;,rv:[]};
           try {
             console.log(v.whois+&#039; start.\n&#039;,data);
-    
+
             // 1.事前処理
             // 1.1.パラメータの既定値設定
             v.step = &#039;1.1&#039;;
@@ -2584,10 +2584,10 @@ try {
                 v.type = whichType(data[0]);
                 v.data = v.type !== &#039;Array&#039; &amp;&amp; v.type !== &#039;Object&#039;? v.data = [data] : data;
                 break;
-              default: 
+              default:
                 throw new Error(&#039;行データの形式が不適切です&#039;);
             }
-    
+
             // 2.追加データが配列ならオブジェクトに変換
             v.step = &#039;2&#039;;
             for( v.i=0 ; v.i&lt;v.data.length ; v.i++ ){
@@ -2600,7 +2600,7 @@ try {
                   }
                 }
               }
-    
+
               // 3.既定値設定項目が空なら既定値を追加
               v.step = &#039;3&#039;;
               v.dMap = Object.keys(p.default);
@@ -2609,7 +2609,7 @@ try {
                   v.obj[v.dMap[v.j]] = p.default[v.dMap[v.j]];
                 }
               }
-    
+
               // 4.追加データにキー項目が指定されているか判断
               v.step = &#039;4&#039;;
               if( v.opt.key === null || typeof v.obj[v.opt.key] === &#039;undefined&#039; ){
@@ -2654,7 +2654,7 @@ try {
                   }
                 }
               }
-    
+
               // 5. 作成したオブジェクトを追加
               // 5.1.append用配列を作成、シートに追加
               v.step = &#039;5.1&#039;;
@@ -2689,7 +2689,7 @@ try {
               p.raw.push(v.arr);
               p.data.push(v.obj);
             }
-    
+
             console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
           } catch(e) {
             console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
@@ -2698,7 +2698,7 @@ try {
             return v.rv;
           }
         })(v.rv.members,data,opt)};  // append終了
-    
+
         /** delete: 行の削除
          * @param {Object.&lt;string, any&gt;} cond - 削除条件。項目名:値が「全て」該当する行を削除
          * @returns {szSheetChanged[]} 更新結果
@@ -2708,12 +2708,12 @@ try {
           const v = {whois:p.whois+&#039;.delete&#039;,rv:[]};
           try {
             console.log(v.whois+&#039; start.\ncond=&#039;+JSON.stringify(cond));
-    
+
             // 1.事前準備
             v.step = &#039;1&#039;;
             v.cond = cond;
             v.map = Object.keys(v.cond);
-    
+
             // 2.逆順に一件ずつ確認
             for( v.i=p.data.length-1 ; v.i&gt;=0 ; v.i-- ){
               // 2.1.該当するか判断
@@ -2741,7 +2741,7 @@ try {
                 p.data.splice(v.rObj.dataNum,1);
               }
             }
-    
+
             console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
           } catch(e) {
             console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
@@ -2750,7 +2750,7 @@ try {
             return v.rv;
           }
         })(v.rv.members,cond)};  // delete終了
-    
+
         /** objectize: 階層形式のシートをオブジェクト化
          * @param {number|string} stCol - 分類の開始列番号(自然数)、または項目名
          * @param {number|string} edCol - 分類の終了列番号(自然数)、または項目名
@@ -2762,14 +2762,14 @@ try {
           const v = {whois:p.whois+&#039;.objectize&#039;,rv:{}};
           try {
             console.log(v.whois+&#039; start.\nstCol=&#039;+stCol+&#039;, edCol=&#039;+edCol+&#039;, valid=&#039;+valid);
-    
+
             v.arr = [p.keys];
             for( v.i=p.headerRow ; v.i&lt;p.raw.length ; v.i++ ){
               v.arr.push(p.raw[v.i]);
             }
             v.rv = objectize(v.arr,stCol,edCol,valid);
             if( v.rv instanceof Error ) throw v.rv;
-    
+
             console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
           } catch(e) {
             console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
@@ -2778,13 +2778,13 @@ try {
             return v.rv;
           }
         })(v.rv.members,stCol,edCol,valid)};  // objectize終了
-    
+
         // 5.メソッドへの受渡用のメンバ変数のオブジェクトを作成
         v.step = &#039;5&#039;;
         const members = {whois:v.whois};
         Object.keys(v.rv).forEach(x =&gt; members[x] = v.rv[x]);
         v.rv.members = members;
-    
+
         console.log(v.whois+&#039; normal end.\n&#039;+JSON.stringify(v.rv));
       } catch(e) {
         console.error(v.whois+&#039; abnormal end.\n&#039;+e.stack+&#039;\n&#039;,v);
@@ -2793,7 +2793,7 @@ try {
         return v.rv;
       }
     }
-    
+
     function whichType(arg,is){
       let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
       switch(rv){
@@ -2810,12 +2810,12 @@ try {
       * https://wwwtyro.github.io/cryptico/  cryptico.min.js
       * ※navigatorは動作のために追加したブラウザの動作環境
       */
-     
+
      const navigator = {
        appName: &quot;Netscape&quot;,
        appVersion: &#039;5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36&#039;
      };
-     
+
      var dbits,canary=244837814094590,j_lm=(canary&amp;16777215)==15715070;function BigInteger(a,b,c){a!=null&amp;&amp;(&quot;number&quot;==typeof a?this.fromNumber(a,b,c):b==null&amp;&amp;&quot;string&quot;!=typeof a?this.fromString(a,256):this.fromString(a,b))}function nbi(){return new BigInteger(null)}function am1(a,b,c,d,e,g){for(;--g&gt;=0;){var h=b*this[a++]+c[d]+e,e=Math.floor(h/67108864);c[d++]=h&amp;67108863}return e}
      function am2(a,b,c,d,e,g){var h=b&amp;32767;for(b&gt;&gt;=15;--g&gt;=0;){var f=this[a]&amp;32767,o=this[a++]&gt;&gt;15,p=b*f+o*h,f=h*f+((p&amp;32767)&lt;&lt;15)+c[d]+(e&amp;1073741823),e=(f&gt;&gt;&gt;30)+(p&gt;&gt;&gt;15)+b*o+(e&gt;&gt;&gt;30);c[d++]=f&amp;1073741823}return e}function am3(a,b,c,d,e,g){var h=b&amp;16383;for(b&gt;&gt;=14;--g&gt;=0;){var f=this[a]&amp;16383,o=this[a++]&gt;&gt;14,p=b*f+o*h,f=h*f+((p&amp;16383)&lt;&lt;14)+c[d]+e,e=(f&gt;&gt;28)+(p&gt;&gt;14)+b*o;c[d++]=f&amp;268435455}return e}
      j_lm&amp;&amp;navigator.appName==&quot;Microsoft Internet Explorer&quot;?(BigInteger.prototype.am=am2,dbits=30):j_lm&amp;&amp;navigator.appName!=&quot;Netscape&quot;?(BigInteger.prototype.am=am1,dbits=26):(BigInteger.prototype.am=am3,dbits=28);BigInteger.prototype.DB=dbits;BigInteger.prototype.DM=(1&lt;&lt;dbits)-1;BigInteger.prototype.DV=1&lt;&lt;dbits;var BI_FP=52;BigInteger.prototype.FV=Math.pow(2,BI_FP);BigInteger.prototype.F1=BI_FP-dbits;BigInteger.prototype.F2=2*dbits-BI_FP;var BI_RM=&quot;0123456789abcdefghijklmnopqrstuvwxyz&quot;,BI_RC=[],rr,vv;
@@ -2948,7 +2948,7 @@ window.addEventListener('DOMContentLoaded',() => {
   });
 
   mermaid.initialize({
-      startOnLoad: true, 
+      startOnLoad: true,
       theme: 'defalt'
   });
 });

@@ -6,7 +6,7 @@ class BurgerMenu {
   /**
    * @constructor
    * @param {string|HTMLElement} parent - 親要素(wrapper)またはそのCSSセレクタ
-   * @param {Object} [opt={}] - オプション 
+   * @param {Object} [opt={}] - オプション
    * @returns {null|Error}
    */
   constructor(parent,opt={}){

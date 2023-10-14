@@ -28,7 +28,7 @@
     v.publicKey = isNaN(arg.to)
     ? config[arg.to].publicKey  // front/gatewayの場合
     : config.publicKey[arg.to]; // 受付番号の場合
-    
+
     v.step = '2'; // 戻り値用のトークン作成
     v.encrypt = cryptico.encrypt(JSON.stringify({
       fm:config.myself.name,to:arg.to,fc:arg.fc,ts:Date.now()

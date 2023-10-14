@@ -85,7 +85,7 @@ class Reception {
       this.wrapper.classList.add('act');
       this.itemSelector.close();
       this.Participants.close();
-      
+
       while(v.loop){  // v.loopがtrueの間、繰り返し
         // 停止条件①：エラー発生
 
@@ -98,13 +98,13 @@ class Reception {
         console.log(v.whois+' step.%s: ',v.step,v.keyword);
         // 文字列長が0、または読込失敗orタイムアウトならGAS問合せを行わずリトライ
         if( v.keyword.length === 0 || v.keyword === null ) continue;
-  
+
         v.step = 2; // 入力された検索キーで認証局経由・管理局に該当者情報を問合せ
         this.LoadingIcon.show();
         v.rv = await this.auth.fetch('recept1A',v.keyword,3);
         if( v.rv instanceof Error ) throw v.rv;
         this.LoadingIcon.hide();
-  
+
         v.step = 3; // 無権限・不正公開鍵・不適切検索キー文字列のエラー
         if( v.rv.isErr ){
           throw new Error(v.rv.message);
@@ -134,7 +134,7 @@ class Reception {
             // 編集結果のメッセージを表示
             alert(v.rv.message);
           }
-        }        
+        }
       }
 
       // 終了処理

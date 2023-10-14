@@ -5,19 +5,19 @@
  */
 /**
  * @desc コマンドラインから`node xxx.js aa bb`を実行した場合の引数(`aa`,`bb`)を取得し、オブジェクトにして返す。<br>
- * 
+ *
  * @example
- * 
+ *
  * ```
  * node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
  * ⇒ {opt:{i:"aaa.html",o:"ccc.json"},val:["bbb","ddd","eee"]}
  * ```
- * 
+ *
  * <caution>注意</caution>
- * 
+ *
  * - スイッチは`(\-*)([0-9a-zA-Z]+):*(.*)$`形式であること
  * - スイッチに該当しないものは配列`val`にそのまま格納される
- * 
+ *
  * @param {void} - なし
  * @returns {AnalyzeArg} 分析結果のオブジェクト
  */
@@ -43,7 +43,7 @@ function analyzeArg(){
   } catch(e){
     console.error('===== analyzeArg abnormal end.\n',e);
     // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
+    if( typeof window !== 'undefined' ) alert(e.stack);
     //throw e; //以降の処理を全て停止
     v.rv.stack = e.stack; return v.rv; // 処理継続
   }
@@ -56,9 +56,9 @@ const fs = require('fs'); // ファイル操作
  * @param {string} i - 入力ファイル名
  * @param {string} o - 出力ファイル名
  * @param {string[]} option - 削除対象とするコメント形式[all|jsdoc|js|css|html]
- * 
+ *
  * @example
- * 
+ *
  * ```
  * node minimize.js -i:minimize.html -o:test.html all
  * node minimize.js -i:minimize.html -o:test.html jsdoc <- JSDocのみ削除
@@ -79,7 +79,7 @@ function onConsole(){
 
     v.readFile = fs.readFileSync(v.argv.opt.i,'utf-8').trim();
     v.rv = minimize(v.readFile,v.opt);
-    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
+    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');
 
     //console.log('v.rv='+JSON.stringify(v.rv));
     console.log('minimize.onConsole end.');

@@ -98,7 +98,7 @@ class Readme {
     try {
       v.step = 1; // 前処理
       this.tbody.innerHTML = ''; // 表示領域のクリア
-      
+
       v.step = 2; // 表示対象となるReadmeをv.listに格納
       v.list = list === null ? this.data.components : list;
       v.list = alasql('select *'

@@ -1,6 +1,6 @@
 /**
  * @classdesc 参加者情報の表示・編集
- * 
+ *
  * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
  */
 class Perticipants {
@@ -278,7 +278,7 @@ class Perticipants {
         colorLight: "#fff",
         correctLevel : QRCode.CorrectLevel.H,
       });
-  
+
       v.step = 1.2; // その他文字情報表示
       ['entryStr','申込者氏名','申込者カナ'].forEach(x => {
         v.x = x;
@@ -374,7 +374,7 @@ class Perticipants {
   }
 
   /** 参加費の編集を行い、編集結果を返す
-   * @param {Object} [data=null] - 編集対象となる参加者情報 
+   * @param {Object} [data=null] - 編集対象となる参加者情報
    * @returns {Object} {entryNo:{string},fee0n:'未入場/無料/未収/既収/退場済'}
    */
   edit = async (data=null) => {
@@ -464,7 +464,7 @@ class Perticipants {
   }
 
   /** 参加者情報を表示する
-   * @param {Object} [data=null] - 表示対象となる参加者情報 
+   * @param {Object} [data=null] - 表示対象となる参加者情報
    * @returns {void}
    */
   view = (data=null) => {
@@ -484,7 +484,7 @@ class Perticipants {
 
       // 参加者一覧・参加費欄でプルダウンは非表示
       this.list.querySelectorAll('.content .td[name="fee"] select').forEach(x => {
-        x.classList.add('hide');        
+        x.classList.add('hide');
       });
 
       // 参加者一覧・詳細情報を非表示状態に変更

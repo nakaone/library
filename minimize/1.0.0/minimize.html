@@ -80,7 +80,7 @@ function minimize(str,opt={}){
       v.rv = v.rv.replaceAll(v.rex.html,'');
     }
 
-    // 複数の改行は一つに    
+    // 複数の改行は一つに
     v.rv = v.rv.replaceAll(/\n+/g,'\n');
 
     //console.log('v.rv='+JSON.stringify(v.rv));
@@ -88,7 +88,7 @@ function minimize(str,opt={}){
     return v.rv;
   } catch(e){
     // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
+    if( typeof window !== 'undefined' ) alert(e.stack);
     //throw e; //以降の処理を全て停止する場合
     v.rv.stack = e.stack; return v.rv; // 処理継続する場合
   }
@@ -103,9 +103,9 @@ const fs = require('fs'); // ファイル操作
  * @param {string} i - 入力ファイル名
  * @param {string} o - 出力ファイル名
  * @param {string[]} option - 削除対象とするコメント形式[all|jsdoc|js|css|html]
- * 
+ *
  * @example
- * 
+ *
  * ```
  * node minimize.js -i:minimize.html -o:test.html all
  * node minimize.js -i:minimize.html -o:test.html jsdoc <- JSDocのみ削除
@@ -126,7 +126,7 @@ function onConsole(){
 
     v.readFile = fs.readFileSync(v.argv.opt.i,'utf-8').trim();
     v.rv = minimize(v.readFile,v.opt);
-    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
+    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');
 
     //console.log('v.rv='+JSON.stringify(v.rv));
     console.log('minimize.onConsole end.');
@@ -172,7 +172,7 @@ function onKeyup(event=null){
 
   } catch(e){
     console.error('onKeyup abnormal end.',e);
-    alert(e.stack); 
+    alert(e.stack);
     v.rv.stack = e.stack; return v.rv;
   }
 }

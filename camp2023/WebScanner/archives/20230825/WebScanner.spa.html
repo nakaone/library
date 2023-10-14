@@ -155,7 +155,7 @@ pre {
 <script type="text/javascript">/**
  * @desc オブジェクトのプロパティを再帰的にマージ
  * - Qiita [JavaScriptでオブジェクトをマージ（結合）する方法、JSONのマージをする方法](https://qiita.com/riversun/items/60307d58f9b2f461082a)
- * 
+ *
  * @param {Object} target - 結合対象のオブジェクト1
  * @param {Object} source - 結合対象のオブジェクト2。同名のプロパティはこちらで上書き
  * @param {Object} opts - オプション
@@ -189,20 +189,20 @@ function mergeDeeply(target, source, opts) {
  * @param {Object} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
  * @param {number} [depth=0] - 再起呼出時の階層。開始・終了メッセージ制御用なので指定不要
  * @returns {void}
- * 
+ *
  * ## 使用方法
- * 
+ *
  * 1. 主にclass内constructorで冒頭に使用することを想定。
  * 1. 第一階層にメンバ"css"が存在すると、新規styleを生成
  * 1. 第一階層にメンバ"parent"が存在する場合、
  *    - 文字列型ならCSSセレクタと解して`parent:{selector:(string),element:(HTMLElement)}`を生成
  *    - HTMLElement型ならそのまま`parent:(HTMLElement)}`として設定
- * 
+ *
  * ### 入力例
- * 
+ *
  * ```
  * const menu = new BurgerMenu({parent:'body',auth:confObj,fuga:{a:10}})
- * 
+ *
  * class BurgerMenu {
  *   constructor(opt){
  *     setupInstance(
@@ -228,9 +228,9 @@ function mergeDeeply(target, source, opts) {
  *       });
  *     // 以降、constructorの処理
  * ```
- * 
+ *
  * ### 出力例
- * 
+ *
  * ```
  * this = {
  *   parent: {
@@ -245,7 +245,7 @@ function mergeDeeply(target, source, opts) {
  *   },
  * }
  * ```
- * 
+ *
  * ```
  * <style type="text/css">
  * .date {
@@ -254,9 +254,9 @@ function mergeDeeply(target, source, opts) {
  * }
  * </style>
  * ```
- * 
+ *
  * ### デシジョンテーブル
- * 
+ *
  * | 優先(a) | 劣後(b) | 結果 | 備考 |
  * | :--: | :--: | :--: | :-- |
  * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
@@ -275,7 +275,7 @@ function mergeDeeply(target, source, opts) {
  * |  -  |  B  |  B  | |
  * |  -  | [B] | [B] | |
  * |  -  | {B} | {B} | |
- * 
+ *
  */
 const setupInstance = (dest,opt,def) => {
   const v = {whois:'setupInstance',rv:true,step:0,
@@ -363,13 +363,13 @@ const setupInstance = (dest,opt,def) => {
 
 /**
  * @classdesc 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャン
- * 
+ *
  * **残課題**
- * 
+ *
  * 1. scanDoc稼働未確認
- * 
+ *
  * @example
- * 
+ *
  * ```
  * <div class="webScanner"></div>
  * 〜
@@ -383,7 +383,7 @@ class WebScanner {
    * @constructor
    * @param {string} [parent='body'] - 親要素のCSSセレクタ
    * @param {Object} [opt={}] - オプション
-   * 
+   *
    * - [Promiseでsleep機能を作る](https://www.sejuku.net/blog/24629#index_id5)
    */
   constructor(parent='body',opt={}){
@@ -533,7 +533,7 @@ class WebScanner {
 
       console.log(v.whois+' normal end.\n',this);
       return v.rv;
-      
+
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
@@ -543,7 +543,7 @@ class WebScanner {
   /** QRコードをスキャン
    * @param {void}
    * @returns {string} スキャンしたQRコードの文字列
-   * 
+   *
    * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
    */
   scanQR = async () => {
@@ -584,7 +584,7 @@ class WebScanner {
           = this.size * (v.vw > v.vh ? 1 : (v.vw / v.vh));
           this.canvas.height = v.ch
           = this.size * (v.vh > v.vw ? 1 : (v.vh / v.vw));
-  
+
           v.step = 3.2; // キャンバスへの描画
           this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
           v.imageData = this.context.getImageData(0, 0, v.cw, v.ch);
@@ -607,7 +607,7 @@ class WebScanner {
 
       console.log(v.whois+' normal end.\n',v.rv);
       return v.rv;
-  
+
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;

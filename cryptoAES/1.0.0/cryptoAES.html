@@ -63,7 +63,7 @@
  * @param {string} text - 暗号化対象の文字列
  * @param {string} pass - パスワード
  * @returns {encryptAES}
- * 
+ *
  * - [JavaScript AES暗号・復号](https://chigusa-web.com/blog/js-aes/)
  */
 function encryptAES(text, pass) {
@@ -128,7 +128,7 @@ function onConsole(){
 
     v.readFile = fs.readFileSync(v.argv.opt.i,'utf-8').trim();
     v.rv = cryptoAES(v.readFile);
-    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
+    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');
 
     //console.log('v.rv='+JSON.stringify(v.rv));
     console.log('cryptoAES.onConsole end.');
@@ -193,7 +193,7 @@ function onInput(event=null){
 
   } catch(e){
     console.error('onInput abnormal end.',e);
-    alert(e.stack); 
+    alert(e.stack);
     v.rv.stack = e.stack; return v.rv;
   }
 }

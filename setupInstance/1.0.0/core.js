@@ -1,12 +1,12 @@
 /** クラス(constructor)共通の初期処理を行う。
- * 
+ *
  * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
  * @param {Object} opt - 起動時にオプションとして渡されたオブジェクト
  * @param {Object} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
  * @returns {void}
- * 
+ *
  * ## 処理概要
- * 
+ *
  * 1. オプション・既定値をメンバに設定
  * 1. オプション(Object)の第一階層にメンバ"parent"が存在する場合、
  *    1. メンバ"parent"がHTMLElement型の場合、
@@ -22,20 +22,20 @@
  *    呼出元クラスで作成されたスタイルシートが存在しないなら新規作成する
  * 1. オプション(Object)の第一階層にメンバ"html"が存在する場合、
  *    this.wrapper内に指定のHTML要素を生成
- * 
+ *
  * ## 領域開閉制御に関するメモ
- * 
+ *
  * 1. 領域全体の開閉制御はhtml側(BurgerMenu.change())で行う<br>
  *    ※displayの書き換えになっているが、将来的にはactクラスの加除に修正。<br>
  *    　現段階では影響が大きいため見送り。
  * 1. wrapperの既定値は「開いた状態(actあり)」とする
  * 1. wrapper内の要素の表示/非表示制御はメソッドで行う
- * 
+ *
  * ## 入力例
- * 
+ *
  * ```
  * const menu = new BurgerMenu({parent:'body',auth:confObj,fuga:{a:10}})
- * 
+ *
  * class BurgerMenu {
  *   constructor(opt){
  *     setupInstance(
@@ -61,9 +61,9 @@
  *       });
  *     // 以降、constructorの処理
  * ```
- * 
+ *
  * ## 出力例
- * 
+ *
  * ```
  * this = {
  *   parent: {
@@ -78,7 +78,7 @@
  *   },
  * }
  * ```
- * 
+ *
  * ```
  * <style type="text/css">
  * .date {
@@ -87,9 +87,9 @@
  * }
  * </style>
  * ```
- * 
+ *
  * ## デシジョンテーブル
- * 
+ *
  * | 優先(a) | 劣後(b) | 結果 | 備考 |
  * | :--: | :--: | :--: | :-- |
  * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
@@ -108,7 +108,7 @@
  * |  -  |  B  |  B  | |
  * |  -  | [B] | [B] | |
  * |  -  | {B} | {B} | |
- * 
+ *
  */
 const setupInstance = (dest,opt,def) => {
   const v = {whois:'setupInstance',rv:true,step:0,
@@ -165,7 +165,7 @@ const setupInstance = (dest,opt,def) => {
         // wrapperをparentに追加
         dest.wrapper = createElement({attr:{class:v.constructor,name:'wrapper'}});
         dest.parent.appendChild(dest.wrapper);
-        dest.wrapperSelector = 
+        dest.wrapperSelector =
         (dest.parentSelector === null ? null : dest.parentSelector + ' > ')
         + 'div.' + v.constructor + '[name="wrapper"]';
       } else {

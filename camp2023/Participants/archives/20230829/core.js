@@ -9,7 +9,7 @@
  * @param {boolean} [opt.showList=false] - リスト表示ならtrue、但し編集モードなら強制表示
  * @param {boolean} [opt.showDetail=false] - 詳細を表示するならtrue
  * @returns {Object.<string, any>} 修正された項目ラベルと値
- * 
+ *
  */
 class Perticipants {
   constructor(opt={}){
@@ -31,7 +31,7 @@ class Perticipants {
       if( v.rv instanceof Error ) throw v.rv;
       v.step = 1.2; // 編集モードなら参加者一覧は必ず表示するよう設定
       this.showList = this.edit || this.showList;
-  
+
       v.step = 1.3; // 描画領域をクリアし、必要な要素をセット
       this.#setupElements();
 
@@ -44,7 +44,7 @@ class Perticipants {
       this.toggle('.detail',opt.showDetail);
       this.parent.element.querySelector('.detail .label button')
       .addEventListener('click',this.toggle);
-    
+
       v.step = 2; // QRコード、受付番号、申込者名
       this.#setupSummary();
 
@@ -60,7 +60,7 @@ class Perticipants {
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
-    }    
+    }
   }
 
   /** 描画領域をクリアし、必要な要素をセットする
@@ -100,7 +100,7 @@ class Perticipants {
         .Perticipants .label button {
           grid-column: 3 / 4;
         }
-      
+
         /* QRコード、受付番号、申込者名 */
         .Perticipants .summary {
           width: 100%;
@@ -131,7 +131,7 @@ class Perticipants {
         .Perticipants .summary rt span {
           font-size: 1rem;
         }
-      
+
         /* 参加者リスト */
         .Perticipants .list .content {
           width: 100%;
@@ -155,10 +155,10 @@ class Perticipants {
         .Perticipants .list .content div:nth-child(4n+4) {
           grid-column: 10 / 13;
         }
-      
+
         /* 詳細 */
         .Perticipants .detail {
-      
+
         }
         .Perticipants .detail .content {
           width: 100%;
@@ -176,7 +176,7 @@ class Perticipants {
         .Perticipants .message.hide {
           display: none;
         }
-      
+
         /* ボタン領域 */
         .Perticipants .buttons {
           width: 100%;
@@ -210,7 +210,7 @@ class Perticipants {
           <rt name="申込者カナ"><span class="v"></span></rt>
         </ruby></div>
       </div>
-  
+
       <div class="list">
         <div class="label">
           <p>参加者一覧</p>
@@ -223,7 +223,7 @@ class Perticipants {
           <div class="th">参加費</div>
         </div>
       </div>
-  
+
       <div class="detail">
         <div class="label">
           <p>詳細情報</p>
@@ -237,11 +237,11 @@ class Perticipants {
           </div>
         </div>
       </div>
-  
+
       <div class="buttons">
         <button name="取消">取消</button>
         <button name="決定">決定</button>
-        <button name="全員">全員<br>受領</button>  
+        <button name="全員">全員<br>受領</button>
       </div>
       `;
       this.summary = this.parent.element.querySelector(':scope > .summary');
@@ -278,13 +278,13 @@ class Perticipants {
         colorLight: "#fff",
         correctLevel : QRCode.CorrectLevel.H,
       });
-  
+
       ['entryNo','申込者氏名','申込者カナ'].forEach(x => {
         v.x = x;
         v.element = this.summary.querySelector('[name="'+x+'"] .v');
         v.element.innerText = this.data[v.x];
       });
-  
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 
@@ -327,7 +327,7 @@ class Perticipants {
           text: this.data['fee0'+v.i],
         }));
       }
-    
+
       console.log(v.whois+' normal end.',v.rv);
       return v.rv;
 

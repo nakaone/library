@@ -1,4 +1,4 @@
-/* 
+/*
 1. 基本的に新しい記事が上に来るようにする
 1. contentの中の"`"は"\`"に置換する(content終了記号と誤解される)
 1. URLクエリで`/tips.html?id=xxxx`(xxxxは記事のID)とすると直接記事を呼び出せる
@@ -104,7 +104,7 @@ window.addEventListener('DOMContentLoaded',async () => {
 \`\`\`
 /**
  * @classdesc 参加者情報の表示・編集
- * 
+ *
  * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
  */
 class Participants {
@@ -229,7 +229,7 @@ class Participants {
       console.error(v.whois+' abnormal end(step.'+v.step+').\\n',e,v);
       return e;
     }
-  }  
+  }
 }
 \`\`\`
 
@@ -240,7 +240,7 @@ class Participants {
 \`\`\`
 /**
  * @classdesc 参加者情報の表示・編集
- * 
+ *
  * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
  */
 class Participants {
@@ -507,7 +507,7 @@ class Participants {
         colorLight: "#fff",
         correctLevel : QRCode.CorrectLevel.H,
       });
-  
+
       v.step = 1.2; // その他文字情報表示
       ['entryStr','申込者氏名','申込者カナ'].forEach(x => {
         v.x = x;
@@ -920,7 +920,7 @@ v.r1.forEach(l => {
     // prop部分の変換
     v.r2.push(l.replace(
       v.propRex,
-      "    '$1': '$2',\\n"  
+      "    '$1': '$2',\\n"
     ));
   }
 })
@@ -1007,19 +1007,19 @@ class Reception {
 # 事前確認：httpd-ssl.confの存在
 
 \`\`\`
-cd /etc/apache2 
-% ls 
+cd /etc/apache2
+% ls
 extra		magic		original	users
 httpd.conf	mime.types	other
 % vi httpd.conf
 -------------------------
-# Secure (SSL/TLS) connections 
+# Secure (SSL/TLS) connections
 #Include /private/etc/apache2/extra/httpd-ssl.conf
-# 
+#
 # Note: The following must must be present to support
 #       starting without SSL on platforms with no /dev/random equivalent
 #       but a statically compiled-in mod_ssl.
-# 
+#
 -------------------------
 :/httpd-ssl.conf
 -------------------------
@@ -1046,7 +1046,7 @@ httpd-manual.conf		proxy-html.conf
 最初サイト記載通り\`openssl genrsa -des3 -rand rand.dat 1024 > server.pem\`を行ったが、「"-rand"なんてパラメータはない」と言われたのでスキップ
 
 \`\`\`
-% openssl genrsa -des3 1024 > server.pem 
+% openssl genrsa -des3 1024 > server.pem
 Generating RSA private key, 1024 bit long modulus
 ...................+++++
 ........................+++++
@@ -1087,7 +1087,7 @@ A challenge password []:skz.oyaji
 ## 自己署名証明書(CRT)を作成する
 
 \`\`\`
-% openssl req -days 365 -in csr.pem -key server.pem -x509 -out crt.pem 
+% openssl req -days 365 -in csr.pem -key server.pem -x509 -out crt.pem
 % ls -la
 total 24
 drwxr-xr-x   5 ena.kaon  staff  160  7 23 14:21 .
@@ -1095,7 +1095,7 @@ drwxr-xr-x  12 ena.kaon  staff  384  7 23 10:31 ..
 -rw-r--r--   1 ena.kaon  staff  932  7 23 14:21 crt.pem
 -rw-r--r--   1 ena.kaon  staff  729  7 23 14:19 csr.pem
 -rw-r--r--   1 ena.kaon  staff  887  7 23 14:16 server.pem
-% 
+%
 \`\`\`
 
 ## 秘密鍵と証明書を Apache から参照できる場所に設置
@@ -1124,7 +1124,7 @@ SSLCertificateKeyFile "/private/etc/apache2/server.key"
 
 \`\`\`
 % mkdir backup
-% cd backup 
+% cd backup
 ena.kaon@enakaonnoMacBook-Air backup % sudo cp /private/etc/apache2/server.crt ./
 sudo cp /private/etc/apache2/server.key ./
 Password:
@@ -1137,7 +1137,7 @@ cp: /private/etc/apache2/server.key: No such file or directory
 \`\`\`
 % sudo cp server.pem /private/etc/apache2/server.key
 sudo cp crt.pem /private/etc/apache2/server.crt
-% ls -la /private/etc/apache2 
+% ls -la /private/etc/apache2
 total 104
 drwxr-xr-x  11 root  wheel    352  7 23 14:31 .
 drwxr-xr-x  79 root  wheel   2528  7 20 18:17 ..
@@ -1150,7 +1150,7 @@ drwxr-xr-x   4 root  wheel    128  6 15 19:08 other
 -rw-r--r--   1 root  wheel    932  7 23 14:31 server.crt
 -rw-r--r--   1 root  wheel    887  7 23 14:31 server.key
 drwxr-xr-x   2 root  wheel     64  6 15 19:08 users
-% 
+%
 \`\`\`
 
 ## Apache が SSL 設定ファイルを読み込めるようにする
@@ -1173,7 +1173,7 @@ Include /private/etc/apache2/extra/httpd-ssl.conf
 
 
 http://localhost/
--> Failed to load resource: 
+-> Failed to load resource:
 
 https://localhost/
 -> このサイトにアクセスできませんlocalhost で接続が拒否されました。
@@ -1361,7 +1361,7 @@ function doPost(e){
   if( arg.passPhrase === conf.Master.key ){
     try {
       elaps.func = arg.func; // 処理名をセット
-    
+
       switch( arg.func ){
         case 'auth1B':
           rv = auth1B(arg.data);
@@ -1443,7 +1443,7 @@ function prototype(){
   } catch(e){
     console.error('prototype abnormal end.',e);
     // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
+    if( typeof window !== 'undefined' ) alert(e.stack);
     //throw e; //以降の処理を全て停止する場合
     v.rv.stack = e.stack; return v.rv; // 処理継続する場合
   }
@@ -1511,7 +1511,7 @@ function prototype(arg){
     return v.rv;
   } catch(e){
     // ブラウザで実行する場合はアラート表示
-    if( typeof window !== 'undefined' ) alert(e.stack); 
+    if( typeof window !== 'undefined' ) alert(e.stack);
     //throw e; //以降の処理を全て停止する場合
     v.rv.stack = e.stack; return v.rv; // 処理継続する場合
   }
@@ -1532,7 +1532,7 @@ function onConsole(){
 
     v.readFile = fs.readFileSync(v.argv.opt.i,'utf-8').trim();
     v.rv = prototype(v.readFile);
-    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');  
+    v.writeFile = fs.writeFileSync(v.argv.opt.o,v.rv,'utf-8');
 
     //console.log('v.rv='+JSON.stringify(v.rv));
     console.log('prototype.onConsole end.');
@@ -1578,7 +1578,7 @@ function onInput(event=null){
 
   } catch(e){
     console.error('onInput abnormal end.',e);
-    alert(e.stack); 
+    alert(e.stack);
     v.rv.stack = e.stack; return v.rv;
   }
 }
@@ -1893,13 +1893,13 @@ drwxr-xr-x   2 root  wheel     64  6 15 19:08 users
 # DocumentRoot: The directory out of which you will serve your
 # documents. By default, all requests are taken from this directory, but
 # symbolic links and aliases may be used to point to other locations.
-# 
+#
 DocumentRoot "/Library/WebServer/Documents"  <-- ここ
 -------------------------
 :/DocumentRoot
 -------------------------
 % cd /Library/WebServer/Documents # 現状の内容確認(2023/7/20)
-% ls 
+% ls
 css		index.html	js
 img		index.html.en	src
 \`\`\`
@@ -1919,10 +1919,10 @@ img		index.html.en	src
 % ifconfig en0
 en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
   options=6463<RXCSUM,TXCSUM,TSO4,TSO6,CHANNEL_IO,PARTIAL_CSUM,ZEROINVERT_CSUM>
-  ether 0c:e4:41:e8:71:85 
-  inet6 fe80::4b8:8c63:f0e5:60cb%en0 prefixlen 64 secured scopeid 0xc 
-  inet6 2404:7a80:2301:2b00:1014:c9e8:5021:1907 prefixlen 64 autoconf secured 
-  inet6 2404:7a80:2301:2b00:6d66:9e73:e45d:1308 prefixlen 64 autoconf temporary 
+  ether 0c:e4:41:e8:71:85
+  inet6 fe80::4b8:8c63:f0e5:60cb%en0 prefixlen 64 secured scopeid 0xc
+  inet6 2404:7a80:2301:2b00:1014:c9e8:5021:1907 prefixlen 64 autoconf secured
+  inet6 2404:7a80:2301:2b00:6d66:9e73:e45d:1308 prefixlen 64 autoconf temporary
   inet 192.168.1.7 netmask 0xffffff00 broadcast 192.168.1.255
   nat64 prefix 2001:260:306:b:: prefixlen 96
   nd6 options=201<PERFORMNUD,DAD>

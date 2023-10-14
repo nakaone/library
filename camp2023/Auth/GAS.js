@@ -141,7 +141,7 @@ function auth1A(arg){
       }
     });
     console.log(v.whois+'.'+v.step+': v.dt='+v.dt);
-    
+
     v.step = '1.2'; // 暗号化。受付番号＋公開鍵なのでencodeURIは省略
     v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
     if( v.dt.status !== 'success' )
@@ -158,7 +158,7 @@ function auth1A(arg){
         md: 3,  // 署名付き暗号化
         ts: Date.now(),
         dt: v.dt.cipher,
-      }),  
+      }),
     }).getContentText();
     console.log(v.whois+'.'+v.step+': res='+v.res);
     v.step = '2.2';
@@ -250,9 +250,9 @@ function auth1B(arg){
 /** 認証局での認証の第二段階
  * @param {AuthArg} arg - クライアントの受付番号、公開鍵他
  * @returns {Object} - fetchResponse.result={common:共通鍵,info:クライアント情報}
- * 
+ *
  * ## 注意事項
- * 
+ *
  * clientからのtokenは署名されているが、認証局はclientのpublicKeyを
  * 持たないので検証は省略し、そのまま管理局に送って管理局側で検証する。
  */
@@ -288,7 +288,7 @@ function auth2A(arg){
         md: 3,  // 署名付き暗号化
         ts: Date.now(),
         dt: v.dt.cipher,
-      }),  
+      }),
     }).getContentText();
     console.log(v.whois+'.'+v.step+': res='+v.res);
     v.step = '2.2';

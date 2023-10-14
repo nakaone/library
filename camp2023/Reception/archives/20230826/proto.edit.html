@@ -172,7 +172,7 @@ const edit = async (data) => {
       v.step = 2.4; // 氏名＋カナ
       conf.edit.table.appendChild(createElement({attr:{class:'td'},children:[{
         tag: 'ruby',
-        html: data[v.pre+'氏名'], 
+        html: data[v.pre+'氏名'],
         children: [{
           tag: 'rt',
           text: data[v.pre+'カナ']
@@ -217,7 +217,7 @@ const edit = async (data) => {
 			colorLight: "#ffffff",
 			correctLevel: QRCode.CorrectLevel.H
     });
-    
+
 
     v.step = 4; // 編集用ダイアログの表示
     conf.edit.element.showModal();
@@ -273,7 +273,7 @@ const list = async (data) => {
           attr:{name:d.entryNo}, // 受付番号をname属性で持たせる
           children:[{
             tag: 'ruby',
-            html: d['申込者氏名'], 
+            html: d['申込者氏名'],
             children: [{
               tag: 'rt',
               text: d['申込者カナ'],

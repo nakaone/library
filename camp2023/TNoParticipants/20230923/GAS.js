@@ -13,7 +13,7 @@ function getTNoParticipants(arg) {
       }
     });
     console.log(v.whois+'.'+v.step+': v.dt='+v.dt);
-    
+
     v.step = '1.2'; // 暗号化。受付番号＋公開鍵なのでencodeURIは省略
     v.dt = cryptico.encrypt(v.dt,arg.master,arg.RSAkey);
     if( v.dt.status !== 'success' )
@@ -30,7 +30,7 @@ function getTNoParticipants(arg) {
         md: 3,  // 署名付き暗号化
         ts: Date.now(),
         dt: v.dt.cipher,
-      }),  
+      }),
     }).getContentText();
     console.log(v.whois+'.'+v.step+': res='+v.res);
     v.step = '2.2';

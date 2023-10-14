@@ -4,20 +4,20 @@
  * @param {Object} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
  * @param {number} [depth=0] - 再起呼出時の階層。開始・終了メッセージ制御用なので指定不要
  * @returns {void}
- * 
+ *
  * ## 使用方法
- * 
+ *
  * 1. 主にclass内constructorで冒頭に使用することを想定。
  * 1. 第一階層にメンバ"css"が存在すると、新規styleを生成
  * 1. 第一階層にメンバ"parent"が存在する場合、
  *    - 文字列型ならCSSセレクタと解して`parent:{selector:(string),element:(HTMLElement)}`を生成
  *    - HTMLElement型ならそのまま`parent:(HTMLElement)}`として設定
- * 
+ *
  * ### 入力例
- * 
+ *
  * ```
  * const menu = new BurgerMenu({parent:'body',auth:confObj,fuga:{a:10}})
- * 
+ *
  * class BurgerMenu {
  *   constructor(opt){
  *     setupInstance(
@@ -43,9 +43,9 @@
  *       });
  *     // 以降、constructorの処理
  * ```
- * 
+ *
  * ### 出力例
- * 
+ *
  * ```
  * this = {
  *   parent: {
@@ -60,7 +60,7 @@
  *   },
  * }
  * ```
- * 
+ *
  * ```
  * <style type="text/css">
  * .date {
@@ -69,9 +69,9 @@
  * }
  * </style>
  * ```
- * 
+ *
  * ### デシジョンテーブル
- * 
+ *
  * | 優先(a) | 劣後(b) | 結果 | 備考 |
  * | :--: | :--: | :--: | :-- |
  * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
@@ -90,7 +90,7 @@
  * |  -  |  B  |  B  | |
  * |  -  | [B] | [B] | |
  * |  -  | {B} | {B} | |
- * 
+ *
  */
 const setupInstance = (dest,opt,def) => {
   const v = {whois:'setupInstance',rv:true,step:0,

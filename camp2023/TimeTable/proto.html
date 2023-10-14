@@ -103,23 +103,23 @@
 <script type="text/javascript">
 
 /** JavaScriptオブジェクト記述形式の文字列をオブジェクト化
- * 
+ *
  * ## 処理内容
- * 
+ *
  * - コメントを削除
  * - メンバ名をダブルクォーテーションで囲む
  * - 末尾にカンマがあれば削除
  * - シングルクォーテーション内にダブルクォーテーションがあればエスケープ
- * 
+ *
  * ## 注意事項
- * 
+ *
  * - ダブルクォーテーション内部のシングルクォーテーション使用は不可<br>
  *   ex."スタッフ'集合'"
  * - シングルクォーテーション内部のシングルクォーテーション使用は不可<br>
  *   ex.'ab\'cde\''
- * 
+ *
  * ## テストソース
- * 
+ *
  * {日本語:0,ひらがな:1,カタカナ:2,かナ漢字:3,全部載せAb1:4},
  * {
  *    p1:0,p2:'abc',p3:"abc",p4:'ab"c"',p5:"ab\"c\"",
@@ -189,7 +189,7 @@ function objectize(str){
 
 /**
  * @classdesc 参加者情報の表示・編集
- * 
+ *
  * - [JavaScriptでの rem ⇔ px に変換するテクニック＆コード例](https://pisuke-code.com/javascript-convert-rem-to-px/)
  */
  class TimeTable {
@@ -314,7 +314,7 @@ function objectize(str){
       console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
       return e;
     }
-  }  
+  }
 }
 
 window.addEventListener('DOMContentLoaded',() => {

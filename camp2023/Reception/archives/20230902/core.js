@@ -78,7 +78,7 @@ class Reception {
 
       this.itemSelector.close();
       this.Perticipants.close();
-      
+
       while(v.loop){  // v.loopがtrueの間、繰り返し
         // 停止条件①：エラー発生
 
@@ -87,13 +87,13 @@ class Reception {
         v.keyword = await this.WebScanner.entry();
         if( v.keyword instanceof Error ) throw v.keyword;
         if( v.keyword === null ) continue; // 読込失敗orタイムアウト
-  
+
         v.step = 2; // 入力された検索キーで認証局経由・管理局に該当者情報を問合せ
         this.LoadingIcon.show();
         v.rv = await this.auth.fetch('recept1A',v.keyword,3);
         if( v.rv instanceof Error ) throw v.rv;
         this.LoadingIcon.hide();
-  
+
         v.step = 3; // 無権限・不正公開鍵・不適切検索キー文字列のエラー
         if( v.rv.isErr ){
           throw new Error(v.rv.message);
@@ -123,7 +123,7 @@ class Reception {
             // 編集結果のメッセージを表示
             alert(v.rv.message);
           }
-        }        
+        }
       }
 
       // 終了処理
