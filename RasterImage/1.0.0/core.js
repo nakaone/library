@@ -134,7 +134,16 @@ class RasterImage extends BasePage {
         width: '100%',
         margin: '1rem',
         display: 'inline-block',
-      }});
+      },children:[
+        {attr:{class:'ctrl'},children:[
+          {tag:'button',text:'download zip file',event:{click:this.download}}
+        ]},
+        {attr:{class:'preview'},style:{
+          width: '100%',
+          margin: '1rem',
+          display: 'inline-block',  
+        }},
+      ]});
       parent.appendChild(v.wrapper);
 
       files.forEach(x => {

@@ -79,7 +79,7 @@
     </tr>
   </table></div>
 </div>
-<div class="preview"></div>
+<div class="previewArea"></div>
 <script type="text/javascript">
 window.addEventListener('DOMContentLoaded',async () => {
   const v = {whois:'DOMContentLoaded',rv:null,step:0,
@@ -103,11 +103,11 @@ window.addEventListener('DOMContentLoaded',async () => {
 
         document.querySelector('.console').style.display = 'none';
 
-        v.rv = v.RasterImage.preview('.preview');
+        v.rv = v.RasterImage.preview('.previewArea');
         if( v.rv instanceof Error ) throw v.rv;
 
-        v.rv = v.RasterImage.download();
-        if( v.rv instanceof Error ) throw v.rv;
+        //v.rv = v.RasterImage.download();
+        //if( v.rv instanceof Error ) throw v.rv;
 
         v.step = 99; // 終了処理
         console.log(v.whois+' normal end.\n',v.rv);
