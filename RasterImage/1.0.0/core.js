@@ -20,25 +20,20 @@ class RasterImage extends BasePage {
         mimeType: 'image/webp',
       },
       files: [],  // {File[]} - DnDされたファイルオブジェクトの配列
-      css: [`
-        img {max-width:400px;max-height:400px}
-        .multiInput {
-          border: solid 5px #ccc;
-          margin: 1rem;
-          padding:2em;
-          text-align:center;
+      css: [
+        /* preview用 */`
+        .tooltip {
+          position: absolute;
+          z-index: 10;
+          visibility: hidden;
+          background-color: rgba(255,255,255,0.8);
+          font-size: 0.7rem;
+          padding: 0.5rem;
+          line-height: 1rem;
         }
       `],
       html: [
-        {attr:{class:'multi'},name:'multi',children:[
-          {attr:{class:'multiInput'},text:'画像ファイルをドロップ(複数可)',event:{drop:(e)=>{
-            e.stopPropagation();
-            e.preventDefault();
-            this.onDrop(e.dataTransfer.files);
-          },dragover:(e)=>{
-            e.preventDefault();
-          }}},
-        ]}
+        {tag:'div',attr:{class:'tooltip'}}
       ],
     }};
     console.log(v.whois+' start.',opt);
@@ -59,9 +54,9 @@ class RasterImage extends BasePage {
    * @param {ProgressEvent} files
    * @returns {null|Error}
    */
-  onDrop = async (files) => {
+  onDrop = async (files,opt=this.compressor) => {
     const v = {whois:this.className+'.onDrop',rv:null,step:0};
-    console.log(v.whois+' start.',files);
+    console.log(v.whois+' start.',files,opt);
     try {
 
       v.step = 1; // zipを生成
@@ -73,46 +68,21 @@ class RasterImage extends BasePage {
         v.step = 2.1; // 変換前をoriginに保存
         v.file = {origin:files[v.i]};
         v.step = 2.2; // 変換後をcompressに保存
-        console.log(this.compressor);
-        v.file.compress = await this.compress(files[v.i],this.compressor);
+        v.file.compress = await this.compress(files[v.i],opt);
         console.log(v.file);
-        v.step = 2.3; // 変換結果をメンバ変数に格納
-        this.files.push(v.file);
-        v.step = 2.4; // 圧縮比率計算
+        v.step = 2.3; // 圧縮比率計算
         v.file.compress.ratio = v.file.compress.size / v.file.origin.size;
+        v.step = 2.4; // 変換結果をメンバ変数に格納
+        this.files.push(v.file);
 
-        v.step = 3; // プレビュー表示
-        this.createElement({style:{
-          margin: '1rem',
-          padding: '1rem',
-          width:'80%',
-          display:'grid',
-          'grid-template-columns': '1fr 1fr',
-          'grid-gap': '2rem',
-        },children:[
-          {style:{'font-size':'1.2rem'},text:v.file.origin.name},
-          {style:{'font-size':'1.2rem'},text:v.file.compress.name},
-          {tag:'img',attr:{src:URL.createObjectURL(v.file.origin)}},
-          {tag:'img',attr:{src:URL.createObjectURL(v.file.compress)}},
-          {style:{'text-align':'right'},text:v.file.origin.size+' bytes'},
-          {style:{'text-align':'right'},text:v.file.compress.size+' bytes ('
-          + Math.round(v.file.compress.ratio * 10000) / 100 + ' %)'},
-          {text:v.file.origin.type},
-          {text:v.file.compress.type},
-        ]},this.multi);
-
-        v.step = 4;
+        v.step = 3;
         // 圧縮されたファイルをzipに保存
-        v.zip = this.zip.file(v.file.compress.name,v.file.compress,{binary:true});
+        this.zip.file(v.file.compress.name,v.file.compress,{binary:true});
+        //v.zip = this.zip.file(v.file.compress.name,v.file.compress,{binary:true});
       }
 
-      v.step = 5; // zipファイルをダウンロード
-      console.log(this.zip)
-      v.blob = await this.zip.generateAsync({ type: 'blob' }); // Blob の取得
-      v.rv = this.download(v.blob);
-      if( v.rv instanceof Error ) throw v.rv;
-
-      v.step = 6; // 終了処理
+      v.step = 4; // 終了処理
+      v.rv = this.files;
       console.log(v.whois+' normal end.\\n',this.files);
       return v.rv;
 
@@ -140,6 +110,77 @@ class RasterImage extends BasePage {
     });
   }
 
+  /** 指定要素にプレビュー画像を追加
+   * @param {string|HTMLElement} parent - プレビュー画像を追加する要素
+   * @param {Object} files - this.onDropで作成された原本・圧縮後ファイル
+   * @returns {null|Error}
+   */
+  preview = (parent=this.parent,files=this.files) => {
+    const v = {whois:this.className+'.preview',rv:null,step:0};
+    console.log(v.whois+' start.',parent,files);
+    try {
+
+      v.step = 1; // CSSセレクタで指定された場合、HTMLElementに変換
+      if( typeof parent === 'string' ){
+        parent = document.querySelector(parent);
+      }
+
+      v.step = 2; // wrapperの作成
+      v.wrapper = this.createElement({attr:{class:'wrapper'},style:{
+        width: '100%',
+        margin: '1rem',
+        display: 'inline-block',
+        /*
+        display: 'grid',
+        'grid-auto-flow': 'column',
+        'grid-gap': '1rem',
+        */
+      }});
+      parent.appendChild(v.wrapper);
+
+      files.forEach(x => {
+
+        this.createElement({
+          tag:'img',
+          attr:{src:URL.createObjectURL(x.compress)},
+          style:{
+            margin: '1rem',
+            'max-width':'200px',
+            'max-height':'200px'
+          },
+          event:{
+            'mouseenter':(e)=>{
+              console.log('mouseenter',e);
+              e.stopPropagation();
+              const tooltip = this.parent.querySelector('.tooltip');
+              tooltip.innerHTML = x.compress.name
+              + '</br>' + x.origin.size.toLocaleString()
+              + ' -> ' + x.compress.size.toLocaleString()
+              + ' bytes(' + Math.round(x.compress.ratio*10000)/100 + '%)';
+              tooltip.style.top = e.pageY + 'px';
+              tooltip.style.left = e.pageX + 'px';
+              tooltip.style.visibility = "visible";
+            },
+            'mouseleave':(e)=>{
+              console.log('mouseleave',e);
+              e.stopPropagation();
+              const tooltip = this.parent.querySelector('.tooltip');
+              tooltip.style.visibility = "hidden";
+            },
+          },
+        },v.wrapper);
+      });
+      
+      v.step = 99; // 終了処理
+      console.log(v.whois+' normal end.\\n',v.rv);
+      return v.rv;
+  
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
   /** ファイル(Blob)のダウンロード
    * @param {Blob} blob - ダウンロード対象のBlob
    * @returns {null|Error}
@@ -148,12 +189,16 @@ class RasterImage extends BasePage {
    *
    * - [ファイルをダウンロード保存する方法](https://javascript.keicode.com/newjs/download-files.php)
    */
-  download = (blob) => {
+  download = async () => {
     const v = {whois:this.className+'.download',rv:null,step:0};
     console.log(v.whois+' start.');
     try {
 
-      const url = URL.createObjectURL(blob);
+      v.step = 1;  // Blob の取得
+      v.blob = await this.zip.generateAsync({type:'blob'});
+
+      v.step = 2; // ダウンロード
+      const url = URL.createObjectURL(v.blob);
       const a = document.createElement("a");
       document.body.appendChild(a);
       a.download = 'RasterImage.zip';
@@ -162,7 +207,7 @@ class RasterImage extends BasePage {
       a.remove();
       URL.revokeObjectURL(url);
 
-      v.step = 99; // 終了処理
+      v.step = 3; // 終了処理
       console.log(v.whois+' normal end.\\n',v.rv);
       return v.rv;
 

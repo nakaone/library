@@ -56,6 +56,41 @@ class BasePage {
       // def:基底クラス(本クラス)の既定値
       def:{parent:'body',wrapper:null,screenList:{},
         css: [
+          /* 全ページ共通既定値 */`
+          html {
+            font-size: 24pt;
+            font:helvetica,arial,freesans,clean,sans-serif;
+            line-height: 1.5rem;
+            color: black;
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+          }
+          body {
+            width: 100%;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            -webkit-text-size-adjust: none;
+            -moz-text-size-adjust: none;
+            text-size-adjust: none;
+          }
+          .right, .num {
+            text-align: right;
+          }`,
+          /* テーブル関係 */`
+          th, .th {
+            padding: 0.3em;
+            background-color: #888;
+            color: white;
+          }
+          td, .td {
+            padding: 0.3em;
+            border-bottom: solid 1px #aaa;
+            border-right: solid 1px #aaa;
+          }`,
           /* LoadingIcon共通部分 */ `
           .LoadingIcon {
             position: absolute;
