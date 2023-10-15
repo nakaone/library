@@ -20,6 +20,7 @@ class RasterImage extends BasePage {
         mimeType: 'image/webp',
       },
       files: [],  // {File[]} - DnDされたファイルオブジェクトの配列
+      thumbnail: '200px', // サムネイルの最大サイズ
       css: [
         /* preview用 */`
         .tooltip {
@@ -72,18 +73,21 @@ class RasterImage extends BasePage {
         console.log(v.file);
         v.step = 2.3; // 圧縮比率計算
         v.file.compress.ratio = v.file.compress.size / v.file.origin.size;
-        v.step = 2.4; // 変換結果をメンバ変数に格納
+        v.step = 2.4; // 元画像のサイズを取得
+        v.size = await this.imagesize(v.file.origin);
+        v.file.origin.width = v.size.width;
+        v.file.origin.height = v.size.height;
+        v.step = 2.5; // 変換結果をメンバ変数に格納
         this.files.push(v.file);
 
         v.step = 3;
         // 圧縮されたファイルをzipに保存
         this.zip.file(v.file.compress.name,v.file.compress,{binary:true});
-        //v.zip = this.zip.file(v.file.compress.name,v.file.compress,{binary:true});
       }
 
       v.step = 4; // 終了処理
       v.rv = this.files;
-      console.log(v.whois+' normal end.\\n',this.files);
+      console.log(v.whois+' normal end.\n',this.files);
       return v.rv;
 
     } catch(e){
@@ -130,11 +134,6 @@ class RasterImage extends BasePage {
         width: '100%',
         margin: '1rem',
         display: 'inline-block',
-        /*
-        display: 'grid',
-        'grid-auto-flow': 'column',
-        'grid-gap': '1rem',
-        */
       }});
       parent.appendChild(v.wrapper);
 
@@ -145,8 +144,8 @@ class RasterImage extends BasePage {
           attr:{src:URL.createObjectURL(x.compress)},
           style:{
             margin: '1rem',
-            'max-width':'200px',
-            'max-height':'200px'
+            'max-width':this.thumbnail,
+            'max-height':this.thumbnail,
           },
           event:{
             'mouseenter':(e)=>{
@@ -154,9 +153,11 @@ class RasterImage extends BasePage {
               e.stopPropagation();
               const tooltip = this.parent.querySelector('.tooltip');
               tooltip.innerHTML = x.compress.name
-              + '</br>' + x.origin.size.toLocaleString()
-              + ' -> ' + x.compress.size.toLocaleString()
-              + ' bytes(' + Math.round(x.compress.ratio*10000)/100 + '%)';
+              + '</br>' + x.origin.width + 'x' + x.origin.height
+              + ' (' + x.origin.size.toLocaleString() + 'bytes)'
+              + '</br>-> ' + e.target.naturalWidth + 'x' + e.target.naturalHeight
+              + ' (' + x.compress.size.toLocaleString()
+              + 'bytes / ' + Math.round(x.compress.ratio*10000)/100 + '%)';
               tooltip.style.top = e.pageY + 'px';
               tooltip.style.left = e.pageX + 'px';
               tooltip.style.visibility = "visible";
@@ -216,4 +217,30 @@ class RasterImage extends BasePage {
       return e;
     }
   }
+
+  /**
+   * 画像ファイルのサイズをチェックする
+   */
+  imagesize = async (file) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+
+      img.onload = () => {
+        const size = {
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+        };
+
+        URL.revokeObjectURL(img.src);
+        resolve(size);
+      };
+
+      img.onerror = (error) => {
+        reject(error);
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
 }
