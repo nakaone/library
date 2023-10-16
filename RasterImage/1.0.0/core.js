@@ -257,10 +257,11 @@ class RasterImage extends BasePage {
         v.file = {origin:files[v.i]};
         v.step = 3.2; // 変換後をcompressに保存
         v.file.compress = await this.compress(files[v.i],v.opt).catch(e=>{
-          return new Error("'"+v.file.origin.name+"'は非対応の画像形式です");
+          return e;
         });
         if( v.file.compress instanceof Error ){
-          // 圧縮に失敗した場合
+          v.step = 3.3;
+          // 圧縮に失敗した場合、エラー画像表示
           this.createElement({style:{
             display: 'inline-block',
             'vertical-align':'top',
@@ -274,13 +275,13 @@ class RasterImage extends BasePage {
           console.error(v.file.compress);
           continue;
         }
-        v.step = 3.3; // 圧縮比率計算
+        v.step = 3.4; // 圧縮比率計算
         v.file.compress.ratio = v.file.compress.size / v.file.origin.size;
-        v.step = 3.4; // 元画像のサイズを取得
+        v.step = 3.5; // 元画像のサイズを取得
         v.size = await this.imagesize(v.file.origin);
         v.file.origin.width = v.size.width;
         v.file.origin.height = v.size.height;
-        v.step = 3.5; // 変換結果をメンバ変数に格納
+        v.step = 3.6; // 変換結果をメンバ変数に格納
         this.files.push(v.file);
 
         // ------------------------------
