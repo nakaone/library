@@ -5,173 +5,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="text/javascript" src="../../BasePage/1.0.0/core.js"></script>
 <script type="text/javascript" src="core.js"></script>
-<!--
-<link href="../szLib.css" rel="stylesheet" />
-<style type="text/css">
-  .dropArea {
-    margin: 1rem;
-    padding: 2rem;
-    border: solid 5px #ccc;
-    text-align:center;
-  }
-  table {
-    margin: 1rem;
-  }
-</style>
--->
 </head><body>
 <div id="RasterImage"></div>
-<!--
-<div class="console">
-  <div class="dropArea">画像ファイルをドロップ(複数可)</div>
-  <div class="options"><table>
-    <tr>
-      <th>画像形式</th>
-      <td>
-        <select name="mimeType">
-          <option value="image/webp">webp</option>
-          <option value="image/png">png</option>
-          <option value="image/jpeg">jpeg</option>
-          <option value="image/gif">gif</option>
-        </select>
-      </td>
-      <td></td>
-    </tr>
-    <tr>
-      <th>画像サイズ</th>
-      <td>
-        <select name="standard">
-          <option value="-1">原寸</option>
-          <option value="7680">8K(7680)</option>
-          <option value="3840">4K(3840)</option>
-          <option value="1920">FullHD(1920)</option>
-          <option value="1280">HDTV(1280)</option>
-          <option value="1024">XGA(1024)</option>
-          <option value="800">SVGA(800)</option>
-          <option value="640" selected>VGA(640)</option>
-          <option value="320">QuarterVGA(320)</option>
-          <option value="-2">custom</option>
-        </select>
-      </td>
-      <td>原画縦横比を保持するので規格名は目安</td>
-    </tr>
-    <tr class="size">
-      <th>最大高/幅</th>
-      <td>
-        <input name="maxSize" type="number" value="640" style="width:80px" />
-      </td>
-      <td>無指定の場合は'-1'を入力</td>
-    </tr>
-    <tr class="size">
-      <th>最小高/幅</th>
-      <td>
-        <input name="minSize" type="number" value="0" style="width:80px" />
-      </td>
-      <td></td>
-    </tr>
-    <tr>
-      <th>画像の向き</th>
-      <td>
-        <select name="checkOrientation">
-          <option value="true">補正する</option>
-          <option value="false">補正しない</option>
-        </select>
-      </td>
-      <td>Exif Orientationに基づく。Jpegのみ有効</td>
-    </tr>
-    <tr>
-      <th>Exif情報</th>
-      <td>
-        <select name="retainExif">
-          <option value="false">保持しない</option>
-          <option value="true">保持する</option>
-        </select>
-      </td>
-      <td>圧縮後もExifを保持するかの指定</td>
-    </tr>
-    <tr>
-      <th>品質</th>
-      <td>
-        <input name="quality" type="number" value="0.8" style="width:80px" />
-      </td>
-      <td>既定値はjpeg:0.92, webp:0.80。推奨値は最低0.6</td>
-    </tr>
-  </table></div>
-</div>
-<div class="previewArea"></div>
--->
 <script type="text/javascript">
 window.addEventListener('DOMContentLoaded',async () => {
-  const v = {whois:'DOMContentLoaded',rv:null,step:0,
-    /*
-    onDrop: async (files) => {  // ドロップ時の動作定義
-      v.whois = 'onDrop';
-      console.log(v.whois+' start.');
-      try {
-
-        // オプションの指定
-        v.opt = {};
-        ['mimeType','checkOrientation','retainExif','maxSize','minSize','quality'].forEach(x => {
-          v.opt[x] = document.querySelector('.options [name="'+x+'"]').value;
-        });
-        v.opt.maxWidth = v.opt.maxHeight = v.opt.maxSize < 0 ? Infinity : v.opt.maxSize;
-        delete v.opt.maxSize;
-        v.opt.minWidth = v.opt.minHeight = v.opt.minSize < 0 ? Infinity : v.opt.minSize;
-        delete v.opt.minSize;
-
-        v.rv = await v.RasterImage.onDrop(files,v.opt);
-        if( v.rv instanceof Error ) throw v.rv;
-
-        document.querySelector('.console').style.display = 'none';
-
-        v.rv = v.RasterImage.preview('.previewArea');
-        if( v.rv instanceof Error ) throw v.rv;
-
-        //v.rv = v.RasterImage.download();
-        //if( v.rv instanceof Error ) throw v.rv;
-
-        v.step = 99; // 終了処理
-        console.log(v.whois+' normal end.\n',v.rv);
-        return v.rv;
-
-      } catch(e){
-        console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-        return e;
-      }
-    },
-    */
-  };
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
   console.log(v.whois+' start.');
   try {
 
+    v.step = 1; // インスタンス生成
     v.RasterImage = new RasterImage({parent:'#RasterImage'});
 
-    /*
-    // イベント定義
-    document.querySelector('div.dropArea').addEventListener('drop',(e)=>{
-      e.stopPropagation();
-      e.preventDefault();
-      v.onDrop(e.dataTransfer.files);
-    });
-    document.querySelector('div.dropArea').addEventListener('dragover',(e)=>{
-      e.preventDefault();
-    });
-
-    // 最大サイズ入力欄はカスタム以外閉じておく
-    document.querySelectorAll('tr.size').forEach(x => x.style.display = 'none');
-    document.querySelector('select[name="standard"]').addEventListener('change',(e)=>{
-      console.log(e.target.value);
-      document.querySelector('input[name="maxSize"]').value = e.target.value;
-      if( e.target.value == -2 ){
-        document.querySelector('input[name="maxSize"]').value = 640;
-        document.querySelectorAll('tr.size').forEach(x => x.style.display = '');
-      } else {
-        document.querySelectorAll('tr.size').forEach(x => x.style.display = 'none');
-      }
-    });
-    */
-
-    v.step = 99; // 終了処理
+    v.step = 2; // 終了処理
     console.log(v.whois+' normal end.\n',v.rv);
     return v.rv;
 

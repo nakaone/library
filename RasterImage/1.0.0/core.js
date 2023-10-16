@@ -22,14 +22,6 @@ class RasterImage extends BasePage {
         // bulk:ローカル(PC)上の画像ファイルを一括変換、
         // camera: スマホのカメラで撮影した画像を圧縮
         // scanQR: QRコードをスマホのカメラで認識
-      /*
-      compressor: { // compressor.jsオプションの既定値
-        maxWidth: 640,
-        maxHeight: 640,
-        quality: 0.80,
-        mimeType: 'image/webp',
-      },
-      */
       files: [],  // {File[]} - DnDされたファイルオブジェクトの配列
       thumbnail: '200px', // サムネイルの最大サイズ
       css: [
@@ -57,9 +49,10 @@ class RasterImage extends BasePage {
           padding: 0.5rem;
           line-height: 1rem;
         }`,
+        // 以下未作成
         // ②スマホカメラでの撮影(camera)
         // ③QRコードスキャン(scanQR)
-],
+      ],
       html: [
         {tag:'div',attr:{class:'tooltip'}}, // tooltip用
         // 1.画像の一括変換・圧縮(bulk)
@@ -190,7 +183,6 @@ class RasterImage extends BasePage {
       // ※ v.defで定義しようとすると以下のメッセージが出て不可
       // ReferenceError: Must call super constructor in derived class
       // before accessing 'this' or returning from derived constructor
-      console.log(this);
       this.preview.querySelector('button').addEventListener('click',this.download);
 
       v.step = 1; // 終了処理
@@ -225,11 +217,17 @@ class RasterImage extends BasePage {
     console.log(v.whois+' start.',files);
     try {
 
+      // ------------------------------
+      // 1. 前処理
+      // ------------------------------
       v.step = 1;
       this.changeScreen('loading');
       this.zip = new JSZip(); // zipを生成
 
-      v.step = 2; // compress.jsのオプションを取得
+      // ------------------------------
+      // 2. compress.jsのオプションを取得
+      // ------------------------------
+      v.step = 2;
       v.o = this.bulk.querySelector('.specification');
       v.opt = {
         mimeType: v.o.querySelector('[name="mimeType"] select').value,
@@ -243,7 +241,9 @@ class RasterImage extends BasePage {
       v.opt.minHeight = v.opt.minWidth = (v.min == -1 ? 0 : v.min);
 
       for( v.i=0 ; v.i<files.length ; v.i++ ){
-        v.step = 3; // DnDされたファイルを順次処理
+        // ------------------------------
+        // 3. DnDされたファイルを順次圧縮
+        // ------------------------------
         // 変換前はthis.files[n].origin, 変換後はthis.files[n].compressで参照可
         v.step = 3.1; // 変換前をoriginに保存
         v.file = {origin:files[v.i]};
@@ -259,11 +259,16 @@ class RasterImage extends BasePage {
         v.step = 3.5; // 変換結果をメンバ変数に格納
         this.files.push(v.file);
 
+        // ------------------------------
+        // 4. 圧縮されたファイルをzipに保存
+        // ------------------------------
         v.step = 4;
-        // 圧縮されたファイルをzipに保存
         this.zip.file(v.file.compress.name,v.file.compress,{binary:true});
 
-        v.step = 5; // プレビュー画像を追加
+        // ------------------------------
+        // 5. プレビュー画像を追加
+        // ------------------------------
+        v.step = 5;
         this.createElement({
           tag:'img',
           attr:{src:URL.createObjectURL(v.file.compress)},
@@ -299,7 +304,10 @@ class RasterImage extends BasePage {
 
       }
 
-      v.step = 6; // 終了処理
+      // ------------------------------
+      // 6. 終了処理
+      // ------------------------------
+      v.step = 6;
       this.changeScreen('preview');
       v.rv = this.files;
       console.log(v.whois+' normal end.\n',this.files);
@@ -328,85 +336,6 @@ class RasterImage extends BasePage {
       new Compressor(file,opt);
     });
   }
-
-  /** 指定要素にプレビュー画像を追加
-   * @param {string|HTMLElement} parent - プレビュー画像を追加する要素
-   * @param {Object} files - this.bulkで作成された原本・圧縮後ファイル
-   * @returns {null|Error}
-   */
-  /*
-  preview = (parent=this.parent,files=this.files) => {
-    const v = {whois:this.className+'.preview',rv:null,step:0};
-    console.log(v.whois+' start.',parent,files);
-    try {
-
-      v.step = 1; // CSSセレクタで指定された場合、HTMLElementに変換
-      if( typeof parent === 'string' ){
-        parent = document.querySelector(parent);
-      }
-
-      v.step = 2; // wrapperの作成
-      v.wrapper = this.createElement({attr:{class:'wrapper'},style:{
-        width: '100%',
-        margin: '1rem',
-        display: 'inline-block',
-      },children:[
-        {attr:{class:'ctrl'},children:[
-          {tag:'button',text:'download zip file',event:{click:this.download}}
-        ]},
-        {attr:{class:'preview'},style:{
-          width: '100%',
-          margin: '1rem',
-          display: 'inline-block',  
-        }},
-      ]});
-      parent.appendChild(v.wrapper);
-
-      files.forEach(x => {
-
-        this.createElement({
-          tag:'img',
-          attr:{src:URL.createObjectURL(x.compress)},
-          style:{
-            margin: '1rem',
-            'max-width':this.thumbnail,
-            'max-height':this.thumbnail,
-          },
-          event:{
-            'mouseenter':(e)=>{
-              console.log('mouseenter',e);
-              e.stopPropagation();
-              const tooltip = this.parent.querySelector('.tooltip');
-              tooltip.innerHTML = x.compress.name
-              + '</br>' + x.origin.width + 'x' + x.origin.height
-              + ' (' + x.origin.size.toLocaleString() + 'bytes)'
-              + '</br>-> ' + e.target.naturalWidth + 'x' + e.target.naturalHeight
-              + ' (' + x.compress.size.toLocaleString()
-              + 'bytes / ' + Math.round(x.compress.ratio*10000)/100 + '%)';
-              tooltip.style.top = e.pageY + 'px';
-              tooltip.style.left = e.pageX + 'px';
-              tooltip.style.visibility = "visible";
-            },
-            'mouseleave':(e)=>{
-              console.log('mouseleave',e);
-              e.stopPropagation();
-              const tooltip = this.parent.querySelector('.tooltip');
-              tooltip.style.visibility = "hidden";
-            },
-          },
-        },v.wrapper);
-      });
-      
-      v.step = 99; // 終了処理
-      console.log(v.whois+' normal end.\\n',v.rv);
-      return v.rv;
-  
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-      return e;
-    }
-  }
-  */
 
   /** ファイル(Blob)のダウンロード
    * @param {Blob} blob - ダウンロード対象のBlob
