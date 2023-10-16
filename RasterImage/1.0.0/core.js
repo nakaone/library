@@ -23,7 +23,7 @@ class RasterImage extends BasePage {
         // camera: スマホのカメラで撮影した画像を圧縮
         // scanQR: QRコードをスマホのカメラで認識
       files: [],  // {File[]} - DnDされたファイルオブジェクトの配列
-      thumbnail: '200px', // サムネイルの最大サイズ
+      thumbnail: 200, // サムネイルの最大サイズ
       css: [
         // ①画像の一括変換・圧縮(bulk)
         `.bulk .dropArea {
@@ -38,6 +38,9 @@ class RasterImage extends BasePage {
         // プレビュー領域
         `.preview {
           margin: 1rem;
+        }
+        .preview .image {
+          display: 'inline-block',
         }`,
         // preview用ツールチップ。parent直下に設定。
         `.tooltip {
@@ -213,7 +216,7 @@ class RasterImage extends BasePage {
    * @returns {null|Error}
    */
   bulkCompress = async (files) => {
-    const v = {whois:this.className+'.bulk',rv:null,step:0};
+    const v = {whois:this.className+'.bulkCompress',rv:null,step:0};
     console.log(v.whois+' start.',files);
     try {
 
@@ -239,6 +242,11 @@ class RasterImage extends BasePage {
       v.opt.maxHeight = v.opt.maxWidth = (v.max == -1 ? Infinity : v.max);
       v.min = v.o.querySelector('[name="minSize"] input').value;
       v.opt.minHeight = v.opt.minWidth = (v.min == -1 ? 0 : v.min);
+      v.opt.error = (e) => {
+        alert("'"+''+"'は非対応の画像形式です",e);
+        console.error('l.244',e);
+        return e;
+      };
 
       for( v.i=0 ; v.i<files.length ; v.i++ ){
         // ------------------------------
@@ -248,8 +256,24 @@ class RasterImage extends BasePage {
         v.step = 3.1; // 変換前をoriginに保存
         v.file = {origin:files[v.i]};
         v.step = 3.2; // 変換後をcompressに保存
-        v.file.compress = await this.compress(files[v.i],v.opt);
-        console.log(v.file);
+        v.file.compress = await this.compress(files[v.i],v.opt).catch(e=>{
+          return new Error("'"+v.file.origin.name+"'は非対応の画像形式です");
+        });
+        if( v.file.compress instanceof Error ){
+          // 圧縮に失敗した場合
+          this.createElement({style:{
+            display: 'inline-block',
+            'vertical-align':'top',
+            margin:'1rem',
+            width: (this.thumbnail - 30) + 'px',
+            height: (this.thumbnail * 0.75 - 30) + 'px',
+            border: 'solid 5px #ccc',
+            padding: '10px',
+          },html:'Error: '+v.file.origin.name+'<br>'+'※画像形式非対応'}
+          ,this.preview.querySelector('[name="image"]'));
+          console.error(v.file.compress);
+          continue;
+        }
         v.step = 3.3; // 圧縮比率計算
         v.file.compress.ratio = v.file.compress.size / v.file.origin.size;
         v.step = 3.4; // 元画像のサイズを取得
@@ -270,37 +294,40 @@ class RasterImage extends BasePage {
         // ------------------------------
         v.step = 5;
         this.createElement({
-          tag:'img',
-          attr:{src:URL.createObjectURL(v.file.compress)},
-          style:{
-            margin: '1rem',
-            'max-width':this.thumbnail,
-            'max-height':this.thumbnail,
-          },
-          event:{
-            // tooltipに情報表示
-            'mouseenter':(e)=>{
-              console.log('mouseenter',e);
-              e.stopPropagation();
-              const tooltip = this.parent.querySelector('.tooltip');
-              tooltip.innerHTML = v.file.compress.name
-              + '</br>' + v.file.origin.width + 'x' + v.file.origin.height
-              + ' (' + v.file.origin.size.toLocaleString() + 'bytes)'
-              + '</br>-> ' + e.target.naturalWidth + 'x' + e.target.naturalHeight
-              + ' (' + v.file.compress.size.toLocaleString()
-              + 'bytes / ' + Math.round(v.file.compress.ratio*10000)/100 + '%)';
-              tooltip.style.top = e.pageY + 'px';
-              tooltip.style.left = e.pageX + 'px';
-              tooltip.style.visibility = "visible";
+          style:{display:'inline-block','vertical-align':'top'},
+          children:[{
+            tag:'img',
+            attr:{src:URL.createObjectURL(v.file.compress)},
+            style:{
+              margin: '1rem',
+              'max-width':this.thumbnail + 'px',
+              'max-height':this.thumbnail + 'px',
             },
-            'mouseleave':(e)=>{
-              console.log('mouseleave',e);
-              e.stopPropagation();
-              const tooltip = this.parent.querySelector('.tooltip');
-              tooltip.style.visibility = "hidden";
+            event:{
+              // tooltipに情報表示
+              'mouseenter':(e)=>{
+                console.log('mouseenter',e,v.file);
+                e.stopPropagation();
+                const tooltip = this.parent.querySelector('.tooltip');
+                tooltip.innerHTML = v.file.compress.name
+                + '</br>' + v.file.origin.width + 'x' + v.file.origin.height
+                + ' (' + v.file.origin.size.toLocaleString() + 'bytes)'
+                + '</br>-> ' + e.target.naturalWidth + 'x' + e.target.naturalHeight
+                + ' (' + v.file.compress.size.toLocaleString()
+                + 'bytes / ' + Math.round(v.file.compress.ratio*10000)/100 + '%)';
+                tooltip.style.top = e.pageY + 'px';
+                tooltip.style.left = e.pageX + 'px';
+                tooltip.style.visibility = "visible";
+              },
+              'mouseleave':(e)=>{
+                console.log('mouseleave',e);
+                e.stopPropagation();
+                const tooltip = this.parent.querySelector('.tooltip');
+                tooltip.style.visibility = "hidden";
+              },
             },
-          },
-        },this.preview.querySelector('[name="image"]'));
+          }
+        ]},this.preview.querySelector('[name="image"]'));
 
       }
 
@@ -373,8 +400,13 @@ class RasterImage extends BasePage {
     }
   }
 
-  /**
-   * 画像ファイルのサイズをチェックする
+  /** 画像ファイルのサイズをチェックする
+   * @param {File} file - 画像ファイル
+   * @returns {Promise} - width,heightをメンバとして持つオブジェクト
+   * 
+   * #### 参考
+   * 
+   * - [JavaScript で File オブジェクトの画像のサイズを取得する方法](https://gotohayato.com/content/519/)
    */
   imagesize = async (file) => {
     return new Promise((resolve, reject) => {
@@ -397,5 +429,4 @@ class RasterImage extends BasePage {
       img.src = URL.createObjectURL(file);
     });
   }
-
 }
