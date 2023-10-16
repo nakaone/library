@@ -79,6 +79,9 @@ class BasePage {
           }
           .right, .num {
             text-align: right;
+          }
+          .hide {
+            display: none;
           }`,
           /* テーブル関係 */`
           th, .th {

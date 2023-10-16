@@ -1,3 +1,8 @@
+/**
+ * @classdesc ラスタ画像の操作
+ * 
+ * 起動時オプション(opt.func)により、①画像の一括変換・圧縮、②スマホカメラでの撮影(含間欠撮影)、③QRコードスキャンを行う
+ */
 class RasterImage extends BasePage {
   /**
    * @constructor
@@ -13,17 +18,37 @@ class RasterImage extends BasePage {
   constructor(opt){
     const v = {whois:'RasterImage.constructor',rv:null,step:0,def:{
       parent: 'body',
+      func: 'bulk',
+        // bulk:ローカル(PC)上の画像ファイルを一括変換、
+        // camera: スマホのカメラで撮影した画像を圧縮
+        // scanQR: QRコードをスマホのカメラで認識
+      /*
       compressor: { // compressor.jsオプションの既定値
         maxWidth: 640,
         maxHeight: 640,
         quality: 0.80,
         mimeType: 'image/webp',
       },
+      */
       files: [],  // {File[]} - DnDされたファイルオブジェクトの配列
       thumbnail: '200px', // サムネイルの最大サイズ
       css: [
-        /* preview用 */`
-        .tooltip {
+        // ①画像の一括変換・圧縮(bulk)
+        `.bulk .dropArea {
+          margin: 1rem;
+          padding: 2rem;
+          border: solid 5px #ccc;
+          text-align:center;
+        }
+        .bulk table {
+          margin: 1rem;
+        }`,
+        // プレビュー領域
+        `.preview {
+          margin: 1rem;
+        }`,
+        // preview用ツールチップ。parent直下に設定。
+        `.tooltip {
           position: absolute;
           z-index: 10;
           visibility: hidden;
@@ -31,18 +56,145 @@ class RasterImage extends BasePage {
           font-size: 0.7rem;
           padding: 0.5rem;
           line-height: 1rem;
-        }
-      `],
+        }`,
+        // ②スマホカメラでの撮影(camera)
+        // ③QRコードスキャン(scanQR)
+],
       html: [
-        {tag:'div',attr:{class:'tooltip'}}
+        {tag:'div',attr:{class:'tooltip'}}, // tooltip用
+        // 1.画像の一括変換・圧縮(bulk)
+        {name:'bulk',attr:{class:'bulk'},children:[
+          // 1.1.ドロップ領域
+          {attr:{class:'dropArea'},text:'画像ファイルをドロップ(複数可)',event:{
+            drop:(e)=>{
+              e.stopPropagation();
+              e.preventDefault();
+              this.bulkCompress(e.dataTransfer.files);        
+            },
+            dragover:(e)=>e.preventDefault(),
+          }},
+          // 1.2.圧縮仕様の指定領域
+          {attr:{class:'specification'},children:[
+            {tag:'table',children:[
+              {tag:'tr',attr:{name:'mimeType'},children:[
+                {tag:'th',text:'画像形式'},
+                {tag:'td',children:[
+                  {tag:'select',children:[
+                    {tag:'option',attr:{value:'image/webp'},text:'webp'},
+                    {tag:'option',attr:{value:'image/png'},text:'png'},
+                    {tag:'option',attr:{value:'image/jpeg'},text:'jpeg'},
+                    {tag:'option',attr:{value:'image/gif'},text:'gif'},
+                  ]}
+                ]},
+                {tag:'td',text:''}
+              ]},
+              {tag:'tr',attr:{name:'standard'},children:[
+                {tag:'th',text:'画像サイズ'},
+                {tag:'td',children:[
+                  {tag:'select',children:[
+                    {tag:'option',attr:{value:'-1'},text:'原寸'},
+                    {tag:'option',attr:{value:'7680'},text:'8K(7680)'},
+                    {tag:'option',attr:{value:'3840'},text:'4K(3840)'},
+                    {tag:'option',attr:{value:'1920'},text:'FullHD(1920)'},
+                    {tag:'option',attr:{value:'1280'},text:'HDTV(1280)'},
+                    {tag:'option',attr:{value:'1024'},text:'XGA(1024)'},
+                    {tag:'option',attr:{value:'800'},text:'SVGA(800)'},
+                    {tag:'option',attr:{value:'640',checked:true},text:'VGA(640)'},
+                    {tag:'option',attr:{value:'320'},text:'QuarterVGA(320)'},
+                    {tag:'option',attr:{value:'-2'},text:'custom'},
+                  ],event:{
+                    change:(e)=>{
+                      console.log(e.target.value);
+                      let max = this.bulk.querySelector('[name="maxSize"]');
+                      let min = this.bulk.querySelector('[name="minSize"]');
+                      if( e.target.value == -2 ){
+                        // カスタム選択時
+                        max.classList.remove('hide'); // 最大高/幅欄を表示
+                        min.classList.remove('hide'); // 最小高/幅欄を表示
+                        max.value = 640;  // 既定値を再セット
+                        min.value = 320;
+                      } else {
+                        // それ以外の選択肢
+                        max.classList.add('hide'); // 最大高/幅欄を非表示
+                        min.classList.add('hide'); // 最小高/幅欄を非表示
+                        max.value = e.target.value; // 選択された値をセット
+                      }
+                
+                    }
+                  }}
+                ]},
+                {tag:'td',text:'原画縦横比を保持するので規格名は目安'}
+              ]},
+              {tag:'tr',attr:{name:'maxSize',class:'hide'},children:[
+                {tag:'th',text:'最大高/幅'},
+                {tag:'td',children:[
+                  {tag:'input',attr:{type:'number',value:640},style:{width:'50px'}}
+                ]},
+                {tag:'td',text:'無指定の場合は"-1"を入力'}
+              ]},
+              {tag:'tr',attr:{name:'minSize',class:'hide'},children:[
+                {tag:'th',text:'最小高/幅'},
+                {tag:'td',children:[
+                  {tag:'input',attr:{type:'number',value:320},style:{width:'50px'}}
+                ]},
+                {tag:'td',text:'無指定の場合は"-1"を入力'}
+              ]},
+              {tag:'tr',attr:{name:'checkOrientation'},children:[
+                {tag:'th',text:'画像の向き'},
+                {tag:'td',children:[
+                  {tag:'select',children:[
+                    {tag:'option',attr:{value:true},text:'補正する'},
+                    {tag:'option',attr:{value:false},text:'補正しない'},
+                  ]}
+                ]},
+                {tag:'td',text:'Exif Orientationに基づく。Jpegのみ有効'}
+              ]},
+              {tag:'tr',attr:{name:'retainExif'},children:[
+                {tag:'th',text:'Exif情報'},
+                {tag:'td',children:[
+                  {tag:'select',children:[
+                    {tag:'option',attr:{value:false},text:'保持しない'},
+                    {tag:'option',attr:{value:true},text:'保持する'},
+                  ]}
+                ]},
+                {tag:'td',text:'圧縮後もExifを保持するかの指定'}
+              ]},
+              {tag:'tr',attr:{name:'quality'},children:[
+                {tag:'th',text:'品質'},
+                {tag:'td',children:[
+                  {tag:'input',attr:{type:'number',value:0.8},style:{width:'50px'}}
+                ]},
+                {tag:'td',html:'0(圧縮大)〜1(無圧縮)の小数。推奨値は最低0.6。<br/>既定値はjpeg:0.92,webp:0.80。'}
+              ]},
+            ]}
+          ]},
+        ]},
+        // 1.3.プレビュー領域
+        {name:'preview',attr:{class:'preview'},children:[
+          {attr:{name:'ctrl'},children:[
+            {tag:'button',text:'download zip file'}
+          ]},
+          {attr:{name:'image'}},
+        ]},
+
+        // 以降未作成
+        // 2.スマホカメラでの撮影(camera)
+        // 3.QRコードスキャン(scanQR)
       ],
     }};
     console.log(v.whois+' start.',opt);
     try {
       super(v.def,opt);
-      this.changeScreen('multi');
 
-      v.step = 99; // 終了処理
+      // プレビュー領域ダウンロードボタンの動作定義
+      // ※ v.defで定義しようとすると以下のメッセージが出て不可
+      // ReferenceError: Must call super constructor in derived class
+      // before accessing 'this' or returning from derived constructor
+      console.log(this);
+      this.preview.querySelector('button').addEventListener('click',this.download);
+
+      v.step = 1; // 終了処理
+      this.changeScreen(this.func);
       console.log(v.whois+' normal end.\n',v.rv);
 
     } catch(e){
@@ -52,40 +204,103 @@ class RasterImage extends BasePage {
   }
 
   /** 画像(複数)がドロップされた際の処理
+   * 
+   * ```
+   * // ドロップ領域のイベントとして定義。以下は定義例
+   * document.querySelector('div.dropArea').addEventListener('drop',(e)=>{
+   *   e.stopPropagation();
+   *   e.preventDefault();
+   *   v.onDrop(e.dataTransfer.files);
+   * });
+   * document.querySelector('div.dropArea').addEventListener('dragover',(e)=>{
+   *   e.preventDefault();
+   * });
+   * ```
+   * 
    * @param {ProgressEvent} files
    * @returns {null|Error}
    */
-  onDrop = async (files,opt=this.compressor) => {
-    const v = {whois:this.className+'.onDrop',rv:null,step:0};
-    console.log(v.whois+' start.',files,opt);
+  bulkCompress = async (files) => {
+    const v = {whois:this.className+'.bulk',rv:null,step:0};
+    console.log(v.whois+' start.',files);
     try {
 
-      v.step = 1; // zipを生成
-      this.zip = new JSZip();
+      v.step = 1;
+      this.changeScreen('loading');
+      this.zip = new JSZip(); // zipを生成
+
+      v.step = 2; // compress.jsのオプションを取得
+      v.o = this.bulk.querySelector('.specification');
+      v.opt = {
+        mimeType: v.o.querySelector('[name="mimeType"] select').value,
+        checkOrientation: v.o.querySelector('[name="checkOrientation"] select').value,
+        retainExif: v.o.querySelector('[name="retainExif"] select').value,
+        quality: v.o.querySelector('[name="quality"] input').value,
+      }
+      v.max = v.o.querySelector('[name="maxSize"] input').value;
+      v.opt.maxHeight = v.opt.maxWidth = (v.max == -1 ? Infinity : v.max);
+      v.min = v.o.querySelector('[name="minSize"] input').value;
+      v.opt.minHeight = v.opt.minWidth = (v.min == -1 ? 0 : v.min);
 
       for( v.i=0 ; v.i<files.length ; v.i++ ){
-        v.step = 2; // DnDされたファイルを順次処理
+        v.step = 3; // DnDされたファイルを順次処理
         // 変換前はthis.files[n].origin, 変換後はthis.files[n].compressで参照可
-        v.step = 2.1; // 変換前をoriginに保存
+        v.step = 3.1; // 変換前をoriginに保存
         v.file = {origin:files[v.i]};
-        v.step = 2.2; // 変換後をcompressに保存
-        v.file.compress = await this.compress(files[v.i],opt);
+        v.step = 3.2; // 変換後をcompressに保存
+        v.file.compress = await this.compress(files[v.i],v.opt);
         console.log(v.file);
-        v.step = 2.3; // 圧縮比率計算
+        v.step = 3.3; // 圧縮比率計算
         v.file.compress.ratio = v.file.compress.size / v.file.origin.size;
-        v.step = 2.4; // 元画像のサイズを取得
+        v.step = 3.4; // 元画像のサイズを取得
         v.size = await this.imagesize(v.file.origin);
         v.file.origin.width = v.size.width;
         v.file.origin.height = v.size.height;
-        v.step = 2.5; // 変換結果をメンバ変数に格納
+        v.step = 3.5; // 変換結果をメンバ変数に格納
         this.files.push(v.file);
 
-        v.step = 3;
+        v.step = 4;
         // 圧縮されたファイルをzipに保存
         this.zip.file(v.file.compress.name,v.file.compress,{binary:true});
+
+        v.step = 5; // プレビュー画像を追加
+        this.createElement({
+          tag:'img',
+          attr:{src:URL.createObjectURL(v.file.compress)},
+          style:{
+            margin: '1rem',
+            'max-width':this.thumbnail,
+            'max-height':this.thumbnail,
+          },
+          event:{
+            // tooltipに情報表示
+            'mouseenter':(e)=>{
+              console.log('mouseenter',e);
+              e.stopPropagation();
+              const tooltip = this.parent.querySelector('.tooltip');
+              tooltip.innerHTML = v.file.compress.name
+              + '</br>' + v.file.origin.width + 'x' + v.file.origin.height
+              + ' (' + v.file.origin.size.toLocaleString() + 'bytes)'
+              + '</br>-> ' + e.target.naturalWidth + 'x' + e.target.naturalHeight
+              + ' (' + v.file.compress.size.toLocaleString()
+              + 'bytes / ' + Math.round(v.file.compress.ratio*10000)/100 + '%)';
+              tooltip.style.top = e.pageY + 'px';
+              tooltip.style.left = e.pageX + 'px';
+              tooltip.style.visibility = "visible";
+            },
+            'mouseleave':(e)=>{
+              console.log('mouseleave',e);
+              e.stopPropagation();
+              const tooltip = this.parent.querySelector('.tooltip');
+              tooltip.style.visibility = "hidden";
+            },
+          },
+        },this.preview.querySelector('[name="image"]'));
+
       }
 
-      v.step = 4; // 終了処理
+      v.step = 6; // 終了処理
+      this.changeScreen('preview');
       v.rv = this.files;
       console.log(v.whois+' normal end.\n',this.files);
       return v.rv;
@@ -116,9 +331,10 @@ class RasterImage extends BasePage {
 
   /** 指定要素にプレビュー画像を追加
    * @param {string|HTMLElement} parent - プレビュー画像を追加する要素
-   * @param {Object} files - this.onDropで作成された原本・圧縮後ファイル
+   * @param {Object} files - this.bulkで作成された原本・圧縮後ファイル
    * @returns {null|Error}
    */
+  /*
   preview = (parent=this.parent,files=this.files) => {
     const v = {whois:this.className+'.preview',rv:null,step:0};
     console.log(v.whois+' start.',parent,files);
@@ -190,6 +406,7 @@ class RasterImage extends BasePage {
       return e;
     }
   }
+  */
 
   /** ファイル(Blob)のダウンロード
    * @param {Blob} blob - ダウンロード対象のBlob

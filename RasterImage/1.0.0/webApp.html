@@ -7,7 +7,6 @@
 <script type="text/javascript" src="core.js"></script>
 <!--
 <link href="../szLib.css" rel="stylesheet" />
--->
 <style type="text/css">
   .dropArea {
     margin: 1rem;
@@ -19,8 +18,10 @@
     margin: 1rem;
   }
 </style>
-<script src="core.js"></script>
+-->
 </head><body>
+<div id="RasterImage"></div>
+<!--
 <div class="console">
   <div class="dropArea">画像ファイルをドロップ(複数可)</div>
   <div class="options"><table>
@@ -98,9 +99,11 @@
   </table></div>
 </div>
 <div class="previewArea"></div>
+-->
 <script type="text/javascript">
 window.addEventListener('DOMContentLoaded',async () => {
   const v = {whois:'DOMContentLoaded',rv:null,step:0,
+    /*
     onDrop: async (files) => {  // ドロップ時の動作定義
       v.whois = 'onDrop';
       console.log(v.whois+' start.');
@@ -136,12 +139,14 @@ window.addEventListener('DOMContentLoaded',async () => {
         return e;
       }
     },
+    */
   };
   console.log(v.whois+' start.');
   try {
 
-    v.RasterImage = new RasterImage();
+    v.RasterImage = new RasterImage({parent:'#RasterImage'});
 
+    /*
     // イベント定義
     document.querySelector('div.dropArea').addEventListener('drop',(e)=>{
       e.stopPropagation();
@@ -164,6 +169,7 @@ window.addEventListener('DOMContentLoaded',async () => {
         document.querySelectorAll('tr.size').forEach(x => x.style.display = 'none');
       }
     });
+    */
 
     v.step = 99; // 終了処理
     console.log(v.whois+' normal end.\n',v.rv);
