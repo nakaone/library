@@ -98,14 +98,14 @@ class RasterImage extends BasePage {
                     {tag:'option',attr:{value:'1280'},text:'HDTV(1280)'},
                     {tag:'option',attr:{value:'1024'},text:'XGA(1024)'},
                     {tag:'option',attr:{value:'800'},text:'SVGA(800)'},
-                    {tag:'option',attr:{value:'640',checked:true},text:'VGA(640)'},
+                    {tag:'option',attr:{value:'640'},logical:{selected:true},text:'VGA(640)'},
                     {tag:'option',attr:{value:'320'},text:'QuarterVGA(320)'},
                     {tag:'option',attr:{value:'-2'},text:'custom'},
                   ],event:{
                     change:(e)=>{
                       console.log(e.target.value);
-                      let max = this.bulk.querySelector('[name="maxSize"]');
-                      let min = this.bulk.querySelector('[name="minSize"]');
+                      let max = this.bulk.querySelector('[name="maxSize"] input');
+                      let min = this.bulk.querySelector('[name="minSize"] input');
                       if( e.target.value == -2 ){
                         // カスタム選択時
                         max.classList.remove('hide'); // 最大高/幅欄を表示
@@ -116,7 +116,14 @@ class RasterImage extends BasePage {
                         // それ以外の選択肢
                         max.classList.add('hide'); // 最大高/幅欄を非表示
                         min.classList.add('hide'); // 最小高/幅欄を非表示
-                        max.value = e.target.value; // 選択された値をセット
+                        if( e.target.value == -1 ){
+                          // 原寸大の場合
+                          max.value = Infinity;
+                          min.value = 0;
+                        } else {
+                          // 原寸大以外
+                          max.value = e.target.value; // 選択された値をセット
+                        }
                       }
                 
                     }

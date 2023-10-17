@@ -435,7 +435,7 @@ class BasePage {
         v.step = 5; // 論理属性を定義(ex.checked)
         for( v.j in v.def.logical ){
           if( v.def.logical[v.j] ){
-            v.obj.setAttribute(v.j,true);
+            v.obj.setAttribute(v.j,v.def.logical[v.j]);
           }
         }
 
