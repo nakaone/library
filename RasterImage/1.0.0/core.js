@@ -41,6 +41,9 @@ class RasterImage extends BasePage {
         }
         .preview .image {
           display: 'inline-block',
+        }
+        .preview .info {
+          font-size: 0.6rem;
         }`,
         // preview用ツールチップ。parent直下に設定。
         `.tooltip {
@@ -212,6 +215,10 @@ class RasterImage extends BasePage {
    * });
    * ```
    * 
+   * #### 参考
+   * 
+   * - [ブラウザ上で HEIC/HEIF を PNG/JPEG に変換する方法](https://zenn.dev/seya/articles/5faa498604a63e)
+   * 
    * @param {ProgressEvent} files
    * @returns {null|Error}
    */
@@ -255,12 +262,24 @@ class RasterImage extends BasePage {
         // 変換前はthis.files[n].origin, 変換後はthis.files[n].compressで参照可
         v.step = 3.1; // 変換前をoriginに保存
         v.file = {origin:files[v.i]};
-        v.step = 3.2; // 変換後をcompressに保存
-        v.file.compress = await this.compress(files[v.i],v.opt).catch(e=>{
+
+        v.step = 3.2; // HEIC形式はjpegに変換
+        if (v.file.origin.type === 'image/heif' || v.file.origin.type === 'image/heic') {
+          v.name = v.file.origin.name;
+          v.file.origin = await heic2any({
+            blob: v.file.origin,
+            toType: 'image/jpeg',
+          });
+          v.file.origin.name = v.name;
+          console.log('%s step.%s',v.whois,v.step,v.file.origin);
+        }
+
+        v.step = 3.3; // 変換後をcompressに保存
+        v.file.compress = await this.compress(v.file.origin,v.opt).catch(e=>{
           return e;
         });
         if( v.file.compress instanceof Error ){
-          v.step = 3.3;
+          v.step = 3.4;
           // 圧縮に失敗した場合、エラー画像表示
           this.createElement({style:{
             display: 'inline-block',
@@ -275,13 +294,16 @@ class RasterImage extends BasePage {
           console.error(v.file.compress);
           continue;
         }
-        v.step = 3.4; // 圧縮比率計算
+        v.step = 3.5; // 圧縮比率計算
         v.file.compress.ratio = v.file.compress.size / v.file.origin.size;
-        v.step = 3.5; // 元画像のサイズを取得
+        v.step = 3.6; // 画像のサイズを取得
         v.size = await this.imagesize(v.file.origin);
         v.file.origin.width = v.size.width;
         v.file.origin.height = v.size.height;
-        v.step = 3.6; // 変換結果をメンバ変数に格納
+        v.size = await this.imagesize(v.file.compress);
+        v.file.compress.width = v.size.width;
+        v.file.compress.height = v.size.height;
+        v.step = 3.7; // 変換結果をメンバ変数に格納
         this.files.push(v.file);
 
         // ------------------------------
@@ -294,6 +316,7 @@ class RasterImage extends BasePage {
         // 5. プレビュー画像を追加
         // ------------------------------
         v.step = 5;
+        console.log("%s step.%s",v.whois,v.step,v.file);
         this.createElement({
           style:{display:'inline-block','vertical-align':'top'},
           children:[{
@@ -304,6 +327,7 @@ class RasterImage extends BasePage {
               'max-width':this.thumbnail + 'px',
               'max-height':this.thumbnail + 'px',
             },
+            /* 不適切な内容が表示されるためペンディング
             event:{
               // tooltipに情報表示
               'mouseenter':(e)=>{
@@ -327,7 +351,33 @@ class RasterImage extends BasePage {
                 tooltip.style.visibility = "hidden";
               },
             },
-          }
+            */
+          },
+          {style:{margin:'1rem'},children:[
+            {tag:'p',attr:{class:'info'},text:v.file.origin.name},
+            {tag:'table',attr:{class:'info'},children:[
+              {tag:'tr',children:[
+                {tag:'th'},{tag:'th',text:'before'},{tag:'th',text:'after'}
+              ]},
+              {tag:'tr',children:[
+                {tag:'th',text:'width'},
+                {tag:'td',attr:{class:'num'},text:v.file.origin.width},
+                {tag:'td',attr:{class:'num'},text:v.file.compress.width},
+              ]},
+              {tag:'tr',children:[
+                {tag:'th',text:'height'},
+                {tag:'td',attr:{class:'num'},text:v.file.origin.height},
+                {tag:'td',attr:{class:'num'},text:v.file.compress.height},
+              ]},
+              {tag:'tr',children:[
+                {tag:'th',text:'size'},
+                {tag:'td',attr:{class:'num'},text:v.file.origin.size.toLocaleString()},
+                {tag:'td',attr:{class:'num'},html:v.file.compress.size.toLocaleString()
+                  + '<br/>' + Math.round(v.file.compress.ratio*10000)/100 + '%'
+                },
+              ]},
+            ]},
+          ]}
         ]},this.preview.querySelector('[name="image"]'));
 
       }
