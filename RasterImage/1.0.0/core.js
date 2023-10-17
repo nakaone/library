@@ -104,28 +104,29 @@ class RasterImage extends BasePage {
                   ],event:{
                     change:(e)=>{
                       console.log(e.target.value);
-                      let max = this.bulk.querySelector('[name="maxSize"] input');
-                      let min = this.bulk.querySelector('[name="minSize"] input');
+                      let max = this.bulk.querySelector('[name="maxSize"]');
+                      let maxi = max.querySelector('input');
+                      let min = this.bulk.querySelector('[name="minSize"]');
+                      let mini = min.querySelector('input');
                       if( e.target.value == -2 ){
                         // カスタム選択時
                         max.classList.remove('hide'); // 最大高/幅欄を表示
                         min.classList.remove('hide'); // 最小高/幅欄を表示
-                        max.value = 640;  // 既定値を再セット
-                        min.value = 320;
+                        maxi.defaultValue = 640;  // 既定値を再セット
+                        mini.defaultValue = 320;
                       } else {
                         // それ以外の選択肢
                         max.classList.add('hide'); // 最大高/幅欄を非表示
                         min.classList.add('hide'); // 最小高/幅欄を非表示
                         if( e.target.value == -1 ){
                           // 原寸大の場合
-                          max.value = Infinity;
-                          min.value = 0;
+                          maxi.defaultValue = 999999; // "Infinity" cannot be parsed
+                          mini.defaultValue = 0;
                         } else {
                           // 原寸大以外
-                          max.value = e.target.value; // 選択された値をセット
+                          maxi.defaultValue = e.target.value; // 選択された値をセット
                         }
                       }
-                
                     }
                   }}
                 ]},
