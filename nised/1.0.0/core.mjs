@@ -40,12 +40,20 @@ export class nised extends BaseCommand {
       v.source = this.opt.hasOwnProperty('m') && this.opt.m > 0
       ? marked.parse(v.rv) : v.rv;
 
-      v.step = 3; // 置換実行
+      // 置換実行
+      v.step = 3.1; // pre, suffixの追加
+      if( this.opt.hasOwnProperty('p') ){
+        v.source = this.opt.p + v.source;
+      }
+      if( this.opt.hasOwnProperty('x') ){
+        v.source += this.opt.x;
+      }
+      v.step = 3.2; // 置換実行
       v.rex = new RegExp(this.opt.r,'g');
       v.oText = v.iText.replaceAll(v.rex,v.source);
       //v.oText = v.iText.replaceAll(this.opt.r,v.source);
 
-      v.step = 3; // 出力
+      v.step = 4; // 出力
       if( this.opt.hasOwnProperty('o') ){
         v.rv = this.writeAsText(this.opt.o,v.oText);
         if( v.rv instanceof Error ) throw v.rv;
@@ -62,8 +70,6 @@ export class nised extends BaseCommand {
       return e;
     }
   }
-
-
 }
 
 new nised({verbose:1});

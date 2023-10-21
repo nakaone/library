@@ -246,9 +246,9 @@ export class BaseCommand {
     if( this.verbose === 0 ) return null;
     const content = '\n\n\n\n'
     + '==================================================\n'
-    + '  ' + name + '\n'
-    + '                         ' + (new Date()) + '\n'
-    + '==================================================\n\n'
+    + '= ' + name + '\n'
+    + '=             ' + (new Date()) + '\n'
+    + '==================================================\n'
     ;
     console.log(content)
   }
