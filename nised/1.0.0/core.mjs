@@ -15,6 +15,7 @@ const { marked } = pkg;
  *    -p: 変換時、sourceの前につけるテキスト(prefix)
  *    -x: 変換時、sourceの後につけるテキスト(suffix)
  *    -m: ソースがMarkdownの場合、htmlに 0:変換しない、1:変換する(既定値)
+ *    -v: ログ出力を 0:しない 1:start/endのみ出力 2:1+結果も出力
  */
 export class nised extends BaseCommand {
   /**
@@ -22,12 +23,12 @@ export class nised extends BaseCommand {
    * @param {Object.<string, any>} opt 
    * @returns 
    */
-  constructor(opt){
-    super(opt);
+  constructor(){
+    super();
     const v = {whois:'nised.constructor',rv:null,step:0};
-    this.log(v.whois+' start.',opt);
+    this.log(v.whois+' start.');
     try {
-  
+
       v.step = 1; // 入力ファイルの読み込み
       v.rv = this.readAsText(this.opt.i);
       if( v.rv instanceof Error ) throw v.rv;
@@ -72,5 +73,4 @@ export class nised extends BaseCommand {
   }
 }
 
-new nised({verbose:1});
-//new nised();
+new nised();

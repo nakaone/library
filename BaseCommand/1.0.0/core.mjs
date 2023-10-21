@@ -1,30 +1,30 @@
 import fs from 'fs';
 
-/**
+/** 起動時パラメータ
  * @typedef BaseCommand
- * @prop {number} verbose - ログ出力を 0:しない 1:start/endのみ出力 2:1+結果も出力
- * @prop {string} taskName - トップシートに表示するタスク名
+ * @prop {number} log - ログ出力を 0:しない 1:start/endのみ出力 2:1+結果も出力
+ * @prop {string} task - トップシートに表示するタスク名
  */
 export class BaseCommand {
-  constructor(opt={}){
+  constructor(){
     const v = {whois:'BaseCommand.constructor',rv:null,step:0};
     try {
-  
-      this.verbose = opt.verbose || 0; // 0:ログ出力をしない
-      // トップシートを出力
-      this.printTop(opt.taskName || 'BaseCommand');
-
+      // 起動時パラメータを取得
+      this.opt = {log:0}; // analyzeArgのログ出力エラー抑止に事前設定
       v.arg = this.analyzeArg();
-      this.opt = {};
+      // 「キー：値」形式のパラメータをthis.optのメンバとして格納
       Object.keys(v.arg.opt).forEach(x => this.opt[x] = v.arg.opt[x]);
+      // 値のみのパラメータを配列this.argに格納
       if( v.arg.val.length > 0 ){
-        if( v.arg.val.length === 1 && v.arg.val[0] === 'verbose' ){
-
-        } else {
         this.arg = v.arg.val;
-
-        }
       }
+
+      // 起動時パラメータの既定値を設定
+      this.opt.log = Number(this.opt.log) || 0;
+      this.opt.task = this.opt.task || 'BaseCommand';
+
+      // トップシートを出力
+      this.printTop();
 
       this.log(v.whois+' normal end.',v.rv);
       return v.rv;
@@ -171,12 +171,12 @@ export class BaseCommand {
       }
   
       v.step = 99; // 終了処理
-      if(this.verbose>0)
+      if(this.log>0)
         this.log(v.whois+' normal end.',v.rv);
       return v.rv;
   
     } catch(e){
-      if(this.verbose>0)
+      if(this.log>0)
         this.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
     }
@@ -230,23 +230,23 @@ export class BaseCommand {
 
   /** verboseに基づきthis.logを出力 */
   log = (...arg) => {
-    // this.verbose === 0 -> 出力しない
-    if( this.verbose === 0 ) return;
-    if( this.verbose === 1 ){
-      // this.verbose === 1 -> start/endのみ出力
+    // this.log === 0 -> 出力しない
+    if( this.opt.log === 0 ) return;
+    if( this.opt.log === 1 ){
+      // this.log === 1 -> start/endのみ出力
       console.log(arg[0]);
     } else {
-      // this.verbose === 2 -> start/end+結果も出力
-      console.log(arg);
+      // this.log === 2 -> start/end+結果も出力
+      console.log(...arg);
     }
   }
 
   /** コンソール実行時、トップシートイメージを出力 */
-  printTop = (name) => {
-    if( this.verbose === 0 ) return null;
+  printTop = () => {
+    if( this.opt.log === 0 ) return null;
     const content = '\n\n\n\n'
     + '==================================================\n'
-    + '= ' + name + '\n'
+    + '= ' + this.opt.task + '\n'
     + '=             ' + (new Date()) + '\n'
     + '==================================================\n'
     ;
