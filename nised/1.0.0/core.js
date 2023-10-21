@@ -1,12 +1,11 @@
-import { BaseCommand } from "../../BaseCommand/1.0.0/core.mjs";
+import { BaseCommand } from "../../BaseCommand/1.0.0/core.js";
 import pkg from '../../cdnjs/marked/9.1.2/marked.min.js';
 const { marked } = pkg;
 
 /** 
+ * @classdesc 指定文字列を指定ファイルの内容で置換する(偽sed)
  * なお、正規表現内部のエスケープを回避するため、replaceAllのキーは単純文字列とする。
- * 
  * @example
- * 
  * node core.mjs
  *    -i: 入力ファイルのパス(input)
  *    -o: 出力ファイルのパス(output)。無指定の場合、verbose=0でコンソールに出力
@@ -20,9 +19,9 @@ const { marked } = pkg;
  */
 export class nised extends BaseCommand {
   /**
-   * 
-   * @param {Object.<string, any>} opt 
-   * @returns 
+   * @constructor
+   * @param {void} 
+   * @returns {null|Error}
    */
   constructor(){
     super();
@@ -79,5 +78,3 @@ export class nised extends BaseCommand {
     }
   }
 }
-
-new nised();

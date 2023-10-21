@@ -1,0 +1,1 @@
+jsdoc2md core.js > core.md

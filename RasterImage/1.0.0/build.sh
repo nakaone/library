@@ -13,7 +13,7 @@ TASK="RasterImage"
 mkdir tmp
 
 # BasePageの埋め込み
-node ../../nised/1.0.0/core.mjs -log:1 -task:"${TASK}: embed BasePage" \
+node ../../nised/1.0.0/node.js -log:1 -task:"${TASK}: embed BasePage" \
   -i:"webApp.html" -o:"tmp/spa01.html" -s:"../../BasePage/1.0.0/core.js" \
   -r:'<script type="text/javascript" src="../../BasePage/1.0.0/core.js"></script>' \
   -p:'<script type="text/javascript">' \
@@ -21,7 +21,7 @@ node ../../nised/1.0.0/core.mjs -log:1 -task:"${TASK}: embed BasePage" \
   -j:1
 
 # RasterImage.coreの埋め込み
-node ../../nised/1.0.0/core.mjs -log:1 -task:"${TASK}: embed RasterImage.core" \
+node ../../nised/1.0.0/node.js -log:1 -task:"${TASK}: embed RasterImage.core" \
   -i:"tmp/spa01.html" -o:"tmp/spa02.html" -s:"core.js" \
   -r:'<script type="text/javascript" src="core.js"></script>' \
   -p:'<script type="text/javascript">' \
