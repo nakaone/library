@@ -252,4 +252,72 @@ export class BaseCommand {
     ;
     console.log(content)
   }
+
+  /**
+   * @typedef {Object} deleteCommentArg
+   * @prop {boolean} [jsdoc=false] - trueならJSDoc形式(/**〜*／)のコメントを削除する
+   * @prop {boolean} [js=false] - trueならJavaScript形式(/*〜*／,／／)のコメントを削除する
+   * @prop {boolean} [css=false] - trueならCSS形式(/*〜*／)のコメントを削除する
+   * @prop {boolean} [html=false] - trueならHTML形式(<!--〜--＞)のコメントを削除する
+   * @prop {boolean} [all=false] - trueなら上記全てのコメントを削除する
+   */
+  /** ソースから指定形式のコメントを削除
+   * 
+   * なおヒアドキュメント未対応のため、改行や複数の空白文字の単一化は行なっていない
+   * 
+   * @param {string} str - 操作対象となるソース
+   * @param {deleteCommentArg} opt - コメント形式の指定
+   * @returns {string} コメントを削除したソース
+   */
+  deleteComment = (str,opt={}) => {
+    const v = {whois:'BaseCommand.deleteComment',rv:str,step:0,
+      rex:{
+        jsdoc: /\s*?\/\*\*[\s\S]+?\*\/\s*?/g,
+        js: /\s*\/\/.+\n/g,
+        css: /\s*?\/\*[\s\S]+?\*\/\s*?/g,
+        html: /\s*?<!\-\-[\s\S]+?\-\->\s*?/g,
+      },
+    };
+    this.log(v.whois+' start.',str,opt);
+    try {
+  
+      v.step = 1; // 前処理：オプションの既定値設定
+      v.opt = Object.assign({
+        jsdoc:false,
+        js: false,
+        css: false,
+        html: false,
+        all: false,
+      },opt);
+
+      v.step = 2;
+      if( v.opt.jsdoc || v.opt.all ){
+        v.rv = v.rv.replaceAll(v.rex.jsdoc,'');
+      }
+      v.step = 3;
+      if( v.opt.js || v.opt.all ){
+        v.rv = v.rv.replaceAll(v.rex.css,'');
+        v.rv = v.rv.replaceAll(v.rex.js,'\n');
+      }
+      v.step = 4;
+      if( v.opt.css || v.opt.all ){
+        v.rv = v.rv.replaceAll(v.rex.css,'');
+      }
+      v.step = 5;
+      if( v.opt.html || v.opt.all ){
+        v.rv = v.rv.replaceAll(v.rex.html,'');
+      }
+
+      // 複数の改行は一つに
+      //v.rv = v.rv.replaceAll(/\n+/g,'\n');
+
+      v.step = 6; // 終了処理
+      this.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+  
+    } catch(e){
+      this.log(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }  
 }

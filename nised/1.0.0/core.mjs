@@ -15,6 +15,7 @@ const { marked } = pkg;
  *    -p: 変換時、sourceの前につけるテキスト(prefix)
  *    -x: 変換時、sourceの後につけるテキスト(suffix)
  *    -m: ソースがMarkdownの場合、htmlに 0:変換しない、1:変換する(既定値)
+ *    -j: ソースがJavaScriptの場合、コメントを 0:削除しない、1:削除する(既定値)
  *    -v: ログ出力を 0:しない 1:start/endのみ出力 2:1+結果も出力
  */
 export class nised extends BaseCommand {
@@ -38,8 +39,14 @@ export class nised extends BaseCommand {
       v.rv = this.readAsText(this.opt.s);
       if( v.rv instanceof Error ) throw v.rv;
       v.step = 2.2; // Markdown変換指定があれば変換
-      v.source = this.opt.hasOwnProperty('m') && this.opt.m > 0
+      v.source = this.opt.hasOwnProperty('m') && Number(this.opt.m) > 0
       ? marked.parse(v.rv) : v.rv;
+      v.step = 2.3; // JavaScriptでコメント削除
+      if( this.opt.hasOwnProperty('j') && Number(this.opt.j) > 0 ){
+        v.rv = this.deleteComment(v.source,{js:true});
+        if( v.rv instanceof Error ) throw v.rv;
+        v.source = v.rv;
+      }
 
       // 置換実行
       v.step = 3.1; // pre, suffixの追加
