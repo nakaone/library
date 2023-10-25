@@ -1,6 +1,6 @@
-/** kz標準形式の仕訳帳データ作成に必要な一連の処理を行い、実行日をファイル名とするjsonを保存 */
-function makeJournals(){
-  const v = {whois:'makeJournals',rv:null,step:0,oData:[],
+/** 「kz標準」シート作成、出力用勘定科目マスタ作成 */
+function setupKzData(){
+  const v = {whois:'setupKzData',rv:{journals:[],accounts:[]},step:0,
     activeSheet: SpreadsheetApp.getActiveSpreadsheet(),
     elaps: Date.now(),
   };
@@ -8,40 +8,90 @@ function makeJournals(){
   try {
 
     v.step = 1; // kz標準シートに仕訳帳データを作成する
-    v.rv = yayoi01();
-    if( v.rv instanceof Error ) throw v.rv;
-    v.rv = YFP01();
-    if( v.rv instanceof Error ) throw v.rv;
-    v.rv = kz01();
-    if( v.rv instanceof Error ) throw v.rv;
-    v.rv = acMaster();
-    if( v.rv instanceof Error ) throw v.rv;
+    v.r = yayoi01();
+    if( v.r instanceof Error ) throw v.r;
+    v.r = YFP01();
+    if( v.r instanceof Error ) throw v.r;
+    v.r = kz01();
+    if( v.r instanceof Error ) throw v.r;
 
-    v.step = 2; // 現在のシートが保存されているフォルダのIDを取得
+    v.step = 2; // 勘定科目シートに勘定科目マスタを作成
+    v.r = acMaster();
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 3; // 終了処理
+    console.log(v.whois+' normal end. (elaps: %s msec)',Date.now()-v.elaps);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+
+/** 出力用仕訳帳・勘定科目データの作成 */
+function getKzData(){
+  const v = {whois:'getKzData',rv:{journals:[],accounts:[]},step:0,
+    activeSheet: SpreadsheetApp.getActiveSpreadsheet(),
+    elaps: Date.now(),
+  };
+  console.log(v.whois+' start.');
+  try {
+
+    v.step = 1; // 仕訳帳の出力データを作成
+    v.iData = v.activeSheet.getSheetByName('kz標準').getRange('a5:w').getValues();
+    for( v.i=1 ; v.i<v.iData.length ; v.i++ ){
+      v.a = arr2obj(v.iData[v.i],v.iData[0]);
+      if( Object.keys(v.a).length > 0 ) v.rv.journals.push(v.a);
+    }
+
+    v.step = 2; // 勘定科目マスタのデータを作成
+    v.iData = v.activeSheet.getSheetByName('勘定科目').getRange('aj5:au').getValues();
+    for( v.i=1 ; v.i<v.iData.length ; v.i++ ){
+      v.a = arr2obj(v.iData[v.i],v.iData[0]);
+      if( Object.keys(v.a).length > 0 ) v.rv.accounts.push(v.a);
+    }
+
+    v.step = 3; // 終了処理
+    console.log(v.whois+' normal end. (elaps: %s msec)',Date.now()-v.elaps);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+
+/** 出力用仕訳帳・勘定科目データをjsonファイルとして保存 */
+function downloadKzData(){
+  const v = {whois:'downloadKzData',rv:{journals:[],accounts:[]},step:0,
+    activeSheet: SpreadsheetApp.getActiveSpreadsheet(),
+    elaps: Date.now(),
+  };
+  console.log(v.whois+' start.');
+  try {
+
+    v.step = 1; // 現在のシートが保存されているフォルダのIDを取得
     v.folderId = DriveApp.getFileById(v.activeSheet.getId())
     .getParents().next().getId();
 
-    v.step = 3; // ファイル名の作成
+    v.step = 2; // ファイル名の作成
     v.date = new Date();
     v.fileName = v.date.getFullYear()
     + ('0'+(v.date.getMonth()+1)).slice(-2)
     + ('0'+v.date.getDate()).slice(-2)
     + '.json';
 
-    v.step = 4; // 格納するデータの取得
-    v.iData = v.activeSheet.getSheetByName('kz標準').getRange('a5:w').getValues();
+    v.step = 3; // 格納するデータの取得
+    v.oData = getKzData();
+    if( v.oData instanceof Error ) throw v.oData;
 
-    v.step = 5; // データをオブジェクト化
-    for( v.i=1 ; v.i<v.iData.length ; v.i++ ){
-      v.oData.push(arr2obj(v.iData[v.i],v.iData[0]));
-    }
-
-    v.step = 6; // ファイルを保存
+    v.step = 4; // ファイルを保存
     v.blob = Utilities.newBlob('','application/json',v.fileName);
     v.file = v.blob.setDataFromString(JSON.stringify(v.oData),'UTF-8');
     DriveApp.getFolderById(v.folderId).createFile(v.file);
 
-    v.step = 7; // 終了処理
+    v.step = 5; // 終了処理
     console.log(v.whois+' normal end. (elaps: %s msec)',Date.now()-v.elaps);
     return v.rv;
 
