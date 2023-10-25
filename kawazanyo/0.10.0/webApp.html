@@ -5,6 +5,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.1.10/alasql.min.js" integrity="sha512-Igz7esT29XvklQE5s9lKkzY/xN5OmbsWYzXml2AE7hEYyAxxIgbQ0NXvyqt4S9VrWHA0lRUKkhLgc62QO3vkoQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <!-- 独自ライブラリ -->
 <script type="text/javascript" src="../../BasePage/1.0.0/core.js"></script>
+<script type="text/javascript" src="../../DateEx/1.1.0/core.js"></script>
 <!-- O/Lやlibrary配下は漏洩の危険があるため、ローカルから取得 -->
 <script type="text/javascript" src="../../../../tmp/kzData.js"></script>
 <style type="text/css"></style>
@@ -24,6 +25,7 @@ class KawaZanyo extends BasePage {
       v.r = super(v.def,opt);
 
       this.accounts = raw.accounts;
+      console.log('this.accounts=%s',JSON.stringify(this.accounts));
       this.journals = raw.journals;
       this.account = {};
       raw.accounts.forEach(x => {
@@ -35,7 +37,61 @@ class KawaZanyo extends BasePage {
       console.log(v.ac);
       */
 
-      this.dumpObject(this.accounts,['名称','本籍','B1','B2','B3','BS','P1','P2','PS','C1','C2','CS']);
+      this.journals.forEach(x => {
+        x.date = new DateEx(x['取引日']);
+        x['取引日'] = x.date.toLocale();
+      });
+      v.sql = "select top 10 `会計年度` as `年度`"
+      + ", `伝票番号`"
+      + ", `行番号`"
+      + ", '借方' as `所属`"
+      + ", `取引日`"
+      + ", `摘要`"
+      + ", `補助摘要`"
+      + ", `借方科目` as `科目`"
+      + ", `借方補助` as `補助科目`"
+      + ", `借方部門` as `部門`"
+      + ", case when aMst.`本籍`='借' then `借方本体` else `借方本体`*-1 end as `本体`"
+      + ", `借方区分` as `税区分`"
+      + ", `借方税率` as `税率`"
+      + ", case when aMst.`本籍`='借' then `借方税額` else `借方税額`*-1 end as `税額`"
+      + ", case when aMst.`本籍`='借' then `借方合計` else `借方合計`*-1 end as `合計`"
+      + " from ? as jMst"
+      + " inner join ("
+      + " select * from ?"
+      + ") as aMst on jMst.`借方科目` = aMst.`名称`";
+      v.kari = alasql(v.sql,[this.journals,this.accounts]);
+      console.log(v.kari)
+      v.sql = "select top 10 `会計年度` as `年度`"
+      + ", `伝票番号`"
+      + ", `行番号`"
+      + ", '貸方' as `所属`"
+      + ", `取引日`"
+      + ", `摘要`"
+      + ", `補助摘要`"
+      + ", `貸方科目` as `科目`"
+      + ", `貸方補助` as `補助科目`"
+      + ", `貸方部門` as `部門`"
+      + ", case when aMst.`本籍`='貸' then `貸方本体` else `貸方本体`*-1 end as `本体`"
+      + ", `貸方区分` as `税区分`"
+      + ", `貸方税率` as `税率`"
+      + ", case when aMst.`本籍`='貸' then `貸方税額` else `貸方税額`*-1 end as `税額`"
+      + ", case when aMst.`本籍`='貸' then `貸方合計` else `貸方合計`*-1 end as `合計`"
+      + " from ? as jMst"
+      + " inner join ("
+      + " select * from ?"
+      + ") as aMst on jMst.`貸方科目` = aMst.`名称`"
+      v.kashi = alasql(v.sql,[this.journals,this.accounts]);
+      console.log(v.kashi)
+
+      this.daifuku = alasql("select * from ? order by `取引日`,`伝票番号`,`行番号`",
+      [[...v.kari,...v.kashi]]);
+      console.log(this.daifuku)
+      this.dumpObject(this.daifuku,['年度','伝票番号','行番号','所属','取引日','摘要','補助摘要',
+      '科目','補助科目','部門','本体','税区分','税率','税額','合計']);
+
+      //this.dumpObject(this.accounts,['名称','本籍','B1','B2','B3','BS','P1','P2','PS','C1','C2','CS']);
+      //this.dumpObject(this.daifuku,['年度','伝票番号','行番号','取引日','摘要','補助摘要','科目','補助科目','部門','本体','税区分','税率','税額','合計',]);
       this.changeScreen('dump');
 
       v.step = 10; // 終了処理
@@ -49,24 +105,29 @@ class KawaZanyo extends BasePage {
   /** オブジェクトの配列をテーブルとして表示
    * @param {string} parent
    */
-  dumpObject = (arg,header=[]) => {
+  dumpObject = (arg=[],header=[]) => {
     const v = {whois:this.className+'.dump',rv:null,step:0};
-    console.log(v.whois+' start.',this);
+    console.log(v.whois+' start.',arg,header);
     try {
 
+      v.step = 1;  // 前処理
       this.dump.innerHTML = '';
+
+      v.step = 2; // table要素の生成
       v.table = this.createElement({tag:'table',children:[
         {tag:'thead',children:[{tag:'tr'}]},
         {tag:'tbody'},
         {tag:'tfoot'},
       ]});
 
+      v.step = 3; // ヘッダの作成
       for( v.i=0 ; v.i<header.length ; v.i++ ){
         v.table.querySelector('thead tr').appendChild(this.createElement(
           {tag:'th',text:header[v.i]}
         ));
       }
 
+      v.step = 4; // データの作成
       for( v.i=0 ; v.i<arg.length ; v.i++ ){
         v.tr = this.createElement({tag:'tr'});
         for( v.j=0 ; v.j<header.length ; v.j++ ){
@@ -79,7 +140,7 @@ class KawaZanyo extends BasePage {
         v.table.querySelector('tbody').appendChild(v.tr);
       }
 
-      v.step = 99; // 終了処理
+      v.step = 5; // 終了処理
       this.dump.appendChild(v.table);
       console.log(v.whois+' normal end.');
       return v.rv;
