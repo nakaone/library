@@ -1,0 +1,111 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>kz0.10.0</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!-- CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.1.10/alasql.min.js" integrity="sha512-Igz7esT29XvklQE5s9lKkzY/xN5OmbsWYzXml2AE7hEYyAxxIgbQ0NXvyqt4S9VrWHA0lRUKkhLgc62QO3vkoQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!-- 独自ライブラリ -->
+<script type="text/javascript" src="../../BasePage/1.0.0/core.js"></script>
+<!-- O/Lやlibrary配下は漏洩の危険があるため、ローカルから取得 -->
+<script type="text/javascript" src="../../../../tmp/kzData.js"></script>
+<style type="text/css"></style>
+</head><body>
+
+
+<script type="text/javascript">
+class KawaZanyo extends BasePage {
+  constructor(raw,opt={}){
+    const v = {whois:'KawaZanyo.constructor',rv:null,step:0,def:{
+      html: [
+        {name:'dump'},  // オブジェクト配列の内容を表示する領域
+      ],
+    }};
+    console.log(v.whois+' start.');
+    try {
+      v.r = super(v.def,opt);
+
+      this.accounts = raw.accounts;
+      this.journals = raw.journals;
+      this.account = {};
+      raw.accounts.forEach(x => {
+        this.account[x['名称']] = x;
+      });
+      //console.log("this.account=%s",JSON.stringify(this.account));
+      /* sample
+      v.ac = alasql("select * from ? where B1=1 and BS is null",[this.accounts]);
+      console.log(v.ac);
+      */
+
+      this.dumpObject(this.accounts,['名称','本籍','B1','B2','B3','BS','P1','P2','PS','C1','C2','CS']);
+      this.changeScreen('dump');
+
+      v.step = 10; // 終了処理
+      console.log(v.whois+' normal end.\n',v.rv);
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    }
+  }
+
+  /** オブジェクトの配列をテーブルとして表示
+   * @param {string} parent
+   */
+  dumpObject = (arg,header=[]) => {
+    const v = {whois:this.className+'.dump',rv:null,step:0};
+    console.log(v.whois+' start.',this);
+    try {
+
+      this.dump.innerHTML = '';
+      v.table = this.createElement({tag:'table',children:[
+        {tag:'thead',children:[{tag:'tr'}]},
+        {tag:'tbody'},
+        {tag:'tfoot'},
+      ]});
+
+      for( v.i=0 ; v.i<header.length ; v.i++ ){
+        v.table.querySelector('thead tr').appendChild(this.createElement(
+          {tag:'th',text:header[v.i]}
+        ));
+      }
+
+      for( v.i=0 ; v.i<arg.length ; v.i++ ){
+        v.tr = this.createElement({tag:'tr'});
+        for( v.j=0 ; v.j<header.length ; v.j++ ){
+          if( arg[v.i][header[v.j]] ){
+            v.tr.appendChild(this.createElement({tag:'td',text:arg[v.i][header[v.j]]}));
+          } else {
+            v.tr.appendChild(this.createElement({tag:'td'}));
+          }
+        }
+        v.table.querySelector('tbody').appendChild(v.tr);
+      }
+
+      v.step = 99; // 終了処理
+      this.dump.appendChild(v.table);
+      console.log(v.whois+' normal end.');
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+}
+
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(v.whois+' start.');
+  try {
+
+    v.kz = new KawaZanyo(rawjson,{parent:'body'});
+    //console.log(rawjson);
+
+    v.step = 99; // 終了処理
+    console.log(v.whois+' normal end.');
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').\n',e,v);
+  }
+});
+</script></body></html>
