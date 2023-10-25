@@ -24,6 +24,7 @@ class KawaZanyo extends BasePage {
     try {
       v.r = super(v.def,opt);
 
+      v.step = 1; // accounts,journalsの格納
       this.accounts = raw.accounts;
       console.log('this.accounts=%s',JSON.stringify(this.accounts));
       this.journals = raw.journals;
@@ -31,17 +32,34 @@ class KawaZanyo extends BasePage {
       raw.accounts.forEach(x => {
         this.account[x['名称']] = x;
       });
-      //console.log("this.account=%s",JSON.stringify(this.account));
-      /* sample
-      v.ac = alasql("select * from ? where B1=1 and BS is null",[this.accounts]);
-      console.log(v.ac);
-      */
 
+      v.step = 2; // 取引日(Date型)を文字列に変換
       this.journals.forEach(x => {
         x.date = new DateEx(x['取引日']);
         x['取引日'] = x.date.toLocale();
       });
-      v.sql = "select top 10 `会計年度` as `年度`"
+
+      v.step = 3; // 大福帳の作成
+      v.r = this.genDaifuku();
+      if( v.r instanceof Error ) throw v.r;
+      console.log(this.daifuku);
+
+      v.step = 10; // 終了処理
+      console.log(v.whois+' normal end.\n',v.rv);
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    }
+  }
+
+  /** 大福帳の作成 */
+  genDaifuku = () => {
+    const v = {whois:this.className+'.genDaifuku',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1; // 借方の抽出
+      v.sql = "select `会計年度` as `年度`"
       + ", `伝票番号`"
       + ", `行番号`"
       + ", '借方' as `所属`"
@@ -61,8 +79,10 @@ class KawaZanyo extends BasePage {
       + " select * from ?"
       + ") as aMst on jMst.`借方科目` = aMst.`名称`";
       v.kari = alasql(v.sql,[this.journals,this.accounts]);
-      console.log(v.kari)
-      v.sql = "select top 10 `会計年度` as `年度`"
+      //console.log(v.kari);
+
+      v.step = 2; // 貸方の抽出
+      v.sql = "select `会計年度` as `年度`"
       + ", `伝票番号`"
       + ", `行番号`"
       + ", '貸方' as `所属`"
@@ -82,23 +102,29 @@ class KawaZanyo extends BasePage {
       + " select * from ?"
       + ") as aMst on jMst.`貸方科目` = aMst.`名称`"
       v.kashi = alasql(v.sql,[this.journals,this.accounts]);
-      console.log(v.kashi)
+      //console.log(v.kashi)
 
+      v.step = 3; // メンバ変数に格納
       this.daifuku = alasql("select * from ? order by `取引日`,`伝票番号`,`行番号`",
       [[...v.kari,...v.kashi]]);
-      console.log(this.daifuku)
+      //console.log(this.daifuku)
+
+      /*
       this.dumpObject(this.daifuku,['年度','伝票番号','行番号','所属','取引日','摘要','補助摘要',
       '科目','補助科目','部門','本体','税区分','税率','税額','合計']);
 
       //this.dumpObject(this.accounts,['名称','本籍','B1','B2','B3','BS','P1','P2','PS','C1','C2','CS']);
       //this.dumpObject(this.daifuku,['年度','伝票番号','行番号','取引日','摘要','補助摘要','科目','補助科目','部門','本体','税区分','税率','税額','合計',]);
       this.changeScreen('dump');
+      */
 
-      v.step = 10; // 終了処理
-      console.log(v.whois+' normal end.\n',v.rv);
+      v.step = 99; // 終了処理
+      console.log(v.whois+' normal end.\\n',v.rv);
+      return v.rv;
 
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
     }
   }
 
