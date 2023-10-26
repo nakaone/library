@@ -164,8 +164,8 @@ function yayoi01(){
         v.step = 3.3; // 伝票番号・行番号の再採番
         v.o['伝票番号'] = v.jno;
         v.o['行番号'] = v.lno++;
-        v.dsum += Math.round(v.o['借方金額']);
-        v.csum += Math.round(v.o['貸方金額']);
+        v.dsum += Math.round(v.o['借方金額']||0);
+        v.csum += Math.round(v.o['貸方金額']||0);
         if( v.dsum === v.csum ){
           v.jno++;
           v.lno = 1;
@@ -204,7 +204,7 @@ function yayoi01(){
             }
           }
           v.step = 3.6; // 税額・本体・合計を作成
-          v.o[v.x+'合計'] = Number(v.o[v.x+'金額']);
+          v.o[v.x+'合計'] = Number(v.o[v.x+'金額']||0);
           v.o[v.x+'税額'] = Math.floor(v.o[v.x+'合計'] * v.o[v.x+'税率']);
           v.o[v.x+'本体'] = v.o[v.x+'合計'] - v.o[v.x+'税額'];
         }
@@ -309,7 +309,7 @@ function YFP01(){
             else v.o[v.x+'税率'] = 0.10;
           }
           v.step = 3.6; // 税額・本体・合計を作成
-          v.o[v.x+'合計'] = Number(v.o[v.x+'金額']);
+          v.o[v.x+'合計'] = Number(v.o[v.x+'金額']||0);
           v.o[v.x+'税額'] = Math.floor(v.o[v.x+'合計'] * v.o[v.x+'税率']);
           v.o[v.x+'本体'] = v.o[v.x+'合計'] - v.o[v.x+'税額'];
         }
