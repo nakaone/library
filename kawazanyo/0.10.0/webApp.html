@@ -13,7 +13,82 @@
 
 
 <script type="text/javascript">
+/**
+ * @typedef {Object} account
+ * @prop {string} 名称 - 分類の名称
+ * @prop {string} 本籍 - 借 or 貸
+ * @prop {number} B1 - BS大分類の表示順
+ * @prop {number} B2 - BS中分類の表示順
+ * @prop {number} B3 - BS小分類の表示順
+ * @prop {number} BS - BS科目の表示順。集計項目は空白
+ * @prop {number} P1 - PL大分類の表示順
+ * @prop {number} P2 - PL中分類の表示順
+ * @prop {number} PS - PL科目の表示順。集計項目は空白
+ * @prop {number} C1 - CF大分類の表示順
+ * @prop {number} C2 - CF中分類の表示順
+ * @prop {number} CS - CF分類の表示順。集計項目は空白
+ * @prop {string} type - 勘定科目の分類。
+ *    B1/2/3=BSの集計項目、BA=BSの勘定科目(BS Account)。
+ *    P1/2/3=PLの集計項目、PA=PLの勘定科目(PL Account)。
+ *    C1/2/3=CFの集計項目、CA=CFの勘定科目(CF Account)。
+ */
+/**
+ * @typedef {Object} journal
+ * @prop {number} 会計年度
+ * @prop {number} 伝票番号
+ * @prop {number} 行番号
+ * @prop {string} 取引日 - constructorでyyyy/MM/dd形式に変換
+ * @prop {DateEx} date - 取引日。constructorの追加項目
+ * @prop {string} 摘要
+ * @prop {string} 補助摘要
+ * @prop {string} 借方科目
+ * @prop {string} 借方補助 - 補助科目
+ * @prop {string} 借方部門
+ * @prop {number} 借方本体
+ * @prop {number} 借方区分 - 税区分。課税、非課税、免税、不課税
+ * @prop {number} 借方税率 - 小数表記。10% -> 0.1
+ * @prop {number} 借方税額
+ * @prop {number} 借方合計 - 本体＋税額
+ * @prop {string} 貸方科目
+ * @prop {string} 貸方補助
+ * @prop {string} 貸方部門
+ * @prop {number} 貸方本体
+ * @prop {number} 貸方区分
+ * @prop {number} 貸方税率
+ * @prop {number} 貸方税額
+ * @prop {number} 貸方合計
+ * @prop {string} 備考
+ */
+/**
+ * @typedef {Object} daifuku
+ * @prop {number} 年度
+ * @prop {number} 伝票番号
+ * @prop {number} 行番号
+ * @prop {string} 所属 - 借方 or 貸方
+ * @prop {string} 取引日
+ * @prop {Date} date
+ * @prop {string} 摘要
+ * @prop {string} 補助摘要
+ * @prop {string} 科目
+ * @prop {string} 補助科目
+ * @prop {string} 部門
+ * @prop {number} 本体
+ * @prop {string} 税区分
+ * @prop {number} 税率 - 小数
+ * @prop {number} 税額
+ * @prop {number} 合計
+ */
+/**
+ * @typedef {Object} rawjson
+ * @prop {account[]} accounts - 勘定科目マスタ
+ * @prop {journal[]} journals - 仕訳日記帳明細
+ */
 class KawaZanyo extends BasePage {
+  /**
+   * @constructor
+   * @param {rawjson} raw
+   * @param {Object} opt
+   */
   constructor(raw,opt={}){
     const v = {whois:'KawaZanyo.constructor',rv:null,step:0,def:{
       html: [
@@ -24,16 +99,36 @@ class KawaZanyo extends BasePage {
     try {
       v.r = super(v.def,opt);
 
-      v.step = 1; // accounts,journalsの格納
-      this.accounts = raw.accounts;
+      v.step = 1.1; // 勘定科目マスタ(raw.accounts)のthis.accountsへの格納
+      // 格納時、typeを追加する。
+      this.accounts = [];
+      [
+        "select *,'B1' as type from ? where B1 is not null and B2 is null and BS is null",
+        "select *,'B2' as type from ? where B1 is not null and B2 is not null and B3 is null and BS is null",
+        "select *,'B3' as type from ? where B1 is not null and B2 is not null and B3 is not null and BS is null",
+        "select *,'BA' as type from ? where BS is not null",
+        "select *,'P1' as type from ? where P1 is not null and P2 is null and PS is null",
+        "select *,'P2' as type from ? where P1 is not null and P2 is not null and P3 is null and PS is null",
+        //"select *,'P3' as type from ? where P1 is not null and P2 is not null and P3 is not null and PS is null",
+        "select *,'PA' as type from ? where PS is not null",
+        "select *,'C1' as type from ? where C1 is not null and C2 is null and CS is null",
+        "select *,'C2' as type from ? where C1 is not null and C2 is not null and C3 is null and CS is null",
+        //"select *,'C3' as type from ? where C1 is not null and C2 is not null and C3 is not null and CS is null",
+        "select *,'CA' as type from ? where CS is not null",
+      ].forEach(sql => {
+        this.accounts = this.accounts.concat(alasql(sql,[raw.accounts]));
+      });
       console.log('this.accounts=%s',JSON.stringify(this.accounts));
-      this.journals = raw.journals;
+
+      v.step = 1.2; // this.account(単数型)：勘定科目名->account Objへの参照
       this.account = {};
       raw.accounts.forEach(x => {
         this.account[x['名称']] = x;
       });
 
-      v.step = 2; // 取引日(Date型)を文字列に変換
+      v.step = 2; // 仕訳帳明細(this.journals)のthis.journalsへの格納
+      this.journals = raw.journals;
+      // 取引日(Date型)を文字列に変換
       this.journals.forEach(x => {
         x.date = new DateEx(x['取引日']);
         x['取引日'] = x.date.toLocale();
@@ -43,6 +138,11 @@ class KawaZanyo extends BasePage {
       v.r = this.genDaifuku();
       if( v.r instanceof Error ) throw v.r;
       console.log(this.daifuku);
+
+      v.step = 4; // 年度✖️科目別金額計算
+      v.r = this.genBP();
+      if( v.r instanceof Error ) throw v.r;
+      console.log(this.BS);
 
       v.step = 10; // 終了処理
       console.log(v.whois+' normal end.\n',v.rv);
@@ -64,6 +164,7 @@ class KawaZanyo extends BasePage {
       + ", `行番号`"
       + ", '借方' as `所属`"
       + ", `取引日`"
+      + ", date"
       + ", `摘要`"
       + ", `補助摘要`"
       + ", `借方科目` as `科目`"
@@ -87,6 +188,7 @@ class KawaZanyo extends BasePage {
       + ", `行番号`"
       + ", '貸方' as `所属`"
       + ", `取引日`"
+      + ", date"
       + ", `摘要`"
       + ", `補助摘要`"
       + ", `貸方科目` as `科目`"
@@ -115,11 +217,143 @@ class KawaZanyo extends BasePage {
 
       //this.dumpObject(this.accounts,['名称','本籍','B1','B2','B3','BS','P1','P2','PS','C1','C2','CS']);
       //this.dumpObject(this.daifuku,['年度','伝票番号','行番号','取引日','摘要','補助摘要','科目','補助科目','部門','本体','税区分','税率','税額','合計',]);
-      this.changeScreen('dump');
       */
 
       v.step = 99; // 終了処理
       console.log(v.whois+' normal end.\\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 年度✖️科目別金額計算
+   *
+   * {科目名＋年度:合計額, ...}形式のオブジェクトをthis.bpとして作成する
+   */
+  genBP = () => {
+    const v = {whois:this.className+'.genBP',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1.1; // 勘定科目ごとの集計
+      v.sql = "select"
+      + " `科目` as ac"
+      + ", `年度` as fy"
+      + ", sum(`合計`) as val"
+      + " from ?"
+      + " group by `科目`,`年度`";
+      v.bp = alasql(v.sql,[this.daifuku]);
+      console.log('v.bp=%s',JSON.stringify(v.bp));
+      v.step = 1.2;
+      this.bp = {};
+      v.bp.forEach(x => this.bp[x.ac+x.fy] = x.val);
+      console.log('this.bp=%s',JSON.stringify(this.bp));
+
+      // 貸借対照表の集計項目
+      v.step = 2.1; // 分類項目と勘定科目ごとの集計を紐付け
+      v.t01 = [];
+      [
+        // BSの大分類項目
+        "select m1.type"
+        + ", m1.`名称` as `分類名`"   // BS上の項目名
+        + ", m2.`名称` as `所属科目`" // debug用
+        + ", bp.fy, bp.val"
+        + " from ? as m1"
+        + " inner join ? as m2 on m1.B1=m2.B1"
+        + " inner join ? as bp on m2.`名称`=bp.ac"
+        + " where m1.type='B1' and m2.type='BA' and bp.val<>0",
+        // BSの中分類項目
+        "select m1.type"
+        + ", m1.`名称` as `分類名`"   // BS上の項目名
+        + ", m2.`名称` as `所属科目`" // debug用
+        + ", bp.fy, bp.val"
+        + " from ? as m1"
+        + " inner join ? as m2 on m1.B1=m2.B1 and m1.B2=m2.B2"
+        + " inner join ? as bp on m2.`名称`=bp.ac"
+        + " where m1.type='B2' and m2.type='BA' and bp.val<>0",
+        // BSの小分類項目
+        "select m1.type"
+        + ", m1.`名称` as `分類名`"   // BS上の項目名
+        + ", m2.`名称` as `所属科目`" // debug用
+        + ", bp.fy, bp.val"
+        + " from ? as m1"
+        + " inner join ? as m2 on m1.B1=m2.B1 and m1.B2=m2.B2 and m1.B3=m2.B3"
+        + " inner join ? as bp on m2.`名称`=bp.ac"
+        + " where m1.type='B3' and m2.type='BA' and bp.val<>0",
+      ].forEach(sql => {
+        v.t01 = v.t01.concat(alasql(sql,[this.accounts,this.accounts,v.bp]));
+      });
+      v.step = 2.2; // 分類項目×年度で集計
+      v.t02 = alasql("select"
+      + " `分類名` as ac"
+      + ", fy"
+      + ", sum(val) as val"
+      + " from ?"
+      + " group by `分類名`,fy"
+      ,[v.t01]);
+
+      v.step = 3; /* PLの分類項目の計算
+        売上総利益 = 売上高 - 売上原価
+        営業利益 = 売上総利益 - 販売費および一般管理費
+        経常利益 = 営業利益 + 営業外収益 - 営業外費用
+        税前利益 = 経常利益 + 特別利益 - 特別損失
+        当期利益 = 税前利益 - 法人税・住民税及び事業税
+      */
+      v.t10 = {};
+      v.step = 3.1; // とりあえず年度別売上高のみ設定
+      alasql("select fy, sum(val) as val from ? where ac='売上高' group by fy",[v.bp]).forEach(x => {
+        v.t10[x.fy] = {fy:x.fy,'売上高':x.val,'売上原価':0,
+          '販売費および一般管理費':0,'営業外収益':0,'営業外費用':0,
+          '特別利益':0,'特別損失':0,'法人税・住民税及び事業税':0,'当期利益':0
+        };
+      });
+      v.step = 3.2; // BS同様、所属勘定科目の合計値から求める項目行を計算
+      v.sql = "select m1.type"
+      + ", m1.`名称` as `分類名`"   // PL上の項目名
+      + ", m2.`名称` as `所属科目`" // debug用
+      + ", bp.fy, bp.val"
+      + " from ? as m1"
+      + " inner join ? as m2 on m1.P1=m2.P1 and m1.P2=m2.P2"
+      + " inner join ? as bp on m2.`名称`=bp.ac"
+      + " where m1.type='P2' and m2.type='PA' and bp.val<>0";
+      v.t11 = alasql(v.sql,[this.accounts,this.accounts,v.bp]);
+      alasql("select"
+      + " `分類名` as ac"
+      + ", fy"
+      + ", sum(val) as val"
+      + " from ?"
+      + " group by `分類名`,fy"
+      ,[v.t11]).forEach(x => {
+        v.t10[x.fy][x.ac] = x.val;
+      })
+      console.log('t10=%s',JSON.stringify(v.t10));
+      v.step = 3.3; // 年度ごとの各種利益を計算
+      v.t12 = [];
+      Object.keys(v.t10).forEach(fy => {
+        v.t10[fy]['売上総利益'] = v.t10[fy]['売上高'] - v.t10[fy]['売上原価'];
+        v.t10[fy]['営業利益'] = v.t10[fy]['売上総利益'] - v.t10[fy]['販売費および一般管理費'];
+        v.t10[fy]['経常利益'] = v.t10[fy]['営業利益'] + v.t10[fy]['営業外収益'] - v.t10[fy]['営業外費用'];
+        v.t10[fy]['税前利益'] = v.t10[fy]['経常利益'] - v.t10[fy]['特別利益'] - v.t10[fy]['特別損失'];
+        v.t10[fy]['当期利益'] = v.t10[fy]['税前利益'] - v.t10[fy]['法人税・住民税及び事業税'];
+        v.t12.push(v.t10[fy]);
+      });
+      console.log('v.t10=%s',JSON.stringify(v.t10));
+      this.dumpObject(v.t12);
+      v.step = 3.4; // this.bpに格納
+      Object.keys(v.t10).forEach(fy => {
+        Object.keys(fy).forEach(ac => {
+          console.log('fy=%s, ac=%s',fy,ac);
+          this.bp[ac+fy] = v.t10[fy][ac];
+        });
+      });
+      console.log(this.bp);
+      
+
+      v.step = 99; // 終了処理
+      console.log(v.whois+' normal end.');
       return v.rv;
 
     } catch(e){
@@ -138,6 +372,12 @@ class KawaZanyo extends BasePage {
 
       v.step = 1;  // 前処理
       this.dump.innerHTML = '';
+      if( header.length === 0 ){
+        for( v.i=0 ; v.i<arg.length ; v.i++ ){
+          header = Array.from(new Set([...header,...Object.keys(arg[v.i])]));
+        }
+      }
+      console.log('header=%s',JSON.stringify(header));
 
       v.step = 2; // table要素の生成
       v.table = this.createElement({tag:'table',children:[
@@ -168,6 +408,7 @@ class KawaZanyo extends BasePage {
 
       v.step = 5; // 終了処理
       this.dump.appendChild(v.table);
+      this.changeScreen('dump');
       console.log(v.whois+' normal end.');
       return v.rv;
 
