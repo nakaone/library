@@ -62,7 +62,10 @@ function getKzData(){
   }
 }
 
-/** 出力用仕訳帳・勘定科目データをjsonファイルとして保存 */
+/** 出力用仕訳帳・勘定科目データをjsonファイルとして保存
+ * 
+ * - 2023/10/25 13:00 出力形式をjsソースに変更、ファイル名を'kzData.js'に固定
+ */
 function downloadKzData(){
   const v = {whois:'downloadKzData',rv:{journals:[],accounts:[]},step:0,
     activeSheet: SpreadsheetApp.getActiveSpreadsheet(),
@@ -76,19 +79,23 @@ function downloadKzData(){
     .getParents().next().getId();
 
     v.step = 2; // ファイル名の作成
+    /*　2023/10/25 13:00
     v.date = new Date();
     v.fileName = v.date.getFullYear()
     + ('0'+(v.date.getMonth()+1)).slice(-2)
     + ('0'+v.date.getDate()).slice(-2)
-    + '.json';
+    + '.js';
+    */
+    v.fileName = 'kzData.js';
 
     v.step = 3; // 格納するデータの取得
     v.oData = getKzData();
     if( v.oData instanceof Error ) throw v.oData;
+    v.oData = 'const rawjson = ' + JSON.stringify(v.oData) + ';';
 
     v.step = 4; // ファイルを保存
     v.blob = Utilities.newBlob('','application/json',v.fileName);
-    v.file = v.blob.setDataFromString(JSON.stringify(v.oData),'UTF-8');
+    v.file = v.blob.setDataFromString(v.oData,'UTF-8');
     DriveApp.getFolderById(v.folderId).createFile(v.file);
 
     v.step = 5; // 終了処理
@@ -100,6 +107,14 @@ function downloadKzData(){
     return e;
   }
 }
+
+/*
+function doGet(e) {
+  const json = JSON.stringify(getKzData());
+  const type = ContentService.MimeType.JSON;
+  return ContentService.createTextOutput(json).setMimeType(type);
+}
+*/
 
 /** fy2017から「弥生中間」シートを作成
  * @param {void}
