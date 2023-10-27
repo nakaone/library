@@ -93,7 +93,7 @@ class KawaZanyo extends BasePage {
     const v = {whois:'KawaZanyo.constructor',rv:null,step:0,def:{
       html: [
         {name:'dump'},  // オブジェクト配列の内容を表示する領域
-        {name:'BSarea'},
+        {name:'BSarea',attr:{class:'BSarea'}},
         {name:'PLarea'},
       ],
       css: [`
@@ -105,6 +105,32 @@ class KawaZanyo extends BasePage {
         td.type1 {background-color:#6bb;font-weight:bold;}
         td.type2 {background-color:#7dd;}
         td.type3 {background-color:#8ff;}
+        `,/* BSarea: 貸借対照表表示領域
+          - -webkit-stickyはSafari用
+          - stickyの親要素にはheight指定必須
+          - theadの最初のthとは行ヘッダ・列ヘッダの交差する部分
+
+          【参考】
+          - [tableの行/列ヘッダーを固定する](https://qiita.com/rokko2massy/items/83283bce06acbba7a4f0)
+          - [tableのヘッダーを固定する方法2つ](https://tedate.jp/coding/how-to-fix-table-header)
+        */`
+        div.BSarea {overflow: scroll;height:800px;}
+        .BSarea thead th {
+          position: -webkit-sticky;
+          position: sticky;
+          z-index: 1;
+          top: 0;
+        }
+        .BSarea thead th:first-child {
+          z-index: 2;
+          left: 0;
+        }
+        .BSarea tbody th {
+          position: -webkit-sticky;
+          position: sticky;
+          left: 0;
+          z-index: 1;
+        }
       `],
     }};
     console.log(v.whois+' start.');
@@ -229,7 +255,10 @@ class KawaZanyo extends BasePage {
     console.log(v.whois+' start.');
     try {
 
-      v.step = 1; // 借方の抽出
+      v.step = 1; // 勘定科目マスタからBS/PL関係の科目のみ抽出
+      v.accounts = alasql("select * from ? where type like 'B%' or type like 'P%'",[this.accounts]);
+
+      v.step = 2.1; // 借方の抽出
       v.sql = "select `会計年度` as `年度`"
       + ", `伝票番号`"
       + ", `行番号`"
@@ -250,7 +279,9 @@ class KawaZanyo extends BasePage {
       + " inner join ("
       + " select * from ?"
       + ") as aMst on jMst.`借方科目` = aMst.`名称`";
-      v.kari = alasql(v.sql,[this.journals,this.accounts]);
+      v.kari = alasql(v.sql,[this.journals,v.accounts]);
+      v.debug = alasql("select * from ? where `名称`='資本金'",[v.accounts]);
+      console.log('v.accounts=%s',JSON.stringify(v.debug));
 
       v.step = 2; // 貸方の抽出
       v.sql = "select `会計年度` as `年度`"
@@ -273,13 +304,18 @@ class KawaZanyo extends BasePage {
       + " inner join ("
       + " select * from ?"
       + ") as aMst on jMst.`貸方科目` = aMst.`名称`"
-      v.kashi = alasql(v.sql,[this.journals,this.accounts]);
+      v.kashi = alasql(v.sql,[this.journals,v.accounts]);
+      v.debug = alasql("select * from ? where `科目`='資本金'",[v.kashi]);
+      console.log('v.kashi=%s',JSON.stringify(v.debug));
 
       v.step = 3; // メンバ変数に格納
       this.daifuku = alasql("select * from ? order by `取引日`,`伝票番号`,`行番号`",
       [[...v.kari,...v.kashi]]);
 
-      v.step = 99; // 終了処理
+      v.debug = alasql("select * from ? where `科目`='資本金'",[this.daifuku]);
+      console.log('v.debug=%s',JSON.stringify(v.debug));
+
+      v.step = 4; // 終了処理
       console.log(v.whois+' normal end.\\n',v.rv);
       return v.rv;
 
@@ -341,7 +377,10 @@ class KawaZanyo extends BasePage {
     console.log(v.whois+' start.');
     try {
 
-      v.step = 1; // 分類項目と勘定科目ごとの集計を紐付け
+      v.step = 1.1; // 勘定科目マスタからBS/PL関係の科目のみ抽出
+      v.accounts = alasql("select * from ? where type like 'B%' or type like 'P%'",[this.accounts]);
+
+      v.step = 1.2; // 分類項目と勘定科目ごとの集計を紐付け
       v.t01 = [];
       [
         // BSの大分類項目
@@ -372,7 +411,7 @@ class KawaZanyo extends BasePage {
         + " inner join ? as bp on m2.`名称`=bp.ac"
         + " where m1.type='B3' and m2.type='BA' and bp.val<>0",
       ].forEach(sql => {
-        v.t01 = v.t01.concat(alasql(sql,[this.accounts,this.accounts,this.bpArr]));
+        v.t01 = v.t01.concat(alasql(sql,[v.accounts,v.accounts,this.bpArr]));
       });
 
       v.step = 2; // 分類項目×年度で集計
@@ -397,11 +436,11 @@ class KawaZanyo extends BasePage {
       + " inner join (select ac from ? group by ac) as bpArr"
       + " on mst.`名称`=bpArr.ac"
       + " where mst.type like 'B%'";
-      v.t03 = alasql(v.sql,[this.accounts,this.bpArr]);
+      v.t03 = alasql(v.sql,[v.accounts,this.bpArr]);
       console.log('v.t03=%s',JSON.stringify(v.t03));
       for( v.i=0 ; v.i<v.t03.length ; v.i++ ){
         v.ac = v.t03[v.i].ac;
-        for( v.j=this.minFy+1 ; v.j<=this.maxFy ; v.j++ ){
+        for( v.j=this.minFy ; v.j<=this.maxFy ; v.j++ ){
           this.bpObj[v.ac+v.j] = (this.bpObj[v.ac+(v.j-1)] || 0) + (this.bpObj[v.ac+v.j] || 0);
         }
       }
@@ -426,9 +465,13 @@ class KawaZanyo extends BasePage {
     console.log(v.whois+' start.');
     try {
 
-      v.step = 1; // 年度毎の各種利益計算用オブジェクトを作成
+      v.step = 1.1; // 勘定科目マスタからBS/PL関係の科目のみ抽出
+      v.accounts = alasql("select * from ? where type like 'B%' or type like 'P%'",[this.accounts]);
+
+      v.step = 1.2; // 年度毎の各種利益計算用オブジェクトを作成
       v.fyObj = {};
-      v.step = 3.1; // 売上が存在する年度について、売上高のみのオブジェクトを作成
+
+      v.step = 1.3; // 売上が存在する年度について、売上高のみのオブジェクトを作成
       alasql("select fy, sum(val) as val from ? where ac='売上高' group by fy",[this.bpArr]).forEach(x => {
         v.fyObj[x.fy] = {fy:x.fy,'売上高':x.val,'売上原価':0,
           '販売費および一般管理費':0,'営業外収益':0,'営業外費用':0,
@@ -445,7 +488,7 @@ class KawaZanyo extends BasePage {
       + " inner join ? as m2 on m1.P1=m2.P1 and m1.P2=m2.P2"
       + " inner join ? as bp on m2.`名称`=bp.ac"
       + " where m1.type='P2' and m2.type='PA' and bp.val<>0";
-      v.t02 = alasql(v.sql,[this.accounts,this.accounts,this.bpArr]);
+      v.t02 = alasql(v.sql,[v.accounts,v.accounts,this.bpArr]);
 
       v.step = 3; // bpArrの計算
       v.bpArr = alasql("select"
@@ -512,13 +555,16 @@ class KawaZanyo extends BasePage {
       v.t01 = alasql(v.sql,[this.bpArr]);
       console.log('v.t01=%s',JSON.stringify(v.t01));
 
-      v.step = 2.2; // 並べ替え
+      v.step = 2.2; // 勘定科目マスタからBS/PL関係の科目のみ抽出
+      v.accounts = alasql("select * from ? where type like 'B%' or type like 'P%'",[this.accounts]);
+
+      v.step = 2.3; // 並べ替え
       v.sql = "select mst.type, t01.ac"
       + " from ? as t01"
       + " inner join ? as mst on t01.ac=mst.`名称`"
       + " where mst.type like 'B%'"
       + " order by mst.B1, mst.B2, mst.B3, mst.type";
-      v.t02 = alasql(v.sql,[v.t01,this.accounts]);
+      v.t02 = alasql(v.sql,[v.t01,v.accounts]);
       this.dumpObject(v.t02);
       console.log('v.t02=%s',JSON.stringify(v.t02));
 
