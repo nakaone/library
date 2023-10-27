@@ -392,7 +392,21 @@ class KawaZanyo extends BasePage {
         v.o[x.ac+x.fy] = x.val;
       })
 
-      v.step = 4; // 終了処理
+      v.step = 4; // 各科目・分類項目について累計値を計算
+      v.sql = "select `名称` as ac from ? as mst"
+      + " inner join (select ac from ? group by ac) as bpArr"
+      + " on mst.`名称`=bpArr.ac"
+      + " where mst.type like 'B%'";
+      v.t03 = alasql(v.sql,[this.accounts,this.bpArr]);
+      console.log('v.t03=%s',JSON.stringify(v.t03));
+      for( v.i=0 ; v.i<v.t03.length ; v.i++ ){
+        v.ac = v.t03[v.i].ac;
+        for( v.j=this.minFy+1 ; v.j<=this.maxFy ; v.j++ ){
+          this.bpObj[v.ac+v.j] = (this.bpObj[v.ac+(v.j-1)] || 0) + (this.bpObj[v.ac+v.j] || 0);
+        }
+      }
+
+      v.step = 5; // 終了処理
       console.log(v.whois+' normal end.');
       return v.rv;
 
