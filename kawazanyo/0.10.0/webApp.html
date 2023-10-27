@@ -137,12 +137,13 @@ class KawaZanyo extends BasePage {
       v.step = 3; // 大福帳の作成
       v.r = this.genDaifuku();
       if( v.r instanceof Error ) throw v.r;
-      console.log(this.daifuku);
 
-      v.step = 4; // 年度✖️科目別金額計算
-      v.r = this.genBP();
+      v.step = 4.1; // 年度✖️科目別金額計算
+      v.r = this.calcBPdetails();
       if( v.r instanceof Error ) throw v.r;
-      console.log(this.BS);
+      v.step = 4.2; // BSの分類別金額計算
+      v.r = this.calcBSdetails();
+      if( v.r instanceof Error ) throw v.r;
 
       v.step = 10; // 終了処理
       console.log(v.whois+' normal end.\n',v.rv);
@@ -231,10 +232,118 @@ class KawaZanyo extends BasePage {
 
   /** 年度✖️科目別金額計算
    *
-   * {科目名＋年度:合計額, ...}形式のオブジェクトをthis.bpとして作成する
+   * {科目名＋年度:合計額, ...}形式のオブジェクトをthis.bpObjとして作成する
    */
-  genBP = () => {
-    const v = {whois:this.className+'.genBP',rv:null,step:0};
+  calcBPdetails = () => {
+    const v = {whois:this.className+'.calcBPdetails',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1; // 勘定科目ごとの集計
+      v.sql = "select"
+      + " `科目` as ac"
+      + ", `年度` as fy"
+      + ", sum(`合計`) as val"
+      + " from ?"
+      + " group by `科目`,`年度`";
+      this.bpArr = alasql(v.sql,[this.daifuku]);
+      console.log('this.bpArr=%s',JSON.stringify(this.bpArr));
+
+      v.step = 2; // 集計結果をthis.bpObjに保存
+      this.bpObj = {};
+      this.bpArr.forEach(x => this.bpObj[x.ac+x.fy] = x.val);
+      console.log('this.bpObj=%s',JSON.stringify(this.bpObj));
+
+      v.step = 3; // 終了処理
+      console.log(v.whois+' normal end.');
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 貸借対照表(BS)の年度✖️分類別金額計算
+   *
+   * {科目名＋年度:合計額, ...}形式のオブジェクトをthis.bpObjとして作成する。
+   * 先行してcalcBPdetails実行済みのこと。
+   */
+  calcBSdetails = () => {
+    const v = {whois:this.className+'.calcBSdetails',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1; // 分類項目と勘定科目ごとの集計を紐付け
+      v.t01 = [];
+      [
+        // BSの大分類項目
+        "select m1.type"
+        + ", m1.`名称` as `分類名`"   // BS上の項目名
+        + ", m2.`名称` as `所属科目`" // debug用
+        + ", bp.fy, bp.val"
+        + " from ? as m1"
+        + " inner join ? as m2 on m1.B1=m2.B1"
+        + " inner join ? as bp on m2.`名称`=bp.ac"
+        + " where m1.type='B1' and m2.type='BA' and bp.val<>0",
+        // BSの中分類項目
+        "select m1.type"
+        + ", m1.`名称` as `分類名`"   // BS上の項目名
+        + ", m2.`名称` as `所属科目`" // debug用
+        + ", bp.fy, bp.val"
+        + " from ? as m1"
+        + " inner join ? as m2 on m1.B1=m2.B1 and m1.B2=m2.B2"
+        + " inner join ? as bp on m2.`名称`=bp.ac"
+        + " where m1.type='B2' and m2.type='BA' and bp.val<>0",
+        // BSの小分類項目
+        "select m1.type"
+        + ", m1.`名称` as `分類名`"   // BS上の項目名
+        + ", m2.`名称` as `所属科目`" // debug用
+        + ", bp.fy, bp.val"
+        + " from ? as m1"
+        + " inner join ? as m2 on m1.B1=m2.B1 and m1.B2=m2.B2 and m1.B3=m2.B3"
+        + " inner join ? as bp on m2.`名称`=bp.ac"
+        + " where m1.type='B3' and m2.type='BA' and bp.val<>0",
+      ].forEach(sql => {
+        v.t01 = v.t01.concat(alasql(sql,[this.accounts,this.accounts,this.bpArr]));
+      });
+      console.log('t01=%s',JSON.stringify(v.t01));
+
+      v.step = 2; // 分類項目×年度で集計
+      v.t02 = alasql("select"
+      + " `分類名` as ac"
+      + ", fy"
+      + ", sum(val) as val"
+      + " from ?"
+      + " group by `分類名`,fy"
+      ,[v.t01]);
+      console.log('t02=%s',JSON.stringify(v.t02));
+
+      v.step = 3; // this.bpObjへの格納
+      v.o = {}; // debug用
+      v.t02.forEach(x => {
+        this.bpObj[x.ac+x.fy] = x.val;
+        v.o[x.ac+x.fy] = x.val;
+      })
+      console.log('v.o=%s',JSON.stringify(v.o));
+
+      v.step = 4; // 終了処理
+      console.log(v.whois+' normal end.');
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 損益計算書(PL)の年度✖️利益別金額計算
+   *
+   * {科目名＋年度:合計額, ...}形式のオブジェクトをthis.bpObjとして作成する
+   * 先行してcalcBPdetails実行済みのこと。
+   */
+  calcPLdetails = () => {
+    const v = {whois:this.className+'.calcBPdetails',rv:null,step:0};
     console.log(v.whois+' start.');
     try {
 
@@ -245,12 +354,12 @@ class KawaZanyo extends BasePage {
       + ", sum(`合計`) as val"
       + " from ?"
       + " group by `科目`,`年度`";
-      v.bp = alasql(v.sql,[this.daifuku]);
-      console.log('v.bp=%s',JSON.stringify(v.bp));
+      this.bpArr = alasql(v.sql,[this.daifuku]);
+      console.log('this.bpArr=%s',JSON.stringify(this.bpArr));
       v.step = 1.2;
-      this.bp = {};
-      v.bp.forEach(x => this.bp[x.ac+x.fy] = x.val);
-      console.log('this.bp=%s',JSON.stringify(this.bp));
+      this.bpObj = {};
+      this.bpArr.forEach(x => this.bpObj[x.ac+x.fy] = x.val);
+      console.log('this.bpObj=%s',JSON.stringify(this.bpObj));
 
       // 貸借対照表の集計項目
       v.step = 2.1; // 分類項目と勘定科目ごとの集計を紐付け
@@ -284,7 +393,7 @@ class KawaZanyo extends BasePage {
         + " inner join ? as bp on m2.`名称`=bp.ac"
         + " where m1.type='B3' and m2.type='BA' and bp.val<>0",
       ].forEach(sql => {
-        v.t01 = v.t01.concat(alasql(sql,[this.accounts,this.accounts,v.bp]));
+        v.t01 = v.t01.concat(alasql(sql,[this.accounts,this.accounts,this.bpArr]));
       });
       v.step = 2.2; // 分類項目×年度で集計
       v.t02 = alasql("select"
@@ -304,7 +413,7 @@ class KawaZanyo extends BasePage {
       */
       v.t10 = {};
       v.step = 3.1; // とりあえず年度別売上高のみ設定
-      alasql("select fy, sum(val) as val from ? where ac='売上高' group by fy",[v.bp]).forEach(x => {
+      alasql("select fy, sum(val) as val from ? where ac='売上高' group by fy",[this.bpArr]).forEach(x => {
         v.t10[x.fy] = {fy:x.fy,'売上高':x.val,'売上原価':0,
           '販売費および一般管理費':0,'営業外収益':0,'営業外費用':0,
           '特別利益':0,'特別損失':0,'法人税・住民税及び事業税':0,'当期利益':0
@@ -319,7 +428,7 @@ class KawaZanyo extends BasePage {
       + " inner join ? as m2 on m1.P1=m2.P1 and m1.P2=m2.P2"
       + " inner join ? as bp on m2.`名称`=bp.ac"
       + " where m1.type='P2' and m2.type='PA' and bp.val<>0";
-      v.t11 = alasql(v.sql,[this.accounts,this.accounts,v.bp]);
+      v.t11 = alasql(v.sql,[this.accounts,this.accounts,this.bpArr]);
       alasql("select"
       + " `分類名` as ac"
       + ", fy"
@@ -342,14 +451,14 @@ class KawaZanyo extends BasePage {
       });
       console.log('v.t10=%s',JSON.stringify(v.t10));
       this.dumpObject(v.t12);
-      v.step = 3.4; // this.bpに格納
+      v.step = 3.4; // this.bpObjに格納
       Object.keys(v.t10).forEach(fy => {
         Object.keys(fy).forEach(ac => {
           console.log('fy=%s, ac=%s',fy,ac);
-          this.bp[ac+fy] = v.t10[fy][ac];
+          this.bpObj[ac+fy] = v.t10[fy][ac];
         });
       });
-      console.log(this.bp);
+      console.log(this.bpObj);
       
 
       v.step = 99; // 終了処理
