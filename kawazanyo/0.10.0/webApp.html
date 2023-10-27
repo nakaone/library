@@ -144,6 +144,9 @@ class KawaZanyo extends BasePage {
       v.step = 4.2; // BSの分類別金額計算
       v.r = this.calcBSdetails();
       if( v.r instanceof Error ) throw v.r;
+      v.step = 4.3; // PLの分類別金額計算
+      v.r = this.calcPLdetails();
+      if( v.r instanceof Error ) throw v.r;
 
       v.step = 10; // 終了処理
       console.log(v.whois+' normal end.\n',v.rv);
@@ -230,6 +233,16 @@ class KawaZanyo extends BasePage {
     }
   }
 
+  /**
+   * @typedef {Object} bpArr
+   * @prop {string} ac - 勘定科目、集計項目名
+   * @prop {number} fy - 会計年度
+   * @prop {number} val - 当該科目・会計年度の値
+   */
+  /**
+   * @typedef {Object} bpObj
+   * @prop {Object.<string, number>} - ラベル：勘定科目・集計項目名＋年度、値：当該科目・会計年度の合計額
+   */
   /** 年度✖️科目別金額計算
    *
    * {科目名＋年度:合計額, ...}形式のオブジェクトをthis.bpObjとして作成する
@@ -347,79 +360,18 @@ class KawaZanyo extends BasePage {
     console.log(v.whois+' start.');
     try {
 
-      v.step = 1.1; // 勘定科目ごとの集計
-      v.sql = "select"
-      + " `科目` as ac"
-      + ", `年度` as fy"
-      + ", sum(`合計`) as val"
-      + " from ?"
-      + " group by `科目`,`年度`";
-      this.bpArr = alasql(v.sql,[this.daifuku]);
-      console.log('this.bpArr=%s',JSON.stringify(this.bpArr));
-      v.step = 1.2;
-      this.bpObj = {};
-      this.bpArr.forEach(x => this.bpObj[x.ac+x.fy] = x.val);
-      console.log('this.bpObj=%s',JSON.stringify(this.bpObj));
-
-      // 貸借対照表の集計項目
-      v.step = 2.1; // 分類項目と勘定科目ごとの集計を紐付け
-      v.t01 = [];
-      [
-        // BSの大分類項目
-        "select m1.type"
-        + ", m1.`名称` as `分類名`"   // BS上の項目名
-        + ", m2.`名称` as `所属科目`" // debug用
-        + ", bp.fy, bp.val"
-        + " from ? as m1"
-        + " inner join ? as m2 on m1.B1=m2.B1"
-        + " inner join ? as bp on m2.`名称`=bp.ac"
-        + " where m1.type='B1' and m2.type='BA' and bp.val<>0",
-        // BSの中分類項目
-        "select m1.type"
-        + ", m1.`名称` as `分類名`"   // BS上の項目名
-        + ", m2.`名称` as `所属科目`" // debug用
-        + ", bp.fy, bp.val"
-        + " from ? as m1"
-        + " inner join ? as m2 on m1.B1=m2.B1 and m1.B2=m2.B2"
-        + " inner join ? as bp on m2.`名称`=bp.ac"
-        + " where m1.type='B2' and m2.type='BA' and bp.val<>0",
-        // BSの小分類項目
-        "select m1.type"
-        + ", m1.`名称` as `分類名`"   // BS上の項目名
-        + ", m2.`名称` as `所属科目`" // debug用
-        + ", bp.fy, bp.val"
-        + " from ? as m1"
-        + " inner join ? as m2 on m1.B1=m2.B1 and m1.B2=m2.B2 and m1.B3=m2.B3"
-        + " inner join ? as bp on m2.`名称`=bp.ac"
-        + " where m1.type='B3' and m2.type='BA' and bp.val<>0",
-      ].forEach(sql => {
-        v.t01 = v.t01.concat(alasql(sql,[this.accounts,this.accounts,this.bpArr]));
-      });
-      v.step = 2.2; // 分類項目×年度で集計
-      v.t02 = alasql("select"
-      + " `分類名` as ac"
-      + ", fy"
-      + ", sum(val) as val"
-      + " from ?"
-      + " group by `分類名`,fy"
-      ,[v.t01]);
-
-      v.step = 3; /* PLの分類項目の計算
-        売上総利益 = 売上高 - 売上原価
-        営業利益 = 売上総利益 - 販売費および一般管理費
-        経常利益 = 営業利益 + 営業外収益 - 営業外費用
-        税前利益 = 経常利益 + 特別利益 - 特別損失
-        当期利益 = 税前利益 - 法人税・住民税及び事業税
-      */
-      v.t10 = {};
-      v.step = 3.1; // とりあえず年度別売上高のみ設定
+      v.step = 1; // 年度毎の各種利益計算用オブジェクトを作成
+      v.fyObj = {};
+      v.step = 3.1; // 売上が存在する年度について、売上高のみのオブジェクトを作成
       alasql("select fy, sum(val) as val from ? where ac='売上高' group by fy",[this.bpArr]).forEach(x => {
-        v.t10[x.fy] = {fy:x.fy,'売上高':x.val,'売上原価':0,
+        v.fyObj[x.fy] = {fy:x.fy,'売上高':x.val,'売上原価':0,
           '販売費および一般管理費':0,'営業外収益':0,'営業外費用':0,
           '特別利益':0,'特別損失':0,'法人税・住民税及び事業税':0,'当期利益':0
         };
       });
-      v.step = 3.2; // BS同様、所属勘定科目の合計値から求める項目行を計算
+      //console.log('t01=%s',JSON.stringify(v.fyObj));
+
+      v.step = 2; // BS同様、所属勘定科目の合計値から求める項目行を計算
       v.sql = "select m1.type"
       + ", m1.`名称` as `分類名`"   // PL上の項目名
       + ", m2.`名称` as `所属科目`" // debug用
@@ -428,40 +380,48 @@ class KawaZanyo extends BasePage {
       + " inner join ? as m2 on m1.P1=m2.P1 and m1.P2=m2.P2"
       + " inner join ? as bp on m2.`名称`=bp.ac"
       + " where m1.type='P2' and m2.type='PA' and bp.val<>0";
-      v.t11 = alasql(v.sql,[this.accounts,this.accounts,this.bpArr]);
-      alasql("select"
+      v.t02 = alasql(v.sql,[this.accounts,this.accounts,this.bpArr]);
+      //console.log('t02=%s',JSON.stringify(v.t02));
+
+      v.step = 3; // bpArrの計算
+      v.bpArr = alasql("select"
       + " `分類名` as ac"
       + ", fy"
       + ", sum(val) as val"
       + " from ?"
       + " group by `分類名`,fy"
-      ,[v.t11]).forEach(x => {
-        v.t10[x.fy][x.ac] = x.val;
-      })
-      console.log('t10=%s',JSON.stringify(v.t10));
-      v.step = 3.3; // 年度ごとの各種利益を計算
-      v.t12 = [];
-      Object.keys(v.t10).forEach(fy => {
-        v.t10[fy]['売上総利益'] = v.t10[fy]['売上高'] - v.t10[fy]['売上原価'];
-        v.t10[fy]['営業利益'] = v.t10[fy]['売上総利益'] - v.t10[fy]['販売費および一般管理費'];
-        v.t10[fy]['経常利益'] = v.t10[fy]['営業利益'] + v.t10[fy]['営業外収益'] - v.t10[fy]['営業外費用'];
-        v.t10[fy]['税前利益'] = v.t10[fy]['経常利益'] - v.t10[fy]['特別利益'] - v.t10[fy]['特別損失'];
-        v.t10[fy]['当期利益'] = v.t10[fy]['税前利益'] - v.t10[fy]['法人税・住民税及び事業税'];
-        v.t12.push(v.t10[fy]);
+      ,[v.t02]);
+      this.bpArr = this.bpArr.concat(v.bpArr);
+      this.dumpObject(v.bpArr);
+
+      v.step = 4; // bpArrの値をv.fyObjに反映させる
+      v.bpArr.forEach(x => {
+        v.fyObj[x.fy][x.ac] = x.val;
       });
-      console.log('v.t10=%s',JSON.stringify(v.t10));
-      this.dumpObject(v.t12);
-      v.step = 3.4; // this.bpObjに格納
-      Object.keys(v.t10).forEach(fy => {
-        Object.keys(fy).forEach(ac => {
-          console.log('fy=%s, ac=%s',fy,ac);
-          this.bpObj[ac+fy] = v.t10[fy][ac];
+      //console.log('v.fyObj=%s',JSON.stringify(v.fyObj));
+
+      v.step = 5; // 年度ごとの各種利益を計算
+      Object.keys(v.fyObj).forEach(fy => {
+        v.fyObj[fy]['売上総利益'] = v.fyObj[fy]['売上高'] - v.fyObj[fy]['売上原価'];
+        v.fyObj[fy]['営業利益'] = v.fyObj[fy]['売上総利益'] - v.fyObj[fy]['販売費および一般管理費'];
+        v.fyObj[fy]['経常利益'] = v.fyObj[fy]['営業利益'] + v.fyObj[fy]['営業外収益'] - v.fyObj[fy]['営業外費用'];
+        v.fyObj[fy]['税前利益'] = v.fyObj[fy]['経常利益'] - v.fyObj[fy]['特別利益'] - v.fyObj[fy]['特別損失'];
+        if( v.fyObj[fy]['当期利益'] === 0 )
+          v.fyObj[fy]['当期利益'] = v.fyObj[fy]['税前利益'] - v.fyObj[fy]['法人税・住民税及び事業税'];
+      });
+      //console.log('v.fyObj=%s',JSON.stringify(v.fyObj));
+      
+      v.step = 6; // bpObjへの格納
+      v.bpObj = {}; // debug用
+      Object.keys(v.fyObj).forEach(fy => {
+        Object.keys(v.fyObj[fy]).forEach(ac => {
+          //console.log('fy=%s(%s), ac=%s(%s), val=%s(%s)',fy,typeof fy,ac,typeof ac,v.fyObj[fy][ac],typeof v.fyObj[fy][ac]);
+          v.bpObj[ac+fy] = this.bpObj[ac+fy] = v.fyObj[fy][ac];
         });
       });
-      console.log(this.bpObj);
-      
+      //console.log('v.bpObj=%s',JSON.stringify(v.bpObj));
 
-      v.step = 99; // 終了処理
+      v.step = 7; // 終了処理
       console.log(v.whois+' normal end.');
       return v.rv;
 
