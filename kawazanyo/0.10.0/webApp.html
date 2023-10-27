@@ -93,7 +93,19 @@ class KawaZanyo extends BasePage {
     const v = {whois:'KawaZanyo.constructor',rv:null,step:0,def:{
       html: [
         {name:'dump'},  // オブジェクト配列の内容を表示する領域
+        {name:'BSarea'},
+        {name:'PLarea'},
       ],
+      css: [`
+        .num {text-align:right;}
+        tbody th {white-space:nowrap;}
+        th.type2 {padding-left: 1rem;}
+        th.type3 {padding-left: 2rem;}
+        th.typeA {padding-left: 3rem;}
+        td.type1 {background-color:#6bb;font-weight:bold;}
+        td.type2 {background-color:#7dd;}
+        td.type3 {background-color:#8ff;}
+      `],
     }};
     console.log(v.whois+' start.');
     try {
@@ -371,6 +383,7 @@ class KawaZanyo extends BasePage {
       + " from ?"
       + " group by `分類名`,fy"
       ,[v.t01]);
+      this.bpArr = this.bpArr.concat(v.t02);
 
       v.step = 3; // this.bpObjへの格納
       v.o = {}; // debug用
@@ -451,6 +464,7 @@ class KawaZanyo extends BasePage {
       Object.keys(v.fyObj).forEach(fy => {
         Object.keys(v.fyObj[fy]).forEach(ac => {
           v.bpObj[ac+fy] = this.bpObj[ac+fy] = v.fyObj[fy][ac];
+          this.bpArr.push({ac:ac,fy:fy,val:v.fyObj[fy][ac]});
         });
       });
 
@@ -470,9 +484,77 @@ class KawaZanyo extends BasePage {
     console.log(v.whois+' start.',axisX,axisY);
     try {
 
+      v.step = 1; // X軸未指定の場合、仕訳帳に存在する会計年度とする
       if( axisX.length === 0 ){
-        v.t01 = 0;
+        for( v.i=this.minFy ; v.i<=this.maxFy ; v.i++ ){
+          axisX.push(v.i);
+        }
       }
+      console.log('axisX=%s',JSON.stringify(axisX));
+
+      v.step = 2; // Y軸未指定の場合、this.bpArrに存在する勘定科目とする
+      v.step = 2.1; // 存在する勘定科目・集計項目を抽出
+      v.sql = "select ac from ? group by ac";
+      v.t01 = alasql(v.sql,[this.bpArr]);
+      console.log('v.t01=%s',JSON.stringify(v.t01));
+
+      v.step = 2.2; // 並べ替え
+      v.sql = "select mst.type, t01.ac"
+      + " from ? as t01"
+      + " inner join ? as mst on t01.ac=mst.`名称`"
+      + " where mst.type like 'B%'"
+      + " order by mst.B1, mst.B2, mst.B3, mst.type";
+      v.t02 = alasql(v.sql,[v.t01,this.accounts]);
+      this.dumpObject(v.t02);
+      console.log('v.t02=%s',JSON.stringify(v.t02));
+
+      for( v.i=0 ; v.i<v.t02.length ; v.i++ ){
+        axisY.push({type:v.t02[v.i].type.slice(-1),name:v.t02[v.i].ac});
+      }
+      console.log('axisY=%s',JSON.stringify(axisY));
+
+      v.step = 3; // BS表の作成
+      this.BSarea.innerHTML = '';
+      v.table = this.createElement({tag:'table',children:[
+        {tag:'thead',children:[{tag:'tr',children:[{tag:'th'}]}]},
+        {tag:'tbody'},
+      ]});
+      this.BSarea.appendChild(v.table);
+
+      for( v.i=0 ; v.i<axisX.length ; v.i++ ){
+        v.table.querySelector('thead tr').appendChild(this.createElement(
+          {tag:'th',text:axisX[v.i]}
+        ));
+      }
+
+      v.tbody = v.table.querySelector('tbody');
+      for( v.i=0 ; v.i<axisY.length ; v.i++ ){
+        // 表左端の勘定科目・集計項目名表示
+
+        v.tr = this.createElement({tag:'tr',children:[{
+          tag:'th',
+          text:axisY[v.i].name,
+          style: {'text-align':'left'},
+          attr:{
+            name:axisY[v.i].name,
+            class:'type'+axisY[v.i].type
+          },
+        }]});
+        v.tbody.appendChild(v.tr);
+        // 値領域の作成
+        v.td = JSON.stringify({
+          tag:'td',
+          attr:{name:axisY[v.i].name,class:'num type'+axisY[v.i].type}
+        });
+        for( v.j=0 ; v.j<axisX.length ; v.j++ ){
+          v.o = JSON.parse(v.td);
+          v.o.attr.name += axisX[v.j];
+          v.o.text = Number(this.bpObj[axisY[v.i].name+axisX[v.j]] || 0).toLocaleString();
+          v.tr.appendChild(this.createElement(v.o));
+        }
+      }
+
+      this.changeScreen('BSarea');
 
       v.step = 99; // 終了処理
       console.log(v.whois+' normal end.\\n',v.rv);
