@@ -27,6 +27,7 @@
     * [.deepcopy](#BasePage+deepcopy) ⇒ <code>null</code> \| <code>Error</code>
     * [.changeScreen](#BasePage+changeScreen) ⇒ <code>null</code> \| <code>Error</code>
     * [.createElement](#BasePage+createElement) ⇒ <code>HTMLElement</code> \| <code>Error</code>
+    * [.dumpObject](#BasePage+dumpObject) ⇒ <code>HTMLElement</code> \| <code>Error</code>
     * [.isArr](#BasePage+isArr) ⇒ <code>boolean</code>
     * [.isObj](#BasePage+isObj) ⇒ <code>boolean</code>
     * [.sleep](#BasePage+sleep) ⇒ <code>void</code>
@@ -123,6 +124,19 @@ HTMLElementを生成する
 | --- | --- | --- | --- |
 | arg | [<code>CEDefObj</code>](#CEDefObj) \| [<code>Array.&lt;CEDefObj&gt;</code>](#CEDefObj) |  | 生成するHTMLElementの定義 |
 | [parent] | <code>HTMLElement</code> \| <code>string</code> | <code></code> | 本関数内部で親要素への追加まで行う場合に指定 |
+
+<a name="BasePage+dumpObject"></a>
+
+### basePage.dumpObject ⇒ <code>HTMLElement</code> \| <code>Error</code>
+オブジェクトの配列をテーブルとして表示
+
+**Kind**: instance property of [<code>BasePage</code>](#BasePage)  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| data | <code>Array.&lt;Object&gt;</code> |  | データ。メンバは全てプリミティブ型であること。 |
+| header | <code>Array.&lt;string&gt;</code> |  | ヘッダ欄に表示するラベルの配列 |
+| [parent] | <code>string</code> \| <code>HTMLElement</code> | <code>null</code> | 指定があれば作成したテーブルを子要素として追加 |
 
 <a name="BasePage+isArr"></a>
 
