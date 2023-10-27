@@ -4,7 +4,7 @@
 <!-- CDN -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.1.10/alasql.min.js" integrity="sha512-Igz7esT29XvklQE5s9lKkzY/xN5OmbsWYzXml2AE7hEYyAxxIgbQ0NXvyqt4S9VrWHA0lRUKkhLgc62QO3vkoQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <!-- 独自ライブラリ -->
-<script type="text/javascript" src="../../BasePage/1.0.0/core.js"></script>
+<script type="text/javascript" src="../../BasePage/1.1.0/core.js"></script>
 <script type="text/javascript" src="../../DateEx/1.1.0/core.js"></script>
 <!-- O/Lやlibrary配下は漏洩の危険があるため、ローカルから取得 -->
 <script type="text/javascript" src="../../../../tmp/kzData.js"></script>
@@ -499,7 +499,7 @@ class KawaZanyo extends BasePage {
       + " group by `分類名`,fy"
       ,[v.t02]);
       this.bpArr = this.bpArr.concat(v.bpArr);
-      this.dumpObject(v.bpArr);
+      this.dump.appendChild(this.dumpObject(v.bpArr));
 
       v.step = 4; // bpArrの値をv.fyObjに反映させる
       v.bpArr.forEach(x => {
@@ -565,7 +565,6 @@ class KawaZanyo extends BasePage {
       + " where mst.type like 'B%'"
       + " order by mst.B1, mst.B2, mst.B3, mst.type";
       v.t02 = alasql(v.sql,[v.t01,v.accounts]);
-      this.dumpObject(v.t02);
       console.log('v.t02=%s',JSON.stringify(v.t02));
 
       for( v.i=0 ; v.i<v.t02.length ; v.i++ ){
@@ -614,7 +613,8 @@ class KawaZanyo extends BasePage {
         }
       }
 
-      this.changeScreen('BSarea');
+      //this.changeScreen('BSarea');
+      this.changeScreen('dump');
 
       v.step = 99; // 終了処理
       console.log(v.whois+' normal end.\\n',v.rv);
@@ -626,60 +626,6 @@ class KawaZanyo extends BasePage {
     }    
   }
 
-  /** オブジェクトの配列をテーブルとして表示
-   * @param {string} parent
-   */
-  dumpObject = (arg=[],header=[]) => {
-    const v = {whois:this.className+'.dump',rv:null,step:0};
-    console.log(v.whois+' start.',arg,header);
-    try {
-
-      v.step = 1;  // 前処理
-      this.dump.innerHTML = '';
-      if( header.length === 0 ){
-        for( v.i=0 ; v.i<arg.length ; v.i++ ){
-          header = Array.from(new Set([...header,...Object.keys(arg[v.i])]));
-        }
-      }
-
-      v.step = 2; // table要素の生成
-      v.table = this.createElement({tag:'table',children:[
-        {tag:'thead',children:[{tag:'tr'}]},
-        {tag:'tbody'},
-        {tag:'tfoot'},
-      ]});
-
-      v.step = 3; // ヘッダの作成
-      for( v.i=0 ; v.i<header.length ; v.i++ ){
-        v.table.querySelector('thead tr').appendChild(this.createElement(
-          {tag:'th',text:header[v.i]}
-        ));
-      }
-
-      v.step = 4; // データの作成
-      for( v.i=0 ; v.i<arg.length ; v.i++ ){
-        v.tr = this.createElement({tag:'tr'});
-        for( v.j=0 ; v.j<header.length ; v.j++ ){
-          if( arg[v.i][header[v.j]] ){
-            v.tr.appendChild(this.createElement({tag:'td',text:arg[v.i][header[v.j]]}));
-          } else {
-            v.tr.appendChild(this.createElement({tag:'td'}));
-          }
-        }
-        v.table.querySelector('tbody').appendChild(v.tr);
-      }
-
-      v.step = 5; // 終了処理
-      this.dump.appendChild(v.table);
-      this.changeScreen('dump');
-      console.log(v.whois+' normal end.');
-      return v.rv;
-
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-      return e;
-    }
-  }
 }
 
 
