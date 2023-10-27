@@ -99,32 +99,9 @@ class KawaZanyo extends BasePage {
     try {
       v.r = super(v.def,opt);
 
-      v.step = 1.1; // 勘定科目マスタ(raw.accounts)のthis.accountsへの格納
-      // 格納時、typeを追加する。
-      this.accounts = [];
-      [
-        "select *,'B1' as type from ? where B1 is not null and B2 is null and BS is null",
-        "select *,'B2' as type from ? where B1 is not null and B2 is not null and B3 is null and BS is null",
-        "select *,'B3' as type from ? where B1 is not null and B2 is not null and B3 is not null and BS is null",
-        "select *,'BA' as type from ? where BS is not null",
-        "select *,'P1' as type from ? where P1 is not null and P2 is null and PS is null",
-        "select *,'P2' as type from ? where P1 is not null and P2 is not null and P3 is null and PS is null",
-        //"select *,'P3' as type from ? where P1 is not null and P2 is not null and P3 is not null and PS is null",
-        "select *,'PA' as type from ? where PS is not null",
-        "select *,'C1' as type from ? where C1 is not null and C2 is null and CS is null",
-        "select *,'C2' as type from ? where C1 is not null and C2 is not null and C3 is null and CS is null",
-        //"select *,'C3' as type from ? where C1 is not null and C2 is not null and C3 is not null and CS is null",
-        "select *,'CA' as type from ? where CS is not null",
-      ].forEach(sql => {
-        this.accounts = this.accounts.concat(alasql(sql,[raw.accounts]));
-      });
-      console.log('this.accounts=%s',JSON.stringify(this.accounts));
-
-      v.step = 1.2; // this.account(単数型)：勘定科目名->account Objへの参照
-      this.account = {};
-      raw.accounts.forEach(x => {
-        this.account[x['名称']] = x;
-      });
+      v.step = 1; // 勘定科目マスタ(raw.accounts)のthis.accountsへの格納
+      v.r = this.genAccount(raw.accounts);
+      if( v.r instanceof Error ) throw v.r;
 
       v.step = 2; // 仕訳帳明細(this.journals)のthis.journalsへの格納
       this.journals = raw.journals;
@@ -153,6 +130,50 @@ class KawaZanyo extends BasePage {
 
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    }
+  }
+
+  /** 勘定科目マスタの作成(this.accounts,this.account)
+   * 格納時、typeを追加する。
+   */
+  genAccount = (raw) => {
+    const v = {whois:'KawaZanyo.genAccount',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1; // this.accounts(複数形)：配列形式の作成
+      this.accounts = [];
+      [
+        "select *,'B1' as type from ? where B1 is not null and B2 is null and BS is null",
+        "select *,'B2' as type from ? where B1 is not null and B2 is not null and B3 is null and BS is null",
+        "select *,'B3' as type from ? where B1 is not null and B2 is not null and B3 is not null and BS is null",
+        "select *,'BA' as type from ? where BS is not null",
+        "select *,'P1' as type from ? where P1 is not null and P2 is null and PS is null",
+        "select *,'P2' as type from ? where P1 is not null and P2 is not null and P3 is null and PS is null",
+        //"select *,'P3' as type from ? where P1 is not null and P2 is not null and P3 is not null and PS is null",
+        "select *,'PA' as type from ? where PS is not null",
+        "select *,'C1' as type from ? where C1 is not null and C2 is null and CS is null",
+        "select *,'C2' as type from ? where C1 is not null and C2 is not null and C3 is null and CS is null",
+        //"select *,'C3' as type from ? where C1 is not null and C2 is not null and C3 is not null and CS is null",
+        "select *,'CA' as type from ? where CS is not null",
+      ].forEach(sql => {
+        this.accounts = this.accounts.concat(alasql(sql,[raw]));
+      });
+      console.log('this.accounts=%s',JSON.stringify(this.accounts));
+
+      v.step = 2; // this.account(単数形)：勘定科目名->account Objへの参照
+      this.account = {};
+      raw.forEach(x => {
+        this.account[x['名称']] = x;
+      });
+
+      v.step = 3; // 終了処理
+      console.log(v.whois+' normal end.\\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
     }
   }
 
