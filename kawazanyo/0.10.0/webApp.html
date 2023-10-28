@@ -165,7 +165,7 @@ class KawaZanyo extends BasePage {
       console.log('this.bpObj=%s',JSON.stringify(this.bpObj));
 
       v.step = 5.1; // BSの表示
-      v.r = this.drawTable();
+      //v.r = this.drawTable();
 
       v.step = 10; // 終了処理
       console.log(v.whois+' normal end.\n',v.rv);
@@ -499,7 +499,9 @@ class KawaZanyo extends BasePage {
       + " group by `分類名`,fy"
       ,[v.t02]);
       this.bpArr = this.bpArr.concat(v.bpArr);
-      this.dump.appendChild(this.dumpObject(v.bpArr));
+      //this.dump.appendChild(this.dumpObject(v.bpArr));
+      this.dump.appendChild(this.drawTable(v.bpArr));
+      this.changeScreen('dump');
 
       v.step = 4; // bpArrの値をv.fyObjに反映させる
       v.bpArr.forEach(x => {
@@ -535,7 +537,7 @@ class KawaZanyo extends BasePage {
     }
   }
 
-  /** 財務諸表を描画 */
+  /** 財務諸表を描画
   drawTable = (axisX=[],axisY=[]) => {
     const v = {whois:this.className+'.drawTable',rv:null,step:0};
     console.log(v.whois+' start.',axisX,axisY);
@@ -625,7 +627,7 @@ class KawaZanyo extends BasePage {
       return e;
     }    
   }
-
+  */
 }
 
 

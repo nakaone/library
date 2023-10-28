@@ -491,44 +491,99 @@ class BasePage {
     }
   }
 
-  /** オブジェクトの配列をテーブルとして表示
-   * @param {Object[]} data - データ。メンバは全てプリミティブ型であること。
-   * @param {string[]} header - ヘッダ欄に表示するラベルの配列
-   * @param {string|HTMLElement} [parent=null] - 指定があれば作成したテーブルを子要素として追加
+  /** テーブルを作成・表示
+   * @param {*} data 
+   * @param {*} opt 
    * @returns {HTMLElement|Error}
+   * 
+   * @desc
+   * 
+   * #### 引数の解説
+   * 
+   * - data {Object.<string, any>[]} : データオブジェクトの配列
+   *   - meta {Object} : opt.hasMeta='meta'の場合(meta以外にメンバ名変更可)。
+   *     - class {string} : 当該行のtd要素にセットするクラス
+   * - opt {Object}
+   *   - [dataFormat='Array'] {string} : データのフォーマット。
+   *     - 'Array' : 一行一オブジェクト
+   *     - 'Cross' : X軸はheader(.name)、Y軸はdata[n][opt.Yaxis]のクロス集計クエリの結果を表示
+   *   - [header=[]] {string[]|Object} : 表のヘッダ(X軸)に関する情報
+   *     - header = {string[]} : X軸ラベルの配列と解釈。空の場合はdataのメンバ名から自動生成(順不同)
+   *     - header = {Object}
+   *       - name {string} : 当該列にセットするデータオブジェクトのメンバ名
+   *       - label {string} : ヘッダ行に表示するラベル(ex.name='ac',label='勘定科目')
+   *       - type {string} : データ型。localeNumber=trueならtype=numberの項目は3桁区切り等で使用
+   *       - class {string} : 当該列のtd要素にセットするクラス
+   *       - func {Function} : セルのデータに対する加工。ex.(e)=>new DateEx(e).toLocale()
+   *             結果はHTML文字列としてinnerHTMLでセットされる。
+   *   - [Yaxis=null] {string} : Y軸ラベルを設定するならdataのメンバ名を設定
+   *   - [meta=null] {string} : dataにメタ情報が含まれていれば、そのメンバ名
+   *   - [fixLabel=true] {boolean} : 行・列のラベルを固定するならtrue
+   *   - [parent=null] {string|HTMLElement} : 結果を書き込む要素、またはそのCSSセレクタ
    */
-  dumpObject = (data=[],header=[],parent=null) => {
-    const v = {whois:'BasePage.dumpObject',step:0,
+  drawTable = (data,opt={}) => {
+    const v = {whois:'BasePage.drawTable',step:0,meta:[],
       rv:this.createElement({tag:'table',children:[
         {tag:'thead',children:[{tag:'tr'}]},
         {tag:'tbody'},
         {tag:'tfoot'},
       ]}),
     };
-    console.log(v.whois+' start.',data,header,parent);
+    console.log(v.whois+' start.');
     try {
+  
+      v.step = 1.1; // 前処理。オプションの既定値設定
+      opt = Object.assign({
+        dataFormat: 'Array',
+        header: [],
+        Yaxis: null,
+        meta: null,
+        fixLabel: true,
+        parent: null,
+      },opt);
+      /*
+      opt.dataFormat = opt.dataFormat || 'Array';
+      opt.header = opt.header || [];
+      opt.Yaxis = opt.Yaxis || null;
+      opt.meta = opt.meta || null;
+      opt.fixLabel = opt.fixLabel || true;
+      */
+      console.log('%s: opt=%s',v.step,JSON.stringify(opt));
 
-      v.step = 1;  // 前処理：ヘッダ未指定の場合、dataのメンバ
-      if( header.length === 0 ){
+      v.step = 1.2; // メタ情報が指定されていれば保存
+      if( opt.meta !== null ){
         for( v.i=0 ; v.i<data.length ; v.i++ ){
-          header = Array.from(new Set([...header,...Object.keys(data[v.i])]));
+          v.meta[v.i] = data[v.i][opt.meta];
+          delete data[v.i][opt.meta];
         }
       }
+      console.log('%s: v.meta=%s',v.step,JSON.stringify(v.meta));
 
-      v.step = 2; // ヘッダの作成
-      for( v.i=0 ; v.i<header.length ; v.i++ ){
+      v.step = 1.3;  // ヘッダ未指定の場合、dataのメンバ名から生成
+      if( this.isArr(opt.header) && opt.header.length === 0 ){
+        for( v.i=0 ; v.i<data.length ; v.i++ ){
+          opt.header = Array.from(
+            new Set([...opt.header,...Object.keys(data[v.i])])
+          );
+        }
+      }
+      console.log('%s: opt.header=%s',v.step,JSON.stringify(opt.header));
+
+
+      v.step = 2; // ヘッダのHTML要素を作成
+      for( v.i=0 ; v.i<opt.header.length ; v.i++ ){
         v.rv.querySelector('thead tr').appendChild(this.createElement(
-          {tag:'th',text:header[v.i]}
+          {tag:'th',text:opt.header[v.i]}
         ));
       }
 
       v.step = 3; // データの作成
       for( v.i=0 ; v.i<data.length ; v.i++ ){
         v.tr = this.createElement({tag:'tr'});
-        for( v.j=0 ; v.j<header.length ; v.j++ ){
+        for( v.j=0 ; v.j<opt.header.length ; v.j++ ){
           v.o = {tag:'td'};
-          if( data[v.i][header[v.j]] ){
-            v.o.text = data[v.i][header[v.j]];
+          if( data[v.i][opt.header[v.j]] ){
+            v.o.text = data[v.i][opt.header[v.j]];
           }
           v.tr.appendChild(this.createElement(v.o));
         }
@@ -536,18 +591,18 @@ class BasePage {
       }
 
       v.step = 4; // 親要素が指定されていたら書き込み
-      if( parent !== null ){
-        v.parent = parent;
-        if( typeof parent === 'string' ){
-          v.parent = this.parent.querySelector(parent);
+      if( opt.parent !== null ){
+        v.parent = opt.parent;
+        if( typeof opt.parent === 'string' ){
+          v.parent = this.parent.querySelector(opt.parent);
         }
         v.parent.appendChild(v.rv);
       }
 
       v.step = 5; // 終了処理
-      console.log(v.whois+' normal end.');
+      console.log(v.whois+' normal end.\n%s',v.rv);
       return v.rv;
-
+  
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
       return e;
