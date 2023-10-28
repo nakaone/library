@@ -509,13 +509,15 @@ class BasePage {
    *     - 'Cross' : X軸はheader(.name)、Y軸はdata[n][opt.Yaxis]のクロス集計クエリの結果を表示
    *   - [header=[]] {string[]|Object} : 表のヘッダ(X軸)に関する情報
    *     - header = {string[]} : X軸ラベルの配列と解釈。空の場合はdataのメンバ名から自動生成(順不同)
-   *     - header = {Object}
+   *     - header = {Object[]}
    *       - name {string} : 当該列にセットするデータオブジェクトのメンバ名
    *       - label {string} : ヘッダ行に表示するラベル(ex.name='ac',label='勘定科目')
    *       - type {string} : データ型。localeNumber=trueならtype=numberの項目は3桁区切り等で使用
    *       - class {string} : 当該列のtd要素にセットするクラス
    *       - func {Function} : セルのデータに対する加工。ex.(e)=>new DateEx(e).toLocale()
    *             結果はHTML文字列としてinnerHTMLでセットされる。
+   *   - [Xaxis] {Object[]} : X軸に関する情報。headerと排他
+   *     - name {string}
    *   - [Yaxis=null] {string} : Y軸ラベルを設定するならdataのメンバ名を設定
    *   - [meta=null] {string} : dataにメタ情報が含まれていれば、そのメンバ名
    *   - [fixLabel=true] {boolean} : 行・列のラベルを固定するならtrue
@@ -557,6 +559,7 @@ class BasePage {
   drawTable = (data,opt={}) => {
     const v = {whois:'BasePage.drawTable',step:0,meta:[],
       rv:this.createElement({attr:{class:'drawTable'},children:[
+        // DIV+tableになっているが、tableだけでも問題ないか確認
         {tag:'table',style:{
           'overflow': 'scroll',
           'height': '800px',

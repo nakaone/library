@@ -165,7 +165,12 @@ class KawaZanyo extends BasePage {
       console.log('this.bpObj=%s',JSON.stringify(this.bpObj));
 
       v.step = 5.1; // BSの表示
-      //v.r = this.drawTable();
+      /*
+      v.r = this.drawTable(this.bpObj,{
+        dataFormat: 'Cross',
+        header: []
+      });
+      */
 
       v.step = 10; // 終了処理
       console.log(v.whois+' normal end.\n',v.rv);
