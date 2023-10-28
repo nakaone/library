@@ -520,13 +520,51 @@ class BasePage {
    *   - [meta=null] {string} : dataにメタ情報が含まれていれば、そのメンバ名
    *   - [fixLabel=true] {boolean} : 行・列のラベルを固定するならtrue
    *   - [parent=null] {string|HTMLElement} : 結果を書き込む要素、またはそのCSSセレクタ
+   * 
+   * #### 参考
+   * 
+   * ##### drawTable関係
+   * 
+   * 1. -webkit-stickyはSafari用
+   * 1. stickyの親要素にはheight指定必須
+   * 1. theadの最初のthとは行ヘッダ・列ヘッダの交差する部分
+   * 
+   * - [tableの行/列ヘッダーを固定する](https://qiita.com/rokko2massy/items/83283bce06acbba7a4f0)
+   * - [tableのヘッダーを固定する方法2つ](https://tedate.jp/coding/how-to-fix-table-header)
    */
+  /*
+    .drawTable {
+      overflow: scroll;
+      height:800px;
+    }
+    .drawTable thead th {
+      position: -webkit-sticky;
+      position: sticky;
+      z-index: 1;
+      top: 0;
+    }
+    .drawTable thead th:first-child {
+      z-index: 2;
+      left: 0;
+    }
+    .drawTable tbody th {
+      position: -webkit-sticky;
+      position: sticky;
+      left: 0;
+      z-index: 1;
+    }
+  */
   drawTable = (data,opt={}) => {
     const v = {whois:'BasePage.drawTable',step:0,meta:[],
-      rv:this.createElement({tag:'table',children:[
-        {tag:'thead',children:[{tag:'tr'}]},
-        {tag:'tbody'},
-        {tag:'tfoot'},
+      rv:this.createElement({attr:{class:'drawTable'},children:[
+        {tag:'table',style:{
+          'overflow': 'scroll',
+          'height': '800px',
+        },children:[
+          {tag:'thead',children:[{tag:'tr'}]},
+          {tag:'tbody'},
+          {tag:'tfoot'},
+        ]}  
       ]}),
     };
     console.log(v.whois+' start.');
@@ -541,13 +579,6 @@ class BasePage {
         fixLabel: true,
         parent: null,
       },opt);
-      /*
-      opt.dataFormat = opt.dataFormat || 'Array';
-      opt.header = opt.header || [];
-      opt.Yaxis = opt.Yaxis || null;
-      opt.meta = opt.meta || null;
-      opt.fixLabel = opt.fixLabel || true;
-      */
       console.log('%s: opt=%s',v.step,JSON.stringify(opt));
 
       v.step = 1.2; // メタ情報が指定されていれば保存
@@ -573,7 +604,11 @@ class BasePage {
       v.step = 2; // ヘッダのHTML要素を作成
       for( v.i=0 ; v.i<opt.header.length ; v.i++ ){
         v.rv.querySelector('thead tr').appendChild(this.createElement(
-          {tag:'th',text:opt.header[v.i]}
+          {tag:'th',text:opt.header[v.i],style:{
+            'position': 'sticky',
+            'z-index': v.i==0 ? '2' : '1',
+            'top': '0',
+          }}
         ));
       }
 
