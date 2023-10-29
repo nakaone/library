@@ -57,8 +57,7 @@
  * @prop {Date} date
  * @prop {string} 摘要
  * @prop {string} 補助摘要
- * @prop {string} 科目
- * @prop {string} 補助科目
+ * @prop {string} 項目名 - 勘定科目名または集計項目名
  * @prop {string} 部門
  * @prop {number} 本体
  * @prop {string} 税区分
@@ -145,31 +144,29 @@ class KawaZanyo extends BasePage {
         }
       `],
     }};
-    console.log(v.whois+' start.');
+    //console.log(v.whois+' start.');
     try {
       v.r = super(v.def,opt);
 
       v.step = 1; // 勘定科目マスタ(raw.accounts)のthis.accountsへの格納
       v.r = this.genAccount(raw.accounts);
       if( v.r instanceof Error ) throw v.r;
-      console.log('this.accounts=%s\nthis.account=%s',JSON.stringify(this.accounts),JSON.stringify(this.account));
+      //console.log('this.accounts=%s\nthis.account=%s',JSON.stringify(this.accounts),JSON.stringify(this.account));
 
       v.step = 2; // 仕訳帳明細(this.journals)のthis.journalsへの格納
       v.r = this.genJournals(raw.journals);
       if( v.r instanceof Error ) throw v.r;
-      console.log('fy=%s〜%s\nthis.journals=%s',this.minFy,this.maxFy,JSON.stringify(this.journals));
+      //console.log('fy=%s〜%s\nthis.journals=%s',this.minFy,this.maxFy,JSON.stringify(this.journals));
 
       v.step = 3; // 仕訳帳データを大福帳に追加
       v.r = this.genDaifuku();
       if( v.r instanceof Error ) throw v.r;
-      console.log('this.daifuku=%s',JSON.stringify(this.daifuku));
-      this.dumpArea.appendChild(this.dumpObject(this.daifuku));
-      this.changeScreen('dumpArea');
 
-      /*
       v.step = 4.1; // BSの分類別金額を大福帳に追加
       v.r = this.addBS();
       if( v.r instanceof Error ) throw v.r;
+      //console.log('this.daifuku=%s',JSON.stringify(this.daifuku));
+      /*
       v.step = 4.2; // PLの各段階利益等、計算項目を大福帳に追加
       v.r = this.addPL();
       if( v.r instanceof Error ) throw v.r;
@@ -178,7 +175,7 @@ class KawaZanyo extends BasePage {
       */
 
       v.step = 10; // 終了処理
-      console.log(v.whois+' normal end.\n',v.rv);
+      //console.log(v.whois+' normal end.\n',v.rv);
 
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
@@ -190,7 +187,7 @@ class KawaZanyo extends BasePage {
    */
   genAccount = (raw) => {
     const v = {whois:this.className+'.genAccount',rv:null,step:0};
-    console.log(v.whois+' start.');
+    //console.log(v.whois+' start.');
     try {
 
       v.step = 1; // this.accounts(複数形)：配列形式の作成
@@ -219,7 +216,7 @@ class KawaZanyo extends BasePage {
       });
 
       v.step = 3; // 終了処理
-      console.log(v.whois+' normal end.');
+      //console.log(v.whois+' normal end.');
       return v.rv;
 
     } catch(e){
@@ -231,7 +228,7 @@ class KawaZanyo extends BasePage {
   /** 仕訳日記帳データの作成 */
   genJournals = (raw) => {
     const v = {whois:'prototype',rv:null,step:0};
-    console.log(v.whois+' start.');
+    //console.log(v.whois+' start.');
     try {
 
       this.journals = raw;
@@ -248,7 +245,7 @@ class KawaZanyo extends BasePage {
       });
 
       v.step = 99; // 終了処理
-      console.log(v.whois+' normal end.\\n',v.rv);
+      //console.log(v.whois+' normal end.\\n',v.rv);
       return v.rv;
 
     } catch(e){
@@ -262,7 +259,7 @@ class KawaZanyo extends BasePage {
   /** 大福帳の作成 */
   genDaifuku = () => {
     const v = {whois:this.className+'.genDaifuku',rv:null,step:0};
-    console.log(v.whois+' start.');
+    //console.log(v.whois+' start.');
     try {
 
       v.step = 1; // 勘定科目マスタからBS/PL関係の科目のみ抽出
@@ -277,41 +274,30 @@ class KawaZanyo extends BasePage {
       + ", date"
       + ", `摘要`"
       + ", `補助摘要`"
-      + ", `借方科目` as `科目`"
-      + ", `借方補助` as `補助科目`"
+      + ", `借方科目` as `項目名`"
       + ", `借方部門` as `部門`"
       + ", case when aMst.`本籍`='借' then `借方本体` else `借方本体`*-1 end as `本体`"
       + ", `借方区分` as `税区分`"
       + ", `借方税率` as `税率`"
       + ", case when aMst.`本籍`='借' then `借方税額` else `借方税額`*-1 end as `税額`"
       + ", case when aMst.`本籍`='借' then `借方合計` else `借方合計`*-1 end as `合計`"
-      + ", aMst.BSsql"
-      + ", aMst.PLsql"
-      + ", aMst.CFsql"
+      + ", aMst.BSseq"
+      + ", aMst.PLseq"
+      + ", aMst.CFseq"
       + " from ? as jMst"
-      + " inner join ("
-      + " select * from ?"
-      + ") as aMst on jMst.`借方科目` = aMst.`名称`";
+      + " inner join ? as aMst on jMst.`借方科目` = aMst.`名称`";
       v.kari = alasql(v.sql,[this.journals,v.accounts]);
-      //v.debug = alasql("select * from ? where `名称`='資本金'",[v.accounts]);
-      //console.log('v.accounts=%s',JSON.stringify(v.debug));
+      console.log('l.291 %s\n%s',v.sql,JSON.stringify(v.kari));
 
       v.step = 2; // 貸方の抽出
       v.kashi = alasql(v.sql.replaceAll(/借/g,'貸'),[this.journals,v.accounts]);
-      //v.debug = alasql("select * from ? where `科目`='資本金'",[v.kashi]);
-      //console.log('v.kashi=%s',JSON.stringify(v.debug));
 
       v.step = 3; // メンバ変数に格納
       this.daifuku = alasql("select * from ? order by `取引日`,`伝票番号`,`行番号`",
       [[...v.kari,...v.kashi]]);
 
-      /*
-      v.debug = alasql("select * from ? where `科目`='資本金'",[this.daifuku]);
-      console.log('v.debug=%s',JSON.stringify(v.debug));
-      */
-
       v.step = 4; // 終了処理
-      console.log(v.whois+' normal end.');
+      //console.log(v.whois+' normal end.');
       return v.rv;
 
     } catch(e){
@@ -320,16 +306,47 @@ class KawaZanyo extends BasePage {
     }
   }
 
-  /** 貸借対照表(BS)の年度✖️分類別金額計算
-   *
-   * {科目名＋年度:合計額, ...}形式のオブジェクトをthis.bpObjとして作成する。
-   * 先行してcalcBPdetails実行済みのこと。
+  /** 貸借対照表(BS)の集計項目を大福帳に追加
+   * @param {void}
+   * @returns {daifuku[]|Error} 追加したレコード
    */
   addBS = () => {
-    const v = {whois:this.className+'.addBS',rv:null,step:0};
-    console.log(v.whois+' start.');
+    const v = {whois:this.className+'.addBS',rv:[],step:0};
+    //console.log(v.whois+' start.');
     try {
 
+      v.step = 1; // 勘定科目マスタからBS関係の科目のみ抽出
+      v.accounts = alasql("select * from ? where type like 'B%'",[this.accounts]);
+      //console.log('v.accounts=%s',JSON.stringify(v.accounts));
+
+      v.step = 2; // 年度×分類項目で集計
+      v.t01 = [];
+      v.sql = "select max(df.`年度`) as `年度`"
+      + ", max(m1.BSseq) as BSseq"
+      + ", m1.`名称` as `項目名`"
+      + ", sum(df.`本体`) as `本体`"
+      + ", sum(df.`税額`) as `税額`"
+      + ", sum(df.`合計`) as `合計`"
+      + " from ? as m1"
+      + " inner join ? as m2 on m1.B1=m2.B1_1"
+      + " inner join ? as df on m2.`名称`=df.`項目名`"
+      + " where m1.type='_2' and m2.type='BA' and df.`合計`<>0"
+      + " group by df.`年度`,m1.`名称`";
+      [
+        // 大分類項目の集計
+        v.sql.replace('_1','').replace('_2','B1'),
+        // 中分類項目の集計
+        v.sql.replace('_1',' and m1.B2=m2.B2').replace('_2','B2'),
+        // 小分類項目の集計
+        v.sql.replace('_1',' and m1.B2=m2.B2 and m1.B3=m2.B3').replace('_2','B3'),
+      ].forEach(sql => {
+        v.t01 = v.t01.concat(alasql(sql,[v.accounts,v.accounts,this.daifuku]));
+      });
+      //console.log('v.t01=%s',JSON.stringify(v.t01));
+      this.dumpArea.appendChild(this.dumpObject(this.daifuku));
+      this.changeScreen('dumpArea');
+
+      /*
       v.step = 1.1; // 勘定科目マスタからBS/PL関係の科目のみ抽出
       v.accounts = alasql("select * from ? where type like 'B%' or type like 'P%'",[this.accounts]);
 
@@ -390,16 +407,17 @@ class KawaZanyo extends BasePage {
       + " on mst.`名称`=bpArr.ac"
       + " where mst.type like 'B%'";
       v.t03 = alasql(v.sql,[v.accounts,this.bpArr]);
-      console.log('v.t03=%s',JSON.stringify(v.t03));
+      //console.log('v.t03=%s',JSON.stringify(v.t03));
       for( v.i=0 ; v.i<v.t03.length ; v.i++ ){
         v.ac = v.t03[v.i].ac;
         for( v.j=this.minFy ; v.j<=this.maxFy ; v.j++ ){
           this.bpObj[v.ac+v.j] = (this.bpObj[v.ac+(v.j-1)] || 0) + (this.bpObj[v.ac+v.j] || 0);
         }
       }
+      */
 
       v.step = 5; // 終了処理
-      console.log(v.whois+' normal end.');
+      //console.log(v.whois+' normal end.');
       return v.rv;
 
     } catch(e){
@@ -415,7 +433,7 @@ class KawaZanyo extends BasePage {
    */
   addPL = () => {
     const v = {whois:this.className+'.calcBPdetails',rv:null,step:0};
-    console.log(v.whois+' start.');
+    //console.log(v.whois+' start.');
     try {
 
       v.step = 1.1; // 勘定科目マスタからBS/PL関係の科目のみ抽出
@@ -481,7 +499,7 @@ class KawaZanyo extends BasePage {
       });
 
       v.step = 7; // 終了処理
-      console.log(v.whois+' normal end.');
+      //console.log(v.whois+' normal end.');
       return v.rv;
 
     } catch(e){

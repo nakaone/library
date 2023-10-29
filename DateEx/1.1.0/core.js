@@ -26,7 +26,7 @@ class DateEx extends Date {
 
   toLocale = (format='yyyy/MM/dd') => {
     const v = {whois:'DateEx.toLocale',rv:format,step:0};
-    console.log(v.whois+' start.');
+    //console.log(v.whois+' start.');
     try {
   
       // 無効な日付なら空文字列を返して終了
@@ -54,7 +54,7 @@ class DateEx extends Date {
       }
 
       v.step = 99; // 終了処理
-      console.log(v.whois+' normal end. rv=%s',v.rv);
+      //console.log(v.whois+' normal end. rv=%s',v.rv);
       return v.rv;
   
     } catch(e){
@@ -425,7 +425,7 @@ class DateEx extends Date {
       diff:{y:0,M:0,d:0,h:0,m:0,s:0,n:0},
       seq:['y','M','d','h','m','s','n']
     };
-    console.log(v.whois+' start.');
+    //console.log(v.whois+' start.');
     try {
   
       v.step = 1; // 加減する値を計算
@@ -448,7 +448,7 @@ class DateEx extends Date {
         default:
           throw new Error('Date.calc()の引数の型が不適切です');
       }
-      //console.log(v);
+      ////console.log(v);
 
       v.step = 2;
       v.rv = new Date(
@@ -462,7 +462,7 @@ class DateEx extends Date {
       );
 
       v.step = 3; // 終了処理
-      console.log(v.whois+' normal end.\\n',v.rv);
+      //console.log(v.whois+' normal end.\\n',v.rv);
       return v.rv;
   
     } catch(e){

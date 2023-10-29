@@ -206,13 +206,13 @@ class BasePage {
         ],
       },
     };
-    console.log(v.whois+' start.',def,opt);
+    //console.log(v.whois+' start.',def,opt);
     try {
 
       // BasePageの既定値をメンバに保存し、特有のCSSを定義
       v.step = 1.1; // 既定値をメンバに保存
       this.deepcopy(this,v.def);
-      console.log("%s step.%s\n",v.whois,v.step,this.css);
+      //console.log("%s step.%s\n",v.whois,v.step,this.css);
 
       v.step = 1.2; // BasePage用(=継承先クラス共通)のCSSを定義
       // BasePageで作成するHTML,CSSは継承先クラス共通なので、
@@ -247,10 +247,10 @@ class BasePage {
       });
       v.step = 2.3; // 継承先クラスの既定値を設定
       this.deepcopy(this,def);
-      console.log("%s step.%s\n",v.whois,v.step,this.css);
+      //console.log("%s step.%s\n",v.whois,v.step,this.css);
       v.step = 2.4; // 継承先クラスのconstructorに渡されたオプションで上書き
       this.deepcopy(this,opt);
-      console.log("%s step.%s\n",v.whois,v.step,this.screenList);
+      //console.log("%s step.%s\n",v.whois,v.step,this.screenList);
 
       v.step = 3; // parentの処理
       if( typeof this.parent === 'string' ){
@@ -290,7 +290,7 @@ class BasePage {
       if( v.rv instanceof Error ) throw v.rv;
 
       v.step = 8; // 終了処理
-      console.log(v.whois+' normal end.\n',v.rv);
+      //console.log(v.whois+' normal end.\n',v.rv);
 
     } catch(e){
       console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
@@ -327,7 +327,7 @@ class BasePage {
    */
   deepcopy = (dest,opt) => {
     const v = {whois:'BasePage.deepcopy',rv:null,step:0};
-    console.log(v.whois+' start.');
+    //console.log(v.whois+' start.');
     try {
 
       Object.keys(opt).forEach(x => {
@@ -347,7 +347,7 @@ class BasePage {
             // 配列要素が配列型・オブジェクト型の場合は重複する(中身もマージされない)
             dest[x] = [...new Set([...dest[x],...opt[x]])];
             //dest[x] = dest[x].concat(opt[x]);
-            //console.log(dest[x],opt[x]);
+            ////console.log(dest[x],opt[x]);
           } else {
             v.step = 5; // 両方オブジェクトでも両方配列でもない場合、optの値でdestの値を置換
             dest[x] = opt[x];
@@ -356,7 +356,7 @@ class BasePage {
       });
 
       v.step = 6; // 終了処理
-      console.log(v.whois+' normal end. result=%s',v.rv);
+      //console.log(v.whois+' normal end. result=%s',v.rv);
       return v.rv;
 
     } catch(e){
@@ -383,7 +383,7 @@ class BasePage {
    */
   changeScreen = (screenName=this.home) => {
     const v = {whois:'BasePage.changeScreen',rv:null,step:0};
-    console.log(v.whois+' start.',screenName);
+    //console.log(v.whois+' start.',screenName);
     try {
 
       v.step = 1;
@@ -392,7 +392,7 @@ class BasePage {
       }
 
       v.step = 2; // 終了処理
-      console.log(v.whois+' normal end.\n',v.rv);
+      //console.log(v.whois+' normal end.\n',v.rv);
       return v.rv;
 
     } catch(e){
@@ -408,7 +408,7 @@ class BasePage {
    */
   createElement = (arg,parent=null) => {
     const v = {whois:'BasePage.createElement',rv:[],step:0};
-    console.log(v.whois+' start.',arg);
+    //console.log(v.whois+' start.',arg);
     try {
       v.step = 1.1; // 引数を強制的に配列化
       v.isArr = this.isArr(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
@@ -482,7 +482,7 @@ class BasePage {
 
       v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
       v.rv = v.isArr ? v.rv : v.rv[0];
-      console.log(v.whois+' normal end.\n',v.rv);
+      //console.log(v.whois+' normal end.\n',v.rv);
       return v.rv;
 
     } catch(e){
@@ -506,7 +506,7 @@ class BasePage {
         {tag:'tfoot'},
       ]}),
     };
-    console.log(v.whois+' start.',data,opt);
+    //console.log(v.whois+' start.',data,opt);
     try {
 
       v.step = 1;  // 前処理：ヘッダ未指定の場合、dataのメンバ
@@ -548,7 +548,7 @@ class BasePage {
       }
 
       v.step = 5; // 終了処理
-      console.log(v.whois+' normal end.');
+      //console.log(v.whois+' normal end.');
       return v.rv;
 
     } catch(e){
@@ -635,24 +635,24 @@ class BasePage {
    */
   setStyleSheet = () => {
     const v = {whois:this.className+'.setStyleSheet',rv:null,step:0,cssDefs:''};
-    console.log(v.whois+' start.',this.css);
+    //console.log(v.whois+' start.',this.css);
     try {
 
       v.step = 1; // CSS定義が空ならスキップ
       if( this.css.length === 0 ){
-        console.log(v.whois+' normal end.(empty CSS)\n');
+        //console.log(v.whois+' normal end.(empty CSS)\n');
         return v.rv;
       }
 
       v.step = 2; // 既に他インスタンスで作成済みならスキップ
       if( document.head.querySelector('style[name="'+this.className+'"]') !== null ){
-        console.log(v.whois+' normal end.(already exist)\n');
+        //console.log(v.whois+' normal end.(already exist)\n');
         return v.rv;
       }
 
       v.step = 3; // CSS全文を一つのテキストにした上で`〜 {〜}`の部分を全て抽出
       v.css = this.css.join('').replaceAll(/\n/g,' ').replaceAll(/\s+/g,' ');
-      console.log(this.css.join('').match(/[^\{\}]+?\{.+?\}/g));
+      //console.log(this.css.join('').match(/[^\{\}]+?\{.+?\}/g));
       v.css.match(/[^\{\}]+?\{.+?\}/g).forEach(l => {
         v.step = 4; // `〜 {〜}`の部分からselectorと括弧内を抽出
         v.m = l.match(/\s*([^\{\}]+?)\s*\{(.+?)\}/);
@@ -680,7 +680,7 @@ class BasePage {
       }
 
       v.step = 10; // 終了処理
-      console.log(v.whois+' normal end.\n',v.rv);
+      //console.log(v.whois+' normal end.\n',v.rv);
       return v.rv;
 
     } catch(e){
