@@ -493,11 +493,12 @@ class BasePage {
 
   /** オブジェクトの配列をテーブルとして表示
    * @param {Object[]} data - データ。メンバは全てプリミティブ型であること。
-   * @param {string[]} header - ヘッダ欄に表示するラベルの配列
-   * @param {string|HTMLElement} [parent=null] - 指定があれば作成したテーブルを子要素として追加
+   * @param {Object} opt
+   * @param {string[]} opt.header - ヘッダ欄に表示するラベルの配列
+   * @param {string|HTMLElement} [opt.parent=null] - 指定があれば作成したテーブルを子要素として追加
    * @returns {HTMLElement|Error}
    */
-  dumpObject = (data=[],header=[],parent=null) => {
+  dumpObject = (data,opt={}) => {
     const v = {whois:'BasePage.dumpObject',step:0,
       rv:this.createElement({tag:'table',children:[
         {tag:'thead',children:[{tag:'tr'}]},
@@ -505,30 +506,32 @@ class BasePage {
         {tag:'tfoot'},
       ]}),
     };
-    console.log(v.whois+' start.',data,header,parent);
+    console.log(v.whois+' start.',data,opt);
     try {
 
       v.step = 1;  // 前処理：ヘッダ未指定の場合、dataのメンバ
-      if( header.length === 0 ){
+      opt.header = opt.header || [];
+      opt.parent = opt.parent || null;
+      if( opt.header.length === 0 ){
         for( v.i=0 ; v.i<data.length ; v.i++ ){
-          header = Array.from(new Set([...header,...Object.keys(data[v.i])]));
+          opt.header = Array.from(new Set([...opt.header,...Object.keys(data[v.i])]));
         }
       }
 
       v.step = 2; // ヘッダの作成
-      for( v.i=0 ; v.i<header.length ; v.i++ ){
+      for( v.i=0 ; v.i<opt.header.length ; v.i++ ){
         v.rv.querySelector('thead tr').appendChild(this.createElement(
-          {tag:'th',text:header[v.i]}
+          {tag:'th',text:opt.header[v.i]}
         ));
       }
 
       v.step = 3; // データの作成
       for( v.i=0 ; v.i<data.length ; v.i++ ){
         v.tr = this.createElement({tag:'tr'});
-        for( v.j=0 ; v.j<header.length ; v.j++ ){
+        for( v.j=0 ; v.j<opt.header.length ; v.j++ ){
           v.o = {tag:'td'};
-          if( data[v.i][header[v.j]] ){
-            v.o.text = data[v.i][header[v.j]];
+          if( data[v.i][opt.header[v.j]] ){
+            v.o.text = data[v.i][opt.header[v.j]];
           }
           v.tr.appendChild(this.createElement(v.o));
         }
@@ -536,10 +539,10 @@ class BasePage {
       }
 
       v.step = 4; // 親要素が指定されていたら書き込み
-      if( parent !== null ){
-        v.parent = parent;
-        if( typeof parent === 'string' ){
-          v.parent = this.parent.querySelector(parent);
+      if( opt.parent !== null ){
+        v.parent = opt.parent;
+        if( typeof opt.parent === 'string' ){
+          v.parent = this.parent.querySelector(opt.parent);
         }
         v.parent.appendChild(v.rv);
       }

@@ -16,6 +16,9 @@
  *    B1/2/3=BSの集計項目、BA=BSの勘定科目(BS Account)。
  *    P1/2/3=PLの集計項目、PA=PLの勘定科目(PL Account)。
  *    C1/2/3=CFの集計項目、CA=CFの勘定科目(CF Account)。
+ * @prop {number} BSseq - BS上の表示順。B1*1000000+B2*10000+B3*100+BA
+ * @prop {number} PLseq - PL上の表示順。P1*1000000+P2*10000+P3*100+PA
+ * @prop {number} CFseq - CF上の表示順。C1*1000000+C2*10000+C3*100+CA
  */
 /**
  * @typedef {Object} journal
@@ -62,7 +65,23 @@
  * @prop {number} 税率 - 小数
  * @prop {number} 税額
  * @prop {number} 合計
- * @prop {number} 表示順 - B(P)1*1000000 + B(P)2*10000 + B(P)3*100 + B(P)A
+ * @prop {number} BSseq - BS上の表示順。B1*1000000+B2*10000+B3*100+BA
+ * @prop {number} PLseq - PL上の表示順。P1*1000000+P2*10000+P3*100+PA
+ * @prop {number} CFseq - CF上の表示順。C1*1000000+C2*10000+C3*100+CA
+ */
+/**
+ * @typedef {Object} kzData
+ * @prop {number} 年度
+ * @prop {string} 取引日
+ * @prop {Date} date
+ * @prop {string} 項目名 - 勘定科目または集計項目名
+ * @prop {string} 部門
+ * @prop {number} 本体
+ * @prop {number} 税額
+ * @prop {number} 合計
+ * @prop {number} 表示順
+ * @prop {number} 前年比額
+ * @prop {number} 前年比率
  */
 class KawaZanyo extends BasePage {
   /**
@@ -76,13 +95,18 @@ class KawaZanyo extends BasePage {
    * 
    * #### 使用するクラス変数
    * 
+   * 1. this.accounts {account[]} - 勘定科目マスタ
+   * 1. this.journals {journal[]} - 仕訳帳明細
+   * 1. this.daifuku {daifuku[]} - 大福帳
+   *    - 仕訳明細帳の借方・貸方をそれぞれ別レコードとして登録
+   *    - BS/PLの分類・計算項目を追加(ex.資産の部、営業外利益)
    */
   constructor(raw,opt={}){
     const v = {whois:'KawaZanyo.constructor',rv:null,step:0,def:{
       html: [
-        {name:'dump'},  // オブジェクト配列の内容を表示する領域
+        {name:'dumpArea',attr:{class:'dumpArea'}},  // オブジェクト配列の内容を表示する領域
         {name:'BSarea',attr:{class:'BSarea'}},
-        {name:'PLarea'},
+        {name:'PLarea',attr:{class:'PLarea'}},
       ],
       css: [`
         .num {text-align:right;}
@@ -135,29 +159,22 @@ class KawaZanyo extends BasePage {
       if( v.r instanceof Error ) throw v.r;
       console.log('fy=%s〜%s\nthis.journals=%s',this.minFy,this.maxFy,JSON.stringify(this.journals));
 
-      v.step = 3; // 大福帳の作成
+      v.step = 3; // 仕訳帳データを大福帳に追加
       v.r = this.genDaifuku();
       if( v.r instanceof Error ) throw v.r;
       console.log('this.daifuku=%s',JSON.stringify(this.daifuku));
+      this.dumpArea.appendChild(this.dumpObject(this.daifuku));
+      this.changeScreen('dumpArea');
 
-      v.step = 4.1; // 年度✖️科目別金額計算
-      v.r = this.calcBPdetails();
+      /*
+      v.step = 4.1; // BSの分類別金額を大福帳に追加
+      v.r = this.addBS();
       if( v.r instanceof Error ) throw v.r;
-      v.step = 4.2; // BSの分類別金額計算
-      v.r = this.calcBSdetails();
+      v.step = 4.2; // PLの各段階利益等、計算項目を大福帳に追加
+      v.r = this.addPL();
       if( v.r instanceof Error ) throw v.r;
-      v.step = 4.3; // PLの分類別金額計算
-      v.r = this.calcPLdetails();
-      if( v.r instanceof Error ) throw v.r;
-      console.log('this.bpArr=%s',JSON.stringify(this.bpArr));
-      console.log('this.bpObj=%s',JSON.stringify(this.bpObj));
 
       v.step = 5.1; // BSの表示
-      /*
-      v.r = this.drawTable(this.bpObj,{
-        dataFormat: 'Cross',
-        header: []
-      });
       */
 
       v.step = 10; // 終了処理
@@ -172,25 +189,25 @@ class KawaZanyo extends BasePage {
    * 格納時、typeを追加する。
    */
   genAccount = (raw) => {
-    const v = {whois:'KawaZanyo.genAccount',rv:null,step:0};
+    const v = {whois:this.className+'.genAccount',rv:null,step:0};
     console.log(v.whois+' start.');
     try {
 
       v.step = 1; // this.accounts(複数形)：配列形式の作成
       this.accounts = [];
       [
-        "select *,'B1' as type from ? where B1 is not null and B2 is null and BS is null",
-        "select *,'B2' as type from ? where B1 is not null and B2 is not null and B3 is null and BS is null",
-        "select *,'B3' as type from ? where B1 is not null and B2 is not null and B3 is not null and BS is null",
-        "select *,'BA' as type from ? where BS is not null",
-        "select *,'P1' as type from ? where P1 is not null and P2 is null and PS is null",
-        "select *,'P2' as type from ? where P1 is not null and P2 is not null and P3 is null and PS is null",
-        //"select *,'P3' as type from ? where P1 is not null and P2 is not null and P3 is not null and PS is null",
-        "select *,'PA' as type from ? where PS is not null",
-        "select *,'C1' as type from ? where C1 is not null and C2 is null and CS is null",
-        "select *,'C2' as type from ? where C1 is not null and C2 is not null and C3 is null and CS is null",
-        //"select *,'C3' as type from ? where C1 is not null and C2 is not null and C3 is not null and CS is null",
-        "select *,'CA' as type from ? where CS is not null",
+        "select *,'B1' as type, B1*1000000 as BSseq, 0 as PLseq, 0 as CFseq from ? where B1 is not null and B2 is null and BS is null",
+        "select *,'B2' as type, B1*1000000+B2*10000 as BSseq, 0 as PLseq, 0 as CFseq from ? where B1 is not null and B2 is not null and B3 is null and BS is null",
+        "select *,'B3' as type, B1*1000000+B2*10000+B3*100 as BSseq, 0 as PLseq, 0 as CFseq from ? where B1 is not null and B2 is not null and B3 is not null and BS is null",
+        "select *,'BA' as type, B1*1000000+B2*10000+B3*100+BS as BSseq, 0 as PLseq, 0 as CFseq from ? where BS is not null",
+        "select *,'P1' as type, 0 as BSseq, P1*1000000 as PLseq, 0 as CFseq from ? where P1 is not null and P2 is null and PS is null",
+        "select *,'P2' as type, 0 as BSseq, P1*1000000+P2*10000 as PLseq, 0 as CFseq from ? where P1 is not null and P2 is not null and P3 is null and PS is null",
+        //"select *,'P3' as type, 0 as BSseq, P1*1000000+P2*10000+P3*100 as PLseq, 0 as CFseq from ? where P1 is not null and P2 is not null and P3 is not null and PS is null",
+        "select *,'PA' as type, 0 as BSseq, P1*1000000+P2*10000+PS as PLseq, 0 as CFseq from ? where PS is not null",
+        "select *,'C1' as type, 0 as BSseq, 0 as PLseq, C1*1000000 as CFseq from ? where C1 is not null and C2 is null and CS is null",
+        "select *,'C2' as type, 0 as BSseq, 0 as PLseq, C1*1000000+C2*10000 as CFseq from ? where C1 is not null and C2 is not null and C3 is null and CS is null",
+        //"select *,'C3' as type, 0 as BSseq, 0 as PLseq, C1*1000000+C2*10000+C3*100 as CFseq from ? where C1 is not null and C2 is not null and C3 is not null and CS is null",
+        "select *,'CA' as type, 0 as BSseq, 0 as PLseq, C1*1000000+C2*10000+CS as CFseq from ? where CS is not null",
       ].forEach(sql => {
         this.accounts = this.accounts.concat(alasql(sql,[raw]));
       });
@@ -202,7 +219,7 @@ class KawaZanyo extends BasePage {
       });
 
       v.step = 3; // 終了処理
-      console.log(v.whois+' normal end.\\n',v.rv);
+      console.log(v.whois+' normal end.');
       return v.rv;
 
     } catch(e){
@@ -268,89 +285,32 @@ class KawaZanyo extends BasePage {
       + ", `借方税率` as `税率`"
       + ", case when aMst.`本籍`='借' then `借方税額` else `借方税額`*-1 end as `税額`"
       + ", case when aMst.`本籍`='借' then `借方合計` else `借方合計`*-1 end as `合計`"
+      + ", aMst.BSsql"
+      + ", aMst.PLsql"
+      + ", aMst.CFsql"
       + " from ? as jMst"
       + " inner join ("
       + " select * from ?"
       + ") as aMst on jMst.`借方科目` = aMst.`名称`";
       v.kari = alasql(v.sql,[this.journals,v.accounts]);
-      v.debug = alasql("select * from ? where `名称`='資本金'",[v.accounts]);
-      console.log('v.accounts=%s',JSON.stringify(v.debug));
+      //v.debug = alasql("select * from ? where `名称`='資本金'",[v.accounts]);
+      //console.log('v.accounts=%s',JSON.stringify(v.debug));
 
       v.step = 2; // 貸方の抽出
-      v.sql = "select `会計年度` as `年度`"
-      + ", `伝票番号`"
-      + ", `行番号`"
-      + ", '貸方' as `所属`"
-      + ", `取引日`"
-      + ", date"
-      + ", `摘要`"
-      + ", `補助摘要`"
-      + ", `貸方科目` as `科目`"
-      + ", `貸方補助` as `補助科目`"
-      + ", `貸方部門` as `部門`"
-      + ", case when aMst.`本籍`='貸' then `貸方本体` else `貸方本体`*-1 end as `本体`"
-      + ", `貸方区分` as `税区分`"
-      + ", `貸方税率` as `税率`"
-      + ", case when aMst.`本籍`='貸' then `貸方税額` else `貸方税額`*-1 end as `税額`"
-      + ", case when aMst.`本籍`='貸' then `貸方合計` else `貸方合計`*-1 end as `合計`"
-      + " from ? as jMst"
-      + " inner join ("
-      + " select * from ?"
-      + ") as aMst on jMst.`貸方科目` = aMst.`名称`"
-      v.kashi = alasql(v.sql,[this.journals,v.accounts]);
-      v.debug = alasql("select * from ? where `科目`='資本金'",[v.kashi]);
-      console.log('v.kashi=%s',JSON.stringify(v.debug));
+      v.kashi = alasql(v.sql.replaceAll(/借/g,'貸'),[this.journals,v.accounts]);
+      //v.debug = alasql("select * from ? where `科目`='資本金'",[v.kashi]);
+      //console.log('v.kashi=%s',JSON.stringify(v.debug));
 
       v.step = 3; // メンバ変数に格納
       this.daifuku = alasql("select * from ? order by `取引日`,`伝票番号`,`行番号`",
       [[...v.kari,...v.kashi]]);
 
+      /*
       v.debug = alasql("select * from ? where `科目`='資本金'",[this.daifuku]);
       console.log('v.debug=%s',JSON.stringify(v.debug));
+      */
 
       v.step = 4; // 終了処理
-      console.log(v.whois+' normal end.\\n',v.rv);
-      return v.rv;
-
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-      return e;
-    }
-  }
-
-  /**
-   * @typedef {Object} bpArr
-   * @prop {string} ac - 勘定科目、集計項目名
-   * @prop {number} fy - 会計年度
-   * @prop {number} val - 当該科目・会計年度の値
-   */
-  /**
-   * @typedef {Object} bpObj
-   * @prop {Object.<string, number>} - ラベル：勘定科目・集計項目名＋年度、値：当該科目・会計年度の合計額
-   */
-  /** 年度✖️科目別金額計算
-   *
-   * {科目名＋年度:合計額, ...}形式のオブジェクトをthis.bpObjとして作成する
-   */
-  calcBPdetails = () => {
-    const v = {whois:this.className+'.calcBPdetails',rv:null,step:0};
-    console.log(v.whois+' start.');
-    try {
-
-      v.step = 1; // 勘定科目ごとの集計
-      v.sql = "select"
-      + " `科目` as ac"
-      + ", `年度` as fy"
-      + ", sum(`合計`) as val"
-      + " from ?"
-      + " group by `科目`,`年度`";
-      this.bpArr = alasql(v.sql,[this.daifuku]);
-
-      v.step = 2; // 集計結果をthis.bpObjに保存
-      this.bpObj = {};
-      this.bpArr.forEach(x => this.bpObj[x.ac+x.fy] = x.val);
-
-      v.step = 3; // 終了処理
       console.log(v.whois+' normal end.');
       return v.rv;
 
@@ -365,8 +325,8 @@ class KawaZanyo extends BasePage {
    * {科目名＋年度:合計額, ...}形式のオブジェクトをthis.bpObjとして作成する。
    * 先行してcalcBPdetails実行済みのこと。
    */
-  calcBSdetails = () => {
-    const v = {whois:this.className+'.calcBSdetails',rv:null,step:0};
+  addBS = () => {
+    const v = {whois:this.className+'.addBS',rv:null,step:0};
     console.log(v.whois+' start.');
     try {
 
@@ -453,7 +413,7 @@ class KawaZanyo extends BasePage {
    * {科目名＋年度:合計額, ...}形式のオブジェクトをthis.bpObjとして作成する
    * 先行してcalcBPdetails実行済みのこと。
    */
-  calcPLdetails = () => {
+  addPL = () => {
     const v = {whois:this.className+'.calcBPdetails',rv:null,step:0};
     console.log(v.whois+' start.');
     try {
@@ -530,95 +490,4 @@ class KawaZanyo extends BasePage {
     }
   }
 
-  /** 財務諸表を描画
-  drawTable = (axisX=[],axisY=[]) => {
-    const v = {whois:this.className+'.drawTable',rv:null,step:0};
-    console.log(v.whois+' start.',axisX,axisY);
-    try {
-
-      v.step = 1; // X軸未指定の場合、仕訳帳に存在する会計年度とする
-      if( axisX.length === 0 ){
-        for( v.i=this.minFy ; v.i<=this.maxFy ; v.i++ ){
-          axisX.push(v.i);
-        }
-      }
-      console.log('axisX=%s',JSON.stringify(axisX));
-
-      v.step = 2; // Y軸未指定の場合、this.bpArrに存在する勘定科目とする
-      v.step = 2.1; // 存在する勘定科目・集計項目を抽出
-      v.sql = "select ac from ? group by ac";
-      v.t01 = alasql(v.sql,[this.bpArr]);
-      console.log('v.t01=%s',JSON.stringify(v.t01));
-
-      v.step = 2.2; // 勘定科目マスタからBS/PL関係の科目のみ抽出
-      v.accounts = alasql("select * from ? where type like 'B%' or type like 'P%'",[this.accounts]);
-
-      v.step = 2.3; // 並べ替え
-      v.sql = "select mst.type, t01.ac"
-      + " from ? as t01"
-      + " inner join ? as mst on t01.ac=mst.`名称`"
-      + " where mst.type like 'B%'"
-      + " order by mst.B1, mst.B2, mst.B3, mst.type";
-      v.t02 = alasql(v.sql,[v.t01,v.accounts]);
-      console.log('v.t02=%s',JSON.stringify(v.t02));
-
-      for( v.i=0 ; v.i<v.t02.length ; v.i++ ){
-        axisY.push({type:v.t02[v.i].type.slice(-1),name:v.t02[v.i].ac});
-      }
-      console.log('axisY=%s',JSON.stringify(axisY));
-
-      v.step = 3; // BS表の作成
-      this.BSarea.innerHTML = '';
-      v.table = this.createElement({tag:'table',children:[
-        {tag:'thead',children:[{tag:'tr',children:[{tag:'th'}]}]},
-        {tag:'tbody'},
-      ]});
-      this.BSarea.appendChild(v.table);
-
-      for( v.i=0 ; v.i<axisX.length ; v.i++ ){
-        v.table.querySelector('thead tr').appendChild(this.createElement(
-          {tag:'th',text:axisX[v.i]}
-        ));
-      }
-
-      v.tbody = v.table.querySelector('tbody');
-      for( v.i=0 ; v.i<axisY.length ; v.i++ ){
-        // 表左端の勘定科目・集計項目名表示
-
-        v.tr = this.createElement({tag:'tr',children:[{
-          tag:'th',
-          text:axisY[v.i].name,
-          style: {'text-align':'left'},
-          attr:{
-            name:axisY[v.i].name,
-            class:'type'+axisY[v.i].type
-          },
-        }]});
-        v.tbody.appendChild(v.tr);
-        // 値領域の作成
-        v.td = JSON.stringify({
-          tag:'td',
-          attr:{name:axisY[v.i].name,class:'num type'+axisY[v.i].type}
-        });
-        for( v.j=0 ; v.j<axisX.length ; v.j++ ){
-          v.o = JSON.parse(v.td);
-          v.o.attr.name += axisX[v.j];
-          v.o.text = Number(this.bpObj[axisY[v.i].name+axisX[v.j]] || 0).toLocaleString();
-          v.tr.appendChild(this.createElement(v.o));
-        }
-      }
-
-      //this.changeScreen('BSarea');
-      this.changeScreen('dump');
-
-      v.step = 99; // 終了処理
-      console.log(v.whois+' normal end.\\n',v.rv);
-      return v.rv;
-
-    } catch(e){
-      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-      return e;
-    }    
-  }
-  */
 }
