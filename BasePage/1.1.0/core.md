@@ -27,7 +27,6 @@
     * [.deepcopy](#BasePage+deepcopy) ⇒ <code>null</code> \| <code>Error</code>
     * [.changeScreen](#BasePage+changeScreen) ⇒ <code>null</code> \| <code>Error</code>
     * [.createElement](#BasePage+createElement) ⇒ <code>HTMLElement</code> \| <code>Error</code>
-    * [.drawTable](#BasePage+drawTable) ⇒ <code>HTMLElement</code> \| <code>Error</code>
     * [.dumpObject](#BasePage+dumpObject) ⇒ <code>HTMLElement</code> \| <code>Error</code>
     * [.isArr](#BasePage+isArr) ⇒ <code>boolean</code>
     * [.isObj](#BasePage+isObj) ⇒ <code>boolean</code>
@@ -125,36 +124,6 @@ HTMLElementを生成する
 | --- | --- | --- | --- |
 | arg | [<code>CEDefObj</code>](#CEDefObj) \| [<code>Array.&lt;CEDefObj&gt;</code>](#CEDefObj) |  | 生成するHTMLElementの定義 |
 | [parent] | <code>HTMLElement</code> \| <code>string</code> | <code></code> | 本関数内部で親要素への追加まで行う場合に指定 |
-
-<a name="BasePage+drawTable"></a>
-
-### basePage.drawTable ⇒ <code>HTMLElement</code> \| <code>Error</code>
-#### 引数の解説
-
-- data {Object.<string, any>[]} : データオブジェクトの配列
-  - meta {Object} : opt.hasMeta='meta'の場合(meta以外にメンバ名変更可)。
-    - class {string} : 当該行のtd要素にセットするクラス
-- opt
-  - [header=null]
-    - header = {null} : dataのメンバ名から自動生成(順不同)
-    - header = {string[]} : X軸ラベルの配列と解釈
-    - header = {Object}
-      - name {string} : 当該列にセットするデータオブジェクトのメンバ名
-      - label {string} : ヘッダ行に表示するラベル(ex.name='ac',label='勘定科目')
-      - type {string} : データ型。localeNumber=trueならtype=numberの項目は3桁区切り等で使用
-      - class {string} : 当該列のtd要素にセットするクラス
-      - func {Function} : セルのデータに対する加工。ex.(e)=>new DateEx(e).toLocale()
-            結果はHTML文字列としてinnerHTMLでセットされる。
-  - [Yaxis=null] {string} : Y軸ラベルを設定するならdataのメンバ名を設定
-  - [meta=null] {string} : dataにメタ情報が含まれていれば、そのメンバ名
-  - [fixLabel=true] {boolean} : 行・列のラベルを固定するならtrue
-
-**Kind**: instance property of [<code>BasePage</code>](#BasePage)  
-
-| Param | Type |
-| --- | --- |
-| data | <code>\*</code> | 
-| opt | <code>\*</code> | 
 
 <a name="BasePage+dumpObject"></a>
 
