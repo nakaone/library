@@ -554,6 +554,59 @@ class BasePage {
     }
   }
 
+  /** テーブルを作成・表示
+   * @param {*} data 
+   * @param {*} opt 
+   * @returns {HTMLElement|Error}
+   * 
+   * @desc
+   * 
+   * #### 引数の解説
+   * 
+   * - data {Object.<string, any>[]} : データオブジェクトの配列<br>
+   *     最低限「X軸の分類項目」「Y軸の分類項目」「値として表示する項目」を持たせる。
+   * - opt {Object}
+   *   - X {Object} : X軸の項目に関する指定
+   *     - member {string} : X軸の集計対象項目(ex.fy)
+   *     - [label=member] {string} : 集計対象項目の表示名(ex.会計年度)
+   *     - [sort] {Object} 
+   *       - key {string} : 並べ替えのキー項目(fyならfy,勘定科目なら表示順、等)
+   *       - [asc=true] {boolean} : 昇順(ascending)ならtrue
+   *     - [col] {Object.<string, Object>}
+   *       - class {string} : 当該列のラベル・セルに指定するクラス
+   *       - type {string} : データ型。localeNumber=trueならtype=numberの項目は3桁区切り等で使用
+   *       - func {Function} : V.rawに対する加工。ex.(e)=>new DateEx(e).toLocale()
+   *             結果はHTML文字列としてinnerHTMLでセットされる。
+   *   - Y {Object} : メンバはXと同じ
+   *   - V {Object}
+   *     - raw {any} : セルに表示する数値(文字列)
+   *     - value {string} : セルのinnerHTMLにセットする文字列<br>
+   *        ※toLocaleString()や複数項目の多段表示等は事前に準備して渡す
+   *     - [class] {string} : セル(td)に指定するクラス
+   *   - [fixLabel=true] {boolean} : 行・列のラベルを固定するならtrue
+   *   - [parent=null] {string|HTMLElement} : 結果を書き込む要素、またはそのCSSセレクタ
+   *   - [localeNumber=false] {boolean|string} :
+   *       - false -> V.raw.toLocaleString()を行わない
+   *       - true -> V.raw.toLocaleString()を行う
+   *       - 文字列 -> V.raw.toLocaleString(opt.localeNumber)を行う
+   * 
+   * #### 注意事項
+   * 
+   * 1. 表示内容の優先順位は opt.X/Y.col.func(V.raw) > V.value > V.raw
+   * 
+   * #### 参考：行・列ラベルの固定方法
+   * 
+   * 1. -webkit-stickyはSafari用
+   * 1. stickyの親要素にはheight指定必須
+   * 1. theadの最初のthとは行ヘッダ・列ヘッダの交差する部分
+   * 
+   * - [tableの行/列ヘッダーを固定する](https://qiita.com/rokko2massy/items/83283bce06acbba7a4f0)
+   * - [tableのヘッダーを固定する方法2つ](https://tedate.jp/coding/how-to-fix-table-header)
+   */
+  crossTable = (data,opt) => {
+
+  }
+
   /** 引数が配列か判定
    * @param {any} obj - 判定対象
    * @returns {boolean}
