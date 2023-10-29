@@ -505,7 +505,7 @@ class KawaZanyo extends BasePage {
       ,[v.t02]);
       this.bpArr = this.bpArr.concat(v.bpArr);
       //this.dump.appendChild(this.dumpObject(v.bpArr));
-      this.dump.appendChild(this.drawTable(v.bpArr));
+      this.dump.appendChild(this.dumpObject(v.bpArr));
       this.changeScreen('dump');
 
       v.step = 4; // bpArrの値をv.fyObjに反映させる
