@@ -69,18 +69,35 @@
  * @prop {number} CFseq - CF上の表示順。C1*1000000+C2*10000+C3*100+CA
  */
 /**
- * @typedef {Object} kzData
+ * @typedef {Object} kzUnit
  * @prop {number} 年度
- * @prop {string} 取引日
- * @prop {Date} date
  * @prop {string} 項目名 - 勘定科目または集計項目名
- * @prop {string} 部門
+ * @prop {number} 表示順 - BSseq, PLseq, CFseq
+ * @prop {string} 部門 - 全体合計は「全部門計」
  * @prop {number} 本体
+ * @prop {number} 本体前比額
+ * @prop {number} 本体前比率
  * @prop {number} 税額
+ * @prop {number} 税額年比額
+ * @prop {number} 税額年比率
  * @prop {number} 合計
- * @prop {number} 表示順
- * @prop {number} 前年比額
- * @prop {number} 前年比率
+ * @prop {number} 合計年比額
+ * @prop {number} 合計年比率
+ */
+/**
+ * @classdesc
+ * 
+ * #### 使用するクラス変数
+ * 
+ * 1. this.accounts {account[]} - 勘定科目マスタ
+ * 1. this.journals {journal[]} - 仕訳帳明細
+ * 1. this.daifuku {daifuku[]} - 大福帳
+ *    - 仕訳明細帳の借方・貸方をそれぞれ別レコードとして登録
+ *    - BS/PLの分類・計算項目を追加(ex.資産の部、営業外利益)
+ *    - BS用の累計は、daifuku上では行わない(単年度増減額になる)
+ * 1. this.BS {kzUnit[]} - 貸借対照表作成(クロス集計)用データ
+ * 1. this.PL
+ * 1. this.CF
  */
 class KawaZanyo extends BasePage {
   /**
@@ -89,16 +106,6 @@ class KawaZanyo extends BasePage {
    * @param {account[]} raw.accounts - 勘定科目マスタ
    * @param {journal[]} raw.journals - 仕訳日記帳
    * @param {Object} opt
-   * 
-   * @desc
-   * 
-   * #### 使用するクラス変数
-   * 
-   * 1. this.accounts {account[]} - 勘定科目マスタ
-   * 1. this.journals {journal[]} - 仕訳帳明細
-   * 1. this.daifuku {daifuku[]} - 大福帳
-   *    - 仕訳明細帳の借方・貸方をそれぞれ別レコードとして登録
-   *    - BS/PLの分類・計算項目を追加(ex.資産の部、営業外利益)
    */
   constructor(raw,opt={}){
     const v = {whois:'KawaZanyo.constructor',rv:null,step:0,def:{
@@ -186,34 +193,43 @@ class KawaZanyo extends BasePage {
    * 格納時、typeを追加する。
    */
   genAccount = (raw) => {
-    const v = {whois:this.className+'.genAccount',rv:null,step:0};
-    //console.log(v.whois+' start.');
+    const v = {whois:this.className+'.genAccount',rv:null,step:0,l1:1000000,l2:10000,l3:100};
+    //console.log(v.whois+' start.',raw);
     try {
 
-      v.step = 1; // this.accounts(複数形)：配列形式の作成
+      v.step = 2; // this.accounts(複数形)：配列形式の作成
       this.accounts = [];
-      [
-        "select *,'B1' as type, B1*1000000 as BSseq, 0 as PLseq, 0 as CFseq from ? where B1 is not null and B2 is null and BS is null",
-        "select *,'B2' as type, B1*1000000+B2*10000 as BSseq, 0 as PLseq, 0 as CFseq from ? where B1 is not null and B2 is not null and B3 is null and BS is null",
-        "select *,'B3' as type, B1*1000000+B2*10000+B3*100 as BSseq, 0 as PLseq, 0 as CFseq from ? where B1 is not null and B2 is not null and B3 is not null and BS is null",
-        "select *,'BA' as type, B1*1000000+B2*10000+B3*100+BS as BSseq, 0 as PLseq, 0 as CFseq from ? where BS is not null",
-        "select *,'P1' as type, 0 as BSseq, P1*1000000 as PLseq, 0 as CFseq from ? where P1 is not null and P2 is null and PS is null",
-        "select *,'P2' as type, 0 as BSseq, P1*1000000+P2*10000 as PLseq, 0 as CFseq from ? where P1 is not null and P2 is not null and P3 is null and PS is null",
-        //"select *,'P3' as type, 0 as BSseq, P1*1000000+P2*10000+P3*100 as PLseq, 0 as CFseq from ? where P1 is not null and P2 is not null and P3 is not null and PS is null",
-        "select *,'PA' as type, 0 as BSseq, P1*1000000+P2*10000+PS as PLseq, 0 as CFseq from ? where PS is not null",
-        "select *,'C1' as type, 0 as BSseq, 0 as PLseq, C1*1000000 as CFseq from ? where C1 is not null and C2 is null and CS is null",
-        "select *,'C2' as type, 0 as BSseq, 0 as PLseq, C1*1000000+C2*10000 as CFseq from ? where C1 is not null and C2 is not null and C3 is null and CS is null",
-        //"select *,'C3' as type, 0 as BSseq, 0 as PLseq, C1*1000000+C2*10000+C3*100 as CFseq from ? where C1 is not null and C2 is not null and C3 is not null and CS is null",
-        "select *,'CA' as type, 0 as BSseq, 0 as PLseq, C1*1000000+C2*10000+CS as CFseq from ? where CS is not null",
-      ].forEach(sql => {
-        this.accounts = this.accounts.concat(alasql(sql,[raw]));
-      });
-
-      v.step = 2; // this.account(単数形)：勘定科目名->account Objへの参照
-      this.account = {};
-      raw.forEach(x => {
-        this.account[x['名称']] = x;
-      });
+      for( v.i=0 ; v.i<raw.length ; v.i++ ){
+        v.o = Object.assign({
+          '名称':'',type:''
+          ,BSseq:0,PLseq:0,CFseq:0
+          ,B1:0,B2:0,B3:0,BS:0
+          ,P1:0,P2:0,P3:0,PS:0
+          ,C1:0,C2:0,C3:0,CS:0
+        },raw[v.i]);
+        if( v.o.B1 > 0 ){
+          v.p = v.o.B2 === 0 ? {type:'B1',BSseq:v.o.B1*v.l1}
+          : ( v.o.B3 === 0 ? {type:'B2',BSseq:v.o.B1*v.l1+v.o.B2*v.l2}
+          : ( v.o.BS === 0 ? {type:'B3',BSseq:v.o.B1*v.l1+v.o.B2*v.l2+v.o.B3*v.l3}
+          : {type:'BA',BSseq:v.o.B1*v.l1+v.o.B2*v.l2+v.o.B3*v.l3+v.o.BS}));
+          this.accounts.push(Object.assign({},v.o,v.p));
+        }
+        if( v.o.P1 > 0 ){
+          v.p = v.o.P2 === 0 ? {type:'P1',PSseq:v.o.P1*v.l1}
+          : ( v.o.P3 === 0 ? {type:'P2',PSseq:v.o.P1*v.l1+v.o.P2*v.l2}
+          : ( v.o.PS === 0 ? {type:'P3',PSseq:v.o.P1*v.l1+v.o.P2*v.l2+v.o.P3*v.l3}
+          : {type:'PA',PSseq:v.o.P1*v.l1+v.o.P2*v.l2+v.o.P3*v.l3+v.o.PS}));
+          this.accounts.push(Object.assign({},v.o,v.p));
+        }
+        if( v.o.C1 > 0 ){
+          v.p = v.o.C2 === 0 ? {type:'C1',CSseq:v.o.C1*v.l1}
+          : ( v.o.C3 === 0 ? {type:'C2',CSseq:v.o.C1*v.l1+v.o.C2*v.l2}
+          : ( v.o.CS === 0 ? {type:'C3',CSseq:v.o.C1*v.l1+v.o.C2*v.l2+v.o.C3*v.l3}
+          : {type:'CA',CSseq:v.o.C1*v.l1+v.o.C2*v.l2+v.o.C3*v.l3+v.o.CS}));
+          this.accounts.push(Object.assign({},v.o,v.p));
+        }
+      }
+      //console.log(this.accounts.slice(0,100));
 
       v.step = 3; // 終了処理
       //console.log(v.whois+' normal end.');
@@ -227,7 +243,7 @@ class KawaZanyo extends BasePage {
 
   /** 仕訳日記帳データの作成 */
   genJournals = (raw) => {
-    const v = {whois:'prototype',rv:null,step:0};
+    const v = {whois:this.className+'.genJournals',rv:null,step:0};
     //console.log(v.whois+' start.');
     try {
 
@@ -235,17 +251,25 @@ class KawaZanyo extends BasePage {
       this.minFy = Infinity;  // 仕訳日記帳に存在する会計年度の最小値
       this.maxFy = -Infinity; // 同最大値
 
-      // 取引日(Date型)を文字列に変換
       this.journals.forEach(x => {
+        // データの存在する会計年度の範囲を保存
+        if( x['会計年度'] < this.minFy ) this.minFy = x['会計年度'];
+        if( this.maxFy < x['会計年度'] ) this.maxFy = x['会計年度'];
+        // 取引日(Date型)を文字列に変換
         x.date = new DateEx(x['取引日']);
         x['取引日'] = x.date.toLocale();
-        v.fy = x['会計年度'];
-        if( v.fy < this.minFy ) this.minFy = v.fy;
-        if( this.maxFy < v.fy ) this.maxFy = v.fy;
+
+        ['摘要','補助摘要'].forEach(y => x[y] = x[y] || '');
+        ['借方','貸方'].forEach(y => {
+          // 空欄の文字項目に空文字列を代入
+          ['科目','補助','部門'].forEach(z => x[y+z] = x[y+z] || '');
+          // 空欄の数値項目に0を代入
+          ['本体','区分','税率','税額','合計'].forEach(z => x[y+z] = x[y+z] || 0);
+        })
       });
 
       v.step = 99; // 終了処理
-      //console.log(v.whois+' normal end.\\n',v.rv);
+      //console.log(v.whois+' normal end.\n',this.journals);
       return v.rv;
 
     } catch(e){
@@ -265,31 +289,28 @@ class KawaZanyo extends BasePage {
       v.step = 1; // 勘定科目マスタからBS/PL関係の科目のみ抽出
       v.accounts = alasql("select * from ? where type like 'B%' or type like 'P%'",[this.accounts]);
 
-      v.step = 2.1; // 借方の抽出
-      v.sql = "select `会計年度` as `年度`"
-      + ", `伝票番号`"
-      + ", `行番号`"
+      v.step = 2; // 借方・貸方の抽出
+      v.sql = "select jn.`会計年度` as `年度`"
+      + ", jn.`伝票番号`"
+      + ", jn.`行番号`"
       + ", '借方' as `所属`"
-      + ", `取引日`"
-      + ", date"
-      + ", `摘要`"
-      + ", `補助摘要`"
-      + ", `借方科目` as `項目名`"
-      + ", `借方部門` as `部門`"
-      + ", case when aMst.`本籍`='借' then `借方本体` else `借方本体`*-1 end as `本体`"
-      + ", `借方区分` as `税区分`"
-      + ", `借方税率` as `税率`"
-      + ", case when aMst.`本籍`='借' then `借方税額` else `借方税額`*-1 end as `税額`"
-      + ", case when aMst.`本籍`='借' then `借方合計` else `借方合計`*-1 end as `合計`"
-      + ", aMst.BSseq"
-      + ", aMst.PLseq"
-      + ", aMst.CFseq"
-      + " from ? as jMst"
-      + " inner join ? as aMst on jMst.`借方科目` = aMst.`名称`";
+      + ", jn.`取引日`"
+      + ", jn.date"
+      + ", jn.`摘要`"
+      + ", jn.`補助摘要`"
+      + ", jn.`借方科目` as `項目名`"
+      + ", jn.`借方部門` as `部門`"
+      + ", case when am.`本籍`='借' then jn.`借方本体` else jn.`借方本体`*-1 end as `本体`"
+      + ", jn.`借方区分` as `税区分`"
+      + ", jn.`借方税率` as `税率`"
+      + ", case when am.`本籍`='借' then jn.`借方税額` else jn.`借方税額`*-1 end as `税額`"
+      + ", case when am.`本籍`='借' then jn.`借方合計` else jn.`借方合計`*-1 end as `合計`"
+      + ", am.BSseq as BSseq"
+      + ", am.PLseq as PLseq"
+      + ", am.CFseq as CFseq"
+      + " from ? as jn"
+      + " inner join ? as am on jn.`借方科目`=am.`名称`";
       v.kari = alasql(v.sql,[this.journals,v.accounts]);
-      console.log('l.291 %s\n%s',v.sql,JSON.stringify(v.kari));
-
-      v.step = 2; // 貸方の抽出
       v.kashi = alasql(v.sql.replaceAll(/借/g,'貸'),[this.journals,v.accounts]);
 
       v.step = 3; // メンバ変数に格納
@@ -297,7 +318,7 @@ class KawaZanyo extends BasePage {
       [[...v.kari,...v.kashi]]);
 
       v.step = 4; // 終了処理
-      //console.log(v.whois+' normal end.');
+      console.log(v.whois+' normal end.',this.daifuku);
       return v.rv;
 
     } catch(e){
@@ -317,21 +338,31 @@ class KawaZanyo extends BasePage {
 
       v.step = 1; // 勘定科目マスタからBS関係の科目のみ抽出
       v.accounts = alasql("select * from ? where type like 'B%'",[this.accounts]);
-      //console.log('v.accounts=%s',JSON.stringify(v.accounts));
+      console.log('v.accunts',v.accounts);
+      console.log('this.daifuku',this.daifuku);
 
-      v.step = 2; // 年度×分類項目で集計
+      v.step = 2; // 勘定科目×年度をthis.BSに追加
+      // 注意：文字列項目(年度・項目名)は操作不要だが、数値項目(表示順)はmaxが必要
+      this.BS = alasql("select `年度`,`項目名`,max(BSseq) as `表示順`, `部門`"
+      + ", sum(`本体`) as `本体`"
+      + ", sum(`税額`) as `税額`"
+      + ", sum(`合計`) as `合計`"
+      + " from ? where BSseq>0"
+      + " group by `年度`, `項目名`, `部門`"
+      ,[this.daifuku]);
+      console.log('this.BS',this.BS);
+
+      v.step = 3.1; // 分類項目×年度を追加
       v.t01 = [];
-      v.sql = "select max(df.`年度`) as `年度`"
-      + ", max(m1.BSseq) as BSseq"
-      + ", m1.`名称` as `項目名`"
+      v.sql = "select df.`年度`,m2.`名称` as `項目名`,max(m2.BSseq) as `表示順`, df.`部門`"
       + ", sum(df.`本体`) as `本体`"
       + ", sum(df.`税額`) as `税額`"
       + ", sum(df.`合計`) as `合計`"
-      + " from ? as m1"
+      + " from ? as df"
+      + " inner join ? as m1 on df.`項目名`=m1.`名称`"
       + " inner join ? as m2 on m1.B1=m2.B1_1"
-      + " inner join ? as df on m2.`名称`=df.`項目名`"
-      + " where m1.type='_2' and m2.type='BA' and df.`合計`<>0"
-      + " group by df.`年度`,m1.`名称`";
+      + " where m1.type='BA' and m2.type='_2' and df.`合計`<>0"
+      + " group by df.`年度`, m2.`名称`, df.`部門`";
       [
         // 大分類項目の集計
         v.sql.replace('_1','').replace('_2','B1'),
@@ -340,11 +371,18 @@ class KawaZanyo extends BasePage {
         // 小分類項目の集計
         v.sql.replace('_1',' and m1.B2=m2.B2 and m1.B3=m2.B3').replace('_2','B3'),
       ].forEach(sql => {
-        v.t01 = v.t01.concat(alasql(sql,[v.accounts,v.accounts,this.daifuku]));
+        v.t01 = v.t01.concat(alasql(sql,[this.daifuku,v.accounts,v.accounts]));
       });
-      //console.log('v.t01=%s',JSON.stringify(v.t01));
-      this.dumpArea.appendChild(this.dumpObject(this.daifuku));
+
+      v.step = 3.2; // 表示順の修正、不要項目の削除
+      this.BS = alasql("select * from ?"
+      + " where `合計`<>0"
+      + " order by `表示順`, `年度`, `部門`"
+      ,[[...this.BS,...v.t01]]);
+      this.dumpArea.appendChild(this.dumpObject(this.BS));
       this.changeScreen('dumpArea');
+
+      v.step = 4; // 各項目を累計値に変更、全部門計を追加、前年比額/率を追加
 
       /*
       v.step = 1.1; // 勘定科目マスタからBS/PL関係の科目のみ抽出
