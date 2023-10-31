@@ -557,7 +557,7 @@ class BasePage {
     }
   }
 
-  /** テーブルを作成・表示
+  /** クロス集計テーブルを作成・表示
    * @param {*} data 
    * @param {*} opt 
    * @returns {HTMLElement|Error}
@@ -572,26 +572,30 @@ class BasePage {
    *   - X {Object} : X軸の項目に関する指定
    *     - member {string} : X軸の集計対象項目(ex.fy)
    *     - [label=member] {string} : 集計対象項目の表示名(ex.会計年度)
-   *     - [sort] {Object} 
-   *       - key {string} : 並べ替えのキー項目(fyならfy,勘定科目なら表示順、等)
+   *     - [sort] {Object|null} : 並べ替えを行わないならnull(要指定) 
+   *       - [key=member] {string} : 並べ替えのキー項目(fyならfy,勘定科目なら表示順、等)
    *       - [asc=true] {boolean} : 昇順(ascending)ならtrue
-   *     - [col] {Object.<string, Object>}
+   *     - [col] {Object.<string, Object>} : 各欄(列)に関する指定。メンバ名はmemberの文字列(ex."合計")
    *       - class {string} : 当該列のラベル・セルに指定するクラス
    *       - type {string} : データ型。localeNumber=trueならtype=numberの項目は3桁区切り等で使用
    *       - func {Function} : V.rawに対する加工。ex.(e)=>new DateEx(e).toLocale()
    *             結果はHTML文字列としてinnerHTMLでセットされる。
    *   - Y {Object} : メンバはXと同じ
    *   - V {Object}
+   *     - member : 値として表示する項目(ex.'合計')
+   *   - [fixLabel=true] {boolean} : 行・列のラベルを固定するならtrue
+   *   - [parent=null] {string|HTMLElement} : 結果を書き込む要素、またはそのCSSセレクタ
+   *   - [localeNumber=true] {boolean|string} :
+   *       - true -> V.memberの値が数字ならtoLocaleString()を行う
+   *       - false -> 同toLocaleString()を行わない
+   *       - 文字列 -> 同toLocaleString(opt.localeNumber)を行う
+   * 
+   * ゴミ箱
    *     - raw {any} : セルに表示する数値(文字列)
    *     - value {string} : セルのinnerHTMLにセットする文字列<br>
    *        ※toLocaleString()や複数項目の多段表示等は事前に準備して渡す
    *     - [class] {string} : セル(td)に指定するクラス
-   *   - [fixLabel=true] {boolean} : 行・列のラベルを固定するならtrue
-   *   - [parent=null] {string|HTMLElement} : 結果を書き込む要素、またはそのCSSセレクタ
-   *   - [localeNumber=false] {boolean|string} :
-   *       - false -> V.raw.toLocaleString()を行わない
-   *       - true -> V.raw.toLocaleString()を行う
-   *       - 文字列 -> V.raw.toLocaleString(opt.localeNumber)を行う
+   * 
    * 
    * #### 注意事項
    * 
@@ -607,7 +611,49 @@ class BasePage {
    * - [tableのヘッダーを固定する方法2つ](https://tedate.jp/coding/how-to-fix-table-header)
    */
   crossTable = (data,opt) => {
+    const v = {whois:'BasePage.crossTable',step:0,
+      rv:this.createElement({tag:'table',children:[
+        {tag:'thead',children:[{tag:'tr'}]},
+        {tag:'tbody'},
+        {tag:'tfoot'},
+      ]}),
+    };
+    //console.log(v.whois+' start.',data,opt);
+    try {
 
+      v.step = 1; // 前処理：既定値の設定
+      opt = Object.assign({fixLabel: true, parent:null, localeNumber: true},opt);
+      ['X','Y'].forEach(axis => {
+        opt[axis].mStr = opt[axis].member.match(/^[ -~]+$/) ? opt[axis].member : '`'+opt[axis].member+'`';
+        opt[axis].label = opt[axis].label || opt[axis].member;
+        opt[axis].lStr = opt[axis].label.match(/^[ -~]+$/) ? opt[axis].label : '`'+opt[axis].label+'`';
+        opt[axis].sort = opt[axis].sort || {};
+        opt[axis].sort.key = opt[axis].sort.key || opt[axis].member;
+        opt[axis].sort.asc = opt[axis].sort.asc || true;
+        opt[axis].col = opt[axis].col || {};
+      });
+      console.log('opt',opt);
+
+      // step.2 : X軸に関する処理
+      ['X','Y'].forEach(axis => {
+        v.sql = "select "
+        + opt[axis].mStr + " as member"
+        + ", " + opt[axis].lStr + " as label"
+        + " from ?"
+        + " group by " + opt[axis].mStr
+        + " order by " + opt[axis].key + " " + (opt[axis].sort.asc ? 'asc' : 'desc');
+        v[axis] = alasql(v.sql,[data]);
+        console.log("sql=%s\nv.%s=%s",v.sql,axis,JSON.stringify(v[axis]));
+      });
+
+      v.step = 5; // 終了処理
+      //console.log(v.whois+' normal end.');
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
   }
 
   /** 引数が配列か判定

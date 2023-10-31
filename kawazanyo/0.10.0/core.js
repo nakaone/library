@@ -169,17 +169,18 @@ class KawaZanyo extends BasePage {
       v.r = this.genDaifuku();
       if( v.r instanceof Error ) throw v.r;
 
-      v.step = 4.1; // BSの分類別金額を大福帳に追加
+      v.step = 4.1; // BSの分類別金額をthis.BSに追加
       v.r = this.addBS();
       if( v.r instanceof Error ) throw v.r;
       //console.log('this.daifuku=%s',JSON.stringify(this.daifuku));
-      /*
-      v.step = 4.2; // PLの各段階利益等、計算項目を大福帳に追加
-      v.r = this.addPL();
-      if( v.r instanceof Error ) throw v.r;
 
-      v.step = 5.1; // BSの表示
-      */
+      v.step = 4.2; // 貸借対照表のテーブルを描画
+      v.r = this.crossTable(this.BS,{
+        X:{member:'年度'},
+        Y:{member:'項目名',sort:{key:'表示順'}},
+        V:{member:'合計'},
+      });
+      if( v.r instanceof Error ) throw v.r;
 
       v.step = 10; // 終了処理
       //console.log(v.whois+' normal end.\n',v.rv);
