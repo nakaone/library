@@ -95,7 +95,7 @@
  *    - 仕訳明細帳の借方・貸方をそれぞれ別レコードとして登録
  *    - BS/PLの分類・計算項目を追加(ex.資産の部、営業外利益)
  *    - BS用の累計は、daifuku上では行わない(単年度増減額になる)
- * 1. this.BS {kzUnit[]} - 貸借対照表作成(クロス集計)用データ
+ * 1. v.t01 {kzUnit[]} - 貸借対照表作成(クロス集計)用データ
  * 1. this.PL
  * 1. this.CF
  */
@@ -318,7 +318,7 @@ class KawaZanyo extends BasePage {
       [[...v.kari,...v.kashi]]);
 
       v.step = 4; // 終了処理
-      console.log(v.whois+' normal end.',this.daifuku);
+      //console.log(v.whois+' normal end.',this.daifuku);
       return v.rv;
 
     } catch(e){
@@ -329,40 +329,59 @@ class KawaZanyo extends BasePage {
 
   /** 貸借対照表(BS)の集計項目を大福帳に追加
    * @param {void}
-   * @returns {daifuku[]|Error} 追加したレコード
+   * @returns {kzUnit[]|Error} 追加したレコード
    */
   addBS = () => {
-    const v = {whois:this.className+'.addBS',rv:[],step:0};
+    const v = {whois:this.className+'.addBS',rv:[],step:0,t01:[],t03:{},t04:[]};
     //console.log(v.whois+' start.');
     try {
 
       v.step = 1; // 勘定科目マスタからBS関係の科目のみ抽出
       v.accounts = alasql("select * from ? where type like 'B%'",[this.accounts]);
-      console.log('v.accunts',v.accounts);
-      console.log('this.daifuku',this.daifuku);
 
-      v.step = 2; // 勘定科目×年度をthis.BSに追加
+      /** step.2 : 勘定科目・分類項目×部門×年度のレコードを持つテーブルを作成
+       * v.t01 : 以下のメンバを持つオブジェクトの配列
+       * @prop {number} 年度
+       * @prop {string} 項目名(勘定科目、集計項目名)
+       * @prop {number} 表示順(BSseq)
+       * @prop {string} 部門
+       * @prop {number} 本体
+       * @prop {number} 税額
+       * @prop {number} 合計
+       */
+      v.step = 2.1; // 勘定科目×部門×年度のレコードをv.t01に追加
       // 注意：文字列項目(年度・項目名)は操作不要だが、数値項目(表示順)はmaxが必要
-      this.BS = alasql("select `年度`,`項目名`,max(BSseq) as `表示順`, `部門`"
+      v.t01 = alasql("select `年度`,`項目名`,max(BSseq) as `表示順`, `部門`"
       + ", sum(`本体`) as `本体`"
       + ", sum(`税額`) as `税額`"
       + ", sum(`合計`) as `合計`"
       + " from ? where BSseq>0"
       + " group by `年度`, `項目名`, `部門`"
       ,[this.daifuku]);
-      console.log('this.BS',this.BS);
 
-      v.step = 3.1; // 分類項目×年度を追加
-      v.t01 = [];
-      v.sql = "select df.`年度`,m2.`名称` as `項目名`,max(m2.BSseq) as `表示順`, df.`部門`"
-      + ", sum(df.`本体`) as `本体`"
-      + ", sum(df.`税額`) as `税額`"
-      + ", sum(df.`合計`) as `合計`"
-      + " from ? as df"
-      + " inner join ? as m1 on df.`項目名`=m1.`名称`"
-      + " inner join ? as m2 on m1.B1=m2.B1_1"
-      + " where m1.type='BA' and m2.type='_2' and df.`合計`<>0"
-      + " group by df.`年度`, m2.`名称`, df.`部門`";
+      v.step = 2.2; // 勘定科目×年度(=全部門計)のレコードをv.t01に追加
+      v.t02 = alasql("select `年度`,`項目名`,max(BSseq) as `表示順`"
+      + ", '全部門計' as `部門`"
+      + ", sum(`本体`) as `本体`"
+      + ", sum(`税額`) as `税額`"
+      + ", sum(`合計`) as `合計`"
+      + " from ? where BSseq>0"
+      + " group by `年度`, `項目名`, `部門`"
+      ,[this.daifuku]);
+      v.t01 = [...v.t01,...v.t02];
+
+      v.step = 2.3; // 分類項目×部門×年度のレコードをv.t01に追加
+      v.parts = ["select df.`年度`,m2.`名称` as `項目名`,max(m2.BSseq) as `表示順`"
+      , ", df.`部門` as `部門`"
+      , ", sum(df.`本体`) as `本体`"
+      , ", sum(df.`税額`) as `税額`"
+      , ", sum(df.`合計`) as `合計`"
+      , " from ? as df"
+      , " inner join ? as m1 on df.`項目名`=m1.`名称`"
+      , " inner join ? as m2 on m1.B1=m2.B1_1"
+      , " where m1.type='BA' and m2.type='_2' and df.`合計`<>0"
+      , " group by df.`年度`, m2.`名称`, df.`部門`"];
+      v.sql = v.parts.join('');
       [
         // 大分類項目の集計
         v.sql.replace('_1','').replace('_2','B1'),
@@ -374,85 +393,81 @@ class KawaZanyo extends BasePage {
         v.t01 = v.t01.concat(alasql(sql,[this.daifuku,v.accounts,v.accounts]));
       });
 
-      v.step = 3.2; // 表示順の修正、不要項目の削除
-      this.BS = alasql("select * from ?"
-      + " where `合計`<>0"
-      + " order by `表示順`, `年度`, `部門`"
-      ,[[...this.BS,...v.t01]]);
-      this.dumpArea.appendChild(this.dumpObject(this.BS));
-      this.changeScreen('dumpArea');
-
-      v.step = 4; // 各項目を累計値に変更、全部門計を追加、前年比額/率を追加
-
-      /*
-      v.step = 1.1; // 勘定科目マスタからBS/PL関係の科目のみ抽出
-      v.accounts = alasql("select * from ? where type like 'B%' or type like 'P%'",[this.accounts]);
-
-      v.step = 1.2; // 分類項目と勘定科目ごとの集計を紐付け
-      v.t01 = [];
+      v.step = 2.4; // 分類項目×年度(=全部門計)のレコードをv.t01に追加
+      v.parts[1] = ", '全部門計' as `部門`";
+      v.parts[9] = " group by df.`年度`, m2.`名称`";
+      v.sql = v.parts.join('');
       [
-        // BSの大分類項目
-        "select m1.type"
-        + ", m1.`名称` as `分類名`"   // BS上の項目名
-        + ", m2.`名称` as `所属科目`" // debug用
-        + ", bp.fy, bp.val"
-        + " from ? as m1"
-        + " inner join ? as m2 on m1.B1=m2.B1"
-        + " inner join ? as bp on m2.`名称`=bp.ac"
-        + " where m1.type='B1' and m2.type='BA' and bp.val<>0",
-        // BSの中分類項目
-        "select m1.type"
-        + ", m1.`名称` as `分類名`"   // BS上の項目名
-        + ", m2.`名称` as `所属科目`" // debug用
-        + ", bp.fy, bp.val"
-        + " from ? as m1"
-        + " inner join ? as m2 on m1.B1=m2.B1 and m1.B2=m2.B2"
-        + " inner join ? as bp on m2.`名称`=bp.ac"
-        + " where m1.type='B2' and m2.type='BA' and bp.val<>0",
-        // BSの小分類項目
-        "select m1.type"
-        + ", m1.`名称` as `分類名`"   // BS上の項目名
-        + ", m2.`名称` as `所属科目`" // debug用
-        + ", bp.fy, bp.val"
-        + " from ? as m1"
-        + " inner join ? as m2 on m1.B1=m2.B1 and m1.B2=m2.B2 and m1.B3=m2.B3"
-        + " inner join ? as bp on m2.`名称`=bp.ac"
-        + " where m1.type='B3' and m2.type='BA' and bp.val<>0",
+        v.sql.replace('_1','').replace('_2','B1'),
+        v.sql.replace('_1',' and m1.B2=m2.B2').replace('_2','B2'),
+        v.sql.replace('_1',' and m1.B2=m2.B2 and m1.B3=m2.B3').replace('_2','B3'),
       ].forEach(sql => {
-        v.t01 = v.t01.concat(alasql(sql,[v.accounts,v.accounts,this.bpArr]));
+        v.t01 = v.t01.concat(alasql(sql,[this.daifuku,v.accounts,v.accounts]));
       });
 
-      v.step = 2; // 分類項目×年度で集計
-      v.t02 = alasql("select"
-      + " `分類名` as ac"
-      + ", fy"
-      + ", sum(val) as val"
-      + " from ?"
-      + " group by `分類名`,fy"
+      v.step = 2.5; // 表示順の修正、不要項目の削除
+      v.t01 = alasql("select * from ?"
+      + " where `合計`<>0"
+      + " order by `表示順`, `部門`, `年度`"
       ,[v.t01]);
-      this.bpArr = this.bpArr.concat(v.t02);
+      this.dumpArea.appendChild(this.dumpObject(v.t01));
+      this.changeScreen('dumpArea');
 
-      v.step = 3; // this.bpObjへの格納
-      v.o = {}; // debug用
-      v.t02.forEach(x => {
-        this.bpObj[x.ac+x.fy] = x.val;
-        v.o[x.ac+x.fy] = x.val;
-      })
-
-      v.step = 4; // 各科目・分類項目について累計値を計算
-      v.sql = "select `名称` as ac from ? as mst"
-      + " inner join (select ac from ? group by ac) as bpArr"
-      + " on mst.`名称`=bpArr.ac"
-      + " where mst.type like 'B%'";
-      v.t03 = alasql(v.sql,[v.accounts,this.bpArr]);
-      //console.log('v.t03=%s',JSON.stringify(v.t03));
-      for( v.i=0 ; v.i<v.t03.length ; v.i++ ){
-        v.ac = v.t03[v.i].ac;
-        for( v.j=this.minFy ; v.j<=this.maxFy ; v.j++ ){
-          this.bpObj[v.ac+v.j] = (this.bpObj[v.ac+(v.j-1)] || 0) + (this.bpObj[v.ac+v.j] || 0);
-        }
+      /** step.3 : 累計作業用に、v.t01から以下のオブジェクトをv.t03として作成
+       * - 項目名 : ex.「普通預金」
+       *   - 表示順
+       *   - 部門 : 「EF」「CK」「全部門計」等
+       *     - 年度 : '2011'等。
+       *       - 本体 : 本体金額
+       *       - 税額
+       *       - 合計
+       *     - 年度 : '2012'等。(後略)
+       */
+      v.step = 3;
+      for( v.i=0 ; v.i<v.t01.length ; v.i++ ){
+        v.label = v.t01[v.i]['項目名'];
+        v.dep = v.t01[v.i]['部門'];
+        v.fy = v.t01[v.i]['年度'];
+        if( !v.t03.hasOwnProperty(v.label) )
+          v.t03[v.label] = {'表示順':v.t01[v.i]['表示順']};
+        if( !v.t03[v.label].hasOwnProperty(v.dep) )
+          v.t03[v.label][v.dep] = {};
+        v.t03[v.label][v.dep][v.t01[v.i]['年度']] = {
+          '本体': v.t01[v.i]['本体'],
+          '税額': v.t01[v.i]['税額'],
+          '合計': v.t01[v.i]['合計'],
+        };
       }
-      */
+
+      v.step = 4; // v.t03について各項目を累計値に変更、前年比額/率を計算してthis.BSに格納
+      this.BS = [];
+      Object.keys(v.t03).forEach(label => {
+        Object.keys(v.t03[label]).forEach(dep => {
+          if( dep !== '表示順' ){ // 「表示順」が項目名直下のメンバとして入っているので除外
+            v.last = {'本体':0,'税額':0,'合計':0};
+            for( let fy=this.minFy ; fy<=this.maxFy ; fy++ ){
+              v.current  = v.t03[label][dep][fy] || {'本体':0,'税額':0,'合計':0};
+              v.o = {
+                '年度': fy,
+                '項目名': label,
+                '表示順': v.t03[label]['表示順'],
+                '部門': dep,
+                '本体': v.last['本体'] + v.current['本体'],
+                '本体前比額': v.current['本体'],
+                '税額': v.last['税額'] + v.current['税額'],
+                '税額前比額': v.current['税額'],
+                '合計': v.last['合計'] + v.current['合計'],
+                '合計前比額': v.current['合計'],
+              };
+              if( v.o['本体']> 0 ) v.o['本体前比率'] = v.o['本体'] / v.last['本体'];
+              if( v.o['税額']> 0 ) v.o['税額前比率'] = v.o['税額'] / v.last['税額'];
+              if( v.o['合計']> 0 ) v.o['合計前比率'] = v.o['合計'] / v.last['合計'];
+              this.BS.push(v.o);
+              ['本体','税額','合計'].forEach(x => v.last[x]=v.o[x]);
+            }
+          }
+        });
+      });
 
       v.step = 5; // 終了処理
       //console.log(v.whois+' normal end.');
