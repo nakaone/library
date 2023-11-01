@@ -172,6 +172,7 @@ class KawaZanyo extends BasePage {
       v.step = 4.1; // BSの分類別金額をthis.BSに追加
       v.r = this.addBS();
       if( v.r instanceof Error ) throw v.r;
+      this.changeScreen('BSarea');
       //console.log('this.daifuku=%s',JSON.stringify(this.daifuku));
 
       v.step = 4.2; // 貸借対照表のテーブルを描画
@@ -411,8 +412,8 @@ class KawaZanyo extends BasePage {
       + " where `合計`<>0"
       + " order by `表示順`, `部門`, `年度`"
       ,[v.t01]);
-      this.dumpArea.appendChild(this.dumpObject(v.t01));
-      this.changeScreen('dumpArea');
+      //this.dumpArea.appendChild(this.dumpObject(v.t01));
+      //this.changeScreen('dumpArea');
 
       /** step.3 : 累計作業用に、v.t01から以下のオブジェクトをv.t03として作成
        * - 項目名 : ex.「普通預金」
@@ -470,6 +471,14 @@ class KawaZanyo extends BasePage {
         });
       });
 
+      v.step = 5; // PivotTable.jsにより貸借対照表を作成
+      $("div.BSarea").pivotUI(this.BS,{
+        rows: ["表示順","項目名"],
+        cols: ["年度"],
+        vals: ["合計"],
+        aggregatorName: 'Integer Sum',
+      },false);
+
       v.step = 5; // 終了処理
       //console.log(v.whois+' normal end.');
       return v.rv;
@@ -525,8 +534,8 @@ class KawaZanyo extends BasePage {
       ,[v.t02]);
       this.bpArr = this.bpArr.concat(v.bpArr);
       //this.dump.appendChild(this.dumpObject(v.bpArr));
-      this.dump.appendChild(this.dumpObject(v.bpArr));
-      this.changeScreen('dump');
+      //this.dump.appendChild(this.dumpObject(v.bpArr));
+      //this.changeScreen('dump');
 
       v.step = 4; // bpArrの値をv.fyObjに反映させる
       v.bpArr.forEach(x => {
