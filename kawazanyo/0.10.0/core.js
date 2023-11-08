@@ -149,6 +149,7 @@ class KawaZanyo extends BasePage {
           left: 0;
           z-index: 1;
         }
+        th, .th { color: #000; }
       `],
     }};
     //console.log(v.whois+' start.');
@@ -472,11 +473,36 @@ class KawaZanyo extends BasePage {
       });
 
       v.step = 5; // PivotTable.jsにより貸借対照表を作成
+      /**
+       * - [PivotTable.jsを使ってjavascriptで集計を簡単に表示するテスト](https://www.tweeeety.blog/entry/20140203/1391408894)
+       * - GitHub pivottable [Parameters](https://github.com/nicolaskruchten/pivottable/wiki/Parameters)
+       * - GitHub pivottable [aggregators](https://github.com/nicolaskruchten/pivottable/wiki/Aggregators)
+       * - [PivotTable.js Examples](https://pivottable.js.org/examples/index.html)
+       */
+      console.log($.pivotUtilities.aggregatorTemplates);
       $("div.BSarea").pivotUI(this.BS,{
         rows: ["表示順","項目名"],
         cols: ["年度"],
         vals: ["合計"],
-        aggregatorName: 'Integer Sum',
+        //aggregatorName: 'Integer Sum',
+        aggregators: {
+          "合計": (arg) => {
+            console.log('l.490 arg',arg);
+            //let rv = $.pivotUtilities.aggregatorTemplates.sum()(['合計']);
+            let rv = function(e,r,a){
+              return {
+                sum:0,
+                push:function(t){
+                  if(!isNaN(parseFloat(t[n])))return this.sum+=parseFloat(t[n])
+                },
+                value:function(){return this.sum},
+                format:t,numInputs:null!=n?0:1
+              }
+            };
+            console.log('l.491 rv\n',rv);
+            return rv;
+          },
+        }
       },false);
 
       v.step = 5; // 終了処理
