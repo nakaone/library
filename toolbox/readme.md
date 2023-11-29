@@ -1,22 +1,4 @@
-common
-
-デプロイ ID
-AKfycbybB8udye-jH0Q62zFiQ3B0MWfBgQRwH4jqm4ZXTZWXD7DJHDPj2LKBGn0h_9mEG-LJvg
-ライブラリ
-URL
-https://script.google.com/macros/library/d/14vttuLFtkWYFJpAxTIlRS0qgkDoajvZa0eoLNJAOfrDuX2uit85V8qvw/1
-
-
-
-toolbox
-
-デプロイ ID
-AKfycbx0XueRym_YLvb4SuTqi94HZgsXFWi9qek8qGn06DnyeHXOZb38buWLA9vCyY9-0ij7zg
-ライブラリ
-URL
-https://script.google.com/macros/library/d/1_rPygHJz3lDJfrSrBE10KaQl77dnwYj5gf770XpFd1010DQd3dnMiBUC/1
-
-「道具箱」設定手順
+# 「道具箱」設定手順
 
 ## 新規ツール開発時
 
