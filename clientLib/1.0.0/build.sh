@@ -153,6 +153,7 @@ list=(
   "createElement/1.2.0"
   "doGAS/1.0.0"
   "toLocale/1.0.0"
+  "whichType/1.0.1"
 )
 for file in ${list[@]}; do
   minimizeSource $file all
