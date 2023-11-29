@@ -1,0 +1,1 @@
+# clientLib: GASのhtmlで使用するライブラリ(クライアント用)
