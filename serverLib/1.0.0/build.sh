@@ -1,7 +1,7 @@
 #!/bin/sh
 # -x  つけるとverbose
 
-cat ../../getActiveCellInfo/1.0.0/core.js > serverLib.tmp
+cat ../../getActiveCellInfo/1.1.0/core.js > serverLib.tmp
 cat ../../SingleTable/1.0.0/core.js >> serverLib.tmp
 cat ../../whichType/1.0.1/core.js >> serverLib.tmp
 

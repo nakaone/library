@@ -51,51 +51,102 @@ async function genHtml(){
     console.log(v.cellInfo);
 
     v.step = 2; // tableの枠組み作成
-    v.dom = createElement({children:[
-      {tag:'table',children:[
-        {tag:'thead',children:[{tag:'tr'}]},
-        {tag:'tbody'}
-      ]}
-    ]});
-    if( v.dom instanceof Error ) throw v.dom;
-    v.thead = v.dom.querySelector('thead tr');
-    v.tbody = v.dom.querySelector('tbody');
+    [v.c, v.r] = [v.w, v.h, v.s] = ['2rem','1.5rem',0];
+    // 行番号セルの幅、列記号セルの高さ、table全体の幅(px)
+    v.cellInfo.width.forEach(w=>{v.w+=' '+w+'px';v.s+=w});
+    v.cellInfo.height.forEach(h => v.h+=' '+h+'px');
+    v.dom = {children:[{attr:{class:'th'}}],style:{
+      'display' : 'grid',
+      'grid-template-columns' : v.w,
+      'grid-template-rows' : v.h,
+      'width' : 'calc('+v.c+' + '+v.s+'px)',
+      'font-size' : '10pt',
+      'color' : '#000000',
+      'font-weight' : 'normal',
+      'background' : '#ffffff',
+      'white-space' : 'nowrap',    
+    }};
 
     v.step = 3; // 列記号の追加
-    for( v.c=v.cellInfo.firstColumn ; v.c<=v.cellInfo.lastColumn ; v.c++ ){
-      v.thead.appendChild(createElement({tag:'th',text:convertNotation(v.c)}));
+    for( v.c=0 ; v.c<v.cellInfo.width.length ; v.c++ ){
+      v.dom.children.push({
+        attr:{class:'th'},
+        text:convertNotation(v.c+v.cellInfo.firstColumn),
+      })
     }
 
     v.step = 4; // 行データの追加
-    for( v.r=0 ; v.r<v.cellInfo.value.length ; v.r++ ){
-      v.tr = {tag:'tr',children:[{tag:'th',attr:{class:'num'},text:(v.cellInfo.firstRow + v.r)}]};
-      for( v.c=0 ; v.c<v.cellInfo.value[v.r].length ; v.c++ ){
-        v.type = v.cellInfo.type[v.r][v.c];
-        v.value = v.cellInfo.value[v.r][v.c];
-        v.td = {tag:'td',attr:{}};
-        if( v.type === 'Number' ){
-          v.td.attr.class = 'num';
-          v.td.text = v.value.toLocaleString();
-        } else if( v.type === 'Date' ){
-          v.format = v.cellInfo.format[v.r][v.c].replaceAll('"','');
-          // 前後のいずれかに'/'がつく場合、月と見做して大文字に変換
-          v.m = v.format.match(/\/m+/);
-          console.log(v.m);
-          if( v.m ) v.format = v.format.replace(v.m[0],'/'+('M'.repeat(v.m[0].length-1)));
-          v.m = v.format.match(/m+\//);
-          console.log(v.m);
-          if( v.m ) v.format = v.format.replace(v.m[0],('M'.repeat(v.m[0].length-1)+'/'));
-          v.td.text = toLocale(new Date(v.value),v.format);
-          console.log('l.55 value=%s, type=%s, format=%s locale=%s',v.value,v.type,v.format,v.td.text);
-        } else {
-          v.td.text = v.value;
+    for( v.r=0 ; v.r<v.cellInfo.range.length ; v.r++ ){
+
+      v.step = 4.1; // 行番号セルを追加
+      v.dom.children.push({
+        attr:{class:'th'},
+        text:(v.cellInfo.firstRow + v.r),
+      });
+
+      for( v.c=0 ; v.c<v.cellInfo.range[v.r].length ; v.c++ ){
+        v.d = v.cellInfo.range[v.r][v.c]; // セル属性のオブジェクト
+
+        v.step = 4.2; // セルオブジェクトv.tdを作成、v.domに追加
+        v.td = {attr:{class:'td'},style:{}};
+        v.dom.children.push(v.td);
+
+        v.step = 4.3; // データ型に基づき表示形式を整える
+        switch( v.d.type ){
+          case 'Date':
+            // 前後のいずれかに'/'がつく場合、月と見做してmをMに変換
+            v.m = v.d.format.match(/\/m+/);
+            if( v.m ) v.d.format = v.d.format.replace(v.m[0],'/'+('M'.repeat(v.m[0].length-1)));
+            v.m = v.d.format.match(/m+\//);
+            if( v.m ) v.d.format = v.d.format.replace(v.m[0],('M'.repeat(v.m[0].length-1)+'/'));
+            v.td.text = toLocale(new Date(v.d.value),v.d.format);
+            break;
+          case 'Number':
+            v.td.text = v.d.value.toLocaleString();
+            break;
+          case 'Boolean':
+            if( v.d.validation && v.d.validation.CriteriaType === 'CHECKBOX' ){
+              v.td.text = v.d.value ? '☑️' : '◻︎';
+            } else {
+              v.td.text = String(v.d.value);
+            }
+            v.td.style['text-align'] = 'center';
+            break;
+          default:
+            v.td.text = v.d.value ? String(v.d.value) : '';
         }
-        v.tr.children.push(v.td);
+
+        v.step = 4.4; // 既定値以外の場合、スタイルを適用
+        if( v.d.fontSize && v.d.fontSize !== 10 )
+          v.td.style['font-size'] = v.d.fontSize + 'pt';
+        if( v.d.fontColor && v.d.fontColor !== '#000000' )
+          v.td.style['color'] = v.d.fontColor;
+        if( v.d.fontWeight && v.d.fontWeight !== 'normal' )
+          v.td.style['font-weight'] = v.d.fontWeight;
+        if( v.d.background && v.d.background !== '#ffffff' )
+          v.td.style['background'] = v.d.background;
+        if( v.d.horizontalAlign && v.d.horizontalAlign.match(/right/) )
+          v.td.style['text-align'] = 'right';
+        if( v.d.wrap && v.d.wrap !== 'OVERFLOW' ){ // 折り返し無し以外
+          v.td.style['white-space'] = 'normal';
+          v.td.style['overflow'] = v.d.wrap === 'WRAP' ? 'auto' : 'hidden';
+        }
+
+        v.step = 4.5; // リンクを設定
+        if( v.d.hasOwnProperty('link') ){
+          v.d.link.forEach(o => {
+            if( o.url ){
+              v.td.text = v.td.text.replace(o.text,
+                '<a src="_url" target="_blank">_text</a>'
+                .replace('_url',o.url).replace('_text',o.text)
+              )
+            }
+          });
+        }
       }
-      v.tbody.appendChild(createElement(v.tr));
     }
 
-    v.rv = v.dom.innerHTML;
+    v.rv = createElement({children:[v.dom]}).innerHTML;
     document.querySelector('textarea').value = v.rv;
     console.log(v.whois+' normal end.\n',v.rv);
 
