@@ -178,6 +178,7 @@ function getActiveCellInfo(){
     v.active = v.sheet.getActiveRange();
     v.rich = v.active.getRichTextValues();
     v.validation = v.active.getDataValidations();
+    // 未対応：結合されたセル情報 .getMergedRanges() 戻り値は{Range}
 
     v.step = 1.2; // シート単位の情報を戻り値にセット
     v.rv = {

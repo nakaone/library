@@ -30,19 +30,59 @@
     </style>
   </head>
   <body>
-    <div>
+    <div class="screen" name="loading">しばらくお待ちください...</div>
+    <div class="screen" name="control">
+      <p>変換する範囲を選択し、下の「実行」をクリック</p>
       <button onclick="genHtml()">実行</button>
     </div>
-    <div>
+    <div class="screen" name="result">
       <textarea></textarea>
+      <button onclick="changeScreen('control')">続行</button>
     </div>
   </body>
 </html>
 <script>
 async function genHtml(){
-  const v = {whois:'genHtml',rv:null,step:0};
+  const v = {whois:'genHtml',rv:null,step:0,
+  style01: // 共通CSS
+    `html, body{
+      width: 100%;
+      font-size: 16px;
+      text-size-adjust: none;
+    }
+    body * {font-size: 1rem;}
+    th, .th {
+      text-align: center;
+      font-weight: bold;
+      color: white;
+      background-color: #888;
+    }
+    td, .td {
+      border-bottom: solid 1px #aaa;
+      border-right: solid 1px #aaa;
+    }
+    .num, .right {text-align:right;}`,
+  style02: // range2Table特有
+    `.range2Table {
+      --gap: 0.1rem;
+      display: grid;
+      grid-template-columns: _gtcols;
+      grid-template-rows: _gtrows;
+      gap: var(--gap);
+      font-size: 10pt;
+      color: rgb(0, 0, 0);
+      font-weight: normal;
+      background: rgb(255, 255, 255);
+      white-space: nowrap;
+    }
+    .range2Table > div {
+      padding: var(--gap);
+    }
+    .range2Table .memo {border-left: solid var(--gap) #f44}`
+  };
   console.log(v.whois+' start.');
   try {
+    changeScreen('loading');
 
     v.step = 1; // アクティブセルの情報を取得
     v.r = await doGAS('getActiveCellInfo');
@@ -51,21 +91,13 @@ async function genHtml(){
     console.log(v.cellInfo);
 
     v.step = 2; // tableの枠組み作成
-    [v.c, v.r] = [v.w, v.h, v.s] = ['2rem','1.5rem',0];
-    // 行番号セルの幅、列記号セルの高さ、table全体の幅(px)
-    v.cellInfo.width.forEach(w=>{v.w+=' '+w+'px';v.s+=w});
-    v.cellInfo.height.forEach(h => v.h+=' '+h+'px');
-    v.dom = {children:[{attr:{class:'th'}}],style:{
-      'display' : 'grid',
-      'grid-template-columns' : v.w,
-      'grid-template-rows' : v.h,
-      'width' : 'calc('+v.c+' + '+v.s+'px)',
-      'font-size' : '10pt',
-      'color' : '#000000',
-      'font-weight' : 'normal',
-      'background' : '#ffffff',
-      'white-space' : 'nowrap',    
-    }};
+    v.dom = {attr:{class:'range2Table'},children:[{attr:{class:'th'}}]};
+    v.gtcols = '2rem';
+    v.cellInfo.width.forEach(w => v.gtcols += ' ' + w + 'px');
+    v.style02 = v.style02.replace('_gtcols',v.gtcols);
+    v.gtrows = '1.5rem';
+    v.cellInfo.height.forEach(h => v.gtrows += ' ' + h + 'px');
+    v.style02 = v.style02.replace('_gtrows',v.gtrows);
 
     v.step = 3; // 列記号の追加
     for( v.c=0 ; v.c<v.cellInfo.width.length ; v.c++ ){
@@ -143,16 +175,84 @@ async function genHtml(){
             }
           });
         }
+
+        v.step = 4.6; // 数式・メモ・入力規則があればポップアップを用意
+        if( v.d.validation || v.d.formula || v.d.note ){
+          v.msg = '';
+          if( v.d.note ) v.msg += 'メモ : ' + v.d.note;
+          if( v.d.formula ) v.msg += (v.msg.length > 0 ? '\n' : '') + '数式 : ' + v.d.formula;
+          if( v.d.validation ){
+            v.msg += (v.msg.length > 0 ? '\n' : '') + '入力規則 : '
+            + v.d.validation.CriteriaType + ' ' + JSON.stringify(v.d.validation.CriteriaValues);
+          }
+          v.msg = v.msg.replaceAll(/'/g,"\\'");
+          if( !v.td.attr ) v.td.attr = {};
+          v.td.attr.onclick = "alert('" + v.msg + "')";
+          v.td.attr.class = ( v.td.attr.class ? (v.td.attr.class + ' ') : '' ) + 'memo';
+        }
       }
     }
 
-    v.rv = createElement({children:[v.dom]}).innerHTML;
+    v.step = 5; /* シート名とシートへのリンク、注意書きを追加
+      https://docs.google.com/spreadsheets/d/18bH3p9QaRg36L0rIhcWCmopRGewyQ7MYgTcNTsJ1gIY/edit#gid=31277711
+      - spreadId:18bH3p9QaRg36L0rIhcWCmopRGewyQ7MYgTcNTsJ1gIY
+      - spreadName:仕訳日記帳
+      - sheetId:31277711
+      - sheetName:勘定科目
+    */
+    v.step = 5.1; // リンク用URLの作成
+    v.url = 'https://docs.google.com/spreadsheets/d/'
+    + v.cellInfo.spreadId // {string} スプレッド(ファイル)のID
+    + '/edit#gid=' + v.cellInfo.sheetId; // {number} シートのID
+
+    v.step = 5.2; // スプレッドシート名の作成
+    v.name = v.cellInfo.spreadName // {string} スプレッドの名前
+    + ' - ' + v.cellInfo.sheetName; // {string} シート名
+
+    v.step = 5.3; // html用/md用のテンプレート
+    [v.html, v.md] = ['出典 : <a href="_url" target="_blank">_name</a>\n\n','- [_name](_url)\n\n'];
+    [
+      '左が赤線のセルは、クリックで数式/メモ/入力規則を表示',
+      '以下ソースの一行目は一般的CSS、二行目はrange2Table専用CSS。既述なら割愛',
+    ].forEach(x => {
+      v.html += '<p>' + x + '</p>\n';
+      v.md += '- ' + x + '\n';
+    });
+
+    v.step = 5.4; // シート名と注意書きをセット
+    v.rv = (v.html + '\n' + v.md + '\n').replaceAll(/_url/g,v.url).replaceAll(/_name/g,v.name);
+
+    v.step = 5.5; // テーブルの出力
+    v.rv += '<style>' + v.style01.replaceAll(/\n/g,' ').replaceAll(/ +/g,' ') + '</style>\n'
+    + '<style>' + v.style02.replaceAll(/\n/g,' ').replaceAll(/ +/g,' ') + '</style>\n'
+    + createElement({children:[v.dom]}).innerHTML;
+
+    v.step = 6; // 終了処理
     document.querySelector('textarea').value = v.rv;
+    changeScreen('result');
     console.log(v.whois+' normal end.\n',v.rv);
 
   } catch(e) {
-    console.error(e,v);
+    console.error('%s abnormal end (step.%s)\n%s',v.whois,v.step,e.message);
+    console.error(v);
     return e;
   }
 }
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(v.whois+' start.');
+  try {
+
+    v.step = 1; // コントロール画面の表示
+    changeScreen('control');
+
+    v.step = 2; // 終了処理
+    console.log(v.whois+' normal end.\\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+  }
+});
 </script>
