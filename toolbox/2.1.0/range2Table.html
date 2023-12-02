@@ -36,6 +36,10 @@
       <button onclick="genHtml()">実行</button>
     </div>
     <div class="screen" name="result">
+      <ol>
+        <li>先頭部分は同一内容をhtmlとmd両方で出力。不要な方を削除のこと</li>
+        <li>ソースの一行目は一般的CSS、二行目はrange2Table専用CSS。既述なら割愛</li>
+      </ol>
       <textarea></textarea>
       <button onclick="changeScreen('control')">続行</button>
     </div>
@@ -96,7 +100,8 @@ async function genHtml(){
     v.cellInfo.width.forEach(w => v.gtcols += ' ' + w + 'px');
     v.style02 = v.style02.replace('_gtcols',v.gtcols);
     v.gtrows = '1.5rem';
-    v.cellInfo.height.forEach(h => v.gtrows += ' ' + h + 'px');
+    // 高さに余裕を持たせるため1.1倍しておく
+    v.cellInfo.height.forEach(h => v.gtrows += ' ' + Math.round(h * 1.1) + 'px');
     v.style02 = v.style02.replace('_gtrows',v.gtrows);
 
     v.step = 3; // 列記号の追加
@@ -166,14 +171,30 @@ async function genHtml(){
 
         v.step = 4.5; // リンクを設定
         if( v.d.hasOwnProperty('link') ){
-          v.d.link.forEach(o => {
-            if( o.url ){
-              v.td.text = v.td.text.replace(o.text,
-                '<a src="_url" target="_blank">_text</a>'
-                .replace('_url',o.url).replace('_text',o.text)
-              )
-            }
-          });
+          if( !v.td.hasOwnProperty('children') ) v.td.children = [];
+          if( v.d.type === 'String' && v.d.link.length > 0 ){
+            v.d.link.forEach(o => {
+              if( o.url ){
+                v.td.children.push({
+                  tag: 'a',
+                  attr: {href:o.url,target:'_blank'},
+                  text: o.text
+                })
+              } else {
+                v.td.children.push({
+                  tag: 'span',
+                  text: o.text
+                })
+              }
+            });
+          } else {
+            v.td.children.push({
+              tag:'a',
+              attr:{href:v.d.link[0].url,target:'_blank'},
+              text:v.td.text,
+            });
+          }
+          delete v.td.text;
         }
 
         v.step = 4.6; // 数式・メモ・入力規則があればポップアップを用意
@@ -183,9 +204,12 @@ async function genHtml(){
           if( v.d.formula ) v.msg += (v.msg.length > 0 ? '\n' : '') + '数式 : ' + v.d.formula;
           if( v.d.validation ){
             v.msg += (v.msg.length > 0 ? '\n' : '') + '入力規則 : '
-            + v.d.validation.CriteriaType + ' ' + JSON.stringify(v.d.validation.CriteriaValues);
+            + v.d.validation.CriteriaType;
+            if( v.d.validation.CriteriaValues.length > 0){
+              v.msg += ' ' + JSON.stringify(v.d.validation.CriteriaValues);
+            }
           }
-          v.msg = v.msg.replaceAll(/'/g,"\\'");
+          v.msg = v.msg.replaceAll(/'/g,"\\'").replaceAll(/\n/g,'\\n');
           if( !v.td.attr ) v.td.attr = {};
           v.td.attr.onclick = "alert('" + v.msg + "')";
           v.td.attr.class = ( v.td.attr.class ? (v.td.attr.class + ' ') : '' ) + 'memo';
@@ -210,10 +234,12 @@ async function genHtml(){
     + ' - ' + v.cellInfo.sheetName; // {string} シート名
 
     v.step = 5.3; // html用/md用のテンプレート
-    [v.html, v.md] = ['出典 : <a href="_url" target="_blank">_name</a>\n\n','- [_name](_url)\n\n'];
-    [
+    [v.html, v.md] = [
+      '出典 : <a href="_url" target="_blank">_name</a>\n\n',
+      '出典 : [_name](_url)\n\n'
+    ];
+    [ // 利用時にコピーされる注意書き
       '左が赤線のセルは、クリックで数式/メモ/入力規則を表示',
-      '以下ソースの一行目は一般的CSS、二行目はrange2Table専用CSS。既述なら割愛',
     ].forEach(x => {
       v.html += '<p>' + x + '</p>\n';
       v.md += '- ' + x + '\n';
