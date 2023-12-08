@@ -92,7 +92,6 @@ async function genHtml(){
     v.r = await doGAS('getActiveCellInfo');
     v.cellInfo = JSON.parse(v.r);
     if( v.cellInfo instanceof Error ) throw v.cellInfo;
-    console.log(v.cellInfo);
 
     v.step = 2; // tableの枠組み作成
     v.dom = {attr:{class:'range2Table'},children:[{attr:{class:'th'}}]};
@@ -131,17 +130,29 @@ async function genHtml(){
         v.step = 4.3; // データ型に基づき表示形式を整える
         switch( v.d.type ){
           case 'Date':
-            // 前後のいずれかに'/'がつく場合、月と見做してmをMに変換
-            v.m = v.d.format.match(/\/m+/);
-            if( v.m ) v.d.format = v.d.format.replace(v.m[0],'/'+('M'.repeat(v.m[0].length-1)));
-            v.m = v.d.format.match(/m+\//);
-            if( v.m ) v.d.format = v.d.format.replace(v.m[0],('M'.repeat(v.m[0].length-1)+'/'));
-            v.td.text = toLocale(new Date(v.d.value),v.d.format);
+            v.step = 4.31;
+            if( !v.d.hasOwnProperty('format') ){
+              v.step = 4.311;
+              // フォーマット指定が無い日付型は、分秒がゼロなら日付・そうでなければ日時として文字列化
+              v.d.date = new Date(v.d.value);
+              v.td.text = (v.d.date.getTime() / 3600000) === Math.ceil(v.d.date.getTime() / 3600000)
+              ? toLocale(v.d.date,'yyyy/MM/dd') : v.d.date.toLocaleString();
+            } else {
+              v.step = 4.312;
+              // 前後のいずれかに'/'がつく場合、月と見做してmをMに変換
+              v.m = v.d.format.match(/\/m+/);
+              if( v.m ) v.d.format = v.d.format.replace(v.m[0],'/'+('M'.repeat(v.m[0].length-1)));
+              v.m = v.d.format.match(/m+\//);
+              if( v.m ) v.d.format = v.d.format.replace(v.m[0],('M'.repeat(v.m[0].length-1)+'/'));
+              v.td.text = toLocale(new Date(v.d.value),v.d.format);
+            }
             break;
           case 'Number':
-            v.td.text = v.d.value.toLocaleString();
+            v.step = 4.32;
+            v.td.text = (v.d.value || 0).toLocaleString();
             break;
           case 'Boolean':
+            v.step = 4.33;
             if( v.d.validation && v.d.validation.CriteriaType === 'CHECKBOX' ){
               v.td.text = v.d.value ? '☑️' : '◻︎';
             } else {
@@ -150,6 +161,7 @@ async function genHtml(){
             v.td.style['text-align'] = 'center';
             break;
           default:
+            v.step = 4.34;
             v.td.text = v.d.value ? String(v.d.value) : '';
         }
 
