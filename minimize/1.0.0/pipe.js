@@ -42,7 +42,7 @@ function minimize(str,opt={}){
     rv:str.trim(),
     rex:{
       jsdoc: /\s*?\/\*\*[\s\S]+?\*\/\s*?/g,
-      js: /\s*\/\/.+\n/g,
+      js: /\s*[^\\]\/\/.+\n/g,
       css: /\s*?\/\*[\s\S]+?\*\/\s*?/g,
       html: /\s*?<!\-\-[\s\S]+?\-\->\s*?/g,
     },
