@@ -23,6 +23,6 @@ cat proto.md \
 | node $nised -f:"__JSDoc" -r:$tmp \
 | node $nised -f:"__source" -r:core.js \
 | node $nised -f:"__test" -r:test.js \
-> ../readme.md
+> readme.md
 
 rm $tmp
