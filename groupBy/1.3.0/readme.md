@@ -457,3 +457,8 @@ function groupByTest(){
 - rev.1.0.0 : 2023/12/06 初版
 - rev.1.1.0 : 2023/12/19 オプション指定を追加
 - rev.1.2.0 : 2023/12/25 戻り値の内容を見直し
+- rev.1.3.0 : 2023/12/27
+  - 指定関数の結果がnullのレコードはrv.arrに追加しない
+  - opt.levelの指定内容をsymbolからstringに変更、Symbol.for(opt.level)として共有を容易に
+  - 指定関数もtry〜catch文使用を前提に、instanceofを追加
+  - 指定関数に渡すレコードオブジェクトをtarget.arrからtarget全体に変更(指定関数内でtarget.level他を参照可能に)

@@ -4,10 +4,13 @@
  * @param {Object} [opt={}] - オプション
  * @param {any} [opt.empty=null] - 分類項目の値が空欄(ex.科目が空欄)の場合に設定する値
  * @param {Function} [opt.func=null] - 集計用の関数。詳細は補足参照
+ * @param {any} [opt.data=null] - opt.funcで使用する呼出元から渡されたデータ
  * @param {boolean} [opt.classify=false] - trueなら結果の配列(v.rv.arr)に分類行を含める
- * @param {Symbol} [opt.level=Symbol('level')] - arr内オブジェクトのlevelメンバの名称を指定するシンボル。
- * @return {Object|Error} 
- * 
+ * @param {string} [opt.level='level'] - arr内オブジェクトのlevelメンバの名称を指定するシンボルのキー文字列
+ * @return {Object|Error}
+ *
+ * @description
+ *
  * - 集計用関数に関する補足
  *   - 未指定の場合、rv.arrには分類項目(引数colsに指定した項目)のみセットして返す
  *   - rv.arr/treeとも分類項目はシステム側で自動的に追加される
@@ -33,10 +36,12 @@ function groupBy(data,cols,opt={}){
       let rv = [];
       // 分類行出力指定あり、または出力指定なしだが分類行ではない場合
       if( opt.classify || !opt.classify && obj.level === (cols.length-1)){
-        const o = {...obj.cols, ...obj.value};
-        if( Object.keys(o).length > 0 ){
-          o[v.rv.level] = obj.level; // Symbolなので要別途追加
-          rv.push(o);
+        if( obj.value !== null ){ // 指定関数でnullが設定されたものはスキップ
+          const o = {...obj.cols, ...obj.value};
+          if( Object.keys(o).length > 0 ){  // 有効なメンバが存在していた場合
+            o[v.rv.level] = obj.level; // Symbolなので要別途追加
+            rv.push(o);
+          }
         }
       }
       // 子要素があれば再帰呼出
@@ -53,12 +58,13 @@ function groupBy(data,cols,opt={}){
     v.step = 1; // オプションの既定値を設定
     opt.empty = opt.empty || null;
     opt.func = opt.func || null;
+    opt.data = opt.data || null;
     opt.classify = opt.classify || false;
     opt.tree = opt.tree || false;
     opt.hasLevel = opt.level ? true : false;  // opt.levelが存在したか
-    v.rv.level = opt.level || Symbol('level');
-    v.rv.opt = opt;
-    console.log(`l.289 opt=${JSON.stringify(opt)}`);
+    opt.level = opt.level || 'level';
+    v.rv.level = Symbol.for(opt.level);
+    v.rv.opt = opt; // 設定されたオプションの値は戻り値にも格納
 
     v.step = 2; // グルーピング
     for( v.i=0 ; v.i<data.length ; v.i++ ){
@@ -68,7 +74,7 @@ function groupBy(data,cols,opt={}){
       for( v.j=0 ; v.j<cols.length ; v.j++ ){
         v.col = cols[v.j];  // グルーピングする項目名
         if( !v.line[v.col] ) v.line[v.col] = opt.empty; // 値未定の場合
-        v.cols[cols[v.j]] = v.line[v.col];  // グルーピング項目のオブジェクト
+        v.cols[v.col] = v.line[v.col];  // グルーピング項目のオブジェクト
         if( !v.model.hasOwnProperty(v.line[v.col])){
           // 格納するオブジェクトが未定義なら追加定義＋計算対象リスト(v.target)に追加
           v.model[v.line[v.col]]
@@ -85,7 +91,9 @@ function groupBy(data,cols,opt={}){
     v.step = 3; // 指定関数で処理結果を計算
     if( typeof opt.func === 'function' ){
       for( v.i=0 ; v.i<v.target.length ; v.i++ ){
-        v.target[v.i].value = opt.func(v.target[v.i].raw);
+        v.r = opt.func(v.target[v.i],opt.data);
+        if( v.r instanceof Error ) throw v.r;
+        v.target[v.i].value = v.r;
       }
     }
 

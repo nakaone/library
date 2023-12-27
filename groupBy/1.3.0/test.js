@@ -8,7 +8,7 @@ function groupByTest(){
     {"表":"BS","科目":"現金","本体":-340,"合計":-340}
   ],['表','科目']];
   v.lv = Symbol('level');
-  v.fc = arr=>{
+  v.fc = (arr)=>{
     let rv = {'本体':0,'合計':0};
     for( let i=0 ; i<arr.length ; i++ ){
       rv['本体'] += arr[i]['本体'];
