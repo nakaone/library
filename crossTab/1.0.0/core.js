@@ -1,9 +1,9 @@
 /** 単純テーブルをクロス集計に変換する
- * @param {Object.<string, string>[]} data - 集計の基となるデータ
+ * @param {Object[]} data - 集計の基となるデータ
  * @param {string[]} yCols - 縦軸となる項目名の配列
  * @param {string} xCol - 横軸となる項目名
  * @param {string|string[]} val - 値としてほしい項目名の配列。
- * @returns
+ * @returns {any[][]|Error}
  */
 function crossTab(data,yCols,xCol,val){
   const v = {whois:'crossTab',rv:[],step:0};
