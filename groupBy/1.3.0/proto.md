@@ -16,9 +16,15 @@
 
 <p class="header">function groupBy</p>
 
-動作イメージ | [JSDoc](#JSDoc) | [source](#source) | [改版履歴](#history)
+[JSDoc](#JSDoc) | [動作イメージ](#OperationImage) | [集計用関数に関する補足](#func) | [source](#source) | [改版履歴](#history)
 
-オブジェクトの配列から指定項目でグルーピング、指定関数で処理した結果を返す。
+<a name="JSDoc"></a>
+
+# JSDoc
+
+__JSDoc
+
+<a name="OperationImage"></a>
 
 # 動作イメージ
 
@@ -255,11 +261,98 @@ v.r.arr.forEach(x => x.level = x[v.r.level]); // levelはシンボルなので�
 }
 ```
 
-<a name="JSDoc"></a>
+<a name="func"></a>
 
-# JSDoc
+# 集計用関数に関する補足
 
-__JSDoc
+集計用関数は「グループ化された結果の一行々々について行われる処理」を示す。
+
+備考：要加筆。「こういうことをやりたい場合、呼出元でこういう関数を定義してこういうデータを渡す」という感じでまとめ直すこと。
+
+以下はcalcBSでのサンプル。
+
+## 集計用関数に渡される「グループ化された結果の一行分のオブジェクト」の形式
+
+- obj {Object}
+  - level {number} 分類行を出力する場合、そのレベル(最高位0、引数colsの添字)
+  - cols {Object.<string,any>} 分類項目名：その値
+  - raw {Object[]} 該当する行オブジェクトの配列
+  - children {Object} 下位分類のオブジェクト
+
+```
+obj = {
+  "level":4,
+  "cols":{"年度":2011,"部門":"CO","L1":1,"L2":1,"L3":-1,"表示順":3},
+  "raw":[
+    {"表":"BS","科目":"現金","部門":"CO","年度":2011,"本体":50000000,..,"LV":0},
+    {"表":"BS","科目":"現金","部門":"CO","年度":2011,"本体":-340,..,"LV":0},
+    {"表":"BS","科目":"現金","部門":"CO","年度":2011,"本体":-460,..,"LV":0},
+    ...
+  ],
+  "children":{
+    .... // 子要素を再帰的に保持
+  }
+}
+```
+
+## 呼出元での処理定義
+
+- 第一引数(obj)は「グループ化された結果の一行分のオブジェクト」、第二引数(ac)は集計用関数内で使用する勘定科目マスタオブジェクト。
+- try 〜 catch文を使用
+- 出力しないレコードはnullを返すようにする(`if( obj.level < 2 ) return null`)
+
+```
+func = (obj,ac)=>{ // 集計用関数の定義
+  const v = {whois:'calcBS.func',rv:null,step:0};
+  //console.log(`${v.whois} start.\nobj=${JSON.stringify(obj)}\nac=${JSON.stringify(ac.slice(0,3))}`)
+  try {
+    v.step = 1; // 年度のみ、または年度×部門のみのレコードは出力しない
+    if( obj.level < 2 ) return null;
+    obj.LV = obj.level === 5 ? 0 : obj.level - 1;
+    obj.L1 = obj.raw[0].L1;
+    obj.L2 = 0 < obj.LV && obj.LV < 2 ? -1 : obj.raw[0].L2;
+    obj.L3 = 0 < obj.LV && obj.LV < 3 ? -1 : obj.raw[0].L3;
+    obj.SQ = 0 < obj.LV               ? -1 : obj.raw[0].SQ;
+
+    v.step = 2; // BS用勘定科目マスタの検索
+    v.a = ac.find(x => obj.L1===x.L1 && obj.L2===x.L2 && obj.L3===x.L3 && obj.LV===x.LV && obj.SQ===x.SQ);
+    //console.log(`l.37 obj=${JSON.stringify(obj)}\nv.a=${JSON.stringify(v.a)}`)
+
+    if( v.a ){
+      v.step = 3.1; // 当該レコードの勘定科目がBS用勘定科目マスタに存在した場合
+      v.rv = {
+        '表'    : 'BS',
+        '項目名' : v.a.label,
+        '表示順' : v.a['表示順'],
+        // LVは、勘定科目は0、集計項目は1〜3を設定
+        LV      : obj.level === 5 ? 0 : obj.level - 1,
+        '本体':0,'税額':0,'合計':0
+      };
+      v.step = 3.2; // 金額を合計
+      obj.raw.forEach(a => ['本体','税額','合計'].forEach(x => v.rv[x] += a[x]));
+    }
+
+    v.step = 4; // 終了処理
+    return v.rv;
+
+  } catch(e) {
+    e.message = `\n${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\raw=${JSON.stringify(obj.raw)}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+},
+```
+
+## 呼出処理
+
+```
+v.step = 4; // BS大福帳を勘定科目(表示順)×部門×年度で集計
+v.r = groupBy(v.bs01,v.cols,{func:v.func,data:v.ac.arr,classify:true});
+if( v.r instanceof Error ) throw v.r;
+console.log(`l.144 v.r.arr=${JSON.stringify(v.r.arr.slice(0,10))}`)
+```
+
 
 <a name="source"></a>
 
@@ -288,3 +381,9 @@ __test
 - rev.1.0.0 : 2023/12/06 初版
 - rev.1.1.0 : 2023/12/19 オプション指定を追加
 - rev.1.2.0 : 2023/12/25 戻り値の内容を見直し
+- rev.1.3.0 : 2023/12/27 集計用関数関係を見直し
+  - 集計用関数もtry〜catch文使用を前提に変更(結果判定instanceofを追加)
+  - 集計用関数内でtarget.level他を参照可能にするため、集計用関数に渡すレコードオブジェクトをtarget.arrからtarget全体に変更
+  - 集計用関数の結果がnullのレコードはrv.arrに追加しない
+  - 集計用関数内で参照するマスタ等、groupByの呼出元からopt.dataとして集計用関数に渡せるよう変更
+  - opt.levelの指定内容をsymbolからstringに変更、Symbol.for(opt.level)として共有を容易に

@@ -1,7 +1,7 @@
 #!/bin/sh
 # -x  つけるとverbose
 
-echo "\n\n\n\n\ngroupBy/1.2.0/build.sh start"
+echo "\n\n\n\n\ngroupBy/1.3.0/build.sh start"
 
 # -----------------------
 # 0.事前準備
