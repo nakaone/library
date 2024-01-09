@@ -1,8 +1,8 @@
 html, body{
   width: 100%;
   margin: 0;
-  font-size: 4vw;
-  text-size-adjust: none;
+  /*font-size: 4vw;*/
+  text-size-adjust: none; /* https://gotohayato.com/content/531/ */
 }
 body * {
   font-size: 1rem;
