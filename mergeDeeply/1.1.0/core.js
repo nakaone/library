@@ -1,4 +1,11 @@
-/** 
+/** 渡された変数内のオブジェクト・配列を再帰的にマージ
+ * - pri,subともデータ型は不問。次項のデシジョンテーブルに基づき、結果を返す
+ * 
+ * @param {any} pri - 優先される変数(priority)
+ * @param {any} sub - 劣後する変数(subordinary)
+ * @param {Object} opt - オプション
+ * @returns {any|Error}
+ * 
  * #### デシジョンテーブル
  *
  * | 優先(pri) | 劣後(sub) | 結果 | 備考 |
@@ -51,19 +58,21 @@ function mergeDeeply(pri,sub,opt={}){
       v.keys = new Set([...Object.keys(pri),...Object.keys(sub)]);
       for( v.key of v.keys ){
         if( pri.hasOwnProperty(v.key) && sub.hasOwnProperty(v.key) ){
-          // 両方キーを持つ
+          v.step = 2.2; // pri,sub両方がキーを持つ
           if( v.isObj(pri[v.key]) && v.isObj(sub[v.key]) || v.isArr(pri[v.key]) && v.isArr(sub[v.key]) ){
+            v.step = 2.21; // 配列またはオブジェクトの場合は再帰呼出
             v.rv[v.key] = mergeDeeply(pri[v.key],sub[v.key],opt);
           } else {
+            v.step = 2.22; // 配列でもオブジェクトでもない場合は優先変数の値をセット
             v.rv[v.key] = pri[v.key];
           }
         } else {
-          // 片方しかキーを持っていない
+          v.step = 2.3; // pri,subいずれか片方しかキーを持っていない
           v.rv[v.key] = pri.hasOwnProperty(v.key) ? pri[v.key] : sub[v.key];
         }
       }
     } else if( v.isArr(pri) && v.isArr(sub) ){
-      v.step = 3; // sub,pri共に配列の場合
+      v.step = '3 '+opt.array; // sub,pri共に配列の場合
       switch( opt.array ){
         case 'pri':
           // pri: 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
