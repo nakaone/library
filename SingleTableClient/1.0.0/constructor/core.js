@@ -1,9 +1,7 @@
-/** SingleTableClientオブジェクトの生成
- * @param {Object} arg
- * 
+/** Google Spreadの単一シート(テーブル)の内容をhtml(SPA)でCRUD
  * - シートをCRUDする場合はarg.nameを、シート無しの場合はarg.dataを指定
  * 
- * ## クラスのメンバ一覧
+ * #### クラスのメンバ一覧
  * 
  * - className
  * - sheetName {string} 操作対象シート名
@@ -11,7 +9,7 @@
  * - listDef
  * - detailDef
  * 
- * ## divの構造
+ * #### divの構造
  * 
  * - loading ※不存在ならbody直下に追加
  * - parent
@@ -33,7 +31,7 @@
  *         - items　※
  *         - control
  * 
- * ## itemオブジェクト
+ * #### itemオブジェクト
  * 
  * ```
  * id:{
@@ -64,6 +62,9 @@
  * 
  * - view/editが不在の場合、当該モード時には表示しない
  * - 関数の引数は当該オブジェクト
+ * 
+ * @param {Object} arg - 内容はv.default定義を参照
+ * @returns {null|Error}
  */
 constructor(arg={}){
 
