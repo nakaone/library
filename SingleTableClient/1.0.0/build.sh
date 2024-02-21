@@ -18,6 +18,7 @@ mkdir $tmp
 # ----------------------------------------------
 methods=(
   constructor
+  realize
   list
   detail
   search

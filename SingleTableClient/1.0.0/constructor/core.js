@@ -18,7 +18,8 @@
  *       - header
  *         - items ※ : 一覧表名称等
  *         - control : 検索(窓、ボタン、クリア)、新規
- *       - table ※ : ヘッダと項目の定義
+ *       - thead : ヘッダ
+ *       - tbody : 明細
  *       - footer
  *         - items ※
  *         - control
@@ -73,128 +74,69 @@ constructor(arg={}){
     sheetName: null, // {string} sheetName - 参照先シート名またはA1形式の範囲指定文字列。sheetDataと択一
     sheetData: [], // {Object[]} sheetData - 処理対象となるオブジェクトの配列。sheetNameと択一
     parent: 'body', // {string|HTMLElement} - 親要素
-    div: {display:'grid',gridTemplateColumns:'repeat(12,1fr)',width:'100%',gridColumn:'1/13'},
-    wrapper: {
-      list:{
-        header: { // style = this.def.div
-          items: {},
-          control: {
-            keyword: {tag:'input',attr:{type:'text'},style:{gridColumn:'1/5'}},
-            search: {tag:'button',text:'search',style:{gridColumn:'5/7'},event:{click:()=>this.search()}},
-            clear: {tag:'button',text:'clear',style:{gridColumn:'7/9'},event:{click:()=>this.clear()}},
-            append: {tag:'button',text:'append',style:{gridColumn:'11/13'},event:{click:()=>this.append()}},
-          },
-        },
-        table: {},
-        footer: { // style = this.def.div
-          items: {},
-          control: true, // true:headerと同じ false:非表示 object:個別に定義
-        },
-      },
-      detail:{ // header,table,footerは縦に3つ並べる
-        header: { // style = this.def.div
-          items: {},
-          control: {
-            list: {tag:'button',text:'list',style:{gridColumn:'1/4'},event:{click:()=>this.list()}},
-            detail: {tag:'button',text:'detail',style:{gridColumn:'4/7'},event:{click:()=>this.detail()}},
-            edit: {tag:'button',text:'edit',style:{gridColumn:'4/7'},event:{click:()=>this.edit()}},
-            update: {tag:'button',text:'update',style:{gridColumn:'7/10'},event:{click:()=>this.update()}},
-            delete: {tag:'button',text:'delete',style:{gridColumn:'10/13'},event:{click:()=>this.delete()}},
-          },
-        },
-        table: {},
-        footer: {
-          items: {},
-          control: true, // true:headerと同じ false:非表示 object:個別に定義
-        },
-      },
+    wrapper: null, // {HTMLElement} - 親要素直下、一番外側の枠組みDOM
+    getData: {func:'',args:[]}, // {Object} - データ取得を行うlist内のdoGASに渡す引数
+    primaryKey: null, // {string} - プライマリーキー。data-idにセットする項目名。
+    data: [], // {Object[]} - シート上のデータ全件
+    population: () => true, // {Function} - 一覧に掲載するitemを取捨選択する関数
+    frame: {attr:{name:'wrapper',class:'SingleTableClient'},children:[ // 各画面の枠組み定義
+      {attr:{name:'list',class:'screen'},children:[
+        {attr:{name:'header'},children:[
+          {attr:{name:'items'},children:[]},
+          {attr:{name:'control'},children:[]},
+        ]},
+        {attr:{name:'table'},children:[]}, // thead,tbodyに分かれると幅に差が発生するので一元化
+        {attr:{name:'footer'},children:[
+          {attr:{name:'items'},children:[]},
+          {attr:{name:'control'},children:[]},
+        ]},
+      ]},
+      {attr:{name:'detail',class:'screen'},children:[
+        {attr:{name:'header'},children:[
+          {attr:{name:'items'},children:[]},
+          {attr:{name:'control'},children:[]},
+        ]},
+        {attr:{name:'table'},children:[]},
+        {attr:{name:'footer'},children:[
+          {attr:{name:'items'},children:[]},
+          {attr:{name:'control'},children:[]},
+        ]},
+      ]},
+    ]},
+    listControl: { // 一覧画面に表示するボタンの定義
+      keyword: {tag:'input',attr:{type:'text'},style:{gridColumn:'1/5'}},
+      search: {tag:'button',text:'search',style:{gridColumn:'5/7'},event:{click:()=>this.search()}},
+      clear: {tag:'button',text:'clear',style:{gridColumn:'7/9'},event:{click:()=>this.clear()}},
+      append: {tag:'button',text:'append',style:{gridColumn:'11/13'},event:{click:()=>this.append()}},
+    },
+    detailControl: { // 詳細画面に表示するボタンの定義
+      list: {tag:'button',text:'list',style:{gridColumn:'1/4'},event:{click:()=>this.list()}},
+      detail: {tag:'button',text:'detail',style:{gridColumn:'4/7'},event:{click:()=>this.detail()}},
+      edit: {tag:'button',text:'edit',style:{gridColumn:'4/7'},event:{click:()=>this.edit()}},
+      update: {tag:'button',text:'update',style:{gridColumn:'7/10'},event:{click:()=>this.update()}},
+      delete: {tag:'button',text:'delete',style:{gridColumn:'10/13'},event:{click:()=>this.delete()}},
     },
   }};
   console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
   try {
 
     v.step = 1; // 既定値の設定
-    console.log(v.default);
     v.opt = mergeDeeply(arg,v.default);
-    console.log(`l.134 v.opt=${stringify(v.opt)}`);
-    //for( v.key in v.default ) this[v.key] = v.default[v.key];
-
-    v.step = 2; // 適用値の設定
-
+    if( v.opt instanceof Error ) throw v.opt;
     // arg.name/dataが両方とも無指定ならエラー
 
-    /*
-    v.step = 1; // メンバの初期値設定
-    // 親要素の特定。未指定ならbodyを親とする。
-    if( opt.parent ){
-      this.parent = typeof opt.parent === 'string'
-        ? document.querySelector(opt.parent) : opt.parent;
-    } else {
-      this.parent = document.querySelector('body');
+    v.step = 2; // 適用値の設定
+    for( v.key in v.opt ) this[v.key] = v.opt[v.key];
+    if( typeof v.opt.parent === 'string' ){
+      this.parent = document.querySelector(v.opt.parent);
     }
 
-    v.step = 2; // 画面の初期化
-    this.parent.innerHTML = '';
-    if( document.querySelector('.screen[name="loading"]') === null ){
-      // body直下に待機画面が無ければ追加
-      v.r = createElement({attr:{name:'loading',class:'screen'},text:'loading...'},document.querySelector('body'));
-      if( v.r instanceof Error ) throw v.r;
+    v.step = 3; // 枠組み定義
+    if( !document.querySelector('body > div[name="loading"]') ){
+      v.r = createElement({attr:{name:'loading',class:'loader screen'},text:'loading...'},'body');
     }
-
-    v.r = createElement([
-      {attr:{name:'list',class:'screen'},children:[
-        {attr:{name:'header'},children:[
-          {attr:{name:'title'}},
-          {attr:{name:'control'}},
-        ]},
-        {attr:{class:'table'},style:{gridTemplateColumns: '1fr 11fr'}},
-        {attr:{name:'footer'},children:[{attr:{name:'control'}}]},
-      ]},
-      {attr:{name:'detail',class:'screen'},children:[
-        {attr:{name:'header'},children:[
-          {attr:{name:'title'}},
-          {attr:{name:'control'}},
-        ]},
-        {attr:{class:'table'},style:{gridTemplateColumns: '1fr 11fr'}},
-        {attr:{name:'footer'},children:[{attr:{name:'control'}}]},
-      ]},
-      {attr:{name:'edit',class:'screen'},children:[
-        {attr:{name:'header'},children:[
-          {attr:{name:'title'}},
-          {attr:{name:'control'}},
-        ]},
-        {attr:{class:'table'},style:{gridTemplateColumns: '2fr 10fr'}},
-        {attr:{name:'footer'},children:[{attr:{name:'control'}}]},
-      ]},
-    ],this.parent);
-    if( v.r instanceof Error ) throw v.r;
-
-    ['header','footer'].forEach(x => {
-      v.r = createElement([
-        {tag:'input',attr:{type:'text'},style:{gridColumn:'1/5'}},
-        {tag:'button',text:'search',style:{gridColumn:'5/7'},event:{click:()=>this.search()}},
-        {tag:'button',text:'clear',style:{gridColumn:'7/9'},event:{click:()=>this.clear()}},
-        {tag:'button',text:'append',style:{gridColumn:'11/13'},event:{click:()=>this.append()}},
-      ],this.parent.querySelector(`[name="list"] [name="${x}"] [name="control"]`));
-      if( v.r instanceof Error ) throw v.r;
-
-      v.r = createElement([
-        {tag:'button',text:'list',style:{gridColumn:'1/4'},event:{click:()=>this.list()}},
-        {tag:'button',text:'edit',style:{gridColumn:'4/7'},event:{click:()=>this.edit()}},
-        {tag:'button',text:'update',style:{gridColumn:'7/10'},event:{click:()=>this.update()}},
-        {tag:'button',text:'delete',style:{gridColumn:'10/13'},event:{click:()=>this.delete()}},
-      ],this.parent.querySelector(`[name="detail"] [name="${x}"] [name="control"]`));
-      if( v.r instanceof Error ) throw v.r;
-
-      v.r = createElement([
-        {tag:'button',text:'list',style:{gridColumn:'1/4'},event:{click:()=>this.list()}},
-        {tag:'button',text:'detail',style:{gridColumn:'4/7'},event:{click:()=>this.detail()}},
-        {tag:'button',text:'update',style:{gridColumn:'7/10'},event:{click:()=>this.update()}},
-        {tag:'button',text:'delete',style:{gridColumn:'10/13'},event:{click:()=>this.delete()}},
-      ],this.parent.querySelector(`[name="edit"] [name="${x}"] [name="control"]`));
-      if( v.r instanceof Error ) throw v.r;
-    });
-    */
+    createElement(this.frame,this.parent);
+    this.wrapper = this.parent.querySelector('.SingleTableClient[name="wrapper"]');
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.`);
