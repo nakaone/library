@@ -1,6 +1,7 @@
 class SingleTableClient {
 
   // ::constructor::
+  // ::realize::
   // ::list::
   // ::detail::
   // ::search::
