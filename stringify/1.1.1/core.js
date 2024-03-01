@@ -3,13 +3,13 @@
  * - 関数はtoString()で文字列化
  * - シンボルは`Symbol(xxx)`という文字列とする
  * - undefinedは'undefined'(文字列)とする
- * 
+ *
  * @param {Object} variable - 文字列化対象変数
  * @param {Object|boolean} opt - booleanの場合、opt.addTypeの値とする
  * @param {boolean} opt.addType=false - 文字列化の際、元のデータ型を追記
  * @returns {string}
  * @example
- * 
+ *
  * ```
  * console.log(`l.424 v.td=${stringify(v.td,true)}`)
  * ⇒ l.424 v.td={
@@ -29,14 +29,14 @@ function stringify(variable,opt={addType:false}){
   const v = {whois:'stringify',rv:null,step:0};
   const conv = arg => {
     const w = {type:whichType(arg)};
-    if( typeof opt === 'boolean' ) opt={addType:opt};
+    w.pre = opt.addType ? `[${w.type}]` : '';
     switch( w.type ){
       case 'Function': case 'Arrow': case 'Symbol':
-        w.rv = (opt.addType?`[${w.type}]`:'') + arg.toString(); break;
+        w.rv = w.pre + arg.toString(); break;
       case 'BigInt':
-        w.rv = (opt.addType?`[${w.type}]`:'') + parseInt(arg); break;
+        w.rv = w.pre + parseInt(arg); break;
       case 'Undefined':
-        w.rv = (opt.addType?`[${w.type}]`:'') + 'undefined'; break;
+        w.rv = w.pre + 'undefined'; break;
       case 'Object':
         w.rv = {};
         for( w.i in arg ){
@@ -52,14 +52,17 @@ function stringify(variable,opt={addType:false}){
         }
         break;
       default:
-        w.rv = (opt.addType?`[${w.type}]`:'') + arg;
+        w.rv = w.pre + arg;
     }
     return w.rv;
   };
-  //console.log(`${v.whois} start.`);
+  //console.log(`${v.whois} start.\nvariable=${variable}\nopt=${JSON.stringify(opt)}`);
   try {
 
-    v.step = 1; // 終了処理
+    v.step = 1; // 事前準備
+    if( typeof opt === 'boolean' ) opt={addType:opt};
+
+    v.step = 2; // 終了処理
     //console.log(`${v.whois} normal end.`);
     return JSON.stringify(conv(variable));
 

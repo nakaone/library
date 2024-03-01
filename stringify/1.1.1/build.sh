@@ -7,7 +7,7 @@ echo "\n\n\n\n\nbuild.sh start"
 find . -name '.DS_Store' -type f -ls -delete
 
 lib="/Users/ena.kaon/Desktop/GitHub/library"
-mod="$lib/stringify/1.1.0"
+mod="$lib/stringify/1.1.1"
 nised="$lib/nised/1.0.0/pipe.cjs"
 
 # -------------------------------------------
