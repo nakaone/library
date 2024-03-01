@@ -1,3 +1,60 @@
+<style>
+.triDown { /* 下向き矢印 */
+  --bw: 50px;
+  width: 0px;
+  height: 0px;
+  border-top: calc(var(--bw) * 0.7) solid #aaa;
+  border-right: var(--bw) solid transparent;
+  border-left: var(--bw) solid transparent;
+  border-bottom: calc(var(--bw) * 0.2) solid transparent;
+}
+.title {
+  font-size: 2.4rem;
+  text-shadow: 2px 2px 5px #888;
+}
+</style>
+
+<p class="title">function createElement</p>
+
+[JSDoc](#JSDoc) | [動作イメージ](#OperationImage) | [source](#source) | [改版履歴](#history)
+
+<a name="JSDoc"></a>
+
+# JSDoc
+
+<a name="createElement"></a>
+
+## createElement(arg, [parent]) ⇒ <code>HTMLElement</code> \| <code>Error</code>
+HTMLElementを生成する
+
+**Kind**: global function  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| arg | <code>CEDefObj</code> \| <code>Array.&lt;CEDefObj&gt;</code> |  | 生成するHTMLElementの定義 |
+| [parent] | <code>HTMLElement</code> \| <code>string</code> | <code></code> | 本関数内部で親要素への追加まで行う場合に指定 |
+
+
+
+<a name="OperationImage"></a>
+
+# 動作イメージ
+
+## サンプルデータ
+
+## 動作結果
+
+### パターン①
+
+<div class="triDown"></div>
+
+<a name="source"></a>
+
+# source
+
+<details><summary>core.js</summary>
+
+```
 /** HTMLElementを生成する
  * @param {CEDefObj|CEDefObj[]} arg - 生成するHTMLElementの定義
  * @param {HTMLElement|string} [parent=null] - 本関数内部で親要素への追加まで行う場合に指定
@@ -88,3 +145,21 @@ function createElement(arg,parent=null){
     return e;
   }
 }
+```
+
+</details>
+
+<details><summary>test.js</summary>
+
+```
+
+```
+
+</details>
+
+<a name="history"></a>
+
+# 改版履歴
+
+- rev.1.2.1 : 2024/03/01 textタグでtextareaの対応を追加
+- rev.1.0.0 : 2023/10/05 初版
