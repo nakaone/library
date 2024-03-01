@@ -62,7 +62,7 @@
  * - [等価性の比較と同一性](https://developer.mozilla.org/ja/docs/Web/JavaScript/Equality_comparisons_and_sameness)
  * - データ型が一致していないと、内容的に一致していても同値では無いと判断(Ex.Number 1 != BigInt 1)。
  * - 配列は、①長さが一致、かつ②順番に比較した個々の値が同値の場合のみ同値と看做す
- * 
+ *
  * @param {any} v1 - 変数1
  * @param {any} v2 - 変数2
  * @returns {boolean|Error}
@@ -117,7 +117,7 @@ function isEqual(v1,v2){
     return v.rv;
 
   } catch(e) {
-    e.message = `\n${v.whois} abnormal end at step.${v.step}`
+    e.message = `${v.whois} abnormal end at step.${v.step}`
     + `\n${e.message}\nv1=${v1}\nv2=${v2}`;
     console.error(`${e.message}\nv=${JSON.stringify(v)}`);
     return e;
