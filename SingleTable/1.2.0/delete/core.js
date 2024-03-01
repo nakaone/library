@@ -1,7 +1,7 @@
 /** 条件に該当するレコード(オブジェクト)を削除
   * @param {Object} [opt={}] - オプション
   * @param {Function} [opt.where=()=>true] - レコードを引数として、条件に合致する場合trueを返す関数
-  * @returns {Object|Error} 削除されたthis.data/raw行の配列
+  * @returns {Object|Error} 削除されたthis.data行のオブジェクト
   * 
   * @example
   * 
@@ -18,7 +18,7 @@
   - "top 3"等、先頭・末尾n行の削除
 */
 delete(opt={}){
-  const v = {whois:this.className+'.delete',step:0,rv:{data:[],raw:[]}};
+  const v = {whois:this.className+'.delete',step:0,rv:[]};
   console.log(`${v.whois} start.\nopt.where=${opt.where.toString()}`);
   try {
 
@@ -32,9 +32,9 @@ delete(opt={}){
       if( Object.keys(this.data[v.i]).length === 0
         || !opt.where(this.data[v.i]) ) continue;
       v.step = 4; // this.dataからの削除
-      v.rv.data.push(this.data.splice(v.i,1)[0]);
+      v.rv.push(this.data.splice(v.i,1)[0]);
       v.step = 5; // this.rawからの削除
-      v.rv.raw.push(this.raw.splice(v.i,1)[0]);
+      this.raw.splice(v.i,1)[0];
       v.step = 6; // (シートが存在すれば)シートからの削除
       if( this.sheet === null ) continue;
       v.rowNum = this.top + v.i + 1;
@@ -44,7 +44,7 @@ delete(opt={}){
     }
 
     v.step = 7; // 終了処理
-    console.log(`${v.whois} normal end. num=${v.rv.data.length}`);
+    console.log(`${v.whois} normal end. num=${v.rv.length}`);
     return v.rv;
 
   } catch(e) {

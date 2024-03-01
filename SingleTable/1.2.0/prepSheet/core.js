@@ -45,18 +45,18 @@ prepSheet(){
     v.bottom = v.dataRange.getLastRow();
     v.left = v.dataRange.getColumn();
     v.right = v.dataRange.getLastColumn();
-    console.log(`l.185 v.top=${v.top}, bottom=${v.bottom}, left=${v.left}, right=${v.right}`+`\nthis.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}`);
+    //console.log(`l.185 v.top=${v.top}, bottom=${v.bottom}, left=${v.left}, right=${v.right}`+`\nthis.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}`);
     this.top = this.top < v.top ? v.top : this.top;
     // 最終行が先頭行以上、または範囲外の場合は存在範囲に変更
     this.bottom = this.bottom > v.bottom ? v.bottom : this.bottom;
     this.left = this.left < v.left ? v.left : this.left;
     this.right = this.right > v.right ? v.right : this.right;
-    console.log(`l.191 this.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}`);
+    //console.log(`l.191 this.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}`);
 
     v.step = 3; // ヘッダ行番号以下の有効範囲(行)をv.rawに取得
     v.range = [this.top, this.left, this.bottom - this.top + 1, this.right - this.left + 1];
     v.raw = this.sheet.getRange(...v.range).getValues();
-    console.log(`l.196 v.raw=${JSON.stringify(v.raw.slice(0,10))}`);
+    //console.log(`l.196 v.raw=${JSON.stringify(v.raw.slice(0,10))}`);
 
     v.step = 4; // ヘッダ行の空白セルに'ColN'を補完
     v.colNo = 1;

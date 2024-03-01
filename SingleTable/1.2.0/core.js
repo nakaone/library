@@ -152,18 +152,18 @@ class SingleTable {
       v.bottom = v.dataRange.getLastRow();
       v.left = v.dataRange.getColumn();
       v.right = v.dataRange.getLastColumn();
-      console.log(`l.185 v.top=${v.top}, bottom=${v.bottom}, left=${v.left}, right=${v.right}`+`\nthis.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}`);
+      //console.log(`l.185 v.top=${v.top}, bottom=${v.bottom}, left=${v.left}, right=${v.right}`+`\nthis.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}`);
       this.top = this.top < v.top ? v.top : this.top;
       // 最終行が先頭行以上、または範囲外の場合は存在範囲に変更
       this.bottom = this.bottom > v.bottom ? v.bottom : this.bottom;
       this.left = this.left < v.left ? v.left : this.left;
       this.right = this.right > v.right ? v.right : this.right;
-      console.log(`l.191 this.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}`);
+      //console.log(`l.191 this.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}`);
   
       v.step = 3; // ヘッダ行番号以下の有効範囲(行)をv.rawに取得
       v.range = [this.top, this.left, this.bottom - this.top + 1, this.right - this.left + 1];
       v.raw = this.sheet.getRange(...v.range).getValues();
-      console.log(`l.196 v.raw=${JSON.stringify(v.raw.slice(0,10))}`);
+      //console.log(`l.196 v.raw=${JSON.stringify(v.raw.slice(0,10))}`);
   
       v.step = 4; // ヘッダ行の空白セルに'ColN'を補完
       v.colNo = 1;
@@ -205,7 +205,6 @@ class SingleTable {
       return e;
     }
   }
-
   /** オブジェクトの配列からシートイメージを作成
     * - シートイメージで渡された場合(raw)
     *   - headerは指定の有無に拘わらず先頭行で置換<br>
@@ -636,7 +635,7 @@ class SingleTable {
   /** 条件に該当するレコード(オブジェクト)を削除
     * @param {Object} [opt={}] - オプション
     * @param {Function} [opt.where=()=>true] - レコードを引数として、条件に合致する場合trueを返す関数
-    * @returns {Object|Error} 削除されたthis.data/raw行の配列
+    * @returns {Object|Error} 削除されたthis.data行のオブジェクト
     * 
     * @example
     * 
@@ -653,7 +652,7 @@ class SingleTable {
     - "top 3"等、先頭・末尾n行の削除
   */
   delete(opt={}){
-    const v = {whois:this.className+'.delete',step:0,rv:{data:[],raw:[]}};
+    const v = {whois:this.className+'.delete',step:0,rv:[]};
     console.log(`${v.whois} start.\nopt.where=${opt.where.toString()}`);
     try {
   
@@ -667,9 +666,9 @@ class SingleTable {
         if( Object.keys(this.data[v.i]).length === 0
           || !opt.where(this.data[v.i]) ) continue;
         v.step = 4; // this.dataからの削除
-        v.rv.data.push(this.data.splice(v.i,1)[0]);
+        v.rv.push(this.data.splice(v.i,1)[0]);
         v.step = 5; // this.rawからの削除
-        v.rv.raw.push(this.raw.splice(v.i,1)[0]);
+        this.raw.splice(v.i,1)[0];
         v.step = 6; // (シートが存在すれば)シートからの削除
         if( this.sheet === null ) continue;
         v.rowNum = this.top + v.i + 1;
@@ -679,7 +678,7 @@ class SingleTable {
       }
   
       v.step = 7; // 終了処理
-      console.log(`${v.whois} normal end. num=${v.rv.data.length}`);
+      console.log(`${v.whois} normal end. num=${v.rv.length}`);
       return v.rv;
   
     } catch(e) {
@@ -690,6 +689,5 @@ class SingleTable {
       return e;
     }
   }
-
 
 }
