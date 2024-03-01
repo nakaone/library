@@ -1,11 +1,11 @@
 /** 渡された変数内のオブジェクト・配列を再帰的にマージ
  * - pri,subともデータ型は不問。次項のデシジョンテーブルに基づき、結果を返す
- * 
+ *
  * @param {any} pri - 優先される変数(priority)
  * @param {any} sub - 劣後する変数(subordinary)
  * @param {Object} opt - オプション
  * @returns {any|Error}
- * 
+ *
  * #### デシジョンテーブル
  *
  * | 優先(pri) | 劣後(sub) | 結果 | 備考 |
@@ -28,9 +28,9 @@
  * |  -  | {B} | {B} | |
  *
  * #### opt.array : pri,sub双方配列の場合の処理方法を指定
- * 
+ *
  * 例 pri:[1,2,{x:'a'},{a:10,b:20}], sub:[1,3,{x:'a'},{a:30,c:40}]
- * 
+ *
  * - pri(priority): 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
  * - add: 値の重複に拘わらず、pri+subを返す ⇒ [1,2,{x:'a'},{a:10,b:20},1,3,{x:'a'},{a:30,c:40}]
  * - set(既定値): priに無いsubの要素をpriに追加 ⇒ [1,2,3,{x:'a'},{x:'a'},{a:10,b:20},{a:30,c:40}]
@@ -45,7 +45,7 @@ function mergeDeeply(pri,sub,opt={}){
     isObj: arg => arg && String(Object.prototype.toString.call(arg).slice(8,-1)) === 'Object',
     isArr: arg => arg && Array.isArray(arg),
   };
-  //console.log(`${v.whois} start.`+`\npri=${JSON.stringify(pri)}`+`\nsub=${JSON.stringify(sub)}`+`\nopt=${JSON.stringify(opt)}`);
+  //console.log(`${v.whois} start.`+`\npri=${stringify(pri)}`+`\nsub=${stringify(sub)}`+`\nopt=${stringify(opt)}`);
   try {
 
     v.step = 1; // 既定値の設定
@@ -98,14 +98,16 @@ function mergeDeeply(pri,sub,opt={}){
           v.rv = [...new Set([...pri,...sub])];
       }
     } else {
-      v.step = 4; // subとpriのデータ型が異なる ⇒ priをセット
-      v.rv = pri;
+      v.step = 4; // subとpriのデータ型が異なる ⇒ priを優先してセット
+      v.rv = whichType(pri,'Undefined') ? sub : pri;
+      //console.log(`l.228 pri=${stringify(pri)}, sub=${stringify(sub)} -> rv=${stringify(v.rv)}`)
     }
     v.step = 5;
+    //console.log(`${v.whois} normal end.`+`\npri=${stringify(pri)}`+`\nsub=${stringify(sub)}`+`\nopt=${stringify(opt)}`+`\nv.rv=${stringify(v.rv)}`)
     return v.rv;
 
   } catch(e) {
-    e.message = `\n${v.whois} abnormal end at step.${v.step}`
+    e.message = `${v.whois} abnormal end at step.${v.step}`
     + `\n${e.message}`
     + `\npri=${JSON.stringify(pri)}`
     + `\nsub=${JSON.stringify(sub)}`
