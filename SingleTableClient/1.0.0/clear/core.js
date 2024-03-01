@@ -1,14 +1,24 @@
+/** キーワード文字列の消去 */
 clear(){
   const v = {whois:this.className+'.clear',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 9; // 終了処理
+    v.step = 1; // 入力欄をクリア
+    this.wrapper.querySelectorAll('[name="list"] [name="control"] [name="keyword"]')
+    .forEach(x => x.value = '');
+
+    v.step = 2; // listで一覧表を再描画
+    this.source.data = [];
+    v.r = this.list();
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 3; // 終了処理
     console.log(`${v.whois} normal end.`);
     return v.rv;
 
   } catch(e) {
-    e.message = `\n${v.whois} abnormal end at step.${v.step}`
+    e.message = `${v.whois} abnormal end at step.${v.step}`
     + `\n${e.message}`;
     console.error(`${e.message}\nv=${JSON.stringify(v)}`);
     return e;

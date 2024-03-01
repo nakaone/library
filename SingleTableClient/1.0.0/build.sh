@@ -24,7 +24,6 @@ methods=(
   search
   clear
   append
-  edit
   update
   delete
 )

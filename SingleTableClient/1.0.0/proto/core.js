@@ -7,7 +7,6 @@ class SingleTableClient {
   // ::search::
   // ::clear::
   // ::append::
-  // ::edit::
   // ::update::
   // ::delete::
   

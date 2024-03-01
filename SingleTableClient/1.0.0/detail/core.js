@@ -1,27 +1,55 @@
-/** 詳細・編集画面の表示 */
+/** 詳細・編集画面の表示
+ * - 遷移元が一覧表の場合、id,modeは一覧表明細のonclickで取得・設定(id != undefined)
+ * - 詳細から編集画面に遷移する際のidの引き継ぎはthis.currentを介して行う<br>
+ *   ∵ editボタンはconstructorで追加されるが、そこでidを設定することはできない。
+ *   (やるならボタンの追加をここで行う必要がある)
+ *   本メソッド内で`addeventListener('click',this.edit(1))`のように
+ *   IDを持たせたイベントを設定することは可能だが、
+ *   view,edit,update,deleteの全てについて設定が必要になり、煩雑なため
+ *   インスタンスメンバで「現在表示・編集している画面ID」を持たせた方がわかりやすいと判断。
+ */
 detail(id=undefined,mode='view'){
   const v = {whois:this.className+'.detail',rv:null,step:0};
-  console.log(`${v.whois} start.`);
+  console.log(`${v.whois} start. id=${id}, mode=${mode}`);
   try {
 
-    v.step = 1; // 事前準備：表示・編集対象およびモードの判定
-    v.event = event || null
+    v.step = 1.1; // 事前準備：表示・編集対象およびモードの判定
     if( id === undefined ){
-      // 一覧表からクリックされて遷移してきた場合、対象をdata-idタグから特定
-      v.id = JSON.parse(event.target.getAttribute('data-id'));
-      // モードの判定。「更新」なら遷移元がbutton,aタグのはず。
-      // 遷移元がDIVなら一覧表等で表示対象として選ばれて遷移してきたと解釈
-      v.mode = whichType(event.target) === 'HTMLDivElement' ? 'view' : 'edit';
+      id = this.current;
     } else {
-      // 更新結果の表示等、呼び出されて処理を行う場合は引数を設定
-      v.id = id;
-      v.mode = mode;
+      this.current = id;
     }
-    v.step = 1.1; // 対象行オブジェクトをv.dataに取得
-    v.data = this.data.find(x => x[this.primaryKey] === v.id);
-    v.step = 1.2; // 操作対象のDOMを特定
+
+    v.step = 1.2; // ボタン表示の変更
+    if( mode === 'view' ){
+      v.step = 1.21; // edit->view状態に変更
+      for( v.i=0 ; v.i<2 ; v.i++ ){
+        // viewボタンを隠し、editボタンを表示
+        this.ctrl.detail.view[v.i].style.zIndex = 1;
+        this.ctrl.detail.edit[v.i].style.zIndex = 2;
+        // updateボタンを隠し、deleteボタンを表示
+        this.ctrl.detail.update[v.i].style.zIndex = 1;
+        this.ctrl.detail.delete[v.i].style.zIndex = 2;
+      }
+    } else {  // mode='edit'
+      v.step = 1.22; // view->edit状態に変更
+      // editボタンを隠し、viewボタンを表示
+      for( v.i=0 ; v.i<2 ; v.i++ ){
+        this.ctrl.detail.view[v.i].style.zIndex = 2;
+        this.ctrl.detail.edit[v.i].style.zIndex = 1;
+        // deleteボタンを隠し、updateボタンを表示
+        this.ctrl.detail.update[v.i].style.zIndex = 2;
+        this.ctrl.detail.delete[v.i].style.zIndex = 1;
+      }
+    }
+
+    v.step = 1.3; // 詳細表示領域をクリア
+    this.wrapper.querySelector('[name="detail"] [name="table"]').innerHTML = '';
+
+    v.step = 1.4; // 対象行オブジェクトをv.dataに取得
+    v.data = this.source.raw.find(x => x[this.primaryKey] === id);
+    v.step = 1.5; // 操作対象(詳細情報表示領域)のDOMを特定
     v.table = this.wrapper.querySelector('[name="detail"] [name="table"]');
-    //console.log(`l.380 ${v.whois}: id=${id}, mode=${mode}, v.id=${v.id}\nv.data=${stringify(v.data)}`);
 
     v.step = 2; // 詳細画面に表示する項目を順次追加
     for( v.i=0 ; v.i<this.detailCols.length ; v.i++ ){
@@ -34,31 +62,44 @@ detail(id=undefined,mode='view'){
       if( v.col.hasOwnProperty('name') ) v.proto.attr = {name:v.col.name};
       v.step = 2.3; // データに項目が無い場合、空文字列をセット(例：任意入力の備考欄が空白)
       if( !v.data.hasOwnProperty(v.col.name) ) v.data[v.col.name] = '';
-      v.step = 2.3; // 参照か編集かを判断し、指定値と既定値をマージ
-      if( v.col.hasOwnProperty('edit') && v.mode === 'edit' ){
-        v.step = 2.31; // 編集指定の場合、detailCols.editのcreateElementオブジェクトを出力
+      v.step = 2.4; // 参照か編集かを判断し、指定値と既定値をマージ
+      if( v.col.hasOwnProperty('edit') && mode === 'edit' ){
+        v.step = 2.41; // 編集指定の場合、detailCols.editのcreateElementオブジェクトを出力
         v.td = mergeDeeply(v.col.edit, v.proto);
       } else {
-        v.step = 2.32; // 参照指定の場合、または編集指定だがeditのcreateElementが無指定の場合、
+        v.step = 2.42; // 参照指定の場合、または編集指定だがeditのcreateElementが無指定の場合、
         // detailCols.viewのcreateElementオブジェクトを出力
         v.td = mergeDeeply(v.col.view, v.proto);
       }
-      v.step = 2.4; // 関数で指定されている項目を実数化
+      v.step = 2.5; // 関数で指定されている項目を実数化
       v.td = this.realize(v.td,v.data);
-      console.log(`l.424 v.td=${stringify(v.td,true)}`)
-      v.step = 2.5; // table領域に項目を追加
+      v.step = 2.6; // table領域に項目を追加
       createElement(v.td,v.table);
     }
 
-    v.step = 3; // 終了処理
+    v.step = 3; // this.sourceCode 詳細・編集画面のcodeタグ内をクリック時にクリップボードに内容をコピー
+    if( this.sourceCode ){
+      this.wrapper.querySelectorAll('[name="detail"] [name="table"] code').forEach(x => {
+        x.classList.add('prettyprint');
+        x.classList.add('linenums');
+        x.addEventListener('click',()=>writeClipboard());
+      });
+      this.wrapper.querySelectorAll('[name="detail"] [name="table"] pre').forEach(x => {
+        x.classList.add('prettyprint');
+        x.classList.add('linenums');
+      });
+    }
+
+    v.step = 4; // 終了処理
     changeScreen('detail');
     console.log(`${v.whois} normal end.`);
     return v.rv;
 
   } catch(e) {
-    e.message = `\n${v.whois} abnormal end at step.${v.step}`
+    e.message = `${v.whois} abnormal end at step.${v.step}`
     + `\n${e.message}`;
     console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
     return e;
   }
 }
