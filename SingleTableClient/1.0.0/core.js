@@ -993,32 +993,6 @@ class SingleTableClient {
    * - サーバ側はIDがSymbolなら新規と判断、新規IDを自動採番する
    * - 変更点：this.idMap, detail.cols.key
    *
-   * ```mermaid
-   * sequenceDiagram
-   *   autonumber
-   *
-   *   Activate client
-   *   Note right of client: append()
-   *   client ->> client: 新規(全項目未設定)画面表示
-   *   client ->> client: this.source.rawにid=nullで登録
-   *   Note right of client: update()
-   *   client ->> server: id:null,data
-   *
-   *   Activate server
-   *   Note right of server: update()
-   *   server ->> server: id=nullなら自動採番
-   *   server ->> insert: id:new,data
-   *
-   *   Activate insert
-   *   insert ->> server: 1(追加された行数)
-   *   Deactivate insert
-   *
-   *   server ->> client: id:new,data
-   *   Deactivate server
-   *   client ->> client: this.source.rawのid修正
-   *   Deactivate client
-   * ```
-   *
    * - 凡例
    *   - client: SingleTableClient
    *   - server: SingleTableServer。アプリ毎に別名になるので注意(ex.tipsServer)

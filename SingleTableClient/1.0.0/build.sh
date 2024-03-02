@@ -49,4 +49,5 @@ jsdoc2md $mod/core.js > $tmp/core.md
 cat $mod/proto/readme.md \
 | node $nised -f:"__JSDoc" -r:$tmp/core.md \
 | node $nised -f:"__source" -r:$mod/core.js \
+| node $nised -f:"__build" -r:$mod/build.sh \
 > $mod/../readme.md
