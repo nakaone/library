@@ -4,29 +4,6 @@ class SingleTableClient {
    * - シートをCRUDする場合はarg.nameを、シート無しの場合はarg.dataを指定
    * - クラスのメンバはconstructor内のv.default参照
    *
-   * #### divの構造
-   *
-   * - loading ※不存在ならbody直下に追加
-   * - parent
-   *   - wrapper
-   *     - list
-   *       - header
-   *         - items ※ : 一覧表名称等
-   *         - control : 検索(窓、ボタン、クリア)、新規
-   *       - thead : ヘッダ
-   *       - tbody : 明細
-   *       - footer
-   *         - items ※
-   *         - control
-   *     - detail
-   *       - header
-   *         - items ※ : 詳細画面名称等
-   *         - control : 一覧、編集 or 更新、削除
-   *       - table ※ : 1アイテムを構成する項目の集合
-   *       - footer
-   *         - items　※
-   *         - control
-   *
    * #### itemオブジェクト
    *
    * ```
