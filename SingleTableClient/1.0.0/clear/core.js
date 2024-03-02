@@ -1,4 +1,7 @@
-/** キーワード文字列の消去 */
+/** キーワード文字列の消去＋一覧の再描画
+ * @param {void}
+ * @returns {null|Error}
+ */
 clear(){
   const v = {whois:this.className+'.clear',rv:null,step:0};
   console.log(`${v.whois} start.`);
@@ -10,7 +13,7 @@ clear(){
 
     v.step = 2; // listで一覧表を再描画
     this.source.data = [];
-    v.r = this.list();
+    v.r = this.listView();
     if( v.r instanceof Error ) throw v.r;
 
     v.step = 3; // 終了処理

@@ -7,9 +7,12 @@
  *   IDを持たせたイベントを設定することは可能だが、
  *   view,edit,update,deleteの全てについて設定が必要になり、煩雑なため
  *   インスタンスメンバで「現在表示・編集している画面ID」を持たせた方がわかりやすいと判断。
+ * 
+ * @param {string|number} id=undefined - primaryKeyの値
+ * @param {string} mode='view' - view or edit
  */
-detail(id=undefined,mode='view'){
-  const v = {whois:this.className+'.detail',rv:null,step:0};
+detailView(id=undefined,mode='view'){
+  const v = {whois:this.className+'.detailView',rv:null,step:0};
   console.log(`${v.whois} start. id=${id}, mode=${mode}`);
   try {
 
@@ -25,21 +28,21 @@ detail(id=undefined,mode='view'){
       v.step = 1.21; // edit->view状態に変更
       for( v.i=0 ; v.i<2 ; v.i++ ){
         // viewボタンを隠し、editボタンを表示
-        this.ctrl.detail.view[v.i].style.zIndex = 1;
-        this.ctrl.detail.edit[v.i].style.zIndex = 2;
+        this.detail.dom.view[v.i].style.zIndex = 1;
+        this.detail.dom.edit[v.i].style.zIndex = 2;
         // updateボタンを隠し、deleteボタンを表示
-        this.ctrl.detail.update[v.i].style.zIndex = 1;
-        this.ctrl.detail.delete[v.i].style.zIndex = 2;
+        this.detail.dom.update[v.i].style.zIndex = 1;
+        this.detail.dom.delete[v.i].style.zIndex = 2;
       }
     } else {  // mode='edit'
       v.step = 1.22; // view->edit状態に変更
       // editボタンを隠し、viewボタンを表示
       for( v.i=0 ; v.i<2 ; v.i++ ){
-        this.ctrl.detail.view[v.i].style.zIndex = 2;
-        this.ctrl.detail.edit[v.i].style.zIndex = 1;
+        this.detail.dom.view[v.i].style.zIndex = 2;
+        this.detail.dom.edit[v.i].style.zIndex = 1;
         // deleteボタンを隠し、updateボタンを表示
-        this.ctrl.detail.update[v.i].style.zIndex = 2;
-        this.ctrl.detail.delete[v.i].style.zIndex = 1;
+        this.detail.dom.update[v.i].style.zIndex = 2;
+        this.detail.dom.delete[v.i].style.zIndex = 1;
       }
     }
 
@@ -47,13 +50,13 @@ detail(id=undefined,mode='view'){
     this.wrapper.querySelector('[name="detail"] [name="table"]').innerHTML = '';
 
     v.step = 1.4; // 対象行オブジェクトをv.dataに取得
-    v.data = this.source.raw.find(x => x[this.primaryKey] === id);
+    v.data = this.source.raw.find(x => x[this.source.primaryKey] === id);
     v.step = 1.5; // 操作対象(詳細情報表示領域)のDOMを特定
     v.table = this.wrapper.querySelector('[name="detail"] [name="table"]');
 
     v.step = 2; // 詳細画面に表示する項目を順次追加
-    for( v.i=0 ; v.i<this.detailCols.length ; v.i++ ){
-      v.col = this.detailCols[v.i];
+    for( v.i=0 ; v.i<this.detail.cols.length ; v.i++ ){
+      v.col = this.detail.cols[v.i];
       v.step = 2.1; // 表示不要項目はスキップ
       if( !v.col.hasOwnProperty('view') && !v.col.hasOwnProperty('edit') )
         continue;
@@ -64,11 +67,11 @@ detail(id=undefined,mode='view'){
       if( !v.data.hasOwnProperty(v.col.name) ) v.data[v.col.name] = '';
       v.step = 2.4; // 参照か編集かを判断し、指定値と既定値をマージ
       if( v.col.hasOwnProperty('edit') && mode === 'edit' ){
-        v.step = 2.41; // 編集指定の場合、detailCols.editのcreateElementオブジェクトを出力
+        v.step = 2.41; // 編集指定の場合、detail.cols.editのcreateElementオブジェクトを出力
         v.td = mergeDeeply(v.col.edit, v.proto);
       } else {
         v.step = 2.42; // 参照指定の場合、または編集指定だがeditのcreateElementが無指定の場合、
-        // detailCols.viewのcreateElementオブジェクトを出力
+        // detail.cols.viewのcreateElementオブジェクトを出力
         v.td = mergeDeeply(v.col.view, v.proto);
       }
       v.step = 2.5; // 関数で指定されている項目を実数化

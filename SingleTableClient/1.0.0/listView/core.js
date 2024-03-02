@@ -1,15 +1,10 @@
 /** 一覧の表示
  * - 「いずれかの項目をクリックで当該行の詳細画面に遷移」は仕様として固定
- * @param {Object} arg={}
- * @returns {HTMLObjectElement|Error}
+ * - 'click':g.tips.detail はNG。無名関数で覆う必要あり
+ *   [JSのクラスメソッドをonclickに設定するときにつまずいたこと](https://zenn.dev/ihashiguchi/articles/d1506331996d76)
  *
- * @desc
+ * #### 明細(行オブジェクト)の取得・更新ロジック
  *
- * 'click':g.tips.detail はNG。無名関数で覆う必要あり
- * - [JSのクラスメソッドをonclickに設定するときにつまずいたこと](https://zenn.dev/ihashiguchi/articles/d1506331996d76)
- *
- * #### 行オブジェクトの取得・更新ロジック
- * 
  * | source.raw | typeof source.list | source.reload | source.raw |
  * | :-- | :-- | :--: | :-- |
  * | length == 0 | Object | (不問) | =doGAS(list) |
@@ -17,9 +12,12 @@
  * | length > 0 | Object | true | =doGAS(list) |
  * | length > 0 | Object | false | (処理不要) |
  * | length > 0 | null | (不問) | (処理不要) |
+ * 
+ * @param {Object} arg={} - 「SingleTableClientメンバ一覧」参照
+ * @returns {HTMLObjectElement|Error}
  */
-async list(arg={}){
-  const v = {whois:this.className+'.list',rv:null,step:0};
+async listView(arg={}){
+  const v = {whois:this.className+'.listView',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
@@ -68,20 +66,20 @@ async list(arg={}){
     v.table = this.wrapper.querySelector('[name="list"] [name="table"]');
     v.table.innerHTML = '';
     v.step = 4.1; // thead
-    for( v.c=0 ; v.c<this.listCols.length ; v.c++ ){
+    for( v.c=0 ; v.c<this.list.cols.length ; v.c++ ){
       // name属性を追加
-      v.th = mergeDeeply(this.listCols[v.c].th,{attr:{name:this.listCols[v.c].col}});
+      v.th = mergeDeeply(this.list.cols[v.c].th,{attr:{name:this.list.cols[v.c].col}});
       createElement(v.th,v.table);
     }
     v.step = 4.2; // tbody
     for( v.r=0 ; v.r<this.source.data.length ; v.r++ ){
-      for( v.c=0 ; v.c<Object.keys(this.listCols).length ; v.c++ ){
+      for( v.c=0 ; v.c<Object.keys(this.list.cols).length ; v.c++ ){
         // name属性を追加
-        v.td = mergeDeeply(this.listCols[v.c].td,{attr:{name:this.listCols[v.c].col},event:{}});
+        v.td = mergeDeeply(this.list.cols[v.c].td,{attr:{name:this.list.cols[v.c].col},event:{}});
         // 関数を使用していれば実数化
         v.td = this.realize(v.td,this.source.data[v.r]);
         // 一行のいずれかの項目をクリックしたら、当該項目の詳細表示画面に遷移するよう定義
-        v.td.event.click = ()=>this.detail(JSON.parse(event.target.getAttribute('data-id')),'view');
+        v.td.event.click = ()=>this.detailView(JSON.parse(event.target.getAttribute('data-id')),'view');
         createElement(v.td,v.table);
       }
     }

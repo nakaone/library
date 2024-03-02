@@ -19,8 +19,8 @@ mkdir $tmp
 methods=(
   constructor
   realize
-  list
-  detail
+  listView
+  detailView
   search
   clear
   append

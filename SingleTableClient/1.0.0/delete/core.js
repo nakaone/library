@@ -1,4 +1,7 @@
-/** 表示中の内容をシート・オブジェクトから削除 */
+/** 表示中の内容をシート・オブジェクトから削除
+ * @param {void} - 削除対象はthis.currentで特定するので引数不要
+ * @returns {null|Error}
+ */
 async delete(){
   const v = {whois:this.className+'.delete',rv:null,step:0};
   console.log(`${v.whois} start.`);
@@ -8,7 +11,7 @@ async delete(){
     if( window.confirm(`元に戻せませんが、削除しますか？`) ){
       changeScreen('loading');
       v.step = 1; // this.source.rawから削除
-      v.index = this.source.raw.findIndex(x => x[this.primaryKey] === this.current);
+      v.index = this.source.raw.findIndex(x => x[this.source.primaryKey] === this.current);
       v.delObj = this.source.raw.splice(v.index,1)[0];
 
       v.step = 2; // シートからの削除
@@ -34,9 +37,9 @@ async delete(){
       }
 
       v.step = 3; // 削除時の終了処理
-      alert(`${this.primaryKey}=${stringify(this.current)}を削除しました`);
+      alert(`${this.source.primaryKey}=${stringify(this.current)}を削除しました`);
       this.current = null;
-      this.list({reload:true}); // 強制再読込、一覧画面に遷移
+      this.listView({reload:true}); // 強制再読込、一覧画面に遷移
     } else {
       v.step = 4;
       alert('削除は取り消されました')

@@ -1,40 +1,6 @@
-/** Google Spreadの単一シート(テーブル)の内容をhtml(SPA)でCRUD
- * - シートをCRUDする場合はarg.nameを、シート無しの場合はarg.dataを指定
- * - クラスのメンバはconstructor内のv.default参照
- *
- * #### itemオブジェクト
- *
- * ```
- * id:{
- *   head:{},
- *   body:{},
- * }
- * ```
- *
- * - プロパティ名はname属性にセットされる
- *
- * ```
- * table:{
- *   id:{
- *     view:{
- *       text: x=>('0000'+x.id).slice(-4),
- *       style:{
- *         textAlign:'right',
- *         gridRow:'1/2',gridColumn:'1/2'
- *       }
- *     }
- *   },
- *   label:{
- *     edit:{},
- *     view:{},
- *   },
- * }
- * ```
- *
- * - view/editが不在の場合、当該モード時には表示しない
- * - 関数の引数は当該オブジェクト
- *
- * @param {Object} arg - 内容はv.default定義を参照
+/**
+ * @constructor
+ * @param {Object} arg - 内容は「SingleTableClientメンバ一覧」を参照
  * @returns {null|Error}
  */
 constructor(arg={}){
@@ -43,12 +9,8 @@ constructor(arg={}){
       className: 'SingleTableClient',
       parent: 'body', // {string|HTMLElement} - 親要素
       wrapper: null, // {HTMLElement} - 親要素直下、一番外側の枠組みDOM
-      //source: null, // {Object|Object[]} - データソースまたはシート取得のパラメータ。詳細はlistメソッド参照
-      //data: [], // {Object[]} - シート上のデータ全件
-      //primaryKey: null, // {string} - プライマリーキー。data-idにセットする項目名。
-      //population: () => true, // {Function} - 一覧に掲載するitemを取捨選択する関数
       sourceCode: false,  // {boolean} 詳細・編集画面のcodeタグ内をクリック時にクリップボードに内容をコピーするならtrue
-      source:{
+      source:{ // データソース(シートの読込 or 行Objの配列)に関する定義
         list:null,  // {string[]} listメソッド内でのシートデータ読み込み時のdoGAS引数の配列
         update:null,  // {string[]} updateメソッド内でのシートデータ更新時のdoGAS引数の配列
         delete: null, // {string[]} deleteメソッド内でのシートデータ削除時のdoGAS引数の配列
@@ -94,29 +56,34 @@ constructor(arg={}){
           ]},
         ]},
       ]},
-      listCols: null, // {Object[]} 一覧表に表示する項目。既定値の無い指定必須項目なのでnullで仮置き
-      detailCols: null, // {Object[]} 詳細・編集画面に表示する項目。既定値の無い指定必須項目なのでnullで仮置き
-      ctrl: {list:{},detail:{}}, // {Object} 一覧表、詳細・編集画面に配置するボタンのHTMLElement
-      listControl: {  // 一覧画面に表示するボタンの定義
-        header: true, // 一覧表のヘッダにボタンを置く
-        footer: true, // フッタにボタンを置く
-        elements:[    // 配置される要素のcreateElementオブジェクトの配列
-          {event:'append',tag:'button',text:'append',style:{gridRow:'1/2',gridColumn:'1/3'}},
-        ]
+      list: { // 一覧表表示領域に関する定義
+        cols: null, // {Object[]} 一覧表に表示する項目。既定値の無い指定必須項目なのでnullで仮置き
+        def: {  // 一覧画面に表示するボタンの定義
+          header: true, // 一覧表のヘッダにボタンを置く
+          footer: true, // フッタにボタンを置く
+          elements:[    // 配置される要素のcreateElementオブジェクトの配列
+            {event:'append',tag:'button',text:'append',style:{gridRow:'1/2',gridColumn:'1/3'}},
+          ]
+        },
+        dom: {}, // {Object} ボタン名：一覧表に配置するボタンのHTMLElement
       },
-      detailControl: { // 詳細画面に表示するボタンの定義
-        header: true, // 詳細画面のヘッダにボタンを置く
-        footer: true, // フッタにボタンを置く
-        elements:[    // 配置される要素のcreateElementオブジェクトの配列
-          // detail,editのようにフリップフロップで表示されるボタンの場合、
-          // grid-columnの他grid-rowも同一内容を指定。
-          // 表示される方を後から定義する(detail->editの順に定義するとeditが表示される)
-          {event:'list',tag:'button',text:'list',style:{gridColumn:'1/5'}},
-          {event:'view',tag:'button',text:'view',style:{gridRow:'1/2',gridColumn:'5/9'}},
-          {event:'edit',tag:'button',text:'edit',style:{gridRow:'1/2',gridColumn:'5/9'}},
-          {event:'delete',tag:'button',text:'delete',style:{gridRow:'1/2',gridColumn:'9/13'}},
-          {event:'update',tag:'button',text:'update',style:{gridRow:'1/2',gridColumn:'9/13'}},
-        ]
+      detail: { // 詳細画面表示領域に関する定義
+        cols: null, // {Object[]} 詳細・編集画面に表示する項目。既定値の無い指定必須項目なのでnullで仮置き
+        def: { // 詳細画面に表示するボタンの定義
+          header: true, // 詳細画面のヘッダにボタンを置く
+          footer: true, // フッタにボタンを置く
+          elements:[    // 配置される要素のcreateElementオブジェクトの配列
+            // detail,editのようにフリップフロップで表示されるボタンの場合、
+            // grid-columnの他grid-rowも同一内容を指定。
+            // 表示される方を後から定義する(detail->editの順に定義するとeditが表示される)
+            {event:'list',tag:'button',text:'list',style:{gridColumn:'1/5'}},
+            {event:'view',tag:'button',text:'view',style:{gridRow:'1/2',gridColumn:'5/9'}},
+            {event:'edit',tag:'button',text:'edit',style:{gridRow:'1/2',gridColumn:'5/9'}},
+            {event:'delete',tag:'button',text:'delete',style:{gridRow:'1/2',gridColumn:'9/13'}},
+            {event:'update',tag:'button',text:'update',style:{gridRow:'1/2',gridColumn:'9/13'}},
+          ]
+        },
+        dom: {}, // {Object} ボタン名：詳細・編集画面に配置するボタンのHTMLElement
       },
       current: null, // 現在表示・編集している行のID
       css:
@@ -182,7 +149,7 @@ white-space: pre-wrap;
       this.source.sortKey[0] = {col:this.source.primaryKey,dir:true};
     // SingleTable用のスタイルシートが未定義なら追加
     if( !document.querySelector('style.SingleTableClient') ){
-      v.styleTag = document.createElement('style'); 
+      v.styleTag = document.createElement('style');
       v.styleTag.classList.add('SingleTableClient');
       v.styleTag.textContent = this.css;
       document.head.appendChild(v.styleTag);
@@ -204,15 +171,15 @@ white-space: pre-wrap;
       search: {click: () => this.search()},
       clear : {click: () => this.clear()},
       append: {click: () => this.append()},
-      list  : {click: () => this.list()},
-      view  : {click: () => this.detail()},
-      edit  : {click: () => this.detail(this.current,'edit')},
+      list  : {click: () => this.listView()},
+      view  : {click: () => this.detailView()},
+      edit  : {click: () => this.detailView(this.current,'edit')},
       update: {click: async () => await this.update()},
       delete: {click: async () => await this.delete()},
     };
     v.step = 4.2; // 一覧表のボタン
     v.step = 4.21;
-    this.listControl.elements.forEach(x => {
+    this.list.def.elements.forEach(x => {
       if( !x.hasOwnProperty('attr') ) x.attr = {};
       // クリック時の動作にメソッドを割り当て
       if( x.hasOwnProperty('event') && typeof x.event === 'string' ){
@@ -224,14 +191,14 @@ white-space: pre-wrap;
     });
     v.step = 4.22; // ヘッダ・フッタにボタンを追加
     ['header','footer'].forEach(x => {
-      if( this.listControl[x] === true ){
-        createElement(this.listControl.elements,
+      if( this.list.def[x] === true ){
+        createElement(this.list.def.elements,
         this.wrapper.querySelector(`[name="list"] [name="${x}"] [name="control"]`));
       }
     });
     v.step = 4.3; // 詳細画面のボタン
     v.step = 4.31;
-    this.detailControl.elements.forEach(x => {
+    this.detail.def.elements.forEach(x => {
       // name属性を追加
       if( !x.hasOwnProperty('attr') ) x.attr = {};
       x.attr.name = x.event;
@@ -241,16 +208,16 @@ white-space: pre-wrap;
     });
     v.step = 4.32; // ヘッダ・フッタにボタンを追加
     ['header','footer'].forEach(x => {
-      if( this.detailControl[x] === true ){
-        createElement(this.detailControl.elements,
+      if( this.detail.def[x] === true ){
+        createElement(this.detail.def.elements,
         this.wrapper.querySelector(`[name="detail"] [name="${x}"] [name="control"]`));
       }
     });
-    v.step = 4.4; // edit・detailボタンはthis.ctrlに登録
+    v.step = 4.4; // edit・detailボタンはthis.detail.domに登録
     ['edit','view','update','delete'].forEach(fc => { // fc=FunCtion
-      this.ctrl.detail[fc] = [];
+      this.detail.dom[fc] = [];
       ['header','footer'].forEach(hf => { // hf=Header and Footer
-        this.ctrl.detail[fc].push(this.wrapper.querySelector(
+        this.detail.dom[fc].push(this.wrapper.querySelector(
           `[name="detail"] [name="${hf}"] [name="control"] [name="${fc}"]`
         ));
       });

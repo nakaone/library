@@ -1,19 +1,26 @@
-/** 編集画面の表示内容でシート・オブジェクトを更新 */
+/** 編集画面の表示内容でシート・オブジェクトを更新
+ * - this.source.primaryKeyを参照し、更新後の値はdetail画面から取得するので引数不要
+ * - 新規の場合、this.current=null
+ *
+ * @param {void} - 更新内容は画面から取得するので引数不要
+ * @returns {null|Error}
+ */
 async update(){
-  const v = {whois:this.className+'.update',rv:null,step:0,diff:[],after:{}};
+  const v = {whois:this.className+'.update',rv:null,step:0,
+  msgBefore:'',msgAfter:'',diff:[],after:{}};
   console.log(`${v.whois} start.`);
   try {
 
     v.step = 1; // 事前準備
     changeScreen('loading');
     // 対象行オブジェクトをv.beforeに取得
-    v.before = this.source.raw.find(x => x[this.primaryKey] === this.current);
+    v.before = this.source.raw.find(x => x[this.source.primaryKey] === this.current);
 
     v.step = 2; // 編集可能な欄(.box)について、編集後の値を取得
     v.str = '[name="detail"] [name="table"] [name="_1"] .box';
-    this.detailCols.forEach(col => {
+    this.detail.cols.forEach(col => {
       v.step = '2:' + col;
-      if( col.hasOwnProperty('edit') ){ // detailColsでeditを持つもののみ対象
+      if( col.hasOwnProperty('edit') ){ // detail.colsでeditを持つもののみ対象
         v.x = this.wrapper.querySelector(v.str.replace('_1',col.name)).value;
         if( v.before[col.name] !== v.x ) // 値が変化したメンバのみ追加
           v.after[col.name] = v.x;
@@ -26,7 +33,7 @@ async update(){
     if( Object.keys(v.after).length > 0 ){
       v.step = 4; // 修正された項目が存在した場合の処理
 
-      v.msgBefore = v.msgAfter = '';
+      //v.msgBefore = v.msgAfter = '';
       for( v.key in v.after ){
         v.step = 4.1; // 修正箇所表示用メッセージの作成
         v.msgBefore += `\n${v.key} : ${stringify(v.before[v.key])}`;
@@ -34,11 +41,11 @@ async update(){
         v.step = 4.2; // this.source.rawの修正
         v.before[v.key] = v.after[v.key];
       }
-      v.msg = `${this.primaryKey}="${v.before[this.primaryKey]}"について、以下の変更を行いました。\n`
+      v.msg = `${this.source.primaryKey}="${v.before[this.source.primaryKey]}"について、以下の変更を行いました。\n`
       + `--- 変更前 ------${v.msgBefore}\n\n--- 変更後 ------${v.msgAfter}`;
 
       v.step = 4.3; // v.afterは更新された項目のみでidを持たないので、追加
-      v.after[this.primaryKey] = this.current;
+      v.after[this.source.primaryKey] = this.current;
 
       v.step = 4.4; // シートデータの場合、シートの修正・ログ出力
       if( whichType(this.source,'Object') ){  // 元データがシート
@@ -56,8 +63,9 @@ async update(){
         if( v.r instanceof Error ) throw v.r;
 
         v.step = 4.6; // 新規作成でid=nullだった場合、採番されたIDをセット
-        if( v.before[this.primaryKey] === null ){
-          this.current = v.before[this.primaryKey] = v.r[this.primaryKey];
+        if( v.before[this.source.primaryKey] === null ){
+          this.current = v.before[this.source.primaryKey]
+          = v.diff[1][this.source.primaryKey] = v.r[this.source.primaryKey];
         }
 
         v.step = 4.7; // ログシートの更新
@@ -68,7 +76,7 @@ async update(){
       }
 
       v.step = 4.8; // 編集画面から参照画面に変更
-      this.detail(this.current,'view');
+      this.detailView(this.current,'view');
 
     } else {
       v.step = 5; // 修正された項目が存在しない場合の処理
