@@ -1,7 +1,7 @@
 #!/bin/sh
 # -x  つけるとverbose
 
-echo "\n\n\n\n\nbuild.sh start"
+echo "\n\n\n\n\n[SingleTableClient] build start"
 
 # .DS_storeの全削除
 find .. -name '.DS_Store' -type f -ls -delete
@@ -31,7 +31,7 @@ cp $mod/proto/core.js $tmp/before.js
 for method in ${methods[@]}; do
   # 各メソッドのソースをインデント
   #   ※VSCodeで編集するため、メソッドも行頭から記述しているため
-  sed 's/^/  /g' $method/core.js > $tmp/$method.js
+  sed 's/^/  /g' $mod/$method/core.js > $tmp/$method.js
   # プロトタイプ(proto/core.js)にメソッドを追加
   cat $tmp/before.js \
   | node $nised -f:"  // ::$method::" -r:$tmp/$method.js \
