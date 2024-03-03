@@ -1,19 +1,19 @@
 /** 一覧の表示
  * - 「いずれかの項目をクリックで当該行の詳細画面に遷移」は仕様として固定
  * - 'click':g.tips.detail はNG。無名関数で覆う必要あり
- *   [JSのクラスメソッドをonclickに設定するときにつまずいたこと](https://zenn.dev/ihashiguchi/articles/d1506331996d76)
+ *   - [JSのクラスメソッドをonclickに設定するときにつまずいたこと](https://zenn.dev/ihashiguchi/articles/d1506331996d76)
  *
  * #### 明細(行オブジェクト)の取得・更新ロジック
  *
- * | source.raw | typeof source.list | source.reload | source.raw |
- * | :-- | :-- | :--: | :-- |
- * | length == 0 | Object | (不問) | =doGAS(list) |
- * | length == 0 | null | (不問) | =arg.raw |
- * | length > 0 | Object | true | =doGAS(list) |
- * | length > 0 | Object | false | (処理不要) |
- * | length > 0 | null | (不問) | (処理不要) |
+ * - this.source.raw.length === 0 : 引数でオブジェクトの配列を渡されていない(=シート要読込)、かつシート未読込
+ *   ⇒ doGAS(this.source.list)
+ * - this.source.raw.length > 0 : 引数でオブジェクトの配列を渡された、またはシート読込済
+ *   - this.source.reload === true : データソースはシート(オブジェクトの配列ではない)、かつ強制再読込
+ * 	   ⇒ doGAS(this.source.list)
+ *   - this.source.reload === false : 引数でオブジェクトの配列を渡された、またはシート読込済で強制再読込は不要
+ * 	   ⇒ 処理不要
  * 
- * @param {Object} arg={} - 「SingleTableClientメンバ一覧」参照
+ * @param {Object} arg={} - 「SingleTableClientメンバ一覧」のsourceオブジェクト
  * @returns {HTMLObjectElement|Error}
  */
 async listView(arg={}){
@@ -28,17 +28,11 @@ async listView(arg={}){
     this.source = v.source;
 
     v.step = 2; // データが未設定またはデータソースがシートで強制再読込指定の場合、データ取得
-    if( this.source.raw.length === 0 || (this.source.reload === true && whichType(this.source.list,'Array')) ){
-      if( whichType(this.source.list,'Array') ){
-        v.step = 2.1; // データソースがシート ⇒ doGASで取得
-        v.r = await doGAS(...this.source.list);
-        if( v.r instanceof Error ) throw v.r;
-        this.source.raw = v.r;
-        this.source.data = []; // 再読込の場合に備え、一度クリア
-      } else {
-        v.step = 2.2; // データをオブジェクトの配列で渡された場合、そのまま利用
-        this.source.raw = JSON.parse(JSON.stringify(this.source.data));
-      }
+    if( this.source.raw.length === 0 || this.source.reload === true ){
+      v.r = await doGAS(...this.source.list);
+      if( v.r instanceof Error ) throw v.r;
+      this.source.raw = v.r;
+      this.source.data = []; // 再読込の場合に備え、一度クリア
     }
 
     v.step = 3; // 一覧に表示するデータの準備

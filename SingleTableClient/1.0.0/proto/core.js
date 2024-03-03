@@ -5,15 +5,19 @@
  * 
  * 以下はthisとして「constructorのv.default < constructorの引数 < listViewの引数」の順で有効となる。
  * 
- * - className {string} 'SingleTableClient'固定。ログ出力時に使用
+ * 1. 「**太字**」はインスタンス生成時、必須指定項目
+ * 1. 「【*内部*】」は指定不要の項目(constructor他で自動的に設定されるメンバ)
+ * 
+ * - className {string} 【*内部*】'SingleTableClient'固定。ログ出力時に使用
  * - parent='body' {string|HTMLElement} 親要素。CSSセレクタかHTMLElementで指定。
- * - wrapper {HTMLElement} 【内部】親要素直下、一番外側の枠組みDOM
+ * - wrapper {HTMLElement} 【*内部*】親要素直下、一番外側の枠組みDOM
  * - sourceCode=false {boolean} 詳細・編集画面のcodeタグ内をクリック時にクリップボードに内容をコピーするならtrue
  * - source  {Object} データソース(シートの読込 or 行Objの配列)に関する定義
- *   - list=null {string[]} listメソッド内でのシートデータ読み込み時のdoGAS引数の配列
- *   - update=null {string[]} updateメソッド内でのシートデータ更新時のdoGAS引数の配列
- *   - delete=null {string[]} deleteメソッド内でのシートデータ削除時のdoGAS引数の配列
+ *   - **list** {string[]} listメソッド内でのシートデータ読み込み時のdoGAS引数の配列
+ *   - **update** {string[]} updateメソッド内でのシートデータ更新時のdoGAS引数の配列
+ *   - **delete** {string[]} deleteメソッド内でのシートデータ削除時のdoGAS引数の配列
  *     <details><summary>【参考：doGAS引数】</summary>
+ * 
  *     ```
  *     0:サーバ側関数名。"tipsServer"固定
  *     1:操作対象シート名。"tips","log"等
@@ -27,12 +31,12 @@
  *     ```
  *     </details>
  *   - filter=x=>true {Function|Arrow} 一覧に掲載する明細の判定関数。引数は明細(行オブジェクト)
- *   - primaryKey=null {string} プライマリーキー。data-idにセットする項目名。
+ *   - **primaryKey** {string} プライマリーキー。data-idにセットする項目名。
  *   - sortKey=[] {Object[]} 一覧表示時の並べ替えキー。既定値primaryKeyをconstructorでセット
  *     - col {string} 項目名文字列
  *     - dir {boolean} true:昇順、false:降順
- *   - raw=[] {Object[]} 明細全件
- *   - data=[] {Object[]} 一覧に表示する明細。rawの部分集合
+ *   - raw=[] {Object[]} 明細全件。データをシートでは無くオブジェクトの配列で渡す場合、ここにセット
+ *   - data=[] {Object[]} 【*内部*】一覧に表示する明細。rawの部分集合
  *   - reload=false {boolean} シートデータを強制再読込するならtrue
  * - frame {Object} 各画面の枠組み定義<details><summary>(既定値)</summary>
  *   ```
@@ -82,7 +86,7 @@
  *       ]
  *       ```
  *       </details>
- *   - cols=null {Object[]} 一覧表に表示する項目。既定値の無い指定必須項目なのでnullで仮置き<details><summary>引数サンプル</summary>
+ *   - **cols** {Object[]} 一覧表に表示する項目。既定値の無い指定必須項目なのでnullで仮置き<details><summary>引数サンプル</summary>
  *     ```
  *     cols: [{  // 一覧表に表示する項目
  *       col:'id',
@@ -95,7 +99,7 @@
  *     }],
  *     ```
  *     </details>
- *   - dom {Object} 【内部】ボタン名：一覧表に配置するボタンのHTMLElement
+ *   - dom {Object} 【*内部*】ボタン名：一覧表に配置するボタンのHTMLElement
  * - detail {Object} 詳細画面表示領域に関する定義
  *   - def {Object} 詳細画面に表示するボタンの定義
  *     - header=true {boolean} 詳細画面のヘッダにボタンを置く
@@ -112,7 +116,7 @@
  *       {event:'update',tag:'button',text:'update',style:{gridRow:'1/2',gridColumn:'9/13'}},
  *       ```
  *       </details>
- *   - cols=null {Object[]} 詳細・編集画面に表示する項目。既定値の無い指定必須項目なのでnullで仮置き<details><summary>引数サンプル</summary>
+ *   - **cols** {Object[]} 詳細・編集画面に表示する項目。既定値の無い指定必須項目なのでnullで仮置き<details><summary>引数サンプル</summary>
  *     ```
  *     cols:[{  // 詳細・編集画面に表示する項目。tableに追加する枠(DIV)順に記載
  *       name:'id' 明細のメンバ名
@@ -173,10 +177,11 @@
  *
  *     ```
  *     </details>
- *   - dom {Object} 【内部】ボタン名：詳細・編集画面に配置するボタンのHTMLElement
- * - current=null {string|number} 現在表示・編集している行のID
+ *   - dom {Object} 【*内部*】ボタン名：詳細・編集画面に配置するボタンのHTMLElement
+ * - current=null {string|number} 【*内部*】現在表示・編集している行のID
  * - registLog {AsyncFunction|AsyncArrow} ログ登録のスクリプト。アプリ毎にログ形式が異なるので既定値は設定せず、constructorに関数で渡す。<br>
  *   なお引数のbefore,after(更新前後の明細(行オブジェクト))はsearchメソッドから渡されるので、固定。<details><summary>サンプル</summary>
+ * 
  *   ```
  *   async (before,after=null) => { //シート更新があるので必ずasync
  *     // 削除なら引数は一つ、更新・追加なら二つ、追加ならbefore.id=null
