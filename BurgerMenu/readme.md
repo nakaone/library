@@ -1,29 +1,215 @@
-<p class="title">class SingleTableClient</p>
+<style scoped type="text/css">
+html, body{
+  width: 100%;
+  margin: 0;
+    text-size-adjust: none; }
+body * {
+  font-size: 1rem;
+  font-family: sans-serif;
+  box-sizing: border-box;
+}
+.num, .right {text-align:right;}
+.screen {padding: 1rem;} .title {   font-size: 2.4rem;
+  text-shadow: 2px 2px 5px #888;
+}
+
+.table {display:grid}
+th, .th, td, .td {
+  margin: 0.2rem;
+  padding: 0.2rem;
+}
+th, .th {
+  background-color: #888;
+  color: white;
+}
+td, .td {
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+
+.triDown {   --bw: 50px;
+  width: 0px;
+  height: 0px;
+  border-top: calc(var(--bw) * 0.7) solid #aaa;
+  border-right: var(--bw) solid transparent;
+  border-left: var(--bw) solid transparent;
+  border-bottom: calc(var(--bw) * 0.2) solid transparent;
+}
+
+.loader,
+.loader:after {
+  border-radius: 50%;
+  width: 10em;
+  height: 10em;
+}
+.loader {
+  margin: 60px auto;
+  font-size: 10px;
+  position: relative;
+  text-indent: -9999em;
+  border-top: 1.1em solid rgba(204,204,204, 0.2);
+  border-right: 1.1em solid rgba(204,204,204, 0.2);
+  border-bottom: 1.1em solid rgba(204,204,204, 0.2);
+  border-left: 1.1em solid #cccccc;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-animation: load8 1.1s infinite linear;
+  animation: load8 1.1s infinite linear;
+}
+@-webkit-keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+</style>
+
+
+<p class="title">class BurgerMenu</p>
 
 # 概要
 
-Google Spreadの単一シート(テーブル)またはオブジェクトの配列を、html(SPA)で参照・編集・追加・削除(CRUD)する。
+## 用語解説
 
-- シンプルな構造の表なら必須引数の指定のみで稼働
-- 元データとしてオブジェクトの配列を使用する場合、constructor(またはlist)の引数で渡す
+- ブランチ：下位の表示画面を持つ要素。下位画面のラッパーとしてのみ機能し、自らの表示画面は持てない。
+- リーフ：自分自身の表示画面のみ持ち、下位画面を持たない要素。
+- 遷移指定(href)：ナビで選択することで、指定サイトの表示を行う。画面は指定時の画面のまま、変化しない。
+- 指定関数：ナビで選択することで、指定サイトの表示を行った上で指定された関数を実行する。
 
-[画面遷移](#画面遷移) | [画面構成](#画面構成) | [動作イメージ](#動作イメージ) | [JSDoc](#SingleTableClient) | [メンバ一覧](#singletableclientメンバ一覧) | [source](#source) | [改版履歴](#history)
+## 全体の構成
 
-# 画面遷移
+1. 表示部は&lt;div data-BurgerMenu&gt;の階層内で定義する。<br>
+   階層外の要素はメニューで選択しても表示されない。
+
+2. 下位の階層を持つ場合、自分自身の表示内容は持たせない(以下はNG)
+   ```
+   <div data-BurgerMenu="label:'お知らせ'">
+   !!NG!! <p>お知らせのページです</p>
+     <div data-BurgerMenu="label:'掲示板'">〜</div>
+     <div data-BurgerMenu="label:'注意事項'">〜</div>
+   </div>
+   ```
+   「お知らせ」は「掲示板」「注意事項」のブランチとして扱われるので、「&lt;p&gt;お知らせのページです&lt;/p&gt;」というお知らせページ自身の表示内容は定義不可。
+
+## data-BurgerMenu属性の書き方
+
+オブジェクトの記述に準ずる。但し短縮するため前後の"{","}"は省略する。
+
+- {string} label - メニュー化する時の名称
+- {string} [func] - メニュー選択時に実行する関数名。<br>
+  関数名と実際の関数はBurgerMenuインスタンス生成時に定義。
+- {string} [href] - 遷移先のURL。別タブが開かれる。
+- {number} [authority] - 表示権限。<br>
+  BurgerMenuインスタンス生成時のauthorityとの論理積>0なら表示する。<br>
+  ex: 一般参加者1、スタッフ2として<br>
+      data-BurgerMenu="authrotiry:2"とされた要素は、<br>
+      new BurgerMenu({authority:1})の一般参加者は非表示、<br>
+      new BurgerMenu({authority:2})のスタッフは表示となる。
+
+## 処理の流れ
+
+HTMLソース(≒body内部)を基に、BurgerMenu.#genNaviでソースの修正とナビゲーションの生成を行う
+
+
+### サンプル
+
+```
+<body>
+  <div data-BurgerMenu="label:'スタッフ'">
+    <div data-BurgerMenu="label:'受付業務',func:'recept'"></div>
+    <div data-BurgerMenu="label:'校内探険'">
+        <img src="expedition.png" width="600px" />
+    </div>
+  </div>
+  <div data-BurgerMenu="label:'Tips',href:'https://〜/tips.html'"></div>
+</body>
+```
+
+### ソースの修正部分
+
+- data-BurgerMenu属性を持つ要素にIDとなるclass属性を付与
+
+```
+<body>
+  <div class="c1001" data-BurgerMenu="label:'スタッフ',authority:2">
+    <div class="c1002" data-BurgerMenu="label:'受付業務',func:'recept'"></div>
+    <div class="c1003" data-BurgerMenu="label:'校内探険'">
+        <img src="expedition.png" width="600px" />
+    </div>
+  </div>
+  <div class="c1004" data-BurgerMenu="label:'Tips',href:'https://〜/tips.html'"></div>
+</body>
+```
+
+### 生成されるナビゲーション
+
+- 通常の画面(校内探検)<br>
+  ソースに付与されたIDに対応する文字列をname属性として持ち、
+  クリックすると`<div class="(name属性の値)">`を持つ要素(該当画面)を開くイベントを付与
+- func指定があった場合(受付業務)<br>
+  name属性として「ID＋実行する関数名」を持ち、
+  クリックすると該当画面を開き、指定された関数を実行するイベントを付与
+- href指定があった場合(Tips)<br>
+  href属性を持ち、クリックすると遷移先画面を開くイベントを付与
+
+```
+<nav>
+  <ul>
+    <li name="c1001">スタッフ
+      <ul>
+        <li><a name="c1002\trecept">受付業務</a></li>
+        <li><a name="c1003">校内探検</a></li>
+      </ul>
+    </li>
+    <li><a name="c1004" href="https://〜/tips.html">Tips</a></li>
+  </ul>
+</nav>
+```
+
+### data-BurgerMenu属性内「func」と関数の対応
+
+BurgerMenuのインスタンス生成時、オプションで指定する
+
+`func:{aaa:bbb}`：aaaはdata-BurgerMenu属性内で指定した関数名、bbbは実行する関数オブジェクトのラベル。
+
+```
+<script type="text/javascript">
+v.BurgerMenu = new BurgerMenu('body',{
+  authority: v.Auth.info.authority,
+  home: 'c1005',  // 参加者パス画面をホームに設定(暫定)
+  func: {recept:v.Reception.main},
+});
+</script>
+```
+
+# 仕様
+
+## 画面遷移
 
 <a href="_top" class="right">先頭へ</a>
 
-# 画面構成
+## 画面構成
 
-## 要素(DIV)構成図
-
-<a href="_top" class="right">先頭へ</a>
-
-## 画面上の要素の役割
+### 要素(DIV)構成図
 
 <a href="_top" class="right">先頭へ</a>
 
-# 動作イメージ
+### 画面上の要素の役割
 
 <a href="_top" class="right">先頭へ</a>
 
@@ -589,7 +775,7 @@ echo "\n$hr[BurgerMenu] build start$hr"
 GitHub="/Users/ena.kaon/Desktop/GitHub"
 lib="$GitHub/library"
 esed="$lib/esed/1.0.0/core.js"
-mod="$lib/BurgerMenu/1.0.1"
+mod="$lib/BurgerMenu/1.0.0"
 readme="$lib/BurgerMenu/readme.md"
 
 # 1.2 .DS_storeの全削除
@@ -667,20 +853,19 @@ tmp="tmp"
 # 4. 仕様書の作成
 # ----------------------------------------------
 # 標準CSSを用意(コメントはesedで除外)
-echo "<style type=\"text/css\">" > $readme
+echo "<style scoped type=\"text/css\">" > $readme
 cat $lib/CSS/1.3.0/core.css | awk 1 \
 | node $esed -x:"\/\*[\s\S]*?\*\/\n*" -s:"" >> $readme
 echo "</style>\n\n" >> $readme
-# proto/readme.mdを追加
-cat $mod/proto.md >> $readme
 
+# proto/readme.mdを追加
 jsdoc2md $mod/core.js > $mod/core.md
-cat $mod/proto.md \
+cat $mod/readme.md \
 | node $esed -x:"__JSDoc" -f:$mod/core.md \
 | node $esed -x:"__source" -f:$mod/core.js \
 | node $esed -x:"__test" -f:$mod/test.js \
 | node $esed -x:"__build" -f:$mod/build.sh \
-> $mod/../readme.md
+>> $readme
 
 #jsdoc2md $script > $tmp/client.md
 #jsdoc2md $server > $tmp/server.md

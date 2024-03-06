@@ -1,4 +1,6 @@
-# class BurgerMenu
+<p class="title">class BurgerMenu</p>
+
+# 概要
 
 ## 用語解説
 
@@ -112,3 +114,58 @@ v.BurgerMenu = new BurgerMenu('body',{
 });
 </script>
 ```
+
+# 仕様
+
+## 画面遷移
+
+<a href="_top" class="right">先頭へ</a>
+
+## 画面構成
+
+### 要素(DIV)構成図
+
+<a href="_top" class="right">先頭へ</a>
+
+### 画面上の要素の役割
+
+<a href="_top" class="right">先頭へ</a>
+
+__JSDoc
+
+# source
+
+<a href="_top" class="right">先頭へ</a>
+
+<details><summary>core.js</summary>
+
+```
+__source
+```
+
+</details>
+
+<!--
+<details><summary>test.js</summary>
+
+```
+__test
+```
+
+</details>
+-->
+
+<details><summary>build.sh</summary>
+
+```
+__build
+```
+
+</details>
+
+# 改版履歴
+
+<a href="_top" class="right">先頭へ</a>
+
+- rev.1.0.1 : 2024/03/07 
+- rev.1.0.0 : 2024/01/03 初版

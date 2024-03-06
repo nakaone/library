@@ -200,7 +200,7 @@ class BurgerMenu {
   /** 親要素を走査してナビゲーションを作成
    * @param {HTMLElement} parent - body等の親要素。
    * @param {HTMLElement} navi - nav等のナビゲーション領域
-   * @returns
+   * @returns {null|Error}
    */
   #genNavi = (parent=this.parent,navi=this.navi) => {
     const v = {whois:'BurgerMenu.#genNavi',step:0,rv:null,idnum:1000,

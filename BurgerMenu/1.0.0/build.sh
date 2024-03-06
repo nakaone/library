@@ -11,7 +11,7 @@ echo "\n$hr[BurgerMenu] build start$hr"
 GitHub="/Users/ena.kaon/Desktop/GitHub"
 lib="$GitHub/library"
 esed="$lib/esed/1.0.0/core.js"
-mod="$lib/BurgerMenu/1.0.1"
+mod="$lib/BurgerMenu/1.0.0"
 readme="$lib/BurgerMenu/readme.md"
 
 # 1.2 .DS_storeの全削除
@@ -89,20 +89,19 @@ tmp="tmp"
 # 4. 仕様書の作成
 # ----------------------------------------------
 # 標準CSSを用意(コメントはesedで除外)
-echo "<style type=\"text/css\">" > $readme
+echo "<style scoped type=\"text/css\">" > $readme
 cat $lib/CSS/1.3.0/core.css | awk 1 \
 | node $esed -x:"\/\*[\s\S]*?\*\/\n*" -s:"" >> $readme
 echo "</style>\n\n" >> $readme
-# proto/readme.mdを追加
-cat $mod/proto.md >> $readme
 
+# proto/readme.mdを追加
 jsdoc2md $mod/core.js > $mod/core.md
-cat $mod/proto.md \
+cat $mod/readme.md \
 | node $esed -x:"__JSDoc" -f:$mod/core.md \
 | node $esed -x:"__source" -f:$mod/core.js \
 | node $esed -x:"__test" -f:$mod/test.js \
 | node $esed -x:"__build" -f:$mod/build.sh \
-> $mod/../readme.md
+>> $readme
 
 #jsdoc2md $script > $tmp/client.md
 #jsdoc2md $server > $tmp/server.md
