@@ -70,9 +70,7 @@ class BurgerMenu {
         event:{click:this.toggle},
         children:[{
           tag:'button',
-          children:[
-            {tag:'span'},{tag:'span'},{tag:'span'}
-          ]
+          children:[{tag:'span'},{tag:'span'},{tag:'span'}],
         }]
       },this.wrapper);
       v.step = 2.2; // ナビゲータの作成
@@ -92,6 +90,7 @@ class BurgerMenu {
       if( v.rv instanceof Error ) throw v.rv;
 
       v.step = 9; // 終了処理
+      changeScreen(this.home);
       console.log(`${v.whois} normal end.`);
   
     } catch(e) {
@@ -412,7 +411,7 @@ class BurgerMenu {
           v.step = 5.32; // nameが無ければ追加
           v.name = v.d.getAttribute('name');
           if( !v.name ){
-            v.name = 'BurgerMenu_' + v.attr.id;
+            v.name = v.attr.id;
             v.d.setAttribute('name',v.name);
           }
           v.step = 5.33; // nameを指定して画面切替
