@@ -102,7 +102,7 @@ class BurgerMenu {
   
       v.step = 1; // 既定値の定義
       v.default = {
-        wrapper: '.BurgerMenu.screen[name="wrapper"]', // {string|HTMLElement}
+        wrapper: `.${this.className}[name="wrapper"]`, // {string|HTMLElement}
         auth: 1,
         func: {}, // {Object.<string,function>} メニューから呼び出される関数
         home: null,
@@ -236,9 +236,9 @@ class BurgerMenu {
         }
       `;
       v.default.toggle = () => {  // ナビゲーション領域の表示/非表示切り替え
-        document.querySelector('.BurgerMenu nav').classList.toggle('is_active');
-        document.querySelector('.BurgerMenu .back').classList.toggle('is_active');
-        document.querySelectorAll('.BurgerMenu .icon button span')
+        document.querySelector(`.${this.className} nav`).classList.toggle('is_active');
+        document.querySelector(`.${this.className} .back`).classList.toggle('is_active');
+        document.querySelectorAll(`.${this.className} .icon button span`)
         .forEach(x => x.classList.toggle('is_active'));        
       };
       v.default.showChildren = (event) => { // ブランチの下位階層メニュー表示/非表示切り替え
@@ -262,7 +262,7 @@ class BurgerMenu {
       v.step = 5; // homeが無指定ならwrapper直下でdata-BurgerMenu属性を持つ最初の要素の識別子
       if( this.home === null ){
         for( v.i=0 ; v.i<this.wrapper.childElementCount ; v.i++ ){
-          v.x = this.wrapper.children[v.i].getAttribute('data-BurgerMenu');
+          v.x = this.wrapper.children[v.i].getAttribute(`data-${this.className}`);
           if( v.x ){
             v.r = this.#objectize(v.x);
             if( v.r instanceof Error ) throw v.r;
@@ -365,7 +365,7 @@ class BurgerMenu {
         v.d = parent.children[v.i];
 
         v.step = 2; // data-BurgerMenuを持たない要素はスキップ
-        v.attr = this.#objectize(v.d.getAttribute('data-BurgerMenu'));
+        v.attr = this.#objectize(v.d.getAttribute(`data-${this.className}`));
         if( v.attr instanceof Error ) throw v.attr;
         if( v.attr === null ) continue;
 
@@ -374,7 +374,7 @@ class BurgerMenu {
 
         v.step = 4; // nav領域にul未設定なら追加
         if( navi.tagName.toLowerCase() !== 'ul' ){
-          v.r = createElement({tag:'ul',attr:{class:'BurgerMenu'}},navi);
+          v.r = createElement({tag:'ul',attr:{class:this.className}},navi);
           if( v.r instanceof Error ) throw v.r;
           navi = v.r;
           console.log(navi);
@@ -384,7 +384,7 @@ class BurgerMenu {
         v.li = {tag:'li',children:[{
           tag:'a',
           text:v.attr.label,
-          attr:{class:'BurgerMenu'},
+          attr:{class:this.className},
         }]};
         v.hasChild = false;
         if( v.attr.hasOwnProperty('func') ){
@@ -414,7 +414,7 @@ class BurgerMenu {
             event:{click:changeScreen(v.name)}
           });
           v.step = 5.34; // 子孫にdata-BurgerMenuがあるか確認
-          if( navi.querySelector('[data-BurgerMenu]') ){
+          if( navi.querySelector(`[data-${this.className}]`) ){
             v.hasChild = true;
           }
         }
