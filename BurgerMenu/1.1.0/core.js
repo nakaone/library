@@ -378,8 +378,17 @@ class BurgerMenu {
         v.step = 3; // 実行権限がない機能・画面はナビに追加しない
         if( (this.auth & v.attr.auth) === 0 ) continue;
 
-        v.step = 4; // nav領域にul未設定なら追加
-        if( navi.tagName.toLowerCase() !== 'ul' ){
+        v.step = 4.1; // screenクラスが無ければ追加
+        v.class = v.d.className.match(/screen/);
+        if( !v.class ) v.d.classList.add('screen'); 
+        v.step = 4.2; // nameが無ければ追加
+        v.name = v.d.getAttribute('name');
+        if( !v.name ){
+          v.name = v.attr.id;
+          v.d.setAttribute('name',v.name);
+        }
+        v.step = 4.3; // nav領域にul未設定なら追加
+        if( navi.tagName !== 'UL' ){
           v.r = createElement({tag:'ul',attr:{class:this.className}},navi);
           if( v.r instanceof Error ) throw v.r;
           navi = v.r;
@@ -396,8 +405,11 @@ class BurgerMenu {
         if( v.attr.hasOwnProperty('func') ){
           v.step = 5.1; // 指定関数実行の場合
           Object.assign(v.li.children[0],{
-            attr:{href:v.attr.href,target:'_blank'},
-            event:{click:this.toggle},  // 遷移後メニューを閉じる
+            attr:{href:'#'},
+            event:{click:(event)=>{
+              this.toggle();  // メニューを閉じる
+              this.func[v.attr.func](event); // 指定関数の実行
+            }},
           });
         } else if( v.attr.hasOwnProperty('href') ){
           v.step = 5.2; // 他サイトへの遷移指定の場合
@@ -405,15 +417,6 @@ class BurgerMenu {
           Object.assign(v.li.children[0],{event:{click:this.toggle}}); // 遷移後メニューを閉じる
         } else {
           v.step = 5.3; // その他(=画面切替)の場合
-          v.step = 5.31; // screenクラスが無ければ追加
-          v.class = v.d.className.match(/screen/);
-          if( !v.class ) v.d.classList.add('screen'); 
-          v.step = 5.32; // nameが無ければ追加
-          v.name = v.d.getAttribute('name');
-          if( !v.name ){
-            v.name = v.attr.id;
-            v.d.setAttribute('name',v.name);
-          }
           // 子孫メニューがあるか確認
           if( v.d.querySelector(`[data-${this.className}]`) ){
             v.step = 5.33; // 子孫メニューが存在する場合

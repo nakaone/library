@@ -29,6 +29,7 @@
     </div>
     <div data-BurgerMenu="id:'c40',label:'その他'">
       <div data-BurgerMenu="id:'c41',label:'リンクテスト',href:'https://developer.mozilla.org/ja/'">hoge</div>
+      <div data-BurgerMenu="id:'c42',label:'funcテスト',func:'test'">funcテスト</div>
     </div>
   </div>
 
@@ -39,7 +40,7 @@ window.addEventListener('DOMContentLoaded',() => {
   console.log(`${v.whois} start.`);
   try {
 
-    v.menu = new BurgerMenu();
+    v.menu = new BurgerMenu({func:{test:(e)=>{alert('hoge');changeScreen('c42');}}});
     if( v.menu instanceof Error ) throw v.menu;
     console.log(v.menu);
 
