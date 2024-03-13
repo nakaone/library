@@ -55,7 +55,7 @@ class BurgerMenu {
       v.step = 2; // アイコン、ナビ、背景の作成
       v.step = 2.1; // アイコンの作成
       this.icon = createElement({
-        attr:{class:'BurgerMenu icon'},
+        attr:{class:'icon'},
         event:{click:this.toggle},
         children:[{
           tag:'button',
@@ -65,12 +65,11 @@ class BurgerMenu {
       v.step = 2.2; // ナビゲータの作成
         this.navi = createElement({
         tag:'nav',
-        attr:{class:'BurgerMenu'},
       },this.wrapper);
       v.step = 2.3; // ナビゲータ背景の作成
       // .back navはonClickで閉じるよう、constructorで設定
         this.back = createElement({
-        attr:{class:'BurgerMenu back'},
+        attr:{class:'back'},
         event:{click:this.toggle},
       },this.wrapper);
 
@@ -125,7 +124,7 @@ class BurgerMenu {
         /* ハンバーガーアイコン
           icon周囲にiconSizeの40%程度の余白が必要なのでtop,rightを指定
         */
-        .BurgerMenu.icon {
+        .BurgerMenu .icon {
           display : flex;
           justify-content : flex-end;
           place-items : center;
@@ -136,7 +135,7 @@ class BurgerMenu {
           height : var(--iconSize);
           z-index : var(--maxIndex);
         }
-        .BurgerMenu.icon > button {
+        .BurgerMenu .icon > button {
           place-content : center center;
           display : block;
           margin : 0;
@@ -149,7 +148,7 @@ class BurgerMenu {
           position : relative;
           box-shadow : none;
         }
-        .BurgerMenu.icon button span {
+        .BurgerMenu .icon button span {
           display : block;
           width : 100%;
           height : calc(var(--iconSize) * 0.12);
@@ -159,34 +158,34 @@ class BurgerMenu {
           background : var(--text);
           transition : top 0.24s, transform 0.24s, opacity 0.24s;
         }
-        .BurgerMenu.icon button span:nth-child(1) {
+        .BurgerMenu .icon button span:nth-child(1) {
           top : 0;
         }
-        .BurgerMenu.icon button span:nth-child(2) {
+        .BurgerMenu .icon button span:nth-child(2) {
           top : 50%;
           transform : translateY(-50%);
         }
-        .BurgerMenu.icon button span:nth-child(3) {
+        .BurgerMenu .icon button span:nth-child(3) {
           top : 100%;
           transform : translateY(-100%);
         }
-        .BurgerMenu.icon button span.is_active:nth-child(1) {
+        .BurgerMenu .icon button span.is_active:nth-child(1) {
           top : 50%;
           transform : translateY(-50%) rotate(135deg);
         }
-        .BurgerMenu.icon button span.is_active:nth-child(2) {
+        .BurgerMenu .icon button span.is_active:nth-child(2) {
           transform : translate(50%, -50%);
           opacity : 0;
         }
-        .BurgerMenu.icon button span.is_active:nth-child(3) {
+        .BurgerMenu .icon button span.is_active:nth-child(3) {
           top : 50%;
           transform : translateY(-50%) rotate(-135deg);
         }
         /* ナビゲーション領域 */
-        nav.BurgerMenu {
+        .BurgerMenu nav {
           display : none;
         }
-        nav.BurgerMenu.is_active {
+        .BurgerMenu nav.is_active {
           display : block;
           margin : 0 0 0 auto;
           font-size : 1rem;
@@ -197,35 +196,35 @@ class BurgerMenu {
           height : var(--iconSize);
           z-index : var(--maxIndex);
         }
-        nav.BurgerMenu ul {
+        .BurgerMenu nav ul {
           margin : 0rem 0rem 1rem 0rem;
           padding : 0rem 0rem 0rem 0rem;
           background-color : var(--back);
         }
-        nav.BurgerMenu ul ul { /* 2階層以降のulにのみ適用 */
+        .BurgerMenu nav ul ul { /* 2階層以降のulにのみ適用 */
           display : none;
         }
-        nav.BurgerMenu ul ul.is_open {
+        .BurgerMenu nav ul ul.is_open {
           display : block;
           border-top : solid 0.2rem var(--fore);
           border-left : solid 0.7rem var(--fore);
         }
-        nav.BurgerMenu li {
+        .BurgerMenu nav li {
           margin : 0.6rem 0rem 0.3rem 0.5rem;
           padding : 0.5rem 0rem 0rem 0rem;
           list-style : none;
           background-color : var(--back);
         }
-        nav.BurgerMenu li a {
+        .BurgerMenu nav li a {
           color : var(--text);
           text-decoration : none;
           font-size: 1.5rem;
         },
         /* 背景 */
-        .BurgerMenu.back {
+        .BurgerMenu .back {
           display : none;
         }
-        .BurgerMenu.back.is_active {
+        .BurgerMenu .back.is_active {
           display : block;
           position : absolute;
           top : 0;
@@ -237,9 +236,9 @@ class BurgerMenu {
         }
       `;
       v.default.toggle = () => {  // ナビゲーション領域の表示/非表示切り替え
-        document.querySelector('nav.BurgerMenu').classList.toggle('is_active');
-        document.querySelector('.BurgerMenu.back').classList.toggle('is_active');
-        document.querySelectorAll('.BurgerMenu.icon button span')
+        document.querySelector('.BurgerMenu nav').classList.toggle('is_active');
+        document.querySelector('.BurgerMenu .back').classList.toggle('is_active');
+        document.querySelectorAll('.BurgerMenu .icon button span')
         .forEach(x => x.classList.toggle('is_active'));        
       };
       v.default.showChildren = (event) => { // ブランチの下位階層メニュー表示/非表示切り替え
