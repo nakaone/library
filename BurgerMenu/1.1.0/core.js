@@ -17,6 +17,7 @@
  * - func {Object.<string,Function>} メニューから実行する関数を集めたライブラリ
  * - home {string} ホーム画面として使用するメニューの識別子。無指定の場合、wrapper直下でdata-BurgerMenu属性を持つ最初の要素
  * - css {string} BurgerMenu専用CSS
+ * - initialSubMenu=true {boolean} サブメニューの初期状態。true:開いた状態、false:閉じた状態
  * 
  * #### data-BurgerMenu属性に設定する文字列
  * 
@@ -105,6 +106,7 @@ class BurgerMenu {
         auth: 1,
         func: {}, // {Object.<string,function>} メニューから呼び出される関数
         home: null,
+        initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
       };
       v.default.css = `/* BurgerMenu専用CSS
           BurgerMenu共通変数定義
@@ -408,16 +410,25 @@ class BurgerMenu {
             v.name = v.attr.id;
             v.d.setAttribute('name',v.name);
           }
-          v.step = 5.33; // nameを指定して画面切替
-          Object.assign(v.li.children[0],{
-            event:{click:(event)=>{
-              changeScreen(event.target.getAttribute('name'));
-              this.toggle();
-            }}
-          });
-          v.step = 5.34; // 子孫にdata-BurgerMenuがあるか確認
-          if( navi.querySelector(`[data-${this.className}]`) ){
-            v.hasChild = true;
+          // 子孫メニューがあるか確認
+          if( v.d.querySelector(`[data-${this.className}]`) ){
+            v.step = 5.33; // 子孫メニューが存在する場合
+            v.hasChild = true; // 再帰呼出用のフラグを立てる
+            Object.assign(v.li.children[0],{
+              // 初期がサブメニュー表示ならclassにis_openを追加
+              attr:{class:(this.initialSubMenu ? 'is_open' : '')},
+              // '▼'または'▶︎'をメニューの前につける
+              text: (this.initialSubMenu ? '▶︎' : '▼') + v.li.children[0].text,
+              event: {click:this.showChildren}
+            });
+          } else { // 子孫メニューが存在しない場合
+            v.step = 5.33; // nameを指定して画面切替
+            Object.assign(v.li.children[0],{
+              event:{click:(event)=>{
+                changeScreen(event.target.getAttribute('name'));
+                this.toggle();
+              }}
+            });
           }
         }
 
@@ -427,7 +438,7 @@ class BurgerMenu {
 
         v.step = 5.5; // 子要素にdata-BurgerMenuが存在する場合、再帰呼出
         if( v.hasChild ){
-          v.r = this.#genNavi(v.d,navi);
+          v.r = this.#genNavi(v.d,v.r);
           if( v.r instanceof Error ) throw v.r;
         }
       }
@@ -444,6 +455,4 @@ class BurgerMenu {
       return e;
     }
   }
-  
-
 }
