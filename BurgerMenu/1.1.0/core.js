@@ -39,6 +39,11 @@
  * 
  * - func, hrefは排他。両方指定された場合はfuncを優先する
  * - func, href共に指定されなかった場合、SPAの画面切替指示と見なし、idの画面に切り替える
+ * - href指定の場合、タグ内の文字列は無視される(下例2行目の「テスト」)
+ *   ```
+ *   <div data-BurgerMenu="id:'c41',label:'これはOK',href:'https://〜'"></div>
+ *   <div data-BurgerMenu="id:'c41',label:'これはNG',href:'https://〜'">テスト</div>
+ *   ```
  * 
  */
 class BurgerMenu {
@@ -396,9 +401,8 @@ class BurgerMenu {
           });
         } else if( v.attr.hasOwnProperty('href') ){
           v.step = 5.2; // 他サイトへの遷移指定の場合
-          Object.assign(v.li.children[0],{
-            event:{click:this.func[v.attr.func]}
-          });
+          Object.assign(v.li.children[0].attr,{href:v.attr.href,target:'_blank'});
+          Object.assign(v.li.children[0],{event:{click:this.toggle}}); // 遷移後メニューを閉じる
         } else {
           v.step = 5.3; // その他(=画面切替)の場合
           v.step = 5.31; // screenクラスが無ければ追加
