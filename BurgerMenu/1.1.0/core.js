@@ -67,7 +67,6 @@ class BurgerMenu {
         tag:'nav',
       },this.wrapper);
       v.step = 2.3; // ナビゲータ背景の作成
-      // .back navはonClickで閉じるよう、constructorで設定
         this.back = createElement({
         attr:{class:'back'},
         event:{click:this.toggle},
@@ -384,7 +383,7 @@ class BurgerMenu {
         v.li = {tag:'li',children:[{
           tag:'a',
           text:v.attr.label,
-          attr:{class:this.className},
+          attr:{class:this.className,name:v.attr.id},
         }]};
         v.hasChild = false;
         if( v.attr.hasOwnProperty('func') ){
@@ -411,7 +410,10 @@ class BurgerMenu {
           }
           v.step = 5.33; // nameを指定して画面切替
           Object.assign(v.li.children[0],{
-            event:{click:changeScreen(v.name)}
+            event:{click:(event)=>{
+              changeScreen(event.target.getAttribute('name'));
+              this.toggle();
+            }}
           });
           v.step = 5.34; // 子孫にdata-BurgerMenuがあるか確認
           if( navi.querySelector(`[data-${this.className}]`) ){
