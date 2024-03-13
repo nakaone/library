@@ -39,17 +39,6 @@
  * - func, hrefは排他。両方指定された場合はfuncを優先する
  * - func, href共に指定されなかった場合、SPAの画面切替指示と見なし、idの画面に切り替える
  * 
- * @example
- * 
- * 
- * 
- * - sourceCode=false {boolean} 詳細・編集画面のcodeタグ内をクリック時にクリップボードに内容をコピーするならtrue
- * - source  {Object} データソース(シートの読込 or 行Objの配列)に関する定義
- *   - **list** {string[]} listメソッド内でのシートデータ読み込み時のdoGAS引数の配列
- *   - **update** {string[]} updateメソッド内でのシートデータ更新時のdoGAS引数の配列
- *   - **delete** {string[]} deleteメソッド内でのシートデータ削除時のdoGAS引数の配列
- * 
- * 
  */
 class BurgerMenu {
 
@@ -192,7 +181,7 @@ class BurgerMenu {
         .BurgerMenu.icon button span.is_active:nth-child(3) {
           top : 50%;
           transform : translateY(-50%) rotate(-135deg);
-        },
+        }
         /* ナビゲーション領域 */
         nav.BurgerMenu {
           display : none;
@@ -284,15 +273,18 @@ class BurgerMenu {
         }
       }
       v.step = 6; // BurgerMenu専用CSSが未定義なら追加
-      if( !document.querySelector('style.BurgerMenu') ){
+      if( !document.querySelector(`style[name="${this.className}"]`) ){
         v.styleTag = document.createElement('style');
-        v.styleTag.classList.add('BurgerMenu');
+        v.styleTag.setAttribute('name',this.className);
         v.styleTag.textContent = this.css;
         document.head.appendChild(v.styleTag);
       }
       v.step = 7; // 待機画面が未定義ならbody直下に追加
       if( !document.querySelector('body > div[name="loading"]') ){
-        v.r = createElement({attr:{name:'loading',class:'loader screen'},text:'loading...'},'body');
+        v.r = createElement({
+          attr:{name:'loading',class:'loader screen'},
+          text:'loading...'
+        },'body');
       }
   
       v.step = 8; // 終了処理
@@ -383,14 +375,18 @@ class BurgerMenu {
 
         v.step = 4; // nav領域にul未設定なら追加
         if( navi.tagName.toLowerCase() !== 'ul' ){
-          v.r = createElement({tag:'ul'},navi);
+          v.r = createElement({tag:'ul',attr:{class:'BurgerMenu'}},navi);
           if( v.r instanceof Error ) throw v.r;
           navi = v.r;
           console.log(navi);
         }
 
         v.step = 5; // メニューの追加
-        v.li = {tag:'li',children:[{tag:'a',text:v.attr.label}]};
+        v.li = {tag:'li',children:[{
+          tag:'a',
+          text:v.attr.label,
+          attr:{class:'BurgerMenu'},
+        }]};
         v.hasChild = false;
         if( v.attr.hasOwnProperty('func') ){
           v.step = 5.1; // 指定関数実行の場合
