@@ -1,3 +1,191 @@
+<style scoped type="text/css">
+html, body{
+  width: 100%;
+  margin: 0;
+    text-size-adjust: none; }
+body * {
+  font-size: 1rem;
+  font-family: sans-serif;
+  box-sizing: border-box;
+}
+.num, .right {text-align:right;}
+.screen {padding: 1rem;} .title {   font-size: 2.4rem;
+  text-shadow: 2px 2px 5px #888;
+}
+
+.table {display:grid}
+th, .th, td, .td {
+  margin: 0.2rem;
+  padding: 0.2rem;
+}
+th, .th {
+  background-color: #888;
+  color: white;
+}
+td, .td {
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+
+.triDown {   --bw: 50px;
+  width: 0px;
+  height: 0px;
+  border-top: calc(var(--bw) * 0.7) solid #aaa;
+  border-right: var(--bw) solid transparent;
+  border-left: var(--bw) solid transparent;
+  border-bottom: calc(var(--bw) * 0.2) solid transparent;
+}
+
+.loader,
+.loader:after {
+  border-radius: 50%;
+  width: 10em;
+  height: 10em;
+}
+.loader {
+  margin: 60px auto;
+  font-size: 10px;
+  position: relative;
+  text-indent: -9999em;
+  border-top: 1.1em solid rgba(204,204,204, 0.2);
+  border-right: 1.1em solid rgba(204,204,204, 0.2);
+  border-bottom: 1.1em solid rgba(204,204,204, 0.2);
+  border-left: 1.1em solid #cccccc;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-animation: load8 1.1s infinite linear;
+  animation: load8 1.1s infinite linear;
+}
+@-webkit-keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+</style>
+
+
+<p class="title">class BurgerMenu</p>
+
+# 概要
+
+## 機能概要
+
+htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメニューを作成
+
+[BurgerMenu仕様](#burgermenu仕様) | [source](#source) | [改版履歴](#改版履歴)
+
+![](summary.svg)
+
+
+# BurgerMenu仕様
+
+
+**Kind**: global class  
+<a name="new_BurgerMenu_new"></a>
+
+### new BurgerMenu(arg)
+
+| Param | Type |
+| --- | --- |
+| arg | <code>Object</code> | 
+
+**Example**  
+### htmlの設定
+
+- wrapperに`class="BurgerMenu screen" name="wrapper"`を設定
+- メニュー化する領域(divタグ)に`data-BurgerMenu`属性を追加(設定値は後掲)
+
+```
+<p class="title">BurgerMenu Test</p>
+<div class="BurgerMenu screen" name="wrapper">
+  <div data-BurgerMenu="id:'c11',label:'掲示板'">掲示板</div>
+  <div data-BurgerMenu="id:'c21',label:'入会申込'">入会申込</div>
+  <div data-BurgerMenu="id:'c30',label:'イベント情報'">
+    <div data-BurgerMenu="id:'c31',label:'会場案内図'">会場案内図</div>
+    <div data-BurgerMenu="id:'c32',label:'タイムテーブル'">タイムテーブル</div>
+  </div>
+  <div data-BurgerMenu="id:'c40',label:'その他'">
+    <div data-BurgerMenu="id:'c41',label:'リンクテスト',href:'https://developer.mozilla.org/ja/'">hoge</div>
+    <div data-BurgerMenu="id:'c42',label:'funcテスト',func:'test'">funcテスト</div>
+  </div>
+</div>
+```
+
+### scriptの設定
+
+- インスタンス生成時の引数については次項参照
+
+```
+v.menu = new BurgerMenu({func:{test:(e)=>{alert('hoge');changeScreen('c42');}}});
+if( v.menu instanceof Error ) throw v.menu;
+```
+
+### BurgerMenuメンバ一覧
+
+以下はthisとして「constructorのv.default < constructorの引数 < listViewの引数」の順で有効となる。
+
+1. 「**太字**」はインスタンス生成時、必須指定項目
+1. 「【*内部*】」は指定不要の項目(constructor他で自動的に設定されるメンバ)
+1. その他はconstructorの引数で指定可、指定が無い項目は既定値をセット
+
+- className {string} 【*内部*】'BurgerMenu'固定。ログ出力時に使用
+- wrapper='.BurgerMenu.screen[name="wrapper"]' {string|HTMLElement} 作成対象のdata-BurgerMenuを全て含む親要素。CSSセレクタかHTMLElementで指定。
+- auth=1 {number} 利用者の閲覧権限。メニューのauth(data-BurgerMenu:{auth:x})とのビット積=0なら当該メニューは作成しない
+- func {Object.<string,Function>} メニューから実行する関数を集めたライブラリ
+- home {string} ホーム画面として使用するメニューの識別子。無指定の場合、wrapper直下でdata-BurgerMenu属性を持つ最初の要素
+- initialSubMenu=true {boolean} サブメニューの初期状態。true:開いた状態、false:閉じた状態
+- css {string} BurgerMenu専用CSS
+- toggle {Arrow} 【*内部*】ナビゲーション領域の表示/非表示切り替え
+- showChildren {Arrow} 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
+
+### data-BurgerMenu属性に設定する文字列
+
+- id {string} メニュー毎に作成する識別子
+- label {string} nav領域に表示するメニューの名称
+- func {string} constructorの引数で渡されたfuncオブジェクトのメンバ名。
+- href {string} 遷移先ページのURL。
+- auth=1 {number} メニューの使用権限。以下例ではシステム管理者は両方表示されるが、一般ユーザにはシステム設定は表示されない
+  ```
+  <div data-BurgerMenu="auth:1">利用案内</div>
+  <div data-BurgerMenu="auth:8">システム設定</div>
+  (中略)
+  <script>
+    const authority = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:15
+    const menu = new BurgerMenu({auth:authority.level}); // レベルを渡してメニュー生成
+  ```
+
+注意事項
+
+- func, hrefは排他。両方指定された場合はfuncを優先する
+- func, href共に指定されなかった場合、SPAの画面切替指示と見なし、idの画面に切り替える
+- href指定の場合、タグ内の文字列は無視される(下例2行目の「テスト」)
+  ```
+  <div data-BurgerMenu="id:'c41',label:'これはOK',href:'https://〜'"></div>
+  <div data-BurgerMenu="id:'c41',label:'これはNG',href:'https://〜'">テスト</div>
+  ```
+
+
+# source
+
+<a href="#top" class="right">先頭へ</a><details><summary>core.js</summary>
+
+```
 /**
  * @classdesc htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメニューを作成
  * 
@@ -499,3 +687,182 @@ class BurgerMenu {
     }
   }
 }
+```
+
+</details>
+
+<a href="#top" class="right">先頭へ</a><details><summary>test.js</summary>
+
+```
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+  <title>BurgerMenu</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="../../CSS/1.3.0/core.css">
+  <style type="text/css"></style>
+  <!-- 必須ライブラリ -->
+  <script type="text/javascript" src="core.js"></script>
+  <script type="text/javascript" src="../../mergeDeeply/1.1.0/core.js"></script>
+  <script type="text/javascript" src="../../createElement/1.2.1/core.js"></script>
+  <script type="text/javascript" src="../../changeScreen/1.1.0/core.js"></script>
+  <!-- 任意(デバッグ用) -->
+  <script type="text/javascript" src="../../stringify/1.1.1/core.js"></script>
+  <script type="text/javascript" src="../../whichType/1.0.1/core.js"></script>
+  </head>
+<body>
+  <!--
+    1. 他画面への遷移(ex.Google)
+    2. 機能実行＋alert
+    3. 機能実行＋結果表示
+    4. SPA画面切り替え
+  -->
+  <p class="title">BurgerMenu Test</p>
+  <div class="BurgerMenu screen" name="wrapper">
+    <div data-BurgerMenu="id:'c11',label:'掲示板'">掲示板</div>
+    <div data-BurgerMenu="id:'c21',label:'入会申込'">入会申込</div>
+    <div data-BurgerMenu="id:'c30',label:'イベント情報'">
+      <div data-BurgerMenu="id:'c31',label:'会場案内図'">会場案内図</div>
+      <div data-BurgerMenu="id:'c32',label:'タイムテーブル'">タイムテーブル</div>
+    </div>
+    <div data-BurgerMenu="id:'c40',label:'その他'">
+      <div data-BurgerMenu="id:'c41',label:'リンクテスト',href:'https://developer.mozilla.org/ja/'">hoge</div>
+      <div data-BurgerMenu="id:'c42',label:'funcテスト',func:'test'">funcテスト</div>
+    </div>
+  </div>
+
+</body>
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.menu = new BurgerMenu({func:{test:(e)=>{alert('hoge');changeScreen('c42');}}});
+    if( v.menu instanceof Error ) throw v.menu;
+    console.log(v.menu);
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+  } catch(e) {
+    e.message = `\n${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+  }
+});
+</script>
+</html>
+```
+
+</details>
+
+<a href="#top" class="right">先頭へ</a><details><summary>build.sh</summary>
+
+```
+#!/bin/sh
+# -x  つけるとverbose
+
+# ----------------------------------------------
+# 1.事前準備
+# ----------------------------------------------
+hr="\n=======================================\n"
+echo "\n$hr[BurgerMenu] build start$hr"
+
+# 1.1 変数・ツールの定義
+GitHub="/Users/ena.kaon/Desktop/GitHub"
+lib="$GitHub/library"
+mod="$lib/BurgerMenu/1.1.0"
+esed="node $lib/esed/1.0.0/core.js"
+
+# 1.2 .DS_storeの全削除
+cd $mod
+find .. -name '.DS_Store' -type f -ls -delete
+
+# 1.3 tmpの用意
+#rm -rf $mod/tmp
+#mkdir $mod/tmp
+#tmp="$mod/tmp"
+
+# 1.4 使用するクラスを最新化
+#$lib/SingleTableClient/1.0.0/build.sh
+
+
+# ----------------------------------------------
+# 2. index.htmlの作成
+# ----------------------------------------------
+# 2.1 CSS部分
+
+# 2.2 html部分
+#work="$tmp/index.html"
+#cp $src/static/index.header.html $work
+#list=(
+#  実施要領
+#  注意事項
+#  持ち物リスト
+#)
+#for x in ${list[@]}; do
+#  echo "<div name=\"$x\">\n" >> $work
+#  cat $src/static/$x.md | marked >> $work
+#  echo "</div>\n\n" >> $work
+#done
+#cat $src/templates/origin.html \
+#| node $esed -x:"\/\*::CSS::\*\/" -f:$lib/CSS/1.3.0/core.css \
+#| node $esed -x:"<!--::body::-->" -f:$work \
+#> $src/index.html
+
+# 2.3 script部分
+
+# ----------------------------------------------
+# 3. server.gsの作成
+# ----------------------------------------------
+
+
+# ----------------------------------------------
+# 4. 仕様書の作成
+# ----------------------------------------------
+readme="$mod/readme.md"
+# 標準CSSを追加(コメントはesedで除外)
+echo "<style scoped type=\"text/css\">" > $readme
+cat $lib/CSS/1.3.0/core.css | awk 1 \
+| $esed -x:"\/\*[\s\S]*?\*\/\n*" -s:"" >> $readme
+echo "</style>\n\n" >> $readme
+
+# proto/readme.mdを追加
+# jsdoc2mdで追加される行は除外してmd作成
+jsdoc2md $mod/core.js | sed '1,4d' > $mod/core.md
+cat $mod/proto.md \
+| $esed -x:"__JSDoc" -f:$mod/core.md \
+| $esed -x:"__source" -f:$mod/core.js \
+| $esed -x:"__test" -f:$mod/test.html \
+| $esed -x:"__build" -f:$mod/build.sh \
+>> $readme
+
+
+echo "\n$hr[BurgerMenu] build end$hr"
+
+
+
+# ----------------------------------------------
+# 参考：関数化、if文
+# ----------------------------------------------
+
+#makeJSDoc(){
+#  base=$1
+#  type=$2
+#  if [ -n $3 ]; then # 入力フォルダ名指定あり
+#    iFile=$3/$base
+#  else               # 入力フォルダ名指定なし
+#    iFile=$base
+#  fi
+#}
+## makeJSDoc ベースファイル名 タイプ 入力フォルダ名 出力フォルダ名
+#makeJSDoc css css $iDir $dDir
+```
+
+</details>
+
+# 改版履歴
+
+- rev.1.1.0 : 2024/03/14
+  - setupInstanceをmergeDeeplyに置換(setupInstanceは廃番)
+  - arg.funcの取り扱いを`new Function()`から直接関数を渡す形に修正
+  - changeメソッドを廃止、changeScreenで代替
+- rev.1.0.0 : 2024/01/03 初版
