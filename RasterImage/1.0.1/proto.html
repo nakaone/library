@@ -1,0 +1,32 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja" class="BasePage"><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <!-- CDN -->
+  <script src="https://cdn.jsdelivr.net/gh/fengyuanchen/compressorjs/dist/compressor.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.1/index.min.js" integrity="sha512-qosaXUCrlY9MGGVtPtsP5MBN+W+R25MfvvvK0oioo9GaAHR7DgpqwVv2NlSOctIX9wcIKsSjhgrSpst1iwmjtA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style type="text/css">/*::css::*/</style>
+</head><body>
+<div id="RasterImage"></div>
+<!--::html::-->
+<script type="text/javascript">
+//::script::
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(v.whois+' start.');
+  try {
+
+    v.step = 1; // インスタンス生成
+    v.RasterImage = new RasterImage({parent:'#RasterImage'});
+
+    v.step = 2; // 終了処理
+    console.log(v.whois+' normal end.\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+  }
+});
+</script>
+</body>
+</html>

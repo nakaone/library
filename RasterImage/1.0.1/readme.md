@@ -1,0 +1,2136 @@
+<style scoped type="text/css">
+html, body{
+  width: 100%;
+  margin: 0;
+    text-size-adjust: none; }
+body * {
+  font-size: 1rem;
+  font-family: sans-serif;
+  box-sizing: border-box;
+}
+.num, .right {text-align:right;}
+.screen {padding: 1rem;} .title {   font-size: 2.4rem;
+  text-shadow: 2px 2px 5px #888;
+}
+
+.table {display:grid}
+th, .th, td, .td {
+  margin: 0.2rem;
+  padding: 0.2rem;
+}
+th, .th {
+  background-color: #888;
+  color: white;
+}
+td, .td {
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+
+.triDown {   --bw: 50px;
+  width: 0px;
+  height: 0px;
+  border-top: calc(var(--bw) * 0.7) solid #aaa;
+  border-right: var(--bw) solid transparent;
+  border-left: var(--bw) solid transparent;
+  border-bottom: calc(var(--bw) * 0.2) solid transparent;
+}
+
+.loader,
+.loader:after {
+  border-radius: 50%;
+  width: 10em;
+  height: 10em;
+}
+.loader {
+  margin: 60px auto;
+  font-size: 10px;
+  position: relative;
+  text-indent: -9999em;
+  border-top: 1.1em solid rgba(204,204,204, 0.2);
+  border-right: 1.1em solid rgba(204,204,204, 0.2);
+  border-bottom: 1.1em solid rgba(204,204,204, 0.2);
+  border-left: 1.1em solid #cccccc;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-animation: load8 1.1s infinite linear;
+  animation: load8 1.1s infinite linear;
+}
+@-webkit-keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+</style>
+
+
+<p class="title">class RasterImage</p>
+
+# 概要
+
+ラスタ画像の操作。起動時オプション(opt.func)により、①画像の一括変換・圧縮、②スマホカメラでの撮影(含間欠撮影)、③QRコードスキャンを行う
+
+<!--
+## 機能概要
+
+- シンプルな構造の表なら必須引数の指定のみで稼働
+- 元データとしてオブジェクトの配列を使用する場合、constructor(またはlist)の引数で渡す
+
+[画面遷移](#画面遷移) | [画面構成](#画面構成) | [動作イメージ](#動作イメージ) | [JSDoc](#RasterImage) | [メンバ一覧](#RasterImageメンバ一覧) | [source](#source) | [改版履歴](#改版履歴)
+
+## その他概要
+
+- シーケンス図
+- 動作イメージ
+- 用語解説
+
+# 使用方法
+
+- サンプル(client script,server script,html onload(インスタンス生成時のソース))
+-->
+
+# RasterImage仕様
+
+
+起動時オプション(opt.func)により、①画像の一括変換・圧縮、②スマホカメラでの撮影(含間欠撮影)、③QRコードスキャンを行う
+
+**Kind**: global class  
+
+* [RasterImage](#RasterImage)
+    * [new RasterImage(opt)](#new_RasterImage_new)
+    * [.bulkCompress](#RasterImage+bulkCompress) ⇒ <code>null</code> \| <code>Error</code>
+    * [.compress](#RasterImage+compress) ⇒ <code>null</code> \| <code>Error</code>
+    * [.download](#RasterImage+download) ⇒ <code>null</code> \| <code>Error</code>
+    * [.imagesize](#RasterImage+imagesize) ⇒ <code>Promise</code>
+
+<a name="new_RasterImage_new"></a>
+
+### new RasterImage(opt)
+**Returns**: <code>null</code> \| <code>Error</code> - #### 参考
+
+- GitHub [Compressor.js Options](https://github.com/fengyuanchen/compressorjs#options)
+- [【JavaScript】ブラウザ画面にドラッグ＆ドロップされた画像をimg要素で表示する](https://www.softel.co.jp/blogs/tech/archives/5679)
+- DnDで複数ファイルをアップロード [画像ファイルアップロード | プレビュー,DnD](https://amaraimusi.sakura.ne.jp/note_prg/JavaScript/file_note.html)  
+
+| Param | Type |
+| --- | --- |
+| opt | <code>\*</code> | 
+
+<a name="RasterImage+bulkCompress"></a>
+
+### rasterImage.bulkCompress ⇒ <code>null</code> \| <code>Error</code>
+画像(複数)がドロップされた際の処理
+
+```
+// ドロップ領域のイベントとして定義。以下は定義例
+document.querySelector('div.dropArea').addEventListener('drop',(e)=>{
+  e.stopPropagation();
+  e.preventDefault();
+  v.onDrop(e.dataTransfer.files);
+});
+document.querySelector('div.dropArea').addEventListener('dragover',(e)=>{
+  e.preventDefault();
+});
+```
+
+#### 参考
+
+- [ブラウザ上で HEIC/HEIF を PNG/JPEG に変換する方法](https://zenn.dev/seya/articles/5faa498604a63e)
+
+**Kind**: instance property of [<code>RasterImage</code>](#RasterImage)  
+
+| Param | Type |
+| --- | --- |
+| files | <code>ProgressEvent</code> | 
+
+<a name="RasterImage+compress"></a>
+
+### rasterImage.compress ⇒ <code>null</code> \| <code>Error</code>
+画像ファイルを圧縮
+
+**Kind**: instance property of [<code>RasterImage</code>](#RasterImage)  
+**Returns**: <code>null</code> \| <code>Error</code> - #### 参考
+
+- GitHub [Compressor.js Options](https://github.com/fengyuanchen/compressorjs#options)
+- [Callback to Async Await](https://stackoverflow.com/questions/49800374/callback-to-async-await)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| file | <code>File</code> | 圧縮対象ファイル |
+| opt | <code>Object</code> | compressorのオプション |
+
+<a name="RasterImage+download"></a>
+
+### rasterImage.download ⇒ <code>null</code> \| <code>Error</code>
+ファイル(Blob)のダウンロード
+
+**Kind**: instance property of [<code>RasterImage</code>](#RasterImage)  
+**Returns**: <code>null</code> \| <code>Error</code> - #### 参考
+
+- [ファイルをダウンロード保存する方法](https://javascript.keicode.com/newjs/download-files.php)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| blob | <code>Blob</code> | ダウンロード対象のBlob |
+
+<a name="RasterImage+imagesize"></a>
+
+### rasterImage.imagesize ⇒ <code>Promise</code>
+画像ファイルのサイズをチェックする
+
+**Kind**: instance property of [<code>RasterImage</code>](#RasterImage)  
+**Returns**: <code>Promise</code> - - width,heightをメンバとして持つオブジェクト
+
+#### 参考
+
+- [JavaScript で File オブジェクトの画像のサイズを取得する方法](https://gotohayato.com/content/519/)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| file | <code>File</code> | 画像ファイル |
+
+
+
+# source
+
+<details><summary>core.js</summary>
+
+```
+/**
+ * @classdesc ラスタ画像の操作
+ * 
+ * 起動時オプション(opt.func)により、①画像の一括変換・圧縮、②スマホカメラでの撮影(含間欠撮影)、③QRコードスキャンを行う
+ */
+class RasterImage extends BasePage {
+  /**
+   * @constructor
+   * @param {*} opt
+   * @returns {null|Error}
+   *
+   * #### 参考
+   *
+   * - GitHub [Compressor.js Options](https://github.com/fengyuanchen/compressorjs#options)
+   * - [【JavaScript】ブラウザ画面にドラッグ＆ドロップされた画像をimg要素で表示する](https://www.softel.co.jp/blogs/tech/archives/5679)
+   * - DnDで複数ファイルをアップロード [画像ファイルアップロード | プレビュー,DnD](https://amaraimusi.sakura.ne.jp/note_prg/JavaScript/file_note.html)
+   */
+  constructor(opt){
+    const v = {whois:'RasterImage.constructor',rv:null,step:0,def:{
+      parent: 'body',
+      func: 'bulk',
+        // bulk:ローカル(PC)上の画像ファイルを一括変換、
+        // camera: スマホのカメラで撮影した画像を圧縮
+        // scanQR: QRコードをスマホのカメラで認識
+      files: [],  // {File[]} - DnDされたファイルオブジェクトの配列
+      thumbnail: 200, // サムネイルの最大サイズ
+      css: [
+        // ①画像の一括変換・圧縮(bulk)
+        `.bulk .dropArea {
+          margin: 1rem;
+          padding: 2rem;
+          border: solid 5px #ccc;
+          text-align:center;
+        }
+        .bulk table {
+          margin: 1rem;
+        }`,
+        // プレビュー領域
+        `.preview {
+          margin: 1rem;
+        }
+        .preview .image {
+          display: 'inline-block',
+        }
+        .preview .info {
+          font-size: 0.6rem;
+        }`,
+        // preview用ツールチップ。parent直下に設定。
+        `.tooltip {
+          position: absolute;
+          z-index: 10;
+          visibility: hidden;
+          background-color: rgba(255,255,255,0.8);
+          font-size: 0.7rem;
+          padding: 0.5rem;
+          line-height: 1rem;
+        }`,
+        // 以下未作成
+        // ②スマホカメラでの撮影(camera)
+        // ③QRコードスキャン(scanQR)
+      ],
+      html: [
+        {tag:'div',attr:{class:'tooltip'}}, // tooltip用
+        // 1.画像の一括変換・圧縮(bulk)
+        {name:'bulk',attr:{class:'bulk'},children:[
+          // 1.1.ドロップ領域
+          {attr:{class:'dropArea'},text:'画像ファイルをドロップ(複数可)',event:{
+            drop:(e)=>{
+              e.stopPropagation();
+              e.preventDefault();
+              this.bulkCompress(e.dataTransfer.files);        
+            },
+            dragover:(e)=>e.preventDefault(),
+          }},
+          // 1.2.圧縮仕様の指定領域
+          {attr:{class:'specification'},children:[
+            {tag:'table',children:[
+              {tag:'tr',attr:{name:'mimeType'},children:[
+                {tag:'th',text:'画像形式'},
+                {tag:'td',children:[
+                  {tag:'select',children:[
+                    {tag:'option',attr:{value:'image/webp'},text:'webp'},
+                    {tag:'option',attr:{value:'image/png'},text:'png'},
+                    {tag:'option',attr:{value:'image/jpeg'},text:'jpeg'},
+                    {tag:'option',attr:{value:'image/gif'},text:'gif'},
+                  ]}
+                ]},
+                {tag:'td',text:''}
+              ]},
+              {tag:'tr',attr:{name:'standard'},children:[
+                {tag:'th',text:'画像サイズ'},
+                {tag:'td',children:[
+                  {tag:'select',children:[
+                    {tag:'option',attr:{value:'-1'},text:'原寸'},
+                    {tag:'option',attr:{value:'7680'},text:'8K(7680)'},
+                    {tag:'option',attr:{value:'3840'},text:'4K(3840)'},
+                    {tag:'option',attr:{value:'1920'},text:'FullHD(1920)'},
+                    {tag:'option',attr:{value:'1280'},text:'HDTV(1280)'},
+                    {tag:'option',attr:{value:'1024'},text:'XGA(1024)'},
+                    {tag:'option',attr:{value:'800'},text:'SVGA(800)'},
+                    {tag:'option',attr:{value:'640'},logical:{selected:true},text:'VGA(640)'},
+                    {tag:'option',attr:{value:'320'},text:'QuarterVGA(320)'},
+                    {tag:'option',attr:{value:'-2'},text:'custom'},
+                  ],event:{
+                    change:(e)=>{
+                      console.log(e.target.value);
+                      let max = this.bulk.querySelector('[name="maxSize"]');
+                      let maxi = max.querySelector('input');
+                      let min = this.bulk.querySelector('[name="minSize"]');
+                      let mini = min.querySelector('input');
+                      if( e.target.value == -2 ){
+                        // カスタム選択時
+                        max.classList.remove('hide'); // 最大高/幅欄を表示
+                        min.classList.remove('hide'); // 最小高/幅欄を表示
+                        maxi.defaultValue = 640;  // 既定値を再セット
+                        mini.defaultValue = 320;
+                      } else {
+                        // それ以外の選択肢
+                        max.classList.add('hide'); // 最大高/幅欄を非表示
+                        min.classList.add('hide'); // 最小高/幅欄を非表示
+                        if( e.target.value == -1 ){
+                          // 原寸大の場合
+                          maxi.defaultValue = 999999; // "Infinity" cannot be parsed
+                          mini.defaultValue = 0;
+                        } else {
+                          // 原寸大以外
+                          maxi.defaultValue = e.target.value; // 選択された値をセット
+                        }
+                      }
+                    }
+                  }}
+                ]},
+                {tag:'td',text:'原画縦横比を保持するので規格名は目安'}
+              ]},
+              {tag:'tr',attr:{name:'maxSize',class:'hide'},children:[
+                {tag:'th',text:'最大高/幅'},
+                {tag:'td',children:[
+                  {tag:'input',attr:{type:'number',value:640},style:{width:'50px'}}
+                ]},
+                {tag:'td',text:'無指定の場合は"-1"を入力'}
+              ]},
+              {tag:'tr',attr:{name:'minSize',class:'hide'},children:[
+                {tag:'th',text:'最小高/幅'},
+                {tag:'td',children:[
+                  {tag:'input',attr:{type:'number',value:320},style:{width:'50px'}}
+                ]},
+                {tag:'td',text:'無指定の場合は"-1"を入力'}
+              ]},
+              {tag:'tr',attr:{name:'checkOrientation'},children:[
+                {tag:'th',text:'画像の向き'},
+                {tag:'td',children:[
+                  {tag:'select',children:[
+                    {tag:'option',attr:{value:true},text:'補正する'},
+                    {tag:'option',attr:{value:false},text:'補正しない'},
+                  ]}
+                ]},
+                {tag:'td',text:'Exif Orientationに基づく。Jpegのみ有効'}
+              ]},
+              {tag:'tr',attr:{name:'retainExif'},children:[
+                {tag:'th',text:'Exif情報'},
+                {tag:'td',children:[
+                  {tag:'select',children:[
+                    {tag:'option',attr:{value:false},text:'保持しない'},
+                    {tag:'option',attr:{value:true},text:'保持する'},
+                  ]}
+                ]},
+                {tag:'td',text:'圧縮後もExifを保持するかの指定'}
+              ]},
+              {tag:'tr',attr:{name:'quality'},children:[
+                {tag:'th',text:'品質'},
+                {tag:'td',children:[
+                  {tag:'input',attr:{type:'number',value:0.8},style:{width:'50px'}}
+                ]},
+                {tag:'td',html:'0(圧縮大)〜1(無圧縮)の小数。推奨値は最低0.6。<br/>既定値はjpeg:0.92,webp:0.80。'}
+              ]},
+            ]}
+          ]},
+        ]},
+        // 1.3.プレビュー領域
+        {name:'preview',attr:{class:'preview'},children:[
+          {attr:{name:'ctrl'},children:[
+            {tag:'button',text:'download zip file'}
+          ]},
+          {attr:{name:'image'}},
+        ]},
+
+        // 以降未作成
+        // 2.スマホカメラでの撮影(camera)
+        // 3.QRコードスキャン(scanQR)
+      ],
+    }};
+    console.log(v.whois+' start.',opt);
+    try {
+      super(v.def,opt);
+
+      // プレビュー領域ダウンロードボタンの動作定義
+      // ※ v.defで定義しようとすると以下のメッセージが出て不可
+      // ReferenceError: Must call super constructor in derived class
+      // before accessing 'this' or returning from derived constructor
+      this.preview.querySelector('button').addEventListener('click',this.download);
+
+      v.step = 1; // 終了処理
+      this.changeScreen(this.func);
+      console.log(v.whois+' normal end.\n',v.rv);
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 画像(複数)がドロップされた際の処理
+   * 
+   * ```
+   * // ドロップ領域のイベントとして定義。以下は定義例
+   * document.querySelector('div.dropArea').addEventListener('drop',(e)=>{
+   *   e.stopPropagation();
+   *   e.preventDefault();
+   *   v.onDrop(e.dataTransfer.files);
+   * });
+   * document.querySelector('div.dropArea').addEventListener('dragover',(e)=>{
+   *   e.preventDefault();
+   * });
+   * ```
+   * 
+   * #### 参考
+   * 
+   * - [ブラウザ上で HEIC/HEIF を PNG/JPEG に変換する方法](https://zenn.dev/seya/articles/5faa498604a63e)
+   * 
+   * @param {ProgressEvent} files
+   * @returns {null|Error}
+   */
+  bulkCompress = async (files) => {
+    const v = {whois:this.className+'.bulkCompress',rv:null,step:0};
+    console.log(v.whois+' start.',files);
+    try {
+
+      // ------------------------------
+      // 1. 前処理
+      // ------------------------------
+      v.step = 1;
+      this.changeScreen('loading');
+      this.zip = new JSZip(); // zipを生成
+
+      // ------------------------------
+      // 2. compress.jsのオプションを取得
+      // ------------------------------
+      v.step = 2;
+      v.o = this.bulk.querySelector('.specification');
+      v.opt = {
+        mimeType: v.o.querySelector('[name="mimeType"] select').value,
+        checkOrientation: v.o.querySelector('[name="checkOrientation"] select').value,
+        retainExif: v.o.querySelector('[name="retainExif"] select').value,
+        quality: v.o.querySelector('[name="quality"] input').value,
+      }
+      v.max = v.o.querySelector('[name="maxSize"] input').value;
+      v.opt.maxHeight = v.opt.maxWidth = (v.max == -1 ? Infinity : v.max);
+      v.min = v.o.querySelector('[name="minSize"] input').value;
+      v.opt.minHeight = v.opt.minWidth = (v.min == -1 ? 0 : v.min);
+      v.opt.error = (e) => {
+        alert("'"+''+"'は非対応の画像形式です",e);
+        console.error('l.244',e);
+        return e;
+      };
+
+      for( v.i=0 ; v.i<files.length ; v.i++ ){
+        // ------------------------------
+        // 3. DnDされたファイルを順次圧縮
+        // ------------------------------
+        // 変換前はthis.files[n].origin, 変換後はthis.files[n].compressで参照可
+        v.step = 3.1; // 変換前をoriginに保存
+        v.file = {origin:files[v.i]};
+
+        v.step = 3.2; // HEIC形式はjpegに変換
+        if (v.file.origin.type === 'image/heif' || v.file.origin.type === 'image/heic') {
+          v.name = v.file.origin.name;
+          v.file.origin = await heic2any({
+            blob: v.file.origin,
+            toType: 'image/jpeg',
+          });
+          v.file.origin.name = v.name;
+          console.log('%s step.%s',v.whois,v.step,v.file.origin);
+        }
+
+        v.step = 3.3; // 変換後をcompressに保存
+        v.file.compress = await this.compress(v.file.origin,v.opt).catch(e=>{
+          return e;
+        });
+        if( v.file.compress instanceof Error ){
+          v.step = 3.4;
+          // 圧縮に失敗した場合、エラー画像表示
+          this.createElement({style:{
+            display: 'inline-block',
+            'vertical-align':'top',
+            margin:'1rem',
+            width: (this.thumbnail - 30) + 'px',
+            height: (this.thumbnail * 0.75 - 30) + 'px',
+            border: 'solid 5px #ccc',
+            padding: '10px',
+          },html:'Error: '+v.file.origin.name+'<br>'+'※画像形式非対応'}
+          ,this.preview.querySelector('[name="image"]'));
+          console.error(v.file.compress);
+          continue;
+        }
+        v.step = 3.5; // 圧縮比率計算
+        v.file.compress.ratio = v.file.compress.size / v.file.origin.size;
+        v.step = 3.6; // 画像のサイズを取得
+        v.size = await this.imagesize(v.file.origin);
+        v.file.origin.width = v.size.width;
+        v.file.origin.height = v.size.height;
+        v.size = await this.imagesize(v.file.compress);
+        v.file.compress.width = v.size.width;
+        v.file.compress.height = v.size.height;
+        v.step = 3.7; // 変換結果をメンバ変数に格納
+        this.files.push(v.file);
+
+        // ------------------------------
+        // 4. 圧縮されたファイルをzipに保存
+        // ------------------------------
+        v.step = 4;
+        this.zip.file(v.file.compress.name,v.file.compress,{binary:true});
+
+        // ------------------------------
+        // 5. プレビュー画像を追加
+        // ------------------------------
+        v.step = 5;
+        console.log("%s step.%s",v.whois,v.step,v.file);
+        this.createElement({
+          style:{display:'inline-block','vertical-align':'top'},
+          children:[{
+            tag:'img',
+            attr:{src:URL.createObjectURL(v.file.compress)},
+            style:{
+              margin: '1rem',
+              'max-width':this.thumbnail + 'px',
+              'max-height':this.thumbnail + 'px',
+            },
+            /* 不適切な内容が表示されるためペンディング
+            event:{
+              // tooltipに情報表示
+              'mouseenter':(e)=>{
+                console.log('mouseenter',e,v.file);
+                e.stopPropagation();
+                const tooltip = this.parent.querySelector('.tooltip');
+                tooltip.innerHTML = v.file.compress.name
+                + '</br>' + v.file.origin.width + 'x' + v.file.origin.height
+                + ' (' + v.file.origin.size.toLocaleString() + 'bytes)'
+                + '</br>-> ' + e.target.naturalWidth + 'x' + e.target.naturalHeight
+                + ' (' + v.file.compress.size.toLocaleString()
+                + 'bytes / ' + Math.round(v.file.compress.ratio*10000)/100 + '%)';
+                tooltip.style.top = e.pageY + 'px';
+                tooltip.style.left = e.pageX + 'px';
+                tooltip.style.visibility = "visible";
+              },
+              'mouseleave':(e)=>{
+                console.log('mouseleave',e);
+                e.stopPropagation();
+                const tooltip = this.parent.querySelector('.tooltip');
+                tooltip.style.visibility = "hidden";
+              },
+            },
+            */
+          },
+          {style:{margin:'1rem'},children:[
+            {tag:'p',attr:{class:'info'},text:v.file.origin.name},
+            {tag:'table',attr:{class:'info'},children:[
+              {tag:'tr',children:[
+                {tag:'th'},{tag:'th',text:'before'},{tag:'th',text:'after'}
+              ]},
+              {tag:'tr',children:[
+                {tag:'th',text:'width'},
+                {tag:'td',attr:{class:'num'},text:v.file.origin.width},
+                {tag:'td',attr:{class:'num'},text:v.file.compress.width},
+              ]},
+              {tag:'tr',children:[
+                {tag:'th',text:'height'},
+                {tag:'td',attr:{class:'num'},text:v.file.origin.height},
+                {tag:'td',attr:{class:'num'},text:v.file.compress.height},
+              ]},
+              {tag:'tr',children:[
+                {tag:'th',text:'size'},
+                {tag:'td',attr:{class:'num'},text:v.file.origin.size.toLocaleString()},
+                {tag:'td',attr:{class:'num'},html:v.file.compress.size.toLocaleString()
+                  + '<br/>' + Math.round(v.file.compress.ratio*10000)/100 + '%'
+                },
+              ]},
+            ]},
+          ]}
+        ]},this.preview.querySelector('[name="image"]'));
+
+      }
+
+      // ------------------------------
+      // 6. 終了処理
+      // ------------------------------
+      v.step = 6;
+      this.changeScreen('preview');
+      v.rv = this.files;
+      console.log(v.whois+' normal end.\n',this.files);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 画像ファイルを圧縮
+   * @param {File} file - 圧縮対象ファイル
+   * @param {Object} opt - compressorのオプション
+   * @returns {null|Error}
+   *
+   * #### 参考
+   *
+   * - GitHub [Compressor.js Options](https://github.com/fengyuanchen/compressorjs#options)
+   * - [Callback to Async Await](https://stackoverflow.com/questions/49800374/callback-to-async-await)
+   */
+  compress = (file,opt) => {
+    return new Promise((resolve,reject) => {
+      opt.success = resolve;
+      opt.error = reject;
+      new Compressor(file,opt);
+    });
+  }
+
+  /** ファイル(Blob)のダウンロード
+   * @param {Blob} blob - ダウンロード対象のBlob
+   * @returns {null|Error}
+   *
+   * #### 参考
+   *
+   * - [ファイルをダウンロード保存する方法](https://javascript.keicode.com/newjs/download-files.php)
+   */
+  download = async () => {
+    const v = {whois:this.className+'.download',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1;  // Blob の取得
+      v.blob = await this.zip.generateAsync({type:'blob'});
+
+      v.step = 2; // ダウンロード
+      const url = URL.createObjectURL(v.blob);
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      a.download = 'RasterImage.zip';
+      a.href = url;
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      v.step = 3; // 終了処理
+      console.log(v.whois+' normal end.\\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 画像ファイルのサイズをチェックする
+   * @param {File} file - 画像ファイル
+   * @returns {Promise} - width,heightをメンバとして持つオブジェクト
+   * 
+   * #### 参考
+   * 
+   * - [JavaScript で File オブジェクトの画像のサイズを取得する方法](https://gotohayato.com/content/519/)
+   */
+  imagesize = async (file) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+
+      img.onload = () => {
+        const size = {
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+        };
+
+        URL.revokeObjectURL(img.src);
+        resolve(size);
+      };
+
+      img.onerror = (error) => {
+        reject(error);
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  }
+}
+
+```
+
+</details>
+
+
+<details><summary>index.html</summary>
+
+```
+<!DOCTYPE html><html xml:lang="ja" lang="ja" class="BasePage"><head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <!-- CDN -->
+  <script src="https://cdn.jsdelivr.net/gh/fengyuanchen/compressorjs/dist/compressor.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/heic2any/0.0.1/index.min.js" integrity="sha512-qosaXUCrlY9MGGVtPtsP5MBN+W+R25MfvvvK0oioo9GaAHR7DgpqwVv2NlSOctIX9wcIKsSjhgrSpst1iwmjtA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style type="text/css"></style>
+</head><body>
+<div id="RasterImage"></div>
+
+<script type="text/javascript">
+/** ページ表示を行うクラスのための基底クラス */
+class BasePage {
+  /**
+   * @typedef BasePageMembers
+   * @prop {string} className - 継承先クラス名。自動設定
+   * @prop {string|HTMLElement} parent='body' - ページ表示領域の親要素またはCSSセレクタ。
+   *  constructorでHTMLElementに自動的に変換される。
+   * @prop {string} parentSelector - ページ表示領域の親要素に対するCSSセレクタ。
+   *  parentがHTMLElementだった場合は空文字列('')が設定される。
+   * @prop {HTMLElement} wrapper - ページ表示領域
+   * @prop {string} wrapperSelector - ページ表示領域に対するCSSセレクタ
+   * @prop {string[]} css - CSS定義
+   * @prop {string|CEDefObj|CEDefObj[]} html - HTML定義。
+   *  文字列ならinnerHTMLそのもの、オブジェクトならcreateElementの引数と看做す
+   * @prop {Object.<string, HTMLElement>} screenList - 複数画面を切り替える場合の画面名と要素
+   * @prop {string} home - ホーム画面名
+   */
+  /**
+   * @constructor
+   * @param {Object} [def={}] - メンバの既定値(default)
+   * @param {Object} [opt={}] - オプションとして与えられたオブジェクト
+   * @returns {null|Error}
+   *
+   * @desc
+   *
+   * #### 処理概要
+   *
+   * 1. オプション・既定値をメンバに設定
+   * 1. オプション(Object)の第一階層にメンバ"parent"が存在する場合、
+   *    1. メンバ"parent"がHTMLElement型の場合、
+   *       - this.parentにメンバ"parent"をそのまま登録
+   *       - this.parentSelectorにnullを設定
+   *    1. メンバ"parent"が文字列型の場合、
+   *       - this.parentにdocument.querySelector(opt.parent)を登録
+   *       - this.parentSelectorにメンバ"parent"を設定
+   *    1. this.parent直下にthis.wrapperを作成<br>
+   *       `div class="呼出元クラス名" name="wrapper"`
+   *    1. this.wrapperに"act"クラスを追加、既定値表示の状態とする
+   * 1. オプション(Object)の第一階層にメンバ"css"が存在する場合、
+   *    呼出元クラスで作成されたスタイルシートが存在しないなら新規作成する
+   * 1. オプション(Object)の第一階層にメンバ"html"が存在する場合、
+   *    this.wrapper内に指定のHTML要素を生成
+   *
+   * #### 注意事項
+   *
+   * 1. 複数画面使用時、各画面はwrapper直下で定義し、メンバとして名前をつける<br>
+   *    これにより画面切り替え(changeScreen)を行う
+   *
+   * #### 参考
+   *
+   * - [ローディングアイコン集](https://projects.lukehaas.me/css-loaders/)
+   * - [CSSで全画面オーバーレイを実装する方法＆コード例](https://pisuke-code.com/css-fullscreen-overlay/)
+   */
+  constructor(def={},opt={}){
+    const v = {whois:'BasePage.constructor',rv:null,step:0,
+      // def:基底クラス(本クラス)の既定値
+      def:{parent:'body',wrapper:null,screenList:{},
+        css: [
+          /* 全ページ共通既定値 */`
+          html {
+            font-size: 24pt;
+            font:helvetica,arial,freesans,clean,sans-serif;
+            line-height: 1.5rem;
+            color: black;
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+          }
+          body {
+            width: 100%;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            -webkit-text-size-adjust: none;
+            -moz-text-size-adjust: none;
+            text-size-adjust: none;
+          }
+          .right, .num {
+            text-align: right;
+          }
+          .hide {
+            display: none;
+          }`,
+          /* テーブル関係 */`
+          th, .th {
+            padding: 0.3em;
+            background-color: #888;
+            color: white;
+          }
+          td, .td {
+            padding: 0.3em;
+            border-bottom: solid 1px #aaa;
+            border-right: solid 1px #aaa;
+          }`,
+          /* LoadingIcon共通部分 */ `
+          .LoadingIcon {
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; height:100%;
+            background: #fff;
+            z-index: 2147483647;
+            display: grid;
+            place-items: center;
+          }`,
+          /* pattern.5 */`
+          .loading5 {
+            --dot-size: 4rem;
+            --R: 0;
+            --G: 0;
+            --B: 0;
+            --back: rgba(var(--R),var(--G),var(--B),1);
+            --pale: rgba(var(--R),var(--G),var(--B),0.2);
+            --middle: rgba(var(--R),var(--G),var(--B),0.5);
+            --dark: rgba(var(--R),var(--G),var(--B),0.7);
+            --m0: calc(var(--dot-size) * 0.8); /* 軌道の大きさ */
+            --m1: calc(var(--m0) * -2.6);
+            --m2: calc(var(--m0) * -1.8);
+            --m3: calc(var(--m0) * 1.75);
+            --m4: calc(var(--m0) * 1.8);
+            --m5: calc(var(--m0) * 2.5);
+
+            margin: 100px auto;
+            font-size: 25px;
+            width: var(--dot-size);
+            height: var(--dot-size);
+            border-radius: 50%;
+            position: relative;
+            text-indent: -9999em;
+            -webkit-animation: load5 1.1s infinite ease;
+            animation: load5 1.1s infinite ease;
+            -webkit-transform: translateZ(0);
+            -ms-transform: translateZ(0);
+            transform: translateZ(0);
+          }
+          @-webkit-keyframes load5 {
+            0%,
+            100% {box-shadow:
+              0em var(--m1) 0em 0em var(--back),
+              var(--m4) var(--m2) 0 0em var(--pale),
+              var(--m5) 0em 0 0em var(--pale),
+              var(--m3) var(--m3) 0 0em var(--pale),
+              0em var(--m5) 0 0em var(--pale),
+              var(--m2) var(--m4) 0 0em var(--pale),
+              var(--m1) 0em 0 0em var(--middle),
+              var(--m2) var(--m2) 0 0em var(--dark);
+            }
+            12.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--dark), var(--m4) var(--m2) 0 0em var(--back), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--middle);
+            }
+            25% {
+              box-shadow: 0em var(--m1) 0em 0em var(--middle), var(--m4) var(--m2) 0 0em var(--dark), var(--m5) 0em 0 0em var(--back), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            37.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--middle), var(--m5) 0em 0 0em var(--dark), var(--m3) var(--m3) 0 0em var(--back), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            50% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--middle), var(--m3) var(--m3) 0 0em var(--dark), 0em var(--m5) 0 0em var(--back), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            62.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--middle), 0em var(--m5) 0 0em var(--dark), var(--m2) var(--m4) 0 0em var(--back), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            75% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--middle), var(--m2) var(--m4) 0 0em var(--dark), var(--m1) 0em 0 0em var(--back), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            87.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--middle), var(--m1) 0em 0 0em var(--dark), var(--m2) var(--m2) 0 0em var(--back);
+            }
+          }
+          @keyframes load5 {
+            0%,
+            100% {
+              box-shadow: 0em var(--m1) 0em 0em var(--back), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--middle), var(--m2) var(--m2) 0 0em var(--dark);
+            }
+            12.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--dark), var(--m4) var(--m2) 0 0em var(--back), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--middle);
+            }
+            25% {
+              box-shadow: 0em var(--m1) 0em 0em var(--middle), var(--m4) var(--m2) 0 0em var(--dark), var(--m5) 0em 0 0em var(--back), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            37.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--middle), var(--m5) 0em 0 0em var(--dark), var(--m3) var(--m3) 0 0em var(--back), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            50% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--middle), var(--m3) var(--m3) 0 0em var(--dark), 0em var(--m5) 0 0em var(--back), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            62.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--middle), 0em var(--m5) 0 0em var(--dark), var(--m2) var(--m4) 0 0em var(--back), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            75% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--middle), var(--m2) var(--m4) 0 0em var(--dark), var(--m1) 0em 0 0em var(--back), var(--m2) var(--m2) 0 0em var(--pale);
+            }
+            87.5% {
+              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--middle), var(--m1) 0em 0 0em var(--dark), var(--m2) var(--m2) 0 0em var(--back);
+            }
+
+          }`,
+        ],
+        html: [
+          {attr:{class:'BasePage'},children:[
+            {attr:{class:'LoadingIcon'},name:'loading',children:[
+              {attr:{class:'loading5'},text:'loading...'}
+            ]},
+          ]},
+        ],
+      },
+    };
+    //console.log(v.whois+' start.',def,opt);
+    try {
+
+      // BasePageの既定値をメンバに保存し、特有のCSSを定義
+      v.step = 1.1; // 既定値をメンバに保存
+      this.deepcopy(this,v.def);
+      //console.log("%s step.%s\n",v.whois,v.step,this.css);
+
+      v.step = 1.2; // BasePage用(=継承先クラス共通)のCSSを定義
+      // BasePageで作成するHTML,CSSは継承先クラス共通なので、
+      // HTMLはBODY直下に`<div name="BasePage">として作成、
+      // CSSはHEAD内部に`<style name="BasePage">`として作成し、
+      // 継承先インスタンス生成の都度存否確認し、存在しなければ生成する。
+      this.className = 'BasePage';
+      v.rv = this.setStyleSheet();
+      if( v.rv instanceof Error ) throw v.rv;
+      this.css = []; // CSSのBasePage特有部分は定義済なのでクリア
+
+      v.step = 1.3; // BasePage用(=継承先クラス共通)のHTMLを生成
+      if( document.querySelector('body > div.BasePage') === null ){
+        this.createElement(this.html,document.querySelector('body'));
+      }
+      this.html = []; // HTMLのBasePage特有部分は作成済なのでクリア
+
+
+      // 継承先クラスの既定値・オプションをメンバに保存
+      v.step = 2.1; // (継承先)クラス名をthis.classNameに保存
+      this.className = this.constructor.name;
+      v.step = 2.2; // def.css,htmlが配列でなかった場合は配列化
+      ['css','html'].forEach(x => {
+        if( def.hasOwnProperty(x) ){
+          // 存在するが配列でないならば配列化
+          if( !this.isArr(def[x]) ){
+            def[x] = [def[x]];
+          }
+        } else {  // 未定義なら空配列をセット
+          def[x] = [];
+        }
+      });
+      v.step = 2.3; // 継承先クラスの既定値を設定
+      this.deepcopy(this,def);
+      //console.log("%s step.%s\n",v.whois,v.step,this.css);
+      v.step = 2.4; // 継承先クラスのconstructorに渡されたオプションで上書き
+      this.deepcopy(this,opt);
+      //console.log("%s step.%s\n",v.whois,v.step,this.screenList);
+
+      v.step = 3; // parentの処理
+      if( typeof this.parent === 'string' ){
+        // 文字列(CSSセレクタ)として渡された場合
+        this.parentSelector = this.parent;
+        this.parent = document.querySelector(this.parentSelector);
+      } else {
+        // 継承先クラスのオプションで{parent:HTMLElement}が指定された場合
+        this.parentSelector = '';
+      }
+
+      v.step = 4; // wrapperの処理
+      if( this.wrapper === null ){
+        this.wrapper = this.createElement(
+          {attr:{name:'wrapper',class:this.className}},
+        this.parent);
+      }
+      this.wrapperSelector
+      = (this.parentSelector === null ? '' : this.parentSelector + ' > ')
+      + 'div.' + this.className + '[name="wrapper"]';
+
+      v.step = 5; // CSS定義に基づき新たなstyleを生成
+      v.rv = this.setStyleSheet();
+      if( v.rv instanceof Error ) throw v.rv;
+
+      v.step = 6; // HTML定義に基づき親要素内のHTML要素を生成
+      if( this.html !== null ){
+        if( typeof this.html === 'string' ){
+          this.wrapper.innerHTML = this.html;
+        } else {
+          this.createElement(this.html,this.wrapper);
+        }
+      }
+
+      v.step = 7; // ホーム画面に遷移
+      v.rv = this.changeScreen();
+      if( v.rv instanceof Error ) throw v.rv;
+
+      v.step = 8; // 終了処理
+      //console.log(v.whois+' normal end.\n',v.rv);
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 劣後(dest)オブジェクトに優先(opt)のメンバを追加・上書きする
+   * @param {Object} dest
+   * @param {Object} opt
+   * @returns {null|Error}
+   *
+   * #### デシジョンテーブル
+   *
+   * | 優先(a) | 劣後(b) | 結果 | 備考 |
+   * | :--: | :--: | :--: | :-- |
+   * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
+   * |  A  |  B  |  A  | |
+   * |  A  | [B] |  A  | |
+   * |  A  | {B} |  A  | |
+   * | [A] |  -  | [A] | |
+   * | [A] |  B  | [A] | |
+   * | [A] | [B] | [A+B] | 配列は置換ではなく結合。但し重複不可 |
+   * | [A] | {B} | [A] | |
+   * | {A} |  -  | {A} | |
+   * | {A} |  B  | {A} | |
+   * | {A} | [B] | {A} | |
+   * | {A} | {B} | {A+B} | オブジェクトも置換ではなく結合する |
+   * |  -  |  -  |  -  | |
+   * |  -  |  B  |  B  | |
+   * |  -  | [B] | [B] | |
+   * |  -  | {B} | {B} | |
+   *
+   */
+  deepcopy = (dest,opt) => {
+    const v = {whois:'BasePage.deepcopy',rv:null,step:0};
+    //console.log(v.whois+' start.');
+    try {
+
+      Object.keys(opt).forEach(x => {
+        v.step = 1;
+        if( !dest.hasOwnProperty(x) ){
+          v.step = 2;
+          // コピー先に存在しなければ追加
+          dest[x] = opt[x];
+        } else {
+          if( this.isObj(dest[x]) && this.isObj(opt[x]) ){
+            v.step = 3; // 両方オブジェクト -> メンバをマージ
+            v.rv = this.deepcopy(dest[x],opt[x]);
+            if( v.rv instanceof Error ) throw v.rv;
+          } else if( this.isArr(dest[x]) && this.isArr(opt[x]) ){
+            v.step = 4; // 両方配列 -> 配列をマージ
+            // Setで配列要素の重複を排除しているが、
+            // 配列要素が配列型・オブジェクト型の場合は重複する(中身もマージされない)
+            dest[x] = [...new Set([...dest[x],...opt[x]])];
+            //dest[x] = dest[x].concat(opt[x]);
+            ////console.log(dest[x],opt[x]);
+          } else {
+            v.step = 5; // 両方オブジェクトでも両方配列でもない場合、optの値でdestの値を置換
+            dest[x] = opt[x];
+          }
+        }
+      });
+
+      v.step = 6; // 終了処理
+      //console.log(v.whois+' normal end. result=%s',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /**
+   * @typedef CEDefObj - createElementに渡すオブジェクト形式
+   * @prop {string} [tag='div'] - タグ
+   * @prop {Object.<string, string>} [attr={}] - タグの属性(ex.src, class)
+   * @prop {Object.<string, string>} [style={}] - 適用するCSS。ラベルは通常のCSSと同じ。
+   * @prop {Object.<string, string>} [event={}] - イベント名：関数Objのオブジェクト。ex. {click:()=>{〜}}
+   * @prop {string} [text=''] - innerTextにセットする文字列
+   * @prop {string} [html=''] - innerHTMLにセットする文字列
+   * @prop {CEDefObj[]} [children=[]] - 子要素
+   * @prop {string} [name=''] - クラスメンバにする場合、メンバ名となる文字列
+   */
+
+  /** 表示する画面の切替
+   * @param {string} screenName - 表示する画面のcreateElementで指定したnameの値
+   * @returns {null|Error}
+   */
+  changeScreen = (screenName=this.home) => {
+    const v = {whois:'BasePage.changeScreen',rv:null,step:0};
+    //console.log(v.whois+' start.',screenName);
+    try {
+
+      v.step = 1;
+      for( v.x in this.screenList ){
+        this[v.x].style.display = v.x === screenName ? '' : 'none';
+      }
+
+      v.step = 2; // 終了処理
+      //console.log(v.whois+' normal end.\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** HTMLElementを生成する
+   * @param {CEDefObj|CEDefObj[]} arg - 生成するHTMLElementの定義
+   * @param {HTMLElement|string} [parent=null] - 本関数内部で親要素への追加まで行う場合に指定
+   * @returns {HTMLElement|Error}
+   */
+  createElement = (arg,parent=null) => {
+    const v = {whois:'BasePage.createElement',rv:[],step:0};
+    //console.log(v.whois+' start.',arg);
+    try {
+      v.step = 1.1; // 引数を強制的に配列化
+      v.isArr = this.isArr(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
+      if( !v.isArr ) arg = [arg];
+      v.step = 1.2; // 親要素の特定
+      if( parent !== null ){
+        v.parent = typeof parent === 'string' ? document.querySelector(parent) : parent;
+      }
+
+
+      for( v.i = 0 ; v.i<arg.length ; v.i++ ){
+        v.step = 2; // 既定値の設定
+        v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
+        Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
+
+        v.step = 3; // HTMLElementを生成、v.objとする
+        v.obj = document.createElement(v.def.tag);
+
+        v.step = 4; // HTMLElementの属性を定義
+        for( v.j in v.def.attr ){
+          v.obj.setAttribute(v.j,v.x = v.def.attr[v.j]);
+        }
+
+        v.step = 5; // 論理属性を定義(ex.checked)
+        for( v.j in v.def.logical ){
+          if( v.def.logical[v.j] ){
+            v.obj.setAttribute(v.j,v.def.logical[v.j]);
+          }
+        }
+
+        v.step = 6; // style属性の定義
+        for( v.j in v.def.style ){
+          if( v.j.match(/^\-\-/) ){ // CSS変数
+            v.obj.style.setProperty(v.j,v.def.style[v.j]);
+          } else {
+            v.obj.style[v.j] = v.def.style[v.j];
+          }
+        }
+
+        v.step = 7; // イベントの定義
+        for( v.j in v.def.event ){
+          v.obj.addEventListener(v.j,v.def.event[v.j],false);
+        }
+
+        v.step = 8; // 内部文字列(html or text)
+        if( v.def.html.length > 0 ){
+          v.obj.innerHTML = v.def.html;
+        } else {
+          v.obj.innerText = v.def.text;
+        }
+
+        v.step = 9; // 子要素の追加(parentは指定しない)
+        for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
+          v.obj.appendChild(this.createElement(v.def.children[v.j]));
+        }
+
+        v.step = 10; // 戻り値への登録
+        v.rv.push(v.obj);
+
+        v.step = 11; // 親要素への追加
+        if( parent !== null ){
+          v.parent.appendChild(v.obj);
+        }
+
+        v.step = 12; // メンバとして、また切替画面として登録
+        if( v.def.name.length > 0 ){
+          this[v.def.name] = v.obj;
+          this.screenList[v.def.name] = v.obj;
+        }
+      }
+
+      v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
+      v.rv = v.isArr ? v.rv : v.rv[0];
+      //console.log(v.whois+' normal end.\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** オブジェクトの配列をテーブルとして表示
+   * @param {Object[]} data - データ。メンバは全てプリミティブ型であること。
+   * @param {Object} opt
+   * @param {string[]} opt.header - ヘッダ欄に表示するラベルの配列
+   * @param {string|HTMLElement} [opt.parent=null] - 指定があれば作成したテーブルを子要素として追加
+   * @returns {HTMLElement|Error}
+   */
+  dumpObject = (data,opt={}) => {
+    const v = {whois:'BasePage.dumpObject',step:0,
+      rv:this.createElement({tag:'table',children:[
+        {tag:'thead',children:[{tag:'tr'}]},
+        {tag:'tbody'},
+        {tag:'tfoot'},
+      ]}),
+    };
+    //console.log(v.whois+' start.',data,opt);
+    try {
+
+      v.step = 1;  // 前処理：ヘッダ未指定の場合、dataのメンバ
+      opt.header = opt.header || [];
+      opt.parent = opt.parent || null;
+      if( opt.header.length === 0 ){
+        for( v.i=0 ; v.i<data.length ; v.i++ ){
+          opt.header = Array.from(new Set([...opt.header,...Object.keys(data[v.i])]));
+        }
+      }
+
+      v.step = 2; // ヘッダの作成
+      for( v.i=0 ; v.i<opt.header.length ; v.i++ ){
+        v.rv.querySelector('thead tr').appendChild(this.createElement(
+          {tag:'th',text:opt.header[v.i]}
+        ));
+      }
+
+      v.step = 3; // データの作成
+      for( v.i=0 ; v.i<data.length ; v.i++ ){
+        v.tr = this.createElement({tag:'tr'});
+        for( v.j=0 ; v.j<opt.header.length ; v.j++ ){
+          v.o = {tag:'td'};
+          if( data[v.i][opt.header[v.j]] ){
+            v.o.text = data[v.i][opt.header[v.j]];
+          }
+          v.tr.appendChild(this.createElement(v.o));
+        }
+        v.rv.querySelector('tbody').appendChild(v.tr);
+      }
+
+      v.step = 4; // 親要素が指定されていたら書き込み
+      if( opt.parent !== null ){
+        v.parent = opt.parent;
+        if( typeof opt.parent === 'string' ){
+          v.parent = this.parent.querySelector(opt.parent);
+        }
+        v.parent.appendChild(v.rv);
+      }
+
+      v.step = 5; // 終了処理
+      //console.log(v.whois+' normal end.');
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** クロス集計テーブルを作成・表示
+   * @param {*} data 
+   * @param {*} opt 
+   * @returns {HTMLElement|Error}
+   * 
+   * @desc
+   * 
+   * #### 引数の解説
+   * 
+   * - data {Object.<string, any>[]} : データオブジェクトの配列<br>
+   *     最低限「X軸の分類項目」「Y軸の分類項目」「値として表示する項目」を持たせる。
+   * - opt {Object}
+   *   - X {Object} : X軸の項目に関する指定
+   *     - member {string} : X軸の集計対象項目(ex.fy)
+   *     - [label=member] {string} : 集計対象項目の表示名(ex.会計年度)
+   *     - [sort] {Object|null} : 並べ替えを行わないならnull(要指定) 
+   *       - [key=member] {string} : 並べ替えのキー項目(fyならfy,勘定科目なら表示順、等)
+   *       - [asc=true] {boolean} : 昇順(ascending)ならtrue
+   *     - [col] {Object.<string, Object>} : 各欄(列)に関する指定。メンバ名はmemberの文字列(ex."合計")
+   *       - class {string} : 当該列のラベル・セルに指定するクラス
+   *       - type {string} : データ型。localeNumber=trueならtype=numberの項目は3桁区切り等で使用
+   *       - func {Function} : V.rawに対する加工。ex.(e)=>new DateEx(e).toLocale()
+   *             結果はHTML文字列としてinnerHTMLでセットされる。
+   *   - Y {Object} : メンバはXと同じ
+   *   - V {Object}
+   *     - member : 値として表示する項目(ex.'合計')
+   *   - [fixLabel=true] {boolean} : 行・列のラベルを固定するならtrue
+   *   - [parent=null] {string|HTMLElement} : 結果を書き込む要素、またはそのCSSセレクタ
+   *   - [localeNumber=true] {boolean|string} :
+   *       - true -> V.memberの値が数字ならtoLocaleString()を行う
+   *       - false -> 同toLocaleString()を行わない
+   *       - 文字列 -> 同toLocaleString(opt.localeNumber)を行う
+   * 
+   * ゴミ箱
+   *     - raw {any} : セルに表示する数値(文字列)
+   *     - value {string} : セルのinnerHTMLにセットする文字列<br>
+   *        ※toLocaleString()や複数項目の多段表示等は事前に準備して渡す
+   *     - [class] {string} : セル(td)に指定するクラス
+   * 
+   * 
+   * #### 注意事項
+   * 
+   * 1. 表示内容の優先順位は opt.X/Y.col.func(V.raw) > V.value > V.raw
+   * 
+   * #### 参考：行・列ラベルの固定方法
+   * 
+   * 1. -webkit-stickyはSafari用
+   * 1. stickyの親要素にはheight指定必須
+   * 1. theadの最初のthとは行ヘッダ・列ヘッダの交差する部分
+   * 
+   * - [tableの行/列ヘッダーを固定する](https://qiita.com/rokko2massy/items/83283bce06acbba7a4f0)
+   * - [tableのヘッダーを固定する方法2つ](https://tedate.jp/coding/how-to-fix-table-header)
+   */
+  crossTable = (data,opt) => {
+    const v = {whois:'BasePage.crossTable',step:0,
+      rv:this.createElement({tag:'table',children:[
+        {tag:'thead',children:[{tag:'tr'}]},
+        {tag:'tbody'},
+        {tag:'tfoot'},
+      ]}),
+    };
+    //console.log(v.whois+' start.',data,opt);
+    try {
+
+      v.step = 1; // 前処理：既定値の設定
+      opt = Object.assign({fixLabel: true, parent:null, localeNumber: true},opt);
+      ['X','Y'].forEach(axis => {
+        opt[axis].mStr = opt[axis].member.match(/^[ -~]+$/) ? opt[axis].member : '`'+opt[axis].member+'`';
+        opt[axis].label = opt[axis].label || opt[axis].member;
+        opt[axis].lStr = opt[axis].label.match(/^[ -~]+$/) ? opt[axis].label : '`'+opt[axis].label+'`';
+        opt[axis].sort = opt[axis].sort || {};
+        opt[axis].sort.key = opt[axis].sort.key || opt[axis].member;
+        opt[axis].sort.asc = opt[axis].sort.asc || true;
+        opt[axis].col = opt[axis].col || {};
+      });
+      console.log('opt',opt);
+
+      // step.2 : X軸に関する処理
+      ['X','Y'].forEach(axis => {
+        v.sql = "select "
+        + opt[axis].mStr + " as member"
+        + ", " + opt[axis].lStr + " as label"
+        + " from ?"
+        + " group by " + opt[axis].mStr
+        + " order by " + opt[axis].key + " " + (opt[axis].sort.asc ? 'asc' : 'desc');
+        v[axis] = alasql(v.sql,[data]);
+        console.log("sql=%s\nv.%s=%s",v.sql,axis,JSON.stringify(v[axis]));
+      });
+
+      v.step = 5; // 終了処理
+      //console.log(v.whois+' normal end.');
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 引数が配列か判定
+   * @param {any} obj - 判定対象
+   * @returns {boolean}
+   */
+  isArr = obj => obj && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Array';
+
+  /** 引数がオブジェクトか判定
+   * @param {any} obj - 判定対象
+   * @returns {boolean}
+   */
+  isObj = obj => obj && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object';
+
+  /** 指定時間待機
+   * @param {number} sec - 待機時間(ミリ秒)
+   * @returns {void}
+   */
+  sleep = (sec) =>
+    {return new Promise(resolve => setTimeout(resolve,sec))};
+
+  /** this.cssからスタイルシートを追加作成
+   * @param {void}
+   * @returns {null|Error}
+   */
+  setStyleSheet = () => {
+    const v = {whois:this.className+'.setStyleSheet',rv:null,step:0,cssDefs:''};
+    //console.log(v.whois+' start.',this.css);
+    try {
+
+      v.step = 1; // CSS定義が空ならスキップ
+      if( this.css.length === 0 ){
+        //console.log(v.whois+' normal end.(empty CSS)\n');
+        return v.rv;
+      }
+
+      v.step = 2; // 既に他インスタンスで作成済みならスキップ
+      if( document.head.querySelector('style[name="'+this.className+'"]') !== null ){
+        //console.log(v.whois+' normal end.(already exist)\n');
+        return v.rv;
+      }
+
+      v.step = 3; // CSS全文を一つのテキストにした上で`〜 {〜}`の部分を全て抽出
+      v.css = this.css.join('').replaceAll(/\n/g,' ').replaceAll(/\s+/g,' ');
+      //console.log(this.css.join('').match(/[^\{\}]+?\{.+?\}/g));
+      v.css.match(/[^\{\}]+?\{.+?\}/g).forEach(l => {
+        v.step = 4; // `〜 {〜}`の部分からselectorと括弧内を抽出
+        v.m = l.match(/\s*([^\{\}]+?)\s*\{(.+?)\}/);
+        v.selector = v.m[1].trim();
+        if( v.selector.indexOf(this.className) < 0  // CSSセレクタに継承先クラス名がない
+         && v.selector.slice(0,1) !== '@' // CSSのアットルールに該当しない
+         && v.selector.match(/[0-9\.%]+/) === null ){  // animationの定義(比率)に該当しない
+          v.step = 5; // 先頭にクラス名をクラスとして追加(style scopedもどき)
+          v.selector = ' .' + this.className + ' ' + v.selector;
+        }
+        v.step = 6; // 作成するCSS本文(cssDefs)に追加
+        v.cssDefs += v.selector + ' {' + v.m[2] + '} ';
+      });
+
+      v.step = 7; // cssDefsの中身があれば定義
+      if( v.cssDefs.length > 0 ){
+        v.step = 8; // 余計な空白を削除
+        v.cssDefs = v.cssDefs.replaceAll(/\n/g,' ').replaceAll(/\s+/g,' ');
+        v.step = 9; // スタイルタグを作成して追加
+        this.createElement({
+          tag:'style',
+          attr:{type:'text/css',name:this.className},
+          text:v.cssDefs
+        },document.head);
+      }
+
+      v.step = 10; // 終了処理
+      //console.log(v.whois+' normal end.\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+}
+/**
+ * @classdesc ラスタ画像の操作
+ * 
+ * 起動時オプション(opt.func)により、①画像の一括変換・圧縮、②スマホカメラでの撮影(含間欠撮影)、③QRコードスキャンを行う
+ */
+class RasterImage extends BasePage {
+  /**
+   * @constructor
+   * @param {*} opt
+   * @returns {null|Error}
+   *
+   * #### 参考
+   *
+   * - GitHub [Compressor.js Options](https://github.com/fengyuanchen/compressorjs#options)
+   * - [【JavaScript】ブラウザ画面にドラッグ＆ドロップされた画像をimg要素で表示する](https://www.softel.co.jp/blogs/tech/archives/5679)
+   * - DnDで複数ファイルをアップロード [画像ファイルアップロード | プレビュー,DnD](https://amaraimusi.sakura.ne.jp/note_prg/JavaScript/file_note.html)
+   */
+  constructor(opt){
+    const v = {whois:'RasterImage.constructor',rv:null,step:0,def:{
+      parent: 'body',
+      func: 'bulk',
+        // bulk:ローカル(PC)上の画像ファイルを一括変換、
+        // camera: スマホのカメラで撮影した画像を圧縮
+        // scanQR: QRコードをスマホのカメラで認識
+      files: [],  // {File[]} - DnDされたファイルオブジェクトの配列
+      thumbnail: 200, // サムネイルの最大サイズ
+      css: [
+        // ①画像の一括変換・圧縮(bulk)
+        `.bulk .dropArea {
+          margin: 1rem;
+          padding: 2rem;
+          border: solid 5px #ccc;
+          text-align:center;
+        }
+        .bulk table {
+          margin: 1rem;
+        }`,
+        // プレビュー領域
+        `.preview {
+          margin: 1rem;
+        }
+        .preview .image {
+          display: 'inline-block',
+        }
+        .preview .info {
+          font-size: 0.6rem;
+        }`,
+        // preview用ツールチップ。parent直下に設定。
+        `.tooltip {
+          position: absolute;
+          z-index: 10;
+          visibility: hidden;
+          background-color: rgba(255,255,255,0.8);
+          font-size: 0.7rem;
+          padding: 0.5rem;
+          line-height: 1rem;
+        }`,
+        // 以下未作成
+        // ②スマホカメラでの撮影(camera)
+        // ③QRコードスキャン(scanQR)
+      ],
+      html: [
+        {tag:'div',attr:{class:'tooltip'}}, // tooltip用
+        // 1.画像の一括変換・圧縮(bulk)
+        {name:'bulk',attr:{class:'bulk'},children:[
+          // 1.1.ドロップ領域
+          {attr:{class:'dropArea'},text:'画像ファイルをドロップ(複数可)',event:{
+            drop:(e)=>{
+              e.stopPropagation();
+              e.preventDefault();
+              this.bulkCompress(e.dataTransfer.files);        
+            },
+            dragover:(e)=>e.preventDefault(),
+          }},
+          // 1.2.圧縮仕様の指定領域
+          {attr:{class:'specification'},children:[
+            {tag:'table',children:[
+              {tag:'tr',attr:{name:'mimeType'},children:[
+                {tag:'th',text:'画像形式'},
+                {tag:'td',children:[
+                  {tag:'select',children:[
+                    {tag:'option',attr:{value:'image/webp'},text:'webp'},
+                    {tag:'option',attr:{value:'image/png'},text:'png'},
+                    {tag:'option',attr:{value:'image/jpeg'},text:'jpeg'},
+                    {tag:'option',attr:{value:'image/gif'},text:'gif'},
+                  ]}
+                ]},
+                {tag:'td',text:''}
+              ]},
+              {tag:'tr',attr:{name:'standard'},children:[
+                {tag:'th',text:'画像サイズ'},
+                {tag:'td',children:[
+                  {tag:'select',children:[
+                    {tag:'option',attr:{value:'-1'},text:'原寸'},
+                    {tag:'option',attr:{value:'7680'},text:'8K(7680)'},
+                    {tag:'option',attr:{value:'3840'},text:'4K(3840)'},
+                    {tag:'option',attr:{value:'1920'},text:'FullHD(1920)'},
+                    {tag:'option',attr:{value:'1280'},text:'HDTV(1280)'},
+                    {tag:'option',attr:{value:'1024'},text:'XGA(1024)'},
+                    {tag:'option',attr:{value:'800'},text:'SVGA(800)'},
+                    {tag:'option',attr:{value:'640'},logical:{selected:true},text:'VGA(640)'},
+                    {tag:'option',attr:{value:'320'},text:'QuarterVGA(320)'},
+                    {tag:'option',attr:{value:'-2'},text:'custom'},
+                  ],event:{
+                    change:(e)=>{
+                      console.log(e.target.value);
+                      let max = this.bulk.querySelector('[name="maxSize"]');
+                      let maxi = max.querySelector('input');
+                      let min = this.bulk.querySelector('[name="minSize"]');
+                      let mini = min.querySelector('input');
+                      if( e.target.value == -2 ){
+                        // カスタム選択時
+                        max.classList.remove('hide'); // 最大高/幅欄を表示
+                        min.classList.remove('hide'); // 最小高/幅欄を表示
+                        maxi.defaultValue = 640;  // 既定値を再セット
+                        mini.defaultValue = 320;
+                      } else {
+                        // それ以外の選択肢
+                        max.classList.add('hide'); // 最大高/幅欄を非表示
+                        min.classList.add('hide'); // 最小高/幅欄を非表示
+                        if( e.target.value == -1 ){
+                          // 原寸大の場合
+                          maxi.defaultValue = 999999; // "Infinity" cannot be parsed
+                          mini.defaultValue = 0;
+                        } else {
+                          // 原寸大以外
+                          maxi.defaultValue = e.target.value; // 選択された値をセット
+                        }
+                      }
+                    }
+                  }}
+                ]},
+                {tag:'td',text:'原画縦横比を保持するので規格名は目安'}
+              ]},
+              {tag:'tr',attr:{name:'maxSize',class:'hide'},children:[
+                {tag:'th',text:'最大高/幅'},
+                {tag:'td',children:[
+                  {tag:'input',attr:{type:'number',value:640},style:{width:'50px'}}
+                ]},
+                {tag:'td',text:'無指定の場合は"-1"を入力'}
+              ]},
+              {tag:'tr',attr:{name:'minSize',class:'hide'},children:[
+                {tag:'th',text:'最小高/幅'},
+                {tag:'td',children:[
+                  {tag:'input',attr:{type:'number',value:320},style:{width:'50px'}}
+                ]},
+                {tag:'td',text:'無指定の場合は"-1"を入力'}
+              ]},
+              {tag:'tr',attr:{name:'checkOrientation'},children:[
+                {tag:'th',text:'画像の向き'},
+                {tag:'td',children:[
+                  {tag:'select',children:[
+                    {tag:'option',attr:{value:true},text:'補正する'},
+                    {tag:'option',attr:{value:false},text:'補正しない'},
+                  ]}
+                ]},
+                {tag:'td',text:'Exif Orientationに基づく。Jpegのみ有効'}
+              ]},
+              {tag:'tr',attr:{name:'retainExif'},children:[
+                {tag:'th',text:'Exif情報'},
+                {tag:'td',children:[
+                  {tag:'select',children:[
+                    {tag:'option',attr:{value:false},text:'保持しない'},
+                    {tag:'option',attr:{value:true},text:'保持する'},
+                  ]}
+                ]},
+                {tag:'td',text:'圧縮後もExifを保持するかの指定'}
+              ]},
+              {tag:'tr',attr:{name:'quality'},children:[
+                {tag:'th',text:'品質'},
+                {tag:'td',children:[
+                  {tag:'input',attr:{type:'number',value:0.8},style:{width:'50px'}}
+                ]},
+                {tag:'td',html:'0(圧縮大)〜1(無圧縮)の小数。推奨値は最低0.6。<br/>既定値はjpeg:0.92,webp:0.80。'}
+              ]},
+            ]}
+          ]},
+        ]},
+        // 1.3.プレビュー領域
+        {name:'preview',attr:{class:'preview'},children:[
+          {attr:{name:'ctrl'},children:[
+            {tag:'button',text:'download zip file'}
+          ]},
+          {attr:{name:'image'}},
+        ]},
+
+        // 以降未作成
+        // 2.スマホカメラでの撮影(camera)
+        // 3.QRコードスキャン(scanQR)
+      ],
+    }};
+    console.log(v.whois+' start.',opt);
+    try {
+      super(v.def,opt);
+
+      // プレビュー領域ダウンロードボタンの動作定義
+      // ※ v.defで定義しようとすると以下のメッセージが出て不可
+      // ReferenceError: Must call super constructor in derived class
+      // before accessing 'this' or returning from derived constructor
+      this.preview.querySelector('button').addEventListener('click',this.download);
+
+      v.step = 1; // 終了処理
+      this.changeScreen(this.func);
+      console.log(v.whois+' normal end.\n',v.rv);
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 画像(複数)がドロップされた際の処理
+   * 
+   * ```
+   * // ドロップ領域のイベントとして定義。以下は定義例
+   * document.querySelector('div.dropArea').addEventListener('drop',(e)=>{
+   *   e.stopPropagation();
+   *   e.preventDefault();
+   *   v.onDrop(e.dataTransfer.files);
+   * });
+   * document.querySelector('div.dropArea').addEventListener('dragover',(e)=>{
+   *   e.preventDefault();
+   * });
+   * ```
+   * 
+   * #### 参考
+   * 
+   * - [ブラウザ上で HEIC/HEIF を PNG/JPEG に変換する方法](https://zenn.dev/seya/articles/5faa498604a63e)
+   * 
+   * @param {ProgressEvent} files
+   * @returns {null|Error}
+   */
+  bulkCompress = async (files) => {
+    const v = {whois:this.className+'.bulkCompress',rv:null,step:0};
+    console.log(v.whois+' start.',files);
+    try {
+
+      // ------------------------------
+      // 1. 前処理
+      // ------------------------------
+      v.step = 1;
+      this.changeScreen('loading');
+      this.zip = new JSZip(); // zipを生成
+
+      // ------------------------------
+      // 2. compress.jsのオプションを取得
+      // ------------------------------
+      v.step = 2;
+      v.o = this.bulk.querySelector('.specification');
+      v.opt = {
+        mimeType: v.o.querySelector('[name="mimeType"] select').value,
+        checkOrientation: v.o.querySelector('[name="checkOrientation"] select').value,
+        retainExif: v.o.querySelector('[name="retainExif"] select').value,
+        quality: v.o.querySelector('[name="quality"] input').value,
+      }
+      v.max = v.o.querySelector('[name="maxSize"] input').value;
+      v.opt.maxHeight = v.opt.maxWidth = (v.max == -1 ? Infinity : v.max);
+      v.min = v.o.querySelector('[name="minSize"] input').value;
+      v.opt.minHeight = v.opt.minWidth = (v.min == -1 ? 0 : v.min);
+      v.opt.error = (e) => {
+        alert("'"+''+"'は非対応の画像形式です",e);
+        console.error('l.244',e);
+        return e;
+      };
+
+      for( v.i=0 ; v.i<files.length ; v.i++ ){
+        // ------------------------------
+        // 3. DnDされたファイルを順次圧縮
+        // ------------------------------
+        // 変換前はthis.files[n].origin, 変換後はthis.files[n].compressで参照可
+        v.step = 3.1; // 変換前をoriginに保存
+        v.file = {origin:files[v.i]};
+
+        v.step = 3.2; // HEIC形式はjpegに変換
+        if (v.file.origin.type === 'image/heif' || v.file.origin.type === 'image/heic') {
+          v.name = v.file.origin.name;
+          v.file.origin = await heic2any({
+            blob: v.file.origin,
+            toType: 'image/jpeg',
+          });
+          v.file.origin.name = v.name;
+          console.log('%s step.%s',v.whois,v.step,v.file.origin);
+        }
+
+        v.step = 3.3; // 変換後をcompressに保存
+        v.file.compress = await this.compress(v.file.origin,v.opt).catch(e=>{
+          return e;
+        });
+        if( v.file.compress instanceof Error ){
+          v.step = 3.4;
+          // 圧縮に失敗した場合、エラー画像表示
+          this.createElement({style:{
+            display: 'inline-block',
+            'vertical-align':'top',
+            margin:'1rem',
+            width: (this.thumbnail - 30) + 'px',
+            height: (this.thumbnail * 0.75 - 30) + 'px',
+            border: 'solid 5px #ccc',
+            padding: '10px',
+          },html:'Error: '+v.file.origin.name+'<br>'+'※画像形式非対応'}
+          ,this.preview.querySelector('[name="image"]'));
+          console.error(v.file.compress);
+          continue;
+        }
+        v.step = 3.5; // 圧縮比率計算
+        v.file.compress.ratio = v.file.compress.size / v.file.origin.size;
+        v.step = 3.6; // 画像のサイズを取得
+        v.size = await this.imagesize(v.file.origin);
+        v.file.origin.width = v.size.width;
+        v.file.origin.height = v.size.height;
+        v.size = await this.imagesize(v.file.compress);
+        v.file.compress.width = v.size.width;
+        v.file.compress.height = v.size.height;
+        v.step = 3.7; // 変換結果をメンバ変数に格納
+        this.files.push(v.file);
+
+        // ------------------------------
+        // 4. 圧縮されたファイルをzipに保存
+        // ------------------------------
+        v.step = 4;
+        this.zip.file(v.file.compress.name,v.file.compress,{binary:true});
+
+        // ------------------------------
+        // 5. プレビュー画像を追加
+        // ------------------------------
+        v.step = 5;
+        console.log("%s step.%s",v.whois,v.step,v.file);
+        this.createElement({
+          style:{display:'inline-block','vertical-align':'top'},
+          children:[{
+            tag:'img',
+            attr:{src:URL.createObjectURL(v.file.compress)},
+            style:{
+              margin: '1rem',
+              'max-width':this.thumbnail + 'px',
+              'max-height':this.thumbnail + 'px',
+            },
+            /* 不適切な内容が表示されるためペンディング
+            event:{
+              // tooltipに情報表示
+              'mouseenter':(e)=>{
+                console.log('mouseenter',e,v.file);
+                e.stopPropagation();
+                const tooltip = this.parent.querySelector('.tooltip');
+                tooltip.innerHTML = v.file.compress.name
+                + '</br>' + v.file.origin.width + 'x' + v.file.origin.height
+                + ' (' + v.file.origin.size.toLocaleString() + 'bytes)'
+                + '</br>-> ' + e.target.naturalWidth + 'x' + e.target.naturalHeight
+                + ' (' + v.file.compress.size.toLocaleString()
+                + 'bytes / ' + Math.round(v.file.compress.ratio*10000)/100 + '%)';
+                tooltip.style.top = e.pageY + 'px';
+                tooltip.style.left = e.pageX + 'px';
+                tooltip.style.visibility = "visible";
+              },
+              'mouseleave':(e)=>{
+                console.log('mouseleave',e);
+                e.stopPropagation();
+                const tooltip = this.parent.querySelector('.tooltip');
+                tooltip.style.visibility = "hidden";
+              },
+            },
+            */
+          },
+          {style:{margin:'1rem'},children:[
+            {tag:'p',attr:{class:'info'},text:v.file.origin.name},
+            {tag:'table',attr:{class:'info'},children:[
+              {tag:'tr',children:[
+                {tag:'th'},{tag:'th',text:'before'},{tag:'th',text:'after'}
+              ]},
+              {tag:'tr',children:[
+                {tag:'th',text:'width'},
+                {tag:'td',attr:{class:'num'},text:v.file.origin.width},
+                {tag:'td',attr:{class:'num'},text:v.file.compress.width},
+              ]},
+              {tag:'tr',children:[
+                {tag:'th',text:'height'},
+                {tag:'td',attr:{class:'num'},text:v.file.origin.height},
+                {tag:'td',attr:{class:'num'},text:v.file.compress.height},
+              ]},
+              {tag:'tr',children:[
+                {tag:'th',text:'size'},
+                {tag:'td',attr:{class:'num'},text:v.file.origin.size.toLocaleString()},
+                {tag:'td',attr:{class:'num'},html:v.file.compress.size.toLocaleString()
+                  + '<br/>' + Math.round(v.file.compress.ratio*10000)/100 + '%'
+                },
+              ]},
+            ]},
+          ]}
+        ]},this.preview.querySelector('[name="image"]'));
+
+      }
+
+      // ------------------------------
+      // 6. 終了処理
+      // ------------------------------
+      v.step = 6;
+      this.changeScreen('preview');
+      v.rv = this.files;
+      console.log(v.whois+' normal end.\n',this.files);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 画像ファイルを圧縮
+   * @param {File} file - 圧縮対象ファイル
+   * @param {Object} opt - compressorのオプション
+   * @returns {null|Error}
+   *
+   * #### 参考
+   *
+   * - GitHub [Compressor.js Options](https://github.com/fengyuanchen/compressorjs#options)
+   * - [Callback to Async Await](https://stackoverflow.com/questions/49800374/callback-to-async-await)
+   */
+  compress = (file,opt) => {
+    return new Promise((resolve,reject) => {
+      opt.success = resolve;
+      opt.error = reject;
+      new Compressor(file,opt);
+    });
+  }
+
+  /** ファイル(Blob)のダウンロード
+   * @param {Blob} blob - ダウンロード対象のBlob
+   * @returns {null|Error}
+   *
+   * #### 参考
+   *
+   * - [ファイルをダウンロード保存する方法](https://javascript.keicode.com/newjs/download-files.php)
+   */
+  download = async () => {
+    const v = {whois:this.className+'.download',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1;  // Blob の取得
+      v.blob = await this.zip.generateAsync({type:'blob'});
+
+      v.step = 2; // ダウンロード
+      const url = URL.createObjectURL(v.blob);
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      a.download = 'RasterImage.zip';
+      a.href = url;
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      v.step = 3; // 終了処理
+      console.log(v.whois+' normal end.\\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 画像ファイルのサイズをチェックする
+   * @param {File} file - 画像ファイル
+   * @returns {Promise} - width,heightをメンバとして持つオブジェクト
+   * 
+   * #### 参考
+   * 
+   * - [JavaScript で File オブジェクトの画像のサイズを取得する方法](https://gotohayato.com/content/519/)
+   */
+  imagesize = async (file) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+
+      img.onload = () => {
+        const size = {
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+        };
+
+        URL.revokeObjectURL(img.src);
+        resolve(size);
+      };
+
+      img.onerror = (error) => {
+        reject(error);
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  }
+}
+
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(v.whois+' start.');
+  try {
+
+    v.step = 1; // インスタンス生成
+    v.RasterImage = new RasterImage({parent:'#RasterImage'});
+
+    v.step = 2; // 終了処理
+    console.log(v.whois+' normal end.\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+  }
+});
+</script>
+</body>
+</html>
+
+```
+
+</details>
+
+
+<details><summary>server.gs</summary>
+
+```
+function doGet() {
+  const htmlOutput = HtmlService.createTemplateFromFile("index").evaluate();
+  htmlOutput.setTitle('RasterImage');
+  return htmlOutput;
+}
+
+```
+
+</details>
+
+
+<details><summary>build.sh</summary>
+
+```
+#!/bin/sh
+# -x  つけるとverbose
+
+# ----------------------------------------------
+# 1.事前準備
+# ----------------------------------------------
+hr="\n=======================================\n"
+echo "\n$hr[RasterImage] build start$hr"
+
+# 1.1 変数・ツールの定義
+GitHub="/Users/ena.kaon/Desktop/GitHub"
+lib="$GitHub/library"
+mod="$lib/RasterImage/1.0.1"
+esed="node $lib/esed/1.0.0/core.js"
+
+# 1.2 .DS_storeの全削除
+cd $mod
+find . -name '.DS_Store' -type f -ls -delete
+
+# 1.3 tmpの用意
+rm -rf $mod/tmp
+mkdir $mod/tmp
+tmp="$mod/tmp"
+
+# 1.4 使用するクラスを最新化
+#$lib/SingleTableClient/1.0.0/build.sh
+
+
+# ----------------------------------------------
+# 2. server.gsの作成
+# ----------------------------------------------
+rm $mod/server.gs # 旧版があれば削除
+cp $mod/server.js $mod/server.gs
+
+
+# ----------------------------------------------
+# 3. index.htmlの作成
+# ----------------------------------------------
+rm $mod/index.html # 旧版があれば削除
+# 3.1 CSS部分
+css="$tmp/index.css"
+touch $css
+
+# 3.2 html部分
+html="$tmp/index.html"
+touch $html
+#cp $src/static/index.header.html $html
+#list=(
+#  実施要領
+#  注意事項
+#  持ち物リスト
+#)
+#for x in ${list[@]}; do
+#  echo "<div name=\"$x\">\n" >> $html
+#  cat $src/static/$x.md | marked >> $html
+#  echo "</div>\n\n" >> $html
+#done
+#cat $src/templates/origin.html \
+#| node $esed -x:"\/\*::CSS::\*\/" -f:$lib/CSS/1.3.0/core.css \
+#| node $esed -x:"<!--::body::-->" -f:$html \
+#> $src/index.html
+
+# 3.3 script部分
+script=$tmp/index.js
+cat $lib/BasePage/1.1.0/core.js | awk 1 > $script #BasePage 1.0.0?
+cat $mod/core.js | awk 1 >> $script
+
+# 3.4 index.htmlプロトタイプのCSS/html/script部分を置換
+cat $mod/proto.html \
+| $esed -x:"\/\*::css::\*\/" -f:$css \
+| $esed -x:"<!--::html::-->" -f:$html \
+| $esed -x:"\/\/::script::" -f:$script \
+> $mod/index.html
+
+
+# ----------------------------------------------
+# 4. 仕様書の作成
+# ----------------------------------------------
+rm $mod/readme.md # 旧版があれば削除
+readme="$tmp/readme.md"
+# 4.1 tmp/readme.mdに標準CSS＋プロトタイプを作成(CSSのコメントはesedで除外)
+echo "<style scoped type=\"text/css\">" > $readme
+cat $lib/CSS/1.3.0/core.css | awk 1 \
+| $esed -x:"\/\*[\s\S]*?\*\/\n*" -s:"" >> $readme
+echo "</style>\n\n" >> $readme
+cat $mod/proto.md >> $readme
+
+# 4.2 JSDocを作成
+jsdoc="$tmp/jsdoc.md"
+# sedはjsdoc2mdの冒頭4行削除用(強制付加されるtitle,a nameタグの削除)
+jsdoc2md $mod/core.js | sed '1,4d' > $jsdoc
+
+# 4.3 ソース部分を作成
+source="$tmp/source.md"
+touch $source
+# 4.3.1 関数定義：ソースファイルのmdへの追加
+addSource(){
+  src=$1  # ソースファイル名
+  if [ $# -lt 2 ]; then # 引数の数が2未満
+    name=$1 # name未指定ならソースファイル名で表示
+  else
+    name=$2 # name指定ありなら指定文字列で表示
+  fi
+  #echo "<a href=\"#top\" style=\"text-align:right\">先頭へ</a>\n" >> $source
+  echo "<details><summary>$name</summary>\n\n\`\`\`" >> $source
+  cat $src | awk 1 >> $source
+  echo "\n\`\`\`\n\n</details>\n\n" >> $source
+}
+# 4.3.2 必要なソースを順次追加
+addSource $mod/core.js core.js
+addSource $mod/index.html index.html
+addSource $mod/server.js server.gs
+#addSource $mod/test.html
+addSource $mod/build.sh build.sh
+
+# 4.4 readme.mdプロトタイプのJSDoc/source部分を置換
+cat $readme \
+| $esed -x:"__JSDoc" -f:$jsdoc \
+| $esed -x:"__source" -f:$source \
+>> $mod/readme.md
+
+
+echo "\n$hr[RasterImage] build end$hr"
+
+```
+
+</details>
+
+
+
+
+</details>
+
+# 改版履歴
+
+- rev.1.0.1 2024/03/16 GAS対応
+  - index.html, server.gsの出力を追加
+  - readme.mdを追加
+- rev.1.0.0 2023/10/21 初版
