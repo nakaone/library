@@ -23,7 +23,9 @@ readme="$tmp/readme.md"
 
 # 1.2 終端位置指定文字列の定義
 echo "step.1.2 start."
+mdBar="<!--::MenuBar::-->"
 eoMethods="//::methods_add_here::"
+mdArticles="<!--::articles::-->"
 mdJSDoc="<!--::JSDoc::-->"
 mdSource="<!--::source::-->"
 
@@ -37,6 +39,19 @@ addMethod(){
   echo $eoMethods >> $w01
   cat $proto | awk 1 | $esed -x:$eoMethods -f:$w01 > $w02
   cp $w02 $proto
+}
+
+# addArticle : 解説記事のclient.mdへの埋め込み
+addArticle(){
+  # {string} $1 - 解説記事ファイル名
+  # {string} $2 - ローカルリンクのラベル
+  # {string} $3 - 解説記事のタイトル
+  echo "addArticle '$3' start."
+  menubar="$menubar | [$3](#$2)"
+  echo $mdBar >> $w01
+  echo "<a name=\"$2\"></a>" >> $w01
+  cat $1 | awk 1 >> $w01
+  echo "" >> $w01
 }
 
 # ----------------------------------------------
@@ -79,6 +94,19 @@ EOS
 echo "step.4.3 start."
 jsdoc2md $proto > $w01
 cat $readme | awk 1 | $esed -x:$mdJSDoc -f:$w01 > $w02; cp $w02 $readme
+
+# 4.4 解説記事をプロトタイプに埋め込みつつ、メニューバー文字列を作成
+echo "step.4.4 start."
+menubar="[先頭](#top)"
+echo "" > $w01
+addArticle $mod/useage.md useage "使用方法"
+addArticle $mod/deliverables.md deliverables "生成されるナビ"
+
+# 4.5 解説記事・メニューバー文字列を置換
+echo "step.4.5 start."
+cat $readme | awk 1 | $esed -x:$mdArticles -f:$w01 > $w02; cp $w02 $readme
+menubar="$menubar | [仕様(JSDoc)](#jsdoc) | [プログラムソース](#program_source) | [改版履歴](#revision_history)"
+cat $readme | awk 1 | sed -E "s/$mdBar/$menubar/g" > $w02; cp $w02 $readme
 
 # 4.6 tmp/readme.mdを$mod直下にコピー
 echo "step.4.6 start."
