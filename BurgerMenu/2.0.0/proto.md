@@ -157,33 +157,11 @@ v.default = {
 
 # BurgerMenu仕様
 
-__JSDoc
+<!--::JSDoc::-->
 
 # source
 
-<a href="#top" class="right">先頭へ</a><details><summary>core.js</summary>
-
-```
-__source
-```
-
-</details>
-
-<a href="#top" class="right">先頭へ</a><details><summary>test.js</summary>
-
-```
-__test
-```
-
-</details>
-
-<a href="#top" class="right">先頭へ</a><details><summary>build.sh</summary>
-
-```
-__build
-```
-
-</details>
+<!--::source::-->
 
 # 改版履歴
 

@@ -1,5 +1,7 @@
 #!/bin/sh
 # -x  つけるとverbose
+# created with reference to camp2024/client/build.sh
+set -e # エラー時点で停止
 
 # ----------------------------------------------
 # 1.事前準備
@@ -8,91 +10,78 @@ hr="\n=======================================\n"
 echo "\n$hr[BurgerMenu] build start$hr"
 
 # 1.1 変数・ツールの定義
+echo "step.1.1 start."
 GitHub="/Users/ena.kaon/Desktop/GitHub"
 lib="$GitHub/library"
-mod="$lib/BurgerMenu/1.1.0"
+mod="$lib/BurgerMenu/2.0.0"
 esed="node $lib/esed/1.0.0/core.js"
+querySelector="node $lib/querySelector/2.0.0/core.js"
+tmp="$mod/tmp"; rm -rf $tmp/*
+w01="$tmp/work01";w02="$tmp/work02";w03="$tmp/work03"
+proto="$tmp/proto.js"; cp $mod/proto.js $proto
+readme="$tmp/readme.md"
 
-# 1.2 .DS_storeの全削除
-cd $mod
-find .. -name '.DS_Store' -type f -ls -delete
+# 1.2 終端位置指定文字列の定義
+echo "step.1.2 start."
+eoMethods="//::methods_add_here::"
+mdJSDoc="<!--::JSDoc::-->"
+mdSource="<!--::source::-->"
 
-# 1.3 tmpの用意
-#rm -rf $mod/tmp
-#mkdir $mod/tmp
-#tmp="$mod/tmp"
+# 1.3 関数定義
+echo "step.1.3 start."
+# addMethod : core.jsにメソッドを追加
+addMethod(){
+  # {string} $1 - 追加するメソッド名
+  echo "addMethod '$1' start."
+  cat $mod/$1.js | awk 1 | sed "s/^/  /" > $w01
+  echo $eoMethods >> $w01
+  cat $proto | awk 1 | $esed -x:$eoMethods -f:$w01 > $w02
+  cp $w02 $proto
+}
 
-# 1.4 使用するクラスを最新化
-#$lib/SingleTableClient/1.0.0/build.sh
+# ----------------------------------------------
+# 2. core.jsへのメソッドの埋め込み
+# ----------------------------------------------
+echo "step.2 start."
+addMethod constructor
+addMethod setProperties
 
 
 # ----------------------------------------------
-# 2. index.htmlの作成
+# 3. 終了処理
 # ----------------------------------------------
-# 2.1 CSS部分
-
-# 2.2 html部分
-#work="$tmp/index.html"
-#cp $src/static/index.header.html $work
-#list=(
-#  実施要領
-#  注意事項
-#  持ち物リスト
-#)
-#for x in ${list[@]}; do
-#  echo "<div name=\"$x\">\n" >> $work
-#  cat $src/static/$x.md | marked >> $work
-#  echo "</div>\n\n" >> $work
-#done
-#cat $src/templates/origin.html \
-#| node $esed -x:"\/\*::CSS::\*\/" -f:$lib/CSS/1.3.0/core.css \
-#| node $esed -x:"<!--::body::-->" -f:$work \
-#> $src/index.html
-
-# 2.3 script部分
-
-# ----------------------------------------------
-# 3. server.gsの作成
-# ----------------------------------------------
-
+echo "step.3 start."
+# 3.1 終端位置指定文字列の削除
+cat $proto | $esed -x:"<!--::.+::-->" -s:"" \
+| $esed -x:"\/\/::.+::" -s:"" \
+| $esed -x:"\/\*::.+::\*\/" -s:"" \
+> $w01; cp $w01 $proto
+# 3.2 行末の空白を削除
+cat $proto | sed 's/ *$//' > $w01; cp $w01 $proto
+# 3.3 連続する改行コードを単一に
+cat $proto | tr -s "\n" > $w01; cp $w01 $proto
+# 3.4 core.jsを更新
+cp $proto $mod/core.js
 
 # ----------------------------------------------
 # 4. 仕様書の作成
 # ----------------------------------------------
-readme="$mod/readme.md"
-# 標準CSSを追加(コメントはesedで除外)
-echo "<style scoped type=\"text/css\">" > $readme
-cat $lib/CSS/1.3.0/core.css | awk 1 \
-| $esed -x:"\/\*[\s\S]*?\*\/\n*" -s:"" >> $readme
-echo "</style>\n\n" >> $readme
+# 4.1 共通CSSをclient.md先頭に追加(esedはコメント部分の削除)
+echo "step.4.1 start."
+cat << EOS > $readme
+<style scoped type="text/css">
+`cat $lib/CSS/1.3.0/core.css | awk 1 | $esed -x:"\/\*[\s\S]*?\*\/\n*" -s:""`
+</style>
+`cat $mod/proto.md`
+EOS
 
-# proto/readme.mdを追加
-# jsdoc2mdで追加される行は除外してmd作成
-jsdoc2md $mod/core.js | sed '1,4d' > $mod/core.md
-cat $mod/proto.md \
-| $esed -x:"__JSDoc" -f:$mod/core.md \
-| $esed -x:"__source" -f:$mod/core.js \
-| $esed -x:"__test" -f:$mod/test.html \
-| $esed -x:"__build" -f:$mod/build.sh \
->> $readme
+# 4.3 JSDocを作成、プロトタイプに埋め込む
+echo "step.4.3 start."
+jsdoc2md $proto > $w01
+cat $readme | awk 1 | $esed -x:$mdJSDoc -f:$w01 > $w02; cp $w02 $readme
 
+# 4.6 tmp/readme.mdを$mod直下にコピー
+echo "step.4.6 start."
+cp $readme $mod/readme.md
 
 echo "\n$hr[BurgerMenu] build end$hr"
-
-
-
-# ----------------------------------------------
-# 参考：関数化、if文
-# ----------------------------------------------
-
-#makeJSDoc(){
-#  base=$1
-#  type=$2
-#  if [ -n $3 ]; then # 入力フォルダ名指定あり
-#    iFile=$3/$base
-#  else               # 入力フォルダ名指定なし
-#    iFile=$base
-#  fi
-#}
-## makeJSDoc ベースファイル名 タイプ 入力フォルダ名 出力フォルダ名
-#makeJSDoc css css $iDir $dDir
