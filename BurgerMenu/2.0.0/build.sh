@@ -14,28 +14,48 @@ echo "step.1.1 start."
 GitHub="/Users/ena.kaon/Desktop/GitHub"
 lib="$GitHub/library"
 mod="$lib/BurgerMenu/2.0.0"
+src="$mod/src"
+doc="$mod/doc"
 esed="node $lib/esed/1.0.0/core.js"
 querySelector="node $lib/querySelector/2.0.0/core.js"
 tmp="$mod/tmp"; rm -rf $tmp/*
 w01="$tmp/work01";w02="$tmp/work02";w03="$tmp/work03"
-proto="$tmp/proto.js"; cp $mod/proto.js $proto
-readme="$tmp/readme.md"
 
-# 1.2 終端位置指定文字列の定義
+# 1.2 .DS_storeの全削除
 echo "step.1.2 start."
+cd $mod
+find . -name '.DS_Store' -type f -ls -delete
+
+# 1.3 最終成果物の原型をtmpに作成
+echo "step.1.3 start."
+# 1.3.1 core.js
+proto="$tmp/proto.js"
+cp $src/proto.js $proto
+# 1.3.2 readme.md
+readme="$tmp/readme.md"
+# 共通CSSを先頭に追加(esedでCSS内のコメントを削除)、原型を埋め込み
+cat << EOS > $readme
+<style scoped type="text/css">
+`cat $lib/CSS/1.3.0/core.css | awk 1 | $esed -x:"\/\*[\s\S]*?\*\/\n*" -s:""`
+</style>
+`cat $doc/proto.md`
+EOS
+
+# 1.4 終端位置指定文字列の定義
+echo "step.1.4 start."
 mdBar="<!--::MenuBar::-->"
 eoMethods="//::methods_add_here::"
 mdArticles="<!--::articles::-->"
 mdJSDoc="<!--::JSDoc::-->"
 mdSource="<!--::source::-->"
 
-# 1.3 関数定義
-echo "step.1.3 start."
+# 1.5 関数定義
+echo "step.1.5 start."
 # addMethod : core.jsにメソッドを追加
 addMethod(){
   # {string} $1 - 追加するメソッド名
   echo "addMethod '$1' start."
-  cat $mod/$1.js | awk 1 | sed "s/^/  /" > $w01
+  cat $src/$1.js | awk 1 | sed "s/^/  /" > $w01
   echo $eoMethods >> $w01
   cat $proto | awk 1 | $esed -x:$eoMethods -f:$w01 > $w02
   cp $w02 $proto
@@ -53,6 +73,7 @@ addArticle(){
   cat $1 | awk 1 >> $w01
   echo "" >> $w01
 }
+
 
 # ----------------------------------------------
 # 2. core.jsへのメソッドの埋め込み
@@ -78,20 +99,12 @@ cat $proto | tr -s "\n" > $w01; cp $w01 $proto
 # 3.4 core.jsを更新
 cp $proto $mod/core.js
 
+
 # ----------------------------------------------
 # 4. 仕様書の作成
 # ----------------------------------------------
-# 4.1 共通CSSをclient.md先頭に追加(esedはコメント部分の削除)
+# 4.1 JSDocを作成、プロトタイプに埋め込む
 echo "step.4.1 start."
-cat << EOS > $readme
-<style scoped type="text/css">
-`cat $lib/CSS/1.3.0/core.css | awk 1 | $esed -x:"\/\*[\s\S]*?\*\/\n*" -s:""`
-</style>
-`cat $mod/proto.md`
-EOS
-
-# 4.3 JSDocを作成、プロトタイプに埋め込む
-echo "step.4.3 start."
 jsdoc2md $proto > $w01
 cat $readme | awk 1 | $esed -x:$mdJSDoc -f:$w01 > $w02; cp $w02 $readme
 
@@ -99,8 +112,8 @@ cat $readme | awk 1 | $esed -x:$mdJSDoc -f:$w01 > $w02; cp $w02 $readme
 echo "step.4.4 start."
 menubar="[先頭](#top)"
 echo "" > $w01
-addArticle $mod/useage.md useage "使用方法"
-addArticle $mod/deliverables.md deliverables "生成されるナビ"
+addArticle $doc/useage.md useage "使用方法"
+addArticle $doc/deliverables.md deliverables "生成されるナビ"
 
 # 4.5 解説記事・メニューバー文字列を置換
 echo "step.4.5 start."
