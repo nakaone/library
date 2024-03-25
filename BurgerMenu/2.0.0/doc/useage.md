@@ -75,9 +75,7 @@ window.addEventListener('DOMContentLoaded',() => {
 「BurgerMenuクラスメンバ⊇インスタンス生成時の引数」となる。ここではクラスメンバ全体について説明。
 
 ```
-v.default = {
-  // ここは別ファイルにしてbuild時に埋め込み
-}
+//::config::
 ```
 
 ## 1.4 Google Spreadシート

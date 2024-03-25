@@ -108,12 +108,19 @@ echo "step.4.1 start."
 jsdoc2md $proto > $w01
 cat $readme | awk 1 | $esed -x:$mdJSDoc -f:$w01 > $w02; cp $w02 $readme
 
+# 4.2 configをuseage.mdに埋め込み
+echo "step.4.2 start."
+cat $doc/useage.md | awk 1 | \
+$esed -x:"\/\/::config::" -f:$src/config.js \
+> $tmp/useage.md
+
 # 4.4 解説記事をプロトタイプに埋め込みつつ、メニューバー文字列を作成
 echo "step.4.4 start."
 menubar="[先頭](#top)"
 echo "" > $w01
-addArticle $doc/useage.md useage "使用方法"
+addArticle $tmp/useage.md useage "使用方法"
 addArticle $doc/deliverables.md deliverables "生成されるナビ"
+addArticle $doc/auth.md authorization "認証の手順"
 
 # 4.5 解説記事・メニューバー文字列を置換
 echo "step.4.5 start."
