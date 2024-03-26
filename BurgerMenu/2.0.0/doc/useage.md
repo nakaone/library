@@ -1,4 +1,8 @@
+<a name="useage"></a>
+
 # 使用方法
+
+[1.名簿(list)シートの作成](#useage_sheet) | [2.config定義](#useage_config) | [3.index.htmlの作成](#useage_html) | [4.フォルダ構造、build.shの生成物](#useage_folder)
 
 使用時の大まかな流れは以下の通り。
 
@@ -40,6 +44,8 @@ sequenceDiagram
 1. build.shを実行、client,server(server.gs)を生成
 1. index.html,server.gsをシートのApps Scriptとしてコピー、デプロイ
 
+<a name="useage_sheet" href="#useage" style="text-align:right">使用方法トップへ</a>
+
 ## 1.名簿(list)シートの作成
 
 - ID(primaryKey)
@@ -61,11 +67,17 @@ sequenceDiagram
 
 <!-- シートイメージを追加 -->
 
+<a name="useage_config" href="#useage" style="text-align:right">使用方法トップへ</a>
+
 ## 2.config定義
+
+BurgerMenuは、基本的に「全ての設定を引数から変更可能」としている。また引数で指定しない場合は既定値を適用する。
 
 「BurgerMenuクラスメンバ⊇インスタンス生成時の引数」となる。ここではクラスメンバ全体について説明。
 
 //::config::
+
+<a name="useage_html" href="#useage" style="text-align:right">使用方法トップへ</a>
 
 ## 3.index.htmlの作成
 
@@ -107,16 +119,40 @@ sequenceDiagram
 
 オブジェクトの記述に準ずる。但し短縮するため前後の"{","}"は省略する。
 
+- {string} id - メニューID
 - {string} label - メニュー化する時の名称
 - {string} [func] - メニュー選択時に実行する関数名。<br>
   関数名と実際の関数はBurgerMenuインスタンス生成時に定義。
 - {string} [href] - 遷移先のURL。別タブが開かれる。
-- {number} [authority] - 表示権限。<br>
+- {number} [auth] - 表示権限。<br>
   BurgerMenuインスタンス生成時のauthorityとの論理積>0なら表示する。<br>
   ex: 一般参加者1、スタッフ2として<br>
       data-BurgerMenu="authrotiry:2"とされた要素は、<br>
       new BurgerMenu({authority:1})の一般参加者は非表示、<br>
       new BurgerMenu({authority:2})のスタッフは表示となる。
+- {string} [from] - メニュー有効期間の開始日時。Dateオブジェクトで処理可能な日時文字列で指定
+- {string} [to] - メニュー有効期間の終了日時
+
+申込フォームのように申込期限がある場合、同一IDで下の例のように設定する。
+
+```
+<!-- 申込開始前 〜2024/03/31 -->
+<div data-BurgerMenu="id:'entryForm',to:'2024/04/01 00:00:00'">
+  「まだお申し込みいただけません」
+</div>
+
+<!-- 申込期間内 2024/04/01〜07 -->
+<div data-BurgerMenu="id:'entryForm',from:'2024/04/01',to:'2024/04/08 00:00:00'">
+  申込フォーム
+</div>
+
+<!-- 申込終了後 2024/04/08〜 -->
+<div data-BurgerMenu="id:'entryForm',from:'2024/04/08'">
+  「申込は終了しました」
+</div>
+```
+
+メニュー生成時点で有効期限を判断、同一IDが複数存在する場合はいずれか一つのDIVのみ残して残りを削除してメニューを生成する。
 
 ### 3.2 script部
 
@@ -141,7 +177,9 @@ window.addEventListener('DOMContentLoaded',() => {
 });
 ```
 
-## 4.build.shの生成物
+<a name="useage_folder" href="#useage" style="text-align:right">使用方法トップへ</a>
+
+## 4.フォルダ構造、build.shの生成物
 
 - client/ : client(index.html)関係のソース
   - commonConfig.js : client/server共通config
