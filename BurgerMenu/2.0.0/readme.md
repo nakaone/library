@@ -93,7 +93,7 @@ htmlソースからdata-BurgerMenu属性を持つ要素を抽出、表示内容�
 <a name="useage"></a>
 # 使用方法
 
-本クラスの使用はGoogle Spreadでの使用を前提とする。
+使用時の大まかな流れは以下の通り。
 
 ```mermaid
 sequenceDiagram
@@ -125,6 +125,8 @@ sequenceDiagram
   client ->> user : 参加者用ページ
 ```
 
+■作成手順
+
 1. Google Spreadを用意、名簿(list)シートを作成
 1. configに名簿シート各項目の定義を記載
 1. 実装する機能・ページ毎にclient(index.html)にDIV要素を作成
@@ -155,6 +157,8 @@ sequenceDiagram
 ## 2.config定義
 
 「BurgerMenuクラスメンバ⊇インスタンス生成時の引数」となる。ここではクラスメンバ全体について説明。
+
+### 2.1 client/server共通部分
 
 ```
 const config = (()=>{
@@ -198,6 +202,38 @@ const config = (()=>{
   return mergeDeeply(unique,common);
 })();
 ```
+
+### 2.2 client特有部分
+
+```
+const unique = (common=>{
+  const rv = {};
+
+  // ------------------------------------------
+  // テスト
+  // ------------------------------------------
+  rv.client = common.auth.core + 20;
+
+  return rv;
+})(common);
+```
+
+### 2.3 server特有部分
+
+```
+const unique = (common=>{
+  const rv = {};
+
+  // ------------------------------------------
+  // テスト
+  // ------------------------------------------
+  rv.server = common.auth.core + 10;
+
+  return rv;
+})(common);
+```
+
+
 
 ## 3.index.htmlの作成
 
@@ -273,7 +309,24 @@ window.addEventListener('DOMContentLoaded',() => {
 });
 ```
 
-## 4.build.shの生成物(フォルダの構造)
+## 4.build.shの生成物
+
+- client/ : client(index.html)関係のソース
+  - commonConfig.js : client/server共通config
+  - clientConfig.js : client特有のconfig
+  - proto.js : class BurgerMenu全体のソース
+  - test.html : client関係のテスト用html
+  - xxx.js : class BurgerMenuの各メソッドのソース
+- server/ : server(server.gs)関係のソース
+  - serverConfig.js : server特有のconfig
+- doc/ : readme.mdの各記事のソース集
+  - proto.md : readme.mdのプロトタイプ
+  - xxx.md : readme.mdに埋め込む各記事のソース
+- build.sh : client/server全体のビルダ
+- core.js : class BurgerMenuのソース
+- index.html : 
+- server.gs : サーバ側BurgerMenuのソース
+- readme.md : client/server全体の仕様書
 
 [先頭](#top) | [使用方法](#useage) | [生成されるナビ](#deliverables) | [認証の手順](#authorization) | [仕様(JSDoc)](#jsdoc) | [プログラムソース](#program_source) | [改版履歴](#revision_history)
 <a name="deliverables"></a>

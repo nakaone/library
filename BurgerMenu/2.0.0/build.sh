@@ -14,7 +14,8 @@ echo "step.1.1 start."
 GitHub="/Users/ena.kaon/Desktop/GitHub"
 lib="$GitHub/library"
 mod="$lib/BurgerMenu/2.0.0"
-src="$mod/src"
+client="$mod/client"
+server="$mod/server"
 doc="$mod/doc"
 esed="node $lib/esed/1.0.0/core.js"
 querySelector="node $lib/querySelector/2.0.0/core.js"
@@ -30,7 +31,7 @@ find . -name '.DS_Store' -type f -ls -delete
 echo "step.1.3 start."
 # 1.3.1 core.js
 proto="$tmp/proto.js"
-cp $src/proto.js $proto
+cp $client/proto.js $proto
 # 1.3.2 readme.md
 readme="$tmp/readme.md"
 # 共通CSSを先頭に追加(esedでCSS内のコメントを削除)、原型を埋め込み
@@ -55,7 +56,7 @@ echo "step.1.5 start."
 addMethod(){
   # {string} $1 - 追加するメソッド名
   echo "addMethod '$1' start."
-  cat $src/$1.js | awk 1 | sed "s/^/  /" > $w01
+  cat $client/$1.js | awk 1 | sed "s/^/  /" > $w01
   echo $eoMethods >> $w01
   cat $proto | awk 1 | $esed -x:$eoMethods -f:$w01 > $w02
   cp $w02 $proto
@@ -75,6 +76,21 @@ addArticle(){
   echo "" >> $4
 }
 
+# addConfig : configファイルのソースをMarkdownとして作成
+addConfig(){
+  # {string} $1 - タイトル
+  # {string} $2 - ファイル名
+  # {string} $3 - ソース追加先のファイル名
+  echo "addConfig '$1' start."
+  cat << EOS >> $3
+### $1
+
+\`\`\`
+`cat $2 | awk 1`
+\`\`\`
+
+EOS
+}
 
 # ----------------------------------------------
 # 2. core.jsへのメソッドの埋め込み
@@ -114,9 +130,13 @@ echo "step.4.4 start."
 menubar="[先頭](#top)"
 echo "" > $w01  # 埋込結果を保持するワーク
 # 4.4.1 別ソースからの埋め込みが必要な解説記事
+rm $w02; touch $w02
+addConfig "2.1 client/server共通部分" $client/commonConfig.js $w02
+addConfig "2.2 client特有部分" $client/clientConfig.js $w02
+addConfig "2.3 server特有部分" $server/serverConfig.js $w02
 cat $doc/useage.md | awk 1 | \
-$esed -x:"\/\/::config::" -f:$src/config.js > $w02
-addArticle $w02 useage "使用方法" $w01
+$esed -x:"\/\/::config::" -f:$w02 > $w03
+addArticle $w03 useage "使用方法" $w01
 # 4.4.2 埋め込み不要の解説記事
 addArticle $doc/deliverables.md deliverables "生成されるナビ" $w01
 addArticle $doc/auth.md authorization "認証の手順" $w01
