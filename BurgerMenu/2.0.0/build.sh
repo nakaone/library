@@ -66,12 +66,13 @@ addArticle(){
   # {string} $1 - 解説記事ファイル名
   # {string} $2 - ローカルリンクのラベル
   # {string} $3 - 解説記事のタイトル
+  # {string} $4 - 埋込先ファイル名
   echo "addArticle '$3' start."
   menubar="$menubar | [$3](#$2)"
-  echo $mdBar >> $w01
-  echo "<a name=\"$2\"></a>" >> $w01
-  cat $1 | awk 1 >> $w01
-  echo "" >> $w01
+  echo $mdBar >> $4
+  echo "<a name=\"$2\"></a>" >> $4
+  cat $1 | awk 1 >> $4
+  echo "" >> $4
 }
 
 
@@ -108,19 +109,17 @@ echo "step.4.1 start."
 jsdoc2md $proto > $w01
 cat $readme | awk 1 | $esed -x:$mdJSDoc -f:$w01 > $w02; cp $w02 $readme
 
-# 4.2 configをuseage.mdに埋め込み
-echo "step.4.2 start."
-cat $doc/useage.md | awk 1 | \
-$esed -x:"\/\/::config::" -f:$src/config.js \
-> $tmp/useage.md
-
 # 4.4 解説記事をプロトタイプに埋め込みつつ、メニューバー文字列を作成
 echo "step.4.4 start."
 menubar="[先頭](#top)"
-echo "" > $w01
-addArticle $tmp/useage.md useage "使用方法"
-addArticle $doc/deliverables.md deliverables "生成されるナビ"
-addArticle $doc/auth.md authorization "認証の手順"
+echo "" > $w01  # 埋込結果を保持するワーク
+# 4.4.1 別ソースからの埋め込みが必要な解説記事
+cat $doc/useage.md | awk 1 | \
+$esed -x:"\/\/::config::" -f:$src/config.js > $w02
+addArticle $w02 useage "使用方法" $w01
+# 4.4.2 埋め込み不要の解説記事
+addArticle $doc/deliverables.md deliverables "生成されるナビ" $w01
+addArticle $doc/auth.md authorization "認証の手順" $w01
 
 # 4.5 解説記事・メニューバー文字列を置換
 echo "step.4.5 start."

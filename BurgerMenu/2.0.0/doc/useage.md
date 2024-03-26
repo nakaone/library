@@ -1,8 +1,79 @@
-# 1.使用方法
+# 使用方法
 
-## 1.1 BODYタグ内部
+使用時の大まかな流れは以下の通り。
 
-### htmlソースイメージ
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant client
+  participant server
+  participant sheet
+  actor admin
+
+  Note right of user : 事前準備
+  admin ->> sheet : 名簿(list)シートの作成
+  admin ->> client : メニュー毎に権限設定したhtmlページを作成
+  user ->> client : 表示要求
+  client ->> user : 一般公開用ページ
+
+  Note right of user : メンバ登録
+  user ->> client : 参加申し込み
+  client ->> server : 参加申込情報
+  server ->> sheet : 参加申込情報
+  admin ->> sheet : 権限設定
+
+  Note right of user : メンバ用機能
+  user ->> client : ID＋表示要求
+  client ->> server : ID
+  server ->> sheet : ID
+  sheet ->> server : 権限情報
+  server ->> client : 権限情報
+  client ->> user : 参加者用ページ
+```
+
+■作成手順
+
+1. Google Spreadを用意、名簿(list)シートを作成
+1. configに名簿シート各項目の定義を記載
+1. 実装する機能・ページ毎にclient(index.html)にDIV要素を作成
+1. build.shを実行、client,server(server.gs)を生成
+1. index.html,server.gsをシートのApps Scriptとしてコピー、デプロイ
+
+## 1.名簿(list)シートの作成
+
+- ID(primaryKey)
+- passcode : 6桁の数字
+- authLog : 「タイムスタンプ＋入力内容」をJSON化
+- email
+- timestamp : 生成日時
+- name
+- reading
+- tel
+- note : フォームから入力された備考
+- cancel
+- authority
+- publicKey
+- keyCreated
+- certificate : 判定日時
+- isTest : テスト用ならtrue
+- memo : シートで入力した内部用備考
+
+<!-- シートイメージを追加 -->
+
+## 2.config定義
+
+「BurgerMenuクラスメンバ⊇インスタンス生成時の引数」となる。ここではクラスメンバ全体について説明。
+
+```
+//::config::
+```
+
+## 3.index.htmlの作成
+
+### 3.1 BODYタグ内部
+
+#### 3.1.1 htmlソースイメージ
 
 - 表示部は&lt;div data-BurgerMenu&gt;の階層内で定義する。<br>
   階層外の要素はメニューで選択しても表示されない。
@@ -32,7 +103,9 @@
 
 「お知らせ」は「掲示板」「注意事項」のブランチとして扱われるので、「&lt;p&gt;お知らせのページです&lt;/p&gt;」というお知らせページ自身の表示内容は定義不可。
 
-### data-BurgerMenu属性の書き方
+#### 3.1.2 data-BurgerMenu属性の書き方
+
+タグのauthとその人の権限の論理積>0ならメニューを表示する。
 
 オブジェクトの記述に準ずる。但し短縮するため前後の"{","}"は省略する。
 
@@ -47,7 +120,7 @@
       new BurgerMenu({authority:1})の一般参加者は非表示、<br>
       new BurgerMenu({authority:2})のスタッフは表示となる。
 
-## 1.2 script部
+### 3.2 script部
 
 ```
 window.addEventListener('DOMContentLoaded',() => {
@@ -70,35 +143,4 @@ window.addEventListener('DOMContentLoaded',() => {
 });
 ```
 
-## 1.3 インスタンス生成時の引数
-
-「BurgerMenuクラスメンバ⊇インスタンス生成時の引数」となる。ここではクラスメンバ全体について説明。
-
-```
-//::config::
-```
-
-## 1.4 Google Spreadシート
-
-- ID(primaryKey)
-- passcode : 6桁の数字
-- authLog : 「タイムスタンプ＋入力内容」をJSON化
-- email
-- timestamp : 生成日時
-- name
-- reading
-- tel
-- note : フォームから入力された備考
-- cancel
-- authority
-- publicKey
-- keyCreated
-- certificate : 判定日時
-- isTest : テスト用ならtrue
-- memo : シートで入力した内部用備考
-
-<!-- シートイメージを追加 -->
-
-## 1.5 【参考】権限(auth)の判定方法
-
-タグのauthとその人の権限の論理積>0ならメニューを表示
+## 4.build.shの生成物(フォルダの構造)
