@@ -16,16 +16,18 @@ authClient/authServerとBurgerMenuで一部共通の値を設定する必要が�
 
 ### 共通部分
 
-<!--::config.cooperation.js::-->
+<!--:config.cooperation.js:-->
 
 ### authClient特有部分
 
-<!--::config.authClient.js::-->
+<!--:config.authClient.js:-->
 
 ### authServer特有部分
 
-<!--::config.authServer.js::-->
+<!--:config.authServer.js:-->
 
 ### BurgerMenu特有部分
 
-<!--::config.BurgerMenu.js::-->
+<!--:config.BurgerMenu.js:-->
+
+<!--::【備忘】GAS/htmlでの暗号化::$doc/crypto.md::-->

@@ -17,6 +17,7 @@ mod="$lib/Auth/2.0.0"
 client="$mod/client"
 server="$mod/server"
 doc="$mod/doc"
+embed="node $lib/embedRecursively/1.0.0/pipe.js"
 esed="node $lib/esed/1.0.0/core.js"
 querySelector="node $lib/querySelector/2.0.0/core.js"
 tmp="$mod/tmp"; rm -rf $tmp/*
@@ -26,6 +27,56 @@ w01="$tmp/work01";w02="$tmp/work02";w03="$tmp/work03"
 echo "step.1.2 start."
 cd $mod
 find . -name '.DS_Store' -type f -ls -delete
+
+# 1.3 最終成果物の原型をtmpに作成
+echo "step.1.3 start."
+# 1.3.1 core.js
+proto="$tmp/proto.js"
+#cp $client/proto.js $proto
+# 1.3.2 readme.md
+readme="$tmp/readme.md"
+
+# 1.5 関数定義
+echo "step.1.5 start."
+# addSource : プログラムソースを追加
+# {string} $1 - プログラムソース名
+# {string} $2 - プログラムソースのフルパス
+# {string} $3 - 成果物の【追加】先ファイル名
+addSource(){
+  echo "addSource '$1' start."
+  cat << EOS >> $3
+<details><summary>$1</summary>
+
+\`\`\`
+`cat $2 | awk 1`
+\`\`\`
+
+</details>
+
+EOS
+}
+
+# ----------------------------------------------
+# 4. 仕様書の作成
+# ----------------------------------------------
+# 4.1 JSDocを作成
+echo "step.4.1 start."
+#jsdoc2md $proto > $w01
+#cat $readme | awk 1 | $esed -x:$mdJSDoc -f:$w01 > $w02; cp $w02 $readme
+touch $tmp/jsdoc.md
+
+# 4.2 プログラムソースを作成
+touch $tmp/source.md
+
+# 4.5 解説記事・メニューバー文字列を置換
+echo "step.4.5 start."
+cat $doc/proto.md | awk 1 \
+| $embed -lib:"$lib" -doc:"$doc" -tmp:"$tmp" \
+> $readme
+
+# 4.6 tmp/readme.mdを$mod直下にコピー
+echo "step.4.6 start."
+cp $readme $mod/readme.md
 
 
 echo "\n$hr[Auth] build end$hr"
