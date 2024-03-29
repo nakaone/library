@@ -1,0 +1,26 @@
+# authClient/authServerとBurgerMenuの連携
+## Google Spreadシート
+## BODYタグ内
+## DOMContentLoaded(インスタンス化)
+## インスタンス化時の引数定義
+### 共通部分
+### authClient特有部分
+### authServer特有部分
+### BurgerMenu特有部分
+## 【備忘】GAS/htmlでの暗号化
+### javascript用
+### GAS用
+# SPAにおける表示制御
+## 募集内容確認〜申込完了までの流れ
+# フォルダ構成
+# Authクラス処理概要
+## 前提
+### 公開鍵・秘密鍵
+### シート操作オブジェクト
+## 新規登録
+## ログイン要求
+## 権限設定(変更)
+## 検索・編集・更新
+# 仕様(JSDoc)
+# プログラムソース
+# 改版履歴
