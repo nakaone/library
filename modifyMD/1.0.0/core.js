@@ -31,7 +31,7 @@ function modifyMD(arg,opt={}){
     // aタグのname属性を生成
     //naming:(obj) => {return 'chapter_' + obj.number.join('_');},
     naming:(obj) => {return 'ac' + ('000'+obj.id).slice(-4)},
-    genChap:(lv,title)=>{
+    genArticle:(lv,title)=>{
       const pObj = v.lastObj[lv-1];
       return {
         id: v.seq++,
@@ -48,7 +48,8 @@ function modifyMD(arg,opt={}){
   try {
 
     v.step = 1.1; // 既定値の設定
-    opt.addNumber = opt.addNumber || true; // false;
+    opt.addNumber = opt.addNumber || true; // タイトルにナンバリングするならtrue;
+    opt.maxJump = opt.maxJump || 10; // 何段階の飛び級を許すか
 
     v.step = 1.2; // 章Objの用意
     v.parent = v.root;
@@ -66,20 +67,24 @@ function modifyMD(arg,opt={}){
         v.step = 2.2; // タイトル行以外
         v.current.content += v.lines[v.i] + '\n';
       } else {  // タイトル行
-        v.step = 2.3;
         v.last = v.current.level; // 一つ前の章のレベルを保存
-        v.current = v.genChap(v.m[1].length,v.m[2]);
+
+        v.step = 2.3; // 新記事を生成
+        v.current = v.genArticle(v.m[1].length,v.m[2]);
         v.stack[v.current.id] = v.current;
 
-        v.step = 2.4;
+        v.step = 2.4; // 前記事とレベルが変わった場合、親要素とlastObjを変更
         if( v.last !== v.current.level ){
           v.parent = v.lastObj[v.current.level - 1];
-          // 子孫をクリア
-          v.lastObj.splice(v.current.level+1,v.lastObj.length);
+          // 自レベル以降の子孫をクリア
+          v.lastObj.splice(v.current.level,v.lastObj.length);
         }
-        v.step = 2.5;
+        v.step = 2.5; // 親要素のchildrenに登録
         v.parent.children.push(v.current.id);
-        v.lastObj[v.current.level] = v.current;
+        for( v.j=0 ; v.j<opt.maxJump ; v.j++ ){
+          // 飛び級用にmaxJump世代先まで自要素をセット
+          v.lastObj[v.current.level+v.j] = v.current;
+        }
       }
     }
 
@@ -132,7 +137,7 @@ function modifyMD(arg,opt={}){
         v.menu += (v.menu.length > 0 ? ' | ' : '')
         + (o.id === obj.id ? o.title : `[${o.title}](#${o.name})`);
       });
-      v.rv += `${v.footprint}<br>&gt; ${v.menu}\n\n`;
+      v.rv += `${v.footprint}<br>&gt; [${v.menu}]\n\n`;
 
       v.step = 4.4; // 本文
       v.rv += obj.content;

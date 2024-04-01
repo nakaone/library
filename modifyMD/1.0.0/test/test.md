@@ -33,7 +33,7 @@ authClient/authServerとBurgerMenuで一部共通の値を設定する必要が�
 
 authClient特有部分本文
 
-## 【備忘】GAS/htmlでの暗号化
+# 【備忘】GAS/htmlでの暗号化
 
 - GAS
   - 鍵ペア生成
