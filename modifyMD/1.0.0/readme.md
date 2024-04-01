@@ -140,7 +140,7 @@ function modifyMD(arg,opt={}){
     },
     // aタグのname属性を生成
     //naming:(obj) => {return 'chapter_' + obj.number.join('_');},
-    naming:(obj) => {return 'article' + ('00000'+obj.id).slice(-6)},
+    naming:(obj) => {return 'ac' + ('000'+obj.id).slice(-4)},
     genChap:(lv,title)=>{
       const pObj = v.lastObj[lv-1];
       return {
@@ -205,11 +205,10 @@ function modifyMD(arg,opt={}){
       obj.sibling = obj.id > 0 ? w.parent.children : []; // ルートは兄弟無し
       v.step = 3.3;
       while(w.parent.level > 0){
-        obj.ancestor.unshift(w.parent);
+        obj.ancestor.unshift(w.parent.id);
         w.parent = v.stack.find(x=>x.id===w.parent.parent);
       }
     });
-    console.log(`l.98 v.stack=${stringify(v.stack)}`);
 
     v.step = 4; // 整形しながら出力
     v.rv = `<a name="${v.naming(v.root)}"></a>\n${v.root.content}\n`;
@@ -218,17 +217,19 @@ function modifyMD(arg,opt={}){
 
       // ルートは出力しない
       if( obj.level === 0 ) return;
+      const pObj = v.stack.find(x=>x.id===obj.parent);
 
       v.step = 4.1; // タイトル行
       v.rv += `${'#'.repeat(obj.level)} `
       // 連番文字列
       + (opt.addNumber ? obj.number.join('.') + ' ' : '')
       // aタグ、タイトル
-      + `<a href="#${obj.parent.name}" name="#${obj.name}">${obj.title}</a>\n\n`
+      + `<a href="#${pObj.name}" name="${obj.name}">${obj.title}</a>\n\n`
 
       v.step = 4.2; // 足跡リスト
       v.footprint = '';
-      obj.ancestor.forEach(o => {
+      obj.ancestor.forEach(id => {
+        let o = v.stack.find(x=>x.id===id);
         v.footprint += (v.footprint.length > 0 ? ' > ' : '')
         + `[${o.title}](#${o.name})`
       });
@@ -236,11 +237,12 @@ function modifyMD(arg,opt={}){
 
       v.step = 4.3; // 兄弟へのリンク
       v.menu = '';
-      obj.sibling.forEach(o => {
+      obj.sibling.forEach(id => {
+        let o = v.stack.find(x=>x.id===id);
         v.menu += (v.menu.length > 0 ? ' | ' : '')
         + (o.id === obj.id ? o.title : `[${o.title}](#${o.name})`);
       });
-      v.rv += v.footprint + v.menu + '\n\n';
+      v.rv += `${v.footprint}<br>&gt; ${v.menu}\n\n`;
 
       v.step = 4.4; // 本文
       v.rv += obj.content;
