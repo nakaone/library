@@ -62,8 +62,11 @@ function modifyMD(arg,opt={}){
   try {
 
     v.step = 1.1; // 既定値の設定
-    opt.addNumber = opt.addNumber || true; // タイトルにナンバリングするならtrue;
-    opt.maxJump = opt.maxJump || 10; // 何段階の飛び級を許すか
+    opt = Object.assign({
+      addNumber: true,// タイトルにナンバリングするならtrue
+      addTOC: true,   // TOCを追加するならtrue
+      maxJump: 10,    // 何段階の飛び級を許すか
+    },opt);
 
     v.step = 1.2; // 章Objの用意
     v.parent = v.root;
@@ -121,6 +124,17 @@ function modifyMD(arg,opt={}){
 
     v.step = 4; // 整形しながら出力
     v.rv = `<a name="${v.naming(v.root)}"></a>\n${v.root.content}\n`;
+    if( opt.addTOC ){ // TOCを追加
+      v.toc = '# 目次\n\n';
+      v.stack.forEach(x => {
+        v.lv = Number(x.level);
+        if( v.lv > 0 ){
+          v.toc += ('   '.repeat(v.lv-1))
+          + `1. <a href="#${x.name}">${x.title}</a>\n`  
+        }
+      });
+      v.rv += v.toc + '\n';
+    }
     v.recursive(v.root.id,(obj)=>{
       //console.log(`l.103 obj=${stringify(obj)}`);
 

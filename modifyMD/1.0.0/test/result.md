@@ -13,6 +13,17 @@ html, body{
 「参加者一覧」等、スタッフには必要だが参加者に公開したくないメニューが存在する。これの表示制御を行うため、スタッフと参加者では「権限(auth)」を分ける。
 
 
+# 目次
+
+1. <a href="#ac0001">authClient/authServerとBurgerMenuの連携</a>
+   1. <a href="#ac0002">Google Spreadシート</a>
+   1. <a href="#ac0003">インスタンス化時の引数定義</a>
+      1. <a href="#ac0004">共通部分</a>
+      1. <a href="#ac0005">authClient特有部分</a>
+1. <a href="#ac0006">【備忘】GAS/htmlでの暗号化</a>
+      1. <a href="#ac0007">javascript用</a>
+      1. <a href="#ac0008">GAS用</a>
+
 # 1 <a href="#ac0000" name="ac0001">authClient/authServerとBurgerMenuの連携</a>
 
 [先頭](#ac0000)
