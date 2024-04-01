@@ -19,6 +19,8 @@ html, body{
 
 ## Google Spreadシート
 
+Google Spreadシートの本文
+
 ## インスタンス化時の引数定義
 
 authClient/authServerとBurgerMenuで一部共通の値を設定する必要があるので、インスタンス化の際の引数を呼出元のconfigで設定することでこれを実現する。

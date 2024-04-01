@@ -130,19 +130,21 @@ td, .td {
  * }
  */
 function modifyMD(arg,opt={}){
-  const v = {whois:'modifyMD',rv:'',step:0,seq:1,noname:'(no name)',
-    root:{id:0,parent:null,number:[0],children:[],level:0,title:'',content:''},
+  const v = {whois:'modifyMD',rv:'',step:0,seq:1,stack:[],
+    root:{id:0,parent:0,number:[],children:[],level:0,title:'',content:''},
     lastObj:[], // 各レベル-1の末尾Obj
-    recursive:(pObj,func) => {
+    recursive:(pId,func) => {
+      const pObj = v.stack.find(x=>x.id===pId);
       func(pObj);
-      pObj.children.forEach(cObj=>v.recursive(cObj,func));
+      pObj.children.forEach(cId=>v.recursive(cId,func));
     },
     // aタグのname属性を生成
-    naming:(obj) => {return 'chapter_' + obj.number.join('_');},
+    //naming:(obj) => {return 'chapter_' + obj.number.join('_');},
+    naming:(obj) => {return 'article' + ('00000'+obj.id).slice(-6)},
     genChap:(lv,title)=>{return {
       id: v.seq++,
-      parent: v.parent,
-      number: [...v.parent.number, v.parent.children.length],
+      parent: v.lastObj[lv-1].id, //v.parent.id,
+      number: [...v.parent.number, v.parent.children.length+1],
       children: [],
       level: lv, //v.m[1].length,
       title: title, //v.m[2],
@@ -156,12 +158,11 @@ function modifyMD(arg,opt={}){
     opt.addNumber = opt.addNumber || true; // false;
 
     v.step = 1.2; // 章Objの用意
-    v.root.parent = v.root;
     v.parent = v.root;
-    // style, ヘッダ・全体のタイトル部分
-    v.root.children.push(v.genChap(1,'先頭'));
-    v.current = v.root.children[0];
-    v.lastObj = [v.root, v.current];
+    v.current = v.root;
+    v.stack[0] = v.root;
+    // style, ヘッダ・全体のタイトル部分はルートに格納
+    v.lastObj = [v.root];
 
     v.step = 2; // 各行の処理
     v.lines = arg.split('\n');
@@ -175,6 +176,7 @@ function modifyMD(arg,opt={}){
         v.step = 2.3;
         v.last = v.current.level; // 一つ前の章のレベルを保存
         v.current = v.genChap(v.m[1].length,v.m[2]);
+        v.stack[v.current.id] = v.current;
 
         v.step = 2.4;
         if( v.last !== v.current.level ){
@@ -183,30 +185,34 @@ function modifyMD(arg,opt={}){
           v.lastObj.splice(v.current.level+1,v.lastObj.length);
         }
         v.step = 2.5;
-        v.parent.children.push(v.current);
+        v.parent.children.push(v.current.id);
         v.lastObj[v.current.level] = v.current;
       }
     }
 
-    v.step = 3;
-    v.recursive(v.root,(obj)=>{
+    v.step = 3; // 導出項目の計算
+    v.recursive(v.root.id,(obj)=>{
+      //console.log(`l.82 obj=${stringify(obj)}`);
       const w = {};
       v.step = 3.1; // aタグのname属性
       obj.name = v.naming(obj);
       v.step = 3.2; // 足跡リスト用の親・兄弟配列
       obj.ancestor = [];
-      w.parent = obj.parent;
+      w.parent = v.stack.find(x=>x.id===obj.parent);
+      obj.sibling = obj.id > 0 ? w.parent.children : []; // ルートは兄弟無し
       v.step = 3.3;
       while(w.parent.level > 0){
         obj.ancestor.unshift(w.parent);
-        w.parent = w.parent.parent;
+        w.parent = v.stack.find(x=>x.id===w.parent.parent);
       }
-      v.step = 3.4;
-      obj.sibling = obj.parent.children;
     });
+    console.log(`l.98 v.stack=${stringify(v.stack)}`);
 
     v.step = 4; // 整形しながら出力
-    v.recursive(v.root,(obj)=>{
+    v.rv = `<a name="${v.naming(v.root)}"></a>\n${v.root.content}\n`;
+    v.recursive(v.root.id,(obj)=>{
+      //console.log(`l.103 obj=${stringify(obj)}`);
+
       // ルートは出力しない
       if( obj.level === 0 ) return;
 
