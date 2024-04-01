@@ -136,11 +136,10 @@ function modifyMD(arg,opt={}){
       + `<a href="#${pObj.name}" name="${obj.name}">${obj.title}</a>\n\n`
 
       v.step = 4.2; // 足跡リスト
-      v.footprint = '';
+      v.footprint = `[先頭](#${v.naming(v.root)})`;
       obj.ancestor.forEach(id => {
         let o = v.stack.find(x=>x.id===id);
-        v.footprint += (v.footprint.length > 0 ? ' > ' : '')
-        + `[${o.title}](#${o.name})`
+        v.footprint += (' > ' + `[${o.title}](#${o.name})`);
       });
       v.footprint += '\n';
 
