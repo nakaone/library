@@ -43,7 +43,6 @@ function modifyMD(arg,opt={}){
       pObj.children.forEach(cId=>v.recursive(cId,func));
     },
     // aタグのname属性を生成
-    //naming:(obj) => {return 'chapter_' + obj.number.join('_');},
     naming:(obj) => {return 'ac' + ('000'+obj.id).slice(-4)},
     genArticle:(lv,title)=>{
       const pObj = v.lastObj[lv-1];
@@ -111,7 +110,6 @@ function modifyMD(arg,opt={}){
 
     v.step = 3; // 導出項目の計算
     v.recursive(v.root.id,(obj)=>{
-      //console.log(`l.82 obj=${stringify(obj)}`);
       const w = {};
       v.step = 3.1; // aタグのname属性
       obj.name = v.naming(obj);
@@ -141,7 +139,6 @@ function modifyMD(arg,opt={}){
       v.rv += v.toc + '\n';
     }
     v.recursive(v.root.id,(obj)=>{
-      //console.log(`l.103 obj=${stringify(obj)}`);
 
       // ルートは出力しない
       if( obj.level === 0 ) return;
