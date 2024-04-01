@@ -1,23 +1,10 @@
 /** MarkDown文書のタイトルからTOC/足跡リストを作成・追加
- * - タイトル行にaタグ追加
- * - 足跡リストを作成
- * - TOCを作成
- * 
- * 1レベルずつ動くとは限らない
- * ①急に上がった ⇒ 問題なし
- * ②急に下がった ⇒ 直前の上位ノードの子として、上位ノード＋1レベルに変更して処理
- * 
- * opt.title='<p class="title">' -> タイトル。この直後にTOCを挿入
- * 
- * {
- *   level: 1〜6
- *   prefix: 1.2.3等の文字列
- *   title: 元々のタイトル
- *   parent: 親ノードへのローカルリンク文字列
- *   footprint: 足跡リスト
- *   content: 子ノード出現以前の本文
- *   children: 子孫ノード。再帰
- * }
+ * @param {string} arg - MarkDown文書の内容
+ * @param {Object} [opt={}] - オプション
+ * @param {boolean} [opt.addNumber=true] - タイトルにナンバリングするならtrue
+ * @param {boolean} [opt.addTOC=true] - TOCを追加するならtrue
+ * @param {number} [opt.maxJump=10] - 何段階の飛び級を許すか
+ * @returns {string} 加工済のMarkDown文書
  */
 function modifyMD(arg,opt={}){
   const v = {whois:'modifyMD',rv:'',step:0,seq:1,stack:[],
