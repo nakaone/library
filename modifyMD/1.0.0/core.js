@@ -31,15 +31,18 @@ function modifyMD(arg,opt={}){
     // aタグのname属性を生成
     //naming:(obj) => {return 'chapter_' + obj.number.join('_');},
     naming:(obj) => {return 'article' + ('00000'+obj.id).slice(-6)},
-    genChap:(lv,title)=>{return {
-      id: v.seq++,
-      parent: v.lastObj[lv-1].id, //v.parent.id,
-      number: [...v.parent.number, v.parent.children.length+1],
-      children: [],
-      level: lv, //v.m[1].length,
-      title: title, //v.m[2],
-      content: '',
-    };},
+    genChap:(lv,title)=>{
+      const pObj = v.lastObj[lv-1];
+      return {
+        id: v.seq++,
+        parent: pObj.id,
+        number: [...pObj.number, pObj.children.length+1],
+        children: [],
+        level: lv,
+        title: title,
+        content: '',
+      };
+    },
   };
   //console.log(`${v.whois} start.`);
   try {
@@ -109,7 +112,7 @@ function modifyMD(arg,opt={}){
       v.step = 4.1; // タイトル行
       v.rv += `${'#'.repeat(obj.level)} `
       // 連番文字列
-      + (opt.addNumber ? obj.number.slice(1).join('.') + ' ' : '')
+      + (opt.addNumber ? obj.number.join('.') + ' ' : '')
       // aタグ、タイトル
       + `<a href="#${obj.parent.name}" name="#${obj.name}">${obj.title}</a>\n\n`
 
