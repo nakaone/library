@@ -1,4 +1,4 @@
-/** MarkDown文書のタイトルからTOC/足跡リストを作成・追加
+/** MarkDown文書の見出しを採番、TOC/足跡リストを作成・追加
  * @param {string} arg - MarkDown文書の内容
  * @param {Object} [opt={}] - オプション
  * @param {boolean} [opt.number=true] - タイトルにナンバリングするならtrue

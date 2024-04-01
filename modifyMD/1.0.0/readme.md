@@ -92,6 +92,8 @@ td, .td {
 
 <p class="title"><a name="top">modifyMD</a></p>
 
+MarkDown文書の見出しを採番、TOC/足跡リストを作成・追加
+
 # pipeでの使用方法
 
 `node pipe.js -(オプション):(値)`を起動
@@ -139,7 +141,7 @@ cat $lib/whichType/1.0.1/core.js | awk 1 \
 <a name="modifyMD"></a>
 
 ## modifyMD(arg, [opt]) ⇒ <code>string</code>
-MarkDown文書のタイトルからTOC/足跡リストを作成・追加
+MarkDown文書の見出しを採番、TOC/足跡リストを作成・追加
 
 **Kind**: global function  
 **Returns**: <code>string</code> - 加工済のMarkDown文書  
@@ -160,7 +162,7 @@ MarkDown文書のタイトルからTOC/足跡リストを作成・追加
 
 <!-- タイトル(第一レベル)が存在しない場合、ラベルをタイトルとして設定 -->
 ```
-/** MarkDown文書のタイトルからTOC/足跡リストを作成・追加
+/** MarkDown文書の見出しを採番、TOC/足跡リストを作成・追加
  * @param {string} arg - MarkDown文書の内容
  * @param {Object} [opt={}] - オプション
  * @param {boolean} [opt.number=true] - タイトルにナンバリングするならtrue
@@ -340,4 +342,4 @@ function modifyMD(arg,opt={}){
 
 # <a name="revision_history" href="#top">改版履歴</a>
 
-- rev.1.0.0 : 2024/03/29 初版
+- rev.1.0.0 : 2024/04/01 初版

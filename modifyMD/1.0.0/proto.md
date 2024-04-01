@@ -4,6 +4,8 @@
 
 <p class="title"><a name="top">modifyMD</a></p>
 
+MarkDown文書の見出しを採番、TOC/足跡リストを作成・追加
+
 # pipeでの使用方法
 
 `node pipe.js -(オプション):(値)`を起動
@@ -57,4 +59,4 @@ cat $lib/whichType/1.0.1/core.js | awk 1 \
 
 # <a name="revision_history" href="#top">改版履歴</a>
 
-- rev.1.0.0 : 2024/03/29 初版
+- rev.1.0.0 : 2024/04/01 初版
