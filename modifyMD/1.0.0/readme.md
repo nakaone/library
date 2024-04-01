@@ -94,13 +94,65 @@ td, .td {
 
 # pipeでの使用方法
 
-1. build.sh内でpipe.jsを生成
-1. 挿入元ファイルに挿入指示文字列を記入
-1. `node pipe.js -(変数名):(パス)`を起動
+`node pipe.js -(オプション):(値)`を起動
 
-詳細はJSDocのexample参照
+```
+cat $test/test.md | awk 1 \
+| node $mod/pipe.js -footprint:'false' > $test/result.md
+```
+
+オプションについてはJSDoc参照
+
+<details><summary>参考：build.sh内でpipe.js生成ソース</summary>
+
+```
+# 2.1 pipe処理部分の記述
+cat << EOS > $mod/pipe.js
+process.stdin.resume();
+process.stdin.setEncoding('utf8');
+
+var lines = []; ; //標準入力から受け取ったデータを格納する配列
+var reader = require('readline').createInterface({　//readlineという機能を用いて標準入力からデータを受け取る
+  input: process.stdin,
+  output: process.stdout
+});
+reader.on('line', line => lines.push(line));
+reader.on('close', () => {
+  console.log(modifyMD(lines.join('\n'),analyzeArg().opt));
+});
+EOS
+# 2.2 modifyMD(core.js)
+cat $mod/core.js | awk 1 \
+| $esed -x:" *console.log.+\n" -s:"" >> $mod/pipe.js
+# 2.3 その他ライブラリ
+cat $lib/analyzeArg/1.1.0/core.js | awk 1 \
+| $esed -x:" *console.log.+\n" -s:"" >> $mod/pipe.js
+cat $lib/stringify/1.1.1/core.js | awk 1 >> $mod/pipe.js
+cat $lib/whichType/1.0.1/core.js | awk 1 \
+| $esed -x:" *console.log.+\n" -s:"" >> $mod/pipe.js
+```
+
+</details>
 
 # <a name="jsdoc" href="#top">仕様(JSDoc)</a>
+
+<a name="modifyMD"></a>
+
+## modifyMD(arg, [opt]) ⇒ <code>string</code>
+MarkDown文書のタイトルからTOC/足跡リストを作成・追加
+
+**Kind**: global function  
+**Returns**: <code>string</code> - 加工済のMarkDown文書  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| arg | <code>string</code> |  | MarkDown文書の内容 |
+| [opt] | <code>Object</code> | <code>{}</code> | オプション |
+| [opt.number] | <code>boolean</code> | <code>true</code> | タイトルにナンバリングするならtrue |
+| [opt.link] | <code>boolean</code> | <code>false</code> | タイトルに親へのリンクを張るならtrue |
+| [opt.footprint] | <code>boolean</code> | <code>true</code> | 足跡リストを作成するならtrue |
+| [opt.TOC] | <code>boolean</code> | <code>true</code> | TOCを追加するならtrue |
+| [opt.maxJump] | <code>number</code> | <code>10</code> | 何段階の飛び級を許すか |
 
 
 
@@ -142,7 +194,7 @@ function modifyMD(arg,opt={}){
       };
     },
   };
-  //console.log(`${v.whois} start.`);
+  console.log(`${v.whois} start.\nopt=${stringify(opt)}`);
   try {
 
     v.step = 1.1; // 既定値の設定
@@ -153,6 +205,15 @@ function modifyMD(arg,opt={}){
       TOC: true,       // TOCを追加するならtrue
       maxJump: 10,     // 何段階の飛び級を許すか
     },opt);
+    for( v.x in opt ){
+      if( typeof opt[v.x] === 'string' ){
+        if( isNaN(opt[v.x]) ){
+          opt[v.x] = opt[v.x].toLowerCase() === 'true' ? true : false;
+        } else {
+          opt[v.x] = Number(opt[v.x]);
+        }
+      }
+    }
 
     v.step = 1.2; // 章Objの用意
     v.parent = v.root;
@@ -264,7 +325,7 @@ function modifyMD(arg,opt={}){
     });
 
     v.step = 9; // 終了処理
-    //console.log(`${v.whois} normal end.`);
+    console.log(`${v.whois} normal end.`);
     return v.rv;
 
   } catch(e) {

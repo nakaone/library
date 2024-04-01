@@ -10,8 +10,6 @@ reader.on('line', line => lines.push(line));
 reader.on('close', () => {
   console.log(modifyMD(lines.join('\n'),analyzeArg().opt));
 });
-
-const log = (arg) => console.log(arg); // テスト用
 /** MarkDown文書のタイトルからTOC/足跡リストを作成・追加
  * @param {string} arg - MarkDown文書の内容
  * @param {Object} [opt={}] - オプション
@@ -46,7 +44,6 @@ function modifyMD(arg,opt={}){
       };
     },
   };
-  //console.log(`${v.whois} start.`);
   try {
 
     v.step = 1.1; // 既定値の設定
@@ -57,6 +54,15 @@ function modifyMD(arg,opt={}){
       TOC: true,       // TOCを追加するならtrue
       maxJump: 10,     // 何段階の飛び級を許すか
     },opt);
+    for( v.x in opt ){
+      if( typeof opt[v.x] === 'string' ){
+        if( isNaN(opt[v.x]) ){
+          opt[v.x] = opt[v.x].toLowerCase() === 'true' ? true : false;
+        } else {
+          opt[v.x] = Number(opt[v.x]);
+        }
+      }
+    }
 
     v.step = 1.2; // 章Objの用意
     v.parent = v.root;
@@ -168,7 +174,6 @@ function modifyMD(arg,opt={}){
     });
 
     v.step = 9; // 終了処理
-    //console.log(`${v.whois} normal end.`);
     return v.rv;
 
   } catch(e) {

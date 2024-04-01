@@ -27,7 +27,7 @@ $mod/build.sh
 cat $test/test.md | awk 1 \
 | node $mod/pipe.js > $test/result.md
 cat $test/result.md | awk 1 \
-| node $mod/pipe.js > $test/result2.md
+| node $mod/pipe.js -footprint:'false' > $test/result2.md
 
 
 echo "\n$hr[modifyMD] test.sh end$hr"

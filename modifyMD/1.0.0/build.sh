@@ -43,13 +43,10 @@ reader.on('line', line => lines.push(line));
 reader.on('close', () => {
   console.log(modifyMD(lines.join('\n'),analyzeArg().opt));
 });
-
-const log = (arg) => console.log(arg); // テスト用
 EOS
 # 2.2 modifyMD(core.js)
-#cat $mod/core.js | awk 1 \
-#| $esed -x:" *console.log.+\n" -s:"" >> $mod/pipe.js
-cat $mod/core.js | awk 1 >> $mod/pipe.js
+cat $mod/core.js | awk 1 \
+| $esed -x:" *console.log.+\n" -s:"" >> $mod/pipe.js
 # 2.3 その他ライブラリ
 cat $lib/analyzeArg/1.1.0/core.js | awk 1 \
 | $esed -x:" *console.log.+\n" -s:"" >> $mod/pipe.js
@@ -59,9 +56,9 @@ cat $lib/whichType/1.0.1/core.js | awk 1 \
 
 
 # ----------------------------------------------
+# 文書化
 # ----------------------------------------------
-touch $tmp/jsdoc.md
-#jsdoc2md $mod/core.js > $tmp/jsdoc.md
+jsdoc2md $mod/core.js > $tmp/jsdoc.md
 cat << EOS > $tmp/source.md
 \`\`\`
 `cat $mod/core.js | awk 1`

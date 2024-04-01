@@ -6,11 +6,45 @@
 
 # pipeでの使用方法
 
-1. build.sh内でpipe.jsを生成
-1. 挿入元ファイルに挿入指示文字列を記入
-1. `node pipe.js -(変数名):(パス)`を起動
+`node pipe.js -(オプション):(値)`を起動
 
-詳細はJSDocのexample参照
+```
+cat $test/test.md | awk 1 \
+| node $mod/pipe.js -footprint:'false' > $test/result.md
+```
+
+オプションについてはJSDoc参照
+
+<details><summary>参考：build.sh内でpipe.js生成ソース</summary>
+
+```
+# 2.1 pipe処理部分の記述
+cat << EOS > $mod/pipe.js
+process.stdin.resume();
+process.stdin.setEncoding('utf8');
+
+var lines = []; ; //標準入力から受け取ったデータを格納する配列
+var reader = require('readline').createInterface({　//readlineという機能を用いて標準入力からデータを受け取る
+  input: process.stdin,
+  output: process.stdout
+});
+reader.on('line', line => lines.push(line));
+reader.on('close', () => {
+  console.log(modifyMD(lines.join('\n'),analyzeArg().opt));
+});
+EOS
+# 2.2 modifyMD(core.js)
+cat $mod/core.js | awk 1 \
+| $esed -x:" *console.log.+\n" -s:"" >> $mod/pipe.js
+# 2.3 その他ライブラリ
+cat $lib/analyzeArg/1.1.0/core.js | awk 1 \
+| $esed -x:" *console.log.+\n" -s:"" >> $mod/pipe.js
+cat $lib/stringify/1.1.1/core.js | awk 1 >> $mod/pipe.js
+cat $lib/whichType/1.0.1/core.js | awk 1 \
+| $esed -x:" *console.log.+\n" -s:"" >> $mod/pipe.js
+```
+
+</details>
 
 # <a name="jsdoc" href="#top">仕様(JSDoc)</a>
 
