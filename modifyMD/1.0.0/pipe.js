@@ -75,6 +75,10 @@ function modifyMD(arg,opt={}){
     // style, ヘッダ・全体のタイトル部分はルートに格納
     v.lastObj = [v.root];
 
+    v.step = 1.3; // modifyMD加工済文書なら元文書に戻す
+    v.m = arg.match(/<!-- modifyMD original document ([\s\S]+?)-->/);
+    if( v.m ) arg = v.m[1].trim();
+
     v.step = 2; // 各行の処理
     v.lines = arg.split('\n');
     for( v.i=0 ; v.i<v.lines.length ; v.i++ ){
@@ -123,7 +127,8 @@ function modifyMD(arg,opt={}){
     });
 
     v.step = 4; // 整形しながら出力
-    v.rv = `<a name="${v.naming(v.root)}"></a>\n${v.root.content}\n`;
+    v.rv = `<!-- modifyMD original document \n${arg}\n-->\n` // 元文書バックアップ
+    + `<a name="${v.naming(v.root)}"></a>\n${v.root.content}\n`;
     if( opt.addTOC ){ // TOCを追加
       v.toc = '# 目次\n\n';
       v.stack.forEach(x => {
