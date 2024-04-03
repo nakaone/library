@@ -62,7 +62,7 @@ function modifyMD(arg,opt={}){
 
     v.step = 1.3; // modifyMD加工済文書なら元文書に戻す
     v.m = arg.match(/<!-- modifyMD original document ([\s\S]+?)-->/);
-    if( v.m ) arg = v.m[1].trim();
+    if( v.m ) arg = v.m[1].replaceAll('--＞','-->').trim();
 
     v.step = 2; // 各行の処理
     v.lines = arg.split('\n');
@@ -111,7 +111,7 @@ function modifyMD(arg,opt={}){
     });
 
     v.step = 4; // 整形しながら出力
-    v.rv = `<!-- modifyMD original document \n${arg}\n-->\n` // 元文書バックアップ
+    v.rv = `<!-- modifyMD original document \n${arg.replaceAll('-->','--＞')}\n-->\n` // 元文書バックアップ
     + `<a name="${v.naming(v.root)}"></a>\n${v.root.content}\n`;
     if( opt.TOC ){ // TOCを追加
       v.toc = '# 目次\n\n';

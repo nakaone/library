@@ -1,6 +1,6 @@
 #!/bin/sh
 # -x  つけるとverbose
-# created with reference to BurgerMenu/2.0.0/build.sh, camp2024/client/build.sh
+# reference: Auth, BurgerMenu, camp2024/client
 set -e # エラー時点で停止
 
 # ----------------------------------------------
@@ -14,32 +14,44 @@ echo "step.1.1 start."
 GitHub="/Users/ena.kaon/Desktop/GitHub"
 lib="$GitHub/library"
 mod="$lib/Auth/2.0.0"
+# ツール
+embed="node $lib/embedRecursively/1.0.0/pipe.js"
+esed="node $lib/esed/1.0.0/pipe.js"
+modify="node $lib/modifyMD/1.0.0/pipe.js"
+querySelector="node $lib/querySelector/2.0.0/core.js"
+# 作業用フォルダの準備
+tmp="$mod/tmp";
+if [ ! -d $tmp ]; then
+  mkdir $tmp
+else 
+  rm -rf $tmp/*
+fi
+w01="$tmp/work01";w02="$tmp/work02";w03="$tmp/work03"
+# 入力ソース
 client="$mod/client"
 server="$mod/server"
 doc="$mod/doc"
-embed="node $lib/embedRecursively/1.0.0/pipe.js"
-esed="node $lib/esed/1.0.0/core.js"
-querySelector="node $lib/querySelector/2.0.0/core.js"
-tmp="$mod/tmp"; rm -rf $tmp/*
-w01="$tmp/work01";w02="$tmp/work02";w03="$tmp/work03"
 
 # 1.2 .DS_storeの全削除
 echo "step.1.2 start."
 cd $mod
 find . -name '.DS_Store' -type f -ls -delete
 
-# 1.3 最終成果物の原型をtmpに作成
+# 1.3 中間・最終成果物の原型をtmpに作成
 echo "step.1.3 start."
-# 1.3.1 core.js
-proto="$tmp/proto.js"
-#cp $client/proto.js $proto
-# 1.3.2 readme.md
-readme="$tmp/readme.md"
+core="$tmp/core.js"; touch $core
+pipe="$tmp/pipe.js"; touch $pipe
+jsdoc="$tmp/jsdoc.md"; touch $jsdoc
+source="$tmp/source.md"; touch $source
+readme="$tmp/readme.md"; touch $readme
+
+# 1.4 使用するクラスを最新化
+#$lib/SingleTableClient/1.0.0/build.sh
 
 # 1.5 関数定義
 echo "step.1.5 start."
 # addSource : プログラムソースを追加
-# {string} $1 - プログラムソース名
+# {string} $1 - プログラムソース名(MD上のラベル)
 # {string} $2 - プログラムソースのフルパス
 # {string} $3 - 成果物の【追加】先ファイル名
 addSource(){
@@ -56,28 +68,38 @@ addSource(){
 EOS
 }
 
-# ----------------------------------------------
-# 4. 仕様書の作成
-# ----------------------------------------------
-# 4.1 JSDocを作成
-echo "step.4.1 start."
-#jsdoc2md $proto > $w01
-#cat $readme | awk 1 | $esed -x:$mdJSDoc -f:$w01 > $w02; cp $w02 $readme
-touch $tmp/jsdoc.md
 
-# 4.2 プログラムソースを作成
-touch $tmp/source.md
+# ----------------------------------------------
+# 2. pipe.jsの生成
+# ----------------------------------------------
 
-# 4.5 解説記事・メニューバー文字列を置換
-echo "step.4.5 start."
+# ----------------------------------------------
+# 3. server.gsの作成
+# ----------------------------------------------
+
+# ----------------------------------------------
+# 4. index.htmlの作成
+# ----------------------------------------------
+
+# ----------------------------------------------
+# 5. 仕様書の作成
+# ----------------------------------------------
+rm $mod/readme.md # 旧版があれば削除
+
+# 5.1 JSDocを作成
+# sedはjsdoc2mdの冒頭4行削除用(強制付加されるtitle,a nameタグの削除)
+#jsdoc2md $script | sed '1,4d' > $jsdoc
+
+# 5.2 ソース部分を作成
+#addSource "core.js" $mod/client/core.js $source
+
+# 5.3 readmeのプロトタイプに外部ファイルを挿入
 cat $doc/proto.md | awk 1 \
-| $embed -lib:"$lib" -doc:"$doc" -tmp:"$tmp" \
+| $embed -lib:$lib -doc:$doc -tmp:$tmp \
 > $readme
 
-# 4.6 tmp/readme.mdを$mod直下にコピー
-echo "step.4.6 start."
-cp $readme $mod/readme.md
-
+# 5.4 MDの見出しを採番、結果を最終成果物として出力
+cat $readme | awk 1 | $modify > $mod/readme.md
 
 echo "\n$hr[Auth] build end$hr"
 echo "##### 注意：BurgerMenu/2.0.0は内容移行後、削除のこと #####\n"
