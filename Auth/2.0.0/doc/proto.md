@@ -5,10 +5,9 @@
 
 「参加者一覧」等、スタッフには必要だが参加者に公開したくないメニューが存在する。これの表示制御を行うため、スタッフと参加者では「権限(auth)」を分ける。
 
-<!--::authClient/authServerとBurgerMenuの連携::$doc/cooperation.md::-->
-<!--::SPAにおける表示制御::$doc/displayControl.md::-->
 <!--::Authクラス処理概要::$doc/overview.md::-->
 <!--::フォルダ構成::$doc/folder.md::-->
+<!--::authClient/authServerとBurgerMenuの連携::$doc/cooperation.md::-->
 
 # 仕様(JSDoc)
 

@@ -6,11 +6,11 @@ set -e # エラー時点で停止
 # ----------------------------------------------
 # 1.事前準備
 # ----------------------------------------------
-hr="\n=======================================\n"
-echo "\n$hr[Auth] build start$hr"
+hr="\n===============================================\n"
+echo "\n$hr`date +"%T"` [Auth] build start$hr"
 
 # 1.1 変数・ツールの定義
-echo "step.1.1 start."
+echo "`date +"%T"` - step.1.1 start."
 GitHub="/Users/ena.kaon/Desktop/GitHub"
 lib="$GitHub/library"
 mod="$lib/Auth/2.0.0"
@@ -33,12 +33,12 @@ server="$mod/server"
 doc="$mod/doc"
 
 # 1.2 .DS_storeの全削除
-echo "step.1.2 start."
+echo "`date +"%T"` - step.1.2 start."
 cd $mod
 find . -name '.DS_Store' -type f -ls -delete
 
 # 1.3 中間・最終成果物の原型をtmpに作成
-echo "step.1.3 start."
+echo "`date +"%T"` - step.1.3 start."
 core="$tmp/core.js"; touch $core
 pipe="$tmp/pipe.js"; touch $pipe
 jsdoc="$tmp/jsdoc.md"; touch $jsdoc
@@ -46,10 +46,11 @@ source="$tmp/source.md"; touch $source
 readme="$tmp/readme.md"; touch $readme
 
 # 1.4 使用するクラスを最新化
+#echo "`date +"%T"` - step.1.4 start."
 #$lib/SingleTableClient/1.0.0/build.sh
 
 # 1.5 関数定義
-echo "step.1.5 start."
+echo "`date +"%T"` - step.1.5 start."
 # addSource : プログラムソースを追加
 # {string} $1 - プログラムソース名(MD上のラベル)
 # {string} $2 - プログラムソースのフルパス
@@ -84,24 +85,29 @@ EOS
 # ----------------------------------------------
 # 5. 仕様書の作成
 # ----------------------------------------------
+echo "`date +"%T"` - step.5 start."
 rm $mod/readme.md # 旧版があれば削除
 
 # 5.1 JSDocを作成
 # sedはjsdoc2mdの冒頭4行削除用(強制付加されるtitle,a nameタグの削除)
+#echo "`date +"%T"` - step.5.1 start."
 #jsdoc2md $script | sed '1,4d' > $jsdoc
 
 # 5.2 ソース部分を作成
+#echo "`date +"%T"` - step.5.2 start."
 #addSource "core.js" $mod/client/core.js $source
 
 # 5.3 readmeのプロトタイプに外部ファイルを挿入
+echo "`date +"%T"` - step.5.3 start."
 cat $doc/proto.md | awk 1 \
 | $embed -lib:$lib -doc:$doc -tmp:$tmp \
 > $readme
 
 # 5.4 MDの見出しを採番、結果を最終成果物として出力
+echo "`date +"%T"` - step.5.4 start."
 cat $readme | awk 1 | $modify > $mod/readme.md
 
-echo "\n$hr[Auth] build end$hr"
+echo "\n$hr`date +"%T"` [Auth] build end$hr"
 echo "##### 注意：BurgerMenu/2.0.0は内容移行後、削除のこと #####\n"
 
 # ===== 以降、バックアップ ===============

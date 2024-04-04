@@ -1,6 +1,6 @@
-# SPAにおける表示制御
+# 全体の流れ
 
-## 募集内容確認〜申込完了までの流れ
+一般公開(募集内容確認)〜申込完了までの大まかな流れは以下のようになる。
 
 - 記号
   - client : camp2024等のブラウザ上のプログラム
@@ -21,11 +21,12 @@ sequenceDiagram
   participant Menu
 
   rect rgba(255, 0, 255, 0.2)
+    user ->> client : 表示要求
+    Note over client : onload時処理
     client ->> Auth : URLクエリ文字列
     Auth ->> client : ID(未定なのでnull)
     client ->> Menu : ID,メニュー生成要求
     Menu ->> client : メニュー(アイコン、nav領域)
-    user ->> client : 表示要求
     client ->> user : 一般公開用画面
   end
 
@@ -51,11 +52,11 @@ sequenceDiagram
   rect rgba(0,0,0,0.1)
     user ->> client : 申込情報呼び出し
     client ->> Auth : ID,検索用関数
-    Note over user,Auth : 検索・編集・更新処理
+    Note over user,Auth : 検索(検索・編集・更新処理)
     client ->> user : 申込情報編集画面
     user ->> client : 申込情報編集結果
     client ->> Auth : ID,更新用関数
-    Note over user,Auth : 検索・編集・更新処理
+    Note over user,Auth : 更新(検索・編集・更新処理)
     client ->> user : 更新結果
   end
 ```
