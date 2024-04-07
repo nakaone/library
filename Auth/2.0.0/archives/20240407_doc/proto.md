@@ -3,33 +3,11 @@
 </style>
 <p class="title"><a name="Auth_top">class Auth</a></p>
 
-イベントサイトにおける募集用・参加者用・スタッフ用メニューの表示制御等、認証に関する処理を行う。
+「参加者一覧」等、スタッフには必要だが参加者に公開したくないメニューが存在する。これの表示制御を行うため、スタッフと参加者では「権限(auth)」を分ける。
 
-クライアント(ブラウザ)側の"class authClient"とサーバ(GAS)側の"class authServer"に分かれるが、一体管理のためソースは一元管理する。
-
-# 機能別処理フロー
-
-<!--::初期化処理::$doc/overview.initial.md::-->
-<!--::onload時処理::$doc/overview.onload.md::-->
-<!--::新規登録::$doc/overview.entry.md::-->
-<!--::ログイン要求::$doc/overview.login.md::-->
-<!--::権限設定(変更)::$doc/overview.permit.md::-->
-<!--::検索・編集・更新::$doc/overview.crud.md::-->
-
-# 設定情報とオブジェクト定義
-
-- client/server共通設定情報(config.common)
-  > クラスメンバ
-- authClient固有設定情報(config.client)
-  > 保持するデータ構造を含む
-- authServer固有設定情報(config.server)
-- 引数・戻り値となるオブジェクトの定義(typedef)
-- ID, RSA鍵(crypto)
-  > client/serverで表にする。使用するライブラリcrypticoの使用方法を含む
-
-# フォルダ構成
-
+<!--::Authクラス処理概要::$doc/overview.md::-->
 <!--::フォルダ構成::$doc/folder.md::-->
+<!--::authClient/authServerとBurgerMenuの連携::$doc/cooperation.md::-->
 
 # 仕様(JSDoc)
 
