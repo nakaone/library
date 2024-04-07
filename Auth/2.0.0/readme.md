@@ -92,111 +92,30 @@ td, .td {
 </style>
 <p class="title"><a name="Auth_top">class Auth</a></p>
 
-「参加者一覧」等、スタッフには必要だが参加者に公開したくないメニューが存在する。これの表示制御を行うため、スタッフと参加者では「権限(auth)」を分ける。
+イベントサイトにおける募集用・参加者用・スタッフ用メニューの表示制御等、認証に関する処理を行う。
 
-# Authクラス処理概要
+クライアント(ブラウザ)側の"class authClient"とサーバ(GAS)側の"class authServer"に分かれるが、一体管理のためソースは一元管理する。
 
-## 全体の流れ
+# 機能別処理フロー
 
-一般公開(募集内容確認)〜申込完了までの大まかな流れは以下のようになる。
+## 初期化処理
 
-- 記号
-  - client : camp2024等のブラウザ上のプログラム
-  - Auth : class authClient+authServer
-  - Menu : class BurgerMenu
-- 領域色
-  - ピンク : ID未定(初回)表示時の処理
-  - 黄色 : 応募申込開始時の処理。詳細は「[新規登録](overview.md#新規登録)」参照
-  - 水色 : メアド登録完了し、申込内容記入用のログイン処理。詳細は「[ログイン要求](overview.md#ログイン要求)」参照
-  - 灰色 : ログイン完了後の申込内容記入処理。詳細は「[検索・編集・更新](overview.md#検索・編集・更新)」参照
+<!--【初期化処理】--＞
 
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant Auth
-  participant Menu
+システム導入時、Google Apps Scriptで一度だけ実行する必要のある処理。
 
-  rect rgba(255, 0, 255, 0.2)
-    user ->> client : 表示要求
-    Note over client : onload時処理
-    client ->> Auth : URLクエリ文字列
-    Auth ->> client : ID(未定なのでnull)
-    client ->> Menu : ID,メニュー生成要求
-    Menu ->> client : メニュー(アイコン、nav領域)
-    client ->> user : 一般公開用画面
-  end
+実行後は秘匿のため、ソースごと削除することを推奨。このため独立した`initial.gs`を作成する。
 
-  rect rgba(255, 255, 0, 0.2)
-    user ->> client : 新規登録
-    client ->> Auth : 新規登録要求
-    Note over user,Auth : 新規登録処理
-    Auth ->> client : ID
-    client ->> client : ID保存
-    client ->> user : 完了通知
-  end
+### server側鍵ペア生成
 
-  rect rgba(0, 255, 255, 0.2)
-    user ->> client : ログイン要求
-    client ->> Auth : ログイン要求
-    Note over user,Auth : ログイン処理
-    Auth ->> client : 権限
-    client ->> client : 権限保存
-    client ->> Menu : メニュー再描画
-    client ->> user : メンバ用画面
-  end
+### シートアクセス権の取得
 
-  rect rgba(0,0,0,0.1)
-    user ->> client : 申込情報呼び出し
-    client ->> Auth : ID,検索用関数
-    Note over user,Auth : 検索(検索・編集・更新処理)
-    client ->> user : 申込情報編集画面
-    user ->> client : 申込情報編集結果
-    client ->> Auth : ID,更新用関数
-    Note over user,Auth : 更新(検索・編集・更新処理)
-    client ->> user : 更新結果
-  end
-```
+### config Objの保存
 
-■作成手順
-
-1. Google Spreadを用意、名簿(list)シートを作成
-1. configに名簿シート各項目の定義を記載
-1. 実装する機能・ページ毎にclient(index.html)にDIV要素を作成
-1. build.shを実行、client,server(server.gs)を生成
-1. index.html,server.gsをシートのApps Scriptとしてコピー、デプロイ
-
-## 前提
-
-### 公開鍵・秘密鍵
-
-窃取したIDでの操作を防止するため、clientで有効期間付きの鍵ペアを生成し、依頼元の信頼性を確保する(CSkey, CPkey : clientの秘密鍵・公開鍵)。
-
-また何らかの手段でCPkeyが窃取されて操作要求が行われた場合、処理結果の暗号化で結果受領を阻止するため、server側も鍵ペアを使用する(SSkey, SPkey : serverの秘密鍵・公開鍵)。
-
-以降の図中で`(XSkey/YPkey)`は「X側の秘密鍵で署名、Y側の公開鍵で暗号化する」の意味。
-
-### シート操作オブジェクト
-
-シートの操作(CRUD)は権限と有効期間の確認が必要なため、以下のようなオブジェクト(ハッシュ)を管理者がソースに埋め込む(configとして定義する)ことで行う。
-
-```
-config.operations = {
-  lookup : {  // {string} 操作名
-    auth : 0, // {number} 操作を許可する権限フラグの論理和
-    from : null, // {string} 有効期間を設定する場合、開始日時文字列
-    to : null, // {string} 同、終了日時文字列
-    func: // {Arrow|Function} 操作を定義する関数
-      (data,id) => data.find(x => x.id === id),
-  },
-  list : {...},
-  update : {...},
-  ...
-}
-```
 
 ## onload時処理
+
+<!--【onload時処理】--＞
 
 ```mermaid
 sequenceDiagram
@@ -229,7 +148,7 @@ sequenceDiagram
          - 保存されていなければ`Auth.ID=未定(null)`
 
 - この段階では「IDが特定されているかどうか」のみ判定
-## 新規登録
+# 新規登録
 
 新規登録では、シート上にIDとメアドのみ作成する。申込者名等、登録内容についてはログイン後に自情報編集画面を呼び出し、修正・加筆を行う。
 
@@ -264,7 +183,7 @@ sequenceDiagram
 - メアドは正規表現による形式チェックのみ、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
 - 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
 - IDはcookieでの保存を想定(∵個人情報では無く、タブを閉じても保存しておきたい)
-## ログイン要求
+# ログイン要求
 
 ```mermaid
 sequenceDiagram
@@ -324,7 +243,7 @@ sequenceDiagram
   - パスコード生成から一定時間内(既定値15分)
   - ログイン可能な権限
 - パスコード入力はダイアログで行う(開発工数低減)
-## 権限設定(変更)
+# 権限設定(変更)
 
 権限を付与すべきかは個別に判断する必要があるため、システム化せず、管理者がシートを直接更新する。
 
@@ -341,7 +260,7 @@ sequenceDiagram
   admin ->> sheet : 権限変更
 ```
 
-## 検索・編集・更新
+# 検索・編集・更新
 
 シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
 例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
@@ -380,92 +299,18 @@ sequenceDiagram
   - 該当IDは当該操作の実行権限を持つか
 
 
-## 【備忘】GAS/htmlでの暗号化
+# 設定情報とオブジェクト定義
 
-### 手順
+- client/server共通設定情報(config.common)
+  > クラスメンバ
+- authClient固有設定情報(config.client)
+  > 保持するデータ構造を含む
+- authServer固有設定情報(config.server)
+- 引数・戻り値となるオブジェクトの定義(typedef)
+- ID, RSA鍵(crypto)
+  > client/serverで表にする。使用するライブラリcrypticoの使用方法を含む
 
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant server
-  participant sheet
-  actor admin
-
-  Note right of server : authServer.constructor()
-  server ->> server : server鍵ペア生成
-
-
-```
-
-- server鍵ペア生成
-
-
-- GASで返したhtml上でcookieの保存はできない
-  ```
-  <script type="text/javascript">
-  document.cookie = 'camp2024=10';  // NG
-  document.cookie = 'pKey=abcdefg'; // NG
-  sessionStorage.setItem("camp2024", "value-sessionStorage"); // OK
-  localStorage.setItem("camp2024", "value-localStorage"); // OK
-  ```
-- sessionStorage, localStorageへの保存はonload時もOK
-
-- GAS
-  - 鍵ペア生成
-  - GASでの保存
-  - 
-
-### javascript用
-
-- Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
-- [Javascriptで公開鍵ペア生成・暗号化/復号をしてみた](https://qiita.com/poruruba/items/272bdc8f539728d5b076)
-
-javascript 鍵ペア ライブラリ
-
-
-### GAS用
-
-GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
-
-- stackoverflow[Generate a public / private Key RSA with Apps Scripts](https://stackoverflow.com/questions/51989469/generate-a-public-private-key-rsa-with-apps-scripts)
-
-
-
-- [GASでトークン等を保存しておけるプロパティサービスについてまとめてみた](https://qiita.com/zumi0/items/85ca400d57f60728a7c7)
-- [GASのプロパティサービス(プロパティストア)とは？3種類の各特徴と使い分け方まとめ](https://auto-worker.com/blog/?p=7829)
-
-鍵ペア生成できそうなのはcrypticoのみ。但しGASライブラリは無いし、requireしなければならない。
-
-- [Google Apps Scriptでrequire()してみる](https://qiita.com/fossamagna/items/7c65e249e1e5ecad51ff)
-
-1. main.jsの`function callHello()`を`global.callHello = function () {`に修正
-1. `browserify main.js -o bundle.js`
-
-失敗。GAS側は予め鍵を保存するよう方針転換。
-
-- [.DERと .PEMという拡張子は鍵の中身じゃなくて、エンコーディングを表している](https://qiita.com/kunichiko/items/12cbccaadcbf41c72735#der%E3%81%A8-pem%E3%81%A8%E3%81%84%E3%81%86%E6%8B%A1%E5%BC%B5%E5%AD%90%E3%81%AF%E9%8D%B5%E3%81%AE%E4%B8%AD%E8%BA%AB%E3%81%98%E3%82%83%E3%81%AA%E3%81%8F%E3%81%A6%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%92%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B)
-
-```
-function getTest(){
-  //スクリプトプロパティを取得し、ログ出力 -> 1度ファイルを閉じた後でも出力される
-  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
-}
-
-function setTest() {
-  //PropertiesServiceでスクリプトプロパティをセット
-  PropertiesService.getScriptProperties().setProperty('TEST1','テスト1です');
-  PropertiesService.getDocumentProperties().setProperty('TEST2','テスト2です');
-  PropertiesService.getDocumentProperties().setProperty('TEST3',{a:10});
-  //スクリプトプロパティを取得し、ログ出力
-  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
-}
-```
+# フォルダ構成
 
 # フォルダ構成
 
@@ -485,125 +330,6 @@ function setTest() {
 - index.html : 
 - server.gs : サーバ側Authのソース
 - readme.md : doc配下を統合した、client/server全体の仕様書
-
-# authClient/authServerとBurgerMenuの連携
-
-表示制御は、authClient/authServerによる権限確認機能と、それに基づいたBurgerMenuによる操作可能メニュー表示制御機能とが連携して行う。
-
-連携は両方を呼び出すプログラム(ex.camp2024)のhtmlとconfigに所定の方法で定義することで実現する。
-
-## Google Spreadシート
-
-## BODYタグ内
-
-## DOMContentLoaded(インスタンス化)
-
-## インスタンス化時の引数定義
-
-authClient/authServerとBurgerMenuで一部共通の値を設定する必要があるので、インスタンス化の際の引数を呼出元のconfigで設定することでこれを実現する。
-
-### 共通部分
-
-<!--:config.cooperation.js:--＞
-
-### authClient特有部分
-
-<!--:config.authClient.js:--＞
-
-### authServer特有部分
-
-<!--:config.authServer.js:--＞
-
-### BurgerMenu特有部分
-
-<!--:config.BurgerMenu.js:--＞
-
-## 【備忘】GAS/htmlでの暗号化
-
-### 手順
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant server
-  participant sheet
-  actor admin
-
-  Note right of server : authServer.constructor()
-  server ->> server : server鍵ペア生成
-
-
-```
-
-- server鍵ペア生成
-
-
-- GASで返したhtml上でcookieの保存はできない
-  ```
-  <script type="text/javascript">
-  document.cookie = 'camp2024=10';  // NG
-  document.cookie = 'pKey=abcdefg'; // NG
-  sessionStorage.setItem("camp2024", "value-sessionStorage"); // OK
-  localStorage.setItem("camp2024", "value-localStorage"); // OK
-  ```
-- sessionStorage, localStorageへの保存はonload時もOK
-
-- GAS
-  - 鍵ペア生成
-  - GASでの保存
-  - 
-
-### javascript用
-
-- Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
-- [Javascriptで公開鍵ペア生成・暗号化/復号をしてみた](https://qiita.com/poruruba/items/272bdc8f539728d5b076)
-
-javascript 鍵ペア ライブラリ
-
-
-### GAS用
-
-GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
-
-- stackoverflow[Generate a public / private Key RSA with Apps Scripts](https://stackoverflow.com/questions/51989469/generate-a-public-private-key-rsa-with-apps-scripts)
-
-
-
-- [GASでトークン等を保存しておけるプロパティサービスについてまとめてみた](https://qiita.com/zumi0/items/85ca400d57f60728a7c7)
-- [GASのプロパティサービス(プロパティストア)とは？3種類の各特徴と使い分け方まとめ](https://auto-worker.com/blog/?p=7829)
-
-鍵ペア生成できそうなのはcrypticoのみ。但しGASライブラリは無いし、requireしなければならない。
-
-- [Google Apps Scriptでrequire()してみる](https://qiita.com/fossamagna/items/7c65e249e1e5ecad51ff)
-
-1. main.jsの`function callHello()`を`global.callHello = function () {`に修正
-1. `browserify main.js -o bundle.js`
-
-失敗。GAS側は予め鍵を保存するよう方針転換。
-
-- [.DERと .PEMという拡張子は鍵の中身じゃなくて、エンコーディングを表している](https://qiita.com/kunichiko/items/12cbccaadcbf41c72735#der%E3%81%A8-pem%E3%81%A8%E3%81%84%E3%81%86%E6%8B%A1%E5%BC%B5%E5%AD%90%E3%81%AF%E9%8D%B5%E3%81%AE%E4%B8%AD%E8%BA%AB%E3%81%98%E3%82%83%E3%81%AA%E3%81%8F%E3%81%A6%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%92%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B)
-
-```
-function getTest(){
-  //スクリプトプロパティを取得し、ログ出力 -> 1度ファイルを閉じた後でも出力される
-  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
-}
-
-function setTest() {
-  //PropertiesServiceでスクリプトプロパティをセット
-  PropertiesService.getScriptProperties().setProperty('TEST1','テスト1です');
-  PropertiesService.getDocumentProperties().setProperty('TEST2','テスト2です');
-  PropertiesService.getDocumentProperties().setProperty('TEST3',{a:10});
-  //スクリプトプロパティを取得し、ログ出力
-  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
-}
-```
 
 
 # 仕様(JSDoc)
@@ -717,170 +443,74 @@ td, .td {
 </style>
 <p class="title"><a name="Auth_top">class Auth</a></p>
 
-「参加者一覧」等、スタッフには必要だが参加者に公開したくないメニューが存在する。これの表示制御を行うため、スタッフと参加者では「権限(auth)」を分ける。
+イベントサイトにおける募集用・参加者用・スタッフ用メニューの表示制御等、認証に関する処理を行う。
+
+クライアント(ブラウザ)側の"class authClient"とサーバ(GAS)側の"class authServer"に分かれるが、一体管理のためソースは一元管理する。
 
 
 # 目次
 
-1. <a href="#ac0001">Authクラス処理概要</a>
-   1. <a href="#ac0002">全体の流れ</a>
-   1. <a href="#ac0003">前提</a>
-      1. <a href="#ac0004">公開鍵・秘密鍵</a>
-      1. <a href="#ac0005">シート操作オブジェクト</a>
+1. <a href="#ac0001">機能別処理フロー</a>
+   1. <a href="#ac0002">初期化処理</a>
+      1. <a href="#ac0003">server側鍵ペア生成</a>
+      1. <a href="#ac0004">シートアクセス権の取得</a>
+      1. <a href="#ac0005">config Objの保存</a>
    1. <a href="#ac0006">onload時処理</a>
-   1. <a href="#ac0007">新規登録</a>
-   1. <a href="#ac0008">ログイン要求</a>
-   1. <a href="#ac0009">権限設定(変更)</a>
-   1. <a href="#ac0010">検索・編集・更新</a>
-   1. <a href="#ac0011">【備忘】GAS/htmlでの暗号化</a>
-      1. <a href="#ac0012">手順</a>
-      1. <a href="#ac0013">javascript用</a>
-      1. <a href="#ac0014">GAS用</a>
-1. <a href="#ac0015">フォルダ構成</a>
-1. <a href="#ac0016">authClient/authServerとBurgerMenuの連携</a>
-   1. <a href="#ac0017">Google Spreadシート</a>
-   1. <a href="#ac0018">BODYタグ内</a>
-   1. <a href="#ac0019">DOMContentLoaded(インスタンス化)</a>
-   1. <a href="#ac0020">インスタンス化時の引数定義</a>
-      1. <a href="#ac0021">共通部分</a>
-      1. <a href="#ac0022">authClient特有部分</a>
-      1. <a href="#ac0023">authServer特有部分</a>
-      1. <a href="#ac0024">BurgerMenu特有部分</a>
-   1. <a href="#ac0025">【備忘】GAS/htmlでの暗号化</a>
-      1. <a href="#ac0026">手順</a>
-      1. <a href="#ac0027">javascript用</a>
-      1. <a href="#ac0028">GAS用</a>
-1. <a href="#ac0029">仕様(JSDoc)</a>
-1. <a href="#ac0030">プログラムソース</a>
-1. <a href="#ac0031">改版履歴</a>
+1. <a href="#ac0007">新規登録</a>
+1. <a href="#ac0008">ログイン要求</a>
+1. <a href="#ac0009">権限設定(変更)</a>
+1. <a href="#ac0010">検索・編集・更新</a>
+1. <a href="#ac0011">設定情報とオブジェクト定義</a>
+1. <a href="#ac0012">フォルダ構成</a>
+1. <a href="#ac0013">フォルダ構成</a>
+1. <a href="#ac0014">仕様(JSDoc)</a>
+1. <a href="#ac0015">プログラムソース</a>
+1. <a href="#ac0016">改版履歴</a>
 
-# 1 Authクラス処理概要<a name="ac0001"></a>
+# 1 機能別処理フロー<a name="ac0001"></a>
 
 [先頭](#ac0000)
-<br>&gt; [Authクラス処理概要 | [フォルダ構成](#ac0015) | [authClient/authServerとBurgerMenuの連携](#ac0016) | [仕様(JSDoc)](#ac0029) | [プログラムソース](#ac0030) | [改版履歴](#ac0031)]
+<br>&gt; [機能別処理フロー | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
 
 
-## 1.1 全体の流れ<a name="ac0002"></a>
+## 1.1 初期化処理<a name="ac0002"></a>
 
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001)
-<br>&gt; [全体の流れ | [前提](#ac0003) | [onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [【備忘】GAS/htmlでの暗号化](#ac0011)]
-
-
-一般公開(募集内容確認)〜申込完了までの大まかな流れは以下のようになる。
-
-- 記号
-  - client : camp2024等のブラウザ上のプログラム
-  - Auth : class authClient+authServer
-  - Menu : class BurgerMenu
-- 領域色
-  - ピンク : ID未定(初回)表示時の処理
-  - 黄色 : 応募申込開始時の処理。詳細は「[新規登録](overview.md#新規登録)」参照
-  - 水色 : メアド登録完了し、申込内容記入用のログイン処理。詳細は「[ログイン要求](overview.md#ログイン要求)」参照
-  - 灰色 : ログイン完了後の申込内容記入処理。詳細は「[検索・編集・更新](overview.md#検索・編集・更新)」参照
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant Auth
-  participant Menu
-
-  rect rgba(255, 0, 255, 0.2)
-    user ->> client : 表示要求
-    Note over client : onload時処理
-    client ->> Auth : URLクエリ文字列
-    Auth ->> client : ID(未定なのでnull)
-    client ->> Menu : ID,メニュー生成要求
-    Menu ->> client : メニュー(アイコン、nav領域)
-    client ->> user : 一般公開用画面
-  end
-
-  rect rgba(255, 255, 0, 0.2)
-    user ->> client : 新規登録
-    client ->> Auth : 新規登録要求
-    Note over user,Auth : 新規登録処理
-    Auth ->> client : ID
-    client ->> client : ID保存
-    client ->> user : 完了通知
-  end
-
-  rect rgba(0, 255, 255, 0.2)
-    user ->> client : ログイン要求
-    client ->> Auth : ログイン要求
-    Note over user,Auth : ログイン処理
-    Auth ->> client : 権限
-    client ->> client : 権限保存
-    client ->> Menu : メニュー再描画
-    client ->> user : メンバ用画面
-  end
-
-  rect rgba(0,0,0,0.1)
-    user ->> client : 申込情報呼び出し
-    client ->> Auth : ID,検索用関数
-    Note over user,Auth : 検索(検索・編集・更新処理)
-    client ->> user : 申込情報編集画面
-    user ->> client : 申込情報編集結果
-    client ->> Auth : ID,更新用関数
-    Note over user,Auth : 更新(検索・編集・更新処理)
-    client ->> user : 更新結果
-  end
-```
-
-■作成手順
-
-1. Google Spreadを用意、名簿(list)シートを作成
-1. configに名簿シート各項目の定義を記載
-1. 実装する機能・ページ毎にclient(index.html)にDIV要素を作成
-1. build.shを実行、client,server(server.gs)を生成
-1. index.html,server.gsをシートのApps Scriptとしてコピー、デプロイ
-
-## 1.2 前提<a name="ac0003"></a>
-
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001)
-<br>&gt; [[全体の流れ](#ac0002) | 前提 | [onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [【備忘】GAS/htmlでの暗号化](#ac0011)]
+[先頭](#ac0000) > [機能別処理フロー](#ac0001)
+<br>&gt; [初期化処理 | [onload時処理](#ac0006)]
 
 
-### 1.2.1 公開鍵・秘密鍵<a name="ac0004"></a>
+<!--【初期化処理】-->
 
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001) > [前提](#ac0003)
-<br>&gt; [公開鍵・秘密鍵 | [シート操作オブジェクト](#ac0005)]
+システム導入時、Google Apps Scriptで一度だけ実行する必要のある処理。
 
+実行後は秘匿のため、ソースごと削除することを推奨。このため独立した`initial.gs`を作成する。
 
-窃取したIDでの操作を防止するため、clientで有効期間付きの鍵ペアを生成し、依頼元の信頼性を確保する(CSkey, CPkey : clientの秘密鍵・公開鍵)。
+### 1.1.1 server側鍵ペア生成<a name="ac0003"></a>
 
-また何らかの手段でCPkeyが窃取されて操作要求が行われた場合、処理結果の暗号化で結果受領を阻止するため、server側も鍵ペアを使用する(SSkey, SPkey : serverの秘密鍵・公開鍵)。
-
-以降の図中で`(XSkey/YPkey)`は「X側の秘密鍵で署名、Y側の公開鍵で暗号化する」の意味。
-
-### 1.2.2 シート操作オブジェクト<a name="ac0005"></a>
-
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001) > [前提](#ac0003)
-<br>&gt; [[公開鍵・秘密鍵](#ac0004) | シート操作オブジェクト]
+[先頭](#ac0000) > [機能別処理フロー](#ac0001) > [初期化処理](#ac0002)
+<br>&gt; [server側鍵ペア生成 | [シートアクセス権の取得](#ac0004) | [config Objの保存](#ac0005)]
 
 
-シートの操作(CRUD)は権限と有効期間の確認が必要なため、以下のようなオブジェクト(ハッシュ)を管理者がソースに埋め込む(configとして定義する)ことで行う。
+### 1.1.2 シートアクセス権の取得<a name="ac0004"></a>
 
-```
-config.operations = {
-  lookup : {  // {string} 操作名
-    auth : 0, // {number} 操作を許可する権限フラグの論理和
-    from : null, // {string} 有効期間を設定する場合、開始日時文字列
-    to : null, // {string} 同、終了日時文字列
-    func: // {Arrow|Function} 操作を定義する関数
-      (data,id) => data.find(x => x.id === id),
-  },
-  list : {...},
-  update : {...},
-  ...
-}
-```
+[先頭](#ac0000) > [機能別処理フロー](#ac0001) > [初期化処理](#ac0002)
+<br>&gt; [[server側鍵ペア生成](#ac0003) | シートアクセス権の取得 | [config Objの保存](#ac0005)]
 
-## 1.3 onload時処理<a name="ac0006"></a>
 
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001)
-<br>&gt; [[全体の流れ](#ac0002) | [前提](#ac0003) | onload時処理 | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [【備忘】GAS/htmlでの暗号化](#ac0011)]
+### 1.1.3 config Objの保存<a name="ac0005"></a>
 
+[先頭](#ac0000) > [機能別処理フロー](#ac0001) > [初期化処理](#ac0002)
+<br>&gt; [[server側鍵ペア生成](#ac0003) | [シートアクセス権の取得](#ac0004) | config Objの保存]
+
+
+
+## 1.2 onload時処理<a name="ac0006"></a>
+
+[先頭](#ac0000) > [機能別処理フロー](#ac0001)
+<br>&gt; [[初期化処理](#ac0002) | onload時処理]
+
+
+<!--【onload時処理】-->
 
 ```mermaid
 sequenceDiagram
@@ -913,10 +543,10 @@ sequenceDiagram
          - 保存されていなければ`Auth.ID=未定(null)`
 
 - この段階では「IDが特定されているかどうか」のみ判定
-## 1.4 新規登録<a name="ac0007"></a>
+# 2 新規登録<a name="ac0007"></a>
 
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001)
-<br>&gt; [[全体の流れ](#ac0002) | [前提](#ac0003) | [onload時処理](#ac0006) | 新規登録 | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [【備忘】GAS/htmlでの暗号化](#ac0011)]
+[先頭](#ac0000)
+<br>&gt; [[機能別処理フロー](#ac0001) | 新規登録 | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
 
 
 新規登録では、シート上にIDとメアドのみ作成する。申込者名等、登録内容についてはログイン後に自情報編集画面を呼び出し、修正・加筆を行う。
@@ -952,10 +582,10 @@ sequenceDiagram
 - メアドは正規表現による形式チェックのみ、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
 - 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
 - IDはcookieでの保存を想定(∵個人情報では無く、タブを閉じても保存しておきたい)
-## 1.5 ログイン要求<a name="ac0008"></a>
+# 3 ログイン要求<a name="ac0008"></a>
 
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001)
-<br>&gt; [[全体の流れ](#ac0002) | [前提](#ac0003) | [onload時処理](#ac0006) | [新規登録](#ac0007) | ログイン要求 | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [【備忘】GAS/htmlでの暗号化](#ac0011)]
+[先頭](#ac0000)
+<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | ログイン要求 | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
 
 
 ```mermaid
@@ -1016,10 +646,10 @@ sequenceDiagram
   - パスコード生成から一定時間内(既定値15分)
   - ログイン可能な権限
 - パスコード入力はダイアログで行う(開発工数低減)
-## 1.6 権限設定(変更)<a name="ac0009"></a>
+# 4 権限設定(変更)<a name="ac0009"></a>
 
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001)
-<br>&gt; [[全体の流れ](#ac0002) | [前提](#ac0003) | [onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | 権限設定(変更) | [検索・編集・更新](#ac0010) | [【備忘】GAS/htmlでの暗号化](#ac0011)]
+[先頭](#ac0000)
+<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | 権限設定(変更) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
 
 
 権限を付与すべきかは個別に判断する必要があるため、システム化せず、管理者がシートを直接更新する。
@@ -1037,10 +667,10 @@ sequenceDiagram
   admin ->> sheet : 権限変更
 ```
 
-## 1.7 検索・編集・更新<a name="ac0010"></a>
+# 5 検索・編集・更新<a name="ac0010"></a>
 
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001)
-<br>&gt; [[全体の流れ](#ac0002) | [前提](#ac0003) | [onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | 検索・編集・更新 | [【備忘】GAS/htmlでの暗号化](#ac0011)]
+[先頭](#ac0000)
+<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | 検索・編集・更新 | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
 
 
 シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
@@ -1080,113 +710,31 @@ sequenceDiagram
   - 該当IDは当該操作の実行権限を持つか
 
 
-## 1.8 【備忘】GAS/htmlでの暗号化<a name="ac0011"></a>
-
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001)
-<br>&gt; [[全体の流れ](#ac0002) | [前提](#ac0003) | [onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | 【備忘】GAS/htmlでの暗号化]
-
-
-### 1.8.1 手順<a name="ac0012"></a>
-
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001) > [【備忘】GAS/htmlでの暗号化](#ac0011)
-<br>&gt; [手順 | [javascript用](#ac0013) | [GAS用](#ac0014)]
-
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant server
-  participant sheet
-  actor admin
-
-  Note right of server : authServer.constructor()
-  server ->> server : server鍵ペア生成
-
-
-```
-
-- server鍵ペア生成
-
-
-- GASで返したhtml上でcookieの保存はできない
-  ```
-  <script type="text/javascript">
-  document.cookie = 'camp2024=10';  // NG
-  document.cookie = 'pKey=abcdefg'; // NG
-  sessionStorage.setItem("camp2024", "value-sessionStorage"); // OK
-  localStorage.setItem("camp2024", "value-localStorage"); // OK
-  ```
-- sessionStorage, localStorageへの保存はonload時もOK
-
-- GAS
-  - 鍵ペア生成
-  - GASでの保存
-  - 
-
-### 1.8.2 javascript用<a name="ac0013"></a>
-
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001) > [【備忘】GAS/htmlでの暗号化](#ac0011)
-<br>&gt; [[手順](#ac0012) | javascript用 | [GAS用](#ac0014)]
-
-
-- Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
-- [Javascriptで公開鍵ペア生成・暗号化/復号をしてみた](https://qiita.com/poruruba/items/272bdc8f539728d5b076)
-
-javascript 鍵ペア ライブラリ
-
-
-### 1.8.3 GAS用<a name="ac0014"></a>
-
-[先頭](#ac0000) > [Authクラス処理概要](#ac0001) > [【備忘】GAS/htmlでの暗号化](#ac0011)
-<br>&gt; [[手順](#ac0012) | [javascript用](#ac0013) | GAS用]
-
-
-GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
-
-- stackoverflow[Generate a public / private Key RSA with Apps Scripts](https://stackoverflow.com/questions/51989469/generate-a-public-private-key-rsa-with-apps-scripts)
-
-
-
-- [GASでトークン等を保存しておけるプロパティサービスについてまとめてみた](https://qiita.com/zumi0/items/85ca400d57f60728a7c7)
-- [GASのプロパティサービス(プロパティストア)とは？3種類の各特徴と使い分け方まとめ](https://auto-worker.com/blog/?p=7829)
-
-鍵ペア生成できそうなのはcrypticoのみ。但しGASライブラリは無いし、requireしなければならない。
-
-- [Google Apps Scriptでrequire()してみる](https://qiita.com/fossamagna/items/7c65e249e1e5ecad51ff)
-
-1. main.jsの`function callHello()`を`global.callHello = function () {`に修正
-1. `browserify main.js -o bundle.js`
-
-失敗。GAS側は予め鍵を保存するよう方針転換。
-
-- [.DERと .PEMという拡張子は鍵の中身じゃなくて、エンコーディングを表している](https://qiita.com/kunichiko/items/12cbccaadcbf41c72735#der%E3%81%A8-pem%E3%81%A8%E3%81%84%E3%81%86%E6%8B%A1%E5%BC%B5%E5%AD%90%E3%81%AF%E9%8D%B5%E3%81%AE%E4%B8%AD%E8%BA%AB%E3%81%98%E3%82%83%E3%81%AA%E3%81%8F%E3%81%A6%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%92%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B)
-
-```
-function getTest(){
-  //スクリプトプロパティを取得し、ログ出力 -> 1度ファイルを閉じた後でも出力される
-  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
-}
-
-function setTest() {
-  //PropertiesServiceでスクリプトプロパティをセット
-  PropertiesService.getScriptProperties().setProperty('TEST1','テスト1です');
-  PropertiesService.getDocumentProperties().setProperty('TEST2','テスト2です');
-  PropertiesService.getDocumentProperties().setProperty('TEST3',{a:10});
-  //スクリプトプロパティを取得し、ログ出力
-  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
-}
-```
-
-# 2 フォルダ構成<a name="ac0015"></a>
+# 6 設定情報とオブジェクト定義<a name="ac0011"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[Authクラス処理概要](#ac0001) | フォルダ構成 | [authClient/authServerとBurgerMenuの連携](#ac0016) | [仕様(JSDoc)](#ac0029) | [プログラムソース](#ac0030) | [改版履歴](#ac0031)]
+<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | 設定情報とオブジェクト定義 | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
+
+
+- client/server共通設定情報(config.common)
+  > クラスメンバ
+- authClient固有設定情報(config.client)
+  > 保持するデータ構造を含む
+- authServer固有設定情報(config.server)
+- 引数・戻り値となるオブジェクトの定義(typedef)
+- ID, RSA鍵(crypto)
+  > client/serverで表にする。使用するライブラリcrypticoの使用方法を含む
+
+# 7 フォルダ構成<a name="ac0012"></a>
+
+[先頭](#ac0000)
+<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | フォルダ構成 | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
+
+
+# 8 フォルダ構成<a name="ac0013"></a>
+
+[先頭](#ac0000)
+<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | フォルダ構成 | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
 
 
 - client/ : client(index.html)関係のソース
@@ -1206,198 +754,27 @@ function setTest() {
 - server.gs : サーバ側Authのソース
 - readme.md : doc配下を統合した、client/server全体の仕様書
 
-# 3 authClient/authServerとBurgerMenuの連携<a name="ac0016"></a>
+
+# 9 仕様(JSDoc)<a name="ac0014"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[Authクラス処理概要](#ac0001) | [フォルダ構成](#ac0015) | authClient/authServerとBurgerMenuの連携 | [仕様(JSDoc)](#ac0029) | [プログラムソース](#ac0030) | [改版履歴](#ac0031)]
+<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | 仕様(JSDoc) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
 
 
-表示制御は、authClient/authServerによる権限確認機能と、それに基づいたBurgerMenuによる操作可能メニュー表示制御機能とが連携して行う。
 
-連携は両方を呼び出すプログラム(ex.camp2024)のhtmlとconfigに所定の方法で定義することで実現する。
 
-## 3.1 Google Spreadシート<a name="ac0017"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016)
-<br>&gt; [Google Spreadシート | [BODYタグ内](#ac0018) | [DOMContentLoaded(インスタンス化)](#ac0019) | [インスタンス化時の引数定義](#ac0020) | [【備忘】GAS/htmlでの暗号化](#ac0025)]
-
-
-## 3.2 BODYタグ内<a name="ac0018"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016)
-<br>&gt; [[Google Spreadシート](#ac0017) | BODYタグ内 | [DOMContentLoaded(インスタンス化)](#ac0019) | [インスタンス化時の引数定義](#ac0020) | [【備忘】GAS/htmlでの暗号化](#ac0025)]
-
-
-## 3.3 DOMContentLoaded(インスタンス化)<a name="ac0019"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016)
-<br>&gt; [[Google Spreadシート](#ac0017) | [BODYタグ内](#ac0018) | DOMContentLoaded(インスタンス化) | [インスタンス化時の引数定義](#ac0020) | [【備忘】GAS/htmlでの暗号化](#ac0025)]
-
-
-## 3.4 インスタンス化時の引数定義<a name="ac0020"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016)
-<br>&gt; [[Google Spreadシート](#ac0017) | [BODYタグ内](#ac0018) | [DOMContentLoaded(インスタンス化)](#ac0019) | インスタンス化時の引数定義 | [【備忘】GAS/htmlでの暗号化](#ac0025)]
-
-
-authClient/authServerとBurgerMenuで一部共通の値を設定する必要があるので、インスタンス化の際の引数を呼出元のconfigで設定することでこれを実現する。
-
-### 3.4.1 共通部分<a name="ac0021"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [インスタンス化時の引数定義](#ac0020)
-<br>&gt; [共通部分 | [authClient特有部分](#ac0022) | [authServer特有部分](#ac0023) | [BurgerMenu特有部分](#ac0024)]
-
-
-<!--:config.cooperation.js:-->
-
-### 3.4.2 authClient特有部分<a name="ac0022"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [インスタンス化時の引数定義](#ac0020)
-<br>&gt; [[共通部分](#ac0021) | authClient特有部分 | [authServer特有部分](#ac0023) | [BurgerMenu特有部分](#ac0024)]
-
-
-<!--:config.authClient.js:-->
-
-### 3.4.3 authServer特有部分<a name="ac0023"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [インスタンス化時の引数定義](#ac0020)
-<br>&gt; [[共通部分](#ac0021) | [authClient特有部分](#ac0022) | authServer特有部分 | [BurgerMenu特有部分](#ac0024)]
-
-
-<!--:config.authServer.js:-->
-
-### 3.4.4 BurgerMenu特有部分<a name="ac0024"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [インスタンス化時の引数定義](#ac0020)
-<br>&gt; [[共通部分](#ac0021) | [authClient特有部分](#ac0022) | [authServer特有部分](#ac0023) | BurgerMenu特有部分]
-
-
-<!--:config.BurgerMenu.js:-->
-
-## 3.5 【備忘】GAS/htmlでの暗号化<a name="ac0025"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016)
-<br>&gt; [[Google Spreadシート](#ac0017) | [BODYタグ内](#ac0018) | [DOMContentLoaded(インスタンス化)](#ac0019) | [インスタンス化時の引数定義](#ac0020) | 【備忘】GAS/htmlでの暗号化]
-
-
-### 3.5.1 手順<a name="ac0026"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [【備忘】GAS/htmlでの暗号化](#ac0025)
-<br>&gt; [手順 | [javascript用](#ac0027) | [GAS用](#ac0028)]
-
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant server
-  participant sheet
-  actor admin
-
-  Note right of server : authServer.constructor()
-  server ->> server : server鍵ペア生成
-
-
-```
-
-- server鍵ペア生成
-
-
-- GASで返したhtml上でcookieの保存はできない
-  ```
-  <script type="text/javascript">
-  document.cookie = 'camp2024=10';  // NG
-  document.cookie = 'pKey=abcdefg'; // NG
-  sessionStorage.setItem("camp2024", "value-sessionStorage"); // OK
-  localStorage.setItem("camp2024", "value-localStorage"); // OK
-  ```
-- sessionStorage, localStorageへの保存はonload時もOK
-
-- GAS
-  - 鍵ペア生成
-  - GASでの保存
-  - 
-
-### 3.5.2 javascript用<a name="ac0027"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [【備忘】GAS/htmlでの暗号化](#ac0025)
-<br>&gt; [[手順](#ac0026) | javascript用 | [GAS用](#ac0028)]
-
-
-- Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
-- [Javascriptで公開鍵ペア生成・暗号化/復号をしてみた](https://qiita.com/poruruba/items/272bdc8f539728d5b076)
-
-javascript 鍵ペア ライブラリ
-
-
-### 3.5.3 GAS用<a name="ac0028"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [【備忘】GAS/htmlでの暗号化](#ac0025)
-<br>&gt; [[手順](#ac0026) | [javascript用](#ac0027) | GAS用]
-
-
-GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
-
-- stackoverflow[Generate a public / private Key RSA with Apps Scripts](https://stackoverflow.com/questions/51989469/generate-a-public-private-key-rsa-with-apps-scripts)
-
-
-
-- [GASでトークン等を保存しておけるプロパティサービスについてまとめてみた](https://qiita.com/zumi0/items/85ca400d57f60728a7c7)
-- [GASのプロパティサービス(プロパティストア)とは？3種類の各特徴と使い分け方まとめ](https://auto-worker.com/blog/?p=7829)
-
-鍵ペア生成できそうなのはcrypticoのみ。但しGASライブラリは無いし、requireしなければならない。
-
-- [Google Apps Scriptでrequire()してみる](https://qiita.com/fossamagna/items/7c65e249e1e5ecad51ff)
-
-1. main.jsの`function callHello()`を`global.callHello = function () {`に修正
-1. `browserify main.js -o bundle.js`
-
-失敗。GAS側は予め鍵を保存するよう方針転換。
-
-- [.DERと .PEMという拡張子は鍵の中身じゃなくて、エンコーディングを表している](https://qiita.com/kunichiko/items/12cbccaadcbf41c72735#der%E3%81%A8-pem%E3%81%A8%E3%81%84%E3%81%86%E6%8B%A1%E5%BC%B5%E5%AD%90%E3%81%AF%E9%8D%B5%E3%81%AE%E4%B8%AD%E8%BA%AB%E3%81%98%E3%82%83%E3%81%AA%E3%81%8F%E3%81%A6%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%92%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B)
-
-```
-function getTest(){
-  //スクリプトプロパティを取得し、ログ出力 -> 1度ファイルを閉じた後でも出力される
-  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
-}
-
-function setTest() {
-  //PropertiesServiceでスクリプトプロパティをセット
-  PropertiesService.getScriptProperties().setProperty('TEST1','テスト1です');
-  PropertiesService.getDocumentProperties().setProperty('TEST2','テスト2です');
-  PropertiesService.getDocumentProperties().setProperty('TEST3',{a:10});
-  //スクリプトプロパティを取得し、ログ出力
-  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
-  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
-}
-```
-
-
-# 4 仕様(JSDoc)<a name="ac0029"></a>
+# 10 プログラムソース<a name="ac0015"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[Authクラス処理概要](#ac0001) | [フォルダ構成](#ac0015) | [authClient/authServerとBurgerMenuの連携](#ac0016) | 仕様(JSDoc) | [プログラムソース](#ac0030) | [改版履歴](#ac0031)]
+<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | プログラムソース | [改版履歴](#ac0016)]
 
 
 
 
-# 5 プログラムソース<a name="ac0030"></a>
-
-[先頭](#ac0000)
-<br>&gt; [[Authクラス処理概要](#ac0001) | [フォルダ構成](#ac0015) | [authClient/authServerとBurgerMenuの連携](#ac0016) | [仕様(JSDoc)](#ac0029) | プログラムソース | [改版履歴](#ac0031)]
-
-
-
-
-# 6 改版履歴<a name="ac0031"></a>
+# 11 改版履歴<a name="ac0016"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[Authクラス処理概要](#ac0001) | [フォルダ構成](#ac0015) | [authClient/authServerとBurgerMenuの連携](#ac0016) | [仕様(JSDoc)](#ac0029) | [プログラムソース](#ac0030) | 改版履歴]
+<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | 改版履歴]
 
 
 - rev.2.0.0 : class Authと統合
