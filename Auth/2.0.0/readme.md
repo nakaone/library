@@ -207,9 +207,16 @@ sequenceDiagram
   participant sheet
   actor admin
 
+  user ->> server : 表示要求(URL)
+  alt URLクエリにIDが存在
+    server ->> client : document.cookie=ID
+  end
   client ->> client : インスタンス生成
-  user ->> client : 表示要求
-  client ->> server : 表示要求(クエリ文字列)
+  alt IDが存在
+    client ->> user : メンバ用サイト
+  else
+    client ->> user : 一般公開サイト
+  end
 ```
 
 1. インスタンス生成
@@ -375,6 +382,36 @@ sequenceDiagram
 
 ## 【備忘】GAS/htmlでの暗号化
 
+### 手順
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant client
+  participant server
+  participant sheet
+  actor admin
+
+  Note right of server : authServer.constructor()
+  server ->> server : server鍵ペア生成
+
+
+```
+
+- server鍵ペア生成
+
+
+- GASで返したhtml上でcookieの保存はできない
+  ```
+  <script type="text/javascript">
+  document.cookie = 'camp2024=10';  // NG
+  document.cookie = 'pKey=abcdefg'; // NG
+  sessionStorage.setItem("camp2024", "value-sessionStorage"); // OK
+  localStorage.setItem("camp2024", "value-localStorage"); // OK
+  ```
+- sessionStorage, localStorageへの保存はonload時もOK
+
 - GAS
   - 鍵ペア生成
   - GASでの保存
@@ -390,9 +427,45 @@ javascript 鍵ペア ライブラリ
 
 ### GAS用
 
+GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
+
+- stackoverflow[Generate a public / private Key RSA with Apps Scripts](https://stackoverflow.com/questions/51989469/generate-a-public-private-key-rsa-with-apps-scripts)
+
+
+
 - [GASでトークン等を保存しておけるプロパティサービスについてまとめてみた](https://qiita.com/zumi0/items/85ca400d57f60728a7c7)
 - [GASのプロパティサービス(プロパティストア)とは？3種類の各特徴と使い分け方まとめ](https://auto-worker.com/blog/?p=7829)
 
+鍵ペア生成できそうなのはcrypticoのみ。但しGASライブラリは無いし、requireしなければならない。
+
+- [Google Apps Scriptでrequire()してみる](https://qiita.com/fossamagna/items/7c65e249e1e5ecad51ff)
+
+1. main.jsの`function callHello()`を`global.callHello = function () {`に修正
+1. `browserify main.js -o bundle.js`
+
+失敗。GAS側は予め鍵を保存するよう方針転換。
+
+- [.DERと .PEMという拡張子は鍵の中身じゃなくて、エンコーディングを表している](https://qiita.com/kunichiko/items/12cbccaadcbf41c72735#der%E3%81%A8-pem%E3%81%A8%E3%81%84%E3%81%86%E6%8B%A1%E5%BC%B5%E5%AD%90%E3%81%AF%E9%8D%B5%E3%81%AE%E4%B8%AD%E8%BA%AB%E3%81%98%E3%82%83%E3%81%AA%E3%81%8F%E3%81%A6%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%92%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B)
+
+```
+function getTest(){
+  //スクリプトプロパティを取得し、ログ出力 -> 1度ファイルを閉じた後でも出力される
+  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
+}
+
+function setTest() {
+  //PropertiesServiceでスクリプトプロパティをセット
+  PropertiesService.getScriptProperties().setProperty('TEST1','テスト1です');
+  PropertiesService.getDocumentProperties().setProperty('TEST2','テスト2です');
+  PropertiesService.getDocumentProperties().setProperty('TEST3',{a:10});
+  //スクリプトプロパティを取得し、ログ出力
+  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
+}
+```
 
 # フォルダ構成
 
@@ -447,6 +520,36 @@ authClient/authServerとBurgerMenuで一部共通の値を設定する必要が�
 
 ## 【備忘】GAS/htmlでの暗号化
 
+### 手順
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant client
+  participant server
+  participant sheet
+  actor admin
+
+  Note right of server : authServer.constructor()
+  server ->> server : server鍵ペア生成
+
+
+```
+
+- server鍵ペア生成
+
+
+- GASで返したhtml上でcookieの保存はできない
+  ```
+  <script type="text/javascript">
+  document.cookie = 'camp2024=10';  // NG
+  document.cookie = 'pKey=abcdefg'; // NG
+  sessionStorage.setItem("camp2024", "value-sessionStorage"); // OK
+  localStorage.setItem("camp2024", "value-localStorage"); // OK
+  ```
+- sessionStorage, localStorageへの保存はonload時もOK
+
 - GAS
   - 鍵ペア生成
   - GASでの保存
@@ -462,9 +565,45 @@ javascript 鍵ペア ライブラリ
 
 ### GAS用
 
+GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
+
+- stackoverflow[Generate a public / private Key RSA with Apps Scripts](https://stackoverflow.com/questions/51989469/generate-a-public-private-key-rsa-with-apps-scripts)
+
+
+
 - [GASでトークン等を保存しておけるプロパティサービスについてまとめてみた](https://qiita.com/zumi0/items/85ca400d57f60728a7c7)
 - [GASのプロパティサービス(プロパティストア)とは？3種類の各特徴と使い分け方まとめ](https://auto-worker.com/blog/?p=7829)
 
+鍵ペア生成できそうなのはcrypticoのみ。但しGASライブラリは無いし、requireしなければならない。
+
+- [Google Apps Scriptでrequire()してみる](https://qiita.com/fossamagna/items/7c65e249e1e5ecad51ff)
+
+1. main.jsの`function callHello()`を`global.callHello = function () {`に修正
+1. `browserify main.js -o bundle.js`
+
+失敗。GAS側は予め鍵を保存するよう方針転換。
+
+- [.DERと .PEMという拡張子は鍵の中身じゃなくて、エンコーディングを表している](https://qiita.com/kunichiko/items/12cbccaadcbf41c72735#der%E3%81%A8-pem%E3%81%A8%E3%81%84%E3%81%86%E6%8B%A1%E5%BC%B5%E5%AD%90%E3%81%AF%E9%8D%B5%E3%81%AE%E4%B8%AD%E8%BA%AB%E3%81%98%E3%82%83%E3%81%AA%E3%81%8F%E3%81%A6%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%92%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B)
+
+```
+function getTest(){
+  //スクリプトプロパティを取得し、ログ出力 -> 1度ファイルを閉じた後でも出力される
+  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
+}
+
+function setTest() {
+  //PropertiesServiceでスクリプトプロパティをセット
+  PropertiesService.getScriptProperties().setProperty('TEST1','テスト1です');
+  PropertiesService.getDocumentProperties().setProperty('TEST2','テスト2です');
+  PropertiesService.getDocumentProperties().setProperty('TEST3',{a:10});
+  //スクリプトプロパティを取得し、ログ出力
+  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
+}
+```
 
 
 # 仕様(JSDoc)
@@ -594,29 +733,31 @@ td, .td {
    1. <a href="#ac0009">権限設定(変更)</a>
    1. <a href="#ac0010">検索・編集・更新</a>
    1. <a href="#ac0011">【備忘】GAS/htmlでの暗号化</a>
-      1. <a href="#ac0012">javascript用</a>
-      1. <a href="#ac0013">GAS用</a>
-1. <a href="#ac0014">フォルダ構成</a>
-1. <a href="#ac0015">authClient/authServerとBurgerMenuの連携</a>
-   1. <a href="#ac0016">Google Spreadシート</a>
-   1. <a href="#ac0017">BODYタグ内</a>
-   1. <a href="#ac0018">DOMContentLoaded(インスタンス化)</a>
-   1. <a href="#ac0019">インスタンス化時の引数定義</a>
-      1. <a href="#ac0020">共通部分</a>
-      1. <a href="#ac0021">authClient特有部分</a>
-      1. <a href="#ac0022">authServer特有部分</a>
-      1. <a href="#ac0023">BurgerMenu特有部分</a>
-   1. <a href="#ac0024">【備忘】GAS/htmlでの暗号化</a>
-      1. <a href="#ac0025">javascript用</a>
-      1. <a href="#ac0026">GAS用</a>
-1. <a href="#ac0027">仕様(JSDoc)</a>
-1. <a href="#ac0028">プログラムソース</a>
-1. <a href="#ac0029">改版履歴</a>
+      1. <a href="#ac0012">手順</a>
+      1. <a href="#ac0013">javascript用</a>
+      1. <a href="#ac0014">GAS用</a>
+1. <a href="#ac0015">フォルダ構成</a>
+1. <a href="#ac0016">authClient/authServerとBurgerMenuの連携</a>
+   1. <a href="#ac0017">Google Spreadシート</a>
+   1. <a href="#ac0018">BODYタグ内</a>
+   1. <a href="#ac0019">DOMContentLoaded(インスタンス化)</a>
+   1. <a href="#ac0020">インスタンス化時の引数定義</a>
+      1. <a href="#ac0021">共通部分</a>
+      1. <a href="#ac0022">authClient特有部分</a>
+      1. <a href="#ac0023">authServer特有部分</a>
+      1. <a href="#ac0024">BurgerMenu特有部分</a>
+   1. <a href="#ac0025">【備忘】GAS/htmlでの暗号化</a>
+      1. <a href="#ac0026">手順</a>
+      1. <a href="#ac0027">javascript用</a>
+      1. <a href="#ac0028">GAS用</a>
+1. <a href="#ac0029">仕様(JSDoc)</a>
+1. <a href="#ac0030">プログラムソース</a>
+1. <a href="#ac0031">改版履歴</a>
 
 # 1 Authクラス処理概要<a name="ac0001"></a>
 
 [先頭](#ac0000)
-<br>&gt; [Authクラス処理概要 | [フォルダ構成](#ac0014) | [authClient/authServerとBurgerMenuの連携](#ac0015) | [仕様(JSDoc)](#ac0027) | [プログラムソース](#ac0028) | [改版履歴](#ac0029)]
+<br>&gt; [Authクラス処理概要 | [フォルダ構成](#ac0015) | [authClient/authServerとBurgerMenuの連携](#ac0016) | [仕様(JSDoc)](#ac0029) | [プログラムソース](#ac0030) | [改版履歴](#ac0031)]
 
 
 ## 1.1 全体の流れ<a name="ac0002"></a>
@@ -750,9 +891,16 @@ sequenceDiagram
   participant sheet
   actor admin
 
+  user ->> server : 表示要求(URL)
+  alt URLクエリにIDが存在
+    server ->> client : document.cookie=ID
+  end
   client ->> client : インスタンス生成
-  user ->> client : 表示要求
-  client ->> server : 表示要求(クエリ文字列)
+  alt IDが存在
+    client ->> user : メンバ用サイト
+  else
+    client ->> user : 一般公開サイト
+  end
 ```
 
 1. インスタンス生成
@@ -938,15 +1086,49 @@ sequenceDiagram
 <br>&gt; [[全体の流れ](#ac0002) | [前提](#ac0003) | [onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | 【備忘】GAS/htmlでの暗号化]
 
 
+### 1.8.1 手順<a name="ac0012"></a>
+
+[先頭](#ac0000) > [Authクラス処理概要](#ac0001) > [【備忘】GAS/htmlでの暗号化](#ac0011)
+<br>&gt; [手順 | [javascript用](#ac0013) | [GAS用](#ac0014)]
+
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant client
+  participant server
+  participant sheet
+  actor admin
+
+  Note right of server : authServer.constructor()
+  server ->> server : server鍵ペア生成
+
+
+```
+
+- server鍵ペア生成
+
+
+- GASで返したhtml上でcookieの保存はできない
+  ```
+  <script type="text/javascript">
+  document.cookie = 'camp2024=10';  // NG
+  document.cookie = 'pKey=abcdefg'; // NG
+  sessionStorage.setItem("camp2024", "value-sessionStorage"); // OK
+  localStorage.setItem("camp2024", "value-localStorage"); // OK
+  ```
+- sessionStorage, localStorageへの保存はonload時もOK
+
 - GAS
   - 鍵ペア生成
   - GASでの保存
   - 
 
-### 1.8.1 javascript用<a name="ac0012"></a>
+### 1.8.2 javascript用<a name="ac0013"></a>
 
 [先頭](#ac0000) > [Authクラス処理概要](#ac0001) > [【備忘】GAS/htmlでの暗号化](#ac0011)
-<br>&gt; [javascript用 | [GAS用](#ac0013)]
+<br>&gt; [[手順](#ac0012) | javascript用 | [GAS用](#ac0014)]
 
 
 - Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
@@ -955,20 +1137,56 @@ sequenceDiagram
 javascript 鍵ペア ライブラリ
 
 
-### 1.8.2 GAS用<a name="ac0013"></a>
+### 1.8.3 GAS用<a name="ac0014"></a>
 
 [先頭](#ac0000) > [Authクラス処理概要](#ac0001) > [【備忘】GAS/htmlでの暗号化](#ac0011)
-<br>&gt; [[javascript用](#ac0012) | GAS用]
+<br>&gt; [[手順](#ac0012) | [javascript用](#ac0013) | GAS用]
+
+
+GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
+
+- stackoverflow[Generate a public / private Key RSA with Apps Scripts](https://stackoverflow.com/questions/51989469/generate-a-public-private-key-rsa-with-apps-scripts)
+
 
 
 - [GASでトークン等を保存しておけるプロパティサービスについてまとめてみた](https://qiita.com/zumi0/items/85ca400d57f60728a7c7)
 - [GASのプロパティサービス(プロパティストア)とは？3種類の各特徴と使い分け方まとめ](https://auto-worker.com/blog/?p=7829)
 
+鍵ペア生成できそうなのはcrypticoのみ。但しGASライブラリは無いし、requireしなければならない。
 
-# 2 フォルダ構成<a name="ac0014"></a>
+- [Google Apps Scriptでrequire()してみる](https://qiita.com/fossamagna/items/7c65e249e1e5ecad51ff)
+
+1. main.jsの`function callHello()`を`global.callHello = function () {`に修正
+1. `browserify main.js -o bundle.js`
+
+失敗。GAS側は予め鍵を保存するよう方針転換。
+
+- [.DERと .PEMという拡張子は鍵の中身じゃなくて、エンコーディングを表している](https://qiita.com/kunichiko/items/12cbccaadcbf41c72735#der%E3%81%A8-pem%E3%81%A8%E3%81%84%E3%81%86%E6%8B%A1%E5%BC%B5%E5%AD%90%E3%81%AF%E9%8D%B5%E3%81%AE%E4%B8%AD%E8%BA%AB%E3%81%98%E3%82%83%E3%81%AA%E3%81%8F%E3%81%A6%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%92%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B)
+
+```
+function getTest(){
+  //スクリプトプロパティを取得し、ログ出力 -> 1度ファイルを閉じた後でも出力される
+  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
+}
+
+function setTest() {
+  //PropertiesServiceでスクリプトプロパティをセット
+  PropertiesService.getScriptProperties().setProperty('TEST1','テスト1です');
+  PropertiesService.getDocumentProperties().setProperty('TEST2','テスト2です');
+  PropertiesService.getDocumentProperties().setProperty('TEST3',{a:10});
+  //スクリプトプロパティを取得し、ログ出力
+  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
+}
+```
+
+# 2 フォルダ構成<a name="ac0015"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[Authクラス処理概要](#ac0001) | フォルダ構成 | [authClient/authServerとBurgerMenuの連携](#ac0015) | [仕様(JSDoc)](#ac0027) | [プログラムソース](#ac0028) | [改版履歴](#ac0029)]
+<br>&gt; [[Authクラス処理概要](#ac0001) | フォルダ構成 | [authClient/authServerとBurgerMenuの連携](#ac0016) | [仕様(JSDoc)](#ac0029) | [プログラムソース](#ac0030) | [改版履歴](#ac0031)]
 
 
 - client/ : client(index.html)関係のソース
@@ -988,89 +1206,123 @@ javascript 鍵ペア ライブラリ
 - server.gs : サーバ側Authのソース
 - readme.md : doc配下を統合した、client/server全体の仕様書
 
-# 3 authClient/authServerとBurgerMenuの連携<a name="ac0015"></a>
+# 3 authClient/authServerとBurgerMenuの連携<a name="ac0016"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[Authクラス処理概要](#ac0001) | [フォルダ構成](#ac0014) | authClient/authServerとBurgerMenuの連携 | [仕様(JSDoc)](#ac0027) | [プログラムソース](#ac0028) | [改版履歴](#ac0029)]
+<br>&gt; [[Authクラス処理概要](#ac0001) | [フォルダ構成](#ac0015) | authClient/authServerとBurgerMenuの連携 | [仕様(JSDoc)](#ac0029) | [プログラムソース](#ac0030) | [改版履歴](#ac0031)]
 
 
 表示制御は、authClient/authServerによる権限確認機能と、それに基づいたBurgerMenuによる操作可能メニュー表示制御機能とが連携して行う。
 
 連携は両方を呼び出すプログラム(ex.camp2024)のhtmlとconfigに所定の方法で定義することで実現する。
 
-## 3.1 Google Spreadシート<a name="ac0016"></a>
+## 3.1 Google Spreadシート<a name="ac0017"></a>
 
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0015)
-<br>&gt; [Google Spreadシート | [BODYタグ内](#ac0017) | [DOMContentLoaded(インスタンス化)](#ac0018) | [インスタンス化時の引数定義](#ac0019) | [【備忘】GAS/htmlでの暗号化](#ac0024)]
-
-
-## 3.2 BODYタグ内<a name="ac0017"></a>
-
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0015)
-<br>&gt; [[Google Spreadシート](#ac0016) | BODYタグ内 | [DOMContentLoaded(インスタンス化)](#ac0018) | [インスタンス化時の引数定義](#ac0019) | [【備忘】GAS/htmlでの暗号化](#ac0024)]
+[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016)
+<br>&gt; [Google Spreadシート | [BODYタグ内](#ac0018) | [DOMContentLoaded(インスタンス化)](#ac0019) | [インスタンス化時の引数定義](#ac0020) | [【備忘】GAS/htmlでの暗号化](#ac0025)]
 
 
-## 3.3 DOMContentLoaded(インスタンス化)<a name="ac0018"></a>
+## 3.2 BODYタグ内<a name="ac0018"></a>
 
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0015)
-<br>&gt; [[Google Spreadシート](#ac0016) | [BODYタグ内](#ac0017) | DOMContentLoaded(インスタンス化) | [インスタンス化時の引数定義](#ac0019) | [【備忘】GAS/htmlでの暗号化](#ac0024)]
+[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016)
+<br>&gt; [[Google Spreadシート](#ac0017) | BODYタグ内 | [DOMContentLoaded(インスタンス化)](#ac0019) | [インスタンス化時の引数定義](#ac0020) | [【備忘】GAS/htmlでの暗号化](#ac0025)]
 
 
-## 3.4 インスタンス化時の引数定義<a name="ac0019"></a>
+## 3.3 DOMContentLoaded(インスタンス化)<a name="ac0019"></a>
 
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0015)
-<br>&gt; [[Google Spreadシート](#ac0016) | [BODYタグ内](#ac0017) | [DOMContentLoaded(インスタンス化)](#ac0018) | インスタンス化時の引数定義 | [【備忘】GAS/htmlでの暗号化](#ac0024)]
+[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016)
+<br>&gt; [[Google Spreadシート](#ac0017) | [BODYタグ内](#ac0018) | DOMContentLoaded(インスタンス化) | [インスタンス化時の引数定義](#ac0020) | [【備忘】GAS/htmlでの暗号化](#ac0025)]
+
+
+## 3.4 インスタンス化時の引数定義<a name="ac0020"></a>
+
+[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016)
+<br>&gt; [[Google Spreadシート](#ac0017) | [BODYタグ内](#ac0018) | [DOMContentLoaded(インスタンス化)](#ac0019) | インスタンス化時の引数定義 | [【備忘】GAS/htmlでの暗号化](#ac0025)]
 
 
 authClient/authServerとBurgerMenuで一部共通の値を設定する必要があるので、インスタンス化の際の引数を呼出元のconfigで設定することでこれを実現する。
 
-### 3.4.1 共通部分<a name="ac0020"></a>
+### 3.4.1 共通部分<a name="ac0021"></a>
 
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0015) > [インスタンス化時の引数定義](#ac0019)
-<br>&gt; [共通部分 | [authClient特有部分](#ac0021) | [authServer特有部分](#ac0022) | [BurgerMenu特有部分](#ac0023)]
+[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [インスタンス化時の引数定義](#ac0020)
+<br>&gt; [共通部分 | [authClient特有部分](#ac0022) | [authServer特有部分](#ac0023) | [BurgerMenu特有部分](#ac0024)]
 
 
 <!--:config.cooperation.js:-->
 
-### 3.4.2 authClient特有部分<a name="ac0021"></a>
+### 3.4.2 authClient特有部分<a name="ac0022"></a>
 
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0015) > [インスタンス化時の引数定義](#ac0019)
-<br>&gt; [[共通部分](#ac0020) | authClient特有部分 | [authServer特有部分](#ac0022) | [BurgerMenu特有部分](#ac0023)]
+[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [インスタンス化時の引数定義](#ac0020)
+<br>&gt; [[共通部分](#ac0021) | authClient特有部分 | [authServer特有部分](#ac0023) | [BurgerMenu特有部分](#ac0024)]
 
 
 <!--:config.authClient.js:-->
 
-### 3.4.3 authServer特有部分<a name="ac0022"></a>
+### 3.4.3 authServer特有部分<a name="ac0023"></a>
 
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0015) > [インスタンス化時の引数定義](#ac0019)
-<br>&gt; [[共通部分](#ac0020) | [authClient特有部分](#ac0021) | authServer特有部分 | [BurgerMenu特有部分](#ac0023)]
+[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [インスタンス化時の引数定義](#ac0020)
+<br>&gt; [[共通部分](#ac0021) | [authClient特有部分](#ac0022) | authServer特有部分 | [BurgerMenu特有部分](#ac0024)]
 
 
 <!--:config.authServer.js:-->
 
-### 3.4.4 BurgerMenu特有部分<a name="ac0023"></a>
+### 3.4.4 BurgerMenu特有部分<a name="ac0024"></a>
 
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0015) > [インスタンス化時の引数定義](#ac0019)
-<br>&gt; [[共通部分](#ac0020) | [authClient特有部分](#ac0021) | [authServer特有部分](#ac0022) | BurgerMenu特有部分]
+[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [インスタンス化時の引数定義](#ac0020)
+<br>&gt; [[共通部分](#ac0021) | [authClient特有部分](#ac0022) | [authServer特有部分](#ac0023) | BurgerMenu特有部分]
 
 
 <!--:config.BurgerMenu.js:-->
 
-## 3.5 【備忘】GAS/htmlでの暗号化<a name="ac0024"></a>
+## 3.5 【備忘】GAS/htmlでの暗号化<a name="ac0025"></a>
 
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0015)
-<br>&gt; [[Google Spreadシート](#ac0016) | [BODYタグ内](#ac0017) | [DOMContentLoaded(インスタンス化)](#ac0018) | [インスタンス化時の引数定義](#ac0019) | 【備忘】GAS/htmlでの暗号化]
+[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016)
+<br>&gt; [[Google Spreadシート](#ac0017) | [BODYタグ内](#ac0018) | [DOMContentLoaded(インスタンス化)](#ac0019) | [インスタンス化時の引数定義](#ac0020) | 【備忘】GAS/htmlでの暗号化]
 
+
+### 3.5.1 手順<a name="ac0026"></a>
+
+[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [【備忘】GAS/htmlでの暗号化](#ac0025)
+<br>&gt; [手順 | [javascript用](#ac0027) | [GAS用](#ac0028)]
+
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant client
+  participant server
+  participant sheet
+  actor admin
+
+  Note right of server : authServer.constructor()
+  server ->> server : server鍵ペア生成
+
+
+```
+
+- server鍵ペア生成
+
+
+- GASで返したhtml上でcookieの保存はできない
+  ```
+  <script type="text/javascript">
+  document.cookie = 'camp2024=10';  // NG
+  document.cookie = 'pKey=abcdefg'; // NG
+  sessionStorage.setItem("camp2024", "value-sessionStorage"); // OK
+  localStorage.setItem("camp2024", "value-localStorage"); // OK
+  ```
+- sessionStorage, localStorageへの保存はonload時もOK
 
 - GAS
   - 鍵ペア生成
   - GASでの保存
   - 
 
-### 3.5.1 javascript用<a name="ac0025"></a>
+### 3.5.2 javascript用<a name="ac0027"></a>
 
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0015) > [【備忘】GAS/htmlでの暗号化](#ac0024)
-<br>&gt; [javascript用 | [GAS用](#ac0026)]
+[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [【備忘】GAS/htmlでの暗号化](#ac0025)
+<br>&gt; [[手順](#ac0026) | javascript用 | [GAS用](#ac0028)]
 
 
 - Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
@@ -1079,37 +1331,73 @@ authClient/authServerとBurgerMenuで一部共通の値を設定する必要が�
 javascript 鍵ペア ライブラリ
 
 
-### 3.5.2 GAS用<a name="ac0026"></a>
+### 3.5.3 GAS用<a name="ac0028"></a>
 
-[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0015) > [【備忘】GAS/htmlでの暗号化](#ac0024)
-<br>&gt; [[javascript用](#ac0025) | GAS用]
+[先頭](#ac0000) > [authClient/authServerとBurgerMenuの連携](#ac0016) > [【備忘】GAS/htmlでの暗号化](#ac0025)
+<br>&gt; [[手順](#ac0026) | [javascript用](#ac0027) | GAS用]
+
+
+GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
+
+- stackoverflow[Generate a public / private Key RSA with Apps Scripts](https://stackoverflow.com/questions/51989469/generate-a-public-private-key-rsa-with-apps-scripts)
+
 
 
 - [GASでトークン等を保存しておけるプロパティサービスについてまとめてみた](https://qiita.com/zumi0/items/85ca400d57f60728a7c7)
 - [GASのプロパティサービス(プロパティストア)とは？3種類の各特徴と使い分け方まとめ](https://auto-worker.com/blog/?p=7829)
 
+鍵ペア生成できそうなのはcrypticoのみ。但しGASライブラリは無いし、requireしなければならない。
+
+- [Google Apps Scriptでrequire()してみる](https://qiita.com/fossamagna/items/7c65e249e1e5ecad51ff)
+
+1. main.jsの`function callHello()`を`global.callHello = function () {`に修正
+1. `browserify main.js -o bundle.js`
+
+失敗。GAS側は予め鍵を保存するよう方針転換。
+
+- [.DERと .PEMという拡張子は鍵の中身じゃなくて、エンコーディングを表している](https://qiita.com/kunichiko/items/12cbccaadcbf41c72735#der%E3%81%A8-pem%E3%81%A8%E3%81%84%E3%81%86%E6%8B%A1%E5%BC%B5%E5%AD%90%E3%81%AF%E9%8D%B5%E3%81%AE%E4%B8%AD%E8%BA%AB%E3%81%98%E3%82%83%E3%81%AA%E3%81%8F%E3%81%A6%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%92%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B)
+
+```
+function getTest(){
+  //スクリプトプロパティを取得し、ログ出力 -> 1度ファイルを閉じた後でも出力される
+  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
+}
+
+function setTest() {
+  //PropertiesServiceでスクリプトプロパティをセット
+  PropertiesService.getScriptProperties().setProperty('TEST1','テスト1です');
+  PropertiesService.getDocumentProperties().setProperty('TEST2','テスト2です');
+  PropertiesService.getDocumentProperties().setProperty('TEST3',{a:10});
+  //スクリプトプロパティを取得し、ログ出力
+  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
+}
+```
 
 
-# 4 仕様(JSDoc)<a name="ac0027"></a>
+# 4 仕様(JSDoc)<a name="ac0029"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[Authクラス処理概要](#ac0001) | [フォルダ構成](#ac0014) | [authClient/authServerとBurgerMenuの連携](#ac0015) | 仕様(JSDoc) | [プログラムソース](#ac0028) | [改版履歴](#ac0029)]
+<br>&gt; [[Authクラス処理概要](#ac0001) | [フォルダ構成](#ac0015) | [authClient/authServerとBurgerMenuの連携](#ac0016) | 仕様(JSDoc) | [プログラムソース](#ac0030) | [改版履歴](#ac0031)]
 
 
 
 
-# 5 プログラムソース<a name="ac0028"></a>
-
-[先頭](#ac0000)
-<br>&gt; [[Authクラス処理概要](#ac0001) | [フォルダ構成](#ac0014) | [authClient/authServerとBurgerMenuの連携](#ac0015) | [仕様(JSDoc)](#ac0027) | プログラムソース | [改版履歴](#ac0029)]
-
-
-
-
-# 6 改版履歴<a name="ac0029"></a>
+# 5 プログラムソース<a name="ac0030"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[Authクラス処理概要](#ac0001) | [フォルダ構成](#ac0014) | [authClient/authServerとBurgerMenuの連携](#ac0015) | [仕様(JSDoc)](#ac0027) | [プログラムソース](#ac0028) | 改版履歴]
+<br>&gt; [[Authクラス処理概要](#ac0001) | [フォルダ構成](#ac0015) | [authClient/authServerとBurgerMenuの連携](#ac0016) | [仕様(JSDoc)](#ac0029) | プログラムソース | [改版履歴](#ac0031)]
+
+
+
+
+# 6 改版履歴<a name="ac0031"></a>
+
+[先頭](#ac0000)
+<br>&gt; [[Authクラス処理概要](#ac0001) | [フォルダ構成](#ac0015) | [authClient/authServerとBurgerMenuの連携](#ac0016) | [仕様(JSDoc)](#ac0029) | [プログラムソース](#ac0030) | 改版履歴]
 
 
 - rev.2.0.0 : class Authと統合
