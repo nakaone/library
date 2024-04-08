@@ -24,15 +24,23 @@ const log = (arg) => console.log(arg); // テスト用
  * - 入力内容内の挿入指示文字列
  *   - 「::(パス)::」 ⇒ 該当部分をパスで指定されたファイルの内容で置換
  *   - 「::(タイトル)::(パス)::」 ⇒ 同上。タイトルはメモとして無視される
- *   - 「::(>タイトル)::(パス)::」 ⇒ '>'を除いたタイトルをh1として追加
- * - 読み込まれた文書は一つレベルが下がる(# -> ##)
+ *   - 「::(タイトル)(指示文字列)::(パス)::」 ⇒ 指示文字列の内容は以下
+ *     - 'o'/'x' : 被挿入文書のルート要素が存在した場合、それを残置するか。<br>
+ *       'o':残置、'x':除去(既定値)
+ *     - [+|-][number] : シフトするレベル。既定値'+0'(+0と-0は同値)<br>
+ *       ex. +1 ⇒ 一つレベルを下げる(# -> ##, ## -> ###)
+ * 
+ * 「被挿入文書のルート要素」とは、被挿入文書の最高レベルの章題が単一だった場合、その章題。
+ * 複数だった場合はルート要素とは看做さない。
  * 
  * #### 入力(proto.md)
  * 
  * ```
  * # 開発用メモ
  * 
- * <!--::フォルダ構成::$test/folder.md::-->
+ * ## フォルダ構成
+ * 
+ * <!--::フォルダ構成x+1::$test/folder.md::-->
  * 
  * <!--::>プログラムソース::$test/source.txt::-->
  * ```
@@ -40,7 +48,9 @@ const log = (arg) => console.log(arg); // テスト用
  * #### 被参照ファイル①：./test/folder.md
  * 
  * ```md
- * # フォルダ構成
+ * # フォルダの構造  ※挿入先文書は「フォルダ構成」
+ * 
+ * ## クライアント側
  * - client/ : client(index.html)関係のソース
  *   - commonConfig.js : client/server共通config
  * ```
@@ -69,7 +79,10 @@ const log = (arg) => console.log(arg); // テスト用
  * ```
  * # 開発用メモ
  * 
- * ## フォルダ構成
+ * ## フォルダ構成  ※被挿入文書のタイトル(ルート要素)は除去
+ * 
+ * ### クライアント側  ※レベルが ## -> ### (+1)
+ * 
  * - client/ : client(index.html)関係のソース
  *   - commonConfig.js : client/server共通config
  * 
@@ -154,7 +167,7 @@ function embedRecursively(arg,opt={}){
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
     + `\n${e.message}`
-    + `\narg=${stringify(arg)}\nopt=${stringify(opt)}`;
+    + `\nopt=${stringify(opt)}\narg=${stringify(arg)}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }

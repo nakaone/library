@@ -154,7 +154,7 @@ function embedRecursively(arg,opt={}){
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
     + `\n${e.message}`
-    + `\narg=${stringify(arg)}\nopt=${stringify(opt)}`;
+    + `\nopt=${stringify(opt)}\narg=${stringify(arg)}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }

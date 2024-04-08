@@ -13,7 +13,7 @@ echo "\n$hr[embedRecursively] build start$hr"
 echo "step.1.1 start."
 GitHub="/Users/ena.kaon/Desktop/GitHub"
 lib="$GitHub/library"
-mod="$lib/embedRecursively/1.0.0"
+mod="$lib/embedRecursively/1.1.0"
 esed="node $lib/esed/1.0.0/core.js"
 querySelector="node $lib/querySelector/2.0.0/core.js"
 tmp="$mod/tmp"; rm -rf $tmp/*
