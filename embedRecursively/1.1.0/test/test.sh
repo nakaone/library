@@ -13,7 +13,7 @@ echo "\n$hr[embedRecursively] test.sh start$hr"
 echo "step.1.1 start."
 GitHub="/Users/ena.kaon/Desktop/GitHub"
 lib="$GitHub/library"
-mod="$lib/embedRecursively/1.0.0"
+mod="$lib/embedRecursively/1.1.0"
 test="$mod/test"
 
 # 1.2 pipe.jsの最新化
@@ -34,8 +34,8 @@ cat << EOS > $test/source.md
 EOS
 # 2.3 統合
 echo "step.2 start."
-cat $test/proto.md | awk 1 \
-| node $mod/pipe.js -library:"$lib" -test:"$test" \
+cat $test/parent.md | awk 1 \
+| node $mod/pipe.js -test:"$test" \
 > $test/result.md
 
 echo "\n$hr[embedRecursively] test.sh end$hr"
