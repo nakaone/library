@@ -1,5 +1,3 @@
-const { stringify } = require('querystring');
-
 /** 文書内の挿入指示文字列を指示ファイルの内容で置換(パス指定では変数使用可)
  * @param {string} content - 処理対象テキスト
  * @param {Object.<string:string>} opt - 「::〜::」で指定されるパス名内の変数'$xxx'を置換
@@ -26,7 +24,7 @@ function embedRecursively(content,opt={}){
     titleEx: /^(#+)\s+(.+)$/, // タイトル行の正規表現定義
     repEx: /(<!--|\/\/|\/\*)::(.+)::.*/,  // 置換対象文字列の正規表現定義
   };
-  console.log(`${v.whois} start.\nopt=${stringify(opt)}`);
+  console.log(`${v.whois} start. ====================\nopt=${stringify(opt)}\ncontent start -----\n${content}\ncontent end -----\n`);
   try {
 
     v.step = 1; // 事前準備
@@ -65,11 +63,12 @@ function embedRecursively(content,opt={}){
 
     for( v.i=0 ; v.i<v.lines.length ; v.i++ ){
       v.line = v.lines[v.i];
+      console.log(`l.66 v.line=${v.line}\nopt=${stringify(opt)}\n`);
 
       v.step = 2; // タイトル行の判定・処理
       v.title = v.line.match(v.titleEx);
       if( v.title ){
-        console.log(`v.title=${stringify(v.title)}\nopt.parentLevel=${opt.parentLevel}\ntopLevel=${v.topLevel}\n\n`);
+        console.log(`l.70 opt=${stringify(opt)}\nv.title=${stringify(v.title)}\nv.topLevel=${v.topLevel}\n`);
         v.level = opt.parentLevel + v.title[1].length - v.topLevel + 1;
         if( opt.useRoot || !v.hasRoot || v.level > v.topLevel ){
           v.rv += '#'.repeat(v.level) + ' ' + v.title[2] +'\n';
@@ -79,7 +78,7 @@ function embedRecursively(content,opt={}){
         v.embed = v.line.match(v.repEx);
         if( v.embed ){
           v.step = 3.1; // 再帰呼出用optの作成
-          v.opt = Object.assign(opt,{depth:opt.depth++,parentLevel:v.level,useRoot:false});
+          v.opt = Object.assign({},opt,{depth:opt.depth+1,parentLevel:v.level,useRoot:false});
           v.step = 3.2; // 「::(パス)::」か「::(メモ[+])::(パス)::」形式か判定
           v.m1 = v.embed[2].match(/^(.+?)::(.+)$/);
           if( v.m1 ){
@@ -102,6 +101,7 @@ function embedRecursively(content,opt={}){
           v.step = 3.4; // 被挿入文書の読み込み
           v.child = v.fs.readFileSync(v.path,opt.encoding);
           v.step = 3.5; // 被挿入文書を再帰呼出
+          console.log(`l.103 v.opt=${stringify(v.opt)}`);
           v.r = embedRecursively(v.child, v.opt);
           if( v.r instanceof Error ) throw v.r;
           v.rv += v.r;
