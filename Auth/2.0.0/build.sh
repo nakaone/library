@@ -15,7 +15,7 @@ GitHub="/Users/ena.kaon/Desktop/GitHub"
 lib="$GitHub/library"
 mod="$lib/Auth/2.0.0"
 # ツール
-embed="node $lib/embedRecursively/1.0.0/pipe.js"
+embed="node $lib/embedRecursively/1.1.0/pipe.js"
 esed="node $lib/esed/1.0.0/pipe.js"
 modify="node $lib/modifyMD/1.0.0/pipe.js"
 querySelector="node $lib/querySelector/2.0.0/core.js"

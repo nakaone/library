@@ -96,26 +96,21 @@ td, .td {
 
 クライアント(ブラウザ)側の"class authClient"とサーバ(GAS)側の"class authServer"に分かれるが、一体管理のためソースは一元管理する。
 
-# 機能別処理フロー
+# 初期化処理
 
-## 初期化処理
-
-<!--【初期化処理】--＞
-
-システム導入時、Google Apps Scriptで一度だけ実行する必要のある処理。
+システム導入時、**Google Apps Scriptで一度だけ実行**する必要のある処理。
 
 実行後は秘匿のため、ソースごと削除することを推奨。このため独立した`initial.gs`を作成する。
 
-### server側鍵ペア生成
-
 ### シートアクセス権の取得
 
-### config Objの保存
+### server側鍵ペア生成
 
+### config情報の作成と保存
+
+# 機能別処理フロー
 
 ## onload時処理
-
-<!--【onload時処理】--＞
 
 ```mermaid
 sequenceDiagram
@@ -127,30 +122,37 @@ sequenceDiagram
   actor admin
 
   user ->> server : 表示要求(URL)
-  alt URLクエリにIDが存在
-    server ->> client : document.cookie=ID
-  end
-  client ->> client : インスタンス生成
-  alt IDが存在
-    client ->> user : メンバ用サイト
-  else
-    client ->> user : 一般公開サイト
+  activate server
+  Note right of server : doGet()
+  rect rgba(0, 255, 255, 0.1)
+    server ->> client : HTML(object)+ID
+    activate client
+    deactivate server
+    Note right of client : authClient.constructor()
+    client ->> client : インスタンス生成、IDをブラウザに保存
+    Note right of client : BurgerMenu.constructor()
+    alt IDが存在
+      client ->> user : メンバ用サイト
+    else
+      client ->> user : 一般公開サイト
+    end
+    deactivate client
   end
 ```
 
-1. インスタンス生成
-   1. BurgerMenuインスタンス生成
-      1. AuthインスタンスをBurgerMenuのインスタンスメンバとして生成(以下Burger.auth)
-      1. Burger.auth.IDの値に従ってAuthメニュー描画(メニューアイコン、nav領域)
-   1. Authインスタンス生成
-      1. cookieにIDがあるか確認
-         - cookieにIDが保存されていたらインスタンスのメンバ(以下Auth.ID)として保存
-         - 保存されていなければ`Auth.ID=未定(null)`
+- 水色の部分はhtmlのonload時処理
+- 表示要求に対するserverからの戻り値(ID)は、[HtmlOutput.appendUntrusted()](https://developers.google.com/apps-script/reference/html/html-output?hl=ja#appenduntrustedaddedcontent)を使用して、HTMLの要素として返す。
+- 「インスタンス生成」の処理内容
+  1. authClient.constructor()
+     1. localStorageにIDがあるか確認<br>
+        不存在または不一致なら、serverから戻されたIDをlocalStorageに保存
+  1. BurgerMenu.constructor()
+     1. AuthインスタンスをBurgerMenuのインスタンスメンバとして生成(以下Burger.auth)
+     1. Burger.auth.IDの値に従ってAuthメニュー描画(メニューアイコン、nav領域)
 
-- この段階では「IDが特定されているかどうか」のみ判定
-# 新規登録
+## 新規登録
 
-新規登録では、シート上にIDとメアドのみ作成する。申込者名等、登録内容についてはログイン後に自情報編集画面を呼び出し、修正・加筆を行う。
+新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはログイン後に自情報編集画面を呼び出し、修正・加筆を行う。
 
 ```mermaid
 sequenceDiagram
@@ -174,16 +176,17 @@ sequenceDiagram
   server ->> client : ID
   deactivate server
   client ->> client : ID保存
-  client ->> user : 完了通知
+  client ->> user : 新規登録画面表示
   deactivate client
 ```
 
-- 新規要求ができる期間の制限は、client側でも行う(BurgerMenuの有効期間設定を想定)
+- 応募締切等、新規要求ができる期間の制限は、client側でも行う(BurgerMenuの有効期間設定を想定)
 - メアド入力はダイアログで行う(開発工数低減)
 - メアドは正規表現による形式チェックのみ、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
 - 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
 - IDはcookieでの保存を想定(∵個人情報では無く、タブを閉じても保存しておきたい)
-# ログイン要求
+
+## ログイン要求
 
 ```mermaid
 sequenceDiagram
@@ -243,7 +246,8 @@ sequenceDiagram
   - パスコード生成から一定時間内(既定値15分)
   - ログイン可能な権限
 - パスコード入力はダイアログで行う(開発工数低減)
-# 権限設定(変更)
+
+## 権限設定、変更
 
 権限を付与すべきかは個別に判断する必要があるため、システム化せず、管理者がシートを直接更新する。
 
@@ -260,7 +264,7 @@ sequenceDiagram
   admin ->> sheet : 権限変更
 ```
 
-# 検索・編集・更新
+## 検索・編集・更新
 
 シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
 例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
@@ -298,7 +302,6 @@ sequenceDiagram
   - CPkeyの有効期限
   - 該当IDは当該操作の実行権限を持つか
 
-
 # 設定情報とオブジェクト定義
 
 - client/server共通設定情報(config.common)
@@ -310,7 +313,41 @@ sequenceDiagram
 - ID, RSA鍵(crypto)
   > client/serverで表にする。使用するライブラリcrypticoの使用方法を含む
 
-# フォルダ構成
+## client:localStorageに保存する情報
+
+## client:sessionStorageに保存する情報
+
+## server:プロパティサービスに保存する情報
+
+### server側config
+
+```
+PropertiesService.getDocumentProperties().setProperty('config',{
+
+});
+```
+
+### ユーザ情報
+
+以下のオブジェクトをユーザ単位に作成し、プロパティサービスに保存する(key = String(ID))。
+
+1. {number} id - ユーザID
+1. {string} email - e-mail
+1. {number} created - 本オブジェクトの作成日時(UNIX時刻)
+1. {string} publicKey - ユーザの公開鍵
+1. {number} authority - ユーザの権限
+1. {Object[]} log - ログイン試行のログ。unshiftで保存、先頭を最新にする
+   1. {number} startAt - 試行開始日時(UNIX時刻)
+   1. {number} passcode - パスコード(原則数値6桁)
+   1. {Object[]} trial - 試行。unshiftで保存、先頭を最新にする
+      1. {number} timestamp - 試行日時(UNIX時刻)
+      1. {number} entered - 入力されたパスコード
+      1. {boolean} result - パスコードと入力値の比較結果(true:OK)
+      1. {string} message='' - NGの場合の理由。OKなら空文字列
+   1. {number} endAt - 試行終了日時(UNIX時刻)
+   1. {boolean} result - 試行の結果(true:OK)
+
+- 有効期間内かは最新のendAtから判断
 
 # フォルダ構成
 
@@ -330,7 +367,6 @@ sequenceDiagram
 - index.html : 
 - server.gs : サーバ側Authのソース
 - readme.md : doc配下を統合した、client/server全体の仕様書
-
 
 # 仕様(JSDoc)
 
@@ -450,67 +486,66 @@ td, .td {
 
 # 目次
 
-1. <a href="#ac0001">機能別処理フロー</a>
-   1. <a href="#ac0002">初期化処理</a>
+1. <a href="#ac0001">初期化処理</a>
+      1. <a href="#ac0002">シートアクセス権の取得</a>
       1. <a href="#ac0003">server側鍵ペア生成</a>
-      1. <a href="#ac0004">シートアクセス権の取得</a>
-      1. <a href="#ac0005">config Objの保存</a>
+      1. <a href="#ac0004">config情報の作成と保存</a>
+1. <a href="#ac0005">機能別処理フロー</a>
    1. <a href="#ac0006">onload時処理</a>
-1. <a href="#ac0007">新規登録</a>
-1. <a href="#ac0008">ログイン要求</a>
-1. <a href="#ac0009">権限設定(変更)</a>
-1. <a href="#ac0010">検索・編集・更新</a>
+   1. <a href="#ac0007">新規登録</a>
+   1. <a href="#ac0008">ログイン要求</a>
+   1. <a href="#ac0009">権限設定、変更</a>
+   1. <a href="#ac0010">検索・編集・更新</a>
 1. <a href="#ac0011">設定情報とオブジェクト定義</a>
-1. <a href="#ac0012">フォルダ構成</a>
-1. <a href="#ac0013">フォルダ構成</a>
-1. <a href="#ac0014">仕様(JSDoc)</a>
-1. <a href="#ac0015">プログラムソース</a>
-1. <a href="#ac0016">改版履歴</a>
+   1. <a href="#ac0012">client:localStorageに保存する情報</a>
+   1. <a href="#ac0013">client:sessionStorageに保存する情報</a>
+   1. <a href="#ac0014">server:プロパティサービスに保存する情報</a>
+      1. <a href="#ac0015">server側config</a>
+      1. <a href="#ac0016">ユーザ情報</a>
+1. <a href="#ac0017">フォルダ構成</a>
+1. <a href="#ac0018">仕様(JSDoc)</a>
+1. <a href="#ac0019">プログラムソース</a>
+1. <a href="#ac0020">改版履歴</a>
 
-# 1 機能別処理フロー<a name="ac0001"></a>
+# 1 初期化処理<a name="ac0001"></a>
 
 [先頭](#ac0000)
-<br>&gt; [機能別処理フロー | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
+<br>&gt; [初期化処理 | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0019) | [改版履歴](#ac0020)]
 
 
-## 1.1 初期化処理<a name="ac0002"></a>
-
-[先頭](#ac0000) > [機能別処理フロー](#ac0001)
-<br>&gt; [初期化処理 | [onload時処理](#ac0006)]
-
-
-<!--【初期化処理】-->
-
-システム導入時、Google Apps Scriptで一度だけ実行する必要のある処理。
+システム導入時、**Google Apps Scriptで一度だけ実行**する必要のある処理。
 
 実行後は秘匿のため、ソースごと削除することを推奨。このため独立した`initial.gs`を作成する。
 
-### 1.1.1 server側鍵ペア生成<a name="ac0003"></a>
+### 1.1 シートアクセス権の取得<a name="ac0002"></a>
 
-[先頭](#ac0000) > [機能別処理フロー](#ac0001) > [初期化処理](#ac0002)
-<br>&gt; [server側鍵ペア生成 | [シートアクセス権の取得](#ac0004) | [config Objの保存](#ac0005)]
-
-
-### 1.1.2 シートアクセス権の取得<a name="ac0004"></a>
-
-[先頭](#ac0000) > [機能別処理フロー](#ac0001) > [初期化処理](#ac0002)
-<br>&gt; [[server側鍵ペア生成](#ac0003) | シートアクセス権の取得 | [config Objの保存](#ac0005)]
+[先頭](#ac0000) > [初期化処理](#ac0001)
+<br>&gt; [シートアクセス権の取得 | [server側鍵ペア生成](#ac0003) | [config情報の作成と保存](#ac0004)]
 
 
-### 1.1.3 config Objの保存<a name="ac0005"></a>
+### 1.2 server側鍵ペア生成<a name="ac0003"></a>
 
-[先頭](#ac0000) > [機能別処理フロー](#ac0001) > [初期化処理](#ac0002)
-<br>&gt; [[server側鍵ペア生成](#ac0003) | [シートアクセス権の取得](#ac0004) | config Objの保存]
-
-
-
-## 1.2 onload時処理<a name="ac0006"></a>
-
-[先頭](#ac0000) > [機能別処理フロー](#ac0001)
-<br>&gt; [[初期化処理](#ac0002) | onload時処理]
+[先頭](#ac0000) > [初期化処理](#ac0001)
+<br>&gt; [[シートアクセス権の取得](#ac0002) | server側鍵ペア生成 | [config情報の作成と保存](#ac0004)]
 
 
-<!--【onload時処理】-->
+### 1.3 config情報の作成と保存<a name="ac0004"></a>
+
+[先頭](#ac0000) > [初期化処理](#ac0001)
+<br>&gt; [[シートアクセス権の取得](#ac0002) | [server側鍵ペア生成](#ac0003) | config情報の作成と保存]
+
+
+# 2 機能別処理フロー<a name="ac0005"></a>
+
+[先頭](#ac0000)
+<br>&gt; [[初期化処理](#ac0001) | 機能別処理フロー | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0019) | [改版履歴](#ac0020)]
+
+
+## 2.1 onload時処理<a name="ac0006"></a>
+
+[先頭](#ac0000) > [機能別処理フロー](#ac0005)
+<br>&gt; [onload時処理 | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定、変更](#ac0009) | [検索・編集・更新](#ac0010)]
+
 
 ```mermaid
 sequenceDiagram
@@ -522,34 +557,41 @@ sequenceDiagram
   actor admin
 
   user ->> server : 表示要求(URL)
-  alt URLクエリにIDが存在
-    server ->> client : document.cookie=ID
-  end
-  client ->> client : インスタンス生成
-  alt IDが存在
-    client ->> user : メンバ用サイト
-  else
-    client ->> user : 一般公開サイト
+  activate server
+  Note right of server : doGet()
+  rect rgba(0, 255, 255, 0.1)
+    server ->> client : HTML(object)+ID
+    activate client
+    deactivate server
+    Note right of client : authClient.constructor()
+    client ->> client : インスタンス生成、IDをブラウザに保存
+    Note right of client : BurgerMenu.constructor()
+    alt IDが存在
+      client ->> user : メンバ用サイト
+    else
+      client ->> user : 一般公開サイト
+    end
+    deactivate client
   end
 ```
 
-1. インスタンス生成
-   1. BurgerMenuインスタンス生成
-      1. AuthインスタンスをBurgerMenuのインスタンスメンバとして生成(以下Burger.auth)
-      1. Burger.auth.IDの値に従ってAuthメニュー描画(メニューアイコン、nav領域)
-   1. Authインスタンス生成
-      1. cookieにIDがあるか確認
-         - cookieにIDが保存されていたらインスタンスのメンバ(以下Auth.ID)として保存
-         - 保存されていなければ`Auth.ID=未定(null)`
+- 水色の部分はhtmlのonload時処理
+- 表示要求に対するserverからの戻り値(ID)は、[HtmlOutput.appendUntrusted()](https://developers.google.com/apps-script/reference/html/html-output?hl=ja#appenduntrustedaddedcontent)を使用して、HTMLの要素として返す。
+- 「インスタンス生成」の処理内容
+  1. authClient.constructor()
+     1. localStorageにIDがあるか確認<br>
+        不存在または不一致なら、serverから戻されたIDをlocalStorageに保存
+  1. BurgerMenu.constructor()
+     1. AuthインスタンスをBurgerMenuのインスタンスメンバとして生成(以下Burger.auth)
+     1. Burger.auth.IDの値に従ってAuthメニュー描画(メニューアイコン、nav領域)
 
-- この段階では「IDが特定されているかどうか」のみ判定
-# 2 新規登録<a name="ac0007"></a>
+## 2.2 新規登録<a name="ac0007"></a>
 
-[先頭](#ac0000)
-<br>&gt; [[機能別処理フロー](#ac0001) | 新規登録 | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
+[先頭](#ac0000) > [機能別処理フロー](#ac0005)
+<br>&gt; [[onload時処理](#ac0006) | 新規登録 | [ログイン要求](#ac0008) | [権限設定、変更](#ac0009) | [検索・編集・更新](#ac0010)]
 
 
-新規登録では、シート上にIDとメアドのみ作成する。申込者名等、登録内容についてはログイン後に自情報編集画面を呼び出し、修正・加筆を行う。
+新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはログイン後に自情報編集画面を呼び出し、修正・加筆を行う。
 
 ```mermaid
 sequenceDiagram
@@ -573,19 +615,20 @@ sequenceDiagram
   server ->> client : ID
   deactivate server
   client ->> client : ID保存
-  client ->> user : 完了通知
+  client ->> user : 新規登録画面表示
   deactivate client
 ```
 
-- 新規要求ができる期間の制限は、client側でも行う(BurgerMenuの有効期間設定を想定)
+- 応募締切等、新規要求ができる期間の制限は、client側でも行う(BurgerMenuの有効期間設定を想定)
 - メアド入力はダイアログで行う(開発工数低減)
 - メアドは正規表現による形式チェックのみ、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
 - 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
 - IDはcookieでの保存を想定(∵個人情報では無く、タブを閉じても保存しておきたい)
-# 3 ログイン要求<a name="ac0008"></a>
 
-[先頭](#ac0000)
-<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | ログイン要求 | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
+## 2.3 ログイン要求<a name="ac0008"></a>
+
+[先頭](#ac0000) > [機能別処理フロー](#ac0005)
+<br>&gt; [[onload時処理](#ac0006) | [新規登録](#ac0007) | ログイン要求 | [権限設定、変更](#ac0009) | [検索・編集・更新](#ac0010)]
 
 
 ```mermaid
@@ -646,10 +689,11 @@ sequenceDiagram
   - パスコード生成から一定時間内(既定値15分)
   - ログイン可能な権限
 - パスコード入力はダイアログで行う(開発工数低減)
-# 4 権限設定(変更)<a name="ac0009"></a>
 
-[先頭](#ac0000)
-<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | 権限設定(変更) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
+## 2.4 権限設定、変更<a name="ac0009"></a>
+
+[先頭](#ac0000) > [機能別処理フロー](#ac0005)
+<br>&gt; [[onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | 権限設定、変更 | [検索・編集・更新](#ac0010)]
 
 
 権限を付与すべきかは個別に判断する必要があるため、システム化せず、管理者がシートを直接更新する。
@@ -667,10 +711,10 @@ sequenceDiagram
   admin ->> sheet : 権限変更
 ```
 
-# 5 検索・編集・更新<a name="ac0010"></a>
+## 2.5 検索・編集・更新<a name="ac0010"></a>
 
-[先頭](#ac0000)
-<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | 検索・編集・更新 | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
+[先頭](#ac0000) > [機能別処理フロー](#ac0005)
+<br>&gt; [[onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定、変更](#ac0009) | 検索・編集・更新]
 
 
 シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
@@ -709,11 +753,10 @@ sequenceDiagram
   - CPkeyの有効期限
   - 該当IDは当該操作の実行権限を持つか
 
-
-# 6 設定情報とオブジェクト定義<a name="ac0011"></a>
+# 3 設定情報とオブジェクト定義<a name="ac0011"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | 設定情報とオブジェクト定義 | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | 設定情報とオブジェクト定義 | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0019) | [改版履歴](#ac0020)]
 
 
 - client/server共通設定情報(config.common)
@@ -725,16 +768,66 @@ sequenceDiagram
 - ID, RSA鍵(crypto)
   > client/serverで表にする。使用するライブラリcrypticoの使用方法を含む
 
-# 7 フォルダ構成<a name="ac0012"></a>
+## 3.1 client:localStorageに保存する情報<a name="ac0012"></a>
+
+[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011)
+<br>&gt; [client:localStorageに保存する情報 | [client:sessionStorageに保存する情報](#ac0013) | [server:プロパティサービスに保存する情報](#ac0014)]
+
+
+## 3.2 client:sessionStorageに保存する情報<a name="ac0013"></a>
+
+[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011)
+<br>&gt; [[client:localStorageに保存する情報](#ac0012) | client:sessionStorageに保存する情報 | [server:プロパティサービスに保存する情報](#ac0014)]
+
+
+## 3.3 server:プロパティサービスに保存する情報<a name="ac0014"></a>
+
+[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011)
+<br>&gt; [[client:localStorageに保存する情報](#ac0012) | [client:sessionStorageに保存する情報](#ac0013) | server:プロパティサービスに保存する情報]
+
+
+### 3.3.1 server側config<a name="ac0015"></a>
+
+[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011) > [server:プロパティサービスに保存する情報](#ac0014)
+<br>&gt; [server側config | [ユーザ情報](#ac0016)]
+
+
+```
+PropertiesService.getDocumentProperties().setProperty('config',{
+
+});
+```
+
+### 3.3.2 ユーザ情報<a name="ac0016"></a>
+
+[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011) > [server:プロパティサービスに保存する情報](#ac0014)
+<br>&gt; [[server側config](#ac0015) | ユーザ情報]
+
+
+以下のオブジェクトをユーザ単位に作成し、プロパティサービスに保存する(key = String(ID))。
+
+1. {number} id - ユーザID
+1. {string} email - e-mail
+1. {number} created - 本オブジェクトの作成日時(UNIX時刻)
+1. {string} publicKey - ユーザの公開鍵
+1. {number} authority - ユーザの権限
+1. {Object[]} log - ログイン試行のログ。unshiftで保存、先頭を最新にする
+   1. {number} startAt - 試行開始日時(UNIX時刻)
+   1. {number} passcode - パスコード(原則数値6桁)
+   1. {Object[]} trial - 試行。unshiftで保存、先頭を最新にする
+      1. {number} timestamp - 試行日時(UNIX時刻)
+      1. {number} entered - 入力されたパスコード
+      1. {boolean} result - パスコードと入力値の比較結果(true:OK)
+      1. {string} message='' - NGの場合の理由。OKなら空文字列
+   1. {number} endAt - 試行終了日時(UNIX時刻)
+   1. {boolean} result - 試行の結果(true:OK)
+
+- 有効期間内かは最新のendAtから判断
+
+# 4 フォルダ構成<a name="ac0017"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | フォルダ構成 | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
-
-
-# 8 フォルダ構成<a name="ac0013"></a>
-
-[先頭](#ac0000)
-<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | フォルダ構成 | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | フォルダ構成 | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0019) | [改版履歴](#ac0020)]
 
 
 - client/ : client(index.html)関係のソース
@@ -754,27 +847,26 @@ sequenceDiagram
 - server.gs : サーバ側Authのソース
 - readme.md : doc配下を統合した、client/server全体の仕様書
 
-
-# 9 仕様(JSDoc)<a name="ac0014"></a>
-
-[先頭](#ac0000)
-<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | 仕様(JSDoc) | [プログラムソース](#ac0015) | [改版履歴](#ac0016)]
-
-
-
-
-# 10 プログラムソース<a name="ac0015"></a>
+# 5 仕様(JSDoc)<a name="ac0018"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | プログラムソース | [改版履歴](#ac0016)]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | 仕様(JSDoc) | [プログラムソース](#ac0019) | [改版履歴](#ac0020)]
 
 
 
 
-# 11 改版履歴<a name="ac0016"></a>
+# 6 プログラムソース<a name="ac0019"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[機能別処理フロー](#ac0001) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定(変更)](#ac0009) | [検索・編集・更新](#ac0010) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0012) | [フォルダ構成](#ac0013) | [仕様(JSDoc)](#ac0014) | [プログラムソース](#ac0015) | 改版履歴]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | プログラムソース | [改版履歴](#ac0020)]
+
+
+
+
+# 7 改版履歴<a name="ac0020"></a>
+
+[先頭](#ac0000)
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0019) | 改版履歴]
 
 
 - rev.2.0.0 : class Authと統合
