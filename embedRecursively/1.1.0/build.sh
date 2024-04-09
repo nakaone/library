@@ -44,9 +44,9 @@ reader.on('close', () => {
 });
 EOS
 # 2.2 embedRecursively(core.js)
-cat $mod/core.js | awk 1 >> $mod/pipe.js
-#cat $mod/core.js | awk 1 \
-#| $esed -x:" *console.log.+\n" -s:"" >> $mod/pipe.js
+#cat $mod/core.js | awk 1 >> $mod/pipe.js
+cat $mod/core.js | awk 1 \
+| $esed -x:" *console.log.+\n" -s:"" >> $mod/pipe.js
 # 2.3 その他ライブラリ
 cat $lib/analyzeArg/1.1.0/core.js | awk 1 \
 | $esed -x:" *console.log.+\n" -s:"" >> $mod/pipe.js
