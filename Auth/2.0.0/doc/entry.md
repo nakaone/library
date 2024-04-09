@@ -8,7 +8,7 @@ sequenceDiagram
   actor user
   participant client
   participant server
-  participant sheet
+  participant property
   actor admin
 
   user ->> client : 登録要求
@@ -18,9 +18,9 @@ sequenceDiagram
   user ->> client : メアド
   client ->> server : メアド
   activate server
-  Note right of server : authServer.operation(registMail)
-  server ->> sheet : メアド
-  sheet ->> server : ID
+  Note right of server : authServer.registMail()
+  server ->> property : メアド
+  property ->> server : ID
   server ->> client : ID
   deactivate server
   client ->> client : ID保存

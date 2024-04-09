@@ -118,7 +118,7 @@ sequenceDiagram
   actor user
   participant client
   participant server
-  participant sheet
+  participant property
   actor admin
 
   user ->> server : 表示要求(URL)
@@ -160,7 +160,7 @@ sequenceDiagram
   actor user
   participant client
   participant server
-  participant sheet
+  participant property
   actor admin
 
   user ->> client : 登録要求
@@ -170,9 +170,9 @@ sequenceDiagram
   user ->> client : メアド
   client ->> server : メアド
   activate server
-  Note right of server : authServer.operation(registMail)
-  server ->> sheet : メアド
-  sheet ->> server : ID
+  Note right of server : authServer.registMail()
+  server ->> property : メアド
+  property ->> server : ID
   server ->> client : ID
   deactivate server
   client ->> client : ID保存
@@ -194,7 +194,7 @@ sequenceDiagram
   actor user
   participant client
   participant server
-  participant sheet
+  participant property
   actor admin
 
   user ->> client : ログイン要求
@@ -203,31 +203,31 @@ sequenceDiagram
   client ->> client : 鍵ペア生成、保存
   client ->> server : ID,CPkey(--/--)
   activate server
-  Note right of server : authServer.operation(login1S)
+  Note right of server : authServer.login1S()
   server ->> server : パスコード生成
-  server ->> sheet : ID,パスコード,CPkey
-  sheet ->> server : 該当ID情報
+  server ->> property : ID,パスコード,CPkey
+  property ->> server : 該当ID情報
   server ->> server : ログイン可否確認
   server ->> user : パスコード連絡メール
   server ->> client : SPkey(--/CPkey)
-  client ->> client : SPkeyを保存
   deactivate server
-  client ->> user : ダイアログ表示
+  client ->> client : SPkeyを保存
+  client ->> user : パスコード入力ダイアログ
   deactivate client
   user ->> client : パスコード入力
   activate client
   Note right of client : authClient.login2C()
   client ->> server : ID,パスコード(CSkey/SPkey)
   activate server
-  Note right of server : authServer.operation(login2S)
-  server ->> sheet : ID
-  sheet ->> server : 該当ID情報
+  Note right of server : authServer.login2S()
+  server ->> property : ID
+  property ->> server : 該当ID情報
   server ->> server : パスコード検証
-  server ->> sheet : 検証結果記録
+  server ->> property : 検証結果記録
   server ->> client : 該当IDの権限(SCkey/CPkey)
   deactivate server
   client ->> client : 権限情報を保存、メニュー再描画
-  client ->> user : 完了通知
+  client ->> user : 被要求画面(ex.受付メニュー)
   deactivate client
 ```
 
@@ -235,7 +235,7 @@ sequenceDiagram
 - clientの鍵およびSPkeyはsessionStorageへの保存を想定<br>
   (∵当該session以外からの参照を阻止、かつ永続的な保存は望ましくない)
 - 有効期間内の鍵ペアが存在したら、鍵ペア生成はスキップ
-- 該当ID情報：ID、メアド、権限、現在設定中のパスコード＋生成日時、入力内容＋成否ログ
+- 該当ID情報は[ユーザ情報](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)参照
 - ログイン可否確認
   - 前回ログイン失敗(3回連続失敗)から一定以上の時間経過(既定値1時間)
   - パスコード再発行は上述の条件が満たされる限り認める<br>
@@ -249,7 +249,7 @@ sequenceDiagram
 
 ## 権限設定、変更
 
-権限を付与すべきかは個別に判断する必要があるため、システム化せず、管理者がシートを直接更新する。
+権限を付与すべきかは個別に判断する必要があるため、システム化せず、管理者がソース(`authServer.changeAuth()`)を直接編集、GASコンソール上で実行する。
 
 ```mermaid
 sequenceDiagram
@@ -257,11 +257,17 @@ sequenceDiagram
   actor user
   participant client
   participant server
-  participant sheet
+  participant property
   actor admin
 
   user ->> admin : 権限要求
-  admin ->> sheet : 権限変更
+  admin ->>+ server : 権限設定状況確認
+  Note right of server : authServer.listAuth()
+  server ->>- admin : 権限設定リスト
+  admin ->>+ server : ソース修正、実行
+  Note right of server : authServer.changeAuth()
+  server ->> property : 権限変更
+  server ->>- admin : 権限設定リスト
 ```
 
 ## 検索・編集・更新
@@ -277,6 +283,7 @@ sequenceDiagram
   actor user
   participant client
   participant server
+  participant property
   participant sheet
   actor admin
 
@@ -286,11 +293,11 @@ sequenceDiagram
   client ->> server : ID,操作名,引数(CSkey/SPkey)
   activate server
   Note right of server : authServer.operation(xxx)
-  server ->> sheet : ID
-  sheet ->> server : 該当ID情報
+  server ->> property : ID
+  property ->> server : 該当ID情報
   server ->> server : 署名・権限検証
-  server ->> sheet : 操作名に対応する関数
-  sheet ->> server : 処理結果
+  server ->> sheet : 操作名(xxx)に対応する関数呼び出し
+  sheet ->> server : 関数(xxx)の処理結果
   server ->> client : 操作結果(SSkey/CPkey)
   deactivate server
   client ->> client : 復号＋署名検証、画面生成
@@ -321,11 +328,10 @@ sequenceDiagram
 
 ### server側config
 
-```
-PropertiesService.getDocumentProperties().setProperty('config',{
-
-});
-```
+1. {number} loginRetryInterval=3,600,000(60分) - 前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
+1. {number} numberOfLoginAttempts=3 - ログイン失敗になるまでの試行回数
+1. {number} loginGraceTime=900,000(15分) - パスコード生成からログインまでの猶予時間(ミリ秒)
+1. {number} userLoginLifeTime=86,400,000(24時間) - ログイン(CPkey)有効期間
 
 ### ユーザ情報
 
@@ -553,7 +559,7 @@ sequenceDiagram
   actor user
   participant client
   participant server
-  participant sheet
+  participant property
   actor admin
 
   user ->> server : 表示要求(URL)
@@ -599,7 +605,7 @@ sequenceDiagram
   actor user
   participant client
   participant server
-  participant sheet
+  participant property
   actor admin
 
   user ->> client : 登録要求
@@ -609,9 +615,9 @@ sequenceDiagram
   user ->> client : メアド
   client ->> server : メアド
   activate server
-  Note right of server : authServer.operation(registMail)
-  server ->> sheet : メアド
-  sheet ->> server : ID
+  Note right of server : authServer.registMail()
+  server ->> property : メアド
+  property ->> server : ID
   server ->> client : ID
   deactivate server
   client ->> client : ID保存
@@ -637,7 +643,7 @@ sequenceDiagram
   actor user
   participant client
   participant server
-  participant sheet
+  participant property
   actor admin
 
   user ->> client : ログイン要求
@@ -646,31 +652,31 @@ sequenceDiagram
   client ->> client : 鍵ペア生成、保存
   client ->> server : ID,CPkey(--/--)
   activate server
-  Note right of server : authServer.operation(login1S)
+  Note right of server : authServer.login1S()
   server ->> server : パスコード生成
-  server ->> sheet : ID,パスコード,CPkey
-  sheet ->> server : 該当ID情報
+  server ->> property : ID,パスコード,CPkey
+  property ->> server : 該当ID情報
   server ->> server : ログイン可否確認
   server ->> user : パスコード連絡メール
   server ->> client : SPkey(--/CPkey)
-  client ->> client : SPkeyを保存
   deactivate server
-  client ->> user : ダイアログ表示
+  client ->> client : SPkeyを保存
+  client ->> user : パスコード入力ダイアログ
   deactivate client
   user ->> client : パスコード入力
   activate client
   Note right of client : authClient.login2C()
   client ->> server : ID,パスコード(CSkey/SPkey)
   activate server
-  Note right of server : authServer.operation(login2S)
-  server ->> sheet : ID
-  sheet ->> server : 該当ID情報
+  Note right of server : authServer.login2S()
+  server ->> property : ID
+  property ->> server : 該当ID情報
   server ->> server : パスコード検証
-  server ->> sheet : 検証結果記録
+  server ->> property : 検証結果記録
   server ->> client : 該当IDの権限(SCkey/CPkey)
   deactivate server
   client ->> client : 権限情報を保存、メニュー再描画
-  client ->> user : 完了通知
+  client ->> user : 被要求画面(ex.受付メニュー)
   deactivate client
 ```
 
@@ -678,7 +684,7 @@ sequenceDiagram
 - clientの鍵およびSPkeyはsessionStorageへの保存を想定<br>
   (∵当該session以外からの参照を阻止、かつ永続的な保存は望ましくない)
 - 有効期間内の鍵ペアが存在したら、鍵ペア生成はスキップ
-- 該当ID情報：ID、メアド、権限、現在設定中のパスコード＋生成日時、入力内容＋成否ログ
+- 該当ID情報は[ユーザ情報](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)参照
 - ログイン可否確認
   - 前回ログイン失敗(3回連続失敗)から一定以上の時間経過(既定値1時間)
   - パスコード再発行は上述の条件が満たされる限り認める<br>
@@ -696,7 +702,7 @@ sequenceDiagram
 <br>&gt; [[onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | 権限設定、変更 | [検索・編集・更新](#ac0010)]
 
 
-権限を付与すべきかは個別に判断する必要があるため、システム化せず、管理者がシートを直接更新する。
+権限を付与すべきかは個別に判断する必要があるため、システム化せず、管理者がソース(`authServer.changeAuth()`)を直接編集、GASコンソール上で実行する。
 
 ```mermaid
 sequenceDiagram
@@ -704,11 +710,17 @@ sequenceDiagram
   actor user
   participant client
   participant server
-  participant sheet
+  participant property
   actor admin
 
   user ->> admin : 権限要求
-  admin ->> sheet : 権限変更
+  admin ->>+ server : 権限設定状況確認
+  Note right of server : authServer.listAuth()
+  server ->>- admin : 権限設定リスト
+  admin ->>+ server : ソース修正、実行
+  Note right of server : authServer.changeAuth()
+  server ->> property : 権限変更
+  server ->>- admin : 権限設定リスト
 ```
 
 ## 2.5 検索・編集・更新<a name="ac0010"></a>
@@ -728,6 +740,7 @@ sequenceDiagram
   actor user
   participant client
   participant server
+  participant property
   participant sheet
   actor admin
 
@@ -737,11 +750,11 @@ sequenceDiagram
   client ->> server : ID,操作名,引数(CSkey/SPkey)
   activate server
   Note right of server : authServer.operation(xxx)
-  server ->> sheet : ID
-  sheet ->> server : 該当ID情報
+  server ->> property : ID
+  property ->> server : 該当ID情報
   server ->> server : 署名・権限検証
-  server ->> sheet : 操作名に対応する関数
-  sheet ->> server : 処理結果
+  server ->> sheet : 操作名(xxx)に対応する関数呼び出し
+  sheet ->> server : 関数(xxx)の処理結果
   server ->> client : 操作結果(SSkey/CPkey)
   deactivate server
   client ->> client : 復号＋署名検証、画面生成
@@ -792,11 +805,10 @@ sequenceDiagram
 <br>&gt; [server側config | [ユーザ情報](#ac0016)]
 
 
-```
-PropertiesService.getDocumentProperties().setProperty('config',{
-
-});
-```
+1. {number} loginRetryInterval=3,600,000(60分) - 前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
+1. {number} numberOfLoginAttempts=3 - ログイン失敗になるまでの試行回数
+1. {number} loginGraceTime=900,000(15分) - パスコード生成からログインまでの猶予時間(ミリ秒)
+1. {number} userLoginLifeTime=86,400,000(24時間) - ログイン(CPkey)有効期間
 
 ### 3.3.2 ユーザ情報<a name="ac0016"></a>
 

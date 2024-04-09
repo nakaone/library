@@ -52,11 +52,10 @@
 
 ### server側config
 
-```
-PropertiesService.getDocumentProperties().setProperty('config',{
-
-});
-```
+1. {number} loginRetryInterval=3,600,000(60分) - 前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
+1. {number} numberOfLoginAttempts=3 - ログイン失敗になるまでの試行回数
+1. {number} loginGraceTime=900,000(15分) - パスコード生成からログインまでの猶予時間(ミリ秒)
+1. {number} userLoginLifeTime=86,400,000(24時間) - ログイン(CPkey)有効期間
 
 ### ユーザ情報
 

@@ -11,6 +11,7 @@ sequenceDiagram
   actor user
   participant client
   participant server
+  participant property
   participant sheet
   actor admin
 
@@ -20,11 +21,11 @@ sequenceDiagram
   client ->> server : ID,操作名,引数(CSkey/SPkey)
   activate server
   Note right of server : authServer.operation(xxx)
-  server ->> sheet : ID
-  sheet ->> server : 該当ID情報
+  server ->> property : ID
+  property ->> server : 該当ID情報
   server ->> server : 署名・権限検証
-  server ->> sheet : 操作名に対応する関数
-  sheet ->> server : 処理結果
+  server ->> sheet : 操作名(xxx)に対応する関数呼び出し
+  sheet ->> server : 関数(xxx)の処理結果
   server ->> client : 操作結果(SSkey/CPkey)
   deactivate server
   client ->> client : 復号＋署名検証、画面生成

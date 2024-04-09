@@ -6,7 +6,7 @@ sequenceDiagram
   actor user
   participant client
   participant server
-  participant sheet
+  participant property
   actor admin
 
   user ->> server : 表示要求(URL)
