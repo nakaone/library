@@ -5,9 +5,9 @@
   - proto.md : readme.mdのプロトタイプ
   - xxx.md : readme.mdに埋め込む各記事のソース
 - src/ : プログラムソース
-  - commonConfig.js : client/server共通config
-  - clientConfig.js : client特有のconfig
-  - serverConfig.js : server特有のconfig
+  - config.common.js : client/server共通config
+  - config.client.js : client特有のconfig
+  - config.server.js : server特有のconfig
   - authClient.js : class authClientのテンプレート
   - authServer.js : class authServerのテンプレート
   - authXxxx.yyyy.js : class authClient/Server各メソッドのソース
