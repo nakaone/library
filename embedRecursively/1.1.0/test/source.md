@@ -6,8 +6,8 @@
  * @param {string} [opt.encoding='utf-8'] - 入力ファイルのエンコード
  * @param {number} [opt.depth=0] - 現在処理中の文書の階層
  * @param {number} [opt.parentLevel=0] - 挿入指定文字列が置かれた位置の親要素のレベル
- * @param {boolean} [opt.useRoot=false] - 子文書ルート使用指定
- *   - true : 子文書のルート要素を使用する
+ * @param {boolean} [opt.useRoot=false] - 子文書ルート使用指定<br>
+ *   - true : 子文書のルート要素を使用する<br>
  *   - false : 子文書のルート要素は使用しない(呼出元の要素をルート要素として扱う)
  * @returns {string}
  * 
@@ -21,6 +21,32 @@
  * 
  * 「ルート要素」とは、被挿入文書の最高レベルの章題が単一だった場合、その章題。
  * 複数だった場合はルート要素とは看做さない。
+ * 
+ * #### 呼出元のソース
+ * 
+ * ```
+ * 1. 挿入指定文字列でメモ有り・子文書ルート指定あり
+ * <!--::test11+::$test/ooChild.md::-->
+ * 
+ * 2. 挿入指定文字列でメモ有り・子文書ルート指定なし
+ * <!--::test21::$test/ooChild.md::-->
+ * 
+ * 3. 挿入指定文字列でメモなし・子文書ルート指定あり
+ * <!--::+::$test/ooChild.md::-->
+ * 
+ * 4. 挿入指定文字列でパスのみ指定
+ * <!--::$test/ooChild.md::-->
+ * ```
+ * 
+ * #### pipe用シェル
+ * 
+ * ```bash
+ * test="./test"
+ * cat $test/parent.md | awk 1 \
+ * | node pipe.js -test:"$test" \
+ * > $test/result.md
+ * ```
+ * 
  */
 function embedRecursively(content,opt={}){
   const v = {whois:'embedRecursively',rv:'',step:0,fs:require('fs'),

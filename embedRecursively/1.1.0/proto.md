@@ -10,7 +10,7 @@
 1. 挿入元ファイルに挿入指示文字列を記入
 1. `node pipe.js -(変数名):(パス)`を起動
 
-詳細はJSDocのexample参照
+
 
 # <a name="jsdoc" href="#top">仕様(JSDoc)</a>
 
