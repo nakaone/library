@@ -13,7 +13,7 @@
 | [opt.encoding] | <code>string</code> | <code>&quot;&#x27;utf-8&#x27;&quot;</code> | 入力ファイルのエンコード |
 | [opt.depth] | <code>number</code> | <code>0</code> | 現在処理中の文書の階層 |
 | [opt.parentLevel] | <code>number</code> | <code>0</code> | 挿入指定文字列が置かれた位置の親要素のレベル |
-| [opt.useRoot] | <code>boolean</code> | <code>false</code> | 子文書ルート使用指定。子文書のルート要素を使用するならtrue |
+| [opt.useRoot] | <code>boolean</code> | <code>false</code> | 子文書ルート使用指定   - true : 子文書のルート要素を使用する   - false : 子文書のルート要素は使用しない(呼出元の要素をルート要素として扱う) |
 
 **Example**  
 ```js

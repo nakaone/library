@@ -6,7 +6,9 @@
  * @param {string} [opt.encoding='utf-8'] - 入力ファイルのエンコード
  * @param {number} [opt.depth=0] - 現在処理中の文書の階層
  * @param {number} [opt.parentLevel=0] - 挿入指定文字列が置かれた位置の親要素のレベル
- * @param {boolean} [opt.useRoot=false] - 子文書ルート使用指定。子文書のルート要素を使用するならtrue
+ * @param {boolean} [opt.useRoot=false] - 子文書ルート使用指定
+ *   - true : 子文書のルート要素を使用する
+ *   - false : 子文書のルート要素は使用しない(呼出元の要素をルート要素として扱う)
  * @returns {string}
  * 
  * @example
@@ -34,7 +36,7 @@ function embedRecursively(content,opt={}){
     if( !opt.hasOwnProperty('encoding') ) opt.encoding = 'utf-8';
     if( !opt.hasOwnProperty('depth') ) opt.depth = 0;
     if( !opt.hasOwnProperty('parentLevel') ) opt.parentLevel = 0;
-    if( !opt.hasOwnProperty('useRoot') ) opt.useRoot = opt.depth === 0 ? true : false;
+    if( !opt.hasOwnProperty('useRoot') ) opt.useRoot = false;
 
     v.step = 1.2; // 階層を判定、一定以上なら処理中断
     if( opt.depth > opt.maxDepth ) throw new Error('maxDepth over');
@@ -55,7 +57,7 @@ function embedRecursively(content,opt={}){
     }
     // レベル毎のタイトル行の数をチェック、トップレベル且つ出現回数1ならルート要素
     for( v.i=1 ; v.i<v.map.length ; v.i++ ){
-      if( typeof v.map[v.i] !== 'undefiend' ){
+      if( typeof v.map[v.i] === 'number' ){
         v.topLevel = v.i;
         v.hasRoot = v.map[v.topLevel] === 1;
         break;
@@ -69,7 +71,14 @@ function embedRecursively(content,opt={}){
       v.title = v.line.match(v.titleEx);
       if( v.title ){
         v.level = opt.parentLevel + v.title[1].length - v.topLevel + 1;
-        if( opt.useRoot || !v.hasRoot || v.level > v.topLevel ){
+        console.log(`l.71 v.title=${stringify(v.title)}\nopt=${stringify(opt)}\nv.topLevel=${v.topLevel}\n`);
+        /** 以下の全ての条件を満たす場合、タイトル行は出力しない
+         * 1. 子文書である(opt.depth > 0)
+         * 1. ルート要素は使用しない指定がされている(opt.useRoot === false)
+         * 1. ルート要素を持つ文書である(v.hasRoot === true)
+         * 1. タイトル行のレベルがトップレベル(v.level === v.topLevel)
+         */
+        if(!(opt.depth>0 && !opt.useRoot && v.hasRoot && v.level===v.topLevel)){
           v.rv += '\n' + '#'.repeat(v.level) + ' ' + v.title[2];
         }
       } else {
@@ -77,7 +86,11 @@ function embedRecursively(content,opt={}){
         v.embed = v.line.match(v.repEx);
         if( v.embed ){
           v.step = 3.1; // 再帰呼出用optの作成
-          v.opt = Object.assign({},opt,{depth:opt.depth+1,parentLevel:v.level,useRoot:false});
+          v.opt = Object.assign({},opt,{
+            depth:opt.depth+1,
+            parentLevel:v.level,
+            useRoot:false
+          });
           v.step = 3.2; // 「::(パス)::」か「::(メモ[+])::(パス)::」形式か判定
           v.m1 = v.embed[2].match(/^(.+?)::(.+)$/);
           if( v.m1 ){
@@ -94,7 +107,6 @@ function embedRecursively(content,opt={}){
             v.m2.forEach(x => {
               let y = x.replaceAll(/\$/g,'').replaceAll(/\//g,'');
               v.path = v.path.replace(x,opt[y]+'/');
-              //v.msg += `x=${x}, y=${y}, path=${v.path}\n`;
             });
           }
           v.step = 3.4; // 被挿入文書の読み込み
