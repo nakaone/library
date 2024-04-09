@@ -1,164 +1,15 @@
-<style>
-/* -----------------------------------------------
-  library/CSS/1.3.0/core.css
------------------------------------------------ */
-html, body{
-  width: 100%;
-  margin: 0;
-  /*font-size: 4vw;*/
-  text-size-adjust: none; /* https://gotohayato.com/content/531/ */
-}
-body * {
-  font-size: 1rem;
-  font-family: sans-serif;
-  box-sizing: border-box;
-}
-.num, .right {text-align:right;}
-.screen {padding: 1rem;} /* SPAでの切替用画面 */
-.title { /* Markdown他でのタイトル */
-  font-size: 2.4rem;
-  text-shadow: 2px 2px 5px #888;
-}
+process.stdin.resume();
+process.stdin.setEncoding('utf8');
 
-/* --- テーブル -------------------------------- */
-.table {display:grid}
-th, .th, td, .td {
-  margin: 0.2rem;
-  padding: 0.2rem;
-}
-th, .th {
-  background-color: #888;
-  color: white;
-}
-td, .td {
-  border-bottom: solid 1px #aaa;
-  border-right: solid 1px #aaa;
-}
-
-/* --- 部品 ----------------------------------- */
-.triDown { /* 下向き矢印 */
-  --bw: 50px;
-  width: 0px;
-  height: 0px;
-  border-top: calc(var(--bw) * 0.7) solid #aaa;
-  border-right: var(--bw) solid transparent;
-  border-left: var(--bw) solid transparent;
-  border-bottom: calc(var(--bw) * 0.2) solid transparent;
-}
-
-/* --- 部品：待機画面 --------------------------- */
-.loader,
-.loader:after {
-  border-radius: 50%;
-  width: 10em;
-  height: 10em;
-}
-.loader {
-  margin: 60px auto;
-  font-size: 10px;
-  position: relative;
-  text-indent: -9999em;
-  border-top: 1.1em solid rgba(204,204,204, 0.2);
-  border-right: 1.1em solid rgba(204,204,204, 0.2);
-  border-bottom: 1.1em solid rgba(204,204,204, 0.2);
-  border-left: 1.1em solid #cccccc;
-  -webkit-transform: translateZ(0);
-  -ms-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-animation: load8 1.1s infinite linear;
-  animation: load8 1.1s infinite linear;
-}
-@-webkit-keyframes load8 {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-@keyframes load8 {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-</style>
-
-<p class="title"><a name="top">embedRecursively</a></p>
-
-# pipeでの使用方法
-
-1. build.sh内でpipe.jsを生成
-1. 挿入元ファイルに挿入指示文字列を記入
-1. `node pipe.js -(変数名):(パス)`を起動
-
-
-
-# <a name="jsdoc" href="#top">仕様(JSDoc)</a>
-
-<a name="embedRecursively"></a>
-
-## embedRecursively(content, opt) ⇒ <code>string</code>
-文書内の挿入指示文字列を指示ファイルの内容で置換(パス指定では変数使用可)
-
-**Kind**: global function  
-
-| Param | Type | Default | Description |
-| --- | --- | --- | --- |
-| content | <code>string</code> |  | 処理対象テキスト |
-| opt | <code>Object.&lt;string:string&gt;</code> |  | 「::〜::」で指定されるパス名内の変数'$xxx'を置換 |
-| [opt.maxDepth] | <code>number</code> | <code>10</code> | 最深階層(無限ループ抑止) |
-| [opt.encoding] | <code>string</code> | <code>&quot;&#x27;utf-8&#x27;&quot;</code> | 入力ファイルのエンコード |
-| [opt.depth] | <code>number</code> | <code>0</code> | 現在処理中の文書の階層 |
-| [opt.parentLevel] | <code>number</code> | <code>0</code> | 挿入指定文字列が置かれた位置の親要素のレベル |
-| [opt.useRoot] | <code>boolean</code> | <code>false</code> | 子文書ルート使用指定<br>   - true : 子文書のルート要素を使用する<br>   - false : 子文書のルート要素は使用しない(呼出元の要素をルート要素として扱う) |
-
-**Example**  
-- 呼出元の挿入指示文字列
-  - 「::(パス)::」 ⇒ 該当部分をパスで指定されたファイルの内容で置換
-  - 「::(メモ[+])::(パス)::」 ⇒ 子文書の内容についてのメモ。あくまで備忘であり、使用されない。<br>
-    末尾に'+'が無い場合、子文書のルート要素を削除する。<br>
-    '+'が有った場合、子文書のルート要素を挿入場所の1レベル下の要素として挿入する。
-
-「ルート要素」とは、被挿入文書の最高レベルの章題が単一だった場合、その章題。
-複数だった場合はルート要素とは看做さない。
-
-#### 呼出元のソース
-
-```
-1. 挿入指定文字列でメモ有り・子文書ルート指定あり
-<!--::test11+::$test/ooChild.md::-->
-
-2. 挿入指定文字列でメモ有り・子文書ルート指定なし
-<!--::test21::$test/ooChild.md::-->
-
-3. 挿入指定文字列でメモなし・子文書ルート指定あり
-<!--::+::$test/ooChild.md::-->
-
-4. 挿入指定文字列でパスのみ指定
-<!--::$test/ooChild.md::-->
-```
-
-#### pipe用シェル
-
-```bash
-test="./test"
-cat $test/parent.md | awk 1 \
-| node pipe.js -test:"$test" \
-> $test/result.md
-```
-
-
-# <a name="source" href="#top">プログラムソース</a>
-
-<!-- タイトル(第一レベル)が存在しない場合、ラベルをタイトルとして設定 -->
-```
+var lines = []; ; //標準入力から受け取ったデータを格納する配列
+var reader = require('readline').createInterface({　//readlineという機能を用いて標準入力からデータを受け取る
+  input: process.stdin,
+  output: process.stdout
+});
+reader.on('line', line => lines.push(line));
+reader.on('close', () => {
+  console.log(embedRecursively(lines.join('\n'),analyzeArg().opt));
+});
 /** 文書内の挿入指示文字列を指示ファイルの内容で置換(パス指定では変数使用可)
  * @param {string} content - 処理対象テキスト
  * @param {Object.<string:string>} opt - 「::〜::」で指定されるパス名内の変数'$xxx'を置換
@@ -320,11 +171,3 @@ function embedRecursively(content,opt={}){
     return e;
   }
 }
-```
-
-
-# <a name="revision_history" href="#top">改版履歴</a>
-
-- rev.1.1.0 : 2024/04/08
-  - ルート要素削除指定、レベルシフト指定を追加
-- rev.1.0.0 : 2024/03/29 初版

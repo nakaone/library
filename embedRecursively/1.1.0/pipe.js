@@ -111,9 +111,9 @@ function embedRecursively(content,opt={}){
          * 1. 子文書である(opt.depth > 0)
          * 1. ルート要素は使用しない指定がされている(opt.useRoot === false)
          * 1. ルート要素を持つ文書である(v.hasRoot === true)
-         * 1. タイトル行のレベルがトップレベル(v.level === v.topLevel)
+         * 1. タイトル行のレベルがトップレベル(v.title[1].length === v.topLevel)
          */
-        if(!(opt.depth>0 && !opt.useRoot && v.hasRoot && v.level===v.topLevel)){
+        if(!(opt.depth>0 && !opt.useRoot && v.hasRoot && v.title[1].length===v.topLevel)){
           v.rv += '\n' + '#'.repeat(v.level) + ' ' + v.title[2];
         }
       } else {

@@ -96,14 +96,14 @@ function embedRecursively(content,opt={}){
       v.title = v.line.match(v.titleEx);
       if( v.title ){
         v.level = opt.parentLevel + v.title[1].length - v.topLevel + 1;
-        console.log(`l.71 v.title=${stringify(v.title)}\nopt=${stringify(opt)}\nv.topLevel=${v.topLevel}\n`);
+        console.log(`l.71 v.title=${stringify(v.title)}\nopt=${stringify(opt)}\nv.topLevel=${v.topLevel}\nv.hasRoot=${v.hasRoot}\nv.level=${v.level}`);
         /** 以下の全ての条件を満たす場合、タイトル行は出力しない
          * 1. 子文書である(opt.depth > 0)
          * 1. ルート要素は使用しない指定がされている(opt.useRoot === false)
          * 1. ルート要素を持つ文書である(v.hasRoot === true)
-         * 1. タイトル行のレベルがトップレベル(v.level === v.topLevel)
+         * 1. タイトル行のレベルがトップレベル(v.title[1].length === v.topLevel)
          */
-        if(!(opt.depth>0 && !opt.useRoot && v.hasRoot && v.level===v.topLevel)){
+        if(!(opt.depth>0 && !opt.useRoot && v.hasRoot && v.title[1].length===v.topLevel)){
           v.rv += '\n' + '#'.repeat(v.level) + ' ' + v.title[2];
         }
       } else {

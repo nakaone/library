@@ -35,7 +35,7 @@ EOS
 # 2.3 統合
 echo "step.2 start."
 cat $test/parent.md | awk 1 \
-| node $mod/pipe.js -test:"$test" \
+| node $mod/pipetest.js -test:"$test" \
 > $test/result.md
 
 echo "\n$hr[embedRecursively] test.sh end$hr"
