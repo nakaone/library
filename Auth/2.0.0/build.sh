@@ -95,6 +95,7 @@ rm $mod/readme.md # 旧版があれば削除
 
 # 5.2 ソース部分を作成
 #echo "`date +"%T"` - step.5.2 start."
+# index.html, server.gs, cryptico.gs, initialize.gs
 #addSource "core.js" $mod/client/core.js $source
 
 # 5.3 readmeのプロトタイプに外部ファイルを挿入

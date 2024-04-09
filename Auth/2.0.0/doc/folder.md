@@ -1,18 +1,19 @@
 # フォルダ構成
 
-- client/ : client(index.html)関係のソース
-  - commonConfig.js : client/server共通config
-  - clientConfig.js : client特有のconfig
-  - proto.js : class Auth全体のソース
-  - test.html : client関係のテスト用html
-  - xxx.js : class Authの各メソッドのソース
-- server/ : server(server.gs)関係のソース
-  - serverConfig.js : server特有のconfig
+- archves : アーカイブ
 - doc/ : readme.mdの各記事のソース集
   - proto.md : readme.mdのプロトタイプ
   - xxx.md : readme.mdに埋め込む各記事のソース
+- src/ : プログラムソース
+  - commonConfig.js : client/server共通config
+  - clientConfig.js : client特有のconfig
+  - serverConfig.js : server特有のconfig
+  - authClient.js : class authClientのテンプレート
+  - authServer.js : class authServerのテンプレート
+  - authXxxx.yyyy.js : class authClient/Server各メソッドのソース
+- test/ : テスト用
 - build.sh : client/server全体のビルダ
-- core.js : class Authのソース
-- index.html : 
-- server.gs : サーバ側Authのソース
+- index.html : クライアント側のソース
+- server.gs : サーバ側のソース
+- initialize.gs : サーバ側初期化処理のソース
 - readme.md : doc配下を統合した、client/server全体の仕様書
