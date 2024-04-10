@@ -46,8 +46,6 @@ clSrc="$tmp/client.html"; touch $clSrc # 最終成果物
 clDoc="$tmp/client.md"; touch $clDoc   # JSDoc
 svSrc="$tmp/server.js"; touch $svSrc
 svDoc="$tmp/server.md"; touch $svDoc
-initSrc="$tmp/initialize.js"; touch $initSrc
-initDoc="$tmp/initialize.md"; touch $initDoc
 readme="$tmp/readme.md"; touch $readme
 
 # 1.4 使用するクラスを最新化
@@ -82,16 +80,26 @@ EOS
 # ----------------------------------------------
 # 3. サーバ側ソースの作成
 # ----------------------------------------------
-# 3.1 initialize.gs
-cat $src/config.server.js | awk 1 >> $initSrc
-cat $src/initialize.js | awk 1 >> $initSrc
-cp $initSrc $mod/initialize.gs
-
-# 3.2 server.gs
-cat $lib/cryptico/cryptico.min.gs | awk 1 >> $svSrc
+# 3.1 ソースの作成
+echo "`date +"%T"` - step.3.1 start."
 cat $lib/stringify/1.1.1/core.js | awk 1 >> $svSrc
 cat $lib/whichType/1.0.1/core.js | awk 1 >> $svSrc
+cat $lib/cryptico/cryptico.min.gs | awk 1 >> $svSrc
+
+# 3.2 最終成果物の作成
+echo "`date +"%T"` - step.3.2 start."
 cp $svSrc $mod/server.gs
+
+# 3.3 JSDocの作成
+echo "`date +"%T"` - step.3.3 start."
+# sedはjsdoc2mdの冒頭4行削除用(強制付加されるtitle,a nameタグの削除)
+jsdoc2md $svSrc | sed '1,4d' >> $svDoc
+
+# 3.4 ソースを仕様書埋込用に修正
+echo "`date +"%T"` - step.3.4 start."
+rm -f $w01; touch $w01;
+addSource "server.gs" $svSrc $w01
+cp $w01 $svSrc
 
 # ----------------------------------------------
 # 4. クライアント側ソースの作成
@@ -100,18 +108,6 @@ cp $svSrc $mod/server.gs
 # ----------------------------------------------
 # 5. 仕様書の作成
 # ----------------------------------------------
-echo "`date +"%T"` - step.5 start."
-# 5.1 JSDocを作成
-# sedはjsdoc2mdの冒頭4行削除用(強制付加されるtitle,a nameタグの削除)
-echo "`date +"%T"` - step.5.1 start."
-jsdoc2md $svSrc | sed '1,4d' >> $svDoc
-jsdoc2md $initSrc | sed '1,4d' >> $initDoc
-
-# 5.2 プログラムソース部分を作成
-echo "`date +"%T"` - step.5.2 start."
-# index.html, server.gs, cryptico.gs, initialize.gs
-rm -f $w01; touch $w01; addSource "server.gs" $svSrc $w01;       cp $w01 $svSrc
-rm -f $w01; touch $w01; addSource "initialize.gs" $initSrc $w01; cp $w01 $initSrc
 
 # 5.3 readmeのプロトタイプに外部ファイルを挿入
 echo "`date +"%T"` - step.5.3 start."

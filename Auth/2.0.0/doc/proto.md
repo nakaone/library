@@ -89,16 +89,11 @@
 
 <!--::$tmp/server.md::-->
 
-<!--::$tmp/initialize.md::-->
-
 # プログラムソース
 
 <!--::$tmp/client.html::-->
 
 <!--::$tmp/server.js::-->
-
-<!--::$tmp/initialize.js::-->
-
 
 # 改版履歴
 

@@ -3,8 +3,16 @@
  * @param {void}
  * @returns {void}
  */
-function initialize(){
-  const v = {whois:'initialize',rv:null,step:0};
+initialize(){
+  const v = {whois:'initialize',rv:null,step:0,default:{
+    name: 'authServer', // プロパティサービスに保存する際のラベル
+    RSA:{
+      bits: 2048,  // ビット長
+      passphrase: 'HkI/yP~TeU&Qcd<6IjL6-X96MhH7LJag',
+      publicKey: null, // 公開鍵
+      privateKey: null, // 秘密鍵
+    },
+  }};
   console.log(`${v.whois} start.`);
   try {
 
