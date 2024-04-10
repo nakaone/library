@@ -26,10 +26,11 @@ if [ ! -d $tmp ]; then
 else 
   rm -rf $tmp/*
 fi
-w01="$tmp/work01";w02="$tmp/work02";w03="$tmp/work03"
+w01="$tmp/work01"; touch $w01
+w02="$tmp/work02"; touch $w02
+w03="$tmp/work03"; touch $w03
 # 入力ソース
-client="$mod/client"
-server="$mod/server"
+src="$mod/src"
 doc="$mod/doc"
 
 # 1.2 .DS_storeの全削除
@@ -41,8 +42,12 @@ find . -name '.DS_Store' -type f -ls -delete
 echo "`date +"%T"` - step.1.3 start."
 core="$tmp/core.js"; touch $core
 pipe="$tmp/pipe.js"; touch $pipe
-jsdoc="$tmp/jsdoc.md"; touch $jsdoc
-source="$tmp/source.md"; touch $source
+clSrc="$tmp/client.html"; touch $clSrc # 最終成果物
+clDoc="$tmp/client.md"; touch $clDoc   # JSDoc
+svSrc="$tmp/server.js"; touch $svSrc
+svDoc="$tmp/server.md"; touch $svDoc
+initSrc="$tmp/initialize.js"; touch $initSrc
+initDoc="$tmp/initialize.md"; touch $initDoc
 readme="$tmp/readme.md"; touch $readme
 
 # 1.4 使用するクラスを最新化
@@ -75,28 +80,38 @@ EOS
 # ----------------------------------------------
 
 # ----------------------------------------------
-# 3. server.gsの作成
+# 3. サーバ側ソースの作成
 # ----------------------------------------------
+# 3.1 initialize.gs
+cat $src/config.server.js | awk 1 >> $initSrc
+cat $src/initialize.js | awk 1 >> $initSrc
+cp $initSrc $mod/initialize.gs
+
+# 3.2 server.gs
+cat $lib/cryptico/cryptico.min.gs | awk 1 >> $svSrc
+cat $lib/stringify/1.1.1/core.js | awk 1 >> $svSrc
+cat $lib/whichType/1.0.1/core.js | awk 1 >> $svSrc
+cp $svSrc $mod/server.gs
 
 # ----------------------------------------------
-# 4. index.htmlの作成
+# 4. クライアント側ソースの作成
 # ----------------------------------------------
 
 # ----------------------------------------------
 # 5. 仕様書の作成
 # ----------------------------------------------
 echo "`date +"%T"` - step.5 start."
-rm $mod/readme.md # 旧版があれば削除
-
 # 5.1 JSDocを作成
 # sedはjsdoc2mdの冒頭4行削除用(強制付加されるtitle,a nameタグの削除)
-#echo "`date +"%T"` - step.5.1 start."
-#jsdoc2md $script | sed '1,4d' > $jsdoc
+echo "`date +"%T"` - step.5.1 start."
+jsdoc2md $svSrc | sed '1,4d' >> $svDoc
+jsdoc2md $initSrc | sed '1,4d' >> $initDoc
 
-# 5.2 ソース部分を作成
-#echo "`date +"%T"` - step.5.2 start."
+# 5.2 プログラムソース部分を作成
+echo "`date +"%T"` - step.5.2 start."
 # index.html, server.gs, cryptico.gs, initialize.gs
-#addSource "core.js" $mod/client/core.js $source
+rm -f $w01; touch $w01; addSource "server.gs" $svSrc $w01;       cp $w01 $svSrc
+rm -f $w01; touch $w01; addSource "initialize.gs" $initSrc $w01; cp $w01 $initSrc
 
 # 5.3 readmeのプロトタイプに外部ファイルを挿入
 echo "`date +"%T"` - step.5.3 start."
@@ -219,7 +234,7 @@ echo "##### 注意：BurgerMenu/2.0.0は内容移行後、削除のこと #####\
 #rm $w02; touch $w02
 #addConfig "2.1 client/server共通部分" $client/commonConfig.js $w02
 #addConfig "2.2 client特有部分" $client/clientConfig.js $w02
-#addConfig "2.3 server特有部分" $server/serverConfig.js $w02
+#addConfig "2.3 server特有部分" $svSrc/serverConfig.js $w02
 #cat $doc/useage.md | awk 1 | \
 #$esed -x:"\/\/::config::" -f:$w02 > $w03
 #addArticle $w03 useage "使用方法" $w01

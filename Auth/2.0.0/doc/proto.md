@@ -85,11 +85,20 @@
 
 # 仕様(JSDoc)
 
-<!--::$tmp/jsdoc.md::-->
+<!--::$tmp/client.md::-->
+
+<!--::$tmp/server.md::-->
+
+<!--::$tmp/initialize.md::-->
 
 # プログラムソース
 
-<!--::$tmp/source.md::-->
+<!--::$tmp/client.html::-->
+
+<!--::$tmp/server.js::-->
+
+<!--::$tmp/initialize.js::-->
+
 
 # 改版履歴
 
