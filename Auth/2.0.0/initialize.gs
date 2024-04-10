@@ -25,14 +25,14 @@ function initialize(){
     // ------------------------------------------
     v.step = 2; // server側鍵ペア生成
     // ------------------------------------------
-
-    // ------------------------------------------
-    v.step = 3; // config情報の作成と保存
-    // ------------------------------------------
     config.RSA.privateKey = // 秘密鍵の生成
     cryptico.generateRSAKey(config.RSA.passphrase, config.RSA.bits);
     config.RSA.publicKey =  // 公開鍵の生成
     cryptico.publicKeyString(config.RSA.privateKey);
+
+    // ------------------------------------------
+    v.step = 3; // config情報の作成と保存
+    // ------------------------------------------
 
     v.step = 9; // 終了処理
     // プロパティサービスへの保存
