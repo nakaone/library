@@ -1,10 +1,9 @@
 /** GAS側の初期化処理
  * システム導入・再初期化時のみ実行。実行後はソースファイルごとシートから削除すること。
- * @param {Object} arg
- * @param {string} [arg.passphrase] - RSAキーのパスフレーズ
+ * @param {Object} [arg={}] - 内容はv.default参照
  * @returns {void}
  */
-initialize(arg){
+initialize(arg={}){
   const v = {whois:this.constructor.name+'.initialize',rv:null,step:0,default:{
     name: 'authServer', // プロパティサービスに保存する際のラベル
     RSA:{
@@ -18,7 +17,7 @@ initialize(arg){
   try {
 
     v.step = 1; // 事前準備
-    v.name = arg.name || v.default.name;
+    v.name = arg.hasOwnProperty('name') ? arg.name : v.default.name;
     v.conf = Object.assign({},(
     PropertiesService.getDocumentProperties().getProperty(v.name)
     || {}), v.default, arg);

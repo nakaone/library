@@ -55,6 +55,7 @@ $lib/BurgerMenu/1.1.0/build.sh
 # 2. server.gsの作成
 # ----------------------------------------------
 echo "`date +"%T"` - step.2 start."
+cat $test/doGet.js | awk 1 > $svSrc
 cat $lib/createPassword/1.0.1/core.js | awk 1 >> $svSrc
 cat $lib/cryptico/cryptico.min.gs | awk 1 >> $svSrc
 cat $lib/sendmail/1.0.0/core.js | awk 1 >> $svSrc

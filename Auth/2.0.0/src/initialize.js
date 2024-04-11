@@ -1,4 +1,9 @@
-function initialize(arg){
+/** GAS側の初期化処理
+ * システム導入・再初期化時のみ実行。実行後はソースファイルごとシートから削除すること。
+ * @param {void}
+ * @returns {void}
+ */
+function initialize(){
   const v = {whois:'initialize',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
