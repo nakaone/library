@@ -91,7 +91,7 @@
 
 # プログラムソース
 
-<!--::$tmp/client.html::-->
+<!--::$tmp/client.js::-->
 
 <!--::$tmp/server.js::-->
 

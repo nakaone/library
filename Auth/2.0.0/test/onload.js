@@ -1,1 +1,0 @@
-v.auth = new authClient();

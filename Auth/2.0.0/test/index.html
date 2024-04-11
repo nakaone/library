@@ -347,6 +347,12 @@ td, .td {
     </div>
   </div></body>
   <script type="text/javascript">
+class authClient {
+  //:x:$src/client.constructor.js::
+  //:x:$src/client.registMail.js::
+  //:x:$src/client.login1C.js::
+  //:x:$src/client.login2C.js::
+}
 /**
  * @classdesc htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメニューを作成
  * 
@@ -1339,8 +1345,8 @@ function whichType(arg,is){
     console.log(`${v.whois} start.`);
     try {
   
-v.auth = new authClient();
-  
+      v.auth = new authClient();
+
       v.step = 99; // 終了処理
       console.log(`${v.whois} normal end.`);
       return v.rv;

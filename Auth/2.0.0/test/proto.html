@@ -41,8 +41,8 @@
     console.log(`${v.whois} start.`);
     try {
   
-  //::$tmp/onload.js::
-  
+      v.auth = new authClient();
+
       v.step = 99; // 終了処理
       console.log(`${v.whois} normal end.`);
       return v.rv;

@@ -51,9 +51,26 @@ echo "`date +"%T"` - step.1.4 start."
 $mod/build.sh
 $lib/BurgerMenu/1.1.0/build.sh
 
+# ----------------------------------------------
+# 2. server.gsの作成
+# ----------------------------------------------
+echo "`date +"%T"` - step.2 start."
+cat $lib/createPassword/1.0.1/core.js | awk 1 >> $svSrc
+cat $lib/cryptico/cryptico.min.gs | awk 1 >> $svSrc
+cat $lib/sendmail/1.0.0/core.js | awk 1 >> $svSrc
+cat $lib/stringify/1.1.1/core.js | awk 1 >> $svSrc
+cat $lib/whichType/1.0.1/core.js | awk 1 >> $svSrc
+cat $mod/server.gs | awk 1 >> $svSrc
+cp $svSrc $test/server.gs
 
 # ----------------------------------------------
-# 3. テスト用index.htmlの作成
+# 3. initialize.gs(初期化処理)の作成
+# ----------------------------------------------
+echo "`date +"%T"` - step.3 start."
+cp $mod/initialize.gs $test/initialize.gs
+
+# ----------------------------------------------
+# 4. テスト用index.htmlの作成
 # ----------------------------------------------
 
 # 4.1 proto.htmlへの埋込前処理
@@ -87,7 +104,7 @@ cat $user/system.html \
 # 4.2 script部分の作成
 echo "`date +"%T"` -  step.4.2 start."
 cat $lib/Auth/2.0.0/client.js | awk 1 > $w01
-cat $lib/BurgerMenu/1.1.0/core.js | awk 1 > $w01
+cat $lib/BurgerMenu/1.1.0/core.js | awk 1 >> $w01
 cat $lib/cryptico/cryptico.min.js | awk 1 >> $w01
 cat $lib/changeScreen/1.1.0/core.js | awk 1 >> $w01
 cat $lib/createElement/1.2.1/core.js | awk 1 >> $w01
@@ -97,8 +114,8 @@ cat $lib/whichType/1.0.1/core.js | awk 1 >> $w01
 cat $w01 | awk 1 > $tmp/script.js
 
 # 4.3 onload部分の作成
-echo "`date +"%T"` -  step.4.3 start."
-cp $test/onload.js $tmp/onload.js
+#echo "`date +"%T"` -  step.4.3 start."
+#cp $test/onload.js $tmp/onload.js
 
 # 4.4 proto.htmlへの埋め込み
 echo "`date +"%T"` -  step.4.4 start."

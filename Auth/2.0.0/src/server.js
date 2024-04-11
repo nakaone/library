@@ -1,12 +1,12 @@
 class authServer {
-  //::$src/authServer.constructor.js::
+  //::$src/server.constructor.js::
 
-  //::$src/authServer.initialize.js::
+  //::$src/server.initalize.js::
 
-  //:x:$src/authServer.registMail.js::
-  //:x:$src/authServer.login1S.js::
-  //:x:$src/authServer.login2S.js::
-  //:x:$src/authServer.listAuth.js::
+  //:x:$src/server.registMail.js::
+  //:x:$src/server.login1S.js::
+  //:x:$src/server.login2S.js::
+  //:x:$src/server.listAuth.js::
   listAuth(arg){
     const v = {whois:this.constructor.name+'.listAuth',rv:null,step:0};
     console.log(`${v.whois} start.`);
@@ -26,6 +26,6 @@ class authServer {
   }
 
 
-  //:x:$src/authServer.changeAuth.js::
-  //:x:$src/authServer.operation.js::
+  //:x:$src/server.changeAuth.js::
+  //:x:$src/server.operation.js::
 }
