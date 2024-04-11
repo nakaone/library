@@ -1,3 +1,6 @@
+<style>
+/*::$lib/CSS/1.3.0/core.css::*/
+</style>
 <p class="title">class BurgerMenu</p>
 
 # 概要

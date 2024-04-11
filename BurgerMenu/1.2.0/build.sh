@@ -8,91 +8,66 @@ hr="\n=======================================\n"
 echo "\n$hr[BurgerMenu] build start$hr"
 
 # 1.1 変数・ツールの定義
+echo "`date +"%T"` - BurgerMenu: step.1.1 start."
 GitHub="/Users/ena.kaon/Desktop/GitHub"
 lib="$GitHub/library"
-mod="$lib/BurgerMenu/1.1.0"
-esed="node $lib/esed/1.0.0/core.js"
+mod="$lib/BurgerMenu/1.2.0"
+# ツール
+embed="node $lib/embedRecursively/1.1.0/pipe.js"
+esed="node $lib/esed/1.0.0/pipe.js"
+modify="node $lib/modifyMD/1.0.0/pipe.js"
+querySelector="node $lib/querySelector/2.0.0/core.js"
+# 作業用フォルダの準備
+tmp="$mod/tmp";
+if [ ! -d $tmp ]; then
+  mkdir $tmp
+else 
+  rm -rf $tmp/*
+fi
+w01="$tmp/work01"; touch $w01
+w02="$tmp/work02"; touch $w02
+w03="$tmp/work03"; touch $w03
 
 # 1.2 .DS_storeの全削除
+echo "`date +"%T"` - BurgerMenu: step.1.2 start."
 cd $mod
 find .. -name '.DS_Store' -type f -ls -delete
 
-# 1.3 tmpの用意
-#rm -rf $mod/tmp
-#mkdir $mod/tmp
-#tmp="$mod/tmp"
+# 1.5 関数定義
+echo "`date +"%T"` - BurgerMenu: step.1.5 start."
+# addSource : プログラムソースを追加
+# {string} $1 - プログラムソース名(MD上のラベル)
+# {string} $2 - プログラムソースのフルパス
+# {string} $3 - 成果物の【追加】先ファイル名
+addSource(){
+  echo "addSource '$1' start."
+  cat << EOS >> $3
+<details><summary>$1</summary>
 
-# 1.4 使用するクラスを最新化
-#$lib/SingleTableClient/1.0.0/build.sh
+\`\`\`
+`cat $2 | awk 1`
+\`\`\`
 
+</details>
 
-# ----------------------------------------------
-# 2. index.htmlの作成
-# ----------------------------------------------
-# 2.1 CSS部分
-
-# 2.2 html部分
-#work="$tmp/index.html"
-#cp $src/static/index.header.html $work
-#list=(
-#  実施要領
-#  注意事項
-#  持ち物リスト
-#)
-#for x in ${list[@]}; do
-#  echo "<div name=\"$x\">\n" >> $work
-#  cat $src/static/$x.md | marked >> $work
-#  echo "</div>\n\n" >> $work
-#done
-#cat $src/templates/origin.html \
-#| node $esed -x:"\/\*::CSS::\*\/" -f:$lib/CSS/1.3.0/core.css \
-#| node $esed -x:"<!--::body::-->" -f:$work \
-#> $src/index.html
-
-# 2.3 script部分
+EOS
+}
 
 # ----------------------------------------------
-# 3. server.gsの作成
+# 5. 仕様書の作成
 # ----------------------------------------------
+# 5.1 jsdoc2mdで追加される行は除外してmd作成
+echo "`date +"%T"` - BurgerMenu: step.5.1 start."
+jsdoc2md $mod/core.js | sed '1,4d' > $tmp/jsdoc.md
 
+# 5.2 プログラムソースの作成
+echo "`date +"%T"` - BurgerMenu: step.5.2 start."
+source="$tmp/source.md"; touch $source
+addSource "class BurgerMenu" $mod/core.js $source
 
-# ----------------------------------------------
-# 4. 仕様書の作成
-# ----------------------------------------------
-readme="$mod/readme.md"
-# 標準CSSを追加(コメントはesedで除外)
-echo "<style scoped type=\"text/css\">" > $readme
-cat $lib/CSS/1.3.0/core.css | awk 1 \
-| $esed -x:"\/\*[\s\S]*?\*\/\n*" -s:"" >> $readme
-echo "</style>\n\n" >> $readme
-
-# proto/readme.mdを追加
-# jsdoc2mdで追加される行は除外してmd作成
-jsdoc2md $mod/core.js | sed '1,4d' > $mod/core.md
-cat $mod/proto.md \
-| $esed -x:"__JSDoc" -f:$mod/core.md \
-| $esed -x:"__source" -f:$mod/core.js \
-| $esed -x:"__test" -f:$mod/test.html \
-| $esed -x:"__build" -f:$mod/build.sh \
->> $readme
-
+# 5.2 readme.mdを作成
+echo "`date +"%T"` - BurgerMenu: step.5.3 start."
+cat $mod/proto.md | awk 1 \
+| $embed -lib:$lib -tmp:$tmp > $mod/readme.md
 
 echo "\n$hr[BurgerMenu] build end$hr"
-
-
-
-# ----------------------------------------------
-# 参考：関数化、if文
-# ----------------------------------------------
-
-#makeJSDoc(){
-#  base=$1
-#  type=$2
-#  if [ -n $3 ]; then # 入力フォルダ名指定あり
-#    iFile=$3/$base
-#  else               # 入力フォルダ名指定なし
-#    iFile=$base
-#  fi
-#}
-## makeJSDoc ベースファイル名 タイプ 入力フォルダ名 出力フォルダ名
-#makeJSDoc css css $iDir $dDir
