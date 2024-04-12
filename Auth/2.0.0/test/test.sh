@@ -46,11 +46,6 @@ echo "`date +"%T"` - step.1.3 start."
 clSrc="$tmp/client.html"; touch $clSrc
 svSrc="$tmp/server.js"; touch $svSrc
 
-# 1.4 使用するクラスを最新化
-echo "`date +"%T"` - step.1.4 start."
-$mod/build.sh
-$lib/BurgerMenu/1.1.0/build.sh
-
 # ----------------------------------------------
 # 2. server.gsの作成
 # ----------------------------------------------
@@ -105,7 +100,7 @@ cat $user/system.html \
 # 4.2 script部分の作成
 echo "`date +"%T"` -  step.4.2 start."
 cat $lib/Auth/2.0.0/client.js | awk 1 > $w01
-cat $lib/BurgerMenu/1.1.0/core.js | awk 1 >> $w01
+cat $lib/BurgerMenu/1.2.0/core.js | awk 1 >> $w01
 cat $lib/cryptico/cryptico.min.js | awk 1 >> $w01
 cat $lib/changeScreen/1.1.0/core.js | awk 1 >> $w01
 cat $lib/createElement/1.2.1/core.js | awk 1 >> $w01
@@ -121,7 +116,8 @@ cat $w01 | awk 1 > $tmp/script.js
 # 4.4 proto.htmlへの埋め込み
 echo "`date +"%T"` -  step.4.4 start."
 cat $test/proto.html | awk 1 \
-| $embed -lib:$lib -tmp:$tmp -user:$user -src:$src > $test/index.html
+| $embed -lib:$lib -tmp:$tmp -user:$user -src:$src \
+> $test/index.html
 
 
 echo "\n$hr`date +"%T"` [Auth] test end$hr"

@@ -68,6 +68,7 @@ addSource "class BurgerMenu" $mod/core.js $source
 # 5.2 readme.mdを作成
 echo "`date +"%T"` - BurgerMenu: step.5.3 start."
 cat $mod/proto.md | awk 1 \
-| $embed -lib:$lib -tmp:$tmp > $mod/readme.md
+| $embed -lib:$lib -tmp:$tmp \
+| $modify > $mod/readme.md
 
 echo "\n$hr[BurgerMenu] build end$hr"

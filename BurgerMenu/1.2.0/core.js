@@ -1,82 +1,5 @@
 /**
  * @classdesc htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメニューを作成
- * 
- * @example
- * 
- * ### htmlの設定
- * 
- * - wrapperに`class="BurgerMenu screen" name="wrapper"`を設定
- * - メニュー化する領域(divタグ)に`data-BurgerMenu`属性を追加(設定値は後掲)
- * 
- * ```
- * <p class="title">BurgerMenu Test</p>
- * <div class="BurgerMenu screen" name="wrapper">
- *   <div data-BurgerMenu="id:'c11',label:'掲示板'">掲示板</div>
- *   <div data-BurgerMenu="id:'c21',label:'入会申込'">入会申込</div>
- *   <div data-BurgerMenu="id:'c30',label:'イベント情報'">
- *     <div data-BurgerMenu="id:'c31',label:'会場案内図'">会場案内図</div>
- *     <div data-BurgerMenu="id:'c32',label:'タイムテーブル'">タイムテーブル</div>
- *   </div>
- *   <div data-BurgerMenu="id:'c40',label:'その他'">
- *     <div data-BurgerMenu="id:'c41',label:'リンクテスト',href:'https://developer.mozilla.org/ja/'">hoge</div>
- *     <div data-BurgerMenu="id:'c42',label:'funcテスト',func:'test'">funcテスト</div>
- *   </div>
- * </div>
- * ```
- * 
- * ### scriptの設定
- * 
- * - インスタンス生成時の引数については次項参照
- * 
- * ```
- * v.menu = new BurgerMenu({func:{test:(e)=>{alert('hoge');changeScreen('c42');}}});
- * if( v.menu instanceof Error ) throw v.menu;
- * ```
- * 
- * ### BurgerMenuメンバ一覧
- * 
- * 以下はthisとして「constructorのv.default < constructorの引数 < listViewの引数」の順で有効となる。
- * 
- * 1. 「**太字**」はインスタンス生成時、必須指定項目
- * 1. 「【*内部*】」は指定不要の項目(constructor他で自動的に設定されるメンバ)
- * 1. その他はconstructorの引数で指定可、指定が無い項目は既定値をセット
- * 
- * - className {string} 【*内部*】'BurgerMenu'固定。ログ出力時に使用
- * - wrapper='.BurgerMenu.screen[name="wrapper"]' {string|HTMLElement} 作成対象のdata-BurgerMenuを全て含む親要素。CSSセレクタかHTMLElementで指定。
- * - auth=1 {number} 利用者の閲覧権限。メニューのauth(data-BurgerMenu:{auth:x})とのビット積=0なら当該メニューは作成しない
- * - func {Object.<string,Function>} メニューから実行する関数を集めたライブラリ
- * - home {string} ホーム画面として使用するメニューの識別子。無指定の場合、wrapper直下でdata-BurgerMenu属性を持つ最初の要素
- * - initialSubMenu=true {boolean} サブメニューの初期状態。true:開いた状態、false:閉じた状態
- * - css {string} BurgerMenu専用CSS
- * - toggle {Arrow} 【*内部*】ナビゲーション領域の表示/非表示切り替え
- * - showChildren {Arrow} 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
- * 
- * ### data-BurgerMenu属性に設定する文字列
- * 
- * - id {string} メニュー毎に作成する識別子
- * - label {string} nav領域に表示するメニューの名称
- * - func {string} constructorの引数で渡されたfuncオブジェクトのメンバ名。
- * - href {string} 遷移先ページのURL。
- * - auth=1 {number} メニューの使用権限。以下例ではシステム管理者は両方表示されるが、一般ユーザにはシステム設定は表示されない
- *   ```
- *   <div data-BurgerMenu="auth:1">利用案内</div>
- *   <div data-BurgerMenu="auth:8">システム設定</div>
- *   (中略)
- *   <script>
- *     const authority = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:15
- *     const menu = new BurgerMenu({auth:authority.level}); // レベルを渡してメニュー生成
- *   ```
- * 
- * 注意事項
- * 
- * - func, hrefは排他。両方指定された場合はfuncを優先する
- * - func, href共に指定されなかった場合、SPAの画面切替指示と見なし、idの画面に切り替える
- * - href指定の場合、タグ内の文字列は無視される(下例2行目の「テスト」)
- *   ```
- *   <div data-BurgerMenu="id:'c41',label:'これはOK',href:'https://〜'"></div>
- *   <div data-BurgerMenu="id:'c41',label:'これはNG',href:'https://〜'">テスト</div>
- *   ```
- * 
  */
 class BurgerMenu {
 
@@ -86,8 +9,7 @@ class BurgerMenu {
    * @returns {BurgerMenu|Error}
    */
   constructor(arg={}){
-    this.className = 'BurgerMenu';
-    const v = {whois:this.className+'.constructor',rv:null,step:0};
+    const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
     console.log(`${v.whois} start.\narg=${stringify(arg)}`);
     try {
 
@@ -116,7 +38,7 @@ class BurgerMenu {
       },this.wrapper);
 
       v.step = 3; // 親要素を走査してナビゲーションを作成
-      v.rv = this.#genNavi(this.wrapper,this.navi);
+      v.rv = this.genNavi();
       if( v.rv instanceof Error ) throw v.rv;
 
       v.step = 9; // 終了処理
@@ -137,13 +59,13 @@ class BurgerMenu {
    * @returns {null|Error}
    */
   #setProperties(arg){
-    const v = {whois:this.className+'.setProperties',rv:null,step:0};
+    const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
     console.log(`${v.whois} start.`);
     try {
   
       v.step = 1; // 既定値の定義
       v.default = {
-        wrapper: `.${this.className}[name="wrapper"]`, // {string|HTMLElement}
+        wrapper: `.${this.constructor.name}[name="wrapper"]`, // {string|HTMLElement}
         auth: 1,
         func: {}, // {Object.<string,function>} メニューから呼び出される関数
         home: null,
@@ -278,9 +200,9 @@ class BurgerMenu {
         }
       `;
       v.default.toggle = () => {  // ナビゲーション領域の表示/非表示切り替え
-        document.querySelector(`.${this.className} nav`).classList.toggle('is_active');
-        document.querySelector(`.${this.className} .back`).classList.toggle('is_active');
-        document.querySelectorAll(`.${this.className} .icon button span`)
+        document.querySelector(`.${this.constructor.name} nav`).classList.toggle('is_active');
+        document.querySelector(`.${this.constructor.name} .back`).classList.toggle('is_active');
+        document.querySelectorAll(`.${this.constructor.name} .icon button span`)
         .forEach(x => x.classList.toggle('is_active'));        
       };
       v.default.showChildren = (event) => { // ブランチの下位階層メニュー表示/非表示切り替え
@@ -304,7 +226,7 @@ class BurgerMenu {
       v.step = 5; // homeが無指定ならwrapper直下でdata-BurgerMenu属性を持つ最初の要素の識別子
       if( this.home === null ){
         for( v.i=0 ; v.i<this.wrapper.childElementCount ; v.i++ ){
-          v.x = this.wrapper.children[v.i].getAttribute(`data-${this.className}`);
+          v.x = this.wrapper.children[v.i].getAttribute(`data-${this.constructor.name}`);
           if( v.x ){
             v.r = this.#objectize(v.x);
             if( v.r instanceof Error ) throw v.r;
@@ -314,9 +236,9 @@ class BurgerMenu {
         }
       }
       v.step = 6; // BurgerMenu専用CSSが未定義なら追加
-      if( !document.querySelector(`style[name="${this.className}"]`) ){
+      if( !document.querySelector(`style[name="${this.constructor.name}"]`) ){
         v.styleTag = document.createElement('style');
-        v.styleTag.setAttribute('name',this.className);
+        v.styleTag.setAttribute('name',this.constructor.name);
         v.styleTag.textContent = this.css;
         document.head.appendChild(v.styleTag);
       }
@@ -350,7 +272,7 @@ class BurgerMenu {
    * @returns {Object|null|Error} 引数がnullまたは空文字列ならnullを返す
    */
   #objectize(arg){
-    const v = {whois:this.className+'.objectize',rv:{},step:0};
+    const v = {whois:this.constructor.name+'.objectize',rv:{},step:0};
     console.log(`${v.whois} start.`);
     try {
 
@@ -373,11 +295,19 @@ class BurgerMenu {
       v.step = 4.1; // idの存否チェック
       if( !v.rv.hasOwnProperty('id') )
         throw new Error('data-BurgerMenuの設定値にはidが必須です\n'+arg);
-      v.step = 4.2; // authの既定値設定
+      v.step = 4.2; // ラベル不在の場合はidをセット
+      if( !v.rv.hasOwnProperty('label') )
+        v.rv.label = v.rv.id;
+      v.step = 4.3; // authの既定値設定
       v.rv.auth = v.rv.hasOwnProperty('auth') ? Number(v.rv.auth) : 1;
-      v.step = 4.3; // func,href両方有ればhrefを削除
+      v.step = 4.4; // func,href両方有ればhrefを削除
       if( v.rv.hasOwnProperty('func') && v.rv.hasOwnProperty('href') )
         delete v.rv.href;
+      v.step = 4.5; // from/toの既定値設定
+      v.rv.from = v.rv.hasOwnProperty('from')
+        ? new Date(v.rv.from).getTime() : 0;  // 1970/1/1(UTC)
+      v.rv.to = v.rv.hasOwnProperty('to')
+        ? new Date(v.rv.from).getTime() : 253402182000000; // 9999/12/31(UTC)
 
       v.step = 5; // 終了処理
       console.log(`${v.whois} normal end.`);
@@ -385,34 +315,38 @@ class BurgerMenu {
   
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\narg=${stringify(arg)}`;  // 引数
+      + `\n${e.message}\narg=${stringify(arg)}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
   }
   
   /** 親要素を走査してナビゲーションを作成
-   * @param {HTMLElement} parent - body等の親要素。
+   * @param {HTMLElement} wrapper - body等の親要素。
    * @param {HTMLElement} navi - nav等のナビゲーション領域
    * @returns {null|Error}
    */
-  #genNavi(parent=this.parent,navi=this.navi){
-    const v = {whois:this.className+'.genNavi',rv:null,step:0};
+  genNavi(auth=this.auth,wrapper=this.wrapper,navi=this.navi){
+    const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
     console.log(`${v.whois} start.`);
     try {
 
+      v.step = 0; // 権限の変更があった場合、メンバを書き換え
+      if( auth !== this.auth ) this.auth = auth;
+
       v.step = 1; // 子要素を順次走査し、data-BurgerMenuを持つ要素をnaviに追加
-      for( v.i=0 ; v.i<parent.childElementCount ; v.i++ ){
-        v.d = parent.children[v.i];
+      for( v.i=0 ; v.i<wrapper.childElementCount ; v.i++ ){
+        v.d = wrapper.children[v.i];
 
         v.step = 2; // data-BurgerMenuを持たない要素はスキップ
-        v.attr = this.#objectize(v.d.getAttribute(`data-${this.className}`));
+        v.attr = this.#objectize(v.d.getAttribute(`data-${this.constructor.name}`));
         if( v.attr instanceof Error ) throw v.attr;
         if( v.attr === null ) continue;
 
-        v.step = 3; // 実行権限がない機能・画面はナビに追加しない
+        v.step = 3.1; // 実行権限がない機能・画面はナビに追加しない
         if( (this.auth & v.attr.auth) === 0 ) continue;
+        v.step = 3.2; // 有効期間外の場合はナビに追加しない
+        if( v.now < v.attr.from || v.attr.to < v.now ) continue;
 
         v.step = 4.1; // screenクラスが無ければ追加
         v.class = v.d.className.match(/screen/);
@@ -425,7 +359,7 @@ class BurgerMenu {
         }
         v.step = 4.3; // nav領域にul未設定なら追加
         if( navi.tagName !== 'UL' ){
-          v.r = createElement({tag:'ul',attr:{class:this.className}},navi);
+          v.r = createElement({tag:'ul',attr:{class:this.constructor.name}},navi);
           if( v.r instanceof Error ) throw v.r;
           navi = v.r;
           console.log(navi);
@@ -435,7 +369,7 @@ class BurgerMenu {
         v.li = {tag:'li',children:[{
           tag:'a',
           text:v.attr.label,
-          attr:{class:this.className,name:v.attr.id},
+          attr:{class:this.constructor.name,name:v.attr.id},
         }]};
         v.hasChild = false;
         if( v.attr.hasOwnProperty('func') ){
@@ -454,7 +388,7 @@ class BurgerMenu {
         } else {
           v.step = 5.3; // その他(=画面切替)の場合
           // 子孫メニューがあるか確認
-          if( v.d.querySelector(`[data-${this.className}]`) ){
+          if( v.d.querySelector(`[data-${this.constructor.name}]`) ){
             v.step = 5.33; // 子孫メニューが存在する場合
             v.hasChild = true; // 再帰呼出用のフラグを立てる
             Object.assign(v.li.children[0],{
@@ -481,7 +415,7 @@ class BurgerMenu {
 
         v.step = 5.5; // 子要素にdata-BurgerMenuが存在する場合、再帰呼出
         if( v.hasChild ){
-          v.r = this.#genNavi(v.d,v.r);
+          v.r = this.genNavi(this.auth,v.d,v.r);
           if( v.r instanceof Error ) throw v.r;
         }
       }
@@ -492,8 +426,7 @@ class BurgerMenu {
   
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\narg=${stringify(arg)}`;  // 引数
+      + `\n${e.message}\nauth=${auth}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }

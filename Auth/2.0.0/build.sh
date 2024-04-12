@@ -50,6 +50,7 @@ readme="$tmp/readme.md"; touch $readme
 
 # 1.4 使用するクラスを最新化
 #echo "`date +"%T"` - step.1.4 start."
+$lib/BurgerMenu/1.2.0/build.sh
 #$lib/SingleTableClient/1.0.0/build.sh
 
 # 1.5 関数定義

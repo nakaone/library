@@ -56,14 +56,14 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 - {string} [func] - メニュー選択時に実行する関数名。<br>
   関数名と実際の関数はBurgerMenuインスタンス生成時に定義。
 - {string} [href] - 遷移先のURL。別タブが開かれる。
-- {number} [auth] - 表示権限。<br>
+- {number} [auth=1] - 表示権限(既定値:1)。<br>
   BurgerMenuインスタンス生成時のauthorityとの論理積>0なら表示する。<br>
   ex: 一般参加者1、スタッフ2として<br>
       data-BurgerMenu="authrotiry:2"とされた要素は、<br>
       new BurgerMenu({authority:1})の一般参加者は非表示、<br>
       new BurgerMenu({authority:2})のスタッフは表示となる。
-- {string} [from] - メニュー有効期間の開始日時。Dateオブジェクトで処理可能な日時文字列で指定
-- {string} [to] - メニュー有効期間の終了日時
+- {string} [from='1970/1/1'] - メニュー有効期間の開始日時。Dateオブジェクトで処理可能な日時文字列で指定
+- {string} [to='9999/12/31'] - メニュー有効期間の終了日時
 
 注意事項
 
@@ -140,7 +140,6 @@ window.addEventListener('DOMContentLoaded',() => {
 1. 「【*内部*】」は指定不要の項目(constructor他で自動的に設定されるメンバ)
 1. その他はconstructorの引数で指定可、指定が無い項目は既定値をセット
 
-- className {string} 【*内部*】'BurgerMenu'固定。ログ出力時に使用
 - wrapper='.BurgerMenu.screen[name="wrapper"]' {string|HTMLElement} 作成対象のdata-BurgerMenuを全て含む親要素。CSSセレクタかHTMLElementで指定。
 - auth=1 {number} 利用者の閲覧権限。メニューのauth(data-BurgerMenu:{auth:x})とのビット積=0なら当該メニューは作成しない
 - func {Object.<string,Function>} メニューから実行する関数を集めたライブラリ
