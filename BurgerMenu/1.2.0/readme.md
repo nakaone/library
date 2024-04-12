@@ -112,23 +112,25 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 
 ```
 <body>
-  <div class="c1001" data-BurgerMenu="label:'スタッフ',authority:2">
-    <div class="c1002" data-BurgerMenu="label:'受付業務',func:'recept'"></div>
-    <div class="c1003" data-BurgerMenu="label:'校内探険'">
-        <img src="expedition.png" width="600px" />
+  <p class="title">校庭キャンプ2024</p>
+  <div class="BurgerMenu screen" name="wrapper">
+    <div data-BurgerMenu="id:'イベント情報'">
+      <div data-BurgerMenu="id:'掲示板',func:'dispBoard'"></div>
+      <div data-BurgerMenu="id:'実施要領'">
+        <!--：：$tmp/実施要領.html：：--＞ ※ embedRecursivelyのプレースホルダは一行で記述
+      </div>
     </div>
   </div>
-  <div class="c1004" data-BurgerMenu="label:'Tips',href:'https://〜/tips.html'"></div>
-</body>
+(中略)
 ```
 
 下位の階層を持つ場合、自分自身の表示内容は持たせない(以下はNG)
 
 ```
-<div data-BurgerMenu="label:'お知らせ'">
+<div data-BurgerMenu="id:'お知らせ'">
 !!NG!! <p>お知らせのページです</p>
-  <div data-BurgerMenu="label:'掲示板'">〜</div>
-  <div data-BurgerMenu="label:'注意事項'">〜</div>
+  <div data-BurgerMenu="id:'掲示板'">〜</div>
+  <div data-BurgerMenu="id:'注意事項'">〜</div>
 </div>
 ```
 
@@ -140,17 +142,17 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 
 オブジェクトの記述に準ずる。但し短縮するため前後の"{","}"は省略する。
 
-- {string} id - メニューID
-- {string} label - メニュー化する時の名称
+- {string} id - 【必須】メニューID
+- {string} [label] - メニュー化する時の名称。省略時はidを使用
 - {string} [func] - メニュー選択時に実行する関数名。<br>
   関数名と実際の関数はBurgerMenuインスタンス生成時に定義。
 - {string} [href] - 遷移先のURL。別タブが開かれる。
 - {number} [auth=1] - 表示権限(既定値:1)。<br>
-  BurgerMenuインスタンス生成時のauthorityとの論理積>0なら表示する。<br>
-  ex: 一般参加者1、スタッフ2として<br>
-      data-BurgerMenu="authrotiry:2"とされた要素は、<br>
-      new BurgerMenu({authority:1})の一般参加者は非表示、<br>
-      new BurgerMenu({authority:2})のスタッフは表示となる。
+  BurgerMenuインスタンス生成時のauthとの論理積>0なら表示する。
+  > ex: 一般参加者1、スタッフ2として
+  >     data-BurgerMenu="auth:2"とされた要素は、
+  >     new BurgerMenu({auth:1})の一般参加者は非表示、
+  >     new BurgerMenu({auth:2})のスタッフは表示となる。
 - {string} [from='1970/1/1'] - メニュー有効期間の開始日時。Dateオブジェクトで処理可能な日時文字列で指定
 - {string} [to='9999/12/31'] - メニュー有効期間の終了日時
 
@@ -169,9 +171,11 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
   <div data-BurgerMenu="auth:8">システム設定</div>
   (中略)
   <script>
-    const authority = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:15
-    const menu = new BurgerMenu({auth:authority.level}); // レベルを渡してメニュー生成
+    const auth = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:15
+    const menu = new BurgerMenu({auth:auth.level}); // レベルを渡してメニュー生成
   ```
+- 権限は一般公開部分は`auth=1`とし、以降**権限が大きくなるにつれて大きな数字を使用**する<br>
+  ∵ data-BurgerMenu属性を持つ要素が入れ子になっている場合、**親要素の権限>子要素の権限 ⇒ 子要素に親要素の権限を適用**という仕様にしている
 - 申込フォームのように申込期限がある場合、同一IDで下の例のように設定する。
   ```
   <!-- 申込開始前 〜2024/03/31 --＞
@@ -202,9 +206,8 @@ window.addEventListener('DOMContentLoaded',() => {
   try {
 
     v.auth = new authClient();
-    v.arg = {...}; // 次項「BurgerMenuクラスメンバ」参照
     v.menu = new BurgerMenu({
-      auth: v.auth.authority, // 閲覧者の権限
+      auth: v.auth.auth, // 閲覧者の権限
     });
     if( v.menu instanceof Error ) throw v.menu;
 
@@ -244,7 +247,7 @@ window.addEventListener('DOMContentLoaded',() => {
 
 * [BurgerMenu](#BurgerMenu)
     * [new BurgerMenu(arg)](#new_BurgerMenu_new)
-    * [.genNavi(parent, navi)](#BurgerMenu+genNavi) ⇒ <code>null</code> \| <code>Error</code>
+    * [.genNavi([auth], [pAuth], wrapper, navi)](#BurgerMenu+genNavi) ⇒ <code>null</code> \| <code>Error</code>
 
 <a name="new_BurgerMenu_new"></a>
 
@@ -256,15 +259,17 @@ window.addEventListener('DOMContentLoaded',() => {
 
 <a name="BurgerMenu+genNavi"></a>
 
-## burgerMenu.genNavi(parent, navi) ⇒ <code>null</code> \| <code>Error</code>
+## burgerMenu.genNavi([auth], [pAuth], wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>
 親要素を走査してナビゲーションを作成
 
 **Kind**: instance method of [<code>BurgerMenu</code>](#BurgerMenu)  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| parent | <code>HTMLElement</code> | body等の親要素。 |
-| navi | <code>HTMLElement</code> | nav等のナビゲーション領域 |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [auth] | <code>number</code> | <code>this.auth</code> | 閲覧者の権限 |
+| [pAuth] | <code>number</code> | <code>1</code> | HTML上の親要素のレベル(表示に必要な権限) |
+| wrapper | <code>HTMLElement</code> |  | body等の親要素。 |
+| navi | <code>HTMLElement</code> |  | nav等のナビゲーション領域 |
 
 # プログラムソース
 
@@ -568,12 +573,15 @@ class BurgerMenu {
       v.step = 4.1; // idの存否チェック
       if( !v.rv.hasOwnProperty('id') )
         throw new Error('data-BurgerMenuの設定値にはidが必須です\n'+arg);
-      v.step = 4.2; // authの既定値設定
+      v.step = 4.2; // ラベル不在の場合はidをセット
+      if( !v.rv.hasOwnProperty('label') )
+        v.rv.label = v.rv.id;
+      v.step = 4.3; // authの既定値設定
       v.rv.auth = v.rv.hasOwnProperty('auth') ? Number(v.rv.auth) : 1;
-      v.step = 4.3; // func,href両方有ればhrefを削除
+      v.step = 4.4; // func,href両方有ればhrefを削除
       if( v.rv.hasOwnProperty('func') && v.rv.hasOwnProperty('href') )
         delete v.rv.href;
-      v.step = 4.4; // from/toの既定値設定
+      v.step = 4.5; // from/toの既定値設定
       v.rv.from = v.rv.hasOwnProperty('from')
         ? new Date(v.rv.from).getTime() : 0;  // 1970/1/1(UTC)
       v.rv.to = v.rv.hasOwnProperty('to')
@@ -585,19 +593,20 @@ class BurgerMenu {
   
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\narg=${stringify(arg)}`;  // 引数
+      + `\n${e.message}\narg=${stringify(arg)}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
   }
   
   /** 親要素を走査してナビゲーションを作成
-   * @param {HTMLElement} parent - body等の親要素。
+   * @param {number} [auth=this.auth] - 閲覧者の権限
+   * @param {number} [pAuth=1] - HTML上の親要素のレベル(表示に必要な権限)
+   * @param {HTMLElement} wrapper - body等の親要素。
    * @param {HTMLElement} navi - nav等のナビゲーション領域
    * @returns {null|Error}
    */
-  genNavi(auth=this.auth,parent=this.parent,navi=this.navi){
+  genNavi(auth=this.auth,pAuth=1,wrapper=this.wrapper,navi=this.navi){
     const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
     console.log(`${v.whois} start.`);
     try {
@@ -606,37 +615,42 @@ class BurgerMenu {
       if( auth !== this.auth ) this.auth = auth;
 
       v.step = 1; // 子要素を順次走査し、data-BurgerMenuを持つ要素をnaviに追加
-      for( v.i=0 ; v.i<parent.childElementCount ; v.i++ ){
-        v.d = parent.children[v.i];
+      for( v.i=0 ; v.i<wrapper.childElementCount ; v.i++ ){
+        v.d = wrapper.children[v.i];
 
-        v.step = 2; // data-BurgerMenuを持たない要素はスキップ
+        // wrapper内のdata-BurgerMenu属性を持つ要素に対する処理
+        v.step = 2.1; // data-BurgerMenuを持たない要素はスキップ
         v.attr = this.#objectize(v.d.getAttribute(`data-${this.constructor.name}`));
         if( v.attr instanceof Error ) throw v.attr;
         if( v.attr === null ) continue;
 
-        v.step = 3.1; // 実行権限がない機能・画面はナビに追加しない
-        if( (this.auth & v.attr.auth) === 0 ) continue;
-        v.step = 3.2; // 有効期間外の場合はナビに追加しない
-        if( v.now < v.attr.from || v.attr.to < v.now ) continue;
+        v.step = 2.2; // 親要素の必要権限>子要素の必要権限 ⇒ 子要素の必要権限を親要素に合わせる
+        if( v.attr.auth < pAuth ) v.attr.auth = pAuth;
 
-        v.step = 4.1; // screenクラスが無ければ追加
+        v.step = 2.3; // screenクラスが無ければ追加
         v.class = v.d.className.match(/screen/);
         if( !v.class ) v.d.classList.add('screen'); 
-        v.step = 4.2; // nameが無ければ追加
+        v.step = 2.4; // nameが無ければ追加
         v.name = v.d.getAttribute('name');
         if( !v.name ){
           v.name = v.attr.id;
           v.d.setAttribute('name',v.name);
         }
-        v.step = 4.3; // nav領域にul未設定なら追加
+
+        // navi領域への追加が必要か、判断
+        v.step = 3.1; // 実行権限がない機能・画面はnavi領域に追加しない
+        if( (this.auth & v.attr.auth) === 0 ) continue;
+        v.step = 3.2; // 有効期間外の場合はnavi領域に追加しない
+        if( v.now < v.attr.from || v.attr.to < v.now ) continue;
+
+        v.step = 4; // navi領域にul未設定なら追加
         if( navi.tagName !== 'UL' ){
           v.r = createElement({tag:'ul',attr:{class:this.constructor.name}},navi);
           if( v.r instanceof Error ) throw v.r;
           navi = v.r;
-          console.log(navi);
         }
 
-        v.step = 5; // メニューの追加
+        v.step = 5; // メニュー項目(li)の追加
         v.li = {tag:'li',children:[{
           tag:'a',
           text:v.attr.label,
@@ -686,7 +700,7 @@ class BurgerMenu {
 
         v.step = 5.5; // 子要素にdata-BurgerMenuが存在する場合、再帰呼出
         if( v.hasChild ){
-          v.r = this.genNavi(this.auth,v.d,v.r);
+          v.r = this.genNavi(this.auth,v.attr.auth,v.d,v.r);
           if( v.r instanceof Error ) throw v.r;
         }
       }
@@ -697,8 +711,7 @@ class BurgerMenu {
   
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\narg=${stringify(arg)}`;  // 引数
+      + `\n${e.message}\nauth=${auth}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
@@ -828,7 +841,7 @@ td, .td {
       1. <a href="#ac0009">インスタンス生成時の引数</a>
 1. <a href="#ac0010">BurgerMenu仕様</a>
    1. <a href="#ac0011">new BurgerMenu(arg)</a>
-   1. <a href="#ac0012">burgerMenu.genNavi(parent, navi) ⇒ <code>null</code> \| <code>Error</code></a>
+   1. <a href="#ac0012">burgerMenu.genNavi([auth], [pAuth], wrapper, navi) ⇒ <code>null</code> \| <code>Error</code></a>
 1. <a href="#ac0013">プログラムソース</a>
 1. <a href="#ac0014">改版履歴</a>
 
@@ -872,23 +885,25 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 
 ```
 <body>
-  <div class="c1001" data-BurgerMenu="label:'スタッフ',authority:2">
-    <div class="c1002" data-BurgerMenu="label:'受付業務',func:'recept'"></div>
-    <div class="c1003" data-BurgerMenu="label:'校内探険'">
-        <img src="expedition.png" width="600px" />
+  <p class="title">校庭キャンプ2024</p>
+  <div class="BurgerMenu screen" name="wrapper">
+    <div data-BurgerMenu="id:'イベント情報'">
+      <div data-BurgerMenu="id:'掲示板',func:'dispBoard'"></div>
+      <div data-BurgerMenu="id:'実施要領'">
+        <!--：：$tmp/実施要領.html：：--> ※ embedRecursivelyのプレースホルダは一行で記述
+      </div>
     </div>
   </div>
-  <div class="c1004" data-BurgerMenu="label:'Tips',href:'https://〜/tips.html'"></div>
-</body>
+(中略)
 ```
 
 下位の階層を持つ場合、自分自身の表示内容は持たせない(以下はNG)
 
 ```
-<div data-BurgerMenu="label:'お知らせ'">
+<div data-BurgerMenu="id:'お知らせ'">
 !!NG!! <p>お知らせのページです</p>
-  <div data-BurgerMenu="label:'掲示板'">〜</div>
-  <div data-BurgerMenu="label:'注意事項'">〜</div>
+  <div data-BurgerMenu="id:'掲示板'">〜</div>
+  <div data-BurgerMenu="id:'注意事項'">〜</div>
 </div>
 ```
 
@@ -904,17 +919,17 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 
 オブジェクトの記述に準ずる。但し短縮するため前後の"{","}"は省略する。
 
-- {string} id - メニューID
-- {string} label - メニュー化する時の名称
+- {string} id - 【必須】メニューID
+- {string} [label] - メニュー化する時の名称。省略時はidを使用
 - {string} [func] - メニュー選択時に実行する関数名。<br>
   関数名と実際の関数はBurgerMenuインスタンス生成時に定義。
 - {string} [href] - 遷移先のURL。別タブが開かれる。
 - {number} [auth=1] - 表示権限(既定値:1)。<br>
-  BurgerMenuインスタンス生成時のauthorityとの論理積>0なら表示する。<br>
-  ex: 一般参加者1、スタッフ2として<br>
-      data-BurgerMenu="authrotiry:2"とされた要素は、<br>
-      new BurgerMenu({authority:1})の一般参加者は非表示、<br>
-      new BurgerMenu({authority:2})のスタッフは表示となる。
+  BurgerMenuインスタンス生成時のauthとの論理積>0なら表示する。
+  > ex: 一般参加者1、スタッフ2として
+  >     data-BurgerMenu="auth:2"とされた要素は、
+  >     new BurgerMenu({auth:1})の一般参加者は非表示、
+  >     new BurgerMenu({auth:2})のスタッフは表示となる。
 - {string} [from='1970/1/1'] - メニュー有効期間の開始日時。Dateオブジェクトで処理可能な日時文字列で指定
 - {string} [to='9999/12/31'] - メニュー有効期間の終了日時
 
@@ -933,9 +948,11 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
   <div data-BurgerMenu="auth:8">システム設定</div>
   (中略)
   <script>
-    const authority = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:15
-    const menu = new BurgerMenu({auth:authority.level}); // レベルを渡してメニュー生成
+    const auth = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:15
+    const menu = new BurgerMenu({auth:auth.level}); // レベルを渡してメニュー生成
   ```
+- 権限は一般公開部分は`auth=1`とし、以降**権限が大きくなるにつれて大きな数字を使用**する<br>
+  ∵ data-BurgerMenu属性を持つ要素が入れ子になっている場合、**親要素の権限>子要素の権限 ⇒ 子要素に親要素の権限を適用**という仕様にしている
 - 申込フォームのように申込期限がある場合、同一IDで下の例のように設定する。
   ```
   <!-- 申込開始前 〜2024/03/31 -->
@@ -974,9 +991,8 @@ window.addEventListener('DOMContentLoaded',() => {
   try {
 
     v.auth = new authClient();
-    v.arg = {...}; // 次項「BurgerMenuクラスメンバ」参照
     v.menu = new BurgerMenu({
-      auth: v.auth.authority, // 閲覧者の権限
+      auth: v.auth.auth, // 閲覧者の権限
     });
     if( v.menu instanceof Error ) throw v.menu;
 
@@ -1024,14 +1040,14 @@ window.addEventListener('DOMContentLoaded',() => {
 
 * [BurgerMenu](#BurgerMenu)
     * [new BurgerMenu(arg)](#new_BurgerMenu_new)
-    * [.genNavi(parent, navi)](#BurgerMenu+genNavi) ⇒ <code>null</code> \| <code>Error</code>
+    * [.genNavi([auth], [pAuth], wrapper, navi)](#BurgerMenu+genNavi) ⇒ <code>null</code> \| <code>Error</code>
 
 <a name="new_BurgerMenu_new"></a>
 
 ## 3.1 new BurgerMenu(arg)<a name="ac0011"></a>
 
 [先頭](#ac0000) > [BurgerMenu仕様](#ac0010)
-<br>&gt; [new BurgerMenu(arg) | [burgerMenu.genNavi(parent, navi) ⇒ <code>null</code> \| <code>Error</code>](#ac0012)]
+<br>&gt; [new BurgerMenu(arg) | [burgerMenu.genNavi([auth], [pAuth], wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>](#ac0012)]
 
 
 | Param | Type |
@@ -1040,19 +1056,21 @@ window.addEventListener('DOMContentLoaded',() => {
 
 <a name="BurgerMenu+genNavi"></a>
 
-## 3.2 burgerMenu.genNavi(parent, navi) ⇒ <code>null</code> \| <code>Error</code><a name="ac0012"></a>
+## 3.2 burgerMenu.genNavi([auth], [pAuth], wrapper, navi) ⇒ <code>null</code> \| <code>Error</code><a name="ac0012"></a>
 
 [先頭](#ac0000) > [BurgerMenu仕様](#ac0010)
-<br>&gt; [[new BurgerMenu(arg)](#ac0011) | burgerMenu.genNavi(parent, navi) ⇒ <code>null</code> \| <code>Error</code>]
+<br>&gt; [[new BurgerMenu(arg)](#ac0011) | burgerMenu.genNavi([auth], [pAuth], wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>]
 
 親要素を走査してナビゲーションを作成
 
 **Kind**: instance method of [<code>BurgerMenu</code>](#BurgerMenu)  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| parent | <code>HTMLElement</code> | body等の親要素。 |
-| navi | <code>HTMLElement</code> | nav等のナビゲーション領域 |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| [auth] | <code>number</code> | <code>this.auth</code> | 閲覧者の権限 |
+| [pAuth] | <code>number</code> | <code>1</code> | HTML上の親要素のレベル(表示に必要な権限) |
+| wrapper | <code>HTMLElement</code> |  | body等の親要素。 |
+| navi | <code>HTMLElement</code> |  | nav等のナビゲーション領域 |
 
 # 4 プログラムソース<a name="ac0013"></a>
 
@@ -1360,12 +1378,15 @@ class BurgerMenu {
       v.step = 4.1; // idの存否チェック
       if( !v.rv.hasOwnProperty('id') )
         throw new Error('data-BurgerMenuの設定値にはidが必須です\n'+arg);
-      v.step = 4.2; // authの既定値設定
+      v.step = 4.2; // ラベル不在の場合はidをセット
+      if( !v.rv.hasOwnProperty('label') )
+        v.rv.label = v.rv.id;
+      v.step = 4.3; // authの既定値設定
       v.rv.auth = v.rv.hasOwnProperty('auth') ? Number(v.rv.auth) : 1;
-      v.step = 4.3; // func,href両方有ればhrefを削除
+      v.step = 4.4; // func,href両方有ればhrefを削除
       if( v.rv.hasOwnProperty('func') && v.rv.hasOwnProperty('href') )
         delete v.rv.href;
-      v.step = 4.4; // from/toの既定値設定
+      v.step = 4.5; // from/toの既定値設定
       v.rv.from = v.rv.hasOwnProperty('from')
         ? new Date(v.rv.from).getTime() : 0;  // 1970/1/1(UTC)
       v.rv.to = v.rv.hasOwnProperty('to')
@@ -1377,19 +1398,20 @@ class BurgerMenu {
   
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\narg=${stringify(arg)}`;  // 引数
+      + `\n${e.message}\narg=${stringify(arg)}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
   }
   
   /** 親要素を走査してナビゲーションを作成
-   * @param {HTMLElement} parent - body等の親要素。
+   * @param {number} [auth=this.auth] - 閲覧者の権限
+   * @param {number} [pAuth=1] - HTML上の親要素のレベル(表示に必要な権限)
+   * @param {HTMLElement} wrapper - body等の親要素。
    * @param {HTMLElement} navi - nav等のナビゲーション領域
    * @returns {null|Error}
    */
-  genNavi(auth=this.auth,parent=this.parent,navi=this.navi){
+  genNavi(auth=this.auth,pAuth=1,wrapper=this.wrapper,navi=this.navi){
     const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
     console.log(`${v.whois} start.`);
     try {
@@ -1398,37 +1420,42 @@ class BurgerMenu {
       if( auth !== this.auth ) this.auth = auth;
 
       v.step = 1; // 子要素を順次走査し、data-BurgerMenuを持つ要素をnaviに追加
-      for( v.i=0 ; v.i<parent.childElementCount ; v.i++ ){
-        v.d = parent.children[v.i];
+      for( v.i=0 ; v.i<wrapper.childElementCount ; v.i++ ){
+        v.d = wrapper.children[v.i];
 
-        v.step = 2; // data-BurgerMenuを持たない要素はスキップ
+        // wrapper内のdata-BurgerMenu属性を持つ要素に対する処理
+        v.step = 2.1; // data-BurgerMenuを持たない要素はスキップ
         v.attr = this.#objectize(v.d.getAttribute(`data-${this.constructor.name}`));
         if( v.attr instanceof Error ) throw v.attr;
         if( v.attr === null ) continue;
 
-        v.step = 3.1; // 実行権限がない機能・画面はナビに追加しない
-        if( (this.auth & v.attr.auth) === 0 ) continue;
-        v.step = 3.2; // 有効期間外の場合はナビに追加しない
-        if( v.now < v.attr.from || v.attr.to < v.now ) continue;
+        v.step = 2.2; // 親要素の必要権限>子要素の必要権限 ⇒ 子要素の必要権限を親要素に合わせる
+        if( v.attr.auth < pAuth ) v.attr.auth = pAuth;
 
-        v.step = 4.1; // screenクラスが無ければ追加
+        v.step = 2.3; // screenクラスが無ければ追加
         v.class = v.d.className.match(/screen/);
         if( !v.class ) v.d.classList.add('screen'); 
-        v.step = 4.2; // nameが無ければ追加
+        v.step = 2.4; // nameが無ければ追加
         v.name = v.d.getAttribute('name');
         if( !v.name ){
           v.name = v.attr.id;
           v.d.setAttribute('name',v.name);
         }
-        v.step = 4.3; // nav領域にul未設定なら追加
+
+        // navi領域への追加が必要か、判断
+        v.step = 3.1; // 実行権限がない機能・画面はnavi領域に追加しない
+        if( (this.auth & v.attr.auth) === 0 ) continue;
+        v.step = 3.2; // 有効期間外の場合はnavi領域に追加しない
+        if( v.now < v.attr.from || v.attr.to < v.now ) continue;
+
+        v.step = 4; // navi領域にul未設定なら追加
         if( navi.tagName !== 'UL' ){
           v.r = createElement({tag:'ul',attr:{class:this.constructor.name}},navi);
           if( v.r instanceof Error ) throw v.r;
           navi = v.r;
-          console.log(navi);
         }
 
-        v.step = 5; // メニューの追加
+        v.step = 5; // メニュー項目(li)の追加
         v.li = {tag:'li',children:[{
           tag:'a',
           text:v.attr.label,
@@ -1478,7 +1505,7 @@ class BurgerMenu {
 
         v.step = 5.5; // 子要素にdata-BurgerMenuが存在する場合、再帰呼出
         if( v.hasChild ){
-          v.r = this.genNavi(this.auth,v.d,v.r);
+          v.r = this.genNavi(this.auth,v.attr.auth,v.d,v.r);
           if( v.r instanceof Error ) throw v.r;
         }
       }
@@ -1489,8 +1516,7 @@ class BurgerMenu {
   
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\narg=${stringify(arg)}`;  // 引数
+      + `\n${e.message}\nauth=${auth}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }

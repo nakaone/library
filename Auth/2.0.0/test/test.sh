@@ -46,6 +46,10 @@ echo "`date +"%T"` - step.1.3 start."
 clSrc="$tmp/client.html"; touch $clSrc
 svSrc="$tmp/server.js"; touch $svSrc
 
+# 1.4 使用するクラスを最新化
+echo "`date +"%T"` - step.1.4 start."
+$mod/build.sh
+
 # ----------------------------------------------
 # 2. server.gsの作成
 # ----------------------------------------------

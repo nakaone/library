@@ -28,7 +28,7 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
     <div data-BurgerMenu="id:'イベント情報'">
       <div data-BurgerMenu="id:'掲示板',func:'dispBoard'"></div>
       <div data-BurgerMenu="id:'実施要領'">
-        <!--::$tmp/実施要領.html::--> ※ embedRecursivelyのプレースホルダは一行で記述
+        <!--：：$tmp/実施要領.html：：--> ※ embedRecursivelyのプレースホルダは一行で記述
       </div>
     </div>
   </div>

@@ -2,6 +2,7 @@
  * @param {Event} e - GASから渡されるイベントオブジェクト。
  * @returns {HtmlOutput}
  * - GAS公式 ウェブアプリ - [リクエストパラメータ](https://developers.google.com/apps-script/guides/web?hl=ja)
+ * - [Webページからデータを送信する](https://www2.kobe-u.ac.jp/~tnishida/programming/GAS-02.html#senddata)
  * 
  * @example
  * 
@@ -10,6 +11,7 @@
  */
 function doGet(e){
   const template = HtmlService.createTemplateFromFile('index');
+  template.camp2024_id = e.parameter.id;
   const htmlOutput = template.evaluate();
   htmlOutput.setTitle('camp2024');
   return htmlOutput;

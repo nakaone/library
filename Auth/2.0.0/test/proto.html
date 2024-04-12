@@ -5,6 +5,7 @@
 </style>
 <!--::$src/cdn.html::-->
 </head><body>
+<div style="display:none" name="camp2024_id"><?= camp2024_id ?></div>
 <p class="title">校庭キャンプ2024</p>
 <div class="BurgerMenu screen" name="wrapper">
   <div data-BurgerMenu="id:'イベント情報'">
@@ -52,6 +53,9 @@ window.addEventListener('DOMContentLoaded',() => {
   const v = {whois:'DOMContentLoaded',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
+
+    v.id = document.querySelector('[name="camp2024_id"]').innerText;
+    console.log(`id=${v.id}`);
 
     v.auth = new authClient();
     v.menu = new BurgerMenu();

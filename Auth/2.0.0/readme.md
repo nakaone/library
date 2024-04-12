@@ -141,7 +141,7 @@ sequenceDiagram
 ```
 
 - 水色の部分はhtmlのonload時処理
-- 表示要求に対するserverからの戻り値(ID)は、[HtmlOutput.appendUntrusted()](https://developers.google.com/apps-script/reference/html/html-output?hl=ja#appenduntrustedaddedcontent)を使用して、HTMLの要素として返す。
+- 表示要求に対するserverからの戻り値(ID)は、bodyタグ直下の冒頭に隠しDIVを用意し、そのinnerTextとして返す。
 - 「インスタンス生成」の処理内容
   1. authClient.constructor()
      1. localStorageにIDがあるか確認<br>
@@ -149,6 +149,10 @@ sequenceDiagram
   1. BurgerMenu.constructor()
      1. AuthインスタンスをBurgerMenuのインスタンスメンバとして生成(以下Burger.auth)
      1. Burger.auth.IDの値に従ってAuthメニュー描画(メニューアイコン、nav領域)
+
+<!--
+[HtmlOutput.appendUntrusted()](https://developers.google.com/apps-script/reference/html/html-output?hl=ja#appenduntrustedaddedcontent)を使用して、HTMLの要素として返す。
+--＞
 
 ## 新規登録
 
@@ -715,7 +719,7 @@ sequenceDiagram
 ```
 
 - 水色の部分はhtmlのonload時処理
-- 表示要求に対するserverからの戻り値(ID)は、[HtmlOutput.appendUntrusted()](https://developers.google.com/apps-script/reference/html/html-output?hl=ja#appenduntrustedaddedcontent)を使用して、HTMLの要素として返す。
+- 表示要求に対するserverからの戻り値(ID)は、bodyタグ直下の冒頭に隠しDIVを用意し、そのinnerTextとして返す。
 - 「インスタンス生成」の処理内容
   1. authClient.constructor()
      1. localStorageにIDがあるか確認<br>
@@ -723,6 +727,10 @@ sequenceDiagram
   1. BurgerMenu.constructor()
      1. AuthインスタンスをBurgerMenuのインスタンスメンバとして生成(以下Burger.auth)
      1. Burger.auth.IDの値に従ってAuthメニュー描画(メニューアイコン、nav領域)
+
+<!--
+[HtmlOutput.appendUntrusted()](https://developers.google.com/apps-script/reference/html/html-output?hl=ja#appenduntrustedaddedcontent)を使用して、HTMLの要素として返す。
+-->
 
 ## 2.2 新規登録<a name="ac0007"></a>
 

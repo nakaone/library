@@ -93,6 +93,7 @@ td, .td {
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.3.2/alasql.min.js" integrity="sha512-aLCnYphqnhhuL0uDFIOSQoD0b2ezNaccMQ6OLGmoxW0cL97b05lOpNx7a31A01xnc5Kf09O0y0jl0Tem1psBSQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head><body>
+<div style="display:none" name="camp2024_id"><?= camp2024_id ?></div>
 <p class="title">校庭キャンプ2024</p>
 <div class="BurgerMenu screen" name="wrapper">
   <div data-BurgerMenu="id:'イベント情報'">
@@ -1296,6 +1297,9 @@ window.addEventListener('DOMContentLoaded',() => {
   const v = {whois:'DOMContentLoaded',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
+
+    v.id = document.querySelector('[name="camp2024_id"]').innerText;
+    console.log(`id=${v.id}`);
 
     v.auth = new authClient();
     v.menu = new BurgerMenu();
