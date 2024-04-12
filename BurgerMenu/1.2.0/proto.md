@@ -23,23 +23,25 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 
 ```
 <body>
-  <div class="c1001" data-BurgerMenu="label:'スタッフ',authority:2">
-    <div class="c1002" data-BurgerMenu="label:'受付業務',func:'recept'"></div>
-    <div class="c1003" data-BurgerMenu="label:'校内探険'">
-        <img src="expedition.png" width="600px" />
+  <p class="title">校庭キャンプ2024</p>
+  <div class="BurgerMenu screen" name="wrapper">
+    <div data-BurgerMenu="id:'イベント情報'">
+      <div data-BurgerMenu="id:'掲示板',func:'dispBoard'"></div>
+      <div data-BurgerMenu="id:'実施要領'">
+        <!--::$tmp/実施要領.html::--> ※ embedRecursivelyのプレースホルダは一行で記述
+      </div>
     </div>
   </div>
-  <div class="c1004" data-BurgerMenu="label:'Tips',href:'https://〜/tips.html'"></div>
-</body>
+(中略)
 ```
 
 下位の階層を持つ場合、自分自身の表示内容は持たせない(以下はNG)
 
 ```
-<div data-BurgerMenu="label:'お知らせ'">
+<div data-BurgerMenu="id:'お知らせ'">
 !!NG!! <p>お知らせのページです</p>
-  <div data-BurgerMenu="label:'掲示板'">〜</div>
-  <div data-BurgerMenu="label:'注意事項'">〜</div>
+  <div data-BurgerMenu="id:'掲示板'">〜</div>
+  <div data-BurgerMenu="id:'注意事項'">〜</div>
 </div>
 ```
 
@@ -51,17 +53,17 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 
 オブジェクトの記述に準ずる。但し短縮するため前後の"{","}"は省略する。
 
-- {string} id - メニューID
-- {string} label - メニュー化する時の名称
+- {string} id - 【必須】メニューID
+- {string} [label] - メニュー化する時の名称。省略時はidを使用
 - {string} [func] - メニュー選択時に実行する関数名。<br>
   関数名と実際の関数はBurgerMenuインスタンス生成時に定義。
 - {string} [href] - 遷移先のURL。別タブが開かれる。
 - {number} [auth=1] - 表示権限(既定値:1)。<br>
-  BurgerMenuインスタンス生成時のauthorityとの論理積>0なら表示する。<br>
-  ex: 一般参加者1、スタッフ2として<br>
-      data-BurgerMenu="authrotiry:2"とされた要素は、<br>
-      new BurgerMenu({authority:1})の一般参加者は非表示、<br>
-      new BurgerMenu({authority:2})のスタッフは表示となる。
+  BurgerMenuインスタンス生成時のauthとの論理積>0なら表示する。
+  > ex: 一般参加者1、スタッフ2として
+  >     data-BurgerMenu="auth:2"とされた要素は、
+  >     new BurgerMenu({auth:1})の一般参加者は非表示、
+  >     new BurgerMenu({auth:2})のスタッフは表示となる。
 - {string} [from='1970/1/1'] - メニュー有効期間の開始日時。Dateオブジェクトで処理可能な日時文字列で指定
 - {string} [to='9999/12/31'] - メニュー有効期間の終了日時
 
@@ -80,9 +82,11 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
   <div data-BurgerMenu="auth:8">システム設定</div>
   (中略)
   <script>
-    const authority = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:15
-    const menu = new BurgerMenu({auth:authority.level}); // レベルを渡してメニュー生成
+    const auth = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:15
+    const menu = new BurgerMenu({auth:auth.level}); // レベルを渡してメニュー生成
   ```
+- 権限は一般公開部分は`auth=1`とし、以降**権限が大きくなるにつれて大きな数字を使用**する<br>
+  ∵ data-BurgerMenu属性を持つ要素が入れ子になっている場合、**親要素の権限>子要素の権限 ⇒ 子要素に親要素の権限を適用**という仕様にしている
 - 申込フォームのように申込期限がある場合、同一IDで下の例のように設定する。
   ```
   <!-- 申込開始前 〜2024/03/31 -->
@@ -113,9 +117,8 @@ window.addEventListener('DOMContentLoaded',() => {
   try {
 
     v.auth = new authClient();
-    v.arg = {...}; // 次項「BurgerMenuクラスメンバ」参照
     v.menu = new BurgerMenu({
-      auth: v.auth.authority, // 閲覧者の権限
+      auth: v.auth.auth, // 閲覧者の権限
     });
     if( v.menu instanceof Error ) throw v.menu;
 

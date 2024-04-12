@@ -322,11 +322,13 @@ class BurgerMenu {
   }
   
   /** 親要素を走査してナビゲーションを作成
+   * @param {number} [auth=this.auth] - 閲覧者の権限
+   * @param {number} [pAuth=1] - HTML上の親要素のレベル(表示に必要な権限)
    * @param {HTMLElement} wrapper - body等の親要素。
    * @param {HTMLElement} navi - nav等のナビゲーション領域
    * @returns {null|Error}
    */
-  genNavi(auth=this.auth,wrapper=this.wrapper,navi=this.navi){
+  genNavi(auth=this.auth,pAuth=1,wrapper=this.wrapper,navi=this.navi){
     const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
     console.log(`${v.whois} start.`);
     try {
@@ -338,34 +340,39 @@ class BurgerMenu {
       for( v.i=0 ; v.i<wrapper.childElementCount ; v.i++ ){
         v.d = wrapper.children[v.i];
 
-        v.step = 2; // data-BurgerMenuを持たない要素はスキップ
+        // wrapper内のdata-BurgerMenu属性を持つ要素に対する処理
+        v.step = 2.1; // data-BurgerMenuを持たない要素はスキップ
         v.attr = this.#objectize(v.d.getAttribute(`data-${this.constructor.name}`));
         if( v.attr instanceof Error ) throw v.attr;
         if( v.attr === null ) continue;
 
-        v.step = 3.1; // 実行権限がない機能・画面はナビに追加しない
-        if( (this.auth & v.attr.auth) === 0 ) continue;
-        v.step = 3.2; // 有効期間外の場合はナビに追加しない
-        if( v.now < v.attr.from || v.attr.to < v.now ) continue;
+        v.step = 2.2; // 親要素の必要権限>子要素の必要権限 ⇒ 子要素の必要権限を親要素に合わせる
+        if( v.attr.auth < pAuth ) v.attr.auth = pAuth;
 
-        v.step = 4.1; // screenクラスが無ければ追加
+        v.step = 2.3; // screenクラスが無ければ追加
         v.class = v.d.className.match(/screen/);
         if( !v.class ) v.d.classList.add('screen'); 
-        v.step = 4.2; // nameが無ければ追加
+        v.step = 2.4; // nameが無ければ追加
         v.name = v.d.getAttribute('name');
         if( !v.name ){
           v.name = v.attr.id;
           v.d.setAttribute('name',v.name);
         }
-        v.step = 4.3; // nav領域にul未設定なら追加
+
+        // navi領域への追加が必要か、判断
+        v.step = 3.1; // 実行権限がない機能・画面はnavi領域に追加しない
+        if( (this.auth & v.attr.auth) === 0 ) continue;
+        v.step = 3.2; // 有効期間外の場合はnavi領域に追加しない
+        if( v.now < v.attr.from || v.attr.to < v.now ) continue;
+
+        v.step = 4; // navi領域にul未設定なら追加
         if( navi.tagName !== 'UL' ){
           v.r = createElement({tag:'ul',attr:{class:this.constructor.name}},navi);
           if( v.r instanceof Error ) throw v.r;
           navi = v.r;
-          console.log(navi);
         }
 
-        v.step = 5; // メニューの追加
+        v.step = 5; // メニュー項目(li)の追加
         v.li = {tag:'li',children:[{
           tag:'a',
           text:v.attr.label,
@@ -415,7 +422,7 @@ class BurgerMenu {
 
         v.step = 5.5; // 子要素にdata-BurgerMenuが存在する場合、再帰呼出
         if( v.hasChild ){
-          v.r = this.genNavi(this.auth,v.d,v.r);
+          v.r = this.genNavi(this.auth,v.attr.auth,v.d,v.r);
           if( v.r instanceof Error ) throw v.r;
         }
       }
