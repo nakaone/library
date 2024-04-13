@@ -16,8 +16,7 @@ sequenceDiagram
     server ->> client : HTML(object)+ID
     activate client
     deactivate server
-    Note right of client : authClient.constructor()
-    client ->> client : インスタンス生成、IDをブラウザに保存
+    client ->> client : localStorageのID確認、IDを渡されていたら更新
     Note right of client : BurgerMenu.constructor()
     alt IDが存在
       client ->> user : メンバ用サイト
@@ -30,6 +29,9 @@ sequenceDiagram
 
 - 水色の部分はhtmlのonload時処理
 - 表示要求に対するserverからの戻り値(ID)は、bodyタグ直下の冒頭に隠しDIVを用意し、そのinnerTextとして返す。
+- ID確認処理
+  - serverからIDが来ていた場合、それを採用。localStorageのIDを更新
+  - serverからIDが来ていなかった場合、localStorageにIDが保存されているか確認
 - 「インスタンス生成」の処理内容
   1. authClient.constructor()
      1. localStorageにIDがあるか確認<br>

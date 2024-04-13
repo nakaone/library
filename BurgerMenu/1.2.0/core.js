@@ -328,15 +328,17 @@ class BurgerMenu {
    * @param {HTMLElement} navi - nav等のナビゲーション領域
    * @returns {null|Error}
    */
-  genNavi(auth=this.auth,pAuth=1,wrapper=this.wrapper,navi=this.navi){
+  genNavi(auth=this.auth,pAuth=1,wrapper=this.wrapper,navi=this.navi,depth=0){
     const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
     console.log(`${v.whois} start.`);
     try {
 
-      v.step = 0; // 権限の変更があった場合、メンバを書き換え
+      v.step = 1.1; // 権限の変更があった場合、メンバを書き換え
       if( auth !== this.auth ) this.auth = auth;
+      v.step = 1.2; // navi領域をクリア
+      if( depth === 0 ) navi.innerHTML = '';
 
-      v.step = 1; // 子要素を順次走査し、data-BurgerMenuを持つ要素をnaviに追加
+      // 子要素を順次走査し、data-BurgerMenuを持つ要素をnaviに追加
       for( v.i=0 ; v.i<wrapper.childElementCount ; v.i++ ){
         v.d = wrapper.children[v.i];
 
@@ -382,10 +384,11 @@ class BurgerMenu {
         if( v.attr.hasOwnProperty('func') ){
           v.step = 5.1; // 指定関数実行の場合
           Object.assign(v.li.children[0],{
-            attr:{href:'#'},
+            attr:{href:'#',name:v.attr.func},
             event:{click:(event)=>{
               this.toggle();  // メニューを閉じる
-              this.func[v.attr.func](event); // 指定関数の実行
+              this.func[event.target.name](event); // 指定関数の実行
+              this.genNavi(); // メニュー再描画
             }},
           });
         } else if( v.attr.hasOwnProperty('href') ){
@@ -422,7 +425,7 @@ class BurgerMenu {
 
         v.step = 5.5; // 子要素にdata-BurgerMenuが存在する場合、再帰呼出
         if( v.hasChild ){
-          v.r = this.genNavi(this.auth,v.attr.auth,v.d,v.r);
+          v.r = this.genNavi(this.auth,v.attr.auth,v.d,v.r,depth+1);
           if( v.r instanceof Error ) throw v.r;
         }
       }
