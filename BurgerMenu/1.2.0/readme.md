@@ -102,6 +102,18 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 
 # 使用方法
 
+## sessionStorage
+
+ブラウザ側で、ユーザID/権限をsessionStorageに保存し、メニュー生成(genNavi)ではsessionStorageを参照する。
+
+∵ インスタンス生成時にfuncとしてメニュー選択時に実行する関数を渡すが、関数にユーザID/権限を渡すため
+
+- sessionStorageのラベル：config.programId
+- userId {number} ユーザID
+- auth {number} ユーザの持つ権限。当初1, ユーザID特定時点で2
+
+詳細は`resetStorage()`参照。
+
 ## htmlの設定
 
 ### body内部
@@ -138,7 +150,7 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 
 ### data-BurgerMenu属性に設定する文字列
 
-タグのauthとその人の権限の論理積>0ならメニューを表示する。
+タグのallowとその人の権限(auth)の論理積>0ならメニューを表示する。
 
 オブジェクトの記述に準ずる。但し短縮するため前後の"{","}"は省略する。
 
@@ -147,10 +159,10 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 - {string} [func] - メニュー選択時に実行する関数名。<br>
   関数名と実際の関数はBurgerMenuインスタンス生成時に定義。
 - {string} [href] - 遷移先のURL。別タブが開かれる。
-- {number} [auth=1] - 表示権限(既定値:1)。<br>
-  BurgerMenuインスタンス生成時のauthとの論理積>0なら表示する。
+- {number} [allow=2^32-1] - 開示範囲。<br>
+  BurgerMenuインスタンス生成時のユーザ権限(auth)との論理積>0なら表示する。
   > ex: 一般参加者1、スタッフ2として
-  >     data-BurgerMenu="auth:2"とされた要素は、
+  >     data-BurgerMenu="allow:2"とされた要素は、
   >     new BurgerMenu({auth:1})の一般参加者は非表示、
   >     new BurgerMenu({auth:2})のスタッフは表示となる。
 - {string} [from='1970/1/1'] - メニュー有効期間の開始日時。Dateオブジェクトで処理可能な日時文字列で指定
@@ -165,17 +177,16 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
   <div data-BurgerMenu="id:'c41',label:'これはOK',href:'https://〜'"></div>
   <div data-BurgerMenu="id:'c41',label:'これはNG',href:'https://〜'">テスト</div>
   ```
-- 以下例ではシステム管理者は両方表示されるが、一般ユーザにはシステム設定は表示されない
+- 以下例ではシステム管理者(auth=8)は両方表示されるが、一般ユーザ(auth=1)にはシステム設定は表示されない
   ```
-  <div data-BurgerMenu="auth:1">利用案内</div>
-  <div data-BurgerMenu="auth:8">システム設定</div>
+  <div data-BurgerMenu="allow:9">利用案内</div>
+  <div data-BurgerMenu="allow:8">システム設定</div>
   (中略)
   <script>
-    const auth = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:15
-    const menu = new BurgerMenu({auth:auth.level}); // レベルを渡してメニュー生成
+    const auth = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:8
+    const menu = new BurgerMenu();
   ```
-- 権限は一般公開部分は`auth=1`とし、以降**権限が大きくなるにつれて大きな数字を使用**する<br>
-  ∵ data-BurgerMenu属性を持つ要素が入れ子になっている場合、**親要素の権限>子要素の権限 ⇒ 子要素に親要素の権限を適用**という仕様にしている
+- ユーザ権限は一般公開部分は`auth=1`とし、auth=0は使用しない(∵0⇒誰も見えない)。以降**権限が大きくなるにつれて大きな数字を使用**する
 - 申込フォームのように申込期限がある場合、同一IDで下の例のように設定する。
   ```
   <!-- 申込開始前 〜2024/03/31 --＞
@@ -205,11 +216,26 @@ window.addEventListener('DOMContentLoaded',() => {
   console.log(`${v.whois} start.`);
   try {
 
+    v.step = 1; // userId,authをセット
+    v.config = resetStorage();
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 2.1; // 使用するクラスのインスタンス化
     v.auth = new authClient();
-    v.menu = new BurgerMenu({
-      auth: v.auth.auth, // 閲覧者の権限
-    });
-    if( v.menu instanceof Error ) throw v.menu;
+    v.step = 2.2;
+    v.menu = new BurgerMenu({func:{
+      enterId:()=>{
+        console.log('enterId start.');
+        const v = window.prompt('受付番号を入力してください');
+        if( v.match(/^[0-9]+/) ){
+          v.r = resetStorage(v);
+          if( v.r instanceof Error ) throw v.r;
+          //this.auth = 2; -> thisはwindowになる
+          console.log(this);
+          //this.genNavi(2); -> thisはwindowになる
+        }
+      }
+    }});
 
     v.step = 99; // 終了処理
     console.log(`${v.whois} normal end.`);
@@ -233,7 +259,6 @@ window.addEventListener('DOMContentLoaded',() => {
 1. その他はconstructorの引数で指定可、指定が無い項目は既定値をセット
 
 - wrapper='.BurgerMenu.screen[name="wrapper"]' {string|HTMLElement} 作成対象のdata-BurgerMenuを全て含む親要素。CSSセレクタかHTMLElementで指定。
-- auth=1 {number} 利用者の閲覧権限。メニューのauth(data-BurgerMenu:{auth:x})とのビット積=0なら当該メニューは作成しない
 - func {Object.<string,Function>} メニューから実行する関数を集めたライブラリ
 - home {string} ホーム画面として使用するメニューの識別子。無指定の場合、wrapper直下でdata-BurgerMenu属性を持つ最初の要素
 - initialSubMenu=true {boolean} サブメニューの初期状態。true:開いた状態、false:閉じた状態
@@ -831,22 +856,23 @@ td, .td {
 1. <a href="#ac0001">概要</a>
    1. <a href="#ac0002">機能概要</a>
 1. <a href="#ac0003">使用方法</a>
-   1. <a href="#ac0004">htmlの設定</a>
-      1. <a href="#ac0005">body内部</a>
-      1. <a href="#ac0006">data-BurgerMenu属性に設定する文字列</a>
-   1. <a href="#ac0007">scriptの設定</a>
-      1. <a href="#ac0008">scriptサンプル</a>
-      1. <a href="#ac0009">インスタンス生成時の引数</a>
-1. <a href="#ac0010">BurgerMenu仕様</a>
-   1. <a href="#ac0011">new BurgerMenu(arg)</a>
-   1. <a href="#ac0012">burgerMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code></a>
-1. <a href="#ac0013">プログラムソース</a>
-1. <a href="#ac0014">改版履歴</a>
+   1. <a href="#ac0004">sessionStorage</a>
+   1. <a href="#ac0005">htmlの設定</a>
+      1. <a href="#ac0006">body内部</a>
+      1. <a href="#ac0007">data-BurgerMenu属性に設定する文字列</a>
+   1. <a href="#ac0008">scriptの設定</a>
+      1. <a href="#ac0009">scriptサンプル</a>
+      1. <a href="#ac0010">インスタンス生成時の引数</a>
+1. <a href="#ac0011">BurgerMenu仕様</a>
+   1. <a href="#ac0012">new BurgerMenu(arg)</a>
+   1. <a href="#ac0013">burgerMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code></a>
+1. <a href="#ac0014">プログラムソース</a>
+1. <a href="#ac0015">改版履歴</a>
 
 # 1 概要<a name="ac0001"></a>
 
 [先頭](#ac0000)
-<br>&gt; [概要 | [使用方法](#ac0003) | [BurgerMenu仕様](#ac0010) | [プログラムソース](#ac0013) | [改版履歴](#ac0014)]
+<br>&gt; [概要 | [使用方法](#ac0003) | [BurgerMenu仕様](#ac0011) | [プログラムソース](#ac0014) | [改版履歴](#ac0015)]
 
 
 ## 1.1 機能概要<a name="ac0002"></a>
@@ -862,19 +888,35 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 # 2 使用方法<a name="ac0003"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[概要](#ac0001) | 使用方法 | [BurgerMenu仕様](#ac0010) | [プログラムソース](#ac0013) | [改版履歴](#ac0014)]
+<br>&gt; [[概要](#ac0001) | 使用方法 | [BurgerMenu仕様](#ac0011) | [プログラムソース](#ac0014) | [改版履歴](#ac0015)]
 
 
-## 2.1 htmlの設定<a name="ac0004"></a>
+## 2.1 sessionStorage<a name="ac0004"></a>
 
 [先頭](#ac0000) > [使用方法](#ac0003)
-<br>&gt; [htmlの設定 | [scriptの設定](#ac0007)]
+<br>&gt; [sessionStorage | [htmlの設定](#ac0005) | [scriptの設定](#ac0008)]
 
 
-### 2.1.1 body内部<a name="ac0005"></a>
+ブラウザ側で、ユーザID/権限をsessionStorageに保存し、メニュー生成(genNavi)ではsessionStorageを参照する。
 
-[先頭](#ac0000) > [使用方法](#ac0003) > [htmlの設定](#ac0004)
-<br>&gt; [body内部 | [data-BurgerMenu属性に設定する文字列](#ac0006)]
+∵ インスタンス生成時にfuncとしてメニュー選択時に実行する関数を渡すが、関数にユーザID/権限を渡すため
+
+- sessionStorageのラベル：config.programId
+- userId {number} ユーザID
+- auth {number} ユーザの持つ権限。当初1, ユーザID特定時点で2
+
+詳細は`resetStorage()`参照。
+
+## 2.2 htmlの設定<a name="ac0005"></a>
+
+[先頭](#ac0000) > [使用方法](#ac0003)
+<br>&gt; [[sessionStorage](#ac0004) | htmlの設定 | [scriptの設定](#ac0008)]
+
+
+### 2.2.1 body内部<a name="ac0006"></a>
+
+[先頭](#ac0000) > [使用方法](#ac0003) > [htmlの設定](#ac0005)
+<br>&gt; [body内部 | [data-BurgerMenu属性に設定する文字列](#ac0007)]
 
 
 - 表示部は&lt;div data-BurgerMenu&gt;の階層内で定義する。<br>
@@ -907,13 +949,13 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 
 「お知らせ」は「掲示板」「注意事項」のブランチとして扱われるので、「&lt;p&gt;お知らせのページです&lt;/p&gt;」というお知らせページ自身の表示内容は定義不可。
 
-### 2.1.2 data-BurgerMenu属性に設定する文字列<a name="ac0006"></a>
+### 2.2.2 data-BurgerMenu属性に設定する文字列<a name="ac0007"></a>
 
-[先頭](#ac0000) > [使用方法](#ac0003) > [htmlの設定](#ac0004)
-<br>&gt; [[body内部](#ac0005) | data-BurgerMenu属性に設定する文字列]
+[先頭](#ac0000) > [使用方法](#ac0003) > [htmlの設定](#ac0005)
+<br>&gt; [[body内部](#ac0006) | data-BurgerMenu属性に設定する文字列]
 
 
-タグのauthとその人の権限の論理積>0ならメニューを表示する。
+タグのallowとその人の権限(auth)の論理積>0ならメニューを表示する。
 
 オブジェクトの記述に準ずる。但し短縮するため前後の"{","}"は省略する。
 
@@ -922,10 +964,10 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 - {string} [func] - メニュー選択時に実行する関数名。<br>
   関数名と実際の関数はBurgerMenuインスタンス生成時に定義。
 - {string} [href] - 遷移先のURL。別タブが開かれる。
-- {number} [auth=1] - 表示権限(既定値:1)。<br>
-  BurgerMenuインスタンス生成時のauthとの論理積>0なら表示する。
+- {number} [allow=2^32-1] - 開示範囲。<br>
+  BurgerMenuインスタンス生成時のユーザ権限(auth)との論理積>0なら表示する。
   > ex: 一般参加者1、スタッフ2として
-  >     data-BurgerMenu="auth:2"とされた要素は、
+  >     data-BurgerMenu="allow:2"とされた要素は、
   >     new BurgerMenu({auth:1})の一般参加者は非表示、
   >     new BurgerMenu({auth:2})のスタッフは表示となる。
 - {string} [from='1970/1/1'] - メニュー有効期間の開始日時。Dateオブジェクトで処理可能な日時文字列で指定
@@ -940,17 +982,16 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
   <div data-BurgerMenu="id:'c41',label:'これはOK',href:'https://〜'"></div>
   <div data-BurgerMenu="id:'c41',label:'これはNG',href:'https://〜'">テスト</div>
   ```
-- 以下例ではシステム管理者は両方表示されるが、一般ユーザにはシステム設定は表示されない
+- 以下例ではシステム管理者(auth=8)は両方表示されるが、一般ユーザ(auth=1)にはシステム設定は表示されない
   ```
-  <div data-BurgerMenu="auth:1">利用案内</div>
-  <div data-BurgerMenu="auth:8">システム設定</div>
+  <div data-BurgerMenu="allow:9">利用案内</div>
+  <div data-BurgerMenu="allow:8">システム設定</div>
   (中略)
   <script>
-    const auth = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:15
-    const menu = new BurgerMenu({auth:auth.level}); // レベルを渡してメニュー生成
+    const auth = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:8
+    const menu = new BurgerMenu();
   ```
-- 権限は一般公開部分は`auth=1`とし、以降**権限が大きくなるにつれて大きな数字を使用**する<br>
-  ∵ data-BurgerMenu属性を持つ要素が入れ子になっている場合、**親要素の権限>子要素の権限 ⇒ 子要素に親要素の権限を適用**という仕様にしている
+- ユーザ権限は一般公開部分は`auth=1`とし、auth=0は使用しない(∵0⇒誰も見えない)。以降**権限が大きくなるにつれて大きな数字を使用**する
 - 申込フォームのように申込期限がある場合、同一IDで下の例のように設定する。
   ```
   <!-- 申込開始前 〜2024/03/31 -->
@@ -970,16 +1011,16 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
   ```
 - メニュー生成時点で有効期限を判断、同一IDが複数存在する場合はいずれか一つのDIVのみ残して残りを削除してメニューを生成する。
 
-## 2.2 scriptの設定<a name="ac0007"></a>
+## 2.3 scriptの設定<a name="ac0008"></a>
 
 [先頭](#ac0000) > [使用方法](#ac0003)
-<br>&gt; [[htmlの設定](#ac0004) | scriptの設定]
+<br>&gt; [[sessionStorage](#ac0004) | [htmlの設定](#ac0005) | scriptの設定]
 
 
-### 2.2.1 scriptサンプル<a name="ac0008"></a>
+### 2.3.1 scriptサンプル<a name="ac0009"></a>
 
-[先頭](#ac0000) > [使用方法](#ac0003) > [scriptの設定](#ac0007)
-<br>&gt; [scriptサンプル | [インスタンス生成時の引数](#ac0009)]
+[先頭](#ac0000) > [使用方法](#ac0003) > [scriptの設定](#ac0008)
+<br>&gt; [scriptサンプル | [インスタンス生成時の引数](#ac0010)]
 
 
 ```
@@ -988,11 +1029,26 @@ window.addEventListener('DOMContentLoaded',() => {
   console.log(`${v.whois} start.`);
   try {
 
+    v.step = 1; // userId,authをセット
+    v.config = resetStorage();
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 2.1; // 使用するクラスのインスタンス化
     v.auth = new authClient();
-    v.menu = new BurgerMenu({
-      auth: v.auth.auth, // 閲覧者の権限
-    });
-    if( v.menu instanceof Error ) throw v.menu;
+    v.step = 2.2;
+    v.menu = new BurgerMenu({func:{
+      enterId:()=>{
+        console.log('enterId start.');
+        const v = window.prompt('受付番号を入力してください');
+        if( v.match(/^[0-9]+/) ){
+          v.r = resetStorage(v);
+          if( v.r instanceof Error ) throw v.r;
+          //this.auth = 2; -> thisはwindowになる
+          console.log(this);
+          //this.genNavi(2); -> thisはwindowになる
+        }
+      }
+    }});
 
     v.step = 99; // 終了処理
     console.log(`${v.whois} normal end.`);
@@ -1005,10 +1061,10 @@ window.addEventListener('DOMContentLoaded',() => {
 });
 ```
 
-### 2.2.2 インスタンス生成時の引数<a name="ac0009"></a>
+### 2.3.2 インスタンス生成時の引数<a name="ac0010"></a>
 
-[先頭](#ac0000) > [使用方法](#ac0003) > [scriptの設定](#ac0007)
-<br>&gt; [[scriptサンプル](#ac0008) | インスタンス生成時の引数]
+[先頭](#ac0000) > [使用方法](#ac0003) > [scriptの設定](#ac0008)
+<br>&gt; [[scriptサンプル](#ac0009) | インスタンス生成時の引数]
 
 
 インスタンス生成時の引数はそのまま**BurgerMenuメンバ**となる。
@@ -1020,7 +1076,6 @@ window.addEventListener('DOMContentLoaded',() => {
 1. その他はconstructorの引数で指定可、指定が無い項目は既定値をセット
 
 - wrapper='.BurgerMenu.screen[name="wrapper"]' {string|HTMLElement} 作成対象のdata-BurgerMenuを全て含む親要素。CSSセレクタかHTMLElementで指定。
-- auth=1 {number} 利用者の閲覧権限。メニューのauth(data-BurgerMenu:{auth:x})とのビット積=0なら当該メニューは作成しない
 - func {Object.<string,Function>} メニューから実行する関数を集めたライブラリ
 - home {string} ホーム画面として使用するメニューの識別子。無指定の場合、wrapper直下でdata-BurgerMenu属性を持つ最初の要素
 - initialSubMenu=true {boolean} サブメニューの初期状態。true:開いた状態、false:閉じた状態
@@ -1028,10 +1083,10 @@ window.addEventListener('DOMContentLoaded',() => {
 - toggle {Arrow} 【*内部*】ナビゲーション領域の表示/非表示切り替え
 - showChildren {Arrow} 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
 
-# 3 BurgerMenu仕様<a name="ac0010"></a>
+# 3 BurgerMenu仕様<a name="ac0011"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[概要](#ac0001) | [使用方法](#ac0003) | BurgerMenu仕様 | [プログラムソース](#ac0013) | [改版履歴](#ac0014)]
+<br>&gt; [[概要](#ac0001) | [使用方法](#ac0003) | BurgerMenu仕様 | [プログラムソース](#ac0014) | [改版履歴](#ac0015)]
 
 
 **Kind**: global class  
@@ -1042,10 +1097,10 @@ window.addEventListener('DOMContentLoaded',() => {
 
 <a name="new_BurgerMenu_new"></a>
 
-## 3.1 new BurgerMenu(arg)<a name="ac0011"></a>
+## 3.1 new BurgerMenu(arg)<a name="ac0012"></a>
 
-[先頭](#ac0000) > [BurgerMenu仕様](#ac0010)
-<br>&gt; [new BurgerMenu(arg) | [burgerMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>](#ac0012)]
+[先頭](#ac0000) > [BurgerMenu仕様](#ac0011)
+<br>&gt; [new BurgerMenu(arg) | [burgerMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>](#ac0013)]
 
 
 | Param | Type |
@@ -1054,10 +1109,10 @@ window.addEventListener('DOMContentLoaded',() => {
 
 <a name="BurgerMenu+genNavi"></a>
 
-## 3.2 burgerMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code><a name="ac0012"></a>
+## 3.2 burgerMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code><a name="ac0013"></a>
 
-[先頭](#ac0000) > [BurgerMenu仕様](#ac0010)
-<br>&gt; [[new BurgerMenu(arg)](#ac0011) | burgerMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>]
+[先頭](#ac0000) > [BurgerMenu仕様](#ac0011)
+<br>&gt; [[new BurgerMenu(arg)](#ac0012) | burgerMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>]
 
 親要素を走査してナビゲーションを作成
 
@@ -1068,10 +1123,10 @@ window.addEventListener('DOMContentLoaded',() => {
 | wrapper | <code>HTMLElement</code> | body等の親要素。 |
 | navi | <code>HTMLElement</code> | nav等のナビゲーション領域 |
 
-# 4 プログラムソース<a name="ac0013"></a>
+# 4 プログラムソース<a name="ac0014"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[概要](#ac0001) | [使用方法](#ac0003) | [BurgerMenu仕様](#ac0010) | プログラムソース | [改版履歴](#ac0014)]
+<br>&gt; [[概要](#ac0001) | [使用方法](#ac0003) | [BurgerMenu仕様](#ac0011) | プログラムソース | [改版履歴](#ac0015)]
 
 
 <details><summary>class BurgerMenu</summary>
@@ -1522,10 +1577,10 @@ class BurgerMenu {
 
 </details>
 
-# 5 改版履歴<a name="ac0014"></a>
+# 5 改版履歴<a name="ac0015"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[概要](#ac0001) | [使用方法](#ac0003) | [BurgerMenu仕様](#ac0010) | [プログラムソース](#ac0013) | 改版履歴]
+<br>&gt; [[概要](#ac0001) | [使用方法](#ac0003) | [BurgerMenu仕様](#ac0011) | [プログラムソース](#ac0014) | 改版履歴]
 
 
 - rev.1.2.0 : 2024/04/11
