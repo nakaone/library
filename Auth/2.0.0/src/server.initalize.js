@@ -1,53 +1,70 @@
 /** GAS側の初期化処理
- * システム導入・再初期化時のみ実行。実行後はソースファイルごとシートから削除すること。
+ * 
+ * パスフレーズが存在しない場合は自動生成して鍵ペアを生成してプロパティサービスに保存、
+ * 既存の場合はプロパティサービスから取得して返す。
+ * 
  * @param {Object} [arg={}] - 内容はv.default参照
- * @returns {void}
+ * @returns {Object} - 内容はv.default参照
+ * 
+ * @example
+ * 
+ * ** 注意事項 **
+ * 
+ * 他のauthServerメソッドは`v.func.xxx`として定義するが、
+ * 本メソッドはユーザに使用させないシステム的なメソッドのため、
+ * funcではなく`v.initialize`として定義する。
+ * 
+ * **戻り値の形式**
+ * 
+ * - {Object|Error} rv
+ *   - passPhrase {string} パスフレーズ
+ *   - privateKey {Object} RSA形式の秘密鍵
+ *   - publicKey {string} RSA形式の公開鍵
+ * 
+ * **参考：パスフレーズ・秘密鍵・公開鍵の一括保存はできない**
+ * 
+ * `{passPhrase:〜,privateKey:〜,publicKey:〜}`のように一括して保存しようとすると、以下のエラーが発生。
+ * 
+ * ```
+ * You have exceeded the property storage quota.
+ * Please remove some properties and try again.
+ * ```
+ * 
+ * 原因は[プロパティ値のサイズ](https://developers.google.com/apps-script/guides/services/quotas?hl=ja)が超過したため。
+ * ⇒ max 9KB/値なので、パスフレーズ・公開鍵・秘密鍵は別々のプロパティとして保存が必要
  */
-initialize(arg={}){
-  const v = {whois:this.constructor.name+'.initialize',rv:null,step:0,default:{
-    name: 'authServer', // プロパティサービスに保存する際のラベル
-    RSA:{
-      bits: 2048,  // ビット長
-      passphrase: createPassword(16), // 16桁のパスワードを自動生成
-      publicKey: null, // 公開鍵
-      privateKey: null, // 秘密鍵
-    },
-  }};
+v.initialize = function(arg={}){
+  const v = {whois:'authServer.initialize',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // 事前準備
-    v.name = arg.hasOwnProperty('name') ? arg.name : v.default.name;
-    v.conf = Object.assign({},(
-    PropertiesService.getDocumentProperties().getProperty(v.name)
-    || {}), v.default, arg);
+    v.step = 1; // プロパティサービスから値を取得
+    v.rv = {
+      passPhrase: PropertiesService.getDocumentProperties().getProperty('passPhrase'),
+      publicKey: PropertiesService.getDocumentProperties().getProperty('publicKey'),
+      privateKey: PropertiesService.getDocumentProperties().getProperty('privateKey'),
+    }
 
-    // ------------------------------------------
-    v.step = 2; // シートアクセス権の取得
-    // ------------------------------------------
-
-    // ------------------------------------------
-    v.step = 3; // server側鍵ペア生成
-    // ------------------------------------------
-    v.conf.RSA.privateKey = // 秘密鍵の生成
-    cryptico.generateRSAKey(v.conf.RSA.passphrase, v.conf.RSA.bits);
-    v.conf.RSA.publicKey =  // 公開鍵の生成
-    cryptico.publicKeyString(v.conf.RSA.privateKey);
-
-    // ------------------------------------------
-    v.step = 3; // v.conf情報の作成と保存
-    // ------------------------------------------
+    v.step = 2; // 鍵ペア未生成の場合は作成後プロパティサービスに保存
+    if( v.rv.passPhrase === null ){
+      v.bits = 2048;  // ビット長
+      v.step = 2.1; // 16桁のパスワードを自動生成
+      v.rv.passPhrase = createPassword(16);
+      PropertiesService.getDocumentProperties().setProperty('passPhrase',v.rv.passPhrase);
+      v.step = 2.2; // 秘密鍵の生成
+      v.rv.privateKey = cryptico.generateRSAKey(v.rv.passPhrase, v.bits);
+      PropertiesService.getDocumentProperties().setProperty('privateKey',v.rv.privateKey);
+      v.step = 2.3; // 公開鍵の生成
+      v.rv.publicKey = cryptico.publicKeyString(v.rv.privateKey);
+      PropertiesService.getDocumentProperties().setProperty('publicKey',v.rv.publicKey);
+    }
 
     v.step = 9; // 終了処理
-    // プロパティサービスへの保存
-    PropertiesService.getDocumentProperties().setProperty(v.conf.name,v.conf);
-    // 保存結果を表示して終了
-    console.log(`${v.whois} normal end.\n${PropertiesService.getDocumentProperties().getProperty(v.conf.name)}`);
+    console.log(`${v.whois} normal end.\npublicKey=${v.rv.publicKey}`);
     return v.rv;
 
   } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\nv.conf=${stringify(v.conf)}`;
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }

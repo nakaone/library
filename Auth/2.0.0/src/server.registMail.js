@@ -1,10 +1,15 @@
-/**
- * @constructor
+/** authClientからの登録要求を受け、IDを返す
+ * @param {void}
+ * @returns {null|Error}
  */
-constructor(arg){
-  const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
+v.func.registMail = function(){
+  const v = {whois:this.constructor.name+'.registMail',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
+
+    v.step = 1; // メアド入力
+    v.step = 2; // authServer.registMailにメアド転送
+    v.step = 3; // IDをstorageに登録
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.`);
