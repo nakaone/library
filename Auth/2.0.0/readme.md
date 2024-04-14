@@ -128,7 +128,8 @@ sequenceDiagram
     server ->> client : HTML(object)+ID
     activate client
     deactivate server
-    client ->> client : localStorageのID確認、IDを渡されていたら更新
+    Note right of client : resetStorage()
+    client ->> client : ID確認処理
     Note right of client : BurgerMenu.constructor()
     alt IDが存在
       client ->> user : メンバ用サイト
@@ -142,8 +143,11 @@ sequenceDiagram
 - 水色の部分はhtmlのonload時処理
 - 表示要求に対するserverからの戻り値(ID)は、bodyタグ直下の冒頭に隠しDIVを用意し、そのinnerTextとして返す。
 - ID確認処理
-  - serverからIDが来ていた場合、それを採用。localStorageのIDを更新
-  - serverからIDが来ていなかった場合、localStorageにIDが保存されているか確認
+  - 引数、HTML埋込情報、sessionStorage、localStorageのユーザ情報を取得
+  - IDを特定(引数>HTML埋込>session>local。いずれにも無ければnull)
+  - IDが特定されるならauthを一般公開->参加者に変更
+
+<!--
 - 「インスタンス生成」の処理内容
   1. authClient.constructor()
      1. localStorageにIDがあるか確認<br>
@@ -152,7 +156,6 @@ sequenceDiagram
      1. AuthインスタンスをBurgerMenuのインスタンスメンバとして生成(以下Burger.auth)
      1. Burger.auth.IDの値に従ってAuthメニュー描画(メニューアイコン、nav領域)
 
-<!--
 [HtmlOutput.appendUntrusted()](https://developers.google.com/apps-script/reference/html/html-output?hl=ja#appenduntrustedaddedcontent)を使用して、HTMLの要素として返す。
 --＞
 
@@ -185,7 +188,7 @@ sequenceDiagram
   client ->> user : 新規登録画面表示
   deactivate client
 ```
-
+- userId(受付番号)がlocalStrageに存在する場合、メニューに「登録要求」は表示しない
 - 応募締切等、新規要求ができる期間の制限は、client側でも行う(BurgerMenuの有効期間設定を想定)
 - メアド入力はダイアログで行う(開発工数低減)
 - メアドは正規表現による形式チェックのみ、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
@@ -726,7 +729,8 @@ sequenceDiagram
     server ->> client : HTML(object)+ID
     activate client
     deactivate server
-    client ->> client : localStorageのID確認、IDを渡されていたら更新
+    Note right of client : resetStorage()
+    client ->> client : ID確認処理
     Note right of client : BurgerMenu.constructor()
     alt IDが存在
       client ->> user : メンバ用サイト
@@ -740,8 +744,11 @@ sequenceDiagram
 - 水色の部分はhtmlのonload時処理
 - 表示要求に対するserverからの戻り値(ID)は、bodyタグ直下の冒頭に隠しDIVを用意し、そのinnerTextとして返す。
 - ID確認処理
-  - serverからIDが来ていた場合、それを採用。localStorageのIDを更新
-  - serverからIDが来ていなかった場合、localStorageにIDが保存されているか確認
+  - 引数、HTML埋込情報、sessionStorage、localStorageのユーザ情報を取得
+  - IDを特定(引数>HTML埋込>session>local。いずれにも無ければnull)
+  - IDが特定されるならauthを一般公開->参加者に変更
+
+<!--
 - 「インスタンス生成」の処理内容
   1. authClient.constructor()
      1. localStorageにIDがあるか確認<br>
@@ -750,7 +757,6 @@ sequenceDiagram
      1. AuthインスタンスをBurgerMenuのインスタンスメンバとして生成(以下Burger.auth)
      1. Burger.auth.IDの値に従ってAuthメニュー描画(メニューアイコン、nav領域)
 
-<!--
 [HtmlOutput.appendUntrusted()](https://developers.google.com/apps-script/reference/html/html-output?hl=ja#appenduntrustedaddedcontent)を使用して、HTMLの要素として返す。
 -->
 
@@ -787,7 +793,7 @@ sequenceDiagram
   client ->> user : 新規登録画面表示
   deactivate client
 ```
-
+- userId(受付番号)がlocalStrageに存在する場合、メニューに「登録要求」は表示しない
 - 応募締切等、新規要求ができる期間の制限は、client側でも行う(BurgerMenuの有効期間設定を想定)
 - メアド入力はダイアログで行う(開発工数低減)
 - メアドは正規表現による形式チェックのみ、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
