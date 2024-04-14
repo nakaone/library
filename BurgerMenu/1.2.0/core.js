@@ -66,7 +66,8 @@ class BurgerMenu {
       v.step = 1; // 既定値の定義
       v.default = {
         wrapper: `.${this.constructor.name}[name="wrapper"]`, // {string|HTMLElement}
-        auth: 1,
+        auth: 1, // ユーザ権限の既定値
+        allow: 2 ** 32 - 1, // data-BurgerMenuのauth(開示範囲)の既定値
         func: {}, // {Object.<string,function>} メニューから呼び出される関数
         home: null,
         initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
@@ -298,8 +299,8 @@ class BurgerMenu {
       v.step = 4.2; // ラベル不在の場合はidをセット
       if( !v.rv.hasOwnProperty('label') )
         v.rv.label = v.rv.id;
-      v.step = 4.3; // authの既定値設定
-      v.rv.auth = v.rv.hasOwnProperty('auth') ? Number(v.rv.auth) : 1;
+      v.step = 4.3; // allowの既定値設定
+      v.rv.allow = v.rv.hasOwnProperty('allow') ? Number(v.rv.allow) : this.allow;
       v.step = 4.4; // func,href両方有ればhrefを削除
       if( v.rv.hasOwnProperty('func') && v.rv.hasOwnProperty('href') )
         delete v.rv.href;
@@ -322,19 +323,19 @@ class BurgerMenu {
   }
   
   /** 親要素を走査してナビゲーションを作成
-   * @param {number} [auth=this.auth] - 閲覧者の権限
-   * @param {number} [pAuth=1] - HTML上の親要素のレベル(表示に必要な権限)
    * @param {HTMLElement} wrapper - body等の親要素。
    * @param {HTMLElement} navi - nav等のナビゲーション領域
    * @returns {null|Error}
    */
-  genNavi(auth=this.auth,pAuth=1,wrapper=this.wrapper,navi=this.navi,depth=0){
+  genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
     const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
     console.log(`${v.whois} start.`);
     try {
 
-      v.step = 1.1; // 権限の変更があった場合、メンバを書き換え
-      if( auth !== this.auth ) this.auth = auth;
+      v.step = 1.1; // sessionStorageからユーザ権限を読み取り
+      v.r = sessionStorage.getItem(config.programId);
+      if( !v.r ) throw new Error(`sessionStorageに${config.programId}キーが存在しません`);
+      this.auth = JSON.parse(v.r).auth;
       v.step = 1.2; // navi領域をクリア
       if( depth === 0 ) navi.innerHTML = '';
 
@@ -348,13 +349,10 @@ class BurgerMenu {
         if( v.attr instanceof Error ) throw v.attr;
         if( v.attr === null ) continue;
 
-        v.step = 2.2; // 親要素の必要権限>子要素の必要権限 ⇒ 子要素の必要権限を親要素に合わせる
-        if( v.attr.auth < pAuth ) v.attr.auth = pAuth;
-
-        v.step = 2.3; // screenクラスが無ければ追加
+        v.step = 2.2; // screenクラスが無ければ追加
         v.class = v.d.className.match(/screen/);
         if( !v.class ) v.d.classList.add('screen'); 
-        v.step = 2.4; // nameが無ければ追加
+        v.step = 2.3; // nameが無ければ追加
         v.name = v.d.getAttribute('name');
         if( !v.name ){
           v.name = v.attr.id;
@@ -363,7 +361,7 @@ class BurgerMenu {
 
         // navi領域への追加が必要か、判断
         v.step = 3.1; // 実行権限がない機能・画面はnavi領域に追加しない
-        if( (this.auth & v.attr.auth) === 0 ) continue;
+        if( (this.auth & v.attr.allow) === 0 ) continue;
         v.step = 3.2; // 有効期間外の場合はnavi領域に追加しない
         if( v.now < v.attr.from || v.attr.to < v.now ) continue;
 
@@ -425,7 +423,7 @@ class BurgerMenu {
 
         v.step = 5.5; // 子要素にdata-BurgerMenuが存在する場合、再帰呼出
         if( v.hasChild ){
-          v.r = this.genNavi(this.auth,v.attr.auth,v.d,v.r,depth+1);
+          v.r = this.genNavi(v.d,v.r,depth+1);
           if( v.r instanceof Error ) throw v.r;
         }
       }
@@ -435,8 +433,7 @@ class BurgerMenu {
       return v.rv;
   
     } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}\nauth=${auth}`;
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }

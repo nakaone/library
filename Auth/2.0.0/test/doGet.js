@@ -11,8 +11,8 @@
  */
 function doGet(e){
   const template = HtmlService.createTemplateFromFile('index');
-  template.camp2024_id = e.parameter.id;
+  template.userId = e.parameter.id;
   const htmlOutput = template.evaluate();
-  htmlOutput.setTitle('camp2024');
+  htmlOutput.setTitle(config.programId);
   return htmlOutput;
 }

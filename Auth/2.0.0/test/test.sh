@@ -54,7 +54,8 @@ $mod/build.sh
 # 2. server.gsの作成
 # ----------------------------------------------
 echo "`date +"%T"` - step.2 start."
-cat $test/doGet.js | awk 1 > $svSrc
+cat $test/config.common.js | awk 1 > $svSrc
+cat $test/doGet.js | awk 1 >> $svSrc
 cat $lib/createPassword/1.0.1/core.js | awk 1 >> $svSrc
 cat $lib/cryptico/cryptico.min.gs | awk 1 >> $svSrc
 cat $lib/sendmail/1.0.0/core.js | awk 1 >> $svSrc
@@ -103,7 +104,8 @@ cat $user/system.html \
 
 # 4.2 script部分の作成
 echo "`date +"%T"` -  step.4.2 start."
-cat $lib/Auth/2.0.0/client.js | awk 1 > $w01
+cat $test/config.common.js | awk 1 > $w01
+cat $lib/Auth/2.0.0/client.js | awk 1 >> $w01
 cat $lib/BurgerMenu/1.2.0/core.js | awk 1 >> $w01
 cat $lib/cryptico/cryptico.min.js | awk 1 >> $w01
 cat $lib/changeScreen/1.1.0/core.js | awk 1 >> $w01
@@ -111,11 +113,13 @@ cat $lib/createElement/1.2.1/core.js | awk 1 >> $w01
 cat $lib/mergeDeeply/1.1.0/core.js | awk 1 >> $w01
 cat $lib/stringify/1.1.1/core.js | awk 1 >> $w01
 cat $lib/whichType/1.0.1/core.js | awk 1 >> $w01
+cat $test/resetStorage.js | awk 1 >> $w01
 cat $w01 | awk 1 > $tmp/script.js
 
 # 4.3 onload部分の作成
-#echo "`date +"%T"` -  step.4.3 start."
-#cp $test/onload.js $tmp/onload.js
+echo "`date +"%T"` -  step.4.3 start."
+cat $test/onload.js | awk 1 \
+| $esed -x:"^" -s:"    " > $tmp/onload.js
 
 # 4.4 proto.htmlへの埋め込み
 echo "`date +"%T"` -  step.4.4 start."

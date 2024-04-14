@@ -1,3 +1,4 @@
+const config = {programId:'camp2024'};
 /** パラメータを確認、表示ページを振り分ける
  * @param {Event} e - GASから渡されるイベントオブジェクト。
  * @returns {HtmlOutput}
@@ -11,9 +12,9 @@
  */
 function doGet(e){
   const template = HtmlService.createTemplateFromFile('index');
-  template.camp2024_id = e.parameter.id;
+  template.userId = e.parameter.id;
   const htmlOutput = template.evaluate();
-  htmlOutput.setTitle('camp2024');
+  htmlOutput.setTitle(config.programId);
   return htmlOutput;
 }
 /** 長さ・文字種指定に基づき、パスワードを生成

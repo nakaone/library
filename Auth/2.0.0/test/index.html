@@ -99,12 +99,12 @@ td, .td {
   8: コアスタッフ(受付担当)向け
 -->
 </head><body>
-<div style="display:none" name="camp2024_id"><?= camp2024_id ?></div>
+<div style="display:none" name="userId"><?= userId ?></div>
 <p class="title">校庭キャンプ2024</p>
 <div class="BurgerMenu screen" name="wrapper">
-  <div data-BurgerMenu="id:'イベント情報',auth:15">
-    <div data-BurgerMenu="id:'掲示板',auth:2">【未実装】掲示板</div>
-    <div data-BurgerMenu="id:'実施要領',auth:15">
+  <div data-BurgerMenu="id:'イベント情報'">
+    <div data-BurgerMenu="id:'掲示板',allow:2">【未実装】掲示板</div>
+    <div data-BurgerMenu="id:'実施要領'">
 <h1>イベント概要</h1>
 <ul>
 <li>日時：2022年10月1日(土) ※雨天決行</li>
@@ -136,7 +136,7 @@ td, .td {
 </li>
 </ul>
     </div>
-    <div data-BurgerMenu="id:'注意事項',auth:15">
+    <div data-BurgerMenu="id:'注意事項'">
 <h1>注意事項</h1>
 
 <h2>参加者の加除、申込のキャンセル</h2>
@@ -189,7 +189,7 @@ td, .td {
 <li>本件に関する問合せは <a href="mailto:shimokitasho.oyaji@gmail.com">shimokitasho.oyaji@gmail.com</a> にお願いします。</li>
 </ul>
     </div>
-    <div data-BurgerMenu="id:'持ち物リスト',auth:15">
+    <div data-BurgerMenu="id:'持ち物リスト'">
 <h1>持ち物リスト</h1>
 <ol>
 <li><p>キャンプ</p>
@@ -217,27 +217,27 @@ td, .td {
 </li>
 </ol>
     </div>
-    <div data-BurgerMenu="id:'タイムテーブル',auth:14">【未実装】タイムテーブル</div>
-    <div data-BurgerMenu="id:'会場案内図',auth:14">
+    <div data-BurgerMenu="id:'タイムテーブル',allow:14">【未実装】タイムテーブル</div>
+    <div data-BurgerMenu="id:'会場案内図',allow:14">
 <svg id="exportSVG" visibility="visible" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" data-info="draw.ninja" data-name="draw" viewBox="0 0 1000 700" width="1000" height="700"><defs id="defsExport"><filter id="filter0"><feGaussianBlur stdDeviation="0"></feGaussianBlur></filter><pattern id="patternImage" patternUnits="userSpaceOnUse" x="0" y="0" width="1" height="1" data-x="0" data-y="0" data-width="1" data-height="1" data-multx="1" data-multy="1" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="patternImage" data-draw="1" fill="#B3B3B3" fill-opacity="1"></pattern><pattern id="pattern0" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 0" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 0 L5 0 L5 5 L0 5 L0 0 Z"></path></pattern><pattern id="pattern1" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 1" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 5 L5 0 L10 5 L5 10 L0 5 Z"></path></pattern><pattern id="pattern2" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 2" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 9 L5 1 L10 9 L0 9 Z"></path></pattern><pattern id="pattern3" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 3" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 5 C0 2.25 2.25 0 5 0 C7.75 0 10 2.25 10 5 C10 7.75 7.75 10 5 10 C2.25 10 0 7.75 0 5 Z"></path></pattern><pattern id="pattern4" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 4" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 5 L4 4 L5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 Z"></path></pattern><pattern id="pattern5" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 5" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M5 10 C-5 2.75 3 -1.75 5 1 C7 -1.75 15 2.75 5 10 Z"></path></pattern><pattern id="pattern6" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 6" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M3 0 L7 0 L7 10 L3 10 L3 0 Z"></path></pattern><pattern id="pattern7" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 7" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M10 3 L10 7 L0 7 L0 3 L10 3 Z"></path></pattern><pattern id="pattern8" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 8" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 10 L3 3 L10 0 L7 7 L0 10 Z"></path></pattern><pattern id="pattern9" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 9" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 4 L10 4 L10 6 L0 6 L0 4 Z M4 10 L4 0 L6 0 L6 10 L4 10 Z"></path></pattern><linearGradient id="linearSystem" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="100%" y2="50%" spreadMethod="pad"><stop offset="50%" stop-color="#D0D0D0" stop-opacity="1"></stop><stop offset="100%" stop-color="transparent" stop-opacity="1"></stop></linearGradient><linearGradient id="linearSystem1" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="100%" y2="50%" spreadMethod="pad"><stop offset="30%" stop-color="#D0D0D0" stop-opacity="1"></stop><stop offset="100%" stop-color="transparent" stop-opacity="1"></stop></linearGradient><linearGradient id="linearSystem2" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="50%" y2="50%" spreadMethod="repeat"><stop offset="30%" stop-color="#D0D0D0" stop-opacity="1"></stop><stop offset="100%" stop-color="transparent" stop-opacity="1"></stop></linearGradient><linearGradient id="linearSystem3" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="50%" y2="50%" spreadMethod="reflect"><stop offset="30%" stop-color="#D0D0D0" stop-opacity="1"></stop><stop offset="100%" stop-color="transparent" stop-opacity="1"></stop></linearGradient><radialGradient id="radialSystem" gradientUnits="objectBoundingBox" r="0.5" cx="0.5" fx="0.5" cy="0.5" fy="0.5" spreadMethod="pad"><stop offset="50%" stop-color="#D0D0D0" stop-opacity="1"></stop><stop offset="100%" stop-color="transparent" stop-opacity="1"></stop></radialGradient><pattern id="patternSystem" patternUnits="userSpaceOnUse" x="0" y="0" width="6" height="8"><path stroke="#D0D0D0" stroke-width="5" fill="none" d="M0 0 L0 10"></path></pattern><linearGradient id="linear0" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="100%" y2="50%" spreadMethod="pad"><stop offset="0%" stop-color="#FF8000" stop-opacity="1"></stop><stop offset="100%" stop-color="#FFFF00" stop-opacity="1"></stop></linearGradient><linearGradient id="linear1" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="100%" y2="50%" spreadMethod="pad"><stop offset="0%" stop-color="#FFFF00" stop-opacity="1"></stop><stop offset="100%" stop-color="#FF8000" stop-opacity="1"></stop></linearGradient><linearGradient id="linearImport" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="100%" y2="50%" spreadMethod="pad"><stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.1"></stop><stop offset="100%" stop-color="#000000" stop-opacity="0.1"></stop></linearGradient><radialGradient id="radial0" gradientUnits="objectBoundingBox" r="0.5" cx="0.5" fx="0.5" cy="0.5" fy="0.5" spreadMethod="pad"><stop offset="0%" stop-color="#FF8000" stop-opacity="1"></stop><stop offset="100%" stop-color="#FFFF00" stop-opacity="1"></stop></radialGradient><radialGradient id="radial1" gradientUnits="objectBoundingBox" r="0.5" cx="0.5" fx="0.5" cy="0.5" fy="0.5" spreadMethod="pad"><stop offset="0%" stop-color="#FFFF00" stop-opacity="1"></stop><stop offset="100%" stop-color="#FF8000" stop-opacity="1"></stop></radialGradient><radialGradient id="radialImport" gradientUnits="objectBoundingBox" r="0.5" cx="0.5" fx="0.5" cy="0.5" fy="0.5" spreadMethod="pad"><stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.1"></stop><stop offset="100%" stop-color="#000000" stop-opacity="0.1"></stop></radialGradient></defs><rect id="pageExport" x="0" y="0" width="1000" height="700" fill="none" fill-opacity="0" stroke="none" stroke-width="0"></rect><g id="objectsExport" visibility="visible"><g id="group41" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="group" deg="0" data-edit="1" data-centerx="264.002" data-centery="286.669"><path id="path0" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="敷地外周" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M509.664 1 L53.664 0 L44.664 7 L31.664 117 L37.764 117.3 L35.664 184.8 L26.064 185.2 L0 479.346 L163.996 456.663 L181.326 573.337 L521.664 507 L528.004 494.156 L514.334 370.333 L519.337 10.328 L510.364 0.296 " data-centerx="323.655" data-centery="241.836"></path><path id="path1" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="校舎＋体育館" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M98.664 12.333 L91.997 144.333 L370.664 147 L369.497 363 L84.188 419.671 L90.192 462.144 L167.805 451.854 L182.096 548.711 L189.233 555 L216.378 549.857 L218.662 557.862 L345.808 535.286 L344.375 527.571 L369.142 523.097 L371.664 531.917 L499.524 507.002 L503.997 501.664 L504.995 369.002 L494.988 368.328 L495.338 216.673 L504.994 216.671 L508.331 13.007 L98.664 12.333 Z " data-centerx="355.913" data-centery="240.264"></path><path id="path2" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="正門横フェンス" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M94.664 184 L24.414 215.25 " data-centerx="119.192" data-centery="154.792"></path><path id="path3" visibility="visible" stroke="none" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="#b0f4d0" fill-rule="evenodd" fill-opacity="0.5" data-name="curve" data-title="朝礼台横芝生" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M97.914 156.5 L100.664 187 L308.164 187.25 L341.664 158 L97.914 156.5 Z " data-centerx="279.442" data-centery="127.042"></path><path id="path4" visibility="visible" stroke="#000000" stroke-width="1" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="#FFFFFF" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="朝礼台" deg="0" data-sw="1" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M195.664 157.5 L219.914 157.5 L219.914 168.25 L195.664 168.25 L195.664 157.5 Z " data-centerx="267.442" data-centery="118.042"></path><path id="path5" visibility="visible" stroke="none" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="#804040" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="菜園右" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M73.164 44.5 L86.764 44.25 L85.914 133.25 L73.064 133.35 L73.164 44.5 Z " data-centerx="139.567" data-centery="43.967"></path><path id="path6" visibility="visible" stroke="none" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="#804040" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="菜園左" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M67.614 44.75 L54.664 45 L54.664 133.5 L66.914 133.5 L67.614 44.75 Z " data-centerx="120.792" data-centery="44.292"></path><path id="path7" visibility="visible" stroke="none" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="#0080FF" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="池" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M82.914 43.3 L83.164 30.5 L70.914 30.5 L70.164 39.25 L74.164 39.25 L74.964 43.3 L82.914 43.3 Z " data-centerx="136.317" data-centery="-7.933"></path><g id="group8" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="ランニングコースライン" deg="0" data-edit="1" data-centerx="258.942" data-centery="230.667" data-group="0"><path id="path9" visibility="visible" stroke="#999999" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M117.664 221.75 L280.414 221.75 L280.414 329.25 L117.664 329.25 L117.664 221.75 Z " data-centerx="-538.625" data-centery="16.5"></path><path id="path10" visibility="visible" stroke="#999999" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M79.164 275.25 C79.164 245.825 96.77 221.75 118.289 221.75 C139.808 221.75 157.414 245.825 157.414 275.25 C157.414 304.675 139.808 328.75 118.289 328.75 C96.77 328.75 79.164 304.675 79.164 275.25 Z " data-centerx="-619.37" data-centery="16.25"></path><path id="path11" visibility="visible" stroke="#999999" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M237.664 275.5 C237.664 246.075 256.058 222 278.539 222 C301.021 222 319.414 246.075 319.414 275.5 C319.414 304.925 301.021 329 278.539 329 C256.058 329 237.664 304.925 237.664 275.5 Z " data-centerx="-459.125" data-centery="16.5"></path></g><g id="group12" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="正門" deg="0" data-edit="1" data-centerx="94.793" data-centery="107.042" data-group="0"><path id="path13" visibility="visible" stroke="#FFFFFF" stroke-width="3" stroke-opacity="1" stroke-linecap="square" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="359" data-sw="3" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M36.858 146.955 L36.456 169.365 " data-centerx="-520.94" data-centery="65.16"></path><path id="path14" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M37.997 161.76 L37.797 170.04 L37.997 161.76 " data-centerx="-519.7" data-centery="72.9"></path><path id="path15" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M36.757 154.4 L36.557 162.68 L36.757 154.4 " data-centerx="-520.94" data-centery="65.54"></path><path id="path16" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M35.557 146.4 L35.357 154.68 L35.557 146.4 " data-centerx="-522.14" data-centery="57.54"></path><path id="path17" visibility="visible" stroke="#000000" stroke-width="1" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="1" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M37.037 132.81 L30.377 134.468 C31.069 137.851 33.412 139.199 36.413 138.969 " data-centerx="-523.89" data-centery="42.902"></path><path id="path18" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="346" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M34.201 171.812 L38.993 171.938 " data-centerx="-521" data-centery="78.875"></path><path id="path19" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="346" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M34.951 131.812 L39.743 131.938 " data-centerx="-520.25" data-centery="38.875"></path><path id="path20" visibility="visible" stroke="none" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="#000000" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="1" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M34.145 139.446 L39.903 139.547 L39.799 145.554 L34.041 145.453 L34.145 139.446 Z " data-centerx="-520.625" data-centery="49.5"></path></g><path id="path21" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="受付枠" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M44.347 149.833 L87.347 149.833 L87.347 182.833 L44.347 182.833 L44.347 149.833 Z " data-centerx="125.5" data-centery="121.5"></path><g id="group22" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="受付文字" deg="0" data-edit="1" data-centerx="125" data-centery="121"><text id="text23" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,115.347,-197.167)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,95.347,-137.167)" data-edit="1" filter="none" x="-68" y="370" data-centerx="-690" data-centery="143">受付</text></g><path id="path24" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M102.347 150.833 L103.347 219.833 L290.347 219.833 L291.347 366.833 L359.347 351.833 L360.347 152.833 L102.347 150.833 " data-centerx="291" data-centery="214"></path><path id="path25" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M91.347 231.833 L279.347 230.833 L280.347 367.833 L91.347 402.833 L91.347 231.833 Z " data-centerx="245.5" data-centery="272"></path><g id="group26" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="group" deg="0" data-edit="1" data-centerx="400.5" data-centery="234.5"><path id="path27" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M326.347 253.833 L355.347 253.833 L355.347 304.833 L326.347 304.833 L326.347 253.833 Z " data-centerx="-710.5" data-centery="151.5"></path><g id="group47Temp" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="group" deg="0" data-edit="1" data-centerx="-710.5" data-centery="150.5" data-group="group41"><g id="group43Temp" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="text" deg="0" data-edit="1" data-centerx="-686.5" data-centery="-56" data-group="group41"><text id="text28" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,406.847,43.833)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,386.847,103.833)" data-edit="1" filter="none" x="-75" y="231" data-centerx="-706" data-centery="4">本</text></g><g id="group45Temp" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="text" deg="0" data-edit="1" data-centerx="-686.5" data-centery="-35" data-group="group41"><text id="text29" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,406.847,64.833)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,386.847,124.833)" data-edit="1" filter="none" x="-75" y="231" data-centerx="-696" data-centery="14">部</text></g></g></g><g id="group30" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="group" deg="0" data-edit="1" data-centerx="-710.5" data-centery="150.5"><g id="group43Temp" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="text" deg="0" data-edit="1" data-centerx="-726.5" data-centery="64" data-group="group41"><text id="text31" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,406.847,43.833)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,386.847,103.833)" data-edit="1" filter="none" x="-75" y="231" data-centerx="-706" data-centery="4">本</text></g><g id="group45Temp" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="text" deg="0" data-edit="1" data-centerx="-726.5" data-centery="85" data-group="group41"><text id="text32" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,406.847,64.833)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,386.847,124.833)" data-edit="1" filter="none" x="-75" y="231" data-centerx="-696" data-centery="14">部</text></g></g><g id="group33" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="text" deg="0" data-edit="1" data-centerx="-706.5" data-centery="4" data-group="group48"><text id="text34" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,406.847,43.833)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,386.847,103.833)" data-edit="1" filter="none" x="-75" y="231" data-centerx="-706" data-centery="4">本</text></g><g id="group35" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="text" deg="0" data-edit="1" data-centerx="-706.5" data-centery="25" data-group="group48"><text id="text36" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,406.847,64.833)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,386.847,124.833)" data-edit="1" filter="none" x="-75" y="231" data-centerx="-696" data-centery="14">部</text></g><g id="group37" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="テント文字" deg="0" data-edit="1" data-centerx="251" data-centery="267"><text id="text38" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,-541.653,-50.167)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,-561.653,9.833)" data-edit="1" filter="none" x="679" y="369" data-centerx="93" data-centery="142">テントエリア</text></g><g id="group39" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="通路文字" deg="0" data-edit="1" data-centerx="269" data-centery="156"><text id="text40" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,-541.653,-161.167)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,-561.653,-101.167)" data-edit="1" filter="none" x="679" y="369" data-centerx="269" data-centery="156">通路・食事エリア</text></g></g></g><g id="settings" visibility="hidden" data-dn0="primalDraw" data-dn1="#FAFAFA" data-dn2="#D2D2D2" data-dn3="18" data-dn4="#000000" data-dn5="#B3B3B3" data-dn6="1" data-dn7="1" data-dn8="2" data-dn9="round" data-dn10="round" data-dn11="none" data-dn12="none" data-dn13="none" data-dn14="evenodd" data-dn15="10" data-dn16="1" data-dn17="1000" data-dn18="700" data-dn19="10" data-dn20="0" data-dn21="1" data-dn22="1" data-dn23="42" data-dn24="group41" data-dn25="2" data-dn26="url(#linear0)" data-dn27="url(#linear1)" data-dn28="url(#radial0)" data-dn29="url(#radial1)" data-dn30="#FF8000" data-dn31="#FFFF00" data-dn32="#000000" data-dn33="1" data-dn34="1" data-dn35="10" data-dn36="" data-dn37="0" data-dn38="109"></g></svg>
     </div>
     <!--div data-BurgerMenu="id:'肝試しルート'"><!-:x:$user/肝試しルート.svg::-></div-->
   </div>
-  <div data-BurgerMenu="id:'参加者情報',auth:14">
-    <div data-BurgerMenu="id:'参加者パス',auth:14">【未実装】参加者パス</div>
-    <div data-BurgerMenu="id:'登録・修正・キャンセル',auth:14">【未実装】登録・修正・キャンセル</div>
+  <div data-BurgerMenu="id:'参加者情報',allow:14">
+    <div data-BurgerMenu="id:'参加者パス',allow:14">【未実装】参加者パス</div>
+    <div data-BurgerMenu="id:'登録・修正・キャンセル',allow:14">【未実装】登録・修正・キャンセル</div>
   </div>
-  <div data-BurgerMenu="id:'スタッフ用',auth:12">
-    <div data-BurgerMenu="id:'スタッフ応募状況',auth:12"><!-- スタッフ応募(募集)状況＋応募フォーム --></div>
-    <div data-BurgerMenu="id:'掲示板への投稿',auth:12">【未実装】掲示板への投稿</div>
-    <div data-BurgerMenu="id:'参加者集計',auth:12">【未実装】参加者集計</div>
-    <div data-BurgerMenu="id:'参加者受付',auth:8"><!-- 参加者情報検索・編集 --></div>
-    <div data-BurgerMenu="id:'気づき投稿',auth:12">【未実装】気づき投稿</div>
-    <div data-BurgerMenu="id:'アクセス分析',auth:12">【未実装】アクセス分析</div>
+  <div data-BurgerMenu="id:'スタッフ用',allow:12">
+    <div data-BurgerMenu="id:'スタッフ応募状況',allow:12"><!-- スタッフ応募(募集)状況＋応募フォーム --></div>
+    <div data-BurgerMenu="id:'掲示板への投稿',allow:12">【未実装】掲示板への投稿</div>
+    <div data-BurgerMenu="id:'参加者集計',allow:12">【未実装】参加者集計</div>
+    <div data-BurgerMenu="id:'参加者受付',allow:8"><!-- 参加者情報検索・編集 --></div>
+    <div data-BurgerMenu="id:'気づき投稿',allow:12">【未実装】気づき投稿</div>
+    <div data-BurgerMenu="id:'アクセス分析',allow:12">【未実装】アクセス分析</div>
   </div>
-  <div data-BurgerMenu="id:'その他',auth:14">
-    <div data-BurgerMenu="id:'参加者アンケート回答',auth:2">【未実装】参加者アンケート回答</div>
-    <div data-BurgerMenu="id:'システム設定',auth:14">
+  <div data-BurgerMenu="id:'その他',allow:14">
+    <div data-BurgerMenu="id:'参加者アンケート回答',allow:2">【未実装】参加者アンケート回答</div>
+    <div data-BurgerMenu="id:'システム設定',allow:14">
 <!--bodyだけだとquerySelectorでscriptを含めて抽出されてしまうので要wrapper-->
 
   <h1>cookieの消去</h1>
@@ -310,7 +310,7 @@ td, .td {
   <p>author: Shimazu Kunihiro</p>
   <p>contact: shimokitasho.oyaji@gmail.com</p>
     </div>
-    <div data-BurgerMenu="id:'関連サイトへのリンク',auth:15">
+    <div data-BurgerMenu="id:'関連サイトへのリンク'">
 <div name="リンク集">
   <h1>リンク集</h1>
   <div>
@@ -364,9 +364,10 @@ td, .td {
 -->
     </div>
   </div>
-  <div data-BurgerMenu="id:'受付番号入力',auth:1,func:'enterId'"></div>
+  <div data-BurgerMenu="id:'受付番号入力',allow:1,func:'enterId'"></div>
 </div></body>
 <script type="text/javascript">
+const config = {programId:'camp2024'};
 class authClient {
   //:x:$src/client.constructor.js::
   constructor(){
@@ -459,7 +460,8 @@ class BurgerMenu {
       v.step = 1; // 既定値の定義
       v.default = {
         wrapper: `.${this.constructor.name}[name="wrapper"]`, // {string|HTMLElement}
-        auth: 1,
+        auth: 1, // ユーザ権限の既定値
+        allow: 2 ** 32 - 1, // data-BurgerMenuのauth(開示範囲)の既定値
         func: {}, // {Object.<string,function>} メニューから呼び出される関数
         home: null,
         initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
@@ -691,8 +693,8 @@ class BurgerMenu {
       v.step = 4.2; // ラベル不在の場合はidをセット
       if( !v.rv.hasOwnProperty('label') )
         v.rv.label = v.rv.id;
-      v.step = 4.3; // authの既定値設定
-      v.rv.auth = v.rv.hasOwnProperty('auth') ? Number(v.rv.auth) : 1;
+      v.step = 4.3; // allowの既定値設定
+      v.rv.allow = v.rv.hasOwnProperty('allow') ? Number(v.rv.allow) : this.allow;
       v.step = 4.4; // func,href両方有ればhrefを削除
       if( v.rv.hasOwnProperty('func') && v.rv.hasOwnProperty('href') )
         delete v.rv.href;
@@ -715,19 +717,19 @@ class BurgerMenu {
   }
   
   /** 親要素を走査してナビゲーションを作成
-   * @param {number} [auth=this.auth] - 閲覧者の権限
-   * @param {number} [pAuth=1] - HTML上の親要素のレベル(表示に必要な権限)
    * @param {HTMLElement} wrapper - body等の親要素。
    * @param {HTMLElement} navi - nav等のナビゲーション領域
    * @returns {null|Error}
    */
-  genNavi(auth=this.auth,pAuth=1,wrapper=this.wrapper,navi=this.navi,depth=0){
+  genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
     const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
     console.log(`${v.whois} start.`);
     try {
 
-      v.step = 1.1; // 権限の変更があった場合、メンバを書き換え
-      if( auth !== this.auth ) this.auth = auth;
+      v.step = 1.1; // sessionStorageからユーザ権限を読み取り
+      v.r = sessionStorage.getItem(config.programId);
+      if( !v.r ) throw new Error(`sessionStorageに${config.programId}キーが存在しません`);
+      this.auth = JSON.parse(v.r).auth;
       v.step = 1.2; // navi領域をクリア
       if( depth === 0 ) navi.innerHTML = '';
 
@@ -741,13 +743,10 @@ class BurgerMenu {
         if( v.attr instanceof Error ) throw v.attr;
         if( v.attr === null ) continue;
 
-        v.step = 2.2; // 親要素の必要権限>子要素の必要権限 ⇒ 子要素の必要権限を親要素に合わせる
-        if( v.attr.auth < pAuth ) v.attr.auth = pAuth;
-
-        v.step = 2.3; // screenクラスが無ければ追加
+        v.step = 2.2; // screenクラスが無ければ追加
         v.class = v.d.className.match(/screen/);
         if( !v.class ) v.d.classList.add('screen'); 
-        v.step = 2.4; // nameが無ければ追加
+        v.step = 2.3; // nameが無ければ追加
         v.name = v.d.getAttribute('name');
         if( !v.name ){
           v.name = v.attr.id;
@@ -756,7 +755,7 @@ class BurgerMenu {
 
         // navi領域への追加が必要か、判断
         v.step = 3.1; // 実行権限がない機能・画面はnavi領域に追加しない
-        if( (this.auth & v.attr.auth) === 0 ) continue;
+        if( (this.auth & v.attr.allow) === 0 ) continue;
         v.step = 3.2; // 有効期間外の場合はnavi領域に追加しない
         if( v.now < v.attr.from || v.attr.to < v.now ) continue;
 
@@ -818,7 +817,7 @@ class BurgerMenu {
 
         v.step = 5.5; // 子要素にdata-BurgerMenuが存在する場合、再帰呼出
         if( v.hasChild ){
-          v.r = this.genNavi(this.auth,v.attr.auth,v.d,v.r,depth+1);
+          v.r = this.genNavi(v.d,v.r,depth+1);
           if( v.r instanceof Error ) throw v.r;
         }
       }
@@ -828,8 +827,7 @@ class BurgerMenu {
       return v.rv;
   
     } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}\nauth=${auth}`;
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
@@ -1321,32 +1319,86 @@ function whichType(arg,is){
     return rv;
   }
 }
+/** sessionStorage/localStorageのユーザ情報を更新する
+ * @param {void}
+ * @returns {void}
+ */
+function resetStorage(userId=null){
+  const v = {whois:'resetStorage',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1.1; // sessionStorageからユーザ情報を取得
+    v.r = sessionStorage.getItem(config.programId);
+    v.session = v.r ? JSON.parse(v.r) : {userId:null,auth:1};
+    v.step = 1.2; // localStorageからユーザ情報を取得
+    v.r = localStorage.getItem(config.programId);
+    v.local = v.r ? Number(v.r) : null;
+    v.step = 1.3; // HTMLに埋め込まれたuserIdを取得
+    v.r = document.querySelector('[name="userId"]').innerText;
+    v.html = v.r.length > 0 ? Number(v.r) : null;
+    v.step = 1.4; // 引数で渡されたuserIdを取得
+    v.arg = userId ? Number(userId) : null;
+
+    v.step = 2.1; // userIdの特定
+    // 優先順位は`arg > html > session > local`
+    v.session.userId = v.arg !== null ? v.arg
+    : ( v.html !== null ? v.html
+    : ( v.session.userId !== null ? v.session.userId
+    : ( v.local !== null ? v.local : null)));
+    v.step = 2.2; // userIdが特定され且つauthが最低の場合は参加者(auth=2)に昇格
+    if( v.session.userId !== null && v.session.auth === 1 ){
+      v.session.auth = 2;
+    }
+
+    v.step = 3.1; // sessionStorageへの保存
+    sessionStorage.setItem(config.programId,JSON.stringify(v.session));
+    v.step = 3.2; // localStorageへの保存
+    localStorage.setItem(config.programId,v.session.userId);
+    
+    v.step = 4; // 終了処理
+    v.rv = v.session;
+    console.log(`${v.whois} normal end.\n`
+    +`v.session=${JSON.stringify(v.session)}\nv.local=${v.local}\nv.html=${v.html}\nv.arg=${v.arg}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
 window.addEventListener('DOMContentLoaded',() => {
   const v = {whois:'DOMContentLoaded',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    v.config = {auth:1};
-    v.config.id = document.querySelector('[name="camp2024_id"]').innerText;
-    if( v.config.id.length === 0 )
-      v.config.id = localStorage.getItem("camp2024_id");
-    if( v.config.id !== null ){
-      localStorage.setItem('camp2024_id',v.config.id);
-      v.config.id = Number(v.config.id);
-      v.config.auth = 2;
-    }
-    console.log(`id=${v.config.id}`);
+v.step = 0; // テスト用
+if( true ){
+  localStorage.removeItem(config.programId);
+  sessionStorage.removeItem(config.programId);
+}
 
-    v.auth = new authClient();
-    v.menu = new BurgerMenu({auth:v.config.auth,func:{
-      enterId:()=>{
-        const v = window.prompt('受付番号を入力してください');
-        if( v.match(/^[0-9]+/) ){
-          localStorage.setItem('camp2024_id',Number(v));
-          this.genNavi({auth:2});
-        }
-      }
-    }});
+v.step = 1; // userId,authをセット
+v.config = resetStorage();
+if( v.r instanceof Error ) throw v.r;
+
+v.step = 2.1; // 使用するクラスのインスタンス化
+v.auth = new authClient();
+v.step = 2.2;
+v.menu = new BurgerMenu({auth:v.config.auth,func:{
+  enterId:()=>{
+    console.log('enterId start.');
+    const v = window.prompt('受付番号を入力してください');
+    if( v.match(/^[0-9]+/) ){
+      v.r = resetStorage(v);
+      if( v.r instanceof Error ) throw v.r;
+      //this.auth = 2; -> thisはwindowになる
+      console.log(this);
+      //this.genNavi(2); -> thisはwindowになる
+    }
+  }
+}});
 
     v.step = 99; // 終了処理
     console.log(`${v.whois} normal end.`);
