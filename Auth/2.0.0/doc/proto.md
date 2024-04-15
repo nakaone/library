@@ -63,7 +63,7 @@
 
 1. {number} id - ユーザID
 1. {string} email - e-mail
-1. {number} created - 本オブジェクトの作成日時(UNIX時刻)
+1. {number} created - ユーザ側鍵ペアの作成日時(UNIX時刻)。有効期間検証に使用
 1. {string} publicKey - ユーザの公開鍵
 1. {number} authority - ユーザの権限
 1. {Object[]} log - ログイン試行のログ。unshiftで保存、先頭を最新にする
