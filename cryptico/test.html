@@ -1,0 +1,152 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>cryptico</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script src="./cryptico.min.js"></script>
+<!--link rel="stylesheet" href="style.css"-->
+<style type="text/css">/*::CSS::*/</style>
+<!--::CDN::-->
+<!--script src="" type="text/javascript"></script-->
+</head>
+<body>
+<!--::body::-->
+</body>
+<script type="text/javascript">
+function stringify(variable,opt={addType:false}){
+  const v = {whois:'stringify',rv:null,step:0};
+  const conv = arg => {
+    const w = {type:whichType(arg)};
+    w.pre = opt.addType ? `[${w.type}]` : '';
+    switch( w.type ){
+      case 'Function': case 'Arrow': case 'Symbol':
+        w.rv = w.pre + arg.toString(); break;
+      case 'BigInt':
+        w.rv = w.pre + parseInt(arg); break;
+      case 'Undefined':
+        w.rv = w.pre + 'undefined'; break;
+      case 'Object':
+        w.rv = {};
+        for( w.i in arg ){
+          // 自分自身(stringify)は出力対象外
+          if( w.i === 'stringify' ) continue;
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      case 'Array':
+        w.rv = [];
+        for( w.i=0 ; w.i<arg.length ; w.i++ ){
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      default:
+        w.rv = w.pre + arg;
+    }
+    return w.rv;
+  };
+  //console.log(`${v.whois} start.\nvariable=${variable}\nopt=${JSON.stringify(opt)}`);
+  try {
+
+    v.step = 1; // 事前準備
+    if( typeof opt === 'boolean' ) opt={addType:opt};
+
+    v.step = 2; // 終了処理
+    //console.log(`${v.whois} normal end.`);
+    return JSON.stringify(conv(variable));
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
+  }
+}
+function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:true}){
+  const v = {
+    whois: 'createPassword',
+    lower: 'abcdefghijklmnopqrstuvwxyz',
+    upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    symbol: '!#$%&()=~|@[];:+-*<>?_>.,',
+    numeric: '0123456789',
+    base: '',
+    rv: '',
+  }
+  try {
+    Object.keys(opt).forEach(x => {
+      if( opt[x] ) v.base += v[x];
+    });
+    for( v.i=0 ; v.i<len ; v.i++ ){
+      v.rv += v.base.charAt(Math.floor(Math.random() * v.base.length));
+    }
+  } catch(e) {
+    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
+    v.rv = e;
+  } finally {
+    return v.rv;
+  }
+}
+
+//::script::
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+    //::onload::
+
+    // https://github.com/wwwtyro/cryptico
+
+    // --------------------------------------------------------
+    // --------------------------------------------------------
+    ['sender','receiver'].forEach(x => {
+      v[x] = {passPhrase: createPassword(16)};
+      v[x].privateKey = cryptico.generateRSAKey(v[x].passPhrase,1024);
+      v[x].publicKey = cryptico.publicKeyString(v[x].privateKey);
+      v[x].publicKeyId = cryptico.publicKeyID(v[x].publicKey);
+      console.log(`${x} =======================`
+        + `\npassPhrase = "${v[x].passPhrase}"`
+        + `\npublicKey = "${v[x].publicKey}"`
+        + `\npublicKeyId = "${v[x].publicKeyId}"`
+      );
+    });
+    v.plane = 'abcdef あいうえお 01234 寿限無';
+    console.log(`v.plane=${v.plane}`);
+    v.encrypt = cryptico.encrypt(v.plane,v.receiver.publicKey,v.sender.privateKey);
+    console.log(`v.encrypt=${stringify(v.encrypt)}`);
+    v.decrypt = cryptico.decrypt(v.encrypt.cipher,v.receiver.privateKey);
+    console.log(`v.decrypt=${stringify(v.decrypt)}`);
+    v.r = cryptico.publicKeyID(v.decrypt.publicKeyString)
+    console.log(`v.r=${stringify(v.r)}`);
+    //console.log(`=${stringify()}`);
+    //console.log(`=${}`);
+
+
+
+
+
+
+
+
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+</html>
+  
