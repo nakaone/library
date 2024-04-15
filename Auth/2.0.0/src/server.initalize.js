@@ -33,39 +33,34 @@
  * 原因は[プロパティ値のサイズ](https://developers.google.com/apps-script/guides/services/quotas?hl=ja)が超過したため。
  * ⇒ max 9KB/値なので、パスフレーズ・公開鍵・秘密鍵は別々のプロパティとして保存が必要
  */
-v.initialize = function(arg={}){
-  const v = {whois:'authServer.initialize',rv:null,step:0};
-  console.log(`${v.whois} start.`);
+v.setRSAkeys = function(){
+  const w = {whois:'authServer.setRSAkeys',rv:{},step:0};
+  console.log(`${w.whois} start.`);
   try {
 
-    v.step = 1; // プロパティサービスから値を取得
-    v.rv = {
-      passPhrase: PropertiesService.getDocumentProperties().getProperty('passPhrase'),
-      publicKey: PropertiesService.getDocumentProperties().getProperty('publicKey'),
-      privateKey: PropertiesService.getDocumentProperties().getProperty('privateKey'),
-    }
+    w.r = PropertiesService.getDocumentProperties().getProperty(v.whois);
+    console.log(`l.25 [${typeof w.r}] ${stringify(w.r)}`)
 
-    v.step = 2; // 鍵ペア未生成の場合は作成後プロパティサービスに保存
-    if( v.rv.passPhrase === null ){
-      v.bits = 2048;  // ビット長
-      v.step = 2.1; // 16桁のパスワードを自動生成
-      v.rv.passPhrase = createPassword(16);
-      PropertiesService.getDocumentProperties().setProperty('passPhrase',v.rv.passPhrase);
-      v.step = 2.2; // 秘密鍵の生成
-      v.rv.privateKey = cryptico.generateRSAKey(v.rv.passPhrase, v.bits);
-      PropertiesService.getDocumentProperties().setProperty('privateKey',v.rv.privateKey);
+    if( w.r === null ){
+      w.bits = 1024;  // ビット長
+      w.step = 2.1; // 16桁のパスワードを自動生成
+      w.rv.passPhrase = createPassword(16);
+      w.step = 2.2; // 秘密鍵の生成
+      w.rv.privateKey = cryptico.generateRSAKey(w.rv.passPhrase, w.bits);
       v.step = 2.3; // 公開鍵の生成
-      v.rv.publicKey = cryptico.publicKeyString(v.rv.privateKey);
-      PropertiesService.getDocumentProperties().setProperty('publicKey',v.rv.publicKey);
+      w.rv.publicKey = cryptico.publicKeyString(w.rv.privateKey);
+      PropertiesService.getDocumentProperties().setProperty(v.whois,w.rv);
+    } else {
+      w.rv = w.r;
     }
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.\npublicKey=${v.rv.publicKey}`);
-    return v.rv;
+    console.log(`${w.whois} normal end.`);
+    console.log(`type = ${typeof w.rv}\npassPhrase="${w.rv.passPhrase}\npublicKey="${w.rv.publicKey}"`);
+    return w.rv;
 
   } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
+    e.message = `${w.whois} abnormal end at step.${w.step}\n${e.message}`;
     return e;
   }
 }
