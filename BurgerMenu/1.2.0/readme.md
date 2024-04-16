@@ -112,7 +112,7 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 - userId {number} ユーザID
 - auth {number} ユーザの持つ権限。当初1, ユーザID特定時点で2
 
-詳細は`resetStorage()`参照。
+詳細は`storeUserInfo()`参照。
 
 ## htmlの設定
 
@@ -217,7 +217,7 @@ window.addEventListener('DOMContentLoaded',() => {
   try {
 
     v.step = 1; // userId,authをセット
-    v.config = resetStorage();
+    v.config = storeUserInfo();
     if( v.r instanceof Error ) throw v.r;
 
     v.step = 2.1; // 使用するクラスのインスタンス化
@@ -228,7 +228,7 @@ window.addEventListener('DOMContentLoaded',() => {
         console.log('enterId start.');
         const v = window.prompt('受付番号を入力してください');
         if( v.match(/^[0-9]+/) ){
-          v.r = resetStorage(v);
+          v.r = storeUserInfo(v);
           if( v.r instanceof Error ) throw v.r;
           //this.auth = 2; -> thisはwindowになる
           console.log(this);
@@ -905,7 +905,7 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 - userId {number} ユーザID
 - auth {number} ユーザの持つ権限。当初1, ユーザID特定時点で2
 
-詳細は`resetStorage()`参照。
+詳細は`storeUserInfo()`参照。
 
 ## 2.2 htmlの設定<a name="ac0005"></a>
 
@@ -1030,7 +1030,7 @@ window.addEventListener('DOMContentLoaded',() => {
   try {
 
     v.step = 1; // userId,authをセット
-    v.config = resetStorage();
+    v.config = storeUserInfo();
     if( v.r instanceof Error ) throw v.r;
 
     v.step = 2.1; // 使用するクラスのインスタンス化
@@ -1041,7 +1041,7 @@ window.addEventListener('DOMContentLoaded',() => {
         console.log('enterId start.');
         const v = window.prompt('受付番号を入力してください');
         if( v.match(/^[0-9]+/) ){
-          v.r = resetStorage(v);
+          v.r = storeUserInfo(v);
           if( v.r instanceof Error ) throw v.r;
           //this.auth = 2; -> thisはwindowになる
           console.log(this);

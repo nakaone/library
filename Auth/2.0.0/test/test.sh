@@ -111,9 +111,9 @@ cat $lib/cryptico/cryptico.min.js | awk 1 >> $w01
 cat $lib/changeScreen/1.1.0/core.js | awk 1 >> $w01
 cat $lib/createElement/1.2.1/core.js | awk 1 >> $w01
 cat $lib/mergeDeeply/1.1.0/core.js | awk 1 >> $w01
+cat $lib/storeUserInfo/1.0.0/core.js | awk 1 >> $w01
 cat $lib/stringify/1.1.1/core.js | awk 1 >> $w01
 cat $lib/whichType/1.0.1/core.js | awk 1 >> $w01
-cat $test/resetStorage.js | awk 1 >> $w01
 cat $w01 | awk 1 > $tmp/script.js
 
 # 4.3 onload部分の作成

@@ -16,7 +16,7 @@ sequenceDiagram
     server ->> client : HTML(object)+ID
     activate client
     deactivate server
-    Note right of client : resetStorage()
+    Note right of client : storeUserInfo()
     client ->> client : ID確認処理
     Note right of client : BurgerMenu.constructor()
     alt IDが存在

@@ -5,7 +5,7 @@ if( true ){
 }
 
 v.step = 1; // userId,authをセット
-v.config = resetStorage();
+v.config = storeUserInfo(config.programId,{CSSselector:'[name="userId"]'});
 if( v.r instanceof Error ) throw v.r;
 
 v.step = 2.1; // 使用するクラスのインスタンス化
@@ -16,11 +16,12 @@ v.menu = new BurgerMenu({auth:v.config.auth,func:{
     console.log('enterId start.');
     const v = window.prompt('受付番号を入力してください');
     if( v.match(/^[0-9]+/) ){
-      v.r = resetStorage(v);
+      v.r = storeUserInfo(config.programId,{userId:v,CSSselector:'[name="userId"]'});
       if( v.r instanceof Error ) throw v.r;
-      //this.auth = 2; -> thisはwindowになる
       console.log(this);
-      //this.genNavi(2); -> thisはwindowになる
+      //this.genNavi(2); -> thisはwindowになるのでNG
+    } else {
+      alert('受付番号は数値で指定してください');
     }
   }
 }});

@@ -79,7 +79,7 @@ function storeUserInfo(programId=null,opt={}){
       v.html = v.r.length > 0 ? Number(v.r) : null;  
     }
     v.step = 2.4; // 引数で渡されたuserIdを取得
-    if( v.opt.userId !== null ) v.arg = Number(userId);
+    if( v.opt.userId !== null ) v.arg = Number(v.opt.userId);
 
     v.step = 2.1; // userIdの特定
     // 優先順位は`arg > html > session > local`
