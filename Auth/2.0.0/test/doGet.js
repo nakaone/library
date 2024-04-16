@@ -13,6 +13,6 @@ function doGet(e){
   const template = HtmlService.createTemplateFromFile('index');
   template.userId = e.parameter.id;
   const htmlOutput = template.evaluate();
-  htmlOutput.setTitle(config.programId);
+  htmlOutput.setTitle(g.programId);
   return htmlOutput;
 }

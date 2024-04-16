@@ -1,1 +1,1 @@
-const config = {programId:'camp2024'};
+const g = {programId:'camp2024'};

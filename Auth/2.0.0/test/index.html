@@ -364,10 +364,11 @@ td, .td {
 -->
     </div>
   </div>
+  <div data-BurgerMenu="id:'参加申し込み',allow:1,func:'entry'"></div>
   <div data-BurgerMenu="id:'受付番号入力',allow:1,func:'enterId'"></div>
 </div></body>
 <script type="text/javascript">
-const config = {programId:'camp2024'};
+const g = {programId:'camp2024'};
 class authClient {
   //:x:$src/client.constructor.js::
   constructor(){
@@ -751,8 +752,8 @@ class BurgerMenu {
     try {
 
       v.step = 1.1; // sessionStorageからユーザ権限を読み取り
-      v.r = sessionStorage.getItem(config.programId);
-      if( !v.r ) throw new Error(`sessionStorageに${config.programId}キーが存在しません`);
+      v.r = sessionStorage.getItem(g.programId);
+      if( !v.r ) throw new Error(`sessionStorageに${g.programId}キーが存在しません`);
       this.auth = JSON.parse(v.r).auth;
       v.step = 1.2; // navi領域をクリア
       if( depth === 0 ) navi.innerHTML = '';
@@ -1296,7 +1297,7 @@ function storeUserInfo(programId=null,opt={}){
       v.html = v.r.length > 0 ? Number(v.r) : null;  
     }
     v.step = 2.4; // 引数で渡されたuserIdを取得
-    if( v.opt.userId !== null ) v.arg = Number(userId);
+    if( v.opt.userId !== null ) v.arg = Number(v.opt.userId);
 
     v.step = 2.1; // userIdの特定
     // 優先順位は`arg > html > session > local`
@@ -1461,23 +1462,26 @@ window.addEventListener('DOMContentLoaded',() => {
 
 v.step = 0; // テスト用
 if( true ){
-  localStorage.removeItem(config.programId);
-  sessionStorage.removeItem(config.programId);
+  localStorage.removeItem(g.programId);
+  sessionStorage.removeItem(g.programId);
 }
 
 v.step = 1; // userId,authをセット
-v.config = storeUserInfo(config.programId,{CSSselector:'[name="userId"]'});
+v.config = storeUserInfo(g.programId,{CSSselector:'[name="userId"]'});
 if( v.r instanceof Error ) throw v.r;
 
 v.step = 2.1; // 使用するクラスのインスタンス化
-v.auth = new authClient();
+g.auth = new authClient();
 v.step = 2.2;
 v.menu = new BurgerMenu({auth:v.config.auth,func:{
+  entry: ()=> {
+    console.log('entry start.');
+  },
   enterId:()=>{
     console.log('enterId start.');
     const v = window.prompt('受付番号を入力してください');
     if( v.match(/^[0-9]+/) ){
-      v.r = storeUserInfo(config.programId,{userId:v,CSSselector:'[name="userId"]'});
+      v.r = storeUserInfo(g.programId,{userId:v,CSSselector:'[name="userId"]'});
       if( v.r instanceof Error ) throw v.r;
       console.log(this);
       //this.genNavi(2); -> thisはwindowになるのでNG

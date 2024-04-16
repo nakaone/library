@@ -333,8 +333,8 @@ class BurgerMenu {
     try {
 
       v.step = 1.1; // sessionStorageからユーザ権限を読み取り
-      v.r = sessionStorage.getItem(config.programId);
-      if( !v.r ) throw new Error(`sessionStorageに${config.programId}キーが存在しません`);
+      v.r = sessionStorage.getItem(g.programId);
+      if( !v.r ) throw new Error(`sessionStorageに${g.programId}キーが存在しません`);
       this.auth = JSON.parse(v.r).auth;
       v.step = 1.2; // navi領域をクリア
       if( depth === 0 ) navi.innerHTML = '';

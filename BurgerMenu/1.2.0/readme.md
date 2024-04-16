@@ -102,13 +102,15 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 
 # 使用方法
 
+【注意】genNaviメソッドでは**グローバル変数`g.programId`を使用**してsessionStorageから情報を取得します。
+
 ## sessionStorage
 
 ブラウザ側で、ユーザID/権限をsessionStorageに保存し、メニュー生成(genNavi)ではsessionStorageを参照する。
 
 ∵ インスタンス生成時にfuncとしてメニュー選択時に実行する関数を渡すが、関数にユーザID/権限を渡すため
 
-- sessionStorageのラベル：config.programId
+- sessionStorageのラベル：g.programId
 - userId {number} ユーザID
 - auth {number} ユーザの持つ権限。当初1, ユーザID特定時点で2
 
@@ -634,8 +636,8 @@ class BurgerMenu {
     try {
 
       v.step = 1.1; // sessionStorageからユーザ権限を読み取り
-      v.r = sessionStorage.getItem(config.programId);
-      if( !v.r ) throw new Error(`sessionStorageに${config.programId}キーが存在しません`);
+      v.r = sessionStorage.getItem(g.programId);
+      if( !v.r ) throw new Error(`sessionStorageに${g.programId}キーが存在しません`);
       this.auth = JSON.parse(v.r).auth;
       v.step = 1.2; // navi領域をクリア
       if( depth === 0 ) navi.innerHTML = '';
@@ -891,6 +893,8 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 <br>&gt; [[概要](#ac0001) | 使用方法 | [BurgerMenu仕様](#ac0011) | [プログラムソース](#ac0014) | [改版履歴](#ac0015)]
 
 
+【注意】genNaviメソッドでは**グローバル変数`g.programId`を使用**してsessionStorageから情報を取得します。
+
 ## 2.1 sessionStorage<a name="ac0004"></a>
 
 [先頭](#ac0000) > [使用方法](#ac0003)
@@ -901,7 +905,7 @@ htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメ�
 
 ∵ インスタンス生成時にfuncとしてメニュー選択時に実行する関数を渡すが、関数にユーザID/権限を渡すため
 
-- sessionStorageのラベル：config.programId
+- sessionStorageのラベル：g.programId
 - userId {number} ユーザID
 - auth {number} ユーザの持つ権限。当初1, ユーザID特定時点で2
 
@@ -1467,8 +1471,8 @@ class BurgerMenu {
     try {
 
       v.step = 1.1; // sessionStorageからユーザ権限を読み取り
-      v.r = sessionStorage.getItem(config.programId);
-      if( !v.r ) throw new Error(`sessionStorageに${config.programId}キーが存在しません`);
+      v.r = sessionStorage.getItem(g.programId);
+      if( !v.r ) throw new Error(`sessionStorageに${g.programId}キーが存在しません`);
       this.auth = JSON.parse(v.r).auth;
       v.step = 1.2; // navi領域をクリア
       if( depth === 0 ) navi.innerHTML = '';

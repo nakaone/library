@@ -11,7 +11,7 @@ sequenceDiagram
   participant property
   actor admin
 
-  user ->> client : 登録要求
+  user ->> client : 登録要求(ID)
   activate client
   Note right of client : authClient.registMail()
   client ->> user : メアド入力ダイアログ
