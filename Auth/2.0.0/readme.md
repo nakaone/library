@@ -137,6 +137,11 @@ sequenceDiagram
       client ->> user : 一般公開サイト
     end
     deactivate client
+
+    user ->>+ client : ID入力
+    Note right of client : enterUserId()
+    client ->> client : storageに保存(storeUserInfo)
+    client ->>- user : メンバ用画面
   end
 ```
 
@@ -157,6 +162,13 @@ sequenceDiagram
      1. Burger.auth.IDの値に従ってAuthメニュー描画(メニューアイコン、nav領域)
 
 [HtmlOutput.appendUntrusted()](https://developers.google.com/apps-script/reference/html/html-output?hl=ja#appenduntrustedaddedcontent)を使用して、HTMLの要素として返す。
+
+    user ->> client : ID入力
+    activate client
+    Note right of client : enterUserId()
+    client ->> user : メンバ用サイト
+    deactivate client
+
 --＞
 
 ## 新規登録
@@ -172,11 +184,9 @@ sequenceDiagram
   participant property
   actor admin
 
-  user ->> client : 登録要求(ID)
+  user ->> client : メアド
   activate client
   Note right of client : authClient.registMail()
-  client ->> user : メアド入力ダイアログ
-  user ->> client : メアド
   client ->> server : メアド
   activate server
   Note right of server : authServer.registMail()
@@ -188,12 +198,12 @@ sequenceDiagram
   client ->> user : 新規登録画面表示
   deactivate client
 ```
-- userId(受付番号)がlocalStrageに存在する場合、メニューに「登録要求」は表示しない
+
+- メアド入力欄は募集要項の一部とし、userId(受付番号)がlocalStrageに存在する場合は表示しない
 - 応募締切等、新規要求ができる期間の制限は、client側でも行う(BurgerMenuの有効期間設定を想定)
-- メアド入力はダイアログで行う(開発工数低減)
-- メアドは正規表現による形式チェックのみ、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
+- メアドは形式チェックのみ行い、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
 - 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
-- IDはcookieでの保存を想定(∵個人情報では無く、タブを閉じても保存しておきたい)
+- IDはstoreUserInfo関数を使用してlocal/sessionStorageでの保存を想定(∵個人情報では無く、タブを閉じても保存しておきたい)
 
 ## ログイン要求
 
@@ -423,6 +433,10 @@ class authClient {
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
+  }
+
+  async doGAS(func,...args){
+    return await doGAS('authServer',func,...args);
   }
 
 /** ブラウザからの登録要求を受け、IDを返す
@@ -881,6 +895,11 @@ sequenceDiagram
       client ->> user : 一般公開サイト
     end
     deactivate client
+
+    user ->>+ client : ID入力
+    Note right of client : enterUserId()
+    client ->> client : storageに保存(storeUserInfo)
+    client ->>- user : メンバ用画面
   end
 ```
 
@@ -901,6 +920,13 @@ sequenceDiagram
      1. Burger.auth.IDの値に従ってAuthメニュー描画(メニューアイコン、nav領域)
 
 [HtmlOutput.appendUntrusted()](https://developers.google.com/apps-script/reference/html/html-output?hl=ja#appenduntrustedaddedcontent)を使用して、HTMLの要素として返す。
+
+    user ->> client : ID入力
+    activate client
+    Note right of client : enterUserId()
+    client ->> user : メンバ用サイト
+    deactivate client
+
 -->
 
 ## 2.2 新規登録<a name="ac0007"></a>
@@ -920,11 +946,9 @@ sequenceDiagram
   participant property
   actor admin
 
-  user ->> client : 登録要求(ID)
+  user ->> client : メアド
   activate client
   Note right of client : authClient.registMail()
-  client ->> user : メアド入力ダイアログ
-  user ->> client : メアド
   client ->> server : メアド
   activate server
   Note right of server : authServer.registMail()
@@ -936,12 +960,12 @@ sequenceDiagram
   client ->> user : 新規登録画面表示
   deactivate client
 ```
-- userId(受付番号)がlocalStrageに存在する場合、メニューに「登録要求」は表示しない
+
+- メアド入力欄は募集要項の一部とし、userId(受付番号)がlocalStrageに存在する場合は表示しない
 - 応募締切等、新規要求ができる期間の制限は、client側でも行う(BurgerMenuの有効期間設定を想定)
-- メアド入力はダイアログで行う(開発工数低減)
-- メアドは正規表現による形式チェックのみ、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
+- メアドは形式チェックのみ行い、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
 - 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
-- IDはcookieでの保存を想定(∵個人情報では無く、タブを閉じても保存しておきたい)
+- IDはstoreUserInfo関数を使用してlocal/sessionStorageでの保存を想定(∵個人情報では無く、タブを閉じても保存しておきたい)
 
 ## 2.3 ログイン要求<a name="ac0008"></a>
 
@@ -1219,6 +1243,10 @@ class authClient {
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
+  }
+
+  async doGAS(func,...args){
+    return await doGAS('authServer',func,...args);
   }
 
 /** ブラウザからの登録要求を受け、IDを返す

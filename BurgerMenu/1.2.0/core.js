@@ -70,6 +70,7 @@ class BurgerMenu {
         allow: 2 ** 32 - 1, // data-BurgerMenuのauth(開示範囲)の既定値
         func: {}, // {Object.<string,function>} メニューから呼び出される関数
         home: null,
+        homeForEachAuth: null, // {Object.<number,string>} ユーザ権限毎にメニューを設定するなら、auth毎に.screen[name]を設定
         initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
       };
       v.default.css = `/* BurgerMenu専用CSS
@@ -224,26 +225,14 @@ class BurgerMenu {
       if( typeof this.wrapper === 'string' ){
         this.wrapper = document.querySelector(this.wrapper);
       }
-      v.step = 5; // homeが無指定ならwrapper直下でdata-BurgerMenu属性を持つ最初の要素の識別子
-      if( this.home === null ){
-        for( v.i=0 ; v.i<this.wrapper.childElementCount ; v.i++ ){
-          v.x = this.wrapper.children[v.i].getAttribute(`data-${this.constructor.name}`);
-          if( v.x ){
-            v.r = this.#objectize(v.x);
-            if( v.r instanceof Error ) throw v.r;
-            this.home = v.r.id;
-            break;
-          }
-        }
-      }
-      v.step = 6; // BurgerMenu専用CSSが未定義なら追加
+      v.step = 5; // BurgerMenu専用CSSが未定義なら追加
       if( !document.querySelector(`style[name="${this.constructor.name}"]`) ){
         v.styleTag = document.createElement('style');
         v.styleTag.setAttribute('name',this.constructor.name);
         v.styleTag.textContent = this.css;
         document.head.appendChild(v.styleTag);
       }
-      v.step = 7; // 待機画面が未定義ならbody直下に追加
+      v.step = 6; // 待機画面が未定義ならbody直下に追加
       if( !document.querySelector('body > div[name="loading"]') ){
         v.r = createElement({
           attr:{name:'loading',class:'loader screen'},
@@ -251,7 +240,7 @@ class BurgerMenu {
         },'body');
       }
   
-      v.step = 8; // 終了処理
+      v.step = 7; // 終了処理
       console.log(`${v.whois} normal end.`);
       return v.rv;
   
@@ -338,6 +327,10 @@ class BurgerMenu {
       this.auth = JSON.parse(v.r).auth;
       v.step = 1.2; // navi領域をクリア
       if( depth === 0 ) navi.innerHTML = '';
+      v.step = 1.3; // auth毎にホームを変更する場合、変更
+      if( this.homeForEachAuth !== null ){
+        this.home = this.homeForEachAuth[this.auth];
+      }
 
       // 子要素を順次走査し、data-BurgerMenuを持つ要素をnaviに追加
       for( v.i=0 ; v.i<wrapper.childElementCount ; v.i++ ){

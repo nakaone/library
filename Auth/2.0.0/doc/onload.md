@@ -25,6 +25,11 @@ sequenceDiagram
       client ->> user : 一般公開サイト
     end
     deactivate client
+
+    user ->>+ client : ID入力
+    Note right of client : enterUserId()
+    client ->> client : storageに保存(storeUserInfo)
+    client ->>- user : メンバ用画面
   end
 ```
 
@@ -45,4 +50,11 @@ sequenceDiagram
      1. Burger.auth.IDの値に従ってAuthメニュー描画(メニューアイコン、nav領域)
 
 [HtmlOutput.appendUntrusted()](https://developers.google.com/apps-script/reference/html/html-output?hl=ja#appenduntrustedaddedcontent)を使用して、HTMLの要素として返す。
+
+    user ->> client : ID入力
+    activate client
+    Note right of client : enterUserId()
+    client ->> user : メンバ用サイト
+    deactivate client
+
 -->

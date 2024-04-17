@@ -18,6 +18,10 @@ class authClient {
     }
   }
 
+  async doGAS(func,...args){
+    return await doGAS('authServer',func,...args);
+  }
+
 /** ブラウザからの登録要求を受け、IDを返す
  * @param {void}
  * @returns {null|Error}

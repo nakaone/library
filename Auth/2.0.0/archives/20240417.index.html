@@ -365,6 +365,21 @@ td, .td {
     </div>
   </div>
   <div data-BurgerMenu="id:'受付番号入力',allow:1,func:'enterUserId'">
+  <!--div data-BurgerMenu="id:'応募・参加者用サイト',allow:1">
+    <form name="unnumbered">
+      <p>これから応募する方は、以下にメールアドレスを入力してください。</p>
+      <input type="email" size="40" />
+      <button type="submit">送信</button>
+    </form>
+    <form name="numbered">
+      <p>応募済で受付番号がわかっている方は、以下に受付番号を入力してください。</p>
+      <input type="number" size="10" />
+      <button type="submit">送信</button>
+    </form>
+    <div name="unidentified">
+      <p>応募済だが受付番号がわからない方は、お名前と連絡先を記入してskz-oyaji@googlegroups.comまでお問い合わせください。</p>
+    </div>
+  </div-->
 </div></body>
 <script type="text/javascript">
 const g = {programId:'camp2024'};
@@ -647,14 +662,37 @@ class BurgerMenu {
       if( typeof this.wrapper === 'string' ){
         this.wrapper = document.querySelector(this.wrapper);
       }
-      v.step = 5; // BurgerMenu専用CSSが未定義なら追加
+      /* 要再帰呼出。そこまで手をかける必要ないと判断
+      v.step = 5; // homeが無指定ならwrapper直下で子にdata-BurgerMenu属性を持たない最初のdata-BurgerMenu要素の識別子
+      if( this.home === null ){
+        v.candidates = this.wrapper.querySelectorAll(`[data-${this.constructor.name}]`);
+        for( v.i=0 ; v.i<v.candidates.length ; v.i++ ){
+          if( v.candidates[v.i].querySelector(`[data-${this.constructor.name}]`) === null ){
+            v.r = this.#objectize(v.candidates[v.i]);
+            if( v.r instanceof Error ) throw v.r;
+            this.home = v.r.id;
+            break;
+          }
+        }
+        for( v.i=0 ; v.i<this.wrapper.childElementCount ; v.i++ ){
+          v.x = this.wrapper.children[v.i].getAttribute(`data-${this.constructor.name}`);
+          if( v.x ){
+            v.r = this.#objectize(v.x);
+            if( v.r instanceof Error ) throw v.r;
+            this.home = v.r.id;
+            break;
+          }
+        }
+      }
+      */
+      v.step = 6; // BurgerMenu専用CSSが未定義なら追加
       if( !document.querySelector(`style[name="${this.constructor.name}"]`) ){
         v.styleTag = document.createElement('style');
         v.styleTag.setAttribute('name',this.constructor.name);
         v.styleTag.textContent = this.css;
         document.head.appendChild(v.styleTag);
       }
-      v.step = 6; // 待機画面が未定義ならbody直下に追加
+      v.step = 7; // 待機画面が未定義ならbody直下に追加
       if( !document.querySelector('body > div[name="loading"]') ){
         v.r = createElement({
           attr:{name:'loading',class:'loader screen'},
@@ -662,7 +700,7 @@ class BurgerMenu {
         },'body');
       }
   
-      v.step = 7; // 終了処理
+      v.step = 8; // 終了処理
       console.log(`${v.whois} normal end.`);
       return v.rv;
   
@@ -752,6 +790,7 @@ class BurgerMenu {
       v.step = 1.3; // auth毎にホームを変更する場合、変更
       if( this.homeForEachAuth !== null ){
         this.home = this.homeForEachAuth[this.auth];
+        console.log(`l.794 this.home=${this.home}`);
       }
 
       // 子要素を順次走査し、data-BurgerMenuを持つ要素をnaviに追加
@@ -981,11 +1020,12 @@ e=a.string2bytes(e);d=a.decryptAESCBC(d[1],e).split("::52cee64bb3a38f6403386519a
  * - スクリーン(div)は`class="screen" name="xxx"`を指定
  * - 引数の`screenName`は上述のname属性
  * 
- * @param {string} screenName - スクリーン名
+ * @param {string} [screenName=this.home] - スクリーン名
  * @returns {void}
  */
-function changeScreen(screenName){
+function changeScreen(screenName=this.home){
   const v = {whois:'changeScreen',rv:null,step:0};
+  console.log(`${v.whois} start. screenName=${screenName}`);
   try {
 
     v.step = 1; // 全スクリーンを閉じる
@@ -1514,6 +1554,90 @@ g.menu = new BurgerMenu({auth:v.config.auth,homeForEachAuth:{
   },
 }});
 
+/*
+// onClickの設定
+// 新規の応募(申し込み) ⇒ authClient.registMail
+document.querySelector('[name="応募・参加者用サイト"] [name="unnumbered"] button').addEventListener('click',async ()=>{
+  const v = {whois:'unnumbered',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.dom = event.target.parentNode.querySelector('input');
+    if( v.dom.checkValidity() ){
+      v.email = v.dom.value;
+      console.log(v.email);
+
+      v.step = 2; // IDの取得
+      v.r = g.auth.doGAS('registMail',v.email);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 3; // 取得したIDの保存
+      v.config = storeUserInfo(g.programId,{userId:v.r,CSSselector:'[name="userId"]'});
+      if( v.config instanceof Error ) throw v.config;
+
+      v.step = 4; // メニュー再描画
+      v.r = g.menu.genNavi();
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 5; // 応募フォームの表示
+      v.r = changeScreen('登録・修正・キャンセル');
+      if( v.r instanceof Error ) throw v.r;
+
+    } else {
+      alert('不適切なメールアドレスです');
+    }
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+});
+
+// 参加申込済・ID未登録 ⇒ localStorageにID保存
+document.querySelector('[name="応募・参加者用サイト"] [name="numbered"] button').addEventListener('click',()=>{
+  const v = {whois:'numbered',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // 受付番号入力欄の取得
+    v.dom = event.target.parentNode.querySelector('input');
+
+    if( v.dom.checkValidity() ){
+      v.step = 2; // 受付番号の取得
+      v.userId = Number(v.dom.value);
+
+      v.step = 3; // sessionStorage/localStorageのユーザ情報を更新
+      v.r = storeUserInfo(g.programId,{userId:v.userId,CSSselector:'[name="userId"]'});
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 4.1; // メニュー再描画
+      v.r = g.menu.genNavi();
+      if( v.r instanceof Error ) throw v.r;
+      v.step = 4.2; // ホーム画面に遷移
+      v.r = changeScreen(g.menu.home);
+      if( v.r instanceof Error ) throw v.r;
+
+    } else {
+      v.step = 5; // 不正入力値の場合、メッセージ表示
+      alert('受付番号は数値で指定してください');
+    }
+
+    v.step = 6; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+});
+*/
     v.step = 99; // 終了処理
     console.log(`${v.whois} normal end.`);
     return v.rv;
@@ -1525,3 +1649,4 @@ g.menu = new BurgerMenu({auth:v.config.auth,homeForEachAuth:{
 });
 </script>
 </html>
+  
