@@ -107,6 +107,7 @@ echo "`date +"%T"` -  step.4.2 start."
 cat $test/config.common.js | awk 1 > $w01
 cat $lib/Auth/2.0.0/client.js | awk 1 >> $w01
 cat $lib/BurgerMenu/1.2.0/core.js | awk 1 >> $w01
+cat $lib/checkFormat/1.0.0/core.js | awk 1 >> $w01
 cat $lib/cryptico/cryptico.min.js | awk 1 >> $w01
 cat $lib/changeScreen/1.1.0/core.js | awk 1 >> $w01
 cat $lib/createElement/1.2.1/core.js | awk 1 >> $w01
