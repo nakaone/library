@@ -18,6 +18,10 @@ class authClient {
     }
   }
 
+  async doGAS(func,...args){
+    return await doGAS('authServer',func,...args);
+  }
+
   //::$src/client.registMail.js::
   //:x:$src/client.login1C.js::
   //:x:$src/client.login2C.js::
