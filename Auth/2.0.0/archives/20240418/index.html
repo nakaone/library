@@ -1,0 +1,1592 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+/* -----------------------------------------------
+  library/CSS/1.3.0/core.css
+----------------------------------------------- */
+html, body{
+  width: 100%;
+  margin: 0;
+  /*font-size: 4vw;*/
+  text-size-adjust: none; /* https://gotohayato.com/content/531/ */
+}
+body * {
+  font-size: 1rem;
+  font-family: sans-serif;
+  box-sizing: border-box;
+}
+.num, .right {text-align:right;}
+.screen {padding: 1rem;} /* SPAでの切替用画面 */
+.title { /* Markdown他でのタイトル */
+  font-size: 2.4rem;
+  text-shadow: 2px 2px 5px #888;
+}
+
+/* --- テーブル -------------------------------- */
+.table {display:grid}
+th, .th, td, .td {
+  margin: 0.2rem;
+  padding: 0.2rem;
+}
+th, .th {
+  background-color: #888;
+  color: white;
+}
+td, .td {
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+
+/* --- 部品 ----------------------------------- */
+.triDown { /* 下向き矢印 */
+  --bw: 50px;
+  width: 0px;
+  height: 0px;
+  border-top: calc(var(--bw) * 0.7) solid #aaa;
+  border-right: var(--bw) solid transparent;
+  border-left: var(--bw) solid transparent;
+  border-bottom: calc(var(--bw) * 0.2) solid transparent;
+}
+
+/* --- 部品：待機画面 --------------------------- */
+.loader,
+.loader:after {
+  border-radius: 50%;
+  width: 10em;
+  height: 10em;
+}
+.loader {
+  margin: 60px auto;
+  font-size: 10px;
+  position: relative;
+  text-indent: -9999em;
+  border-top: 1.1em solid rgba(204,204,204, 0.2);
+  border-right: 1.1em solid rgba(204,204,204, 0.2);
+  border-bottom: 1.1em solid rgba(204,204,204, 0.2);
+  border-left: 1.1em solid #cccccc;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-animation: load8 1.1s infinite linear;
+  animation: load8 1.1s infinite linear;
+}
+@-webkit-keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.3.2/alasql.min.js" integrity="sha512-aLCnYphqnhhuL0uDFIOSQoD0b2ezNaccMQ6OLGmoxW0cL97b05lOpNx7a31A01xnc5Kf09O0y0jl0Tem1psBSQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<!--
+  1: 一般公開部分
+  2: 参加者向け
+  4: スタッフ向け
+  8: コアスタッフ(受付担当)向け
+-->
+</head><body>
+<div style="display:none" name="userId"><?= userId ?></div>
+<p class="title">校庭キャンプ2024</p>
+<div class="BurgerMenu screen" name="wrapper">
+  <div data-BurgerMenu="id:'イベント情報'">
+    <div data-BurgerMenu="id:'掲示板',allow:2">【未実装】掲示板</div>
+    <div data-BurgerMenu="id:'実施要領'">
+<h1>イベント概要</h1>
+<ul>
+<li>日時：2022年10月1日(土) ※雨天決行</li>
+<li>場所：下北沢小校庭、体育館、校舎</li>
+<li>対象：下北沢小在学生、未就学児、卒業生</li>
+<li>内容：キャンプ体験、ゲームコーナー、イベント</li>
+<li>予定：  ※事情により当日変更される可能性があります<pre><code>13:30	受付開始
+14:00	ゲーム、イベント
+16:30	食事(カレー)
+17:30	校内探険  ※終了後順次解散
+20:00	最終解散、終了
+</code></pre>
+</li>
+<li>費用：500円/人 ※未就学児無料</li>
+</ul>
+<h1>参加申込</h1>
+<ol>
+<li><div>以下に申込者のメールアドレスを入力、送信してください<br>
+<input type="email" size="40" /><button onclick="g.auth.registMail(this)">送信</button></div>
+<li>送信いただいたメールアドレス宛に「応募フォームへのご案内」というメールが届きます</li>
+<li>メールに記載されたリンクから応募フォームを開き、必要事項を入力してください。</li>
+</ol>
+<ul>
+<li>メールが届かない場合、以下の点を確認の上、<a href="mailto:shimokitasho.oyaji@gmail.com">shimokitasho.oyaji@gmail.com</a>までご連絡ください。<ul>
+<li>入力されたメールアドレスは正しいですか？</li>
+<li>迷惑メールに振り分けられていないですか？</li>
+<li>quota exceed等、メールが受け取れない状態になっていませんか？</li>
+</ul>
+</li>
+</ul>
+    </div>
+    <div data-BurgerMenu="id:'注意事項'">
+<h1>注意事項</h1>
+
+<h2>参加者の加除、申込のキャンセル</h2>
+<ul>
+<li>参加メンバの追加・削除・変更等で登録内容に修正があれば、参加者サイトから修正願います。<br>
+メニュー &gt; 参加者パス &gt; 詳細情報表示 &gt; 申込フォームを開く</li>
+</ul>
+<h2>参加当日</h2>
+<ul>
+<li>イベント当日の申込は応募者数の多寡によらず承りかねます</li>
+<li>台風等、雨天の場合は中止します。またインフルエンザ等によりデイキャンプに変更する場合があります。</li>
+<li>前項の中止・変更があった場合、当日9:00頃までに本サイト等でご案内します。</li>
+<li>在学生の参加にはなるべく、未就学児の参加には必ず、引率者が同伴ください。</li>
+<li>入場受付は正門となります(東門は閉鎖予定)</li>
+<li>遊具は持ち込みいただけますが、ご使用の際は他の参加者のご迷惑とならないよう、保護者の方でご注意ください。</li>
+<li>ごみ箱の用意はありません。食べ残し他のごみはお持ち帰りの上、各家庭で処理願います。</li>
+<li>参加者が多いため駐輪場は確保できません。荷物運搬を含め、自転車での来校はご遠慮ください。</li>
+<li>保護者の方は名札をご用意ください。</li>
+<li>参加費はお釣りの無いようにご用意ください。</li>
+<li>宿泊されない場合、帰宅時は必ず保護者または成年の代理がお迎えください。</li>
+</ul>
+<h2>キャンプ、遊戯</h2>
+<ul>
+<li>申込時にテント使用を申告していなかった場合、テントの使用はできません</li>
+<li>テント設営スペースについては、係員の指示を必ず守ってください</li>
+<li>テントの貸出はありません。テント・テーブル・タープ等を使用したい場合、申込時に事前申告の上、当日ご持参ください。</li>
+<li>火気を使用するキャンプ用品はご利用いただけません(例：グリル、コンロ、ガソリンを使用するランタン等)</li>
+<li>ペグ等、土に刺して固定する器具の使用は厳禁です</li>
+<li>校庭にキャンプ設営スペースを確保する関係上、屋外でのボール遊び等は禁止とさせていただきます。</li>
+<li>体育館内での遊戯は問題ありませんが、他の参加者の方々にご迷惑とならないよう、保護者の方にはご配慮をお願いします</li>
+<li>遊戯で使用した道具は必ず片付けてください</li>
+<li>トランプ等のカードゲームやゲーム機等、屋内遊具の持ち込みに制限はありません。各ご家庭の判断で御用意ください(WiFi環境はありません)</li>
+<li>テントを持参されない場合、シュラフ等の寝具を御用意ください。</li>
+</ul>
+<h2>食事</h2>
+<ul>
+<li>食事はカレールーのみ提供されます。ごはんや副菜、皿・スプーン・コップ等の食器は提供されませんので、各自ご持参ください。</li>
+<li>食品アレルギーのある方への個別対応は困難なので、申し訳ありませんが参加者側でカレールーまたは代替品をご持参いただけますようお願いします。</li>
+<li>食後の食器はそのまま持ち帰り、洗浄は各家庭でお願いします。</li>
+<li>コロナ対応等で当日校内での飲食ができなくなる可能性があります。対応は都度ご案内しますが、予めご了承ください。</li>
+<li>朝食は素麺を提供する予定です。器・箸を御用意ください。</li>
+</ul>
+<h2>校内探険</h2>
+<ul>
+<li>校内探険の際の懐中電灯はグループ毎に1つ運営で貸与します。明るくなり過ぎないよう、持参したスマホのライトや懐中電灯の使用はご遠慮ください。</li>
+<li>宿泊しない場合、帰宅時は必ず保護者または成年の代理がお迎えください。</li>
+</ul>
+<h2>その他</h2>
+<ul>
+<li>本件に関する問合せは <a href="mailto:shimokitasho.oyaji@gmail.com">shimokitasho.oyaji@gmail.com</a> にお願いします。</li>
+</ul>
+    </div>
+    <div data-BurgerMenu="id:'持ち物リスト'">
+<h1>持ち物リスト</h1>
+<ol>
+<li><p>キャンプ</p>
+<ol>
+<li>テント・テーブル・タープ等のキャンプ用品(任意)</li>
+<li>敷物</li>
+</ol>
+</li>
+<li><p>食事</p>
+<ol>
+<li>ご飯・パン等の主食、おかず</li>
+<li>飲み物</li>
+<li>皿、スプーン、箸、コップ等の食器</li>
+<li>ナプキン、ウェットティッシュ等</li>
+<li>持ち帰り用ゴミ袋</li>
+</ol>
+</li>
+<li><p>その他</p>
+<ol>
+<li>参加費(お釣りの無いように)</li>
+<li>保護者用名札</li>
+<li>マスク</li>
+<li>水筒</li>
+</ol>
+</li>
+</ol>
+    </div>
+    <div data-BurgerMenu="id:'タイムテーブル',allow:14">【未実装】タイムテーブル</div>
+    <div data-BurgerMenu="id:'会場案内図',allow:14">
+<svg id="exportSVG" visibility="visible" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" data-info="draw.ninja" data-name="draw" viewBox="0 0 1000 700" width="1000" height="700"><defs id="defsExport"><filter id="filter0"><feGaussianBlur stdDeviation="0"></feGaussianBlur></filter><pattern id="patternImage" patternUnits="userSpaceOnUse" x="0" y="0" width="1" height="1" data-x="0" data-y="0" data-width="1" data-height="1" data-multx="1" data-multy="1" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="patternImage" data-draw="1" fill="#B3B3B3" fill-opacity="1"></pattern><pattern id="pattern0" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 0" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 0 L5 0 L5 5 L0 5 L0 0 Z"></path></pattern><pattern id="pattern1" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 1" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 5 L5 0 L10 5 L5 10 L0 5 Z"></path></pattern><pattern id="pattern2" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 2" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 9 L5 1 L10 9 L0 9 Z"></path></pattern><pattern id="pattern3" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 3" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 5 C0 2.25 2.25 0 5 0 C7.75 0 10 2.25 10 5 C10 7.75 7.75 10 5 10 C2.25 10 0 7.75 0 5 Z"></path></pattern><pattern id="pattern4" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 4" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 5 L4 4 L5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 Z"></path></pattern><pattern id="pattern5" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 5" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M5 10 C-5 2.75 3 -1.75 5 1 C7 -1.75 15 2.75 5 10 Z"></path></pattern><pattern id="pattern6" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 6" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M3 0 L7 0 L7 10 L3 10 L3 0 Z"></path></pattern><pattern id="pattern7" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 7" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M10 3 L10 7 L0 7 L0 3 L10 3 Z"></path></pattern><pattern id="pattern8" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 8" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 10 L3 3 L10 0 L7 7 L0 10 Z"></path></pattern><pattern id="pattern9" patternUnits="userSpaceOnUse" x="0" y="0" width="10" height="10" data-x="0" data-y="0" data-width="10" data-height="10" data-multx="1" data-multy="1" stroke="none" patternTransform="matrix(1,0,0,1,0,0)" data-transs="0" data-transf="0" data-source="Pattern 9" data-draw="1" fill="#B3B3B3" fill-opacity="1"><path transform="matrix(1,0,0,1,0,0)" d="M0 4 L10 4 L10 6 L0 6 L0 4 Z M4 10 L4 0 L6 0 L6 10 L4 10 Z"></path></pattern><linearGradient id="linearSystem" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="100%" y2="50%" spreadMethod="pad"><stop offset="50%" stop-color="#D0D0D0" stop-opacity="1"></stop><stop offset="100%" stop-color="transparent" stop-opacity="1"></stop></linearGradient><linearGradient id="linearSystem1" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="100%" y2="50%" spreadMethod="pad"><stop offset="30%" stop-color="#D0D0D0" stop-opacity="1"></stop><stop offset="100%" stop-color="transparent" stop-opacity="1"></stop></linearGradient><linearGradient id="linearSystem2" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="50%" y2="50%" spreadMethod="repeat"><stop offset="30%" stop-color="#D0D0D0" stop-opacity="1"></stop><stop offset="100%" stop-color="transparent" stop-opacity="1"></stop></linearGradient><linearGradient id="linearSystem3" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="50%" y2="50%" spreadMethod="reflect"><stop offset="30%" stop-color="#D0D0D0" stop-opacity="1"></stop><stop offset="100%" stop-color="transparent" stop-opacity="1"></stop></linearGradient><radialGradient id="radialSystem" gradientUnits="objectBoundingBox" r="0.5" cx="0.5" fx="0.5" cy="0.5" fy="0.5" spreadMethod="pad"><stop offset="50%" stop-color="#D0D0D0" stop-opacity="1"></stop><stop offset="100%" stop-color="transparent" stop-opacity="1"></stop></radialGradient><pattern id="patternSystem" patternUnits="userSpaceOnUse" x="0" y="0" width="6" height="8"><path stroke="#D0D0D0" stroke-width="5" fill="none" d="M0 0 L0 10"></path></pattern><linearGradient id="linear0" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="100%" y2="50%" spreadMethod="pad"><stop offset="0%" stop-color="#FF8000" stop-opacity="1"></stop><stop offset="100%" stop-color="#FFFF00" stop-opacity="1"></stop></linearGradient><linearGradient id="linear1" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="100%" y2="50%" spreadMethod="pad"><stop offset="0%" stop-color="#FFFF00" stop-opacity="1"></stop><stop offset="100%" stop-color="#FF8000" stop-opacity="1"></stop></linearGradient><linearGradient id="linearImport" gradientUnits="objectBoundingBox" x1="0%" y1="50%" x2="100%" y2="50%" spreadMethod="pad"><stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.1"></stop><stop offset="100%" stop-color="#000000" stop-opacity="0.1"></stop></linearGradient><radialGradient id="radial0" gradientUnits="objectBoundingBox" r="0.5" cx="0.5" fx="0.5" cy="0.5" fy="0.5" spreadMethod="pad"><stop offset="0%" stop-color="#FF8000" stop-opacity="1"></stop><stop offset="100%" stop-color="#FFFF00" stop-opacity="1"></stop></radialGradient><radialGradient id="radial1" gradientUnits="objectBoundingBox" r="0.5" cx="0.5" fx="0.5" cy="0.5" fy="0.5" spreadMethod="pad"><stop offset="0%" stop-color="#FFFF00" stop-opacity="1"></stop><stop offset="100%" stop-color="#FF8000" stop-opacity="1"></stop></radialGradient><radialGradient id="radialImport" gradientUnits="objectBoundingBox" r="0.5" cx="0.5" fx="0.5" cy="0.5" fy="0.5" spreadMethod="pad"><stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.1"></stop><stop offset="100%" stop-color="#000000" stop-opacity="0.1"></stop></radialGradient></defs><rect id="pageExport" x="0" y="0" width="1000" height="700" fill="none" fill-opacity="0" stroke="none" stroke-width="0"></rect><g id="objectsExport" visibility="visible"><g id="group41" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="group" deg="0" data-edit="1" data-centerx="264.002" data-centery="286.669"><path id="path0" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="敷地外周" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M509.664 1 L53.664 0 L44.664 7 L31.664 117 L37.764 117.3 L35.664 184.8 L26.064 185.2 L0 479.346 L163.996 456.663 L181.326 573.337 L521.664 507 L528.004 494.156 L514.334 370.333 L519.337 10.328 L510.364 0.296 " data-centerx="323.655" data-centery="241.836"></path><path id="path1" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="校舎＋体育館" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M98.664 12.333 L91.997 144.333 L370.664 147 L369.497 363 L84.188 419.671 L90.192 462.144 L167.805 451.854 L182.096 548.711 L189.233 555 L216.378 549.857 L218.662 557.862 L345.808 535.286 L344.375 527.571 L369.142 523.097 L371.664 531.917 L499.524 507.002 L503.997 501.664 L504.995 369.002 L494.988 368.328 L495.338 216.673 L504.994 216.671 L508.331 13.007 L98.664 12.333 Z " data-centerx="355.913" data-centery="240.264"></path><path id="path2" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="正門横フェンス" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M94.664 184 L24.414 215.25 " data-centerx="119.192" data-centery="154.792"></path><path id="path3" visibility="visible" stroke="none" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="#b0f4d0" fill-rule="evenodd" fill-opacity="0.5" data-name="curve" data-title="朝礼台横芝生" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M97.914 156.5 L100.664 187 L308.164 187.25 L341.664 158 L97.914 156.5 Z " data-centerx="279.442" data-centery="127.042"></path><path id="path4" visibility="visible" stroke="#000000" stroke-width="1" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="#FFFFFF" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="朝礼台" deg="0" data-sw="1" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M195.664 157.5 L219.914 157.5 L219.914 168.25 L195.664 168.25 L195.664 157.5 Z " data-centerx="267.442" data-centery="118.042"></path><path id="path5" visibility="visible" stroke="none" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="#804040" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="菜園右" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M73.164 44.5 L86.764 44.25 L85.914 133.25 L73.064 133.35 L73.164 44.5 Z " data-centerx="139.567" data-centery="43.967"></path><path id="path6" visibility="visible" stroke="none" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="#804040" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="菜園左" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M67.614 44.75 L54.664 45 L54.664 133.5 L66.914 133.5 L67.614 44.75 Z " data-centerx="120.792" data-centery="44.292"></path><path id="path7" visibility="visible" stroke="none" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="#0080FF" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="池" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M82.914 43.3 L83.164 30.5 L70.914 30.5 L70.164 39.25 L74.164 39.25 L74.964 43.3 L82.914 43.3 Z " data-centerx="136.317" data-centery="-7.933"></path><g id="group8" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="ランニングコースライン" deg="0" data-edit="1" data-centerx="258.942" data-centery="230.667" data-group="0"><path id="path9" visibility="visible" stroke="#999999" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M117.664 221.75 L280.414 221.75 L280.414 329.25 L117.664 329.25 L117.664 221.75 Z " data-centerx="-538.625" data-centery="16.5"></path><path id="path10" visibility="visible" stroke="#999999" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M79.164 275.25 C79.164 245.825 96.77 221.75 118.289 221.75 C139.808 221.75 157.414 245.825 157.414 275.25 C157.414 304.675 139.808 328.75 118.289 328.75 C96.77 328.75 79.164 304.675 79.164 275.25 Z " data-centerx="-619.37" data-centery="16.25"></path><path id="path11" visibility="visible" stroke="#999999" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M237.664 275.5 C237.664 246.075 256.058 222 278.539 222 C301.021 222 319.414 246.075 319.414 275.5 C319.414 304.925 301.021 329 278.539 329 C256.058 329 237.664 304.925 237.664 275.5 Z " data-centerx="-459.125" data-centery="16.5"></path></g><g id="group12" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="正門" deg="0" data-edit="1" data-centerx="94.793" data-centery="107.042" data-group="0"><path id="path13" visibility="visible" stroke="#FFFFFF" stroke-width="3" stroke-opacity="1" stroke-linecap="square" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="359" data-sw="3" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M36.858 146.955 L36.456 169.365 " data-centerx="-520.94" data-centery="65.16"></path><path id="path14" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M37.997 161.76 L37.797 170.04 L37.997 161.76 " data-centerx="-519.7" data-centery="72.9"></path><path id="path15" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M36.757 154.4 L36.557 162.68 L36.757 154.4 " data-centerx="-520.94" data-centery="65.54"></path><path id="path16" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M35.557 146.4 L35.357 154.68 L35.557 146.4 " data-centerx="-522.14" data-centery="57.54"></path><path id="path17" visibility="visible" stroke="#000000" stroke-width="1" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="1" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M37.037 132.81 L30.377 134.468 C31.069 137.851 33.412 139.199 36.413 138.969 " data-centerx="-523.89" data-centery="42.902"></path><path id="path18" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="346" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M34.201 171.812 L38.993 171.938 " data-centerx="-521" data-centery="78.875"></path><path id="path19" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="346" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M34.951 131.812 L39.743 131.938 " data-centerx="-520.25" data-centery="38.875"></path><path id="path20" visibility="visible" stroke="none" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="#000000" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="1" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M34.145 139.446 L39.903 139.547 L39.799 145.554 L34.041 145.453 L34.145 139.446 Z " data-centerx="-520.625" data-centery="49.5"></path></g><path id="path21" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="受付枠" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M44.347 149.833 L87.347 149.833 L87.347 182.833 L44.347 182.833 L44.347 149.833 Z " data-centerx="125.5" data-centery="121.5"></path><g id="group22" visibility="visible" stroke="#000000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="受付文字" deg="0" data-edit="1" data-centerx="125" data-centery="121"><text id="text23" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,115.347,-197.167)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,95.347,-137.167)" data-edit="1" filter="none" x="-68" y="370" data-centerx="-690" data-centery="143">受付</text></g><path id="path24" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M102.347 150.833 L103.347 219.833 L290.347 219.833 L291.347 366.833 L359.347 351.833 L360.347 152.833 L102.347 150.833 " data-centerx="291" data-centery="214"></path><path id="path25" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M91.347 231.833 L279.347 230.833 L280.347 367.833 L91.347 402.833 L91.347 231.833 Z " data-centerx="245.5" data-centery="272"></path><g id="group26" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="group" deg="0" data-edit="1" data-centerx="400.5" data-centery="234.5"><path id="path27" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="none" marker-start="none" marker-end="none" fill="none" fill-rule="evenodd" fill-opacity="1" data-name="curve" data-title="curve" deg="0" data-sw="2" data-grad="0" data-group="group41" data-edit="1" filter="none" d="M326.347 253.833 L355.347 253.833 L355.347 304.833 L326.347 304.833 L326.347 253.833 Z " data-centerx="-710.5" data-centery="151.5"></path><g id="group47Temp" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="group" deg="0" data-edit="1" data-centerx="-710.5" data-centery="150.5" data-group="group41"><g id="group43Temp" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="text" deg="0" data-edit="1" data-centerx="-686.5" data-centery="-56" data-group="group41"><text id="text28" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,406.847,43.833)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,386.847,103.833)" data-edit="1" filter="none" x="-75" y="231" data-centerx="-706" data-centery="4">本</text></g><g id="group45Temp" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="text" deg="0" data-edit="1" data-centerx="-686.5" data-centery="-35" data-group="group41"><text id="text29" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,406.847,64.833)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,386.847,124.833)" data-edit="1" filter="none" x="-75" y="231" data-centerx="-696" data-centery="14">部</text></g></g></g><g id="group30" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="group" deg="0" data-edit="1" data-centerx="-710.5" data-centery="150.5"><g id="group43Temp" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="text" deg="0" data-edit="1" data-centerx="-726.5" data-centery="64" data-group="group41"><text id="text31" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,406.847,43.833)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,386.847,103.833)" data-edit="1" filter="none" x="-75" y="231" data-centerx="-706" data-centery="4">本</text></g><g id="group45Temp" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="text" deg="0" data-edit="1" data-centerx="-726.5" data-centery="85" data-group="group41"><text id="text32" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,406.847,64.833)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,386.847,124.833)" data-edit="1" filter="none" x="-75" y="231" data-centerx="-696" data-centery="14">部</text></g></g><g id="group33" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="text" deg="0" data-edit="1" data-centerx="-706.5" data-centery="4" data-group="group48"><text id="text34" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,406.847,43.833)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,386.847,103.833)" data-edit="1" filter="none" x="-75" y="231" data-centerx="-706" data-centery="4">本</text></g><g id="group35" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="text" deg="0" data-edit="1" data-centerx="-706.5" data-centery="25" data-group="group48"><text id="text36" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,406.847,64.833)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,386.847,124.833)" data-edit="1" filter="none" x="-75" y="231" data-centerx="-696" data-centery="14">部</text></g><g id="group37" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="テント文字" deg="0" data-edit="1" data-centerx="251" data-centery="267"><text id="text38" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,-541.653,-50.167)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,-561.653,9.833)" data-edit="1" filter="none" x="679" y="369" data-centerx="93" data-centery="142">テントエリア</text></g><g id="group39" visibility="visible" stroke="#FF0000" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="none" fill-opacity="1" data-name="group" data-title="通路文字" deg="0" data-edit="1" data-centerx="269" data-centery="156"><text id="text40" visibility="visible" font-family="Verdana" font-size="18" font-weight="normal" font-style="normal" transform="matrix(1,0,0,1,-541.653,-161.167)" stroke="none" stroke-width="2" stroke-opacity="1" stroke-dasharray="none" fill="#FF0000" fill-opacity="1" data-name="text" data-title="text" deg="0" data-sw="2" data-group="group41" data-trans="translate(20,-60) matrix(1,0,0,1,-561.653,-101.167)" data-edit="1" filter="none" x="679" y="369" data-centerx="269" data-centery="156">通路・食事エリア</text></g></g></g><g id="settings" visibility="hidden" data-dn0="primalDraw" data-dn1="#FAFAFA" data-dn2="#D2D2D2" data-dn3="18" data-dn4="#000000" data-dn5="#B3B3B3" data-dn6="1" data-dn7="1" data-dn8="2" data-dn9="round" data-dn10="round" data-dn11="none" data-dn12="none" data-dn13="none" data-dn14="evenodd" data-dn15="10" data-dn16="1" data-dn17="1000" data-dn18="700" data-dn19="10" data-dn20="0" data-dn21="1" data-dn22="1" data-dn23="42" data-dn24="group41" data-dn25="2" data-dn26="url(#linear0)" data-dn27="url(#linear1)" data-dn28="url(#radial0)" data-dn29="url(#radial1)" data-dn30="#FF8000" data-dn31="#FFFF00" data-dn32="#000000" data-dn33="1" data-dn34="1" data-dn35="10" data-dn36="" data-dn37="0" data-dn38="109"></g></svg>
+    </div>
+    <!--div data-BurgerMenu="id:'肝試しルート'"><!-:x:$user/肝試しルート.svg::-></div-->
+  </div>
+  <div data-BurgerMenu="id:'参加者情報',allow:14">
+    <div data-BurgerMenu="id:'参加者パス',allow:14">【未実装】参加者パス</div>
+    <div data-BurgerMenu="id:'登録・修正・キャンセル',allow:14">【未実装】登録・修正・キャンセル</div>
+  </div>
+  <div data-BurgerMenu="id:'スタッフ用',allow:12">
+    <div data-BurgerMenu="id:'スタッフ応募状況',allow:12"><!-- スタッフ応募(募集)状況＋応募フォーム --></div>
+    <div data-BurgerMenu="id:'掲示板への投稿',allow:12">【未実装】掲示板への投稿</div>
+    <div data-BurgerMenu="id:'参加者集計',allow:12">【未実装】参加者集計</div>
+    <div data-BurgerMenu="id:'参加者受付',allow:8"><!-- 参加者情報検索・編集 --></div>
+    <div data-BurgerMenu="id:'気づき投稿',allow:12">【未実装】気づき投稿</div>
+    <div data-BurgerMenu="id:'アクセス分析',allow:12">【未実装】アクセス分析</div>
+  </div>
+  <div data-BurgerMenu="id:'その他',allow:14">
+    <div data-BurgerMenu="id:'参加者アンケート回答',allow:2">【未実装】参加者アンケート回答</div>
+    <div data-BurgerMenu="id:'システム設定',allow:14">
+<!--bodyだけだとquerySelectorでscriptを含めて抽出されてしまうので要wrapper-->
+
+  <h1>cookieの消去</h1>
+  <p>camp2024関係のcookieを全て消去します。</p>
+  <button name="cookie" onclick="eraseStorage">消去</button>
+
+  <h1>「おまつり奉行」について</h1>
+  <p>「おまつり奉行」とはGoogle Spread(GAS)で作成された現在表示されている画面で、以下の機能を持ちます。</p>
+<ul>
+<li>□：一般公開、■：参加者用、◎：スタッフ用</li>
+<li>二階層目まではメニューで用意、三階層目以降は二階層目の画面から遷移または記載する内容のメモ</li>
+</ul>
+<ol>
+<li>イベント情報<ol>
+<li>□掲示板(ホーム)</li>
+<li>□実施要領</li>
+<li>□注意事項</li>
+<li>□持ち物リスト</li>
+<li>■タイムテーブル</li>
+<li>■会場案内図</li>
+<li>■肝試しルート</li>
+</ol>
+</li>
+<li>参加者情報<ol>
+<li>■参加者パス表示</li>
+<li>□登録・修正・キャンセル</li>
+</ol>
+</li>
+<li>スタッフ用<ol>
+<li>□スタッフ応募状況<ol>
+<li>募集内容 : 職種と簡単な仕事内容の説明</li>
+<li>応募状況 : 職種別の応募人数・時間と充足状況</li>
+<li>応募フォーム</li>
+</ol>
+</li>
+<li>◎掲示板への投稿</li>
+<li>◎参加者集計<ol>
+<li>申込状況確認 : 参加者数の集計</li>
+<li>名簿作成 : 紙ベースの参加者名簿作成</li>
+<li>アンケート集計結果 : 参加者アンケートの回答内容の集計</li>
+</ol>
+</li>
+<li>◎参加者受付(参加者情報検索・編集)</li>
+<li>◎気づき投稿 : スタッフが気づいた点や来年以降への申し送り事項を写真やメモで投稿</li>
+<li>◎アクセス分析</li>
+</ol>
+</li>
+<li>その他<ol>
+<li>■参加者アンケート回答</li>
+<li>■システム設定<ol>
+<li>cookie削除</li>
+<li>sessionStorage削除</li>
+<li>おまつり奉行について</li>
+</ol>
+</li>
+<li>□関連サイトへのリンク</li>
+</ol>
+</li>
+</ol>
+<ul>
+<li>応募フォームは、ID未採番の場合は新規、採番済の場合は修正</li>
+<li>掲示板は、一般公開用は内容限定(サイトで掲示する内容のみ、スタッフ投稿は閲覧不可)</li>
+</ul>
+  <hr>
+  <p>OMATSURI Bugyo is a SPA, written by GAS on Google Spread, to support event participants, staffs and stakeholders.</p>
+  <ul>
+    <li>Version.2.0.0 : 2024.09.29 release</li>
+    <li>Version.1.0.3 : 2023.09.29 release</li>
+  </ul>
+  <p>author: Shimazu Kunihiro</p>
+  <p>contact: shimokitasho.oyaji@gmail.com</p>
+    </div>
+    <div data-BurgerMenu="id:'関連サイトへのリンク'">
+<div name="リンク集">
+  <h1>リンク集</h1>
+  <div>
+    <h3>おやじの会」メーリングリスト登録フォーム</h3>
+    <p><a href="https://tinyurl.com/23hgkfv4" target="_blank">https://tinyurl.com/23hgkfv4</a></p>
+    <img src="https://chart.apis.google.com/chart?cht=qr&chs=200x200&chl=https://tinyurl.com/23hgkfv4" />
+  </div>
+  <div>
+    <h3>「校庭キャンプ2023」サイト</h3>
+    <p><a href="https://tinyurl.com/2aeqv5f5" target="_blank">https://tinyurl.com/2aeqv5f5</a></p>
+    <img src="https://chart.apis.google.com/chart?cht=qr&chs=200x200&chl=https://tinyurl.com/2aeqv5f5" />
+  </div>
+  <div>
+    <h3>「校庭キャンプ2023」参加登録フォーム</h3>
+    <p><a href="https://tinyurl.com/28gy6pzw" target="_blank">https://tinyurl.com/28gy6pzw</a></p>
+    <img src="https://chart.apis.google.com/chart?cht=qr&chs=200x200&chl=https://tinyurl.com/28gy6pzw" />
+  </div>
+  <div>
+    <h3>参加者アンケート</h3>
+    <p><a href="https://tinyurl.com/2bruynm8" target="_blank">https://tinyurl.com/2bruynm8</a></p>
+    <img src="https://chart.apis.google.com/chart?cht=qr&chs=200x200&chl=https://tinyurl.com/2bruynm8" />
+  </div>
+</div>
+<!--
+<div>
+  <h3>おやじの会LINEグループ</h3>
+  <p><a href="https://line.me/R/ti/g/kCmlmtuXTd" target="_blank">https://line.me/R/ti/g/kCmlmtuXTd</a></p>
+  <img src="https://chart.apis.google.com/chart?cht=qr&chs=200x200&chl=https://line.me/R/ti/g/kCmlmtuXTd" />
+</div>
+<div>
+  <h3>お友達申請</h3>
+  <p>上記LINEグループで「年齢確認が必要です」と言われた場合、以下で嶋津へのお友達申請を実施</p>
+  <p><a href="https://line.me/ti/p/sETY5YmVFW" target="_blank">https://line.me/ti/p/sETY5YmVFW</a></p>
+  <img src="https://chart.apis.google.com/chart?cht=qr&chs=200x200&chl=" />
+</div>
+<div>
+  <h3>運営側の評価・反省点</h3>
+  <p><a href="https://tinyurl.com/27fcxy3k" target="_blank">https://tinyurl.com/27fcxy3k</a></p>
+  <img src="https://chart.apis.google.com/chart?cht=qr&chs=200x200&chl=https://tinyurl.com/27fcxy3k" />
+</div>
+<div>
+  <h3>おまつり奉行(Google Drive版)</h3>
+  <p><a href="https://tinyurl.com/27p2laoh" target="_blank">https://tinyurl.com/27p2laoh</a></p>
+  <img src="https://chart.apis.google.com/chart?cht=qr&chs=200x200&chl=https://tinyurl.com/27p2laoh" />
+</div>
+<div>
+  <h3>おまつり奉行(GitHub版)</h3>
+  <p><a href="https://tinyurl.com/ythafe6x" target="_blank">https://tinyurl.com/ythafe6x</a></p>
+  <img src="https://chart.apis.google.com/chart?cht=qr&chs=200x200&chl=https://tinyurl.com/ythafe6x" />
+</div>
+-->
+    </div>
+  </div>
+  <div data-BurgerMenu="id:'受付番号入力',allow:1,func:'enterUserId'">
+</div></body>
+<script type="text/javascript">
+const g = {programId:'camp2024'};
+class authClient {
+  //:x:$src/client.constructor.js::
+  /** @constructor
+   * @param {Object} opt
+   * @param {string} opt.programId
+   */
+  constructor(opt){
+    const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // 引数のセット
+      for(let x in opt){
+        this[x] = opt[x];
+      }
+
+      v.step = 2; // ユーザ情報を設定
+      this.#setUserInfo();
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}`
+      + `\n${e.message}\nopt=${stringify(opt)}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** ユーザ情報をメンバに(再)設定する
+   * @param {void}
+   * @returns {void}
+   */
+  #setUserInfo(){
+    const str = sessionStorage.getItem(this.programId);
+    this.user = JSON.parse(str);
+  }
+
+  async doGAS(func,...args){
+    return await doGAS('authServer',this.user.userId,func,...args);
+  }
+
+/** ブラウザからの登録要求を受け、IDを返す
+ * @param {HTMLElement} arg - ボタン要素
+ * @returns {null|Error}
+ * 
+ * @example
+ * 
+ * - ボタンは`onclick="g.auth.registMail(this)"`を指定
+ * - ボタンとinput要素は兄弟要素とし、それをdivで囲む
+ */
+async registMail(arg){
+  const v = {whois:this.constructor.name+'.registMail',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // メールアドレスのチェック
+    v.email = arg.parentNode.querySelector('input[type="email"]').value;
+    if( checkFormat(v.email,'email') === false ){
+      alert(`"${v.email}"は不適切なメールアドレスです`);
+      throw new Error(`"${v.email}" is invalid mail address.`);
+    }
+
+    v.step = 2; // authServer.registMailにメアド転送
+    v.r = changeScreen('loading');
+    if( v.r instanceof Error ) throw v.r;
+    v.id = await this.doGAS('registMail',v.email);
+    if( v.id instanceof Error ) throw v.id;
+    console.log(v.id);
+
+    v.step = 3; // IDをstorageに登録
+    /*localStorage.setItem(this.programId,v.id);
+    v.obj = JSON.parse(sessionStorage.getItem(this.programId));
+    v.obj.userId = v.id;
+    sessionStorage.setItem(this.programId,JSON.stringify(v.obj));*/
+    v.r = storeUserInfo(this.programId,{userId:v.id});
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 4; // メニュー再描画、ホーム画面の定義書き換え
+    v.r = g.menu.genNavi();
+    if( v.r instanceof Error ) throw v.r;
+    v.step = 5; // 応募情報修正画面に遷移
+    v.r = changeScreen('登録・修正・キャンセル');
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\narg=${arg}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+  //:x:$src/client.login1C.js::
+  //:x:$src/client.login2C.js::
+}
+/**
+ * @classdesc htmlからdata-BurgerMenu属性を持つ要素を抽出、ハンバーガーメニューを作成
+ */
+class BurgerMenu {
+
+  /**
+   * @constructor
+   * @param {Object} arg 
+   * @returns {BurgerMenu|Error}
+   */
+  constructor(arg={}){
+    const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
+    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
+    try {
+
+      v.step = 1; // 引数と既定値からメンバの値を設定
+      v.r = this.#setProperties(arg);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 2; // アイコン、ナビ、背景の作成
+      v.step = 2.1; // アイコンの作成
+      this.icon = createElement({
+        attr:{class:'icon'},
+        event:{click:this.toggle},
+        children:[{
+          tag:'button',
+          children:[{tag:'span'},{tag:'span'},{tag:'span'}],
+        }]
+      },this.wrapper);
+      v.step = 2.2; // ナビゲータの作成
+        this.navi = createElement({
+        tag:'nav',
+      },this.wrapper);
+      v.step = 2.3; // ナビゲータ背景の作成
+        this.back = createElement({
+        attr:{class:'back'},
+        event:{click:this.toggle},
+      },this.wrapper);
+
+      v.step = 3; // 親要素を走査してナビゲーションを作成
+      v.rv = this.genNavi();
+      if( v.rv instanceof Error ) throw v.rv;
+
+      v.step = 9; // 終了処理
+      changeScreen(this.home);
+      console.log(`${v.whois} normal end.`);
+  
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}`
+      + `\n${e.message}`
+      + `\narg=${stringify(arg)}`;  // 引数
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** constructorの引数と既定値からthisの値を設定
+   * @param {Object} arg - constructorに渡された引数オブジェクト
+   * @returns {null|Error}
+   */
+  #setProperties(arg){
+    const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
+    console.log(`${v.whois} start.`);
+    try {
+  
+      v.step = 1; // 既定値の定義
+      v.default = {
+        wrapper: `.${this.constructor.name}[name="wrapper"]`, // {string|HTMLElement}
+        auth: 1, // ユーザ権限の既定値
+        allow: 2 ** 32 - 1, // data-BurgerMenuのauth(開示範囲)の既定値
+        func: {}, // {Object.<string,function>} メニューから呼び出される関数
+        home: null,
+        homeForEachAuth: null, // {Object.<number,string>} ユーザ権限毎にメニューを設定するなら、auth毎に.screen[name]を設定
+        initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
+      };
+      v.default.css = `/* BurgerMenu専用CSS
+          BurgerMenu共通変数定義
+          --text: テキストおよびハンバーガーアイコンの線の色
+          --maxIndex: ローディング画面優先なので、最大値2147483647-1
+        */
+        .BurgerMenu {
+          --text : #000;
+          --fore : #fff;
+          --back : #ddd;
+          --debug : rgba(255,0,0,1);
+          --iconSize : 100px;
+          --maxIndex : 2147483646;
+          --navWidth : 0.7;
+        }
+        /* ハンバーガーアイコン
+          icon周囲にiconSizeの40%程度の余白が必要なのでtop,rightを指定
+        */
+        .BurgerMenu .icon {
+          display : flex;
+          justify-content : flex-end;
+          place-items : center;
+          position : absolute;
+          top : calc(var(--iconSize) * 0.4);
+          right : calc(var(--iconSize) * 0.4);
+          width : var(--iconSize);
+          height : var(--iconSize);
+          z-index : var(--maxIndex);
+        }
+        .BurgerMenu .icon > button {
+          place-content : center center;
+          display : block;
+          margin : 0;
+          padding : 0px;
+          box-sizing : border-box;
+          width : calc(var(--iconSize) * 0.7);
+          height : calc(var(--iconSize) * 0.7);
+          border : none;
+          background : rgba(0,0,0,0);
+          position : relative;
+          box-shadow : none;
+        }
+        .BurgerMenu .icon button span {
+          display : block;
+          width : 100%;
+          height : calc(var(--iconSize) * 0.12);
+          border-radius : calc(var(--iconSize) * 0.06);
+          position : absolute;
+          left : 0;
+          background : var(--text);
+          transition : top 0.24s, transform 0.24s, opacity 0.24s;
+        }
+        .BurgerMenu .icon button span:nth-child(1) {
+          top : 0;
+        }
+        .BurgerMenu .icon button span:nth-child(2) {
+          top : 50%;
+          transform : translateY(-50%);
+        }
+        .BurgerMenu .icon button span:nth-child(3) {
+          top : 100%;
+          transform : translateY(-100%);
+        }
+        .BurgerMenu .icon button span.is_active:nth-child(1) {
+          top : 50%;
+          transform : translateY(-50%) rotate(135deg);
+        }
+        .BurgerMenu .icon button span.is_active:nth-child(2) {
+          transform : translate(50%, -50%);
+          opacity : 0;
+        }
+        .BurgerMenu .icon button span.is_active:nth-child(3) {
+          top : 50%;
+          transform : translateY(-50%) rotate(-135deg);
+        }
+        /* ナビゲーション領域 */
+        .BurgerMenu nav {
+          display : none;
+        }
+        .BurgerMenu nav.is_active {
+          display : block;
+          margin : 0 0 0 auto;
+          font-size : 1rem;
+          position : absolute;
+          top : calc(var(--iconSize) * 1.8);
+          right : 0;
+          width : calc(100% * var(--navWidth));
+          height : var(--iconSize);
+          z-index : var(--maxIndex);
+        }
+        .BurgerMenu nav ul {
+          margin : 0rem 0rem 1rem 0rem;
+          padding : 0rem 0rem 0rem 0rem;
+          background-color : var(--back);
+        }
+        .BurgerMenu nav ul ul { /* 2階層以降のulにのみ適用 */
+          display : none;
+        }
+        .BurgerMenu nav ul ul.is_open {
+          display : block;
+          border-top : solid 0.2rem var(--fore);
+          border-left : solid 0.7rem var(--fore);
+        }
+        .BurgerMenu nav li {
+          margin : 0.6rem 0rem 0.3rem 0.5rem;
+          padding : 0.5rem 0rem 0rem 0rem;
+          list-style : none;
+          background-color : var(--back);
+        }
+        .BurgerMenu nav li a {
+          color : var(--text);
+          text-decoration : none;
+          font-size: 1.5rem;
+        },
+        /* 背景 */
+        .BurgerMenu .back {
+          display : none;
+        }
+        .BurgerMenu .back.is_active {
+          display : block;
+          position : absolute;
+          top : 0;
+          right : 0;
+          width : 100vw;
+          height : 100vh;
+          z-index : calc(var(--maxIndex) - 1);
+          background : rgba(100,100,100,0.8);
+        }
+      `;
+      v.default.toggle = () => {  // ナビゲーション領域の表示/非表示切り替え
+        document.querySelector(`.${this.constructor.name} nav`).classList.toggle('is_active');
+        document.querySelector(`.${this.constructor.name} .back`).classList.toggle('is_active');
+        document.querySelectorAll(`.${this.constructor.name} .icon button span`)
+        .forEach(x => x.classList.toggle('is_active'));        
+      };
+      v.default.showChildren = (event) => { // ブランチの下位階層メニュー表示/非表示切り替え
+        event.target.parentNode.querySelector('ul').classList.toggle('is_open');
+        let m = event.target.innerText.match(/^([▶️▼])(.+)/);
+        const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
+        event.target.innerText = text;  
+      };
+
+      v.step = 2; // 引数と既定値から設定値のオブジェクトを作成
+      v.arg = mergeDeeply(arg,v.default);
+      if( v.arg instanceof Error ) throw v.arg;
+
+      v.step = 3; // メンバに設定値をコピー
+      for( v.x in v.arg ) this[v.x] = v.arg[v.x];
+
+      v.step = 4; // wrapperが文字列(CSSセレクタ)ならHTMLElementに変更
+      if( typeof this.wrapper === 'string' ){
+        this.wrapper = document.querySelector(this.wrapper);
+      }
+      v.step = 5; // BurgerMenu専用CSSが未定義なら追加
+      if( !document.querySelector(`style[name="${this.constructor.name}"]`) ){
+        v.styleTag = document.createElement('style');
+        v.styleTag.setAttribute('name',this.constructor.name);
+        v.styleTag.textContent = this.css;
+        document.head.appendChild(v.styleTag);
+      }
+      v.step = 6; // 待機画面が未定義ならbody直下に追加
+      if( !document.querySelector('body > div[name="loading"]') ){
+        v.r = createElement({
+          attr:{name:'loading',class:'loader screen'},
+          text:'loading...'
+        },'body');
+      }
+  
+      v.step = 7; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+  
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}`
+      + `\n${e.message}`
+      + `\narg=${stringify(arg)}`;  // 引数
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+  
+  /** data-BurgerMenu属性の文字列をオブジェクトに変換
+   * BurgerMenu専用として、以下の制限は許容する
+   * - メンバ名は英小文字に限定
+   * - カンマは区切記号のみで、id,label,func,hrefの値(文字列)内には不存在
+   * 
+   * @param {string} arg - data-BurgerMenuにセットされた文字列
+   * @returns {Object|null|Error} 引数がnullまたは空文字列ならnullを返す
+   */
+  #objectize(arg){
+    const v = {whois:this.constructor.name+'.objectize',rv:{},step:0};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // nullまたは空文字列にはnullを返す
+      if( !arg || arg.length === 0 ) return null;
+
+      v.step = 2; // カンマで分割
+      v.p = arg.split(',');
+
+      v.step = 3; // 各値をオブジェクト化
+      for( v.i=0 ; v.i<v.p.length ; v.i++ ){
+        v.m = v.p[v.i].match(/^([a-z]+):['"]?(.+?)['"]?$/);
+        if( v.m ){
+          v.rv[v.m[1]] = v.m[2];
+        } else {
+          throw new Error('data-BurgerMenuの設定値が不適切です\n'+arg);
+        }
+      }
+
+      v.step = 4.1; // idの存否チェック
+      if( !v.rv.hasOwnProperty('id') )
+        throw new Error('data-BurgerMenuの設定値にはidが必須です\n'+arg);
+      v.step = 4.2; // ラベル不在の場合はidをセット
+      if( !v.rv.hasOwnProperty('label') )
+        v.rv.label = v.rv.id;
+      v.step = 4.3; // allowの既定値設定
+      v.rv.allow = v.rv.hasOwnProperty('allow') ? Number(v.rv.allow) : this.allow;
+      v.step = 4.4; // func,href両方有ればhrefを削除
+      if( v.rv.hasOwnProperty('func') && v.rv.hasOwnProperty('href') )
+        delete v.rv.href;
+      v.step = 4.5; // from/toの既定値設定
+      v.rv.from = v.rv.hasOwnProperty('from')
+        ? new Date(v.rv.from).getTime() : 0;  // 1970/1/1(UTC)
+      v.rv.to = v.rv.hasOwnProperty('to')
+        ? new Date(v.rv.from).getTime() : 253402182000000; // 9999/12/31(UTC)
+
+      v.step = 5; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+  
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}`
+      + `\n${e.message}\narg=${stringify(arg)}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+  
+  /** 親要素を走査してナビゲーションを作成
+   * @param {HTMLElement} wrapper - body等の親要素。
+   * @param {HTMLElement} navi - nav等のナビゲーション領域
+   * @returns {null|Error}
+   */
+  genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
+    const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1.1; // sessionStorageからユーザ権限を読み取り
+      v.r = sessionStorage.getItem(g.programId);
+      if( !v.r ) throw new Error(`sessionStorageに${g.programId}キーが存在しません`);
+      this.auth = JSON.parse(v.r).auth;
+      v.step = 1.2; // navi領域をクリア
+      if( depth === 0 ) navi.innerHTML = '';
+      v.step = 1.3; // auth毎にホームを変更する場合、変更
+      if( this.homeForEachAuth !== null ){
+        this.home = this.homeForEachAuth[this.auth];
+      }
+
+      // 子要素を順次走査し、data-BurgerMenuを持つ要素をnaviに追加
+      for( v.i=0 ; v.i<wrapper.childElementCount ; v.i++ ){
+        v.d = wrapper.children[v.i];
+
+        // wrapper内のdata-BurgerMenu属性を持つ要素に対する処理
+        v.step = 2.1; // data-BurgerMenuを持たない要素はスキップ
+        v.attr = this.#objectize(v.d.getAttribute(`data-${this.constructor.name}`));
+        if( v.attr instanceof Error ) throw v.attr;
+        if( v.attr === null ) continue;
+
+        v.step = 2.2; // screenクラスが無ければ追加
+        v.class = v.d.className.match(/screen/);
+        if( !v.class ) v.d.classList.add('screen'); 
+        v.step = 2.3; // nameが無ければ追加
+        v.name = v.d.getAttribute('name');
+        if( !v.name ){
+          v.name = v.attr.id;
+          v.d.setAttribute('name',v.name);
+        }
+
+        // navi領域への追加が必要か、判断
+        v.step = 3.1; // 実行権限がない機能・画面はnavi領域に追加しない
+        if( (this.auth & v.attr.allow) === 0 ) continue;
+        v.step = 3.2; // 有効期間外の場合はnavi領域に追加しない
+        if( v.now < v.attr.from || v.attr.to < v.now ) continue;
+
+        v.step = 4; // navi領域にul未設定なら追加
+        if( navi.tagName !== 'UL' ){
+          v.r = createElement({tag:'ul',attr:{class:this.constructor.name}},navi);
+          if( v.r instanceof Error ) throw v.r;
+          navi = v.r;
+        }
+
+        v.step = 5; // メニュー項目(li)の追加
+        v.li = {tag:'li',children:[{
+          tag:'a',
+          text:v.attr.label,
+          attr:{class:this.constructor.name,name:v.attr.id},
+        }]};
+        v.hasChild = false;
+        if( v.attr.hasOwnProperty('func') ){
+          v.step = 5.1; // 指定関数実行の場合
+          Object.assign(v.li.children[0],{
+            attr:{href:'#',name:v.attr.func},
+            event:{click:(event)=>{
+              this.toggle();  // メニューを閉じる
+              this.func[event.target.name](event); // 指定関数の実行
+              this.genNavi(); // メニュー再描画
+            }},
+          });
+        } else if( v.attr.hasOwnProperty('href') ){
+          v.step = 5.2; // 他サイトへの遷移指定の場合
+          Object.assign(v.li.children[0].attr,{href:v.attr.href,target:'_blank'});
+          Object.assign(v.li.children[0],{event:{click:this.toggle}}); // 遷移後メニューを閉じる
+        } else {
+          v.step = 5.3; // その他(=画面切替)の場合
+          // 子孫メニューがあるか確認
+          if( v.d.querySelector(`[data-${this.constructor.name}]`) ){
+            v.step = 5.33; // 子孫メニューが存在する場合
+            v.hasChild = true; // 再帰呼出用のフラグを立てる
+            Object.assign(v.li.children[0],{
+              // 初期がサブメニュー表示ならclassにis_openを追加
+              attr:{class:(this.initialSubMenu ? 'is_open' : '')},
+              // '▼'または'▶︎'をメニューの前につける
+              text: (this.initialSubMenu ? '▶︎' : '▼') + v.li.children[0].text,
+              event: {click:this.showChildren}
+            });
+          } else { // 子孫メニューが存在しない場合
+            v.step = 5.33; // nameを指定して画面切替
+            Object.assign(v.li.children[0],{
+              event:{click:(event)=>{
+                changeScreen(event.target.getAttribute('name'));
+                this.toggle();
+              }}
+            });
+          }
+        }
+
+        v.step = 5.4; // navi領域にliを追加
+        v.r = createElement(v.li,navi);
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 5.5; // 子要素にdata-BurgerMenuが存在する場合、再帰呼出
+        if( v.hasChild ){
+          v.r = this.genNavi(v.d,v.r,depth+1);
+          if( v.r instanceof Error ) throw v.r;
+        }
+      }
+
+      v.step = 6; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+  
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+}
+/** 文字列がe-mail等として正しい形式か判断
+ * 
+ * @param {string} str - 検査対象となる文字列
+ * @param {string} type='email' - 'email' or 'URL' or 'tel'
+ * @returns {boolean}
+ */
+function checkFormat(str,type='email'){
+  switch(type){
+    case 'email':
+      //return str.match(new RegExp("[\w\-\._]+@[\w\-\._]+\.[A-Za-z]+")) ? true : false;
+      // https://www.javadrive.jp/regex-basic/sample/index13.html#google_vignette
+      return str.match(/^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$/) ? true : false;
+    case 'URL':
+      return str.match(new RegExp("https?://[\w!?/+\-_~;.,*&@#$%()'[\]]+")) ? true : false;
+    default: return false;
+  }
+}
+var dbits,canary=244837814094590,j_lm=(canary&16777215)==15715070;function BigInteger(a,b,c){a!=null&&("number"==typeof a?this.fromNumber(a,b,c):b==null&&"string"!=typeof a?this.fromString(a,256):this.fromString(a,b))}function nbi(){return new BigInteger(null)}function am1(a,b,c,d,e,g){for(;--g>=0;){var h=b*this[a++]+c[d]+e,e=Math.floor(h/67108864);c[d++]=h&67108863}return e}
+function am2(a,b,c,d,e,g){var h=b&32767;for(b>>=15;--g>=0;){var f=this[a]&32767,o=this[a++]>>15,p=b*f+o*h,f=h*f+((p&32767)<<15)+c[d]+(e&1073741823),e=(f>>>30)+(p>>>15)+b*o+(e>>>30);c[d++]=f&1073741823}return e}function am3(a,b,c,d,e,g){var h=b&16383;for(b>>=14;--g>=0;){var f=this[a]&16383,o=this[a++]>>14,p=b*f+o*h,f=h*f+((p&16383)<<14)+c[d]+e,e=(f>>28)+(p>>14)+b*o;c[d++]=f&268435455}return e}
+j_lm&&navigator.appName=="Microsoft Internet Explorer"?(BigInteger.prototype.am=am2,dbits=30):j_lm&&navigator.appName!="Netscape"?(BigInteger.prototype.am=am1,dbits=26):(BigInteger.prototype.am=am3,dbits=28);BigInteger.prototype.DB=dbits;BigInteger.prototype.DM=(1<<dbits)-1;BigInteger.prototype.DV=1<<dbits;var BI_FP=52;BigInteger.prototype.FV=Math.pow(2,BI_FP);BigInteger.prototype.F1=BI_FP-dbits;BigInteger.prototype.F2=2*dbits-BI_FP;var BI_RM="0123456789abcdefghijklmnopqrstuvwxyz",BI_RC=[],rr,vv;
+rr="0".charCodeAt(0);for(vv=0;vv<=9;++vv)BI_RC[rr++]=vv;rr="a".charCodeAt(0);for(vv=10;vv<36;++vv)BI_RC[rr++]=vv;rr="A".charCodeAt(0);for(vv=10;vv<36;++vv)BI_RC[rr++]=vv;function int2char(a){return BI_RM.charAt(a)}function intAt(a,b){var c=BI_RC[a.charCodeAt(b)];return c==null?-1:c}function bnpCopyTo(a){for(var b=this.t-1;b>=0;--b)a[b]=this[b];a.t=this.t;a.s=this.s}function bnpFromInt(a){this.t=1;this.s=a<0?-1:0;a>0?this[0]=a:a<-1?this[0]=a+DV:this.t=0}
+function nbv(a){var b=nbi();b.fromInt(a);return b}
+function bnpFromString(a,b){var c;if(b==16)c=4;else if(b==8)c=3;else if(b==256)c=8;else if(b==2)c=1;else if(b==32)c=5;else if(b==4)c=2;else{this.fromRadix(a,b);return}this.s=this.t=0;for(var d=a.length,e=!1,g=0;--d>=0;){var h=c==8?a[d]&255:intAt(a,d);h<0?a.charAt(d)=="-"&&(e=!0):(e=!1,g==0?this[this.t++]=h:g+c>this.DB?(this[this.t-1]|=(h&(1<<this.DB-g)-1)<<g,this[this.t++]=h>>this.DB-g):this[this.t-1]|=h<<g,g+=c,g>=this.DB&&(g-=this.DB))}if(c==8&&(a[0]&128)!=0)this.s=-1,g>0&&(this[this.t-1]|=(1<<
+this.DB-g)-1<<g);this.clamp();e&&BigInteger.ZERO.subTo(this,this)}function bnpClamp(){for(var a=this.s&this.DM;this.t>0&&this[this.t-1]==a;)--this.t}
+function bnToString(a){if(this.s<0)return"-"+this.negate().toString(a);if(a==16)a=4;else if(a==8)a=3;else if(a==2)a=1;else if(a==32)a=5;else if(a==64)a=6;else if(a==4)a=2;else return this.toRadix(a);var b=(1<<a)-1,c,d=!1,e="",g=this.t,h=this.DB-g*this.DB%a;if(g-- >0){if(h<this.DB&&(c=this[g]>>h)>0)d=!0,e=int2char(c);for(;g>=0;)h<a?(c=(this[g]&(1<<h)-1)<<a-h,c|=this[--g]>>(h+=this.DB-a)):(c=this[g]>>(h-=a)&b,h<=0&&(h+=this.DB,--g)),c>0&&(d=!0),d&&(e+=int2char(c))}return d?e:"0"}
+function bnNegate(){var a=nbi();BigInteger.ZERO.subTo(this,a);return a}function bnAbs(){return this.s<0?this.negate():this}function bnCompareTo(a){var b=this.s-a.s;if(b!=0)return b;var c=this.t,b=c-a.t;if(b!=0)return b;for(;--c>=0;)if((b=this[c]-a[c])!=0)return b;return 0}function nbits(a){var b=1,c;if((c=a>>>16)!=0)a=c,b+=16;if((c=a>>8)!=0)a=c,b+=8;if((c=a>>4)!=0)a=c,b+=4;if((c=a>>2)!=0)a=c,b+=2;a>>1!=0&&(b+=1);return b}
+function bnBitLength(){return this.t<=0?0:this.DB*(this.t-1)+nbits(this[this.t-1]^this.s&this.DM)}function bnpDLShiftTo(a,b){var c;for(c=this.t-1;c>=0;--c)b[c+a]=this[c];for(c=a-1;c>=0;--c)b[c]=0;b.t=this.t+a;b.s=this.s}function bnpDRShiftTo(a,b){for(var c=a;c<this.t;++c)b[c-a]=this[c];b.t=Math.max(this.t-a,0);b.s=this.s}
+function bnpLShiftTo(a,b){var c=a%this.DB,d=this.DB-c,e=(1<<d)-1,g=Math.floor(a/this.DB),h=this.s<<c&this.DM,f;for(f=this.t-1;f>=0;--f)b[f+g+1]=this[f]>>d|h,h=(this[f]&e)<<c;for(f=g-1;f>=0;--f)b[f]=0;b[g]=h;b.t=this.t+g+1;b.s=this.s;b.clamp()}
+function bnpRShiftTo(a,b){b.s=this.s;var c=Math.floor(a/this.DB);if(c>=this.t)b.t=0;else{var d=a%this.DB,e=this.DB-d,g=(1<<d)-1;b[0]=this[c]>>d;for(var h=c+1;h<this.t;++h)b[h-c-1]|=(this[h]&g)<<e,b[h-c]=this[h]>>d;d>0&&(b[this.t-c-1]|=(this.s&g)<<e);b.t=this.t-c;b.clamp()}}
+function bnpSubTo(a,b){for(var c=0,d=0,e=Math.min(a.t,this.t);c<e;)d+=this[c]-a[c],b[c++]=d&this.DM,d>>=this.DB;if(a.t<this.t){for(d-=a.s;c<this.t;)d+=this[c],b[c++]=d&this.DM,d>>=this.DB;d+=this.s}else{for(d+=this.s;c<a.t;)d-=a[c],b[c++]=d&this.DM,d>>=this.DB;d-=a.s}b.s=d<0?-1:0;d<-1?b[c++]=this.DV+d:d>0&&(b[c++]=d);b.t=c;b.clamp()}
+function bnpMultiplyTo(a,b){var c=this.abs(),d=a.abs(),e=c.t;for(b.t=e+d.t;--e>=0;)b[e]=0;for(e=0;e<d.t;++e)b[e+c.t]=c.am(0,d[e],b,e,0,c.t);b.s=0;b.clamp();this.s!=a.s&&BigInteger.ZERO.subTo(b,b)}function bnpSquareTo(a){for(var b=this.abs(),c=a.t=2*b.t;--c>=0;)a[c]=0;for(c=0;c<b.t-1;++c){var d=b.am(c,b[c],a,2*c,0,1);if((a[c+b.t]+=b.am(c+1,2*b[c],a,2*c+1,d,b.t-c-1))>=b.DV)a[c+b.t]-=b.DV,a[c+b.t+1]=1}a.t>0&&(a[a.t-1]+=b.am(c,b[c],a,2*c,0,1));a.s=0;a.clamp()}
+function bnpDivRemTo(a,b,c){var d=a.abs();if(!(d.t<=0)){var e=this.abs();if(e.t<d.t)b!=null&&b.fromInt(0),c!=null&&this.copyTo(c);else{c==null&&(c=nbi());var g=nbi(),h=this.s,a=a.s,f=this.DB-nbits(d[d.t-1]);f>0?(d.lShiftTo(f,g),e.lShiftTo(f,c)):(d.copyTo(g),e.copyTo(c));d=g.t;e=g[d-1];if(e!=0){var o=e*(1<<this.F1)+(d>1?g[d-2]>>this.F2:0),p=this.FV/o,o=(1<<this.F1)/o,q=1<<this.F2,n=c.t,k=n-d,j=b==null?nbi():b;g.dlShiftTo(k,j);c.compareTo(j)>=0&&(c[c.t++]=1,c.subTo(j,c));BigInteger.ONE.dlShiftTo(d,
+j);for(j.subTo(g,g);g.t<d;)g[g.t++]=0;for(;--k>=0;){var l=c[--n]==e?this.DM:Math.floor(c[n]*p+(c[n-1]+q)*o);if((c[n]+=g.am(0,l,c,k,0,d))<l){g.dlShiftTo(k,j);for(c.subTo(j,c);c[n]<--l;)c.subTo(j,c)}}b!=null&&(c.drShiftTo(d,b),h!=a&&BigInteger.ZERO.subTo(b,b));c.t=d;c.clamp();f>0&&c.rShiftTo(f,c);h<0&&BigInteger.ZERO.subTo(c,c)}}}}function bnMod(a){var b=nbi();this.abs().divRemTo(a,null,b);this.s<0&&b.compareTo(BigInteger.ZERO)>0&&a.subTo(b,b);return b}function Classic(a){this.m=a}
+function cConvert(a){return a.s<0||a.compareTo(this.m)>=0?a.mod(this.m):a}function cRevert(a){return a}function cReduce(a){a.divRemTo(this.m,null,a)}function cMulTo(a,b,c){a.multiplyTo(b,c);this.reduce(c)}function cSqrTo(a,b){a.squareTo(b);this.reduce(b)}Classic.prototype.convert=cConvert;Classic.prototype.revert=cRevert;Classic.prototype.reduce=cReduce;Classic.prototype.mulTo=cMulTo;Classic.prototype.sqrTo=cSqrTo;
+function bnpInvDigit(){if(this.t<1)return 0;var a=this[0];if((a&1)==0)return 0;var b=a&3,b=b*(2-(a&15)*b)&15,b=b*(2-(a&255)*b)&255,b=b*(2-((a&65535)*b&65535))&65535,b=b*(2-a*b%this.DV)%this.DV;return b>0?this.DV-b:-b}function Montgomery(a){this.m=a;this.mp=a.invDigit();this.mpl=this.mp&32767;this.mph=this.mp>>15;this.um=(1<<a.DB-15)-1;this.mt2=2*a.t}
+function montConvert(a){var b=nbi();a.abs().dlShiftTo(this.m.t,b);b.divRemTo(this.m,null,b);a.s<0&&b.compareTo(BigInteger.ZERO)>0&&this.m.subTo(b,b);return b}function montRevert(a){var b=nbi();a.copyTo(b);this.reduce(b);return b}
+function montReduce(a){for(;a.t<=this.mt2;)a[a.t++]=0;for(var b=0;b<this.m.t;++b){var c=a[b]&32767,d=c*this.mpl+((c*this.mph+(a[b]>>15)*this.mpl&this.um)<<15)&a.DM,c=b+this.m.t;for(a[c]+=this.m.am(0,d,a,b,0,this.m.t);a[c]>=a.DV;)a[c]-=a.DV,a[++c]++}a.clamp();a.drShiftTo(this.m.t,a);a.compareTo(this.m)>=0&&a.subTo(this.m,a)}function montSqrTo(a,b){a.squareTo(b);this.reduce(b)}function montMulTo(a,b,c){a.multiplyTo(b,c);this.reduce(c)}Montgomery.prototype.convert=montConvert;
+Montgomery.prototype.revert=montRevert;Montgomery.prototype.reduce=montReduce;Montgomery.prototype.mulTo=montMulTo;Montgomery.prototype.sqrTo=montSqrTo;function bnpIsEven(){return(this.t>0?this[0]&1:this.s)==0}function bnpExp(a,b){if(a>4294967295||a<1)return BigInteger.ONE;var c=nbi(),d=nbi(),e=b.convert(this),g=nbits(a)-1;for(e.copyTo(c);--g>=0;)if(b.sqrTo(c,d),(a&1<<g)>0)b.mulTo(d,e,c);else var h=c,c=d,d=h;return b.revert(c)}
+function bnModPowInt(a,b){var c;c=a<256||b.isEven()?new Classic(b):new Montgomery(b);return this.exp(a,c)}BigInteger.prototype.copyTo=bnpCopyTo;BigInteger.prototype.fromInt=bnpFromInt;BigInteger.prototype.fromString=bnpFromString;BigInteger.prototype.clamp=bnpClamp;BigInteger.prototype.dlShiftTo=bnpDLShiftTo;BigInteger.prototype.drShiftTo=bnpDRShiftTo;BigInteger.prototype.lShiftTo=bnpLShiftTo;BigInteger.prototype.rShiftTo=bnpRShiftTo;BigInteger.prototype.subTo=bnpSubTo;
+BigInteger.prototype.multiplyTo=bnpMultiplyTo;BigInteger.prototype.squareTo=bnpSquareTo;BigInteger.prototype.divRemTo=bnpDivRemTo;BigInteger.prototype.invDigit=bnpInvDigit;BigInteger.prototype.isEven=bnpIsEven;BigInteger.prototype.exp=bnpExp;BigInteger.prototype.toString=bnToString;BigInteger.prototype.negate=bnNegate;BigInteger.prototype.abs=bnAbs;BigInteger.prototype.compareTo=bnCompareTo;BigInteger.prototype.bitLength=bnBitLength;BigInteger.prototype.mod=bnMod;BigInteger.prototype.modPowInt=bnModPowInt;
+BigInteger.ZERO=nbv(0);BigInteger.ONE=nbv(1);function bnClone(){var a=nbi();this.copyTo(a);return a}function bnIntValue(){if(this.s<0)if(this.t==1)return this[0]-this.DV;else{if(this.t==0)return-1}else if(this.t==1)return this[0];else if(this.t==0)return 0;return(this[1]&(1<<32-this.DB)-1)<<this.DB|this[0]}function bnByteValue(){return this.t==0?this.s:this[0]<<24>>24}function bnShortValue(){return this.t==0?this.s:this[0]<<16>>16}
+function bnpChunkSize(a){return Math.floor(Math.LN2*this.DB/Math.log(a))}function bnSigNum(){return this.s<0?-1:this.t<=0||this.t==1&&this[0]<=0?0:1}function bnpToRadix(a){a==null&&(a=10);if(this.signum()==0||a<2||a>36)return"0";var b=this.chunkSize(a),b=Math.pow(a,b),c=nbv(b),d=nbi(),e=nbi(),g="";for(this.divRemTo(c,d,e);d.signum()>0;)g=(b+e.intValue()).toString(a).substr(1)+g,d.divRemTo(c,d,e);return e.intValue().toString(a)+g}
+function bnpFromRadix(a,b){this.fromInt(0);b==null&&(b=10);for(var c=this.chunkSize(b),d=Math.pow(b,c),e=!1,g=0,h=0,f=0;f<a.length;++f){var o=intAt(a,f);o<0?a.charAt(f)=="-"&&this.signum()==0&&(e=!0):(h=b*h+o,++g>=c&&(this.dMultiply(d),this.dAddOffset(h,0),h=g=0))}g>0&&(this.dMultiply(Math.pow(b,g)),this.dAddOffset(h,0));e&&BigInteger.ZERO.subTo(this,this)}
+function bnpFromNumber(a,b,c){if("number"==typeof b)if(a<2)this.fromInt(1);else{this.fromNumber(a,c);this.testBit(a-1)||this.bitwiseTo(BigInteger.ONE.shiftLeft(a-1),op_or,this);for(this.isEven()&&this.dAddOffset(1,0);!this.isProbablePrime(b);)this.dAddOffset(2,0),this.bitLength()>a&&this.subTo(BigInteger.ONE.shiftLeft(a-1),this)}else{var c=[],d=a&7;c.length=(a>>3)+1;b.nextBytes(c);d>0?c[0]&=(1<<d)-1:c[0]=0;this.fromString(c,256)}}
+function bnToByteArray(){var a=this.t,b=[];b[0]=this.s;var c=this.DB-a*this.DB%8,d,e=0;if(a-- >0){if(c<this.DB&&(d=this[a]>>c)!=(this.s&this.DM)>>c)b[e++]=d|this.s<<this.DB-c;for(;a>=0;)if(c<8?(d=(this[a]&(1<<c)-1)<<8-c,d|=this[--a]>>(c+=this.DB-8)):(d=this[a]>>(c-=8)&255,c<=0&&(c+=this.DB,--a)),(d&128)!=0&&(d|=-256),e==0&&(this.s&128)!=(d&128)&&++e,e>0||d!=this.s)b[e++]=d}return b}function bnEquals(a){return this.compareTo(a)==0}function bnMin(a){return this.compareTo(a)<0?this:a}
+function bnMax(a){return this.compareTo(a)>0?this:a}function bnpBitwiseTo(a,b,c){var d,e,g=Math.min(a.t,this.t);for(d=0;d<g;++d)c[d]=b(this[d],a[d]);if(a.t<this.t){e=a.s&this.DM;for(d=g;d<this.t;++d)c[d]=b(this[d],e);c.t=this.t}else{e=this.s&this.DM;for(d=g;d<a.t;++d)c[d]=b(e,a[d]);c.t=a.t}c.s=b(this.s,a.s);c.clamp()}function op_and(a,b){return a&b}function bnAnd(a){var b=nbi();this.bitwiseTo(a,op_and,b);return b}function op_or(a,b){return a|b}
+function bnOr(a){var b=nbi();this.bitwiseTo(a,op_or,b);return b}function op_xor(a,b){return a^b}function bnXor(a){var b=nbi();this.bitwiseTo(a,op_xor,b);return b}function op_andnot(a,b){return a&~b}function bnAndNot(a){var b=nbi();this.bitwiseTo(a,op_andnot,b);return b}function bnNot(){for(var a=nbi(),b=0;b<this.t;++b)a[b]=this.DM&~this[b];a.t=this.t;a.s=~this.s;return a}function bnShiftLeft(a){var b=nbi();a<0?this.rShiftTo(-a,b):this.lShiftTo(a,b);return b}
+function bnShiftRight(a){var b=nbi();a<0?this.lShiftTo(-a,b):this.rShiftTo(a,b);return b}function lbit(a){if(a==0)return-1;var b=0;(a&65535)==0&&(a>>=16,b+=16);(a&255)==0&&(a>>=8,b+=8);(a&15)==0&&(a>>=4,b+=4);(a&3)==0&&(a>>=2,b+=2);(a&1)==0&&++b;return b}function bnGetLowestSetBit(){for(var a=0;a<this.t;++a)if(this[a]!=0)return a*this.DB+lbit(this[a]);return this.s<0?this.t*this.DB:-1}function cbit(a){for(var b=0;a!=0;)a&=a-1,++b;return b}
+function bnBitCount(){for(var a=0,b=this.s&this.DM,c=0;c<this.t;++c)a+=cbit(this[c]^b);return a}function bnTestBit(a){var b=Math.floor(a/this.DB);return b>=this.t?this.s!=0:(this[b]&1<<a%this.DB)!=0}function bnpChangeBit(a,b){var c=BigInteger.ONE.shiftLeft(a);this.bitwiseTo(c,b,c);return c}function bnSetBit(a){return this.changeBit(a,op_or)}function bnClearBit(a){return this.changeBit(a,op_andnot)}function bnFlipBit(a){return this.changeBit(a,op_xor)}
+function bnpAddTo(a,b){for(var c=0,d=0,e=Math.min(a.t,this.t);c<e;)d+=this[c]+a[c],b[c++]=d&this.DM,d>>=this.DB;if(a.t<this.t){for(d+=a.s;c<this.t;)d+=this[c],b[c++]=d&this.DM,d>>=this.DB;d+=this.s}else{for(d+=this.s;c<a.t;)d+=a[c],b[c++]=d&this.DM,d>>=this.DB;d+=a.s}b.s=d<0?-1:0;d>0?b[c++]=d:d<-1&&(b[c++]=this.DV+d);b.t=c;b.clamp()}function bnAdd(a){var b=nbi();this.addTo(a,b);return b}function bnSubtract(a){var b=nbi();this.subTo(a,b);return b}
+function bnMultiply(a){var b=nbi();this.multiplyTo(a,b);return b}function bnSquare(){var a=nbi();this.squareTo(a);return a}function bnDivide(a){var b=nbi();this.divRemTo(a,b,null);return b}function bnRemainder(a){var b=nbi();this.divRemTo(a,null,b);return b}function bnDivideAndRemainder(a){var b=nbi(),c=nbi();this.divRemTo(a,b,c);return[b,c]}function bnpDMultiply(a){this[this.t]=this.am(0,a-1,this,0,0,this.t);++this.t;this.clamp()}
+function bnpDAddOffset(a,b){if(a!=0){for(;this.t<=b;)this[this.t++]=0;for(this[b]+=a;this[b]>=this.DV;)this[b]-=this.DV,++b>=this.t&&(this[this.t++]=0),++this[b]}}function NullExp(){}function nNop(a){return a}function nMulTo(a,b,c){a.multiplyTo(b,c)}function nSqrTo(a,b){a.squareTo(b)}NullExp.prototype.convert=nNop;NullExp.prototype.revert=nNop;NullExp.prototype.mulTo=nMulTo;NullExp.prototype.sqrTo=nSqrTo;function bnPow(a){return this.exp(a,new NullExp)}
+function bnpMultiplyLowerTo(a,b,c){var d=Math.min(this.t+a.t,b);c.s=0;for(c.t=d;d>0;)c[--d]=0;var e;for(e=c.t-this.t;d<e;++d)c[d+this.t]=this.am(0,a[d],c,d,0,this.t);for(e=Math.min(a.t,b);d<e;++d)this.am(0,a[d],c,d,0,b-d);c.clamp()}function bnpMultiplyUpperTo(a,b,c){--b;var d=c.t=this.t+a.t-b;for(c.s=0;--d>=0;)c[d]=0;for(d=Math.max(b-this.t,0);d<a.t;++d)c[this.t+d-b]=this.am(b-d,a[d],c,0,0,this.t+d-b);c.clamp();c.drShiftTo(1,c)}
+function Barrett(a){this.r2=nbi();this.q3=nbi();BigInteger.ONE.dlShiftTo(2*a.t,this.r2);this.mu=this.r2.divide(a);this.m=a}function barrettConvert(a){if(a.s<0||a.t>2*this.m.t)return a.mod(this.m);else if(a.compareTo(this.m)<0)return a;else{var b=nbi();a.copyTo(b);this.reduce(b);return b}}function barrettRevert(a){return a}
+function barrettReduce(a){a.drShiftTo(this.m.t-1,this.r2);if(a.t>this.m.t+1)a.t=this.m.t+1,a.clamp();this.mu.multiplyUpperTo(this.r2,this.m.t+1,this.q3);for(this.m.multiplyLowerTo(this.q3,this.m.t+1,this.r2);a.compareTo(this.r2)<0;)a.dAddOffset(1,this.m.t+1);for(a.subTo(this.r2,a);a.compareTo(this.m)>=0;)a.subTo(this.m,a)}function barrettSqrTo(a,b){a.squareTo(b);this.reduce(b)}function barrettMulTo(a,b,c){a.multiplyTo(b,c);this.reduce(c)}Barrett.prototype.convert=barrettConvert;
+Barrett.prototype.revert=barrettRevert;Barrett.prototype.reduce=barrettReduce;Barrett.prototype.mulTo=barrettMulTo;Barrett.prototype.sqrTo=barrettSqrTo;
+function bnModPow(a,b){var c=a.bitLength(),d,e=nbv(1),g;if(c<=0)return e;else d=c<18?1:c<48?3:c<144?4:c<768?5:6;g=c<8?new Classic(b):b.isEven()?new Barrett(b):new Montgomery(b);var h=[],f=3,o=d-1,p=(1<<d)-1;h[1]=g.convert(this);if(d>1){c=nbi();for(g.sqrTo(h[1],c);f<=p;)h[f]=nbi(),g.mulTo(c,h[f-2],h[f]),f+=2}for(var q=a.t-1,n,k=!0,j=nbi(),c=nbits(a[q])-1;q>=0;){c>=o?n=a[q]>>c-o&p:(n=(a[q]&(1<<c+1)-1)<<o-c,q>0&&(n|=a[q-1]>>this.DB+c-o));for(f=d;(n&1)==0;)n>>=1,--f;if((c-=f)<0)c+=this.DB,--q;if(k)h[n].copyTo(e),
+k=!1;else{for(;f>1;)g.sqrTo(e,j),g.sqrTo(j,e),f-=2;f>0?g.sqrTo(e,j):(f=e,e=j,j=f);g.mulTo(j,h[n],e)}for(;q>=0&&(a[q]&1<<c)==0;)g.sqrTo(e,j),f=e,e=j,j=f,--c<0&&(c=this.DB-1,--q)}return g.revert(e)}
+function bnGCD(a){var b=this.s<0?this.negate():this.clone(),a=a.s<0?a.negate():a.clone();if(b.compareTo(a)<0)var c=b,b=a,a=c;var c=b.getLowestSetBit(),d=a.getLowestSetBit();if(d<0)return b;c<d&&(d=c);d>0&&(b.rShiftTo(d,b),a.rShiftTo(d,a));for(;b.signum()>0;)(c=b.getLowestSetBit())>0&&b.rShiftTo(c,b),(c=a.getLowestSetBit())>0&&a.rShiftTo(c,a),b.compareTo(a)>=0?(b.subTo(a,b),b.rShiftTo(1,b)):(a.subTo(b,a),a.rShiftTo(1,a));d>0&&a.lShiftTo(d,a);return a}
+function bnpModInt(a){if(a<=0)return 0;var b=this.DV%a,c=this.s<0?a-1:0;if(this.t>0)if(b==0)c=this[0]%a;else for(var d=this.t-1;d>=0;--d)c=(b*c+this[d])%a;return c}
+function bnModInverse(a){var b=a.isEven();if(this.isEven()&&b||a.signum()==0)return BigInteger.ZERO;for(var c=a.clone(),d=this.clone(),e=nbv(1),g=nbv(0),h=nbv(0),f=nbv(1);c.signum()!=0;){for(;c.isEven();){c.rShiftTo(1,c);if(b){if(!e.isEven()||!g.isEven())e.addTo(this,e),g.subTo(a,g);e.rShiftTo(1,e)}else g.isEven()||g.subTo(a,g);g.rShiftTo(1,g)}for(;d.isEven();){d.rShiftTo(1,d);if(b){if(!h.isEven()||!f.isEven())h.addTo(this,h),f.subTo(a,f);h.rShiftTo(1,h)}else f.isEven()||f.subTo(a,f);f.rShiftTo(1,
+f)}c.compareTo(d)>=0?(c.subTo(d,c),b&&e.subTo(h,e),g.subTo(f,g)):(d.subTo(c,d),b&&h.subTo(e,h),f.subTo(g,f))}if(d.compareTo(BigInteger.ONE)!=0)return BigInteger.ZERO;if(f.compareTo(a)>=0)return f.subtract(a);if(f.signum()<0)f.addTo(a,f);else return f;return f.signum()<0?f.add(a):f}
+var lowprimes=[2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,673,677,683,691,701,709,719,727,
+733,739,743,751,757,761,769,773,787,797,809,811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,941,947,953,967,971,977,983,991,997],lplim=67108864/lowprimes[lowprimes.length-1];
+function bnIsProbablePrime(a){var b,c=this.abs();if(c.t==1&&c[0]<=lowprimes[lowprimes.length-1]){for(b=0;b<lowprimes.length;++b)if(c[0]==lowprimes[b])return!0;return!1}if(c.isEven())return!1;for(b=1;b<lowprimes.length;){for(var d=lowprimes[b],e=b+1;e<lowprimes.length&&d<lplim;)d*=lowprimes[e++];for(d=c.modInt(d);b<e;)if(d%lowprimes[b++]==0)return!1}return c.millerRabin(a)}
+function bnpMillerRabin(a){var b=this.subtract(BigInteger.ONE),c=b.getLowestSetBit();if(c<=0)return!1;var d=b.shiftRight(c),a=a+1>>1;if(a>lowprimes.length)a=lowprimes.length;for(var e=nbi(),g=0;g<a;++g){e.fromInt(lowprimes[Math.floor(Math.random()*lowprimes.length)]);var h=e.modPow(d,this);if(h.compareTo(BigInteger.ONE)!=0&&h.compareTo(b)!=0){for(var f=1;f++<c&&h.compareTo(b)!=0;)if(h=h.modPowInt(2,this),h.compareTo(BigInteger.ONE)==0)return!1;if(h.compareTo(b)!=0)return!1}}return!0}
+BigInteger.prototype.chunkSize=bnpChunkSize;BigInteger.prototype.toRadix=bnpToRadix;BigInteger.prototype.fromRadix=bnpFromRadix;BigInteger.prototype.fromNumber=bnpFromNumber;BigInteger.prototype.bitwiseTo=bnpBitwiseTo;BigInteger.prototype.changeBit=bnpChangeBit;BigInteger.prototype.addTo=bnpAddTo;BigInteger.prototype.dMultiply=bnpDMultiply;BigInteger.prototype.dAddOffset=bnpDAddOffset;BigInteger.prototype.multiplyLowerTo=bnpMultiplyLowerTo;BigInteger.prototype.multiplyUpperTo=bnpMultiplyUpperTo;
+BigInteger.prototype.modInt=bnpModInt;BigInteger.prototype.millerRabin=bnpMillerRabin;BigInteger.prototype.clone=bnClone;BigInteger.prototype.intValue=bnIntValue;BigInteger.prototype.byteValue=bnByteValue;BigInteger.prototype.shortValue=bnShortValue;BigInteger.prototype.signum=bnSigNum;BigInteger.prototype.toByteArray=bnToByteArray;BigInteger.prototype.equals=bnEquals;BigInteger.prototype.min=bnMin;BigInteger.prototype.max=bnMax;BigInteger.prototype.and=bnAnd;BigInteger.prototype.or=bnOr;
+BigInteger.prototype.xor=bnXor;BigInteger.prototype.andNot=bnAndNot;BigInteger.prototype.not=bnNot;BigInteger.prototype.shiftLeft=bnShiftLeft;BigInteger.prototype.shiftRight=bnShiftRight;BigInteger.prototype.getLowestSetBit=bnGetLowestSetBit;BigInteger.prototype.bitCount=bnBitCount;BigInteger.prototype.testBit=bnTestBit;BigInteger.prototype.setBit=bnSetBit;BigInteger.prototype.clearBit=bnClearBit;BigInteger.prototype.flipBit=bnFlipBit;BigInteger.prototype.add=bnAdd;BigInteger.prototype.subtract=bnSubtract;
+BigInteger.prototype.multiply=bnMultiply;BigInteger.prototype.divide=bnDivide;BigInteger.prototype.remainder=bnRemainder;BigInteger.prototype.divideAndRemainder=bnDivideAndRemainder;BigInteger.prototype.modPow=bnModPow;BigInteger.prototype.modInverse=bnModInverse;BigInteger.prototype.pow=bnPow;BigInteger.prototype.gcd=bnGCD;BigInteger.prototype.isProbablePrime=bnIsProbablePrime;BigInteger.prototype.square=bnSquare;
+(function(a,b,c,d,e,g,h){function f(a){var b,d,e=this,g=a.length,f=0,h=e.i=e.j=e.m=0;e.S=[];e.c=[];for(g||(a=[g++]);f<c;)e.S[f]=f++;for(f=0;f<c;f++)b=e.S[f],h=h+b+a[f%g]&c-1,d=e.S[h],e.S[f]=d,e.S[h]=b;e.g=function(a){var b=e.S,d=e.i+1&c-1,g=b[d],f=e.j+g&c-1,h=b[f];b[d]=h;b[f]=g;for(var k=b[g+h&c-1];--a;)d=d+1&c-1,g=b[d],f=f+g&c-1,h=b[f],b[d]=h,b[f]=g,k=k*c+b[g+h&c-1];e.i=d;e.j=f;return k};e.g(c)}function o(a,b,c,d,e){c=[];e=typeof a;if(b&&e=="object")for(d in a)if(d.indexOf("S")<5)try{c.push(o(a[d],
+b-1))}catch(g){}return c.length?c:a+(e!="string"?"\x00":"")}function p(a,b,d,e){a+="";for(e=d=0;e<a.length;e++){var g=b,f=e&c-1,h=(d^=b[e&c-1]*19)+a.charCodeAt(e);g[f]=h&c-1}a="";for(e in b)a+=String.fromCharCode(b[e]);return a}b.seedrandom=function(q,n){var k=[],j,q=p(o(n?[q,a]:arguments.length?q:[(new Date).getTime(),a,window],3),k);j=new f(k);p(j.S,a);b.random=function(){for(var a=j.g(d),b=h,f=0;a<e;)a=(a+f)*c,b*=c,f=j.g(1);for(;a>=g;)a/=2,b/=2,f>>>=1;return(a+f)/b};return q};h=b.pow(c,d);e=b.pow(2,
+e);g=e*2;p(b.random(),a)})([],Math,256,6,52);function SeededRandom(){}function SRnextBytes(a){var b;for(b=0;b<a.length;b++)a[b]=Math.floor(Math.random()*256)}SeededRandom.prototype.nextBytes=SRnextBytes;function Arcfour(){this.j=this.i=0;this.S=[]}function ARC4init(a){var b,c,d;for(b=0;b<256;++b)this.S[b]=b;for(b=c=0;b<256;++b)c=c+this.S[b]+a[b%a.length]&255,d=this.S[b],this.S[b]=this.S[c],this.S[c]=d;this.j=this.i=0}
+function ARC4next(){var a;this.i=this.i+1&255;this.j=this.j+this.S[this.i]&255;a=this.S[this.i];this.S[this.i]=this.S[this.j];this.S[this.j]=a;return this.S[a+this.S[this.i]&255]}Arcfour.prototype.init=ARC4init;Arcfour.prototype.next=ARC4next;function prng_newstate(){return new Arcfour}var rng_psize=256,rng_state,rng_pool,rng_pptr;
+function rng_seed_int(a){rng_pool[rng_pptr++]^=a&255;rng_pool[rng_pptr++]^=a>>8&255;rng_pool[rng_pptr++]^=a>>16&255;rng_pool[rng_pptr++]^=a>>24&255;rng_pptr>=rng_psize&&(rng_pptr-=rng_psize)}function rng_seed_time(){rng_seed_int((new Date).getTime())}
+if(rng_pool==null){rng_pool=[];rng_pptr=0;var t;if(navigator.appName=="Netscape"&&navigator.appVersion<"5"&&window.crypto){var z=window.crypto.random(32);for(t=0;t<z.length;++t)rng_pool[rng_pptr++]=z.charCodeAt(t)&255}for(;rng_pptr<rng_psize;)t=Math.floor(65536*Math.random()),rng_pool[rng_pptr++]=t>>>8,rng_pool[rng_pptr++]=t&255;rng_pptr=0;rng_seed_time()}
+function rng_get_byte(){if(rng_state==null){rng_seed_time();rng_state=prng_newstate();rng_state.init(rng_pool);for(rng_pptr=0;rng_pptr<rng_pool.length;++rng_pptr)rng_pool[rng_pptr]=0;rng_pptr=0}return rng_state.next()}function rng_get_bytes(a){var b;for(b=0;b<a.length;++b)a[b]=rng_get_byte()}function SecureRandom(){}SecureRandom.prototype.nextBytes=rng_get_bytes;
+function SHA256(a){function b(a,b){var c=(a&65535)+(b&65535);return(a>>16)+(b>>16)+(c>>16)<<16|c&65535}function c(a,b){return a>>>b|a<<32-b}a=function(a){for(var a=a.replace(/\r\n/g,"\n"),b="",c=0;c<a.length;c++){var h=a.charCodeAt(c);h<128?b+=String.fromCharCode(h):(h>127&&h<2048?b+=String.fromCharCode(h>>6|192):(b+=String.fromCharCode(h>>12|224),b+=String.fromCharCode(h>>6&63|128)),b+=String.fromCharCode(h&63|128))}return b}(a);return function(a){for(var b="",c=0;c<a.length*4;c++)b+="0123456789abcdef".charAt(a[c>>
+2]>>(3-c%4)*8+4&15)+"0123456789abcdef".charAt(a[c>>2]>>(3-c%4)*8&15);return b}(function(a,e){var g=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,
+2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298],h=[1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225],f=Array(64),o,p,q,n,k,j,l,m,s,r,u,w;a[e>>5]|=128<<24-e%32;a[(e+64>>9<<4)+15]=e;for(s=0;s<a.length;s+=16){o=h[0];p=h[1];q=h[2];n=h[3];
+k=h[4];j=h[5];l=h[6];m=h[7];for(r=0;r<64;r++)f[r]=r<16?a[r+s]:b(b(b(c(f[r-2],17)^c(f[r-2],19)^f[r-2]>>>10,f[r-7]),c(f[r-15],7)^c(f[r-15],18)^f[r-15]>>>3),f[r-16]),u=b(b(b(b(m,c(k,6)^c(k,11)^c(k,25)),k&j^~k&l),g[r]),f[r]),w=b(c(o,2)^c(o,13)^c(o,22),o&p^o&q^p&q),m=l,l=j,j=k,k=b(n,u),n=q,q=p,p=o,o=b(u,w);h[0]=b(o,h[0]);h[1]=b(p,h[1]);h[2]=b(q,h[2]);h[3]=b(n,h[3]);h[4]=b(k,h[4]);h[5]=b(j,h[5]);h[6]=b(l,h[6]);h[7]=b(m,h[7])}return h}(function(a){for(var b=[],c=0;c<a.length*8;c+=8)b[c>>5]|=(a.charCodeAt(c/
+8)&255)<<24-c%32;return b}(a),a.length*8))}var sha256={hex:function(a){return SHA256(a)}};
+function SHA1(a){function b(a,b){return a<<b|a>>>32-b}function c(a){var b="",c,d;for(c=7;c>=0;c--)d=a>>>c*4&15,b+=d.toString(16);return b}var d,e,g=Array(80),h=1732584193,f=4023233417,o=2562383102,p=271733878,q=3285377520,n,k,j,l,m,a=function(a){for(var a=a.replace(/\r\n/g,"\n"),b="",c=0;c<a.length;c++){var d=a.charCodeAt(c);d<128?b+=String.fromCharCode(d):(d>127&&d<2048?b+=String.fromCharCode(d>>6|192):(b+=String.fromCharCode(d>>12|224),b+=String.fromCharCode(d>>6&63|128)),b+=String.fromCharCode(d&
+63|128))}return b}(a);n=a.length;var s=[];for(d=0;d<n-3;d+=4)e=a.charCodeAt(d)<<24|a.charCodeAt(d+1)<<16|a.charCodeAt(d+2)<<8|a.charCodeAt(d+3),s.push(e);switch(n%4){case 0:d=2147483648;break;case 1:d=a.charCodeAt(n-1)<<24|8388608;break;case 2:d=a.charCodeAt(n-2)<<24|a.charCodeAt(n-1)<<16|32768;break;case 3:d=a.charCodeAt(n-3)<<24|a.charCodeAt(n-2)<<16|a.charCodeAt(n-1)<<8|128}for(s.push(d);s.length%16!=14;)s.push(0);s.push(n>>>29);s.push(n<<3&4294967295);for(a=0;a<s.length;a+=16){for(d=0;d<16;d++)g[d]=
+s[a+d];for(d=16;d<=79;d++)g[d]=b(g[d-3]^g[d-8]^g[d-14]^g[d-16],1);e=h;n=f;k=o;j=p;l=q;for(d=0;d<=19;d++)m=b(e,5)+(n&k|~n&j)+l+g[d]+1518500249&4294967295,l=j,j=k,k=b(n,30),n=e,e=m;for(d=20;d<=39;d++)m=b(e,5)+(n^k^j)+l+g[d]+1859775393&4294967295,l=j,j=k,k=b(n,30),n=e,e=m;for(d=40;d<=59;d++)m=b(e,5)+(n&k|n&j|k&j)+l+g[d]+2400959708&4294967295,l=j,j=k,k=b(n,30),n=e,e=m;for(d=60;d<=79;d++)m=b(e,5)+(n^k^j)+l+g[d]+3395469782&4294967295,l=j,j=k,k=b(n,30),n=e,e=m;h=h+e&4294967295;f=f+n&4294967295;o=o+k&4294967295;
+p=p+j&4294967295;q=q+l&4294967295}m=c(h)+c(f)+c(o)+c(p)+c(q);return m.toLowerCase()}
+var sha1={hex:function(a){return SHA1(a)}},MD5=function(a){function b(a,b){var c,d,e,f,g;e=a&2147483648;f=b&2147483648;c=a&1073741824;d=b&1073741824;g=(a&1073741823)+(b&1073741823);return c&d?g^2147483648^e^f:c|d?g&1073741824?g^3221225472^e^f:g^1073741824^e^f:g^e^f}function c(a,c,d,e,f,g,h){a=b(a,b(b(c&d|~c&e,f),h));return b(a<<g|a>>>32-g,c)}function d(a,c,d,e,f,g,h){a=b(a,b(b(c&e|d&~e,f),h));return b(a<<g|a>>>32-g,c)}function e(a,c,d,e,f,g,h){a=b(a,b(b(c^d^e,f),h));return b(a<<g|a>>>32-g,c)}function g(a,
+c,d,e,f,g,h){a=b(a,b(b(d^(c|~e),f),h));return b(a<<g|a>>>32-g,c)}function h(a){var b="",c="",d;for(d=0;d<=3;d++)c=a>>>d*8&255,c="0"+c.toString(16),b+=c.substr(c.length-2,2);return b}var f=[],o,p,q,n,k,j,l,m,a=function(a){for(var a=a.replace(/\r\n/g,"\n"),b="",c=0;c<a.length;c++){var d=a.charCodeAt(c);d<128?b+=String.fromCharCode(d):(d>127&&d<2048?b+=String.fromCharCode(d>>6|192):(b+=String.fromCharCode(d>>12|224),b+=String.fromCharCode(d>>6&63|128)),b+=String.fromCharCode(d&63|128))}return b}(a),
+f=function(a){var b,c=a.length;b=c+8;for(var d=((b-b%64)/64+1)*16,e=Array(d-1),f=0,g=0;g<c;)b=(g-g%4)/4,f=g%4*8,e[b]|=a.charCodeAt(g)<<f,g++;e[(g-g%4)/4]|=128<<g%4*8;e[d-2]=c<<3;e[d-1]=c>>>29;return e}(a);k=1732584193;j=4023233417;l=2562383102;m=271733878;for(a=0;a<f.length;a+=16)o=k,p=j,q=l,n=m,k=c(k,j,l,m,f[a+0],7,3614090360),m=c(m,k,j,l,f[a+1],12,3905402710),l=c(l,m,k,j,f[a+2],17,606105819),j=c(j,l,m,k,f[a+3],22,3250441966),k=c(k,j,l,m,f[a+4],7,4118548399),m=c(m,k,j,l,f[a+5],12,1200080426),l=c(l,
+m,k,j,f[a+6],17,2821735955),j=c(j,l,m,k,f[a+7],22,4249261313),k=c(k,j,l,m,f[a+8],7,1770035416),m=c(m,k,j,l,f[a+9],12,2336552879),l=c(l,m,k,j,f[a+10],17,4294925233),j=c(j,l,m,k,f[a+11],22,2304563134),k=c(k,j,l,m,f[a+12],7,1804603682),m=c(m,k,j,l,f[a+13],12,4254626195),l=c(l,m,k,j,f[a+14],17,2792965006),j=c(j,l,m,k,f[a+15],22,1236535329),k=d(k,j,l,m,f[a+1],5,4129170786),m=d(m,k,j,l,f[a+6],9,3225465664),l=d(l,m,k,j,f[a+11],14,643717713),j=d(j,l,m,k,f[a+0],20,3921069994),k=d(k,j,l,m,f[a+5],5,3593408605),
+m=d(m,k,j,l,f[a+10],9,38016083),l=d(l,m,k,j,f[a+15],14,3634488961),j=d(j,l,m,k,f[a+4],20,3889429448),k=d(k,j,l,m,f[a+9],5,568446438),m=d(m,k,j,l,f[a+14],9,3275163606),l=d(l,m,k,j,f[a+3],14,4107603335),j=d(j,l,m,k,f[a+8],20,1163531501),k=d(k,j,l,m,f[a+13],5,2850285829),m=d(m,k,j,l,f[a+2],9,4243563512),l=d(l,m,k,j,f[a+7],14,1735328473),j=d(j,l,m,k,f[a+12],20,2368359562),k=e(k,j,l,m,f[a+5],4,4294588738),m=e(m,k,j,l,f[a+8],11,2272392833),l=e(l,m,k,j,f[a+11],16,1839030562),j=e(j,l,m,k,f[a+14],23,4259657740),
+k=e(k,j,l,m,f[a+1],4,2763975236),m=e(m,k,j,l,f[a+4],11,1272893353),l=e(l,m,k,j,f[a+7],16,4139469664),j=e(j,l,m,k,f[a+10],23,3200236656),k=e(k,j,l,m,f[a+13],4,681279174),m=e(m,k,j,l,f[a+0],11,3936430074),l=e(l,m,k,j,f[a+3],16,3572445317),j=e(j,l,m,k,f[a+6],23,76029189),k=e(k,j,l,m,f[a+9],4,3654602809),m=e(m,k,j,l,f[a+12],11,3873151461),l=e(l,m,k,j,f[a+15],16,530742520),j=e(j,l,m,k,f[a+2],23,3299628645),k=g(k,j,l,m,f[a+0],6,4096336452),m=g(m,k,j,l,f[a+7],10,1126891415),l=g(l,m,k,j,f[a+14],15,2878612391),
+j=g(j,l,m,k,f[a+5],21,4237533241),k=g(k,j,l,m,f[a+12],6,1700485571),m=g(m,k,j,l,f[a+3],10,2399980690),l=g(l,m,k,j,f[a+10],15,4293915773),j=g(j,l,m,k,f[a+1],21,2240044497),k=g(k,j,l,m,f[a+8],6,1873313359),m=g(m,k,j,l,f[a+15],10,4264355552),l=g(l,m,k,j,f[a+6],15,2734768916),j=g(j,l,m,k,f[a+13],21,1309151649),k=g(k,j,l,m,f[a+4],6,4149444226),m=g(m,k,j,l,f[a+11],10,3174756917),l=g(l,m,k,j,f[a+2],15,718787259),j=g(j,l,m,k,f[a+9],21,3951481745),k=b(k,o),j=b(j,p),l=b(l,q),m=b(m,n);return(h(k)+h(j)+h(l)+
+h(m)).toLowerCase()};function parseBigInt(a,b){return new BigInteger(a,b)}function linebrk(a,b){for(var c="",d=0;d+b<a.length;)c+=a.substring(d,d+b)+"\n",d+=b;return c+a.substring(d,a.length)}function byte2Hex(a){return a<16?"0"+a.toString(16):a.toString(16)}
+function pkcs1pad2(a,b){if(b<a.length+11)throw"Message too long for RSA (n="+b+", l="+a.length+")";for(var c=[],d=a.length-1;d>=0&&b>0;){var e=a.charCodeAt(d--);e<128?c[--b]=e:e>127&&e<2048?(c[--b]=e&63|128,c[--b]=e>>6|192):(c[--b]=e&63|128,c[--b]=e>>6&63|128,c[--b]=e>>12|224)}c[--b]=0;d=new SecureRandom;for(e=[];b>2;){for(e[0]=0;e[0]==0;)d.nextBytes(e);c[--b]=e[0]}c[--b]=2;c[--b]=0;return new BigInteger(c)}
+function RSAKey(){this.n=null;this.e=0;this.coeff=this.dmq1=this.dmp1=this.q=this.p=this.d=null}function RSASetPublic(a,b){a!=null&&b!=null&&a.length>0&&b.length>0?(this.n=parseBigInt(a,16),this.e=parseInt(b,16)):alert("Invalid RSA public key")}function RSADoPublic(a){return a.modPowInt(this.e,this.n)}function RSAEncrypt(a){a=pkcs1pad2(a,this.n.bitLength()+7>>3);if(a==null)return null;a=this.doPublic(a);if(a==null)return null;a=a.toString(16);return(a.length&1)==0?a:"0"+a}
+RSAKey.prototype.doPublic=RSADoPublic;RSAKey.prototype.setPublic=RSASetPublic;RSAKey.prototype.encrypt=RSAEncrypt;function pkcs1unpad2(a,b){for(var c=a.toByteArray(),d=0;d<c.length&&c[d]==0;)++d;if(c.length-d!=b-1||c[d]!=2)return null;for(++d;c[d]!=0;)if(++d>=c.length)return null;for(var e="";++d<c.length;){var g=c[d]&255;g<128?e+=String.fromCharCode(g):g>191&&g<224?(e+=String.fromCharCode((g&31)<<6|c[d+1]&63),++d):(e+=String.fromCharCode((g&15)<<12|(c[d+1]&63)<<6|c[d+2]&63),d+=2)}return e}
+function RSASetPrivate(a,b,c){a!=null&&b!=null&&a.length>0&&b.length>0?(this.n=parseBigInt(a,16),this.e=parseInt(b,16),this.d=parseBigInt(c,16)):alert("Invalid RSA private key")}
+function RSASetPrivateEx(a,b,c,d,e,g,h,f){a!=null&&b!=null&&a.length>0&&b.length>0?(this.n=parseBigInt(a,16),this.e=parseInt(b,16),this.d=parseBigInt(c,16),this.p=parseBigInt(d,16),this.q=parseBigInt(e,16),this.dmp1=parseBigInt(g,16),this.dmq1=parseBigInt(h,16),this.coeff=parseBigInt(f,16)):alert("Invalid RSA private key")}
+function RSAGenerate(a,b){var c=new SeededRandom,d=a>>1;this.e=parseInt(b,16);for(var e=new BigInteger(b,16);;){for(;;)if(this.p=new BigInteger(a-d,1,c),this.p.subtract(BigInteger.ONE).gcd(e).compareTo(BigInteger.ONE)==0&&this.p.isProbablePrime(10))break;for(;;)if(this.q=new BigInteger(d,1,c),this.q.subtract(BigInteger.ONE).gcd(e).compareTo(BigInteger.ONE)==0&&this.q.isProbablePrime(10))break;if(this.p.compareTo(this.q)<=0){var g=this.p;this.p=this.q;this.q=g}var g=this.p.subtract(BigInteger.ONE),
+h=this.q.subtract(BigInteger.ONE),f=g.multiply(h);if(f.gcd(e).compareTo(BigInteger.ONE)==0){this.n=this.p.multiply(this.q);this.d=e.modInverse(f);this.dmp1=this.d.mod(g);this.dmq1=this.d.mod(h);this.coeff=this.q.modInverse(this.p);break}}}
+function RSADoPrivate(a){if(this.p==null||this.q==null)return a.modPow(this.d,this.n);for(var b=a.mod(this.p).modPow(this.dmp1,this.p),a=a.mod(this.q).modPow(this.dmq1,this.q);b.compareTo(a)<0;)b=b.add(this.p);return b.subtract(a).multiply(this.coeff).mod(this.p).multiply(this.q).add(a)}function RSADecrypt(a){a=this.doPrivate(parseBigInt(a,16));return a==null?null:pkcs1unpad2(a,this.n.bitLength()+7>>3)}RSAKey.prototype.doPrivate=RSADoPrivate;RSAKey.prototype.setPrivate=RSASetPrivate;
+RSAKey.prototype.setPrivateEx=RSASetPrivateEx;RSAKey.prototype.generate=RSAGenerate;RSAKey.prototype.decrypt=RSADecrypt;var _RSASIGN_DIHEAD=[];_RSASIGN_DIHEAD.sha1="3021300906052b0e03021a05000414";_RSASIGN_DIHEAD.sha256="3031300d060960864801650304020105000420";var _RSASIGN_HASHHEXFUNC=[];_RSASIGN_HASHHEXFUNC.sha1=sha1.hex;_RSASIGN_HASHHEXFUNC.sha256=sha256.hex;
+function _rsasign_getHexPaddedDigestInfoForString(a,b,c){b/=4;for(var a=(0,_RSASIGN_HASHHEXFUNC[c])(a),c="00"+_RSASIGN_DIHEAD[c]+a,a="",b=b-4-c.length,d=0;d<b;d+=2)a+="ff";return sPaddedMessageHex="0001"+a+c}function _rsasign_signString(a,b){var c=_rsasign_getHexPaddedDigestInfoForString(a,this.n.bitLength(),b);return this.doPrivate(parseBigInt(c,16)).toString(16)}
+function _rsasign_signStringWithSHA1(a){a=_rsasign_getHexPaddedDigestInfoForString(a,this.n.bitLength(),"sha1");return this.doPrivate(parseBigInt(a,16)).toString(16)}function _rsasign_signStringWithSHA256(a){a=_rsasign_getHexPaddedDigestInfoForString(a,this.n.bitLength(),"sha256");return this.doPrivate(parseBigInt(a,16)).toString(16)}function _rsasign_getDecryptSignatureBI(a,b,c){var d=new RSAKey;d.setPublic(b,c);return d.doPublic(a)}
+function _rsasign_getHexDigestInfoFromSig(a,b,c){return _rsasign_getDecryptSignatureBI(a,b,c).toString(16).replace(/^1f+00/,"")}function _rsasign_getAlgNameAndHashFromHexDisgestInfo(a){for(var b in _RSASIGN_DIHEAD){var c=_RSASIGN_DIHEAD[b],d=c.length;if(a.substring(0,d)==c)return[b,a.substring(d)]}return[]}
+function _rsasign_verifySignatureWithArgs(a,b,c,d){b=_rsasign_getHexDigestInfoFromSig(b,c,d);c=_rsasign_getAlgNameAndHashFromHexDisgestInfo(b);if(c.length==0)return!1;b=c[1];a=(0,_RSASIGN_HASHHEXFUNC[c[0]])(a);return b==a}function _rsasign_verifyHexSignatureForMessage(a,b){var c=parseBigInt(a,16);return _rsasign_verifySignatureWithArgs(b,c,this.n.toString(16),this.e.toString(16))}
+function _rsasign_verifyString(a,b){var b=b.replace(/[ \n]+/g,""),c=this.doPublic(parseBigInt(b,16)).toString(16).replace(/^1f+00/,""),d=_rsasign_getAlgNameAndHashFromHexDisgestInfo(c);if(d.length==0)return!1;c=d[1];d=(0,_RSASIGN_HASHHEXFUNC[d[0]])(a);return c==d}RSAKey.prototype.signString=_rsasign_signString;RSAKey.prototype.signStringWithSHA1=_rsasign_signStringWithSHA1;RSAKey.prototype.signStringWithSHA256=_rsasign_signStringWithSHA256;RSAKey.prototype.verifyString=_rsasign_verifyString;
+RSAKey.prototype.verifyHexSignatureForMessage=_rsasign_verifyHexSignatureForMessage;
+var aes=function(){var a={Sbox:[99,124,119,123,242,107,111,197,48,1,103,43,254,215,171,118,202,130,201,125,250,89,71,240,173,212,162,175,156,164,114,192,183,253,147,38,54,63,247,204,52,165,229,241,113,216,49,21,4,199,35,195,24,150,5,154,7,18,128,226,235,39,178,117,9,131,44,26,27,110,90,160,82,59,214,179,41,227,47,132,83,209,0,237,32,252,177,91,106,203,190,57,74,76,88,207,208,239,170,251,67,77,51,133,69,249,2,127,80,60,159,168,81,163,64,143,146,157,56,245,188,182,218,33,16,255,243,210,205,12,19,236,
+95,151,68,23,196,167,126,61,100,93,25,115,96,129,79,220,34,42,144,136,70,238,184,20,222,94,11,219,224,50,58,10,73,6,36,92,194,211,172,98,145,149,228,121,231,200,55,109,141,213,78,169,108,86,244,234,101,122,174,8,186,120,37,46,28,166,180,198,232,221,116,31,75,189,139,138,112,62,181,102,72,3,246,14,97,53,87,185,134,193,29,158,225,248,152,17,105,217,142,148,155,30,135,233,206,85,40,223,140,161,137,13,191,230,66,104,65,153,45,15,176,84,187,22],ShiftRowTab:[0,5,10,15,4,9,14,3,8,13,2,7,12,1,6,11]};a.Init=
+function(){a.Sbox_Inv=Array(256);for(var b=0;b<256;b++)a.Sbox_Inv[a.Sbox[b]]=b;a.ShiftRowTab_Inv=Array(16);for(b=0;b<16;b++)a.ShiftRowTab_Inv[a.ShiftRowTab[b]]=b;a.xtime=Array(256);for(b=0;b<128;b++)a.xtime[b]=b<<1,a.xtime[128+b]=b<<1^27};a.Done=function(){delete a.Sbox_Inv;delete a.ShiftRowTab_Inv;delete a.xtime};a.ExpandKey=function(b){var c=b.length,d,e=1;switch(c){case 16:d=176;break;case 24:d=208;break;case 32:d=240;break;default:alert("my.ExpandKey: Only key lengths of 16, 24 or 32 bytes allowed!")}for(var g=
+c;g<d;g+=4){var h=b.slice(g-4,g);if(g%c==0){if(h=[a.Sbox[h[1]]^e,a.Sbox[h[2]],a.Sbox[h[3]],a.Sbox[h[0]]],(e<<=1)>=256)e^=283}else c>24&&g%c==16&&(h=[a.Sbox[h[0]],a.Sbox[h[1]],a.Sbox[h[2]],a.Sbox[h[3]]]);for(var f=0;f<4;f++)b[g+f]=b[g+f-c]^h[f]}};a.Encrypt=function(b,c){var d=c.length;a.AddRoundKey(b,c.slice(0,16));for(var e=16;e<d-16;e+=16)a.SubBytes(b,a.Sbox),a.ShiftRows(b,a.ShiftRowTab),a.MixColumns(b),a.AddRoundKey(b,c.slice(e,e+16));a.SubBytes(b,a.Sbox);a.ShiftRows(b,a.ShiftRowTab);a.AddRoundKey(b,
+c.slice(e,d))};a.Decrypt=function(b,c){var d=c.length;a.AddRoundKey(b,c.slice(d-16,d));a.ShiftRows(b,a.ShiftRowTab_Inv);a.SubBytes(b,a.Sbox_Inv);for(d-=32;d>=16;d-=16)a.AddRoundKey(b,c.slice(d,d+16)),a.MixColumns_Inv(b),a.ShiftRows(b,a.ShiftRowTab_Inv),a.SubBytes(b,a.Sbox_Inv);a.AddRoundKey(b,c.slice(0,16))};a.SubBytes=function(a,c){for(var d=0;d<16;d++)a[d]=c[a[d]]};a.AddRoundKey=function(a,c){for(var d=0;d<16;d++)a[d]^=c[d]};a.ShiftRows=function(a,c){for(var d=[].concat(a),e=0;e<16;e++)a[e]=d[c[e]]};
+a.MixColumns=function(b){for(var c=0;c<16;c+=4){var d=b[c+0],e=b[c+1],g=b[c+2],h=b[c+3],f=d^e^g^h;b[c+0]^=f^a.xtime[d^e];b[c+1]^=f^a.xtime[e^g];b[c+2]^=f^a.xtime[g^h];b[c+3]^=f^a.xtime[h^d]}};a.MixColumns_Inv=function(b){for(var c=0;c<16;c+=4){var d=b[c+0],e=b[c+1],g=b[c+2],h=b[c+3],f=d^e^g^h,o=a.xtime[f],p=a.xtime[a.xtime[o^d^g]]^f;f^=a.xtime[a.xtime[o^e^h]];b[c+0]^=p^a.xtime[d^e];b[c+1]^=f^a.xtime[e^g];b[c+2]^=p^a.xtime[g^h];b[c+3]^=f^a.xtime[h^d]}};return a}(),cryptico=function(){var a={};aes.Init();
+a.b256to64=function(a){var c,d,e,g="",h=0,f=0,o=a.length;for(e=0;e<o;e++)d=a.charCodeAt(e),f==0?(g+="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".charAt(d>>2&63),c=(d&3)<<4):f==1?(g+="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".charAt(c|d>>4&15),c=(d&15)<<2):f==2&&(g+="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".charAt(c|d>>6&3),h+=1,g+="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".charAt(d&63)),h+=1,f+=1,f==3&&
+(f=0);f>0&&(g+="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".charAt(c),g+="=");f==1&&(g+="=");return g};a.b64to256=function(a){var c,d,e="",g=0,h=0,f=a.length;for(d=0;d<f;d++)c="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".indexOf(a.charAt(d)),c>=0&&(g&&(e+=String.fromCharCode(h|c>>6-g&255)),g=g+2&7,h=c<<g&255);return e};a.b16to64=function(a){var c,d,e="";a.length%2==1&&(a="0"+a);for(c=0;c+3<=a.length;c+=3)d=parseInt(a.substring(c,c+3),16),e+="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".charAt(d>>
+6)+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".charAt(d&63);c+1==a.length?(d=parseInt(a.substring(c,c+1),16),e+="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".charAt(d<<2)):c+2==a.length&&(d=parseInt(a.substring(c,c+2),16),e+="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".charAt(d>>2)+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".charAt((d&3)<<4));for(;(e.length&3)>0;)e+="=";return e};a.b64to16=function(a){var c="",
+d,e=0,g;for(d=0;d<a.length;++d){if(a.charAt(d)=="=")break;v="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".indexOf(a.charAt(d));v<0||(e==0?(c+=int2char(v>>2),g=v&3,e=1):e==1?(c+=int2char(g<<2|v>>4),g=v&15,e=2):e==2?(c+=int2char(g),c+=int2char(v>>2),g=v&3,e=3):(c+=int2char(g<<2|v>>4),c+=int2char(v&15),e=0))}e==1&&(c+=int2char(g<<2));return c};a.string2bytes=function(a){for(var c=[],d=0;d<a.length;d++)c.push(a.charCodeAt(d));return c};a.bytes2string=function(a){for(var c="",d=0;d<
+a.length;d++)c+=String.fromCharCode(a[d]);return c};a.blockXOR=function(a,c){for(var d=Array(16),e=0;e<16;e++)d[e]=a[e]^c[e];return d};a.blockIV=function(){var a=new SecureRandom,c=Array(16);a.nextBytes(c);return c};a.pad16=function(a){var c=a.slice(0),d=(16-a.length%16)%16;for(i=a.length;i<a.length+d;i++)c.push(0);return c};a.depad=function(a){for(a=a.slice(0);a[a.length-1]==0;)a=a.slice(0,a.length-1);return a};a.encryptAESCBC=function(b,c){var d=c.slice(0);aes.ExpandKey(d);for(var e=a.string2bytes(b),
+e=a.pad16(e),g=a.blockIV(),h=0;h<e.length/16;h++){var f=e.slice(h*16,h*16+16),o=g.slice(h*16,h*16+16),f=a.blockXOR(o,f);aes.Encrypt(f,d);g=g.concat(f)}d=a.bytes2string(g);return a.b256to64(d)};a.decryptAESCBC=function(b,c){var d=c.slice(0);aes.ExpandKey(d);for(var b=a.b64to256(b),e=a.string2bytes(b),g=[],h=1;h<e.length/16;h++){var f=e.slice(h*16,h*16+16),o=e.slice((h-1)*16,(h-1)*16+16);aes.Decrypt(f,d);f=a.blockXOR(o,f);g=g.concat(f)}g=a.depad(g);return a.bytes2string(g)};a.wrap60=function(a){for(var c=
+"",d=0;d<a.length;d++)d%60==0&&d!=0&&(c+="\n"),c+=a[d];return c};a.generateAESKey=function(){var a=Array(32);(new SecureRandom).nextBytes(a);return a};a.generateRSAKey=function(a,c){Math.seedrandom(sha256.hex(a));var d=new RSAKey;d.generate(c,"03");return d};a.publicKeyString=function(b){return pubkey=a.b16to64(b.n.toString(16))};a.publicKeyID=function(a){return MD5(a)};a.publicKeyFromString=function(b){var b=a.b64to16(b.split("|")[0]),c=new RSAKey;c.setPublic(b,"03");return c};a.encrypt=function(b,
+c,d){var e="",g=a.generateAESKey();try{var h=a.publicKeyFromString(c);e+=a.b16to64(h.encrypt(a.bytes2string(g)))+"?"}catch(f){return{status:"Invalid public key"}}d&&(signString=cryptico.b16to64(d.signString(b,"sha256")),b+="::52cee64bb3a38f6403386519a39ac91c::",b+=cryptico.publicKeyString(d),b+="::52cee64bb3a38f6403386519a39ac91c::",b+=signString);e+=a.encryptAESCBC(b,g);return{status:"success",cipher:e}};a.decrypt=function(b,c){var d=b.split("?"),e=c.decrypt(a.b64to16(d[0]));if(e==null)return{status:"failure"};
+e=a.string2bytes(e);d=a.decryptAESCBC(d[1],e).split("::52cee64bb3a38f6403386519a39ac91c::");if(d.length==3){var e=a.publicKeyFromString(d[1]),g=a.b64to16(d[2]);return e.verifyString(d[0],g)?{status:"success",plaintext:d[0],signature:"verified",publicKeyString:a.publicKeyString(e)}:{status:"success",plaintext:d[0],signature:"forged",publicKeyString:a.publicKeyString(e)}}else return{status:"success",plaintext:d[0],signature:"unsigned"}};return a}();
+/** SPA用のスクリーンの切り替え
+ * 
+ * - スクリーン(div)は`class="screen" name="xxx"`を指定
+ * - 引数の`screenName`は上述のname属性
+ * 
+ * @param {string} screenName - スクリーン名
+ * @returns {void}
+ */
+function changeScreen(screenName){
+  const v = {whois:'changeScreen',rv:null,step:0};
+  try {
+
+    v.step = 1; // 全スクリーンを閉じる
+    document.querySelectorAll('.screen').forEach(x => x.style.display = 'none');
+
+    v.step = 2; // 対象スクリーンを取得
+    v.screen = document.querySelector(`.screen[name="${screenName}"]`);
+    if( !v.screen ) throw new Error(`${screenName}が見つかりません`);
+
+    v.step = 3; // 祖先に遡ってスクリーンを表示
+    v.i = 100; // 永久ループ防止用
+    while( v.screen.tagName !== 'BODY' && v.i > 0){
+      if( v.screen.tagName === 'DIV' ){
+        v.screen.style.display = '';
+      }
+      v.screen = v.screen.parentNode;
+      v.i--;
+    }
+
+    v.step = 4; // 見つからなければエラー
+    if( v.i <= 0 ) throw new Error(`${screenName}が見つかりません`);
+
+    v.step = 5; // 終了処理
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`
+    + `\nscreenName=${stringify(screenName)}`;  // 引数
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+/** HTMLElementを生成する
+ * @param {CEDefObj|CEDefObj[]} arg - 生成するHTMLElementの定義
+ * @param {HTMLElement|string} [parent=null] - 本関数内部で親要素への追加まで行う場合に指定
+ * @returns {HTMLElement|Error}
+ */
+function createElement(arg,parent=null){
+  const v = {whois:'BasePage.createElement',rv:[],step:0};
+  //console.log(v.whois+' start.',arg);
+  try {
+    v.step = 1.1; // 引数を強制的に配列化
+    v.isArr = Array.isArray(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
+    if( !v.isArr ) arg = [arg];
+    v.step = 1.2; // 親要素の特定
+    if( parent !== null ){
+      v.parent = typeof parent === 'string' ? document.querySelector(parent) : parent;
+    }
+
+
+    for( v.i = 0 ; v.i<arg.length ; v.i++ ){
+      v.step = 2; // 既定値の設定
+      v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
+      Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
+
+      v.step = 3; // HTMLElementを生成、v.objとする
+      v.obj = document.createElement(v.def.tag);
+
+      v.step = 4; // HTMLElementの属性を定義
+      for( v.j in v.def.attr ){
+        v.obj.setAttribute(v.j,v.x = v.def.attr[v.j]);
+      }
+
+      v.step = 5; // 論理属性を定義(ex.checked)
+      for( v.j in v.def.logical ){
+        if( v.def.logical[v.j] ){
+          v.obj.setAttribute(v.j,v.def.logical[v.j]);
+        }
+      }
+
+      v.step = 6; // style属性の定義
+      for( v.j in v.def.style ){
+        if( v.j.match(/^\-\-/) ){ // CSS変数
+          v.obj.style.setProperty(v.j,v.def.style[v.j]);
+        } else {
+          v.obj.style[v.j] = v.def.style[v.j];
+        }
+      }
+
+      v.step = 7; // イベントの定義
+      for( v.j in v.def.event ){
+        v.obj.addEventListener(v.j,v.def.event[v.j],false);
+      }
+
+      v.step = 8; // 内部文字列(html or text)
+      if( v.def.html.length > 0 ){
+        v.obj.innerHTML = v.def.html;
+      } else {
+        // textareaの場合はvalueに、それ以外はinnerTextに内部文字列(text)をセット
+        v.obj[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
+      }
+
+      v.step = 9; // 子要素の追加(parentは指定しない)
+      for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
+        v.obj.appendChild(this.createElement(v.def.children[v.j]));
+      }
+
+      v.step = 10; // 戻り値への登録
+      v.rv.push(v.obj);
+
+      v.step = 11; // 親要素への追加
+      if( parent !== null ){
+        v.parent.appendChild(v.obj);
+      }
+
+      v.step = 12; // メンバとして、また切替画面として登録
+      if( v.def.name.length > 0 ){
+        this[v.def.name] = v.obj;
+        this.screenList[v.def.name] = v.obj;
+      }
+    }
+
+    v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
+    v.rv = v.isArr ? v.rv : v.rv[0];
+    //console.log(v.whois+' normal end.\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+/** 渡された変数内のオブジェクト・配列を再帰的にマージ
+ * - pri,subともデータ型は不問。次項のデシジョンテーブルに基づき、結果を返す
+ *
+ * @param {any} pri - 優先される変数(priority)
+ * @param {any} sub - 劣後する変数(subordinary)
+ * @param {Object} opt - オプション
+ * @returns {any|Error}
+ *
+ * #### デシジョンテーブル
+ *
+ * | 優先(pri) | 劣後(sub) | 結果 | 備考 |
+ * | :--: | :--: | :--: | :-- |
+ * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
+ * |  A  |  B  |  A  | |
+ * |  A  | [B] |  A  | |
+ * |  A  | {B} |  A  | |
+ * | [A] |  -  | [A] | |
+ * | [A] |  B  | [A] | |
+ * | [A] | [B] | [X] | 配列はopt.arrayによる |
+ * | [A] | {B} | [A] | |
+ * | {A} |  -  | {A} | |
+ * | {A} |  B  | {A} | |
+ * | {A} | [B] | {A} | |
+ * | {A} | {B} | {A+B} | オブジェクトも置換ではなく結合する |
+ * |  -  |  -  |  -  | |
+ * |  -  |  B  |  B  | |
+ * |  -  | [B] | [B] | |
+ * |  -  | {B} | {B} | |
+ *
+ * #### opt.array : pri,sub双方配列の場合の処理方法を指定
+ *
+ * 例 pri:[1,2,{x:'a'},{a:10,b:20}], sub:[1,3,{x:'a'},{a:30,c:40}]
+ *
+ * - pri(priority): 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
+ * - add: 値の重複に拘わらず、pri+subを返す ⇒ [1,2,{x:'a'},{a:10,b:20},1,3,{x:'a'},{a:30,c:40}]
+ * - set(既定値): priに無いsubの要素をpriに追加 ⇒ [1,2,3,{x:'a'},{x:'a'},{a:10,b:20},{a:30,c:40}]
+ *   ※`{x:'a'}`は別オブジェクトなので、重複排除されない事に注意。関数、Date等のオブジェクトも同様。
+ * - str(strict): priに無いsubの要素をpriに追加。setと異なり、内容が同値なら重複排除<br>
+ *   ⇒ [1,2,3,{x:'a'},{a:10,b:20},{a:30,c:40}]
+ * - cmp(未実装): pri[n]とsub[n]を比較(comparison)。原則pri優先だが、例外として両方がObj or Arrならマージ<br>
+ *   ⇒ [1,2,{x:'a'},{a:10,b:20,c:40}]
+ */
+function mergeDeeply(pri,sub,opt={}){
+  const v = {whois:'mergeDeeply',rv:null,step:0,
+    isObj: arg => arg && String(Object.prototype.toString.call(arg).slice(8,-1)) === 'Object',
+    isArr: arg => arg && Array.isArray(arg),
+  };
+  //console.log(`${v.whois} start.`+`\npri=${stringify(pri)}`+`\nsub=${stringify(sub)}`+`\nopt=${stringify(opt)}`);
+  try {
+
+    v.step = 1; // 既定値の設定
+    if( !opt.hasOwnProperty('array') ) opt.array = 'set';
+
+    if( v.isObj(pri) && v.isObj(sub) ){
+      v.step = 2; // sub,pri共にハッシュの場合
+      v.rv = {};
+      v.step = 2.1; // 優先・劣後Obj両方のハッシュキー(文字列)を、重複しない形でv.keysに保存
+      v.keys = new Set([...Object.keys(pri),...Object.keys(sub)]);
+      for( v.key of v.keys ){
+        if( pri.hasOwnProperty(v.key) && sub.hasOwnProperty(v.key) ){
+          v.step = 2.2; // pri,sub両方がキーを持つ
+          if( v.isObj(pri[v.key]) && v.isObj(sub[v.key]) || v.isArr(pri[v.key]) && v.isArr(sub[v.key]) ){
+            v.step = 2.21; // 配列またはオブジェクトの場合は再帰呼出
+            v.rv[v.key] = mergeDeeply(pri[v.key],sub[v.key],opt);
+          } else {
+            v.step = 2.22; // 配列でもオブジェクトでもない場合は優先変数の値をセット
+            v.rv[v.key] = pri[v.key];
+          }
+        } else {
+          v.step = 2.3; // pri,subいずれか片方しかキーを持っていない
+          v.rv[v.key] = pri.hasOwnProperty(v.key) ? pri[v.key] : sub[v.key];
+        }
+      }
+    } else if( v.isArr(pri) && v.isArr(sub) ){
+      v.step = '3 '+opt.array; // sub,pri共に配列の場合
+      switch( opt.array ){
+        case 'pri':
+          // pri: 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
+          v.rv = pri;
+          break;
+        case 'add':
+          // add: 値の重複に拘わらず、pri+subを返す ⇒ [1,2,{x:'a'},{a:10,b:20},1,3,{x:'a'},{a:30,c:40}]
+          v.rv = [...pri, ...sub];
+          break;
+        case 'str':
+          // str(strict): priに無いsubの要素をpriに追加。setと異なり、内容が同値なら重複排除<br>
+          // ⇒ [1,2,3,{x:'a'},{a:10,b:20},{a:30,c:40}]
+          v.rv = [];
+          pri.forEach(x => v.rv.push(x));
+          sub.forEach(s => {
+            v.flag = false;
+            pri.forEach(p => v.flag = v.flag || isEqual(s,p));
+            if( v.flag === false ) v.rv.push(s);
+          });
+          break;
+        default:
+          // set(既定値): priに無いsubの要素をpriに追加 ⇒ [1,2,{x:'a'},{a:10,b:20},3,{x:'a'},{a:30,c:40}]
+          v.rv = [...new Set([...pri,...sub])];
+      }
+    } else {
+      v.step = 4; // subとpriのデータ型が異なる ⇒ priを優先してセット
+      v.rv = whichType(pri,'Undefined') ? sub : pri;
+      //console.log(`l.228 pri=${stringify(pri)}, sub=${stringify(sub)} -> rv=${stringify(v.rv)}`)
+    }
+    v.step = 5;
+    //console.log(`${v.whois} normal end.`+`\npri=${stringify(pri)}`+`\nsub=${stringify(sub)}`+`\nopt=${stringify(opt)}`+`\nv.rv=${stringify(v.rv)}`)
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`
+    + `\npri=${JSON.stringify(pri)}`
+    + `\nsub=${JSON.stringify(sub)}`
+    + `\nopt=${JSON.stringify(opt)}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+/** sessionStorage/localStorageのユーザ情報を更新する
+ * 
+ * ①本関数の引数、②HTMLに埋め込まれたユーザ情報、③sessionStorage、④localStorageから
+ * ユーザ情報が取得できないか試行、①>②>③>④の優先順位で最新の情報を特定し、
+ * localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限を保存する。
+ * 
+ * @param {string} programId - configObjを保存するstorage上のキー文字列
+ * @param {Object} [opt]
+ * @param {number} [opt.userId=null] - URLクエリ文字列等、決まったユーザIDを指定する場合に使用
+ * @param {string} [opt.CSSselector=null] - userIdを保持するHTML上の要素を特定するCSSセレクタ文字列
+ * @param {number} [opt.public=1] - ユーザIDの特定で権限が昇格する場合、変更前の権限(一般公開用権限)
+ * @param {number} [opt.member=2] - ユーザIDの特定で権限が昇格する場合、変更後の権限(参加者用権限)
+ * @returns {void}
+ * 
+ * @example
+ * 
+ * **実行結果(例)**
+ * 
+ * - localStorage : ユーザIDのみ。以下は`programId='camp2024'`の場合の例。
+ *   | Key | Value |
+ *   | :-- | :-- |
+ *   | camp2024 | 123 |
+ * - sessionStorage : ユーザID＋ユーザ権限
+ *   | Key | Value |
+ *   | :-- | :-- |
+ *   | camp2024 | {"userId":123,"auth":1} |
+ * 
+ * **HTMLへのユーザIDの埋め込み**
+ * 
+ * 応募後の登録内容確認メールのように、URLのクエリ文字列でユーザIDが与えられた場合、
+ * 以下のようにHTMLにIDが埋め込まれて返される。
+ * 
+ * 1. クエリ文字列が埋め込まれたURL(末尾の`id=123`)
+ *    ```
+ *    https://script.google.com/macros/s/AK〜24yz/exec?id=123
+ *    ```
+ * 2. doGet関数で返すHTMLファイルに予め埋込用の要素を定義
+ *    ```
+ *    <div style="display:none" name="userId"><?= userId ?></div>
+ *    ```
+ * 3. 要求時、クエリ文字列を埋め込んだHTMLを返す<br>
+ *    ```
+ *    function doGet(e){
+ *      const template = HtmlService.createTemplateFromFile('index');
+ *      template.userId = e.parameter.id;  // 'userId'がHTML上の変数、末尾'id'がクエリ文字列の内容
+ *      const htmlOutput = template.evaluate();
+ *      htmlOutput.setTitle(config.programId);  // ここではclient側と共通のconfigで名称を指定
+ *      return htmlOutput;
+ *    }
+ *    ```
+ * 4. `opt.CSSselector='div[name="userId"]'`を指定して本関数を実行、HTMLからユーザIDを取得
+ * 
+ */
+function storeUserInfo(programId=null,opt={}){
+  const v = {whois:'storeUserInfo',rv:null,step:0,html:null,arg:null};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1.1; // 必須引数の確認
+    if( programId === null )
+      throw new Error(`${v.whois} Error: no programId.`);
+    v.step = 1.2; // オプションの既定値をセット
+    v.opt = Object.assign({
+      userId: null,
+      CSSselector: null,
+      public: 1,
+      member: 2,
+    },opt);
+
+    v.step = 2.1; // sessionStorageからユーザ情報を取得
+    v.r = sessionStorage.getItem(programId);
+    v.session = v.r ? JSON.parse(v.r) : {userId:null,auth:1};
+    v.step = 2.2; // localStorageからユーザ情報を取得
+    v.r = localStorage.getItem(programId);
+    v.local = v.r ? Number(v.r) : null;
+    v.step = 2.3; // HTMLに埋め込まれたuserIdを取得
+    if( v.opt.CSSselector !== null ){
+      v.r = document.querySelector(v.opt.CSSselector).innerText;
+      v.html = v.r.length > 0 ? Number(v.r) : null;  
+    }
+    v.step = 2.4; // 引数で渡されたuserIdを取得
+    if( v.opt.userId !== null ) v.arg = Number(v.opt.userId);
+
+    v.step = 2.1; // userIdの特定
+    // 優先順位は`arg > html > session > local`
+    v.session.userId = v.arg !== null ? v.arg
+    : ( v.html !== null ? v.html
+    : ( v.session.userId !== null ? v.session.userId
+    : ( v.local !== null ? v.local : null)));
+    v.step = 2.2; // userIdが特定され且つauthが最低の場合は参加者(auth=2)に昇格
+    if( v.session.userId !== null && v.session.auth === v.opt.public ){
+      v.session.auth = v.opt.member;
+    }
+
+    v.step = 3.1; // sessionStorageへの保存
+    sessionStorage.setItem(programId,JSON.stringify(v.session));
+    v.step = 3.2; // localStorageへの保存
+    localStorage.setItem(programId,v.session.userId);
+    
+    v.step = 4; // 終了処理
+    v.rv = v.session;
+    console.log(`${v.whois} normal end.\n`
+    +`v.session=${JSON.stringify(v.session)}\nv.local=${v.local}\nv.html=${v.html}\nv.arg=${v.arg}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+/** 関数他を含め、変数を文字列化
+ * - JSON.stringifyでは文字列化されない関数、シンボル、undefinedも文字列化して表示
+ * - 関数はtoString()で文字列化
+ * - シンボルは`Symbol(xxx)`という文字列とする
+ * - undefinedは'undefined'(文字列)とする
+ *
+ * @param {Object} variable - 文字列化対象変数
+ * @param {Object|boolean} opt - booleanの場合、opt.addTypeの値とする
+ * @param {boolean} opt.addType=false - 文字列化の際、元のデータ型を追記
+ * @returns {string}
+ * @example
+ *
+ * ```
+ * console.log(`l.424 v.td=${stringify(v.td,true)}`)
+ * ⇒ l.424 v.td={
+ *   "children":[{
+ *     "attr":{"class":"[String]th"}, // opt.addType=trueなら[データ型名]がつく
+ *     "text":"[String]タグ"
+ *   },{
+ *     "attr":{"class":"[String]td"},
+ *     "text":"[String]#md"
+ *   }],
+ *   "style":{"gridColumn":"[String]1/13"},
+ *   "attr":{"name":"[String]tag"}
+ * }
+ * ```
+ */
+function stringify(variable,opt={addType:false}){
+  const v = {whois:'stringify',rv:null,step:0};
+  const conv = arg => {
+    const w = {type:whichType(arg)};
+    w.pre = opt.addType ? `[${w.type}]` : '';
+    switch( w.type ){
+      case 'Function': case 'Arrow': case 'Symbol':
+        w.rv = w.pre + arg.toString(); break;
+      case 'BigInt':
+        w.rv = w.pre + parseInt(arg); break;
+      case 'Undefined':
+        w.rv = w.pre + 'undefined'; break;
+      case 'Object':
+        w.rv = {};
+        for( w.i in arg ){
+          // 自分自身(stringify)は出力対象外
+          if( w.i === 'stringify' ) continue;
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      case 'Array':
+        w.rv = [];
+        for( w.i=0 ; w.i<arg.length ; w.i++ ){
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      default:
+        w.rv = w.pre + arg;
+    }
+    return w.rv;
+  };
+  //console.log(`${v.whois} start.\nvariable=${variable}\nopt=${JSON.stringify(opt)}`);
+  try {
+
+    v.step = 1; // 事前準備
+    if( typeof opt === 'boolean' ) opt={addType:opt};
+
+    v.step = 2; // 終了処理
+    //console.log(`${v.whois} normal end.`);
+    return JSON.stringify(conv(variable));
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+/** 変数の型を判定
+ * 
+ * - 引数"is"が指定された場合、判定対象が"is"と等しいかの真偽値を返す。
+ *
+ * @param {any} arg - 判定対象の変数
+ * @param {string} [is] - 想定される型(型名の大文字小文字は意識不要)
+ * @returns {string|boolean} - 型の名前。is指定有りなら判定対象が想定型かの真偽値
+ *
+ * @example
+ * ```
+ * let a = 10;
+ * whichType(a);  // 'Number'
+ * whichType(a,'string'); // false
+ * ```
+ *
+ * <b>確認済戻り値一覧</b>
+ *
+ * オブジェクトは型名が返るので、限定列挙は困難。以下は確認済みの戻り値のみ記載。
+ *
+ * | 型名 | 戻り値 | 備考 |
+ * | :-- | :-- | :-- |
+ * | 文字列 | String |  |
+ * | 数値 | Number |  |
+ * | NaN | NaN |  |
+ * | 長整数 | BigInt |  |
+ * | 論理値 | Boolean |  |
+ * | シンボル | Symbol |  |
+ * | undefined | Undefined | 先頭大文字 |
+ * | Null | Null |  |
+ * | オブジェクト | Object |  |
+ * | 配列 | Array |  |
+ * | 関数 | Function |  |
+ * | アロー関数 | Arrow |  |
+ * | エラー | Error | RangeError等も'Error' |
+ * | Date型 | Date |  |
+ * | Promise型 | Promise |  |
+ *
+ * - Qiita [JavaScriptの型などの判定いろいろ](https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3)
+ *
+ */
+
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
+  }
+}
+
+function doGAS(func, ...args){
+  console.log('doGAS start. func=%s',func,...args);
+  return new Promise(function(resolve, reject){
+    google.script.run.withSuccessHandler(function(...e){
+      resolve(...e);
+    }).withFailureHandler(function(...e){
+      reject(...e);
+    })[func](...args);
+  });
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+v.step = 0; // テスト用
+if( true ){
+  localStorage.removeItem(g.programId);
+  sessionStorage.removeItem(g.programId);
+}
+
+v.step = 1; // userId,authをセット
+v.config = storeUserInfo(g.programId,{CSSselector:'[name="userId"]'});
+if( v.r instanceof Error ) throw v.r;
+
+v.step = 2.1; // authClientクラスのインスタンス化
+g.auth = new authClient({programId:g.programId});
+console.log(g.auth);
+v.step = 2.2; // BurgerMenuクラスのインスタンス化
+g.menu = new BurgerMenu({auth:v.config.auth,homeForEachAuth:{
+  1: '実施要領',  // auth毎のBurgerMenuホーム画面(.screen[name])
+  2: '参加者パス',
+  4: 'スタッフの手引き',
+},func:{
+  enterUserId:()=>{
+    console.log('enterId start.');
+    const v = window.prompt('受付番号を入力してください');
+    if( v !== null ){
+      if( v.match(/^[0-9]+/) ){
+        v.step = 1;
+        v.r = storeUserInfo(g.programId,{userId:v,CSSselector:'[name="userId"]'});
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 2; // メニュー再描画
+        v.r = g.menu.genNavi();
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 3; // ホーム画面に遷移
+        v.r = changeScreen(g.menu.home);
+        if( v.r instanceof Error ) throw v.r;
+
+      } else {
+        v.step = 4;
+        alert('受付番号は数値で指定してください');
+      }
+    }
+  },
+}});
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+  </html>
+  

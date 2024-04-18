@@ -9,7 +9,7 @@ v.config = storeUserInfo(g.programId,{CSSselector:'[name="userId"]'});
 if( v.r instanceof Error ) throw v.r;
 
 v.step = 2.1; // authClientクラスのインスタンス化
-g.auth = new authClient();
+g.auth = new authClient({programId:g.programId});
 v.step = 2.2; // BurgerMenuクラスのインスタンス化
 g.menu = new BurgerMenu({auth:v.config.auth,homeForEachAuth:{
   1: '実施要領',  // auth毎のBurgerMenuホーム画面(.screen[name])

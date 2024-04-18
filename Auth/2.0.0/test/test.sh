@@ -115,6 +115,7 @@ cat $lib/checkFormat/1.0.0/core.js | awk 1 >> $w01
 cat $lib/cryptico/cryptico.min.js | awk 1 >> $w01
 cat $lib/changeScreen/1.1.0/core.js | awk 1 >> $w01
 cat $lib/createElement/1.2.1/core.js | awk 1 >> $w01
+cat $lib/doGAS/1.0.0/core.js | awk 1 >> $w01
 cat $lib/mergeDeeply/1.1.0/core.js | awk 1 >> $w01
 cat $lib/storeUserInfo/1.0.0/core.js | awk 1 >> $w01
 cat $lib/stringify/1.1.1/core.js | awk 1 >> $w01
