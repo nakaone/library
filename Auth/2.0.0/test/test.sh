@@ -54,13 +54,17 @@ $mod/build.sh
 # 2. server.gsの作成
 # ----------------------------------------------
 echo "`date +"%T"` - step.2 start."
-cat $test/config.common.js | awk 1 > $svSrc
+cat $test/authServerTest.js | awk 1 > $svSrc
+cat $test/config.common.js | awk 1 >> $svSrc
 cat $test/doGet.js | awk 1 >> $svSrc
+cat $lib/checkFormat/1.0.0/core.js | awk 1 >> $svSrc
 cat $lib/createPassword/1.0.1/core.js | awk 1 >> $svSrc
 cat $lib/cryptico/cryptico.min.gs | awk 1 >> $svSrc
 cat $lib/sendmail/1.0.0/core.js | awk 1 >> $svSrc
 cat $lib/stringify/1.1.1/core.js | awk 1 >> $svSrc
 cat $lib/whichType/1.0.1/core.js | awk 1 >> $svSrc
+cat $lib/SingleTable/1.2.0/core.js | awk 1 >> $svSrc
+cat $lib/toLocale/1.0.0/core.js | awk 1 >> $svSrc
 cat $mod/server.gs | awk 1 >> $svSrc
 cp $svSrc $test/server.gs
 

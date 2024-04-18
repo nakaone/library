@@ -30,8 +30,8 @@ function authServer(userId=null,func=null,arg=null) {
       if( ['registMail'].find(x => x === func) ){
         
         //::$src/server.registMail.js::
-        w.r = w.func.verifySignature(arg);
-        if( w.r instanceof Error ) throw w.r;
+        w.rv = w.func.registMail(arg);
+        if( w.rv instanceof Error ) throw w.rv;
 
       } else {
         w.step = 2; // 該当処理なし
@@ -70,14 +70,14 @@ function authServer(userId=null,func=null,arg=null) {
     }
 
     w.step = 6; // 終了処理
-    console.log(`${w.whois} normal end.`);
+    console.log(`${w.whois} normal end.\nw.rv=${stringify(w.rv)}`);
     // 該当処理なしの場合、何も返さない
     if( w.rv !== null ) return w.rv;
 
   } catch(e) {
     e.message = `${w.whois} abnormal end at step.${w.step}`
     + `\n${e.message}\nuserId=${userId}\nfunc=${func}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
+    console.error(`${e.message}\nw=${stringify(w)}`);
     return e;
   }
 }

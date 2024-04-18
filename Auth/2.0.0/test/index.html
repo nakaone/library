@@ -122,8 +122,8 @@ td, .td {
 </ul>
 <h1>参加申込</h1>
 <ol>
-<li>以下に申込者のメールアドレスを入力、送信してください<br>
-<label>e-mail</label><input type="email" /><button onclick="sendInvitation()">送信</button></li>
+<li><form><p>以下に申込者のメールアドレスを入力、送信してください</p>
+  <input type="email" size="40" /><button>送信</button></form></li>
 <li>送信いただいたメールアドレス宛に「応募フォームへのご案内」というメールが届きます</li>
 <li>メールに記載されたリンクから応募フォームを開き、必要事項を入力してください。</li>
 </ol>
@@ -863,7 +863,9 @@ class BurgerMenu {
 function checkFormat(str,type='email'){
   switch(type){
     case 'email':
-      return str.match(new RegExp("[\w\-._]+@[\w\-._]+\.[A-Za-z]+")) ? true : false;
+      //return str.match(new RegExp("[\w\-\._]+@[\w\-\._]+\.[A-Za-z]+")) ? true : false;
+      // https://www.javadrive.jp/regex-basic/sample/index13.html#google_vignette
+      return str.match(/^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$/) ? true : false;
     case 'URL':
       return str.match(new RegExp("https?://[\w!?/+\-_~;.,*&@#$%()'[\]]+")) ? true : false;
     default: return false;

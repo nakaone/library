@@ -506,6 +506,10 @@ function authServer(userId=null,func=null,arg=null) {
       if( ['registMail'].find(x => x === func) ){
         
 /** authClientからの登録要求を受け、IDを返す
+ * 
+ * - IDは自然数の前提、1から順に採番。
+ * - 新規採番は途中の欠損は考慮せず、最大値＋1とする
+ * 
  * @param {string} email - 要求があったユーザのe-mail
  * @returns {number|Error} 採番されたuserId
  */
@@ -514,25 +518,36 @@ w.func.registMail = function(email){
   console.log(`${v.whois} start.`);
   try {
 
-    // masterシートを読み込み
+    v.step = 1; // emailアドレスの妥当性検証
+    if( checkFormat(email,'email' ) === false ){
+      throw new Error(`invalid e-mail address.`);
+    }
+
+    v.step = 2; // masterシートを読み込み
     v.master = new SingleTable(w.masterSheet);
 
+    v.step = 3; // 既登録メアドでは無いか確認
+    v.m = v.master.data.find(x => x[w.emailColumn] === email);
+    if( v.m ) throw new Error(`"${email}" has already registrated.`);
+
+    v.step = 4; // 新規userIdを採番
     if( v.master.data.length === 0 ){
-      v.rv = 1; // シートを新規作成した時のuserIdは'1'
+      v.rv = 1;
     } else {
-      // 通常の場合
-
-      // 既登録メアドでは無いか確認
-      v.m = v.master.data.find(x => x[w.emailColumn] === email);
-      if( v.m ) throw new Error(`${v.whois} Error: "${email}" has already registrated.`);
-
-      // userIdを採番
       v.exist = v.master.data.map(x => x[w.primatyKeyColumn]);
       v.rv = Math.max(...v.exist) + 1;
     }
 
+    v.step = 5; // シートに登録
+    v.r = v.master.insert([{
+      userId:v.rv,
+      email:email,
+      created:toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn')
+    }]);
+    if( v.r instanceof Error ) throw v.r;
+
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.`);
+    console.log(`${w.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
   } catch(e) {
@@ -542,8 +557,8 @@ w.func.registMail = function(email){
     return e;
   }
 }
-        w.r = w.func.verifySignature(arg);
-        if( w.r instanceof Error ) throw w.r;
+        w.rv = w.func.registMail(arg);
+        if( w.rv instanceof Error ) throw w.rv;
 
       } else {
         w.step = 2; // 該当処理なし
@@ -684,14 +699,14 @@ w.func.verifySignature = function(userId=null,arg=null){
     }
 
     w.step = 6; // 終了処理
-    console.log(`${w.whois} normal end.`);
+    console.log(`${w.whois} normal end.\nw.rv=${stringify(w.rv)}`);
     // 該当処理なしの場合、何も返さない
     if( w.rv !== null ) return w.rv;
 
   } catch(e) {
     e.message = `${w.whois} abnormal end at step.${w.step}`
     + `\n${e.message}\nuserId=${userId}\nfunc=${func}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
+    console.error(`${e.message}\nw=${stringify(w)}`);
     return e;
   }
 }
@@ -1316,6 +1331,10 @@ function authServer(userId=null,func=null,arg=null) {
       if( ['registMail'].find(x => x === func) ){
         
 /** authClientからの登録要求を受け、IDを返す
+ * 
+ * - IDは自然数の前提、1から順に採番。
+ * - 新規採番は途中の欠損は考慮せず、最大値＋1とする
+ * 
  * @param {string} email - 要求があったユーザのe-mail
  * @returns {number|Error} 採番されたuserId
  */
@@ -1324,25 +1343,36 @@ w.func.registMail = function(email){
   console.log(`${v.whois} start.`);
   try {
 
-    // masterシートを読み込み
+    v.step = 1; // emailアドレスの妥当性検証
+    if( checkFormat(email,'email' ) === false ){
+      throw new Error(`invalid e-mail address.`);
+    }
+
+    v.step = 2; // masterシートを読み込み
     v.master = new SingleTable(w.masterSheet);
 
+    v.step = 3; // 既登録メアドでは無いか確認
+    v.m = v.master.data.find(x => x[w.emailColumn] === email);
+    if( v.m ) throw new Error(`"${email}" has already registrated.`);
+
+    v.step = 4; // 新規userIdを採番
     if( v.master.data.length === 0 ){
-      v.rv = 1; // シートを新規作成した時のuserIdは'1'
+      v.rv = 1;
     } else {
-      // 通常の場合
-
-      // 既登録メアドでは無いか確認
-      v.m = v.master.data.find(x => x[w.emailColumn] === email);
-      if( v.m ) throw new Error(`${v.whois} Error: "${email}" has already registrated.`);
-
-      // userIdを採番
       v.exist = v.master.data.map(x => x[w.primatyKeyColumn]);
       v.rv = Math.max(...v.exist) + 1;
     }
 
+    v.step = 5; // シートに登録
+    v.r = v.master.insert([{
+      userId:v.rv,
+      email:email,
+      created:toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn')
+    }]);
+    if( v.r instanceof Error ) throw v.r;
+
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.`);
+    console.log(`${w.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
   } catch(e) {
@@ -1352,8 +1382,8 @@ w.func.registMail = function(email){
     return e;
   }
 }
-        w.r = w.func.verifySignature(arg);
-        if( w.r instanceof Error ) throw w.r;
+        w.rv = w.func.registMail(arg);
+        if( w.rv instanceof Error ) throw w.rv;
 
       } else {
         w.step = 2; // 該当処理なし
@@ -1494,14 +1524,14 @@ w.func.verifySignature = function(userId=null,arg=null){
     }
 
     w.step = 6; // 終了処理
-    console.log(`${w.whois} normal end.`);
+    console.log(`${w.whois} normal end.\nw.rv=${stringify(w.rv)}`);
     // 該当処理なしの場合、何も返さない
     if( w.rv !== null ) return w.rv;
 
   } catch(e) {
     e.message = `${w.whois} abnormal end at step.${w.step}`
     + `\n${e.message}\nuserId=${userId}\nfunc=${func}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
+    console.error(`${e.message}\nw=${stringify(w)}`);
     return e;
   }
 }
