@@ -173,7 +173,7 @@ sequenceDiagram
 
 ## 新規登録
 
-新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはログイン後に自情報編集画面を呼び出し、修正・加筆を行う。
+新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
 
 ```mermaid
 sequenceDiagram
@@ -187,25 +187,124 @@ sequenceDiagram
   user ->> client : メアド
   activate client
   Note right of client : authClient.registMail()
-  client ->> server : メアド
+  alt sessionにuserId保存済
+    client ->> user : userIdをダイアログで表示して終了
+  end
+  client ->> client : 鍵ペア生成、sessionStorageに保存
+  client ->> server : メアド＋CPkey
   activate server
   Note right of server : authServer.registMail()
   server ->> property : メアド
-  property ->> server : ID
-  server ->> client : ID
-  deactivate server
-  client ->> client : ID保存
-  client ->> user : 新規登録画面表示
+  property ->> server : userIdマップ
+  alt マップにメアドが存在
+    server ->> property : userId
+    property ->> server : ユーザ情報
+    alt CPkeyが不一致
+      server ->> property : ユーザ情報(CPkey更新)
+    end
+    server ->> client : userId
+    client ->> user : userIdをダイアログで表示
+  else マップにメアドが不在
+    server ->> server : userIdを新規採番
+    server ->> property : userIdマップ
+    server ->> property : userId,メアド,CPkey
+    server ->> client : 検索結果＋ユーザ情報＋SPkey
+    deactivate server
+    client ->> client : userIdをlocal/sessionに、SPkeyをsessionに保存
+    client ->> user : 新規登録画面表示
+  end
   deactivate client
 ```
 
+- 参加者が改めて参加要項からメールアドレスを入力するのは「自分のuserIdを失念した」場合を想定
 - メアド入力欄は募集要項の一部とし、userId(受付番号)がlocalStrageに存在する場合は表示しない
 - 応募締切等、新規要求ができる期間の制限は、client側でも行う(BurgerMenuの有効期間設定を想定)
 - メアドは形式チェックのみ行い、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
+- ユーザはログインを行わないので、サーバ側のプロパティサービスにID/auth等のユーザ情報は保存しない。
+- IDはstoreUserInfo関数を使用してlocal/sessionStorageでの保存を想定(∵タブを閉じても保存したい。個人情報とは言えず、特に問題ないと判断)
+- 「検索結果=既存」の場合、ユーザ情報編集画面の表示も検討したが、なりすましでもe-mail入力で個人情報が表示されることになるので不適切と判断。
 - 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
-- IDはstoreUserInfo関数を使用してlocal/sessionStorageでの保存を想定(∵個人情報では無く、タブを閉じても保存しておきたい)
 
 ## ログイン要求
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant caller
+  participant login
+  participant server
+  participant property
+
+  caller ->> login : 呼び出し(userId,処理名)
+  activate login
+  Note right of login : authClient.login()
+  alt 鍵ペアが無効
+    login ->> login : 鍵ペア再生成＋sessionに保存
+  end
+
+  login ->> server : userId,CPkey(SPkey/--)
+  activate server
+  Note right of server : authServer.login1S()
+  server ->> property : userId
+  property ->> server  : ユーザ情報
+  server ->> server : 実行権限確認(※1)
+  alt 実行権限確認結果がOK or NG
+    server ->> login : OK or NG
+    login ->> caller : OK or NG
+  end
+
+  server ->> server : パスコード・要求ID生成(※2)
+  server ->> property : パスコード,要求ID,要求時刻
+  server ->> user : パスコード連絡メール
+  server ->> login : OK＋要求ID
+  deactivate server
+  login ->> user : パスコード入力ダイアログ
+
+  user ->> login : パスコード入力
+  login ->> server : userId,パスコード＋要求ID(CS/SP)
+  activate server
+  Note right of server : authServer.login2S()
+  server ->> property : userId
+  property ->> server : ユーザ情報
+  server ->> server : パスコード検証(※3)
+  server ->> property : 検証結果記録
+  server ->> login : OK or NG
+  deactivate server
+  login ->> caller : OK or NG
+  deactivate login
+```
+
+- ※1 : 実行権限確認<br>
+  | 実行権限 | CPkey | 凍結 | 結論 |
+  | :-- | :-- | :-- | :-- |
+  | 無し | — | — | NG (no permission) |
+  | 有り | 有効 | — | OK |
+  | 有り | 無効 | true | NG (lockout) |
+  | 有り | 無効 | false | 以降の処理を実施 |
+  - 実行権限 : authServer内関数毎の所要権限 & ユーザ権限 > 0 ? 有り : 無し
+  - CPkey : ① and ② ? 有効 : 無効<br>
+  ①送られてきたCPkeyがユーザ毎のプロパティサービスに保存されたCPkeyと一致<br>
+  ②ユーザ毎のプロパティサービスに保存されたCPkeyが有効期限内
+  - 凍結 : 前回ログイン失敗(3回連続失敗)から一定時間内 ? true : false
+- ※2 : パスコード・要求ID生成
+  - パスコードは数値6桁(既定値)
+  - 要求IDはuserIdと要求時刻(UNIX時刻)を連結した文字列のMD5(or CRC32)をbase64化
+- ※3 : 「パスコード検証」は復号・署名確認の上、以下の点をチェックする
+  - 復号可能且つ署名が一致
+  - 送付されたパスコード・要求IDがプロパティサービスのそれと一致
+  - 試行回数が一定数以下(既定値3回)
+  - パスコード生成から一定時間内(既定値15分)
+  - ログイン可能な権限
+- パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
+  例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
+
+## ユーザ情報の参照・編集
+
+シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
+例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
+
+userは要求時に操作名を指定し、その実行結果を受け取る。
 
 ```mermaid
 sequenceDiagram
@@ -214,57 +313,34 @@ sequenceDiagram
   participant client
   participant server
   participant property
-  actor admin
+  participant sheet
 
-  user ->> client : ログイン要求
+  user ->> client : 操作要求
   activate client
-  Note right of client : authClient.login1C()
-  client ->> client : 鍵ペア生成、保存
-  client ->> server : ID,CPkey(--/--)
+  client ->> client : ログイン要求
+  alt ログインNG
+    client ->> user : エラー
+  end
+  
+  client ->> server : ID,引数(CSkey/SPkey)
   activate server
-  Note right of server : authServer.login1S()
-  server ->> server : パスコード生成
-  server ->> property : ID,パスコード,CPkey
-  property ->> server : 該当ID情報
-  server ->> server : ログイン可否確認
-  server ->> user : パスコード連絡メール
-  server ->> client : SPkey(--/CPkey)
+  Note right of server : authServer.operation(xxx)
+  server ->> property : userId
+  property ->> server : ユーザ情報
+  server ->> server : 引数を復号
+  alt 復号不可
+    server ->> client : エラーメッセージ
+    client ->> user : ダイアログを出して終了
+  end
+
+  server ->> sheet : 操作名(xxx)に対応する関数呼び出し
+  sheet ->> server : 関数(xxx)の処理結果
+  server ->> client : 操作結果(SSkey/CPkey)
   deactivate server
-  client ->> client : SPkeyを保存
-  client ->> user : パスコード入力ダイアログ
-  deactivate client
-  user ->> client : パスコード入力
-  activate client
-  Note right of client : authClient.login2C()
-  client ->> server : ID,パスコード(CSkey/SPkey)
-  activate server
-  Note right of server : authServer.login2S()
-  server ->> property : ID
-  property ->> server : 該当ID情報
-  server ->> server : パスコード検証
-  server ->> property : 検証結果記録
-  server ->> client : 該当IDの権限(SCkey/CPkey)
-  deactivate server
-  client ->> client : 権限情報を保存、メニュー再描画
-  client ->> user : 被要求画面(ex.受付メニュー)
+  client ->> client : 復号＋署名検証、画面生成
+  client ->> user : 結果表示画面
   deactivate client
 ```
-
-- IDは保存済の前提
-- clientの鍵およびSPkeyはsessionStorageへの保存を想定<br>
-  (∵当該session以外からの参照を阻止、かつ永続的な保存は望ましくない)
-- 有効期間内の鍵ペアが存在したら、鍵ペア生成はスキップ
-- 該当ID情報は[ユーザ情報](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)参照
-- ログイン可否確認
-  - 前回ログイン失敗(3回連続失敗)から一定以上の時間経過(既定値1時間)
-  - パスコード再発行は上述の条件が満たされる限り認める<br>
-    例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
-- 「パスコード検証」は復号・署名確認の上、以下の点をチェックする
-  - パスコードが一致
-  - 試行回数が一定数以下(既定値3回)
-  - パスコード生成から一定時間内(既定値15分)
-  - ログイン可能な権限
-- パスコード入力はダイアログで行う(開発工数低減)
 
 ## 権限設定、変更
 
@@ -288,45 +364,6 @@ sequenceDiagram
   server ->> property : 権限変更
   server ->>- admin : 権限設定リスト
 ```
-
-## 検索・編集・更新
-
-シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
-例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
-
-userは要求時に操作名を指定し、その実行結果を受け取る。
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant server
-  participant property
-  participant sheet
-  actor admin
-
-  admin ->> server : 操作用ハッシュ定義
-  user ->> client : 操作要求
-  activate client
-  client ->> server : ID,操作名,引数(CSkey/SPkey)
-  activate server
-  Note right of server : authServer.operation(xxx)
-  server ->> property : ID
-  property ->> server : 該当ID情報
-  server ->> server : 署名・権限検証
-  server ->> sheet : 操作名(xxx)に対応する関数呼び出し
-  sheet ->> server : 関数(xxx)の処理結果
-  server ->> client : 操作結果(SSkey/CPkey)
-  deactivate server
-  client ->> client : 復号＋署名検証、画面生成
-  client ->> user : 結果表示画面
-  deactivate client
-```
-
-- 「署名・権限検証」では復号・署名検証の上、以下の点の確認を行う
-  - CPkeyの有効期限
-  - 該当IDは当該操作の実行権限を持つか
 
 # 設定情報とオブジェクト定義
 
@@ -396,7 +433,35 @@ sequenceDiagram
 
 # 仕様(JSDoc)
 
+* [authClient](#authClient)
+    * [new authClient(opt)](#new_authClient_new)
+    * [.registMail(arg)](#authClient+registMail) ⇒ <code>null</code> \| <code>Error</code>
 
+<a name="new_authClient_new"></a>
+
+## new authClient(opt)
+
+| Param | Type |
+| --- | --- |
+| opt | <code>Object</code> | 
+| opt.programId | <code>string</code> | 
+
+<a name="authClient+registMail"></a>
+
+## authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code>
+ブラウザからの登録要求を受け、IDを返す
+
+**Kind**: instance method of [<code>authClient</code>](#authClient)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| arg | <code>HTMLElement</code> | ボタン要素 |
+
+**Example**  
+```js
+- ボタンは`onclick="g.auth.registMail(this)"`を指定
+- ボタンとinput要素は兄弟要素とし、それをdivで囲む
+```
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -416,41 +481,87 @@ sequenceDiagram
 
 ```
 class authClient {
-  //:x:$src/client.constructor.js::
-  constructor(){
-    const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
-    console.log(`${v.whois} start.`);
-    try {
-      
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.`);
-      return v.rv;
+/** @constructor
+ * @param {Object} opt
+ * @param {string} opt.programId
+ */
+constructor(opt){
+  const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
 
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\narg=${stringify(arg)}`;  // 引数
-      console.error(`${e.message}\nv=${stringify(v)}`);
-      return e;
+    v.step = 1; // 引数のセット
+    for(let x in opt){
+      this[x] = opt[x];
     }
-  }
 
-  async doGAS(func,...args){
-    return await doGAS('authServer',func,...args);
+    v.step = 2; // ユーザ情報を設定
+    this.#setUserInfo();
+
+    v.step = 3; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\nopt=${stringify(opt)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
   }
+}
+
+  // setUserInfo, doGAS
+/** ユーザ情報をメンバに(再)設定する
+ * @param {void}
+ * @returns {void}
+ */
+#setUserInfo(){
+  const str = sessionStorage.getItem(this.programId);
+  this.user = JSON.parse(str);
+}
+
+async doGAS(func,...args){
+  return await doGAS('authServer',this.user.userId,func,...args);
+}
 
 /** ブラウザからの登録要求を受け、IDを返す
- * @param {void}
+ * @param {HTMLElement} arg - ボタン要素
  * @returns {null|Error}
+ * 
+ * @example
+ * 
+ * - ボタンは`onclick="g.auth.registMail(this)"`を指定
+ * - ボタンとinput要素は兄弟要素とし、それをdivで囲む
  */
-registMail(){
+async registMail(arg){
   const v = {whois:this.constructor.name+'.registMail',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // メアド入力
+    v.step = 1; // メールアドレスのチェック
+    v.email = arg.parentNode.querySelector('input[type="email"]').value;
+    if( checkFormat(v.email,'email') === false ){
+      alert(`"${v.email}"は不適切なメールアドレスです`);
+      throw new Error(`"${v.email}" is invalid mail address.`);
+    }
+
     v.step = 2; // authServer.registMailにメアド転送
+    v.r = changeScreen('loading');
+    if( v.r instanceof Error ) throw v.r;
+    v.id = await this.doGAS('registMail',v.email);
+    if( v.id instanceof Error ) throw v.id;
+    console.log(v.id);
+
     v.step = 3; // IDをstorageに登録
+    v.r = storeUserInfo(this.programId,{userId:v.id});
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 4; // メニュー再描画、ホーム画面の定義書き換え
+    v.r = g.menu.genNavi();
+    if( v.r instanceof Error ) throw v.r;
+    v.step = 5; // 応募情報修正画面に遷移
+    v.r = changeScreen('登録・修正・キャンセル');
+    if( v.r instanceof Error ) throw v.r;
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.`);
@@ -458,8 +569,7 @@ registMail(){
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}`
-    + `\narg=${stringify(arg)}`;  // 引数
+    + `\n${e.message}\narg=${arg}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }
@@ -832,8 +942,8 @@ td, .td {
    1. <a href="#ac0006">onload時処理</a>
    1. <a href="#ac0007">新規登録</a>
    1. <a href="#ac0008">ログイン要求</a>
-   1. <a href="#ac0009">権限設定、変更</a>
-   1. <a href="#ac0010">検索・編集・更新</a>
+   1. <a href="#ac0009">ユーザ情報の参照・編集</a>
+   1. <a href="#ac0010">権限設定、変更</a>
 1. <a href="#ac0011">設定情報とオブジェクト定義</a>
    1. <a href="#ac0012">client:localStorageに保存する情報</a>
    1. <a href="#ac0013">client:sessionStorageに保存する情報</a>
@@ -842,13 +952,15 @@ td, .td {
       1. <a href="#ac0016">ユーザ情報</a>
 1. <a href="#ac0017">フォルダ構成</a>
 1. <a href="#ac0018">仕様(JSDoc)</a>
-1. <a href="#ac0019">プログラムソース</a>
-1. <a href="#ac0020">改版履歴</a>
+   1. <a href="#ac0019">new authClient(opt)</a>
+   1. <a href="#ac0020">authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code></a>
+1. <a href="#ac0021">プログラムソース</a>
+1. <a href="#ac0022">改版履歴</a>
 
 # 1 初期化処理<a name="ac0001"></a>
 
 [先頭](#ac0000)
-<br>&gt; [初期化処理 | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0019) | [改版履歴](#ac0020)]
+<br>&gt; [初期化処理 | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0021) | [改版履歴](#ac0022)]
 
 
 システム導入時、**Google Apps Scriptで一度だけ実行**する必要のある処理。
@@ -876,13 +988,13 @@ td, .td {
 # 2 機能別処理フロー<a name="ac0005"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[初期化処理](#ac0001) | 機能別処理フロー | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0019) | [改版履歴](#ac0020)]
+<br>&gt; [[初期化処理](#ac0001) | 機能別処理フロー | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0021) | [改版履歴](#ac0022)]
 
 
 ## 2.1 onload時処理<a name="ac0006"></a>
 
 [先頭](#ac0000) > [機能別処理フロー](#ac0005)
-<br>&gt; [onload時処理 | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定、変更](#ac0009) | [検索・編集・更新](#ac0010)]
+<br>&gt; [onload時処理 | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [ユーザ情報の参照・編集](#ac0009) | [権限設定、変更](#ac0010)]
 
 
 ```mermaid
@@ -947,10 +1059,10 @@ sequenceDiagram
 ## 2.2 新規登録<a name="ac0007"></a>
 
 [先頭](#ac0000) > [機能別処理フロー](#ac0005)
-<br>&gt; [[onload時処理](#ac0006) | 新規登録 | [ログイン要求](#ac0008) | [権限設定、変更](#ac0009) | [検索・編集・更新](#ac0010)]
+<br>&gt; [[onload時処理](#ac0006) | 新規登録 | [ログイン要求](#ac0008) | [ユーザ情報の参照・編集](#ac0009) | [権限設定、変更](#ac0010)]
 
 
-新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはログイン後に自情報編集画面を呼び出し、修正・加筆を行う。
+新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
 
 ```mermaid
 sequenceDiagram
@@ -964,29 +1076,132 @@ sequenceDiagram
   user ->> client : メアド
   activate client
   Note right of client : authClient.registMail()
-  client ->> server : メアド
+  alt sessionにuserId保存済
+    client ->> user : userIdをダイアログで表示して終了
+  end
+  client ->> client : 鍵ペア生成、sessionStorageに保存
+  client ->> server : メアド＋CPkey
   activate server
   Note right of server : authServer.registMail()
   server ->> property : メアド
-  property ->> server : ID
-  server ->> client : ID
-  deactivate server
-  client ->> client : ID保存
-  client ->> user : 新規登録画面表示
+  property ->> server : userIdマップ
+  alt マップにメアドが存在
+    server ->> property : userId
+    property ->> server : ユーザ情報
+    alt CPkeyが不一致
+      server ->> property : ユーザ情報(CPkey更新)
+    end
+    server ->> client : userId
+    client ->> user : userIdをダイアログで表示
+  else マップにメアドが不在
+    server ->> server : userIdを新規採番
+    server ->> property : userIdマップ
+    server ->> property : userId,メアド,CPkey
+    server ->> client : 検索結果＋ユーザ情報＋SPkey
+    deactivate server
+    client ->> client : userIdをlocal/sessionに、SPkeyをsessionに保存
+    client ->> user : 新規登録画面表示
+  end
   deactivate client
 ```
 
+- 参加者が改めて参加要項からメールアドレスを入力するのは「自分のuserIdを失念した」場合を想定
 - メアド入力欄は募集要項の一部とし、userId(受付番号)がlocalStrageに存在する場合は表示しない
 - 応募締切等、新規要求ができる期間の制限は、client側でも行う(BurgerMenuの有効期間設定を想定)
 - メアドは形式チェックのみ行い、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
+- ユーザはログインを行わないので、サーバ側のプロパティサービスにID/auth等のユーザ情報は保存しない。
+- IDはstoreUserInfo関数を使用してlocal/sessionStorageでの保存を想定(∵タブを閉じても保存したい。個人情報とは言えず、特に問題ないと判断)
+- 「検索結果=既存」の場合、ユーザ情報編集画面の表示も検討したが、なりすましでもe-mail入力で個人情報が表示されることになるので不適切と判断。
 - 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
-- IDはstoreUserInfo関数を使用してlocal/sessionStorageでの保存を想定(∵個人情報では無く、タブを閉じても保存しておきたい)
 
 ## 2.3 ログイン要求<a name="ac0008"></a>
 
 [先頭](#ac0000) > [機能別処理フロー](#ac0005)
-<br>&gt; [[onload時処理](#ac0006) | [新規登録](#ac0007) | ログイン要求 | [権限設定、変更](#ac0009) | [検索・編集・更新](#ac0010)]
+<br>&gt; [[onload時処理](#ac0006) | [新規登録](#ac0007) | ログイン要求 | [ユーザ情報の参照・編集](#ac0009) | [権限設定、変更](#ac0010)]
 
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant caller
+  participant login
+  participant server
+  participant property
+
+  caller ->> login : 呼び出し(userId,処理名)
+  activate login
+  Note right of login : authClient.login()
+  alt 鍵ペアが無効
+    login ->> login : 鍵ペア再生成＋sessionに保存
+  end
+
+  login ->> server : userId,CPkey(SPkey/--)
+  activate server
+  Note right of server : authServer.login1S()
+  server ->> property : userId
+  property ->> server  : ユーザ情報
+  server ->> server : 実行権限確認(※1)
+  alt 実行権限確認結果がOK or NG
+    server ->> login : OK or NG
+    login ->> caller : OK or NG
+  end
+
+  server ->> server : パスコード・要求ID生成(※2)
+  server ->> property : パスコード,要求ID,要求時刻
+  server ->> user : パスコード連絡メール
+  server ->> login : OK＋要求ID
+  deactivate server
+  login ->> user : パスコード入力ダイアログ
+
+  user ->> login : パスコード入力
+  login ->> server : userId,パスコード＋要求ID(CS/SP)
+  activate server
+  Note right of server : authServer.login2S()
+  server ->> property : userId
+  property ->> server : ユーザ情報
+  server ->> server : パスコード検証(※3)
+  server ->> property : 検証結果記録
+  server ->> login : OK or NG
+  deactivate server
+  login ->> caller : OK or NG
+  deactivate login
+```
+
+- ※1 : 実行権限確認<br>
+  | 実行権限 | CPkey | 凍結 | 結論 |
+  | :-- | :-- | :-- | :-- |
+  | 無し | — | — | NG (no permission) |
+  | 有り | 有効 | — | OK |
+  | 有り | 無効 | true | NG (lockout) |
+  | 有り | 無効 | false | 以降の処理を実施 |
+  - 実行権限 : authServer内関数毎の所要権限 & ユーザ権限 > 0 ? 有り : 無し
+  - CPkey : ① and ② ? 有効 : 無効<br>
+  ①送られてきたCPkeyがユーザ毎のプロパティサービスに保存されたCPkeyと一致<br>
+  ②ユーザ毎のプロパティサービスに保存されたCPkeyが有効期限内
+  - 凍結 : 前回ログイン失敗(3回連続失敗)から一定時間内 ? true : false
+- ※2 : パスコード・要求ID生成
+  - パスコードは数値6桁(既定値)
+  - 要求IDはuserIdと要求時刻(UNIX時刻)を連結した文字列のMD5(or CRC32)をbase64化
+- ※3 : 「パスコード検証」は復号・署名確認の上、以下の点をチェックする
+  - 復号可能且つ署名が一致
+  - 送付されたパスコード・要求IDがプロパティサービスのそれと一致
+  - 試行回数が一定数以下(既定値3回)
+  - パスコード生成から一定時間内(既定値15分)
+  - ログイン可能な権限
+- パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
+  例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
+
+## 2.4 ユーザ情報の参照・編集<a name="ac0009"></a>
+
+[先頭](#ac0000) > [機能別処理フロー](#ac0005)
+<br>&gt; [[onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | ユーザ情報の参照・編集 | [権限設定、変更](#ac0010)]
+
+
+シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
+例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
+
+userは要求時に操作名を指定し、その実行結果を受け取る。
 
 ```mermaid
 sequenceDiagram
@@ -995,62 +1210,39 @@ sequenceDiagram
   participant client
   participant server
   participant property
-  actor admin
+  participant sheet
 
-  user ->> client : ログイン要求
+  user ->> client : 操作要求
   activate client
-  Note right of client : authClient.login1C()
-  client ->> client : 鍵ペア生成、保存
-  client ->> server : ID,CPkey(--/--)
+  client ->> client : ログイン要求
+  alt ログインNG
+    client ->> user : エラー
+  end
+  
+  client ->> server : ID,引数(CSkey/SPkey)
   activate server
-  Note right of server : authServer.login1S()
-  server ->> server : パスコード生成
-  server ->> property : ID,パスコード,CPkey
-  property ->> server : 該当ID情報
-  server ->> server : ログイン可否確認
-  server ->> user : パスコード連絡メール
-  server ->> client : SPkey(--/CPkey)
+  Note right of server : authServer.operation(xxx)
+  server ->> property : userId
+  property ->> server : ユーザ情報
+  server ->> server : 引数を復号
+  alt 復号不可
+    server ->> client : エラーメッセージ
+    client ->> user : ダイアログを出して終了
+  end
+
+  server ->> sheet : 操作名(xxx)に対応する関数呼び出し
+  sheet ->> server : 関数(xxx)の処理結果
+  server ->> client : 操作結果(SSkey/CPkey)
   deactivate server
-  client ->> client : SPkeyを保存
-  client ->> user : パスコード入力ダイアログ
-  deactivate client
-  user ->> client : パスコード入力
-  activate client
-  Note right of client : authClient.login2C()
-  client ->> server : ID,パスコード(CSkey/SPkey)
-  activate server
-  Note right of server : authServer.login2S()
-  server ->> property : ID
-  property ->> server : 該当ID情報
-  server ->> server : パスコード検証
-  server ->> property : 検証結果記録
-  server ->> client : 該当IDの権限(SCkey/CPkey)
-  deactivate server
-  client ->> client : 権限情報を保存、メニュー再描画
-  client ->> user : 被要求画面(ex.受付メニュー)
+  client ->> client : 復号＋署名検証、画面生成
+  client ->> user : 結果表示画面
   deactivate client
 ```
 
-- IDは保存済の前提
-- clientの鍵およびSPkeyはsessionStorageへの保存を想定<br>
-  (∵当該session以外からの参照を阻止、かつ永続的な保存は望ましくない)
-- 有効期間内の鍵ペアが存在したら、鍵ペア生成はスキップ
-- 該当ID情報は[ユーザ情報](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)参照
-- ログイン可否確認
-  - 前回ログイン失敗(3回連続失敗)から一定以上の時間経過(既定値1時間)
-  - パスコード再発行は上述の条件が満たされる限り認める<br>
-    例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
-- 「パスコード検証」は復号・署名確認の上、以下の点をチェックする
-  - パスコードが一致
-  - 試行回数が一定数以下(既定値3回)
-  - パスコード生成から一定時間内(既定値15分)
-  - ログイン可能な権限
-- パスコード入力はダイアログで行う(開発工数低減)
-
-## 2.4 権限設定、変更<a name="ac0009"></a>
+## 2.5 権限設定、変更<a name="ac0010"></a>
 
 [先頭](#ac0000) > [機能別処理フロー](#ac0005)
-<br>&gt; [[onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | 権限設定、変更 | [検索・編集・更新](#ac0010)]
+<br>&gt; [[onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [ユーザ情報の参照・編集](#ac0009) | 権限設定、変更]
 
 
 権限を付与すべきかは個別に判断する必要があるため、システム化せず、管理者がソース(`authServer.changeAuth()`)を直接編集、GASコンソール上で実行する。
@@ -1074,53 +1266,10 @@ sequenceDiagram
   server ->>- admin : 権限設定リスト
 ```
 
-## 2.5 検索・編集・更新<a name="ac0010"></a>
-
-[先頭](#ac0000) > [機能別処理フロー](#ac0005)
-<br>&gt; [[onload時処理](#ac0006) | [新規登録](#ac0007) | [ログイン要求](#ac0008) | [権限設定、変更](#ac0009) | 検索・編集・更新]
-
-
-シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
-例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
-
-userは要求時に操作名を指定し、その実行結果を受け取る。
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant server
-  participant property
-  participant sheet
-  actor admin
-
-  admin ->> server : 操作用ハッシュ定義
-  user ->> client : 操作要求
-  activate client
-  client ->> server : ID,操作名,引数(CSkey/SPkey)
-  activate server
-  Note right of server : authServer.operation(xxx)
-  server ->> property : ID
-  property ->> server : 該当ID情報
-  server ->> server : 署名・権限検証
-  server ->> sheet : 操作名(xxx)に対応する関数呼び出し
-  sheet ->> server : 関数(xxx)の処理結果
-  server ->> client : 操作結果(SSkey/CPkey)
-  deactivate server
-  client ->> client : 復号＋署名検証、画面生成
-  client ->> user : 結果表示画面
-  deactivate client
-```
-
-- 「署名・権限検証」では復号・署名検証の上、以下の点の確認を行う
-  - CPkeyの有効期限
-  - 該当IDは当該操作の実行権限を持つか
-
 # 3 設定情報とオブジェクト定義<a name="ac0011"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | 設定情報とオブジェクト定義 | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0019) | [改版履歴](#ac0020)]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | 設定情報とオブジェクト定義 | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0021) | [改版履歴](#ac0022)]
 
 
 - client/server共通設定情報(config.common)
@@ -1190,7 +1339,7 @@ sequenceDiagram
 # 4 フォルダ構成<a name="ac0017"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | フォルダ構成 | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0019) | [改版履歴](#ac0020)]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | フォルダ構成 | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0021) | [改版履歴](#ac0022)]
 
 
 - archves : アーカイブ
@@ -1214,10 +1363,46 @@ sequenceDiagram
 # 5 仕様(JSDoc)<a name="ac0018"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | 仕様(JSDoc) | [プログラムソース](#ac0019) | [改版履歴](#ac0020)]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | 仕様(JSDoc) | [プログラムソース](#ac0021) | [改版履歴](#ac0022)]
 
 
+* [authClient](#authClient)
+    * [new authClient(opt)](#new_authClient_new)
+    * [.registMail(arg)](#authClient+registMail) ⇒ <code>null</code> \| <code>Error</code>
 
+<a name="new_authClient_new"></a>
+
+## 5.1 new authClient(opt)<a name="ac0019"></a>
+
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0018)
+<br>&gt; [new authClient(opt) | [authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code>](#ac0020)]
+
+
+| Param | Type |
+| --- | --- |
+| opt | <code>Object</code> | 
+| opt.programId | <code>string</code> | 
+
+<a name="authClient+registMail"></a>
+
+## 5.2 authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code><a name="ac0020"></a>
+
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0018)
+<br>&gt; [[new authClient(opt)](#ac0019) | authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code>]
+
+ブラウザからの登録要求を受け、IDを返す
+
+**Kind**: instance method of [<code>authClient</code>](#authClient)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| arg | <code>HTMLElement</code> | ボタン要素 |
+
+**Example**  
+```js
+- ボタンは`onclick="g.auth.registMail(this)"`を指定
+- ボタンとinput要素は兄弟要素とし、それをdivで囲む
+```
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -1231,51 +1416,97 @@ sequenceDiagram
 - 
 ```
 
-# 6 プログラムソース<a name="ac0019"></a>
+# 6 プログラムソース<a name="ac0021"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | プログラムソース | [改版履歴](#ac0020)]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | プログラムソース | [改版履歴](#ac0022)]
 
 
 <details><summary>client.js</summary>
 
 ```
 class authClient {
-  //:x:$src/client.constructor.js::
-  constructor(){
-    const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
-    console.log(`${v.whois} start.`);
-    try {
-      
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.`);
-      return v.rv;
+/** @constructor
+ * @param {Object} opt
+ * @param {string} opt.programId
+ */
+constructor(opt){
+  const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
 
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\narg=${stringify(arg)}`;  // 引数
-      console.error(`${e.message}\nv=${stringify(v)}`);
-      return e;
+    v.step = 1; // 引数のセット
+    for(let x in opt){
+      this[x] = opt[x];
     }
-  }
 
-  async doGAS(func,...args){
-    return await doGAS('authServer',func,...args);
+    v.step = 2; // ユーザ情報を設定
+    this.#setUserInfo();
+
+    v.step = 3; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\nopt=${stringify(opt)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
   }
+}
+
+  // setUserInfo, doGAS
+/** ユーザ情報をメンバに(再)設定する
+ * @param {void}
+ * @returns {void}
+ */
+#setUserInfo(){
+  const str = sessionStorage.getItem(this.programId);
+  this.user = JSON.parse(str);
+}
+
+async doGAS(func,...args){
+  return await doGAS('authServer',this.user.userId,func,...args);
+}
 
 /** ブラウザからの登録要求を受け、IDを返す
- * @param {void}
+ * @param {HTMLElement} arg - ボタン要素
  * @returns {null|Error}
+ * 
+ * @example
+ * 
+ * - ボタンは`onclick="g.auth.registMail(this)"`を指定
+ * - ボタンとinput要素は兄弟要素とし、それをdivで囲む
  */
-registMail(){
+async registMail(arg){
   const v = {whois:this.constructor.name+'.registMail',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // メアド入力
+    v.step = 1; // メールアドレスのチェック
+    v.email = arg.parentNode.querySelector('input[type="email"]').value;
+    if( checkFormat(v.email,'email') === false ){
+      alert(`"${v.email}"は不適切なメールアドレスです`);
+      throw new Error(`"${v.email}" is invalid mail address.`);
+    }
+
     v.step = 2; // authServer.registMailにメアド転送
+    v.r = changeScreen('loading');
+    if( v.r instanceof Error ) throw v.r;
+    v.id = await this.doGAS('registMail',v.email);
+    if( v.id instanceof Error ) throw v.id;
+    console.log(v.id);
+
     v.step = 3; // IDをstorageに登録
+    v.r = storeUserInfo(this.programId,{userId:v.id});
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 4; // メニュー再描画、ホーム画面の定義書き換え
+    v.r = g.menu.genNavi();
+    if( v.r instanceof Error ) throw v.r;
+    v.step = 5; // 応募情報修正画面に遷移
+    v.r = changeScreen('登録・修正・キャンセル');
+    if( v.r instanceof Error ) throw v.r;
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.`);
@@ -1283,8 +1514,7 @@ registMail(){
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}`
-    + `\narg=${stringify(arg)}`;  // 引数
+    + `\n${e.message}\narg=${arg}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }
@@ -1539,10 +1769,10 @@ w.func.verifySignature = function(userId=null,arg=null){
 
 </details>
 
-# 7 改版履歴<a name="ac0020"></a>
+# 7 改版履歴<a name="ac0022"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0019) | 改版履歴]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0021) | 改版履歴]
 
 
 - rev.2.0.0 : class Authと統合

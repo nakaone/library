@@ -122,10 +122,10 @@ td, .td {
 </ul>
 <h1>参加申込</h1>
 <ol>
-<li><form><p>以下に申込者のメールアドレスを入力、送信してください</p>
-  <input type="email" size="40" /><button>送信</button></form></li>
-<li>送信いただいたメールアドレス宛に「応募フォームへのご案内」というメールが届きます</li>
-<li>メールに記載されたリンクから応募フォームを開き、必要事項を入力してください。</li>
+<li><div>以下に申込者のメールアドレスを入力、送信してください<br>
+  <input type="email" size="40" />
+  <button onclick="g.auth.registMail(this)">送信</button></div></li>
+<li>送信後、応募フォームが開くので必要事項を入力してください。</li>
 </ol>
 <ul>
 <li>メールが届かない場合、以下の点を確認の上、<a href="mailto:shimokitasho.oyaji@gmail.com">shimokitasho.oyaji@gmail.com</a>までご連絡ください。<ul>
@@ -369,41 +369,87 @@ td, .td {
 <script type="text/javascript">
 const g = {programId:'camp2024'};
 class authClient {
-  //:x:$src/client.constructor.js::
-  constructor(){
-    const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
-    console.log(`${v.whois} start.`);
-    try {
-      
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.`);
-      return v.rv;
+/** @constructor
+ * @param {Object} opt
+ * @param {string} opt.programId
+ */
+constructor(opt){
+  const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
 
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\narg=${stringify(arg)}`;  // 引数
-      console.error(`${e.message}\nv=${stringify(v)}`);
-      return e;
+    v.step = 1; // 引数のセット
+    for(let x in opt){
+      this[x] = opt[x];
     }
-  }
 
-  async doGAS(func,...args){
-    return await doGAS('authServer',func,...args);
+    v.step = 2; // ユーザ情報を設定
+    this.#setUserInfo();
+
+    v.step = 3; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\nopt=${stringify(opt)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
   }
+}
+
+  // setUserInfo, doGAS
+/** ユーザ情報をメンバに(再)設定する
+ * @param {void}
+ * @returns {void}
+ */
+#setUserInfo(){
+  const str = sessionStorage.getItem(this.programId);
+  this.user = JSON.parse(str);
+}
+
+async doGAS(func,...args){
+  return await doGAS('authServer',this.user.userId,func,...args);
+}
 
 /** ブラウザからの登録要求を受け、IDを返す
- * @param {void}
+ * @param {HTMLElement} arg - ボタン要素
  * @returns {null|Error}
+ * 
+ * @example
+ * 
+ * - ボタンは`onclick="g.auth.registMail(this)"`を指定
+ * - ボタンとinput要素は兄弟要素とし、それをdivで囲む
  */
-registMail(){
+async registMail(arg){
   const v = {whois:this.constructor.name+'.registMail',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // メアド入力
+    v.step = 1; // メールアドレスのチェック
+    v.email = arg.parentNode.querySelector('input[type="email"]').value;
+    if( checkFormat(v.email,'email') === false ){
+      alert(`"${v.email}"は不適切なメールアドレスです`);
+      throw new Error(`"${v.email}" is invalid mail address.`);
+    }
+
     v.step = 2; // authServer.registMailにメアド転送
+    v.r = changeScreen('loading');
+    if( v.r instanceof Error ) throw v.r;
+    v.id = await this.doGAS('registMail',v.email);
+    if( v.id instanceof Error ) throw v.id;
+    console.log(v.id);
+
     v.step = 3; // IDをstorageに登録
+    v.r = storeUserInfo(this.programId,{userId:v.id});
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 4; // メニュー再描画、ホーム画面の定義書き換え
+    v.r = g.menu.genNavi();
+    if( v.r instanceof Error ) throw v.r;
+    v.step = 5; // 応募情報修正画面に遷移
+    v.r = changeScreen('登録・修正・キャンセル');
+    if( v.r instanceof Error ) throw v.r;
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.`);
@@ -411,8 +457,7 @@ registMail(){
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}`
-    + `\narg=${stringify(arg)}`;  // 引数
+    + `\n${e.message}\narg=${arg}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }
@@ -1111,6 +1156,35 @@ function createElement(arg,parent=null){
     return e;
   }
 }
+/** サーバ側GASの指定関数を実行、結果を取得
+ * 
+ * - [GASのgoogle.script.runをPromise化する](https://www.330k.info/essay/gas_google_script_run_convert_promise/)
+ * 
+ * @exsample
+ * 
+ * <pre><code>
+ * (async ()=> {
+ *   const result1 = await doGAS('doSomething1');
+ *   const result2 = await doGAS('doSomething2');
+ *   const result3 = await doGAS('doSomething3');
+ * })();
+ * </code></pre>
+ * 
+ * doSomething(arg1, arg2, ...)のように引数を渡す時は以下のようにdoGASの第2引数以下に指定する。
+ * ```
+ * doGAS('doSomething', arg1, arg2);
+ * ```
+ */
+function doGAS(func, ...args){
+  console.log('doGAS start. func=%s',func,...args);
+  return new Promise(function(resolve, reject){
+    google.script.run.withSuccessHandler(function(...e){
+      resolve(...e);
+    }).withFailureHandler(function(...e){
+      reject(...e);
+    })[func](...args);
+  });
+}
 /** 渡された変数内のオブジェクト・配列を再帰的にマージ
  * - pri,subともデータ型は不問。次項のデシジョンテーブルに基づき、結果を返す
  *
@@ -1484,7 +1558,7 @@ v.config = storeUserInfo(g.programId,{CSSselector:'[name="userId"]'});
 if( v.r instanceof Error ) throw v.r;
 
 v.step = 2.1; // authClientクラスのインスタンス化
-g.auth = new authClient();
+g.auth = new authClient({programId:g.programId});
 v.step = 2.2; // BurgerMenuクラスのインスタンス化
 g.menu = new BurgerMenu({auth:v.config.auth,homeForEachAuth:{
   1: '実施要領',  // auth毎のBurgerMenuホーム画面(.screen[name])

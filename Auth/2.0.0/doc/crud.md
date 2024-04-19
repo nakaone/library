@@ -13,17 +13,25 @@ sequenceDiagram
   participant server
   participant property
   participant sheet
-  actor admin
 
-  admin ->> server : 操作用ハッシュ定義
   user ->> client : 操作要求
   activate client
-  client ->> server : ID,操作名,引数(CSkey/SPkey)
+  client ->> client : ログイン要求
+  alt ログインNG
+    client ->> user : エラー
+  end
+  
+  client ->> server : ID,引数(CSkey/SPkey)
   activate server
   Note right of server : authServer.operation(xxx)
-  server ->> property : ID
-  property ->> server : 該当ID情報
-  server ->> server : 署名・権限検証
+  server ->> property : userId
+  property ->> server : ユーザ情報
+  server ->> server : 引数を復号
+  alt 復号不可
+    server ->> client : エラーメッセージ
+    client ->> user : ダイアログを出して終了
+  end
+
   server ->> sheet : 操作名(xxx)に対応する関数呼び出し
   sheet ->> server : 関数(xxx)の処理結果
   server ->> client : 操作結果(SSkey/CPkey)
@@ -32,7 +40,3 @@ sequenceDiagram
   client ->> user : 結果表示画面
   deactivate client
 ```
-
-- 「署名・権限検証」では復号・署名検証の上、以下の点の確認を行う
-  - CPkeyの有効期限
-  - 該当IDは当該操作の実行権限を持つか
