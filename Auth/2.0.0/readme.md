@@ -110,6 +110,12 @@ td, .td {
 
 # 機能別処理フロー
 
+窃取したIDでの操作を防止するため、clientで有効期間付きの鍵ペアを生成し、依頼元の信頼性を確保する(CSkey, CPkey : clientの秘密鍵・公開鍵)。
+
+また何らかの手段でCPkeyが窃取されて操作要求が行われた場合、処理結果の暗号化で結果受領を阻止するため、server側も鍵ペアを使用する(SSkey, SPkey : serverの秘密鍵・公開鍵)。
+
+以降の図中で`(XSkey/YPkey)`は「X側の秘密鍵で署名、Y側の公開鍵で暗号化する」の意味。
+
 ## onload時処理
 
 ```mermaid
@@ -194,7 +200,6 @@ sequenceDiagram
   client ->> server : メアド＋CPkey
   activate server
   Note right of server : authServer.registMail()
-  server ->> property : メアド
   property ->> server : userIdマップ
   alt マップにメアドが存在
     server ->> property : userId
@@ -342,6 +347,23 @@ sequenceDiagram
   deactivate client
 ```
 
+シートの操作(CRUD)は権限と有効期間の確認が必要なため、以下のようなオブジェクト(ハッシュ)を管理者がソースに埋め込む(configとして定義する)ことで行う。
+
+```
+config.operations = {
+  lookup : {  // {string} 操作名
+    auth : 0, // {number} 操作を許可する権限フラグの論理和
+    from : null, // {string} 有効期間を設定する場合、開始日時文字列
+    to : null, // {string} 同、終了日時文字列
+    func: // {Arrow|Function} 操作を定義する関数
+      (data,id) => data.find(x => x.id === id),
+  },
+  list : {...},
+  update : {...},
+  ...
+}
+```
+
 ## 権限設定、変更
 
 権限を付与すべきかは個別に判断する必要があるため、システム化せず、管理者がソース(`authServer.changeAuth()`)を直接編集、GASコンソール上で実行する。
@@ -367,49 +389,66 @@ sequenceDiagram
 
 # 設定情報とオブジェクト定義
 
-- client/server共通設定情報(config.common)
-  > クラスメンバ
-- authClient固有設定情報(config.client)
-  > 保持するデータ構造を含む
-- authServer固有設定情報(config.server)
-- 引数・戻り値となるオブジェクトの定義(typedef)
-- ID, RSA鍵(crypto)
-  > client/serverで表にする。使用するライブラリcrypticoの使用方法を含む
+### 設定情報
 
-## client:localStorageに保存する情報
+「設定情報」とはauthClient/Serverのメンバ変数であり、constructorへ渡す引数を指す。
 
-## client:sessionStorageに保存する情報
+#### authClientのメンバ変数
 
-## server:プロパティサービスに保存する情報
-
-### server側config
+#### authServerのメンバ変数
 
 1. {number} loginRetryInterval=3,600,000(60分) - 前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
 1. {number} numberOfLoginAttempts=3 - ログイン失敗になるまでの試行回数
 1. {number} loginGraceTime=900,000(15分) - パスコード生成からログインまでの猶予時間(ミリ秒)
 1. {number} userLoginLifeTime=86,400,000(24時間) - ログイン(CPkey)有効期間
 
-### ユーザ情報
+### ストレージ/プロパティサービス、グローバル変数
 
-以下のオブジェクトをユーザ単位に作成し、プロパティサービスに保存する(key = String(ID))。
+#### クライアント側
 
-1. {number} id - ユーザID
-1. {string} email - e-mail
-1. {number} created - ユーザ側鍵ペアの作成日時(UNIX時刻)。有効期間検証に使用
-1. {string} publicKey - ユーザの公開鍵
-1. {number} authority - ユーザの権限
-1. {Object[]} log - ログイン試行のログ。unshiftで保存、先頭を最新にする
-   1. {number} startAt - 試行開始日時(UNIX時刻)
-   1. {number} passcode - パスコード(原則数値6桁)
-   1. {Object[]} trial - 試行。unshiftで保存、先頭を最新にする
-      1. {number} timestamp - 試行日時(UNIX時刻)
-      1. {number} entered - 入力されたパスコード
-      1. {boolean} result - パスコードと入力値の比較結果(true:OK)
-      1. {string} message='' - NGの場合の理由。OKなら空文字列
-   1. {number} endAt - 試行終了日時(UNIX時刻)
-   1. {boolean} result - 試行の結果(true:OK)
+- localStorage : `"authClient"(固定) : ユーザID`
+- sessionStorage : `"authClient"(固定)`
+  1. {number} userId - ユーザID
+  1. {string} email - 連絡先メールアドレス
+  1. {number} created - ユーザ側鍵ペアの作成日時(UNIX時刻)。有効期間検証に使用
+  1. {string} passPhrase - クライアント側鍵ペア生成の際のパスフレーズ
+  1. {number} auth - ユーザの権限
+- グローバル変数
+  1. {string} programId - authClientを呼び出すプロジェクト(関数)名
+  1. {Object} CSkey - クライアント側の秘密鍵
+  1. {string} CPkey - クライアント側の公開鍵
 
-- 有効期間内かは最新のendAtから判断
+**注意事項**
+
+1. sessionStorageに秘密鍵を保存することができないため、鍵ペアはonload時に生成し、グローバル変数として保持する
+
+#### サーバ側
+
+- DocumentProperties : `"authServer"(固定)`
+  1. {string} passPhrase - サーバ側鍵ペア生成の際のパスフレーズ
+  1. {Object} SCkey - サーバ側秘密鍵
+  1. {string} SPkey - サーバ側公開鍵
+- DocumentProperties : `(ユーザID)`
+  1. {number} userId - ユーザID
+  1. {string} email - e-mail
+  1. {number} created - ユーザ側鍵ペアの作成日時(UNIX時刻)。有効期間検証に使用
+  1. {string} CPKey - ユーザの公開鍵
+  1. {number} auth - ユーザの権限
+  1. {Object[]} log - ログイン試行のログ。unshiftで保存、先頭を最新にする
+     1. {number} startAt - 試行開始日時(UNIX時刻)
+     1. {number} passcode - パスコード(原則数値6桁)
+     1. {Object[]} trial - 試行。unshiftで保存、先頭を最新にする
+        1. {number} timestamp - 試行日時(UNIX時刻)
+        1. {number} entered - 入力されたパスコード
+        1. {boolean} result - パスコードと入力値の比較結果(true:OK)
+        1. {string} message='' - NGの場合の理由。OKなら空文字列
+     1. {number} endAt - 試行終了日時(UNIX時刻)
+     1. {boolean} result - 試行の結果(true:OK)
+
+<!--
+- グローバル変数
+  1. {string} programId - authServerを呼び出すプロジェクト(関数)名
+--＞
 
 # フォルダ構成
 
@@ -824,6 +863,97 @@ w.func.verifySignature = function(userId=null,arg=null){
 
 </details>
 
+# 備忘
+
+## GAS/htmlでの暗号化
+
+#### 手順
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant client
+  participant server
+  participant sheet
+  actor admin
+
+  Note right of server : authServer.constructor()
+  server ->> server : server鍵ペア生成
+
+
+```
+
+- server鍵ペア生成
+
+
+- GASで返したhtml上でcookieの保存はできない
+  ```
+  <script type="text/javascript">
+  document.cookie = 'camp2024=10';  // NG
+  document.cookie = 'pKey=abcdefg'; // NG
+  sessionStorage.setItem("camp2024", "value-sessionStorage"); // OK
+  localStorage.setItem("camp2024", "value-localStorage"); // OK
+  ```
+- sessionStorage, localStorageへの保存はonload時もOK
+
+- GAS
+  - 鍵ペア生成
+  - GASでの保存
+  - 
+
+#### javascript用
+
+- Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
+- [Javascriptで公開鍵ペア生成・暗号化/復号をしてみた](https://qiita.com/poruruba/items/272bdc8f539728d5b076)
+
+javascript 鍵ペア ライブラリ
+
+
+#### GAS用
+
+GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
+
+- stackoverflow[Generate a public / private Key RSA with Apps Scripts](https://stackoverflow.com/questions/51989469/generate-a-public-private-key-rsa-with-apps-scripts)
+
+また、GASでは署名する方法はあるが、暗号化および署名検証の方法が見つからない
+
+- 
+
+- [GASでトークン等を保存しておけるプロパティサービスについてまとめてみた](https://qiita.com/zumi0/items/85ca400d57f60728a7c7)
+- [GASのプロパティサービス(プロパティストア)とは？3種類の各特徴と使い分け方まとめ](https://auto-worker.com/blog/?p=7829)
+
+鍵ペア生成できそうなのはcrypticoのみ。但しGASライブラリは無いし、requireしなければならない。
+
+- [Google Apps Scriptでrequire()してみる](https://qiita.com/fossamagna/items/7c65e249e1e5ecad51ff)
+
+1. main.jsの`function callHello()`を`global.callHello = function () {`に修正
+1. `browserify main.js -o bundle.js`
+
+失敗。GAS側は予め鍵を保存するよう方針転換。
+
+- [.DERと .PEMという拡張子は鍵の中身じゃなくて、エンコーディングを表している](https://qiita.com/kunichiko/items/12cbccaadcbf41c72735#der%E3%81%A8-pem%E3%81%A8%E3%81%84%E3%81%86%E6%8B%A1%E5%BC%B5%E5%AD%90%E3%81%AF%E9%8D%B5%E3%81%AE%E4%B8%AD%E8%BA%AB%E3%81%98%E3%82%83%E3%81%AA%E3%81%8F%E3%81%A6%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%92%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B)
+
+```
+function getTest(){
+  //スクリプトプロパティを取得し、ログ出力 -> 1度ファイルを閉じた後でも出力される
+  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
+}
+
+function setTest() {
+  //PropertiesServiceでスクリプトプロパティをセット
+  PropertiesService.getScriptProperties().setProperty('TEST1','テスト1です');
+  PropertiesService.getDocumentProperties().setProperty('TEST2','テスト2です');
+  PropertiesService.getDocumentProperties().setProperty('TEST3',{a:10});
+  //スクリプトプロパティを取得し、ログ出力
+  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
+}
+```
+
 # 改版履歴
 
 - rev.2.0.0 : class Authと統合
@@ -945,22 +1075,28 @@ td, .td {
    1. <a href="#ac0009">ユーザ情報の参照・編集</a>
    1. <a href="#ac0010">権限設定、変更</a>
 1. <a href="#ac0011">設定情報とオブジェクト定義</a>
-   1. <a href="#ac0012">client:localStorageに保存する情報</a>
-   1. <a href="#ac0013">client:sessionStorageに保存する情報</a>
-   1. <a href="#ac0014">server:プロパティサービスに保存する情報</a>
-      1. <a href="#ac0015">server側config</a>
-      1. <a href="#ac0016">ユーザ情報</a>
-1. <a href="#ac0017">フォルダ構成</a>
-1. <a href="#ac0018">仕様(JSDoc)</a>
-   1. <a href="#ac0019">new authClient(opt)</a>
-   1. <a href="#ac0020">authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code></a>
-1. <a href="#ac0021">プログラムソース</a>
-1. <a href="#ac0022">改版履歴</a>
+      1. <a href="#ac0012">設定情報</a>
+         1. <a href="#ac0013">authClientのメンバ変数</a>
+         1. <a href="#ac0014">authServerのメンバ変数</a>
+      1. <a href="#ac0015">ストレージ/プロパティサービス、グローバル変数</a>
+         1. <a href="#ac0016">クライアント側</a>
+         1. <a href="#ac0017">サーバ側</a>
+1. <a href="#ac0018">フォルダ構成</a>
+1. <a href="#ac0019">仕様(JSDoc)</a>
+   1. <a href="#ac0020">new authClient(opt)</a>
+   1. <a href="#ac0021">authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code></a>
+1. <a href="#ac0022">プログラムソース</a>
+1. <a href="#ac0023">備忘</a>
+   1. <a href="#ac0024">GAS/htmlでの暗号化</a>
+         1. <a href="#ac0025">手順</a>
+         1. <a href="#ac0026">javascript用</a>
+         1. <a href="#ac0027">GAS用</a>
+1. <a href="#ac0028">改版履歴</a>
 
 # 1 初期化処理<a name="ac0001"></a>
 
 [先頭](#ac0000)
-<br>&gt; [初期化処理 | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0021) | [改版履歴](#ac0022)]
+<br>&gt; [初期化処理 | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0018) | [仕様(JSDoc)](#ac0019) | [プログラムソース](#ac0022) | [備忘](#ac0023) | [改版履歴](#ac0028)]
 
 
 システム導入時、**Google Apps Scriptで一度だけ実行**する必要のある処理。
@@ -988,8 +1124,14 @@ td, .td {
 # 2 機能別処理フロー<a name="ac0005"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[初期化処理](#ac0001) | 機能別処理フロー | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0021) | [改版履歴](#ac0022)]
+<br>&gt; [[初期化処理](#ac0001) | 機能別処理フロー | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0018) | [仕様(JSDoc)](#ac0019) | [プログラムソース](#ac0022) | [備忘](#ac0023) | [改版履歴](#ac0028)]
 
+
+窃取したIDでの操作を防止するため、clientで有効期間付きの鍵ペアを生成し、依頼元の信頼性を確保する(CSkey, CPkey : clientの秘密鍵・公開鍵)。
+
+また何らかの手段でCPkeyが窃取されて操作要求が行われた場合、処理結果の暗号化で結果受領を阻止するため、server側も鍵ペアを使用する(SSkey, SPkey : serverの秘密鍵・公開鍵)。
+
+以降の図中で`(XSkey/YPkey)`は「X側の秘密鍵で署名、Y側の公開鍵で暗号化する」の意味。
 
 ## 2.1 onload時処理<a name="ac0006"></a>
 
@@ -1083,7 +1225,6 @@ sequenceDiagram
   client ->> server : メアド＋CPkey
   activate server
   Note right of server : authServer.registMail()
-  server ->> property : メアド
   property ->> server : userIdマップ
   alt マップにメアドが存在
     server ->> property : userId
@@ -1239,6 +1380,23 @@ sequenceDiagram
   deactivate client
 ```
 
+シートの操作(CRUD)は権限と有効期間の確認が必要なため、以下のようなオブジェクト(ハッシュ)を管理者がソースに埋め込む(configとして定義する)ことで行う。
+
+```
+config.operations = {
+  lookup : {  // {string} 操作名
+    auth : 0, // {number} 操作を許可する権限フラグの論理和
+    from : null, // {string} 有効期間を設定する場合、開始日時文字列
+    to : null, // {string} 同、終了日時文字列
+    func: // {Arrow|Function} 操作を定義する関数
+      (data,id) => data.find(x => x.id === id),
+  },
+  list : {...},
+  update : {...},
+  ...
+}
+```
+
 ## 2.5 権限設定、変更<a name="ac0010"></a>
 
 [先頭](#ac0000) > [機能別処理フロー](#ac0005)
@@ -1269,40 +1427,27 @@ sequenceDiagram
 # 3 設定情報とオブジェクト定義<a name="ac0011"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | 設定情報とオブジェクト定義 | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0021) | [改版履歴](#ac0022)]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | 設定情報とオブジェクト定義 | [フォルダ構成](#ac0018) | [仕様(JSDoc)](#ac0019) | [プログラムソース](#ac0022) | [備忘](#ac0023) | [改版履歴](#ac0028)]
 
 
-- client/server共通設定情報(config.common)
-  > クラスメンバ
-- authClient固有設定情報(config.client)
-  > 保持するデータ構造を含む
-- authServer固有設定情報(config.server)
-- 引数・戻り値となるオブジェクトの定義(typedef)
-- ID, RSA鍵(crypto)
-  > client/serverで表にする。使用するライブラリcrypticoの使用方法を含む
-
-## 3.1 client:localStorageに保存する情報<a name="ac0012"></a>
+### 3.1 設定情報<a name="ac0012"></a>
 
 [先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011)
-<br>&gt; [client:localStorageに保存する情報 | [client:sessionStorageに保存する情報](#ac0013) | [server:プロパティサービスに保存する情報](#ac0014)]
+<br>&gt; [設定情報 | [ストレージ/プロパティサービス、グローバル変数](#ac0015)]
 
 
-## 3.2 client:sessionStorageに保存する情報<a name="ac0013"></a>
+「設定情報」とはauthClient/Serverのメンバ変数であり、constructorへ渡す引数を指す。
 
-[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011)
-<br>&gt; [[client:localStorageに保存する情報](#ac0012) | client:sessionStorageに保存する情報 | [server:プロパティサービスに保存する情報](#ac0014)]
+#### 3.1.1 authClientのメンバ変数<a name="ac0013"></a>
 
-
-## 3.3 server:プロパティサービスに保存する情報<a name="ac0014"></a>
-
-[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011)
-<br>&gt; [[client:localStorageに保存する情報](#ac0012) | [client:sessionStorageに保存する情報](#ac0013) | server:プロパティサービスに保存する情報]
+[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011) > [設定情報](#ac0012)
+<br>&gt; [authClientのメンバ変数 | [authServerのメンバ変数](#ac0014)]
 
 
-### 3.3.1 server側config<a name="ac0015"></a>
+#### 3.1.2 authServerのメンバ変数<a name="ac0014"></a>
 
-[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011) > [server:プロパティサービスに保存する情報](#ac0014)
-<br>&gt; [server側config | [ユーザ情報](#ac0016)]
+[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011) > [設定情報](#ac0012)
+<br>&gt; [[authClientのメンバ変数](#ac0013) | authServerのメンバ変数]
 
 
 1. {number} loginRetryInterval=3,600,000(60分) - 前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
@@ -1310,36 +1455,70 @@ sequenceDiagram
 1. {number} loginGraceTime=900,000(15分) - パスコード生成からログインまでの猶予時間(ミリ秒)
 1. {number} userLoginLifeTime=86,400,000(24時間) - ログイン(CPkey)有効期間
 
-### 3.3.2 ユーザ情報<a name="ac0016"></a>
+### 3.2 ストレージ/プロパティサービス、グローバル変数<a name="ac0015"></a>
 
-[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011) > [server:プロパティサービスに保存する情報](#ac0014)
-<br>&gt; [[server側config](#ac0015) | ユーザ情報]
+[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011)
+<br>&gt; [[設定情報](#ac0012) | ストレージ/プロパティサービス、グローバル変数]
 
 
-以下のオブジェクトをユーザ単位に作成し、プロパティサービスに保存する(key = String(ID))。
+#### 3.2.1 クライアント側<a name="ac0016"></a>
 
-1. {number} id - ユーザID
-1. {string} email - e-mail
-1. {number} created - ユーザ側鍵ペアの作成日時(UNIX時刻)。有効期間検証に使用
-1. {string} publicKey - ユーザの公開鍵
-1. {number} authority - ユーザの権限
-1. {Object[]} log - ログイン試行のログ。unshiftで保存、先頭を最新にする
-   1. {number} startAt - 試行開始日時(UNIX時刻)
-   1. {number} passcode - パスコード(原則数値6桁)
-   1. {Object[]} trial - 試行。unshiftで保存、先頭を最新にする
-      1. {number} timestamp - 試行日時(UNIX時刻)
-      1. {number} entered - 入力されたパスコード
-      1. {boolean} result - パスコードと入力値の比較結果(true:OK)
-      1. {string} message='' - NGの場合の理由。OKなら空文字列
-   1. {number} endAt - 試行終了日時(UNIX時刻)
-   1. {boolean} result - 試行の結果(true:OK)
+[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011) > [ストレージ/プロパティサービス、グローバル変数](#ac0015)
+<br>&gt; [クライアント側 | [サーバ側](#ac0017)]
 
-- 有効期間内かは最新のendAtから判断
 
-# 4 フォルダ構成<a name="ac0017"></a>
+- localStorage : `"authClient"(固定) : ユーザID`
+- sessionStorage : `"authClient"(固定)`
+  1. {number} userId - ユーザID
+  1. {string} email - 連絡先メールアドレス
+  1. {number} created - ユーザ側鍵ペアの作成日時(UNIX時刻)。有効期間検証に使用
+  1. {string} passPhrase - クライアント側鍵ペア生成の際のパスフレーズ
+  1. {number} auth - ユーザの権限
+- グローバル変数
+  1. {string} programId - authClientを呼び出すプロジェクト(関数)名
+  1. {Object} CSkey - クライアント側の秘密鍵
+  1. {string} CPkey - クライアント側の公開鍵
+
+**注意事項**
+
+1. sessionStorageに秘密鍵を保存することができないため、鍵ペアはonload時に生成し、グローバル変数として保持する
+
+#### 3.2.2 サーバ側<a name="ac0017"></a>
+
+[先頭](#ac0000) > [設定情報とオブジェクト定義](#ac0011) > [ストレージ/プロパティサービス、グローバル変数](#ac0015)
+<br>&gt; [[クライアント側](#ac0016) | サーバ側]
+
+
+- DocumentProperties : `"authServer"(固定)`
+  1. {string} passPhrase - サーバ側鍵ペア生成の際のパスフレーズ
+  1. {Object} SCkey - サーバ側秘密鍵
+  1. {string} SPkey - サーバ側公開鍵
+- DocumentProperties : `(ユーザID)`
+  1. {number} userId - ユーザID
+  1. {string} email - e-mail
+  1. {number} created - ユーザ側鍵ペアの作成日時(UNIX時刻)。有効期間検証に使用
+  1. {string} CPKey - ユーザの公開鍵
+  1. {number} auth - ユーザの権限
+  1. {Object[]} log - ログイン試行のログ。unshiftで保存、先頭を最新にする
+     1. {number} startAt - 試行開始日時(UNIX時刻)
+     1. {number} passcode - パスコード(原則数値6桁)
+     1. {Object[]} trial - 試行。unshiftで保存、先頭を最新にする
+        1. {number} timestamp - 試行日時(UNIX時刻)
+        1. {number} entered - 入力されたパスコード
+        1. {boolean} result - パスコードと入力値の比較結果(true:OK)
+        1. {string} message='' - NGの場合の理由。OKなら空文字列
+     1. {number} endAt - 試行終了日時(UNIX時刻)
+     1. {boolean} result - 試行の結果(true:OK)
+
+<!--
+- グローバル変数
+  1. {string} programId - authServerを呼び出すプロジェクト(関数)名
+-->
+
+# 4 フォルダ構成<a name="ac0018"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | フォルダ構成 | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0021) | [改版履歴](#ac0022)]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | フォルダ構成 | [仕様(JSDoc)](#ac0019) | [プログラムソース](#ac0022) | [備忘](#ac0023) | [改版履歴](#ac0028)]
 
 
 - archves : アーカイブ
@@ -1360,10 +1539,10 @@ sequenceDiagram
 - initialize.gs : サーバ側初期化処理のソース
 - readme.md : doc配下を統合した、client/server全体の仕様書
 
-# 5 仕様(JSDoc)<a name="ac0018"></a>
+# 5 仕様(JSDoc)<a name="ac0019"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | 仕様(JSDoc) | [プログラムソース](#ac0021) | [改版履歴](#ac0022)]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0018) | 仕様(JSDoc) | [プログラムソース](#ac0022) | [備忘](#ac0023) | [改版履歴](#ac0028)]
 
 
 * [authClient](#authClient)
@@ -1372,10 +1551,10 @@ sequenceDiagram
 
 <a name="new_authClient_new"></a>
 
-## 5.1 new authClient(opt)<a name="ac0019"></a>
+## 5.1 new authClient(opt)<a name="ac0020"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0018)
-<br>&gt; [new authClient(opt) | [authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code>](#ac0020)]
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0019)
+<br>&gt; [new authClient(opt) | [authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code>](#ac0021)]
 
 
 | Param | Type |
@@ -1385,10 +1564,10 @@ sequenceDiagram
 
 <a name="authClient+registMail"></a>
 
-## 5.2 authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code><a name="ac0020"></a>
+## 5.2 authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code><a name="ac0021"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0018)
-<br>&gt; [[new authClient(opt)](#ac0019) | authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code>]
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0019)
+<br>&gt; [[new authClient(opt)](#ac0020) | authClient.registMail(arg) ⇒ <code>null</code> \| <code>Error</code>]
 
 ブラウザからの登録要求を受け、IDを返す
 
@@ -1416,10 +1595,10 @@ sequenceDiagram
 - 
 ```
 
-# 6 プログラムソース<a name="ac0021"></a>
+# 6 プログラムソース<a name="ac0022"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | プログラムソース | [改版履歴](#ac0022)]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0018) | [仕様(JSDoc)](#ac0019) | プログラムソース | [備忘](#ac0023) | [改版履歴](#ac0028)]
 
 
 <details><summary>client.js</summary>
@@ -1769,10 +1948,121 @@ w.func.verifySignature = function(userId=null,arg=null){
 
 </details>
 
-# 7 改版履歴<a name="ac0022"></a>
+# 7 備忘<a name="ac0023"></a>
 
 [先頭](#ac0000)
-<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0017) | [仕様(JSDoc)](#ac0018) | [プログラムソース](#ac0021) | 改版履歴]
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0018) | [仕様(JSDoc)](#ac0019) | [プログラムソース](#ac0022) | 備忘 | [改版履歴](#ac0028)]
+
+
+## 7.1 GAS/htmlでの暗号化<a name="ac0024"></a>
+
+[先頭](#ac0000) > [備忘](#ac0023)
+<br>&gt; [GAS/htmlでの暗号化]
+
+
+#### 7.1.1 手順<a name="ac0025"></a>
+
+[先頭](#ac0000) > [備忘](#ac0023) > [GAS/htmlでの暗号化](#ac0024)
+<br>&gt; [手順 | [javascript用](#ac0026) | [GAS用](#ac0027)]
+
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant client
+  participant server
+  participant sheet
+  actor admin
+
+  Note right of server : authServer.constructor()
+  server ->> server : server鍵ペア生成
+
+
+```
+
+- server鍵ペア生成
+
+
+- GASで返したhtml上でcookieの保存はできない
+  ```
+  <script type="text/javascript">
+  document.cookie = 'camp2024=10';  // NG
+  document.cookie = 'pKey=abcdefg'; // NG
+  sessionStorage.setItem("camp2024", "value-sessionStorage"); // OK
+  localStorage.setItem("camp2024", "value-localStorage"); // OK
+  ```
+- sessionStorage, localStorageへの保存はonload時もOK
+
+- GAS
+  - 鍵ペア生成
+  - GASでの保存
+  - 
+
+#### 7.1.2 javascript用<a name="ac0026"></a>
+
+[先頭](#ac0000) > [備忘](#ac0023) > [GAS/htmlでの暗号化](#ac0024)
+<br>&gt; [[手順](#ac0025) | javascript用 | [GAS用](#ac0027)]
+
+
+- Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
+- [Javascriptで公開鍵ペア生成・暗号化/復号をしてみた](https://qiita.com/poruruba/items/272bdc8f539728d5b076)
+
+javascript 鍵ペア ライブラリ
+
+
+#### 7.1.3 GAS用<a name="ac0027"></a>
+
+[先頭](#ac0000) > [備忘](#ac0023) > [GAS/htmlでの暗号化](#ac0024)
+<br>&gt; [[手順](#ac0025) | [javascript用](#ac0026) | GAS用]
+
+
+GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
+
+- stackoverflow[Generate a public / private Key RSA with Apps Scripts](https://stackoverflow.com/questions/51989469/generate-a-public-private-key-rsa-with-apps-scripts)
+
+また、GASでは署名する方法はあるが、暗号化および署名検証の方法が見つからない
+
+- 
+
+- [GASでトークン等を保存しておけるプロパティサービスについてまとめてみた](https://qiita.com/zumi0/items/85ca400d57f60728a7c7)
+- [GASのプロパティサービス(プロパティストア)とは？3種類の各特徴と使い分け方まとめ](https://auto-worker.com/blog/?p=7829)
+
+鍵ペア生成できそうなのはcrypticoのみ。但しGASライブラリは無いし、requireしなければならない。
+
+- [Google Apps Scriptでrequire()してみる](https://qiita.com/fossamagna/items/7c65e249e1e5ecad51ff)
+
+1. main.jsの`function callHello()`を`global.callHello = function () {`に修正
+1. `browserify main.js -o bundle.js`
+
+失敗。GAS側は予め鍵を保存するよう方針転換。
+
+- [.DERと .PEMという拡張子は鍵の中身じゃなくて、エンコーディングを表している](https://qiita.com/kunichiko/items/12cbccaadcbf41c72735#der%E3%81%A8-pem%E3%81%A8%E3%81%84%E3%81%86%E6%8B%A1%E5%BC%B5%E5%AD%90%E3%81%AF%E9%8D%B5%E3%81%AE%E4%B8%AD%E8%BA%AB%E3%81%98%E3%82%83%E3%81%AA%E3%81%8F%E3%81%A6%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%87%E3%82%A3%E3%83%B3%E3%82%B0%E3%82%92%E8%A1%A8%E3%81%97%E3%81%A6%E3%81%84%E3%82%8B)
+
+```
+function getTest(){
+  //スクリプトプロパティを取得し、ログ出力 -> 1度ファイルを閉じた後でも出力される
+  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
+}
+
+function setTest() {
+  //PropertiesServiceでスクリプトプロパティをセット
+  PropertiesService.getScriptProperties().setProperty('TEST1','テスト1です');
+  PropertiesService.getDocumentProperties().setProperty('TEST2','テスト2です');
+  PropertiesService.getDocumentProperties().setProperty('TEST3',{a:10});
+  //スクリプトプロパティを取得し、ログ出力
+  console.log(PropertiesService.getScriptProperties().getProperty('TEST1'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST2'));
+  console.log(PropertiesService.getDocumentProperties().getProperty('TEST3'));
+}
+```
+
+# 8 改版履歴<a name="ac0028"></a>
+
+[先頭](#ac0000)
+<br>&gt; [[初期化処理](#ac0001) | [機能別処理フロー](#ac0005) | [設定情報とオブジェクト定義](#ac0011) | [フォルダ構成](#ac0018) | [仕様(JSDoc)](#ac0019) | [プログラムソース](#ac0022) | [備忘](#ac0023) | 改版履歴]
 
 
 - rev.2.0.0 : class Authと統合

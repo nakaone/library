@@ -13,6 +13,12 @@
 
 # 機能別処理フロー
 
+窃取したIDでの操作を防止するため、clientで有効期間付きの鍵ペアを生成し、依頼元の信頼性を確保する(CSkey, CPkey : clientの秘密鍵・公開鍵)。
+
+また何らかの手段でCPkeyが窃取されて操作要求が行われた場合、処理結果の暗号化で結果受領を阻止するため、server側も鍵ペアを使用する(SSkey, SPkey : serverの秘密鍵・公開鍵)。
+
+以降の図中で`(XSkey/YPkey)`は「X側の秘密鍵で署名、Y側の公開鍵で暗号化する」の意味。
+
 ## onload時処理
 
 <!--::onload時処理::$doc/onload.md::-->
@@ -35,49 +41,7 @@
 
 # 設定情報とオブジェクト定義
 
-- client/server共通設定情報(config.common)
-  > クラスメンバ
-- authClient固有設定情報(config.client)
-  > 保持するデータ構造を含む
-- authServer固有設定情報(config.server)
-- 引数・戻り値となるオブジェクトの定義(typedef)
-- ID, RSA鍵(crypto)
-  > client/serverで表にする。使用するライブラリcrypticoの使用方法を含む
-
-## client:localStorageに保存する情報
-
-## client:sessionStorageに保存する情報
-
-## server:プロパティサービスに保存する情報
-
-### server側config
-
-1. {number} loginRetryInterval=3,600,000(60分) - 前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
-1. {number} numberOfLoginAttempts=3 - ログイン失敗になるまでの試行回数
-1. {number} loginGraceTime=900,000(15分) - パスコード生成からログインまでの猶予時間(ミリ秒)
-1. {number} userLoginLifeTime=86,400,000(24時間) - ログイン(CPkey)有効期間
-
-### ユーザ情報
-
-以下のオブジェクトをユーザ単位に作成し、プロパティサービスに保存する(key = String(ID))。
-
-1. {number} id - ユーザID
-1. {string} email - e-mail
-1. {number} created - ユーザ側鍵ペアの作成日時(UNIX時刻)。有効期間検証に使用
-1. {string} publicKey - ユーザの公開鍵
-1. {number} authority - ユーザの権限
-1. {Object[]} log - ログイン試行のログ。unshiftで保存、先頭を最新にする
-   1. {number} startAt - 試行開始日時(UNIX時刻)
-   1. {number} passcode - パスコード(原則数値6桁)
-   1. {Object[]} trial - 試行。unshiftで保存、先頭を最新にする
-      1. {number} timestamp - 試行日時(UNIX時刻)
-      1. {number} entered - 入力されたパスコード
-      1. {boolean} result - パスコードと入力値の比較結果(true:OK)
-      1. {string} message='' - NGの場合の理由。OKなら空文字列
-   1. {number} endAt - 試行終了日時(UNIX時刻)
-   1. {boolean} result - 試行の結果(true:OK)
-
-- 有効期間内かは最新のendAtから判断
+<!--::$doc/typedef.md::-->
 
 # フォルダ構成
 
@@ -94,6 +58,12 @@
 <!--::$tmp/client.js::-->
 
 <!--::$tmp/server.js::-->
+
+# 備忘
+
+## GAS/htmlでの暗号化
+
+<!--::$doc/crypto.md::-->
 
 # 改版履歴
 

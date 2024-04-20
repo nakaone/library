@@ -40,3 +40,20 @@ sequenceDiagram
   client ->> user : 結果表示画面
   deactivate client
 ```
+
+シートの操作(CRUD)は権限と有効期間の確認が必要なため、以下のようなオブジェクト(ハッシュ)を管理者がソースに埋め込む(configとして定義する)ことで行う。
+
+```
+config.operations = {
+  lookup : {  // {string} 操作名
+    auth : 0, // {number} 操作を許可する権限フラグの論理和
+    from : null, // {string} 有効期間を設定する場合、開始日時文字列
+    to : null, // {string} 同、終了日時文字列
+    func: // {Arrow|Function} 操作を定義する関数
+      (data,id) => data.find(x => x.id === id),
+  },
+  list : {...},
+  update : {...},
+  ...
+}
+```

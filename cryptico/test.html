@@ -108,6 +108,7 @@ window.addEventListener('DOMContentLoaded',() => {
 
     // --------------------------------------------------------
     // --------------------------------------------------------
+    // sender,receiver それぞれに鍵ペア生成
     ['sender','receiver'].forEach(x => {
       v[x] = {passPhrase: createPassword(16)};
       v[x].privateKey = cryptico.generateRSAKey(v[x].passPhrase,1024);
@@ -119,6 +120,8 @@ window.addEventListener('DOMContentLoaded',() => {
         + `\npublicKeyId = "${v[x].publicKeyId}"`
       );
     });
+
+    // sender -> receiver に plane を送付
     v.plane = 'abcdef あいうえお 01234 寿限無';
     console.log(`v.plane=${v.plane}`);
     v.encrypt = cryptico.encrypt(v.plane,v.receiver.publicKey,v.sender.privateKey);
@@ -130,9 +133,43 @@ window.addEventListener('DOMContentLoaded',() => {
     //console.log(`=${stringify()}`);
     //console.log(`=${}`);
 
+    // 秘密鍵をsessionStorageに保存できるかテスト
+    // 鍵ペアを一度sessionStorageに保存、再取得して暗号化・復号をテスト
+    v.s = {}; // sessionStorageから再取得した鍵
+    ['sender','receiver'].forEach(x => {
+      v.s[x] = {};
+      ['passPhrase','privateKey','publicKey','publicKeyId'].forEach(y => {
+        v.label = `${x}_${y}`;
+        console.log(`l.140 x=${x}, y=${y} -> ${v.label} = ${v[x][y]}`);
+        sessionStorage.setItem(v.label,v[x][y]);
+        v.value = sessionStorage.getItem(v.label);
+        console.log(v.value);
+        v.s[x][y] = v.value;
+      });
+    });
+    // 結果NG : 単純に保存しただけではできない
 
+    
 
+    /* NG : 秘密鍵の改行'\n'を'\\n'に置換
+    // https://qiita.com/sho7650/items/1dd65a1db785f902a2d6
+    ['sender','receiver'].forEach(x => {
+      v.label = `${x}_privateKey`;
+      v.r = v[x].privateKey.replaceAll('\n','\\n');
+      sessionStorage.setItem(v.label,v.r);
+      v.value = sessionStorage.getItem(v.label);
+      console.log(v.value);
+      v.s[x].privateKey = v.value.replaceAll('\\n','\n');
+    }); */
 
+    console.log(`l.151 v.plane=${v.plane}\nv.s.receiver.publicKey=${v.s.receiver.publicKey}\nv.s.sender.privateKey=${v.s.sender.privateKey}`);
+    v.encrypt = cryptico.encrypt(v.plane,v.s.receiver.publicKey,v.s.sender.privateKey);
+    console.log(`v.encrypt=${v.encrypt}`);
+    //console.log(`v.encrypt=${stringify(v.encrypt)}`);
+    v.decrypt = cryptico.decrypt(v.encrypt.cipher,v.s.receiver.privateKey);
+    console.log(`v.decrypt=${stringify(v.decrypt)}`);
+    v.r = cryptico.publicKeyID(v.decrypt.publicKeyString)
+    console.log(`v.r=${stringify(v.r)}`);
 
 
 

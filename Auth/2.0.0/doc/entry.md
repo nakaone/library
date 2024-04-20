@@ -21,7 +21,6 @@ sequenceDiagram
   client ->> server : メアド＋CPkey
   activate server
   Note right of server : authServer.registMail()
-  server ->> property : メアド
   property ->> server : userIdマップ
   alt マップにメアドが存在
     server ->> property : userId
