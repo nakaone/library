@@ -11,9 +11,27 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 
 <!--::$doc/overview.svg::-->
 
+本クラスは**Google SpreadのGASにデプロイし、SPAとして使用する**ことを想定しているため、'camp2024'等の**呼出元**で以下の作業を行う。
+
+1. caller/index.htmlの作成
+   1. body部でのメニュー要素定義
+   1. authMenuの適用値設定
+   1. グローバル変数、local/sessionStorageでのユーザ情報保存(※1)
+   1. class authMenu(=authMenu/client.js)の組み込み(※2)
+1. caller/server.gs
+   1. authServerの適用値設定
+   1. documentPropertiesでのサーバ・ユーザ情報保存(※1)
+   1. authServer(=authMenu/server.js)の組み込み(※2)
+
+なお以下2点は自動的に行う。
+- ※1 : 「〜情報保存」は、システム側で自動的に処理(作業は発生しない)
+- ※2 : 呼出元のbuild.shで自動処理。記述方法は「フォルダ構成、ビルド手順」を参照。
+
 # 使用方法
 
-## body内部の設定
+## body部でのメニュー要素定義
+
+### メニュー要素の定義
 
 - 表示部は&lt;div data-menu&gt;の階層内で定義する。<br>
   階層外の要素はメニューで選択しても表示されない。
@@ -103,7 +121,27 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
   ```
 - メニュー生成時点で有効期限を判断、同一IDが複数存在する場合はいずれか一つのDIVのみ残して残りを削除してメニューを生成する。
 
-## script部の設定
+## authMenuの適用値設定
+
+インスタンス生成時の引数はそのまま**authMenuメンバ変数**となる。
+
+以下はthisとして「constructorのv.default < constructorの引数 < listViewの引数」の順で有効となる。
+
+1. 「**太字**」はインスタンス生成時、必須指定項目
+1. 「【*内部*】」は指定不要の項目(constructor他で自動的に設定されるメンバ)
+1. その他はconstructorの引数で指定可、指定が無い項目は既定値をセット
+
+- wrapper='.authMenu.screen[name="wrapper"]' {string|HTMLElement} 作成対象のdata-menuを全て含む親要素。CSSセレクタかHTMLElementで指定。
+- func {Object.<string,Function>} メニューから実行する関数を集めたライブラリ
+- home {string} ホーム画面として使用するメニューの識別子。無指定の場合、wrapper直下でdata-menu属性を持つ最初の要素
+- initialSubMenu=true {boolean} サブメニューの初期状態。true:開いた状態、false:閉じた状態
+- css {string} authMenu専用CSS
+- toggle {Arrow} 【*内部*】ナビゲーション領域の表示/非表示切り替え
+- showChildren {Arrow} 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
+
+### インスタンス生成時の処理フロー
+
+<!--::onload時処理::$doc/onload.md::-->
 
 ### scriptサンプル
 
@@ -118,7 +156,7 @@ window.addEventListener('DOMContentLoaded',() => {
     if( v.r instanceof Error ) throw v.r;
 
     v.step = 2.1; // 使用するクラスのインスタンス化
-    v.auth = new authClient();
+    v.auth = new authMenu();
     v.step = 2.2;
     v.menu = new authMenu({func:{
       enterId:()=>{
@@ -145,45 +183,126 @@ window.addEventListener('DOMContentLoaded',() => {
 });
 ```
 
-### インスタンス生成時の引数
+## グローバル変数、local/sessionStorageのユーザ情報保存
 
-インスタンス生成時の引数はそのまま**authMenuメンバ**となる。
+`onClick`や`addEventListener`から呼ばれる関数にauthMenuインスタンスを渡す必要があるため、**authMenuのインスタンスはグローバル変数として定義**する。
 
-以下はthisとして「constructorのv.default < constructorの引数 < listViewの引数」の順で有効となる。
+```
+<script type="text/javascript">
+const g = {};
+(中略)
+window.addEventListener('DOMContentLoaded',() => {
+  g.menu = new authMenu({...});
+  (後略)
+});
+</script>
+```
 
-1. 「**太字**」はインスタンス生成時、必須指定項目
-1. 「【*内部*】」は指定不要の項目(constructor他で自動的に設定されるメンバ)
-1. その他はconstructorの引数で指定可、指定が無い項目は既定値をセット
+- localStorage : `"authMenu"(固定) : ユーザID(初期値null)`
+- sessionStorage : `"authMenu"(固定)`
+  1. {number} userId=null - ユーザID
+  1. {string} email='' - 連絡先メールアドレス
+  1. {number} created=null - ユーザ側鍵ペアの作成日時(UNIX時刻)。有効期間検証に使用
+  1. {string} passPhrase=createPassword() - クライアント側鍵ペア生成の際のパスフレーズ
+  1. {number} auth=1 - ユーザの権限
+  1. {number} unfreeze=null - ログイン連続失敗後、凍結解除される日時(UNIX時刻)
+  1. {string} SPkey=null - サーバ側公開鍵
+- グローバル変数
+  1. {string} programId - authMenuを呼び出すプロジェクト(関数)名
+  1. {Object} CSkey - クライアント側の秘密鍵
+  1. {string} CPkey - クライアント側の公開鍵
 
-- wrapper='.authMenu.screen[name="wrapper"]' {string|HTMLElement} 作成対象のdata-menuを全て含む親要素。CSSセレクタかHTMLElementで指定。
-- func {Object.<string,Function>} メニューから実行する関数を集めたライブラリ
-- home {string} ホーム画面として使用するメニューの識別子。無指定の場合、wrapper直下でdata-menu属性を持つ最初の要素
-- initialSubMenu=true {boolean} サブメニューの初期状態。true:開いた状態、false:閉じた状態
-- css {string} authMenu専用CSS
-- toggle {Arrow} 【*内部*】ナビゲーション領域の表示/非表示切り替え
-- showChildren {Arrow} 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
+**注意事項**
 
-## ストレージ/プロパティサービス、グローバル変数
+1. local/sessionStorageに`authMenu`キーがない場合、作成
+1. グローバル変数にCS/CPkeyがない場合、作成
+
+※ sessionStorageに秘密鍵を保存することができないため、鍵ペアはonload時に生成し、グローバル変数として保持する
+
+## authServerの適用値設定
+
+1. {Object.<string>:<Function>} func={} - 使用する関数を集めたオブジェクト
+1. {number} loginRetryInterval=3,600,000(60分) - 前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
+1. {number} numberOfLoginAttempts=3 - ログイン失敗になるまでの試行回数
+1. {number} loginGraceTime=900,000(15分) - パスコード生成からログインまでの猶予時間(ミリ秒)
+1. {number} userLoginLifeTime=86,400,000(24時間) - クライアント側ログイン(CPkey)有効期間
+1. {string} masterSheet='master' - 参加者マスタのシート名
+1. {string} primatyKeyColumn='userId' - 主キーとなる項目名。主キーは数値で設定
+1. {string} emailColumn='email' - e-mailを格納する項目名
+
+## documentPropertiesのサーバ・ユーザ情報保存
+
+- DocumentProperties : `"authServer"(固定)`
+  1. {string} passPhrase - サーバ側鍵ペア生成の際のパスフレーズ
+  1. {Object} SCkey - サーバ側秘密鍵
+  1. {string} SPkey - サーバ側公開鍵
+- DocumentProperties : `(ユーザID)`
+  1. {number} userId - ユーザID
+  1. {string} email - e-mail
+  1. {number} created - ユーザ側鍵ペアの作成日時(UNIX時刻)。有効期間検証に使用
+  1. {string} CPKey - ユーザの公開鍵
+  1. {number} auth - ユーザの権限
+  1. {Object[]} log - ログイン試行のログ。unshiftで保存、先頭を最新にする
+     1. {number} startAt - 試行開始日時(UNIX時刻)
+     1. {number} passcode - パスコード(原則数値6桁)
+     1. {Object[]} trial - 試行。unshiftで保存、先頭を最新にする
+        1. {number} timestamp - 試行日時(UNIX時刻)
+        1. {number} entered - 入力されたパスコード
+        1. {boolean} result - パスコードと入力値の比較結果(true:OK)
+        1. {string} message='' - NGの場合の理由。OKなら空文字列
+     1. {number} endAt - 試行終了日時(UNIX時刻)
+     1. {boolean} result - 試行の結果(true:OK)
 
 # 機能別処理フロー
 
-## インスタンス化時
+窃取したIDでの操作を防止するため、clientで有効期間付きの鍵ペアを生成し、依頼元の信頼性を確保する(CSkey, CPkey : clientの秘密鍵・公開鍵)。
+
+また何らかの手段でCPkeyが窃取されて操作要求が行われた場合、処理結果の暗号化で結果受領を阻止するため、server側も鍵ペアを使用する(SSkey, SPkey : serverの秘密鍵・公開鍵)。
+
+以降の図中で`(XSkey/YPkey)`は「X側の秘密鍵で署名、Y側の公開鍵で暗号化する」の意味。
 
 ## 新規ユーザ登録
 
+<!--::$doc/entry.md::-->
+
 ## ログイン要求
+
+<!--::$doc/login.md::-->
 
 ## ユーザ情報の参照・編集
 
+<!--::$doc/crud.md::-->
+
 ## 権限設定、変更
 
-# フォルダ構成
+<!--::$doc/permit.md::-->
+
+# フォルダ構成、ビルド手順
+
+クライアント(ブラウザ)側の"class authMenu"とサーバ(GAS)側の"class authServer"に分かれるが、一体管理のためソースは一元管理する。
+
+<!--::$doc/folder.md::-->
 
 # 仕様(JSDoc)
 
+<!--:x:$tmp/client.md::-->
+
+<!--:x:$tmp/server.md::-->
+
+# テクニカルメモ
+
+## GAS/htmlでの暗号化
+
+<!--::$doc/crypto.md::-->
+
 # プログラムソース
+
+<!--:x:$tmp/client.js::-->
+
+<!--:x:$tmp/server.js::-->
 
 # 改版履歴
 
 - rev 1.0.0 : 2024/04/20
-  - "class BurgerMenu rev 1.2.0"および作成途中の"class authClient/Server 2.0.0"を統合
+  - "class BurgerMenu(rev 1.2.0)"および作成途中の"class Auth(rev 2.0.0)"を統合
+  - "storeUserInfo(rev 1.0.0)"を吸収

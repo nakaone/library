@@ -97,7 +97,7 @@ EOS
 #
 #
 ## ----------------------------------------------
-## 4. client.js(class authClient)の作成
+## 4. client.js(class authMenu)の作成
 ## ----------------------------------------------
 #echo "`date +"%T"` - step.4.1 start."
 #cat $src/client.js | awk 1 | $embed -src:$src >> $clSrc
