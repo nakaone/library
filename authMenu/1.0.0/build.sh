@@ -1,6 +1,6 @@
 #!/bin/sh
 # -x  つけるとverbose
-# reference: authMenu, BurgerMenu, camp2024/client
+# reference: authMenu, authMenu, camp2024/client
 set -e # エラー時点で停止
 
 # ----------------------------------------------
@@ -39,14 +39,14 @@ find . -name '.DS_Store' -type f -ls -delete
 #echo "`date +"%T"` - step.1.3 start."
 #core="$tmp/core.js"; touch $core
 #pipe="$tmp/pipe.js"; touch $pipe
-#clSrc="$tmp/client.js"; touch $clSrc # 最終成果物
-#clDoc="$tmp/client.md"; touch $clDoc   # JSDoc
+clSource="$tmp/client.js"; touch $clSource # 最終成果物
+clDoc="$tmp/client.md"; touch $clDoc   # JSDoc
 #svSrc="$tmp/server.js"; touch $svSrc
 #svDoc="$tmp/server.md"; touch $svDoc
 
 # 1.4 使用するクラスを最新化
 #echo "`date +"%T"` - step.1.4 start."
-#$lib/BurgerMenu/1.2.0/build.sh
+#$lib/authMenu/1.2.0/build.sh
 #$lib/SingleTableClient/1.0.0/build.sh
 
 # 1.5 関数定義
@@ -88,31 +88,25 @@ EOS
 #rm -f $w01; touch $w01;
 #addSource "server.gs" $svSrc $w01
 #cp $w01 $svSrc
-#
-#
-## ----------------------------------------------
-## 3. initialize.gs(初期化処理)の作成
-## ----------------------------------------------
-#cp $src/initialize.js $mod/initialize.gs
-#
-#
-## ----------------------------------------------
-## 4. client.js(class authMenu)の作成
-## ----------------------------------------------
-#echo "`date +"%T"` - step.4.1 start."
-#cat $src/client.js | awk 1 | $embed -src:$src >> $clSrc
-#cp $clSrc $mod/client.js
-#
-## 4.2 JSDocの作成
-#echo "`date +"%T"` - step.4.2 start."
-## sedはjsdoc2mdの冒頭4行削除用(強制付加されるtitle,a nameタグの削除)
-#jsdoc2md $clSrc | sed '1,4d' >> $clDoc
-#
-## 4.3 ソースを仕様書埋込用に修正
-#echo "`date +"%T"` - step.4.3 start."
-#rm -f $w01; touch $w01;
-#addSource "client.js" $clSrc $w01
-#cp $w01 $clSrc
+
+
+# ----------------------------------------------
+# 4. client.js(class authMenu)の作成
+# ----------------------------------------------
+echo "`date +"%T"` - step.4.1 start."
+cat $src/client.js | awk 1 | $embed -src:$src >> $clSource
+cp $clSource $mod/client.js
+
+# 4.2 JSDocの作成
+echo "`date +"%T"` - step.4.2 start."
+# sedはjsdoc2mdの冒頭4行削除用(強制付加されるtitle,a nameタグの削除)
+jsdoc2md $clSource | sed '1,4d' >> $clDoc
+
+# 4.3 ソースを仕様書埋込用に修正
+echo "`date +"%T"` - step.4.3 start."
+w01="$tmp/w01"
+addSource "client.js" $clSource $w01
+cp $w01 $clSource
 
 # ----------------------------------------------
 # 5. 仕様書の作成

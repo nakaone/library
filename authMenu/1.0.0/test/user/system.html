@@ -1,0 +1,67 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>system</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" href="../../../library/CSS/1.3.0/core.css">
+<style class="core" type="text/css"></style>
+<!--::CDN::-->
+<!--script src="" type="text/javascript"></script-->
+</head>
+<body><div name="wrapper"><!--bodyだけだとquerySelectorでscriptを含めて抽出されてしまうので要wrapper-->
+
+  <h1>cookieの消去</h1>
+  <p>camp2024関係のcookieを全て消去します。</p>
+  <button name="cookie" onclick="eraseStorage">消去</button>
+
+  <h1>「おまつり奉行」について</h1>
+  <p>「おまつり奉行」とはGoogle Spread(GAS)で作成された現在表示されている画面で、以下の機能を持ちます。</p>
+  <!--::機能説明(omatsuri.md)::$tmp/omatsuri.html::-->
+  <hr>
+  <p>OMATSURI Bugyo is a SPA, written by GAS on Google Spread, to support event participants, staffs and stakeholders.</p>
+  <ul>
+    <li>Version.2.0.0 : 2024.09.29 release</li>
+    <li>Version.1.0.3 : 2023.09.29 release</li>
+  </ul>
+  <p>author: Shimazu Kunihiro</p>
+  <p>contact: shimokitasho.oyaji@gmail.com</p>
+
+</div></body>
+<script class="core" type="text/javascript">
+function eraseStorage(event){
+  const v = {whois:'eraseStorage',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    console.log(event.target);
+    
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`
+    + `\narg=${stringify(arg)}`;  // 引数
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+</script>
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+    //::onload::
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+</html>
+  

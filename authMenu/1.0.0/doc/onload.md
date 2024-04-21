@@ -18,7 +18,7 @@ sequenceDiagram
     deactivate server
     Note right of client : storeUserInfo()
     client ->> client : ID確認処理
-    Note right of client : BurgerMenu.constructor()
+    Note right of client : authMenu.constructor()
     alt IDが存在
       client ->> user : メンバ用サイト
     else
@@ -45,8 +45,8 @@ sequenceDiagram
   1. authClient.constructor()
      1. localStorageにIDがあるか確認<br>
         不存在または不一致なら、serverから戻されたIDをlocalStorageに保存
-  1. BurgerMenu.constructor()
-     1. AuthインスタンスをBurgerMenuのインスタンスメンバとして生成(以下Burger.auth)
+  1. authMenu.constructor()
+     1. AuthインスタンスをauthMenuのインスタンスメンバとして生成(以下Burger.auth)
      1. Burger.auth.IDの値に従ってAuthメニュー描画(メニューアイコン、nav領域)
 
 [HtmlOutput.appendUntrusted()](https://developers.google.com/apps-script/reference/html/html-output?hl=ja#appenduntrustedaddedcontent)を使用して、HTMLの要素として返す。

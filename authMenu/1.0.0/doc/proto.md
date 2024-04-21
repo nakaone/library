@@ -40,7 +40,7 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 ```
 <body>
   <p class="title">校庭キャンプ2024</p>
-  <div class="BurgerMenu screen" name="wrapper">
+  <div class="authMenu screen" name="wrapper">
     <div data-menu="id:'イベント情報'">
       <div data-menu="id:'掲示板',func:'dispBoard'"></div>
       <div data-menu="id:'実施要領'">
@@ -72,14 +72,14 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 - {string} id - 【必須】メニューID
 - {string} [label] - メニュー化する時の名称。省略時はidを使用
 - {string} [func] - メニュー選択時に実行する関数名。<br>
-  関数名と実際の関数はBurgerMenuインスタンス生成時に定義。
+  関数名と実際の関数はauthMenuインスタンス生成時に定義。
 - {string} [href] - 遷移先のURL。別タブが開かれる。
 - {number} [allow=2^32-1] - 開示範囲。<br>
-  BurgerMenuインスタンス生成時のユーザ権限(auth)との論理積>0なら表示する。
+  authMenuインスタンス生成時のユーザ権限(auth)との論理積>0なら表示する。
   > ex: 一般参加者1、スタッフ2として
   >     data-menu="allow:2"とされた要素は、
-  >     new BurgerMenu({auth:1})の一般参加者は非表示、
-  >     new BurgerMenu({auth:2})のスタッフは表示となる。
+  >     new authMenu({auth:1})の一般参加者は非表示、
+  >     new authMenu({auth:2})のスタッフは表示となる。
 - {string} [from='1970/1/1'] - メニュー有効期間の開始日時。Dateオブジェクトで処理可能な日時文字列で指定
 - {string} [to='9999/12/31'] - メニュー有効期間の終了日時
 
@@ -99,7 +99,7 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
   (中略)
   <script>
     const auth = new Auth(...);  // 利用権限を取得。一般ユーザ:1, 管理者:8
-    const menu = new BurgerMenu();
+    const menu = new authMenu();
   ```
 - ユーザ権限は一般公開部分は`auth=1`とし、auth=0は使用しない(∵0⇒誰も見えない)。以降**権限が大きくなるにつれて大きな数字を使用**する
 - 申込フォームのように申込期限がある場合、同一IDで下の例のように設定する。
@@ -304,5 +304,5 @@ window.addEventListener('DOMContentLoaded',() => {
 # 改版履歴
 
 - rev 1.0.0 : 2024/04/20
-  - "class BurgerMenu(rev 1.2.0)"および作成途中の"class Auth(rev 2.0.0)"を統合
+  - "class authMenu(rev 1.2.0)"および作成途中の"class Auth(rev 2.0.0)"を統合
   - "storeUserInfo(rev 1.0.0)"を吸収
