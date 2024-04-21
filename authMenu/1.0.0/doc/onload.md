@@ -16,9 +16,8 @@ sequenceDiagram
     server ->> client : HTML(object)+ID
     activate client
     deactivate server
-    Note right of client : storeUserInfo()
-    client ->> client : ID確認処理
     Note right of client : authMenu.constructor()
+    client ->> client : インスタンス生成
     alt IDが存在
       client ->> user : メンバ用サイト
     else
@@ -34,11 +33,14 @@ sequenceDiagram
 ```
 
 - 水色の部分はhtmlのonload時処理
-- 表示要求に対するserverからの戻り値(ID)は、bodyタグ直下の冒頭に隠しDIVを用意し、そのinnerTextとして返す。
-- ID確認処理
-  - 引数、HTML埋込情報、sessionStorage、localStorageのユーザ情報を取得
-  - IDを特定(引数>HTML埋込>session>local。いずれにも無ければnull)
-  - IDが特定されるならauthを一般公開->参加者に変更
+- 表示要求に対するserverからの戻り値(ID)については、「[クエリ文字列の受取](#receiving_query_string)」の項を参照。
+- 「インスタンス生成」での処理内容
+  1. ユーザ情報を取得、不足分は既定値を設定
+     - 引数、HTML埋込情報、sessionStorage、localStorageのユーザ情報を取得
+     - IDを特定(引数>HTML埋込>session>local。いずれにも無ければnull)
+     - IDが特定されるならauthを一般公開->参加者に変更
+  1. 親要素を走査してナビゲーションを作成(アイコン、ナビ領域、背景)
+- 図中の`enterUserId()`は、`new authMenu()`の引数として渡された関数
 
 <!--
 - 「インスタンス生成」の処理内容

@@ -31,6 +31,8 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 
 ## body部での要素定義
 
+<a name="receiving_query_string"></a>
+
 ### クエリ文字列の受取
 
 以下は`https://script.google.com/〜4yz/exec?id=XXX`として、変数`id`でユーザIDを渡している例。

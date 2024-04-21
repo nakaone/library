@@ -122,6 +122,8 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 
 ## body部での要素定義
 
+<a name="receiving_query_string"></a>
+
 ### クエリ文字列の受取
 
 以下は`https://script.google.com/〜4yz/exec?id=XXX`として、変数`id`でユーザIDを渡している例。
@@ -272,9 +274,8 @@ sequenceDiagram
     server ->> client : HTML(object)+ID
     activate client
     deactivate server
-    Note right of client : storeUserInfo()
-    client ->> client : ID確認処理
     Note right of client : authMenu.constructor()
+    client ->> client : インスタンス生成
     alt IDが存在
       client ->> user : メンバ用サイト
     else
@@ -290,11 +291,15 @@ sequenceDiagram
 ```
 
 - 水色の部分はhtmlのonload時処理
-- 表示要求に対するserverからの戻り値(ID)は、bodyタグ直下の冒頭に隠しDIVを用意し、そのinnerTextとして返す。
-- ID確認処理
-  - 引数、HTML埋込情報、sessionStorage、localStorageのユーザ情報を取得
-  - IDを特定(引数>HTML埋込>session>local。いずれにも無ければnull)
-  - IDが特定されるならauthを一般公開->参加者に変更
+- 表示要求に対するserverからの戻り値(ID)については、「[クエリ文字列の受取](#receiving_query_string)」の項を参照。
+- 「インスタンス生成」での処理内容
+  1. ユーザ情報を取得、不足分は既定値を設定
+     - 引数、HTML埋込情報、sessionStorage、localStorageのユーザ情報を取得
+     - IDを特定(引数>HTML埋込>session>local。いずれにも無ければnull)
+     - IDが特定されるならauthを一般公開->参加者に変更
+     - RSA鍵ペアを生成、保存
+  1. 親要素を走査してナビゲーションを作成(アイコン、ナビ領域、背景)
+- 図中の`enterUserId()`は、`new authMenu()`の引数として渡された関数
 
 <!--
 - 「インスタンス生成」の処理内容
@@ -937,6 +942,8 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 [先頭](#ac0000) > [使用方法](#ac0002) > body部での要素定義
 
 
+<a name="receiving_query_string"></a>
+
 ### 2.1.1 クエリ文字列の受取<a name="ac0004"></a>
 
 [先頭](#ac0000) > [使用方法](#ac0002) > [body部での要素定義](#ac0003) > クエリ文字列の受取
@@ -1102,9 +1109,8 @@ sequenceDiagram
     server ->> client : HTML(object)+ID
     activate client
     deactivate server
-    Note right of client : storeUserInfo()
-    client ->> client : ID確認処理
     Note right of client : authMenu.constructor()
+    client ->> client : インスタンス生成
     alt IDが存在
       client ->> user : メンバ用サイト
     else
@@ -1120,11 +1126,15 @@ sequenceDiagram
 ```
 
 - 水色の部分はhtmlのonload時処理
-- 表示要求に対するserverからの戻り値(ID)は、bodyタグ直下の冒頭に隠しDIVを用意し、そのinnerTextとして返す。
-- ID確認処理
-  - 引数、HTML埋込情報、sessionStorage、localStorageのユーザ情報を取得
-  - IDを特定(引数>HTML埋込>session>local。いずれにも無ければnull)
-  - IDが特定されるならauthを一般公開->参加者に変更
+- 表示要求に対するserverからの戻り値(ID)については、「[クエリ文字列の受取](#receiving_query_string)」の項を参照。
+- 「インスタンス生成」での処理内容
+  1. ユーザ情報を取得、不足分は既定値を設定
+     - 引数、HTML埋込情報、sessionStorage、localStorageのユーザ情報を取得
+     - IDを特定(引数>HTML埋込>session>local。いずれにも無ければnull)
+     - IDが特定されるならauthを一般公開->参加者に変更
+     - RSA鍵ペアを生成、保存
+  1. 親要素を走査してナビゲーションを作成(アイコン、ナビ領域、背景)
+- 図中の`enterUserId()`は、`new authMenu()`の引数として渡された関数
 
 <!--
 - 「インスタンス生成」の処理内容
