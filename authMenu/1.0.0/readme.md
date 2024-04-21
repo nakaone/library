@@ -105,7 +105,7 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 本クラスは**Google SpreadのGASにデプロイし、SPAとして使用する**ことを想定しているため、'camp2024'等の**呼出元**で以下の作業を行う。
 
 1. caller/index.htmlの作成
-   1. body部でのメニュー要素定義
+   1. body部での要素定義
    1. authMenuの適用値設定
    1. グローバル変数、local/sessionStorageでのユーザ情報保存(※1)
    1. class authMenu(=authMenu/client.js)の組み込み(※2)
@@ -120,7 +120,31 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 
 # 使用方法
 
-## body部でのメニュー要素定義
+## body部での要素定義
+
+### クエリ文字列の受取
+
+以下は`https://script.google.com/〜4yz/exec?id=XXX`として、変数`id`でユーザIDを渡している例。
+
+サーバ側でクエリ文字列を受け取り、HTML内の変数`userId`にセット。
+
+```
+function doGet(e){
+  const template = HtmlService.createTemplateFromFile('index');
+  template.userId = e.parameter.id;  // ここ!!
+  const htmlOutput = template.evaluate();
+  htmlOutput.setTitle('camp2024');
+  return htmlOutput;
+}
+```
+
+クライアント側では`<?= userId ?>`で値を取得。
+
+```
+<div style="display:none" name="userId"><?= userId ?></div>
+```
+
+以下、querySelector等で適宜参照する。
 
 ### メニュー要素の定義
 
@@ -849,29 +873,30 @@ td, .td {
 
 1. <a href="#ac0001">機能概要</a>
 1. <a href="#ac0002">使用方法</a>
-   1. <a href="#ac0003">body部でのメニュー要素定義</a>
-      1. <a href="#ac0004">メニュー要素の定義</a>
-      1. <a href="#ac0005">data-menu属性に設定する文字列</a>
-   1. <a href="#ac0006">authMenuの適用値設定</a>
-      1. <a href="#ac0007">インスタンス生成時の処理フロー</a>
-      1. <a href="#ac0008">scriptサンプル</a>
-   1. <a href="#ac0009">グローバル変数、local/sessionStorageのユーザ情報保存</a>
-   1. <a href="#ac0010">authServerの適用値設定</a>
-   1. <a href="#ac0011">documentPropertiesのサーバ・ユーザ情報保存</a>
-1. <a href="#ac0012">機能別処理フロー</a>
-   1. <a href="#ac0013">新規ユーザ登録</a>
-   1. <a href="#ac0014">ログイン要求</a>
-   1. <a href="#ac0015">ユーザ情報の参照・編集</a>
-   1. <a href="#ac0016">権限設定、変更</a>
-1. <a href="#ac0017">フォルダ構成、ビルド手順</a>
-1. <a href="#ac0018">仕様(JSDoc)</a>
-1. <a href="#ac0019">テクニカルメモ</a>
-   1. <a href="#ac0020">GAS/htmlでの暗号化</a>
-         1. <a href="#ac0021">手順</a>
-         1. <a href="#ac0022">javascript用</a>
-         1. <a href="#ac0023">GAS用</a>
-1. <a href="#ac0024">プログラムソース</a>
-1. <a href="#ac0025">改版履歴</a>
+   1. <a href="#ac0003">body部での要素定義</a>
+      1. <a href="#ac0004">クエリ文字列の受取</a>
+      1. <a href="#ac0005">メニュー要素の定義</a>
+      1. <a href="#ac0006">data-menu属性に設定する文字列</a>
+   1. <a href="#ac0007">authMenuの適用値設定</a>
+      1. <a href="#ac0008">インスタンス生成時の処理フロー</a>
+      1. <a href="#ac0009">scriptサンプル</a>
+   1. <a href="#ac0010">グローバル変数、local/sessionStorageのユーザ情報保存</a>
+   1. <a href="#ac0011">authServerの適用値設定</a>
+   1. <a href="#ac0012">documentPropertiesのサーバ・ユーザ情報保存</a>
+1. <a href="#ac0013">機能別処理フロー</a>
+   1. <a href="#ac0014">新規ユーザ登録</a>
+   1. <a href="#ac0015">ログイン要求</a>
+   1. <a href="#ac0016">ユーザ情報の参照・編集</a>
+   1. <a href="#ac0017">権限設定、変更</a>
+1. <a href="#ac0018">フォルダ構成、ビルド手順</a>
+1. <a href="#ac0019">仕様(JSDoc)</a>
+1. <a href="#ac0020">テクニカルメモ</a>
+   1. <a href="#ac0021">GAS/htmlでの暗号化</a>
+         1. <a href="#ac0022">手順</a>
+         1. <a href="#ac0023">javascript用</a>
+         1. <a href="#ac0024">GAS用</a>
+1. <a href="#ac0025">プログラムソース</a>
+1. <a href="#ac0026">改版履歴</a>
 
 # 1 機能概要<a name="ac0001"></a>
 
@@ -889,7 +914,7 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 本クラスは**Google SpreadのGASにデプロイし、SPAとして使用する**ことを想定しているため、'camp2024'等の**呼出元**で以下の作業を行う。
 
 1. caller/index.htmlの作成
-   1. body部でのメニュー要素定義
+   1. body部での要素定義
    1. authMenuの適用値設定
    1. グローバル変数、local/sessionStorageでのユーザ情報保存(※1)
    1. class authMenu(=authMenu/client.js)の組み込み(※2)
@@ -907,14 +932,41 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 [先頭](#ac0000) > 使用方法
 
 
-## 2.1 body部でのメニュー要素定義<a name="ac0003"></a>
+## 2.1 body部での要素定義<a name="ac0003"></a>
 
-[先頭](#ac0000) > [使用方法](#ac0002) > body部でのメニュー要素定義
+[先頭](#ac0000) > [使用方法](#ac0002) > body部での要素定義
 
 
-### 2.1.1 メニュー要素の定義<a name="ac0004"></a>
+### 2.1.1 クエリ文字列の受取<a name="ac0004"></a>
 
-[先頭](#ac0000) > [使用方法](#ac0002) > [body部でのメニュー要素定義](#ac0003) > メニュー要素の定義
+[先頭](#ac0000) > [使用方法](#ac0002) > [body部での要素定義](#ac0003) > クエリ文字列の受取
+
+
+以下は`https://script.google.com/〜4yz/exec?id=XXX`として、変数`id`でユーザIDを渡している例。
+
+サーバ側でクエリ文字列を受け取り、HTML内の変数`userId`にセット。
+
+```
+function doGet(e){
+  const template = HtmlService.createTemplateFromFile('index');
+  template.userId = e.parameter.id;  // ここ!!
+  const htmlOutput = template.evaluate();
+  htmlOutput.setTitle('camp2024');
+  return htmlOutput;
+}
+```
+
+クライアント側では`<?= userId ?>`で値を取得。
+
+```
+<div style="display:none" name="userId"><?= userId ?></div>
+```
+
+以下、querySelector等で適宜参照する。
+
+### 2.1.2 メニュー要素の定義<a name="ac0005"></a>
+
+[先頭](#ac0000) > [使用方法](#ac0002) > [body部での要素定義](#ac0003) > メニュー要素の定義
 
 
 - 表示部は&lt;div data-menu&gt;の階層内で定義する。<br>
@@ -947,9 +999,9 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 
 「お知らせ」は「掲示板」「注意事項」のブランチとして扱われるので、「&lt;p&gt;お知らせのページです&lt;/p&gt;」というお知らせページ自身の表示内容は定義不可。
 
-### 2.1.2 data-menu属性に設定する文字列<a name="ac0005"></a>
+### 2.1.3 data-menu属性に設定する文字列<a name="ac0006"></a>
 
-[先頭](#ac0000) > [使用方法](#ac0002) > [body部でのメニュー要素定義](#ac0003) > data-menu属性に設定する文字列
+[先頭](#ac0000) > [使用方法](#ac0002) > [body部での要素定義](#ac0003) > data-menu属性に設定する文字列
 
 
 タグのallowとその人の権限(auth)の論理積>0ならメニューを表示する。
@@ -1008,7 +1060,7 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
   ```
 - メニュー生成時点で有効期限を判断、同一IDが複数存在する場合はいずれか一つのDIVのみ残して残りを削除してメニューを生成する。
 
-## 2.2 authMenuの適用値設定<a name="ac0006"></a>
+## 2.2 authMenuの適用値設定<a name="ac0007"></a>
 
 [先頭](#ac0000) > [使用方法](#ac0002) > authMenuの適用値設定
 
@@ -1029,9 +1081,9 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 - toggle {Arrow} 【*内部*】ナビゲーション領域の表示/非表示切り替え
 - showChildren {Arrow} 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
 
-### 2.2.1 インスタンス生成時の処理フロー<a name="ac0007"></a>
+### 2.2.1 インスタンス生成時の処理フロー<a name="ac0008"></a>
 
-[先頭](#ac0000) > [使用方法](#ac0002) > [authMenuの適用値設定](#ac0006) > インスタンス生成時の処理フロー
+[先頭](#ac0000) > [使用方法](#ac0002) > [authMenuの適用値設定](#ac0007) > インスタンス生成時の処理フロー
 
 
 ```mermaid
@@ -1093,9 +1145,9 @@ sequenceDiagram
 
 -->
 
-### 2.2.2 scriptサンプル<a name="ac0008"></a>
+### 2.2.2 scriptサンプル<a name="ac0009"></a>
 
-[先頭](#ac0000) > [使用方法](#ac0002) > [authMenuの適用値設定](#ac0006) > scriptサンプル
+[先頭](#ac0000) > [使用方法](#ac0002) > [authMenuの適用値設定](#ac0007) > scriptサンプル
 
 
 ```
@@ -1136,7 +1188,7 @@ window.addEventListener('DOMContentLoaded',() => {
 });
 ```
 
-## 2.3 グローバル変数、local/sessionStorageのユーザ情報保存<a name="ac0009"></a>
+## 2.3 グローバル変数、local/sessionStorageのユーザ情報保存<a name="ac0010"></a>
 
 [先頭](#ac0000) > [使用方法](#ac0002) > グローバル変数、local/sessionStorageのユーザ情報保存
 
@@ -1175,7 +1227,7 @@ window.addEventListener('DOMContentLoaded',() => {
 
 ※ sessionStorageに秘密鍵を保存することができないため、鍵ペアはonload時に生成し、グローバル変数として保持する
 
-## 2.4 authServerの適用値設定<a name="ac0010"></a>
+## 2.4 authServerの適用値設定<a name="ac0011"></a>
 
 [先頭](#ac0000) > [使用方法](#ac0002) > authServerの適用値設定
 
@@ -1189,7 +1241,7 @@ window.addEventListener('DOMContentLoaded',() => {
 1. {string} primatyKeyColumn='userId' - 主キーとなる項目名。主キーは数値で設定
 1. {string} emailColumn='email' - e-mailを格納する項目名
 
-## 2.5 documentPropertiesのサーバ・ユーザ情報保存<a name="ac0011"></a>
+## 2.5 documentPropertiesのサーバ・ユーザ情報保存<a name="ac0012"></a>
 
 [先頭](#ac0000) > [使用方法](#ac0002) > documentPropertiesのサーバ・ユーザ情報保存
 
@@ -1215,7 +1267,7 @@ window.addEventListener('DOMContentLoaded',() => {
      1. {number} endAt - 試行終了日時(UNIX時刻)
      1. {boolean} result - 試行の結果(true:OK)
 
-# 3 機能別処理フロー<a name="ac0012"></a>
+# 3 機能別処理フロー<a name="ac0013"></a>
 
 [先頭](#ac0000) > 機能別処理フロー
 
@@ -1226,9 +1278,9 @@ window.addEventListener('DOMContentLoaded',() => {
 
 以降の図中で`(XSkey/YPkey)`は「X側の秘密鍵で署名、Y側の公開鍵で暗号化する」の意味。
 
-## 3.1 新規ユーザ登録<a name="ac0013"></a>
+## 3.1 新規ユーザ登録<a name="ac0014"></a>
 
-[先頭](#ac0000) > [機能別処理フロー](#ac0012) > 新規ユーザ登録
+[先頭](#ac0000) > [機能別処理フロー](#ac0013) > 新規ユーザ登録
 
 
 新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
@@ -1282,9 +1334,9 @@ sequenceDiagram
 - 「検索結果=既存」の場合、ユーザ情報編集画面の表示も検討したが、なりすましでもe-mail入力で個人情報が表示されることになるので不適切と判断。
 - 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
 
-## 3.2 ログイン要求<a name="ac0014"></a>
+## 3.2 ログイン要求<a name="ac0015"></a>
 
-[先頭](#ac0000) > [機能別処理フロー](#ac0012) > ログイン要求
+[先頭](#ac0000) > [機能別処理フロー](#ac0013) > ログイン要求
 
 
 ```mermaid
@@ -1359,9 +1411,9 @@ sequenceDiagram
 - パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
   例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
 
-## 3.3 ユーザ情報の参照・編集<a name="ac0015"></a>
+## 3.3 ユーザ情報の参照・編集<a name="ac0016"></a>
 
-[先頭](#ac0000) > [機能別処理フロー](#ac0012) > ユーザ情報の参照・編集
+[先頭](#ac0000) > [機能別処理フロー](#ac0013) > ユーザ情報の参照・編集
 
 
 シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
@@ -1422,9 +1474,9 @@ config.operations = {
 }
 ```
 
-## 3.4 権限設定、変更<a name="ac0016"></a>
+## 3.4 権限設定、変更<a name="ac0017"></a>
 
-[先頭](#ac0000) > [機能別処理フロー](#ac0012) > 権限設定、変更
+[先頭](#ac0000) > [機能別処理フロー](#ac0013) > 権限設定、変更
 
 
 権限を付与すべきかは個別に判断する必要があるため、システム化せず、管理者がソース(`authServer.changeAuth()`)を直接編集、GASコンソール上で実行する。
@@ -1448,7 +1500,7 @@ sequenceDiagram
   server ->>- admin : 権限設定リスト
 ```
 
-# 4 フォルダ構成、ビルド手順<a name="ac0017"></a>
+# 4 フォルダ構成、ビルド手順<a name="ac0018"></a>
 
 [先頭](#ac0000) > フォルダ構成、ビルド手順
 
@@ -1473,7 +1525,7 @@ sequenceDiagram
 - initialize.gs : サーバ側初期化処理のソース
 - readme.md : doc配下を統合した、client/server全体の仕様書
 
-# 5 仕様(JSDoc)<a name="ac0018"></a>
+# 5 仕様(JSDoc)<a name="ac0019"></a>
 
 [先頭](#ac0000) > 仕様(JSDoc)
 
@@ -1482,19 +1534,19 @@ sequenceDiagram
 
 <!--:x:$tmp/server.md::-->
 
-# 6 テクニカルメモ<a name="ac0019"></a>
+# 6 テクニカルメモ<a name="ac0020"></a>
 
 [先頭](#ac0000) > テクニカルメモ
 
 
-## 6.1 GAS/htmlでの暗号化<a name="ac0020"></a>
+## 6.1 GAS/htmlでの暗号化<a name="ac0021"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0019) > GAS/htmlでの暗号化
+[先頭](#ac0000) > [テクニカルメモ](#ac0020) > GAS/htmlでの暗号化
 
 
-#### 6.1.1 手順<a name="ac0021"></a>
+#### 6.1.1 手順<a name="ac0022"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0019) > [GAS/htmlでの暗号化](#ac0020) > 手順
+[先頭](#ac0000) > [テクニカルメモ](#ac0020) > [GAS/htmlでの暗号化](#ac0021) > 手順
 
 
 ```mermaid
@@ -1530,9 +1582,9 @@ sequenceDiagram
   - GASでの保存
   - 
 
-#### 6.1.2 javascript用<a name="ac0022"></a>
+#### 6.1.2 javascript用<a name="ac0023"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0019) > [GAS/htmlでの暗号化](#ac0020) > javascript用
+[先頭](#ac0000) > [テクニカルメモ](#ac0020) > [GAS/htmlでの暗号化](#ac0021) > javascript用
 
 
 - Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
@@ -1541,9 +1593,9 @@ sequenceDiagram
 javascript 鍵ペア ライブラリ
 
 
-#### 6.1.3 GAS用<a name="ac0023"></a>
+#### 6.1.3 GAS用<a name="ac0024"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0019) > [GAS/htmlでの暗号化](#ac0020) > GAS用
+[先頭](#ac0000) > [テクニカルメモ](#ac0020) > [GAS/htmlでの暗号化](#ac0021) > GAS用
 
 
 GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
@@ -1588,7 +1640,7 @@ function setTest() {
 }
 ```
 
-# 7 プログラムソース<a name="ac0024"></a>
+# 7 プログラムソース<a name="ac0025"></a>
 
 [先頭](#ac0000) > プログラムソース
 
@@ -1597,7 +1649,7 @@ function setTest() {
 
 <!--:x:$tmp/server.js::-->
 
-# 8 改版履歴<a name="ac0025"></a>
+# 8 改版履歴<a name="ac0026"></a>
 
 [先頭](#ac0000) > 改版履歴
 

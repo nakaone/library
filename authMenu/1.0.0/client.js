@@ -9,8 +9,12 @@ constructor(arg={}){
   console.log(`${v.whois} start.\narg=${stringify(arg)}`);
   try {
 
-    v.step = 1; // 引数と既定値からメンバの値を設定
+    v.step = 1.1; // 引数と既定値からメンバの値を設定
     v.r = this.#setProperties(arg);
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 1.2; // sessionStorage/localStorageのユーザ情報を更新
+    v.r = this.storeUserInfo();
     if( v.r instanceof Error ) throw v.r;
 
     v.step = 2; // アイコン、ナビ、背景の作成
@@ -38,7 +42,8 @@ constructor(arg={}){
     if( v.rv instanceof Error ) throw v.rv;
 
     v.step = 9; // 終了処理
-    changeScreen(this.home);
+    v.r = this.changeScreen();
+    if( v.r instanceof Error ) throw v.r;
     console.log(`${v.whois} normal end.`);
 
   } catch(e) {
@@ -50,11 +55,47 @@ constructor(arg={}){
   }
 }
 /** constructorの引数と既定値からthisの値を設定
+ * 
  * @param {Object} arg - constructorに渡された引数オブジェクト
  * @returns {null|Error}
+ * 
+ * @desc
+ * 
+ * ### <a id="authMenu_memberList">authMenuクラスメンバ一覧</a>
+ * 
+ * 1. 「**太字**」はインスタンス生成時、必須指定項目
+ * 1. 「【*内部*】」は指定不要の項目(constructor他で自動的に設定されるメンバ)
+ * 1. その他はconstructorの引数で指定可、指定が無い項目は既定値をセット
+ * 
+ * - wrapper='.authMenu[name="wrapper"] {string|HTMLElement}<br>
+ *   メニュー全体を囲む要素。body不可
+ * - icon {HTMLElement} : 【*内部*】メニューアイコンとなるHTML要素
+ * - navi {HTMLElement} : 【*内部*】ナビ領域となるHTML要素
+ * - back {HTMLElement} : 【*内部*】ナビ領域の背景となるHTML要素
+ * - auth=1 {number}<br>
+ *   ユーザ(クライアント)の権限
+ * - userIdSelector='[name="userId"]' {string}<br>
+ *   URLクエリ文字列で与えられたuserIdを保持する要素のCSSセレクタ
+ * - publicAuth=1 {number}<br>
+ *   ユーザIDの特定で権限が昇格する場合、変更前の権限(一般公開用権限)
+ * - memberAuth=2 {number}<br>
+ *   ユーザIDの特定で権限が昇格する場合、変更後の権限(参加者用権限)
+ * - allow=2**32-1 {number}<br>
+ *   data-menuのauth(開示範囲)の既定値
+ * - func={} {Object.<string,function>}<br>
+ *   メニューから呼び出される関数。ラベルはdata-menu属性の`func`に対応させる。
+ * - **home** {string|Object.<number,string>}<br>
+ *   文字列の場合、ホーム画面とするdata-menu属性のid。<br>
+ *   ユーザ権限別にホームを設定するなら`{auth:スクリーン名(.screen[name])}`形式のオブジェクトを指定。<br>
+ *   例(auth=1:一般公開,2:参加者,4:スタッフ)⇒`{1:'実施要領',2:'参加者パス',4:'スタッフの手引き'}`
+ * - initialSubMenu=true {boolean}<br>
+ *   サブメニューの初期状態。true:開いた状態、false:閉じた状態
+ * - css {string} : authMenu専用CSS。書き換えする場合、全文指定すること(一部変更は不可)
+ * - toggle {Arrow} : 【*内部*】ナビゲーション領域の表示/非表示切り替え
+ * - showChildren {Arror} : 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
  */
 #setProperties(arg){
-  const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
+    const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
@@ -196,18 +237,28 @@ constructor(arg={}){
         background : rgba(100,100,100,0.8);
       }
     `;
-    v.default.toggle = () => {  // ナビゲーション領域の表示/非表示切り替え
+    v.default.toggle = () => {
+      // ナビゲーション領域の表示/非表示切り替え
       document.querySelector(`.${this.constructor.name} nav`).classList.toggle('is_active');
       document.querySelector(`.${this.constructor.name} .back`).classList.toggle('is_active');
       document.querySelectorAll(`.${this.constructor.name} .icon button span`)
       .forEach(x => x.classList.toggle('is_active'));        
     };
-    v.default.showChildren = (event) => { // ブランチの下位階層メニュー表示/非表示切り替え
+    v.default.showChildren = (event) => {
+      // ブランチの下位階層メニュー表示/非表示切り替え
       event.target.parentNode.querySelector('ul').classList.toggle('is_open');
       let m = event.target.innerText.match(/^([▶️▼])(.+)/);
       const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
       event.target.innerText = text;  
     };
+    v.default.changeScreen = (arg=null) => {
+      // this.homeの内容に従って画面を切り替える
+      if( arg === null ){
+        // 変更先画面が無指定 => ホーム画面を表示
+        arg = typeof this.home === 'string' ? this.home : this.home[this.auth];
+      }
+      return changeScreen(arg);
+    }
 
     v.step = 2; // 引数と既定値から設定値のオブジェクトを作成
     v.arg = mergeDeeply(arg,v.default);
@@ -243,6 +294,104 @@ constructor(arg={}){
     e.message = `${v.whois} abnormal end at step.${v.step}`
     + `\n${e.message}`
     + `\narg=${stringify(arg)}`;  // 引数
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+/** sessionStorage/localStorageのユーザ情報を更新する
+ * 
+ * ①本関数の引数、②HTMLに埋め込まれたユーザ情報、③sessionStorage、④localStorageから
+ * ユーザ情報が取得できないか試行、①>②>③>④の優先順位で最新の情報を特定し、
+ * localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限を保存する。
+ * 
+ * @param {number} userId=null - 決まったユーザIDを指定する場合に指定
+ * @returns {void}
+ * 
+ * @example
+ * 
+ * **実行結果(例)**
+ * 
+ * - localStorage : ユーザIDのみ。以下は例。
+ *   | Key | Value |
+ *   | :-- | :-- |
+ *   | authMenu | 123 |
+ * - sessionStorage : ユーザID＋ユーザ権限
+ *   | Key | Value |
+ *   | :-- | :-- |
+ *   | authMenu | {"userId":123,"auth":1} |
+ * 
+ * **HTMLへのユーザIDの埋め込み**
+ * 
+ * 応募後の登録内容確認メールのように、URLのクエリ文字列でユーザIDが与えられた場合、
+ * 以下のようにHTMLにIDが埋め込まれて返される。
+ * 
+ * 1. クエリ文字列が埋め込まれたURL(末尾の`id=123`)
+ *    ```
+ *    https://script.google.com/macros/s/AK〜24yz/exec?id=123
+ *    ```
+ * 2. doGet関数で返すHTMLファイルに予め埋込用の要素を定義
+ *    ```
+ *    <div style="display:none" name="userId"><?= userId ?></div>
+ *    ```
+ * 3. 要求時、クエリ文字列を埋め込んだHTMLを返す<br>
+ *    ```
+ *    function doGet(e){
+ *      const template = HtmlService.createTemplateFromFile('index');
+ *      template.userId = e.parameter.id;  // 'userId'がHTML上の変数、末尾'id'がクエリ文字列の内容
+ *      const htmlOutput = template.evaluate();
+ *      htmlOutput.setTitle('camp2024');
+ *      return htmlOutput;
+ *    }
+ *    ```
+ * 4. `opt.userIdSelector='div[name="userId"]'`を指定して本関数を実行、HTMLからユーザIDを取得
+ * 
+ */
+storeUserInfo(userId=null){
+  const v = {whois:'storeUserInfo',rv:null,step:0,html:null,arg:null};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // オプションの既定値をセット
+
+    v.step = 2.1; // sessionStorageからユーザ情報を取得
+    v.r = sessionStorage.getItem(this.constructor.name);
+    v.session = v.r ? JSON.parse(v.r) : {userId:null,auth:1};
+    v.step = 2.2; // localStorageからユーザ情報を取得
+    v.r = localStorage.getItem(this.constructor.name);
+    v.local = v.r ? Number(v.r) : null;
+    v.step = 2.3; // HTMLに埋め込まれたuserIdを取得
+    v.dom = document.querySelector(this.userIdSelector);
+    if( v.dom !== null ){
+      v.r = v.dom.innerText;
+      v.html = v.r.length > 0 ? Number(v.r) : null;  
+    }
+    v.step = 2.4; // 引数で渡されたuserIdを取得
+    if( userId !== null ) v.arg = Number(userId);
+
+    v.step = 2.1; // userIdの特定
+    // 優先順位は`arg > html > session > local`
+    v.session.userId = v.arg !== null ? v.arg
+    : ( v.html !== null ? v.html
+    : ( v.session.userId !== null ? v.session.userId
+    : ( v.local !== null ? v.local : null)));
+    v.step = 2.2; // userIdが特定され且つauthが最低の場合は参加者(auth=2)に昇格
+    if( v.session.userId !== null && v.session.auth === this.publicAuth ){
+      v.session.auth = this.memberAuth;
+    }
+
+    v.step = 3.1; // sessionStorageへの保存
+    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.session));
+    v.step = 3.2; // localStorageへの保存
+    localStorage.setItem(this.constructor.name,v.session.userId);
+    
+    v.step = 4; // 終了処理
+    v.rv = v.session;
+    console.log(`${v.whois} normal end.\n`
+    +`v.session=${JSON.stringify(v.session)}\nv.local=${v.local}\nv.html=${v.html}\nv.arg=${v.arg}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }
@@ -319,8 +468,8 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
   try {
 
     v.step = 1.1; // sessionStorageからユーザ権限を読み取り
-    v.r = sessionStorage.getItem(g.programId);
-    if( !v.r ) throw new Error(`sessionStorageに${g.programId}キーが存在しません`);
+    v.r = sessionStorage.getItem(this.constructor.name);
+    if( !v.r ) throw new Error(`sessionStorageに${this.constructor.name}キーが存在しません`);
     this.auth = JSON.parse(v.r).auth;
     v.step = 1.2; // navi領域をクリア
     if( depth === 0 ) navi.innerHTML = '';
@@ -335,7 +484,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
 
       // wrapper内のdata-menu属性を持つ要素に対する処理
       v.step = 2.1; // data-menuを持たない要素はスキップ
-      v.attr = this.#objectize(v.d.getAttribute(`data-${this.constructor.name}`));
+      v.attr = this.#objectize(v.d.getAttribute(`data-menu`));
       if( v.attr instanceof Error ) throw v.attr;
       if( v.attr === null ) continue;
 
@@ -386,7 +535,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
       } else {
         v.step = 5.3; // その他(=画面切替)の場合
         // 子孫メニューがあるか確認
-        if( v.d.querySelector(`[data-${this.constructor.name}]`) ){
+        if( v.d.querySelector(`[data-menu]`) ){
           v.step = 5.33; // 子孫メニューが存在する場合
           v.hasChild = true; // 再帰呼出用のフラグを立てる
           Object.assign(v.li.children[0],{
@@ -400,7 +549,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
           v.step = 5.33; // nameを指定して画面切替
           Object.assign(v.li.children[0],{
             event:{click:(event)=>{
-              changeScreen(event.target.getAttribute('name'));
+              this.changeScreen(event.target.getAttribute('name'));
               this.toggle();
             }}
           });

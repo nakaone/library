@@ -1,9 +1,45 @@
 /** constructorの引数と既定値からthisの値を設定
+ * 
  * @param {Object} arg - constructorに渡された引数オブジェクト
  * @returns {null|Error}
+ * 
+ * @desc
+ * 
+ * ### <a id="authMenu_memberList">authMenuクラスメンバ一覧</a>
+ * 
+ * 1. 「**太字**」はインスタンス生成時、必須指定項目
+ * 1. 「【*内部*】」は指定不要の項目(constructor他で自動的に設定されるメンバ)
+ * 1. その他はconstructorの引数で指定可、指定が無い項目は既定値をセット
+ * 
+ * - wrapper='.authMenu[name="wrapper"] {string|HTMLElement}<br>
+ *   メニュー全体を囲む要素。body不可
+ * - icon {HTMLElement} : 【*内部*】メニューアイコンとなるHTML要素
+ * - navi {HTMLElement} : 【*内部*】ナビ領域となるHTML要素
+ * - back {HTMLElement} : 【*内部*】ナビ領域の背景となるHTML要素
+ * - auth=1 {number}<br>
+ *   ユーザ(クライアント)の権限
+ * - userIdSelector='[name="userId"]' {string}<br>
+ *   URLクエリ文字列で与えられたuserIdを保持する要素のCSSセレクタ
+ * - publicAuth=1 {number}<br>
+ *   ユーザIDの特定で権限が昇格する場合、変更前の権限(一般公開用権限)
+ * - memberAuth=2 {number}<br>
+ *   ユーザIDの特定で権限が昇格する場合、変更後の権限(参加者用権限)
+ * - allow=2**32-1 {number}<br>
+ *   data-menuのauth(開示範囲)の既定値
+ * - func={} {Object.<string,function>}<br>
+ *   メニューから呼び出される関数。ラベルはdata-menu属性の`func`に対応させる。
+ * - **home** {string|Object.<number,string>}<br>
+ *   文字列の場合、ホーム画面とするdata-menu属性のid。<br>
+ *   ユーザ権限別にホームを設定するなら`{auth:スクリーン名(.screen[name])}`形式のオブジェクトを指定。<br>
+ *   例(auth=1:一般公開,2:参加者,4:スタッフ)⇒`{1:'実施要領',2:'参加者パス',4:'スタッフの手引き'}`
+ * - initialSubMenu=true {boolean}<br>
+ *   サブメニューの初期状態。true:開いた状態、false:閉じた状態
+ * - css {string} : authMenu専用CSS。書き換えする場合、全文指定すること(一部変更は不可)
+ * - toggle {Arrow} : 【*内部*】ナビゲーション領域の表示/非表示切り替え
+ * - showChildren {Arror} : 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
  */
 #setProperties(arg){
-  const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
+    const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
@@ -145,18 +181,28 @@
         background : rgba(100,100,100,0.8);
       }
     `;
-    v.default.toggle = () => {  // ナビゲーション領域の表示/非表示切り替え
+    v.default.toggle = () => {
+      // ナビゲーション領域の表示/非表示切り替え
       document.querySelector(`.${this.constructor.name} nav`).classList.toggle('is_active');
       document.querySelector(`.${this.constructor.name} .back`).classList.toggle('is_active');
       document.querySelectorAll(`.${this.constructor.name} .icon button span`)
       .forEach(x => x.classList.toggle('is_active'));        
     };
-    v.default.showChildren = (event) => { // ブランチの下位階層メニュー表示/非表示切り替え
+    v.default.showChildren = (event) => {
+      // ブランチの下位階層メニュー表示/非表示切り替え
       event.target.parentNode.querySelector('ul').classList.toggle('is_open');
       let m = event.target.innerText.match(/^([▶️▼])(.+)/);
       const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
       event.target.innerText = text;  
     };
+    v.default.changeScreen = (arg=null) => {
+      // this.homeの内容に従って画面を切り替える
+      if( arg === null ){
+        // 変更先画面が無指定 => ホーム画面を表示
+        arg = typeof this.home === 'string' ? this.home : this.home[this.auth];
+      }
+      return changeScreen(arg);
+    }
 
     v.step = 2; // 引数と既定値から設定値のオブジェクトを作成
     v.arg = mergeDeeply(arg,v.default);

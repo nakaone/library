@@ -9,8 +9,8 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
   try {
 
     v.step = 1.1; // sessionStorageからユーザ権限を読み取り
-    v.r = sessionStorage.getItem(g.programId);
-    if( !v.r ) throw new Error(`sessionStorageに${g.programId}キーが存在しません`);
+    v.r = sessionStorage.getItem(this.constructor.name);
+    if( !v.r ) throw new Error(`sessionStorageに${this.constructor.name}キーが存在しません`);
     this.auth = JSON.parse(v.r).auth;
     v.step = 1.2; // navi領域をクリア
     if( depth === 0 ) navi.innerHTML = '';
@@ -25,7 +25,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
 
       // wrapper内のdata-menu属性を持つ要素に対する処理
       v.step = 2.1; // data-menuを持たない要素はスキップ
-      v.attr = this.#objectize(v.d.getAttribute(`data-${this.constructor.name}`));
+      v.attr = this.#objectize(v.d.getAttribute(`data-menu`));
       if( v.attr instanceof Error ) throw v.attr;
       if( v.attr === null ) continue;
 
@@ -76,7 +76,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
       } else {
         v.step = 5.3; // その他(=画面切替)の場合
         // 子孫メニューがあるか確認
-        if( v.d.querySelector(`[data-${this.constructor.name}]`) ){
+        if( v.d.querySelector(`[data-menu]`) ){
           v.step = 5.33; // 子孫メニューが存在する場合
           v.hasChild = true; // 再帰呼出用のフラグを立てる
           Object.assign(v.li.children[0],{
@@ -90,7 +90,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
           v.step = 5.33; // nameを指定して画面切替
           Object.assign(v.li.children[0],{
             event:{click:(event)=>{
-              changeScreen(event.target.getAttribute('name'));
+              this.changeScreen(event.target.getAttribute('name'));
               this.toggle();
             }}
           });

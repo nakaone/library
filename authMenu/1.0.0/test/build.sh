@@ -116,6 +116,10 @@ echo "`date +"%T"` - camp2024: step.4.12 start."
 cat $user/map2023.svg \
 | $esed -x:" style=\"position: fixed; top: 0px; left: 0px;\"" -s:"" \
 > $tmp/map2023.svg # svg内の画像を固定する指定は削除
+# 4.13 肝試しルート
+base64 -i $user/肝試しルート.webp > $tmp/w01
+echo "<img src=\"data:image/webp;bases64,__webp\" />" \
+| $esed -x:"__webp" -f:$tmp/w01 > $tmp/肝試しルート.txt
 # 4.13 システム設定
 echo "`date +"%T"` - camp2024: step.4.13 start."
 #cat $user/system.html | $querySelector -key:'style.core' > $w01; echo $eoCSS >> $w01
@@ -138,12 +142,11 @@ cat $lib/createElement/1.2.1/core.js | awk 1 >> $clScript
 cat $lib/mergeDeeply/1.1.0/core.js | awk 1 >> $clScript
 cat $lib/stringify/1.1.1/core.js | awk 1 >> $clScript
 cat $lib/whichType/1.0.1/core.js | awk 1 >> $clScript
-cat $clScript | awk 1 > $tmp/script.js
 
 # 4.3 onload部分の作成
 echo "`date +"%T"` - camp2024: step.4.3 start."
 clOnload="$tmp/onload.js"
-touch $clOnload
+cat $src/onload.js | sed 's/^/    /g' > $clOnload
 
 ## JSDocの作成
 clDoc="$tmp/client.md"

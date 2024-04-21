@@ -14,7 +14,7 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 本クラスは**Google SpreadのGASにデプロイし、SPAとして使用する**ことを想定しているため、'camp2024'等の**呼出元**で以下の作業を行う。
 
 1. caller/index.htmlの作成
-   1. body部でのメニュー要素定義
+   1. body部での要素定義
    1. authMenuの適用値設定
    1. グローバル変数、local/sessionStorageでのユーザ情報保存(※1)
    1. class authMenu(=authMenu/client.js)の組み込み(※2)
@@ -29,7 +29,31 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
 
 # 使用方法
 
-## body部でのメニュー要素定義
+## body部での要素定義
+
+### クエリ文字列の受取
+
+以下は`https://script.google.com/〜4yz/exec?id=XXX`として、変数`id`でユーザIDを渡している例。
+
+サーバ側でクエリ文字列を受け取り、HTML内の変数`userId`にセット。
+
+```
+function doGet(e){
+  const template = HtmlService.createTemplateFromFile('index');
+  template.userId = e.parameter.id;  // ここ!!
+  const htmlOutput = template.evaluate();
+  htmlOutput.setTitle('camp2024');
+  return htmlOutput;
+}
+```
+
+クライアント側では`<?= userId ?>`で値を取得。
+
+```
+<div style="display:none" name="userId"><?= userId ?></div>
+```
+
+以下、querySelector等で適宜参照する。
 
 ### メニュー要素の定義
 

@@ -5,16 +5,27 @@
 </style>
 <!--::$src/cdn.html::-->
 </head><body>
+<div style="display:none" name="userId"><?= userId ?></div>
 <p class="title">校庭キャンプ2024</p>
 <div class="authMenu screen" name="wrapper">
   <div data-menu="id:'イベント情報'">
     <div data-menu="id:'掲示板'"></div>
-    <div data-menu="id:'実施要領'"><!--::$tmp/実施要領.html::--></div>
-    <div data-menu="id:'注意事項'"><!--::$tmp/注意事項.html::--></div>
-    <div data-menu="id:'持ち物リスト'"><!--::$tmp/持ち物リスト.html::--></div>
+    <div data-menu="id:'実施要領'">
+      <!--::$tmp/実施要領.html::-->
+    </div>
+    <div data-menu="id:'注意事項'">
+      <!--::$tmp/注意事項.html::-->
+    </div>
+    <div data-menu="id:'持ち物リスト'">
+      <!--::$tmp/持ち物リスト.html::-->
+    </div>
     <div data-menu="id:'タイムテーブル'"></div>
-    <div data-menu="id:'会場案内図'"><!--::$tmp/map2023.svg::--></div>
-    <div data-menu="id:'肝試しルート'"><!--::$user/肝試しルート.svg::--></div>
+    <div data-menu="id:'会場案内図'">
+      <!--::$tmp/map2023.svg::-->
+    </div>
+    <div data-menu="id:'肝試しルート'">
+      <!--::$tmp/肝試しルート.txt::-->
+    </div>
   </div>
   <div data-menu="id:'参加者情報'">
     <div data-menu="id:'参加者パス'"></div>
@@ -30,11 +41,16 @@
   </div>
   <div data-menu="id:'その他'">
     <div data-menu="id:'参加者アンケート回答'"></div>
-    <div data-menu="id:'システム設定'"><!--::$tmp/system.html::--></div>
-    <div data-menu="id:'関連サイトへのリンク'"><!--::$user/リンク集.html::--></div>
+    <div data-menu="id:'システム設定'">
+      <!--::$tmp/system.html::-->
+    </div>
+    <div data-menu="id:'関連サイトへのリンク'">
+      <!--::$user/リンク集.html::-->
+    </div>
   </div>
 </div></body>
 <script type="text/javascript">
+const g = {}; // グローバル変数格納用
 //::$tmp/script.js::
 window.addEventListener('DOMContentLoaded',() => {
   const v = {whois:'DOMContentLoaded',rv:null,step:0};

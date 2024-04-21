@@ -8,8 +8,12 @@ constructor(arg={}){
   console.log(`${v.whois} start.\narg=${stringify(arg)}`);
   try {
 
-    v.step = 1; // 引数と既定値からメンバの値を設定
+    v.step = 1.1; // 引数と既定値からメンバの値を設定
     v.r = this.#setProperties(arg);
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 1.2; // sessionStorage/localStorageのユーザ情報を更新
+    v.r = this.storeUserInfo();
     if( v.r instanceof Error ) throw v.r;
 
     v.step = 2; // アイコン、ナビ、背景の作成
@@ -37,7 +41,8 @@ constructor(arg={}){
     if( v.rv instanceof Error ) throw v.rv;
 
     v.step = 9; // 終了処理
-    changeScreen(this.home);
+    v.r = this.changeScreen();
+    if( v.r instanceof Error ) throw v.r;
     console.log(`${v.whois} normal end.`);
 
   } catch(e) {
