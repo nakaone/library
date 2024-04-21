@@ -8,15 +8,14 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1.1; // sessionStorageからユーザ権限を読み取り
-    v.r = sessionStorage.getItem(this.constructor.name);
-    if( !v.r ) throw new Error(`sessionStorageに${this.constructor.name}キーが存在しません`);
-    this.auth = JSON.parse(v.r).auth;
-    v.step = 1.2; // navi領域をクリア
-    if( depth === 0 ) navi.innerHTML = '';
-    v.step = 1.3; // auth毎にホームを変更する場合、変更
-    if( this.homeForEachAuth !== null ){
-      this.home = this.homeForEachAuth[this.auth];
+    if( depth === 0 ){
+      v.step = 1.1; // sessionStorageからユーザ権限を読み取り
+      v.r = sessionStorage.getItem(this.constructor.name);
+      if( !v.r ) throw new Error(`sessionStorageに${this.constructor.name}キーが存在しません`);
+      this.auth = JSON.parse(v.r).auth;
+
+      v.step = 1.2; // navi領域をクリア
+      navi.innerHTML = '';
     }
 
     // 子要素を順次走査し、data-menuを持つ要素をnaviに追加

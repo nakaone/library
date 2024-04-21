@@ -55,7 +55,7 @@ storeUserInfo(userId=null){
 
     v.step = 2.1; // sessionStorageからユーザ情報を取得
     v.r = sessionStorage.getItem(this.constructor.name);
-    v.session = v.r ? JSON.parse(v.r) : {userId:null,auth:1};
+    v.session = v.r ? JSON.parse(v.r) : {userId:null,auth:this.publicAuth};
     v.step = 2.2; // localStorageからユーザ情報を取得
     v.r = localStorage.getItem(this.constructor.name);
     v.local = v.r ? Number(v.r) : null;
@@ -83,7 +83,10 @@ storeUserInfo(userId=null){
     sessionStorage.setItem(this.constructor.name,JSON.stringify(v.session));
     v.step = 3.2; // localStorageへの保存
     localStorage.setItem(this.constructor.name,v.session.userId);
-    
+    v.step = 3.3; // メンバに保存
+    this.userId = v.session.userId;
+    this.auth = v.session.auth;
+
     v.step = 4; // 終了処理
     v.rv = v.session;
     console.log(`${v.whois} normal end.\n`

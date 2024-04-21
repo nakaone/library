@@ -7,9 +7,15 @@
 </head><body>
 <div style="display:none" name="userId"><?= userId ?></div>
 <p class="title">校庭キャンプ2024</p>
+<!--
+  1: 一般公開部分
+  2: 参加者向け
+  4: スタッフ向け
+  8: コアスタッフ(受付担当)向け
+-->
 <div class="authMenu screen" name="wrapper">
   <div data-menu="id:'イベント情報'">
-    <div data-menu="id:'掲示板'"></div>
+    <div data-menu="id:'掲示板',allow:2">【未実装】掲示板</div>
     <div data-menu="id:'実施要領'">
       <!--::$tmp/実施要領.html::-->
     </div>
@@ -19,35 +25,34 @@
     <div data-menu="id:'持ち物リスト'">
       <!--::$tmp/持ち物リスト.html::-->
     </div>
-    <div data-menu="id:'タイムテーブル'"></div>
-    <div data-menu="id:'会場案内図'">
+    <div data-menu="id:'タイムテーブル',allow:14">【未実装】タイムテーブル</div>
+    <div data-menu="id:'会場案内図',allow:14">
       <!--::$tmp/map2023.svg::-->
     </div>
-    <div data-menu="id:'肝試しルート'">
-      <!--::$tmp/肝試しルート.txt::-->
-    </div>
+    <!--div data-menu="id:'肝試しルート'"><!-:x:$user/肝試しルート.svg::-></div-->
   </div>
-  <div data-menu="id:'参加者情報'">
-    <div data-menu="id:'参加者パス'"></div>
-    <div data-menu="id:'登録・修正・キャンセル'"></div>
+  <div data-menu="id:'参加者情報',allow:14">
+    <div data-menu="id:'参加者パス',allow:14">【未実装】参加者パス</div>
+    <div data-menu="id:'登録・修正・キャンセル',allow:14">【未実装】登録・修正・キャンセル</div>
   </div>
-  <div data-menu="id:'スタッフ用'">
-    <div data-menu="id:'スタッフ応募状況'"><!-- スタッフ応募(募集)状況＋応募フォーム --></div>
-    <div data-menu="id:'掲示板への投稿'"></div>
-    <div data-menu="id:'参加者集計'"></div>
-    <div data-menu="id:'参加者受付'"><!-- 参加者情報検索・編集 --></div>
-    <div data-menu="id:'気づき投稿'"></div>
-    <div data-menu="id:'アクセス分析'"></div>
+  <div data-menu="id:'スタッフ用',allow:12">
+    <div data-menu="id:'スタッフ応募状況',allow:12"><!-- スタッフ応募(募集)状況＋応募フォーム --></div>
+    <div data-menu="id:'掲示板への投稿',allow:12">【未実装】掲示板への投稿</div>
+    <div data-menu="id:'参加者集計',allow:12">【未実装】参加者集計</div>
+    <div data-menu="id:'参加者受付',allow:8"><!-- 参加者情報検索・編集 --></div>
+    <div data-menu="id:'気づき投稿',allow:12">【未実装】気づき投稿</div>
+    <div data-menu="id:'アクセス分析',allow:12">【未実装】アクセス分析</div>
   </div>
-  <div data-menu="id:'その他'">
-    <div data-menu="id:'参加者アンケート回答'"></div>
-    <div data-menu="id:'システム設定'">
+  <div data-menu="id:'その他',allow:14">
+    <div data-menu="id:'参加者アンケート回答',allow:2">【未実装】参加者アンケート回答</div>
+    <div data-menu="id:'システム設定',allow:14">
       <!--::$tmp/system.html::-->
     </div>
     <div data-menu="id:'関連サイトへのリンク'">
       <!--::$user/リンク集.html::-->
     </div>
   </div>
+  <div data-menu="id:'受付番号入力',allow:1,func:'enterUserId'">
 </div></body>
 <script type="text/javascript">
 const g = {}; // グローバル変数格納用

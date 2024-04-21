@@ -18,7 +18,7 @@ g.authMenu = new authMenu({
       if( v !== null ){
         if( v.match(/^[0-9]+/) ){
           v.step = 1;
-          v.r = storeUserInfo(Number(v));
+          v.r = g.authMenu.storeUserInfo(Number(v));
           if( v.r instanceof Error ) throw v.r;
 
           v.step = 2; // メニュー再描画

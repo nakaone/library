@@ -16,8 +16,8 @@
  * - icon {HTMLElement} : 【*内部*】メニューアイコンとなるHTML要素
  * - navi {HTMLElement} : 【*内部*】ナビ領域となるHTML要素
  * - back {HTMLElement} : 【*内部*】ナビ領域の背景となるHTML要素
- * - auth=1 {number}<br>
- *   ユーザ(クライアント)の権限
+ * - userId {number} : ユーザID。this.storeUserInfoで設定
+ * - auth=1 {number} : ユーザ(クライアント)の権限
  * - userIdSelector='[name="userId"]' {string}<br>
  *   URLクエリ文字列で与えられたuserIdを保持する要素のCSSセレクタ
  * - publicAuth=1 {number}<br>
@@ -37,20 +37,24 @@
  * - css {string} : authMenu専用CSS。書き換えする場合、全文指定すること(一部変更は不可)
  * - toggle {Arrow} : 【*内部*】ナビゲーション領域の表示/非表示切り替え
  * - showChildren {Arror} : 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
+ * - changeScreen {Arror} : 【*内部*】this.homeの内容に従って画面を切り替え
  */
 #setProperties(arg){
-    const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
+  const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
     v.step = 1; // 既定値の定義
     v.default = {
       wrapper: `.${this.constructor.name}[name="wrapper"]`, // {string|HTMLElement}
+      userId: null,
       auth: 1, // ユーザ権限の既定値
+      userIdSelector: '[name="userId"]',
+      publicAuth: 1,
+      memberAuth: 2,
       allow: 2 ** 32 - 1, // data-menuのauth(開示範囲)の既定値
       func: {}, // {Object.<string,function>} メニューから呼び出される関数
       home: null,
-      homeForEachAuth: null, // {Object.<number,string>} ユーザ権限毎にメニューを設定するなら、auth毎に.screen[name]を設定
       initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
     };
     v.default.css = `/* authMenu専用CSS
@@ -236,8 +240,7 @@
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}`
-    + `\narg=${stringify(arg)}`;  // 引数
+    + `\n${e.message}\narg=${stringify(arg)}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }
