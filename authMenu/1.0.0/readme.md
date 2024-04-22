@@ -747,17 +747,14 @@ localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限�
 | wrapper | <code>HTMLElement</code> | body等の親要素。 |
 | navi | <code>HTMLElement</code> | nav等のナビゲーション領域 |
 
+**Kind**: global function  
+**Returns**: <code>Object</code> - 分岐先処理での処理結果  
+
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | userId | <code>number</code> | <code></code> |  |
-| arg | <code>string</code> | <code>null</code> | 暗号化結果の文字列 |
-
-**Example**  
-```js
-**プロパティサービス：authServer**
-
-- 
-```
+| func | <code>string</code> | <code>null</code> | 分岐先処理名 |
+| arg | <code>string</code> | <code>null</code> | 分岐先処理に渡す引数オブジェクト |
 
 # テクニカルメモ
 
@@ -1448,37 +1445,81 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
 <details><summary>server.gs</summary>
 
 ```
-/**
- * 
+/** サーバ側の認証処理を分岐させる
  * @param {number} userId 
- * @param {string} arg - 暗号化結果の文字列
- * @returns {Object}
- * 
- * @example
- * 
- * **プロパティサービス：authServer**
- * 
- * - 
+ * @param {string} func - 分岐先処理名
+ * @param {string} arg - 分岐先処理に渡す引数オブジェクト
+ * @returns {Object} 分岐先処理での処理結果
  */
 function authServer(userId=null,func=null,arg=null) {
   // 内部関数で'v'を使用するため、ここでは'w'で定義
-  const w = {whois:'authServer',rv:null,step:0,
-    func:{},  // 使用する関数を集めたオブジェクト
-    validityPeriod: 2 * 24 * 3600 * 1000, // クライアント側ログインの有効期間(2日)
-    masterSheet: 'master', // 参加者マスタのシート名
-    primatyKeyColumn: 'userId', // 主キーとなる項目名。主キーは数値で設定
-    emailColumn: 'email', // e-mailを格納する項目名
-  };
+  const w = {whois:'authServer',rv:null,step:0,func:{}};
   console.log(`${w.whois} start.`);
-  PropertiesService.getDocumentProperties().deleteProperty(w.whois);
   try {
 
-    if( userId === null ){
-      w.step = 1;
-      // userId未定でも可能な処理
-      // ⇒ 一般公開用メニュー
+    w.step = 1; // 既定値をwに登録
+/** authServerの適用値を設定
+ * 
+ * これら設定値はプロジェクトにより異なるため、
+ * プロジェクト毎に適宜ソースを修正して使用すること。
+ * 
+ * @param {number|null} userId 
+ * @returns {null}
+ * 
+ * 1. propertyName='authServer' {string}<br>
+ *    プロパティサービスのキー名
+ * 1. loginRetryInterval=3,600,000(60分) {number}<br>
+ *    前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
+ * 1. numberOfLoginAttempts=3 {number}<br>
+ *    ログイン失敗になるまでの試行回数
+ * 1. loginGraceTime=900,000(15分) {number}<br>
+ *    パスコード生成からログインまでの猶予時間(ミリ秒)
+ * 1. userLoginLifeTime=86,400,000(24時間) {number}<br>
+ *    クライアント側ログイン(CPkey)有効期間
+ * 1. masterSheet='master' {string}<br>
+ *    参加者マスタのシート名
+ * 1. primatyKeyColumn='userId' {string}<br>
+ *    主キーとなる項目名。主キーは数値で設定
+ * 1. emailColumn='email' {string}<br>
+ *    e-mailを格納するシート上の項目名
+ */
+w.func.setProperties = function(){
+  const v = {whois:w.whois+'.setProperties',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // 適用値をセット
+    w.propertyName = 'authServer';
+    w.loginRetryInterval = 3600000;
+    w.numberOfLoginAttempts = 3;
+    w.loginGraceTime = 900000;
+    w.userLoginLifeTime = 86400000;
+    w.masterSheet = 'master';
+    w.primatyKeyColumn ='userId';
+    w.emailColumn = 'email';
+
+    v.step = 2; // 鍵ペア不存在なら生成
+    v.prop = PropertiesService.getDocumentProperties().getProperty(w.propertyName);
+    if( v.prop === null ){
+      v.prop = {passPhrase:createPassword(16)};
+      v.prop.SCkey = cryptico.generateRSAKey(v.prop.passPhrase,1024);
+      v.prop.SPkey = cryptico.publicKeyString(v.prop.SCkey);
+      PropertiesService.getDocumentProperties().setProperty(w.propertyName,v.prop);
+    }
+    console.log(v.prop);
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+w.rv = w.func.setProperties(arg);
+if( w.rv instanceof Error ) throw w.rv;
+
+    if( userId === null ){ // userIdが不要な処理
       if( ['registMail'].find(x => x === func) ){
-        
+        w.step = 1; // userId未定でも可能な処理 ⇒ 一般公開用
 /** authClientからの登録要求を受け、IDを返す
  * 
  * - IDは自然数の前提、1から順に採番。
@@ -1531,17 +1572,15 @@ w.func.registMail = function(email){
     return e;
   }
 }
-        w.rv = w.func.registMail(arg);
-        if( w.rv instanceof Error ) throw w.rv;
-
+w.rv = w.func.registMail(arg);
+if( w.rv instanceof Error ) throw w.rv;
       } else {
         w.step = 2; // 該当処理なし
         w.rv = null;
       }
-    } else {
+    } else {  // userIdが必要な処理
       if( ['login1S'].find(x => x === func) ){
-        w.step = 3;
-        // userIdは必要だが、ログインは不要な処理
+        w.step = 3; // ログインは不要な処理
         // ⇒ 参加者用メニュー(応募情報(自分の個人情報)修正を除く)
 
         //:x:$src/server.login1S.js::
@@ -1654,8 +1693,8 @@ w.func.verifySignature = function(userId=null,arg=null){
     return e;
   }
 }
-        w.r = w.func.verifySignature(userId,arg);
-        if( w.r instanceof Error ) throw w.r;
+w.r = w.func.verifySignature(userId,arg);
+if( w.r instanceof Error ) throw w.r;
 
         switch( func ){
           case 'login2S': w.step = 4 + ':login2S';
@@ -2542,17 +2581,14 @@ localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限�
 | wrapper | <code>HTMLElement</code> | body等の親要素。 |
 | navi | <code>HTMLElement</code> | nav等のナビゲーション領域 |
 
+**Kind**: global function  
+**Returns**: <code>Object</code> - 分岐先処理での処理結果  
+
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | userId | <code>number</code> | <code></code> |  |
-| arg | <code>string</code> | <code>null</code> | 暗号化結果の文字列 |
-
-**Example**  
-```js
-**プロパティサービス：authServer**
-
-- 
-```
+| func | <code>string</code> | <code>null</code> | 分岐先処理名 |
+| arg | <code>string</code> | <code>null</code> | 分岐先処理に渡す引数オブジェクト |
 
 # 6 テクニカルメモ<a name="ac0023"></a>
 
@@ -3261,37 +3297,81 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
 <details><summary>server.gs</summary>
 
 ```
-/**
- * 
+/** サーバ側の認証処理を分岐させる
  * @param {number} userId 
- * @param {string} arg - 暗号化結果の文字列
- * @returns {Object}
- * 
- * @example
- * 
- * **プロパティサービス：authServer**
- * 
- * - 
+ * @param {string} func - 分岐先処理名
+ * @param {string} arg - 分岐先処理に渡す引数オブジェクト
+ * @returns {Object} 分岐先処理での処理結果
  */
 function authServer(userId=null,func=null,arg=null) {
   // 内部関数で'v'を使用するため、ここでは'w'で定義
-  const w = {whois:'authServer',rv:null,step:0,
-    func:{},  // 使用する関数を集めたオブジェクト
-    validityPeriod: 2 * 24 * 3600 * 1000, // クライアント側ログインの有効期間(2日)
-    masterSheet: 'master', // 参加者マスタのシート名
-    primatyKeyColumn: 'userId', // 主キーとなる項目名。主キーは数値で設定
-    emailColumn: 'email', // e-mailを格納する項目名
-  };
+  const w = {whois:'authServer',rv:null,step:0,func:{}};
   console.log(`${w.whois} start.`);
-  PropertiesService.getDocumentProperties().deleteProperty(w.whois);
   try {
 
-    if( userId === null ){
-      w.step = 1;
-      // userId未定でも可能な処理
-      // ⇒ 一般公開用メニュー
+    w.step = 1; // 既定値をwに登録
+/** authServerの適用値を設定
+ * 
+ * これら設定値はプロジェクトにより異なるため、
+ * プロジェクト毎に適宜ソースを修正して使用すること。
+ * 
+ * @param {number|null} userId 
+ * @returns {null}
+ * 
+ * 1. propertyName='authServer' {string}<br>
+ *    プロパティサービスのキー名
+ * 1. loginRetryInterval=3,600,000(60分) {number}<br>
+ *    前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
+ * 1. numberOfLoginAttempts=3 {number}<br>
+ *    ログイン失敗になるまでの試行回数
+ * 1. loginGraceTime=900,000(15分) {number}<br>
+ *    パスコード生成からログインまでの猶予時間(ミリ秒)
+ * 1. userLoginLifeTime=86,400,000(24時間) {number}<br>
+ *    クライアント側ログイン(CPkey)有効期間
+ * 1. masterSheet='master' {string}<br>
+ *    参加者マスタのシート名
+ * 1. primatyKeyColumn='userId' {string}<br>
+ *    主キーとなる項目名。主キーは数値で設定
+ * 1. emailColumn='email' {string}<br>
+ *    e-mailを格納するシート上の項目名
+ */
+w.func.setProperties = function(){
+  const v = {whois:w.whois+'.setProperties',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // 適用値をセット
+    w.propertyName = 'authServer';
+    w.loginRetryInterval = 3600000;
+    w.numberOfLoginAttempts = 3;
+    w.loginGraceTime = 900000;
+    w.userLoginLifeTime = 86400000;
+    w.masterSheet = 'master';
+    w.primatyKeyColumn ='userId';
+    w.emailColumn = 'email';
+
+    v.step = 2; // 鍵ペア不存在なら生成
+    v.prop = PropertiesService.getDocumentProperties().getProperty(w.propertyName);
+    if( v.prop === null ){
+      v.prop = {passPhrase:createPassword(16)};
+      v.prop.SCkey = cryptico.generateRSAKey(v.prop.passPhrase,1024);
+      v.prop.SPkey = cryptico.publicKeyString(v.prop.SCkey);
+      PropertiesService.getDocumentProperties().setProperty(w.propertyName,v.prop);
+    }
+    console.log(v.prop);
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+w.rv = w.func.setProperties(arg);
+if( w.rv instanceof Error ) throw w.rv;
+
+    if( userId === null ){ // userIdが不要な処理
       if( ['registMail'].find(x => x === func) ){
-        
+        w.step = 1; // userId未定でも可能な処理 ⇒ 一般公開用
 /** authClientからの登録要求を受け、IDを返す
  * 
  * - IDは自然数の前提、1から順に採番。
@@ -3344,17 +3424,15 @@ w.func.registMail = function(email){
     return e;
   }
 }
-        w.rv = w.func.registMail(arg);
-        if( w.rv instanceof Error ) throw w.rv;
-
+w.rv = w.func.registMail(arg);
+if( w.rv instanceof Error ) throw w.rv;
       } else {
         w.step = 2; // 該当処理なし
         w.rv = null;
       }
-    } else {
+    } else {  // userIdが必要な処理
       if( ['login1S'].find(x => x === func) ){
-        w.step = 3;
-        // userIdは必要だが、ログインは不要な処理
+        w.step = 3; // ログインは不要な処理
         // ⇒ 参加者用メニュー(応募情報(自分の個人情報)修正を除く)
 
         //:x:$src/server.login1S.js::
@@ -3467,8 +3545,8 @@ w.func.verifySignature = function(userId=null,arg=null){
     return e;
   }
 }
-        w.r = w.func.verifySignature(userId,arg);
-        if( w.r instanceof Error ) throw w.r;
+w.r = w.func.verifySignature(userId,arg);
+if( w.r instanceof Error ) throw w.r;
 
         switch( func ){
           case 'login2S': w.step = 4 + ':login2S';

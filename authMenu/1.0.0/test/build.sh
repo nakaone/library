@@ -86,11 +86,17 @@ EOS
 echo "`date +"%T"` - camp2024: step.3.2 start."
 svSource="$tmp/server.js"
 svDoc="$tmp/server.md"
-cat $src/doGet.js | awk 1 > $svSource
-cat $lib/cryptico/cryptico.min.gs | awk 1 >> $svSource
+cat $src/authServerTest.js | awk 1 > $svSource # debug
+cat $lib/authMenu/1.0.0/server.gs >> $svSource
+cat $lib/checkFormat/1.0.0/core.js >> $svSource
+cat $lib/createPassword/1.0.1/core.js >> $svSource
+cat $src/doGet.js | awk 1 >> $svSource
 cat $lib/mergeDeeply/1.1.0/core.js | awk 1 >> $svSource
+cat $lib/SingleTable/1.2.0/core.js | awk 1 >> $svSource
 cat $lib/stringify/1.1.1/core.js | awk 1 >> $svSource
+cat $lib/toLocale/1.0.0/core.js >> $svSource
 cat $lib/whichType/1.0.1/core.js | awk 1 >> $svSource
+cat $lib/cryptico/cryptico.min.gs | awk 1 >> $svSource
 # 最終成果物の作成
 cp $svSource $mod/server.gs
 ## JSDocの作成

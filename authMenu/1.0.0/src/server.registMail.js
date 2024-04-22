@@ -50,3 +50,5 @@ w.func.registMail = function(email){
     return e;
   }
 }
+w.rv = w.func.registMail(arg);
+if( w.rv instanceof Error ) throw w.rv;

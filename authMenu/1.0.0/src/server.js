@@ -1,46 +1,29 @@
-/**
- * 
+/** サーバ側の認証処理を分岐させる
  * @param {number} userId 
- * @param {string} arg - 暗号化結果の文字列
- * @returns {Object}
- * 
- * @example
- * 
- * **プロパティサービス：authServer**
- * 
- * - 
+ * @param {string} func - 分岐先処理名
+ * @param {string} arg - 分岐先処理に渡す引数オブジェクト
+ * @returns {Object} 分岐先処理での処理結果
  */
 function authServer(userId=null,func=null,arg=null) {
   // 内部関数で'v'を使用するため、ここでは'w'で定義
-  const w = {whois:'authServer',rv:null,step:0,
-    func:{},  // 使用する関数を集めたオブジェクト
-    validityPeriod: 2 * 24 * 3600 * 1000, // クライアント側ログインの有効期間(2日)
-    masterSheet: 'master', // 参加者マスタのシート名
-    primatyKeyColumn: 'userId', // 主キーとなる項目名。主キーは数値で設定
-    emailColumn: 'email', // e-mailを格納する項目名
-  };
+  const w = {whois:'authServer',rv:null,step:0,func:{}};
   console.log(`${w.whois} start.`);
-  PropertiesService.getDocumentProperties().deleteProperty(w.whois);
   try {
 
-    if( userId === null ){
-      w.step = 1;
-      // userId未定でも可能な処理
-      // ⇒ 一般公開用メニュー
-      if( ['registMail'].find(x => x === func) ){
-        
-        //::$src/server.registMail.js::
-        w.rv = w.func.registMail(arg);
-        if( w.rv instanceof Error ) throw w.rv;
+    w.step = 1; // 既定値をwに登録
+    //::$src/server.setProperties.js::
 
+    if( userId === null ){ // userIdが不要な処理
+      if( ['registMail'].find(x => x === func) ){
+        w.step = 1; // userId未定でも可能な処理 ⇒ 一般公開用
+        //::メールアドレスの登録::$src/server.registMail.js::
       } else {
         w.step = 2; // 該当処理なし
         w.rv = null;
       }
-    } else {
+    } else {  // userIdが必要な処理
       if( ['login1S'].find(x => x === func) ){
-        w.step = 3;
-        // userIdは必要だが、ログインは不要な処理
+        w.step = 3; // ログインは不要な処理
         // ⇒ 参加者用メニュー(応募情報(自分の個人情報)修正を除く)
 
         //:x:$src/server.login1S.js::
@@ -51,8 +34,6 @@ function authServer(userId=null,func=null,arg=null) {
 
         w.step = 4; // クライアント側の署名検証＋引数のオブジェクト化
         //::$src/server.verifySignature.js::
-        w.r = w.func.verifySignature(userId,arg);
-        if( w.r instanceof Error ) throw w.r;
 
         switch( func ){
           case 'login2S': w.step = 4 + ':login2S';

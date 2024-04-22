@@ -101,3 +101,5 @@ w.func.verifySignature = function(userId=null,arg=null){
     return e;
   }
 }
+w.r = w.func.verifySignature(userId,arg);
+if( w.r instanceof Error ) throw w.r;
