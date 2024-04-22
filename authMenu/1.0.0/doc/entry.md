@@ -9,7 +9,7 @@ sequenceDiagram
   participant client
   participant server
   participant property
-  actor admin
+  participant sheet
 
   user ->> client : メアド
   activate client
@@ -34,6 +34,7 @@ sequenceDiagram
     server ->> server : userIdを新規採番
     server ->> property : userIdマップ
     server ->> property : userId,メアド,CPkey
+    server ->> sheet : userId,メアド
     server ->> client : 検索結果＋ユーザ情報＋SPkey
     deactivate server
     client ->> client : userIdをlocal/sessionに、SPkeyをsessionに保存
