@@ -297,7 +297,6 @@ sequenceDiagram
      - 引数、HTML埋込情報、sessionStorage、localStorageのユーザ情報を取得
      - IDを特定(引数>HTML埋込>session>local。いずれにも無ければnull)
      - IDが特定されるならauthを一般公開->参加者に変更
-     - RSA鍵ペアを生成、保存
   1. 親要素を走査してナビゲーションを作成(アイコン、ナビ領域、背景)
 - 図中の`enterUserId()`は、`new authMenu()`の引数として渡された関数
 
@@ -1132,7 +1131,6 @@ sequenceDiagram
      - 引数、HTML埋込情報、sessionStorage、localStorageのユーザ情報を取得
      - IDを特定(引数>HTML埋込>session>local。いずれにも無ければnull)
      - IDが特定されるならauthを一般公開->参加者に変更
-     - RSA鍵ペアを生成、保存
   1. 親要素を走査してナビゲーションを作成(アイコン、ナビ領域、背景)
 - 図中の`enterUserId()`は、`new authMenu()`の引数として渡された関数
 
