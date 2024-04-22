@@ -262,6 +262,7 @@ window.addEventListener('DOMContentLoaded',() => {
   1. {string} passPhrase - サーバ側鍵ペア生成の際のパスフレーズ
   1. {Object} SCkey - サーバ側秘密鍵
   1. {string} SPkey - サーバ側公開鍵
+  1. {number[]} userList - 登録済ユーザIDのリスト
 - DocumentProperties : `(ユーザID)`
   1. {number} userId - ユーザID
   1. {string} email - e-mail
