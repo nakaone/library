@@ -412,6 +412,7 @@ window.addEventListener('DOMContentLoaded',() => {
   1. {string} passPhrase - サーバ側鍵ペア生成の際のパスフレーズ
   1. {Object} SCkey - サーバ側秘密鍵
   1. {string} SPkey - サーバ側公開鍵
+  1. {number[]} userList - 登録済ユーザIDのリスト
 - DocumentProperties : `(ユーザID)`
   1. {number} userId - ユーザID
   1. {string} email - e-mail
@@ -448,7 +449,7 @@ sequenceDiagram
   participant client
   participant server
   participant property
-  actor admin
+  participant sheet
 
   user ->> client : メアド
   activate client
@@ -473,6 +474,7 @@ sequenceDiagram
     server ->> server : userIdを新規採番
     server ->> property : userIdマップ
     server ->> property : userId,メアド,CPkey
+    server ->> sheet : userId,メアド
     server ->> client : 検索結果＋ユーザ情報＋SPkey
     deactivate server
     client ->> client : userIdをlocal/sessionに、SPkeyをsessionに保存
@@ -2216,6 +2218,7 @@ window.addEventListener('DOMContentLoaded',() => {
   1. {string} passPhrase - サーバ側鍵ペア生成の際のパスフレーズ
   1. {Object} SCkey - サーバ側秘密鍵
   1. {string} SPkey - サーバ側公開鍵
+  1. {number[]} userList - 登録済ユーザIDのリスト
 - DocumentProperties : `(ユーザID)`
   1. {number} userId - ユーザID
   1. {string} email - e-mail
@@ -2258,7 +2261,7 @@ sequenceDiagram
   participant client
   participant server
   participant property
-  actor admin
+  participant sheet
 
   user ->> client : メアド
   activate client
@@ -2283,6 +2286,7 @@ sequenceDiagram
     server ->> server : userIdを新規採番
     server ->> property : userIdマップ
     server ->> property : userId,メアド,CPkey
+    server ->> sheet : userId,メアド
     server ->> client : 検索結果＋ユーザ情報＋SPkey
     deactivate server
     client ->> client : userIdをlocal/sessionに、SPkeyをsessionに保存
