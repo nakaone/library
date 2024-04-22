@@ -41,8 +41,8 @@ find . -name '.DS_Store' -type f -ls -delete
 #pipe="$tmp/pipe.js"; touch $pipe
 clSource="$tmp/client.js"; touch $clSource # 最終成果物
 clDoc="$tmp/client.md"; touch $clDoc   # JSDoc
-#svSrc="$tmp/server.js"; touch $svSrc
-#svDoc="$tmp/server.md"; touch $svDoc
+svSource="$tmp/server.js"; touch $svSource
+svDoc="$tmp/server.md"; touch $svDoc
 
 # 1.4 使用するクラスを最新化
 #echo "`date +"%T"` - step.1.4 start."
@@ -70,24 +70,24 @@ EOS
 }
 
 
-## ----------------------------------------------
-## 2. server.gs(class authServer)の作成
-## ----------------------------------------------
-## 2.1 ソースの作成
-#echo "`date +"%T"` - step.2.1 start."
-#cat $src/server.js | awk 1 | $embed -src:$src >> $svSrc
-#cp $svSrc $mod/server.gs
-#
-## 2.3 JSDocの作成
-#echo "`date +"%T"` - step.2.3 start."
-## sedはjsdoc2mdの冒頭4行削除用(強制付加されるtitle,a nameタグの削除)
-#jsdoc2md $svSrc | sed '1,4d' >> $svDoc
-#
-## 2.4 ソースを仕様書埋込用に修正
-#echo "`date +"%T"` - step.2.4 start."
-#rm -f $w01; touch $w01;
-#addSource "server.gs" $svSrc $w01
-#cp $w01 $svSrc
+# ----------------------------------------------
+# 2. server.gs(class authServer)の作成
+# ----------------------------------------------
+# 2.1 ソースの作成
+echo "`date +"%T"` - step.2.1 start."
+cat $src/server.js | awk 1 | $embed -src:$src >> $svSource
+cp $svSource $mod/server.gs
+
+# 2.3 JSDocの作成
+echo "`date +"%T"` - step.2.3 start."
+# sedはjsdoc2mdの冒頭4行削除用(強制付加されるtitle,a nameタグの削除)
+jsdoc2md $svSource | sed '1,4d' >> $svDoc
+
+# 2.4 ソースを仕様書埋込用に修正
+echo "`date +"%T"` - step.2.4 start."
+w24="$tmp/w24"; touch $w24;
+addSource "server.gs" $svSource $w24
+cp $w24 $svSource
 
 
 # ----------------------------------------------
@@ -104,9 +104,9 @@ jsdoc2md $clSource | sed '1,4d' >> $clDoc
 
 # 4.3 ソースを仕様書埋込用に修正
 echo "`date +"%T"` - step.4.3 start."
-w01="$tmp/w01"
-addSource "client.js" $clSource $w01
-cp $w01 $clSource
+w43="$tmp/w43"
+addSource "client.js" $clSource $w43
+cp $w43 $clSource
 
 # ----------------------------------------------
 # 5. 仕様書の作成

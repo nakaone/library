@@ -311,9 +311,9 @@ window.addEventListener('DOMContentLoaded',() => {
 
 # 仕様(JSDoc)
 
-<!--:x:$tmp/client.md::-->
+<!--::$tmp/client.md::-->
 
-<!--:x:$tmp/server.md::-->
+<!--::$tmp/server.md::-->
 
 # テクニカルメモ
 
@@ -323,9 +323,9 @@ window.addEventListener('DOMContentLoaded',() => {
 
 # プログラムソース
 
-<!--:x:$tmp/client.js::-->
+<!--::$tmp/client.js::-->
 
-<!--:x:$tmp/server.js::-->
+<!--::$tmp/server.js::-->
 
 # 改版履歴
 
