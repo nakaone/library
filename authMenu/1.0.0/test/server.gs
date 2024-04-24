@@ -1,4 +1,16 @@
 function authServerTest(){
+  //PropertiesService.getDocumentProperties().deleteAllProperties();
+  const p = PropertiesService.getDocumentProperties().getProperties();
+  console.log(p);
+  /*
+  ローカル側での重複メアドチェック
+  サーバ側での重複メアドチェック
+  シートに格納された値
+  localStorage
+  sessionStorage
+  properties.authServer(特にmap)
+  properties.userId
+
   const v = {target:'registMail',
     registMail:[
       //[null,'registMail','invalid'],
@@ -6,10 +18,16 @@ function authServerTest(){
       [null,'registMail','fuga@gmail.com'],
     ],
   };
-  for( v.i=0 ; v.i<v[v.target].length ; v.i++ ){
-    v.rv = authServer(...v[v.target][v.i]);
-    console.log(`${v.i} v.rv=${stringify(v.rv)}`);
+  if( true ){ // debug
+    PropertiesService.getDocumentProperties().deleteAllProperties();
   }
+  if( v.target === 'registMail' ){
+    for( v.i=0 ; v.i<v[v.target].length ; v.i++ ){
+      v.rv = authServer(...v[v.target][v.i]);
+      console.log(`${v.i} v.rv=${stringify(v.rv)}`);
+    }
+  }
+  */
 }
 /** サーバ側の認証処理を分岐させる
  * @param {number} userId 
@@ -19,7 +37,7 @@ function authServerTest(){
  */
 function authServer(userId=null,func=null,arg=null) {
   // 内部関数で'v'を使用するため、ここでは'w'で定義
-  const w = {whois:'authServer',rv:null,step:0,func:{}};
+  const w = {whois:'authServer',rv:null,step:0,func:{},prop:{}};
   console.log(`${w.whois} start.`);
   try {
 
@@ -42,12 +60,21 @@ function authServer(userId=null,func=null,arg=null) {
  *    パスコード生成からログインまでの猶予時間(ミリ秒)
  * 1. userLoginLifeTime=86,400,000(24時間) {number}<br>
  *    クライアント側ログイン(CPkey)有効期間
+ * 1. defaultAuth=2 {number}<br>
+ *    新規登録者に設定する権限
  * 1. masterSheet='master' {string}<br>
  *    参加者マスタのシート名
  * 1. primatyKeyColumn='userId' {string}<br>
  *    主キーとなる項目名。主キーは数値で設定
  * 1. emailColumn='email' {string}<br>
  *    e-mailを格納するシート上の項目名
+ * 1. passPhrase {string} : authServerのパスフレーズ
+ * 1. SSkey {Object} : authServerの秘密鍵
+ * 1. SPkey {string} : authServerの公開鍵
+ * 1. map {Object} : `{email:userId}`形式のマップ
+ * 1. userIdStartNumber=1 : ユーザID(数値)の開始
+ * 
+ * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
  */
 w.func.setProperties = function(){
   const v = {whois:w.whois+'.setProperties',rv:null,step:0};
@@ -55,24 +82,28 @@ w.func.setProperties = function(){
   try {
 
     v.step = 1; // 適用値をセット
-    w.propertyName = 'authServer';
-    w.loginRetryInterval = 3600000;
-    w.numberOfLoginAttempts = 3;
-    w.loginGraceTime = 900000;
-    w.userLoginLifeTime = 86400000;
-    w.masterSheet = 'master';
-    w.primatyKeyColumn ='userId';
-    w.emailColumn = 'email';
-
-    v.step = 2; // 鍵ペア不存在なら生成
-    v.prop = PropertiesService.getDocumentProperties().getProperty(w.propertyName);
-    if( v.prop === null ){
-      v.prop = {passPhrase:createPassword(16)};
-      v.prop.SCkey = cryptico.generateRSAKey(v.prop.passPhrase,1024);
-      v.prop.SPkey = cryptico.publicKeyString(v.prop.SCkey);
-      PropertiesService.getDocumentProperties().setProperty(w.propertyName,v.prop);
+    w.prop = PropertiesService.getDocumentProperties().getProperties();
+    if( Object.keys(w.prop).length === 0 ){
+      w.prop = {
+        propertyName : 'authServer',
+        loginRetryInterval : 3600000,
+        numberOfLoginAttempts : 3,
+        loginGraceTime : 900000,
+        userLoginLifeTime : 86400000,
+        defaultAuth : 2,
+        masterSheet : 'master',
+        primatyKeyColumn : 'userId',
+        emailColumn : 'email',
+        passPhrase : createPassword(16),
+        map : {'shimokitasho.oyaji@gmail.com':0},
+        userIdStartNumber : 1,
+      };
+      w.prop.SSkey = cryptico.generateRSAKey(w.prop.passPhrase,1024);
+      w.prop.SPkey = cryptico.publicKeyString(w.prop.SSkey);
+      // プロパティサービスを更新
+      PropertiesService.getDocumentProperties().setProperties(w.prop);
     }
-    console.log(v.prop);
+    console.log(`${v.whois} normal end.\n`,w.prop);
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
@@ -91,49 +122,88 @@ if( w.rv instanceof Error ) throw w.rv;
  * - IDは自然数の前提、1から順に採番。
  * - 新規採番は途中の欠損は考慮せず、最大値＋1とする
  * 
- * @param {string} email - 要求があったユーザのe-mail
+ * @param {Object} arg
+ * @param {string} arg.email - 要求があったユーザのe-mail
+ * @param {string} arg.CPkey - 要求があったユーザの公開鍵
+ * @param {number} arg.updated - 公開鍵更新日時(UNIX時刻)
  * @returns {number|Error} 採番されたuserId
  */
-w.func.registMail = function(email){
-  const v = {whois:w.whois+'.registMail',rv:null,step:0};
-  console.log(`${v.whois} start.`);
+w.func.registMail = function(arg){
+  const v = {whois:w.whois+'.registMail',rv:null,step:0,
+    max:(w.prop.userIdStartNumber - 1),
+    prop:PropertiesService.getDocumentProperties(),
+  };
+  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
   try {
 
     v.step = 1; // emailアドレスの妥当性検証
-    if( checkFormat(email,'email' ) === false ){
+    if( checkFormat(arg.email,'email' ) === false ){
       throw new Error(`invalid e-mail address.`);
     }
 
-    v.step = 2; // masterシートを読み込み
-    v.master = new SingleTable(w.masterSheet);
+    // DocumentPropertiesにメアドが登録済か確認
+    console.log(`l.132 w.prop=${stringify(w.prop)}`);
+    if( w.prop.map.hasOwnProperty(arg.email) ){
+      // メアドが登録済の場合
 
-    v.step = 3; // 既登録メアドでは無いか確認
-    v.m = v.master.data.find(x => x[w.emailColumn] === email);
-    if( v.m ) throw new Error(`"${email}" has already registrated.`);
+      v.step = 2.1; // ユーザの公開鍵を更新
+      v.rv = w.prop[w.prop.map[arg.email]];
+      v.rv.updated = arg.updated;
+      v.rv.CPkey = arg.CPkey;
+      v.prop.setProperty(w.prop.map[arg.email],v.rv);
 
-    v.step = 4; // 新規userIdを採番
-    if( v.master.data.length === 0 ){
-      v.rv = 1;
+      v.step = 2.2; // 戻り値用にユーザ情報を補完
+      v.rv.isExit = true;
+      v.rv.SPkey = w.prop.SPkey;
+
     } else {
-      v.exist = v.master.data.map(x => x[w.primatyKeyColumn]);
-      v.rv = Math.max(...v.exist) + 1;
+      // メアドが未登録の場合
+
+      v.step = 3.1; // 既登録userIdの最大値を検索
+      Object.keys(w.prop.map).forEach(x => {
+        if( w.prop.map[x] > v.max ) v.max = w.prop.map[x];
+      });
+
+      v.step = 3.2; // プロパティサービス用ユーザ情報オブジェクトを作成
+      v.rv = {
+        userId  : v.max + 1,
+        created : Date.now(),
+        updated : arg.updated,
+        email   : arg.email,
+        auth    : w.prop.defaultAuth,
+        CPkey   : arg.CPkey,
+      }
+
+      v.step = 3.3; // プロパティサービスに保存
+      v.step = 3.31; // email -> userId マップ
+      w.prop.map[arg.email] = v.rv.userId;
+      console.log(`l.180 w.prop=${stringify(w.prop)}`)
+      v.prop.setProperties(w.prop);
+      v.step = 3.32; // ユーザ情報
+      v.prop.setProperty(v.rv.userId,v.rv);
+
+      v.step = 3.4; // シートに追加
+      v.master = new SingleTable(w.prop.masterSheet);
+      v.r = v.master.insert([{
+        userId: v.rv.userId,
+        created: toLocale(new Date(v.rv.created),'yyyy/MM/dd hh:mm:ss.nnn'),
+        email: v.rv.email,
+        auth: v.rv.auth,
+      }]);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 3.5; // 戻り値用にユーザ情報を補完
+      v.rv.isExist = false;
+      v.rv.SPkey = w.prop.SPkey;
     }
 
-    v.step = 5; // シートに登録
-    v.r = v.master.insert([{
-      userId:v.rv,
-      email:email,
-      created:toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn')
-    }]);
-    if( v.r instanceof Error ) throw v.r;
-
-    v.step = 9; // 終了処理
-    console.log(`${w.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    v.step = 4; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\nemail=${email}`;
+    + `\n${e.message}\narg=${stringify(arg)}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }

@@ -16,12 +16,21 @@
  *    パスコード生成からログインまでの猶予時間(ミリ秒)
  * 1. userLoginLifeTime=86,400,000(24時間) {number}<br>
  *    クライアント側ログイン(CPkey)有効期間
+ * 1. defaultAuth=2 {number}<br>
+ *    新規登録者に設定する権限
  * 1. masterSheet='master' {string}<br>
  *    参加者マスタのシート名
  * 1. primatyKeyColumn='userId' {string}<br>
  *    主キーとなる項目名。主キーは数値で設定
  * 1. emailColumn='email' {string}<br>
  *    e-mailを格納するシート上の項目名
+ * 1. passPhrase {string} : authServerのパスフレーズ
+ * 1. SSkey {Object} : authServerの秘密鍵
+ * 1. SPkey {string} : authServerの公開鍵
+ * 1. map {Object} : `{email:userId}`形式のマップ
+ * 1. userIdStartNumber=1 : ユーザID(数値)の開始
+ * 
+ * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
  */
 w.func.setProperties = function(){
   const v = {whois:w.whois+'.setProperties',rv:null,step:0};
@@ -29,24 +38,28 @@ w.func.setProperties = function(){
   try {
 
     v.step = 1; // 適用値をセット
-    w.propertyName = 'authServer';
-    w.loginRetryInterval = 3600000;
-    w.numberOfLoginAttempts = 3;
-    w.loginGraceTime = 900000;
-    w.userLoginLifeTime = 86400000;
-    w.masterSheet = 'master';
-    w.primatyKeyColumn ='userId';
-    w.emailColumn = 'email';
-
-    v.step = 2; // 鍵ペア不存在なら生成
-    v.prop = PropertiesService.getDocumentProperties().getProperty(w.propertyName);
-    if( v.prop === null ){
-      v.prop = {passPhrase:createPassword(16)};
-      v.prop.SCkey = cryptico.generateRSAKey(v.prop.passPhrase,1024);
-      v.prop.SPkey = cryptico.publicKeyString(v.prop.SCkey);
-      PropertiesService.getDocumentProperties().setProperty(w.propertyName,v.prop);
+    w.prop = PropertiesService.getDocumentProperties().getProperties();
+    if( Object.keys(w.prop).length === 0 ){
+      w.prop = {
+        propertyName : 'authServer',
+        loginRetryInterval : 3600000,
+        numberOfLoginAttempts : 3,
+        loginGraceTime : 900000,
+        userLoginLifeTime : 86400000,
+        defaultAuth : 2,
+        masterSheet : 'master',
+        primatyKeyColumn : 'userId',
+        emailColumn : 'email',
+        passPhrase : createPassword(16),
+        map : {'shimokitasho.oyaji@gmail.com':0},
+        userIdStartNumber : 1,
+      };
+      w.prop.SSkey = cryptico.generateRSAKey(w.prop.passPhrase,1024);
+      w.prop.SPkey = cryptico.publicKeyString(w.prop.SSkey);
+      // プロパティサービスを更新
+      PropertiesService.getDocumentProperties().setProperties(w.prop);
     }
-    console.log(v.prop);
+    console.log(`${v.whois} normal end.\n`,w.prop);
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;

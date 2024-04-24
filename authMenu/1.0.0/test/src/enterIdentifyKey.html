@@ -3,31 +3,60 @@
  * @param {HTMLElement} dom - クリックされたボタン
  * @returns {void}
  */
-function enterIdentifyKey(dom){
+ async function enterIdentifyKey(dom){
   const v = {whois:'enterIdentifyKey',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
+    v.step = 1; // 入力値をv.keyに保存
     v.key = dom.parentNode.querySelector('input').value;
     if( dom.parentNode.getAttribute('name') === 'enterMail' ){
-      // メールアドレス入力
+      v.step = 2; // メールアドレス入力
+      if( checkFormat(v.key,'email') ){
+        v.step = 2.1; // ユーザIDの存否確認
+        v.userId = localStorage.getItem('authMenu');
+        console.log(`l.385 v.userId=${v.userId}, isNull=${v.userId === null}, typeof=${typeof v.userId}`);
+        if( v.userId !== null && !isNaN(v.userId) ){
+          alert(`"${v.key}"は既に登録されています(受付番号=${v.userId})`);
+          return;
+        }
+
+        v.step = 2.2; // サーバ側に問合せ
+        v.r = await g.authMenu.registMail(v.key);
+        if( v.r instanceof Error ) throw v.r;
+        console.log(`l.395 v.r=${JSON.stringify(v.r)}`);
+
+        v.step = 2.3; // メニュー再描画
+        v.a = g.authMenu.genNavi();
+        if( v.a instanceof Error ) throw v.a;
+
+        if( v.r.isExist ){
+          v.step = 2.4; // 登録済のメアド ⇒ ホーム画面に遷移
+          v.a = g.authMenu.changeScreen();
+        } else {
+          v.step = 2.5; // 未登録のメアド ⇒ 新規登録画面に遷移
+          v.a = g.authMenu.changeScreen('登録・修正・キャンセル');
+        }
+      } else {
+        alert('メールアドレスの形式が不適切です');
+      }
     } else {
-      // 受付番号入力
+      v.step = 3; // 受付番号入力
       if( v.key.match(/^[0-9]+/) ){
-        v.step = 1;
+        v.step = 3.1;
         v.r = g.authMenu.storeUserInfo(Number(v.key));
         if( v.r instanceof Error ) throw v.r;
 
-        v.step = 2; // メニュー再描画
+        v.step = 3.2; // メニュー再描画
         v.r = g.authMenu.genNavi();
         if( v.r instanceof Error ) throw v.r;
 
-        v.step = 3; // ホーム画面に遷移
+        v.step = 3.3; // ホーム画面に遷移
         v.r = g.authMenu.changeScreen();
         if( v.r instanceof Error ) throw v.r;
 
       } else {
-        v.step = 4;
+        v.step = 3.4;
         alert('受付番号は数値で指定してください');
       }
     }

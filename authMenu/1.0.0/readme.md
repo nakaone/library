@@ -736,6 +736,7 @@ sequenceDiagram
     * [new authMenu(arg)](#new_authMenu_new)
     * [.storeUserInfo(userId)](#authMenu+storeUserInfo) ⇒ <code>void</code>
     * [.genNavi(wrapper, navi)](#authMenu+genNavi) ⇒ <code>null</code> \| <code>Error</code>
+    * [.registMail(email)](#authMenu+registMail) ⇒ <code>Object</code>
 
 <a name="new_authMenu_new"></a>
 
@@ -807,6 +808,15 @@ localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限�
 | --- | --- | --- |
 | wrapper | <code>HTMLElement</code> | body等の親要素。 |
 | navi | <code>HTMLElement</code> | nav等のナビゲーション領域 |
+
+<a name="authMenu+registMail"></a>
+
+## authMenu.registMail(email) ⇒ <code>Object</code>
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| email | <code>string</code> | 入力されたメールアドレス |
 
 **Kind**: global function  
 **Returns**: <code>Object</code> - 分岐先処理での処理結果  
@@ -1317,6 +1327,9 @@ storeUserInfo(userId=null){
     return e;
   }
 }
+async doGAS(func,...args){
+  return await doGAS('authServer',this.userId,func,...args);
+}
 
   // ===================================
   // メニュー関係(旧BurgerMenu)
@@ -1498,6 +1511,61 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
   }
 }
 
+  // ===================================
+  // 認証関係(旧Auth)
+  // ===================================
+/**
+ * 
+ * @param {string} email - 入力されたメールアドレス
+ * @returns {Object}
+ */
+async registMail(email){
+  const v = {whois:this.constructor.name+'.registMail',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // 鍵ペア生成
+    v.passPhrase = createPassword(16);
+    v.CSkey = cryptico.generateRSAKey(v.passPhrase,1024);
+    v.CPkey = cryptico.publicKeyString(v.CSkey);
+    v.updated = new Date();
+
+    v.step = 2; // authServer.registMailに問合せ
+    v.rv = await this.doGAS('registMail',{
+      email: email,
+      CPkey: v.CPkey,
+      updated: v.updated.getTime(),
+    });
+    if( v.rv instanceof Error ) throw v.rv;
+    console.log(`l.1062 v.rv=${stringify(v.rv)}`);
+
+    v.step = 3.1; // ユーザ情報更新用に、格納する変数を補完
+    v.rv.passPhrase = v.passPhrase;
+    v.rv.CSkey = v.CSkey;
+    v.rv.auth = Number(v.rv.auth);
+    v.step = 3.2; // インスタンス変数の更新
+    v.map = Object.keys(v.rv);
+    for( v.i=0 ; v.i<v.map.length ; v.i++ ){
+      this[v.map[v.i]] = v.rv[v.map[v.i]];
+    }
+    v.step = 3.3; // localStorageの更新
+    localStorage.setItem(this.constructor.name,v.rv.userId);
+    v.step = 3.4; // sessionStorageの更新
+    v.prop = Object.assign({},
+      JSON.parse(sessionStorage.getItem(this.constructor.name)),v.rv);
+    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.prop));
+
+    v.step = 4; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\nemail=${email}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
 }
 ```
 
@@ -1514,7 +1582,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
  */
 function authServer(userId=null,func=null,arg=null) {
   // 内部関数で'v'を使用するため、ここでは'w'で定義
-  const w = {whois:'authServer',rv:null,step:0,func:{}};
+  const w = {whois:'authServer',rv:null,step:0,func:{},prop:{}};
   console.log(`${w.whois} start.`);
   try {
 
@@ -1537,12 +1605,21 @@ function authServer(userId=null,func=null,arg=null) {
  *    パスコード生成からログインまでの猶予時間(ミリ秒)
  * 1. userLoginLifeTime=86,400,000(24時間) {number}<br>
  *    クライアント側ログイン(CPkey)有効期間
+ * 1. defaultAuth=2 {number}<br>
+ *    新規登録者に設定する権限
  * 1. masterSheet='master' {string}<br>
  *    参加者マスタのシート名
  * 1. primatyKeyColumn='userId' {string}<br>
  *    主キーとなる項目名。主キーは数値で設定
  * 1. emailColumn='email' {string}<br>
  *    e-mailを格納するシート上の項目名
+ * 1. passPhrase {string} : authServerのパスフレーズ
+ * 1. SSkey {Object} : authServerの秘密鍵
+ * 1. SPkey {string} : authServerの公開鍵
+ * 1. map {Object} : `{email:userId}`形式のマップ
+ * 1. userIdStartNumber=1 : ユーザID(数値)の開始
+ * 
+ * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
  */
 w.func.setProperties = function(){
   const v = {whois:w.whois+'.setProperties',rv:null,step:0};
@@ -1550,24 +1627,28 @@ w.func.setProperties = function(){
   try {
 
     v.step = 1; // 適用値をセット
-    w.propertyName = 'authServer';
-    w.loginRetryInterval = 3600000;
-    w.numberOfLoginAttempts = 3;
-    w.loginGraceTime = 900000;
-    w.userLoginLifeTime = 86400000;
-    w.masterSheet = 'master';
-    w.primatyKeyColumn ='userId';
-    w.emailColumn = 'email';
-
-    v.step = 2; // 鍵ペア不存在なら生成
-    v.prop = PropertiesService.getDocumentProperties().getProperty(w.propertyName);
-    if( v.prop === null ){
-      v.prop = {passPhrase:createPassword(16)};
-      v.prop.SCkey = cryptico.generateRSAKey(v.prop.passPhrase,1024);
-      v.prop.SPkey = cryptico.publicKeyString(v.prop.SCkey);
-      PropertiesService.getDocumentProperties().setProperty(w.propertyName,v.prop);
+    w.prop = PropertiesService.getDocumentProperties().getProperties();
+    if( Object.keys(w.prop).length === 0 ){
+      w.prop = {
+        propertyName : 'authServer',
+        loginRetryInterval : 3600000,
+        numberOfLoginAttempts : 3,
+        loginGraceTime : 900000,
+        userLoginLifeTime : 86400000,
+        defaultAuth : 2,
+        masterSheet : 'master',
+        primatyKeyColumn : 'userId',
+        emailColumn : 'email',
+        passPhrase : createPassword(16),
+        map : {'shimokitasho.oyaji@gmail.com':0},
+        userIdStartNumber : 1,
+      };
+      w.prop.SSkey = cryptico.generateRSAKey(w.prop.passPhrase,1024);
+      w.prop.SPkey = cryptico.publicKeyString(w.prop.SSkey);
+      // プロパティサービスを更新
+      PropertiesService.getDocumentProperties().setProperties(w.prop);
     }
-    console.log(v.prop);
+    console.log(`${v.whois} normal end.\n`,w.prop);
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
@@ -1586,49 +1667,88 @@ if( w.rv instanceof Error ) throw w.rv;
  * - IDは自然数の前提、1から順に採番。
  * - 新規採番は途中の欠損は考慮せず、最大値＋1とする
  * 
- * @param {string} email - 要求があったユーザのe-mail
+ * @param {Object} arg
+ * @param {string} arg.email - 要求があったユーザのe-mail
+ * @param {string} arg.CPkey - 要求があったユーザの公開鍵
+ * @param {number} arg.updated - 公開鍵更新日時(UNIX時刻)
  * @returns {number|Error} 採番されたuserId
  */
-w.func.registMail = function(email){
-  const v = {whois:w.whois+'.registMail',rv:null,step:0};
-  console.log(`${v.whois} start.`);
+w.func.registMail = function(arg){
+  const v = {whois:w.whois+'.registMail',rv:null,step:0,
+    max:(w.prop.userIdStartNumber - 1),
+    prop:PropertiesService.getDocumentProperties(),
+  };
+  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
   try {
 
     v.step = 1; // emailアドレスの妥当性検証
-    if( checkFormat(email,'email' ) === false ){
+    if( checkFormat(arg.email,'email' ) === false ){
       throw new Error(`invalid e-mail address.`);
     }
 
-    v.step = 2; // masterシートを読み込み
-    v.master = new SingleTable(w.masterSheet);
+    // DocumentPropertiesにメアドが登録済か確認
+    console.log(`l.132 w.prop=${stringify(w.prop)}`);
+    if( w.prop.map.hasOwnProperty(arg.email) ){
+      // メアドが登録済の場合
 
-    v.step = 3; // 既登録メアドでは無いか確認
-    v.m = v.master.data.find(x => x[w.emailColumn] === email);
-    if( v.m ) throw new Error(`"${email}" has already registrated.`);
+      v.step = 2.1; // ユーザの公開鍵を更新
+      v.rv = w.prop[w.prop.map[arg.email]];
+      v.rv.updated = arg.updated;
+      v.rv.CPkey = arg.CPkey;
+      v.prop.setProperty(w.prop.map[arg.email],v.rv);
 
-    v.step = 4; // 新規userIdを採番
-    if( v.master.data.length === 0 ){
-      v.rv = 1;
+      v.step = 2.2; // 戻り値用にユーザ情報を補完
+      v.rv.isExit = true;
+      v.rv.SPkey = w.prop.SPkey;
+
     } else {
-      v.exist = v.master.data.map(x => x[w.primatyKeyColumn]);
-      v.rv = Math.max(...v.exist) + 1;
+      // メアドが未登録の場合
+
+      v.step = 3.1; // 既登録userIdの最大値を検索
+      Object.keys(w.prop.map).forEach(x => {
+        if( w.prop.map[x] > v.max ) v.max = w.prop.map[x];
+      });
+
+      v.step = 3.2; // プロパティサービス用ユーザ情報オブジェクトを作成
+      v.rv = {
+        userId  : v.max + 1,
+        created : Date.now(),
+        updated : arg.updated,
+        email   : arg.email,
+        auth    : w.prop.defaultAuth,
+        CPkey   : arg.CPkey,
+      }
+
+      v.step = 3.3; // プロパティサービスに保存
+      v.step = 3.31; // email -> userId マップ
+      w.prop.map[arg.email] = v.rv.userId;
+      console.log(`l.180 w.prop=${stringify(w.prop)}`)
+      v.prop.setProperties(w.prop);
+      v.step = 3.32; // ユーザ情報
+      v.prop.setProperty(v.rv.userId,v.rv);
+
+      v.step = 3.4; // シートに追加
+      v.master = new SingleTable(w.prop.masterSheet);
+      v.r = v.master.insert([{
+        userId: v.rv.userId,
+        created: toLocale(new Date(v.rv.created),'yyyy/MM/dd hh:mm:ss.nnn'),
+        email: v.rv.email,
+        auth: v.rv.auth,
+      }]);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 3.5; // 戻り値用にユーザ情報を補完
+      v.rv.isExist = false;
+      v.rv.SPkey = w.prop.SPkey;
     }
 
-    v.step = 5; // シートに登録
-    v.r = v.master.insert([{
-      userId:v.rv,
-      email:email,
-      created:toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn')
-    }]);
-    if( v.r instanceof Error ) throw v.r;
-
-    v.step = 9; // 終了処理
-    console.log(`${w.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    v.step = 4; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\nemail=${email}`;
+    + `\n${e.message}\narg=${stringify(arg)}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }
@@ -1913,13 +2033,14 @@ td, .td {
    1. <a href="#ac0020">new authMenu(arg)</a>
    1. <a href="#ac0021">authMenu.storeUserInfo(userId) ⇒ <code>void</code></a>
    1. <a href="#ac0022">authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code></a>
-1. <a href="#ac0023">テクニカルメモ</a>
-   1. <a href="#ac0024">GAS/htmlでの暗号化</a>
-         1. <a href="#ac0025">手順</a>
-         1. <a href="#ac0026">javascript用</a>
-         1. <a href="#ac0027">GAS用</a>
-1. <a href="#ac0028">プログラムソース</a>
-1. <a href="#ac0029">改版履歴</a>
+   1. <a href="#ac0023">authMenu.registMail(email) ⇒ <code>Object</code></a>
+1. <a href="#ac0024">テクニカルメモ</a>
+   1. <a href="#ac0025">GAS/htmlでの暗号化</a>
+         1. <a href="#ac0026">手順</a>
+         1. <a href="#ac0027">javascript用</a>
+         1. <a href="#ac0028">GAS用</a>
+1. <a href="#ac0029">プログラムソース</a>
+1. <a href="#ac0030">改版履歴</a>
 
 # 1 機能概要<a name="ac0001"></a>
 
@@ -2622,6 +2743,7 @@ sequenceDiagram
     * [new authMenu(arg)](#new_authMenu_new)
     * [.storeUserInfo(userId)](#authMenu+storeUserInfo) ⇒ <code>void</code>
     * [.genNavi(wrapper, navi)](#authMenu+genNavi) ⇒ <code>null</code> \| <code>Error</code>
+    * [.registMail(email)](#authMenu+registMail) ⇒ <code>Object</code>
 
 <a name="new_authMenu_new"></a>
 
@@ -2703,6 +2825,18 @@ localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限�
 | wrapper | <code>HTMLElement</code> | body等の親要素。 |
 | navi | <code>HTMLElement</code> | nav等のナビゲーション領域 |
 
+<a name="authMenu+registMail"></a>
+
+## 5.4 authMenu.registMail(email) ⇒ <code>Object</code><a name="ac0023"></a>
+
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0019) > authMenu.registMail(email) ⇒ <code>Object</code>
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| email | <code>string</code> | 入力されたメールアドレス |
+
 **Kind**: global function  
 **Returns**: <code>Object</code> - 分岐先処理での処理結果  
 
@@ -2712,19 +2846,19 @@ localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限�
 | func | <code>string</code> | <code>null</code> | 分岐先処理名 |
 | arg | <code>string</code> | <code>null</code> | 分岐先処理に渡す引数オブジェクト |
 
-# 6 テクニカルメモ<a name="ac0023"></a>
+# 6 テクニカルメモ<a name="ac0024"></a>
 
 [先頭](#ac0000) > テクニカルメモ
 
 
-## 6.1 GAS/htmlでの暗号化<a name="ac0024"></a>
+## 6.1 GAS/htmlでの暗号化<a name="ac0025"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0023) > GAS/htmlでの暗号化
+[先頭](#ac0000) > [テクニカルメモ](#ac0024) > GAS/htmlでの暗号化
 
 
-#### 6.1.1 手順<a name="ac0025"></a>
+#### 6.1.1 手順<a name="ac0026"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0023) > [GAS/htmlでの暗号化](#ac0024) > 手順
+[先頭](#ac0000) > [テクニカルメモ](#ac0024) > [GAS/htmlでの暗号化](#ac0025) > 手順
 
 
 ```mermaid
@@ -2760,9 +2894,9 @@ sequenceDiagram
   - GASでの保存
   - 
 
-#### 6.1.2 javascript用<a name="ac0026"></a>
+#### 6.1.2 javascript用<a name="ac0027"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0023) > [GAS/htmlでの暗号化](#ac0024) > javascript用
+[先頭](#ac0000) > [テクニカルメモ](#ac0024) > [GAS/htmlでの暗号化](#ac0025) > javascript用
 
 
 - Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
@@ -2771,9 +2905,9 @@ sequenceDiagram
 javascript 鍵ペア ライブラリ
 
 
-#### 6.1.3 GAS用<a name="ac0027"></a>
+#### 6.1.3 GAS用<a name="ac0028"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0023) > [GAS/htmlでの暗号化](#ac0024) > GAS用
+[先頭](#ac0000) > [テクニカルメモ](#ac0024) > [GAS/htmlでの暗号化](#ac0025) > GAS用
 
 
 GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
@@ -2818,7 +2952,7 @@ function setTest() {
 }
 ```
 
-# 7 プログラムソース<a name="ac0028"></a>
+# 7 プログラムソース<a name="ac0029"></a>
 
 [先頭](#ac0000) > プログラムソース
 
@@ -3230,6 +3364,9 @@ storeUserInfo(userId=null){
     return e;
   }
 }
+async doGAS(func,...args){
+  return await doGAS('authServer',this.userId,func,...args);
+}
 
   // ===================================
   // メニュー関係(旧BurgerMenu)
@@ -3411,6 +3548,61 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
   }
 }
 
+  // ===================================
+  // 認証関係(旧Auth)
+  // ===================================
+/**
+ * 
+ * @param {string} email - 入力されたメールアドレス
+ * @returns {Object}
+ */
+async registMail(email){
+  const v = {whois:this.constructor.name+'.registMail',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // 鍵ペア生成
+    v.passPhrase = createPassword(16);
+    v.CSkey = cryptico.generateRSAKey(v.passPhrase,1024);
+    v.CPkey = cryptico.publicKeyString(v.CSkey);
+    v.updated = new Date();
+
+    v.step = 2; // authServer.registMailに問合せ
+    v.rv = await this.doGAS('registMail',{
+      email: email,
+      CPkey: v.CPkey,
+      updated: v.updated.getTime(),
+    });
+    if( v.rv instanceof Error ) throw v.rv;
+    console.log(`l.1062 v.rv=${stringify(v.rv)}`);
+
+    v.step = 3.1; // ユーザ情報更新用に、格納する変数を補完
+    v.rv.passPhrase = v.passPhrase;
+    v.rv.CSkey = v.CSkey;
+    v.rv.auth = Number(v.rv.auth);
+    v.step = 3.2; // インスタンス変数の更新
+    v.map = Object.keys(v.rv);
+    for( v.i=0 ; v.i<v.map.length ; v.i++ ){
+      this[v.map[v.i]] = v.rv[v.map[v.i]];
+    }
+    v.step = 3.3; // localStorageの更新
+    localStorage.setItem(this.constructor.name,v.rv.userId);
+    v.step = 3.4; // sessionStorageの更新
+    v.prop = Object.assign({},
+      JSON.parse(sessionStorage.getItem(this.constructor.name)),v.rv);
+    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.prop));
+
+    v.step = 4; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\nemail=${email}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
 }
 ```
 
@@ -3427,7 +3619,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
  */
 function authServer(userId=null,func=null,arg=null) {
   // 内部関数で'v'を使用するため、ここでは'w'で定義
-  const w = {whois:'authServer',rv:null,step:0,func:{}};
+  const w = {whois:'authServer',rv:null,step:0,func:{},prop:{}};
   console.log(`${w.whois} start.`);
   try {
 
@@ -3450,12 +3642,21 @@ function authServer(userId=null,func=null,arg=null) {
  *    パスコード生成からログインまでの猶予時間(ミリ秒)
  * 1. userLoginLifeTime=86,400,000(24時間) {number}<br>
  *    クライアント側ログイン(CPkey)有効期間
+ * 1. defaultAuth=2 {number}<br>
+ *    新規登録者に設定する権限
  * 1. masterSheet='master' {string}<br>
  *    参加者マスタのシート名
  * 1. primatyKeyColumn='userId' {string}<br>
  *    主キーとなる項目名。主キーは数値で設定
  * 1. emailColumn='email' {string}<br>
  *    e-mailを格納するシート上の項目名
+ * 1. passPhrase {string} : authServerのパスフレーズ
+ * 1. SSkey {Object} : authServerの秘密鍵
+ * 1. SPkey {string} : authServerの公開鍵
+ * 1. map {Object} : `{email:userId}`形式のマップ
+ * 1. userIdStartNumber=1 : ユーザID(数値)の開始
+ * 
+ * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
  */
 w.func.setProperties = function(){
   const v = {whois:w.whois+'.setProperties',rv:null,step:0};
@@ -3463,24 +3664,28 @@ w.func.setProperties = function(){
   try {
 
     v.step = 1; // 適用値をセット
-    w.propertyName = 'authServer';
-    w.loginRetryInterval = 3600000;
-    w.numberOfLoginAttempts = 3;
-    w.loginGraceTime = 900000;
-    w.userLoginLifeTime = 86400000;
-    w.masterSheet = 'master';
-    w.primatyKeyColumn ='userId';
-    w.emailColumn = 'email';
-
-    v.step = 2; // 鍵ペア不存在なら生成
-    v.prop = PropertiesService.getDocumentProperties().getProperty(w.propertyName);
-    if( v.prop === null ){
-      v.prop = {passPhrase:createPassword(16)};
-      v.prop.SCkey = cryptico.generateRSAKey(v.prop.passPhrase,1024);
-      v.prop.SPkey = cryptico.publicKeyString(v.prop.SCkey);
-      PropertiesService.getDocumentProperties().setProperty(w.propertyName,v.prop);
+    w.prop = PropertiesService.getDocumentProperties().getProperties();
+    if( Object.keys(w.prop).length === 0 ){
+      w.prop = {
+        propertyName : 'authServer',
+        loginRetryInterval : 3600000,
+        numberOfLoginAttempts : 3,
+        loginGraceTime : 900000,
+        userLoginLifeTime : 86400000,
+        defaultAuth : 2,
+        masterSheet : 'master',
+        primatyKeyColumn : 'userId',
+        emailColumn : 'email',
+        passPhrase : createPassword(16),
+        map : {'shimokitasho.oyaji@gmail.com':0},
+        userIdStartNumber : 1,
+      };
+      w.prop.SSkey = cryptico.generateRSAKey(w.prop.passPhrase,1024);
+      w.prop.SPkey = cryptico.publicKeyString(w.prop.SSkey);
+      // プロパティサービスを更新
+      PropertiesService.getDocumentProperties().setProperties(w.prop);
     }
-    console.log(v.prop);
+    console.log(`${v.whois} normal end.\n`,w.prop);
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
@@ -3499,49 +3704,88 @@ if( w.rv instanceof Error ) throw w.rv;
  * - IDは自然数の前提、1から順に採番。
  * - 新規採番は途中の欠損は考慮せず、最大値＋1とする
  * 
- * @param {string} email - 要求があったユーザのe-mail
+ * @param {Object} arg
+ * @param {string} arg.email - 要求があったユーザのe-mail
+ * @param {string} arg.CPkey - 要求があったユーザの公開鍵
+ * @param {number} arg.updated - 公開鍵更新日時(UNIX時刻)
  * @returns {number|Error} 採番されたuserId
  */
-w.func.registMail = function(email){
-  const v = {whois:w.whois+'.registMail',rv:null,step:0};
-  console.log(`${v.whois} start.`);
+w.func.registMail = function(arg){
+  const v = {whois:w.whois+'.registMail',rv:null,step:0,
+    max:(w.prop.userIdStartNumber - 1),
+    prop:PropertiesService.getDocumentProperties(),
+  };
+  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
   try {
 
     v.step = 1; // emailアドレスの妥当性検証
-    if( checkFormat(email,'email' ) === false ){
+    if( checkFormat(arg.email,'email' ) === false ){
       throw new Error(`invalid e-mail address.`);
     }
 
-    v.step = 2; // masterシートを読み込み
-    v.master = new SingleTable(w.masterSheet);
+    // DocumentPropertiesにメアドが登録済か確認
+    console.log(`l.132 w.prop=${stringify(w.prop)}`);
+    if( w.prop.map.hasOwnProperty(arg.email) ){
+      // メアドが登録済の場合
 
-    v.step = 3; // 既登録メアドでは無いか確認
-    v.m = v.master.data.find(x => x[w.emailColumn] === email);
-    if( v.m ) throw new Error(`"${email}" has already registrated.`);
+      v.step = 2.1; // ユーザの公開鍵を更新
+      v.rv = w.prop[w.prop.map[arg.email]];
+      v.rv.updated = arg.updated;
+      v.rv.CPkey = arg.CPkey;
+      v.prop.setProperty(w.prop.map[arg.email],v.rv);
 
-    v.step = 4; // 新規userIdを採番
-    if( v.master.data.length === 0 ){
-      v.rv = 1;
+      v.step = 2.2; // 戻り値用にユーザ情報を補完
+      v.rv.isExit = true;
+      v.rv.SPkey = w.prop.SPkey;
+
     } else {
-      v.exist = v.master.data.map(x => x[w.primatyKeyColumn]);
-      v.rv = Math.max(...v.exist) + 1;
+      // メアドが未登録の場合
+
+      v.step = 3.1; // 既登録userIdの最大値を検索
+      Object.keys(w.prop.map).forEach(x => {
+        if( w.prop.map[x] > v.max ) v.max = w.prop.map[x];
+      });
+
+      v.step = 3.2; // プロパティサービス用ユーザ情報オブジェクトを作成
+      v.rv = {
+        userId  : v.max + 1,
+        created : Date.now(),
+        updated : arg.updated,
+        email   : arg.email,
+        auth    : w.prop.defaultAuth,
+        CPkey   : arg.CPkey,
+      }
+
+      v.step = 3.3; // プロパティサービスに保存
+      v.step = 3.31; // email -> userId マップ
+      w.prop.map[arg.email] = v.rv.userId;
+      console.log(`l.180 w.prop=${stringify(w.prop)}`)
+      v.prop.setProperties(w.prop);
+      v.step = 3.32; // ユーザ情報
+      v.prop.setProperty(v.rv.userId,v.rv);
+
+      v.step = 3.4; // シートに追加
+      v.master = new SingleTable(w.prop.masterSheet);
+      v.r = v.master.insert([{
+        userId: v.rv.userId,
+        created: toLocale(new Date(v.rv.created),'yyyy/MM/dd hh:mm:ss.nnn'),
+        email: v.rv.email,
+        auth: v.rv.auth,
+      }]);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 3.5; // 戻り値用にユーザ情報を補完
+      v.rv.isExist = false;
+      v.rv.SPkey = w.prop.SPkey;
     }
 
-    v.step = 5; // シートに登録
-    v.r = v.master.insert([{
-      userId:v.rv,
-      email:email,
-      created:toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn')
-    }]);
-    if( v.r instanceof Error ) throw v.r;
-
-    v.step = 9; // 終了処理
-    console.log(`${w.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    v.step = 4; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\nemail=${email}`;
+    + `\n${e.message}\narg=${stringify(arg)}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }
@@ -3701,7 +3945,7 @@ if( w.r instanceof Error ) throw w.r;
 
 </details>
 
-# 8 改版履歴<a name="ac0029"></a>
+# 8 改版履歴<a name="ac0030"></a>
 
 [先頭](#ac0000) > 改版履歴
 

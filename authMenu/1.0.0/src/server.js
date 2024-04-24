@@ -6,7 +6,7 @@
  */
 function authServer(userId=null,func=null,arg=null) {
   // 内部関数で'v'を使用するため、ここでは'w'で定義
-  const w = {whois:'authServer',rv:null,step:0,func:{}};
+  const w = {whois:'authServer',rv:null,step:0,func:{},prop:{}};
   console.log(`${w.whois} start.`);
   try {
 

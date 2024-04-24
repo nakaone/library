@@ -122,9 +122,7 @@ td, .td {
 </ul>
 <h1>参加申込</h1>
 <ol>
-<li><div>以下に申込者のメールアドレスを入力、送信してください<br>
-  <input type="email" size="40" />
-  <button onclick="g.auth.registMail(this)">送信</button></div></li>
+<li>右上のメニューから「新規申込、受付番号確認」を選択し、申込者のメールアドレスを送信してください。</li>
 <li>送信後、応募フォームが開くので必要事項を入力してください。</li>
 </ol>
 <ul>
@@ -370,31 +368,60 @@ td, .td {
  * @param {HTMLElement} dom - クリックされたボタン
  * @returns {void}
  */
-function enterIdentifyKey(dom){
+ async function enterIdentifyKey(dom){
   const v = {whois:'enterIdentifyKey',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
+    v.step = 1; // 入力値をv.keyに保存
     v.key = dom.parentNode.querySelector('input').value;
     if( dom.parentNode.getAttribute('name') === 'enterMail' ){
-      // メールアドレス入力
+      v.step = 2; // メールアドレス入力
+      if( checkFormat(v.key,'email') ){
+        v.step = 2.1; // ユーザIDの存否確認
+        v.userId = localStorage.getItem('authMenu');
+        console.log(`l.385 v.userId=${v.userId}, isNull=${v.userId === null}, typeof=${typeof v.userId}`);
+        if( v.userId !== null && !isNaN(v.userId) ){
+          alert(`"${v.key}"は既に登録されています(受付番号=${v.userId})`);
+          return;
+        }
+
+        v.step = 2.2; // サーバ側に問合せ
+        v.r = await g.authMenu.registMail(v.key);
+        if( v.r instanceof Error ) throw v.r;
+        console.log(`l.395 v.r=${JSON.stringify(v.r)}`);
+
+        v.step = 2.3; // メニュー再描画
+        v.a = g.authMenu.genNavi();
+        if( v.a instanceof Error ) throw v.a;
+
+        if( v.r.isExist ){
+          v.step = 2.4; // 登録済のメアド ⇒ ホーム画面に遷移
+          v.a = g.authMenu.changeScreen();
+        } else {
+          v.step = 2.5; // 未登録のメアド ⇒ 新規登録画面に遷移
+          v.a = g.authMenu.changeScreen('登録・修正・キャンセル');
+        }
+      } else {
+        alert('メールアドレスの形式が不適切です');
+      }
     } else {
-      // 受付番号入力
+      v.step = 3; // 受付番号入力
       if( v.key.match(/^[0-9]+/) ){
-        v.step = 1;
+        v.step = 3.1;
         v.r = g.authMenu.storeUserInfo(Number(v.key));
         if( v.r instanceof Error ) throw v.r;
 
-        v.step = 2; // メニュー再描画
+        v.step = 3.2; // メニュー再描画
         v.r = g.authMenu.genNavi();
         if( v.r instanceof Error ) throw v.r;
 
-        v.step = 3; // ホーム画面に遷移
+        v.step = 3.3; // ホーム画面に遷移
         v.r = g.authMenu.changeScreen();
         if( v.r instanceof Error ) throw v.r;
 
       } else {
-        v.step = 4;
+        v.step = 3.4;
         alert('受付番号は数値で指定してください');
       }
     }
@@ -825,6 +852,9 @@ storeUserInfo(userId=null){
     return e;
   }
 }
+async doGAS(func,...args){
+  return await doGAS('authServer',this.userId,func,...args);
+}
 
   // ===================================
   // メニュー関係(旧BurgerMenu)
@@ -1006,6 +1036,61 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
   }
 }
 
+  // ===================================
+  // 認証関係(旧Auth)
+  // ===================================
+/**
+ * 
+ * @param {string} email - 入力されたメールアドレス
+ * @returns {Object}
+ */
+async registMail(email){
+  const v = {whois:this.constructor.name+'.registMail',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // 鍵ペア生成
+    v.passPhrase = createPassword(16);
+    v.CSkey = cryptico.generateRSAKey(v.passPhrase,1024);
+    v.CPkey = cryptico.publicKeyString(v.CSkey);
+    v.updated = new Date();
+
+    v.step = 2; // authServer.registMailに問合せ
+    v.rv = await this.doGAS('registMail',{
+      email: email,
+      CPkey: v.CPkey,
+      updated: v.updated.getTime(),
+    });
+    if( v.rv instanceof Error ) throw v.rv;
+    console.log(`l.1062 v.rv=${stringify(v.rv)}`);
+
+    v.step = 3.1; // ユーザ情報更新用に、格納する変数を補完
+    v.rv.passPhrase = v.passPhrase;
+    v.rv.CSkey = v.CSkey;
+    v.rv.auth = Number(v.rv.auth);
+    v.step = 3.2; // インスタンス変数の更新
+    v.map = Object.keys(v.rv);
+    for( v.i=0 ; v.i<v.map.length ; v.i++ ){
+      this[v.map[v.i]] = v.rv[v.map[v.i]];
+    }
+    v.step = 3.3; // localStorageの更新
+    localStorage.setItem(this.constructor.name,v.rv.userId);
+    v.step = 3.4; // sessionStorageの更新
+    v.prop = Object.assign({},
+      JSON.parse(sessionStorage.getItem(this.constructor.name)),v.rv);
+    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.prop));
+
+    v.step = 4; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\nemail=${email}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
 }
 var dbits,canary=244837814094590,j_lm=(canary&16777215)==15715070;function BigInteger(a,b,c){a!=null&&("number"==typeof a?this.fromNumber(a,b,c):b==null&&"string"!=typeof a?this.fromString(a,256):this.fromString(a,b))}function nbi(){return new BigInteger(null)}function am1(a,b,c,d,e,g){for(;--g>=0;){var h=b*this[a++]+c[d]+e,e=Math.floor(h/67108864);c[d++]=h&67108863}return e}
 function am2(a,b,c,d,e,g){var h=b&32767;for(b>>=15;--g>=0;){var f=this[a]&32767,o=this[a++]>>15,p=b*f+o*h,f=h*f+((p&32767)<<15)+c[d]+(e&1073741823),e=(f>>>30)+(p>>>15)+b*o+(e>>>30);c[d++]=f&1073741823}return e}function am3(a,b,c,d,e,g){var h=b&16383;for(b>>=14;--g>=0;){var f=this[a]&16383,o=this[a++]>>14,p=b*f+o*h,f=h*f+((p&16383)<<14)+c[d]+e,e=(f>>28)+(p>>14)+b*o;c[d++]=f&268435455}return e}
@@ -1157,6 +1242,23 @@ function changeScreen(screenName){
     return e;
   }
 }
+/** 文字列がe-mail等として正しい形式か判断
+ * 
+ * @param {string} str - 検査対象となる文字列
+ * @param {string} type='email' - 'email' or 'URL' or 'tel'
+ * @returns {boolean}
+ */
+function checkFormat(str,type='email'){
+  switch(type){
+    case 'email':
+      //return str.match(new RegExp("[\w\-\._]+@[\w\-\._]+\.[A-Za-z]+")) ? true : false;
+      // https://www.javadrive.jp/regex-basic/sample/index13.html#google_vignette
+      return str.match(/^[a-zA-Z0-9_.+-]+@([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.)+[a-zA-Z]{2,}$/) ? true : false;
+    case 'URL':
+      return str.match(new RegExp("https?://[\w!?/+\-_~;.,*&@#$%()'[\]]+")) ? true : false;
+    default: return false;
+  }
+}
 /** HTMLElementを生成する
  * @param {CEDefObj|CEDefObj[]} arg - 生成するHTMLElementの定義
  * @param {HTMLElement|string} [parent=null] - 本関数内部で親要素への追加まで行う場合に指定
@@ -1246,6 +1348,69 @@ function createElement(arg,parent=null){
     console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
     return e;
   }
+}
+/** 長さ・文字種指定に基づき、パスワードを生成
+ * 
+ * @param {number} [len=16] - パスワードの長さ
+ * @param {Object} opt 
+ * @param {boolean} [opt.lower=true] - 英小文字を使うならtrue
+ * @param {boolean} [opt.upper=true] - 英大文字を使うならtrue
+ * @param {boolean} [opt.symbol=true] - 記号を使うならtrue
+ * @param {boolean} [opt.numeric=true] - 数字を使うならtrue
+ * @returns {string}
+ */
+function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:true}){
+  const v = {
+    whois: 'createPassword',
+    lower: 'abcdefghijklmnopqrstuvwxyz',
+    upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    symbol: '!#$%&()=~|@[];:+-*<>?_>.,',
+    numeric: '0123456789',
+    base: '',
+    rv: '',
+  }
+  try {
+    Object.keys(opt).forEach(x => {
+      if( opt[x] ) v.base += v[x];
+    });
+    for( v.i=0 ; v.i<len ; v.i++ ){
+      v.rv += v.base.charAt(Math.floor(Math.random() * v.base.length));
+    }
+  } catch(e) {
+    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
+    v.rv = e;
+  } finally {
+    return v.rv;
+  }
+}
+/** サーバ側GASの指定関数を実行、結果を取得
+ * 
+ * - [GASのgoogle.script.runをPromise化する](https://www.330k.info/essay/gas_google_script_run_convert_promise/)
+ * 
+ * @exsample
+ * 
+ * <pre><code>
+ * (async ()=> {
+ *   const result1 = await doGAS('doSomething1');
+ *   const result2 = await doGAS('doSomething2');
+ *   const result3 = await doGAS('doSomething3');
+ * })();
+ * </code></pre>
+ * 
+ * doSomething(arg1, arg2, ...)のように引数を渡す時は以下のようにdoGASの第2引数以下に指定する。
+ * ```
+ * doGAS('doSomething', arg1, arg2);
+ * ```
+ */
+function doGAS(func, ...args){
+  console.log('doGAS start. func=%s',func,...args);
+  return new Promise(function(resolve, reject){
+    google.script.run.withSuccessHandler(function(...e){
+      resolve(...e);
+    }).withFailureHandler(function(...e){
+      reject(...e);
+    })[func](...args);
+  });
 }
 /** 渡された変数内のオブジェクト・配列を再帰的にマージ
  * - pri,subともデータ型は不問。次項のデシジョンテーブルに基づき、結果を返す
