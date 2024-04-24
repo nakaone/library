@@ -9,7 +9,6 @@ sequenceDiagram
   participant browser
   participant storage
   participant client as authMenu
-  participant property
   participant server as authServer
   participant sheet
 
@@ -27,11 +26,11 @@ sequenceDiagram
   client ->> server : メアド＋CPkey＋作成日時
   activate server
   Note right of server : authServer.registMail()
-  property ->> server : DocumentProperties
-  server ->> property : ユーザ情報(※1)
   alt メアドが未登録
     server ->> server : ユーザIDを新規採番
-    server ->> sheet : ユーザ情報(※3)
+    server ->> sheet : ユーザ情報(※1)
+  else メアドが登録済
+    server ->> sheet : CPkey＋作成日時
   end
   server ->> client : ユーザ情報(※2)
   deactivate server
@@ -52,19 +51,38 @@ sequenceDiagram
 
 - CPkeyは有効期限にかかわらず送付され、server側で更新する<br>
   ※有効期間の検証を省略するため、都度更新
-- ※1(プロパティ保存),※2(SV->CL),※3(シート保存)の「ユーザ情報」オブジェクトのメンバは以下の通り。
-  | 名称 | 属性 | 内容 | ※1 | ※2 | ※3 |
-  | :-- | :-- | :-- | :--: | :--: | :--: |
-  | isExist | boolean | true:登録済、false:新規登録 | × | ◎ | × |
-  | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ |
-  | created | number | ユーザID新規登録時刻(UNIX時刻) | ◎ | ◎ | ▲<br>(日付文字列) |
-  | updated | number | サーバ側CPkey登録時刻(UNIX時刻) | ◎ | ◎ | × |
-  | email | string | サーバ側に登録されたe-mail | ◎ | × | ◎ |
-  | auth | number | サーバ側に登録されたユーザ権限 | ◎ | ◎ | ◎ |
-  | SPkey | string | サーバ側の公開鍵 | × | ◎ | × |
-  | CPkey | string | サーバ側に登録されたCPkey | ◎ | × | × |
-
-
+- ※1(シート保存),※2(SV->CL)の「ユーザ情報」オブジェクトのメンバは以下の通り。
+  | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
+  | :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
+  | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
+  | created | string | ユーザID新規登録時刻(日時文字列) | × | ◎ | ◎ | ◎ | ◎ |
+  | email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
+  | auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
+  | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
+  | passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | × | × | × |
+  | CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
+  | CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
+  | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | ◎ | ◎ |
+  | isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
+  | trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
+- trialは以下のメンバを持つObject
+  | 名称 | 属性 | 内容 | I/O |
+  | :-- | :-- | :-- | :-- |
+  | startAt | number | 試行開始日時(UNIX時刻) | × |
+  | passcode | number | パスコード(原則数値6桁) | × |
+  | log | object[] | 試行の記録。unshiftで先頭を最新にする | × |
+  | <span style="margin-left:1rem">timestamp</span> | number | 試行日時(UNIX時刻) | × |
+  | <span style="margin-left:1rem">entered</span> | number | 入力されたパスコード | × |
+  | <span style="margin-left:1rem">result</span> | boolean | パスコードと入力値の比較結果(true:OK) | × |
+  | <span style="margin-left:1rem">status</span> | string | NGの場合の理由。'OK':試行OK | × |
+  | endAt | number | 試行終了日時(UNIX時刻) | × |
+  | result | boolean | 試行の結果(true:OK) | ◎ |
+  | unfreeze | number | ログイン連続失敗後、凍結解除される日時(UNIX時刻) | ◎ |
+  - loc : localStorage
+  - ses : sessionStorage
+  - mem : authMenuインスタンス変数(メンバ)
+  - I/O : authServer -> authMenuへ送られるオブジェクト
+  - sht : シート
 - 参加者が改めて参加要項からメールアドレスを入力するのは「自分のuserIdを失念した」場合を想定
 - 応募締切等、新規要求ができる期間の制限は、client側でも行う(authMenuの有効期間設定を想定)
 - メアドは形式チェックのみ行い、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
