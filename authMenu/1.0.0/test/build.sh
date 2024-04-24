@@ -144,7 +144,10 @@ clScript="$tmp/script.js"
 cat $lib/authMenu/1.0.0/client.js | awk 1 > $clScript
 cat $lib/cryptico/cryptico.min.js | awk 1 >> $clScript
 cat $lib/changeScreen/1.1.0/core.js | awk 1 >> $clScript
+cat $lib/checkFormat/1.0.0/core.js | awk 1 >> $clScript
 cat $lib/createElement/1.2.1/core.js | awk 1 >> $clScript
+cat $lib/createPassword/1.0.1/core.js | awk 1 >> $clScript
+cat $lib/doGAS/1.0.0/core.js | awk 1 >> $clScript
 cat $lib/mergeDeeply/1.1.0/core.js | awk 1 >> $clScript
 cat $lib/stringify/1.1.1/core.js | awk 1 >> $clScript
 cat $lib/whichType/1.0.1/core.js | awk 1 >> $clScript

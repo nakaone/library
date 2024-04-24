@@ -412,7 +412,7 @@ window.addEventListener('DOMContentLoaded',() => {
   1. {string} passPhrase - サーバ側鍵ペア生成の際のパスフレーズ
   1. {Object} SCkey - サーバ側秘密鍵
   1. {string} SPkey - サーバ側公開鍵
-  1. {number[]} userList - 登録済ユーザIDのリスト
+  1. {Object} map - `{email:userId}`形式のマップ
 - DocumentProperties : `(ユーザID)`
   1. {number} userId - ユーザID
   1. {string} email - e-mail
@@ -468,23 +468,24 @@ sequenceDiagram
   activate server
   Note right of server : authServer.registMail()
   property ->> server : DocumentProperties
+  server ->> property : ユーザ情報(※1)
   alt メアドが未登録
     server ->> server : ユーザIDを新規採番
     server ->> sheet : ユーザ情報(※3)
   end
-  server ->> property : ユーザ情報(※1)
   server ->> client : ユーザ情報(※2)
   deactivate server
 
+  client ->> client : ユーザ情報更新(インスタンス変数)
   client ->> storage : ユーザ情報更新
-  client ->> client : メニュー再描画
-  alt 既存メアド
-    client ->> client : ホーム画面に遷移
-  else 新規登録
-    client ->> client : 新規登録画面に遷移
-  end
-  client ->> browser : 終了ステータス
+  client ->> browser : ユーザ情報(※2)
   deactivate client
+  browser ->> browser : メニュー再描画
+  alt 既存メアド
+    browser ->> browser : ホーム画面に遷移
+  else 新規登録
+    browser ->> browser : 新規登録画面に遷移
+  end
   browser ->> user : 遷移先画面
   deactivate browser
 ```
@@ -497,7 +498,7 @@ sequenceDiagram
   | isExist | boolean | true:登録済、false:新規登録 | × | ◎ | × |
   | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ |
   | created | number | ユーザID新規登録時刻(UNIX時刻) | ◎ | ◎ | ▲<br>(日付文字列) |
-  | updated | number | サーバ側CPkey登録時刻(UNIX時刻) | ◎ | ◎ | ▲<br>(日付文字列) |
+  | updated | number | サーバ側CPkey登録時刻(UNIX時刻) | ◎ | ◎ | × |
   | email | string | サーバ側に登録されたe-mail | ◎ | × | ◎ |
   | auth | number | サーバ側に登録されたユーザ権限 | ◎ | ◎ | ◎ |
   | SPkey | string | サーバ側の公開鍵 | × | ◎ | × |
@@ -2276,7 +2277,7 @@ window.addEventListener('DOMContentLoaded',() => {
   1. {string} passPhrase - サーバ側鍵ペア生成の際のパスフレーズ
   1. {Object} SCkey - サーバ側秘密鍵
   1. {string} SPkey - サーバ側公開鍵
-  1. {number[]} userList - 登録済ユーザIDのリスト
+  1. {Object} map - `{email:userId}`形式のマップ
 - DocumentProperties : `(ユーザID)`
   1. {number} userId - ユーザID
   1. {string} email - e-mail
@@ -2338,23 +2339,24 @@ sequenceDiagram
   activate server
   Note right of server : authServer.registMail()
   property ->> server : DocumentProperties
+  server ->> property : ユーザ情報(※1)
   alt メアドが未登録
     server ->> server : ユーザIDを新規採番
     server ->> sheet : ユーザ情報(※3)
   end
-  server ->> property : ユーザ情報(※1)
   server ->> client : ユーザ情報(※2)
   deactivate server
 
+  client ->> client : ユーザ情報更新(インスタンス変数)
   client ->> storage : ユーザ情報更新
-  client ->> client : メニュー再描画
-  alt 既存メアド
-    client ->> client : ホーム画面に遷移
-  else 新規登録
-    client ->> client : 新規登録画面に遷移
-  end
-  client ->> browser : 終了ステータス
+  client ->> browser : ユーザ情報(※2)
   deactivate client
+  browser ->> browser : メニュー再描画
+  alt 既存メアド
+    browser ->> browser : ホーム画面に遷移
+  else 新規登録
+    browser ->> browser : 新規登録画面に遷移
+  end
   browser ->> user : 遷移先画面
   deactivate browser
 ```
@@ -2367,7 +2369,7 @@ sequenceDiagram
   | isExist | boolean | true:登録済、false:新規登録 | × | ◎ | × |
   | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ |
   | created | number | ユーザID新規登録時刻(UNIX時刻) | ◎ | ◎ | ▲<br>(日付文字列) |
-  | updated | number | サーバ側CPkey登録時刻(UNIX時刻) | ◎ | ◎ | ▲<br>(日付文字列) |
+  | updated | number | サーバ側CPkey登録時刻(UNIX時刻) | ◎ | ◎ | × |
   | email | string | サーバ側に登録されたe-mail | ◎ | × | ◎ |
   | auth | number | サーバ側に登録されたユーザ権限 | ◎ | ◎ | ◎ |
   | SPkey | string | サーバ側の公開鍵 | × | ◎ | × |
