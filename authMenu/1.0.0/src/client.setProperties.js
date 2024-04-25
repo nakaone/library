@@ -38,6 +38,8 @@
  * - toggle {Arrow} : 【*内部*】ナビゲーション領域の表示/非表示切り替え
  * - showChildren {Arror} : 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
  * - changeScreen {Arror} : 【*内部*】this.homeの内容に従って画面を切り替え
+ * - RSAkeyLength=1024 {number} : 鍵ペアのキー長
+ * - passPhraseLength=16 {number} : 鍵ペア生成の際のパスフレーズ長
  */
 #setProperties(arg){
   const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
@@ -56,6 +58,8 @@
       func: {}, // {Object.<string,function>} メニューから呼び出される関数
       home: null,
       initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
+      RSAkeyLength: 1024,
+      passPhraseLength: 16,
     };
     v.default.css = `/* authMenu専用CSS
         authMenu共通変数定義

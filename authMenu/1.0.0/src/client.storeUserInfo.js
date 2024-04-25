@@ -46,55 +46,61 @@
  * 4. `opt.userIdSelector='div[name="userId"]'`を指定して本関数を実行、HTMLからユーザIDを取得
  * 
  */
-storeUserInfo(userId=null){
-  const v = {whois:'storeUserInfo',rv:null,step:0,html:null,arg:null};
+storeUserInfo(arg={}){
+  const v = {whois:'storeUserInfo',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // オプションの既定値をセット
-
-    v.step = 2.1; // sessionStorageからユーザ情報を取得
+    v.step = 1.1; // sessionStorageからユーザ情報を取得
     v.r = sessionStorage.getItem(this.constructor.name);
-    v.session = v.r ? JSON.parse(v.r) : {userId:null,auth:this.publicAuth};
-    v.step = 2.2; // localStorageからユーザ情報を取得
+    v.session = v.r ? JSON.parse(v.r) : {};
+    v.step = 1.2; // localStorageからユーザ情報を取得
     v.r = localStorage.getItem(this.constructor.name);
-    v.local = v.r ? Number(v.r) : null;
-    v.step = 2.3; // HTMLに埋め込まれたuserIdを取得
+    v.local = v.r ? {userId:Number(v.r)} : {};
+    v.step = 1.3; // HTMLに埋め込まれたuserIdを取得
     v.dom = document.querySelector(this.userIdSelector);
-    if( v.dom !== null ){
-      v.r = v.dom.innerText;
-      v.html = v.r.length > 0 ? Number(v.r) : null;  
-    }
-    v.step = 2.4; // 引数で渡されたuserIdを取得
-    if( userId !== null ) v.arg = Number(userId);
+    v.html = v.dom !== null && v.dom.innerText.length > 0
+      ? {userId:Number(v.r)} :{};
 
-    v.step = 2.1; // userIdの特定
+    v.step = 2.1; // 優先順位に沿ってユーザ情報を統合
     // 優先順位は`arg > html > session > local`
-    v.session.userId = v.arg !== null ? v.arg
-    : ( v.html !== null ? v.html
-    : ( v.session.userId !== null ? v.session.userId
-    : ( v.local !== null ? v.local : null)));
-    v.step = 2.2; // userIdが特定され且つauthが最低の場合は参加者(auth=2)に昇格
-    if( v.session.userId !== null && v.session.auth === this.publicAuth ){
-      v.session.auth = this.memberAuth;
+    v.proto = {};
+    ['userId','email','auth','passPhrase','CSkey','CPkey',
+    'updated','SPkey'].forEach(x => v.proto[x]=null);
+    v.rv = Object.assign(v.proto,v.local,v.session,v.html,arg);
+
+    v.step = 2.2; // 鍵ペア・秘密鍵が存在しなければ作成
+    if( v.rv.CSkey === null ){
+      if( v.rv.passPhrase === null ){
+        v.rv.passPhrase = createPassword(this.passPhraseLength);
+        v.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
+      }
+      v.rv.CSkey = cryptico.generateRSAKey(v.rv.passPhrase,this.RSAkeyLength);
+      v.rv.CPkey = cryptico.publicKeyString(v.rv.CSkey);
     }
 
-    v.step = 3.1; // sessionStorageへの保存
+    v.step = 2.3; // userIdが特定され且つauthが最低の場合は参加者(auth=2)に昇格
+    if( v.rv.userId !== null && v.rv.auth === this.publicAuth ){
+      v.rv.auth = this.memberAuth;
+    }
+
+    v.step = 3.1; // localStorageへの保存
+    localStorage.setItem(this.constructor.name,v.rv.userId);
+    v.step = 3.2; // sessionStorageへの保存
+    v.session = Object.assign({},v.rv);
+    delete v.session.CSkey;
     sessionStorage.setItem(this.constructor.name,JSON.stringify(v.session));
-    v.step = 3.2; // localStorageへの保存
-    localStorage.setItem(this.constructor.name,v.session.userId);
-    v.step = 3.3; // メンバに保存
-    this.userId = v.session.userId;
-    this.auth = v.session.auth;
+    v.step = 3.3; // インスタンス変数(メンバ)への保存
+    v.member = Object.assign({},v.rv);
+    delete v.member.passPhrase;
+    Object.keys(v.member).forEach(x => this[x]=v.member[x]);
 
     v.step = 4; // 終了処理
-    v.rv = v.session;
-    console.log(`${v.whois} normal end.\n`
-    +`v.session=${JSON.stringify(v.session)}\nv.local=${v.local}\nv.html=${v.html}\nv.arg=${v.arg}`);
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
   } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}\nv.rv=${v.rv}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }

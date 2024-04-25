@@ -1,9 +1,8 @@
-<script type="text/javascript">
 /** 新規申込処理、または受付番号未登録時の登録処理
  * @param {HTMLElement} dom - クリックされたボタン
  * @returns {void}
  */
- async function enterIdentifyKey(dom){
+async function enterIdentifyKey(dom){
   const v = {whois:'enterIdentifyKey',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
@@ -15,7 +14,6 @@
       if( checkFormat(v.key,'email') ){
         v.step = 2.1; // ユーザIDの存否確認
         v.userId = localStorage.getItem('authMenu');
-        console.log(`l.385 v.userId=${v.userId}, isNull=${v.userId === null}, typeof=${typeof v.userId}`);
         if( v.userId !== null && !isNaN(v.userId) ){
           alert(`"${v.key}"は既に登録されています(受付番号=${v.userId})`);
           return;
@@ -24,7 +22,6 @@
         v.step = 2.2; // サーバ側に問合せ
         v.r = await g.authMenu.registMail(v.key);
         if( v.r instanceof Error ) throw v.r;
-        console.log(`l.395 v.r=${JSON.stringify(v.r)}`);
 
         v.step = 2.3; // メニュー再描画
         v.a = g.authMenu.genNavi();
@@ -44,7 +41,7 @@
       v.step = 3; // 受付番号入力
       if( v.key.match(/^[0-9]+/) ){
         v.step = 3.1;
-        v.r = g.authMenu.storeUserInfo(Number(v.key));
+        v.r = g.authMenu.storeUserInfo({userId:Number(v.key)});
         if( v.r instanceof Error ) throw v.r;
 
         v.step = 3.2; // メニュー再描画
@@ -70,12 +67,3 @@
     alert(e.message);
   }
 }
-</script>
-<div name="enterMail">
-  <p>新規に応募される方、または受付番号がわからなくなった方は、以下にメールアドレスを入力してください。</p>
-  <input type="email" size="40" /><button onclick="enterIdentifyKey(this)">送信</button>
-</div>
-<div name="enterUserId">
-  <p>受付番号をご存じの方は、以下に受付番号を入力してください。</p>
-  <input type="number" /><button onclick="enterIdentifyKey(this)">送信</button>
-</div>

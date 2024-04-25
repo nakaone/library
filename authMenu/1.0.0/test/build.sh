@@ -150,6 +150,7 @@ cat $lib/createPassword/1.0.1/core.js | awk 1 >> $clScript
 cat $lib/doGAS/1.0.0/core.js | awk 1 >> $clScript
 cat $lib/mergeDeeply/1.1.0/core.js | awk 1 >> $clScript
 cat $lib/stringify/1.1.1/core.js | awk 1 >> $clScript
+cat $lib/toLocale/1.0.0/core.js | awk 1 >> $clScript
 cat $lib/whichType/1.0.1/core.js | awk 1 >> $clScript
 
 # 4.3 onload部分の作成

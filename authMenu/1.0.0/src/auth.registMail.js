@@ -8,22 +8,22 @@ async registMail(email){
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // 鍵ペア生成
-    v.passPhrase = createPassword(16);
-    v.CSkey = cryptico.generateRSAKey(v.passPhrase,1024);
+    v.step = 1; /* 鍵ペア生成
+    v.passPhrase = createPassword(this.passPhraseLength);
+    v.CSkey = cryptico.generateRSAKey(v.passPhrase,this.RSAkeyLength);
     v.CPkey = cryptico.publicKeyString(v.CSkey);
-    v.updated = new Date();
+    v.updated = new Date();*/
 
     v.step = 2; // authServer.registMailに問合せ
     v.rv = await this.doGAS('registMail',{
       email: email,
-      CPkey: v.CPkey,
-      updated: v.updated.getTime(),
+      CPkey: this.CPkey,
+      updated: this.updated,
     });
     if( v.rv instanceof Error ) throw v.rv;
     console.log(`l.1062 v.rv=${stringify(v.rv)}`);
 
-    v.step = 3.1; // ユーザ情報更新用に、格納する変数を補完
+    v.step = 3.1; /* ユーザ情報更新用に、格納する変数を補完
     v.rv.passPhrase = v.passPhrase;
     v.rv.CSkey = v.CSkey;
     v.rv.auth = Number(v.rv.auth);
@@ -37,7 +37,9 @@ async registMail(email){
     v.step = 3.4; // sessionStorageの更新
     v.prop = Object.assign({},
       JSON.parse(sessionStorage.getItem(this.constructor.name)),v.rv);
-    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.prop));
+    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.prop));*/
+    v.rv = this.storeUserInfo(v.rv);
+    if( v.rv instanceof Error ) throw v.rv;
 
     v.step = 4; // 終了処理
     console.log(`${v.whois} normal end.`);

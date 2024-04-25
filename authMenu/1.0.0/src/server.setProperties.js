@@ -27,7 +27,6 @@
  * 1. passPhrase {string} : authServerのパスフレーズ
  * 1. SSkey {Object} : authServerの秘密鍵
  * 1. SPkey {string} : authServerの公開鍵
- * 1. map {Object} : `{email:userId}`形式のマップ
  * 1. userIdStartNumber=1 : ユーザID(数値)の開始
  * 
  * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
@@ -51,7 +50,6 @@ w.func.setProperties = function(){
         primatyKeyColumn : 'userId',
         emailColumn : 'email',
         passPhrase : createPassword(16),
-        map : {'shimokitasho.oyaji@gmail.com':0},
         userIdStartNumber : 1,
       };
       w.prop.SSkey = cryptico.generateRSAKey(w.prop.passPhrase,1024);

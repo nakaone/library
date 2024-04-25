@@ -1038,6 +1038,8 @@ constructor(arg={}){
  * - toggle {Arrow} : 【*内部*】ナビゲーション領域の表示/非表示切り替え
  * - showChildren {Arror} : 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
  * - changeScreen {Arror} : 【*内部*】this.homeの内容に従って画面を切り替え
+ * - RSAkeyLength=1024 {number} : 鍵ペアのキー長
+ * - passPhraseLength=16 {number} : 鍵ペア生成の際のパスフレーズ長
  */
 #setProperties(arg){
   const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
@@ -1056,6 +1058,8 @@ constructor(arg={}){
       func: {}, // {Object.<string,function>} メニューから呼び出される関数
       home: null,
       initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
+      RSAkeyLength: 1024,
+      passPhraseLength: 16,
     };
     v.default.css = `/* authMenu専用CSS
         authMenu共通変数定義
@@ -1293,55 +1297,61 @@ constructor(arg={}){
  * 4. `opt.userIdSelector='div[name="userId"]'`を指定して本関数を実行、HTMLからユーザIDを取得
  * 
  */
-storeUserInfo(userId=null){
-  const v = {whois:'storeUserInfo',rv:null,step:0,html:null,arg:null};
+storeUserInfo(arg={}){
+  const v = {whois:'storeUserInfo',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // オプションの既定値をセット
-
-    v.step = 2.1; // sessionStorageからユーザ情報を取得
+    v.step = 1.1; // sessionStorageからユーザ情報を取得
     v.r = sessionStorage.getItem(this.constructor.name);
-    v.session = v.r ? JSON.parse(v.r) : {userId:null,auth:this.publicAuth};
-    v.step = 2.2; // localStorageからユーザ情報を取得
+    v.session = v.r ? JSON.parse(v.r) : {};
+    v.step = 1.2; // localStorageからユーザ情報を取得
     v.r = localStorage.getItem(this.constructor.name);
-    v.local = v.r ? Number(v.r) : null;
-    v.step = 2.3; // HTMLに埋め込まれたuserIdを取得
+    v.local = v.r ? {userId:Number(v.r)} : {};
+    v.step = 1.3; // HTMLに埋め込まれたuserIdを取得
     v.dom = document.querySelector(this.userIdSelector);
-    if( v.dom !== null ){
-      v.r = v.dom.innerText;
-      v.html = v.r.length > 0 ? Number(v.r) : null;  
-    }
-    v.step = 2.4; // 引数で渡されたuserIdを取得
-    if( userId !== null ) v.arg = Number(userId);
+    v.html = v.dom !== null && v.dom.innerText.length > 0
+      ? {userId:Number(v.r)} :{};
 
-    v.step = 2.1; // userIdの特定
+    v.step = 2.1; // 優先順位に沿ってユーザ情報を統合
     // 優先順位は`arg > html > session > local`
-    v.session.userId = v.arg !== null ? v.arg
-    : ( v.html !== null ? v.html
-    : ( v.session.userId !== null ? v.session.userId
-    : ( v.local !== null ? v.local : null)));
-    v.step = 2.2; // userIdが特定され且つauthが最低の場合は参加者(auth=2)に昇格
-    if( v.session.userId !== null && v.session.auth === this.publicAuth ){
-      v.session.auth = this.memberAuth;
+    v.proto = {};
+    ['userId','email','auth','passPhrase','CSkey','CPkey',
+    'updated','SPkey'].forEach(x => v.proto[x]=null);
+    v.rv = Object.assign(v.proto,v.local,v.session,v.html,arg);
+
+    v.step = 2.2; // 鍵ペア・秘密鍵が存在しなければ作成
+    if( v.rv.CSkey === null ){
+      if( v.rv.passPhrase === null ){
+        v.rv.passPhrase = createPassword(this.passPhraseLength);
+        v.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
+      }
+      v.rv.CSkey = cryptico.generateRSAKey(v.rv.passPhrase,this.RSAkeyLength);
+      v.rv.CPkey = cryptico.publicKeyString(v.rv.CSkey);
     }
 
-    v.step = 3.1; // sessionStorageへの保存
+    v.step = 2.3; // userIdが特定され且つauthが最低の場合は参加者(auth=2)に昇格
+    if( v.rv.userId !== null && v.rv.auth === this.publicAuth ){
+      v.rv.auth = this.memberAuth;
+    }
+
+    v.step = 3.1; // localStorageへの保存
+    localStorage.setItem(this.constructor.name,v.rv.userId);
+    v.step = 3.2; // sessionStorageへの保存
+    v.session = Object.assign({},v.rv);
+    delete v.session.CSkey;
     sessionStorage.setItem(this.constructor.name,JSON.stringify(v.session));
-    v.step = 3.2; // localStorageへの保存
-    localStorage.setItem(this.constructor.name,v.session.userId);
-    v.step = 3.3; // メンバに保存
-    this.userId = v.session.userId;
-    this.auth = v.session.auth;
+    v.step = 3.3; // インスタンス変数(メンバ)への保存
+    v.member = Object.assign({},v.rv);
+    delete v.member.passPhrase;
+    Object.keys(v.member).forEach(x => this[x]=v.member[x]);
 
     v.step = 4; // 終了処理
-    v.rv = v.session;
-    console.log(`${v.whois} normal end.\n`
-    +`v.session=${JSON.stringify(v.session)}\nv.local=${v.local}\nv.html=${v.html}\nv.arg=${v.arg}`);
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
   } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}\nv.rv=${v.rv}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }
@@ -1543,22 +1553,22 @@ async registMail(email){
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // 鍵ペア生成
-    v.passPhrase = createPassword(16);
-    v.CSkey = cryptico.generateRSAKey(v.passPhrase,1024);
+    v.step = 1; /* 鍵ペア生成
+    v.passPhrase = createPassword(this.passPhraseLength);
+    v.CSkey = cryptico.generateRSAKey(v.passPhrase,this.RSAkeyLength);
     v.CPkey = cryptico.publicKeyString(v.CSkey);
-    v.updated = new Date();
+    v.updated = new Date();*/
 
     v.step = 2; // authServer.registMailに問合せ
     v.rv = await this.doGAS('registMail',{
       email: email,
-      CPkey: v.CPkey,
-      updated: v.updated.getTime(),
+      CPkey: this.CPkey,
+      updated: this.updated,
     });
     if( v.rv instanceof Error ) throw v.rv;
     console.log(`l.1062 v.rv=${stringify(v.rv)}`);
 
-    v.step = 3.1; // ユーザ情報更新用に、格納する変数を補完
+    v.step = 3.1; /* ユーザ情報更新用に、格納する変数を補完
     v.rv.passPhrase = v.passPhrase;
     v.rv.CSkey = v.CSkey;
     v.rv.auth = Number(v.rv.auth);
@@ -1572,7 +1582,9 @@ async registMail(email){
     v.step = 3.4; // sessionStorageの更新
     v.prop = Object.assign({},
       JSON.parse(sessionStorage.getItem(this.constructor.name)),v.rv);
-    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.prop));
+    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.prop));*/
+    v.rv = this.storeUserInfo(v.rv);
+    if( v.rv instanceof Error ) throw v.rv;
 
     v.step = 4; // 終了処理
     console.log(`${v.whois} normal end.`);
@@ -1635,7 +1647,6 @@ function authServer(userId=null,func=null,arg=null) {
  * 1. passPhrase {string} : authServerのパスフレーズ
  * 1. SSkey {Object} : authServerの秘密鍵
  * 1. SPkey {string} : authServerの公開鍵
- * 1. map {Object} : `{email:userId}`形式のマップ
  * 1. userIdStartNumber=1 : ユーザID(数値)の開始
  * 
  * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
@@ -1659,7 +1670,6 @@ w.func.setProperties = function(){
         primatyKeyColumn : 'userId',
         emailColumn : 'email',
         passPhrase : createPassword(16),
-        map : {'shimokitasho.oyaji@gmail.com':0},
         userIdStartNumber : 1,
       };
       w.prop.SSkey = cryptico.generateRSAKey(w.prop.passPhrase,1024);
@@ -1689,13 +1699,12 @@ if( w.rv instanceof Error ) throw w.rv;
  * @param {Object} arg
  * @param {string} arg.email - 要求があったユーザのe-mail
  * @param {string} arg.CPkey - 要求があったユーザの公開鍵
- * @param {number} arg.updated - 公開鍵更新日時(UNIX時刻)
+ * @param {string} arg.updated - 公開鍵更新日時(日時文字列)
  * @returns {number|Error} 採番されたuserId
  */
 w.func.registMail = function(arg){
-  const v = {whois:w.whois+'.registMail',rv:null,step:0,
-    max:(w.prop.userIdStartNumber - 1),
-    prop:PropertiesService.getDocumentProperties(),
+  const v = {whois:w.whois+'.registMail',step:0,
+    rv: {userId:null,auth:null,SPkey:w.prop.SPkey,isExist:null},
   };
   console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
   try {
@@ -1705,63 +1714,65 @@ w.func.registMail = function(arg){
       throw new Error(`invalid e-mail address.`);
     }
 
-    // DocumentPropertiesにメアドが登録済か確認
-    console.log(`l.132 w.prop=${stringify(w.prop)}`);
-    if( w.prop.map.hasOwnProperty(arg.email) ){
-      // メアドが登録済の場合
+    v.step = 2; // メアドの登録状況を取得
+    v.master = new SingleTable(w.masterSheet);
+    if( v.master instanceof Error ) throw v.master;
 
-      v.step = 2.1; // ユーザの公開鍵を更新
-      v.rv = w.prop[w.prop.map[arg.email]];
-      v.rv.updated = arg.updated;
-      v.rv.CPkey = arg.CPkey;
-      v.prop.setProperty(w.prop.map[arg.email],v.rv);
+    v.step = 3; // メアドが登録済か確認、登録済ならシートのユーザ情報を保存
+    v.sheet = null;
+    for( v.i=0 ; v.i<v.master.data.length ; v.i++ ){
+      if( v.master.data[v.i][w.prop.emailColumn] === arg.email ){
+        v.sheet = v.master.data[v.i];
+        break;
+      }
+    }
 
-      v.step = 2.2; // 戻り値用にユーザ情報を補完
+    if( v.sheet !== null ){
+      v.step = 4; // メアドが登録済の場合
+
+      if( v.sheet.CPkey !== arg.CPkey ){
+        v.step = 4.1; // ユーザの公開鍵を更新
+        v.r = v.master.update([{CPkey:arg.CPkey,updated:arg.updated}]);
+        if( v.r instanceof Error ) throw v.r;
+      }
+
+      v.step = 4.2; // フラグを更新
       v.rv.isExit = true;
-      v.rv.SPkey = w.prop.SPkey;
 
     } else {
-      // メアドが未登録の場合
+      v.step = 5; // メアドが未登録の場合
 
-      v.step = 3.1; // 既登録userIdの最大値を検索
-      Object.keys(w.prop.map).forEach(x => {
-        if( w.prop.map[x] > v.max ) v.max = w.prop.map[x];
-      });
+      v.step = 5.1; // userIdの最大値を取得
+      if( v.master.data.length === 0 ){
+        v.max = w.prop.userIdStartNumber - 1;
+      } else {
+        v.map = v.master.data.map(x=>x[w.prop.primatyKeyColumn]);
+        v.max = Math.max(...v.map);
+      }
 
-      v.step = 3.2; // プロパティサービス用ユーザ情報オブジェクトを作成
-      v.rv = {
+      v.step = 5.2; // シートに初期値を登録
+      v.sheet = {
         userId  : v.max + 1,
-        created : Date.now(),
-        updated : arg.updated,
+        created : toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn'),
         email   : arg.email,
         auth    : w.prop.defaultAuth,
         CPkey   : arg.CPkey,
-      }
-
-      v.step = 3.3; // プロパティサービスに保存
-      v.step = 3.31; // email -> userId マップ
-      w.prop.map[arg.email] = v.rv.userId;
-      console.log(`l.180 w.prop=${stringify(w.prop)}`)
-      v.prop.setProperties(w.prop);
-      v.step = 3.32; // ユーザ情報
-      v.prop.setProperty(v.rv.userId,v.rv);
-
-      v.step = 3.4; // シートに追加
-      v.master = new SingleTable(w.prop.masterSheet);
-      v.r = v.master.insert([{
-        userId: v.rv.userId,
-        created: toLocale(new Date(v.rv.created),'yyyy/MM/dd hh:mm:ss.nnn'),
-        email: v.rv.email,
-        auth: v.rv.auth,
-      }]);
+        updated : arg.updated,
+        trial   : '{}',
+      };
+      v.r = v.master.insert([v.sheet]);
       if( v.r instanceof Error ) throw v.r;
 
-      v.step = 3.5; // 戻り値用にユーザ情報を補完
+      v.step = 5.3; // フラグを更新
       v.rv.isExist = false;
-      v.rv.SPkey = w.prop.SPkey;
     }
 
-    v.step = 4; // 終了処理
+    v.step = 6; // 戻り値用にユーザ情報の項目を調整
+    Object.keys(v.rv).forEach(x => {
+      if( v.rv[x] === null ) v.rv[x] = v.sheet[x];
+    })
+
+    v.step = 7; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
@@ -3094,6 +3105,8 @@ constructor(arg={}){
  * - toggle {Arrow} : 【*内部*】ナビゲーション領域の表示/非表示切り替え
  * - showChildren {Arror} : 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
  * - changeScreen {Arror} : 【*内部*】this.homeの内容に従って画面を切り替え
+ * - RSAkeyLength=1024 {number} : 鍵ペアのキー長
+ * - passPhraseLength=16 {number} : 鍵ペア生成の際のパスフレーズ長
  */
 #setProperties(arg){
   const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
@@ -3112,6 +3125,8 @@ constructor(arg={}){
       func: {}, // {Object.<string,function>} メニューから呼び出される関数
       home: null,
       initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
+      RSAkeyLength: 1024,
+      passPhraseLength: 16,
     };
     v.default.css = `/* authMenu専用CSS
         authMenu共通変数定義
@@ -3349,55 +3364,61 @@ constructor(arg={}){
  * 4. `opt.userIdSelector='div[name="userId"]'`を指定して本関数を実行、HTMLからユーザIDを取得
  * 
  */
-storeUserInfo(userId=null){
-  const v = {whois:'storeUserInfo',rv:null,step:0,html:null,arg:null};
+storeUserInfo(arg={}){
+  const v = {whois:'storeUserInfo',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // オプションの既定値をセット
-
-    v.step = 2.1; // sessionStorageからユーザ情報を取得
+    v.step = 1.1; // sessionStorageからユーザ情報を取得
     v.r = sessionStorage.getItem(this.constructor.name);
-    v.session = v.r ? JSON.parse(v.r) : {userId:null,auth:this.publicAuth};
-    v.step = 2.2; // localStorageからユーザ情報を取得
+    v.session = v.r ? JSON.parse(v.r) : {};
+    v.step = 1.2; // localStorageからユーザ情報を取得
     v.r = localStorage.getItem(this.constructor.name);
-    v.local = v.r ? Number(v.r) : null;
-    v.step = 2.3; // HTMLに埋め込まれたuserIdを取得
+    v.local = v.r ? {userId:Number(v.r)} : {};
+    v.step = 1.3; // HTMLに埋め込まれたuserIdを取得
     v.dom = document.querySelector(this.userIdSelector);
-    if( v.dom !== null ){
-      v.r = v.dom.innerText;
-      v.html = v.r.length > 0 ? Number(v.r) : null;  
-    }
-    v.step = 2.4; // 引数で渡されたuserIdを取得
-    if( userId !== null ) v.arg = Number(userId);
+    v.html = v.dom !== null && v.dom.innerText.length > 0
+      ? {userId:Number(v.r)} :{};
 
-    v.step = 2.1; // userIdの特定
+    v.step = 2.1; // 優先順位に沿ってユーザ情報を統合
     // 優先順位は`arg > html > session > local`
-    v.session.userId = v.arg !== null ? v.arg
-    : ( v.html !== null ? v.html
-    : ( v.session.userId !== null ? v.session.userId
-    : ( v.local !== null ? v.local : null)));
-    v.step = 2.2; // userIdが特定され且つauthが最低の場合は参加者(auth=2)に昇格
-    if( v.session.userId !== null && v.session.auth === this.publicAuth ){
-      v.session.auth = this.memberAuth;
+    v.proto = {};
+    ['userId','email','auth','passPhrase','CSkey','CPkey',
+    'updated','SPkey'].forEach(x => v.proto[x]=null);
+    v.rv = Object.assign(v.proto,v.local,v.session,v.html,arg);
+
+    v.step = 2.2; // 鍵ペア・秘密鍵が存在しなければ作成
+    if( v.rv.CSkey === null ){
+      if( v.rv.passPhrase === null ){
+        v.rv.passPhrase = createPassword(this.passPhraseLength);
+        v.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
+      }
+      v.rv.CSkey = cryptico.generateRSAKey(v.rv.passPhrase,this.RSAkeyLength);
+      v.rv.CPkey = cryptico.publicKeyString(v.rv.CSkey);
     }
 
-    v.step = 3.1; // sessionStorageへの保存
+    v.step = 2.3; // userIdが特定され且つauthが最低の場合は参加者(auth=2)に昇格
+    if( v.rv.userId !== null && v.rv.auth === this.publicAuth ){
+      v.rv.auth = this.memberAuth;
+    }
+
+    v.step = 3.1; // localStorageへの保存
+    localStorage.setItem(this.constructor.name,v.rv.userId);
+    v.step = 3.2; // sessionStorageへの保存
+    v.session = Object.assign({},v.rv);
+    delete v.session.CSkey;
     sessionStorage.setItem(this.constructor.name,JSON.stringify(v.session));
-    v.step = 3.2; // localStorageへの保存
-    localStorage.setItem(this.constructor.name,v.session.userId);
-    v.step = 3.3; // メンバに保存
-    this.userId = v.session.userId;
-    this.auth = v.session.auth;
+    v.step = 3.3; // インスタンス変数(メンバ)への保存
+    v.member = Object.assign({},v.rv);
+    delete v.member.passPhrase;
+    Object.keys(v.member).forEach(x => this[x]=v.member[x]);
 
     v.step = 4; // 終了処理
-    v.rv = v.session;
-    console.log(`${v.whois} normal end.\n`
-    +`v.session=${JSON.stringify(v.session)}\nv.local=${v.local}\nv.html=${v.html}\nv.arg=${v.arg}`);
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
   } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}\nv.rv=${v.rv}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }
@@ -3599,22 +3620,22 @@ async registMail(email){
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // 鍵ペア生成
-    v.passPhrase = createPassword(16);
-    v.CSkey = cryptico.generateRSAKey(v.passPhrase,1024);
+    v.step = 1; /* 鍵ペア生成
+    v.passPhrase = createPassword(this.passPhraseLength);
+    v.CSkey = cryptico.generateRSAKey(v.passPhrase,this.RSAkeyLength);
     v.CPkey = cryptico.publicKeyString(v.CSkey);
-    v.updated = new Date();
+    v.updated = new Date();*/
 
     v.step = 2; // authServer.registMailに問合せ
     v.rv = await this.doGAS('registMail',{
       email: email,
-      CPkey: v.CPkey,
-      updated: v.updated.getTime(),
+      CPkey: this.CPkey,
+      updated: this.updated,
     });
     if( v.rv instanceof Error ) throw v.rv;
     console.log(`l.1062 v.rv=${stringify(v.rv)}`);
 
-    v.step = 3.1; // ユーザ情報更新用に、格納する変数を補完
+    v.step = 3.1; /* ユーザ情報更新用に、格納する変数を補完
     v.rv.passPhrase = v.passPhrase;
     v.rv.CSkey = v.CSkey;
     v.rv.auth = Number(v.rv.auth);
@@ -3628,7 +3649,9 @@ async registMail(email){
     v.step = 3.4; // sessionStorageの更新
     v.prop = Object.assign({},
       JSON.parse(sessionStorage.getItem(this.constructor.name)),v.rv);
-    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.prop));
+    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.prop));*/
+    v.rv = this.storeUserInfo(v.rv);
+    if( v.rv instanceof Error ) throw v.rv;
 
     v.step = 4; // 終了処理
     console.log(`${v.whois} normal end.`);
@@ -3691,7 +3714,6 @@ function authServer(userId=null,func=null,arg=null) {
  * 1. passPhrase {string} : authServerのパスフレーズ
  * 1. SSkey {Object} : authServerの秘密鍵
  * 1. SPkey {string} : authServerの公開鍵
- * 1. map {Object} : `{email:userId}`形式のマップ
  * 1. userIdStartNumber=1 : ユーザID(数値)の開始
  * 
  * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
@@ -3715,7 +3737,6 @@ w.func.setProperties = function(){
         primatyKeyColumn : 'userId',
         emailColumn : 'email',
         passPhrase : createPassword(16),
-        map : {'shimokitasho.oyaji@gmail.com':0},
         userIdStartNumber : 1,
       };
       w.prop.SSkey = cryptico.generateRSAKey(w.prop.passPhrase,1024);
@@ -3745,13 +3766,12 @@ if( w.rv instanceof Error ) throw w.rv;
  * @param {Object} arg
  * @param {string} arg.email - 要求があったユーザのe-mail
  * @param {string} arg.CPkey - 要求があったユーザの公開鍵
- * @param {number} arg.updated - 公開鍵更新日時(UNIX時刻)
+ * @param {string} arg.updated - 公開鍵更新日時(日時文字列)
  * @returns {number|Error} 採番されたuserId
  */
 w.func.registMail = function(arg){
-  const v = {whois:w.whois+'.registMail',rv:null,step:0,
-    max:(w.prop.userIdStartNumber - 1),
-    prop:PropertiesService.getDocumentProperties(),
+  const v = {whois:w.whois+'.registMail',step:0,
+    rv: {userId:null,auth:null,SPkey:w.prop.SPkey,isExist:null},
   };
   console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
   try {
@@ -3761,63 +3781,65 @@ w.func.registMail = function(arg){
       throw new Error(`invalid e-mail address.`);
     }
 
-    // DocumentPropertiesにメアドが登録済か確認
-    console.log(`l.132 w.prop=${stringify(w.prop)}`);
-    if( w.prop.map.hasOwnProperty(arg.email) ){
-      // メアドが登録済の場合
+    v.step = 2; // メアドの登録状況を取得
+    v.master = new SingleTable(w.masterSheet);
+    if( v.master instanceof Error ) throw v.master;
 
-      v.step = 2.1; // ユーザの公開鍵を更新
-      v.rv = w.prop[w.prop.map[arg.email]];
-      v.rv.updated = arg.updated;
-      v.rv.CPkey = arg.CPkey;
-      v.prop.setProperty(w.prop.map[arg.email],v.rv);
+    v.step = 3; // メアドが登録済か確認、登録済ならシートのユーザ情報を保存
+    v.sheet = null;
+    for( v.i=0 ; v.i<v.master.data.length ; v.i++ ){
+      if( v.master.data[v.i][w.prop.emailColumn] === arg.email ){
+        v.sheet = v.master.data[v.i];
+        break;
+      }
+    }
 
-      v.step = 2.2; // 戻り値用にユーザ情報を補完
+    if( v.sheet !== null ){
+      v.step = 4; // メアドが登録済の場合
+
+      if( v.sheet.CPkey !== arg.CPkey ){
+        v.step = 4.1; // ユーザの公開鍵を更新
+        v.r = v.master.update([{CPkey:arg.CPkey,updated:arg.updated}]);
+        if( v.r instanceof Error ) throw v.r;
+      }
+
+      v.step = 4.2; // フラグを更新
       v.rv.isExit = true;
-      v.rv.SPkey = w.prop.SPkey;
 
     } else {
-      // メアドが未登録の場合
+      v.step = 5; // メアドが未登録の場合
 
-      v.step = 3.1; // 既登録userIdの最大値を検索
-      Object.keys(w.prop.map).forEach(x => {
-        if( w.prop.map[x] > v.max ) v.max = w.prop.map[x];
-      });
+      v.step = 5.1; // userIdの最大値を取得
+      if( v.master.data.length === 0 ){
+        v.max = w.prop.userIdStartNumber - 1;
+      } else {
+        v.map = v.master.data.map(x=>x[w.prop.primatyKeyColumn]);
+        v.max = Math.max(...v.map);
+      }
 
-      v.step = 3.2; // プロパティサービス用ユーザ情報オブジェクトを作成
-      v.rv = {
+      v.step = 5.2; // シートに初期値を登録
+      v.sheet = {
         userId  : v.max + 1,
-        created : Date.now(),
-        updated : arg.updated,
+        created : toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn'),
         email   : arg.email,
         auth    : w.prop.defaultAuth,
         CPkey   : arg.CPkey,
-      }
-
-      v.step = 3.3; // プロパティサービスに保存
-      v.step = 3.31; // email -> userId マップ
-      w.prop.map[arg.email] = v.rv.userId;
-      console.log(`l.180 w.prop=${stringify(w.prop)}`)
-      v.prop.setProperties(w.prop);
-      v.step = 3.32; // ユーザ情報
-      v.prop.setProperty(v.rv.userId,v.rv);
-
-      v.step = 3.4; // シートに追加
-      v.master = new SingleTable(w.prop.masterSheet);
-      v.r = v.master.insert([{
-        userId: v.rv.userId,
-        created: toLocale(new Date(v.rv.created),'yyyy/MM/dd hh:mm:ss.nnn'),
-        email: v.rv.email,
-        auth: v.rv.auth,
-      }]);
+        updated : arg.updated,
+        trial   : '{}',
+      };
+      v.r = v.master.insert([v.sheet]);
       if( v.r instanceof Error ) throw v.r;
 
-      v.step = 3.5; // 戻り値用にユーザ情報を補完
+      v.step = 5.3; // フラグを更新
       v.rv.isExist = false;
-      v.rv.SPkey = w.prop.SPkey;
     }
 
-    v.step = 4; // 終了処理
+    v.step = 6; // 戻り値用にユーザ情報の項目を調整
+    Object.keys(v.rv).forEach(x => {
+      if( v.rv[x] === null ) v.rv[x] = v.sheet[x];
+    })
+
+    v.step = 7; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
