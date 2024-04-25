@@ -22,7 +22,7 @@ sequenceDiagram
   browser ->> client : メアド
   activate client
   Note right of client : registMail()
-  client ->> client : 鍵ペア生成
+  client ->> client : (不存在なら)鍵ペア生成
   client ->> server : メアド＋CPkey＋作成日時
   activate server
   Note right of server : authServer.registMail()
@@ -50,19 +50,20 @@ sequenceDiagram
 ```
 
 - CPkeyは有効期限にかかわらず送付され、server側で更新する<br>
-  ※有効期間の検証を省略するため、都度更新
+  - 同一userIdで異なる機器からログインする場合を想定
+  - 将来的に有効期間を設定した場合、強制更新ならその検証も省略可能
 - ※1(シート保存),※2(SV->CL)の「ユーザ情報」オブジェクトのメンバは以下の通り。
   | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
   | :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
   | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
-  | created | string | ユーザID新規登録時刻(日時文字列) | × | ◎ | ◎ | ◎ | ◎ |
+  | created | string | ユーザID新規登録時刻(日時文字列) | × | × | × | × | ◎ |
   | email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
   | auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
-  | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
   | passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | × | × | × |
   | CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
   | CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
-  | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | ◎ | ◎ |
+  | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
+  | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
   | isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
   | trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
 - trialは以下のメンバを持つObject
