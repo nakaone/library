@@ -8,13 +8,8 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
   console.log(`${v.whois} start.`);
   try {
 
+    v.step = 1; // navi領域をクリア
     if( depth === 0 ){
-      v.step = 1.1; // sessionStorageからユーザ権限を読み取り
-      v.r = sessionStorage.getItem(this.constructor.name);
-      if( !v.r ) throw new Error(`sessionStorageに${this.constructor.name}キーが存在しません`);
-      this.auth = JSON.parse(v.r).auth;
-
-      v.step = 1.2; // navi領域をクリア
       navi.innerHTML = '';
     }
 
@@ -40,7 +35,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
 
       // navi領域への追加が必要か、判断
       v.step = 3.1; // 実行権限がない機能・画面はnavi領域に追加しない
-      if( (this.auth & v.attr.allow) === 0 ) continue;
+      if( (this.user.auth & v.attr.allow) === 0 ) continue;
       v.step = 3.2; // 有効期間外の場合はnavi領域に追加しない
       if( v.now < v.attr.from || v.attr.to < v.now ) continue;
 

@@ -1,7 +1,7 @@
 function authServerTest(){
-  //PropertiesService.getDocumentProperties().deleteAllProperties();
-  const p = PropertiesService.getDocumentProperties().getProperties();
-  console.log(p);
+  PropertiesService.getDocumentProperties().deleteAllProperties();
+  //const p = PropertiesService.getDocumentProperties().getProperties();
+  //console.log(p);
   /*
   ローカル側での重複メアドチェック
   サーバ側での重複メアドチェック
@@ -10,24 +10,16 @@ function authServerTest(){
   sessionStorage
   properties.authServer(特にmap)
   properties.userId
-
-  const v = {target:'registMail',
-    registMail:[
-      //[null,'registMail','invalid'],
-      [null,'registMail','hoge@gmail.com'],
-      [null,'registMail','fuga@gmail.com'],
-    ],
-  };
-  if( true ){ // debug
-    PropertiesService.getDocumentProperties().deleteAllProperties();
-  }
-  if( v.target === 'registMail' ){
-    for( v.i=0 ; v.i<v[v.target].length ; v.i++ ){
-      v.rv = authServer(...v[v.target][v.i]);
-      console.log(`${v.i} v.rv=${stringify(v.rv)}`);
-    }
-  }
   */
+
+  const v = {data:[
+    //[null,'registMail','invalid'],
+    [null,'registMail',{email:'hoge@gmail.com',CPkey:'abcdefg0123',updated:'2024/04/25 15:00:01.234'}],
+  ]};
+  for( v.i=0 ; v.i<v.data.length ; v.i++ ){
+    v.rv = authServer(...v.data[v.i]);
+    console.log(`${v.i} v.rv=${stringify(v.rv)}`);
+  }
 }
 /** サーバ側の認証処理を分岐させる
  * @param {number} userId 
@@ -127,9 +119,14 @@ if( w.rv instanceof Error ) throw w.rv;
  * @returns {number|Error} 採番されたuserId
  */
 w.func.registMail = function(arg){
-  const v = {whois:w.whois+'.registMail',step:0,
-    rv: {userId:null,auth:null,SPkey:w.prop.SPkey,isExist:null},
-  };
+  const v = {whois:w.whois+'.registMail',step:0,rv:{
+    userId:null,
+    created:null,
+    email:null,
+    auth:null,
+    SPkey:w.prop.SPkey,
+    isExist:null,
+  }};
   console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
   try {
 
@@ -139,7 +136,7 @@ w.func.registMail = function(arg){
     }
 
     v.step = 2; // メアドの登録状況を取得
-    v.master = new SingleTable(w.masterSheet);
+    v.master = new SingleTable(w.prop.masterSheet);
     if( v.master instanceof Error ) throw v.master;
 
     v.step = 3; // メアドが登録済か確認、登録済ならシートのユーザ情報を保存
@@ -168,9 +165,12 @@ w.func.registMail = function(arg){
 
       v.step = 5.1; // userIdの最大値を取得
       if( v.master.data.length === 0 ){
+        // 登録済が0件(シート作成直後)の場合
         v.max = w.prop.userIdStartNumber - 1;
       } else {
-        v.map = v.master.data.map(x=>x[w.prop.primatyKeyColumn]);
+        v.map = v.master.data.map(x =>
+          isNaN(x[w.prop.primatyKeyColumn])
+          ? 0 : Number(x[w.prop.primatyKeyColumn]));
         v.max = Math.max(...v.map);
       }
 
@@ -194,7 +194,7 @@ w.func.registMail = function(arg){
     v.step = 6; // 戻り値用にユーザ情報の項目を調整
     Object.keys(v.rv).forEach(x => {
       if( v.rv[x] === null ) v.rv[x] = v.sheet[x];
-    })
+    });
 
     v.step = 7; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);

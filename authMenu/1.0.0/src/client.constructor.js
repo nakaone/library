@@ -1,4 +1,4 @@
-/**
+/** 
  * @constructor
  * @param {Object} arg 
  * @returns {authMenu|Error}
@@ -8,12 +8,8 @@ constructor(arg={}){
   console.log(`${v.whois} start.\narg=${stringify(arg)}`);
   try {
 
-    v.step = 1.1; // 引数と既定値からメンバの値を設定
+    v.step = 1; // 引数と既定値からメンバの値を設定
     v.r = this.#setProperties(arg);
-    if( v.r instanceof Error ) throw v.r;
-
-    v.step = 1.2; // sessionStorage/localStorageのユーザ情報を更新
-    v.r = this.storeUserInfo();
     if( v.r instanceof Error ) throw v.r;
 
     v.step = 2; // アイコン、ナビ、背景の作成

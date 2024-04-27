@@ -1,5 +1,5 @@
 class authMenu {
-/**
+/** 
  * @constructor
  * @param {Object} arg 
  * @returns {authMenu|Error}
@@ -9,12 +9,8 @@ constructor(arg={}){
   console.log(`${v.whois} start.\narg=${stringify(arg)}`);
   try {
 
-    v.step = 1.1; // 引数と既定値からメンバの値を設定
+    v.step = 1; // 引数と既定値からメンバの値を設定
     v.r = this.#setProperties(arg);
-    if( v.r instanceof Error ) throw v.r;
-
-    v.step = 1.2; // sessionStorage/localStorageのユーザ情報を更新
-    v.r = this.storeUserInfo();
     if( v.r instanceof Error ) throw v.r;
 
     v.step = 2; // アイコン、ナビ、背景の作成
@@ -54,7 +50,7 @@ constructor(arg={}){
     return e;
   }
 }
-/** constructorの引数と既定値からthisの値を設定
+/** setProperties: constructorの引数と既定値からthisの値を設定
  * 
  * @param {Object} arg - constructorに渡された引数オブジェクト
  * @returns {null|Error}
@@ -91,11 +87,9 @@ constructor(arg={}){
  * - initialSubMenu=true {boolean}<br>
  *   サブメニューの初期状態。true:開いた状態、false:閉じた状態
  * - css {string} : authMenu専用CSS。書き換えする場合、全文指定すること(一部変更は不可)
- * - toggle {Arrow} : 【*内部*】ナビゲーション領域の表示/非表示切り替え
- * - showChildren {Arror} : 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
- * - changeScreen {Arror} : 【*内部*】this.homeの内容に従って画面を切り替え
  * - RSAkeyLength=1024 {number} : 鍵ペアのキー長
  * - passPhraseLength=16 {number} : 鍵ペア生成の際のパスフレーズ長
+ * - user={} {object} ユーザ情報オブジェクト。詳細はstoreUserInfo()で設定
  */
 #setProperties(arg){
   const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
@@ -116,6 +110,7 @@ constructor(arg={}){
       initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
       RSAkeyLength: 1024,
       passPhraseLength: 16,
+      user: {}, // ユーザ情報
     };
     v.default.css = `/* authMenu専用CSS
         authMenu共通変数定義
@@ -245,48 +240,30 @@ constructor(arg={}){
         background : rgba(100,100,100,0.8);
       }
     `;
-    v.default.toggle = () => {
-      // ナビゲーション領域の表示/非表示切り替え
-      document.querySelector(`.${this.constructor.name} nav`).classList.toggle('is_active');
-      document.querySelector(`.${this.constructor.name} .back`).classList.toggle('is_active');
-      document.querySelectorAll(`.${this.constructor.name} .icon button span`)
-      .forEach(x => x.classList.toggle('is_active'));        
-    };
-    v.default.showChildren = (event) => {
-      // ブランチの下位階層メニュー表示/非表示切り替え
-      event.target.parentNode.querySelector('ul').classList.toggle('is_open');
-      let m = event.target.innerText.match(/^([▶️▼])(.+)/);
-      const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
-      event.target.innerText = text;  
-    };
-    v.default.changeScreen = (arg=null) => {
-      // this.homeの内容に従って画面を切り替える
-      if( arg === null ){
-        // 変更先画面が無指定 => ホーム画面を表示
-        arg = typeof this.home === 'string' ? this.home : this.home[this.auth];
-      }
-      return changeScreen(arg);
-    }
 
     v.step = 2; // 引数と既定値から設定値のオブジェクトを作成
     v.arg = mergeDeeply(arg,v.default);
     if( v.arg instanceof Error ) throw v.arg;
 
-    v.step = 3; // メンバに設定値をコピー
-    for( v.x in v.arg ) this[v.x] = v.arg[v.x];
+    v.step = 3; // インスタンス変数に設定値を保存
+    Object.keys(v.arg).forEach(x => this[x] = v.arg[x]);
 
-    v.step = 4; // wrapperが文字列(CSSセレクタ)ならHTMLElementに変更
+    v.step = 4; // sessionStorage他のユーザ情報を更新
+    v.r = this.storeUserInfo(v.arg.user);
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 5; // wrapperが文字列(CSSセレクタ)ならHTMLElementに変更
     if( typeof this.wrapper === 'string' ){
       this.wrapper = document.querySelector(this.wrapper);
     }
-    v.step = 5; // authMenu専用CSSが未定義なら追加
+    v.step = 6; // authMenu専用CSSが未定義なら追加
     if( !document.querySelector(`style[name="${this.constructor.name}"]`) ){
       v.styleTag = document.createElement('style');
       v.styleTag.setAttribute('name',this.constructor.name);
       v.styleTag.textContent = this.css;
       document.head.appendChild(v.styleTag);
     }
-    v.step = 6; // 待機画面が未定義ならbody直下に追加
+    v.step = 7; // 待機画面が未定義ならbody直下に追加
     if( !document.querySelector('body > div[name="loading"]') ){
       v.r = createElement({
         attr:{name:'loading',class:'loader screen'},
@@ -294,7 +271,7 @@ constructor(arg={}){
       },'body');
     }
 
-    v.step = 7; // 終了処理
+    v.step = 8; // 終了処理
     console.log(`${v.whois} normal end.`);
     return v.rv;
 
@@ -305,13 +282,38 @@ constructor(arg={}){
     return e;
   }
 }
-/** sessionStorage/localStorageのユーザ情報を更新する
+/** storeUserInfo: インスタンス変数やstorageに保存したユーザ情報を更新
  * 
- * ①本関数の引数、②HTMLに埋め込まれたユーザ情報、③sessionStorage、④localStorageから
- * ユーザ情報が取得できないか試行、①>②>③>④の優先順位で最新の情報を特定し、
- * localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限を保存する。
  * 
- * @param {number} userId=null - 決まったユーザIDを指定する場合に指定
+ * 1. 本関数の引数オブジェクト
+ * 1. インスタンス変数
+ * 1. sessionStorage
+ * 1. localStorage
+ * 1. HTMLに埋め込まれたユーザ情報
+ * 
+ * ユーザ情報を取得し、①>②>③>④>⑤の優先順位で最新の情報を特定、各々の内容を更新する。
+ * 
+ * | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
+ * | :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
+ * | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
+ * | created | string | ユーザID新規登録時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
+ * | email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
+ * | auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
+ * | passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | ◎ | × | × |
+ * | CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
+ * | CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
+ * | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
+ * | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
+ * | isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
+ * | trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
+ * 
+ * - インスタンス変数には関数実行結果を除く全項目を持たせ、他の格納場所のマスタとして使用する
+ * - sessionStorageはインスタンス変数のバックアップとして、保持可能な全項目を持たせる
+ * - ユーザ情報に関するインスタンス変数(メンバ)は、他のインスタンス変数(設定項目)と区別するため、
+ *   `this.user`オブジェクトに上記メンバを持たせる
+ * 
+ * 
+ * @param {object} arg={} - 特定の値を設定する場合に使用 
  * @returns {void}
  * 
  * @example
@@ -354,53 +356,71 @@ constructor(arg={}){
  * 
  */
 storeUserInfo(arg={}){
-  const v = {whois:'storeUserInfo',rv:null,step:0};
-  console.log(`${v.whois} start.`);
+  const v = {whois:this.constructor.name+'.storeUserInfo',rv:null,step:0};
+  console.log(`${v.whois} start.\narg=${stringify(arg)}`);
   try {
 
-    v.step = 1.1; // sessionStorageからユーザ情報を取得
+    // -------------------------------------
+    // 各格納場所から現在の保存内容を取得
+    // -------------------------------------
+    v.step = 1.1; //インスタンス変数
+    v.user = this.hasOwnProperty('user') ? this.user : {};
+    if( Object.keys(v.user).length === 0 ){
+      // メンバが存在しない場合、全項目nullの初期オブジェクトを作成
+      ['userId','created','email','auth','passPhrase','CSkey',
+      'CPkey','updated','SPkey'].forEach(x => v.user[x]=null);
+    }
+    v.step = 1.2; // sessionStorage
     v.r = sessionStorage.getItem(this.constructor.name);
     v.session = v.r ? JSON.parse(v.r) : {};
-    v.step = 1.2; // localStorageからユーザ情報を取得
+    v.step = 1.3; // localStorage
     v.r = localStorage.getItem(this.constructor.name);
     v.local = v.r ? {userId:Number(v.r)} : {};
-    v.step = 1.3; // HTMLに埋め込まれたuserIdを取得
+    v.step = 1.4; // HTMLに埋め込まれたユーザ情報(ID)
     v.dom = document.querySelector(this.userIdSelector);
-    v.html = v.dom !== null && v.dom.innerText.length > 0
+    v.html = (v.dom !== null && v.dom.innerText.length > 0)
       ? {userId:Number(v.r)} :{};
 
+    // -------------------------------------
+    // 各格納場所のユーザ情報をv.rvに一元化
+    // -------------------------------------
     v.step = 2.1; // 優先順位に沿ってユーザ情報を統合
-    // 優先順位は`arg > html > session > local`
-    v.proto = {};
-    ['userId','email','auth','passPhrase','CSkey','CPkey',
-    'updated','SPkey'].forEach(x => v.proto[x]=null);
-    v.rv = Object.assign(v.proto,v.local,v.session,v.html,arg);
+    // 優先順位は`html < local < session < user < arg`
+    v.rv = Object.assign(v.html,v.local,v.session,v.user,arg);
 
     v.step = 2.2; // 鍵ペア・秘密鍵が存在しなければ作成
     if( v.rv.CSkey === null ){
       if( v.rv.passPhrase === null ){
         v.rv.passPhrase = createPassword(this.passPhraseLength);
-        v.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
+        v.rv.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
       }
-      v.rv.CSkey = cryptico.generateRSAKey(v.rv.passPhrase,this.RSAkeyLength);
+      v.rv.CSkey = cryptico.generateRSAKey(v.rv.passPhrase,(this.RSAkeyLength));
       v.rv.CPkey = cryptico.publicKeyString(v.rv.CSkey);
     }
 
-    v.step = 2.3; // userIdが特定され且つauthが最低の場合は参加者(auth=2)に昇格
-    if( v.rv.userId !== null && v.rv.auth === this.publicAuth ){
+    v.step = 2.3; // ユーザ権限の設定
+    if( v.rv.auth === null ){
+      // ユーザIDが未設定 ⇒ 一般公開用
+      v.rv.auth = this.publicAuth;
+    } else if( v.rv.auth === this.publicAuth ){
+      // ユーザIDが設定済だが権限が一般公開用 ⇒ 参加者用に修正
       v.rv.auth = this.memberAuth;
     }
 
+    // -------------------------------------
+    // 各格納場所の値を更新
+    // -------------------------------------
+    v.step = 3.3; // インスタンス変数(メンバ)への保存
+    this.user = v.rv;
+    v.step = 3.2; // sessionStorageへの保存
+    Object.keys(v.user).filter(x => x !== 'CSkey').forEach(x => {
+      if( v.rv.hasOwnProperty(x) && v.rv[x] ){
+        v.session[x] = v.rv[x];
+      }
+    });
+    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.session));
     v.step = 3.1; // localStorageへの保存
     localStorage.setItem(this.constructor.name,v.rv.userId);
-    v.step = 3.2; // sessionStorageへの保存
-    v.session = Object.assign({},v.rv);
-    delete v.session.CSkey;
-    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.session));
-    v.step = 3.3; // インスタンス変数(メンバ)への保存
-    v.member = Object.assign({},v.rv);
-    delete v.member.passPhrase;
-    Object.keys(v.member).forEach(x => this[x]=v.member[x]);
 
     v.step = 4; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
@@ -412,8 +432,48 @@ storeUserInfo(arg={}){
     return e;
   }
 }
+/** authMenu用の既定値をセットしてdoGASを呼び出し */
 async doGAS(func,...args){
   return await doGAS('authServer',this.userId,func,...args);
+}
+
+/** ナビゲーション領域の表示/非表示切り替え */
+toggle(){
+  const v = {whois:'authMenu.toggle'};
+  console.log(`${v.whois} start.`);
+  try {
+    v.step = 1;
+    document.querySelector(`.authMenu nav`).classList.toggle('is_active');
+    v.step = 2;
+    document.querySelector(`.authMenu .back`).classList.toggle('is_active');
+    v.step = 3;
+    document.querySelectorAll(`.authMenu .icon button span`)
+    .forEach(x => x.classList.toggle('is_active'));        
+    console.log(`${v.whois} normal end.`);
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+/** ブランチの下位階層メニュー表示/非表示切り替え */
+showChildren(event){
+  event.target.parentNode.querySelector('ul').classList.toggle('is_open');
+  let m = event.target.innerText.match(/^([▶️▼])(.+)/);
+  const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
+  event.target.innerText = text;  
+}
+
+/** this.homeの内容に従って画面を切り替える */ 
+changeScreen(arg=null){
+  console.log(this.constructor.name+`.changeScreen start.`
+  + `\nthis.home=${stringify(this.home)}(${typeof this.home})`
+  + `\nthis.user.auth=${this.user.auth}`);
+  if( arg === null ){
+    // 変更先画面が無指定 => ホーム画面を表示
+    arg = typeof this.home === 'string' ? this.home : this.home[this.user.auth];
+  }
+  return changeScreen(arg);
 }
 
   // ===================================
@@ -486,13 +546,8 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
   console.log(`${v.whois} start.`);
   try {
 
+    v.step = 1; // navi領域をクリア
     if( depth === 0 ){
-      v.step = 1.1; // sessionStorageからユーザ権限を読み取り
-      v.r = sessionStorage.getItem(this.constructor.name);
-      if( !v.r ) throw new Error(`sessionStorageに${this.constructor.name}キーが存在しません`);
-      this.auth = JSON.parse(v.r).auth;
-
-      v.step = 1.2; // navi領域をクリア
       navi.innerHTML = '';
     }
 
@@ -518,7 +573,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
 
       // navi領域への追加が必要か、判断
       v.step = 3.1; // 実行権限がない機能・画面はnavi領域に追加しない
-      if( (this.auth & v.attr.allow) === 0 ) continue;
+      if( (this.user.auth & v.attr.allow) === 0 ) continue;
       v.step = 3.2; // 有効期間外の場合はnavi領域に追加しない
       if( v.now < v.attr.from || v.attr.to < v.now ) continue;
 
@@ -609,40 +664,19 @@ async registMail(email){
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; /* 鍵ペア生成
-    v.passPhrase = createPassword(this.passPhraseLength);
-    v.CSkey = cryptico.generateRSAKey(v.passPhrase,this.RSAkeyLength);
-    v.CPkey = cryptico.publicKeyString(v.CSkey);
-    v.updated = new Date();*/
-
-    v.step = 2; // authServer.registMailに問合せ
+    v.step = 1; // authServer.registMailに問合せ
     v.rv = await this.doGAS('registMail',{
       email: email,
-      CPkey: this.CPkey,
-      updated: this.updated,
+      CPkey: this.user.CPkey,
+      updated: this.user.updated,
     });
     if( v.rv instanceof Error ) throw v.rv;
-    console.log(`l.1062 v.rv=${stringify(v.rv)}`);
 
-    v.step = 3.1; /* ユーザ情報更新用に、格納する変数を補完
-    v.rv.passPhrase = v.passPhrase;
-    v.rv.CSkey = v.CSkey;
-    v.rv.auth = Number(v.rv.auth);
-    v.step = 3.2; // インスタンス変数の更新
-    v.map = Object.keys(v.rv);
-    for( v.i=0 ; v.i<v.map.length ; v.i++ ){
-      this[v.map[v.i]] = v.rv[v.map[v.i]];
-    }
-    v.step = 3.3; // localStorageの更新
-    localStorage.setItem(this.constructor.name,v.rv.userId);
-    v.step = 3.4; // sessionStorageの更新
-    v.prop = Object.assign({},
-      JSON.parse(sessionStorage.getItem(this.constructor.name)),v.rv);
-    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.prop));*/
+    v.step = 2; // ユーザ情報更新用
     v.rv = this.storeUserInfo(v.rv);
     if( v.rv instanceof Error ) throw v.rv;
 
-    v.step = 4; // 終了処理
+    v.step = 3; // 終了処理
     console.log(`${v.whois} normal end.`);
     return v.rv;
 

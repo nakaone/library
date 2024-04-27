@@ -1,10 +1,35 @@
-/** sessionStorage/localStorageのユーザ情報を更新する
+/** storeUserInfo: インスタンス変数やstorageに保存したユーザ情報を更新
  * 
- * ①本関数の引数、②HTMLに埋め込まれたユーザ情報、③sessionStorage、④localStorageから
- * ユーザ情報が取得できないか試行、①>②>③>④の優先順位で最新の情報を特定し、
- * localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限を保存する。
  * 
- * @param {number} userId=null - 決まったユーザIDを指定する場合に指定
+ * 1. 本関数の引数オブジェクト
+ * 1. インスタンス変数
+ * 1. sessionStorage
+ * 1. localStorage
+ * 1. HTMLに埋め込まれたユーザ情報
+ * 
+ * ユーザ情報を取得し、①>②>③>④>⑤の優先順位で最新の情報を特定、各々の内容を更新する。
+ * 
+ * | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
+ * | :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
+ * | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
+ * | created | string | ユーザID新規登録時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
+ * | email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
+ * | auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
+ * | passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | ◎ | × | × |
+ * | CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
+ * | CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
+ * | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
+ * | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
+ * | isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
+ * | trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
+ * 
+ * - インスタンス変数には関数実行結果を除く全項目を持たせ、他の格納場所のマスタとして使用する
+ * - sessionStorageはインスタンス変数のバックアップとして、保持可能な全項目を持たせる
+ * - ユーザ情報に関するインスタンス変数(メンバ)は、他のインスタンス変数(設定項目)と区別するため、
+ *   `this.user`オブジェクトに上記メンバを持たせる
+ * 
+ * 
+ * @param {object} arg={} - 特定の値を設定する場合に使用 
  * @returns {void}
  * 
  * @example
@@ -47,53 +72,71 @@
  * 
  */
 storeUserInfo(arg={}){
-  const v = {whois:'storeUserInfo',rv:null,step:0};
-  console.log(`${v.whois} start.`);
+  const v = {whois:this.constructor.name+'.storeUserInfo',rv:null,step:0};
+  console.log(`${v.whois} start.\narg=${stringify(arg)}`);
   try {
 
-    v.step = 1.1; // sessionStorageからユーザ情報を取得
+    // -------------------------------------
+    // 各格納場所から現在の保存内容を取得
+    // -------------------------------------
+    v.step = 1.1; //インスタンス変数
+    v.user = this.hasOwnProperty('user') ? this.user : {};
+    if( Object.keys(v.user).length === 0 ){
+      // メンバが存在しない場合、全項目nullの初期オブジェクトを作成
+      ['userId','created','email','auth','passPhrase','CSkey',
+      'CPkey','updated','SPkey'].forEach(x => v.user[x]=null);
+    }
+    v.step = 1.2; // sessionStorage
     v.r = sessionStorage.getItem(this.constructor.name);
     v.session = v.r ? JSON.parse(v.r) : {};
-    v.step = 1.2; // localStorageからユーザ情報を取得
+    v.step = 1.3; // localStorage
     v.r = localStorage.getItem(this.constructor.name);
     v.local = v.r ? {userId:Number(v.r)} : {};
-    v.step = 1.3; // HTMLに埋め込まれたuserIdを取得
+    v.step = 1.4; // HTMLに埋め込まれたユーザ情報(ID)
     v.dom = document.querySelector(this.userIdSelector);
-    v.html = v.dom !== null && v.dom.innerText.length > 0
+    v.html = (v.dom !== null && v.dom.innerText.length > 0)
       ? {userId:Number(v.r)} :{};
 
+    // -------------------------------------
+    // 各格納場所のユーザ情報をv.rvに一元化
+    // -------------------------------------
     v.step = 2.1; // 優先順位に沿ってユーザ情報を統合
-    // 優先順位は`arg > html > session > local`
-    v.proto = {};
-    ['userId','email','auth','passPhrase','CSkey','CPkey',
-    'updated','SPkey'].forEach(x => v.proto[x]=null);
-    v.rv = Object.assign(v.proto,v.local,v.session,v.html,arg);
+    // 優先順位は`html < local < session < user < arg`
+    v.rv = Object.assign(v.html,v.local,v.session,v.user,arg);
 
     v.step = 2.2; // 鍵ペア・秘密鍵が存在しなければ作成
     if( v.rv.CSkey === null ){
       if( v.rv.passPhrase === null ){
         v.rv.passPhrase = createPassword(this.passPhraseLength);
-        v.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
+        v.rv.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
       }
-      v.rv.CSkey = cryptico.generateRSAKey(v.rv.passPhrase,this.RSAkeyLength);
+      v.rv.CSkey = cryptico.generateRSAKey(v.rv.passPhrase,(this.RSAkeyLength));
       v.rv.CPkey = cryptico.publicKeyString(v.rv.CSkey);
     }
 
-    v.step = 2.3; // userIdが特定され且つauthが最低の場合は参加者(auth=2)に昇格
-    if( v.rv.userId !== null && v.rv.auth === this.publicAuth ){
+    v.step = 2.3; // ユーザ権限の設定
+    if( v.rv.auth === null ){
+      // ユーザIDが未設定 ⇒ 一般公開用
+      v.rv.auth = this.publicAuth;
+    } else if( v.rv.auth === this.publicAuth ){
+      // ユーザIDが設定済だが権限が一般公開用 ⇒ 参加者用に修正
       v.rv.auth = this.memberAuth;
     }
 
+    // -------------------------------------
+    // 各格納場所の値を更新
+    // -------------------------------------
+    v.step = 3.3; // インスタンス変数(メンバ)への保存
+    this.user = v.rv;
+    v.step = 3.2; // sessionStorageへの保存
+    Object.keys(v.user).filter(x => x !== 'CSkey').forEach(x => {
+      if( v.rv.hasOwnProperty(x) && v.rv[x] ){
+        v.session[x] = v.rv[x];
+      }
+    });
+    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.session));
     v.step = 3.1; // localStorageへの保存
     localStorage.setItem(this.constructor.name,v.rv.userId);
-    v.step = 3.2; // sessionStorageへの保存
-    v.session = Object.assign({},v.rv);
-    delete v.session.CSkey;
-    sessionStorage.setItem(this.constructor.name,JSON.stringify(v.session));
-    v.step = 3.3; // インスタンス変数(メンバ)への保存
-    v.member = Object.assign({},v.rv);
-    delete v.member.passPhrase;
-    Object.keys(v.member).forEach(x => this[x]=v.member[x]);
 
     v.step = 4; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);

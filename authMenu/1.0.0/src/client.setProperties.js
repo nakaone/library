@@ -1,4 +1,4 @@
-/** constructorの引数と既定値からthisの値を設定
+/** setProperties: constructorの引数と既定値からthisの値を設定
  * 
  * @param {Object} arg - constructorに渡された引数オブジェクト
  * @returns {null|Error}
@@ -35,11 +35,9 @@
  * - initialSubMenu=true {boolean}<br>
  *   サブメニューの初期状態。true:開いた状態、false:閉じた状態
  * - css {string} : authMenu専用CSS。書き換えする場合、全文指定すること(一部変更は不可)
- * - toggle {Arrow} : 【*内部*】ナビゲーション領域の表示/非表示切り替え
- * - showChildren {Arror} : 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
- * - changeScreen {Arror} : 【*内部*】this.homeの内容に従って画面を切り替え
  * - RSAkeyLength=1024 {number} : 鍵ペアのキー長
  * - passPhraseLength=16 {number} : 鍵ペア生成の際のパスフレーズ長
+ * - user={} {object} ユーザ情報オブジェクト。詳細はstoreUserInfo()で設定
  */
 #setProperties(arg){
   const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
@@ -60,6 +58,7 @@
       initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
       RSAkeyLength: 1024,
       passPhraseLength: 16,
+      user: {}, // ユーザ情報
     };
     v.default.css = `/* authMenu専用CSS
         authMenu共通変数定義
@@ -189,48 +188,30 @@
         background : rgba(100,100,100,0.8);
       }
     `;
-    v.default.toggle = () => {
-      // ナビゲーション領域の表示/非表示切り替え
-      document.querySelector(`.${this.constructor.name} nav`).classList.toggle('is_active');
-      document.querySelector(`.${this.constructor.name} .back`).classList.toggle('is_active');
-      document.querySelectorAll(`.${this.constructor.name} .icon button span`)
-      .forEach(x => x.classList.toggle('is_active'));        
-    };
-    v.default.showChildren = (event) => {
-      // ブランチの下位階層メニュー表示/非表示切り替え
-      event.target.parentNode.querySelector('ul').classList.toggle('is_open');
-      let m = event.target.innerText.match(/^([▶️▼])(.+)/);
-      const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
-      event.target.innerText = text;  
-    };
-    v.default.changeScreen = (arg=null) => {
-      // this.homeの内容に従って画面を切り替える
-      if( arg === null ){
-        // 変更先画面が無指定 => ホーム画面を表示
-        arg = typeof this.home === 'string' ? this.home : this.home[this.auth];
-      }
-      return changeScreen(arg);
-    }
 
     v.step = 2; // 引数と既定値から設定値のオブジェクトを作成
     v.arg = mergeDeeply(arg,v.default);
     if( v.arg instanceof Error ) throw v.arg;
 
-    v.step = 3; // メンバに設定値をコピー
-    for( v.x in v.arg ) this[v.x] = v.arg[v.x];
+    v.step = 3; // インスタンス変数に設定値を保存
+    Object.keys(v.arg).forEach(x => this[x] = v.arg[x]);
 
-    v.step = 4; // wrapperが文字列(CSSセレクタ)ならHTMLElementに変更
+    v.step = 4; // sessionStorage他のユーザ情報を更新
+    v.r = this.storeUserInfo(v.arg.user);
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 5; // wrapperが文字列(CSSセレクタ)ならHTMLElementに変更
     if( typeof this.wrapper === 'string' ){
       this.wrapper = document.querySelector(this.wrapper);
     }
-    v.step = 5; // authMenu専用CSSが未定義なら追加
+    v.step = 6; // authMenu専用CSSが未定義なら追加
     if( !document.querySelector(`style[name="${this.constructor.name}"]`) ){
       v.styleTag = document.createElement('style');
       v.styleTag.setAttribute('name',this.constructor.name);
       v.styleTag.textContent = this.css;
       document.head.appendChild(v.styleTag);
     }
-    v.step = 6; // 待機画面が未定義ならbody直下に追加
+    v.step = 7; // 待機画面が未定義ならbody直下に追加
     if( !document.querySelector('body > div[name="loading"]') ){
       v.r = createElement({
         attr:{name:'loading',class:'loader screen'},
@@ -238,7 +219,7 @@
       },'body');
     }
 
-    v.step = 7; // 終了処理
+    v.step = 8; // 終了処理
     console.log(`${v.whois} normal end.`);
     return v.rv;
 
