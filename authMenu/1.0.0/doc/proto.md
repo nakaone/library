@@ -314,9 +314,9 @@ window.addEventListener('DOMContentLoaded',() => {
 
 <!--::$doc/entry.md::-->
 
-## ログイン要求
+## 操作要求
 
-<!--::$doc/login.md::-->
+<!--::$doc/request.md::-->
 
 ## ユーザ情報の参照・編集
 
