@@ -1,4 +1,9 @@
-# ログイン要求
+# 操作要求
+
+シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
+例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
+
+userは要求時に操作名を指定し、その実行結果を受け取る。
 
 ```mermaid
 sequenceDiagram
@@ -9,10 +14,11 @@ sequenceDiagram
   participant server as authServer
   participant sheet
 
-  browser ->> client : SQL
+  user ->> browser : 操作名
   activate browser
-  activate client
   Note right of browser : editUserInfo()
+  browser ->> client : SQL
+  activate client
   Note right of client : request()
   alt SQL=null
     client ->> browser : 自ユーザ情報
@@ -56,9 +62,10 @@ sequenceDiagram
   deactivate server
   client ->> server : SQL
   activate server
-  Note right of server : crud()
-  server ->> client : 処理結果
+  Note right of server : operation(操作名)
+  server ->> client : 処理結果(SSkey/CPkey)
   deactivate server
+  client ->> client : 復号＋署名検証
   client ->> browser : 処理結果
   deactivate client
   browser ->> browser : 処理結果表示画面生成
@@ -66,6 +73,7 @@ sequenceDiagram
   deactivate browser
 ```
 
+- 「操作要求」には新規ユーザ登録からの`authMenu.request()`呼出を含む
 - ユーザIDやCS/CPkey他、自分のユーザ情報は先行する「新規ユーザ登録」によりインスタンス変数に存在する前提
 
 
@@ -94,50 +102,18 @@ sequenceDiagram
 - パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
   例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
 
-<!--
-sequenceDiagram
-  autonumber
-  actor user
-  participant caller
-  participant login
-  participant server
-  participant property
-
-  caller ->> login : 呼び出し(userId,処理名)
-  activate login
-  Note right of login : authMenu.login()
-  alt 鍵ペアが無効
-    login ->> login : 鍵ペア再生成＋sessionに保存
-  end
-
-  login ->> server : userId,CPkey(SPkey/--)
-  activate server
-  Note right of server : authServer.login1S()
-  server ->> property : userId
-  property ->> server  : ユーザ情報
-  server ->> server : 実行権限確認(※1)
-  alt 実行権限確認結果がOK or NG
-    server ->> login : OK or NG
-    login ->> caller : OK or NG
-  end
-
-  server ->> server : パスコード・要求ID生成(※2)
-  server ->> property : パスコード,要求ID,要求時刻
-  server ->> user : パスコード連絡メール
-  server ->> login : OK＋要求ID
-  deactivate server
-  login ->> user : パスコード入力ダイアログ
-
-  user ->> login : パスコード入力
-  login ->> server : userId,パスコード＋要求ID(CS/SP)
-  activate server
-  Note right of server : authServer.login2S()
-  server ->> property : userId
-  property ->> server : ユーザ情報
-  server ->> server : パスコード検証(※3)
-  server ->> property : 検証結果記録
-  server ->> login : OK or NG
-  deactivate server
-  login ->> caller : OK or NG
-  deactivate login
--->
+- シートの操作(CRUD)は権限と有効期間の確認が必要なため、以下のようなオブジェクト(ハッシュ)を管理者がソースに埋め込む(configとして定義する)ことで行う。
+  ```
+  config.operations = {
+    lookup : {  // {string} 操作名
+      auth : 0, // {number} 操作を許可する権限フラグの論理和
+      from : null, // {string} 有効期間を設定する場合、開始日時文字列
+      to : null, // {string} 同、終了日時文字列
+      func: // {Arrow|Function} 操作を定義する関数
+        (data,id) => data.find(x => x.id === id),
+    },
+    list : {...},
+    update : {...},
+    ...
+  }
+  ```

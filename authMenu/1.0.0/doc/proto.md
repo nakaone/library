@@ -318,10 +318,6 @@ window.addEventListener('DOMContentLoaded',() => {
 
 <!--::$doc/request.md::-->
 
-## ユーザ情報の参照・編集
-
-<!--::$doc/crud.md::-->
-
 ## 権限設定、変更
 
 <!--::$doc/permit.md::-->
