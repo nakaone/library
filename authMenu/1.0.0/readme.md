@@ -113,6 +113,7 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
    1. authServerの適用値設定
    1. documentPropertiesでのサーバ・ユーザ情報保存(※1)
    1. authServer(=authMenu/server.js)の組み込み(※2)
+1. ユーザ情報保存用シートの作成
 
 なお以下2点は自動的に行う。
 - ※1 : 「〜情報保存」は、システム側で自動的に処理(作業は発生しない)
@@ -395,6 +396,8 @@ window.addEventListener('DOMContentLoaded',() => {
 
 ※ sessionStorageに秘密鍵を保存することができないため、鍵ペアはonload時に生成し、グローバル変数として保持する
 
+<a name="7decbcdb14f79d872117b5ebedc691c5"></a>
+
 ## authServerの適用値設定
 
 1. {Object.<string>:<Function>} func={} - 使用する関数を集めたオブジェクト
@@ -429,6 +432,25 @@ window.addEventListener('DOMContentLoaded',() => {
         1. {string} message='' - NGの場合の理由。OKなら空文字列
      1. {number} endAt - 試行終了日時(UNIX時刻)
      1. {boolean} result - 試行の結果(true:OK)
+
+## ユーザ情報保存用シートの作成
+
+システム関係項目として以下を作成し、シート名を[authServerの適用値設定](#7decbcdb14f79d872117b5ebedc691c5)の`masterSheet`に定義する。
+
+1. 「【*内部*】」は指定不要の項目(システム側で自動的に作成・更新)
+
+- userId {number} 【*内部*】ユーザID
+- created {string} 【*内部*】ユーザIDを登録した日時文字列
+- email {string} 【*内部*】ユーザのe-mailアドレス
+- auth {number} ユーザの権限
+- CPkey {string} 【*内部*】ユーザの公開鍵
+- updated {string} 【*内部*】ユーザ公開鍵が作成・更新された日時文字列
+- trial {string} 【*内部*】ログイン試行関係情報のJSON文字列
+
+1. 順番は不問
+1. ヘッダ部(1行目)のみ作成し、2行目以降のデータ部は作成不要
+1. `auth`のみ手動で変更可。他項目はシステムで設定・変更するので手動での変更は不可
+1. これ以外の項目は任意に追加可能
 
 # 機能別処理フロー
 
@@ -754,6 +776,10 @@ sequenceDiagram
 * [authMenu](#authMenu)
     * [new authMenu(arg)](#new_authMenu_new)
     * [.storeUserInfo(userId)](#authMenu+storeUserInfo) ⇒ <code>void</code>
+    * [.doGAS()](#authMenu+doGAS)
+    * [.toggle()](#authMenu+toggle)
+    * [.showChildren()](#authMenu+showChildren)
+    * [.changeScreen()](#authMenu+changeScreen)
     * [.genNavi(wrapper, navi)](#authMenu+genNavi) ⇒ <code>null</code> \| <code>Error</code>
     * [.registMail(email)](#authMenu+registMail) ⇒ <code>Object</code>
 
@@ -768,7 +794,7 @@ sequenceDiagram
 <a name="authMenu+storeUserInfo"></a>
 
 ## authMenu.storeUserInfo(userId) ⇒ <code>void</code>
-sessionStorage/localStorageのユーザ情報を更新する
+storeUserInfo: インスタンス変数、sessionStorage/localStorageのユーザ情報を更新する
 
 ①本関数の引数、②HTMLに埋め込まれたユーザ情報、③sessionStorage、④localStorageから
 ユーザ情報が取得できないか試行、①>②>③>④の優先順位で最新の情報を特定し、
@@ -816,6 +842,30 @@ localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限�
    }
    ```
 4. `opt.userIdSelector='div[name="userId"]'`を指定して本関数を実行、HTMLからユーザIDを取得
+<a name="authMenu+doGAS"></a>
+
+## authMenu.doGAS()
+authMenu用の既定値をセットしてdoGASを呼び出し
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
+<a name="authMenu+toggle"></a>
+
+## authMenu.toggle()
+ナビゲーション領域の表示/非表示切り替え
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
+<a name="authMenu+showChildren"></a>
+
+## authMenu.showChildren()
+ブランチの下位階層メニュー表示/非表示切り替え
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
+<a name="authMenu+changeScreen"></a>
+
+## authMenu.changeScreen()
+this.homeの内容に従って画面を切り替える
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
 <a name="authMenu+genNavi"></a>
 
 ## authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>
@@ -943,7 +993,7 @@ function setTest() {
 
 ```
 class authMenu {
-/**
+/** 
  * @constructor
  * @param {Object} arg 
  * @returns {authMenu|Error}
@@ -953,12 +1003,8 @@ constructor(arg={}){
   console.log(`${v.whois} start.\narg=${stringify(arg)}`);
   try {
 
-    v.step = 1.1; // 引数と既定値からメンバの値を設定
+    v.step = 1; // 引数と既定値からメンバの値を設定
     v.r = this.#setProperties(arg);
-    if( v.r instanceof Error ) throw v.r;
-
-    v.step = 1.2; // sessionStorage/localStorageのユーザ情報を更新
-    v.r = this.storeUserInfo();
     if( v.r instanceof Error ) throw v.r;
 
     v.step = 2; // アイコン、ナビ、背景の作成
@@ -998,7 +1044,7 @@ constructor(arg={}){
     return e;
   }
 }
-/** constructorの引数と既定値からthisの値を設定
+/** setProperties: constructorの引数と既定値からthisの値を設定
  * 
  * @param {Object} arg - constructorに渡された引数オブジェクト
  * @returns {null|Error}
@@ -1035,11 +1081,9 @@ constructor(arg={}){
  * - initialSubMenu=true {boolean}<br>
  *   サブメニューの初期状態。true:開いた状態、false:閉じた状態
  * - css {string} : authMenu専用CSS。書き換えする場合、全文指定すること(一部変更は不可)
- * - toggle {Arrow} : 【*内部*】ナビゲーション領域の表示/非表示切り替え
- * - showChildren {Arror} : 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
- * - changeScreen {Arror} : 【*内部*】this.homeの内容に従って画面を切り替え
  * - RSAkeyLength=1024 {number} : 鍵ペアのキー長
  * - passPhraseLength=16 {number} : 鍵ペア生成の際のパスフレーズ長
+ * - sessionProperties {string[]} : sessionStorageに保存する項目名のリスト
  */
 #setProperties(arg){
   const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
@@ -1060,6 +1104,7 @@ constructor(arg={}){
       initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
       RSAkeyLength: 1024,
       passPhraseLength: 16,
+      sessionProperties: ['userId','email','auth','passPhrase','CPkey','updated','SPkey'],
     };
     v.default.css = `/* authMenu専用CSS
         authMenu共通変数定義
@@ -1189,34 +1234,16 @@ constructor(arg={}){
         background : rgba(100,100,100,0.8);
       }
     `;
-    v.default.toggle = () => {
-      // ナビゲーション領域の表示/非表示切り替え
-      document.querySelector(`.${this.constructor.name} nav`).classList.toggle('is_active');
-      document.querySelector(`.${this.constructor.name} .back`).classList.toggle('is_active');
-      document.querySelectorAll(`.${this.constructor.name} .icon button span`)
-      .forEach(x => x.classList.toggle('is_active'));        
-    };
-    v.default.showChildren = (event) => {
-      // ブランチの下位階層メニュー表示/非表示切り替え
-      event.target.parentNode.querySelector('ul').classList.toggle('is_open');
-      let m = event.target.innerText.match(/^([▶️▼])(.+)/);
-      const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
-      event.target.innerText = text;  
-    };
-    v.default.changeScreen = (arg=null) => {
-      // this.homeの内容に従って画面を切り替える
-      if( arg === null ){
-        // 変更先画面が無指定 => ホーム画面を表示
-        arg = typeof this.home === 'string' ? this.home : this.home[this.auth];
-      }
-      return changeScreen(arg);
-    }
 
     v.step = 2; // 引数と既定値から設定値のオブジェクトを作成
     v.arg = mergeDeeply(arg,v.default);
     if( v.arg instanceof Error ) throw v.arg;
 
-    v.step = 3; // メンバに設定値をコピー
+    v.step = 3; // インスタンス変数、sessionStorage/localStorageのユーザ情報を更新
+    v.r = this.storeUserInfo(v.arg);
+    if( v.r instanceof Error ) throw v.r;
+
+
     for( v.x in v.arg ) this[v.x] = v.arg[v.x];
 
     v.step = 4; // wrapperが文字列(CSSセレクタ)ならHTMLElementに変更
@@ -1249,7 +1276,7 @@ constructor(arg={}){
     return e;
   }
 }
-/** sessionStorage/localStorageのユーザ情報を更新する
+/** storeUserInfo: インスタンス変数、sessionStorage/localStorageのユーザ情報を更新する
  * 
  * ①本関数の引数、②HTMLに埋め込まれたユーザ情報、③sessionStorage、④localStorageから
  * ユーザ情報が取得できないか試行、①>②>③>④の優先順位で最新の情報を特定し、
@@ -1298,7 +1325,7 @@ constructor(arg={}){
  * 
  */
 storeUserInfo(arg={}){
-  const v = {whois:'storeUserInfo',rv:null,step:0};
+  const v = {whois:this.constructor.name+'.storeUserInfo',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
@@ -1324,9 +1351,9 @@ storeUserInfo(arg={}){
     if( v.rv.CSkey === null ){
       if( v.rv.passPhrase === null ){
         v.rv.passPhrase = createPassword(this.passPhraseLength);
-        v.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
+        v.rv.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
       }
-      v.rv.CSkey = cryptico.generateRSAKey(v.rv.passPhrase,this.RSAkeyLength);
+      v.rv.CSkey = cryptico.generateRSAKey(v.rv.passPhrase,v.rv.RSAkeyLength);
       v.rv.CPkey = cryptico.publicKeyString(v.rv.CSkey);
     }
 
@@ -1338,8 +1365,8 @@ storeUserInfo(arg={}){
     v.step = 3.1; // localStorageへの保存
     localStorage.setItem(this.constructor.name,v.rv.userId);
     v.step = 3.2; // sessionStorageへの保存
-    v.session = Object.assign({},v.rv);
-    delete v.session.CSkey;
+    v.session = {};
+    v.rv.sessionProperties.forEach(x => v.session[x] = v.rv[x]);
     sessionStorage.setItem(this.constructor.name,JSON.stringify(v.session));
     v.step = 3.3; // インスタンス変数(メンバ)への保存
     v.member = Object.assign({},v.rv);
@@ -1356,8 +1383,34 @@ storeUserInfo(arg={}){
     return e;
   }
 }
+/** authMenu用の既定値をセットしてdoGASを呼び出し */
 async doGAS(func,...args){
   return await doGAS('authServer',this.userId,func,...args);
+}
+
+/** ナビゲーション領域の表示/非表示切り替え */
+toggle(){
+  document.querySelector(`.${this.constructor.name} nav`).classList.toggle('is_active');
+  document.querySelector(`.${this.constructor.name} .back`).classList.toggle('is_active');
+  document.querySelectorAll(`.${this.constructor.name} .icon button span`)
+  .forEach(x => x.classList.toggle('is_active'));        
+}
+
+/** ブランチの下位階層メニュー表示/非表示切り替え */
+showChildren(event){
+  event.target.parentNode.querySelector('ul').classList.toggle('is_open');
+  let m = event.target.innerText.match(/^([▶️▼])(.+)/);
+  const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
+  event.target.innerText = text;  
+}
+
+/** this.homeの内容に従って画面を切り替える */ 
+changeScreen(arg=null){
+  if( arg === null ){
+    // 変更先画面が無指定 => ホーム画面を表示
+    arg = typeof this.home === 'string' ? this.home : this.home[this.auth];
+  }
+  return changeScreen(arg);
 }
 
   // ===================================
@@ -2053,24 +2106,29 @@ td, .td {
    1. <a href="#ac0010">グローバル変数、local/sessionStorageのユーザ情報保存</a>
    1. <a href="#ac0011">authServerの適用値設定</a>
    1. <a href="#ac0012">documentPropertiesのサーバ・ユーザ情報保存</a>
-1. <a href="#ac0013">機能別処理フロー</a>
-   1. <a href="#ac0014">新規ユーザ登録</a>
-   1. <a href="#ac0015">ログイン要求</a>
-   1. <a href="#ac0016">ユーザ情報の参照・編集</a>
-   1. <a href="#ac0017">権限設定、変更</a>
-1. <a href="#ac0018">フォルダ構成、ビルド手順</a>
-1. <a href="#ac0019">仕様(JSDoc)</a>
-   1. <a href="#ac0020">new authMenu(arg)</a>
-   1. <a href="#ac0021">authMenu.storeUserInfo(userId) ⇒ <code>void</code></a>
-   1. <a href="#ac0022">authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code></a>
-   1. <a href="#ac0023">authMenu.registMail(email) ⇒ <code>Object</code></a>
-1. <a href="#ac0024">テクニカルメモ</a>
-   1. <a href="#ac0025">GAS/htmlでの暗号化</a>
-         1. <a href="#ac0026">手順</a>
-         1. <a href="#ac0027">javascript用</a>
-         1. <a href="#ac0028">GAS用</a>
-1. <a href="#ac0029">プログラムソース</a>
-1. <a href="#ac0030">改版履歴</a>
+   1. <a href="#ac0013">ユーザ情報保存用シートの作成</a>
+1. <a href="#ac0014">機能別処理フロー</a>
+   1. <a href="#ac0015">新規ユーザ登録</a>
+   1. <a href="#ac0016">ログイン要求</a>
+   1. <a href="#ac0017">ユーザ情報の参照・編集</a>
+   1. <a href="#ac0018">権限設定、変更</a>
+1. <a href="#ac0019">フォルダ構成、ビルド手順</a>
+1. <a href="#ac0020">仕様(JSDoc)</a>
+   1. <a href="#ac0021">new authMenu(arg)</a>
+   1. <a href="#ac0022">authMenu.storeUserInfo(userId) ⇒ <code>void</code></a>
+   1. <a href="#ac0023">authMenu.doGAS()</a>
+   1. <a href="#ac0024">authMenu.toggle()</a>
+   1. <a href="#ac0025">authMenu.showChildren()</a>
+   1. <a href="#ac0026">authMenu.changeScreen()</a>
+   1. <a href="#ac0027">authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code></a>
+   1. <a href="#ac0028">authMenu.registMail(email) ⇒ <code>Object</code></a>
+1. <a href="#ac0029">テクニカルメモ</a>
+   1. <a href="#ac0030">GAS/htmlでの暗号化</a>
+         1. <a href="#ac0031">手順</a>
+         1. <a href="#ac0032">javascript用</a>
+         1. <a href="#ac0033">GAS用</a>
+1. <a href="#ac0034">プログラムソース</a>
+1. <a href="#ac0035">改版履歴</a>
 
 # 1 機能概要<a name="ac0001"></a>
 
@@ -2096,6 +2154,7 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
    1. authServerの適用値設定
    1. documentPropertiesでのサーバ・ユーザ情報保存(※1)
    1. authServer(=authMenu/server.js)の組み込み(※2)
+1. ユーザ情報保存用シートの作成
 
 なお以下2点は自動的に行う。
 - ※1 : 「〜情報保存」は、システム側で自動的に処理(作業は発生しない)
@@ -2405,6 +2464,8 @@ window.addEventListener('DOMContentLoaded',() => {
 
 ※ sessionStorageに秘密鍵を保存することができないため、鍵ペアはonload時に生成し、グローバル変数として保持する
 
+<a name="7decbcdb14f79d872117b5ebedc691c5"></a>
+
 ## 2.4 authServerの適用値設定<a name="ac0011"></a>
 
 [先頭](#ac0000) > [使用方法](#ac0002) > authServerの適用値設定
@@ -2446,7 +2507,29 @@ window.addEventListener('DOMContentLoaded',() => {
      1. {number} endAt - 試行終了日時(UNIX時刻)
      1. {boolean} result - 試行の結果(true:OK)
 
-# 3 機能別処理フロー<a name="ac0013"></a>
+## 2.6 ユーザ情報保存用シートの作成<a name="ac0013"></a>
+
+[先頭](#ac0000) > [使用方法](#ac0002) > ユーザ情報保存用シートの作成
+
+
+システム関係項目として以下を作成し、シート名を[authServerの適用値設定](#7decbcdb14f79d872117b5ebedc691c5)の`masterSheet`に定義する。
+
+1. 「【*内部*】」は指定不要の項目(システム側で自動的に作成・更新)
+
+- userId {number} 【*内部*】ユーザID
+- created {string} 【*内部*】ユーザIDを登録した日時文字列
+- email {string} 【*内部*】ユーザのe-mailアドレス
+- auth {number} ユーザの権限
+- CPkey {string} 【*内部*】ユーザの公開鍵
+- updated {string} 【*内部*】ユーザ公開鍵が作成・更新された日時文字列
+- trial {string} 【*内部*】ログイン試行関係情報のJSON文字列
+
+1. 順番は不問
+1. ヘッダ部(1行目)のみ作成し、2行目以降のデータ部は作成不要
+1. `auth`のみ手動で変更可。他項目はシステムで設定・変更するので手動での変更は不可
+1. これ以外の項目は任意に追加可能
+
+# 3 機能別処理フロー<a name="ac0014"></a>
 
 [先頭](#ac0000) > 機能別処理フロー
 
@@ -2457,9 +2540,9 @@ window.addEventListener('DOMContentLoaded',() => {
 
 以降の図中で`(XSkey/YPkey)`は「X側の秘密鍵で署名、Y側の公開鍵で暗号化する」の意味。
 
-## 3.1 新規ユーザ登録<a name="ac0014"></a>
+## 3.1 新規ユーザ登録<a name="ac0015"></a>
 
-[先頭](#ac0000) > [機能別処理フロー](#ac0013) > 新規ユーザ登録
+[先頭](#ac0000) > [機能別処理フロー](#ac0014) > 新規ユーザ登録
 
 
 新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
@@ -2592,9 +2675,9 @@ sequenceDiagram
   deactivate client
 -->
 
-## 3.2 ログイン要求<a name="ac0015"></a>
+## 3.2 ログイン要求<a name="ac0016"></a>
 
-[先頭](#ac0000) > [機能別処理フロー](#ac0013) > ログイン要求
+[先頭](#ac0000) > [機能別処理フロー](#ac0014) > ログイン要求
 
 
 ```mermaid
@@ -2669,9 +2752,9 @@ sequenceDiagram
 - パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
   例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
 
-## 3.3 ユーザ情報の参照・編集<a name="ac0016"></a>
+## 3.3 ユーザ情報の参照・編集<a name="ac0017"></a>
 
-[先頭](#ac0000) > [機能別処理フロー](#ac0013) > ユーザ情報の参照・編集
+[先頭](#ac0000) > [機能別処理フロー](#ac0014) > ユーザ情報の参照・編集
 
 
 シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
@@ -2732,9 +2815,9 @@ config.operations = {
 }
 ```
 
-## 3.4 権限設定、変更<a name="ac0017"></a>
+## 3.4 権限設定、変更<a name="ac0018"></a>
 
-[先頭](#ac0000) > [機能別処理フロー](#ac0013) > 権限設定、変更
+[先頭](#ac0000) > [機能別処理フロー](#ac0014) > 権限設定、変更
 
 
 権限を付与すべきかは個別に判断する必要があるため、システム化せず、管理者がソース(`authServer.changeAuth()`)を直接編集、GASコンソール上で実行する。
@@ -2758,7 +2841,7 @@ sequenceDiagram
   server ->>- admin : 権限設定リスト
 ```
 
-# 4 フォルダ構成、ビルド手順<a name="ac0018"></a>
+# 4 フォルダ構成、ビルド手順<a name="ac0019"></a>
 
 [先頭](#ac0000) > フォルダ構成、ビルド手順
 
@@ -2783,7 +2866,7 @@ sequenceDiagram
 - initialize.gs : サーバ側初期化処理のソース
 - readme.md : doc配下を統合した、client/server全体の仕様書
 
-# 5 仕様(JSDoc)<a name="ac0019"></a>
+# 5 仕様(JSDoc)<a name="ac0020"></a>
 
 [先頭](#ac0000) > 仕様(JSDoc)
 
@@ -2791,14 +2874,18 @@ sequenceDiagram
 * [authMenu](#authMenu)
     * [new authMenu(arg)](#new_authMenu_new)
     * [.storeUserInfo(userId)](#authMenu+storeUserInfo) ⇒ <code>void</code>
+    * [.doGAS()](#authMenu+doGAS)
+    * [.toggle()](#authMenu+toggle)
+    * [.showChildren()](#authMenu+showChildren)
+    * [.changeScreen()](#authMenu+changeScreen)
     * [.genNavi(wrapper, navi)](#authMenu+genNavi) ⇒ <code>null</code> \| <code>Error</code>
     * [.registMail(email)](#authMenu+registMail) ⇒ <code>Object</code>
 
 <a name="new_authMenu_new"></a>
 
-## 5.1 new authMenu(arg)<a name="ac0020"></a>
+## 5.1 new authMenu(arg)<a name="ac0021"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0019) > new authMenu(arg)
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > new authMenu(arg)
 
 
 | Param | Type |
@@ -2807,11 +2894,11 @@ sequenceDiagram
 
 <a name="authMenu+storeUserInfo"></a>
 
-## 5.2 authMenu.storeUserInfo(userId) ⇒ <code>void</code><a name="ac0021"></a>
+## 5.2 authMenu.storeUserInfo(userId) ⇒ <code>void</code><a name="ac0022"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0019) > authMenu.storeUserInfo(userId) ⇒ <code>void</code>
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.storeUserInfo(userId) ⇒ <code>void</code>
 
-sessionStorage/localStorageのユーザ情報を更新する
+storeUserInfo: インスタンス変数、sessionStorage/localStorageのユーザ情報を更新する
 
 ①本関数の引数、②HTMLに埋め込まれたユーザ情報、③sessionStorage、④localStorageから
 ユーザ情報が取得できないか試行、①>②>③>④の優先順位で最新の情報を特定し、
@@ -2859,11 +2946,47 @@ localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限�
    }
    ```
 4. `opt.userIdSelector='div[name="userId"]'`を指定して本関数を実行、HTMLからユーザIDを取得
+<a name="authMenu+doGAS"></a>
+
+## 5.3 authMenu.doGAS()<a name="ac0023"></a>
+
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.doGAS()
+
+authMenu用の既定値をセットしてdoGASを呼び出し
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
+<a name="authMenu+toggle"></a>
+
+## 5.4 authMenu.toggle()<a name="ac0024"></a>
+
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.toggle()
+
+ナビゲーション領域の表示/非表示切り替え
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
+<a name="authMenu+showChildren"></a>
+
+## 5.5 authMenu.showChildren()<a name="ac0025"></a>
+
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.showChildren()
+
+ブランチの下位階層メニュー表示/非表示切り替え
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
+<a name="authMenu+changeScreen"></a>
+
+## 5.6 authMenu.changeScreen()<a name="ac0026"></a>
+
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.changeScreen()
+
+this.homeの内容に従って画面を切り替える
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
 <a name="authMenu+genNavi"></a>
 
-## 5.3 authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code><a name="ac0022"></a>
+## 5.7 authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code><a name="ac0027"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0019) > authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>
 
 親要素を走査してナビゲーションを作成
 
@@ -2876,9 +2999,9 @@ localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限�
 
 <a name="authMenu+registMail"></a>
 
-## 5.4 authMenu.registMail(email) ⇒ <code>Object</code><a name="ac0023"></a>
+## 5.8 authMenu.registMail(email) ⇒ <code>Object</code><a name="ac0028"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0019) > authMenu.registMail(email) ⇒ <code>Object</code>
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.registMail(email) ⇒ <code>Object</code>
 
 **Kind**: instance method of [<code>authMenu</code>](#authMenu)  
 
@@ -2895,19 +3018,19 @@ localStorageにはユーザIDのみ、sessionStorageにはユーザID＋権限�
 | func | <code>string</code> | <code>null</code> | 分岐先処理名 |
 | arg | <code>string</code> | <code>null</code> | 分岐先処理に渡す引数オブジェクト |
 
-# 6 テクニカルメモ<a name="ac0024"></a>
+# 6 テクニカルメモ<a name="ac0029"></a>
 
 [先頭](#ac0000) > テクニカルメモ
 
 
-## 6.1 GAS/htmlでの暗号化<a name="ac0025"></a>
+## 6.1 GAS/htmlでの暗号化<a name="ac0030"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0024) > GAS/htmlでの暗号化
+[先頭](#ac0000) > [テクニカルメモ](#ac0029) > GAS/htmlでの暗号化
 
 
-#### 6.1.1 手順<a name="ac0026"></a>
+#### 6.1.1 手順<a name="ac0031"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0024) > [GAS/htmlでの暗号化](#ac0025) > 手順
+[先頭](#ac0000) > [テクニカルメモ](#ac0029) > [GAS/htmlでの暗号化](#ac0030) > 手順
 
 
 ```mermaid
@@ -2943,9 +3066,9 @@ sequenceDiagram
   - GASでの保存
   - 
 
-#### 6.1.2 javascript用<a name="ac0027"></a>
+#### 6.1.2 javascript用<a name="ac0032"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0024) > [GAS/htmlでの暗号化](#ac0025) > javascript用
+[先頭](#ac0000) > [テクニカルメモ](#ac0029) > [GAS/htmlでの暗号化](#ac0030) > javascript用
 
 
 - Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
@@ -2954,9 +3077,9 @@ sequenceDiagram
 javascript 鍵ペア ライブラリ
 
 
-#### 6.1.3 GAS用<a name="ac0028"></a>
+#### 6.1.3 GAS用<a name="ac0033"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0024) > [GAS/htmlでの暗号化](#ac0025) > GAS用
+[先頭](#ac0000) > [テクニカルメモ](#ac0029) > [GAS/htmlでの暗号化](#ac0030) > GAS用
 
 
 GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
@@ -3001,7 +3124,7 @@ function setTest() {
 }
 ```
 
-# 7 プログラムソース<a name="ac0029"></a>
+# 7 プログラムソース<a name="ac0034"></a>
 
 [先頭](#ac0000) > プログラムソース
 
@@ -3010,7 +3133,7 @@ function setTest() {
 
 ```
 class authMenu {
-/**
+/** 
  * @constructor
  * @param {Object} arg 
  * @returns {authMenu|Error}
@@ -3020,12 +3143,8 @@ constructor(arg={}){
   console.log(`${v.whois} start.\narg=${stringify(arg)}`);
   try {
 
-    v.step = 1.1; // 引数と既定値からメンバの値を設定
+    v.step = 1; // 引数と既定値からメンバの値を設定
     v.r = this.#setProperties(arg);
-    if( v.r instanceof Error ) throw v.r;
-
-    v.step = 1.2; // sessionStorage/localStorageのユーザ情報を更新
-    v.r = this.storeUserInfo();
     if( v.r instanceof Error ) throw v.r;
 
     v.step = 2; // アイコン、ナビ、背景の作成
@@ -3065,7 +3184,7 @@ constructor(arg={}){
     return e;
   }
 }
-/** constructorの引数と既定値からthisの値を設定
+/** setProperties: constructorの引数と既定値からthisの値を設定
  * 
  * @param {Object} arg - constructorに渡された引数オブジェクト
  * @returns {null|Error}
@@ -3102,11 +3221,9 @@ constructor(arg={}){
  * - initialSubMenu=true {boolean}<br>
  *   サブメニューの初期状態。true:開いた状態、false:閉じた状態
  * - css {string} : authMenu専用CSS。書き換えする場合、全文指定すること(一部変更は不可)
- * - toggle {Arrow} : 【*内部*】ナビゲーション領域の表示/非表示切り替え
- * - showChildren {Arror} : 【*内部*】ブランチの下位階層メニュー表示/非表示切り替え
- * - changeScreen {Arror} : 【*内部*】this.homeの内容に従って画面を切り替え
  * - RSAkeyLength=1024 {number} : 鍵ペアのキー長
  * - passPhraseLength=16 {number} : 鍵ペア生成の際のパスフレーズ長
+ * - sessionProperties {string[]} : sessionStorageに保存する項目名のリスト
  */
 #setProperties(arg){
   const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
@@ -3127,6 +3244,7 @@ constructor(arg={}){
       initialSubMenu: true, // サブメニューの初期状態。true:開いた状態、false:閉じた状態
       RSAkeyLength: 1024,
       passPhraseLength: 16,
+      sessionProperties: ['userId','email','auth','passPhrase','CPkey','updated','SPkey'],
     };
     v.default.css = `/* authMenu専用CSS
         authMenu共通変数定義
@@ -3256,34 +3374,16 @@ constructor(arg={}){
         background : rgba(100,100,100,0.8);
       }
     `;
-    v.default.toggle = () => {
-      // ナビゲーション領域の表示/非表示切り替え
-      document.querySelector(`.${this.constructor.name} nav`).classList.toggle('is_active');
-      document.querySelector(`.${this.constructor.name} .back`).classList.toggle('is_active');
-      document.querySelectorAll(`.${this.constructor.name} .icon button span`)
-      .forEach(x => x.classList.toggle('is_active'));        
-    };
-    v.default.showChildren = (event) => {
-      // ブランチの下位階層メニュー表示/非表示切り替え
-      event.target.parentNode.querySelector('ul').classList.toggle('is_open');
-      let m = event.target.innerText.match(/^([▶️▼])(.+)/);
-      const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
-      event.target.innerText = text;  
-    };
-    v.default.changeScreen = (arg=null) => {
-      // this.homeの内容に従って画面を切り替える
-      if( arg === null ){
-        // 変更先画面が無指定 => ホーム画面を表示
-        arg = typeof this.home === 'string' ? this.home : this.home[this.auth];
-      }
-      return changeScreen(arg);
-    }
 
     v.step = 2; // 引数と既定値から設定値のオブジェクトを作成
     v.arg = mergeDeeply(arg,v.default);
     if( v.arg instanceof Error ) throw v.arg;
 
-    v.step = 3; // メンバに設定値をコピー
+    v.step = 3; // インスタンス変数、sessionStorage/localStorageのユーザ情報を更新
+    v.r = this.storeUserInfo(v.arg);
+    if( v.r instanceof Error ) throw v.r;
+
+
     for( v.x in v.arg ) this[v.x] = v.arg[v.x];
 
     v.step = 4; // wrapperが文字列(CSSセレクタ)ならHTMLElementに変更
@@ -3316,7 +3416,7 @@ constructor(arg={}){
     return e;
   }
 }
-/** sessionStorage/localStorageのユーザ情報を更新する
+/** storeUserInfo: インスタンス変数、sessionStorage/localStorageのユーザ情報を更新する
  * 
  * ①本関数の引数、②HTMLに埋め込まれたユーザ情報、③sessionStorage、④localStorageから
  * ユーザ情報が取得できないか試行、①>②>③>④の優先順位で最新の情報を特定し、
@@ -3365,7 +3465,7 @@ constructor(arg={}){
  * 
  */
 storeUserInfo(arg={}){
-  const v = {whois:'storeUserInfo',rv:null,step:0};
+  const v = {whois:this.constructor.name+'.storeUserInfo',rv:null,step:0};
   console.log(`${v.whois} start.`);
   try {
 
@@ -3391,9 +3491,9 @@ storeUserInfo(arg={}){
     if( v.rv.CSkey === null ){
       if( v.rv.passPhrase === null ){
         v.rv.passPhrase = createPassword(this.passPhraseLength);
-        v.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
+        v.rv.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
       }
-      v.rv.CSkey = cryptico.generateRSAKey(v.rv.passPhrase,this.RSAkeyLength);
+      v.rv.CSkey = cryptico.generateRSAKey(v.rv.passPhrase,v.rv.RSAkeyLength);
       v.rv.CPkey = cryptico.publicKeyString(v.rv.CSkey);
     }
 
@@ -3405,8 +3505,8 @@ storeUserInfo(arg={}){
     v.step = 3.1; // localStorageへの保存
     localStorage.setItem(this.constructor.name,v.rv.userId);
     v.step = 3.2; // sessionStorageへの保存
-    v.session = Object.assign({},v.rv);
-    delete v.session.CSkey;
+    v.session = {};
+    v.rv.sessionProperties.forEach(x => v.session[x] = v.rv[x]);
     sessionStorage.setItem(this.constructor.name,JSON.stringify(v.session));
     v.step = 3.3; // インスタンス変数(メンバ)への保存
     v.member = Object.assign({},v.rv);
@@ -3423,8 +3523,34 @@ storeUserInfo(arg={}){
     return e;
   }
 }
+/** authMenu用の既定値をセットしてdoGASを呼び出し */
 async doGAS(func,...args){
   return await doGAS('authServer',this.userId,func,...args);
+}
+
+/** ナビゲーション領域の表示/非表示切り替え */
+toggle(){
+  document.querySelector(`.${this.constructor.name} nav`).classList.toggle('is_active');
+  document.querySelector(`.${this.constructor.name} .back`).classList.toggle('is_active');
+  document.querySelectorAll(`.${this.constructor.name} .icon button span`)
+  .forEach(x => x.classList.toggle('is_active'));        
+}
+
+/** ブランチの下位階層メニュー表示/非表示切り替え */
+showChildren(event){
+  event.target.parentNode.querySelector('ul').classList.toggle('is_open');
+  let m = event.target.innerText.match(/^([▶️▼])(.+)/);
+  const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
+  event.target.innerText = text;  
+}
+
+/** this.homeの内容に従って画面を切り替える */ 
+changeScreen(arg=null){
+  if( arg === null ){
+    // 変更先画面が無指定 => ホーム画面を表示
+    arg = typeof this.home === 'string' ? this.home : this.home[this.auth];
+  }
+  return changeScreen(arg);
 }
 
   // ===================================
@@ -4005,7 +4131,7 @@ if( w.r instanceof Error ) throw w.r;
 
 </details>
 
-# 8 改版履歴<a name="ac0030"></a>
+# 8 改版履歴<a name="ac0035"></a>
 
 [先頭](#ac0000) > 改版履歴
 

@@ -22,6 +22,7 @@ htmlからdata-menu属性を持つ要素を抽出、ハンバーガーメニュ�
    1. authServerの適用値設定
    1. documentPropertiesでのサーバ・ユーザ情報保存(※1)
    1. authServer(=authMenu/server.js)の組み込み(※2)
+1. ユーザ情報保存用シートの作成
 
 なお以下2点は自動的に行う。
 - ※1 : 「〜情報保存」は、システム側で自動的に処理(作業は発生しない)
@@ -245,6 +246,8 @@ window.addEventListener('DOMContentLoaded',() => {
 
 ※ sessionStorageに秘密鍵を保存することができないため、鍵ペアはonload時に生成し、グローバル変数として保持する
 
+<a name="7decbcdb14f79d872117b5ebedc691c5"></a>
+
 ## authServerの適用値設定
 
 1. {Object.<string>:<Function>} func={} - 使用する関数を集めたオブジェクト
@@ -279,6 +282,25 @@ window.addEventListener('DOMContentLoaded',() => {
         1. {string} message='' - NGの場合の理由。OKなら空文字列
      1. {number} endAt - 試行終了日時(UNIX時刻)
      1. {boolean} result - 試行の結果(true:OK)
+
+## ユーザ情報保存用シートの作成
+
+システム関係項目として以下を作成し、シート名を[authServerの適用値設定](#7decbcdb14f79d872117b5ebedc691c5)の`masterSheet`に定義する。
+
+1. 「【*内部*】」は指定不要の項目(システム側で自動的に作成・更新)
+
+- userId {number} 【*内部*】ユーザID
+- created {string} 【*内部*】ユーザIDを登録した日時文字列
+- email {string} 【*内部*】ユーザのe-mailアドレス
+- auth {number} ユーザの権限
+- CPkey {string} 【*内部*】ユーザの公開鍵
+- updated {string} 【*内部*】ユーザ公開鍵が作成・更新された日時文字列
+- trial {string} 【*内部*】ログイン試行関係情報のJSON文字列
+
+1. 順番は不問
+1. ヘッダ部(1行目)のみ作成し、2行目以降のデータ部は作成不要
+1. `auth`のみ手動で変更可。他項目はシステムで設定・変更するので手動での変更は不可
+1. これ以外の項目は任意に追加可能
 
 # 機能別処理フロー
 
