@@ -1,6 +1,6 @@
 # 操作要求
 
-シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
+ユーザ情報の編集や候補者リストの作成等、シートの操作(CRUD)は管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
 例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
 
 userは要求時に操作名を指定し、その実行結果を受け取る。
@@ -14,18 +14,19 @@ sequenceDiagram
   participant server as authServer
   participant sheet
 
-  user ->> browser : 操作名
+  user ->> browser : パラメータ入力、要求
   activate browser
-  Note right of browser : editUserInfo()
-  browser ->> client : SQL
+  Note right of browser : editUserInfo()等
+  browser ->> client : 操作名
   activate client
   Note right of client : request()
-  alt SQL=null
+  alt requestの引数がnull
     client ->> browser : 自ユーザ情報
     browser ->> user : ユーザ情報編集画面表示、終了
   end
 
-  client ->> server : userId,CPkey(SPkey/--)
+  client ->> client : 要求ID生成
+  client ->> server : userId,CPkey(SPkey/--),要求ID,要求日時
   activate server
   Note right of server : login1S()
   sheet ->> server : ユーザ情報
@@ -37,7 +38,7 @@ sequenceDiagram
   end
   rect rgba(0, 255, 255, 0.1)
     alt 確認結果=要確認
-      server ->> server : パスコード・要求ID生成(※2)
+      server ->> server : パスコード生成(※2)
       server ->> sheet : パスコード,要求ID,要求時刻
       server ->> user : パスコード連絡メール
       server ->> client : OK＋要求ID
@@ -50,7 +51,6 @@ sequenceDiagram
       Note right of server : login2S()
       sheet ->> server : ユーザ情報
       server ->> server : パスコード検証(※3)
-      server ->> sheet : 検証結果記録
       alt 検証結果NG
         server ->> client : NG
         client ->> browser : エラー
@@ -58,11 +58,15 @@ sequenceDiagram
       end
     end
   end
+  server ->> sheet : 検証結果記録(含、要求ID)
   server ->> client : OK
   deactivate server
-  client ->> server : SQL
+  client ->> server : SQL,要求ID
   activate server
   Note right of server : operation(操作名)
+  sheet ->> server : ユーザ情報
+  server ->> server : 要求ID検証
+  server ->> sheet  : SQLの実行
   server ->> client : 処理結果(SSkey/CPkey)
   deactivate server
   client ->> client : 復号＋署名検証
@@ -75,9 +79,7 @@ sequenceDiagram
 
 - 「操作要求」には新規ユーザ登録からの`authMenu.request()`呼出を含む
 - ユーザIDやCS/CPkey他、自分のユーザ情報は先行する「新規ユーザ登録」によりインスタンス変数に存在する前提
-
-
-
+- 要求ID検証 : 要求IDが直近の検証結果であること、OKと判断されていること
 - ※1 : 実行権限確認<br>
   | 実行権限 | CPkey | 凍結 | 結論 |
   | :-- | :-- | :-- | :-- |
