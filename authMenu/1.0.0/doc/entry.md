@@ -1,17 +1,45 @@
 # 新規登録
 
-新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
+- 新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
 
 ```mermaid
 sequenceDiagram
   autonumber
   actor user
-  participant browser
   participant storage
   participant client as authMenu
   participant server as authServer
   participant sheet
 
+  user ->> client : 新規登録要求
+  activate client
+  Note right of client : registMail()
+  alt SPkey不在
+    client ->> user : ダイアログ
+    user ->> client : e-mail
+    client ->> server : e-mail,CPkey,updated
+
+    sheet ->> server : ユーザ情報
+    server ->> server : ①登録状況確認
+    alt 登録済
+      server ->> sheet : CPkey,updated
+    else 未登録
+      server ->> server : 新規ユーザIDを採番
+      server ->> sheet : 新規ユーザとして追加
+    end
+    server ->> client : ユーザ情報
+    client ->> client : ②クライアント側更新
+  end
+  client ->> user : ユーザ情報編集画面
+  deactivate client
+```
+
+- ①登録状況確認
+- ②クライアント側更新
+  - storeUserInfo()でインスタンス変数,sessionStorageの情報を更新
+  - 返されたユーザ権限に基づきメニュー再描画
+
+<!--
   user ->> browser : メアド
   activate browser
   Note right of browser : enterIdentifyKey()
@@ -47,7 +75,7 @@ sequenceDiagram
   end
   browser ->> user : 遷移先画面
   deactivate browser
-```
+
 
 - CPkeyは有効期限にかかわらず送付され、server側で更新する<br>
   - 同一userIdで異なる機器からログインする場合を想定
@@ -91,41 +119,4 @@ sequenceDiagram
 - 「検索結果=既存」の場合、ユーザ情報編集画面の表示も検討したが、なりすましでもe-mail入力で個人情報が表示されることになるので不適切と判断。
 - 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
 
-<!--
-- メアド入力欄は募集要項の一部とし、userId(受付番号)がlocalStrageに存在する場合は表示しない
-
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant server
-  participant property
-  participant sheet
-
-  user ->> client : メアド
-  activate client
-  Note right of client : authMenu.registMail()
-  alt userId保存済
-    client ->> user : userIdを表示して終了
-  end
-  client ->> client : 鍵ペア生成
-  client ->> server : メアド＋CPkey
-  activate server
-  Note right of server : authServer.registMail()
-  property ->> server : DocumentProperties
-  alt メアドが登録済
-    server ->> property : ユーザ情報(※1)
-    server ->> client : ユーザ情報(※2)
-    client ->> client : 遷移先=ホーム画面
-    client ->> user : userIdを表示
-  else メアドが未登録
-    server ->> server : userIdを新規採番
-    server ->> property : ユーザ情報(※1)
-    server ->> sheet : ユーザ情報(※3)
-    server ->> client : ユーザ情報(※2)
-    deactivate server
-    client ->> client : 遷移先=新規登録画面
-  end
-  client ->> client : session/local更新、メニュー再描画、遷移先画面に遷移
-  deactivate client
 -->

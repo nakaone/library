@@ -594,61 +594,154 @@ sequenceDiagram
 
 ## ログイン要求
 
+- ユーザIDやCS/CPkey他、自分のユーザ情報は先行する「新規ユーザ登録」によりインスタンス変数に存在する前提
+
 ```mermaid
 sequenceDiagram
   autonumber
   actor user
-  participant caller
-  participant login
-  participant server
-  participant property
+  participant browser
+  participant client as authMenu
+  participant server as authServer
+  participant sheet
 
-  caller ->> login : 呼び出し(userId,処理名)
-  activate login
-  Note right of login : authMenu.login()
-  alt 鍵ペアが無効
-    login ->> login : 鍵ペア再生成＋sessionに保存
-  end
-
-  login ->> server : userId,CPkey(SPkey/--)
+  browser ->> client : userId/e-mail
+  activate client
+  Note right of client : login()
+  client ->> server : userId/e-mail,CPkey(SPkey/--)
   activate server
-  Note right of server : authServer.login1S()
-  server ->> property : userId
-  property ->> server  : ユーザ情報
-  server ->> server : 実行権限確認(※1)
-  alt 実行権限確認結果がOK or NG
-    server ->> login : OK or NG
-    login ->> caller : OK or NG
+  Note right of server : loginA()
+  sheet ->> server : ユーザ情報
+  server ->> server : ①ログイン確認
+  alt ログインOK
+    server ->> client : ユーザ情報
+    client ->> client : ②ユーザ情報更新
+    client ->> browser : ホーム画面表示
+  else ログインNG
+    rect rgba(0, 255, 255, 0.1)
+      server ->> server : パスコード生成
+      server ->> sheet : パスコード
+      server ->> user : パスコード連絡メール
+      server ->> client : ログインNG
+      deactivate server
+      client ->> user : パスコード入力ダイアログ
+      user ->> client : パスコード
+      client ->> server : パスコード
+      activate server
+      Note right of server : loginB()
+      sheet ->> server : ユーザ情報
+      server ->> server : ③パスコード検証
+      server ->> sheet : 検証結果
+      alt 検証OK
+        server ->> client : ユーザ情報
+        client ->> client : ②ユーザ情報更新
+        client ->> browser : ホーム画面表示
+      else 検証NG
+        server ->> client : 検証NG通知
+        deactivate server
+        client ->> browser : エラーメッセージ
+      end
+      deactivate client
+    end
   end
-
-  server ->> server : パスコード・要求ID生成(※2)
-  server ->> property : パスコード,要求ID,要求時刻
-  server ->> user : パスコード連絡メール
-  server ->> login : OK＋要求ID
-  deactivate server
-  login ->> user : パスコード入力ダイアログ
-
-  user ->> login : パスコード入力
-  login ->> server : userId,パスコード＋要求ID(CS/SP)
-  activate server
-  Note right of server : authServer.login2S()
-  server ->> property : userId
-  property ->> server : ユーザ情報
-  server ->> server : パスコード検証(※3)
-  server ->> property : 検証結果記録
-  server ->> login : OK or NG
-  deactivate server
-  login ->> caller : OK or NG
-  deactivate login
 ```
 
+- ①ログイン確認 : 以下の全てを満たす場合はOK
+  - userIdまたはe-mailが登録済
+  - 復号化したCPkeyがシート上のCPkeyと一致
+- ②ユーザ情報更新
+  1. authMenuインスタンス変数/sessionStorageのユーザ情報を更新
+  1. メニューを再描画(genNavi()の実行)
+- ③パスコード検証
+
+## 操作要求
+
+ユーザ情報の編集や候補者リストの作成等、シートの操作(CRUD)は管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
+例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
+
+userは要求時に操作名を指定し、その実行結果を受け取る。
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant browser
+  participant client as authMenu
+  participant server as authServer
+  participant sheet
+
+  user ->> browser : パラメータ入力、要求
+  activate browser
+  Note right of browser : editUserInfo()等
+  browser ->> client : 操作名
+  activate client
+  Note right of client : request()
+  alt requestの引数がnull
+    client ->> browser : 自ユーザ情報
+    browser ->> user : ユーザ情報編集画面表示、終了
+  end
+
+  client ->> client : 要求ID生成
+  client ->> server : userId,CPkey(SPkey/--),要求ID,要求日時
+  activate server
+  Note right of server : login1S()
+  sheet ->> server : ユーザ情報
+  server ->> server : 実行権限確認(※1)
+  alt 確認結果=NG
+    server ->> client : エラー
+    client ->> browser : エラー
+    browser ->> user : エラー表示して終了
+  end
+  rect rgba(0, 255, 255, 0.1)
+    alt 確認結果=要確認
+      server ->> server : パスコード生成(※2)
+      server ->> sheet : パスコード,要求ID,要求時刻
+      server ->> user : パスコード連絡メール
+      server ->> client : OK＋要求ID
+      deactivate server
+
+      client ->> user : パスコード入力ダイアログ
+      user ->> client : パスコード入力
+      client ->> server : userId,パスコード＋要求ID(CS/SP)
+      activate server
+      Note right of server : login2S()
+      sheet ->> server : ユーザ情報
+      server ->> server : パスコード検証(※3)
+      alt 検証結果NG
+        server ->> client : NG
+        client ->> browser : エラー
+        browser ->> user : エラー表示して終了
+      end
+    end
+  end
+  server ->> sheet : 検証結果記録(含、要求ID)
+  server ->> client : OK
+  deactivate server
+  client ->> server : SQL,要求ID
+  activate server
+  Note right of server : operation(操作名)
+  sheet ->> server : ユーザ情報
+  server ->> server : 要求ID検証
+  server ->> sheet  : SQLの実行
+  server ->> client : 処理結果(SSkey/CPkey)
+  deactivate server
+  client ->> client : 復号＋署名検証
+  client ->> browser : 処理結果
+  deactivate client
+  browser ->> browser : 処理結果表示画面生成
+  browser ->> user : 処理結果表示画面
+  deactivate browser
+```
+
+- 「操作要求」には新規ユーザ登録からの`authMenu.request()`呼出を含む
+- 要求ID検証 : 要求IDが直近の検証結果であること、OKと判断されていること
 - ※1 : 実行権限確認<br>
   | 実行権限 | CPkey | 凍結 | 結論 |
   | :-- | :-- | :-- | :-- |
   | 無し | — | — | NG (no permission) |
   | 有り | 有効 | — | OK |
   | 有り | 無効 | true | NG (lockout) |
-  | 有り | 無効 | false | 以降の処理を実施 |
+  | 有り | 無効 | false | 要確認(confirm) |
   - 実行権限 : authServer内関数毎の所要権限 & ユーザ権限 > 0 ? 有り : 無し
   - CPkey : ① and ② ? 有効 : 無効<br>
   ①送られてきたCPkeyがユーザ毎のプロパティサービスに保存されたCPkeyと一致<br>
@@ -666,65 +759,21 @@ sequenceDiagram
 - パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
   例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
 
-## ユーザ情報の参照・編集
-
-シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
-例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
-
-userは要求時に操作名を指定し、その実行結果を受け取る。
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant server
-  participant property
-  participant sheet
-
-  user ->> client : 操作要求
-  activate client
-  client ->> client : ログイン要求
-  alt ログインNG
-    client ->> user : エラー
-  end
-  
-  client ->> server : ID,引数(CSkey/SPkey)
-  activate server
-  Note right of server : authServer.operation(xxx)
-  server ->> property : userId
-  property ->> server : ユーザ情報
-  server ->> server : 引数を復号
-  alt 復号不可
-    server ->> client : エラーメッセージ
-    client ->> user : ダイアログを出して終了
-  end
-
-  server ->> sheet : 操作名(xxx)に対応する関数呼び出し
-  sheet ->> server : 関数(xxx)の処理結果
-  server ->> client : 操作結果(SSkey/CPkey)
-  deactivate server
-  client ->> client : 復号＋署名検証、画面生成
-  client ->> user : 結果表示画面
-  deactivate client
-```
-
-シートの操作(CRUD)は権限と有効期間の確認が必要なため、以下のようなオブジェクト(ハッシュ)を管理者がソースに埋め込む(configとして定義する)ことで行う。
-
-```
-config.operations = {
-  lookup : {  // {string} 操作名
-    auth : 0, // {number} 操作を許可する権限フラグの論理和
-    from : null, // {string} 有効期間を設定する場合、開始日時文字列
-    to : null, // {string} 同、終了日時文字列
-    func: // {Arrow|Function} 操作を定義する関数
-      (data,id) => data.find(x => x.id === id),
-  },
-  list : {...},
-  update : {...},
-  ...
-}
-```
+- シートの操作(CRUD)は権限と有効期間の確認が必要なため、以下のようなオブジェクト(ハッシュ)を管理者がソースに埋め込む(configとして定義する)ことで行う。
+  ```
+  config.operations = {
+    lookup : {  // {string} 操作名
+      auth : 0, // {number} 操作を許可する権限フラグの論理和
+      from : null, // {string} 有効期間を設定する場合、開始日時文字列
+      to : null, // {string} 同、終了日時文字列
+      func: // {Arrow|Function} 操作を定義する関数
+        (data,id) => data.find(x => x.id === id),
+    },
+    list : {...},
+    update : {...},
+    ...
+  }
+  ```
 
 ## 権限設定、変更
 
@@ -2173,7 +2222,7 @@ td, .td {
 1. <a href="#ac0014">機能別処理フロー</a>
    1. <a href="#ac0015">新規ユーザ登録</a>
    1. <a href="#ac0016">ログイン要求</a>
-   1. <a href="#ac0017">ユーザ情報の参照・編集</a>
+   1. <a href="#ac0017">操作要求</a>
    1. <a href="#ac0018">権限設定、変更</a>
 1. <a href="#ac0019">フォルダ構成、ビルド手順</a>
 1. <a href="#ac0020">仕様(JSDoc)</a>
@@ -2743,61 +2792,157 @@ sequenceDiagram
 [先頭](#ac0000) > [機能別処理フロー](#ac0014) > ログイン要求
 
 
+- ユーザIDやCS/CPkey他、自分のユーザ情報は先行する「新規ユーザ登録」によりインスタンス変数に存在する前提
+
 ```mermaid
 sequenceDiagram
   autonumber
   actor user
-  participant caller
-  participant login
-  participant server
-  participant property
+  participant browser
+  participant client as authMenu
+  participant server as authServer
+  participant sheet
 
-  caller ->> login : 呼び出し(userId,処理名)
-  activate login
-  Note right of login : authMenu.login()
-  alt 鍵ペアが無効
-    login ->> login : 鍵ペア再生成＋sessionに保存
-  end
-
-  login ->> server : userId,CPkey(SPkey/--)
+  browser ->> client : userId/e-mail
+  activate client
+  Note right of client : login()
+  client ->> server : userId/e-mail,CPkey(SPkey/--)
   activate server
-  Note right of server : authServer.login1S()
-  server ->> property : userId
-  property ->> server  : ユーザ情報
-  server ->> server : 実行権限確認(※1)
-  alt 実行権限確認結果がOK or NG
-    server ->> login : OK or NG
-    login ->> caller : OK or NG
+  Note right of server : loginA()
+  sheet ->> server : ユーザ情報
+  server ->> server : ①ログイン確認
+  alt ログインOK
+    server ->> client : ユーザ情報
+    client ->> client : ②ユーザ情報更新
+    client ->> browser : ホーム画面表示
+  else ログインNG
+    rect rgba(0, 255, 255, 0.1)
+      server ->> server : パスコード生成
+      server ->> sheet : パスコード
+      server ->> user : パスコード連絡メール
+      server ->> client : ログインNG
+      deactivate server
+      client ->> user : パスコード入力ダイアログ
+      user ->> client : パスコード
+      client ->> server : パスコード
+      activate server
+      Note right of server : loginB()
+      sheet ->> server : ユーザ情報
+      server ->> server : ③パスコード検証
+      server ->> sheet : 検証結果
+      alt 検証OK
+        server ->> client : ユーザ情報
+        client ->> client : ②ユーザ情報更新
+        client ->> browser : ホーム画面表示
+      else 検証NG
+        server ->> client : 検証NG通知
+        deactivate server
+        client ->> browser : エラーメッセージ
+      end
+      deactivate client
+    end
   end
-
-  server ->> server : パスコード・要求ID生成(※2)
-  server ->> property : パスコード,要求ID,要求時刻
-  server ->> user : パスコード連絡メール
-  server ->> login : OK＋要求ID
-  deactivate server
-  login ->> user : パスコード入力ダイアログ
-
-  user ->> login : パスコード入力
-  login ->> server : userId,パスコード＋要求ID(CS/SP)
-  activate server
-  Note right of server : authServer.login2S()
-  server ->> property : userId
-  property ->> server : ユーザ情報
-  server ->> server : パスコード検証(※3)
-  server ->> property : 検証結果記録
-  server ->> login : OK or NG
-  deactivate server
-  login ->> caller : OK or NG
-  deactivate login
 ```
 
+- ①ログイン確認 : 以下の全てを満たす場合はOK
+  - userIdまたはe-mailが登録済
+  - 復号化したCPkeyがシート上のCPkeyと一致
+- ②ユーザ情報更新
+  1. authMenuインスタンス変数/sessionStorageのユーザ情報を更新
+  1. メニューを再描画(genNavi()の実行)
+- ③パスコード検証
+
+## 3.3 操作要求<a name="ac0017"></a>
+
+[先頭](#ac0000) > [機能別処理フロー](#ac0014) > 操作要求
+
+
+ユーザ情報の編集や候補者リストの作成等、シートの操作(CRUD)は管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
+例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
+
+userは要求時に操作名を指定し、その実行結果を受け取る。
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant browser
+  participant client as authMenu
+  participant server as authServer
+  participant sheet
+
+  user ->> browser : パラメータ入力、要求
+  activate browser
+  Note right of browser : editUserInfo()等
+  browser ->> client : 操作名
+  activate client
+  Note right of client : request()
+  alt requestの引数がnull
+    client ->> browser : 自ユーザ情報
+    browser ->> user : ユーザ情報編集画面表示、終了
+  end
+
+  client ->> client : 要求ID生成
+  client ->> server : userId,CPkey(SPkey/--),要求ID,要求日時
+  activate server
+  Note right of server : login1S()
+  sheet ->> server : ユーザ情報
+  server ->> server : 実行権限確認(※1)
+  alt 確認結果=NG
+    server ->> client : エラー
+    client ->> browser : エラー
+    browser ->> user : エラー表示して終了
+  end
+  rect rgba(0, 255, 255, 0.1)
+    alt 確認結果=要確認
+      server ->> server : パスコード生成(※2)
+      server ->> sheet : パスコード,要求ID,要求時刻
+      server ->> user : パスコード連絡メール
+      server ->> client : OK＋要求ID
+      deactivate server
+
+      client ->> user : パスコード入力ダイアログ
+      user ->> client : パスコード入力
+      client ->> server : userId,パスコード＋要求ID(CS/SP)
+      activate server
+      Note right of server : login2S()
+      sheet ->> server : ユーザ情報
+      server ->> server : パスコード検証(※3)
+      alt 検証結果NG
+        server ->> client : NG
+        client ->> browser : エラー
+        browser ->> user : エラー表示して終了
+      end
+    end
+  end
+  server ->> sheet : 検証結果記録(含、要求ID)
+  server ->> client : OK
+  deactivate server
+  client ->> server : SQL,要求ID
+  activate server
+  Note right of server : operation(操作名)
+  sheet ->> server : ユーザ情報
+  server ->> server : 要求ID検証
+  server ->> sheet  : SQLの実行
+  server ->> client : 処理結果(SSkey/CPkey)
+  deactivate server
+  client ->> client : 復号＋署名検証
+  client ->> browser : 処理結果
+  deactivate client
+  browser ->> browser : 処理結果表示画面生成
+  browser ->> user : 処理結果表示画面
+  deactivate browser
+```
+
+- 「操作要求」には新規ユーザ登録からの`authMenu.request()`呼出を含む
+- 要求ID検証 : 要求IDが直近の検証結果であること、OKと判断されていること
 - ※1 : 実行権限確認<br>
   | 実行権限 | CPkey | 凍結 | 結論 |
   | :-- | :-- | :-- | :-- |
   | 無し | — | — | NG (no permission) |
   | 有り | 有効 | — | OK |
   | 有り | 無効 | true | NG (lockout) |
-  | 有り | 無効 | false | 以降の処理を実施 |
+  | 有り | 無効 | false | 要確認(confirm) |
   - 実行権限 : authServer内関数毎の所要権限 & ユーザ権限 > 0 ? 有り : 無し
   - CPkey : ① and ② ? 有効 : 無効<br>
   ①送られてきたCPkeyがユーザ毎のプロパティサービスに保存されたCPkeyと一致<br>
@@ -2815,68 +2960,21 @@ sequenceDiagram
 - パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
   例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
 
-## 3.3 ユーザ情報の参照・編集<a name="ac0017"></a>
-
-[先頭](#ac0000) > [機能別処理フロー](#ac0014) > ユーザ情報の参照・編集
-
-
-シートの操作(CRUD)は、管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
-例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
-
-userは要求時に操作名を指定し、その実行結果を受け取る。
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant server
-  participant property
-  participant sheet
-
-  user ->> client : 操作要求
-  activate client
-  client ->> client : ログイン要求
-  alt ログインNG
-    client ->> user : エラー
-  end
-  
-  client ->> server : ID,引数(CSkey/SPkey)
-  activate server
-  Note right of server : authServer.operation(xxx)
-  server ->> property : userId
-  property ->> server : ユーザ情報
-  server ->> server : 引数を復号
-  alt 復号不可
-    server ->> client : エラーメッセージ
-    client ->> user : ダイアログを出して終了
-  end
-
-  server ->> sheet : 操作名(xxx)に対応する関数呼び出し
-  sheet ->> server : 関数(xxx)の処理結果
-  server ->> client : 操作結果(SSkey/CPkey)
-  deactivate server
-  client ->> client : 復号＋署名検証、画面生成
-  client ->> user : 結果表示画面
-  deactivate client
-```
-
-シートの操作(CRUD)は権限と有効期間の確認が必要なため、以下のようなオブジェクト(ハッシュ)を管理者がソースに埋め込む(configとして定義する)ことで行う。
-
-```
-config.operations = {
-  lookup : {  // {string} 操作名
-    auth : 0, // {number} 操作を許可する権限フラグの論理和
-    from : null, // {string} 有効期間を設定する場合、開始日時文字列
-    to : null, // {string} 同、終了日時文字列
-    func: // {Arrow|Function} 操作を定義する関数
-      (data,id) => data.find(x => x.id === id),
-  },
-  list : {...},
-  update : {...},
-  ...
-}
-```
+- シートの操作(CRUD)は権限と有効期間の確認が必要なため、以下のようなオブジェクト(ハッシュ)を管理者がソースに埋め込む(configとして定義する)ことで行う。
+  ```
+  config.operations = {
+    lookup : {  // {string} 操作名
+      auth : 0, // {number} 操作を許可する権限フラグの論理和
+      from : null, // {string} 有効期間を設定する場合、開始日時文字列
+      to : null, // {string} 同、終了日時文字列
+      func: // {Arrow|Function} 操作を定義する関数
+        (data,id) => data.find(x => x.id === id),
+    },
+    list : {...},
+    update : {...},
+    ...
+  }
+  ```
 
 ## 3.4 権限設定、変更<a name="ac0018"></a>
 
