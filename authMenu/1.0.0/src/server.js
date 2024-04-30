@@ -1,4 +1,9 @@
 /** サーバ側の認証処理を分岐させる
+ * 
+ * 1. ユーザID未定でも可能な処理(一般公開部分)
+ * 1. ユーザIDは必要だが、ログイン(RSA)は不要な処理
+ * 1. RSAキーが必要な処理
+ * 
  * @param {number} userId 
  * @param {string} func - 分岐先処理名
  * @param {string} arg - 分岐先処理に渡す引数オブジェクト
@@ -14,21 +19,25 @@ function authServer(userId=null,func=null,arg=null) {
     //::$src/server.setProperties.js::
 
     if( userId === null ){ // userIdが不要な処理
-      if( ['registMail'].find(x => x === func) ){
+      if( ['registMail','getUserInfo'].find(x => x === func) ){
         w.step = 1; // userId未定でも可能な処理 ⇒ 一般公開用
-        //::メールアドレスの登録::$src/server.registMail.js::
+        //:x:メールアドレスの登録::$src/server.registMail.js::
+        //::ユーザ情報・状態の取得::$src/server.getUserInfo.js::
       } else {
         w.step = 2; // 該当処理なし
         w.rv = null;
       }
     } else {  // userIdが必要な処理
-      if( ['login1S'].find(x => x === func) ){
+      if( ['sendPasscode'].find(x => x === func) ){
         w.step = 3; // ログインは不要な処理
         // ⇒ 参加者用メニュー(応募情報(自分の個人情報)修正を除く)
+        switch( func ){
+          case 'sendPasscode': w.step += ':sendPasscode';
+            //::$src/server.sendPasscode.js::
+            break;
+        }
 
-        //:x:$src/server.login1S.js::
-
-      } else if( ['login2S','operation'].find(x => x === func) ){
+      } else if( ['verifyPasscode','operation'].find(x => x === func) ){
         // ログインしないと操作不可の処理
         // ⇒ 応募情報修正、スタッフ用メニュー
 
@@ -36,13 +45,13 @@ function authServer(userId=null,func=null,arg=null) {
         //::$src/server.verifySignature.js::
 
         switch( func ){
-          case 'login2S': w.step = 4 + ':login2S';
-            //:x:$src/server.login2S.js::
+          case 'verifyPasscode': w.step += ':verifyPasscode';
+            //::$src/server.verifyPasscode.js::
+            break;
+          case 'operation': w.step += ':operation';
+            //::$src/server.operation.js::
             break;
           // 後略
-          //:x:$src/server.listAuth.js::
-          //:x:$src/server.changeAuth.js::
-          //:x:$src/server.operation.js::
         }
       } else {
         w.step = 5; // 該当処理なし
