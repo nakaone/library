@@ -29,15 +29,3 @@ showChildren(event){
   const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
   event.target.innerText = text;  
 }
-
-/** this.homeの内容に従って画面を切り替える */ 
-changeScreen(arg=null){
-  console.log(this.constructor.name+`.changeScreen start.`
-  + `\nthis.home=${stringify(this.home)}(${typeof this.home})`
-  + `\nthis.user.auth=${this.user.auth}`);
-  if( arg === null ){
-    // 変更先画面が無指定 => ホーム画面を表示
-    arg = typeof this.home === 'string' ? this.home : this.home[this.user.auth];
-  }
-  return changeScreen(arg);
-}

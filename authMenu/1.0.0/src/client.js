@@ -3,6 +3,7 @@ class authMenu {
   //::$src/client.setProperties.js::
   //::$src/client.storeUserInfo.js::
   //::$src/client.utilities.js::
+  //::$src/client.changeScreen.js::
 
   // ===================================
   // メニュー関係(旧BurgerMenu)

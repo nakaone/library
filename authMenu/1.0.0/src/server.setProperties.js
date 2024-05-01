@@ -8,6 +8,7 @@
  * 
  * 1. propertyName='authServer' {string}<br>
  *    プロパティサービスのキー名
+ * 1. passcodeDigits=6 {number} : パスコードの桁数
  * 1. loginRetryInterval=3,600,000(60分) {number}<br>
  *    前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
  * 1. numberOfLoginAttempts=3 {number}<br>
@@ -24,9 +25,12 @@
  *    主キーとなる項目名。主キーは数値で設定
  * 1. emailColumn='email' {string}<br>
  *    e-mailを格納するシート上の項目名
- * 1. passPhrase {string} : authServerのパスフレーズ
- * 1. SSkey {Object} : authServerの秘密鍵
- * 1. SPkey {string} : authServerの公開鍵
+ * 1. RSA {Object} : サーバ側RSAキー関連情報
+ *    1. passPhraseLength=16 {number} : authServerのパスフレーズの長さ
+ *    1. passPhrase {string} : authServerのパスフレーズ(自動生成)
+ *    1. bits=1024 {number} : RSAキーのビット長
+ *    1. SSkey {Object} : authServerの秘密鍵
+ *    1. SPkey {string} : authServerの公開鍵
  * 1. userIdStartNumber=1 : ユーザID(数値)の開始
  * 
  * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
@@ -49,11 +53,20 @@ w.func.setProperties = function(){
         masterSheet : 'master',
         primatyKeyColumn : 'userId',
         emailColumn : 'email',
-        passPhrase : createPassword(16),
+        RSA : {
+          passPhraseLength : 16,
+          bits: 1024,  
+        },
         userIdStartNumber : 1,
+        notificatePasscodeMail: {
+          subject: '[連絡] パスコード',
+          body: 'パスコードは以下の通りです。\n\n::passcode::',
+          options: {},
+        },
       };
-      w.prop.SSkey = cryptico.generateRSAKey(w.prop.passPhrase,1024);
-      w.prop.SPkey = cryptico.publicKeyString(w.prop.SSkey);
+      w.prop.RSA.passPhrase = createPassword(w.prop.RSA.passPhraseLength),
+      w.prop.RSA.SSkey = cryptico.generateRSAKey(w.prop.RSA.passPhrase,w.prop.RSA.bits);
+      w.prop.RSA.SPkey = cryptico.publicKeyString(w.prop.RSA.SSkey);
       // プロパティサービスを更新
       PropertiesService.getDocumentProperties().setProperties(w.prop);
     }

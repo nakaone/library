@@ -43,6 +43,7 @@ function authServer(userId=null,func=null,arg=null) {
 
         w.step = 4; // クライアント側の署名検証＋引数のオブジェクト化
         //::$src/server.verifySignature.js::
+        // verifySignatureの戻り値はw.rで受けるので、後続処理に引数として渡す
 
         switch( func ){
           case 'verifyPasscode': w.step += ':verifyPasscode';

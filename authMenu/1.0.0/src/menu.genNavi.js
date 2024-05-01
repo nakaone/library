@@ -8,9 +8,10 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // navi領域をクリア
+    v.step = 1; // navi領域および画面・要素対応マップをクリア
     if( depth === 0 ){
       navi.innerHTML = '';
+      this.screenAttr = {};
     }
 
     // 子要素を順次走査し、data-menuを持つ要素をnaviに追加
@@ -94,6 +95,9 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
       v.step = 5.4; // navi領域にliを追加
       v.r = createElement(v.li,navi);
       if( v.r instanceof Error ) throw v.r;
+
+      v.step = 5.5; // 画面・要素対応マップに登録
+      this.screenAttr[v.name] = v.attr;
 
       v.step = 5.5; // 子要素にdata-menuが存在する場合、再帰呼出
       if( v.hasChild ){

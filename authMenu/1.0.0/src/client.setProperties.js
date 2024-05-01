@@ -38,6 +38,8 @@
  * - RSAkeyLength=1024 {number} : 鍵ペアのキー長
  * - passPhraseLength=16 {number} : 鍵ペア生成の際のパスフレーズ長
  * - user={} {object} ユーザ情報オブジェクト。詳細はstoreUserInfo()で設定
+ * - screenAttr={} {Object.<string, object>}<br>
+ *   メニューに登録した画面名とdata-menu属性(オブジェクト)の対応
  */
 #setProperties(arg){
   const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};

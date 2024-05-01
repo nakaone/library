@@ -32,8 +32,6 @@ select(opt={}){
   try {
 
     v.step = 1; // 既定値の設定
-    //if( !opt.hasOwnProperty('where') )
-    //  opt.where = () => true;
     if( opt.hasOwnProperty('where') ){
       if( typeof opt.where === 'string' )
         opt.where = new Function(opt.where);
@@ -42,7 +40,6 @@ select(opt={}){
     }
     if( !opt.hasOwnProperty('orderBy') )
       opt.orderBy = [];
-    console.log(`l.478 opt.where [${typeof opt.where}] = '${opt.where.toString()}'`)
 
     v.step = 2; // 対象となるレコードを抽出
     for( v.i=0 ; v.i<this.data.length ; v.i++ ){

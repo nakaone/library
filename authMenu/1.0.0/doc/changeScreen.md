@@ -13,7 +13,7 @@ sequenceDiagram
   activate client
   Note right of client : changeScreen()
   alt 権限あり(allow&auth>0)
-    client ->> browser : 要求画面
+    client ->> browser : 要求画面表示後、終了
   else 権限なし(allow&auth=0)
     alt メアド未定(this.email===null)
       client ->> user : ダイアログ
@@ -33,9 +33,11 @@ sequenceDiagram
     server ->> client : 存否確認結果＋ユーザ情報
     deactivate server
     client ->> client : ②ユーザ情報更新
-    alt CP一致 and CP有効
-      client ->> browser : 要求画面
-    else CP不一致 or CP無効
+    alt 権限なし
+      client ->> browser : エラー表示後、終了
+    else 権限あり and CP一致 and CP有効
+      client ->> browser : 要求画面表示後、終了
+    else 権限あり and (CP不一致 or CP無効)
 
       client ->> client : 鍵ペア再生成
       client ->> server : userId,CPkey,updated
@@ -45,7 +47,7 @@ sequenceDiagram
       server ->> server : ④パスコード生成
       server ->> sheet : ⑤trial,CPkey,updated
       server ->> user : パスコード連絡メール
-      server ->> client : メール送付通知,SPkey
+      server ->> client : SPkey
       deactivate server
 
       client ->> client : ②ユーザ情報更新(CP,SP)

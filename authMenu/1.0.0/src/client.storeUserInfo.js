@@ -105,7 +105,7 @@ storeUserInfo(arg={}){
     v.rv = Object.assign(v.html,v.local,v.session,v.user,arg);
 
     v.step = 2.2; // 鍵ペア・秘密鍵が存在しなければ作成
-    if( v.rv.CSkey === null ){
+    if( v.rv.passPhrase === null || v.rv.CSkey === null ){
       if( v.rv.passPhrase === null ){
         v.rv.passPhrase = createPassword(this.passPhraseLength);
         v.rv.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
