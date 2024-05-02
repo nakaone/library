@@ -1,5 +1,11 @@
 function authServerTest(){
-  PropertiesService.getDocumentProperties().deleteAllProperties();
+  const v = {};
+  v.constructor = function(){
+    PropertiesService.getDocumentProperties().deleteAllProperties();
+    v.rv = authServer();
+    console.log(`v.rv=${stringify(v.rv)}\nproperties=${stringify(PropertiesService.getDocumentProperties().getProperties())}`);
+  }
+  v.constructor();
   //const p = PropertiesService.getDocumentProperties().getProperties();
   //console.log(p);
   /*
@@ -10,7 +16,6 @@ function authServerTest(){
   sessionStorage
   properties.authServer(特にmap)
   properties.userId
-  */
 
   const v = {data:[
     //[null,'registMail','invalid'],
@@ -20,4 +25,5 @@ function authServerTest(){
     v.rv = authServer(...v.data[v.i]);
     console.log(`${v.i} v.rv=${stringify(v.rv)}`);
   }
+  */
 }
