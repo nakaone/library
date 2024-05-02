@@ -51,6 +51,7 @@ find . -name '.DS_Store' -type f -ls -delete
 # 1.4 使用するクラスを最新化
 echo "`date +"%T"` - camp2024: step.1.4 start."
 $lib/authMenu/1.0.0/build.sh
+$lib/SingleTable/1.2.0/build.sh
 
 # 1.5 関数定義
 echo "`date +"%T"` - camp2024: step.1.5 start."

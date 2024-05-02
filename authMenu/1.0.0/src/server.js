@@ -50,7 +50,7 @@ function authServer(userId=null,func=null,arg=null) {
             //::$src/server.verifyPasscode.js::
             break;
           case 'operation': w.step += ':operation';
-            //::$src/server.operation.js::
+            //:x:$src/server.operation.js::
             break;
           // 後略
         }

@@ -462,18 +462,46 @@ window.addEventListener('DOMContentLoaded',() => {
 
 ## 新規ユーザ登録
 
-新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
+- 新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
 
 ```mermaid
 sequenceDiagram
   autonumber
   actor user
-  participant browser
   participant storage
   participant client as authMenu
   participant server as authServer
   participant sheet
 
+  user ->> client : 新規登録要求
+  activate client
+  Note right of client : registMail()
+  alt SPkey不在
+    client ->> user : ダイアログ
+    user ->> client : e-mail
+    client ->> server : e-mail,CPkey,updated
+
+    sheet ->> server : ユーザ情報
+    server ->> server : ①登録状況確認
+    alt 登録済
+      server ->> sheet : CPkey,updated
+    else 未登録
+      server ->> server : 新規ユーザIDを採番
+      server ->> sheet : 新規ユーザとして追加
+    end
+    server ->> client : ユーザ情報
+    client ->> client : ②クライアント側更新
+  end
+  client ->> user : ユーザ情報編集画面
+  deactivate client
+```
+
+- ①登録状況確認
+- ②クライアント側更新
+  - storeUserInfo()でインスタンス変数,sessionStorageの情報を更新
+  - 返されたユーザ権限に基づきメニュー再描画
+
+<!--
   user ->> browser : メアド
   activate browser
   Note right of browser : enterIdentifyKey()
@@ -509,7 +537,7 @@ sequenceDiagram
   end
   browser ->> user : 遷移先画面
   deactivate browser
-```
+
 
 - CPkeyは有効期限にかかわらず送付され、server側で更新する<br>
   - 同一userIdで異なる機器からログインする場合を想定
@@ -553,48 +581,13 @@ sequenceDiagram
 - 「検索結果=既存」の場合、ユーザ情報編集画面の表示も検討したが、なりすましでもe-mail入力で個人情報が表示されることになるので不適切と判断。
 - 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
 
-<!--
-- メアド入力欄は募集要項の一部とし、userId(受付番号)がlocalStrageに存在する場合は表示しない
-
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant server
-  participant property
-  participant sheet
-
-  user ->> client : メアド
-  activate client
-  Note right of client : authMenu.registMail()
-  alt userId保存済
-    client ->> user : userIdを表示して終了
-  end
-  client ->> client : 鍵ペア生成
-  client ->> server : メアド＋CPkey
-  activate server
-  Note right of server : authServer.registMail()
-  property ->> server : DocumentProperties
-  alt メアドが登録済
-    server ->> property : ユーザ情報(※1)
-    server ->> client : ユーザ情報(※2)
-    client ->> client : 遷移先=ホーム画面
-    client ->> user : userIdを表示
-  else メアドが未登録
-    server ->> server : userIdを新規採番
-    server ->> property : ユーザ情報(※1)
-    server ->> sheet : ユーザ情報(※3)
-    server ->> client : ユーザ情報(※2)
-    deactivate server
-    client ->> client : 遷移先=新規登録画面
-  end
-  client ->> client : session/local更新、メニュー再描画、遷移先画面に遷移
-  deactivate client
 --＞
 
 ## ログイン要求
 
-- ユーザIDやCS/CPkey他、自分のユーザ情報は先行する「新規ユーザ登録」によりインスタンス変数に存在する前提
+- 新規ユーザ登録は「サーバ側に登録されていない」ことを確認の上行うので、ログイン要求の一部になる。
+- ユーザIDやCS/CPkey他の自ユーザ情報、およびSPkeyはauthClient.constructor()で初期値を設定し、先行する「新規ユーザ登録」で修正済情報がインスタンス変数に存在する前提
+
 
 ```mermaid
 sequenceDiagram
@@ -605,54 +598,132 @@ sequenceDiagram
   participant server as authServer
   participant sheet
 
-  browser ->> client : userId/e-mail
+  browser ->> client : 呼び出し
   activate client
   Note right of client : login()
-  client ->> server : userId/e-mail,CPkey(SPkey/--)
+  alt メアド未定(this.email===null)
+    client ->> user : ダイアログ
+    user ->> client : e-mail
+  end
+
+  client ->> server : e-mail,CPkey
   activate server
-  Note right of server : loginA()
+  Note right of server : getUserStatus()
   sheet ->> server : ユーザ情報
-  server ->> server : ①ログイン確認
-  alt ログインOK
-    server ->> client : ユーザ情報
-    client ->> client : ②ユーザ情報更新
+  server ->> server : ①ユーザ情報存否確認
+  alt CPkey不一致
+    server ->> sheet : CPkey更新
+  end
+  server ->> client : 存否確認結果＋ユーザ情報
+  deactivate server
+  client ->> client : ②ユーザ情報更新
+  alt 登録済 and CPkey一致
     client ->> browser : ホーム画面表示
-  else ログインNG
-    rect rgba(0, 255, 255, 0.1)
-      server ->> server : パスコード生成
-      server ->> sheet : パスコード
-      server ->> user : パスコード連絡メール
-      server ->> client : ログインNG
-      deactivate server
-      client ->> user : パスコード入力ダイアログ
-      user ->> client : パスコード
-      client ->> server : パスコード
+  else 未登録 or CPkey不一致
+
+    alt 未登録
+      client ->> server : e-mail,CPkey(平文)
       activate server
-      Note right of server : loginB()
+      Note right of server : registMail()
       sheet ->> server : ユーザ情報
-      server ->> server : ③パスコード検証
-      server ->> sheet : 検証結果
-      alt 検証OK
-        server ->> client : ユーザ情報
-        client ->> client : ②ユーザ情報更新
-        client ->> browser : ホーム画面表示
-      else 検証NG
-        server ->> client : 検証NG通知
-        deactivate server
-        client ->> browser : エラーメッセージ
-      end
-      deactivate client
+      server ->> server : ③新規ユーザ情報作成
+      server ->> sheet : 新規ユーザ情報
+      server ->> client : 新規ユーザ情報
+      deactivate server
+      client ->> client : ②ユーザ情報更新
+    end
+
+    client ->> server : userId
+    activate server
+    Note right of server : sendPasscode()
+    sheet ->> server : ユーザ情報
+    server ->> server : ④パスコード生成
+    server ->> sheet : ⑤trial更新
+    server ->> user : パスコード連絡メール
+    server ->> client : メール送付通知
+    deactivate server
+
+    client ->> user : ダイアログ
+    user ->> client : パスコード
+
+    client ->> server : userId,パスコード
+    activate server
+    Note right of server : verifyPasscode()
+    sheet ->> server : ユーザ情報
+    server ->> server : ⑥パスコード検証
+    server ->> sheet : ⑤trial更新(検証結果)
+    alt 検証OK
+      server ->> client : ユーザ情報
+      client ->> client : ②ユーザ情報更新
+      client ->> browser : ホーム画面表示
+    else 検証NG
+      server ->> client : 検証NG通知
+      deactivate server
+      client ->> browser : エラーメッセージ
     end
   end
+  deactivate client
 ```
 
-- ①ログイン確認 : 以下の全てを満たす場合はOK
-  - userIdまたはe-mailが登録済
-  - 復号化したCPkeyがシート上のCPkeyと一致
-- ②ユーザ情報更新
+- 応募締切等、新規要求ができる期間の制限は、client側でも行う(authMenuの有効期間設定を想定)
+- メアドは形式チェックのみ行い、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
+- ①ユーザ情報存否確認
+  - e-mailが登録済 ? 登録済 : 未登録
+  - 復号化したCPkeyがシート上のCPkeyと一致 ? CPkey一致 : CPkey不一致
+- CPkeyは有効期限にかかわらず送付され、server側で更新する<br>
+  - 同一userIdで異なる機器からログインする場合を想定
+  - 将来的に有効期間を設定した場合、強制更新ならその検証も省略可能
+- ②ユーザ情報更新(storeUserInfo)
   1. authMenuインスタンス変数/sessionStorageのユーザ情報を更新
   1. メニューを再描画(genNavi()の実行)
-- ③パスコード検証
+- ※1(シート保存),※2(SV->CL)の「ユーザ情報」オブジェクトのメンバは以下の通り。
+  | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
+  | :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
+  | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
+  | created | string | ユーザID新規登録時刻(日時文字列) | × | × | × | × | ◎ |
+  | email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
+  | auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
+  | passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | × | × | × |
+  | CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
+  | CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
+  | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
+  | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
+  | isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
+  | trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
+- 新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
+- ③新規ユーザ情報作成
+- ④パスコード生成
+  - 実行権限の確認
+    - CPkey : ① and ② ? 有効 : 無効<br>
+      ①送られてきたCPkeyがユーザ毎のプロパティサービスに保存されたCPkeyと一致<br>
+      ②ユーザ毎のプロパティサービスに保存されたCPkeyが有効期限内
+    - 凍結 : 前回ログイン失敗(3回連続失敗)から一定時間内 ? true : false
+- ⑤trial更新 : trialは以下のメンバを持つObjectをJSON形式でシート上で保存
+  | 名称 | 属性 | 内容 | I/O |
+  | :-- | :-- | :-- | :-- |
+  | startAt | number | 試行開始日時(UNIX時刻) | × |
+  | passcode | number | パスコード(原則数値6桁) | × |
+  | log | object[] | 試行の記録。unshiftで先頭を最新にする | × |
+  | <span style="margin-left:1rem">timestamp</span> | number | 試行日時(UNIX時刻) | × |
+  | <span style="margin-left:1rem">entered</span> | number | 入力されたパスコード | × |
+  | <span style="margin-left:1rem">result</span> | boolean | パスコードと入力値の比較結果(true:OK) | × |
+  | <span style="margin-left:1rem">status</span> | string | NGの場合の理由。'OK':試行OK | × |
+  | endAt | number | 試行終了日時(UNIX時刻) | × |
+  | result | boolean | 試行の結果(true:OK) | ◎ |
+  | unfreeze | number | ログイン連続失敗後、凍結解除される日時(UNIX時刻) | ◎ |
+  - loc : localStorage
+  - ses : sessionStorage
+  - mem : authMenuインスタンス変数(メンバ)
+  - I/O : authServer -> authMenuへ送られるオブジェクト
+  - sht : シート
+- ⑥パスコード検証 : 「パスコード検証」は復号・署名確認の上、以下の点をチェックする
+  - 復号可能且つ署名が一致
+  - 送付されたパスコード・要求IDがプロパティサービスのそれと一致
+  - 試行回数が一定数以下(既定値3回)
+  - パスコード生成から一定時間内(既定値15分)
+  - ログイン可能な権限
+- パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
+  例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
 
 ## 操作要求
 
@@ -824,13 +895,12 @@ sequenceDiagram
 
 * [authMenu](#authMenu)
     * [new authMenu(arg)](#new_authMenu_new)
+    * [.changeScreen(screenName)](#authMenu+changeScreen) ⇒ <code>void</code>
+    * [.genNavi(wrapper, navi)](#authMenu+genNavi) ⇒ <code>null</code> \| <code>Error</code>
     * [.storeUserInfo(arg)](#authMenu+storeUserInfo) ⇒ <code>void</code>
     * [.doGAS()](#authMenu+doGAS)
     * [.toggle()](#authMenu+toggle)
     * [.showChildren()](#authMenu+showChildren)
-    * [.changeScreen()](#authMenu+changeScreen)
-    * [.genNavi(wrapper, navi)](#authMenu+genNavi) ⇒ <code>null</code> \| <code>Error</code>
-    * [.registMail(email)](#authMenu+registMail) ⇒ <code>Object</code>
 
 <a name="new_authMenu_new"></a>
 
@@ -839,6 +909,29 @@ sequenceDiagram
 | Param | Type |
 | --- | --- |
 | arg | <code>Object</code> | 
+
+<a name="authMenu+changeScreen"></a>
+
+## authMenu.changeScreen(screenName) ⇒ <code>void</code>
+適宜認証を行った上で画面を切り替える
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| screenName | <code>string</code> | <code>null</code> | 切替先の画面名 |
+
+<a name="authMenu+genNavi"></a>
+
+## authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>
+親要素を走査してナビゲーションを作成
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| wrapper | <code>HTMLElement</code> | body等の親要素。 |
+| navi | <code>HTMLElement</code> | nav等のナビゲーション領域 |
 
 <a name="authMenu+storeUserInfo"></a>
 
@@ -932,33 +1025,11 @@ authMenu用の既定値をセットしてdoGASを呼び出し
 ## authMenu.showChildren()
 ブランチの下位階層メニュー表示/非表示切り替え
 
-**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
-<a name="authMenu+changeScreen"></a>
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)
 
-## authMenu.changeScreen()
-this.homeの内容に従って画面を切り替える
-
-**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
-<a name="authMenu+genNavi"></a>
-
-## authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>
-親要素を走査してナビゲーションを作成
-
-**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| wrapper | <code>HTMLElement</code> | body等の親要素。 |
-| navi | <code>HTMLElement</code> | nav等のナビゲーション領域 |
-
-<a name="authMenu+registMail"></a>
-
-## authMenu.registMail(email) ⇒ <code>Object</code>
-**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| email | <code>string</code> | 入力されたメールアドレス |
+1. ユーザID未定でも可能な処理(一般公開部分)
+1. ユーザIDは必要だが、ログイン(RSA)は不要な処理
+1. RSAキーが必要な処理
 
 **Kind**: global function  
 **Returns**: <code>Object</code> - 分岐先処理での処理結果  
@@ -1117,6 +1188,359 @@ constructor(arg={}){
     return e;
   }
 }
+/** 適宜認証を行った上で画面を切り替える
+ * @param {string} screenName=null - 切替先の画面名
+ * @returns {void}
+ */
+async changeScreen(screenName=null){
+  const v = {whois:this.constructor.name+'.changeScreen',rv:null,step:0};
+  console.log(`${v.whois} start.\nscreenName=${screenName}(${typeof screenName})`);
+  try {
+
+    v.step = 1; // 権限と開示範囲の比較
+    v.step = 1.1; // 対象画面が未指定の場合、特定
+    if( screenName === null ){
+      console.log(this.constructor.name+`.changeScreen start.`
+      + `\nthis.home=${stringify(this.home)}(${typeof this.home})`
+      + `\nthis.user.auth=${this.user.auth}`);
+      // 変更先画面が無指定 => ホーム画面を表示
+      screenName = typeof this.home === 'string' ? this.home : this.home[this.user.auth];
+    }
+
+    if ( (this.screenAttr[screenName].allow & this.auth) > 0 ){
+      v.step = 2; // 指定画面の表示、終了処理
+      console.log(`${v.whois} normal end.`);
+      return changeScreen(screenName);
+    }
+  
+    // 以降、対象画面の開示権限が無い場合の処理
+    v.step = 3; // メアド未登録の場合
+    if( !this.user.hasOwnProperty('email') || !this.user.email ){
+      v.step = 3.1; // ダイアログでメアドを入力
+      v.email = window.prompt('メールアドレスを入力してください');
+      if( v.email === null ){
+        v.step = 3.2; // 入力キャンセルなら即終了
+        console.log(`${v.whois}: email address enter canceled (step ${v.step}).`);
+        return v.rv;
+      } else {
+        v.step = 3.3; // メアドの形式チェック
+        if( checkFormat(v.email,'email' ) === false ){
+          alert('メールアドレスの形式が不適切です');
+          console.log(`${v.whois}: invalid email address (step ${v.step}).`);
+          return v.rv;
+        }
+        v.step = 3.4; // ユーザ情報更新
+        v.r = this.storeUserInfo({email:v.email});
+        if( v.r instanceof Error ) throw v.r;
+      }
+    }
+  
+    v.step = 4.1; // ユーザ情報の取得。ユーザ不在なら新規登録
+    //【getUserInfoの引数・戻り値】
+    // @param {Object} arg
+    // @param {string} arg.email - 要求があったユーザのe-mail
+    // @param {string} arg.CPkey - 要求があったユーザの公開鍵
+    // @returns {object} 以下のメンバを持つオブジェクト
+    // 1. SPkey {string} - サーバ側公開鍵
+    // 1. isExist {boolean} - 既存メアドならtrue、新規登録ならfalse
+    // 1. isEqual {boolean} - 引数のCPkeyがシート上のCPkeyと一致するならtrue
+    // 1. isExpired {boolean} - CPkeyが有効期限切れならtrue
+    // 1. data {object} - 該当ユーザのシート上のオブジェクト
+    v.r = await this.doGAS('getUserInfo',{
+      email: this.user.email,
+      CPkey: this.user.CPkey,
+      updated: this.user.updated,
+    });
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 4.2; // ユーザ情報の更新
+    v.r = this.storeUserInfo(Object.assign(v.r.data,{SPkey:v.r.SPkey}));
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 5; // 権限が無い ⇒ エラーを表示して終了
+    if( (v.r.data.auth & w.screenAttr.auth) === 0 ){
+      alert(`指定画面(${screenName})の表示権限がありません。`);
+      console.log(`${v.whois}: no authority (step ${v.step}).`);
+      return v.rv;
+    }
+
+    v.step = 6; // 権限あり and CP一致 and CP有効 ⇒ 指定画面の表示、終了処理
+    if( ((v.r.data.auth & w.screenAttr.auth) > 0) && v.r.isEqual && v.r.isExpired ){
+      console.log(`${v.whois} normal end.`);
+      return changeScreen(screenName);
+    }
+
+    // 以降【権限あり and (CP不一致 or CP無効) ⇒ パスコード入力】
+    v.step = 7.1; // 鍵ペア再生成
+    this.user.passphrase = null;
+    v.r = this.storeUserInfo(v.r.data);
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 7.21; // パスコード通知メールの発行要求
+    //【sendPasscodeの引数・戻り値】
+    // @param {Object} arg
+    // @param {number} arg.userId - ユーザID
+    // @param {string} arg.CPkey - 要求があったユーザの公開鍵
+    // @param {string} arg.updated - CPkey生成・更新日時文字列
+    // @returns {object} 以下のメンバを持つオブジェクト
+    // - result {number}
+    //   - 0 : 成功(パスコード通知メールを送信)
+    //   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
+    //   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
+    // - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
+    // - SPkey=null {Object} サーバ側公開鍵
+    // - loginGraceTime=900,000(15分) {number}<br>
+    //   パスコード生成からログインまでの猶予時間(ミリ秒)
+    // - remainRetryInterval {number} 再挑戦可能になるまでの時間(ミリ秒)
+    // - passcodeDigits=6 {number} : パスコードの桁数
+    v.r = await this.doGAS('sendPasscode',{
+      userId: this.user.userId,
+      CPkey: this.user.CPkey,
+      updated: this.user.updated,
+    });
+    if( v.r instanceof Error ) throw v.r;
+    v.step = 7.22; // エラーメッセージの表示
+    if( v.r.result > 0 ){
+      switch(v.r.result){
+        case 1: v.msg = 'パスコード生成から入力までの時間が長すぎ、'
+          + '\n現在のパスコードが無効になりました。'
+          + '\n再度メニューを選択すれば、パスコードが再発行されます。'
+          + `\n再発行後、${Math.ceil(v.r.loginGraceTime/60000)}分以内にパスコードを入力してください。`;
+          break;
+        case 2: v.msg = '前回のログイン連続失敗から所定時間を経過していません。'
+          + `約${Math.ceil(v.r.remainRetryInterval/60000)}分後、再度ログインしてください。`;
+          break;
+      }
+      console.log(`${v.whois}: rejected by sendPasscode (step ${v.step}).`);
+      return v.rv;
+    }
+    v.step = 7.23; // ユーザ情報更新
+    v.a = this.storeUserInfo({email:v.email});
+    if( v.a instanceof Error ) throw v.a;
+
+    v.step = 7.3; // パスコード入力
+    v.passcode = window.prompt(`メールに記載されたパスコードを入力してください`
+      + `(数値${v.r.passcodeDigits}桁)`
+      + `\nパスコードを再発行する場合は"-1"を入力してください。`);
+    if( v.passcode === null ){
+      v.step = 7.31; // 入力キャンセルなら即終了
+      console.log(`${v.whois}: passcode enter canceled (step ${v.step}).`);
+      return v.rv;
+    } else {
+      if( isNaN(v.passcode) ){
+        v.step = 7.32; // パスコードの形式チェック
+        alert('パスコードの形式が不適切です');
+        console.log(`${v.whois}: invalid passcode (step ${v.step}).`);
+        return v.rv;
+      } else {
+        v.step = 7.33; // パスコードの数値化
+        v.passcode = Number(v.passcode);
+        if( v.passcode < 0 ){
+          v.step = 7.34; // 再発行要求
+          // パスコード再発行はパスコード入力ダイアログに負の数を入力し、
+          // changeScreenからsendPasscodeを再度呼び出すことで行う
+          v.r = this.changeScreen(screenName);
+          if( v.r instanceof Error ) throw v.r;
+          return v.r;
+        }
+      }
+    }
+
+    v.step = 7.41; // パスコード検証要求
+    //【verifyPasscodeの引数・戻り値】
+    v.encrypt = cryptico.encrypt(
+      ('0'.repeat(v.r.passcodeDigits) + String(v.passcode)).slice(-v.rpasscodeDigits),
+      this.SPkey,this.CSkey);
+    v.r = await this.doGAS('verifyPasscode',{
+      userId: this.user.userId,
+      passcode: v.encrypt,
+    });
+    if( v.r instanceof Error ) throw v.r;
+
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`
+    + `\narg=${stringify(arg)}`;  // 引数
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+/** 親要素を走査してナビゲーションを作成
+ * @param {HTMLElement} wrapper - body等の親要素。
+ * @param {HTMLElement} navi - nav等のナビゲーション領域
+ * @returns {null|Error}
+ */
+genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
+  const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // navi領域および画面・要素対応マップをクリア
+    if( depth === 0 ){
+      navi.innerHTML = '';
+      this.screenAttr = {};
+    }
+
+    // 子要素を順次走査し、data-menuを持つ要素をnaviに追加
+    for( v.i=0 ; v.i<wrapper.childElementCount ; v.i++ ){
+      v.d = wrapper.children[v.i];
+
+      // wrapper内のdata-menu属性を持つ要素に対する処理
+      v.step = 2.1; // data-menuを持たない要素はスキップ
+      v.attr = this.#objectize(v.d.getAttribute(`data-menu`));
+      if( v.attr instanceof Error ) throw v.attr;
+      if( v.attr === null ) continue;
+
+      v.step = 2.2; // screenクラスが無ければ追加
+      v.class = v.d.className.match(/screen/);
+      if( !v.class ) v.d.classList.add('screen'); 
+      v.step = 2.3; // nameが無ければ追加
+      v.name = v.d.getAttribute('name');
+      if( !v.name ){
+        v.name = v.attr.id;
+        v.d.setAttribute('name',v.name);
+      }
+
+      // navi領域への追加が必要か、判断
+      v.step = 3.1; // 実行権限がない機能・画面はnavi領域に追加しない
+      if( (this.user.auth & v.attr.allow) === 0 ) continue;
+      v.step = 3.2; // 有効期間外の場合はnavi領域に追加しない
+      if( v.now < v.attr.from || v.attr.to < v.now ) continue;
+
+      v.step = 4; // navi領域にul未設定なら追加
+      if( navi.tagName !== 'UL' ){
+        v.r = createElement({tag:'ul',attr:{class:this.constructor.name}},navi);
+        if( v.r instanceof Error ) throw v.r;
+        navi = v.r;
+      }
+
+      v.step = 5; // メニュー項目(li)の追加
+      v.li = {tag:'li',children:[{
+        tag:'a',
+        text:v.attr.label,
+        attr:{class:this.constructor.name,name:v.attr.id},
+      }]};
+      v.hasChild = false;
+      if( v.attr.hasOwnProperty('func') ){
+        v.step = 5.1; // 指定関数実行の場合
+        Object.assign(v.li.children[0],{
+          attr:{href:'#',name:v.attr.func},
+          event:{click:(event)=>{
+            this.toggle();  // メニューを閉じる
+            this.func[event.target.name](event); // 指定関数の実行
+            this.genNavi(); // メニュー再描画
+          }},
+        });
+      } else if( v.attr.hasOwnProperty('href') ){
+        v.step = 5.2; // 他サイトへの遷移指定の場合
+        Object.assign(v.li.children[0].attr,{href:v.attr.href,target:'_blank'});
+        Object.assign(v.li.children[0],{event:{click:this.toggle}}); // 遷移後メニューを閉じる
+      } else {
+        v.step = 5.3; // その他(=画面切替)の場合
+        // 子孫メニューがあるか確認
+        if( v.d.querySelector(`[data-menu]`) ){
+          v.step = 5.33; // 子孫メニューが存在する場合
+          v.hasChild = true; // 再帰呼出用のフラグを立てる
+          Object.assign(v.li.children[0],{
+            // 初期がサブメニュー表示ならclassにis_openを追加
+            attr:{class:(this.initialSubMenu ? 'is_open' : '')},
+            // '▼'または'▶︎'をメニューの前につける
+            text: (this.initialSubMenu ? '▶︎' : '▼') + v.li.children[0].text,
+            event: {click:this.showChildren}
+          });
+        } else { // 子孫メニューが存在しない場合
+          v.step = 5.33; // nameを指定して画面切替
+          Object.assign(v.li.children[0],{
+            event:{click:(event)=>{
+              this.changeScreen(event.target.getAttribute('name'));
+              this.toggle();
+            }}
+          });
+        }
+      }
+
+      v.step = 5.4; // navi領域にliを追加
+      v.r = createElement(v.li,navi);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 5.5; // 画面・要素対応マップに登録
+      this.screenAttr[v.name] = v.attr;
+
+      v.step = 5.5; // 子要素にdata-menuが存在する場合、再帰呼出
+      if( v.hasChild ){
+        v.r = this.genNavi(v.d,v.r,depth+1);
+        if( v.r instanceof Error ) throw v.r;
+      }
+    }
+
+    v.step = 6; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+/** data-menu属性の文字列をオブジェクトに変換
+ * authMenu専用として、以下の制限は許容する
+ * - メンバ名は英小文字に限定
+ * - カンマは区切記号のみで、id,label,func,hrefの値(文字列)内には不存在
+ * 
+ * @param {string} arg - data-menuにセットされた文字列
+ * @returns {Object|null|Error} 引数がnullまたは空文字列ならnullを返す
+ */
+#objectize(arg){
+  const v = {whois:this.constructor.name+'.objectize',rv:{},step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // nullまたは空文字列にはnullを返す
+    if( !arg || arg.length === 0 ) return null;
+
+    v.step = 2; // カンマで分割
+    v.p = arg.split(',');
+
+    v.step = 3; // 各値をオブジェクト化
+    for( v.i=0 ; v.i<v.p.length ; v.i++ ){
+      v.m = v.p[v.i].match(/^([a-z]+):['"]?(.+?)['"]?$/);
+      if( v.m ){
+        v.rv[v.m[1]] = v.m[2];
+      } else {
+        throw new Error('data-menuの設定値が不適切です\n'+arg);
+      }
+    }
+
+    v.step = 4.1; // idの存否チェック
+    if( !v.rv.hasOwnProperty('id') )
+      throw new Error('data-menuの設定値にはidが必須です\n'+arg);
+    v.step = 4.2; // ラベル不在の場合はidをセット
+    if( !v.rv.hasOwnProperty('label') )
+      v.rv.label = v.rv.id;
+    v.step = 4.3; // allowの既定値設定
+    v.rv.allow = v.rv.hasOwnProperty('allow') ? Number(v.rv.allow) : this.allow;
+    v.step = 4.4; // func,href両方有ればhrefを削除
+    if( v.rv.hasOwnProperty('func') && v.rv.hasOwnProperty('href') )
+      delete v.rv.href;
+    v.step = 4.5; // from/toの既定値設定
+    v.rv.from = v.rv.hasOwnProperty('from')
+      ? new Date(v.rv.from).getTime() : 0;  // 1970/1/1(UTC)
+    v.rv.to = v.rv.hasOwnProperty('to')
+      ? new Date(v.rv.from).getTime() : 253402182000000; // 9999/12/31(UTC)
+
+    v.step = 5; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\narg=${stringify(arg)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
 /** setProperties: constructorの引数と既定値からthisの値を設定
  * 
  * @param {Object} arg - constructorに渡された引数オブジェクト
@@ -1157,6 +1581,8 @@ constructor(arg={}){
  * - RSAkeyLength=1024 {number} : 鍵ペアのキー長
  * - passPhraseLength=16 {number} : 鍵ペア生成の際のパスフレーズ長
  * - user={} {object} ユーザ情報オブジェクト。詳細はstoreUserInfo()で設定
+ * - screenAttr={} {Object.<string, object>}<br>
+ *   メニューに登録した画面名とdata-menu属性(オブジェクト)の対応
  */
 #setProperties(arg){
   const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
@@ -1456,7 +1882,7 @@ storeUserInfo(arg={}){
     v.rv = Object.assign(v.html,v.local,v.session,v.user,arg);
 
     v.step = 2.2; // 鍵ペア・秘密鍵が存在しなければ作成
-    if( v.rv.CSkey === null ){
+    if( v.rv.passPhrase === null || v.rv.CSkey === null ){
       if( v.rv.passPhrase === null ){
         v.rv.passPhrase = createPassword(this.passPhraseLength);
         v.rv.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
@@ -1530,230 +1956,6 @@ showChildren(event){
   const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
   event.target.innerText = text;  
 }
-
-/** this.homeの内容に従って画面を切り替える */ 
-changeScreen(arg=null){
-  console.log(this.constructor.name+`.changeScreen start.`
-  + `\nthis.home=${stringify(this.home)}(${typeof this.home})`
-  + `\nthis.user.auth=${this.user.auth}`);
-  if( arg === null ){
-    // 変更先画面が無指定 => ホーム画面を表示
-    arg = typeof this.home === 'string' ? this.home : this.home[this.user.auth];
-  }
-  return changeScreen(arg);
-}
-
-  // ===================================
-  // メニュー関係(旧BurgerMenu)
-  // ===================================
-/** data-menu属性の文字列をオブジェクトに変換
- * authMenu専用として、以下の制限は許容する
- * - メンバ名は英小文字に限定
- * - カンマは区切記号のみで、id,label,func,hrefの値(文字列)内には不存在
- * 
- * @param {string} arg - data-menuにセットされた文字列
- * @returns {Object|null|Error} 引数がnullまたは空文字列ならnullを返す
- */
-#objectize(arg){
-  const v = {whois:this.constructor.name+'.objectize',rv:{},step:0};
-  console.log(`${v.whois} start.`);
-  try {
-
-    v.step = 1; // nullまたは空文字列にはnullを返す
-    if( !arg || arg.length === 0 ) return null;
-
-    v.step = 2; // カンマで分割
-    v.p = arg.split(',');
-
-    v.step = 3; // 各値をオブジェクト化
-    for( v.i=0 ; v.i<v.p.length ; v.i++ ){
-      v.m = v.p[v.i].match(/^([a-z]+):['"]?(.+?)['"]?$/);
-      if( v.m ){
-        v.rv[v.m[1]] = v.m[2];
-      } else {
-        throw new Error('data-menuの設定値が不適切です\n'+arg);
-      }
-    }
-
-    v.step = 4.1; // idの存否チェック
-    if( !v.rv.hasOwnProperty('id') )
-      throw new Error('data-menuの設定値にはidが必須です\n'+arg);
-    v.step = 4.2; // ラベル不在の場合はidをセット
-    if( !v.rv.hasOwnProperty('label') )
-      v.rv.label = v.rv.id;
-    v.step = 4.3; // allowの既定値設定
-    v.rv.allow = v.rv.hasOwnProperty('allow') ? Number(v.rv.allow) : this.allow;
-    v.step = 4.4; // func,href両方有ればhrefを削除
-    if( v.rv.hasOwnProperty('func') && v.rv.hasOwnProperty('href') )
-      delete v.rv.href;
-    v.step = 4.5; // from/toの既定値設定
-    v.rv.from = v.rv.hasOwnProperty('from')
-      ? new Date(v.rv.from).getTime() : 0;  // 1970/1/1(UTC)
-    v.rv.to = v.rv.hasOwnProperty('to')
-      ? new Date(v.rv.from).getTime() : 253402182000000; // 9999/12/31(UTC)
-
-    v.step = 5; // 終了処理
-    console.log(`${v.whois} normal end.`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\narg=${stringify(arg)}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-/** 親要素を走査してナビゲーションを作成
- * @param {HTMLElement} wrapper - body等の親要素。
- * @param {HTMLElement} navi - nav等のナビゲーション領域
- * @returns {null|Error}
- */
-genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
-  const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
-  console.log(`${v.whois} start.`);
-  try {
-
-    v.step = 1; // navi領域をクリア
-    if( depth === 0 ){
-      navi.innerHTML = '';
-    }
-
-    // 子要素を順次走査し、data-menuを持つ要素をnaviに追加
-    for( v.i=0 ; v.i<wrapper.childElementCount ; v.i++ ){
-      v.d = wrapper.children[v.i];
-
-      // wrapper内のdata-menu属性を持つ要素に対する処理
-      v.step = 2.1; // data-menuを持たない要素はスキップ
-      v.attr = this.#objectize(v.d.getAttribute(`data-menu`));
-      if( v.attr instanceof Error ) throw v.attr;
-      if( v.attr === null ) continue;
-
-      v.step = 2.2; // screenクラスが無ければ追加
-      v.class = v.d.className.match(/screen/);
-      if( !v.class ) v.d.classList.add('screen'); 
-      v.step = 2.3; // nameが無ければ追加
-      v.name = v.d.getAttribute('name');
-      if( !v.name ){
-        v.name = v.attr.id;
-        v.d.setAttribute('name',v.name);
-      }
-
-      // navi領域への追加が必要か、判断
-      v.step = 3.1; // 実行権限がない機能・画面はnavi領域に追加しない
-      if( (this.user.auth & v.attr.allow) === 0 ) continue;
-      v.step = 3.2; // 有効期間外の場合はnavi領域に追加しない
-      if( v.now < v.attr.from || v.attr.to < v.now ) continue;
-
-      v.step = 4; // navi領域にul未設定なら追加
-      if( navi.tagName !== 'UL' ){
-        v.r = createElement({tag:'ul',attr:{class:this.constructor.name}},navi);
-        if( v.r instanceof Error ) throw v.r;
-        navi = v.r;
-      }
-
-      v.step = 5; // メニュー項目(li)の追加
-      v.li = {tag:'li',children:[{
-        tag:'a',
-        text:v.attr.label,
-        attr:{class:this.constructor.name,name:v.attr.id},
-      }]};
-      v.hasChild = false;
-      if( v.attr.hasOwnProperty('func') ){
-        v.step = 5.1; // 指定関数実行の場合
-        Object.assign(v.li.children[0],{
-          attr:{href:'#',name:v.attr.func},
-          event:{click:(event)=>{
-            this.toggle();  // メニューを閉じる
-            this.func[event.target.name](event); // 指定関数の実行
-            this.genNavi(); // メニュー再描画
-          }},
-        });
-      } else if( v.attr.hasOwnProperty('href') ){
-        v.step = 5.2; // 他サイトへの遷移指定の場合
-        Object.assign(v.li.children[0].attr,{href:v.attr.href,target:'_blank'});
-        Object.assign(v.li.children[0],{event:{click:this.toggle}}); // 遷移後メニューを閉じる
-      } else {
-        v.step = 5.3; // その他(=画面切替)の場合
-        // 子孫メニューがあるか確認
-        if( v.d.querySelector(`[data-menu]`) ){
-          v.step = 5.33; // 子孫メニューが存在する場合
-          v.hasChild = true; // 再帰呼出用のフラグを立てる
-          Object.assign(v.li.children[0],{
-            // 初期がサブメニュー表示ならclassにis_openを追加
-            attr:{class:(this.initialSubMenu ? 'is_open' : '')},
-            // '▼'または'▶︎'をメニューの前につける
-            text: (this.initialSubMenu ? '▶︎' : '▼') + v.li.children[0].text,
-            event: {click:this.showChildren}
-          });
-        } else { // 子孫メニューが存在しない場合
-          v.step = 5.33; // nameを指定して画面切替
-          Object.assign(v.li.children[0],{
-            event:{click:(event)=>{
-              this.changeScreen(event.target.getAttribute('name'));
-              this.toggle();
-            }}
-          });
-        }
-      }
-
-      v.step = 5.4; // navi領域にliを追加
-      v.r = createElement(v.li,navi);
-      if( v.r instanceof Error ) throw v.r;
-
-      v.step = 5.5; // 子要素にdata-menuが存在する場合、再帰呼出
-      if( v.hasChild ){
-        v.r = this.genNavi(v.d,v.r,depth+1);
-        if( v.r instanceof Error ) throw v.r;
-      }
-    }
-
-    v.step = 6; // 終了処理
-    console.log(`${v.whois} normal end.`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-
-  // ===================================
-  // 認証関係(旧Auth)
-  // ===================================
-/**
- * 
- * @param {string} email - 入力されたメールアドレス
- * @returns {Object}
- */
-async registMail(email){
-  const v = {whois:this.constructor.name+'.registMail',rv:null,step:0};
-  console.log(`${v.whois} start.`);
-  try {
-
-    v.step = 1; // authServer.registMailに問合せ
-    v.rv = await this.doGAS('registMail',{
-      email: email,
-      CPkey: this.user.CPkey,
-      updated: this.user.updated,
-    });
-    if( v.rv instanceof Error ) throw v.rv;
-
-    v.step = 2; // ユーザ情報更新用
-    v.rv = this.storeUserInfo(v.rv);
-    if( v.rv instanceof Error ) throw v.rv;
-
-    v.step = 3; // 終了処理
-    console.log(`${v.whois} normal end.`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\nemail=${email}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
 }
 ```
 
@@ -1763,6 +1965,11 @@ async registMail(email){
 
 ```
 /** サーバ側の認証処理を分岐させる
+ * 
+ * 1. ユーザID未定でも可能な処理(一般公開部分)
+ * 1. ユーザIDは必要だが、ログイン(RSA)は不要な処理
+ * 1. RSAキーが必要な処理
+ * 
  * @param {number} userId 
  * @param {string} func - 分岐先処理名
  * @param {string} arg - 分岐先処理に渡す引数オブジェクト
@@ -1785,6 +1992,7 @@ function authServer(userId=null,func=null,arg=null) {
  * 
  * 1. propertyName='authServer' {string}<br>
  *    プロパティサービスのキー名
+ * 1. passcodeDigits=6 {number} : パスコードの桁数
  * 1. loginRetryInterval=3,600,000(60分) {number}<br>
  *    前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
  * 1. numberOfLoginAttempts=3 {number}<br>
@@ -1801,9 +2009,12 @@ function authServer(userId=null,func=null,arg=null) {
  *    主キーとなる項目名。主キーは数値で設定
  * 1. emailColumn='email' {string}<br>
  *    e-mailを格納するシート上の項目名
- * 1. passPhrase {string} : authServerのパスフレーズ
- * 1. SSkey {Object} : authServerの秘密鍵
- * 1. SPkey {string} : authServerの公開鍵
+ * 1. RSA {Object} : サーバ側RSAキー関連情報
+ *    1. passPhraseLength=16 {number} : authServerのパスフレーズの長さ
+ *    1. passPhrase {string} : authServerのパスフレーズ(自動生成)
+ *    1. bits=1024 {number} : RSAキーのビット長
+ *    1. SSkey {Object} : authServerの秘密鍵
+ *    1. SPkey {string} : authServerの公開鍵
  * 1. userIdStartNumber=1 : ユーザID(数値)の開始
  * 
  * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
@@ -1826,11 +2037,20 @@ w.func.setProperties = function(){
         masterSheet : 'master',
         primatyKeyColumn : 'userId',
         emailColumn : 'email',
-        passPhrase : createPassword(16),
+        RSA : {
+          passPhraseLength : 16,
+          bits: 1024,  
+        },
         userIdStartNumber : 1,
+        notificatePasscodeMail: {
+          subject: '[連絡] パスコード',
+          body: 'パスコードは以下の通りです。\n\n::passcode::',
+          options: {},
+        },
       };
-      w.prop.SSkey = cryptico.generateRSAKey(w.prop.passPhrase,1024);
-      w.prop.SPkey = cryptico.publicKeyString(w.prop.SSkey);
+      w.prop.RSA.passPhrase = createPassword(w.prop.RSA.passPhraseLength),
+      w.prop.RSA.SSkey = cryptico.generateRSAKey(w.prop.RSA.passPhrase,w.prop.RSA.bits);
+      w.prop.RSA.SPkey = cryptico.publicKeyString(w.prop.RSA.SSkey);
       // プロパティサービスを更新
       PropertiesService.getDocumentProperties().setProperties(w.prop);
     }
@@ -1846,9 +2066,10 @@ w.rv = w.func.setProperties(arg);
 if( w.rv instanceof Error ) throw w.rv;
 
     if( userId === null ){ // userIdが不要な処理
-      if( ['registMail'].find(x => x === func) ){
+      if( ['registMail','getUserInfo'].find(x => x === func) ){
         w.step = 1; // userId未定でも可能な処理 ⇒ 一般公開用
-/** authClientからの登録要求を受け、IDを返す
+        //:x:メールアドレスの登録::$src/server.registMail.js::
+/** authClientからの要求を受け、ユーザ情報と状態を返す
  * 
  * - IDは自然数の前提、1から順に採番。
  * - 新規採番は途中の欠損は考慮せず、最大値＋1とする
@@ -1856,17 +2077,17 @@ if( w.rv instanceof Error ) throw w.rv;
  * @param {Object} arg
  * @param {string} arg.email - 要求があったユーザのe-mail
  * @param {string} arg.CPkey - 要求があったユーザの公開鍵
- * @param {string} arg.updated - 公開鍵更新日時(日時文字列)
- * @returns {number|Error} 採番されたuserId
+ * @returns {object} 以下のメンバを持つオブジェクト
+ * 1. SPkey {string} - サーバ側公開鍵
+ * 1. isExist {boolean} - 既存メアドならtrue、新規登録ならfalse
+ * 1. isEqual {boolean} - 引数のCPkeyがシート上のCPkeyと一致するならtrue
+ * 1. isExpired {boolean} - CPkeyが有効期限切れならtrue
+ * 1. data {object} - 該当ユーザのシート上のオブジェクト
  */
-w.func.registMail = function(arg){
-  const v = {whois:w.whois+'.registMail',step:0,rv:{
-    userId:null,
-    created:null,
-    email:null,
-    auth:null,
+w.func.getUserInfo = function(arg){
+  const v = {whois:w.whois+'.getUserInfo',step:0,rv:{
     SPkey:w.prop.SPkey,
-    isExist:null,
+    isExist:true, isEqual:true, isExpired:false, data:null,
   }};
   console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
   try {
@@ -1881,30 +2102,17 @@ w.func.registMail = function(arg){
     if( v.master instanceof Error ) throw v.master;
 
     v.step = 3; // メアドが登録済か確認、登録済ならシートのユーザ情報を保存
-    v.sheet = null;
     for( v.i=0 ; v.i<v.master.data.length ; v.i++ ){
       if( v.master.data[v.i][w.prop.emailColumn] === arg.email ){
-        v.sheet = v.master.data[v.i];
+        v.rv.data = v.master.data[v.i];
         break;
       }
     }
 
-    if( v.sheet !== null ){
-      v.step = 4; // メアドが登録済の場合
+    if( v.rv.data === null ){
+      v.step = 4; // メアドが未登録の場合
 
-      if( v.sheet.CPkey !== arg.CPkey ){
-        v.step = 4.1; // ユーザの公開鍵を更新
-        v.r = v.master.update([{CPkey:arg.CPkey,updated:arg.updated}]);
-        if( v.r instanceof Error ) throw v.r;
-      }
-
-      v.step = 4.2; // フラグを更新
-      v.rv.isExit = true;
-
-    } else {
-      v.step = 5; // メアドが未登録の場合
-
-      v.step = 5.1; // userIdの最大値を取得
+      v.step = 4.1; // userIdの最大値を取得
       if( v.master.data.length === 0 ){
         // 登録済が0件(シート作成直後)の場合
         v.max = w.prop.userIdStartNumber - 1;
@@ -1915,29 +2123,29 @@ w.func.registMail = function(arg){
         v.max = Math.max(...v.map);
       }
 
-      v.step = 5.2; // シートに初期値を登録
-      v.sheet = {
+      v.step = 4.2; // シートに初期値を登録
+      v.rv.data = {
         userId  : v.max + 1,
         created : toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn'),
         email   : arg.email,
         auth    : w.prop.defaultAuth,
         CPkey   : arg.CPkey,
-        updated : arg.updated,
+        updated : null,
         trial   : '{}',
       };
-      v.r = v.master.insert([v.sheet]);
+      v.rv.data.updated = v.rv.data.created;
+      v.r = v.master.insert([v.rv.data]);
       if( v.r instanceof Error ) throw v.r;
 
-      v.step = 5.3; // フラグを更新
+      v.step = 4.3; // 存否フラグを更新
       v.rv.isExist = false;
     }
 
-    v.step = 6; // 戻り値用にユーザ情報の項目を調整
-    Object.keys(v.rv).forEach(x => {
-      if( v.rv[x] === null ) v.rv[x] = v.sheet[x];
-    });
+    v.step = 5; // 戻り値用にユーザ情報の項目を調整
+    v.rv.isEqual = v.rv.data.CPkey === arg.CPkey;
+    v.rv.isExpired = (new Date(v.rv.data.updated).getTime() + w.userLoginLifeTime) > Date.now();
 
-    v.step = 7; // 終了処理
+    v.step = 6; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
@@ -1948,20 +2156,167 @@ w.func.registMail = function(arg){
     return e;
   }
 }
-w.rv = w.func.registMail(arg);
+w.rv = w.func.getUserInfo(arg);
 if( w.rv instanceof Error ) throw w.rv;
       } else {
         w.step = 2; // 該当処理なし
         w.rv = null;
       }
     } else {  // userIdが必要な処理
-      if( ['login1S'].find(x => x === func) ){
+      if( ['sendPasscode'].find(x => x === func) ){
         w.step = 3; // ログインは不要な処理
         // ⇒ 参加者用メニュー(応募情報(自分の個人情報)修正を除く)
+        switch( func ){
+          case 'sendPasscode': w.step += ':sendPasscode';
+/** authClientからの要求を受け、ユーザ情報と状態を返す
+ * 
+ * ユーザIDやCS/CPkey他の自ユーザ情報、およびSPkeyはauthClient.constructor()で初期値を設定し、
+ * 先行する「新規ユーザ登録」で修正済情報がインスタンス変数に存在する前提。
+ * 
+ * @param {Object} arg
+ * @param {number} arg.userId - ユーザID
+ * @param {string} arg.CPkey - 要求があったユーザの公開鍵
+ * @param {string} arg.updated - CPkey生成・更新日時文字列
+ * @returns {object} 以下のメンバを持つオブジェクト
+ * - status {number}
+ *   - 0 : 成功(パスコード通知メールを送信)
+ *   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
+ *   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
+ * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
+ * - SPkey=null {Object} サーバ側公開鍵
+ * - loginGraceTime=900,000(15分) {number}<br>
+ *   パスコード生成からログインまでの猶予時間(ミリ秒)
+ * - remainRetryInterval=0 {number} 再挑戦可能になるまでの時間(ミリ秒)
+ * - passcodeDigits=6 {number} : パスコードの桁数
+ */
+w.func.sendPasscode = function(arg){
+  const v = {whois:w.whois+'.sendPasscode',step:0,rv:{
+    status: 0, data: null, SPkey: null,
+    loginGraceTime: w.prop.loginGraceTime,
+    remainRetryInterval: 0,
+    passcodeDigits: w.prop.passcodeDigits,
+  }};
+  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
+  try {
 
-        //:x:$src/server.login1S.js::
+    // ---------------------------------------------
+    v.step = 1; // 事前準備
+    // ---------------------------------------------
+    v.step = 1.1; // シートから全ユーザ情報の取得
+    v.master = new SingleTable(w.prop.masterSheet);
+    if( v.master instanceof Error ) throw v.master;
 
-      } else if( ['login2S','operation'].find(x => x === func) ){
+    v.step = 1.2; // 対象ユーザ情報の取得
+    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === arg.userId});
+    if( v.user instanceof Error ) throw v.user;
+
+    v.step = 1.3; // trialオブジェクトの取得
+    v.trial = JSON.parse(v.user.trial);
+    if( !v.trial.hasOwnProperty('log') ) v.trial.log = [];
+
+
+    // ---------------------------------------------
+    v.step = 2; // パスコード生成
+    //【trialオブジェクト定義】
+    // - passcode {number} パスコード(原則数値6桁)
+    // - created {number} パスコード生成日時(UNIX時刻)
+    // - log {object[]} 試行の記録。unshiftで先頭を最新にする
+    //   - timestamp {number} 試行日時(UNIX時刻)
+    //   - entered {number} 入力されたパスコード
+    //   - status {number} v.rv.statusの値
+    //   - result {number} 0:成功、1〜n:連続n回目の失敗
+    // trialオブジェクトはunshiftで常に先頭(添字=0)が最新になるようにする。
+    // ---------------------------------------------
+
+    v.step = 2.1; // 試行可能かの確認
+    // 以下のいずれかの場合はエラーを返して終了
+    // ①パスコード生成からログインまでの猶予時間を過ぎている
+    if( (w.prop.loginGraceTime + trial.created) > Date.now() ){
+      v.rv.status = 1;
+      return v.rv;
+    }
+    // ②前回ログイン失敗から凍結時間を過ぎていない
+    if( v.trial.log.length > 0 ){
+      if( trial.log[0].status === w.prop.numberOfLoginAttempts
+      && (trial.log[0].timestamp + w.prop.loginRetryInterval) > Date.now() )
+        v.rv.status = 2;
+        v.rv.remainRetryInterval = trial.log[0].timestamp
+          + w.prop.loginRetryInterval - Date.now();
+        return v.rv;
+    }
+
+    v.step = 2.2; // trialオブジェクトを生成、シートに保存
+    v.trial.passcode = Math.floor(Math.random() * Math.pow(10,w.prop.passcodeDigits));
+    v.trial.created = Date.now();
+
+    v.step = 2.3; // trial更新に合わせ、CPkey/updatedも更新
+    // sendPasscodeが呼ばれるのは「CP不一致 or CP無効」の場合。
+    // よって送られてきた新規CPkey/updatedでシート上のそれを更新する
+    v.r = v.master.update({
+      CPkey: arg.CPkey,
+      updated: arg.updated,
+      trial: JSON.stringify(v.trial)
+    },{where: x => x[w.prop.primatyKeyColumn] === arg.userId});
+
+
+    // ---------------------------------------------
+    v.step = 3; // パスコード通知メールの発信
+    // ---------------------------------------------
+    // $lib/sendmail/1.0.0/core.js
+    // @param {String} recipient - 受信者のアドレス
+    // @param {String} subject - 件名
+    // @param {String} body - メールの本文
+    // @param {Object} options - 詳細パラメータを指定する JavaScript オブジェクト（下記を参照）
+    // @param {BlobSource[]} options.attachments - メールと一緒に送信するファイルの配列
+    // @param {String} options.bcc - Bcc で送信するメールアドレスのカンマ区切りのリスト
+    // @param {String} options.cc - Cc に含めるメールアドレスのカンマ区切りのリスト
+    // @param {String} options.from - メールの送信元アドレス。getAliases() によって返される値のいずれかにする必要があります。
+    // @param {String} options.htmlBody - 設定すると、HTML をレンダリングできるデバイスは、必須の本文引数の代わりにそれを使用します。メール用にインライン画像を用意する場合は、HTML 本文にオプションの inlineImages フィールドを追加できます。
+    // @param {Object} options.inlineImages - 画像キー（String）から画像データ（BlobSource）へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、<img src="cid:imageKey" /> 形式でこれらの画像への参照が含まれていることを前提としています。
+    // @param {String} options.name - メールの送信者の名前（デフォルト: ユーザー名）
+    // @param {String} options.replyTo - デフォルトの返信先アドレスとして使用するメールアドレス（デフォルト: ユーザーのメールアドレス）
+    // @returns {null|Error}
+    //
+    // w.prop.notificatePasscodeMailでテンプレート設定済
+    // notificatePasscodeMail: {
+    //   subject: '[連絡] パスコード',
+    //   body: 'パスコードは以下の通りです。\n\n::passcode::',
+    //   options: {},
+    // },
+    v.trial.body = w.prop.notificatePasscodeMail.body
+    .replaceAll('::passcode::',('0'.repeat(w.prop.passcodeDigits)
+    + String(v.trial.passcode)).slice(-w.prop.passcodeDigits));
+    v.r = sendmail(
+      v.user.email, // recipient
+      w.prop.notificatePasscodeMail.subject, // subject
+      v.trial.body, // body
+      w.prop.notificatePasscodeMail.options // options
+    );
+    if( v.r instanceof Error ) throw v.r;
+
+
+    // ---------------------------------------------
+    v.step = 4; // 終了処理
+    // ---------------------------------------------
+    v.rv.data = v.user;
+    delete v.rv.data.trial; // 悪用されないよう、念のため削除
+    v.rv.SPkey = w.prop.SPkey;
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\narg=${stringify(arg)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+w.rv = w.func.sendPasscode(arg);
+if( w.rv instanceof Error ) throw w.rv;
+            break;
+        }
+
+      } else if( ['verifyPasscode','operation'].find(x => x === func) ){
         // ログインしないと操作不可の処理
         // ⇒ 応募情報修正、スタッフ用メニュー
 
@@ -1969,24 +2324,7 @@ if( w.rv instanceof Error ) throw w.rv;
 /** クライアント側の署名を検証、引数を復号してオブジェクト化する
  * @param {number} userId - ユーザID
  * @param {string} arg - クライアント側での暗号化＋署名結果(文字列)
- * @returns {Object}
- * 
- * @example
- * 
- * サーバ側に鍵ペアが存在しない場合は自動生成してプロパティサービスに保存
- * 
- * ** 注意事項 **
- * 
- * 他のauthServerメソッドは`w.func.xxx`として定義するが、
- * 本メソッドはユーザに使用させないシステム的なメソッドのため、
- * funcではなく`w.initialize`として定義する。
- * 
- * **戻り値の形式**
- * 
- * - {Object|Error} rv
- *   - passPhrase {string} パスフレーズ
- *   - privateKey {Object} RSA形式の秘密鍵
- *   - publicKey {string} RSA形式の公開鍵
+ * @returns {Object|Error} 復号化したオブジェクト
  * 
  * **参考：パスフレーズ・秘密鍵・公開鍵の一括保存はできない**
  * 
@@ -2001,68 +2339,87 @@ if( w.rv instanceof Error ) throw w.rv;
  * ⇒ max 9KB/値なので、パスフレーズ・公開鍵・秘密鍵は別々のプロパティとして保存が必要
  */
 w.func.verifySignature = function(userId=null,arg=null){
-  const v = {whois:w.whois+'.verifySignature',rv:{},step:0};
+  const v = {whois:w.whois+'.verifySignature',rv:{result:0,message:'',obj:null},step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    // userId, argは共に必須
+    // ---------------------------------------------
+    v.step = 1; // 事前準備
+    // ---------------------------------------------
+    v.step = 1.1; // 引数チェック。userId, argは共に必須
     if( userId === null ) throw new Error(`${v.whois} Error: no userId.`);
     if( arg === null ) throw new Error(`${v.whois} Error: no arg.`);
 
-    v.step = 1; // サーバ側鍵ペアの取得・生成　※親関数のwhoisを使用
-    v.RSA = PropertiesService.getDocumentProperties().getProperty(w.whois);
-    if( v.RSA === null ){
-      v.step = 1.1;
-      v.bits = 1024;  // ビット長
-      v.RSA.passPhrase = createPassword(16); // 16桁のパスワードを自動生成
-      v.step = 1.2; // 秘密鍵の生成
-      v.RSA.privateKey = cryptico.generateRSAKey(v.RSA.passPhrase, v.bits);
-      v.step = 1.3; // 公開鍵の生成
-      v.RSA.publicKey = cryptico.publicKeyString(v.RSA.privateKey);
-      PropertiesService.getDocumentProperties().setProperty(w.whois,v.RSA);
-    }
+    v.step = 1.2; // サーバ側鍵ペアの取得・生成　※親関数のwhoisを使用
+    v.RSA = PropertiesService.getDocumentProperties().getProperty(w.whois).RSA;
 
+
+    // ---------------------------------------------
     v.step = 2; // クライアント側情報の取得
-    v.client = PropertiesService.getDocumentProperties().getProperty(userId);
+    // ---------------------------------------------
+    v.step = 2.1; // シートから全ユーザ情報の取得
+    v.master = new SingleTable(w.prop.masterSheet);
+    if( v.master instanceof Error ) throw v.master;
 
-    if( v.client === null ){
-      v.step = 3; // クライアント側情報未登録 ⇒ 空オブジェクトを返す
-      v.client = {
-        userId: userId,
-        email: '',
-        created: Date.now(),
-        publicKeyID: '',
-        authority: 2,
-        log: [],
-      };
-      PropertiesService.getDocumentProperties().setProperty(userId,v.client);
-    } else {
-      v.step = 4; // クライアント側情報登録済
-      v.step = 4.1; // 引数の復元
-      v.decrypt = cryptico.decrypt(arg,v.RSA.privateKey);
-      console.log(`v.decrypt=${stringify(v.decrypt)}`);
-      v.step = 4.2; // 署名の検証
-      v.decrypt.publicKeyID = cryptico.publicKeyID(v.decrypt.publicKeyString);
-      v.decrypt.verify = v.client.publicKeyID === v.decrypt.publicKeyID;
-      v.step = 4.3; // 有効期間の確認。　※親関数のvalidityPeriodを使用
-      v.decrypt.validityPeriod = (v.client.created + w.validityPeriod) < Date.now();
-      v.step = 4.3; // 戻り値をオブジェクト化
-      v.rv = v.decrypt.status === 'success' && v.decrypt.verify && v.decrypt.validityPeriod
-      ? JSON.parse(v.decrypt.plaintext)
-      : new Error(`cryptico.decrypt error.`
+    v.step = 2.2; // 対象ユーザ情報の取得
+    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === userId});
+    if( v.user instanceof Error ) throw v.user;
+
+    v.step = 2.3 // userIdがシートに存在しない
+    if( v.user.length === 0 ){
+      v.rv.result = 1;
+      console.log(`${v.whois}: no userId on sheet ${w.prop.masterSheet} (step ${v.step}).`);
+      return v.rv;
+    }
+    
+    // ---------------------------------------------
+    v.step = 3; // 引数の復元
+    // 【以下の処理におけるv.rvオブジェクトのメンバ】
+    // - result {number}
+    //   - 0: 正常終了
+    //   - 1: userIdがシートに存在しない
+    //   - 2: 不適切な暗号化(decrypt.status != 'success')
+    //   - 3: 不適切な署名(decrypt.publicKeyString != sheet.CPkey)<br>
+    //     ※ decrypt.signatureは常に"forged"で"verified"にならないため、CPkeyを比較
+    //   - 4: CPkey有効期限切れ
+    // - message='' {string} エラーだった場合のメッセージ
+    // - obj=null {object} 復号したオブジェクト
+    // ---------------------------------------------
+    v.decrypt = cryptico.decrypt(arg,v.RSA.SPkey);
+    //console.log(`v.decrypt=${stringify(v.decrypt)}`);
+    if( v.decrypt.status !== 'success' ){
+      v.step = 3.1; // 復号不可
+      v.rv.result = 2;
+      v.rv.message = `${v.whois}: decrypt error (step ${v.step}).`
       + `\nstatus="${v.decrypt.status}"`
       + `\nplaintext="${v.decrypt.plaintext}"`
       + `\nsignature="${v.decrypt.signature}"`
       + `\npublicKeyString="${v.decrypt.publicKeyString}"`
       + `\npublicKeyID="${v.decrypt.publicKeyID}"`
       + `\nverify="${v.decrypt.verify}"`
-      + `\nvalidityPeriod="${v.decrypt.validityPeriod}"`);
+      + `\nvalidityPeriod="${v.decrypt.validityPeriod}"`;
+    } else if( v.decrypt.publicKeyString !== v.user.CPkey ){
+      v.step = 3.2; // 不適切な署名(CPkey不一致)
+      v.rv.result = 3;
+      v.rv.message = `${v.whois}: CPkey unmatch (step ${v.step}).`
+      + `\nv.decrypt.publicKeyString=${v.decrypt.publicKeyString}`
+      + `\nv.user.CPkey=${v.user.CPkey}`;
+    } else if( (new Date(v.user.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
+      v.step = 3.3; // CPkey有効期限切れ
+      v.rv.result = 4;
+      v.rv.message = `${v.whois}: CPkey expired (step ${v.step}).`
+      + `\nupdated: ${v.user.updated})`
+      + `\nuserLoginLifeTime: ${w.prop.userLoginLifeTime/3600000} hours`
+      + `\nDate.now(): ${toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn')}`;
+    } else {
+      v.step = 3.4; // 正常終了
+      v.rv.obj = JSON.parse(v.decrypt.plaintext);
     }
+    if( v.rv.result > 0 ) throw new Error(v.rv.message);
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.`);
-    console.log(`type = ${typeof v.rv}\npassPhrase="${v.rv.passPhrase}\npublicKey="${v.rv.publicKey}"`);
-    return v.rv;
+    return v.rv.obj;
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
@@ -2071,15 +2428,132 @@ w.func.verifySignature = function(userId=null,arg=null){
 }
 w.r = w.func.verifySignature(userId,arg);
 if( w.r instanceof Error ) throw w.r;
+        // verifySignatureの戻り値はw.rで受けるので、後続処理に引数として渡す
 
         switch( func ){
-          case 'login2S': w.step = 4 + ':login2S';
-            //:x:$src/server.login2S.js::
+          case 'verifyPasscode': w.step += ':verifyPasscode';
+/** 入力されたパスコードの検証
+ * 
+ * @param {Object} arg
+ * @param {number} arg.userId - ユーザID
+ * @param {number} arg.passcode - 入力されたパスコード
+ * @returns {Object|number} ユーザ情報オブジェクト。エラーならエラーコード
+    // ログイン失敗になるまでの試行回数(numberOfLoginAttempts)
+    // パスコード生成からログインまでの猶予時間(ミリ秒)(loginGraceTime)
+    // クライアント側ログイン(CPkey)有効期間(userLoginLifeTime)
+ * @returns {object} 以下のメンバを持つオブジェクト
+ * - status {number}
+ *   - 0 : 成功(パスコードが一致)
+ *   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
+ *   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
+ *   - 3 : クライアント側ログイン(CPkey)有効期限切れ
+ *   - 4 : パスコード不一致
+ * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
+ * - SPkey=null {Object} サーバ側公開鍵
+ * - loginGraceTime=900,000(15分) {number}<br>
+ *   パスコード生成からログインまでの猶予時間(ミリ秒)
+ * - remainRetryInterval=0 {number} 再挑戦可能になるまでの時間(ミリ秒)
+ * - passcodeDigits=6 {number} : パスコードの桁数
+ */
+w.func.verifyPasscode = function(arg){
+  const v = {whois:w.whois+'.verifyPasscode',step:0,rv:{
+    status: 0, data: null, SPkey: null,
+    loginGraceTime: w.prop.loginGraceTime,
+    remainRetryInterval: 0,
+    passcodeDigits: w.prop.passcodeDigits,
+  }};
+  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
+  try {
+
+    // ---------------------------------------------
+    v.step = 1; // 事前準備
+    // ---------------------------------------------
+    v.step = 1.1; // シートから全ユーザ情報の取得
+    v.master = new SingleTable(w.prop.masterSheet);
+    if( v.master instanceof Error ) throw v.master;
+
+    v.step = 1.2; // 対象ユーザ情報の取得
+    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === arg.userId});
+    if( v.user instanceof Error ) throw v.user;
+
+    v.step = 1.3; // trialオブジェクトの取得
+    v.trial = JSON.parse(v.user.trial);
+    if( !v.trial.hasOwnProperty('log') ) v.trial.log = [];
+
+
+    // ---------------------------------------------
+    v.step = 2; // パスコード検証
+    // ---------------------------------------------
+    // ログイン失敗になるまでの試行回数(numberOfLoginAttempts)
+    // パスコード生成からログインまでの猶予時間(ミリ秒)(loginGraceTime)
+    // クライアント側ログイン(CPkey)有効期間(userLoginLifeTime)
+
+    v.step = 2.1; // 試行可能かの確認
+    // 以下のいずれかの場合はエラーを返して終了
+    if( (w.prop.loginGraceTime + v.trial.created) > Date.now() ){
+      // ①パスコード生成からログインまでの猶予時間を過ぎている
+      v.rv.status = 1;
+    } else if( v.trial.log.length > 0
+      && trial.log[0].status === w.prop.numberOfLoginAttempts
+      && (trial.log[0].timestamp + w.prop.loginRetryInterval) > Date.now() ){
+      // ②前回ログイン失敗から凍結時間を過ぎていない
+      v.rv.status = 2;
+      v.rv.remainRetryInterval = trial.log[0].timestamp
+        + w.prop.loginRetryInterval - Date.now();
+    } else if( (new Date(v.user.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
+      // ③クライアント側ログイン(CPkey)有効期限切れ(userLoginLifeTime)
+      v.rv.status = 3;
+    } else if( v.trial.passcode !== arg.passcode ){
+      // ④パスコード不一致
+      v.rv.status = 4;
+    } else {
+      // パスコードが一致
+      v.rv.data = v.user;
+    }
+
+    // ---------------------------------------------
+    v.step = 3; // 終了処理
+    // ---------------------------------------------
+    v.step = 3.1; // trial更新(検証結果の格納)
+    // - passcode {number} パスコード(原則数値6桁)
+    // - log {object[]} 試行の記録。unshiftで先頭を最新にする
+    //   - timestamp {number} 試行日時(UNIX時刻)
+    //   - entered {number} 入力されたパスコード
+    //   - status {number} v.rv.statusの値
+    //   - result {number} 0:成功、1〜n:連続n回目の失敗
+    // 
+    // trialオブジェクトはunshiftで常に先頭(添字=0)が最新になるようにする。
+    // 新しいlogオブジェクトの作成
+    v.log = {
+      timestamp: Date.now(),
+      entered: arg.passcode,
+      status: v.status,
+      result: v.status === 0 ? 0 : (v.trial.log[0].result + 1),
+    }
+    v.trial.log.unshift(v.log);
+    v.r = v.master.update({trial:JSON.stringify(v.trial)},
+      {where:x => x.userId === arg.userId});
+    if( v.r instanceof Error ) throw v.r;
+
+
+    v.step = 3.2; // 検証OKならユーザ情報を、NGなら通知を返す
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\narg=${stringify(arg)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+w.rv = w.func.verifyPasscode(w.r);  // w.rはserver.verifySignatureの戻り値
+if( w.rv instanceof Error ) throw w.rv;
+            break;
+          case 'operation': w.step += ':operation';
+            //:x:$src/server.operation.js::
             break;
           // 後略
-          //:x:$src/server.listAuth.js::
-          //:x:$src/server.changeAuth.js::
-          //:x:$src/server.operation.js::
         }
       } else {
         w.step = 5; // 該当処理なし
@@ -2227,20 +2701,19 @@ td, .td {
 1. <a href="#ac0019">フォルダ構成、ビルド手順</a>
 1. <a href="#ac0020">仕様(JSDoc)</a>
    1. <a href="#ac0021">new authMenu(arg)</a>
-   1. <a href="#ac0022">authMenu.storeUserInfo(arg) ⇒ <code>void</code></a>
-   1. <a href="#ac0023">authMenu.doGAS()</a>
-   1. <a href="#ac0024">authMenu.toggle()</a>
-   1. <a href="#ac0025">authMenu.showChildren()</a>
-   1. <a href="#ac0026">authMenu.changeScreen()</a>
-   1. <a href="#ac0027">authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code></a>
-   1. <a href="#ac0028">authMenu.registMail(email) ⇒ <code>Object</code></a>
-1. <a href="#ac0029">テクニカルメモ</a>
-   1. <a href="#ac0030">GAS/htmlでの暗号化</a>
-         1. <a href="#ac0031">手順</a>
-         1. <a href="#ac0032">javascript用</a>
-         1. <a href="#ac0033">GAS用</a>
-1. <a href="#ac0034">プログラムソース</a>
-1. <a href="#ac0035">改版履歴</a>
+   1. <a href="#ac0022">authMenu.changeScreen(screenName) ⇒ <code>void</code></a>
+   1. <a href="#ac0023">authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code></a>
+   1. <a href="#ac0024">authMenu.storeUserInfo(arg) ⇒ <code>void</code></a>
+   1. <a href="#ac0025">authMenu.doGAS()</a>
+   1. <a href="#ac0026">authMenu.toggle()</a>
+   1. <a href="#ac0027">authMenu.showChildren()</a>
+1. <a href="#ac0028">テクニカルメモ</a>
+   1. <a href="#ac0029">GAS/htmlでの暗号化</a>
+         1. <a href="#ac0030">手順</a>
+         1. <a href="#ac0031">javascript用</a>
+         1. <a href="#ac0032">GAS用</a>
+1. <a href="#ac0033">プログラムソース</a>
+1. <a href="#ac0034">改版履歴</a>
 
 # 1 機能概要<a name="ac0001"></a>
 
@@ -2657,18 +3130,46 @@ window.addEventListener('DOMContentLoaded',() => {
 [先頭](#ac0000) > [機能別処理フロー](#ac0014) > 新規ユーザ登録
 
 
-新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
+- 新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
 
 ```mermaid
 sequenceDiagram
   autonumber
   actor user
-  participant browser
   participant storage
   participant client as authMenu
   participant server as authServer
   participant sheet
 
+  user ->> client : 新規登録要求
+  activate client
+  Note right of client : registMail()
+  alt SPkey不在
+    client ->> user : ダイアログ
+    user ->> client : e-mail
+    client ->> server : e-mail,CPkey,updated
+
+    sheet ->> server : ユーザ情報
+    server ->> server : ①登録状況確認
+    alt 登録済
+      server ->> sheet : CPkey,updated
+    else 未登録
+      server ->> server : 新規ユーザIDを採番
+      server ->> sheet : 新規ユーザとして追加
+    end
+    server ->> client : ユーザ情報
+    client ->> client : ②クライアント側更新
+  end
+  client ->> user : ユーザ情報編集画面
+  deactivate client
+```
+
+- ①登録状況確認
+- ②クライアント側更新
+  - storeUserInfo()でインスタンス変数,sessionStorageの情報を更新
+  - 返されたユーザ権限に基づきメニュー再描画
+
+<!--
   user ->> browser : メアド
   activate browser
   Note right of browser : enterIdentifyKey()
@@ -2704,7 +3205,7 @@ sequenceDiagram
   end
   browser ->> user : 遷移先画面
   deactivate browser
-```
+
 
 - CPkeyは有効期限にかかわらず送付され、server側で更新する<br>
   - 同一userIdで異なる機器からログインする場合を想定
@@ -2748,43 +3249,6 @@ sequenceDiagram
 - 「検索結果=既存」の場合、ユーザ情報編集画面の表示も検討したが、なりすましでもe-mail入力で個人情報が表示されることになるので不適切と判断。
 - 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
 
-<!--
-- メアド入力欄は募集要項の一部とし、userId(受付番号)がlocalStrageに存在する場合は表示しない
-
-sequenceDiagram
-  autonumber
-  actor user
-  participant client
-  participant server
-  participant property
-  participant sheet
-
-  user ->> client : メアド
-  activate client
-  Note right of client : authMenu.registMail()
-  alt userId保存済
-    client ->> user : userIdを表示して終了
-  end
-  client ->> client : 鍵ペア生成
-  client ->> server : メアド＋CPkey
-  activate server
-  Note right of server : authServer.registMail()
-  property ->> server : DocumentProperties
-  alt メアドが登録済
-    server ->> property : ユーザ情報(※1)
-    server ->> client : ユーザ情報(※2)
-    client ->> client : 遷移先=ホーム画面
-    client ->> user : userIdを表示
-  else メアドが未登録
-    server ->> server : userIdを新規採番
-    server ->> property : ユーザ情報(※1)
-    server ->> sheet : ユーザ情報(※3)
-    server ->> client : ユーザ情報(※2)
-    deactivate server
-    client ->> client : 遷移先=新規登録画面
-  end
-  client ->> client : session/local更新、メニュー再描画、遷移先画面に遷移
-  deactivate client
 -->
 
 ## 3.2 ログイン要求<a name="ac0016"></a>
@@ -2792,7 +3256,9 @@ sequenceDiagram
 [先頭](#ac0000) > [機能別処理フロー](#ac0014) > ログイン要求
 
 
-- ユーザIDやCS/CPkey他、自分のユーザ情報は先行する「新規ユーザ登録」によりインスタンス変数に存在する前提
+- 新規ユーザ登録は「サーバ側に登録されていない」ことを確認の上行うので、ログイン要求の一部になる。
+- ユーザIDやCS/CPkey他の自ユーザ情報、およびSPkeyはauthClient.constructor()で初期値を設定し、先行する「新規ユーザ登録」で修正済情報がインスタンス変数に存在する前提
+
 
 ```mermaid
 sequenceDiagram
@@ -2803,54 +3269,132 @@ sequenceDiagram
   participant server as authServer
   participant sheet
 
-  browser ->> client : userId/e-mail
+  browser ->> client : 呼び出し
   activate client
   Note right of client : login()
-  client ->> server : userId/e-mail,CPkey(SPkey/--)
+  alt メアド未定(this.email===null)
+    client ->> user : ダイアログ
+    user ->> client : e-mail
+  end
+
+  client ->> server : e-mail,CPkey
   activate server
-  Note right of server : loginA()
+  Note right of server : getUserStatus()
   sheet ->> server : ユーザ情報
-  server ->> server : ①ログイン確認
-  alt ログインOK
-    server ->> client : ユーザ情報
-    client ->> client : ②ユーザ情報更新
+  server ->> server : ①ユーザ情報存否確認
+  alt CPkey不一致
+    server ->> sheet : CPkey更新
+  end
+  server ->> client : 存否確認結果＋ユーザ情報
+  deactivate server
+  client ->> client : ②ユーザ情報更新
+  alt 登録済 and CPkey一致
     client ->> browser : ホーム画面表示
-  else ログインNG
-    rect rgba(0, 255, 255, 0.1)
-      server ->> server : パスコード生成
-      server ->> sheet : パスコード
-      server ->> user : パスコード連絡メール
-      server ->> client : ログインNG
-      deactivate server
-      client ->> user : パスコード入力ダイアログ
-      user ->> client : パスコード
-      client ->> server : パスコード
+  else 未登録 or CPkey不一致
+
+    alt 未登録
+      client ->> server : e-mail,CPkey(平文)
       activate server
-      Note right of server : loginB()
+      Note right of server : registMail()
       sheet ->> server : ユーザ情報
-      server ->> server : ③パスコード検証
-      server ->> sheet : 検証結果
-      alt 検証OK
-        server ->> client : ユーザ情報
-        client ->> client : ②ユーザ情報更新
-        client ->> browser : ホーム画面表示
-      else 検証NG
-        server ->> client : 検証NG通知
-        deactivate server
-        client ->> browser : エラーメッセージ
-      end
-      deactivate client
+      server ->> server : ③新規ユーザ情報作成
+      server ->> sheet : 新規ユーザ情報
+      server ->> client : 新規ユーザ情報
+      deactivate server
+      client ->> client : ②ユーザ情報更新
+    end
+
+    client ->> server : userId
+    activate server
+    Note right of server : sendPasscode()
+    sheet ->> server : ユーザ情報
+    server ->> server : ④パスコード生成
+    server ->> sheet : ⑤trial更新
+    server ->> user : パスコード連絡メール
+    server ->> client : メール送付通知
+    deactivate server
+
+    client ->> user : ダイアログ
+    user ->> client : パスコード
+
+    client ->> server : userId,パスコード
+    activate server
+    Note right of server : verifyPasscode()
+    sheet ->> server : ユーザ情報
+    server ->> server : ⑥パスコード検証
+    server ->> sheet : ⑤trial更新(検証結果)
+    alt 検証OK
+      server ->> client : ユーザ情報
+      client ->> client : ②ユーザ情報更新
+      client ->> browser : ホーム画面表示
+    else 検証NG
+      server ->> client : 検証NG通知
+      deactivate server
+      client ->> browser : エラーメッセージ
     end
   end
+  deactivate client
 ```
 
-- ①ログイン確認 : 以下の全てを満たす場合はOK
-  - userIdまたはe-mailが登録済
-  - 復号化したCPkeyがシート上のCPkeyと一致
-- ②ユーザ情報更新
+- 応募締切等、新規要求ができる期間の制限は、client側でも行う(authMenuの有効期間設定を想定)
+- メアドは形式チェックのみ行い、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
+- ①ユーザ情報存否確認
+  - e-mailが登録済 ? 登録済 : 未登録
+  - 復号化したCPkeyがシート上のCPkeyと一致 ? CPkey一致 : CPkey不一致
+- CPkeyは有効期限にかかわらず送付され、server側で更新する<br>
+  - 同一userIdで異なる機器からログインする場合を想定
+  - 将来的に有効期間を設定した場合、強制更新ならその検証も省略可能
+- ②ユーザ情報更新(storeUserInfo)
   1. authMenuインスタンス変数/sessionStorageのユーザ情報を更新
   1. メニューを再描画(genNavi()の実行)
-- ③パスコード検証
+- ※1(シート保存),※2(SV->CL)の「ユーザ情報」オブジェクトのメンバは以下の通り。
+  | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
+  | :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
+  | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
+  | created | string | ユーザID新規登録時刻(日時文字列) | × | × | × | × | ◎ |
+  | email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
+  | auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
+  | passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | × | × | × |
+  | CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
+  | CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
+  | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
+  | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
+  | isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
+  | trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
+- 新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
+- ③新規ユーザ情報作成
+- ④パスコード生成
+  - 実行権限の確認
+    - CPkey : ① and ② ? 有効 : 無効<br>
+      ①送られてきたCPkeyがユーザ毎のプロパティサービスに保存されたCPkeyと一致<br>
+      ②ユーザ毎のプロパティサービスに保存されたCPkeyが有効期限内
+    - 凍結 : 前回ログイン失敗(3回連続失敗)から一定時間内 ? true : false
+- ⑤trial更新 : trialは以下のメンバを持つObjectをJSON形式でシート上で保存
+  | 名称 | 属性 | 内容 | I/O |
+  | :-- | :-- | :-- | :-- |
+  | startAt | number | 試行開始日時(UNIX時刻) | × |
+  | passcode | number | パスコード(原則数値6桁) | × |
+  | log | object[] | 試行の記録。unshiftで先頭を最新にする | × |
+  | <span style="margin-left:1rem">timestamp</span> | number | 試行日時(UNIX時刻) | × |
+  | <span style="margin-left:1rem">entered</span> | number | 入力されたパスコード | × |
+  | <span style="margin-left:1rem">result</span> | boolean | パスコードと入力値の比較結果(true:OK) | × |
+  | <span style="margin-left:1rem">status</span> | string | NGの場合の理由。'OK':試行OK | × |
+  | endAt | number | 試行終了日時(UNIX時刻) | × |
+  | result | boolean | 試行の結果(true:OK) | ◎ |
+  | unfreeze | number | ログイン連続失敗後、凍結解除される日時(UNIX時刻) | ◎ |
+  - loc : localStorage
+  - ses : sessionStorage
+  - mem : authMenuインスタンス変数(メンバ)
+  - I/O : authServer -> authMenuへ送られるオブジェクト
+  - sht : シート
+- ⑥パスコード検証 : 「パスコード検証」は復号・署名確認の上、以下の点をチェックする
+  - 復号可能且つ署名が一致
+  - 送付されたパスコード・要求IDがプロパティサービスのそれと一致
+  - 試行回数が一定数以下(既定値3回)
+  - パスコード生成から一定時間内(既定値15分)
+  - ログイン可能な権限
+- パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
+  例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
 
 ## 3.3 操作要求<a name="ac0017"></a>
 
@@ -3034,13 +3578,12 @@ sequenceDiagram
 
 * [authMenu](#authMenu)
     * [new authMenu(arg)](#new_authMenu_new)
+    * [.changeScreen(screenName)](#authMenu+changeScreen) ⇒ <code>void</code>
+    * [.genNavi(wrapper, navi)](#authMenu+genNavi) ⇒ <code>null</code> \| <code>Error</code>
     * [.storeUserInfo(arg)](#authMenu+storeUserInfo) ⇒ <code>void</code>
     * [.doGAS()](#authMenu+doGAS)
     * [.toggle()](#authMenu+toggle)
     * [.showChildren()](#authMenu+showChildren)
-    * [.changeScreen()](#authMenu+changeScreen)
-    * [.genNavi(wrapper, navi)](#authMenu+genNavi) ⇒ <code>null</code> \| <code>Error</code>
-    * [.registMail(email)](#authMenu+registMail) ⇒ <code>Object</code>
 
 <a name="new_authMenu_new"></a>
 
@@ -3053,9 +3596,38 @@ sequenceDiagram
 | --- | --- |
 | arg | <code>Object</code> | 
 
+<a name="authMenu+changeScreen"></a>
+
+## 5.2 authMenu.changeScreen(screenName) ⇒ <code>void</code><a name="ac0022"></a>
+
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.changeScreen(screenName) ⇒ <code>void</code>
+
+適宜認証を行った上で画面を切り替える
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| screenName | <code>string</code> | <code>null</code> | 切替先の画面名 |
+
+<a name="authMenu+genNavi"></a>
+
+## 5.3 authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code><a name="ac0023"></a>
+
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>
+
+親要素を走査してナビゲーションを作成
+
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| wrapper | <code>HTMLElement</code> | body等の親要素。 |
+| navi | <code>HTMLElement</code> | nav等のナビゲーション領域 |
+
 <a name="authMenu+storeUserInfo"></a>
 
-## 5.2 authMenu.storeUserInfo(arg) ⇒ <code>void</code><a name="ac0022"></a>
+## 5.4 authMenu.storeUserInfo(arg) ⇒ <code>void</code><a name="ac0024"></a>
 
 [先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.storeUserInfo(arg) ⇒ <code>void</code>
 
@@ -3133,7 +3705,7 @@ storeUserInfo: インスタンス変数やstorageに保存したユーザ情報�
 4. `opt.userIdSelector='div[name="userId"]'`を指定して本関数を実行、HTMLからユーザIDを取得
 <a name="authMenu+doGAS"></a>
 
-## 5.3 authMenu.doGAS()<a name="ac0023"></a>
+## 5.5 authMenu.doGAS()<a name="ac0025"></a>
 
 [先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.doGAS()
 
@@ -3142,7 +3714,7 @@ authMenu用の既定値をセットしてdoGASを呼び出し
 **Kind**: instance method of [<code>authMenu</code>](#authMenu)  
 <a name="authMenu+toggle"></a>
 
-## 5.4 authMenu.toggle()<a name="ac0024"></a>
+## 5.6 authMenu.toggle()<a name="ac0026"></a>
 
 [先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.toggle()
 
@@ -3151,48 +3723,17 @@ authMenu用の既定値をセットしてdoGASを呼び出し
 **Kind**: instance method of [<code>authMenu</code>](#authMenu)  
 <a name="authMenu+showChildren"></a>
 
-## 5.5 authMenu.showChildren()<a name="ac0025"></a>
+## 5.7 authMenu.showChildren()<a name="ac0027"></a>
 
 [先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.showChildren()
 
 ブランチの下位階層メニュー表示/非表示切り替え
 
-**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
-<a name="authMenu+changeScreen"></a>
+**Kind**: instance method of [<code>authMenu</code>](#authMenu)
 
-## 5.6 authMenu.changeScreen()<a name="ac0026"></a>
-
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.changeScreen()
-
-this.homeの内容に従って画面を切り替える
-
-**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
-<a name="authMenu+genNavi"></a>
-
-## 5.7 authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code><a name="ac0027"></a>
-
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>
-
-親要素を走査してナビゲーションを作成
-
-**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| wrapper | <code>HTMLElement</code> | body等の親要素。 |
-| navi | <code>HTMLElement</code> | nav等のナビゲーション領域 |
-
-<a name="authMenu+registMail"></a>
-
-## 5.8 authMenu.registMail(email) ⇒ <code>Object</code><a name="ac0028"></a>
-
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.registMail(email) ⇒ <code>Object</code>
-
-**Kind**: instance method of [<code>authMenu</code>](#authMenu)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| email | <code>string</code> | 入力されたメールアドレス |
+1. ユーザID未定でも可能な処理(一般公開部分)
+1. ユーザIDは必要だが、ログイン(RSA)は不要な処理
+1. RSAキーが必要な処理
 
 **Kind**: global function  
 **Returns**: <code>Object</code> - 分岐先処理での処理結果  
@@ -3203,19 +3744,19 @@ this.homeの内容に従って画面を切り替える
 | func | <code>string</code> | <code>null</code> | 分岐先処理名 |
 | arg | <code>string</code> | <code>null</code> | 分岐先処理に渡す引数オブジェクト |
 
-# 6 テクニカルメモ<a name="ac0029"></a>
+# 6 テクニカルメモ<a name="ac0028"></a>
 
 [先頭](#ac0000) > テクニカルメモ
 
 
-## 6.1 GAS/htmlでの暗号化<a name="ac0030"></a>
+## 6.1 GAS/htmlでの暗号化<a name="ac0029"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0029) > GAS/htmlでの暗号化
+[先頭](#ac0000) > [テクニカルメモ](#ac0028) > GAS/htmlでの暗号化
 
 
-#### 6.1.1 手順<a name="ac0031"></a>
+#### 6.1.1 手順<a name="ac0030"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0029) > [GAS/htmlでの暗号化](#ac0030) > 手順
+[先頭](#ac0000) > [テクニカルメモ](#ac0028) > [GAS/htmlでの暗号化](#ac0029) > 手順
 
 
 ```mermaid
@@ -3251,9 +3792,9 @@ sequenceDiagram
   - GASでの保存
   - 
 
-#### 6.1.2 javascript用<a name="ac0032"></a>
+#### 6.1.2 javascript用<a name="ac0031"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0029) > [GAS/htmlでの暗号化](#ac0030) > javascript用
+[先頭](#ac0000) > [テクニカルメモ](#ac0028) > [GAS/htmlでの暗号化](#ac0029) > javascript用
 
 
 - Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
@@ -3262,9 +3803,9 @@ sequenceDiagram
 javascript 鍵ペア ライブラリ
 
 
-#### 6.1.3 GAS用<a name="ac0033"></a>
+#### 6.1.3 GAS用<a name="ac0032"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0029) > [GAS/htmlでの暗号化](#ac0030) > GAS用
+[先頭](#ac0000) > [テクニカルメモ](#ac0028) > [GAS/htmlでの暗号化](#ac0029) > GAS用
 
 
 GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
@@ -3309,7 +3850,7 @@ function setTest() {
 }
 ```
 
-# 7 プログラムソース<a name="ac0034"></a>
+# 7 プログラムソース<a name="ac0033"></a>
 
 [先頭](#ac0000) > プログラムソース
 
@@ -3369,6 +3910,359 @@ constructor(arg={}){
     return e;
   }
 }
+/** 適宜認証を行った上で画面を切り替える
+ * @param {string} screenName=null - 切替先の画面名
+ * @returns {void}
+ */
+async changeScreen(screenName=null){
+  const v = {whois:this.constructor.name+'.changeScreen',rv:null,step:0};
+  console.log(`${v.whois} start.\nscreenName=${screenName}(${typeof screenName})`);
+  try {
+
+    v.step = 1; // 権限と開示範囲の比較
+    v.step = 1.1; // 対象画面が未指定の場合、特定
+    if( screenName === null ){
+      console.log(this.constructor.name+`.changeScreen start.`
+      + `\nthis.home=${stringify(this.home)}(${typeof this.home})`
+      + `\nthis.user.auth=${this.user.auth}`);
+      // 変更先画面が無指定 => ホーム画面を表示
+      screenName = typeof this.home === 'string' ? this.home : this.home[this.user.auth];
+    }
+
+    if ( (this.screenAttr[screenName].allow & this.auth) > 0 ){
+      v.step = 2; // 指定画面の表示、終了処理
+      console.log(`${v.whois} normal end.`);
+      return changeScreen(screenName);
+    }
+  
+    // 以降、対象画面の開示権限が無い場合の処理
+    v.step = 3; // メアド未登録の場合
+    if( !this.user.hasOwnProperty('email') || !this.user.email ){
+      v.step = 3.1; // ダイアログでメアドを入力
+      v.email = window.prompt('メールアドレスを入力してください');
+      if( v.email === null ){
+        v.step = 3.2; // 入力キャンセルなら即終了
+        console.log(`${v.whois}: email address enter canceled (step ${v.step}).`);
+        return v.rv;
+      } else {
+        v.step = 3.3; // メアドの形式チェック
+        if( checkFormat(v.email,'email' ) === false ){
+          alert('メールアドレスの形式が不適切です');
+          console.log(`${v.whois}: invalid email address (step ${v.step}).`);
+          return v.rv;
+        }
+        v.step = 3.4; // ユーザ情報更新
+        v.r = this.storeUserInfo({email:v.email});
+        if( v.r instanceof Error ) throw v.r;
+      }
+    }
+  
+    v.step = 4.1; // ユーザ情報の取得。ユーザ不在なら新規登録
+    //【getUserInfoの引数・戻り値】
+    // @param {Object} arg
+    // @param {string} arg.email - 要求があったユーザのe-mail
+    // @param {string} arg.CPkey - 要求があったユーザの公開鍵
+    // @returns {object} 以下のメンバを持つオブジェクト
+    // 1. SPkey {string} - サーバ側公開鍵
+    // 1. isExist {boolean} - 既存メアドならtrue、新規登録ならfalse
+    // 1. isEqual {boolean} - 引数のCPkeyがシート上のCPkeyと一致するならtrue
+    // 1. isExpired {boolean} - CPkeyが有効期限切れならtrue
+    // 1. data {object} - 該当ユーザのシート上のオブジェクト
+    v.r = await this.doGAS('getUserInfo',{
+      email: this.user.email,
+      CPkey: this.user.CPkey,
+      updated: this.user.updated,
+    });
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 4.2; // ユーザ情報の更新
+    v.r = this.storeUserInfo(Object.assign(v.r.data,{SPkey:v.r.SPkey}));
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 5; // 権限が無い ⇒ エラーを表示して終了
+    if( (v.r.data.auth & w.screenAttr.auth) === 0 ){
+      alert(`指定画面(${screenName})の表示権限がありません。`);
+      console.log(`${v.whois}: no authority (step ${v.step}).`);
+      return v.rv;
+    }
+
+    v.step = 6; // 権限あり and CP一致 and CP有効 ⇒ 指定画面の表示、終了処理
+    if( ((v.r.data.auth & w.screenAttr.auth) > 0) && v.r.isEqual && v.r.isExpired ){
+      console.log(`${v.whois} normal end.`);
+      return changeScreen(screenName);
+    }
+
+    // 以降【権限あり and (CP不一致 or CP無効) ⇒ パスコード入力】
+    v.step = 7.1; // 鍵ペア再生成
+    this.user.passphrase = null;
+    v.r = this.storeUserInfo(v.r.data);
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 7.21; // パスコード通知メールの発行要求
+    //【sendPasscodeの引数・戻り値】
+    // @param {Object} arg
+    // @param {number} arg.userId - ユーザID
+    // @param {string} arg.CPkey - 要求があったユーザの公開鍵
+    // @param {string} arg.updated - CPkey生成・更新日時文字列
+    // @returns {object} 以下のメンバを持つオブジェクト
+    // - result {number}
+    //   - 0 : 成功(パスコード通知メールを送信)
+    //   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
+    //   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
+    // - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
+    // - SPkey=null {Object} サーバ側公開鍵
+    // - loginGraceTime=900,000(15分) {number}<br>
+    //   パスコード生成からログインまでの猶予時間(ミリ秒)
+    // - remainRetryInterval {number} 再挑戦可能になるまでの時間(ミリ秒)
+    // - passcodeDigits=6 {number} : パスコードの桁数
+    v.r = await this.doGAS('sendPasscode',{
+      userId: this.user.userId,
+      CPkey: this.user.CPkey,
+      updated: this.user.updated,
+    });
+    if( v.r instanceof Error ) throw v.r;
+    v.step = 7.22; // エラーメッセージの表示
+    if( v.r.result > 0 ){
+      switch(v.r.result){
+        case 1: v.msg = 'パスコード生成から入力までの時間が長すぎ、'
+          + '\n現在のパスコードが無効になりました。'
+          + '\n再度メニューを選択すれば、パスコードが再発行されます。'
+          + `\n再発行後、${Math.ceil(v.r.loginGraceTime/60000)}分以内にパスコードを入力してください。`;
+          break;
+        case 2: v.msg = '前回のログイン連続失敗から所定時間を経過していません。'
+          + `約${Math.ceil(v.r.remainRetryInterval/60000)}分後、再度ログインしてください。`;
+          break;
+      }
+      console.log(`${v.whois}: rejected by sendPasscode (step ${v.step}).`);
+      return v.rv;
+    }
+    v.step = 7.23; // ユーザ情報更新
+    v.a = this.storeUserInfo({email:v.email});
+    if( v.a instanceof Error ) throw v.a;
+
+    v.step = 7.3; // パスコード入力
+    v.passcode = window.prompt(`メールに記載されたパスコードを入力してください`
+      + `(数値${v.r.passcodeDigits}桁)`
+      + `\nパスコードを再発行する場合は"-1"を入力してください。`);
+    if( v.passcode === null ){
+      v.step = 7.31; // 入力キャンセルなら即終了
+      console.log(`${v.whois}: passcode enter canceled (step ${v.step}).`);
+      return v.rv;
+    } else {
+      if( isNaN(v.passcode) ){
+        v.step = 7.32; // パスコードの形式チェック
+        alert('パスコードの形式が不適切です');
+        console.log(`${v.whois}: invalid passcode (step ${v.step}).`);
+        return v.rv;
+      } else {
+        v.step = 7.33; // パスコードの数値化
+        v.passcode = Number(v.passcode);
+        if( v.passcode < 0 ){
+          v.step = 7.34; // 再発行要求
+          // パスコード再発行はパスコード入力ダイアログに負の数を入力し、
+          // changeScreenからsendPasscodeを再度呼び出すことで行う
+          v.r = this.changeScreen(screenName);
+          if( v.r instanceof Error ) throw v.r;
+          return v.r;
+        }
+      }
+    }
+
+    v.step = 7.41; // パスコード検証要求
+    //【verifyPasscodeの引数・戻り値】
+    v.encrypt = cryptico.encrypt(
+      ('0'.repeat(v.r.passcodeDigits) + String(v.passcode)).slice(-v.rpasscodeDigits),
+      this.SPkey,this.CSkey);
+    v.r = await this.doGAS('verifyPasscode',{
+      userId: this.user.userId,
+      passcode: v.encrypt,
+    });
+    if( v.r instanceof Error ) throw v.r;
+
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`
+    + `\narg=${stringify(arg)}`;  // 引数
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+/** 親要素を走査してナビゲーションを作成
+ * @param {HTMLElement} wrapper - body等の親要素。
+ * @param {HTMLElement} navi - nav等のナビゲーション領域
+ * @returns {null|Error}
+ */
+genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
+  const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // navi領域および画面・要素対応マップをクリア
+    if( depth === 0 ){
+      navi.innerHTML = '';
+      this.screenAttr = {};
+    }
+
+    // 子要素を順次走査し、data-menuを持つ要素をnaviに追加
+    for( v.i=0 ; v.i<wrapper.childElementCount ; v.i++ ){
+      v.d = wrapper.children[v.i];
+
+      // wrapper内のdata-menu属性を持つ要素に対する処理
+      v.step = 2.1; // data-menuを持たない要素はスキップ
+      v.attr = this.#objectize(v.d.getAttribute(`data-menu`));
+      if( v.attr instanceof Error ) throw v.attr;
+      if( v.attr === null ) continue;
+
+      v.step = 2.2; // screenクラスが無ければ追加
+      v.class = v.d.className.match(/screen/);
+      if( !v.class ) v.d.classList.add('screen'); 
+      v.step = 2.3; // nameが無ければ追加
+      v.name = v.d.getAttribute('name');
+      if( !v.name ){
+        v.name = v.attr.id;
+        v.d.setAttribute('name',v.name);
+      }
+
+      // navi領域への追加が必要か、判断
+      v.step = 3.1; // 実行権限がない機能・画面はnavi領域に追加しない
+      if( (this.user.auth & v.attr.allow) === 0 ) continue;
+      v.step = 3.2; // 有効期間外の場合はnavi領域に追加しない
+      if( v.now < v.attr.from || v.attr.to < v.now ) continue;
+
+      v.step = 4; // navi領域にul未設定なら追加
+      if( navi.tagName !== 'UL' ){
+        v.r = createElement({tag:'ul',attr:{class:this.constructor.name}},navi);
+        if( v.r instanceof Error ) throw v.r;
+        navi = v.r;
+      }
+
+      v.step = 5; // メニュー項目(li)の追加
+      v.li = {tag:'li',children:[{
+        tag:'a',
+        text:v.attr.label,
+        attr:{class:this.constructor.name,name:v.attr.id},
+      }]};
+      v.hasChild = false;
+      if( v.attr.hasOwnProperty('func') ){
+        v.step = 5.1; // 指定関数実行の場合
+        Object.assign(v.li.children[0],{
+          attr:{href:'#',name:v.attr.func},
+          event:{click:(event)=>{
+            this.toggle();  // メニューを閉じる
+            this.func[event.target.name](event); // 指定関数の実行
+            this.genNavi(); // メニュー再描画
+          }},
+        });
+      } else if( v.attr.hasOwnProperty('href') ){
+        v.step = 5.2; // 他サイトへの遷移指定の場合
+        Object.assign(v.li.children[0].attr,{href:v.attr.href,target:'_blank'});
+        Object.assign(v.li.children[0],{event:{click:this.toggle}}); // 遷移後メニューを閉じる
+      } else {
+        v.step = 5.3; // その他(=画面切替)の場合
+        // 子孫メニューがあるか確認
+        if( v.d.querySelector(`[data-menu]`) ){
+          v.step = 5.33; // 子孫メニューが存在する場合
+          v.hasChild = true; // 再帰呼出用のフラグを立てる
+          Object.assign(v.li.children[0],{
+            // 初期がサブメニュー表示ならclassにis_openを追加
+            attr:{class:(this.initialSubMenu ? 'is_open' : '')},
+            // '▼'または'▶︎'をメニューの前につける
+            text: (this.initialSubMenu ? '▶︎' : '▼') + v.li.children[0].text,
+            event: {click:this.showChildren}
+          });
+        } else { // 子孫メニューが存在しない場合
+          v.step = 5.33; // nameを指定して画面切替
+          Object.assign(v.li.children[0],{
+            event:{click:(event)=>{
+              this.changeScreen(event.target.getAttribute('name'));
+              this.toggle();
+            }}
+          });
+        }
+      }
+
+      v.step = 5.4; // navi領域にliを追加
+      v.r = createElement(v.li,navi);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 5.5; // 画面・要素対応マップに登録
+      this.screenAttr[v.name] = v.attr;
+
+      v.step = 5.5; // 子要素にdata-menuが存在する場合、再帰呼出
+      if( v.hasChild ){
+        v.r = this.genNavi(v.d,v.r,depth+1);
+        if( v.r instanceof Error ) throw v.r;
+      }
+    }
+
+    v.step = 6; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+/** data-menu属性の文字列をオブジェクトに変換
+ * authMenu専用として、以下の制限は許容する
+ * - メンバ名は英小文字に限定
+ * - カンマは区切記号のみで、id,label,func,hrefの値(文字列)内には不存在
+ * 
+ * @param {string} arg - data-menuにセットされた文字列
+ * @returns {Object|null|Error} 引数がnullまたは空文字列ならnullを返す
+ */
+#objectize(arg){
+  const v = {whois:this.constructor.name+'.objectize',rv:{},step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // nullまたは空文字列にはnullを返す
+    if( !arg || arg.length === 0 ) return null;
+
+    v.step = 2; // カンマで分割
+    v.p = arg.split(',');
+
+    v.step = 3; // 各値をオブジェクト化
+    for( v.i=0 ; v.i<v.p.length ; v.i++ ){
+      v.m = v.p[v.i].match(/^([a-z]+):['"]?(.+?)['"]?$/);
+      if( v.m ){
+        v.rv[v.m[1]] = v.m[2];
+      } else {
+        throw new Error('data-menuの設定値が不適切です\n'+arg);
+      }
+    }
+
+    v.step = 4.1; // idの存否チェック
+    if( !v.rv.hasOwnProperty('id') )
+      throw new Error('data-menuの設定値にはidが必須です\n'+arg);
+    v.step = 4.2; // ラベル不在の場合はidをセット
+    if( !v.rv.hasOwnProperty('label') )
+      v.rv.label = v.rv.id;
+    v.step = 4.3; // allowの既定値設定
+    v.rv.allow = v.rv.hasOwnProperty('allow') ? Number(v.rv.allow) : this.allow;
+    v.step = 4.4; // func,href両方有ればhrefを削除
+    if( v.rv.hasOwnProperty('func') && v.rv.hasOwnProperty('href') )
+      delete v.rv.href;
+    v.step = 4.5; // from/toの既定値設定
+    v.rv.from = v.rv.hasOwnProperty('from')
+      ? new Date(v.rv.from).getTime() : 0;  // 1970/1/1(UTC)
+    v.rv.to = v.rv.hasOwnProperty('to')
+      ? new Date(v.rv.from).getTime() : 253402182000000; // 9999/12/31(UTC)
+
+    v.step = 5; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\narg=${stringify(arg)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
 /** setProperties: constructorの引数と既定値からthisの値を設定
  * 
  * @param {Object} arg - constructorに渡された引数オブジェクト
@@ -3409,6 +4303,8 @@ constructor(arg={}){
  * - RSAkeyLength=1024 {number} : 鍵ペアのキー長
  * - passPhraseLength=16 {number} : 鍵ペア生成の際のパスフレーズ長
  * - user={} {object} ユーザ情報オブジェクト。詳細はstoreUserInfo()で設定
+ * - screenAttr={} {Object.<string, object>}<br>
+ *   メニューに登録した画面名とdata-menu属性(オブジェクト)の対応
  */
 #setProperties(arg){
   const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
@@ -3708,7 +4604,7 @@ storeUserInfo(arg={}){
     v.rv = Object.assign(v.html,v.local,v.session,v.user,arg);
 
     v.step = 2.2; // 鍵ペア・秘密鍵が存在しなければ作成
-    if( v.rv.CSkey === null ){
+    if( v.rv.passPhrase === null || v.rv.CSkey === null ){
       if( v.rv.passPhrase === null ){
         v.rv.passPhrase = createPassword(this.passPhraseLength);
         v.rv.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
@@ -3782,230 +4678,6 @@ showChildren(event){
   const text = ((m[1] === '▼') ? '▶️' : '▼') + m[2];
   event.target.innerText = text;  
 }
-
-/** this.homeの内容に従って画面を切り替える */ 
-changeScreen(arg=null){
-  console.log(this.constructor.name+`.changeScreen start.`
-  + `\nthis.home=${stringify(this.home)}(${typeof this.home})`
-  + `\nthis.user.auth=${this.user.auth}`);
-  if( arg === null ){
-    // 変更先画面が無指定 => ホーム画面を表示
-    arg = typeof this.home === 'string' ? this.home : this.home[this.user.auth];
-  }
-  return changeScreen(arg);
-}
-
-  // ===================================
-  // メニュー関係(旧BurgerMenu)
-  // ===================================
-/** data-menu属性の文字列をオブジェクトに変換
- * authMenu専用として、以下の制限は許容する
- * - メンバ名は英小文字に限定
- * - カンマは区切記号のみで、id,label,func,hrefの値(文字列)内には不存在
- * 
- * @param {string} arg - data-menuにセットされた文字列
- * @returns {Object|null|Error} 引数がnullまたは空文字列ならnullを返す
- */
-#objectize(arg){
-  const v = {whois:this.constructor.name+'.objectize',rv:{},step:0};
-  console.log(`${v.whois} start.`);
-  try {
-
-    v.step = 1; // nullまたは空文字列にはnullを返す
-    if( !arg || arg.length === 0 ) return null;
-
-    v.step = 2; // カンマで分割
-    v.p = arg.split(',');
-
-    v.step = 3; // 各値をオブジェクト化
-    for( v.i=0 ; v.i<v.p.length ; v.i++ ){
-      v.m = v.p[v.i].match(/^([a-z]+):['"]?(.+?)['"]?$/);
-      if( v.m ){
-        v.rv[v.m[1]] = v.m[2];
-      } else {
-        throw new Error('data-menuの設定値が不適切です\n'+arg);
-      }
-    }
-
-    v.step = 4.1; // idの存否チェック
-    if( !v.rv.hasOwnProperty('id') )
-      throw new Error('data-menuの設定値にはidが必須です\n'+arg);
-    v.step = 4.2; // ラベル不在の場合はidをセット
-    if( !v.rv.hasOwnProperty('label') )
-      v.rv.label = v.rv.id;
-    v.step = 4.3; // allowの既定値設定
-    v.rv.allow = v.rv.hasOwnProperty('allow') ? Number(v.rv.allow) : this.allow;
-    v.step = 4.4; // func,href両方有ればhrefを削除
-    if( v.rv.hasOwnProperty('func') && v.rv.hasOwnProperty('href') )
-      delete v.rv.href;
-    v.step = 4.5; // from/toの既定値設定
-    v.rv.from = v.rv.hasOwnProperty('from')
-      ? new Date(v.rv.from).getTime() : 0;  // 1970/1/1(UTC)
-    v.rv.to = v.rv.hasOwnProperty('to')
-      ? new Date(v.rv.from).getTime() : 253402182000000; // 9999/12/31(UTC)
-
-    v.step = 5; // 終了処理
-    console.log(`${v.whois} normal end.`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\narg=${stringify(arg)}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-/** 親要素を走査してナビゲーションを作成
- * @param {HTMLElement} wrapper - body等の親要素。
- * @param {HTMLElement} navi - nav等のナビゲーション領域
- * @returns {null|Error}
- */
-genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
-  const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
-  console.log(`${v.whois} start.`);
-  try {
-
-    v.step = 1; // navi領域をクリア
-    if( depth === 0 ){
-      navi.innerHTML = '';
-    }
-
-    // 子要素を順次走査し、data-menuを持つ要素をnaviに追加
-    for( v.i=0 ; v.i<wrapper.childElementCount ; v.i++ ){
-      v.d = wrapper.children[v.i];
-
-      // wrapper内のdata-menu属性を持つ要素に対する処理
-      v.step = 2.1; // data-menuを持たない要素はスキップ
-      v.attr = this.#objectize(v.d.getAttribute(`data-menu`));
-      if( v.attr instanceof Error ) throw v.attr;
-      if( v.attr === null ) continue;
-
-      v.step = 2.2; // screenクラスが無ければ追加
-      v.class = v.d.className.match(/screen/);
-      if( !v.class ) v.d.classList.add('screen'); 
-      v.step = 2.3; // nameが無ければ追加
-      v.name = v.d.getAttribute('name');
-      if( !v.name ){
-        v.name = v.attr.id;
-        v.d.setAttribute('name',v.name);
-      }
-
-      // navi領域への追加が必要か、判断
-      v.step = 3.1; // 実行権限がない機能・画面はnavi領域に追加しない
-      if( (this.user.auth & v.attr.allow) === 0 ) continue;
-      v.step = 3.2; // 有効期間外の場合はnavi領域に追加しない
-      if( v.now < v.attr.from || v.attr.to < v.now ) continue;
-
-      v.step = 4; // navi領域にul未設定なら追加
-      if( navi.tagName !== 'UL' ){
-        v.r = createElement({tag:'ul',attr:{class:this.constructor.name}},navi);
-        if( v.r instanceof Error ) throw v.r;
-        navi = v.r;
-      }
-
-      v.step = 5; // メニュー項目(li)の追加
-      v.li = {tag:'li',children:[{
-        tag:'a',
-        text:v.attr.label,
-        attr:{class:this.constructor.name,name:v.attr.id},
-      }]};
-      v.hasChild = false;
-      if( v.attr.hasOwnProperty('func') ){
-        v.step = 5.1; // 指定関数実行の場合
-        Object.assign(v.li.children[0],{
-          attr:{href:'#',name:v.attr.func},
-          event:{click:(event)=>{
-            this.toggle();  // メニューを閉じる
-            this.func[event.target.name](event); // 指定関数の実行
-            this.genNavi(); // メニュー再描画
-          }},
-        });
-      } else if( v.attr.hasOwnProperty('href') ){
-        v.step = 5.2; // 他サイトへの遷移指定の場合
-        Object.assign(v.li.children[0].attr,{href:v.attr.href,target:'_blank'});
-        Object.assign(v.li.children[0],{event:{click:this.toggle}}); // 遷移後メニューを閉じる
-      } else {
-        v.step = 5.3; // その他(=画面切替)の場合
-        // 子孫メニューがあるか確認
-        if( v.d.querySelector(`[data-menu]`) ){
-          v.step = 5.33; // 子孫メニューが存在する場合
-          v.hasChild = true; // 再帰呼出用のフラグを立てる
-          Object.assign(v.li.children[0],{
-            // 初期がサブメニュー表示ならclassにis_openを追加
-            attr:{class:(this.initialSubMenu ? 'is_open' : '')},
-            // '▼'または'▶︎'をメニューの前につける
-            text: (this.initialSubMenu ? '▶︎' : '▼') + v.li.children[0].text,
-            event: {click:this.showChildren}
-          });
-        } else { // 子孫メニューが存在しない場合
-          v.step = 5.33; // nameを指定して画面切替
-          Object.assign(v.li.children[0],{
-            event:{click:(event)=>{
-              this.changeScreen(event.target.getAttribute('name'));
-              this.toggle();
-            }}
-          });
-        }
-      }
-
-      v.step = 5.4; // navi領域にliを追加
-      v.r = createElement(v.li,navi);
-      if( v.r instanceof Error ) throw v.r;
-
-      v.step = 5.5; // 子要素にdata-menuが存在する場合、再帰呼出
-      if( v.hasChild ){
-        v.r = this.genNavi(v.d,v.r,depth+1);
-        if( v.r instanceof Error ) throw v.r;
-      }
-    }
-
-    v.step = 6; // 終了処理
-    console.log(`${v.whois} normal end.`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-
-  // ===================================
-  // 認証関係(旧Auth)
-  // ===================================
-/**
- * 
- * @param {string} email - 入力されたメールアドレス
- * @returns {Object}
- */
-async registMail(email){
-  const v = {whois:this.constructor.name+'.registMail',rv:null,step:0};
-  console.log(`${v.whois} start.`);
-  try {
-
-    v.step = 1; // authServer.registMailに問合せ
-    v.rv = await this.doGAS('registMail',{
-      email: email,
-      CPkey: this.user.CPkey,
-      updated: this.user.updated,
-    });
-    if( v.rv instanceof Error ) throw v.rv;
-
-    v.step = 2; // ユーザ情報更新用
-    v.rv = this.storeUserInfo(v.rv);
-    if( v.rv instanceof Error ) throw v.rv;
-
-    v.step = 3; // 終了処理
-    console.log(`${v.whois} normal end.`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\nemail=${email}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
 }
 ```
 
@@ -4015,6 +4687,11 @@ async registMail(email){
 
 ```
 /** サーバ側の認証処理を分岐させる
+ * 
+ * 1. ユーザID未定でも可能な処理(一般公開部分)
+ * 1. ユーザIDは必要だが、ログイン(RSA)は不要な処理
+ * 1. RSAキーが必要な処理
+ * 
  * @param {number} userId 
  * @param {string} func - 分岐先処理名
  * @param {string} arg - 分岐先処理に渡す引数オブジェクト
@@ -4037,6 +4714,7 @@ function authServer(userId=null,func=null,arg=null) {
  * 
  * 1. propertyName='authServer' {string}<br>
  *    プロパティサービスのキー名
+ * 1. passcodeDigits=6 {number} : パスコードの桁数
  * 1. loginRetryInterval=3,600,000(60分) {number}<br>
  *    前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
  * 1. numberOfLoginAttempts=3 {number}<br>
@@ -4053,9 +4731,12 @@ function authServer(userId=null,func=null,arg=null) {
  *    主キーとなる項目名。主キーは数値で設定
  * 1. emailColumn='email' {string}<br>
  *    e-mailを格納するシート上の項目名
- * 1. passPhrase {string} : authServerのパスフレーズ
- * 1. SSkey {Object} : authServerの秘密鍵
- * 1. SPkey {string} : authServerの公開鍵
+ * 1. RSA {Object} : サーバ側RSAキー関連情報
+ *    1. passPhraseLength=16 {number} : authServerのパスフレーズの長さ
+ *    1. passPhrase {string} : authServerのパスフレーズ(自動生成)
+ *    1. bits=1024 {number} : RSAキーのビット長
+ *    1. SSkey {Object} : authServerの秘密鍵
+ *    1. SPkey {string} : authServerの公開鍵
  * 1. userIdStartNumber=1 : ユーザID(数値)の開始
  * 
  * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
@@ -4078,11 +4759,20 @@ w.func.setProperties = function(){
         masterSheet : 'master',
         primatyKeyColumn : 'userId',
         emailColumn : 'email',
-        passPhrase : createPassword(16),
+        RSA : {
+          passPhraseLength : 16,
+          bits: 1024,  
+        },
         userIdStartNumber : 1,
+        notificatePasscodeMail: {
+          subject: '[連絡] パスコード',
+          body: 'パスコードは以下の通りです。\n\n::passcode::',
+          options: {},
+        },
       };
-      w.prop.SSkey = cryptico.generateRSAKey(w.prop.passPhrase,1024);
-      w.prop.SPkey = cryptico.publicKeyString(w.prop.SSkey);
+      w.prop.RSA.passPhrase = createPassword(w.prop.RSA.passPhraseLength),
+      w.prop.RSA.SSkey = cryptico.generateRSAKey(w.prop.RSA.passPhrase,w.prop.RSA.bits);
+      w.prop.RSA.SPkey = cryptico.publicKeyString(w.prop.RSA.SSkey);
       // プロパティサービスを更新
       PropertiesService.getDocumentProperties().setProperties(w.prop);
     }
@@ -4098,9 +4788,10 @@ w.rv = w.func.setProperties(arg);
 if( w.rv instanceof Error ) throw w.rv;
 
     if( userId === null ){ // userIdが不要な処理
-      if( ['registMail'].find(x => x === func) ){
+      if( ['registMail','getUserInfo'].find(x => x === func) ){
         w.step = 1; // userId未定でも可能な処理 ⇒ 一般公開用
-/** authClientからの登録要求を受け、IDを返す
+        //:x:メールアドレスの登録::$src/server.registMail.js::
+/** authClientからの要求を受け、ユーザ情報と状態を返す
  * 
  * - IDは自然数の前提、1から順に採番。
  * - 新規採番は途中の欠損は考慮せず、最大値＋1とする
@@ -4108,17 +4799,17 @@ if( w.rv instanceof Error ) throw w.rv;
  * @param {Object} arg
  * @param {string} arg.email - 要求があったユーザのe-mail
  * @param {string} arg.CPkey - 要求があったユーザの公開鍵
- * @param {string} arg.updated - 公開鍵更新日時(日時文字列)
- * @returns {number|Error} 採番されたuserId
+ * @returns {object} 以下のメンバを持つオブジェクト
+ * 1. SPkey {string} - サーバ側公開鍵
+ * 1. isExist {boolean} - 既存メアドならtrue、新規登録ならfalse
+ * 1. isEqual {boolean} - 引数のCPkeyがシート上のCPkeyと一致するならtrue
+ * 1. isExpired {boolean} - CPkeyが有効期限切れならtrue
+ * 1. data {object} - 該当ユーザのシート上のオブジェクト
  */
-w.func.registMail = function(arg){
-  const v = {whois:w.whois+'.registMail',step:0,rv:{
-    userId:null,
-    created:null,
-    email:null,
-    auth:null,
+w.func.getUserInfo = function(arg){
+  const v = {whois:w.whois+'.getUserInfo',step:0,rv:{
     SPkey:w.prop.SPkey,
-    isExist:null,
+    isExist:true, isEqual:true, isExpired:false, data:null,
   }};
   console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
   try {
@@ -4133,30 +4824,17 @@ w.func.registMail = function(arg){
     if( v.master instanceof Error ) throw v.master;
 
     v.step = 3; // メアドが登録済か確認、登録済ならシートのユーザ情報を保存
-    v.sheet = null;
     for( v.i=0 ; v.i<v.master.data.length ; v.i++ ){
       if( v.master.data[v.i][w.prop.emailColumn] === arg.email ){
-        v.sheet = v.master.data[v.i];
+        v.rv.data = v.master.data[v.i];
         break;
       }
     }
 
-    if( v.sheet !== null ){
-      v.step = 4; // メアドが登録済の場合
+    if( v.rv.data === null ){
+      v.step = 4; // メアドが未登録の場合
 
-      if( v.sheet.CPkey !== arg.CPkey ){
-        v.step = 4.1; // ユーザの公開鍵を更新
-        v.r = v.master.update([{CPkey:arg.CPkey,updated:arg.updated}]);
-        if( v.r instanceof Error ) throw v.r;
-      }
-
-      v.step = 4.2; // フラグを更新
-      v.rv.isExit = true;
-
-    } else {
-      v.step = 5; // メアドが未登録の場合
-
-      v.step = 5.1; // userIdの最大値を取得
+      v.step = 4.1; // userIdの最大値を取得
       if( v.master.data.length === 0 ){
         // 登録済が0件(シート作成直後)の場合
         v.max = w.prop.userIdStartNumber - 1;
@@ -4167,29 +4845,29 @@ w.func.registMail = function(arg){
         v.max = Math.max(...v.map);
       }
 
-      v.step = 5.2; // シートに初期値を登録
-      v.sheet = {
+      v.step = 4.2; // シートに初期値を登録
+      v.rv.data = {
         userId  : v.max + 1,
         created : toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn'),
         email   : arg.email,
         auth    : w.prop.defaultAuth,
         CPkey   : arg.CPkey,
-        updated : arg.updated,
+        updated : null,
         trial   : '{}',
       };
-      v.r = v.master.insert([v.sheet]);
+      v.rv.data.updated = v.rv.data.created;
+      v.r = v.master.insert([v.rv.data]);
       if( v.r instanceof Error ) throw v.r;
 
-      v.step = 5.3; // フラグを更新
+      v.step = 4.3; // 存否フラグを更新
       v.rv.isExist = false;
     }
 
-    v.step = 6; // 戻り値用にユーザ情報の項目を調整
-    Object.keys(v.rv).forEach(x => {
-      if( v.rv[x] === null ) v.rv[x] = v.sheet[x];
-    });
+    v.step = 5; // 戻り値用にユーザ情報の項目を調整
+    v.rv.isEqual = v.rv.data.CPkey === arg.CPkey;
+    v.rv.isExpired = (new Date(v.rv.data.updated).getTime() + w.userLoginLifeTime) > Date.now();
 
-    v.step = 7; // 終了処理
+    v.step = 6; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
@@ -4200,20 +4878,167 @@ w.func.registMail = function(arg){
     return e;
   }
 }
-w.rv = w.func.registMail(arg);
+w.rv = w.func.getUserInfo(arg);
 if( w.rv instanceof Error ) throw w.rv;
       } else {
         w.step = 2; // 該当処理なし
         w.rv = null;
       }
     } else {  // userIdが必要な処理
-      if( ['login1S'].find(x => x === func) ){
+      if( ['sendPasscode'].find(x => x === func) ){
         w.step = 3; // ログインは不要な処理
         // ⇒ 参加者用メニュー(応募情報(自分の個人情報)修正を除く)
+        switch( func ){
+          case 'sendPasscode': w.step += ':sendPasscode';
+/** authClientからの要求を受け、ユーザ情報と状態を返す
+ * 
+ * ユーザIDやCS/CPkey他の自ユーザ情報、およびSPkeyはauthClient.constructor()で初期値を設定し、
+ * 先行する「新規ユーザ登録」で修正済情報がインスタンス変数に存在する前提。
+ * 
+ * @param {Object} arg
+ * @param {number} arg.userId - ユーザID
+ * @param {string} arg.CPkey - 要求があったユーザの公開鍵
+ * @param {string} arg.updated - CPkey生成・更新日時文字列
+ * @returns {object} 以下のメンバを持つオブジェクト
+ * - status {number}
+ *   - 0 : 成功(パスコード通知メールを送信)
+ *   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
+ *   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
+ * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
+ * - SPkey=null {Object} サーバ側公開鍵
+ * - loginGraceTime=900,000(15分) {number}<br>
+ *   パスコード生成からログインまでの猶予時間(ミリ秒)
+ * - remainRetryInterval=0 {number} 再挑戦可能になるまでの時間(ミリ秒)
+ * - passcodeDigits=6 {number} : パスコードの桁数
+ */
+w.func.sendPasscode = function(arg){
+  const v = {whois:w.whois+'.sendPasscode',step:0,rv:{
+    status: 0, data: null, SPkey: null,
+    loginGraceTime: w.prop.loginGraceTime,
+    remainRetryInterval: 0,
+    passcodeDigits: w.prop.passcodeDigits,
+  }};
+  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
+  try {
 
-        //:x:$src/server.login1S.js::
+    // ---------------------------------------------
+    v.step = 1; // 事前準備
+    // ---------------------------------------------
+    v.step = 1.1; // シートから全ユーザ情報の取得
+    v.master = new SingleTable(w.prop.masterSheet);
+    if( v.master instanceof Error ) throw v.master;
 
-      } else if( ['login2S','operation'].find(x => x === func) ){
+    v.step = 1.2; // 対象ユーザ情報の取得
+    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === arg.userId});
+    if( v.user instanceof Error ) throw v.user;
+
+    v.step = 1.3; // trialオブジェクトの取得
+    v.trial = JSON.parse(v.user.trial);
+    if( !v.trial.hasOwnProperty('log') ) v.trial.log = [];
+
+
+    // ---------------------------------------------
+    v.step = 2; // パスコード生成
+    //【trialオブジェクト定義】
+    // - passcode {number} パスコード(原則数値6桁)
+    // - created {number} パスコード生成日時(UNIX時刻)
+    // - log {object[]} 試行の記録。unshiftで先頭を最新にする
+    //   - timestamp {number} 試行日時(UNIX時刻)
+    //   - entered {number} 入力されたパスコード
+    //   - status {number} v.rv.statusの値
+    //   - result {number} 0:成功、1〜n:連続n回目の失敗
+    // trialオブジェクトはunshiftで常に先頭(添字=0)が最新になるようにする。
+    // ---------------------------------------------
+
+    v.step = 2.1; // 試行可能かの確認
+    // 以下のいずれかの場合はエラーを返して終了
+    // ①パスコード生成からログインまでの猶予時間を過ぎている
+    if( (w.prop.loginGraceTime + trial.created) > Date.now() ){
+      v.rv.status = 1;
+      return v.rv;
+    }
+    // ②前回ログイン失敗から凍結時間を過ぎていない
+    if( v.trial.log.length > 0 ){
+      if( trial.log[0].status === w.prop.numberOfLoginAttempts
+      && (trial.log[0].timestamp + w.prop.loginRetryInterval) > Date.now() )
+        v.rv.status = 2;
+        v.rv.remainRetryInterval = trial.log[0].timestamp
+          + w.prop.loginRetryInterval - Date.now();
+        return v.rv;
+    }
+
+    v.step = 2.2; // trialオブジェクトを生成、シートに保存
+    v.trial.passcode = Math.floor(Math.random() * Math.pow(10,w.prop.passcodeDigits));
+    v.trial.created = Date.now();
+
+    v.step = 2.3; // trial更新に合わせ、CPkey/updatedも更新
+    // sendPasscodeが呼ばれるのは「CP不一致 or CP無効」の場合。
+    // よって送られてきた新規CPkey/updatedでシート上のそれを更新する
+    v.r = v.master.update({
+      CPkey: arg.CPkey,
+      updated: arg.updated,
+      trial: JSON.stringify(v.trial)
+    },{where: x => x[w.prop.primatyKeyColumn] === arg.userId});
+
+
+    // ---------------------------------------------
+    v.step = 3; // パスコード通知メールの発信
+    // ---------------------------------------------
+    // $lib/sendmail/1.0.0/core.js
+    // @param {String} recipient - 受信者のアドレス
+    // @param {String} subject - 件名
+    // @param {String} body - メールの本文
+    // @param {Object} options - 詳細パラメータを指定する JavaScript オブジェクト（下記を参照）
+    // @param {BlobSource[]} options.attachments - メールと一緒に送信するファイルの配列
+    // @param {String} options.bcc - Bcc で送信するメールアドレスのカンマ区切りのリスト
+    // @param {String} options.cc - Cc に含めるメールアドレスのカンマ区切りのリスト
+    // @param {String} options.from - メールの送信元アドレス。getAliases() によって返される値のいずれかにする必要があります。
+    // @param {String} options.htmlBody - 設定すると、HTML をレンダリングできるデバイスは、必須の本文引数の代わりにそれを使用します。メール用にインライン画像を用意する場合は、HTML 本文にオプションの inlineImages フィールドを追加できます。
+    // @param {Object} options.inlineImages - 画像キー（String）から画像データ（BlobSource）へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、<img src="cid:imageKey" /> 形式でこれらの画像への参照が含まれていることを前提としています。
+    // @param {String} options.name - メールの送信者の名前（デフォルト: ユーザー名）
+    // @param {String} options.replyTo - デフォルトの返信先アドレスとして使用するメールアドレス（デフォルト: ユーザーのメールアドレス）
+    // @returns {null|Error}
+    //
+    // w.prop.notificatePasscodeMailでテンプレート設定済
+    // notificatePasscodeMail: {
+    //   subject: '[連絡] パスコード',
+    //   body: 'パスコードは以下の通りです。\n\n::passcode::',
+    //   options: {},
+    // },
+    v.trial.body = w.prop.notificatePasscodeMail.body
+    .replaceAll('::passcode::',('0'.repeat(w.prop.passcodeDigits)
+    + String(v.trial.passcode)).slice(-w.prop.passcodeDigits));
+    v.r = sendmail(
+      v.user.email, // recipient
+      w.prop.notificatePasscodeMail.subject, // subject
+      v.trial.body, // body
+      w.prop.notificatePasscodeMail.options // options
+    );
+    if( v.r instanceof Error ) throw v.r;
+
+
+    // ---------------------------------------------
+    v.step = 4; // 終了処理
+    // ---------------------------------------------
+    v.rv.data = v.user;
+    delete v.rv.data.trial; // 悪用されないよう、念のため削除
+    v.rv.SPkey = w.prop.SPkey;
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\narg=${stringify(arg)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+w.rv = w.func.sendPasscode(arg);
+if( w.rv instanceof Error ) throw w.rv;
+            break;
+        }
+
+      } else if( ['verifyPasscode','operation'].find(x => x === func) ){
         // ログインしないと操作不可の処理
         // ⇒ 応募情報修正、スタッフ用メニュー
 
@@ -4221,24 +5046,7 @@ if( w.rv instanceof Error ) throw w.rv;
 /** クライアント側の署名を検証、引数を復号してオブジェクト化する
  * @param {number} userId - ユーザID
  * @param {string} arg - クライアント側での暗号化＋署名結果(文字列)
- * @returns {Object}
- * 
- * @example
- * 
- * サーバ側に鍵ペアが存在しない場合は自動生成してプロパティサービスに保存
- * 
- * ** 注意事項 **
- * 
- * 他のauthServerメソッドは`w.func.xxx`として定義するが、
- * 本メソッドはユーザに使用させないシステム的なメソッドのため、
- * funcではなく`w.initialize`として定義する。
- * 
- * **戻り値の形式**
- * 
- * - {Object|Error} rv
- *   - passPhrase {string} パスフレーズ
- *   - privateKey {Object} RSA形式の秘密鍵
- *   - publicKey {string} RSA形式の公開鍵
+ * @returns {Object|Error} 復号化したオブジェクト
  * 
  * **参考：パスフレーズ・秘密鍵・公開鍵の一括保存はできない**
  * 
@@ -4253,68 +5061,87 @@ if( w.rv instanceof Error ) throw w.rv;
  * ⇒ max 9KB/値なので、パスフレーズ・公開鍵・秘密鍵は別々のプロパティとして保存が必要
  */
 w.func.verifySignature = function(userId=null,arg=null){
-  const v = {whois:w.whois+'.verifySignature',rv:{},step:0};
+  const v = {whois:w.whois+'.verifySignature',rv:{result:0,message:'',obj:null},step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    // userId, argは共に必須
+    // ---------------------------------------------
+    v.step = 1; // 事前準備
+    // ---------------------------------------------
+    v.step = 1.1; // 引数チェック。userId, argは共に必須
     if( userId === null ) throw new Error(`${v.whois} Error: no userId.`);
     if( arg === null ) throw new Error(`${v.whois} Error: no arg.`);
 
-    v.step = 1; // サーバ側鍵ペアの取得・生成　※親関数のwhoisを使用
-    v.RSA = PropertiesService.getDocumentProperties().getProperty(w.whois);
-    if( v.RSA === null ){
-      v.step = 1.1;
-      v.bits = 1024;  // ビット長
-      v.RSA.passPhrase = createPassword(16); // 16桁のパスワードを自動生成
-      v.step = 1.2; // 秘密鍵の生成
-      v.RSA.privateKey = cryptico.generateRSAKey(v.RSA.passPhrase, v.bits);
-      v.step = 1.3; // 公開鍵の生成
-      v.RSA.publicKey = cryptico.publicKeyString(v.RSA.privateKey);
-      PropertiesService.getDocumentProperties().setProperty(w.whois,v.RSA);
-    }
+    v.step = 1.2; // サーバ側鍵ペアの取得・生成　※親関数のwhoisを使用
+    v.RSA = PropertiesService.getDocumentProperties().getProperty(w.whois).RSA;
 
+
+    // ---------------------------------------------
     v.step = 2; // クライアント側情報の取得
-    v.client = PropertiesService.getDocumentProperties().getProperty(userId);
+    // ---------------------------------------------
+    v.step = 2.1; // シートから全ユーザ情報の取得
+    v.master = new SingleTable(w.prop.masterSheet);
+    if( v.master instanceof Error ) throw v.master;
 
-    if( v.client === null ){
-      v.step = 3; // クライアント側情報未登録 ⇒ 空オブジェクトを返す
-      v.client = {
-        userId: userId,
-        email: '',
-        created: Date.now(),
-        publicKeyID: '',
-        authority: 2,
-        log: [],
-      };
-      PropertiesService.getDocumentProperties().setProperty(userId,v.client);
-    } else {
-      v.step = 4; // クライアント側情報登録済
-      v.step = 4.1; // 引数の復元
-      v.decrypt = cryptico.decrypt(arg,v.RSA.privateKey);
-      console.log(`v.decrypt=${stringify(v.decrypt)}`);
-      v.step = 4.2; // 署名の検証
-      v.decrypt.publicKeyID = cryptico.publicKeyID(v.decrypt.publicKeyString);
-      v.decrypt.verify = v.client.publicKeyID === v.decrypt.publicKeyID;
-      v.step = 4.3; // 有効期間の確認。　※親関数のvalidityPeriodを使用
-      v.decrypt.validityPeriod = (v.client.created + w.validityPeriod) < Date.now();
-      v.step = 4.3; // 戻り値をオブジェクト化
-      v.rv = v.decrypt.status === 'success' && v.decrypt.verify && v.decrypt.validityPeriod
-      ? JSON.parse(v.decrypt.plaintext)
-      : new Error(`cryptico.decrypt error.`
+    v.step = 2.2; // 対象ユーザ情報の取得
+    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === userId});
+    if( v.user instanceof Error ) throw v.user;
+
+    v.step = 2.3 // userIdがシートに存在しない
+    if( v.user.length === 0 ){
+      v.rv.result = 1;
+      console.log(`${v.whois}: no userId on sheet ${w.prop.masterSheet} (step ${v.step}).`);
+      return v.rv;
+    }
+    
+    // ---------------------------------------------
+    v.step = 3; // 引数の復元
+    // 【以下の処理におけるv.rvオブジェクトのメンバ】
+    // - result {number}
+    //   - 0: 正常終了
+    //   - 1: userIdがシートに存在しない
+    //   - 2: 不適切な暗号化(decrypt.status != 'success')
+    //   - 3: 不適切な署名(decrypt.publicKeyString != sheet.CPkey)<br>
+    //     ※ decrypt.signatureは常に"forged"で"verified"にならないため、CPkeyを比較
+    //   - 4: CPkey有効期限切れ
+    // - message='' {string} エラーだった場合のメッセージ
+    // - obj=null {object} 復号したオブジェクト
+    // ---------------------------------------------
+    v.decrypt = cryptico.decrypt(arg,v.RSA.SPkey);
+    //console.log(`v.decrypt=${stringify(v.decrypt)}`);
+    if( v.decrypt.status !== 'success' ){
+      v.step = 3.1; // 復号不可
+      v.rv.result = 2;
+      v.rv.message = `${v.whois}: decrypt error (step ${v.step}).`
       + `\nstatus="${v.decrypt.status}"`
       + `\nplaintext="${v.decrypt.plaintext}"`
       + `\nsignature="${v.decrypt.signature}"`
       + `\npublicKeyString="${v.decrypt.publicKeyString}"`
       + `\npublicKeyID="${v.decrypt.publicKeyID}"`
       + `\nverify="${v.decrypt.verify}"`
-      + `\nvalidityPeriod="${v.decrypt.validityPeriod}"`);
+      + `\nvalidityPeriod="${v.decrypt.validityPeriod}"`;
+    } else if( v.decrypt.publicKeyString !== v.user.CPkey ){
+      v.step = 3.2; // 不適切な署名(CPkey不一致)
+      v.rv.result = 3;
+      v.rv.message = `${v.whois}: CPkey unmatch (step ${v.step}).`
+      + `\nv.decrypt.publicKeyString=${v.decrypt.publicKeyString}`
+      + `\nv.user.CPkey=${v.user.CPkey}`;
+    } else if( (new Date(v.user.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
+      v.step = 3.3; // CPkey有効期限切れ
+      v.rv.result = 4;
+      v.rv.message = `${v.whois}: CPkey expired (step ${v.step}).`
+      + `\nupdated: ${v.user.updated})`
+      + `\nuserLoginLifeTime: ${w.prop.userLoginLifeTime/3600000} hours`
+      + `\nDate.now(): ${toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn')}`;
+    } else {
+      v.step = 3.4; // 正常終了
+      v.rv.obj = JSON.parse(v.decrypt.plaintext);
     }
+    if( v.rv.result > 0 ) throw new Error(v.rv.message);
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.`);
-    console.log(`type = ${typeof v.rv}\npassPhrase="${v.rv.passPhrase}\npublicKey="${v.rv.publicKey}"`);
-    return v.rv;
+    return v.rv.obj;
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
@@ -4323,15 +5150,132 @@ w.func.verifySignature = function(userId=null,arg=null){
 }
 w.r = w.func.verifySignature(userId,arg);
 if( w.r instanceof Error ) throw w.r;
+        // verifySignatureの戻り値はw.rで受けるので、後続処理に引数として渡す
 
         switch( func ){
-          case 'login2S': w.step = 4 + ':login2S';
-            //:x:$src/server.login2S.js::
+          case 'verifyPasscode': w.step += ':verifyPasscode';
+/** 入力されたパスコードの検証
+ * 
+ * @param {Object} arg
+ * @param {number} arg.userId - ユーザID
+ * @param {number} arg.passcode - 入力されたパスコード
+ * @returns {Object|number} ユーザ情報オブジェクト。エラーならエラーコード
+    // ログイン失敗になるまでの試行回数(numberOfLoginAttempts)
+    // パスコード生成からログインまでの猶予時間(ミリ秒)(loginGraceTime)
+    // クライアント側ログイン(CPkey)有効期間(userLoginLifeTime)
+ * @returns {object} 以下のメンバを持つオブジェクト
+ * - status {number}
+ *   - 0 : 成功(パスコードが一致)
+ *   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
+ *   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
+ *   - 3 : クライアント側ログイン(CPkey)有効期限切れ
+ *   - 4 : パスコード不一致
+ * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
+ * - SPkey=null {Object} サーバ側公開鍵
+ * - loginGraceTime=900,000(15分) {number}<br>
+ *   パスコード生成からログインまでの猶予時間(ミリ秒)
+ * - remainRetryInterval=0 {number} 再挑戦可能になるまでの時間(ミリ秒)
+ * - passcodeDigits=6 {number} : パスコードの桁数
+ */
+w.func.verifyPasscode = function(arg){
+  const v = {whois:w.whois+'.verifyPasscode',step:0,rv:{
+    status: 0, data: null, SPkey: null,
+    loginGraceTime: w.prop.loginGraceTime,
+    remainRetryInterval: 0,
+    passcodeDigits: w.prop.passcodeDigits,
+  }};
+  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
+  try {
+
+    // ---------------------------------------------
+    v.step = 1; // 事前準備
+    // ---------------------------------------------
+    v.step = 1.1; // シートから全ユーザ情報の取得
+    v.master = new SingleTable(w.prop.masterSheet);
+    if( v.master instanceof Error ) throw v.master;
+
+    v.step = 1.2; // 対象ユーザ情報の取得
+    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === arg.userId});
+    if( v.user instanceof Error ) throw v.user;
+
+    v.step = 1.3; // trialオブジェクトの取得
+    v.trial = JSON.parse(v.user.trial);
+    if( !v.trial.hasOwnProperty('log') ) v.trial.log = [];
+
+
+    // ---------------------------------------------
+    v.step = 2; // パスコード検証
+    // ---------------------------------------------
+    // ログイン失敗になるまでの試行回数(numberOfLoginAttempts)
+    // パスコード生成からログインまでの猶予時間(ミリ秒)(loginGraceTime)
+    // クライアント側ログイン(CPkey)有効期間(userLoginLifeTime)
+
+    v.step = 2.1; // 試行可能かの確認
+    // 以下のいずれかの場合はエラーを返して終了
+    if( (w.prop.loginGraceTime + v.trial.created) > Date.now() ){
+      // ①パスコード生成からログインまでの猶予時間を過ぎている
+      v.rv.status = 1;
+    } else if( v.trial.log.length > 0
+      && trial.log[0].status === w.prop.numberOfLoginAttempts
+      && (trial.log[0].timestamp + w.prop.loginRetryInterval) > Date.now() ){
+      // ②前回ログイン失敗から凍結時間を過ぎていない
+      v.rv.status = 2;
+      v.rv.remainRetryInterval = trial.log[0].timestamp
+        + w.prop.loginRetryInterval - Date.now();
+    } else if( (new Date(v.user.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
+      // ③クライアント側ログイン(CPkey)有効期限切れ(userLoginLifeTime)
+      v.rv.status = 3;
+    } else if( v.trial.passcode !== arg.passcode ){
+      // ④パスコード不一致
+      v.rv.status = 4;
+    } else {
+      // パスコードが一致
+      v.rv.data = v.user;
+    }
+
+    // ---------------------------------------------
+    v.step = 3; // 終了処理
+    // ---------------------------------------------
+    v.step = 3.1; // trial更新(検証結果の格納)
+    // - passcode {number} パスコード(原則数値6桁)
+    // - log {object[]} 試行の記録。unshiftで先頭を最新にする
+    //   - timestamp {number} 試行日時(UNIX時刻)
+    //   - entered {number} 入力されたパスコード
+    //   - status {number} v.rv.statusの値
+    //   - result {number} 0:成功、1〜n:連続n回目の失敗
+    // 
+    // trialオブジェクトはunshiftで常に先頭(添字=0)が最新になるようにする。
+    // 新しいlogオブジェクトの作成
+    v.log = {
+      timestamp: Date.now(),
+      entered: arg.passcode,
+      status: v.status,
+      result: v.status === 0 ? 0 : (v.trial.log[0].result + 1),
+    }
+    v.trial.log.unshift(v.log);
+    v.r = v.master.update({trial:JSON.stringify(v.trial)},
+      {where:x => x.userId === arg.userId});
+    if( v.r instanceof Error ) throw v.r;
+
+
+    v.step = 3.2; // 検証OKならユーザ情報を、NGなら通知を返す
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\narg=${stringify(arg)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+w.rv = w.func.verifyPasscode(w.r);  // w.rはserver.verifySignatureの戻り値
+if( w.rv instanceof Error ) throw w.rv;
+            break;
+          case 'operation': w.step += ':operation';
+            //:x:$src/server.operation.js::
             break;
           // 後略
-          //:x:$src/server.listAuth.js::
-          //:x:$src/server.changeAuth.js::
-          //:x:$src/server.operation.js::
         }
       } else {
         w.step = 5; // 該当処理なし
@@ -4355,7 +5299,7 @@ if( w.r instanceof Error ) throw w.r;
 
 </details>
 
-# 8 改版履歴<a name="ac0035"></a>
+# 8 改版履歴<a name="ac0034"></a>
 
 [先頭](#ac0000) > 改版履歴
 

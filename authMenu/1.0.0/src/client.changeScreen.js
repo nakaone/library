@@ -64,7 +64,7 @@ async changeScreen(screenName=null){
     if( v.r instanceof Error ) throw v.r;
 
     v.step = 4.2; // ユーザ情報の更新
-    v.r = this.storeUserInfo(Object.assign({v.r.data},{SPkey:v.r.SPkey}));
+    v.r = this.storeUserInfo(Object.assign(v.r.data,{SPkey:v.r.SPkey}));
     if( v.r instanceof Error ) throw v.r;
 
     v.step = 5; // 権限が無い ⇒ エラーを表示して終了

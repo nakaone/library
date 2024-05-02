@@ -22,6 +22,11 @@ function authServerTest(){
   }
 }
 /** サーバ側の認証処理を分岐させる
+ * 
+ * 1. ユーザID未定でも可能な処理(一般公開部分)
+ * 1. ユーザIDは必要だが、ログイン(RSA)は不要な処理
+ * 1. RSAキーが必要な処理
+ * 
  * @param {number} userId 
  * @param {string} func - 分岐先処理名
  * @param {string} arg - 分岐先処理に渡す引数オブジェクト
@@ -44,6 +49,7 @@ function authServer(userId=null,func=null,arg=null) {
  * 
  * 1. propertyName='authServer' {string}<br>
  *    プロパティサービスのキー名
+ * 1. passcodeDigits=6 {number} : パスコードの桁数
  * 1. loginRetryInterval=3,600,000(60分) {number}<br>
  *    前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
  * 1. numberOfLoginAttempts=3 {number}<br>
@@ -60,9 +66,12 @@ function authServer(userId=null,func=null,arg=null) {
  *    主キーとなる項目名。主キーは数値で設定
  * 1. emailColumn='email' {string}<br>
  *    e-mailを格納するシート上の項目名
- * 1. passPhrase {string} : authServerのパスフレーズ
- * 1. SSkey {Object} : authServerの秘密鍵
- * 1. SPkey {string} : authServerの公開鍵
+ * 1. RSA {Object} : サーバ側RSAキー関連情報
+ *    1. passPhraseLength=16 {number} : authServerのパスフレーズの長さ
+ *    1. passPhrase {string} : authServerのパスフレーズ(自動生成)
+ *    1. bits=1024 {number} : RSAキーのビット長
+ *    1. SSkey {Object} : authServerの秘密鍵
+ *    1. SPkey {string} : authServerの公開鍵
  * 1. userIdStartNumber=1 : ユーザID(数値)の開始
  * 
  * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
@@ -85,11 +94,20 @@ w.func.setProperties = function(){
         masterSheet : 'master',
         primatyKeyColumn : 'userId',
         emailColumn : 'email',
-        passPhrase : createPassword(16),
+        RSA : {
+          passPhraseLength : 16,
+          bits: 1024,  
+        },
         userIdStartNumber : 1,
+        notificatePasscodeMail: {
+          subject: '[連絡] パスコード',
+          body: 'パスコードは以下の通りです。\n\n::passcode::',
+          options: {},
+        },
       };
-      w.prop.SSkey = cryptico.generateRSAKey(w.prop.passPhrase,1024);
-      w.prop.SPkey = cryptico.publicKeyString(w.prop.SSkey);
+      w.prop.RSA.passPhrase = createPassword(w.prop.RSA.passPhraseLength),
+      w.prop.RSA.SSkey = cryptico.generateRSAKey(w.prop.RSA.passPhrase,w.prop.RSA.bits);
+      w.prop.RSA.SPkey = cryptico.publicKeyString(w.prop.RSA.SSkey);
       // プロパティサービスを更新
       PropertiesService.getDocumentProperties().setProperties(w.prop);
     }
@@ -105,9 +123,10 @@ w.rv = w.func.setProperties(arg);
 if( w.rv instanceof Error ) throw w.rv;
 
     if( userId === null ){ // userIdが不要な処理
-      if( ['registMail'].find(x => x === func) ){
+      if( ['registMail','getUserInfo'].find(x => x === func) ){
         w.step = 1; // userId未定でも可能な処理 ⇒ 一般公開用
-/** authClientからの登録要求を受け、IDを返す
+        //:x:メールアドレスの登録::$src/server.registMail.js::
+/** authClientからの要求を受け、ユーザ情報と状態を返す
  * 
  * - IDは自然数の前提、1から順に採番。
  * - 新規採番は途中の欠損は考慮せず、最大値＋1とする
@@ -115,17 +134,17 @@ if( w.rv instanceof Error ) throw w.rv;
  * @param {Object} arg
  * @param {string} arg.email - 要求があったユーザのe-mail
  * @param {string} arg.CPkey - 要求があったユーザの公開鍵
- * @param {string} arg.updated - 公開鍵更新日時(日時文字列)
- * @returns {number|Error} 採番されたuserId
+ * @returns {object} 以下のメンバを持つオブジェクト
+ * 1. SPkey {string} - サーバ側公開鍵
+ * 1. isExist {boolean} - 既存メアドならtrue、新規登録ならfalse
+ * 1. isEqual {boolean} - 引数のCPkeyがシート上のCPkeyと一致するならtrue
+ * 1. isExpired {boolean} - CPkeyが有効期限切れならtrue
+ * 1. data {object} - 該当ユーザのシート上のオブジェクト
  */
-w.func.registMail = function(arg){
-  const v = {whois:w.whois+'.registMail',step:0,rv:{
-    userId:null,
-    created:null,
-    email:null,
-    auth:null,
+w.func.getUserInfo = function(arg){
+  const v = {whois:w.whois+'.getUserInfo',step:0,rv:{
     SPkey:w.prop.SPkey,
-    isExist:null,
+    isExist:true, isEqual:true, isExpired:false, data:null,
   }};
   console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
   try {
@@ -140,30 +159,17 @@ w.func.registMail = function(arg){
     if( v.master instanceof Error ) throw v.master;
 
     v.step = 3; // メアドが登録済か確認、登録済ならシートのユーザ情報を保存
-    v.sheet = null;
     for( v.i=0 ; v.i<v.master.data.length ; v.i++ ){
       if( v.master.data[v.i][w.prop.emailColumn] === arg.email ){
-        v.sheet = v.master.data[v.i];
+        v.rv.data = v.master.data[v.i];
         break;
       }
     }
 
-    if( v.sheet !== null ){
-      v.step = 4; // メアドが登録済の場合
+    if( v.rv.data === null ){
+      v.step = 4; // メアドが未登録の場合
 
-      if( v.sheet.CPkey !== arg.CPkey ){
-        v.step = 4.1; // ユーザの公開鍵を更新
-        v.r = v.master.update([{CPkey:arg.CPkey,updated:arg.updated}]);
-        if( v.r instanceof Error ) throw v.r;
-      }
-
-      v.step = 4.2; // フラグを更新
-      v.rv.isExit = true;
-
-    } else {
-      v.step = 5; // メアドが未登録の場合
-
-      v.step = 5.1; // userIdの最大値を取得
+      v.step = 4.1; // userIdの最大値を取得
       if( v.master.data.length === 0 ){
         // 登録済が0件(シート作成直後)の場合
         v.max = w.prop.userIdStartNumber - 1;
@@ -174,29 +180,29 @@ w.func.registMail = function(arg){
         v.max = Math.max(...v.map);
       }
 
-      v.step = 5.2; // シートに初期値を登録
-      v.sheet = {
+      v.step = 4.2; // シートに初期値を登録
+      v.rv.data = {
         userId  : v.max + 1,
         created : toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn'),
         email   : arg.email,
         auth    : w.prop.defaultAuth,
         CPkey   : arg.CPkey,
-        updated : arg.updated,
+        updated : null,
         trial   : '{}',
       };
-      v.r = v.master.insert([v.sheet]);
+      v.rv.data.updated = v.rv.data.created;
+      v.r = v.master.insert([v.rv.data]);
       if( v.r instanceof Error ) throw v.r;
 
-      v.step = 5.3; // フラグを更新
+      v.step = 4.3; // 存否フラグを更新
       v.rv.isExist = false;
     }
 
-    v.step = 6; // 戻り値用にユーザ情報の項目を調整
-    Object.keys(v.rv).forEach(x => {
-      if( v.rv[x] === null ) v.rv[x] = v.sheet[x];
-    });
+    v.step = 5; // 戻り値用にユーザ情報の項目を調整
+    v.rv.isEqual = v.rv.data.CPkey === arg.CPkey;
+    v.rv.isExpired = (new Date(v.rv.data.updated).getTime() + w.userLoginLifeTime) > Date.now();
 
-    v.step = 7; // 終了処理
+    v.step = 6; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
@@ -207,20 +213,167 @@ w.func.registMail = function(arg){
     return e;
   }
 }
-w.rv = w.func.registMail(arg);
+w.rv = w.func.getUserInfo(arg);
 if( w.rv instanceof Error ) throw w.rv;
       } else {
         w.step = 2; // 該当処理なし
         w.rv = null;
       }
     } else {  // userIdが必要な処理
-      if( ['login1S'].find(x => x === func) ){
+      if( ['sendPasscode'].find(x => x === func) ){
         w.step = 3; // ログインは不要な処理
         // ⇒ 参加者用メニュー(応募情報(自分の個人情報)修正を除く)
+        switch( func ){
+          case 'sendPasscode': w.step += ':sendPasscode';
+/** authClientからの要求を受け、ユーザ情報と状態を返す
+ * 
+ * ユーザIDやCS/CPkey他の自ユーザ情報、およびSPkeyはauthClient.constructor()で初期値を設定し、
+ * 先行する「新規ユーザ登録」で修正済情報がインスタンス変数に存在する前提。
+ * 
+ * @param {Object} arg
+ * @param {number} arg.userId - ユーザID
+ * @param {string} arg.CPkey - 要求があったユーザの公開鍵
+ * @param {string} arg.updated - CPkey生成・更新日時文字列
+ * @returns {object} 以下のメンバを持つオブジェクト
+ * - status {number}
+ *   - 0 : 成功(パスコード通知メールを送信)
+ *   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
+ *   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
+ * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
+ * - SPkey=null {Object} サーバ側公開鍵
+ * - loginGraceTime=900,000(15分) {number}<br>
+ *   パスコード生成からログインまでの猶予時間(ミリ秒)
+ * - remainRetryInterval=0 {number} 再挑戦可能になるまでの時間(ミリ秒)
+ * - passcodeDigits=6 {number} : パスコードの桁数
+ */
+w.func.sendPasscode = function(arg){
+  const v = {whois:w.whois+'.sendPasscode',step:0,rv:{
+    status: 0, data: null, SPkey: null,
+    loginGraceTime: w.prop.loginGraceTime,
+    remainRetryInterval: 0,
+    passcodeDigits: w.prop.passcodeDigits,
+  }};
+  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
+  try {
 
-        //:x:$src/server.login1S.js::
+    // ---------------------------------------------
+    v.step = 1; // 事前準備
+    // ---------------------------------------------
+    v.step = 1.1; // シートから全ユーザ情報の取得
+    v.master = new SingleTable(w.prop.masterSheet);
+    if( v.master instanceof Error ) throw v.master;
 
-      } else if( ['login2S','operation'].find(x => x === func) ){
+    v.step = 1.2; // 対象ユーザ情報の取得
+    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === arg.userId});
+    if( v.user instanceof Error ) throw v.user;
+
+    v.step = 1.3; // trialオブジェクトの取得
+    v.trial = JSON.parse(v.user.trial);
+    if( !v.trial.hasOwnProperty('log') ) v.trial.log = [];
+
+
+    // ---------------------------------------------
+    v.step = 2; // パスコード生成
+    //【trialオブジェクト定義】
+    // - passcode {number} パスコード(原則数値6桁)
+    // - created {number} パスコード生成日時(UNIX時刻)
+    // - log {object[]} 試行の記録。unshiftで先頭を最新にする
+    //   - timestamp {number} 試行日時(UNIX時刻)
+    //   - entered {number} 入力されたパスコード
+    //   - status {number} v.rv.statusの値
+    //   - result {number} 0:成功、1〜n:連続n回目の失敗
+    // trialオブジェクトはunshiftで常に先頭(添字=0)が最新になるようにする。
+    // ---------------------------------------------
+
+    v.step = 2.1; // 試行可能かの確認
+    // 以下のいずれかの場合はエラーを返して終了
+    // ①パスコード生成からログインまでの猶予時間を過ぎている
+    if( (w.prop.loginGraceTime + trial.created) > Date.now() ){
+      v.rv.status = 1;
+      return v.rv;
+    }
+    // ②前回ログイン失敗から凍結時間を過ぎていない
+    if( v.trial.log.length > 0 ){
+      if( trial.log[0].status === w.prop.numberOfLoginAttempts
+      && (trial.log[0].timestamp + w.prop.loginRetryInterval) > Date.now() )
+        v.rv.status = 2;
+        v.rv.remainRetryInterval = trial.log[0].timestamp
+          + w.prop.loginRetryInterval - Date.now();
+        return v.rv;
+    }
+
+    v.step = 2.2; // trialオブジェクトを生成、シートに保存
+    v.trial.passcode = Math.floor(Math.random() * Math.pow(10,w.prop.passcodeDigits));
+    v.trial.created = Date.now();
+
+    v.step = 2.3; // trial更新に合わせ、CPkey/updatedも更新
+    // sendPasscodeが呼ばれるのは「CP不一致 or CP無効」の場合。
+    // よって送られてきた新規CPkey/updatedでシート上のそれを更新する
+    v.r = v.master.update({
+      CPkey: arg.CPkey,
+      updated: arg.updated,
+      trial: JSON.stringify(v.trial)
+    },{where: x => x[w.prop.primatyKeyColumn] === arg.userId});
+
+
+    // ---------------------------------------------
+    v.step = 3; // パスコード通知メールの発信
+    // ---------------------------------------------
+    // $lib/sendmail/1.0.0/core.js
+    // @param {String} recipient - 受信者のアドレス
+    // @param {String} subject - 件名
+    // @param {String} body - メールの本文
+    // @param {Object} options - 詳細パラメータを指定する JavaScript オブジェクト（下記を参照）
+    // @param {BlobSource[]} options.attachments - メールと一緒に送信するファイルの配列
+    // @param {String} options.bcc - Bcc で送信するメールアドレスのカンマ区切りのリスト
+    // @param {String} options.cc - Cc に含めるメールアドレスのカンマ区切りのリスト
+    // @param {String} options.from - メールの送信元アドレス。getAliases() によって返される値のいずれかにする必要があります。
+    // @param {String} options.htmlBody - 設定すると、HTML をレンダリングできるデバイスは、必須の本文引数の代わりにそれを使用します。メール用にインライン画像を用意する場合は、HTML 本文にオプションの inlineImages フィールドを追加できます。
+    // @param {Object} options.inlineImages - 画像キー（String）から画像データ（BlobSource）へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、<img src="cid:imageKey" /> 形式でこれらの画像への参照が含まれていることを前提としています。
+    // @param {String} options.name - メールの送信者の名前（デフォルト: ユーザー名）
+    // @param {String} options.replyTo - デフォルトの返信先アドレスとして使用するメールアドレス（デフォルト: ユーザーのメールアドレス）
+    // @returns {null|Error}
+    //
+    // w.prop.notificatePasscodeMailでテンプレート設定済
+    // notificatePasscodeMail: {
+    //   subject: '[連絡] パスコード',
+    //   body: 'パスコードは以下の通りです。\n\n::passcode::',
+    //   options: {},
+    // },
+    v.trial.body = w.prop.notificatePasscodeMail.body
+    .replaceAll('::passcode::',('0'.repeat(w.prop.passcodeDigits)
+    + String(v.trial.passcode)).slice(-w.prop.passcodeDigits));
+    v.r = sendmail(
+      v.user.email, // recipient
+      w.prop.notificatePasscodeMail.subject, // subject
+      v.trial.body, // body
+      w.prop.notificatePasscodeMail.options // options
+    );
+    if( v.r instanceof Error ) throw v.r;
+
+
+    // ---------------------------------------------
+    v.step = 4; // 終了処理
+    // ---------------------------------------------
+    v.rv.data = v.user;
+    delete v.rv.data.trial; // 悪用されないよう、念のため削除
+    v.rv.SPkey = w.prop.SPkey;
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\narg=${stringify(arg)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+w.rv = w.func.sendPasscode(arg);
+if( w.rv instanceof Error ) throw w.rv;
+            break;
+        }
+
+      } else if( ['verifyPasscode','operation'].find(x => x === func) ){
         // ログインしないと操作不可の処理
         // ⇒ 応募情報修正、スタッフ用メニュー
 
@@ -228,24 +381,7 @@ if( w.rv instanceof Error ) throw w.rv;
 /** クライアント側の署名を検証、引数を復号してオブジェクト化する
  * @param {number} userId - ユーザID
  * @param {string} arg - クライアント側での暗号化＋署名結果(文字列)
- * @returns {Object}
- * 
- * @example
- * 
- * サーバ側に鍵ペアが存在しない場合は自動生成してプロパティサービスに保存
- * 
- * ** 注意事項 **
- * 
- * 他のauthServerメソッドは`w.func.xxx`として定義するが、
- * 本メソッドはユーザに使用させないシステム的なメソッドのため、
- * funcではなく`w.initialize`として定義する。
- * 
- * **戻り値の形式**
- * 
- * - {Object|Error} rv
- *   - passPhrase {string} パスフレーズ
- *   - privateKey {Object} RSA形式の秘密鍵
- *   - publicKey {string} RSA形式の公開鍵
+ * @returns {Object|Error} 復号化したオブジェクト
  * 
  * **参考：パスフレーズ・秘密鍵・公開鍵の一括保存はできない**
  * 
@@ -260,68 +396,87 @@ if( w.rv instanceof Error ) throw w.rv;
  * ⇒ max 9KB/値なので、パスフレーズ・公開鍵・秘密鍵は別々のプロパティとして保存が必要
  */
 w.func.verifySignature = function(userId=null,arg=null){
-  const v = {whois:w.whois+'.verifySignature',rv:{},step:0};
+  const v = {whois:w.whois+'.verifySignature',rv:{result:0,message:'',obj:null},step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    // userId, argは共に必須
+    // ---------------------------------------------
+    v.step = 1; // 事前準備
+    // ---------------------------------------------
+    v.step = 1.1; // 引数チェック。userId, argは共に必須
     if( userId === null ) throw new Error(`${v.whois} Error: no userId.`);
     if( arg === null ) throw new Error(`${v.whois} Error: no arg.`);
 
-    v.step = 1; // サーバ側鍵ペアの取得・生成　※親関数のwhoisを使用
-    v.RSA = PropertiesService.getDocumentProperties().getProperty(w.whois);
-    if( v.RSA === null ){
-      v.step = 1.1;
-      v.bits = 1024;  // ビット長
-      v.RSA.passPhrase = createPassword(16); // 16桁のパスワードを自動生成
-      v.step = 1.2; // 秘密鍵の生成
-      v.RSA.privateKey = cryptico.generateRSAKey(v.RSA.passPhrase, v.bits);
-      v.step = 1.3; // 公開鍵の生成
-      v.RSA.publicKey = cryptico.publicKeyString(v.RSA.privateKey);
-      PropertiesService.getDocumentProperties().setProperty(w.whois,v.RSA);
-    }
+    v.step = 1.2; // サーバ側鍵ペアの取得・生成　※親関数のwhoisを使用
+    v.RSA = PropertiesService.getDocumentProperties().getProperty(w.whois).RSA;
 
+
+    // ---------------------------------------------
     v.step = 2; // クライアント側情報の取得
-    v.client = PropertiesService.getDocumentProperties().getProperty(userId);
+    // ---------------------------------------------
+    v.step = 2.1; // シートから全ユーザ情報の取得
+    v.master = new SingleTable(w.prop.masterSheet);
+    if( v.master instanceof Error ) throw v.master;
 
-    if( v.client === null ){
-      v.step = 3; // クライアント側情報未登録 ⇒ 空オブジェクトを返す
-      v.client = {
-        userId: userId,
-        email: '',
-        created: Date.now(),
-        publicKeyID: '',
-        authority: 2,
-        log: [],
-      };
-      PropertiesService.getDocumentProperties().setProperty(userId,v.client);
-    } else {
-      v.step = 4; // クライアント側情報登録済
-      v.step = 4.1; // 引数の復元
-      v.decrypt = cryptico.decrypt(arg,v.RSA.privateKey);
-      console.log(`v.decrypt=${stringify(v.decrypt)}`);
-      v.step = 4.2; // 署名の検証
-      v.decrypt.publicKeyID = cryptico.publicKeyID(v.decrypt.publicKeyString);
-      v.decrypt.verify = v.client.publicKeyID === v.decrypt.publicKeyID;
-      v.step = 4.3; // 有効期間の確認。　※親関数のvalidityPeriodを使用
-      v.decrypt.validityPeriod = (v.client.created + w.validityPeriod) < Date.now();
-      v.step = 4.3; // 戻り値をオブジェクト化
-      v.rv = v.decrypt.status === 'success' && v.decrypt.verify && v.decrypt.validityPeriod
-      ? JSON.parse(v.decrypt.plaintext)
-      : new Error(`cryptico.decrypt error.`
+    v.step = 2.2; // 対象ユーザ情報の取得
+    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === userId});
+    if( v.user instanceof Error ) throw v.user;
+
+    v.step = 2.3 // userIdがシートに存在しない
+    if( v.user.length === 0 ){
+      v.rv.result = 1;
+      console.log(`${v.whois}: no userId on sheet ${w.prop.masterSheet} (step ${v.step}).`);
+      return v.rv;
+    }
+    
+    // ---------------------------------------------
+    v.step = 3; // 引数の復元
+    // 【以下の処理におけるv.rvオブジェクトのメンバ】
+    // - result {number}
+    //   - 0: 正常終了
+    //   - 1: userIdがシートに存在しない
+    //   - 2: 不適切な暗号化(decrypt.status != 'success')
+    //   - 3: 不適切な署名(decrypt.publicKeyString != sheet.CPkey)<br>
+    //     ※ decrypt.signatureは常に"forged"で"verified"にならないため、CPkeyを比較
+    //   - 4: CPkey有効期限切れ
+    // - message='' {string} エラーだった場合のメッセージ
+    // - obj=null {object} 復号したオブジェクト
+    // ---------------------------------------------
+    v.decrypt = cryptico.decrypt(arg,v.RSA.SPkey);
+    //console.log(`v.decrypt=${stringify(v.decrypt)}`);
+    if( v.decrypt.status !== 'success' ){
+      v.step = 3.1; // 復号不可
+      v.rv.result = 2;
+      v.rv.message = `${v.whois}: decrypt error (step ${v.step}).`
       + `\nstatus="${v.decrypt.status}"`
       + `\nplaintext="${v.decrypt.plaintext}"`
       + `\nsignature="${v.decrypt.signature}"`
       + `\npublicKeyString="${v.decrypt.publicKeyString}"`
       + `\npublicKeyID="${v.decrypt.publicKeyID}"`
       + `\nverify="${v.decrypt.verify}"`
-      + `\nvalidityPeriod="${v.decrypt.validityPeriod}"`);
+      + `\nvalidityPeriod="${v.decrypt.validityPeriod}"`;
+    } else if( v.decrypt.publicKeyString !== v.user.CPkey ){
+      v.step = 3.2; // 不適切な署名(CPkey不一致)
+      v.rv.result = 3;
+      v.rv.message = `${v.whois}: CPkey unmatch (step ${v.step}).`
+      + `\nv.decrypt.publicKeyString=${v.decrypt.publicKeyString}`
+      + `\nv.user.CPkey=${v.user.CPkey}`;
+    } else if( (new Date(v.user.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
+      v.step = 3.3; // CPkey有効期限切れ
+      v.rv.result = 4;
+      v.rv.message = `${v.whois}: CPkey expired (step ${v.step}).`
+      + `\nupdated: ${v.user.updated})`
+      + `\nuserLoginLifeTime: ${w.prop.userLoginLifeTime/3600000} hours`
+      + `\nDate.now(): ${toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn')}`;
+    } else {
+      v.step = 3.4; // 正常終了
+      v.rv.obj = JSON.parse(v.decrypt.plaintext);
     }
+    if( v.rv.result > 0 ) throw new Error(v.rv.message);
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.`);
-    console.log(`type = ${typeof v.rv}\npassPhrase="${v.rv.passPhrase}\npublicKey="${v.rv.publicKey}"`);
-    return v.rv;
+    return v.rv.obj;
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
@@ -330,15 +485,132 @@ w.func.verifySignature = function(userId=null,arg=null){
 }
 w.r = w.func.verifySignature(userId,arg);
 if( w.r instanceof Error ) throw w.r;
+        // verifySignatureの戻り値はw.rで受けるので、後続処理に引数として渡す
 
         switch( func ){
-          case 'login2S': w.step = 4 + ':login2S';
-            //:x:$src/server.login2S.js::
+          case 'verifyPasscode': w.step += ':verifyPasscode';
+/** 入力されたパスコードの検証
+ * 
+ * @param {Object} arg
+ * @param {number} arg.userId - ユーザID
+ * @param {number} arg.passcode - 入力されたパスコード
+ * @returns {Object|number} ユーザ情報オブジェクト。エラーならエラーコード
+    // ログイン失敗になるまでの試行回数(numberOfLoginAttempts)
+    // パスコード生成からログインまでの猶予時間(ミリ秒)(loginGraceTime)
+    // クライアント側ログイン(CPkey)有効期間(userLoginLifeTime)
+ * @returns {object} 以下のメンバを持つオブジェクト
+ * - status {number}
+ *   - 0 : 成功(パスコードが一致)
+ *   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
+ *   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
+ *   - 3 : クライアント側ログイン(CPkey)有効期限切れ
+ *   - 4 : パスコード不一致
+ * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
+ * - SPkey=null {Object} サーバ側公開鍵
+ * - loginGraceTime=900,000(15分) {number}<br>
+ *   パスコード生成からログインまでの猶予時間(ミリ秒)
+ * - remainRetryInterval=0 {number} 再挑戦可能になるまでの時間(ミリ秒)
+ * - passcodeDigits=6 {number} : パスコードの桁数
+ */
+w.func.verifyPasscode = function(arg){
+  const v = {whois:w.whois+'.verifyPasscode',step:0,rv:{
+    status: 0, data: null, SPkey: null,
+    loginGraceTime: w.prop.loginGraceTime,
+    remainRetryInterval: 0,
+    passcodeDigits: w.prop.passcodeDigits,
+  }};
+  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
+  try {
+
+    // ---------------------------------------------
+    v.step = 1; // 事前準備
+    // ---------------------------------------------
+    v.step = 1.1; // シートから全ユーザ情報の取得
+    v.master = new SingleTable(w.prop.masterSheet);
+    if( v.master instanceof Error ) throw v.master;
+
+    v.step = 1.2; // 対象ユーザ情報の取得
+    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === arg.userId});
+    if( v.user instanceof Error ) throw v.user;
+
+    v.step = 1.3; // trialオブジェクトの取得
+    v.trial = JSON.parse(v.user.trial);
+    if( !v.trial.hasOwnProperty('log') ) v.trial.log = [];
+
+
+    // ---------------------------------------------
+    v.step = 2; // パスコード検証
+    // ---------------------------------------------
+    // ログイン失敗になるまでの試行回数(numberOfLoginAttempts)
+    // パスコード生成からログインまでの猶予時間(ミリ秒)(loginGraceTime)
+    // クライアント側ログイン(CPkey)有効期間(userLoginLifeTime)
+
+    v.step = 2.1; // 試行可能かの確認
+    // 以下のいずれかの場合はエラーを返して終了
+    if( (w.prop.loginGraceTime + v.trial.created) > Date.now() ){
+      // ①パスコード生成からログインまでの猶予時間を過ぎている
+      v.rv.status = 1;
+    } else if( v.trial.log.length > 0
+      && trial.log[0].status === w.prop.numberOfLoginAttempts
+      && (trial.log[0].timestamp + w.prop.loginRetryInterval) > Date.now() ){
+      // ②前回ログイン失敗から凍結時間を過ぎていない
+      v.rv.status = 2;
+      v.rv.remainRetryInterval = trial.log[0].timestamp
+        + w.prop.loginRetryInterval - Date.now();
+    } else if( (new Date(v.user.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
+      // ③クライアント側ログイン(CPkey)有効期限切れ(userLoginLifeTime)
+      v.rv.status = 3;
+    } else if( v.trial.passcode !== arg.passcode ){
+      // ④パスコード不一致
+      v.rv.status = 4;
+    } else {
+      // パスコードが一致
+      v.rv.data = v.user;
+    }
+
+    // ---------------------------------------------
+    v.step = 3; // 終了処理
+    // ---------------------------------------------
+    v.step = 3.1; // trial更新(検証結果の格納)
+    // - passcode {number} パスコード(原則数値6桁)
+    // - log {object[]} 試行の記録。unshiftで先頭を最新にする
+    //   - timestamp {number} 試行日時(UNIX時刻)
+    //   - entered {number} 入力されたパスコード
+    //   - status {number} v.rv.statusの値
+    //   - result {number} 0:成功、1〜n:連続n回目の失敗
+    // 
+    // trialオブジェクトはunshiftで常に先頭(添字=0)が最新になるようにする。
+    // 新しいlogオブジェクトの作成
+    v.log = {
+      timestamp: Date.now(),
+      entered: arg.passcode,
+      status: v.status,
+      result: v.status === 0 ? 0 : (v.trial.log[0].result + 1),
+    }
+    v.trial.log.unshift(v.log);
+    v.r = v.master.update({trial:JSON.stringify(v.trial)},
+      {where:x => x.userId === arg.userId});
+    if( v.r instanceof Error ) throw v.r;
+
+
+    v.step = 3.2; // 検証OKならユーザ情報を、NGなら通知を返す
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\narg=${stringify(arg)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+w.rv = w.func.verifyPasscode(w.r);  // w.rはserver.verifySignatureの戻り値
+if( w.rv instanceof Error ) throw w.rv;
+            break;
+          case 'operation': w.step += ':operation';
+            //:x:$src/server.operation.js::
             break;
           // 後略
-          //:x:$src/server.listAuth.js::
-          //:x:$src/server.changeAuth.js::
-          //:x:$src/server.operation.js::
         }
       } else {
         w.step = 5; // 該当処理なし
@@ -582,659 +854,14 @@ function mergeDeeply(pri,sub,opt={}){
  */
 class SingleTable {
 
-  /** SingleTableオブジェクトの生成
-   * - 引数が二つの場合、name＋optと解釈。一つの場合はoptのみと解釈する。
-   * - optで指定可能なメンバは以下の通り
-   *   - name : 参照先シート名またはA1形式の範囲指定文字列
-   *   - raw : シートイメージ(二次元配列)
-   *   - data : オブジェクトの配列
-   * - クラスのメンバについては[SingleTableObj](#SingleTableObj)参照
-   * 
-   * @param {string|Object} arg1 - 参照先シート名またはA1形式の範囲指定文字列(name)、またはオプション(opt)
-   * @param {Object} arg2 - オプション(opt)
-   * @returns {SingleTableObj|Error}
-   */
-  constructor(arg1,arg2){
-    const v = {whois:'SingleTable.constructor',rv:null,step:0,arg:{}};
-    console.log(`${v.whois} start.`);
-    try {
-  
-      v.step = 1.1; // 全引数のオブジェクト化＋既定値の設定
-      if( typeof arg1 === 'string' ){ // name指定あり
-        v.arg = Object.assign({name:arg1},(arg2 || {}));
-      } else { // name指定なしでopt指定、または引数無し
-        v.arg = arg1;
-      }
-      v.arg = Object.assign({name:'',raw:[],data:[],header:[]},v.arg);
-  
-      v.step = 1.2; // メンバの初期値を設定
-      this.sheet = null;
-      this.className = 'SingleTable';
-      this.name = v.arg.name || '';
-      ['header','raw','data'].forEach(x => this[x] = (v.arg[x] || []));
-  
-      v.step = 1.3; // nameから指定範囲を特定、メンバに保存
-      v.m = this.name.match(/^'?(.+?)'?!([A-Za-z]*)([0-9]*):?([A-Za-z]*)([0-9]*)$/);
-      //old v.m = this.name.match(/^'*(.+?)'*!([A-Za-z]+)([0-9]*):([A-Za-z]+)([0-9]*)$/);
-      if( v.m ){
-        // シート名がA1形式の範囲指定文字列ならname,left/top/right/bottomを書き換え
-        this.name = v.m[1];
-        this.left = convertNotation(v.m[2]);
-        if( v.m[3] ) this.top = Number(v.m[3]);
-        this.right = convertNotation(v.m[4]);
-        if( v.m[5] ) this.bottom = Number(v.m[5]);
-      } else {
-        this.top = this.left = 1;
-        this.bottom = this.right = Infinity;
-      }
-      //console.log(`l.65 this.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}\ndata=${JSON.stringify(this.data)}\nraw=${JSON.stringify(this.raw)}`);
-  
-      v.step = 2; // sheetかdataかで処理を分岐
-      this.type = (this.data.length > 0 || this.raw.length > 0 ) ? 'data' : 'sheet';
-      if( this.type === 'sheet' ){
-        v.r = this.prepSheet();
-      } else {
-        v.r = this.prepData();
-      }
-      if( v.r instanceof Error ) throw v.r;
-  
-      v.step = 3; // 終了処理
-      console.log(`${v.whois} normal end.`);
-      return v.rv;
-  
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\narg1=${JSON.stringify(arg1)}\narg2=${JSON.stringify(arg2)}`;  // 引数
-      console.error(`${e.message}\nv=${JSON.stringify(v)}`);
-      return e;
-    }
-  }  
 
-  /** シートから指定有効範囲内のデータを取得
-   * - 「指定有効範囲」とは、指定範囲かつデータが存在する範囲を指す。<br>
-   *   例：指定範囲=C2:F ⇒ top=3, bottom=7, left=3(C列), right=6(F列)
-   * 
-   *   | | A | B | C | D | E | F | G | H |
-   *   | :--: | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-   *   | 1 | |  | タイトル |  |  |  |  |  |  |
-   *   | 2 | |  |  |  |  |  |  |  |  |
-   *   | 3 | |  | (Col1) | D3 | E3 | (Col2) |  |  |  |
-   *   | 4 | |  |  |  |  |  |  |  |  |
-   *   | 5 | |  | 5 | 4 |  |  |  |  |  |
-   *   | 6 | |  | 5 | 6 | 7 | 8 |  |  |  |
-   *   | 7 | |  | 4 | 3 | hoge | fuga |  |  |  |
-   *   | 8 | |  |  |  |  |  |  |  |  |
-   *   | 9 | |  |  |  |  |  |  | dummy |  |
-   *   | 10 | |  |  |  |  |  |  |  |  |
-   * 
-   *   - 有効範囲とはデータが存在する範囲(datarange=C1:H9)
-   *   - 「タイトル(C1)」「dummy(H9)」は有効範囲だが、指定範囲(C2:F)から外れるので除外
-   *   - 指定範囲にデータが存在しない場合、指定有効範囲はデータが存在する範囲とする<br>
-   *     ex.C2:Fだが2行目は空なのでtop=3、C列はタイトルはないがデータが存在するのでleft=3
-   *   - ヘッダ行(3行目)の空白セル(C3,F3)には自動採番したコラム名を設定(Col1,Col2)
-   *   - データ範囲はヘッダ行(3行目)の次の行(4行目)から始まると看做す
-   *   - データ範囲内の空行(4行目)もraw/data共に入れる<br>
-   *     ∵ シート上の行位置とオブジェクトの位置を対応可能にするため
-   *   - 空白セルはdataには入れない(undefinedになる)<br>
-   *     ex.5行目={C3:5,D3:4}(Col1,2はundef)、6行目={C3:5,D3:6,Col1:7,Col2:8}
-   *   - 有効範囲は9行目(dummy)までだが、指定範囲内だと7行目までなので、bottom=7
-   * 
-   * @param {void}
-   * @returns {void}
-   */
-  prepSheet(){
-    const v = {whois:this.className+'.prepSheet',rv:null,step:0};
-    console.log(`${v.whois} start.`);
-    try {
-  
-      v.step = 1; // シートからデータを取得、初期値設定
-      this.sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(this.name);
-      if( this.sheet instanceof Error ) throw this.sheet;
-  
-      v.step = 2; // 範囲行・列番号がデータの存在する範囲外だった場合、存在範囲内に変更
-      v.dataRange = this.sheet.getDataRange();
-      v.top = v.dataRange.getRow();
-      v.bottom = v.dataRange.getLastRow();
-      v.left = v.dataRange.getColumn();
-      v.right = v.dataRange.getLastColumn();
-      //console.log(`l.185 v.top=${v.top}, bottom=${v.bottom}, left=${v.left}, right=${v.right}`+`\nthis.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}`);
-      this.top = this.top < v.top ? v.top : this.top;
-      // 最終行が先頭行以上、または範囲外の場合は存在範囲に変更
-      this.bottom = this.bottom > v.bottom ? v.bottom : this.bottom;
-      this.left = this.left < v.left ? v.left : this.left;
-      this.right = this.right > v.right ? v.right : this.right;
-      //console.log(`l.191 this.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}`);
-  
-      v.step = 3; // ヘッダ行番号以下の有効範囲(行)をv.rawに取得
-      v.range = [this.top, this.left, this.bottom - this.top + 1, this.right - this.left + 1];
-      v.raw = this.sheet.getRange(...v.range).getValues();
-      //console.log(`l.196 v.raw=${JSON.stringify(v.raw.slice(0,10))}`);
-  
-      v.step = 4; // ヘッダ行の空白セルに'ColN'を補完
-      v.colNo = 1;
-      for( v.i=0 ; v.i<v.raw[0].length ; v.i++ ){
-        this.header.push( v.raw[0][v.i] === '' ? 'Col' + v.colNo : v.raw[0][v.i] );
-        v.colNo++;
-      }
-  
-      v.step = 5; // 指定有効範囲の末端行を検索(中間の空行は残すが、末尾の空行は削除)
-      for( v.r=(this.bottom-this.top) ; v.r>=0 ; v.r-- ){
-        if( v.raw[v.r].join('').length > 0 ){
-          this.bottom = this.top + v.r;
-          break;
-        }
-      }
-  
-      v.step = 6; // this.raw/dataにデータをセット
-      this.raw[0] = v.raw[0]; // ヘッダ行
-      for( v.r=1 ; v.r<=(this.bottom-this.top) ; v.r++ ){
-        this.raw.push(v.raw[v.r]);
-        v.o = {};
-        for( v.c=0 ; v.c<this.header.length ; v.c++ ){
-          if( v.raw[v.r][v.c] !== '' ){
-            v.o[this.header[v.c]] = v.raw[v.r][v.c];
-          }
-        }
-        this.data.push(v.o);
-      }
-  
-      v.step = 7; // 終了処理
-      this.dump();
-      console.log(`${v.whois} normal end.`);
-      return v.rv;
-  
-    } catch(e) {
-      e.message = `\n${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`;
-      console.error(`${e.message}\nv=${JSON.stringify(v)}`);
-      return e;
-    }
-  }
-  /** オブジェクトの配列からシートイメージを作成
-    * - シートイメージで渡された場合(raw)
-    *   - headerは指定の有無に拘わらず先頭行で置換<br>
-    *     ∵ rawとheaderで内容に齟齬が有った場合、dataが適切に作成されない
-    *   - 先頭行に空欄が有った場合、ColNで自動的に命名
-    * - オブジェクトの配列が渡された場合(data)
-    *   - headerの指定なし：メンバ名を抽出してheaderを作成
-    *   - headerの指定あり：データとしてのオブジェクトにheaderに無いメンバが有っても無視
-    * - rawとdata両方が渡された場合、いずれも変更しない(齟齬の有無はノーチェック)
-    * - 以下の条件をすべて満たす場合、新規にシートを作成
-    *   - シート名がthis.nameのシートが存在しない
-    *   - 操作対象がシートではない(this.type === 'data')
-    *   - シート名(this.name)が指定されている
-    * - シートはthis.nameで指定された名前になるが、左上のセル位置も併せて指定可能<br>
-    *   ex. 'testsheet'!B2<br>
-    *   なおセル位置は左上の単一セル指定のみ有効、他は有っても無視(ex.B2:C5ならC5は無視)
-    * 
-    * 1. オブジェクトの配列(this.data.length > 0) ※択一
-    *    1. headerの作成
-    *    1. rawの作成
-    * 1. シートイメージ(this.raw.length > 0) ※択一
-    *    1. headerの作成 : 1行目をヘッダと看做す(添字:0)
-    *    1. dataの作成
-    * 1. シートの作成(this.type=='data' && this.name!=null)
-    *    1. 既存のシートがないか確認(存在すればエラー)
-    *    1. this.rawをシートに出力
-    * 
-    * @param {void}
-    * @returns {void}
-    */
-  prepData(){
-    const v = {whois:this.className+'.prepData',rv:null,step:0,colNo:1};
-    console.log(`${v.whois} start.`);
-    try {
-  
-      if( this.data.length > 0 ){
-        v.step = 1; // オブジェクトの配列でデータを渡された場合
-        v.step = 1.1; // headerの作成
-        if( this.header.length === 0 ){
-          v.members = new Set();
-          this.data.forEach(x => {
-            Object.keys(x).forEach(y => v.members.add(y));
-          });
-          this.header = Array.from(v.members);
-        }
-        v.step = 1.2; // rawの作成
-        this.raw[0] = this.header;
-        for( v.r=0 ; v.r<this.data.length ; v.r++ ){
-          this.raw[v.r+1] = [];
-          for( v.c=0 ; v.c<this.header.length ; v.c++ ){
-            v.val = this.data[v.r][this.header[v.c]];
-            this.raw[v.r+1][v.c] = v.val ? v.val : '';
-          }
-        }
-      } else {
-        v.step = 2; // シートイメージでデータを渡された場合
-        v.step = 2.1; // headerの作成
-        this.header = JSON.parse(JSON.stringify(this.raw[0]));
-        for( v.c=0 ; v.c<this.header.length ; v.c++ ){
-          if( this.header[v.c] === '' ) this.header[v.c] = 'Col' + v.colNo++;
-        }
-        v.step = 2.2; // dataの作成
-        if( this.data.length === 0 ){
-          for( v.r=1 ; v.r<this.raw.length ; v.r++ ){
-            v.o = {};
-            for( v.c=0 ; v.c<this.header.length ; v.c++ ){
-              v.o[this.header[v.c]] = this.raw[v.r][v.c];
-            }
-            this.data.push(v.o);
-          }
-        }
-      }
-  
-      v.step = 3; // raw/data以外のメンバの設定
-      this.bottom = this.top + this.raw.length - 1;
-      this.right = this.left + this.raw[0].length - 1;
-  
-      v.step = 4; // シートの作成
-      v.ass = SpreadsheetApp.getActiveSpreadsheet();
-      if( this.type==='data' && this.name!=='' && v.ass.getSheetByName(this.name)===null ){
-        this.sheet = v.ass.insertSheet();
-        this.sheet.setName(this.name);
-        this.sheet.getRange(this.top,this.left,this.raw.length,this.raw[0].length)
-        .setValues(this.raw);
-      }
-  
-      v.step = 5; // 終了処理
-      console.log(`${v.whois} normal end.`);
-      return v.rv;
-  
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`;
-      console.error(`${e.message}\nv=${JSON.stringify(v)}`);
-      return e;
-    }
-  }
 
-    /** SingleTableクラスメンバの値をダンプ表示 */
-    dump(av=null){
-      const v = {whois:this.className+'.dump',rv:null,step:0,colNo:1};
-      console.log(`${v.whois} start.`);
-      try {
-  
-        v.step = 1; // メンバの値
-        v.msg = `member's value ----------`
-        + `\nclassName=${this.className}, name=${this.name}, type=${this.type}`
-        + `\ntop=${this.top}, left=${this.left}, bottom=${this.bottom}, right=${this.right}`
-        + `\nheader=${JSON.stringify(this.header)}`
-        + `\ndata=${JSON.stringify(this.data)}`
-        + `\nraw=${JSON.stringify(this.raw)}`;
-  
-        v.step = 2; // vの値
-        if( av !== null ){
-          v.msg += `\n\nvariable's value ----------`
-          + `\ntop=${av.top}, left=${av.left}, bottom=${av.bottom}, right=${av.right}`;
-        }
-  
-        v.step = 3; // ダンプ
-        console.log(v.msg);
-  
-        v.step = 2; // 終了処理
-        console.log(`${v.whois} normal end.`);
-        return v.rv;
-  
-      } catch(e) {
-        e.message = `\n${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-        console.error(`${e.message}\nv=${JSON.stringify(v)}`);
-        return e;
-      }
-    }
 
-  /** 条件に該当するレコード(オブジェクト)を抽出
-    * @param {Object} [opt={}] - オプション
-    * @param {Function} [opt.where=()=>true] - レコードを引数として、条件に合致する場合trueを返す関数
-    * @param {string[][]} [opt.orderBy=[]] - 並べ替えのキーと昇順/降順指定
-    *  [['key1'(,'desc')],['key2'(,'desc')],...]
-    * @returns {Array.Object.<string, any>|Error}
-    * 
-    * @example
-    * 
-    * ```
-    * v.table = new SingleTable('test',{top:3});
-    * v.r = v.table.select({
-    *   where: x => x.B3 && 1<x.B3 && x.B3<9,
-    *   orderBy:[['B3'],['C3','desc']]
-    * });
-    * console.log(JSON.stringify(v.r));
-    * // -> [
-    *   {"B3":4,"C3":3,"Col1":"hoge","E3":"fuga"},
-    *   {"B3":5,"C3":6,"Col1":7,"E3":8},
-    *   {"B3":5,"C3":4}
-    * ]
-    * ```
-    * 
-    * 「Col1に'g'が含まれる」という場合
-    * ```
-    * where: x => {return x.Col1 && String(x.Col1).indexOf('g') > -1}
-    * ```
-    */
-  select(opt={}){
-    const v = {whois:this.className+'.select',rv:[],step:0};
-    console.log(`${v.whois} start.`); //\nopt.where=${opt.where.toString()}\nopt.orderBy=${JSON.stringify(opt.orderBy)}`);
-    try {
-  
-      v.step = 1; // 既定値の設定
-      //if( !opt.hasOwnProperty('where') )
-      //  opt.where = () => true;
-      if( opt.hasOwnProperty('where') ){
-        if( typeof opt.where === 'string' )
-          opt.where = new Function(opt.where);
-      } else {
-        opt.where = () => true;
-      }
-      if( !opt.hasOwnProperty('orderBy') )
-        opt.orderBy = [];
-      console.log(`l.478 opt.where [${typeof opt.where}] = '${opt.where.toString()}'`)
-  
-      v.step = 2; // 対象となるレコードを抽出
-      for( v.i=0 ; v.i<this.data.length ; v.i++ ){
-        if( Object.keys(this.data[v.i]).length > 0 // 空Objではない
-            && opt.where(this.data[v.i]) ) // 対象判定結果がtrue
-          v.rv.push(this.data[v.i]);
-      }
-  
-      v.step = 3; // 並べ替え
-      v.rv.sort((a,b) => {
-        for( v.i=0 ; v.i<opt.orderBy.length ; v.i++ ){
-          [v.p, v.q] = opt.orderBy[v.i][1]
-          && opt.orderBy[v.i][1].toLowerCase() === 'desc' ? [1,-1] : [-1,1];
-          if( a[opt.orderBy[v.i][0]] < b[opt.orderBy[v.i][0]] ) return v.p;
-          if( a[opt.orderBy[v.i][0]] > b[opt.orderBy[v.i][0]] ) return v.q;
-        }
-        return 0;
-      });
-  
-      v.step = 4; // 終了処理
-      console.log(`${v.whois} normal end. num=${v.rv.length}`);
-      return v.rv;
-  
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\nopt=${JSON.stringify(opt)}`;  // 引数
-      console.error(`${e.message}\nv=${JSON.stringify(v)}`);
-      return e;
-    }
-  
-  }
 
-  /**
-    * @typedef {Object} UpdateResult
-    * @prop {number} row - 変更対象の行番号(自然数)
-    * @prop {Object} old - 変更前の行オブジェクト
-    * @prop {Object} new - 変更後の行オブジェクト
-    * @prop {Object.<string, any[]>} diff - {変更した項目名：[変更前,変更後]}形式のオブジェクト
-    * @prop {number} row - 更新対象行番号(自然数)
-    * @prop {number} left - 更新対象領域左端列番号(自然数)
-    * @prop {number} right - 更新対象領域右端列番号(自然数)
-    */
-  /** 条件に該当するレコード(オブジェクト)を更新
-    * 
-    * @param {Object|Function} set - セットする{項目名:値}、または行オブジェクトを引数にセットする{項目名:値}を返す関数
-    * @param {Object} [opt={}] - オプション
-    * @param {Function} [opt.where=()=>true] - レコードを引数として、条件に合致する場合trueを返す関数
-    * @returns {UpdateResult[]|Error} 更新結果を格納した配列
-    * 
-    * @example
-    * 
-    * ```
-    * v.table = new SingleTable('test!B3:E');
-    * // B3欄が4のレコードについて、Col1に'hoge'・E3に'fuga'をセットする
-    * v.table.update({Col1:'hoge',E3:'fuga'},{where:o=>o.B3&&o.B3==4});  // 戻り値 -> [{
-    *   "old":{"B3":4,"C3":3,"Col1":"a","E3":"b"},
-    *   "new":{"B3":4,"C3":3,"Col1":"hoge","E3":"fuga"},
-    *   "diff":{"Col1":["a","hoge"],"E3":["b","fuga"]},
-    *   "row":7,
-    *   "left":4,"right":5
-    * }]
-    * ```
-    * 
-    * 更新対象データを直接指定、また同一行の他の項目から導出してセットすることも可能。
-    * 
-    * ```
-    * // E3欄に'a'をセットする
-    * v.table.update(
-    *   {E3:'a'},  // 更新対象データを直接指定
-    *   {where:o=>o.B3==5&&o.C3==4}
-    * )
-    * // Col1欄にB3+C3の値をセットする
-    * v.table.update(
-    *   o=>{return {Col1:(o.B3||0)+(o.C3||0)}},  // 他項目から導出
-    *   {where:o=>o.B3==5&&o.C3==4}
-    * )
-    * ```
-    */
-  update(set,opt={}){
-    const v = {whois:this.className+'.update',step:0,rv:[],
-      // top〜rightは更新する場合の対象領域(行/列番号。自然数)
-      top:Infinity, left:Infinity, bottom:-Infinity, right:-Infinity};
-    console.log(`${v.whois} start.\nset=${typeof set === 'function' ? set.toString() : JSON.stringify(set)}\nopt=${JSON.stringify(opt)}`);
-    try {
-  
-      v.step = 1; // 既定値の設定
-      if( !opt.hasOwnProperty('where') )
-        opt.where = () => true;
-  
-      v.step = 2; // 1行ずつ差分をチェックしながら処理結果を保存
-      for( v.i=0 ; v.i<this.data.length ; v.i++ ){
-        if( Object.keys(this.data[v.i]).length > 0 && opt.where(this.data[v.i]) ){
-          v.step = 2.1; // 「空Objではない かつ 対象判定結果がtrue」なら更新対象
-          v.r = { // {UpdateResult} - 更新結果オブジェクトを作成
-            old: Object.assign({},this.data[v.i]),
-            new: this.data[v.i],
-            diff: {},
-            row: this.top + 1 + v.i,
-            left: Infinity, right: -Infinity,  // 変更があった列番号の範囲
-          };
-  
-          v.step = 2.2; // 更新後の値をv.diffに格納
-          v.diff = whichType(set) === 'Object' ? set : set(this.data[v.i]);
-  
-          v.step = 2.3; // 差分が存在する項目の洗い出し
-          v.exist = false;  // 差分が存在したらtrue
-          this.header.forEach(x => {
-            v.step = 2.4; // 項目毎に差分判定
-            if( v.diff.hasOwnProperty(x) && v.r.old[x] !== v.diff[x] ){
-              v.step = 2.5; // 更新後に値が変わる場合
-              v.exist = true; // 値が変わった旨、フラグを立てる
-              v.r.new[x] = v.diff[x];
-              v.r.diff[x] = [v.r.old[x]||'', v.r.new[x]];
-              v.col = this.left + this.header.findIndex(i=>i==x); // 変更があった列番号
-              // 一行内で、更新があった範囲(左端列・右端列)の値を書き換え
-              v.r.left = v.r.left > v.col ? v.col : v.r.left;
-              v.r.right = v.r.right < v.col ? v.col : v.r.right;
-            }
-          });
-  
-          v.step = 3; // いずれかの項目で更新後に値が変わった場合
-          if( v.exist ){
-            v.step = 3.1; // 更新対象領域を書き換え
-            v.top = v.top > v.r.row ? v.r.row : v.top;
-            v.bottom = v.bottom < v.r.row ? v.r.row : v.bottom;
-            v.left = v.left > v.r.left ? v.r.left : v.left;
-            v.right = v.right < v.r.right ? v.r.right : v.right;
-  
-            v.step = 3.2; // this.raw上のデータを更新
-            this.raw[v.r.row-this.top] = (o=>{
-              const rv = [];
-              this.header.forEach(x => rv.push(o[x]||''));
-              return rv;
-            })(v.r.new);
-  
-            v.step = 3.3; // ログ(戻り値)に追加
-            v.rv.push(v.r);
-          }
-        }
-      }
-  
-      v.step = 4; // 更新が有ったら、シート上の更新対象領域をthis.rawで書き換え
-      if( v.rv.length > 0 ){
-        v.step = 4.1; // 更新対象領域のみthis.rawから矩形に切り出し
-        v.data = (()=>{
-          let rv = [];
-          this.raw.slice(v.top-this.top,v.bottom-this.top+1).forEach(l => {
-            rv.push(l.slice(v.left-this.left,v.right-this.left+1));
-          });
-          return rv;
-        })();
-        v.step = 4.2; // データ渡しかつシート作成指示無しを除き、シートを更新
-        if( this.sheet !== null ){
-          this.sheet.getRange(
-            v.top,
-            v.left,
-            v.bottom-v.top+1,
-            v.right-v.left+1
-          ).setValues(v.data);
-        }
-      }
-  
-      v.step = 5; // 終了処理
-      console.log(`${v.whois} normal end. num=${v.rv.length}`);
-      return v.rv;
-  
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`
-      console.error(`${e.message}\nv=${JSON.stringify(v)}`,set,opt);
-      return e;
-    }
-  }
 
-  /** レコード(オブジェクト)を追加
-    * 
-    * - 複数行の一括追加も可
-    * 
-    * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
-    * @returns {number|Error} 追加した行数
-    * 
-    * @example
-    * 
-    * ```
-    * v.table = new SingleTable('test',{top:3});
-    * v.table.insert({B3:3,E3:1});
-    *   // -> 一行追加
-    * v.table.insert([{B3:2,E3:2},{C3:1,Col1:'hoge'}]);
-    *   // -> 複数行追加
-    * ```
-    */
-  insert(records=[]){
-    const v = {whois:this.className+'.insert',step:0,rv:[],
-      r:[],left:Infinity,right:-Infinity};
-    console.log(`${v.whois} start.\nrecords=${JSON.stringify(records)}`);
-    try {
-  
-      v.step = 1; // 引数がオブジェクトなら配列に変換
-      if( !Array.isArray(records) ) records = [records];
-      // 追加対象が0件なら処理終了
-      if( records.length === 0 ) return 0;
-  
-      for( v.i=0 ; v.i<records.length ; v.i++ ){
-        v.step = 2; // 挿入するレコード(オブジェクト)を配列化してthis.rawに追加
-        v.arr = [];
-        for( v.j=0 ; v.j<this.header.length ; v.j++ ){
-          v.step = 3; // 空欄なら空文字列をセット
-          v.cVal = records[v.i][this.header[v.j]] || '';
-  
-          if( v.cVal !== '' ){
-            v.step = 4; // 追加する範囲を見直し
-            v.left = v.left > v.j ? v.j : v.left;
-            v.right = v.right < v.j ? v.j : v.right;
-          }
-  
-          v.step = 5; // 一行分のデータ(配列)に項目の値を追加
-          v.arr.push(v.cVal);
-        }
-        v.step = 6; // 一行分のデータをthis.raw/dataに追加
-        this.raw.push(v.arr);
-        this.data.push(records[v.i]);
-        v.rv.push(v.arr);
-      }
-  
-      v.step = 7; // 更新範囲(矩形)のみv.rv -> v.rにコピー
-      v.rv.forEach(x => v.r.push(x.slice(v.left,v.right+1)));
-  
-      v.step = 8; // データ渡しかつシート作成指示無しを除き、シートに追加
-      if( this.sheet !== null ){
-        this.sheet.getRange(
-          this.bottom+1,
-          this.left+v.left,
-          v.r.length,
-          v.r[0].length
-        ).setValues(v.r);
-      }
-  
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end. num=${v.rv.length}`);
-      return v.rv;
-  
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\nrecords=${JSON.stringify(records)}`;
-      console.error(`${e.message}\nv=${JSON.stringify(v)}`);
-      return e;
-    }
-  }
 
-  /** 条件に該当するレコード(オブジェクト)を削除
-    * @param {Object} [opt={}] - オプション
-    * @param {Function} [opt.where=()=>true] - レコードを引数として、条件に合致する場合trueを返す関数
-    * @returns {Object|Error} 削除されたthis.data行のオブジェクト
-    * 
-    * @example
-    * 
-    * ```
-    * v.table = new SingleTable('test',{top:3});
-    * v.table.delete({where:o=>o.Col1&&o.Col1==7});
-    *   // -> Col1==7の行を削除。判定用変数(Col1)の存否、要確認
-    * v.table.delete({where:o=>o.val&&o.val==5});
-    *   // -> val==5の行を全て削除。
-    * ```
-    */
-  /* 将来的に対応を検討する項目
-    - 引数をwhereのみとし、Object->Functionに変更
-    - "top 3"等、先頭・末尾n行の削除
-  */
-  delete(opt={}){
-    const v = {whois:this.className+'.delete',step:0,rv:[]};
-    console.log(`${v.whois} start.\nopt.where=${opt.where.toString()}`);
-    try {
-  
-      v.step = 1; // 既定値の設定
-      if( !opt.hasOwnProperty('where') )
-        opt.where = () => true;
-  
-      v.step = 2; // 下の行から判定し、削除による行ズレの影響を回避
-      for( v.i=this.data.length-1 ; v.i>=0 ; v.i-- ){
-        v.step = 3; // 削除対象(空Objではない and 対象判定結果がtrue)
-        if( Object.keys(this.data[v.i]).length === 0
-          || !opt.where(this.data[v.i]) ) continue;
-        v.step = 4; // this.dataからの削除
-        v.rv.push(this.data.splice(v.i,1)[0]);
-        v.step = 5; // this.rawからの削除
-        this.raw.splice(v.i,1)[0];
-        v.step = 6; // (シートが存在すれば)シートからの削除
-        if( this.sheet === null ) continue;
-        v.rowNum = this.top + v.i + 1;
-        // 1シート複数テーブルの場合を考慮し、headerの列範囲のみ削除して上にシフト
-        this.sheet.getRange(v.rowNum,this.left,1,this.right-this.left+1)
-        .deleteCells(SpreadsheetApp.Dimension.ROWS);
-      }
-  
-      v.step = 7; // 終了処理
-      console.log(`${v.whois} normal end. num=${v.rv.length}`);
-      return v.rv;
-  
-    } catch(e) {
-      e.message = `\n${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\nopt=${JSON.stringify(opt)}`;
-      console.error(`${e.message}\nv=${JSON.stringify(v)}`);
-      return e;
-    }
-  }
+
+
 
 }
 /** 関数他を含め、変数を文字列化
