@@ -12,6 +12,92 @@ sequenceDiagram
   browser ->> client : 画面要求(既定値：ホーム)
   activate client
   Note right of client : changeScreen()
+  client ->> client : ユーザ権限、および要求画面の開示範囲(allow)を取得
+  alt 権限あり(allow&auth>0)
+    client ->> browser : 要求画面表示
+  else 権限なし(allow&auth=0)
+    alt メアド未定(this.email===null)
+      client ->> user : ダイアログ
+      user ->> client : e-mail
+      client ->> client : ユーザ情報更新(storeUserInfo)
+    end
+
+    client ->> server : userId,e-mail,CPkey,updated,allow
+    activate server
+    Note right of server : checkAuthority()
+    sheet ->> server : ユーザ情報
+    server ->> server : ユーザ情報取得(getUserInfo)
+    alt 未登録
+      server ->> server : 新規ユーザ情報作成
+      server ->> sheet : 新規ユーザ情報
+    end
+    server ->> server : 権限有無判断
+    alt 権限なし or 凍結中
+      server ->> client : エラー
+      client ->> client : ユーザ情報(auth)更新※1
+      client ->> browser : 「権限がありません」「凍結中」
+    else 権限あり
+      server ->> server : ①ログイン要否判断
+      alt ログイン不要
+        server ->> client : OK
+        client ->> browser : 要求画面表示
+      else 要ログイン
+        server ->> server : パスコード生成
+        server ->> sheet : trial更新(パスコード)
+        server ->> user : パスコード連絡メール
+        server ->> client : 試行可能回数
+        deactivate server
+
+        alt 試行可能回数 = 0
+          client ->> browser : 「現在凍結中」
+        else 試行可能回数 > 0
+          client ->> client : 鍵ペア再生成
+          client ->> user : ダイアログ
+          user ->> client : パスコード
+          client ->> server : userId,CPkey,updated,パスコード(SP/CS)
+          activate server
+          Note right of server : verifyPasscode()
+          sheet ->> server : ユーザ情報
+          server ->> server : パスコード検証
+          server ->> sheet : trial更新(検証結果)
+          alt 検証OK(パスコードが一致)
+            server ->> client : ユーザ情報
+            server ->> sheet : CPkey,updated更新
+            client ->> client : ユーザ情報更新
+            client ->> browser : 要求画面
+          else 検証NG(パスコードが不一致)
+            server ->> client : 検証NG通知
+            deactivate server
+            client ->> client : 試行可能回数--
+            client ->> browser : エラーメッセージ
+          end
+        end
+      end
+    end
+  end
+  deactivate client
+```
+
+- ※1 : 権限が無いのにサーバまで問合せが来るのは、クライアント側の権限情報が誤っている可能性があるため、念のため更新する。
+- ①ログイン要否判断：いかのいずれかの場合、ログインが必要
+  - パスコード生成からログインまでの猶予時間を過ぎている
+  - クライアント側ログイン(CPkey)有効期限切れ
+  - 引数のCPkeyがシート上のCPkeyと不一致
+
+
+<!--
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant browser
+  participant client as authMenu
+  participant server as authServer
+  participant sheet
+
+  browser ->> client : 画面要求(既定値：ホーム)
+  activate client
+  Note right of client : changeScreen()
   alt 権限あり(allow&auth>0)
     client ->> browser : 要求画面表示後、終了
   else 権限なし(allow&auth=0)
@@ -73,11 +159,7 @@ sequenceDiagram
     deactivate client
   end
 ```
-
-- ①ユーザ情報存否確認
-  - e-mailが登録済 ? 登録済 : 未登録
-  - 復号化したCPkeyがシート上のCPkeyと一致 ? CP一致 : CP不一致
-  - CPkey生成・更新日時＋CPkey有効期間 > Date.now() ? CP有効 : CP無効
+-->
 
 ## typedef
 

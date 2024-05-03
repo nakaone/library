@@ -19,9 +19,8 @@ function authServer(userId=null,func=null,arg=null) {
     //::$src/server.setProperties.js::
 
     if( userId === null ){ // userIdが不要な処理
-      if( ['registMail','getUserInfo'].find(x => x === func) ){
+      if( ['getUserInfo'].find(x => x === func) ){
         w.step = 1; // userId未定でも可能な処理 ⇒ 一般公開用
-        //:x:メールアドレスの登録::$src/server.registMail.js::
         //::ユーザ情報・状態の取得::$src/server.getUserInfo.js::
       } else {
         w.step = 2; // 該当処理なし
