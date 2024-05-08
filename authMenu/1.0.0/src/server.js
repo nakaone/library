@@ -1,61 +1,65 @@
 /** サーバ側の認証処理を分岐させる
  * 
- * 1. ユーザID未定でも可能な処理(一般公開部分)
- * 1. ユーザIDは必要だが、ログイン(RSA)は不要な処理
- * 1. RSAキーが必要な処理
+ * 最初に`setProperties()`で設定情報(w.prop)および
+ * シート・ユーザ情報(w.master,w.user)を設定した上で、
+ * 以下のデシジョンテーブルに基づき処理を分岐させる。
+ * 
+ * | userId | arg | 処理 |
+ * | :-- | :-- | :-- |
+ * | null | string(e-mail) | registNewEmail:新規ユーザ登録 |
+ * | number | null | 応募情報(自情報)取得 |
+ * | number | string(encrypted JSON) | ユーザ情報編集 |
  * 
  * @param {number} userId 
- * @param {string} func - 分岐先処理名
- * @param {string} arg - 分岐先処理に渡す引数オブジェクト
+ * @param {null|string} arg - 分岐先処理名、分岐先処理に渡す引数オブジェクト
  * @returns {Object} 分岐先処理での処理結果
  */
-function authServer(userId=null,func=null,arg=null) {
+function authServer(userId=null,arg=null) {
   // 内部関数で'v'を使用するため、ここでは'w'で定義
-  const w = {whois:'authServer',rv:null,step:0,func:{},prop:{}};
+  const w = {whois:'authServer',rv:null,step:0,
+    prop:{}, // setPropertiesで設定されるauthServerのconfig
+    isJSON:str=>{try{JSON.parse(str)}catch(e){return false} return true},
+  };
   console.log(`${w.whois} start.`);
   try {
 
-    w.step = 1; // 既定値をwに登録
-    //::$src/server.setProperties.js::
+    w.step = 1; { // メソッドの登録(括弧はVSCode他のグルーピング用)
+      //::authServerの適用値を設定::$src/server.setProperties.js::
+      //::シートからユーザ情報を取得、メニュー表示権限を持つか判断::$src/server.checkAuthority.js::
+      //::::$src/server..js::
+      //::::$src/server..js::
+      //::::$src/server..js::
+      //::::$src/server..js::
+    }
 
-    if( userId === null ){ // userIdが不要な処理
-      if( ['getUserInfo'].find(x => x === func) ){
-        w.step = 1; // userId未定でも可能な処理 ⇒ 一般公開用
-        //::ユーザ情報・状態の取得::$src/server.getUserInfo.js::
+    w.step = 2; // 既定値をwに登録
+    w.rv = w.func.setProperties(arg);
+    if( w.rv instanceof Error ) throw w.rv;
+  
+    if( userId === null ){
+      w.step = 2; // userId未設定 ⇒ 新規ユーザ登録
+      w.r = w.func.registNewEmail(arg);
+      if( w.r instanceof Error ) throw w.r;
+    } else if( typeof userId === 'number' ){
+      if( arg === null ){
+        w.step = 3; // userIdはあるがarg未設定 ⇒ 応募情報(自情報)取得
+        w.r = w.func.getUserInfo(userId);
+        if( w.r instanceof Error ) throw w.r;
+      } else if( w.isJSON(arg) ){
+        w.step = 4; // argが平文 ⇒ 掲示板他、秘匿性が必要ない処理
       } else {
-        w.step = 2; // 該当処理なし
-        w.rv = null;
-      }
-    } else {  // userIdが必要な処理
-      if( ['sendPasscode'].find(x => x === func) ){
-        w.step = 3; // ログインは不要な処理
-        // ⇒ 参加者用メニュー(応募情報(自分の個人情報)修正を除く)
-        switch( func ){
-          case 'sendPasscode': w.step += ':sendPasscode';
-            //::$src/server.sendPasscode.js::
-            break;
+        w.step = 5; // argが暗号 ⇒ ユーザ情報編集
+        // argを復号、署名検証
+        w.decrypt = cryptico.decrypt(arg,w.prop.RSA.SSkey);
+        if( w.decrypt.status === 'success' && w.decrypt.publicKeyString === w.user.CPkey ){
+          w.arg = JSON.parse(w.decrypt.plaintext);
+
+          // 以下に分岐処理を記述
+          // checkAuthority : シートからユーザ情報を取得、メニュー表示権限を持つか判断
+          w.rv = w.func.checkAuthority(arg);
+          if( w.rv instanceof Error ) throw w.rv;          
         }
 
-      } else if( ['verifyPasscode','operation'].find(x => x === func) ){
-        // ログインしないと操作不可の処理
-        // ⇒ 応募情報修正、スタッフ用メニュー
-
-        w.step = 4; // クライアント側の署名検証＋引数のオブジェクト化
-        //::$src/server.verifySignature.js::
-        // verifySignatureの戻り値はw.rで受けるので、後続処理に引数として渡す
-
-        switch( func ){
-          case 'verifyPasscode': w.step += ':verifyPasscode';
-            //::$src/server.verifyPasscode.js::
-            break;
-          case 'operation': w.step += ':operation';
-            //:x:$src/server.operation.js::
-            break;
-          // 後略
-        }
-      } else {
-        w.step = 5; // 該当処理なし
-        w.rv = null;
       }
     }
 

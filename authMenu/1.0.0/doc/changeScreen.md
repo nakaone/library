@@ -1,5 +1,132 @@
-# 画面切替
+# 新規ユーザ登録、画面切替
 
+「画面切替」はサーバ側に開示範囲(allow)を渡し、シート上のユーザ権限(auth)と比較することで「要求画面を表示する権限が存在するか」を確認し、クライアント側でサーバ側の確認結果に基づき画面切替を行う。
+
+新規ユーザ登録は「応募情報表示・編集画面に切り替える」という画面切替の一般事例に「シート上にユーザ情報が存在しなければ追加」という手順を追加することで、画面切替の特殊事例として扱う。
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant browser
+  participant client as authMenu
+  participant server as authServer<br>main function
+  participant method as authServer<br>internal function
+  participant sheet
+
+  browser ->> client : 画面要求(既定値：ホーム)
+  activate client
+  Note right of client : changeScreen()
+  client ->> client : ユーザ権限、および要求画面の開示範囲(allow)を取得
+  alt 権限あり(allow&auth>0)
+    client ->> browser : 要求画面表示
+  else 権限なし(allow&auth=0)
+    alt メアド未定(this.email===null)
+      client ->> user : ダイアログ
+      user ->> client : e-mail
+      client ->> client : ユーザ情報更新(storeUserInfo)
+    end
+    client ->> server : userId,{e-mail,CPkey,updated,allow}(JSON)
+    activate server
+    sheet ->> server : ユーザ情報(全件)
+    server ->> server : 処理分岐
+    server ->> method : userId,e-mail
+    activate method
+    Note right of method : getUserInfo()
+    alt 未登録
+      method ->> method : 新規ユーザ情報作成
+      method ->> sheet : 新規ユーザ情報
+    end
+    method ->> method : 該当ユーザ情報を変数(w.user)に保存
+    method ->> server : 結果
+    deactivate method
+
+    server ->> server : ①ログイン要否判断
+    alt ログイン不要
+      alt 権限あり
+        server ->> client : 該当ユーザ情報(object)
+        client ->> browser : 要求画面
+      else 権限なし
+        server ->> client : シート上のauth(number)
+        client ->> client : ユーザ情報更新※1
+        client ->> browser : 「権限がありません」
+      else 凍結中
+        server ->> client : NG(null)
+        client ->> browser : 「アカウント凍結中」
+      end
+    else 要ログイン
+      server ->> method : 呼び出し
+      activate method
+      Note right of method : sendPasscode()
+      method ->> method : パスコード生成
+      method ->> sheet : trial更新(パスコード)
+      method ->> user : w.user.email宛パスコード連絡メール送付
+      method ->> server : 試行可能回数
+      deactivate method
+
+      server ->> client : 試行可能回数
+      deactivate server
+
+      client ->> client : 鍵ペア再生成
+      client ->> user : ダイアログ
+      user ->> client : パスコード
+
+      client ->> server : userId,{CPkey,updated,パスコード}(SP/CS)
+      activate server
+      sheet ->> server : ユーザ情報(全件)
+      server ->> server : 処理分岐
+      server ->>+ method : userId
+      Note right of method : getUserInfo()
+      method ->> method : 該当ユーザ情報を変数(w.user)に保存
+      method ->>- server : 検索結果
+      server ->> method : userId,CPkey,updated,パスコード(平文)
+      activate method
+      Note right of method : verifyPasscode()
+      method ->> method : パスコード検証
+      alt 検証OK(パスコード一致)
+        method ->> sheet : CPkey,updated,trial更新(検証結果)
+        method ->> server : ユーザ情報
+        server ->> client : ユーザ情報
+        client ->> client : ユーザ情報更新
+        client ->> browser : 要求画面
+      else 検証NG(パスコード不一致)
+        method ->> sheet : trial更新(検証結果)
+        method ->> server : 検証NG通知
+        deactivate method
+        server ->> client : 検証NG通知
+        deactivate server
+        client ->> client : 試行可能回数--
+        client ->> browser : エラーメッセージ
+      end
+    end
+  end
+  deactivate client
+```
+
+- ※1 : 権限が無いのにサーバまで問合せが来るのは、クライアント側の権限情報が誤っている可能性があるため、念のため更新する。
+- ①ログイン要否判断：いかのいずれかの場合、ログインが必要
+  - パスコード生成からログインまでの猶予時間を過ぎている
+  - クライアント側ログイン(CPkey)有効期限切れ
+  - 引数のCPkeyがシート上のCPkeyと不一致
+
+
+# シート更新
+
+- 
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant browser
+  participant client as authMenu
+  participant server as authServer<br>main function
+  participant method as authServer<br>internal function
+  participant sheet
+
+```
+
+<!--
 ```mermaid
 sequenceDiagram
   autonumber
@@ -76,88 +203,6 @@ sequenceDiagram
     end
   end
   deactivate client
-```
-
-- ※1 : 権限が無いのにサーバまで問合せが来るのは、クライアント側の権限情報が誤っている可能性があるため、念のため更新する。
-- ①ログイン要否判断：いかのいずれかの場合、ログインが必要
-  - パスコード生成からログインまでの猶予時間を過ぎている
-  - クライアント側ログイン(CPkey)有効期限切れ
-  - 引数のCPkeyがシート上のCPkeyと不一致
-
-
-<!--
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant browser
-  participant client as authMenu
-  participant server as authServer
-  participant sheet
-
-  browser ->> client : 画面要求(既定値：ホーム)
-  activate client
-  Note right of client : changeScreen()
-  alt 権限あり(allow&auth>0)
-    client ->> browser : 要求画面表示後、終了
-  else 権限なし(allow&auth=0)
-    alt メアド未定(this.email===null)
-      client ->> user : ダイアログ
-      user ->> client : e-mail
-      client ->> client : ②ユーザ情報更新
-    end
-
-    client ->> server : e-mail,CPkey
-    activate server
-    Note right of server : getUserInfo()
-    sheet ->> server : ユーザ情報
-    server ->> server : ①ユーザ情報存否確認
-    alt 未登録
-      server ->> server : ③新規ユーザ情報作成
-      server ->> sheet : 新規ユーザ情報
-    end
-    server ->> client : 存否確認結果＋ユーザ情報
-    deactivate server
-    client ->> client : ②ユーザ情報更新
-    alt 権限なし
-      client ->> browser : エラー表示後、終了
-    else 権限あり and CP一致 and CP有効
-      client ->> browser : 要求画面表示後、終了
-    else 権限あり and (CP不一致 or CP無効)
-
-      client ->> client : 鍵ペア再生成
-      client ->> server : userId,CPkey,updated
-      activate server
-      Note right of server : sendPasscode()
-      sheet ->> server : ユーザ情報
-      server ->> server : ④パスコード生成
-      server ->> sheet : ⑤trial,CPkey,updated
-      server ->> user : パスコード連絡メール
-      server ->> client : SPkey
-      deactivate server
-
-      client ->> client : ②ユーザ情報更新(CP,SP)
-      client ->> user : ダイアログ
-      user ->> client : パスコード
-
-      client ->> server : userId,パスコード(SP/CS)
-      activate server
-      Note right of server : verifyPasscode()
-      sheet ->> server : ユーザ情報
-      server ->> server : ⑥パスコード検証
-      server ->> sheet : ⑤trial更新(検証結果)
-      alt 検証OK
-        server ->> client : ユーザ情報
-        client ->> client : ②ユーザ情報更新
-        client ->> browser : 要求画面
-      else 検証NG
-        server ->> client : 検証NG通知
-        deactivate server
-        client ->> browser : エラーメッセージ
-      end
-    end
-    deactivate client
-  end
 ```
 -->
 

@@ -133,5 +133,3 @@ w.func.checkAuthority = function(arg){
     return e;
   }
 }
-w.rv = w.func.checkAuthority(arg);
-if( w.rv instanceof Error ) throw w.rv;
