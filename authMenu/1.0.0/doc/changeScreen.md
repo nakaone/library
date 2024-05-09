@@ -110,22 +110,6 @@ sequenceDiagram
   - 引数のCPkeyがシート上のCPkeyと不一致
 
 
-# シート更新
-
-- 
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant browser
-  participant client as authMenu
-  participant server as authServer<br>main function
-  participant method as authServer<br>internal function
-  participant sheet
-
-```
-
 <!--
 ```mermaid
 sequenceDiagram
