@@ -25,11 +25,6 @@ function authServer(userId=null,arg=null) {
 
     w.step = 1; { // メソッドの登録(括弧はVSCode他のグルーピング用)
       //::authServerの適用値を設定::$src/server.setProperties.js::
-      //::シートからユーザ情報を取得、メニュー表示権限を持つか判断::$src/server.checkAuthority.js::
-      //::::$src/server..js::
-      //::::$src/server..js::
-      //::::$src/server..js::
-      //::::$src/server..js::
     }
 
     w.step = 2; // 既定値をwに登録

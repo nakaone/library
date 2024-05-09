@@ -460,134 +460,11 @@ window.addEventListener('DOMContentLoaded',() => {
 
 以降の図中で`(XSkey/YPkey)`は「X側の秘密鍵で署名、Y側の公開鍵で暗号化する」の意味。
 
-## 新規ユーザ登録
+## 画面切替(＋新規ユーザ登録)
 
-- 新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
+「画面切替」はサーバ側に開示範囲(allow)を渡し、シート上のユーザ権限(auth)と比較することで「要求画面を表示する権限が存在するか」を確認し、クライアント側でサーバ側の確認結果に基づき画面切替を行う。
 
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant storage
-  participant client as authMenu
-  participant server as authServer
-  participant sheet
-
-  user ->> client : 新規登録要求
-  activate client
-  Note right of client : registMail()
-  alt SPkey不在
-    client ->> user : ダイアログ
-    user ->> client : e-mail
-    client ->> server : e-mail,CPkey,updated
-
-    sheet ->> server : ユーザ情報
-    server ->> server : ①登録状況確認
-    alt 登録済
-      server ->> sheet : CPkey,updated
-    else 未登録
-      server ->> server : 新規ユーザIDを採番
-      server ->> sheet : 新規ユーザとして追加
-    end
-    server ->> client : ユーザ情報
-    client ->> client : ②クライアント側更新
-  end
-  client ->> user : ユーザ情報編集画面
-  deactivate client
-```
-
-- ①登録状況確認
-- ②クライアント側更新
-  - storeUserInfo()でインスタンス変数,sessionStorageの情報を更新
-  - 返されたユーザ権限に基づきメニュー再描画
-
-<!--
-  user ->> browser : メアド
-  activate browser
-  Note right of browser : enterIdentifyKey()
-  storage ->> browser : ユーザID
-  alt ユーザID保存済
-    browser ->> user : ユーザIDを表示して終了
-  end
-  browser ->> client : メアド
-  activate client
-  Note right of client : registMail()
-  client ->> client : (不存在なら)鍵ペア生成
-  client ->> server : メアド＋CPkey＋作成日時
-  activate server
-  Note right of server : authServer.registMail()
-  alt メアドが未登録
-    server ->> server : ユーザIDを新規採番
-    server ->> sheet : ユーザ情報(※1)
-  else メアドが登録済
-    server ->> sheet : CPkey＋作成日時
-  end
-  server ->> client : ユーザ情報(※2)
-  deactivate server
-
-  client ->> client : ユーザ情報更新(インスタンス変数)
-  client ->> storage : ユーザ情報更新
-  client ->> browser : ユーザ情報(※2)
-  deactivate client
-  browser ->> browser : メニュー再描画
-  alt 既存メアド
-    browser ->> browser : ホーム画面に遷移
-  else 新規登録
-    browser ->> browser : 新規登録画面に遷移
-  end
-  browser ->> user : 遷移先画面
-  deactivate browser
-
-
-- CPkeyは有効期限にかかわらず送付され、server側で更新する<br>
-  - 同一userIdで異なる機器からログインする場合を想定
-  - 将来的に有効期間を設定した場合、強制更新ならその検証も省略可能
-- ※1(シート保存),※2(SV->CL)の「ユーザ情報」オブジェクトのメンバは以下の通り。
-  | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
-  | :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
-  | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
-  | created | string | ユーザID新規登録時刻(日時文字列) | × | × | × | × | ◎ |
-  | email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
-  | auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
-  | passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | × | × | × |
-  | CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
-  | CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
-  | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
-  | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
-  | isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
-  | trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
-- trialは以下のメンバを持つObject
-  | 名称 | 属性 | 内容 | I/O |
-  | :-- | :-- | :-- | :-- |
-  | startAt | number | 試行開始日時(UNIX時刻) | × |
-  | passcode | number | パスコード(原則数値6桁) | × |
-  | log | object[] | 試行の記録。unshiftで先頭を最新にする | × |
-  | <span style="margin-left:1rem">timestamp</span> | number | 試行日時(UNIX時刻) | × |
-  | <span style="margin-left:1rem">entered</span> | number | 入力されたパスコード | × |
-  | <span style="margin-left:1rem">result</span> | boolean | パスコードと入力値の比較結果(true:OK) | × |
-  | <span style="margin-left:1rem">status</span> | string | NGの場合の理由。'OK':試行OK | × |
-  | endAt | number | 試行終了日時(UNIX時刻) | × |
-  | result | boolean | 試行の結果(true:OK) | ◎ |
-  | unfreeze | number | ログイン連続失敗後、凍結解除される日時(UNIX時刻) | ◎ |
-  - loc : localStorage
-  - ses : sessionStorage
-  - mem : authMenuインスタンス変数(メンバ)
-  - I/O : authServer -> authMenuへ送られるオブジェクト
-  - sht : シート
-- 参加者が改めて参加要項からメールアドレスを入力するのは「自分のuserIdを失念した」場合を想定
-- 応募締切等、新規要求ができる期間の制限は、client側でも行う(authMenuの有効期間設定を想定)
-- メアドは形式チェックのみ行い、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
-- IDはstoreUserInfo関数を使用してlocal/sessionStorageでの保存を想定(∵タブを閉じても保存したい。個人情報とは言えず、特に問題ないと判断)
-- 「検索結果=既存」の場合、ユーザ情報編集画面の表示も検討したが、なりすましでもe-mail入力で個人情報が表示されることになるので不適切と判断。
-- 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
-
---＞
-
-## ログイン要求
-
-- 新規ユーザ登録は「サーバ側に登録されていない」ことを確認の上行うので、ログイン要求の一部になる。
-- ユーザIDやCS/CPkey他の自ユーザ情報、およびSPkeyはauthClient.constructor()で初期値を設定し、先行する「新規ユーザ登録」で修正済情報がインスタンス変数に存在する前提
-
+新規ユーザ登録は「応募情報表示・編集画面に切り替える」という画面切替の一般事例に「シート上にユーザ情報が存在しなければ追加」という手順を追加することで、画面切替の特殊事例として扱う。
 
 ```mermaid
 sequenceDiagram
@@ -595,256 +472,259 @@ sequenceDiagram
   actor user
   participant browser
   participant client as authMenu
-  participant server as authServer
+  participant server as authServer<br>main function
+  participant method as authServer<br>internal function
   participant sheet
 
-  browser ->> client : 呼び出し
+  browser ->> client : 画面要求(既定値：ホーム)
   activate client
-  Note right of client : login()
-  alt メアド未定(this.email===null)
-    client ->> user : ダイアログ
-    user ->> client : e-mail
-  end
-
-  client ->> server : e-mail,CPkey
-  activate server
-  Note right of server : getUserStatus()
-  sheet ->> server : ユーザ情報
-  server ->> server : ①ユーザ情報存否確認
-  alt CPkey不一致
-    server ->> sheet : CPkey更新
-  end
-  server ->> client : 存否確認結果＋ユーザ情報
-  deactivate server
-  client ->> client : ②ユーザ情報更新
-  alt 登録済 and CPkey一致
-    client ->> browser : ホーム画面表示
-  else 未登録 or CPkey不一致
-
+  Note right of client : changeScreen()
+  client ->> client : ユーザ権限、および要求画面の開示範囲(allow)を取得
+  alt 権限あり(allow&auth>0)
+    client ->> browser : 要求画面表示
+  else 権限なし(allow&auth=0)
+    alt メアド未定(this.email===null)
+      client ->> user : ダイアログ
+      user ->> client : e-mail
+      client ->> client : ユーザ情報更新(storeUserInfo)
+    end
+    client ->> server : userId,{e-mail,CPkey,updated,allow}(JSON)
+    activate server
+    sheet ->> server : ユーザ情報(全件)
+    server ->> server : 処理分岐
+    server ->> method : userId,e-mail
+    activate method
+    Note right of method : getUserInfo()
     alt 未登録
-      client ->> server : e-mail,CPkey(平文)
-      activate server
-      Note right of server : registMail()
-      sheet ->> server : ユーザ情報
-      server ->> server : ③新規ユーザ情報作成
-      server ->> sheet : 新規ユーザ情報
-      server ->> client : 新規ユーザ情報
-      deactivate server
-      client ->> client : ②ユーザ情報更新
+      method ->> method : 新規ユーザ情報作成
+      method ->> sheet : 新規ユーザ情報
     end
+    method ->> method : 該当ユーザ情報を変数(w.user)に保存
+    method ->> server : 結果
+    deactivate method
 
-    client ->> server : userId
-    activate server
-    Note right of server : sendPasscode()
-    sheet ->> server : ユーザ情報
-    server ->> server : ④パスコード生成
-    server ->> sheet : ⑤trial更新
-    server ->> user : パスコード連絡メール
-    server ->> client : メール送付通知
-    deactivate server
+    server ->> server : ①ログイン要否判断
+    alt ログイン不要
+      alt 権限あり
+        server ->> client : 該当ユーザ情報(object)
+        client ->> browser : 要求画面
+      else 権限なし
+        server ->> client : シート上のauth(number)
+        client ->> client : ユーザ情報更新※1
+        client ->> browser : 「権限がありません」
+      else 凍結中
+        server ->> client : NG(null)
+        client ->> browser : 「アカウント凍結中」
+      end
+    else 要ログイン
+      server ->> method : 呼び出し
+      activate method
+      Note right of method : sendPasscode()
+      method ->> method : パスコード生成
+      method ->> sheet : trial更新(パスコード)
+      method ->> user : w.user.email宛パスコード連絡メール送付
+      method ->> server : 試行可能回数
+      deactivate method
 
-    client ->> user : ダイアログ
-    user ->> client : パスコード
-
-    client ->> server : userId,パスコード
-    activate server
-    Note right of server : verifyPasscode()
-    sheet ->> server : ユーザ情報
-    server ->> server : ⑥パスコード検証
-    server ->> sheet : ⑤trial更新(検証結果)
-    alt 検証OK
-      server ->> client : ユーザ情報
-      client ->> client : ②ユーザ情報更新
-      client ->> browser : ホーム画面表示
-    else 検証NG
-      server ->> client : 検証NG通知
-      deactivate server
-      client ->> browser : エラーメッセージ
-    end
-  end
-  deactivate client
-```
-
-- 応募締切等、新規要求ができる期間の制限は、client側でも行う(authMenuの有効期間設定を想定)
-- メアドは形式チェックのみ行い、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
-- ①ユーザ情報存否確認
-  - e-mailが登録済 ? 登録済 : 未登録
-  - 復号化したCPkeyがシート上のCPkeyと一致 ? CPkey一致 : CPkey不一致
-- CPkeyは有効期限にかかわらず送付され、server側で更新する<br>
-  - 同一userIdで異なる機器からログインする場合を想定
-  - 将来的に有効期間を設定した場合、強制更新ならその検証も省略可能
-- ②ユーザ情報更新(storeUserInfo)
-  1. authMenuインスタンス変数/sessionStorageのユーザ情報を更新
-  1. メニューを再描画(genNavi()の実行)
-- ※1(シート保存),※2(SV->CL)の「ユーザ情報」オブジェクトのメンバは以下の通り。
-  | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
-  | :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
-  | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
-  | created | string | ユーザID新規登録時刻(日時文字列) | × | × | × | × | ◎ |
-  | email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
-  | auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
-  | passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | × | × | × |
-  | CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
-  | CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
-  | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
-  | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
-  | isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
-  | trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
-- 新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
-- ③新規ユーザ情報作成
-- ④パスコード生成
-  - 実行権限の確認
-    - CPkey : ① and ② ? 有効 : 無効<br>
-      ①送られてきたCPkeyがユーザ毎のプロパティサービスに保存されたCPkeyと一致<br>
-      ②ユーザ毎のプロパティサービスに保存されたCPkeyが有効期限内
-    - 凍結 : 前回ログイン失敗(3回連続失敗)から一定時間内 ? true : false
-- ⑤trial更新 : trialは以下のメンバを持つObjectをJSON形式でシート上で保存
-  | 名称 | 属性 | 内容 | I/O |
-  | :-- | :-- | :-- | :-- |
-  | startAt | number | 試行開始日時(UNIX時刻) | × |
-  | passcode | number | パスコード(原則数値6桁) | × |
-  | log | object[] | 試行の記録。unshiftで先頭を最新にする | × |
-  | <span style="margin-left:1rem">timestamp</span> | number | 試行日時(UNIX時刻) | × |
-  | <span style="margin-left:1rem">entered</span> | number | 入力されたパスコード | × |
-  | <span style="margin-left:1rem">result</span> | boolean | パスコードと入力値の比較結果(true:OK) | × |
-  | <span style="margin-left:1rem">status</span> | string | NGの場合の理由。'OK':試行OK | × |
-  | endAt | number | 試行終了日時(UNIX時刻) | × |
-  | result | boolean | 試行の結果(true:OK) | ◎ |
-  | unfreeze | number | ログイン連続失敗後、凍結解除される日時(UNIX時刻) | ◎ |
-  - loc : localStorage
-  - ses : sessionStorage
-  - mem : authMenuインスタンス変数(メンバ)
-  - I/O : authServer -> authMenuへ送られるオブジェクト
-  - sht : シート
-- ⑥パスコード検証 : 「パスコード検証」は復号・署名確認の上、以下の点をチェックする
-  - 復号可能且つ署名が一致
-  - 送付されたパスコード・要求IDがプロパティサービスのそれと一致
-  - 試行回数が一定数以下(既定値3回)
-  - パスコード生成から一定時間内(既定値15分)
-  - ログイン可能な権限
-- パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
-  例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
-
-## 操作要求
-
-ユーザ情報の編集や候補者リストの作成等、シートの操作(CRUD)は管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
-例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
-
-userは要求時に操作名を指定し、その実行結果を受け取る。
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant browser
-  participant client as authMenu
-  participant server as authServer
-  participant sheet
-
-  user ->> browser : パラメータ入力、要求
-  activate browser
-  Note right of browser : editUserInfo()等
-  browser ->> client : 操作名
-  activate client
-  Note right of client : request()
-  alt requestの引数がnull
-    client ->> browser : 自ユーザ情報
-    browser ->> user : ユーザ情報編集画面表示、終了
-  end
-
-  client ->> client : 要求ID生成
-  client ->> server : userId,CPkey(SPkey/--),要求ID,要求日時
-  activate server
-  Note right of server : login1S()
-  sheet ->> server : ユーザ情報
-  server ->> server : 実行権限確認(※1)
-  alt 確認結果=NG
-    server ->> client : エラー
-    client ->> browser : エラー
-    browser ->> user : エラー表示して終了
-  end
-  rect rgba(0, 255, 255, 0.1)
-    alt 確認結果=要確認
-      server ->> server : パスコード生成(※2)
-      server ->> sheet : パスコード,要求ID,要求時刻
-      server ->> user : パスコード連絡メール
-      server ->> client : OK＋要求ID
+      server ->> client : 試行可能回数
       deactivate server
 
-      client ->> user : パスコード入力ダイアログ
-      user ->> client : パスコード入力
-      client ->> server : userId,パスコード＋要求ID(CS/SP)
+      client ->> client : 鍵ペア再生成
+      client ->> user : ダイアログ
+      user ->> client : パスコード
+
+      client ->> server : userId,{CPkey,updated,パスコード}(SP/CS)
       activate server
-      Note right of server : login2S()
-      sheet ->> server : ユーザ情報
-      server ->> server : パスコード検証(※3)
-      alt 検証結果NG
-        server ->> client : NG
-        client ->> browser : エラー
-        browser ->> user : エラー表示して終了
+      sheet ->> server : ユーザ情報(全件)
+      server ->> server : 処理分岐
+      server ->>+ method : userId
+      Note right of method : getUserInfo()
+      method ->> method : 該当ユーザ情報を変数(w.user)に保存
+      method ->>- server : 検索結果
+      server ->> method : userId,CPkey,updated,パスコード(平文)
+      activate method
+      Note right of method : verifyPasscode()
+      method ->> method : パスコード検証
+      alt 検証OK(パスコード一致)
+        method ->> sheet : CPkey,updated,trial更新(検証結果)
+        method ->> server : ユーザ情報
+        server ->> client : ユーザ情報
+        client ->> client : ユーザ情報更新
+        client ->> browser : 要求画面
+      else 検証NG(パスコード不一致)
+        method ->> sheet : trial更新(検証結果)
+        method ->> server : 検証NG通知
+        deactivate method
+        server ->> client : 検証NG通知
+        deactivate server
+        client ->> client : 試行可能回数--
+        client ->> browser : エラーメッセージ
       end
     end
   end
-  server ->> sheet : 検証結果記録(含、要求ID)
-  server ->> client : OK
-  deactivate server
-  client ->> server : SQL,要求ID
-  activate server
-  Note right of server : operation(操作名)
-  sheet ->> server : ユーザ情報
-  server ->> server : 要求ID検証
-  server ->> sheet  : SQLの実行
-  server ->> client : 処理結果(SSkey/CPkey)
-  deactivate server
-  client ->> client : 復号＋署名検証
-  client ->> browser : 処理結果
   deactivate client
-  browser ->> browser : 処理結果表示画面生成
-  browser ->> user : 処理結果表示画面
-  deactivate browser
 ```
 
-- 「操作要求」には新規ユーザ登録からの`authMenu.request()`呼出を含む
-- 要求ID検証 : 要求IDが直近の検証結果であること、OKと判断されていること
-- ※1 : 実行権限確認<br>
-  | 実行権限 | CPkey | 凍結 | 結論 |
-  | :-- | :-- | :-- | :-- |
-  | 無し | — | — | NG (no permission) |
-  | 有り | 有効 | — | OK |
-  | 有り | 無効 | true | NG (lockout) |
-  | 有り | 無効 | false | 要確認(confirm) |
-  - 実行権限 : authServer内関数毎の所要権限 & ユーザ権限 > 0 ? 有り : 無し
-  - CPkey : ① and ② ? 有効 : 無効<br>
-  ①送られてきたCPkeyがユーザ毎のプロパティサービスに保存されたCPkeyと一致<br>
-  ②ユーザ毎のプロパティサービスに保存されたCPkeyが有効期限内
-  - 凍結 : 前回ログイン失敗(3回連続失敗)から一定時間内 ? true : false
-- ※2 : パスコード・要求ID生成
-  - パスコードは数値6桁(既定値)
-  - 要求IDはuserIdと要求時刻(UNIX時刻)を連結した文字列のMD5(or CRC32)をbase64化
-- ※3 : 「パスコード検証」は復号・署名確認の上、以下の点をチェックする
-  - 復号可能且つ署名が一致
-  - 送付されたパスコード・要求IDがプロパティサービスのそれと一致
-  - 試行回数が一定数以下(既定値3回)
-  - パスコード生成から一定時間内(既定値15分)
-  - ログイン可能な権限
-- パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
-  例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
+- ※1 : 権限が無いのにサーバまで問合せが来るのは、クライアント側の権限情報が誤っている可能性があるため、念のため更新する。
+- ①ログイン要否判断：いかのいずれかの場合、ログインが必要
+  - パスコード生成からログインまでの猶予時間を過ぎている
+  - クライアント側ログイン(CPkey)有効期限切れ
+  - 引数のCPkeyがシート上のCPkeyと不一致
 
-- シートの操作(CRUD)は権限と有効期間の確認が必要なため、以下のようなオブジェクト(ハッシュ)を管理者がソースに埋め込む(configとして定義する)ことで行う。
-  ```
-  config.operations = {
-    lookup : {  // {string} 操作名
-      auth : 0, // {number} 操作を許可する権限フラグの論理和
-      from : null, // {string} 有効期間を設定する場合、開始日時文字列
-      to : null, // {string} 同、終了日時文字列
-      func: // {Arrow|Function} 操作を定義する関数
-        (data,id) => data.find(x => x.id === id),
-    },
-    list : {...},
-    update : {...},
-    ...
-  }
-  ```
+
+<!--
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant browser
+  participant client as authMenu
+  participant server as authServer
+  participant sheet
+
+  browser ->> client : 画面要求(既定値：ホーム)
+  activate client
+  Note right of client : changeScreen()
+  client ->> client : ユーザ権限、および要求画面の開示範囲(allow)を取得
+  alt 権限あり(allow&auth>0)
+    client ->> browser : 要求画面表示
+  else 権限なし(allow&auth=0)
+    alt メアド未定(this.email===null)
+      client ->> user : ダイアログ
+      user ->> client : e-mail
+      client ->> client : ユーザ情報更新(storeUserInfo)
+    end
+
+    client ->> server : userId,e-mail,CPkey,updated,allow
+    activate server
+    Note right of server : checkAuthority()
+    sheet ->> server : ユーザ情報
+    server ->> server : ユーザ情報取得(getUserInfo)
+    alt 未登録
+      server ->> server : 新規ユーザ情報作成
+      server ->> sheet : 新規ユーザ情報
+    end
+    server ->> server : 権限有無判断
+    alt 権限なし or 凍結中
+      server ->> client : エラー
+      client ->> client : ユーザ情報(auth)更新※1
+      client ->> browser : 「権限がありません」「凍結中」
+    else 権限あり
+      server ->> server : ①ログイン要否判断
+      alt ログイン不要
+        server ->> client : OK
+        client ->> browser : 要求画面表示
+      else 要ログイン
+        server ->> server : パスコード生成
+        server ->> sheet : trial更新(パスコード)
+        server ->> user : パスコード連絡メール
+        server ->> client : 試行可能回数
+        deactivate server
+
+        alt 試行可能回数 = 0
+          client ->> browser : 「現在凍結中」
+        else 試行可能回数 > 0
+          client ->> client : 鍵ペア再生成
+          client ->> user : ダイアログ
+          user ->> client : パスコード
+          client ->> server : userId,CPkey,updated,パスコード(SP/CS)
+          activate server
+          Note right of server : verifyPasscode()
+          sheet ->> server : ユーザ情報
+          server ->> server : パスコード検証
+          server ->> sheet : trial更新(検証結果)
+          alt 検証OK(パスコードが一致)
+            server ->> client : ユーザ情報
+            server ->> sheet : CPkey,updated更新
+            client ->> client : ユーザ情報更新
+            client ->> browser : 要求画面
+          else 検証NG(パスコードが不一致)
+            server ->> client : 検証NG通知
+            deactivate server
+            client ->> client : 試行可能回数--
+            client ->> browser : エラーメッセージ
+          end
+        end
+      end
+    end
+  end
+  deactivate client
+```
+--＞
+
+#### typedef
+
+| 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
+| :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
+| userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
+| created | string | ユーザID新規登録時刻(日時文字列) | × | × | × | × | ◎ |
+| email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
+| auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
+| passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | × | × | × |
+| CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
+| CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
+| updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
+| SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
+| isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
+| trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
+
+| 名称 | 属性 | 内容 | I/O |
+| :-- | :-- | :-- | :-- |
+| startAt | number | 試行開始日時(UNIX時刻) | × |
+| passcode | number | パスコード(原則数値6桁) | × |
+| log | object[] | 試行の記録。unshiftで先頭を最新にする | × |
+| <span style="margin-left:1rem">timestamp</span> | number | 試行日時(UNIX時刻) | × |
+| <span style="margin-left:1rem">entered</span> | number | 入力されたパスコード | × |
+| <span style="margin-left:1rem">result</span> | boolean | パスコードと入力値の比較結果(true:OK) | × |
+| <span style="margin-left:1rem">status</span> | string | NGの場合の理由。'OK':試行OK | × |
+| endAt | number | 試行終了日時(UNIX時刻) | × |
+| result | boolean | 試行の結果(true:OK) | ◎ |
+| unfreeze | number | ログイン連続失敗後、凍結解除される日時(UNIX時刻) | ◎ |
+- loc : localStorage
+- ses : sessionStorage
+- mem : authMenuインスタンス変数(メンバ)
+- I/O : authServer -> authMenuへ送られるオブジェクト
+- sht : シート
+
+## シート更新
+
+#### シートの更新(CRUD)を伴う処理の定義方法
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant browser
+  participant client as authMenu
+  participant server as authServer<br>main function
+  participant method as authServer<br>internal function
+  participant sheet
+
+  client ->> server : userId,{func,arg}(SP/CS)
+  activate server
+  sheet ->> server : ユーザ情報(全件)
+  server ->> server : 処理分岐①
+  alt 実行権限なし
+    server ->> client : エラー通知
+    client ->> browser : エラーメッセージ
+  end
+
+  server ->>+ method : 指定関数にargを渡す
+  Note right of method : updateApplication(), etc
+  method ->>- server : 指定関数実行結果
+  server ->> client : 指定関数実行結果
+  client ->> client : 結果表示画面の生成
+  client ->> browser : 結果表示画面
+
+
+  deactivate server
+
+```
+
+- ①処理分岐：以下の全てを満たす場合、funcにarg(Object)を渡す
+  1. 引数(arg)を復号、署名検証を行う
+  1. userIdから当該ユーザの権限(auth)を特定、指定処理(func)の実行権限があるか確認
+- updateApplication等に必要となる実行可能権限は、`setProperties()`で'allow'として予め埋め込んでおく。
 
 ## 権限設定、変更
 
@@ -1027,9 +907,15 @@ authMenu用の既定値をセットしてdoGASを呼び出し
 
 **Kind**: instance method of [<code>authMenu</code>](#authMenu)
 
-1. ユーザID未定でも可能な処理(一般公開部分)
-1. ユーザIDは必要だが、ログイン(RSA)は不要な処理
-1. RSAキーが必要な処理
+最初に`setProperties()`で設定情報(w.prop)および
+シート・ユーザ情報(w.master,w.user)を設定した上で、
+以下のデシジョンテーブルに基づき処理を分岐させる。
+
+| userId | arg | 処理 |
+| :-- | :-- | :-- |
+| null | string(e-mail) | registNewEmail:新規ユーザ登録 |
+| number | null | 応募情報(自情報)取得 |
+| number | string(encrypted JSON) | ユーザ情報編集 |
 
 **Kind**: global function  
 **Returns**: <code>Object</code> - 分岐先処理での処理結果  
@@ -1037,8 +923,7 @@ authMenu用の既定値をセットしてdoGASを呼び出し
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | userId | <code>number</code> | <code></code> |  |
-| func | <code>string</code> | <code>null</code> | 分岐先処理名 |
-| arg | <code>string</code> | <code>null</code> | 分岐先処理に渡す引数オブジェクト |
+| arg | <code>null</code> \| <code>string</code> | <code></code> | 分岐先処理名、分岐先処理に渡す引数オブジェクト |
 
 # テクニカルメモ
 
@@ -1966,65 +1851,88 @@ showChildren(event){
 ```
 /** サーバ側の認証処理を分岐させる
  * 
- * 1. ユーザID未定でも可能な処理(一般公開部分)
- * 1. ユーザIDは必要だが、ログイン(RSA)は不要な処理
- * 1. RSAキーが必要な処理
+ * 最初に`setProperties()`で設定情報(w.prop)および
+ * シート・ユーザ情報(w.master,w.user)を設定した上で、
+ * 以下のデシジョンテーブルに基づき処理を分岐させる。
+ * 
+ * | userId | arg | 処理 |
+ * | :-- | :-- | :-- |
+ * | null | string(e-mail) | registNewEmail:新規ユーザ登録 |
+ * | number | null | 応募情報(自情報)取得 |
+ * | number | string(encrypted JSON) | ユーザ情報編集 |
  * 
  * @param {number} userId 
- * @param {string} func - 分岐先処理名
- * @param {string} arg - 分岐先処理に渡す引数オブジェクト
+ * @param {null|string} arg - 分岐先処理名、分岐先処理に渡す引数オブジェクト
  * @returns {Object} 分岐先処理での処理結果
  */
-function authServer(userId=null,func=null,arg=null) {
+function authServer(userId=null,arg=null) {
   // 内部関数で'v'を使用するため、ここでは'w'で定義
-  const w = {whois:'authServer',rv:null,step:0,func:{},prop:{}};
+  const w = {whois:'authServer',rv:null,step:0,
+    prop:{}, // setPropertiesで設定されるauthServerのconfig
+    isJSON:str=>{try{JSON.parse(str)}catch(e){return false} return true},
+  };
   console.log(`${w.whois} start.`);
   try {
 
-    w.step = 1; // 既定値をwに登録
+    w.step = 1; { // メソッドの登録(括弧はVSCode他のグルーピング用)
 /** authServerの適用値を設定
  * 
  * これら設定値はプロジェクトにより異なるため、
  * プロジェクト毎に適宜ソースを修正して使用すること。
  * 
- * @param {number|null} userId 
- * @returns {null}
+ * @param {object} arg
+ * @param {number} arg.userId=null - ユーザID
+ * @param {string} arg.email=null - メールアドレス
+ * @returns {number}
+ * - -1 : ユーザID・メールアドレスとも引数に無し 
+ * - 0 : ユーザIDまたはメールアドレスに該当無し
+ * - 1 : ユーザIDまたはメールアドレスが1件該当
+ * - 2 : ユーザIDまたはメールアドレスが複数件該当(エラー)
+ * - 4 : 引数で渡されたユーザIDが不正
+ * - 8 : 引数で渡されたメールアドレスが不正
  * 
- * 1. propertyName='authServer' {string}<br>
- *    プロパティサービスのキー名
- * 1. passcodeDigits=6 {number} : パスコードの桁数
- * 1. loginRetryInterval=3,600,000(60分) {number}<br>
- *    前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
- * 1. numberOfLoginAttempts=3 {number}<br>
- *    ログイン失敗になるまでの試行回数
- * 1. loginGraceTime=900,000(15分) {number}<br>
- *    パスコード生成からログインまでの猶予時間(ミリ秒)
- * 1. userLoginLifeTime=86,400,000(24時間) {number}<br>
- *    クライアント側ログイン(CPkey)有効期間
- * 1. defaultAuth=2 {number}<br>
- *    新規登録者に設定する権限
- * 1. masterSheet='master' {string}<br>
- *    参加者マスタのシート名
- * 1. primatyKeyColumn='userId' {string}<br>
- *    主キーとなる項目名。主キーは数値で設定
- * 1. emailColumn='email' {string}<br>
- *    e-mailを格納するシート上の項目名
- * 1. RSA {Object} : サーバ側RSAキー関連情報
- *    1. passPhraseLength=16 {number} : authServerのパスフレーズの長さ
- *    1. passPhrase {string} : authServerのパスフレーズ(自動生成)
- *    1. bits=1024 {number} : RSAキーのビット長
- *    1. SSkey {Object} : authServerの秘密鍵
- *    1. SPkey {string} : authServerの公開鍵
- * 1. userIdStartNumber=1 : ユーザID(数値)の開始
+ * **propの既定値、prop以外に設定される値**
+ * 
+ * - w.prop : 恒常的な設定値を保持
+ *   1. propertyName='authServer' {string}<br>
+ *      プロパティサービスのキー名
+ *   1. passcodeDigits=6 {number} : パスコードの桁数
+ *   1. loginRetryInterval=3,600,000(60分) {number}<br>
+ *      前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
+ *   1. numberOfLoginAttempts=3 {number}<br>
+ *      ログイン失敗になるまでの試行回数
+ *   1. loginGraceTime=900,000(15分) {number}<br>
+ *      パスコード生成からログインまでの猶予時間(ミリ秒)
+ *   1. userLoginLifeTime=86,400,000(24時間) {number}<br>
+ *      クライアント側ログイン(CPkey)有効期間
+ *   1. defaultAuth=2 {number}<br>
+ *      新規登録者に設定する権限
+ *   1. masterSheet='master' {string}<br>
+ *      参加者マスタのシート名
+ *   1. primatyKeyColumn='userId' {string}<br>
+ *      主キーとなる項目名。主キーは数値で設定
+ *   1. emailColumn='email' {string}<br>
+ *      e-mailを格納するシート上の項目名
+ *   1. RSA {Object} : サーバ側RSAキー関連情報
+ *      1. passPhraseLength=16 {number} : authServerのパスフレーズの長さ
+ *      1. passPhrase {string} : authServerのパスフレーズ(自動生成)
+ *      1. bits=1024 {number} : RSAキーのビット長
+ *      1. SSkey {Object} : authServerの秘密鍵
+ *      1. SPkey {string} : authServerの公開鍵
+ *   1. userIdStartNumber=1 : ユーザID(数値)の開始
+ * - w.master {SingleTable} : authServerが呼ばれた時点のマスタシート
  * 
  * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
  */
-w.func.setProperties = function(){
-  const v = {whois:w.whois+'.setProperties',rv:null,step:0};
+w.func.setProperties = function(arg={}){
+  const v = {whois:w.whois+'.setProperties',rv:0,step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // 適用値をセット
+    v.step = 1; // 引数の既定値を設定
+    v.arg = Object.assign({userId:null,email:null},arg);
+
+    v.step = 2; // 適用値をセット
     w.prop = PropertiesService.getDocumentProperties().getProperties();
     if( Object.keys(w.prop).length === 0 ){
       w.prop = {
@@ -2054,6 +1962,12 @@ w.func.setProperties = function(){
       // プロパティサービスを更新
       PropertiesService.getDocumentProperties().setProperties(w.prop);
     }
+
+    v.step = 3; // シートから全ユーザ情報の取得
+    w.master = new SingleTable(w.prop.masterSheet);
+    if( w.master instanceof Error ) throw w.master;
+
+    v.step = 4; // 終了処理
     console.log(`${v.whois} normal end.\n`,w.prop);
 
   } catch(e) {
@@ -2062,502 +1976,36 @@ w.func.setProperties = function(){
     return e;
   }
 }
-w.rv = w.func.setProperties(arg);
-if( w.rv instanceof Error ) throw w.rv;
-
-    if( userId === null ){ // userIdが不要な処理
-      if( ['registMail','getUserInfo'].find(x => x === func) ){
-        w.step = 1; // userId未定でも可能な処理 ⇒ 一般公開用
-        //:x:メールアドレスの登録::$src/server.registMail.js::
-/** authClientからの要求を受け、ユーザ情報と状態を返す
- * 
- * - IDは自然数の前提、1から順に採番。
- * - 新規採番は途中の欠損は考慮せず、最大値＋1とする
- * 
- * @param {Object} arg
- * @param {string} arg.email - 要求があったユーザのe-mail
- * @param {string} arg.CPkey - 要求があったユーザの公開鍵
- * @returns {object} 以下のメンバを持つオブジェクト
- * 1. SPkey {string} - サーバ側公開鍵
- * 1. isExist {boolean} - 既存メアドならtrue、新規登録ならfalse
- * 1. isEqual {boolean} - 引数のCPkeyがシート上のCPkeyと一致するならtrue
- * 1. isExpired {boolean} - CPkeyが有効期限切れならtrue
- * 1. data {object} - 該当ユーザのシート上のオブジェクト
- */
-w.func.getUserInfo = function(arg){
-  const v = {whois:w.whois+'.getUserInfo',step:0,rv:{
-    SPkey:w.prop.SPkey,
-    isExist:true, isEqual:true, isExpired:false, data:null,
-  }};
-  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
-  try {
-
-    v.step = 1; // emailアドレスの妥当性検証
-    if( checkFormat(arg.email,'email' ) === false ){
-      throw new Error(`invalid e-mail address.`);
     }
 
-    v.step = 2; // メアドの登録状況を取得
-    v.master = new SingleTable(w.prop.masterSheet);
-    if( v.master instanceof Error ) throw v.master;
-
-    v.step = 3; // メアドが登録済か確認、登録済ならシートのユーザ情報を保存
-    for( v.i=0 ; v.i<v.master.data.length ; v.i++ ){
-      if( v.master.data[v.i][w.prop.emailColumn] === arg.email ){
-        v.rv.data = v.master.data[v.i];
-        break;
-      }
-    }
-
-    if( v.rv.data === null ){
-      v.step = 4; // メアドが未登録の場合
-
-      v.step = 4.1; // userIdの最大値を取得
-      if( v.master.data.length === 0 ){
-        // 登録済が0件(シート作成直後)の場合
-        v.max = w.prop.userIdStartNumber - 1;
+    w.step = 2; // 既定値をwに登録
+    w.rv = w.func.setProperties(arg);
+    if( w.rv instanceof Error ) throw w.rv;
+  
+    if( userId === null ){
+      w.step = 2; // userId未設定 ⇒ 新規ユーザ登録
+      w.r = w.func.registNewEmail(arg);
+      if( w.r instanceof Error ) throw w.r;
+    } else if( typeof userId === 'number' ){
+      if( arg === null ){
+        w.step = 3; // userIdはあるがarg未設定 ⇒ 応募情報(自情報)取得
+        w.r = w.func.getUserInfo(userId);
+        if( w.r instanceof Error ) throw w.r;
+      } else if( w.isJSON(arg) ){
+        w.step = 4; // argが平文 ⇒ 掲示板他、秘匿性が必要ない処理
       } else {
-        v.map = v.master.data.map(x =>
-          isNaN(x[w.prop.primatyKeyColumn])
-          ? 0 : Number(x[w.prop.primatyKeyColumn]));
-        v.max = Math.max(...v.map);
-      }
+        w.step = 5; // argが暗号 ⇒ ユーザ情報編集
+        // argを復号、署名検証
+        w.decrypt = cryptico.decrypt(arg,w.prop.RSA.SSkey);
+        if( w.decrypt.status === 'success' && w.decrypt.publicKeyString === w.user.CPkey ){
+          w.arg = JSON.parse(w.decrypt.plaintext);
 
-      v.step = 4.2; // シートに初期値を登録
-      v.rv.data = {
-        userId  : v.max + 1,
-        created : toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn'),
-        email   : arg.email,
-        auth    : w.prop.defaultAuth,
-        CPkey   : arg.CPkey,
-        updated : null,
-        trial   : '{}',
-      };
-      v.rv.data.updated = v.rv.data.created;
-      v.r = v.master.insert([v.rv.data]);
-      if( v.r instanceof Error ) throw v.r;
-
-      v.step = 4.3; // 存否フラグを更新
-      v.rv.isExist = false;
-    }
-
-    v.step = 5; // 戻り値用にユーザ情報の項目を調整
-    v.rv.isEqual = v.rv.data.CPkey === arg.CPkey;
-    v.rv.isExpired = (new Date(v.rv.data.updated).getTime() + w.userLoginLifeTime) > Date.now();
-
-    v.step = 6; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\narg=${stringify(arg)}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-w.rv = w.func.getUserInfo(arg);
-if( w.rv instanceof Error ) throw w.rv;
-      } else {
-        w.step = 2; // 該当処理なし
-        w.rv = null;
-      }
-    } else {  // userIdが必要な処理
-      if( ['sendPasscode'].find(x => x === func) ){
-        w.step = 3; // ログインは不要な処理
-        // ⇒ 参加者用メニュー(応募情報(自分の個人情報)修正を除く)
-        switch( func ){
-          case 'sendPasscode': w.step += ':sendPasscode';
-/** authClientからの要求を受け、ユーザ情報と状態を返す
- * 
- * ユーザIDやCS/CPkey他の自ユーザ情報、およびSPkeyはauthClient.constructor()で初期値を設定し、
- * 先行する「新規ユーザ登録」で修正済情報がインスタンス変数に存在する前提。
- * 
- * @param {Object} arg
- * @param {number} arg.userId - ユーザID
- * @param {string} arg.CPkey - 要求があったユーザの公開鍵
- * @param {string} arg.updated - CPkey生成・更新日時文字列
- * @returns {object} 以下のメンバを持つオブジェクト
- * - status {number}
- *   - 0 : 成功(パスコード通知メールを送信)
- *   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
- *   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
- * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
- * - SPkey=null {Object} サーバ側公開鍵
- * - loginGraceTime=900,000(15分) {number}<br>
- *   パスコード生成からログインまでの猶予時間(ミリ秒)
- * - remainRetryInterval=0 {number} 再挑戦可能になるまでの時間(ミリ秒)
- * - passcodeDigits=6 {number} : パスコードの桁数
- */
-w.func.sendPasscode = function(arg){
-  const v = {whois:w.whois+'.sendPasscode',step:0,rv:{
-    status: 0, data: null, SPkey: null,
-    loginGraceTime: w.prop.loginGraceTime,
-    remainRetryInterval: 0,
-    passcodeDigits: w.prop.passcodeDigits,
-  }};
-  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
-  try {
-
-    // ---------------------------------------------
-    v.step = 1; // 事前準備
-    // ---------------------------------------------
-    v.step = 1.1; // シートから全ユーザ情報の取得
-    v.master = new SingleTable(w.prop.masterSheet);
-    if( v.master instanceof Error ) throw v.master;
-
-    v.step = 1.2; // 対象ユーザ情報の取得
-    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === arg.userId});
-    if( v.user instanceof Error ) throw v.user;
-
-    v.step = 1.3; // trialオブジェクトの取得
-    v.trial = JSON.parse(v.user.trial);
-    if( !v.trial.hasOwnProperty('log') ) v.trial.log = [];
-
-
-    // ---------------------------------------------
-    v.step = 2; // パスコード生成
-    //【trialオブジェクト定義】
-    // - passcode {number} パスコード(原則数値6桁)
-    // - created {number} パスコード生成日時(UNIX時刻)
-    // - log {object[]} 試行の記録。unshiftで先頭を最新にする
-    //   - timestamp {number} 試行日時(UNIX時刻)
-    //   - entered {number} 入力されたパスコード
-    //   - status {number} v.rv.statusの値
-    //   - result {number} 0:成功、1〜n:連続n回目の失敗
-    // trialオブジェクトはunshiftで常に先頭(添字=0)が最新になるようにする。
-    // ---------------------------------------------
-
-    v.step = 2.1; // 試行可能かの確認
-    // 以下のいずれかの場合はエラーを返して終了
-    // ①パスコード生成からログインまでの猶予時間を過ぎている
-    if( (w.prop.loginGraceTime + trial.created) > Date.now() ){
-      v.rv.status = 1;
-      return v.rv;
-    }
-    // ②前回ログイン失敗から凍結時間を過ぎていない
-    if( v.trial.log.length > 0 ){
-      if( trial.log[0].status === w.prop.numberOfLoginAttempts
-      && (trial.log[0].timestamp + w.prop.loginRetryInterval) > Date.now() )
-        v.rv.status = 2;
-        v.rv.remainRetryInterval = trial.log[0].timestamp
-          + w.prop.loginRetryInterval - Date.now();
-        return v.rv;
-    }
-
-    v.step = 2.2; // trialオブジェクトを生成、シートに保存
-    v.trial.passcode = Math.floor(Math.random() * Math.pow(10,w.prop.passcodeDigits));
-    v.trial.created = Date.now();
-
-    v.step = 2.3; // trial更新に合わせ、CPkey/updatedも更新
-    // sendPasscodeが呼ばれるのは「CP不一致 or CP無効」の場合。
-    // よって送られてきた新規CPkey/updatedでシート上のそれを更新する
-    v.r = v.master.update({
-      CPkey: arg.CPkey,
-      updated: arg.updated,
-      trial: JSON.stringify(v.trial)
-    },{where: x => x[w.prop.primatyKeyColumn] === arg.userId});
-
-
-    // ---------------------------------------------
-    v.step = 3; // パスコード通知メールの発信
-    // ---------------------------------------------
-    // $lib/sendmail/1.0.0/core.js
-    // @param {String} recipient - 受信者のアドレス
-    // @param {String} subject - 件名
-    // @param {String} body - メールの本文
-    // @param {Object} options - 詳細パラメータを指定する JavaScript オブジェクト（下記を参照）
-    // @param {BlobSource[]} options.attachments - メールと一緒に送信するファイルの配列
-    // @param {String} options.bcc - Bcc で送信するメールアドレスのカンマ区切りのリスト
-    // @param {String} options.cc - Cc に含めるメールアドレスのカンマ区切りのリスト
-    // @param {String} options.from - メールの送信元アドレス。getAliases() によって返される値のいずれかにする必要があります。
-    // @param {String} options.htmlBody - 設定すると、HTML をレンダリングできるデバイスは、必須の本文引数の代わりにそれを使用します。メール用にインライン画像を用意する場合は、HTML 本文にオプションの inlineImages フィールドを追加できます。
-    // @param {Object} options.inlineImages - 画像キー（String）から画像データ（BlobSource）へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、<img src="cid:imageKey" /> 形式でこれらの画像への参照が含まれていることを前提としています。
-    // @param {String} options.name - メールの送信者の名前（デフォルト: ユーザー名）
-    // @param {String} options.replyTo - デフォルトの返信先アドレスとして使用するメールアドレス（デフォルト: ユーザーのメールアドレス）
-    // @returns {null|Error}
-    //
-    // w.prop.notificatePasscodeMailでテンプレート設定済
-    // notificatePasscodeMail: {
-    //   subject: '[連絡] パスコード',
-    //   body: 'パスコードは以下の通りです。\n\n::passcode::',
-    //   options: {},
-    // },
-    v.trial.body = w.prop.notificatePasscodeMail.body
-    .replaceAll('::passcode::',('0'.repeat(w.prop.passcodeDigits)
-    + String(v.trial.passcode)).slice(-w.prop.passcodeDigits));
-    v.r = sendmail(
-      v.user.email, // recipient
-      w.prop.notificatePasscodeMail.subject, // subject
-      v.trial.body, // body
-      w.prop.notificatePasscodeMail.options // options
-    );
-    if( v.r instanceof Error ) throw v.r;
-
-
-    // ---------------------------------------------
-    v.step = 4; // 終了処理
-    // ---------------------------------------------
-    v.rv.data = v.user;
-    delete v.rv.data.trial; // 悪用されないよう、念のため削除
-    v.rv.SPkey = w.prop.SPkey;
-    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\narg=${stringify(arg)}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-w.rv = w.func.sendPasscode(arg);
-if( w.rv instanceof Error ) throw w.rv;
-            break;
+          // 以下に分岐処理を記述
+          // checkAuthority : シートからユーザ情報を取得、メニュー表示権限を持つか判断
+          w.rv = w.func.checkAuthority(arg);
+          if( w.rv instanceof Error ) throw w.rv;          
         }
 
-      } else if( ['verifyPasscode','operation'].find(x => x === func) ){
-        // ログインしないと操作不可の処理
-        // ⇒ 応募情報修正、スタッフ用メニュー
-
-        w.step = 4; // クライアント側の署名検証＋引数のオブジェクト化
-/** クライアント側の署名を検証、引数を復号してオブジェクト化する
- * @param {number} userId - ユーザID
- * @param {string} arg - クライアント側での暗号化＋署名結果(文字列)
- * @returns {Object|Error} 復号化したオブジェクト
- * 
- * **参考：パスフレーズ・秘密鍵・公開鍵の一括保存はできない**
- * 
- * `{passPhrase:〜,privateKey:〜,publicKey:〜}`のように一括して保存しようとすると、以下のエラーが発生。
- * 
- * ```
- * You have exceeded the property storage quota.
- * Please remove some properties and try again.
- * ```
- * 
- * 原因は[プロパティ値のサイズ](https://developers.google.com/apps-script/guides/services/quotas?hl=ja)が超過したため。
- * ⇒ max 9KB/値なので、パスフレーズ・公開鍵・秘密鍵は別々のプロパティとして保存が必要
- */
-w.func.verifySignature = function(userId=null,arg=null){
-  const v = {whois:w.whois+'.verifySignature',rv:{result:0,message:'',obj:null},step:0};
-  console.log(`${v.whois} start.`);
-  try {
-
-    // ---------------------------------------------
-    v.step = 1; // 事前準備
-    // ---------------------------------------------
-    v.step = 1.1; // 引数チェック。userId, argは共に必須
-    if( userId === null ) throw new Error(`${v.whois} Error: no userId.`);
-    if( arg === null ) throw new Error(`${v.whois} Error: no arg.`);
-
-    v.step = 1.2; // サーバ側鍵ペアの取得・生成　※親関数のwhoisを使用
-    v.RSA = PropertiesService.getDocumentProperties().getProperty(w.whois).RSA;
-
-
-    // ---------------------------------------------
-    v.step = 2; // クライアント側情報の取得
-    // ---------------------------------------------
-    v.step = 2.1; // シートから全ユーザ情報の取得
-    v.master = new SingleTable(w.prop.masterSheet);
-    if( v.master instanceof Error ) throw v.master;
-
-    v.step = 2.2; // 対象ユーザ情報の取得
-    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === userId});
-    if( v.user instanceof Error ) throw v.user;
-
-    v.step = 2.3 // userIdがシートに存在しない
-    if( v.user.length === 0 ){
-      v.rv.result = 1;
-      console.log(`${v.whois}: no userId on sheet ${w.prop.masterSheet} (step ${v.step}).`);
-      return v.rv;
-    }
-    
-    // ---------------------------------------------
-    v.step = 3; // 引数の復元
-    // 【以下の処理におけるv.rvオブジェクトのメンバ】
-    // - result {number}
-    //   - 0: 正常終了
-    //   - 1: userIdがシートに存在しない
-    //   - 2: 不適切な暗号化(decrypt.status != 'success')
-    //   - 3: 不適切な署名(decrypt.publicKeyString != sheet.CPkey)<br>
-    //     ※ decrypt.signatureは常に"forged"で"verified"にならないため、CPkeyを比較
-    //   - 4: CPkey有効期限切れ
-    // - message='' {string} エラーだった場合のメッセージ
-    // - obj=null {object} 復号したオブジェクト
-    // ---------------------------------------------
-    v.decrypt = cryptico.decrypt(arg,v.RSA.SPkey);
-    //console.log(`v.decrypt=${stringify(v.decrypt)}`);
-    if( v.decrypt.status !== 'success' ){
-      v.step = 3.1; // 復号不可
-      v.rv.result = 2;
-      v.rv.message = `${v.whois}: decrypt error (step ${v.step}).`
-      + `\nstatus="${v.decrypt.status}"`
-      + `\nplaintext="${v.decrypt.plaintext}"`
-      + `\nsignature="${v.decrypt.signature}"`
-      + `\npublicKeyString="${v.decrypt.publicKeyString}"`
-      + `\npublicKeyID="${v.decrypt.publicKeyID}"`
-      + `\nverify="${v.decrypt.verify}"`
-      + `\nvalidityPeriod="${v.decrypt.validityPeriod}"`;
-    } else if( v.decrypt.publicKeyString !== v.user.CPkey ){
-      v.step = 3.2; // 不適切な署名(CPkey不一致)
-      v.rv.result = 3;
-      v.rv.message = `${v.whois}: CPkey unmatch (step ${v.step}).`
-      + `\nv.decrypt.publicKeyString=${v.decrypt.publicKeyString}`
-      + `\nv.user.CPkey=${v.user.CPkey}`;
-    } else if( (new Date(v.user.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
-      v.step = 3.3; // CPkey有効期限切れ
-      v.rv.result = 4;
-      v.rv.message = `${v.whois}: CPkey expired (step ${v.step}).`
-      + `\nupdated: ${v.user.updated})`
-      + `\nuserLoginLifeTime: ${w.prop.userLoginLifeTime/3600000} hours`
-      + `\nDate.now(): ${toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn')}`;
-    } else {
-      v.step = 3.4; // 正常終了
-      v.rv.obj = JSON.parse(v.decrypt.plaintext);
-    }
-    if( v.rv.result > 0 ) throw new Error(v.rv.message);
-
-    v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.`);
-    return v.rv.obj;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    return e;
-  }
-}
-w.r = w.func.verifySignature(userId,arg);
-if( w.r instanceof Error ) throw w.r;
-        // verifySignatureの戻り値はw.rで受けるので、後続処理に引数として渡す
-
-        switch( func ){
-          case 'verifyPasscode': w.step += ':verifyPasscode';
-/** 入力されたパスコードの検証
- * 
- * @param {Object} arg
- * @param {number} arg.userId - ユーザID
- * @param {number} arg.passcode - 入力されたパスコード
- * @returns {Object|number} ユーザ情報オブジェクト。エラーならエラーコード
-    // ログイン失敗になるまでの試行回数(numberOfLoginAttempts)
-    // パスコード生成からログインまでの猶予時間(ミリ秒)(loginGraceTime)
-    // クライアント側ログイン(CPkey)有効期間(userLoginLifeTime)
- * @returns {object} 以下のメンバを持つオブジェクト
- * - status {number}
- *   - 0 : 成功(パスコードが一致)
- *   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
- *   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
- *   - 3 : クライアント側ログイン(CPkey)有効期限切れ
- *   - 4 : パスコード不一致
- * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
- * - SPkey=null {Object} サーバ側公開鍵
- * - loginGraceTime=900,000(15分) {number}<br>
- *   パスコード生成からログインまでの猶予時間(ミリ秒)
- * - remainRetryInterval=0 {number} 再挑戦可能になるまでの時間(ミリ秒)
- * - passcodeDigits=6 {number} : パスコードの桁数
- */
-w.func.verifyPasscode = function(arg){
-  const v = {whois:w.whois+'.verifyPasscode',step:0,rv:{
-    status: 0, data: null, SPkey: null,
-    loginGraceTime: w.prop.loginGraceTime,
-    remainRetryInterval: 0,
-    passcodeDigits: w.prop.passcodeDigits,
-  }};
-  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
-  try {
-
-    // ---------------------------------------------
-    v.step = 1; // 事前準備
-    // ---------------------------------------------
-    v.step = 1.1; // シートから全ユーザ情報の取得
-    v.master = new SingleTable(w.prop.masterSheet);
-    if( v.master instanceof Error ) throw v.master;
-
-    v.step = 1.2; // 対象ユーザ情報の取得
-    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === arg.userId});
-    if( v.user instanceof Error ) throw v.user;
-
-    v.step = 1.3; // trialオブジェクトの取得
-    v.trial = JSON.parse(v.user.trial);
-    if( !v.trial.hasOwnProperty('log') ) v.trial.log = [];
-
-
-    // ---------------------------------------------
-    v.step = 2; // パスコード検証
-    // ---------------------------------------------
-    // ログイン失敗になるまでの試行回数(numberOfLoginAttempts)
-    // パスコード生成からログインまでの猶予時間(ミリ秒)(loginGraceTime)
-    // クライアント側ログイン(CPkey)有効期間(userLoginLifeTime)
-
-    v.step = 2.1; // 試行可能かの確認
-    // 以下のいずれかの場合はエラーを返して終了
-    if( (w.prop.loginGraceTime + v.trial.created) > Date.now() ){
-      // ①パスコード生成からログインまでの猶予時間を過ぎている
-      v.rv.status = 1;
-    } else if( v.trial.log.length > 0
-      && trial.log[0].status === w.prop.numberOfLoginAttempts
-      && (trial.log[0].timestamp + w.prop.loginRetryInterval) > Date.now() ){
-      // ②前回ログイン失敗から凍結時間を過ぎていない
-      v.rv.status = 2;
-      v.rv.remainRetryInterval = trial.log[0].timestamp
-        + w.prop.loginRetryInterval - Date.now();
-    } else if( (new Date(v.user.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
-      // ③クライアント側ログイン(CPkey)有効期限切れ(userLoginLifeTime)
-      v.rv.status = 3;
-    } else if( v.trial.passcode !== arg.passcode ){
-      // ④パスコード不一致
-      v.rv.status = 4;
-    } else {
-      // パスコードが一致
-      v.rv.data = v.user;
-    }
-
-    // ---------------------------------------------
-    v.step = 3; // 終了処理
-    // ---------------------------------------------
-    v.step = 3.1; // trial更新(検証結果の格納)
-    // - passcode {number} パスコード(原則数値6桁)
-    // - log {object[]} 試行の記録。unshiftで先頭を最新にする
-    //   - timestamp {number} 試行日時(UNIX時刻)
-    //   - entered {number} 入力されたパスコード
-    //   - status {number} v.rv.statusの値
-    //   - result {number} 0:成功、1〜n:連続n回目の失敗
-    // 
-    // trialオブジェクトはunshiftで常に先頭(添字=0)が最新になるようにする。
-    // 新しいlogオブジェクトの作成
-    v.log = {
-      timestamp: Date.now(),
-      entered: arg.passcode,
-      status: v.status,
-      result: v.status === 0 ? 0 : (v.trial.log[0].result + 1),
-    }
-    v.trial.log.unshift(v.log);
-    v.r = v.master.update({trial:JSON.stringify(v.trial)},
-      {where:x => x.userId === arg.userId});
-    if( v.r instanceof Error ) throw v.r;
-
-
-    v.step = 3.2; // 検証OKならユーザ情報を、NGなら通知を返す
-    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\narg=${stringify(arg)}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-w.rv = w.func.verifyPasscode(w.r);  // w.rはserver.verifySignatureの戻り値
-if( w.rv instanceof Error ) throw w.rv;
-            break;
-          case 'operation': w.step += ':operation';
-            //:x:$src/server.operation.js::
-            break;
-          // 後略
-        }
-      } else {
-        w.step = 5; // 該当処理なし
-        w.rv = null;
       }
     }
 
@@ -2694,26 +2142,27 @@ td, .td {
    1. <a href="#ac0012">documentPropertiesのサーバ・ユーザ情報保存</a>
    1. <a href="#ac0013">ユーザ情報保存用シートの作成</a>
 1. <a href="#ac0014">機能別処理フロー</a>
-   1. <a href="#ac0015">新規ユーザ登録</a>
-   1. <a href="#ac0016">ログイン要求</a>
-   1. <a href="#ac0017">操作要求</a>
-   1. <a href="#ac0018">権限設定、変更</a>
-1. <a href="#ac0019">フォルダ構成、ビルド手順</a>
-1. <a href="#ac0020">仕様(JSDoc)</a>
-   1. <a href="#ac0021">new authMenu(arg)</a>
-   1. <a href="#ac0022">authMenu.changeScreen(screenName) ⇒ <code>void</code></a>
-   1. <a href="#ac0023">authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code></a>
-   1. <a href="#ac0024">authMenu.storeUserInfo(arg) ⇒ <code>void</code></a>
-   1. <a href="#ac0025">authMenu.doGAS()</a>
-   1. <a href="#ac0026">authMenu.toggle()</a>
-   1. <a href="#ac0027">authMenu.showChildren()</a>
-1. <a href="#ac0028">テクニカルメモ</a>
-   1. <a href="#ac0029">GAS/htmlでの暗号化</a>
-         1. <a href="#ac0030">手順</a>
-         1. <a href="#ac0031">javascript用</a>
-         1. <a href="#ac0032">GAS用</a>
-1. <a href="#ac0033">プログラムソース</a>
-1. <a href="#ac0034">改版履歴</a>
+   1. <a href="#ac0015">画面切替(＋新規ユーザ登録)</a>
+         1. <a href="#ac0016">typedef</a>
+   1. <a href="#ac0017">シート更新</a>
+         1. <a href="#ac0018">シートの更新(CRUD)を伴う処理の定義方法</a>
+   1. <a href="#ac0019">権限設定、変更</a>
+1. <a href="#ac0020">フォルダ構成、ビルド手順</a>
+1. <a href="#ac0021">仕様(JSDoc)</a>
+   1. <a href="#ac0022">new authMenu(arg)</a>
+   1. <a href="#ac0023">authMenu.changeScreen(screenName) ⇒ <code>void</code></a>
+   1. <a href="#ac0024">authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code></a>
+   1. <a href="#ac0025">authMenu.storeUserInfo(arg) ⇒ <code>void</code></a>
+   1. <a href="#ac0026">authMenu.doGAS()</a>
+   1. <a href="#ac0027">authMenu.toggle()</a>
+   1. <a href="#ac0028">authMenu.showChildren()</a>
+1. <a href="#ac0029">テクニカルメモ</a>
+   1. <a href="#ac0030">GAS/htmlでの暗号化</a>
+         1. <a href="#ac0031">手順</a>
+         1. <a href="#ac0032">javascript用</a>
+         1. <a href="#ac0033">GAS用</a>
+1. <a href="#ac0034">プログラムソース</a>
+1. <a href="#ac0035">改版履歴</a>
 
 # 1 機能概要<a name="ac0001"></a>
 
@@ -3125,140 +2574,14 @@ window.addEventListener('DOMContentLoaded',() => {
 
 以降の図中で`(XSkey/YPkey)`は「X側の秘密鍵で署名、Y側の公開鍵で暗号化する」の意味。
 
-## 3.1 新規ユーザ登録<a name="ac0015"></a>
+## 3.1 画面切替(＋新規ユーザ登録)<a name="ac0015"></a>
 
-[先頭](#ac0000) > [機能別処理フロー](#ac0014) > 新規ユーザ登録
-
-
-- 新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant storage
-  participant client as authMenu
-  participant server as authServer
-  participant sheet
-
-  user ->> client : 新規登録要求
-  activate client
-  Note right of client : registMail()
-  alt SPkey不在
-    client ->> user : ダイアログ
-    user ->> client : e-mail
-    client ->> server : e-mail,CPkey,updated
-
-    sheet ->> server : ユーザ情報
-    server ->> server : ①登録状況確認
-    alt 登録済
-      server ->> sheet : CPkey,updated
-    else 未登録
-      server ->> server : 新規ユーザIDを採番
-      server ->> sheet : 新規ユーザとして追加
-    end
-    server ->> client : ユーザ情報
-    client ->> client : ②クライアント側更新
-  end
-  client ->> user : ユーザ情報編集画面
-  deactivate client
-```
-
-- ①登録状況確認
-- ②クライアント側更新
-  - storeUserInfo()でインスタンス変数,sessionStorageの情報を更新
-  - 返されたユーザ権限に基づきメニュー再描画
-
-<!--
-  user ->> browser : メアド
-  activate browser
-  Note right of browser : enterIdentifyKey()
-  storage ->> browser : ユーザID
-  alt ユーザID保存済
-    browser ->> user : ユーザIDを表示して終了
-  end
-  browser ->> client : メアド
-  activate client
-  Note right of client : registMail()
-  client ->> client : (不存在なら)鍵ペア生成
-  client ->> server : メアド＋CPkey＋作成日時
-  activate server
-  Note right of server : authServer.registMail()
-  alt メアドが未登録
-    server ->> server : ユーザIDを新規採番
-    server ->> sheet : ユーザ情報(※1)
-  else メアドが登録済
-    server ->> sheet : CPkey＋作成日時
-  end
-  server ->> client : ユーザ情報(※2)
-  deactivate server
-
-  client ->> client : ユーザ情報更新(インスタンス変数)
-  client ->> storage : ユーザ情報更新
-  client ->> browser : ユーザ情報(※2)
-  deactivate client
-  browser ->> browser : メニュー再描画
-  alt 既存メアド
-    browser ->> browser : ホーム画面に遷移
-  else 新規登録
-    browser ->> browser : 新規登録画面に遷移
-  end
-  browser ->> user : 遷移先画面
-  deactivate browser
+[先頭](#ac0000) > [機能別処理フロー](#ac0014) > 画面切替(＋新規ユーザ登録)
 
 
-- CPkeyは有効期限にかかわらず送付され、server側で更新する<br>
-  - 同一userIdで異なる機器からログインする場合を想定
-  - 将来的に有効期間を設定した場合、強制更新ならその検証も省略可能
-- ※1(シート保存),※2(SV->CL)の「ユーザ情報」オブジェクトのメンバは以下の通り。
-  | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
-  | :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
-  | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
-  | created | string | ユーザID新規登録時刻(日時文字列) | × | × | × | × | ◎ |
-  | email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
-  | auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
-  | passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | × | × | × |
-  | CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
-  | CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
-  | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
-  | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
-  | isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
-  | trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
-- trialは以下のメンバを持つObject
-  | 名称 | 属性 | 内容 | I/O |
-  | :-- | :-- | :-- | :-- |
-  | startAt | number | 試行開始日時(UNIX時刻) | × |
-  | passcode | number | パスコード(原則数値6桁) | × |
-  | log | object[] | 試行の記録。unshiftで先頭を最新にする | × |
-  | <span style="margin-left:1rem">timestamp</span> | number | 試行日時(UNIX時刻) | × |
-  | <span style="margin-left:1rem">entered</span> | number | 入力されたパスコード | × |
-  | <span style="margin-left:1rem">result</span> | boolean | パスコードと入力値の比較結果(true:OK) | × |
-  | <span style="margin-left:1rem">status</span> | string | NGの場合の理由。'OK':試行OK | × |
-  | endAt | number | 試行終了日時(UNIX時刻) | × |
-  | result | boolean | 試行の結果(true:OK) | ◎ |
-  | unfreeze | number | ログイン連続失敗後、凍結解除される日時(UNIX時刻) | ◎ |
-  - loc : localStorage
-  - ses : sessionStorage
-  - mem : authMenuインスタンス変数(メンバ)
-  - I/O : authServer -> authMenuへ送られるオブジェクト
-  - sht : シート
-- 参加者が改めて参加要項からメールアドレスを入力するのは「自分のuserIdを失念した」場合を想定
-- 応募締切等、新規要求ができる期間の制限は、client側でも行う(authMenuの有効期間設定を想定)
-- メアドは形式チェックのみ行い、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
-- IDはstoreUserInfo関数を使用してlocal/sessionStorageでの保存を想定(∵タブを閉じても保存したい。個人情報とは言えず、特に問題ないと判断)
-- 「検索結果=既存」の場合、ユーザ情報編集画面の表示も検討したが、なりすましでもe-mail入力で個人情報が表示されることになるので不適切と判断。
-- 申込時に自分限定の申込情報操作のためログインすることになるので、メール到達確認はそこで行う
+「画面切替」はサーバ側に開示範囲(allow)を渡し、シート上のユーザ権限(auth)と比較することで「要求画面を表示する権限が存在するか」を確認し、クライアント側でサーバ側の確認結果に基づき画面切替を行う。
 
--->
-
-## 3.2 ログイン要求<a name="ac0016"></a>
-
-[先頭](#ac0000) > [機能別処理フロー](#ac0014) > ログイン要求
-
-
-- 新規ユーザ登録は「サーバ側に登録されていない」ことを確認の上行うので、ログイン要求の一部になる。
-- ユーザIDやCS/CPkey他の自ユーザ情報、およびSPkeyはauthClient.constructor()で初期値を設定し、先行する「新規ユーザ登録」で修正済情報がインスタンス変数に存在する前提
-
+新規ユーザ登録は「応募情報表示・編集画面に切り替える」という画面切替の一般事例に「シート上にユーザ情報が存在しなければ追加」という手順を追加することで、画面切替の特殊事例として扱う。
 
 ```mermaid
 sequenceDiagram
@@ -3266,261 +2589,270 @@ sequenceDiagram
   actor user
   participant browser
   participant client as authMenu
-  participant server as authServer
+  participant server as authServer<br>main function
+  participant method as authServer<br>internal function
   participant sheet
 
-  browser ->> client : 呼び出し
+  browser ->> client : 画面要求(既定値：ホーム)
   activate client
-  Note right of client : login()
-  alt メアド未定(this.email===null)
-    client ->> user : ダイアログ
-    user ->> client : e-mail
-  end
-
-  client ->> server : e-mail,CPkey
-  activate server
-  Note right of server : getUserStatus()
-  sheet ->> server : ユーザ情報
-  server ->> server : ①ユーザ情報存否確認
-  alt CPkey不一致
-    server ->> sheet : CPkey更新
-  end
-  server ->> client : 存否確認結果＋ユーザ情報
-  deactivate server
-  client ->> client : ②ユーザ情報更新
-  alt 登録済 and CPkey一致
-    client ->> browser : ホーム画面表示
-  else 未登録 or CPkey不一致
-
+  Note right of client : changeScreen()
+  client ->> client : ユーザ権限、および要求画面の開示範囲(allow)を取得
+  alt 権限あり(allow&auth>0)
+    client ->> browser : 要求画面表示
+  else 権限なし(allow&auth=0)
+    alt メアド未定(this.email===null)
+      client ->> user : ダイアログ
+      user ->> client : e-mail
+      client ->> client : ユーザ情報更新(storeUserInfo)
+    end
+    client ->> server : userId,{e-mail,CPkey,updated,allow}(JSON)
+    activate server
+    sheet ->> server : ユーザ情報(全件)
+    server ->> server : 処理分岐
+    server ->> method : userId,e-mail
+    activate method
+    Note right of method : getUserInfo()
     alt 未登録
-      client ->> server : e-mail,CPkey(平文)
-      activate server
-      Note right of server : registMail()
-      sheet ->> server : ユーザ情報
-      server ->> server : ③新規ユーザ情報作成
-      server ->> sheet : 新規ユーザ情報
-      server ->> client : 新規ユーザ情報
-      deactivate server
-      client ->> client : ②ユーザ情報更新
+      method ->> method : 新規ユーザ情報作成
+      method ->> sheet : 新規ユーザ情報
     end
+    method ->> method : 該当ユーザ情報を変数(w.user)に保存
+    method ->> server : 結果
+    deactivate method
 
-    client ->> server : userId
-    activate server
-    Note right of server : sendPasscode()
-    sheet ->> server : ユーザ情報
-    server ->> server : ④パスコード生成
-    server ->> sheet : ⑤trial更新
-    server ->> user : パスコード連絡メール
-    server ->> client : メール送付通知
-    deactivate server
+    server ->> server : ①ログイン要否判断
+    alt ログイン不要
+      alt 権限あり
+        server ->> client : 該当ユーザ情報(object)
+        client ->> browser : 要求画面
+      else 権限なし
+        server ->> client : シート上のauth(number)
+        client ->> client : ユーザ情報更新※1
+        client ->> browser : 「権限がありません」
+      else 凍結中
+        server ->> client : NG(null)
+        client ->> browser : 「アカウント凍結中」
+      end
+    else 要ログイン
+      server ->> method : 呼び出し
+      activate method
+      Note right of method : sendPasscode()
+      method ->> method : パスコード生成
+      method ->> sheet : trial更新(パスコード)
+      method ->> user : w.user.email宛パスコード連絡メール送付
+      method ->> server : 試行可能回数
+      deactivate method
 
-    client ->> user : ダイアログ
-    user ->> client : パスコード
-
-    client ->> server : userId,パスコード
-    activate server
-    Note right of server : verifyPasscode()
-    sheet ->> server : ユーザ情報
-    server ->> server : ⑥パスコード検証
-    server ->> sheet : ⑤trial更新(検証結果)
-    alt 検証OK
-      server ->> client : ユーザ情報
-      client ->> client : ②ユーザ情報更新
-      client ->> browser : ホーム画面表示
-    else 検証NG
-      server ->> client : 検証NG通知
-      deactivate server
-      client ->> browser : エラーメッセージ
-    end
-  end
-  deactivate client
-```
-
-- 応募締切等、新規要求ができる期間の制限は、client側でも行う(authMenuの有効期間設定を想定)
-- メアドは形式チェックのみ行い、到達確認および別ソースとの突合は行わない(ex.在校生メアド一覧との突合)
-- ①ユーザ情報存否確認
-  - e-mailが登録済 ? 登録済 : 未登録
-  - 復号化したCPkeyがシート上のCPkeyと一致 ? CPkey一致 : CPkey不一致
-- CPkeyは有効期限にかかわらず送付され、server側で更新する<br>
-  - 同一userIdで異なる機器からログインする場合を想定
-  - 将来的に有効期間を設定した場合、強制更新ならその検証も省略可能
-- ②ユーザ情報更新(storeUserInfo)
-  1. authMenuインスタンス変数/sessionStorageのユーザ情報を更新
-  1. メニューを再描画(genNavi()の実行)
-- ※1(シート保存),※2(SV->CL)の「ユーザ情報」オブジェクトのメンバは以下の通り。
-  | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
-  | :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
-  | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
-  | created | string | ユーザID新規登録時刻(日時文字列) | × | × | × | × | ◎ |
-  | email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
-  | auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
-  | passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | × | × | × |
-  | CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
-  | CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
-  | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
-  | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
-  | isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
-  | trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
-- 新規登録では、[サーバ側のプロパティサービス](#332-%E3%83%A6%E3%83%BC%E3%82%B6%E6%83%85%E5%A0%B1)にIDとメアドのみ作成する。申込者名等、登録内容についてはユーザ情報の参照・編集画面を呼び出し、修正・加筆を行う。
-- ③新規ユーザ情報作成
-- ④パスコード生成
-  - 実行権限の確認
-    - CPkey : ① and ② ? 有効 : 無効<br>
-      ①送られてきたCPkeyがユーザ毎のプロパティサービスに保存されたCPkeyと一致<br>
-      ②ユーザ毎のプロパティサービスに保存されたCPkeyが有効期限内
-    - 凍結 : 前回ログイン失敗(3回連続失敗)から一定時間内 ? true : false
-- ⑤trial更新 : trialは以下のメンバを持つObjectをJSON形式でシート上で保存
-  | 名称 | 属性 | 内容 | I/O |
-  | :-- | :-- | :-- | :-- |
-  | startAt | number | 試行開始日時(UNIX時刻) | × |
-  | passcode | number | パスコード(原則数値6桁) | × |
-  | log | object[] | 試行の記録。unshiftで先頭を最新にする | × |
-  | <span style="margin-left:1rem">timestamp</span> | number | 試行日時(UNIX時刻) | × |
-  | <span style="margin-left:1rem">entered</span> | number | 入力されたパスコード | × |
-  | <span style="margin-left:1rem">result</span> | boolean | パスコードと入力値の比較結果(true:OK) | × |
-  | <span style="margin-left:1rem">status</span> | string | NGの場合の理由。'OK':試行OK | × |
-  | endAt | number | 試行終了日時(UNIX時刻) | × |
-  | result | boolean | 試行の結果(true:OK) | ◎ |
-  | unfreeze | number | ログイン連続失敗後、凍結解除される日時(UNIX時刻) | ◎ |
-  - loc : localStorage
-  - ses : sessionStorage
-  - mem : authMenuインスタンス変数(メンバ)
-  - I/O : authServer -> authMenuへ送られるオブジェクト
-  - sht : シート
-- ⑥パスコード検証 : 「パスコード検証」は復号・署名確認の上、以下の点をチェックする
-  - 復号可能且つ署名が一致
-  - 送付されたパスコード・要求IDがプロパティサービスのそれと一致
-  - 試行回数が一定数以下(既定値3回)
-  - パスコード生成から一定時間内(既定値15分)
-  - ログイン可能な権限
-- パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
-  例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
-
-## 3.3 操作要求<a name="ac0017"></a>
-
-[先頭](#ac0000) > [機能別処理フロー](#ac0014) > 操作要求
-
-
-ユーザ情報の編集や候補者リストの作成等、シートの操作(CRUD)は管理者が事前に`{操作名:実行関数}`の形でソースに埋め込んで定義する。<br>
-例：`{lookup:(arg)=>data.find(x=>x.id==arg.id)}`
-
-userは要求時に操作名を指定し、その実行結果を受け取る。
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant browser
-  participant client as authMenu
-  participant server as authServer
-  participant sheet
-
-  user ->> browser : パラメータ入力、要求
-  activate browser
-  Note right of browser : editUserInfo()等
-  browser ->> client : 操作名
-  activate client
-  Note right of client : request()
-  alt requestの引数がnull
-    client ->> browser : 自ユーザ情報
-    browser ->> user : ユーザ情報編集画面表示、終了
-  end
-
-  client ->> client : 要求ID生成
-  client ->> server : userId,CPkey(SPkey/--),要求ID,要求日時
-  activate server
-  Note right of server : login1S()
-  sheet ->> server : ユーザ情報
-  server ->> server : 実行権限確認(※1)
-  alt 確認結果=NG
-    server ->> client : エラー
-    client ->> browser : エラー
-    browser ->> user : エラー表示して終了
-  end
-  rect rgba(0, 255, 255, 0.1)
-    alt 確認結果=要確認
-      server ->> server : パスコード生成(※2)
-      server ->> sheet : パスコード,要求ID,要求時刻
-      server ->> user : パスコード連絡メール
-      server ->> client : OK＋要求ID
+      server ->> client : 試行可能回数
       deactivate server
 
-      client ->> user : パスコード入力ダイアログ
-      user ->> client : パスコード入力
-      client ->> server : userId,パスコード＋要求ID(CS/SP)
+      client ->> client : 鍵ペア再生成
+      client ->> user : ダイアログ
+      user ->> client : パスコード
+
+      client ->> server : userId,{CPkey,updated,パスコード}(SP/CS)
       activate server
-      Note right of server : login2S()
-      sheet ->> server : ユーザ情報
-      server ->> server : パスコード検証(※3)
-      alt 検証結果NG
-        server ->> client : NG
-        client ->> browser : エラー
-        browser ->> user : エラー表示して終了
+      sheet ->> server : ユーザ情報(全件)
+      server ->> server : 処理分岐
+      server ->>+ method : userId
+      Note right of method : getUserInfo()
+      method ->> method : 該当ユーザ情報を変数(w.user)に保存
+      method ->>- server : 検索結果
+      server ->> method : userId,CPkey,updated,パスコード(平文)
+      activate method
+      Note right of method : verifyPasscode()
+      method ->> method : パスコード検証
+      alt 検証OK(パスコード一致)
+        method ->> sheet : CPkey,updated,trial更新(検証結果)
+        method ->> server : ユーザ情報
+        server ->> client : ユーザ情報
+        client ->> client : ユーザ情報更新
+        client ->> browser : 要求画面
+      else 検証NG(パスコード不一致)
+        method ->> sheet : trial更新(検証結果)
+        method ->> server : 検証NG通知
+        deactivate method
+        server ->> client : 検証NG通知
+        deactivate server
+        client ->> client : 試行可能回数--
+        client ->> browser : エラーメッセージ
       end
     end
   end
-  server ->> sheet : 検証結果記録(含、要求ID)
-  server ->> client : OK
-  deactivate server
-  client ->> server : SQL,要求ID
-  activate server
-  Note right of server : operation(操作名)
-  sheet ->> server : ユーザ情報
-  server ->> server : 要求ID検証
-  server ->> sheet  : SQLの実行
-  server ->> client : 処理結果(SSkey/CPkey)
-  deactivate server
-  client ->> client : 復号＋署名検証
-  client ->> browser : 処理結果
   deactivate client
-  browser ->> browser : 処理結果表示画面生成
-  browser ->> user : 処理結果表示画面
-  deactivate browser
 ```
 
-- 「操作要求」には新規ユーザ登録からの`authMenu.request()`呼出を含む
-- 要求ID検証 : 要求IDが直近の検証結果であること、OKと判断されていること
-- ※1 : 実行権限確認<br>
-  | 実行権限 | CPkey | 凍結 | 結論 |
-  | :-- | :-- | :-- | :-- |
-  | 無し | — | — | NG (no permission) |
-  | 有り | 有効 | — | OK |
-  | 有り | 無効 | true | NG (lockout) |
-  | 有り | 無効 | false | 要確認(confirm) |
-  - 実行権限 : authServer内関数毎の所要権限 & ユーザ権限 > 0 ? 有り : 無し
-  - CPkey : ① and ② ? 有効 : 無効<br>
-  ①送られてきたCPkeyがユーザ毎のプロパティサービスに保存されたCPkeyと一致<br>
-  ②ユーザ毎のプロパティサービスに保存されたCPkeyが有効期限内
-  - 凍結 : 前回ログイン失敗(3回連続失敗)から一定時間内 ? true : false
-- ※2 : パスコード・要求ID生成
-  - パスコードは数値6桁(既定値)
-  - 要求IDはuserIdと要求時刻(UNIX時刻)を連結した文字列のMD5(or CRC32)をbase64化
-- ※3 : 「パスコード検証」は復号・署名確認の上、以下の点をチェックする
-  - 復号可能且つ署名が一致
-  - 送付されたパスコード・要求IDがプロパティサービスのそれと一致
-  - 試行回数が一定数以下(既定値3回)
-  - パスコード生成から一定時間内(既定値15分)
-  - ログイン可能な権限
-- パスコード再発行は凍結中以外認めるが、再発行前の失敗は持ち越す。<br>
-  例：旧パスコードで2回連続失敗、再発行後の1回目で失敗したら凍結
+- ※1 : 権限が無いのにサーバまで問合せが来るのは、クライアント側の権限情報が誤っている可能性があるため、念のため更新する。
+- ①ログイン要否判断：いかのいずれかの場合、ログインが必要
+  - パスコード生成からログインまでの猶予時間を過ぎている
+  - クライアント側ログイン(CPkey)有効期限切れ
+  - 引数のCPkeyがシート上のCPkeyと不一致
 
-- シートの操作(CRUD)は権限と有効期間の確認が必要なため、以下のようなオブジェクト(ハッシュ)を管理者がソースに埋め込む(configとして定義する)ことで行う。
-  ```
-  config.operations = {
-    lookup : {  // {string} 操作名
-      auth : 0, // {number} 操作を許可する権限フラグの論理和
-      from : null, // {string} 有効期間を設定する場合、開始日時文字列
-      to : null, // {string} 同、終了日時文字列
-      func: // {Arrow|Function} 操作を定義する関数
-        (data,id) => data.find(x => x.id === id),
-    },
-    list : {...},
-    update : {...},
-    ...
-  }
-  ```
 
-## 3.4 権限設定、変更<a name="ac0018"></a>
+<!--
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant browser
+  participant client as authMenu
+  participant server as authServer
+  participant sheet
+
+  browser ->> client : 画面要求(既定値：ホーム)
+  activate client
+  Note right of client : changeScreen()
+  client ->> client : ユーザ権限、および要求画面の開示範囲(allow)を取得
+  alt 権限あり(allow&auth>0)
+    client ->> browser : 要求画面表示
+  else 権限なし(allow&auth=0)
+    alt メアド未定(this.email===null)
+      client ->> user : ダイアログ
+      user ->> client : e-mail
+      client ->> client : ユーザ情報更新(storeUserInfo)
+    end
+
+    client ->> server : userId,e-mail,CPkey,updated,allow
+    activate server
+    Note right of server : checkAuthority()
+    sheet ->> server : ユーザ情報
+    server ->> server : ユーザ情報取得(getUserInfo)
+    alt 未登録
+      server ->> server : 新規ユーザ情報作成
+      server ->> sheet : 新規ユーザ情報
+    end
+    server ->> server : 権限有無判断
+    alt 権限なし or 凍結中
+      server ->> client : エラー
+      client ->> client : ユーザ情報(auth)更新※1
+      client ->> browser : 「権限がありません」「凍結中」
+    else 権限あり
+      server ->> server : ①ログイン要否判断
+      alt ログイン不要
+        server ->> client : OK
+        client ->> browser : 要求画面表示
+      else 要ログイン
+        server ->> server : パスコード生成
+        server ->> sheet : trial更新(パスコード)
+        server ->> user : パスコード連絡メール
+        server ->> client : 試行可能回数
+        deactivate server
+
+        alt 試行可能回数 = 0
+          client ->> browser : 「現在凍結中」
+        else 試行可能回数 > 0
+          client ->> client : 鍵ペア再生成
+          client ->> user : ダイアログ
+          user ->> client : パスコード
+          client ->> server : userId,CPkey,updated,パスコード(SP/CS)
+          activate server
+          Note right of server : verifyPasscode()
+          sheet ->> server : ユーザ情報
+          server ->> server : パスコード検証
+          server ->> sheet : trial更新(検証結果)
+          alt 検証OK(パスコードが一致)
+            server ->> client : ユーザ情報
+            server ->> sheet : CPkey,updated更新
+            client ->> client : ユーザ情報更新
+            client ->> browser : 要求画面
+          else 検証NG(パスコードが不一致)
+            server ->> client : 検証NG通知
+            deactivate server
+            client ->> client : 試行可能回数--
+            client ->> browser : エラーメッセージ
+          end
+        end
+      end
+    end
+  end
+  deactivate client
+```
+-->
+
+#### 3.1.1 typedef<a name="ac0016"></a>
+
+[先頭](#ac0000) > [機能別処理フロー](#ac0014) > [画面切替(＋新規ユーザ登録)](#ac0015) > typedef
+
+
+| 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
+| :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
+| userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
+| created | string | ユーザID新規登録時刻(日時文字列) | × | × | × | × | ◎ |
+| email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
+| auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
+| passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | × | × | × |
+| CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
+| CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
+| updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
+| SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
+| isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
+| trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
+
+| 名称 | 属性 | 内容 | I/O |
+| :-- | :-- | :-- | :-- |
+| startAt | number | 試行開始日時(UNIX時刻) | × |
+| passcode | number | パスコード(原則数値6桁) | × |
+| log | object[] | 試行の記録。unshiftで先頭を最新にする | × |
+| <span style="margin-left:1rem">timestamp</span> | number | 試行日時(UNIX時刻) | × |
+| <span style="margin-left:1rem">entered</span> | number | 入力されたパスコード | × |
+| <span style="margin-left:1rem">result</span> | boolean | パスコードと入力値の比較結果(true:OK) | × |
+| <span style="margin-left:1rem">status</span> | string | NGの場合の理由。'OK':試行OK | × |
+| endAt | number | 試行終了日時(UNIX時刻) | × |
+| result | boolean | 試行の結果(true:OK) | ◎ |
+| unfreeze | number | ログイン連続失敗後、凍結解除される日時(UNIX時刻) | ◎ |
+- loc : localStorage
+- ses : sessionStorage
+- mem : authMenuインスタンス変数(メンバ)
+- I/O : authServer -> authMenuへ送られるオブジェクト
+- sht : シート
+
+## 3.2 シート更新<a name="ac0017"></a>
+
+[先頭](#ac0000) > [機能別処理フロー](#ac0014) > シート更新
+
+
+#### 3.2.1 シートの更新(CRUD)を伴う処理の定義方法<a name="ac0018"></a>
+
+[先頭](#ac0000) > [機能別処理フロー](#ac0014) > [シート更新](#ac0017) > シートの更新(CRUD)を伴う処理の定義方法
+
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor user
+  participant browser
+  participant client as authMenu
+  participant server as authServer<br>main function
+  participant method as authServer<br>internal function
+  participant sheet
+
+  client ->> server : userId,{func,arg}(SP/CS)
+  activate server
+  sheet ->> server : ユーザ情報(全件)
+  server ->> server : 処理分岐①
+  alt 実行権限なし
+    server ->> client : エラー通知
+    client ->> browser : エラーメッセージ
+  end
+
+  server ->>+ method : 指定関数にargを渡す
+  Note right of method : updateApplication(), etc
+  method ->>- server : 指定関数実行結果
+  server ->> client : 指定関数実行結果
+  client ->> client : 結果表示画面の生成
+  client ->> browser : 結果表示画面
+
+
+  deactivate server
+
+```
+
+- ①処理分岐：以下の全てを満たす場合、funcにarg(Object)を渡す
+  1. 引数(arg)を復号、署名検証を行う
+  1. userIdから当該ユーザの権限(auth)を特定、指定処理(func)の実行権限があるか確認
+- updateApplication等に必要となる実行可能権限は、`setProperties()`で'allow'として予め埋め込んでおく。
+
+## 3.3 権限設定、変更<a name="ac0019"></a>
 
 [先頭](#ac0000) > [機能別処理フロー](#ac0014) > 権限設定、変更
 
@@ -3546,7 +2878,7 @@ sequenceDiagram
   server ->>- admin : 権限設定リスト
 ```
 
-# 4 フォルダ構成、ビルド手順<a name="ac0019"></a>
+# 4 フォルダ構成、ビルド手順<a name="ac0020"></a>
 
 [先頭](#ac0000) > フォルダ構成、ビルド手順
 
@@ -3571,7 +2903,7 @@ sequenceDiagram
 - initialize.gs : サーバ側初期化処理のソース
 - readme.md : doc配下を統合した、client/server全体の仕様書
 
-# 5 仕様(JSDoc)<a name="ac0020"></a>
+# 5 仕様(JSDoc)<a name="ac0021"></a>
 
 [先頭](#ac0000) > 仕様(JSDoc)
 
@@ -3587,9 +2919,9 @@ sequenceDiagram
 
 <a name="new_authMenu_new"></a>
 
-## 5.1 new authMenu(arg)<a name="ac0021"></a>
+## 5.1 new authMenu(arg)<a name="ac0022"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > new authMenu(arg)
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0021) > new authMenu(arg)
 
 
 | Param | Type |
@@ -3598,9 +2930,9 @@ sequenceDiagram
 
 <a name="authMenu+changeScreen"></a>
 
-## 5.2 authMenu.changeScreen(screenName) ⇒ <code>void</code><a name="ac0022"></a>
+## 5.2 authMenu.changeScreen(screenName) ⇒ <code>void</code><a name="ac0023"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.changeScreen(screenName) ⇒ <code>void</code>
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0021) > authMenu.changeScreen(screenName) ⇒ <code>void</code>
 
 適宜認証を行った上で画面を切り替える
 
@@ -3612,9 +2944,9 @@ sequenceDiagram
 
 <a name="authMenu+genNavi"></a>
 
-## 5.3 authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code><a name="ac0023"></a>
+## 5.3 authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code><a name="ac0024"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0021) > authMenu.genNavi(wrapper, navi) ⇒ <code>null</code> \| <code>Error</code>
 
 親要素を走査してナビゲーションを作成
 
@@ -3627,9 +2959,9 @@ sequenceDiagram
 
 <a name="authMenu+storeUserInfo"></a>
 
-## 5.4 authMenu.storeUserInfo(arg) ⇒ <code>void</code><a name="ac0024"></a>
+## 5.4 authMenu.storeUserInfo(arg) ⇒ <code>void</code><a name="ac0025"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.storeUserInfo(arg) ⇒ <code>void</code>
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0021) > authMenu.storeUserInfo(arg) ⇒ <code>void</code>
 
 storeUserInfo: インスタンス変数やstorageに保存したユーザ情報を更新
 
@@ -3705,35 +3037,41 @@ storeUserInfo: インスタンス変数やstorageに保存したユーザ情報�
 4. `opt.userIdSelector='div[name="userId"]'`を指定して本関数を実行、HTMLからユーザIDを取得
 <a name="authMenu+doGAS"></a>
 
-## 5.5 authMenu.doGAS()<a name="ac0025"></a>
+## 5.5 authMenu.doGAS()<a name="ac0026"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.doGAS()
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0021) > authMenu.doGAS()
 
 authMenu用の既定値をセットしてdoGASを呼び出し
 
 **Kind**: instance method of [<code>authMenu</code>](#authMenu)  
 <a name="authMenu+toggle"></a>
 
-## 5.6 authMenu.toggle()<a name="ac0026"></a>
+## 5.6 authMenu.toggle()<a name="ac0027"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.toggle()
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0021) > authMenu.toggle()
 
 ナビゲーション領域の表示/非表示切り替え
 
 **Kind**: instance method of [<code>authMenu</code>](#authMenu)  
 <a name="authMenu+showChildren"></a>
 
-## 5.7 authMenu.showChildren()<a name="ac0027"></a>
+## 5.7 authMenu.showChildren()<a name="ac0028"></a>
 
-[先頭](#ac0000) > [仕様(JSDoc)](#ac0020) > authMenu.showChildren()
+[先頭](#ac0000) > [仕様(JSDoc)](#ac0021) > authMenu.showChildren()
 
 ブランチの下位階層メニュー表示/非表示切り替え
 
 **Kind**: instance method of [<code>authMenu</code>](#authMenu)
 
-1. ユーザID未定でも可能な処理(一般公開部分)
-1. ユーザIDは必要だが、ログイン(RSA)は不要な処理
-1. RSAキーが必要な処理
+最初に`setProperties()`で設定情報(w.prop)および
+シート・ユーザ情報(w.master,w.user)を設定した上で、
+以下のデシジョンテーブルに基づき処理を分岐させる。
+
+| userId | arg | 処理 |
+| :-- | :-- | :-- |
+| null | string(e-mail) | registNewEmail:新規ユーザ登録 |
+| number | null | 応募情報(自情報)取得 |
+| number | string(encrypted JSON) | ユーザ情報編集 |
 
 **Kind**: global function  
 **Returns**: <code>Object</code> - 分岐先処理での処理結果  
@@ -3741,22 +3079,21 @@ authMenu用の既定値をセットしてdoGASを呼び出し
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | userId | <code>number</code> | <code></code> |  |
-| func | <code>string</code> | <code>null</code> | 分岐先処理名 |
-| arg | <code>string</code> | <code>null</code> | 分岐先処理に渡す引数オブジェクト |
+| arg | <code>null</code> \| <code>string</code> | <code></code> | 分岐先処理名、分岐先処理に渡す引数オブジェクト |
 
-# 6 テクニカルメモ<a name="ac0028"></a>
+# 6 テクニカルメモ<a name="ac0029"></a>
 
 [先頭](#ac0000) > テクニカルメモ
 
 
-## 6.1 GAS/htmlでの暗号化<a name="ac0029"></a>
+## 6.1 GAS/htmlでの暗号化<a name="ac0030"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0028) > GAS/htmlでの暗号化
+[先頭](#ac0000) > [テクニカルメモ](#ac0029) > GAS/htmlでの暗号化
 
 
-#### 6.1.1 手順<a name="ac0030"></a>
+#### 6.1.1 手順<a name="ac0031"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0028) > [GAS/htmlでの暗号化](#ac0029) > 手順
+[先頭](#ac0000) > [テクニカルメモ](#ac0029) > [GAS/htmlでの暗号化](#ac0030) > 手順
 
 
 ```mermaid
@@ -3792,9 +3129,9 @@ sequenceDiagram
   - GASでの保存
   - 
 
-#### 6.1.2 javascript用<a name="ac0031"></a>
+#### 6.1.2 javascript用<a name="ac0032"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0028) > [GAS/htmlでの暗号化](#ac0029) > javascript用
+[先頭](#ac0000) > [テクニカルメモ](#ac0029) > [GAS/htmlでの暗号化](#ac0030) > javascript用
 
 
 - Node.jsスタイルで書かれたコードをブラウザ上で動くものに変換 : [ざっくりbrowserify入門](https://qiita.com/fgkm/items/a362b9917fa5f893c09a)
@@ -3803,9 +3140,9 @@ sequenceDiagram
 javascript 鍵ペア ライブラリ
 
 
-#### 6.1.3 GAS用<a name="ac0032"></a>
+#### 6.1.3 GAS用<a name="ac0033"></a>
 
-[先頭](#ac0000) > [テクニカルメモ](#ac0028) > [GAS/htmlでの暗号化](#ac0029) > GAS用
+[先頭](#ac0000) > [テクニカルメモ](#ac0029) > [GAS/htmlでの暗号化](#ac0030) > GAS用
 
 
 GASでは鍵ペア生成はできない ⇒ openssl等で作成し、プロパティサービスに保存しておく。
@@ -3850,7 +3187,7 @@ function setTest() {
 }
 ```
 
-# 7 プログラムソース<a name="ac0033"></a>
+# 7 プログラムソース<a name="ac0034"></a>
 
 [先頭](#ac0000) > プログラムソース
 
@@ -4688,65 +4025,88 @@ showChildren(event){
 ```
 /** サーバ側の認証処理を分岐させる
  * 
- * 1. ユーザID未定でも可能な処理(一般公開部分)
- * 1. ユーザIDは必要だが、ログイン(RSA)は不要な処理
- * 1. RSAキーが必要な処理
+ * 最初に`setProperties()`で設定情報(w.prop)および
+ * シート・ユーザ情報(w.master,w.user)を設定した上で、
+ * 以下のデシジョンテーブルに基づき処理を分岐させる。
+ * 
+ * | userId | arg | 処理 |
+ * | :-- | :-- | :-- |
+ * | null | string(e-mail) | registNewEmail:新規ユーザ登録 |
+ * | number | null | 応募情報(自情報)取得 |
+ * | number | string(encrypted JSON) | ユーザ情報編集 |
  * 
  * @param {number} userId 
- * @param {string} func - 分岐先処理名
- * @param {string} arg - 分岐先処理に渡す引数オブジェクト
+ * @param {null|string} arg - 分岐先処理名、分岐先処理に渡す引数オブジェクト
  * @returns {Object} 分岐先処理での処理結果
  */
-function authServer(userId=null,func=null,arg=null) {
+function authServer(userId=null,arg=null) {
   // 内部関数で'v'を使用するため、ここでは'w'で定義
-  const w = {whois:'authServer',rv:null,step:0,func:{},prop:{}};
+  const w = {whois:'authServer',rv:null,step:0,
+    prop:{}, // setPropertiesで設定されるauthServerのconfig
+    isJSON:str=>{try{JSON.parse(str)}catch(e){return false} return true},
+  };
   console.log(`${w.whois} start.`);
   try {
 
-    w.step = 1; // 既定値をwに登録
+    w.step = 1; { // メソッドの登録(括弧はVSCode他のグルーピング用)
 /** authServerの適用値を設定
  * 
  * これら設定値はプロジェクトにより異なるため、
  * プロジェクト毎に適宜ソースを修正して使用すること。
  * 
- * @param {number|null} userId 
- * @returns {null}
+ * @param {object} arg
+ * @param {number} arg.userId=null - ユーザID
+ * @param {string} arg.email=null - メールアドレス
+ * @returns {number}
+ * - -1 : ユーザID・メールアドレスとも引数に無し 
+ * - 0 : ユーザIDまたはメールアドレスに該当無し
+ * - 1 : ユーザIDまたはメールアドレスが1件該当
+ * - 2 : ユーザIDまたはメールアドレスが複数件該当(エラー)
+ * - 4 : 引数で渡されたユーザIDが不正
+ * - 8 : 引数で渡されたメールアドレスが不正
  * 
- * 1. propertyName='authServer' {string}<br>
- *    プロパティサービスのキー名
- * 1. passcodeDigits=6 {number} : パスコードの桁数
- * 1. loginRetryInterval=3,600,000(60分) {number}<br>
- *    前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
- * 1. numberOfLoginAttempts=3 {number}<br>
- *    ログイン失敗になるまでの試行回数
- * 1. loginGraceTime=900,000(15分) {number}<br>
- *    パスコード生成からログインまでの猶予時間(ミリ秒)
- * 1. userLoginLifeTime=86,400,000(24時間) {number}<br>
- *    クライアント側ログイン(CPkey)有効期間
- * 1. defaultAuth=2 {number}<br>
- *    新規登録者に設定する権限
- * 1. masterSheet='master' {string}<br>
- *    参加者マスタのシート名
- * 1. primatyKeyColumn='userId' {string}<br>
- *    主キーとなる項目名。主キーは数値で設定
- * 1. emailColumn='email' {string}<br>
- *    e-mailを格納するシート上の項目名
- * 1. RSA {Object} : サーバ側RSAキー関連情報
- *    1. passPhraseLength=16 {number} : authServerのパスフレーズの長さ
- *    1. passPhrase {string} : authServerのパスフレーズ(自動生成)
- *    1. bits=1024 {number} : RSAキーのビット長
- *    1. SSkey {Object} : authServerの秘密鍵
- *    1. SPkey {string} : authServerの公開鍵
- * 1. userIdStartNumber=1 : ユーザID(数値)の開始
+ * **propの既定値、prop以外に設定される値**
+ * 
+ * - w.prop : 恒常的な設定値を保持
+ *   1. propertyName='authServer' {string}<br>
+ *      プロパティサービスのキー名
+ *   1. passcodeDigits=6 {number} : パスコードの桁数
+ *   1. loginRetryInterval=3,600,000(60分) {number}<br>
+ *      前回ログイン失敗(3回連続失敗)から再挑戦可能になるまでの時間(ミリ秒)
+ *   1. numberOfLoginAttempts=3 {number}<br>
+ *      ログイン失敗になるまでの試行回数
+ *   1. loginGraceTime=900,000(15分) {number}<br>
+ *      パスコード生成からログインまでの猶予時間(ミリ秒)
+ *   1. userLoginLifeTime=86,400,000(24時間) {number}<br>
+ *      クライアント側ログイン(CPkey)有効期間
+ *   1. defaultAuth=2 {number}<br>
+ *      新規登録者に設定する権限
+ *   1. masterSheet='master' {string}<br>
+ *      参加者マスタのシート名
+ *   1. primatyKeyColumn='userId' {string}<br>
+ *      主キーとなる項目名。主キーは数値で設定
+ *   1. emailColumn='email' {string}<br>
+ *      e-mailを格納するシート上の項目名
+ *   1. RSA {Object} : サーバ側RSAキー関連情報
+ *      1. passPhraseLength=16 {number} : authServerのパスフレーズの長さ
+ *      1. passPhrase {string} : authServerのパスフレーズ(自動生成)
+ *      1. bits=1024 {number} : RSAキーのビット長
+ *      1. SSkey {Object} : authServerの秘密鍵
+ *      1. SPkey {string} : authServerの公開鍵
+ *   1. userIdStartNumber=1 : ユーザID(数値)の開始
+ * - w.master {SingleTable} : authServerが呼ばれた時点のマスタシート
  * 
  * - [Class Properties](https://developers.google.com/apps-script/reference/properties/properties?hl=ja)
  */
-w.func.setProperties = function(){
-  const v = {whois:w.whois+'.setProperties',rv:null,step:0};
+w.func.setProperties = function(arg={}){
+  const v = {whois:w.whois+'.setProperties',rv:0,step:0};
   console.log(`${v.whois} start.`);
   try {
 
-    v.step = 1; // 適用値をセット
+    v.step = 1; // 引数の既定値を設定
+    v.arg = Object.assign({userId:null,email:null},arg);
+
+    v.step = 2; // 適用値をセット
     w.prop = PropertiesService.getDocumentProperties().getProperties();
     if( Object.keys(w.prop).length === 0 ){
       w.prop = {
@@ -4776,6 +4136,12 @@ w.func.setProperties = function(){
       // プロパティサービスを更新
       PropertiesService.getDocumentProperties().setProperties(w.prop);
     }
+
+    v.step = 3; // シートから全ユーザ情報の取得
+    w.master = new SingleTable(w.prop.masterSheet);
+    if( w.master instanceof Error ) throw w.master;
+
+    v.step = 4; // 終了処理
     console.log(`${v.whois} normal end.\n`,w.prop);
 
   } catch(e) {
@@ -4784,502 +4150,36 @@ w.func.setProperties = function(){
     return e;
   }
 }
-w.rv = w.func.setProperties(arg);
-if( w.rv instanceof Error ) throw w.rv;
-
-    if( userId === null ){ // userIdが不要な処理
-      if( ['registMail','getUserInfo'].find(x => x === func) ){
-        w.step = 1; // userId未定でも可能な処理 ⇒ 一般公開用
-        //:x:メールアドレスの登録::$src/server.registMail.js::
-/** authClientからの要求を受け、ユーザ情報と状態を返す
- * 
- * - IDは自然数の前提、1から順に採番。
- * - 新規採番は途中の欠損は考慮せず、最大値＋1とする
- * 
- * @param {Object} arg
- * @param {string} arg.email - 要求があったユーザのe-mail
- * @param {string} arg.CPkey - 要求があったユーザの公開鍵
- * @returns {object} 以下のメンバを持つオブジェクト
- * 1. SPkey {string} - サーバ側公開鍵
- * 1. isExist {boolean} - 既存メアドならtrue、新規登録ならfalse
- * 1. isEqual {boolean} - 引数のCPkeyがシート上のCPkeyと一致するならtrue
- * 1. isExpired {boolean} - CPkeyが有効期限切れならtrue
- * 1. data {object} - 該当ユーザのシート上のオブジェクト
- */
-w.func.getUserInfo = function(arg){
-  const v = {whois:w.whois+'.getUserInfo',step:0,rv:{
-    SPkey:w.prop.SPkey,
-    isExist:true, isEqual:true, isExpired:false, data:null,
-  }};
-  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
-  try {
-
-    v.step = 1; // emailアドレスの妥当性検証
-    if( checkFormat(arg.email,'email' ) === false ){
-      throw new Error(`invalid e-mail address.`);
     }
 
-    v.step = 2; // メアドの登録状況を取得
-    v.master = new SingleTable(w.prop.masterSheet);
-    if( v.master instanceof Error ) throw v.master;
-
-    v.step = 3; // メアドが登録済か確認、登録済ならシートのユーザ情報を保存
-    for( v.i=0 ; v.i<v.master.data.length ; v.i++ ){
-      if( v.master.data[v.i][w.prop.emailColumn] === arg.email ){
-        v.rv.data = v.master.data[v.i];
-        break;
-      }
-    }
-
-    if( v.rv.data === null ){
-      v.step = 4; // メアドが未登録の場合
-
-      v.step = 4.1; // userIdの最大値を取得
-      if( v.master.data.length === 0 ){
-        // 登録済が0件(シート作成直後)の場合
-        v.max = w.prop.userIdStartNumber - 1;
+    w.step = 2; // 既定値をwに登録
+    w.rv = w.func.setProperties(arg);
+    if( w.rv instanceof Error ) throw w.rv;
+  
+    if( userId === null ){
+      w.step = 2; // userId未設定 ⇒ 新規ユーザ登録
+      w.r = w.func.registNewEmail(arg);
+      if( w.r instanceof Error ) throw w.r;
+    } else if( typeof userId === 'number' ){
+      if( arg === null ){
+        w.step = 3; // userIdはあるがarg未設定 ⇒ 応募情報(自情報)取得
+        w.r = w.func.getUserInfo(userId);
+        if( w.r instanceof Error ) throw w.r;
+      } else if( w.isJSON(arg) ){
+        w.step = 4; // argが平文 ⇒ 掲示板他、秘匿性が必要ない処理
       } else {
-        v.map = v.master.data.map(x =>
-          isNaN(x[w.prop.primatyKeyColumn])
-          ? 0 : Number(x[w.prop.primatyKeyColumn]));
-        v.max = Math.max(...v.map);
-      }
+        w.step = 5; // argが暗号 ⇒ ユーザ情報編集
+        // argを復号、署名検証
+        w.decrypt = cryptico.decrypt(arg,w.prop.RSA.SSkey);
+        if( w.decrypt.status === 'success' && w.decrypt.publicKeyString === w.user.CPkey ){
+          w.arg = JSON.parse(w.decrypt.plaintext);
 
-      v.step = 4.2; // シートに初期値を登録
-      v.rv.data = {
-        userId  : v.max + 1,
-        created : toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn'),
-        email   : arg.email,
-        auth    : w.prop.defaultAuth,
-        CPkey   : arg.CPkey,
-        updated : null,
-        trial   : '{}',
-      };
-      v.rv.data.updated = v.rv.data.created;
-      v.r = v.master.insert([v.rv.data]);
-      if( v.r instanceof Error ) throw v.r;
-
-      v.step = 4.3; // 存否フラグを更新
-      v.rv.isExist = false;
-    }
-
-    v.step = 5; // 戻り値用にユーザ情報の項目を調整
-    v.rv.isEqual = v.rv.data.CPkey === arg.CPkey;
-    v.rv.isExpired = (new Date(v.rv.data.updated).getTime() + w.userLoginLifeTime) > Date.now();
-
-    v.step = 6; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\narg=${stringify(arg)}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-w.rv = w.func.getUserInfo(arg);
-if( w.rv instanceof Error ) throw w.rv;
-      } else {
-        w.step = 2; // 該当処理なし
-        w.rv = null;
-      }
-    } else {  // userIdが必要な処理
-      if( ['sendPasscode'].find(x => x === func) ){
-        w.step = 3; // ログインは不要な処理
-        // ⇒ 参加者用メニュー(応募情報(自分の個人情報)修正を除く)
-        switch( func ){
-          case 'sendPasscode': w.step += ':sendPasscode';
-/** authClientからの要求を受け、ユーザ情報と状態を返す
- * 
- * ユーザIDやCS/CPkey他の自ユーザ情報、およびSPkeyはauthClient.constructor()で初期値を設定し、
- * 先行する「新規ユーザ登録」で修正済情報がインスタンス変数に存在する前提。
- * 
- * @param {Object} arg
- * @param {number} arg.userId - ユーザID
- * @param {string} arg.CPkey - 要求があったユーザの公開鍵
- * @param {string} arg.updated - CPkey生成・更新日時文字列
- * @returns {object} 以下のメンバを持つオブジェクト
- * - status {number}
- *   - 0 : 成功(パスコード通知メールを送信)
- *   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
- *   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
- * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
- * - SPkey=null {Object} サーバ側公開鍵
- * - loginGraceTime=900,000(15分) {number}<br>
- *   パスコード生成からログインまでの猶予時間(ミリ秒)
- * - remainRetryInterval=0 {number} 再挑戦可能になるまでの時間(ミリ秒)
- * - passcodeDigits=6 {number} : パスコードの桁数
- */
-w.func.sendPasscode = function(arg){
-  const v = {whois:w.whois+'.sendPasscode',step:0,rv:{
-    status: 0, data: null, SPkey: null,
-    loginGraceTime: w.prop.loginGraceTime,
-    remainRetryInterval: 0,
-    passcodeDigits: w.prop.passcodeDigits,
-  }};
-  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
-  try {
-
-    // ---------------------------------------------
-    v.step = 1; // 事前準備
-    // ---------------------------------------------
-    v.step = 1.1; // シートから全ユーザ情報の取得
-    v.master = new SingleTable(w.prop.masterSheet);
-    if( v.master instanceof Error ) throw v.master;
-
-    v.step = 1.2; // 対象ユーザ情報の取得
-    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === arg.userId});
-    if( v.user instanceof Error ) throw v.user;
-
-    v.step = 1.3; // trialオブジェクトの取得
-    v.trial = JSON.parse(v.user.trial);
-    if( !v.trial.hasOwnProperty('log') ) v.trial.log = [];
-
-
-    // ---------------------------------------------
-    v.step = 2; // パスコード生成
-    //【trialオブジェクト定義】
-    // - passcode {number} パスコード(原則数値6桁)
-    // - created {number} パスコード生成日時(UNIX時刻)
-    // - log {object[]} 試行の記録。unshiftで先頭を最新にする
-    //   - timestamp {number} 試行日時(UNIX時刻)
-    //   - entered {number} 入力されたパスコード
-    //   - status {number} v.rv.statusの値
-    //   - result {number} 0:成功、1〜n:連続n回目の失敗
-    // trialオブジェクトはunshiftで常に先頭(添字=0)が最新になるようにする。
-    // ---------------------------------------------
-
-    v.step = 2.1; // 試行可能かの確認
-    // 以下のいずれかの場合はエラーを返して終了
-    // ①パスコード生成からログインまでの猶予時間を過ぎている
-    if( (w.prop.loginGraceTime + trial.created) > Date.now() ){
-      v.rv.status = 1;
-      return v.rv;
-    }
-    // ②前回ログイン失敗から凍結時間を過ぎていない
-    if( v.trial.log.length > 0 ){
-      if( trial.log[0].status === w.prop.numberOfLoginAttempts
-      && (trial.log[0].timestamp + w.prop.loginRetryInterval) > Date.now() )
-        v.rv.status = 2;
-        v.rv.remainRetryInterval = trial.log[0].timestamp
-          + w.prop.loginRetryInterval - Date.now();
-        return v.rv;
-    }
-
-    v.step = 2.2; // trialオブジェクトを生成、シートに保存
-    v.trial.passcode = Math.floor(Math.random() * Math.pow(10,w.prop.passcodeDigits));
-    v.trial.created = Date.now();
-
-    v.step = 2.3; // trial更新に合わせ、CPkey/updatedも更新
-    // sendPasscodeが呼ばれるのは「CP不一致 or CP無効」の場合。
-    // よって送られてきた新規CPkey/updatedでシート上のそれを更新する
-    v.r = v.master.update({
-      CPkey: arg.CPkey,
-      updated: arg.updated,
-      trial: JSON.stringify(v.trial)
-    },{where: x => x[w.prop.primatyKeyColumn] === arg.userId});
-
-
-    // ---------------------------------------------
-    v.step = 3; // パスコード通知メールの発信
-    // ---------------------------------------------
-    // $lib/sendmail/1.0.0/core.js
-    // @param {String} recipient - 受信者のアドレス
-    // @param {String} subject - 件名
-    // @param {String} body - メールの本文
-    // @param {Object} options - 詳細パラメータを指定する JavaScript オブジェクト（下記を参照）
-    // @param {BlobSource[]} options.attachments - メールと一緒に送信するファイルの配列
-    // @param {String} options.bcc - Bcc で送信するメールアドレスのカンマ区切りのリスト
-    // @param {String} options.cc - Cc に含めるメールアドレスのカンマ区切りのリスト
-    // @param {String} options.from - メールの送信元アドレス。getAliases() によって返される値のいずれかにする必要があります。
-    // @param {String} options.htmlBody - 設定すると、HTML をレンダリングできるデバイスは、必須の本文引数の代わりにそれを使用します。メール用にインライン画像を用意する場合は、HTML 本文にオプションの inlineImages フィールドを追加できます。
-    // @param {Object} options.inlineImages - 画像キー（String）から画像データ（BlobSource）へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、<img src="cid:imageKey" /> 形式でこれらの画像への参照が含まれていることを前提としています。
-    // @param {String} options.name - メールの送信者の名前（デフォルト: ユーザー名）
-    // @param {String} options.replyTo - デフォルトの返信先アドレスとして使用するメールアドレス（デフォルト: ユーザーのメールアドレス）
-    // @returns {null|Error}
-    //
-    // w.prop.notificatePasscodeMailでテンプレート設定済
-    // notificatePasscodeMail: {
-    //   subject: '[連絡] パスコード',
-    //   body: 'パスコードは以下の通りです。\n\n::passcode::',
-    //   options: {},
-    // },
-    v.trial.body = w.prop.notificatePasscodeMail.body
-    .replaceAll('::passcode::',('0'.repeat(w.prop.passcodeDigits)
-    + String(v.trial.passcode)).slice(-w.prop.passcodeDigits));
-    v.r = sendmail(
-      v.user.email, // recipient
-      w.prop.notificatePasscodeMail.subject, // subject
-      v.trial.body, // body
-      w.prop.notificatePasscodeMail.options // options
-    );
-    if( v.r instanceof Error ) throw v.r;
-
-
-    // ---------------------------------------------
-    v.step = 4; // 終了処理
-    // ---------------------------------------------
-    v.rv.data = v.user;
-    delete v.rv.data.trial; // 悪用されないよう、念のため削除
-    v.rv.SPkey = w.prop.SPkey;
-    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\narg=${stringify(arg)}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-w.rv = w.func.sendPasscode(arg);
-if( w.rv instanceof Error ) throw w.rv;
-            break;
+          // 以下に分岐処理を記述
+          // checkAuthority : シートからユーザ情報を取得、メニュー表示権限を持つか判断
+          w.rv = w.func.checkAuthority(arg);
+          if( w.rv instanceof Error ) throw w.rv;          
         }
 
-      } else if( ['verifyPasscode','operation'].find(x => x === func) ){
-        // ログインしないと操作不可の処理
-        // ⇒ 応募情報修正、スタッフ用メニュー
-
-        w.step = 4; // クライアント側の署名検証＋引数のオブジェクト化
-/** クライアント側の署名を検証、引数を復号してオブジェクト化する
- * @param {number} userId - ユーザID
- * @param {string} arg - クライアント側での暗号化＋署名結果(文字列)
- * @returns {Object|Error} 復号化したオブジェクト
- * 
- * **参考：パスフレーズ・秘密鍵・公開鍵の一括保存はできない**
- * 
- * `{passPhrase:〜,privateKey:〜,publicKey:〜}`のように一括して保存しようとすると、以下のエラーが発生。
- * 
- * ```
- * You have exceeded the property storage quota.
- * Please remove some properties and try again.
- * ```
- * 
- * 原因は[プロパティ値のサイズ](https://developers.google.com/apps-script/guides/services/quotas?hl=ja)が超過したため。
- * ⇒ max 9KB/値なので、パスフレーズ・公開鍵・秘密鍵は別々のプロパティとして保存が必要
- */
-w.func.verifySignature = function(userId=null,arg=null){
-  const v = {whois:w.whois+'.verifySignature',rv:{result:0,message:'',obj:null},step:0};
-  console.log(`${v.whois} start.`);
-  try {
-
-    // ---------------------------------------------
-    v.step = 1; // 事前準備
-    // ---------------------------------------------
-    v.step = 1.1; // 引数チェック。userId, argは共に必須
-    if( userId === null ) throw new Error(`${v.whois} Error: no userId.`);
-    if( arg === null ) throw new Error(`${v.whois} Error: no arg.`);
-
-    v.step = 1.2; // サーバ側鍵ペアの取得・生成　※親関数のwhoisを使用
-    v.RSA = PropertiesService.getDocumentProperties().getProperty(w.whois).RSA;
-
-
-    // ---------------------------------------------
-    v.step = 2; // クライアント側情報の取得
-    // ---------------------------------------------
-    v.step = 2.1; // シートから全ユーザ情報の取得
-    v.master = new SingleTable(w.prop.masterSheet);
-    if( v.master instanceof Error ) throw v.master;
-
-    v.step = 2.2; // 対象ユーザ情報の取得
-    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === userId});
-    if( v.user instanceof Error ) throw v.user;
-
-    v.step = 2.3 // userIdがシートに存在しない
-    if( v.user.length === 0 ){
-      v.rv.result = 1;
-      console.log(`${v.whois}: no userId on sheet ${w.prop.masterSheet} (step ${v.step}).`);
-      return v.rv;
-    }
-    
-    // ---------------------------------------------
-    v.step = 3; // 引数の復元
-    // 【以下の処理におけるv.rvオブジェクトのメンバ】
-    // - result {number}
-    //   - 0: 正常終了
-    //   - 1: userIdがシートに存在しない
-    //   - 2: 不適切な暗号化(decrypt.status != 'success')
-    //   - 3: 不適切な署名(decrypt.publicKeyString != sheet.CPkey)<br>
-    //     ※ decrypt.signatureは常に"forged"で"verified"にならないため、CPkeyを比較
-    //   - 4: CPkey有効期限切れ
-    // - message='' {string} エラーだった場合のメッセージ
-    // - obj=null {object} 復号したオブジェクト
-    // ---------------------------------------------
-    v.decrypt = cryptico.decrypt(arg,v.RSA.SPkey);
-    //console.log(`v.decrypt=${stringify(v.decrypt)}`);
-    if( v.decrypt.status !== 'success' ){
-      v.step = 3.1; // 復号不可
-      v.rv.result = 2;
-      v.rv.message = `${v.whois}: decrypt error (step ${v.step}).`
-      + `\nstatus="${v.decrypt.status}"`
-      + `\nplaintext="${v.decrypt.plaintext}"`
-      + `\nsignature="${v.decrypt.signature}"`
-      + `\npublicKeyString="${v.decrypt.publicKeyString}"`
-      + `\npublicKeyID="${v.decrypt.publicKeyID}"`
-      + `\nverify="${v.decrypt.verify}"`
-      + `\nvalidityPeriod="${v.decrypt.validityPeriod}"`;
-    } else if( v.decrypt.publicKeyString !== v.user.CPkey ){
-      v.step = 3.2; // 不適切な署名(CPkey不一致)
-      v.rv.result = 3;
-      v.rv.message = `${v.whois}: CPkey unmatch (step ${v.step}).`
-      + `\nv.decrypt.publicKeyString=${v.decrypt.publicKeyString}`
-      + `\nv.user.CPkey=${v.user.CPkey}`;
-    } else if( (new Date(v.user.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
-      v.step = 3.3; // CPkey有効期限切れ
-      v.rv.result = 4;
-      v.rv.message = `${v.whois}: CPkey expired (step ${v.step}).`
-      + `\nupdated: ${v.user.updated})`
-      + `\nuserLoginLifeTime: ${w.prop.userLoginLifeTime/3600000} hours`
-      + `\nDate.now(): ${toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn')}`;
-    } else {
-      v.step = 3.4; // 正常終了
-      v.rv.obj = JSON.parse(v.decrypt.plaintext);
-    }
-    if( v.rv.result > 0 ) throw new Error(v.rv.message);
-
-    v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.`);
-    return v.rv.obj;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    return e;
-  }
-}
-w.r = w.func.verifySignature(userId,arg);
-if( w.r instanceof Error ) throw w.r;
-        // verifySignatureの戻り値はw.rで受けるので、後続処理に引数として渡す
-
-        switch( func ){
-          case 'verifyPasscode': w.step += ':verifyPasscode';
-/** 入力されたパスコードの検証
- * 
- * @param {Object} arg
- * @param {number} arg.userId - ユーザID
- * @param {number} arg.passcode - 入力されたパスコード
- * @returns {Object|number} ユーザ情報オブジェクト。エラーならエラーコード
-    // ログイン失敗になるまでの試行回数(numberOfLoginAttempts)
-    // パスコード生成からログインまでの猶予時間(ミリ秒)(loginGraceTime)
-    // クライアント側ログイン(CPkey)有効期間(userLoginLifeTime)
- * @returns {object} 以下のメンバを持つオブジェクト
- * - status {number}
- *   - 0 : 成功(パスコードが一致)
- *   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
- *   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
- *   - 3 : クライアント側ログイン(CPkey)有効期限切れ
- *   - 4 : パスコード不一致
- * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
- * - SPkey=null {Object} サーバ側公開鍵
- * - loginGraceTime=900,000(15分) {number}<br>
- *   パスコード生成からログインまでの猶予時間(ミリ秒)
- * - remainRetryInterval=0 {number} 再挑戦可能になるまでの時間(ミリ秒)
- * - passcodeDigits=6 {number} : パスコードの桁数
- */
-w.func.verifyPasscode = function(arg){
-  const v = {whois:w.whois+'.verifyPasscode',step:0,rv:{
-    status: 0, data: null, SPkey: null,
-    loginGraceTime: w.prop.loginGraceTime,
-    remainRetryInterval: 0,
-    passcodeDigits: w.prop.passcodeDigits,
-  }};
-  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
-  try {
-
-    // ---------------------------------------------
-    v.step = 1; // 事前準備
-    // ---------------------------------------------
-    v.step = 1.1; // シートから全ユーザ情報の取得
-    v.master = new SingleTable(w.prop.masterSheet);
-    if( v.master instanceof Error ) throw v.master;
-
-    v.step = 1.2; // 対象ユーザ情報の取得
-    v.user = v.master.select({where: x => x[w.prop.primatyKeyColumn] === arg.userId});
-    if( v.user instanceof Error ) throw v.user;
-
-    v.step = 1.3; // trialオブジェクトの取得
-    v.trial = JSON.parse(v.user.trial);
-    if( !v.trial.hasOwnProperty('log') ) v.trial.log = [];
-
-
-    // ---------------------------------------------
-    v.step = 2; // パスコード検証
-    // ---------------------------------------------
-    // ログイン失敗になるまでの試行回数(numberOfLoginAttempts)
-    // パスコード生成からログインまでの猶予時間(ミリ秒)(loginGraceTime)
-    // クライアント側ログイン(CPkey)有効期間(userLoginLifeTime)
-
-    v.step = 2.1; // 試行可能かの確認
-    // 以下のいずれかの場合はエラーを返して終了
-    if( (w.prop.loginGraceTime + v.trial.created) > Date.now() ){
-      // ①パスコード生成からログインまでの猶予時間を過ぎている
-      v.rv.status = 1;
-    } else if( v.trial.log.length > 0
-      && trial.log[0].status === w.prop.numberOfLoginAttempts
-      && (trial.log[0].timestamp + w.prop.loginRetryInterval) > Date.now() ){
-      // ②前回ログイン失敗から凍結時間を過ぎていない
-      v.rv.status = 2;
-      v.rv.remainRetryInterval = trial.log[0].timestamp
-        + w.prop.loginRetryInterval - Date.now();
-    } else if( (new Date(v.user.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
-      // ③クライアント側ログイン(CPkey)有効期限切れ(userLoginLifeTime)
-      v.rv.status = 3;
-    } else if( v.trial.passcode !== arg.passcode ){
-      // ④パスコード不一致
-      v.rv.status = 4;
-    } else {
-      // パスコードが一致
-      v.rv.data = v.user;
-    }
-
-    // ---------------------------------------------
-    v.step = 3; // 終了処理
-    // ---------------------------------------------
-    v.step = 3.1; // trial更新(検証結果の格納)
-    // - passcode {number} パスコード(原則数値6桁)
-    // - log {object[]} 試行の記録。unshiftで先頭を最新にする
-    //   - timestamp {number} 試行日時(UNIX時刻)
-    //   - entered {number} 入力されたパスコード
-    //   - status {number} v.rv.statusの値
-    //   - result {number} 0:成功、1〜n:連続n回目の失敗
-    // 
-    // trialオブジェクトはunshiftで常に先頭(添字=0)が最新になるようにする。
-    // 新しいlogオブジェクトの作成
-    v.log = {
-      timestamp: Date.now(),
-      entered: arg.passcode,
-      status: v.status,
-      result: v.status === 0 ? 0 : (v.trial.log[0].result + 1),
-    }
-    v.trial.log.unshift(v.log);
-    v.r = v.master.update({trial:JSON.stringify(v.trial)},
-      {where:x => x.userId === arg.userId});
-    if( v.r instanceof Error ) throw v.r;
-
-
-    v.step = 3.2; // 検証OKならユーザ情報を、NGなら通知を返す
-    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\narg=${stringify(arg)}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-w.rv = w.func.verifyPasscode(w.r);  // w.rはserver.verifySignatureの戻り値
-if( w.rv instanceof Error ) throw w.rv;
-            break;
-          case 'operation': w.step += ':operation';
-            //:x:$src/server.operation.js::
-            break;
-          // 後略
-        }
-      } else {
-        w.step = 5; // 該当処理なし
-        w.rv = null;
       }
     }
 
@@ -5299,7 +4199,7 @@ if( w.rv instanceof Error ) throw w.rv;
 
 </details>
 
-# 8 改版履歴<a name="ac0034"></a>
+# 8 改版履歴<a name="ac0035"></a>
 
 [先頭](#ac0000) > 改版履歴
 

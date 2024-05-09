@@ -310,17 +310,13 @@ window.addEventListener('DOMContentLoaded',() => {
 
 以降の図中で`(XSkey/YPkey)`は「X側の秘密鍵で署名、Y側の公開鍵で暗号化する」の意味。
 
-## 新規ユーザ登録
+## 画面切替(＋新規ユーザ登録)
 
-<!--::$doc/entry.md::-->
+<!--::$doc/changeScreen.md::-->
 
-## ログイン要求
+## シート更新
 
-<!--::$doc/login.md::-->
-
-## 操作要求
-
-<!--::$doc/request.md::-->
+<!--::$doc/updateSheet.md::-->
 
 ## 権限設定、変更
 
