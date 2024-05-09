@@ -1,14 +1,15 @@
-/** authClientからの要求を受け、ユーザ情報と状態を返す
+/** getUserInfo: authClientからの要求を受け、ユーザ情報と状態を返す
  * 
  * - IDは自然数の前提、1から順に採番。
  * - 新規採番は途中の欠損は考慮せず、最大値＋1とする
  * 
- * @param {Object} arg
- * @param {number} arg.userId=null - ユーザID
+ * @param {number} userId=null - ユーザID
+ * @param {Object} arg={}
  * @param {string} arg.email=null - e-mail。新規ユーザ登録時のみ使用の想定
  * @param {string} arg.CPkey=null - 要求があったユーザの公開鍵
  * @param {string} arg.updated=null - CPkey生成・更新日時文字列
- * @param {boolean} arg.createIfNotExist=false - true:ユーザが未登録なら作成
+ * @param {boolean} arg.createIfNotExist=false - true:メアドが未登録なら作成
+ * @param {boolean} arg.returnTrialStatus=true - true:現在のログイン試行の状態を返す
  * @returns {object} 以下のメンバを持つオブジェクト
  * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial欄)
  * - trial={} {Object} オブジェクト化したtrial欄(JSON)
@@ -26,7 +27,7 @@
  * - remainRetryInterval=0 {number} 再挑戦可能になるまでの時間(ミリ秒)
  * - passcodeDigits=6 {number} : パスコードの桁数
  */
-w.func.getUserInfo = function(arg){
+w.func.getUserInfo = function(userId=null,arg={}){
   const v = {whois:w.whois+'.getUserInfo',step:0,
     rv:{data:null,trial:null,isExist:0}};
   console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
@@ -37,20 +38,16 @@ w.func.getUserInfo = function(arg){
     // ---------------------------------------------
     v.step = 1.1; // 引数の既定値を設定
     v.arg = Object.assign({
-      userId: null,
+      userId: userId === null ? null : Number(userId),
       email: null,
       CPkey: null,
       updated: null,
       createIfNotExist: false,
-      returnTrialStatus: false,
+      returnTrialStatus: true,
     },arg);
 
-    v.step = 1.2; // シートから全ユーザ情報の取得
-    v.master = new SingleTable(w.prop.masterSheet);
-    if( v.master instanceof Error ) throw v.master;
-
     v.step = 1.3; // 対象ユーザ情報の取得
-    v.r = v.master.select({
+    v.r = w.master.select({
       where: x => x[w.prop.primatyKeyColumn] === arg.userId
       || x[w.prop.emailColumn] === arg.email
     });
@@ -72,11 +69,11 @@ w.func.getUserInfo = function(arg){
       }
 
       v.step = 2.3; // userIdの最大値を取得
-      if( v.master.data.length === 0 ){
+      if( w.master.data.length === 0 ){
         // 登録済が0件(シート作成直後)の場合
         v.max = w.prop.userIdStartNumber - 1;
       } else {
-        v.map = v.master.data.map(x =>
+        v.map = w.master.data.map(x =>
           isNaN(x[w.prop.primatyKeyColumn])
           ? 0 : Number(x[w.prop.primatyKeyColumn]));
         v.max = Math.max(...v.map);
@@ -93,7 +90,7 @@ w.func.getUserInfo = function(arg){
         trial   : '{log:[]}',
       };
       v.rv.data.updated = v.rv.data.created;
-      v.r = v.master.insert([v.rv.data]);
+      v.r = w.master.insert([v.rv.data]);
       if( v.r instanceof Error ) throw v.r;
 
       v.step = 4.3; // 存否フラグを更新
@@ -122,7 +119,7 @@ w.func.getUserInfo = function(arg){
       v.rv.trial = {log:[]};
     }
 
-    // ログイン試行の状態をオブジェクトとして作成
+    // ログイン試行の状態に関する項目を戻り値オブジェクトに追加
     v.step = 3.2; // 既定値の作成
     v.rv = Object.assign(v.rv,{
       status: 0,

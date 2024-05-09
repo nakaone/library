@@ -5,9 +5,9 @@
  * 
  * | userId | arg | 分岐先関数 | 処理 |
  * | :-- | :-- | :-- | :-- |
- * | null | {string} e-mail(平文) | getUserInfo | 新規ユーザ登録 |
+ * | null | {string} JSON(平文) | getUserInfo | 新規ユーザ登録 |
  * | number | null | getUserInfo | 応募情報(自情報)取得 |
- * | number | {string} JSON(SP/--)<br>(CPkey,updated,passcode) | verifyPasscode | パスコード検証 |
+ * | number | {string} JSON(SP/--) | verifyPasscode | パスコード検証 |
  * 
  * @param {number} userId 
  * @param {null|string} arg - 分岐先処理名、分岐先処理に渡す引数オブジェクト
@@ -38,8 +38,12 @@ function authServer(userId=null,arg=null) {
       // ------------------------------------------------
       w.step = 3.1; // userId未設定 ⇒ 新規ユーザ登録
       // ------------------------------------------------
-      w.rv = w.func.getUserInfo(null,arg);
-      if( w.rv instanceof Error ) throw w.rv;
+      if( w.isJSON(arg) ){
+        w.rv = w.func.getUserInfo(null,Object.assign({
+          createIfNotExist: true, // メアドが未登録なら作成
+        },JSON.parse(arg)));
+        if( w.rv instanceof Error ) throw w.rv;
+      }
 
     } else {
       w.userId = Number(userId);
