@@ -1,14 +1,13 @@
-/** サーバ側の認証処理を分岐させる
+/** 必要に応じて引数を復号・署名検証した上で、サーバ側の処理を分岐させる
  * 
- * 最初に`setProperties()`で設定情報(w.prop)および
- * シート・ユーザ情報(w.master,w.user)を設定した上で、
- * 以下のデシジョンテーブルに基づき処理を分岐させる。
+ * 最初にシート上の全ユーザ情報を取得(w.master)した上で、引数の型・内容に基づき
+ * 以下のデシジョンテーブルによって処理を分岐させる。
  * 
- * | userId | arg | 処理 |
- * | :-- | :-- | :-- |
- * | null | string(e-mail) | registNewEmail:新規ユーザ登録 |
- * | number | null | 応募情報(自情報)取得 |
- * | number | string(encrypted JSON) | ユーザ情報編集 |
+ * | userId | arg | 分岐先関数 | 処理 |
+ * | :-- | :-- | :-- | :-- |
+ * | null | {string} e-mail(平文) | getUserInfo | 新規ユーザ登録 |
+ * | number | null | getUserInfo | 応募情報(自情報)取得 |
+ * | number | {string} JSON(SP/--)<br>(CPkey,updated,passcode) | verifyPasscode | パスコード検証 |
  * 
  * @param {number} userId 
  * @param {null|string} arg - 分岐先処理名、分岐先処理に渡す引数オブジェクト
@@ -20,41 +19,57 @@ function authServer(userId=null,arg=null) {
     prop:{}, // setPropertiesで設定されるauthServerのconfig
     isJSON:str=>{try{JSON.parse(str)}catch(e){return false} return true},
   };
+  //::$src/server.getUserInfo.js::
+  //::$src/server.verifyPasscode.js::
   console.log(`${w.whois} start.`);
   try {
 
-    w.step = 1; { // メソッドの登録(括弧はVSCode他のグルーピング用)
-      //::authServerの適用値を設定::$src/server.setProperties.js::
-    }
+    w.step = 1; // PropertiesServiceに格納された値をw.propに読み込み
+    w.prop = PropertiesService.getDocumentProperties().getProperties();
+    if( !w.prop ) throw new Error('Property service not configured.');
 
-    w.step = 2; // 既定値をwに登録
-    w.rv = w.func.setProperties(arg);
-    if( w.rv instanceof Error ) throw w.rv;
-  
-    if( userId === null ){
-      w.step = 2; // userId未設定 ⇒ 新規ユーザ登録
-      w.r = w.func.registNewEmail(arg);
-      if( w.r instanceof Error ) throw w.r;
-    } else if( typeof userId === 'number' ){
+    w.step = 2; // シートから全ユーザ情報の取得
+    w.master = new SingleTable(w.prop.masterSheet);
+    if( w.master instanceof Error ) throw w.master;
+
+    w.step = 3; // 処理の分岐
+    if( userId === null && typeof arg === 'string' ){
+
+      // ------------------------------------------------
+      w.step = 3.1; // userId未設定 ⇒ 新規ユーザ登録
+      // ------------------------------------------------
+      w.rv = w.func.getUserInfo(null,arg);
+      if( w.rv instanceof Error ) throw w.rv;
+
+    } else {
+      w.userId = Number(userId);
+      if( isNaN(w.userId) ) throw new Error('userId is not a number.');
+
       if( arg === null ){
-        w.step = 3; // userIdはあるがarg未設定 ⇒ 応募情報(自情報)取得
-        w.r = w.func.getUserInfo(userId);
-        if( w.r instanceof Error ) throw w.r;
-      } else if( w.isJSON(arg) ){
-        w.step = 4; // argが平文 ⇒ 掲示板他、秘匿性が必要ない処理
+
+        // ------------------------------------------------
+        w.step = 3.2; // arg未設定 ⇒ 応募情報(自情報)取得
+        // ------------------------------------------------
+        w.rv = w.func.getUserInfo(w.userId,null);
+        if( w.rv instanceof Error ) throw w.rv;
+
       } else {
-        w.step = 5; // argが暗号 ⇒ ユーザ情報編集
-        // argを復号、署名検証
+
+        // argを復号
         w.decrypt = cryptico.decrypt(arg,w.prop.RSA.SSkey);
-        if( w.decrypt.status === 'success' && w.decrypt.publicKeyString === w.user.CPkey ){
+        if( w.decrypt.status === 'success' ){
           w.arg = JSON.parse(w.decrypt.plaintext);
 
-          // 以下に分岐処理を記述
-          // checkAuthority : シートからユーザ情報を取得、メニュー表示権限を持つか判断
-          w.rv = w.func.checkAuthority(arg);
-          if( w.rv instanceof Error ) throw w.rv;          
+          // ------------------------------------------------
+          w.step = 3.3; // パスコード検証
+          // ------------------------------------------------
+          w.rv = w.func.verifyPasscode(w.userId,arg);
+          if( w.rv instanceof Error ) throw w.rv;
+    
+          if( w.decrypt.publicKeyString === w.user.CPkey ){
+            // 【備忘】argの署名検証まで必要な処理をここに記述
+          }
         }
-
       }
     }
 
