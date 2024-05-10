@@ -43,6 +43,7 @@ sequenceDiagram
 
     server ->> server : ①ログイン要否判断
     alt ログイン不要
+      server ->> server : 権限有無判断(auth&allow)
       alt 権限あり
         server ->> client : 該当ユーザ情報(object)
         client ->> browser : 要求画面
@@ -55,48 +56,51 @@ sequenceDiagram
         client ->> browser : 「アカウント凍結中」
       end
     else 要ログイン
-      server ->> method : 呼び出し
-      activate method
-      Note right of method : sendPasscode()
-      method ->> method : パスコード生成
-      method ->> sheet : trial更新(パスコード)
-      method ->> user : w.user.email宛パスコード連絡メール送付
-      method ->> server : 試行可能回数
-      deactivate method
-
-      server ->> client : 試行可能回数
-      deactivate server
-
-      client ->> client : 鍵ペア再生成
-      client ->> user : ダイアログ
-      user ->> client : パスコード
-
-      client ->> server : userId,{CPkey,updated,パスコード}(SP/CS)
-      activate server
-      sheet ->> server : ユーザ情報(全件)
-      server ->> server : 処理分岐
-      server ->>+ method : userId
-      Note right of method : getUserInfo()
-      method ->> method : 該当ユーザ情報を変数(w.user)に保存
-      method ->>- server : 検索結果
-      server ->> method : userId,CPkey,updated,パスコード(平文)
-      activate method
-      Note right of method : verifyPasscode()
-      method ->> method : パスコード検証
-      alt 検証OK(パスコード一致)
-        method ->> sheet : CPkey,updated,trial更新(検証結果)
-        method ->> server : ユーザ情報
-        server ->> client : ユーザ情報
-        client ->> client : ユーザ情報更新
-        client ->> browser : 要求画面
-      else 検証NG(パスコード不一致)
-        method ->> sheet : trial更新(検証結果)
-        method ->> server : 検証NG通知
+      rect rgba(192, 192, 255, 0.3)
+        server ->> method : 呼び出し
+        activate method
+        Note right of method : sendPasscode()
+        method ->> method : パスコード生成
+        method ->> sheet : trial更新(パスコード)
+        method ->> user : w.user.email宛パスコード連絡メール送付
+        method ->> server : 試行可能回数
         deactivate method
-        server ->> client : 検証NG通知
+
+        server ->> client : 試行可能回数
         deactivate server
-        client ->> client : 試行可能回数--
-        client ->> browser : エラーメッセージ
+
+        client ->> client : 鍵ペア再生成
+        client ->> user : ダイアログ
+        user ->> client : パスコード
+
+        client ->> server : userId,{CPkey,updated,パスコード}(SP/CS)
+        activate server
+        sheet ->> server : ユーザ情報(全件)
+        server ->> server : 処理分岐
+        server ->> method : userId,CPkey,updated,パスコード(平文)
+        activate method
+        Note right of method : verifyPasscode()
+        method ->> method : パスコード検証
+        alt 検証OK(パスコード一致)
+          method ->> sheet : CPkey,updated,trial更新(検証結果)
+          method ->> server : ユーザ情報
+          server ->> client : ユーザ情報
+          client ->> client : ユーザ情報更新、権限有無判断(auth&allow)
+          alt 権限あり
+            client ->> browser : 要求画面
+          else 権限なし
+            client ->> client : ユーザ情報更新※1
+            client ->> browser : 「権限がありません」
+          end
+        else 検証NG(パスコード不一致)
+          method ->> sheet : trial更新(検証結果)
+          method ->> server : 検証NG通知
+          deactivate method
+          server ->> client : 検証NG通知
+          deactivate server
+          client ->> client : 試行可能回数--
+          client ->> browser : エラーメッセージ
+        end
       end
     end
   end
@@ -108,87 +112,6 @@ sequenceDiagram
   - パスコード生成からログインまでの猶予時間を過ぎている
   - クライアント側ログイン(CPkey)有効期限切れ
   - 引数のCPkeyがシート上のCPkeyと不一致
-
-
-<!--
-```mermaid
-sequenceDiagram
-  autonumber
-  actor user
-  participant browser
-  participant client as authMenu
-  participant server as authServer
-  participant sheet
-
-  browser ->> client : 画面要求(既定値：ホーム)
-  activate client
-  Note right of client : changeScreen()
-  client ->> client : ユーザ権限、および要求画面の開示範囲(allow)を取得
-  alt 権限あり(allow&auth>0)
-    client ->> browser : 要求画面表示
-  else 権限なし(allow&auth=0)
-    alt メアド未定(this.email===null)
-      client ->> user : ダイアログ
-      user ->> client : e-mail
-      client ->> client : ユーザ情報更新(storeUserInfo)
-    end
-
-    client ->> server : userId,e-mail,CPkey,updated,allow
-    activate server
-    Note right of server : checkAuthority()
-    sheet ->> server : ユーザ情報
-    server ->> server : ユーザ情報取得(getUserInfo)
-    alt 未登録
-      server ->> server : 新規ユーザ情報作成
-      server ->> sheet : 新規ユーザ情報
-    end
-    server ->> server : 権限有無判断
-    alt 権限なし or 凍結中
-      server ->> client : エラー
-      client ->> client : ユーザ情報(auth)更新※1
-      client ->> browser : 「権限がありません」「凍結中」
-    else 権限あり
-      server ->> server : ①ログイン要否判断
-      alt ログイン不要
-        server ->> client : OK
-        client ->> browser : 要求画面表示
-      else 要ログイン
-        server ->> server : パスコード生成
-        server ->> sheet : trial更新(パスコード)
-        server ->> user : パスコード連絡メール
-        server ->> client : 試行可能回数
-        deactivate server
-
-        alt 試行可能回数 = 0
-          client ->> browser : 「現在凍結中」
-        else 試行可能回数 > 0
-          client ->> client : 鍵ペア再生成
-          client ->> user : ダイアログ
-          user ->> client : パスコード
-          client ->> server : userId,CPkey,updated,パスコード(SP/CS)
-          activate server
-          Note right of server : verifyPasscode()
-          sheet ->> server : ユーザ情報
-          server ->> server : パスコード検証
-          server ->> sheet : trial更新(検証結果)
-          alt 検証OK(パスコードが一致)
-            server ->> client : ユーザ情報
-            server ->> sheet : CPkey,updated更新
-            client ->> client : ユーザ情報更新
-            client ->> browser : 要求画面
-          else 検証NG(パスコードが不一致)
-            server ->> client : 検証NG通知
-            deactivate server
-            client ->> client : 試行可能回数--
-            client ->> browser : エラーメッセージ
-          end
-        end
-      end
-    end
-  end
-  deactivate client
-```
--->
 
 ## typedef
 

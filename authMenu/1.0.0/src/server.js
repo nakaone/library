@@ -1,4 +1,4 @@
-/** 必要に応じて引数を復号・署名検証した上で、サーバ側の処理を分岐させる
+/** authServer: 必要に応じて引数を復号・署名検証した上で、サーバ側の処理を分岐させる
  * 
  * 最初にシート上の全ユーザ情報を取得(w.master)した上で、引数の型・内容に基づき
  * 以下のデシジョンテーブルによって処理を分岐させる。
@@ -39,10 +39,10 @@ function authServer(userId=null,arg=null) {
       w.step = 3.1; // userId未設定 ⇒ 新規ユーザ登録
       // ------------------------------------------------
       if( w.isJSON(arg) ){
-        w.rv = w.func.getUserInfo(null,Object.assign({
+        w.user = w.func.getUserInfo(null,Object.assign({
           createIfNotExist: true, // メアドが未登録なら作成
         },JSON.parse(arg)));
-        if( w.rv instanceof Error ) throw w.rv;
+        if( w.user instanceof Error ) throw w.user;
       }
 
     } else {
@@ -54,8 +54,8 @@ function authServer(userId=null,arg=null) {
         // ------------------------------------------------
         w.step = 3.2; // arg未設定 ⇒ 応募情報(自情報)取得
         // ------------------------------------------------
-        w.rv = w.func.getUserInfo(w.userId,null);
-        if( w.rv instanceof Error ) throw w.rv;
+        w.user = w.func.getUserInfo(w.userId,null);
+        if( w.user instanceof Error ) throw w.user;
 
       } else {
 
@@ -66,8 +66,9 @@ function authServer(userId=null,arg=null) {
 
           // ------------------------------------------------
           w.step = 3.3; // パスコード検証
+          // 
           // ------------------------------------------------
-          w.rv = w.func.verifyPasscode(w.userId,arg);
+          w.rv = w.func.verifyPasscode(w.userId,w.arg);
           if( w.rv instanceof Error ) throw w.rv;
     
           if( w.decrypt.publicKeyString === w.user.CPkey ){

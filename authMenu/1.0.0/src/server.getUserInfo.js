@@ -9,6 +9,7 @@
  * @param {string} arg.CPkey=null - 要求があったユーザの公開鍵
  * @param {string} arg.updated=null - CPkey生成・更新日時文字列
  * @param {boolean} arg.createIfNotExist=false - true:メアドが未登録なら作成
+ * @param {boolean} arg.updateCPkey=false - true:渡されたCPkeyがシートと異なる場合は更新
  * @param {boolean} arg.returnTrialStatus=true - true:現在のログイン試行の状態を返す
  * @returns {object} 以下のメンバを持つオブジェクト
  * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial欄)
@@ -43,6 +44,7 @@ w.func.getUserInfo = function(userId=null,arg={}){
       CPkey: null,
       updated: null,
       createIfNotExist: false,
+      updateCPkey: false,
       returnTrialStatus: true,
     },arg);
 
@@ -62,6 +64,17 @@ w.func.getUserInfo = function(userId=null,arg={}){
     } else if( v.r.length === 1 ){     // 1件該当 ⇒ 既存ユーザ
       v.step = 2.1;
       v.rv.data = v.r[0];
+      if( arg.updateCPkey
+        && v.rv.data.CPkey !== arg.CPkey
+        && typeof arg.CPkey === 'string'
+      ){
+        v.step = 2.2; // 渡されたCPkeyとシートとが異なり、更新指示が有った場合は更新
+        v.rv.data.CPkey = arg.CPkey;
+        v.rv.data.updated = arg.updated;
+        v.r = w.master.update({CPkey:arg.CPkey,updated:arg.updated},
+          {where:x => x[w.prop.primatyKeyColumn] === arg.userId});
+        if( v.r instanceof Error ) throw v.r;
+      }
     } else if( arg.createIfNotExist ){ // 該当無しand作成指示 ⇒ 新規ユーザ
       v.step = 2.2; // emailアドレスの妥当性検証
       if( checkFormat(arg.email,'email' ) === false ){
