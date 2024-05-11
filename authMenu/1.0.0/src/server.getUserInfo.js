@@ -48,11 +48,10 @@ w.func.getUserInfo = function(userId=null,arg={}){
       returnTrialStatus: true,
     },arg);
 
-    v.step = 1.3; // 対象ユーザ情報の取得
-    v.r = w.master.select({
-      where: x => x[w.prop.primatyKeyColumn] === arg.userId
-      || x[w.prop.emailColumn] === arg.email
-    });
+    v.step = 1.2; // 対象ユーザ情報の取得
+    v.r = v.arg.userId === null
+    ? w.master.select({where: x => x[w.prop.emailColumn] === arg.email})
+    : w.master.select({where: x => x[w.prop.primatyKeyColumn] === arg.userId});
     if( v.r instanceof Error ) throw v.r;
 
 
@@ -100,13 +99,13 @@ w.func.getUserInfo = function(userId=null,arg={}){
         auth    : w.prop.defaultAuth,
         CPkey   : arg.CPkey,
         updated : null,
-        trial   : '{log:[]}',
+        trial   : '{"log":[]}',
       };
       v.rv.data.updated = v.rv.data.created;
       v.r = w.master.insert([v.rv.data]);
       if( v.r instanceof Error ) throw v.r;
 
-      v.step = 4.3; // 存否フラグを更新
+      v.step = 2.5; // 存否フラグを更新
       v.rv.isExist = v.rv.data.userId;
     }
 
@@ -149,7 +148,7 @@ w.func.getUserInfo = function(userId=null,arg={}){
     }
 
     v.step = 3.4; // ②クライアント側ログイン(CPkey)有効期限切れ
-    if( (new Date(v.user.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
+    if( (new Date(v.rv.data.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
       v.rv.status += 2;
     }
 
@@ -189,5 +188,3 @@ w.func.getUserInfo = function(userId=null,arg={}){
     return e;
   }
 }
-w.rv = w.func.getUserInfo(arg);
-if( w.rv instanceof Error ) throw w.rv;

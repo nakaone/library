@@ -1,29 +1,31 @@
 function authServerTest(){
-  const v = {};
-  v.constructor = function(){
-    PropertiesService.getDocumentProperties().deleteAllProperties();
-    v.rv = authServer();
-    console.log(`v.rv=${stringify(v.rv)}\nproperties=${stringify(PropertiesService.getDocumentProperties().getProperties())}`);
-  }
-  v.constructor();
-  //const p = PropertiesService.getDocumentProperties().getProperties();
-  //console.log(p);
-  /*
-  ローカル側での重複メアドチェック
-  サーバ側での重複メアドチェック
-  シートに格納された値
-  localStorage
-  sessionStorage
-  properties.authServer(特にmap)
-  properties.userId
+  const v = {
+    constructor: () => {
+      //PropertiesService.getDocumentProperties().deleteAllProperties();
+      v.rv = authServer();
+      console.log(`v.rv=${stringify(v.rv)}\nproperties=${stringify(PropertiesService.getDocumentProperties().getProperties())}`);
+    },
+    getUserInfo: () => {/* getUserInfoメソッド(内部関数)のテスト
+      ①新規ユーザ登録
+      ②既存ユーザIDを指定してユーザ情報を取得
+      ③CPkey,updatedの更新
+      チェックポイントは
+      a. ユーザ情報オブジェクトが正しいか
+      b. trial情報が正しいか
+      c. statusが正しいか
+      d. その他項目に適切な値が設定されているか
+      なお本テスト前にsetProperties()は実行済の前提
+    */
+      v.td = [
+        {userId:null,arg:{email:'nakaone.kunihiro@gmail.com'}},
+      ];
+      for( v.i=0 ; v.i<v.td.length ; v.i++ ){
+        v.rv = authServer(v.td[v.i].userId,JSON.stringify(v.td[v.i].arg));
+        console.log(`$v.i => v.rv = ${stringify(v.rv)}`);
+      }
+    },
+  };
 
-  const v = {data:[
-    //[null,'registMail','invalid'],
-    [null,'registMail',{email:'hoge@gmail.com',CPkey:'abcdefg0123',updated:'2024/04/25 15:00:01.234'}],
-  ]};
-  for( v.i=0 ; v.i<v.data.length ; v.i++ ){
-    v.rv = authServer(...v.data[v.i]);
-    console.log(`${v.i} v.rv=${stringify(v.rv)}`);
-  }
-  */
+  //v.constructor();
+  v.getUserInfo();
 }

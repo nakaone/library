@@ -71,12 +71,15 @@ EOS
 
 
 # ----------------------------------------------
-# 2. server.gs(class authServer)の作成
+# 2. server.gs(function authServer)の作成
 # ----------------------------------------------
 # 2.1 ソースの作成
 echo "`date +"%T"` - step.2.1 start."
 cat $src/server.js | awk 1 | $embed -src:$src >> $svSource
 cp $svSource $mod/server.gs
+# server: setProperties.gs
+cat $src/server.setProperties.js | awk 1 >> $svSource 
+cp $src/server.setProperties.js $mod/setProperties.gs
 
 # 2.3 JSDocの作成
 echo "`date +"%T"` - step.2.3 start."
@@ -88,6 +91,7 @@ echo "`date +"%T"` - step.2.4 start."
 w24="$tmp/w24"; touch $w24;
 addSource "server.gs" $svSource $w24
 cp $w24 $svSource
+
 
 
 # ----------------------------------------------
