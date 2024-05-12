@@ -3,6 +3,9 @@
  * @returns {void}
  */
 w.func.preProcess = function(){
+  const v = {whois:w.whois+'.preProcess',step:0,rv:null};
+  console.log(`${v.whois} start.`);
+    
   w.step = 1.1; // PropertiesServiceに格納された値をw.propに読み込み
   w.prop = PropertiesService.getDocumentProperties().getProperties();
   if( !w.prop ) throw new Error('Property service not configured.');
@@ -43,4 +46,10 @@ w.func.preProcess = function(){
       throw new Error('Invalid arg');
     }
   }
+
+  console.log(`${v.whois} normal end.`
+    + `\nw.userId=${w.userId}`
+    + `\nw.argType=${w.argType}`
+    + `\nw.arg=${stringify(w.arg)}`
+  );
 }

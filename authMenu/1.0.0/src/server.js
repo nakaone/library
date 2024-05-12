@@ -5,9 +5,9 @@
  * 
  * | userId | arg | 分岐先関数 | 処理 |
  * | :-- | :-- | :-- | :-- |
- * | null   | {string} JSON(平文)   | getUserInfo    | 新規ユーザ登録 |
- * | number | null                 | getUserInfo    | 応募情報(自情報)取得 |
- * | number | {string} JSON(SP/--) | verifyPasscode | パスコード検証 |
+ * | null   | JSON(平文)         | getUserInfo    | 新規ユーザ登録 |
+ * | number | JSON(平文) or null | getUserInfo    | 応募情報(自情報)取得 |
+ * | number | JSON(SP/--)       | verifyPasscode | パスコード検証 |
  * 
  * @param {number} userId 
  * @param {null|string} arg - 分岐先処理名、分岐先処理に渡す引数オブジェクトのJSON
@@ -30,7 +30,6 @@ function authServer(userId=null,arg=null) {
 
     w.step = 1; // 前処理
     w.func.preProcess();
-    console.log(`w.userId=${w.userId}\nw.argType=${w.argType}\nw.arg=${stringify(w.arg)}`);
 
     w.step = 2; // userId未設定 ⇒ 新規ユーザ登録
     if( w.userId === null ){
@@ -41,8 +40,8 @@ function authServer(userId=null,arg=null) {
     }
 
     w.step = 3; // arg未設定 ⇒ 応募情報(自情報)取得
-    if( w.userId !== null && w.argType === 'null' ){
-      w.rv = w.func.getUserInfo(w.userId,null);
+    if( w.userId !== null && (w.argType === 'null' || w.argType === 'JSON') ){
+      w.rv = w.func.getUserInfo(w.userId,w.arg);
       if( w.rv instanceof Error ) throw w.rv;
     }
 

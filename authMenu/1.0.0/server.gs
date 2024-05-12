@@ -5,9 +5,9 @@
  * 
  * | userId | arg | 分岐先関数 | 処理 |
  * | :-- | :-- | :-- | :-- |
- * | null   | {string} JSON(平文)   | getUserInfo    | 新規ユーザ登録 |
- * | number | null                 | getUserInfo    | 応募情報(自情報)取得 |
- * | number | {string} JSON(SP/--) | verifyPasscode | パスコード検証 |
+ * | null   | JSON(平文)         | getUserInfo    | 新規ユーザ登録 |
+ * | number | JSON(平文) or null | getUserInfo    | 応募情報(自情報)取得 |
+ * | number | JSON(SP/--)       | verifyPasscode | パスコード検証 |
  * 
  * @param {number} userId 
  * @param {null|string} arg - 分岐先処理名、分岐先処理に渡す引数オブジェクトのJSON
@@ -26,6 +26,9 @@ function authServer(userId=null,arg=null) {
  * @returns {void}
  */
 w.func.preProcess = function(){
+  const v = {whois:w.whois+'.preProcess',step:0,rv:null};
+  console.log(`${v.whois} start.`);
+    
   w.step = 1.1; // PropertiesServiceに格納された値をw.propに読み込み
   w.prop = PropertiesService.getDocumentProperties().getProperties();
   if( !w.prop ) throw new Error('Property service not configured.');
@@ -66,6 +69,12 @@ w.func.preProcess = function(){
       throw new Error('Invalid arg');
     }
   }
+
+  console.log(`${v.whois} normal end.`
+    + `\nw.userId=${w.userId}`
+    + `\nw.argType=${w.argType}`
+    + `\nw.arg=${stringify(w.arg)}`
+  );
 }
 /** getUserInfo: authClientからの要求を受け、ユーザ情報と状態を返す
  * 
@@ -89,7 +98,9 @@ w.func.preProcess = function(){
  *   - 1〜4 : 要ログイン
  *     - 1 : ①パスコード生成からログインまでの猶予時間を過ぎている
  *     - 2 : ②クライアント側ログイン(CPkey)有効期限切れ
+ *             ※シート上のupdatedが空欄ならノーチェック
  *     - 4 : ③引数のCPkeyがシート上のCPkeyと不一致
+ *             ※引数にCPkeyが含まれない場合はノーチェック
  *   - 8 : ④凍結中
  * - numberOfLoginAttempts {number} 試行可能回数
  * - loginGraceTime=900,000(15分) {number}<br>
@@ -99,8 +110,8 @@ w.func.preProcess = function(){
  */
 w.func.getUserInfo = function(userId=null,arg={}){
   const v = {whois:w.whois+'.getUserInfo',step:0,
-    rv:{data:null,trial:null,isExist:0}};
-  console.log(`${v.whois} start.\ntypeof arg=${typeof arg}\narg=${stringify(arg)}`);
+    rv:{data:null,isExist:0}};
+  console.log(`${v.whois} start.\narg(${typeof arg})=${stringify(arg)}`);
   try {
 
     // ---------------------------------------------
@@ -119,8 +130,8 @@ w.func.getUserInfo = function(userId=null,arg={}){
 
     v.step = 1.2; // 対象ユーザ情報の取得
     v.r = v.arg.userId === null
-    ? w.master.select({where: x => x[w.prop.emailColumn] === arg.email})
-    : w.master.select({where: x => x[w.prop.primatyKeyColumn] === arg.userId});
+    ? w.master.select({where: x => x[w.prop.emailColumn] === v.arg.email})
+    : w.master.select({where: x => x[w.prop.primatyKeyColumn] === v.arg.userId});
     if( v.r instanceof Error ) throw v.r;
 
 
@@ -132,20 +143,18 @@ w.func.getUserInfo = function(userId=null,arg={}){
     } else if( v.r.length === 1 ){     // 1件該当 ⇒ 既存ユーザ
       v.step = 2.1;
       v.rv.data = v.r[0];
-      if( arg.updateCPkey
-        && v.rv.data.CPkey !== arg.CPkey
-        && typeof arg.CPkey === 'string'
+      if( v.arg.updateCPkey // CPkeyの更新
+        && v.rv.data.CPkey !== v.arg.CPkey
+        && typeof v.arg.CPkey === 'string'
       ){
         v.step = 2.2; // 渡されたCPkeyとシートとが異なり、更新指示が有った場合は更新
-        v.rv.data.CPkey = arg.CPkey;
-        v.rv.data.updated = arg.updated;
-        v.r = w.master.update({CPkey:arg.CPkey,updated:arg.updated},
-          {where:x => x[w.prop.primatyKeyColumn] === arg.userId});
+        v.r = w.master.update({CPkey:v.arg.CPkey,updated:v.arg.updated},
+          {where:x => x[w.prop.primatyKeyColumn] === v.arg.userId});
         if( v.r instanceof Error ) throw v.r;
       }
-    } else if( arg.createIfNotExist ){ // 該当無しand作成指示 ⇒ 新規ユーザ
+    } else if( v.arg.createIfNotExist ){ // 該当無しand作成指示 ⇒ 新規ユーザ
       v.step = 2.2; // emailアドレスの妥当性検証
-      if( checkFormat(arg.email,'email' ) === false ){
+      if( checkFormat(v.arg.email,'email' ) === false ){
         throw new Error(`Invalid e-mail address.`);
       }
 
@@ -164,9 +173,9 @@ w.func.getUserInfo = function(userId=null,arg={}){
       v.rv.data = {
         userId  : v.max + 1,
         created : toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn'),
-        email   : arg.email,
+        email   : v.arg.email,
         auth    : w.prop.defaultAuth,
-        CPkey   : arg.CPkey,
+        CPkey   : v.arg.CPkey,
         updated : null,
         trial   : '{"log":[]}',
       };
@@ -176,6 +185,8 @@ w.func.getUserInfo = function(userId=null,arg={}){
 
       v.step = 2.5; // 存否フラグを更新
       v.rv.isExist = v.rv.data.userId;
+    } else {  // 該当無しand作成指示無し
+      return v.rv;
     }
 
     // ---------------------------------------------
@@ -186,18 +197,18 @@ w.func.getUserInfo = function(userId=null,arg={}){
     // - log {object[]} 試行の記録。unshiftで先頭を最新にする
     //   - timestamp {number} 試行日時(UNIX時刻)
     //   - entered {number} 入力されたパスコード
-    //   - status {number} 失敗した原因(v.rv.trial.statusの値)
+    //   - status {number} 失敗した原因(v.trial.statusの値)
     //   - result {number} 0:成功、1〜n:連続n回目の失敗
     // trialオブジェクトはunshiftで常に先頭(添字=0)が最新になるようにする。
     // ---------------------------------------------
     v.step = 3.1; // ログイン試行関係情報をv.trialに格納
     if( v.rv.data.hasOwnProperty('trial') ){
       // パスコードが含まれるtrialはdata配下からrv直下に移動
-      v.rv.trial = JSON.parse(v.rv.data.trial);
+      v.trial = JSON.parse(v.rv.data.trial);
       delete v.rv.data.trial;
     } else {
       // シート上に不存在かつ新規ユーザ登録をしない場合
-      v.rv.trial = {log:[]};
+      v.trial = {log:[]};
     }
 
     // ログイン試行の状態に関する項目を戻り値オブジェクトに追加
@@ -211,23 +222,24 @@ w.func.getUserInfo = function(userId=null,arg={}){
     });
 
     v.step = 3.3; // ①パスコード生成からログインまでの猶予時間を過ぎている
-    if( ( v.rv.trial.hasOwnProperty('created')
-      && w.prop.loginGraceTime + v.rv.trial.created) > Date.now() ){
+    if( ( v.trial.hasOwnProperty('created')
+      && w.prop.loginGraceTime + v.trial.created) > Date.now() ){
       v.rv.status += 1;
     }
 
     v.step = 3.4; // ②クライアント側ログイン(CPkey)有効期限切れ
-    if( (new Date(v.rv.data.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
+    if( String(v.rv.data.updated).length > 0
+      && (new Date(v.rv.data.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
       v.rv.status += 2;
     }
 
     v.step = 3.5; // ③引数のCPkeyがシート上のCPkeyと不一致
-    if( arg.CPkey !== v.rv.data.CPkey ){
+    if( v.arg.CPkey && v.arg.CPkey !== v.rv.data.CPkey ){
       v.rv.status += 4;
     }
 
-    if( v.rv.trial.log.length > 0 ){
-      v.log = v.rv.trial.log[0];
+    if( v.trial.log.length > 0 ){
+      v.log = v.trial.log[0];
 
       v.step = 3.6; // 試行Objがlogに存在するなら残りの試行可能回数を計算
       v.rv.numberOfLoginAttempts = w.prop.numberOfLoginAttempts - v.log.result;
@@ -364,7 +376,6 @@ w.func.verifyPasscode = function(arg){
 
     w.step = 1; // 前処理
     w.func.preProcess();
-    console.log(`w.userId=${w.userId}\nw.argType=${w.argType}\nw.arg=${stringify(w.arg)}`);
 
     w.step = 2; // userId未設定 ⇒ 新規ユーザ登録
     if( w.userId === null ){
@@ -375,8 +386,8 @@ w.func.verifyPasscode = function(arg){
     }
 
     w.step = 3; // arg未設定 ⇒ 応募情報(自情報)取得
-    if( w.userId !== null && w.argType === 'null' ){
-      w.rv = w.func.getUserInfo(w.userId,null);
+    if( w.userId !== null && (w.argType === 'null' || w.argType === 'JSON') ){
+      w.rv = w.func.getUserInfo(w.userId,w.arg);
       if( w.rv instanceof Error ) throw w.rv;
     }
 
