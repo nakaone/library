@@ -1079,7 +1079,7 @@ class SingleTable {
     const v = {whois:this.className+'.update',step:0,rv:[],
       // top〜rightは更新する場合の対象領域(行/列番号。自然数)
       top:Infinity, left:Infinity, bottom:-Infinity, right:-Infinity};
-    console.log(`${v.whois} start.\nset=${typeof set === 'function' ? set.toString() : JSON.stringify(set)}\nopt=${JSON.stringify(opt)}`);
+    console.log(`${v.whois} start.\nset=${typeof set === 'function' ? set.toString() : stringify(set)}\nopt=${stringify(opt)}`);
     try {
   
       v.step = 1; // 既定値の設定
