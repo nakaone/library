@@ -2319,8 +2319,6 @@ function setProperties(){
     console.log(`v.enc=${stringify(v.enc)}`);
     v.dec = cryptico.decrypt(v.enc.cipher,v.SSkey);
     console.log(`v.dec=${stringify(v.dec)}`);
-    v.dec = cryptico.decrypt('abcde',v.SSkey);
-    console.log(`v.dec=${stringify(v.dec)}`);
 
     /*
     v.step = 2.4; // RSAテスト -> "signature":"verified"
@@ -4825,8 +4823,6 @@ function setProperties(){
     v.enc = cryptico.encrypt(v.str,v.prop.SPkey,v.SSkey);
     console.log(`v.enc=${stringify(v.enc)}`);
     v.dec = cryptico.decrypt(v.enc.cipher,v.SSkey);
-    console.log(`v.dec=${stringify(v.dec)}`);
-    v.dec = cryptico.decrypt('abcde',v.SSkey);
     console.log(`v.dec=${stringify(v.dec)}`);
 
     /*

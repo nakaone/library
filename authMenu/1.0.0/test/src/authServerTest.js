@@ -4,7 +4,7 @@ function authServerTest(){
       v.passPhrase = createPassword();
       v.Skey = cryptico.generateRSAKey(v.passPhrase,1024);
       v.Pkey = cryptico.publicKeyString(v.Skey);
-      v.updated = Date.now();
+      v.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
     },
     constructor: () => {
       //PropertiesService.getDocumentProperties().deleteAllProperties();
