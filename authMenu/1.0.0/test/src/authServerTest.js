@@ -1,12 +1,12 @@
 function authServerTest(){
   const v = {
-    setRAS: () => {
+    setRAS: () => { // getUserInfo()他から呼ばれる汎用関数
       v.passPhrase = createPassword();
       v.Skey = cryptico.generateRSAKey(v.passPhrase,1024);
       v.Pkey = cryptico.publicKeyString(v.Skey);
       v.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
     },
-    constructor: () => {
+    constructor: () => {  // constructorのテスト
       //PropertiesService.getDocumentProperties().deleteAllProperties();
       v.rv = authServer();
       console.log(`v.rv=${stringify(v.rv)}\nproperties=${stringify(PropertiesService.getDocumentProperties().getProperties())}`);
@@ -35,6 +35,17 @@ function authServerTest(){
         console.log(`${v.i} => v.rv = ${stringify(v.rv)}`);
       }
     },
+    registEmail: () => {  /* 新規ユーザ登録のテスト
+      userId = null, arg = {func:'registEmail',e-mail,CPkey,updated}
+    */
+      v.setRAS(); // テスト用のRSA鍵を生成
+      v.rv = authServer(null,{
+        func: 'registEmail',
+        email: 'nakaone.kunihiro@gmail.com',
+        CPkey: v.Pkey,
+        updated: v.updated,
+      });
+    }
   };
 
   //v.constructor();
