@@ -1,6 +1,19 @@
 /** preProcess: 事前準備。シートからユーザ情報全権取得、引数のオブジェクト化
  * @param {void}
  * @returns {void}
+ * 
+ * **オブジェクト'w'にセットする内容**
+ * 
+ * - prop {Object} PropertiesServiceに格納された値。内容はsetProperties参照
+ * - master {SingleTable} シートの情報
+ * - userId {number|null} ユーザID
+ * - arg {Object} JSON形式のauthServerの引数argをオブジェクト化
+ * - argType {string} authServerの引数argのデータ型。null/JSON/encrypted
+ * - decrypt {Object} argが暗号化されていた場合、復号化したオブジェクト
+ *   - status {string} "success"
+ *   - plaintext {string} 復号した文字列
+ *   - signature {string} verified, forged, unsigned
+ *   - publicKeyString {string} 送信側公開鍵
  */
 w.func.preProcess = function(){
   const v = {whois:w.whois+'.preProcess',step:0,rv:null};

@@ -85,7 +85,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
           v.step = 5.33; // nameを指定して画面切替
           Object.assign(v.li.children[0],{
             event:{click:(event)=>{
-              this.changeScreen(event.target.getAttribute('name'));
+              this.changeScreen(this.screenAttr[event.target.getAttribute('name')].screen);
               this.toggle();
             }}
           });

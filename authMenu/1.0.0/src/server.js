@@ -31,6 +31,27 @@ function authServer(userId=null,arg=null) {
     w.step = 1; // 前処理
     w.func.preProcess();
 
+    if( w.arg.func === 'changeScreen' ){
+      w.rv = w.func.getUserInfo(w.userId,w.arg);
+      if( w.rv instanceof Error ) throw w.rv;
+      if( (w.arg.allow & w.rv.data.auth) > 0 ){
+        if( w.rv.status === 0 ){
+          // 権限ありでstatusも問題なし ⇒ 該当ユーザ情報
+          w.rv.data.SPkey = w.prop.SPkey;
+        } else if( (w.rv.status & 8) > 0 ){
+          // 権限ありだが凍結中 ⇒ 再挑戦可能になるまでの時間(ミリ秒)
+          w.rv = w.rv.remainRetryInterval;
+        } else {
+          // 権限ありだが要ログイン
+          //w.rv = w.func.sendPasscode();
+        }
+      } else {
+        // 権限なし ⇒ シート上のauth
+        w.rv = w.rv.data.auth;
+      }
+    }
+
+    /*
     w.step = 2; // userId未設定 ⇒ 新規ユーザ登録
     if( w.userId === null ){
       w.rv = w.func.getUserInfo(null,Object.assign({
@@ -50,6 +71,7 @@ function authServer(userId=null,arg=null) {
       w.rv = w.func.verifyPasscode(w.userId,w.arg);
       if( w.rv instanceof Error ) throw w.rv;
     }
+    */
 
     w.step = 5; // 終了処理
     console.log(`${w.whois} normal end.\nw.rv=${stringify(w.rv)}`);

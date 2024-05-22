@@ -816,6 +816,10 @@ storeUserInfo: インスタンス変数やstorageに保存したユーザ情報�
 ## authMenu.doGAS()
 authMenu用の既定値をセットしてdoGASを呼び出し
 
+async doGAS(func,...args){
+  return await doGAS('authServer',this.userId,func,...args);
+}
+
 **Kind**: instance method of [<code>authMenu</code>](#authMenu)  
 <a name="authMenu+toggle"></a>
 
@@ -1068,7 +1072,7 @@ async changeScreen(screenName=null){
   console.log(`${v.whois} start.\nscreenName=${screenName}(${typeof screenName})`);
   try {
 
-    v.step = 1; // 権限と開示範囲の比較
+    v.step = 1; // ユーザ権限と要求画面の開示範囲を比較
     v.step = 1.1; // 対象画面が未指定の場合、特定
     if( screenName === null ){
       console.log(this.constructor.name+`.changeScreen start.`
@@ -1078,69 +1082,82 @@ async changeScreen(screenName=null){
       screenName = typeof this.home === 'string' ? this.home : this.home[this.user.auth];
     }
 
+    v.step = 1.2; // 権限と開示範囲の比較
     if ( (this.screenAttr[screenName].allow & this.auth) > 0 ){
-      v.step = 2; // 指定画面の表示、終了処理
+      v.step = 1.3; // 画面表示の権限が有る場合、要求画面を表示して終了
       console.log(`${v.whois} normal end.`);
-      return changeScreen(screenName);
+      return changeScreen(screenName);  // 注：このchangeScreenはメソッドでは無くライブラリ関数
     }
   
     // 以降、対象画面の開示権限が無い場合の処理
-    v.step = 3; // メアド未登録の場合
+    v.step = 2; // メアド未登録の場合
     if( !this.user.hasOwnProperty('email') || !this.user.email ){
-      v.step = 3.1; // ダイアログでメアドを入力
+      v.step = 2.1; // ダイアログでメアドを入力
       v.email = window.prompt('メールアドレスを入力してください');
       if( v.email === null ){
-        v.step = 3.2; // 入力キャンセルなら即終了
+        v.step = 2.2; // 入力キャンセルなら即終了
         console.log(`${v.whois}: email address enter canceled (step ${v.step}).`);
         return v.rv;
       } else {
-        v.step = 3.3; // メアドの形式チェック
+        v.step = 2.3; // メアドの形式チェック
         if( checkFormat(v.email,'email' ) === false ){
           alert('メールアドレスの形式が不適切です');
           console.log(`${v.whois}: invalid email address (step ${v.step}).`);
           return v.rv;
         }
-        v.step = 3.4; // ユーザ情報更新
+        v.step = 2.4; // ユーザ情報更新
         v.r = this.storeUserInfo({email:v.email});
         if( v.r instanceof Error ) throw v.r;
       }
     }
   
     v.step = 4.1; // ユーザ情報の取得。ユーザ不在なら新規登録
+    //【authServerの引数・戻り値】
+    // @param {number} userId 
+    // @param {null|string} arg - 分岐先処理名、分岐先処理に渡す引数オブジェクトのJSON
+    // @returns {Object} 分岐先処理での処理結果
     //【getUserInfoの引数・戻り値】
     // @param {Object} arg
-    // @param {string} arg.email - 要求があったユーザのe-mail
-    // @param {string} arg.CPkey - 要求があったユーザの公開鍵
+    // @param {string} arg.email=null - e-mail。新規ユーザ登録時のみ使用の想定
+    // @param {string} arg.CPkey=null - 要求があったユーザの公開鍵
+    // @param {string} arg.updated=null - CPkey生成・更新日時文字列
+    // @param {boolean} arg.createIfNotExist=false - true:メアドが未登録なら作成
+    // @param {boolean} arg.updateCPkey=false - true:渡されたCPkeyがシートと異なる場合は更新
+    // @param {boolean} arg.returnTrialStatus=true - true:現在のログイン試行の状態を返す
     // @returns {object} 以下のメンバを持つオブジェクト
     // 1. SPkey {string} - サーバ側公開鍵
     // 1. isExist {boolean} - 既存メアドならtrue、新規登録ならfalse
     // 1. isEqual {boolean} - 引数のCPkeyがシート上のCPkeyと一致するならtrue
     // 1. isExpired {boolean} - CPkeyが有効期限切れならtrue
     // 1. data {object} - 該当ユーザのシート上のオブジェクト
-    v.r = await this.doGAS('getUserInfo',{
+    v.r = await this.doGAS({
+      func: 'changeScreen',
       email: this.user.email,
       CPkey: this.user.CPkey,
       updated: this.user.updated,
-    });
+      createIfNotExist: true,
+      updateCPkey: true,
+      returnTrialStatus: true,
+    },{type:'JSON'});
     if( v.r instanceof Error ) throw v.r;
 
-    v.step = 4.2; // ユーザ情報の更新
-    v.r = this.storeUserInfo(Object.assign(v.r.data,{SPkey:v.r.SPkey}));
-    if( v.r instanceof Error ) throw v.r;
+    v.step = 5; // 権限ありでstatusも問題なし ⇒ 該当ユーザ情報の更新
+    if( whichType(v.r,'Object') ){
+      v.r = this.storeUserInfo(v.r.data);
+      if( v.r instanceof Error ) throw v.r;
+      v.r = changeScreen(screenName);
+      if( v.r instanceof Error ) throw v.r;
+    }
 
-    v.step = 5; // 権限が無い ⇒ エラーを表示して終了
-    if( (v.r.data.auth & w.screenAttr.auth) === 0 ){
+    v.step = 6; // 権限が無い ⇒ エラーを表示して終了
+    if( typeof v.r === 'number' ){
       alert(`指定画面(${screenName})の表示権限がありません。`);
-      console.log(`${v.whois}: no authority (step ${v.step}).`);
+      console.log(`${v.whois}: no authority (step ${v.step}).`
+        +`\nremainRetryInterval=${v.r}`);
       return v.rv;
     }
 
-    v.step = 6; // 権限あり and CP一致 and CP有効 ⇒ 指定画面の表示、終了処理
-    if( ((v.r.data.auth & w.screenAttr.auth) > 0) && v.r.isEqual && v.r.isExpired ){
-      console.log(`${v.whois} normal end.`);
-      return changeScreen(screenName);
-    }
-
+    /*
     // 以降【権限あり and (CP不一致 or CP無効) ⇒ パスコード入力】
     v.step = 7.1; // 鍵ペア再生成
     this.user.passphrase = null;
@@ -1227,7 +1244,7 @@ async changeScreen(screenName=null){
       passcode: v.encrypt,
     });
     if( v.r instanceof Error ) throw v.r;
-
+    */
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
@@ -1324,7 +1341,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
           v.step = 5.33; // nameを指定して画面切替
           Object.assign(v.li.children[0],{
             event:{click:(event)=>{
-              this.changeScreen(event.target.getAttribute('name'));
+              this.changeScreen(this.screenAttr[event.target.getAttribute('name')].screen);
               this.toggle();
             }}
           });
@@ -1796,9 +1813,14 @@ storeUserInfo(arg={}){
     return e;
   }
 }
-/** authMenu用の既定値をセットしてdoGASを呼び出し */
+/** authMenu用の既定値をセットしてdoGASを呼び出し
+ * 
 async doGAS(func,...args){
   return await doGAS('authServer',this.userId,func,...args);
+}
+ */
+async doGAS(arg,opt={type:'JSON'}){
+  return await doGAS('authServer',this.userId,JSON.stringify(arg));
 }
 
 /** ナビゲーション領域の表示/非表示切り替え */
@@ -1861,6 +1883,19 @@ function authServer(userId=null,arg=null) {
 /** preProcess: 事前準備。シートからユーザ情報全権取得、引数のオブジェクト化
  * @param {void}
  * @returns {void}
+ * 
+ * **オブジェクト'w'にセットする内容**
+ * 
+ * - prop {Object} PropertiesServiceに格納された値。内容はsetProperties参照
+ * - master {SingleTable} シートの情報
+ * - userId {number|null} ユーザID
+ * - arg {Object} JSON形式のauthServerの引数argをオブジェクト化
+ * - argType {string} authServerの引数argのデータ型。null/JSON/encrypted
+ * - decrypt {Object} argが暗号化されていた場合、復号化したオブジェクト
+ *   - status {string} "success"
+ *   - plaintext {string} 復号した文字列
+ *   - signature {string} verified, forged, unsigned
+ *   - publicKeyString {string} 送信側公開鍵
  */
 w.func.preProcess = function(){
   const v = {whois:w.whois+'.preProcess',step:0,rv:null};
@@ -2214,6 +2249,27 @@ w.func.verifyPasscode = function(arg){
     w.step = 1; // 前処理
     w.func.preProcess();
 
+    if( w.arg.func === 'changeScreen' ){
+      w.rv = w.func.getUserInfo(w.userId,w.arg);
+      if( w.rv instanceof Error ) throw w.rv;
+      if( (w.arg.allow & w.rv.data.auth) > 0 ){
+        if( w.rv.status === 0 ){
+          // 権限ありでstatusも問題なし ⇒ 該当ユーザ情報
+          w.rv.data.SPkey = w.prop.SPkey;
+        } else if( (w.rv.status & 8) > 0 ){
+          // 権限ありだが凍結中 ⇒ 再挑戦可能になるまでの時間(ミリ秒)
+          w.rv = w.rv.remainRetryInterval;
+        } else {
+          // 権限ありだが要ログイン
+          //w.rv = w.func.sendPasscode();
+        }
+      } else {
+        // 権限なし ⇒ シート上のauth
+        w.rv = w.rv.data.auth;
+      }
+    }
+
+    /*
     w.step = 2; // userId未設定 ⇒ 新規ユーザ登録
     if( w.userId === null ){
       w.rv = w.func.getUserInfo(null,Object.assign({
@@ -2233,6 +2289,7 @@ w.func.verifyPasscode = function(arg){
       w.rv = w.func.verifyPasscode(w.userId,w.arg);
       if( w.rv instanceof Error ) throw w.rv;
     }
+    */
 
     w.step = 5; // 終了処理
     console.log(`${w.whois} normal end.\nw.rv=${stringify(w.rv)}`);
@@ -2315,12 +2372,11 @@ function setProperties(){
     v.step = 2.3; // RSAキー動作の確認 -> "signature":"verified"
     v.SSkey = cryptico.generateRSAKey(v.r.passPhrase,v.r.bits);
     v.str = `This is test string.`;
-    v.enc = cryptico.encrypt(v.str,v.prop.SPkey,v.SSkey);
+    v.enc = cryptico.encrypt(v.str,v.prop.SPkey);
     console.log(`v.enc=${stringify(v.enc)}`);
     v.dec = cryptico.decrypt(v.enc.cipher,v.SSkey);
     console.log(`v.dec=${stringify(v.dec)}`);
 
-    /*
     v.step = 2.4; // RSAテスト -> "signature":"verified"
     v.S = createPassword(v.prop.passPhraseLength);
     v.SS = cryptico.generateRSAKey(v.S,v.prop.bits);
@@ -2332,8 +2388,7 @@ function setProperties(){
     v.enc = cryptico.encrypt(v.str,v.RP,v.SS);
     console.log(`v.enc=${stringify(v.enc)}`);
     v.dec = cryptico.decrypt(v.enc.cipher,v.RS);
-    console.log(`v.dec=${stringify(v.dec)}`); -> "signature":"verified"
-    */
+    console.log(`v.dec=${stringify(v.dec)}`); //-> "signature":"verified"
 
     v.step = 3; // 終了処理
     console.log(`${v.whois} normal end.`);
@@ -3291,6 +3346,10 @@ storeUserInfo: インスタンス変数やstorageに保存したユーザ情報�
 
 authMenu用の既定値をセットしてdoGASを呼び出し
 
+async doGAS(func,...args){
+  return await doGAS('authServer',this.userId,func,...args);
+}
+
 **Kind**: instance method of [<code>authMenu</code>](#authMenu)  
 <a name="authMenu+toggle"></a>
 
@@ -3573,7 +3632,7 @@ async changeScreen(screenName=null){
   console.log(`${v.whois} start.\nscreenName=${screenName}(${typeof screenName})`);
   try {
 
-    v.step = 1; // 権限と開示範囲の比較
+    v.step = 1; // ユーザ権限と要求画面の開示範囲を比較
     v.step = 1.1; // 対象画面が未指定の場合、特定
     if( screenName === null ){
       console.log(this.constructor.name+`.changeScreen start.`
@@ -3583,69 +3642,82 @@ async changeScreen(screenName=null){
       screenName = typeof this.home === 'string' ? this.home : this.home[this.user.auth];
     }
 
+    v.step = 1.2; // 権限と開示範囲の比較
     if ( (this.screenAttr[screenName].allow & this.auth) > 0 ){
-      v.step = 2; // 指定画面の表示、終了処理
+      v.step = 1.3; // 画面表示の権限が有る場合、要求画面を表示して終了
       console.log(`${v.whois} normal end.`);
-      return changeScreen(screenName);
+      return changeScreen(screenName);  // 注：このchangeScreenはメソッドでは無くライブラリ関数
     }
   
     // 以降、対象画面の開示権限が無い場合の処理
-    v.step = 3; // メアド未登録の場合
+    v.step = 2; // メアド未登録の場合
     if( !this.user.hasOwnProperty('email') || !this.user.email ){
-      v.step = 3.1; // ダイアログでメアドを入力
+      v.step = 2.1; // ダイアログでメアドを入力
       v.email = window.prompt('メールアドレスを入力してください');
       if( v.email === null ){
-        v.step = 3.2; // 入力キャンセルなら即終了
+        v.step = 2.2; // 入力キャンセルなら即終了
         console.log(`${v.whois}: email address enter canceled (step ${v.step}).`);
         return v.rv;
       } else {
-        v.step = 3.3; // メアドの形式チェック
+        v.step = 2.3; // メアドの形式チェック
         if( checkFormat(v.email,'email' ) === false ){
           alert('メールアドレスの形式が不適切です');
           console.log(`${v.whois}: invalid email address (step ${v.step}).`);
           return v.rv;
         }
-        v.step = 3.4; // ユーザ情報更新
+        v.step = 2.4; // ユーザ情報更新
         v.r = this.storeUserInfo({email:v.email});
         if( v.r instanceof Error ) throw v.r;
       }
     }
   
     v.step = 4.1; // ユーザ情報の取得。ユーザ不在なら新規登録
+    //【authServerの引数・戻り値】
+    // @param {number} userId 
+    // @param {null|string} arg - 分岐先処理名、分岐先処理に渡す引数オブジェクトのJSON
+    // @returns {Object} 分岐先処理での処理結果
     //【getUserInfoの引数・戻り値】
     // @param {Object} arg
-    // @param {string} arg.email - 要求があったユーザのe-mail
-    // @param {string} arg.CPkey - 要求があったユーザの公開鍵
+    // @param {string} arg.email=null - e-mail。新規ユーザ登録時のみ使用の想定
+    // @param {string} arg.CPkey=null - 要求があったユーザの公開鍵
+    // @param {string} arg.updated=null - CPkey生成・更新日時文字列
+    // @param {boolean} arg.createIfNotExist=false - true:メアドが未登録なら作成
+    // @param {boolean} arg.updateCPkey=false - true:渡されたCPkeyがシートと異なる場合は更新
+    // @param {boolean} arg.returnTrialStatus=true - true:現在のログイン試行の状態を返す
     // @returns {object} 以下のメンバを持つオブジェクト
     // 1. SPkey {string} - サーバ側公開鍵
     // 1. isExist {boolean} - 既存メアドならtrue、新規登録ならfalse
     // 1. isEqual {boolean} - 引数のCPkeyがシート上のCPkeyと一致するならtrue
     // 1. isExpired {boolean} - CPkeyが有効期限切れならtrue
     // 1. data {object} - 該当ユーザのシート上のオブジェクト
-    v.r = await this.doGAS('getUserInfo',{
+    v.r = await this.doGAS({
+      func: 'changeScreen',
       email: this.user.email,
       CPkey: this.user.CPkey,
       updated: this.user.updated,
-    });
+      createIfNotExist: true,
+      updateCPkey: true,
+      returnTrialStatus: true,
+    },{type:'JSON'});
     if( v.r instanceof Error ) throw v.r;
 
-    v.step = 4.2; // ユーザ情報の更新
-    v.r = this.storeUserInfo(Object.assign(v.r.data,{SPkey:v.r.SPkey}));
-    if( v.r instanceof Error ) throw v.r;
+    v.step = 5; // 権限ありでstatusも問題なし ⇒ 該当ユーザ情報の更新
+    if( whichType(v.r,'Object') ){
+      v.r = this.storeUserInfo(v.r.data);
+      if( v.r instanceof Error ) throw v.r;
+      v.r = changeScreen(screenName);
+      if( v.r instanceof Error ) throw v.r;
+    }
 
-    v.step = 5; // 権限が無い ⇒ エラーを表示して終了
-    if( (v.r.data.auth & w.screenAttr.auth) === 0 ){
+    v.step = 6; // 権限が無い ⇒ エラーを表示して終了
+    if( typeof v.r === 'number' ){
       alert(`指定画面(${screenName})の表示権限がありません。`);
-      console.log(`${v.whois}: no authority (step ${v.step}).`);
+      console.log(`${v.whois}: no authority (step ${v.step}).`
+        +`\nremainRetryInterval=${v.r}`);
       return v.rv;
     }
 
-    v.step = 6; // 権限あり and CP一致 and CP有効 ⇒ 指定画面の表示、終了処理
-    if( ((v.r.data.auth & w.screenAttr.auth) > 0) && v.r.isEqual && v.r.isExpired ){
-      console.log(`${v.whois} normal end.`);
-      return changeScreen(screenName);
-    }
-
+    /*
     // 以降【権限あり and (CP不一致 or CP無効) ⇒ パスコード入力】
     v.step = 7.1; // 鍵ペア再生成
     this.user.passphrase = null;
@@ -3732,7 +3804,7 @@ async changeScreen(screenName=null){
       passcode: v.encrypt,
     });
     if( v.r instanceof Error ) throw v.r;
-
+    */
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
@@ -3829,7 +3901,7 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
           v.step = 5.33; // nameを指定して画面切替
           Object.assign(v.li.children[0],{
             event:{click:(event)=>{
-              this.changeScreen(event.target.getAttribute('name'));
+              this.changeScreen(this.screenAttr[event.target.getAttribute('name')].screen);
               this.toggle();
             }}
           });
@@ -4301,9 +4373,14 @@ storeUserInfo(arg={}){
     return e;
   }
 }
-/** authMenu用の既定値をセットしてdoGASを呼び出し */
+/** authMenu用の既定値をセットしてdoGASを呼び出し
+ * 
 async doGAS(func,...args){
   return await doGAS('authServer',this.userId,func,...args);
+}
+ */
+async doGAS(arg,opt={type:'JSON'}){
+  return await doGAS('authServer',this.userId,JSON.stringify(arg));
 }
 
 /** ナビゲーション領域の表示/非表示切り替え */
@@ -4366,6 +4443,19 @@ function authServer(userId=null,arg=null) {
 /** preProcess: 事前準備。シートからユーザ情報全権取得、引数のオブジェクト化
  * @param {void}
  * @returns {void}
+ * 
+ * **オブジェクト'w'にセットする内容**
+ * 
+ * - prop {Object} PropertiesServiceに格納された値。内容はsetProperties参照
+ * - master {SingleTable} シートの情報
+ * - userId {number|null} ユーザID
+ * - arg {Object} JSON形式のauthServerの引数argをオブジェクト化
+ * - argType {string} authServerの引数argのデータ型。null/JSON/encrypted
+ * - decrypt {Object} argが暗号化されていた場合、復号化したオブジェクト
+ *   - status {string} "success"
+ *   - plaintext {string} 復号した文字列
+ *   - signature {string} verified, forged, unsigned
+ *   - publicKeyString {string} 送信側公開鍵
  */
 w.func.preProcess = function(){
   const v = {whois:w.whois+'.preProcess',step:0,rv:null};
@@ -4719,6 +4809,27 @@ w.func.verifyPasscode = function(arg){
     w.step = 1; // 前処理
     w.func.preProcess();
 
+    if( w.arg.func === 'changeScreen' ){
+      w.rv = w.func.getUserInfo(w.userId,w.arg);
+      if( w.rv instanceof Error ) throw w.rv;
+      if( (w.arg.allow & w.rv.data.auth) > 0 ){
+        if( w.rv.status === 0 ){
+          // 権限ありでstatusも問題なし ⇒ 該当ユーザ情報
+          w.rv.data.SPkey = w.prop.SPkey;
+        } else if( (w.rv.status & 8) > 0 ){
+          // 権限ありだが凍結中 ⇒ 再挑戦可能になるまでの時間(ミリ秒)
+          w.rv = w.rv.remainRetryInterval;
+        } else {
+          // 権限ありだが要ログイン
+          //w.rv = w.func.sendPasscode();
+        }
+      } else {
+        // 権限なし ⇒ シート上のauth
+        w.rv = w.rv.data.auth;
+      }
+    }
+
+    /*
     w.step = 2; // userId未設定 ⇒ 新規ユーザ登録
     if( w.userId === null ){
       w.rv = w.func.getUserInfo(null,Object.assign({
@@ -4738,6 +4849,7 @@ w.func.verifyPasscode = function(arg){
       w.rv = w.func.verifyPasscode(w.userId,w.arg);
       if( w.rv instanceof Error ) throw w.rv;
     }
+    */
 
     w.step = 5; // 終了処理
     console.log(`${w.whois} normal end.\nw.rv=${stringify(w.rv)}`);
@@ -4820,12 +4932,11 @@ function setProperties(){
     v.step = 2.3; // RSAキー動作の確認 -> "signature":"verified"
     v.SSkey = cryptico.generateRSAKey(v.r.passPhrase,v.r.bits);
     v.str = `This is test string.`;
-    v.enc = cryptico.encrypt(v.str,v.prop.SPkey,v.SSkey);
+    v.enc = cryptico.encrypt(v.str,v.prop.SPkey);
     console.log(`v.enc=${stringify(v.enc)}`);
     v.dec = cryptico.decrypt(v.enc.cipher,v.SSkey);
     console.log(`v.dec=${stringify(v.dec)}`);
 
-    /*
     v.step = 2.4; // RSAテスト -> "signature":"verified"
     v.S = createPassword(v.prop.passPhraseLength);
     v.SS = cryptico.generateRSAKey(v.S,v.prop.bits);
@@ -4837,8 +4948,7 @@ function setProperties(){
     v.enc = cryptico.encrypt(v.str,v.RP,v.SS);
     console.log(`v.enc=${stringify(v.enc)}`);
     v.dec = cryptico.decrypt(v.enc.cipher,v.RS);
-    console.log(`v.dec=${stringify(v.dec)}`); -> "signature":"verified"
-    */
+    console.log(`v.dec=${stringify(v.dec)}`); //-> "signature":"verified"
 
     v.step = 3; // 終了処理
     console.log(`${v.whois} normal end.`);

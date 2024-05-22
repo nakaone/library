@@ -24,6 +24,19 @@ function authServer(userId=null,arg=null) {
 /** preProcess: 事前準備。シートからユーザ情報全権取得、引数のオブジェクト化
  * @param {void}
  * @returns {void}
+ * 
+ * **オブジェクト'w'にセットする内容**
+ * 
+ * - prop {Object} PropertiesServiceに格納された値。内容はsetProperties参照
+ * - master {SingleTable} シートの情報
+ * - userId {number|null} ユーザID
+ * - arg {Object} JSON形式のauthServerの引数argをオブジェクト化
+ * - argType {string} authServerの引数argのデータ型。null/JSON/encrypted
+ * - decrypt {Object} argが暗号化されていた場合、復号化したオブジェクト
+ *   - status {string} "success"
+ *   - plaintext {string} 復号した文字列
+ *   - signature {string} verified, forged, unsigned
+ *   - publicKeyString {string} 送信側公開鍵
  */
 w.func.preProcess = function(){
   const v = {whois:w.whois+'.preProcess',step:0,rv:null};
@@ -377,6 +390,27 @@ w.func.verifyPasscode = function(arg){
     w.step = 1; // 前処理
     w.func.preProcess();
 
+    if( w.arg.func === 'changeScreen' ){
+      w.rv = w.func.getUserInfo(w.userId,w.arg);
+      if( w.rv instanceof Error ) throw w.rv;
+      if( (w.arg.allow & w.rv.data.auth) > 0 ){
+        if( w.rv.status === 0 ){
+          // 権限ありでstatusも問題なし ⇒ 該当ユーザ情報
+          w.rv.data.SPkey = w.prop.SPkey;
+        } else if( (w.rv.status & 8) > 0 ){
+          // 権限ありだが凍結中 ⇒ 再挑戦可能になるまでの時間(ミリ秒)
+          w.rv = w.rv.remainRetryInterval;
+        } else {
+          // 権限ありだが要ログイン
+          //w.rv = w.func.sendPasscode();
+        }
+      } else {
+        // 権限なし ⇒ シート上のauth
+        w.rv = w.rv.data.auth;
+      }
+    }
+
+    /*
     w.step = 2; // userId未設定 ⇒ 新規ユーザ登録
     if( w.userId === null ){
       w.rv = w.func.getUserInfo(null,Object.assign({
@@ -396,6 +430,7 @@ w.func.verifyPasscode = function(arg){
       w.rv = w.func.verifyPasscode(w.userId,w.arg);
       if( w.rv instanceof Error ) throw w.rv;
     }
+    */
 
     w.step = 5; // 終了処理
     console.log(`${w.whois} normal end.\nw.rv=${stringify(w.rv)}`);

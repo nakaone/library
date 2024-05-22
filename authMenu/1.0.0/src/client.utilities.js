@@ -1,6 +1,11 @@
-/** authMenu用の既定値をセットしてdoGASを呼び出し */
+/** authMenu用の既定値をセットしてdoGASを呼び出し
+ * 
 async doGAS(func,...args){
   return await doGAS('authServer',this.userId,func,...args);
+}
+ */
+async doGAS(arg,opt={type:'JSON'}){
+  return await doGAS('authServer',this.userId,JSON.stringify(arg));
 }
 
 /** ナビゲーション領域の表示/非表示切り替え */
