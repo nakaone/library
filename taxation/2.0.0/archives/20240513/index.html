@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script>
+      <?
+        const v = {};
+
+        v.step = 1; // 本スプレッドシートのIDを取得
+        v.ssId = SpreadsheetApp.getActiveSpreadsheet().getId();
+        console.log("%s step.%s : %s",v.whois,v.step,v.ssId);
+
+        v.step = 2.1; // 親フォルダを取得
+        v.parent = DriveApp.getFileById(v.ssId).getParents();
+        console.log("%s step.%s : %s",v.whois,v.step,v.parent);
+        v.step = 2.2;
+        v.folderId = v.parent.next().getId();
+        console.log("%s step.%s : %s",v.whois,v.step,v.folderId);
+        v.step = 2.3;
+        var folder = DriveApp.getFolderById(v.folderId);
+        console.log("%s step.%s : %s",v.whois,v.step,v.folder);
+
+        var files = folder.getFiles();
+        var list = [];
+
+        while (files.hasNext()) {
+          var file = files.next();
+          list.push({"id":file.getId(),"name":file.getName(),"url":file.getUrl()});
+        }
+      ?>
+      var list = <?!= JSON.stringify(list) ?>;
+    
+      function onSelected(event)
+      {
+        var img = document.getElementById("image")
+        img.alt = "Loading....";
+        img.src = null;
+        var fileId = event.currentTarget.value;
+        google.script.run
+          .withSuccessHandler( SuccessGetBase64Image )
+          .withFailureHandler( Failure )
+          .GetBase64Image( fileId, img.id );
+      }
+      function Failure(){
+        alert("失敗");
+      }
+      function SuccessGetBase64Image(entry)
+      {
+        document.getElementById(entry.param).alt = entry.name;
+        document.getElementById(entry.param).src = entry.base64;
+      }
+
+      function onLoad()
+      {
+        var select = document.getElementById("select");
+        select.addEventListener('change', onSelected);
+        list.forEach( file => {
+          var option = document.createElement("option");
+          option.value = file.id;
+          option.innerText = file.name;
+          select.appendChild(option);
+        });
+      }
+    </script>
+  </head>
+  <body onload="onLoad();">
+
+    <label for="select">Choose a menu:</label>
+    <select name="select" id="select">
+    <option value="">--Please choose an option--</option>
+    </select>
+
+    <p>
+      <!--
+      OK <img src="" height="562" width="750" alt="選択されてません" align="top" id="image">
+      NG <iframe src="" height="562" width="750" alt="選択されてません" align="top" id="image"></iframe>
+      -->
+      <embed id="image" type="application/pdf" src="">
+    </p>    
+  </body>
+</html>

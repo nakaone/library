@@ -1,0 +1,422 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>prototype</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--link rel="stylesheet" href="style.css"-->
+<style type="text/css">
+:root {
+  --labelWidth: 15rem;
+}
+.title {text-shadow: 2px 2px 5px #888;}
+.tr {
+  display: grid;
+  grid-template-columns: var(--labelWidth) repeat(12, 1fr);
+  width: 100%;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+.th, .td, th, td {
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding: 3px;
+}
+.th, th {font-weight: bold;}
+</style>
+<!--::CDN::-->
+<!--script src="" type="text/javascript"></script-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.3.3/alasql.min.js" integrity="sha512-7k4ZPMd1bY6JyBeo7E7yuCGaA1KLngDlXMXVy/esOO981ERo9+0aFQlBiwGmy68xYOkWpEMQx1KQ6Lf2aTuXWg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+<div style="page-break-after: always;">
+  <h1 class="title">ena.kaon 税務定期作業</h1>
+  <p style="text-align:right"><?= new Date().toLocaleDateString("ja-JP") ?></p>
+
+  <div><h2>資料</h2>
+    <div class="tr">
+      <div class="th">銀行通帳</div>
+      <div class="td" style="grid-column: 2/14">
+        MUFG <a href="https://drive.google.com/file/d/1wsw1qwwIFjDhWmBpl3dAw9O-J0W7ODsS/view?usp=drive_link" target="_blank">No.8</a>
+        / <a href="https://drive.google.com/file/d/18OeCJIZcIom0nNgmytT94MYCPlwVKky-/view?usp=drive_link" target="_blank">No.9</a>
+        ,
+        SMBC <a href="https://drive.google.com/file/d/16kLggr5GAI3nYGmhmgA9Z3slC23A6jk4/view?usp=drive_link" target="_blank">No.6</a>
+      </div>
+    </div>
+    <div class="tr">
+      <div class="th">ローン関係</div>
+      <div class="td" style="grid-column:2/14">
+        <a href="https://drive.google.com/file/d/1cra9KqGG0H64N1JGM-UUs0HJVi0U4KLR/view?usp=drivesdk" target="_blank">SMBCローン残高通知</a>
+        ,
+        <a href="https://drive.google.com/file/d/1b8khZqLqu79MHQ-6-lu6mGWZw_10VI6V/view?usp=drivesdk" target="_blank">SMTL&F払込予定表</a>
+      </div>
+    </div>
+  </div>
+
+  <div><h2>収入(レントロール)</h2>
+    <div class="monthly" name="EF">恵比寿フェリシタ</div>
+    <div class="monthly" name="CK">クレセント上池袋</div>
+    <div class="monthly" name="HS">羽沢眞和マンション</div>
+  </div>
+
+  <div><h2>支出</h2>
+    <div class="monthly" name="pension">健保・年金、確定拠出年金</div>
+    <div class="monthly" name="YFPa">YFP 税務顧問報酬</div>
+    <div class="monthly" name="YFPb">YFP 記帳代行</div>
+    <!--div class="tr"><div class="th">税金関係</div>
+      <div class="td" style="grid-column:2/6">前期分：
+        <a target="_blank" href="">国税</a>
+        <a target="_blank" href="https://drive.google.com/file/d/1tqTfrHu8ArvNK4cSctEllaTZfeCL2iBh/view?usp=drivesdk">地方税</a>
+      </div>
+      <div class="td" style="grid-column:6/10">今期分(予定納税)：
+      </div>
+      <div class="td" style="grid-column:10/14">
+      </div>
+    </div>
+    <div name="RepaymentSchedule">SMTL&F 返済予定表-->
+    <div name="NOTE">確証貼付ノート</div>
+  </div>
+</div>
+
+<div name="evidence" style="page-break-after: always;">
+  <h2>その他支出(電子証憑)</h2>
+  <table>
+    <thead>
+      <th>取引日</th>
+      <th>品名・摘要</th>
+      <th>価格</th>
+      <th>支払方法</th>
+      <th>備考</th>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<!--div name="transport">
+  <h2>交通費</h2>
+</div-->
+
+<p style="text-align:right">以上</p>
+</body>
+<script type="text/javascript">
+function main(list){
+  const v = {whois:'main',rv:null,step:0,
+    fy: 202310, // 会計年度の開始年月
+    // convYM: yyyyMM<->年月連番の相互変換
+    convYM: arg => String(arg).length === 6
+    ? Number(String(arg).substring(0,4))*12+Number(String(arg).substring(4,6))-1
+    : Math.floor(Number(arg)/12)*100+((Number(arg)%12)+1),
+  };
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // 月次証憑
+    v.monthlyDom = document.querySelectorAll('.monthly');
+    for( v.i=0 ; v.i<v.monthlyDom.length ; v.i++ ){
+      v.step = 1.1;
+      v.docType = v.monthlyDom[v.i].getAttribute('name');
+      v.label = v.monthlyDom[v.i].innerText;
+      v.monthlyDom[v.i].innerHTML = '';
+
+      v.step = 1.2;
+      v.list = alasql(`select * from ? where docType='${v.docType}' order by dateOfIssue`,[list]);
+      v.map = {};
+      for( v.j=0 ; v.j<v.list.length ; v.j++ ){
+        v.str = String(v.list[v.j].dateOfIssue);
+        v.map[v.str] = {attr:{class:'td'},children:[{
+          tag:'a',
+          attr:{href:v.list[v.j].url,target:'_blank'},
+          text:v.str.slice(-2)
+        }]};
+      }
+
+      v.step = 1.3;
+      v.tr = {attr:{class:'tr'},children:[
+        {attr:{class:'th'},text:v.label}]};
+      for( v.j=v.convYM(v.fy) ; v.j<v.convYM(v.fy)+12 ; v.j++ ){
+        v.str = String(v.convYM(v.j));
+        v.tr.children.push(v.map.hasOwnProperty(v.str)
+          ? v.map[v.str] : {text:v.str.slice(-2),attr:{class:'td'}});
+      }
+
+      v.step = 1.4;
+      v.r = createElement(v.tr,v.monthlyDom[v.i]);
+      if( v.r instanceof Error ) throw v.r;
+    }
+
+    v.step = 2; // 確証貼付ノート
+    v.step = 2.1;
+    v.noteDom = document.querySelector('[name="NOTE"]');
+    v.docType = v.noteDom.getAttribute('name');
+    v.label = v.noteDom.innerText;
+    v.noteDom.innerHTML = '';
+
+    v.step = 2.2;
+    v.list = alasql(`select * from ? where docType='${v.docType}' order by dateOfIssue`,[list]);
+
+    v.step = 2.3;
+    console.log(`l.138 gridRow=${Math.ceil(v.list.length/12)+1}`)
+    v.tr = {attr:{class:'tr'},children:[{
+      attr:{class:'th'},
+      text:v.label,
+      style:{gridRow:`1/${Math.ceil(v.list.length/12)+1}`},
+    }]};
+    for( v.j=0 ; v.j<v.list.length ; v.j++ ){
+      v.tr.children.push({
+        attr: {class:'td'},
+        children:[{
+          tag:'a',
+          attr:{href:v.list[v.j].url,target:'_blank'},
+          text:String(v.list[v.j].dateOfIssue).slice(-2),
+        }],
+      });
+    }
+    console.log(`l.149 v.tr=${stringify(v.tr)}`);
+
+    v.step = 2.4;
+    v.r = createElement(v.tr,v.noteDom);
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 3; // 不定期支出(電子証憑)
+    v.step = 3.1;
+    v.evidenceDom = document.querySelector('[name="evidence"] tbody');
+    v.evidenceDom.innerHTML = '';
+
+    v.step = 3.2;
+    v.list = alasql(`select * from ? where date is not null and not (summary like '%埋込済%') order by date`,[list]);
+    console.log(`step=${v.step} v.list=${stringify(v.list)}`);
+
+    v.step = 3.3;
+    v.tbody = [];
+    for( v.i=0 ; v.i<v.list.length ; v.i++ ){
+      v.tbody.push({tag:'tr',children:[
+        {tag:'td',text:toLocale(new Date(v.list[v.i].date))},
+        {tag:'td',children:[{tag:'a',attr:{target:'_blank',href:v.list[v.i].url},text:v.list[v.i].summary}]},
+        //{tag:'td',text:v.list[v.i].summary},
+        {tag:'td',text:Number(v.list[v.i].price).toLocaleString(),style:{textAlign:'right'}},
+        {tag:'td',text:v.list[v.i].method},
+        {tag:'td',text:(v.list[v.i].note || '')},
+      ]});
+    }
+
+    v.step = 3.4;
+    v.r = createElement(v.tbody,v.evidenceDom);
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+    
+    google.script.run.withSuccessHandler(json => main(JSON.parse(json))).getList();
+
+    /*google.script.run.withSuccessHandler(json => {
+      const v = {list:JSON.parse(json)};
+      console.log(`l.21 list=${JSON.stringify(v.list)}`);
+      v.ef = alasql('select * from ? where docType = "恵比寿フェリシタ"',[v.list]);
+      console.log(`l.24 v.ef=${JSON.stringify(v.ef)}`);
+    }).getList();*/
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+
+function createElement(arg,parent=null){
+  const v = {whois:'BasePage.createElement',rv:[],step:0};
+  //console.log(v.whois+' start.',arg);
+  try {
+    v.step = 1.1; // 引数を強制的に配列化
+    v.isArr = Array.isArray(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
+    if( !v.isArr ) arg = [arg];
+    v.step = 1.2; // 親要素の特定
+    if( parent !== null ){
+      v.parent = typeof parent === 'string' ? document.querySelector(parent) : parent;
+    }
+
+
+    for( v.i = 0 ; v.i<arg.length ; v.i++ ){
+      v.step = 2; // 既定値の設定
+      v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
+      Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
+
+      v.step = 3; // HTMLElementを生成、v.objとする
+      v.obj = document.createElement(v.def.tag);
+
+      v.step = 4; // HTMLElementの属性を定義
+      for( v.j in v.def.attr ){
+        v.obj.setAttribute(v.j,v.x = v.def.attr[v.j]);
+      }
+
+      v.step = 5; // 論理属性を定義(ex.checked)
+      for( v.j in v.def.logical ){
+        if( v.def.logical[v.j] ){
+          v.obj.setAttribute(v.j,v.def.logical[v.j]);
+        }
+      }
+
+      v.step = 6; // style属性の定義
+      for( v.j in v.def.style ){
+        if( v.j.match(/^\-\-/) ){ // CSS変数
+          v.obj.style.setProperty(v.j,v.def.style[v.j]);
+        } else {
+          v.obj.style[v.j] = v.def.style[v.j];
+        }
+      }
+
+      v.step = 7; // イベントの定義
+      for( v.j in v.def.event ){
+        v.obj.addEventListener(v.j,v.def.event[v.j],false);
+      }
+
+      v.step = 8; // 内部文字列(html or text)
+      if( v.def.html.length > 0 ){
+        v.obj.innerHTML = v.def.html;
+      } else {
+        // textareaの場合はvalueに、それ以外はinnerTextに内部文字列(text)をセット
+        v.obj[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
+      }
+
+      v.step = 9; // 子要素の追加(parentは指定しない)
+      for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
+        v.obj.appendChild(this.createElement(v.def.children[v.j]));
+      }
+
+      v.step = 10; // 戻り値への登録
+      v.rv.push(v.obj);
+
+      v.step = 11; // 親要素への追加
+      if( parent !== null ){
+        v.parent.appendChild(v.obj);
+      }
+
+      v.step = 12; // メンバとして、また切替画面として登録
+      if( v.def.name.length > 0 ){
+        this[v.def.name] = v.obj;
+        this.screenList[v.def.name] = v.obj;
+      }
+    }
+
+    v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
+    v.rv = v.isArr ? v.rv : v.rv[0];
+    //console.log(v.whois+' normal end.\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+
+function stringify(variable,opt={addType:false}){
+  const v = {whois:'stringify',rv:null,step:0};
+  const conv = arg => {
+    const w = {type:whichType(arg)};
+    w.pre = opt.addType ? `[${w.type}]` : '';
+    switch( w.type ){
+      case 'Function': case 'Arrow': case 'Symbol':
+        w.rv = w.pre + arg.toString(); break;
+      case 'BigInt':
+        w.rv = w.pre + parseInt(arg); break;
+      case 'Undefined':
+        w.rv = w.pre + 'undefined'; break;
+      case 'Object':
+        w.rv = {};
+        for( w.i in arg ){
+          // 自分自身(stringify)は出力対象外
+          if( w.i === 'stringify' ) continue;
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      case 'Array':
+        w.rv = [];
+        for( w.i=0 ; w.i<arg.length ; w.i++ ){
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      default:
+        w.rv = w.pre + arg;
+    }
+    return w.rv;
+  };
+  //console.log(`${v.whois} start.\nvariable=${variable}\nopt=${JSON.stringify(opt)}`);
+  try {
+
+    v.step = 1; // 事前準備
+    if( typeof opt === 'boolean' ) opt={addType:opt};
+
+    v.step = 2; // 終了処理
+    //console.log(`${v.whois} normal end.`);
+    return JSON.stringify(conv(variable));
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
+  }
+}
+
+function toLocale(dObj,format='yyyy/MM/dd'){
+  const v = {rv:format,l:{ // 地方時ベース
+    y: dObj.getFullYear(),
+    M: dObj.getMonth()+1,
+    d: dObj.getDate(),
+    h: dObj.getHours(),
+    m: dObj.getMinutes(),
+    s: dObj.getSeconds(),
+    n: dObj.getMilliseconds()
+  }};
+  try {
+
+    v.step = 1; // 無効な日付なら空文字列を返して終了
+    if( isNaN(dObj.getTime()) ) return '';
+
+    v.step = 2; // 日付文字列作成
+    for( v.x in v.l ){
+      v.m = v.rv.match(new RegExp(v.x+'+'));
+      if( v.m ){
+        v.str = v.m[0].length > 1
+          ? ('000'+v.l[v.x]).slice(-v.m[0].length)
+          : String(v.l[v.x]);
+        v.rv = v.rv.replace(v.m[0],v.str);
+      }
+    }
+
+    v.step = 3; // 終了処理
+    return v.rv;
+
+  } catch(e){
+    console.error(e,v);
+    return e;
+  }
+}
+</script>
+</html>
+  
