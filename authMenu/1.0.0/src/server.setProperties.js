@@ -67,12 +67,11 @@ function setProperties(){
     v.step = 2.3; // RSAキー動作の確認 -> "signature":"verified"
     v.SSkey = cryptico.generateRSAKey(v.r.passPhrase,v.r.bits);
     v.str = `This is test string.`;
-    v.enc = cryptico.encrypt(v.str,v.prop.SPkey,v.SSkey);
+    v.enc = cryptico.encrypt(v.str,v.prop.SPkey);
     console.log(`v.enc=${stringify(v.enc)}`);
     v.dec = cryptico.decrypt(v.enc.cipher,v.SSkey);
     console.log(`v.dec=${stringify(v.dec)}`);
 
-    /*
     v.step = 2.4; // RSAテスト -> "signature":"verified"
     v.S = createPassword(v.prop.passPhraseLength);
     v.SS = cryptico.generateRSAKey(v.S,v.prop.bits);
@@ -84,8 +83,7 @@ function setProperties(){
     v.enc = cryptico.encrypt(v.str,v.RP,v.SS);
     console.log(`v.enc=${stringify(v.enc)}`);
     v.dec = cryptico.decrypt(v.enc.cipher,v.RS);
-    console.log(`v.dec=${stringify(v.dec)}`); -> "signature":"verified"
-    */
+    console.log(`v.dec=${stringify(v.dec)}`); //-> "signature":"verified"
 
     v.step = 3; // 終了処理
     console.log(`${v.whois} normal end.`);
