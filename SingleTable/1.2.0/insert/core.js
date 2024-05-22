@@ -59,6 +59,7 @@ insert(records=[]){
         v.r.length,
         v.r[0].length
       ).setValues(v.r);
+      this.bottom += v.r.length;
     }
 
     v.step = 9; // 終了処理
