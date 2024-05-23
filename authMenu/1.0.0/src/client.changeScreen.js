@@ -4,7 +4,7 @@
  */
 async changeScreen(screenName=null){
   const v = {whois:this.constructor.name+'.changeScreen',rv:null,step:0};
-  console.log(`${v.whois} start.\nscreenName=${screenName}(${typeof screenName})`);
+  console.log(`${v.whois} start.\nscreenName(${typeof screenName})="${screenName}"`);
   try {
 
     v.step = 1; // ユーザ権限と要求画面の開示範囲を比較
@@ -182,9 +182,7 @@ async changeScreen(screenName=null){
     */
 
   } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}`
-    + `\narg=${stringify(arg)}`;  // 引数
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }
