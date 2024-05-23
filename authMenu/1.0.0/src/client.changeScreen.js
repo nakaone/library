@@ -70,6 +70,7 @@ async changeScreen(screenName=null){
       email: this.user.email,
       CPkey: this.user.CPkey,
       updated: this.user.updated,
+      allow: this.screenAttr[screenName].allow,
       createIfNotExist: true,
       updateCPkey: true,
       returnTrialStatus: true,

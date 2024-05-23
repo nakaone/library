@@ -1137,6 +1137,7 @@ async changeScreen(screenName=null){
       email: this.user.email,
       CPkey: this.user.CPkey,
       updated: this.user.updated,
+      allow: this.screenAttr[screenName].allow,
       createIfNotExist: true,
       updateCPkey: true,
       returnTrialStatus: true,
@@ -2264,22 +2265,26 @@ w.func.verifyPasscode = function(arg){
     w.step = 1; // 前処理
     w.func.preProcess();
 
+    w.step = 2; // 画面切替
     if( w.arg.func === 'changeScreen' ){
+      w.step = 2.1; // ユーザ情報を取得
       w.rv = w.func.getUserInfo(w.userId,w.arg);
       if( w.rv instanceof Error ) throw w.rv;
+
+      w.step = 2.2; // 切替先画面の表示権限の確認
       if( (w.arg.allow & w.rv.data.auth) > 0 ){
         if( w.rv.status === 0 ){
-          // 権限ありでstatusも問題なし ⇒ 該当ユーザ情報
+          w.step = 2.21; // 権限ありでstatusも問題なし ⇒ 該当ユーザ情報
           w.rv.data.SPkey = w.prop.SPkey;
         } else if( (w.rv.status & 8) > 0 ){
-          // 権限ありだが凍結中 ⇒ 再挑戦可能になるまでの時間(ミリ秒)
+          w.step = 2.22; // 権限ありだが凍結中 ⇒ 再挑戦可能になるまでの時間(ミリ秒)
           w.rv = w.rv.remainRetryInterval;
         } else {
-          // 権限ありだが要ログイン
+          w.step = 2.23; // 権限ありだが要ログイン
           //w.rv = w.func.sendPasscode();
         }
       } else {
-        // 権限なし ⇒ シート上のauth
+        w.step = 2.24; // 権限なし ⇒ シート上のauth
         w.rv = w.rv.data.auth;
       }
     }
@@ -3712,6 +3717,7 @@ async changeScreen(screenName=null){
       email: this.user.email,
       CPkey: this.user.CPkey,
       updated: this.user.updated,
+      allow: this.screenAttr[screenName].allow,
       createIfNotExist: true,
       updateCPkey: true,
       returnTrialStatus: true,
@@ -4839,22 +4845,26 @@ w.func.verifyPasscode = function(arg){
     w.step = 1; // 前処理
     w.func.preProcess();
 
+    w.step = 2; // 画面切替
     if( w.arg.func === 'changeScreen' ){
+      w.step = 2.1; // ユーザ情報を取得
       w.rv = w.func.getUserInfo(w.userId,w.arg);
       if( w.rv instanceof Error ) throw w.rv;
+
+      w.step = 2.2; // 切替先画面の表示権限の確認
       if( (w.arg.allow & w.rv.data.auth) > 0 ){
         if( w.rv.status === 0 ){
-          // 権限ありでstatusも問題なし ⇒ 該当ユーザ情報
+          w.step = 2.21; // 権限ありでstatusも問題なし ⇒ 該当ユーザ情報
           w.rv.data.SPkey = w.prop.SPkey;
         } else if( (w.rv.status & 8) > 0 ){
-          // 権限ありだが凍結中 ⇒ 再挑戦可能になるまでの時間(ミリ秒)
+          w.step = 2.22; // 権限ありだが凍結中 ⇒ 再挑戦可能になるまでの時間(ミリ秒)
           w.rv = w.rv.remainRetryInterval;
         } else {
-          // 権限ありだが要ログイン
+          w.step = 2.23; // 権限ありだが要ログイン
           //w.rv = w.func.sendPasscode();
         }
       } else {
-        // 権限なし ⇒ シート上のauth
+        w.step = 2.24; // 権限なし ⇒ シート上のauth
         w.rv = w.rv.data.auth;
       }
     }
