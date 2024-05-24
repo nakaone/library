@@ -26,11 +26,12 @@ sequenceDiagram
       user ->> client : e-mail
       client ->> client : ユーザ情報更新(storeUserInfo)
     end
-    client ->> server : userId,{e-mail,CPkey,updated,allow}(JSON)
+    client ->> server : ①changeScreen.arg
     activate server
+    Note right of server : changeScreen()
     sheet ->> server : ユーザ情報(全件)
     server ->> server : 処理分岐
-    server ->> method : userId,e-mail
+    server ->> method : ②getUserInfo.arg
     activate method
     Note right of method : getUserInfo()
     alt 未登録
@@ -38,67 +39,68 @@ sequenceDiagram
       method ->> sheet : 新規ユーザ情報
     end
     method ->> method : 該当ユーザ情報を変数(w.user)に保存
-    method ->> server : 結果
+    method ->> server : ③getUserInfo.rv
     deactivate method
 
-    server ->> server : ①ログイン要否判断
+    server ->> server : パスコード要否判断 ※1
     alt ログイン不要
       server ->> server : 権限有無判断(auth&allow)
       alt 権限あり
-        server ->> client : 該当ユーザ情報(object)
+        server ->> client : ④response='hasAuth'
         client ->> browser : 要求画面
       else 権限なし
-        server ->> client : シート上のauth(number)
-        client ->> client : ユーザ情報更新※1
+        server ->> client : ⑤response='noAuth'
+        client ->> client : ユーザ情報更新 ※2
         client ->> browser : 「権限がありません」
       else 凍結中
-        server ->> client : NG(null)
+        server ->> client : ⑥response='freezing'
         client ->> browser : 「アカウント凍結中」
       end
     else 要ログイン
       rect rgba(192, 192, 255, 0.3)
-        server ->> method : 呼び出し
+        server ->> method : ⑦sendPasscode.arg
         activate method
         Note right of method : sendPasscode()
         method ->> method : パスコード生成
         method ->> sheet : trial更新(パスコード)
         method ->> user : w.user.email宛パスコード連絡メール送付
-        method ->> server : 試行可能回数
+        method ->> server : ⑧sendPasscode.rv
         deactivate method
 
-        server ->> client : 試行可能回数
+        server ->> client : ⑨response='passcode'
         deactivate server
 
         client ->> client : 鍵ペア再生成
         client ->> user : ダイアログ
         user ->> client : パスコード
 
-        client ->> server : userId,{CPkey,updated,パスコード}(SP/CS)
+        client ->> server : ⑩checkPasscode.arg
         activate server
+        Note right of server : checkPasscode()
         sheet ->> server : ユーザ情報(全件)
         server ->> server : 処理分岐
-        server ->> method : userId,CPkey,updated,パスコード(平文)
+        server ->> method : ⑪verifyPasscode.arg
         activate method
         Note right of method : verifyPasscode()
         method ->> method : パスコード検証
         alt 検証OK(パスコード一致)
           method ->> sheet : CPkey,updated,trial更新(検証結果)
-          method ->> server : ユーザ情報
-          server ->> client : ユーザ情報
+          method ->> server : ⑫verifyPasscode.rv
+          server ->> client : ⑬response='match'
           client ->> client : ユーザ情報更新、権限有無判断(auth&allow)
           alt 権限あり
             client ->> browser : 要求画面
           else 権限なし
-            client ->> client : ユーザ情報更新※1
+            client ->> client : ユーザ情報更新 ※2
             client ->> browser : 「権限がありません」
           end
         else 検証NG(パスコード不一致)
           method ->> sheet : trial更新(検証結果)
-          method ->> server : 検証NG通知
+          method ->> server : ⑭verifyPasscode.unmatch
           deactivate method
-          server ->> client : 検証NG通知
+          server ->> client : ⑮response='unmatch'
           deactivate server
-          client ->> client : 試行可能回数--
+          client ->> client : 試行可能回数を-1
           client ->> browser : エラーメッセージ
         end
       end
@@ -107,12 +109,21 @@ sequenceDiagram
   deactivate client
 ```
 
-- ※1 : 権限が無いのにサーバまで問合せが来るのは、クライアント側の権限情報が誤っている可能性があるため、念のため更新する。
-- ①ログイン要否判断：いかのいずれかの場合、ログインが必要
+- ※1 : パスコード要否判断：いかのいずれかの場合、パスコードが必要
+  - 新規ユーザ登録
   - パスコード生成からログインまでの猶予時間を過ぎている
   - クライアント側ログイン(CPkey)有効期限切れ
   - 引数のCPkeyがシート上のCPkeyと不一致
+- ※2 : 権限が無いのにサーバまで問合せが来るのは、クライアント側の権限情報が誤っている可能性があるため、念のため更新する。
 
+<iframe width="100%" height="500px" src="changeScreen.html"></iframe>
+<!--
+原本(Google Spread)
+MyDrive > fy2024 > 2024mmdd_camp2024 > camp2024.gsheet > changeScreenシート
+https://docs.google.com/spreadsheets/d/1wizrYCTnFbRpi38gJ3ZIdXtC3lV7NfEcQGkuj6-E0Jk/edit#gid=0
+-->
+
+<!--
 ## typedef
 
 | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
@@ -146,3 +157,4 @@ sequenceDiagram
 - mem : authMenuインスタンス変数(メンバ)
 - I/O : authServer -> authMenuへ送られるオブジェクト
 - sht : シート
+-->

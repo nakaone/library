@@ -1,0 +1,324 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<!--
+原本(Google Spread)
+MyDrive > fy2024 > 2024mmdd_camp2024 > camp2024.gsheet > changeScreenシート
+https://docs.google.com/spreadsheets/d/1wizrYCTnFbRpi38gJ3ZIdXtC3lV7NfEcQGkuj6-E0Jk/edit#gid=0
+
+※データの修正は上記シートに対して行い、結果を`const g = 〜`に転記すること。
+-->
+<title>changeScreen</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--link rel="stylesheet" href="style.css"-->
+<style type="text/css">
+th, .th, td, .td {
+  margin: 0.2rem;
+  padding: 0.2rem;
+}
+th, .th {
+  background-color: #888;
+  color: white;
+}
+td, .td {
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+.i01 {padding-left: 0rem;}
+.i02 {padding-left: 1.5rem;}
+.i03 {padding-left: 3.0rem;}
+.i04 {padding-left: 4.5rem;}
+.i05 {padding-left: 6.0rem;}
+</style>
+<!--::CDN::-->
+<!--script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.4.0/alasql.min.js" type="text/javascript"></script-->
+</head>
+<body>
+<div name="select"></div>
+<table>
+  <thead>
+    <tr>
+      <th>No</th>
+      <th>メンバ名</th>
+      <th>データ型</th>
+      <th>内容</th>
+      <th>暗号化</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+</body>
+<script type="text/javascript">
+const g = {
+  opt:[
+    {col:"a00" ,label:'全件'},
+    {col:"a01" ,label:'①changeScreen.arg'},
+    {col:"a02" ,label:'②getUserInfo.arg'},
+    {col:"a03" ,label:'③getUserInfo.rv'},
+    {col:"a04" ,label:'④changeScreen.hasAuth'},
+    {col:"a05" ,label:'⑤changeScreen.noAuth'},
+    {col:"a06" ,label:'⑥changeScreen.freezing'},
+    {col:"a07" ,label:'⑦sendPasscode.arg'},
+    {col:"a08" ,label:'⑧sendPasscode.rv'},
+    {col:"a09" ,label:'⑨changeScreen.passcode'},
+    {col:"a10" ,label:'⑩checkPasscode.arg'},
+    {col:"a11" ,label:'⑪verifyPasscode.arg'},
+    {col:"a12" ,label:'⑫verifyPasscode.match'},
+    {col:"a13" ,label:'⑬checkPasscode.match'},
+    {col:"a14" ,label:'⑭verifyPasscode.unmatch'},
+    {col:"a15" ,label:'⑮checkPasscode.unmatch'},
+  ],
+  type:{P:'plain',J:'JSON',E:'暗号化(署名なし)',S:'暗号化(署名あり)'},
+  data: [
+    {"no":1,"lv":1,"name":"param","type":"—","note":"","a01":"—","a02":"—","a03":null,"a04":null,"a05":null,"a06":null,"a07":"—","a08":null,"a09":null,"a10":"—","a11":"—","a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":2,"lv":2,"name":"userId","type":"number","note":"ユーザID","a01":"J","a02":"P","a03":null,"a04":null,"a05":null,"a06":null,"a07":"P","a08":null,"a09":null,"a10":"P","a11":"P","a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":3,"lv":2,"name":"arg","type":"Object","note":"","a01":"J","a02":"P","a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":"S","a11":"P","a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":4,"lv":3,"name":"email","type":"string","note":"メールアドレス","a01":"J","a02":"P","a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":5,"lv":3,"name":"CPkey","type":"string","note":"ユーザ公開鍵","a01":"J","a02":"P","a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":"S","a11":"P","a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":6,"lv":3,"name":"updated","type":"string","note":"ユーザ公開鍵更新日時","a01":"J","a02":"P","a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":"S","a11":"P","a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":7,"lv":3,"name":"allow","type":"number","note":"メニュー開示範囲","a01":"J","a02":null,"a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":8,"lv":3,"name":"createIfNotExist","type":"boolean","note":"true:メアドが未登録なら作成","a01":null,"a02":"P","a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":9,"lv":3,"name":"updateCPkey","type":"boolean","note":"true:渡されたCPkeyがシートと異なる場合は更新","a01":null,"a02":"P","a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":10,"lv":3,"name":"returnTrialStatus","type":"boolean","note":"true:現在のログイン試行の状態を返す","a01":null,"a02":"P","a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":11,"lv":3,"name":"passcode","type":"number","note":"入力されたパスコード","a01":null,"a02":null,"a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":"S","a11":"P","a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":12,"lv":1,"name":"returns","type":"—","note":"","a01":null,"a02":null,"a03":"—","a04":"—","a05":"—","a06":"—","a07":null,"a08":"—","a09":"—","a10":null,"a11":null,"a12":"—","a13":"—","a14":"—","a15":"—"},
+    {"no":13,"lv":2,"name":"response","type":"string","note":"処理結果","a01":null,"a02":null,"a03":"P","a04":"E","a05":"E","a06":"E","a07":null,"a08":"P","a09":"E","a10":null,"a11":null,"a12":"P","a13":"S","a14":"P","a15":"S"},
+    {"no":14,"lv":2,"name":"data","type":"Object","note":"ユーザ情報","a01":null,"a02":null,"a03":"P","a04":"E","a05":"E","a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":"S","a14":null,"a15":null},
+    {"no":15,"lv":3,"name":"userId","type":"number","note":"シート上のuserId欄の値","a01":null,"a02":null,"a03":"P","a04":"E","a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":"S","a14":null,"a15":null},
+    {"no":16,"lv":3,"name":"created","type":"string","note":"シート上のcreated欄の値","a01":null,"a02":null,"a03":"P","a04":"E","a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":"S","a14":null,"a15":null},
+    {"no":17,"lv":3,"name":"email","type":"string","note":"シート上のemail欄の値","a01":null,"a02":null,"a03":"P","a04":"E","a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":"S","a14":null,"a15":null},
+    {"no":18,"lv":3,"name":"auth","type":"number","note":"シート上のauth欄の値","a01":null,"a02":null,"a03":"P","a04":"E","a05":"E","a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":"S","a14":null,"a15":null},
+    {"no":19,"lv":3,"name":"CPkey","type":"string","note":"シート上のCPkey欄の値","a01":null,"a02":null,"a03":"P","a04":"E","a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":"S","a14":null,"a15":null},
+    {"no":20,"lv":3,"name":"updated","type":"string","note":"シート上のupdated欄の値","a01":null,"a02":null,"a03":"P","a04":"E","a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":"S","a14":null,"a15":null},
+    {"no":21,"lv":3,"name":"trial","type":"string","note":"シート上のtrial欄に保存されたJSON文字列","a01":null,"a02":null,"a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":22,"lv":4,"name":"passcode","type":"number","note":"最新のパスコード","a01":null,"a02":null,"a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":23,"lv":4,"name":"created","type":"number","note":"パスコード生成日時(UNIX時刻)","a01":null,"a02":null,"a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":24,"lv":4,"name":"log","type":"Object[]","note":"試行の記録。常に添字0が最新","a01":null,"a02":null,"a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":25,"lv":5,"name":"timestamp","type":"number","note":"試行日時(UNIX時刻)","a01":null,"a02":null,"a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":26,"lv":5,"name":"enterd","type":"number","note":"入力されたパスコード","a01":null,"a02":null,"a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":27,"lv":5,"name":"status","type":"number","note":"失敗した原因","a01":null,"a02":null,"a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":28,"lv":5,"name":"result","type":"number","note":"0:成功、1〜n:連続n回目の失敗","a01":null,"a02":null,"a03":null,"a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":29,"lv":3,"name":"その他","type":"any","note":"上記以外のシート上の項目","a01":null,"a02":null,"a03":"P","a04":"E","a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":30,"lv":2,"name":"SPkey","type":"string","note":"サーバ側公開鍵","a01":null,"a02":null,"a03":null,"a04":"E","a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":"S","a14":null,"a15":null},
+    {"no":31,"lv":2,"name":"trial","type":"Object[]","note":"シートtrial欄(JSON)のオブジェクト。内容はNo.21と同じ","a01":null,"a02":null,"a03":"P","a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":32,"lv":2,"name":"isExist","type":"number","note":"既存メアドなら0、新規登録なら採番したユーザID","a01":null,"a02":null,"a03":"P","a04":null,"a05":null,"a06":null,"a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":33,"lv":2,"name":"status","type":"number","note":"ログイン試行の状態","a01":null,"a02":null,"a03":"P","a04":null,"a05":null,"a06":"E","a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":34,"lv":2,"name":"numberOfLoginAttempts","type":"number","note":"残試行可能回数","a01":null,"a02":null,"a03":"P","a04":null,"a05":null,"a06":"E","a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":"S"},
+    {"no":35,"lv":2,"name":"loginGraceTime","type":"number","note":"パスコード生成からログインまでの猶予時間(ミリ秒)","a01":null,"a02":null,"a03":"P","a04":null,"a05":null,"a06":"E","a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":36,"lv":2,"name":"remainRetryInterval","type":"number","note":"再挑戦可能になるまでの時間(ミリ秒)","a01":null,"a02":null,"a03":"P","a04":null,"a05":null,"a06":"E","a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+    {"no":37,"lv":2,"name":"passcodeDigits","type":"number","note":"パスコードの桁数","a01":null,"a02":null,"a03":"P","a04":null,"a05":null,"a06":"E","a07":null,"a08":null,"a09":null,"a10":null,"a11":null,"a12":null,"a13":null,"a14":null,"a15":null},
+  ]
+};
+
+function drawTable(){
+  const v = {whois:'drawTable',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // 選択内容の取得
+    v.col = document.querySelector('select').value;
+    console.log(v.col)
+
+    v.step = 2; // 行単位に追加
+    document.querySelector('tbody').innerHTML = '';
+    v.tbody = [];
+    for( v.i=0 ; v.i<g.data.length ; v.i++ ){
+      if( v.col !== 'a00' && g.data[v.i][v.col] === null ) continue;
+      v.tbody.push({tag:'tr',children:[
+        {tag:'td',text:g.data[v.i].no,style:{textAlign:'right'}},
+        {tag:'td',text:g.data[v.i].name,attr:{class:'i0'+g.data[v.i].lv}},
+        {tag:'td',text:g.data[v.i].type},
+        {tag:'td',text:g.data[v.i].note},
+        {tag:'td',text:(g.type[g.data[v.i][v.col]] || '—')},
+      ]})
+    }
+    createElement(v.tbody,'tbody');
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+
+
+function createElement(arg,parent=null){
+  const v = {whois:'BasePage.createElement',rv:[],step:0};
+  //console.log(v.whois+' start.',arg);
+  try {
+    v.step = 1.1; // 引数を強制的に配列化
+    v.isArr = Array.isArray(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
+    if( !v.isArr ) arg = [arg];
+    v.step = 1.2; // 親要素の特定
+    if( parent !== null ){
+      v.parent = typeof parent === 'string' ? document.querySelector(parent) : parent;
+    }
+
+
+    for( v.i = 0 ; v.i<arg.length ; v.i++ ){
+      v.step = 2; // 既定値の設定
+      v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
+      Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
+
+      v.step = 3; // HTMLElementを生成、v.objとする
+      v.obj = document.createElement(v.def.tag);
+
+      v.step = 4; // HTMLElementの属性を定義
+      for( v.j in v.def.attr ){
+        v.obj.setAttribute(v.j,v.x = v.def.attr[v.j]);
+      }
+
+      v.step = 5; // 論理属性を定義(ex.checked)
+      for( v.j in v.def.logical ){
+        if( v.def.logical[v.j] ){
+          v.obj.setAttribute(v.j,v.def.logical[v.j]);
+        }
+      }
+
+      v.step = 6; // style属性の定義
+      for( v.j in v.def.style ){
+        if( v.j.match(/^\-\-/) ){ // CSS変数
+          v.obj.style.setProperty(v.j,v.def.style[v.j]);
+        } else {
+          v.obj.style[v.j] = v.def.style[v.j];
+        }
+      }
+
+      v.step = 7; // イベントの定義
+      for( v.j in v.def.event ){
+        v.obj.addEventListener(v.j,v.def.event[v.j],false);
+      }
+
+      v.step = 8; // 内部文字列(html or text)
+      if( v.def.html.length > 0 ){
+        v.obj.innerHTML = v.def.html;
+      } else {
+        // textareaの場合はvalueに、それ以外はinnerTextに内部文字列(text)をセット
+        v.obj[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
+      }
+
+      v.step = 9; // 子要素の追加(parentは指定しない)
+      for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
+        v.obj.appendChild(this.createElement(v.def.children[v.j]));
+      }
+
+      v.step = 10; // 戻り値への登録
+      v.rv.push(v.obj);
+
+      v.step = 11; // 親要素への追加
+      if( parent !== null ){
+        v.parent.appendChild(v.obj);
+      }
+
+      v.step = 12; // メンバとして、また切替画面として登録
+      if( v.def.name.length > 0 ){
+        this[v.def.name] = v.obj;
+        this.screenList[v.def.name] = v.obj;
+      }
+    }
+
+    v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
+    v.rv = v.isArr ? v.rv : v.rv[0];
+    //console.log(v.whois+' normal end.\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+
+function stringify(variable,opt={addType:false}){
+  const v = {whois:'stringify',rv:null,step:0};
+  const conv = arg => {
+    const w = {type:whichType(arg)};
+    w.pre = opt.addType ? `[${w.type}]` : '';
+    switch( w.type ){
+      case 'Function': case 'Arrow': case 'Symbol':
+        w.rv = w.pre + arg.toString(); break;
+      case 'BigInt':
+        w.rv = w.pre + parseInt(arg); break;
+      case 'Undefined':
+        w.rv = w.pre + 'undefined'; break;
+      case 'Object':
+        w.rv = {};
+        for( w.i in arg ){
+          // 自分自身(stringify)は出力対象外
+          if( w.i === 'stringify' ) continue;
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      case 'Array':
+        w.rv = [];
+        for( w.i=0 ; w.i<arg.length ; w.i++ ){
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      default:
+        w.rv = w.pre + arg;
+    }
+    return w.rv;
+  };
+  //console.log(`${v.whois} start.\nvariable=${variable}\nopt=${JSON.stringify(opt)}`);
+  try {
+
+    v.step = 1; // 事前準備
+    if( typeof opt === 'boolean' ) opt={addType:opt};
+
+    v.step = 2; // 終了処理
+    //console.log(`${v.whois} normal end.`);
+    return JSON.stringify(conv(variable));
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
+  }
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // プルダウンの設定
+    v.select = {tag:'select',event:{'change':()=>drawTable()},children:[]};
+    for( v.i=0 ; v.i<g.opt.length ; v.i++ ){
+      v.select.children.push({
+        tag: 'option',
+        attr: {value:g.opt[v.i].col},
+        text: g.opt[v.i].label,
+      });
+    }
+    v.r = createElement(v.select,'[name="select"]');
+    console.log(v.r);
+    drawTable();
+    
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+</html>
+  
