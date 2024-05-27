@@ -99,10 +99,16 @@ w.func.preProcess = function(){
  * @param {string} arg.email=null - e-mail。新規ユーザ登録時のみ使用の想定
  * @param {string} arg.CPkey=null - 要求があったユーザの公開鍵
  * @param {string} arg.updated=null - CPkey生成・更新日時文字列
+ * @param {number} arg.allow - 開示範囲フラグ
  * @param {boolean} arg.createIfNotExist=false - true:メアドが未登録なら作成
  * @param {boolean} arg.updateCPkey=false - true:渡されたCPkeyがシートと異なる場合は更新
  * @param {boolean} arg.returnTrialStatus=true - true:現在のログイン試行の状態を返す
  * @returns {object} 以下のメンバを持つオブジェクト
+ * - response {string} 処理結果
+ *   - 'hasAuth'  : 権限あり
+ *   - 'noAuth'   : 権限なし
+ *   - 'freezing' : 凍結中
+ *   - 'passcode' : パスコードの入力が必要
  * - data=null {Object} シート上のユーザ情報オブジェクト(除、trial欄)
  * - trial={} {Object} オブジェクト化したtrial欄(JSON)
  * - isExist=0 {number} - 既存メアドなら0、新規登録したなら新規採番したユーザID
@@ -123,7 +129,7 @@ w.func.preProcess = function(){
  */
 w.func.getUserInfo = function(userId=null,arg={}){
   const v = {whois:w.whois+'.getUserInfo',step:0,
-    rv:{data:null,isExist:0}};
+    rv:{response:null,data:null,isExist:0}};
   console.log(`${v.whois} start.\narg(${typeof arg})=${stringify(arg)}`);
   try {
 
@@ -199,7 +205,8 @@ w.func.getUserInfo = function(userId=null,arg={}){
       v.step = 2.5; // 存否フラグを更新
       v.rv.isExist = v.rv.data.userId;
     } else {  // 該当無しand作成指示無し
-      return v.rv;
+      //return v.rv;
+      throw new Error('No matching user found');
     }
 
     // ---------------------------------------------
@@ -238,17 +245,20 @@ w.func.getUserInfo = function(userId=null,arg={}){
     if( ( v.trial.hasOwnProperty('created')
       && w.prop.loginGraceTime + v.trial.created) > Date.now() ){
       v.rv.status += 1;
+      v.rv.response = 'passcode';
     }
 
     v.step = 3.4; // ②クライアント側ログイン(CPkey)有効期限切れ
     if( String(v.rv.data.updated).length > 0
       && (new Date(v.rv.data.updated).getTime() + w.prop.userLoginLifeTime) < Date.now() ){
       v.rv.status += 2;
+      v.rv.response = 'passcode';
     }
 
     v.step = 3.5; // ③引数のCPkeyがシート上のCPkeyと不一致
     if( v.arg.CPkey && v.arg.CPkey !== v.rv.data.CPkey ){
       v.rv.status += 4;
+      v.rv.response = 'passcode';
     }
 
     if( v.trial.log.length > 0 ){
@@ -264,14 +274,19 @@ w.func.getUserInfo = function(userId=null,arg={}){
         && (v.log.timestamp + w.prop.loginRetryInterval) > Date.now()
       ){
         v.rv.status += 8;
+        v.rv.response = 'freezing';
         // 再挑戦可能になるまでの時間を計算(ミリ秒)
         v.rv.remainRetryInterval = v.log.timestamp
           + w.prop.loginRetryInterval - Date.now();  
       }
     }
 
+    v.step = 3.8; // 上記に引っかからず、auth&allow>0なら権限あり
+    v.rv.response = (v.arg.allow & v.rv.data.auth) > 0 ? 'hasAuth' : 'noAuth';
 
+    // ---------------------------------------------
     v.step = 4; // 終了処理
+    // ---------------------------------------------
     console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
     return v.rv;
 
@@ -393,48 +408,41 @@ w.func.verifyPasscode = function(arg){
     w.step = 2; // 画面切替
     if( w.arg.func === 'changeScreen' ){
       w.step = 2.1; // ユーザ情報を取得
-      w.rv = w.func.getUserInfo(w.userId,w.arg);
-      if( w.rv instanceof Error ) throw w.rv;
+      w.r = w.func.getUserInfo(w.userId,w.arg);
+      if( w.r instanceof Error ) throw w.r;
+      console.log('l.467 w.r='+stringify(w.r))
 
-      w.step = 2.2; // 切替先画面の表示権限の確認
-      if( (w.arg.allow & w.rv.data.auth) > 0 ){
-        if( w.rv.status === 0 ){
-          w.step = 2.21; // 権限ありでstatusも問題なし ⇒ 該当ユーザ情報
-          w.rv.data.SPkey = w.prop.SPkey;
-        } else if( (w.rv.status & 8) > 0 ){
-          w.step = 2.22; // 権限ありだが凍結中 ⇒ 再挑戦可能になるまでの時間(ミリ秒)
-          w.rv = w.rv.remainRetryInterval;
-        } else {
-          w.step = 2.23; // 権限ありだが要ログイン
-          //w.rv = w.func.sendPasscode();
-        }
-      } else {
-        w.step = 2.24; // 権限なし ⇒ シート上のauth
-        w.rv = w.rv.data.auth;
+      w.step = 2.2; // 戻り値の設定
+      switch(w.r.response){
+        case 'hasAuth':
+          w.rv = {
+            response: w.r.response,
+            data: w.r.data,
+            SPkey: w.prop.SPkey,
+          };
+          break;
+        case 'noAuth':
+          w.rv = {
+            response: w.r.response,
+            data: {auth:w.r.data.auth},
+          };
+          break;
+        case 'freezing':
+          w.rv = {
+            response: w.r.response,
+            status: w.r.status,
+            numberOfLoginAttempts: w.r.numberOfLoginAttempts,
+            loginGraceTime: w.r.loginGraceTime,
+            remainRetryInterval: w.r.remainRetryInterval,
+            passcodeDigits: w.r.passcodeDigits,
+          };
+          break;
+        case 'passcode':
+          w.rv = {response:w.r.response};
+          break;
+        default: w.rv = null;
       }
     }
-
-    /*
-    w.step = 2; // userId未設定 ⇒ 新規ユーザ登録
-    if( w.userId === null ){
-      w.rv = w.func.getUserInfo(null,Object.assign({
-        createIfNotExist: true, // メアドが未登録なら作成
-      },w.arg));
-      if( w.rv instanceof Error ) throw w.rv;
-    }
-
-    w.step = 3; // arg未設定 ⇒ 応募情報(自情報)取得
-    if( w.userId !== null && (w.argType === 'null' || w.argType === 'JSON') ){
-      w.rv = w.func.getUserInfo(w.userId,w.arg);
-      if( w.rv instanceof Error ) throw w.rv;
-    }
-
-    w.step = 4; // パスコード検証
-    if( w.userId !== null && w.argType === 'encrypted' ){
-      w.rv = w.func.verifyPasscode(w.userId,w.arg);
-      if( w.rv instanceof Error ) throw w.rv;
-    }
-    */
 
     w.step = 5; // 終了処理
     console.log(`${w.whois} normal end.\nw.rv=${stringify(w.rv)}`);

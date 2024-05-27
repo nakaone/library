@@ -368,10 +368,10 @@ td, .td {
 const g = {}; // グローバル変数格納用
 class authMenu {
 /** 
- * @constructor
- * @param {Object} arg 
- * @returns {authMenu|Error}
- */
+  * @constructor
+  * @param {Object} arg 
+  * @returns {authMenu|Error}
+  */
 constructor(arg={}){
   const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
   console.log(`${v.whois} start.\narg=${stringify(arg)}`);
@@ -419,9 +419,9 @@ constructor(arg={}){
   }
 }
 /** 適宜認証を行った上で画面を切り替える
- * @param {string} screenName=null - 切替先の画面名
- * @returns {void}
- */
+  * @param {string} screenName=null - 切替先の画面名
+  * @returns {void}
+  */
 async changeScreen(screenName=null){
   const v = {whois:this.constructor.name+'.changeScreen',rv:null,step:0};
   console.log(`${v.whois} start.\nscreenName(${typeof screenName})="${screenName}"`);
@@ -500,6 +500,115 @@ async changeScreen(screenName=null){
       default: throw new Error('Invalid response');
     }
 
+    /*
+    v.step = 5; // 権限ありでstatusも問題なし ⇒ 該当ユーザ情報の更新
+    if( whichType(v.r,'Object') ){
+      v.r = this.storeUserInfo(v.r.data);
+      if( v.r instanceof Error ) throw v.r;
+      v.r = changeScreen(screenName);
+      if( v.r instanceof Error ) throw v.r;
+    }
+
+    v.step = 6; // 権限が無い ⇒ エラーを表示して終了
+    if( typeof v.r === 'number' ){
+      alert(`指定画面(${screenName})の表示権限がありません。`);
+      console.log(`${v.whois}: no authority (step ${v.step}).`
+        +`\nremainRetryInterval=${v.r}`);
+      return v.rv;
+    }
+
+
+
+
+
+    // 以降【権限あり and (CP不一致 or CP無効) ⇒ パスコード入力】
+    v.step = 7.1; // 鍵ペア再生成
+    this.user.passphrase = null;
+    v.r = this.storeUserInfo(v.r.data);
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 7.21; // パスコード通知メールの発行要求
+    //【sendPasscodeの引数・戻り値】
+    // @param {Object} arg
+    // @param {number} arg.userId - ユーザID
+    // @param {string} arg.CPkey - 要求があったユーザの公開鍵
+    // @param {string} arg.updated - CPkey生成・更新日時文字列
+    // @returns {object} 以下のメンバを持つオブジェクト
+    // - result {number}
+    //   - 0 : 成功(パスコード通知メールを送信)
+    //   - 1 : パスコード生成からログインまでの猶予時間を過ぎている
+    //   - 2 : 凍結中(前回ログイン失敗から一定時間経過していない)
+    // - data=null {Object} シート上のユーザ情報オブジェクト(除、trial)
+    // - SPkey=null {Object} サーバ側公開鍵
+    // - loginGraceTime=900,000(15分) {number}<br>
+    //   パスコード生成からログインまでの猶予時間(ミリ秒)
+    // - remainRetryInterval {number} 再挑戦可能になるまでの時間(ミリ秒)
+    // - passcodeDigits=6 {number} : パスコードの桁数
+    v.r = await this.doGAS('sendPasscode',{
+      userId: this.user.userId,
+      CPkey: this.user.CPkey,
+      updated: this.user.updated,
+    });
+    if( v.r instanceof Error ) throw v.r;
+    v.step = 7.22; // エラーメッセージの表示
+    if( v.r.result > 0 ){
+      switch(v.r.result){
+        case 1: v.msg = 'パスコード生成から入力までの時間が長すぎ、'
+          + '\n現在のパスコードが無効になりました。'
+          + '\n再度メニューを選択すれば、パスコードが再発行されます。'
+          + `\n再発行後、${Math.ceil(v.r.loginGraceTime/60000)}分以内にパスコードを入力してください。`;
+          break;
+        case 2: v.msg = '前回のログイン連続失敗から所定時間を経過していません。'
+          + `約${Math.ceil(v.r.remainRetryInterval/60000)}分後、再度ログインしてください。`;
+          break;
+      }
+      console.log(`${v.whois}: rejected by sendPasscode (step ${v.step}).`);
+      return v.rv;
+    }
+    v.step = 7.23; // ユーザ情報更新
+    v.a = this.storeUserInfo({email:v.email});
+    if( v.a instanceof Error ) throw v.a;
+
+    v.step = 7.3; // パスコード入力
+    v.passcode = window.prompt(`メールに記載されたパスコードを入力してください`
+      + `(数値${v.r.passcodeDigits}桁)`
+      + `\nパスコードを再発行する場合は"-1"を入力してください。`);
+    if( v.passcode === null ){
+      v.step = 7.31; // 入力キャンセルなら即終了
+      console.log(`${v.whois}: passcode enter canceled (step ${v.step}).`);
+      return v.rv;
+    } else {
+      if( isNaN(v.passcode) ){
+        v.step = 7.32; // パスコードの形式チェック
+        alert('パスコードの形式が不適切です');
+        console.log(`${v.whois}: invalid passcode (step ${v.step}).`);
+        return v.rv;
+      } else {
+        v.step = 7.33; // パスコードの数値化
+        v.passcode = Number(v.passcode);
+        if( v.passcode < 0 ){
+          v.step = 7.34; // 再発行要求
+          // パスコード再発行はパスコード入力ダイアログに負の数を入力し、
+          // changeScreenからsendPasscodeを再度呼び出すことで行う
+          v.r = this.changeScreen(screenName);
+          if( v.r instanceof Error ) throw v.r;
+          return v.r;
+        }
+      }
+    }
+
+    v.step = 7.41; // パスコード検証要求
+    //【verifyPasscodeの引数・戻り値】
+    v.encrypt = cryptico.encrypt(
+      ('0'.repeat(v.r.passcodeDigits) + String(v.passcode)).slice(-v.rpasscodeDigits),
+      this.SPkey,this.CSkey);
+    v.r = await this.doGAS('verifyPasscode',{
+      userId: this.user.userId,
+      passcode: v.encrypt,
+    });
+    if( v.r instanceof Error ) throw v.r;
+    */
+
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
@@ -507,12 +616,12 @@ async changeScreen(screenName=null){
   }
 }
 /** 親要素を走査してナビゲーションを作成
- * @param {HTMLElement} wrapper - body等の親要素。
- * @param {HTMLElement} navi - nav等のナビゲーション領域
- * @param {number} depth=0 - 再帰呼出の階層
- * @param {boolean} addMenu=true - 再帰呼出で呼出元(親要素)がメニュー化対象ならtrue
- * @returns {null|Error}
- */
+  * @param {HTMLElement} wrapper - body等の親要素。
+  * @param {HTMLElement} navi - nav等のナビゲーション領域
+  * @param {number} depth=0 - 再帰呼出の階層
+  * @param {boolean} addMenu=true - 再帰呼出で呼出元(親要素)がメニュー化対象ならtrue
+  * @returns {null|Error}
+  */
 genNavi(wrapper=this.wrapper,navi=this.navi,depth=0,addMenu=true){
   const v = {whois:this.constructor.name+'.genNavi',rv:null,step:0,now:Date.now()};
   console.log(`${v.whois} start. depth=${depth}`);
@@ -640,13 +749,13 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0,addMenu=true){
   }
 }
 /** data-menu属性の文字列をオブジェクトに変換
- * authMenu専用として、以下の制限は許容する
- * - メンバ名は英小文字に限定
- * - カンマは区切記号のみで、id,label,func,hrefの値(文字列)内には不存在
- * 
- * @param {string} arg - data-menuにセットされた文字列
- * @returns {Object|null|Error} 引数がnullまたは空文字列ならnullを返す
- */
+  * authMenu専用として、以下の制限は許容する
+  * - メンバ名は英小文字に限定
+  * - カンマは区切記号のみで、id,label,func,hrefの値(文字列)内には不存在
+  * 
+  * @param {string} arg - data-menuにセットされた文字列
+  * @returns {Object|null|Error} 引数がnullまたは空文字列ならnullを返す
+  */
 #objectize(arg){
   const v = {whois:this.constructor.name+'.objectize',rv:{},step:0};
   console.log(`${v.whois} start.`);
@@ -697,48 +806,48 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0,addMenu=true){
   }
 }
 /** setProperties: constructorの引数と既定値からthisの値を設定
- * 
- * @param {Object} arg - constructorに渡された引数オブジェクト
- * @returns {null|Error}
- * 
- * @desc
- * 
- * ### <a id="authMenu_memberList">authMenuクラスメンバ一覧</a>
- * 
- * 1. 「**太字**」はインスタンス生成時、必須指定項目
- * 1. 「【*内部*】」は指定不要の項目(constructor他で自動的に設定されるメンバ)
- * 1. その他はconstructorの引数で指定可、指定が無い項目は既定値をセット
- * 
- * - wrapper='.authMenu[name="wrapper"] {string|HTMLElement}<br>
- *   メニュー全体を囲む要素。body不可
- * - icon {HTMLElement} : 【*内部*】メニューアイコンとなるHTML要素
- * - navi {HTMLElement} : 【*内部*】ナビ領域となるHTML要素
- * - back {HTMLElement} : 【*内部*】ナビ領域の背景となるHTML要素
- * - userId {number} : ユーザID。this.storeUserInfoで設定
- * - auth=1 {number} : ユーザ(クライアント)の権限
- * - userIdSelector='[name="userId"]' {string}<br>
- *   URLクエリ文字列で与えられたuserIdを保持する要素のCSSセレクタ
- * - publicAuth=1 {number}<br>
- *   ユーザIDの特定で権限が昇格する場合、変更前の権限(一般公開用権限)
- * - memberAuth=2 {number}<br>
- *   ユーザIDの特定で権限が昇格する場合、変更後の権限(参加者用権限)
- * - allow=2**32-1 {number}<br>
- *   data-menuのauth(開示範囲)の既定値
- * - func={} {Object.<string,function>}<br>
- *   メニューから呼び出される関数。ラベルはdata-menu属性の`func`に対応させる。
- * - **home** {string|Object.<number,string>}<br>
- *   文字列の場合、ホーム画面とするdata-menu属性のid。<br>
- *   ユーザ権限別にホームを設定するなら`{auth:スクリーン名(.screen[name])}`形式のオブジェクトを指定。<br>
- *   例(auth=1:一般公開,2:参加者,4:スタッフ)⇒`{1:'実施要領',2:'参加者パス',4:'スタッフの手引き'}`
- * - initialSubMenu=true {boolean}<br>
- *   サブメニューの初期状態。true:開いた状態、false:閉じた状態
- * - css {string} : authMenu専用CSS。書き換えする場合、全文指定すること(一部変更は不可)
- * - RSAkeyLength=1024 {number} : 鍵ペアのキー長
- * - passPhraseLength=16 {number} : 鍵ペア生成の際のパスフレーズ長
- * - user={} {object} ユーザ情報オブジェクト。詳細はstoreUserInfo()で設定
- * - screenAttr={} {Object.<string, object>}<br>
- *   メニューに登録した画面名とdata-menu属性(オブジェクト)の対応
- */
+  * 
+  * @param {Object} arg - constructorに渡された引数オブジェクト
+  * @returns {null|Error}
+  * 
+  * @desc
+  * 
+  * ### <a id="authMenu_memberList">authMenuクラスメンバ一覧</a>
+  * 
+  * 1. 「**太字**」はインスタンス生成時、必須指定項目
+  * 1. 「【*内部*】」は指定不要の項目(constructor他で自動的に設定されるメンバ)
+  * 1. その他はconstructorの引数で指定可、指定が無い項目は既定値をセット
+  * 
+  * - wrapper='.authMenu[name="wrapper"] {string|HTMLElement}<br>
+  *   メニュー全体を囲む要素。body不可
+  * - icon {HTMLElement} : 【*内部*】メニューアイコンとなるHTML要素
+  * - navi {HTMLElement} : 【*内部*】ナビ領域となるHTML要素
+  * - back {HTMLElement} : 【*内部*】ナビ領域の背景となるHTML要素
+  * - userId {number} : ユーザID。this.storeUserInfoで設定
+  * - auth=1 {number} : ユーザ(クライアント)の権限
+  * - userIdSelector='[name="userId"]' {string}<br>
+  *   URLクエリ文字列で与えられたuserIdを保持する要素のCSSセレクタ
+  * - publicAuth=1 {number}<br>
+  *   ユーザIDの特定で権限が昇格する場合、変更前の権限(一般公開用権限)
+  * - memberAuth=2 {number}<br>
+  *   ユーザIDの特定で権限が昇格する場合、変更後の権限(参加者用権限)
+  * - allow=2**32-1 {number}<br>
+  *   data-menuのauth(開示範囲)の既定値
+  * - func={} {Object.<string,function>}<br>
+  *   メニューから呼び出される関数。ラベルはdata-menu属性の`func`に対応させる。
+  * - **home** {string|Object.<number,string>}<br>
+  *   文字列の場合、ホーム画面とするdata-menu属性のid。<br>
+  *   ユーザ権限別にホームを設定するなら`{auth:スクリーン名(.screen[name])}`形式のオブジェクトを指定。<br>
+  *   例(auth=1:一般公開,2:参加者,4:スタッフ)⇒`{1:'実施要領',2:'参加者パス',4:'スタッフの手引き'}`
+  * - initialSubMenu=true {boolean}<br>
+  *   サブメニューの初期状態。true:開いた状態、false:閉じた状態
+  * - css {string} : authMenu専用CSS。書き換えする場合、全文指定すること(一部変更は不可)
+  * - RSAkeyLength=1024 {number} : 鍵ペアのキー長
+  * - passPhraseLength=16 {number} : 鍵ペア生成の際のパスフレーズ長
+  * - user={} {object} ユーザ情報オブジェクト。詳細はstoreUserInfo()で設定
+  * - screenAttr={} {Object.<string, object>}<br>
+  *   メニューに登録した画面名とdata-menu属性(オブジェクト)の対応
+  */
 #setProperties(arg){
   const v = {whois:this.constructor.name+'.setProperties',rv:null,step:0};
   console.log(`${v.whois} start.`);
@@ -931,78 +1040,78 @@ genNavi(wrapper=this.wrapper,navi=this.navi,depth=0,addMenu=true){
   }
 }
 /** storeUserInfo: インスタンス変数やstorageに保存したユーザ情報を更新
- * 
- * 
- * 1. 本関数の引数オブジェクト
- * 1. インスタンス変数
- * 1. sessionStorage
- * 1. localStorage
- * 1. HTMLに埋め込まれたユーザ情報
- * 
- * ユーザ情報を取得し、①>②>③>④>⑤の優先順位で最新の情報を特定、各々の内容を更新する。
- * 
- * | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
- * | :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
- * | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
- * | created | string | ユーザID新規登録時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
- * | email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
- * | auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
- * | passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | ◎ | × | × |
- * | CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
- * | CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
- * | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
- * | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
- * | isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
- * | trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
- * 
- * - インスタンス変数には関数実行結果を除く全項目を持たせ、他の格納場所のマスタとして使用する
- * - sessionStorageはインスタンス変数のバックアップとして、保持可能な全項目を持たせる
- * - ユーザ情報に関するインスタンス変数(メンバ)は、他のインスタンス変数(設定項目)と区別するため、
- *   `this.user`オブジェクトに上記メンバを持たせる
- * 
- * 
- * @param {object} arg={} - 特定の値を設定する場合に使用 
- * @returns {void}
- * 
- * @example
- * 
- * **実行結果(例)**
- * 
- * - localStorage : ユーザIDのみ。以下は例。
- *   | Key | Value |
- *   | :-- | :-- |
- *   | authMenu | 123 |
- * - sessionStorage : ユーザID＋ユーザ権限
- *   | Key | Value |
- *   | :-- | :-- |
- *   | authMenu | {"userId":123,"auth":1} |
- * 
- * **HTMLへのユーザIDの埋め込み**
- * 
- * 応募後の登録内容確認メールのように、URLのクエリ文字列でユーザIDが与えられた場合、
- * 以下のようにHTMLにIDが埋め込まれて返される。
- * 
- * 1. クエリ文字列が埋め込まれたURL(末尾の`id=123`)
- *    ```
- *    https://script.google.com/macros/s/AK〜24yz/exec?id=123
- *    ```
- * 2. doGet関数で返すHTMLファイルに予め埋込用の要素を定義
- *    ```
- *    <div style="display:none" name="userId"><?= userId ?></div>
- *    ```
- * 3. 要求時、クエリ文字列を埋め込んだHTMLを返す<br>
- *    ```
- *    function doGet(e){
- *      const template = HtmlService.createTemplateFromFile('index');
- *      template.userId = e.parameter.id;  // 'userId'がHTML上の変数、末尾'id'がクエリ文字列の内容
- *      const htmlOutput = template.evaluate();
- *      htmlOutput.setTitle('camp2024');
- *      return htmlOutput;
- *    }
- *    ```
- * 4. `opt.userIdSelector='div[name="userId"]'`を指定して本関数を実行、HTMLからユーザIDを取得
- * 
- */
+  * 
+  * 
+  * 1. 本関数の引数オブジェクト
+  * 1. インスタンス変数
+  * 1. sessionStorage
+  * 1. localStorage
+  * 1. HTMLに埋め込まれたユーザ情報
+  * 
+  * ユーザ情報を取得し、①>②>③>④>⑤の優先順位で最新の情報を特定、各々の内容を更新する。
+  * 
+  * | 名称 | 属性 | 内容 | loc | ses | mem | I/O | sht |
+  * | :-- | :-- | :-- | :--: | :--: | :--: | :--: | :--: |
+  * | userId | number | (新規採番された)ユーザID | ◎ | ◎ | ◎ | ◎ | ◎ |
+  * | created | string | ユーザID新規登録時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
+  * | email | string | ユーザの連絡先メールアドレス | × | ◎ | ◎ | × | ◎ |
+  * | auth | number | ユーザの権限 | × | ◎ | ◎ | ◎ | ◎ |
+  * | passPhrase | string | クライアント側鍵ペア生成のパスフレーズ | × | ◎ | ◎ | × | × |
+  * | CSkey | object | クライアント側の秘密鍵 | × | × | ◎ | × | × |
+  * | CPkey | string | クライアント側の公開鍵 | × | ◎ | ◎ | × | ◎ |
+  * | updated | string | クライアント側公開鍵生成時刻(日時文字列) | × | ◎ | ◎ | × | ◎ |
+  * | SPkey | string | サーバ側の公開鍵 | × | ◎ | ◎ | ◎ | × |
+  * | isExist | boolean | 新規登録対象メアドが登録済ならtrue | × | × | × | ◎ | × |
+  * | trial | object | ログイン試行関係情報 | × | × | × | ▲ | ◎ |
+  * 
+  * - インスタンス変数には関数実行結果を除く全項目を持たせ、他の格納場所のマスタとして使用する
+  * - sessionStorageはインスタンス変数のバックアップとして、保持可能な全項目を持たせる
+  * - ユーザ情報に関するインスタンス変数(メンバ)は、他のインスタンス変数(設定項目)と区別するため、
+  *   `this.user`オブジェクトに上記メンバを持たせる
+  * 
+  * 
+  * @param {object} arg={} - 特定の値を設定する場合に使用 
+  * @returns {void}
+  * 
+  * @example
+  * 
+  * **実行結果(例)**
+  * 
+  * - localStorage : ユーザIDのみ。以下は例。
+  *   | Key | Value |
+  *   | :-- | :-- |
+  *   | authMenu | 123 |
+  * - sessionStorage : ユーザID＋ユーザ権限
+  *   | Key | Value |
+  *   | :-- | :-- |
+  *   | authMenu | {"userId":123,"auth":1} |
+  * 
+  * **HTMLへのユーザIDの埋め込み**
+  * 
+  * 応募後の登録内容確認メールのように、URLのクエリ文字列でユーザIDが与えられた場合、
+  * 以下のようにHTMLにIDが埋め込まれて返される。
+  * 
+  * 1. クエリ文字列が埋め込まれたURL(末尾の`id=123`)
+  *    ```
+  *    https://script.google.com/macros/s/AK〜24yz/exec?id=123
+  *    ```
+  * 2. doGet関数で返すHTMLファイルに予め埋込用の要素を定義
+  *    ```
+  *    <div style="display:none" name="userId"><?= userId ?></div>
+  *    ```
+  * 3. 要求時、クエリ文字列を埋め込んだHTMLを返す<br>
+  *    ```
+  *    function doGet(e){
+  *      const template = HtmlService.createTemplateFromFile('index');
+  *      template.userId = e.parameter.id;  // 'userId'がHTML上の変数、末尾'id'がクエリ文字列の内容
+  *      const htmlOutput = template.evaluate();
+  *      htmlOutput.setTitle('camp2024');
+  *      return htmlOutput;
+  *    }
+  *    ```
+  * 4. `opt.userIdSelector='div[name="userId"]'`を指定して本関数を実行、HTMLからユーザIDを取得
+  * 
+  */
 storeUserInfo(arg={}){
   const v = {whois:this.constructor.name+'.storeUserInfo',rv:null,step:0};
   console.log(`${v.whois} start.\narg=${stringify(arg)}`);
@@ -1081,11 +1190,11 @@ storeUserInfo(arg={}){
   }
 }
 /** authMenu用の既定値をセットしてdoGASを呼び出し
- * 
+  * 
 async doGAS(func,...args){
   return await doGAS('authServer',this.userId,func,...args);
 }
- */
+  */
 async doGAS(arg,opt={type:'JSON'}){
   return await doGAS('authServer',this.userId,JSON.stringify(arg));
 }
@@ -1225,13 +1334,13 @@ e=a.pad16(e),g=a.blockIV(),h=0;h<e.length/16;h++){var f=e.slice(h*16,h*16+16),o=
 c,d){var e="",g=a.generateAESKey();try{var h=a.publicKeyFromString(c);e+=a.b16to64(h.encrypt(a.bytes2string(g)))+"?"}catch(f){return{status:"Invalid public key"}}d&&(signString=cryptico.b16to64(d.signString(b,"sha256")),b+="::52cee64bb3a38f6403386519a39ac91c::",b+=cryptico.publicKeyString(d),b+="::52cee64bb3a38f6403386519a39ac91c::",b+=signString);e+=a.encryptAESCBC(b,g);return{status:"success",cipher:e}};a.decrypt=function(b,c){var d=b.split("?"),e=c.decrypt(a.b64to16(d[0]));if(e==null)return{status:"failure"};
 e=a.string2bytes(e);d=a.decryptAESCBC(d[1],e).split("::52cee64bb3a38f6403386519a39ac91c::");if(d.length==3){var e=a.publicKeyFromString(d[1]),g=a.b64to16(d[2]);return e.verifyString(d[0],g)?{status:"success",plaintext:d[0],signature:"verified",publicKeyString:a.publicKeyString(e)}:{status:"success",plaintext:d[0],signature:"forged",publicKeyString:a.publicKeyString(e)}}else return{status:"success",plaintext:d[0],signature:"unsigned"}};return a}();
 /** SPA用のスクリーンの切り替え
- * 
- * - スクリーン(div)は`class="screen" name="xxx"`を指定
- * - 引数の`screenName`は上述のname属性
- * 
- * @param {string} screenName - スクリーン名
- * @returns {void}
- */
+  * 
+  * - スクリーン(div)は`class="screen" name="xxx"`を指定
+  * - 引数の`screenName`は上述のname属性
+  * 
+  * @param {string} screenName - スクリーン名
+  * @returns {void}
+  */
 function changeScreen(screenName){
   const v = {whois:'changeScreen',rv:null,step:0};
   try {
@@ -1268,11 +1377,11 @@ function changeScreen(screenName){
   }
 }
 /** 文字列がe-mail等として正しい形式か判断
- * 
- * @param {string} str - 検査対象となる文字列
- * @param {string} type='email' - 'email' or 'URL' or 'tel'
- * @returns {boolean}
- */
+  * 
+  * @param {string} str - 検査対象となる文字列
+  * @param {string} type='email' - 'email' or 'URL' or 'tel'
+  * @returns {boolean}
+  */
 function checkFormat(str,type='email'){
   switch(type){
     case 'email':
@@ -1285,10 +1394,10 @@ function checkFormat(str,type='email'){
   }
 }
 /** HTMLElementを生成する
- * @param {CEDefObj|CEDefObj[]} arg - 生成するHTMLElementの定義
- * @param {HTMLElement|string} [parent=null] - 本関数内部で親要素への追加まで行う場合に指定
- * @returns {HTMLElement|Error}
- */
+  * @param {CEDefObj|CEDefObj[]} arg - 生成するHTMLElementの定義
+  * @param {HTMLElement|string} [parent=null] - 本関数内部で親要素への追加まで行う場合に指定
+  * @returns {HTMLElement|Error}
+  */
 function createElement(arg,parent=null){
   const v = {whois:'BasePage.createElement',rv:[],step:0};
   //console.log(v.whois+' start.',arg);
@@ -1375,15 +1484,15 @@ function createElement(arg,parent=null){
   }
 }
 /** 長さ・文字種指定に基づき、パスワードを生成
- * 
- * @param {number} [len=16] - パスワードの長さ
- * @param {Object} opt 
- * @param {boolean} [opt.lower=true] - 英小文字を使うならtrue
- * @param {boolean} [opt.upper=true] - 英大文字を使うならtrue
- * @param {boolean} [opt.symbol=true] - 記号を使うならtrue
- * @param {boolean} [opt.numeric=true] - 数字を使うならtrue
- * @returns {string}
- */
+  * 
+  * @param {number} [len=16] - パスワードの長さ
+  * @param {Object} opt 
+  * @param {boolean} [opt.lower=true] - 英小文字を使うならtrue
+  * @param {boolean} [opt.upper=true] - 英大文字を使うならtrue
+  * @param {boolean} [opt.symbol=true] - 記号を使うならtrue
+  * @param {boolean} [opt.numeric=true] - 数字を使うならtrue
+  * @returns {string}
+  */
 function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:true}){
   const v = {
     whois: 'createPassword',
@@ -1409,24 +1518,24 @@ function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:tr
   }
 }
 /** サーバ側GASの指定関数を実行、結果を取得
- * 
- * - [GASのgoogle.script.runをPromise化する](https://www.330k.info/essay/gas_google_script_run_convert_promise/)
- * 
- * @exsample
- * 
- * <pre><code>
- * (async ()=> {
- *   const result1 = await doGAS('doSomething1');
- *   const result2 = await doGAS('doSomething2');
- *   const result3 = await doGAS('doSomething3');
- * })();
- * </code></pre>
- * 
- * doSomething(arg1, arg2, ...)のように引数を渡す時は以下のようにdoGASの第2引数以下に指定する。
- * ```
- * doGAS('doSomething', arg1, arg2);
- * ```
- */
+  * 
+  * - [GASのgoogle.script.runをPromise化する](https://www.330k.info/essay/gas_google_script_run_convert_promise/)
+  * 
+  * @exsample
+  * 
+  * <pre><code>
+  * (async ()=> {
+  *   const result1 = await doGAS('doSomething1');
+  *   const result2 = await doGAS('doSomething2');
+  *   const result3 = await doGAS('doSomething3');
+  * })();
+  * </code></pre>
+  * 
+  * doSomething(arg1, arg2, ...)のように引数を渡す時は以下のようにdoGASの第2引数以下に指定する。
+  * ```
+  * doGAS('doSomething', arg1, arg2);
+  * ```
+  */
 function doGAS(func, ...args){
   console.log('doGAS start. func=%s',func,...args);
   return new Promise(function(resolve, reject){
@@ -1438,47 +1547,47 @@ function doGAS(func, ...args){
   });
 }
 /** 渡された変数内のオブジェクト・配列を再帰的にマージ
- * - pri,subともデータ型は不問。次項のデシジョンテーブルに基づき、結果を返す
- *
- * @param {any} pri - 優先される変数(priority)
- * @param {any} sub - 劣後する変数(subordinary)
- * @param {Object} opt - オプション
- * @returns {any|Error}
- *
- * #### デシジョンテーブル
- *
- * | 優先(pri) | 劣後(sub) | 結果 | 備考 |
- * | :--: | :--: | :--: | :-- |
- * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
- * |  A  |  B  |  A  | |
- * |  A  | [B] |  A  | |
- * |  A  | {B} |  A  | |
- * | [A] |  -  | [A] | |
- * | [A] |  B  | [A] | |
- * | [A] | [B] | [X] | 配列はopt.arrayによる |
- * | [A] | {B} | [A] | |
- * | {A} |  -  | {A} | |
- * | {A} |  B  | {A} | |
- * | {A} | [B] | {A} | |
- * | {A} | {B} | {A+B} | オブジェクトも置換ではなく結合する |
- * |  -  |  -  |  -  | |
- * |  -  |  B  |  B  | |
- * |  -  | [B] | [B] | |
- * |  -  | {B} | {B} | |
- *
- * #### opt.array : pri,sub双方配列の場合の処理方法を指定
- *
- * 例 pri:[1,2,{x:'a'},{a:10,b:20}], sub:[1,3,{x:'a'},{a:30,c:40}]
- *
- * - pri(priority): 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
- * - add: 値の重複に拘わらず、pri+subを返す ⇒ [1,2,{x:'a'},{a:10,b:20},1,3,{x:'a'},{a:30,c:40}]
- * - set(既定値): priに無いsubの要素をpriに追加 ⇒ [1,2,3,{x:'a'},{x:'a'},{a:10,b:20},{a:30,c:40}]
- *   ※`{x:'a'}`は別オブジェクトなので、重複排除されない事に注意。関数、Date等のオブジェクトも同様。
- * - str(strict): priに無いsubの要素をpriに追加。setと異なり、内容が同値なら重複排除<br>
- *   ⇒ [1,2,3,{x:'a'},{a:10,b:20},{a:30,c:40}]
- * - cmp(未実装): pri[n]とsub[n]を比較(comparison)。原則pri優先だが、例外として両方がObj or Arrならマージ<br>
- *   ⇒ [1,2,{x:'a'},{a:10,b:20,c:40}]
- */
+  * - pri,subともデータ型は不問。次項のデシジョンテーブルに基づき、結果を返す
+  *
+  * @param {any} pri - 優先される変数(priority)
+  * @param {any} sub - 劣後する変数(subordinary)
+  * @param {Object} opt - オプション
+  * @returns {any|Error}
+  *
+  * #### デシジョンテーブル
+  *
+  * | 優先(pri) | 劣後(sub) | 結果 | 備考 |
+  * | :--: | :--: | :--: | :-- |
+  * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
+  * |  A  |  B  |  A  | |
+  * |  A  | [B] |  A  | |
+  * |  A  | {B} |  A  | |
+  * | [A] |  -  | [A] | |
+  * | [A] |  B  | [A] | |
+  * | [A] | [B] | [X] | 配列はopt.arrayによる |
+  * | [A] | {B} | [A] | |
+  * | {A} |  -  | {A} | |
+  * | {A} |  B  | {A} | |
+  * | {A} | [B] | {A} | |
+  * | {A} | {B} | {A+B} | オブジェクトも置換ではなく結合する |
+  * |  -  |  -  |  -  | |
+  * |  -  |  B  |  B  | |
+  * |  -  | [B] | [B] | |
+  * |  -  | {B} | {B} | |
+  *
+  * #### opt.array : pri,sub双方配列の場合の処理方法を指定
+  *
+  * 例 pri:[1,2,{x:'a'},{a:10,b:20}], sub:[1,3,{x:'a'},{a:30,c:40}]
+  *
+  * - pri(priority): 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
+  * - add: 値の重複に拘わらず、pri+subを返す ⇒ [1,2,{x:'a'},{a:10,b:20},1,3,{x:'a'},{a:30,c:40}]
+  * - set(既定値): priに無いsubの要素をpriに追加 ⇒ [1,2,3,{x:'a'},{x:'a'},{a:10,b:20},{a:30,c:40}]
+  *   ※`{x:'a'}`は別オブジェクトなので、重複排除されない事に注意。関数、Date等のオブジェクトも同様。
+  * - str(strict): priに無いsubの要素をpriに追加。setと異なり、内容が同値なら重複排除<br>
+  *   ⇒ [1,2,3,{x:'a'},{a:10,b:20},{a:30,c:40}]
+  * - cmp(未実装): pri[n]とsub[n]を比較(comparison)。原則pri優先だが、例外として両方がObj or Arrならマージ<br>
+  *   ⇒ [1,2,{x:'a'},{a:10,b:20,c:40}]
+  */
 function mergeDeeply(pri,sub,opt={}){
   const v = {whois:'mergeDeeply',rv:null,step:0,
     isObj: arg => arg && String(Object.prototype.toString.call(arg).slice(8,-1)) === 'Object',
@@ -1556,32 +1665,32 @@ function mergeDeeply(pri,sub,opt={}){
   }
 }
 /** 関数他を含め、変数を文字列化
- * - JSON.stringifyでは文字列化されない関数、シンボル、undefinedも文字列化して表示
- * - 関数はtoString()で文字列化
- * - シンボルは`Symbol(xxx)`という文字列とする
- * - undefinedは'undefined'(文字列)とする
- *
- * @param {Object} variable - 文字列化対象変数
- * @param {Object|boolean} opt - booleanの場合、opt.addTypeの値とする
- * @param {boolean} opt.addType=false - 文字列化の際、元のデータ型を追記
- * @returns {string}
- * @example
- *
- * ```
- * console.log(`l.424 v.td=${stringify(v.td,true)}`)
- * ⇒ l.424 v.td={
- *   "children":[{
- *     "attr":{"class":"[String]th"}, // opt.addType=trueなら[データ型名]がつく
- *     "text":"[String]タグ"
- *   },{
- *     "attr":{"class":"[String]td"},
- *     "text":"[String]#md"
- *   }],
- *   "style":{"gridColumn":"[String]1/13"},
- *   "attr":{"name":"[String]tag"}
- * }
- * ```
- */
+  * - JSON.stringifyでは文字列化されない関数、シンボル、undefinedも文字列化して表示
+  * - 関数はtoString()で文字列化
+  * - シンボルは`Symbol(xxx)`という文字列とする
+  * - undefinedは'undefined'(文字列)とする
+  *
+  * @param {Object} variable - 文字列化対象変数
+  * @param {Object|boolean} opt - booleanの場合、opt.addTypeの値とする
+  * @param {boolean} opt.addType=false - 文字列化の際、元のデータ型を追記
+  * @returns {string}
+  * @example
+  *
+  * ```
+  * console.log(`l.424 v.td=${stringify(v.td,true)}`)
+  * ⇒ l.424 v.td={
+  *   "children":[{
+  *     "attr":{"class":"[String]th"}, // opt.addType=trueなら[データ型名]がつく
+  *     "text":"[String]タグ"
+  *   },{
+  *     "attr":{"class":"[String]td"},
+  *     "text":"[String]#md"
+  *   }],
+  *   "style":{"gridColumn":"[String]1/13"},
+  *   "attr":{"name":"[String]tag"}
+  * }
+  * ```
+  */
 function stringify(variable,opt={addType:false}){
   const v = {whois:'stringify',rv:null,step:0};
   const conv = arg => {
@@ -1631,29 +1740,29 @@ function stringify(variable,opt={addType:false}){
   }
 }
 /** 日時を指定形式の文字列にして返す
- * @param {Date} dObj - 日付型オブジェクト
- * @param {string} [format='yyyy/MM/dd'] - 日時を指定する文字列。年:y,月:M,日:d,時:h,分:m,秒:s,ミリ秒:n
- * @returns {string} 指定形式に変換された文字列。無効な日付なら長さ0の文字列
- *
- * @example
- * ```
- * "1965/9/5"[yy/MM/dd hh:mm:ss.nnn] ⇒ "65/09/05 00:00:00.000"
- * "1965/9/5"[yyyy-MM-dd] ⇒ "1965-09-05"
- * "1965/9/5"[hh:mm] ⇒ "00:00"
- * "1977-03-04"[yy/MM/dd hh:mm:ss.nnn] ⇒ "77/03/04 09:00:00.000"
- * "1977-03-04"[yyyy-MM-dd] ⇒ "1977-03-04"
- * "1977-03-04"[hh:mm] ⇒ "09:00"
- * 1688189258262[yy/MM/dd hh:mm:ss.nnn] ⇒ "23/07/01 14:27:38.262"
- * 1688189258262[yyyy-MM-dd] ⇒ "2023-07-01"
- * 1688189258262[hh:mm] ⇒ "14:27"
- * "Sat Jul 01 2023 14:16:30 GMT+0900"[yy/MM/dd hh:mm:ss.nnn] ⇒ "23/07/01 14:16:30.000"
- * "Sat Jul 01 2023 14:16:30 GMT+0900"[yyyy-MM-dd] ⇒ "2023-07-01"
- * "Sat Jul 01 2023 14:16:30 GMT+0900"[hh:mm] ⇒ "14:16"
- * "12:34"[yy/MM/dd hh:mm:ss.nnn] ⇒ ""
- * "12:34"[yyyy-MM-dd] ⇒ ""
- * "12:34"[hh:mm] ⇒ ""
- * ```
- */
+  * @param {Date} dObj - 日付型オブジェクト
+  * @param {string} [format='yyyy/MM/dd'] - 日時を指定する文字列。年:y,月:M,日:d,時:h,分:m,秒:s,ミリ秒:n
+  * @returns {string} 指定形式に変換された文字列。無効な日付なら長さ0の文字列
+  *
+  * @example
+  * ```
+  * "1965/9/5"[yy/MM/dd hh:mm:ss.nnn] ⇒ "65/09/05 00:00:00.000"
+  * "1965/9/5"[yyyy-MM-dd] ⇒ "1965-09-05"
+  * "1965/9/5"[hh:mm] ⇒ "00:00"
+  * "1977-03-04"[yy/MM/dd hh:mm:ss.nnn] ⇒ "77/03/04 09:00:00.000"
+  * "1977-03-04"[yyyy-MM-dd] ⇒ "1977-03-04"
+  * "1977-03-04"[hh:mm] ⇒ "09:00"
+  * 1688189258262[yy/MM/dd hh:mm:ss.nnn] ⇒ "23/07/01 14:27:38.262"
+  * 1688189258262[yyyy-MM-dd] ⇒ "2023-07-01"
+  * 1688189258262[hh:mm] ⇒ "14:27"
+  * "Sat Jul 01 2023 14:16:30 GMT+0900"[yy/MM/dd hh:mm:ss.nnn] ⇒ "23/07/01 14:16:30.000"
+  * "Sat Jul 01 2023 14:16:30 GMT+0900"[yyyy-MM-dd] ⇒ "2023-07-01"
+  * "Sat Jul 01 2023 14:16:30 GMT+0900"[hh:mm] ⇒ "14:16"
+  * "12:34"[yy/MM/dd hh:mm:ss.nnn] ⇒ ""
+  * "12:34"[yyyy-MM-dd] ⇒ ""
+  * "12:34"[hh:mm] ⇒ ""
+  * ```
+  */
 
 function toLocale(dObj,format='yyyy/MM/dd'){
   const v = {rv:format,l:{ // 地方時ベース
@@ -1690,45 +1799,45 @@ function toLocale(dObj,format='yyyy/MM/dd'){
   }
 }
 /** 変数の型を判定
- * 
- * - 引数"is"が指定された場合、判定対象が"is"と等しいかの真偽値を返す。
- *
- * @param {any} arg - 判定対象の変数
- * @param {string} [is] - 想定される型(型名の大文字小文字は意識不要)
- * @returns {string|boolean} - 型の名前。is指定有りなら判定対象が想定型かの真偽値
- *
- * @example
- * ```
- * let a = 10;
- * whichType(a);  // 'Number'
- * whichType(a,'string'); // false
- * ```
- *
- * <b>確認済戻り値一覧</b>
- *
- * オブジェクトは型名が返るので、限定列挙は困難。以下は確認済みの戻り値のみ記載。
- *
- * | 型名 | 戻り値 | 備考 |
- * | :-- | :-- | :-- |
- * | 文字列 | String |  |
- * | 数値 | Number |  |
- * | NaN | NaN |  |
- * | 長整数 | BigInt |  |
- * | 論理値 | Boolean |  |
- * | シンボル | Symbol |  |
- * | undefined | Undefined | 先頭大文字 |
- * | Null | Null |  |
- * | オブジェクト | Object |  |
- * | 配列 | Array |  |
- * | 関数 | Function |  |
- * | アロー関数 | Arrow |  |
- * | エラー | Error | RangeError等も'Error' |
- * | Date型 | Date |  |
- * | Promise型 | Promise |  |
- *
- * - Qiita [JavaScriptの型などの判定いろいろ](https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3)
- *
- */
+  * 
+  * - 引数"is"が指定された場合、判定対象が"is"と等しいかの真偽値を返す。
+  *
+  * @param {any} arg - 判定対象の変数
+  * @param {string} [is] - 想定される型(型名の大文字小文字は意識不要)
+  * @returns {string|boolean} - 型の名前。is指定有りなら判定対象が想定型かの真偽値
+  *
+  * @example
+  * ```
+  * let a = 10;
+  * whichType(a);  // 'Number'
+  * whichType(a,'string'); // false
+  * ```
+  *
+  * <b>確認済戻り値一覧</b>
+  *
+  * オブジェクトは型名が返るので、限定列挙は困難。以下は確認済みの戻り値のみ記載。
+  *
+  * | 型名 | 戻り値 | 備考 |
+  * | :-- | :-- | :-- |
+  * | 文字列 | String |  |
+  * | 数値 | Number |  |
+  * | NaN | NaN |  |
+  * | 長整数 | BigInt |  |
+  * | 論理値 | Boolean |  |
+  * | シンボル | Symbol |  |
+  * | undefined | Undefined | 先頭大文字 |
+  * | Null | Null |  |
+  * | オブジェクト | Object |  |
+  * | 配列 | Array |  |
+  * | 関数 | Function |  |
+  * | アロー関数 | Arrow |  |
+  * | エラー | Error | RangeError等も'Error' |
+  * | Date型 | Date |  |
+  * | Promise型 | Promise |  |
+  *
+  * - Qiita [JavaScriptの型などの判定いろいろ](https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3)
+  *
+  */
 
 function whichType(arg,is){
   let rv = String(Object.prototype.toString.call(arg).slice(8,-1));

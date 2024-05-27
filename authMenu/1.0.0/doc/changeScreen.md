@@ -28,7 +28,7 @@ sequenceDiagram
     end
     client ->> server : ①changeScreen.arg
     activate server
-    Note right of server : changeScreen()
+    Note right of server : func='changeScreen'
     sheet ->> server : ユーザ情報(全件)
     server ->> server : 処理分岐
     server ->> method : ②getUserInfo.arg
@@ -74,9 +74,9 @@ sequenceDiagram
         client ->> user : ダイアログ
         user ->> client : パスコード
 
-        client ->> server : ⑩checkPasscode.arg
+        client ->> server : ⑩verifyPasscode.arg
         activate server
-        Note right of server : checkPasscode()
+        Note right of server : func='verifyPasscode'
         sheet ->> server : ユーザ情報(全件)
         server ->> server : 処理分岐
         server ->> method : ⑪verifyPasscode.arg
