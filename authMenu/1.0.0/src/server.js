@@ -23,6 +23,7 @@ function authServer(userId=null,arg=null) {
 
   //::$src/server.preProcess.js::
   //::$src/server.getUserInfo.js::
+  //::$src/server.sendPasscode.js::
   //::$src/server.verifyPasscode.js::
 
   console.log(`${w.whois} start.`);
@@ -65,6 +66,8 @@ function authServer(userId=null,arg=null) {
           break;
         case 'passcode':
           w.rv = {response:w.r.response};
+          w.r = w.func.sendPasscode(w.r.data.userId);
+          if( w.r instanceof Error ) throw w.r;
           break;
         default: w.rv = null;
       }

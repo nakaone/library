@@ -170,13 +170,16 @@ w.func.getUserInfo = function(userId=null,arg={}){
       v.rv.response = 'passcode';
     }
 
+    v.step = 3.6; // 新規登録されたユーザはパスコード入力
+    if( v.rv.isExist > 0 ) v.rv.response = 'passcode';
+
     if( v.trial.log.length > 0 ){
       v.log = v.trial.log[0];
 
-      v.step = 3.6; // 試行Objがlogに存在するなら残りの試行可能回数を計算
+      v.step = 3.7; // 試行Objがlogに存在するなら残りの試行可能回数を計算
       v.rv.numberOfLoginAttempts = w.prop.numberOfLoginAttempts - v.log.result;
 
-      v.step = 3.7; // ④凍結中(前回ログイン失敗から一定時間経過していない)
+      v.step = 3.8; // ④凍結中(前回ログイン失敗から一定時間経過していない)
       if( v.log.hasOwnProperty('result')
         && v.log.result === w.prop.numberOfLoginAttempts
         && v.log.hasOwnProperty('timestamp')
@@ -190,8 +193,11 @@ w.func.getUserInfo = function(userId=null,arg={}){
       }
     }
 
-    v.step = 3.8; // 上記に引っかからず、auth&allow>0なら権限あり
-    v.rv.response = (v.arg.allow & v.rv.data.auth) > 0 ? 'hasAuth' : 'noAuth';
+    v.step = 3.9; // 上記に引っかからず、auth&allow>0なら権限あり
+    if( v.rv.response === null ){
+      v.rv.response = (v.arg.allow & v.rv.data.auth) > 0
+      ? 'hasAuth' : 'noAuth';
+    }
 
     // ---------------------------------------------
     v.step = 4; // 終了処理

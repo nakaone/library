@@ -93,6 +93,7 @@ cat $lib/checkFormat/1.0.0/core.js >> $svSource
 cat $lib/createPassword/1.0.1/core.js >> $svSource
 cat $src/doGet.js | awk 1 >> $svSource
 cat $lib/mergeDeeply/1.1.0/core.js | awk 1 >> $svSource
+cat $lib/sendmail/1.0.0/core.js >> $svSource
 cat $lib/SingleTable/1.2.0/core.js | awk 1 >> $svSource
 cat $lib/stringify/1.1.1/core.js | awk 1 >> $svSource
 cat $lib/toLocale/1.0.0/core.js >> $svSource

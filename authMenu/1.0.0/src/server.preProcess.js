@@ -22,6 +22,8 @@ w.func.preProcess = function(){
   w.step = 1.1; // PropertiesServiceに格納された値をw.propに読み込み
   w.prop = PropertiesService.getDocumentProperties().getProperties();
   if( !w.prop ) throw new Error('Property service not configured.');
+  // JSONで定義されている項目をオブジェクト化
+  w.prop.notificatePasscodeMail = JSON.parse(w.prop.notificatePasscodeMail);
 
   w.step = 1.2; // シートから全ユーザ情報の取得
   w.master = new SingleTable(w.prop.masterSheet);

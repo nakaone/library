@@ -45,6 +45,8 @@ w.func.preProcess = function(){
   w.step = 1.1; // PropertiesServiceに格納された値をw.propに読み込み
   w.prop = PropertiesService.getDocumentProperties().getProperties();
   if( !w.prop ) throw new Error('Property service not configured.');
+  // JSONで定義されている項目をオブジェクト化
+  w.prop.notificatePasscodeMail = JSON.parse(w.prop.notificatePasscodeMail);
 
   w.step = 1.2; // シートから全ユーザ情報の取得
   w.master = new SingleTable(w.prop.masterSheet);
@@ -261,13 +263,16 @@ w.func.getUserInfo = function(userId=null,arg={}){
       v.rv.response = 'passcode';
     }
 
+    v.step = 3.6; // 新規登録されたユーザはパスコード入力
+    if( v.rv.isExist > 0 ) v.rv.response = 'passcode';
+
     if( v.trial.log.length > 0 ){
       v.log = v.trial.log[0];
 
-      v.step = 3.6; // 試行Objがlogに存在するなら残りの試行可能回数を計算
+      v.step = 3.7; // 試行Objがlogに存在するなら残りの試行可能回数を計算
       v.rv.numberOfLoginAttempts = w.prop.numberOfLoginAttempts - v.log.result;
 
-      v.step = 3.7; // ④凍結中(前回ログイン失敗から一定時間経過していない)
+      v.step = 3.8; // ④凍結中(前回ログイン失敗から一定時間経過していない)
       if( v.log.hasOwnProperty('result')
         && v.log.result === w.prop.numberOfLoginAttempts
         && v.log.hasOwnProperty('timestamp')
@@ -281,8 +286,11 @@ w.func.getUserInfo = function(userId=null,arg={}){
       }
     }
 
-    v.step = 3.8; // 上記に引っかからず、auth&allow>0なら権限あり
-    v.rv.response = (v.arg.allow & v.rv.data.auth) > 0 ? 'hasAuth' : 'noAuth';
+    v.step = 3.9; // 上記に引っかからず、auth&allow>0なら権限あり
+    if( v.rv.response === null ){
+      v.rv.response = (v.arg.allow & v.rv.data.auth) > 0
+      ? 'hasAuth' : 'noAuth';
+    }
 
     // ---------------------------------------------
     v.step = 4; // 終了処理
@@ -293,6 +301,52 @@ w.func.getUserInfo = function(userId=null,arg={}){
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
     + `\n${e.message}\narg=${stringify(arg)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+/** sendPasscode: 指定ユーザにパスコード連絡メールを発信する
+ * 
+ * @param {number} userId=null - ユーザID
+ * @returns {null|Error}
+ */
+w.func.sendPasscode = function(userId=null){
+  const v = {whois:w.whois+'.sendPasscode',step:0,rv:null};
+  console.log(`${v.whois} start. userId(${typeof userId})=${userId}`);
+  try {
+
+    v.step = 1; // パスコード生成、trialを更新
+    v.passcode = ('0'.repeat(w.prop.passcodeDigits)
+      + Math.floor(Math.random() * (10 ** w.prop.passcodeDigits))).slice(-w.prop.passcodeDigits);
+    v.r = w.master.update({trial:JSON.stringify({
+      passcode: v.passcode,
+      created: Date.now(),
+      log: [],
+    })},{where:x => x[w.prop.primatyKeyColumn] === userId});
+
+    
+    v.step = 2; // マスタ(SingleTable)からユーザ情報を特定
+    v.user = w.master.select({where: x => x[w.prop.primatyKeyColumn] === userId})[0];
+    if( v.user instanceof Error ) throw v.user;
+    if( !v.user ) throw new Error('userId nomatch');
+
+
+    v.step = 3; // パスコード連絡メールを発信
+    v.rv = sendmail(
+      v.user.email,
+      w.prop.notificatePasscodeMail.subject,
+      w.prop.notificatePasscodeMail.body.replace('::passcode::',v.passcode),
+      w.prop.notificatePasscodeMail.options,
+    );
+    if( v.rv instanceof Error ) throw v.rv;
+
+
+    v.step = 4; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }
@@ -439,6 +493,8 @@ w.func.verifyPasscode = function(arg){
           break;
         case 'passcode':
           w.rv = {response:w.r.response};
+          w.r = w.func.sendPasscode(w.r.data.userId);
+          if( w.r instanceof Error ) throw w.r;
           break;
         default: w.rv = null;
       }

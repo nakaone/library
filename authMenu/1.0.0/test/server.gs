@@ -98,6 +98,8 @@ w.func.preProcess = function(){
   w.step = 1.1; // PropertiesServiceに格納された値をw.propに読み込み
   w.prop = PropertiesService.getDocumentProperties().getProperties();
   if( !w.prop ) throw new Error('Property service not configured.');
+  // JSONで定義されている項目をオブジェクト化
+  w.prop.notificatePasscodeMail = JSON.parse(w.prop.notificatePasscodeMail);
 
   w.step = 1.2; // シートから全ユーザ情報の取得
   w.master = new SingleTable(w.prop.masterSheet);
@@ -314,13 +316,16 @@ w.func.getUserInfo = function(userId=null,arg={}){
       v.rv.response = 'passcode';
     }
 
+    v.step = 3.6; // 新規登録されたユーザはパスコード入力
+    if( v.rv.isExist > 0 ) v.rv.response = 'passcode';
+
     if( v.trial.log.length > 0 ){
       v.log = v.trial.log[0];
 
-      v.step = 3.6; // 試行Objがlogに存在するなら残りの試行可能回数を計算
+      v.step = 3.7; // 試行Objがlogに存在するなら残りの試行可能回数を計算
       v.rv.numberOfLoginAttempts = w.prop.numberOfLoginAttempts - v.log.result;
 
-      v.step = 3.7; // ④凍結中(前回ログイン失敗から一定時間経過していない)
+      v.step = 3.8; // ④凍結中(前回ログイン失敗から一定時間経過していない)
       if( v.log.hasOwnProperty('result')
         && v.log.result === w.prop.numberOfLoginAttempts
         && v.log.hasOwnProperty('timestamp')
@@ -334,8 +339,11 @@ w.func.getUserInfo = function(userId=null,arg={}){
       }
     }
 
-    v.step = 3.8; // 上記に引っかからず、auth&allow>0なら権限あり
-    v.rv.response = (v.arg.allow & v.rv.data.auth) > 0 ? 'hasAuth' : 'noAuth';
+    v.step = 3.9; // 上記に引っかからず、auth&allow>0なら権限あり
+    if( v.rv.response === null ){
+      v.rv.response = (v.arg.allow & v.rv.data.auth) > 0
+      ? 'hasAuth' : 'noAuth';
+    }
 
     // ---------------------------------------------
     v.step = 4; // 終了処理
@@ -346,6 +354,52 @@ w.func.getUserInfo = function(userId=null,arg={}){
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
     + `\n${e.message}\narg=${stringify(arg)}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+/** sendPasscode: 指定ユーザにパスコード連絡メールを発信する
+ * 
+ * @param {number} userId=null - ユーザID
+ * @returns {null|Error}
+ */
+w.func.sendPasscode = function(userId=null){
+  const v = {whois:w.whois+'.sendPasscode',step:0,rv:null};
+  console.log(`${v.whois} start. userId(${typeof userId})=${userId}`);
+  try {
+
+    v.step = 1; // パスコード生成、trialを更新
+    v.passcode = ('0'.repeat(w.prop.passcodeDigits)
+      + Math.floor(Math.random() * (10 ** w.prop.passcodeDigits))).slice(-w.prop.passcodeDigits);
+    v.r = w.master.update({trial:JSON.stringify({
+      passcode: v.passcode,
+      created: Date.now(),
+      log: [],
+    })},{where:x => x[w.prop.primatyKeyColumn] === userId});
+
+    
+    v.step = 2; // マスタ(SingleTable)からユーザ情報を特定
+    v.user = w.master.select({where: x => x[w.prop.primatyKeyColumn] === userId})[0];
+    if( v.user instanceof Error ) throw v.user;
+    if( !v.user ) throw new Error('userId nomatch');
+
+
+    v.step = 3; // パスコード連絡メールを発信
+    v.rv = sendmail(
+      v.user.email,
+      w.prop.notificatePasscodeMail.subject,
+      w.prop.notificatePasscodeMail.body.replace('::passcode::',v.passcode),
+      w.prop.notificatePasscodeMail.options,
+    );
+    if( v.rv instanceof Error ) throw v.rv;
+
+
+    v.step = 4; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }
@@ -492,6 +546,8 @@ w.func.verifyPasscode = function(arg){
           break;
         case 'passcode':
           w.rv = {response:w.r.response};
+          w.r = w.func.sendPasscode(w.r.data.userId);
+          if( w.r instanceof Error ) throw w.r;
           break;
         default: w.rv = null;
       }
@@ -695,7 +751,52 @@ function mergeDeeply(pri,sub,opt={}){
     return e;
   }
 }
-/**
+/** GASからメールを発信する
+ * 実行に当たっては権限の承認を必要とする。
+ * 
+ * - [Google App Script メモ（メール送信制限 回避術）](https://zenn.dev/tatsuya_okzk/articles/259203cc416328)
+ * - GAS公式[createDraft](https://developers.google.com/apps-script/reference/gmail/gmail-app?hl=ja#createdraftrecipient,-subject,-body,-options)
+ * 
+ * @param {String} recipient - 受信者のアドレス
+ * @param {String} subject - 件名
+ * @param {String} body - メールの本文
+ * @param {Object} options - 詳細パラメータを指定する JavaScript オブジェクト（下記を参照）
+ * @param {BlobSource[]} options.attachments - メールと一緒に送信するファイルの配列
+ * @param {String} options.bcc - Bcc で送信するメールアドレスのカンマ区切りのリスト
+ * @param {String} options.cc - Cc に含めるメールアドレスのカンマ区切りのリスト
+ * @param {String} options.from - メールの送信元アドレス。getAliases() によって返される値のいずれかにする必要があります。
+ * @param {String} options.htmlBody - 設定すると、HTML をレンダリングできるデバイスは、必須の本文引数の代わりにそれを使用します。メール用にインライン画像を用意する場合は、HTML 本文にオプションの inlineImages フィールドを追加できます。
+ * @param {Object} options.inlineImages - 画像キー（String）から画像データ（BlobSource）へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、<img src="cid:imageKey" /> 形式でこれらの画像への参照が含まれていることを前提としています。
+ * @param {String} options.name - メールの送信者の名前（デフォルト: ユーザー名）
+ * @param {String} options.replyTo - デフォルトの返信先アドレスとして使用するメールアドレス（デフォルト: ユーザーのメールアドレス）
+ * @returns {null|Error}
+ */
+function sendmail(recipient,subject,body,options){
+  const v = {whois:'sendmail',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.draft = GmailApp.createDraft(recipient,subject,body,options);
+    v.draftId = v.draft.getId();
+    GmailApp.getDraft(v.draftId).send();
+
+    console.log('Mail Remaining Daily Quota:'+MailApp.getRemainingDailyQuota());
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `\n${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`
+    + `\nrecipient=${recipient}`
+    + `\nsubject=${subject}`
+    + `\nbody=${body}`
+    + `\n=options=${JSON.stringify(options)}`;  // 引数
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}/**
  * @typedef {Object} SingleTableObj
  * @prop {string} className - クラス名(='SingleTable')
  * @prop {string} name - シート名。データを引数で渡し、シートを作成しない場合は空文字列

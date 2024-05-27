@@ -24,11 +24,11 @@ function setProperties(){
       loginRetryInterval : 3600000,// {number} 前回ログイン失敗(凍結)から再挑戦可能になるまでの時間(ミリ秒)
       numberOfLoginAttempts : 3, // {number} ログイン失敗になるまでの試行回数
       loginGraceTime : 900000, // {number} パスコード生成からログインまでの猶予時間(ミリ秒)
-      notificatePasscodeMail: { // {Object} パスコード連絡メールのテンプレート
+      notificatePasscodeMail: JSON.stringify({ // {Object} パスコード連絡メールのテンプレート
         subject: '[連絡] パスコード',
         body: 'パスコードは以下の通りです。\n\n::passcode::',
         options: {},
-      },
+      }),
 
       // ユーザ情報関係
       userLoginLifeTime : 86400000, // {number} クライアント側ログイン(CPkey)有効期間
