@@ -1,29 +1,6 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <style type="text/css">
-/* -----------------------------------------------
-  library/CSS/1.3.0/core.css
------------------------------------------------ */
-html, body{
-  width: 100%;
-  margin: 0;
-  /*font-size: 4vw;*/
-  text-size-adjust: none; /* https://gotohayato.com/content/531/ */
-}
-body * {
-  font-size: 1rem;
-  font-family: sans-serif;
-  box-sizing: border-box;
-}
-.num, .right {text-align:right;}
-.screen {padding: 1rem;} /* SPAでの切替用画面 */
-.title { /* Markdown他でのタイトル */
-  font-size: 2.4rem;
-  text-shadow: 2px 2px 5px #888;
-}
-
-/* --- テーブル -------------------------------- */
-.table {display:grid}
 th, .th, td, .td {
   margin: 0.2rem;
   padding: 0.2rem;
@@ -36,76 +13,24 @@ td, .td {
   border-bottom: solid 1px #aaa;
   border-right: solid 1px #aaa;
 }
-
-/* --- 部品 ----------------------------------- */
-.triDown { /* 下向き矢印 */
-  --bw: 50px;
-  width: 0px;
-  height: 0px;
-  border-top: calc(var(--bw) * 0.7) solid #aaa;
-  border-right: var(--bw) solid transparent;
-  border-left: var(--bw) solid transparent;
-  border-bottom: calc(var(--bw) * 0.2) solid transparent;
-}
-
-/* --- 部品：待機画面 --------------------------- */
-.loader,
-.loader:after {
-  border-radius: 50%;
-  width: 10em;
-  height: 10em;
-}
-.loader {
-  margin: 60px auto;
-  font-size: 10px;
-  position: relative;
-  text-indent: -9999em;
-  border-top: 1.1em solid rgba(204,204,204, 0.2);
-  border-right: 1.1em solid rgba(204,204,204, 0.2);
-  border-bottom: 1.1em solid rgba(204,204,204, 0.2);
-  border-left: 1.1em solid #cccccc;
-  -webkit-transform: translateZ(0);
-  -ms-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-animation: load8 1.1s infinite linear;
-  animation: load8 1.1s infinite linear;
-}
-@-webkit-keyframes load8 {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
-@keyframes load8 {
-  0% {
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-    transform: rotate(360deg);
-  }
-}
 </style>
-<!--:x:$src/cdn.html::-->
 <script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
-</head><body>
-  <table>
-    <thead><tr>
-      <th>id</th>
-      <th>name</th>
-      <th>type</th>
-      <th>range</th>
-      <th>role</th>
-      <th>note</th>
-    </tr></thead>
-    <tbody></tbody>
-  </table>
-  <div name="data" style="display:none"><?= data ?></div>  
+</head>
+<body>
+<table>
+  <thead><tr>
+    <th>id</th>
+    <th>name</th>
+    <th>type</th>
+    <th>range</th><!-- choices -->
+    <th>default</th><!-- def -->
+    <th>role</th>
+    <th>note</th>
+  </tr></thead>
+  <tbody></tbody>
+</table>
+  <div name="data" style="display:none"><?= data ?></div>
+  <div name="scenario" style="display:none"></div>
 </body>
 <script type="text/javascript">
 /** HTMLElementを生成する
@@ -333,7 +258,6 @@ function toggle(){
 
     v.id = event.target.getAttribute('name');
     v.obj = alasql(`select * from relation where rId=${v.id}`)[0];
-    console.log(`v.obj.isOpen(${typeof v.obj.isOpen})=${v.obj.isOpen}`)
     alasql(`update relation set isOpen=${v.obj.isOpen < 0 ? 1 : -1} where rId=${v.id}`);
 
     v.r = disp();
@@ -349,23 +273,25 @@ function toggle(){
     return e;
   }
 }
-function disp(pId=0,depth=0,row=[]){
+function disp(pId=null,depth=0,row=[]){
+  if( depth > 10 ) return new Error('too many depth'); // 永久ループ防止
   const v = {whois:'disp',rv:null,step:0,row:row};
   console.log(`${v.whois} start.`);
   try {
 
-    if( depth > 10 ) throw new Error('too many depth');
+    if( pId === null ){
+      pId = Number(document.querySelector('[name="scenario"]').innerText);
+    }
 
-    v.step = 1; // 子要素をseq順に取得
+    v.step = 1; // ツリー(relation)から親がpIdである子要素をseq,name順に取得
     v.sql = `select * from relation`
-    + ` inner join primitive on relation.cId === primitive.id`
-    + ` where relation.pId=${pId} order by relation.seq`;
+    + ` inner join master on relation.cId === master.nId`
+    + ` where relation.pId=${pId} order by relation.seq, master.name`;
     v.children = alasql(v.sql);
-    console.log(`l.257 v.children=${stringify(v.children)}`);
 
     v.step = 2; // 子要素を順次追加
     for( v.i=0 ; v.i<v.children.length ; v.i++ ){
-      v.step = 2.1; // 項目名の前の表示/非表示制御
+      v.step = 2.1; // 行データ作成前に、項目名の前の'▼':'▶'を追加
       v.c = {tag:'td',children:[]};
       if( v.children[v.i].isOpen !== 0 ){ // 子要素が有る場合
         v.c.children.push({
@@ -379,19 +305,20 @@ function disp(pId=0,depth=0,row=[]){
       } else {
         v.c.children.push({tag:'span',text:(v.children[v.i].name||''),style:{marginLeft:`${depth}rem`}});
       }
-      v.step = 2.2; // 項目名以外を一行分作成
+      v.step = 2.2; // 項目名と合わせて一行分のデータを作成
       v.row.push({tag:'tr',children:[
-        {tag:'td',text:v.children[v.i].id,style:{textAlign:'right'}},
+        {tag:'td',text:v.children[v.i].nId,style:{textAlign:'right'}},
         v.c,
         {tag:'td',html:(v.children[v.i].type||'')},
-        {tag:'td',html:(v.children[v.i].range||'')},
+        {tag:'td',html:(v.children[v.i].choices||'')},
+        {tag:'td',html:(v.children[v.i].def||'')},
         {tag:'td',html:(v.children[v.i].role||'')},
         {tag:'td',html:(v.children[v.i].note||'')},
       ]});
 
       v.step = 2.2; // 子要素のisOpenなら再帰呼出
       if( v.children[v.i].isOpen > 0 ){
-        v.r = disp(v.children[v.i].id,depth+1,v.row);
+        v.r = disp(v.children[v.i].nId,depth+1,v.row);
         if( v.r instanceof Error ) throw v.r;
       }
     }
@@ -403,12 +330,12 @@ function disp(pId=0,depth=0,row=[]){
     }
 
     v.step = 4; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
     return v.rv;
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
     return e;
   }
 }
@@ -420,27 +347,63 @@ window.addEventListener('DOMContentLoaded',() => {
 
 v.step = 1; // データを取得
 v.data = JSON.parse(document.querySelector('[name="data"]').innerText);
-console.log(`l.299 v.data=${stringify(v.data)}`);
+for( v.r=0 ; v.r<v.data.length ; v.r++ ){
+  console.log(`l.108 v.data[${v.r}].hasChild(${typeof v.data[v.r].hasChild})=${v.data[v.r].hasChild}`)
+}
 
-v.step = 2.1; // テーブル'primitive'の作成
-alasql(`create table primitive (id int,name string,type string, range string,role string,note string)`);
-v.data.primitive.forEach(x => {
-  alasql(`insert into primitive values (${x.id},"${x.name}","${x.type||''}","${x.range||''}","${x.role||''}","${x.note||''}");`);
-});
+v.step = 2.1; // テーブル"master"の作成
+v.mDef = [
+  {name:'nId',type:'int'},
+  {name:'name',type:'string'},
+  {name:'type',type:'string'},
+  {name:'choices',type:'string'}, // 当初rangeにしていたらエラー。項目名変更
+  {name:'def',type:'string'},
+  {name:'role',type:'string'},
+  {name:'note',type:'string'},
+];
+v.sql = `create table master (`;
+v.mDef.forEach(x => v.sql += `${x.name} ${x.type},`);
+v.sql = v.sql.replace(/,$/,');');
+alasql(v.sql);
 
-v.step = 2.2; // テーブル'relation'の作成
-// isOpen: -1=close, 0=no child, 1=open
-alasql('create table relation (rId int,pId int,cId int,seq int,isOpen number)');
-v.i = 0;
-v.data.relation.forEach(x => {
-  console.log(`l.299 x.hasChild(${typeof x.hasChild})="${x.hasChild}"`)
-  alasql(`insert into relation values (${v.i},${x.pId},${x.cId},${x.seq},${x.hasChild==='true'?-1:0});`);
-  v.i++;
-});
-v.rel = alasql('select * from relation;');
-console.log('l.300',v.rel)
+v.sql = `insert into master values `;
+for( v.r=0 ; v.r<v.data.length ; v.r++ ){
+  if( v.data[v.r].nId === "" ) continue;
+  v.rSql = '';
+  v.mDef.forEach(x => v.rSql += `"${v.data[v.r][x.name]}",`);
+  v.sql = v.sql + `(${v.rSql.replace(/,$/,'')}),`
+}
+v.sql = v.sql.replace(/,$/,';');
+alasql(v.sql);
 
-v.step = 3; // ツリーの描画
+v.step = 2.2; // テーブル"relation"の作成
+v.rDef = [
+  {name:'rId',type:'int'},  // relation特定用
+  {name:'pId',type:'int'},
+  {name:'cId',type:'int'},
+  {name:'seq',type:'int'},
+  {name:'isOpen',type:'number'}, // -1=close, 0=no child, 1=open
+];
+v.sql = `create table relation (`;
+v.rDef.forEach(x => v.sql += `${x.name} ${x.type},`);
+v.sql = v.sql.replace(/,$/,');');
+alasql(v.sql);
+
+v.sql = `insert into relation values `;
+for( v.r=0 ; v.r<v.data.length ; v.r++ ){
+  if( v.data[v.r].pId === "" ) continue;
+  v.sql += `(${v.r},`
+  + `${v.data[v.r].pId || 'null'},`
+  + `${v.data[v.r].cId || 'null'},`
+  + `${v.data[v.r].seq || 'null'},`
+  + `${v.data[v.r].hasChild?-1:0}),`;
+}
+v.sql = v.sql.replace(/,$/,';');
+alasql(v.sql);
+
+v.step = 3.1; // シナリオを指定。ここではauthMenuシナリオを指定
+document.querySelector('[name="scenario"]').innerText = '1';
+v.step = 3.2; // ツリーの描画
 v.r = disp();
 if( v.r instanceof Error ) throw v.r;
 

@@ -73,7 +73,7 @@ EOS
 # ----------------------------------------------
 echo "`date +"%T"` - typeDefs: step.3.1 start."
 cat $src/doGet.js | awk 1 > $tmp/server.js
-cat $lib/SingleTable/1.2.0/core.js | awk 1 >> $tmp/server.js
+#cat $lib/SingleTable/1.2.0/core.js | awk 1 >> $tmp/server.js
 # 最終成果物の作成
 cp $tmp/server.js $mod/server.gs
 ## JSDocの作成

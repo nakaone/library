@@ -5,7 +5,6 @@ function toggle(){
 
     v.id = event.target.getAttribute('name');
     v.obj = alasql(`select * from relation where rId=${v.id}`)[0];
-    console.log(`v.obj.isOpen(${typeof v.obj.isOpen})=${v.obj.isOpen}`)
     alasql(`update relation set isOpen=${v.obj.isOpen < 0 ? 1 : -1} where rId=${v.id}`);
 
     v.r = disp();

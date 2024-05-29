@@ -1,25 +1,61 @@
 v.step = 1; // データを取得
 v.data = JSON.parse(document.querySelector('[name="data"]').innerText);
-console.log(`l.299 v.data=${stringify(v.data)}`);
+for( v.r=0 ; v.r<v.data.length ; v.r++ ){
+  console.log(`l.108 v.data[${v.r}].hasChild(${typeof v.data[v.r].hasChild})=${v.data[v.r].hasChild}`)
+}
 
-v.step = 2.1; // テーブル'primitive'の作成
-alasql(`create table primitive (id int,name string,type string, range string,role string,note string)`);
-v.data.primitive.forEach(x => {
-  alasql(`insert into primitive values (${x.id},"${x.name}","${x.type||''}","${x.range||''}","${x.role||''}","${x.note||''}");`);
-});
+v.step = 2.1; // テーブル"master"の作成
+v.mDef = [
+  {name:'nId',type:'int'},
+  {name:'name',type:'string'},
+  {name:'type',type:'string'},
+  {name:'choices',type:'string'}, // 当初rangeにしていたらエラー。項目名変更
+  {name:'def',type:'string'},
+  {name:'role',type:'string'},
+  {name:'note',type:'string'},
+];
+v.sql = `create table master (`;
+v.mDef.forEach(x => v.sql += `${x.name} ${x.type},`);
+v.sql = v.sql.replace(/,$/,');');
+alasql(v.sql);
 
-v.step = 2.2; // テーブル'relation'の作成
-// isOpen: -1=close, 0=no child, 1=open
-alasql('create table relation (rId int,pId int,cId int,seq int,isOpen number)');
-v.i = 0;
-v.data.relation.forEach(x => {
-  console.log(`l.299 x.hasChild(${typeof x.hasChild})="${x.hasChild}"`)
-  alasql(`insert into relation values (${v.i},${x.pId},${x.cId},${x.seq},${x.hasChild==='true'?-1:0});`);
-  v.i++;
-});
-v.rel = alasql('select * from relation;');
-console.log('l.300',v.rel)
+v.sql = `insert into master values `;
+for( v.r=0 ; v.r<v.data.length ; v.r++ ){
+  if( v.data[v.r].nId === "" ) continue;
+  v.rSql = '';
+  v.mDef.forEach(x => v.rSql += `"${v.data[v.r][x.name]}",`);
+  v.sql = v.sql + `(${v.rSql.replace(/,$/,'')}),`
+}
+v.sql = v.sql.replace(/,$/,';');
+alasql(v.sql);
 
-v.step = 3; // ツリーの描画
+v.step = 2.2; // テーブル"relation"の作成
+v.rDef = [
+  {name:'rId',type:'int'},  // relation特定用
+  {name:'pId',type:'int'},
+  {name:'cId',type:'int'},
+  {name:'seq',type:'int'},
+  {name:'isOpen',type:'number'}, // -1=close, 0=no child, 1=open
+];
+v.sql = `create table relation (`;
+v.rDef.forEach(x => v.sql += `${x.name} ${x.type},`);
+v.sql = v.sql.replace(/,$/,');');
+alasql(v.sql);
+
+v.sql = `insert into relation values `;
+for( v.r=0 ; v.r<v.data.length ; v.r++ ){
+  if( v.data[v.r].pId === "" ) continue;
+  v.sql += `(${v.r},`
+  + `${v.data[v.r].pId || 'null'},`
+  + `${v.data[v.r].cId || 'null'},`
+  + `${v.data[v.r].seq || 'null'},`
+  + `${v.data[v.r].hasChild?-1:0}),`;
+}
+v.sql = v.sql.replace(/,$/,';');
+alasql(v.sql);
+
+v.step = 3.1; // シナリオを指定。ここではauthMenuシナリオを指定
+document.querySelector('[name="scenario"]').innerText = '1';
+v.step = 3.2; // ツリーの描画
 v.r = disp();
 if( v.r instanceof Error ) throw v.r;
