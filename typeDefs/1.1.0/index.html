@@ -1,0 +1,457 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+/* -----------------------------------------------
+  library/CSS/1.3.0/core.css
+----------------------------------------------- */
+html, body{
+  width: 100%;
+  margin: 0;
+  /*font-size: 4vw;*/
+  text-size-adjust: none; /* https://gotohayato.com/content/531/ */
+}
+body * {
+  font-size: 1rem;
+  font-family: sans-serif;
+  box-sizing: border-box;
+}
+.num, .right {text-align:right;}
+.screen {padding: 1rem;} /* SPAでの切替用画面 */
+.title { /* Markdown他でのタイトル */
+  font-size: 2.4rem;
+  text-shadow: 2px 2px 5px #888;
+}
+
+/* --- テーブル -------------------------------- */
+.table {display:grid}
+th, .th, td, .td {
+  margin: 0.2rem;
+  padding: 0.2rem;
+}
+th, .th {
+  background-color: #888;
+  color: white;
+}
+td, .td {
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+
+/* --- 部品 ----------------------------------- */
+.triDown { /* 下向き矢印 */
+  --bw: 50px;
+  width: 0px;
+  height: 0px;
+  border-top: calc(var(--bw) * 0.7) solid #aaa;
+  border-right: var(--bw) solid transparent;
+  border-left: var(--bw) solid transparent;
+  border-bottom: calc(var(--bw) * 0.2) solid transparent;
+}
+
+/* --- 部品：待機画面 --------------------------- */
+.loader,
+.loader:after {
+  border-radius: 50%;
+  width: 10em;
+  height: 10em;
+}
+.loader {
+  margin: 60px auto;
+  font-size: 10px;
+  position: relative;
+  text-indent: -9999em;
+  border-top: 1.1em solid rgba(204,204,204, 0.2);
+  border-right: 1.1em solid rgba(204,204,204, 0.2);
+  border-bottom: 1.1em solid rgba(204,204,204, 0.2);
+  border-left: 1.1em solid #cccccc;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-animation: load8 1.1s infinite linear;
+  animation: load8 1.1s infinite linear;
+}
+@-webkit-keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load8 {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+</style>
+<!--:x:$src/cdn.html::-->
+<script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
+</head><body>
+  <table>
+    <thead><tr>
+      <th>id</th>
+      <th>name</th>
+      <th>type</th>
+      <th>range</th>
+      <th>role</th>
+      <th>note</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+  <div name="data" style="display:none"><?= data ?></div>  
+</body>
+<script type="text/javascript">
+/** HTMLElementを生成する
+ * @param {CEDefObj|CEDefObj[]} arg - 生成するHTMLElementの定義
+ * @param {HTMLElement|string} [parent=null] - 本関数内部で親要素への追加まで行う場合に指定
+ * @returns {HTMLElement|Error}
+ */
+function createElement(arg,parent=null){
+  const v = {whois:'BasePage.createElement',rv:[],step:0};
+  //console.log(v.whois+' start.',arg);
+  try {
+    v.step = 1.1; // 引数を強制的に配列化
+    v.isArr = Array.isArray(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
+    if( !v.isArr ) arg = [arg];
+    v.step = 1.2; // 親要素の特定
+    if( parent !== null ){
+      v.parent = typeof parent === 'string' ? document.querySelector(parent) : parent;
+    }
+
+
+    for( v.i = 0 ; v.i<arg.length ; v.i++ ){
+      v.step = 2; // 既定値の設定
+      v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
+      Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
+
+      v.step = 3; // HTMLElementを生成、v.objとする
+      v.obj = document.createElement(v.def.tag);
+
+      v.step = 4; // HTMLElementの属性を定義
+      for( v.j in v.def.attr ){
+        v.obj.setAttribute(v.j,v.x = v.def.attr[v.j]);
+      }
+
+      v.step = 5; // 論理属性を定義(ex.checked)
+      for( v.j in v.def.logical ){
+        if( v.def.logical[v.j] ){
+          v.obj.setAttribute(v.j,v.def.logical[v.j]);
+        }
+      }
+
+      v.step = 6; // style属性の定義
+      for( v.j in v.def.style ){
+        if( v.j.match(/^\-\-/) ){ // CSS変数
+          v.obj.style.setProperty(v.j,v.def.style[v.j]);
+        } else {
+          v.obj.style[v.j] = v.def.style[v.j];
+        }
+      }
+
+      v.step = 7; // イベントの定義
+      for( v.j in v.def.event ){
+        v.obj.addEventListener(v.j,v.def.event[v.j],false);
+      }
+
+      v.step = 8; // 内部文字列(html or text)
+      if( v.def.html.length > 0 ){
+        v.obj.innerHTML = v.def.html;
+      } else {
+        // textareaの場合はvalueに、それ以外はinnerTextに内部文字列(text)をセット
+        v.obj[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
+      }
+
+      v.step = 9; // 子要素の追加(parentは指定しない)
+      for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
+        v.obj.appendChild(this.createElement(v.def.children[v.j]));
+      }
+
+      v.step = 10; // 戻り値への登録
+      v.rv.push(v.obj);
+
+      v.step = 11; // 親要素への追加
+      if( parent !== null ){
+        v.parent.appendChild(v.obj);
+      }
+
+      v.step = 12; // メンバとして、また切替画面として登録
+      if( v.def.name.length > 0 ){
+        this[v.def.name] = v.obj;
+        this.screenList[v.def.name] = v.obj;
+      }
+    }
+
+    v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
+    v.rv = v.isArr ? v.rv : v.rv[0];
+    //console.log(v.whois+' normal end.\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+/** 関数他を含め、変数を文字列化
+ * - JSON.stringifyでは文字列化されない関数、シンボル、undefinedも文字列化して表示
+ * - 関数はtoString()で文字列化
+ * - シンボルは`Symbol(xxx)`という文字列とする
+ * - undefinedは'undefined'(文字列)とする
+ *
+ * @param {Object} variable - 文字列化対象変数
+ * @param {Object|boolean} opt - booleanの場合、opt.addTypeの値とする
+ * @param {boolean} opt.addType=false - 文字列化の際、元のデータ型を追記
+ * @returns {string}
+ * @example
+ *
+ * ```
+ * console.log(`l.424 v.td=${stringify(v.td,true)}`)
+ * ⇒ l.424 v.td={
+ *   "children":[{
+ *     "attr":{"class":"[String]th"}, // opt.addType=trueなら[データ型名]がつく
+ *     "text":"[String]タグ"
+ *   },{
+ *     "attr":{"class":"[String]td"},
+ *     "text":"[String]#md"
+ *   }],
+ *   "style":{"gridColumn":"[String]1/13"},
+ *   "attr":{"name":"[String]tag"}
+ * }
+ * ```
+ */
+function stringify(variable,opt={addType:false}){
+  const v = {whois:'stringify',rv:null,step:0};
+  const conv = arg => {
+    const w = {type:whichType(arg)};
+    w.pre = opt.addType ? `[${w.type}]` : '';
+    switch( w.type ){
+      case 'Function': case 'Arrow': case 'Symbol':
+        w.rv = w.pre + arg.toString(); break;
+      case 'BigInt':
+        w.rv = w.pre + parseInt(arg); break;
+      case 'Undefined':
+        w.rv = w.pre + 'undefined'; break;
+      case 'Object':
+        w.rv = {};
+        for( w.i in arg ){
+          // 自分自身(stringify)は出力対象外
+          if( w.i === 'stringify' ) continue;
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      case 'Array':
+        w.rv = [];
+        for( w.i=0 ; w.i<arg.length ; w.i++ ){
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      default:
+        w.rv = w.pre + arg;
+    }
+    return w.rv;
+  };
+  //console.log(`${v.whois} start.\nvariable=${variable}\nopt=${JSON.stringify(opt)}`);
+  try {
+
+    v.step = 1; // 事前準備
+    if( typeof opt === 'boolean' ) opt={addType:opt};
+
+    v.step = 2; // 終了処理
+    //console.log(`${v.whois} normal end.`);
+    return JSON.stringify(conv(variable));
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+/** 変数の型を判定
+ * 
+ * - 引数"is"が指定された場合、判定対象が"is"と等しいかの真偽値を返す。
+ *
+ * @param {any} arg - 判定対象の変数
+ * @param {string} [is] - 想定される型(型名の大文字小文字は意識不要)
+ * @returns {string|boolean} - 型の名前。is指定有りなら判定対象が想定型かの真偽値
+ *
+ * @example
+ * ```
+ * let a = 10;
+ * whichType(a);  // 'Number'
+ * whichType(a,'string'); // false
+ * ```
+ *
+ * <b>確認済戻り値一覧</b>
+ *
+ * オブジェクトは型名が返るので、限定列挙は困難。以下は確認済みの戻り値のみ記載。
+ *
+ * | 型名 | 戻り値 | 備考 |
+ * | :-- | :-- | :-- |
+ * | 文字列 | String |  |
+ * | 数値 | Number |  |
+ * | NaN | NaN |  |
+ * | 長整数 | BigInt |  |
+ * | 論理値 | Boolean |  |
+ * | シンボル | Symbol |  |
+ * | undefined | Undefined | 先頭大文字 |
+ * | Null | Null |  |
+ * | オブジェクト | Object |  |
+ * | 配列 | Array |  |
+ * | 関数 | Function |  |
+ * | アロー関数 | Arrow |  |
+ * | エラー | Error | RangeError等も'Error' |
+ * | Date型 | Date |  |
+ * | Promise型 | Promise |  |
+ *
+ * - Qiita [JavaScriptの型などの判定いろいろ](https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3)
+ *
+ */
+
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
+  }
+}
+function toggle(){
+  const v = {whois:'toggle',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.id = event.target.getAttribute('name');
+    v.obj = alasql(`select * from relation where rId=${v.id}`)[0];
+    console.log(`v.obj.isOpen(${typeof v.obj.isOpen})=${v.obj.isOpen}`)
+    alasql(`update relation set isOpen=${v.obj.isOpen < 0 ? 1 : -1} where rId=${v.id}`);
+
+    v.r = disp();
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+function disp(pId=0,depth=0,row=[]){
+  const v = {whois:'disp',rv:null,step:0,row:row};
+  console.log(`${v.whois} start.`);
+  try {
+
+    if( depth > 10 ) throw new Error('too many depth');
+
+    v.step = 1; // 子要素をseq順に取得
+    v.sql = `select * from relation`
+    + ` inner join primitive on relation.cId === primitive.id`
+    + ` where relation.pId=${pId} order by relation.seq`;
+    v.children = alasql(v.sql);
+    console.log(`l.257 v.children=${stringify(v.children)}`);
+
+    v.step = 2; // 子要素を順次追加
+    for( v.i=0 ; v.i<v.children.length ; v.i++ ){
+      v.step = 2.1; // 項目名の前の表示/非表示制御
+      v.c = {tag:'td',children:[]};
+      if( v.children[v.i].isOpen !== 0 ){ // 子要素が有る場合
+        v.c.children.push({
+          tag:'span',
+          attr:{name:v.children[v.i].rId},
+          text:v.children[v.i].isOpen>0?'▼':'▶',
+          event:{click:()=>toggle()},
+          style:{marginLeft:`${depth}rem`}
+        });
+        v.c.children.push({tag:'span',text:(v.children[v.i].name||'')});
+      } else {
+        v.c.children.push({tag:'span',text:(v.children[v.i].name||''),style:{marginLeft:`${depth}rem`}});
+      }
+      v.step = 2.2; // 項目名以外を一行分作成
+      v.row.push({tag:'tr',children:[
+        {tag:'td',text:v.children[v.i].id,style:{textAlign:'right'}},
+        v.c,
+        {tag:'td',html:(v.children[v.i].type||'')},
+        {tag:'td',html:(v.children[v.i].range||'')},
+        {tag:'td',html:(v.children[v.i].role||'')},
+        {tag:'td',html:(v.children[v.i].note||'')},
+      ]});
+
+      v.step = 2.2; // 子要素のisOpenなら再帰呼出
+      if( v.children[v.i].isOpen > 0 ){
+        v.r = disp(v.children[v.i].id,depth+1,v.row);
+        if( v.r instanceof Error ) throw v.r;
+      }
+    }
+
+    v.step = 3; // tbodyの内容を描画
+    if( depth === 0 ){
+      document.querySelector('tbody').innerHTML = '';
+      createElement(v.row,'tbody');
+    }
+
+    v.step = 4; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+v.step = 1; // データを取得
+v.data = JSON.parse(document.querySelector('[name="data"]').innerText);
+console.log(`l.299 v.data=${stringify(v.data)}`);
+
+v.step = 2.1; // テーブル'primitive'の作成
+alasql(`create table primitive (id int,name string,type string, range string,role string,note string)`);
+v.data.primitive.forEach(x => {
+  alasql(`insert into primitive values (${x.id},"${x.name}","${x.type||''}","${x.range||''}","${x.role||''}","${x.note||''}");`);
+});
+
+v.step = 2.2; // テーブル'relation'の作成
+// isOpen: -1=close, 0=no child, 1=open
+alasql('create table relation (rId int,pId int,cId int,seq int,isOpen number)');
+v.i = 0;
+v.data.relation.forEach(x => {
+  console.log(`l.299 x.hasChild(${typeof x.hasChild})="${x.hasChild}"`)
+  alasql(`insert into relation values (${v.i},${x.pId},${x.cId},${x.seq},${x.hasChild==='true'?-1:0});`);
+  v.i++;
+});
+v.rel = alasql('select * from relation;');
+console.log('l.300',v.rel)
+
+v.step = 3; // ツリーの描画
+v.r = disp();
+if( v.r instanceof Error ) throw v.r;
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+</html>
