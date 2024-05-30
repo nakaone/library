@@ -37,9 +37,7 @@ alasql(v.sql);
 v.sql = `insert into relation values `;
 for( v.r=0 ; v.r<v.data.length ; v.r++ ){
   if( v.data[v.r].pId === "" ) continue;
-  console.log(`l.174\nv.data[${v.r}].rId(${typeof v.data[v.r].rId})=${v.data[v.r].rId}\nv.data[${v.r}].pId(${typeof v.data[v.r].pId})=${v.data[v.r].pId} ⇒ ${typeof v.data[v.r].pId === 'number' ? v.data[v.r].pId : 'null'},`)
-  v.sql += `(${typeof v.data[v.r].rId === 'number'
-  ? v.data[v.r].rId : (v.data.length + v.r)},` // 空欄の場合は採番
+  v.sql += `(${v.r},`
   + `${typeof v.data[v.r].pId === 'number' ? v.data[v.r].pId : 'null'},`
   + `${typeof v.data[v.r].cId === 'number' ? v.data[v.r].cId : 'null'},`
   + `${typeof v.data[v.r].seq === 'number' ? v.data[v.r].seq : 'null'},`
