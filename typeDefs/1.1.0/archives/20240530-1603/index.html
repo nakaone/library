@@ -20,7 +20,7 @@ td, .td {
   <table>
     <thead><tr>
       <th>id</th>
-      <th>name</th><!-- cName -->
+      <th>name</th>
       <th>type</th>
       <th>range</th><!-- choices -->
       <th>default</th><!-- def -->
@@ -286,30 +286,29 @@ function disp(pId=null,depth=0,row=[]){
     v.step = 1; // ツリー(relation)から親がpIdである子要素をseq,name順に取得
     v.sql = `select * from relation`
     + ` inner join master on relation.cId === master.nId`
-    + ` where relation.pId=${pId} order by relation.seq, relation.cName`;
+    + ` where relation.pId=${pId} order by relation.seq, master.name`;
     v.children = alasql(v.sql);
 
     v.step = 2; // 子要素を順次追加
     for( v.i=0 ; v.i<v.children.length ; v.i++ ){
       v.step = 2.1; // 行データ作成前に、項目名の前の'▼':'▶'を追加
-      v.name = {tag:'td',children:[]};
+      v.c = {tag:'td',children:[]};
       if( v.children[v.i].isOpen !== 0 ){ // 子要素が有る場合
-        v.name.children.push({
+        v.c.children.push({
           tag:'span',
           attr:{name:v.children[v.i].rId},
           text:v.children[v.i].isOpen>0?'▼':'▶',
           event:{click:()=>toggle()},
           style:{marginLeft:`${depth}rem`}
         });
-        v.name.children.push({tag:'span',text:(v.children[v.i].cName||'')});
+        v.c.children.push({tag:'span',text:(v.children[v.i].name||'')});
       } else {
-        v.name.children.push({tag:'span',text:(v.children[v.i].cName||'')
-          ,style:{marginLeft:`${depth}rem`}});
+        v.c.children.push({tag:'span',text:(v.children[v.i].name||''),style:{marginLeft:`${depth}rem`}});
       }
       v.step = 2.2; // 項目名と合わせて一行分のデータを作成
       v.row.push({tag:'tr',children:[
         {tag:'td',text:v.children[v.i].nId,style:{textAlign:'right'}},
-        v.name,
+        v.c,
         {tag:'td',html:(v.children[v.i].type||'')},
         {tag:'td',html:(v.children[v.i].choices||'')},
         {tag:'td',html:(v.children[v.i].def||'')},
@@ -352,7 +351,7 @@ window.addEventListener('DOMContentLoaded',() => {
     v.step = 2.1; // テーブル"master"の作成
     v.sql = `create table master (`
     + `nId int,`
-    + `nName string,`
+    + `name string,`
     + `type string,`
     + `choices string,`
     + `def string,`
@@ -364,7 +363,7 @@ window.addEventListener('DOMContentLoaded',() => {
     for( v.r=0 ; v.r<v.data.length ; v.r++ ){
       if( v.data[v.r].nId === "" ) continue;
       v.sql += `(${v.data[v.r].nId},`
-      + `"${v.data[v.r].nName}",`
+      + `"${v.data[v.r].name}",`
       + `"${v.data[v.r].type}",`
       + `"${v.data[v.r].choices}",`
       + `"${v.data[v.r].def}",`
@@ -378,7 +377,6 @@ window.addEventListener('DOMContentLoaded',() => {
     + `rId int,`
     + `pId int,`
     + `cId int,`
-    + `cName string,`
     + `seq int,`
     + `isOpen number)`; // -1=close, 0=no child, 1=open
     alasql(v.sql);
@@ -389,7 +387,6 @@ window.addEventListener('DOMContentLoaded',() => {
       v.sql += `(${v.r},`
       + `${typeof v.data[v.r].pId === 'number' ? v.data[v.r].pId : 'null'},`
       + `${typeof v.data[v.r].cId === 'number' ? v.data[v.r].cId : 'null'},`
-      + `"${v.data[v.r].cName}",`
       + `${typeof v.data[v.r].seq === 'number' ? v.data[v.r].seq : 'null'},`
       + `${v.data[v.r].hasChild ? -1 : 0}),`;
     }
