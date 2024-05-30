@@ -5,7 +5,7 @@ function disp(pId=null,depth=0,row=[]){
   try {
 
     if( pId === null ){
-      pId = Number(document.querySelector('[name="scenario"]').innerText);
+      pId = Number(document.querySelector('[name="pId"]').innerText);
     }
 
     v.step = 1; // ツリー(relation)から親がpIdである子要素をseq,name順に取得

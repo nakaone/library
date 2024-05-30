@@ -17,20 +17,20 @@ td, .td {
 <script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
 </head>
 <body>
-<table>
-  <thead><tr>
-    <th>id</th>
-    <th>name</th>
-    <th>type</th>
-    <th>range</th><!-- choices -->
-    <th>default</th><!-- def -->
-    <th>role</th>
-    <th>note</th>
-  </tr></thead>
-  <tbody></tbody>
-</table>
+  <table>
+    <thead><tr>
+      <th>id</th>
+      <th>name</th>
+      <th>type</th>
+      <th>range</th><!-- choices -->
+      <th>default</th><!-- def -->
+      <th>role</th>
+      <th>note</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+  <div name="pId" style="display:none"><?= pId ?></div>
   <div name="data" style="display:none"><?= data ?></div>
-  <div name="scenario" style="display:none"></div>
 </body>
 <script type="text/javascript">
 /** HTMLElementを生成する
@@ -280,7 +280,7 @@ function disp(pId=null,depth=0,row=[]){
   try {
 
     if( pId === null ){
-      pId = Number(document.querySelector('[name="scenario"]').innerText);
+      pId = Number(document.querySelector('[name="pId"]').innerText);
     }
 
     v.step = 1; // ツリー(relation)から親がpIdである子要素をseq,name順に取得
@@ -345,71 +345,63 @@ window.addEventListener('DOMContentLoaded',() => {
   console.log(`${v.whois} start.`);
   try {
 
-v.step = 1; // データを取得
-v.data = JSON.parse(document.querySelector('[name="data"]').innerText);
-for( v.r=0 ; v.r<v.data.length ; v.r++ ){
-  console.log(`l.108 v.data[${v.r}].hasChild(${typeof v.data[v.r].hasChild})=${v.data[v.r].hasChild}`)
-}
-
-v.step = 2.1; // テーブル"master"の作成
-v.mDef = [
-  {name:'nId',type:'int'},
-  {name:'name',type:'string'},
-  {name:'type',type:'string'},
-  {name:'choices',type:'string'}, // 当初rangeにしていたらエラー。項目名変更
-  {name:'def',type:'string'},
-  {name:'role',type:'string'},
-  {name:'note',type:'string'},
-];
-v.sql = `create table master (`;
-v.mDef.forEach(x => v.sql += `${x.name} ${x.type},`);
-v.sql = v.sql.replace(/,$/,');');
-alasql(v.sql);
-
-v.sql = `insert into master values `;
-for( v.r=0 ; v.r<v.data.length ; v.r++ ){
-  if( v.data[v.r].nId === "" ) continue;
-  v.rSql = '';
-  v.mDef.forEach(x => v.rSql += `"${v.data[v.r][x.name]}",`);
-  v.sql = v.sql + `(${v.rSql.replace(/,$/,'')}),`
-}
-v.sql = v.sql.replace(/,$/,';');
-alasql(v.sql);
-
-v.step = 2.2; // テーブル"relation"の作成
-v.rDef = [
-  {name:'rId',type:'int'},  // relation特定用
-  {name:'pId',type:'int'},
-  {name:'cId',type:'int'},
-  {name:'seq',type:'int'},
-  {name:'isOpen',type:'number'}, // -1=close, 0=no child, 1=open
-];
-v.sql = `create table relation (`;
-v.rDef.forEach(x => v.sql += `${x.name} ${x.type},`);
-v.sql = v.sql.replace(/,$/,');');
-alasql(v.sql);
-
-v.sql = `insert into relation values `;
-for( v.r=0 ; v.r<v.data.length ; v.r++ ){
-  if( v.data[v.r].pId === "" ) continue;
-  v.sql += `(${v.r},`
-  + `${v.data[v.r].pId || 'null'},`
-  + `${v.data[v.r].cId || 'null'},`
-  + `${v.data[v.r].seq || 'null'},`
-  + `${v.data[v.r].hasChild?-1:0}),`;
-}
-v.sql = v.sql.replace(/,$/,';');
-alasql(v.sql);
-
-v.step = 3.1; // シナリオを指定。ここではauthMenuシナリオを指定
-document.querySelector('[name="scenario"]').innerText = '1';
-v.step = 3.2; // ツリーの描画
-v.r = disp();
-if( v.r instanceof Error ) throw v.r;
+    v.step = 1; // データを取得
+    v.data = JSON.parse(document.querySelector('[name="data"]').innerText);
+    
+    v.step = 2.1; // テーブル"master"の作成
+    v.sql = `create table master (`
+    + `nId int,`
+    + `name string,`
+    + `type string,`
+    + `choices string,`
+    + `def string,`
+    + `role string,`
+    + `note string)`;
+    alasql(v.sql);
+    
+    v.sql = `insert into master values `;
+    for( v.r=0 ; v.r<v.data.length ; v.r++ ){
+      if( v.data[v.r].nId === "" ) continue;
+      v.sql += `(${v.data[v.r].nId},`
+      + `"${v.data[v.r].name}",`
+      + `"${v.data[v.r].type}",`
+      + `"${v.data[v.r].choices}",`
+      + `"${v.data[v.r].def}",`
+      + `"${v.data[v.r].role}",`
+      + `"${v.data[v.r].note}"),`;
+    }
+    alasql(v.sql.replace(/,$/,';'));
+    
+    v.step = 2.2; // テーブル"relation"の作成
+    v.sql = `create table relation (`
+    + `rId int,`
+    + `pId int,`
+    + `cId int,`
+    + `seq int,`
+    + `isOpen number)`; // -1=close, 0=no child, 1=open
+    alasql(v.sql);
+    
+    v.sql = `insert into relation values `;
+    for( v.r=0 ; v.r<v.data.length ; v.r++ ){
+      if( v.data[v.r].pId === "" ) continue;
+      console.log(`l.174\nv.data[${v.r}].rId(${typeof v.data[v.r].rId})=${v.data[v.r].rId}\nv.data[${v.r}].pId(${typeof v.data[v.r].pId})=${v.data[v.r].pId} ⇒ ${typeof v.data[v.r].pId === 'number' ? v.data[v.r].pId : 'null'},`)
+      v.sql += `(${typeof v.data[v.r].rId === 'number'
+      ? v.data[v.r].rId : (v.data.length + v.r)},` // 空欄の場合は採番
+      + `${typeof v.data[v.r].pId === 'number' ? v.data[v.r].pId : 'null'},`
+      + `${typeof v.data[v.r].cId === 'number' ? v.data[v.r].cId : 'null'},`
+      + `${typeof v.data[v.r].seq === 'number' ? v.data[v.r].seq : 'null'},`
+      + `${v.data[v.r].hasChild ? -1 : 0}),`;
+    }
+    alasql(v.sql.replace(/,$/,';'));
+    
+    v.step = 3; // ツリーの描画
+    v.r = disp();
+    if( v.r instanceof Error ) throw v.r;
 
     v.step = 99; // 終了処理
     console.log(`${v.whois} normal end.`);
     return v.rv;
+    
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
     console.error(`${e.message}\nv=${JSON.stringify(v)}`);

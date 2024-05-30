@@ -92,10 +92,13 @@ cp $tmp/server.js $mod/server.gs
 # sedはjsdoc2mdの冒頭4行削除用(強制付加されるtitle,a nameタグの削除)
 #jsdoc2md $tmp/client.js | sed '1,4d' > $clDoc
 
+# onload.jsはインデント
+cat $src/onload.js | awk 1 | sed -E "s/^/    /g" > $tmp/onload.js
+
 # 4.4 proto.htmlへの埋め込み
 echo "`date +"%T"` - typeDefs: step.4.4 start."
 cat $src/proto.html | awk 1 \
-| $embed -lib:$lib -src:$src > $mod/index.html
+| $embed -lib:$lib -src:$src -tmp:$tmp > $mod/index.html
 
 ## ----------------------------------------------
 ## 5. 仕様書の作成
