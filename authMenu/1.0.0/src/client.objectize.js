@@ -8,7 +8,7 @@
  */
 #objectize(arg){
   const v = {whois:this.constructor.name+'.objectize',rv:{},step:0};
-  console.log(`${v.whois} start.`);
+  console.log(`${v.whois} start.\narg=${stringify(arg)}`);
   try {
 
     v.step = 1; // nullまたは空文字列にはnullを返す
@@ -49,8 +49,7 @@
     return v.rv;
 
   } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}\narg=${stringify(arg)}`;
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }

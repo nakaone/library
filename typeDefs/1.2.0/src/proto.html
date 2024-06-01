@@ -1,0 +1,60 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+th, .th, td, .td {
+  margin: 0.2rem;
+  padding: 0.2rem;
+}
+th, .th {
+  background-color: #888;
+  color: white;
+}
+td, .td {
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
+</head>
+<body>
+  <table>
+    <thead><tr>
+      <th>id</th>
+      <th>name</th><!-- cName -->
+      <th>type</th>
+      <th>range</th><!-- choices -->
+      <th>default</th><!-- def -->
+      <th>role</th>
+      <th>note</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+  <div name="pId" style="display:none"><?= pId ?></div>
+  <div name="data" style="display:none"><?= data ?></div>
+</body>
+<script type="text/javascript">
+//::$lib/createElement/1.2.1/core.js::
+//::$lib/stringify/1.1.1/core.js::
+//::$lib/whichType/1.0.1/core.js::
+//::$src/toggle.js::
+//::$src/disp.js::
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    //::$tmp/onload.js::
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+    
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+</html>
