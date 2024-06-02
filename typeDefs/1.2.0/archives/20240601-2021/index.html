@@ -1,0 +1,318 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+th, .th, td, .td {
+  margin: 0.2rem;
+  padding: 0.2rem;
+}
+th, .th {
+  background-color: #888;
+  color: white;
+}
+td, .td {
+  border-bottom: solid 1px #aaa;
+  border-right: solid 1px #aaa;
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
+</head>
+<body>
+  <table>
+    <thead><tr>
+      <th>id</th>
+      <th>name</th><!-- nName -->
+      <th>type</th>
+      <th>range</th><!-- choices -->
+      <th>default</th><!-- def -->
+      <th>role</th>
+      <th>note</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+  <div name="pId" style="display:none"><?= pId ?></div>
+  <div name="data" style="display:none"><?= data ?></div>
+</body>
+<script type="text/javascript">
+/** HTMLElementを生成する
+  * @param {CEDefObj|CEDefObj[]} arg - 生成するHTMLElementの定義
+  * @param {HTMLElement|string} [parent=null] - 本関数内部で親要素への追加まで行う場合に指定
+  * @returns {HTMLElement|Error}
+  */
+function createElement(arg,parent=null){
+  const v = {whois:'BasePage.createElement',rv:[],step:0};
+  //console.log(v.whois+' start.',arg);
+  try {
+    v.step = 1.1; // 引数を強制的に配列化
+    v.isArr = Array.isArray(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
+    if( !v.isArr ) arg = [arg];
+    v.step = 1.2; // 親要素の特定
+    if( parent !== null ){
+      v.parent = typeof parent === 'string' ? document.querySelector(parent) : parent;
+    }
+
+
+    for( v.i = 0 ; v.i<arg.length ; v.i++ ){
+      v.step = 2; // 既定値の設定
+      v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
+      Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
+
+      v.step = 3; // HTMLElementを生成、v.objとする
+      v.obj = document.createElement(v.def.tag);
+
+      v.step = 4; // HTMLElementの属性を定義
+      for( v.j in v.def.attr ){
+        v.obj.setAttribute(v.j,v.x = v.def.attr[v.j]);
+      }
+
+      v.step = 5; // 論理属性を定義(ex.checked)
+      for( v.j in v.def.logical ){
+        if( v.def.logical[v.j] ){
+          v.obj.setAttribute(v.j,v.def.logical[v.j]);
+        }
+      }
+
+      v.step = 6; // style属性の定義
+      for( v.j in v.def.style ){
+        if( v.j.match(/^\-\-/) ){ // CSS変数
+          v.obj.style.setProperty(v.j,v.def.style[v.j]);
+        } else {
+          v.obj.style[v.j] = v.def.style[v.j];
+        }
+      }
+
+      v.step = 7; // イベントの定義
+      for( v.j in v.def.event ){
+        v.obj.addEventListener(v.j,v.def.event[v.j],false);
+      }
+
+      v.step = 8; // 内部文字列(html or text)
+      if( v.def.html.length > 0 ){
+        v.obj.innerHTML = v.def.html;
+      } else {
+        // textareaの場合はvalueに、それ以外はinnerTextに内部文字列(text)をセット
+        v.obj[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
+      }
+
+      v.step = 9; // 子要素の追加(parentは指定しない)
+      for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
+        v.obj.appendChild(this.createElement(v.def.children[v.j]));
+      }
+
+      v.step = 10; // 戻り値への登録
+      v.rv.push(v.obj);
+
+      v.step = 11; // 親要素への追加
+      if( parent !== null ){
+        v.parent.appendChild(v.obj);
+      }
+
+      v.step = 12; // メンバとして、また切替画面として登録
+      if( v.def.name.length > 0 ){
+        this[v.def.name] = v.obj;
+        this.screenList[v.def.name] = v.obj;
+      }
+    }
+
+    v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
+    v.rv = v.isArr ? v.rv : v.rv[0];
+    //console.log(v.whois+' normal end.\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+function toggle(){
+  const v = {whois:'toggle',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.id = event.target.getAttribute('name');
+    v.obj = alasql(`select * from master where seq=${v.id}`)[0];
+    alasql(`update master set isOpen=${v.obj.isOpen < 0 ? 1 : -1} where seq=${v.id}`);
+
+    v.r = disp();
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+function disp(pId=null,depth=0,row=[]){
+  const v = {whois:'disp',rv:null,step:0,row:row};
+  console.log(`${v.whois} start. pId=${pId},depth=${depth}`);
+  try {
+
+    v.step = 1.1; // 永久ループ防止
+    if( depth > 10 ) return new Error('too many depth');
+
+    v.step = 1.2; // 既定値設定
+    if( pId === null )
+      pId = Number(document.querySelector('[name="pId"]').innerText);
+    console.log(`l.287 pID=${pId}`)
+
+    v.step = 2; // 子要素の配列をv.childrenに作成
+    v.step = 2.1; // pIdのレコードをv.pRowに取得
+    v.pRow = alasql(`select * from master where nId=${pId}`)[0];
+    console.log('v.pRow',v.pRow)
+
+    v.step = 2.2; // 自分(pId)の子要素をv.childrenに追加
+    v.sql = `pId=${pId}`;
+    v.step = 2.3; // pIdのレコードにlIdが設定されていた場合、lIdの子要素を取得
+    if( v.pRow.lId > 0 ) v.sql += ` or pId=${v.pRow.lId}`;
+
+    v.step = 2.4; // masterから取得
+    v.sql = `select * from master where ${v.sql}`;
+    v.children = alasql(v.sql);
+    console.log(`l.302 v.sql=${v.sql}\nv.children=${JSON.stringify(v.children)}`)
+
+    v.step = 2.5; // 除外する要素(lId<0)のnIdを取得
+    v.exclude = alasql('select -lId as id from ? where lId<0',[v.children]);
+    console.log(`l.306 v.exclude=${JSON.stringify(v.exclude)}`)
+
+    v.step = 2.6; // v.childrenから除外
+    v.sql = 'select children.*,exclude.id from ? as children'
+    + ' left join ? as exclude on children.nId=exclude.id'
+    + ' where exclude.id is null'
+    + ' and not(children.lId<0)'
+    + ' order by seq;';
+    v.children = alasql(v.sql,[v.children, v.exclude]);
+    console.log('l.314',v.children);
+
+
+    // 子要素を順次処理
+    for( v.i=0 ; v.i<v.children.length ; v.i++ ){
+      v.step = 3.1; // 行データ作成前に、項目名の前の'▼':'▶'を追加
+      v.name = {tag:'td',children:[]};
+      if( v.children[v.i].isOpen !== 0 ){ // 子要素が有る場合
+        v.name.children.push({
+          tag:'span',
+          attr:{name:v.children[v.i].seq},
+          text:v.children[v.i].isOpen>0?'▼':'▶',
+          event:{click:()=>toggle()},
+          style:{marginLeft:`${depth}rem`}
+        });
+        v.name.children.push({tag:'span',text:(v.children[v.i].nName||'')});
+      } else {
+        v.name.children.push({tag:'span',text:(v.children[v.i].nName||'')
+          ,style:{marginLeft:`${depth}rem`}});
+      }
+      v.step = 3.2; // 項目名と合わせて一行分のデータを作成
+      v.row.push({tag:'tr',children:[
+        {tag:'td',text:v.children[v.i].nId,style:{textAlign:'right'}},
+        v.name,
+        {tag:'td',html:(v.children[v.i].type||'')},
+        {tag:'td',html:(v.children[v.i].range||'')},
+        {tag:'td',html:(v.children[v.i].default||'')},
+        {tag:'td',html:(v.children[v.i].role||'')},
+        {tag:'td',html:(v.children[v.i].note||'')},
+      ]});
+
+      v.step = 3.3; // 子要素のisOpenなら再帰呼出
+      if( v.children[v.i].isOpen > 0 ){
+        v.r = disp(v.children[v.i].nId,depth+1,v.row);
+        if( v.r instanceof Error ) throw v.r;
+      }
+    }
+
+    v.step = 4; // tbodyの内容を描画
+    if( depth === 0 ){
+      document.querySelector('tbody').innerHTML = '';
+      createElement(v.row,'tbody');
+    }
+
+
+    v.step = 5; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0,map:[]};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1; // データを取得
+    v.data = JSON.parse(document.querySelector('[name="data"]').innerText);
+
+    v.step = 2; // テーブル"master"の作成
+    v.step = 2.1; // create
+    v.sql = 'create table master ('
+    + '`seq` int,'
+    + '`pId` int,'
+    + '`lId` int,'
+    + '`nId` int,'
+    + '`nName` string,'
+    + '`type` string,'
+    + '`range` string,'
+    + '`default` string,'
+    + '`role` string,'
+    + '`note` string,'
+    + '`isOpen` int default 0)'; // -1=close, 0=no child, 1=open
+    alasql(v.sql);
+
+    v.step = 2.2; // テーブル"master"のデータをセット
+    v.numType = x => (typeof v.data[v.r][x] === 'string' 
+      ? 'NULL' : v.data[v.r][x]) + ',';
+    v.strType = x => (v.data[v.r][x] === '' 
+      ? '""' : `"${v.data[v.r][x]}"`) + ',';
+    v.sql = `insert into master values `;
+    for( v.r=0 ; v.r<v.data.length ; v.r++ ){
+      if( v.data[v.r].pId === "" && v.data[v.r].nName !== "root") continue;
+      v.sql += `(${v.r},`;  // seq欄
+      ['pId','lId','nId']
+      .forEach(x => v.sql += v.numType(x));
+      ['nName','type','range','default','role','note']
+      .forEach(x => v.sql += v.strType(x));
+      v.sql += '0),'; // isOpen
+    }
+    alasql(v.sql.replace(/,$/,';'));
+
+    v.step = 2.3; // 引用先行の空欄が引用元行の該当欄で埋まる場合、値を引用
+    v.sql = 'select * from master where lId>0 and nId>0';
+    v.list = alasql(v.sql);
+    for( v.r=0 ; v.r<v.list.length ; v.r++ ){
+      v.lRow = alasql(`select * from master where nId=${v.list[v.r].lId}`)[0];
+      ['nName','type','range','default','role','note'].forEach(x => {
+        if( v.list[v.r][x] === '' && v.lRow[x] !== '' ){
+          v.sql = `update master set \`${x}\` = "${v.lRow[x]}"`
+          + ` where seq=${v.list[v.r].seq}`;
+          console.log(`l.430 v.sql = ${v.sql}`)
+          alasql(v.sql);
+        }
+      });
+    }
+
+    v.step = 2.4; // isOpenのセット
+    alasql('select pId,count(*) as cnt from master where pId>=0 group by pId')
+    .forEach(x => alasql(`update master set isOpen = -1 where nId=${x.pId}`));
+
+    v.step = 3; // ツリーの描画
+    v.r = disp();
+    if( v.r instanceof Error ) throw v.r;
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+    
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+</html>

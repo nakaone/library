@@ -1,10 +1,15 @@
 # シート格納場所
 
-ena.kaon > Google Drive > projects > [typeDefs](https://docs.google.com/spreadsheets/d/1XYq0OGR_om-wbPjz1bCfoFlxw1FsuPeLhEksuKXkd24/edit#gid=1464253663)
+ena.kaon > Google Drive > projects > [typeDefs](https://docs.google.com/spreadsheets/d/1XN7p14-Hyo2DCu76A0I6UXjUxLlKtfP9697UxjS-7ys/edit?usp=drive_link)
 
 
 # 更新履歴
 
+- rev.1.2.0 : 2024/06/01
+  - ロジック見直しでcId, cName, hasChild欄を削除
+  - choices -> range, def -> defaultに欄の名前を変更
+  - シート上のシステム行を2行目に集約
+  - lId<0を除外対象子要素として指定可能に
 - rev.1.1.0 : 2024/05/30
   - 表示対象のルート要素(pId)をURLクエリから指定可能に変更
   - primitive, relationを同一シートに統合
