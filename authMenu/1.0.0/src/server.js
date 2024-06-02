@@ -65,7 +65,10 @@ function authServer(userId=null,arg=null) {
           };
           break;
         case 'passcode':
-          w.rv = {response:w.r.response};
+          w.rv = {
+            response:w.r.response,
+            numberOfLoginAttempts: w.r.numberOfLoginAttempts,
+          };
           w.r = w.func.sendPasscode(w.r.data.userId);
           if( w.r instanceof Error ) throw w.r;
           break;

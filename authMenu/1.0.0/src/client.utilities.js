@@ -1,11 +1,28 @@
 /** authMenu用の既定値をセットしてdoGASを呼び出し
  * 
+ * @param {Object} arg - authServerのメソッドに渡す引数オブジェクト
+ * @param {Object} opt
+ * @param {string} opt.type - argの加工形式
+ * - JSON : JSON.stringify(arg)
+ * - encrypt : SPkeyで暗号化・署名は無し
+ * - signature : SPkeyで暗号化・CSkeyで署名
 async doGAS(func,...args){
   return await doGAS('authServer',this.userId,func,...args);
 }
  */
 async doGAS(arg,opt={type:'JSON'}){
-  return await doGAS('authServer',this.userId,JSON.stringify(arg));
+  const v = {arg:JSON.stringify(arg)};
+  if( opt.type === 'encrypt' || opt.type === 'signature' ){
+    v.encrypt = opt.type === 'encrypt'
+    ? cryptico.encrypt(v.arg,this.user.SPkey)
+    : cryptico.encrypt(v.arg,this.user.SPkey,this.user.CSkey);
+    if( v.encrypt.status === 'success' ){
+      v.arg = v.encrypt.cipher;
+    } else {
+      throw new Error('encrypt failed.');
+    }
+  }
+  return await doGAS('authServer',this.userId,v.arg);
 }
 
 /** ナビゲーション領域の表示/非表示切り替え */
