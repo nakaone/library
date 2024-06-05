@@ -24,25 +24,39 @@ function disp(pId=null,depth=0,row=[]){
     v.children = alasql(v.sql);
 
     v.step = 2.5; // 除外する要素(lId<0)のnIdを取得
-    v.exclude = alasql('select -lId as id from ? where lId<0',[v.children]);
+    v.exclude = alasql('select -lId as delId from ? where lId<0',[v.children]);
 
-    v.step = 2.6; // v.childrenから除外
-    v.sql = 'select children.*,exclude.id from ? as children'
-    + ' left join ? as exclude on children.nId=exclude.id'
-    + ' where exclude.id is null'
+    v.step = 2.6; // 自分とlIdで重複する要素のnIdを取得、v.excludeに追加
+    v.step = 2.61; // 重複する要素：引用元nId === 引用先lId ⇒ 引用元を削除
+    v.sql = 'select c1.nId as delId, c2.nId as dupId, c1.rowNo as rowNo'
+    + ' from ? as c1'
+    + ' inner join ? as c2 on c1.nId = c2.lId';
+    v.duplicate = alasql(v.sql,[v.children,v.children]);
+    v.exclude = [...v.exclude,...v.duplicate];
+
+    v.step = 2.62; // 表示時の順番を守るため、引用先のseqを引用元のseqで書き換える
+    v.duplicate.forEach(x =>
+      v.children.find(o => o.nId === x.dupId).rowNo = x.rowNo);
+
+    v.step = 2.7; // v.childrenから除外
+    v.sql = 'select children.*,exclude.delId from ? as children'
+    + ' left join ? as exclude on children.nId=exclude.delId'
+    + ' where exclude.delId is null'
     + ' and not(children.lId<0)'
-    + ' order by seq;';
+    + ' order by rowNo;';
     v.children = alasql(v.sql,[v.children, v.exclude]);
+    //console.log(JSON.stringify(v.children))
 
 
     // 子要素を順次処理
     for( v.i=0 ; v.i<v.children.length ; v.i++ ){
-      v.step = 3.1; // 行データ作成前に、項目名の前の'▼':'▶'を追加
+      v.step = 3.1; // name欄の作成
       v.name = {tag:'td',children:[]};
       if( v.children[v.i].isOpen !== 0 ){ // 子要素が有る場合
+        // 行データ作成前に、項目名の前の'▼':'▶'を追加
         v.name.children.push({
           tag:'span',
-          attr:{name:v.children[v.i].seq},
+          attr:{name:v.children[v.i].rowNo},
           text:v.children[v.i].isOpen>0?'▼':'▶',
           event:{click:()=>toggle()},
           style:{marginLeft:`${depth}rem`}
@@ -52,15 +66,24 @@ function disp(pId=null,depth=0,row=[]){
         v.name.children.push({tag:'span',text:(v.children[v.i].nName||'')
           ,style:{marginLeft:`${depth}rem`}});
       }
-      v.step = 3.2; // 項目名と合わせて一行分のデータを作成
+
+      v.step = 3.2; // note欄の作成
+      v.stack = [];
+      if( v.children[v.i].range )
+        v.stack.push('range = ' + v.children[v.i].range);
+      if( v.children[v.i].default )
+        v.stack.push('default = ' + v.children[v.i].default);
+      if( v.children[v.i].note )
+        v.stack.push(v.children[v.i].note);
+      v.note = v.stack.join('<br>');
+
+      v.step = 3.3; // 項目名と合わせて一行分のデータを作成
       v.row.push({tag:'tr',children:[
         {tag:'td',text:v.children[v.i].nId,style:{textAlign:'right'}},
         v.name,
         {tag:'td',html:(v.children[v.i].type||'')},
-        {tag:'td',html:(v.children[v.i].range||'')},
-        {tag:'td',html:(v.children[v.i].default||'')},
         {tag:'td',html:(v.children[v.i].role||'')},
-        {tag:'td',html:(v.children[v.i].note||'')},
+        {tag:'td',html:v.note},
       ]});
 
       v.step = 3.3; // 子要素のisOpenなら再帰呼出

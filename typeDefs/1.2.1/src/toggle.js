@@ -4,8 +4,8 @@ function toggle(){
   try {
 
     v.id = event.target.getAttribute('name');
-    v.obj = alasql(`select * from master where seq=${v.id}`)[0];
-    alasql(`update master set isOpen=${v.obj.isOpen < 0 ? 1 : -1} where seq=${v.id}`);
+    v.obj = alasql(`select * from master where rowNo=${v.id}`)[0];
+    alasql(`update master set isOpen=${v.obj.isOpen < 0 ? 1 : -1} where rowNo=${v.id}`);
 
     v.r = disp();
     if( v.r instanceof Error ) throw v.r;

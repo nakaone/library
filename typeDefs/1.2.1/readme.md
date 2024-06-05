@@ -5,6 +5,9 @@ ena.kaon > Google Drive > projects > [typeDefs](https://docs.google.com/spreadsh
 
 # 更新履歴
 
+- rev.1.2.1 : 2024/06/05
+  - range,defaultをnote欄に統合
+  - 関数・メソッド内部で呼び出す関数・メソッドを項目として追加(call,func)
 - rev.1.2.0 : 2024/06/01
   - ロジック見直しでcId, cName, hasChild欄を削除
   - choices -> range, def -> defaultに欄の名前を変更
