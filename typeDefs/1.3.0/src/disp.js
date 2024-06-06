@@ -45,10 +45,8 @@ function disp(pId=null,depth=0,row=[]){
     + ' and not(children.lId<0)'
     + ' order by rowNo;';
     v.children = alasql(v.sql,[v.children, v.exclude]);
-    //console.log(JSON.stringify(v.children))
 
-
-    // 子要素を順次処理
+    v.step = 3; // 子要素を順次処理
     for( v.i=0 ; v.i<v.children.length ; v.i++ ){
       v.step = 3.1; // name欄の作成
       v.name = {tag:'td',children:[]};
@@ -69,10 +67,26 @@ function disp(pId=null,depth=0,row=[]){
 
       v.step = 3.2; // note欄の作成
       v.stack = [];
+      v.step = 3.21; // range: 取り得る値
       if( v.children[v.i].range )
         v.stack.push('range = ' + v.children[v.i].range);
+      v.step = 3.22; // default: 既定値
       if( v.children[v.i].default )
         v.stack.push('default = ' + v.children[v.i].default);
+      v.step = 3.23; // ref: 参照している関数
+      if( v.children[v.i].ref ){
+        v.str = 'refs = ';
+        v.url = 'https://script.google.com/macros/s/AKfycbxEG0HhYdS9Yo7g5biJfVLgy_YTjR6NuhwNZc4YXB8/dev'
+        v.refTable = [];
+        v.children[v.i].ref.split(',').forEach(x => v.refTable.push({nId:Number(x)}));
+        v.sql = `select * from master as m1`
+        + ` inner join ? as m2 on m1.nId=m2.nId`;
+        v.refs = alasql(v.sql,[v.refTable]).forEach(x => v.str +=
+          `<a href="${v.url}?pId=${x.nId}" target="_blank">`
+          + `${x.nId}:${x.nName}</a> `);
+        v.stack.push(v.str)
+      }
+      v.step = 3.24; // note: 本来の備考
       if( v.children[v.i].note )
         v.stack.push(v.children[v.i].note);
       v.note = v.stack.join('<br>');

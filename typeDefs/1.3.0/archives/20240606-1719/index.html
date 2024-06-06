@@ -156,6 +156,7 @@ function disp(pId=null,depth=0,row=[]){
     if( pId === null )
       pId = Number(document.querySelector('[name="pId"]').innerText);
 
+
     v.step = 2; // 子要素の配列をv.childrenに作成
     v.step = 2.1; // pIdのレコードをv.pRowに取得
     v.pRow = alasql(`select * from master where nId=${pId}`)[0];
@@ -192,7 +193,8 @@ function disp(pId=null,depth=0,row=[]){
     + ' order by rowNo;';
     v.children = alasql(v.sql,[v.children, v.exclude]);
 
-    v.step = 3; // 子要素を順次処理
+
+    // 子要素を順次処理
     for( v.i=0 ; v.i<v.children.length ; v.i++ ){
       v.step = 3.1; // name欄の作成
       v.name = {tag:'td',children:[]};
@@ -220,11 +222,13 @@ function disp(pId=null,depth=0,row=[]){
       if( v.children[v.i].default )
         v.stack.push('default = ' + v.children[v.i].default);
       v.step = 3.23; // ref: 参照している関数
+      console.log(`l.226 v.children[${v.i}]=${JSON.stringify(v.children[v.i])}`)
       if( v.children[v.i].ref ){
         v.str = 'refs = ';
         v.url = 'https://script.google.com/macros/s/AKfycbxEG0HhYdS9Yo7g5biJfVLgy_YTjR6NuhwNZc4YXB8/dev'
         v.refTable = [];
         v.children[v.i].ref.split(',').forEach(x => v.refTable.push({nId:Number(x)}));
+        console.log(`l.231 v.str=${v.str}\nv.url=${v.url}\nv.refTable=${JSON.stringify(v.refTable)}`);
         v.sql = `select * from master as m1`
         + ` inner join ? as m2 on m1.nId=m2.nId`;
         v.refs = alasql(v.sql,[v.refTable]).forEach(x => v.str +=
@@ -278,7 +282,7 @@ window.addEventListener('DOMContentLoaded',() => {
   console.log(`${v.whois} start.`);
   try {
 
-v.step = 1; // データを取得
+    v.step = 1; // データを取得
     v.data = JSON.parse(document.querySelector('[name="data"]').innerText);
     
     v.step = 2; // テーブル"master"の作成
@@ -316,7 +320,7 @@ v.step = 1; // データを取得
       v.sql += '0),'; // isOpenは既定値'0'
     }
     alasql(v.sql.replace(/,$/,';'));
-    
+
     v.step = 2.3; // ①引用先(lId>0)のnId未設定 且つ ②引用元に子要素が存在 だと
     // dispで親要素から呼出される際、pIdにセットされるnIdが不明になってエラー発生
     // 【例】authMenu.constructorの内部でsessionStorageを参照する場合
@@ -333,7 +337,7 @@ v.step = 1; // データを取得
       //        https://github.com/AlaSQL/alasql/issues/458
     + ` group by m1.rowNo`;
     alasql(v.sql).forEach(x => alasql(`update master set nId=rowNo where rowNo=${x.rowNo}`));
-    
+
     v.step = 2.4; // 引用先行の空欄が引用元行の該当欄で埋まる場合、値を引用
     v.sql = 'select * from master where lId>0';
     v.list = alasql(v.sql);

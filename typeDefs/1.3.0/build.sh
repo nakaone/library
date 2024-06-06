@@ -13,7 +13,7 @@ echo "\n$hr`date +"%T"` [typeDefs] build start$hr"
 echo "`date +"%T"` - typeDefs: step.1.1 start."
 GitHub="/Users/ena.kaon/Desktop/GitHub"
 lib="$GitHub/library"
-mod="$lib/typeDefs/1.2.1"
+mod="$lib/typeDefs/1.3.0"
 src="$mod/src"
 # ツール
 embed="node $lib/embedRecursively/1.1.0/pipe.js"
