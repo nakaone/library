@@ -6,6 +6,10 @@ https://docs.google.com/spreadsheets/d/1XN7p14-Hyo2DCu76A0I6UXjUxLlKtfP9697UxjS-
 
 - authMenu機能群 [授受データ型定義情報](https://script.google.com/macros/s/AKfycbxEG0HhYdS9Yo7g5biJfVLgy_YTjR6NuhwNZc4YXB8/dev?pId=4)
 
+# 事前処理
+
+新規プロジェクト(スプレッドシート)作成時、GASでsetProperties()を行い、サーバ側の設定をDocumentPropertiesに保存する。
+
 # 初期化処理
 
 authMenuインスタンス化時点で以下の処理を行う。
