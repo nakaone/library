@@ -14,13 +14,13 @@ function doGet(e){
   v.template.data = JSON.stringify(v.a);
   
   v.htmlOutput = v.template.evaluate();
-  v.htmlOutput.setTitle('typeDefs r.1.2.0');
+  v.htmlOutput.setTitle('typeDefs r.1.3.0');
   return v.htmlOutput;
 }
 
-/** refFunc: 参照している関数/メソッドのnIdから関数名/メソッド名を引用 */
-function refFunc(nId,list){
-  const v = {whois:'refFunc',map:{},rv:[],step:0};
+/** refName: 参照している関数/メソッドのnIdから関数名/メソッド名を引用 */
+function refName(nId,list){
+  const v = {whois:'refName',map:{},rv:[],step:0};
   try {
     v.step = 1; // nId->関数/メソッド名のマップを作成
     list.forEach(x => v.map[x[0]] = x[1]);

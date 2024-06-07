@@ -75,7 +75,7 @@ function disp(pId=null,depth=0,row=[]){
         v.stack.push('default = ' + v.children[v.i].default);
       v.step = 3.23; // ref: 参照している関数
       if( v.children[v.i].ref ){
-        v.str = 'refs = ';
+        v.str = 'ref = ';
         v.url = 'https://script.google.com/macros/s/AKfycbxEG0HhYdS9Yo7g5biJfVLgy_YTjR6NuhwNZc4YXB8/dev'
         v.refTable = [];
         v.children[v.i].ref.split(',').forEach(x => v.refTable.push({nId:Number(x)}));
