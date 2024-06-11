@@ -1,0 +1,416 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+.table, .tr {display: grid; width: 100%;}
+.tr {grid-template-columns: repeat(21,1rem) 1fr; gap:0.2rem; width:100%}
+.ctrl {color:#aaa}
+/*
+.indent, .ctrl, .item {border:solid 1px red; margin:0; padding:0}
+*/
+</style>
+<script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
+</head>
+<body>
+  <div name="tree" class="table"></div>
+  <div name="pId" style="display:none"><?= pId ?></div>
+  <div name="data" style="display:none"><?= data ?></div>
+</body>
+<script type="text/javascript">
+/** HTMLElementを生成する
+ * @param {CEDefObj|CEDefObj[]} arg - 生成するHTMLElementの定義
+ * @param {HTMLElement|string} [parent=null] - 本関数内部で親要素への追加まで行う場合に指定
+ * @returns {HTMLElement|Error}
+ */
+function createElement(arg,parent=null){
+  const v = {whois:'BasePage.createElement',rv:[],step:0};
+  //console.log(v.whois+' start.',arg);
+  try {
+    v.step = 1.1; // 引数を強制的に配列化
+    v.isArr = Array.isArray(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
+    if( !v.isArr ) arg = [arg];
+    v.step = 1.2; // 親要素の特定
+    if( parent !== null ){
+      v.parent = typeof parent === 'string' ? document.querySelector(parent) : parent;
+    }
+
+
+    for( v.i = 0 ; v.i<arg.length ; v.i++ ){
+      v.step = 2; // 既定値の設定
+      v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
+      Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
+
+      v.step = 3; // HTMLElementを生成、v.objとする
+      v.obj = document.createElement(v.def.tag);
+
+      v.step = 4; // HTMLElementの属性を定義
+      for( v.j in v.def.attr ){
+        v.obj.setAttribute(v.j,v.x = v.def.attr[v.j]);
+      }
+
+      v.step = 5; // 論理属性を定義(ex.checked)
+      for( v.j in v.def.logical ){
+        if( v.def.logical[v.j] ){
+          v.obj.setAttribute(v.j,v.def.logical[v.j]);
+        }
+      }
+
+      v.step = 6; // style属性の定義
+      for( v.j in v.def.style ){
+        if( v.j.match(/^\-\-/) ){ // CSS変数
+          v.obj.style.setProperty(v.j,v.def.style[v.j]);
+        } else {
+          v.obj.style[v.j] = v.def.style[v.j];
+        }
+      }
+
+      v.step = 7; // イベントの定義
+      for( v.j in v.def.event ){
+        v.obj.addEventListener(v.j,v.def.event[v.j],false);
+      }
+
+      v.step = 8; // 内部文字列(html or text)
+      if( v.def.html.length > 0 ){
+        v.obj.innerHTML = v.def.html;
+      } else {
+        // textareaの場合はvalueに、それ以外はinnerTextに内部文字列(text)をセット
+        v.obj[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
+      }
+
+      v.step = 9; // 子要素の追加(parentは指定しない)
+      for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
+        v.obj.appendChild(this.createElement(v.def.children[v.j]));
+      }
+
+      v.step = 10; // 戻り値への登録
+      v.rv.push(v.obj);
+
+      v.step = 11; // 親要素への追加
+      if( parent !== null ){
+        v.parent.appendChild(v.obj);
+      }
+
+      v.step = 12; // メンバとして、また切替画面として登録
+      if( v.def.name.length > 0 ){
+        this[v.def.name] = v.obj;
+        this.screenList[v.def.name] = v.obj;
+      }
+    }
+
+    v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
+    v.rv = v.isArr ? v.rv : v.rv[0];
+    //console.log(v.whois+' normal end.\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+
+function stringify(variable,opt={addType:false}){
+  const v = {whois:'stringify',rv:null,step:0};
+  const conv = arg => {
+    const w = {type:whichType(arg)};
+    w.pre = opt.addType ? `[${w.type}]` : '';
+    switch( w.type ){
+      case 'Function': case 'Arrow': case 'Symbol':
+        w.rv = w.pre + arg.toString(); break;
+      case 'BigInt':
+        w.rv = w.pre + parseInt(arg); break;
+      case 'Undefined':
+        w.rv = w.pre + 'undefined'; break;
+      case 'Object':
+        w.rv = {};
+        for( w.i in arg ){
+          // 自分自身(stringify)は出力対象外
+          if( w.i === 'stringify' ) continue;
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      case 'Array':
+        w.rv = [];
+        for( w.i=0 ; w.i<arg.length ; w.i++ ){
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      default:
+        w.rv = w.pre + arg;
+    }
+    return w.rv;
+  };
+  //console.log(`${v.whois} start.\nvariable=${variable}\nopt=${JSON.stringify(opt)}`);
+  try {
+
+    v.step = 1; // 事前準備
+    if( typeof opt === 'boolean' ) opt={addType:opt};
+
+    v.step = 2; // 終了処理
+    //console.log(`${v.whois} normal end.`);
+    return JSON.stringify(conv(variable));
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
+  }
+}
+
+class TypeDefs {
+  constructor(arg={}){
+    const v = {whois:this.constructor.name+'.constructor+',rv:null,step:0};
+    console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
+    try {
+
+      v.step = 1; // 既定値を設定、データを取得(this.raw)
+      // サーバ側から渡されるマスタ(JSON)が格納される領域
+      this.raw = JSON.parse(document.querySelector(arg.dataDiv || 'div[name="data"]').innerText);
+      // サーバ側から渡されるルートのID
+      this.pId = Number(document.querySelector(arg.pId || 'div[name="pId"]').innerText);
+      // ツリーの描画領域
+      this.area = document.querySelector(arg.area || 'div.table[name="tree"]');
+
+      v.step = 2; // データを補完、整理
+      this.data = {};
+      for( v.i=0 ; v.i<this.raw.length ; v.i++ ){
+        v.step = 2.1; // linkが空欄なら空配列に修正
+        if( this.raw[v.i].link === '' ) this.raw[v.i].link = [];
+        v.step = 2.2; // childrenが空欄なら空配列に修正
+        if( this.raw[v.i].children === '' ) this.raw[v.i].children = [];
+        v.step = 2.3; // 子要素は閉じた状態に設定
+        this.raw[v.i].isOpen = false;
+        v.step = 2.4; // this.dataに保存
+        this.data[this.raw[v.i].id] = this.raw[v.i];
+      }
+      console.log(`l.195 this.data=${JSON.stringify(this.data)}`);
+
+      v.step = 3; // ツリーを描画
+      v.r = this.disp();
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  disp(pId=this.pId,depth=0){
+    const v = {whois:this.constructor.name+'.disp',rv:null,step:0};
+    console.log(`${v.whois} start.\npId=${pId}, depth=${depth}`);
+    try {
+
+      // ---------------------------------------------------
+      v.step = 1; // 事前準備
+      // ---------------------------------------------------
+      v.step = 1.1; // 永久ループ防止
+      if( depth > 20 ) throw new Error('too many depth');
+
+      if( depth === 0 ){  // ルート要素のみの処理
+        this.area.innerHTML = '';
+      }
+
+      // ---------------------------------------------------
+      v.step = 2; // 子要素の配列をv.childrenとして作成
+      // ---------------------------------------------------
+      v.step = 2.1; // 対象外子要素を削除する関数を定義
+      v.exclude = arr => {  // マイナスがあればプラスと相殺
+        v.minus = arr.filter(x => x < 0);
+        v.plus = arr.filter(x => x > 0);
+        v.minus.forEach(x => {
+          v.index = v.plus.findIndex(y => -x === y);
+          if( v.index >= 0 ) v.plus.splice(v.index,1);
+        });
+        return v.plus;
+      };
+
+      v.step = 2.2; // 自要素およびリンク元要素の子要素を追加
+      v.children = [];
+      v.exclude(this.data[pId].children).forEach(x => {
+        if(this.data[pId].link.findIndex(y => x === y) >= 0){
+          // linkにも存在 ⇒ 子要素から削除し、linkのchildrenを子要素として追加
+          v.children.push(...v.exclude(this.data[x].children));
+        } else {
+          // linkには不在 ⇒ そのまま子要素として追加
+          v.children.push(x);
+        }
+      })
+      console.log(`l.251 v.children=${stringify(v.children)}`);
+
+      // ---------------------------------------------------
+      v.step = 3; // 自要素を描画する
+      // ---------------------------------------------------
+      v.step = 3.1; // link指定が有れば、それをベースに自要素の値を上書き
+      v.item = {};
+      if( Array.isArray(this.data[pId].link) && this.data[pId].link.length > 0 ){
+        v.list = [...this.data[pId].link.toReversed(),pId];
+        v.list.forEach(x => v.list.push(this.data[x]));
+        v.item = Object.assign(...v.list);
+      } else {
+        v.item = this.data[pId];
+      }
+      console.log(`l.261 v.item=${JSON.stringify(v.item)}`);
+
+      v.step = 3.2; // createElementオブジェクトを作成する関数を定義
+      v.style = (x,depth) => {
+        // typeStr例: [{number}=0]
+        x.typeStr = (x.attribute.type ? `{${x.attribute.type}}` : '')
+                  + (x.attribute.default ? `=${x.attribute.default}` : '');
+        if( x.isOpt === true ) x.typeStr = `[${x.typeStr}]`;
+
+        // item領域の作成
+        v.iArr = [{tag:'span',text:x.label,attr:{name:'label'},
+          event:{click:e => this.edit(e)}}];
+        if( x.attribute.type ){
+          v.iArr.push({tag:'span',text:x.typeStr,attr:{name:'typeStr'},
+            event:{click:e => this.edit(e)}});
+        }
+        if( x.attribute.role ){
+          v.iArr.push({tag:'span',text:x.attribute.role,attr:{name:'role'},
+            event:{click:e => this.edit(e)}});
+        }
+        if( x.note ){
+          v.iArr.push({tag:'span',text:x.note,attr:{name:'note'},
+            event:{click:e => this.edit(e)}});
+        }
+        v.itemChildren = [];
+        for( v.i=0 ; v.i<v.iArr.length ; v.i++ ){
+          v.itemChildren.push(v.iArr[v.i],
+            (v.i===0 ? {tag:'span',html:' : '} : {tag:'br'}));
+        }
+        v.itemChildren.pop();
+
+        return {
+          attr:{class:'tr',name:x.id},
+          children:[
+            {
+              attr:{class:'indent'},
+              style:{gridColumn:`1/${depth+1}`,width:depth+'rem'}
+            },{
+              attr: {class:'ctrl',name:x.id},
+              // 子要素があれば[▶|▼]、無ければ●
+              text: (v.children.length === 0 ? '●' : (x.isOpen ? '▼' : '▶')),
+              style:{gridColumn:`${depth+1}/${depth+2}`},
+              event: {click:e => this.toggle(e)},
+            },
+            {
+              attr:{class:'item'},
+              style:{gridColumn:`${depth+2}/23`},
+              children:v.itemChildren,
+            },
+          ]
+        };
+      };
+      v.step = 3.3; // 関数の結果を描画領域に追加
+      console.log(`l.298 v.item=${stringify(v.style(v.item,depth))}`);
+      v.r = createElement(v.style(v.item,depth),this.area);
+      if( v.r instanceof Error ) throw v.r;
+
+      // ---------------------------------------------------
+      v.step = 4; // 子要素を順次再帰呼出
+      // ---------------------------------------------------
+      if( this.data[pId].isOpen === true ){
+        for( v.i=0 ; v.i<v.children.length ; v.i++ ){
+          v.r = this.disp(v.children[v.i],depth+1);
+          if( v.r instanceof Error ) throw v.r;
+        }
+      }
+
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  toggle(event){
+    const v = {whois:this.constructor.name+'.toggle',rv:null,step:0};
+    console.log(`${v.whois} start.`);//\ntarget=${event.parentNode.name}`);
+    try {
+
+      v.step = 1; // 対象idの取得
+      v.id = Number(event.target.getAttribute('name'));
+
+      v.step = 2; // isOpenを逆転
+      this.data[v.id].isOpen = this.data[v.id].isOpen ? false : true;
+
+      v.step = 3; // 再描画
+      v.r = this.disp();
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  edit(event){
+    const v = {whois:this.constructor.name+'.edit',rv:null,step:0};
+    console.log(`${v.whois} start.\ntarget=${event.target.name}`);
+    try {
+
+      v.step = 1; // 対象idの取得
+      v.id = Number(event.target.parentNode.parentNode.getAttribute('name'));
+      v.name = event.target.parentNode.getAttribute('name');
+      console.log(`l.369 v.id=${v.id}, v.name=${v.name}`);
+
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1;
+    v.TypeDefs = new TypeDefs();
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+    
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+</html>
