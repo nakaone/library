@@ -1,0 +1,579 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+.table, .tr {display: grid; width: 100%;}
+.tr {grid-template-columns: repeat(21,1rem) 1fr; gap:0.2rem; width:100%}
+.ctrl {color:#aaa}
+.fuchidori { /* https://web-camp.io/magazine/archives/104400 */
+  background-color: #ccc;
+  padding: 0 3rem;
+  color: #ffffff;
+  text-shadow:
+    1px 1px #000000, /*文字の右下に影を追加*/
+    1px -1px #000000,/*文字の右上に影を追加*/
+    -1px 1px #000000,/*文字の左下に影を追加*/
+    -1px -1px #000000;/*文字の左上に影を追加*/
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
+</head>
+<body>
+  <div name="tree" class="table"></div>
+  <div name="pId" style="display:none"><?= pId ?></div>
+  <div name="data" style="display:none"><?= data ?></div>
+</body>
+<script type="text/javascript">
+/** HTMLElementを生成する
+ * @param {CEDefObj|CEDefObj[]} arg - 生成するHTMLElementの定義
+ * @param {HTMLElement|string} [parent=null] - 本関数内部で親要素への追加まで行う場合に指定
+ * @returns {HTMLElement|Error}
+ */
+function createElement(arg,parent=null){
+  const v = {whois:'BasePage.createElement',rv:[],step:0};
+  //console.log(v.whois+' start.',arg);
+  try {
+    v.step = 1.1; // 引数を強制的に配列化
+    v.isArr = Array.isArray(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
+    if( !v.isArr ) arg = [arg];
+    v.step = 1.2; // 親要素の特定
+    if( parent !== null ){
+      v.parent = typeof parent === 'string' ? document.querySelector(parent) : parent;
+    }
+
+
+    for( v.i = 0 ; v.i<arg.length ; v.i++ ){
+      v.step = 2; // 既定値の設定
+      v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
+      Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
+
+      v.step = 3; // HTMLElementを生成、v.objとする
+      v.obj = document.createElement(v.def.tag);
+
+      v.step = 4; // HTMLElementの属性を定義
+      for( v.j in v.def.attr ){
+        v.obj.setAttribute(v.j,v.x = v.def.attr[v.j]);
+      }
+
+      v.step = 5; // 論理属性を定義(ex.checked)
+      for( v.j in v.def.logical ){
+        if( v.def.logical[v.j] ){
+          v.obj.setAttribute(v.j,v.def.logical[v.j]);
+        }
+      }
+
+      v.step = 6; // style属性の定義
+      for( v.j in v.def.style ){
+        if( v.j.match(/^\-\-/) ){ // CSS変数
+          v.obj.style.setProperty(v.j,v.def.style[v.j]);
+        } else {
+          v.obj.style[v.j] = v.def.style[v.j];
+        }
+      }
+
+      v.step = 7; // イベントの定義
+      for( v.j in v.def.event ){
+        v.obj.addEventListener(v.j,v.def.event[v.j],false);
+      }
+
+      v.step = 8; // 内部文字列(html or text)
+      if( v.def.html.length > 0 ){
+        v.obj.innerHTML = v.def.html;
+      } else {
+        // textareaの場合はvalueに、それ以外はinnerTextに内部文字列(text)をセット
+        v.obj[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
+      }
+
+      v.step = 9; // 子要素の追加(parentは指定しない)
+      for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
+        v.obj.appendChild(this.createElement(v.def.children[v.j]));
+      }
+
+      v.step = 10; // 戻り値への登録
+      v.rv.push(v.obj);
+
+      v.step = 11; // 親要素への追加
+      if( parent !== null ){
+        v.parent.appendChild(v.obj);
+      }
+
+      v.step = 12; // メンバとして、また切替画面として登録
+      if( v.def.name.length > 0 ){
+        this[v.def.name] = v.obj;
+        this.screenList[v.def.name] = v.obj;
+      }
+    }
+
+    v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
+    v.rv = v.isArr ? v.rv : v.rv[0];
+    //console.log(v.whois+' normal end.\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+
+/** サーバ側GASの指定関数を実行、結果を取得
+ * 
+ * - [GASのgoogle.script.runをPromise化する](https://www.330k.info/essay/gas_google_script_run_convert_promise/)
+ * 
+ * @exsample
+ * 
+ * <pre><code>
+ * (async ()=> {
+ *   const result1 = await doGAS('doSomething1');
+ *   const result2 = await doGAS('doSomething2');
+ *   const result3 = await doGAS('doSomething3');
+ * })();
+ * </code></pre>
+ * 
+ * doSomething(arg1, arg2, ...)のように引数を渡す時は以下のようにdoGASの第2引数以下に指定する。
+ * ```
+ * doGAS('doSomething', arg1, arg2);
+ * ```
+ */
+function doGAS(func, ...args){
+  console.log('doGAS start. func=%s',func,...args);
+  return new Promise(function(resolve, reject){
+    google.script.run.withSuccessHandler(function(...e){
+      resolve(...e);
+    }).withFailureHandler(function(...e){
+      reject(...e);
+    })[func](...args);
+  });
+}
+
+function stringify(variable,opt={addType:false}){
+  const v = {whois:'stringify',rv:null,step:0};
+  const conv = arg => {
+    const w = {type:whichType(arg)};
+    w.pre = opt.addType ? `[${w.type}]` : '';
+    switch( w.type ){
+      case 'Function': case 'Arrow': case 'Symbol':
+        w.rv = w.pre + arg.toString(); break;
+      case 'BigInt':
+        w.rv = w.pre + parseInt(arg); break;
+      case 'Undefined':
+        w.rv = w.pre + 'undefined'; break;
+      case 'Object':
+        w.rv = {};
+        for( w.i in arg ){
+          // 自分自身(stringify)は出力対象外
+          if( w.i === 'stringify' ) continue;
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      case 'Array':
+        w.rv = [];
+        for( w.i=0 ; w.i<arg.length ; w.i++ ){
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      default:
+        w.rv = w.pre + arg;
+    }
+    return w.rv;
+  };
+  //console.log(`${v.whois} start.\nvariable=${variable}\nopt=${JSON.stringify(opt)}`);
+  try {
+
+    v.step = 1; // 事前準備
+    if( typeof opt === 'boolean' ) opt={addType:opt};
+
+    v.step = 2; // 終了処理
+    //console.log(`${v.whois} normal end.`);
+    return JSON.stringify(conv(variable));
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
+  }
+}
+
+class TypeDefs {
+  constructor(arg={}){
+    const v = {whois:this.constructor.name+'.constructor+',rv:null,step:0};
+    console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
+    try {
+
+      v.step = 1; // 既定値を設定、データを取得(this.raw)
+      // サーバ側から渡されるマスタ(JSON)が格納される領域
+      this.raw = JSON.parse(document.querySelector(arg.dataDiv || 'div[name="data"]').innerText);
+      // サーバ側から渡されるルートのID
+      this.pId = Number(document.querySelector(arg.pId || 'div[name="pId"]').innerText);
+      // ツリーの描画領域
+      this.area = document.querySelector(arg.area || 'div.table[name="tree"]');
+
+      v.step = 2; // データを補完、整理
+      this.data = {};
+      for( v.i=0 ; v.i<this.raw.length ; v.i++ ){
+        v.step = 2.1; // linkが空欄なら空配列に修正
+        if( this.raw[v.i].link === '' ) this.raw[v.i].link = [];
+        v.step = 2.2; // childrenが空欄なら空配列に修正
+        if( this.raw[v.i].children === '' ) this.raw[v.i].children = [];
+        v.step = 2.3; // 子要素は閉じた状態に設定
+        this.raw[v.i].isOpen = false;
+        v.step = 2.4; // this.dataに保存
+        this.data[this.raw[v.i].id] = this.raw[v.i];
+      }
+      console.log(`l.195 this.data=${JSON.stringify(this.data)}`);
+
+      v.step = 3.1; // item領域描画関数の定義
+      this.item = { /**
+        * 行のtype毎にどのように出力するか定義
+        * @param {object} x - 一行分のデータ
+        * @returns {object[]} createElementの引数形式で、div.item内部のchildren
+        */
+        branch: x => {  // ブランチ行(グループまとめ)の出力定義
+          // ctrl:出力する、item内出力項目:label(必須),note
+          const v = {rv:{ctrl:true,children:[{
+            tag  : 'span',
+            html : x.label,
+            attr : {name:'label'},
+            event: {click:e => this.edit(e)}
+          }]}};
+          // noteが有れば追加
+          if( x.attribute.note ){ v.rv.children.push({
+            tag:'br'
+          },{
+            tag  : 'span',
+            html : x.attribute.note,
+            attr : {name:'note'},
+            event: {click:e => this.edit(e)},
+          })};
+          return v.rv;
+        },
+        comment: x => { // コメント行の出力定義
+          // ctrl:出力しない、item内出力項目:labelのみ、背景色をつける
+          const v = {rv:{ctrl:false,children:[{
+            tag  : 'span',
+            html : x.label,
+            attr : {name:'label',class:'fuchidori'},
+            event: {click:e => this.edit(e)}
+          }]}};
+          return v.rv;
+        },
+        variable: x => {  // 変数型の行の出力定義
+          // ctrl:出力する、item内出力項目:label(必須),type,role,note
+          const v = {rv:{ctrl:true,children:[{
+            // 必須のlabelは事前にセット
+            tag  : 'span',
+            html : x.label,
+            attr : {name:'label'},
+            event: {click:e => this.edit(e)}
+          }]}};
+          // 任意項目を順次追加
+          if( x.attribute.type ){ v.rv.children.push({
+            tag:'span',html:' '
+          },{
+            tag  : 'span',
+            html : x.attribute.type,
+            attr : {name:'type'},
+            event: {click:e => this.edit(e)},
+          })}
+          if( x.attribute.role ){ v.rv.children.push({
+            tag:'span',html:' '
+          },{
+            tag  : 'span',
+            html : x.attribute.role,
+            attr : {name:'role'},
+            event: {click:e => this.edit(e)},
+          })}
+          if( x.attribute.note ){ v.rv.children.push({
+            tag:'br'
+          },{
+            tag  : 'span',
+            html : x.attribute.note,
+            attr : {name:'note'},
+            event: {click:e => this.edit(e)},
+          })}
+          return v.rv;
+        }
+      };
+
+      v.step = 3.2; // 引数で渡された物があればそれを優先
+      if( arg.hasOwnProperty('item') ){
+        for( v.x in arg.item ){
+          this.item[v.x] = arg.item[v.x];
+        }
+      }
+
+      v.step = 4; // ツリーを描画
+      v.r = this.disp();
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** disp: 描画領域にツリーを描画
+   * @param {number} pId - 描画対象ノードのid
+   * @param {number} depth - ツリーの階層(0オリジン)
+   * @returns {null}
+   */
+  disp(pId=this.pId,depth=0){
+    const v = {whois:this.constructor.name+'.disp',rv:null,step:0};
+    console.log(`${v.whois} start.\npId=${pId}, depth=${depth}`);
+    try {
+
+      v.step = 1; // 事前準備
+      v.step = 1.1; // 永久ループ防止
+      if( depth > 20 ) throw new Error('too many depth');
+      v.step = 1.2; // ルート要素のみの処理
+      if( depth === 0 ){
+        this.area.innerHTML = '';
+      }
+
+      v.step = 2; // 自要素およびリンク元要素の子要素の配列をv.childrenとして作成
+      v.children = [];
+      this.exclude(this.data[pId].children).forEach(x => {
+        if(this.data[pId].link.findIndex(y => x === y) >= 0){
+          // linkにも存在 ⇒ 子要素から削除し、linkのchildrenを子要素として追加
+          v.children.push(...this.exclude(this.data[x].children));
+        } else {
+          // linkには不在 ⇒ そのまま子要素として追加
+          v.children.push(x);
+        }
+      })
+      console.log(`l.314 v.children=${stringify(v.children)}`);
+
+      v.step = 3; // 自要素を描画する
+      v.r = this.drawItem(pId,depth,v.children.length>0);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 4; // 子要素を順次再帰呼出
+      if( this.data[pId].isOpen === true ){
+        for( v.i=0 ; v.i<v.children.length ; v.i++ ){
+          v.r = this.disp(v.children[v.i],depth+1);
+          if( v.r instanceof Error ) throw v.r;
+        }
+      }
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** toggle: 子要素を開閉
+   * @param {Event} - クリックのイベントオブジェクト
+   * @returns {null}
+   */
+  toggle(event){
+    const v = {whois:this.constructor.name+'.toggle',rv:null,step:0};
+    console.log(`${v.whois} start.`);//\ntarget=${event.parentNode.name}`);
+    try {
+
+      v.step = 1; // 対象idの取得
+      v.id = Number(event.target.getAttribute('name'));
+
+      v.step = 2; // isOpenを逆転
+      this.data[v.id].isOpen = this.data[v.id].isOpen ? false : true;
+
+      v.step = 3; // 再描画
+      v.r = this.disp();
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** edit: クリックされた要素を編集
+   * @param {Event} - クリックのイベントオブジェクト
+   * @returns {null}
+   */
+  async edit(event){
+    const v = {whois:this.constructor.name+'.edit',rv:null,step:0};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // 対象idの取得
+      v.id = Number(event.target.parentNode.getAttribute('name'));
+      v.name = event.target.getAttribute('name');
+      console.log(`l.427 v.id=${v.id}, v.name=${v.name}`);
+
+      v.step = 2; // 修正値の取得
+      v.data = this.data[v.id];
+      v.oldValue = v.name === 'label' ? v.data.label : v.data.attribute[v.name];
+      v.newValue = prompt('修正値を入力してください',v.oldValue);
+      console.log(`l.433 v.newValue(${typeof v.newValue})=${v.newValue}`)
+
+      v.step = 3; // 修正値の反映、画面再表示
+      if( v.newValue !== null ){
+        v.step = 3.1; // インスタンス変数に反映
+        if( v.name === 'label' ){
+          this.data[v.id].label = v.newValue;
+        } else {
+          this.data[v.id].attribute[v.name] = v.newValue;
+        }
+        console.log(`l.443 this.data[${v.id}]=${stringify(this.data[v.id])}`)
+
+        v.step = 3.2; // シートに反映
+        v.r = await doGAS('typeDefsFront',['update',this.data[v.id]]);
+        if( v.r instanceof Error ) throw v.r;
+        console.log(`l.448 v.r=${stringify(v.r)}`)
+
+        v.step = 3.3; // 画面再表示
+        v.r = this.disp();
+        if( v.r instanceof Error ) throw v.r;
+        console.log(`l.453 v.r=${stringify(v.r)}`)
+      }
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** exclude: 整数の配列に絶対値が等しい正負の数があれば両方削除する
+   * @param {number[]} arg - 整数の配列
+   * @returns {number[]} argから絶対値が等しい正負の数を削除した配列
+   */
+  exclude(arg){
+    const v = {whois:this.constructor.name+'.exclude',rv:[],step:0};
+    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
+    try {
+
+      v.minus = arg.filter(x => x < 0);
+      if( v.minus.length === 0 ){
+        v.rv = arg;
+      } else {
+        v.plus = arg.filter(x => x > 0);
+        for( v.i=0 ; v.i<v.plus.length ; v.i++ ){
+          if( v.minus.findIndex(x => -x === v.plus[v.i]) < 0 ){
+            v.rv.push(v.plus[v.i]);
+          }
+        }
+      }
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** drawItem: 一行分の明細を描画領域に追加
+   * @param {number} id
+   * @param {number} depth
+   * @param {boolean} hasChild
+   * @returns {object} 追加した行のcreateElement引数オブジェクト
+   */
+  drawItem(id,depth,hasChild){
+    const v = {whois:this.constructor.name+'.drawItem',rv:null,step:0};
+    console.log(`${v.whois} start.\nid=${id}`);
+    try {
+
+      v.step = 1; // link指定が有れば、それをベースに自要素の値を上書き
+      if( Array.isArray(this.data[id].link) && this.data[id].link.length > 0 ){
+        v.list = [...this.data[id].link.toReversed(),id];
+        v.list.forEach(x => v.list.push(this.data[x]));
+        v.data = Object.assign({},...v.list);
+      } else {
+        v.data = Object.assign({},this.data[id]);
+      }
+      //console.log(`l.442 v.data=${JSON.stringify(v.data)}`);
+
+      v.step = 2; // createElementオブジェクトを作成する関数を定義
+      //console.log(`l.450 v.data.type=${v.data.type}\nthis.item=${stringify(this.item)}`);
+      v.item = this.item[v.data.type](v.data);
+      v.rv = {
+        attr:{class:'tr'},
+        children:[
+          {
+            attr:{class:'indent'},
+            style:{gridColumn:`1/${depth+1}`,width:depth+'rem'}
+          },{
+            attr: {class:'ctrl',name:v.data.id},
+            // 子要素があれば[▶|▼]、無ければ●。コメント行等、v.item.ctrl==falseなら空白
+            text: (v.item.ctrl ? (hasChild ? (v.data.isOpen ? '▼' : '▶') : '●') : ''),
+            style:{gridColumn:`${depth+1}/${depth+2}`},
+            event: {click:e => this.toggle(e)},
+          },
+          {
+            attr:{class:'item',name:v.data.id},
+            style:{gridColumn:`${depth+2}/23`},
+            children:v.item.children,
+          },
+        ]
+      };
+
+      v.step = 3; // 関数の結果を描画領域に追加
+      v.r = createElement(v.rv,this.area);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1;
+    v.TypeDefs = new TypeDefs();
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+    
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+</html>
