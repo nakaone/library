@@ -1,25 +1,31 @@
 function doGet(e){
-  const v = {rv:[]};
+  const v = {rv:{}};
   console.log(`doGet start`);
   // html変数に値をセット
   v.template = HtmlService.createTemplateFromFile('index');
   v.template.pId = e.parameter.pId || 0;
 
-  // データをシートから取得
-  v.data = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(e.parameter.sn || 'master').getDataRange().getValues();
+  ['relation','node'].forEach(x => {
+    // データをシートから取得
+    v[x] = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(e.parameter.sn || x).getDataRange().getValues();
 
-  // データをオブジェクト化
-  for( v.r=1 ; v.r<v.data.length ; v.r++ ){
-    v.o = {};
-    for( v.c=0 ; v.c<v.data[v.r].length ; v.c++ ){
-      v.o[v.data[0][v.c]] = (arg =>{
-        // JSON型の文字列項目はオブジェクト化して保存
-        try{ return JSON.parse(arg); }
-        catch(e){ return arg; }
-      })(v.data[v.r][v.c]);
+    // データをオブジェクト化
+    v.rv[x] = [];
+    for( v.r=1 ; v.r<v[x].length ; v.r++ ){
+      v.o = {};
+      for( v.c=0 ; v.c<v[x][v.r].length ; v.c++ ){
+        v.o[v[x][0][v.c]] = v[x][v.r][v.c];
+        /*
+        v.o[v[x][0][v.c]] = (arg =>{
+          // JSON型の文字列項目はオブジェクト化して保存
+          try{ return JSON.parse(arg); }
+          catch(e){ return arg; }
+        })(v[x][v.r][v.c]);
+        */
+      }
+      v.rv[x].push(v.o);
     }
-    v.rv.push(v.o);
-  }
+  })
   v.template.data = JSON.stringify(v.rv);
 
   v.htmlOutput = v.template.evaluate();
@@ -75,24 +81,24 @@ function typeDefsFront(arg){
  */
 
 /** 単一スプレッドシートまたはデータオブジェクト配列のCRUDを行う
- * 
+ *
  * - 原則「1シート1テーブル」で運用する
  *   ∵「ヘッダ行として指定した行にデータが存在する範囲がテーブル」として看做されるので、
  *   複数テーブルのつもりでヘッダ行が同じ行番号にあった場合、単一テーブルとして処理される
  * - 表の結合には対応しない(join機能は実装しない)
  * - データ領域右端より左のヘッダ行の空欄は、Col1から連番で欄の名前を採番する
  * - 本クラスのメンバについては[SingleTableObj](#SingleTableObj)参照
- * 
+ *
  * #### 参考
- * 
+ *
  * - GAS公式 [Class Spreadsheet](https://developers.google.com/apps-script/reference/spreadsheet/spreadsheet?hl=ja)
- * 
+ *
  * #### 使用するライブラリ
- * 
+ *
  * - convertNotation
- * 
+ *
  * #### 将来的検討課題
- * 
+ *
  * 1. groupByメソッドの追加
  * 1. ツリー構造であるシートをツリー構造オブジェクトとして出力(Objectizeメソッドの追加)
  */
@@ -105,7 +111,7 @@ class SingleTable {
    *   - raw : シートイメージ(二次元配列)
    *   - data : オブジェクトの配列
    * - クラスのメンバについては[SingleTableObj](#SingleTableObj)参照
-   * 
+   *
    * @param {string|Object} arg1 - 参照先シート名またはA1形式の範囲指定文字列(name)、またはオプション(opt)
    * @param {Object} arg2 - オプション(opt)
    * @returns {SingleTableObj|Error}
@@ -114,7 +120,7 @@ class SingleTable {
     const v = {whois:'SingleTable.constructor',rv:null,step:0,arg:{}};
     console.log(`${v.whois} start.`);
     try {
-  
+
       v.step = 1.1; // 全引数のオブジェクト化＋既定値の設定
       if( typeof arg1 === 'string' ){ // name指定あり
         v.arg = Object.assign({name:arg1},(arg2 || {}));
@@ -122,13 +128,13 @@ class SingleTable {
         v.arg = arg1;
       }
       v.arg = Object.assign({name:'',raw:[],data:[],header:[]},v.arg);
-  
+
       v.step = 1.2; // メンバの初期値を設定
       this.sheet = null;
       this.className = 'SingleTable';
       this.name = v.arg.name || '';
       ['header','raw','data'].forEach(x => this[x] = (v.arg[x] || []));
-  
+
       v.step = 1.3; // nameから指定範囲を特定、メンバに保存
       v.m = this.name.match(/^'?(.+?)'?!([A-Za-z]*)([0-9]*):?([A-Za-z]*)([0-9]*)$/);
       //old v.m = this.name.match(/^'*(.+?)'*!([A-Za-z]+)([0-9]*):([A-Za-z]+)([0-9]*)$/);
@@ -144,7 +150,7 @@ class SingleTable {
         this.bottom = this.right = Infinity;
       }
       //console.log(`l.65 this.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}\ndata=${JSON.stringify(this.data)}\nraw=${JSON.stringify(this.raw)}`);
-  
+
       v.step = 2; // sheetかdataかで処理を分岐
       this.type = (this.data.length > 0 || this.raw.length > 0 ) ? 'data' : 'sheet';
       if( this.type === 'sheet' ){
@@ -153,11 +159,11 @@ class SingleTable {
         v.r = this.prepData();
       }
       if( v.r instanceof Error ) throw v.r;
-  
+
       v.step = 3; // 終了処理
       console.log(`${v.whois} normal end.`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}`
       + `\n${e.message}`
@@ -165,12 +171,12 @@ class SingleTable {
       console.error(`${e.message}\nv=${JSON.stringify(v)}`);
       return e;
     }
-  }  
+  }
 
   /** シートから指定有効範囲内のデータを取得
    * - 「指定有効範囲」とは、指定範囲かつデータが存在する範囲を指す。<br>
    *   例：指定範囲=C2:F ⇒ top=3, bottom=7, left=3(C列), right=6(F列)
-   * 
+   *
    *   | | A | B | C | D | E | F | G | H |
    *   | :--: | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
    *   | 1 | |  | タイトル |  |  |  |  |  |  |
@@ -183,7 +189,7 @@ class SingleTable {
    *   | 8 | |  |  |  |  |  |  |  |  |
    *   | 9 | |  |  |  |  |  |  | dummy |  |
    *   | 10 | |  |  |  |  |  |  |  |  |
-   * 
+   *
    *   - 有効範囲とはデータが存在する範囲(datarange=C1:H9)
    *   - 「タイトル(C1)」「dummy(H9)」は有効範囲だが、指定範囲(C2:F)から外れるので除外
    *   - 指定範囲にデータが存在しない場合、指定有効範囲はデータが存在する範囲とする<br>
@@ -195,7 +201,7 @@ class SingleTable {
    *   - 空白セルはdataには入れない(undefinedになる)<br>
    *     ex.5行目={C3:5,D3:4}(Col1,2はundef)、6行目={C3:5,D3:6,Col1:7,Col2:8}
    *   - 有効範囲は9行目(dummy)までだが、指定範囲内だと7行目までなので、bottom=7
-   * 
+   *
    * @param {void}
    * @returns {void}
    */
@@ -203,11 +209,11 @@ class SingleTable {
     const v = {whois:this.className+'.prepSheet',rv:null,step:0};
     console.log(`${v.whois} start.`);
     try {
-  
+
       v.step = 1; // シートからデータを取得、初期値設定
       this.sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(this.name);
       if( this.sheet instanceof Error ) throw this.sheet;
-  
+
       v.step = 2; // 範囲行・列番号がデータの存在する範囲外だった場合、存在範囲内に変更
       v.dataRange = this.sheet.getDataRange();
       v.top = v.dataRange.getRow();
@@ -221,19 +227,19 @@ class SingleTable {
       this.left = this.left < v.left ? v.left : this.left;
       this.right = this.right > v.right ? v.right : this.right;
       //console.log(`l.191 this.top=${this.top}, bottom=${this.bottom}, left=${this.left}, right=${this.right}`);
-  
+
       v.step = 3; // ヘッダ行番号以下の有効範囲(行)をv.rawに取得
       v.range = [this.top, this.left, this.bottom - this.top + 1, this.right - this.left + 1];
       v.raw = this.sheet.getRange(...v.range).getValues();
       //console.log(`l.196 v.raw=${JSON.stringify(v.raw.slice(0,10))}`);
-  
+
       v.step = 4; // ヘッダ行の空白セルに'ColN'を補完
       v.colNo = 1;
       for( v.i=0 ; v.i<v.raw[0].length ; v.i++ ){
         this.header.push( v.raw[0][v.i] === '' ? 'Col' + v.colNo : v.raw[0][v.i] );
         v.colNo++;
       }
-  
+
       v.step = 5; // 指定有効範囲の末端行を検索(中間の空行は残すが、末尾の空行は削除)
       for( v.r=(this.bottom-this.top) ; v.r>=0 ; v.r-- ){
         if( v.raw[v.r].join('').length > 0 ){
@@ -241,7 +247,7 @@ class SingleTable {
           break;
         }
       }
-  
+
       v.step = 6; // this.raw/dataにデータをセット
       this.raw[0] = v.raw[0]; // ヘッダ行
       for( v.r=1 ; v.r<=(this.bottom-this.top) ; v.r++ ){
@@ -254,12 +260,12 @@ class SingleTable {
         }
         this.data.push(v.o);
       }
-  
+
       v.step = 7; // 終了処理
       this.dump();
       console.log(`${v.whois} normal end.`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `\n${v.whois} abnormal end at step.${v.step}`
       + `\n${e.message}`;
@@ -283,7 +289,7 @@ class SingleTable {
     * - シートはthis.nameで指定された名前になるが、左上のセル位置も併せて指定可能<br>
     *   ex. 'testsheet'!B2<br>
     *   なおセル位置は左上の単一セル指定のみ有効、他は有っても無視(ex.B2:C5ならC5は無視)
-    * 
+    *
     * 1. オブジェクトの配列(this.data.length > 0) ※択一
     *    1. headerの作成
     *    1. rawの作成
@@ -293,7 +299,7 @@ class SingleTable {
     * 1. シートの作成(this.type=='data' && this.name!=null)
     *    1. 既存のシートがないか確認(存在すればエラー)
     *    1. this.rawをシートに出力
-    * 
+    *
     * @param {void}
     * @returns {void}
     */
@@ -301,7 +307,7 @@ class SingleTable {
     const v = {whois:this.className+'.prepData',rv:null,step:0,colNo:1};
     console.log(`${v.whois} start.`);
     try {
-  
+
       if( this.data.length > 0 ){
         v.step = 1; // オブジェクトの配列でデータを渡された場合
         v.step = 1.1; // headerの作成
@@ -339,11 +345,11 @@ class SingleTable {
           }
         }
       }
-  
+
       v.step = 3; // raw/data以外のメンバの設定
       this.bottom = this.top + this.raw.length - 1;
       this.right = this.left + this.raw[0].length - 1;
-  
+
       v.step = 4; // シートの作成
       v.ass = SpreadsheetApp.getActiveSpreadsheet();
       if( this.type==='data' && this.name!=='' && v.ass.getSheetByName(this.name)===null ){
@@ -352,11 +358,11 @@ class SingleTable {
         this.sheet.getRange(this.top,this.left,this.raw.length,this.raw[0].length)
         .setValues(this.raw);
       }
-  
+
       v.step = 5; // 終了処理
       console.log(`${v.whois} normal end.`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}`
       + `\n${e.message}`;
@@ -370,7 +376,7 @@ class SingleTable {
       const v = {whois:this.className+'.dump',rv:null,step:0,colNo:1};
       console.log(`${v.whois} start.`);
       try {
-  
+
         v.step = 1; // メンバの値
         v.msg = `member's value ----------`
         + `\nclassName=${this.className}, name=${this.name}, type=${this.type}`
@@ -378,20 +384,20 @@ class SingleTable {
         + `\nheader=${JSON.stringify(this.header)}`
         + `\ndata=${JSON.stringify(this.data)}`
         + `\nraw=${JSON.stringify(this.raw)}`;
-  
+
         v.step = 2; // vの値
         if( av !== null ){
           v.msg += `\n\nvariable's value ----------`
           + `\ntop=${av.top}, left=${av.left}, bottom=${av.bottom}, right=${av.right}`;
         }
-  
+
         v.step = 3; // ダンプ
         console.log(v.msg);
-  
+
         v.step = 2; // 終了処理
         console.log(`${v.whois} normal end.`);
         return v.rv;
-  
+
       } catch(e) {
         e.message = `\n${v.whois} abnormal end at step.${v.step}\n${e.message}`;
         console.error(`${e.message}\nv=${JSON.stringify(v)}`);
@@ -405,9 +411,9 @@ class SingleTable {
     * @param {string[][]} [opt.orderBy=[]] - 並べ替えのキーと昇順/降順指定
     *  [['key1'(,'desc')],['key2'(,'desc')],...]
     * @returns {Array.Object.<string, any>|Error}
-    * 
+    *
     * @example
-    * 
+    *
     * ```
     * v.table = new SingleTable('test',{top:3});
     * v.r = v.table.select({
@@ -421,7 +427,7 @@ class SingleTable {
     *   {"B3":5,"C3":4}
     * ]
     * ```
-    * 
+    *
     * 「Col1に'g'が含まれる」という場合
     * ```
     * where: x => {return x.Col1 && String(x.Col1).indexOf('g') > -1}
@@ -431,7 +437,7 @@ class SingleTable {
     const v = {whois:this.className+'.select',rv:[],step:0};
     console.log(`${v.whois} start.`); //\nopt.where=${opt.where.toString()}\nopt.orderBy=${JSON.stringify(opt.orderBy)}`);
     try {
-  
+
       v.step = 1; // 既定値の設定
       if( opt.hasOwnProperty('where') ){
         if( typeof opt.where === 'string' )
@@ -441,14 +447,14 @@ class SingleTable {
       }
       if( !opt.hasOwnProperty('orderBy') )
         opt.orderBy = [];
-  
+
       v.step = 2; // 対象となるレコードを抽出
       for( v.i=0 ; v.i<this.data.length ; v.i++ ){
         if( Object.keys(this.data[v.i]).length > 0 // 空Objではない
             && opt.where(this.data[v.i]) ) // 対象判定結果がtrue
           v.rv.push(this.data[v.i]);
       }
-  
+
       v.step = 3; // 並べ替え
       v.rv.sort((a,b) => {
         for( v.i=0 ; v.i<opt.orderBy.length ; v.i++ ){
@@ -459,11 +465,11 @@ class SingleTable {
         }
         return 0;
       });
-  
+
       v.step = 4; // 終了処理
       console.log(`${v.whois} normal end. num=${v.rv.length}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}`
       + `\n${e.message}`
@@ -471,7 +477,7 @@ class SingleTable {
       console.error(`${e.message}\nv=${JSON.stringify(v)}`);
       return e;
     }
-  
+
   }
 
   /**
@@ -485,14 +491,14 @@ class SingleTable {
     * @prop {number} right - 更新対象領域右端列番号(自然数)
     */
   /** 条件に該当するレコード(オブジェクト)を更新
-    * 
+    *
     * @param {Object|Function} set - セットする{項目名:値}、または行オブジェクトを引数にセットする{項目名:値}を返す関数
     * @param {Object} [opt={}] - オプション
     * @param {Function} [opt.where=()=>true] - レコードを引数として、条件に合致する場合trueを返す関数
     * @returns {UpdateResult[]|Error} 更新結果を格納した配列
-    * 
+    *
     * @example
-    * 
+    *
     * ```
     * v.table = new SingleTable('test!B3:E');
     * // B3欄が4のレコードについて、Col1に'hoge'・E3に'fuga'をセットする
@@ -504,9 +510,9 @@ class SingleTable {
     *   "left":4,"right":5
     * }]
     * ```
-    * 
+    *
     * 更新対象データを直接指定、また同一行の他の項目から導出してセットすることも可能。
-    * 
+    *
     * ```
     * // E3欄に'a'をセットする
     * v.table.update(
@@ -526,11 +532,11 @@ class SingleTable {
       top:Infinity, left:Infinity, bottom:-Infinity, right:-Infinity};
     console.log(`${v.whois} start.\nset=${typeof set === 'function' ? set.toString() : stringify(set)}\nopt=${stringify(opt)}`);
     try {
-  
+
       v.step = 1; // 既定値の設定
       if( !opt.hasOwnProperty('where') )
         opt.where = () => true;
-  
+
       v.step = 2; // 1行ずつ差分をチェックしながら処理結果を保存
       for( v.i=0 ; v.i<this.data.length ; v.i++ ){
         if( Object.keys(this.data[v.i]).length > 0 && opt.where(this.data[v.i]) ){
@@ -542,10 +548,10 @@ class SingleTable {
             row: this.top + 1 + v.i,
             left: Infinity, right: -Infinity,  // 変更があった列番号の範囲
           };
-  
+
           v.step = 2.2; // 更新後の値をv.diffに格納
           v.diff = whichType(set) === 'Object' ? set : set(this.data[v.i]);
-  
+
           v.step = 2.3; // 差分が存在する項目の洗い出し
           v.exist = false;  // 差分が存在したらtrue
           this.header.forEach(x => {
@@ -561,7 +567,7 @@ class SingleTable {
               v.r.right = v.r.right < v.col ? v.col : v.r.right;
             }
           });
-  
+
           v.step = 3; // いずれかの項目で更新後に値が変わった場合
           if( v.exist ){
             v.step = 3.1; // 更新対象領域を書き換え
@@ -569,20 +575,20 @@ class SingleTable {
             v.bottom = v.bottom < v.r.row ? v.r.row : v.bottom;
             v.left = v.left > v.r.left ? v.r.left : v.left;
             v.right = v.right < v.r.right ? v.r.right : v.right;
-  
+
             v.step = 3.2; // this.raw上のデータを更新
             this.raw[v.r.row-this.top] = (o=>{
               const rv = [];
               this.header.forEach(x => rv.push(o[x]||''));
               return rv;
             })(v.r.new);
-  
+
             v.step = 3.3; // ログ(戻り値)に追加
             v.rv.push(v.r);
           }
         }
       }
-  
+
       v.step = 4; // 更新が有ったら、シート上の更新対象領域をthis.rawで書き換え
       if( v.rv.length > 0 ){
         v.step = 4.1; // 更新対象領域のみthis.rawから矩形に切り出し
@@ -603,11 +609,11 @@ class SingleTable {
           ).setValues(v.data);
         }
       }
-  
+
       v.step = 5; // 終了処理
       console.log(`${v.whois} normal end. num=${v.rv.length}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`
       console.error(`${e.message}\nv=${JSON.stringify(v)}`,set,opt);
@@ -616,14 +622,14 @@ class SingleTable {
   }
 
   /** レコード(オブジェクト)を追加
-    * 
+    *
     * - 複数行の一括追加も可
-    * 
+    *
     * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
     * @returns {number|Error} 追加した行数
-    * 
+    *
     * @example
-    * 
+    *
     * ```
     * v.table = new SingleTable('test',{top:3});
     * v.table.insert({B3:3,E3:1});
@@ -637,25 +643,25 @@ class SingleTable {
       r:[],left:Infinity,right:-Infinity};
     console.log(`${v.whois} start.\nrecords=${JSON.stringify(records)}`);
     try {
-  
+
       v.step = 1; // 引数がオブジェクトなら配列に変換
       if( !Array.isArray(records) ) records = [records];
       // 追加対象が0件なら処理終了
       if( records.length === 0 ) return 0;
-  
+
       for( v.i=0 ; v.i<records.length ; v.i++ ){
         v.step = 2; // 挿入するレコード(オブジェクト)を配列化してthis.rawに追加
         v.arr = [];
         for( v.j=0 ; v.j<this.header.length ; v.j++ ){
           v.step = 3; // 空欄なら空文字列をセット
           v.cVal = records[v.i][this.header[v.j]] || '';
-  
+
           if( v.cVal !== '' ){
             v.step = 4; // 追加する範囲を見直し
             v.left = v.left > v.j ? v.j : v.left;
             v.right = v.right < v.j ? v.j : v.right;
           }
-  
+
           v.step = 5; // 一行分のデータ(配列)に項目の値を追加
           v.arr.push(v.cVal);
         }
@@ -664,10 +670,10 @@ class SingleTable {
         this.data.push(records[v.i]);
         v.rv.push(v.arr);
       }
-  
+
       v.step = 7; // 更新範囲(矩形)のみv.rv -> v.rにコピー
       v.rv.forEach(x => v.r.push(x.slice(v.left,v.right+1)));
-  
+
       v.step = 8; // データ渡しかつシート作成指示無しを除き、シートに追加
       if( this.sheet !== null ){
         this.sheet.getRange(
@@ -678,11 +684,11 @@ class SingleTable {
         ).setValues(v.r);
         this.bottom += v.r.length;
       }
-  
+
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end. num=${v.rv.length}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}`
       + `\n${e.message}`
@@ -696,9 +702,9 @@ class SingleTable {
     * @param {Object} [opt={}] - オプション
     * @param {Function} [opt.where=()=>true] - レコードを引数として、条件に合致する場合trueを返す関数
     * @returns {Object|Error} 削除されたthis.data行のオブジェクト
-    * 
+    *
     * @example
-    * 
+    *
     * ```
     * v.table = new SingleTable('test',{top:3});
     * v.table.delete({where:o=>o.Col1&&o.Col1==7});
@@ -715,11 +721,11 @@ class SingleTable {
     const v = {whois:this.className+'.delete',step:0,rv:[]};
     console.log(`${v.whois} start.\nopt.where=${opt.where.toString()}`);
     try {
-  
+
       v.step = 1; // 既定値の設定
       if( !opt.hasOwnProperty('where') )
         opt.where = () => true;
-  
+
       v.step = 2; // 下の行から判定し、削除による行ズレの影響を回避
       for( v.i=this.data.length-1 ; v.i>=0 ; v.i-- ){
         v.step = 3; // 削除対象(空Objではない and 対象判定結果がtrue)
@@ -736,11 +742,11 @@ class SingleTable {
         this.sheet.getRange(v.rowNum,this.left,1,this.right-this.left+1)
         .deleteCells(SpreadsheetApp.Dimension.ROWS);
       }
-  
+
       v.step = 7; // 終了処理
       console.log(`${v.whois} normal end. num=${v.rv.length}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `\n${v.whois} abnormal end at step.${v.step}`
       + `\n${e.message}`
