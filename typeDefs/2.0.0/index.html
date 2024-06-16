@@ -283,7 +283,7 @@ class TypeDefs {
       this.raw = JSON.parse(document.querySelector(arg.dataDiv || 'div[name="data"]').innerText);
       console.log('l.284',this.raw)
       // サーバ側から渡されるルートのID
-      this.pId = Number(document.querySelector(arg.pId || 'div[name="pId"]').innerText);
+      this.rootId = Number(document.querySelector(arg.pId || 'div[name="pId"]').innerText);
       // ツリーの描画領域
       this.area = document.querySelector(arg.area || 'div.table[name="tree"]');
       // 無効行は表示しない
@@ -460,9 +460,9 @@ class TypeDefs {
    * @param {number} depth - ツリーの階層(0オリジン)
    * @returns {null}
    */
-  disp(pId=this.pId,depth=0,isOpen=true){
+  disp(pId=0,nId=this.rootId,depth=0,isOpen=true){
     const v = {whois:this.constructor.name+'.disp',rv:null,step:0};
-    console.log(`${v.whois} start.\npId=${pId}, depth=${depth}`);
+    console.log(`${v.whois} start.\npId=${pId}, nId=${nId}, depth=${depth}`);
     try {
 
       v.step = 1; // 事前準備
@@ -482,7 +482,7 @@ class TypeDefs {
       + ' , case when r2.pId is null then r1.`isOpen` else r2.`isOpen` end as `isOpen`'
       + ' from relation as r1'
       + ' left join relation as r2 on r1.nId = r2.pId'
-      + ` where r1.pId = ${pId}`
+      + ` where r1.pId = ${nId}`
       + ' order by r1.`order`, r2.`order`'
       + ';';
       v.work = alasql(v.sql);
@@ -497,13 +497,13 @@ class TypeDefs {
       console.log(`l.494 v.children=${JSON.stringify(v.children)}`)
 
       v.step = 3; // 自要素を描画する
-      v.r = this.drawItem(pId,depth,v.children.length>0);
+      v.r = this.drawItem(pId,nId,depth,v.children.length>0);
       if( v.r instanceof Error ) throw v.r;
 
       v.step = 4; // 子要素を順次再帰呼出
       if( isOpen === true ){
         for( v.i=0 ; v.i<v.children.length ; v.i++ ){
-          v.r = this.disp(v.children[v.i].nId,depth+1,v.children[v.i].isOpen);
+          v.r = this.disp(nId,v.children[v.i].nId,depth+1,v.children[v.i].isOpen);
           if( v.r instanceof Error ) throw v.r;
         }
       }
@@ -529,10 +529,15 @@ class TypeDefs {
     try {
 
       v.step = 1; // 対象idの取得
-      v.id = Number(event.target.getAttribute('name'));
+      v.name = event.target.parentNode.getAttribute('name')
+      v.m = v.name.match(/^(\d+):(\d+)$/);
+      if( v.name === null ) throw new Error(`Invalid name "${v.name}"`);
+      [v.pId,v.nId] = [Number(v.m[1]),Number(v.m[2])];
 
       v.step = 2; // isOpenを逆転
-      this.data[v.id].isOpen = this.data[v.id].isOpen ? false : true;
+      v.relation = alasql(`select * from relation where pId=${v.pId} and nId=${v.nId}`)[0];
+      v.relation.isOpen = v.relation.isOpen ? false : true;
+      alasql(`update relation set isOpen=${v.relation.isOpen} where pId=${v.pId} and nId=${v.nId}`);
 
       v.step = 3; // 再描画
       v.r = this.disp();
@@ -558,73 +563,40 @@ class TypeDefs {
     console.log(`${v.whois} start.`);
     try {
 
-      v.step = 1; // 対象idの取得
-      v.id = Number(event.target.parentNode.getAttribute('name'));
+      v.step = 1.1; // 対象idの取得
+      v.idStr = event.target.parentNode.parentNode.getAttribute('name');
+      v.m = v.idStr.match(/^(\d+):(\d+)$/);
+      if( v.m === null ) throw new Error(`Invalid name "${v.idStr}"`);
+      [this.pId,this.nId] = [Number(v.m[1]),Number(v.m[2])];
+
+      v.step = 1.2; // 対象属性名の取得
       v.name = event.target.getAttribute('name');
-      console.log(`l.560 v.id=${v.id}, v.name=${v.name}`);
+      console.log(`l.574 pId=${this.pId}, nId=${this.nId}, name=${v.name}`)
 
       v.step = 2; // 修正値の取得
-      v.data = alasql(`select * from node where nId=${v.id}`)[0];
-      v.oldValue = v.data.attribute[v.name];
+      v.node = alasql(`select * from node where nId=${this.nId}`)[0];
+      v.oldValue = v.node.attribute[v.name];
       v.newValue = prompt('修正値を入力してください',v.oldValue);
-      console.log(`l.566 v.newValue(${typeof v.newValue})=${v.newValue}`)
 
       v.step = 3; // 修正値の反映、画面再表示
       if( v.newValue !== null ){
         v.step = 3.1; // データベースに反映
-        v.data.attribute[v.name] = v.newValue;
-        v.now = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
-        v.sql = `update node set updated="${v.now}" where nId=${v.id}`;
-        alasql(v.sql);
-        console.log(`l.573 v.data=${stringify(v.data)}`)
-        console.log(`l.574 ${stringify(alasql(`select * from node where nId=${v.id}`)[0])}`)
-        v.data = alasql(`select * from node where nId=${v.id}`)[0];
+        v.node.attribute[v.name] = v.newValue;
+        v.node.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
+        // alasql内部のオブジェクト(JSON型変数)はオブジェクトへの代入だけでRDBも更新されるので割愛
+        alasql(`update node set updated="${v.node.updated}" where nId=${v.node.nId}`);
 
         v.step = 3.2; // シートに反映
-        v.r = await doGAS('typeDefsFront',['edit',v.data]);
+        v.r = await doGAS('typeDefsFront',['edit',v.node]);
         if( v.r instanceof Error ) throw v.r;
-        console.log(`l.582 v.r=${stringify(v.r)}`)
 
         v.step = 3.3; // 画面再表示
         v.r = this.disp();
         if( v.r instanceof Error ) throw v.r;
-        console.log(`l.582 v.r=${stringify(v.r)}`)
       }
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.`);
-      return v.rv;
-
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-      console.error(`${e.message}\nv=${stringify(v)}`);
-      return e;
-    }
-  }
-
-  /** exclude: 整数の配列に絶対値が等しい正負の数があれば両方削除する
-   * @param {number[]} arg - 整数の配列
-   * @returns {number[]} argから絶対値が等しい正負の数を削除した配列
-   */
-  exclude(arg){
-    const v = {whois:this.constructor.name+'.exclude',rv:[],step:0};
-    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
-    try {
-
-      v.minus = arg.filter(x => x < 0);
-      if( v.minus.length === 0 ){
-        v.rv = arg;
-      } else {
-        v.plus = arg.filter(x => x > 0);
-        for( v.i=0 ; v.i<v.plus.length ; v.i++ ){
-          if( v.minus.findIndex(x => -x === v.plus[v.i]) < 0 ){
-            v.rv.push(v.plus[v.i]);
-          }
-        }
-      }
-
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
 
     } catch(e) {
@@ -645,29 +617,34 @@ class TypeDefs {
 
       v.step = 1; // 準備
       event.preventDefault();
-      v.name = event.target.getAttribute('name');
+      v.name = event.target.parentNode.getAttribute('name');
 
       v.step = 2; // 動作を分岐
-      if( !isNaN(v.name) ){
-        v.step = 2.1; // nameが数字 ⇒ 「▶」等、行頭のアイコン ⇒ ダイアログ表示
-        // 選択されたidを保存
-        this.currentId = Number(v.name);
-        // 有効化⇔無効化切替
+      v.m = v.name.match(/^(\d+):(\d+)$/);
+      if( v.m ){
+        v.step = 2.1; // nameが「pId:nId」形式
+        // ⇒ 「▶」等、行頭のアイコンの右ボタンクリックから呼ばれた ⇒ ダイアログ表示
+        v.step = 2.11; // 選択されたidを保存
+        [this.pId,this.nId] = [Number(v.m[1]),Number(v.m[2])];
+        v.relation = alasql(`select * from relation where pId=${this.pId} and nId=${this.nId}`)[0];
+        v.step = 2.12; // 有効化⇔無効化切替
         this.dialog.querySelector('[name="activate"]').innerText
-        = this.data[this.currentId].deleted === '' ? '無効化' : '有効化';
-        // ダイアログの表示
+        = v.relation.deleted ? '有効化' : '無効化';
+        v.step = 2.13; // ダイアログの表示
         this.dialog.showModal();
       } else {
-        v.step = 2.2; // nameが数字以外 ⇒ ダイアログ内の機能選択
+        v.step = 2.2; // nameが「pId:nId」形式以外
+        // ⇒ ダイアログ内の機能選択(ex. addNewのDivがクリックされた)
+        v.step = 2.21; // 選択された機能の呼び出し
         v.r = this[v.name]();
         if( v.r instanceof Error ) throw v.r;
+        v.step = 2.22; // ダイアログを閉じてツリーを再描画
         this.dialog.close();
-        v.step = 2.3; // ツリーを再描画
         v.r = this.disp();
         if( v.r instanceof Error ) throw v.r;
       }
 
-      v.step = 9; // 終了処理
+      v.step = 3; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
 
@@ -684,42 +661,41 @@ class TypeDefs {
    * @param {boolean} hasChild
    * @returns {object} 追加した行のcreateElement引数オブジェクト
    */
-  drawItem(id,depth,hasChild){
+  drawItem(pId,nId,depth,hasChild){
     const v = {whois:this.constructor.name+'.drawItem',rv:null,step:0};
-    console.log(`${v.whois} start.\nid=${id},depth=${depth},hasChild=${hasChild}`);
+    console.log(`${v.whois} start.\npId=${pId},nId=${nId},depth=${depth},hasChild=${hasChild}`);
     try {
 
       v.step = 1; // 自要素の値を取得
-      v.data = alasql(`select * from node where nId=${id}`)[0];
-      console.log(`l.694 v.data(${typeof v.data})=${stringify(v.data)}`);
+      v.node = alasql(`select * from node where nId=${nId}`)[0];
+      v.relation = alasql(`select * from relation where pId=${pId} and nId=${nId}`)[0];
 
       v.step = 2; // 無効行非表示指定かつ表示対象行が削除済なら表示しない
-      if( this.showDeleted === false && v.data.deleted ){
+      if( this.showDeleted === false && v.node.deleted ){
         console.log(`${v.whois} skipped.`
         + `\nthis.showDeleted(${typeof this.showDeleted})=${this.showDeleted}`
-        + `\nv.data.deleted(${typeof v.data.deleted})=${v.data.deleted}`
-        + `\nv.v.data=${stringify(v.data)}`)
+        + `\nv.node.deleted(${typeof v.node.deleted})=${v.node.deleted}`
+        + `\nv.v.node=${stringify(v.node)}`)
         return v.rv;
       }
 
       v.step = 3; // createElementオブジェクトを作成する関数を定義
-      v.item = this.item[v.data.type].disp(v.data);
-      console.log(`l.707 v.item=${stringify(v.item)}`);
+      v.item = this.item[v.node.type].disp(v.node);
       v.rv = {
-        attr:{class:'tr'},
+        attr:{class:'tr',name:`${pId}:${nId}`},
         children:[
           {
             attr:{class:'indent'},
             style:{gridColumn:`1/${depth+1}`,width:depth+'rem'}
           },{
-            attr: {class:'ctrl',name:v.data.nId},
+            attr: {class:'ctrl'},
             // 子要素があれば[▶|▼]、無ければ●。コメント行等、v.item.ctrl==falseなら空白
-            text: (this.item[v.data.type].ctrl ? (hasChild ? (v.data.isOpen ? '▼' : '▶') : '●') : '□'),
+            text: (this.item[v.node.type].ctrl ? (hasChild ? (v.node.isOpen ? '▼' : '▶') : '●') : '□'),
             style:{gridColumn:`${depth+1}/${depth+2}`},
             event: {click:e => this.toggle(e),contextmenu:e => this.context(e)},
           },
           {
-            attr:{class:'item',name:v.data.nId},
+            attr:{class:'item'},
             style:{gridColumn:`${depth+2}/23`},
             children:v.item,
           },
@@ -777,7 +753,7 @@ class TypeDefs {
     console.log(`${v.whois} start.`);
     try {
 
-      // 選択中の行(this.currentId)のdeletedが設定済なら空白に、空白なら現在日時をセット
+      // 選択中の行(this.nId)のdeletedが設定済なら空白に、空白なら現在日時をセット
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
@@ -799,7 +775,7 @@ class TypeDefs {
     console.log(`${v.whois} start.`);
     try {
 
-      // 選択中の行(this.currentId)をthis.copiedIdに保存する
+      // 選択中の行(this.nId)をthis.copiedIdに保存する
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
