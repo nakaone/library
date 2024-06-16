@@ -36,19 +36,18 @@ function doGet(e){
 
 function typeDefsFront(arg){
   const v = {whois:'typeDefsFront',rv:null,step:0};
-  console.log(`${v.whois} start. arg=${stringify(arg)}`);
+  console.log(`${v.whois} start. arg(${whichType(arg)})=${stringify(arg)}`);
   try {
 
-    v.table = new SingleTable('master');
+    //v.relation = new SingleTable('relation');
     switch( arg[0] ){
-      case 'update':
+      case 'edit':
+        v.node = new SingleTable('node');
+        console.log(`l.46 arg[1](${typeof arg[1]})=${stringify(arg[1])}`)
         // JSONで記録する項目はJSON文字列化
-        ['link','attribute','children'].forEach(x => {
-          if( arg[1][x] ){
-            arg[1][x] = JSON.stringify(arg[1][x]);
-          }
-        });
-        v.rv = v.table.update(arg[1],{where:o=>o.id===arg[1].id});
+        arg[1].attribute = JSON.stringify(arg[1].attribute);
+        console.log(`l.49 nId(${typeof arg[1].nId})=${arg[1].nId}`);
+        v.rv = v.node.update(arg[1],{where:o=>o.nId===arg[1].nId});
         if( v.rv instanceof Error ) throw v.rv;
         console.log(`${arg[0]}: v.rv=${stringify(v.rv)}`);
         break;

@@ -561,34 +561,34 @@ class TypeDefs {
       v.step = 1; // 対象idの取得
       v.id = Number(event.target.parentNode.getAttribute('name'));
       v.name = event.target.getAttribute('name');
-      console.log(`l.427 v.id=${v.id}, v.name=${v.name}`);
+      console.log(`l.560 v.id=${v.id}, v.name=${v.name}`);
 
       v.step = 2; // 修正値の取得
-      v.data = this.data[v.id];
-      v.oldValue = v.name === 'label' ? v.data.label : v.data.attribute[v.name];
+      v.data = alasql(`select * from node where nId=${v.id}`)[0];
+      v.oldValue = v.data.attribute[v.name];
       v.newValue = prompt('修正値を入力してください',v.oldValue);
-      console.log(`l.433 v.newValue(${typeof v.newValue})=${v.newValue}`)
+      console.log(`l.566 v.newValue(${typeof v.newValue})=${v.newValue}`)
 
       v.step = 3; // 修正値の反映、画面再表示
       if( v.newValue !== null ){
-        v.step = 3.1; // インスタンス変数に反映
-        if( v.name === 'label' ){
-          this.data[v.id].label = v.newValue;
-        } else {
-          this.data[v.id].attribute[v.name] = v.newValue;
-        }
-        this.data[v.id].updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
-        console.log(`l.443 this.data[${v.id}]=${stringify(this.data[v.id])}`)
+        v.step = 3.1; // データベースに反映
+        v.data.attribute[v.name] = v.newValue;
+        v.now = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
+        v.sql = `update node set updated="${v.now}" where nId=${v.id}`;
+        alasql(v.sql);
+        console.log(`l.573 v.data=${stringify(v.data)}`)
+        console.log(`l.574 ${stringify(alasql(`select * from node where nId=${v.id}`)[0])}`)
+        v.data = alasql(`select * from node where nId=${v.id}`)[0];
 
         v.step = 3.2; // シートに反映
-        v.r = await doGAS('typeDefsFront',['update',this.data[v.id]]);
+        v.r = await doGAS('typeDefsFront',['edit',v.data]);
         if( v.r instanceof Error ) throw v.r;
-        console.log(`l.448 v.r=${stringify(v.r)}`)
+        console.log(`l.582 v.r=${stringify(v.r)}`)
 
         v.step = 3.3; // 画面再表示
         v.r = this.disp();
         if( v.r instanceof Error ) throw v.r;
-        console.log(`l.453 v.r=${stringify(v.r)}`)
+        console.log(`l.582 v.r=${stringify(v.r)}`)
       }
 
       v.step = 9; // 終了処理
