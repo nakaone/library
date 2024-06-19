@@ -10,6 +10,7 @@ dialog {
   width: 10rem;
 }
 dialog::backdrop {backdrop-filter: blur(8px);}
+dialog[name="edit"]{ width: 25rem; }
 dialog > div {
   width: 100%;
   margin: 0.5rem 0;
@@ -23,6 +24,10 @@ dialog [name="arrow"] > div {
   text-align: center;
   background-color: #ccc;
 }
+dialog .tr {display: grid; grid-template-columns: repeat(12, 1fr);}
+dialog .th {grid-column: 1/3;}
+dialog .td {grid-column: 3/13; width: 100%;}
+dislog[name="edit"] {width: 25rem;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
 </head>
@@ -31,14 +36,10 @@ dialog [name="arrow"] > div {
   <div name="data" style="display:none"><?= data ?></div>
   <div name="tree" class="table"></div>
 
-  <dialog>
+  <dialog name="edit"></dialog>
+  <dialog name="context">
+    <div name="edit">編集</div>
     <div name="addNew">新規作成</div>
-      <!--
-      <div>新規作成</div>
-        <option value="branch">branch</option>
-        <option value="variable">variable</option>
-        <option value="comment">comment</option>
-      -->
     <div name="activate">有効化</div>
     <div name="copy">コピー</div>
     <div name="paste">ペースト</div>
@@ -75,60 +76,60 @@ function createElement(arg,parent=null){
       v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
       Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
 
-      v.step = 3; // HTMLElementを生成、v.objとする
-      v.obj = document.createElement(v.def.tag);
+      v.step = 3; // HTMLElementを生成、v.nodeとする
+      v.node = document.createElement(v.def.tag);
 
       v.step = 4; // HTMLElementの属性を定義
       for( v.j in v.def.attr ){
-        v.obj.setAttribute(v.j,v.x = v.def.attr[v.j]);
+        v.node.setAttribute(v.j,v.x = v.def.attr[v.j]);
       }
 
       v.step = 5; // 論理属性を定義(ex.checked)
       for( v.j in v.def.logical ){
         if( v.def.logical[v.j] ){
-          v.obj.setAttribute(v.j,v.def.logical[v.j]);
+          v.node.setAttribute(v.j,v.def.logical[v.j]);
         }
       }
 
       v.step = 6; // style属性の定義
       for( v.j in v.def.style ){
         if( v.j.match(/^\-\-/) ){ // CSS変数
-          v.obj.style.setProperty(v.j,v.def.style[v.j]);
+          v.node.style.setProperty(v.j,v.def.style[v.j]);
         } else {
-          v.obj.style[v.j] = v.def.style[v.j];
+          v.node.style[v.j] = v.def.style[v.j];
         }
       }
 
       v.step = 7; // イベントの定義
       for( v.j in v.def.event ){
-        v.obj.addEventListener(v.j,v.def.event[v.j],false);
+        v.node.addEventListener(v.j,v.def.event[v.j],false);
       }
 
       v.step = 8; // 内部文字列(html or text)
       if( v.def.html.length > 0 ){
-        v.obj.innerHTML = v.def.html;
+        v.node.innerHTML = v.def.html;
       } else {
         // textareaの場合はvalueに、それ以外はinnerTextに内部文字列(text)をセット
-        v.obj[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
+        v.node[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
       }
 
       v.step = 9; // 子要素の追加(parentは指定しない)
       for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
-        v.obj.appendChild(this.createElement(v.def.children[v.j]));
+        v.node.appendChild(this.createElement(v.def.children[v.j]));
       }
 
       v.step = 10; // 戻り値への登録
-      v.rv.push(v.obj);
+      v.rv.push(v.node);
 
       v.step = 11; // 親要素への追加
       if( parent !== null ){
-        v.parent.appendChild(v.obj);
+        v.parent.appendChild(v.node);
       }
 
       v.step = 12; // メンバとして、また切替画面として登録
       if( v.def.name.length > 0 ){
-        this[v.def.name] = v.obj;
-        this.screenList[v.def.name] = v.obj;
+        this[v.def.name] = v.node;
+        this.screenList[v.def.name] = v.node;
       }
     }
 
@@ -272,7 +273,140 @@ function whichType(arg,is){
 
 class TypeDefs {
   constructor(arg={}){
-    const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
+    const v = {whois:this.constructor.name+'.constructor',rv:null,step:0,default:{
+      iDef:{  /* 行タイプ別のitem領域作成関連の定義
+        proto: {項目名:新規作成時の既定値,..}
+        ctrl: 子要素を持つ可能性がある(▶▼●)ならtrue、無い(常時□)ならfalse
+        disp: 一行分のデータを引数に、item領域のchildren(createElement用配列)を返す関数
+        edit: 一行分のデータを引数に、編集画面のchildren(createElement形式)を返す関数
+        */
+        variable: {
+          proto: {label:'',type:'',role:'',note:''},
+          ctrl: true,
+          disp: x => {  // 変数型の行の出力定義
+            const v = {rv:[{
+              // 必須のlabelは事前にセット
+              tag  : 'span',
+              html : x.attribute.label,
+              attr : {name:'label'},
+            }]};
+            // 任意項目を順次追加
+            if( x.attribute.type ){ v.rv.push({
+              tag:'span',html:' '
+            },{
+              tag  : 'span',
+              html : x.attribute.type,
+              attr : {name:'type'},
+            })}
+            if( x.attribute.role ){ v.rv.push({
+              tag:'span',html:' '
+            },{
+              tag  : 'span',
+              html : x.attribute.role,
+              attr : {name:'role'},
+            })}
+            if( x.attribute.note ){ v.rv.push({
+              tag:'br'
+            },{
+              tag  : 'span',
+              html : x.attribute.note,
+              attr : {name:'note'},
+            })}
+            return v.rv;
+          },
+          edit: x => {
+            const v = {rv:[
+              {attr:{class:'tr'},children:[
+                {attr:{class:'th'},text:'label'},
+                {tag:'input',attr:{name:'label',class:'td',value:x.attribute.label}},
+              ]},
+              {attr:{class:'tr'},children:[
+                {attr:{class:'th'},text:'type'},
+                {tag:'input',attr:{name:'type',class:'td',value:x.attribute.type}},
+              ]},
+              {attr:{class:'tr'},children:[
+                {attr:{class:'th'},text:'role'},
+                {tag:'input',attr:{name:'role',class:'td',value:x.attribute.role}},
+              ]},
+              {attr:{class:'tr'},children:[
+                {attr:{class:'th'},text:'note'},
+                {tag:'textarea',attr:{name:'note',class:'td',value:x.attribute.note}},
+              ]},
+            ]};
+            return v.rv;
+          },
+        },
+        branch: {
+          proto: {label:'',note:''},
+          ctrl: true, // 
+          disp: x => {  // ブランチ行(グループまとめ)の出力定義
+            const v = {rv:[{
+              tag  : 'span',
+              html : x.attribute.label,
+              attr : {name:'label'},
+            }]};
+            // noteが有れば追加
+            if( x.attribute.note ){ v.rv.push({
+              tag:'br'
+            },{
+              tag  : 'span',
+              html : x.attribute.note,
+              attr : {name:'note'},
+            })};
+            return v.rv;
+          },
+          edit: x => {
+            const v = {rv:[
+              {attr:{class:'tr'},children:[
+                {attr:{class:'th'},text:'label'},
+                {tag:'input',attr:{name:'label',class:'td',value:x.attribute.label}},
+              ]},
+              {attr:{class:'tr'},children:[
+                {attr:{class:'th'},text:'note'},
+                {tag:'textarea',attr:{name:'note',class:'td'},text:x.attribute.note},
+              ]},
+            ]};
+            return v.rv;
+          },
+        },
+        comment: {
+          proto: {label:''},
+          ctrl: false,
+          disp: x => { // コメント行の出力定義
+            const v = {rv:[{
+              tag  : 'span',
+              html : x.attribute.label,
+              attr : {name:'label',class:'comment'},
+            }]};
+            return v.rv;
+          },
+          edit: x => {
+            const v = {rv:[
+              {attr:{class:'tr'},children:[
+                {attr:{class:'th'},text:'label'},
+                {tag:'input',attr:{name:'label',class:'td',value:x.attribute.label}},
+              ]},
+            ]};
+            return v.rv;
+          },
+        },
+      },
+      tDef: { // テーブル定義
+        branch: {
+          parent   : 'number',
+          child    : 'number',
+          seq      : 'number'
+        },
+        node: {
+          nId      : 'number',
+          type     : 'string',
+          origin   : 'number',
+          attribute: 'json',
+          isValid  : 'boolean default true',
+          isOpen   : 'boolean default false'
+        },
+      },
+    }};
     console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
     try {
 
@@ -286,164 +420,74 @@ class TypeDefs {
       this.rootId = Number(document.querySelector(arg.pId || 'div[name="pId"]').innerText);
       // ツリーの描画領域
       this.area = document.querySelector(arg.area || 'div.table[name="tree"]');
-      // 無効行は表示しない
-      this.showDeleted = false;
+      // 引数とv.defaultで設定された既定値からメンバ作成
+      Object.keys(v.default).forEach(x => this[x] = Object.assign({},v.default[x],(arg[x]||{})));
 
       // ---------------------------------------------------
       v.step = 2; // データベース化
       // ---------------------------------------------------
-      v.step = 2.11; // node
-      v.sql = 'create table node ('
-      + '`nId` int,'
-      + '`type` string,'
-      + '`attribute` json,'
-      + '`created` string,'
-      + '`updated` string);';
-      alasql(v.sql);
-      v.step = 2.12;
-      this.raw.node.forEach(x => {
-        v.sql = `insert into node values (${x.nId}`
-        + `,"${x.type}"`
-        + ',' + (x.attribute || null)
-        + ',' + (x.created ? `"${x.created}"` : null)
-        + ',' + (x.updated ? `"${x.updated}"` : null)
-        + `);`
+      Object.keys(this.tDef).forEach(tableName => {
+        v.step = 2.1; // テーブルの作成
+        v.cols = Object.keys(this.tDef[tableName]);
+        v.sql = '';
+        v.cols.forEach(colName => {
+          v.sql += `\`${colName}\` ${this.tDef[tableName][colName]},`;
+        });
+        v.sql = `create table ${tableName} (${v.sql.slice(0,v.sql.length-1)});`;
         alasql(v.sql);
+
+        v.step = 2.2; // データのセット
+        this.raw[tableName].forEach(row => {
+          //console.log(`l.310 row=${stringify(row)}`);
+          v.sql = '';
+          v.cols.forEach(colName => {
+            if( typeof row[colName] === 'undefined' || String(row[colName]).length === 0 ){
+              v.col = 'null';
+            } else {
+              v.col = row[colName];
+              if( this.tDef[tableName][colName].match(/string/) ){
+                // string型 ⇒ ダブルクォーテーションで囲む
+                // int, json, boolean ⇒ 囲み記号不要
+                v.col = `"${v.col}"`;
+              }
+              if( this.tDef[tableName][colName].match(/json/) ){
+                v.col = '@' + v.col;
+              }
+            }
+            v.sql += v.col + ',';
+            //console.log(`l.445 row[${colName}](${whichType(row[colName])})=${row[colName]}\nv.col=${v.col}\nv.sql=${v.sql}`);
+          });
+          v.sql = `insert into ${tableName} values (${v.sql.slice(0,v.sql.length-1)});`;
+          //console.log(`l.449 v.sql=${v.sql}`)
+          alasql(v.sql);
+        });
+        v.r = alasql(`select * from ${tableName}`);
+        console.log(`l.453 ${tableName} =====\n${stringify(v.r)}`);
       });
-      console.log(`l.317 ${stringify(alasql('select * from node'))}`)
-
-      v.step = 2.21; // relationは操作が多いのでRDB化
-      v.sql = 'create table relation ('
-      + '`pId` int,'
-      + '`order` int,'
-      + '`nId` int,'
-      + '`deleted` string,'
-      + '`isOpen` boolean);';
-      alasql(v.sql);
-      v.step = 2.22;
-      this.raw.relation.forEach(x => {
-        v.sql = `insert into relation values (${x.pId}`
-        + `,${x.order}`
-        + `,${x.nId}`
-        + ',' + (x.deleted ? `"${x.deleted}"` : null)
-        + `, false);`
-        alasql(v.sql);
-      });
-      console.log(`l.333 ${stringify(alasql('select * from relation'))}`)
-      
-      // ---------------------------------------------------
-      v.step = 3.1; // item領域描画関数の定義
-      // ---------------------------------------------------
-      this.item = { /**
-        * 行のtype毎にどのように出力するか定義
-        * @param {object} x - 一行分のデータ
-        * @returns {object[]} createElementの引数形式で、div.item内部のchildren
-        */
-        branch: {
-          proto: {label:'',note:''},
-          ctrl: true, // 子要素を持つ可能性がある(▶▼●)ならtrue、無い(常時□)ならfalse
-          disp: x => {  // ブランチ行(グループまとめ)の出力定義
-            const v = {rv:[{
-              tag  : 'span',
-              html : x.attribute.label,
-              attr : {name:'label'},
-              event: {click:e => this.edit(e)}
-            }]};
-            // noteが有れば追加
-            if( x.attribute.note ){ v.rv.push({
-              tag:'br'
-            },{
-              tag  : 'span',
-              html : x.attribute.note,
-              attr : {name:'note'},
-              event: {click:e => this.edit(e)},
-            })};
-            return v.rv;
-          },
-        },
-        comment: {
-          proto: {label:''},
-          ctrl: false,
-          disp: x => { // コメント行の出力定義
-            const v = {rv:[{
-              tag  : 'span',
-              html : x.attribute.label,
-              attr : {name:'label',class:'comment'},
-              event: {click:e => this.edit(e)}
-            }]};
-            return v.rv;
-          },
-        },
-        variable: {
-          proto: {label:'',type:'',role:'',note:''},
-          ctrl: true,
-          disp: x => {  // 変数型の行の出力定義
-            const v = {rv:[{
-              // 必須のlabelは事前にセット
-              tag  : 'span',
-              html : x.attribute.label,
-              attr : {name:'label'},
-              event: {click:e => this.edit(e)}
-            }]};
-            // 任意項目を順次追加
-            if( x.attribute.type ){ v.rv.push({
-              tag:'span',html:' '
-            },{
-              tag  : 'span',
-              html : x.attribute.type,
-              attr : {name:'type'},
-              event: {click:e => this.edit(e)},
-            })}
-            if( x.attribute.role ){ v.rv.push({
-              tag:'span',html:' '
-            },{
-              tag  : 'span',
-              html : x.attribute.role,
-              attr : {name:'role'},
-              event: {click:e => this.edit(e)},
-            })}
-            if( x.attribute.note ){ v.rv.push({
-              tag:'br'
-            },{
-              tag  : 'span',
-              html : x.attribute.note,
-              attr : {name:'note'},
-              event: {click:e => this.edit(e)},
-            })}
-            return v.rv;
-          },
-        },
-      };
-
-      v.step = 3.2; // 引数で渡された物があればそれを優先
-      if( arg.hasOwnProperty('item') ){
-        for( v.x in arg.item ){
-          this.item[v.x] = arg.item[v.x];
-        }
-      }
 
       // ---------------------------------------------------
-      v.step = 4; // ダイアログの準備
+      v.step = 3; // ダイアログの準備
       // ---------------------------------------------------
-      this.dialog = document.querySelector('dialog');
+      this.contextDialog = document.querySelector('dialog[name="context"]');
       // ボタンの動作定義
-      ['addNew','activate','copy','paste','levelUp','moveForward',
+      ['edit','addNew','activate','copy','paste','levelUp','moveForward',
       'moveLater','levelDown','showDeleted'].forEach(x => {
-        this.dialog.querySelector(`[name="${x}"]`)
+        this.contextDialog.querySelector(`[name="${x}"]`)
         .addEventListener('click',e=>this.context(e));
       });
       // 行タイプ選択用プルダウンの選択肢をセット
       v.select = {tag:'select',children:[],style:{marginLeft:'2rem'}};
-      Object.keys(this.item).forEach(x => v.select.children.push({tag:'option',attr:{value:x},text:x}));
-      v.r = createElement(v.select,this.dialog.querySelector('[name="addNew"]'));
+      Object.keys(this.iDef).forEach(x => v.select.children.push({tag:'option',attr:{value:x},text:x}));
+      v.r = createElement(v.select,this.contextDialog.querySelector('[name="addNew"]'));
       if( v.r instanceof Error ) throw v.r;
+
+      this.editDialog = document.querySelector('dialog[name="edit"]');
 
       // ---------------------------------------------------
       v.step = 5; // ツリーを描画
       // ---------------------------------------------------
       v.r = this.disp();
       if( v.r instanceof Error ) throw v.r;
-
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
@@ -456,13 +500,13 @@ class TypeDefs {
   }
 
   /** disp: 描画領域にツリーを描画
-   * @param {number} pId - 描画対象ノードのid
+   * @param {number} nId - 描画対象のルート要素のnId
    * @param {number} depth - ツリーの階層(0オリジン)
    * @returns {null}
    */
-  disp(pId=0,nId=this.rootId,depth=0,isOpen=true){
+  disp(nId=this.rootId,depth=0){
     const v = {whois:this.constructor.name+'.disp',rv:null,step:0};
-    console.log(`${v.whois} start.\npId=${pId}, nId=${nId}, depth=${depth}`);
+    console.log(`${v.whois} start.\nnId=${nId}, depth=${depth}`);
     try {
 
       v.step = 1; // 事前準備
@@ -473,43 +517,63 @@ class TypeDefs {
         this.area.innerHTML = ''; // 表示領域をクリア
       }
 
-      v.step = 2; // 子要素の配列をv.childrenとして作成
-      v.step = 2.1; // v.work=「自要素＋リンク元要素」の子要素
-      v.sql = `select` //`select r01.nId as nId`
-      + ' case when r2.pId is null then r1.nId else r2.nId end as nId'
-      + ' , case when r2.pId is null then r1.`order` else r2.`order` end as `order`'
-      + ' , case when r2.pId is null then r1.`deleted` else r2.`deleted` end as `del`'
-      + ' , case when r2.pId is null then r1.`isOpen` else r2.`isOpen` end as `isOpen`'
-      + ' from relation as r1'
-      + ' left join relation as r2 on r1.nId = r2.pId'
-      + ` where r1.pId = ${nId}`
-      + ' order by r1.`order`, r2.`order`'
-      + ';';
-      v.work = alasql(v.sql);
-      //console.log(`l.488 v.work=${JSON.stringify(v.work)}`)
+      v.step = 2; // 自要素を描画
+      v.step = 2.1; // 自要素のnodeオブジェクトをv.nodeとして取得
+      v.sql = 'select n1.nId as nId, n1.`type` as `type`'
+      + ', n1.attribute as a1'
+      + ', n2.attribute as a2'
+      + ', n1.isValid as isValid'
+      + ', n1.isOpen as isOpen'
+      + ' from node as n1'
+      + ' left join node as n2 on n1.origin = n2.nId'
+      + ' where n1.nId=' + nId;
+      v.node = alasql(v.sql)[0];
+      v.node.attribute = Object.assign((v.node.a2||{}),(v.node.a1||{}));
+      ['a1','a2'].forEach(x => delete v.node[x]);
+      //console.log(`l.532 v.node=${stringify(v.node)}`);
 
-      v.step = 2.2; // v.workから除外対象の子要素(order<0)を削除
-      v.sql = 'select * from ? as c0'
-      + ' left join (select nId from ? where `order`<0) as c1'
-      + ' on c0.nId = c1.nId'
-      + ' where c1.nId is null;';
-      v.children = alasql(v.sql,[v.work,v.work]);
-      console.log(`l.494 v.children=${JSON.stringify(v.children)}`)
+      v.step = 2.2; // createElement用の行オブジェクトをv.rvとして作成
+      v.sql = 'select * from branch where parent='+nId;
+      v.hasChild = alasql(v.sql).length > 0;
+      //console.log(`l.538 v.hasChild(${whichType(v.hasChild)})=${v.hasChild}`)
+      v.rv = {
+        attr:{class:'tr',name:`${nId}`},
+        children:[
+          {
+            attr:{class:'indent'},
+            style:{gridColumn:`1/${depth+1}`,width:depth+'rem'}
+          },{
+            attr: {class:'ctrl'},
+            // 子要素があれば[▶|▼]、無ければ●。コメント行等、子要素を持ち得ないtypeなら空白
+            text: (this.iDef[v.node.type].ctrl ? (v.hasChild ? (v.node.isOpen ? '▼' : '▶') : '●') : '□'),
+            style:{gridColumn:`${depth+1}/${depth+2}`},
+            event: {click:e => this.toggle(e),contextmenu:e => this.context(e)},
+          },
+          {
+            attr:{class:'item'},
+            style:{gridColumn:`${depth+2}/23`},
+            children: this.iDef[v.node.type].disp(v.node),
+          },
+        ]
+      };
+      //console.log(`l.559 v.rv=${stringify(v.rv)}`)
 
-      v.step = 3; // 自要素を描画する
-      v.r = this.drawItem(pId,nId,depth,v.children.length>0);
+      v.step = 2.3; // 関数の結果を描画領域に追加
+      v.r = createElement(v.rv,this.area);
       if( v.r instanceof Error ) throw v.r;
 
-      v.step = 4; // 子要素を順次再帰呼出
-      if( isOpen === true ){
+      v.step = 3; // 子要素を順次再帰呼出
+      if( v.node.isOpen === true ){
+        v.sql = 'select child from branch where parent='+nId+' order by seq';
+        v.children = alasql(v.sql);
         for( v.i=0 ; v.i<v.children.length ; v.i++ ){
-          v.r = this.disp(nId,v.children[v.i].nId,depth+1,v.children[v.i].isOpen);
+          v.r = this.disp(v.children[v.i].child,depth+1);
           if( v.r instanceof Error ) throw v.r;
         }
       }
 
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      v.step = 4; // 終了処理
+      console.log(`${v.whois} normal end.`);//\nv.rv=${stringify(v.rv)}`);
       return v.rv;
 
     } catch(e) {
@@ -525,19 +589,16 @@ class TypeDefs {
    */
   toggle(event){
     const v = {whois:this.constructor.name+'.toggle',rv:null,step:0};
-    console.log(`${v.whois} start.`);//\ntarget=${event.parentNode.name}`);
+    console.log(`${v.whois} start.`);
     try {
 
       v.step = 1; // 対象idの取得
-      v.name = event.target.parentNode.getAttribute('name')
-      v.m = v.name.match(/^(\d+):(\d+)$/);
-      if( v.name === null ) throw new Error(`Invalid name "${v.name}"`);
-      [v.pId,v.nId] = [Number(v.m[1]),Number(v.m[2])];
+      v.nId = Number(event.target.parentNode.getAttribute('name'));
 
       v.step = 2; // isOpenを逆転
-      v.relation = alasql(`select * from relation where pId=${v.pId} and nId=${v.nId}`)[0];
-      v.relation.isOpen = v.relation.isOpen ? false : true;
-      alasql(`update relation set isOpen=${v.relation.isOpen} where pId=${v.pId} and nId=${v.nId}`);
+      v.node = alasql('select * from node where nId='+v.nId)[0];
+      v.node.isOpen = v.node.isOpen ? false : true;
+      alasql(`update node set isOpen=${v.node.isOpen} where nId=${v.nId}`);
 
       v.step = 3; // 再描画
       v.r = this.disp();
@@ -554,48 +615,84 @@ class TypeDefs {
     }
   }
 
-  /** edit: クリックされた要素を編集
+  /** edit: クリックされた要素の編集画面を表示
    * @param {Event} - クリックのイベントオブジェクト
    * @returns {null}
    */
-  async edit(event){
+  edit(){
     const v = {whois:this.constructor.name+'.edit',rv:null,step:0};
     console.log(`${v.whois} start.`);
     try {
 
-      v.step = 1.1; // 対象idの取得
-      v.idStr = event.target.parentNode.parentNode.getAttribute('name');
-      v.m = v.idStr.match(/^(\d+):(\d+)$/);
-      if( v.m === null ) throw new Error(`Invalid name "${v.idStr}"`);
-      [this.pId,this.nId] = [Number(v.m[1]),Number(v.m[2])];
+      v.step = 1; // 対象nodeの取得
+      v.sql = 'select * from node where nId=' + this.nId;
+      v.node = alasql(v.sql)[0];
+      console.log(`l.629 -----\nv.sql=${v.sql}\nv.node=${stringify(v.node)}`)
 
-      v.step = 1.2; // 対象属性名の取得
-      v.name = event.target.getAttribute('name');
-      console.log(`l.574 pId=${this.pId}, nId=${this.nId}, name=${v.name}`)
+      v.step = 2; // 編集画面の作成
+      v.editDialog = this.iDef[v.node.type].edit(v.node);
+      console.log(`l.634 v.editDialog=${stringify(v.editDialog)}`);
 
-      v.step = 2; // 修正値の取得
-      v.node = alasql(`select * from node where nId=${this.nId}`)[0];
-      v.oldValue = v.node.attribute[v.name];
-      v.newValue = prompt('修正値を入力してください',v.oldValue);
+      v.step = 3; // 更新ボタンを追加、編集画面の再作成
+      v.editDialog.push({tag:'button',text:'更新',event:{click:e => this.update()}});
+      this.editDialog.innerHTML = '';
+      v.r = createElement(v.editDialog,this.editDialog);
+      if( v.r instanceof Error ) throw v.r;
 
-      v.step = 3; // 修正値の反映、画面再表示
-      if( v.newValue !== null ){
-        v.step = 3.1; // データベースに反映
-        v.node.attribute[v.name] = v.newValue;
-        v.node.updated = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
-        // alasql内部のオブジェクト(JSON型変数)はオブジェクトへの代入だけでRDBも更新されるので割愛
-        alasql(`update node set updated="${v.node.updated}" where nId=${v.node.nId}`);
+      v.step = 4; // 編集画面を表示して終了処理
+      this.editDialog.showModal();
 
-        v.step = 3.2; // シートに反映
-        v.r = await doGAS('typeDefsFront',['edit',v.node]);
+      v.step = 5; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** update: 編集画面の内容をデータベースとシートに反映
+   * @param {void}
+   * @returns {null}
+   */
+  async update(){
+    const v = {whois:this.constructor.name+'.update',rv:null,step:0};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // ダイアログの値とDB上の値を比較
+      v.node = alasql('select * from node where nId='+this.nId)[0];
+      v.changedCols = 0;
+      Object.keys(this.iDef[v.node.type].proto).forEach(x => {
+        v.dialog = this.editDialog.querySelector(`[name="${x}"]`).value;
+        if( v.node.attribute[x] !== v.dialog ){
+          v.node.attribute[x] = v.dialog;
+          v.changedCols++;
+        }
+      });
+
+      v.step = 2; // 変更点が有った場合
+      if( v.changedCols > 0 ){
+        v.step = 2.1; // データベースに反映
+        v.sql = 'update node set'
+        + ' attribute=@' + JSON.stringify(v.node.attribute)
+        + ' where nId=' + this.nId;
+        alasql(v.sql);
+
+        v.step = 2.2; // シートに反映
+        v.r = await doGAS('typeDefsFront',['edit',{node:{update:[v.node]}}]);
         if( v.r instanceof Error ) throw v.r;
 
-        v.step = 3.3; // 画面再表示
+        v.step = 2.3; // 画面再表示
         v.r = this.disp();
         if( v.r instanceof Error ) throw v.r;
+
       }
 
       v.step = 9; // 終了処理
+      this.editDialog.close();
       console.log(`${v.whois} normal end.`);
       return v.rv;
 
@@ -618,28 +715,33 @@ class TypeDefs {
       v.step = 1; // 準備
       event.preventDefault();
       v.name = event.target.parentNode.getAttribute('name');
+      //console.log(`l.700 v.name=${v.name}`)
 
       v.step = 2; // 動作を分岐
-      v.m = v.name.match(/^(\d+):(\d+)$/);
-      if( v.m ){
-        v.step = 2.1; // nameが「pId:nId」形式
-        // ⇒ 「▶」等、行頭のアイコンの右ボタンクリックから呼ばれた ⇒ ダイアログ表示
+      if( !isNaN(v.name) ){
+        v.step = 2.1; // nameが整数(=nId)
+        // ⇒ 「▶」等、行頭のアイコンの右ボタンクリックから呼ばれた
+        // ⇒ 右ボタンメニューのダイアログ表示
+
         v.step = 2.11; // 選択されたidを保存
-        [this.pId,this.nId] = [Number(v.m[1]),Number(v.m[2])];
-        v.relation = alasql(`select * from relation where pId=${this.pId} and nId=${this.nId}`)[0];
-        v.step = 2.12; // 有効化⇔無効化切替
-        this.dialog.querySelector('[name="activate"]').innerText
-        = v.relation.deleted ? '有効化' : '無効化';
+        this.nId = Number(v.name);
+
+        v.step = 2.12; // ダイアログ内ボタンのラベル「有効化⇔無効化」の切替
+        v.node = alasql('select * from node where nId='+this.nId)[0];
+        v.act = this.contextDialog.querySelector('[name="activate"]');
+        v.act.innerText = v.node.isValid ? '無効化' : '有効化';
+
         v.step = 2.13; // ダイアログの表示
-        this.dialog.showModal();
+        this.contextDialog.showModal();
       } else {
         v.step = 2.2; // nameが「pId:nId」形式以外
         // ⇒ ダイアログ内の機能選択(ex. addNewのDivがクリックされた)
+        v.name = event.target.getAttribute('name');
         v.step = 2.21; // 選択された機能の呼び出し
         v.r = this[v.name]();
         if( v.r instanceof Error ) throw v.r;
         v.step = 2.22; // ダイアログを閉じてツリーを再描画
-        this.dialog.close();
+        this.contextDialog.close();
         v.r = this.disp();
         if( v.r instanceof Error ) throw v.r;
       }
@@ -655,83 +757,81 @@ class TypeDefs {
     }
   }
 
-  /** drawItem: 一行分の明細を描画領域に追加
-   * @param {number} id
-   * @param {number} depth
-   * @param {boolean} hasChild
-   * @returns {object} 追加した行のcreateElement引数オブジェクト
-   */
-  drawItem(pId,nId,depth,hasChild){
-    const v = {whois:this.constructor.name+'.drawItem',rv:null,step:0};
-    console.log(`${v.whois} start.\npId=${pId},nId=${nId},depth=${depth},hasChild=${hasChild}`);
-    try {
-
-      v.step = 1; // 自要素の値を取得
-      v.node = alasql(`select * from node where nId=${nId}`)[0];
-      v.relation = alasql(`select * from relation where pId=${pId} and nId=${nId}`)[0];
-
-      v.step = 2; // 無効行非表示指定かつ表示対象行が削除済なら表示しない
-      if( this.showDeleted === false && v.node.deleted ){
-        console.log(`${v.whois} skipped.`
-        + `\nthis.showDeleted(${typeof this.showDeleted})=${this.showDeleted}`
-        + `\nv.node.deleted(${typeof v.node.deleted})=${v.node.deleted}`
-        + `\nv.v.node=${stringify(v.node)}`)
-        return v.rv;
-      }
-
-      v.step = 3; // createElementオブジェクトを作成する関数を定義
-      v.item = this.item[v.node.type].disp(v.node);
-      v.rv = {
-        attr:{class:'tr',name:`${pId}:${nId}`},
-        children:[
-          {
-            attr:{class:'indent'},
-            style:{gridColumn:`1/${depth+1}`,width:depth+'rem'}
-          },{
-            attr: {class:'ctrl'},
-            // 子要素があれば[▶|▼]、無ければ●。コメント行等、v.item.ctrl==falseなら空白
-            text: (this.item[v.node.type].ctrl ? (hasChild ? (v.node.isOpen ? '▼' : '▶') : '●') : '□'),
-            style:{gridColumn:`${depth+1}/${depth+2}`},
-            event: {click:e => this.toggle(e),contextmenu:e => this.context(e)},
-          },
-          {
-            attr:{class:'item'},
-            style:{gridColumn:`${depth+2}/23`},
-            children:v.item,
-          },
-        ]
-      };
-      console.log(`l.728 v.rv=${stringify(v.rv)}`)
-
-      v.step = 4; // 関数の結果を描画領域に追加
-      v.r = createElement(v.rv,this.area);
-      if( v.r instanceof Error ) throw v.r;
-
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
-      return v.rv;
-
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-      console.error(`${e.message}\nv=${stringify(v)}`);
-      return e;
-    }
-  }
-
   /** addNew: 新規行を追加
    * @parem {void}
    * @returns {null}
    */
-  addNew(){
-    const v = {whois:this.constructor.name+'.addNew',rv:null,step:0};
+  async addNew(){
+    const v = {whois:this.constructor.name+'.addNew',rv:null,step:0,
+    data:{branch:{update:[],insert:[]},node:{update:[],insert:[]}}};
     console.log(`${v.whois} start.`);
     try {
 
-      // 選択されている行タイプのthis.item.protoに基づき、行オブジェクトを作成
-      // createdには現在日時をセット
+      v.step = 1; // nodeオブジェクトを作成
+      // dialogのプルダウンから選択されたtypeを取得
+      v.type = this.contextDialog.querySelector('select').value;
+      // 新規nIdを採番
+      v.nId = alasql('select max(nId) as max from node')[0].max + 1;
+      // シート用データに保存
+      v.data.node.insert.push({nId:v.nId,type:v.type});
+      // データベースに追加
+      // 'insert into node (`nId`,`type`,`origin`,`attribute`,`isValid`,`isOpen`) values'
+      v.sql = 'insert into node (`nId`,`type`,`attribute`) values'
+      + ` (${v.nId},"${v.type}",{"label":"(未定義)"});`
+      alasql(v.sql);
+
+      v.step = 2; // branchオブジェクトの作成と兄弟の順番調整
       // 作成する位置は「現在選択されている次の行」
       // ⇒ ①子孫があり、開いている(isOpen=true)なら長男として作成
       //   ②①以外なら弟として作成
+      v.node = alasql('select * from node where nId='+this.nId)[0];
+      v.children = alasql('select * from branch where parent='+this.nId);
+      if( v.node.isOpen && v.children.length > 0 ){
+
+        v.step = 2.1; // ①子孫があり、開いている ⇒ 長男として作成
+
+        v.step = 2.11; // this.nIdの子要素の順番を一つずつ繰り下げ
+        v.sql = 'update branch set seq=seq+1 where parent=' + this.nId;
+        alasql(v.sql);
+        v.sql = 'select * from branch where parent=' + this.nId
+        v.data.branch.update = alasql(v.sql);
+
+        v.step = 2.12; // parent=this.nId, child=new.nId, seq=1をbranchに追加
+        v.data.branch.insert = [{parent:this.nId,child:v.nId,seq:1}];
+        alasql(`insert into branch (parent,child,seq) values (${this.nId},${v.nId},1);`);
+
+      } else {
+
+        v.step = 2.2; // ②①以外なら弟として作成
+        v.step = 2.21; // 親要素と自要素の関係を取得
+        v.sql = 'select * from branch where child=' + this.nId;
+        v.branch = alasql(v.sql)[0];
+
+        v.sql = 2.22; // 自要素以降の順番を一つずつ繰り下げ
+        v.sql1 = 'update branch set seq=seq+1'
+        + ' where parent=' + v.branch.parent
+        + ' and seq>' + v.branch.seq;
+        v.sql2 = 'select * from branch'
+        + ' where parent=' + v.branch.parent
+        + ' and seq>' + v.branch.seq;
+        alasql(v.sql1);
+        v.data.branch.update = alasql(v.sql2);
+
+        v.step = 2.23; // parent=v.branch.parent, child=new.nId,
+          // seq=v.branch.seq+1をbranchに追加
+        v.data.branch.insert = [{parent:v.branch.parent,child:v.nId,seq:v.branch.seq+1}];
+        alasql(`insert into branch (parent,child,seq) values `
+        + `(${v.branch.parent},${v.nId},${v.branch.seq+1});`);
+      }
+
+      v.step = 3; // シートの更新
+      v.r = await doGAS('typeDefsFront',['edit',v.data]);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 3; // 編集画面の表示
+      this.nId = v.nId;
+      v.r = this.edit();
+      if( v.r instanceof Error ) throw v.r;
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
@@ -913,7 +1013,7 @@ class TypeDefs {
       this.showDeleted = !this.showDeleted;
 
       v.step = 2; // ダイアログの表記を反転
-      this.dialog.querySelector('[name="showDeleted"]').innerText
+      this.contextDialog.querySelector('[name="showDeleted"]').innerText
       = this.showDeleted ? '無効行は非表示' : '無効行も表示';
 
       v.step = 3; // 再描画
@@ -930,7 +1030,6 @@ class TypeDefs {
       return e;
     }
   }
-
 }
 
 window.addEventListener('DOMContentLoaded',() => {

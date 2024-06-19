@@ -5,7 +5,7 @@ function doGet(e){
   v.template = HtmlService.createTemplateFromFile('index');
   v.template.pId = e.parameter.pId || 0;
 
-  ['relation','node'].forEach(x => {
+  ['branch','node','leaf'].forEach(x => {
     // データをシートから取得
     v[x] = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(e.parameter.sn || x).getDataRange().getValues();
 
@@ -15,13 +15,6 @@ function doGet(e){
       v.o = {};
       for( v.c=0 ; v.c<v[x][v.r].length ; v.c++ ){
         v.o[v[x][0][v.c]] = v[x][v.r][v.c];
-        /*
-        v.o[v[x][0][v.c]] = (arg =>{
-          // JSON型の文字列項目はオブジェクト化して保存
-          try{ return JSON.parse(arg); }
-          catch(e){ return arg; }
-        })(v[x][v.r][v.c]);
-        */
       }
       v.rv[x].push(v.o);
     }
@@ -39,17 +32,45 @@ function typeDefsFront(arg){
   console.log(`${v.whois} start. arg(${whichType(arg)})=${stringify(arg)}`);
   try {
 
-    //v.relation = new SingleTable('relation');
     switch( arg[0] ){
       case 'edit':
-        v.node = new SingleTable('node');
-        console.log(`l.46 arg[1](${typeof arg[1]})=${stringify(arg[1])}`)
-        // JSONで記録する項目はJSON文字列化
-        arg[1].attribute = JSON.stringify(arg[1].attribute);
-        console.log(`l.49 nId(${typeof arg[1].nId})=${arg[1].nId}`);
-        v.rv = v.node.update(arg[1],{where:o=>o.nId===arg[1].nId});
-        if( v.rv instanceof Error ) throw v.rv;
-        console.log(`${arg[0]}: v.rv=${stringify(v.rv)}`);
+        // arg[1] = {branch:{update:[{},{}],insert:[]},node:{update:[],insert:[]}}
+        v.arg = Object.assign({
+          branch: {update:[],insert:[]},
+          node:   {update:[],insert:[]},
+        },arg[1]);
+        if( v.arg.branch.update.length > 0 || v.arg.branch.insert.length > 0 ){
+          v.branch = new SingleTable('branch');
+          if( v.arg.branch.update.length > 0 ){
+            v.arg.branch.update.forEach(x => {
+              v.r = v.branch.update(x,{where:o=>
+                (o.parent === x.parent) && (o.child === x.child)});
+              if( v.r instanceof Error ) throw v.r;
+            });
+          }
+          if( v.arg.branch.insert.length > 0 ){
+            v.r = v.branch.insert(v.arg.branch.insert);
+            if( v.r instanceof Error ) throw v.r;
+          }
+        }        
+
+        if( v.arg.node.update.length > 0 || v.arg.node.insert.length > 0 ){
+          v.node = new SingleTable('node');
+          if( v.arg.node.update.length > 0 ){
+            v.arg.node.update.forEach(x => {
+              // JSONで記録する項目はJSON文字列化
+              x.attribute = JSON.stringify(x.attribute);
+              v.r = v.node.update(x,{where:o=>o.nId===x.nId});
+              if( v.r instanceof Error ) throw v.r;
+            });
+          }
+          if( v.arg.node.insert.length > 0 ){
+            // JSONで記録する項目はJSON文字列化
+            v.arg.node.insert.forEach(x => x.attribute = JSON.stringify(x.attribute));
+            v.r = v.node.insert(v.arg.node.insert);
+            if( v.r instanceof Error ) throw v.r;
+          }
+        }        
         break;
       default: v.rv = new Error('Invalid function');
     }
