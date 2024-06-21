@@ -38,7 +38,8 @@ dislog[name="edit"] {width: 25rem;}
 
   <dialog name="edit"></dialog>
   <dialog name="context">
-    <div name="edit">編集</div>
+    <div name="editNode">編集</div>
+    <!--div name="edit">編集</div-->
     <div name="addNew">新規作成</div>
     <div name="activate">有効化</div>
     <div name="copy">コピー</div>
@@ -274,7 +275,7 @@ function whichType(arg,is){
 class TypeDefs {
   constructor(arg={}){
     const v = {whois:this.constructor.name+'.constructor',rv:null,step:0,default:{
-      iDef:{  /* 行タイプ別のitem領域作成関連の定義
+      iDef:{  /* 行タイプ別のitem領域(attribute)作成関連の定義
         proto: {項目名:新規作成時の既定値,..}
         ctrl: 子要素を持つ可能性がある(▶▼●)ならtrue、無い(常時□)ならfalse
         disp: 一行分のデータを引数に、item領域のchildren(createElement用配列)を返す関数
@@ -470,7 +471,7 @@ class TypeDefs {
       // ---------------------------------------------------
       this.contextDialog = document.querySelector('dialog[name="context"]');
       // ボタンの動作定義
-      ['edit','addNew','activate','copy','paste','levelUp','moveForward',
+      ['editNode','addNew','activate','copy','paste','levelUp','moveForward',
       'moveLater','levelDown','showDeleted'].forEach(x => {
         this.contextDialog.querySelector(`[name="${x}"]`)
         .addEventListener('click',e=>this.context(e));
@@ -615,35 +616,74 @@ class TypeDefs {
     }
   }
 
-  /** edit: クリックされた要素の編集画面を表示
-   * @param {Event} - クリックのイベントオブジェクト
-   * @returns {null}
+  /** editNode: nodeの編集
+   * @param {Event|Object} - クリックのイベントオブジェクトまたは編集対象のnodeオブジェクト
+   * 
+   * - Qiita [【javascript】非同期な自作 confirm を作ってみた](https://qiita.com/naoki-funawatari/items/4de792bfefe5eab909cc)
    */
-  edit(){
-    const v = {whois:this.constructor.name+'.edit',rv:null,step:0};
-    console.log(`${v.whois} start.`);
+  async editNode(arg){
+    const v = {whois:this.constructor.name+'.editNode',rv:null,step:0};
+    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
     try {
 
       v.step = 1; // 対象nodeの取得
-      v.sql = 'select * from node where nId=' + this.nId;
-      v.node = alasql(v.sql)[0];
-      console.log(`l.629 -----\nv.sql=${v.sql}\nv.node=${stringify(v.node)}`)
+      if( whichType(arguments[0]) === 'Object' ){
+        // 編集対象のnodeオブジェクトが渡された場合
+        v.node = Object.assign({attribute:{}},arguments[0]);
+      } else {
+        // 右ボタンダイアログから「編集」が選択された場合
+        v.sql = 'select * from node where nId=' + this.nId;
+        v.node = alasql(v.sql)[0];
+      }
 
       v.step = 2; // 編集画面の作成
       v.editDialog = this.iDef[v.node.type].edit(v.node);
-      console.log(`l.634 v.editDialog=${stringify(v.editDialog)}`);
 
       v.step = 3; // 更新ボタンを追加、編集画面の再作成
-      v.editDialog.push({tag:'button',text:'更新',event:{click:e => this.update()}});
+      v.editDialog.push(
+        {tag:'button',attr:{name:'submit'},text:'更新'},
+        {tag:'button',attr:{name:'cancel'},text:'取消'},
+      );
       this.editDialog.innerHTML = '';
       v.r = createElement(v.editDialog,this.editDialog);
       if( v.r instanceof Error ) throw v.r;
 
-      v.step = 4; // 編集画面を表示して終了処理
-      this.editDialog.showModal();
+      v.step = 4; // 編集画面を表示
+      v.r = await (async ()=>{
+        this.editDialog.showModal();
 
-      v.step = 5; // 終了処理
-      console.log(`${v.whois} normal end.`);
+        return new Promise(resolve => {
+          this.editDialog.querySelector('button[name="submit"]').addEventListener("click", () => {
+            this.editDialog.close();
+            // .td[name]属性を持つ全要素からvalueを取得してオブジェクト化
+            const rv = {status:true,data:{}}
+            this.editDialog.querySelectorAll('.td[name]').forEach(x => {
+              rv.data[x.getAttribute('name')] = x.value;
+            });
+            resolve(rv);
+          });
+
+          this.editDialog.querySelector('button[name="cancel"]').addEventListener("click", () => {
+            this.editDialog.close();
+            resolve({status:false});
+          });
+        });
+      })();
+
+      v.step = 5;
+      if( v.r.status ){
+        v.step = 5.1; // 編集結果をデータベースとシートに反映
+        v.node.attribute = v.r.data;
+        v.r = await this.syncDB({node:{update:[v.node]}});
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 5.2; // 画面再表示
+        v.r = this.disp();
+        if( v.r instanceof Error ) throw v.r;
+      }
+
+      v.step = 6; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
 
     } catch(e) {
@@ -653,47 +693,107 @@ class TypeDefs {
     }
   }
 
-  /** update: 編集画面の内容をデータベースとシートに反映
-   * @param {void}
+  /** syncDB: データベースとシートの両方を更新する
+   * @param {Object.<string, Object>} arg - テーブル名と操作オブジェクト
+   * @param {Object.<string, [Object]>} arg.xxx - xxx=update or delete
    * @returns {null}
+   * 
+   * @example
+   * 
+   * {node:{update:[{nId:10,type:xxx,attribute:{..}}]}} 
    */
-  async update(){
-    const v = {whois:this.constructor.name+'.update',rv:null,step:0};
-    console.log(`${v.whois} start.`);
+  async syncDB(arg){
+    const v = {whois:this.constructor.name+'.syncDB',rv:null,step:0};
+    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
     try {
 
-      v.step = 1; // ダイアログの値とDB上の値を比較
-      v.node = alasql('select * from node where nId='+this.nId)[0];
-      v.changedCols = 0;
-      Object.keys(this.iDef[v.node.type].proto).forEach(x => {
-        v.dialog = this.editDialog.querySelector(`[name="${x}"]`).value;
-        if( v.node.attribute[x] !== v.dialog ){
-          v.node.attribute[x] = v.dialog;
-          v.changedCols++;
+      v.step = 1; // 事前準備
+      v.arg = Object.assign({
+        node:{update:[],delete:[]},
+        branch:{update:[],delete:[]},
+      },arg);
+      v.trans = {
+        node:{update:[],insert:[],delete:[]},
+        branch:{update:[],insert:[],delete:[]},
+      };
+
+      v.step = 2; // nodeの更新/追加
+      if( v.arg.node.update.length > 0 ){
+        v.step = 2.1; // シート更新用の引数作成
+        // 引数v.arg.updateの内、既存はupdateに、不在はinsertに分ける
+        v.sql = 'select * from ? as n1'
+        + ' left join node as n2 on n1.nId=n2.nId'
+        + ' where n2.nId is ';
+        v.trans.node.update = alasql(v.sql+'not null',[v.arg.node.update]);
+        v.trans.node.insert = alasql(v.sql+'null',[v.arg.node.update]);
+        console.log(`l.761 v.trans.node=${stringify(v.trans.node)}`);
+
+        v.step = 2.2; // データベースの更新処理
+        for( v.i=0 ; v.i<v.trans.node.update.length ; v.i++ ){
+          v.sql = 'update node set'
+          + ' attribute=@' + JSON.stringify(v.trans.node.update[v.i].attribute)
+          + ' where nId=' + v.trans.node.update[v.i].nId;
+          alasql(v.sql);
         }
-      });
 
-      v.step = 2; // 変更点が有った場合
-      if( v.changedCols > 0 ){
-        v.step = 2.1; // データベースに反映
-        v.sql = 'update node set'
-        + ' attribute=@' + JSON.stringify(v.node.attribute)
-        + ' where nId=' + this.nId;
-        alasql(v.sql);
-
-        v.step = 2.2; // シートに反映
-        v.r = await doGAS('typeDefsFront',['edit',{node:{update:[v.node]}}]);
-        if( v.r instanceof Error ) throw v.r;
-
-        v.step = 2.3; // 画面再表示
-        v.r = this.disp();
-        if( v.r instanceof Error ) throw v.r;
-
+        v.step = 2.3; // データベースの追加処理
+        for( v.i=0 ; v.i<v.trans.node.insert.length ; v.i++ ){
+          v.sql = 'insert into node (`nId`,`type`,`origin`,'
+          + '`attribute`,`isValid`,`isOpen`) values ('
+          + v.trans.node.insert[v.i].nId
+          + `,"${v.trans.node.insert[v.i].type}"`
+          + `,${v.trans.node.insert[v.i].origin || 'null'}`
+          + `,@${v.trans.node.insert[v.i].attribute}`
+          + `,${v.trans.node.insert[v.i].isValid || true}`
+          + `,${v.trans.node.insert[v.i].isOpen || false}`
+          + ')';
+          alasql(v.sql);
+        }
       }
 
-      v.step = 9; // 終了処理
-      this.editDialog.close();
-      console.log(`${v.whois} normal end.`);
+      v.step = 3; // nodeの削除
+      // 未作成
+
+      v.step = 4; // branchの更新/追加
+      if( v.arg.branch.update.length > 0 ){
+        v.step = 2.1; // シート更新用の引数作成
+        // 引数v.arg.updateの内、既存はupdateに、不在はinsertに分ける
+        v.sql = 'select * from ? as b1'
+        + ' left join branch as b2'
+        + ' on b1.parent=b2.parent and b1.child=b2.child'
+        + ' where b2.parent is ';
+        v.trans.branch.update = alasql(v.sql+'not null',[v.arg.branch.update]);
+        v.trans.branch.insert = alasql(v.sql+'null',[v.arg.branch.update]);
+
+        v.step = 2.2; // データベースの更新処理
+        for( v.i=0 ; v.i<v.trans.branch.update.length ; v.i++ ){
+          v.sql = 'update branch set'
+          + ' seq=' + v.trans.branch.update[v.i].seq
+          + ' where parent=' + v.trans.branch.update[v.i].parent
+          + ' and child=' + v.trans.branch.update[v.i].child;
+          alasql(v.sql);
+        }
+
+        v.step = 2.3; // データベースの追加処理
+        for( v.i=0 ; v.i<v.trans.branch.insert.length ; v.i++ ){
+          v.sql = 'insert into branch (`parent`,`child`,`seq`) values ('
+          + v.trans.branch.insert[v.i].parent
+          + `,${v.trans.branch.insert[v.i].child}`
+          + `,${v.trans.branch.insert[v.i].seq}`
+          + ')';
+          alasql(v.sql);
+        }
+      }
+
+      v.step = 5; // branchの削除
+      // 未作成
+
+      v.step = 6; // シートへの反映
+      v.r = await doGAS('typeDefsFront',['edit',v.trans]);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 7; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
 
     } catch(e) {
@@ -766,6 +866,50 @@ class TypeDefs {
     data:{branch:{update:[],insert:[]},node:{update:[],insert:[]}}};
     console.log(`${v.whois} start.`);
     try {
+
+
+      /* 2024/06/20 作りかけ version =================================
+      v.step = 1; // nodeオブジェクトを作成
+      // dialogのプルダウンから選択されたtypeを取得
+      v.type = this.contextDialog.querySelector('select').value;
+      // 新規nIdを採番
+      v.nId = alasql('select max(nId) as max from node')[0].max + 1;
+
+      v.step = 3; // 編集画面の表示
+      this.nId = v.nId;
+      v.r = this.edit({
+        nId: v.nId,
+        type: v.type,
+        attribute: Object.assign({},
+          this.iDef[v.type].proto,
+          {"label":"(未定義)"}
+        ),
+      });
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 2; // branchオブジェクトの作成と兄弟の順番調整
+      // 作成する位置は「現在選択されている次の行」
+      // ⇒ ①子孫があり、開いている(isOpen=true)なら長男として作成
+      //   ②①以外なら弟として作成
+      v.node = alasql('select * from node where nId='+this.nId)[0];
+      v.children = alasql('select * from branch where parent='+this.nId);
+      if( v.node.isOpen && v.children.length > 0 ){
+
+        v.step = 2.1; // ①子孫があり、開いている ⇒ 長男として作成
+      } else {
+
+        v.step = 2.2; // ②①以外なら弟として作成
+      }
+
+
+      //v.TypeDefs.edit({nId:-1,type:'branch',origin:'',attribute:{label:'edit test'},isValid:true,isOpen:false});
+
+
+
+      v.step = 4; // 親要素の下に追加
+      v.r = this.appendChild();
+      if( v.r instanceof Error ) throw v.r;
+      */
 
       v.step = 1; // nodeオブジェクトを作成
       // dialogのプルダウンから選択されたtypeを取得
@@ -843,6 +987,48 @@ class TypeDefs {
       return e;
     }
   }
+
+  /** appendChild: 親要素の下に子要素を追加
+   * - 前提として、追加対象のnodeはデータベースには登録済だがシートには未反映
+   */
+  appendChild(pId=this.nId,cNode={},seq=1){
+  const v = {whois:this.constructor.name+'.appendChild',rv:null,step:0};
+  console.log(`${v.whois} start.\npId=${pId}, cNode=${stringify(cNode)}, seq=${seq}`);
+  try {
+
+    // DBとシート上の子要素を更新または追加
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+
+  /** removeChild: 親要素の下に子要素を追加
+   * 
+   */
+  removeChild(pId=this.nId,cId,seq=1){
+  const v = {whois:this.constructor.name+'.removeChild',rv:null,step:0};
+  console.log(`${v.whois} start.\npId=${pId}, nId=${nId}`);
+  try {
+
+    // DBとシート上の子要素を更新または追加
+    
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
 
   /** activate: 現在選択されている行の有効/無効を切り替える
    * @parem {void}
