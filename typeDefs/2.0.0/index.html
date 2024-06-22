@@ -39,7 +39,7 @@ dislog[name="edit"] {width: 25rem;}
   <dialog name="edit"></dialog>
   <dialog name="context">
     <div name="edit">編集</div>
-    <div name="addNew">新規作成</div>
+    <div name="append">新規作成</div>
     <div name="activate">有効化</div>
     <div name="copy">コピー</div>
     <div name="paste">ペースト</div>
@@ -468,7 +468,7 @@ class TypeDefs {
       // ---------------------------------------------------
       this.contextDialog = document.querySelector('dialog[name="context"]');
       // ボタンの動作定義
-      ['edit','addNew','activate','copy','paste','levelUp','moveForward',
+      ['edit','append','activate','copy','paste','levelUp','moveForward',
       'moveLater','levelDown','showDeleted'].forEach(x => {
         this.contextDialog.querySelector(`[name="${x}"]`)
         .addEventListener('click',e=>this.context(e));
@@ -476,7 +476,7 @@ class TypeDefs {
       // 行タイプ選択用プルダウンの選択肢をセット
       v.select = {tag:'select',children:[],style:{marginLeft:'2rem'}};
       Object.keys(this.iDef).forEach(x => v.select.children.push({tag:'option',attr:{value:x},text:x}));
-      v.r = createElement(v.select,this.contextDialog.querySelector('[name="addNew"]'));
+      v.r = createElement(v.select,this.contextDialog.querySelector('[name="append"]'));
       if( v.r instanceof Error ) throw v.r;
 
       this.editDialog = document.querySelector('dialog[name="edit"]');
@@ -898,7 +898,7 @@ class TypeDefs {
         this.contextDialog.showModal();
       } else {
         v.step = 2.2; // nameが数値以外
-        // ⇒ ダイアログ内の機能選択(ex. addNewのDivがクリックされた)
+        // ⇒ ダイアログ内の機能選択(ex. appendのDivがクリックされた)
         v.name = event.target.getAttribute('name');
         v.step = 2.21; // 選択された機能の呼び出し
         v.r = this[v.name](event);
@@ -954,12 +954,12 @@ class TypeDefs {
     }
   }
 
-  /** addNew: 新規行を追加
+  /** append: 新規行を追加
    * @parem {void}
    * @returns {null}
    */
-  async addNew(){
-    const v = {whois:this.constructor.name+'.addNew',rv:null,step:0,
+  async append(){
+    const v = {whois:this.constructor.name+'.append',rv:null,step:0,
       trans:{node:{update:[]},branch:[]}};
     console.log(`${v.whois} start.`);
     try {
@@ -1023,70 +1023,6 @@ class TypeDefs {
     }
   }
 
-  /** appendChild: 親要素の下に子要素を追加
-   * - 前提として、追加対象のnodeはデータベースには登録済だがシートには未反映
-   */
-  appendChild(pId=this.nId,cNode={},seq=1){
-  const v = {whois:this.constructor.name+'.appendChild',rv:null,step:0};
-  console.log(`${v.whois} start.\npId=${pId}, cNode=${stringify(cNode)}, seq=${seq}`);
-  try {
-
-    // DBとシート上の子要素を更新または追加
-
-    v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-
-  /** removeChild: 親要素の下に子要素を追加
-   * 
-   */
-  removeChild(pId=this.nId,cId,seq=1){
-  const v = {whois:this.constructor.name+'.removeChild',rv:null,step:0};
-  console.log(`${v.whois} start.\npId=${pId}, nId=${nId}`);
-  try {
-
-    // DBとシート上の子要素を更新または追加
-    
-    v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-
-  /** activate: 現在選択されている行の有効/無効を切り替える
-   * @parem {void}
-   * @returns {null}
-   */
-  activate(){
-    const v = {whois:this.constructor.name+'.activate',rv:null,step:0};
-    console.log(`${v.whois} start.`);
-    try {
-
-      // 選択中の行(this.nId)のdeletedが設定済なら空白に、空白なら現在日時をセット
-
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
-      return v.rv;
-
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-      console.error(`${e.message}\nv=${stringify(v)}`);
-      return e;
-    }
-  }
-
   /** copy: 現在選択されている行をコピーする
    * @parem {void}
    * @returns {null}
@@ -1126,6 +1062,28 @@ class TypeDefs {
       //     シートに新規idを追加、currentIdは更新
       //   ②①以外なら弟として作成
       //     copiedIdの要素をコピーして新規行を作成(idのみ新規に採番)
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** activate: 現在選択されている行の有効/無効を切り替える
+   * @parem {void}
+   * @returns {null}
+   */
+  activate(){
+    const v = {whois:this.constructor.name+'.activate',rv:null,step:0};
+    console.log(`${v.whois} start.`);
+    try {
+
+      // 選択中の行(this.nId)のdeletedが設定済なら空白に、空白なら現在日時をセット
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
