@@ -322,15 +322,15 @@ class TypeDefs {
               ]},
               {attr:{class:'tr'},children:[
                 {attr:{class:'th'},text:'type'},
-                {tag:'input',attr:{name:'type',class:'td',value:x.attribute.type}},
+                {tag:'input',attr:{name:'type',class:'td',value:(x.attribute.type || '')}},
               ]},
               {attr:{class:'tr'},children:[
                 {attr:{class:'th'},text:'role'},
-                {tag:'input',attr:{name:'role',class:'td',value:x.attribute.role}},
+                {tag:'input',attr:{name:'role',class:'td',value:(x.attribute.role || '')}},
               ]},
               {attr:{class:'tr'},children:[
                 {attr:{class:'th'},text:'note'},
-                {tag:'textarea',attr:{name:'note',class:'td',value:x.attribute.note}},
+                {tag:'textarea',attr:{name:'note',class:'td',value:(x.attribute.note || '')}},
               ]},
             ]};
             return v.rv;
@@ -363,7 +363,7 @@ class TypeDefs {
               ]},
               {attr:{class:'tr'},children:[
                 {attr:{class:'th'},text:'note'},
-                {tag:'textarea',attr:{name:'note',class:'td'},text:x.attribute.note},
+                {tag:'textarea',attr:{name:'note',class:'td'},text:(x.attribute.note || '')},
               ]},
             ]};
             return v.rv;
@@ -736,7 +736,7 @@ class TypeDefs {
           + v.trans.node.insert[v.i].nId
           + `,"${v.trans.node.insert[v.i].type}"`
           + `,${v.trans.node.insert[v.i].origin || 'null'}`
-          + `,@${v.trans.node.insert[v.i].attribute}`
+          + `,@${JSON.stringify(v.trans.node.insert[v.i].attribute)}`
           + `,${v.trans.node.insert[v.i].isValid || true}`
           + `,${v.trans.node.insert[v.i].isOpen || false}`
           + ')';
@@ -933,14 +933,14 @@ class TypeDefs {
       v.r = await this.editNode(arg);
       if( v.r instanceof Error ) throw v.r;
 
-      if( v.r.status ){
-      v.step = 2; // DBおよびシートに反映
-      v.r = await this.syncDB({node:{update:[v.r.node]}});
-      if( v.r instanceof Error ) throw v.r;
+      if( v.r.status === true ){
+        v.step = 2; // DBおよびシートに反映
+        v.r = await this.syncDB({node:{update:[v.r.node]}});
+        if( v.r instanceof Error ) throw v.r;
 
-      v.step = 3; // ツリーを再描画
-      v.r = this.disp();
-      if( v.r instanceof Error ) throw v.r;
+        v.step = 3; // ツリーを再描画
+        v.r = this.disp();
+        if( v.r instanceof Error ) throw v.r;
       }
 
       v.step = 4; // 終了処理
@@ -954,14 +954,13 @@ class TypeDefs {
     }
   }
 
-
   /** addNew: 新規行を追加
    * @parem {void}
    * @returns {null}
    */
   async addNew(){
     const v = {whois:this.constructor.name+'.addNew',rv:null,step:0,
-    data:{branch:{update:[],insert:[]},node:{update:[],insert:[]}}};
+      trans:{node:{update:[]},branch:[]}};
     console.log(`${v.whois} start.`);
     try {
 
@@ -972,11 +971,17 @@ class TypeDefs {
       v.nId = alasql('select max(nId) as max from node')[0].max + 1;
 
       v.step = 2; // nodeの作成
-      v.r = this.editNode({nId:v.nId,type:v.type,attribute:{label:'(新規作成)'}});
+      v.new = {
+        nId:v.nId,
+        type:v.type,
+        attribute:{label:'(新規作成)'}
+      };
+      v.r = await this.editNode(v.new);
       if( v.r instanceof Error ) throw v.r;
+      // DB更新対象に追加
+      v.trans.node.update.push(v.r.node);
 
       v.step = 3; // branchの作成
-      v.arg = {};
       // 作成する位置は「現在選択されている次の行」
       // ⇒ ①子孫があり、かつ開いている(isOpen=true)なら長男として作成
       //   ②①以外なら弟として作成
@@ -984,14 +989,30 @@ class TypeDefs {
       v.children = alasql('select * from branch where parent='+this.nId);
       if( v.node.isOpen && v.children.length > 0 ){
         v.step = 2.1; // ①子孫があり、開いている ⇒ 長男として作成
-        v.arg = {parent:this.nId,child:v.nId,seq:1};
+        v.trans.branch.push({
+          parent: this.nId,
+          child: v.nId,
+          seq: 1
+        });
       } else {
         v.step = 2.2; // ②①以外なら弟として作成
         v.branch = alasql('select * from branch where child='+this.nId)[0];
-        v.arg = {parent:v.branch.parent,child:this.nId,seq:v.branch.seq+1};
+        v.trans.branch.push({
+          parent: v.branch.parent,
+          child: v.nId,
+          seq: v.branch.seq+1
+        });
       }
 
-      v.step = 9; // 終了処理
+      v.step = 4; // DBおよびシートに反映
+      v.r = await this.syncDB(v.trans);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 5; // ツリーを再描画
+      v.r = this.disp();
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 6; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
 
