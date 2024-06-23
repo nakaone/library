@@ -1223,7 +1223,7 @@ class TypeDefs {
       + ', b1.seq as pSeq'   // 親要素の祖父母要素内での順番
       + ', b2.child as nId'  // 対象要素のnId
       + ' from branch as b2' // 親が無い場合に備え、b2を基にする
-      + ' inner join branch as b1 on b1.parent=b2.child'
+      + ' inner join branch as b1 on b1.child=b2.parent'
       + ' where b2.child=' + this.nId;
       v.r = alasql(v.sql)[0];
 
