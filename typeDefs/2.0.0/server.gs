@@ -43,8 +43,7 @@ function typeDefsFront(arg){
           v.branch = new SingleTable('branch');
           if( v.arg.branch.update.length > 0 ){
             v.arg.branch.update.forEach(x => {
-              v.r = v.branch.update(x,{where:o=>
-                (o.parent === x.parent) && (o.child === x.child)});
+              v.r = v.branch.update(x,{where:o=>o.child === x.child});
               if( v.r instanceof Error ) throw v.r;
             });
           }
