@@ -28,6 +28,7 @@ dialog .tr {display: grid; grid-template-columns: repeat(12, 1fr);}
 dialog .th {grid-column: 1/3;}
 dialog .td {grid-column: 3/13; width: 100%;}
 dislog[name="edit"] {width: 25rem;}
+.TypeDefs .deleted {color:#aaa};
 </style>
 <script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
 </head>
@@ -334,6 +335,8 @@ function whichType(arg,is){
 class TypeDefs {
   constructor(arg={}){
     const v = {whois:this.constructor.name+'.constructor',rv:null,step:0,default:{
+      showDeleted: true,
+      maxDepth: 20, // 最深階層数。永久ループ防止用
       iDef:{  /* 行タイプ別のitem領域(attribute)作成関連の定義
         proto: {項目名:新規作成時の既定値,..}
         ctrl: 子要素を持つ可能性がある(▶▼●)ならtrue、無い(常時□)ならfalse
@@ -478,13 +481,16 @@ class TypeDefs {
       // ---------------------------------------------------
       v.step = 1; // 既定値を設定、データを取得(this.raw)
       // ---------------------------------------------------
-      this.maxDepth = 20; // 最深階層数。永久ループ防止用
       // サーバ側から渡されるマスタ(JSON)が格納される領域
       this.raw = JSON.parse(document.querySelector(arg.dataDiv || 'div[name="data"]').innerText);
       // サーバ側から渡されるルートのID
       this.rootId = Number(document.querySelector(arg.pId || 'div[name="pId"]').innerText);
       // 引数とv.defaultで設定された既定値からメンバ作成
-      Object.keys(v.default).forEach(x => this[x] = Object.assign({},v.default[x],(arg[x]||{})));
+      Object.keys(v.default).forEach(x => 
+        this[x] = whichType(v.default[x],'Object')
+        ? mergeDeeply((arg[x]||{}),v.default[x])
+        : (arg[x] || v.default[x])
+      );
 
       // ---------------------------------------------------
       v.step = 2; // データベース化
@@ -603,6 +609,7 @@ class TypeDefs {
       v.step = 2.3; // createElement用の行オブジェクトをv.rvとして作成
       v.rv = {
         attr:{class:'tr',name:`${nId}`},
+        event: {contextmenu:e => this.context(e)},
         children:[
           {
             attr:{class:'indent'},
@@ -614,7 +621,7 @@ class TypeDefs {
               ? (v.children.length>0 ? (v.node.isOpen ? '▼' : '▶') : '●')
               : '□'),
             style:{gridColumn:`${depth+1}/${depth+2}`},
-            event: {click:e => this.toggle(e),contextmenu:e => this.context(e)},
+            event: {click:e => this.toggle(e)},
           },
           {
             attr:{class:'item'},
@@ -747,12 +754,13 @@ class TypeDefs {
 
   /** syncDB: データベースとシートの両方を更新する
    * @param {Object.<string, Object>} arg - テーブル名と操作オブジェクト
-   * @param {Object.<string, [Object]>} arg.xxx - xxx=update or delete
+   * @param {Object} arg.node
+   * @param {Object[]} arg.node.update - 更新・追加対象のnodeオブジェクト
+   * @param {Object[]} arg.node.delete - 削除対象のnodeオブジェクト
+   * @param {Object} arg.leaf
+   * @param {Object[]} arg.leaf.update - 更新・追加対象のleafオブジェクト
+   * @param {Object[]} arg.leaf.delete - 削除対象のleafオブジェクト
    * @returns {null}
-   * 
-   * @example
-   * 
-   * {node:{update:[{nId:10,type:xxx,attribute:{..}}]}} 
    */
   async syncDB(arg){
     const v = {whois:this.constructor.name+'.syncDB',rv:null,step:0};
@@ -862,18 +870,146 @@ class TypeDefs {
     }
   }
 
-  /** context: 右ボタンメニュー
+  /** decidePosition: 挿入位置の決定
+   * @param {number} newId - 追加するnodeのnId
+   * @param {Object} trans - 本関数呼出元からsyncDBをコールする際の引数オブジェクト
+   * @returns {Object}
+   *
+   * ** 戻り値 **
+   *
+   * - rv {Object}
+   *   - type {string} : 'child' or 'sibling'
+   *   - pId {number} : 親要素のnId
+   *   - seq {number} : 親要素内での順番
+   */
+  
+  /** moveNode: nodeの移動に必要なsyncDB更新用データを作成
+   * @param {Object} arg
+   * @param {number} arg.fId - 移動元親nodeのnId。0なら新規作成node
+   * @param {number} arg.tId - 移動先親nodeのnId
+   * @param {number|Object} arg.nId - 移動対象nodeのnId、または移動対象nodeオブジェクト
+   * @param {number} [arg.seq=1] - 移動先のseq
+   * @returns {Object} rv - syncDBの引数nodeに代入するオブジェクト
+   * @returns {Object[]} rv.update - 更新・追加対象のnodeオブジェクトの配列
+   * @returns {number[]} rv.delete - 削除対象nodeのnIdの配列
+   *
+   * **処理概要**
+   *
+   * 1. 事前準備
+   *    1.1 引数への既定値設定
+   *    1.2 v.bmNodeに移動前のnodeを退避、v.amNodeに移動後のnodeをセット
+   *    1.3 v.bmParentに移動前の親要素を、v.amParentに移動後の親要素をセット
+   *    1.4 v.bmChildrenにv.bmParentの子要素を、v.amChildrenにv.amParentの子要素をセット
+   * 2. 「fId <> tId」ならば、移動元親の子要素について並び順を変更
+   *    2.1 v.bmChildren[x].seq > v.bmNode.seqについて、seqを繰り上げ(-1)
+   * 3. 移動先親の子要素(v.amChildren)について並び順を変更
+   *    3.1 前に移動(v.amNode.seq<v.bmNode.seq)
+   *    ⇒ v.amChildren.forEach(x => v.amNode.seq <= x.seq < v.bmNode.seq)
+   *      を満たす要素について、seqを繰り下げ(+1)
+   *    3.2 後に移動(v.amNode.seq>v.bmNode.seq)
+   *    ⇒ v.amChildren.forEach(x => v.bmNode.seq < x.seq <= v.amNode.seq)
+   *      を満たす要素について、seqを繰り上げ(-1)
+   * 4. 移動対象のpIdを(fIdから)tIdに変更、seqを上書き
+   * 5. 移動対象が子要素を持っていた場合、コピー元の全子孫要素を新規nodeとして追加
+   */
+
+  /** appendLeaf: leafの追加(新規作成または貼付)
+   * @param {Object} arg
+   * @param {string} [arg.type] - 新規作成の場合、nodeの型
+   * @returns {Object}
+   *
+   * ** 戻り値 **
+   *
+   * - rv {Object}
+   *   - node {Object}
+   *     - update {Object[]}
+   *   - leaf {Object}
+   *     - update {Object[]}
+   *
+   * **処理概要**
+   *
+   * 1. 事前準備
+   *    1.1 引数への既定値設定
+   *    1.2 decidePositionでpIdとseqを特定する
+   *    1.3 追加先の親要素をv.parentとして取得
+   * 
+   * 2. 追加対象要素の作成
+   * 2.1 新規追加の場合
+   *   追加するleafの作成。lIdを採番してeditLeafに渡し、戻り値をv.leafとする
+   *   追加するnodeの作成。v.node = {
+   *     nId : 新規採番
+   *     pId : decidePosition.pId
+   *     seq : decidePosition.seq
+   *     lId : v.leaf.lId
+   *     type : arg.type
+   *     created : 現時刻
+   *     updated : 設定しない
+   *     deleted : 設定しない
+   *   }
+   * 2.2 貼付の場合
+   *   コピー元要素をv.originalとして取得
+   *     v.original = "select * from node where nId="+this.copiedId
+   *   追加するnodeの作成。v.node = {
+   *     nId : 新規採番
+   *     pId : decidePosition.pId
+   *     seq : decidePosition.seq
+   *     lId : v.original.lId
+   *     type : v.original.type
+   *     created : 現時刻
+   *     updated : 設定しない
+   *     deleted : 設定しない
+   *   }
+   * 
+   * 3. 追加により影響を受ける兄弟要素の順番修正
+   *   decidePosition.seq以上の弟要素はseqを繰り下げ(+1)
+   * 
+   * 4. 追加用の内部関数を定義
+   *   v.recursive = (pId=v.node.pId, original=v.node) => {
+   *     4.1 nodeの作成
+   *       v.rv.node.update.push({
+   *         nId : 新規採番
+   *         pId : pId
+   *         seq : original.seq
+   *         lId : original.lId
+   *         type : original.type
+   *         created : 現時刻
+   *         updated : 設定しない
+   *         deleted : original.deleted
+   *       })
+   *     4.2 子要素を洗い出し、再帰呼出
+   *       ("select * from node where pId="+original.nId).forEach(x => {
+   *         v.recursive(original.nId,x)
+   *       })
+   *   }
+   * 
+   * 5. 本体＋リンク先の追加
+   * 5.1 v.parentの子要素と同じleaf(lId)を持つ要素の、
+   *     親要素の集合をv.parentsとして抽出
+   * 5.2 v.parentsの各要素について内部関数を呼び出し
+   *     v.recursive(v.parents[x].nId,v.node)
+   */
+
+  /** context: 右ボタンメニューを表示し、選択された処理を呼び出す
    * @param {Event} - クリックのイベントオブジェクト
    * @returns {null}
    */
   context(event){
     const v = {whois:this.constructor.name+'.context',rv:null,step:0};
-    console.log(`${v.whois} start.`);
+    console.log(`${v.whois} start.`,event.target);
     try {
 
       v.step = 1; // 準備
       event.preventDefault();
-      v.name = event.target.parentNode.getAttribute('name');
+      // クリックされた要素の親を遡り、'tr'クラスの要素の名前を取得
+      [v.maxDepth,v.dom,v.name] = [this.maxDepth,event.target,null];
+      while( v.name === null && v.maxDepth > 0 ){
+        if( v.dom.className === 'tr' ){
+          v.name = v.dom.getAttribute('name');
+        } else {
+          v.dom = v.dom.parentNode;
+        }
+        v.maxDepth--;
+      }
 
       v.step = 2; // 動作を分岐
       if( !isNaN(v.name) ){
@@ -954,6 +1090,45 @@ class TypeDefs {
       return e;
     }
   }
+
+  /** copy: 現在選択されている行をコピーする
+   * @parem {void}
+   * @returns {null}
+   */
+
+  /** paste: コピーされた要素の実体を追加登録
+   * @parem {void}
+   * @returns {null}
+   */
+
+  /** toggleDeleted: 削除済要素の表示/非表示を切替
+   * @parem {void}
+   * @returns {null}
+   * 
+   * 選択された行の表示/非表示切替と同時に、削除済要素の表示/非表示切替を行う
+   */
+
+  /** levelUp: 一つ上の階層に移動
+   * @parem {void}
+   * @returns {null}
+   */
+
+  /** levelDown: 一つ下の階層に移動
+   * @parem {void}
+   * @returns {null}
+   */
+
+  /** moveForward: 表示順を一つ前に移動
+   * @parem {void}
+   * @returns {null}
+   * 
+   * 相対seqを絶対seqに変換 : context側で処理
+   */
+
+  /** moveLater: 表示順を一つ後に移動
+   * @parem {void}
+   * @returns {null}
+   */
 
 }
 
