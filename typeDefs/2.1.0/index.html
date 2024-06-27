@@ -994,25 +994,29 @@ class TypeDefs {
    * @returns {null}
    */
   context(event){
-    const v = {whois:this.constructor.name+'.context',rv:null,step:0};
+    const v = {whois:this.constructor.name+'.context',rv:null,
+      step:0,maxDepth:this.maxDepth,dom:event.target,name:null};
     console.log(`${v.whois} start.`,event.target);
     try {
 
       v.step = 1; // 準備
       event.preventDefault();
       // クリックされた要素の親を遡り、'tr'クラスの要素の名前を取得
-      [v.maxDepth,v.dom,v.name] = [this.maxDepth,event.target,null];
       while( v.name === null && v.maxDepth > 0 ){
-        if( v.dom.className === 'tr' ){
+        if( v.dom.getAttribute('class') === 'tr' ){
           v.name = v.dom.getAttribute('name');
         } else {
           v.dom = v.dom.parentNode;
+          if( whichType(v.dom) === 'HTMLHtmlElement' ){
+            // 親要素が<html>ならダイアログから呼ばれたと判断
+            v.maxDepth = 0;
+          }
         }
         v.maxDepth--;
       }
 
       v.step = 2; // 動作を分岐
-      if( !isNaN(v.name) ){
+      if( v.name !== null ){
         v.step = 2.1; // nameが整数(=nId)
         // ⇒ 「▶」等、行頭のアイコンの右ボタンクリックから呼ばれた
         // ⇒ 右ボタンメニューのダイアログ表示
