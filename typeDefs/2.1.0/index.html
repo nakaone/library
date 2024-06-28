@@ -337,6 +337,7 @@ class TypeDefs {
     const v = {whois:this.constructor.name+'.constructor',rv:null,step:0,default:{
       showDeleted: true,
       maxDepth: 20, // 最深階層数。永久ループ防止用
+      proto:{trans:JSON.stringify({node:{update:[],delete:[]},leaf:{update:[],delete:[]}})},
       iDef:{  /* 行タイプ別のitem領域(attribute)作成関連の定義
         proto: {項目名:新規作成時の既定値,..}
         ctrl: 子要素を持つ可能性がある(▶▼●)ならtrue、無い(常時□)ならfalse
@@ -456,10 +457,10 @@ class TypeDefs {
       },
       tDef: { // テーブル定義
         node: {
-          nId      : 'int not null primary key',
-          pId      : 'int not null',
-          seq      : 'int not null',
-          lId      : 'int not null',
+          nId      : 'int not null primary key default 0',
+          pId      : 'int not null default 0',
+          seq      : 'int not null default 0',
+          lId      : 'int not null default 0',
           type     : 'string not null',
           isOpen   : 'boolean default false',
           created  : 'Date not null', // yyyy/MM/dd hh:mm:ss.nnn
@@ -467,7 +468,7 @@ class TypeDefs {
           deleted  : 'Date default null',
         },
         leaf: {
-          lId      : 'int not null primary key',
+          lId      : 'int not null primary key default 0',
           attribute: 'json not null',
           created  : 'Date not null', // yyyy/MM/dd hh:mm:ss.nnn
           updated  : 'Date default null',
@@ -509,16 +510,20 @@ class TypeDefs {
         this.raw[tableName].forEach(row => {
           v.cols = []; v.vals = [];
           Object.keys(row).forEach(col => {
-            v.cols.push('`'+col+'`');
-            v.colType = this.tDef[tableName][col].split(' ')[0].toLowerCase();
-            v.vals.push(v.colType === 'json'
-              ? '@' + row[col]  // JSONは@をつける
-              : ( v.colType === 'string' || v.colType === 'date'
-                ? '"' + row[col] + '"' // string,dateはダブルクォーテーションで囲む
-                : row[col] // number,booleanはそのまま使用
-            ));
+            if( row[col] || row[col] === 0 ){
+              v.cols.push('`'+col+'`');
+              v.colType = this.tDef[tableName][col].split(' ')[0].toLowerCase();
+              v.vals.push(v.colType === 'json'
+                ? '@' + row[col]  // JSONは@をつける
+                : ( v.colType === 'string' || v.colType === 'date'
+                  ? '"' + row[col] + '"' // string,dateはダブルクォーテーションで囲む
+                  : row[col] // number,booleanはそのまま使用
+              ));
+            }
           });
-          alasql(`insert into ${tableName} (${v.cols.join()}) values (${v.vals.join()})`);
+          v.sql = `insert into ${tableName}`
+          + ` (${v.cols.join()}) values (${v.vals.join()})`;
+          alasql(v.sql);
         });
       });
 
@@ -736,11 +741,11 @@ class TypeDefs {
       v.step = 5; // 終了処理
       v.rv = {status:v.r.status};
       if( v.r.status ){
-        v.rv.leaf = {
+        v.rv.leaf = mergeDeeply({
           lId: arg.lId,
           attribute: v.r.leaf,
-          updated: new Date(),
-        }
+          updated: toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn'),
+        },arg);
       }
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
@@ -752,7 +757,10 @@ class TypeDefs {
     }
   }
 
-  /** syncDB: データベースとシートの両方を更新する
+  /** syncDB: データベースとシートの両方を更新・追加する
+   * 
+   * 尚「(物理)削除」は当面シート上で行うため割愛。
+   * 
    * @param {Object.<string, Object>} arg - テーブル名と操作オブジェクト
    * @param {Object} arg.node
    * @param {Object[]} arg.node.update - 更新・追加対象のnodeオブジェクト
@@ -763,18 +771,18 @@ class TypeDefs {
    * @returns {null}
    */
   async syncDB(arg){
-    const v = {whois:this.constructor.name+'.syncDB',rv:null,step:0};
+    const v = {whois:this.constructor.name+'.syncDB',rv:null,step:0,rex:/,"\w+":"undefined"/g};
     console.log(`${v.whois} start.\narg=${stringify(arg)}`);
     try {
 
       // ----------------------------------------------
       v.step = 1; // 事前準備
       // ----------------------------------------------
-      v.arg = mergeDeeply(arg,{node:{update:[],delete:[]},
-        leaf:{update:[],delete:[]}});
-      console.log(`l.767 v.arg=${stringify(v.arg)}`)
+      arg = JSON.parse(JSON.stringify(arg).replaceAll(v.rex,''));
+      v.arg = mergeDeeply(arg,JSON.parse(this.proto.trans));
+      console.log(`l.775 v.arg=${stringify(v.arg)}`)
       v.trans = mergeDeeply(v.arg,{node:{insert:[]},leaf:{insert:[]}});
-      console.log(`l.769 v.trans=${stringify(v.trans)}`)
+      console.log(`l.777 v.trans=${stringify(v.trans)}`)
 
       v.step = 1.1; // nodeについてupdateとinsertの切り分け
       // 引数v.trans.updateの内、既存はupdateに、不在はinsertに分ける
@@ -784,66 +792,91 @@ class TypeDefs {
       v.trans.node.update = alasql(v.sql+'not null',[v.arg.node.update]);
       v.trans.node.insert = alasql(v.sql+'null',[v.arg.node.update]);
 
-      v.step = 1.2; // updateとinsertの切り分け
+      v.step = 1.2; // leafについてupdateとinsertの切り分け
       // 引数v.trans.updateの内、既存はupdateに、不在はinsertに分ける
       v.sql = 'select * from ? as l1'
       + ' left join leaf as l2 on l1.lId=l2.lId'
       + ' where l2.lId is ';
       v.trans.leaf.update = alasql(v.sql+'not null',[v.arg.leaf.update]);
       v.trans.leaf.insert = alasql(v.sql+'null',[v.arg.leaf.update]);
-      console.log(`l.786 v.trans=${stringify(v.trans)}`)
+      // undefinedを削除
+      v.trans = JSON.parse(JSON.stringify(v.trans).replaceAll(v.rex,''));
+      console.log(`l.797 v.trans=${stringify(v.trans)}`)
 
       // ----------------------------------------------
-      v.step = 2; // leafのCRUD
+      v.step = 2; // leafの更新・追加
       // ----------------------------------------------
-      if( v.arg.leaf.update.length > 0 ){
-        v.step = 2.1; // updateとinsertの振り分け
-
-        v.step = 2.2; // データベースの更新処理
-        v.trans.leaf.update.forEach(x => {
-          v.stack = [];
-          if( x.hasOwnProperty('attribute') )
-            v.stack.push('`attribute`=@'+JSON.stringify(x.attribute));
-          ['created','updated','deleted'].forEach(y => {
-            if( x.hasOwnProperty[y] && x[y] )
-              v.stack.push(`\`${y}\`="${x[y]}"`);
-          });
-          v.sql = `update leaf set ${v.stack.join()} where lId=${x.lId}`;
-          alasql(v.sql);
+      v.step = 2.1; // データベースの更新処理
+      v.trans.leaf.update.forEach(x => {
+        v.stack = [];
+        if( x.hasOwnProperty('attribute') )
+          v.stack.push('`attribute`=@'+JSON.stringify(x.attribute));
+        ['created','updated','deleted'].forEach(y => {
+          if( x.hasOwnProperty(y) && x[y] )
+            v.stack.push(`\`${y}\`="${x[y]}"`);
         });
+        v.sql = `update leaf set ${v.stack.join()} where lId=${x.lId}`;
+        alasql(v.sql);
+      });
 
-        v.step = 2.3; // データベースの追加処理
-        v.trans.leaf.insert.forEach(x => {
-          v.cols = ['lId']; v.vals = [x.lId];
-          // JSON型(先頭に'@'をつける項目)
-          if( x.hasOwnProperty('attribute') ){
-            v.cols.push('attribute');
-            v.vals.push('@'+JSON.stringify(x.attribute));
+      v.step = 2.2; // データベースの追加処理
+      v.trans.leaf.insert.forEach(x => {
+        v.cols = ['lId']; v.vals = [x.lId];
+        // JSON型(先頭に'@'をつける項目)
+        if( x.hasOwnProperty('attribute') ){
+          v.cols.push('attribute');
+          v.vals.push('@'+JSON.stringify(x.attribute));
+        }
+        // string,Date型(ダブルクォーテーションで囲む項目)
+        ['created','updated','deleted'].forEach(y => {
+          if( x.hasOwnProperty(y) ){
+            v.cols.push(y);
+            v.vals.push(`"${x[y]}"`);
           }
-          // string,Date型(ダブルクォーテーションで囲む項目)
-          ['created','updated','deleted'].forEach(y => {
-            if( x.hasOwnProperty[y] ){
-              v.cols.push(y);
-              v.vals.push(`"${x[y]}"`);
-            }
-          });
-          v.sql = `insert into leaf (${v.cols.join()}) values (${v.vals.join()})`;
-          alasql(v.sql);
         });
-      }
+        v.sql = `insert into leaf (${v.cols.join()}) values (${v.vals.join()})`;
+        alasql(v.sql);
+      });
 
+      // ----------------------------------------------
+      v.step = 3; // nodeの更新・追加
+      // ----------------------------------------------
+      v.step = 3.1; // データベースの更新処理
+      v.trans.node.update.forEach(x => {
+        v.stack = [];
+        ['nId','pId','seq','lId'].forEach(y => {
+          if( x.hasOwnProperty(y) && (x[y] || x[y] === 0) )
+            v.stack.push(`\`${y}\`=${x[y]}`);
+        });
+        ['type','created','updated','deleted'].forEach(y => {
+          if( x.hasOwnProperty(y) && x[y] )
+            v.stack.push(`\`${y}\`="${x[y]}"`);
+        });
+        v.sql = `update node set ${v.stack.join()} where lId=${x.lId}`;
+        alasql(v.sql);
+      });
 
+      v.step = 3.3; // データベースの追加処理
+      v.trans.node.insert.forEach(x => {
+        v.cols = []; v.vals = [];
+        ['nId','pId','seq','lId'].forEach(y => {
+          if( x.hasOwnProperty(y) && (x[y] || x[y] === 0) ){
+            v.cols.push(y);
+            v.vals.push(x[y]);
+          }
+        });
+        ['type','created','updated','deleted'].forEach(y => {
+          if( x.hasOwnProperty(y) && x[y] ){
+            v.cols.push(y);
+            v.vals.push(`"${x[y]}"`);
+          }
+        });
+        v.sql = `insert into node (${v.cols.join()}) values (${v.vals.join()})`;
+        alasql(v.sql);
+      });
 
-      v.step = 4; // leaf,nodeの削除
-      /* 未作成
-      - leafのdeleteは当該leafをchildとするnodeも削除
-        その際、parentが複数有ればそれも削除するか確認
-      - leafの削除を伴わないnodeの削除はありえない
-        「リンクを切る」場合でも、参照元は削除されなくても参照先leafは必ず削除される
-      */
-
-      v.step = 5; // シートへの反映
-      console.log(`l.754 v.trans=${stringify(v.trans)}`)
+      v.step = 4; // シートへの反映
+      v.step = 4.1; // Date型を日時文字列に変換
       Object.keys(this.tDef).forEach(tableName => {
         ['update','insert','delete'].forEach(func => {
           v.i<v.trans[tableName][func].forEach(obj => {
@@ -855,11 +888,11 @@ class TypeDefs {
           });
         });
       });
-      console.log(`l.766 v.trans=${stringify(v.trans)}`)
+      v.step = 4.2; // サーバ側処理
       v.r = await doGAS('typeDefsFront',v.trans);
       if( v.r instanceof Error ) throw v.r;
 
-      v.step = 6; // 終了処理
+      v.step = 5; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
 
@@ -871,18 +904,41 @@ class TypeDefs {
   }
 
   /** decidePosition: 挿入位置の決定
-   * @param {number} newId - 追加するnodeのnId
-   * @param {Object} trans - 本関数呼出元からsyncDBをコールする際の引数オブジェクト
+   * @param {void}
    * @returns {Object}
    *
    * ** 戻り値 **
    *
    * - rv {Object}
-   *   - type {string} : 'child' or 'sibling'
    *   - pId {number} : 親要素のnId
    *   - seq {number} : 親要素内での順番
    */
-  
+  decidePosition(){
+    const v = {whois:this.constructor.name+'.decidePosition',rv:null,step:0};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.node = alasql('select * from node where nId='+this.nId)[0];
+      v.children = alasql('select * from node where pId='+this.nId);
+      if( v.node.isOpen && v.children.length > 0 ){
+        v.step = 2.1; // ①子孫があり、開いている ⇒ 長男として作成
+        v.rv = {pId:this.nId,seq:1};
+      } else {
+        v.step = 2.2; // ②①以外なら弟として作成
+        v.rv = {pId:v.node.pId,seq:v.node.seq+1};
+      }
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
   /** moveNode: nodeの移動に必要なsyncDB更新用データを作成
    * @param {Object} arg
    * @param {number} arg.fId - 移動元親nodeのnId。0なら新規作成node
@@ -913,55 +969,30 @@ class TypeDefs {
    * 5. 移動対象が子要素を持っていた場合、コピー元の全子孫要素を新規nodeとして追加
    */
 
-  /** appendLeaf: leafの追加(新規作成または貼付)
-   * @param {Object} arg
-   * @param {string} [arg.type] - 新規作成の場合、nodeの型
-   * @returns {Object}
-   *
-   * ** 戻り値 **
-   *
-   * - rv {Object}
-   *   - node {Object}
-   *     - update {Object[]}
-   *   - leaf {Object}
-   *     - update {Object[]}
-   *
+  /** appendBranch: コピー元要素をコピー先およびリンク先に追加
+   * @param {number|Object} arg=this.copiedId - 追加するnodeのnId。Objectの場合、leaf+type
+   * @returns {Object} rv syncDBでupdateに渡す更新対象の配列(={node:Object[],leaf:Object[]})
+   * 
    * **処理概要**
-   *
+   * 
    * 1. 事前準備
-   *    1.1 引数への既定値設定
-   *    1.2 decidePositionでpIdとseqを特定する
-   *    1.3 追加先の親要素をv.parentとして取得
+   * 1.1 追加位置のpId,seqを確定(v.dp=decidePosition())
    * 
    * 2. 追加対象要素の作成
-   * 2.1 新規追加の場合
-   *   追加するleafの作成。lIdを採番してeditLeafに渡し、戻り値をv.leafとする
-   *   追加するnodeの作成。v.node = {
-   *     nId : 新規採番
-   *     pId : decidePosition.pId
-   *     seq : decidePosition.seq
-   *     lId : v.leaf.lId
-   *     type : arg.type
-   *     created : 現時刻
-   *     updated : 設定しない
-   *     deleted : 設定しない
-   *   }
-   * 2.2 貼付の場合
-   *   コピー元要素をv.originalとして取得
-   *     v.original = "select * from node where nId="+this.copiedId
-   *   追加するnodeの作成。v.node = {
-   *     nId : 新規採番
-   *     pId : decidePosition.pId
-   *     seq : decidePosition.seq
-   *     lId : v.original.lId
-   *     type : v.original.type
-   *     created : 現時刻
-   *     updated : 設定しない
-   *     deleted : 設定しない
-   *   }
+   * 2.1 コピー元要素をv.originalとして作成
+   *   v.original = "select * from node inner join leaf on node.lId=leaf.lId where nId="+arg
+   *   v.original = arg
+   * 2.2 追加するnodeの作成。v.node = {
+   *   nId : 新規採番
+   *   pId : v.dp.pId
+   *   seq : v.dp.seq
+   *   lId : v.original.lId
+   *   type : v.original.type
+   *   created : 現時刻
+   * }
    * 
    * 3. 追加により影響を受ける兄弟要素の順番修正
-   *   decidePosition.seq以上の弟要素はseqを繰り下げ(+1)
+   *   v.dp.seq以上の弟要素はseqを繰り下げ(+1)
    * 
    * 4. 追加用の内部関数を定義
    *   v.recursive = (pId=v.node.pId, original=v.node) => {
@@ -972,9 +1003,10 @@ class TypeDefs {
    *         seq : original.seq
    *         lId : original.lId
    *         type : original.type
-   *         created : 現時刻
-   *         updated : 設定しない
-   *         deleted : original.deleted
+   *         created : 現在日時
+   *         deleted : 指定箇所への追加で無い場合、または追加要素の子要素の場合は現在日時を設定
+   *          v.dp.pId === original.pId && v.dp.seq === original.seq
+   *          || v.node.lId !== original.lId ? null : 現在日時
    *       })
    *     4.2 子要素を洗い出し、再帰呼出
    *       ("select * from node where pId="+original.nId).forEach(x => {
@@ -983,34 +1015,116 @@ class TypeDefs {
    *   }
    * 
    * 5. 本体＋リンク先の追加
-   * 5.1 v.parentの子要素と同じleaf(lId)を持つ要素の、
-   *     親要素の集合をv.parentsとして抽出
-   * 5.2 v.parentsの各要素について内部関数を呼び出し
+   * 5.1 追加先の親要素をv.parentとして取得
+   * 5.2 v.parentの子要素と同じleaf(lId)を持つ要素の、親要素の集合をv.parentsとして抽出
+   * 5.3 v.parentsの各要素について内部関数を呼び出し
    *     v.recursive(v.parents[x].nId,v.node)
    */
+  appendBranch(arg=this.copiedId){
+    const v = {whois:this.constructor.name+'.appendBranch',step:0,
+      rv:JSON.parse(this.proto.trans)};
+    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
+    try {
+
+      v.step = 1; // 事前準備
+      v.step = 1.1; // 追加位置のpId,seqを確定(v.dp=decidePosition())
+      v.dp = this.decidePosition();
+      if( v.dp instanceof Error ) throw v.dp;
+      v.nextId = alasql('select max(nId) as m from node')[0].m + 1;
+      v.now = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
+
+      v.step = 2; // 追加対象要素の作成
+      v.step = 2.1; // コピー元要素をv.originalとして作成
+      v.original = typeof arg === 'number'
+      ? alasql('select * from node inner join leaf on node.lId=leaf.lId where nId='+arg)[0]
+      : arg;  // this.appendからオブジェクトを渡された場合
+
+      v.step = 2.2; // 追加するnodeの作成
+      v.node = {
+        nId: v.nextId++,
+        pId: v.dp.pId,
+        seq: v.dp.seq,
+        lId: v.original.lId,
+        type: v.original.type,
+        created: v.now,
+      }
+
+      v.step = 3; // 追加用の内部関数を定義
+      v.recursive = (pId=v.node.pId, original=v.node) => {
+        console.log(`l.1054 pId=${pId}, original=${stringify(original)}`);
+        v.step = 3.1; // 追加により影響を受ける兄弟要素の順番修正
+        v.sql = `select * from node where pId=${pId} and seq>=${original.seq}`;
+        alasql(v.sql).forEach(x => {
+          x.seq += 1;
+          x.updated = v.now;
+          v.rv.node.update.push(x);
+        });
+
+        v.step = 3.2; // 追加するnodeの作成
+        v.rv.node.update.push({
+          nId : v.nextId++,
+          pId : pId,
+          seq : original.seq,
+          lId : original.lId,
+          type : original.type,
+          created : v.now,
+          deleted : //指定箇所への追加で無い場合、または追加要素の子要素の場合は現在日時を設定
+            (v.dp.pId === original.pId && v.dp.seq === original.seq
+            || v.node.lId !== original.lId) ? null : v.now,
+        });
+
+        v.step = 3.3; // 子要素を洗い出し、再帰呼出
+        alasql("select * from node where pId="+original.nId)
+        .forEach(x => v.recursive(original.nId,x));
+      };
+
+      v.step = 4; // 本体＋リンク先の追加
+      v.step = 4.1; // 追加先親要素配下に存在するlIdをleavesとして取得
+      v.sql = `select lId from node where pId=${v.dp.pId} group by lId`;
+      v.leaves = alasql(v.sql);
+      console.log(`l.1085 v.leaves=${stringify(v.leaves)}`)
+
+      v.step = 4.2; // 追加先の親要素をv.parentとして取得(=leavesを配下に持つ要素)
+      v.sql = 'select node.* from node inner join'
+      + ` ? as leaves on node.lId=leaves.lId`
+      + ` group by node.pId`;
+      v.parents = alasql(v.sql,[v.leaves]);
+      console.log(`l.1092 v.parents=${stringify(v.parents)}`)
+
+      v.step = 4.3; // v.parentsの各要素について内部関数を呼び出し
+      v.parents.forEach(x => v.recursive(x.pId,v.node));
+      
+      v.step = 5; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
 
   /** context: 右ボタンメニューを表示し、選択された処理を呼び出す
    * @param {Event} - クリックのイベントオブジェクト
    * @returns {null}
    */
-  context(event){
-    const v = {whois:this.constructor.name+'.context',rv:null,
-      step:0,maxDepth:this.maxDepth,dom:event.target,name:null};
+  async context(event){
+    const v = {whois:this.constructor.name+'.context',rv:null,step:0};
     console.log(`${v.whois} start.`,event.target);
     try {
 
       v.step = 1; // 準備
       event.preventDefault();
       // クリックされた要素の親を遡り、'tr'クラスの要素の名前を取得
+      [v.maxDepth,v.dom,v.name] = [this.maxDepth,event.target,null];
       while( v.name === null && v.maxDepth > 0 ){
         if( v.dom.getAttribute('class') === 'tr' ){
           v.name = v.dom.getAttribute('name');
         } else {
           v.dom = v.dom.parentNode;
-          if( whichType(v.dom) === 'HTMLHtmlElement' ){
-            // 親要素が<html>ならダイアログから呼ばれたと判断
+          if( whichType(v.dom,'HTMLHtmlElement') )
             v.maxDepth = 0;
-          }
         }
         v.maxDepth--;
       }
@@ -1036,7 +1150,7 @@ class TypeDefs {
         // ⇒ ダイアログ内の機能選択(ex. appendのDivがクリックされた)
         v.name = event.target.getAttribute('name');
         v.step = 2.21; // 選択された機能の呼び出し
-        v.r = this[v.name](event);
+        v.r = await this[v.name](event);
         if( v.r instanceof Error ) throw v.r;
         v.step = 2.22; // ダイアログを閉じてツリーを再描画
         this.contextDialog.close();
@@ -1078,13 +1192,56 @@ class TypeDefs {
         v.step = 2; // DBおよびシートに反映
         v.r = await this.syncDB({leaf:{update:[v.r.leaf]}});
         if( v.r instanceof Error ) throw v.r;
-
-        v.step = 3; // ツリーを再描画
-        v.r = this.disp();
-        if( v.r instanceof Error ) throw v.r;
       }
 
       v.step = 4; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** append: 新規行を追加
+   * @parem {void}
+   * @returns {null}
+   */
+  async append(){
+    const v = {whois:this.constructor.name+'.append',rv:null,step:0,
+      trans:JSON.parse(this.proto.trans)};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // 新規leafを作成して編集
+      v.type = this.contextDialog.querySelector('select').value;
+      v.r = await this.editLeaf({
+        type: v.type,
+        lId: alasql('select max(lId) as m from leaf')[0].m + 1,
+        attribute: {label:'(新規作成)'},
+        created: toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn'),
+      });
+      if( v.r instanceof Error ) throw v.r;
+
+      if( v.r.status === true ){
+        v.step = 2; // ブランチへの追加
+        v.leaf = v.r.leaf;
+        v.trans.leaf.update.push(v.r.leaf);
+        v.leaf.type = v.type;
+        v.r = this.appendBranch(v.leaf);
+        if( v.r instanceof Error ) throw v.r;
+        v.trans.node.update = [...v.trans.node.update,...v.r.node.update];
+        v.trans.leaf.update = [...v.trans.leaf.update,...v.r.leaf.update];
+        console.log(`l.1251 v.trans=${stringify(v.trans)}`)
+
+        v.step = 3; // DBおよびシートに反映
+        v.r = await this.syncDB(v.trans);
+        if( v.r instanceof Error ) throw v.r;
+      }
+
+      v.step = 5; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
 
