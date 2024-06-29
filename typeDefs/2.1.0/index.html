@@ -780,9 +780,7 @@ class TypeDefs {
       // ----------------------------------------------
       arg = JSON.parse(JSON.stringify(arg).replaceAll(v.rex,''));
       v.arg = mergeDeeply(arg,JSON.parse(this.proto.trans));
-      console.log(`l.775 v.arg=${stringify(v.arg)}`)
       v.trans = mergeDeeply(v.arg,{node:{insert:[]},leaf:{insert:[]}});
-      console.log(`l.777 v.trans=${stringify(v.trans)}`)
 
       v.step = 1.1; // nodeについてupdateとinsertの切り分け
       // 引数v.trans.updateの内、既存はupdateに、不在はinsertに分ける
@@ -801,7 +799,6 @@ class TypeDefs {
       v.trans.leaf.insert = alasql(v.sql+'null',[v.arg.leaf.update]);
       // undefinedを削除
       v.trans = JSON.parse(JSON.stringify(v.trans).replaceAll(v.rex,''));
-      console.log(`l.797 v.trans=${stringify(v.trans)}`)
 
       // ----------------------------------------------
       v.step = 2; // leafの更新・追加
@@ -1051,7 +1048,6 @@ class TypeDefs {
 
       v.step = 3; // 追加用の内部関数を定義
       v.recursive = (pId=v.node.pId, original=v.node) => {
-        console.log(`l.1054 pId=${pId}, original=${stringify(original)}`);
         v.step = 3.1; // 追加により影響を受ける兄弟要素の順番修正
         v.sql = `select * from node where pId=${pId} and seq>=${original.seq}`;
         alasql(v.sql).forEach(x => {
@@ -1082,14 +1078,12 @@ class TypeDefs {
       v.step = 4.1; // 追加先親要素配下に存在するlIdをleavesとして取得
       v.sql = `select lId from node where pId=${v.dp.pId} group by lId`;
       v.leaves = alasql(v.sql);
-      console.log(`l.1085 v.leaves=${stringify(v.leaves)}`)
 
       v.step = 4.2; // 追加先の親要素をv.parentとして取得(=leavesを配下に持つ要素)
       v.sql = 'select node.* from node inner join'
       + ` ? as leaves on node.lId=leaves.lId`
       + ` group by node.pId`;
       v.parents = alasql(v.sql,[v.leaves]);
-      console.log(`l.1092 v.parents=${stringify(v.parents)}`)
 
       v.step = 4.3; // v.parentsの各要素について内部関数を呼び出し
       v.parents.forEach(x => v.recursive(x.pId,v.node));
@@ -1234,14 +1228,13 @@ class TypeDefs {
         if( v.r instanceof Error ) throw v.r;
         v.trans.node.update = [...v.trans.node.update,...v.r.node.update];
         v.trans.leaf.update = [...v.trans.leaf.update,...v.r.leaf.update];
-        console.log(`l.1251 v.trans=${stringify(v.trans)}`)
 
         v.step = 3; // DBおよびシートに反映
         v.r = await this.syncDB(v.trans);
         if( v.r instanceof Error ) throw v.r;
       }
 
-      v.step = 5; // 終了処理
+      v.step = 4; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
 
@@ -1256,11 +1249,58 @@ class TypeDefs {
    * @parem {void}
    * @returns {null}
    */
+  copy(){
+    const v = {whois:this.constructor.name+'.copy',rv:null,step:0};
+    console.log(`${v.whois} start.`);
+    try {
+
+      // 選択中の行(this.nId)をthis.copiedIdに保存する
+      this.copiedId = this.nId;
+
+      v.node = alasql('select * from node inner join leaf on node.lId=leaf.lId where nId='+this.nId)[0];
+      alert(`「${v.node.attribute.label}」をコピーしました`);
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
 
   /** paste: コピーされた要素の実体を追加登録
    * @parem {void}
    * @returns {null}
    */
+  async paste(){
+    const v = {whois:this.constructor.name+'.paste',rv:null,step:0,
+      trans:JSON.parse(this.proto.trans)};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // ブランチへの追加
+      v.r = this.appendBranch(this.copiedId);
+      if( v.r instanceof Error ) throw v.r;
+      v.trans.node.update = [...v.trans.node.update,...v.r.node.update];
+      v.trans.leaf.update = [...v.trans.leaf.update,...v.r.leaf.update];
+
+      v.step = 2; // DBおよびシートに反映
+      v.r = await this.syncDB(v.trans);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 3; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
 
   /** toggleDeleted: 削除済要素の表示/非表示を切替
    * @parem {void}
