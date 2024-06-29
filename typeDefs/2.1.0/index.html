@@ -463,16 +463,16 @@ class TypeDefs {
           lId      : 'int not null default 0',
           type     : 'string not null',
           isOpen   : 'boolean default false',
-          created  : 'Date not null', // yyyy/MM/dd hh:mm:ss.nnn
-          updated  : 'Date default null',
-          deleted  : 'Date default null',
+          created  : 'string not null', // yyyy/MM/dd hh:mm:ss.nnn
+          updated  : 'string default null',
+          deleted  : 'string default null',
         },
         leaf: {
           lId      : 'int not null primary key default 0',
           attribute: 'json not null',
-          created  : 'Date not null', // yyyy/MM/dd hh:mm:ss.nnn
-          updated  : 'Date default null',
-          deleted  : 'Date default null',
+          created  : 'string not null', // yyyy/MM/dd hh:mm:ss.nnn
+          updated  : 'string default null',
+          deleted  : 'string default null',
         },
       },
     }};
