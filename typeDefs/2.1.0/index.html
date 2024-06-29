@@ -28,7 +28,7 @@ dialog .tr {display: grid; grid-template-columns: repeat(12, 1fr);}
 dialog .th {grid-column: 1/3;}
 dialog .td {grid-column: 3/13; width: 100%;}
 dislog[name="edit"] {width: 25rem;}
-.TypeDefs .deleted {color:#aaa};
+.TypeDefs .tr.deleted {color:#aaa; text-decoration: line-through;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
 </head>
@@ -530,15 +530,17 @@ class TypeDefs {
       // ---------------------------------------------------
       v.step = 3; // ツリー描画領域・ダイアログの準備
       // ---------------------------------------------------
+      v.step = 3.1; // ツリー描画領域
       this.treeDiv = createElement({
         attr:{class:this.constructor.name+' table',name:'tree'}
       },'body');
 
-      v.step = 3.11; // 行タイプ選択用プルダウンの選択肢をセット
+      v.step = 3.2; // コンテキストメニュー(右ボタンメニュー)
+      v.step = 3.21; // 行タイプ選択用プルダウンの選択肢をセット
       v.opt = [];
       Object.keys(this.iDef).forEach(x =>
         v.opt.push({tag:'option',attr:{value:x},text:x}));
-      v.step = 3.12; // 右ボタンメニューダイアログの作成
+      v.step = 3.22; // 右ボタンメニューダイアログの作成
       this.contextDialog = createElement({
         tag:'dialog',
         attr:{class:this.constructor.name,name:'context'},
@@ -548,21 +550,38 @@ class TypeDefs {
             children:[{tag:'select',children:v.opt,style:{marginLeft:'2rem'}}]},
           {attr:{name:'copy'},text:'複写',event:{click:e=>this.context(e)}},
           {attr:{name:'paste'},text:'貼付',event:{click:e=>this.context(e)}},
-          {attr:{name:'activate'},text:'無効化',event:{click:e=>this.context(e)}},
+          {attr:{name:'setValidation'},text:'無効化',event:{click:e=>this.context(e)}},
           {attr:{name:'arrow'},children:[
             {attr:{name:'levelUp'},text:'◀',event:{click:e=>this.context(e)}},
             {attr:{name:'moveForward'},text:'▲',event:{click:e=>this.context(e)}},
             {attr:{name:'moveLater'},text:'▼',event:{click:e=>this.context(e)}},
             {attr:{name:'levelDown'},text:'▶',event:{click:e=>this.context(e)}},
           ]},
-          {attr:{name:'showDeleted'},text:'無効行は非表示',event:{click:e=>this.context(e)}},
         ]
       },'body');
 
-      v.step = 3.2; // attribute編集用ダイアログの作成
+      v.step = 3.3; // attribute編集用ダイアログの作成
       this.editDialog = createElement({
         tag:'dialog',
         attr:{class:this.constructor.name,name:'edit'},
+      },'body');
+
+      v.step = 3.4; // 有効/無効変更指定ダイアログ
+      this.validationDialog = createElement({
+        tag:'dialog',
+        attr:{class:this.constructor.name,name:'validation'},
+        children:[
+          {tag:'input',attr:{type:'checkbox',name:'isInvalid'}},
+          {tag:'span',text:'無効化する'},
+          {tag:'hr'},
+          {tag:'input',attr:{type:'checkbox',name:'hideDeleted'}},
+          {tag:'span',text:'無効行は表示しない'},
+          {children:[
+            {tag:'button',attr:{name:'submit'},text:'更新'},
+            {tag:'button',attr:{name:'cancel'},text:'取消'},
+          ]},
+        ],
+        style:{width:'15rem'},
       },'body');
 
       // ---------------------------------------------------
@@ -603,7 +622,7 @@ class TypeDefs {
       v.step = 2; // 自要素を描画
       v.step = 2.1; // 自要素のnodeオブジェクトをv.nodeとして取得
       v.sql = 'select node.nId, node.pId, node.seq, node.type'
-      + ',node.isOpen , leaf.lId, leaf.attribute'
+      + ', node.isOpen, node.`deleted`, leaf.lId, leaf.attribute'
       + ' from node inner join leaf on node.lId=leaf.lId'
       + ' where node.';
       v.node = alasql(v.sql+'nId='+nId)[0];
@@ -613,7 +632,8 @@ class TypeDefs {
 
       v.step = 2.3; // createElement用の行オブジェクトをv.rvとして作成
       v.rv = {
-        attr:{class:'tr',name:`${nId}`},
+        attr:{name:`${nId}`,class: 'tr'
+          + (v.node.deleted && v.node.deleted.length > 0 ? ' deleted' : '')},
         event: {contextmenu:e => this.context(e)},
         children:[
           {
@@ -1113,7 +1133,8 @@ class TypeDefs {
       // クリックされた要素の親を遡り、'tr'クラスの要素の名前を取得
       [v.maxDepth,v.dom,v.name] = [this.maxDepth,event.target,null];
       while( v.name === null && v.maxDepth > 0 ){
-        if( v.dom.getAttribute('class') === 'tr' ){
+        v.class = v.dom.getAttribute('class');
+        if( v.class && v.class.split(' ')[0] === 'tr' ){
           v.name = v.dom.getAttribute('name');
         } else {
           v.dom = v.dom.parentNode;
@@ -1134,8 +1155,8 @@ class TypeDefs {
 
         v.step = 2.12; // ダイアログ内ボタンのラベル「有効化⇔無効化」の切替
         v.node = alasql('select * from node where nId='+this.nId)[0];
-        v.act = this.contextDialog.querySelector('[name="activate"]');
-        v.act.innerText = v.node.isValid ? '無効化' : '有効化';
+        v.act = this.contextDialog.querySelector('[name="setValidation"]');
+        v.act.innerText = v.node.deleted && v.node.deleted.length > 0 ? '有効化' : '無効化';
 
         v.step = 2.13; // ダイアログの表示
         this.contextDialog.showModal();
@@ -1302,12 +1323,81 @@ class TypeDefs {
     }
   }
 
-  /** toggleDeleted: 削除済要素の表示/非表示を切替
+  /** setValidation: 選択された行の表示/非表示切替と同時に、削除済要素の表示/非表示切替を行う
    * @parem {void}
    * @returns {null}
-   * 
-   * 選択された行の表示/非表示切替と同時に、削除済要素の表示/非表示切替を行う
    */
+  async setValidation(){
+    const v = {whois:this.constructor.name+'.setValidation',rv:null,step:0,
+      trans:JSON.parse(this.proto.trans),isInvalid:false};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // 選択された行の表示/非表示設定をチェックボックスに表示
+      v.node = alasql('select * from node where nId='+this.nId)[0];
+      if( v.node.deleted && v.node.deleted.length > 0 ){
+        this.validationDialog.querySelector('input[name="isInvalid"]').checked = true;
+        v.isInvalid = true;  // 変更前の状態を無効に変更
+      }
+
+      v.step = 2; // 削除済要素の表示/非表示設定をチェックボックスに表示
+      if( this.showDeleted === false ){
+        this.validationDialog.querySelector('input[name="hideDeleted"]').checked = true;
+      }
+
+      v.step = 3; // 設定画面を表示
+      v.r = await (async ()=>{
+        this.validationDialog.showModal();
+
+        return new Promise(resolve => {
+          this.validationDialog.querySelector('button[name="submit"]').addEventListener("click", () => {
+            this.validationDialog.close();
+            // .input[name]属性を持つ全要素からvalueを取得してオブジェクト化
+            const rv = {status:true,values:{}}
+            this.validationDialog.querySelectorAll('input[name]').forEach(x => {
+              rv.values[x.getAttribute('name')] = x.checked;
+            });
+            resolve(rv);
+          });
+
+          this.validationDialog.querySelector('button[name="cancel"]').addEventListener("click", () => {
+            this.validationDialog.close();
+            resolve({status:false});
+          });
+        });
+      })();
+      if( v.r instanceof Error ) throw v.r;
+      console.log(`l.1369 v.r=${stringify(v.r)}`)
+
+      v.step = 4; // 設定結果の反映
+      if( v.r.status === true ){
+        v.step = 4.1; // 削除済要素の表示/非表示設定
+        this.showDeleted = !v.r.values.hideDeleted;
+
+        v.step = 4.2; // 選択された行の表示/非表示設定
+        if( v.r.values.isInvalid !== v.isInvalid ){
+          v.step = 4.21; // v.node.deletedを設定
+          v.node.deleted = v.r.values.isInvalid === true
+          ? toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn') // 有効->無効 : node.deletedに日時文字列
+          : ''; // 無効->有効 : deletedを削除
+          v.trans.node.update.push(v.node);
+
+          v.step = 4.22; // DBおよびシートの更新
+          v.r = await this.syncDB(v.trans);
+          if( v.r instanceof Error ) throw v.r;
+        }
+      }
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
 
   /** levelUp: 一つ上の階層に移動
    * @parem {void}
