@@ -962,9 +962,7 @@ class TypeDefs {
    * @param {number} arg.tId - 移動先親nodeのnId
    * @param {number|Object} arg.nId - 移動対象nodeのnId、または移動対象nodeオブジェクト
    * @param {number} [arg.seq=1] - 移動先のseq
-   * @returns {Object} rv - syncDBの引数nodeに代入するオブジェクト
-   * @returns {Object[]} rv.update - 更新・追加対象のnodeオブジェクトの配列
-   * @returns {number[]} rv.delete - 削除対象nodeのnIdの配列
+   * @returns {Object[]} rv - 更新・追加対象のnodeオブジェクトの配列
    *
    * **処理概要**
    *
@@ -985,6 +983,90 @@ class TypeDefs {
    * 4. 移動対象のpIdを(fIdから)tIdに変更、seqを上書き
    * 5. 移動対象が子要素を持っていた場合、コピー元の全子孫要素を新規nodeとして追加
    */
+  moveNode(arg){
+    const v = {whois:this.constructor.name+'.moveNode',step:0,
+      rv:[],now:toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn')};
+    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
+    try {
+
+      v.step = 1; // 事前準備
+      v.step = 1.1; // 引数への既定値設定
+      v.arg = Object.assign({seq:1},arg);
+      console.log(`l.996 v.arg=${stringify(v.arg)}`)
+
+      v.step = 1.2 // v.bmNodeに移動前のnodeを退避、v.amNodeに移動後のnodeをセット
+      v.sql = 'select * from node where nId=';
+      v.bmNode = alasql(v.sql+v.arg.nId)[0];
+      v.amNode = Object.assign({},v.bmNode,{
+        // nId : 変化無し
+        pId : v.arg.tId,
+        seq : v.arg.seq,
+        // lId : 変化無し
+        // type : 変化無し
+        //created : 変化無し
+        updated : v.now,
+        //deleted : 変化無し
+      });
+
+      v.step = 1.3 // v.bmParentに移動前の親要素を、v.amParentに移動後の親要素をセット
+      v.bmParent = alasql(v.sql+v.arg.fId)[0];
+      v.amParent = alasql(v.sql+v.arg.tId)[0];
+
+      v.step = 1.4 // v.bmChildrenにv.bmParentの子要素を、v.amChildrenにv.amParentの子要素をセット
+      v.sql = 'select * from node where pId=';
+      v.bmChildren = alasql(v.sql+v.arg.fId);
+      v.amChildren = alasql(v.sql+v.arg.tId);
+
+      v.step = 2. // 「fId <> tId」ならば、移動元親の子要素について並び順を変更
+      if( v.arg.fId !== v.arg.tId ){
+        v.step = 2.1 // v.bmChildren[x].seq > v.bmNode.seqについて、seqを繰り上げ(-1)
+        v.bmChildren.forEach(x => {
+          if( x.seq > v.bmNode.seq ){
+            x.seq -= 1;
+            v.rv.push(x);
+          }
+        });
+      }
+      
+      v.step = 3. // 移動先親の子要素(v.amChildren)について並び順を変更
+      if( v.amNode.seq < v.bmNode.seq ){
+        v.step = 3.1 // 前に移動(v.amNode.seq<v.bmNode.seq)
+          // ⇒ v.amChildren.forEach(x => v.amNode.seq <= x.seq < v.bmNode.seq)
+          //   を満たす要素について、seqを繰り下げ(+1)
+        v.amChildren.forEach(x => {
+          if( v.amNode.seq <= x.seq && x.seq < v.bmNode.seq ){
+            x.seq += 1;
+            v.rv.push(x);
+          }
+        });
+      } else {
+        v.step = 3.2 // 後に移動(v.amNode.seq>v.bmNode.seq)
+          // ⇒ v.amChildren.forEach(x => v.bmNode.seq < x.seq <= v.amNode.seq)
+          //   を満たす要素について、seqを繰り上げ(-1)
+        v.amChildren.forEach(x => {
+          if( v.bmNode.seq < x.seq && x.seq <= v.amNode.seq ){
+            x.seq -= 1;
+            v.rv.push(x);
+          }
+        });
+      }
+
+      v.step = 4. // 移動対象のpIdを(fIdから)tIdに変更、seqを上書き
+      v.rv.push(v.amNode);
+
+      // v.step = 5. // 移動対象が子要素を持っていた場合、コピー元の全子孫要素を新規nodeとして追加
+      // ↑ 移動では使用しない
+
+      v.step = 5; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
 
   /** appendBranch: コピー元要素をコピー先およびリンク先に追加
    * @param {number|Object} arg=this.copiedId - 追加するnodeのnId。Objectの場合、leaf+type
@@ -1164,6 +1246,7 @@ class TypeDefs {
         v.step = 2.2; // nameが数値以外
         // ⇒ ダイアログ内の機能選択(ex. appendのDivがクリックされた)
         v.name = event.target.getAttribute('name');
+        console.log(`l.1163 v.name=${v.name}`,event.target)
         v.step = 2.21; // 選択された機能の呼び出し
         v.r = await this[v.name](event);
         if( v.r instanceof Error ) throw v.r;
@@ -1403,11 +1486,104 @@ class TypeDefs {
    * @parem {void}
    * @returns {null}
    */
+  async levelUp(){
+    const v = {whois:this.constructor.name+'.levelUp',rv:null,step:0};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // 祖父母・親・自要素の情報を取得
+      v.sql = 'select n1.pId as gId' // 祖父母のnId
+      + ', n1.nId as pId'  // 親要素のnId
+      + ', n1.seq as pSeq'   // 親要素の祖父母要素内での順番
+      + ', n2.nId as nId'  // 対象要素のnId
+      + ' from node as n2' // 親が無い場合に備え、b2を基にする
+      + ' inner join node as n1 on n1.nId=n2.pId'
+      + ' where n2.nId=' + this.nId;
+      v.r = alasql(v.sql)[0];
+
+      // 祖父母要素が無い ⇒ 一つ上の階層はない ⇒ 処理終了
+      if( v.r ){
+        v.step = 2; // moveNodeでsyncDB更新用データを作成
+        v.r = this.moveNode({
+          fId: v.r.pId,       // 親要素
+          tId: v.r.gId,       // 祖父母要素
+          nId: this.nId,      // 移動対象要素
+          seq: v.r.pSeq + 1,  // 親要素の次
+        });
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 3; // データベースの更新
+        v.r = await this.syncDB({node:{update:v.r}});
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 4; // ツリーを再描画
+        v.r = this.disp();
+        if( v.r instanceof Error ) throw v.r;
+      }
+
+      v.step = 5; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
 
   /** levelDown: 一つ下の階層に移動
+   * 「一つ下の階層」⇒「兄要素の末子」と看做す
    * @parem {void}
    * @returns {null}
    */
+  async levelDown(){
+    const v = {whois:this.constructor.name+'.levelDown',rv:null,step:0};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // 親(parent)、兄(brother)要素を取得
+      v.sql = 'select n1.pId as pId, n2.nId as bId'
+      + ' from node as n1' // n1:対象要素
+      + ' inner join node as n2 on n1.pId=n2.pId and n1.seq-1=n2.seq' // n2:兄要素
+      + ' where n1.nId=' + this.nId;
+      v.r = alasql(v.sql)[0];
+
+      // 兄要素が無い ⇒ 一つ上の階層はない ⇒ 処理終了
+      if( v.r ){
+
+        v.step = 2; // 甥(nephew)要素の数を取得
+        v.sql = 'select count(*) as num from node where pId='+v.r.bId;
+        v.num = alasql(v.sql)[0].num;
+
+        v.step = 3; // moveNodeでsyncDB更新用データを作成
+        v.r = this.moveNode({
+          fId: v.r.pId,       // 親要素
+          tId: v.r.bId,       // 兄要素
+          nId: this.nId,      // 移動対象要素
+          seq: v.num + 1,     // 甥要素の数＋1
+        });
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 3; // データベースの更新
+        v.r = await this.syncDB({node:{update:v.r}});
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 4; // ツリーを再描画
+        v.r = this.disp();
+        if( v.r instanceof Error ) throw v.r;
+      }
+
+      v.step = 5; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
 
   /** moveForward: 表示順を一つ前に移動
    * @parem {void}
@@ -1415,12 +1591,89 @@ class TypeDefs {
    * 
    * 相対seqを絶対seqに変換 : context側で処理
    */
+  async moveForward(){
+    const v = {whois:this.constructor.name+'.moveForward',rv:null,step:0};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // 対象ノードを取得、移動先を設定
+      v.r = alasql(`select * from node where nId=`+this.nId)[0];
+
+      // 長子 ⇒ これ以上前に行けない ⇒ 処理終了
+      if( v.r.seq > 1 ){
+        v.step = 2; // moveNodeでsyncDB更新用データを作成
+        v.r = this.moveNode({
+          fId: v.r.pId,       // 親要素
+          tId: v.r.pId,       // 親要素(変わらず)
+          nId: this.nId,      // 移動対象要素
+          seq: v.r.seq - 1,   // 現在の一つ前
+        });
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 3; // データベースの更新
+        v.r = await this.syncDB({node:{update:v.r}});
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 4; // ツリーを再描画
+        v.r = this.disp();
+        if( v.r instanceof Error ) throw v.r;
+      }
+
+      v.step = 5; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
 
   /** moveLater: 表示順を一つ後に移動
    * @parem {void}
    * @returns {null}
    */
+  async moveLater(){
+    const v = {whois:this.constructor.name+'.moveLater',rv:null,step:0};
+    console.log(`${v.whois} start.`);
+    try {
 
+      v.step = 1; // 対象ノードを取得、移動先を設定
+      v.r = alasql(`select * from node where nId=`+this.nId)[0];
+      // 兄弟要素数を取得
+      v.b = alasql(`select count(nId) as num from node where pId=`+v.r.pId)[0];
+
+      // 末子 ⇒ これ以上後に行けない ⇒ 処理終了
+      if( v.r.seq < v.b.num ){
+        v.step = 2; // moveNodeでsyncDB更新用データを作成
+        v.r = this.moveNode({
+          fId: v.r.pId,       // 親要素
+          tId: v.r.pId,       // 親要素(変わらず)
+          nId: this.nId,      // 移動対象要素
+          seq: v.r.seq + 1,   // 現在の一つ後
+        });
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 3; // データベースの更新
+        v.r = await this.syncDB({node:{update:v.r}});
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 4; // ツリーを再描画
+        v.r = this.disp();
+        if( v.r instanceof Error ) throw v.r;
+      }
+
+      v.step = 5; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
 }
 
 window.addEventListener('DOMContentLoaded',() => {
