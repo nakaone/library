@@ -546,18 +546,29 @@ class TypeDefs {
       this.contextDialog = createElement({
         tag:'dialog',
         attr:{class:this.constructor.name,name:'context'},
+        // Zenn <dialog>要素に「ダイアログの外側クリックで閉じる」処理の追加
+        // https://zenn.dev/de_teiu_tkg/articles/96a46374655e56
+        event:{'click':(event) => {
+          if( event.target.closest('[name="container"]') === null ){
+            this.contextDialog.close();
+            this.editDialog.close();
+            this.validationDialog.close();
+          }
+        }},
         children:[
-          {attr:{name:'edit'},text:'編集',event:{click:e=>this.context(e)}},
-          {attr:{name:'append'},text:'追加',event:{click:e=>this.context(e)},
-            children:[{tag:'select',children:v.opt,style:{marginLeft:'2rem'}}]},
-          {attr:{name:'copy'},text:'複写',event:{click:e=>this.context(e)}},
-          {attr:{name:'paste'},text:'貼付',event:{click:e=>this.context(e)}},
-          {attr:{name:'setValidation'},text:'無効化',event:{click:e=>this.context(e)}},
-          {attr:{name:'arrow'},children:[
-            {attr:{name:'levelUp'},text:'◀',event:{click:e=>this.context(e)}},
-            {attr:{name:'moveForward'},text:'▲',event:{click:e=>this.context(e)}},
-            {attr:{name:'moveLater'},text:'▼',event:{click:e=>this.context(e)}},
-            {attr:{name:'levelDown'},text:'▶',event:{click:e=>this.context(e)}},
+          {attr:{name:'container'},children:[
+            {attr:{name:'edit'},text:'編集',event:{click:e=>this.context(e)}},
+            {attr:{name:'append'},text:'追加',event:{click:e=>this.context(e)},
+              children:[{tag:'select',children:v.opt,style:{marginLeft:'2rem'}}]},
+            {attr:{name:'copy'},text:'複写',event:{click:e=>this.context(e)}},
+            {attr:{name:'paste'},text:'貼付',event:{click:e=>this.context(e)}},
+            {attr:{name:'setValidation'},text:'無効化',event:{click:e=>this.context(e)}},
+            {attr:{name:'arrow'},children:[
+              {attr:{name:'levelUp'},text:'◀',event:{click:e=>this.context(e)}},
+              {attr:{name:'moveForward'},text:'▲',event:{click:e=>this.context(e)}},
+              {attr:{name:'moveLater'},text:'▼',event:{click:e=>this.context(e)}},
+              {attr:{name:'levelDown'},text:'▶',event:{click:e=>this.context(e)}},
+            ]},
           ]},
         ]
       },'body');
@@ -566,22 +577,39 @@ class TypeDefs {
       this.editDialog = createElement({
         tag:'dialog',
         attr:{class:this.constructor.name,name:'edit'},
+        event:{'click':(event) => {
+          if( event.target.closest('[name="container"]') === null ){
+            this.contextDialog.close();
+            this.editDialog.close();
+            this.validationDialog.close();
+          }
+        }},
+        children:[{attr:{name:'container'},children:[]}]
       },'body');
 
       v.step = 3.4; // 有効/無効変更指定ダイアログ
       this.validationDialog = createElement({
         tag:'dialog',
         attr:{class:this.constructor.name,name:'validation'},
+        event:{'click':(event) => {
+          if( event.target.closest('[name="container"]') === null ){
+            this.contextDialog.close();
+            this.editDialog.close();
+            this.validationDialog.close();
+          }
+        }},
         children:[
-          {tag:'input',attr:{type:'checkbox',name:'isInvalid'}},
-          {tag:'span',text:'無効化する'},
-          {tag:'hr'},
-          {tag:'input',attr:{type:'checkbox',name:'hideDeleted'}},
-          {tag:'span',text:'無効行は表示しない'},
-          {children:[
-            {tag:'button',attr:{name:'submit'},text:'更新'},
-            {tag:'button',attr:{name:'cancel'},text:'取消'},
-          ]},
+          {attr:{name:'container'},children:[
+            {tag:'input',attr:{type:'checkbox',name:'isInvalid'}},
+            {tag:'span',text:'無効化する'},
+            {tag:'hr'},
+            {tag:'input',attr:{type:'checkbox',name:'hideDeleted'}},
+            {tag:'span',text:'無効行は表示しない'},
+            {children:[
+              {tag:'button',attr:{name:'submit'},text:'更新'},
+              {tag:'button',attr:{name:'cancel'},text:'取消'},
+            ]},
+          ]}
         ],
         style:{width:'15rem'},
       },'body');
@@ -591,7 +619,6 @@ class TypeDefs {
       // ---------------------------------------------------
       v.r = this.disp();
       if( v.r instanceof Error ) throw v.r;
-
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
@@ -727,13 +754,18 @@ class TypeDefs {
       v.step = 1; // 編集画面の作成
       v.editDialog = this.iDef[arg.type].edit(arg);
 
-      v.step = 3; // 更新ボタンを追加、編集画面の再作成
+      v.step = 2; // 更新ボタンを追加、編集画面の再作成
       v.editDialog.push(
         {tag:'button',attr:{name:'submit'},text:'更新'},
         {tag:'button',attr:{name:'cancel'},text:'取消'},
       );
-      this.editDialog.innerHTML = '';
-      v.r = createElement(v.editDialog,this.editDialog);
+
+      v.step = 3; // 更新対象領域をv.containerとして取得、編集画面を更新
+      v.container = this.editDialog.querySelector('[name="container"]');
+      v.container.innerHTML = '';
+      v.r = createElement(v.editDialog,v.container);
+      //this.editDialog.innerHTML = '';
+      //v.r = createElement(v.editDialog,this.editDialog);
       if( v.r instanceof Error ) throw v.r;
 
       v.step = 4; // 編集画面を表示
