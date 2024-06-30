@@ -504,7 +504,8 @@ class TypeDefs {
           v.sql += `\`${colName}\` ${this.tDef[tableName][colName]},`;
         });
         v.sql = `create table ${tableName} (${v.sql.slice(0,v.sql.length-1)});`;
-        alasql(v.sql);
+        v.r = alasql(v.sql);
+        if( v.r instanceof Error ) throw v.r;
 
         v.step = 2.2; // データのセット
         this.raw[tableName].forEach(row => {
@@ -523,7 +524,8 @@ class TypeDefs {
           });
           v.sql = `insert into ${tableName}`
           + ` (${v.cols.join()}) values (${v.vals.join()})`;
-          alasql(v.sql);
+          v.r = alasql(v.sql);
+          if( v.r instanceof Error ) throw v.r;
         });
       });
 
@@ -694,7 +696,7 @@ class TypeDefs {
       v.step = 2; // isOpenを逆転
       v.node = alasql('select * from node where nId='+v.nId)[0];
       v.node.isOpen = v.node.isOpen ? false : true;
-      alasql(`update node set isOpen=${v.node.isOpen} where nId=${v.nId}`);
+      v.r = alasql(`update node set isOpen=${v.node.isOpen} where nId=${v.nId}`);
 
       v.step = 3; // 再描画
       v.r = this.disp();
@@ -829,11 +831,12 @@ class TypeDefs {
         if( x.hasOwnProperty('attribute') )
           v.stack.push('`attribute`=@'+JSON.stringify(x.attribute));
         ['created','updated','deleted'].forEach(y => {
-          if( x.hasOwnProperty(y) && x[y] )
+          if( x.hasOwnProperty(y) && (x[y] || x[y] === '') )
             v.stack.push(`\`${y}\`="${x[y]}"`);
         });
         v.sql = `update leaf set ${v.stack.join()} where lId=${x.lId}`;
-        alasql(v.sql);
+        v.r = alasql(v.sql);
+        if( v.r instanceof Error ) throw v.r;
       });
 
       v.step = 2.2; // データベースの追加処理
@@ -852,7 +855,8 @@ class TypeDefs {
           }
         });
         v.sql = `insert into leaf (${v.cols.join()}) values (${v.vals.join()})`;
-        alasql(v.sql);
+        v.r = alasql(v.sql);
+        if( v.r instanceof Error ) throw v.r;
       });
 
       // ----------------------------------------------
@@ -861,19 +865,21 @@ class TypeDefs {
       v.step = 3.1; // データベースの更新処理
       v.trans.node.update.forEach(x => {
         v.stack = [];
-        ['nId','pId','seq','lId'].forEach(y => {
+        ['pId','seq','lId'].forEach(y => {
           if( x.hasOwnProperty(y) && (x[y] || x[y] === 0) )
             v.stack.push(`\`${y}\`=${x[y]}`);
         });
         ['type','created','updated','deleted'].forEach(y => {
-          if( x.hasOwnProperty(y) && x[y] )
+          if( x.hasOwnProperty(y) && (x[y] || x[y] === '') )
             v.stack.push(`\`${y}\`="${x[y]}"`);
         });
-        v.sql = `update node set ${v.stack.join()} where lId=${x.lId}`;
-        alasql(v.sql);
+        v.sql = `update node set ${v.stack.join()} where nId=${x.nId}`;
+        console.log(`l.877 v.sql=${v.sql}`); v.step = 3.11;
+        v.r = alasql(v.sql);
+        if( v.r instanceof Error ) throw v.r;
       });
 
-      v.step = 3.3; // データベースの追加処理
+      v.step = 3.2; // データベースの追加処理
       v.trans.node.insert.forEach(x => {
         v.cols = []; v.vals = [];
         ['nId','pId','seq','lId'].forEach(y => {
@@ -883,13 +889,14 @@ class TypeDefs {
           }
         });
         ['type','created','updated','deleted'].forEach(y => {
-          if( x.hasOwnProperty(y) && x[y] ){
+          if( x.hasOwnProperty(y) && (x[y] || x[y] === '') ){
             v.cols.push(y);
             v.vals.push(`"${x[y]}"`);
           }
         });
         v.sql = `insert into node (${v.cols.join()}) values (${v.vals.join()})`;
-        alasql(v.sql);
+        v.r = alasql(v.sql);
+        if( v.r instanceof Error ) throw v.r;
       });
 
       v.step = 4; // シートへの反映
@@ -1246,7 +1253,6 @@ class TypeDefs {
         v.step = 2.2; // nameが数値以外
         // ⇒ ダイアログ内の機能選択(ex. appendのDivがクリックされた)
         v.name = event.target.getAttribute('name');
-        console.log(`l.1163 v.name=${v.name}`,event.target)
         v.step = 2.21; // 選択された機能の呼び出し
         v.r = await this[v.name](event);
         if( v.r instanceof Error ) throw v.r;
@@ -1450,7 +1456,6 @@ class TypeDefs {
         });
       })();
       if( v.r instanceof Error ) throw v.r;
-      console.log(`l.1369 v.r=${stringify(v.r)}`)
 
       v.step = 4; // 設定結果の反映
       if( v.r.status === true ){
