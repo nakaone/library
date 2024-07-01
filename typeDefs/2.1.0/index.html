@@ -1201,45 +1201,36 @@ class TypeDefs {
         v.step = 1.32; // 追加により影響を受ける兄弟要素の順番修正
         w.sql = `select * from node where pId=${pId} and seq>=${seq}`;
         w.r = alasql(w.sql);
-        console.log(`l.1289 w.r=${stringify(w.r)}`)
         w.r.forEach(x => {
           x.seq += 1;
           x.updated = w.now;
           v.rv.node.update.push(x);
         });
-        console.log(`l.1295 w.r=${stringify(w.r)}`)
 
         v.step = 1.33; // 子要素を洗い出し、再帰呼出
         w.r = alasql('select * from node where pId=' + org.nId);
         w.r.forEach(x => v.recursive(w.new.nId,x.seq,x,depth+1));
       };
 
-      v.step = 2; // 追加対象要素の作成
+      v.step = 2; // コピー元要素(含、子孫)を対象要素(コピー先)に作成
       v.recursive(v.dp.pId,v.dp.seq,v.original,0);
 
-      /*
       v.step = 3; // リンク先への追加
       // 「追加対象の兄弟要素を子要素として持つ要素」にも追加
 
-      v.step = 3.1; // 追加先親要素配下に存在するlIdをleavesとして取得
-      v.sql = `select lId from node where pId=${v.dp.pId} group by lId`;
+      v.step = 3.1; // コピー先要素の配下に存在するlIdをleavesとして取得
+      v.sql = 'select lId from node where pId='+v.dp.pId+' group by lId';
       v.leaves = alasql(v.sql);
 
-      v.step = 3.2; // 追加先の親要素をv.parentとして取得(=leavesを配下に持つ要素)
+      v.step = 3.2; // リンク先の親要素(=leavesのいずれかを子要素とする要素)をv.parentsとして取得
       v.sql = 'select node.* from node inner join'
       + ` ? as leaves on node.lId=leaves.lId`
+      + ` where pId<>${v.dp.pId}`
       + ` group by node.pId`;
       v.parents = alasql(v.sql,[v.leaves]);
 
       v.step = 3.3; // v.parents配下の子要素について内部関数を呼び出し
-      v.parents.forEach(p => {
-        v.brothers = alasql('select * from node where pId='+p.nId);
-        v.brothers.forEach(b => {
-          v.recursive(b.pId,b.seq,b,0);
-        });
-      });
-      //v.parents.forEach(x => v.recursive(x.pId,v.node));
-      */
+      v.parents.forEach(p => v.recursive(p.pId,1,v.original,0));
       
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
