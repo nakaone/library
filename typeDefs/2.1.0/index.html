@@ -762,6 +762,7 @@ class TypeDefs {
             {attr:{name:'copy'},text:'複写',event:{click:e=>this.context(e)}},
             {attr:{name:'paste'},text:'貼付',event:{click:e=>this.context(e)}},
             {attr:{name:'setValidation'},text:'無効化',event:{click:e=>this.context(e)}},
+            {attr:{name:'delete'},text:'削除',event:{click:e=>this.context(e)}},
             {attr:{name:'arrow'},children:[
               {attr:{name:'levelUp'},text:'◀',event:{click:e=>this.context(e)}},
               {attr:{name:'moveForward'},text:'▲',event:{click:e=>this.context(e)}},
@@ -1108,7 +1109,7 @@ class TypeDefs {
       // ----------------------------------------------
       v.step = 2; // leafの更新・追加
       // ----------------------------------------------
-      v.step = 2.1; // データベースの更新処理
+      v.step = 2.1; // leafの更新処理
       v.trans.leaf.update.forEach(x => {
         v.stack = [];
         if( x.hasOwnProperty('attribute') )
@@ -1122,7 +1123,7 @@ class TypeDefs {
         if( v.r instanceof Error ) throw v.r;
       });
 
-      v.step = 2.2; // データベースの追加処理
+      v.step = 2.2; // leafの追加処理
       v.trans.leaf.insert.forEach(x => {
         v.cols = ['`lId`']; v.vals = [x.lId];
         // JSON型(先頭に'@'をつける項目)
@@ -1142,10 +1143,16 @@ class TypeDefs {
         if( v.r instanceof Error ) throw v.r;
       });
 
+      v.step = 2.3; // leafの削除処理
+      v.trans.leaf.delete.forEach(x => {
+        v.r = alasql('delete from leaf where lId='+x.lId);
+        if( v.r instanceof Error ) throw v.r;
+      });
+
       // ----------------------------------------------
       v.step = 3; // nodeの更新・追加
       // ----------------------------------------------
-      v.step = 3.1; // データベースの更新処理
+      v.step = 3.1; // nodeの更新処理
       v.trans.node.update.forEach(x => {
         v.stack = [];
         ['pId','seq','lId'].forEach(y => {
@@ -1162,7 +1169,7 @@ class TypeDefs {
         if( v.r instanceof Error ) throw v.r;
       });
 
-      v.step = 3.2; // データベースの追加処理
+      v.step = 3.2; // nodeの追加処理
       v.trans.node.insert.forEach(x => {
         v.cols = []; v.vals = [];
         ['nId','pId','seq','lId'].forEach(y => {
@@ -1182,7 +1189,16 @@ class TypeDefs {
         if( v.r instanceof Error ) throw v.r;
       });
 
+      v.step = 3.3; // nodeの削除処理
+      v.trans.node.delete.forEach(x => {
+        v.r = alasql('delete from node where nId='+x.nId);
+        if( v.r instanceof Error ) throw v.r;
+      });
+
+
+      // ----------------------------------------------
       v.step = 4; // シートへの反映
+      // ----------------------------------------------
       v.step = 4.1; // Date型を日時文字列に変換
       Object.keys(this.tDef).forEach(tableName => {
         ['update','insert','delete'].forEach(func => {
@@ -1204,7 +1220,9 @@ class TypeDefs {
       if( v.r instanceof Error ) throw v.r;
       this.loading.hide();
 
+      // ----------------------------------------------
       v.step = 5; // 終了処理
+      // ----------------------------------------------
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
 
@@ -1802,6 +1820,53 @@ class TypeDefs {
           v.r = await this.syncDB(v.trans);
           if( v.r instanceof Error ) throw v.r;
         }
+      }
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** delete: 選択された行および子孫を物理削除
+   * @parem {void}
+   * @returns {null}
+   */
+  async delete(){
+    const v = {whois:this.constructor.name+'.delete',rv:null,step:0,
+      trans:JSON.parse(this.proto.trans),depth:0};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // 削除対象ノードの洗い出し
+      v.node = alasql('select node.*, leaf.attribute from node inner join leaf on node.lId = leaf.lId where nId='+this.nId)[0];
+      console.log(`l.1831 v.node=${stringify(v.node)}`)
+
+      v.step = 2; // 削除対象＋子孫を洗い出す内部関数を定義
+      v.recursive = pNode => {
+        v.trans.node.delete.push(pNode);
+        alasql('select * from node where pId='+pNode.nId)
+        .forEach(cNode => v.recursive(cNode));
+      };
+
+      v.step = 3; // 削除の確認
+      v.label = v.node.attribute.label || '(対象不明)';
+      if( window.confirm(v.label+'を削除しますか？') ){
+        v.step = 4; // node内を再帰的に削除
+        delete v.node.attribute;
+        v.recursive(v.node);
+        v.step = 5; // nodeに紐付かないleafを削除
+        v.trans.leaf.delete = alasql('select leaf.* from leaf left join node on leaf.lId=node.lId where node.nId is null');
+        v.step = 6; // syncDBの呼び出し
+        v.r = await this.syncDB(v.trans);
+        if( v.r instanceof Error ) throw v.r;
+        v.step = 7; // 終了メッセージ
+        await alert(v.label+'を削除しました');
       }
 
       v.step = 9; // 終了処理
