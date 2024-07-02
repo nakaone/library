@@ -30,6 +30,36 @@ dialog .td {grid-column: 3/13; width: 100%;}
 dislog[name="edit"] {width: 25rem;}
 .TypeDefs .tr.deleted {color:#aaa; text-decoration: line-through;}
 .TypeDefs span.link[name="label"] {color:#00f}
+
+/*
+CSSだけでツールチップを実現する方法
+https://so-zou.jp/web-app/tech/css/sample/tooltip.htm
+*/
+.tooltip a:hover {
+    /* 位置 */
+    position: relative;
+}
+.tooltip a:hover:after {
+    content: attr(title);
+
+    /* 位置 */
+    position: absolute;
+    left: 0;
+    top: 32px;
+    z-index: 1;
+
+    /* 文字 */
+    font-weight: normal;
+    color: black;
+    white-space: nowrap;
+
+    /* 背景 */
+    background-color: white;
+    padding: 3px;
+    border: 1px silver solid;
+    border-radius: 3px;
+    box-shadow: 1px 1px 3px silver;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
 </head>
@@ -353,12 +383,8 @@ class TypeDefs {
               // 必須のlabelは事前にセット
               tag  : 'span',
               html : x.attribute.label || '',
-              attr : {name:'label'},
+              attr : Object.assign({name:'label'},this.linkTip(x)),
             }]};
-            // リンク項目なら青文字に変更
-            if( x.isLink ){
-              v.rv[0].attr.class = 'link'
-            }
             // 任意項目を順次追加
             if( x.attribute.type ){ v.rv.push({
               tag:'span',html:' '
@@ -407,12 +433,12 @@ class TypeDefs {
         },
         branch: {
           proto: {label:'',note:''},
-          ctrl: true, // 
+          ctrl: true,
           disp: x => {  // ブランチ行(グループまとめ)の出力定義
             const v = {rv:[{
               tag  : 'span',
               html : x.attribute.label || '',
-              attr : {name:'label'},
+              attr : Object.assign({name:'label'},this.linkTip(x)),
             }]};
             // noteが有れば追加
             if( x.attribute.note ){ v.rv.push({
@@ -445,7 +471,7 @@ class TypeDefs {
             const v = {rv:[{
               tag  : 'span',
               html : x.attribute.label || '',
-              attr : {name:'label',class:'comment'},
+              attr : Object.assign({name:'label',class:'comment'},this.linkTip(x)),
             }]};
             return v.rv;
           },
@@ -535,7 +561,7 @@ class TypeDefs {
       });
 
       // ---------------------------------------------------
-      v.step = 3; // ツリー描画領域・ダイアログの準備
+      v.step = 3; // ツリー描画領域・ダイアログ・ツールチップの準備
       // ---------------------------------------------------
       v.step = 3.1; // ツリー描画領域
       this.treeDiv = createElement({
@@ -661,13 +687,41 @@ class TypeDefs {
       + ' where node.';
       v.node = alasql(v.sql+'nId='+nId)[0];
 
-      v.step = 2.2; // lIdが他のブランチにも存在するならv.node.isLink=trueを設定
-      v.node.isLink = alasql('select * from node where lId='+v.node.lId).length > 1;
-
       v.step = 2.2; // 子要素のnodeオブジェクトをv.childrenとして取得
       v.children = alasql(v.sql+'pId='+nId+' order by seq');
 
-      v.step = 2.3; // createElement用の行オブジェクトをv.rvとして作成
+      v.step = 2.3; // lIdが他のブランチにも存在するならv.node.linkにツールチップ用文字列を設定
+      // v.node.link = [
+      //   [  ※ルートから自要素まで、node+leafのオブジェクトを並べる
+      //      {nId:0,lId:0,attribute:{label:'root'}},
+      //      {nId:1,lId:1,attribute:{label:'祖父母要素'}},
+      //      {nId:5,lId:2,attribute:{label:'親要素'}},
+      //      {nId:9,lId:5,attribute:{label:'自要素'}},
+      //   ],[..],..  ※複数箇所でリンクしていた場合、複数
+      // ]
+      // なお無効化されている行はthis.showDeleted=falseなら除外する
+      v.sql = 'select node.nId, node.pId, node.seq, node.lId, node.type, leaf.attribute'
+      + ' from node inner join leaf on node.lId=leaf.lId where'
+      + ( this.showDeleted ? '' : ' node.`deleted` is null and');
+      v.linkNodes = alasql(`${v.sql} node.nId<>${nId} and leaf.lId=${v.node.lId}`);
+      console.log(`l.707 this.showDeleted=${this.showDeleted}\nv.sql=${v.sql}\nv.linkNodes=${stringify(v.linkNodes)}`)
+      if( v.linkNodes.length > 0 ){
+        v.node.link = [];
+        v.linkNodes.forEach(linkNode => {
+          v.nId = linkNode.pId;
+          v.tree = [linkNode];
+          v.depth = 0;
+          while( linkNode.pId > 0 && v.depth < this.maxDepth ){
+            linkNode = alasql(`${v.sql} node.nId=${v.nId}`)[0];
+            v.tree.unshift(linkNode);
+            v.nId = linkNode.pId;
+            v.depth++;
+          }
+          v.node.link.push(v.tree);
+        });
+      }
+
+      v.step = 2.4; // createElement用の行オブジェクトをv.rvとして作成
       v.rv = {
         attr:{name:`${nId}`,class: 'tr'
           + (v.node.deleted && v.node.deleted.length > 0 ? ' deleted' : '')},
@@ -693,7 +747,7 @@ class TypeDefs {
         ]
       };
 
-      v.step = 2.4; // v.rvを描画領域に追加
+      v.step = 2.5; // v.rvを描画領域に追加
       v.r = createElement(v.rv,this.treeDiv);
       if( v.r instanceof Error ) throw v.r;
 
@@ -1243,6 +1297,40 @@ class TypeDefs {
       v.step = 3.3; // v.parents配下の子要素について内部関数を呼び出し
       v.parents.forEach(p => v.recursive(p.pId,1,v.original,0));
       
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** linkTip: ツールチップ用文字列を作成
+   * @param {Object} arg - this.iDef[xxx].dispに渡されたオブジェクト
+   * @param {Object[][]} arg.link - ルートからリンク先要素までのnode+leafオブジェクトの配列
+   * @param {string} attr='title' - ツールチップ用文字列をセットする属性
+   * @returns {string}
+   */
+  linkTip(arg,attr='title'){
+    const v = {whois:this.constructor.name+'.linkTip',rv:{},step:0};
+    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
+    try {
+
+      if( arg.link && arg.link.length > 0 ){
+        v.step = 1; 
+        v.rv.class = 'link';
+        v.rv[attr] = '';
+        v.cnt = 1;
+        arg.link.forEach(link => {
+          v.stack = link.map(o => o.attribute.label);
+          v.rv[attr] += `${v.cnt++}. ${v.stack.join(' > ')}\n`;
+        });
+        v.rv[attr] = v.rv[attr].slice(0,v.rv[attr].length-1);
+      }
+
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
