@@ -1,71 +1,56 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <style type="text/css">
-.table, .tr {display: grid; width: 100%;}
-.tr {grid-template-columns: repeat(21,1rem) 1fr; gap:0.2rem; width:100%}
-.ctrl {color:#aaa}
-.comment {background-color: #ccc; padding: 0 3rem;}
-dialog {
-  box-shadow: 0px 20px 36px 0px rgba(0, 0, 0, 0.6);
-  width: 10rem;
-}
+/* ツリー描画領域 */
+.tree, .tr {display: grid; width: 100%;}
+.tree .tr {grid-template-columns: repeat(21,1rem) 1fr; gap:0.2rem; width:100%}
+.tree .tr.deleted {color:#aaa; text-decoration: line-through;}
+.tree .th {grid-column: 1/3;}
+.tree .td {grid-column: 3/13; width: 100%;}
+.tree .ctrl {color:#aaa}
+.tree .comment {background-color: #ccc; padding: 0 3rem;}
+.tree span.link[name="label"] {color:#00f}
+/* ダイアログ共通 */
+dialog {box-shadow: 0px 20px 36px 0px rgba(0, 0, 0, 0.6);width: 10rem;}
 dialog::backdrop {backdrop-filter: blur(8px);}
-dialog[name="edit"]{ width: 25rem; }
-dialog > div {
-  width: 100%;
-  margin: 0.5rem 0;
-}
-dialog [name="arrow"] {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(4, 1fr);
-}
-dialog [name="arrow"] > div {
-  text-align: center;
-  background-color: #ccc;
-}
-dialog .tr {display: grid; grid-template-columns: repeat(12, 1fr);}
-dialog .th {grid-column: 1/3;}
-dialog .td {grid-column: 3/13; width: 100%;}
-dislog[name="edit"] {width: 25rem;}
-.TypeDefs .tr.deleted {color:#aaa; text-decoration: line-through;}
-.TypeDefs span.link[name="label"] {color:#00f}
+/* context: 右ボタンメニュー */
+dialog.context > div {width: 100%;margin: 0.5rem 0;}
+dialog.context [name="arrow"] {display: grid;gap: 1rem;grid-template-columns: repeat(4, 1fr);}
+dialog.context [name="arrow"] > div {text-align: center;background-color: #ccc;}
+/* edit: attribute編集用ダイアログ */
+dialog.edit { width: 25rem; }
+/* validation: 有効/無効変更指定ダイアログ */
 
-/*
-CSSだけでツールチップを実現する方法
-https://so-zou.jp/web-app/tech/css/sample/tooltip.htm
-*/
-.tooltip a:hover {
-    /* 位置 */
-    position: relative;
-}
-.tooltip a:hover:after {
-    content: attr(title);
 
-    /* 位置 */
-    position: absolute;
-    left: 0;
-    top: 32px;
-    z-index: 1;
-
-    /* 文字 */
-    font-weight: normal;
-    color: black;
-    white-space: nowrap;
-
-    /* 背景 */
-    background-color: white;
-    padding: 3px;
-    border: 1px silver solid;
-    border-radius: 3px;
-    box-shadow: 1px 1px 3px silver;
+/* 待機画面
+  CSSだけでツールチップを実現する方法
+  https://so-zou.jp/web-app/tech/css/sample/tooltip.htm */
+.tooltip a:hover {position: relative;}
+.tooltip a:hover:after {content: attr(title);
+  /* 位置 */
+  position: absolute;
+  left: 0;
+  top: 32px;
+  z-index: 1;
+  /* 文字 */
+  font-weight: normal;
+  color: black;
+  white-space: nowrap;
+  /* 背景 */
+  background-color: white;
+  padding: 3px;
+  border: 1px silver solid;
+  border-radius: 3px;
+  box-shadow: 1px 1px 3px silver;
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
 </head>
 <body>
-  <div name="pId" style="display:none"><?= pId ?></div>
-  <div name="data" style="display:none"><?= data ?></div>
+  <div class="TypeDefs">
+    <div name="pId" style="display:none"><?= pId ?></div>
+    <div name="data" style="display:none"><?= data ?></div>
+  </div>
 </body>
 <script type="text/javascript">
 /** HTMLElementを生成する
@@ -733,7 +718,7 @@ class TypeDefs {
       // ---------------------------------------------------
       v.step = 3.1; // ツリー描画領域
       this.treeDiv = createElement({
-        attr:{class:this.constructor.name+' table',name:'tree'}
+        attr:{class:'tree'}
       },'body');
 
       v.step = 3.2; // コンテキストメニュー(右ボタンメニュー)
@@ -744,7 +729,7 @@ class TypeDefs {
       v.step = 3.22; // 右ボタンメニューダイアログの作成
       this.contextDialog = createElement({
         tag:'dialog',
-        attr:{class:this.constructor.name,name:'context'},
+        attr:{class:'context'},
         // Zenn <dialog>要素に「ダイアログの外側クリックで閉じる」処理の追加
         // https://zenn.dev/de_teiu_tkg/articles/96a46374655e56
         event:{'click':(event) => {
@@ -776,7 +761,7 @@ class TypeDefs {
       v.step = 3.3; // attribute編集用ダイアログの作成
       this.editDialog = createElement({
         tag:'dialog',
-        attr:{class:this.constructor.name,name:'edit'},
+        attr:{class:'edit'},
         event:{'click':(event) => {
           if( event.target.closest('[name="container"]') === null ){
             this.contextDialog.close();
@@ -790,7 +775,7 @@ class TypeDefs {
       v.step = 3.4; // 有効/無効変更指定ダイアログ
       this.validationDialog = createElement({
         tag:'dialog',
-        attr:{class:this.constructor.name,name:'validation'},
+        attr:{class:'validation'},
         event:{'click':(event) => {
           if( event.target.closest('[name="container"]') === null ){
             this.contextDialog.close();
