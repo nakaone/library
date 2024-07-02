@@ -1,49 +1,6 @@
 <!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<style type="text/css">
-/* ツリー描画領域 */
-.tree, .tr {display: grid; width: 100%;}
-.tree .tr {grid-template-columns: repeat(21,1rem) 1fr; gap:0.2rem; width:100%}
-.tree .tr.deleted {color:#aaa; text-decoration: line-through;}
-.tree .th {grid-column: 1/3;}
-.tree .td {grid-column: 3/13; width: 100%;}
-.tree .ctrl {color:#aaa}
-.tree .comment {background-color: #ccc; padding: 0 3rem;}
-.tree span.link[name="label"] {color:#00f}
-/* ダイアログ共通 */
-dialog {box-shadow: 0px 20px 36px 0px rgba(0, 0, 0, 0.6);width: 10rem;}
-dialog::backdrop {backdrop-filter: blur(8px);}
-/* context: 右ボタンメニュー */
-dialog.context > div {width: 100%;margin: 0.5rem 0;}
-dialog.context [name="arrow"] {display: grid;gap: 1rem;grid-template-columns: repeat(4, 1fr);}
-dialog.context [name="arrow"] > div {text-align: center;background-color: #ccc;}
-/* edit: attribute編集用ダイアログ */
-dialog.edit { width: 25rem; }
-/* validation: 有効/無効変更指定ダイアログ */
-
-
-/* 待機画面
-  CSSだけでツールチップを実現する方法
-  https://so-zou.jp/web-app/tech/css/sample/tooltip.htm */
-.tooltip a:hover {position: relative;}
-.tooltip a:hover:after {content: attr(title);
-  /* 位置 */
-  position: absolute;
-  left: 0;
-  top: 32px;
-  z-index: 1;
-  /* 文字 */
-  font-weight: normal;
-  color: black;
-  white-space: nowrap;
-  /* 背景 */
-  background-color: white;
-  padding: 3px;
-  border: 1px silver solid;
-  border-radius: 3px;
-  box-shadow: 1px 1px 3px silver;
-}
-</style>
+<style type="text/css"></style>
 <script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
 </head>
 <body>
@@ -659,6 +616,50 @@ class TypeDefs {
           deleted  : 'string default null',
         },
       },
+      css: `
+        /* ツリー描画領域 */
+        .tree, .tr {display: grid; width: 100%;}
+        .tree .tr {grid-template-columns: repeat(21,1rem) 1fr; gap:0.2rem; width:100%}
+        .tree .tr.deleted {color:#aaa; text-decoration: line-through;}
+        .tree .th {grid-column: 1/3;}
+        .tree .td {grid-column: 3/13; width: 100%;}
+        .tree .ctrl {color:#aaa}
+        .tree .comment {background-color: #ccc; padding: 0 3rem;}
+        .tree span.link[name="label"] {color:#00f}
+
+        /* ダイアログ共通 */
+        dialog {box-shadow: 0px 20px 36px 0px rgba(0, 0, 0, 0.6);width: 10rem;}
+        dialog::backdrop {backdrop-filter: blur(8px);}
+        /* context: 右ボタンメニュー */
+        dialog.context > div {width: 100%;margin: 0.5rem 0;}
+        dialog.context [name="arrow"] {display: grid;gap: 1rem;grid-template-columns: repeat(4, 1fr);}
+        dialog.context [name="arrow"] > div {text-align: center;background-color: #ccc;}
+        /* edit: attribute編集用ダイアログ */
+        dialog.edit { width: 25rem; }
+        /* validation: 有効/無効変更指定ダイアログ */
+
+        /* 待機画面
+          CSSだけでツールチップを実現する方法
+          https://so-zou.jp/web-app/tech/css/sample/tooltip.htm */
+        .tooltip a:hover {position: relative;}
+        .tooltip a:hover:after {content: attr(title);
+          /* 位置 */
+          position: absolute;
+          left: 0;
+          top: 32px;
+          z-index: 1;
+          /* 文字 */
+          font-weight: normal;
+          color: black;
+          white-space: nowrap;
+          /* 背景 */
+          background-color: white;
+          padding: 3px;
+          border: 1px silver solid;
+          border-radius: 3px;
+          box-shadow: 1px 1px 3px silver;
+        }
+      `,
     }};
     console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
     try {
@@ -802,6 +803,16 @@ class TypeDefs {
 
       v.step = 3.5; // 待機画面の準備
       this.loading = new LoadingIcon();
+
+      v.step = 3.6; // スタイルシートの準備
+      if( document.querySelector(`style[name="${this.constructor.name}"]`) === null ){
+        v.r = createElement({
+          tag: 'style',
+          attr: {type:'text/css',name:this.constructor.name},
+          text: this.css.replaceAll(/\/\*[\s\S]+?\*\//g,'').replaceAll(/\n/g,' ').replaceAll(/ +/g,' ').trim(),
+        },'head');
+        if( v.r instanceof Error ) throw v.r;
+      }
 
       // ---------------------------------------------------
       v.step = 4; // ツリーを描画
