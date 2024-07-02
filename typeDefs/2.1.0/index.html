@@ -717,9 +717,10 @@ class TypeDefs {
       v.step = 3; // ツリー描画領域・ダイアログ・ツールチップの準備
       // ---------------------------------------------------
       v.step = 3.1; // ツリー描画領域
+      this.wrapper = document.querySelector('body > .'+this.constructor.name);
       this.treeDiv = createElement({
         attr:{class:'tree'}
-      },'body');
+      },this.wrapper);
 
       v.step = 3.2; // コンテキストメニュー(右ボタンメニュー)
       v.step = 3.21; // 行タイプ選択用プルダウンの選択肢をセット
@@ -756,7 +757,7 @@ class TypeDefs {
             ]},
           ]},
         ]
-      },'body');
+      },this.wrapper);
 
       v.step = 3.3; // attribute編集用ダイアログの作成
       this.editDialog = createElement({
@@ -770,7 +771,7 @@ class TypeDefs {
           }
         }},
         children:[{attr:{name:'container'},children:[]}]
-      },'body');
+      },this.wrapper);
 
       v.step = 3.4; // 有効/無効変更指定ダイアログ
       this.validationDialog = createElement({
@@ -797,7 +798,7 @@ class TypeDefs {
           ]}
         ],
         style:{width:'15rem'},
-      },'body');
+      },this.wrapper);
 
       v.step = 3.5; // 待機画面の準備
       this.loading = new LoadingIcon();
@@ -865,7 +866,6 @@ class TypeDefs {
       + ' from node inner join leaf on node.lId=leaf.lId where'
       + ( this.showDeleted ? '' : ' node.`deleted` is null and');
       v.linkNodes = alasql(`${v.sql} node.nId<>${nId} and leaf.lId=${v.node.lId}`);
-      console.log(`l.707 this.showDeleted=${this.showDeleted}\nv.sql=${v.sql}\nv.linkNodes=${stringify(v.linkNodes)}`)
 
       if( v.linkNodes.length > 0 ){
         v.step = 2.31; // リンクが存在
