@@ -683,12 +683,16 @@ class TypeDefs {
       v.step = 2.1; // 自要素のnodeオブジェクトをv.nodeとして取得
       v.sql = 'select node.nId, node.pId, node.seq, node.type'
       + ', node.isOpen, node.`deleted`, leaf.lId, leaf.attribute'
-      + ' from node inner join leaf on node.lId=leaf.lId'
-      + ' where node.';
-      v.node = alasql(v.sql+'nId='+nId)[0];
+      + ' from node inner join leaf on node.lId=leaf.lId where '
+      + (this.showDeleted ? '' : 'node.`deleted` is null and ');
+      v.node = alasql(v.sql+'node.nId='+nId)[0];
+      if( !v.node ){  // 削除済だった場合、空集合 ⇒ 以降の処理をスキップ
+        console.log(`${v.whois} normal end. (empty node)`);
+        return v.rv;
+      }
 
       v.step = 2.2; // 子要素のnodeオブジェクトをv.childrenとして取得
-      v.children = alasql(v.sql+'pId='+nId+' order by seq');
+      v.children = alasql(v.sql+'node.pId='+nId+' order by seq');
 
       v.step = 2.3; // lIdが他のブランチにも存在するならv.node.linkにツールチップ用文字列を設定
       // v.node.link = [
@@ -705,19 +709,33 @@ class TypeDefs {
       + ( this.showDeleted ? '' : ' node.`deleted` is null and');
       v.linkNodes = alasql(`${v.sql} node.nId<>${nId} and leaf.lId=${v.node.lId}`);
       console.log(`l.707 this.showDeleted=${this.showDeleted}\nv.sql=${v.sql}\nv.linkNodes=${stringify(v.linkNodes)}`)
+
       if( v.linkNodes.length > 0 ){
+        v.step = 2.31; // リンクが存在
         v.node.link = [];
         v.linkNodes.forEach(linkNode => {
+          v.step = 2.32; // 個々のリンクについて順次処理
           v.nId = linkNode.pId;
           v.tree = [linkNode];
           v.depth = 0;
-          while( linkNode.pId > 0 && v.depth < this.maxDepth ){
+          v.add = true;
+          while( v.add && linkNode.pId > 0 && v.depth < this.maxDepth ){
+            v.step = 2.33; // リンク〜ルートまでの要素を抽出
             linkNode = alasql(`${v.sql} node.nId=${v.nId}`)[0];
-            v.tree.unshift(linkNode);
-            v.nId = linkNode.pId;
-            v.depth++;
+            if( linkNode !== undefined ){
+              v.step = 2.34; // 途中のノードを保存
+              v.tree.unshift(linkNode);
+              v.nId = linkNode.pId;
+              v.depth++;
+            } else {
+              v.step = 2.35; // 途中で見つからないノードが存在
+              // ⇒ this.showDeleted=falseでdeletedが設定されているノード
+              // ⇒ ツールチップ表示の対象外
+              v.add = false;
+            }
           }
-          v.node.link.push(v.tree);
+          v.step = 2.36; // 途中のノードを先頭に保存
+          if( v.add ) v.node.link.push(v.tree);
         });
       }
 
@@ -760,7 +778,7 @@ class TypeDefs {
       }
 
       v.step = 4; // 終了処理
-      console.log(`${v.whois} normal end.`);//\nv.rv=${stringify(v.rv)}`);
+      console.log(`${v.whois} normal end.`);
       return v.rv;
 
     } catch(e) {
