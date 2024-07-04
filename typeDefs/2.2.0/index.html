@@ -1877,29 +1877,45 @@ class TypeDefs {
    */
   async delete(){
     const v = {whois:this.constructor.name+'.delete',rv:null,step:0,
-      trans:JSON.parse(this.proto.trans),depth:0};
+      trans:JSON.parse(this.proto.trans),label:[]};
     console.log(`${v.whois} start.`);
     try {
 
-      v.step = 1; // 削除対象ノードの洗い出し
-      v.node = alasql('select node.*, leaf.attribute from node inner join leaf on node.lId = leaf.lId where nId='+this.nId)[0];
+      v.step = 1; // 削除対象のnIdを洗い出し
+      v.delId = [this.nId];
+      this.treeDiv.querySelectorAll('.ctrl input').forEach(o => {
+        if( o.checked === true ){
+          v.tr = JSON.parse(o.closest('.tr').getAttribute('name'));
+          if( v.tr.findIndex(x => x == this.nId) < 0 ){
+            // ルート〜自要素までの間に現在行が存在しない場合は
+            // checkされていた要素のnIdを削除対象として追加
+            v.delId.push(v.tr.slice(-1)[0]);
+          }
+        }
+      });
 
-      v.step = 2; // 削除対象＋子孫を洗い出す内部関数を定義
+      v.step = 2; // 削除対象のnodeをv.nodesに取得
+      v.sql = 'select node.*, leaf.attribute'
+      + ' from node inner join leaf on node.lId = leaf.lId';
+      v.nodes = alasql(v.sql+` where node.nId in (${v.delId.join()})`);
+
+      v.step = 3; // node内の削除対象＋子孫を再帰的に削除
       v.recursive = pNode => {
+        v.label.push(pNode.attribute.label || '(不明)');
         v.trans.node.delete.push(pNode);
-        alasql('select * from node where pId='+pNode.nId)
+        alasql(v.sql+' where pId='+pNode.nId)
         .forEach(cNode => v.recursive(cNode));
       };
+      v.nodes.forEach(x => v.recursive(x));
 
-      v.step = 3; // 削除の確認
-      v.label = v.node.attribute.label || '(対象不明)';
-      if( window.confirm(v.label+'を削除しますか？') ){
-        v.step = 4; // node内を再帰的に削除
-        delete v.node.attribute;
-        v.recursive(v.node);
-        v.step = 5; // nodeに紐付かないleafを削除
-        v.trans.leaf.delete = alasql('select leaf.* from leaf left join node on leaf.lId=node.lId where node.nId is null');
-        v.step = 6; // syncDBの呼び出し
+      v.step = 5; // nodeに紐付かないleafを削除対象としてセット
+      v.sql = 'select leaf.* from leaf'
+      + ' left join node on leaf.lId=node.lId'
+      + ' where node.nId is null';
+      v.trans.leaf.delete = alasql(v.sql);
+
+      v.step = 6; // 削除の確認、syncDBの呼び出し
+      if( window.confirm(v.label.join()+'を削除しますか？') ){
         v.r = await this.syncDB(v.trans);
         if( v.r instanceof Error ) throw v.r;
       }
