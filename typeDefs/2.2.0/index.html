@@ -16,8 +16,9 @@
  * @returns {HTMLElement|Error}
  */
 function createElement(arg,parent=null){
-  const v = {whois:'BasePage.createElement',rv:[],step:0};
-  //console.log(v.whois+' start.',arg);
+  const v = {whois:'createElement',rv:[],step:0};
+  console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}\nparent`,parent);
+  console.log(v.whois+' start.',arg);
   try {
     v.step = 1.1; // 引数を強制的に配列化
     v.isArr = Array.isArray(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
@@ -30,7 +31,7 @@ function createElement(arg,parent=null){
 
     for( v.i = 0 ; v.i<arg.length ; v.i++ ){
       v.step = 2; // 既定値の設定
-      v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
+      v.def = {tag:'div',attr:{},logical:{},style:{},event:{},text:'',html:'',children:[],name:''};
       Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
 
       v.step = 3; // HTMLElementを生成、v.nodeとする
@@ -92,7 +93,7 @@ function createElement(arg,parent=null){
 
     v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
     v.rv = v.isArr ? v.rv : v.rv[0];
-    //console.log(v.whois+' normal end.\n',v.rv);
+    console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
     return v.rv;
 
   } catch(e){
@@ -191,7 +192,6 @@ function mergeDeeply(pri,sub,opt={}){
     } else {
       v.step = 4; // subとpriのデータ型が異なる ⇒ priを優先してセット
       v.rv = whichType(pri,'Undefined') ? sub : pri;
-      //console.log(`l.228 pri=${stringify(pri)}, sub=${stringify(sub)} -> rv=${stringify(v.rv)}`)
     }
     v.step = 5;
     //console.log(`${v.whois} normal end.`+`\npri=${stringify(pri)}`+`\nsub=${stringify(sub)}`+`\nopt=${stringify(opt)}`+`\nv.rv=${stringify(v.rv)}`)
@@ -603,7 +603,8 @@ class TypeDefs {
           seq      : 'int not null default 0',
           lId      : 'int not null default 0',
           type     : 'string not null',
-          isOpen   : 'boolean default false',
+          isOpen   : 'boolean default false', // ローカル側のみ保持する項目
+          selected : 'boolean default false', // ローカル側のみ保持する項目
           created  : 'string not null', // yyyy/MM/dd hh:mm:ss.nnn
           updated  : 'string default null',
           deleted  : 'string default null',
@@ -832,26 +833,29 @@ class TypeDefs {
 
   /** disp: 描画領域にツリーを描画
    * @param {number} nId - 描画対象のルート要素のnId
-   * @param {number} depth - ツリーの階層(0オリジン)
+   * @param {number[]} path=[] - ツリーの階層(ルートから自要素までのnIdの配列)
    * @returns {null}
    */
-  disp(nId=this.rootId,depth=0){
+  disp(nId=this.rootId,path=[]){
     const v = {whois:this.constructor.name+'.disp',rv:null,step:0};
-    console.log(`${v.whois} start.\nnId=${nId}, depth=${depth}`);
+    console.log(`${v.whois} start.\nnId=${nId}, path=${stringify(path)}`);
     try {
 
       v.step = 1; // 事前準備
-      v.step = 1.1; // 永久ループ防止
-      if( depth > this.maxDepth ) throw new Error('too many depth');
-      v.step = 1.2; // ルート要素のみの処理
-      if( depth === 0 ){
+      v.step = 1.1; // pathを別オブジェクト化
+      v.path = JSON.parse(JSON.stringify(path));
+      v.step = 1.2; // 永久ループ防止
+      if( v.path.length > this.maxDepth ) throw new Error('too many depth');
+      v.step = 1.3; // ルート要素のみの処理
+      if( v.path.length === 0 ){
         this.treeDiv.innerHTML = ''; // 表示領域をクリア
       }
 
       v.step = 2; // 自要素を描画
       v.step = 2.1; // 自要素のnodeオブジェクトをv.nodeとして取得
       v.sql = 'select node.nId, node.pId, node.seq, node.type'
-      + ', node.isOpen, node.`deleted`, leaf.lId, leaf.attribute'
+      + ', node.isOpen, node.`selected`' // ローカル側のみの項目
+      + ', node.`deleted`, leaf.lId, leaf.attribute'
       + ' from node inner join leaf on node.lId=leaf.lId where '
       + (this.showDeleted ? '' : 'node.`deleted` is null and ');
       v.node = alasql(v.sql+'node.nId='+nId)[0];
@@ -859,14 +863,12 @@ class TypeDefs {
         console.log(`${v.whois} normal end. (empty node)`);
         return v.rv;
       }
+      v.path.push(nId);
 
-      v.step = 2.2; // 子要素のnodeオブジェクトをv.childrenとして取得
-      v.children = alasql(v.sql+'node.pId='+nId+' order by seq');
-
-      v.step = 2.3; // lIdが他のブランチにも存在するならv.node.linkにツールチップ用文字列を設定
+      v.step = 2.2; // lIdが他のブランチにも存在するならv.node.linkにツールチップ用文字列を設定
       // v.node.link = [
       //   [  ※ルートから自要素まで、node+leafのオブジェクトを並べる
-      //      {nId:0,lId:0,attribute:{label:'root'}},
+      //      {nId:0,lId:0,attribute:{label:'root'}}, 
       //      {nId:1,lId:1,attribute:{label:'祖父母要素'}},
       //      {nId:5,lId:2,attribute:{label:'親要素'}},
       //      {nId:9,lId:5,attribute:{label:'自要素'}},
@@ -879,68 +881,100 @@ class TypeDefs {
       v.linkNodes = alasql(`${v.sql} node.nId<>${nId} and leaf.lId=${v.node.lId}`);
 
       if( v.linkNodes.length > 0 ){
-        v.step = 2.31; // リンクが存在
+        v.step = 2.21; // リンクが存在
         v.node.link = [];
         v.linkNodes.forEach(linkNode => {
-          v.step = 2.32; // 個々のリンクについて順次処理
+          v.step = 2.22; // 個々のリンクについて順次処理
           v.nId = linkNode.pId;
           v.tree = [linkNode];
           v.depth = 0;
           v.add = true;
           while( v.add && linkNode.pId > 0 && v.depth < this.maxDepth ){
-            v.step = 2.33; // リンク〜ルートまでの要素を抽出
+            v.step = 2.23; // リンク〜ルートまでの要素を抽出
             linkNode = alasql(`${v.sql} node.nId=${v.nId}`)[0];
             if( linkNode !== undefined ){
-              v.step = 2.34; // 途中のノードを保存
+              v.step = 2.24; // 途中のノードを保存
               v.tree.unshift(linkNode);
               v.nId = linkNode.pId;
               v.depth++;
             } else {
-              v.step = 2.35; // 途中で見つからないノードが存在
+              v.step = 2.25; // 途中で見つからないノードが存在
               // ⇒ this.showDeleted=falseでdeletedが設定されているノード
               // ⇒ ツールチップ表示の対象外
               v.add = false;
             }
           }
-          v.step = 2.36; // 途中のノードを先頭に保存
+          v.step = 2.26; // 途中のノードを先頭に保存
           if( v.add ) v.node.link.push(v.tree);
         });
       }
 
-      v.step = 2.4; // createElement用の行オブジェクトをv.rvとして作成
+      v.step = 2.3; // createElement用の行オブジェクトをv.rvとして作成
+      v.step = 2.31; // 行(tr)を作成。deletedに日付があればclassにも追加、
+      // nameはJSON化したpath(ルート〜自要素のnIdの配列)
       v.rv = {
-        attr:{name:`${nId}`,class: 'tr'
+        attr:{name:JSON.stringify(v.path),class: 'tr'
           + (v.node.deleted && v.node.deleted.length > 0 ? ' deleted' : '')},
         event: {contextmenu:e => this.context(e)},
-        children:[
-          {
-            attr:{class:'indent'},
-            style:{gridColumn:`1/${depth+1}`,width:depth+'rem'}
-          },{
-            attr: {class:'ctrl'},
-            // 子要素があれば[▶|▼]、無ければ●。コメント行等、子要素を持ち得ないtypeなら空白
-            text: (this.iDef[v.node.type].ctrl 
-              ? (v.children.length>0 ? (v.node.isOpen ? '▼' : '▶') : '●')
-              : '□'),
-            style:{gridColumn:`${depth+1}/${depth+2}`},
-            event: {click:e => this.toggle(e)},
-          },
-          {
-            attr:{class:'item'},
-            style:{gridColumn:`${depth+2}/23`},
-            children: this.iDef[v.node.type].disp(v.node),
-          },
-        ]
+        children:[],
       };
 
-      v.step = 2.5; // v.rvを描画領域に追加
+      v.step = 2.32; // 行内部のindent部を作成
+      v.rv.children.push({
+        attr:{class:'indent'},
+        style:{gridColumn:`1/${v.path.length+1}`,width:v.path.length+'rem'}
+      });
+
+      v.step = 2.33; // 行内部のctrl部を作成
+      v.ctrl = {  // 共通部分
+        attr: {class:'ctrl tooltip',title:`n=${v.node.nId},l=${v.node.lId}`},
+        style:{gridColumn:`${v.path.length+1}/${v.path.length+2}`},
+      };
+      // 子要素があれば[▶|▼]、無ければチェックボックス。コメント行等、子要素を持ち得ないtypeなら空白
+      v.children = alasql(v.sql+' node.pId='+nId+' order by seq');
+      if( this.iDef[v.node.type].ctrl ){
+        if( v.children.length > 0 ){
+          // 子要素が存在する場合、[▶|▼]を表示
+          v.ctrl.text = v.node.isOpen ? '▼' : '▶';
+          v.ctrl.event = {click:e => this.toggle(e)};
+        } else {
+          // 子要素が存在しない場合、チェックボックスを表示
+          v.ctrl.children = [{
+            tag:'input',
+            attr:{type:'checkbox'},
+            logical: {checked:v.node.selected},
+            event: {change:e=>{
+              const v = {};
+              v.name = e.target.closest('.tr').getAttribute('name');
+              v.nId = JSON.parse(v.name).slice(-1)[0];
+              v.checked = e.target.checked;
+              alasql('update node set `selected`='+v.checked+' where nId='+v.nId);
+            }}
+          }];
+        }
+      } else {
+        // コメント行等、子要素を持ち得ないtypeなら「□」を表示
+        // ※ this.iDef[v.node.type].ctrlで"false"が設定されているtype
+        v.ctrl.text = '□';
+        v.ctrl.event = {click:e => this.toggle(e)};
+      }
+      v.rv.children.push(v.ctrl);
+
+      v.step = 2.34; // 行内部のitem部を作成
+      v.rv.children.push({
+        attr:{class:'item'},
+        style:{gridColumn:`${v.path.length+2}/23`},
+        children: this.iDef[v.node.type].disp(v.node),
+      });
+
+      v.step = 2.4; // v.rvを描画領域に追加
       v.r = createElement(v.rv,this.treeDiv);
       if( v.r instanceof Error ) throw v.r;
 
       v.step = 3; // 子要素を順次再帰呼出
       if( v.node.isOpen === true ){
         for( v.i=0 ; v.i<v.children.length ; v.i++ ){
-          v.r = this.disp(v.children[v.i].nId,depth+1);
+          v.r = this.disp(v.children[v.i].nId,v.path);
           if( v.r instanceof Error ) throw v.r;
         }
       }
@@ -966,7 +1000,9 @@ class TypeDefs {
     try {
 
       v.step = 1; // 対象idの取得
-      v.nId = Number(event.target.parentNode.getAttribute('name'));
+      //v.nId = Number(event.target.parentNode.getAttribute('name'));
+      v.name = event.target.closest('.tr').getAttribute('name');
+      v.nId = JSON.parse(v.name).slice(-1)[0];
 
       v.step = 2; // isOpenを逆転
       v.node = alasql('select * from node where nId='+v.nId)[0];
@@ -1160,7 +1196,6 @@ class TypeDefs {
             v.stack.push(`\`${y}\`="${x[y]}"`);
         });
         v.sql = `update node set ${v.stack.join()} where nId=${x.nId}`;
-        console.log(`l.877 v.sql=${v.sql}`); v.step = 3.11;
         v.r = alasql(v.sql);
         if( v.r instanceof Error ) throw v.r;
       });
@@ -1301,7 +1336,6 @@ class TypeDefs {
       v.step = 1; // 事前準備
       v.step = 1.1; // 引数への既定値設定
       v.arg = Object.assign({seq:1},arg);
-      console.log(`l.996 v.arg=${stringify(v.arg)}`)
 
       v.step = 1.2 // v.bmNodeに移動前のnodeを退避、v.amNodeに移動後のnodeをセット
       v.sql = 'select * from node where nId=';
@@ -1379,6 +1413,8 @@ class TypeDefs {
 
   /** appendBranch: コピー元要素をコピー先およびリンク先に追加
    * @param {number|Object} arg=this.copiedId - 追加するnodeのnId。Objectの場合、leaf+type
+   * @param {number} [nextId=null] - 新規採番するnId。nIdは通常DB上の最大値＋1で採番するが、
+   * 複数箇所のpasteを行う場合、先行箇所をDB登録前に次の箇所の採番を行うため、paste側で採番して渡される。
    * @returns {Object} rv syncDBでupdateに渡す更新対象の配列(={node:Object[],leaf:Object[]})
    * 
    * **処理概要**
@@ -1431,7 +1467,7 @@ class TypeDefs {
    * 　　 但しnId=11はコピー先なので除外すると、v.parents=[2]
    * ⑤v.parents(nId=2)の長子としてコピー元要素(nId=20)＋その子孫(nId=21)を追加
    */
-  appendBranch(arg=this.copiedId){
+  appendBranch(arg=this.copiedId,nextId=null){
     const v = {whois:this.constructor.name+'.appendBranch',step:0,
       rv:JSON.parse(this.proto.trans)};
     console.log(`${v.whois} start.\narg=${stringify(arg)}`);
@@ -1441,7 +1477,7 @@ class TypeDefs {
       v.step = 1.1; // 追加位置のpId,seqを確定(v.dp=decidePosition())
       v.dp = this.decidePosition();
       if( v.dp instanceof Error ) throw v.dp;
-      v.nextId = alasql('select max(nId) as m from node')[0].m + 1;
+      v.nextId = nextId || alasql('select max(nId) as m from node')[0].m + 1;
       v.now = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss.nnn');
 
       v.step = 1.2; // コピー元要素をv.originalとして作成
@@ -1561,28 +1597,16 @@ class TypeDefs {
 
       v.step = 1; // 準備
       event.preventDefault();
-      // クリックされた要素の親を遡り、'tr'クラスの要素の名前を取得
-      [v.maxDepth,v.dom,v.name] = [this.maxDepth,event.target,null];
-      while( v.name === null && v.maxDepth > 0 ){
-        v.class = v.dom.getAttribute('class');
-        if( v.class && v.class.split(' ')[0] === 'tr' ){
-          v.name = v.dom.getAttribute('name');
-        } else {
-          v.dom = v.dom.parentNode;
-          if( whichType(v.dom,'HTMLHtmlElement') )
-            v.maxDepth = 0;
-        }
-        v.maxDepth--;
-      }
+      v.tr = event.target.closest('.tr');
 
       v.step = 2; // 動作を分岐
-      if( v.name !== null ){
-        v.step = 2.1; // nameが整数(=nId)
+      if( v.tr !== null ){
+        v.step = 2.1; // trクラスが祖先に存在
         // ⇒ 「▶」等、行頭のアイコンの右ボタンクリックから呼ばれた
         // ⇒ 右ボタンメニューのダイアログ表示
 
-        v.step = 2.11; // 選択されたidを保存
-        this.nId = Number(v.name);
+        v.step = 2.11; // 選択されたidを保存(pathの末尾のnId)
+        this.nId = JSON.parse(v.tr.getAttribute('name')).slice(-1)[0];
 
         v.step = 2.12; // ダイアログ内ボタンのラベル「有効化⇔無効化」の切替
         v.node = alasql('select * from node where nId='+this.nId)[0];
@@ -1592,7 +1616,7 @@ class TypeDefs {
         v.step = 2.13; // ダイアログの表示
         this.contextDialog.showModal();
       } else {
-        v.step = 2.2; // nameが数値以外
+        v.step = 2.2; // trクラスが祖先に存在しない
         // ⇒ ダイアログ内の機能選択(ex. appendのDivがクリックされた)
         v.name = event.target.getAttribute('name');
         v.step = 2.21; // 選択された機能の呼び出し
@@ -1698,6 +1722,10 @@ class TypeDefs {
   }
 
   /** copy: 現在選択されている行をコピーする
+   * 「現在選択されている行」とはコンテキストメニューを呼び出した行(現在行)と
+   * チェックボックスで選択されている行(選択行)の和集合。
+   * ただし選択行が現在行の子孫だった場合、コピー対象外となる。
+   * 
    * @parem {void}
    * @returns {null}
    */
@@ -1706,14 +1734,24 @@ class TypeDefs {
     console.log(`${v.whois} start.`);
     try {
 
-      // 選択中の行(this.nId)をthis.copiedIdに保存する
-      this.copiedId = this.nId;
-
-      v.node = alasql('select * from node inner join leaf on node.lId=leaf.lId where nId='+this.nId)[0];
-      alert(`「${v.node.attribute.label}」をコピーしました`);
+      v.step = 1; // 選択中の行(this.nId)をthis.copiedIdに保存する
+      this.copiedId = [this.nId];
+      this.treeDiv.querySelectorAll('.ctrl input').forEach(o => {
+        v.step = 2;
+        if( o.checked === true ){
+          v.step = 3;
+          v.tr = JSON.parse(o.closest('.tr').getAttribute('name'));
+          if( v.tr.findIndex(x => x == this.nId) < 0 ){
+            v.step = 4;
+            // ルート〜自要素までの間に現在行が存在しない場合は
+            // checkされていた要素のnIdをcopy対象として追加
+            this.copiedId.push(v.tr.slice(-1)[0]);
+          }
+        }
+      });
 
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      console.log(`${v.whois} normal end.\nthis.copiedId=${stringify(this.copiedId)}`);
       return v.rv;
 
     } catch(e) {
@@ -1730,14 +1768,18 @@ class TypeDefs {
   async paste(){
     const v = {whois:this.constructor.name+'.paste',rv:null,step:0,
       trans:JSON.parse(this.proto.trans)};
-    console.log(`${v.whois} start.`);
+    console.log(`${v.whois} start.\nthis.copiedId=${stringify(this.copiedId)}`);
     try {
 
       v.step = 1; // ブランチへの追加
-      v.r = this.appendBranch(this.copiedId);
-      if( v.r instanceof Error ) throw v.r;
-      v.trans.node.update = [...v.trans.node.update,...v.r.node.update];
-      v.trans.leaf.update = [...v.trans.leaf.update,...v.r.leaf.update];
+      v.nextId = alasql('select max(nId) as m from node')[0].m + 1;
+      this.copiedId.forEach(x => {
+        v.r = this.appendBranch(x,v.nextId);
+        if( v.r instanceof Error ) throw v.r;
+        v.trans.node.update = [...v.trans.node.update,...v.r.node.update];
+        //v.trans.leaf.update = [...v.trans.leaf.update,...v.r.leaf.update];
+        v.nextId += v.r.node.update.length;
+      });
 
       v.step = 2; // DBおよびシートに反映
       v.r = await this.syncDB(v.trans);
@@ -1841,7 +1883,6 @@ class TypeDefs {
 
       v.step = 1; // 削除対象ノードの洗い出し
       v.node = alasql('select node.*, leaf.attribute from node inner join leaf on node.lId = leaf.lId where nId='+this.nId)[0];
-      console.log(`l.1831 v.node=${stringify(v.node)}`)
 
       v.step = 2; // 削除対象＋子孫を洗い出す内部関数を定義
       v.recursive = pNode => {

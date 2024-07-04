@@ -89,7 +89,7 @@ function doGet(e){
   v.template.data = JSON.stringify(v.rv);
 
   v.htmlOutput = v.template.evaluate();
-  v.htmlOutput.setTitle('typeDefs r.2.1.0');
+  v.htmlOutput.setTitle('typeDefs r.2.2.0');
   console.log(`doGet end\npId=${v.template.pId}\n${JSON.stringify(v.template.data)}`);
   return v.htmlOutput;
 }

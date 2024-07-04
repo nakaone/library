@@ -1,6 +1,6 @@
 # シート格納場所
 
-ena.kaon > Google Drive > projects > [typeDefs](https://docs.google.com/spreadsheets/d/1XN7p14-Hyo2DCu76A0I6UXjUxLlKtfP9697UxjS-7ys/edit?usp=drive_link)
+ena.kaon > Google Drive > projects > typeDefs
 
 ## "origin"の考え方
 
@@ -116,8 +116,11 @@ constructor配下にペースト
 # 更新履歴
 
 - rev.2.2.0
+  - 複数箇所の一括削除・コピーを可能に
   - 新規作成時のラベル既定値を空欄に変更
   - 削除後のメッセージ(alert)を削除
+  - 表示行(tr)のname属性をnIdからpath(JSON)に変更
+  - ctrl部にnId,lIdを表示するツールチップを追加
 - rev.2.1.0 : 2024/07/02
 - rev.2.0.0
   - masterシートをnode,relationに分離
