@@ -314,130 +314,70 @@ class LoadingIcon {
    * @param {Object} [arg={}] - オプション
    * @param {HTMLElement} [arg.pattern='loading5'] - デザインパターン(CSSのクラス名)
    *
-   * - [ローディングアイコン集](https://projects.lukehaas.me/css-loaders/)
-   * - [CSSで全画面オーバーレイを実装する方法＆コード例](https://pisuke-code.com/css-fullscreen-overlay/)
+   * - [CSS Loaders](https://css-loaders.com/bars/)
    */
   constructor(arg={}){
     const v = {whois:this.constructor.name+'.constructor',rv:true,step:0,
-      css: {
-        loading5: `
-          .LoadingIcon.act {
-            position: absolute;
-            left: 0; top: 0;
-            width: 100%; height:100vh;
-            background: #fff;
-            z-index: 2147483647;
-            display: grid;
-            place-items: center;
-          }
-          .LoadingIcon {
-            display: none;
-          }
-          .loading5 {
-            --dot-size: 4rem;
-            --R: 0;
-            --G: 0;
-            --B: 0;
-            --back: rgba(var(--R),var(--G),var(--B),1);
-            --pale: rgba(var(--R),var(--G),var(--B),0.2);
-            --middle: rgba(var(--R),var(--G),var(--B),0.5);
-            --dark: rgba(var(--R),var(--G),var(--B),0.7);
-            --m0: calc(var(--dot-size) * 0.8); /* 軌道の大きさ */
-            --m1: calc(var(--m0) * -2.6);
-            --m2: calc(var(--m0) * -1.8);
-            --m3: calc(var(--m0) * 1.75);
-            --m4: calc(var(--m0) * 1.8);
-            --m5: calc(var(--m0) * 2.5);
+      css: { theSpinner23: `
+        dialog.LoadingIcon {
+          width: 400px; /* .loader width * 2 */
+          aspect-ratio: 1;
+          position: relative;
+          outline: none;
+          border: none;
+        }
+        dialog.LoadingIcon::backdrop {background:#fff}
+        dialog.LoadingIcon > div {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          margin: -100px 0 0 -100px;
+        }
 
-            margin: 100px auto;
-            font-size: 25px;
-            width: var(--dot-size);
-            height: var(--dot-size);
-            border-radius: 50%;
-            position: relative;
-            text-indent: -9999em;
-            -webkit-animation: load5 1.1s infinite ease;
-            animation: load5 1.1s infinite ease;
-            -webkit-transform: translateZ(0);
-            -ms-transform: translateZ(0);
-            transform: translateZ(0);
-          }
-          @-webkit-keyframes load5 {
-            0%,
-            100% {box-shadow:
-              0em var(--m1) 0em 0em var(--back),
-              var(--m4) var(--m2) 0 0em var(--pale),
-              var(--m5) 0em 0 0em var(--pale),
-              var(--m3) var(--m3) 0 0em var(--pale),
-              0em var(--m5) 0 0em var(--pale),
-              var(--m2) var(--m4) 0 0em var(--pale),
-              var(--m1) 0em 0 0em var(--middle),
-              var(--m2) var(--m2) 0 0em var(--dark);
-            }
-            12.5% {
-              box-shadow: 0em var(--m1) 0em 0em var(--dark), var(--m4) var(--m2) 0 0em var(--back), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--middle);
-            }
-            25% {
-              box-shadow: 0em var(--m1) 0em 0em var(--middle), var(--m4) var(--m2) 0 0em var(--dark), var(--m5) 0em 0 0em var(--back), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
-            }
-            37.5% {
-              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--middle), var(--m5) 0em 0 0em var(--dark), var(--m3) var(--m3) 0 0em var(--back), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
-            }
-            50% {
-              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--middle), var(--m3) var(--m3) 0 0em var(--dark), 0em var(--m5) 0 0em var(--back), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
-            }
-            62.5% {
-              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--middle), 0em var(--m5) 0 0em var(--dark), var(--m2) var(--m4) 0 0em var(--back), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
-            }
-            75% {
-              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--middle), var(--m2) var(--m4) 0 0em var(--dark), var(--m1) 0em 0 0em var(--back), var(--m2) var(--m2) 0 0em var(--pale);
-            }
-            87.5% {
-              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--middle), var(--m1) 0em 0 0em var(--dark), var(--m2) var(--m2) 0 0em var(--back);
-            }
-          }
-          @keyframes load5 {
-            0%,
-            100% {
-              box-shadow: 0em var(--m1) 0em 0em var(--back), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--middle), var(--m2) var(--m2) 0 0em var(--dark);
-            }
-            12.5% {
-              box-shadow: 0em var(--m1) 0em 0em var(--dark), var(--m4) var(--m2) 0 0em var(--back), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--middle);
-            }
-            25% {
-              box-shadow: 0em var(--m1) 0em 0em var(--middle), var(--m4) var(--m2) 0 0em var(--dark), var(--m5) 0em 0 0em var(--back), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
-            }
-            37.5% {
-              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--middle), var(--m5) 0em 0 0em var(--dark), var(--m3) var(--m3) 0 0em var(--back), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
-            }
-            50% {
-              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--middle), var(--m3) var(--m3) 0 0em var(--dark), 0em var(--m5) 0 0em var(--back), var(--m2) var(--m4) 0 0em var(--pale), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
-            }
-            62.5% {
-              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--middle), 0em var(--m5) 0 0em var(--dark), var(--m2) var(--m4) 0 0em var(--back), var(--m1) 0em 0 0em var(--pale), var(--m2) var(--m2) 0 0em var(--pale);
-            }
-            75% {
-              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--middle), var(--m2) var(--m4) 0 0em var(--dark), var(--m1) 0em 0 0em var(--back), var(--m2) var(--m2) 0 0em var(--pale);
-            }
-            87.5% {
-              box-shadow: 0em var(--m1) 0em 0em var(--pale), var(--m4) var(--m2) 0 0em var(--pale), var(--m5) 0em 0 0em var(--pale), var(--m3) var(--m3) 0 0em var(--pale), 0em var(--m5) 0 0em var(--pale), var(--m2) var(--m4) 0 0em var(--middle), var(--m1) 0em 0 0em var(--dark), var(--m2) var(--m2) 0 0em var(--back);
-            }
-          }
-        `,
-      },
+        /* HTML: <div class="loader"></div> */
+        .loader {
+          width: 200px;   /* ここは修正 */
+          aspect-ratio: 1;
+          display: grid;
+          border-radius: 50%;
+          background:
+            linear-gradient(0deg ,rgb(0 0 0/50%) 30%,#0000 0 70%,rgb(0 0 0/100%) 0) 50%/8% 100%,
+            linear-gradient(90deg,rgb(0 0 0/25%) 30%,#0000 0 70%,rgb(0 0 0/75% ) 0) 50%/100% 8%;
+          background-repeat: no-repeat;
+          animation: l23 1s infinite steps(12);
+        }
+        .loader::before,
+        .loader::after {
+          content: "";
+          grid-area: 1/1;
+          border-radius: 50%;
+          background: inherit;
+          opacity: 0.915;
+          transform: rotate(30deg);
+        }
+        .loader::after {
+          opacity: 0.83;
+          transform: rotate(60deg);
+        }
+        @keyframes l23 {
+          100% {transform: rotate(1turn)}
+        }
+      `},
     };
     console.log(`${v.whois} start.\narg=${stringify(arg)}`);
   try {
 
       v.step = 1; // 事前準備：argの既定値設定
-      if( !arg.hasOwnProperty('pattern') ) arg.pattern = 'loading5';
+      if( !arg.hasOwnProperty('pattern') ) arg.pattern = 'theSpinner23';
 
       v.step = 2; // 待機画面要素の準備
       this.screen = document.querySelector('.'+this.constructor.name);
       if( this.screen === null ){
-        this.screen = createElement({attr:{class:this.constructor.name},children:[
-          {attr:{class:arg.pattern},text:'loading...'}
-        ]},'body');
+        this.screen = createElement({
+          tag:'dialog',
+          attr:{class:this.constructor.name},
+          children:[{attr:{class:'loader '+arg.pattern}}],
+        },'body');
         if( this.screen instanceof Error ) throw this.screen;
       }
 
@@ -463,14 +403,10 @@ class LoadingIcon {
   }
 
   /** 待機画面を表示する */
-  show = () => {
-    this.screen.classList.add('act');
-  }
+  show = () => this.screen.showModal();
 
   /** 待機画面を隠蔽する */
-  hide = () => {
-    this.screen.classList.remove('act');
-  }
+  hide = () => this.screen.close();
 }
 
 class TypeDefs {
@@ -619,31 +555,31 @@ class TypeDefs {
       },
       css: `
         /* ツリー描画領域 */
-        .tree, .tr {display: grid; width: 100%;}
-        .tree .tr {grid-template-columns: repeat(21,1rem) 1fr; gap:0.2rem; width:100%}
-        .tree .tr.deleted {color:#aaa; text-decoration: line-through;}
-        .tree .th {grid-column: 1/3;}
-        .tree .td {grid-column: 3/13; width: 100%;}
-        .tree .ctrl {color:#aaa}
-        .tree .comment {background-color: #ccc; padding: 0 3rem;}
-        .tree span.link[name="label"] {color:#00f}
+        .TypeDefs .tree, .tr {display: grid; width: 100%;}
+        .TypeDefs .tree .tr {grid-template-columns: repeat(21,1rem) 1fr; gap:0.2rem; width:100%}
+        .TypeDefs .tree .tr.deleted {color:#aaa; text-decoration: line-through;}
+        .TypeDefs .tree .th {grid-column: 1/3;}
+        .TypeDefs .tree .td {grid-column: 3/13; width: 100%;}
+        .TypeDefs .tree .ctrl {color:#aaa}
+        .TypeDefs .tree .comment {background-color: #ccc; padding: 0 3rem;}
+        .TypeDefs .tree span.link[name="label"] {color:#00f}
 
         /* ダイアログ共通 */
-        dialog {box-shadow: 0px 20px 36px 0px rgba(0, 0, 0, 0.6);width: 10rem;}
-        dialog::backdrop {backdrop-filter: blur(8px);}
+        .TypeDefs dialog {box-shadow: 0px 20px 36px 0px rgba(0, 0, 0, 0.6);width: 10rem;}
+        .TypeDefs dialog::backdrop {backdrop-filter: blur(8px);}
         /* context: 右ボタンメニュー */
-        dialog.context > div {width: 100%;margin: 0.5rem 0;}
-        dialog.context [name="arrow"] {display: grid;gap: 1rem;grid-template-columns: repeat(4, 1fr);}
-        dialog.context [name="arrow"] > div {text-align: center;background-color: #ccc;}
+        .TypeDefs dialog.context > div, dialog.context button {width: 100%;margin: 0.3rem 0;}
+        .TypeDefs dialog.context [name="arrow"] {display: grid;gap: 1rem;grid-template-columns: repeat(4, 1fr);}
+        .TypeDefs dialog.context [name="arrow"] > div {text-align: center;background-color: #ccc;}
         /* edit: attribute編集用ダイアログ */
-        dialog.edit { width: 25rem; }
+        .TypeDefs dialog.edit { width: 25rem; }
         /* validation: 有効/無効変更指定ダイアログ */
 
         /* 待機画面
           CSSだけでツールチップを実現する方法
           https://so-zou.jp/web-app/tech/css/sample/tooltip.htm */
-        .tooltip a:hover {position: relative;}
-        .tooltip a:hover:after {content: attr(title);
+        .TypeDefs .tooltip a:hover {position: relative;}
+        .TypeDefs .tooltip a:hover:after {content: attr(title);
           /* 位置 */
           position: absolute;
           left: 0;
@@ -744,13 +680,14 @@ class TypeDefs {
         }},
         children:[
           {attr:{name:'container'},children:[
-            {attr:{name:'edit'},text:'編集',event:{click:e=>this.context(e)}},
-            {attr:{name:'append'},text:'追加',event:{click:e=>this.context(e)},
+            {attr:{name:'label'}},
+            {tag:'button',attr:{name:'edit'},text:'編集',event:{click:e=>this.context(e)}},
+            {tag:'button',attr:{name:'append'},text:'追加',event:{click:e=>this.context(e)},
               children:[{tag:'select',children:v.opt,style:{marginLeft:'2rem'}}]},
-            {attr:{name:'copy'},text:'複写',event:{click:e=>this.context(e)}},
-            {attr:{name:'paste'},text:'貼付',event:{click:e=>this.context(e)}},
-            {attr:{name:'setValidation'},text:'無効化',event:{click:e=>this.context(e)}},
-            {attr:{name:'delete'},text:'削除',event:{click:e=>this.context(e)}},
+            {tag:'button',attr:{name:'copy'},text:'複写',event:{click:e=>this.context(e)}},
+            {tag:'button',attr:{name:'paste'},text:'貼付',event:{click:e=>this.context(e)}},
+            {tag:'button',attr:{name:'setValidation'},text:'無効化',event:{click:e=>this.context(e)}},
+            {tag:'button',attr:{name:'delete'},text:'削除',event:{click:e=>this.context(e)}},
             {attr:{name:'arrow'},children:[
               {attr:{name:'levelUp'},text:'◀',event:{click:e=>this.context(e)}},
               {attr:{name:'moveForward'},text:'▲',event:{click:e=>this.context(e)}},
@@ -1601,6 +1538,7 @@ class TypeDefs {
 
       v.step = 2; // 動作を分岐
       if( v.tr !== null ){
+        
         v.step = 2.1; // trクラスが祖先に存在
         // ⇒ 「▶」等、行頭のアイコンの右ボタンクリックから呼ばれた
         // ⇒ 右ボタンメニューのダイアログ表示
@@ -1609,23 +1547,34 @@ class TypeDefs {
         this.nId = JSON.parse(v.tr.getAttribute('name')).slice(-1)[0];
 
         v.step = 2.12; // ダイアログ内ボタンのラベル「有効化⇔無効化」の切替
-        v.node = alasql('select * from node where nId='+this.nId)[0];
-        v.act = this.contextDialog.querySelector('[name="setValidation"]');
-        v.act.innerText = v.node.deleted && v.node.deleted.length > 0 ? '有効化' : '無効化';
+        v.sql = 'select node.*, leaf.attribute'
+        + ' from node inner join leaf on node.lId=leaf.lId'
+        + ' where node.nId=' + this.nId;
+        v.node = alasql(v.sql)[0];
+        this.contextDialog.querySelector('[name="setValidation"]')
+        .innerText = v.node.deleted && v.node.deleted.length > 0 ? '有効化' : '無効化';
 
-        v.step = 2.13; // ダイアログの表示
+        v.step = 2.13; // ラベルの表示
+        this.contextDialog.querySelector('[name="label"]').innerText = v.node.attribute.label;
+
+        v.step = 2.14; // ダイアログの表示
         this.contextDialog.showModal();
+
       } else {
+
         v.step = 2.2; // trクラスが祖先に存在しない
         // ⇒ ダイアログ内の機能選択(ex. appendのDivがクリックされた)
         v.name = event.target.getAttribute('name');
-        v.step = 2.21; // 選択された機能の呼び出し
-        v.r = await this[v.name](event);
-        if( v.r instanceof Error ) throw v.r;
-        v.step = 2.22; // ダイアログを閉じてツリーを再描画
-        this.contextDialog.close();
-        v.r = this.disp();
-        if( v.r instanceof Error ) throw v.r;
+        if( v.name !== null ){
+          // 追加ボタン内のプルダウンが変更された場合、v.name===null
+          v.step = 2.21; // 選択された機能の呼び出し
+          v.r = await this[v.name](event);
+          if( v.r instanceof Error ) throw v.r;
+          v.step = 2.22; // ダイアログを閉じてツリーを再描画
+          this.contextDialog.close();
+          v.r = this.disp();
+          if( v.r instanceof Error ) throw v.r;
+        }
       }
 
       v.step = 3; // 終了処理
