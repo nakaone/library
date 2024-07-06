@@ -100,9 +100,7 @@ ena.kaon > Google Drive > projects > typeDefs
 
 # 機能強化検討事項
 
-1. 「●」をチェックボックスに変更して一括削除・コピーを可能にする
 1. 「先頭へ」「末尾へ」を追加(D&Dを可能にする？)
-1. contextにnId,lId,labelの表示を追加
 1. typeの変更を可能にする
 1. type毎のattribute確認方法の実装
 1. [bug] 下から2行目のアイテムを最下行に移動しようとしても変化しない
