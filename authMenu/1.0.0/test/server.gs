@@ -796,7 +796,8 @@ function sendmail(recipient,subject,body,options){
     console.error(`${e.message}\nv=${JSON.stringify(v)}`);
     return e;
   }
-}/**
+}
+/**
  * @typedef {Object} SingleTableObj
  * @prop {string} className - クラス名(='SingleTable')
  * @prop {string} name - シート名。データを引数で渡し、シートを作成しない場合は空文字列
@@ -1620,7 +1621,8 @@ function toLocale(dObj,format='yyyy/MM/dd'){
     console.error(e,v);
     return e;
   }
-}/** 変数の型を判定
+}
+/** 変数の型を判定
  * 
  * - 引数"is"が指定された場合、判定対象が"is"と等しいかの真偽値を返す。
  *
