@@ -250,7 +250,8 @@ class TypeDef{
       v.rv = {
         arg: this.arg,
         header: this.cols.header,
-        data: this.obj,
+        obj: this.obj,
+        arr: this.arr,
       }
       console.log(`${v.whois} normal end.`);
       return v.rv;

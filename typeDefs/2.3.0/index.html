@@ -386,7 +386,14 @@ class LoadingIcon {
   /** 待機画面を隠蔽する */
   hide = () => this.screen.close();
 }
-
+function htmlEscape(str){ // https://jp-seemore.com/web/3534/#toc5
+  return typeof str !== 'string' ? str : str
+    .replaceAll(/&/g, "&amp;")
+    .replaceAll(/</g, "&lt;")
+    .replaceAll(/>/g, "&gt;")
+    .replaceAll(/"/g, "&quot;")
+    .replaceAll(/'/g, "&#039;");
+}
 class TypeDefsClient{
   /** @constructor
    */
@@ -412,6 +419,50 @@ class TypeDefsClient{
       v.step = 1.3; // サーバ側から渡されるルートのID
       this.rootId = Number(document.querySelector(this.rootId).innerText);
       console.log(`l.414 this.rootId=${this.rootId}\nthis.raw=${stringify(this.raw)}`);
+
+      // ---------------------------------------------------
+      v.step = 2; // データベース化
+      // ---------------------------------------------------
+      v.step = 2.1; // create
+      v.systemCols = {
+        nId: 'int primary key',// {number} ノードのID。自然数
+        level: 'int not null',// {number} 当該行の階層。自然数
+        label: 'string',// {string} ノードのラベル
+        note: 'string',// {string} 備考欄
+        pId: 'int not null',// {number} 親ノードのID
+        seq: 'int not null',// {number} 親ノード内での順番。自然数
+        num: 'int default 0',// {number} 子要素の数
+        base: 'string',// {number} 継承元ノード(基底ノード)のID
+        row: 'int',// {number} シート上の行番号(自然数)
+      };
+      v.cols = Object.assign({},v.systemCols,this.raw.arg.attr);
+      v.sql = '';
+      Object.keys(v.cols).forEach(col => v.sql += `\`${col}\` ${v.cols[col]},`);
+      v.sql = `create table node (${v.sql.slice(0,v.sql.length-1)})`;
+      v.r = alasql(v.sql); if( v.r instanceof Error ) throw v.r;
+
+      v.step = 2.2; // insert
+      for( v.i=0 ; v.i<this.raw.arr.length ; v.i++ ){
+        v.o = this.raw.arr[v.i];
+        v.cols = []; v.vals = [];
+        Object.keys(v.systemCols).forEach(x => {
+          if( v.o[x] || v.o[x] === 0 ){
+            v.cols.push('`'+x+'`');
+            v.vals.push(v.systemCols[x].match(/string/)
+            ? `"${htmlEscape(v.o[x])}"` : v.o[x]);
+          }
+        });
+        Object.keys(this.raw.arg.attr).forEach(x => {
+          if( v.o.raw[x] || v.o.raw[x] === 0 ){
+            v.cols.push('`'+x+'`');
+            v.vals.push(this.raw.arg.attr[x].match(/string/)
+            ? `"${htmlEscape(v.o.raw[x])}"` : v.o.raw[x]);
+          }
+        });
+        v.sql = `insert into node (${v.cols.join()}) values (${v.vals.join()});`;
+        v.r = alasql(v.sql); if( v.r instanceof Error ) throw v.r;
+      }
+      console.log(`l.458 node=${stringify(alasql('select * from node'))}`);
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.`);
