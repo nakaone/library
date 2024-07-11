@@ -3,46 +3,30 @@ function doGet(e){
   console.log(`doGet start`);
   // html変数に値をセット
   v.template = HtmlService.createTemplateFromFile('index');
-  v.template.pId = e.parameter.pId || 0;
+  v.template.rootId = e ? e.parameter.r || 0 : 0;
 
-  ['node','leaf'].forEach(x => {
-    // データをシートから取得
-    v[x] = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(e.parameter.sn || x).getDataRange().getValues();
-
-    // データをオブジェクト化
-    v.rv[x] = [];
-    for( v.r=1 ; v.r<v[x].length ; v.r++ ){
-      v.o = {};
-      for( v.c=0 ; v.c<v[x][v.r].length ; v.c++ ){
-        v.o[v[x][0][v.c]] = v[x][v.r][v.c];
-      }
-      v.rv[x].push(v.o);
-    }
-  })
+  v.td = new TypeDef({attr: {type:'string',role:'string'}});
+  v.rv = v.td.analyze();
   v.template.data = JSON.stringify(v.rv);
 
   v.htmlOutput = v.template.evaluate();
-  v.htmlOutput.setTitle('TypeDefs r.2.2.0');
+  v.htmlOutput.setTitle('TypeDefs r.2.3.0');
   console.log(`doGet end\npId=${v.template.pId}\n${JSON.stringify(v.template.data)}`);
   return v.htmlOutput;
 }
 
 /** treeGroup: シート関数。階層ラベルに従ってグループ化する
- * @param {Object} arg - class TypeDefの引数参照
+ * Apps Script上で呼び出して実行することを想定した関数
+ * @param {void}
  * @returns {void}
  */
 function treeGroup(){
   const v = {};
-  v.td = new TypeDef({
-    sh: 'node',
-    nId: 'id',
-    lv: 'l([0-9]+)',
-    base: 'origin',
-    note: 'note',
-    attr: ['data type','role'],
-  });
+  v.td = new TypeDef({attr: {type:'string',role:'string'}});
+  console.log(JSON.stringify(v.td.analyze()));
   v.r = v.td.setupGroups();
 }
+
 /** TypeDef: 指定範囲のツリー構造のデータを並べ替え、グループ化する
  * 
  * **元データの制約**
@@ -68,16 +52,17 @@ class TypeDef{
       // ---------------------------------------------
       v.step = 1.1; // 引数の既定値設定
       this.arg = Object.assign({
-        sh: 'master',   // シート名
-        nId: 'nId',     // Node IDの項目名
-        lv: 'lv([0-9]+)',  // 階層化されたラベル欄。末尾の数値は階層(1から連続した自然数)
-        base: 'base',   // 継承元ノードのID
-        note: null,     // 備考欄の項目名
-        attr: [],       // 属性の項目名
+        sh: 'master',   // {string} シート名
+        nId: 'nId',     // {number} Node IDの欄名(IDは自然数で設定。0はルート、負数はbaseから除外)
+        lv: 'lv([0-9]+)',  // {string} 階層化ラベル欄。末尾の数値は階層(1から連続した自然数)
+        base: 'base',   // {string} 継承元ノードのIDを指定する欄名
+        note: null,     // {string} 備考欄の欄名
+        attr: {},       // {Object.<string,string>[]} 属性の欄名＋SQLデータ型の配列
+        // ex.{type:'string not null',flag:'number default 0'}
         header: 1,      // ヘッダ行番号
         data: [2,null], // データ範囲の行番号(ヘッダ次行〜末尾)
       },arg);
-      this.arg.lv = new RegExp(this.arg.lv);
+      console.log(`l.63 this.arg=${stringify(this.arg)}`)
 
       v.r = this.analyze();
       if( v.r instanceof Error ) throw v.r;
