@@ -5,7 +5,7 @@ function doGet(e){
   v.template = HtmlService.createTemplateFromFile('index');
   v.template.rootId = e ? e.parameter.r || 0 : 0;
 
-  v.td = new TypeDef({attr: {type:'string',role:'string'}});
+  v.td = new TypeDef({nId:'id',lv:'l([0-9]+)',attr: {dataType:'string',role:'string'}});
   v.rv = v.td.analyze();
   v.template.data = JSON.stringify(v.rv);
 
@@ -22,7 +22,7 @@ function doGet(e){
  */
 function treeGroup(){
   const v = {};
-  v.td = new TypeDef({attr: {type:'string',role:'string'}});
+  v.td = new TypeDef({nId:'id',lv:'l([0-9]+)',attr: {dataType:'string',role:'string'}});
   console.log(JSON.stringify(v.td.analyze()));
   v.r = v.td.setupGroups();
 }
@@ -62,7 +62,6 @@ class TypeDef{
         header: 1,      // ヘッダ行番号
         data: [2,null], // データ範囲の行番号(ヘッダ次行〜末尾)
       },arg);
-      console.log(`l.63 this.arg=${stringify(this.arg)}`)
 
       v.r = this.analyze();
       if( v.r instanceof Error ) throw v.r;
@@ -109,7 +108,7 @@ class TypeDef{
         this.raw[0].length  // 列数
       );
 
-      v.step = 1.4; // 階層化ラベル欄を文字列の配列としてthis.labelに保存
+      v.step = 1.4; // 階層化ラベル欄を文字列の配列としてthis.colsに保存
       // ex. lv02 -> this.label[1] = 'lv02'
       // 併せてラベルと添字の換算マップもthis.mapとして作成
       // ex. 左端列がnId
@@ -164,7 +163,7 @@ class TypeDef{
       for( v.r=this.dRange[0]-1 ; v.r<this.dRange[1] ; v.r++ ){
 
         v.step = 2.21; // 一行分のデータの原型をv.oとして作成
-        v.o = JSON.parse(v.proto); //Object.assign({},v.proto);
+        v.o = JSON.parse(v.proto);
         this.cols.header.forEach(col => {
           v.val = this.raw[v.r][this.cols.label[col]];
           if( String(v.val).length > 0 ){
