@@ -1,0 +1,763 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css"></style>
+<script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
+</head>
+<body>
+  <h1>test</h1>
+  <div class="TypeDefs">
+    <div name="rootId" style="display:none"><?= rootId ?></div>
+    <div name="data" style="display:none"><?= data ?></div>
+  </div>
+</body>
+<script type="text/javascript">
+function createElement(arg,parent=null){
+  const v = {whois:'createElement',rv:[],step:0};
+  console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}\nparent`,parent);
+  console.log(v.whois+' start.',arg);
+  try {
+    v.step = 1.1; // 引数を強制的に配列化
+    v.isArr = Array.isArray(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
+    if( !v.isArr ) arg = [arg];
+    v.step = 1.2; // 親要素の特定
+    if( parent !== null ){
+      v.parent = typeof parent === 'string' ? document.querySelector(parent) : parent;
+    }
+
+
+    for( v.i = 0 ; v.i<arg.length ; v.i++ ){
+      v.step = 2; // 既定値の設定
+      v.def = {tag:'div',attr:{},logical:{},style:{},event:{},text:'',html:'',children:[],name:''};
+      Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
+
+      v.step = 3; // HTMLElementを生成、v.nodeとする
+      v.node = document.createElement(v.def.tag);
+
+      v.step = 4; // HTMLElementの属性を定義
+      for( v.j in v.def.attr ){
+        v.node.setAttribute(v.j,v.x = v.def.attr[v.j]);
+      }
+
+      v.step = 5; // 論理属性を定義(ex.checked)
+      for( v.j in v.def.logical ){
+        if( v.def.logical[v.j] ){
+          v.node.setAttribute(v.j,v.def.logical[v.j]);
+        }
+      }
+
+      v.step = 6; // style属性の定義
+      for( v.j in v.def.style ){
+        if( v.j.match(/^\-\-/) ){ // CSS変数
+          v.node.style.setProperty(v.j,v.def.style[v.j]);
+        } else {
+          v.node.style[v.j] = v.def.style[v.j];
+        }
+      }
+
+      v.step = 7; // イベントの定義
+      for( v.j in v.def.event ){
+        v.node.addEventListener(v.j,v.def.event[v.j],false);
+      }
+
+      v.step = 8; // 内部文字列(html or text)
+      if( v.def.html.length > 0 ){
+        v.node.innerHTML = v.def.html;
+      } else {
+        // textareaの場合はvalueに、それ以外はinnerTextに内部文字列(text)をセット
+        v.node[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
+      }
+
+      v.step = 9; // 子要素の追加(parentは指定しない)
+      for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
+        v.node.appendChild(this.createElement(v.def.children[v.j]));
+      }
+
+      v.step = 10; // 戻り値への登録
+      v.rv.push(v.node);
+
+      v.step = 11; // 親要素への追加
+      if( parent !== null ){
+        v.parent.appendChild(v.node);
+      }
+
+      v.step = 12; // メンバとして、また切替画面として登録
+      if( v.def.name.length > 0 ){
+        this[v.def.name] = v.node;
+        this.screenList[v.def.name] = v.node;
+      }
+    }
+
+    v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
+    v.rv = v.isArr ? v.rv : v.rv[0];
+    console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+function doGAS(func, ...args){
+  console.log('doGAS start. func=%s',func,...args);
+  return new Promise(function(resolve, reject){
+    google.script.run.withSuccessHandler(function(...e){
+      resolve(...e);
+    }).withFailureHandler(function(...e){
+      reject(...e);
+    })[func](...args);
+  });
+}
+function mergeDeeply(pri,sub,opt={}){
+  const v = {whois:'mergeDeeply',rv:null,step:0,
+    isObj: arg => arg && String(Object.prototype.toString.call(arg).slice(8,-1)) === 'Object',
+    isArr: arg => arg && Array.isArray(arg),
+  };
+  //console.log(`${v.whois} start.`+`\npri=${stringify(pri)}`+`\nsub=${stringify(sub)}`+`\nopt=${stringify(opt)}`);
+  try {
+
+    v.step = 1; // 既定値の設定
+    if( !opt.hasOwnProperty('array') ) opt.array = 'set';
+
+    if( v.isObj(pri) && v.isObj(sub) ){
+      v.step = 2; // sub,pri共にハッシュの場合
+      v.rv = {};
+      v.step = 2.1; // 優先・劣後Obj両方のハッシュキー(文字列)を、重複しない形でv.keysに保存
+      v.keys = new Set([...Object.keys(pri),...Object.keys(sub)]);
+      for( v.key of v.keys ){
+        if( pri.hasOwnProperty(v.key) && sub.hasOwnProperty(v.key) ){
+          v.step = 2.2; // pri,sub両方がキーを持つ
+          if( v.isObj(pri[v.key]) && v.isObj(sub[v.key]) || v.isArr(pri[v.key]) && v.isArr(sub[v.key]) ){
+            v.step = 2.21; // 配列またはオブジェクトの場合は再帰呼出
+            v.rv[v.key] = mergeDeeply(pri[v.key],sub[v.key],opt);
+          } else {
+            v.step = 2.22; // 配列でもオブジェクトでもない場合は優先変数の値をセット
+            v.rv[v.key] = pri[v.key];
+          }
+        } else {
+          v.step = 2.3; // pri,subいずれか片方しかキーを持っていない
+          v.rv[v.key] = pri.hasOwnProperty(v.key) ? pri[v.key] : sub[v.key];
+        }
+      }
+    } else if( v.isArr(pri) && v.isArr(sub) ){
+      v.step = '3 '+opt.array; // sub,pri共に配列の場合
+      switch( opt.array ){
+        case 'pri':
+          // pri: 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
+          v.rv = pri;
+          break;
+        case 'add':
+          // add: 値の重複に拘わらず、pri+subを返す ⇒ [1,2,{x:'a'},{a:10,b:20},1,3,{x:'a'},{a:30,c:40}]
+          v.rv = [...pri, ...sub];
+          break;
+        case 'str':
+          // str(strict): priに無いsubの要素をpriに追加。setと異なり、内容が同値なら重複排除<br>
+          // ⇒ [1,2,3,{x:'a'},{a:10,b:20},{a:30,c:40}]
+          v.rv = [];
+          pri.forEach(x => v.rv.push(x));
+          sub.forEach(s => {
+            v.flag = false;
+            pri.forEach(p => v.flag = v.flag || isEqual(s,p));
+            if( v.flag === false ) v.rv.push(s);
+          });
+          break;
+        default:
+          // set(既定値): priに無いsubの要素をpriに追加 ⇒ [1,2,{x:'a'},{a:10,b:20},3,{x:'a'},{a:30,c:40}]
+          v.rv = [...new Set([...pri,...sub])];
+      }
+    } else {
+      v.step = 4; // subとpriのデータ型が異なる ⇒ priを優先してセット
+      v.rv = whichType(pri,'Undefined') ? sub : pri;
+    }
+    v.step = 5;
+    //console.log(`${v.whois} normal end.`+`\npri=${stringify(pri)}`+`\nsub=${stringify(sub)}`+`\nopt=${stringify(opt)}`+`\nv.rv=${stringify(v.rv)}`)
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`
+    + `\npri=${JSON.stringify(pri)}`
+    + `\nsub=${JSON.stringify(sub)}`
+    + `\nopt=${JSON.stringify(opt)}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+function stringify(variable,opt={addType:false}){
+  const v = {whois:'stringify',rv:null,step:0};
+  const conv = arg => {
+    const w = {type:whichType(arg)};
+    w.pre = opt.addType ? `[${w.type}]` : '';
+    switch( w.type ){
+      case 'Function': case 'Arrow': case 'Symbol':
+        w.rv = w.pre + arg.toString(); break;
+      case 'BigInt':
+        w.rv = w.pre + parseInt(arg); break;
+      case 'Undefined':
+        w.rv = w.pre + 'undefined'; break;
+      case 'Object':
+        w.rv = {};
+        for( w.i in arg ){
+          // 自分自身(stringify)は出力対象外
+          if( w.i === 'stringify' ) continue;
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      case 'Array':
+        w.rv = [];
+        for( w.i=0 ; w.i<arg.length ; w.i++ ){
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      default:
+        w.rv = w.pre + arg;
+    }
+    return w.rv;
+  };
+  //console.log(`${v.whois} start.\nvariable=${variable}\nopt=${JSON.stringify(opt)}`);
+  try {
+
+    v.step = 1; // 事前準備
+    if( typeof opt === 'boolean' ) opt={addType:opt};
+
+    v.step = 2; // 終了処理
+    //console.log(`${v.whois} normal end.`);
+    return JSON.stringify(conv(variable));
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+function toLocale(arg,format='yyyy-MM-ddThh:mm:ss.nnnZ'){
+  const v = {rv:format};
+  try {
+
+    dObj = String(Object.prototype.toString.call(arg).slice(8,-1)) !== 'Date'
+    ? arg : new Date(arg);
+
+    v.step = 1; // 無効な日付なら空文字列を返して終了
+    if( isNaN(dObj.getTime()) ) return '';
+
+    v.local = { // 地方時ベース
+      y: dObj.getFullYear(),
+      M: dObj.getMonth()+1,
+      d: dObj.getDate(),
+      h: dObj.getHours(),
+      m: dObj.getMinutes(),
+      s: dObj.getSeconds(),
+      n: dObj.getMilliseconds(),
+      Z: Math.abs(dObj.getTimezoneOffset())
+    }
+    // タイムゾーン文字列の作成
+    v.local.Z = v.local.Z === 0 ? 'Z'
+    : ((dObj.getTimezoneOffset() < 0 ? '+' : '-')
+    + ('0' + Math.floor(v.local.Z / 60)).slice(-2)
+    + ':' + ('0' + (v.local.Z % 60)).slice(-2));
+
+    v.step = 2; // 日付文字列作成
+    for( v.x in v.local ){
+      v.m = v.rv.match(new RegExp(v.x+'+'));
+      if( v.m ){
+        v.str = v.m[0].length > 1
+          ? ('000'+v.local[v.x]).slice(-v.m[0].length)
+          : String(v.local[v.x]);
+        v.rv = v.rv.replace(v.m[0],v.str);
+      }
+    }
+
+    v.step = 3; // 終了処理
+    return v.rv;
+
+  } catch(e){
+    console.error(e,v);
+    return e;
+  }
+}
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
+  }
+}
+class LoadingIcon {
+  /**
+   * @constructor
+   * @param {Object} [arg={}] - オプション
+   * @param {HTMLElement} [arg.pattern='loading5'] - デザインパターン(CSSのクラス名)
+   *
+   * - [CSS Loaders](https://css-loaders.com/bars/)
+   */
+  constructor(arg={}){
+    const v = {whois:this.constructor.name+'.constructor',rv:true,step:0,
+      css: { theSpinner23: `
+        dialog.LoadingIcon {
+          width: 400px; /* .loader width * 2 */
+          aspect-ratio: 1;
+          position: relative;
+          outline: none;
+          border: none;
+        }
+        dialog.LoadingIcon::backdrop {background:#fff}
+        dialog.LoadingIcon > div {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          margin: -100px 0 0 -100px;
+        }
+
+        /* HTML: <div class="loader"></div> */
+        .loader {
+          width: 200px;   /* ここは修正 */
+          aspect-ratio: 1;
+          display: grid;
+          border-radius: 50%;
+          background:
+            linear-gradient(0deg ,rgb(0 0 0/50%) 30%,#0000 0 70%,rgb(0 0 0/100%) 0) 50%/8% 100%,
+            linear-gradient(90deg,rgb(0 0 0/25%) 30%,#0000 0 70%,rgb(0 0 0/75% ) 0) 50%/100% 8%;
+          background-repeat: no-repeat;
+          animation: l23 1s infinite steps(12);
+        }
+        .loader::before,
+        .loader::after {
+          content: "";
+          grid-area: 1/1;
+          border-radius: 50%;
+          background: inherit;
+          opacity: 0.915;
+          transform: rotate(30deg);
+        }
+        .loader::after {
+          opacity: 0.83;
+          transform: rotate(60deg);
+        }
+        @keyframes l23 {
+          100% {transform: rotate(1turn)}
+        }
+      `},
+    };
+    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
+  try {
+
+      v.step = 1; // 事前準備：argの既定値設定
+      if( !arg.hasOwnProperty('pattern') ) arg.pattern = 'theSpinner23';
+
+      v.step = 2; // 待機画面要素の準備
+      this.screen = document.querySelector('.'+this.constructor.name);
+      if( this.screen === null ){
+        this.screen = createElement({
+          tag:'dialog',
+          attr:{class:this.constructor.name},
+          children:[{attr:{class:'loader '+arg.pattern}}],
+        },'body');
+        if( this.screen instanceof Error ) throw this.screen;
+      }
+
+      v.step = 3; // styleの準備
+      if( document.querySelector(`style[name="${this.constructor.name}_${arg.pattern}"]`) === null ){
+        v.r = createElement({
+          tag: 'style',
+          attr: {type:'text/css',name:`${this.constructor.name}_${arg.pattern}"]`},
+          text: v.css[arg.pattern].replaceAll(/\n/g,'').replaceAll(/\s+/g,' '),
+        },'head');
+      }
+
+      v.step = 9; // 終了処理
+      this.hide();
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** 待機画面を表示する */
+  show = () => this.screen.showModal();
+
+  /** 待機画面を隠蔽する */
+  hide = () => this.screen.close();
+}
+function htmlEscape(str){ // https://jp-seemore.com/web/3534/#toc5
+  return typeof str !== 'string' ? str : str
+    .replaceAll(/&/g, "&amp;")
+    .replaceAll(/</g, "&lt;")
+    .replaceAll(/>/g, "&gt;")
+    .replaceAll(/"/g, "&quot;")
+    .replaceAll(/'/g, "&#039;");
+}
+class TypeDefsClient{
+  /** @constructor
+   * - html上に実装するのは参照のみ。編集他はシートで行う。
+   * - 編集・追加・コピペ・削除機能を追加する場合はTypeDefs/2.2.0を参照
+   * - baseの子要素の削除は、参照先の子要素に削除対象ノードのnIdを負数で設定することで実現
+   * - baseの子要素の変更は参照先に子要素を追加、追加した要素のbaseに変更対象のnIdを設定
+   */
+  constructor(arg={}){
+    const v = {whois:this.constructor.name+'.constructor',rv:null,step:0,default:{
+      wrapper: 'body > .'+this.constructor.name, // ラッパーのCSSセレクタ。constructor内でHTMLElementに変換
+      rootId: 'div[name="rootId"]',    // URLクエリで渡されたルートIDのCSSセレクタ。constructor内で数値に変換
+      dataDiv: 'div[name="data"]',  // TypeDefsServerから渡されたデータ(JSON)
+      css: `
+        /* ツリー描画領域 */
+        .TypeDefsClient .tree, .tr {display: grid; width: 100%;}
+        .TypeDefsClient .tree .tr {grid-template-columns: repeat(21,1rem) 1fr; gap:0.2rem; width:100%}
+        .TypeDefsClient .tree .tr.deleted {color:#aaa; text-decoration: line-through;}
+        .TypeDefsClient .tree .th {grid-column: 1/3;}
+        .TypeDefsClient .tree .td {grid-column: 3/13; width: 100%;}
+        .TypeDefsClient .tree .ctrl {color:#aaa}
+        .TypeDefsClient .tree .comment {background-color: #ccc; padding: 0 3rem;}
+        .TypeDefsClient .tree span.link[name="label"] {color:#00f}
+
+        /* ツールチップ
+          CSSだけでツールチップを実現する方法
+          https://so-zou.jp/web-app/tech/css/sample/tooltip.htm */
+        .TypeDefsClient .tooltip a:hover {position: relative;}
+        .TypeDefsClient .tooltip a:hover:after {content: attr(title);
+          /* 位置 */
+          position: absolute;
+          left: 0;
+          top: 32px;
+          z-index: 1;
+          /* 文字 */
+          font-weight: normal;
+          color: black;
+          white-space: nowrap;
+          /* 背景 */
+          background-color: white;
+          padding: 3px;
+          border: 1px silver solid;
+          border-radius: 3px;
+          box-shadow: 1px 1px 3px silver;
+        }
+      `,
+    }};
+    console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
+    try {
+
+      (()=>{  v.step = 1; // 既定値を設定、データを取得(this.raw)
+        v.step = 1.1; // 引数とv.defaultで設定された既定値からメンバ作成
+        Object.keys(v.default).forEach(x =>
+          this[x] = whichType(v.default[x],'Object')
+          ? mergeDeeply((arg[x]||{}),v.default[x])
+          : (arg[x] || v.default[x])
+        );
+        v.step = 1.2; // サーバ側から渡されるマスタ(JSON)が格納される領域
+        this.raw = JSON.parse(document.querySelector(this.dataDiv).innerText);
+        v.step = 1.3; // サーバ側から渡されるルートのID
+        this.rootId = Number(document.querySelector(this.rootId).innerText);
+        //console.log(`l.414 this.rootId=${this.rootId}\nthis.raw=${stringify(this.raw)}`);
+      })();
+
+      (()=>{  v.step = 2; // データベース作成
+        v.systemCols = {
+          nId: 'int primary key',// {number} ノードのID。自然数
+          level: 'int not null',// {number} 当該行の階層。自然数
+          label: 'string',// {string} ノードのラベル
+          note: 'string',// {string} 備考欄
+          pId: 'int not null',// {number} 親ノードのID
+          seq: 'int not null',// {number} 親ノード内での順番。自然数
+          num: 'int default 0',// {number} 子要素の数
+          base: 'string',// {string} 継承元ノード(基底ノード)のID。カンマ区切りで多重継承に対応
+          row: 'int',// {number} シート上の行番号(自然数)
+          // ----- 以下はTypeDefClient内で追加される項目 -------------------
+          isOpen: 'boolean default false',  // {boolean} html表示時、trueなら子要素を表示
+          path: 'string', // {string} ルート〜自要素までのnId。カンマ区切り
+          lId: 'int default (-1)', // 継承によってシステム内で追加された要素の引用元のnId
+        };
+        v.cols = Object.assign({},v.systemCols,this.raw.arg.attr);
+        v.sql = '';
+        Object.keys(v.cols).forEach(col => v.sql += `\`${col}\` ${v.cols[col]},`);
+        v.sql = `create table node (${v.sql.slice(0,v.sql.length-1)})`;
+        v.r = alasql(v.sql); if( v.r instanceof Error ) throw v.r;
+
+        // insert
+        v.sql = 'insert into node select * from ?';
+        v.r = alasql(v.sql,[this.raw.arr]); if( v.r instanceof Error ) throw v.r;
+        console.log(`l.486`,stringify(alasql('select * from node')));
+      })();
+
+      (()=>{  v.step = 3; // 継承元設定値を継承先空欄に設定
+        for( v.i=0 ; v.i<this.raw.arr.length ; v.i++ ){
+          v.step = 3.1;
+          console.log(`l.492 this.raw.arr[${v.i}]=${stringify(this.raw.arr[v.i])}`)
+          v.to = this.raw.arr[v.i]; // 継承先。v.fm -> v.to (class v.to extend v.fm)
+          if( !v.to.base ) continue;  // 継承していないならスキップ
+
+          console.log(`l.496 v.to.base(${whichType(v.to.base)})=${stringify(v.to.base)}`)
+          v.bases = String(v.to.base).split(',');
+          for( v.j=0 ; v.j<v.bases.length ; v.j++ ){
+            v.step = 3.2;
+            if( v.bases[v.j] < 0 ) continue;  // 削除対象(nId<0)は除外
+            console.log(`l.500 this.raw.obj[${v.bases[v.j]}]=${stringify(this.raw.obj[v.bases[v.j]])}`)
+            v.fm = this.raw.obj[v.bases[v.j]];  // 継承元
+            // 子要素展開位置指定のためbaseに自分のnIdを設定している場合はスキップ
+            if( v.fm.nId !== v.to.nId ){
+              v.step = 3.3; // 継承元から継承先に引き継ぐべき項目を順次チェック
+              v.sql = [];
+              ['label','note'].forEach(col => { // システム項目
+                if((v.fm[col] || v.fm[col] === 0) && (!v.to[col] && v.to[col] !== 0)){
+                  v.step = 3.5; // 継承元項目が有効かつ継承先項目が無効の場合はコピー
+                  v.to[col] = v.fm[col];
+                  v.sql.push(`\`${col}\`=${JSON.stringify(v.fm[col])}`);
+                }
+              });
+              Object.keys(this.raw.arg.attr).forEach(col => { // 属性項目 いまここ
+                v.step = 3.4;
+                if((v.fm.raw[col] || v.fm.raw[col] === 0) && (!v.to.raw[col] && v.to.raw[col] !== 0)){
+                  v.step = 3.5; // 継承元項目が有効かつ継承先項目が無効の場合はコピー
+                  v.to[col] = v.fm[col];
+                  v.sql.push(`\`${col}\`=${JSON.stringify(v.fm[col])}`);
+                }
+              });
+              v.step = 3.6; // コピーされた項目があった場合、DBを更新
+              if( v.sql.length > 0 ){
+                v.step = 3.7;
+                console.log(`l.518 sql=update node set ${v.sql.join()} where nId=${v.to.nId}`)
+                v.r = alasql(`update node set ${v.sql.join()} where nId=${v.to.nId}`);
+                if( v.r instanceof Error ) throw v.r;
+              }
+            }
+          }
+        }
+        console.log(`l.524 ${JSON.stringify(alasql('select * from node where nId in (2,104)'))}`);
+      })();
+
+      (()=>{  v.step = 4; // 継承元の子要素を継承先に展開
+        const recursive = () => {  /* 子要素を展開する再帰関数を定義
+          1. 自要素(v.node)含め、継承元要素の子要素をv.childrenに作成
+          2. baseで削除対象として挙げられた子要素を追加対象から除外
+              (v.node.baseのnId<0の要素について、絶対値が同じ要素をv.childrenから削除)
+          3. 自要素直下の子要素で更新される継承元の子要素は追加対象から除外
+              (v.children内で自要素直下の子要素とnIdが一致する要素は削除)
+            ※ この段階で「v.childrenは有効なnodeの子要素のみ」となる
+          4. v.children内で順番(seq)を採番しなおす
+          5. 自要素直下の子要素について
+              (1) 再採番後のseqを反映(4.の結果が反映済なら不要)
+              (2) v.childrenから除外
+            ※ この段階で「v.childrenは追加登録すべき子要素のみ」となる
+          6. v.childrenに残った子要素について、順次再帰呼出する */
+        };
+        // ルート直下の要素について、再帰関数を呼び出し
+
+      })();
+
+      (()=>{  v.step = 5; // ツリー描画領域・ダイアログ・ツールチップの準備
+        v.step = 5.1; // ツリー描画領域
+        this.wrapper = document.querySelector('body > .'+this.constructor.name);
+        this.treeDiv = createElement({attr:{class:'tree'}},this.wrapper);
+
+        v.step = 5.5; // 待機画面の準備
+        this.loading = new LoadingIcon();
+
+        v.step = 5.6; // スタイルシートの準備
+        if( document.querySelector(`style[name="${this.constructor.name}"]`) === null ){
+          v.r = createElement({
+            tag: 'style',
+            attr: {type:'text/css',name:this.constructor.name},
+            text: this.css.replaceAll(/\/\*[\s\S]+?\*\//g,'').replaceAll(/\n/g,' ').replaceAll(/ +/g,' ').trim(),
+          },'head');
+          if( v.r instanceof Error ) throw v.r;
+        }
+      })();
+
+      v.step = 9; // 終了処理
+      //v.r = this.disp();
+      //if( v.r instanceof Error ) throw v.r;
+      console.log(`${v.whois} normal end.`);
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** 【旧版】disp: 描画領域にツリーを描画
+   * @param {number} nId=this.rootId - 描画対象のルート要素のnId
+   * @param {number[]} path=[] - ツリーの階層(ルートから自要素までのnIdの配列)
+   * @returns {null}
+   */
+  disp(nId=this.rootId,path=[]){
+    const v = {whois:this.constructor.name+'.disp',rv:null,step:0};
+    console.log(`${v.whois} start.\nnId=${nId}, path=${stringify(path)}`);
+    try {
+
+      v.step = 1; // 事前準備
+      v.step = 1.1; // pathを別オブジェクト化
+      v.path = JSON.parse(JSON.stringify(path));
+      v.step = 1.2; // 永久ループ防止
+      if( v.path.length > this.maxDepth ) throw new Error('too many depth');
+      v.step = 1.3; // ルート要素(初回呼出時)のみの処理
+      if( v.path.length === 0 ){
+        this.treeDiv.innerHTML = ''; // 表示領域をクリア
+      }
+
+      v.step = 2; // 自要素を描画
+      v.step = 2.1; // 自要素のnodeオブジェクトをv.nodeとして取得
+      v.sql = 'select node.nId, node.pId, node.seq, node.type'
+      + ', node.isOpen, node.`selected`' // ローカル側のみの項目
+      + ', node.`deleted`, leaf.lId, leaf.attribute'
+      + ' from node inner join leaf on node.lId=leaf.lId where '
+      + (this.showDeleted ? '' : 'node.`deleted` is null and ');
+      v.node = alasql(v.sql+'node.nId='+nId)[0];
+      if( !v.node ){  // 削除済だった場合、空集合 ⇒ 以降の処理をスキップ
+        console.log(`${v.whois} normal end. (empty node)`);
+        return v.rv;
+      }
+      v.path.push(nId);
+
+      v.step = 2.2; // lIdが他のブランチにも存在するならv.node.linkにツールチップ用文字列を設定
+      // v.node.link = [
+      //   [  ※ルートから自要素まで、node+leafのオブジェクトを並べる
+      //      {nId:0,lId:0,attribute:{label:'root'}},
+      //      {nId:1,lId:1,attribute:{label:'祖父母要素'}},
+      //      {nId:5,lId:2,attribute:{label:'親要素'}},
+      //      {nId:9,lId:5,attribute:{label:'自要素'}},
+      //   ],[..],..  ※複数箇所でリンクしていた場合、複数
+      // ]
+      // なお無効化されている行はthis.showDeleted=falseなら除外する
+      v.sql = 'select node.nId, node.pId, node.seq, node.lId, node.type, leaf.attribute'
+      + ' from node inner join leaf on node.lId=leaf.lId where'
+      + ( this.showDeleted ? '' : ' node.`deleted` is null and');
+      v.linkNodes = alasql(`${v.sql} node.nId<>${nId} and leaf.lId=${v.node.lId}`);
+
+      if( v.linkNodes.length > 0 ){
+        v.step = 2.21; // リンクが存在
+        v.node.link = [];
+        v.linkNodes.forEach(linkNode => {
+          v.step = 2.22; // 個々のリンクについて順次処理
+          v.nId = linkNode.pId;
+          v.tree = [linkNode];
+          v.depth = 0;
+          v.add = true;
+          while( v.add && linkNode.pId > 0 && v.depth < this.maxDepth ){
+            v.step = 2.23; // リンク〜ルートまでの要素を抽出
+            linkNode = alasql(`${v.sql} node.nId=${v.nId}`)[0];
+            if( linkNode !== undefined ){
+              v.step = 2.24; // 途中のノードを保存
+              v.tree.unshift(linkNode);
+              v.nId = linkNode.pId;
+              v.depth++;
+            } else {
+              v.step = 2.25; // 途中で見つからないノードが存在
+              // ⇒ this.showDeleted=falseでdeletedが設定されているノード
+              // ⇒ ツールチップ表示の対象外
+              v.add = false;
+            }
+          }
+          v.step = 2.26; // 途中のノードを先頭に保存
+          if( v.add ) v.node.link.push(v.tree);
+        });
+      }
+
+      v.step = 2.3; // createElement用の行オブジェクトをv.rvとして作成
+      v.step = 2.31; // 行(tr)を作成。deletedに日付があればclassにも追加、
+      // nameはJSON化したpath(ルート〜自要素のnIdの配列)
+      v.rv = {
+        attr:{name:JSON.stringify(v.path),class: 'tr'
+          + (v.node.deleted && v.node.deleted.length > 0 ? ' deleted' : '')},
+        event: {contextmenu:e => this.context(e)},
+        children:[],
+      };
+
+      v.step = 2.32; // 行内部のindent部を作成
+      v.rv.children.push({
+        attr:{class:'indent'},
+        style:{gridColumn:`1/${v.path.length+1}`,width:v.path.length+'rem'}
+      });
+
+      v.step = 2.33; // 行内部のctrl部を作成
+      v.ctrl = {  // 共通部分
+        attr: {class:'ctrl tooltip',title:`n=${v.node.nId},l=${v.node.lId}`},
+        style:{gridColumn:`${v.path.length+1}/${v.path.length+2}`},
+      };
+      // 子要素があれば[▶|▼]、無ければチェックボックス。コメント行等、子要素を持ち得ないtypeなら空白
+      v.children = alasql(v.sql+' node.pId='+nId+' order by seq');
+      if( this.iDef[v.node.type].ctrl ){
+        if( v.children.length > 0 ){
+          // 子要素が存在する場合、[▶|▼]を表示
+          v.ctrl.text = v.node.isOpen ? '▼' : '▶';
+          v.ctrl.event = {click:e => this.toggle(e)};
+        } else {
+          // 子要素が存在しない場合、チェックボックスを表示
+          v.ctrl.children = [{
+            tag:'input',
+            attr:{type:'checkbox'},
+            logical: {checked:v.node.selected},
+            event: {change:e=>{
+              const v = {};
+              v.name = e.target.closest('.tr').getAttribute('name');
+              v.nId = JSON.parse(v.name).slice(-1)[0];
+              v.checked = e.target.checked;
+              alasql('update node set `selected`='+v.checked+' where nId='+v.nId);
+            }}
+          }];
+        }
+      } else {
+        // コメント行等、子要素を持ち得ないtypeなら「□」を表示
+        // ※ this.iDef[v.node.type].ctrlで"false"が設定されているtype
+        v.ctrl.text = '□';
+        v.ctrl.event = {click:e => this.toggle(e)};
+      }
+      v.rv.children.push(v.ctrl);
+
+      v.step = 2.34; // 行内部のitem部を作成
+      v.rv.children.push({
+        attr:{class:'item'},
+        style:{gridColumn:`${v.path.length+2}/23`},
+        children: this.iDef[v.node.type].disp(v.node),
+      });
+
+      v.step = 2.4; // v.rvを描画領域に追加
+      v.r = createElement(v.rv,this.treeDiv);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 3; // 子要素を順次再帰呼出
+      if( v.node.isOpen === true ){
+        for( v.i=0 ; v.i<v.children.length ; v.i++ ){
+          v.r = this.disp(v.children[v.i].nId,v.path);
+          if( v.r instanceof Error ) throw v.r;
+        }
+      }
+
+      v.step = 4; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+}
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.step = 1;
+    v.td = new TypeDefsClient();
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
