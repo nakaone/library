@@ -22,8 +22,10 @@ function doGet(e){
  */
 function treeGroup(){
   const v = {};
-  v.td = new TypeDef({nId:'id',lv:'l([0-9]+)',attr: {dataType:'string',role:'string'}});
-  console.log(JSON.stringify(v.td.analyze()));
+  v.td = new TypeDefServer();
+  v.r = v.td.analyze();
+  v.r.arr = v.r.arr.slice(0,20);
+  console.log(JSON.stringify(v.r));
   v.r = v.td.setupGroups();
 }
 
@@ -41,28 +43,13 @@ function treeGroup(){
  * - class [Range](https://developers.google.com/apps-script/reference/spreadsheet/range?hl=ja)
  * - class [Group](https://developers.google.com/apps-script/reference/spreadsheet/group?hl=ja)
  */
-class TypeDef{
-  constructor(arg={}){ //sheetName,labelWidth=8){
+class TypeDefServer{
+  constructor(arg={}){
     const v = {whois:this.constructor.name+'.constructor',rv:null,step:0};
     console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
 
-      // ---------------------------------------------
-      // 事前準備
-      // ---------------------------------------------
-      v.step = 1.1; // 引数の既定値設定
-      this.arg = Object.assign({
-        sh: 'master',   // {string} シート名
-        nId: 'nId',     // {number} Node IDの欄名(IDは自然数で設定。0はルート、負数はbaseから除外)
-        lv: 'lv([0-9]+)',  // {string} 階層化ラベル欄。末尾の数値は階層(1から連続した自然数)
-        base: 'base',   // {string} 継承元ノードのIDを指定する欄名
-        note: null,     // {string} 備考欄の欄名
-        attr: {},       // {Object.<string,string>[]} 属性の欄名＋SQLデータ型の配列
-        // ex.{type:'string not null',flag:'number default 0'}
-        header: 1,      // ヘッダ行番号
-        data: [2,null], // データ範囲の行番号(ヘッダ次行〜末尾)
-      },arg);
-
+      this.arg = arg; // 複数回analyzeを呼び出す場合に備えたバックアップ
       v.r = this.analyze();
       if( v.r instanceof Error ) throw v.r;
 
@@ -81,178 +68,164 @@ class TypeDef{
    * @param {void}
    * @returns {Object} 分析結果。index.htmlへの返却用オブジェクト
    */
-  analyze(){
-    const v = {whois:this.constructor.name+'.analyze',rv:null,step:0};
+  analyze(arg={}){
+    const v = {whois:this.constructor.name+'.analyze',step:0,rv:{header:[],data:[]}};
     console.log(`${v.whois} start.`);
     try {
 
-      // ---------------------------------------------
-      // 事前準備
-      // ---------------------------------------------
-      v.step = 1.1; // 対象シートObjをthis.sheetに、生データをthis.rawに保存
-      this.sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(this.arg.sh);
-      this.raw = this.sheet.getDataRange().getValues();
+      (()=>{  v.step = 1; // 事前準備
 
-      v.step = 1.2; // データ開始/終端行をthis.dRangeに保存
-      this.dRange = [].concat(this.arg.data);
-      if( this.arg.data[1] === null ){
-        // データ終端行未指定の場合、取得データから設定
-        this.dRange[1] = this.raw.length;
-      }
+        v.step = 1.1; // 引数の既定値設定
+        v.arg = Object.assign({
+          sheetName: 'master',  // {string} シート名
+          header: 1,    // ヘッダ行番号
+          left: 1,      // 左端列番号
+          right: null,  // 右端列番号。nullならgetDataRangeから設定
+          top: 2,       // データ範囲の開始行番号
+          bottom: null, // データ範囲の終端行番号。nullならgetDataRangeから設定
+        },this.arg,arg);
 
-      v.step = 1.3; // シート上のデータ範囲をthis.rangeに保存
-      this.range = this.sheet.getRange(
-        this.dRange[0], // 開始行番号
-        1,  // 開始列番号
-        this.dRange[1] - this.dRange[0] + 1,  // 行数
-        this.raw[0].length  // 列数
-      );
+        v.step = 1.2; // 対象シートObjおよび指定範囲外を含む全範囲の生データを取得
+        this.sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(v.arg.sheetName);
+        this.range = this.sheet.getDataRange();
+        v.raw = this.range.getValues();
 
-      v.step = 1.4; // 階層化ラベル欄を文字列の配列としてthis.colsに保存
-      // ex. lv02 -> this.label[1] = 'lv02'
-      // 併せてラベルと添字の換算マップもthis.mapとして作成
-      // ex. 左端列がnId
-      // this.map['nId']=0, this.map[0]='nId'
-      this.cols = {
-        header:[],  // {string[]} 欄名の配列。兼、添字->欄名参照用マップ
-        label:{},   // {Object.<string,number>} 欄名->添字参照用マップ
-        level:{},   // レベル欄のみ作成。レベル(自然数)<->欄名で相互参照
-        lvNum: 0,   // 階層の深さ(レベル数)。0オリジン
-      };
-      v.rex = new RegExp(this.arg.lv);
-      for( v.i=0 ; v.i<this.raw[this.arg.header-1].length ; v.i++ ){
-        v.col = this.raw[this.arg.header-1][v.i];
-        if( v.col.length === 0 ) continue;
-        this.cols.header.push(v.col);
-        this.cols.label[v.col] = v.i;
-        v.m = v.col.match(v.rex);
-        if( v.m ){
-          this.cols.level[v.col] = v.i;
-          this.cols.level[v.i] = v.col;
-          this.cols.lvNum++;
+        v.step = 1.3; // right,bottom==nullの場合、getDataRangeから値を設定
+        if( v.arg.right === null ) v.arg.right = v.raw[0].length;
+        if( v.arg.bottom === null ) v.arg.bottom = v.raw.length;
+
+        v.step = 1.4; // 不要なデータ範囲を削除。0:ヘッダ行、1〜終端:データ行になる
+        // データ終端行より後の行は削除
+        v.raw.splice(v.arg.bottom);
+        // ヘッダ次行〜データ開始前行を削除
+        v.raw.splice(v.arg.header,v.arg.top-v.arg.header-1);
+        // this.rawのヘッダ行より前の行は削除
+        v.raw.splice(0,v.arg.header-1);
+        for( v.r=0 ; v.r<v.raw.length ; v.r++ ){
+          // 右端列より右の列は削除
+          v.raw[v.r].splice(v.arg.right);
+          // this.rawの左端列より左の列は削除
+          v.raw[v.r].splice(0,v.arg.left-1);
         }
-      }
-
-      // ---------------------------------------------
-      // this.obj,arrを作成
-      // ---------------------------------------------
-      v.step = 2.1; // 事前準備
-      this.obj = {0:{nId:0}};
-      this.arr = [];
-      v.proto = JSON.stringify({    // this.objに格納されるオブジェクトの原型
-        // nId〜baseはシステム用にプログラムで使用する変数名(固定)で、
-        // objはシート上のカラム名で値を格納する。
-        nId: null,   // {number} ノードのID。自然数
-        level: null, // {number} 当該行の階層。自然数
-        label: null, // {string} ノードのラベル
-        //note: null,  // {string} 備考欄。不在時undefinedにするため、定義しない
-        pId: null,   // {number} 親ノードのID
-        seq: null,   // {number} 親ノード内での順番。自然数
-        num: 0,      // {number} 子要素の数
-        base: null,  // {number} 継承元ノード(基底ノード)のID
-        row: 0,      // {number} シート上の行番号(自然数)
-        raw: {},     // {Object<string,any>} 一行分の全ての欄の名前とその値
-      });
-
-      // v.stack {Object[]} - レベル毎に最新のnIdとseqを保持する
-      v.stack = new Array(9).fill(null);
-      v.stack[0] = {nId:0,seq:0}; // root(lv=0)
-
-      v.step = 2.2; // this.rawを一行ずつ処理
-      // 行番号ベース(自然数)のthis.dRangeを添字(0オリジン)に変換するため、各々-1
-      for( v.r=this.dRange[0]-1 ; v.r<this.dRange[1] ; v.r++ ){
-
-        v.step = 2.21; // 一行分のデータの原型をv.oとして作成
-        v.o = JSON.parse(v.proto);
-        this.cols.header.forEach(col => {
-          v.val = this.raw[v.r][this.cols.label[col]];
-          if( String(v.val).length > 0 ){
-            // 値(セル)が空欄では無い場合、v.o.rawにメンバを追加
-            v.o.raw[col] = v.val; // いまここ：前の行のrawがクリアされていない
+        
+        /* ヘッダ行の'label'〜次の項目までの空欄はカラム名=レベル番号に変更
+           階層化ラベル欄は'label'または空欄
+            fm: 階層化ラベル欄の開始位置。不要部分削除後の添字(0オリジン)
+            to: 階層化ラベル欄の終端位置 */
+        v.fm = v.to = null;
+        v.rv.header = JSON.parse(JSON.stringify(v.raw[0]).replaceAll(/label/g,''));
+        for( v.c=v.l=0 ; v.c<v.rv.header.length ; v.c++ ){
+          if( v.rv.header[v.c].length === 0 ){
+            if( v.fm === null ) v.fm = v.c;
+            v.to = v.c;
+            v.rv.header[v.c] = ++v.l;
           }
+        }
+      })();
+
+      (()=>{  v.step = 2; // this.obj,arrを作成【見直し】
+
+        v.step = 2.1; // 事前準備
+        this.obj = {0:{nId:0}};
+        this.arr = [];
+        // v.stack {Object[]} - レベル毎に最新のnIdとseqを保持する
+        v.stack = new Array(9).fill(null);
+        v.stack[0] = {nId:0,seq:0}; // root(lv=0)
+
+        v.proto = JSON.stringify({    // this.obj,arrに格納されるオブジェクトの原型
+          // 1. クライアントに渡される項目
+          // 1.1 シート上の予約項目
+          nId: null,   // {number} ノードのID。自然数
+          label: null, // {string} ノードのラベル
+          base: '',  // {number} 継承元ノード(基底ノード)のID
+          // 1.2 プログラム中で導出される予約項目
+          level: null, // {number} 当該行の階層。自然数
+          pId: null,   // {number} 親ノードのID
+          seq: null,   // {number} 親ノード内での順番。自然数
+          // 1.3 その他シート上の属性項目は適宜追加
+
+          // 2. クライアントに渡されない項目(最後に削除)
+          num: 0,      // {number} 子要素の数
+          row: 0,      // {number} シート上の行番号(自然数)
         });
 
-        v.step = 2.22; // nIdの設定
-        v.o.nId = v.o.raw[this.arg.nId];
+        for( v.r=1 ; v.r<v.raw.length ; v.r++ ){
+          v.o = JSON.parse(v.proto);
 
-        v.step = 2.23; // levelとlabelの設定
-        for( v.i=0 ; v.i<this.cols.lvNum ; v.i++ ){
-          v.o.label = v.o.raw[this.cols.level[v.i]];
-          if( v.o.label && v.o.label.length > 0 ){
-            v.o.level = v.i + 1;
-            v.i = this.cols.lvNum;
+          // 行(一次元配列)をオブジェクト化
+          for( v.c=0 ; v.c<v.raw[v.r].length ; v.c++ ){
+            v.val = v.raw[v.r][v.c];
+            if( v.val || v.val === 0 ){ // 空欄ではない場合
+              if( v.fm <= v.c && v.c <= v.to ){  // 階層化ラベル欄
+                v.o.label = v.val;
+                v.o.level = v.c - v.fm + 1;
+              } else {  // ラベル欄以外
+                v.o[v.rv.header[v.c]] = v.val;
+              }
+            }
           }
+          // レベル未定(=ラベル欄に文字列が無い)行はスキップ
+          if( v.o.level === null ) continue;
+
+          v.step = 2.25; // pId,seqの設定
+          if( v.stack[v.o.level-1] === null ) throw new Error('level skipped.');
+          v.o.pId = v.stack[v.o.level-1].nId;
+          v.o.seq = ++v.stack[v.o.level-1].seq;
+  
+          v.step = 2.26; // num(子要素数)の設定、stackの更新
+          if( v.stack[v.o.level] !== null ){
+            // 更新前の最新ノードの子要素数にseqを代入
+            this.obj[v.stack[v.o.level].nId].num = v.stack[v.o.level].seq;
+          }
+          v.stack[v.o.level] = {nId:v.o.nId,seq:0};
+          for( v.i=v.o.level+1 ; v.i<=(v.to-v.fm+1) ; v.i++ ){
+            v.stack[v.i] = null;
+          }
+  
+          v.step = 2.27; // row(シート上の行番号)の設定
+          v.o.row = v.arg.header + v.r;
+
+          v.step = 2.28; // this.obj, arrへの格納
+          this.obj[v.o.nId] = v.o;
+          this.arr.push(v.o);
         }
-        // レベル未定(=ラベル欄に文字列が無い)行はスキップ
-        if( v.o.level === null ) continue;
+        v.rv.arr = JSON.parse(JSON.stringify(this.arr));
+        v.rv.arr.forEach(o => { // クライアント側で不要な項目を削除
+          delete o.num;
+          delete o.row;
+        });
+      })();
 
-        v.step = 2.24; // noteの設定
-        if( v.o.raw.hasOwnProperty(this.arg.note) ){
-          v.o.note = v.o.raw[this.arg.note];
-        }
-
-        v.step = 2.25; // pId,seqの設定
-        if( v.stack[v.o.level-1] === null ) throw new Error('level skipped.');
-        v.o.pId = v.stack[v.o.level-1].nId;
-        v.o.seq = ++v.stack[v.o.level-1].seq;
-
-        v.step = 2.26; // num(子要素数)の設定、stackの更新
-        if( v.stack[v.o.level] !== null ){
-          // 更新前の最新ノードの子要素数にseqを代入
-          this.obj[v.stack[v.o.level].nId].num = v.stack[v.o.level].seq;
-        }
-        v.stack[v.o.level] = {nId:v.o.nId,seq:0};
-        for( v.i=v.o.level+1 ; v.i<=this.cols.lvNum ; v.i++ ){
-          v.stack[v.i] = null;
-        }
-
-        v.step = 2.27; // base,row(シート上の行番号)の設定
-        if( v.o.raw.hasOwnProperty(this.arg.base) ){
-          v.o.base = v.o.raw[this.arg.base];
-        }
-        v.o.row = this.arg.header + v.r;
-
-        v.step = 2.28; // this.obj, arrへの格納
-        this.obj[v.o.nId] = v.o;
-        this.arr.push(v.o);
-      }
-
-      // ---------------------------------------------
-      // シート上の「グループ」をthis.groupsに格納
-      // ---------------------------------------------
-      v.step = 3.1; // 再帰呼出関数を定義
-      v.recursive = (o,d=0) => {
-        v.step = 3.11;
-        if( d >= this.cols.lvNum ) throw new Error('too many depth');
-        v.step = 3.12; // 子要素を抽出
-        v.children = this.arr.filter(x => x.pId === o.nId).sort((a,b)=>a.seq<b.seq);
-        if( v.children.length === 0 ){
-          v.step = 3.13; // 子要素が存在しない場合、edRow=自行
-          o.edRow = o.row;
-        } else {
-          v.step = 3.14; // stRow,edRowは「行番号」(≠添字)
-          o.stRow = o.row + 1; // 子要素の開始行＝自要素の次行
-          v.children.forEach(x => o.edRow = v.recursive(x,d+1));
-          this.groups.push({st:o.stRow,ed:o.edRow,depth:d});
-        }
-        v.step = 3.15;
-        return o.edRow;
-      };
-
-      v.step = 3.2; // トップレベルを抽出、再帰関数を呼び出し
-      this.groups = [];
-      this.arr.filter(x => x.pId === 0).sort((a,b)=>a.seq<b.seq)
-      .forEach(x => v.recursive(x,0));
+      (()=>{  v.step = 3; // シート上の「グループ」をthis.groupsに格納
+        v.step = 3.1; // 再帰呼出関数を定義
+        v.recursive = (o,d=0) => {
+          const w = {};
+          v.step = 3.11;
+          if( d > (v.to - v.fm + 1) ) throw new Error('too many depth');
+          v.step = 3.12; // 子要素を抽出
+          v.children = this.arr.filter(x => x.pId === o.nId).sort((a,b)=>a.seq<b.seq);
+          if( v.children.length === 0 ){
+            v.step = 3.13; // 子要素が存在しない場合、edRow=自行
+            w.edRow = o.row;
+          } else {
+            v.step = 3.14; // stRow,edRowは「行番号」(≠添字)
+            w.stRow = o.row + 1; // 子要素の開始行＝自要素の次行
+            v.children.forEach(x => w.edRow = v.recursive(x,d+1));
+            this.groups.push({st:w.stRow,ed:w.edRow,depth:d});
+          }
+          v.step = 3.15;
+          return w.edRow;
+        };
+  
+        v.step = 3.2; // トップレベルを抽出、再帰関数を呼び出し
+        this.groups = [];
+        this.arr.filter(x => x.pId === 0).sort((a,b)=>a.seq<b.seq)
+        .forEach(x => v.recursive(x,0));
+      })();
 
       // ---------------------------------------------
       v.step = 9; // 終了処理
       // ---------------------------------------------
-      v.rv = {
-        arg: this.arg,
-        header: this.cols.header,
-        obj: this.obj,
-        arr: this.arr,
-      }
       console.log(`${v.whois} normal end.`);
       return v.rv;
 
@@ -277,6 +250,7 @@ class TypeDef{
 
       v.step = 2; // グループ化実行
       this.groups.forEach(x => {
+        console.log(`l.252 x=${stringify(x)}`)
         if( x.depth < 8 ) // シート上のグループ化は8階層まで
           this.sheet.getRange(x.st,1,x.ed-x.st+1).shiftRowGroupDepth(1);
       });
@@ -290,7 +264,6 @@ class TypeDef{
       return e;
     }
   }
-
 }
 
 function stringify(variable,opt={addType:false}){

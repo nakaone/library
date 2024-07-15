@@ -4,6 +4,7 @@
 <script src="https://cdn.jsdelivr.net/npm/alasql@4.4.0/dist/alasql.min.js"></script>
 </head>
 <body>
+  <h1>test</h1>
   <div class="TypeDefs">
     <div name="rootId" style="display:none"><?= rootId ?></div>
     <div name="data" style="display:none"><?= data ?></div>
@@ -372,7 +373,7 @@ class LoadingIcon {
       this.hide();
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
@@ -396,76 +397,342 @@ function htmlEscape(str){ // https://jp-seemore.com/web/3534/#toc5
 }
 class TypeDefsClient{
   /** @constructor
+   * - html上に実装するのは参照のみ。編集他はシートで行う。
+   * - 編集・追加・コピペ・削除機能を追加する場合はTypeDefs/2.2.0を参照
+   * - baseの子要素の削除は、参照先の子要素に削除対象ノードのnIdを負数で設定することで実現
+   * - baseの子要素の変更は参照先に子要素を追加、追加した要素のbaseに変更対象のnIdを設定
    */
   constructor(arg={}){
     const v = {whois:this.constructor.name+'.constructor',rv:null,step:0,default:{
+      wrapper: 'body > .'+this.constructor.name, // ラッパーのCSSセレクタ。constructor内でHTMLElementに変換
       rootId: 'div[name="rootId"]',    // URLクエリで渡されたルートIDのCSSセレクタ。constructor内で数値に変換
       dataDiv: 'div[name="data"]',  // TypeDefsServerから渡されたデータ(JSON)
+      css: `
+        /* ツリー描画領域 */
+        .TypeDefsClient .tree, .tr {display: grid; width: 100%;}
+        .TypeDefsClient .tree .tr {grid-template-columns: repeat(21,1rem) 1fr; gap:0.2rem; width:100%}
+        .TypeDefsClient .tree .tr.deleted {color:#aaa; text-decoration: line-through;}
+        .TypeDefsClient .tree .th {grid-column: 1/3;}
+        .TypeDefsClient .tree .td {grid-column: 3/13; width: 100%;}
+        .TypeDefsClient .tree .ctrl {color:#aaa}
+        .TypeDefsClient .tree .comment {background-color: #ccc; padding: 0 3rem;}
+        .TypeDefsClient .tree span.link[name="label"] {color:#00f}
+
+        /* ツールチップ
+          CSSだけでツールチップを実現する方法
+          https://so-zou.jp/web-app/tech/css/sample/tooltip.htm */
+        .TypeDefsClient .tooltip a:hover {position: relative;}
+        .TypeDefsClient .tooltip a:hover:after {content: attr(title);
+          /* 位置 */
+          position: absolute;
+          left: 0;
+          top: 32px;
+          z-index: 1;
+          /* 文字 */
+          font-weight: normal;
+          color: black;
+          white-space: nowrap;
+          /* 背景 */
+          background-color: white;
+          padding: 3px;
+          border: 1px silver solid;
+          border-radius: 3px;
+          box-shadow: 1px 1px 3px silver;
+        }
+      `,
     }};
     console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
     try {
 
-      // ---------------------------------------------------
-      v.step = 1; // 既定値を設定、データを取得(this.raw)
-      // ---------------------------------------------------
-      v.step = 1.1; // 引数とv.defaultで設定された既定値からメンバ作成
-      Object.keys(v.default).forEach(x => 
-        this[x] = whichType(v.default[x],'Object')
-        ? mergeDeeply((arg[x]||{}),v.default[x])
-        : (arg[x] || v.default[x])
-      );
-      v.step = 1.2; // サーバ側から渡されるマスタ(JSON)が格納される領域
-      this.raw = JSON.parse(document.querySelector(this.dataDiv).innerText);
-      v.step = 1.3; // サーバ側から渡されるルートのID
-      this.rootId = Number(document.querySelector(this.rootId).innerText);
-      console.log(`l.414 this.rootId=${this.rootId}\nthis.raw=${stringify(this.raw)}`);
+      (()=>{  v.step = 1; // 既定値を設定、データを取得(this.raw)
+        v.step = 1.1; // 引数とv.defaultで設定された既定値からメンバ作成
+        Object.keys(v.default).forEach(x =>
+          this[x] = whichType(v.default[x],'Object')
+          ? mergeDeeply((arg[x]||{}),v.default[x])
+          : (arg[x] || v.default[x])
+        );
+        v.step = 1.2; // サーバ側から渡されるマスタ(JSON)が格納される領域
+        this.raw = JSON.parse(document.querySelector(this.dataDiv).innerText);
+        v.step = 1.3; // サーバ側から渡されるルートのID
+        this.rootId = Number(document.querySelector(this.rootId).innerText);
+        //console.log(`l.414 this.rootId=${this.rootId}\nthis.raw=${stringify(this.raw)}`);
+      })();
 
-      // ---------------------------------------------------
-      v.step = 2; // データベース化
-      // ---------------------------------------------------
-      v.step = 2.1; // create
-      v.systemCols = {
-        nId: 'int primary key',// {number} ノードのID。自然数
-        level: 'int not null',// {number} 当該行の階層。自然数
-        label: 'string',// {string} ノードのラベル
-        note: 'string',// {string} 備考欄
-        pId: 'int not null',// {number} 親ノードのID
-        seq: 'int not null',// {number} 親ノード内での順番。自然数
-        num: 'int default 0',// {number} 子要素の数
-        base: 'string',// {number} 継承元ノード(基底ノード)のID
-        row: 'int',// {number} シート上の行番号(自然数)
-      };
-      v.cols = Object.assign({},v.systemCols,this.raw.arg.attr);
-      v.sql = '';
-      Object.keys(v.cols).forEach(col => v.sql += `\`${col}\` ${v.cols[col]},`);
-      v.sql = `create table node (${v.sql.slice(0,v.sql.length-1)})`;
-      v.r = alasql(v.sql); if( v.r instanceof Error ) throw v.r;
-
-      v.step = 2.2; // insert
-      for( v.i=0 ; v.i<this.raw.arr.length ; v.i++ ){
-        v.o = this.raw.arr[v.i];
-        v.cols = []; v.vals = [];
-        Object.keys(v.systemCols).forEach(x => {
-          if( v.o[x] || v.o[x] === 0 ){
-            v.cols.push('`'+x+'`');
-            v.vals.push(v.systemCols[x].match(/string/)
-            ? `"${htmlEscape(v.o[x])}"` : v.o[x]);
-          }
-        });
-        Object.keys(this.raw.arg.attr).forEach(x => {
-          if( v.o.raw[x] || v.o.raw[x] === 0 ){
-            v.cols.push('`'+x+'`');
-            v.vals.push(this.raw.arg.attr[x].match(/string/)
-            ? `"${htmlEscape(v.o.raw[x])}"` : v.o.raw[x]);
-          }
-        });
-        v.sql = `insert into node (${v.cols.join()}) values (${v.vals.join()});`;
+      (()=>{  v.step = 2; // データベース作成
+        v.systemCols = {
+          nId: 'int primary key',// {number} ノードのID。自然数
+          level: 'int not null',// {number} 当該行の階層。自然数
+          label: 'string',// {string} ノードのラベル
+          note: 'string',// {string} 備考欄
+          pId: 'int not null',// {number} 親ノードのID
+          seq: 'int not null',// {number} 親ノード内での順番。自然数
+          num: 'int default 0',// {number} 子要素の数
+          base: 'string',// {string} 継承元ノード(基底ノード)のID。カンマ区切りで多重継承に対応
+          row: 'int',// {number} シート上の行番号(自然数)
+          // ----- 以下はTypeDefClient内で追加される項目 -------------------
+          isOpen: 'boolean default false',  // {boolean} html表示時、trueなら子要素を表示
+          path: 'string', // {string} ルート〜自要素までのnId。カンマ区切り
+          lId: 'int default (-1)', // 継承によってシステム内で追加された要素の引用元のnId
+        };
+        v.cols = Object.assign({},v.systemCols,this.raw.arg.attr);
+        v.sql = '';
+        Object.keys(v.cols).forEach(col => v.sql += `\`${col}\` ${v.cols[col]},`);
+        v.sql = `create table node (${v.sql.slice(0,v.sql.length-1)})`;
         v.r = alasql(v.sql); if( v.r instanceof Error ) throw v.r;
-      }
-      console.log(`l.458 node=${stringify(alasql('select * from node'))}`);
+
+        // insert
+        v.sql = 'insert into node select * from ?';
+        v.r = alasql(v.sql,[this.raw.arr]); if( v.r instanceof Error ) throw v.r;
+        console.log(`l.486`,stringify(alasql('select * from node')));
+      })();
+
+      (()=>{  v.step = 3; // 継承元設定値を継承先空欄に設定
+        for( v.i=0 ; v.i<this.raw.arr.length ; v.i++ ){
+          v.step = 3.1;
+          console.log(`l.492 this.raw.arr[${v.i}]=${stringify(this.raw.arr[v.i])}`)
+          v.to = this.raw.arr[v.i]; // 継承先。v.fm -> v.to (class v.to extend v.fm)
+          if( !v.to.base ) continue;  // 継承していないならスキップ
+
+          console.log(`l.496 v.to.base(${whichType(v.to.base)})=${stringify(v.to.base)}`)
+          v.bases = String(v.to.base).split(',');
+          for( v.j=0 ; v.j<v.bases.length ; v.j++ ){
+            v.step = 3.2;
+            if( v.bases[v.j] < 0 ) continue;  // 削除対象(nId<0)は除外
+            console.log(`l.500 this.raw.obj[${v.bases[v.j]}]=${stringify(this.raw.obj[v.bases[v.j]])}`)
+            v.fm = this.raw.obj[v.bases[v.j]];  // 継承元
+            // 子要素展開位置指定のためbaseに自分のnIdを設定している場合はスキップ
+            if( v.fm.nId !== v.to.nId ){
+              v.step = 3.3; // 継承元から継承先に引き継ぐべき項目を順次チェック
+              v.sql = [];
+              ['label','note'].forEach(col => { // システム項目
+                if((v.fm[col] || v.fm[col] === 0) && (!v.to[col] && v.to[col] !== 0)){
+                  v.step = 3.5; // 継承元項目が有効かつ継承先項目が無効の場合はコピー
+                  v.to[col] = v.fm[col];
+                  v.sql.push(`\`${col}\`=${JSON.stringify(v.fm[col])}`);
+                }
+              });
+              Object.keys(this.raw.arg.attr).forEach(col => { // 属性項目 いまここ
+                v.step = 3.4;
+                if((v.fm.raw[col] || v.fm.raw[col] === 0) && (!v.to.raw[col] && v.to.raw[col] !== 0)){
+                  v.step = 3.5; // 継承元項目が有効かつ継承先項目が無効の場合はコピー
+                  v.to[col] = v.fm[col];
+                  v.sql.push(`\`${col}\`=${JSON.stringify(v.fm[col])}`);
+                }
+              });
+              v.step = 3.6; // コピーされた項目があった場合、DBを更新
+              if( v.sql.length > 0 ){
+                v.step = 3.7;
+                console.log(`l.518 sql=update node set ${v.sql.join()} where nId=${v.to.nId}`)
+                v.r = alasql(`update node set ${v.sql.join()} where nId=${v.to.nId}`);
+                if( v.r instanceof Error ) throw v.r;
+              }
+            }
+          }
+        }
+        console.log(`l.524 ${JSON.stringify(alasql('select * from node where nId in (2,104)'))}`);
+      })();
+
+      (()=>{  v.step = 4; // 継承元の子要素を継承先に展開
+        const recursive = () => {  /* 子要素を展開する再帰関数を定義
+          1. 自要素(v.node)含め、継承元要素の子要素をv.childrenに作成
+          2. baseで削除対象として挙げられた子要素を追加対象から除外
+              (v.node.baseのnId<0の要素について、絶対値が同じ要素をv.childrenから削除)
+          3. 自要素直下の子要素で更新される継承元の子要素は追加対象から除外
+              (v.children内で自要素直下の子要素とnIdが一致する要素は削除)
+            ※ この段階で「v.childrenは有効なnodeの子要素のみ」となる
+          4. v.children内で順番(seq)を採番しなおす
+          5. 自要素直下の子要素について
+              (1) 再採番後のseqを反映(4.の結果が反映済なら不要)
+              (2) v.childrenから除外
+            ※ この段階で「v.childrenは追加登録すべき子要素のみ」となる
+          6. v.childrenに残った子要素について、順次再帰呼出する */
+        };
+        // ルート直下の要素について、再帰関数を呼び出し
+
+      })();
+
+      (()=>{  v.step = 5; // ツリー描画領域・ダイアログ・ツールチップの準備
+        v.step = 5.1; // ツリー描画領域
+        this.wrapper = document.querySelector('body > .'+this.constructor.name);
+        this.treeDiv = createElement({attr:{class:'tree'}},this.wrapper);
+
+        v.step = 5.5; // 待機画面の準備
+        this.loading = new LoadingIcon();
+
+        v.step = 5.6; // スタイルシートの準備
+        if( document.querySelector(`style[name="${this.constructor.name}"]`) === null ){
+          v.r = createElement({
+            tag: 'style',
+            attr: {type:'text/css',name:this.constructor.name},
+            text: this.css.replaceAll(/\/\*[\s\S]+?\*\//g,'').replaceAll(/\n/g,' ').replaceAll(/ +/g,' ').trim(),
+          },'head');
+          if( v.r instanceof Error ) throw v.r;
+        }
+      })();
 
       v.step = 9; // 終了処理
+      //v.r = this.disp();
+      //if( v.r instanceof Error ) throw v.r;
       console.log(`${v.whois} normal end.`);
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** 【旧版】disp: 描画領域にツリーを描画
+   * @param {number} nId=this.rootId - 描画対象のルート要素のnId
+   * @param {number[]} path=[] - ツリーの階層(ルートから自要素までのnIdの配列)
+   * @returns {null}
+   */
+  disp(nId=this.rootId,path=[]){
+    const v = {whois:this.constructor.name+'.disp',rv:null,step:0};
+    console.log(`${v.whois} start.\nnId=${nId}, path=${stringify(path)}`);
+    try {
+
+      v.step = 1; // 事前準備
+      v.step = 1.1; // pathを別オブジェクト化
+      v.path = JSON.parse(JSON.stringify(path));
+      v.step = 1.2; // 永久ループ防止
+      if( v.path.length > this.maxDepth ) throw new Error('too many depth');
+      v.step = 1.3; // ルート要素(初回呼出時)のみの処理
+      if( v.path.length === 0 ){
+        this.treeDiv.innerHTML = ''; // 表示領域をクリア
+      }
+
+      v.step = 2; // 自要素を描画
+      v.step = 2.1; // 自要素のnodeオブジェクトをv.nodeとして取得
+      v.sql = 'select node.nId, node.pId, node.seq, node.type'
+      + ', node.isOpen, node.`selected`' // ローカル側のみの項目
+      + ', node.`deleted`, leaf.lId, leaf.attribute'
+      + ' from node inner join leaf on node.lId=leaf.lId where '
+      + (this.showDeleted ? '' : 'node.`deleted` is null and ');
+      v.node = alasql(v.sql+'node.nId='+nId)[0];
+      if( !v.node ){  // 削除済だった場合、空集合 ⇒ 以降の処理をスキップ
+        console.log(`${v.whois} normal end. (empty node)`);
+        return v.rv;
+      }
+      v.path.push(nId);
+
+      v.step = 2.2; // lIdが他のブランチにも存在するならv.node.linkにツールチップ用文字列を設定
+      // v.node.link = [
+      //   [  ※ルートから自要素まで、node+leafのオブジェクトを並べる
+      //      {nId:0,lId:0,attribute:{label:'root'}},
+      //      {nId:1,lId:1,attribute:{label:'祖父母要素'}},
+      //      {nId:5,lId:2,attribute:{label:'親要素'}},
+      //      {nId:9,lId:5,attribute:{label:'自要素'}},
+      //   ],[..],..  ※複数箇所でリンクしていた場合、複数
+      // ]
+      // なお無効化されている行はthis.showDeleted=falseなら除外する
+      v.sql = 'select node.nId, node.pId, node.seq, node.lId, node.type, leaf.attribute'
+      + ' from node inner join leaf on node.lId=leaf.lId where'
+      + ( this.showDeleted ? '' : ' node.`deleted` is null and');
+      v.linkNodes = alasql(`${v.sql} node.nId<>${nId} and leaf.lId=${v.node.lId}`);
+
+      if( v.linkNodes.length > 0 ){
+        v.step = 2.21; // リンクが存在
+        v.node.link = [];
+        v.linkNodes.forEach(linkNode => {
+          v.step = 2.22; // 個々のリンクについて順次処理
+          v.nId = linkNode.pId;
+          v.tree = [linkNode];
+          v.depth = 0;
+          v.add = true;
+          while( v.add && linkNode.pId > 0 && v.depth < this.maxDepth ){
+            v.step = 2.23; // リンク〜ルートまでの要素を抽出
+            linkNode = alasql(`${v.sql} node.nId=${v.nId}`)[0];
+            if( linkNode !== undefined ){
+              v.step = 2.24; // 途中のノードを保存
+              v.tree.unshift(linkNode);
+              v.nId = linkNode.pId;
+              v.depth++;
+            } else {
+              v.step = 2.25; // 途中で見つからないノードが存在
+              // ⇒ this.showDeleted=falseでdeletedが設定されているノード
+              // ⇒ ツールチップ表示の対象外
+              v.add = false;
+            }
+          }
+          v.step = 2.26; // 途中のノードを先頭に保存
+          if( v.add ) v.node.link.push(v.tree);
+        });
+      }
+
+      v.step = 2.3; // createElement用の行オブジェクトをv.rvとして作成
+      v.step = 2.31; // 行(tr)を作成。deletedに日付があればclassにも追加、
+      // nameはJSON化したpath(ルート〜自要素のnIdの配列)
+      v.rv = {
+        attr:{name:JSON.stringify(v.path),class: 'tr'
+          + (v.node.deleted && v.node.deleted.length > 0 ? ' deleted' : '')},
+        event: {contextmenu:e => this.context(e)},
+        children:[],
+      };
+
+      v.step = 2.32; // 行内部のindent部を作成
+      v.rv.children.push({
+        attr:{class:'indent'},
+        style:{gridColumn:`1/${v.path.length+1}`,width:v.path.length+'rem'}
+      });
+
+      v.step = 2.33; // 行内部のctrl部を作成
+      v.ctrl = {  // 共通部分
+        attr: {class:'ctrl tooltip',title:`n=${v.node.nId},l=${v.node.lId}`},
+        style:{gridColumn:`${v.path.length+1}/${v.path.length+2}`},
+      };
+      // 子要素があれば[▶|▼]、無ければチェックボックス。コメント行等、子要素を持ち得ないtypeなら空白
+      v.children = alasql(v.sql+' node.pId='+nId+' order by seq');
+      if( this.iDef[v.node.type].ctrl ){
+        if( v.children.length > 0 ){
+          // 子要素が存在する場合、[▶|▼]を表示
+          v.ctrl.text = v.node.isOpen ? '▼' : '▶';
+          v.ctrl.event = {click:e => this.toggle(e)};
+        } else {
+          // 子要素が存在しない場合、チェックボックスを表示
+          v.ctrl.children = [{
+            tag:'input',
+            attr:{type:'checkbox'},
+            logical: {checked:v.node.selected},
+            event: {change:e=>{
+              const v = {};
+              v.name = e.target.closest('.tr').getAttribute('name');
+              v.nId = JSON.parse(v.name).slice(-1)[0];
+              v.checked = e.target.checked;
+              alasql('update node set `selected`='+v.checked+' where nId='+v.nId);
+            }}
+          }];
+        }
+      } else {
+        // コメント行等、子要素を持ち得ないtypeなら「□」を表示
+        // ※ this.iDef[v.node.type].ctrlで"false"が設定されているtype
+        v.ctrl.text = '□';
+        v.ctrl.event = {click:e => this.toggle(e)};
+      }
+      v.rv.children.push(v.ctrl);
+
+      v.step = 2.34; // 行内部のitem部を作成
+      v.rv.children.push({
+        attr:{class:'item'},
+        style:{gridColumn:`${v.path.length+2}/23`},
+        children: this.iDef[v.node.type].disp(v.node),
+      });
+
+      v.step = 2.4; // v.rvを描画領域に追加
+      v.r = createElement(v.rv,this.treeDiv);
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 3; // 子要素を順次再帰呼出
+      if( v.node.isOpen === true ){
+        for( v.i=0 ; v.i<v.children.length ; v.i++ ){
+          v.r = this.disp(v.children[v.i].nId,v.path);
+          if( v.r instanceof Error ) throw v.r;
+        }
+      }
+
+      v.step = 4; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
 
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
@@ -482,11 +749,11 @@ window.addEventListener('DOMContentLoaded',() => {
 
     v.step = 1;
     v.td = new TypeDefsClient();
-    
+
     v.step = 99; // 終了処理
     console.log(`${v.whois} normal end.`);
     return v.rv;
-    
+
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
     console.error(`${e.message}\nv=${JSON.stringify(v)}`);
