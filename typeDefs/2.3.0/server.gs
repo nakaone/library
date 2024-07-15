@@ -5,7 +5,7 @@ function doGet(e){
   v.template = HtmlService.createTemplateFromFile('index');
   v.template.rootId = e ? e.parameter.r || 0 : 0;
 
-  v.td = new TypeDef({nId:'id',lv:'l([0-9]+)',attr: {dataType:'string',role:'string'}});
+  v.td = new TypeDefServer();
   v.rv = v.td.analyze();
   v.template.data = JSON.stringify(v.rv);
 
@@ -22,14 +22,14 @@ function doGet(e){
  */
 function treeGroup(){
   const v = {};
-  v.td = new TypeDefServer();
+  v.td = new TypeDefServer({attr:{type:'string',role:'string',note:'string'}});
   v.r = v.td.analyze();
   v.r.arr = v.r.arr.slice(0,20);
   console.log(JSON.stringify(v.r));
   v.r = v.td.setupGroups();
 }
 
-/** TypeDef: 指定範囲のツリー構造のデータを並べ替え、グループ化する
+/** TypeDefServer: 指定範囲のツリー構造のデータを並べ替え、グループ化する
  * 
  * **元データの制約**
  * - lvの正規表現では数値部分を"([0-9]+)"とし、必ず括弧で囲む
@@ -69,7 +69,7 @@ class TypeDefServer{
    * @returns {Object} 分析結果。index.htmlへの返却用オブジェクト
    */
   analyze(arg={}){
-    const v = {whois:this.constructor.name+'.analyze',step:0,rv:{header:[],data:[]}};
+    const v = {whois:this.constructor.name+'.analyze',step:0,rv:{}};
     console.log(`${v.whois} start.`);
     try {
 
@@ -83,6 +83,7 @@ class TypeDefServer{
           right: null,  // 右端列番号。nullならgetDataRangeから設定
           top: 2,       // データ範囲の開始行番号
           bottom: null, // データ範囲の終端行番号。nullならgetDataRangeから設定
+          attr:{},      // 任意に追加される属性項目。項目名:SQL(create)の属性
         },this.arg,arg);
 
         v.step = 1.2; // 対象シートObjおよび指定範囲外を含む全範囲の生データを取得
@@ -112,13 +113,27 @@ class TypeDefServer{
            階層化ラベル欄は'label'または空欄
             fm: 階層化ラベル欄の開始位置。不要部分削除後の添字(0オリジン)
             to: 階層化ラベル欄の終端位置 */
-        v.fm = v.to = null;
-        v.rv.header = JSON.parse(JSON.stringify(v.raw[0]).replaceAll(/label/g,''));
-        for( v.c=v.l=0 ; v.c<v.rv.header.length ; v.c++ ){
-          if( v.rv.header[v.c].length === 0 ){
+        v.rv.header = [
+          {name:'nId',type:'int'},
+          {name:'label',type:'string'},
+          {name:'base',type:'string'},
+          {name:'level',type:'int'},
+          {name:'pId',type:'int'},
+          {name:'seq',type:'int'},
+        ];
+        v.fm = v.to = null; // 階層化ラベル欄の開始/終了位置(添字なので0オリジン)
+        v.header = JSON.parse(JSON.stringify(v.raw[0]).replaceAll(/label/g,''));
+        for( v.c=v.l=0 ; v.c<v.header.length ; v.c++ ){
+          if( v.header[v.c].length === 0 ){ // 空欄 ⇒ 階層化ラベル欄
             if( v.fm === null ) v.fm = v.c;
             v.to = v.c;
-            v.rv.header[v.c] = ++v.l;
+          } else {  // 非空欄 ⇒ 定義された属性ならv.rv.headerに追加
+            if( v.arg.attr[v.header[v.c]] ){
+              v.rv.header.push({
+                name: v.header[v.c],
+                type: v.arg.attr[v.header[v.c]],
+              });
+            }
           }
         }
       })();
@@ -160,7 +175,7 @@ class TypeDefServer{
                 v.o.label = v.val;
                 v.o.level = v.c - v.fm + 1;
               } else {  // ラベル欄以外
-                v.o[v.rv.header[v.c]] = v.val;
+                v.o[v.header[v.c]] = v.val;
               }
             }
           }
@@ -250,7 +265,6 @@ class TypeDefServer{
 
       v.step = 2; // グループ化実行
       this.groups.forEach(x => {
-        console.log(`l.252 x=${stringify(x)}`)
         if( x.depth < 8 ) // シート上のグループ化は8階層まで
           this.sheet.getRange(x.st,1,x.ed-x.st+1).shiftRowGroupDepth(1);
       });
