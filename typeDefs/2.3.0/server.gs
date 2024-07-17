@@ -37,7 +37,7 @@ function treeGroup(){
  * - 「行番号」「列番号」はシート上の行/列番号を指す【自然数】
  * - 'nId','base'はシート上の必須項目
  * - 階層化ラベル欄は空欄にする。または先頭に'label'とのみ表記(他の文字列だと属性項目と解釈される)
- * - システムで付加される項目は予約語なのでラベルには使用不可(level,pId,seq,path,children,tmp)
+ * - 'sys'は予約語なのでラベルには使用不可
  * 
  * **メンバ変数**
  * 
@@ -47,24 +47,28 @@ function treeGroup(){
  * - this.header {Object[]} ヘッダ項目の情報
  *   - name {string} ヘッダ項目名の文字列(ex.'note')
  *   - type {string} SQLで項目を作成する場合の属性(ex.'int primary key')
- *   - isSys {boolean} システム項目ならtrue
  * - this.arr {Object[]} 行単位のデータオブジェクトの配列
- *   - === 以下はシート上の項目 =================
+ *   - === シート上の項目 =================
  *   - nId {number} ノードのID。自然数
  *   - label {string} ノードのラベル
  *   - base {number[]} シート上は文字列。継承元ノード(基底ノード)のID
  *   - xxxx {any} その他任意項目(role,note等)
- *   - === 以下はシステムで付加される項目 =================
- *   - level {number} 当該行の階層。自然数
- *   - pId {number} 親ノードのID
- *   - seq {number} 親ノード内での順番。自然数
- *   - path {number[]} ルート〜自要素までのnId
- *   - children {number[]} 自分＋継承元ノードの有効な子要素のnId
- *   - _sys {Object} システム内で使用するが、クライアント側には渡されない項目
+ *   - === システムで付加される項目 =================
+ *   - sys {Object}
+ *     - level {number} 当該行の階層。自然数
+ *     - pId {number} 親ノードのID
+ *     - seq {number} 親ノード内での順番。自然数
+ *     - path {number[]} ルート〜自要素までのnId
  *     - num {number} 子要素の数
  *     - row {number} シート上の行番号
- *     - own {number[]} 自分の子要素の配列
- *     - base {number[]} base(文字列)を分割、継承元nIdの配列
+ *     - own {number[]} 自分の子要素のnIdの配列
+ *     - base {number[]} base(文字列)を分割、継承元nIdの配列。自要素を含む
+ *     - ref {Object[]} 自分＋継承元ノードの子要素。含、無効な子要素
+ *       - nId {number} 継承元ノード(含、自要素)のnId
+ *       - children {number[]} 継承元ノード(含、自要素)の子要素のnIdの配列
+ *     - children {Object[]} 自分＋継承元ノードの「有効な」子要素
+ *       - nId {number} 子要素のnId
+ *       - base {number} 継承元ノードのnId。自ノードの場合、自分のnId
  * - this.obj {Object} 構造化した行単位のデータオブジェクト
  * - this.groups {Object[]} シート上でグループ化を行うための、グループ化単位の情報
  *   - st {number} グループ化開始行番号
@@ -114,18 +118,18 @@ class TypeDefServer{
   /** analyze: シートからデータを取得してノード間の関連他を分析、メンバに格納する
    * @param {void}
    * @returns {Object} 分析結果。index.htmlへの返却用オブジェクト
-   * 
-   * ** 戻り値 **
    */
-  analyze(arg={}){
+  analyze(){
     const v = {whois:this.constructor.name+'.analyze',step:0,rv:{}};
     console.log(`${v.whois} start.`);
     try {
 
       (()=>{  v.step = 1; // 事前準備
 
-        v.step = 1.1; // 引数の既定値設定
-        v.arg = Object.assign({},this.arg,arg);
+        v.step = 1.1; // 設定値をコピー
+        // インスタンス生成後にシートを変更・再読込が行われる可能性を排除できないので、
+        // this.argはインスタンス生成時の状態を保存するためコピーを使用する。
+        v.arg = Object.assign({},this.arg);
 
         v.step = 1.2; // 対象シートObjおよび指定範囲外を含む全範囲の生データを取得
         this.sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(v.arg.sheetName);
@@ -155,14 +159,10 @@ class TypeDefServer{
             fm: 階層化ラベル欄の開始位置。不要部分削除後の添字(0オリジン)
             to: 階層化ラベル欄の終端位置 */
         this.header = [
-          {name:'nId',type:'int',isSys:true},
-          {name:'label',type:'string',isSys:true},
-          {name:'base',type:'string',isSys:true},
-          {name:'level',type:'int',isSys:true},
-          {name:'pId',type:'int',isSys:true},
-          {name:'seq',type:'int',isSys:true},
-          {name:'path',type:'string',isSys:true},
-          {name:'children',type:'string',isSys:true},
+          {name:'nId',type:'int'},
+          {name:'label',type:'string'},
+          {name:'base',type:'string'},
+          {name:'sys',type:'json'}
         ];
         v.fm = v.to = null; // 階層化ラベル欄の開始/終了位置(添字なので0オリジン)
         v.header = JSON.parse(JSON.stringify(v.raw[0]).replaceAll(/label/g,''));
@@ -175,7 +175,6 @@ class TypeDefServer{
               this.header.push({
                 name: v.header[v.c],
                 type: v.arg.attr[v.header[v.c]],
-                isSys: false,
               });
             }
           }
@@ -185,31 +184,30 @@ class TypeDefServer{
       (()=>{  v.step = 2; // this.arrを作成
 
         v.step = 2.1; // 事前準備
-        this.arr = [];  // {Object[]} Objectはv.protoの各項目から_sysを除いたもの
+        this.arr = [];  // {Object[]} Objectはv.protoの各項目からsysを除いたもの
         v.proto = JSON.stringify({    // v.obj,arrに格納されるオブジェクトの原型
           nId: null,   // {number} ノードのID。自然数
           label: null, // {string} ノードのラベル
           base: '',  // {number} 継承元ノード(基底ノード)のID
-          level: null, // {number} 当該行の階層。自然数
-          pId: null,   // {number} 親ノードのID
-          seq: null,   // {number} 親ノード内での順番。自然数
-          path: [],   // {number[]} ルート〜自要素までのnId
-          children: [], // 自分＋継承元ノードの有効な子要素のnId
-          _sys: {
+          sys: {
+            level: null, // {number} 当該行の階層。自然数
+            pId: null,   // {number} 親ノードのID
+            seq: null,   // {number} 親ノード内での順番。自然数
+            path: [],    // {number[]} ルート〜自要素までのnId
             num: 0,      // {number} 子要素の数
             row: 0,      // {number} シート上の行番号(自然数)
-            own: [],    // {number[]} 自分の子要素の配列
-            base: [],   // {number[]} base(文字列)を分割、継承元nIdの配列
+            own: [],     // {number[]} 自分の子要素の配列
+            base: [],    // {number[]} base(文字列)を分割、継承元nIdの配列
+            ref:[],      // {Object[]} 自分＋継承元ノードの子要素。含、無効な子要素
+            children:[], // {Object[]} 自分＋継承元ノードの「有効な」子要素
           }
         });
-
-        v.obj = {0:{nId:0}};
 
         // v.stack {Object[]} - レベル毎に最新のnIdとseqを保持する
         v.stack = new Array(9).fill(null);
         v.stack[0] = {nId:0,seq:0}; // root(lv=0)
 
-
+        v.obj = {0:{nId:0}};
         for( v.r=1 ; v.r<v.raw.length ; v.r++ ){
           v.o = JSON.parse(v.proto);
 
@@ -219,41 +217,37 @@ class TypeDefServer{
             if( v.val || v.val === 0 ){ // 空欄ではない場合
               if( v.fm <= v.c && v.c <= v.to ){  // 階層化ラベル欄
                 v.o.label = v.val;
-                v.o.level = v.c - v.fm + 1;
+                v.o.sys.level = v.c - v.fm + 1;
               } else {  // ラベル欄以外
                 v.o[v.header[v.c]] = v.val;
               }
             }
           }
           // レベル未定(=ラベル欄に文字列が無い)行はスキップ
-          if( v.o.level === null ) continue;
+          if( v.o.sys.level === null ) continue;
 
           v.step = 2.25; // pId,seqの設定
-          if( v.stack[v.o.level-1] === null ) throw new Error('level skipped.');
-          v.o.pId = v.stack[v.o.level-1].nId;
-          v.o.seq = ++v.stack[v.o.level-1].seq;
+          if( v.stack[v.o.sys.level-1] === null ) throw new Error('level skipped.');
+          v.o.sys.pId = v.stack[v.o.sys.level-1].nId;
+          v.o.sys.seq = ++v.stack[v.o.sys.level-1].seq;
   
           v.step = 2.26; // num(子要素数)の設定、stackの更新
-          if( v.stack[v.o.level] !== null ){
+          if( v.stack[v.o.sys.level] !== null ){
             // 更新前の最新ノードの子要素数にseqを代入
-            v.obj[v.stack[v.o.level].nId]._sys.num = v.stack[v.o.level].seq;
+            v.obj[v.stack[v.o.sys.level].nId].sys.num = v.stack[v.o.sys.level].seq;
           }
-          v.stack[v.o.level] = {nId:v.o.nId,seq:0};
-          for( v.i=v.o.level+1 ; v.i<=(v.to-v.fm+1) ; v.i++ ){
+          v.stack[v.o.sys.level] = {nId:v.o.nId,seq:0};
+          for( v.i=v.o.sys.level+1 ; v.i<=(v.to-v.fm+1) ; v.i++ ){
             v.stack[v.i] = null;
           }
   
           v.step = 2.27; // row(シート上の行番号)の設定
-          v.o._sys.row = v.arg.header + v.r;
+          v.o.sys.row = v.arg.header + v.r;
 
           v.step = 2.28; // v.obj, arrへの格納
           v.obj[v.o.nId] = v.o;
           this.arr.push(v.o);
         }
-        v.rv.arr = JSON.parse(JSON.stringify(this.arr));
-        v.rv.arr.forEach(o => { // クライアント側で不要な項目を削除
-          delete o._sys;
-        });
       })();
 
       (()=>{  v.step = 3; // シート上の「グループ」をthis.groupsに格納
@@ -263,28 +257,28 @@ class TypeDefServer{
           v.step = 3.11;
           if( d > (v.to - v.fm + 1) ) throw new Error('too many depth');
           v.step = 3.12; // 子要素を抽出
-          v.children = this.arr.filter(x => x.pId === o.nId).sort((a,b)=>a.seq<b.seq);
+          v.children = this.arr.filter(x => x.sys.pId === o.nId).sort((a,b)=>a.seq<b.seq);
 
           v.step = 3.13; // システム項目の設定
-          o._sys.own = v.children.map(x => x.nId);
-          o.path = path.concat([o.nId]);
-          o._sys.base = JSON.parse(`[${o.base}]`);
-          if( o._sys.base.findIndex(x => x === o.nId) < 0 ){
+          o.sys.own = v.children.map(x => x.nId);
+          o.sys.path = path.concat([o.nId]);
+          o.sys.base = JSON.parse(`[${o.base}]`);
+          if( o.sys.base.findIndex(x => x === o.nId) < 0 ){
             // baseに自nId未登録ならarg.addに従って追加
             if( v.arg.add === 'bottom' ){
-              o._sys.base.push(o.nId);
+              o.sys.base.push(o.nId);
             } else {
-              o._sys.base.unshift(o.nId);
+              o.sys.base.unshift(o.nId);
             }
           }
 
           if( v.children.length === 0 ){
             v.step = 3.14; // 子要素が存在しない場合、edRow=自行
-            w.edRow = o._sys.row;
+            w.edRow = o.sys.row;
           } else {
             v.step = 3.15; // stRow,edRowは「行番号」(≠添字)
-            w.stRow = o._sys.row + 1; // 子要素の開始行＝自要素の次行
-            v.children.forEach(x => w.edRow = v.recursive(x,d+1,o.path));
+            w.stRow = o.sys.row + 1; // 子要素の開始行＝自要素の次行
+            v.children.forEach(x => w.edRow = v.recursive(x,d+1,o.sys.path));
             this.groups.push({st:w.stRow,ed:w.edRow,depth:d});
           }
 
@@ -294,11 +288,11 @@ class TypeDefServer{
   
         v.step = 3.2; // トップレベルを抽出、再帰関数を呼び出し
         this.groups = [];
-        this.arr.filter(x => x.pId === 0).sort((a,b)=>a.seq<b.seq)
+        this.arr.filter(x => x.sys.pId === 0).sort((a,b)=>a.seq<b.seq)
         .forEach(x => v.recursive(x,0,[0]));
       })();
 
-      (()=>{  v.step = 4; /* this.objを作成
+      (()=>{  v.step = 4; /* this.arrに継承元の情報を反映、childrenを作成
         自分の子要素の設定ルール
         nId < 0 ⇒ 継承元ノードの-nIdを削除
         nId >= 0
@@ -309,17 +303,17 @@ class TypeDefServer{
         整理すると nId>=0 の場合は通常と同じ取扱となる。
         */
 
-        v.attrCols = this.header  // 属性項目名の一覧を作成
-        .filter(x => x.isSys === false).map(x => x.name);
-        v.obj = {};
+        v.step = 4.1; // 事前準備
+        v.attrCols = Object.keys(v.arg.attr); // 属性項目名の一覧を作成
+        v.obj = {}; // v.objを再設定
         this.arr.forEach(o => v.obj[o.nId] = o);
 
-        v.step = 4.1; // this.arrを基に、空欄を継承元ノードの値で補完
+        v.step = 4.2; // this.arrを基に、空欄を継承元ノードの値で補完
         for( v.i=0 ; v.i<this.arr.length ; v.i++ ){
           v.o = this.arr[v.i];
-          for( v.j=0 ; v.j<v.o._sys.base.length ; v.j++ ){
+          for( v.j=0 ; v.j<v.o.sys.base.length ; v.j++ ){
             v.step = 4.2; // 継承元ノード毎の処理
-            v.bId = v.o._sys.base[v.j] = Number(v.o._sys.base[v.j]);
+            v.bId = v.o.sys.base[v.j] = Number(v.o.sys.base[v.j]);
             if( v.bId < 0 ) continue; // 削除指定の場合スキップ
             v.step = 4.3; // 空欄があれば継承元の値で補完
             v.attrCols.forEach(x => {
@@ -327,23 +321,31 @@ class TypeDefServer{
                 v.o[x] = v.obj[v.bId][x];
               }
             });
-            v.step = 4.4; // childrenへの追加
-            v.obj[v.bId]._sys.own.forEach(x => {
+            v.step = 4.4; // refへの追加
+            v.o.sys.ref.push({nId:v.bId,children:v.obj[v.bId].sys.own});
+            v.step = 4.5; // childrenへの追加
+            v.obj[v.bId].sys.own.forEach(x => {
               // 循環参照していればエラー
-              if( v.o.path.findIndex(i => i === x) >= 0 ){
+              if( v.o.sys.path.findIndex(i => i === x) >= 0 ){
                 throw new Error(`circular reference. nId=${x}`);
               }
               // 削除要素ではない(-nIdがbaseに無い)なら追加
-              if( v.o._sys.base.findIndex(i => i === -x) < 0 ){
-                v.o.children.push(x);
+              if( v.o.sys.base.findIndex(i => i === -x) < 0 ){
+                v.o.sys.children.push({nId:x,base:v.bId});
               }
             });
           }
         }
       })();
+
       // ---------------------------------------------
       v.step = 9; // 終了処理
       // ---------------------------------------------
+      v.rv = {
+        arg   : v.arg,
+        header: this.header,
+        arr   : this.arr,
+      };
       console.log(`${v.whois} normal end.`);
       return v.rv;
 
