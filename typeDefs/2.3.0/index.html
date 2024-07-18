@@ -418,8 +418,8 @@ class TypeDefsClient{
         .TypeDefsClient .tree .th {grid-column: 1/3;}
         .TypeDefsClient .tree .td {grid-column: 3/13; width: 100%;}
         .TypeDefsClient .tree .ctrl {color:#aaa}
-        .TypeDefsClient .tree .comment {background-color: #ccc; padding: 0 3rem;}
-        .TypeDefsClient .tree span.link[name="label"] {color:#00f}
+        .TypeDefsClient .tree .item {display:grid; width:100%; grid-template-columns: repeat(12,1fr)}
+        .TypeDefsClient .tree .item .annotation {font-size:0.75rem;color:#aaa}
 
         /* ツールチップ
           CSSだけでツールチップを実現する方法
@@ -551,7 +551,7 @@ class TypeDefsClient{
           style:{gridColumn:`1/${v.path.length+1}`,width:v.path.length+'rem'}
         };
         v.ctrl = {   // ctrl部
-          attr:{class:'ctrl'},
+          attr:{class:'ctrl tooltip',title:'nId='+nId},
           text: v.node.isOpen ? '▼' : '▶',
           style:{gridColumn:`${v.path.length+1}/${v.path.length+2}`},
           event:{click:e=>this.toggle(e)},
@@ -559,7 +559,7 @@ class TypeDefsClient{
         v.item = {   // アイテム部(ラベル)
           attr:{class:'item'},
           style:{gridColumn:`${v.path.length+2}/23`},
-          html: v.node.label,
+          children:[],
         };
         v.tr.children.push(v.indent,v.ctrl,v.item);
       })();
@@ -569,6 +569,19 @@ class TypeDefsClient{
 
 
       v.step = 3; // item部の作成
+      v.item.children.push({
+        html : v.node.label + '&emsp;'
+          + `<span class="annotation">${v.node.type||''}</span>`,
+        style: {gridColumn:'1/13',},
+      },{
+        attr : {class:'annotation'},
+        html : v.node.role || '',
+        style: {gridColumn:'1/13',fontSize:'0.75rem',color:'#aaa'},
+      },{
+        attr : {class:'annotation'},
+        html : v.node.note || '',
+        style: {gridColumn:'1/13',fontSize:'0.75rem',color:'#aaa'},
+      });
 
       (()=>{  v.step = 4; // 一行分の描画、子要素の再帰呼出
 
