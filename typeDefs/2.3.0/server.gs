@@ -1,3 +1,17 @@
+/** treeGroup: シート関数。階層ラベルに従ってグループ化する
+ * Apps Script上で呼び出して実行することを想定した関数
+ * @param {void}
+ * @returns {void}
+ */
+function treeGroup(){
+  const v = {};
+  v.td = new TypeDefServer({attr:{type:'string',role:'string',note:'string'}});
+  v.r = v.td.analyze();
+  v.r.arr = v.r.arr.slice(0,20);
+  console.log(JSON.stringify(v.r));
+  v.r = v.td.setupGroups();
+}
+
 function doGet(e){
   const v = {rv:{}};
   console.log(`doGet start`);
@@ -13,20 +27,6 @@ function doGet(e){
   v.htmlOutput.setTitle('TypeDefs r.2.3.0');
   console.log(`doGet end\npId=${v.template.pId}\n${JSON.stringify(v.template.data)}`);
   return v.htmlOutput;
-}
-
-/** treeGroup: シート関数。階層ラベルに従ってグループ化する
- * Apps Script上で呼び出して実行することを想定した関数
- * @param {void}
- * @returns {void}
- */
-function treeGroup(){
-  const v = {};
-  v.td = new TypeDefServer({attr:{type:'string',role:'string',note:'string'}});
-  v.r = v.td.analyze();
-  v.r.arr = v.r.arr.slice(0,20);
-  console.log(JSON.stringify(v.r));
-  v.r = v.td.setupGroups();
 }
 
 /** TypeDefServer: 指定範囲のツリー構造のデータを並べ替え、グループ化する

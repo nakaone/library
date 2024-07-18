@@ -552,40 +552,55 @@ class TypeDefsClient{
         };
         v.ctrl = {   // ctrl部
           attr:{class:'ctrl tooltip',title:'nId='+nId},
-          text: v.node.isOpen ? '▼' : '▶',
           style:{gridColumn:`${v.path.length+1}/${v.path.length+2}`},
-          event:{click:e=>this.toggle(e)},
         };
         v.item = {   // アイテム部(ラベル)
           attr:{class:'item'},
           style:{gridColumn:`${v.path.length+2}/23`},
           children:[],
         };
-        v.tr.children.push(v.indent,v.ctrl,v.item);
       })();
 
       v.step = 2; // ctrl部の作成
-
-
+      // 子要素が無い場合は「■」、有る場合は矢印
+      if( v.node.sys.children.length > 0 ){
+        v.ctrl.text = v.node.isOpen ? '▼' : '▶';
+        v.ctrl.event = {click:e=>this.toggle(e)};
+      } else {
+        v.ctrl.text = '■';
+      }
 
       v.step = 3; // item部の作成
-      v.item.children.push({
-        html : v.node.label + '&emsp;'
-          + `<span class="annotation">${v.node.type||''}</span>`,
-        style: {gridColumn:'1/13',},
-      },{
-        attr : {class:'annotation'},
-        html : v.node.role || '',
-        style: {gridColumn:'1/13',fontSize:'0.75rem',color:'#aaa'},
-      },{
-        attr : {class:'annotation'},
-        html : v.node.note || '',
-        style: {gridColumn:'1/13',fontSize:'0.75rem',color:'#aaa'},
-      });
+      v.isComment = v.node.label.match(/^■/)
+        && !v.node.base && !v.node.type && !v.node.role && !v.node.note;
+      if( v.isComment ){
+        delete v.ctrl;
+        v.item.style = {gridColumn:`${v.path.length+1}/23`};
+        v.item.children.push({
+          html:v.node.label,
+          style:{gridColumn:'1/13',background:'#ddd',paddingLeft:'1rem'},
+        });
+        console.log(`l.586 v.item=${stringify(v.item)}`)
+      } else {
+        v.item.children.push({
+          html : v.node.label + '&emsp;'
+            + `<span class="annotation">${v.node.type||''}</span>`,
+          style: {gridColumn:'1/13',},
+        },{
+          attr : {class:'annotation'},
+          html : v.node.role || '',
+          style: {gridColumn:'1/13',fontSize:'0.75rem',color:'#aaa'},
+        },{
+          attr : {class:'annotation'},
+          html : v.node.note || '',
+          style: {gridColumn:'1/13',fontSize:'0.75rem',color:'#aaa'},
+        });
+      }
 
       (()=>{  v.step = 4; // 一行分の描画、子要素の再帰呼出
 
         v.step = 4.1; // v.rvを描画領域に追加
+        v.tr.children.push(v.indent,v.ctrl,v.item);
         v.r = createElement(v.tr,this.treeDiv);
         if( v.r instanceof Error ) throw v.r;
 
