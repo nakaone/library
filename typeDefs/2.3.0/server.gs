@@ -184,7 +184,6 @@ class TypeDefServer{
       (()=>{  v.step = 2; // this.arrを作成
 
         v.step = 2.1; // 事前準備
-        this.arr = [];  // {Object[]} Objectはv.protoの各項目からsysを除いたもの
         v.proto = JSON.stringify({    // v.obj,arrに格納されるオブジェクトの原型
           nId: null,   // {number} ノードのID。自然数
           label: null, // {string} ノードのラベル
@@ -202,12 +201,13 @@ class TypeDefServer{
             children:[], // {Object[]} 自分＋継承元ノードの「有効な」子要素
           }
         });
+        this.arr = [Object.assign(JSON.parse(v.proto),{nId:0,label:'root'})];
+        v.obj = {0:this.arr[0]};
 
         // v.stack {Object[]} - レベル毎に最新のnIdとseqを保持する
         v.stack = new Array(9).fill(null);
         v.stack[0] = {nId:0,seq:0}; // root(lv=0)
 
-        v.obj = {0:{nId:0}};
         for( v.r=1 ; v.r<v.raw.length ; v.r++ ){
           v.o = JSON.parse(v.proto);
 
