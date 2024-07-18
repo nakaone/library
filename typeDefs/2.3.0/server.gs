@@ -288,8 +288,9 @@ class TypeDefServer{
   
         v.step = 3.2; // トップレベルを抽出、再帰関数を呼び出し
         this.groups = [];
-        this.arr.filter(x => x.sys.pId === 0).sort((a,b)=>a.seq<b.seq)
-        .forEach(x => v.recursive(x,0,[0]));
+        v.recursive(this.arr[0],0,[0]);
+        //this.arr.filter(x => x.sys.pId === 0).sort((a,b)=>a.seq<b.seq)
+        //.forEach(x => v.recursive(x,0,[0]));
       })();
 
       (()=>{  v.step = 4; /* this.arrに継承元の情報を反映、childrenを作成
@@ -370,7 +371,7 @@ class TypeDefServer{
 
       v.step = 2; // グループ化実行
       this.groups.forEach(x => {
-        if( x.depth < 8 ) // シート上のグループ化は8階層まで
+        if( 0 < x.depth && x.depth < 8 ) // シート上のグループ化は8階層まで
           this.sheet.getRange(x.st,1,x.ed-x.st+1).shiftRowGroupDepth(1);
       });
       v.step = 9; // 終了処理

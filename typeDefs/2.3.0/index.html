@@ -5,7 +5,7 @@
 </head>
 <body>
   <h1>test</h1>
-  <div class="TypeDefs">
+  <div class="TypeDefsClient">
     <div name="rootId" style="display:none"><?= rootId ?></div>
     <div name="data" style="display:none"><?= data ?></div>
   </div>
@@ -395,6 +395,8 @@ function htmlEscape(str){ // https://jp-seemore.com/web/3534/#toc5
     .replaceAll(/"/g, "&quot;")
     .replaceAll(/'/g, "&#039;");
 }
+</script>
+<script type="text/javascript">
 class TypeDefsClient{
   /** @constructor
    * - html上に実装するのは参照のみ。編集他はシートで行う。
@@ -484,6 +486,7 @@ class TypeDefsClient{
         v.step = 5.1; // ツリー描画領域
         this.wrapper = document.querySelector('body > .'+this.constructor.name);
         this.treeDiv = createElement({attr:{class:'tree'}},this.wrapper);
+        console.log(`l.489`,this.wrapper,this.treeDiv)
 
         v.step = 5.5; // 待機画面の準備
         this.loading = new LoadingIcon();
@@ -521,49 +524,101 @@ class TypeDefsClient{
     console.log(`${v.whois} start.\nnId=${nId}, path=${stringify(path)}`);
     try {
 
-      v.step = 1.1; // 対象ノードを処理用変数に格納
-      v.node = this.data[nId];
-      console.log(`l.524 this.data[${nId}]=${stringify(this.data[nId])}`);
+      (()=>{  // v.step = 1; // 事前準備
 
-      v.step = 1.2; // pathを別オブジェクト化
-      v.path = JSON.parse(JSON.stringify(path));
+        v.step = 1.1; // 対象ノードを処理用変数に格納
+        v.node = this.data[nId];
 
-      v.step = 1.3; // 永久ループ防止
-      if( v.path.length > this.maxDepth ) throw new Error('too many depth');
+        v.step = 1.2; // 初回呼出時、表示領域をクリア
+        if( path.length === 0 ) this.treeDiv.innerHTML = '';
 
-      v.step = 1.4; // 初回呼出時、表示領域をクリア
-      if( v.path.length === 0 ) this.treeDiv.innerHTML = '';
+        v.step = 1.3; // pathを別オブジェクト化
+        v.path = path.concat(nId);
 
-      v.step = 1.5; // 大枠を作成
-      v.tr = {attr:{class:'tr'},children:[]}; // 一行分のデータ
-      v.indent = {  // インデント部
-        attr:{class:'indent'},
-        style:{gridColumn:`1/${v.path.length+1}`,width:v.path.length+'rem'}
-      };
-      v.ctrl = {attr:{class:'ctrl'}}; // ctrl部
-      v.item = {    // アイテム部(ラベル)
-        attr:{class:'item'},
-        html: v.node.label,
-      };
-      v.tr.children.push(v.indent,v.ctrl,v.item);
+        v.step = 1.4; // 永久ループ防止
+        if( v.path.length > this.maxDepth ) throw new Error('too many depth');
+
+        v.step = 1.5; // 大枠を作成
+        v.tr = { // 一行分のデータ(インデント・ctrl・アイテムのラッパー)
+          attr:{
+            class:'tr',
+            name: JSON.stringify({nId:v.node.nId}),
+          },
+          children:[]
+        };
+        v.indent = {  // インデント部
+          attr:{class:'indent'},
+          style:{gridColumn:`1/${v.path.length+1}`,width:v.path.length+'rem'}
+        };
+        v.ctrl = {   // ctrl部
+          attr:{class:'ctrl'},
+          text: v.node.isOpen ? '▼' : '▶',
+          style:{gridColumn:`${v.path.length+1}/${v.path.length+2}`},
+          event:{click:e=>this.toggle(e)},
+        };
+        v.item = {   // アイテム部(ラベル)
+          attr:{class:'item'},
+          style:{gridColumn:`${v.path.length+2}/23`},
+          html: v.node.label,
+        };
+        v.tr.children.push(v.indent,v.ctrl,v.item);
+      })();
 
       v.step = 2; // ctrl部の作成
 
+
+
       v.step = 3; // item部の作成
 
-      v.step = 4; // v.rvを描画領域に追加
-      v.r = createElement(v.rv,this.treeDiv);
-      if( v.r instanceof Error ) throw v.r;
+      (()=>{  v.step = 4; // 一行分の描画、子要素の再帰呼出
 
-      v.step = 5; // 子要素を順次再帰呼出
-      if( true ){//v.node.isOpen === true ){
-        for( v.i=0 ; v.i<v.node.sys.children.length ; v.i++ ){
-          v.r = this.disp(v.node.sys.children[v.i].nId,v.path);
-          if( v.r instanceof Error ) throw v.r;
+        v.step = 4.1; // v.rvを描画領域に追加
+        v.r = createElement(v.tr,this.treeDiv);
+        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 4.2; // 子要素を順次再帰呼出
+        if( v.node.isOpen === true ){
+          for( v.i=0 ; v.i<v.node.sys.children.length ; v.i++ ){
+            v.r = this.disp(v.node.sys.children[v.i].nId,v.path);
+            if( v.r instanceof Error ) throw v.r;
+          }
         }
-      }
+
+      })();
 
       v.step = 6; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** toggle: 子要素を開閉
+   * @param {Event} - クリックのイベントオブジェクト
+   * @returns {null}
+   */
+  toggle(event){
+    const v = {whois:this.constructor.name+'.toggle',rv:null,step:0};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // 対象idの取得
+      v.name = event.target.closest('.tr').getAttribute('name');
+      console.log(`l.608 v.name=${v.name}`,event.target.closest('.tr'))
+      v.nId = JSON.parse(v.name).nId;
+
+      v.step = 2; // isOpenを逆転
+      this.data[v.nId].isOpen = this.data[v.nId].isOpen ? false : true;
+
+      v.step = 3; // 再描画
+      v.r = this.disp();
+      if( v.r instanceof Error ) throw v.r;
+
+      v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.`);
       return v.rv;
 
