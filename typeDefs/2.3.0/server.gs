@@ -154,7 +154,7 @@ class TypeDefServer{
           v.raw[v.r].splice(0,v.arg.left-1);
         }
         
-        /* ヘッダ行の'label'〜次の項目までの空欄はカラム名=レベル番号に変更
+        v.step = 1.5; /* ヘッダ行の'label'〜次の項目までの空欄はカラム名=レベル番号に変更
            階層化ラベル欄は'label'または空欄
             fm: 階層化ラベル欄の開始位置。不要部分削除後の添字(0オリジン)
             to: 階層化ラベル欄の終端位置 */
@@ -179,6 +179,10 @@ class TypeDefServer{
             }
           }
         }
+
+        v.step = 1.6; // トグル位置を設定
+        // https://techuplife.tech/gas-ss-srowcolumngroup/#rtoc-9
+        this.sheet.setRowGroupControlPosition(SpreadsheetApp.GroupControlTogglePosition.BEFORE);
       })();
 
       (()=>{  v.step = 2; // this.arrを作成
