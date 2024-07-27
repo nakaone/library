@@ -314,6 +314,7 @@ class BurgerMenu {
   /** 親要素を走査してナビゲーションを作成
    * @param {HTMLElement} wrapper - body等の親要素。
    * @param {HTMLElement} navi - nav等のナビゲーション領域
+   * @param {number} depth=0 - 階層の深さ
    * @returns {null|Error}
    */
   genNavi(wrapper=this.wrapper,navi=this.navi,depth=0){
