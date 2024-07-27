@@ -1573,7 +1573,8 @@ class BurgerMenu {
 <br>&gt; [[概要](#ac0001) | [使用方法](#ac0003) | [BurgerMenu仕様](#ac0011) | [プログラムソース](#ac0014) | 改版履歴]
 
 - rev.1.2.1 : 2024/07/27
-  
+  - 待機画面関係を削除(class LoadingIconで代用)
+  - ユーザ権限はconstructorの引数で設定(sessionStorageからの読み込みは削除)
 - rev.1.2.0 : 2024/04/11
   - genNavi(メニュー再描画)で利用者権限(auth)による制御を追加
   - data-BurgerMenu属性で、label省略時はidを使用するよう変更

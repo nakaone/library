@@ -232,15 +232,8 @@ class BurgerMenu {
         v.styleTag.textContent = this.css;
         document.head.appendChild(v.styleTag);
       }
-      v.step = 6; // 待機画面が未定義ならbody直下に追加
-      if( !document.querySelector('body > div[name="loading"]') ){
-        v.r = createElement({
-          attr:{name:'loading',class:'loader screen'},
-          text:'loading...'
-        },'body');
-      }
   
-      v.step = 7; // 終了処理
+      v.step = 6; // 終了処理
       console.log(`${v.whois} normal end.`);
       return v.rv;
   
@@ -322,13 +315,9 @@ class BurgerMenu {
     console.log(`${v.whois} start.`);
     try {
 
-      v.step = 1.1; // sessionStorageからユーザ権限を読み取り
-      v.r = sessionStorage.getItem(g.programId);
-      if( !v.r ) throw new Error(`sessionStorageに${g.programId}キーが存在しません`);
-      this.auth = JSON.parse(v.r).auth;
-      v.step = 1.2; // navi領域をクリア
+      v.step = 1.1; // navi領域をクリア
       if( depth === 0 ) navi.innerHTML = '';
-      v.step = 1.3; // auth毎にホームを変更する場合、変更
+      v.step = 1.2; // auth毎にホームを変更する場合、変更
       if( this.homeForEachAuth !== null ){
         this.home = this.homeForEachAuth[this.auth];
       }
