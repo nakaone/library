@@ -27,8 +27,8 @@ function toLocale(arg,format='yyyy-MM-ddThh:mm:ss.nnnZ'){
   const v = {rv:format};
   try {
 
-    dObj = String(Object.prototype.toString.call(arg).slice(8,-1)) !== 'Date'
-    ? arg : new Date(arg);
+    let dObj = whichType(arg,'Date') ? arg : new Date(arg);
+    //dObj = String(Object.prototype.toString.call(arg).slice(8,-1)) !== 'Date' ? arg : new Date(arg);
 
     v.step = 1; // 無効な日付なら空文字列を返して終了
     if( isNaN(dObj.getTime()) ) return '';
