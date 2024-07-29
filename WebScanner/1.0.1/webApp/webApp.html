@@ -1,0 +1,854 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>WebScanner</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="../szLib.css" rel="stylesheet" />
+<style type="text/css"></style>
+</head><body>
+  <div id="WebScanner"></div>
+  <div id="qrcode"></div>
+</body>
+<!-- QRコード検出 -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<!-- QRコード生成 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script type="text/javascript">
+/** HTMLElementを生成する
+ * @param {CEDefObj|CEDefObj[]} arg - 生成するHTMLElementの定義
+ * @param {HTMLElement|string} [parent=null] - 本関数内部で親要素への追加まで行う場合に指定
+ * @returns {HTMLElement|Error}
+ */
+function createElement(arg,parent=null){
+  const v = {whois:'BasePage.createElement',rv:[],step:0};
+  //console.log(v.whois+' start.',arg);
+  try {
+    v.step = 1.1; // 引数を強制的に配列化
+    v.isArr = Array.isArray(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
+    if( !v.isArr ) arg = [arg];
+    v.step = 1.2; // 親要素の特定
+    if( parent !== null ){
+      v.parent = typeof parent === 'string' ? document.querySelector(parent) : parent;
+    }
+
+
+    for( v.i = 0 ; v.i<arg.length ; v.i++ ){
+      v.step = 2; // 既定値の設定
+      v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
+      Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
+
+      v.step = 3; // HTMLElementを生成、v.objとする
+      v.obj = document.createElement(v.def.tag);
+
+      v.step = 4; // HTMLElementの属性を定義
+      for( v.j in v.def.attr ){
+        v.obj.setAttribute(v.j,v.x = v.def.attr[v.j]);
+      }
+
+      v.step = 5; // 論理属性を定義(ex.checked)
+      for( v.j in v.def.logical ){
+        if( v.def.logical[v.j] ){
+          v.obj.setAttribute(v.j,v.def.logical[v.j]);
+        }
+      }
+
+      v.step = 6; // style属性の定義
+      for( v.j in v.def.style ){
+        if( v.j.match(/^\-\-/) ){ // CSS変数
+          v.obj.style.setProperty(v.j,v.def.style[v.j]);
+        } else {
+          v.obj.style[v.j] = v.def.style[v.j];
+        }
+      }
+
+      v.step = 7; // イベントの定義
+      for( v.j in v.def.event ){
+        v.obj.addEventListener(v.j,v.def.event[v.j],false);
+      }
+
+      v.step = 8; // 内部文字列(html or text)
+      if( v.def.html.length > 0 ){
+        v.obj.innerHTML = v.def.html;
+      } else {
+        // textareaの場合はvalueに、それ以外はinnerTextに内部文字列(text)をセット
+        v.obj[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
+      }
+
+      v.step = 9; // 子要素の追加(parentは指定しない)
+      for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
+        v.obj.appendChild(this.createElement(v.def.children[v.j]));
+      }
+
+      v.step = 10; // 戻り値への登録
+      v.rv.push(v.obj);
+
+      v.step = 11; // 親要素への追加
+      if( parent !== null ){
+        v.parent.appendChild(v.obj);
+      }
+
+      v.step = 12; // メンバとして、また切替画面として登録
+      if( v.def.name.length > 0 ){
+        this[v.def.name] = v.obj;
+        this.screenList[v.def.name] = v.obj;
+      }
+    }
+
+    v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
+    v.rv = v.isArr ? v.rv : v.rv[0];
+    //console.log(v.whois+' normal end.\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+/** 渡された変数内のオブジェクト・配列を再帰的にマージ
+ * - pri,subともデータ型は不問。次項のデシジョンテーブルに基づき、結果を返す
+ *
+ * @param {any} pri - 優先される変数(priority)
+ * @param {any} sub - 劣後する変数(subordinary)
+ * @param {Object} opt - オプション
+ * @returns {any|Error}
+ *
+ * #### デシジョンテーブル
+ *
+ * | 優先(pri) | 劣後(sub) | 結果 | 備考 |
+ * | :--: | :--: | :--: | :-- |
+ * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
+ * |  A  |  B  |  A  | |
+ * |  A  | [B] |  A  | |
+ * |  A  | {B} |  A  | |
+ * | [A] |  -  | [A] | |
+ * | [A] |  B  | [A] | |
+ * | [A] | [B] | [X] | 配列はopt.arrayによる |
+ * | [A] | {B} | [A] | |
+ * | {A} |  -  | {A} | |
+ * | {A} |  B  | {A} | |
+ * | {A} | [B] | {A} | |
+ * | {A} | {B} | {A+B} | オブジェクトも置換ではなく結合する |
+ * |  -  |  -  |  -  | |
+ * |  -  |  B  |  B  | |
+ * |  -  | [B] | [B] | |
+ * |  -  | {B} | {B} | |
+ *
+ * #### opt.array : pri,sub双方配列の場合の処理方法を指定
+ *
+ * 例 pri:[1,2,{x:'a'},{a:10,b:20}], sub:[1,3,{x:'a'},{a:30,c:40}]
+ *
+ * - pri(priority): 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
+ * - add: 値の重複に拘わらず、pri+subを返す ⇒ [1,2,{x:'a'},{a:10,b:20},1,3,{x:'a'},{a:30,c:40}]
+ * - set(既定値): priに無いsubの要素をpriに追加 ⇒ [1,2,3,{x:'a'},{x:'a'},{a:10,b:20},{a:30,c:40}]
+ *   ※`{x:'a'}`は別オブジェクトなので、重複排除されない事に注意。関数、Date等のオブジェクトも同様。
+ * - str(strict): priに無いsubの要素をpriに追加。setと異なり、内容が同値なら重複排除<br>
+ *   ⇒ [1,2,3,{x:'a'},{a:10,b:20},{a:30,c:40}]
+ * - cmp(未実装): pri[n]とsub[n]を比較(comparison)。原則pri優先だが、例外として両方がObj or Arrならマージ<br>
+ *   ⇒ [1,2,{x:'a'},{a:10,b:20,c:40}]
+ */
+function mergeDeeply(pri,sub,opt={}){
+  const v = {whois:'mergeDeeply',rv:null,step:0,
+    isObj: arg => arg && String(Object.prototype.toString.call(arg).slice(8,-1)) === 'Object',
+    isArr: arg => arg && Array.isArray(arg),
+  };
+  //console.log(`${v.whois} start.`+`\npri=${stringify(pri)}`+`\nsub=${stringify(sub)}`+`\nopt=${stringify(opt)}`);
+  try {
+
+    v.step = 1; // 既定値の設定
+    if( !opt.hasOwnProperty('array') ) opt.array = 'set';
+
+    if( v.isObj(pri) && v.isObj(sub) ){
+      v.step = 2; // sub,pri共にハッシュの場合
+      v.rv = {};
+      v.step = 2.1; // 優先・劣後Obj両方のハッシュキー(文字列)を、重複しない形でv.keysに保存
+      v.keys = new Set([...Object.keys(pri),...Object.keys(sub)]);
+      for( v.key of v.keys ){
+        if( pri.hasOwnProperty(v.key) && sub.hasOwnProperty(v.key) ){
+          v.step = 2.2; // pri,sub両方がキーを持つ
+          if( v.isObj(pri[v.key]) && v.isObj(sub[v.key]) || v.isArr(pri[v.key]) && v.isArr(sub[v.key]) ){
+            v.step = 2.21; // 配列またはオブジェクトの場合は再帰呼出
+            v.rv[v.key] = mergeDeeply(pri[v.key],sub[v.key],opt);
+          } else {
+            v.step = 2.22; // 配列でもオブジェクトでもない場合は優先変数の値をセット
+            v.rv[v.key] = pri[v.key];
+          }
+        } else {
+          v.step = 2.3; // pri,subいずれか片方しかキーを持っていない
+          v.rv[v.key] = pri.hasOwnProperty(v.key) ? pri[v.key] : sub[v.key];
+        }
+      }
+    } else if( v.isArr(pri) && v.isArr(sub) ){
+      v.step = '3 '+opt.array; // sub,pri共に配列の場合
+      switch( opt.array ){
+        case 'pri':
+          // pri: 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
+          v.rv = pri;
+          break;
+        case 'add':
+          // add: 値の重複に拘わらず、pri+subを返す ⇒ [1,2,{x:'a'},{a:10,b:20},1,3,{x:'a'},{a:30,c:40}]
+          v.rv = [...pri, ...sub];
+          break;
+        case 'str':
+          // str(strict): priに無いsubの要素をpriに追加。setと異なり、内容が同値なら重複排除<br>
+          // ⇒ [1,2,3,{x:'a'},{a:10,b:20},{a:30,c:40}]
+          v.rv = [];
+          pri.forEach(x => v.rv.push(x));
+          sub.forEach(s => {
+            v.flag = false;
+            pri.forEach(p => v.flag = v.flag || isEqual(s,p));
+            if( v.flag === false ) v.rv.push(s);
+          });
+          break;
+        default:
+          // set(既定値): priに無いsubの要素をpriに追加 ⇒ [1,2,{x:'a'},{a:10,b:20},3,{x:'a'},{a:30,c:40}]
+          v.rv = [...new Set([...pri,...sub])];
+      }
+    } else {
+      v.step = 4; // subとpriのデータ型が異なる ⇒ priを優先してセット
+      v.rv = whichType(pri,'Undefined') ? sub : pri;
+      //console.log(`l.228 pri=${stringify(pri)}, sub=${stringify(sub)} -> rv=${stringify(v.rv)}`)
+    }
+    v.step = 5;
+    //console.log(`${v.whois} normal end.`+`\npri=${stringify(pri)}`+`\nsub=${stringify(sub)}`+`\nopt=${stringify(opt)}`+`\nv.rv=${stringify(v.rv)}`)
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`
+    + `\npri=${JSON.stringify(pri)}`
+    + `\nsub=${JSON.stringify(sub)}`
+    + `\nopt=${JSON.stringify(opt)}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+/** クラス(constructor)共通の初期処理を行う。
+ *
+ * @param {Object} dest - 設定先のオブジェクト。初回呼出時はthis
+ * @param {Object} opt - 起動時にオプションとして渡されたオブジェクト
+ * @param {Object} def - 既定値のオブジェクト。初回呼出時はnull(内部定義を使用)
+ * @returns {void}
+ *
+ * ## 処理概要
+ *
+ * 1. オプション・既定値をメンバに設定
+ * 1. オプション(Object)の第一階層にメンバ"parent"が存在する場合、
+ *    1. メンバ"parent"がHTMLElement型の場合、
+ *       - this.parentにメンバ"parent"をそのまま登録
+ *       - this.parentSelectorにnullを設定
+ *    1. メンバ"parent"が文字列型の場合、
+ *       - this.parentにdocument.querySelector(opt.parent)を登録
+ *       - this.parentSelectorにメンバ"parent"を設定
+ *    1. this.parent直下にthis.wrapperを作成<br>
+ *       `div class="呼出元クラス名" name="wrapper"`
+ *    1. this.wrapperに"act"クラスを追加、既定値表示の状態とする
+ * 1. オプション(Object)の第一階層にメンバ"css"が存在する場合、
+ *    呼出元クラスで作成されたスタイルシートが存在しないなら新規作成する
+ * 1. オプション(Object)の第一階層にメンバ"html"が存在する場合、
+ *    this.wrapper内に指定のHTML要素を生成
+ *
+ * ## 領域開閉制御に関するメモ
+ *
+ * 1. 領域全体の開閉制御はhtml側(BurgerMenu.change())で行う<br>
+ *    ※displayの書き換えになっているが、将来的にはactクラスの加除に修正。<br>
+ *    　現段階では影響が大きいため見送り。
+ * 1. wrapperの既定値は「開いた状態(actあり)」とする
+ * 1. wrapper内の要素の表示/非表示制御はメソッドで行う
+ *
+ * ## 入力例
+ *
+ * ```
+ * const menu = new BurgerMenu({parent:'body',auth:confObj,fuga:{a:10}})
+ *
+ * class BurgerMenu {
+ *   constructor(opt){
+ *     setupInstance(
+ *       this,  // 第一引数はthis(固定)
+ *       opt,   // 第二引数はconstructorに渡されたオプション
+ *       {      // 第三引数は既定値のオブジェクト
+ *         css: [  // このクラスに適用するCSS定義の配列
+ *           {
+ *             sel:'.date', // CSSセレクタ
+ *             prop:{       // 設定する値。ラベル・値ともクォーテーションで囲む
+ *               'margin-top':'1rem',
+ *               'padding-left': '1rem',
+ *             }
+ *           },
+ *         ],
+ *         parent: '',  // 親要素のCSSセレクタ or HTMLElementの既定値
+ *         auth: null,
+ *         hoge: 'Hello World',
+ *         fuga: {
+ *           a: null,
+ *           b: 20,
+ *         },
+ *       });
+ *     // 以降、constructorの処理
+ * ```
+ *
+ * ## 出力例
+ *
+ * ```
+ * this = {
+ *   parent: {
+ *     selector: 'body',  // optより導出
+ *     element : (body element),  // optより導出
+ *   },
+ *   auth: confObj, // optの値を設定
+ *   hoge: 'Hello World',  // 既定値を設定
+ *   fuga: {
+ *     a:10,  // optの値を設定
+ *     b:20,  // 既定値を設定
+ *   },
+ * }
+ * ```
+ *
+ * ```
+ * <style type="text/css">
+ * .date {
+ *   margin-top: 1rem;
+ *   padding-left: 1rem;
+ * }
+ * </style>
+ * ```
+ *
+ * ## デシジョンテーブル
+ *
+ * | 優先(a) | 劣後(b) | 結果 | 備考 |
+ * | :--: | :--: | :--: | :-- |
+ * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
+ * |  A  |  B  |  A  | |
+ * |  A  | [B] |  A  | |
+ * |  A  | {B} |  A  | |
+ * | [A] |  -  | [A] | |
+ * | [A] |  B  | [A] | |
+ * | [A] | [B] | [A+B] | 配列は置換ではなく結合。但し重複不可 |
+ * | [A] | {B} | [A] | |
+ * | {A} |  -  | {A} | |
+ * | {A} |  B  | {A} | |
+ * | {A} | [B] | {A} | |
+ * | {A} | {B} | {A+B} | オブジェクトも置換ではなく結合する |
+ * |  -  |  -  |  -  | |
+ * |  -  |  B  |  B  | |
+ * |  -  | [B] | [B] | |
+ * |  -  | {B} | {B} | |
+ *
+ */
+const setupInstance = (dest,opt,def) => {
+  const v = {whois:'setupInstance',rv:true,step:0,
+    constructor: dest.constructor ? dest.constructor.name : null,  // 呼出元クラス名
+    // 配列・オブジェクトの判定式
+    isObj: obj => obj && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Object',
+    isArr: obj => obj && String(Object.prototype.toString.call(obj).slice(8,-1)) === 'Array',
+    // ディープコピー。値の設定ロジックは上記デシジョンテーブル参照
+    deepcopy: (dest,opt) => {
+      Object.keys(opt).forEach(x => {
+        if( !dest.hasOwnProperty(x) ){
+          // コピー先に存在しなければ追加
+          dest[x] = opt[x];
+        } else {
+          if( v.isObj(dest[x]) && v.isObj(opt[x]) ){
+            // 両方オブジェクト -> メンバをマージ
+            v.deepcopy(dest[x],opt[x]);
+          } else if( v.isArr(dest[x]) && v.isArr(opt[x]) ){
+            // 両方配列 -> 配列をマージ
+            // Setで配列要素の重複を排除しているが、
+            // 配列要素が配列型・オブジェクト型の場合は重複する(中身もマージされない)
+            dest[x] = [...new Set([...dest[x],...opt[x]])];
+          } else {
+            // optの値でdestの値を置換
+            dest[x] = opt[x];
+          }
+        }
+      });
+    },
+    cssDefs: '',  // CSS定義文字列による指定の場合、その結合した文字列
+  };
+  v.whois = v.constructor + '.' + v.whois;
+  console.log(v.whois+' start.',dest,opt,def);
+  try {
+
+    v.step = 1; // 呼出元の確認、呼出元クラス名の取得
+    if( !dest.constructor ){
+      throw new Error('呼出元がクラスではありません');
+    }
+
+    v.step = 2; // オプションをメンバにディープコピー
+    dest = Object.assign(dest,def); // 既定値をセット
+    v.deepcopy(dest,opt);
+
+    v.step = 3; // parent,wrapperの処理
+    if( dest.hasOwnProperty('parent') ){
+      if( (typeof dest.parent === 'string') || (dest.parent instanceof HTMLElement)){
+        dest.parentSelector = null;
+        if( typeof dest.parent === 'string' ){
+          // CSSセレクタだった場合
+          dest.parentSelector = dest.parent;
+          dest.parent = document.querySelector(dest.parentSelector);
+        }
+        // wrapperをparentに追加
+        dest.wrapper = createElement({attr:{class:v.constructor,name:'wrapper'}});
+        dest.parent.appendChild(dest.wrapper);
+        dest.wrapperSelector =
+        (dest.parentSelector === null ? null : dest.parentSelector + ' > ')
+        + 'div.' + v.constructor + '[name="wrapper"]';
+      } else {
+        throw new Error(v.whois+': parent is not string or HTMLElement.');
+      }
+    }
+    dest.wrapper.classList.add('act'); // wrapperはact状態にしておく
+
+    v.step = 4; // CSS定義に基づき新たなstyleを生成
+    if( dest.hasOwnProperty('css') && // dest.cssがあり、未定義なら追加
+    document.head.querySelector('style[name="'+v.constructor+'"]') === null ){
+      dest.style = createElement({
+        tag:'style',
+        attr:{type:'text/css',name:v.constructor}
+      });
+      document.head.appendChild(dest.style);
+      for( v.i=0 ; v.i<dest.css.length ; v.i++ ){
+        v.x = dest.css[v.i];
+        if( v.isObj(v.x) ){
+          // {sel,prop}による指定の場合(将来的に廃止予定)
+          for( v.y in v.x.prop ){
+            v.prop = dest.parent.selector + ' ' + v.x.sel
+              + ' { ' + v.y + ' : ' + v.x.prop[v.y] + '; }\n';
+            dest.style.sheet.insertRule(v.prop,
+              dest.style.sheet.cssRules.length,
+            );
+          }
+        } else {
+          // CSS定義文字列による指定の場合
+          v.cssDefs = v.cssDefs + v.x;
+        }
+      }
+      if( v.cssDefs.length > 0 ){
+        dest.style.innerText = v.cssDefs.replaceAll(/\n/g,'').replaceAll(/\s+/g,' ');
+      }
+    }
+
+    v.step = 5; // HTML定義に基づき親要素内のHTML要素を生成
+    if( dest.hasOwnProperty('html') ){
+      if( v.isObj(dest.html) ){
+        v.step = 4.1; // オブジェクトならcreateElementの引数
+        v.html = createElement(dest.html);
+        if( v.html instanceof Error ) throw v.html;
+        dest.wrapper.appendChild(v.html);
+      } else {
+        v.step = 4.2;
+        if( v.isArr(dest.html) ){
+          v.step = 4.21;
+          if( typeof dest.html[0] === 'string' ){
+            v.step = 4.211;
+            // 配列の最初の要素が文字列なら結合してinnerHTML
+            dest.wrapper.innerHTML = dest.html.join('');
+          } else {
+            v.step = 4.212;
+            // オブジェクトならcreateElementして親要素に追加
+            dest.html.forEach(x => dest.wrapper.appendChild(createElement(x)));
+          }
+        } else {
+          v.step = 4.22;  // 文字列ならinnerHTMLそのもの
+          dest.wrapper.innerHTML = dest.html;
+        }
+      }
+    }
+
+    v.step = 6; // 終了処理
+    console.log(v.whois+' normal end.\n',dest);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+/**
+ * @classdesc デバイスのカメラで文書/コードのスキャンを行う
+ *
+ * 指定セレクタ以下にcanvas他の必要な要素を作成し、QRコードや文書をスキャンする。
+ *
+ * **残課題**
+ *
+ * 1. scanDoc稼働未確認
+ *
+ * @example
+ *
+ * ```
+ * <div class="webScanner"></div>
+ * 〜
+ * const ws = new webScanner('.webScanner');
+ * ws.scanQR(r=>console.log('scanned QR Code = '+r));   // QRコードの読み込み
+ * ws.scanDoc();  // 文書の撮影
+ * ```
+ */
+class WebScanner {
+  /**
+   * @constructor
+   * @param {HTMLElement|string} parent - 親要素またはそのCSSセレクタ
+   * @param {Object} [opt={}] - オプション
+   * @returns {true|Error}
+   *
+   * オプション「description」は起動時は説明文(html)として渡され、
+   * 処理中にそれを内容とするHTMLElementに変換される(constructor step 1.2)
+   */
+  constructor(parent,opt={}){
+    const v = {whois:'WebScanner.constructor',rv:true,step:0,
+      default:{
+        display:{ // entry実行時に表示する領域
+          wrapper: true,  // 常時true
+          video: false,
+          canvas: true,
+          description: true,
+          input: true,
+          button: true,
+          link: false,
+          qrcode: false,
+        },
+        closeWhenFinished: true,  // スキャン・入力終了時、領域を閉じるならtrue
+        // === メンバとして持つHTMLElementの定義 ==============
+        parent: parent, // {HTMLElement} 親要素
+        parentSelector: null, // {string} 親要素のCSSセレクタ
+        style: null,  // {HTMLStyleElement} CSS定義
+        wrapper: null,  // {HTMLElement} - 親直下のラッパー
+        video: null,  // {HTMLElement} - videoで撮影している画像領域
+        canvas: null, // {HTMLElement} - 撮影画像を描画する領域
+        context: null, // {CanvasRenderingContext2D} - 描画コンテキスト
+        description: null, // {HTMLElement} - 説明文
+        input: null, // {HTMLElement} - 入力欄
+        button: null, // {HTMLElement} - 決定ボタン
+        link: null, // {HTMLElement} - 入力された内容(リンク)
+        qrcode: null, // {HTMLElement} - QRコード生成用領域
+
+        // === scanQR専用パラメータ ==========================
+        constraints:{ // video.getUserMediaで指定するオプション
+          audio: false,
+          video: {
+            facingMode: 'environment',
+            width: {min: 300},
+            height: {min: 300},
+          },
+        },
+        showVideo: false, // scanQR実行時、video領域を表示するならtrue
+        closeFinder: true, // scanQR実行後、video/canvas領域を残すならfalse
+        RegExp: /.+/, // scanQR実行時、読込結果を評価する正規表現
+        maxWaiting: 90000, // 最大待機時間。単位：ミリ秒
+        interval: 300, // 動画撮像間隔。ミリ秒
+        size: null,  // 撮像領域(ファインダ)のサイズ。px。nullなら親要素の大きさから判断
+        minSize : 300, // 最小撮像サイズ。px
+
+        // === CSS/HTML定義 ================================
+        css:[
+          /* WebScanner共通部分(wrapper) */ `
+          .WebScanner {
+            display: none;
+          }
+          .WebScanner.act {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr;
+            place-items: center;
+            gap: 2rem;
+          }`,
+          /* video, canvas */`
+          .WebScanner video {
+            display: none;
+          }
+          .WebScanner video.act {
+            display: block;
+            width: 100%;
+          }
+          .WebScanner canvas {
+            display: none;
+          }
+          .WebScanner canvas.act {
+            display: block;
+            width: 100%;
+          }`,
+          /* keyword */`
+          .WebScanner .description {
+            display: none;
+          }
+          .WebScanner .description.act {
+            display: block;
+          }
+          .WebScanner input {
+            display: none;
+          }
+          .WebScanner input.act {
+            display: block;
+            width: 80%;
+            margin: 0 auto;
+            height: 7vw;
+            font-size: 5vw;
+            border: solid 5px #888;
+          }
+          .WebScanner button {
+            display: none;
+          }
+          .WebScanner button.act {
+            display: block;
+            width: 80%;
+            height: 15vw;
+            font-size: 5vw;
+            margin: 0 auto;
+          }
+          .WebScanner .value {
+            display: none;
+          }
+          .WebScanner .link {
+            display: none;
+          }
+          .WebScanner .link.act {
+            display: block;
+            width: 80%;
+          }`,
+          /* qrcode */`
+          .WebScanner .qrcode {
+            display: none;
+          }
+          .WebScanner .qrcode.act {
+            display: block;
+            width: 40%;
+            height: 300px;
+            margin: 0 auto;
+          }
+          .WebScanner .qrcode.act canvas {
+            display: block;
+          }`,
+        ],
+        html:[  // イベント定義を複数回行わないようにするため、eventで定義
+          {tag:'video'},
+          {tag:'canvas'},
+          {attr:{class:'description'}},
+          {tag:'input',attr:{type:'text'}},
+          {tag:'button',text:'検索',event:{click:(event)=>{
+            event.target.parentNode.querySelector('.value').innerText
+            = event.target.parentNode.querySelector('input').value;
+          }}},
+          {attr:{class:'value'}},
+          {attr:{class:'link'}},
+          {attr:{class:'qrcode'}},
+        ],
+      },
+    };
+    console.log(v.whois+' start.',opt);
+    try {
+
+      v.step = 1.1; // メンバの値セット、HTML/CSSの生成
+      v.rv = setupInstance(this,opt,v.default);
+      if( v.rv instanceof Error ) throw v.rv;
+      v.step = 1.2; // 説明文の処理
+      v.description = this.description;
+      this.wrapper = this.parent.querySelector('.WebScanner');
+      this.description = this.wrapper.querySelector('.description');
+      this.description.innerHTML = '受付番号または氏名(ヨミ)の一部を入力してください';
+
+      v.step = 2; // 各領域をメンバとして保存
+      this.video = this.wrapper.querySelector('video');
+      this.canvas = this.wrapper.querySelector('canvas');
+      this.input = this.wrapper.querySelector('input');
+      this.button = this.wrapper.querySelector('button');
+      this.value = this.wrapper.querySelector('.value');
+      this.link = this.wrapper.querySelector('.link');
+      this.qrcode = this.wrapper.querySelector('.qrcode');
+
+      v.step = 3; // デバイスがサポートされているか確認
+      if (!('mediaDevices' in navigator) || !('getUserMedia' in navigator.mediaDevices)) {
+        throw new Error('デバイス(カメラ)がサポートされていません');
+      } else {
+        console.log("%s step.%s: device supported.",v.whois,v.step);
+      }
+
+      v.step = 4; // 描画コンテキストの取得とクリア
+      this.context = this.canvas.getContext('2d');
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      v.step = 5; // 撮像(video)領域のサイズ変更
+      // wrapper縦横の小さい方をthis.sizeに格納
+      if( this.size === null ){
+        v.w = this.parent.clientWidth;
+        this.size = v.w < this.minSize ? this.minSize : v.w;
+      }
+      console.log("w=%s, size=%s",v.w,this.size);
+
+      // 以下の手順はawaitが必要なので、scanQRで実行
+
+
+      console.log(v.whois+' normal end.',v.rv);
+      return v.rv;
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** スキャンまたは入力欄への手入力で文字列を取得
+   * @param {Object} opt - scanQR専用パラメータ。詳細はconstructor参照
+   * @returns {string|null} 取得した文字列。読込失敗ならnull
+   */
+  entry = async (opt={}) => {
+    const v = {whois:'WebScanner.entry',rv:null,step:0};
+    console.log(v.whois+' start.');
+    try {
+
+      v.step = 1.1; // パラメータの設定
+      Object.keys(opt).forEach(x => this[x] = opt[x]);
+      v.step = 1.2; // 作業用要素の内容を初期化
+      this.input.value = '';
+      this.value.innerText = '';
+
+      v.step = 2; // カメラの準備(videoタグに表示)
+      this.constraints.video.width =
+      this.constraints.video.height = this.size;
+      this.video.srcObject = await navigator.mediaDevices
+      .getUserMedia(this.constraints);
+      this.video.onloadedmetadata = () => {
+        this.video.play();
+      };
+
+      v.step = 3; // video,canvas他要素の表示
+      Object.keys(this.display).forEach(x => {
+        if( this.display[x] ){
+          this[x].classList.add('act');
+        }
+      });
+      this.canvas.width  = v.cw =
+      this.canvas.height = v.ch = this.size;
+
+      v.step = 4; // 定期的にスキャン実行
+      v.cnt = 0;
+      do {
+        v.rv = this.scanQR();
+        // div.valueをチェック、入力されていたらそれを利用
+        if( v.rv === null && this.value.innerText !== '' ){
+          v.rv =  this.value.innerText;
+        }
+        console.log(v.cnt);
+        v.cnt += this.interval;
+        await this.sleep(this.interval);
+      } while( v.rv === null && v.cnt < this.maxWaiting );
+
+      v.step = 5; // スキャンまたは入力結果の処理
+      if( v.rv !== null ){
+        v.step = 5.1; // 入力欄・ボタンを非表示
+        ['input','button','description'].forEach(x => {
+          this[x].classList.remove('act');
+        });
+
+        v.step = 5.2; // スキャンした文字列の表示
+        if( this.display.link ){
+          this.link.innerHTML = '<a target="_blank" href="'
+          + v.rv + '">' + v.rv + '</a>';
+        }
+
+        v.step = 5.3; // QRコードの表示
+        if( this.display.qrcode ){
+          this.qrcode.innerHTML = '';
+          v.qrSize = this.qrcode.clientWidth;
+          console.log(this.qrcode);
+          //v.qr = new QRCode(this.qrcode,v.rv);
+          v.qr = new QRCode(this.qrcode,{
+            text: v.rv,
+            width: v.qrSize, height: v.qrSize,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+          });
+        }
+      }
+
+      v.step = 6.1; // 終了処理
+      if( this.closeWhenFinished ){
+        this.stop();
+      } else {
+        // videoの撮影停止(closeWhenFinishedならthis.close内で実行)
+        this.video.srcObject.getVideoTracks().forEach((track) => {
+          track.stop();
+        });
+      }
+      console.log(v.whois+' normal end.\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** QRコードをスキャン
+   * @param {Object} opt - scanQR専用パラメータ。詳細はconstructor参照
+   * @returns {string|null} スキャンしたQRコードの文字列。読込失敗ならnull
+   *
+   * ※このメソッドは一コマ分の撮影および解析(jsQR)しか行わない。
+   *
+   * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
+   */
+  scanQR = () => {
+    const v = {whois:'WebScanner.scanQR',rv:null,step:0};
+    //console.log(v.whois+' start.');
+    try {
+
+      if(this.video.readyState !== this.video.HAVE_ENOUGH_DATA)
+        return null;
+
+      v.cw = v.ch = this.size;
+
+      v.step = 4.1; // キャンバスへの描画
+      this.context.drawImage(this.video, 0, 0, v.cw, v.ch);
+      v.imageData = this.context.getImageData(0, 0, v.cw, v.ch);
+      v.code = jsQR(v.imageData.data, v.imageData.width, v.imageData.height);
+      if ( v.code ) {
+        v.step = 4.2;
+        console.log(v.code);
+        // スキャン結果の判定
+        if( typeof v.code.data === 'string' && v.code.data.match(this.RegExp) ){
+          v.rv = v.code.data;
+        }
+      }
+
+      //console.log(v.whois+' normal end.\n',v.rv);
+      return v.rv;
+
+    } catch(e){
+      console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+      return e;
+    }
+  }
+
+  /** 指定時間待機 */
+  sleep = (sec) =>
+    {return new Promise(resolve => setTimeout(resolve,sec))};
+
+  /** 終了処理
+   * @param {boolean} [endStatus=false] - 終了時のステータス。異常終了ならtrue
+   * @returns {void}
+   */
+  stop = (endStatus=false) => {
+    if( endStatus ){
+      alert('一定時間('+(this.maxWaiting/1000)+'秒)経過に伴いスキャナを停止しました')
+    }
+    this.video.srcObject.getVideoTracks().forEach((track) => {
+      track.stop();
+    });
+    if( this.closeFinder ){
+      Object.keys(this.display).forEach(x => {
+        this[x].classList.remove('act');
+      })
+    }
+  }
+}
+
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {};
+  v.WebScanner = new WebScanner('#WebScanner',{
+    display:{
+      link: true,
+      qrcode: true,
+    },
+    description: '受付番号または氏名(ヨミ)の一部を入力してください',
+    closeWhenFinished:false,
+  });
+  v.rv = await v.WebScanner.entry();
+});
+</script>
+</html>

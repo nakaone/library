@@ -1,0 +1,34 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>WebScanner</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="../szLib.css" rel="stylesheet" />
+<style type="text/css"></style>
+</head><body>
+  <div id="WebScanner"></div>
+  <div id="qrcode"></div>
+</body>
+<!-- QRコード検出 -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<!-- QRコード生成 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script type="text/javascript">
+//::$lib/createElement/1.2.1/core.js::
+//::$lib/mergeDeeply/1.1.0/core.js::
+//::$lib/setupInstance/1.0.0/core.js::
+//::$mod/core.js::
+
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {};
+  v.WebScanner = new WebScanner('#WebScanner',{
+    display:{
+      link: true,
+      qrcode: true,
+    },
+    description: '受付番号または氏名(ヨミ)の一部を入力してください',
+    closeWhenFinished:false,
+  });
+  v.rv = await v.WebScanner.entry();
+});
+</script>
+</html>
