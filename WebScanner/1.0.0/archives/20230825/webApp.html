@@ -1,0 +1,81 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>WebScanner</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="../szLib.css" rel="stylesheet" />
+<style data-embed="../szLib.css"/></style>
+<style type="text/css">
+  html, body, #wrapper {
+    width: 100%;
+  }
+  #wrapper {
+    margin: 0 auto;
+    width: 80%;
+    display: flex;
+    flex-flow: column;
+    /*
+    display: grid;
+    grid-template-rows: 160vw 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
+    */
+  }
+  #wrapper > div {
+    margin: 1rem;
+  }
+</style>
+</head><body>
+  <div id="wrapper">
+    <div id="scanner"></div>
+    <div><input type="text" value="(undefined)" /></div>
+    <div><a></a></div>
+    <div id="qr"></div>
+  </div>
+</body>
+
+<!-- QRコード検出 -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<!-- QRコード生成 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script type="text/javascript" src="../createElement.js" data-embed="../createElement.js"></script>
+<script type="text/javascript" src="../mergeDeeply.js" data-embed="../mergeDeeply.js"></script>
+<script type="text/javascript" src="../setupInstance/core.js" data-embed="../setupInstance/core.js"></script>
+<script type="text/javascript" src="core.js" data-embed="core.js"></script>
+<script type="text/javascript">
+const changed = () => {
+  const v = {};
+  console.log('input changed.');
+
+  v.text = document.querySelector('input').value;
+
+  // QRコードの作成
+  v.qr = document.querySelector('#qr');
+  v.qr.innerHTML = '';
+  v.rv = new QRCode(v.qr,{
+    text: v.text,
+    width: 300, height: 300,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  // リンクの更新
+  v.a = document.querySelector('a');
+  v.a.setAttribute('href',v.text);
+  v.a.innerText = v.text;
+}
+
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {};
+
+  document.querySelector('input').addEventListener('input',changed);
+
+  v.scanner = new WebScanner('#scanner',{showVideo:true,closeFinder:false,});
+  v.rv = await v.scanner.scanQR({RegExp:/^[0-9]+$/});
+  document.querySelector('input').value = v.rv;
+  console.log(v.rv);
+
+  changed();
+
+});
+</script>
+</html>
