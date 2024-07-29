@@ -13,22 +13,25 @@
  * - 空白行は出力対象に含めない
  * - 空欄は出力対象に含めない
  * - 更新は一回一行、かつ条件は一項目のみ指定可
+ * - getは全件取得のみ、抽出は行わない
  */
 function simpleTable(arg){
   const v = {whois:'simpleTable',step:0,rv:[]};
   console.log(`${v.whois} start.\narg=${stringify(arg)}`);
   try {
 
+    v.step = 1; // 事前準備
+    if( whichType(arg,'String') ) arg = {func:'get',name:arg};
     arg.func = arg.func || 'get';
 
-    v.step = 1; // シートデータの取得
+    v.step = 2; // シートデータの取得
     v.sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(arg.name);
     v.data = v.sheet.getDataRange().getValues();
     if( !v.data || v.data.length < 2 ) throw new Error('invalid sheet data');
 
 
     if( arg.func === 'get' ){
-      v.step = 2; // オブジェクトの配列に変換
+      v.step = 3; // オブジェクトの配列に変換
       for( v.r=1 ; v.r < v.data.length ; v.r++ ){
         v.o = {};
         for( v.c=0 ; v.c<v.data[0].length ; v.c++ ){
@@ -41,12 +44,12 @@ function simpleTable(arg){
         if( Object.keys(v.o).length > 0 ) v.rv.push(v.o);
       }      
     } else {
-      v.step = 3.1; // 列番号を特定
+      v.step = 4.1; // 列番号を特定
       v.c = v.data[0].findIndex(x => x === arg.key);
       if( v.c < 0 ) throw new Error(`Couldn't find key column "${arg.key}"`);
 
       for( v.r=1 ; v.r<v.data.length ; v.r++ ){
-        v.step = 3.2; // 行を特定
+        v.step = 4.2; // 行を特定
         v.val = v.data[v.r][v.c]; // Date型はUNIX時刻に統一
         if( whichType(v.val,'Date') ) v.val = v.val.getTime();
         if( v.val === arg.val ){
