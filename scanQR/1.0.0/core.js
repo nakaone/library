@@ -29,7 +29,7 @@ async function scanQR(parent,opt={}){
     sleep: (sec) =>  // 指定時間待機
       {return new Promise(resolve => setTimeout(resolve,sec))},
   };
-  console.log(v.whois+' start.');
+  console.log(`${v.whois} start.\nparent=${parent}\nopt=${stringify(opt)}`);
   try {
 
     // ファインダ領域の作成
@@ -52,8 +52,7 @@ async function scanQR(parent,opt={}){
     }
     v.constraints.video.width = v.constraints.video.height = v.ps;
     v.step = '1.3'; // video要素の生成
-    v.video = createElement({tag:'video',style:{margin:'auto'}});
-    v.parent.append(v.video);
+    v.video = createElement({tag:'video',style:{margin:'auto'}},v.video);
 
     v.step = '2';
     const stream = await navigator.mediaDevices.getUserMedia(v.constraints);
@@ -90,8 +89,9 @@ async function scanQR(parent,opt={}){
     console.log(v.whois+' normal end.\n'+v.rv);
     return v.rv;
 
-  } catch(error) {
-    console.error(v.whois+' abnormal end.',error,v);
-    return error;
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
   }
 }
