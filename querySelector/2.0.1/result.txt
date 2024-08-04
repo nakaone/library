@@ -1,0 +1,235 @@
+
+class Reception {
+
+  /**
+   * @param {Object} arg
+   * @param {string} arg.wrapper - Receptionを展開する包摂要素のCSSセレクタ
+   * @param {string[]} arg.header - シート上の項目名のリスト
+   * @param {Object[]} arg.data - シート上のデータ。{項目名:値,..}
+   * @param {Function|Arrow} arg.filter - 対象者の判定式。戻り値はboolean
+   */
+  constructor(arg){
+    const v = {whois:this.constructor.name+'.constructor',step:0,rv:null};
+    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
+    try {
+
+      v.step = 1; // 事前準備
+      v.step = 1.1; // 既定値の設定、メンバ変数への保存
+      this.wrapper = document.querySelector(arg.wrapper || '.Reception[name="wrapper"]');
+        // {HTMLElement} Receptionを展開する包摂要素
+      this.header = arg.header; // {string[]} シート上の項目名のリスト
+      this.data = arg.data; // {Object[]} シート上のデータ。{項目名:値,..}
+      this.filter = arg.filter; // {Function|Arrow} 対象者の判定式。戻り値はboolean
+
+      v.step = 1.2; // スキャナ領域をメンバ変数にセット＋イベント定義
+      this.scanner = this.wrapper.querySelector('[name=scanner]');
+      this.keyword = this.wrapper.querySelector('[name="keyword"]');
+      // 「検索」ボタンクリックでキーワードを所定の要素に埋め込む
+      this.keyword.querySelector('button').addEventListener('click',e => {
+        e.target.parentNode.querySelector('[name="val"]').innerText
+        = e.target.parentNode.querySelector('input').value;
+      });
+      // 検索結果が複数時の候補者一覧表示画面
+      this.dialog = this.scanner.querySelector('dialog');
+      this.dialog.querySelector('button').addEventListener('click',()=>{
+        this.dialog.close();
+        v.entryNo = Number(this.dialog.querySelector('button').value);
+        console.log(`l.568 entryNo(${whichType(v.entryNo)})=${v.entryNo}`);
+        v.r = this.editParticipant(this.data.find(x => Number(x.entryNo) === v.entryNo));
+        if( v.r instanceof Error ) throw v.r;
+      });
+
+      v.step = 1.3; // 申込情報詳細画面領域をメンバ変数にセット＋イベント定義
+      this.detail = this.wrapper.querySelector('[name="detail"]');
+      // 詳細画面のボタンクリック時(受付時、参加費等の入力後)の動作定義
+      ['cancel','update','updall'].forEach(x =>
+        this.detail.querySelector(`button[name="${x}"]`)
+        .addEventListener('click',e=>this.updateDetail(e)));
+
+
+      v.step = 2; // 受付番号を入力して該当者を特定、申込情報編集画面を呼び出す
+      v.rv = this.targeting();
+      if( v.rv instanceof Error ) throw v.r;
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** targeting: 受付番号を入力して該当者を特定、申込情報編集画面を呼び出す
+   * @param {void}
+   * @returns {null}
+   */
+  async targeting(){
+    const v = {whois:this.constructor.name+'.targeting',step:0,rv:null,target:null};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.step = 1; // 事前準備：スキャナ画面を表示、詳細画面を閉鎖
+      this.scanner.style.display = 'grid';
+      this.detail.style.display = 'none';
+
+      v.key = await (async ()=>{  v.step = 2; // 受付番号スキャン、キーワード入力
+        v.r = await scanQR('.Reception [name="camera"]',{field:()=>{
+          return document.querySelector('.Reception [name="val"]').innerText}});
+        if( v.r instanceof Error ) throw v.r;
+        return v.r;
+      })();
+
+      v.target = await (()=>{  v.step = 3; // 該当者の抽出
+        v.candidates = this.data.filter(o => {return this.filter(o,v.key)});
+        //console.log(`l.522 v.candidates=${stringify(v.candidates)}`)
+
+        if( v.candidates.length === 1 ){
+          v.step = 2.1; // 該当が一件のみ
+          v.r = this.editParticipant(v.candidates[0]);
+          if( v.r instanceof Error ) throw v.r;
+        } else {
+          v.step = 2.2; // 該当が複数 ⇒ ダイアログでリスト表示、選択
+          v.candidates.sort((a,b)=>a['申込者カナ']<b['申込者カナ']).forEach(o => {createElement({
+            attr: {name:o.entryNo},
+            children:[{tag:'ruby',text:o['申込者氏名'],children:[{tag:'rt',text:o['申込者カナ']}]}],
+            event: {click:e=>{
+              // 選択された候補者に背景色を付け、受付番号をbutton.valueにセット
+              this.dialog.querySelectorAll('div').forEach(x => x.classList.remove('act'));
+              v.e = e.target.closest('div');
+              v.e.classList.add('act');
+              this.dialog.querySelector('button').value = v.e.getAttribute('name');
+            }},
+          }),this.dialog.querySelector('[name="list"]')});
+          this.dialog.showModal();
+        }
+      })();
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** editParticipant: 申込情報編集画面を表示
+   * @param {Object.<string, any>} arg - 該当申込情報のオブジェクト
+   * @returns {null}
+   */
+  editParticipant(arg){
+    const v = {whois:this.constructor.name+'.editParticipant',step:0,rv:null};
+    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
+    try {
+
+      v.step = 1; // 事前準備：スキャナ画面を閉鎖、詳細画面表示
+      this.scanner.style.display = 'none';
+      this.detail.style.display = 'grid';
+      v.data = Object.assign({
+        '緊急連絡先': '(未記入)',
+        'ボランティア募集': '(不可)',
+      },arg);
+
+      v.step = 2; // 対象申込情報をdetail内の各要素に書き込み
+      v.step = 2.1; // 非参加者情報をセット
+      this.header.forEach(col => {
+        if( col.indexOf('参加者0') < 0 || col.indexOf('fee0') < 0 ){
+          // 必須項目をセット
+          v.e = this.detail.querySelector(`[name="${col}"]`);
+          if( v.e ){
+            if( col === 'editURL' ){
+              this.detail.querySelector('[name="editURL"] img').src
+              = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='
+              + v.data.editURL;
+            } else if( col === 'memo' ){
+              if( v.data['memo'] )
+                this.detail.querySelector('textarea').value = v.data['memo'];
+            } else {
+              v.e.innerText = v.data[col] ? v.data[col] : '';
+            }
+          }
+        }
+      });
+
+      v.step = 2.2; // 参加者情報をセット
+      for( v.i=1 ; v.i<=5 ; v.i++ ){
+        if( !v.data[`参加者0${v.i}氏名`] ){
+          v.step = 2.21; // 氏名未登録の参加者は空欄
+          this.detail.querySelector(`tr[name="参加者0${v.i}"]`).innerHTML = '';
+        } else {
+          v.step = 2.22; // 氏名・カナ・所属のセット
+          ['氏名','カナ','所属'].forEach(x => {
+            v.col = `参加者0${v.i}${x}`;
+            this.detail.querySelector(`[name="${v.col}"]`).innerHTML = v.data[v.col] ? v.data[v.col] : '';
+          });
+
+          v.step = 2.23; // 会費のセット
+          v.col = `fee0${v.i}`;
+          v.val = v.data[v.col] ? v.data[v.col] : '未収';
+          this.detail.querySelector(`[name="${v.col}"][value="${v.val}"]`).checked = true;
+        }
+      }
+
+      v.step = 3; // 更新内容をシートに反映
+      //       v.r = await doGAS('auth1',{entryNo:v.entryNo});
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+
+  /** updateDetail: 詳細画面の入力内容をシートに反映
+   * 要更新箇所はfee01〜05、memoのみ。
+   * @param {string} arg - 動作内容。cancel || update || updall
+   */
+  async updateDetail(e){
+    const v = {whois:this.constructor.name+'.updateDetail',step:0,rv:null,obj:{}};
+    console.log(`${v.whois} start.`);
+    try {
+
+      v.func = e.target.getAttribute('name');
+
+      // update or updall ⇒ 入力内容で更新
+      if( v.func === 'update' || v.func === 'updall' ){
+        // 受付番号を取得
+        v.obj.entryNo = Number(this.detail.querySelector('[name="entryNo"]').innerText);
+        // fee01〜05を取得
+        for( v.i=1 ; v.i<6 ; v.i++ ){
+          v.tr = this.detail.querySelector(`tr[name="参加者0${v.i}"]`);
+          if( v.tr.innerHTML.length > 0 ){
+            v.obj['fee0'+v.i] = this.detail.querySelector(`form[name="参加者0${v.i}会費"]`).elements['fee0'+v.i].value;
+          }
+        }
+        // memoを取得
+        v.memo = this.detail.querySelector('textarea[name="memo"]').value;
+        if( v.memo.length > 0 ) v.obj.memo = v.memo;
+        // 取得結果をシートに反映
+        console.log(`l.732 v.obj=${stringify(v.obj)}`);
+        //v.r = doGAS()
+      }
+
+      v.step = 9; // 終了処理
+      v.r = this.targeting(); // 受付番号入力画面を再度呼び出し
+      if( v.r instanceof Error ) throw v.r;
+      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+}
+
