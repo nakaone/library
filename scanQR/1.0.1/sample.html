@@ -1,0 +1,284 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>scanQR TEST</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--link rel="stylesheet" href="style.css"-->
+<!-- QRコード検出/生成 -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<style type="text/css">/*::CSS::*/</style>
+</head>
+<body>
+<h1>scanQR test</h1>
+<div id="parent"></div>
+
+<input type="text" />
+<button onclick="document.querySelector('#val').innerText=document.querySelector('input').value">入力</button>
+<div id="val" style="display: none;"></div>
+
+</body>
+<script type="text/javascript">
+function stringify(variable,opt={addType:false}){
+  const v = {whois:'stringify',rv:null,step:0};
+  const conv = arg => {
+    const w = {type:whichType(arg)};
+    w.pre = opt.addType ? `[${w.type}]` : '';
+    switch( w.type ){
+      case 'Function': case 'Arrow': case 'Symbol':
+        w.rv = w.pre + arg.toString(); break;
+      case 'BigInt':
+        w.rv = w.pre + parseInt(arg); break;
+      case 'Undefined':
+        w.rv = w.pre + 'undefined'; break;
+      case 'Object':
+        w.rv = {};
+        for( w.i in arg ){
+          // 自分自身(stringify)は出力対象外
+          if( w.i === 'stringify' ) continue;
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      case 'Array':
+        w.rv = [];
+        for( w.i=0 ; w.i<arg.length ; w.i++ ){
+          w.rv[w.i] = conv(arg[w.i]);
+        }
+        break;
+      default:
+        w.rv = w.pre + arg;
+    }
+    return w.rv;
+  };
+  //console.log(`${v.whois} start.\nvariable=${variable}\nopt=${JSON.stringify(opt)}`);
+  try {
+
+    v.step = 1; // 事前準備
+    if( typeof opt === 'boolean' ) opt={addType:opt};
+
+    v.step = 2; // 終了処理
+    //console.log(`${v.whois} normal end.`);
+    return JSON.stringify(conv(variable));
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
+  }
+}
+function createElement(arg,parent=null){
+  const v = {whois:'BasePage.createElement',rv:[],step:0};
+  //console.log(v.whois+' start.',arg);
+  try {
+    v.step = 1.1; // 引数を強制的に配列化
+    v.isArr = Array.isArray(arg); // 引数が配列ならtrue。戻り値にも使用するので保存
+    if( !v.isArr ) arg = [arg];
+    v.step = 1.2; // 親要素の特定
+    if( parent !== null ){
+      v.parent = typeof parent === 'string' ? document.querySelector(parent) : parent;
+    }
+
+
+    for( v.i = 0 ; v.i<arg.length ; v.i++ ){
+      v.step = 2; // 既定値の設定
+      v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
+      Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
+
+      v.step = 3; // HTMLElementを生成、v.objとする
+      v.obj = document.createElement(v.def.tag);
+
+      v.step = 4; // HTMLElementの属性を定義
+      for( v.j in v.def.attr ){
+        v.obj.setAttribute(v.j,v.x = v.def.attr[v.j]);
+      }
+
+      v.step = 5; // 論理属性を定義(ex.checked)
+      for( v.j in v.def.logical ){
+        if( v.def.logical[v.j] ){
+          v.obj.setAttribute(v.j,v.def.logical[v.j]);
+        }
+      }
+
+      v.step = 6; // style属性の定義
+      for( v.j in v.def.style ){
+        if( v.j.match(/^\-\-/) ){ // CSS変数
+          v.obj.style.setProperty(v.j,v.def.style[v.j]);
+        } else {
+          v.obj.style[v.j] = v.def.style[v.j];
+        }
+      }
+
+      v.step = 7; // イベントの定義
+      for( v.j in v.def.event ){
+        v.obj.addEventListener(v.j,v.def.event[v.j],false);
+      }
+
+      v.step = 8; // 内部文字列(html or text)
+      if( v.def.html.length > 0 ){
+        v.obj.innerHTML = v.def.html;
+      } else {
+        // textareaの場合はvalueに、それ以外はinnerTextに内部文字列(text)をセット
+        v.obj[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
+      }
+
+      v.step = 9; // 子要素の追加(parentは指定しない)
+      for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
+        v.obj.appendChild(this.createElement(v.def.children[v.j]));
+      }
+
+      v.step = 10; // 戻り値への登録
+      v.rv.push(v.obj);
+
+      v.step = 11; // 親要素への追加
+      if( parent !== null ){
+        v.parent.appendChild(v.obj);
+      }
+
+      v.step = 12; // メンバとして、また切替画面として登録
+      if( v.def.name.length > 0 ){
+        this[v.def.name] = v.obj;
+        this.screenList[v.def.name] = v.obj;
+      }
+    }
+
+    v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
+    v.rv = v.isArr ? v.rv : v.rv[0];
+    //console.log(v.whois+' normal end.\n',v.rv);
+    return v.rv;
+
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+</script>
+<script type="text/javascript">
+/** QRコードをスキャン
+ * @param {string} parent - 親要素のCSSセレクタ
+ * @param {Object} [opt={}] - オプション
+ * @param {number} opt.size - ファインダ領域のサイズ
+ * @param {number} opt.interval=300 - 撮像間隔。ミリ秒
+ * @param {number} opt.max=90000 - 最大待機時間。単位：ミリ秒
+ * @param {Function} opt.field - 入力欄を併用する場合、入力欄の値を返す関数
+ * @returns {string} スキャンしたQRコードの文字列
+ *
+ * - Qiita [html＋javascriptだけで実装したシンプルなQRコードリーダー](https://qiita.com/murasuke/items/c16e4f15ac4436ed2744)
+ * - [Promiseでsleep機能を作る](https://www.sejuku.net/blog/24629#index_id5)
+ *
+ * @typedef scanQRopt
+ * @prop {number} [size=500] - ファインダのサイズ
+ */
+async function scanQR(parent,opt={}){
+  const v = {whois:'scanQR',rv:null,
+    constraints:{
+      audio: false,
+      video: {
+        facingMode: 'environment',
+        //width: opt.size || 500,
+        //height: opt.size || 500,
+      },
+    },
+    max: opt.max || 90000, // 最大待機時間。単位：ミリ秒
+    interval: opt.interval || 300, // 撮像間隔。ミリ秒
+    minSize : opt.minSize || 640, // 最小撮像サイズ。px
+    sleep: (sec) =>  // 指定時間待機
+      {return new Promise(resolve => setTimeout(resolve,sec))},
+  };
+  console.log(v.whois+' start.');
+  try {
+
+    // ファインダ領域の作成
+    v.step = '1.1'; // 親要素の高さを最大に
+    v.parent = document.querySelector(parent);
+    v.parent.style.width = v.parent.style.height = '100%';
+    v.step = '1.2'; // 撮像領域を親要素の幅・高さ、いずれか小さい方の正方形に設定
+    if( opt.hasOwnProperty('size') ){
+      v.ps = opt.size;
+    } else {
+      v.pw = v.parent.clientWidth;
+      v.ph = v.parent.clientHeight;
+      if( v.pw < v.ph ){
+        v.ps = v.pw < v.minSize ? v.minSize : v.pw;
+        v.parent.style.height = v.ps + 'px';
+      } else {
+        v.ps = v.ph < v.minSize ? v.minSize : v.ph;
+        v.parent.style.width = v.ps + 'px';
+      }
+    }
+    v.constraints.video.width = v.constraints.video.height = v.ps;
+    v.step = '1.3'; // video要素の生成
+    v.video = createElement({tag:'video',style:{margin:'auto'}});
+    v.parent.append(v.video);
+
+    v.step = '2';
+    const stream = await navigator.mediaDevices.getUserMedia(v.constraints);
+    v.video.srcObject = stream;
+    v.video.play();
+
+    v.step = '3';
+    const { width, height } = v.constraints.video;
+    v.canvas = new OffscreenCanvas(width, height);
+    const context = v.canvas.getContext('2d');
+
+    v.step = '4'; // 定期的にスキャン実行
+    v.cnt = 0;
+    do {
+      context.drawImage(v.video, 0, 0, width, height);
+      const imageData = context.getImageData(0, 0, width, height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height);
+      v.field = opt.field();  // 入力欄に入力されていれば!null
+      if (code || v.field) {
+        v.rv = v.field || code.data;
+      } else {
+        await v.sleep(v.interval);
+        console.log(v.cnt);
+        v.cnt += v.interval;
+      }
+    } while( v.rv === null && v.cnt < v.max );
+
+    // 終了処理
+    v.video.srcObject.getVideoTracks().forEach((track) => {
+      track.stop();
+    });
+    v.parent.innerHTML = ''; // 作業用DIVを除去
+
+    console.log(v.whois+' normal end.\n'+v.rv);
+    return v.rv;
+
+  } catch(error) {
+    console.error(v.whois+' abnormal end.',error,v);
+    return error;
+  }
+}
+
+window.addEventListener('DOMContentLoaded',async () => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.r = await scanQR('#parent',{field:()=>{
+      return document.querySelector('#val').innerText;
+    }});
+    console.log(`v.r(${whichType(v.r)})=${stringify(v.r)}`);
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+</html>
