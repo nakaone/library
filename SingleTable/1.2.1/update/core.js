@@ -13,6 +13,8 @@
   * @param {Object|Function} set - セットする{項目名:値}、または行オブジェクトを引数にセットする{項目名:値}を返す関数
   * @param {Object} [opt={}] - オプション
   * @param {Function} [opt.where=()=>true] - レコードを引数として、条件に合致する場合trueを返す関数
+  * @param {string} [opt.key] - whereを指定せず「キー項目と値を指定、合致すれば更新」とする場合のキー項目名
+  * @param {any} [opt.value] - 同、キー項目の値
   * @returns {UpdateResult[]|Error} 更新結果を格納した配列
   * 
   * @example
@@ -42,6 +44,8 @@
   *   o=>{return {Col1:(o.B3||0)+(o.C3||0)}},  // 他項目から導出
   *   {where:o=>o.B3==5&&o.C3==4}
   * )
+  * // entryNo=7について、memo欄に"test content"をセット
+  * v.table.update({memo:'test content',key:'entryNo',value:7})
   * ```
   */
 update(set,opt={}){
@@ -53,11 +57,11 @@ update(set,opt={}){
 
     v.step = 1; // 既定値の設定
     if( !opt.hasOwnProperty('where') )
-      opt.where = () => true;
+      opt.where = o => o[opt.key] == opt.value;
 
     v.step = 2; // 1行ずつ差分をチェックしながら処理結果を保存
     for( v.i=0 ; v.i<this.data.length ; v.i++ ){
-      if( Object.keys(this.data[v.i]).length > 0 && opt.where(this.data[v.i]) ){
+      if( Object.keys(this.data[v.i]).length > 0 && opt.where(this.data[v.i])){
         v.step = 2.1; // 「空Objではない かつ 対象判定結果がtrue」なら更新対象
         v.r = { // {UpdateResult} - 更新結果オブジェクトを作成
           old: Object.assign({},this.data[v.i]),
