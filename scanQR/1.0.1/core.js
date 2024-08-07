@@ -32,7 +32,11 @@ async function scanQR(parent,opt={}){
     v.szStr = v.parent.style.height = v.szNum + 'px'; // 文字列型の撮像領域幅。ex.980px
 
     v.step = 2; // video要素の生成
-    v.video = createElement({tag:'video',style:{width:v.szStr,height:v.szStr}},v.parent);
+    v.video = v.parent.querySelector('video');
+    if( !v.video ){
+      v.video = createElement({tag:'video',style:{width:v.szStr,height:v.szStr}},v.parent);
+      if( v.video instanceof Error ) throw v.video;
+    }
     v.constraints = {
       audio: false, // 音声は使用しない
       video: {
@@ -70,7 +74,6 @@ async function scanQR(parent,opt={}){
     v.video.srcObject.getVideoTracks().forEach((track) => {
       track.stop();
     });
-    v.parent.innerHTML = ''; // 作業用DIVを除去
 
     console.log(v.whois+' normal end.\n'+v.rv);
     return v.rv;
