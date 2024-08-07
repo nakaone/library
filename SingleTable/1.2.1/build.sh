@@ -9,7 +9,7 @@ find .. -name '.DS_Store' -type f -ls -delete
 echo "`date +"%T"` - SingleTable: step.1 start."
 lib="/Users/ena.kaon/Desktop/GitHub/library"
 nised="$lib/nised/1.0.0/pipe.cjs"
-mod="$lib/SingleTable/1.2.0"
+mod="$lib/SingleTable/1.2.1"
 tmp="$mod/tmp"
 rm -rf $tmp
 mkdir $tmp

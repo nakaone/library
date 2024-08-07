@@ -238,6 +238,8 @@ where: x => {return x.Col1 && String(x.Col1).indexOf('g') > -1}
 | set | <code>Object</code> \| <code>function</code> |  | セットする{項目名:値}、または行オブジェクトを引数にセットする{項目名:値}を返す関数 |
 | [opt] | <code>Object</code> | <code>{}</code> | オプション |
 | [opt.where] | <code>function</code> | <code>()&#x3D;&gt;true</code> | レコードを引数として、条件に合致する場合trueを返す関数 |
+| [opt.key] | <code>string</code> |  | whereを指定せず「キー項目と値を指定、合致すれば更新」とする場合のキー項目名 |
+| [opt.value] | <code>any</code> |  | 同、キー項目の値 |
 
 **Example**  
 ```
@@ -265,6 +267,8 @@ v.table.update(
   o=>{return {Col1:(o.B3||0)+(o.C3||0)}},  // 他項目から導出
   {where:o=>o.B3==5&&o.C3==4}
 )
+// entryNo=7について、memo欄に"test content"をセット
+v.table.update({memo:'test content',key:'entryNo',value:7})
 ```
 <a name="SingleTable+insert"></a>
 
@@ -773,6 +777,8 @@ class SingleTable {
     * @param {Object|Function} set - セットする{項目名:値}、または行オブジェクトを引数にセットする{項目名:値}を返す関数
     * @param {Object} [opt={}] - オプション
     * @param {Function} [opt.where=()=>true] - レコードを引数として、条件に合致する場合trueを返す関数
+    * @param {string} [opt.key] - whereを指定せず「キー項目と値を指定、合致すれば更新」とする場合のキー項目名
+    * @param {any} [opt.value] - 同、キー項目の値
     * @returns {UpdateResult[]|Error} 更新結果を格納した配列
     * 
     * @example
@@ -802,6 +808,8 @@ class SingleTable {
     *   o=>{return {Col1:(o.B3||0)+(o.C3||0)}},  // 他項目から導出
     *   {where:o=>o.B3==5&&o.C3==4}
     * )
+    * // entryNo=7について、memo欄に"test content"をセット
+    * v.table.update({memo:'test content',key:'entryNo',value:7})
     * ```
     */
   update(set,opt={}){
@@ -813,11 +821,11 @@ class SingleTable {
   
       v.step = 1; // 既定値の設定
       if( !opt.hasOwnProperty('where') )
-        opt.where = () => true;
+        opt.where = o => o[opt.key] == opt.value;
   
       v.step = 2; // 1行ずつ差分をチェックしながら処理結果を保存
       for( v.i=0 ; v.i<this.data.length ; v.i++ ){
-        if( Object.keys(this.data[v.i]).length > 0 && opt.where(this.data[v.i]) ){
+        if( Object.keys(this.data[v.i]).length > 0 && opt.where(this.data[v.i])){
           v.step = 2.1; // 「空Objではない かつ 対象判定結果がtrue」なら更新対象
           v.r = { // {UpdateResult} - 更新結果オブジェクトを作成
             old: Object.assign({},this.data[v.i]),
@@ -1054,8 +1062,6 @@ __test
 
 # 改版履歴
 
-- rev.1.2.1 : 2024/08/06
-  - update().optにkey,valueを追加し、where(関数)ではできない「クライアント側から呼び出して処理」を可能に
 - rev.1.2.0 : 2024/02/17
   - 元データとしてシート以外にオブジェクトの配列に対応
   - ライブラリ関数を使用、不要なメンバを削除(clog, deepcopy, convertNotation)
