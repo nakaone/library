@@ -13,6 +13,7 @@ class LoadingIcon {
     const v = {whois:this.constructor.name+'.constructor',rv:true,step:0,
       css: { theSpinner23: `
         dialog.LoadingIcon {
+          margin: auto;
           width: 400px; /* .loader width * 2 */
           aspect-ratio: 1;
           position: relative;
