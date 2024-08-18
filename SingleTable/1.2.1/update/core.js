@@ -45,7 +45,7 @@
   *   {where:o=>o.B3==5&&o.C3==4}
   * )
   * // entryNo=7について、memo欄に"test content"をセット
-  * v.table.update({memo:'test content',key:'entryNo',value:7})
+  * v.table.update({memo:'test content'},{key:'entryNo',value:7})
   * ```
   */
 update(set,opt={}){
