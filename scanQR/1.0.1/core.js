@@ -40,7 +40,7 @@ async function scanQR(parent,opt={}){
     v.constraints = {
       audio: false, // 音声は使用しない
       video: {
-        //facingMode: 'environment',
+        facingMode: 'environment',
         width: v.szNum,
         height: v.szNum,
       },
