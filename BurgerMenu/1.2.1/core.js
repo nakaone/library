@@ -87,6 +87,7 @@ class BurgerMenu {
           --maxIndex : 2147483646;
           --navWidth : 0.7;
         }
+        .BurgerMenu .screen {padding: 1rem;width: calc(100% - 2rem);}
         /* ハンバーガーアイコン
           icon周囲にiconSizeの40%程度の余白が必要なのでtop,rightを指定
         */
