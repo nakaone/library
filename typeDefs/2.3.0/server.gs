@@ -1,3 +1,62 @@
+function onOpen() {
+  // 最初にトリガー(起動時)として要追加
+  var ui = SpreadsheetApp.getUi();
+  var menu = ui.createMenu('道具箱')
+  .addItem("選択範囲のJSONを出力(非表示行・列は対象外)","exportRange")
+  .addItem("階層ラベルに従ってグループ化","treeGroup");
+  // サブメニュー使用時はaddSubMenuを使用
+  menu.addToUi();
+}
+
+/** exportRange: シート上の選択範囲をJSON形式で出力
+ * - 選択範囲の先頭行は項目ラベル行とする(必須)。
+ * - 非表示となっている行・列は出力されない
+ * - シートのメニューから呼び出される想定なので、引数・戻り値は無し(void)。
+ *   入力はアクティブシートの選択範囲、出力はダイアログとなる。
+ */
+function exportRange(){
+  const v = {whois:'exportRange',step:0,rv:[]};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.range = SpreadsheetApp.getActiveRange();
+    v.data = v.range.getValues();
+    v.sheet = v.range.getSheet();
+    v.row = v.range.getRow(); v.col = v.range.getColumn();
+    v.isHidden = {row:[],col:[]};
+    for( v.i=0 ; v.i<v.data.length ; v.i++ ){
+      v.isHidden.row[v.i] = v.sheet.isRowHiddenByUser(v.row+v.i)
+        || v.sheet.isRowHiddenByFilter(v.row+v.i);
+    }
+    for( v.i=0 ; v.i<v.data[0].length ; v.i++ ){
+      v.isHidden.col[v.i] = v.sheet.isColumnHiddenByUser(v.col+v.i);
+    }
+
+    for( v.r=1 ; v.r<v.data.length ; v.r++ ){
+      if( v.isHidden.row[v.r] ) continue;
+      v.o = {};
+      for( v.c=0 ; v.c<v.data[0].length ; v.c++ ){
+        if( v.isHidden.col[v.c] ) continue;
+        if( v.data[v.r][v.c] !== '' ){
+          v.o[v.data[0][v.c]] = v.data[v.r][v.c];
+        }
+      }
+      if( Object.keys(v.o).length > 0 ) v.rv.push(v.o);
+    }
+
+    SpreadsheetApp.getUi().alert(JSON.stringify(v.rv));
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+
 /** treeGroup: シート関数。階層ラベルに従ってグループ化する
  * Apps Script上で呼び出して実行することを想定した関数
  * @param {void}
