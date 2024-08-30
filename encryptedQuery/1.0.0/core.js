@@ -2,20 +2,25 @@ class encryptedQuery {
 
   /** @constructor
    * @param {Object} arg
-   * @param {string} arg.url - 問合せ先(server=WebAPI)のURL
-   * @param {string} [arg.upv='n'] - URLパラメータ(クエリ文字列)の変数名(URL Parameter Variable)
+   * === client/server両方で使用するパラメータ ==================
+   * @param {boolean} arg.isClient=true - 動作環境。true:クライアント側、false:サーバ側
    * @param {string} arg.storageKey - DocumentProperties/sessionStorageのキー文字列
-   * @param {number} arg.bits=1024 - クライアント側で鍵ペアを生成する場合の鍵長
-   * @param {string} arg.sheetName='master' - サーバ側でユーザ情報を保持するシート名
-   * @param {string} arg.IDcol='entryNo' - 当該シート上でのユーザ側を特定する欄名
-   * @param {string} arg.CPcol='CPkey' - 当該シート上でユーザ側公開鍵を保持する欄名
-   * @param {string} [arg.SPkey] - サーバ側の公開鍵
+   * @param {string} [arg.upv='n'] - URLパラメータ(クエリ文字列)の変数名(URL Parameter Variable)
+   * === clientでのみ使用するパラメータ ==================
+   * @param {string} arg.url - 問合せ先(server=WebAPI)のURL
+   * @param {number|string} arg.clientId - クライアントのID。例：受付番号(entryNo)
+   * @param {number} [arg.bits=1024] - クライアント側で鍵ペアを生成する場合の鍵長
+   * === serverでのみ使用するパラメータ ==================
+   * @param {SingleTable} arg.master - サーバ側でユーザ情報を保持するシート
+   * @param {string} arg.IDcol - 当該シート上でのユーザ側を特定する欄名。ex.'entryNo'
+   * @param {string} arg.CPcol - 当該シート上でユーザ側公開鍵を保持する欄名。ex.'CPkey'
    * @returns 
    * 
    * 
    * @param {string|Object} [CSkey] - クライアント側の秘密鍵。文字列ならcryptico.toJSON()で出力された文字列
    * @param {string} [CPkey] - クライアント側の公開鍵
    * @param {string|Object} [SSkey] - サーバ側の秘密鍵。文字列ならcryptico.toJSON()で出力された文字列
+   * @param {string} [arg.SPkey] - サーバ側の公開鍵
    * 
    */
   constructor(arg){
@@ -23,52 +28,53 @@ class encryptedQuery {
     console.log(`${v.whois} start.\narg=${stringify(arg)}`);
     try {
 
-      v.step = 1; // 環境変数(メンバ)の設定
-      this.isClient = window ? true : false;  // 実行環境の識別。クライアント側(ブラウザ)ならtrue
-      if( arg.storageKey ){
-        this.storageKey = arg.storageKey;
-      } else {
-        throw new Error(`${this.isClient?'sessionStorage':'DocumentProperties'}のキー文字列が指定されていません`);
-      }
-      this.upv = arg.upv || 'n';  // URLパラメータ(クエリ文字列)の変数名
+      (()=>{  v.step = 1; // 事前準備
 
-      if( this.isClient ){  // 実行環境がクライアント側の場合の鍵ペア設定
+        v.step = 1; // 環境変数(メンバ)の設定
+        this.isClient = arg.hasOwnProperty('isClient') ? arg.isClient : true;
+        if( arg.storageKey ){
+          this.storageKey = arg.storageKey;
+        } else {
+          throw new Error(`${this.isClient?'sessionStorage':'DocumentProperties'}のキー文字列が指定されていません`);
+        }
+        this.upv = arg.upv || 'n';  // URLパラメータ(クエリ文字列)の変数名
+
+      })();
+
+      if( this.isClient ){  v.step = 2; // 実行環境がクライアント側の場合の鍵ペア設定
 
         v.step = 2.1; // 必須パラメータの存否確認、既定値設定
-        if( arg.url ){
-          this.url = arg.url;
-        } else {
-          throw new Error('問合せ先(API)のURLが指定されていません');
-        }
+        if( arg.url ) this.url = arg.url; else throw new Error('問合せ先(API)のURLが指定されていません');
+        if( arg.clientId ) this.clientId = arg.clientId; else throw new Error('IDが指定されていません');
         arg.bits = arg.bits || 1024;
 
         v.step = 2.2; // 実行環境がクライアント側かつsessionStorageに保存されているなら取得
-        this.conf = JSON.parse(sessionStorage.getItem(this.storageKey));
+        this.conf = JSON.parse(sessionStorage.getItem(this.storageKey)) || {};
 
         v.step = 2.3; // クライアント側鍵ペアの設定
         if( this.conf.CPkey ){
-          // クライアント側公開鍵が指定されている場合
+          v.step = 2.31; // クライアント側公開鍵が指定されている場合
           this.CSkey = RSAKey.parse(this.conf.CSkey);
           this.CPkey = this.conf.CPkey;
         } else {
-          // クライアント側公開鍵が未定の場合、鍵ペア未生成と看做して生成
+          v.step = 2.32; // クライアント側公開鍵が未定の場合、鍵ペア未生成と看做して生成
           v.password = createPassword();
           this.CSkey = cryptico.generateRSAKey(v.password,(arg.bits));
-          this.conf.CSkey = this.CSkey.toJSON();
+          this.conf.CSkey = JSON.stringify(this.CSkey.toJSON());
           this.conf.CPkey = this.CPkey = cryptico.publicKeyString(this.CSkey);
-          // 生成した鍵ペアをsessionStorageに保存
+          v.step = 2.33; // 生成した鍵ペアをsessionStorageに保存
           sessionStorage.setItem(this.storageKey,JSON.stringify(this.conf));
         }
 
         v.step = 2.4; // サーバ側公開鍵を取得済なら設定
-        this.SPkey = arg.SPkey || this.conf.SPkey || '';
+        this.SPkey = this.conf.SPkey || null;
 
-      } else {  // 実行環境がサーバ側の場合の鍵ペア設定
+      } else {  v.step = 3; // 実行環境がサーバ側の場合の鍵ペア設定
 
         v.step = 3.1; // 必須パラメータの存否確認、既定値設定
-        this.master = new SingleTable(arg.sheetName || 'master');
-        this.IDcol = arg.IDcol || 'entryNo';
-        this.CPcol = arg.CPcol || 'CPkey';
+        if( arg.master ) this.master = arg.master; else throw new Error('master is not defined.');
+        if( arg.IDcol ) this.IDcol = arg.IDcol; else throw new Error('IDcol is not defined.');
+        if( arg.CPcol ) this.CPcol = arg.CPcol; else throw new Error('CPcol is not defined.');
 
         v.step = 3.2; // 実行環境がサーバ側(GAS)かつDocumentPropertiesに保存されているなら取得
         this.conf = JSON.parse(PropertiesService.getDocumentProperties().getProperty(arg.DocPropKey));
@@ -99,33 +105,9 @@ class encryptedQuery {
     }
   }
 
-  /** setSPkey: クライアント側で新たにサーバ側公開鍵取得時、メンバ変数とsessionStorageに保存
-   * @param {string} arg - 新たに取得したサーバ側公開鍵
-   * @returns {null}
-   */
-  setSPkey(arg){
-    const v = {whois:this.constructor.name+'.setSPkey',step:0,rv:null};
-    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
-    try {
-  
-      this.conf.SPkey = this.SPkey = arg;
-      // sessionStorageに保存
-      sessionStorage.setItem(this.storageKey,JSON.stringify(this.conf));
-
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
-      return v.rv;
-  
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-      console.error(`${e.message}\nv=${stringify(v)}`);
-      return e;
-    }
-  }
-
   /** request: クライアント->サーバ側への処理要求
    * 
-   * @param {Object} arg 
+   * @param {string|Object} arg - サーバ側で分岐処理を行うコールバック関数に渡す引数
    * @returns 
    * 
    * [自分]
@@ -148,24 +130,61 @@ class encryptedQuery {
    */
   async request(arg){
     const v = {whois:this.constructor.name+'.request',step:0,rv:null};
-    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
+    console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
+
+      if( this.SPkey === null ){  // サーバ側公開鍵未取得
+
+        v.step = 1.1; // 平文でCPkeyをbase64化せずに送る
+        v.url = `${this.url}?id=${this.clientId}&CPkey=${this.CPkey}`;
+
+      } else {  // サーバ側公開鍵取得済 -> 暗号化して送る
+
+        v.step = 1.2; // responseで署名検証のためにIDが必要なので付加し、JSON化
+        v.json = JSON.stringify({id:this.clientId,arg:arg});
+        console.log(`l.137 v.json(${whichType(v.json)})=${stringify(v.json)}`);
   
-      // id {number|string} - ユーザデータを特定する情報。ex.受付番号
-      // arg {Object} - 分岐処理を行うコールバック関数に渡す引数
+        v.step = 1.3; // JSON -> base64
+        v.b64 = await this.base64Encode(v.str);
+        if( v.b64 instanceof Error ) throw v.b64;
+        console.log(`l.142 v.b64(${whichType(v.b64)})=${stringify(v.b64)}`);
+  
+        v.step = 1.4; // SPkeyがあればbase64を暗号化、無ければそのまま使用
+        v.enc = cryptico.encrypt(v.b64,this.SPkey,this.CSkey);
+        if( v.enc.status !== 'success' ) throw new Error('encrypt failed.');
+        v.arg = v.enc.cipher;
+        console.log(`l.152 v.arg(${whichType(v.arg)})=${stringify(v.arg)}`);
+  
+        v.url = `${this.url}?${this.upv}=${v.arg}`;
+      }
 
-      // argが文字列以外の場合、JSON化＋base64化
-      v.str = whichType(arg,'String') ? arg : JSON.stringify(arg);
-      v.b64 = this.base64Encode(v.str);
-      if( v.b64 instanceof Error ) throw v.b64;
+      v.step = 2; // 問合せの実行、結果受領
+      console.log(`l.156 v.url(${whichType(v.url)})=${stringify(v.url)}`);
+      v.res = await fetch(v.url);
+      console.log(`l.158 v.res(${whichType(v.res)})=${stringify(v.res)}`);
 
-      // サーバ側に問合せ、結果受領
-      v.url = `${this.url}?${this.upv}=${v.b64}`;
-      v.b64 = await fetch(v.url);
+      v.step = 3.1; // 結果を復号(encrypted -> base64)
+      v.dec = cryptico.decrypt(v.res,this.CSkey);
+      console.log(`l.162 v.dec(${whichType(v.dec)})=${stringify(v.dec)}`);
+      if( v.dec.status !== 'success' ) throw new Error('decrypt failed.');
 
-      // base64->JSONで復元、オブジェクト化
-      v.str = this.base64Decode(v.b64);
-      v.rv =JSON.parse(v.str);
+      v.step = 3.2; // 署名検証、SPkeyが無ければ保存
+      if( v.dec.publicKeyString !== this.SPkey ){
+        if( this.SPkey === null ){
+          this.conf.SPkey = this.SPkey = v.dec.publicKeyString;
+          // sessionStorageに保存
+          sessionStorage.setItem(this.storageKey,JSON.stringify(this.conf));  
+        } else {
+          throw new Error('サーバ側の署名が不正です');
+        }
+      }
+
+      v.step = 3.3; // base64 -> JSON
+      v.json = await this.base64Decode(v.b64);
+      console.log(`l.178 v.json(${whichType(v.json)})=${stringify(v.json)}`);
+
+      v.step = 3.4; // JSON -> Object
+      v.rv = JSON.parse(v.json);
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
@@ -180,24 +199,45 @@ class encryptedQuery {
 
   /** response: サーバ側処理、結果通知
    * 
-   * @param {*} arg 
-   * @param {*} callback 
+   * @param {Object} arg - URLクエリ文字列のオブジェクト(e.parameter)
+   * @param {*} callback - 分岐処理を行うコールバック関数。asyncで定義のこと。
    * @returns 
+   * 
+   * - ContentService.createTextOutput()はdoGetで行うため、定義不要
    */
-  async response(arg,plainCB,encryptedCB){
-    const v = {whois:this.constructor.name+'.response',step:0,rv:null};
+  async response(arg,callback){
+    const v = {whois:this.constructor.name+'.response',step:0,rv:null,arg:arg,isPlain:true};
     console.log(`${v.whois} start.\narg=${stringify(arg)}`);
     try {
   
-      // base64->文字列に復元
-      v.str = this.base64Decode(v.arg);
+      // argにthis.upvで指定されたメンバが無い、
+      // またはそれ以外のメンバが存在する ⇒ 平文
+      if( arg[this.upv] && Object.keys(arg).length === 1 ){
+        // argにはthis.upvで指定されたメンバ以外のメンバは存在しない ⇒ 暗号文
+        v.isPlain = false;
+      }
+      v.rv = await callback(v.arg,v.isPlain);
+
+      /*
+      // cipher -> base64
+      v.dec = cryptico.decrypt(arg,this.SSkey);
+      if( v.dec.status === 'success' ){
+        // 署名検証。
+        v.b64 = v.dec.plaintext;
+      } else {
+        // 復号失敗⇒平文として、引数をそのまま使用
+        v.obj = arg;
+      }
+
+      // base64 -> json
+      v.json = Utilities.newBlob(Utilities.base64Decode(v.b64, Utilities.Charset.UTF_8)).getDataAsString();
+
+      // json -> Object
+      v.arg = JSON.parse(v.json);
 
       v.obj = objectizeJSON(v.str);
       if( v.obj === null ){  // 復元結果が非JSON文字列
 
-        // 暗号化文字列と解釈し、復号
-        v.dec = cryptico.decrypt(v.r,this.SSkey);
-        if( v.dec.status !== 'success' ) throw new Error('decode failed.');
 
         // 復号文字列(JSON)をオブジェクト化、シートからユーザ情報を取得して署名検証
         v.obj = JSON.parse(v.dec.plaintext);
@@ -210,11 +250,10 @@ class encryptedQuery {
         }
 
         // 引数が暗号化されている場合の処理分岐を呼び出す
-        v.r = await encryptedCB(v.obj.arg);
-
-      } else {  // 復元結果がオブジェクト
-        v.r = await plainCB(v.obj);
+        v.r = await callback(v.obj.arg);
+        v.isPlain = false;
       }
+      v.r = await callback(v.obj,v.isPlain);
       if( v.r instanceof Error ) throw v.r;
 
       // 結果をJSON＋base64化して返す
@@ -223,6 +262,7 @@ class encryptedQuery {
       v.enc = cryptico.encrypt(v.b64,this.CPkey,this.SSkey);
       if( v.enc.status !== 'success' ){}
       v.rv = {status:true,data:v.enc.cipher};
+      */
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
@@ -251,7 +291,7 @@ class encryptedQuery {
    * console.log(`str=${v.str}\nenc=${v.enc}\ndec=${v.dec}`);
    * ```
    */
-  base64Encode(...parts) {
+  async base64Encode(...parts) {
     return new Promise(resolve => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -278,7 +318,7 @@ class encryptedQuery {
    * console.log(`str=${v.str}\nenc=${v.enc}\ndec=${v.dec}`);
    * ```
    */
-  base64Decode(text, charset='UTF-8') {
+  async base64Decode(text, charset='UTF-8') {
     return fetch(`data:text/plain;charset=${charset};base64,` + text)
     .then(response => response.text());
   }
