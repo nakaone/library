@@ -38,7 +38,6 @@
  * - Qiita [JavaScriptの型などの判定いろいろ](https://qiita.com/amamamaou/items/ef0b797156b324bb4ef3)
  *
  */
-
 function whichType(arg,is){
   let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
   switch(rv){
