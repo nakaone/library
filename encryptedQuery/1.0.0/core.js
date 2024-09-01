@@ -14,6 +14,7 @@ class encryptedQuery {
    * @param {SingleTable} arg.master - サーバ側でユーザ情報を保持するシート
    * @param {string} arg.IDcol - 当該シート上でのユーザ側を特定する欄名。ex.'entryNo'
    * @param {string} arg.CPcol - 当該シート上でユーザ側公開鍵を保持する欄名。ex.'CPkey'
+   * @param {string} arg.upv - URLクエリパラメータ文字列。URL Parameter Variable
    * @returns 
    * 
    * 
@@ -38,7 +39,6 @@ class encryptedQuery {
           throw new Error(`${this.isClient?'sessionStorage':'DocumentProperties'}のキー文字列が指定されていません`);
         }
         this.upv = arg.upv || 'n';  // URLパラメータ(クエリ文字列)の変数名
-
       })();
 
       if( this.isClient ){  v.step = 2; // 実行環境がクライアント側の場合の鍵ペア設定
@@ -136,9 +136,7 @@ class encryptedQuery {
       if( this.SPkey === null ){  // サーバ側公開鍵未取得
 
         v.step = 1.1; // 平文で送付。送付内容はidとCPkeyのみ(固定)
-        v.payload = {id:this.clientId,CPkey:this.CPkey};
-        v.payload.CPkey = 'hoge'; // テスト用データ
-        v.url = `${this.url}?${new URLSearchParams(v.payload)}`;
+        v.url = `${this.url}?${this.upv}=${this.clientId}&CPkey=${this.CPkey}`
         console.log(`l.140 v.url(${whichType(v.url)})=${stringify(v.url)}`);
 
       } else {  // サーバ側公開鍵取得済 -> 暗号化して送る
@@ -221,13 +219,16 @@ class encryptedQuery {
     const v = {whois:this.constructor.name+'.response',step:0,rv:null,arg:arg,isPlain:true};
     console.log(`${v.whois} start.\narg=${stringify(arg)}`);
     try {
-  
-      // argにthis.upvで指定されたメンバが無い、
-      // またはそれ以外のメンバが存在する ⇒ 平文
-      if( arg[this.upv] && Object.keys(arg).length === 1 ){
-        // argにはthis.upvで指定されたメンバ以外のメンバは存在しない ⇒ 暗号文
+
+      if( this.objectizeJSON(arg) === null ){
+        // argがJSON化不可能なら暗号文と看做す
         v.isPlain = false;
+
+      } else {
+        // argがJSON化可能なら平文と看做す
+        v.arg = JSON.parse(v.arg);
       }
+
       v.rv = await callback(v.arg,v.isPlain);
 
       /*
