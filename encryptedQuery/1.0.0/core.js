@@ -77,7 +77,7 @@ class encryptedQuery {
         if( arg.CPcol ) this.CPcol = arg.CPcol; else throw new Error('CPcol is not defined.');
 
         v.step = 3.2; // 実行環境がサーバ側(GAS)かつDocumentPropertiesに保存されているなら取得
-        this.conf = JSON.parse(PropertiesService.getDocumentProperties().getProperty(arg.DocPropKey));
+        this.conf = JSON.parse(PropertiesService.getDocumentProperties().getProperty(arg.storageKey));
 
         v.step = 3.3; // サーバ側鍵ペアの設定
         if( this.conf.SPkey ){
@@ -135,37 +135,49 @@ class encryptedQuery {
 
       if( this.SPkey === null ){  // サーバ側公開鍵未取得
 
-        v.step = 1.1; // 平文でCPkeyをbase64化せずに送る
-        v.url = `${this.url}?id=${this.clientId}&CPkey=${this.CPkey}`;
+        v.step = 1.1; // 平文で送付。送付内容はidとCPkeyのみ(固定)
+        v.payload = {id:this.clientId,CPkey:this.CPkey};
+        v.payload.CPkey = 'hoge'; // テスト用データ
+        v.url = `${this.url}?${new URLSearchParams(v.payload)}`;
+        console.log(`l.140 v.url(${whichType(v.url)})=${stringify(v.url)}`);
 
       } else {  // サーバ側公開鍵取得済 -> 暗号化して送る
 
         v.step = 1.2; // responseで署名検証のためにIDが必要なので付加し、JSON化
         v.json = JSON.stringify({id:this.clientId,arg:arg});
-        console.log(`l.137 v.json(${whichType(v.json)})=${stringify(v.json)}`);
+        console.log(`l.146 v.json(${whichType(v.json)})=${stringify(v.json)}`);
   
         v.step = 1.3; // JSON -> base64
         v.b64 = await this.base64Encode(v.str);
         if( v.b64 instanceof Error ) throw v.b64;
-        console.log(`l.142 v.b64(${whichType(v.b64)})=${stringify(v.b64)}`);
+        console.log(`l.151 v.b64(${whichType(v.b64)})=${stringify(v.b64)}`);
   
         v.step = 1.4; // SPkeyがあればbase64を暗号化、無ければそのまま使用
         v.enc = cryptico.encrypt(v.b64,this.SPkey,this.CSkey);
         if( v.enc.status !== 'success' ) throw new Error('encrypt failed.');
         v.arg = v.enc.cipher;
-        console.log(`l.152 v.arg(${whichType(v.arg)})=${stringify(v.arg)}`);
+        console.log(`l.157 v.arg(${whichType(v.arg)})=${stringify(v.arg)}`);
   
         v.url = `${this.url}?${this.upv}=${v.arg}`;
+        console.log(`l.160 v.url(${whichType(v.url)})=${stringify(v.url)}`);
       }
 
       v.step = 2; // 問合せの実行、結果受領
-      console.log(`l.156 v.url(${whichType(v.url)})=${stringify(v.url)}`);
-      v.res = await fetch(v.url);
-      console.log(`l.158 v.res(${whichType(v.res)})=${stringify(v.res)}`);
+      console.log(`l.164 v.url(${whichType(v.url)})=${stringify(v.url)}`);
+      v.r = await fetch(v.url,{
+        method: 'GET',
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "text/plain",
+        }
+      });
+      if( !v.r.ok ) throw new Error(`[fetch error] status=${v.r.status}`);
+      v.res = await v.r.json();
+      console.log(`l.165 v.res(${whichType(v.res)})=${stringify(v.res)}`);
 
       v.step = 3.1; // 結果を復号(encrypted -> base64)
       v.dec = cryptico.decrypt(v.res,this.CSkey);
-      console.log(`l.162 v.dec(${whichType(v.dec)})=${stringify(v.dec)}`);
+      console.log(`l.169 v.dec(${whichType(v.dec)})=${stringify(v.dec)}`);
       if( v.dec.status !== 'success' ) throw new Error('decrypt failed.');
 
       v.step = 3.2; // 署名検証、SPkeyが無ければ保存
@@ -181,7 +193,7 @@ class encryptedQuery {
 
       v.step = 3.3; // base64 -> JSON
       v.json = await this.base64Decode(v.b64);
-      console.log(`l.178 v.json(${whichType(v.json)})=${stringify(v.json)}`);
+      console.log(`l.185 v.json(${whichType(v.json)})=${stringify(v.json)}`);
 
       v.step = 3.4; // JSON -> Object
       v.rv = JSON.parse(v.json);
