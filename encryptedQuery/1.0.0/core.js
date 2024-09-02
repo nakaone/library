@@ -228,7 +228,7 @@ class encryptedQuery {
       if( Object.keys(arg).length > 1 ){
         v.step = 2; // argのメンバが複数 ⇒ 平文
         v.isPlain = true;
-        v.arg = {entryNo:arg[this.upv],CPkey:arg.CPkey};
+        v.arg = arg;  // 復号が必要ないので、e.parameterをそのまま渡す
       } else {
         v.step = 3; // argのメンバが単数 ⇒ 暗号文
         v.isPlain = false;
@@ -236,7 +236,7 @@ class encryptedQuery {
       console.log(`step ${v.step}: isPlain=${v.isPlain}\nv.arg=${stringify(v.arg)}`);
 
       v.step = 4; // 分岐用関数の呼び出し
-      v.rv = await callback(v.arg,v.isPlain);
+      v.rv = callback(v.arg,v.isPlain);
 
       /*
       // cipher -> base64
@@ -285,7 +285,7 @@ class encryptedQuery {
       */
 
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
   
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
