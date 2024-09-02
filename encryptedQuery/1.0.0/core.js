@@ -213,22 +213,29 @@ class encryptedQuery {
    * @param {*} callback - 分岐処理を行うコールバック関数。asyncで定義のこと。
    * @returns 
    * 
+   * - 引数argはthis.upvのメンバは必須。これ以外のメンバが存在する場合は平文、
+   *   存在しない場合はthis.upvの値を暗号文と解釈する。
    * - ContentService.createTextOutput()はdoGetで行うため、定義不要
    */
   async response(arg,callback){
-    const v = {whois:this.constructor.name+'.response',step:0,rv:null,arg:arg,isPlain:true};
-    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
+    const v = {whois:this.constructor.name+'.response',step:0,rv:null};
+    console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
 
-      if( this.objectizeJSON(arg) === null ){
-        // argがJSON化不可能なら暗号文と看做す
-        v.isPlain = false;
+      v.step = 1; // 事前準備
+      if( !arg.hasOwnProperty(this.upv) ) throw new Error(`必須項目"${this.upv}"が定義されてません`);
 
+      if( Object.keys(arg).length > 1 ){
+        v.step = 2; // argのメンバが複数 ⇒ 平文
+        v.isPlain = true;
+        v.arg = {entryNo:arg[this.upv],CPkey:arg.CPkey};
       } else {
-        // argがJSON化可能なら平文と看做す
-        v.arg = JSON.parse(v.arg);
+        v.step = 3; // argのメンバが単数 ⇒ 暗号文
+        v.isPlain = false;
       }
+      console.log(`step ${v.step}: isPlain=${v.isPlain}\nv.arg=${stringify(v.arg)}`);
 
+      v.step = 4; // 分岐用関数の呼び出し
       v.rv = await callback(v.arg,v.isPlain);
 
       /*
