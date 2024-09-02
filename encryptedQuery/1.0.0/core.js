@@ -217,7 +217,7 @@ class encryptedQuery {
    *   存在しない場合はthis.upvの値を暗号文と解釈する。
    * - ContentService.createTextOutput()はdoGetで行うため、定義不要
    */
-  async response(arg,callback){
+  response(arg,callback){
     const v = {whois:this.constructor.name+'.response',step:0,rv:null};
     console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
