@@ -52,6 +52,7 @@ class encryptedQuery {
         this.conf = JSON.parse(sessionStorage.getItem(this.storageKey)) || {};
 
         v.step = 2.3; // クライアント側鍵ペアの設定
+        vlog(this.conf,'CPkey',55);
         if( this.conf.CPkey ){
           v.step = 2.31; // クライアント側公開鍵が指定されている場合
           this.CSkey = RSAKey.parse(this.conf.CSkey);
@@ -136,32 +137,32 @@ class encryptedQuery {
       if( this.SPkey === null ){  // サーバ側公開鍵未取得
 
         v.step = 1.1; // 平文で送付。送付内容はidとCPkeyのみ(固定)
-        v.url = `${this.url}?${this.upv}=${this.clientId}&CPkey=${this.CPkey}`
-        console.log(`l.140 v.url(${whichType(v.url)})=${stringify(v.url)}`);
+        v.url = `${this.url}?${this.upv}=${this.clientId}&CPkey=${this.CPkey}`;
+        vlog(v,'url',141);
 
       } else {  // サーバ側公開鍵取得済 -> 暗号化して送る
 
         v.step = 1.2; // responseで署名検証のためにIDが必要なので付加し、JSON化
         v.json = JSON.stringify({id:this.clientId,arg:arg});
-        console.log(`l.146 v.json(${whichType(v.json)})=${stringify(v.json)}`);
+        vlog(v,'json',147);
   
         v.step = 1.3; // JSON -> base64
         v.b64 = await this.base64Encode(v.str);
         if( v.b64 instanceof Error ) throw v.b64;
-        console.log(`l.151 v.b64(${whichType(v.b64)})=${stringify(v.b64)}`);
+        vlog(v,'b64',152);
   
         v.step = 1.4; // SPkeyがあればbase64を暗号化、無ければそのまま使用
         v.enc = cryptico.encrypt(v.b64,this.SPkey,this.CSkey);
         if( v.enc.status !== 'success' ) throw new Error('encrypt failed.');
         v.arg = v.enc.cipher;
-        console.log(`l.157 v.arg(${whichType(v.arg)})=${stringify(v.arg)}`);
+        vlog(v,'arg',158);
   
         v.url = `${this.url}?${this.upv}=${v.arg}`;
-        console.log(`l.160 v.url(${whichType(v.url)})=${stringify(v.url)}`);
+        vlog(v,'url',161);
       }
 
       v.step = 2; // 問合せの実行、結果受領
-      console.log(`l.164 v.url(${whichType(v.url)})=${stringify(v.url)}`);
+      vlog(v,'url',165);
       v.r = await fetch(v.url,{
         method: 'GET',
         headers: {
@@ -171,12 +172,16 @@ class encryptedQuery {
       });
       if( !v.r.ok ) throw new Error(`[fetch error] status=${v.r.status}`);
       v.res = await v.r.json();
-      console.log(`l.165 v.res(${whichType(v.res)})=${stringify(v.res)}`);
+      vlog(v,'res',175);
+      if( v.res.isOK === false ) throw new Error(v.res.message);
 
       v.step = 3.1; // 結果を復号(encrypted -> base64)
-      v.dec = cryptico.decrypt(v.res,this.CSkey);
-      console.log(`l.169 v.dec(${whichType(v.dec)})=${stringify(v.dec)}`);
-      if( v.dec.status !== 'success' ) throw new Error('decrypt failed.');
+      v.cipher = v.res.rv;
+      vlog(v,'cipher',180);
+      vlog(this,'CSkey',181);
+      v.dec = cryptico.decrypt(v.cipher,this.CSkey);
+      vlog(v,'dec',183);
+      if( v.dec.status !== 'success' ) throw new Error(`decrypt failed.\n${stringify(v.dec)}`);
 
       v.step = 3.2; // 署名検証、SPkeyが無ければ保存
       if( v.dec.publicKeyString !== this.SPkey ){
@@ -190,11 +195,13 @@ class encryptedQuery {
       }
 
       v.step = 3.3; // base64 -> JSON
+      v.b64 = v.dec.plaintext;
       v.json = await this.base64Decode(v.b64);
-      console.log(`l.185 v.json(${whichType(v.json)})=${stringify(v.json)}`);
+      vlog(v,'json',200);
 
       v.step = 3.4; // JSON -> Object
-      v.rv = JSON.parse(v.json);
+      v.rv = this.objectizeJSON(v.json);
+      if( v.rv === null ) throw new Error(`invalid JSON\n${stringify(v.json)}`);
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
@@ -211,11 +218,16 @@ class encryptedQuery {
    * 
    * @param {Object} arg - URLクエリ文字列のオブジェクト(e.parameter)
    * @param {*} callback - 分岐処理を行うコールバック関数。asyncで定義のこと。
-   * @returns 
+   * @returns {Object}
    * 
    * - 引数argはthis.upvのメンバは必須。これ以外のメンバが存在する場合は平文、
    *   存在しない場合はthis.upvの値を暗号文と解釈する。
    * - ContentService.createTextOutput()はdoGetで行うため、定義不要
+   * 
+   * - 戻り値のデータ型
+   *   - isOK {boolean} true:正常終了、false:異常終了
+   *   - message {string} エラーメッセージ(平文)
+   *   - rv {Object} 署名＋暗号化された、分岐先関数の戻り値(JSON)。ex.`{status:-1}`
    */
   response(arg,callback){
     const v = {whois:this.constructor.name+'.response',step:0,rv:null};
@@ -223,66 +235,83 @@ class encryptedQuery {
     try {
 
       v.step = 1; // 事前準備
-      if( !arg.hasOwnProperty(this.upv) ) throw new Error(`必須項目"${this.upv}"が定義されてません`);
+      if( !arg.hasOwnProperty(this.upv) )
+        throw new Error(`必須項目"${this.upv}"が定義されてません`);
 
-      if( Object.keys(arg).length > 1 ){
-        v.step = 2; // argのメンバが複数 ⇒ 平文
+      if( Object.keys(arg).length > 1 ){  v.step = 2; // argのメンバが複数 ⇒ 平文
+
+        v.step = 2.1; // 復号が必要ないので、e.parameterをそのまま渡す
         v.isPlain = true;
-        v.arg = arg;  // 復号が必要ないので、e.parameterをそのまま渡す
-      } else {
-        v.step = 3; // argのメンバが単数 ⇒ 暗号文
+        v.arg = arg;
+
+        v.step = 2.2; // 平文の場合、arg[this.upv]はIDなので、ユーザ情報をv.userに取得
+        v.user = this.master.data.find(x => x[this.IDcol] == arg[this.upv]);
+        if( !v.user )
+          throw new Error(`対象が見つかりません(ID=${arg[this.upv]}[${whichType(arg[this.upv])}])`);
+        vlog(v,'user',251);
+
+        v.step = 2.3; // ユーザ情報にCPkeyを登録
+        v.val = {};
+        v.val[this.CPcol] = arg.CPkey;
+        vlog(v,'val',256);
+        v.r = this.master.update(v.val,{key:this.IDcol,value:arg[this.upv]});
+        if( v.r instanceof Error ) throw v.r;
+
+      } else {  v.step = 3; // argのメンバが単数 ⇒ 暗号文
+        // 暗号文は{id,arg}形式のオブジェクトを暗号化したもの。
+
         v.isPlain = false;
-      }
-      console.log(`step ${v.step}: isPlain=${v.isPlain}\nv.arg=${stringify(v.arg)}`);
+        v.cipher = arg[this.upv];  // 暗号文本体
 
-      v.step = 4; // 分岐用関数の呼び出し
-      v.rv = callback(v.arg,v.isPlain);
+        v.step = 3.1; // cipher -> base64
+        v.dec = cryptico.decrypt(v.cipher,this.SSkey);
+        if( v.dec.status === 'success' ) v.b64 = v.dec.plaintext;
+        else throw new Error(`decrypt failed.\n${stringify(v.dec)}`);
+  
+        v.step = 3.2; // base64 -> JSON
+        v.json = Utilities.newBlob(Utilities.base64Decode(v.b64, Utilities.Charset.UTF_8)).getDataAsString();
 
-      /*
-      // cipher -> base64
-      v.dec = cryptico.decrypt(arg,this.SSkey);
-      if( v.dec.status === 'success' ){
-        // 署名検証。
-        v.b64 = v.dec.plaintext;
-      } else {
-        // 復号失敗⇒平文として、引数をそのまま使用
-        v.obj = arg;
-      }
+        v.step = 3.3; // JSON -> Object({id,arg}形式)
+        v.obj = this.objectizeJSON(v.json);
+        if( v.obj === null ) throw new Error(`Objectize failed.\n${v.json}`);
 
-      // base64 -> json
-      v.json = Utilities.newBlob(Utilities.base64Decode(v.b64, Utilities.Charset.UTF_8)).getDataAsString();
-
-      // json -> Object
-      v.arg = JSON.parse(v.json);
-
-      v.obj = objectizeJSON(v.str);
-      if( v.obj === null ){  // 復元結果が非JSON文字列
-
-
-        // 復号文字列(JSON)をオブジェクト化、シートからユーザ情報を取得して署名検証
-        v.obj = JSON.parse(v.dec.plaintext);
+        v.step = 3.4; // 署名検証
         v.user = this.master.data.find(x => x[this.IDcol] === v.obj.id);
-        if( !v.user ) throw new Error(`"${v.obj.id}"は未登録です`);
+        if( v.user === null )
+          throw new Error(`対象が見つかりません(ID=${v.obj.id}[${whichType(v.obj.id)}])`);
+        if( v.dec.publicKeyString !== v.user.CPkey )
+          throw new Error(`unmatch CPkey.\ndec.CPkey=${v.dec.publicKeyString}\nregistrated=${v.user.CPkey}`);
 
-        // 検証NG(署名が未登録)ならthrowする
-        if( v.user[this.CPcol] !== v.dec.publicKeyString ){
-          throw new Error('不適切な署名です');
-        }
-
-        // 引数が暗号化されている場合の処理分岐を呼び出す
-        v.r = await callback(v.obj.arg);
-        v.isPlain = false;
+        v.step = 3.5; // 分岐先関数への引数をv.argに設定
+        v.arg = v.obj.arg;
       }
-      v.r = await callback(v.obj,v.isPlain);
-      if( v.r instanceof Error ) throw v.r;
+      vlog(v,['isPlain','arg'],288);
 
-      // 結果をJSON＋base64化して返す
-      v.str = JSON.stringify(v.r);
-      v.b64 = this.base64Encode(v.str);
-      v.enc = cryptico.encrypt(v.b64,this.CPkey,this.SSkey);
-      if( v.enc.status !== 'success' ){}
-      v.rv = {status:true,data:v.enc.cipher};
-      */
+      v.step = 4; // 分岐用関数の呼び出し(この段階でのv.rvはObject)
+      v.r = callback(v.arg,v.isPlain);
+      vlog(v,'r',292);
+
+      (()=>{  v.step = 5; // 結果の暗号化
+
+        v.step = 5.1; // 結果(Object) -> JSON
+        v.json = JSON.stringify(v.r);
+        vlog(v,'json',298);
+
+        v.step = 5.2; // JSON -> base64
+        v.b64 = Utilities.base64Encode(v.json, Utilities.Charset.UTF_8);
+        vlog(v,'b64',302);
+
+        v.step = 5.3; // base64 -> encrypt
+        vlog(v,'user',305);
+        vlog(this,'SSkey',306);
+        v.enc = cryptico.encrypt(v.b64,v.user.CPkey,this.SSkey);  // 署名あり
+        if( v.enc.status !== 'success' )
+          throw new Error(`encrypt failed.\n${stringify(v.enc)}`);
+
+        v.step = 5.4; // 結果オブジェクトの作成
+        v.rv = {isOK:true,rv:v.enc.cipher};
+  
+      })();
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
@@ -290,7 +319,7 @@ class encryptedQuery {
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
-      v.rv = {status:false,message:e.message};
+      v.rv = {isOK:false,message:e.message};
     } finally {
       return v.rv;
     }
