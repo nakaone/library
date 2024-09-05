@@ -116,6 +116,10 @@ class encryptedQuery {
     console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
 
+      // -------------------------------------------------
+      // step.1 : 問合せ先URL(WebAPI+param)を作成
+      // -------------------------------------------------
+
       v.step = 1.1; // 平文か暗号文か判定。サーバ側公開鍵取得済なら暗号文とする。
       v.isPlain = this.SPkey === null ? true : false;
       vlog(v,'isPlain');
@@ -147,6 +151,10 @@ class encryptedQuery {
       vlog(v,'url');
 
 
+      // -------------------------------------------------
+      // step.2 : サーバ側に問合せ実行、結果検証
+      // -------------------------------------------------
+
       v.step = 2.1; // 問合せの実行
       v.r = await fetch(v.url,{
         method: 'GET',
@@ -175,6 +183,11 @@ class encryptedQuery {
       v.res = v.obj.rv;
       vlog(v,'res');
 
+
+      // -------------------------------------------------
+      // step.3 : 呼出元への戻り値の作成(結果の復号、署名検証)
+      // -------------------------------------------------
+
       v.step = 3.1; // decrypt
       v.dec = cryptico.decrypt(v.res,this.CSkey);
       if( v.dec.status !== 'success' ){
@@ -196,13 +209,11 @@ class encryptedQuery {
       v.json = await this.decB64(v.dec.plaintext);
 
       v.step = 3.4; // JSON -> Object
-      v.obj = this.objectizeJSON(v.json);
-      if( v.obj === null ){
+      v.rv = this.objectizeJSON(v.json);
+      if( v.rv === null ){
         throw new Error(`invalid JSON\n${stringify(v.json)}`);
       }
 
-      v.step = 3.5;
-      v.rv = v.obj;
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
@@ -233,7 +244,9 @@ class encryptedQuery {
     console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
 
-      v.step = 1; // 分岐用関数に渡す引数v.argを作成
+      // -------------------------------------------------
+      // step.1 : 分岐用関数に渡す引数v.argを作成
+      // -------------------------------------------------
 
       v.step = 1.1; // 引数(e.parameter)が平文か暗号文か判定
       v.isPlain = arg.hasOwnProperty('p') ? true : false;
@@ -287,11 +300,17 @@ class encryptedQuery {
       }
       vlog(v,'arg');
 
+
+      // -------------------------------------------------
       v.step = 2; // 分岐用関数の呼び出し
+      // -------------------------------------------------
       v.r = callback(v.arg);
       vlog(v,'r');
 
-      v.step = 3;  // 呼出元への戻り値の作成(結果への署名・暗号化)
+
+      // -------------------------------------------------
+      // step.3 : 呼出元への戻り値の作成(結果への署名・暗号化)
+      // -------------------------------------------------
       v.step = 3.1; // 分岐先関数の戻り値(Object) -> JSON
       v.json = JSON.stringify(v.r);
       vlog(v,'json');
