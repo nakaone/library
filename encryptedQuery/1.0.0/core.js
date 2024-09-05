@@ -61,11 +61,11 @@ class encryptedQuery {
           this.CSkey = cryptico.generateRSAKey(v.password,(arg.bits));
           this.conf.CSkey = JSON.stringify(this.CSkey.toJSON());
           this.conf.CPkey = this.CPkey = cryptico.publicKeyString(this.CSkey);
-          vlog(this,'CPkey',65);
+          vlog(this,'CPkey');
           v.step = 2.33; // 生成した鍵ペアをsessionStorageに保存
           sessionStorage.setItem(this.storageKey,JSON.stringify(this.conf));
         }
-        vlog(this.conf,'CPkey',68);
+        vlog(this.conf,'CPkey');
 
         v.step = 2.4; // サーバ側公開鍵を取得済なら設定
         this.SPkey = this.conf.SPkey || null;
@@ -98,7 +98,7 @@ class encryptedQuery {
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.`);
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
@@ -118,33 +118,33 @@ class encryptedQuery {
 
       v.step = 1.1; // 平文か暗号文か判定。サーバ側公開鍵取得済なら暗号文とする。
       v.isPlain = this.SPkey === null ? true : false;
-      vlog(v,'isPlain',123);
+      vlog(v,'isPlain');
 
       v.step = 1.2; // responseで署名検証のためにIDが必要なので付加し、JSON化
       v.json = JSON.stringify({id:this.clientId,arg:arg});
-      vlog(v,'json',126);
+      vlog(v,'json');
 
       v.step = 1.3; // base64化
       v.b64 = await this.encB64(v.json);
-      vlog(v,'b64',130);
+      vlog(v,'b64');
 
       v.step = 1.4; // 暗号化
       if( v.isPlain ){
         v.str = v.b64;
       } else {
         v.enc = cryptico.encrypt(v.b64,this.SPkey,this.CSkey);
-        vlog(v,'enc',137);
+        vlog(v,'enc');
         if( v.enc.status !== 'success' ) throw new Error('encrypt failed.');
         v.str = v.enc.cipher;
       }
 
       v.step = 1.5; // URLセーフ化
       v.param = this.encURL(v.str);
-      vlog(v,'param',145);
+      vlog(v,'param');
 
       v.step = 1.6; // WebAPI+paramでURL作成
       v.url = `${this.url}?${v.isPlain?'p':'c'}=${v.param}`;
-      vlog(v,'url',151);
+      vlog(v,'url');
 
 
       v.step = 2.1; // 問合せの実行
@@ -155,7 +155,7 @@ class encryptedQuery {
           "Content-Type": "text/plain",
         }
       });
-      vlog(v,'r',162);
+      vlog(v,'r');
       console.log(v.r);
 
       v.step = 2.2; // ネットワークエラー
@@ -163,7 +163,7 @@ class encryptedQuery {
 
       v.step = 2.3; // オブジェクト化
       v.obj = await v.r.json();
-      vlog(v,'obj',166);
+      vlog(v,'obj');
 
       v.step = 2.4; // 分岐先関数では無く、response()で起きたエラーの場合はthrow
       // ※分岐先関数でのエラーは本関数(response)の戻り値として本関数呼出元に返す
@@ -173,7 +173,7 @@ class encryptedQuery {
 
       v.step = 2.5;
       v.res = v.obj.rv;
-      vlog(v,'res',182);
+      vlog(v,'res');
 
       v.step = 3.1; // decrypt
       v.dec = cryptico.decrypt(v.res,this.CSkey);
@@ -186,7 +186,7 @@ class encryptedQuery {
         if( this.SPkey === null ){
           this.conf.SPkey = this.SPkey = v.dec.publicKeyString;
           // sessionStorageに保存
-          sessionStorage.setItem(this.storageKey,JSON.stringify(this.conf));  
+          sessionStorage.setItem(this.storageKey,JSON.stringify(this.conf));
         } else {
           throw new Error('サーバ側の署名が不正です');
         }
@@ -210,35 +210,35 @@ class encryptedQuery {
 
         v.step = 1.1; // 平文か暗号文か判定。サーバ側公開鍵取得済なら暗号文とする。
         v.isPlain = this.SPkey === null ? true : false;
-        vlog(v,'isPlain',123);
+        vlog(v,'isPlain');
 
         v.step = 1.2; // responseで署名検証のためにIDが必要なので付加し、JSON化
         v.json = JSON.stringify({id:this.clientId,arg:arg});
-        vlog(v,'json',126);
+        vlog(v,'json');
 
         v.step = 1.3; // base64化
         v.b64 = await this.encB64(v.json);
-        vlog(v,'b64',130);
+        vlog(v,'b64');
 
         v.step = 1.4; // 暗号化
         if( v.isPlain ){
           v.str = v.b64;
         } else {
           v.enc = cryptico.encrypt(v.b64,this.SPkey,this.CSkey);
-          vlog(v,'enc',137);
+          vlog(v,'enc');
           if( v.enc.status !== 'success' ) throw new Error('encrypt failed.');
           v.str = v.enc.cipher;
         }
 
         v.step = 1.5; // URLセーフ化
         v.param = this.encURL(v.str);
-        vlog(v,'param',145);
+        vlog(v,'param');
 
         v.step = 1.6; // WebAPI+paramでURL作成
         return `${this.url}?${v.isPlain?'p':'c'}=${v.param}`;
 
       })();
-      vlog(v,'url',151);
+      vlog(v,'url');
 
       v.res = await (async ()=>{  v.step = 2; // サーバ側に問合せ実行、結果検証
 
@@ -250,7 +250,7 @@ class encryptedQuery {
             "Content-Type": "text/plain",
           }
         });
-        vlog(v,'r',162);
+        vlog(v,'r');
         console.log(v.r);
 
         v.step = 2.2; // ネットワークエラー
@@ -258,7 +258,7 @@ class encryptedQuery {
 
         v.step = 2.3; // オブジェクト化
         v.obj = await v.r.json();
-        vlog(v,'obj',166);
+        vlog(v,'obj');
 
         v.step = 2.4; // 分岐先関数では無く、response()で起きたエラーの場合はthrow
         // ※分岐先関数でのエラーは本関数(response)の戻り値として本関数呼出元に返す
@@ -269,7 +269,7 @@ class encryptedQuery {
         v.step = 2.5;
         return v.obj.rv;
       })();
-      vlog(v,'res',182);
+      vlog(v,'res');
 
       v.rv = await (async ()=>{  v.step = 3; // 呼出元への戻り値の作成(結果の復号、署名検証)
 
@@ -284,7 +284,7 @@ class encryptedQuery {
           if( this.SPkey === null ){
             this.conf.SPkey = this.SPkey = v.dec.publicKeyString;
             // sessionStorageに保存
-            sessionStorage.setItem(this.storageKey,JSON.stringify(this.conf));  
+            sessionStorage.setItem(this.storageKey,JSON.stringify(this.conf));
           } else {
             throw new Error('サーバ側の署名が不正です');
           }
@@ -310,7 +310,7 @@ class encryptedQuery {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
@@ -341,11 +341,11 @@ class encryptedQuery {
       v.step = 1.1; // 引数(e.parameter)が平文か暗号文か判定
       v.isPlain = arg.hasOwnProperty('p') ? true : false;
       v.str = arg[v.isPlain?'p':'c'];
-      vlog(v,'str',253);
+      vlog(v,'str');
 
       v.step = 1.2;  // URLセーフ解除
       v.cipher = this.decURL(v.str);
-      vlog(v,'cipher',257);
+      vlog(v,'cipher');
 
       v.step = 1.3;  // 暗号文なら復号
       if( v.isPlain ){
@@ -355,21 +355,21 @@ class encryptedQuery {
         if( v.dec.status === 'success' ) v.b64 = v.dec.plaintext;
         else throw new Error(`decrypt failed.\n${stringify(v.dec)}`);
       }
-      vlog(v,'b64',267);
+      vlog(v,'b64');
 
       v.step = 1.4;  // base64解除
       v.json = this.decB64(v.b64);
-      vlog(v,'json',271);
+      vlog(v,'json');
 
       v.step = 1.5;  // Object化
       v.obj = JSON.parse(v.json);
-      vlog(v,'obj',275);
+      vlog(v,'obj');
 
       v.step = 1.6;  // ユーザ情報を取得
       v.user = this.master.data.find(x => x[this.IDcol] == v.obj.id);
       if( !v.user )
         throw new Error(`対象が見つかりません(ID=${arg[this.upv]}[${whichType(arg[this.upv])}])`);
-      vlog(v,'user',285);
+      vlog(v,'user');
 
       v.step = 1.7;  // 平文ならCPkeyをv.userに保存、暗号文なら署名検証
       if( v.isPlain ){
@@ -388,20 +388,20 @@ class encryptedQuery {
         id: v.obj.id,
         arg: v.obj.arg,
       }
-      vlog(v,'arg',279);
+      vlog(v,'arg');
 
       v.step = 2; // 分岐用関数の呼び出し
       v.r = callback(v.arg);
-      vlog(v,'r',292);
+      vlog(v,'r');
 
       v.step = 3;  // 呼出元への戻り値の作成(結果への署名・暗号化)
       v.step = 3.1; // 分岐先関数の戻り値(Object) -> JSON
       v.json = JSON.stringify(v.r);
-      vlog(v,'json',298);
+      vlog(v,'json');
 
       v.step = 3.2; // JSON -> base64
       v.b64 = this.encB64(v.json);
-      vlog(v,'b64',302);
+      vlog(v,'b64');
 
       v.step = 3.3; // base64 -> encrypt
       v.enc = cryptico.encrypt(v.b64,v.user.CPkey,this.SSkey);  // 署名あり
@@ -418,12 +418,12 @@ class encryptedQuery {
         v.step = 1.1; // 引数(e.parameter)が平文か暗号文か判定
         v.isPlain = arg.hasOwnProperty('p') ? true : false;
         v.str = arg[v.isPlain?'p':'c'];
-        vlog(v,'str',253);
+        vlog(v,'str');
 
         v.step = 1.2;  // URLセーフ解除
         v.cipher = this.decURL(v.str);
-        vlog(v,'cipher',257);
-  
+        vlog(v,'cipher');
+
         v.step = 1.3;  // 暗号文なら復号
         if( v.isPlain ){
           v.b64 = v.cipher;
@@ -432,21 +432,21 @@ class encryptedQuery {
           if( v.dec.status === 'success' ) v.b64 = v.dec.plaintext;
           else throw new Error(`decrypt failed.\n${stringify(v.dec)}`);
         }
-        vlog(v,'b64',267);
-  
+        vlog(v,'b64');
+
         v.step = 1.4;  // base64解除
         v.json = await this.decB64(v.b64);
-        vlog(v,'json',271);
-  
+        vlog(v,'json');
+
         v.step = 1.5;  // Object化
         v.obj = JSON.parse(v.json);
-        vlog(v,'obj',275);
+        vlog(v,'obj');
 
         v.step = 1.6;  // ユーザ情報を取得
         v.user = this.master.data.find(x => x[this.IDcol] == v.obj.id);
         if( !v.user )
           throw new Error(`対象が見つかりません(ID=${arg[this.upv]}[${whichType(arg[this.upv])}])`);
-        vlog(v,'user',285);
+        vlog(v,'user');
 
         v.step = 1.7;  // 平文ならCPkeyをv.userに保存、暗号文なら署名検証
         if( v.isPlain ){
@@ -465,23 +465,23 @@ class encryptedQuery {
           id: v.obj.id,
           arg: v.obj.arg,
         }
-        vlog(v,'arg',279);
+        vlog(v,'arg');
 
       })();
 
       v.step = 2; // 分岐用関数の呼び出し
       v.r = await callback(v.arg);
-      vlog(v,'r',292);
+      vlog(v,'r');
 
       await (async ()=>{  v.step = 3;  // 呼出元への戻り値の作成(結果への署名・暗号化)
 
         v.step = 3.1; // 分岐先関数の戻り値(Object) -> JSON
         v.json = JSON.stringify(v.r);
-        vlog(v,'json',298);
+        vlog(v,'json');
 
         v.step = 3.2; // JSON -> base64
         v.b64 = await this.encB64(v.json);
-        vlog(v,'b64',302);
+        vlog(v,'b64');
 
         v.step = 5.3; // base64 -> encrypt
         v.enc = cryptico.encrypt(v.b64,v.user.CPkey,this.SSkey);  // 署名あり
@@ -491,13 +491,13 @@ class encryptedQuery {
 
         v.step = 5.4; // 結果オブジェクトの作成
         v.rv = {isOK:true,rv:v.enc.cipher};
-  
+
       })();
       */
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
@@ -562,7 +562,7 @@ class encryptedQuery {
   decB64(text, charset='UTF-8') {
     const cl = (text, charset='UTF-8') => {
       return fetch(`data:text/plain;charset=${charset};base64,` + text)
-      .then(response => response.text());  
+      .then(response => response.text());
     };
     const sv = text => Utilities.newBlob(Utilities.base64Decode(text, Utilities.Charset.UTF_8)).getDataAsString();
 
