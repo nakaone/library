@@ -7,6 +7,7 @@ class encryptedQuery {
    * @param {string} arg.storageKey - DocumentProperties/sessionStorageのキー文字列
    * @param {string} arg.pUP='x' - 平文送信時のURLクエリパラメータの変数名(Plain URL Parameter)
    * @param {string} arg.eUP='y' - 暗号文〃(encrypted URL Parameter)
+   * @param {number} arg.expire=172800000 - クライアント側鍵の有効期間。既定値48時間
    * === clientでのみ使用するパラメータ ==================
    * @param {string} arg.url - 問合せ先(server=WebAPI)のURL
    * @param {number|string} arg.clientId - クライアントのID。例：受付番号(entryNo)
@@ -17,12 +18,6 @@ class encryptedQuery {
    * @param {string} arg.CPcol - 当該シート上でユーザ側公開鍵を保持する欄名。ex.'CPkey'
    * @param {string} arg.upv - URLクエリパラメータ文字列。URL Parameter Variable
    * @returns 
-   * 
-   * 
-   * @param {string|Object} [CSkey] - クライアント側の秘密鍵。文字列ならcryptico.toJSON()で出力された文字列
-   * @param {string} [CPkey] - クライアント側の公開鍵
-   * @param {string|Object} [SSkey] - サーバ側の秘密鍵。文字列ならcryptico.toJSON()で出力された文字列
-   * @param {string} [arg.SPkey] - サーバ側の公開鍵
    * 
    */
   constructor(arg){
@@ -41,6 +36,7 @@ class encryptedQuery {
         }
         this.pUP = arg.pUP || 'x';
         this.eUP = arg.eUP || 'y';
+        this.expire = arg.expire || 172800000;
       })();
 
       if( this.isClient ){  v.step = 2; // 実行環境がクライアント側の場合の鍵ペア設定
@@ -307,6 +303,7 @@ class encryptedQuery {
         user: v.user,
         id: v.obj.id,
         arg: v.obj.arg,
+        expire: this.expire,
       }
       vlog(v,'arg');
 
@@ -410,20 +407,6 @@ class encryptedQuery {
     const sv = text => Utilities.newBlob(Utilities.base64Decode(text, Utilities.Charset.UTF_8)).getDataAsString();
 
     return this.isClient ? cl(text) : sv(text);
-  }
-
-  /** encURL:文字列をURLセーフ化、decURL:URLセーフ化された文字列を復元
-   * 
-   * @param {string} text - 変換対象文字列
-   * @returns {string} 変換結果
-   * 
-   * - Zenn [URLセーフなBase64エンコーディングとデコーディング](https://zenn.dev/jusanz/articles/d6cec091d45657)
-   */
-  encURL(text){
-    return text.replace(/=/g, "~").replace(/\+/g, "-").replace(/\//g, "_");
-  }
-  decURL(text){
-    return text.replace(/~/g,"=").replace(/-/g, "+").replace(/_/g, "/");
   }
 
   /** objectizeJSON: 文字列がJSONか判定、parse結果かnullを返す
