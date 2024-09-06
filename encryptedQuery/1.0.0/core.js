@@ -5,7 +5,8 @@ class encryptedQuery {
    * === client/server両方で使用するパラメータ ==================
    * @param {boolean} arg.isClient=true - 動作環境。true:クライアント側、false:サーバ側
    * @param {string} arg.storageKey - DocumentProperties/sessionStorageのキー文字列
-   * @param {string} [arg.upv='n'] - URLパラメータ(クエリ文字列)の変数名(URL Parameter Variable)
+   * @param {string} arg.pUP='x' - 平文送信時のURLクエリパラメータの変数名(Plain URL Parameter)
+   * @param {string} arg.eUP='y' - 暗号文〃(encrypted URL Parameter)
    * === clientでのみ使用するパラメータ ==================
    * @param {string} arg.url - 問合せ先(server=WebAPI)のURL
    * @param {number|string} arg.clientId - クライアントのID。例：受付番号(entryNo)
@@ -38,6 +39,8 @@ class encryptedQuery {
         } else {
           throw new Error(`${this.isClient?'sessionStorage':'DocumentProperties'}のキー文字列が指定されていません`);
         }
+        this.pUP = arg.pUP || 'x';
+        this.eUP = arg.eUP || 'y';
       })();
 
       if( this.isClient ){  v.step = 2; // 実行環境がクライアント側の場合の鍵ペア設定
@@ -144,11 +147,11 @@ class encryptedQuery {
       }
 
       v.step = 1.5; // URLセーフ化
-      v.param = this.encURL(v.str);
+      v.param = encodeURIComponent(v.str);
       vlog(v,'param');
 
       v.step = 1.6; // WebAPI+paramでURL作成
-      v.url = `${this.url}?${v.isPlain?'p':'c'}=${v.param}`;
+      v.url = `${this.url}?${v.isPlain ? this.pUP : this.eUP}=${v.param}`;
       vlog(v,'url');
 
 
@@ -250,12 +253,20 @@ class encryptedQuery {
       // -------------------------------------------------
 
       v.step = 1.1; // 引数(e.parameter)が平文か暗号文か判定
-      v.isPlain = arg.hasOwnProperty('p') ? true : false;
-      v.str = arg[v.isPlain?'p':'c'];
-      vlog(v,'str');
+      v.keys = Object.keys(arg);
+      if( v.keys.length === 1 && v.keys.indexOf(this.pUP) >= 0 ){
+        v.isPlain = true;
+        v.str = arg[this.pUP];
+      } else if( v.keys.length === 1 && v.keys.indexOf(this.eUP) >= 0 ){
+        v.isPlain = false;
+        v.str = arg[this.eUP];
+      } else {
+        throw new Error('Invalid URL query parameter');
+      }
+      vlog(v,['isPlain','str']);
 
       v.step = 1.2;  // URLセーフ解除
-      v.cipher = this.decURL(v.str);
+      v.cipher = decodeURIComponent(v.str);
       vlog(v,'cipher');
 
       v.step = 1.3;  // 暗号文なら復号
