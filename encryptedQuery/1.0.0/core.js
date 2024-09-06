@@ -65,6 +65,7 @@ class encryptedQuery {
           v.step = 2.33; // 生成した鍵ペアをsessionStorageに保存
           sessionStorage.setItem(this.storageKey,JSON.stringify(this.conf));
         }
+        vlog(v,'password');
         vlog(this.conf,'CPkey');
 
         v.step = 2.4; // サーバ側公開鍵を取得済なら設定
@@ -145,7 +146,6 @@ class encryptedQuery {
       v.step = 1.5; // URLセーフ化
       v.param = this.encURL(v.str);
       vlog(v,'param');
-      vlog(this,'CPkey');
 
       v.step = 1.6; // WebAPI+paramでURL作成
       v.url = `${this.url}?${v.isPlain?'p':'c'}=${v.param}`;
@@ -282,16 +282,11 @@ class encryptedQuery {
         throw new Error(`対象が見つかりません(ID=${arg[this.upv]}[${whichType(arg[this.upv])}])`);
       vlog(v,'user');
 
-      v.step = 1.7;  // 平文ならCPkeyをv.userに保存、暗号文なら署名検証
-      if( v.isPlain ){
-        v.user.CPkey = v.obj.arg;
-        // シートへの保存はauth1で実施
-        //v.r = this.master.update({CPkey:v.user.CPkey},{key:this.IDcol,value:v.user.id});
-        //if( v.r instanceof Error ) throw v.r;
-      } else {
-        if( v.dec.publicKeyString !== v.user.CPkey ){
-          throw new Error(`unmatch CPkey.\ndec.CPkey=${v.dec.publicKeyString}\nregistrated=${v.user.CPkey}`);
-        }
+      v.step = 1.7;  // 暗号文なら署名検証
+      // 尚v.user.CPkeyおよびシートへの保存はauth1で実施、この時点での変更は不可。
+      // ∵ masterは同一Objectなので、ここで変更すると「変更点無し」と解釈されupdateされない。
+      if( v.isPlain === false && v.dec.publicKeyString !== v.user.CPkey ){
+        throw new Error(`unmatch CPkey.\ndec.CPkey=${v.dec.publicKeyString}\nregistrated=${v.user.CPkey}`);
       }
 
       v.step = 1.8;  // 分岐用関数に渡す引数をv.argに設定
