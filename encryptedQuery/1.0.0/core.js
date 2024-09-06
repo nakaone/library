@@ -145,6 +145,7 @@ class encryptedQuery {
       v.step = 1.5; // URLセーフ化
       v.param = this.encURL(v.str);
       vlog(v,'param');
+      vlog(this,'CPkey');
 
       v.step = 1.6; // WebAPI+paramでURL作成
       v.url = `${this.url}?${v.isPlain?'p':'c'}=${v.param}`;
@@ -284,6 +285,9 @@ class encryptedQuery {
       v.step = 1.7;  // 平文ならCPkeyをv.userに保存、暗号文なら署名検証
       if( v.isPlain ){
         v.user.CPkey = v.obj.arg;
+        // シートへの保存はauth1で実施
+        //v.r = this.master.update({CPkey:v.user.CPkey},{key:this.IDcol,value:v.user.id});
+        //if( v.r instanceof Error ) throw v.r;
       } else {
         if( v.dec.publicKeyString !== v.user.CPkey ){
           throw new Error(`unmatch CPkey.\ndec.CPkey=${v.dec.publicKeyString}\nregistrated=${v.user.CPkey}`);
@@ -410,10 +414,10 @@ class encryptedQuery {
    * - Zenn [URLセーフなBase64エンコーディングとデコーディング](https://zenn.dev/jusanz/articles/d6cec091d45657)
    */
   encURL(text){
-    return text.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+    return text.replace(/=/g, "~").replace(/\+/g, "-").replace(/\//g, "_");
   }
   decURL(text){
-    return text.replace(/-/g, "+").replace(/_/g, "/");
+    return text.replace(/~/g,"=").replace(/-/g, "+").replace(/_/g, "/");
   }
 
   /** objectizeJSON: 文字列がJSONか判定、parse結果かnullを返す
