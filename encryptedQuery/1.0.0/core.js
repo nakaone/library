@@ -11,7 +11,7 @@ class encryptedQuery {
    * === clientでのみ使用するパラメータ ==================
    * @param {string} arg.url - 問合せ先(server=WebAPI)のURL
    * @param {number|string} arg.clientId - クライアントのID。例：受付番号(entryNo)
-   * @param {number} [arg.bits=1024] - クライアント側で鍵ペアを生成する場合の鍵長
+   * @param {number} [arg.bits] - クライアント側で鍵ペアを生成する場合の鍵長。既定値はconfig.jsで設定
    * === serverでのみ使用するパラメータ ==================
    * @param {SingleTable} arg.master - サーバ側でユーザ情報を保持するシート
    * @param {string} arg.IDcol - 当該シート上でのユーザ側を特定する欄名。ex.'entryNo'
@@ -44,10 +44,12 @@ class encryptedQuery {
         v.step = 2.1; // 必須パラメータの存否確認、既定値設定
         if( arg.url ) this.url = arg.url; else throw new Error('問合せ先(API)のURLが指定されていません');
         if( arg.clientId ) this.clientId = arg.clientId; else throw new Error('IDが指定されていません');
-        arg.bits = arg.bits || 1024;
 
         v.step = 2.2; // 実行環境がクライアント側かつsessionStorageに保存されているなら取得
         this.conf = JSON.parse(sessionStorage.getItem(this.storageKey)) || {};
+
+        v.step = 2.3; // 任意パラメータに既定値設定
+        arg.bits = arg.bits || this.conf.sys.auth.bits;
 
         v.step = 2.3; // クライアント側鍵ペアの設定
         if( this.conf.CPkey ){
@@ -297,6 +299,13 @@ class encryptedQuery {
       }
 
       v.step = 1.8;  // 分岐用関数に渡す引数をv.argに設定
+      // @param {Object} arg
+      // @param {Boolean} arg.isPlain - true:平文、false:暗号文
+      // @param {SingleTable} arg.master - ユーザ情報のシートオブジェクト
+      // @param {Object.<string,any>} arg.user - master内の該当ユーザの情報
+      // @param {number|string} arg.id - ユーザを特定する値
+      // @param {Object} arg.arg - encryptedQuery.request()に渡された、分岐先関数の引数
+      // @param {number} arg.expire - クライアント側鍵の有効期間。既定値48時間
       v.arg = {
         isPlain: v.isPlain,
         master: this.master,
