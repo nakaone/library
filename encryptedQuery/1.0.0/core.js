@@ -8,10 +8,10 @@ class encryptedQuery {
    * @param {string} arg.pUP='x' - 平文送信時のURLクエリパラメータの変数名(Plain URL Parameter)
    * @param {string} arg.eUP='y' - 暗号文〃(encrypted URL Parameter)
    * @param {number} arg.expire=172800000 - クライアント側鍵の有効期間。既定値48時間
+   * @param {number} [arg.bits=1024] - クライアント側で鍵ペアを生成する場合の鍵長。既定値はconfig.jsで設定
    * === clientでのみ使用するパラメータ ==================
    * @param {string} arg.url - 問合せ先(server=WebAPI)のURL
    * @param {number|string} arg.clientId - クライアントのID。例：受付番号(entryNo)
-   * @param {number} [arg.bits] - クライアント側で鍵ペアを生成する場合の鍵長。既定値はconfig.jsで設定
    * === serverでのみ使用するパラメータ ==================
    * @param {SingleTable} arg.master - サーバ側でユーザ情報を保持するシート
    * @param {string} arg.IDcol - 当該シート上でのユーザ側を特定する欄名。ex.'entryNo'
@@ -49,7 +49,7 @@ class encryptedQuery {
         this.conf = JSON.parse(sessionStorage.getItem(this.storageKey)) || {};
 
         v.step = 2.3; // 任意パラメータに既定値設定
-        arg.bits = arg.bits || this.conf.sys.auth.bits;
+        arg.bits = arg.bits || 1024;
 
         v.step = 2.3; // クライアント側鍵ペアの設定
         if( this.conf.CPkey ){
