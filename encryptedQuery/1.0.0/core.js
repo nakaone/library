@@ -17,6 +17,7 @@ class encryptedQuery {
    * @param {string} arg.IDcol - 当該シート上でのユーザ側を特定する欄名。ex.'entryNo'
    * @param {string} arg.CPcol - 当該シート上でユーザ側公開鍵を保持する欄名。ex.'CPkey'
    * @param {string} arg.upv - URLクエリパラメータ文字列。URL Parameter Variable
+   * @param {number} arg.passcodeValidityPeriod=600000 - パスコードの有効期間。ミリ秒、既定値10分
    * @returns 
    * 
    */
@@ -78,6 +79,7 @@ class encryptedQuery {
         if( arg.master ) this.master = arg.master; else throw new Error('master is not defined.');
         if( arg.IDcol ) this.IDcol = arg.IDcol; else throw new Error('IDcol is not defined.');
         if( arg.CPcol ) this.CPcol = arg.CPcol; else throw new Error('CPcol is not defined.');
+        this.passcodeValidityPeriod = this.passcodeValidityPeriod || 600000;
 
         v.step = 3.2; // 実行環境がサーバ側(GAS)かつDocumentPropertiesに保存されているなら取得
         this.conf = JSON.parse(PropertiesService.getDocumentProperties().getProperty(arg.storageKey));
@@ -178,7 +180,7 @@ class encryptedQuery {
       v.step = 2.4; // 分岐先関数では無く、response()で起きたエラーの場合はthrow
       // ※分岐先関数でのエラーは本関数(response)の戻り値として本関数呼出元に返す
       if( v.obj.isOK === false ){
-        throw new Error(v.res.message);
+        throw new Error(v.obj.message);
       }
 
       v.step = 2.5;
