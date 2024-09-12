@@ -159,7 +159,7 @@ class encryptedQuery {
       // step.2 : サーバ側に問合せ実行、結果検証
       // -------------------------------------------------
 
-      v.step = 2.1; // 問合せの実行
+      v.step = 2.1; // 問合せの実行、ネットワークエラーなら弾く
       v.r = await fetch(v.url,{
         method: 'GET',
         headers: {
@@ -168,22 +168,19 @@ class encryptedQuery {
         }
       });
       vlog(v,'r');
-      console.log(v.r);
-
-      v.step = 2.2; // ネットワークエラー
       if( !v.r.ok ) throw new Error(`[fetch error] status=${v.r.status}`);
 
-      v.step = 2.3; // オブジェクト化
+      v.step = 2.2; // オブジェクト化
       v.obj = await v.r.json();
       vlog(v,'obj');
 
-      v.step = 2.4; // 分岐先関数では無く、response()で起きたエラーの場合はthrow
+      v.step = 2.3; // 分岐先関数では無く、response()で起きたエラーの場合はthrow
       // ※分岐先関数でのエラーは本関数(response)の戻り値として本関数呼出元に返す
       if( v.obj.isOK === false ){
         throw new Error(v.obj.message);
       }
 
-      v.step = 2.5;
+      v.step = 2.4;
       v.res = v.obj.rv;
       vlog(v,'res');
 
