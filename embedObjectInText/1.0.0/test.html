@@ -25,28 +25,17 @@
     <p><a href="::editURL::" target="_blank" class="button">申込内容の修正</a></p>
     <p>それでは当日、会場でお待ちしております。</p>
   </div>
-  
+
   <div class="testdata" title="2">
     <p>[連絡] 校庭キャンプ2024 重複申込分をキャンセルしました</p>
-    <p>To: ::申込者氏名[0]:: 様</p>
+    <p>To: ::obj.申込者氏名:: 様</p>
     <p>Fm: 下北沢小おやじの会</p>
     <p>この度お申し込みいただいた「校庭キャンプ2024」ですが、複数回申込が行われていたため一つを残して他をキャンセル処理させていただきました。</p>
     <p>お手元に何通か申込受付メールが届いているかと存じますが【最後のものが有効】です(最後以外はキャンセルした旨の通知)。</p>
     <p>当日受付では以下のQRコードを提示してください。</p>
-    <p><img src="https://api.qrserver.com/v1/create-qr-code/?data=::entryNo[0]::" /></p>
+    <p><img src="https://api.qrserver.com/v1/create-qr-code/?data=::obj.entryNo::" /></p>
     <p>また参加者の変更やキャンセルを行う場合、以下から行ってください。</p>
-    <p><a href="::obj[0].editURL[0]::" target="_blank" class="button">申込内容の修正</a></p>
-    <p>それでは当日、会場でお待ちしております。</p>
-    
-    <p>[連絡] 校庭キャンプ2024 重複申込分をキャンセルしました</p>
-    <p>To: ::申込者氏名[1]:: 様</p>
-    <p>Fm: 下北沢小おやじの会</p>
-    <p>この度お申し込みいただいた「校庭キャンプ2024」ですが、複数回申込が行われていたため一つを残して他をキャンセル処理させていただきました。</p>
-    <p>お手元に何通か申込受付メールが届いているかと存じますが【最後のものが有効】です(最後以外はキャンセルした旨の通知)。</p>
-    <p>当日受付では以下のQRコードを提示してください。</p>
-    <p><img src="https://api.qrserver.com/v1/create-qr-code/?data=::entryNo[1]::" /></p>
-    <p>また参加者の変更やキャンセルを行う場合、以下から行ってください。</p>
-    <p><a href="::obj[1].editURL[1]::" target="_blank" class="button">申込内容の修正</a></p>
+    <p><a href="::obj.editURL::" target="_blank" class="button">申込内容の修正</a></p>
     <p>それでは当日、会場でお待ちしております。</p>
   </div>
 </body>
@@ -58,10 +47,21 @@ window.addEventListener('DOMContentLoaded',() => {
   console.log(`${v.whois} start.`);
   try {
 
+    v.data = [
+      {申込者氏名:'徳川　光圀',entryNo:1,editURL:'http://w01.com/'},
+      {obj:{申込者氏名:'徳川　光圀',entryNo:1,editURL:'http://w01.com/'}},
+    ];
+    /* 単純オブジェクト
     v.rv = embedObjectInText(
       document.querySelector('.testdata[title="1"]').innerHTML,
       '::(.+?)::',
-      {申込者氏名:'徳川　光圀',entryNo:1,editURL:'http://w01.com/'}
+      v.data[0]
+    );
+    */
+    v.rv = embedObjectInText(
+      document.querySelector('.testdata[title="2"]').innerHTML,
+      '::(.+?)::',
+      v.data[1]
     );
     createElement({text:v.rv},document.querySelector('body'));
 

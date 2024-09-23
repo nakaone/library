@@ -19,14 +19,16 @@ function embedObjectInText(source,rex,data){
     vlog(v,'map');
 
     for( v.i=0 ; v.i<v.map.length ; v.i++ ){
-      v.m = v.map[v.i].match(new RegExp(rex))[1];
+      v.m = v.map[v.i].match(new RegExp(rex))[1].split('.');
       vlog(v,'m')
-      console.log(v.map[v.i],data[v.m]);
-      v.rv = v.rv.replaceAll(new RegExp(v.map[v.i],'g'),data[v.m]);
-    }
 
-    // オブジェクトメンバと比較し、存在するもののみ抽出
-    // 全件置換を実行
+      v.target = data;
+      for( v.d=0 ; v.d<v.m.length ; v.d++ ){
+        v.target = v.target[v.m[v.d]];
+      }
+      vlog(v,'target');
+      v.rv = v.rv.replaceAll(new RegExp(v.map[v.i],'g'),v.target);
+    }
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
