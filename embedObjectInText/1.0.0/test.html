@@ -1,0 +1,79 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>embedObjectInText</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--link rel="stylesheet" href="style.css"-->
+<style type="text/css">
+  .testdata {display: none;}
+</style>
+<!--::CDN::-->
+<script src="./core.js" type="text/javascript"></script>
+<script src="../../createElement/1.2.1/core.js" type="text/javascript"></script>
+<script src="../../stringify/1.1.1/core.js" type="text/javascript"></script>
+<script src="../../whichType/1.0.1/core.js" type="text/javascript"></script>
+<script src="../../vlog/1.1.0/core.js" type="text/javascript"></script>
+</head>
+<body>
+  <div class="testdata" title="1">
+    <p>[連絡] 校庭キャンプ2024 重複申込分をキャンセルしました</p>
+    <p>To: ::申込者氏名:: 様</p>
+    <p>Fm: 下北沢小おやじの会</p>
+    <p>この度お申し込みいただいた「校庭キャンプ2024」ですが、複数回申込が行われていたため一つを残して他をキャンセル処理させていただきました。</p>
+    <p>お手元に何通か申込受付メールが届いているかと存じますが【最後のものが有効】です(最後以外はキャンセルした旨の通知)。</p>
+    <p>当日受付では以下のQRコードを提示してください。</p>
+    <p><img src="https://api.qrserver.com/v1/create-qr-code/?data=::entryNo::" /></p>
+    <p>また参加者の変更やキャンセルを行う場合、以下から行ってください。</p>
+    <p><a href="::editURL::" target="_blank" class="button">申込内容の修正</a></p>
+    <p>それでは当日、会場でお待ちしております。</p>
+  </div>
+  
+  <div class="testdata" title="2">
+    <p>[連絡] 校庭キャンプ2024 重複申込分をキャンセルしました</p>
+    <p>To: ::申込者氏名[0]:: 様</p>
+    <p>Fm: 下北沢小おやじの会</p>
+    <p>この度お申し込みいただいた「校庭キャンプ2024」ですが、複数回申込が行われていたため一つを残して他をキャンセル処理させていただきました。</p>
+    <p>お手元に何通か申込受付メールが届いているかと存じますが【最後のものが有効】です(最後以外はキャンセルした旨の通知)。</p>
+    <p>当日受付では以下のQRコードを提示してください。</p>
+    <p><img src="https://api.qrserver.com/v1/create-qr-code/?data=::entryNo[0]::" /></p>
+    <p>また参加者の変更やキャンセルを行う場合、以下から行ってください。</p>
+    <p><a href="::obj[0].editURL[0]::" target="_blank" class="button">申込内容の修正</a></p>
+    <p>それでは当日、会場でお待ちしております。</p>
+    
+    <p>[連絡] 校庭キャンプ2024 重複申込分をキャンセルしました</p>
+    <p>To: ::申込者氏名[1]:: 様</p>
+    <p>Fm: 下北沢小おやじの会</p>
+    <p>この度お申し込みいただいた「校庭キャンプ2024」ですが、複数回申込が行われていたため一つを残して他をキャンセル処理させていただきました。</p>
+    <p>お手元に何通か申込受付メールが届いているかと存じますが【最後のものが有効】です(最後以外はキャンセルした旨の通知)。</p>
+    <p>当日受付では以下のQRコードを提示してください。</p>
+    <p><img src="https://api.qrserver.com/v1/create-qr-code/?data=::entryNo[1]::" /></p>
+    <p>また参加者の変更やキャンセルを行う場合、以下から行ってください。</p>
+    <p><a href="::obj[1].editURL[1]::" target="_blank" class="button">申込内容の修正</a></p>
+    <p>それでは当日、会場でお待ちしております。</p>
+  </div>
+</body>
+<script type="text/javascript">
+//::script::
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.rv = embedObjectInText(
+      document.querySelector('.testdata[title="1"]').innerHTML,
+      '::(.+?)::',
+      {申込者氏名:'徳川　光圀',entryNo:1,editURL:'http://w01.com/'}
+    );
+    createElement({text:v.rv},document.querySelector('body'));
+
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+</html>
