@@ -11,7 +11,7 @@
  */
 function embedObjectInText(source,data,rex='::(.+?)::'){
   const v = {whois:'embedObjectInText',step:0,rv:source};
-  console.log(`${v.whois} start.`);
+  console.log(`${v.whois} start.\ndata(${whichType(data)})=${stringify(data)}`);
   try {
 
     v.step = 1; // テキストから位置指定文字列を抽出
