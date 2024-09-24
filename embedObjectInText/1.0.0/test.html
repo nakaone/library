@@ -71,21 +71,20 @@ window.addEventListener('DOMContentLoaded',() => {
     /* 単純オブジェクト
     v.rv = embedObjectInText(
       document.querySelector('.testdata[title="0"]').innerHTML,
+      v.data[0],
       '::(.+?)::',
-      v.data[0]
     );
     */
     /* 階層化オブジェクト
     v.rv = embedObjectInText(
       document.querySelector('.testdata[title="1"]').innerHTML,
+      v.data[1],
       '::(.+?)::',
-      v.data[1]
     );
     */
     v.rv = embedObjectInText(
       document.querySelector('.testdata[title="2"]').innerHTML,
-      '::(.+?)::',
-      v.data[2]
+      v.data[2],
     );
     createElement({text:v.rv},document.querySelector('body'));
 

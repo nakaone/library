@@ -1,15 +1,15 @@
 /** embedObjectInText: テキストの指定位置にオブジェクトメンバの値を埋め込む
  * 
  * @param {string} source - テキスト
- * @param {string} rex - 位置指定文字列。文字列部分は括弧で囲む。ex.`::(.+?)::`
  * @param {Object} data - 埋め込むオブジェクト
+ * @param {string} rex='::(.+?)::' - 位置指定文字列。文字列部分は括弧で囲む
  * @returns {string}
  * 
  * - オブジェクトメンバに存在しない位置指定文字列は変換しない
  * - 埋め込むオブジェクトが階層化している場合、ピリオドで区切る
  * - dataは配列不可だが、メンバは配列可
  */
-function embedObjectInText(source,rex,data){
+function embedObjectInText(source,data,rex='::(.+?)::'){
   const v = {whois:'embedObjectInText',step:0,rv:source};
   console.log(`${v.whois} start.`);
   try {
