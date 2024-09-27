@@ -100,5 +100,5 @@ class LoadingIcon {
   show = () => this.screen.showModal();
 
   /** 待機画面を隠蔽する */
-  hide = () => this.screen.close();
+  hide = () => {this.screen.close();console.log('hide loading icon');}
 }
