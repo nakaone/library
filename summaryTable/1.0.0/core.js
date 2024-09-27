@@ -1,6 +1,5 @@
-/** summaryTable: 集計表を作成
+/** summaryTable: 集計表作成用のcreateElementオブジェクトを作成
  * @param {Object} arg
- * @param {string} arg.wrapper - tableの包摂要素(div)を指定するCSSセレクタ
  * @param {Object[]} arg.data - 集計表の元となるデータ。1行1Objectの配列
  * @param {string[]} arg.cols - 横軸の項目名
  * @param {string[]} arg.rows - 縦軸の項目名
@@ -9,6 +8,7 @@
  * @param {function} arg.normalize - データを正規化する関数
  * @param {Object} arg.thead - ヘッダ部を作成するcreateElementオブジェクト
  * @param {Object} arg.tbody - ボディ部を作成するcreateElementオブジェクト。但し計数項目・導出項目は除く
+ * @returns {Object} createElemntの引数となるオブジェクト
  * 
  * - 空白行は想定しない(全てのセルが計数項目または導出項目の前提)
  * - Google Spread [表形式仕様・テストデータ](https://docs.google.com/spreadsheets/d/1fvCYOfp35LivbZlQHIhnGaujpCUeoI7u2qydFrMFem0/edit?gid=1400698249#gid=1400698249)
@@ -109,17 +109,16 @@ function summaryTable(arg){
 
 
     v.step = 5.3; // 表の作成
-    v.r = createElement({
+    v.rv = {
       children:[
         {tag:'table',children:[
           {tag:'thead',children:arg.thead},
           {tag:'tbody',children:arg.tbody},
         ]}
-    ]},document.querySelector(arg.wrapper));
-    if( v.r instanceof Error ) throw v.r;
+    ]};
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);
+    console.log(`${v.whois} normal end.`);
     return v.rv;
 
   } catch(e) {
