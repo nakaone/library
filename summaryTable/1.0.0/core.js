@@ -8,10 +8,14 @@
  * @param {function} arg.normalize - データを正規化する関数
  * @param {Object} arg.thead - ヘッダ部を作成するcreateElementオブジェクト
  * @param {Object} arg.tbody - ボディ部を作成するcreateElementオブジェクト。但し計数項目・導出項目は除く
- * @returns {Object} createElemntの引数となるオブジェクト
+ * @returns {Object}
  * 
  * - 空白行は想定しない(全てのセルが計数項目または導出項目の前提)
  * - Google Spread [表形式仕様・テストデータ](https://docs.google.com/spreadsheets/d/1fvCYOfp35LivbZlQHIhnGaujpCUeoI7u2qydFrMFem0/edit?gid=1400698249#gid=1400698249)
+ * 
+ * **戻り値のデータ型**
+ * rv.data {Object[]} - `{row:"(行ラベル)",col:"(列ラベル)",num:件数}`形式のオブジェクト。セル単位。
+ * rv.table {Object} - createElemntの引数となるオブジェクト
  * 
  * **normalizeの仕様**
  * 
@@ -25,18 +29,22 @@ function summaryTable(arg){
   console.log(`${v.whois} start.\narg=${stringify(arg)}`);
   try {
 
-    v.step = 1; // データを正規化する
+    v.step = 1; // 事前準備
+    if( !arg.hasOwnProperty('colsFormula') ) arg.colsFormula = [];
+    if( !arg.hasOwnProperty('rowsFormula') ) arg.rowsFormula = [];
+
+    v.step = 2; // データを正規化する
     arg.data.forEach(o => v.data.push(...arg.normalize(o)));
     vlog(v,'data');
 
-    v.step = 2; // 計数項目の集計
+    v.step = 3; // 計数項目の集計
     v.sql = 'select `row`,`col`,count(*) as `num` from ? group by `row`,`col`;';
     v.table = alasql(v.sql,[v.data]);
     vlog(v,'table');
 
-    v.step = 3; // 横方向での導出項目の計算
+    v.step = 4; // 横方向での導出項目の計算
     arg.colsFormula.forEach(formula => {
-      v.step = 3.1;
+      v.step = 4.1;
       v.m = formula.match(/^(.+?)=(.+)$/);
       v.left = v.m[1];
       v.fm = [];
@@ -49,14 +57,14 @@ function summaryTable(arg){
       vlog(v,['m','cols','to','fm']);
 
       arg.rows.forEach(row => {
-        v.step = 3.2; // 集計結果を格納するセルを特定、v.cellとする
+        v.step = 4.2; // 集計結果を格納するセルを特定、v.cellとする
         v.cell = v.table.find(x => x.row === row && x.col === v.left);
         if( v.cell === undefined ){
           v.cell = {row:row,col:v.left,num:0};
           v.table.push(v.cell);
         }
 
-        v.step = 3.3; // 式に現れた項目毎に加減
+        v.step = 4.3; // 式に現れた項目毎に加減
         v.fm.forEach(col => {
           v.cell.num += ((v.table.find(x => x.row === row && x.col === col.name)
           || {num:0}).num) * (col.sign ? 1 : -1);
@@ -65,9 +73,9 @@ function summaryTable(arg){
       });
     });
 
-    v.step = 4; // 縦方向での導出項目の計算
+    v.step = 5; // 縦方向での導出項目の計算
     arg.rowsFormula.forEach(formula => {
-      v.step = 4.1;
+      v.step = 5.1;
       v.m = formula.match(/^(.+?)=(.+)$/);
       v.left = v.m[1];
       v.fm = [];
@@ -80,14 +88,14 @@ function summaryTable(arg){
       vlog(v,['m','rows','to','fm']);
 
       arg.cols.forEach(col => {
-        v.step = 4.2; // 集計結果を格納するセルを特定、v.cellとする
+        v.step = 5.2; // 集計結果を格納するセルを特定、v.cellとする
         v.cell = v.table.find(x => x.row === v.left && x.col === col);
         if( v.cell === undefined ){
           v.cell = {row:v.left,col:col,num:0};
           v.table.push(v.cell);
         }
 
-        v.step = 4.3; // 式に現れた項目毎に加減
+        v.step = 5.3; // 式に現れた項目毎に加減
         v.fm.forEach(row => {
           v.cell.num += ((v.table.find(x => x.row === row.name && x.col === col)
           || {num:0}).num) * (row.sign ? 1 : -1);
@@ -95,29 +103,27 @@ function summaryTable(arg){
         vlog(v,'cell');
       });
     });
+    vlog(v,'table');
 
     for( v.i=0 ; v.i<arg.tbody.length ; v.i++ ){
-      v.step = 5.1; // 表要素の作成：行単位
+      v.step = 6.1; // 表要素の作成：行単位
       v.tr = arg.tbody[v.i].children;
       for( v.j=0 ; v.j<arg.cols.length ; v.j++ ){
-        v.step = 5.2; // 列単位
+        v.step = 6.2; // 列単位
         v.val = (v.table.find(x => x.row === arg.rows[v.i] && x.col === arg.cols[v.j]) || {num:0}).num;
-        v.tr.push({tag:'td',text:v.val});
+        v.tr.push({tag:'td',text:v.val,attr:{title:arg.rows[v.i]+'_'+arg.cols[v.j]}});
       }
       vlog(v,'tr')
     }
 
-
-    v.step = 5.3; // 表の作成
-    v.rv = {
-      children:[
-        {tag:'table',children:[
-          {tag:'thead',children:arg.thead},
-          {tag:'tbody',children:arg.tbody},
-        ]}
-    ]};
-
     v.step = 9; // 終了処理
+    v.rv = {
+      data: v.table,
+      table: {children:[{tag:'table',children:[
+        {tag:'thead',children:arg.thead},
+        {tag:'tbody',children:arg.tbody},
+      ]}]}
+    };
     console.log(`${v.whois} normal end.`);
     return v.rv;
 
