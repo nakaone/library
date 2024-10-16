@@ -1,0 +1,35 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>encryptedQuery</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--link rel="stylesheet" href="style.css"-->
+<style type="text/css">/*:x:CSS:x:*/</style>
+<!--:x:CDN:x:-->
+<!--script src="" type="text/javascript"></script-->
+</head>
+<body>
+<!--:x:body:x:-->
+</body>
+<script type="text/javascript">
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+    //:x:onload:x:
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+class encryptedQuery {
+  
+}
+class encryptedQueryClient extends encryptedQuery {
+  
+}
+</script>
+</html>
