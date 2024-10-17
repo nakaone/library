@@ -40,7 +40,7 @@ tmp="$test/tmp"; mkdir -p $tmp
 # 1. サーバ側テスト用ソース：server.gsの作成
 # ----------------------------------------------
 log "1";
-cat $src/doGet.js | awk 1 | \
+cat $src/doPost.js | awk 1 | \
 $embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $test/server.gs
 
 # ----------------------------------------------
