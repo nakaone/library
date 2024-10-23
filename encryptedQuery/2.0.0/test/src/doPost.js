@@ -12,6 +12,9 @@ function doPost(e) {
     v.params = JSON.parse(e.postData.getDataAsString());
     console.log(v.params);
 
+    v.config = JSON.parse(PropertiesService.getDocumentProperties().getProperty('config'));
+    v.config.SSkey = RSAKey.parse(v.config.SSkey);
+
     v.rv = {
       method: "POST",
       message: `doPost関数が呼ばれました(${toLocale(new Date())})`,
