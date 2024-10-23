@@ -1,0 +1,436 @@
+<?xml version="1.0"?>
+<opml version="2.0">
+  <head>
+    <ownerEmail>
+      ena.kaon@gmail.com
+    </ownerEmail>
+  </head>
+  <body>
+    <outline text="encryptedQuery 2.0.0">
+      <outline text="はじめに">
+        <outline text="開発の動機">
+          <outline text="要改善点">
+            <outline text="レスポンスが遅い">
+              <outline text="全データを暗号化した上で授受しているため(?)" />
+            </outline>
+            <outline text="複数シートにまたがる更新ができない(しづらい)" _note="ex.参加者リストに追加時に参加者数集計シートも併せて更新等(シート関数を噛ませると遅くなるので、参加者リスト更新と同時に参加者数集計シートも更新しておきたい)&#10;" />
+            <outline text="シート毎に権限設定ができない" _note="ex.掲示板シートはOKだが参加者リストは参照不可にする、等&#10;" />
+          </outline>
+          <outline text="追加・変更する点">
+            <outline text="暗号化対象を全データからトークンのみに変更" />
+            <outline text="clientに仮想シート(≒テーブル)を持たせ、server(Spread Sheet)と同期させる" />
+            <outline text="同期をとるために授受するデータを、全件から前回同期後に変更された部分のみに変更" />
+            <outline text="auth機能を追加" />
+            <outline text="callbackに加え、テーブルのCRUDに特化したメソッドを用意" _note="※CRUDのみだとbulkMailのような「サーバ側で抽出結果を基に行う」処理ができなくなるため、callbackは残す&#10;" />
+            <outline text="一回のリクエストで複数テーブルのCRUDに対応" />
+            <outline text="更新結果は専用のシート(&quot;log&quot;シート)に追記していく" />
+            <outline text="テーブル毎に「参照のみ」「参照＋更新」権限を設定可能にする" />
+            <outline text="掲示板等、自動同期機能を追加" />
+            <outline text="機能を簡素化">
+              <outline text="pKeyを必須とし、更新対象はこれで特定可能にする" />
+            </outline>
+          </outline>
+        </outline>
+        <outline text="表記上の注意事項">
+          <outline text="引数はメンバ化、メンバは内部変数化し、メソッド内では内部変数のみ使用" />
+          <outline text="「記憶領域(localStorage/DocumentProperties)⊆引数⊆メンバ⊆内部変数」なので、記憶領域/引数/メンバ/内部変数には差分のみ記載" />
+        </outline>
+      </outline>
+      <outline text="class encryptedQuery">
+        <outline text="メンバ" _note="encryptedQueryClient/Server共通の既定値&#10;">
+          <outline text="validityPeriod {number}=1日 最終ログイン日時からのログイン有効期間" _note="ログインは基本的にセッション有効期間とするが、有効期間を超えた場合は再ログインを必要とする" />
+          <outline text="graceTime {number}=10分 メール送信〜パスコード確認処理終了までの猶予時間(ミリ秒)" _note="&#10;" />
+          <outline text="passcodeValidityPeriod {number}=600000(10分) パスコードの有効期間。ミリ秒" _note="メール送信〜受領〜パスコード入力〜送信〜確認処理終了までの時間。通信に係る時間も含む。不正防止のため、始点/終点ともサーバ側で時刻を設定する。" />
+          <outline text="maxTrial {number}=3 パスコード入力の最大試行回数" />
+          <outline text="passcodeDigit {number}=6  パスコードの桁数" />
+          <outline text="freezing {number}=3600000 連続失敗した場合の凍結期間。ミリ秒。既定値1時間" />
+          <outline text="syncInterval {number}=0 自動更新する場合の間隔(ミリ秒)。0なら自動更新しない" />
+          <outline text="bits {number}=1024 鍵長" />
+          <outline text="tableDefs {Object} {領域名:定義Obj}形式のテーブル構成定義" _note="使用可能なデータ型はAlaSQL&quot;&lt;a href=&quot;https://github.com/AlaSQL/alasql/wiki/Data%20types&quot;&gt;Data Types&lt;/a&gt;&quot;に準拠&#10;">
+            <outline text="&quot;accounts&quot;シート">
+              <outline text="システム項目 : 更新があってもログに出力しない" />
+              <outline text="id {number} ユーザの主キー" _note="{label:'id',type:'integer',suffix:''}&#10;" />
+              <outline text="name {string} ユーザ名" />
+              <outline text="email {string} ユーザのメールアドレス" />
+              <outline text="phone {string} 連絡先電話番号" />
+              <outline text="role {string} ユーザの役割(=setup()で定義された付与するアクセス権限)" />
+              <outline text="CPkey {string} ユーザの公開鍵" />
+              <outline text="lastSync {string} 最終同期日時" />
+              <outline text="lastLogin {string} 最終ログイン日時" />
+              <outline text="trial {Object} ログイン試行関係情報">
+                <outline text="passcode {number} 最新のパスコード" />
+                <outline text="created {string} パスコード生成日時" _note="=最終パスコード通知メール送信日時" />
+                <outline text="lastTrial {string} 最終パスコード通知メール送信日時" />
+                <outline text="log {Object[]} ログイン試行のログ" _note="unshiftで常に0が最新、新規パスコード生成時にクリア。">
+                  <outline text="timestamp {string} パスコード入力日時。クライアント側で設定" />
+                  <outline text="entered {number} ユーザが入力したパスコード" />
+                  <outline text="status {number} 試行結果" _note="0: パスコード新規発行&#10;1: ログイン成功&#10;2: パスコード不一致(再試行可)&#10;4: パスコード不一致(再試行不可、凍結に移行)&#10;5: ログイン権限無し&#10;6: アカウント凍結中&#10;7: 不適切な署名&#10;8: その他(システムエラー他。エラーメッセージ参照)&#10;" />
+                  <outline text="message {string} エラーメッセージ" />
+                </outline>
+              </outline>
+              <outline text="begin {string} アカウントの有効期間開始日時" />
+              <outline text="end {string} アカウントの有効期間終了日時" />
+              <outline text="create {string} アカウント生成日時" />
+              <outline text="update {string} アカウント更新日時" />
+              <outline text="delete {string} アカウント削除日時(論理削除)" />
+              <outline text="1 Backlink">
+                <outline text="accountsシートが未作成なら作成(⇒&lt;a href=&quot;https://workflowy.com/#/2913661920c7&quot;&gt;定義&lt;/a&gt;)" />
+              </outline>
+            </outline>
+            <outline text="&quot;log&quot;シート">
+              <outline text="timestamp {string} 更新日時" />
+              <outline text="id {number} &lt;a href=&quot;http://更新者のaccount.id&quot;&gt;更新者のaccount.id&lt;/a&gt;" />
+              <outline text="result {number} front()の処理結果。&lt;a href=&quot;https://workflowy.com/#/078054b626eb&quot;&gt;result&lt;/a&gt;参照" />
+              <outline text="message {string} エラーメッセージ。エラー発生時以外は空白" />
+              <outline text="branch {string} 要求された処理名。append/update/delete等" />
+              <outline text="arg {string} 要求された処理に渡した引数オブジェクトのJSON" />
+              <outline text="rv {string} 要求された処理から返された値。Object/ArrayならJSON化" />
+              <outline text="table {string} 更新対象となった範囲名(テーブル名)" />
+              <outline text="before {string} 更新前の行データオブジェクト(JSON)" />
+              <outline text="after {string} 更新後の行データオブジェクト(JSON)" />
+              <outline text="diff {string} 差分情報。{差分項目名：[更新前,更新後],...}形式" />
+              <outline text="2 Backlinks">
+                <outline text="log {Object[]} 前回同期日時以降の&lt;a href=&quot;https://workflowy.com/#/3dccb0fdd2b4&quot;&gt;&quot;log&quot;シート&lt;/a&gt;行データのJSON" />
+                <outline text="logシートが未作成なら作成(⇒&lt;a href=&quot;https://workflowy.com/#/3dccb0fdd2b4&quot;&gt;定義&lt;/a&gt;)" />
+              </outline>
+            </outline>
+            <outline text="その他(ユーザ定義シート) {Object[]}" _note="クライアント側のcreate tableで使用する各項目の定義">
+              <outline text="label {string} 項目名" />
+              <outline text="type {string} データ型" />
+              <outline text="suffix {string} &quot;not null&quot;等の制約、他" />
+            </outline>
+          </outline>
+          <outline text="2 Backlinks">
+            <outline text="メンバ(インスタンス変数)" _note="本項は導出項目のみ。CL/SV共通&lt;a href=&quot;https://workflowy.com/#/7567bf629d85&quot;&gt;メンバ&lt;/a&gt;、constructtorの&lt;a href=&quot;https://workflowy.com/#/10d03345527e&quot;&gt;引数 &lt;/a&gt;は除く。&#10;" />
+            <outline text="メンバ" _note="本項は導出項目のみ。CL/SV共通&lt;a href=&quot;https://workflowy.com/#/7567bf629d85&quot;&gt;メンバ&lt;/a&gt;、constructorの&lt;a href=&quot;https://workflowy.com/#/0f40403814ce&quot;&gt;引数&lt;/a&gt;は除く。&#10;" />
+          </outline>
+        </outline>
+        <outline text="constructor()">
+          <outline text="概要">
+            <outline text="config, arg, 既定値(v.default)をマージ、メンバとしてthisに保存" />
+          </outline>
+        </outline>
+        <outline text="encToken()">
+          <outline text="注意事項">
+            <outline text="自局の秘密鍵、相手局の公開鍵はメンバとして保存済の前提(this.sKey, this.pKey)" />
+          </outline>
+          <outline text="引数">
+            <outline text="sKey {Object} 自局の秘密鍵" />
+            <outline text="pKey {string} 相手局の公開鍵" />
+          </outline>
+          <outline text="概要">
+            <outline text="基となるオブジェクトを作成" />
+            <outline text="Obj -&amp;gt; JSON(JSON.stringify)" />
+            <outline text="JSON -&amp;gt; BASE64(await this.encB64)" />
+            <outline text="BASE64 -&amp;gt; 暗号化・署名(cryptico.encrypt)" />
+            <outline text="暗号文 -&amp;gt; URLセーフ(encodeURIComponent)" />
+          </outline>
+        </outline>
+        <outline text="decToken()">
+          <outline text="概要">
+            <outline text="URLセーフ -&amp;gt; 暗号文(decodeURIComponent)" />
+            <outline text="暗号文 -&amp;gt; BASE64(cryptico.decrypt)" />
+            <outline text="BASE64 -&amp;gt; JSON(await this.decB64)" />
+            <outline text="JSON -&amp;gt; Obj(JSON.parse)" />
+          </outline>
+        </outline>
+      </outline>
+      <outline text="クライアント側の構成">
+        <outline text="localStorage" _note="sessionStorageはオンメモリと寿命が変わらないため、使用しない&#10;">
+          <outline text="id {number} 利用者識別子。自然数" _note="同一メアドでの複数アカウント利用も考えられるので、識別子はe-mailとは別に設定可能とする" />
+        </outline>
+        <outline text="class encryptedQueryClient extends encryptedQuery">
+          <outline text="メンバ(インスタンス変数)" _note="本項は導出項目のみ。CL/SV共通&lt;a href=&quot;https://workflowy.com/#/7567bf629d85&quot;&gt;メンバ&lt;/a&gt;、constructtorの&lt;a href=&quot;https://workflowy.com/#/10d03345527e&quot;&gt;引数 &lt;/a&gt;は除く。&#10;">
+            <outline text="id {number} 利用者識別子" />
+            <outline text="lastSync {string}='1970-01-01' 前回同期日時。初期値はundefined" />
+            <outline text="lastLogin {string}='1970-01-01' 前回ログイン日時" />
+            <outline text="lastRequest {string}='1970-01-01' 前回パスコード通知メール発行要求日時" />
+            <outline text="thawing {string}='1970-01-01' 凍結解除日時" />
+            <outline text="keyGenerate {string} クライアント側鍵ペアの生成日時" />
+            <outline text="CSkey {Object} クライアント側秘密鍵" />
+            <outline text="CPkey {string} クライアント側公開鍵" />
+            <outline text="SPkey {string} サーバ側公開鍵" />
+            <outline text="tables {Object} {領域名:以下メンバを持つオブジェクト}形式">
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/561b163cd0d7&quot;&gt;クライアント側テーブル用データ&lt;/a&gt;" />
+            </outline>
+          </outline>
+          <outline text="constructor()">
+            <outline text="引数 : 以下のメンバを持つオブジェクト">
+              <outline text="prjName {string}='encryptedQuery' localStorageのキー名" />
+              <outline text="api {string} サーバ側WebAPIのURL" />
+            </outline>
+            <outline text="概要">
+              <outline text="idの特定" _note="if( URLクエリ文字列にID指定あり ){&#10;  idにURLクエリ文字列のID指定を設定&#10;} else if( localStorageにIDが存在 ){&#10;  idにlocalStorageのIDを設定&#10;} else {&#10;  for( 試行回数(this.maxTrial)=0 ; 0≦試行回数&amp;lt;3 ; 試行回数++ ){&#10;    id入力ダイアログを表示&#10;    if( 入力されたidが適切な形式 ) 試行回数=-1&#10;  }&#10;  if( 試行回数 === -1 ){&#10;    idに入力されたidを設定&#10;  } else {&#10;    this.thawingに凍結解除日時を設定&#10;  }&#10;}&#10;" />
+              <outline text="引数・既定値からメンバを設定" />
+              <outline text="クライアント側鍵ペアの作成" _note="v.step = 1.1; // 鍵ペアの作成&#10;v.password = createPassword();&#10;if( v.password instanceof Error ) throw v.password;&#10;v.key = cryptico.generateRSAKey(v.password,this.bits);&#10;&#10;v.step = 1.2; // メンバ変数に格納&#10;this.keyGenerate = Date.now();&#10;this.CPkey = cryptico.publicKeyString(v.key);&#10;this.CSkey = JSON.stringify(v.key.toJSON()),  // 文字列化された秘密鍵&#10;" />
+              <outline text="SPkey未入手ならauthorize呼び出し" />
+              <outline text="this.tableDefsに基づき各種テーブルを作成" />
+            </outline>
+          </outline>
+          <outline text="authorize() : サーバ側のauth1/2を呼び出し、一連のログイン関係処理を行う">
+            <outline text="概要" _note="// パスコード通知メール発行要求&#10;if( idが凍結中 ){&#10;  throw new Error('現在凍結中です')&#10;} else if( 前回のパスコード通知メール発行要求日時(lastRequest)から10分以上経過 ){&#10;  サーバ側にパスコード通知メール発行要求(v.eq.request(auth1))&#10;  lastRequestに現在日時設定&#10;}&#10;&#10;// パスコード入力&#10;for( 適正形式=false,試行回数=0 ; 0≦試行回数&amp;lt;3 ; 試行回数++ ){&#10;  パスコード入力画面表示&#10;  パスコード入力&#10;  if( 適正形式(数値) ){&#10;    r = パスコード確認要求(auth2)&#10;    if( r = 正常終了 ){&#10;      初期画面表示&#10;      試行回数=-1&#10;    } else {&#10;      if( 恒久的エラー(ex.権限無し、CPkey不一致) ){&#10;        throw new Error(r.message)&#10;      }&#10;      // 非恒久的エラー(再試行可能なエラー)：パスコード不一致&#10;    }&#10;  }&#10;}&#10;if( 試行回数 != -1 ){&#10;  throw new Error('試行回数を超えたので凍結します')&#10;}&#10;">
+              <outline text="パスコード通知メール発行要求" _note="if( idが凍結中 ){  ※ this.thawing &amp;gt; Date.now()&#10;  throw new Error('現在凍結中です')&#10;} else if( 前回のパスコード通知メール発行要求日時から10分以上経過 ){&#10;  // this.lastRequest + this.passcodeValidityPeriod &amp;lt; Date.now()&#10;  サーバ側にパスコード通知メール発行要求(v.eq.front(auth1))&#10;  lastRequestに現在日時設定&#10;}" />
+              <outline text="パスコード入力" _note="for( 適正形式=false,試行回数=0 ; 0≦試行回数&amp;lt;3 ; 試行回数++ ){&#10;  パスコード入力画面表示&#10;  パスコード入力&#10;  if( 適正形式(数値) ){&#10;    r = パスコード確認要求(auth2)&#10;    if( r = 正常終了 ){&#10;      試行回数=-1&#10;    } else {&#10;      if( 恒久的エラー(ex.権限無し、CPkey不一致) ){&#10;        throw new Error(r.message)&#10;      }&#10;      // 非恒久的エラー(再試行可能なエラー)：パスコード不一致&#10;    }&#10;  }&#10;}&#10;if( 試行回数 != -1 ){&#10;  throw new Error('試行回数を超えたので凍結します')&#10;}" />
+              <outline text="this.tablesに初期テーブルデータをセット" _note="auth2正常終了時の戻り値.tablesをメンバとして保存">
+                <outline text="&lt;a href=&quot;https://workflowy.com/#/561b163cd0d7&quot;&gt;クライアント側初期テーブル用データ&lt;/a&gt;の構成" />
+                <outline text="this.tableDefsに基づきcreate tableを実行" _note="accounts.trial, logテーブルは作成対象外。&#10;" />
+                <outline text="auth2の&lt;a href=&quot;https://workflowy.com/#/5ed89bf06f52&quot;&gt;戻り値&lt;/a&gt;に基づきデータをセット" />
+              </outline>
+            </outline>
+            <outline text="引数 : 無し" />
+            <outline text="戻り値 : null | Error" />
+          </outline>
+          <outline text="request() : encryptedQueryServer.front()に対して処理要求を行う">
+            <outline text="概要">
+              <outline text="tokenの作成、暗号化(this.encToken)" />
+              <outline text="encryptedQueryServer.front()への&lt;a href=&quot;https://workflowy.com/#/dd958d471b6a&quot;&gt;引数&lt;/a&gt;を作成">
+                <outline text="request()への引数＋メンバからtokenを作成" />
+                <outline text="syncにはtrueを設定" _note="this.syncIntervaleの値に関わらず、処理要求時は更新&#10;" />
+              </outline>
+              <outline text="doPostでfront()を呼び出し、&lt;a href=&quot;https://workflowy.com/#/72b8e229c963&quot;&gt;戻り値&lt;/a&gt;を取得" />
+              <outline text="戻り値のtokenを復号(this.decToken)、SPkey未定ならthis.SPkeyに保存" />
+              <outline text="戻り値のlogを基にテーブルを更新(this.syncTables呼び出し)" />
+              <outline text="戻り値のdataを呼出元関数に返す" />
+            </outline>
+            <outline text="引数" _note="以下のメンバを持つオブジェクト。参考：encryptedQueryServer.front()の&lt;a href=&quot;https://workflowy.com/#/dd958d471b6a&quot;&gt;引数&lt;/a&gt;">
+              <outline text="branch {string} 要求処理名。ex.&quot;auth1&quot;" />
+              <outline text="data {string} 要求処理(メソッド)に渡す引数オブジェクトのJSON" />
+            </outline>
+            <outline text="戻り値">
+              <outline text="data {Object} 要求処理結果。平文" />
+            </outline>
+            <outline text="v.1.0.0 source" _note="/** request: クライアント-&amp;gt;サーバ側への処理要求&#10; * &#10; * @param {string|Object} arg - サーバ側で分岐処理を行うコールバック関数に渡す引数&#10; * @returns &#10; */&#10;async request(arg=this.CPkey){&#10;  const v = {whois:&lt;a href=&quot;http://this.constructor.name&quot;&gt;this.constructor.name&lt;/a&gt;+'.request',step:0,rv:null};&#10;  console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);&#10;  try {&#10;&#10;    // -------------------------------------------------&#10;    // step.1 : 問合せ先URL(WebAPI+param)を作成&#10;    // -------------------------------------------------&#10;&#10;    v.step = 1.1; // 平文か暗号文か判定。サーバ側公開鍵取得済なら暗号文とする。&#10;    v.isPlain = this.SPkey === null ? true : false;&#10;    vlog(v,'isPlain');&#10;&#10;    v.step = 1.2; // responseで署名検証のためにIDが必要なので付加し、JSON化&#10;    v.json = JSON.stringify({id:this.clientId,arg:arg});&#10;    vlog(v,'json');&#10;&#10;    v.step = 1.3; // base64化&#10;    v.b64 = await this.encB64(v.json);&#10;    vlog(v,'b64');&#10;&#10;    v.step = 1.4; // 暗号化&#10;    if( v.isPlain ){&#10;      v.str = v.b64;&#10;    } else {&#10;      v.enc = cryptico.encrypt(v.b64,this.SPkey,this.CSkey);&#10;      vlog(v,'enc');&#10;      if( v.enc.status !== 'success' ) throw new Error('encrypt failed.');&#10;      v.str = v.enc.cipher;&#10;    }&#10;&#10;    v.step = 1.5; // URLセーフ化&#10;    v.param = encodeURIComponent(v.str);&#10;    vlog(v,'param');&#10;&#10;    v.step = 1.6; // WebAPI+paramでURL作成&#10;    v.url = `${this.url}?${v.isPlain ? this.pUP : this.eUP}=${v.param}`;&#10;    vlog(v,'url');&#10;&#10;&#10;    // -------------------------------------------------&#10;    // step.2 : サーバ側に問合せ実行、結果検証&#10;    // -------------------------------------------------&#10;&#10;    v.step = 2.1; // 問合せの実行、ネットワークエラーなら弾く&#10;    v.r = await fetch(v.url,{&#10;      method: 'GET',&#10;      headers: {&#10;        &quot;Accept&quot;: &quot;application/json&quot;,&#10;        &quot;Content-Type&quot;: &quot;text/plain&quot;,&#10;      }&#10;    });&#10;    vlog(v,'r');&#10;    if( !v.r.ok ) throw new Error(`[fetch error] status=${v.r.status}`);&#10;&#10;    v.step = 2.2; // オブジェクト化&#10;    v.obj = await v.r.json();&#10;    vlog(v,'obj');&#10;&#10;    v.step = 2.3; // 分岐先関数では無く、response()で起きたエラーの場合はthrow&#10;    // ※分岐先関数でのエラーは本関数(response)の戻り値として本関数呼出元に返す&#10;    if( v.obj.isOK === false ){&#10;      throw new Error(v.obj.message);&#10;    }&#10;&#10;    v.step = 2.4;&#10;    v.res = v.obj.rv;&#10;    vlog(v,'res');&#10;&#10;&#10;    // -------------------------------------------------&#10;    // step.3 : 呼出元への戻り値の作成(結果の復号、署名検証)&#10;    // -------------------------------------------------&#10;&#10;    v.step = 3.1; // decrypt&#10;    v.dec = cryptico.decrypt(v.res,this.CSkey);&#10;    if( v.dec.status !== 'success' ){&#10;      throw new Error(`decrypt failed.\n${stringify(v.dec)}`);&#10;    }&#10;&#10;    v.step = 3.2; // 署名検証、SPkeyが無ければ保存&#10;    if( v.dec.publicKeyString !== this.SPkey ){&#10;      if( this.SPkey === null ){&#10;        this.conf.SPkey = this.SPkey = v.dec.publicKeyString;&#10;        // sessionStorageに保存&#10;        sessionStorage.setItem(this.storageKey,JSON.stringify(this.conf));&#10;      } else {&#10;        throw new Error('サーバ側の署名が不正です');&#10;      }&#10;    }&#10;&#10;    v.step = 3.3; // base64 -&amp;gt; JSON&#10;    v.json = await this.decB64(v.dec.plaintext);&#10;&#10;    v.step = 3.4; // JSON -&amp;gt; Object&#10;    v.rv = this.objectizeJSON(v.json);&#10;    if( v.rv === null ){&#10;      throw new Error(`invalid JSON\n${stringify(v.json)}`);&#10;    }&#10;&#10;&#10;    v.step = 9; // 終了処理&#10;    console.log(`${v.whois} normal end.\nv.rv=${stringify(v.rv)}`);&#10;    return v.rv;&#10;&#10;  } catch(e) {&#10;    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;&#10;    console.error(`${e.message}\nv=${stringify(v)}`);&#10;    return e;&#10;  }&#10;}" />
+          </outline>
+          <outline text="syncTables() : サーバ側テーブルの更新情報をローカルに反映">
+            <outline text="概要">
+              <outline text="引数を順次走査" />
+              <outline text="①before, after両方存在 ⇒ diffを基に更新処理" />
+              <outline text="②before不存在 &amp; after存在 ⇒ afterを追加" />
+              <outline text="③before存在 &amp; after不存在 ⇒ 対象を削除" />
+            </outline>
+            <outline text="引数">
+              <outline text="request()の戻り値オブジェクトの&lt;a href=&quot;https://workflowy.com/#/764e6d8b282a&quot;&gt;log {Object[]} 前回同期日時以降の&quot;log&quot;シート行データのJSON&lt;/a&gt;" />
+            </outline>
+            <outline text="戻り値 : null | Error" />
+          </outline>
+          <outline text="append() : 新規レコードを追加" _note="サーバ側(シート)にpKeyが存在していた場合はエラーが返る">
+            <outline text="概要" />
+            <outline text="引数">
+              <outline text="range {string} 範囲名" />
+              <outline text="data {Object[]} 追加する行オブジェクトの配列" />
+            </outline>
+            <outline text="戻り値">
+              <outline text="data {Object[]} 追加された行オブジェクトの配列" _note="id等、サーバ側での採番結果を含める。" />
+            </outline>
+          </outline>
+          <outline text="update() : 既存レコードを更新" _note="サーバ側(シート)にpKeyが不存在の場合はエラーが返る&#10;">
+            <outline text="概要" />
+            <outline text="引数">
+              <outline text="range {string} 範囲名" />
+              <outline text="key {any} 当該範囲名のpKeyの値" />
+              <outline text="data {Object} 行オブジェクト" />
+            </outline>
+            <outline text="戻り値" />
+          </outline>
+          <outline text="delete() : 既存レコードを物理削除" _note="サーバ側(シート)にpKeyが不存在の場合はエラーが返る" />
+          <outline text="encB64() : 日本語文字列を含め、base64にエンコード">
+            <outline text="source" _note="/** encB64: 日本語文字列を含め、base64にエンコード&#10;  * @param {string} parts - 変換する日本語文字列&#10;  * @returns {string} base64エンコード文字列&#10;  * &#10;  * - Qiita [JavaScriptでBase64エンコード・デコード](&lt;a href=&quot;https://qiita.com/i15fujimura1s/items/6fa5d16b1e53f04f3b06&quot;&gt;https://qiita.com/i15fujimura1s/items/6fa5d16b1e53f04f3b06&lt;/a&gt;)&#10;  * - Zenn [URLセーフなBase64エンコーディングとデコーディング](&lt;a href=&quot;https://zenn.dev/jusanz/articles/d6cec091d45657&quot;&gt;https://zenn.dev/jusanz/articles/d6cec091d45657&lt;/a&gt;)&#10;  * &#10;  * @example&#10;  * &#10;  * ```&#10;  * v.str = 'これはテスト用文字列です';&#10;  * v.enc = await base64Encode(v.str);&#10;  * v.dec = await base64Decode(v.enc);&#10;  * console.log(`str=${v.str}\nenc=${v.enc}\ndec=${v.dec}`);&#10;  * ```&#10;  */&#10;&#10;encB64(...parts){&#10;  return new Promise(resolve =&amp;gt; {&#10;    const reader = new FileReader();&#10;    reader.onload = () =&amp;gt; {&#10;      const offset = reader.result.indexOf(&quot;,&quot;) + 1;&#10;      resolve(reader.result.slice(offset));&#10;    };&#10;    reader.readAsDataURL(new Blob(parts));&#10;  });&#10;}&#10;" />
+          </outline>
+          <outline text="decB64() : base64を日本語文字列にデコード">
+            <outline text="source" _note="/** decB64: base64を日本語文字列にデコード&#10;  * @param {string} text - base64文字列&#10;  * @param {string} charset='UTF-8'&#10;  * @returns {string} 復号された日本語文字列&#10;  * &#10;  * - Qiita [JavaScriptでBase64エンコード・デコード](&lt;a href=&quot;https://qiita.com/i15fujimura1s/items/6fa5d16b1e53f04f3b06&quot;&gt;https://qiita.com/i15fujimura1s/items/6fa5d16b1e53f04f3b06&lt;/a&gt;)&#10;  * &#10;  * @example&#10;  * &#10;  * ```&#10;  * v.str = 'これはテスト用文字列です';&#10;  * v.enc = await base64Encode(v.str);&#10;  * v.dec = await base64Decode(v.enc);&#10;  * console.log(`str=${v.str}\nenc=${v.enc}\ndec=${v.dec}`);&#10;  * ```&#10;  */&#10;decB64(text, charset='UTF-8') {&#10;  return fetch(`data:text/plain;charset=${charset};base64,` + text)&#10;  .then(response =&amp;gt; response.text());&#10;}&#10;" />
+          </outline>
+        </outline>
+      </outline>
+      <outline text="サーバ側の構成">
+        <outline text="DocumentPropertiesの構成" _note="項目名'config'とし、以下のメンバを持つオブジェクトとして定義&#10;">
+          <outline text="keyGenerate {string} サーバ側鍵ペアの生成日時" />
+          <outline text="SPkey {string} サーバ側公開鍵" />
+          <outline text="SSkey {string} 文字列化したサーバ側秘密鍵" />
+        </outline>
+        <outline text="doPost()">
+          <outline text="概要">
+            <outline text="POSTされたJSONをオブジェクト化(v.params)" />
+            <outline text="DocumentPropertiesの設定情報を取得、オブジェクト化(v.config)" />
+            <outline text="encryptedQueryServerのインスタンスを作成(v.eq)" />
+            <outline text="v.eq.dispatch()にv.paramsを渡し、結果をv.rvとして取得" />
+            <outline text="v.rvを呼出元に返す" />
+          </outline>
+          <outline text="v.1.0.0 source" _note="function doGet(e){&#10;  const v = {whois:'doGet',step:0,rv:{}};&#10;  console.log(`${v.whois} start.\ne.parameter=${stringify(e.parameter)}`);&#10;  try {&#10;&#10;    v.step = 1.1; // URLクエリ文字列未設定なら導通テストと看做す&#10;    if( Object.keys(e.parameter).length === 0 ){&#10;      v.rv = {status:-1,message:'ping test'};&#10;      return ContentService&#10;      .createTextOutput(JSON.stringify(v.rv,null,2))&#10;      .setMimeType(ContentService.MimeType.JSON);&#10;    }&#10;    console.log(`${v.whois} step ${v.step} end.`);&#10;&#10;    v.step = 1.2; // 設定情報を取得&#10;    v.conf = JSON.parse(PropertiesService.getDocumentProperties().getProperty('config'));&#10;    console.log(`${v.whois} step ${v.step} end.`);&#10;&#10;    v.step = 1.3; // ユーザ情報を取得&#10;    v.master = new SingleTable(v.conf.master.sheetName);&#10;    console.log(`${v.whois} step ${v.step} end.`);&#10;&#10;    v.step = 2; // 暗号化通信用インスタンス作成&#10;    v.eq = new encryptedQuery({&#10;      isClient: false,&#10;      storageKey: v.conf.sys.storageKey,&#10;      master: v.master,&#10;      IDcol: 'entryNo',&#10;      CPcol: 'CPkey',&#10;      upv: v.conf.sys.upv,&#10;      passcodeValidityPeriod: v.conf.sys.auth.passcodeValidityPeriod,&#10;    });&#10;    console.log(`${v.whois} step ${v.step} end.`);&#10;&#10;    v.step = 3.1; // 処理分岐用関数を定義。以下はencryptedQuery.response()からv.branchに渡される引数の内容&#10;    // @param {Object} arg&#10;    // @param {Boolean} arg.isPlain - true:平文、false:暗号文&#10;    // @param {SingleTable} arg.master - ユーザ情報のシートオブジェクト&#10;    // @param {Object.&amp;lt;string,any&amp;gt;} arg.user - master内の該当ユーザの情報&#10;    // @param {number|string} &lt;a href=&quot;http://arg.id&quot;&gt;arg.id&lt;/a&gt; - ユーザを特定する値&#10;    // @param {Object} arg.arg - encryptedQuery.request()に渡された、分岐先関数の引数&#10;    // @param {number} arg.expire - クライアント側鍵の有効期間。既定値48時間&#10;    v.branch = (arg) =&amp;gt; {&#10;      console.log(`v.branch start.\narg(${whichType(arg)})=${stringify(arg)}`);&#10;      if( arg.isPlain === true ){ // 平文で渡された⇒パスコード通知メール発行要求&#10;        //v.rv = auth1({entryNo:&lt;a href=&quot;http://arg.id&quot;&gt;arg.id&lt;/a&gt;,CPkey:arg.arg},v.master);&#10;        v.rv = auth1({&#10;          CPkey: arg.arg,&#10;          mail: v.conf.sys.passcodeNotification,&#10;          entryNo: &lt;a href=&quot;http://arg.id&quot;&gt;arg.id&lt;/a&gt;,&#10;          master: v.master,&#10;          user: arg.user,&#10;          conf: v.conf.sys.auth,&#10;          sheet: v.conf.master.cols,&#10;        });&#10;      } else {&#10;        //引数が暗号化されていた場合の分岐処理&#10;        if( arg.arg.func === 'bulkMail' ){&#10;          // 他で利用する可能性もあるので、スタッフ一覧はdoGet内で取得&#10;          v.staff = new SingleTable(v.conf.staff.sheetName);&#10;          v.rv = bulkMail(Object.assign({&#10;            to: 'スタッフ',&#10;            subject: '校庭キャンプ2024に関するお知らせ',&#10;            type: 'plain',&#10;            body: 'これはテストです',&#10;            name: '下北沢小おやじの会',&#10;            replyTo: v.conf.sys.staffML,&#10;            hold: true, // 下書きとして保存(即時送信はしない)&#10;            master: v.master,   // 参加者マスタ&#10;            staff: v.staff,     // スタッフマスタ&#10;          },arg.arg));&#10;        } else if( arg.arg.func === 'updateParticipant' ) {&#10;          v.r = arg.master.update(arg.arg.data,{key:'entryNo',value:arg.arg.entryNo});&#10;          v.rv = v.r instanceof Error&#10;          ? {isOK:false,message:v.rv.message}&#10;          : {isOK:true,data:arg.master.data};&#10;        } else {&#10;          v.rv = auth2({&#10;            passcode: arg.arg,&#10;            entryNo: &lt;a href=&quot;http://arg.id&quot;&gt;arg.id&lt;/a&gt;,&#10;            master: v.master,&#10;            user: arg.user,&#10;            conf: v.conf.sys.auth,&#10;            sheet: v.conf.master.cols,&#10;          });  &#10;        }&#10;&#10;        //if( !isNaN(arg) ){ v.r = auth2(arg); }&#10;        //else if( arg === 'get' ){ v.r = v.eq.master.data; }&#10;        //else if( arg.hasOwnProperty('id') &amp;&amp; arg.hasOwnProperty('data') )&#10;        //{ v.r = v.eq.master.update(&lt;a href=&quot;http://arg.id&quot;&gt;arg.id&lt;/a&gt;,arg.data)}&#10;        //else { v.r = new Error('invalid function type.')}&#10;        //v.rv = {arg:arg,isPlain:isPlain}; // テスト用ダミー&#10;      }&#10;      return v.rv;&#10;    };&#10;    console.log(`${v.whois} step ${v.step} end.`);&#10;&#10;    v.step = 3.2; // 処理分岐用関数を実行&#10;    v.rv = v.eq.response(e.parameter,v.branch);&#10;    console.log(`${v.whois} step ${v.step} end.`);&#10;&#10;    v.step = 9; // 終了処理&#10;    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);&#10;&#10;  } catch(e) {&#10;    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;&#10;    console.error(`${e.message}\nv=${stringify(v)}`);&#10;    v.rv = {status:-1,message:e.message};&#10;  } finally {&#10;    return ContentService&#10;    .createTextOutput(JSON.stringify(v.rv,null,2))&#10;    .setMimeType(ContentService.MimeType.JSON);&#10;  }&#10;}" />
+        </outline>
+        <outline text="class encryptedQueryServer extends encryptedQuery">
+          <outline text="メンバ" _note="本項は導出項目のみ。CL/SV共通&lt;a href=&quot;https://workflowy.com/#/7567bf629d85&quot;&gt;メンバ&lt;/a&gt;、constructorの&lt;a href=&quot;https://workflowy.com/#/0f40403814ce&quot;&gt;引数&lt;/a&gt;は除く。&#10;">
+            <outline text="id {number} 要求元のユーザ識別子" />
+            <outline text="user {Object} 要求元アカウントのユーザ情報オブジェクト" />
+            <outline text="tables {Object} 範囲名をメンバ名とする複数テーブル情報のオブジェクト" />
+          </outline>
+          <outline text="constructor()">
+            <outline text="概要">
+              <outline text="config, arg, 既定値(v.default)をマージ、メンバとしてthisに保存(super())" />
+              <outline text="accountsシートが未作成なら作成(⇒&lt;a href=&quot;https://workflowy.com/#/2913661920c7&quot;&gt;定義&lt;/a&gt;)" />
+              <outline text="logシートが未作成なら作成(⇒&lt;a href=&quot;https://workflowy.com/#/3dccb0fdd2b4&quot;&gt;定義&lt;/a&gt;)" />
+              <outline text="tablesで定義されているテーブルをSingleTableインスタンスとしてメンバ化" />
+              <outline text="サーバ側鍵ペアが未生成なら作成、DocumentPropertiesに保存" _note="v.step = 1.1; // 鍵ペアの作成&#10;v.password = createPassword();&#10;if( v.password instanceof Error ) throw v.password;&#10;v.key = cryptico.generateRSAKey(v.password,this.bits);&#10;&#10;v.step = 1.2; // オブジェクトv.configに各種設定値をセット&#10;v.config = {&#10;keyGenerate: Date.now(),&#10;SPkey: cryptico.publicKeyString(v.key),&#10;SSkey: JSON.stringify(v.key.toJSON()),  // 文字列化された秘密鍵&#10;};&#10;&#10;v.step = 2; // DocumentPropertiesへの保存&#10;PropertiesService.getDocumentProperties().setProperty('config',JSON.stringify(v.config));&#10;" />
+            </outline>
+            <outline text="引数 : 以下のメンバを持つオブジェクト">
+              <outline text="config {Object} DocumentPropertiesに保存されていた内容" />
+              <outline text="accountSheetName {string}='accounts' ユーザ情報のシート名" />
+              <outline text="logSheetName{string}='log' ログのシート名" />
+              <outline text="tables {Object} 範囲名をメンバ名とする複数テーブル情報のオブジェクト">
+                <outline text="range {string} 対象データ範囲のA1記法。1シート1テーブルとなっていない場合、範囲を特定するために使用。1シート1テーブルならシート名" />
+                <outline text="pKey {string}='id' 一意キー項目名。ログ等、追加のみで書き換えを前提としない場合以外は必須。複合キーは不可" />
+                <outline text="CPkey {string}='CPkey' CPkeyを格納する欄名。accountシート用" />
+                <outline text="trial {string}='trial' 試行情報を格納する欄名" />
+                <outline text="role {string}='role' 役割を格納する欄名" />
+                <outline text="1 Backlink">
+                  <outline text="constructor()の引数Obj.&lt;a href=&quot;https://workflowy.com/#/752c37c55bd4&quot;&gt;tables&lt;/a&gt;" />
+                </outline>
+              </outline>
+              <outline text="mail {Object} パスコード通知メール関係の定義">
+                <outline text="subject {string}='パスコード通知'" />
+                <outline text="body {string}='パスコードは以下の通りです\n\n::passcode::' - メール本文(非html)。パスコード設定箇所は`::passcode::`をプレースホルダとする" />
+                <outline text="sender {string} メール送信者名" />
+              </outline>
+              <outline text="branch {Object} 分岐先関数の定義" _note="ex.{append:{func:()=&amp;gt;{..},auth:{admin:true,guest:false}}&#10;append/update/deleteはargで無指定ならメソッドをconstructorでセット(arg優先)&#10;">
+                <outline text="func {Function} 分岐先関数" />
+                <outline text="auth {Object} role毎に分岐先関数実行に必要な権限の有無を定義" />
+              </outline>
+              <outline text="role {string} user.func毎に定義された、テーブルへのアクセス権限" _note="{役割名:{範囲名:権限},..}のJSON。以下は例&#10;role = {&#10;  admin: {auth1:true, auth2:true, boardRead:true,boardWrite:true...},&#10;  guest: {auth1:true, auth2:true, boardRead:true,boardWrite:false,...},&#10;}&#10;【旧版】&#10;role = {&#10;  admin: {accounts:'rw',log:'rw',board:'rw',summary:'rw'},&#10;  staff: {accounts: 'rw',log:'rw',board:'rw',summary:'r'},&#10;  supporter: {log:'w',board:'rw',summary:'r'},&#10;  participant: {board:'r',summary:'r'},&#10;  guest: {board:'r'},&#10;}&#10;" />
+              <outline text="1 Backlink">
+                <outline text="メンバ" _note="本項は導出項目のみ。CL/SV共通&lt;a href=&quot;https://workflowy.com/#/7567bf629d85&quot;&gt;メンバ&lt;/a&gt;、constructorの&lt;a href=&quot;https://workflowy.com/#/0f40403814ce&quot;&gt;引数&lt;/a&gt;は除く。&#10;" />
+              </outline>
+            </outline>
+            <outline text="戻り値 : Error or インスタンス" />
+          </outline>
+          <outline text="front() : encryptedQueryClientからの要求に基づく処理を行い、結果を戻す">
+            <outline text="概要">
+              <outline text="ユーザ情報を取得、メンバに格納(&lt;a href=&quot;http://this.id&quot;&gt;this.id&lt;/a&gt;, this.user)" />
+              <outline text="暗号化されていた場合は復号(this.decToken)" />
+              <outline text="実行権限のチェック" _note="※&lt;a href=&quot;https://workflowy.com/#/078054b626eb&quot;&gt;result&lt;/a&gt;参照">
+                <outline text="accountsシート登録情報に基づくチェック" />
+                <outline text="token有りの場合のチェック" />
+              </outline>
+              <outline text="分岐先関数を呼び出し" />
+              <outline text="戻り値Objに分岐先関数の処理結果、lastSync以降の差分を設定" />
+              <outline text="logへの記録" />
+              <outline text="返信用&lt;a href=&quot;https://workflowy.com/#/43b4edef5965&quot;&gt;token&lt;/a&gt;の作成(this.encToken)" _note="token.responseTimeの追加設定、token.lastSyncの更新" />
+            </outline>
+            <outline text="引数" _note="以下のメンバを持つオブジェクト">
+              <outline text="id {number} accountsシート上の主キー" />
+              <outline text="token {string} 以下のメンバを持つオブジェクトを暗号化＋署名した文字列。未認証の場合undefined">
+                <outline text="requestTime {number} クライアント側での発信時刻(UNIX時刻)" />
+                <outline text="responseTime {number} サーバ側での返信時刻(UNIX時刻)" />
+                <outline text="branch {string} 要求処理名(=this.branchのラベル)。ex.&quot;auth1&quot;" />
+                <outline text="lastSync {number} 前回同期日時" />
+                <outline text="2 Backlinks">
+                  <outline text="&lt;a href=&quot;https://workflowy.com/#/43b4edef5965&quot;&gt;token&lt;/a&gt; {Object}" />
+                  <outline text="返信用&lt;a href=&quot;https://workflowy.com/#/43b4edef5965&quot;&gt;token&lt;/a&gt;の作成(this.encToken)" _note="token.responseTimeの追加設定、token.lastSyncの更新" />
+                </outline>
+              </outline>
+              <outline text="data {string} 要求処理(メソッド)に渡す引数オブジェクトのJSON" />
+              <outline text="sync {boolean} trueならlastSync以降の差分を要求" />
+              <outline text="2 Backlinks">
+                <outline text="encryptedQueryServer.front()への&lt;a href=&quot;https://workflowy.com/#/dd958d471b6a&quot;&gt;引数&lt;/a&gt;を作成" />
+                <outline text="引数" _note="以下のメンバを持つオブジェクト。参考：encryptedQueryServer.front()の&lt;a href=&quot;https://workflowy.com/#/dd958d471b6a&quot;&gt;引数&lt;/a&gt;" />
+              </outline>
+            </outline>
+            <outline text="戻り値">
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/43b4edef5965&quot;&gt;token&lt;/a&gt; {Object}" />
+              <outline text="result {number}" _note="          0: 正常(エラー項目無し)&#10;&#10;// accountシート登録情報に基づくチェック&#10;2^ 0 =    1: idがユーザ一覧(accountシート)に不存在&#10;2^ 1 =    2: メールアドレス未登録&#10;2^ 2 =    4: roleが未登録&#10;2^ 3 =    8: 指定分岐先関数の実行権限無し&#10;2^ 4 =   16: アカウント凍結中&#10;2^ 5 =   32: 有効期間始期未登録&#10;2^ 6 =   64: 有効期間終期未登録&#10;2^ 7 =  128: アカウントの有効期間外&#10;2^ 8 =  256: 要求処理(arg.token.branch)の実行権限無し&#10;&#10;// 以下、token有りの場合&#10;2^16 =  65,536: 復号失敗(SPkeyが不適切)&#10;2^17 = 131,072: CPkeyが未登録&#10;2^18 = 262,144: 不適切な署名(CPkey不一致)&#10;2^19 = 524,228: 最終ログイン日時から一定以上経過(lastLogin+validPeriod&amp;gt;Date.now())&#10;　※クライアント側鍵ペアの有効期間チェックは本項で代替する&#10;">
+                <outline text="2 Backlinks">
+                  <outline text="result {number} front()の処理結果。&lt;a href=&quot;https://workflowy.com/#/078054b626eb&quot;&gt;result&lt;/a&gt;参照" />
+                  <outline text="実行権限のチェック" _note="※&lt;a href=&quot;https://workflowy.com/#/078054b626eb&quot;&gt;result&lt;/a&gt;参照" />
+                </outline>
+              </outline>
+              <outline text="message {string} エラーメッセージ" />
+              <outline text="data {Object} 要求処理メソッドからの戻り値(JSON)。結果コード等を含む" />
+              <outline text="log {Object[]} 前回同期日時以降の&lt;a href=&quot;https://workflowy.com/#/3dccb0fdd2b4&quot;&gt;&quot;log&quot;シート&lt;/a&gt;行データのJSON">
+                <outline text="1 Backlink">
+                  <outline text="request()の戻り値オブジェクトの&lt;a href=&quot;https://workflowy.com/#/764e6d8b282a&quot;&gt;log {Object[]} 前回同期日時以降の&quot;log&quot;シート行データのJSON&lt;/a&gt;" />
+                </outline>
+              </outline>
+              <outline text="1 Backlink">
+                <outline text="doPostでfront()を呼び出し、&lt;a href=&quot;https://workflowy.com/#/72b8e229c963&quot;&gt;戻り値&lt;/a&gt;を取得" />
+              </outline>
+            </outline>
+          </outline>
+          <outline text="auth1() : パスコードメールを送信" _note="クライアント側の処理はencryptedQueryClient.authorize()「&lt;a href=&quot;https://workflowy.com/#/a4a6dbaf2b81&quot;&gt;概要&lt;/a&gt;」参照">
+            <outline text="概要" _note="front()でアカウント登録や実行権限のチェックは済んでいるので、auth1でのチェックはパスコード有効期限のみ行う。&#10;">
+              <outline text="前回パスコード発行後、パスコードの有効期間(passcodeValidityPeriod)以内なら以降の処理はスキップ" />
+              <outline text="パスコード生成" _note="this.user[v.sheet.trial].passcode = Math.floor(Math.random() * (10 ** v.conf.passcodeDigit));&#10;this.user[v.sheet.trial].created = v.now;" />
+              <outline text="メール送信" _note="v.draft = GmailApp.createDraft(&#10;  this.user[v.mail.recipient], // 宛先&#10;  v.mail.subject, // ex.'[連絡]校庭キャンプ2024 パスコード',&#10;  v.mail.body.replaceAll(/::passcode::/g,&#10;    ('0'.repeat(v.conf.passcodeDigit)+this.user[v.sheet.trial].passcode).slice(-v.conf.passcodeDigit)),&#10;  {name: v.mail.sender}, // ex.'下北沢小おやじの会'。HTMLメールならhtmlBody要素で追加指定&#10;);&#10;GmailApp.getDraft(v.draft.getId()).send();&#10;console.log(v.whois+'.'+v.step+': Mail Remaining Daily Quota:'&#10;  + MailApp.getRemainingDailyQuota());&#10;" />
+              <outline text="accountsシートの試行情報(trial)を書き換え" _note="v.dObj = {};&#10;v.dObj[v.sheet.trial] = JSON.stringify(this.user[v.sheet.trial]);&#10;v.dObj[v.sheet.CPkey] = arg.CPkey;&#10;v.dObj[v.sheet.auth] = this.user[v.sheet.auth];&#10;vlog(v,'dObj');&#10;v.r = arg.master.update(v.dObj,{where:o=&amp;gt;o[&lt;a href=&quot;http://v.sheet.id&quot;&gt;v.sheet.id&lt;/a&gt;]==v.entryNo});&#10;vlog(v,'r');&#10;if( v.r instanceof Error ) throw v.r;&#10;" />
+            </outline>
+            <outline text="引数">
+              <outline text="CPkey {string} クライアント側公開鍵" />
+            </outline>
+            <outline text="戻り値">
+              <outline text="result {number}" _note="0: 処理成功(パスコード通知メールを新規発行)&#10;1: 処理成功(パスコード通知メールは10分以内なので発行省略)&#10;9: システム、その他エラー。message参照&#10;" />
+              <outline text="message {string} エラーメッセージ。正常終了ならundefined" />
+            </outline>
+          </outline>
+          <outline text="auth2() : 入力されたパスコードの検証">
+            <outline text="概要">
+              <outline text="パスコードの検証">
+                <outline text="パスコードの有効期間内" />
+                <outline text="パスコードが一致" />
+              </outline>
+              <outline text="クライアント側初期テーブル用データの作成" _note="trialはクライアント側に渡さないよう削除。logシートは授受対象外&#10;" />
+              <outline text="accountsシートのtrial,lastSyncの書き換え" />
+            </outline>
+            <outline text="引数">
+              <outline text="passcode {number} クライアント側で入力されたパスコード" />
+            </outline>
+            <outline text="戻り値">
+              <outline text="result {number}" _note="0: 処理成功(パスコード一致)&#10;1: パスコード生成から10分以上経過、もう一度auth1からやり直し&#10;2: パスコード不一致(再試行可)&#10;3: パスコード不一致(再試行不可、凍結に移行)&#10;9: システム、その他エラー。message参照&#10;" />
+              <outline text="message {string} エラーメッセージ。正常終了ならundefined" />
+              <outline text="tables {Object} クライアント側初期テーブル用データの作成" _note="{領域名:以下メンバを持つオブジェクト}形式">
+                <outline text="constructor()の引数Obj.&lt;a href=&quot;https://workflowy.com/#/752c37c55bd4&quot;&gt;tables&lt;/a&gt;" />
+                <outline text="header {string[]} ヘッダ項目名のリスト。空欄不可" />
+                <outline text="data {Object[]} 行データオブジェクトの一次元配列" />
+                <outline text="2 Backlinks">
+                  <outline text="&lt;a href=&quot;https://workflowy.com/#/561b163cd0d7&quot;&gt;クライアント側テーブル用データ&lt;/a&gt;" />
+                  <outline text="&lt;a href=&quot;https://workflowy.com/#/561b163cd0d7&quot;&gt;クライアント側初期テーブル用データ&lt;/a&gt;の構成" />
+                </outline>
+              </outline>
+              <outline text="1 Backlink">
+                <outline text="auth2の&lt;a href=&quot;https://workflowy.com/#/5ed89bf06f52&quot;&gt;戻り値&lt;/a&gt;に基づきデータをセット" />
+              </outline>
+            </outline>
+            <outline text="v.1.0.0 source" _note="/** auth2: 入力されたパスコードを検証、正当なら全ユーザ情報を返す&#10; * @param {Object} arg&#10; * ----- auth2特有設定 -----&#10; * @param {string|number} arg.passcode - 入力されたパスコード&#10; * ----- auth1,2共通 -----&#10; * @param {number} arg.entryNo - ユーザID&#10; * @param {SingleTable} arg.master - ユーザ情報シートのオブジェクト&#10; * @param {Object.&amp;lt;string,any&amp;gt;} arg.user - ユーザ情報&#10; * @param {Object} arg.conf - 設定値&#10; * @param {number} [arg.conf.bits=1024] - RSA鍵長。クライアント/サーバ両方に適用&#10; * @param {number} [arg.conf.maxTrial=3] - 最大試行回数(パスコード入力)&#10; * @param {number} [arg.conf.passcodeValidityPeriod=600000] - パスコードの有効期間。ミリ秒&#10; * @param {number} [arg.conf.expire=172800000] - クライアント側鍵の有効期間。既定値48時間&#10; * @param {number} [arg.conf.freezing=3600000] - 連続失敗した場合の凍結期間。ミリ秒。既定値1時間&#10; * @param {number} [arg.conf.authFlag=2] - auth1/auth2を実行可能な権限フラグ&#10; * @param {number} [arg.conf.passcodeDigit=6] - パスコードの桁数&#10; * @param {Object} arg.sheet - シート関係情報&#10; * @param {string} &lt;a href=&quot;http://arg.sheet.id&quot;&gt;arg.sheet.id&lt;/a&gt;='entryNo' - ユーザを特定するキーの欄名&#10; * @param {string} arg.sheet.CPkey='CPkey' - CPkeyを格納する欄名&#10; * @param {string} arg.sheet.trial='trial' - 試行情報を格納する欄名&#10; * @param {string} arg.sheet.auth='authority' - ユーザ権限を格納する欄名&#10; * &#10; * &#10; * &#10; * @param {string|number} arg.entryNo - ユーザID&#10; * @param {string|number} arg.passcode - 入力されたパスコード&#10; * @param {number} arg.expire - 有効期間(ミリ秒)&#10; * @param {SingleTable} master - ユーザ情報シートのオブジェクト&#10; * @returns &#10; * &#10; * なおIDに該当するユーザがシートに登録されているかは、前段階のencryptedQuery.response()内で検証されているため割愛。&#10; * &#10; * **パスコード正当性判断基準**&#10; * &#10; * - パスコード生成から10分以内&#10; * - パスコードが正しい&#10; * &#10; * **戻り値のデータ形式**&#10; * &#10; * - rv {Object}&#10; *   - status {number} 1:正当 0:不当だが再試行可 -1〜-8:不当、再試行不可 -9:システムエラー&#10; *   - message {string} エラーメッセージ(エラー時のみ)&#10; *   - header {string[]} 欄名の一覧&#10; *   - data {Object.&amp;lt;string,any&amp;gt;} 全ユーザ情報(master全行の{欄名:値})&#10; */&#10;function auth2(arg){&#10;  const v = {whois:'auth2',step:0,rv:{status:1},entryNo:Number(arg.entryNo),now:Date.now()};&#10;  console.log(`${v.whois} start.\narg=${stringify(arg)}`);&#10;  try {&#10;&#10;    v.step = 1; // パスコードの形式検証&#10;    if( isNaN(arg.passcode) ){&#10;      v.rv.status = 0;&#10;      v.rv.message = 'パスコードが数値ではありません';&#10;    } else {&#10;      v.passcode = Number(arg.passcode);&#10;      vlog(v,'passcode');&#10;&#10;      v.step = 2; // 有効期限の検証&#10;      arg.user[arg.sheet.trial] = JSON.parse(arg.user[arg.sheet.trial]);&#10;      vlog(arg.user,'trial',v);&#10;      if( (v.now - arg.user[arg.sheet.trial].created) &amp;gt; arg.conf.passcodeValidityPeriod ){&#10;        v.rv.status = -2;&#10;        v.rv.message = `パスコードの有効期限(${Math.round(arg.conf.passcodeValidityPeriod/60000)}分)が切れています`&#10;      } else {&#10;        v.step = 3; // パスコードの一致検証&#10;        if( arg.user[arg.sheet.trial].passcode === v.passcode ){&#10;          // OKの場合、スタッフ名簿とarg.masterシート全件を戻り値に追加&#10;          v.staff = new SingleTable('スタッフ名簿');&#10;          Object.assign(v.rv,{&#10;            status: 1,&#10;            header: arg.master.header,&#10;            data: JSON.parse(JSON.stringify(arg.master.data)),&#10;            staff: JSON.parse(JSON.stringify(v.staff.data)),&#10;            expire: v.now + arg.expire,&#10;          });&#10;          v.rv.data.forEach(x =&amp;gt; delete x.trial); // trial情報は削除&#10;        } else {&#10;          v.step = 4; // 再試行可否判断&#10;          v.rv.message = 'パスコードが一致しませんでした';&#10;          if( arg.user[arg.sheet.trial].result &amp;lt;= arg.conf.maxTrial ){&#10;            v.rv.status = 0;&#10;          } else {&#10;            v.rv.status = -3;&#10;            v.rv.message += `\n連続${arg.conf.maxTrial}回パスコード不一致のため、アカウントが凍結されます。`&#10;            + `\nシステム管理者に凍結解除を依頼するか、${Math.round(arg.conf.freezing/60000)}分以上の間隔を置いて再試行してください。`;&#10;          }&#10;        }&#10;      }&#10;    }&#10;    vlog(v,'rv');&#10;&#10;    (()=&amp;gt;{  v.step = 5; // シートのtrial欄を更新&#10;&#10;      v.step = 5.1; // trial情報を更新&#10;      arg.user[arg.sheet.trial].result = v.rv.status &amp;gt; 0 ? 0 : (arg.user[arg.sheet.trial].result + 1);&#10;      arg.user[arg.sheet.trial].log.unshift({&#10;        timestamp: v.now,&#10;        enterd   : arg.passcode,&#10;        status   : v.rv.status,&#10;      });&#10;&#10;      v.step = 5.2; // シートの試行情報を書き換え&#10;      v.dObj = {};&#10;      v.dObj[arg.sheet.trial] = JSON.stringify(arg.user[arg.sheet.trial]);&#10;      v.r = arg.master.update(v.dObj,{where:o=&amp;gt;o[&lt;a href=&quot;http://arg.sheet.id&quot;&gt;arg.sheet.id&lt;/a&gt;]==v.entryNo});&#10;      if( v.r instanceof Error ) throw v.r;&#10;&#10;    })();&#10;&#10;    v.step = 9; // 終了処理&#10;    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);&#10;&#10;  } catch(e) {&#10;    v.rv.status = -9; // システムエラーは status = -9&#10;    v.rv.message = e.message;&#10;    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;&#10;    console.error(`${e.message}\nv=${stringify(v)}`);&#10;  } finally {&#10;    return v.rv;&#10;  }&#10;}" />
+          </outline>
+          <outline text="append() : シートに新規レコードを追加" _note="更新系の処理は以下の手順で行う。&#10;①ローカル側に対象と更新データを渡す&#10;②対象と更新データをサーバ側に投げる(requestを呼び出す)&#10;③サーバ側更新結果をローカルのDBに反映">
+            <outline text="概要">
+              <outline text="autonumber" />
+              <outline text="pKeyが既に存在する場合はエラー" _note="一度戻してローカル側でupdateが必要な処理か判断させる" />
+            </outline>
+            <outline text="引数" />
+            <outline text="戻り値" />
+          </outline>
+          <outline text="update() : シートの既存レコードを更新">
+            <outline text="概要" />
+            <outline text="引数">
+              <outline text="append {boolean}=false true:既存レコードに存在しない場合は追加する" />
+            </outline>
+            <outline text="戻り値" />
+          </outline>
+          <outline text="delete() : シートの既存レコードを物理削除">
+            <outline text="概要" />
+            <outline text="引数" />
+            <outline text="戻り値" />
+          </outline>
+          <outline text="encB64() : 日本語文字列を含め、base64にエンコード">
+            <outline text="source" _note="/** encB64: 日本語文字列を含め、base64にエンコード&#10;  * @param {string} parts - 変換する日本語文字列&#10;  * @returns {string} base64エンコード文字列&#10;  */&#10;encB64(text){&#10;  return Utilities.base64Encode(text, Utilities.Charset.UTF_8);&#10;}" />
+          </outline>
+          <outline text="decB64() : base64を日本語文字列にデコード">
+            <outline text="source" _note="/** decB64: base64を日本語文字列にデコード&#10;  * @param {string} text - base64文字列&#10;  * @param {string} charset='UTF-8'&#10;  * @returns {string} 復号された日本語文字列&#10;  */&#10;decB64(text, charset='UTF-8') {&#10;  return Utilities.newBlob(Utilities.base64Decode(text, Utilities.Charset.UTF_8)).getDataAsString();&#10;}" />
+          </outline>
+        </outline>
+      </outline>
+      <outline text="ゴミ箱">
+        <outline text="setup() : DocumentPropertiesに当該Prjで使用する設定情報をセット" _note="上記「DocumentPropertiesの構成」に記載した項目の他、encryptedQuery以外のクラス・関数で使用する項目を含む。&#10;">
+          <outline text="【未完】source" _note="/** setup: DocumentPropertiesに設定情報を保存&#10; * - 【プロジェクト毎にソースを修正】して使用のこと&#10; * - Qiita [crypticoでPure JavaScriptによる公開鍵暗号を用いるメモ](&lt;a href=&quot;https://qiita.com/miyanaga/items/8692d0742a49fb37a6da&quot;&gt;https://qiita.com/miyanaga/items/8692d0742a49fb37a6da&lt;/a&gt;)&#10; */&#10;function setup(){&#10;  const v = {whois:'setup',step:0,rv:null,conf:{}};&#10;  console.log(`${v.whois} start.`);&#10;  try {&#10;&#10;    // step.1 各種設定値をv.configにセット&#10;&#10;    v.step = 1.1; // 鍵ペアの作成&#10;    v.password = createPassword();&#10;    if( v.password instanceof Error ) throw v.password;&#10;    v.bits = 1024;&#10;    v.key = cryptico.generateRSAKey(v.password,v.bits);&#10;&#10;    v.step = 1.2; // オブジェクトv.configに各種設定値をセット&#10;    v.config = {&#10;      keyGenerate: Date.now(),&#10;      keyLength: v.bits,&#10;      SPkey: cryptico.publicKeyString(v.key),&#10;      SSkey: JSON.stringify(v.key.toJSON()),  // 文字列化された秘密鍵&#10;    };&#10;&#10;    v.step = 2; // DocumentPropertiesへの保存&#10;    PropertiesService.getDocumentProperties().setProperty('config',JSON.stringify(v.config));&#10;&#10;    v.step = 3; // 保存内容の確認、終了処理&#10;    console.log(`${v.whois} normal end.\n${PropertiesService.getDocumentProperties().getProperty('config')}`);&#10;&#10;  } catch(e) {&#10;    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;&#10;    console.error(`${e.message}\nv=${stringify(v)}`);&#10;  }&#10;}" />
+        </outline>
+      </outline>
+    </outline>
+  </body>
+</opml>
