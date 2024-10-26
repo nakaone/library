@@ -39,8 +39,9 @@ tmp="$prj/tmp"; mkdir -p $tmp
 # 1. pipe.jsの作成
 # ----------------------------------------------
 log "1";
-#sed -e "s/^/  /g" $src/constructor.js > $tmp/constructor.js
+chmod 644 $prj/pipe.js
 cat $prj/proto.js | awk 1 | \
 $embed -prj:$prj -lib:$lib -tmp:$tmp > $prj/pipe.js
+chmod 444 $prj/pipe.js
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"

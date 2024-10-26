@@ -7,6 +7,7 @@
  * @param {number} [opt.depth=0] - 現在処理中の文書の階層
  * @param {number} [opt.parentLevel=0] - 挿入指定文字列が置かれた位置の親要素のレベル
  * @param {boolean} [opt.useRoot=false] - 子文書ルート使用指定<br>
+ * @param {string} [opt.prefix=''] - 行頭の空白文字列(インデント)
  *   - true : 子文書のルート要素を使用する<br>
  *   - false : 子文書のルート要素は使用しない(呼出元の要素をルート要素として扱う)
  * @returns {string}
@@ -14,7 +15,7 @@
 function embedRecursively(content,opt={}){
   const v = {whois:'embedRecursively',rv:'',step:0,fs:require('fs'),
     titleEx: /^(#+)\s+(.+)$/, // タイトル行の正規表現定義
-    repEx: /(<!--|\/\/|\/\*)::(.+)::.*/,  // 置換対象文字列の正規表現定義
+    repEx: /^(.*?)(<!--|\/\/|\/\*)::(.+)::.*/,  // 置換対象文字列の正規表現定義
   };
   try {
 
@@ -25,6 +26,7 @@ function embedRecursively(content,opt={}){
     if( !opt.hasOwnProperty('depth') ) opt.depth = 0;
     if( !opt.hasOwnProperty('parentLevel') ) opt.parentLevel = 0;
     if( !opt.hasOwnProperty('useRoot') ) opt.useRoot = false;
+    if( !opt.hasOwnProperty('prefix') ) opt.prefix = '';
 
     v.step = 1.2; // 階層を判定、一定以上なら処理中断
     if( opt.depth > opt.maxDepth ) throw new Error('maxDepth over');
@@ -76,17 +78,18 @@ function embedRecursively(content,opt={}){
           v.opt = Object.assign({},opt,{
             depth:opt.depth+1,
             parentLevel:v.level,
-            useRoot:false
+            useRoot:false,
+            prefix: v.embed[1],
           });
           v.step = 3.2; // 「::(パス)::」か「::(メモ[+])::(パス)::」形式か判定
-          v.m1 = v.embed[2].match(/^(.+?)::(.+)$/);
+          v.m1 = v.embed[3].match(/^(.+?)::(.+)$/);
           if( v.m1 ){
             v.step = 3.21; //「::(メモ[+])::(パス)::」形式
             v.path = v.m1[2];
             v.opt.useRoot = v.m1[1].match(/\+$/) ? true : false;
           } else {
             v.step = 3.22; // ファイルパスのみの指定
-            v.path = v.embed[2];
+            v.path = v.embed[3];
           }
           v.step = 3.3; // パスの中の変数を実値に置換
           v.m2 = v.path.match(/\$(.+?)\//g);
@@ -101,10 +104,10 @@ function embedRecursively(content,opt={}){
           v.step = 3.5; // 被挿入文書を再帰呼出
           v.r = embedRecursively(v.child, v.opt);
           if( v.r instanceof Error ) throw v.r;
-          v.rv += v.r + '\n';
+          v.rv += opt.prefix + v.r;
         } else {
           v.step = 4; // 非タイトル・非挿入指定行
-          v.rv += v.line + '\n';
+          v.rv += opt.prefix + v.line + '\n';
         }
       }
     }

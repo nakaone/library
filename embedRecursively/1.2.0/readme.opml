@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<opml version="2.0">
+  <head>
+    <ownerEmail>
+      ena.kaon@gmail.com
+    </ownerEmail>
+  </head>
+  <body>
+    <outline text="embedRecursively 1.2.0">
+      <outline text="はじめに">
+        <outline text="開発の動機">
+          <outline text="core.jsとpipe.jsの一本化" />
+          <outline text="JavsScriptソースのclass挿入時、メソッドの1行目の空白が無視されるバグ修正" />
+          <outline text="挿入指定文字列前のインデントを有効化" />
+        </outline>
+        <outline text="呼出元の挿入指示文字列" _note="- 「::(パス)::」 ⇒ 該当部分をパスで指定されたファイルの内容で置換&#10;- 「::(メモ[+])::(パス)::」 ⇒ 子文書の内容についてのメモ。あくまで備忘であり、使用されない。&amp;lt;br&amp;gt;&#10;  末尾に'+'が無い場合、子文書のルート要素を削除する。&amp;lt;br&amp;gt;&#10;  '+'が有った場合、子文書のルート要素を挿入場所の1レベル下の要素として挿入する。&#10;&#10;「ルート要素」とは、被挿入文書の最高レベルの章題が単一だった場合、その章題。&#10;複数だった場合はルート要素とは看做さない。&#10;" />
+        <outline text="使用例" _note="1. 挿入指定文字列でメモ有り・子文書ルート指定あり&#10;&amp;lt;!--::test11+::$test/&lt;a href=&quot;http://ooChild.md&quot;&gt;ooChild.md&lt;/a&gt;::--&amp;gt;&#10;&#10;2. 挿入指定文字列でメモ有り・子文書ルート指定なし&#10;&amp;lt;!--::test21::$test/&lt;a href=&quot;http://ooChild.md&quot;&gt;ooChild.md&lt;/a&gt;::--&amp;gt;&#10;&#10;3. 挿入指定文字列でメモなし・子文書ルート指定あり&#10;&amp;lt;!--::+::$test/&lt;a href=&quot;http://ooChild.md&quot;&gt;ooChild.md&lt;/a&gt;::--&amp;gt;&#10;&#10;4. 挿入指定文字列でパスのみ指定&#10;&amp;lt;!--::$test/&lt;a href=&quot;http://ooChild.md&quot;&gt;ooChild.md&lt;/a&gt;::--&amp;gt;" />
+        <outline text="変更履歴">
+          <outline text="rev 1.0.0 2024/03/29 初版" />
+          <outline text="rev 1.1.0 2024/04/08">
+            <outline text="ルート要素削除指定、レベルシフト指定を追加" />
+          </outline>
+        </outline>
+      </outline>
+      <outline text="処理概要">
+        <outline text="事前準備">
+          <outline text="引数の既定値設定" />
+          <outline text="階層を判定、一定以上なら処理中断" />
+          <outline text="処理対象テキストを行毎に分割、v.lineに格納" />
+          <outline text="ルート要素の有無、レベルを判定" />
+        </outline>
+        <outline text="処理対象テキストを一行毎に処理">
+          <outline text="MD文書のタイトル行だった場合(ex. ## hoge)">
+            <outline text="親文書の挿入箇所のレベルに&quot;#&quot;の数を加えてタイトル行として出力" />
+          </outline>
+          <outline text="挿入指定行だった場合(ex. //::hoge.js::)" />
+          <outline text="いずれでもない場合" />
+        </outline>
+      </outline>
+      <outline text="引数">
+        <outline text="content {string} 処理対象テキスト" />
+        <outline text="opt">
+          <outline text="maxDepth {number}=10 最深階層(無限ループ防止)" />
+          <outline text="encoding {string}='utf-8' 入力ファイルのエンコード" />
+          <outline text="parentLevel {number}=0 挿入指定文字列が置かれた位置の親要素のレベル" />
+          <outline text="useRoot {boolean}=false 子文書ルート使用指定" _note="true : 子文書のルート要素を使用する&#10;false : 子文書のルート要素は使用しない(呼出元の要素をルート要素として扱う)&#10;" />
+        </outline>
+      </outline>
+      <outline text="戻り値 {string} 埋込後の処理対象テキスト" />
+    </outline>
+  </body>
+</opml>
