@@ -3,9 +3,11 @@ function test(){
   console.log(`${v.whois} start.`);
   try {
 
-    v.rv = new SingleTable({
-      range: 'target',
-      opt: {
+    // --------------------------------------------
+    // constructor関係
+    // --------------------------------------------
+    if( true ){ // rawからのシート作成、logシートの作成
+      v.rv = new SingleTable('target',{
         primaryKey: 'D3',
         raw: [
           ['','','タイトル','','','','',''],
@@ -19,8 +21,8 @@ function test(){
           ['','','','','','','','dummy'],
           ['','','','','','','',''],
         ]
-      }
-    });
+      });
+    }
     
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
