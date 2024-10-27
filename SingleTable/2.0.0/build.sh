@@ -33,6 +33,7 @@ function log(){  # 1.4 ログメッセージ出力関数
 prj="$lib/SingleTable/2.0.0"
 test="$prj/test"
 src="$prj/src"
+test="$prj/test"
 prjName="SingleTable"
 tmp="$prj/tmp"; mkdir -p $tmp
 
@@ -40,8 +41,14 @@ tmp="$prj/tmp"; mkdir -p $tmp
 # 1. core.jsの作成
 # ----------------------------------------------
 log "1";
-sed -e "s/^/  /g" $src/constructor.js > $tmp/constructor.js
 cat $src/proto.js | awk 1 | \
 $embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $prj/core.js
+
+# ----------------------------------------------
+# 2. test.jsの作成
+# ----------------------------------------------
+log "2";
+cat $test/proto.js | awk 1 | \
+$embed -prj:$prj -src:$src -lib:$lib -test:$test -tmp:$tmp > $prj/test.js
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"

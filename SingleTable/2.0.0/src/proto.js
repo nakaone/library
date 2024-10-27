@@ -2,5 +2,5 @@
  * - [仕様書](https://workflowy.com/#/91d73fc35411)
  */
 class SingleTable {
-  //::$tmp/constructor.js::
+  //::$src/constructor.js::
 }
