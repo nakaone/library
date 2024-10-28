@@ -3,12 +3,81 @@ function test(){
   console.log(`${v.whois} start.`);
   try {
 
-    // テスト用シートの削除
+    // ③appendテスト　※テスト②を先行、シート生成のこと
+    v.st = new SingleTable('master',{
+      primaryKey: 'entryNo',
+      cols: [
+        {name:'タイムスタンプ',type:'Date'},
+        {name:'メールアドレス',type:'string',unique:true},
+        {name:'申込者氏名',type:'string'},
+        {name:'申込者カナ',type:'string'},
+        {name:'申込者の参加',type:'string'},
+        {name:'宿泊、テント',type:'string'},
+        {name:'引取者氏名',type:'string'},
+        {name:'参加者01氏名',type:'string'},
+        {name:'参加者01カナ',type:'string'},
+        {name:'参加者01所属',type:'string'},
+        {name:'参加者02氏名',type:'string'},
+        {name:'参加者02カナ',type:'string'},
+        {name:'参加者02所属',type:'string'},
+        {name:'参加者03氏名',type:'string'},
+        {name:'参加者03カナ',type:'string'},
+        {name:'参加者03所属',type:'string'},
+        {name:'参加者04氏名',type:'string'},
+        {name:'参加者04カナ',type:'string'},
+        {name:'参加者04所属',type:'string'},
+        {name:'参加者05カナ',type:'string'},
+        {name:'参加者05氏名',type:'string'},
+        {name:'参加者05所属',type:'string'},
+        {name:'緊急連絡先',type:'string'},
+        {name:'ボランティア募集',type:'string'},
+        {name:'備考',type:'string'},
+        {name:'キャンセル',type:'string'},
+        {name:'authority',type:'number'},
+        {name:'CPkey',type:'string'},
+        {name:'entryNo',type:'number',auto_increment:[1,2]},
+        {name:'trial',type:'string'},
+        {name:'editURL',type:'string'},
+        {name:'entryTime',type:'Date'},
+        {name:'receptionist',type:'number'},
+        {name:'fee00',type:'string',default:'未入場'},
+        {name:'fee01',type:'string',default:'未入場'},
+        {name:'fee02',type:'string',default:'未入場'},
+        {name:'fee03',type:'string',default:'未入場'},
+        {name:'fee04',type:'string',default:'未入場'},
+        {name:'fee05',type:'string',default:'未入場'},
+        {name:'memo',type:'string'},
+      ],
+    });
+    // 単純な追加(自動採番、既定値の設定)
+    v.rv = v.st.append({'タイムスタンプ':toLocale(new Date())});
+
+    // メールアドレスの重複 : {name:'メールアドレス',type:'string',unique:true},
+    //v.rv = v.st.append({'タイムスタンプ':toLocale(new Date()),'メールアドレス':'nakaone.kunihiro@gmail.com'});
+
+    // 複数レコードの一括追加 : {name:'entryNo',type:'number',auto_increment:[1,2]},
+
+    // シートまたはログが使用中
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+
+/*
+    // --------------------------------------------------------------------
+    // ②テスト用シートの削除
     v.spread = SpreadsheetApp.getActiveSpreadsheet();
     v.sheet = v.spread.getSheetByName('master');
     if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
 
-    // constructor: dataにてテストデータ生成
+    // ②constructor: dataにてテストデータ生成
     v.rv = new SingleTable('master',{
       primaryKey: 'entryNo',
       cols: [
@@ -56,24 +125,13 @@ function test(){
       data: [{"タイムスタンプ":"2024-10-06T10:51:06.427Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"島津　邦浩","申込者カナ":"シマヅ　クニヒロ","申込者の参加":"スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊、テント":"宿泊しない","authority":2,"CPkey":"jZiM1isJ+1AZoVZ9NnWTvCoeghCm+FY05eb6jhz8wpT3DwqJbNnszW8PWDd3sq0N5mjN/Nshh+RGGrdkm7CC+sO32js+wm1YmYGr0FMaFxvMBDrWzyJ7qrPI4unbx2IkrPkXSmSEbw91n/LOu0x7br106XeJ9TXJbJS16rV0nzs=","entryNo":1,"trial":"{\"passcode\":920782,\"created\":1728874149915,\"result\":0,\"log\":[{\"timestamp\":1728874165893,\"enterd\":920782,\"status\":1},{\"timestamp\":1728768131564,\"enterd\":46757,\"status\":1},{\"timestamp\":1728768105236,\"enterd\":46747,\"status\":0},{\"timestamp\":1728731037700,\"enterd\":456044,\"status\":1},{\"timestamp\":1728711888082,\"enterd\":485785,\"status\":1},{\"timestamp\":1728709250994,\"enterd\":425862,\"status\":1},{\"timestamp\":1728701179073,\"enterd\":259177,\"status\":1},{\"timestamp\":1728646863938,\"enterd\":530072,\"status\":1},{\"timestamp\":1728646839729,\"enterd\":null,\"status\":1}]}","editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfKJ5aUz4h6lTGlz6c3NjPyWMnViVQxHqwRkCnzJsRKfz9ULQ/viewform?edit2=2_ABaOnuePpXliGgMlVVUYiSKgwX6SXBNrnwozwTMF09Ml1py7Ocp1N7_w5F7uqf52Ak63zBE"},{"タイムスタンプ":"2024-09-15T03:47:03.578Z","メールアドレス":"via1315r@yahoo.co.jp","申込者氏名":"檜垣　素直","申込者カナ":"ヒガキ　スナオ","申込者の参加":"参加予定(宿泊なし)","宿泊、テント":"宿泊しない","引取者氏名":"宿泊予定なので不要","参加者01氏名":"檜垣　若菜","参加者01カナ":"ヒガキ　ワカナ","参加者01所属":"1年生","緊急連絡先":"09013357002","ボランティア募集":"できる","備考":"食事以外でも、お手伝い出来る事があれば。","authority":1,"entryNo":2,"editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfKJ5aUz4h6lTGlz6c3NjPyWMnViVQxHqwRkCnzJsRKfz9ULQ/viewform?edit2=2_ABaOnudWLvuoT6Wq0Hu-4tqFl5OyTK-Z7EwdMDEQGS1jKJVIa41Dh8nNJPtpFyPu8cyZYGo"},{"タイムスタンプ":"2024-09-15T04:51:37.346Z","メールアドレス":"kousuke.murata4690@gmail.com","申込者氏名":"阿部　晃祐","申込者カナ":"アベ　コウスケ","申込者の参加":"参加予定(宿泊あり)","宿泊、テント":"宿泊する(テントあり)","引取者氏名":"宿泊予定なので不要","参加者01氏名":"阿部　涼","参加者01カナ":"アベ　リョウ","参加者01所属":"6年生","ボランティア募集":"できる","authority":1,"entryNo":3,"editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfKJ5aUz4h6lTGlz6c3NjPyWMnViVQxHqwRkCnzJsRKfz9ULQ/viewform?edit2=2_ABaOnufKjD-xj5FN0GnTNIILVeJVwYJajCP8bZphy1zyleVl8UDLWqzUjDDFWZf7uMA0qtk"},{"タイムスタンプ":"2024-09-15T05:18:01.813Z","メールアドレス":"nakaone2001@gmail.com","申込者氏名":"島津　弘子","申込者カナ":"シマヅ　ヒロコ","申込者の参加":"参加予定(宿泊なし)","宿泊、テント":"宿泊しない","参加者01氏名":"島津　悠奈","参加者01カナ":"シマヅ　ユウナ","参加者01所属":"4年生","authority":2,"CPkey":"k5lfKMj3ybfMF6jocHPln98lLJIBIxKrrpLc4RhPenBIEg6OfgdXYQAVh907SoCg0MEBazhWic2oFaKNFJu9pa4prXWvTzYjRWw5XkmC9a7AdNQ0judVMATii7Xqp6drowisY6+Rul2zwrF2UKY8epoYP8ZkX9RyH6OFyglYQL8=","entryNo":4,"trial":"{\"passcode\":65698,\"created\":1729076868102,\"result\":0,\"log\":[{\"timestamp\":1728729400367,\"enterd\":119192,\"status\":1},{\"timestamp\":1728708771586,\"enterd\":254267,\"status\":1},{\"timestamp\":1728708701693,\"enterd\":254263,\"status\":0},{\"timestamp\":1728708634458,\"enterd\":null,\"status\":1}]}","editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfKJ5aUz4h6lTGlz6c3NjPyWMnViVQxHqwRkCnzJsRKfz9ULQ/viewform?edit2=2_ABaOnueGXR29gyuz_kc4UMghOrIa_iNPhrkHdrW4zVI8KFW5aB2jsVCtjq79aasCFBWgTvI"}],
     });
 
-    v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-
-/*
-    // テスト用シートの削除
+    // --------------------------------------------------------------------
+    // ①テスト用シートの削除
     v.spread = SpreadsheetApp.getActiveSpreadsheet();
     v.sheet = v.spread.getSheetByName('target');
     if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
 
-    // constructor: シートイメージで生成、シート≠範囲
+    // ①constructor: シートイメージで生成、シート≠範囲
     v.rv = new SingleTable('target',{
       primaryKey: 'D3',
       raw: [
@@ -360,12 +418,18 @@ class SingleTable {
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
   
-      v.step = 1; // 引数がオブジェクトなら配列に変換
+      // ------------------------------------------------
+      v.step = 1; // 事前準備
+      // ------------------------------------------------
+      // 引数がオブジェクトなら配列に変換
       if( !Array.isArray(records) ) records = [records];
   
+      // ------------------------------------------------
       v.step = 2; // 追加レコードを順次チェック
+      // ------------------------------------------------
       for( v.i=0 ; v.i<records.length ; v.i++ ){
   
+        v.step = 2.1; // ログオブジェクトのプロトタイプ生成
         v.log = {
           uuid: Utilities.getUuid(),
           timestamp: toLocale(new Date()),
@@ -375,17 +439,20 @@ class SingleTable {
           message: [],
           diff: JSON.stringify(records[v.i]),
         };
+        vlog(v,['log'],v);
   
-        v.step = 2.1; // pkey or uniqueの単一値チェック
+        v.step = 2.2; // pkey or uniqueの単一値チェック
         this.unique.cols.forEach(col => {
+          console.log(`l.399 this.unique.map[${col}]=${stringify(this.unique.map[col])}, records[${v.i}]=${stringify(records[v.i])}`);
           if( records[v.i].hasOwnProperty(col) ){
             if( this.unique.map[col].indexOf(records[v.i][col]) >= 0 ){
               v.log.message.push(`unique error: col="${col}", value="${records[v.i][col]}"`);
             }
           }
         });
+        vlog(v,['log'],v);
   
-        v.step = 2.2; // auto_increment属性の項目について採番
+        v.step = 2.3; // auto_increment属性の項目について採番
         this.auto_increment.cols.forEach(col => {
           // あるべき値を計算
           v.tobe = this.auto_increment.map[col].max + this.auto_increment.map[col].val;
@@ -404,86 +471,129 @@ class SingleTable {
           }
         });
   
-  
+        v.step = 2.4; // エラー有無によって変わる値の設定
         if( v.log.message.length === 0 ){ // エラーが無かった場合
   
-          v.step = 2.3; // defaultの値をセット
+          v.step = 2.41; // 追加する行オブジェクトに既定値を補足(this.defaultObjの値をセット)
           Object.assign(records[v.i],this.defaultObj);
   
+          v.step = 2.42; // ログオブジェクトに結果設定
           v.log.result = true;
           v.log.after = JSON.stringify(records[v.i]);
   
+          v.step = 2.43; // 追加するレコードをシートイメージ(二次元配列)に追加
+          for( v.j=0,v.row=[] ; v.j<this.header.length ; v.j++ ){
+            v.row.push(records[v.i][this.header[v.j]] || null);
+          }
+          v.sheet.push(v.row);
+  
+          v.step = 2.44; // 戻り値への格納
           v.rv.success.push(records[v.i]);
   
-        } else {  // エラーが有った場合
+        } else { // エラーが有った場合
   
+          v.step = 2.45; // ログオブジェクトに結果設定
           v.log.result = false;
+  
+          v.step = 2.46; // 戻り値への格納
           v.rv.failure.push(records[v.i]);
         }
-        // エラーの有無にかかわらず、ログに追加
-        v.log.push(v.rv.log);
+  
+        v.step = 2.5; // エラーの有無にかかわらず、ログに追加
+        v.rv.log.push(v.log);
       }
+      vlog(v,['rv','log'],v);
   
-      v.step = 3; // レコードの追加
-      v.step = 2.5; // 追加するレコードをシートイメージ(二次元配列)に追加
-      for( v.j=0,v.row=[] ; v.j<this.header.length ; v.j++ ){
-        v.row.push(records[this.header[v.j]] || null);
-      }
-      v.sheet.push(v.row);
-  
-      v.step = 3.1; // テーブルに排他制御をかける
-      v.lock = LockService.getDocumentLock();
-      v.cnt = this.maxTrial;
-      while( v.cnt > 0 ){
-        if( v.lock.tryLock(this.interval) ){
-  
-          v.step = 3.2; // 追加実行
-          this.sheet.getRange(
-            this.bottom + 1,
-            this.left,
-            v.rv.success.length,
-            this.header.length
-          ).setValues(v.sheet);
-  
-          v.step = 3.3; // テーブルの排他制御を解除、末端行番号を書き換え
-          v.lock.releaseLock();
-          this.bottom += v.sheet.length;
-          v.cnt = -1;
-        } else {
-          v.cnt--;
+      // ------------------------------------------------
+      v.step = 3; // 正常レコードのシートへの追加
+      // ------------------------------------------------
+      if( v.sheet.length > 0 ){
+        v.step = 3.1; // テーブルに排他制御をかける
+        v.lock = LockService.getDocumentLock();
+        v.cnt = this.maxTrial;
+        while( v.cnt > 0 ){
+          if( v.lock.tryLock(this.interval) ){
+    
+            v.step = 3.2; // 追加実行
+            vlog(v,['cnt','sheet'],v);
+            this.sheet.getRange(
+              this.bottom + 1,
+              this.left,
+              v.rv.success.length,
+              this.header.length
+            ).setValues(v.sheet);
+    
+            v.step = 3.3; // テーブルの排他制御を解除、末端行番号を書き換え
+            v.lock.releaseLock();
+            this.bottom += v.sheet.length;
+            v.cnt = -1;
+          } else {
+            v.step = 3.4; // 排他できなかった場合、試行回数を-1
+            v.cnt--;
+          }
         }
+    
+        v.step = 3.5; // リトライしても排他不能だった場合の処理
+        if( v.cnt === 0 ){
+          // 成功レコードを全て失敗に変更
+          v.rv.failure = [...v.rv.success,...v.rv.failure];
+          v.rv.success = [];
+    
+          v.rv.log.forEach(log => {
+            log.result = false;
+            log.message.push(`lock error`);
+            delete log.after;
+          });
+          throw new Error(`could not get lock ${this.maxTrial} times.`);
+        }
+    
+        v.step = 3.6; // this.data/rawに追加
+        // ※シートへの書き込み後に実行のこと
+        this.data = [...this.data,...v.rv.success];
+        this.raw = [...this.raw,...v.sheet];
       }
   
-      // リトライしても排他不能だった場合、成功レコードを全て失敗に変更
-      if( v.cnt === 0 ){
   
-        v.rv.failure = [...v.rv.success,...v.rv.failure];
-        v.rv.success = [];
-  
-        v.rv.log.forEach(log => {
-          log.result = false;
-          log.message.push(`lock error`);
-          delete log.after;
-        });
-        throw new Error(`could not get lock ${this.maxTrial} times.`);
-      }
-  
-  
+      // ------------------------------------------------
       v.step = 4; // ログに記録
+      // ------------------------------------------------
       v.rv.log.forEach(log => {
-        // エラーメッセージを配列から文字列に変換
+  
+        v.step = 4.1; // エラーメッセージを配列から文字列に変換
         if( log.message.length === 0 ){
           delete log.message;
         } else {
           log.message = log.message.join('\n');
         }
+        log.result = log.result ? 'OK' : 'NG';
   
-        // オブジェクトからシートイメージに変換
+        v.step = 4.2; // オブジェクトからシートイメージに変換
         v.row = [];
         this.log.header.forEach(col => {
-          v.row.push(log[col] || null);
+          // log.result(boolean) === false だと空欄になる。∵falseと判定されているため
+          // [falsyな値](https://mosa-architect.gitlab.io/frontend-techs/js/variable/falsy-values.html)
+          // 0: 数字のゼロ
+          // "": 長さゼロの文字列
+          // false: booleanのfalse
+          // null: null(明示的なnull)
+          // undefined: 未定義(または何も代入されていない状態)
+          // NaN: 数字ではない
+          if( log[col] ){
+            v.value = log[col];
+          } else {
+            if( log[col] === 0 ) v.value = '0';
+            else if( log[col] === '' ) v.value = '';
+            else if( log[col] === false ) v.value = 'false';
+            else if( log[col] === null ) v.value = 'null';
+            else if( log[col] === undefined ) v.value = 'undefined';
+            else if( isNaN(log[col]) ) v.value = 'NaN';
+            else v.value = null;
+          }
+          v.row.push(v.value);
         });
+        v.tmp = log; vlog(v,['tmp','row'],v);
   
+        v.step = 4.3; // ログに行追加
         this.log.sheet.appendRow(v.row);
       });
   
