@@ -3,4 +3,5 @@
  */
 class SingleTable {
   //::$src/constructor.js::
+  //::$src/append.js::
 }
