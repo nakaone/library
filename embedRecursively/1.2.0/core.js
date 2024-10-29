@@ -79,7 +79,7 @@ function embedRecursively(content,opt={}){
             depth:opt.depth+1,
             parentLevel:v.level,
             useRoot:false,
-            prefix: v.embed[1],
+            prefix: (opt.prefix || '') + v.embed[1],
           });
           v.step = 3.2; // 「::(パス)::」か「::(メモ[+])::(パス)::」形式か判定
           v.m1 = v.embed[3].match(/^(.+?)::(.+)$/);
