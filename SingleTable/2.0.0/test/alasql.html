@@ -1,0 +1,40 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>prototype</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--link rel="stylesheet" href="style.css"-->
+<style type="text/css">/*::CSS::*/</style>
+<!--::CDN::-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.3.2/alasql.min.js" integrity="sha512-aLCnYphqnhhuL0uDFIOSQoD0b2ezNaccMQ6OLGmoxW0cL97b05lOpNx7a31A01xnc5Kf09O0y0jl0Tem1psBSQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+<!--::body::-->
+</body>
+<script type="text/javascript">
+//::script::
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+    //::onload::
+
+    v.sql = 'create table tt (str string, num number, bool boolean, dt Date, js JSON);'
+    + 'insert into tt (str,num,bool,dt,js) values ("abc",123,true,"1965/9/5",{"a":10});'
+    + 'insert into tt (str,num,bool,dt,js) values (null,null,null,"12:34",{"b":10,"c":30});'
+    // undefined, NaN -> NG, 12:34 -> invalid date
+    + 'select * from tt;'
+    ;
+    v.r = alasql(v.sql);
+    console.log(v.r);
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+</html>

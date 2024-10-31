@@ -3,6 +3,48 @@ function test(){
   console.log(`${v.whois} start.`);
   try {
 
+    // ①テスト用シートの削除
+    v.spread = SpreadsheetApp.getActiveSpreadsheet();
+    v.sheet = v.spread.getSheetByName('target');
+    if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+
+    // ①constructor: シートイメージで生成、シート≠範囲
+    v.rv = new SingleTable('target!C3:F',{
+      primaryKey: 'D3',
+      raw: [
+        ['','','タイトル','','','','',''],
+        ['','','','','','','',''],
+        ['','','C3','D3','E3','F3','',''],
+        ['','','','','','','',''],
+        ['','','5','4','','','',''],
+        ['','','5','6','7','8','',''],
+        ['','','4','3','hoge','fuga','',''],
+        ['','','','','','','',''],
+        ['','','','','','','','dummy'],
+        ['','','','','','','',''],
+      ]
+    });
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
+
+/*
+    // メールアドレスの重複 : {name:'メールアドレス',type:'string',unique:true},
+    //v.rv = v.st.append({'タイムスタンプ':toLocale(new Date()),'メールアドレス':'nakaone.kunihiro@gmail.com'});
+
+    // 複数レコードの一括追加 : {name:'entryNo',type:'number',auto_increment:[1,2]},
+
+    // シートまたはログが使用中
+
+    // --------------------------------------------------------------------
     // ③appendテスト　※テスト②を先行、シート生成のこと
     v.st = new SingleTable('master',{
       primaryKey: 'entryNo',
@@ -52,30 +94,12 @@ function test(){
     // 単純な追加(自動採番、既定値の設定)
     v.rv = v.st.append({'タイムスタンプ':toLocale(new Date())});
 
-    // メールアドレスの重複 : {name:'メールアドレス',type:'string',unique:true},
-    //v.rv = v.st.append({'タイムスタンプ':toLocale(new Date()),'メールアドレス':'nakaone.kunihiro@gmail.com'});
-
-    // 複数レコードの一括追加 : {name:'entryNo',type:'number',auto_increment:[1,2]},
-
-    // シートまたはログが使用中
-
-    v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
-}
-
-/*
-    // --------------------------------------------------------------------
     // ②テスト用シートの削除
     v.spread = SpreadsheetApp.getActiveSpreadsheet();
     v.sheet = v.spread.getSheetByName('master');
     if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+
+    // --------------------------------------------------------------------
 
     // ②constructor: dataにてテストデータ生成
     v.rv = new SingleTable('master',{
@@ -132,12 +156,12 @@ function test(){
     if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
 
     // ①constructor: シートイメージで生成、シート≠範囲
-    v.rv = new SingleTable('target',{
+    v.rv = new SingleTable('target!C3:F',{
       primaryKey: 'D3',
       raw: [
         ['','','タイトル','','','','',''],
         ['','','','','','','',''],
-        ['','','','D3','E3','','',''],
+        ['','','C3','D3','E3','F3','',''],
         ['','','','','','','',''],
         ['','','5','4','','','',''],
         ['','','5','6','7','8','',''],
