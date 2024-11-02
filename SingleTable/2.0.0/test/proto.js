@@ -7,21 +7,18 @@ function test(){
     v.spread = SpreadsheetApp.getActiveSpreadsheet();
     v.sheet = v.spread.getSheetByName('target');
     if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+    v.sheet = v.spread.getSheetByName('log');
+    if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
 
     // ①constructor: シートイメージで生成、シート≠範囲
     v.rv = new SingleTable('target!C3:F',{
       primaryKey: 'D3',
       raw: [
-        ['','','タイトル','','','','',''],
-        ['','','','','','','',''],
-        ['','','C3','D3','E3','F3','',''],
-        ['','','','','','','',''],
-        ['','','5','4','','','',''],
-        ['','','5','6','7','8','',''],
-        ['','','4','3','hoge','fuga','',''],
-        ['','','','','','','',''],
-        ['','','','','','','','dummy'],
-        ['','','','','','','',''],
+        ['string','boolean','date','number'],
+        ['a',undefined,'1965/9/5',-1],
+        ['tRue',null,'12:34',Infinity],
+        ['{"a":10}',false,Date.now(),0],
+        ['d',true,new Date(),1.23e+4],
       ]
     });
 

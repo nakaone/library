@@ -3,5 +3,7 @@
  */
 class SingleTable {
   //::$src/constructor.js::
+  //::$src/insertSheet.js::
+  //::$src/objectizeNote.js::
   //::$src/append.js::
 }

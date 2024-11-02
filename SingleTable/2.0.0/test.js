@@ -7,21 +7,18 @@ function test(){
     v.spread = SpreadsheetApp.getActiveSpreadsheet();
     v.sheet = v.spread.getSheetByName('target');
     if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+    v.sheet = v.spread.getSheetByName('log');
+    if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
 
     // ①constructor: シートイメージで生成、シート≠範囲
     v.rv = new SingleTable('target!C3:F',{
       primaryKey: 'D3',
       raw: [
-        ['','','タイトル','','','','',''],
-        ['','','','','','','',''],
-        ['','','C3','D3','E3','F3','',''],
-        ['','','','','','','',''],
-        ['','','5','4','','','',''],
-        ['','','5','6','7','8','',''],
-        ['','','4','3','hoge','fuga','',''],
-        ['','','','','','','',''],
-        ['','','','','','','','dummy'],
-        ['','','','','','','',''],
+        ['string','boolean','date','number'],
+        ['a',undefined,'1965/9/5',-1],
+        ['tRue',null,'12:34',Infinity],
+        ['{"a":10}',false,Date.now(),0],
+        ['d',true,new Date(),1.23e+4],
       ]
     });
 
@@ -188,17 +185,28 @@ class SingleTable {
         return rv;
       },
       default:{ // メンバの初期値、既定値
-        primaryKey:null, cols:null, raw:null, data:null, header:null,
-        account:null, defaultObj:{},maxTrial:5, interval:2500,
-        unique:{cols:[],map:{}},
-        auto_increment:{cols:[],map:{}},
-        log:{
-          sheetName: 'log',
-          primaryKey: 'uuid',
-          cols: [
-            {name:'uuid',type:'string',note:'ログの一意キー項目'},
-            {name:'timestamp',type:'string',note:'更新日時。yyyy-MM-ddThh:mm:ss.nnnZ形式'},
-            {name:'account',type:'string',note:'更新者の識別子'},
+        // 未設定かを判断するため、初期値は原則nullとする
+  
+        // 引数以外の、内部で計算・設定されるメンバ
+        range: range, // {string} A1記法の範囲指定。引数range
+        sheetName: null, // {string} シート名。this.rangeから導出
+        spread: SpreadsheetApp.getActiveSpreadsheet(), // {Spreadsheet} スプレッドシートオブジェクト(=ファイル。シートの集合)
+        sheet:null, // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
+        header:null, // {string[]} 項目名の配列。ヘッダ行
+        notes:null, //  {string[]} ヘッダ行各項目のメモ。項目定義。
+        top:null, //  {number} ヘッダ行の行番号(自然数)
+        left:null, //  {number} データ領域左端の列番号(自然数)
+        right:null, //  {number} データ領域右端の列番号(自然数)
+        bottom:null, //  {number} データ領域下端の行番号(自然数)
+        log:{ // {Object} 更新履歴シートの定義
+          sheetName: opt.logSheetName || 'log', // {string}='log' 更新履歴シート名。
+          sheet:null, // {Sheet} 更新履歴シートオブジェクト
+          primaryKey:'id', // {string}='id' 一意キー項目名
+          header: null, // {string[]} 更新履歴シートの項目名リスト
+          cols: [ // {Object[]} 更新履歴シートの項目定義
+            {name:'id',type:'UUID',note:'ログの一意キー項目'},
+            {name:'timestamp',type:'Date',note:'更新日時。yyyy-MM-ddThh:mm:ss.nnnZ形式'},
+            {name:'account',type:'string|number',note:'更新者の識別子'},
             {name:'range',type:'string',note:'更新対象となった範囲名(テーブル名)'},
             {name:'result',type:'boolean',note:'true:追加・更新が成功'},
             {name:'message',type:'string',note:'エラーメッセージ'},
@@ -206,7 +214,41 @@ class SingleTable {
             {name:'after',type:'JSON',note:'更新後の行データオブジェクト'},
             {name:'diff',type:'JSON',note:'追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式'},
           ],
-        }, 
+        },
+        unique:{cols:[],map:{}}, // {Object} primaryKeyおよびunique属性が付いた項目の一覧
+        auto_increment:{cols:[],map:{}}, // {Object} auto_increment属性が付いた項目の最大値を管理するオブジェクト
+        defaultObj:{},  // {Object} 既定値項目で構成されたオブジェクト
+        colsDef: [  // {Object[]} 項目定義オブジェクト(colsの要素)のメンバ一覧(定義内容)
+          {name:'name',type:'string',note:'項目名'},
+          {name:'type',type:'string',note:'データ型。string|number|boolean|Date|JSON|UUID'},
+          {name:'format',type:'string',note:'表示形式。日付の場合のみ有効'},
+          {name:'options',type:'any[]',note:'取り得る選択肢(配列)。ex.["未入場","既収","未収","無料"]'},
+          {name:'default',type:'any',note:'既定値'},
+          {name:'unique',type:'boolean',note:'列内で一意な値とする場合はtrue'},
+          {name:'auto_increment',type:'{bloolean|null|number|number[]}=false',note:'自動採番の指定'
+            + '\nnull ⇒ 自動採番しない'
+            + '\nboolean ⇒ true:自動採番する(基数=1,増減値=1)、false:自動採番しない'
+            + '\nnumber ⇒ 自動採番する(基数=指定値,増減値=1)'
+            + '\nnumber[] ⇒ 自動採番する(基数=添字0,増減値=添字1)'},
+          {name:'suffix',type:'string',note:'"not null"等、上記以外のSQLフィールド制約'},
+          {name:'note',type:'string',note:'本項目に関する備考'},
+        ],
+        colDefNote: [ // {string[]} シート上で項目定義メモを編集する際の注意事項
+          '項目定義以外の部分(コメント)は「//」をつける(単一行のみ。複数行の「/* 〜 */」は非対応)',
+          '各項目はカンマでは無く改行で区切る(視認性の向上)',
+          'JSON.stringifyでの処理を前提とした書き方。各項目をjoin(',')、両端に"{〜}"を加えてJSON.parseしたらオブジェクトになるように記載',
+        ],
+  
+        // 引数optのメンバとして与えられる項目
+        primaryKey:null, // {string}=null 一意キー項目名
+        cols:null, // {Object[]} 項目定義。内容は「colDefs」参照
+        raw:null, // {any[][]}=[] シート未作成の場合にセットするシートイメージ。添字=0はヘッダ
+        data:null, // {Object.<string,any>[]}=[] シート未作成の場合にセットする行オブジェクトの配列
+        outputLog:true, // {boolean}=true ログ出力しないならfalse
+        logSheetName:null, // {string}='log' 更新履歴シート名
+        account:null, // {number|string} 更新者のアカウント
+        maxTrial:5, // {number}=5 ロックされていた場合の最大試行回数
+        interval:2500, // {number}=2500 ロックされていた場合の試行間隔(ミリ秒)
       },
       getDataRange:null, getValues:null, getNotes:null,
     };
@@ -222,8 +264,6 @@ class SingleTable {
       Object.keys(v.opt).forEach(x => this[x] = v.opt[x]);
   
       v.step = 1.2; // 導出項目の計算
-      this.spread = SpreadsheetApp.getActiveSpreadsheet();
-      this.range = range;
       this.log.header = this.log.cols.map(x => x.name); // 更新履歴シートの項目名一覧
   
       v.step = 1.3; // 引数'range'から対象範囲絞り込み
@@ -255,7 +295,7 @@ class SingleTable {
         v.getValues = v.getDataRange.getValues();
         v.getNotes  = v.getDataRange.getNotes();
   
-        v.step = 2.12; // 範囲確定
+        v.step = 2.12; // 範囲確定。A1記法とデータ範囲のどちらか小さい方
         this.right = Math.min(this.right, v.getValues[0].length);
         this.bottom = Math.min(this.bottom, v.getValues.length);
   
@@ -305,11 +345,11 @@ class SingleTable {
             // this.rawとthis.dataが両方与えられていた場合、整合性確保のためdataは破棄
             this.data = [];
             for( v.r=1 ; v.r<this.raw.length ; v.r++ ){
-              this.data[v.r] = {};
+              this.data[v.r-1] = {};
               for( v.c=0 ; v.c<this.raw[0].length ; v.c++ ){
                 if( this.raw[v.r][v.c] !== undefined ){
                   // 対象セルが0,null,false等のfalsyな値でもセットされるよう、undefined以外ならコピーする
-                  this.data[v.r][this.raw[0][v.c]] = this.raw[v.r][v.c];
+                  this.data[v.r-1][this.raw[0][v.c]] = this.raw[v.r][v.c];
                 }
               }
             }
@@ -361,44 +401,17 @@ class SingleTable {
           for( v.i=0 ; v.i<this.raw[0].length ; v.i++ ){
             this.cols[v.i] = {
               name: this.raw[0][v.i],
-              useage: [
-                '- name {string} 項目名',
-                '- type {string} データ型。使用可能なデータ型はAlaSQL"Data Types"に準拠',
-                '- format {string} 表示形式。日付の場合のみ指定',
-                '- options {string} 取り得る選択肢(配列)のJSON表現',
-                '    ex. ["未入場","既収","未収","無料"]',
-                '- default {any} 既定値',
-                '- unique {boolean}=false true:一意な値を持つ',
-                '- auto_increment {bloolean|null|number|number[]}=false 自動採番項目',
-                '    null ⇒ 自動採番しない',
-                '    boolean ⇒ true:自動採番する(基数=1,増減値=1)、false:自動採番しない',
-                '    number ⇒ 自動採番する(基数=指定値,増減値=1)',
-                '    number[] ⇒ 自動採番する(基数=添字0,増減値=添字1)',
-                '- suffix {string} "not null"等、上記以外のSQLのcreate table文のフィールド制約',
-                '- note {string} 本項目に関する備考。create table等では使用しない',
-                '- useage {string} 本メモの記入方法',
-                '',
-                '【注意事項】',
-                '1. 項目定義以外の部分は「//」をつける(「/* 〜 */」は非対応)',
-                '2. 各項目はカンマでは無く改行で区切る(視認性の向上)',
-                '3. JSON.stringifyでの処理を前提とした書き方にする',
-                '   ※各項目をjoin(',')、両端に"{〜}"を加えてJSON.parseしたらオブジェクトになるように記載'
-              ].join('\n'),
             }
           }
         } else {
-  
-          // getNotesからcolsを作成
+          // メモがあればgetNotesからcolsを作成
           v.notes = v.getNotes[this.top-1].slice(this.left-1,this.right);
           for( v.i=0 ; v.i<v.notes.length ; v.i++ ){
-            v.lines = v.notes[v.i].split('\n');
-            for( v.j=0 ; v.j<v.lines.length ; v.j++ ){
-              // コメントは削除
-              if( v.lines[v.j].indexOf('//') >= 0 ){
-                v.lines[v.j] = v.lines[v.j].slice(v.lines[v.j].indexOf('//'));
-              }
-            };
-            this.cols[v.i] = JSON.parse(`{${v.lines.join(',')}}`);
+            v.r = this.objectizeNote(v.notes[v.i]);
+            if( v.r instanceof Error ) throw v.r;
+            v.notes[v.i] = v.r;
+            // name属性はメモでは原則省略されているので、追加しておく
+            v.notes[v.i].name = this.raw[0][v.i];
           }
         }
       }
@@ -406,40 +419,24 @@ class SingleTable {
       // ----------------------------------------------
       v.step = 4; // this.colsからの導出項目の計算
       // ----------------------------------------------
-      v.step = 4.1; // 項目定義メモ(this.notes)の作成
-      if( v.getNotes !== null ){
-        this.notes = v.getNotes[this.top-1].slice(this.left-1,this.right);
-      } else {
-        this.notes = [];
-        // colsからnote作成
-        for( v.i=0 ; v.i<this.cols.length ; v.i++ ){
-          this.notes[v.i] = '';
-          ['name','type','format','options','default','unique','auto_increment','suffix','note','useage'].forEach(x => {
-            if( this.cols[v.i].hasOwnProperty(x) ){
-              this.notes[v.i] += `"${x}": "${this.cols[v.i][x]}"\n`;
-            }
-          });
-        }
-      }
-  
-      v.step = 4.2; // ヘッダ項目一覧(this.header)の作成
+      v.step = 4.1; // ヘッダ項目一覧(this.header)の作成
       this.header = this.cols.map(x => x.name);
   
-      v.step = 4.3; // 項目定義関係の導出項目の計算
+      v.step = 4.2; // 項目定義関係の導出項目の計算
       if( this.primaryKey ) this.unique.cols.push(this.primaryKey);
       this.cols.forEach(col => {
   
-        v.step = 4.31; // append時の既定値Objの作成
+        v.step = 4.21; // append時の既定値Objの作成
         if( col.hasOwnProperty('default') ) this.defaultObj[col.name] = col.default;
   
-        v.step = 4.32; // primaryKeyとunique指定のある項目のリストを作成
+        v.step = 4.22; // primaryKeyとunique指定のある項目のリストを作成
         if( col.unique === true ) this.unique.cols.push(col.name);
   
-        v.step = 4.33; // auto_increment指定のある項目のリストを作成
+        v.step = 4.23; // auto_increment指定のある項目のリストを作成
         if( col.hasOwnProperty('auto_increment') ) this.auto_increment.cols.push(col.name);
       });
   
-      v.step = 4.4; // this.dataをthis.cols.typeに従って属性変更
+      v.step = 4.3; // this.dataをthis.cols.typeに従って属性変更
       // JSON -> オブジェクト化
       // date -> format指定が有れば、指定に沿って文字列化
       // 【不要】colsがあれば、必要に応じてクライアント側で属性変更可能
@@ -447,13 +444,24 @@ class SingleTable {
       // ----------------------------------------------
       v.step = 5; // シートの作成、項目定義メモの作成
       // ----------------------------------------------
-      if( this.sheet === null ){  // シート未作成なら作成
-        this.sheet = this.spread.insertSheet();
-        this.sheet.setName(this.sheetName);
-        this.sheet.getRange(this.top,this.left,this.raw.length,this.header.length).setValues(this.raw);  
-      }
-      if( v.getNotes === null ){  // シート上に項目定義メモが未作成ならthis.notesをセット
-        this.sheet.getRange(this.top,this.left,1,this.header.length).setNotes([this.notes]);  
+      v.r = this.insertSheet({
+        sheetName: this.sheetName,
+        left: this.left,
+        top: this.top,
+        cols: this.cols,
+        rows: this.data,
+      });
+      if( v.r instanceof Error ) throw v.r;
+  
+      // -----------------------------------------
+      v.step = 6; // "log"シート不在なら作成
+      // -----------------------------------------
+      if( this.outputLog === true ){  // ログ出力する場合
+        v.r = this.insertSheet({
+          sheetName: this.log.sheetName,
+          cols: this.log.cols,
+        });
+        if( v.r instanceof Error ) throw v.r;
       }
   
       v.step = 9; // 終了処理
@@ -467,191 +475,150 @@ class SingleTable {
     }
   }
   
-  /*
-  constructor(range,opt={}){
-    const v = {whois:this.constructor.name+'.constructor',step:1,rv:null,default:{
-      primaryKey:null, cols:[], raw:[], data:[], header:[], log:{
-        sheetName: 'log',
-        primaryKey: 'uuid',
-        cols: [
-          {name:'uuid',type:'string',note:'ログの一意キー項目'},
-          {name:'timestamp',type:'string',note:'更新日時。yyyy-MM-ddThh:mm:ss.nnnZ形式'},
-          {name:'account',type:'string',note:'更新者の識別子'},
-          {name:'range',type:'string',note:'更新対象となった範囲名(テーブル名)'},
-          {name:'result',type:'boolean',note:'true:追加・更新が成功'},
-          {name:'message',type:'string',note:'エラーメッセージ'},
-          {name:'before',type:'JSON',note:'更新前の行データオブジェクト'},
-          {name:'after',type:'JSON',note:'更新後の行データオブジェクト'},
-          {name:'diff',type:'JSON',note:'追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式'},
-        ],
-      }, unique:{cols:[],map:{}}, auto_increment:{cols:[],map:{}},account:null, defaultObj:{},
-      maxTrial:5, interval:2500,
-    }};
-    console.log(`${v.whois} start.\nrange(${whichType(range)})=${range}\nopt(${whichType(opt)})=${stringify(opt)}`);
+  /** insertSheet: シートの新規作成＋項目定義メモのセット
+   * @param arg {Object}
+   * @param arg.sheetName {string} - 作成するシート名
+   * @param arg.left=1 {number} - 左端列番号(自然数)
+   * @param arg.top=1 {number} - 上端行番号(自然数)
+   * @param arg.cols {Object[]} - 項目定義オブジェクトの配列
+   * @param [arg.rows] {Array[]|Object[]} - 行データ
+   * @returns {Sheet} 作成されたシートオブジェクト
+   */
+  insertSheet(arg){
+    const v = {whois:this.constructor.name+'.insertSheet',step:0,rv:null,range:null};
+    console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
   
-      // -----------------------------------------
-      // 1. 引数の既定値設定＋メンバ化、導出項目の計算
-      // -----------------------------------------
-      v.step = 1.1; // 引数をメンバ化
-      v.opt = mergeDeeply(opt,v.default);
-      if( v.opt instanceof Error ) throw v.opt;
-      Object.keys(v.opt).forEach(x => this[x] = v.opt[x]);
+      v.step = 1; // 既定値の設定
+      v.arg = mergeDeeply(arg,{sheetName:null,left:1,top:1,cols:null,rows:null});
+      if( v.arg instanceof Error ) throw v.arg;
+      vlog(v,'arg');
   
-      v.step = 1.2; // 導出項目の計算(項目定義関係以外)
-      this.spread = SpreadsheetApp.getActiveSpreadsheet();
-      this.range = range;
-      this.log.header = this.log.cols.map(x => x.name); // 更新履歴シートの項目名一覧
+      v.step = 2; // シートの存否確認、不在なら追加
+      v.rv = this.spread.getSheetByName(v.arg.sheetName);
+      v.addNew = v.rv === null ? true : false;
+      if( v.addNew ){
+        v.step = 2.1; // 新規シートを追加
+        v.rv = this.spread.insertSheet();
+        v.rv.setName(v.arg.sheetName);
   
-      v.step = 1.3; // 項目定義関係の導出項目の計算
-      if( this.primaryKey ) this.unique.cols.push(this.primaryKey);
-      this.cols.forEach(col => {
+        v.step = 2.2; // ヘッダ行の範囲をrangeとして設定
+        v.range = v.rv.getRange(v.arg.top,v.arg.left,1,v.arg.cols.length);
   
-        v.step = 1.31; // append時の既定値Objの作成
-        if( col.hasOwnProperty('default') ) this.defaultObj[col.name] = col.default;
-  
-        v.step = 1.32; // primaryKeyとunique指定のある項目のリストを作成
-        if( col.unique === true ) this.unique.cols.push(col.name);
-  
-        v.step = 1.33; // auto_increment指定のある項目のリストを作成
-        if( col.hasOwnProperty('auto_increment') ) this.auto_increment.cols.push(col.name);
-      });
-  
-      v.step = 1.4; // シート名およびデータ領域の推定
-      // range(対象データ範囲のA1記法)から指定範囲を特定、メンバに保存
-      // ※ この段階では"a2:c"(⇒bottom不明)等、未確定部分が残る可能性あり
-      v.m = range.match(/^'?(.+?)'?!([A-Za-z]*)([0-9]*):?([A-Za-z]*)([0-9]*)$/);
-      if( v.m ){  // rangeがA1記法で指定された場合
-        this.sheetName = v.m[1];
-        this.left = convertNotation(v.m[2]);
-        this.top = v.m[3] ? Number(v.m[3]) : 1;
-        this.right = convertNotation(v.m[4]);
-        this.bottom = v.m[5] ? Number(v.m[5]) : Infinity;
-      } else {    // rangeが非A1記法 ⇒ range=シート名
-        this.sheetName = range;
-        this.top = this.left = 1;
-        this.bottom = this.right = Infinity;
+        v.step = 2.3; // ヘッダ行に項目名をセット
+        v.range.setValues([v.arg.cols.map(x => x.name)]);
       }
   
-      // -----------------------------------------
-      v.step = 2; // 操作対象シートの読み込み
-      // -----------------------------------------
-      //:x:$src/constructor.genSheet.js::
+      v.step = 3; // 項目定義メモの存否確認、不在なら追加
+      if( v.range === null )  // 既存シートならヘッダ行の範囲を取得
+        v.range = v.rv.getRange(v.arg.top,v.arg.left,1,v.arg.cols.length);
+      v.notes = v.range.getNotes();
+      if( v.notes === null ){
   
-      // -----------------------------------------
-      v.step = 3; // 指定有効範囲の特定
-      // -----------------------------------------
-      this.raw = []; this.data = [];  // 引数があっても一度クリア
+        v.step = 3.1; // 項目定義オブジェクトのメンバ一覧を取得
+        v.colsDef = this.colsDef.map(x => x.name);
   
-      v.step = 3.1; // 範囲行・列番号がデータの存在する範囲外だった場合、存在範囲内に変更
-      v.dataRange = this.sheet.getDataRange();
-      v.top = v.dataRange.getRow();
-      v.bottom = v.dataRange.getLastRow();
-      v.left = v.dataRange.getColumn();
-      v.right = v.dataRange.getLastColumn();
-      this.top = this.top < v.top ? v.top : this.top;
-      // 最終行が先頭行以上、または範囲外の場合は存在範囲に変更
-      this.bottom = this.bottom > v.bottom ? v.bottom : this.bottom;
-      this.left = this.left < v.left ? v.left : this.left;
-      this.right = this.right > v.right ? v.right : this.right;
+        v.step = 3.2; // 項目定義編集時の注意事項を作成
+        v.colsDefNote = [''];
+        this.colsDefNote.forEach(l => v.colDefNote.push('// '+l));
+        v.colDefNote = v.colDefNote.join('\n');
   
-      v.step = 3.2; // ヘッダ行番号以下の有効範囲(行)をv.rawに取得
-      v.range = [this.top, this.left, this.bottom - this.top + 1, this.right - this.left + 1];
-      v.raw = this.sheet.getRange(...v.range).getValues();
-  
-      v.step = 3.3; // ヘッダ行と項目定義の突き合わせ
-      if( this.cols.length > 0 ){
-        v.step = 3.31; // 項目定義が存在していた場合
-        // 「シートが存在 and 項目定義が存在 and 項目が不一致」ならエラー
-        if( this.cols.length !== v.raw[0].length ){
-          throw new Error(`ヘッダ行と項目定義の項目数が一致しません\nheader=${stringify(v.raw[0])}\ncols=${stringify(this.cols)}`);
-        } else {
-          for( v.i=0 ; v.i<this.cols.length ; v.i++ ){
-            if( this.cols[v.i].name != v.raw[0][v.i] ){
-              throw new Error(`ヘッダ行と項目定義が一致しません\nheader=${stringify(v.raw[0])}\ncols=${stringify(this.cols)}`);
-            } else {
-              this.header.push(v.raw[0][v.i]);
+        v.step = 3.3; // 個々の項目についてメモ(文字列)を作成
+        v.notes = [];
+        for( v.i=0 ; v.i<v.arg.cols.length ; v.i++ ){
+          v.notes[v.i] = [];
+          for( v.j=0 ; v.j<v.colsDef.length ; v.j++ ){
+            if( v.arg.cols[v.i].hasOwnProperty(v.colsDef[v.j]) ){
+              v.notes[v.i].push(`${v.colsDef[v.j]}: ${v.arg.cols[v.i][v.colsDef[v.j]]}`)
             }
           }
+          v.notes[v.j].push(v.colDefNote);  // 注意事項を追加
+          v.notes[v.j] = v.notes[v.j].join('\n');
         }
-      } else {
-        v.step = 3.32; // 項目定義が不存在の場合
-        // ヘッダ行の空白セルに'ColN'を補完
-        for( v.i=0 ; v.i<v.raw[0].length ; v.i++ ){
-          if( v.raw[0][v.i] === '' ) v.raw[0][v.i] = 'Col' + (v.i+1);
-          this.header.push(v.raw[0][v.i]);
-        }
+        v.range.setNotes([v.notes]);
       }
   
-      v.step = 3.4; // 指定有効範囲の末端行を検索(中間の空行は残すが、末尾の空行は削除)
-      for( v.r=(this.bottom-this.top) ; v.r>=0 ; v.r-- ){
-        if( v.raw[v.r].join('').length > 0 ){
-          this.bottom = this.top + v.r;
-          break;
-        }
-      }
+      v.step = 4; // 新規作成シートの場合、データを追加
+      if( v.addNew && v.arg.rows !== null ){
+        v.sheet = []; // シートイメージ
+        v.header = v.arg.cols.map(x => x.name); // ヘッダ行
   
-      v.step = 3.5; // this.raw/dataにデータをセット
-      this.raw[0] = v.raw[0]; // ヘッダ行
-      for( v.r=1 ; v.r<=(this.bottom-this.top) ; v.r++ ){
-        this.raw.push(v.raw[v.r]);
-        v.o = {};
-        for( v.c=0 ; v.c<this.header.length ; v.c++ ){
-          if( v.raw[v.r][v.c] !== '' ){
-            v.o[this.header[v.c]] = v.raw[v.r][v.c];
+        v.step = 4.1; // 項目の並びが異なる可能性があるので、シートイメージの場合は行オブジェクト化
+        if( whichType(v.arg.rows[0],'Object') ){
+          v.step = 4.11;
+          v.data = v.arg.rows;
+        } else {
+          v.step = 4.12;
+          v.data = [];
+          for( v.i=1 ; v.i<v.arg.rows.length ; v.i++ ){
+            v.row = {};
+            for( v.j=0 ; v.j<v.arg.rows[v.i].length ; v.j++ ){
+              vlog(v,['i','j'])
+              if( v.arg.rows[v.i].hasOwnProperty(v.header[v.j]) ){
+                v.row[v.header[v.j]] = v.arg.rows[v.i][v.j];
+              }
+            }
+            v.data.push(v.row);
           }
         }
-        this.data.push(v.o);
-      }
   
-      // -----------------------------------------
-      v.step = 4; // "log"シート不在なら作成
-      // -----------------------------------------
-      this.log.sheet = this.spread.getSheetByName(this.log.sheetName);
-      if( this.log.sheet === null ){
-        this.log.sheet = this.spread.insertSheet();
-        this.log.sheet.setName(this.log.sheetName);
-  
-        v.name = []; v.note = [];
-        this.log.cols.forEach(x => {
-          v.name.push(x.name);
-          v.note.push(x.note || null);
+        v.step = 4.2; // 行オブジェクトをシートイメージに変換
+        v.data.forEach(row => {
+          v.row = [];
+          Object.keys(row).forEach(key => {
+            v.row[v.header.indexOf(key)] = row[key];
+          });
+          v.sheet.push(v.row);
         });
-        v.range = this.log.sheet.getRange(1,1,1,this.log.cols.length);
-        v.range.setValues([v.name]);
-        v.range.setNotes([v.note]);
   
+        v.step = 4.3; // 作成したシートイメージをセット
+        v.rv.getRange(v.arg.top+1,v.arg.left,v.sheet.length,v.sheet[0].length).setValues(v.sheet);
       }
   
-      // -----------------------------------------
-      // 5. this.data取得後に導出可能になる項目の計算
-      // -----------------------------------------
-      v.step = 5.1; // this.uniqueの作成
-      this.unique.cols.forEach(col => {
-        this.unique.map[col] = this.data.map(x => x[col]);
-      });
-      v.step = 5.2; // this.auto_incrementの作成
-      this.auto_increment.cols.forEach(col => {
-        // null ⇒ 自動採番しない
-        // boolean ⇒ true:自動採番する(基数=1,増減値=1)、false:自動採番しない
-        // number ⇒ 自動採番する(基数=指定値,増減値=1)
-        // number[] ⇒ 自動採番する(基数=添字0,増減値=添字1)
-        v.base = false;
-        v.ai = this.cols.find(x => x.name === col).auto_increment;
-        switch( whichType(v.ai) ){
-          case 'Boolean':
-            if( v.ai ) [v.base,v.val] = [1,1]; break;
-          case 'Number':
-            [v.base,v.val] = [v.ai,1]; break;
-          case 'Array':
-            [v.base,v.val] = [v.ai[0],(v.ai[1] || 1)];
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+  
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+  
+  /** objectizeNote: 項目定義メモをオブジェクト化
+   * @param arg {string} 項目定義メモの文字列
+   * @returns {Object} 項目定義オブジェクト
+   */
+  objectizeNote(arg){
+    const v = {whois:this.constructor.name+'.objectizeNote',step:0,rv:[]};
+    console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
+    try {
+  
+      v.step = 1; // JSON化する際、クォーテーションで囲む必要が無い項目のマップを作成
+      v.quote = {};
+      this.colsDef.forEach(x => {
+        v.type = (x.type || '').toLowerCase();
+        v.quote[x.name] = (v.type === 'number' || v.type === 'boolean') ? false : true;
+      })
+  
+      v.step = 2; // 改行で分割、一行毎にチェック
+      arg.split('\n').forEach(line => {
+        // コメントの削除
+        v.l = line.indexOf('//');
+        if( v.l >= 0 ) line = line.slice(0,v.l);
+  
+        // 「項目名：値」形式の行はメンバとして追加
+        v.m = line.trim().match(/^["']?([a-zA-Z0-9_\$]+)["']?\s*:\s*["']?(.+)["']?$/);
+        if( v.m ){
+          v.rv.push(`"${v.m[1]}":`+(v.quote[v.m[1]] ? `"${v.m[2]}"` : v.m[2]))
         }
-        this.auto_increment.map[col] = {
-          max: Math.max(this.data.map(x => x[col])) || v.base,
-          val: v.val
-        };
       });
-    
+  
+      v.step = 3; // オブジェクト化
+      if( v.rv.length === 0 ) throw new Error(`invalid column definition`);
+      v.rv = JSON.parse(`{${v.rv.join(',')}}`);
+  
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
@@ -662,7 +629,7 @@ class SingleTable {
       return e;
     }
   }
-  */
+  
   /** append: 領域に新規行を追加
    * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
    * @returns {Object} {success:[],failure:[]}形式
