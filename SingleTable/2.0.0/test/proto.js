@@ -3,12 +3,9 @@ function test(){
   console.log(`${v.whois} start.`);
   try {
 
-    // ①テスト用シートの削除
     v.spread = SpreadsheetApp.getActiveSpreadsheet();
     v.sheet = v.spread.getSheetByName('target');
-    if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
-    v.sheet = v.spread.getSheetByName('log');
-    if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+    v.sheet.getRange(3,3,1,1).setNote('type: UUID');
 
     // ①constructor: シートイメージで生成、シート≠範囲
     v.rv = new SingleTable('target!C3:F',{
@@ -40,6 +37,14 @@ function test(){
     // 複数レコードの一括追加 : {name:'entryNo',type:'number',auto_increment:[1,2]},
 
     // シートまたはログが使用中
+
+    // --------------------------------------------------------------------
+    // ①テスト用シートの削除
+    v.spread = SpreadsheetApp.getActiveSpreadsheet();
+    v.sheet = v.spread.getSheetByName('target');
+    if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+    v.sheet = v.spread.getSheetByName('log');
+    if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
 
     // --------------------------------------------------------------------
     // ③appendテスト　※テスト②を先行、シート生成のこと
@@ -171,7 +176,6 @@ function test(){
 */
 
 //::SingleTable::$prj/core.js::
-//::$lib/convertNotation/1.0.0/core.js::
 //::$lib/mergeDeeply/1.1.0/core.js::
 //::$lib/stringify/1.1.1/core.js::
 //::$lib/toLocale/1.1.0/core.js::

@@ -57,7 +57,7 @@ constructor(range,opt={}){
         {name:'suffix',type:'string',note:'"not null"等、上記以外のSQLフィールド制約'},
         {name:'note',type:'string',note:'本項目に関する備考'},
       ],
-      colDefNote: [ // {string[]} シート上で項目定義メモを編集する際の注意事項
+      colsDefNote: [ // {string[]} シート上で項目定義メモを編集する際の注意事項
         '項目定義以外の部分(コメント)は「//」をつける(単一行のみ。複数行の「/* 〜 */」は非対応)',
         '各項目はカンマでは無く改行で区切る(視認性の向上)',
         'JSON.stringifyでの処理を前提とした書き方。各項目をjoin(',')、両端に"{〜}"を加えてJSON.parseしたらオブジェクトになるように記載',
@@ -220,25 +220,26 @@ constructor(range,opt={}){
     // ----------------------------------------------
     if( this.cols === null ){
       this.cols = [];
-      if( v.getNotes === null ){
-        // 両方無し⇒rawから作成
-        for( v.i=0 ; v.i<this.raw[0].length ; v.i++ ){
-          this.cols[v.i] = {
-            name: this.raw[0][v.i],
-          }
-        }
-      } else {
+
+      if( v.getNotes !== null ){  // シートが存在
         // メモがあればgetNotesからcolsを作成
         v.notes = v.getNotes[this.top-1].slice(this.left-1,this.right);
         for( v.i=0 ; v.i<v.notes.length ; v.i++ ){
           v.r = this.objectizeNote(v.notes[v.i]);
+          console.log(`l.407 ${JSON.stringify(v.notes[v.i])}\n-> ${JSON.stringify(v.r)}`)
           if( v.r instanceof Error ) throw v.r;
-          v.notes[v.i] = v.r;
           // name属性はメモでは原則省略されているので、追加しておく
-          v.notes[v.i].name = this.raw[0][v.i];
+          v.r.name = this.raw[0][v.i];
+          this.cols[v.i] = v.r;
+        }
+
+      } else {  // this.colsもシート(v.getNotes)も不在 ⇒ rawから作成
+        for( v.i=0 ; v.i<this.raw[0].length ; v.i++ ){
+          this.cols[v.i] = {name: this.raw[0][v.i]};
         }
       }
     }
+    console.log(`l.419`,JSON.stringify(this.cols))
 
     // ----------------------------------------------
     v.step = 4; // this.colsからの導出項目の計算

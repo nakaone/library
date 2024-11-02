@@ -268,7 +268,7 @@ class SingleTable {
       // JSON -> オブジェクト化
       // date -> format指定が有れば、指定に沿って文字列化
       // 【不要】colsがあれば、必要に応じてクライアント側で属性変更可能
-      
+  
       // ----------------------------------------------
       v.step = 5; // シートの作成、項目定義メモの作成
       // ----------------------------------------------
@@ -563,7 +563,7 @@ class SingleTable {
         v.cnt = this.maxTrial;
         while( v.cnt > 0 ){
           if( v.lock.tryLock(this.interval) ){
-    
+  
             v.step = 3.2; // 追加実行
             vlog(v,['cnt','sheet'],v);
             this.sheet.getRange(
@@ -572,7 +572,7 @@ class SingleTable {
               v.rv.success.length,
               this.header.length
             ).setValues(v.sheet);
-    
+  
             v.step = 3.3; // テーブルの排他制御を解除、末端行番号を書き換え
             v.lock.releaseLock();
             this.bottom += v.sheet.length;
@@ -582,13 +582,13 @@ class SingleTable {
             v.cnt--;
           }
         }
-    
+  
         v.step = 3.5; // リトライしても排他不能だった場合の処理
         if( v.cnt === 0 ){
           // 成功レコードを全て失敗に変更
           v.rv.failure = [...v.rv.success,...v.rv.failure];
           v.rv.success = [];
-    
+  
           v.rv.log.forEach(log => {
             log.result = false;
             log.message.push(`lock error`);
@@ -596,7 +596,7 @@ class SingleTable {
           });
           throw new Error(`could not get lock ${this.maxTrial} times.`);
         }
-    
+  
         v.step = 3.6; // this.data/rawに追加
         // ※シートへの書き込み後に実行のこと
         this.data = [...this.data,...v.rv.success];

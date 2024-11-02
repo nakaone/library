@@ -15,7 +15,6 @@ insertSheet(arg){
     v.step = 1; // 既定値の設定
     v.arg = mergeDeeply(arg,{sheetName:null,left:1,top:1,cols:null,rows:null});
     if( v.arg instanceof Error ) throw v.arg;
-    vlog(v,'arg');
 
     v.step = 2; // シートの存否確認、不在なら追加
     v.rv = this.spread.getSheetByName(v.arg.sheetName);
@@ -33,33 +32,42 @@ insertSheet(arg){
     }
 
     v.step = 3; // 項目定義メモの存否確認、不在なら追加
-    if( v.range === null )  // 既存シートならヘッダ行の範囲を取得
-      v.range = v.rv.getRange(v.arg.top,v.arg.left,1,v.arg.cols.length);
-    v.notes = v.range.getNotes();
-    if( v.notes === null ){
+    // v.range: 項目定義メモを貼付する領域(=ヘッダ行の範囲)
+    v.range = v.rv.getRange(v.arg.top,v.arg.left,1,v.arg.cols.length);
+    // v.notes: setNotes()用のメモの配列
+    v.notes = v.addNew ? [] : v.range.getNotes();
+    // v.colsDefNote: 項目定義編集時の注意事項
+    v.colsDefNote = [''];
+    this.colsDefNote.forEach(l => v.colsDefNote.push('// '+l));
+    v.colsDefNote = v.colsDefNote.join('\n');
 
-      v.step = 3.1; // 項目定義オブジェクトのメンバ一覧を取得
-      v.colsDef = this.colsDef.map(x => x.name);
+    v.step = 3.1; // 列毎にメモを作成
+    for( v.i=0 ; v.i<v.arg.cols.length ; v.i++ ){
+      v.step = 3.2; // 作成済みならスキップ
+      if( v.notes[v.i] !== undefined ) continue;
 
-      v.step = 3.2; // 項目定義編集時の注意事項を作成
-      v.colsDefNote = [''];
-      this.colsDefNote.forEach(l => v.colDefNote.push('// '+l));
-      v.colDefNote = v.colDefNote.join('\n');
+      v.step = 3.3; // 項目定義メモの内容(文字列)を作成
+      v.note = [];
+      for( v.j=0 ; v.j<this.colsDef.length ; v.j++ ){
+        v.step = 3.4; // nameはヘッダ行のセルから取得可能なので省略
+        if( this.colsDef[v.j].name === 'name' ) continue;
 
-      v.step = 3.3; // 個々の項目についてメモ(文字列)を作成
-      v.notes = [];
-      for( v.i=0 ; v.i<v.arg.cols.length ; v.i++ ){
-        v.notes[v.i] = [];
-        for( v.j=0 ; v.j<v.colsDef.length ; v.j++ ){
-          if( v.arg.cols[v.i].hasOwnProperty(v.colsDef[v.j]) ){
-            v.notes[v.i].push(`${v.colsDef[v.j]}: ${v.arg.cols[v.i][v.colsDef[v.j]]}`)
-          }
+        if( v.arg.cols[v.i].hasOwnProperty(this.colsDef[v.j].name) ){
+          v.step = 3.5; // 対象シートの項目定義(arg.cols)に該当定義内容が存在する場合、「定義項目名：値」
+          v.note.push(`${this.colsDef[v.j].name}: ${v.arg.cols[v.i][this.colsDef[v.j].name]}`);
+        } else {
+          v.step = 3.6; // 存在しない場合、「// 定義項目名：{データ型} - 説明」
+          v.note.push(`// ${this.colsDef[v.j].name}: {${(this.colsDef[v.j].type || '')}} - ${(this.colsDef[v.j].note || '')}`)
         }
-        v.notes[v.j].push(v.colDefNote);  // 注意事項を追加
-        v.notes[v.j] = v.notes[v.j].join('\n');
       }
-      v.range.setNotes([v.notes]);
+
+      v.step = 3.7; // 注意事項を追加して行を結合
+      v.note.push(v.colsDefNote);
+      v.notes[v.i] = v.note.join('\n');
     }
+
+    v.step = 3.8; // メモを貼付
+    v.range.setNotes([v.notes]);
 
     v.step = 4; // 新規作成シートの場合、データを追加
     if( v.addNew && v.arg.rows !== null ){
@@ -76,7 +84,6 @@ insertSheet(arg){
         for( v.i=1 ; v.i<v.arg.rows.length ; v.i++ ){
           v.row = {};
           for( v.j=0 ; v.j<v.arg.rows[v.i].length ; v.j++ ){
-            vlog(v,['i','j'])
             if( v.arg.rows[v.i].hasOwnProperty(v.header[v.j]) ){
               v.row[v.header[v.j]] = v.arg.rows[v.i][v.j];
             }

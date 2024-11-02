@@ -18,18 +18,17 @@ objectizeNote(arg){
     arg.split('\n').forEach(line => {
       // コメントの削除
       v.l = line.indexOf('//');
-      if( v.l >= 0 ) line = line.slice(0,v.l);
-
+      v.line = v.l < 0 ? line : line.slice(0,v.l);
+      
       // 「項目名：値」形式の行はメンバとして追加
-      v.m = line.trim().match(/^["']?([a-zA-Z0-9_\$]+)["']?\s*:\s*["']?(.+)["']?$/);
+      v.m = v.line.trim().match(/^["']?([a-zA-Z0-9_\$]+)["']?\s*:\s*["']?(.+)["']?$/);
       if( v.m ){
         v.rv.push(`"${v.m[1]}":`+(v.quote[v.m[1]] ? `"${v.m[2]}"` : v.m[2]))
       }
     });
 
     v.step = 3; // オブジェクト化
-    if( v.rv.length === 0 ) throw new Error(`invalid column definition`);
-    v.rv = JSON.parse(`{${v.rv.join(',')}}`);
+    v.rv = v.rv.length === 0 ? {} : JSON.parse(`{${v.rv.join(',')}}`);
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
