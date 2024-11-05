@@ -10,7 +10,7 @@ function test(){
     // ①constructor: シートイメージで生成、シート≠範囲
     v.rv = new SingleTable('target!C3:F',{
       primaryKey: 'D3',
-      raw: [
+      values: [
         ['string','boolean','date','number'],
         ['a',undefined,'1965/9/5',-1],
         ['tRue',null,'12:34',Infinity],

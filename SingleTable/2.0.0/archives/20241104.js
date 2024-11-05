@@ -192,13 +192,13 @@ class SingleTable {
    * @returns {Object} setupSheet()のv.rv参照
    */
   constructor(range,opt){
-    const v = {whois:this.constructor.name+'.prototype',step:0,rv:null};
+    const v = {whois:this.constructor.name+'.constructor',step:0,rv:null};
     console.log(`${v.whois} start.`);
     try {
   
       this.stSheet = class {
-        constructor(range,opt={}){
-          const v = {whois:this.constructor.name+'.constructor',step:0,rv:null};
+        constructor(parent,range,opt={}){
+          const v = {whois:'stSheet.constructor',step:0,rv:null};
           console.log(`${v.whois} start.\nrange=${range}\nopt=${stringify(opt)}`);
           try {
   
@@ -243,7 +243,7 @@ class SingleTable {
             }
   
             v.step = 3; // spread読み込みテスト
-            this.sheet = this.spread.getSheetByName(this.sheetName);
+            this.sheet = parent.spread.getSheetByName(this.sheetName);
   
             v.step = 9; // 終了処理
             console.log(`${v.whois} normal end.`);
@@ -271,7 +271,7 @@ class SingleTable {
   
       this.stSchema = class {
         constructor(arg){
-          const v = {whois:this.constructor.name+'.constructor',step:0,rv:null};
+          const v = {whois:'stSchema.constructor',step:0,rv:null};
           console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
           try {
   
@@ -301,7 +301,15 @@ class SingleTable {
         }
       };
   
-      this.target = new this.stSheet(range);
+      v.step = 1; // メンバの初期化、既定値設定
+      this.spread = SpreadsheetApp.getActiveSpreadsheet(); // {Spreadsheet} スプレッドシートオブジェクト(=ファイル。シートの集合)
+      this.target = new this.stSheet(this,range);
+      this.log = new this.stSheet(this,(opt.logSheetName||'log'));
+      this.notesOnEditingNote = [
+        '項目定義以外の部分は「//」をつける(単一行コメントのみ、複数行の「/* 〜 */」は非対応)',
+        '各項目はカンマでは無く改行で区切る(∵視認性の向上)',
+        '項目名・値のクォーテーションは不要',
+      ];
   
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
@@ -313,6 +321,7 @@ class SingleTable {
       return e;
     }
   }
+
   /** insertSheet: シートの新規作成＋項目定義メモのセット
    * @param arg {Object}
    * @param arg.sheetName {string} - 作成するシート名
