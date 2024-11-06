@@ -1,31 +1,33 @@
 /** sdbTable: シート上の対象範囲(テーブル) */
 this.sdbTable = class {
   /** @constructor
-   * @param table {Object}
-   * @param table.spread {SpreadSheet} - スプレッドシート
-   * @param table.range {string} - A1記法の範囲指定
-   * @param table.schema {sdbSchema[]} - 新規作成シートの項目定義オブジェクトの配列
-   * @param table.values {Object[]|Array[]} - 新規作成シートに書き込む初期値
+   * @param arg {Object}
+   * @param arg.spread {SpreadSheet} - スプレッドシート
+   * @param arg.name {string} - 範囲名。スプレッドシート内で一意
+   * @param [arg.range] {string} - 対象データ範囲のA1記法。省略時はnameを流用、セル範囲指定は無しと看做す
+   * @param [arg.cols] {sdbColumn[]} - 新規作成シートの項目定義オブジェクトの配列
+   * @param [arg.values] {Object[]|Array[]} - 新規作成シートに書き込む初期値
    * @returns
    */
-  constructor(range,opt={}){
+  constructor(arg){
     const v = {whois:'sdbTable.constructor',step:0,rv:null,
       getDataRange:null, getValues:null, getNotes:null,
-      colNo: table => { // 列記号を列番号に変換
+      colNo: arg => { // 列記号を列番号に変換
         let rv=0;
-        for( let b='a'.charCodeAt(0)-1,s=table.toLowerCase(),i=0 ; i<table.length ; i++ ){
+        for( let b='a'.charCodeAt(0)-1,s=arg.toLowerCase(),i=0 ; i<arg.length ; i++ ){
           rv = rv * 26 + s.charCodeAt(i) - b;
         }
         return rv;
       },
     };
-    console.log(`${v.whois} start.\nrange=${range}\nopt=${stringify(opt)}`);
+    console.log(`${v.whois} start.\narg=${stringify(arg)}`);
     try {
 
       // ----------------------------------------------
       v.step = 1; // メンバの初期化、既定値設定
       // ----------------------------------------------
-      this.range = null; // {string} A1記法の範囲指定
+      this.name = arg.name; // {string} テーブル名
+      this.range = arg.range || arg.name; // {string} A1記法の範囲指定
       this.sheetName = null; // {string} シート名。this.rangeから導出
       this.sheet = null; // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
       this.schema = null; // {sdbSchema[]} シートの項目定義
@@ -37,11 +39,11 @@ this.sdbTable = class {
 
 
       // ----------------------------------------------
-      v.step = 2; // 引数'range'から対象範囲絞り込み
+      v.step = 2; // 引数name,rangeから対象範囲絞り込み
       // ----------------------------------------------
       // range(対象データ範囲のA1記法)から指定範囲を特定、メンバに保存
       // ※ この段階では"a2:c"(⇒bottom不明)等、未確定部分が残る
-      v.m = range.match(/^'?(.+?)'?!([A-Za-z]*)([0-9]*):?([A-Za-z]*)([0-9]*)$/);
+      v.m = this.range.match(/^'?(.+?)'?!([A-Za-z]*)([0-9]*):?([A-Za-z]*)([0-9]*)$/);
       if( v.m ){  // rangeがA1記法で指定された場合
         this.sheetName = v.m[1];
         this.left = v.m[2] ? v.colNo(v.m[2]) : 1;
@@ -57,94 +59,155 @@ this.sdbTable = class {
       }
 
       // ----------------------------------------------
-      v.step = 3; // シートの存否確認、データ取得
+      v.step = 3; // this.schemaの作成
       // ----------------------------------------------
-      this.sheet = (table.spread || SpreadsheetApp.getActiveSpreadsheet()).getSheetByName(this.sheetName);
-      v.isExist = this.sheet !== null ? true : false;
-      if( v.isExist ){
-        v.step = 2.11; // シートイメージの読み込み
+      v.schemaArg = { // sdbSchema用の引数
+        cols: arg.cols || null,
+        header: null,
+        notes: null,
+        values: arg.values || null,
+      };
+      this.sheet = (arg.spread || SpreadsheetApp.getActiveSpreadsheet()).getSheetByName(this.sheetName);
+      if( this.sheet !== null ){
+
+        v.step = 3.11; // シートイメージの読み込み
         v.getDataRange = this.sheet.getDataRange();
         v.getValues = v.getDataRange.getValues();
 
-        v.step = 2.12; // 範囲確定。A1記法とデータ範囲のどちらか小さい方
+        v.step = 3.12; // 範囲確定。A1記法とデータ範囲のどちらか小さい方
         this.right = Math.min(this.right, v.getValues[0].length);
         this.bottom = Math.min(this.bottom, v.getValues.length);
 
-        v.step = 2.13; // 項目定義メモの読み込み
-        v.getNotes  = v.getRange(this.top,this.left,1,this.right-this.left+1).getNotes()[0];
-      } else if( table.values === null ){
-        throw new Error(`シートも初期化データも存在しません`);
+        v.step = 3.13; // 項目定義メモの読み込み
+        v.schemaArg.notes = v.getRange(this.top,this.left,1,this.right-this.left+1).getNotes()[0];
+
+      } else {
+
+        v.step = 3.21; // シートも項目定義も初期データも無いならエラー
+        if( !arg.cols && !arg.values ){
+          throw new Error(`シートも項目定義も初期データも存在しません`);
+        }
+        v.step = 3.22; // arg.valuesがシートイメージなら先頭行をheaderとする
+          if( arg.values && Array.isArray(arg.values) ){
+          v.schemaArg.header = arg.values[0];
+        }
       }
 
-      // ----------------------------------------------
-      v.step = 4; // this.schema, this.valuesの作成
-      // ----------------------------------------------
-      this.schema = new sdbSchema({cols: table.schema,values:table.values,notes:v.getNotes});
+      v.step = 3.3; // スキーマをインスタンス化、右端列番号の確定
+      this.schema = new sdbSchema(v.schemaArg);
       if( this.schema instanceof Error ) throw this.schema;
+      this.right = this.left - 1 + this.schema.cols.length;
 
-      if( v.getValues !== null ){
+      // ----------------------------------------------
+      v.step = 4; // this.valuesの作成
+      // ----------------------------------------------
+      if( this.sheet === null && whichType(arg.values[0],'Object') ){
+
+        v.step = 4.1; // シート不在で初期データが行オブジェクトの場合
+        this.values = arg.values;
+
+      } else {
+
+        v.step = 4.2; // シート存在または初期データがシートイメージの場合
+        if( this.sheet === null ){
+          // 対象が初期データの場合
+          v.data = arg.values;
+          v.top = 0;
+          v.bottom = arg.values.length;
+          v.left = 0;
+          v.right = arg.values[0].length;
+        } else {
+          // 対象がシートイメージの場合
+          v.data = v.getValues;
+          v.top = this.top;
+          v.bottom = this.bottom + 1;
+          v.left = this.left;
+          v.right = this.right + 1;
+        }
+
+        v.step = 4.3; // シートイメージから行オブジェクトへ変換
         this.values = [];
-        v.header = this.schema.cols.map(x => x.name);
-        for( v.i=1 ; v.i<this.bottom ; v.i++ ){
-          this.values[v.i-1] = {};
-          for( v.j=0 ; v.j<v.header.length ; v.j++ ){
-            if( v.getValues[v.i][v.j] ){
-              this.values[v.i-1][v.header[v.j]] = v.getValues[v.i][v.j];
+        for( v.i=v.top+1,v.cnt=0 ; v.i<v.bottom ; v.i++,v.cnt++ ){
+          this.values[v.cnt] = {};
+          for( v.j=v.left ; v.j<v.right ; v.j++ ){
+            if( v.data[v.i][v.j] ){
+              this.values[v.cnt][v.data[v.top][v.j]] = v.data[v.i][v.j];
             }
           }
         }
-      } else {
-        this.values = table.values;
       }
 
+      v.step = 4.4; // 末尾行番号の確定
+      this.bottom = this.top + this.values.length - 1;
+
       // ----------------------------------------------
-      v.step = 5; // その他メンバの設定
+      v.step = 5; // シート未作成の場合、追加
       // ----------------------------------------------
-      this.primaryKey = null;
-      this.unique = {};
-      this.auto_increment = {};
-      this.defaultRow = {};
-      for( v.i=0 ; v.i<this.schema.cols.length ; v.i++ ){
-        v.col = this.schema.cols[v.i];
+      if( this.sheet === null ){
 
-        if( v.col.primaryKey === true ){
-          this.primaryKey = v.col.name;
-          this.unique[v.col.name] = [];
+        v.step = 5.1; // this.schema.colsからヘッダ行作成
+        v.sheetImage = [this.schema.cols.map(x => x.name)];
+
+        v.step = 5.2; // this.valuesをシートイメージに変換
+        for( v.i=0 ; v.i<this.values.length ; v.i++ ){
+          v.row = [];
+          for( v.j=0 ; v.j<v.sheetImage[0].length ; v.j++ ){
+            v.row[v.j] = this.values[v.i][v.sheetImage[0][v.j]]
+          }
+          v.sheetImage.push(v.row);
         }
 
-        if( v.col.unique === true ){
-          this.unique[v.col.name] = [];
-        }
+        v.step = 5.3; // シートの追加
+        v.rv = this.spread.insertSheet();
+        v.rv.setName(this.sheetName);
 
-        if( v.col.auto_increment !== false ){
-          this.auto_increment[v.col.name] = v.col.auto_increment;
-          this.auto_increment[v.col.name].current = this.auto_increment[v.col.name].base;
-        }
+        v.step = 5.4; // シートイメージのセット
+        this.sheet.getRange(
+          this.top,
+          this.left,
+          this.bottom - this.top + 1,
+          this.right - this.left + 1
+        ).setValues(v.sheetImage);
 
-        if( v.col.default !== null ){
-          this.defaultRow[v.col.name] = v.col.default;
-        }
+        v.step = 5.5; // 項目定義メモの追加
+        v.notes = [];
+        this.schema.cols.forEach(x => {
+          v.r = x.getNote();
+          if( v.r instanceof Error ) throw v.r;
+          v.notes.push(v.r);
+        });
+        this.sheet.getRange(this.top,this.left,1,v.notes.length).setNote(v.notes);
+
       }
 
+      // ------------------------------------------------
+      v.step = 6; // this.schema.unique,auto_incrementに
+      // データスキャンの結果を反映
+      // ------------------------------------------------
+      v.unique = Object.keys(this.schema.unique);
+      v.auto_increment = Object.keys(this.schema.auto_increment);
       for( v.i=0 ; v.i<this.values.length ; v.i++ ){
-        // this.schema.uniqueに設定されている値をMapに追加
-        Object.keys(this.unique).forEach(x => {
-          if( this.unique[x].indexOf(this.values[v.i][x]) < 0 ){
-            this.unique[x].push(this.values[v.i][x]);
-          } else {
-            throw new Error(`${x}の値${this.values[v.i][x]}は重複しています`);
-          }
-        });
 
-        // this.schema.auto_incrementの最大(小)値をcurrentにセット
-        Object.keys(this.auto_increment).forEach(x => {
-          if( (this.auto_increment[x].step > 0 &&
-            this.values[v.i][x] > this.auto_increment[x].current)
-            || (this.auto_increment[x].step < 0 &&
-            this.values[v.i][x] < this.auto_increment[x].current) ){
-            this.auto_increment[x].current = this.values[v.i][x];
+        v.step = 6.1; // this.schema.uniqueに設定されている値をMapに追加
+        for( v.j=0 ; v.j<v.unique.length ; v.j++ ){
+          v.map = this.schema.unique[v.unique[v.j]];
+          v.val = this.values[v.i][v.unique[v.j]];
+          if( v.map.indexOf(v.val) < 0 ){
+            v.map.push(v.val);
+          } else {
+            throw new Error(`「${v.unique[v.j]}」欄の値"${v.val}"は重複しています`);
           }
-        });
+        }
+
+        v.step = 6.2; // this.schema.auto_incrementの最大(小)値をcurrentにセット
+        for( v.j=0 ; v.j<v.auto_increment.length ; v.j++ ){
+          v.obj = this.schema.auto_increment[v.auto_increment[v.j]];
+          v.val = this.values[v.i][v.auto_increment[v.j]];
+          if( v.obj.step > 0 && v.obj.current < v.val
+           || v.obj.step < 0 && v.obj.current > v.val ){
+            v.obj.current = v.val;
+          }
+        }
       }
 
       v.step = 9; // 終了処理

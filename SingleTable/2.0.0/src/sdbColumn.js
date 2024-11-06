@@ -113,25 +113,13 @@ this.sdbColumn = class {
     }
   }
 
-  /** getObj: 項目定義オブジェクトの取得
-   * @param {void}
-   * @returns {Object} 項目定義オブジェクト
-   */
-  getObj(){
-    const rv = {};
-    this.typedef.map(x => x.name).forEach(x => {
-      if( this[x] !== null ) rv[x] = this[x];
-    });
-    return rv;
-  }
-
   /** getNote: 項目定義メモの文字列を作成
    * @param opt {Object}
    * @param opt.undef=true {boolean} - 未定義の項目もコメントとして記載
    * @param opt.defined=false {boolean} - 定義済項目もデータ型・説明文をコメントとして記載
    * @returns {string} 項目定義メモの文字列
    */
-  getNote(opt){
+  getNote(opt={}){
     const v = {whois:'sdbSchema.getNote',step:0,rv:[]};
     console.log(`${v.whois} start.\nopt(${whichType(opt)})=${stringify(opt)}`);
     try {
