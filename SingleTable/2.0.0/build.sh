@@ -41,7 +41,7 @@ tmp="$prj/tmp"; mkdir -p $tmp
 # 1. core.jsの作成
 # ----------------------------------------------
 log "1";
-cat $src/proto.js | awk 1 | \
+cat $src/SpreadDB.js | awk 1 | \
 $embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $prj/core.js
 
 # ----------------------------------------------
