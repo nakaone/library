@@ -81,11 +81,13 @@ function test(){
 
     // テスト用シートの再作成
     v.spread = SpreadsheetApp.getActiveSpreadsheet();
-    v.sheet = v.spread.getSheetByName('target');
-    v.sheet.getRange(3,3,1,1).setNote('type: UUID');
+    ['target','master','log'].forEach(x => {
+      v.sheet = v.spread.getSheetByName(x);
+      if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+    });
 
     // ①constructor: シートイメージで生成、シート≠範囲
-    v.rv = new SpreadDB({range:'target!c3:f',values:tData[0].raw});
+    v.rv = new SpreadDB({name:'target',range:'target!c3:f',values:tData[0].raw});
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
@@ -98,155 +100,10 @@ function test(){
   }
 }
 
-/*
-    // メールアドレスの重複 : {name:'メールアドレス',type:'string',unique:true},
-    //v.rv = v.st.append({'タイムスタンプ':toLocale(new Date()),'メールアドレス':'nakaone.kunihiro@gmail.com'});
-
-    // 複数レコードの一括追加 : {name:'entryNo',type:'number',auto_increment:[1,2]},
-
-    // シートまたはログが使用中
-
-    // --------------------------------------------------------------------
-    // ①テスト用シートの削除
-    v.spread = SpreadsheetApp.getActiveSpreadsheet();
-    v.sheet = v.spread.getSheetByName('target');
-    if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
-    v.sheet = v.spread.getSheetByName('log');
-    if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
-
-    // --------------------------------------------------------------------
-    // ③appendテスト　※テスト②を先行、シート生成のこと
-    v.st = new SingleTable('master',{
-      primaryKey: 'entryNo',
-      cols: [
-        {name:'タイムスタンプ',type:'Date'},
-        {name:'メールアドレス',type:'string',unique:true},
-        {name:'申込者氏名',type:'string'},
-        {name:'申込者カナ',type:'string'},
-        {name:'申込者の参加',type:'string'},
-        {name:'宿泊、テント',type:'string'},
-        {name:'引取者氏名',type:'string'},
-        {name:'参加者01氏名',type:'string'},
-        {name:'参加者01カナ',type:'string'},
-        {name:'参加者01所属',type:'string'},
-        {name:'参加者02氏名',type:'string'},
-        {name:'参加者02カナ',type:'string'},
-        {name:'参加者02所属',type:'string'},
-        {name:'参加者03氏名',type:'string'},
-        {name:'参加者03カナ',type:'string'},
-        {name:'参加者03所属',type:'string'},
-        {name:'参加者04氏名',type:'string'},
-        {name:'参加者04カナ',type:'string'},
-        {name:'参加者04所属',type:'string'},
-        {name:'参加者05カナ',type:'string'},
-        {name:'参加者05氏名',type:'string'},
-        {name:'参加者05所属',type:'string'},
-        {name:'緊急連絡先',type:'string'},
-        {name:'ボランティア募集',type:'string'},
-        {name:'備考',type:'string'},
-        {name:'キャンセル',type:'string'},
-        {name:'authority',type:'number'},
-        {name:'CPkey',type:'string'},
-        {name:'entryNo',type:'number',auto_increment:[1,2]},
-        {name:'trial',type:'string'},
-        {name:'editURL',type:'string'},
-        {name:'entryTime',type:'Date'},
-        {name:'receptionist',type:'number'},
-        {name:'fee00',type:'string',default:'未入場'},
-        {name:'fee01',type:'string',default:'未入場'},
-        {name:'fee02',type:'string',default:'未入場'},
-        {name:'fee03',type:'string',default:'未入場'},
-        {name:'fee04',type:'string',default:'未入場'},
-        {name:'fee05',type:'string',default:'未入場'},
-        {name:'memo',type:'string'},
-      ],
-    });
-    // 単純な追加(自動採番、既定値の設定)
-    v.rv = v.st.append({'タイムスタンプ':toLocale(new Date())});
-
-    // ②テスト用シートの削除
-    v.spread = SpreadsheetApp.getActiveSpreadsheet();
-    v.sheet = v.spread.getSheetByName('master');
-    if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
-
-    // --------------------------------------------------------------------
-
-    // ②constructor: dataにてテストデータ生成
-    v.rv = new SingleTable('master',{
-      primaryKey: 'entryNo',
-      cols: [
-        {name:'タイムスタンプ',type:'Date'},
-        {name:'メールアドレス',type:'string',unique:true},
-        {name:'申込者氏名',type:'string'},
-        {name:'申込者カナ',type:'string'},
-        {name:'申込者の参加',type:'string'},
-        {name:'宿泊、テント',type:'string'},
-        {name:'引取者氏名',type:'string'},
-        {name:'参加者01氏名',type:'string'},
-        {name:'参加者01カナ',type:'string'},
-        {name:'参加者01所属',type:'string'},
-        {name:'参加者02氏名',type:'string'},
-        {name:'参加者02カナ',type:'string'},
-        {name:'参加者02所属',type:'string'},
-        {name:'参加者03氏名',type:'string'},
-        {name:'参加者03カナ',type:'string'},
-        {name:'参加者03所属',type:'string'},
-        {name:'参加者04氏名',type:'string'},
-        {name:'参加者04カナ',type:'string'},
-        {name:'参加者04所属',type:'string'},
-        {name:'参加者05カナ',type:'string'},
-        {name:'参加者05氏名',type:'string'},
-        {name:'参加者05所属',type:'string'},
-        {name:'緊急連絡先',type:'string'},
-        {name:'ボランティア募集',type:'string'},
-        {name:'備考',type:'string'},
-        {name:'キャンセル',type:'string'},
-        {name:'authority',type:'number'},
-        {name:'CPkey',type:'string'},
-        {name:'entryNo',type:'number',auto_increment:[1,2]},
-        {name:'trial',type:'string'},
-        {name:'editURL',type:'string'},
-        {name:'entryTime',type:'Date'},
-        {name:'receptionist',type:'number'},
-        {name:'fee00',type:'string',default:'未入場'},
-        {name:'fee01',type:'string',default:'未入場'},
-        {name:'fee02',type:'string',default:'未入場'},
-        {name:'fee03',type:'string',default:'未入場'},
-        {name:'fee04',type:'string',default:'未入場'},
-        {name:'fee05',type:'string',default:'未入場'},
-        {name:'memo',type:'string'},
-      ],
-      data: [{"タイムスタンプ":"2024-10-06T10:51:06.427Z","メールアドレス":"nakaone.kunihiro@gmail.com","申込者氏名":"島津　邦浩","申込者カナ":"シマヅ　クニヒロ","申込者の参加":"スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊、テント":"宿泊しない","authority":2,"CPkey":"jZiM1isJ+1AZoVZ9NnWTvCoeghCm+FY05eb6jhz8wpT3DwqJbNnszW8PWDd3sq0N5mjN/Nshh+RGGrdkm7CC+sO32js+wm1YmYGr0FMaFxvMBDrWzyJ7qrPI4unbx2IkrPkXSmSEbw91n/LOu0x7br106XeJ9TXJbJS16rV0nzs=","entryNo":1,"trial":"{\"passcode\":920782,\"created\":1728874149915,\"result\":0,\"log\":[{\"timestamp\":1728874165893,\"enterd\":920782,\"status\":1},{\"timestamp\":1728768131564,\"enterd\":46757,\"status\":1},{\"timestamp\":1728768105236,\"enterd\":46747,\"status\":0},{\"timestamp\":1728731037700,\"enterd\":456044,\"status\":1},{\"timestamp\":1728711888082,\"enterd\":485785,\"status\":1},{\"timestamp\":1728709250994,\"enterd\":425862,\"status\":1},{\"timestamp\":1728701179073,\"enterd\":259177,\"status\":1},{\"timestamp\":1728646863938,\"enterd\":530072,\"status\":1},{\"timestamp\":1728646839729,\"enterd\":null,\"status\":1}]}","editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfKJ5aUz4h6lTGlz6c3NjPyWMnViVQxHqwRkCnzJsRKfz9ULQ/viewform?edit2=2_ABaOnuePpXliGgMlVVUYiSKgwX6SXBNrnwozwTMF09Ml1py7Ocp1N7_w5F7uqf52Ak63zBE"},{"タイムスタンプ":"2024-09-15T03:47:03.578Z","メールアドレス":"via1315r@yahoo.co.jp","申込者氏名":"檜垣　素直","申込者カナ":"ヒガキ　スナオ","申込者の参加":"参加予定(宿泊なし)","宿泊、テント":"宿泊しない","引取者氏名":"宿泊予定なので不要","参加者01氏名":"檜垣　若菜","参加者01カナ":"ヒガキ　ワカナ","参加者01所属":"1年生","緊急連絡先":"09013357002","ボランティア募集":"できる","備考":"食事以外でも、お手伝い出来る事があれば。","authority":1,"entryNo":2,"editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfKJ5aUz4h6lTGlz6c3NjPyWMnViVQxHqwRkCnzJsRKfz9ULQ/viewform?edit2=2_ABaOnudWLvuoT6Wq0Hu-4tqFl5OyTK-Z7EwdMDEQGS1jKJVIa41Dh8nNJPtpFyPu8cyZYGo"},{"タイムスタンプ":"2024-09-15T04:51:37.346Z","メールアドレス":"kousuke.murata4690@gmail.com","申込者氏名":"阿部　晃祐","申込者カナ":"アベ　コウスケ","申込者の参加":"参加予定(宿泊あり)","宿泊、テント":"宿泊する(テントあり)","引取者氏名":"宿泊予定なので不要","参加者01氏名":"阿部　涼","参加者01カナ":"アベ　リョウ","参加者01所属":"6年生","ボランティア募集":"できる","authority":1,"entryNo":3,"editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfKJ5aUz4h6lTGlz6c3NjPyWMnViVQxHqwRkCnzJsRKfz9ULQ/viewform?edit2=2_ABaOnufKjD-xj5FN0GnTNIILVeJVwYJajCP8bZphy1zyleVl8UDLWqzUjDDFWZf7uMA0qtk"},{"タイムスタンプ":"2024-09-15T05:18:01.813Z","メールアドレス":"nakaone2001@gmail.com","申込者氏名":"島津　弘子","申込者カナ":"シマヅ　ヒロコ","申込者の参加":"参加予定(宿泊なし)","宿泊、テント":"宿泊しない","参加者01氏名":"島津　悠奈","参加者01カナ":"シマヅ　ユウナ","参加者01所属":"4年生","authority":2,"CPkey":"k5lfKMj3ybfMF6jocHPln98lLJIBIxKrrpLc4RhPenBIEg6OfgdXYQAVh907SoCg0MEBazhWic2oFaKNFJu9pa4prXWvTzYjRWw5XkmC9a7AdNQ0judVMATii7Xqp6drowisY6+Rul2zwrF2UKY8epoYP8ZkX9RyH6OFyglYQL8=","entryNo":4,"trial":"{\"passcode\":65698,\"created\":1729076868102,\"result\":0,\"log\":[{\"timestamp\":1728729400367,\"enterd\":119192,\"status\":1},{\"timestamp\":1728708771586,\"enterd\":254267,\"status\":1},{\"timestamp\":1728708701693,\"enterd\":254263,\"status\":0},{\"timestamp\":1728708634458,\"enterd\":null,\"status\":1}]}","editURL":"https://docs.google.com/forms/d/e/1FAIpQLSfKJ5aUz4h6lTGlz6c3NjPyWMnViVQxHqwRkCnzJsRKfz9ULQ/viewform?edit2=2_ABaOnueGXR29gyuz_kc4UMghOrIa_iNPhrkHdrW4zVI8KFW5aB2jsVCtjq79aasCFBWgTvI"}],
-    });
-
-    // --------------------------------------------------------------------
-    // ①テスト用シートの削除
-    v.spread = SpreadsheetApp.getActiveSpreadsheet();
-    v.sheet = v.spread.getSheetByName('target');
-    if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
-
-    // ①constructor: シートイメージで生成、シート≠範囲
-    v.rv = new SingleTable('target!C3:F',{
-      primaryKey: 'D3',
-      raw: [
-        ['','','タイトル','','','','',''],
-        ['','','','','','','',''],
-        ['','','C3','D3','E3','F3','',''],
-        ['','','','','','','',''],
-        ['','','5','4','','','',''],
-        ['','','5','6','7','8','',''],
-        ['','','4','3','hoge','fuga','',''],
-        ['','','','','','','',''],
-        ['','','','','','','','dummy'],
-        ['','','','','','','',''],
-      ]
-    });
-*/
-
 class SpreadDB {
 
   /** @constructor
-   * @param table {Object|Object[]} 対象領域情報(sdbTable.constructor()の引数オブジェクト)の配列
+   * @param tables {Object|Object[]} 対象領域情報(sdbTable.constructor()の引数オブジェクト)の配列
    * @param opt {Object}={}
    * @param opt.outputLog {boolean}=true ログ出力しないならfalse
    * @param opt.logSheetName {string}='log' 更新履歴シート名
@@ -255,40 +112,46 @@ class SpreadDB {
    * @param opt.interval {number}=2500 シート更新時、ロックされていた場合の試行間隔(ミリ秒)
    * @returns {SpreadDB|Error}
    */
-  constructor(table,opt={}){
+  constructor(tables,opt={}){
     const v = {whois:this.constructor.name+'.constructor',step:0,rv:null};
     console.log(`${v.whois} start.`);
     try {
   
+      // -------------------------------------------------------------
+      // 1. 事前準備
+      // -------------------------------------------------------------
       v.step = 1; // サブクラスの定義
         /** sdbTable: シート上の対象範囲(テーブル) */
-      this.sdbTable = class {
+      const sdbTable = class {
         /** @constructor
-         * @param table {Object}
-         * @param table.spread {SpreadSheet} - スプレッドシート
-         * @param table.range {string} - A1記法の範囲指定
-         * @param table.schema {sdbSchema[]} - 新規作成シートの項目定義オブジェクトの配列
-         * @param table.values {Object[]|Array[]} - 新規作成シートに書き込む初期値
+         * @param arg {Object}
+         * @param arg.spread {SpreadSheet} - スプレッドシート
+         * @param arg.name {string} - 範囲名。スプレッドシート内で一意
+         * @param [arg.range] {string} - 対象データ範囲のA1記法。省略時はnameを流用、セル範囲指定は無しと看做す
+         * @param [arg.cols] {sdbColumn[]} - 新規作成シートの項目定義オブジェクトの配列
+         * @param [arg.values] {Object[]|Array[]} - 新規作成シートに書き込む初期値
          * @returns
          */
-        constructor(range,opt={}){
+        constructor(arg){
           const v = {whois:'sdbTable.constructor',step:0,rv:null,
             getDataRange:null, getValues:null, getNotes:null,
-            colNo: table => { // 列記号を列番号に変換
+            colNo: arg => { // 列記号を列番号に変換
               let rv=0;
-              for( let b='a'.charCodeAt(0)-1,s=table.toLowerCase(),i=0 ; i<table.length ; i++ ){
+              for( let b='a'.charCodeAt(0)-1,s=arg.toLowerCase(),i=0 ; i<arg.length ; i++ ){
                 rv = rv * 26 + s.charCodeAt(i) - b;
               }
               return rv;
             },
           };
-          console.log(`${v.whois} start.\nrange=${range}\nopt=${stringify(opt)}`);
+          console.log(`${v.whois} start.\narg=${stringify(arg)}`);
           try {
       
             // ----------------------------------------------
             v.step = 1; // メンバの初期化、既定値設定
             // ----------------------------------------------
-            this.range = null; // {string} A1記法の範囲指定
+            this.spread = arg.spread || SpreadsheetApp.getActiveSpreadsheet();
+            this.name = arg.name; // {string} テーブル名
+            this.range = arg.range || arg.name; // {string} A1記法の範囲指定
             this.sheetName = null; // {string} シート名。this.rangeから導出
             this.sheet = null; // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
             this.schema = null; // {sdbSchema[]} シートの項目定義
@@ -300,11 +163,11 @@ class SpreadDB {
       
       
             // ----------------------------------------------
-            v.step = 2; // 引数'range'から対象範囲絞り込み
+            v.step = 2; // 引数name,rangeから対象範囲絞り込み
             // ----------------------------------------------
             // range(対象データ範囲のA1記法)から指定範囲を特定、メンバに保存
             // ※ この段階では"a2:c"(⇒bottom不明)等、未確定部分が残る
-            v.m = range.match(/^'?(.+?)'?!([A-Za-z]*)([0-9]*):?([A-Za-z]*)([0-9]*)$/);
+            v.m = this.range.match(/^'?(.+?)'?!([A-Za-z]*)([0-9]*):?([A-Za-z]*)([0-9]*)$/);
             if( v.m ){  // rangeがA1記法で指定された場合
               this.sheetName = v.m[1];
               this.left = v.m[2] ? v.colNo(v.m[2]) : 1;
@@ -318,97 +181,163 @@ class SpreadDB {
               this.top = this.left = 1;
               this.bottom = this.right = Infinity;
             }
+            vlog(this,['sheetName','top','left','right','bottom'],v)
       
             // ----------------------------------------------
-            v.step = 3; // シートの存否確認、データ取得
+            v.step = 3; // this.schemaの作成
             // ----------------------------------------------
-            this.sheet = (table.spread || SpreadsheetApp.getActiveSpreadsheet()).getSheetByName(this.sheetName);
-            v.isExist = this.sheet !== null ? true : false;
-            if( v.isExist ){
-              v.step = 2.11; // シートイメージの読み込み
+            v.schemaArg = { // sdbSchema用の引数
+              cols: arg.cols || null,
+              header: null,
+              notes: null,
+              values: arg.values || null,
+            };
+            this.sheet = this.spread.getSheetByName(this.sheetName);
+            if( this.sheet !== null ){
+      
+              v.step = 3.11; // シートイメージの読み込み
               v.getDataRange = this.sheet.getDataRange();
               v.getValues = v.getDataRange.getValues();
       
-              v.step = 2.12; // 範囲確定。A1記法とデータ範囲のどちらか小さい方
+              v.step = 3.12; // 範囲確定。A1記法とデータ範囲のどちらか小さい方
               this.right = Math.min(this.right, v.getValues[0].length);
               this.bottom = Math.min(this.bottom, v.getValues.length);
       
-              v.step = 2.13; // 項目定義メモの読み込み
-              v.getNotes  = v.getRange(this.top,this.left,1,this.right-this.left+1).getNotes()[0];
-            } else if( table.values === null ){
-              throw new Error(`シートも初期化データも存在しません`);
+              v.step = 3.13; // 項目定義メモの読み込み
+              v.schemaArg.notes = this.sheet.getRange(this.top,this.left,1,this.right-this.left+1).getNotes()[0];
+      
+            } else {
+      
+              v.step = 3.21; // シートも項目定義も初期データも無いならエラー
+              if( !arg.cols && !arg.values ){
+                throw new Error(`シートも項目定義も初期データも存在しません`);
+              }
+              v.step = 3.22; // arg.valuesがシートイメージなら先頭行をheaderとする
+                if( arg.values && Array.isArray(arg.values) ){
+                v.schemaArg.header = arg.values[0];
+              }
             }
       
-            // ----------------------------------------------
-            v.step = 4; // this.schema, this.valuesの作成
-            // ----------------------------------------------
-            this.schema = new sdbSchema({cols: table.schema,values:table.values,notes:v.getNotes});
+            v.step = 3.3; // スキーマをインスタンス化、右端列番号の確定
+            this.schema = new sdbSchema(v.schemaArg);
+            vlog(this,'schema',v);
             if( this.schema instanceof Error ) throw this.schema;
+            this.right = this.left - 1 + this.schema.cols.length;
       
-            if( v.getValues !== null ){
+            // ----------------------------------------------
+            v.step = 4; // this.valuesの作成
+            // ----------------------------------------------
+            if( this.sheet === null && whichType(arg.values[0],'Object') ){
+      
+              v.step = 4.1; // シート不在で初期データが行オブジェクトの場合
+              this.values = arg.values;
+      
+            } else {
+      
+              v.step = 4.2; // シート存在または初期データがシートイメージの場合
+              if( this.sheet === null ){
+                // 対象が初期データの場合
+                v.data = arg.values;
+                v.top = 0;
+                v.bottom = arg.values.length;
+                v.left = 0;
+                v.right = arg.values[0].length;
+              } else {
+                // 対象がシートイメージの場合
+                v.data = v.getValues;
+                v.top = this.top;
+                v.bottom = this.bottom + 1;
+                v.left = this.left;
+                v.right = this.right + 1;
+              }
+      
+              v.step = 4.3; // シートイメージから行オブジェクトへ変換
               this.values = [];
-              v.header = this.schema.cols.map(x => x.name);
-              for( v.i=1 ; v.i<this.bottom ; v.i++ ){
-                this.values[v.i-1] = {};
-                for( v.j=0 ; v.j<v.header.length ; v.j++ ){
-                  if( v.getValues[v.i][v.j] ){
-                    this.values[v.i-1][v.header[v.j]] = v.getValues[v.i][v.j];
+              for( v.i=v.top+1,v.cnt=0 ; v.i<v.bottom ; v.i++,v.cnt++ ){
+                this.values[v.cnt] = {};
+                for( v.j=v.left ; v.j<v.right ; v.j++ ){
+                  if( v.data[v.i][v.j] ){
+                    this.values[v.cnt][v.data[v.top][v.j]] = v.data[v.i][v.j];
                   }
                 }
               }
-            } else {
-              this.values = table.values;
             }
       
+            v.step = 4.4; // 末尾行番号の確定
+            this.bottom = this.top + this.values.length;
+            vlog(this,['values','top','left','right','bottom'],v);
+      
             // ----------------------------------------------
-            v.step = 5; // その他メンバの設定
+            v.step = 5; // シート未作成の場合、追加
             // ----------------------------------------------
-            this.primaryKey = null;
-            this.unique = {};
-            this.auto_increment = {};
-            this.defaultRow = {};
-            for( v.i=0 ; v.i<this.schema.cols.length ; v.i++ ){
-              v.col = this.schema.cols[v.i];
+            if( this.sheet === null ){
       
-              if( v.col.primaryKey === true ){
-                this.primaryKey = v.col.name;
-                this.unique[v.col.name] = [];
+              v.step = 5.1; // this.schema.colsからヘッダ行作成
+              v.sheetImage = [this.schema.cols.map(x => x.name)];
+      
+              v.step = 5.2; // this.valuesをシートイメージに変換
+              for( v.i=0 ; v.i<this.values.length ; v.i++ ){
+                v.row = [];
+                for( v.j=0 ; v.j<v.sheetImage[0].length ; v.j++ ){
+                  v.row[v.j] = this.values[v.i][v.sheetImage[0][v.j]]
+                }
+                v.sheetImage.push(v.row);
               }
       
-              if( v.col.unique === true ){
-                this.unique[v.col.name] = [];
-              }
+              v.step = 5.3; // シートの追加
+              this.sheet = this.spread.insertSheet();
+              this.sheet.setName(this.sheetName);
       
-              if( v.col.auto_increment !== false ){
-                this.auto_increment[v.col.name] = v.col.auto_increment;
-                this.auto_increment[v.col.name].current = this.auto_increment[v.col.name].base;
-              }
+              v.step = 5.4; // シートイメージのセット
+              this.sheet.getRange(
+                this.top,
+                this.left,
+                this.bottom - this.top + 1,
+                this.right - this.left + 1
+              ).setValues(v.sheetImage);
       
-              if( v.col.default !== null ){
-                this.defaultRow[v.col.name] = v.col.default;
-              }
+              v.step = 5.5; // 項目定義メモの追加
+              v.notes = [];
+              this.schema.cols.forEach(x => {
+                console.log(`l.447`,x)
+                v.r = x.getNote();
+                if( v.r instanceof Error ) throw v.r;
+                v.notes.push(v.r);
+              });
+              this.sheet.getRange(this.top,this.left,1,v.notes.length).setNote(v.notes);
+      
             }
       
+            // ------------------------------------------------
+            v.step = 6; // this.schema.unique,auto_incrementに
+            // データスキャンの結果を反映
+            // ------------------------------------------------
+            v.unique = Object.keys(this.schema.unique);
+            v.auto_increment = Object.keys(this.schema.auto_increment);
             for( v.i=0 ; v.i<this.values.length ; v.i++ ){
-              // this.schema.uniqueに設定されている値をMapに追加
-              Object.keys(this.unique).forEach(x => {
-                if( this.unique[x].indexOf(this.values[v.i][x]) < 0 ){
-                  this.unique[x].push(this.values[v.i][x]);
-                } else {
-                  throw new Error(`${x}の値${this.values[v.i][x]}は重複しています`);
-                }
-              });
       
-              // this.schema.auto_incrementの最大(小)値をcurrentにセット
-              Object.keys(this.auto_increment).forEach(x => {
-                if( (this.auto_increment[x].step > 0 &&
-                  this.values[v.i][x] > this.auto_increment[x].current)
-                  || (this.auto_increment[x].step < 0 &&
-                  this.values[v.i][x] < this.auto_increment[x].current) ){
-                  this.auto_increment[x].current = this.values[v.i][x];
+              v.step = 6.1; // this.schema.uniqueに設定されている値をMapに追加
+              for( v.j=0 ; v.j<v.unique.length ; v.j++ ){
+                v.map = this.schema.unique[v.unique[v.j]];
+                v.val = this.values[v.i][v.unique[v.j]];
+                if( v.map.indexOf(v.val) < 0 ){
+                  v.map.push(v.val);
+                } else {
+                  throw new Error(`「${v.unique[v.j]}」欄の値"${v.val}"は重複しています`);
                 }
-              });
+              }
+      
+              v.step = 6.2; // this.schema.auto_incrementの最大(小)値をcurrentにセット
+              for( v.j=0 ; v.j<v.auto_increment.length ; v.j++ ){
+                v.obj = this.schema.auto_increment[v.auto_increment[v.j]];
+                v.val = this.values[v.i][v.auto_increment[v.j]];
+                if( v.obj.step > 0 && v.obj.current < v.val
+                 || v.obj.step < 0 && v.obj.current > v.val ){
+                  v.obj.current = v.val;
+                }
+              }
             }
+            vlog(this,['unique','auto_increment'],v)
       
             v.step = 9; // 終了処理
             console.log(`${v.whois} normal end.`);
@@ -496,13 +425,14 @@ class SpreadDB {
         }
       }
         /** sdbSchema: シート上の対象範囲(テーブル)の構造定義 */
-      this.sdbSchema = class {
+      const sdbSchema = class {
         /** @constructor
          * @param arg {Object}
-         * @param [arg.cols] {Object.<string,any>[]} - 項目定義オブジェクトの配列
-         * @param [arg.values] {string[]} - 行オブジェクトの配列
+         * @param [arg.cols] {sdbColumn[]} - 項目定義オブジェクトの配列
+         * @param [arg.header] {string[]} - ヘッダ行のシートイメージ(=項目名一覧)
          * @param [arg.notes] {string[]} - 項目定義メモの配列
-         * @returns
+         * @param [arg.values] {Object[]} - 初期データとなる行オブジェクトの配列
+         * @returns {sdbSchema|Error}
          */
         constructor(arg={}){
           const v = {whois:'sdbSchema.constructor',step:0,rv:null};
@@ -510,14 +440,18 @@ class SpreadDB {
           try {
       
             v.step = 1; // 事前準備
-            v.arg = mergeDeeply(arg,{cols:null,values:null,notes:null});
+            v.arg = mergeDeeply(arg,{cols:null,header:null,notes:null,values:null});
       
+            // -----------------------------------------------
             v.step = 2; // 項目定義オブジェクト(this.cols)の作成
+            // -----------------------------------------------
             v.step = 2.1; // v.cols: sdbColumns.constructor()への引数
             if( v.arg.notes !== null ){
               v.cols = v.arg.notes;
             } else if( v.arg.cols !== null ){
               v.cols = v.arg.cols;
+            } else if( v.arg.header !== null ){
+              v.cols = v.arg.header;
             } else if( v.arg.values !== null ){
               // 行オブジェクトの配列から項目名リストを作成
               v.obj = {};
@@ -535,6 +469,39 @@ class SpreadDB {
               this.cols.push(v.r);
             })
       
+            // -----------------------------------------------
+            v.step = 3; // this.cols以外のメンバ作成
+            // -----------------------------------------------
+            this.primaryKey = null;
+            this.unique = {};
+            this.auto_increment = {};
+            this.defaultRow = {};
+            for( v.i=0 ; v.i<this.cols.length ; v.i++ ){
+      
+              v.step = 3.1; // primaryKey
+              if( this.cols[v.i].primaryKey === true ){
+                this.primaryKey = this.cols[v.i].name;
+                this.unique[this.cols[v.i].name] = [];
+              }
+      
+              v.step = 3.2; // unique
+              if( this.cols[v.i].unique === true ){
+                this.unique[this.cols[v.i].name] = [];
+              }
+      
+              v.step = 3.3; // auto_increment
+              // ※sdbColumnでauto_incrementなら配列、違うならfalse設定済
+              if( this.cols[v.i].auto_increment !== false ){
+                this.auto_increment[this.cols[v.i].name] = this.cols[v.i].auto_increment;
+                this.auto_increment[this.cols[v.i].name].current = this.auto_increment[this.cols[v.i].name].base;
+              }
+      
+              v.step = 3.4; // default
+              if( this.cols[v.i].default !== null ){
+                this.defaultRow[this.cols[v.i].name] = this.cols[v.i].default;
+              }
+            }
+      
             v.step = 9; // 終了処理
             console.log(`${v.whois} normal end.`);
       
@@ -544,60 +511,9 @@ class SpreadDB {
             return e;
           }
         }
-      
-        getSchema(){
-          const v = {whois:'sdbSchema.getSchema',step:0,rv:null};
-          console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
-          try {
-      
-            v.step = 9; // 終了処理
-            console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-            return v.rv;
-      
-          } catch(e) {
-            e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-            console.error(`${e.message}\nv=${stringify(v)}`);
-            return e;
-          }
-        }
-      
-        /** getNext: auto_increment項目の次の値を取得 */
-        getNext(arg){
-          const v = {whois:'sdbSchema.getNext',step:0,rv:null};
-          console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
-          try {
-      
-            v.step = 9; // 終了処理
-            console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-            return v.rv;
-      
-          } catch(e) {
-            e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-            console.error(`${e.message}\nv=${stringify(v)}`);
-            return e;
-          }
-        }
-      
-        /** isUnique: unique項目で、引数が登録済か判定 */
-        getNext(arg){
-          const v = {whois:'sdbSchema.getNext',step:0,rv:null};
-          console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
-          try {
-      
-            v.step = 9; // 終了処理
-            console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-            return v.rv;
-      
-          } catch(e) {
-            e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-            console.error(`${e.message}\nv=${stringify(v)}`);
-            return e;
-          }
-        }
-      
       }
         /** sdbColumn: 項目定義オブジェクト */
-      this.sdbColumn = class {
+      const sdbColumn = class {
         /** @constructor
          * @param arg {sdbColumn|string} - 項目定義オブジェクト、または項目定義メモまたは項目名
          * @returns {sdbColumn|Error}
@@ -689,9 +605,9 @@ class SpreadDB {
       
               v.step = 4; // 一行毎に属性の表記かを判定
               v.rv = {};
-              arg.split('\n').forEach(prop => {
+              v.lines.forEach(prop => {
                 v.m = prop.trim().match(/^["']?(.+?)["']?\s*:\s*["']?(.+)["']?$/);
-                v.rv[v.m[1]] = v.m[2];
+                if( v.m ) v.rv[v.m[1]] = v.m[2];
               });
       
               v.step = 5; // 属性項目が無ければ項目名と看做す
@@ -711,43 +627,38 @@ class SpreadDB {
           }
         }
       
-        /** getObj: 項目定義オブジェクトの取得
-         * @param {void}
-         * @returns {Object} 項目定義オブジェクト
-         */
-        getObj(){
-          const rv = {};
-          this.typedef.map(x => x.name).forEach(x => {
-            if( this[x] !== null ) rv[x] = this[x];
-          });
-          return rv;
-        }
-      
         /** getNote: 項目定義メモの文字列を作成
          * @param opt {Object}
          * @param opt.undef=true {boolean} - 未定義の項目もコメントとして記載
          * @param opt.defined=false {boolean} - 定義済項目もデータ型・説明文をコメントとして記載
          * @returns {string} 項目定義メモの文字列
          */
-        getNote(opt){
+        getNote(opt={}){
           const v = {whois:'sdbSchema.getNote',step:0,rv:[]};
           console.log(`${v.whois} start.\nopt(${whichType(opt)})=${stringify(opt)}`);
           try {
       
+            v.step = 1; // オプションの既定値を設定
             v.opt = Object.assign({undef:true,defined:false},opt);
+            vlog(v,'opt')
       
+            v.step = 2; // 項目定義の属性を順次チェック
             this.typedef.map(x => x.name).forEach(x => {
-              if( this[x] !== null ){
+              v.typedef = Object.assign({type:'',note:''},this.typedef.find(y => y.name === x));
+              console.log(`l.792 ${x}: value=${this[x]}, typedef=${stringify(this.typedef[x])}`);
+              if( this.hasOwnProperty(x) && this[x] !== null ){
                 v.rv.push(`${x}: ${this[x]}`
-                  + ( v.opt.defined ? ` // {${this.typedef[x].type}} - ${this.typedef[x].note}` : ''));
+                  + ( v.opt.defined ? ` // {${v.typedef.type}} - ${v.typedef.note}` : ''));
               } else if( v.opt.undef ){
-                v.rv.push(`// ${x} {${this.typedef[x].type}} - ${this.typedef[x].note}`);
+                // 説明文をコメントとして出力する場合
+                v.rv.push(`// ${x} {${v.typedef.type}} - ${v.typedef.note}`);
               }
             })
       
             v.step = 9; // 終了処理
+            v.rv = v.rv.join('\n');
             console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-            return v.rv.join('\n');
+            return v.rv;
       
           } catch(e) {
             e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
@@ -755,11 +666,18 @@ class SpreadDB {
             return e;
           }
         }
-      };
-      
+      }
   
-      v.step = 2; // メンバの初期化、既定値設定
-      this.spread = SpreadsheetApp.getActiveSpreadsheet(); // {Spreadsheet} スプレッドシートオブジェクト(=ファイル。シートの集合)
+      v.step = 2; // メンバの初期化
+      // spread {Spreadsheet} スプレッドシートオブジェクト(=ファイル。シートの集合)
+      this.spread = SpreadsheetApp.getActiveSpreadsheet();
+      // tables {Object.<string,sdbTable>} 操作対象シートの情報。メンバ名はテーブル名。
+      this.tables = {};
+  
+      v.step = 3; // 引数tablesが配列でない場合、配列に変換(以降で統一的に処理するため)
+      v.tables = Array.isArray(tables) ? tables : [tables];
+  
+      v.step = 4; // 引数「opt」の設定値をメンバとして登録
       v.opt = mergeDeeply(opt,{
         outputLog: true,
         logSheetName: 'log',
@@ -771,36 +689,35 @@ class SpreadDB {
       });
       Object.keys(v.opt).forEach(x => this[x] = v.opt[x]);
   
-      v.step = 3; // 更新履歴シートの項目定義
-      // v.tables: 作成対象テーブルリスト。引数tableが単一オブジェクトなら配列に変換
-      v.tables = whichType(table,'Object') ? [table] : table;
-      // ログは「range=シート名」とし、範囲指定はしない(1シート占有)。
-      v.logTable = v.tables.find(x => x.range === this.logSheetName);
-      if( this.outputLog && !v.logTable.schema ){
-        v.logTable.schema = [  // 更新履歴シートの項目定義
-          {name:'id',type:'UUID',note:'ログの一意キー項目'},
-          {name:'timestamp',type:'Date',note:'更新日時。yyyy-MM-ddThh:mm:ss.nnnZ形式'},
-          {name:'account',type:'string|number',note:'更新者の識別子'},
-          {name:'range',type:'string',note:'更新対象となった範囲名(テーブル名)'},
-          {name:'result',type:'boolean',note:'true:追加・更新が成功'},
-          {name:'message',type:'string',note:'エラーメッセージ'},
-          {name:'before',type:'JSON',note:'更新前の行データオブジェクト'},
-          {name:'after',type:'JSON',note:'更新後の行データオブジェクト'},
-          {name:'diff',type:'JSON',note:'追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式'},
-        ];
+      v.step = 5; // 更新履歴を残す場合、作成対象テーブルリストに更新履歴シートを追加
+      if( this.outputLog === true ){
+        // 作成対象テーブルリストに更新履歴が入っていないか確認、入ってなければリストに追加
+        if( v.tables.map(x => x.name).indexOf(this.logSheetName) < 0 ){
+          v.tables.push({
+            name: this.logSheetName,
+            cols: [  // 更新履歴シートの項目定義
+              {name:'id',type:'UUID',note:'ログの一意キー項目',primaryKey:true},
+              {name:'timestamp',type:'Date',note:'更新日時。yyyy-MM-ddThh:mm:ss.nnnZ形式'},
+              {name:'account',type:'string|number',note:'更新者の識別子'},
+              {name:'range',type:'string',note:'更新対象となった範囲名(テーブル名)'},
+              {name:'result',type:'boolean',note:'true:追加・更新が成功'},
+              {name:'message',type:'string',note:'エラーメッセージ'},
+              {name:'before',type:'JSON',note:'更新前の行データオブジェクト'},
+              {name:'after',type:'JSON',note:'更新後の行データオブジェクト'},
+              {name:'diff',type:'JSON',note:'追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式'},
+            ],
+          });
+        }
       }
   
-      v.step = 4; // 対象テーブルのインスタンス化
-      v.step = 4.1; // 
-      if( v.opt.outputLog && v.tables.map(x => x.name).indexOf(v.opt.logSheetName) < 0){
-        v.tables.push(v.opt.logSheetName);
-      }
-      this.tables = {};
+      v.step = 6; // 対象テーブルのインスタンス化
+  
       v.tables.forEach(x => {
+        // sdbTableインスタンス生成時、spreadが必要になるので追加しておく
         x.spread = this.spread;
         v.r = new sdbTable(x);
         if( v.r instanceof Error ) throw v.r;
-        this.tables[v.r.range] = v.r;
+        this.tables[x.name] = v.r;
       });
   
       v.step = 9; // 終了処理

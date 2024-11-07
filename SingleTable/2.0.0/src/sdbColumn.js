@@ -1,5 +1,5 @@
 /** sdbColumn: 項目定義オブジェクト */
-this.sdbColumn = class {
+const sdbColumn = class {
   /** @constructor
    * @param arg {sdbColumn|string} - 項目定義オブジェクト、または項目定義メモまたは項目名
    * @returns {sdbColumn|Error}
@@ -91,9 +91,9 @@ this.sdbColumn = class {
 
         v.step = 4; // 一行毎に属性の表記かを判定
         v.rv = {};
-        arg.split('\n').forEach(prop => {
+        v.lines.forEach(prop => {
           v.m = prop.trim().match(/^["']?(.+?)["']?\s*:\s*["']?(.+)["']?$/);
-          v.rv[v.m[1]] = v.m[2];
+          if( v.m ) v.rv[v.m[1]] = v.m[2];
         });
 
         v.step = 5; // 属性項目が無ければ項目名と看做す
@@ -124,20 +124,27 @@ this.sdbColumn = class {
     console.log(`${v.whois} start.\nopt(${whichType(opt)})=${stringify(opt)}`);
     try {
 
+      v.step = 1; // オプションの既定値を設定
       v.opt = Object.assign({undef:true,defined:false},opt);
+      vlog(v,'opt')
 
+      v.step = 2; // 項目定義の属性を順次チェック
       this.typedef.map(x => x.name).forEach(x => {
-        if( this[x] !== null ){
+        v.typedef = Object.assign({type:'',note:''},this.typedef.find(y => y.name === x));
+        console.log(`l.792 ${x}: value=${this[x]}, typedef=${stringify(this.typedef[x])}`);
+        if( this.hasOwnProperty(x) && this[x] !== null ){
           v.rv.push(`${x}: ${this[x]}`
-            + ( v.opt.defined ? ` // {${this.typedef[x].type}} - ${this.typedef[x].note}` : ''));
+            + ( v.opt.defined ? ` // {${v.typedef.type}} - ${v.typedef.note}` : ''));
         } else if( v.opt.undef ){
-          v.rv.push(`// ${x} {${this.typedef[x].type}} - ${this.typedef[x].note}`);
+          // 説明文をコメントとして出力する場合
+          v.rv.push(`// ${x} {${v.typedef.type}} - ${v.typedef.note}`);
         }
       })
 
       v.step = 9; // 終了処理
+      v.rv = v.rv.join('\n');
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-      return v.rv.join('\n');
+      return v.rv;
 
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
@@ -145,4 +152,4 @@ this.sdbColumn = class {
       return e;
     }
   }
-};
+}

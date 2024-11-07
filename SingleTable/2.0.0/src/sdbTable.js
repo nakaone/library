@@ -1,5 +1,5 @@
 /** sdbTable: シート上の対象範囲(テーブル) */
-this.sdbTable = class {
+const sdbTable = class {
   /** @constructor
    * @param arg {Object}
    * @param arg.spread {SpreadSheet} - スプレッドシート
@@ -26,6 +26,7 @@ this.sdbTable = class {
       // ----------------------------------------------
       v.step = 1; // メンバの初期化、既定値設定
       // ----------------------------------------------
+      this.spread = arg.spread || SpreadsheetApp.getActiveSpreadsheet();
       this.name = arg.name; // {string} テーブル名
       this.range = arg.range || arg.name; // {string} A1記法の範囲指定
       this.sheetName = null; // {string} シート名。this.rangeから導出
@@ -57,6 +58,7 @@ this.sdbTable = class {
         this.top = this.left = 1;
         this.bottom = this.right = Infinity;
       }
+      vlog(this,['sheetName','top','left','right','bottom'],v)
 
       // ----------------------------------------------
       v.step = 3; // this.schemaの作成
@@ -67,7 +69,7 @@ this.sdbTable = class {
         notes: null,
         values: arg.values || null,
       };
-      this.sheet = (arg.spread || SpreadsheetApp.getActiveSpreadsheet()).getSheetByName(this.sheetName);
+      this.sheet = this.spread.getSheetByName(this.sheetName);
       if( this.sheet !== null ){
 
         v.step = 3.11; // シートイメージの読み込み
@@ -79,7 +81,7 @@ this.sdbTable = class {
         this.bottom = Math.min(this.bottom, v.getValues.length);
 
         v.step = 3.13; // 項目定義メモの読み込み
-        v.schemaArg.notes = v.getRange(this.top,this.left,1,this.right-this.left+1).getNotes()[0];
+        v.schemaArg.notes = this.sheet.getRange(this.top,this.left,1,this.right-this.left+1).getNotes()[0];
 
       } else {
 
@@ -95,6 +97,7 @@ this.sdbTable = class {
 
       v.step = 3.3; // スキーマをインスタンス化、右端列番号の確定
       this.schema = new sdbSchema(v.schemaArg);
+      vlog(this,'schema',v);
       if( this.schema instanceof Error ) throw this.schema;
       this.right = this.left - 1 + this.schema.cols.length;
 
@@ -138,7 +141,8 @@ this.sdbTable = class {
       }
 
       v.step = 4.4; // 末尾行番号の確定
-      this.bottom = this.top + this.values.length - 1;
+      this.bottom = this.top + this.values.length;
+      vlog(this,['values','top','left','right','bottom'],v);
 
       // ----------------------------------------------
       v.step = 5; // シート未作成の場合、追加
@@ -158,8 +162,8 @@ this.sdbTable = class {
         }
 
         v.step = 5.3; // シートの追加
-        v.rv = this.spread.insertSheet();
-        v.rv.setName(this.sheetName);
+        this.sheet = this.spread.insertSheet();
+        this.sheet.setName(this.sheetName);
 
         v.step = 5.4; // シートイメージのセット
         this.sheet.getRange(
@@ -172,6 +176,7 @@ this.sdbTable = class {
         v.step = 5.5; // 項目定義メモの追加
         v.notes = [];
         this.schema.cols.forEach(x => {
+          console.log(`l.447`,x)
           v.r = x.getNote();
           if( v.r instanceof Error ) throw v.r;
           v.notes.push(v.r);
@@ -209,6 +214,7 @@ this.sdbTable = class {
           }
         }
       }
+      vlog(this,['unique','auto_increment'],v)
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.`);
