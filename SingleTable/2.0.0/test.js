@@ -1,12 +1,9 @@
 function test(){
-  const v = {whois:'test',step:0,rv:null};
-  console.log(`${v.whois} start.`);
-  try {
-
-    // テストデータの準備
-    tData = [
-      {
-        data: [],
+  const v = {whois:'test',step:0,rv:null,
+    tables:{
+      target: { // "target"シート
+        name: 'target',
+        range: 'target!c3:f',
         raw: [
           ['string','boolean','date','number'],
           ['a',undefined,'1965/9/5',-1],
@@ -15,8 +12,10 @@ function test(){
           ['d',true,new Date(),1.23e+4],  
         ],
         cols: null,
-      },{
-        data: [],
+      },
+      master: { // "master"シート
+        name: 'master',
+        // range指定は無し
         raw: [
           ['タイムスタンプ','メールアドレス','申込者氏名','申込者カナ','申込者の参加','宿泊、テント','引取者氏名','参加者01氏名','参加者01カナ','参加者01所属','参加者02氏名','参加者02カナ','参加者02所属','参加者03氏名','参加者03カナ','参加者03所属','参加者04氏名','参加者04カナ','参加者04所属','参加者05カナ','参加者05氏名','参加者05所属','緊急連絡先','ボランティア募集','備考','キャンセル','authority','CPkey','entryNo','trial','editURL','entryTime','receptionist','fee00','fee01','fee02','fee03','fee04','fee05','memo'],
           ['2024/10/06 19:51:06','nakaone.kunihiro@gmail.com','島津　邦浩','シマヅ　クニヒロ','スタッフとして申込者のみ参加(おやじの会メンバ)','宿泊しない','','','','','','','','','','','','','','','','','','','','','2','jZiM1isJ+1AZoVZ9NnWTvCoeghCm+FY05eb6jhz8wpT3DwqJbNnszW8PWDd3sq0N5mjN/Nshh+RGGrdkm7CC+sO32js+wm1YmYGr0FMaFxvMBDrWzyJ7qrPI4unbx2IkrPkXSmSEbw91n/LOu0x7br106XeJ9TXJbJS16rV0nzs=','1','{"passcode":920782,"created":1728874149915,"result":0,"log":[{"timestamp":1728874165893,"enterd":920782,"status":1},{"timestamp":1728768131564,"enterd":46757,"status":1},{"timestamp":1728768105236,"enterd":46747,"status":0},{"timestamp":1728731037700,"enterd":456044,"status":1},{"timestamp":1728711888082,"enterd":485785,"status":1},{"timestamp":1728709250994,"enterd":425862,"status":1},{"timestamp":1728701179073,"enterd":259177,"status":1},{"timestamp":1728646863938,"enterd":530072,"status":1},{"timestamp":1728646839729,"enterd":null,"status":1}]}','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_ePpXliGgMlVVUYiSKgwX6SXBNrnwozwTMF09Ml1py7Ocp1N7_w5F7uqf52Ak63zBE','','','','','','','','',''],
@@ -66,28 +65,83 @@ function test(){
           {name:'fee05',type:'string'},
           {name:'memo',type:'string'},
         ],
+      },
+    },
+    spread: SpreadsheetApp.getActiveSpreadsheet(),
+    deleteSheet: (sheetName) => {  // テスト用シートの削除
+      v.sheet = v.spread.getSheetByName(sheetName);
+      if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+    },
+    setupData: (sheetName,whichData=0) => { // whichData 0:初期データ不使用, 1:シートイメージ, 2:行オブジェクト
+      console.log(`setupData start. sheetName=${sheetName}, whichData=${whichData}`);
+
+      v.step = 1; // テストデータにパターン設定
+      v.table = Object.assign({
+        // spread: v.spread,
+        name: null,
+        cols:null,
+      },v.tables[sheetName]);
+
+      switch(whichData){
+        case 0: v.step = 2; // 初期データ(values)を使用しない
+          break;
+        case 1: v.step = 3; // シートイメージを初期データとする
+          if( v.tables[sheetName].raw ){
+            v.table.values = v.tables[sheetName].raw;
+          } else {
+            // 行オブジェクトをシートイメージに変換
+            v.table.values = [v.tables[sheetName].cols.map(x => x.name)];
+            for( v.i=0 ; v.i<v.tables[sheetName].data.length ; v.i++ ){
+              v.table.values[v.i+1] = [];
+              for( v.j=0 ; v.j<v.table.values[0].length ; v.j++ ){
+                v.table.values[v.i+1].push(v.tables[sheetName].data[v.table.values[0][v.j]] || null);
+              }
+            }
+          }
+          break;
+        case 2: v.step = 4; // 行オブジェクトを初期データとする
+          if( v.tables[sheetName].data ){
+            v.table.values = v.tables[sheetName].data;
+          } else {
+            // シートイメージを行オブジェクトに変換
+            v.table.values = [];
+            for( v.i=1 ; v.i<v.tables[sheetName].raw.length ; v.i++ ){
+              v.table.values[v.i-1] = {};
+              for( v.j=0 ; v.j<v.tables[sheetName].raw[v.i].length ; v.j++ ){
+                if( v.tables[sheetName].raw[v.i][v.j] ){
+                  v.table.values[v.i-1][v.tables[sheetName].raw[0][v.j]] = v.tables[sheetName].raw[v.i][v.j];
+                }
+              }
+            }
+          }
+          break;
       }
+      console.log(`setupData end. v.table=${stringify(v.table)}`);
+      v.table.spread = v.spread; // ログ表示の際に不要なSpreadsheetオブジェクトは後から追加
+      return v.table;
+    },
+  };
+  console.log(`${v.whois} start.`);
+  try {
+
+    // テストパターンの定義
+    v.tests = [
+      () => { // pattren.0 : "target"シートをシートイメージから新規作成
+        ['target','master','log'].forEach(x => v.deleteSheet(x));
+        return new SpreadDB(v.setupData('target',1));
+      },
+      () => { // pattren.1 : "master"シートをシートイメージから新規作成
+        ['target','master','log'].forEach(x => v.deleteSheet(x));
+        return new SpreadDB(v.setupData('master',1));
+      },
+      () => { // pattren.2 : "target","master"シートを行オブジェクトから新規作成
+        ['target','master','log'].forEach(x => v.deleteSheet(x));
+        new SpreadDB([v.setupData('target',2),v.setupData('master',2)]);
+      },
     ];
 
-    v.pattern = 0;  // テストデータのパターン指定
-    for( v.i=1 ; v.i<tData[v.pattern].raw.length ; v.i++ ){
-      tData[v.pattern].data[v.i-1] = {};
-      for( v.j=0 ; v.j<tData[v.pattern].raw[0].length ; v.j++ ){
-        if( tData[v.pattern].raw[v.i][v.j] ){
-          tData[v.pattern].data[v.i-1][tData[v.pattern].raw[0][v.j]] = tData[v.pattern].raw[v.i][v.j];
-        }
-      }
-    }
-
-    // テスト用シートの再作成
-    v.spread = SpreadsheetApp.getActiveSpreadsheet();
-    ['target','master','log'].forEach(x => {
-      v.sheet = v.spread.getSheetByName(x);
-      if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
-    });
-
-    // ①constructor: シートイメージで生成、シート≠範囲
-    v.rv = new SpreadDB({name:'target',range:'target!c3:f',values:tData[0].raw});
+    // テスト実行
+    v.rv = v.tests[2]();
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
@@ -213,7 +267,7 @@ class SpreadDB {
                 throw new Error(`シートも項目定義も初期データも存在しません`);
               }
               v.step = 3.22; // arg.valuesがシートイメージなら先頭行をheaderとする
-                if( arg.values && Array.isArray(arg.values) ){
+                if( arg.values && Array.isArray(arg.values[0]) ){
                 v.schemaArg.header = arg.values[0];
               }
             }

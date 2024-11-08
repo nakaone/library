@@ -111,7 +111,7 @@ class SpreadDB {
                 throw new Error(`シートも項目定義も初期データも存在しません`);
               }
               v.step = 3.22; // arg.valuesがシートイメージなら先頭行をheaderとする
-                if( arg.values && Array.isArray(arg.values) ){
+                if( arg.values && Array.isArray(arg.values[0]) ){
                 v.schemaArg.header = arg.values[0];
               }
             }
