@@ -41,7 +41,7 @@ class SpreadDB {
               return rv;
             },
           };
-          console.log(`${v.whois} start.\narg=${stringify(arg)}`);
+          console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
           try {
       
             // ----------------------------------------------
@@ -75,7 +75,7 @@ class SpreadDB {
               if( this.left > this.right ) [this.left, this.right] = [this.right, this.left];
               if( this.top > this.bottom ) [this.top, this.bottom] = [this.bottom, this.top];
             } else {    // rangeが非A1記法 ⇒ range=シート名
-              this.sheetName = range;
+              this.sheetName = this.range;
               this.top = this.left = 1;
               this.bottom = this.right = Infinity;
             }
@@ -118,50 +118,57 @@ class SpreadDB {
       
             v.step = 3.3; // スキーマをインスタンス化、右端列番号の確定
             this.schema = new sdbSchema(v.schemaArg);
-            vlog(this,'schema',v);
             if( this.schema instanceof Error ) throw this.schema;
             this.right = this.left - 1 + this.schema.cols.length;
       
             // ----------------------------------------------
             v.step = 4; // this.valuesの作成
             // ----------------------------------------------
-            if( this.sheet === null && whichType(arg.values[0],'Object') ){
-      
-              v.step = 4.1; // シート不在で初期データが行オブジェクトの場合
-              this.values = arg.values;
-      
-            } else {
-      
-              v.step = 4.2; // シート存在または初期データがシートイメージの場合
-              if( this.sheet === null ){
-                // 対象が初期データの場合
-                v.data = arg.values;
-                v.top = 0;
-                v.bottom = arg.values.length;
-                v.left = 0;
-                v.right = arg.values[0].length;
-              } else {
-                // 対象がシートイメージの場合
-                v.data = v.getValues;
-                v.top = this.top;
-                v.bottom = this.bottom + 1;
-                v.left = this.left;
-                v.right = this.right + 1;
-              }
-      
-              v.step = 4.3; // シートイメージから行オブジェクトへ変換
-              this.values = [];
-              for( v.i=v.top+1,v.cnt=0 ; v.i<v.bottom ; v.i++,v.cnt++ ){
-                this.values[v.cnt] = {};
-                for( v.j=v.left ; v.j<v.right ; v.j++ ){
-                  if( v.data[v.i][v.j] ){
-                    this.values[v.cnt][v.data[v.top][v.j]] = v.data[v.i][v.j];
+            v.step = 4.1; // シートイメージから行オブジェクトへ変換関数を定義
+            v.convert = o => {
+              v.obj = [];
+              for( v.i=o.top+1,v.cnt=0 ; v.i<o.bottom ; v.i++,v.cnt++ ){
+                v.obj[v.cnt] = {};
+                for( v.j=o.left ; v.j<o.right ; v.j++ ){
+                  if( o.data[v.i][v.j] ){
+                    v.obj[v.cnt][o.data[o.top][v.j]] = o.data[v.i][v.j];
                   }
                 }
               }
+              return v.obj;
             }
       
-            v.step = 4.4; // 末尾行番号の確定
+            if( this.sheet === null ){
+              if( arg.values ){
+                if( whichType(arg.values[0],'Object') ){
+                  v.step = 4.2; // シート不在で初期データが行オブジェクト
+                  this.values = arg.values;
+                } else {
+                  v.step = 4.3; // シート不在で初期データがシートイメージ
+                  this.values = v.convert({
+                    data  : arg.values,
+                    top   : 0,
+                    left  : 0,
+                    right : arg.values[0].length,
+                    bottom: arg.values.length,
+                  });
+                }
+              } else {
+                v.step = 4.4; // シート不在で初期データ無し
+                this.values = [];
+              }
+            } else {
+              v.step = 4.5; // シートが存在
+              this.values = v.convert({
+                data  : v.getValues,
+                top   : this.top,
+                left  : this.left,
+                right : this.right + 1, // 等号無しで判定するので+1
+                bottom: this.bottom + 1, // 同上
+              });
+            }
+      
+            v.step = 4.6; // 末尾行番号の確定
             this.bottom = this.top + this.values.length;
             vlog(this,['values','top','left','right','bottom'],v);
       
@@ -197,13 +204,11 @@ class SpreadDB {
               v.step = 5.5; // 項目定義メモの追加
               v.notes = [];
               this.schema.cols.forEach(x => {
-                console.log(`l.447`,x)
                 v.r = x.getNote();
                 if( v.r instanceof Error ) throw v.r;
                 v.notes.push(v.r);
               });
-              this.sheet.getRange(this.top,this.left,1,v.notes.length).setNote(v.notes);
-      
+              this.sheet.getRange(this.top,this.left,1,v.notes.length).setNotes([v.notes]);      
             }
       
             // ------------------------------------------------
@@ -230,7 +235,7 @@ class SpreadDB {
                 v.obj = this.schema.auto_increment[v.auto_increment[v.j]];
                 v.val = this.values[v.i][v.auto_increment[v.j]];
                 if( v.obj.step > 0 && v.obj.current < v.val
-                 || v.obj.step < 0 && v.obj.current > v.val ){
+                  || v.obj.step < 0 && v.obj.current > v.val ){
                   v.obj.current = v.val;
                 }
               }
@@ -252,7 +257,7 @@ class SpreadDB {
          * @returns {Object} {success:[],failure:[]}形式
          */
         append(records){
-          const v = {whois:this.constructor.name+'.append',step:0,rv:{success:[],failure:[],log:[]},
+          const v = {whois:'sdbTable.append',step:0,rv:{success:[],failure:[],log:[]},
             cols:[],sheet:[]};
           console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
           try {
@@ -277,7 +282,7 @@ class SpreadDB {
          * @returns {Object} {success:[],failure:[]}形式
          */
         update(records){
-          const v = {whois:this.constructor.name+'.update',step:0,rv:{success:[],failure:[],log:[]},
+          const v = {whois:'sdbTable.update',step:0,rv:{success:[],failure:[],log:[]},
             cols:[],sheet:[]};
           console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
           try {
@@ -302,7 +307,7 @@ class SpreadDB {
          * @returns {Object} {success:[],failure:[]}形式
          */
         delete(records){
-          const v = {whois:this.constructor.name+'.delete',step:0,rv:{success:[],failure:[],log:[]},
+          const v = {whois:'sdbTable.delete',step:0,rv:{success:[],failure:[],log:[]},
             cols:[],sheet:[]};
           console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
           try {
@@ -322,6 +327,7 @@ class SpreadDB {
           }
         }
       }
+      
         /** sdbSchema: シート上の対象範囲(テーブル)の構造定義 */
       const sdbSchema = class {
         /** @constructor
@@ -417,7 +423,7 @@ class SpreadDB {
          * @returns {sdbColumn|Error}
          */
         constructor(arg={}){
-          const v = {whois:'sdbSchema.constructor',step:0,rv:null};
+          const v = {whois:'sdbColumn.constructor',step:0,rv:null};
           console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
           try {
       
@@ -484,7 +490,7 @@ class SpreadDB {
          * @returns {Object} 項目定義オブジェクト
          */
         str2obj(arg){
-          const v = {whois:'sdbSchema.str2obj',step:0,rv:null,
+          const v = {whois:'sdbColumn.str2obj',step:0,rv:null,
             rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現
             isJSON: (str) => {let r;try{r=JSON.parse(str)}catch(e){r=null} return r},
           };
@@ -532,25 +538,24 @@ class SpreadDB {
          * @returns {string} 項目定義メモの文字列
          */
         getNote(opt={}){
-          const v = {whois:'sdbSchema.getNote',step:0,rv:[]};
-          console.log(`${v.whois} start.\nopt(${whichType(opt)})=${stringify(opt)}`);
+          const v = {whois:'sdbColumn.getNote',step:0,rv:[]};
+          console.log(`${v.whois} start.\nthis=${stringify(this)}\nopt(${whichType(opt)})=${stringify(opt)}`);
           try {
       
             v.step = 1; // オプションの既定値を設定
             v.opt = Object.assign({undef:true,defined:false},opt);
-            vlog(v,'opt')
       
             v.step = 2; // 項目定義の属性を順次チェック
             this.typedef.map(x => x.name).forEach(x => {
               v.typedef = Object.assign({type:'',note:''},this.typedef.find(y => y.name === x));
-              console.log(`l.792 ${x}: value=${this[x]}, typedef=${stringify(this.typedef[x])}`);
-              if( this.hasOwnProperty(x) && this[x] !== null ){
-                v.rv.push(`${x}: ${this[x]}`
-                  + ( v.opt.defined ? ` // {${v.typedef.type}} - ${v.typedef.note}` : ''));
+              if( this[x] !== null ){
+                v.l = `${x}: ${this[x]}`
+                  + ( v.opt.defined ? ` // {${v.typedef.type}} - ${v.typedef.note}` : '');
               } else if( v.opt.undef ){
                 // 説明文をコメントとして出力する場合
-                v.rv.push(`// ${x} {${v.typedef.type}} - ${v.typedef.note}`);
+                v.l = `// ${x} {${v.typedef.type}} - ${v.typedef.note}`;
               }
+              v.rv.push(v.l);
             })
       
             v.step = 9; // 終了処理

@@ -5,7 +5,7 @@ const sdbColumn = class {
    * @returns {sdbColumn|Error}
    */
   constructor(arg={}){
-    const v = {whois:'sdbSchema.constructor',step:0,rv:null};
+    const v = {whois:'sdbColumn.constructor',step:0,rv:null};
     console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
 
@@ -72,7 +72,7 @@ const sdbColumn = class {
    * @returns {Object} 項目定義オブジェクト
    */
   str2obj(arg){
-    const v = {whois:'sdbSchema.str2obj',step:0,rv:null,
+    const v = {whois:'sdbColumn.str2obj',step:0,rv:null,
       rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現
       isJSON: (str) => {let r;try{r=JSON.parse(str)}catch(e){r=null} return r},
     };
@@ -120,25 +120,24 @@ const sdbColumn = class {
    * @returns {string} 項目定義メモの文字列
    */
   getNote(opt={}){
-    const v = {whois:'sdbSchema.getNote',step:0,rv:[]};
-    console.log(`${v.whois} start.\nopt(${whichType(opt)})=${stringify(opt)}`);
+    const v = {whois:'sdbColumn.getNote',step:0,rv:[]};
+    console.log(`${v.whois} start.\nthis=${stringify(this)}\nopt(${whichType(opt)})=${stringify(opt)}`);
     try {
 
       v.step = 1; // オプションの既定値を設定
       v.opt = Object.assign({undef:true,defined:false},opt);
-      vlog(v,'opt')
 
       v.step = 2; // 項目定義の属性を順次チェック
       this.typedef.map(x => x.name).forEach(x => {
         v.typedef = Object.assign({type:'',note:''},this.typedef.find(y => y.name === x));
-        console.log(`l.792 ${x}: value=${this[x]}, typedef=${stringify(this.typedef[x])}`);
-        if( this.hasOwnProperty(x) && this[x] !== null ){
-          v.rv.push(`${x}: ${this[x]}`
-            + ( v.opt.defined ? ` // {${v.typedef.type}} - ${v.typedef.note}` : ''));
+        if( this[x] !== null ){
+          v.l = `${x}: ${this[x]}`
+            + ( v.opt.defined ? ` // {${v.typedef.type}} - ${v.typedef.note}` : '');
         } else if( v.opt.undef ){
           // 説明文をコメントとして出力する場合
-          v.rv.push(`// ${x} {${v.typedef.type}} - ${v.typedef.note}`);
+          v.l = `// ${x} {${v.typedef.type}} - ${v.typedef.note}`;
         }
+        v.rv.push(v.l);
       })
 
       v.step = 9; // 終了処理
