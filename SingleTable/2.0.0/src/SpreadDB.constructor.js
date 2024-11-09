@@ -20,6 +20,7 @@ constructor(tables,opt={}){
     //::$src/sdbTable.js::
     //::$src/sdbSchema.js::
     //::$src/sdbColumn.js::
+    //::$src/sdbLog.js::
 
     v.step = 2; // メンバの初期化
     // spread {Spreadsheet} スプレッドシートオブジェクト(=ファイル。シートの集合)
@@ -54,17 +55,7 @@ constructor(tables,opt={}){
       if( v.tables.map(x => x.name).indexOf(this.logSheetName) < 0 ){
         v.tables.push({
           name: this.logSheetName,
-          cols: [  // 更新履歴シートの項目定義
-            {name:'id',type:'UUID',note:'ログの一意キー項目',primaryKey:true},
-            {name:'timestamp',type:'Date',note:'更新日時。yyyy-MM-ddThh:mm:ss.nnnZ形式'},
-            {name:'account',type:'string|number',note:'更新者の識別子'},
-            {name:'range',type:'string',note:'更新対象となった範囲名(テーブル名)'},
-            {name:'result',type:'boolean',note:'true:追加・更新が成功'},
-            {name:'message',type:'string',note:'エラーメッセージ'},
-            {name:'before',type:'JSON',note:'更新前の行データオブジェクト'},
-            {name:'after',type:'JSON',note:'更新後の行データオブジェクト'},
-            {name:'diff',type:'JSON',note:'追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式'},
-          ],
+          cols: sdbLog.typedef(),
         });
       }
     }
