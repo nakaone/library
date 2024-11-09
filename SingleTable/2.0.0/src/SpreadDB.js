@@ -11,7 +11,7 @@ class SpreadDB {
       cols:[],sheet:[]};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -19,14 +19,14 @@ class SpreadDB {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
   }
-  
+
   /** update: 単数または複数のシートの行を更新
    * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
    * @returns {Object} {success:[],failure:[]}形式
@@ -36,7 +36,7 @@ class SpreadDB {
       cols:[],sheet:[]};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -44,14 +44,14 @@ class SpreadDB {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
   }
-  
+
   /** delete: 単数または複数のシートから行を削除
    * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
    * @returns {Object} {success:[],failure:[]}形式
@@ -61,7 +61,7 @@ class SpreadDB {
       cols:[],sheet:[]};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -69,7 +69,7 @@ class SpreadDB {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
@@ -86,7 +86,7 @@ class SpreadDB {
       cols:[],sheet:[]};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -94,7 +94,7 @@ class SpreadDB {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);

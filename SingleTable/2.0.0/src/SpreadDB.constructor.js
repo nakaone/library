@@ -29,6 +29,12 @@ constructor(tables,opt={}){
 
     v.step = 3; // 引数tablesが配列でない場合、配列に変換(以降で統一的に処理するため)
     v.tables = Array.isArray(tables) ? tables : [tables];
+    for( v.i=0 ; v.i<v.tables.length ; v.i++ ){
+      // 文字列ならname属性指定と看做す
+      if(whichType(v.tables[v.i],'String')){
+        v.tables[v.i] = {name: v.tables[v.i]};
+      };
+    }
 
     v.step = 4; // 引数「opt」の設定値をメンバとして登録
     v.opt = mergeDeeply(opt,{

@@ -157,20 +157,18 @@ class SpreadDB {
                 v.step = 4.4; // シート不在で初期データ無し
                 this.values = [];
               }
+              v.step = 4.5; // 末尾行番号の確定
+              this.bottom = this.top + this.values.length;
             } else {
-              v.step = 4.5; // シートが存在
+              v.step = 4.6; // シートが存在
               this.values = v.convert({
                 data  : v.getValues,
                 top   : this.top,
                 left  : this.left,
                 right : this.right + 1, // 等号無しで判定するので+1
-                bottom: this.bottom + 1, // 同上
+                bottom: this.bottom,
               });
             }
-      
-            v.step = 4.6; // 末尾行番号の確定
-            this.bottom = this.top + this.values.length;
-            vlog(this,['values','top','left','right','bottom'],v);
       
             // ----------------------------------------------
             v.step = 5; // シート未作成の場合、追加
@@ -208,7 +206,7 @@ class SpreadDB {
                 if( v.r instanceof Error ) throw v.r;
                 v.notes.push(v.r);
               });
-              this.sheet.getRange(this.top,this.left,1,v.notes.length).setNotes([v.notes]);      
+              this.sheet.getRange(this.top,this.left,1,v.notes.length).setNotes([v.notes]);
             }
       
             // ------------------------------------------------
@@ -240,7 +238,7 @@ class SpreadDB {
                 }
               }
             }
-            vlog(this,['unique','auto_increment'],v)
+            vlog(this,['schema.unique','schema.auto_increment'],v)
       
             v.step = 9; // 終了処理
             console.log(`${v.whois} normal end.`);
@@ -327,7 +325,6 @@ class SpreadDB {
           }
         }
       }
-      
         /** sdbSchema: シート上の対象範囲(テーブル)の構造定義 */
       const sdbSchema = class {
         /** @constructor
@@ -579,6 +576,12 @@ class SpreadDB {
   
       v.step = 3; // 引数tablesが配列でない場合、配列に変換(以降で統一的に処理するため)
       v.tables = Array.isArray(tables) ? tables : [tables];
+      for( v.i=0 ; v.i<v.tables.length ; v.i++ ){
+        // 文字列ならname属性指定と看做す
+        if(whichType(v.tables[v.i],'String')){
+          v.tables[v.i] = {name: v.tables[v.i]};
+        };
+      }
   
       v.step = 4; // 引数「opt」の設定値をメンバとして登録
       v.opt = mergeDeeply(opt,{
@@ -643,7 +646,7 @@ class SpreadDB {
       cols:[],sheet:[]};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -651,14 +654,14 @@ class SpreadDB {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
   }
-  
+
   /** update: 単数または複数のシートの行を更新
    * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
    * @returns {Object} {success:[],failure:[]}形式
@@ -668,7 +671,7 @@ class SpreadDB {
       cols:[],sheet:[]};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -676,14 +679,14 @@ class SpreadDB {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
   }
-  
+
   /** delete: 単数または複数のシートから行を削除
    * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
    * @returns {Object} {success:[],failure:[]}形式
@@ -693,7 +696,7 @@ class SpreadDB {
       cols:[],sheet:[]};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -701,7 +704,7 @@ class SpreadDB {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
@@ -718,7 +721,7 @@ class SpreadDB {
       cols:[],sheet:[]};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -726,7 +729,7 @@ class SpreadDB {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);

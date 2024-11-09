@@ -136,20 +136,18 @@ const sdbTable = class {
           v.step = 4.4; // シート不在で初期データ無し
           this.values = [];
         }
+        v.step = 4.5; // 末尾行番号の確定
+        this.bottom = this.top + this.values.length;
       } else {
-        v.step = 4.5; // シートが存在
+        v.step = 4.6; // シートが存在
         this.values = v.convert({
           data  : v.getValues,
           top   : this.top,
           left  : this.left,
           right : this.right + 1, // 等号無しで判定するので+1
-          bottom: this.bottom + 1, // 同上
+          bottom: this.bottom,
         });
       }
-
-      v.step = 4.6; // 末尾行番号の確定
-      this.bottom = this.top + this.values.length;
-      vlog(this,['values','top','left','right','bottom'],v);
 
       // ----------------------------------------------
       v.step = 5; // シート未作成の場合、追加
@@ -187,7 +185,7 @@ const sdbTable = class {
           if( v.r instanceof Error ) throw v.r;
           v.notes.push(v.r);
         });
-        this.sheet.getRange(this.top,this.left,1,v.notes.length).setNotes([v.notes]);      
+        this.sheet.getRange(this.top,this.left,1,v.notes.length).setNotes([v.notes]);
       }
 
       // ------------------------------------------------
@@ -219,7 +217,7 @@ const sdbTable = class {
           }
         }
       }
-      vlog(this,['unique','auto_increment'],v)
+      vlog(this,['schema.unique','schema.auto_increment'],v)
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.`);

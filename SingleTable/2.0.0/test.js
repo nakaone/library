@@ -138,10 +138,49 @@ function test(){
         ['target','master','log'].forEach(x => v.deleteSheet(x));
         new SpreadDB([v.setupData('target',2),v.setupData('master',2)]);
       },
+      () => { // pattern.3 : 既存シートのスキーマ他、各種属性設定状況を確認
+        // spread {Spreadsheet} スプレッドシートオブジェクト
+        // name {string} テーブル名
+        // range {string} A1記法の範囲指定
+        // sheetName {string} シート名
+        // sheet {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
+        // schema {sdbSchema} シートの項目定義
+        //    cols {sdbColumn[]} 項目定義オブジェクトの配列
+        //       name {string} 項目名
+        //       type {string} データ型。string,number,boolean,Date,JSON,UUID
+        //       format {string} 表示形式。type=Dateの場合のみ指定
+        //       options {string} 取り得る選択肢(配列)のJSON表現。ex. ["未入場","既収","未収","無料"]
+        //       default {any} 既定値
+        //       primaryKey {boolean}=false 一意キー項目ならtrue
+        //       unique {boolean}=false primaryKey以外で一意な値を持つならtrue
+        //       auto_increment {bloolean|null|number|number[]}=false 自動採番項目。
+        //         null ⇒ 自動採番しない
+        //         boolean ⇒ true:自動採番する(基数=1,増減値=1)、false:自動採番しない
+        //         number ⇒ 自動採番する(基数=指定値,増減値=1)
+        //         number[] ⇒ 自動採番する(基数=添字0,増減値=添字1)
+        //       suffix {string} "not null"等、上記以外のSQLのcreate table文のフィールド制約
+        //       note {string} 本項目に関する備考。create table等では使用しない
+        //    primaryKey {string}='id' 一意キー項目名
+        //    unique {Object.<string, any[]>} primaryKeyおよびunique属性項目の管理情報。メンバ名はprimaryKey/uniqueの項目名
+        //    auto_increment {Object.<string,Object>} auto_increment属性項目の管理情報。メンバ名はauto_incrementの項目名
+        //      base {number} 基数
+        //      step {number} 増減値
+        //      current {number} 現在の最大(小)値。currentはsdbTableインスタンスで操作する。
+        //    defaultRow {Object} 既定値項目で構成されたオブジェクト。appendの際のプロトタイプ
+        // values {Object[]} 行オブジェクトの配列。{項目名:値,..} 形式
+        // top {number} ヘッダ行の行番号(自然数)。通常header+1
+        // left {number} データ領域左端の列番号(自然数)
+        // right {number} データ領域右端の列番号(自然数)
+        // bottom {number} データ領域下端の行番号(自然数)
+        v.r = new SpreadDB([{name:'target',range:'target!c3:f'},'master']);
+        return JSON.parse(JSON.stringify(v.r.tables.target));
+        //v.rv = Object.keys(v.r);
+        //v.rv = {schema:v.r.target.schema,values:v.r.target.values};
+      },
     ];
 
     // テスト実行
-    v.rv = v.tests[2]();
+    v.rv = v.tests[3]();
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
@@ -313,20 +352,18 @@ class SpreadDB {
                 v.step = 4.4; // シート不在で初期データ無し
                 this.values = [];
               }
+              v.step = 4.5; // 末尾行番号の確定
+              this.bottom = this.top + this.values.length;
             } else {
-              v.step = 4.5; // シートが存在
+              v.step = 4.6; // シートが存在
               this.values = v.convert({
                 data  : v.getValues,
                 top   : this.top,
                 left  : this.left,
                 right : this.right + 1, // 等号無しで判定するので+1
-                bottom: this.bottom + 1, // 同上
+                bottom: this.bottom,
               });
             }
-      
-            v.step = 4.6; // 末尾行番号の確定
-            this.bottom = this.top + this.values.length;
-            vlog(this,['values','top','left','right','bottom'],v);
       
             // ----------------------------------------------
             v.step = 5; // シート未作成の場合、追加
@@ -364,7 +401,7 @@ class SpreadDB {
                 if( v.r instanceof Error ) throw v.r;
                 v.notes.push(v.r);
               });
-              this.sheet.getRange(this.top,this.left,1,v.notes.length).setNotes([v.notes]);      
+              this.sheet.getRange(this.top,this.left,1,v.notes.length).setNotes([v.notes]);
             }
       
             // ------------------------------------------------
@@ -396,7 +433,7 @@ class SpreadDB {
                 }
               }
             }
-            vlog(this,['unique','auto_increment'],v)
+            vlog(this,['schema.unique','schema.auto_increment'],v)
       
             v.step = 9; // 終了処理
             console.log(`${v.whois} normal end.`);
@@ -483,7 +520,6 @@ class SpreadDB {
           }
         }
       }
-      
         /** sdbSchema: シート上の対象範囲(テーブル)の構造定義 */
       const sdbSchema = class {
         /** @constructor
@@ -735,6 +771,12 @@ class SpreadDB {
   
       v.step = 3; // 引数tablesが配列でない場合、配列に変換(以降で統一的に処理するため)
       v.tables = Array.isArray(tables) ? tables : [tables];
+      for( v.i=0 ; v.i<v.tables.length ; v.i++ ){
+        // 文字列ならname属性指定と看做す
+        if(whichType(v.tables[v.i],'String')){
+          v.tables[v.i] = {name: v.tables[v.i]};
+        };
+      }
   
       v.step = 4; // 引数「opt」の設定値をメンバとして登録
       v.opt = mergeDeeply(opt,{
@@ -799,7 +841,7 @@ class SpreadDB {
       cols:[],sheet:[]};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -807,14 +849,14 @@ class SpreadDB {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
   }
-  
+
   /** update: 単数または複数のシートの行を更新
    * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
    * @returns {Object} {success:[],failure:[]}形式
@@ -824,7 +866,7 @@ class SpreadDB {
       cols:[],sheet:[]};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -832,14 +874,14 @@ class SpreadDB {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
   }
-  
+
   /** delete: 単数または複数のシートから行を削除
    * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
    * @returns {Object} {success:[],failure:[]}形式
@@ -849,7 +891,7 @@ class SpreadDB {
       cols:[],sheet:[]};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -857,7 +899,7 @@ class SpreadDB {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
@@ -874,7 +916,7 @@ class SpreadDB {
       cols:[],sheet:[]};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -882,7 +924,7 @@ class SpreadDB {
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-  
+
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
