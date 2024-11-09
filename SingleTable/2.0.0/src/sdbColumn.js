@@ -38,7 +38,7 @@ const sdbColumn = class {
       });
 
       v.step = 4; // auto_incrementをオブジェクトに変換
-      if( this.auto_increment !== null && this.auto_increment !== false ){
+      if( this.auto_increment !== null && String(this.auto_increment).toLowerCase() !== 'false' ){
         switch( whichType(this.auto_increment) ){
           case 'Array': this.auto_increment = {
             base: this.auto_increment[0],
