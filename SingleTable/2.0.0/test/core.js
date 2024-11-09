@@ -177,10 +177,27 @@ function test(){
         //v.rv = Object.keys(v.r);
         //v.rv = {schema:v.r.target.schema,values:v.r.target.values};
       },
+      () => { // pattern.4 : 既存シートのスキーマ他、各種属性設定状況を確認
+        v.r = new SpreadDB('master');
+        v.r = JSON.parse(JSON.stringify(v.r.tables.master));
+        v.log = {};
+        ['name','range','sheetName','top','left','right','bottom'].forEach(x => v.log[x] = v.r[x]);
+        console.log(JSON.stringify(v.log));
+        console.log(stringify(v.r.values[0]));
+        // schema: ログに出力しきれないので分割
+        v.log = JSON.parse(JSON.stringify(v.r.schema));
+        delete v.log.cols;
+        console.log(JSON.stringify(v.log));
+        v.r.schema.cols.forEach(col => console.log(JSON.stringify(col)));
+      },
+      () => { // pattern.5 : 項目定義メモを編集、結果が反映されていることの確認
+        v.r = new SpreadDB('master');
+        return v.r.tables.master.schema.cols.find(x => x.name === '申込者氏名').unique;
+      },
     ];
 
     // テスト実行
-    v.rv = v.tests[3]();
+    v.rv = v.tests[5]();
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
