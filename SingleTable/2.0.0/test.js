@@ -177,10 +177,27 @@ function test(){
         //v.rv = Object.keys(v.r);
         //v.rv = {schema:v.r.target.schema,values:v.r.target.values};
       },
+      () => { // pattern.4 : 既存シートのスキーマ他、各種属性設定状況を確認
+        v.r = new SpreadDB('master');
+        v.r = JSON.parse(JSON.stringify(v.r.tables.master));
+        v.log = {};
+        ['name','range','sheetName','top','left','right','bottom'].forEach(x => v.log[x] = v.r[x]);
+        console.log(JSON.stringify(v.log));
+        console.log(stringify(v.r.values[0]));
+        // schema: ログに出力しきれないので分割
+        v.log = JSON.parse(JSON.stringify(v.r.schema));
+        delete v.log.cols;
+        console.log(JSON.stringify(v.log));
+        v.r.schema.cols.forEach(col => console.log(JSON.stringify(col)));
+      },
+      () => { // pattern.5 : 項目定義メモを編集、結果が反映されていることの確認
+        v.r = new SpreadDB('master');
+        return v.r.tables.master.schema.cols.find(x => x.name === '申込者氏名').unique;
+      },
     ];
 
     // テスト実行
-    v.rv = v.tests[3]();
+    v.rv = v.tests[5]();
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
@@ -610,6 +627,25 @@ class SpreadDB {
       }
         /** sdbColumn: 項目定義オブジェクト */
       const sdbColumn = class {
+            
+        static typedef(){return [
+          {name:'name',type:'string',note:'項目名'},
+          {name:'type',type:'string',note:'データ型。string,number,boolean,Date,JSON,UUID'},
+          {name:'format',type:'string',note:'表示形式。type=Dateの場合のみ指定'},
+          {name:'options',type:'number|string|boolean|Date',note:'取り得る選択肢(配列)のJSON表現。ex.["未入場","既収","未収","無料"]'},
+          {name:'default',type:'number|string|boolean|Date',note:'既定値'},
+          {name:'primaryKey',type:'boolean',note:'一意キー項目ならtrue'},
+          {name:'unique',type:'boolean',note:'primaryKey以外で一意な値を持つならtrue'},
+          {name:'auto_increment',type:'null|bloolean|number|number[]',note:'自動採番項目'
+            + '\n// null ⇒ 自動採番しない'
+            + '\n// boolean ⇒ true:自動採番する(基数=1,増減値=1)、false:自動採番しない'
+            + '\n// number ⇒ 自動採番する(基数=指定値,増減値=1)'
+            + '\n// number[] ⇒ 自動採番する(基数=添字0,増減値=添字1)'
+          },
+          {name:'suffix',type:'string',note:'"not null"等、上記以外のSQLのcreate table文のフィールド制約'},
+          {name:'note',type:'string',note:'本項目に関する備考。create table等では使用しない'},
+        ]};
+      
         /** @constructor
          * @param arg {sdbColumn|string} - 項目定義オブジェクト、または項目定義メモまたは項目名
          * @returns {sdbColumn|Error}
@@ -619,35 +655,16 @@ class SpreadDB {
           console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
           try {
       
-            v.step = 1; // 項目定義オブジェクトのプロトタイプ
-            this.typedef = [
-              {name:'name',type:'string',note:'項目名'},
-              {name:'type',type:'string',note:'データ型。string,number,boolean,Date,JSON,UUID'},
-              {name:'format',type:'string',note:'表示形式。type=Dateの場合のみ指定'},
-              {name:'options',type:'number|string|boolean|Date',note:'取り得る選択肢(配列)のJSON表現。ex.["未入場","既収","未収","無料"]'},
-              {name:'default',type:'number|string|boolean|Date',note:'既定値'},
-              {name:'primaryKey',type:'boolean',note:'一意キー項目ならtrue'},
-              {name:'unique',type:'boolean',note:'primaryKey以外で一意な値を持つならtrue'},
-              {name:'auto_increment',type:'null|bloolean|number|number[]',note:'自動採番項目'
-                + '\n// null ⇒ 自動採番しない'
-                + '\n// boolean ⇒ true:自動採番する(基数=1,増減値=1)、false:自動採番しない'
-                + '\n// number ⇒ 自動採番する(基数=指定値,増減値=1)'
-                + '\n// number[] ⇒ 自動採番する(基数=添字0,増減値=添字1)'
-              },
-              {name:'suffix',type:'string',note:'"not null"等、上記以外のSQLのcreate table文のフィールド制約'},
-              {name:'note',type:'string',note:'本項目に関する備考。create table等では使用しない'},
-            ];
-      
-            v.step = 2; // 引数が項目定義メモまたは項目名の場合、オブジェクトに変換
+            v.step = 1; // 引数が項目定義メモまたは項目名の場合、オブジェクトに変換
             if( whichType(arg,'String') ) arg = this.str2obj(arg);
             if( arg instanceof Error ) throw arg;
       
-            v.step = 3; // メンバに格納
-            this.typedef.map(x => x.name).forEach(x => {
+            v.step = 2; // メンバに格納
+            sdbColumn.typedef().map(x => x.name).forEach(x => {
               this[x] = arg.hasOwnProperty(x) ? arg[x] : null;
             });
       
-            v.step = 4; // auto_incrementをオブジェクトに変換
+            v.step = 3; // auto_incrementをオブジェクトに変換
             if( this.auto_increment !== null && String(this.auto_increment).toLowerCase() !== 'false' ){
               switch( whichType(this.auto_increment) ){
                 case 'Array': this.auto_increment = {
@@ -730,7 +747,7 @@ class SpreadDB {
          * @returns {string} 項目定義メモの文字列
          */
         getNote(opt={}){
-          const v = {whois:'sdbColumn.getNote',step:0,rv:[]};
+          const v = {whois:'sdbColumn.getNote',step:0,rv:[],prop:{}};
           console.log(`${v.whois} start.\nthis=${stringify(this)}\nopt(${whichType(opt)})=${stringify(opt)}`);
           try {
       
@@ -738,17 +755,18 @@ class SpreadDB {
             v.opt = Object.assign({undef:true,defined:false},opt);
       
             v.step = 2; // 項目定義の属性を順次チェック
-            this.typedef.map(x => x.name).forEach(x => {
-              v.typedef = Object.assign({type:'',note:''},this.typedef.find(y => y.name === x));
-              if( this[x] !== null ){
-                v.l = `${x}: ${this[x]}`
-                  + ( v.opt.defined ? ` // {${v.typedef.type}} - ${v.typedef.note}` : '');
+            v.typedef = sdbColumn.typedef();
+            for( v.i=0 ; v.i<v.typedef.length ; v.i++ ){
+              v.typedef[v.i] = Object.assign({type:'',note:''},v.typedef[v.i]);
+              if( this[v.typedef[v.i].name] !== null ){
+                v.l = `${v.typedef[v.i].name}: ${this[v.typedef[v.i].name]}`
+                  + ( v.opt.defined ? ` // {${v.typedef[v.i].type}} - ${v.typedef[v.i].note}` : '');
               } else if( v.opt.undef ){
                 // 説明文をコメントとして出力する場合
-                v.l = `// ${x} {${v.typedef.type}} - ${v.typedef.note}`;
+                v.l = `// ${v.typedef[v.i].name}:undefined {${v.typedef[v.i].type}} - ${v.typedef[v.i].note}`;
               }
               v.rv.push(v.l);
-            })
+            }
       
             v.step = 9; // 終了処理
             v.rv = v.rv.join('\n');
