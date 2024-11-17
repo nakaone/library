@@ -61,10 +61,10 @@ constructor(tables,opt={}){
     }
 
     v.step = 6; // 対象テーブルのインスタンス化
-
     v.tables.forEach(x => {
       // sdbTableインスタンス生成時、spreadが必要になるので追加しておく
       x.spread = this.spread;
+      x.account = this.account;
       v.r = new sdbTable(x);
       if( v.r instanceof Error ) throw v.r;
       this.tables[x.name] = v.r;

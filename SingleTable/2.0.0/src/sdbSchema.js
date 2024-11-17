@@ -50,16 +50,20 @@ const sdbSchema = class {
       this.unique = {};
       this.auto_increment = {};
       this.defaultRow = {};
+      v.bool = arg => {  // 引数を真偽値として評価。真偽値として評価不能ならnull
+        let rv={"true":true,"false":false}[String(arg).toLowerCase()];
+        return typeof rv === 'boolean' ? rv : null
+      };
       for( v.i=0 ; v.i<this.cols.length ; v.i++ ){
 
         v.step = 3.1; // primaryKey
-        if( this.cols[v.i].primaryKey === true ){
+        if( v.bool(this.cols[v.i].primaryKey) === true ){
           this.primaryKey = this.cols[v.i].name;
           this.unique[this.cols[v.i].name] = [];
         }
 
         v.step = 3.2; // unique
-        if( this.cols[v.i].unique === true ){
+        if( v.bool(this.cols[v.i].unique) === true ){
           this.unique[this.cols[v.i].name] = [];
         }
 
@@ -71,7 +75,7 @@ const sdbSchema = class {
         }
 
         v.step = 3.4; // default
-        if( this.cols[v.i].default !== null ){
+        if( String(this.cols[v.i].default).toLowerCase() !== 'null' ){
           this.defaultRow[this.cols[v.i].name] = this.cols[v.i].default;
         }
       }

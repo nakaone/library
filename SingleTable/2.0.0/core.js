@@ -47,9 +47,10 @@ class SpreadDB {
             // ----------------------------------------------
             v.step = 1; // メンバの初期化、既定値設定
             // ----------------------------------------------
-            this.spread = arg.spread || SpreadsheetApp.getActiveSpreadsheet();
+            this.spread = arg.spread; // || SpreadsheetApp.getActiveSpreadsheet();
             this.name = arg.name; // {string} テーブル名
             this.range = arg.range || arg.name; // {string} A1記法の範囲指定
+            this.account = arg.account || null; // {string} 更新者のアカウント
             this.sheetName = null; // {string} シート名。this.rangeから導出
             this.sheet = null; // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
             this.schema = null; // {sdbSchema[]} シートの項目定義
@@ -125,13 +126,13 @@ class SpreadDB {
             v.step = 4; // this.valuesの作成
             // ----------------------------------------------
             v.step = 4.1; // シートイメージから行オブジェクトへ変換関数を定義
-            v.convert = o => {
+            v.convert = o => { // top,left,right,bottomは全てシートベースの行列番号(自然数)で計算
               v.obj = [];
-              for( v.i=o.top+1,v.cnt=0 ; v.i<o.bottom ; v.i++,v.cnt++ ){
+              for( v.i=o.top,v.cnt=0 ; v.i<o.bottom ; v.i++,v.cnt++ ){
                 v.obj[v.cnt] = {};
-                for( v.j=o.left ; v.j<o.right ; v.j++ ){
+                for( v.j=o.left-1 ; v.j<o.right ; v.j++ ){
                   if( o.data[v.i][v.j] ){
-                    v.obj[v.cnt][o.data[o.top][v.j]] = o.data[v.i][v.j];
+                    v.obj[v.cnt][o.data[o.top-1][v.j]] = o.data[v.i][v.j];
                   }
                 }
               }
@@ -147,8 +148,8 @@ class SpreadDB {
                   v.step = 4.3; // シート不在で初期データがシートイメージ
                   this.values = v.convert({
                     data  : arg.values,
-                    top   : 0,
-                    left  : 0,
+                    top   : 1,  // シート上に展開した場合の先頭行番号
+                    left  : 1,  // 同、左端列番号
                     right : arg.values[0].length,
                     bottom: arg.values.length,
                   });
@@ -165,10 +166,11 @@ class SpreadDB {
                 data  : v.getValues,
                 top   : this.top,
                 left  : this.left,
-                right : this.right + 1, // 等号無しで判定するので+1
+                right : this.right,
                 bottom: this.bottom,
               });
             }
+            vlog(this,'values',v);
       
             // ----------------------------------------------
             v.step = 5; // シート未作成の場合、追加
@@ -210,35 +212,30 @@ class SpreadDB {
             }
       
             // ------------------------------------------------
-            v.step = 6; // this.schema.unique,auto_incrementに
-            // データスキャンの結果を反映
+            v.step = 6; // unique,auto_incrementの作成
             // ------------------------------------------------
-            v.unique = Object.keys(this.schema.unique);
-            v.auto_increment = Object.keys(this.schema.auto_increment);
-            for( v.i=0 ; v.i<this.values.length ; v.i++ ){
-      
-              v.step = 6.1; // this.schema.uniqueに設定されている値をMapに追加
-              for( v.j=0 ; v.j<v.unique.length ; v.j++ ){
-                v.map = this.schema.unique[v.unique[v.j]];
-                v.val = this.values[v.i][v.unique[v.j]];
-                if( v.map.indexOf(v.val) < 0 ){
-                  v.map.push(v.val);
-                } else {
-                  throw new Error(`「${v.unique[v.j]}」欄の値"${v.val}"は重複しています`);
+            v.step = 6.1; // unique項目の値を洗い出し
+            this.values.forEach(vObj => {
+              Object.keys(this.schema.unique).forEach(unique => {
+                if( vObj[unique] ){
+                  if( this.schema.unique[unique].indexOf(vObj[unique]) < 0 ){
+                    this.schema.unique[unique].push(vObj[unique]);
+                  } else {
+                    throw new Error(`${v.whois}:「${unique}」欄の値"${vObj[unique]}"は重複しています`);
+                  }
                 }
-              }
+              });
       
-              v.step = 6.2; // this.schema.auto_incrementの最大(小)値をcurrentにセット
-              for( v.j=0 ; v.j<v.auto_increment.length ; v.j++ ){
-                v.obj = this.schema.auto_increment[v.auto_increment[v.j]];
-                v.val = this.values[v.i][v.auto_increment[v.j]];
-                if( v.obj.step > 0 && v.obj.current < v.val
-                  || v.obj.step < 0 && v.obj.current > v.val ){
-                  v.obj.current = v.val;
+              v.step = 6.2; // auto_increment項目の値を洗い出し
+              Object.keys(this.schema.auto_increment).forEach(ai => {
+                v.c = this.schema.auto_increment[ai].current;
+                v.s = this.schema.auto_increment[ai].step;
+                v.v = Number(vObj[ai]);
+                if( (v.s > 0 && v.c < v.v) || (v.s < 0 && v.c > v.v) ){
+                  this.schema.auto_increment[ai].current = v.v;
                 }
-              }
-            }
-            vlog(this,['schema.unique','schema.auto_increment'],v)
+              });
+            });
       
             v.step = 9; // 終了処理
             console.log(`${v.whois} normal end.`);
@@ -255,14 +252,58 @@ class SpreadDB {
          * @returns {Object} {success:[],failure:[]}形式
          */
         append(records){
-          const v = {whois:'sdbTable.append',step:0,rv:{success:[],failure:[],log:[]},
-            cols:[],sheet:[]};
+          const v = {whois:'sdbTable.append',step:0,rv:[],sheet:[]};
           console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
           try {
       
             // ------------------------------------------------
             v.step = 1; // 事前準備
             // ------------------------------------------------
+            if( !Array.isArray(records)) records = [records];
+      
+            // ------------------------------------------------
+            v.step = 2; // 追加レコードを順次チェック
+            // ------------------------------------------------
+            for( v.i=0 ; v.i<records.length ; v.i++ ){
+      
+              // 追加レコードに設定された項目名のリストを作成
+              v.cols = Object.keys(records[v.i]);
+      
+              v.step = 3; // pkey or uniqueのチェック、存在していれば失敗の配列に加えて追加対象から除外
+              v.result = true;
+              for( v.j=0 ; v.j<v.cols.length ; v.j++ ){
+                if( this.schema.unique.hasOwnProperty(v.cols[v.j]) ){
+                  if( this.schema.unique[v.cols[v.j]].indexOf(records[v.i][v.cols[v.j]]) >= 0 ){
+                    v.result = false;
+                    v.message = `${v.cols[v.j]}欄の値「${records[v.i][v.cols[v.j]]}」が重複しています`;
+                  }
+                }
+              }
+      
+              if( v.result === true ){
+                v.step = 4; // チェックが通ったら必要な情報追加
+                v.step = 4.1; // auto_increment属性を持つ項目は採番
+                v.step = 4.2; // defaultの値をセット
+      
+                v.step = 5; // レコードの追加
+                v.step = 5.1; // 追加するレコードをシートイメージ(二次元配列)に変換
+                v.step = 5.2; // 配列をシートに追加
+                v.step = 5.3; // this.bottomの書き換え
+      
+              }
+      
+              v.step = 6; // 戻り値(ログオブジェクト)の作成
+              v.r = new sdbLog({
+                account: this.account,
+                range: this.name,
+                result: v.result,
+                message: v.message || null,
+                before: null,
+                after: records[v.i],
+                diff: records[v.i],
+              });
+              v.rv.push(v.r);
+            }
       
             v.step = 9; // 終了処理
             console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
@@ -377,16 +418,20 @@ class SpreadDB {
             this.unique = {};
             this.auto_increment = {};
             this.defaultRow = {};
+            v.bool = arg => {  // 引数を真偽値として評価。真偽値として評価不能ならnull
+              let rv={"true":true,"false":false}[String(arg).toLowerCase()];
+              return typeof rv === 'boolean' ? rv : null
+            };
             for( v.i=0 ; v.i<this.cols.length ; v.i++ ){
       
               v.step = 3.1; // primaryKey
-              if( this.cols[v.i].primaryKey === true ){
+              if( v.bool(this.cols[v.i].primaryKey) === true ){
                 this.primaryKey = this.cols[v.i].name;
                 this.unique[this.cols[v.i].name] = [];
               }
       
               v.step = 3.2; // unique
-              if( this.cols[v.i].unique === true ){
+              if( v.bool(this.cols[v.i].unique) === true ){
                 this.unique[this.cols[v.i].name] = [];
               }
       
@@ -398,7 +443,7 @@ class SpreadDB {
               }
       
               v.step = 3.4; // default
-              if( this.cols[v.i].default !== null ){
+              if( String(this.cols[v.i].default).toLowerCase() !== 'null' ){
                 this.defaultRow[this.cols[v.i].name] = this.cols[v.i].default;
               }
             }
@@ -415,7 +460,7 @@ class SpreadDB {
       }
         /** sdbColumn: 項目定義オブジェクト */
       const sdbColumn = class {
-            
+      
         static typedef(){return [
           {name:'name',type:'string',note:'項目名'},
           {name:'type',type:'string',note:'データ型。string,number,boolean,Date,JSON,UUID'},
@@ -577,13 +622,13 @@ class SpreadDB {
           {name:'timestamp',type:'Date',note:'更新日時。yyyy-MM-ddThh:mm:ss.nnn+hh:mm形式',default:()=>toLocale(new Date())},
           {name:'account',type:'string|number',note:'更新者の識別子',default:(o={})=>o.account||null},
           {name:'range',type:'string',note:'更新対象となった範囲名(テーブル名)',default:(o={})=>o.range||null},
-          {name:'result',type:'boolean',note:'true:追加・更新が成功',default:(o={})=>o.result||true},
+          {name:'result',type:'boolean',note:'true:追加・更新が成功',default:(o={})=>o.hasOwnProperty('result')?o.result:true},
           {name:'message',type:'string',note:'エラーメッセージ',default:(o={})=>o.message||null},
           {name:'before',type:'JSON',note:'更新前の行データオブジェクト',default:(o={})=>o.before||null},
           {name:'after',type:'JSON',note:'更新後の行データオブジェクト',default:(o={})=>o.after||null},
           {name:'diff',type:'JSON',note:'追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式',default:(o={})=>o.diff||null},
         ]};
-        
+      
         /** @constructor
          * @param arg {Object}
          * @param arg.account {string|number} - 更新者の識別子
@@ -612,7 +657,6 @@ class SpreadDB {
             return e;
           }
         }
-      
       }
   
       v.step = 2; // メンバの初期化
@@ -654,10 +698,10 @@ class SpreadDB {
       }
   
       v.step = 6; // 対象テーブルのインスタンス化
-  
       v.tables.forEach(x => {
         // sdbTableインスタンス生成時、spreadが必要になるので追加しておく
         x.spread = this.spread;
+        x.account = this.account;
         v.r = new sdbTable(x);
         if( v.r instanceof Error ) throw v.r;
         this.tables[x.name] = v.r;

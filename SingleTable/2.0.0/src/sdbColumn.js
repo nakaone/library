@@ -1,6 +1,6 @@
 /** sdbColumn: 項目定義オブジェクト */
 const sdbColumn = class {
-      
+
   static typedef(){return [
     {name:'name',type:'string',note:'項目名'},
     {name:'type',type:'string',note:'データ型。string,number,boolean,Date,JSON,UUID'},

@@ -9,7 +9,7 @@ function test(){
           ['a',undefined,'1965/9/5',-1],
           ['tRue',null,'12:34',Infinity],
           ['{"a":10}',false,Date.now(),0],
-          ['d',true,new Date(),1.23e+4],  
+          ['d',true,new Date(),1.23e+4],
         ],
         cols: null,
       },
@@ -52,7 +52,7 @@ function test(){
           {name:'キャンセル',type:'string'},
           {name:'authority',type:'number'},
           {name:'CPkey',type:'string'},
-          {name:'entryNo',type:'number',primaryKey:true},
+          {name:'entryNo',type:'number',primaryKey:true,auto_increment:[10,1]},
           {name:'trial',type:'JSON'},
           {name:'editURL',type:'string'},
           {name:'entryTime',type:'string'},
@@ -120,12 +120,55 @@ function test(){
       v.table.spread = v.spread; // ログ表示の際に不要なSpreadsheetオブジェクトは後から追加
       return v.table;
     },
+    appendSample: [
+      {
+        タイムスタンプ: toLocale(new Date()),
+        メールアドレス: `x${Date.now()}@gmail.com`,
+        // 申込者氏名: ,
+        // 申込者カナ: ,
+        // 申込者の参加: ,
+        // 宿泊、テント: ,
+        // 引取者氏名: ,
+        // 参加者01氏名: ,
+        // 参加者01カナ: ,
+        // 参加者01所属: ,
+        // 参加者02氏名: ,
+        // 参加者02カナ: ,
+        // 参加者02所属: ,
+        // 参加者03氏名: ,
+        // 参加者03カナ: ,
+        // 参加者03所属: ,
+        // 参加者04氏名: ,
+        // 参加者04カナ: ,
+        // 参加者04所属: ,
+        // 参加者05カナ: ,
+        // 参加者05氏名: ,
+        // 参加者05所属: ,
+        // 緊急連絡先: ,
+        // ボランティア募集: ,
+        // 備考: ,
+        // キャンセル: ,
+        // authority: ,
+        // CPkey: ,
+        // entryNo: ,
+        // trial: ,
+        // editURL: ,
+        // entryTime: ,
+        // receptionist: ,
+        // fee00: ,
+        // fee01: ,
+        // fee02: ,
+        // fee03: ,
+        // fee04: ,
+        // fee05: ,
+        // memo: ,
+      },
+    ],
   };
   console.log(`${v.whois} start.`);
   try {
 
-    // テストパターンの定義
-    v.tests = [
+    v.step = 1; v.tests = [ // テストパターンの定義
       () => { // pattren.0 : "target"シートをシートイメージから新規作成
         ['target','master','log'].forEach(x => v.deleteSheet(x));
         return new SpreadDB(v.setupData('target',1));
@@ -194,10 +237,18 @@ function test(){
         v.r = new SpreadDB('master');
         return v.r.tables.master.schema.cols.find(x => x.name === '申込者氏名').unique;
       },
+      () => { // pattern.6 : appendテスト
+        v.sdb = new SpreadDB('master',{account:'hoge'});
+        return v.sdb.tables.master.append(v.appendSample[0]);
+      },
+      () => { // pattern.7 : appendテスト - unique項目の重複
+        v.sdb = new SpreadDB('master',{account:'hoge'});
+        return v.sdb.tables.master.append(Object.assign(v.appendSample[0],{'メールアドレス':'nakaone.kunihiro@gmail.com'}));
+      },
     ];
 
-    // テスト実行
-    v.rv = v.tests[5]();
+    v.step = 2; // テスト実行
+    v.rv = v.tests[7]();
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
