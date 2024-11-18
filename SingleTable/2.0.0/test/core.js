@@ -238,6 +238,8 @@ function test(){
         return v.r.tables.master.schema.cols.find(x => x.name === '申込者氏名').unique;
       },
       () => { // pattern.6 : appendテスト
+        // auto_increment - entryNo欄で確認
+        // default - authority欄で確認
         v.sdb = new SpreadDB('master',{account:'hoge'});
         return v.sdb.tables.master.append(v.appendSample[0]);
       },
@@ -245,10 +247,18 @@ function test(){
         v.sdb = new SpreadDB('master',{account:'hoge'});
         return v.sdb.tables.master.append(Object.assign(v.appendSample[0],{'メールアドレス':'nakaone.kunihiro@gmail.com'}));
       },
+      () => { // pattern.8 : 
+      },
+      () => { // pattern.9 : 
+      },
+      () => { // pattern.10 : 
+      },
+      () => { // pattern.11 : 
+      },
     ];
 
     v.step = 2; // テスト実行
-    v.rv = v.tests[7]();
+    v.rv = v.tests[6]();
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);

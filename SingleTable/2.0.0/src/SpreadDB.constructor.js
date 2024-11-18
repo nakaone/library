@@ -49,21 +49,23 @@ constructor(tables,opt={}){
     });
     Object.keys(v.opt).forEach(x => this[x] = v.opt[x]);
 
-    v.step = 5; // 更新履歴を残す場合、作成対象テーブルリストに更新履歴シートを追加
+    v.step = 5; // 更新履歴を残す場合、変更履歴シートを他シートに先行して準備
     if( this.outputLog === true ){
-      // 作成対象テーブルリストに更新履歴が入っていないか確認、入ってなければリストに追加
-      if( v.tables.map(x => x.name).indexOf(this.logSheetName) < 0 ){
-        v.tables.push({
-          name: this.logSheetName,
-          cols: sdbLog.typedef(),
-        });
-      }
+      this.log = this.tables[this.logSheetName] = new sdbTable({
+        spread: this.spread,
+        name: this.logSheetName,
+        cols: sdbLog.typedef(),
+      });
+      if( this.log instanceof Error ) throw this.log;
+    } else {
+      this.log = null;
     }
 
     v.step = 6; // 対象テーブルのインスタンス化
     v.tables.forEach(x => {
       // sdbTableインスタンス生成時、spreadが必要になるので追加しておく
       x.spread = this.spread;
+      x.log = this.log;
       x.account = this.account;
       v.r = new sdbTable(x);
       if( v.r instanceof Error ) throw v.r;

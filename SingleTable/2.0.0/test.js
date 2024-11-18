@@ -238,6 +238,8 @@ function test(){
         return v.r.tables.master.schema.cols.find(x => x.name === '申込者氏名').unique;
       },
       () => { // pattern.6 : appendテスト
+        // auto_increment - entryNo欄で確認
+        // default - authority欄で確認
         v.sdb = new SpreadDB('master',{account:'hoge'});
         return v.sdb.tables.master.append(v.appendSample[0]);
       },
@@ -245,10 +247,18 @@ function test(){
         v.sdb = new SpreadDB('master',{account:'hoge'});
         return v.sdb.tables.master.append(Object.assign(v.appendSample[0],{'メールアドレス':'nakaone.kunihiro@gmail.com'}));
       },
+      () => { // pattern.8 : 
+      },
+      () => { // pattern.9 : 
+      },
+      () => { // pattern.10 : 
+      },
+      () => { // pattern.11 : 
+      },
     ];
 
     v.step = 2; // テスト実行
-    v.rv = v.tests[7]();
+    v.rv = v.tests[6]();
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
@@ -313,6 +323,7 @@ class SpreadDB {
             this.spread = arg.spread; // || SpreadsheetApp.getActiveSpreadsheet();
             this.name = arg.name; // {string} テーブル名
             this.range = arg.range || arg.name; // {string} A1記法の範囲指定
+            this.log = arg.log || null; // {sdbTable} 変更履歴シート
             this.account = arg.account || null; // {string} 更新者のアカウント
             this.sheetName = null; // {string} シート名。this.rangeから導出
             this.sheet = null; // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
@@ -515,7 +526,7 @@ class SpreadDB {
          * @returns {Object} {success:[],failure:[]}形式
          */
         append(records){
-          const v = {whois:'sdbTable.append',step:0,rv:[],sheet:[]};
+          const v = {whois:'sdbTable.append',step:0,rv:[]};
           console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
           try {
       
@@ -523,52 +534,87 @@ class SpreadDB {
             v.step = 1; // 事前準備
             // ------------------------------------------------
             if( !Array.isArray(records)) records = [records];
+            v.target = [];  // 対象領域のシートイメージを準備
+            v.log = []; // 更新履歴のシートイメージを準備
       
             // ------------------------------------------------
-            v.step = 2; // 追加レコードを順次チェック
+            v.step = 2; // 追加レコードをシートイメージに展開
             // ------------------------------------------------
+            v.header = this.schema.cols.map(x => x.name);
             for( v.i=0 ; v.i<records.length ; v.i++ ){
       
-              // 追加レコードに設定された項目名のリストを作成
-              v.cols = Object.keys(records[v.i]);
+              v.logObj = new sdbLog({account: this.account,range: this.name});
+              console.log(`l.545 logObj=${stringify(v.logObj)}`)
       
-              v.step = 3; // pkey or uniqueのチェック、存在していれば失敗の配列に加えて追加対象から除外
-              v.result = true;
-              for( v.j=0 ; v.j<v.cols.length ; v.j++ ){
-                if( this.schema.unique.hasOwnProperty(v.cols[v.j]) ){
-                  if( this.schema.unique[v.cols[v.j]].indexOf(records[v.i][v.cols[v.j]]) >= 0 ){
-                    v.result = false;
-                    v.message = `${v.cols[v.j]}欄の値「${records[v.i][v.cols[v.j]]}」が重複しています`;
-                  }
+              v.step = 2.1; // auto_increment項目の設定
+              // ※ auto_increment設定はuniqueチェックに先行
+              for( v.ai in this.schema.auto_increment ){
+                if( !records[v.i][v.ai] ){
+                  this.schema.auto_increment[v.ai].current += this.schema.auto_increment[v.ai].step;
+                  records[v.i][v.ai] = this.schema.auto_increment[v.ai].current;
                 }
               }
       
-              if( v.result === true ){
-                v.step = 4; // チェックが通ったら必要な情報追加
-                v.step = 4.1; // auto_increment属性を持つ項目は採番
-                v.step = 4.2; // defaultの値をセット
+              v.step = 2.2; // 既定値の設定
+              records[v.i] = Object.assign({},this.schema.defaultRow,records[v.i]);
       
-                v.step = 5; // レコードの追加
-                v.step = 5.1; // 追加するレコードをシートイメージ(二次元配列)に変換
-                v.step = 5.2; // 配列をシートに追加
-                v.step = 5.3; // this.bottomの書き換え
-      
+              v.step = 2.3; // 追加レコードの正当性チェック(unique重複チェック)
+              for( v.unique in this.schema.unique ){
+                if( this.schema.unique[v.unique].indexOf(records[v.i][v.unique]) >= 0 ){
+                  // 登録済の場合はエラーとして処理
+                  v.logObj.result = false;
+                  // 複数項目のエラーメッセージに対応するため場合分け
+                  v.logObj.message = (v.logObj.message === null ? '' : '\n')
+                  + `${v.unique}欄の値「${records[v.i][v.unique]}」が重複しています`;
+                } else {
+                  // 未登録の場合this.sdbSchema.uniqueに値を追加
+                  this.schema.unique[v.unique].push(records[v.i][v.unique]);
+                }
               }
       
-              v.step = 6; // 戻り値(ログオブジェクト)の作成
-              v.r = new sdbLog({
-                account: this.account,
-                range: this.name,
-                result: v.result,
-                message: v.message || null,
-                before: null,
-                after: records[v.i],
-                diff: records[v.i],
-              });
-              v.rv.push(v.r);
+              v.step = 2.4; // 正当性チェックOKの場合の処理
+              if( v.logObj.result ){
+                v.step = 2.41; // シートイメージに展開して登録
+                v.row = [];
+                for( v.j=0 ; v.j<v.header.length ; v.j++ ){
+                  v.row[v.j] = records[v.i][v.header[v.j]];
+                }
+                v.target.push(v.row);
+      
+                v.step = 2.42; // this.valuesへの追加
+                this.values.push(records[v.i]);
+      
+                v.step = 2.43; // ログに追加レコード情報を記載
+                v.logObj.after = v.logObj.diff = JSON.stringify(records[v.i]);
+              }
+      
+              v.step = 2.5; // 成否に関わらずログ出力対象に保存
+              v.log.push(v.logObj);
+            }
+      
+            // ------------------------------------------------
+            v.step = 3; // 対象シート・更新履歴に展開
+            // ------------------------------------------------
+            v.step = 3.1; // 対象シートへの展開
+            if( v.target.length > 0 ){
+              this.sheet.getRange(
+                this.bottom+1,
+                this.left,
+                v.target.length,
+                v.target[0].length
+              ).setValues(v.target);
+            }
+            // this.sdbTable.bottomの書き換え
+            this.bottom += v.target.length;
+      
+            v.step = 3.2; // 変更履歴追記対象なら追記(変更履歴シートは追記対象外)
+            if( this.log !== null ){
+              v.r = this.log.append(v.log);
+              if( v.r instanceof Error ) throw v.r;
             }
       
             v.step = 9; // 終了処理
+            v.rv = v.log;
             console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
             return v.rv;
       
@@ -949,21 +995,23 @@ class SpreadDB {
       });
       Object.keys(v.opt).forEach(x => this[x] = v.opt[x]);
   
-      v.step = 5; // 更新履歴を残す場合、作成対象テーブルリストに更新履歴シートを追加
+      v.step = 5; // 更新履歴を残す場合、変更履歴シートを他シートに先行して準備
       if( this.outputLog === true ){
-        // 作成対象テーブルリストに更新履歴が入っていないか確認、入ってなければリストに追加
-        if( v.tables.map(x => x.name).indexOf(this.logSheetName) < 0 ){
-          v.tables.push({
-            name: this.logSheetName,
-            cols: sdbLog.typedef(),
-          });
-        }
+        this.log = this.tables[this.logSheetName] = new sdbTable({
+          spread: this.spread,
+          name: this.logSheetName,
+          cols: sdbLog.typedef(),
+        });
+        if( this.log instanceof Error ) throw this.log;
+      } else {
+        this.log = null;
       }
   
       v.step = 6; // 対象テーブルのインスタンス化
       v.tables.forEach(x => {
         // sdbTableインスタンス生成時、spreadが必要になるので追加しておく
         x.spread = this.spread;
+        x.log = this.log;
         x.account = this.account;
         v.r = new sdbTable(x);
         if( v.r instanceof Error ) throw v.r;
