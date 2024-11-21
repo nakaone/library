@@ -1,5 +1,5 @@
 /** sdbTable: シート上の対象範囲(テーブル) */
-const sdbTable = class {
+class sdbTable {
   /** @constructor
    * @param arg {Object}
    * @param arg.spread {SpreadSheet} - スプレッドシート

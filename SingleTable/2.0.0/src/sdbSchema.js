@@ -1,5 +1,5 @@
 /** sdbSchema: シート上の対象範囲(テーブル)の構造定義 */
-const sdbSchema = class {
+class sdbSchema {
   /** @constructor
    * @param arg {Object}
    * @param [arg.cols] {sdbColumn[]} - 項目定義オブジェクトの配列

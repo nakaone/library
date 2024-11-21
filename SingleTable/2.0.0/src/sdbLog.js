@@ -1,5 +1,5 @@
 /** sdbLog: 更新履歴オブジェクトを管理、生成 */
-const sdbLog = class {
+class sdbLog {
 
   /** colDefs: 更新履歴シートの項目定義。sdbLog.colsDefs()で外部から参照可 */
   static typedef(){return [

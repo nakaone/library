@@ -16,19 +16,13 @@ constructor(tables,opt={}){
     // -------------------------------------------------------------
     // 1. 事前準備
     // -------------------------------------------------------------
-    v.step = 1; // サブクラスの定義
-    //::$src/sdbTable.js::
-    //::$src/sdbSchema.js::
-    //::$src/sdbColumn.js::
-    //::$src/sdbLog.js::
-
-    v.step = 2; // メンバの初期化
+    v.step = 1; // メンバの初期化
     // spread {Spreadsheet} スプレッドシートオブジェクト(=ファイル。シートの集合)
     this.spread = SpreadsheetApp.getActiveSpreadsheet();
     // tables {Object.<string,sdbTable>} 操作対象シートの情報。メンバ名はテーブル名。
     this.tables = {};
 
-    v.step = 3; // 引数tablesが配列でない場合、配列に変換(以降で統一的に処理するため)
+    v.step = 2; // 引数tablesが配列でない場合、配列に変換(以降で統一的に処理するため)
     v.tables = Array.isArray(tables) ? tables : [tables];
     for( v.i=0 ; v.i<v.tables.length ; v.i++ ){
       // 文字列ならname属性指定と看做す
@@ -37,7 +31,7 @@ constructor(tables,opt={}){
       };
     }
 
-    v.step = 4; // 引数「opt」の設定値をメンバとして登録
+    v.step = 3; // 引数「opt」の設定値をメンバとして登録
     v.opt = mergeDeeply(opt,{
       outputLog: true,
       logSheetName: 'log',
@@ -49,7 +43,7 @@ constructor(tables,opt={}){
     });
     Object.keys(v.opt).forEach(x => this[x] = v.opt[x]);
 
-    v.step = 5; // 更新履歴を残す場合、変更履歴シートを他シートに先行して準備
+    v.step = 4; // 更新履歴を残す場合、変更履歴シートを他シートに先行して準備
     if( this.outputLog === true ){
       this.log = this.tables[this.logSheetName] = new sdbTable({
         spread: this.spread,
@@ -61,7 +55,7 @@ constructor(tables,opt={}){
       this.log = null;
     }
 
-    v.step = 6; // 対象テーブルのインスタンス化
+    v.step = 5; // 対象テーブルのインスタンス化
     v.tables.forEach(x => {
       // sdbTableインスタンス生成時、spreadが必要になるので追加しておく
       x.spread = this.spread;

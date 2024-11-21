@@ -1,3 +1,7 @@
+//::$src/sdbTable.js::
+//::$src/sdbSchema.js::
+//::$src/sdbColumn.js::
+//::$src/sdbLog.js::
 class SpreadDB {
 
   //::$src/SpreadDB.constructor.js::

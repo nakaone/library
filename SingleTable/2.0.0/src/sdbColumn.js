@@ -1,5 +1,5 @@
 /** sdbColumn: 項目定義オブジェクト */
-const sdbColumn = class {
+class sdbColumn {
 
   static typedef(){return [
     {name:'name',type:'string',note:'項目名'},
