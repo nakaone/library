@@ -248,7 +248,7 @@ class SpreadDB {
           }
         }
       
-        /** append: 領域に新規行を追加
+              /** append: 領域に新規行を追加
          * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
          * @returns {sdbLog[]}
          */
@@ -256,23 +256,23 @@ class SpreadDB {
           const v = {whois:'sdbTable.append',step:0,rv:[]};
           console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
           try {
-      
+        
             // ------------------------------------------------
             v.step = 1; // 事前準備
             // ------------------------------------------------
             if( !Array.isArray(records)) records = [records];
             v.target = [];  // 対象領域のシートイメージを準備
             v.log = []; // 更新履歴のシートイメージを準備
-      
+        
             // ------------------------------------------------
             v.step = 2; // 追加レコードをシートイメージに展開
             // ------------------------------------------------
             v.header = this.schema.cols.map(x => x.name);
             for( v.i=0 ; v.i<records.length ; v.i++ ){
-      
+        
               v.logObj = new sdbLog({account: this.account,range: this.name});
               console.log(`l.545 logObj=${stringify(v.logObj)}`)
-      
+        
               v.step = 2.1; // auto_increment項目の設定
               // ※ auto_increment設定はuniqueチェックに先行
               for( v.ai in this.schema.auto_increment ){
@@ -281,10 +281,10 @@ class SpreadDB {
                   records[v.i][v.ai] = this.schema.auto_increment[v.ai].current;
                 }
               }
-      
+        
               v.step = 2.2; // 既定値の設定
               records[v.i] = Object.assign({},this.schema.defaultRow,records[v.i]);
-      
+        
               v.step = 2.3; // 追加レコードの正当性チェック(unique重複チェック)
               for( v.unique in this.schema.unique ){
                 if( this.schema.unique[v.unique].indexOf(records[v.i][v.unique]) >= 0 ){
@@ -298,7 +298,7 @@ class SpreadDB {
                   this.schema.unique[v.unique].push(records[v.i][v.unique]);
                 }
               }
-      
+        
               v.step = 2.4; // 正当性チェックOKの場合の処理
               if( v.logObj.result ){
                 v.step = 2.41; // シートイメージに展開して登録
@@ -307,18 +307,18 @@ class SpreadDB {
                   v.row[v.j] = records[v.i][v.header[v.j]];
                 }
                 v.target.push(v.row);
-      
+        
                 v.step = 2.42; // this.valuesへの追加
                 this.values.push(records[v.i]);
-      
+        
                 v.step = 2.43; // ログに追加レコード情報を記載
                 v.logObj.after = v.logObj.diff = JSON.stringify(records[v.i]);
               }
-      
+        
               v.step = 2.5; // 成否に関わらずログ出力対象に保存
               v.log.push(v.logObj);
             }
-      
+        
             // ------------------------------------------------
             v.step = 3; // 対象シート・更新履歴に展開
             // ------------------------------------------------
@@ -333,26 +333,25 @@ class SpreadDB {
             }
             // this.sdbTable.bottomの書き換え
             this.bottom += v.target.length;
-      
+        
             v.step = 3.2; // 変更履歴追記対象なら追記(変更履歴シートは追記対象外)
             if( this.log !== null ){
               v.r = this.log.append(v.log);
               if( v.r instanceof Error ) throw v.r;
             }
-      
+        
             v.step = 9; // 終了処理
             v.rv = v.log;
             console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
             return v.rv;
-      
+        
           } catch(e) {
             e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
             console.error(`${e.message}\nv=${stringify(v)}`);
             return e;
           }
         }
-      
-        /** update: 領域に新規行を追加
+              /** update: 領域に新規行を追加
          * @param {Object|Object[]} trans=[] - 更新するオブジェクトの配列
          * @param {Object|Function|any} where - 対象レコードの判定条件
          * @param {Object|Function} data - 更新する値
@@ -374,47 +373,47 @@ class SpreadDB {
           };
           console.log(`${v.whois} start.\ntrans(${whichType(trans)})=${stringify(trans)}`);
           try {
-      
+        
             // ------------------------------------------------
             v.step = 1; // 事前準備
             // ------------------------------------------------
-      
+        
             if( !Array.isArray(trans)) trans = [trans];
-      
+        
             // 対象となる行オブジェクト判定式の作成
             for( v.i=0 ; v.i<trans.length ; v.i++ ){
-      
+        
               v.step = 1.1; // where,dataの存否確認
               v.msg = `${v.whois}: _が指定されていません(${JSON.stringify(trans[v.i])})`;
               if( !trans[v.i].where ) throw new Error(v.msg.replace('_','位置指定(where)'));
               if( !trans[v.i].data ) throw new Error(v.msg.replace('_','更新データ(data)'));
-      
+        
               v.step = 1.2; // whereがオブジェクトまたは文字列指定なら関数化
               v.where = typeof trans[v.i].where === 'function' ? trans[v.i].where
               : new Function('o','return isEqual(' + ( typeof trans[v.i].where === 'object'
                 ? `o['${trans[v.i].where.key}'],'${trans[v.i].where.value}'`
                 : `o['${this.schema.primaryKey}'],'${trans[v.i].where}'`
               ) + ');');
-      
+        
               v.step = 1.3; // dataがオブジェクトなら関数化
               v.data = typeof trans[v.i].data === 'function' ? trans[v.i].data
               : new Function('o',`return ${JSON.stringify(trans[v.i].data)}`);
               vlog(v,['where','data'],670);
-      
+        
               // 対象レコードか一件ずつチェック
               for( v.j=0 ; v.j<this.values.length ; v.j++ ){
-      
+        
                 v.step = 2.1; // 対象外判定ならスキップ
                 if( v.where(this.values[v.j]) === false ) continue;
-      
+        
                 v.step = 2.2; // 更新履歴オブジェクトを作成
                 v.logObj = new sdbLog({account:this.account,range:this.name,
                   before:JSON.parse(JSON.stringify(this.values[v.j])),after:{},diff:{}});
-      
+        
                 v.step = 2.3; // v.after: 更新指定項目のみのオブジェクト
                 v.after = v.data(this.values[v.j]);
                 vlog(v,['logObj','after'],684)
-      
+        
                 v.step = 2.4; // シート上の項目毎にチェック
                 v.header.forEach(x => {
                   //console.log(`l.688 x=${x},v.after=${JSON.stringify(v.after)}\nv.logObj.before[${x}]=${v.logObj.before[x]}\nv.after[${x}]=${v.after[x]}\nisEqual=${isEqual(v.logObj.before[x],v.after[x])}`)
@@ -429,7 +428,7 @@ class SpreadDB {
                     v.logObj.after[x] = v.logObj.before[x];
                   }
                 })
-      
+        
                 v.step = 2.5; // 更新レコードの正当性チェック(unique重複チェック)
                 for( v.unique in this.schema.unique ){
                   if( this.schema.unique[v.unique].indexOf(trans[v.i][v.unique]) >= 0 ){
@@ -455,7 +454,7 @@ class SpreadDB {
                 v.log.push(v.logObj);
               }
             }
-      
+        
             // ------------------------------------------------
             v.step = 3; // 対象シート・更新履歴に展開
             // ------------------------------------------------
@@ -470,7 +469,7 @@ class SpreadDB {
               v.target.push(v.row);
             }
             vlog(v,'target')
-      
+        
             v.step = 3.2; // シートに展開
             // v.top,bottom: 最初と最後の行オブジェクトの添字(≠行番号) ⇒ top+1 ≦ row ≦ bottom+1
             // v.left,right: 左端と右端の行配列の添字(≠列番号) ⇒ left+1 ≦ col ≦ right+1
@@ -482,25 +481,25 @@ class SpreadDB {
                 v.target[0].length
               ).setValues(v.target);
             }
-      
+        
             v.step = 3.3; // 変更履歴追記対象なら追記(変更履歴シートは追記対象外)
             if( this.log !== null ){
               v.r = this.log.append(v.log);
               if( v.r instanceof Error ) throw v.r;
             }
-      
+        
             v.step = 9; // 終了処理
             console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
             return v.rv;
-      
+        
           } catch(e) {
             e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
             console.error(`${e.message}\nv=${stringify(v)}`);
             return e;
           }
         }
-      
-        /** delete: 領域に新規行を追加
+        
+              /** delete: 領域に新規行を追加
          * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
          * @returns {Object} {success:[],failure:[]}形式
          */
@@ -509,21 +508,22 @@ class SpreadDB {
             cols:[],sheet:[]};
           console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
           try {
-      
+        
             // ------------------------------------------------
             v.step = 1; // 事前準備
             // ------------------------------------------------
-      
+        
             v.step = 9; // 終了処理
             console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
             return v.rv;
-      
+        
           } catch(e) {
             e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
             console.error(`${e.message}\nv=${stringify(v)}`);
             return e;
           }
         }
+        
       }
         /** sdbSchema: シート上の対象範囲(テーブル)の構造定義 */
       const sdbSchema = class {
