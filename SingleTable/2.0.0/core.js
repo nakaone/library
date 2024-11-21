@@ -228,18 +228,18 @@ class sdbTable {
   }
 
   /** append: 領域に新規行を追加
-   * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
+   * @param {Object|Object[]} record=[] - 追加するオブジェクトの配列
    * @returns {sdbLog[]}
    */
-  append(records){
+  append(record){
     const v = {whois:'sdbTable.append',step:0,rv:[]};
-    console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
+    console.log(`${v.whois} start.\nrecord(${whichType(record)})=${stringify(record)}`);
     try {
   
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
-      if( !Array.isArray(records)) records = [records];
+      if( !Array.isArray(record)) record = [record];
       v.target = [];  // 対象領域のシートイメージを準備
       v.log = []; // 更新履歴のシートイメージを準備
   
@@ -247,7 +247,7 @@ class sdbTable {
       v.step = 2; // 追加レコードをシートイメージに展開
       // ------------------------------------------------
       v.header = this.schema.cols.map(x => x.name);
-      for( v.i=0 ; v.i<records.length ; v.i++ ){
+      for( v.i=0 ; v.i<record.length ; v.i++ ){
   
         v.logObj = new sdbLog({account: this.account,range: this.name});
         console.log(`l.545 logObj=${stringify(v.logObj)}`)
@@ -255,26 +255,26 @@ class sdbTable {
         v.step = 2.1; // auto_increment項目の設定
         // ※ auto_increment設定はuniqueチェックに先行
         for( v.ai in this.schema.auto_increment ){
-          if( !records[v.i][v.ai] ){
+          if( !record[v.i][v.ai] ){
             this.schema.auto_increment[v.ai].current += this.schema.auto_increment[v.ai].step;
-            records[v.i][v.ai] = this.schema.auto_increment[v.ai].current;
+            record[v.i][v.ai] = this.schema.auto_increment[v.ai].current;
           }
         }
   
         v.step = 2.2; // 既定値の設定
-        records[v.i] = Object.assign({},this.schema.defaultRow,records[v.i]);
+        record[v.i] = Object.assign({},this.schema.defaultRow,record[v.i]);
   
         v.step = 2.3; // 追加レコードの正当性チェック(unique重複チェック)
         for( v.unique in this.schema.unique ){
-          if( this.schema.unique[v.unique].indexOf(records[v.i][v.unique]) >= 0 ){
+          if( this.schema.unique[v.unique].indexOf(record[v.i][v.unique]) >= 0 ){
             // 登録済の場合はエラーとして処理
             v.logObj.result = false;
             // 複数項目のエラーメッセージに対応するため場合分け
             v.logObj.message = (v.logObj.message === null ? '' : '\n')
-            + `${v.unique}欄の値「${records[v.i][v.unique]}」が重複しています`;
+            + `${v.unique}欄の値「${record[v.i][v.unique]}」が重複しています`;
           } else {
             // 未登録の場合this.sdbSchema.uniqueに値を追加
-            this.schema.unique[v.unique].push(records[v.i][v.unique]);
+            this.schema.unique[v.unique].push(record[v.i][v.unique]);
           }
         }
   
@@ -283,15 +283,15 @@ class sdbTable {
           v.step = 2.41; // シートイメージに展開して登録
           v.row = [];
           for( v.j=0 ; v.j<v.header.length ; v.j++ ){
-            v.row[v.j] = records[v.i][v.header[v.j]];
+            v.row[v.j] = record[v.i][v.header[v.j]];
           }
           v.target.push(v.row);
   
           v.step = 2.42; // this.valuesへの追加
-          this.values.push(records[v.i]);
+          this.values.push(record[v.i]);
   
           v.step = 2.43; // ログに追加レコード情報を記載
-          v.logObj.after = v.logObj.diff = JSON.stringify(records[v.i]);
+          v.logObj.after = v.logObj.diff = JSON.stringify(record[v.i]);
         }
   
         v.step = 2.5; // 成否に関わらずログ出力対象に保存
@@ -333,14 +333,14 @@ class sdbTable {
   /** update: 領域に新規行を追加
    * @param {Object|Object[]} trans=[] - 更新するオブジェクトの配列
    * @param {Object|Function|any} trans.where - 対象レコードの判定条件
-   * @param {Object|Function} trans.data - 更新する値
+   * @param {Object|Function} trans.record - 更新する値
    * @returns {sdbLog[]}
    * 
    * - where句の指定方法
    *   - Object ⇒ {key:キー項目名, value: キー項目の値}形式で、key:valueに該当するレコードを更新
    *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
    *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
-   * - data句の指定方法
+   * - record句の指定方法
    *   - Object ⇒ {更新対象項目名:セットする値}
    *   - Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数
    *     【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
@@ -362,10 +362,10 @@ class sdbTable {
       // 対象となる行オブジェクト判定式の作成
       for( v.i=0 ; v.i<trans.length ; v.i++ ){
   
-        v.step = 1.1; // where,dataの存否確認
+        v.step = 1.1; // where,recordの存否確認
         v.msg = `${v.whois}: _が指定されていません(${JSON.stringify(trans[v.i])})`;
         if( !trans[v.i].where ) throw new Error(v.msg.replace('_','位置指定(where)'));
-        if( !trans[v.i].data ) throw new Error(v.msg.replace('_','更新データ(data)'));
+        if( !trans[v.i].record ) throw new Error(v.msg.replace('_','更新データ(record)'));
   
         v.step = 1.2; // whereがオブジェクトまたは文字列指定なら関数化
         v.where = typeof trans[v.i].where === 'function' ? trans[v.i].where
@@ -374,10 +374,10 @@ class sdbTable {
           : `o['${this.schema.primaryKey}'],'${trans[v.i].where}'`
         ) + ');');
   
-        v.step = 1.3; // dataがオブジェクトなら関数化
-        v.data = typeof trans[v.i].data === 'function' ? trans[v.i].data
-        : new Function('o',`return ${JSON.stringify(trans[v.i].data)}`);
-        vlog(v,['where','data'],670);
+        v.step = 1.3; // recordがオブジェクトなら関数化
+        v.record = typeof trans[v.i].record === 'function' ? trans[v.i].record
+        : new Function('o',`return ${JSON.stringify(trans[v.i].record)}`);
+        vlog(v,['where','record'],670);
   
         // 対象レコードか一件ずつチェック
         for( v.j=0 ; v.j<this.values.length ; v.j++ ){
@@ -390,7 +390,7 @@ class sdbTable {
             before:JSON.parse(JSON.stringify(this.values[v.j])),after:{},diff:{}});
   
           v.step = 2.3; // v.after: 更新指定項目のみのオブジェクト
-          v.after = v.data(this.values[v.j]);
+          v.after = v.record(this.values[v.j]);
           vlog(v,['logObj','after'],684)
   
           v.step = 2.4; // シート上の項目毎にチェック

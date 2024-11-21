@@ -1,10 +1,28 @@
 function test(){
   const v = {whois:'test',step:0,rv:null,
-    tables:{
+    // ----- 定数・ユーティリティ関数群
+    spread: SpreadsheetApp.getActiveSpreadsheet(),
+    deleteSheet: (sheetName) => {  // テスト用シートの削除関数
+      v.sheet = v.spread.getSheetByName(sheetName);
+      if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+    },
+    raw2obj: sheet => { // シートイメージ(二次元配列)を行オブジェクトに変換
+      v.data = JSON.parse(JSON.stringify(v.src[sheet].values));
+      v.src[sheet].values = [];
+      for( v.i=1 ; v.i<v.data.length ; v.i++ ){
+        v.o = {};
+        for( v.j=0 ; v.j<v.data[v.i].length ; v.j++ ){
+          if( v.data[v.i][v.j] ) v.o[v.data[0][v.j]] = v.data[v.i][v.j];
+        }
+        v.src[sheet].values.push(v.o);
+      }
+    },
+    // ----- テスト用ソース(サンプルデータ)
+    src: {
       target: { // "target"シート
         name: 'target',
         range: 'target!c3:f',
-        raw: [
+        values: [
           ['string','boolean','date','number'],
           ['a',undefined,'1965/9/5',-1],
           ['tRue',null,'12:34',Infinity],
@@ -16,12 +34,13 @@ function test(){
       master: { // "master"シート
         name: 'master',
         // range指定は無し
-        raw: [
+        account: 'hoge',
+        values: [
           ['タイムスタンプ','メールアドレス','申込者氏名','申込者カナ','申込者の参加','宿泊、テント','引取者氏名','参加者01氏名','参加者01カナ','参加者01所属','参加者02氏名','参加者02カナ','参加者02所属','参加者03氏名','参加者03カナ','参加者03所属','参加者04氏名','参加者04カナ','参加者04所属','参加者05カナ','参加者05氏名','参加者05所属','緊急連絡先','ボランティア募集','備考','キャンセル','authority','CPkey','entryNo','trial','editURL','entryTime','receptionist','fee00','fee01','fee02','fee03','fee04','fee05','memo'],
-          ['2024/10/06 19:51:06','nakaone.kunihiro@gmail.com','島津　邦浩','シマヅ　クニヒロ','スタッフとして申込者のみ参加(おやじの会メンバ)','宿泊しない','','','','','','','','','','','','','','','','','','','','','2','jZiM1isJ+1AZoVZ9NnWTvCoeghCm+FY05eb6jhz8wpT3DwqJbNnszW8PWDd3sq0N5mjN/Nshh+RGGrdkm7CC+sO32js+wm1YmYGr0FMaFxvMBDrWzyJ7qrPI4unbx2IkrPkXSmSEbw91n/LOu0x7br106XeJ9TXJbJS16rV0nzs=','1','{"passcode":920782,"created":1728874149915,"result":0,"log":[{"timestamp":1728874165893,"enterd":920782,"status":1},{"timestamp":1728768131564,"enterd":46757,"status":1},{"timestamp":1728768105236,"enterd":46747,"status":0},{"timestamp":1728731037700,"enterd":456044,"status":1},{"timestamp":1728711888082,"enterd":485785,"status":1},{"timestamp":1728709250994,"enterd":425862,"status":1},{"timestamp":1728701179073,"enterd":259177,"status":1},{"timestamp":1728646863938,"enterd":530072,"status":1},{"timestamp":1728646839729,"enterd":null,"status":1}]}','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_ePpXliGgMlVVUYiSKgwX6SXBNrnwozwTMF09Ml1py7Ocp1N7_w5F7uqf52Ak63zBE','','','','','','','','',''],
+          ['2024/10/06 19:51:06','nakaone.kunihiro@gmail.com','島津　邦浩','シマヅ　クニヒロ','スタッフとして申込者のみ参加(おやじの会メンバ)','宿泊しない','','','','','','','','','','','','','','','','','','','','','2','jZiM1isJ+1AZoVZ9NnWTvCoeghCm+FY05eb6jhz8wpT3DwqJbNnszW8PWDd3sq0N5mjN/Nshh+RGGrdkm7CC+sO32js+wm1YmYGr0FMaFxvMBDrWzyJ7qrPI4unbx2IkrPkXSmSEbw91n/LOu0x7br106XeJ9TXJbJS16rV0nzs=','1','{"passcode":920782,"created":1728874149915,"result":0,"log":[{"timestamp":1728874165893,"enterd":920782,"status":1}]}','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_ePpXliGgMlVVUYiSKgwX6SXBNrnwozwTMF09Ml1py7Ocp1N7_w5F7uqf52Ak63zBE','','','','','','','','',''],
           ['2024/09/15 12:47:04','via1315r@yahoo.co.jp','前田　素直','マエダ　スナオ','参加予定(宿泊なし)','宿泊しない','宿泊予定なので不要','前田　若菜','マエダ　ワカナ','1年生','','','','','','','','','','','','','9013357002','できる','食事以外でも、お手伝い出来る事があれば。','','1','','2','','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_dWLvuoT6Wq0Hu-4tqFl5OyTK-Z7EwdMDEQGS1jKJVIa41Dh8nNJPtpFyPu8cyZYGo','','','','','','','','',''],
           ['2024/09/15 13:51:37','kousuke.murata4690@gmail.com','小早川　晃祐','コバヤカワ　コウスケ','参加予定(宿泊あり)','宿泊する(テントあり)','宿泊予定なので不要','小早川　涼','コバヤカワ　リョウ','6年生','','','','','','','','','','','','','','できる','','','1','','3','','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_fKjD-xj5FN0GnTNIILVeJVwYJajCP8bZphy1zyleVl8UDLWqzUjDDFWZf7uMA0qtk','','','','','','','','',''],
-          ['2024/09/15 14:18:02','nakaone2001@gmail.com','島津　弘子','シマヅ　ヒロコ','参加予定(宿泊なし)','宿泊しない','','島津　悠奈','シマヅ　ユウナ','4年生','','','','','','','','','','','','','','','','','2','k5lfKMj3ybfMF6jocHPln98lLJIBIxKrrpLc4RhPenBIEg6OfgdXYQAVh907SoCg0MEBazhWic2oFaKNFJu9pa4prXWvTzYjRWw5XkmC9a7AdNQ0judVMATii7Xqp6drowisY6+Rul2zwrF2UKY8epoYP8ZkX9RyH6OFyglYQL8=','4','{"passcode":65698,"created":1729076868102,"result":0,"log":[{"timestamp":1728729400367,"enterd":119192,"status":1},{"timestamp":1728708771586,"enterd":254267,"status":1},{"timestamp":1728708701693,"enterd":254263,"status":0},{"timestamp":1728708634458,"enterd":null,"status":1}]}','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_eGXR29gyuz_kc4UMghOrIa_iNPhrkHdrW4zVI8KFW5aB2jsVCtjq79aasCFBWgTvI','','','','','','','','',''],
+          ['2024/09/15 14:18:02','nakaone2001@gmail.com','島津　弘子','シマヅ　ヒロコ','参加予定(宿泊なし)','宿泊しない','','島津　悠奈','シマヅ　ユウナ','4年生','','','','','','','','','','','','','','','','','2','k5lfKMj3ybfMF6jocHPln98lLJIBIxKrrpLc4RhPenBIEg6OfgdXYQAVh907SoCg0MEBazhWic2oFaKNFJu9pa4prXWvTzYjRWw5XkmC9a7AdNQ0judVMATii7Xqp6drowisY6+Rul2zwrF2UKY8epoYP8ZkX9RyH6OFyglYQL8=','4','{"passcode":65698,"created":1729076868102,"result":0,"log":[{"timestamp":1728729400367,"enterd":119192,"status":1}]}','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_eGXR29gyuz_kc4UMghOrIa_iNPhrkHdrW4zVI8KFW5aB2jsVCtjq79aasCFBWgTvI','','','','','','','','',''],
         ],
         cols: [
           {name:'タイムスタンプ',type:'Date'},
@@ -66,128 +85,37 @@ function test(){
           {name:'memo',type:'string'},
         ],
       },
+      append: [ // appendメソッド用の引数
+        // 00: 基本
+        {タイムスタンプ: toLocale(new Date()),メールアドレス: `x${Date.now()}@gmail.com`},
+      ],
+      update: [ // updateメソッド用の引数
+        // 00: primaryKeyで更新
+        {where:'1',record:{authority:3}},
+      ],
+      delete: [ // deleteメソッド用の引数
+        // 00: primaryKeyで更新
+        '2',
+      ],
     },
-    spread: SpreadsheetApp.getActiveSpreadsheet(),
-    deleteSheet: (sheetName) => {  // テスト用シートの削除
-      v.sheet = v.spread.getSheetByName(sheetName);
-      if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
-    },
-    setupData: (sheetName,whichData=0) => { // whichData 0:初期データ不使用, 1:シートイメージ, 2:行オブジェクト
-      console.log(`setupData start. sheetName=${sheetName}, whichData=${whichData}`);
-
-      v.step = 1; // テストデータにパターン設定
-      v.table = Object.assign({
-        // spread: v.spread,
-        name: null,
-        cols:null,
-      },v.tables[sheetName]);
-
-      switch(whichData){
-        case 0: v.step = 2; // 初期データ(values)を使用しない
-          break;
-        case 1: v.step = 3; // シートイメージを初期データとする
-          if( v.tables[sheetName].raw ){
-            v.table.values = v.tables[sheetName].raw;
-          } else {
-            // 行オブジェクトをシートイメージに変換
-            v.table.values = [v.tables[sheetName].cols.map(x => x.name)];
-            for( v.i=0 ; v.i<v.tables[sheetName].data.length ; v.i++ ){
-              v.table.values[v.i+1] = [];
-              for( v.j=0 ; v.j<v.table.values[0].length ; v.j++ ){
-                v.table.values[v.i+1].push(v.tables[sheetName].data[v.table.values[0][v.j]] || null);
-              }
-            }
-          }
-          break;
-        case 2: v.step = 4; // 行オブジェクトを初期データとする
-          if( v.tables[sheetName].data ){
-            v.table.values = v.tables[sheetName].data;
-          } else {
-            // シートイメージを行オブジェクトに変換
-            v.table.values = [];
-            for( v.i=1 ; v.i<v.tables[sheetName].raw.length ; v.i++ ){
-              v.table.values[v.i-1] = {};
-              for( v.j=0 ; v.j<v.tables[sheetName].raw[v.i].length ; v.j++ ){
-                if( v.tables[sheetName].raw[v.i][v.j] ){
-                  v.table.values[v.i-1][v.tables[sheetName].raw[0][v.j]] = v.tables[sheetName].raw[v.i][v.j];
-                }
-              }
-            }
-          }
-          break;
-      }
-      console.log(`setupData end. v.table=${stringify(v.table)}`);
-      v.table.spread = v.spread; // ログ表示の際に不要なSpreadsheetオブジェクトは後から追加
-      return v.table;
-    },
-    appendSample: [
-      {
-        タイムスタンプ: toLocale(new Date()),
-        メールアドレス: `x${Date.now()}@gmail.com`,
-        // 申込者氏名: ,
-        // 申込者カナ: ,
-        // 申込者の参加: ,
-        // 宿泊、テント: ,
-        // 引取者氏名: ,
-        // 参加者01氏名: ,
-        // 参加者01カナ: ,
-        // 参加者01所属: ,
-        // 参加者02氏名: ,
-        // 参加者02カナ: ,
-        // 参加者02所属: ,
-        // 参加者03氏名: ,
-        // 参加者03カナ: ,
-        // 参加者03所属: ,
-        // 参加者04氏名: ,
-        // 参加者04カナ: ,
-        // 参加者04所属: ,
-        // 参加者05カナ: ,
-        // 参加者05氏名: ,
-        // 参加者05所属: ,
-        // 緊急連絡先: ,
-        // ボランティア募集: ,
-        // 備考: ,
-        // キャンセル: ,
-        // authority: ,
-        // CPkey: ,
-        // entryNo: ,
-        // trial: ,
-        // editURL: ,
-        // entryTime: ,
-        // receptionist: ,
-        // fee00: ,
-        // fee01: ,
-        // fee02: ,
-        // fee03: ,
-        // fee04: ,
-        // fee05: ,
-        // memo: ,
-      },
-    ],
-    updateSample: [
-      {where:'1',data:{authority:3}},
-    ],
-    deleteSample: [
-      '2',
-    ],
   };
-  console.log(`${v.whois} start.`);
-  try {
-
-    v.step = 1; v.tests = [ // テストパターンの定義
-      () => { // pattren.0 : "target"シートをシートイメージから新規作成
+  const pattern = { // テストパターン(関数)の定義
+    constructor: [  // constructor関係のテスト
+      () => { // "target"シートをシートイメージから新規作成
         ['target','master','log'].forEach(x => v.deleteSheet(x));
-        return new SpreadDB(v.setupData('target',1));
+        return new SpreadDB(v.src.target);
       },
-      () => { // pattren.1 : "master"シートをシートイメージから新規作成
+      () => { // "master"シートをシートイメージから新規作成
         ['target','master','log'].forEach(x => v.deleteSheet(x));
-        return new SpreadDB(v.setupData('master',1));
+        return new SpreadDB(v.src.master);
       },
-      () => { // pattren.2 : "target","master"シートを行オブジェクトから新規作成
+      () => { // "target","master"シートを行オブジェクトから新規作成
         ['target','master','log'].forEach(x => v.deleteSheet(x));
-        new SpreadDB([v.setupData('target',2),v.setupData('master',2)]);
+        // シートイメージから行オブジェクトへ変換
+        ['target','master'].forEach(sheet => v.raw2obj(sheet));
+        new SpreadDB([v.src.target,v.src.master]);
       },
-      () => { // pattern.3 : 既存シートのスキーマ他、各種属性設定状況を確認
+      () => { // 既存シートのスキーマ他、各種属性設定状況を確認
         // spread {Spreadsheet} スプレッドシートオブジェクト
         // name {string} テーブル名
         // range {string} A1記法の範囲指定
@@ -243,38 +171,46 @@ function test(){
         v.r = new SpreadDB('master');
         return v.r.tables.master.schema.cols.find(x => x.name === '申込者氏名').unique;
       },
+    ],
+    append: [ // sdbTable.append関係のテスト
       () => { // pattern.6 : appendテスト
         // auto_increment - entryNo欄で確認
         // default - authority欄で確認
-        v.sdb = new SpreadDB('master',{account:'hoge'});
-        return v.sdb.tables.master.append(v.appendSample[0]);
+        //['target','master','log'].forEach(x => v.deleteSheet(x));
+        v.sdb = new SpreadDB(v.src.master);
+        return v.sdb.tables.master.append(v.src.append[0]);
       },
-      () => { // pattern.7 : appendテスト - unique項目の重複
-        v.sdb = new SpreadDB('master',{account:'hoge'});
-        return v.sdb.tables.master.append(Object.assign(v.appendSample[0],{'メールアドレス':'nakaone.kunihiro@gmail.com'}));
+      () => { // pattern.7 : appendテスト - unique項目の重複エラー
+        //['target','master','log'].forEach(x => v.deleteSheet(x));
+        v.sdb = new SpreadDB(v.src.master);
+        v.src.append[0]['メールアドレス'] = 'nakaone.kunihiro@gmail.com';
+        return v.sdb.tables.master.append(v.src.append[0]);
       },
+    ],
+    update: [ // sdbTable.update()関係のテスト
       () => { // pattern.8 : updateテスト
-        v.deleteSheet('master');  // masterシートは再作成
-        v.sdb = new SpreadDB(v.setupData('master',1));
-        return v.sdb.tables.master.update(v.updateSample[0]);
+        ['target','master','log'].forEach(x => v.deleteSheet(x));
+        v.sdb = new SpreadDB(v.src.master);
+        return v.sdb.tables.master.update(v.src.update[0]);
       },
+    ],
+    delete: [ // sdbTable.delete関係のテスト
       () => { // pattern.9 : delete
         v.deleteSheet('master');  // masterシートは再作成
-        v.sdb = new SpreadDB(v.setupData('master',1));
-        return v.sdb.tables.master.delete(v.deleteSample[0]);
+        v.sdb = new SpreadDB(v.src.master);
+        return v.sdb.tables.master.delete(v.src.delete[0]);
       },
-      () => { // pattern.10 : 
-      },
-      () => { // pattern.11 : 
-      },
-    ];
+    ],
+  };
+  console.log(`${v.whois} start.`);
+  try {
 
-    v.step = 2; // テスト実行
-    v.rv = v.tests[9]();
-
-    v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-    return v.rv;
+    v.p = 'append';
+    for( v.i=0 ; v.i<pattern[v.p].length ; v.i++ ){
+      v.rv = pattern[v.p][v.i]();
+      if( v.rv instanceof Error ) throw v.rv;
+      console.log(`===== pattern.${v.i} end.\n${stringify(v.rv)}`);
+    }
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;

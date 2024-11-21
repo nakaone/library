@@ -1,14 +1,14 @@
 /** update: 領域に新規行を追加
  * @param {Object|Object[]} trans=[] - 更新するオブジェクトの配列
  * @param {Object|Function|any} trans.where - 対象レコードの判定条件
- * @param {Object|Function} trans.data - 更新する値
+ * @param {Object|Function} trans.record - 更新する値
  * @returns {sdbLog[]}
  * 
  * - where句の指定方法
  *   - Object ⇒ {key:キー項目名, value: キー項目の値}形式で、key:valueに該当するレコードを更新
  *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
  *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
- * - data句の指定方法
+ * - record句の指定方法
  *   - Object ⇒ {更新対象項目名:セットする値}
  *   - Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数
  *     【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
@@ -30,10 +30,10 @@ update(trans=[]){
     // 対象となる行オブジェクト判定式の作成
     for( v.i=0 ; v.i<trans.length ; v.i++ ){
 
-      v.step = 1.1; // where,dataの存否確認
+      v.step = 1.1; // where,recordの存否確認
       v.msg = `${v.whois}: _が指定されていません(${JSON.stringify(trans[v.i])})`;
       if( !trans[v.i].where ) throw new Error(v.msg.replace('_','位置指定(where)'));
-      if( !trans[v.i].data ) throw new Error(v.msg.replace('_','更新データ(data)'));
+      if( !trans[v.i].record ) throw new Error(v.msg.replace('_','更新データ(record)'));
 
       v.step = 1.2; // whereがオブジェクトまたは文字列指定なら関数化
       v.where = typeof trans[v.i].where === 'function' ? trans[v.i].where
@@ -42,10 +42,10 @@ update(trans=[]){
         : `o['${this.schema.primaryKey}'],'${trans[v.i].where}'`
       ) + ');');
 
-      v.step = 1.3; // dataがオブジェクトなら関数化
-      v.data = typeof trans[v.i].data === 'function' ? trans[v.i].data
-      : new Function('o',`return ${JSON.stringify(trans[v.i].data)}`);
-      vlog(v,['where','data'],670);
+      v.step = 1.3; // recordがオブジェクトなら関数化
+      v.record = typeof trans[v.i].record === 'function' ? trans[v.i].record
+      : new Function('o',`return ${JSON.stringify(trans[v.i].record)}`);
+      vlog(v,['where','record'],670);
 
       // 対象レコードか一件ずつチェック
       for( v.j=0 ; v.j<this.values.length ; v.j++ ){
@@ -58,7 +58,7 @@ update(trans=[]){
           before:JSON.parse(JSON.stringify(this.values[v.j])),after:{},diff:{}});
 
         v.step = 2.3; // v.after: 更新指定項目のみのオブジェクト
-        v.after = v.data(this.values[v.j]);
+        v.after = v.record(this.values[v.j]);
         vlog(v,['logObj','after'],684)
 
         v.step = 2.4; // シート上の項目毎にチェック
