@@ -1,7 +1,7 @@
 /** update: 領域に新規行を追加
  * @param {Object|Object[]} trans=[] - 更新するオブジェクトの配列
- * @param {Object|Function|any} where - 対象レコードの判定条件
- * @param {Object|Function} data - 更新する値
+ * @param {Object|Function|any} trans.where - 対象レコードの判定条件
+ * @param {Object|Function} trans.data - 更新する値
  * @returns {sdbLog[]}
  * 
  * - where句の指定方法

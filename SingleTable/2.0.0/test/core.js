@@ -167,6 +167,9 @@ function test(){
     updateSample: [
       {where:'1',data:{authority:3}},
     ],
+    deleteSample: [
+      '2',
+    ],
   };
   console.log(`${v.whois} start.`);
   try {
@@ -255,7 +258,10 @@ function test(){
         v.sdb = new SpreadDB(v.setupData('master',1));
         return v.sdb.tables.master.update(v.updateSample[0]);
       },
-      () => { // pattern.9 : 
+      () => { // pattern.9 : delete
+        v.deleteSheet('master');  // masterシートは再作成
+        v.sdb = new SpreadDB(v.setupData('master',1));
+        return v.sdb.tables.master.delete(v.deleteSample[0]);
       },
       () => { // pattern.10 : 
       },
@@ -264,7 +270,7 @@ function test(){
     ];
 
     v.step = 2; // テスト実行
-    v.rv = v.tests[8]();
+    v.rv = v.tests[9]();
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
