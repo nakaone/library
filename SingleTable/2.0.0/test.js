@@ -164,6 +164,9 @@ function test(){
         // memo: ,
       },
     ],
+    updateSample: [
+      {where:'1',data:{authority:3}},
+    ],
   };
   console.log(`${v.whois} start.`);
   try {
@@ -247,7 +250,10 @@ function test(){
         v.sdb = new SpreadDB('master',{account:'hoge'});
         return v.sdb.tables.master.append(Object.assign(v.appendSample[0],{'メールアドレス':'nakaone.kunihiro@gmail.com'}));
       },
-      () => { // pattern.8 : 
+      () => { // pattern.8 : updateテスト
+        v.deleteSheet('master');  // masterシートは再作成
+        v.sdb = new SpreadDB(v.setupData('master',1));
+        return v.sdb.tables.master.update(v.updateSample[0]);
       },
       () => { // pattern.9 : 
       },
@@ -258,7 +264,7 @@ function test(){
     ];
 
     v.step = 2; // テスト実行
-    v.rv = v.tests[6]();
+    v.rv = v.tests[8]();
 
     v.step = 9; // 終了処理
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
@@ -523,7 +529,7 @@ class SpreadDB {
       
         /** append: 領域に新規行を追加
          * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
-         * @returns {Object} {success:[],failure:[]}形式
+         * @returns {sdbLog[]}
          */
         append(records){
           const v = {whois:'sdbTable.append',step:0,rv:[]};
@@ -626,18 +632,141 @@ class SpreadDB {
         }
       
         /** update: 領域に新規行を追加
-         * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
-         * @returns {Object} {success:[],failure:[]}形式
+         * @param {Object|Object[]} trans=[] - 更新するオブジェクトの配列
+         * @param {Object|Function|any} where - 対象レコードの判定条件
+         * @param {Object|Function} data - 更新する値
+         * @returns {sdbLog[]}
+         * 
+         * - where句の指定方法
+         *   - Object ⇒ {key:キー項目名, value: キー項目の値}形式で、key:valueに該当するレコードを更新
+         *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
+         *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
+         * - data句の指定方法
+         *   - Object ⇒ {更新対象項目名:セットする値}
+         *   - Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数
+         *     【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
          */
-        update(records){
-          const v = {whois:'sdbTable.update',step:0,rv:{success:[],failure:[],log:[]},
-            cols:[],sheet:[]};
-          console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
+        update(trans=[]){
+          const v = {whois:'sdbTable.update',step:0,rv:[],log:[],target:[],
+            top:Infinity,left:Infinity,right:0,bottom:0,
+            header: this.schema.cols.map(x => x.name), // 項目一覧
+          };
+          console.log(`${v.whois} start.\ntrans(${whichType(trans)})=${stringify(trans)}`);
           try {
       
             // ------------------------------------------------
             v.step = 1; // 事前準備
             // ------------------------------------------------
+      
+            if( !Array.isArray(trans)) trans = [trans];
+      
+            // 対象となる行オブジェクト判定式の作成
+            for( v.i=0 ; v.i<trans.length ; v.i++ ){
+      
+              v.step = 1.1; // where,dataの存否確認
+              v.msg = `${v.whois}: _が指定されていません(${JSON.stringify(trans[v.i])})`;
+              if( !trans[v.i].where ) throw new Error(v.msg.replace('_','位置指定(where)'));
+              if( !trans[v.i].data ) throw new Error(v.msg.replace('_','更新データ(data)'));
+      
+              v.step = 1.2; // whereがオブジェクトまたは文字列指定なら関数化
+              v.where = typeof trans[v.i].where === 'function' ? trans[v.i].where
+              : new Function('o','return isEqual(' + ( typeof trans[v.i].where === 'object'
+                ? `o['${trans[v.i].where.key}'],'${trans[v.i].where.value}'`
+                : `o['${this.schema.primaryKey}'],'${trans[v.i].where}'`
+              ) + ');');
+      
+              v.step = 1.3; // dataがオブジェクトなら関数化
+              v.data = typeof trans[v.i].data === 'function' ? trans[v.i].data
+              : new Function('o',`return ${JSON.stringify(trans[v.i].data)}`);
+              vlog(v,['where','data'],670);
+      
+              // 対象レコードか一件ずつチェック
+              for( v.j=0 ; v.j<this.values.length ; v.j++ ){
+      
+                v.step = 2.1; // 対象外判定ならスキップ
+                if( v.where(this.values[v.j]) === false ) continue;
+      
+                v.step = 2.2; // 更新履歴オブジェクトを作成
+                v.logObj = new sdbLog({account:this.account,range:this.name,
+                  before:JSON.parse(JSON.stringify(this.values[v.j])),after:{},diff:{}});
+      
+                v.step = 2.3; // v.after: 更新指定項目のみのオブジェクト
+                v.after = v.data(this.values[v.j]);
+                vlog(v,['logObj','after'],684)
+      
+                v.step = 2.4; // シート上の項目毎にチェック
+                v.header.forEach(x => {
+                  //console.log(`l.688 x=${x},v.after=${JSON.stringify(v.after)}\nv.logObj.before[${x}]=${v.logObj.before[x]}\nv.after[${x}]=${v.after[x]}\nisEqual=${isEqual(v.logObj.before[x],v.after[x])}`)
+                  if( v.after.hasOwnProperty(x) && !isEqual(v.logObj.before[x],v.after[x]) ){
+                    v.step = 2.41; // 変更指定項目かつ値が変化していた場合、afterとdiffに新しい値を設定
+                    v.logObj.after[x] = v.logObj.diff[x] = v.after[x];
+                    v.colNo = v.header.findIndex(y => y === x);
+                    v.left = Math.min(v.left,v.colNo);
+                    v.right = Math.max(v.right,v.colNo);
+                  } else {
+                    v.step = 2.42; // 非変更指定項目または変更指定項目だが値の変化が無い場合、beforeの値をセット
+                    v.logObj.after[x] = v.logObj.before[x];
+                  }
+                })
+      
+                v.step = 2.5; // 更新レコードの正当性チェック(unique重複チェック)
+                for( v.unique in this.schema.unique ){
+                  if( this.schema.unique[v.unique].indexOf(trans[v.i][v.unique]) >= 0 ){
+                    v.step = 2.51; // 登録済の場合はエラーとして処理
+                    v.logObj.result = false;
+                    // 複数項目のエラーメッセージに対応するため場合分け
+                    v.logObj.message = (v.logObj.message === null ? '' : '\n')
+                    + `${v.unique}欄の値「${trans[v.i][v.unique]}」が重複しています`;
+                  } else {
+                    v.step = 2.52; // 未登録の場合this.sdbSchema.uniqueに値を追加
+                    this.schema.unique[v.unique].push(trans[v.i][v.unique]);
+                  }
+                }
+          
+                v.step = 2.6; // 正当性チェックOKの場合の処理
+                if( v.logObj.result ){
+                  v.top = Math.min(v.top, v.j);
+                  v.bottom = Math.max(v.bottom, v.j);
+                  this.values[v.j] = v.logObj.after;          
+                }
+          
+                v.step = 2.7; // 成否に関わらずログ出力対象に保存
+                v.log.push(v.logObj);
+              }
+            }
+      
+            // ------------------------------------------------
+            v.step = 3; // 対象シート・更新履歴に展開
+            // ------------------------------------------------
+            vlog(v,['top','left','right','bottom'])
+            v.step = 3.1; // シートイメージ(二次元配列)作成
+            for( v.i=v.top ; v.i<=v.bottom ; v.i++ ){
+              console.log(`l.733 this.values[${v.i}]=${JSON.stringify(this.values[v.i])}`)
+              v.row = [];
+              for( v.j=v.left ; v.j<=v.right ; v.j++ ){
+                v.row.push(this.values[v.i][v.header[v.j]] || null);
+              }
+              v.target.push(v.row);
+            }
+            vlog(v,'target')
+      
+            v.step = 3.2; // シートに展開
+            // v.top,bottom: 最初と最後の行オブジェクトの添字(≠行番号) ⇒ top+1 ≦ row ≦ bottom+1
+            // v.left,right: 左端と右端の行配列の添字(≠列番号) ⇒ left+1 ≦ col ≦ right+1
+            if( v.target.length > 0 ){
+              this.sheet.getRange(
+                v.top + 2,  // +1(添字->行番号) +1(ヘッダ行分)
+                v.left + 1,  // +1(添字->行番号)
+                v.target.length,
+                v.target[0].length
+              ).setValues(v.target);
+            }
+      
+            v.step = 3.3; // 変更履歴追記対象なら追記(変更履歴シートは追記対象外)
+            if( this.log !== null ){
+              v.r = this.log.append(v.log);
+              if( v.r instanceof Error ) throw v.r;
+            }
       
             v.step = 9; // 終了処理
             console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
@@ -1131,6 +1260,145 @@ class SpreadDB {
 }
 
 
+/** 二つの引数が同値か判断する
+ * @param {any} v1 - 変数1
+ * @param {any} v2 - 変数2
+ * @param {Object|boolean} opt - オプション。v1,v2でデータ型が異なる場合の判定方法を指定
+ * @param {string} opt.force=null - v1,v2に強制するデータ型(ex.v1='9-5-1965',v2='1965/9/5',opt.force='date'->true)
+ *   'string','number','bigint','boolean','undefined','symbol','function','null','date','object','array'
+ * @param {boolean} opt.string_number=true - trueなら文字列・数値型の相違を無視(ex.'10'=10と判断)
+ * @param {boolean} opt.string_bigint=true - trueなら文字列・長整数型の相違を無視(ex.'10'=10nと判断)
+ * @param {boolean} opt.string_boolean=true - trueなら文字列・真偽値の相違を無視(ex.'TruE'=trueと判断)
+ * @param {boolean} opt.string_undefined=true - trueなら文字列・undefinedの相違を無視(ex.'undefined'=undefinedと判断)
+ * @param {boolean} opt.string_function=true - trueなら文字列・関数の相違を無視(ex.'()=>true'と()=>trueは同値と判断)
+ * @param {boolean} opt.string_null=true - trueなら文字列・nullの相違を無視(ex.'Null'=nullと判断)
+ * @param {boolean} opt.string_date=true - trueなら文字列・Date型の相違を無視(ex.'1965/9/5'=new Date('1965-09-05')と判断)
+ * @param {boolean} opt.number_bigint=true - trueなら数値・長整数型の相違を無視(ex.10=10nと判断)
+ * @param {boolean} opt.number_date=true - trueなら数値・Date型の相違を無視(ex.-136458000000=new Date('1965-09-05')と判断)
+ * @param {boolean} opt.bigint_date=true - trueなら長整数・Date型の相違を無視(ex.-136458000000n=new Date('1965-09-05')と判断)
+ * @returns {boolean|Error}
+ * 
+ * - [等価性の比較と同一性](https://developer.mozilla.org/ja/docs/Web/JavaScript/Equality_comparisons_and_sameness)
+ * - データ型が一致していないと、内容的に一致していても同値では無いと判断(Ex.Number 1 != BigInt 1)。
+ * - 配列は、①長さが一致、かつ②順番に比較した個々の値が同値の場合のみ同値と看做す
+ * - `opt.strict = false`はスプレッドシートに保存されていた内容との比較での利用を想定
+ */
+function isEqual(v1=undefined,v2=undefined,opt={}){
+  const v = {whois:'isEqual',rv:true,step:0,
+  };
+  try {
+
+    // -------------------------------------------
+    // 1. 事前準備
+    // -------------------------------------------
+    v.step = 1.1; // v.types: typeofの戻り値の内、objectを除いたもの
+    v.types = ['string','number','bigint','boolean','undefined','symbol','function'];
+    v.typeAll = [...v.types,'null','date','object','array'];
+
+    v.step = 1.2; // データ型判定関数の定義
+    // typeofの戻り値の内 string,number,bigint,boolean,undefined,symbol,function はそのまま
+    // objectは null,date,array,objectに分けて文字列として返す
+    // 引数:データ型判定対象変数、戻り値:v.typeallに列挙された文字列
+    v.which = x => {
+      if( x === null ) return 'null';
+      if( v.types.indexOf(typeof x) >= 0 ) return typeof x;
+      if( Array.isArray(x) ) return 'array';
+      return isNaN(new Date(x)) ? 'object' : 'date';
+    };
+
+    v.step = 1.3; // オプションに既定値を設定
+    v.opt = Object.assign({
+      force: null,
+      string_number: true, // trueなら文字列・数値型の相違を無視(ex.'10'=10と判断)
+      string_bigint: true, // trueなら文字列・長整数型の相違を無視(ex.'10'=10nと判断)
+      string_boolean: true, // trueなら文字列・真偽値の相違を無視(ex.'TruE'=trueと判断)
+      string_undefined: true, // trueなら文字列・undefinedの相違を無視(ex.'undefined'=undefinedと判断)
+      string_function: true, // trueなら文字列・関数の相違を無視(ex.'()=>true'と()=>trueは同値と判断)
+      string_null: true, // trueなら文字列・nullの相違を無視(ex.'Null'=nullと判断)
+      string_date: true, // trueなら文字列・Date型の相違を無視(ex.'1965/9/5'=new Date('1965-09-05')と判断)
+      number_bigint: true, // trueなら数値・長整数型の相違を無視(ex.10=10nと判断)
+      number_date: true, // trueなら数値・Date型の相違を無視(ex.-136458000000=new Date('1965-09-05')と判断)
+      bigint_date: true, // trueなら長整数・Date型の相違を無視(ex.-136458000000n=new Date('1965-09-05')と判断)
+    },opt);
+
+    v.step = 1.4; // オプションの適用マップ(v.map)を作成
+    // v1,v2でデータ型が異なる場合の判定方法として、次項(step.1.5)で定義する判定式を
+    // 適用する場合はtrueを、適用しない場合(=厳密比較する場合)はfalseを設定する。
+    // なおデータ型がv1,v2で不一致の場合はオプションの真偽値をセットするが、
+    // 一致する場合は必ず判定式が適用されるようtrueをセットしておく。
+    v.map = {};
+    v.typeAll.forEach(x => {
+      v.map[x] = {};
+      // `x === y` ⇒ データ型が一致する場合はtrue、不一致はfalseをセット
+      v.typeAll.forEach(y => v.map[x][y] = x === y);
+    });
+    // オプションの指定値をセット
+    for( v.prop in v.opt ){
+      v.m = v.prop.match(/^([a-z]+)_([a-z]+)$/);
+      if( v.m ) v.map[v.m[1]][v.m[2]] = v.map[v.m[2]][v.m[1]] = v.opt[v.prop];
+    }
+
+    v.step = 1.5; // 比較対象のデータ型に基づいた判定式の定義
+    v.f01 = (x,y) => x === y;  // ①厳密比較
+    v.f02 = (x,y) => x == y;   // ②緩い比較
+    v.f03 = (x,y) => {try{return BigInt(x) === BigInt(y)}catch{return false}};  // ③BigInt
+      // BigInt(Infinity) -> The number Infinity cannot be converted to a BigInt because it is not an integer
+      // これを回避するためtry〜catchとする
+    v.f04 = (x,y) => String(x).toLowerCase() === String(y).toLowerCase(); //Boolean(x) === Boolean(y),  // ④Boolean
+    v.f05 = (x,y) => String(x) === String(y);  // ⑤String
+    v.f06 = (x,y) => x.toString() === y.toString();  // ⑥toString()
+    v.f07 = (x,y) => {try{return new Date(x).getTime() === new Date(y).getTime()}catch{return false}};  // ⑦getTime()
+      // new Date(Infinity) -> Invalid Date
+      // これを回避するためtry〜catchとする
+    v.f08 = (x,y) => new Date(Number(x)).getTime() === new Date(Number(y)).getTime();  // ⑧getTime(num)
+
+    v.step = 1.6; // デシジョンテーブルの定義
+    // 比較対象のデータ型毎に、どの比較方法を採用するかを定義する
+    // ex. v.dt['string','number'] ⇒ v.f02(②緩い比較)で同一かを判定
+    v.dt = {
+      "string":{"string":v.f01,"number":v.f02,"bigint":v.f03,"boolean":v.f04,"undefined":v.f05,"function":v.f06,"null":v.f04,"date":v.f07},
+      "number":{"string":v.f02,"number":v.f01,"bigint":v.f03,"date":v.f07},
+      "bigint":{"string":v.f03,"number":v.f03,"bigint":v.f01,"date":v.f07},
+      "boolean":{"string":v.f04,"boolean":v.f01},
+      "undefined":{"string":v.f05,"undefined":v.f01},
+      "symbol":{"symbol":v.f06},
+      "function":{"string":v.f06,"function":v.f06},
+      "null": {"string":v.f04,"null":v.f01},
+      "date": {"string":v.f07,"number":v.f07,"bigint":v.f08,"date":v.f07},
+      "object": {"object":(x,y)=>{
+        // 直下のメンバが不一致ならfalseを返す(孫要素以降は不問)
+        if(JSON.stringify(Object.keys(x).sort()) !== JSON.stringify(Object.keys(y).sort())) return false;
+        // 個々のメンバを再帰呼出
+        for( let m in x ) if( isEqual(x[m],y[m],v.opt) === false ) return false;
+        return true;
+      }},
+      "array": {"array":(x,y)=>{
+        // 要素の個数が不一致ならfalseを返す(孫要素以降は不問)
+        if( x.length !== y.length ) return false;
+        // 個々のメンバを再帰呼出
+        for( let i=0 ; i<x.length ; i++ ) if( isEqual(x[i],y[i],v.opt) === false ) return false;
+        return true;
+      }},
+    };
+
+    // -------------------------------------------
+    v.step = 2; // 判定式を選択、結果を返す
+    // -------------------------------------------
+    // データ型の組み合わせパターンで判定式が定義されていればそれに基づき判定。
+    // 未定義なら「false固定」としてfalseを返す。
+    v.t1 = v.opt.force || v.which(v1); v.t2 = v.opt.force || v.which(v2);
+    v.f = v.map[v.t1][v.t2] ? v.dt[v.t1][v.t2] : v.f01;
+    //console.log(`t1:${v.t1}, t2:${v.t2}, f: ${v.f}`);
+    return v.f(v1,v2);
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\nv1(${typeof v1})=${typeof v1 === 'object' ? JSON.stringify(v1) : v1}`
+    + `\nv2(${typeof v2})=${typeof v2 === 'object' ? JSON.stringify(v2) : v2}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
 /** 渡された変数内のオブジェクト・配列を再帰的にマージ
  * - pri,subともデータ型は不問。次項のデシジョンテーブルに基づき、結果を返す
  *
