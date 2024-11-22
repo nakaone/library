@@ -317,15 +317,37 @@ function test(){
         return v.sdb.tables.master.delete(v.src.delete[0]);
       },
     ],
+    transact: [
+      () => {
+        v.src.multi(); // 一シート複数テーブルテスト用の「multi」シートを作成
+        v.now = Date.now();
+        v.sdb = new SpreadDB([v.src.master,v.src.accounts,v.src.BS],{
+          accunt: 'Shimazu'
+        });
+        v.r = v.sdb.transact([
+          {name:'master',action:'append',arg:{'メールアドレス':`x${v.now}@gmail.com`}},
+          {name:'accounts',action:'update',arg:{where:{key:'実績',value:'(営外)貸倒損失'},record:{'読替':'テスト'}}},
+          {name:'BS',action:'delete',arg:{where:o=>{o['勘定科目']==='現金'}}},
+        ],{
+          getLogFrom: null,
+          getLogOption: {
+            cols: true,
+            excludeErrors: false,
+            simple: true,
+          },
+        });
+        return v.r;
+      },
+    ]
   };
   console.log(`${v.whois} start.`);
   try {
 
     // v.src.multi(); // 一シート複数テーブルテスト用の「multi」シートを作成
+    ['target','master','log'].forEach(x => v.deleteSheet(x));
 
     // テスト対象を絞る場合、以下のv.st,numの値を書き換え
-    v.p = 'append'; v.st = 1; v.num = 1 || pattern[v.p].length;
-    ['target','master','log'].forEach(x => v.deleteSheet(x));
+    v.p = 'transact'; v.st = 0; v.num = 1 || pattern[v.p].length;
     for( v.i=v.st ; v.i<v.st+v.num ; v.i++ ){
       v.rv = pattern[v.p][v.i]();
       if( v.rv instanceof Error ) throw v.rv;
@@ -401,7 +423,6 @@ class sdbTable {
         this.top = this.left = 1;
         this.bottom = this.right = Infinity;
       }
-      vlog(this,['sheetName','top','left','right','bottom'],v)
 
       // ----------------------------------------------
       v.step = 3; // this.schemaの作成
@@ -419,11 +440,14 @@ class sdbTable {
         v.getDataRange = this.sheet.getDataRange();
         v.getValues = v.getDataRange.getValues();
 
-        v.step = 3.12; // 範囲確定。A1記法とデータ範囲のどちらか小さい方
+        v.step = 3.12; // 範囲絞り込み(未確定)。A1記法とデータ範囲のどちらか小さい方
         this.right = Math.min(this.right, v.getValues[0].length);
         this.bottom = Math.min(this.bottom, v.getValues.length);
 
-        v.step = 3.13; // 項目定義メモの読み込み
+        v.step = 3.13; // ヘッダ行のシートイメージ(項目一覧)
+        v.schemaArg.header = v.getValues[this.top-1].slice(this.left-1,this.right);
+
+        v.step = 3.14; // 項目定義メモの読み込み
         v.schemaArg.notes = this.sheet.getRange(this.top,this.left,1,this.right-this.left+1).getNotes()[0];
 
       } else {
@@ -448,14 +472,18 @@ class sdbTable {
       // ----------------------------------------------
       v.step = 4.1; // シートイメージから行オブジェクトへ変換関数を定義
       v.convert = o => { // top,left,right,bottomは全てシートベースの行列番号(自然数)で計算
-        v.obj = [];
-        for( v.i=o.top,v.cnt=0 ; v.i<o.bottom ; v.i++,v.cnt++ ){
-          v.obj[v.cnt] = {};
+        // 先頭〜末尾の途中に全項目が空欄の行があれば、空オブジェクトを作成するが、
+        // 末尾行以降の全項目空欄行はスキップする
+        v.obj = []; v.flag = false;
+        for( v.i=o.bottom-1 ; v.i>=o.top ; v.i-- ){
+          v.o = {};
           for( v.j=o.left-1 ; v.j<o.right ; v.j++ ){
             if( o.data[v.i][v.j] ){
-              v.obj[v.cnt][o.data[o.top-1][v.j]] = o.data[v.i][v.j];
+              v.o[o.data[o.top-1][v.j]] = o.data[v.i][v.j];
+              v.flag = true;
             }
           }
+          if( v.flag === true ) v.obj.unshift(v.o);
         }
         return v.obj;
       }
@@ -479,10 +507,8 @@ class sdbTable {
           v.step = 4.4; // シート不在で初期データ無し
           this.values = [];
         }
-        v.step = 4.5; // 末尾行番号の確定
-        this.bottom = this.top + this.values.length;
       } else {
-        v.step = 4.6; // シートが存在
+        v.step = 4.5; // シートが存在
         this.values = v.convert({
           data  : v.getValues,
           top   : this.top,
@@ -491,7 +517,9 @@ class sdbTable {
           bottom: this.bottom,
         });
       }
-      vlog(this,'values',v);
+      v.step = 4.6; // 末尾行番号の確定
+      this.bottom = this.top + this.values.length;
+      vlog(this,['name','top','left','right','bottom','values'],v)
 
       // ----------------------------------------------
       v.step = 5; // シート未作成の場合、追加
@@ -718,7 +746,6 @@ class sdbTable {
         v.step = 1.3; // recordがオブジェクトなら関数化
         v.record = typeof trans[v.i].record === 'function' ? trans[v.i].record
         : new Function('o',`return ${JSON.stringify(trans[v.i].record)}`);
-        vlog(v,['where','record'],670);
   
         // 対象レコードか一件ずつチェック
         for( v.j=0 ; v.j<this.values.length ; v.j++ ){
@@ -732,11 +759,9 @@ class sdbTable {
   
           v.step = 2.3; // v.after: 更新指定項目のみのオブジェクト
           v.after = v.record(this.values[v.j]);
-          vlog(v,['logObj','after'],684)
   
           v.step = 2.4; // シート上の項目毎にチェック
           v.header.forEach(x => {
-            //console.log(`l.688 x=${x},v.after=${JSON.stringify(v.after)}\nv.logObj.before[${x}]=${v.logObj.before[x]}\nv.after[${x}]=${v.after[x]}\nisEqual=${isEqual(v.logObj.before[x],v.after[x])}`)
             if( v.after.hasOwnProperty(x) && !isEqual(v.logObj.before[x],v.after[x]) ){
               v.step = 2.41; // 変更指定項目かつ値が変化していた場合、afterとdiffに新しい値を設定
               v.logObj.after[x] = v.logObj.diff[x] = v.after[x];
@@ -778,17 +803,14 @@ class sdbTable {
       // ------------------------------------------------
       v.step = 3; // 対象シート・更新履歴に展開
       // ------------------------------------------------
-      vlog(v,['top','left','right','bottom'])
       v.step = 3.1; // シートイメージ(二次元配列)作成
       for( v.i=v.top ; v.i<=v.bottom ; v.i++ ){
-        console.log(`l.733 this.values[${v.i}]=${JSON.stringify(this.values[v.i])}`)
         v.row = [];
         for( v.j=v.left ; v.j<=v.right ; v.j++ ){
           v.row.push(this.values[v.i][v.header[v.j]] || null);
         }
         v.target.push(v.row);
       }
-      vlog(v,'target')
   
       v.step = 3.2; // シートに展開
       // v.top,bottom: 最初と最後の行オブジェクトの添字(≠行番号) ⇒ top+1 ≦ row ≦ bottom+1
@@ -937,11 +959,11 @@ class sdbSchema {
       v.step = 2; // 項目定義オブジェクト(this.cols)の作成
       // -----------------------------------------------
       v.step = 2.1; // v.cols: sdbColumns.constructor()への引数
-      if( v.arg.notes !== null ){
+      if( Array.isArray(v.arg.notes) && v.arg.notes.join('').length > 0 ){
         v.cols = v.arg.notes;
       } else if( v.arg.cols !== null ){
         v.cols = v.arg.cols;
-      } else if( v.arg.header !== null ){
+      } else if( Array.isArray(v.arg.header) && v.arg.header.join('').length > 0 ){
         v.cols = v.arg.header;
       } else if( v.arg.values !== null ){
         // 行オブジェクトの配列から項目名リストを作成
@@ -1293,14 +1315,56 @@ class SpreadDB {
 
   /** transact: シートの操作
    * 
-   * @param arg 
+   * @param trans {Object|Object[]} - 以下のメンバを持つオブジェクト(の配列)
+   * @param trans.name {string} - 更新対象範囲名
+   * @param trans.action {string} - 操作内容。"append", "update", "delete"のいずれか
+   * @param trans.arg {Object|Object[]} - append/update/deleteの引数
+   * @param opt={} {Object} - オプション
+   * @param opt.getLogFrom=null {string|number|Date} - 取得する更新履歴オブジェクトの時刻指定
+   * @param opt.getLogOption={} {Object} - getLogFrom≠nullの場合、getLogメソッドのオプション
    * @returns 
+   * 
+   * - GAS公式 Class LockService [getDocumentLock()](https://developers.google.com/apps-script/reference/lock/lock-service?hl=ja#getDocumentLock())
+   * - Qiita [GASの排他制御（ロック）の利用方法を調べた](https://qiita.com/kyamadahoge/items/f5d3fafb2eea97af42fe)
    */
   transact(trans,opt={}){
-    const v = {whois:this.constructor.name+'.transact',step:0,rv:null};
+    const v = {whois:this.constructor.name+'.transact',step:0,rv:[]};
     console.log(`${v.whois} start.\ntrans(${whichType(trans)})=${stringify(trans)}\nopt=${stringify(opt)}`);
     try {
   
+      v.step = 1; // 事前準備
+      v.step = 1.1; // 引数transを配列化
+      if( !Array.isArray(trans) ) trans = [trans];
+      v.step = 1.2; // オプションに既定値を設定
+      v.opt = Object.assign({
+        getLogFrom: null,
+        getLogOption: {},
+      },opt);
+
+      v.step = 2; // スプレッドシートをロックして更新処理
+      v.lock = LockService.getDocumentLock();
+      if( v.lock.tryLock(10000) ){
+
+        v.step = 2.1; // シートの更新処理
+        for( v.i=0 ; v.i<trans.length ; v.i++ ){
+          if( ['append','update','delete'].find(x => x === trans[v.i].action) ){
+            v.r = this.tables[trans[v.i].name][trans[v.i].action](trans[v.i].arg);
+            if( v.r instanceof Error ) throw v.r;
+            v.rv = [...v.rv, ...v.r];
+          }
+        }
+
+        v.step = 2.2; // 更新履歴の取得
+        if( v.opt.getLogFrom !== null ){
+          v.r = this.getLog(v.opt.getLogFrom,v.opt.getLogOption);
+          if( v.r instanceof Error ) throw v.r;
+          v.rv = {result:v.rv,data:v.r};
+        }
+
+        v.step = 2.3; // ロック解除
+        v.lock.releaseLock();
+      }
+
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
@@ -1313,17 +1377,54 @@ class SpreadDB {
   }
 
   /** getLog: 指定時刻以降の変更履歴を取得
-   * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
+   * @param datetime=null {string} - Date型に変換可能な日時文字列
+   * @param opt={} {Object} - オプション
+   * @param opt.cols=null {boolean} 各項目の定義集も返す
+   * @param opt.excludeErrors=true {boolean} エラーログを除く
+   * @param opt.simple=true {boolean} 戻り値のログ情報の項目を絞り込む
    * @returns {Object} {success:[],failure:[]}形式
    */
-  getLog(records){
-    const v = {whois:this.constructor.name+'.delete',step:0,rv:null};
-    console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
+  getLog(datetime=null,opt={}){
+    const v = {whois:this.constructor.name+'.delete',step:0,rv:{}};
+    console.log(`${v.whois} start.\ndatetime(${whichType(datetime)})=${stringify(datetime)}\nopt(${whichType(opt)})=${stringify(opt)}`);
     try {
 
-      // ------------------------------------------------
       v.step = 1; // 事前準備
-      // ------------------------------------------------
+      v.datetime = datetime === null ? -Infinity : new Date(datetime).getTime();
+      v.opt = Object.assign({
+        cols: datetime === null ? true : false,
+        excludeErrors: true,
+        simple: true,
+      },opt);
+
+      v.step = 2; // 戻り値lastReferenceの設定
+      v.rv.lastReference = toLocale(new Date());
+
+      v.step = 3; // 戻り値colsの設定
+      if( v.opt.cols ){
+        v.rv.cols = {};
+        for( v.table in this.tables ){
+          v.rv.cols[v.table] = this.tables[v.table].schema.cols;
+        }
+      }
+
+      v.step = 4; // 戻り値logの設定
+      v.rv.log = [];
+      for( v.i=0 ; v.i<this.log.values.length ; v.i++ ){
+        v.l = this.log.values[v.i];
+        if( new Date(v.l.timestamp).getTime() > v.datetime ){
+          if( v.l.result === false && v.opt.excludeErrors === true ) continue;
+          if( v.opt.simple ){
+            v.rv.log.push({
+              range: v.l.range,
+              action: v.l.before ? (v.l.after ? 'update' : 'delete') : 'append',
+              record: v.l.before && !v.l.after ? v.l.before : v.l.after,
+            });
+          } else {
+            v.rv.log.push(v.l);
+          }
+        }
+      }
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);

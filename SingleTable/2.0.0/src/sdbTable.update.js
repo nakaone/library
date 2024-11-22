@@ -45,7 +45,6 @@ update(trans=[]){
       v.step = 1.3; // recordがオブジェクトなら関数化
       v.record = typeof trans[v.i].record === 'function' ? trans[v.i].record
       : new Function('o',`return ${JSON.stringify(trans[v.i].record)}`);
-      vlog(v,['where','record'],670);
 
       // 対象レコードか一件ずつチェック
       for( v.j=0 ; v.j<this.values.length ; v.j++ ){
@@ -59,11 +58,9 @@ update(trans=[]){
 
         v.step = 2.3; // v.after: 更新指定項目のみのオブジェクト
         v.after = v.record(this.values[v.j]);
-        vlog(v,['logObj','after'],684)
 
         v.step = 2.4; // シート上の項目毎にチェック
         v.header.forEach(x => {
-          //console.log(`l.688 x=${x},v.after=${JSON.stringify(v.after)}\nv.logObj.before[${x}]=${v.logObj.before[x]}\nv.after[${x}]=${v.after[x]}\nisEqual=${isEqual(v.logObj.before[x],v.after[x])}`)
           if( v.after.hasOwnProperty(x) && !isEqual(v.logObj.before[x],v.after[x]) ){
             v.step = 2.41; // 変更指定項目かつ値が変化していた場合、afterとdiffに新しい値を設定
             v.logObj.after[x] = v.logObj.diff[x] = v.after[x];
@@ -105,17 +102,14 @@ update(trans=[]){
     // ------------------------------------------------
     v.step = 3; // 対象シート・更新履歴に展開
     // ------------------------------------------------
-    vlog(v,['top','left','right','bottom'])
     v.step = 3.1; // シートイメージ(二次元配列)作成
     for( v.i=v.top ; v.i<=v.bottom ; v.i++ ){
-      console.log(`l.733 this.values[${v.i}]=${JSON.stringify(this.values[v.i])}`)
       v.row = [];
       for( v.j=v.left ; v.j<=v.right ; v.j++ ){
         v.row.push(this.values[v.i][v.header[v.j]] || null);
       }
       v.target.push(v.row);
     }
-    vlog(v,'target')
 
     v.step = 3.2; // シートに展開
     // v.top,bottom: 最初と最後の行オブジェクトの添字(≠行番号) ⇒ top+1 ≦ row ≦ bottom+1

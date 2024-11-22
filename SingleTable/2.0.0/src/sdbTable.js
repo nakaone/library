@@ -60,7 +60,6 @@ class sdbTable {
         this.top = this.left = 1;
         this.bottom = this.right = Infinity;
       }
-      vlog(this,['sheetName','top','left','right','bottom'],v)
 
       // ----------------------------------------------
       v.step = 3; // this.schemaの作成
@@ -78,11 +77,14 @@ class sdbTable {
         v.getDataRange = this.sheet.getDataRange();
         v.getValues = v.getDataRange.getValues();
 
-        v.step = 3.12; // 範囲確定。A1記法とデータ範囲のどちらか小さい方
+        v.step = 3.12; // 範囲絞り込み(未確定)。A1記法とデータ範囲のどちらか小さい方
         this.right = Math.min(this.right, v.getValues[0].length);
         this.bottom = Math.min(this.bottom, v.getValues.length);
 
-        v.step = 3.13; // 項目定義メモの読み込み
+        v.step = 3.13; // ヘッダ行のシートイメージ(項目一覧)
+        v.schemaArg.header = v.getValues[this.top-1].slice(this.left-1,this.right);
+
+        v.step = 3.14; // 項目定義メモの読み込み
         v.schemaArg.notes = this.sheet.getRange(this.top,this.left,1,this.right-this.left+1).getNotes()[0];
 
       } else {
@@ -107,14 +109,18 @@ class sdbTable {
       // ----------------------------------------------
       v.step = 4.1; // シートイメージから行オブジェクトへ変換関数を定義
       v.convert = o => { // top,left,right,bottomは全てシートベースの行列番号(自然数)で計算
-        v.obj = [];
-        for( v.i=o.top,v.cnt=0 ; v.i<o.bottom ; v.i++,v.cnt++ ){
-          v.obj[v.cnt] = {};
+        // 先頭〜末尾の途中に全項目が空欄の行があれば、空オブジェクトを作成するが、
+        // 末尾行以降の全項目空欄行はスキップする
+        v.obj = []; v.flag = false;
+        for( v.i=o.bottom-1 ; v.i>=o.top ; v.i-- ){
+          v.o = {};
           for( v.j=o.left-1 ; v.j<o.right ; v.j++ ){
             if( o.data[v.i][v.j] ){
-              v.obj[v.cnt][o.data[o.top-1][v.j]] = o.data[v.i][v.j];
+              v.o[o.data[o.top-1][v.j]] = o.data[v.i][v.j];
+              v.flag = true;
             }
           }
+          if( v.flag === true ) v.obj.unshift(v.o);
         }
         return v.obj;
       }
@@ -138,10 +144,8 @@ class sdbTable {
           v.step = 4.4; // シート不在で初期データ無し
           this.values = [];
         }
-        v.step = 4.5; // 末尾行番号の確定
-        this.bottom = this.top + this.values.length;
       } else {
-        v.step = 4.6; // シートが存在
+        v.step = 4.5; // シートが存在
         this.values = v.convert({
           data  : v.getValues,
           top   : this.top,
@@ -150,7 +154,9 @@ class sdbTable {
           bottom: this.bottom,
         });
       }
-      vlog(this,'values',v);
+      v.step = 4.6; // 末尾行番号の確定
+      this.bottom = this.top + this.values.length;
+      vlog(this,['name','top','left','right','bottom','values'],v)
 
       // ----------------------------------------------
       v.step = 5; // シート未作成の場合、追加

@@ -20,11 +20,11 @@ class sdbSchema {
       v.step = 2; // 項目定義オブジェクト(this.cols)の作成
       // -----------------------------------------------
       v.step = 2.1; // v.cols: sdbColumns.constructor()への引数
-      if( v.arg.notes !== null ){
+      if( Array.isArray(v.arg.notes) && v.arg.notes.join('').length > 0 ){
         v.cols = v.arg.notes;
       } else if( v.arg.cols !== null ){
         v.cols = v.arg.cols;
-      } else if( v.arg.header !== null ){
+      } else if( Array.isArray(v.arg.header) && v.arg.header.join('').length > 0 ){
         v.cols = v.arg.header;
       } else if( v.arg.values !== null ){
         // 行オブジェクトの配列から項目名リストを作成

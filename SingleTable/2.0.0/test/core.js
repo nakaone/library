@@ -317,15 +317,37 @@ function test(){
         return v.sdb.tables.master.delete(v.src.delete[0]);
       },
     ],
+    transact: [
+      () => {
+        v.src.multi(); // 一シート複数テーブルテスト用の「multi」シートを作成
+        v.now = Date.now();
+        v.sdb = new SpreadDB([v.src.master,v.src.accounts,v.src.BS],{
+          accunt: 'Shimazu'
+        });
+        v.r = v.sdb.transact([
+          {name:'master',action:'append',arg:{'メールアドレス':`x${v.now}@gmail.com`}},
+          {name:'accounts',action:'update',arg:{where:{key:'実績',value:'(営外)貸倒損失'},record:{'読替':'テスト'}}},
+          {name:'BS',action:'delete',arg:{where:o=>{o['勘定科目']==='現金'}}},
+        ],{
+          getLogFrom: null,
+          getLogOption: {
+            cols: true,
+            excludeErrors: false,
+            simple: true,
+          },
+        });
+        return v.r;
+      },
+    ]
   };
   console.log(`${v.whois} start.`);
   try {
 
     // v.src.multi(); // 一シート複数テーブルテスト用の「multi」シートを作成
+    ['target','master','log'].forEach(x => v.deleteSheet(x));
 
     // テスト対象を絞る場合、以下のv.st,numの値を書き換え
-    v.p = 'append'; v.st = 1; v.num = 1 || pattern[v.p].length;
-    ['target','master','log'].forEach(x => v.deleteSheet(x));
+    v.p = 'transact'; v.st = 0; v.num = 1 || pattern[v.p].length;
     for( v.i=v.st ; v.i<v.st+v.num ; v.i++ ){
       v.rv = pattern[v.p][v.i]();
       if( v.rv instanceof Error ) throw v.rv;
