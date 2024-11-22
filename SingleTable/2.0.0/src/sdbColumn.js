@@ -132,7 +132,10 @@ class sdbColumn {
       for( v.i=0 ; v.i<v.typedef.length ; v.i++ ){
         v.typedef[v.i] = Object.assign({type:'',note:''},v.typedef[v.i]);
         if( this[v.typedef[v.i].name] !== null ){
-          v.l = `${v.typedef[v.i].name}: ${this[v.typedef[v.i].name]}`
+          // auto_incrementは配列型で記載されるよう変換
+          v.val = v.typedef[v.i].name === 'auto_increment' && whichType(this.auto_increment,'Object')
+          ? JSON.stringify([this.auto_increment.base,this.auto_increment.step]) : this[v.typedef[v.i].name];
+          v.l = `${v.typedef[v.i].name}: ${v.val}`
             + ( v.opt.defined ? ` // {${v.typedef[v.i].type}} - ${v.typedef[v.i].note}` : '');
         } else if( v.opt.undef ){
           // 説明文をコメントとして出力する場合

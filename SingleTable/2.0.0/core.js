@@ -250,7 +250,6 @@ class sdbTable {
       for( v.i=0 ; v.i<record.length ; v.i++ ){
   
         v.logObj = new sdbLog({account: this.account,range: this.name});
-        console.log(`l.545 logObj=${stringify(v.logObj)}`)
   
         v.step = 2.1; // auto_increment項目の設定
         // ※ auto_increment設定はuniqueチェックに先行
@@ -269,9 +268,10 @@ class sdbTable {
           if( this.schema.unique[v.unique].indexOf(record[v.i][v.unique]) >= 0 ){
             // 登録済の場合はエラーとして処理
             v.logObj.result = false;
-            // 複数項目のエラーメッセージに対応するため場合分け
-            v.logObj.message = (v.logObj.message === null ? '' : '\n')
-            + `${v.unique}欄の値「${record[v.i][v.unique]}」が重複しています`;
+            // 複数項目のエラーメッセージに対応するため配列化を介在させる
+            v.logObj.message = v.logObj.message === null ? [] : v.logObj.message.split('\n');
+            v.logObj.message.push(`${v.unique}欄の値「${record[v.i][v.unique]}」が重複しています`);
+            v.logObj.message = v.logObj.message.join('\n');
           } else {
             // 未登録の場合this.sdbSchema.uniqueに値を追加
             this.schema.unique[v.unique].push(record[v.i][v.unique]);
@@ -800,7 +800,10 @@ class sdbColumn {
       for( v.i=0 ; v.i<v.typedef.length ; v.i++ ){
         v.typedef[v.i] = Object.assign({type:'',note:''},v.typedef[v.i]);
         if( this[v.typedef[v.i].name] !== null ){
-          v.l = `${v.typedef[v.i].name}: ${this[v.typedef[v.i].name]}`
+          // auto_incrementは配列型で記載されるよう変換
+          v.val = v.typedef[v.i].name === 'auto_increment' && whichType(this.auto_increment,'Object')
+          ? JSON.stringify([this.auto_increment.base,this.auto_increment.step]) : this[v.typedef[v.i].name];
+          v.l = `${v.typedef[v.i].name}: ${v.val}`
             + ( v.opt.defined ? ` // {${v.typedef[v.i].type}} - ${v.typedef[v.i].note}` : '');
         } else if( v.opt.undef ){
           // 説明文をコメントとして出力する場合
@@ -947,24 +950,20 @@ class SpreadDB {
     }
   }
 
-  /** append: 単数または複数のシートに新規行を追加
-   * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
-   * @returns {Object} {success:[],failure:[]}形式
+  /** transact: シートの操作
+   * 
+   * @param arg 
+   * @returns 
    */
-  append(records){
-    const v = {whois:this.constructor.name+'.append',step:0,rv:{success:[],failure:[],log:[]},
-      cols:[],sheet:[]};
-    console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
+  transact(trans,opt={}){
+    const v = {whois:this.constructor.name+'.transact',step:0,rv:null};
+    console.log(`${v.whois} start.\ntrans(${whichType(trans)})=${stringify(trans)}\nopt=${stringify(opt)}`);
     try {
-
-      // ------------------------------------------------
-      v.step = 1; // 事前準備
-      // ------------------------------------------------
-
+  
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
-
+  
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
@@ -972,63 +971,12 @@ class SpreadDB {
     }
   }
 
-  /** update: 単数または複数のシートの行を更新
+  /** getLog: 指定時刻以降の変更履歴を取得
    * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
    * @returns {Object} {success:[],failure:[]}形式
    */
-  update(records){
-    const v = {whois:this.constructor.name+'.update',step:0,rv:{success:[],failure:[],log:[]},
-      cols:[],sheet:[]};
-    console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
-    try {
-
-      // ------------------------------------------------
-      v.step = 1; // 事前準備
-      // ------------------------------------------------
-
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-      return v.rv;
-
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-      console.error(`${e.message}\nv=${stringify(v)}`);
-      return e;
-    }
-  }
-
-  /** delete: 単数または複数のシートから行を削除
-   * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
-   * @returns {Object} {success:[],failure:[]}形式
-   */
-  delete(records){
-    const v = {whois:this.constructor.name+'.delete',step:0,rv:{success:[],failure:[],log:[]},
-      cols:[],sheet:[]};
-    console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
-    try {
-
-      // ------------------------------------------------
-      v.step = 1; // 事前準備
-      // ------------------------------------------------
-
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-      return v.rv;
-
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-      console.error(`${e.message}\nv=${stringify(v)}`);
-      return e;
-    }
-  }
-
-  /** getDiff: 指定時刻以降の変更履歴を取得
-   * @param {Object|Object[]} records=[] - 追加するオブジェクトの配列
-   * @returns {Object} {success:[],failure:[]}形式
-   */
-  getDiff(records){
-    const v = {whois:this.constructor.name+'.delete',step:0,rv:{success:[],failure:[],log:[]},
-      cols:[],sheet:[]};
+  getLog(records){
+    const v = {whois:this.constructor.name+'.delete',step:0,rv:null};
     console.log(`${v.whois} start.\nrecords(${whichType(records)})=${stringify(records)}`);
     try {
 

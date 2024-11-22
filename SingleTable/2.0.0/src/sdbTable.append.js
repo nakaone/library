@@ -21,7 +21,6 @@ append(record){
     for( v.i=0 ; v.i<record.length ; v.i++ ){
 
       v.logObj = new sdbLog({account: this.account,range: this.name});
-      console.log(`l.545 logObj=${stringify(v.logObj)}`)
 
       v.step = 2.1; // auto_increment項目の設定
       // ※ auto_increment設定はuniqueチェックに先行
@@ -40,9 +39,10 @@ append(record){
         if( this.schema.unique[v.unique].indexOf(record[v.i][v.unique]) >= 0 ){
           // 登録済の場合はエラーとして処理
           v.logObj.result = false;
-          // 複数項目のエラーメッセージに対応するため場合分け
-          v.logObj.message = (v.logObj.message === null ? '' : '\n')
-          + `${v.unique}欄の値「${record[v.i][v.unique]}」が重複しています`;
+          // 複数項目のエラーメッセージに対応するため配列化を介在させる
+          v.logObj.message = v.logObj.message === null ? [] : v.logObj.message.split('\n');
+          v.logObj.message.push(`${v.unique}欄の値「${record[v.i][v.unique]}」が重複しています`);
+          v.logObj.message = v.logObj.message.join('\n');
         } else {
           // 未登録の場合this.sdbSchema.uniqueに値を追加
           this.schema.unique[v.unique].push(record[v.i][v.unique]);
