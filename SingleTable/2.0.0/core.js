@@ -1,3 +1,206 @@
+class SpreadDB {
+  /** @constructor
+   * @param tables {Object|Object[]} 対象領域情報(sdbTable.constructor()の引数オブジェクト)の配列
+   * @param opt {Object}={}
+   * @param opt.outputLog {boolean}=true ログ出力しないならfalse
+   * @param opt.logSheetName {string}='log' 更新履歴シート名
+   * @param opt.account {number|string}=null 更新者のアカウント
+   * @param opt.maxTrial {number}=5 シート更新時、ロックされていた場合の最大試行回数
+   * @param opt.interval {number}=2500 シート更新時、ロックされていた場合の試行間隔(ミリ秒)
+   * @returns {SpreadDB|Error}
+   */
+  constructor(tables,opt={}){
+    const v = {whois:this.constructor.name+'.constructor',step:0,rv:null};
+    console.log(`${v.whois} start.`);
+    try {
+  
+      // -------------------------------------------------------------
+      // 1. 事前準備
+      // -------------------------------------------------------------
+      v.step = 1; // メンバの初期化
+      // spread {Spreadsheet} スプレッドシートオブジェクト(=ファイル。シートの集合)
+      this.spread = SpreadsheetApp.getActiveSpreadsheet();
+      // tables {Object.<string,sdbTable>} 操作対象シートの情報。メンバ名はテーブル名。
+      this.tables = {};
+  
+      v.step = 2; // 引数tablesが配列でない場合、配列に変換(以降で統一的に処理するため)
+      v.tables = Array.isArray(tables) ? tables : [tables];
+      for( v.i=0 ; v.i<v.tables.length ; v.i++ ){
+        // 文字列ならname属性指定と看做す
+        if(whichType(v.tables[v.i],'String')){
+          v.tables[v.i] = {name: v.tables[v.i]};
+        };
+      }
+  
+      v.step = 3; // 引数「opt」の設定値をメンバとして登録
+      v.opt = mergeDeeply(opt,{
+        outputLog: true,
+        logSheetName: 'log',
+        account: null,
+        maxTrial: 5,
+        interval: 2500,
+        values: null,
+        schema: null,
+      });
+      Object.keys(v.opt).forEach(x => this[x] = v.opt[x]);
+  
+      v.step = 4; // 更新履歴を残す場合、変更履歴シートを他シートに先行して準備
+      if( this.outputLog === true ){
+        this.log = this.tables[this.logSheetName] = new sdbTable({
+          spread: this.spread,
+          name: this.logSheetName,
+          cols: sdbLog.typedef(),
+        });
+        if( this.log instanceof Error ) throw this.log;
+      } else {
+        this.log = null;
+      }
+  
+      v.step = 5; // 対象テーブルのインスタンス化
+      v.tables.forEach(x => {
+        // sdbTableインスタンス生成時、spreadが必要になるので追加しておく
+        x.spread = this.spread;
+        x.log = this.log;
+        x.account = this.account;
+        v.r = new sdbTable(x);
+        if( v.r instanceof Error ) throw v.r;
+        this.tables[x.name] = v.r;
+      });
+  
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+      return v.rv;
+  
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+  /** transact: シートの操作
+   * 
+   * @param trans {Object|Object[]} - 以下のメンバを持つオブジェクト(の配列)
+   * @param trans.name {string} - 更新対象範囲名
+   * @param trans.action {string} - 操作内容。"append", "update", "delete"のいずれか
+   * @param trans.arg {Object|Object[]} - append/update/deleteの引数
+   * @param opt={} {Object} - オプション
+   * @param opt.getLogFrom=null {string|number|Date} - 取得する更新履歴オブジェクトの時刻指定
+   * @param opt.getLogOption={} {Object} - getLogFrom≠nullの場合、getLogメソッドのオプション
+   * @returns 
+   * 
+   * - GAS公式 Class LockService [getDocumentLock()](https://developers.google.com/apps-script/reference/lock/lock-service?hl=ja#getDocumentLock())
+   * - Qiita [GASの排他制御（ロック）の利用方法を調べた](https://qiita.com/kyamadahoge/items/f5d3fafb2eea97af42fe)
+   */
+  transact(trans,opt={}){
+    const v = {whois:this.constructor.name+'.transact',step:0,rv:[]};
+    console.log(`${v.whois} start.\ntrans(${whichType(trans)})=${stringify(trans)}\nopt=${stringify(opt)}`);
+    try {
+  
+      v.step = 1; // 事前準備
+      v.step = 1.1; // 引数transを配列化
+      if( !Array.isArray(trans) ) trans = [trans];
+      v.step = 1.2; // オプションに既定値を設定
+      v.opt = Object.assign({
+        getLogFrom: null,
+        getLogOption: {},
+      },opt);
+  
+      v.step = 2; // スプレッドシートをロックして更新処理
+      v.lock = LockService.getDocumentLock();
+      if( v.lock.tryLock(10000) ){
+  
+        v.step = 2.1; // シートの更新処理
+        for( v.i=0 ; v.i<trans.length ; v.i++ ){
+          if( ['append','update','delete'].find(x => x === trans[v.i].action) ){
+            v.r = this.tables[trans[v.i].name][trans[v.i].action](trans[v.i].arg);
+            if( v.r instanceof Error ) throw v.r;
+            v.rv = [...v.rv, ...v.r];
+          }
+        }
+  
+        v.step = 2.2; // 更新履歴の取得
+        if( v.opt.getLogFrom !== null ){
+          v.r = this.getLog(v.opt.getLogFrom,v.opt.getLogOption);
+          if( v.r instanceof Error ) throw v.r;
+          v.rv = {result:v.rv,data:v.r};
+        }
+  
+        v.step = 2.3; // ロック解除
+        v.lock.releaseLock();
+      }
+  
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+      return v.rv;
+  
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+  
+  /** getLog: 指定時刻以降の変更履歴を取得
+   * @param datetime=null {string} - Date型に変換可能な日時文字列
+   * @param opt={} {Object} - オプション
+   * @param opt.cols=null {boolean} 各項目の定義集も返す
+   * @param opt.excludeErrors=true {boolean} エラーログを除く
+   * @param opt.simple=true {boolean} 戻り値のログ情報の項目を絞り込む
+   * @returns {Object} {success:[],failure:[]}形式
+   */
+  getLog(datetime=null,opt={}){
+    const v = {whois:this.constructor.name+'.delete',step:0,rv:{}};
+    console.log(`${v.whois} start.\ndatetime(${whichType(datetime)})=${stringify(datetime)}\nopt(${whichType(opt)})=${stringify(opt)}`);
+    try {
+  
+      v.step = 1; // 事前準備
+      v.datetime = datetime === null ? -Infinity : new Date(datetime).getTime();
+      v.opt = Object.assign({
+        cols: datetime === null ? true : false,
+        excludeErrors: true,
+        simple: true,
+      },opt);
+  
+      v.step = 2; // 戻り値lastReferenceの設定
+      v.rv.lastReference = toLocale(new Date());
+  
+      v.step = 3; // 戻り値colsの設定
+      if( v.opt.cols ){
+        v.rv.cols = {};
+        for( v.table in this.tables ){
+          v.rv.cols[v.table] = this.tables[v.table].schema.cols;
+        }
+      }
+  
+      v.step = 4; // 戻り値logの設定
+      v.rv.log = [];
+      for( v.i=0 ; v.i<this.log.values.length ; v.i++ ){
+        v.l = this.log.values[v.i];
+        if( new Date(v.l.timestamp).getTime() > v.datetime ){
+          if( v.l.result === false && v.opt.excludeErrors === true ) continue;
+          if( v.opt.simple ){
+            v.rv.log.push({
+              range: v.l.range,
+              action: v.l.before ? (v.l.after ? 'update' : 'delete') : 'append',
+              record: v.l.before && !v.l.after ? v.l.before : v.l.after,
+            });
+          } else {
+            v.rv.log.push(v.l);
+          }
+        }
+      }
+  
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+      return v.rv;
+  
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+}
 /** sdbTable: シート上の対象範囲(テーブル) */
 class sdbTable {
   /** @constructor
@@ -22,7 +225,7 @@ class sdbTable {
     };
     console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
     try {
-
+  
       // ----------------------------------------------
       v.step = 1; // メンバの初期化、既定値設定
       // ----------------------------------------------
@@ -39,8 +242,8 @@ class sdbTable {
       this.left = null; // {number} データ領域左端の列番号(自然数)
       this.right = null; // {number} データ領域右端の列番号(自然数)
       this.bottom = null; // {number} データ領域下端の行番号(自然数)
-
-
+  
+  
       // ----------------------------------------------
       v.step = 2; // 引数name,rangeから対象範囲絞り込み
       // ----------------------------------------------
@@ -60,7 +263,7 @@ class sdbTable {
         this.top = this.left = 1;
         this.bottom = this.right = Infinity;
       }
-
+  
       // ----------------------------------------------
       v.step = 3; // this.schemaの作成
       // ----------------------------------------------
@@ -72,23 +275,23 @@ class sdbTable {
       };
       this.sheet = this.spread.getSheetByName(this.sheetName);
       if( this.sheet !== null ){
-
+  
         v.step = 3.11; // シートイメージの読み込み
         v.getDataRange = this.sheet.getDataRange();
         v.getValues = v.getDataRange.getValues();
-
+  
         v.step = 3.12; // 範囲絞り込み(未確定)。A1記法とデータ範囲のどちらか小さい方
         this.right = Math.min(this.right, v.getValues[0].length);
         this.bottom = Math.min(this.bottom, v.getValues.length);
-
+  
         v.step = 3.13; // ヘッダ行のシートイメージ(項目一覧)
         v.schemaArg.header = v.getValues[this.top-1].slice(this.left-1,this.right);
-
+  
         v.step = 3.14; // 項目定義メモの読み込み
         v.schemaArg.notes = this.sheet.getRange(this.top,this.left,1,this.right-this.left+1).getNotes()[0];
-
+  
       } else {
-
+  
         v.step = 3.21; // シートも項目定義も初期データも無いならエラー
         if( !arg.cols && !arg.values ){
           throw new Error(`シートも項目定義も初期データも存在しません`);
@@ -98,12 +301,12 @@ class sdbTable {
           v.schemaArg.header = arg.values[0];
         }
       }
-
+  
       v.step = 3.3; // スキーマをインスタンス化、右端列番号の確定
       this.schema = new sdbSchema(v.schemaArg);
       if( this.schema instanceof Error ) throw this.schema;
       this.right = this.left - 1 + this.schema.cols.length;
-
+  
       // ----------------------------------------------
       v.step = 4; // this.valuesの作成
       // ----------------------------------------------
@@ -124,7 +327,7 @@ class sdbTable {
         }
         return v.obj;
       }
-
+  
       if( this.sheet === null ){
         if( arg.values ){
           if( whichType(arg.values[0],'Object') ){
@@ -157,15 +360,15 @@ class sdbTable {
       v.step = 4.6; // 末尾行番号の確定
       this.bottom = this.top + this.values.length;
       vlog(this,['name','top','left','right','bottom','values'],v)
-
+  
       // ----------------------------------------------
       v.step = 5; // シート未作成の場合、追加
       // ----------------------------------------------
       if( this.sheet === null ){
-
+  
         v.step = 5.1; // this.schema.colsからヘッダ行作成
         v.sheetImage = [this.schema.cols.map(x => x.name)];
-
+  
         v.step = 5.2; // this.valuesをシートイメージに変換
         for( v.i=0 ; v.i<this.values.length ; v.i++ ){
           v.row = [];
@@ -174,11 +377,11 @@ class sdbTable {
           }
           v.sheetImage.push(v.row);
         }
-
+  
         v.step = 5.3; // シートの追加
         this.sheet = this.spread.insertSheet();
         this.sheet.setName(this.sheetName);
-
+  
         v.step = 5.4; // シートイメージのセット
         this.sheet.getRange(
           this.top,
@@ -186,7 +389,7 @@ class sdbTable {
           this.bottom - this.top + 1,
           this.right - this.left + 1
         ).setValues(v.sheetImage);
-
+  
         v.step = 5.5; // 項目定義メモの追加
         v.notes = [];
         this.schema.cols.forEach(x => {
@@ -196,7 +399,7 @@ class sdbTable {
         });
         this.sheet.getRange(this.top,this.left,1,v.notes.length).setNotes([v.notes]);
       }
-
+  
       // ------------------------------------------------
       v.step = 6; // unique,auto_incrementの作成
       // ------------------------------------------------
@@ -211,7 +414,7 @@ class sdbTable {
             }
           }
         });
-
+  
         v.step = 6.2; // auto_increment項目の値を洗い出し
         Object.keys(this.schema.auto_increment).forEach(ai => {
           v.c = this.schema.auto_increment[ai].current;
@@ -222,17 +425,16 @@ class sdbTable {
           }
         });
       });
-
+  
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.`);
-
+  
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
   }
-
   /** append: 領域に新規行を追加
    * @param {Object|Object[]} record=[] - 追加するオブジェクトの配列
    * @returns {sdbLog[]}
@@ -861,211 +1063,6 @@ class sdbLog {
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.`);
-
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-      console.error(`${e.message}\nv=${stringify(v)}`);
-      return e;
-    }
-  }
-}
-class SpreadDB {
-
-  /** @constructor
-   * @param tables {Object|Object[]} 対象領域情報(sdbTable.constructor()の引数オブジェクト)の配列
-   * @param opt {Object}={}
-   * @param opt.outputLog {boolean}=true ログ出力しないならfalse
-   * @param opt.logSheetName {string}='log' 更新履歴シート名
-   * @param opt.account {number|string}=null 更新者のアカウント
-   * @param opt.maxTrial {number}=5 シート更新時、ロックされていた場合の最大試行回数
-   * @param opt.interval {number}=2500 シート更新時、ロックされていた場合の試行間隔(ミリ秒)
-   * @returns {SpreadDB|Error}
-   */
-  constructor(tables,opt={}){
-    const v = {whois:this.constructor.name+'.constructor',step:0,rv:null};
-    console.log(`${v.whois} start.`);
-    try {
-  
-      // -------------------------------------------------------------
-      // 1. 事前準備
-      // -------------------------------------------------------------
-      v.step = 1; // メンバの初期化
-      // spread {Spreadsheet} スプレッドシートオブジェクト(=ファイル。シートの集合)
-      this.spread = SpreadsheetApp.getActiveSpreadsheet();
-      // tables {Object.<string,sdbTable>} 操作対象シートの情報。メンバ名はテーブル名。
-      this.tables = {};
-  
-      v.step = 2; // 引数tablesが配列でない場合、配列に変換(以降で統一的に処理するため)
-      v.tables = Array.isArray(tables) ? tables : [tables];
-      for( v.i=0 ; v.i<v.tables.length ; v.i++ ){
-        // 文字列ならname属性指定と看做す
-        if(whichType(v.tables[v.i],'String')){
-          v.tables[v.i] = {name: v.tables[v.i]};
-        };
-      }
-  
-      v.step = 3; // 引数「opt」の設定値をメンバとして登録
-      v.opt = mergeDeeply(opt,{
-        outputLog: true,
-        logSheetName: 'log',
-        account: null,
-        maxTrial: 5,
-        interval: 2500,
-        values: null,
-        schema: null,
-      });
-      Object.keys(v.opt).forEach(x => this[x] = v.opt[x]);
-  
-      v.step = 4; // 更新履歴を残す場合、変更履歴シートを他シートに先行して準備
-      if( this.outputLog === true ){
-        this.log = this.tables[this.logSheetName] = new sdbTable({
-          spread: this.spread,
-          name: this.logSheetName,
-          cols: sdbLog.typedef(),
-        });
-        if( this.log instanceof Error ) throw this.log;
-      } else {
-        this.log = null;
-      }
-  
-      v.step = 5; // 対象テーブルのインスタンス化
-      v.tables.forEach(x => {
-        // sdbTableインスタンス生成時、spreadが必要になるので追加しておく
-        x.spread = this.spread;
-        x.log = this.log;
-        x.account = this.account;
-        v.r = new sdbTable(x);
-        if( v.r instanceof Error ) throw v.r;
-        this.tables[x.name] = v.r;
-      });
-  
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-      return v.rv;
-  
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-      console.error(`${e.message}\nv=${stringify(v)}`);
-      return e;
-    }
-  }
-
-  /** transact: シートの操作
-   * 
-   * @param trans {Object|Object[]} - 以下のメンバを持つオブジェクト(の配列)
-   * @param trans.name {string} - 更新対象範囲名
-   * @param trans.action {string} - 操作内容。"append", "update", "delete"のいずれか
-   * @param trans.arg {Object|Object[]} - append/update/deleteの引数
-   * @param opt={} {Object} - オプション
-   * @param opt.getLogFrom=null {string|number|Date} - 取得する更新履歴オブジェクトの時刻指定
-   * @param opt.getLogOption={} {Object} - getLogFrom≠nullの場合、getLogメソッドのオプション
-   * @returns 
-   * 
-   * - GAS公式 Class LockService [getDocumentLock()](https://developers.google.com/apps-script/reference/lock/lock-service?hl=ja#getDocumentLock())
-   * - Qiita [GASの排他制御（ロック）の利用方法を調べた](https://qiita.com/kyamadahoge/items/f5d3fafb2eea97af42fe)
-   */
-  transact(trans,opt={}){
-    const v = {whois:this.constructor.name+'.transact',step:0,rv:[]};
-    console.log(`${v.whois} start.\ntrans(${whichType(trans)})=${stringify(trans)}\nopt=${stringify(opt)}`);
-    try {
-  
-      v.step = 1; // 事前準備
-      v.step = 1.1; // 引数transを配列化
-      if( !Array.isArray(trans) ) trans = [trans];
-      v.step = 1.2; // オプションに既定値を設定
-      v.opt = Object.assign({
-        getLogFrom: null,
-        getLogOption: {},
-      },opt);
-
-      v.step = 2; // スプレッドシートをロックして更新処理
-      v.lock = LockService.getDocumentLock();
-      if( v.lock.tryLock(10000) ){
-
-        v.step = 2.1; // シートの更新処理
-        for( v.i=0 ; v.i<trans.length ; v.i++ ){
-          if( ['append','update','delete'].find(x => x === trans[v.i].action) ){
-            v.r = this.tables[trans[v.i].name][trans[v.i].action](trans[v.i].arg);
-            if( v.r instanceof Error ) throw v.r;
-            v.rv = [...v.rv, ...v.r];
-          }
-        }
-
-        v.step = 2.2; // 更新履歴の取得
-        if( v.opt.getLogFrom !== null ){
-          v.r = this.getLog(v.opt.getLogFrom,v.opt.getLogOption);
-          if( v.r instanceof Error ) throw v.r;
-          v.rv = {result:v.rv,data:v.r};
-        }
-
-        v.step = 2.3; // ロック解除
-        v.lock.releaseLock();
-      }
-
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-      return v.rv;
-  
-    } catch(e) {
-      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-      console.error(`${e.message}\nv=${stringify(v)}`);
-      return e;
-    }
-  }
-
-  /** getLog: 指定時刻以降の変更履歴を取得
-   * @param datetime=null {string} - Date型に変換可能な日時文字列
-   * @param opt={} {Object} - オプション
-   * @param opt.cols=null {boolean} 各項目の定義集も返す
-   * @param opt.excludeErrors=true {boolean} エラーログを除く
-   * @param opt.simple=true {boolean} 戻り値のログ情報の項目を絞り込む
-   * @returns {Object} {success:[],failure:[]}形式
-   */
-  getLog(datetime=null,opt={}){
-    const v = {whois:this.constructor.name+'.delete',step:0,rv:{}};
-    console.log(`${v.whois} start.\ndatetime(${whichType(datetime)})=${stringify(datetime)}\nopt(${whichType(opt)})=${stringify(opt)}`);
-    try {
-
-      v.step = 1; // 事前準備
-      v.datetime = datetime === null ? -Infinity : new Date(datetime).getTime();
-      v.opt = Object.assign({
-        cols: datetime === null ? true : false,
-        excludeErrors: true,
-        simple: true,
-      },opt);
-
-      v.step = 2; // 戻り値lastReferenceの設定
-      v.rv.lastReference = toLocale(new Date());
-
-      v.step = 3; // 戻り値colsの設定
-      if( v.opt.cols ){
-        v.rv.cols = {};
-        for( v.table in this.tables ){
-          v.rv.cols[v.table] = this.tables[v.table].schema.cols;
-        }
-      }
-
-      v.step = 4; // 戻り値logの設定
-      v.rv.log = [];
-      for( v.i=0 ; v.i<this.log.values.length ; v.i++ ){
-        v.l = this.log.values[v.i];
-        if( new Date(v.l.timestamp).getTime() > v.datetime ){
-          if( v.l.result === false && v.opt.excludeErrors === true ) continue;
-          if( v.opt.simple ){
-            v.rv.log.push({
-              range: v.l.range,
-              action: v.l.before ? (v.l.after ? 'update' : 'delete') : 'append',
-              record: v.l.before && !v.l.after ? v.l.before : v.l.after,
-            });
-          } else {
-            v.rv.log.push(v.l);
-          }
-        }
-      }
-
-      v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
-      return v.rv;
 
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
