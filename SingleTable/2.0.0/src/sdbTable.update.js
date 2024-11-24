@@ -3,7 +3,7 @@
  * @param {Object|Function|any} trans.where - 対象レコードの判定条件
  * @param {Object|Function} trans.record - 更新する値
  * @returns {sdbLog[]}
- * 
+ *
  * - where句の指定方法
  *   - Object ⇒ {key:キー項目名, value: キー項目の値}形式で、key:valueに該当するレコードを更新
  *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
@@ -15,7 +15,7 @@
  */
 update(trans=[]){
   const v = {whois:'sdbTable.update',step:0,rv:[],log:[],target:[],
-    top:Infinity,left:Infinity,right:0,bottom:0,
+    top:Infinity,left:Infinity,right:0,bottom:0,argument:JSON.stringify(trans),
     header: this.schema.cols.map(x => x.name), // 項目一覧
   };
   console.log(`${v.whois} start.\ntrans(${whichType(trans)})=${stringify(trans)}`);
@@ -49,50 +49,52 @@ update(trans=[]){
         v.step = 2.1; // 対象外判定ならスキップ
         if( v.where(this.values[v.j]) === false ) continue;
 
-        v.step = 2.2; // 更新履歴オブジェクトを作成
-        v.logObj = new sdbLog({account:this.account,range:this.name,
-          before:JSON.parse(JSON.stringify(this.values[v.j])),after:{},diff:{}});
+        v.step = 2.2; // v.before: 更新前の行オブジェクトのコピー
+        [v.before,v.after,v.diff] = [Object.assign({},this.values[v.j]),{},{}];
 
-        v.step = 2.3; // v.after: 更新指定項目のみのオブジェクト
-        v.after = v.record(this.values[v.j]);
+        v.step = 2.3; // v.rObj: 更新指定項目のみのオブジェクト
+        v.rObj = v.record(this.values[v.j]);
 
         v.step = 2.4; // シート上の項目毎にチェック
         v.header.forEach(x => {
-          if( v.after.hasOwnProperty(x) && !isEqual(v.logObj.before[x],v.after[x]) ){
+          if( v.rObj.hasOwnProperty(x) && !isEqual(v.before[x],v.rObj[x]) ){
             v.step = 2.41; // 変更指定項目かつ値が変化していた場合、afterとdiffに新しい値を設定
-            v.logObj.after[x] = v.logObj.diff[x] = v.after[x];
+            v.after[x] = v.diff[x] = v.rObj[x];
             v.colNo = v.header.findIndex(y => y === x);
             v.left = Math.min(v.left,v.colNo);
             v.right = Math.max(v.right,v.colNo);
           } else {
             v.step = 2.42; // 非変更指定項目または変更指定項目だが値の変化が無い場合、beforeの値をセット
-            v.logObj.after[x] = v.logObj.before[x];
+            v.after[x] = v.before[x];
           }
         })
 
-        v.step = 2.5; // 更新レコードの正当性チェック(unique重複チェック)
+        v.step = 2.5; // 更新履歴オブジェクトを作成
+        v.logObj = new sdbLog({account:this.account,range:this.name,
+          action:'update',argument:v.argument,before:v.before,after:v.after,diff:v.diff});
+
+        v.step = 2.6; // 更新レコードの正当性チェック(unique重複チェック)
         for( v.unique in this.schema.unique ){
           if( this.schema.unique[v.unique].indexOf(trans[v.i][v.unique]) >= 0 ){
-            v.step = 2.51; // 登録済の場合はエラーとして処理
+            v.step = 2.61; // 登録済の場合はエラーとして処理
             v.logObj.result = false;
             // 複数項目のエラーメッセージに対応するため場合分け
             v.logObj.message = (v.logObj.message === null ? '' : '\n')
             + `${v.unique}欄の値「${trans[v.i][v.unique]}」が重複しています`;
           } else {
-            v.step = 2.52; // 未登録の場合this.sdbSchema.uniqueに値を追加
+            v.step = 2.62; // 未登録の場合this.sdbSchema.uniqueに値を追加
             this.schema.unique[v.unique].push(trans[v.i][v.unique]);
           }
         }
-  
-        v.step = 2.6; // 正当性チェックOKの場合の処理
-        if( v.logObj.result ){
+
+        v.step = 2.7; // 正当性チェックOKの場合の処理
+        if( v.logObj.result === true ){
           v.top = Math.min(v.top, v.j);
           v.bottom = Math.max(v.bottom, v.j);
-          this.values[v.j] = v.logObj.after;          
+          this.values[v.j] = v.after;
         }
-  
-        v.step = 2.7; // 成否に関わらずログ出力対象に保存
-        ['before','after','diff'].forEach(x => {if(v.logObj[x]) v.logObj[x] = JSON.stringify(v.logObj[x])});
+
+        v.step = 2.8; // 成否に関わらずログ出力対象に保存
         v.log.push(v.logObj);
       }
     }
@@ -108,26 +110,28 @@ update(trans=[]){
       }
       v.target.push(v.row);
     }
+    vlog(v,['target','top','left'],1022)
 
     v.step = 3.2; // シートに展開
     // v.top,bottom: 最初と最後の行オブジェクトの添字(≠行番号) ⇒ top+1 ≦ row ≦ bottom+1
     // v.left,right: 左端と右端の行配列の添字(≠列番号) ⇒ left+1 ≦ col ≦ right+1
     if( v.target.length > 0 ){
       this.sheet.getRange(
-        v.top + 2,  // +1(添字->行番号) +1(ヘッダ行分)
-        v.left + 1,  // +1(添字->行番号)
+        this.top + v.top +1,  // +1(添字->行番号)
+        this.left + v.left,
         v.target.length,
         v.target[0].length
       ).setValues(v.target);
     }
 
     v.step = 3.3; // 変更履歴追記対象なら追記(変更履歴シートは追記対象外)
-    if( this.log !== null ){
+    if( this.log !== null && v.log.length > 0 ){
       v.r = this.log.append(v.log);
       if( v.r instanceof Error ) throw v.r;
     }
 
     v.step = 9; // 終了処理
+    v.rv = v.log;
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
     return v.rv;
 

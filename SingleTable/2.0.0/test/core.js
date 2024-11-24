@@ -309,7 +309,7 @@ function test(){
         return v.sdb.tables.master.delete('2');
       },
       () => { // pattern.1 : primaryKey, {key:value}での削除
-        v.sdb = new SpreadDB(v.src.master,{accunt: 'Shimazu'});
+        v.sdb = new SpreadDB(v.src.master,{account: 'Shimazu'});
         return v.sdb.tables.master.delete([
           o => {return o['申込者カナ'].match(/コバヤカワ/) ? true : false}, // 関数型
           {'参加者01氏名':'島津　悠奈'}, // {キー項目名:値}型
@@ -319,7 +319,7 @@ function test(){
       },
       () => { // pattern.2 : 複数テーブルシート内の「BS」から一明細を関数指定で削除
         v.src.multi(); // 一シート複数テーブルテスト用の「multi」シートを作成
-        v.sdb = new SpreadDB(v.src.BS,{accunt: 'Shimazu'});
+        v.sdb = new SpreadDB(v.src.BS,{account: 'Shimazu'});
         return v.sdb.tables.BS.delete(o=>{return o['勘定科目'] && o['勘定科目']==='現金' ? true : false});
       },
     ],
@@ -327,24 +327,33 @@ function test(){
       () => {
         v.src.multi(); // 一シート複数テーブルテスト用の「multi」シートを作成
         v.now = Date.now();
-        v.sdb = new SpreadDB([v.src.master,v.src.accounts,v.src.BS],{
-          accunt: 'Shimazu'
-        });
+        v.sdb = new SpreadDB([v.src.master,v.src.accounts,v.src.BS],{account:'Shimazu'});
         v.r = v.sdb.transact([
           {name:'master',action:'append',arg:{'メールアドレス':`x${v.now}@gmail.com`}},
-          {name:'accounts',action:'update',arg:{where:{key:'実績',value:'(営外)貸倒損失'},record:{'読替':'テスト'}}},
-          {name:'BS',action:'delete',arg:[
-            
-          ]},
+          {name:'accounts',action:'update',arg:{where:{key:'実績',value:'(営外)貸倒損失'},record:{'読替':'テスト①'}}},
+          {name:'BS',action:'update',arg:{where:{'勘定科目':'現金'},record:{'小':'テスト②'}}},
+          //{name:'BS',action:'delete',arg:o=>{return o['勘定科目'].match(/現金/) ? true : false}}, // Cannot read properties of undefined (reading 'match')
+          {name:'BS',action:'delete',arg:{'勘定科目':'現金'}},
         ],{
-          getLogFrom: null,
+          getLogFrom: 0,
           getLogOption: {
             cols: true,
             excludeErrors: false,
             simple: true,
           },
         });
-        return v.r;
+        // 実行結果
+        console.log(`v.r members = ${Object.keys(v.r)}\nv.r.data members = ${Object.keys(v.r.data)}`)
+        if( v.r.hasOwnProperty('data') ){
+          console.log(`v.r.data.lastReference=${v.r.data.lastReference}`);
+          for( v.cols in v.r.data.cols ){
+            console.log(`v.r.data.cols.${v.cols}=${JSON.stringify(v.r.data.cols[v.cols])}`)
+          }
+          console.log(`v.r.data.log=${JSON.stringify(v.r.data.log)}`);
+          return v.r.result;
+        } else {
+          return v.r;
+        }
       },
     ]
   };
@@ -355,7 +364,7 @@ function test(){
     ['target','master','log'].forEach(x => v.deleteSheet(x));
 
     // テスト対象を絞る場合、以下のv.st,numの値を書き換え
-    v.p = 'update'; v.st = 0; v.num = 1 || pattern[v.p].length;
+    v.p = 'transact'; v.st = 0; v.num = 1 || pattern[v.p].length;
 
     for( v.i=v.st ; v.i<v.st+v.num ; v.i++ ){
       v.rv = pattern[v.p][v.i]();

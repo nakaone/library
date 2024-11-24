@@ -309,7 +309,7 @@ function test(){
         return v.sdb.tables.master.delete('2');
       },
       () => { // pattern.1 : primaryKey, {key:value}での削除
-        v.sdb = new SpreadDB(v.src.master,{accunt: 'Shimazu'});
+        v.sdb = new SpreadDB(v.src.master,{account: 'Shimazu'});
         return v.sdb.tables.master.delete([
           o => {return o['申込者カナ'].match(/コバヤカワ/) ? true : false}, // 関数型
           {'参加者01氏名':'島津　悠奈'}, // {キー項目名:値}型
@@ -319,7 +319,7 @@ function test(){
       },
       () => { // pattern.2 : 複数テーブルシート内の「BS」から一明細を関数指定で削除
         v.src.multi(); // 一シート複数テーブルテスト用の「multi」シートを作成
-        v.sdb = new SpreadDB(v.src.BS,{accunt: 'Shimazu'});
+        v.sdb = new SpreadDB(v.src.BS,{account: 'Shimazu'});
         return v.sdb.tables.BS.delete(o=>{return o['勘定科目'] && o['勘定科目']==='現金' ? true : false});
       },
     ],
@@ -327,24 +327,33 @@ function test(){
       () => {
         v.src.multi(); // 一シート複数テーブルテスト用の「multi」シートを作成
         v.now = Date.now();
-        v.sdb = new SpreadDB([v.src.master,v.src.accounts,v.src.BS],{
-          accunt: 'Shimazu'
-        });
+        v.sdb = new SpreadDB([v.src.master,v.src.accounts,v.src.BS],{account:'Shimazu'});
         v.r = v.sdb.transact([
           {name:'master',action:'append',arg:{'メールアドレス':`x${v.now}@gmail.com`}},
-          {name:'accounts',action:'update',arg:{where:{key:'実績',value:'(営外)貸倒損失'},record:{'読替':'テスト'}}},
-          {name:'BS',action:'delete',arg:[
-            
-          ]},
+          {name:'accounts',action:'update',arg:{where:{key:'実績',value:'(営外)貸倒損失'},record:{'読替':'テスト①'}}},
+          {name:'BS',action:'update',arg:{where:{'勘定科目':'現金'},record:{'小':'テスト②'}}},
+          //{name:'BS',action:'delete',arg:o=>{return o['勘定科目'].match(/現金/) ? true : false}}, // Cannot read properties of undefined (reading 'match')
+          {name:'BS',action:'delete',arg:{'勘定科目':'現金'}},
         ],{
-          getLogFrom: null,
+          getLogFrom: 0,
           getLogOption: {
             cols: true,
             excludeErrors: false,
             simple: true,
           },
         });
-        return v.r;
+        // 実行結果
+        console.log(`v.r members = ${Object.keys(v.r)}\nv.r.data members = ${Object.keys(v.r.data)}`)
+        if( v.r.hasOwnProperty('data') ){
+          console.log(`v.r.data.lastReference=${v.r.data.lastReference}`);
+          for( v.cols in v.r.data.cols ){
+            console.log(`v.r.data.cols.${v.cols}=${JSON.stringify(v.r.data.cols[v.cols])}`)
+          }
+          console.log(`v.r.data.log=${JSON.stringify(v.r.data.log)}`);
+          return v.r.result;
+        } else {
+          return v.r;
+        }
       },
     ]
   };
@@ -355,7 +364,7 @@ function test(){
     ['target','master','log'].forEach(x => v.deleteSheet(x));
 
     // テスト対象を絞る場合、以下のv.st,numの値を書き換え
-    v.p = 'update'; v.st = 0; v.num = 1 || pattern[v.p].length;
+    v.p = 'transact'; v.st = 0; v.num = 1 || pattern[v.p].length;
 
     for( v.i=v.st ; v.i<v.st+v.num ; v.i++ ){
       v.rv = pattern[v.p][v.i]();
@@ -450,7 +459,7 @@ class SpreadDB {
     }
   }
   /** transact: シートの操作
-   * 
+   *
    * @param trans {Object|Object[]} - 以下のメンバを持つオブジェクト(の配列)
    * @param trans.name {string} - 更新対象範囲名
    * @param trans.action {string} - 操作内容。"append", "update", "delete"のいずれか
@@ -458,8 +467,8 @@ class SpreadDB {
    * @param opt={} {Object} - オプション
    * @param opt.getLogFrom=null {string|number|Date} - 取得する更新履歴オブジェクトの時刻指定
    * @param opt.getLogOption={} {Object} - getLogFrom≠nullの場合、getLogメソッドのオプション
-   * @returns 
-   * 
+   * @returns {Object|Object[]} opt.getLogForm=nullの場合、更新履歴オブジェクトの配列。≠nullの場合、{result:更新履歴オブジェクトの配列,data:getLogの戻り値}
+   *
    * - GAS公式 Class LockService [getDocumentLock()](https://developers.google.com/apps-script/reference/lock/lock-service?hl=ja#getDocumentLock())
    * - Qiita [GASの排他制御（ロック）の利用方法を調べた](https://qiita.com/kyamadahoge/items/f5d3fafb2eea97af42fe)
    */
@@ -479,26 +488,30 @@ class SpreadDB {
   
       v.step = 2; // スプレッドシートをロックして更新処理
       v.lock = LockService.getDocumentLock();
-      if( v.lock.tryLock(10000) ){
   
-        v.step = 2.1; // シートの更新処理
-        for( v.i=0 ; v.i<trans.length ; v.i++ ){
-          if( ['append','update','delete'].find(x => x === trans[v.i].action) ){
-            v.r = this.tables[trans[v.i].name][trans[v.i].action](trans[v.i].arg);
-            if( v.r instanceof Error ) throw v.r;
-            v.rv = [...v.rv, ...v.r];
+      for( v.tryNo=this.maxTrial ; v.tryNo > 0 ; v.tryNo-- ){
+        if( v.lock.tryLock(this.interval) ){
+    
+          v.step = 2.1; // シートの更新処理
+          for( v.i=0 ; v.i<trans.length ; v.i++ ){
+            if( ['append','update','delete'].find(x => x === trans[v.i].action) ){
+              v.r = this.tables[trans[v.i].name][trans[v.i].action](trans[v.i].arg);
+              if( v.r instanceof Error ) throw v.r;
+              v.rv = [...v.rv, ...v.r];
+            }
           }
+    
+          v.step = 2.2; // 更新履歴の取得
+          if( v.opt.getLogFrom !== null ){
+            v.r = this.getLog(v.opt.getLogFrom,v.opt.getLogOption);
+            if( v.r instanceof Error ) throw v.r;
+            v.rv = {result:v.rv,data:v.r};
+          }
+    
+          v.step = 2.3; // ロック解除
+          v.lock.releaseLock();
+          v.tryNo = 0;
         }
-  
-        v.step = 2.2; // 更新履歴の取得
-        if( v.opt.getLogFrom !== null ){
-          v.r = this.getLog(v.opt.getLogFrom,v.opt.getLogOption);
-          if( v.r instanceof Error ) throw v.r;
-          v.rv = {result:v.rv,data:v.r};
-        }
-  
-        v.step = 2.3; // ロック解除
-        v.lock.releaseLock();
       }
   
       v.step = 9; // 終了処理
@@ -511,7 +524,6 @@ class SpreadDB {
       return e;
     }
   }
-  
   /** getLog: 指定時刻以降の変更履歴を取得
    * @param datetime=null {string} - Date型に変換可能な日時文字列
    * @param opt={} {Object} - オプション
@@ -553,8 +565,8 @@ class SpreadDB {
           if( v.opt.simple ){
             v.rv.log.push({
               range: v.l.range,
-              action: v.l.before ? (v.l.after ? 'update' : 'delete') : 'append',
-              record: v.l.before && !v.l.after ? v.l.before : v.l.after,
+              action: v.l.action,
+              record: v.l.after || v.l.before,
             });
           } else {
             v.rv.log.push(v.l);
@@ -812,7 +824,7 @@ class sdbTable {
    * @returns {sdbLog[]}
    */
   append(record){
-    const v = {whois:'sdbTable.append',step:0,rv:[]};
+    const v = {whois:'sdbTable.append',step:0,rv:[],argument:JSON.stringify(record)};
     console.log(`${v.whois} start.\nrecord(${whichType(record)})=${stringify(record)}`);
     try {
   
@@ -829,7 +841,8 @@ class sdbTable {
       v.header = this.schema.cols.map(x => x.name);
       for( v.i=0 ; v.i<record.length ; v.i++ ){
   
-        v.logObj = new sdbLog({account: this.account,range: this.name});
+        v.logObj = new sdbLog({account: this.account,range: this.name,
+          action:'append',argument:v.argument});
   
         v.step = 2.1; // auto_increment項目の設定
         // ※ auto_increment設定はuniqueチェックに先行
@@ -915,7 +928,7 @@ class sdbTable {
    * @param {Object|Function|any} trans.where - 対象レコードの判定条件
    * @param {Object|Function} trans.record - 更新する値
    * @returns {sdbLog[]}
-   * 
+   *
    * - where句の指定方法
    *   - Object ⇒ {key:キー項目名, value: キー項目の値}形式で、key:valueに該当するレコードを更新
    *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
@@ -927,7 +940,7 @@ class sdbTable {
    */
   update(trans=[]){
     const v = {whois:'sdbTable.update',step:0,rv:[],log:[],target:[],
-      top:Infinity,left:Infinity,right:0,bottom:0,
+      top:Infinity,left:Infinity,right:0,bottom:0,argument:JSON.stringify(trans),
       header: this.schema.cols.map(x => x.name), // 項目一覧
     };
     console.log(`${v.whois} start.\ntrans(${whichType(trans)})=${stringify(trans)}`);
@@ -961,50 +974,52 @@ class sdbTable {
           v.step = 2.1; // 対象外判定ならスキップ
           if( v.where(this.values[v.j]) === false ) continue;
   
-          v.step = 2.2; // 更新履歴オブジェクトを作成
-          v.logObj = new sdbLog({account:this.account,range:this.name,
-            before:JSON.parse(JSON.stringify(this.values[v.j])),after:{},diff:{}});
+          v.step = 2.2; // v.before: 更新前の行オブジェクトのコピー
+          [v.before,v.after,v.diff] = [Object.assign({},this.values[v.j]),{},{}];
   
-          v.step = 2.3; // v.after: 更新指定項目のみのオブジェクト
-          v.after = v.record(this.values[v.j]);
+          v.step = 2.3; // v.rObj: 更新指定項目のみのオブジェクト
+          v.rObj = v.record(this.values[v.j]);
   
           v.step = 2.4; // シート上の項目毎にチェック
           v.header.forEach(x => {
-            if( v.after.hasOwnProperty(x) && !isEqual(v.logObj.before[x],v.after[x]) ){
+            if( v.rObj.hasOwnProperty(x) && !isEqual(v.before[x],v.rObj[x]) ){
               v.step = 2.41; // 変更指定項目かつ値が変化していた場合、afterとdiffに新しい値を設定
-              v.logObj.after[x] = v.logObj.diff[x] = v.after[x];
+              v.after[x] = v.diff[x] = v.rObj[x];
               v.colNo = v.header.findIndex(y => y === x);
               v.left = Math.min(v.left,v.colNo);
               v.right = Math.max(v.right,v.colNo);
             } else {
               v.step = 2.42; // 非変更指定項目または変更指定項目だが値の変化が無い場合、beforeの値をセット
-              v.logObj.after[x] = v.logObj.before[x];
+              v.after[x] = v.before[x];
             }
           })
   
-          v.step = 2.5; // 更新レコードの正当性チェック(unique重複チェック)
+          v.step = 2.5; // 更新履歴オブジェクトを作成
+          v.logObj = new sdbLog({account:this.account,range:this.name,
+            action:'update',argument:v.argument,before:v.before,after:v.after,diff:v.diff});
+  
+          v.step = 2.6; // 更新レコードの正当性チェック(unique重複チェック)
           for( v.unique in this.schema.unique ){
             if( this.schema.unique[v.unique].indexOf(trans[v.i][v.unique]) >= 0 ){
-              v.step = 2.51; // 登録済の場合はエラーとして処理
+              v.step = 2.61; // 登録済の場合はエラーとして処理
               v.logObj.result = false;
               // 複数項目のエラーメッセージに対応するため場合分け
               v.logObj.message = (v.logObj.message === null ? '' : '\n')
               + `${v.unique}欄の値「${trans[v.i][v.unique]}」が重複しています`;
             } else {
-              v.step = 2.52; // 未登録の場合this.sdbSchema.uniqueに値を追加
+              v.step = 2.62; // 未登録の場合this.sdbSchema.uniqueに値を追加
               this.schema.unique[v.unique].push(trans[v.i][v.unique]);
             }
           }
-    
-          v.step = 2.6; // 正当性チェックOKの場合の処理
-          if( v.logObj.result ){
+  
+          v.step = 2.7; // 正当性チェックOKの場合の処理
+          if( v.logObj.result === true ){
             v.top = Math.min(v.top, v.j);
             v.bottom = Math.max(v.bottom, v.j);
-            this.values[v.j] = v.logObj.after;          
+            this.values[v.j] = v.after;
           }
-    
-          v.step = 2.7; // 成否に関わらずログ出力対象に保存
-          ['before','after','diff'].forEach(x => {if(v.logObj[x]) v.logObj[x] = JSON.stringify(v.logObj[x])});
+  
+          v.step = 2.8; // 成否に関わらずログ出力対象に保存
           v.log.push(v.logObj);
         }
       }
@@ -1020,26 +1035,28 @@ class sdbTable {
         }
         v.target.push(v.row);
       }
+      vlog(v,['target','top','left'],1022)
   
       v.step = 3.2; // シートに展開
       // v.top,bottom: 最初と最後の行オブジェクトの添字(≠行番号) ⇒ top+1 ≦ row ≦ bottom+1
       // v.left,right: 左端と右端の行配列の添字(≠列番号) ⇒ left+1 ≦ col ≦ right+1
       if( v.target.length > 0 ){
         this.sheet.getRange(
-          v.top + 2,  // +1(添字->行番号) +1(ヘッダ行分)
-          v.left + 1,  // +1(添字->行番号)
+          this.top + v.top +1,  // +1(添字->行番号)
+          this.left + v.left,
           v.target.length,
           v.target[0].length
         ).setValues(v.target);
       }
   
       v.step = 3.3; // 変更履歴追記対象なら追記(変更履歴シートは追記対象外)
-      if( this.log !== null ){
+      if( this.log !== null && v.log.length > 0 ){
         v.r = this.log.append(v.log);
         if( v.r instanceof Error ) throw v.r;
       }
   
       v.step = 9; // 終了処理
+      v.rv = v.log;
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
   
@@ -1049,18 +1066,17 @@ class sdbTable {
       return e;
     }
   }
-  
   /** delete: 領域から指定行を物理削除
    * @param {Object|Function|any} where=[] - 対象レコードの判定条件
    * @returns {sdbLog[]}
-   * 
+   *
    * - where句の指定方法
    *   - Object ⇒ {key:キー項目名, value: キー項目の値}形式で、key:valueに該当するレコードを更新
    *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
    *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
    */
   delete(where){
-    const v = {whois:'sdbTable.delete',step:0,rv:[],log:[],where:[]};
+    const v = {whois:'sdbTable.delete',step:0,rv:[],log:[],where:[],argument:JSON.stringify(where)};
     console.log(`${v.whois} start.\nwhere(${whichType(where)})=${stringify(where)}`);
     try {
   
@@ -1083,11 +1099,10 @@ class sdbTable {
   
         v.step = 2.1; // 対象外判定ならスキップ
         if( v.cond(this.values[v.i]) === false ) continue;
-        console.log(`l.1099 this.values[${v.i}]=${stringify(this.values[v.i])}`)
   
         v.step = 2.2; // 更新履歴オブジェクトを作成
         v.logObj = new sdbLog({account:this.account,range:this.name,
-          before:JSON.stringify(this.values[v.i])});
+          action:'delete',argument:v.argument,before:this.values[v.i]});
         v.logObj.diff = v.logObj.before;
         v.log.push(v.logObj);
   
@@ -1106,7 +1121,7 @@ class sdbTable {
   
         v.step = 2.5; // シートのセルを削除
         v.range = this.sheet.getRange(
-          v.i + 2,  // +1(添字->行番号) +1(ヘッダ行分)
+          this.top + v.i + 1,  // +1(添字->行番号)
           this.left,
           1,
           this.right - this.left + 1,
@@ -1119,7 +1134,7 @@ class sdbTable {
       }
   
       v.step = 3; // 変更履歴追記対象なら追記(変更履歴シートは追記対象外)
-      if( v.log.length > 0 ){
+      if( this.log !== null && v.log.length > 0 ){
         v.r = this.log.append(v.log);
         if( v.r instanceof Error ) throw v.r;
       }
@@ -1435,11 +1450,15 @@ class sdbLog {
     {name:'timestamp',type:'Date',note:'更新日時。yyyy-MM-ddThh:mm:ss.nnn+hh:mm形式',default:()=>toLocale(new Date())},
     {name:'account',type:'string|number',note:'更新者の識別子',default:(o={})=>o.account||null},
     {name:'range',type:'string',note:'更新対象となった範囲名(テーブル名)',default:(o={})=>o.range||null},
+    {name:'action',type:'string',note:'操作内容。append/update/delete/getLogのいずれか',default:(o={})=>o.action||null},
+    {name:'argument',type:'string',note:'操作関数に渡された引数',default:(o={})=>
+      o.hasOwnProperty('argument')?(typeof o.argument === 'string' ? o.argument : JSON.stringify(o.argument)):null},
     {name:'result',type:'boolean',note:'true:追加・更新が成功',default:(o={})=>o.hasOwnProperty('result')?o.result:true},
     {name:'message',type:'string',note:'エラーメッセージ',default:(o={})=>o.message||null},
-    {name:'before',type:'JSON',note:'更新前の行データオブジェクト',default:(o={})=>o.before||null},
-    {name:'after',type:'JSON',note:'更新後の行データオブジェクト',default:(o={})=>o.after||null},
-    {name:'diff',type:'JSON',note:'追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式',default:(o={})=>o.diff||null},
+    {name:'before',type:'JSON',note:'更新前の行データオブジェクト',default:(o={})=>o.hasOwnProperty('before')?JSON.stringify(o.before):null},
+    {name:'after',type:'JSON',note:'更新後の行データオブジェクト',default:(o={})=>o.hasOwnProperty('after')?JSON.stringify(o.after):null},
+    {name:'diff',type:'JSON',note:'追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式',
+      default:(o={})=>o.hasOwnProperty('diff')?JSON.stringify(o.diff):null},
   ]};
 
   /** @constructor

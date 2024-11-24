@@ -1,14 +1,14 @@
 /** delete: 領域から指定行を物理削除
  * @param {Object|Function|any} where=[] - 対象レコードの判定条件
  * @returns {sdbLog[]}
- * 
+ *
  * - where句の指定方法
  *   - Object ⇒ {key:キー項目名, value: キー項目の値}形式で、key:valueに該当するレコードを更新
  *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
  *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
  */
 delete(where){
-  const v = {whois:'sdbTable.delete',step:0,rv:[],log:[],where:[]};
+  const v = {whois:'sdbTable.delete',step:0,rv:[],log:[],where:[],argument:JSON.stringify(where)};
   console.log(`${v.whois} start.\nwhere(${whichType(where)})=${stringify(where)}`);
   try {
 
@@ -31,11 +31,10 @@ delete(where){
 
       v.step = 2.1; // 対象外判定ならスキップ
       if( v.cond(this.values[v.i]) === false ) continue;
-      console.log(`l.1099 this.values[${v.i}]=${stringify(this.values[v.i])}`)
 
       v.step = 2.2; // 更新履歴オブジェクトを作成
       v.logObj = new sdbLog({account:this.account,range:this.name,
-        before:JSON.stringify(this.values[v.i])});
+        action:'delete',argument:v.argument,before:this.values[v.i]});
       v.logObj.diff = v.logObj.before;
       v.log.push(v.logObj);
 
@@ -54,7 +53,7 @@ delete(where){
 
       v.step = 2.5; // シートのセルを削除
       v.range = this.sheet.getRange(
-        v.i + 2,  // +1(添字->行番号) +1(ヘッダ行分)
+        this.top + v.i + 1,  // +1(添字->行番号)
         this.left,
         1,
         this.right - this.left + 1,
@@ -67,7 +66,7 @@ delete(where){
     }
 
     v.step = 3; // 変更履歴追記対象なら追記(変更履歴シートは追記対象外)
-    if( v.log.length > 0 ){
+    if( this.log !== null && v.log.length > 0 ){
       v.r = this.log.append(v.log);
       if( v.r instanceof Error ) throw v.r;
     }

@@ -3,7 +3,7 @@
  * @returns {sdbLog[]}
  */
 append(record){
-  const v = {whois:'sdbTable.append',step:0,rv:[]};
+  const v = {whois:'sdbTable.append',step:0,rv:[],argument:JSON.stringify(record)};
   console.log(`${v.whois} start.\nrecord(${whichType(record)})=${stringify(record)}`);
   try {
 
@@ -20,7 +20,8 @@ append(record){
     v.header = this.schema.cols.map(x => x.name);
     for( v.i=0 ; v.i<record.length ; v.i++ ){
 
-      v.logObj = new sdbLog({account: this.account,range: this.name});
+      v.logObj = new sdbLog({account: this.account,range: this.name,
+        action:'append',argument:v.argument});
 
       v.step = 2.1; // auto_increment項目の設定
       // ※ auto_increment設定はuniqueチェックに先行

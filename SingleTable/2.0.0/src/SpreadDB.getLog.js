@@ -39,8 +39,8 @@ getLog(datetime=null,opt={}){
         if( v.opt.simple ){
           v.rv.log.push({
             range: v.l.range,
-            action: v.l.before ? (v.l.after ? 'update' : 'delete') : 'append',
-            record: v.l.before && !v.l.after ? v.l.before : v.l.after,
+            action: v.l.action,
+            record: v.l.after || v.l.before,
           });
         } else {
           v.rv.log.push(v.l);
