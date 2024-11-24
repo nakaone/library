@@ -196,14 +196,6 @@ function test(){
         // 00: 基本
         {タイムスタンプ: toLocale(new Date()),メールアドレス: `x${Date.now()}@gmail.com`},
       ],
-      update: [ // updateメソッド用の引数
-        // 00: primaryKeyで更新
-        {where:'1',record:{authority:3}},
-      ],
-      delete: [ // deleteメソッド用の引数
-        // 00: primaryKeyで更新
-        '2',
-      ],
     },
   };
   const pattern = { // テストパターン(関数)の定義
@@ -307,14 +299,28 @@ function test(){
       () => { // pattern.8 : updateテスト
         ['target','master','log'].forEach(x => v.deleteSheet(x));
         v.sdb = new SpreadDB(v.src.master);
-        return v.sdb.tables.master.update(v.src.update[0]);
+        return v.sdb.tables.master.update({where:'1',record:{authority:3}});
       },
     ],
     delete: [ // sdbTable.delete関係のテスト
-      () => { // pattern.9 : delete
+      () => { // pattern.0 : primaryKeyで指定
         v.deleteSheet('master');  // masterシートは再作成
         v.sdb = new SpreadDB(v.src.master);
-        return v.sdb.tables.master.delete(v.src.delete[0]);
+        return v.sdb.tables.master.delete('2');
+      },
+      () => { // pattern.1 : primaryKey, {key:value}での削除
+        v.sdb = new SpreadDB(v.src.master,{accunt: 'Shimazu'});
+        return v.sdb.tables.master.delete([
+          o => {return o['申込者カナ'].match(/コバヤカワ/) ? true : false}, // 関数型
+          {'参加者01氏名':'島津　悠奈'}, // {キー項目名:値}型
+          {key:'メールアドレス',value:'nakaone.kunihiro@gmail.com'},  // key-value型
+          2,  // primaryKey指定
+        ]);
+      },
+      () => { // pattern.2 : 複数テーブルシート内の「BS」から一明細を関数指定で削除
+        v.src.multi(); // 一シート複数テーブルテスト用の「multi」シートを作成
+        v.sdb = new SpreadDB(v.src.BS,{accunt: 'Shimazu'});
+        return v.sdb.tables.BS.delete(o=>{return o['勘定科目'] && o['勘定科目']==='現金' ? true : false});
       },
     ],
     transact: [
@@ -327,7 +333,9 @@ function test(){
         v.r = v.sdb.transact([
           {name:'master',action:'append',arg:{'メールアドレス':`x${v.now}@gmail.com`}},
           {name:'accounts',action:'update',arg:{where:{key:'実績',value:'(営外)貸倒損失'},record:{'読替':'テスト'}}},
-          {name:'BS',action:'delete',arg:{where:o=>{o['勘定科目']==='現金'}}},
+          {name:'BS',action:'delete',arg:[
+            
+          ]},
         ],{
           getLogFrom: null,
           getLogOption: {
@@ -347,7 +355,8 @@ function test(){
     ['target','master','log'].forEach(x => v.deleteSheet(x));
 
     // テスト対象を絞る場合、以下のv.st,numの値を書き換え
-    v.p = 'transact'; v.st = 0; v.num = 1 || pattern[v.p].length;
+    v.p = 'update'; v.st = 0; v.num = 1 || pattern[v.p].length;
+
     for( v.i=v.st ; v.i<v.st+v.num ; v.i++ ){
       v.rv = pattern[v.p][v.i]();
       if( v.rv instanceof Error ) throw v.rv;
@@ -939,11 +948,8 @@ class sdbTable {
         if( !trans[v.i].record ) throw new Error(v.msg.replace('_','更新データ(record)'));
   
         v.step = 1.2; // whereがオブジェクトまたは文字列指定なら関数化
-        v.where = typeof trans[v.i].where === 'function' ? trans[v.i].where
-        : new Function('o','return isEqual(' + ( typeof trans[v.i].where === 'object'
-          ? `o['${trans[v.i].where.key}'],'${trans[v.i].where.value}'`
-          : `o['${this.schema.primaryKey}'],'${trans[v.i].where}'`
-        ) + ');');
+        v.where = this.functionalize(trans[v.i].where);
+        if( v.where instanceof Error ) throw v.where;
   
         v.step = 1.3; // recordがオブジェクトなら関数化
         v.record = typeof trans[v.i].record === 'function' ? trans[v.i].record
@@ -998,6 +1004,7 @@ class sdbTable {
           }
     
           v.step = 2.7; // 成否に関わらずログ出力対象に保存
+          ['before','after','diff'].forEach(x => {if(v.logObj[x]) v.logObj[x] = JSON.stringify(v.logObj[x])});
           v.log.push(v.logObj);
         }
       }
@@ -1053,79 +1060,109 @@ class sdbTable {
    *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
    */
   delete(where){
-    const v = {whois:'sdbTable.delete',step:0,rv:[],log:[],
-      target:[],  // 削除対象行番号の配列。ex. [1,3,10]
-      header: this.schema.cols.map(x => x.name), // 項目一覧
-    };
+    const v = {whois:'sdbTable.delete',step:0,rv:[],log:[],where:[]};
     console.log(`${v.whois} start.\nwhere(${whichType(where)})=${stringify(where)}`);
     try {
   
       // 削除指定が複数の時、上の行を削除後に下の行を削除しようとすると添字や行番号が分かりづらくなる。
       // そこで対象となる行の添字(行番号)を洗い出した後、降順にソートし、下の行から順次削除を実行する
-      
-      v.step = 1; // 事前準備 : 引数を配列化
+  
+      v.step = 1.1; // 事前準備 : 引数を配列化
       if( !Array.isArray(where)) where = [where];
   
-      // ------------------------------------------------
-      // 削除対象行の添字(行番号)リストをv.targetに作成
-      // ------------------------------------------------
+      v.step = 1.2; // 該当レコードかの判別用関数を作成
       for( v.i=0 ; v.i<where.length ; v.i++ ){
-      
-        v.step = 2; // whereがオブジェクトまたは文字列指定なら関数化
-        v.where = typeof where[v.i] === 'function' ? where[v.i]
-        : new Function('o','return isEqual(' + ( typeof where[v.i] === 'object'
-          ? `o['${where[v.i].key}'],'${where[v.i].value}'`
-          : `o['${this.schema.primaryKey}'],'${where[v.i]}'`
-        ) + ');');
-  
-        v.step = 3; // 対象レコードか一件ずつチェック
-        for( v.j=0 ; v.j<this.values.length ; v.j++ ){
-  
-          v.step = 3.1; // 対象外判定ならスキップ
-          if( v.where(this.values[v.j]) === false ) continue;
-  
-          v.step = 3.2; // 更新履歴オブジェクトを作成
-          v.logObj = new sdbLog({account:this.account,range:this.name,
-            before:JSON.parse(JSON.stringify(this.values[v.j]))});
-          v.logObj.diff = v.logObj.before;
-  
-          v.step = 3.3; // 削除レコードのunique項目をthis.schema.uniqueから削除
-          // this.schema.auto_incrementは削除の必要性が薄いので無視
-          // ※必ずしも次回採番時に影響するとは限らず、影響したとしても欠番扱いで問題ないと判断
-          for( v.unique in this.schema.unique ){
-            if( this.values[v.j][v.unique] ){
-              v.idx = this.schema.unique[v.unique].indexOf(this.values[v.j][v.unique]);
-              if( v.idx >= 0 ) this.schema.unique[v.unique].splice(v.idx,1);
-            }
-          }
-    
-          v.step = 3.4; // ログ出力対象に保存、削除対象添字リストに追加
-          v.log.push(v.logObj);
-          v.target.push(v.j);
-        }
+        where[v.i] = this.functionalize(where[v.i]);
+        if( where[v.i] instanceof Error ) throw where[v.i];
       }
+      v.step = 1.3; // 引数argのいずれかに該当する場合trueを返す関数を作成
+      v.cond = o => {let rv = false;where.forEach(w => {if(w(o)) rv=true});return rv};
   
-      // ------------------------------------------------
-      // 降順に並び替え後、順次削除実行
-      // ------------------------------------------------
-      v.step = 4.1; // 降順に並べ換え
-      v.target = v.target.sort((a,b) => (a > b ? -1 : 1));
+      v.step = 2; // 対象レコードか一件ずつチェック
+      for( v.i=this.values.length-1 ; v.i>=0 ; v.i-- ){
   
-      for( v.i=0 ; v.i<v.target.length ; v.i++ ){
+        v.step = 2.1; // 対象外判定ならスキップ
+        if( v.cond(this.values[v.i]) === false ) continue;
+        console.log(`l.1099 this.values[${v.i}]=${stringify(this.values[v.i])}`)
   
-        v.step = 4.2; // this.valuesから削除
-        this.values.splice(v.target[v.i],1);
+        v.step = 2.2; // 更新履歴オブジェクトを作成
+        v.logObj = new sdbLog({account:this.account,range:this.name,
+          before:JSON.stringify(this.values[v.i])});
+        v.logObj.diff = v.logObj.before;
+        v.log.push(v.logObj);
   
-        v.step = 4.3; // シートのセルを削除
-        this.sheet.getRange(
-          v.target[v.i] + 2,  // +1(添字->行番号) +1(ヘッダ行分)
+        v.step = 2.3; // 削除レコードのunique項目をthis.schema.uniqueから削除
+        // this.schema.auto_incrementは削除の必要性が薄いので無視
+        // ※必ずしも次回採番時に影響するとは限らず、影響したとしても欠番扱いで問題ないと判断
+        for( v.unique in this.schema.unique ){
+          if( this.values[v.i][v.unique] ){
+            v.idx = this.schema.unique[v.unique].indexOf(this.values[v.i][v.unique]);
+            if( v.idx >= 0 ) this.schema.unique[v.unique].splice(v.idx,1);
+          }
+        }
+  
+        v.step = 2.4; // this.valuesから削除
+        this.values.splice(v.i,1);
+  
+        v.step = 2.5; // シートのセルを削除
+        v.range = this.sheet.getRange(
+          v.i + 2,  // +1(添字->行番号) +1(ヘッダ行分)
           this.left,
           1,
           this.right - this.left + 1,
-        ).deleteCells(SpreadsheetApp.Dimension.ROWS);
+        );
+        v.range.deleteCells(SpreadsheetApp.Dimension.ROWS);
   
-        v.step = 4.4; // this.bottomを書き換え
+        v.step = 2.6; // this.bottomを書き換え
         this.bottom = this.bottom - 1;
+  
+      }
+  
+      v.step = 3; // 変更履歴追記対象なら追記(変更履歴シートは追記対象外)
+      if( v.log.length > 0 ){
+        v.r = this.log.append(v.log);
+        if( v.r instanceof Error ) throw v.r;
+      }
+  
+      v.step = 9; // 終了処理
+      v.rv = v.log;
+      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+      return v.rv;
+  
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+  /** functionalize: where句のオブジェクト・文字列を関数化(update/deleteで使用) */
+  functionalize(arg){
+    const v = {whois:'sdbTable.functionalize',step:0,rv:null};
+    console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
+    try {
+  
+  
+      switch( typeof arg ){
+        case 'function': v.step = 2.1;  // 関数指定ならそのまま利用
+          v.rv = arg;
+          break;
+        case 'object':
+          v.step = 2.2;
+          v.keys = Object.keys(arg);
+          if( v.keys.length === 2 && v.keys.includes('key') && v.keys.includes('value') ){
+            v.step = 2.3; // {key:〜,value:〜}形式での指定の場合
+            v.rv = new Function('o',`return isEqual(o['${arg.key}'],'${arg.value}')`);
+          } else {
+            v.step = 2.4; // {キー項目名:値}形式での指定の場合
+            v.c = [];
+            for( v.j=0 ; v.j<v.keys.length ; v.j++ ){
+              v.c.push(`isEqual(o['${v.keys[v.j]}'],'${arg[v.keys[v.j]]}')`);
+            }
+            v.rv = new Function('o',`return (${v.c.join(' && ')})`);
+          }
+          break;
+        default: v.step = 2.5; // primaryKeyの値指定
+          v.rv = new Function('o',`return isEqual(o['${this.schema.primaryKey}'],${arg})`);
       }
   
       v.step = 9; // 終了処理

@@ -196,14 +196,6 @@ function test(){
         // 00: 基本
         {タイムスタンプ: toLocale(new Date()),メールアドレス: `x${Date.now()}@gmail.com`},
       ],
-      update: [ // updateメソッド用の引数
-        // 00: primaryKeyで更新
-        {where:'1',record:{authority:3}},
-      ],
-      delete: [ // deleteメソッド用の引数
-        // 00: primaryKeyで更新
-        '2',
-      ],
     },
   };
   const pattern = { // テストパターン(関数)の定義
@@ -307,14 +299,28 @@ function test(){
       () => { // pattern.8 : updateテスト
         ['target','master','log'].forEach(x => v.deleteSheet(x));
         v.sdb = new SpreadDB(v.src.master);
-        return v.sdb.tables.master.update(v.src.update[0]);
+        return v.sdb.tables.master.update({where:'1',record:{authority:3}});
       },
     ],
     delete: [ // sdbTable.delete関係のテスト
-      () => { // pattern.9 : delete
+      () => { // pattern.0 : primaryKeyで指定
         v.deleteSheet('master');  // masterシートは再作成
         v.sdb = new SpreadDB(v.src.master);
-        return v.sdb.tables.master.delete(v.src.delete[0]);
+        return v.sdb.tables.master.delete('2');
+      },
+      () => { // pattern.1 : primaryKey, {key:value}での削除
+        v.sdb = new SpreadDB(v.src.master,{accunt: 'Shimazu'});
+        return v.sdb.tables.master.delete([
+          o => {return o['申込者カナ'].match(/コバヤカワ/) ? true : false}, // 関数型
+          {'参加者01氏名':'島津　悠奈'}, // {キー項目名:値}型
+          {key:'メールアドレス',value:'nakaone.kunihiro@gmail.com'},  // key-value型
+          2,  // primaryKey指定
+        ]);
+      },
+      () => { // pattern.2 : 複数テーブルシート内の「BS」から一明細を関数指定で削除
+        v.src.multi(); // 一シート複数テーブルテスト用の「multi」シートを作成
+        v.sdb = new SpreadDB(v.src.BS,{accunt: 'Shimazu'});
+        return v.sdb.tables.BS.delete(o=>{return o['勘定科目'] && o['勘定科目']==='現金' ? true : false});
       },
     ],
     transact: [
@@ -327,7 +333,9 @@ function test(){
         v.r = v.sdb.transact([
           {name:'master',action:'append',arg:{'メールアドレス':`x${v.now}@gmail.com`}},
           {name:'accounts',action:'update',arg:{where:{key:'実績',value:'(営外)貸倒損失'},record:{'読替':'テスト'}}},
-          {name:'BS',action:'delete',arg:{where:o=>{o['勘定科目']==='現金'}}},
+          {name:'BS',action:'delete',arg:[
+            
+          ]},
         ],{
           getLogFrom: null,
           getLogOption: {
@@ -347,7 +355,8 @@ function test(){
     ['target','master','log'].forEach(x => v.deleteSheet(x));
 
     // テスト対象を絞る場合、以下のv.st,numの値を書き換え
-    v.p = 'transact'; v.st = 0; v.num = 1 || pattern[v.p].length;
+    v.p = 'update'; v.st = 0; v.num = 1 || pattern[v.p].length;
+
     for( v.i=v.st ; v.i<v.st+v.num ; v.i++ ){
       v.rv = pattern[v.p][v.i]();
       if( v.rv instanceof Error ) throw v.rv;

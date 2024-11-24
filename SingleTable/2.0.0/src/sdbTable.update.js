@@ -36,11 +36,8 @@ update(trans=[]){
       if( !trans[v.i].record ) throw new Error(v.msg.replace('_','更新データ(record)'));
 
       v.step = 1.2; // whereがオブジェクトまたは文字列指定なら関数化
-      v.where = typeof trans[v.i].where === 'function' ? trans[v.i].where
-      : new Function('o','return isEqual(' + ( typeof trans[v.i].where === 'object'
-        ? `o['${trans[v.i].where.key}'],'${trans[v.i].where.value}'`
-        : `o['${this.schema.primaryKey}'],'${trans[v.i].where}'`
-      ) + ');');
+      v.where = this.functionalize(trans[v.i].where);
+      if( v.where instanceof Error ) throw v.where;
 
       v.step = 1.3; // recordがオブジェクトなら関数化
       v.record = typeof trans[v.i].record === 'function' ? trans[v.i].record
@@ -95,6 +92,7 @@ update(trans=[]){
         }
   
         v.step = 2.7; // 成否に関わらずログ出力対象に保存
+        ['before','after','diff'].forEach(x => {if(v.logObj[x]) v.logObj[x] = JSON.stringify(v.logObj[x])});
         v.log.push(v.logObj);
       }
     }

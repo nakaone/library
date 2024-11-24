@@ -4,4 +4,5 @@ class sdbTable {
   //::$src/sdbTable.append.js::
   //::$src/sdbTable.update.js::
   //::$src/sdbTable.delete.js::
+  //::$src/sdbTable.functionalize.js::
 }
