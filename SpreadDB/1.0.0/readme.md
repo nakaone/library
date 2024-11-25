@@ -119,7 +119,7 @@ SpreadDB 1.0.0
         - interval {number}=10000 シート更新時、ロックされていた場合の試行間隔(ミリ秒)
         - 1 Backlink
           - constructorの引数「[opt ](https://workflowy.com/#/192d23e7183c)」の各メンバ
-    - 戻り値 {SingleTable|Error}
+    - 戻り値 {SpreadDB|Error}
   - transact() : シートの操作
     - 概要
       - テーブルに排他制御をかける

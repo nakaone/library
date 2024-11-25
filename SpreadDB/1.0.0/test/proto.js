@@ -1,6 +1,6 @@
 //::$test/core.js::
 
-//::SingleTable::$prj/core.js::
+//::SpreadDB::$prj/core.js::
 //::$lib/isEqual/1.1.0/core.js::
 //::$lib/mergeDeeply/1.1.0/core.js::
 //::$lib/stringify/1.1.1/core.js::

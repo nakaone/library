@@ -101,7 +101,7 @@
               </outline>
             </outline>
           </outline>
-          <outline text="戻り値 {SingleTable|Error}" />
+          <outline text="戻り値 {SpreadDB|Error}" />
         </outline>
         <outline text="transact() : シートの操作">
           <outline text="概要">

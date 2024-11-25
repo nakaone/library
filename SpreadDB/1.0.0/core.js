@@ -171,7 +171,17 @@ class SpreadDB {
       if( v.opt.cols ){
         v.rv.cols = {};
         for( v.table in this.tables ){
-          v.rv.cols[v.table] = this.tables[v.table].schema.cols;
+          // colsの未定義項目(値がnullの項目)は削除
+          v.rv.cols[v.table] = [];
+          for( v.i=0 ; v.i<this.tables[v.table].schema.cols.length ; v.i++ ){
+            v.o = {};
+            Object.keys(this.tables[v.table].schema.cols[v.i]).forEach(x => {
+              if( this.tables[v.table].schema.cols[v.i][x] !== (x === 'auto_increment' ? false : null) ){
+                v.o[x] = this.tables[v.table].schema.cols[v.i][x];
+              }
+            });
+            v.rv.cols[v.table].push(v.o);
+          }          
         }
       }
   

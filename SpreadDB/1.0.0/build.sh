@@ -30,11 +30,11 @@ function log(){  # 1.4 ログメッセージ出力関数
 # ----------------------------------------------
 # 0.2 事前準備(プロジェクト固有部分)
 # ----------------------------------------------
-prj="$lib/SingleTable/2.0.0"
+prj="$lib/SpreadDB/1.0.0"
 test="$prj/test"
 src="$prj/src"
 test="$prj/test"
-prjName="SingleTable"
+prjName="SpreadDB"
 tmp="$prj/tmp"; mkdir -p $tmp
 
 # ----------------------------------------------
