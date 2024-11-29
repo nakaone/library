@@ -1,0 +1,58 @@
+sequenceDiagram
+  autonumber
+  actor mailer as メーラ
+  participant browser as ブラウザ
+  participant eqc as E.Q.client
+  participant doPost
+  participant eqs as E.Q.Server<br>constructor()<br>front()
+  participant eqsa as E.Q.Server<br>auth1/2()
+  participant sdb as SpreadDB
+  participant ss as スプレッドシート
+
+  browser ->> browser : onload実行
+  browser ->> eqc : インスタンス生成
+
+  Note right of eqc : constructor()
+
+  eqc ->> eqc : authorize()を呼び出し
+
+  Note right of eqc : authorize()
+  eqc ->> doPost : userId+CPkey
+
+  doPost ->> eqs : userId+CPkey
+
+  Note right of eqs : constructor()
+  eqs ->> sdb : インスタンス生成
+  Note right of sdb : constructor()
+  sdb ->> eqs : user情報
+
+  eqs ->> eqs : front()を呼び出し
+
+  Note right of eqs : front()
+  eqs ->> eqs : 分岐先関数の判断
+
+
+
+
+
+  Note right of sdb : transact()
+
+
+%%  master ->> master : SPkey(DocumentProperties)
+%%  public ->> browser : 公開サイト表示
+%%  browser ->> browser : 鍵ペア生成
+%%  browser ->> staff : 受付番号＋CPkey
+%%  Note right of staff : auth()
+%%  staff ->> master : 受付番号＋CPkey
+%%  Note right of master : auth1()
+%%  master ->> master : CPkey保存＋試行可否判断
+%%  master ->> mailer : パスコード通知メール
+%%  master ->> staff : auth1結果通知
+%%  staff ->> browser : パスコード入力ダイアログ
+%%  browser ->> staff : パスコード
+%%  staff ->> master : パスコード
+%%  Note right of master : auth2()
+%%  master ->> master : パスコード確認
+%%  master ->> staff : auth2結果通知＋SPkey
+%%  staff ->> browser : 画面情報＋SPkey
+%%  browser ->> browser : 画面生成、SPkey保存
