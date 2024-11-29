@@ -7,7 +7,7 @@
  * @returns {Object} {success:[],failure:[]}形式
  */
 getLog(datetime=null,opt={}){
-  const v = {whois:this.constructor.name+'.delete',step:0,rv:{}};
+  const v = {whois:this.constructor.name+'.getLog',step:0,rv:{}};
   console.log(`${v.whois} start.\ndatetime(${whichType(datetime)})=${stringify(datetime)}\nopt(${whichType(opt)})=${stringify(opt)}`);
   try {
 

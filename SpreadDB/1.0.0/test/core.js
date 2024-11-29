@@ -355,7 +355,19 @@ function test(){
           return v.r;
         }
       },
-    ]
+    ],
+    save: [
+      ()=>{ // No.0 : テストシート
+        return SpreadDB.save();
+      },
+      ()=>{ // No.1 : マイドライブ > projects > kawazanyo > 0.10.0 > kz.0.10.0 のコピー
+        //return SpreadDB.save({SpreadId:'1YxHCS_UAQoQ3ElsJFs817vxLZ4xA_GLLGndEEm0hZWY',sheets:['kz標準']}) // Exceeded maximum execution time
+        return SpreadDB.save({SpreadId:'1YxHCS_UAQoQ3ElsJFs817vxLZ4xA_GLLGndEEm0hZWY',sheets:['仕様']})
+      },
+      ()=>{ // No.2 : kz.0.10.0がフルだとタイムアウト ⇒ 選択されたシートの値のみ
+
+      },
+    ],
   };
   console.log(`${v.whois} start.`);
   try {
@@ -364,7 +376,7 @@ function test(){
     ['target','master','log'].forEach(x => v.deleteSheet(x));
 
     // テスト対象を絞る場合、以下のv.st,numの値を書き換え
-    v.p = 'transact'; v.st = 0; v.num = 1 || pattern[v.p].length;
+    v.p = 'save'; v.st = 0; v.num = 1 || pattern[v.p].length;
 
     for( v.i=v.st ; v.i<v.st+v.num ; v.i++ ){
       v.rv = pattern[v.p][v.i]();
