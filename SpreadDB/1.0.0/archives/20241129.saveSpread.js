@@ -13,6 +13,7 @@ function saveSpread(SpreadId=null){
         // フォルダ・ファイル関連情報
         Ancestors: (()=>{ // マイドライブ〜所属するフォルダまでのツリー
           v.folderNames = [];
+          v.folder = v.srcFile.getParents().next();
           while (v.folder) {
             v.folderNames.unshift(v.folder.getName());
             v.parents = v.folder.getParents();
@@ -48,7 +49,7 @@ function saveSpread(SpreadId=null){
           return v.a;
         })(),
 
-        SavedDateTime: toLocale(new Date()),  // 本メソッド実行日時
+        SavedDateTime: toLocale(new Date(v.start)),  // 本メソッド実行日時
         Sheets: [], // シート情報
       };
       return v.SpreadObject;
@@ -62,7 +63,6 @@ function saveSpread(SpreadId=null){
      * @param arg.func {function} - セルに設定する値を導出する関数
      */
     scan: arg => {
-      console.log(`scan: arg=${JSON.stringify(arg,null,2)}\narg.sheet=${arg.sheet}\narg.dr=${arg.dr}\narg.src=${arg.src}\narg.dst=${arg.dst}\nfunc=${arg.func.toString()}`);
       // 処理結果が未作成ならソースと同じ形の二次元配列を作成
       if( !arg.hasOwnProperty('dst') ){
         arg.dst = [];
@@ -72,7 +72,6 @@ function saveSpread(SpreadId=null){
       }
 
       while( v.conf.next.row < arg.src.length && v.overLimit === false ){
-        console.log(`scan: ${v.sheetName}.${v.propName} row=${v.conf.next.row} start.`);
         if( arg.src[v.i] ){
           // 一行分のデータを作成
           for( v.j=0 ; v.j<arg.src[v.i].length ; v.j++ ){
@@ -86,9 +85,12 @@ function saveSpread(SpreadId=null){
         // 制限時間チェック
         if( (Date.now() - v.start) > v.elapsLimit ) v.overLimit = true;
       }
+      v.ratio = Math.round((v.conf.next.row/arg.src.length)*10000)/100;
+      console.log(`scan: ${v.sheetName}.${v.propName} row=${v.conf.next.row}(${v.ratio}%) end.`);
       return arg.dst;
     },
     getProp: { // シートの各属性情報取得関数群
+      // 1.シート単位の属性
       SheetId: arg => {return arg.sheet.getSheetId()},
       ColumnWidth: arg => {
         v.a = []; v.max = arg.sheet.getLastColumn();
@@ -98,11 +100,32 @@ function saveSpread(SpreadId=null){
         return v.a;
       },
       A1Notation: arg => {return arg.dr.getA1Notation()},
+      FrozenColumns: arg => {return arg.sheet.getFrozenColumns()},  // 固定列数
+      FrozenRows: arg => {return arg.sheet.getFrozenRows()},  // 固定行数
+      // 2.セル単位の属性
+      // 2.1.値・数式・メモ
       DisplayValues: arg => {return arg.dr.getDisplayValues()},
       Values: arg => {return arg.dr.getValues()},
       Formulas: arg => {return arg.dr.getFormulas()},
       FormulasR1C1: arg => {return arg.dr.getFormulasR1C1()},
       Notes: arg => {return arg.dr.getNotes()},
+      // 2.2.セルの装飾(見映え)
+      Backgrounds: arg => {return arg.dr.getBackgrounds()},
+      //Borders: JSON.stringify(v.dr.getBorder()),
+
+      DataValidations: arg => {
+        arg.src = arg.dr.getDataValidations();
+        // 作成途中の結果があればarg.dstにセット
+        if( v.data.Sheets.find(x => x.Name === v.sheetName).DataValidations )
+          arg.dst = v.data.Sheets.find(x => x.Name === v.sheetName).DataValidations;
+        arg.func = o => {return { // セルの処理関数
+          AllowInvalid: o.getAllowInvalid(),
+          CriteriaType: JSON.parse(JSON.stringify(o.getCriteriaType())),
+          CriteriaValues: JSON.parse(JSON.stringify(o.getCriteriaValues())),
+          HelpText: o.getHelpText(),
+        }};
+        return v.scan(arg);
+      },
       /* タイムオーバーが多く、実装ペンディング
       RowHeight: arg => {
         v.a = []; v.max = arg.sheet.getLastRow();
@@ -111,35 +134,11 @@ function saveSpread(SpreadId=null){
         }
         return v.a;
       },
-      DataValidations: arg => {
-        console.log(`DataValidations:arg.sheet=${arg.sheet},arg.dr=${arg.dr}`);
-        arg.src = arg.dr.getDataValidations();
-        console.log('l.109',arg.src);
-        // 作成途中の結果があればarg.dstにセット
-        if( v.data.Sheets.find(x => x.Name === v.sheetName).DataValidations )
-          arg.dst = v.data.Sheets.find(x => x.Name === v.sheetName).DataValidations;
-        console.log('l.113',arg.dst)
-        arg.func = o => {return { // セルの処理関数
-          AllowInvalid: o.getAllowInvalid(),
-          CriteriaType: JSON.parse(JSON.stringify(o.getCriteriaType())),
-          CriteriaValues: JSON.parse(JSON.stringify(o.getCriteriaValues())),
-          HelpText: o.getHelpText(),
-        }};
-        console.log('l.120',arg.func.toString())
-
-        return v.scan(arg);
-      },
       */
       /*
         v.getSheet = (sheet) => {
           v.dr = sheet.getDataRange();
           v.SheetObject = {
-            FrozenColumns: sheet.getFrozenColumns(),  // 固定列数
-            FrozenRows: sheet.getFrozenRows(),  // 固定行数
-    
-    
-            Backgrounds: v.dr.getBackgrounds(),
-            //Borders: JSON.stringify(v.dr.getBorder()),
             FontColorObjects: (()=>{
               v.fc = v.dr.getFontColorObjects();
               for( v.i=0 ; v.i<v.fc.length ; v.i++ ){
@@ -204,7 +203,9 @@ function saveSpread(SpreadId=null){
   console.log(`${v.whois} start.`);
   try {
 
+    // --------------------------------------------------
     v.step = 1; // 進捗管理(v.conf)のセット
+    // --------------------------------------------------
     v.ScriptProperties = PropertiesService.getScriptProperties().getProperty(v.propKey);
     if( v.ScriptProperties !== null ){  // 2回目以降(タイマー起動)
 
@@ -216,7 +217,7 @@ function saveSpread(SpreadId=null){
       v.dstFile = DriveApp.getFileById(v.conf.fileId);
       v.unzip = Utilities.unzip(v.dstFile.getBlob());
       v.data = JSON.parse(v.unzip[0].getDataAsString('UTF-8'));
-      //v.data = JSON.parse(v.dstFile.getBlob().getDataAsString('UTF-8'));
+      v.dstFile.setTrashed(true); // 現在のzipをゴミ箱に移動
 
     } else { v.step = 2; // 初回実行時
 
@@ -237,12 +238,7 @@ function saveSpread(SpreadId=null){
       v.step = 2.3; // v.dataにスプレッドシート関連情報をセット
       v.data = v.getSpread();
 
-      v.step = 2.4; // 作業用ファイル未作成の場合、新規作成
-      v.dstFile = DriveApp.createFile(Utilities.newBlob('{}','application/json',v.data.Name+'.json'));
-      v.dstFile.moveTo(v.srcFile.getParents().next());  // スプレッドシートと同じフォルダに移動
-      v.conf.fileId = v.dstFile.getId(); // confに登録
-
-      v.step = 2.5; // シート名一覧(v.conf.sheetList)の作成、v.data.Sheetsに初期値設定
+      v.step = 2.4; // シート名一覧(v.conf.sheetList)の作成、v.data.Sheetsに初期値設定
       v.spread.getSheets().forEach(x => v.conf.sheetList.push(x.getSheetName()));
       v.conf.sheetList.forEach(x => v.data.Sheets.push({Name:x}));
 
@@ -250,9 +246,11 @@ function saveSpread(SpreadId=null){
       v.conf.propList = Object.keys(v.getProp);
     }
 
+    // --------------------------------------------------
+    v.step = 3; // シート毎の情報取得
+    // --------------------------------------------------
     v.arg = {};
     while( v.conf.next.sheet < v.conf.sheetList.length && v.overLimit === false ){
-      v.step = 3; // シート毎の情報取得
       v.sheetName = v.conf.sheetList[v.conf.next.sheet];
       v.arg.sheet = v.spread.getSheetByName(v.sheetName);
       v.arg.dr = v.arg.sheet.getDataRange();
@@ -277,11 +275,12 @@ function saveSpread(SpreadId=null){
       if( (Date.now() - v.start) > v.elapsLimit ) v.overLimit = true;
     }
 
-    v.step = 9.1; // v.dataの内容を作業用ファイルに書き込む
-    //v.dstFile.setContent(JSON.stringify(v.data,null,2));
-    v.dstFile.setTrashed(true); // 現在のzipをゴミ箱に移動
-    v.blob = Utilities.newBlob(JSON.stringify(v.data),'application/json',v.data.Name+'.json');
-    v.zip = Utilities.zip([v.blob],v.data.Name+'.zip');
+    // --------------------------------------------------
+    v.step = 4; // v.dataの内容を作業用ファイルに書き込む
+    // --------------------------------------------------
+    // 圧縮対象のファイル名に日本語が入っていると"Illegal byte sequence"になるのでdata.json固定
+    v.blob = Utilities.newBlob(JSON.stringify(v.data),'application/json','data.json');
+    v.zip = Utilities.zip([v.blob],`${v.data.Name}.${toLocale(new Date(v.start),'yyyyMMdd-hhmmss')}.zip`);
     v.dstFile = v.srcFile.getParents().next().createFile(v.zip);
     v.conf.fileId = v.dstFile.getId();
 
