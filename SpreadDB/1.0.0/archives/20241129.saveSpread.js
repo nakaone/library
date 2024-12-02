@@ -1,5 +1,6 @@
 function funcTest(){
   const v = {rv:null,propKey:'saveSpread',SpreadId:'1YxHCS_UAQoQ3ElsJFs817vxLZ4xA_GLLGndEEm0hZWY'};
+  PropertiesService.getScriptProperties().deleteProperty(v.propKey);
   v.rv = saveSpread(v.SpreadId);
   console.log(`funcTest: v.rv(${whichType(v.rv)})=${typeof v.rv === 'object' ? JSON.stringify(v.rv) : v.rv}`);
 }
@@ -92,6 +93,7 @@ function saveSpread(SpreadId=null){
     getProp: { // シートの各属性情報取得関数群
       // 1.シート単位の属性
       SheetId: arg => {return arg.sheet.getSheetId()},
+      A1Notation: arg => {return arg.dr.getA1Notation()},
       ColumnWidth: arg => {
         v.a = []; v.max = arg.sheet.getLastColumn();
         for( v.i=1 ; v.i<=v.max ; v.i++ ){
@@ -99,9 +101,24 @@ function saveSpread(SpreadId=null){
         }
         return v.a;
       },
-      A1Notation: arg => {return arg.dr.getA1Notation()},
+      RowHeight: arg => {
+        v.a = v.data.Sheets.find(x => x.Name === v.sheetName).RowHeight || [];
+        v.max = arg.sheet.getLastRow();
+        while( v.conf.next.row < v.max && v.overLimit === false ){
+          // 一行分のデータを作成
+          v.a.push(arg.sheet.getRowHeight(v.conf.next.row+1));
+          // カウンタを調整
+          v.conf.next.row++;
+          // 制限時間チェック
+          if( (Date.now() - v.start) > v.elapsLimit ) v.overLimit = true;
+        }
+        v.ratio = Math.round((v.conf.next.row/v.max)*10000)/100;
+        console.log(`scan: ${v.sheetName}.RowHeight row=${v.conf.next.row}(${v.ratio}%) end.`);
+        return v.a;
+      },
       FrozenColumns: arg => {return arg.sheet.getFrozenColumns()},  // 固定列数
       FrozenRows: arg => {return arg.sheet.getFrozenRows()},  // 固定行数
+
       // 2.セル単位の属性
       // 2.1.値・数式・メモ
       DisplayValues: arg => {return arg.dr.getDisplayValues()},
@@ -109,10 +126,47 @@ function saveSpread(SpreadId=null){
       Formulas: arg => {return arg.dr.getFormulas()},
       FormulasR1C1: arg => {return arg.dr.getFormulasR1C1()},
       Notes: arg => {return arg.dr.getNotes()},
-      // 2.2.セルの装飾(見映え)
+      // 2.2.セルの背景色、罫線
       Backgrounds: arg => {return arg.dr.getBackgrounds()},
       //Borders: JSON.stringify(v.dr.getBorder()),
-
+      FontColorObjects: arg => {
+        arg.src = arg.dr.getFontColorObjects();
+        // 作成途中の結果があればarg.dstにセット
+        if( v.data.Sheets.find(x => x.Name === v.sheetName).FontColorObjects )
+          arg.dst = v.data.Sheets.find(x => x.Name === v.sheetName).FontColorObjects;
+        arg.func = o => {return o.asRgbColor().asHexString()};  // セルの処理関数
+        return v.scan(arg);
+      },
+      // 2.3.フォント、上下左右寄せ、折り返し、回転
+      FontFamilies: arg => {return arg.dr.getFontFamilies()},
+      FontLines: arg => {return arg.dr.getFontLines()}, // セルの線のスタイル。'underline','line-through','none'など
+      FontSizes: arg => {return arg.dr.getFontSizes()},
+      FontStyles: arg => {return arg.dr.getFontStyles()}, // フォントスタイル。'italic'または'normal'
+      FontWeights: arg => {return arg.dr.getFontWeights()},
+      HorizontalAlignments: arg => {return arg.dr.getHorizontalAlignments()},
+      VerticalAlignments: arg => {return arg.dr.getVerticalAlignments()},
+      WrapStrategies: arg => {  // テキストの折り返し
+        arg.src = arg.dr.getWrapStrategies();
+        // 作成途中の結果があればarg.dstにセット
+        if( v.data.Sheets.find(x => x.Name === v.sheetName).WrapStrategies )
+          arg.dst = v.data.Sheets.find(x => x.Name === v.sheetName).WrapStrategies;
+        arg.func = o => {return JSON.stringify(o).replaceAll('"','')};  // セルの処理関数
+        return v.scan(arg);
+      },
+      TextDirections: arg => {  // セルの方向
+        arg.src = arg.dr.getTextDirections();
+        // 作成途中の結果があればarg.dstにセット
+        if( v.data.Sheets.find(x => x.Name === v.sheetName).TextDirections )
+          arg.dst = v.data.Sheets.find(x => x.Name === v.sheetName).TextDirections;
+        arg.func = o => {return JSON.stringify(o).replaceAll('"','')};  // セルの処理関数
+        return v.scan(arg);
+      },
+      // 2.4.その他
+      MergedRanges: arg => {  // 結合セル
+        v.a = [];
+        arg.dr.getMergedRanges().forEach(x => v.a.push(x.getA1Notation()));
+        return v.a;
+      },
       DataValidations: arg => {
         arg.src = arg.dr.getDataValidations();
         // 作成途中の結果があればarg.dstにセット
@@ -126,78 +180,6 @@ function saveSpread(SpreadId=null){
         }};
         return v.scan(arg);
       },
-      /* タイムオーバーが多く、実装ペンディング
-      RowHeight: arg => {
-        v.a = []; v.max = arg.sheet.getLastRow();
-        for( v.i=1 ; v.i<=v.max ; v.i++ ){
-          v.a.push(arg.sheet.getRowHeight(v.i));
-        }
-        return v.a;
-      },
-      */
-      /*
-        v.getSheet = (sheet) => {
-          v.dr = sheet.getDataRange();
-          v.SheetObject = {
-            FontColorObjects: (()=>{
-              v.fc = v.dr.getFontColorObjects();
-              for( v.i=0 ; v.i<v.fc.length ; v.i++ ){
-                for( v.j=0 ; v.j<v.fc[v.i].length ; v.j++ ){
-                  v.fc[v.i][v.j] = v.fc[v.i][v.j].asRgbColor().asHexString();
-                }
-              }
-              return v.fc;
-            })(),
-            FontFamilies: v.dr.getFontFamilies(),
-            FontLines: v.dr.getFontLines(), // セルの線のスタイル。'underline','line-through','none'など
-            FontSizes: v.dr.getFontSizes(),
-            FontStyles: v.dr.getFontStyles(), // フォントスタイル。'italic'または'normal'
-            FontWeights: v.dr.getFontWeights(),
-            HorizontalAlignments: v.dr.getHorizontalAlignments(),
-            MergedRanges: (()=>{  // 結合セル
-              v.r = [];
-              v.dr.getMergedRanges().forEach(x => v.r.push(x.getA1Notation()));
-              return v.r;
-            })(),
-            TextDirections: (()=>{  // セルの方向
-              v.td = v.dr.getTextDirections();
-              for( v.i=0 ; v.i<v.td.length ; v.i++ ){
-                for( v.j=0 ; v.j<v.td[v.i].length ; v.j++ ){
-                  if( v.td[v.i][v.j] ) v.td[v.i][v.j] = JSON.stringify(v.td[v.i][v.j]);
-                }
-              }
-              return v.td;
-            })(),
-            TextRotations: (()=>{ // テキストの回転
-              v.tr = v.dr.getTextRotations();
-              for( v.i=0 ; v.i<v.tr.length ; v.i++ ){
-                for( v.j=0 ; v.j<v.tr[v.i].length ; v.j++ ){
-                  if( v.tr[v.i][v.j] ){
-                    v.tr[v.i][v.j] = {
-                      Degrees: v.tr[v.i][v.j].getDegrees(), // 標準のテキストの向きと現在のテキストの向きとの間の角度
-                      Vertical: v.tr[v.i][v.j].isVertical(),  // テキストが縦方向に積み重ねられている場合は true
-                    };
-                  }
-                }
-              }
-              return v.tr;
-            })(),
-            VerticalAlignments: v.dr.getVerticalAlignments(),
-            WrapStrategies: (()=>{  // テキストの折り返し
-              v.ws = v.dr.getWrapStrategies();
-              for( v.i=0 ; v.i<v.ws.length ; v.i++ ){
-                for( v.j=0 ; v.j<v.ws[v.i].length ; v.j++ ){
-                  if( v.ws[v.i][v.j] ){
-                    v.ws[v.i][v.j] = JSON.stringify(v.ws[v.i][v.j]).replaceAll('"','');
-                  }
-                }
-              }
-              return v.ws;
-            })(),
-          };
-          return v.SheetObject;
-        };
-    */
     },
   };
   console.log(`${v.whois} start.`);
@@ -206,48 +188,60 @@ function saveSpread(SpreadId=null){
     // --------------------------------------------------
     v.step = 1; // 進捗管理(v.conf)のセット
     // --------------------------------------------------
-    v.ScriptProperties = PropertiesService.getScriptProperties().getProperty(v.propKey);
-    if( v.ScriptProperties !== null ){  // 2回目以降(タイマー起動)
+    if( SpreadId !== null ){  // 初回実行時、または強制停止
+      if( SpreadId === false ){ // 強制停止
 
-      v.step = 1.1; // confをPropertyから取得
-      v.conf = JSON.parse(v.ScriptProperties);
+        v.step = 1.1;
+        throw new Error(`次回処理の強制停止指示があったため、処理を終了します`);
+
+      } else {  // 初回実行時
+
+        v.step = 2.1; // confに初期値を設定
+        v.conf = {
+          count:0,
+          SpreadId: SpreadId === null ? SpreadsheetApp.getActiveSpreadsheet().getId() : SpreadId,
+          sheetList: [],
+          propList: [],
+          next: {sheet:0,prop:0,row:0},
+          complete: false,
+        };
+        if( !v.conf.SpreadId ){
+          throw new Error(`対象スプレッドシートのIDが特定できません`);
+        }
+
+        v.step = 2.2; // 入力元のスプレッドシート・ファイル
+        v.spread = SpreadsheetApp.openById(v.conf.SpreadId);
+        v.srcFile = DriveApp.getFileById(v.conf.SpreadId);
+
+        v.step = 2.3; // v.dataにスプレッドシート関連情報をセット
+        v.data = v.getSpread();
+
+        v.step = 2.4; // シート名一覧(v.conf.sheetList)の作成、v.data.Sheetsに初期値設定
+        v.spread.getSheets().forEach(x => v.conf.sheetList.push(x.getSheetName()));
+        v.conf.sheetList.forEach(x => v.data.Sheets.push({Name:x}));
+
+        v.step = 2.5; // 取得する属性一覧(v.conf.propList)の作成
+        v.conf.propList = Object.keys(v.getProp);
+
+      }
+
+    } else {  // 2回目以降(タイマー起動)
+
+      v.step = 3.1; // confをPropertyから取得
+      v.conf = JSON.parse(v.PropertiesService.getScriptProperties().getProperty(v.propKey));
       v.spread = SpreadsheetApp.openById(v.conf.SpreadId);
+      v.srcFile = DriveApp.getFileById(v.conf.SpreadId);
 
-      v.step = 1.2; // 作業用ファイルの内容をv.dataに読み込み
+      v.step = 3.2; // 作業用ファイルの内容をv.dataに読み込み
       v.dstFile = DriveApp.getFileById(v.conf.fileId);
       v.unzip = Utilities.unzip(v.dstFile.getBlob());
       v.data = JSON.parse(v.unzip[0].getDataAsString('UTF-8'));
       v.dstFile.setTrashed(true); // 現在のzipをゴミ箱に移動
 
-    } else { v.step = 2; // 初回実行時
-
-      v.step = 2.1; // confに初期値を設定
-      v.conf = {
-        count:0,
-        SpreadId: SpreadId === null ? SpreadsheetApp.getActiveSpreadsheet().getId() : SpreadId,
-        sheetList: [],
-        propList: [],
-        next: {sheet:0,prop:0,row:0},
-        complete: false,
-      };
-
-      v.step = 2.2; // 入力元のスプレッドシート・ファイル
-      v.spread = SpreadsheetApp.openById(v.conf.SpreadId);
-      v.srcFile = DriveApp.getFileById(v.conf.SpreadId);
-
-      v.step = 2.3; // v.dataにスプレッドシート関連情報をセット
-      v.data = v.getSpread();
-
-      v.step = 2.4; // シート名一覧(v.conf.sheetList)の作成、v.data.Sheetsに初期値設定
-      v.spread.getSheets().forEach(x => v.conf.sheetList.push(x.getSheetName()));
-      v.conf.sheetList.forEach(x => v.data.Sheets.push({Name:x}));
-
-      v.step = 2.5; // 取得する属性一覧(v.conf.propList)の作成
-      v.conf.propList = Object.keys(v.getProp);
     }
 
     // --------------------------------------------------
-    v.step = 3; // シート毎の情報取得
+    v.step = 4; // シート毎の情報取得
     // --------------------------------------------------
     v.arg = {};
     while( v.conf.next.sheet < v.conf.sheetList.length && v.overLimit === false ){
@@ -255,42 +249,49 @@ function saveSpread(SpreadId=null){
       v.arg.sheet = v.spread.getSheetByName(v.sheetName);
       v.arg.dr = v.arg.sheet.getDataRange();
       while( v.conf.next.prop < v.conf.propList.length && v.overLimit === false ){
-        v.step = 4; // 属性毎の情報取得
+        v.step = 4.1; // 属性毎の情報取得
         v.propName = v.conf.propList[v.conf.next.prop];
         console.log(`step.${v.step}: ${v.sheetName}.${v.propName} start.`);
-        v.step = 4.1; // 前回結果をクリア
+        v.step = 4.2; // 前回結果をクリア
         ['src','dst','func'].forEach(x => delete v.arg[x]);
-        v.step = 4.2; // 属性取得の実行
+        v.step = 4.3; // 属性取得の実行
         v.r = v.getProp[v.conf.propList[v.conf.next.prop]](v.arg);
         if( v.r instanceof Error ) throw v.r;
         v.data.Sheets.find(x => x.Name === v.sheetName)[v.propName] = v.r;
-        v.step = 4.3; // カウンタを調整
-        v.conf.next.prop++; v.conf.next.row = 0;
-        v.step = 4.4; // 制限時間チェック
+        v.step = 4.4; // カウンタを調整
+        if(!v.overLimit){
+          v.conf.next.prop++;
+          v.conf.next.row = 0;
+        }
+        v.step = 4.5; // 制限時間チェック
         if( (Date.now() - v.start) > v.elapsLimit ) v.overLimit = true;
       }
-      v.step = 3.1; // カウンタを調整
-      v.conf.next.sheet++; [v.conf.next.prop,v.conf.next.row] = [0,0];
-      v.step = 3.2; // 制限時間チェック
+      v.step = 4.6; // カウンタを調整
+      if(!v.overLimit){
+        v.conf.next.sheet++;
+        [v.conf.next.prop,v.conf.next.row] = [0,0]
+      };
+      v.step = 4.7; // 制限時間チェック
       if( (Date.now() - v.start) > v.elapsLimit ) v.overLimit = true;
     }
 
     // --------------------------------------------------
-    v.step = 4; // v.dataの内容を作業用ファイルに書き込む
+    v.step = 5; // v.dataの内容を作業用ファイルに書き込む
     // --------------------------------------------------
-    // 圧縮対象のファイル名に日本語が入っていると"Illegal byte sequence"になるのでdata.json固定
-    v.blob = Utilities.newBlob(JSON.stringify(v.data),'application/json','data.json');
+    v.step = 5.1; // 圧縮対象のファイル名に日本語が入っていると"Illegal byte sequence"になるので英文字指定
+    v.blob = Utilities.newBlob(JSON.stringify(v.data),'application/json',`${v.overLimit?'uncomplete':'data'}.json`);
     v.zip = Utilities.zip([v.blob],`${v.data.Name}.${toLocale(new Date(v.start),'yyyyMMdd-hhmmss')}.zip`);
     v.dstFile = v.srcFile.getParents().next().createFile(v.zip);
     v.conf.fileId = v.dstFile.getId();
 
-    v.step = 9.2; // ScriptPropertiesを削除
+    v.step = 5.2; // ScriptPropertiesを削除
     if( v.ScriptProperties !== null ){
       PropertiesService.getScriptProperties().deleteProperty(v.propKey);
     }
     v.conf.count += 1;  // 実行回数をインクリメント
     if( v.overLimit ){  // タイムアウト時
-      if( v.conf.count > v.executionLimit ){ // 実行回数の制限を超えた場合
+      v.step = 5.3;
+      if( v.conf.count > v.executionLimit && v.complete === false ){ // 実行回数の制限を超えた場合
         throw new Error(`最大実行回数(${v.executionLimit}回)を超えたので、処理を中断しました`);
       } else {
         // ScriptPropertiesを更新
@@ -302,12 +303,12 @@ function saveSpread(SpreadId=null){
 
     v.step = 9; // 終了処理
     v.rv = v.conf;
-    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${JSON.stringify(v.rv)}`);
     return v.rv;
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
     return e;
   }
 }
