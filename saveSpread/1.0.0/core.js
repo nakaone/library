@@ -1,10 +1,3 @@
-
-/** saveSpread() : 指定スプレッドシートから各種属性情報を取得、Google Diverのスプレッドシートと同じフォルダにzip形式圧縮されたJSONとして保存
- * @param arg {string|boolean} - セーブ対象スプレッドシートのIDまたはfalse(強制停止)
- * @returns {Object.<string,any>} 属性名：設定値形式のオブジェクト
- * 
- * - 仕様は[workflowy](https://workflowy.com/#/415ca4c2d194)参照
- */
 function saveSpread(arg=null){
   const v = {whois:'saveSpread',step:0,rv:null,propKey:'saveSpread',
     start:Date.now(),elapsLimit:300000,overLimit:false,executionLimit:100,
@@ -101,6 +94,7 @@ function saveSpread(arg=null){
         }
         return v.a;
       },
+      /* 実行時間が非常に長いので無効化
       RowHeight: arg => {
         v.a = v.data.Sheets.find(x => x.Name === v.sheetName).RowHeight || [];
         v.max = arg.sheet.getLastRow();
@@ -115,7 +109,7 @@ function saveSpread(arg=null){
         v.ratio = Math.round((v.conf.next.row/v.max)*10000)/100;
         console.log(`scan: ${v.sheetName}.RowHeight row=${v.conf.next.row}(${v.ratio}%) end.`);
         return v.a;
-      },
+      },*/
       FrozenColumns: arg => {return arg.sheet.getFrozenColumns()},  // 固定列数
       FrozenRows: arg => {return arg.sheet.getFrozenRows()},  // 固定行数
 
