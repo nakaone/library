@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<opml version="2.0">
+  <head>
+    <ownerEmail>
+      ena.kaon@gmail.com
+    </ownerEmail>
+  </head>
+  <body>
+    <outline text="saveSpread() : 指定スプレッドシートから各種属性情報を取得、Google Diverのスプレッドシートと同じフォルダにzip形式圧縮されたJSONとして保存" _note="本関数はGASの制約「実行時間は6分以内」に係る場合があるので、処理が5分を超えた段階で終了し、自関数をタイマー起動するよう設定&#10;">
+      <outline text="概要">
+        <outline text="変数'v'に設定情報や属性情報取得関数を定義">
+          <outline text="属性情報">
+            <outline text="propKey {string}='saveSpread' ScriptPropertyのキー名" _note="本関数実行時に一意に特定される必要があるため、対象シート名や実行日時等を含まない固定文字列を設定" />
+            <outline text="start {number}=Date.now() saveSpread開始日時(UNIX時刻)" />
+            <outline text="elapsLimit {number}=300000 一処理当たりの制限時間(5分)" />
+            <outline text="executionLimit {number}=100 処理を分割した場合の最大処理数" />
+          </outline>
+          <outline text="getSpread() : フォルダ・ファイル関連、スプレッドシート関連情報を取得" />
+          <outline text="scan() : 属性情報が二次元の場合、一行毎に制限時間をチェックしながら文字列化" />
+          <outline text="getProp {Object.&amp;lt;string,function&amp;gt;} : シートの各属性情報取得関数群">
+            <outline text="各関数の引数: arg {Object}">
+              <outline text="sheet {Sheet} 処理対象とするシートオブジェクト" />
+              <outline text="dr {Range} sheetの内、データが存在する範囲(getDataRange())" />
+              <outline text="[src] {Object[][]} v.scan()に渡す二次元の属性情報。" _note="ex. arg.src = arg.dr.getFontColorObjects()" />
+              <outline text="[dst] {Object[][]} v.scan()に渡す前回処理結果" _note="前回途中で処理が中断した場合、続きを追加できるようにscanに渡す" />
+              <outline text="[func] {function} v.scan()に渡す個別セルの属性情報取得関数" />
+            </outline>
+          </outline>
+          <outline text="その他変数vの主要メンバ" _note="※横断的に使用するもののみ列挙&#10;">
+            <outline text="conf {Object} 進捗状況。処理未完の場合、&lt;a href=&quot;https://workflowy.com/#/89875a6cf5f6&quot;&gt;PropertyService&lt;/a&gt;に保存" />
+            <outline text="spread {Spreadsheet} 対象のスプレッドシートオブジェクト" />
+            <outline text="srcFile {File} 対象のスプレッドシートのファイルオブジェクト" />
+            <outline text="dstFile {File} 分析結果を保存するJSON(zip)のファイルオブジェクト" />
+            <outline text="data {Object} 分析結果のオブジェクト" _note="{getSpreadの結果＋getPropの結果}" />
+            <outline text="sheetName {string} 現在処理中のシート名" />
+            <outline text="propName {string} 現在処理中の属性名" />
+            <outline text="folder {Folder} 処理対象スプレッドシートが存在するフォルダオブジェクト" />
+          </outline>
+        </outline>
+      </outline>
+      <outline text="引数">
+        <outline text="arg {string|boolean} セーブ対象スプレッドシートのIDまたはfalse(強制停止)" />
+      </outline>
+      <outline text="PropertyService">
+        <outline text="complete {boolean} 完了したらtrue" />
+        <outline text="count {number} 実行回数" _note="処理時間が5分を超え、分割実行の都度インクリメント" />
+        <outline text="SpreadId {string} セーブ対象のスプレッドシートのID" />
+        <outline text="sheetList {string[]} セーブ対象スプレッドシートのシート名一覧" />
+        <outline text="propList {string[]} 出力するシート属性名の一覧。ex.&lt;code&gt;Values&lt;/code&gt; ,&lt;code&gt;Notes&lt;/code&gt; " />
+        <outline text="next {Object} 次に処理対象となるsheetList,propListの添字">
+          <outline text="sheet {number} sheetList内で次に処理対象とするシート名の添字" />
+          <outline text="prop {number} propList内で次に処理対象とする属性名の添字" />
+          <outline text="row {number} 次に処理対象とする行番号(0オリジン)" />
+        </outline>
+        <outline text="fileId {string} 出力先ファイル(zip)のファイルID" />
+        <outline text="2 Backlinks">
+          <outline text="conf {Object} 進捗状況。処理未完の場合、&lt;a href=&quot;https://workflowy.com/#/89875a6cf5f6&quot;&gt;PropertyService&lt;/a&gt;に保存" />
+          <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/89875a6cf5f6&quot;&gt;PropertyService&lt;/a&gt;} ※completeで完了しているか判断" />
+        </outline>
+      </outline>
+      <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/89875a6cf5f6&quot;&gt;PropertyService&lt;/a&gt;} ※completeで完了しているか判断" />
+    </outline>
+  </body>
+</opml>
