@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!-- ----------------------------------------------
+道具箱 > 「選択範囲をHTML化」サイドバー画面＋スクリプト
+----------------------------------------------- -->
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      textarea {width: 90%;}
+    </style>
+  </head>
+  <body>
+    <div>
+      <button onclick="genHtml()">実行</button>
+    </div>
+    <div>
+      <textarea></textarea>
+    </div>
+  </body>
+</html>
+<script>
+//::$src/doGAS.js::
+//::$lib/changeScreen/1.1.0/core.js::
+//::$lib/convertNotation/1.0.0/core.js::
+//::$lib/createElement/1.2.1/core.js::
+//::$lib/toLocale/1.1.0/core.js::
+
+async function convert(){
+  const v = {whois:'convert',rv:null,step:0};
+  console.log(v.whois+' start.');
+  try {
+    google.script.run.withSuccessHandler(convert2).getCellInfo();
+    console.log(v.whois+' normal end.');
+  } catch(e) {
+    console.error(e,v);
+    return e;
+  }
+}
+
+function convert2(arg){
+  console.log('convert2 arg=%s',JSON.stringify(arg));
+}
+
+async function genHtml(arg){
+  const v = {whois:'genHtml',rv:null,step:0};
+  console.log(v.whois+' start.\narg=%s',arg);
+  try {
+
+    v.step = 1; // アクティブセルの情報を取得
+    v.cellInfo = JSON.parse(await doGAS('getCellInfo'));
+    if( v.cellInfo instanceof Error ) throw v.cellInfo;
+    console.log(v.cellInfo);
+
+    v.step = 2; // tableの枠組み作成
+    v.dom = createElement({children:[
+      {tag:'table',children:[
+        {tag:'thead',children:[{tag:'tr'}]},
+        {tag:'tbody'}
+      ]}
+    ]});
+    if( v.dom instanceof Error ) throw v.dom;
+    v.thead = v.dom.querySelector('thead tr');
+    v.tbody = v.dom.querySelector('tbody');
+
+    v.step = 3; // 列記号の追加
+    for( v.c=v.cellInfo.firstColumn ; v.c<=v.cellInfo.lastColumn ; v.c++ ){
+      v.thead.appendChild(createElement({tag:'th',text:convertNotation(v.c)}));
+    }
+
+    v.step = 4; // 行データの追加
+    for( v.r=0 ; v.r<v.cellInfo.value.length ; v.r++ ){
+      v.tr = {tag:'tr',children:[{tag:'th',attr:{class:'num'},text:(v.cellInfo.firstRow + v.r)}]};
+      for( v.c=0 ; v.c<v.cellInfo.value[v.r].length ; v.c++ ){
+        v.type = v.cellInfo.type[v.r][v.c];
+        v.value = v.cellInfo.value[v.r][v.c];
+        v.td = {tag:'td',attr:{}};
+        if( v.type === 'Number' ){
+          v.td.attr.class = 'num';
+          v.td.text = v.value.toLocaleString();
+        } else if( v.type === 'Date' ){
+          v.format = v.cellInfo.format[v.r][v.c].replaceAll('"','');
+          // 前後のいずれかに'/'がつく場合、月と見做して大文字に変換
+          v.m = v.format.match(/\/m+/);
+          console.log(v.m);
+          if( v.m ) v.format = v.format.replace(v.m[0],'/'+('M'.repeat(v.m[0].length-1)));
+          v.m = v.format.match(/m+\//);
+          console.log(v.m);
+          if( v.m ) v.format = v.format.replace(v.m[0],('M'.repeat(v.m[0].length-1)+'/'));
+          v.td.text = toLocale(new Date(v.value),v.format);
+          console.log('l.55 value=%s, type=%s, format=%s locale=%s',v.value,v.type,v.format,v.td.text);
+        } else {
+          v.td.text = v.value;
+        }
+        v.tr.children.push(v.td);
+      }
+      v.tbody.appendChild(createElement(v.tr));
+    }
+
+    v.rv = v.dom.innerHTML;
+    document.querySelector('textarea').value = v.rv;
+    console.log(v.whois+' normal end.\n',v.rv);
+
+  } catch(e) {
+    console.error(e,v);
+    return e;
+  }
+}
+</script>
