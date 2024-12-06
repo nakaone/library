@@ -9,7 +9,7 @@ class SpreadProperties {
     const v = {whois:this.constructor.name+'.constructor',step:0,rv:null};
     console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
-
+  
       v.step = 1.1; // 引数に既定値設定
       if( typeof arg === 'string' ) arg = {SpreadId:arg};
       v.arg = Object.assign({
@@ -19,7 +19,7 @@ class SpreadProperties {
         executionLimit: 100, // {number}=100 処理を分割した場合の最大処理数
       },arg);
       Object.keys(v.arg).forEach(x => this[x] = v.arg[x]);
-
+  
       v.step = 1.2; // メンバの既定値設定
       this.conf = { // {Object} 進捗状況。処理未完の場合、PropertyServiceに保存
         start: Date.now(),  // {number} saveSpread開始日時(UNIX時刻)
@@ -41,15 +41,15 @@ class SpreadProperties {
       this.dstFile = null; // {File} 分析結果を保存するJSON(zip)のファイルオブジェクト。saveSpread()で設定
       this.data = {}; // {Object} 分析結果のオブジェクト。{getSpreadの結果＋getPropの結果}
       this.overLimit = false; // {boolean} 処理時間(elapsLimit)を超えたらtrue
-
+  
       /* sheetProperties {Object.<string,function>} : シートの各属性情報取得関数群
-       * 各関数の引数: arg {Object}
-       * - [src] {Object[][]} this.scan()に渡す二次元の属性情報。
-       *   ex. arg.src = this.range.getFontColorObjects()
-       * - [dst] {Object[][]} this.scan()に渡す前回処理結果
-       *   前回途中で処理が中断した場合、続きを追加できるようにscanに渡す
-       * - [func] {function} this.scan()に渡す個別セルの属性情報取得関数
-       */
+        * 各関数の引数: arg {Object}
+        * - [src] {Object[][]} this.scan()に渡す二次元の属性情報。
+        *   ex. arg.src = this.range.getFontColorObjects()
+        * - [dst] {Object[][]} this.scan()に渡す前回処理結果
+        *   前回途中で処理が中断した場合、続きを追加できるようにscanに渡す
+        * - [func] {function} this.scan()に渡す個別セルの属性情報取得関数
+        */
       v.step = 1.3;
       this.sheetProperties = { // シートの各属性情報取得関数群
         // 1.シート単位の属性
@@ -144,47 +144,47 @@ class SpreadProperties {
           return this.scan(arg);
         },
       };
-
+  
       // --------------------------------------------------
       v.step = 2; // 進捗管理(this.conf)のセット
       // --------------------------------------------------
       v.step = 2.1; // confをPropertyから取得
       v.ScriptProperties = PropertiesService.getScriptProperties().getProperty(this.propKey);
       if( v.ScriptProperties !== null ){ // 2回目以降の実行時(タイマー起動)
-
+  
         this.conf = JSON.parse(v.ScriptProperties);
         this.spread = SpreadsheetApp.openById(this.conf.SpreadId);
         this.srcFile = DriveApp.getFileById(this.conf.SpreadId);
-
+  
         v.step = 2.2; // 作業用ファイルの内容をthis.dataに読み込み
         this.dstFile = DriveApp.getFileById(this.conf.fileId);
         v.unzip = Utilities.unzip(this.dstFile.getBlob());
         this.data = JSON.parse(v.unzip[0].getDataAsString('UTF-8'));
         this.dstFile.setTrashed(true); // 現在のzipをゴミ箱に移動
-
+  
       } else {  // 強制停止、または初回実行時
-
+  
         if( arg === false ){ // 強制停止
-
+  
           v.step = 2.3;
           throw new Error(`次回処理の強制停止指示があったため、処理を終了します`);
-
+  
         } else {  // 初回実行時
-
+  
           v.step = 2.41; // 入力元のスプレッドシート・ファイル
           this.spread = SpreadsheetApp.openById(this.conf.SpreadId);
           this.srcFile = DriveApp.getFileById(this.conf.SpreadId);
-
+  
           v.step = 2.42; // this.dataにスプレッドシート関連情報をセット
           this.data = this.spreadProperties();
-
+  
           v.step = 2.43; // シート名一覧(this.conf.sheetList)の作成、this.data.Sheetsに初期値設定
           this.spread.getSheets().forEach(x => this.conf.sheetList.push(x.getSheetName()));
           this.conf.sheetList.forEach(x => this.data.Sheets.push({Name:x}));
-
+  
           v.step = 2.44; // 取得する属性一覧(this.conf.propList)の作成
           this.conf.propList = Object.keys(this.sheetProperties);
-
+  
         }
       }
   
@@ -198,7 +198,7 @@ class SpreadProperties {
       return e;
     }
   }
-
+  
   /** spreadProperties: フォルダ・ファイル関連、スプレッドシート関連の属性情報取得
    * @param {void}
    * @returns {Object.<string,string>} 属性名：値形式
@@ -225,7 +225,7 @@ class SpreadProperties {
         DateCreated: toLocale(this.srcFile.getDateCreated()), // ファイル作成日時
         LastUpdated: toLocale(this.srcFile.getLastUpdated()),
         Size: this.srcFile.getSize(),
-
+  
         // スプレッドシート関連情報
         Id: this.spread.getId(),
         Name: this.spread.getName(),
@@ -248,11 +248,11 @@ class SpreadProperties {
           this.spread.getViewers().forEach(x => v.a.push(x.getEmail()));
           return v.a;
         })(),
-
+  
         SavedDateTime: toLocale(new Date(this.conf.start)),  // 本メソッド実行日時
         Sheets: [], // シート情報
       };
-
+  
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
@@ -263,7 +263,7 @@ class SpreadProperties {
       return e;
     }
   }
-
+  
   /** scan: 属性情報が二次元の場合、一行毎に制限時間をチェックしながら文字列化
    * @param arg {Object}
    * @param arg.src {any[][]} - scanの呼出元で取得したソースとなる二次元配列
@@ -273,7 +273,7 @@ class SpreadProperties {
   scan(arg){
     const v = {whois:this.constructor.name+'.scan',step:0,rv:null};
     try {
-
+  
       // 処理結果が未作成ならソースと同じ形の二次元配列を作成
       if( !arg.hasOwnProperty('dst') ){
         arg.dst = [];
@@ -281,7 +281,7 @@ class SpreadProperties {
           arg.dst.push(new Array(arg.src[v.i].length));
         }
       }
-
+  
       while( this.conf.next.row < arg.src.length && this.overLimit === false ){
         if( arg.src[v.i] ){
           // 一行分のデータを作成
@@ -297,18 +297,18 @@ class SpreadProperties {
         if( (Date.now() - this.conf.start) > this.elapsLimit ) this.overLimit = true;
       }
       v.ratio = Math.round((this.conf.next.row/arg.src.length)*10000)/100;
-
+  
       v.step = 9; // 終了処理
       console.log(`scan: ${this.sheetName}.${this.propName} row=${this.conf.next.row}(${v.ratio}%) end.`);
       return arg.dst;
-
+  
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
   }
-
+  
   /** getSheet: 指定されたシートの属性情報を取得
    * @param arg {string}=this.spread.getActiveSheet() - 取得対象となるシート名。未指定の場合表示中のシート
    * @returns {void} this.data.Sheet[取得対象シート名]
@@ -343,7 +343,7 @@ class SpreadProperties {
         v.step = 4.5; // 制限時間チェック
         if( (Date.now() - this.conf.start) > this.elapsLimit ) this.overLimit = true;
       }
-
+  
       v.step = 9; // 終了処理
       v.rv = this.data.Sheets.find(x => x.Name === this.sheetName);
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
@@ -355,7 +355,6 @@ class SpreadProperties {
       return e;
     }
   }
-
   /** getRange: 現在選択中の範囲の属性情報を取得
    * @returns {Object}
    */
@@ -374,7 +373,7 @@ class SpreadProperties {
       return e;
     }
   }
-
+  
   /** saveSpread() : 指定スプレッドシートから各種属性情報を取得、Google Diverのスプレッドシートと同じフォルダにzip形式圧縮されたJSONとして保存
    * @param arg {string} - 呼出元の関数名
    * @returns {Object.<string,any>} 属性名：設定値形式のオブジェクト
@@ -385,7 +384,7 @@ class SpreadProperties {
     const v = {whois:'saveSpread',step:0,rv:null};
     console.log(`${v.whois} start.`);
     try {
-
+  
       // --------------------------------------------------
       v.step = 4; // シート毎の情報取得
       // --------------------------------------------------
@@ -422,7 +421,7 @@ class SpreadProperties {
         v.step = 4.7; // 制限時間チェック
         if( (Date.now() - this.conf.start) > this.elapsLimit ) this.overLimit = true;
       }
-
+  
       // --------------------------------------------------
       v.step = 5; // this.dataの内容を作業用ファイルに書き込む
       // --------------------------------------------------
@@ -431,7 +430,7 @@ class SpreadProperties {
       v.zip = Utilities.zip([v.blob],`${this.data.Name}.${toLocale(new Date(this.conf.start),'yyyyMMdd-hhmmss')}.zip`);
       this.dstFile = this.srcFile.getParents().next().createFile(v.zip);
       this.conf.fileId = this.dstFile.getId();
-
+  
       v.step = 5.2; // ScriptPropertiesを削除
       if( v.ScriptProperties ){
         PropertiesService.getScriptProperties().deleteProperty(this.propKey);
@@ -448,16 +447,18 @@ class SpreadProperties {
           ScriptApp.newTrigger(arg).timeBased().after(1000 * 60).create();
         }
       }
-
+  
       v.step = 9; // 終了処理
       v.rv = this.conf;
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${JSON.stringify(v.rv)}`);
       return v.rv;
-
+  
     } catch(e) {
       e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
       console.error(`${e.message}\nv=${JSON.stringify(v)}`);
       return e;
     }
   }
+  
 }
+
