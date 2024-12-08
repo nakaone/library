@@ -30,20 +30,13 @@ function getActiveSheet(){
 }
 function range2html1(){ // 選択範囲をHTML化 > 行列記号を付ける
   const sp = new SpreadProperties();
-  const rv = sp.range2html({guide:true});
-  const html = HtmlService.createHtmlOutputFromFile('result')
-  .setTitle('処理結果').append(`<textarea id="result">${rv}</textarea>`);
-  SpreadsheetApp.getUi().showSidebar(html);
+  showSidebar({result:sp.range2html({guide:true})});
 }
 function range2html2(){ // 選択範囲をHTML化 > 行列記号を付けない
   const sp = new SpreadProperties();
-  const rv = sp.range2html({guide:false});
-  const html = HtmlService.createHtmlOutputFromFile('result')
-  .setTitle('処理結果').append(`<textarea id="result">${rv}</textarea>`);
-  SpreadsheetApp.getUi().showSidebar(html);
+  showSidebar({result:sp.range2html({guide:false})});
 }
-/** deleteAllTriggers: 全てのトリガーを削除 */
-function deleteAllTriggers() {
+function deleteAllTriggers() {  // 全てのトリガーを削除
   const triggers = ScriptApp.getProjectTriggers();
   for (const trigger of triggers) {
     ScriptApp.deleteTrigger(trigger);
@@ -221,6 +214,34 @@ function mergeDeeply(pri,sub,opt={}){
     console.error(`${e.message}\nv=${JSON.stringify(v)}`);
     return e;
   }
+}
+/** showSidebar: 処理結果をサイドバーのtextareaに表示
+ * @param {Object} arg
+ * @param {string} arg.result - 表示する処理結果
+ * @param {string} [arg.content] - サイドバーのhtml
+ */
+function showSidebar(arg={}){ // 
+  if( !arg.content ){
+    arg.content = [`<!DOCTYPE html><html><head><base target="_top"><script>`
+    , `function copyToClipboard() {`
+    , `  const result = document.getElementById('result').value; //innerText;`
+    , `  navigator.clipboard.writeText(result).then(() => {`
+    , `    alert('クリップボードにコピーしました: ' + result);`
+    , `  }).catch(err => {`
+    , `    console.error('コピーに失敗しました: ', err);`
+    , `  });`
+    , `}`
+    , `</script></head><body>`
+    , `  <h1>処理結果</h1>`
+    , `  <button onclick="copyToClipboard()">コピー</button><br><hr>`
+    , `  <textarea id="result">::result::</textarea>`
+    , `</body>`
+    , `</html>`].join('\n');
+  }
+  arg.content = arg.content.replace('::result::',arg.result);
+  console.log(`l.67 arg=${JSON.stringify(arg)}`)
+  const html = HtmlService.createHtmlOutput(arg.content).setTitle('処理結果');
+  SpreadsheetApp.getUi().showSidebar(html);
 }
 class SpreadProperties {
   /** @constructor

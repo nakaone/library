@@ -30,20 +30,13 @@ function getActiveSheet(){
 }
 function range2html1(){ // 選択範囲をHTML化 > 行列記号を付ける
   const sp = new SpreadProperties();
-  const rv = sp.range2html({guide:true});
-  const html = HtmlService.createHtmlOutputFromFile('result')
-  .setTitle('処理結果').append(`<textarea id="result">${rv}</textarea>`);
-  SpreadsheetApp.getUi().showSidebar(html);
+  showSidebar({result:sp.range2html({guide:true})});
 }
 function range2html2(){ // 選択範囲をHTML化 > 行列記号を付けない
   const sp = new SpreadProperties();
-  const rv = sp.range2html({guide:false});
-  const html = HtmlService.createHtmlOutputFromFile('result')
-  .setTitle('処理結果').append(`<textarea id="result">${rv}</textarea>`);
-  SpreadsheetApp.getUi().showSidebar(html);
+  showSidebar({result:sp.range2html({guide:false})});
 }
-/** deleteAllTriggers: 全てのトリガーを削除 */
-function deleteAllTriggers() {
+function deleteAllTriggers() {  // 全てのトリガーを削除
   const triggers = ScriptApp.getProjectTriggers();
   for (const trigger of triggers) {
     ScriptApp.deleteTrigger(trigger);
@@ -55,6 +48,7 @@ function deleteAllTriggers() {
 
 //::$lib/convertNotation/1.0.0/core.js::
 //::$lib/mergeDeeply/1.1.0/core.js::
+//::$lib/showSidebar/1.0.0/core.js::
 //::$lib/SpreadProperties/1.1.0/core.js::
 //::$lib/stringify/1.1.1/core.js::
 //::$lib/toLocale/1.1.0/core.js::

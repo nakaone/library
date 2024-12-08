@@ -45,12 +45,4 @@ log "1";
 cat $src/proto.js | awk 1 | \
 $embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $prj/toolbox.gs
 
-# ----------------------------------------------
-# 2. result.htmlの作成
-# ----------------------------------------------
-log "2";
-cp $src/result.html $prj/
-#cat $src/htmlTable.html | awk 1 | \
-#$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $prj/htmlTable.html
-
 echo "\n$separator`date +"%T"` [$prjName] end$separator"
