@@ -1,0 +1,460 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>range2html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>
+
+<style type="text/css">
+.x294e52cb-5a38 .th, .x294e52cb-5a38 .td {
+  position: relative;
+  height: 20px;
+  background: #ffffff;
+  font-size: 10pt;
+  border-right: solid 1px #e1e1e1;
+  border-bottom: solid 1px #e1e1e1;
+  word-break: break-all;
+}
+.x294e52cb-5a38 .th {
+  font-family: sans-serif;
+  text-align: center;
+  vertical-align: middle;
+  font-weight: 900;
+  background: #dddddd;
+  border-top: solid 1px #e1e1e1;
+  border-left: solid 1px #e1e1e1;
+  width: 50px;
+}
+.x294e52cb-5a38 .td {
+  width: 100px;
+  font-family: arial,sans,sans-serif;
+  vertical-align: bottom;
+  overflow: hidden; /* 折り返しは隠す */
+}
+.x294e52cb-5a38 .noteIcon {
+  position: absolute; top:0; right: 0;
+  width: 0px;
+  height: 0px;
+  border-top: 4px solid black;
+  border-right: 4px solid black;
+  border-bottom: 4px solid transparent;
+  border-left: 4px solid transparent;
+}
+.x294e52cb-5a38 td:nth-Child(1){width: 135px;}
+.x294e52cb-5a38 td:nth-Child(2){width: 80px;}
+</style>
+<table class="x294e52cb-5a38"><tr>
+  <td title="B2:C3を「数値」として範囲名設定
+=E2
+=R[0]C[3]" style="text-align:left;font-family:Arial;background:#ffff00;"><div class="noteIcon"></div>数値</td>
+  <td style="text-align:right;font-family:Arial;color:#ff00ff;background:#ffff00;">1234</td>
+</tr><tr>
+  <td style="text-align:left;font-family:Arial;background:#ffff00;">オプション 1</td>
+  <td style="text-align:right;font-family:Arial;background:#ffff00;">-5678</td>
+</tr><tr>
+  <td title="結合セルにメモ
+=C4+10
+=R[0]C[1]+10" rowspan="2" style="text-align:right;font-family:Arial;"><div class="noteIcon"></div> ¥ 1,244.00 </td>
+  <td style="text-align:right;font-family:Arial;"> ¥ 1,234.00 </td>
+</tr><tr>
+  <td style="text-align:right;font-family:Arial;"> ¥ (5,678.00)</td>
+</tr><tr>
+  <td colspan="0"></td>
+  <td colspan="2" style="text-align:right;font-weight:bold;font-family:Arial;">12,345,678</td>
+</tr><tr>
+  <td style="vertical-align:top;text-align:left;font-family:Arial;">じゅげむじゅげむごこうのすりきれかいざりすいぎょのすいぎょうまつ</td>
+  <td style="text-align:center;font-family:Arial;">-5,678</td>
+</tr><tr>
+  <td style="text-align:left;font-size:18pt;font-family:Arial;">小数</td>
+  <td style="text-align:right;font-family:Arial;">1.234</td>
+</tr><tr>
+  <td style="text-align:left;font-style:italic;text-decoration-line:line-through;font-family:Arial;">斜体に取消線</td>
+  <td style="text-align:right;font-family:Arial;">-5.678</td>
+</tr><tr>
+</tr></table>
+
+
+
+
+
+
+
+<style type="text/css">
+.x294e52cb-5a38-49d5-bf93-18b99739acad th,td {
+  position: relative;
+  height: 20px;
+  background: #ffffff;
+  font-size: 10pt;
+  border-right: solid 1px #e1e1e1;
+  border-bottom: solid 1px #e1e1e1;
+  word-break: break-all;
+}
+.x294e52cb-5a38-49d5-bf93-18b99739acad th {
+  font-family: sans-serif;
+  text-align: center;
+  vertical-align: middle;
+  font-weight: 900;
+  background: #dddddd;
+  border-top: solid 1px #e1e1e1;
+  border-left: solid 1px #e1e1e1;
+  width: 50px;
+}
+.x294e52cb-5a38-49d5-bf93-18b99739acad td {
+  width: 100px;
+  font-family: arial,sans,sans-serif;
+  vertical-align: bottom;
+  overflow: hidden; /* 折り返しは隠す */
+}
+.x294e52cb-5a38-49d5-bf93-18b99739acad .noteIcon {
+  position: absolute; top:0; right: 0;
+  width: 0px;
+  height: 0px;
+  border-top: 4px solid black;
+  border-right: 4px solid black;
+  border-bottom: 4px solid transparent;
+  border-left: 4px solid transparent;
+}
+.x294e52cb-5a38-49d5-bf93-18b99739acad td:nth-Child(1){width: 135px;}
+.x294e52cb-5a38-49d5-bf93-18b99739acad td:nth-Child(2){width: 80px;}
+</style>
+<table class="x294e52cb-5a38-49d5-bf93-18b99739acad"><tr>
+  <td title="B2:C3を「数値」として範囲名設定
+=E2
+=R[0]C[3]" style="text-align:left;font-family:Arial;background:#ffff00;"><div class="noteIcon"></div>数値</td>
+  <td style="text-align:right;font-family:Arial;color:#ff00ff;background:#ffff00;">1234</td>
+</tr><tr>
+  <td style="text-align:left;font-family:Arial;background:#ffff00;">オプション 1</td>
+  <td style="text-align:right;font-family:Arial;background:#ffff00;">-5678</td>
+</tr><tr>
+  <td title="結合セルにメモ
+=C4+10
+=R[0]C[1]+10" rowspan="2" style="text-align:right;font-family:Arial;"><div class="noteIcon"></div> ¥ 1,244.00 </td>
+  <td style="text-align:right;font-family:Arial;"> ¥ 1,234.00 </td>
+</tr><tr>
+  <td style="text-align:right;font-family:Arial;"> ¥ (5,678.00)</td>
+</tr><tr>
+  <td colspan="0"></td>
+  <td colspan="2" style="text-align:right;font-weight:bold;font-family:Arial;">12,345,678</td>
+</tr><tr>
+  <td style="vertical-align:top;text-align:left;font-family:Arial;">じゅげむじゅげむごこうのすりきれかいざりすいぎょのすいぎょうまつ</td>
+  <td style="text-align:center;font-family:Arial;">-5,678</td>
+</tr><tr>
+  <td style="text-align:left;font-size:18pt;font-family:Arial;">小数</td>
+  <td style="text-align:right;font-family:Arial;">1.234</td>
+</tr><tr>
+  <td style="text-align:left;font-style:italic;text-decoration-line:line-through;font-family:Arial;">斜体に取消線</td>
+  <td style="text-align:right;font-family:Arial;">-5.678</td>
+</tr><tr>
+</tr></table>
+      
+  <style type="text/css">
+    .range2html th,td {
+      position: relative;
+      height: 20px;
+      background: #ffffff;
+      font-size: 10pt;
+      border-right: solid 1px #e1e1e1;
+      border-bottom: solid 1px #e1e1e1;
+      word-break: break-all;
+    }
+    .range2html th {
+      font-family: sans-serif;
+      text-align: center;
+      vertical-align: middle;
+      font-weight: 900;
+      background: #dddddd;
+      border-top: solid 1px #e1e1e1;
+      border-left: solid 1px #e1e1e1;
+      width: 50px;
+    }
+    .range2html td {
+      width: 100px;
+      font-family: arial,sans,sans-serif;
+      vertical-align: bottom;
+      overflow: hidden; /* 折り返しは隠す */
+    }
+    .range2html .noteIcon {
+      position: absolute; top:0; right: 0;
+      width: 0px;
+      height: 0px;
+      border-top: 4px solid black;
+      border-right: 4px solid black;
+      border-bottom: 4px solid transparent;
+      border-left: 4px solid transparent;
+    }
+    .range2html td:nth-Child(1){width: 47px;}
+    .range2html td:nth-Child(2){width: 47px;}
+    .range2html td:nth-Child(3){width: 60px;}
+    .range2html td:nth-Child(4){width: 47px;}
+    .range2html td:nth-Child(5){width: 74px;}
+    .range2html td:nth-Child(6){width: 40px;}
+    .range2html td:nth-Child(7){width: 47px;}
+    .range2html td:nth-Child(8){width: 60px;}
+    .range2html td:nth-Child(9){width: 51px;}
+    .range2html td:nth-Child(10){width: 60px;}
+    .range2html td:nth-Child(11){width: 47px;}
+    .range2html td:nth-Child(12){width: 54px;}
+    </style>
+    <table class="range2html"><tr>
+      <td title="UUID" style="text-align:left;font-family:Arial;"><div class="noteIcon"></div>userId</td>
+      <td style="text-align:left;font-family:Arial;">email</td>
+      <td title="gasでメールを発信した時、正常に送信できたか確認する方法は？" style="text-align:left;font-family:Arial;"><div class="noteIcon"></div>送信結果</td>
+      <td title="送信Obj内にメンバ"CPkey"が存在するかどうか" style="text-align:left;font-family:Arial;"><div class="noteIcon"></div>CPkey</td>
+      <td title="前回パスコード通知メール発行日時からの経過時間" style="text-align:left;font-family:Arial;"><div class="noteIcon"></div>パスコード<br>送信日時</td>
+      <td title="func(文字列)。login,append,update,delete,getLogのいずれか" style="text-align:left;font-family:Arial;"><div class="noteIcon"></div>token<br>復号</td>
+      <td title="シートに登録されたCPkeyと復号により取得した署名が一致するかどうか" style="text-align:left;font-family:Arial;"><div class="noteIcon"></div>署名</td>
+      <td title="=ログイン有効期間" style="text-align:left;font-family:Arial;"><div class="noteIcon"></div>CPkey<br>有効期限</td>
+      <td title="tokenを復号した文字列" style="text-align:left;font-family:Arial;"><div class="noteIcon"></div>func</td>
+      <td style="text-align:left;font-family:Arial;">凍結</td>
+      <td style="text-align:left;font-family:Arial;">パス<br>コード</td>
+      <td style="text-align:left;font-family:Arial;">失敗</td>
+    </tr><tr>
+      <td title="シートにuserIdが存在しない" style="text-align:left;font-family:Arial;"><div class="noteIcon"></div>未登録</td>
+      <td title="シートにe-mailが存在しない" style="text-align:left;font-family:Arial;"><div class="noteIcon"></div>未登録</td>
+      <td style="text-align:left;font-family:Arial;">正常</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">エラー</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">登録済</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td style="text-align:left;font-family:Arial;">登録済</td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">存在</td>
+      <td style="text-align:left;font-family:Arial;">10分未満</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">10分以上</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">凍結中</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">非凍結中</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">不存在</td>
+      <td style="text-align:left;font-family:Arial;">10分以上</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">10分未満</td>
+      <td style="text-align:left;font-family:Arial;">不可</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">可</td>
+      <td style="text-align:left;font-family:Arial;">不一致</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">一致</td>
+      <td style="text-align:left;font-family:Arial;">期限切れ</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">期限内</td>
+      <td style="text-align:left;font-family:Arial;">login</td>
+      <td style="text-align:left;font-family:Arial;">凍結中</td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">非凍結中</td>
+      <td style="text-align:left;font-family:Arial;">不一致</td>
+      <td style="text-align:left;font-family:Arial;">3回連続</td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">3回未満</td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">一致</td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">append</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">update</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">delete</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td style="text-align:left;font-family:Arial;">getLog</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr><tr>
+    </tr></table>
+
+</body></html>

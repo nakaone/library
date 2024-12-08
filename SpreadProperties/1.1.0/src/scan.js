@@ -3,25 +3,20 @@
  * @param arg.src {any[][]} - scanの呼出元で取得したソースとなる二次元配列
  * @param arg.dst {any[][]} - 処理結果。前回作成途中の二次元配列
  * @param arg.func {function} - セルに設定する値を導出する関数
+ * @param [arg.default] {any} - セルの既定値。存在する場合のみ指定
  */
 scan(arg){
   const v = {whois:this.constructor.name+'.scan',step:0,rv:null};
   try {
 
-    // 処理結果が未作成ならソースと同じ形の二次元配列を作成
-    if( !arg.hasOwnProperty('dst') ){
-      arg.dst = [];
-      for( v.i=0 ; v.i<arg.src.length ; v.i++ ){
-        arg.dst.push(new Array(arg.src[v.i].length));
-      }
-    }
-
     while( this.conf.next.row < arg.src.length && this.overLimit === false ){
-      if( arg.src[v.i] ){
+      if( arg.src[this.conf.next.row] ){
         // 一行分のデータを作成
-        for( v.j=0 ; v.j<arg.src[v.i].length ; v.j++ ){
-          if( arg.src[v.i][v.j] ){
-            arg.dst[v.i][v.j] = arg.func(arg.src[v.i][v.j]);
+        for( v.i=0 ; v.i<arg.src[this.conf.next.row].length ; v.i++ ){
+          if( !arg.src[this.conf.next.row][v.i] ) continue;  // null等なら処理対象外
+          v.r = arg.func(arg.src[this.conf.next.row][v.i]);
+          if( !arg.hasOwnProperty('default') || arg.default !== v.r ){
+            arg.dst[this.conf.next.row][v.i] = v.r;
           }
         }
       }
@@ -37,7 +32,9 @@ scan(arg){
     return arg.dst;
 
   } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`
+    + `\narg=${JSON.stringify(arg)}`
+    + `\nthis.conf.next=${JSON.stringify(this.conf.next)}`
     console.error(`${e.message}\nv=${stringify(v)}`);
     return e;
   }

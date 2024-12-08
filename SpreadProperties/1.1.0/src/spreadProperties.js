@@ -33,7 +33,7 @@ spreadProperties(){
           v.r = o.getRange();
           v.a.push({
             Name: o.getName(),
-            sheetName: v.r.getRange().getName(),
+            sheetName: v.r.getSheet().getName(),
             Range: v.r.getA1Notation(),
           });
         }); return v.a;

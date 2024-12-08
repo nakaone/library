@@ -27,6 +27,9 @@ function log(){  # 1.4 ログメッセージ出力関数
   echo "\n$separator`date +"%T"` [$prjName] step $1 start$separator"
 }
 
+# 0.15 使用するクラスを最新に
+$lib/SpreadProperties/1.1.0/build.sh
+
 # ----------------------------------------------
 # 0.2 事前準備(プロジェクト固有部分)
 # ----------------------------------------------
@@ -43,9 +46,10 @@ cat $src/proto.js | awk 1 | \
 $embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $prj/toolbox.gs
 
 # ----------------------------------------------
-# 2. toolbox.htmlの作成
+# 2. result.htmlの作成
 # ----------------------------------------------
-#log "2";
+log "2";
+cp $src/result.html $prj/
 #cat $src/htmlTable.html | awk 1 | \
 #$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $prj/htmlTable.html
 

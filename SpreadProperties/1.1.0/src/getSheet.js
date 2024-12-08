@@ -7,9 +7,8 @@ getSheet(arg=null){
   console.log(`${v.whois} start.\narg=${arg}`);
   try {
 
-    //this.conf.next = {sheet:this.conf.sheetList.findIndex(x => x === arg),prop:0,row:0};
-    this.conf.next = {prop:0,row:0};
-    this.sheetName = arg || this.spread.getActiveSheet().getName();
+    this.sheetName = arg === null ? this.spread.getActiveSheet().getName() : arg;
+    this.conf.next = {sheet:this.conf.sheetList.findIndex(x => x === this.sheetName),prop:0,row:0};
     this.sheet = this.spread.getSheetByName(this.sheetName);
     this.range = this.sheet.getDataRange();
     while( this.conf.next.prop < this.conf.propList.length && this.overLimit === false ){
@@ -18,10 +17,12 @@ getSheet(arg=null){
       console.log(`${this.sheetName}.${this.propName} start.`
       + ` (sheet=${this.conf.next.sheet+1}/${this.conf.sheetList.length},`
       + ` prop=${this.conf.next.prop+1}/${this.conf.propList.length})`);
-      v.step = 4.2; // 前回結果をクリア
-      v.arg = {};
+      v.step = 4.2; // 引数を作成
+      v.arg = {sheet:this.sheet,range: this.range,dst:this.data.Sheets.find(x => x.Name === this.sheetName)};
+      if( !v.arg.dst ) v.arg.dst = this.data.Sheets[this.sheetName] = {};
+
       v.step = 4.3; // 属性取得の実行
-      v.r = this.sheetProperties[this.conf.propList[this.conf.next.prop]](v.arg);
+      v.r = this.sheetProperties[this.conf.propList[this.conf.next.prop]].get(v.arg);
       if( v.r instanceof Error ) throw v.r;
       this.data.Sheets.find(x => x.Name === this.sheetName)[this.propName] = v.r;
       v.step = 4.4; // カウンタを調整

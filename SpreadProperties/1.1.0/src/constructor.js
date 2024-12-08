@@ -52,18 +52,23 @@ constructor(arg){
     v.step = 1.3;
     this.sheetProperties = { // シートの各属性情報取得関数群
       // 1.シート単位の属性
-      Name: arg => {return this.sheet.getName()},
-      SheetId: arg => {return this.sheet.getSheetId()},
-      A1Notation: arg => {return this.range.getA1Notation()},
-      ColumnWidth: arg => {
-        v.a = []; v.max = this.sheet.getLastColumn();
-        for( v.i=1 ; v.i<=v.max ; v.i++ ){
-          v.a.push(this.sheet.getColumnWidth(v.i));
-        }
-        return v.a;
+      Name: {get:arg=>{return this.sheet.getName()}},
+      SheetId: {get:arg=>{return this.sheet.getSheetId()}},
+      A1Notation: {get:arg=>{return this.range.getA1Notation()}},
+      ColumnWidth: {
+        get:arg=>{
+          v.max = this.sheet.getLastColumn();
+          v.a = new Array(v.max);
+          for( v.i=0 ; v.i<v.max ; v.i++ ){
+            v.w = this.sheet.getColumnWidth(v.i+1);
+            v.a[v.i] = v.w !== this.sheetProperties.ColumnWidth.default ? v.w : '';
+          }
+          return v.a;
+        },
+        default:100,
       },
       /* 実行時間が非常に長いので無効化
-      RowHeight: arg => {
+      RowHeight: arg=>{
         v.a = this.data.Sheets.find(x => x.Name === this.sheetName).RowHeight || [];
         v.max = this.sheet.getLastRow();
         while( this.conf.next.row < v.max && this.overLimit === false ){
@@ -78,69 +83,243 @@ constructor(arg){
         console.log(`scan: ${this.sheetName}.RowHeight row=${this.conf.next.row}(${v.ratio}%) end.`);
         return v.a;
       },*/
-      FrozenColumns: arg => {return this.sheet.getFrozenColumns()},  // 固定列数
-      FrozenRows: arg => {return this.sheet.getFrozenRows()},  // 固定行数
+      FrozenColumns: {get:arg=>{return this.sheet.getFrozenColumns()}},  // 固定列数
+      FrozenRows: {get:arg=>{return this.sheet.getFrozenRows()}},  // 固定行数
 
       // 2.セル単位の属性
       // 2.1.値・数式・メモ
-      DisplayValues: arg => {return this.range.getDisplayValues()},
-      Values: arg => {return this.range.getValues()},
-      Formulas: arg => {return this.range.getFormulas()},
-      FormulasR1C1: arg => {return this.range.getFormulasR1C1()},
-      Notes: arg => {return this.range.getNotes()},
+      DisplayValues: {
+        get:arg=>{return this.range.getDisplayValues()},
+        default:'',
+        css:arg=>{return {text:arg.replaceAll(/\n/g,'<br>')}},
+      },
+      Values: {get:arg=>{return this.range.getValues()},default:''},
+      FormulasR1C1: {
+        get:arg=>{return this.range.getFormulasR1C1()},
+        default:'',
+        css: arg=>{return {attr:{title:[arg]}}},
+      },
+      Formulas: {
+        get:arg=>{return this.range.getFormulas()},
+        default:'',
+        css: arg=>{return {attr:{title:[arg]}}},
+      },
+      Notes: {
+        get:arg=>{return this.range.getNotes()},
+        default:'',
+        css: arg=>{return {attr:{title:[arg]}}},
+      },
       // 2.2.セルの背景色、罫線
-      Backgrounds: arg => {return this.range.getBackgrounds()},
+      Backgrounds: {
+        get:arg=>{
+          v.a = this.range.getBackgrounds();
+          if( !arg.dst.hasOwnProperty('Backgrounds') )
+            arg.dst.Backgrounds = Array.from({length:v.a.length},()=>Array.from({length:v.a[0].length},()=>null));
+          arg = Object.assign(arg,{
+            src: v.a,
+            dst: arg.dst.Backgrounds,
+            func: o => {return o},
+            default: this.sheetProperties.Backgrounds.default,
+          });
+          return this.scan(arg);
+        },
+        default:'#ffffff',
+        css:arg=>{return {style:{background:arg}}},
+      },
       //Borders: JSON.stringify(v.dr.getBorder()),
-      FontColorObjects: arg => {
-        arg.src = this.range.getFontColorObjects();
-        // 作成途中の結果があればarg.dstにセット
-        if( this.data.Sheets.find(x => x.Name === this.sheetName).FontColorObjects )
-          arg.dst = this.data.Sheets.find(x => x.Name === this.sheetName).FontColorObjects;
-        arg.func = o => {return o.asRgbColor().asHexString()};  // セルの処理関数
-        return this.scan(arg);
+      FontColorObjects: {
+        get:arg=>{
+          // asHexString()の戻り値は#aarrggbbなので注意
+          // https://developers.google.com/apps-script/reference/base/rgb-color.html?hl=ja#asHexString()
+          v.a = this.range.getFontColorObjects();
+          if( !arg.dst.hasOwnProperty('FontColorObjects') )
+            arg.dst.FontColorObjects = Array.from({length:v.a.length},()=>Array.from({length:v.a[0].length},()=>null));
+          arg = Object.assign(arg,{
+            src: v.a,
+            dst: arg.dst.FontColorObjects,
+            func: o => {return o.asRgbColor().asHexString()},
+            default: this.sheetProperties.FontColorObjects.default,
+          });
+          return this.scan(arg);
+        },
+        default:'#ff000000',
+        css:arg=>{return {style:{'color':arg}}},
       },
       // 2.3.フォント、上下左右寄せ、折り返し、回転
-      FontFamilies: arg => {return this.range.getFontFamilies()},
-      FontLines: arg => {return this.range.getFontLines()}, // セルの線のスタイル。'underline','line-through','none'など
-      FontSizes: arg => {return this.range.getFontSizes()},
-      FontStyles: arg => {return this.range.getFontStyles()}, // フォントスタイル。'italic'または'normal'
-      FontWeights: arg => {return this.range.getFontWeights()},
-      HorizontalAlignments: arg => {return this.range.getHorizontalAlignments()},
-      VerticalAlignments: arg => {return this.range.getVerticalAlignments()},
-      WrapStrategies: arg => {  // テキストの折り返し
-        arg.src = this.range.getWrapStrategies();
-        // 作成途中の結果があればarg.dstにセット
-        if( this.data.Sheets.find(x => x.Name === this.sheetName).WrapStrategies )
-          arg.dst = this.data.Sheets.find(x => x.Name === this.sheetName).WrapStrategies;
-        arg.func = o => {return JSON.stringify(o).replaceAll('"','')};  // セルの処理関数
-        return this.scan(arg);
+      FontFamilies: {
+        get:arg=>{
+          v.a = this.range.getFontFamilies();
+          if( !arg.dst.hasOwnProperty('FontFamilies') )
+            arg.dst.FontFamilies = Array.from({length:v.a.length},()=>Array.from({length:v.a[0].length},()=>null));
+          arg = Object.assign(arg,{
+            src: v.a,
+            dst: arg.dst.FontFamilies,
+            func: o => {return o},
+            default: this.sheetProperties.FontFamilies.default,
+          });
+          return this.scan(arg);
+        },
+        default:'arial,sans,sans-serif',
+        css: arg=>{return {style:{'font-family':arg}}},
       },
-      TextDirections: arg => {  // セルの方向
-        arg.src = this.range.getTextDirections();
-        // 作成途中の結果があればarg.dstにセット
-        if( this.data.Sheets.find(x => x.Name === this.sheetName).TextDirections )
-          arg.dst = this.data.Sheets.find(x => x.Name === this.sheetName).TextDirections;
-        arg.func = o => {return JSON.stringify(o).replaceAll('"','')};  // セルの処理関数
-        return this.scan(arg);
+      FontLines: { // セルの線のスタイル。'underline','line-through','none'
+        get:arg=>{
+          v.a = this.range.getFontLines();
+          if( !arg.dst.hasOwnProperty('FontLines') )
+            arg.dst.FontLines = Array.from({length:v.a.length},()=>Array.from({length:v.a[0].length},()=>null));
+          arg = Object.assign(arg,{
+            src: v.a,
+            dst: arg.dst.FontLines,
+            func: o => {return o},
+            default: this.sheetProperties.FontLines.default,
+          });
+          return this.scan(arg);
+        },
+        default:'none',
+        css: arg=>{return {style:{'text-decoration-line':arg}}},
+      },
+      FontSizes: {
+        get:arg=>{
+          v.a = this.range.getFontSizes()
+          if( !arg.dst.hasOwnProperty('FontSizes') )
+            arg.dst.FontSizes = Array.from({length:v.a.length},()=>Array.from({length:v.a[0].length},()=>null));
+          arg = Object.assign(arg,{
+            src: v.a,
+            dst: arg.dst.FontSizes,
+            func: o => {return o},
+            default: this.sheetProperties.FontSizes.default,
+          });
+          return this.scan(arg);
+        },
+        default:10,
+        css: arg=>{return {style:{'font-size':arg+'pt'}}},
+      },
+      FontStyles: { // フォントスタイル。'italic'または'normal'
+        get:arg=>{
+          v.a = this.range.getFontStyles();
+          if( !arg.dst.hasOwnProperty('FontStyles') )
+            arg.dst.FontStyles = Array.from({length:v.a.length},()=>Array.from({length:v.a[0].length},()=>null));
+          arg = Object.assign(arg,{
+            src: v.a,
+            dst: arg.dst.FontStyles,
+            func: o => {return o},
+            default: this.sheetProperties.FontStyles.default,
+          });
+          return this.scan(arg);
+        },
+        default:'normal',
+        css: arg=>{return {style:{'font-style':arg}}},
+      },
+      FontWeights: {  // normal, bold, 900, etc. https://developer.mozilla.org/ja/docs/Web/CSS/font-weight
+        get:arg=>{
+          v.a = this.range.getFontWeights()
+          if( !arg.dst.hasOwnProperty('FontWeights') )
+            arg.dst.FontWeights = Array.from({length:v.a.length},()=>Array.from({length:v.a[0].length},()=>null));
+          arg = Object.assign(arg,{
+            src: v.a,
+            dst: arg.dst.FontWeights,
+            func: o => {return o},
+            default: this.sheetProperties.FontWeights.default,
+          });
+          return this.scan(arg);
+        },
+        default:'normal',
+        css: arg=>{return {style:{'font-weight':arg}}},
+      },
+      HorizontalAlignments: {
+        get:arg=>{
+          v.a = this.range.getHorizontalAlignments();
+          if( !arg.dst.hasOwnProperty('HorizontalAlignments') )
+            arg.dst.HorizontalAlignments = Array.from({length:v.a.length},()=>Array.from({length:v.a[0].length},()=>null));
+          arg = Object.assign(arg,{
+            src: v.a,
+            dst: arg.dst.HorizontalAlignments,
+            func: o => {return o},
+            default: this.sheetProperties.HorizontalAlignments.default,
+          });
+          return this.scan(arg);
+        },
+        default:'general',
+        css: arg=>{return {style:{'text-align':arg.replace('general-','')}}},
+      },
+      VerticalAlignments: {
+        get:arg=>{
+          v.a = this.range.getVerticalAlignments();
+          if( !arg.dst.hasOwnProperty('VerticalAlignments') )
+            arg.dst.VerticalAlignments = Array.from({length:v.a.length},()=>Array.from({length:v.a[0].length},()=>null));
+          arg = Object.assign(arg,{
+            src: v.a,
+            dst: arg.dst.VerticalAlignments,
+            func: o => {return o},
+            default: this.sheetProperties.VerticalAlignments.default,
+          });
+          return this.scan(arg);
+        },
+        default:'bottom',
+        css: arg=>{return {style:{'vertical-align':arg}}},
+      },
+      WrapStrategies: {  // テキストの折り返し
+        get:arg=>{
+          v.a = this.range.getWrapStrategies();
+          if( !arg.dst.hasOwnProperty('WrapStrategies') )
+            arg.dst.WrapStrategies = Array.from({length:v.a.length},()=>Array.from({length:v.a[0].length},()=>null));
+          arg = Object.assign(arg,{
+            src: v.a,
+            dst: arg.dst.WrapStrategies,
+            func: o => {return JSON.stringify(o).replaceAll('"','')},
+            default: this.sheetProperties.WrapStrategies.default,
+          });
+          return this.scan(arg);
+        },
+        default:null,
+        // html化の際はtdのCSSで「word-break: break-all(全て折り返し)」指定しているので、css関数は定義しない
+      },
+      TextDirections: {  // 文章方向
+        // https://developer.mozilla.org/ja/docs/Web/CSS/text-decoration-line
+        // LEFT_TO_RIGHT	Enum	文章方向（左から右へ）。
+        // RIGHT_TO_LEFT	Enum	文章方向が右から左。
+        get:arg=>{
+          v.a = this.range.getTextDirections();
+          if( !arg.dst.hasOwnProperty('TextDirections') )
+            arg.dst.TextDirections = Array.from({length:v.a.length},()=>Array.from({length:v.a[0].length},()=>null));
+          if( !arg.dst.hasOwnProperty('TextDirections') ) arg.dst.TextDirections = [];
+          arg = Object.assign(arg,{
+            src: v.a,
+            dst: arg.dst.TextDirections,
+            func: o => {return JSON.stringify(o).replaceAll('"','')},
+            default: this.sheetProperties.TextDirections.default,
+          });
+          return this.scan(arg);
+        },
+        default:null,
+        // htmlへの反映は未対応
       },
       // 2.4.その他
-      MergedRanges: arg => {  // 結合セル
+      MergedRanges: {get:arg=>{  // 結合セル
         v.a = [];
         this.range.getMergedRanges().forEach(x => v.a.push(x.getA1Notation()));
         return v.a;
-      },
-      DataValidations: arg => {
-        arg.src = this.range.getDataValidations();
-        // 作成途中の結果があればarg.dstにセット
-        if( this.data.Sheets.find(x => x.Name === this.sheetName).DataValidations )
-          arg.dst = this.data.Sheets.find(x => x.Name === this.sheetName).DataValidations;
-        arg.func = o => {return { // セルの処理関数
-          AllowInvalid: o.getAllowInvalid(),
-          CriteriaType: JSON.parse(JSON.stringify(o.getCriteriaType())),
-          CriteriaValues: JSON.parse(JSON.stringify(o.getCriteriaValues())),
-          HelpText: o.getHelpText(),
-        }};
-        return this.scan(arg);
+      }},
+      DataValidations: {
+        get:arg=>{
+          v.a = this.range.getDataValidations();
+          if( !arg.dst.hasOwnProperty('DataValidations') )
+            arg.dst.DataValidations = Array.from({length:v.a.length},()=>Array.from({length:v.a[0].length},()=>null));
+          arg = Object.assign(arg,{
+            src: v.a,
+            dst: arg.dst.DataValidations,
+            func: o => {return { // セルの処理関数
+              AllowInvalid: o.getAllowInvalid(),
+              CriteriaType: JSON.parse(JSON.stringify(o.getCriteriaType())),
+              CriteriaValues: JSON.parse(JSON.stringify(o.getCriteriaValues())),
+              HelpText: o.getHelpText(),
+            }},
+            default: this.sheetProperties.DataValidations.default,
+          });
+          return this.scan(arg);
+        },
+        default:null,
+        // htmlへの反映は未対応
       },
     };
 

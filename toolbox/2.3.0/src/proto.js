@@ -3,14 +3,20 @@ function onOpen() {
   var menu = ui.createMenu('道具箱');
   menu.addItem('スプレッドシートの属性情報出力','saveSpread');
   menu.addItem('表示中のシートの属性情報出力','getActiveSheet');
-  //menu.addItem('選択範囲をHTML化','showHtmlTableSidebar');
   //menu.addSeparator();
+  menu.addSubMenu(
+    ui.createMenu("選択範囲をHTML化")
+    .addItem('行列記号を付ける','range2html1')
+    .addItem('行列記号を付けない','range2html2')
+  );
   menu.addSubMenu(
     ui.createMenu("GAS Utilities")
     .addItem('全てのトリガーを削除','deleteAllTriggers')
   );
   menu.addToUi();
 }
+
+//// メニュー(onOpen)から呼ばれる関数群 ///////////////////////////////////////////////
 
 function saveSpread(){
   const sp = new SpreadProperties();
@@ -22,8 +28,33 @@ function getActiveSheet(){
   const ui = SpreadsheetApp.getUi();
   ui.alert(`Sheet "${rv.Name}"`,JSON.stringify(rv), ui.ButtonSet.OK);
 }
+function range2html1(){ // 選択範囲をHTML化 > 行列記号を付ける
+  const sp = new SpreadProperties();
+  const rv = sp.range2html({guide:true});
+  const html = HtmlService.createHtmlOutputFromFile('result')
+  .setTitle('処理結果').append(`<textarea id="result">${rv}</textarea>`);
+  SpreadsheetApp.getUi().showSidebar(html);
+}
+function range2html2(){ // 選択範囲をHTML化 > 行列記号を付けない
+  const sp = new SpreadProperties();
+  const rv = sp.range2html({guide:false});
+  const html = HtmlService.createHtmlOutputFromFile('result')
+  .setTitle('処理結果').append(`<textarea id="result">${rv}</textarea>`);
+  SpreadsheetApp.getUi().showSidebar(html);
+}
+/** deleteAllTriggers: 全てのトリガーを削除 */
+function deleteAllTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
+  for (const trigger of triggers) {
+    ScriptApp.deleteTrigger(trigger);
+  }
+  Logger.log('全てのトリガーが削除されました。');
+}
 
-//::$src/deleteAllTriggers.js::
+//// ライブラリ ///////////////////////////////////////////////
+
+//::$lib/convertNotation/1.0.0/core.js::
+//::$lib/mergeDeeply/1.1.0/core.js::
 //::$lib/SpreadProperties/1.1.0/core.js::
 //::$lib/stringify/1.1.1/core.js::
 //::$lib/toLocale/1.1.0/core.js::

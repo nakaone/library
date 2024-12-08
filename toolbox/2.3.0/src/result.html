@@ -1,0 +1,23 @@
+<!DOCTYPE html><html>
+<!--
+  toolbox.gs内関数の処理結果表示用のサイドバー
+-->
+<head>
+  <base target="_top">
+  <script>
+    function copyToClipboard() {
+      const result = document.getElementById('result').value; //innerText;
+      navigator.clipboard.writeText(result).then(() => {
+        alert('クリップボードにコピーしました: ' + result);
+      }).catch(err => {
+        console.error('コピーに失敗しました: ', err);
+      });
+    }
+  </script>
+</head>
+<body>
+  <h1>処理結果</h1>
+  <button onclick="copyToClipboard()">コピー</button>
+  <hr>
+</body>
+</html>
