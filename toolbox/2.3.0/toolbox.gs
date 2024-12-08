@@ -830,10 +830,17 @@ class SpreadProperties {
         }
       }
   
-      v.step = 2.5; // title属性はメモ＋数式なので配列として保存されている。これを文字列に変換
+      v.step = 2.5; // attrの初期値を設定
       for( v.r=0 ; v.r<v.element.length ; v.r++ ){
         for( v.c=0 ; v.c<v.element[v.r].length ; v.c++ ){
-          if( v.element[v.r][v.c] && v.element[v.r][v.c].hasOwnProperty('attr') && v.element[v.r][v.c].attr.hasOwnProperty('title'))
+          if( !v.element[v.r][v.c] ) continue;
+          // セル幅を指定するクラスを設定。この段階では添字(数値)を設定、クラス文字列にはv.tdで変換
+          console.log(`l.837 v.element[${v.r}][${v.c}]=${JSON.stringify(v.element[v.r][v.c])}`)
+          if( !v.element[v.r][v.c].hasOwnProperty('attr') ) v.element[v.r][v.c].attr = {};
+          v.element[v.r][v.c].attr = mergeDeeply({class:v.c},v.element[v.r][v.c].attr);
+  
+          // title属性はメモ＋数式なので配列として保存されている。これを文字列に変換
+          if( v.element[v.r][v.c] && v.element[v.r][v.c].attr.hasOwnProperty('title'))
             v.element[v.r][v.c].attr.title = v.element[v.r][v.c].attr.title.join('\n');
         }
       }
@@ -855,8 +862,6 @@ class SpreadProperties {
           v.element[v.r].splice(v.mrLeft,(v.mrRight-v.mrLeft+1));
   
         v.step = 2.63; // colspan, rowspanの設定
-        if( !v.element[v.mrTop][v.mrLeft].hasOwnProperty('attr') )
-          v.element[v.mrTop][v.mrLeft].attr = {};
         if( v.mrLeft < v.mrRight )
           v.element[v.mrTop][v.mrLeft].attr.colspan = v.mrRight - v.mrLeft + 1;
         if( v.mrTop < v.mrBottom )
@@ -904,8 +909,9 @@ class SpreadProperties {
   
       v.step = 3.2; // ColumnWidth
       for( v.i=v.left ; v.i<=v.right ; v.i++ ){
-        v.html.push(`.${v.className} td:nth-Child(${v.i-v.left+1}){width: ${
-          v.sheet.ColumnWidth[v.i] || this.sheetProperties.ColumnWidth.default}px;}`)
+        v.width = (v.sheet.ColumnWidth[v.i] || this.sheetProperties.ColumnWidth.default) + 'px';
+        v.html.push(`.${v.className} td:nth-Child(${v.i-v.left+1}),`
+        + ` .${v.className} td.col${v.i-v.left+1} {width: ${v.width};}`);
       }
       v.html.push('</style>');
   
@@ -919,6 +925,15 @@ class SpreadProperties {
             // メモの存在を示す右上隅の黒い三角マークを追加
             o.text = '<div class="noteIcon"></div>' + (o.text||'');
           }
+  
+          // 結合セルの影響で列がズレたセルはセル幅指定用のクラスを設定
+          if( o.attr.hasOwnProperty('colspan') || o.attr.hasOwnProperty('rowspan') || o.attr.class === v.c ){
+            delete o.attr.class;
+          } else {
+            o.attr.class = `col${o.attr.class+1}`;
+          }
+  
+          // tdの属性を指定
           for( let p in o.attr ) rv += ` ${p}="${o.attr[p]}"`;
         }
         if( o.hasOwnProperty('style') ){
