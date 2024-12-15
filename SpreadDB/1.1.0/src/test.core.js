@@ -1,0 +1,180 @@
+function SpreadDbTest(){
+  const v = {whois:'SpreadDbTest',step:0,rv:null,
+    // ----- 定数・ユーティリティ関数群
+    spread: SpreadsheetApp.getActiveSpreadsheet(),
+    deleteSheet: (sheetName) => {  // テスト用シートの削除関数
+      v.sheet = v.spread.getSheetByName(sheetName);
+      if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+    },
+    raw2obj: sheet => { // シートイメージ(二次元配列)を行オブジェクトに変換
+      v.data = JSON.parse(JSON.stringify(v.src[sheet].values));
+      v.src[sheet].values = [];
+      for( v.i=1 ; v.i<v.data.length ; v.i++ ){
+        v.o = {};
+        for( v.j=0 ; v.j<v.data[v.i].length ; v.j++ ){
+          if( v.data[v.i][v.j] ) v.o[v.data[0][v.j]] = v.data[v.i][v.j];
+        }
+        v.src[sheet].values.push(v.o);
+      }
+    },
+    // ----- テスト用ソース(サンプルデータ)
+    src: {
+      PL: {
+        name: 'PL',
+        values: [
+          ['大','中','勘定科目','一覧存否','L1','L2','SQ','本籍'],
+          ['売上高','','','',1,'','',''],
+          ['','売上高','','',1,1,'',''],
+          ['','','売上高',22,1,1,1,'貸'],
+          ['','売上原価','','',1,2,'',''],
+          ['','','仕入高',-1,1,2,1,'借'],
+          ['','','仕入値引高',-1,1,2,2,'借'],
+          ['','','仕入割戻し高',-1,1,2,3,'借'],
+          ['売上総利益','','','',2,'','',''],
+          ['','販売費および一般管理費','','',2,1,'',''],
+          ['','','役員報酬',35,2,1,1,'借'],
+          ['','','給料',-1,2,1,2,'借'],
+          ['','','賞与',-1,2,1,3,'借'],
+          ['','','退職金',-1,2,1,4,'借'],
+          ['','','法定福利費',52,2,1,5,'借'],
+          ['','','福利厚生費',57,2,1,6,'借'],
+          ['','','販売促進費',-1,2,1,7,'借'],
+          ['','','外注費',24,2,1,8,'借'],
+          ['','','広告宣伝費',29,2,1,9,'借'],
+          ['','','荷造運賃',-1,2,1,10,'借'],
+          ['','','会議費',9,2,1,11,'借'],
+          ['','','交際費',8,2,1,12,'借'],
+          ['','','寄附金',25,2,1,13,'借'],
+          ['','','旅費交通費',40,2,1,14,'借'],
+          ['','','通信費',63,2,1,15,'借'],
+          ['','','新聞図書費',39,2,1,16,'借'],
+          ['','','地代家賃',21,2,1,17,'借'],
+          ['','','水道光熱費',48,2,1,18,'借'],
+          ['','','修繕費',12,2,1,19,'借'],
+          ['','','消耗品費',53,2,1,20,'借'],
+          ['','','事務用品費',7,2,1,21,'借'],
+          ['','','賃借料',-1,2,1,22,'借'],
+          ['','','支払報酬料',37,2,1,22,'借'],
+          ['','','支払手数料',38,2,1,22,'借'],
+          ['','','保険料',11,2,1,23,'借'],
+          ['','','租税公課',58,2,1,24,'借'],
+          ['','','諸会費',60,2,1,26,'借'],
+          ['','','雑費',70,2,1,27,'借'],
+          ['','','減価償却費',55,2,1,25,'借'],
+          ['','','長期前払費用償却',66,2,1,25,'借'],
+          ['営業利益','','','',3,'','',''],
+          ['','営業外収益','','',3,1,'',''],
+          ['','','受取利息',18,3,1,1,'貸'],
+          ['','','受取配当金',-1,3,1,2,'貸'],
+          ['','','有価証券売却益',-1,3,1,3,'貸'],
+          ['','','有価証券評価益',-1,3,1,4,'貸'],
+          ['','','為替差益',-1,3,1,5,'貸'],
+          ['','','雑収入',33,3,1,6,'貸'],
+          ['','営業外費用','','',3,2,'',''],
+          ['','','支払利息',36,3,2,1,'借'],
+          ['','','有価証券評価損',-1,3,2,2,'借'],
+          ['','','創立費償却',-1,3,2,3,'借'],
+          ['','','開業費償却',-1,3,2,4,'借'],
+          ['','','貸倒損失',6,3,2,5,'借'],
+          ['','','雑損失',69,3,2,6,'借'],
+          ['経常利益','','','',4,'','',''],
+          ['','特別利益','','',4,1,'',''],
+          ['','','固定資産売却益',19,4,1,1,'貸'],
+          ['','','投資有価証券売却益',-1,4,1,2,'貸'],
+          ['','','貸倒引当金戻入額',-1,4,1,3,'貸'],
+          ['','特別損失','','',4,2,'',''],
+          ['','','固定資産売却損',-1,4,2,1,'借'],
+          ['','','固定資産除却損',-1,4,2,2,'借'],
+          ['','','投資有価証券売却損',-1,4,2,3,'借'],
+          ['税前利益','','','',5,'','',''],
+          ['','法人税・住民税及び事業税','','',5,1,'',''],
+          ['','','法人税',-1,5,1,1,'借'],
+          ['','','住民税',-1,5,1,2,'借'],
+          ['','','事業税',-1,5,1,3,'借'],
+          ['','','法人税等',49,5,1,4,'借'],
+          ['当期利益','','','',6,'','',''],
+          ['','','当期利益',32,6,'',1,'借'],
+        ],
+      },
+      master: { // "master"シート
+        name: 'master',
+        account: 'hoge',
+        values: [
+          ['タイムスタンプ','メールアドレス','申込者氏名','申込者カナ','申込者の参加','宿泊、テント','引取者氏名','参加者01氏名','参加者01カナ','参加者01所属','参加者02氏名','参加者02カナ','参加者02所属','参加者03氏名','参加者03カナ','参加者03所属','参加者04氏名','参加者04カナ','参加者04所属','参加者05カナ','参加者05氏名','参加者05所属','緊急連絡先','ボランティア募集','備考','キャンセル','authority','CPkey','entryNo','trial','editURL','entryTime','receptionist','fee00','fee01','fee02','fee03','fee04','fee05','memo'],
+          ['2024/10/06 19:51:06','nakaone.kunihiro@gmail.com','島津　邦浩','シマヅ　クニヒロ','スタッフとして申込者のみ参加(おやじの会メンバ)','宿泊しない','','','','','','','','','','','','','','','','','','','','','2','jZiM1isJ+1AZoVZ9NnWTvCoeghCm+FY05eb6jhz8wpT3DwqJbNnszW8PWDd3sq0N5mjN/Nshh+RGGrdkm7CC+sO32js+wm1YmYGr0FMaFxvMBDrWzyJ7qrPI4unbx2IkrPkXSmSEbw91n/LOu0x7br106XeJ9TXJbJS16rV0nzs=','1','{"passcode":920782,"created":1728874149915,"result":0,"log":[{"timestamp":1728874165893,"enterd":920782,"status":1}]}','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_ePpXliGgMlVVUYiSKgwX6SXBNrnwozwTMF09Ml1py7Ocp1N7_w5F7uqf52Ak63zBE','','','','','','','','',''],
+          ['2024/09/15 12:47:04','via1315r@yahoo.co.jp','前田　素直','マエダ　スナオ','参加予定(宿泊なし)','宿泊しない','宿泊予定なので不要','前田　若菜','マエダ　ワカナ','1年生','','','','','','','','','','','','','9013357002','できる','食事以外でも、お手伝い出来る事があれば。','','1','','2','','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_dWLvuoT6Wq0Hu-4tqFl5OyTK-Z7EwdMDEQGS1jKJVIa41Dh8nNJPtpFyPu8cyZYGo','','','','','','','','',''],
+          ['2024/09/15 13:51:37','kousuke.murata4690@gmail.com','小早川　晃祐','コバヤカワ　コウスケ','参加予定(宿泊あり)','宿泊する(テントあり)','宿泊予定なので不要','小早川　涼','コバヤカワ　リョウ','6年生','','','','','','','','','','','','','','できる','','','1','','3','','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_fKjD-xj5FN0GnTNIILVeJVwYJajCP8bZphy1zyleVl8UDLWqzUjDDFWZf7uMA0qtk','','','','','','','','',''],
+          ['2024/09/15 14:18:02','nakaone2001@gmail.com','島津　弘子','シマヅ　ヒロコ','参加予定(宿泊なし)','宿泊しない','','島津　悠奈','シマヅ　ユウナ','4年生','','','','','','','','','','','','','','','','','2','k5lfKMj3ybfMF6jocHPln98lLJIBIxKrrpLc4RhPenBIEg6OfgdXYQAVh907SoCg0MEBazhWic2oFaKNFJu9pa4prXWvTzYjRWw5XkmC9a7AdNQ0judVMATii7Xqp6drowisY6+Rul2zwrF2UKY8epoYP8ZkX9RyH6OFyglYQL8=','4','{"passcode":65698,"created":1729076868102,"result":0,"log":[{"timestamp":1728729400367,"enterd":119192,"status":1}]}','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_eGXR29gyuz_kc4UMghOrIa_iNPhrkHdrW4zVI8KFW5aB2jsVCtjq79aasCFBWgTvI','','','','','','','','',''],
+        ],
+        cols: [
+          {name:'タイムスタンプ',type:'Date'},
+          {name:'メールアドレス',type:'string',unique:true},
+          {name:'申込者氏名',type:'string'},
+          {name:'申込者カナ',type:'string'},
+          {name:'申込者の参加',type:'string'},
+          {name:'宿泊、テント',type:'string'},
+          {name:'引取者氏名',type:'string'},
+          {name:'参加者01氏名',type:'string'},
+          {name:'参加者01カナ',type:'string'},
+          {name:'参加者01所属',type:'string'},
+          {name:'参加者02氏名',type:'string'},
+          {name:'参加者02カナ',type:'string'},
+          {name:'参加者02所属',type:'string'},
+          {name:'参加者03氏名',type:'string'},
+          {name:'参加者03カナ',type:'string'},
+          {name:'参加者03所属',type:'string'},
+          {name:'参加者04氏名',type:'string'},
+          {name:'参加者04カナ',type:'string'},
+          {name:'参加者04所属',type:'string'},
+          {name:'参加者05カナ',type:'string'},
+          {name:'参加者05氏名',type:'string'},
+          {name:'参加者05所属',type:'string'},
+          {name:'緊急連絡先',type:'string'},
+          {name:'ボランティア募集',type:'string'},
+          {name:'備考',type:'string'},
+          {name:'キャンセル',type:'string'},
+          {name:'authority',type:'number'},
+          {name:'CPkey',type:'string'},
+          {name:'entryNo',type:'number',primaryKey:true,auto_increment:[10,1]},
+          {name:'trial',type:'JSON'},
+          {name:'editURL',type:'string'},
+          {name:'entryTime',type:'string'},
+          {name:'receptionist',type:'string'},
+          {name:'fee00',type:'string'},
+          {name:'fee01',type:'string'},
+          {name:'fee02',type:'string'},
+          {name:'fee03',type:'string'},
+          {name:'fee04',type:'string'},
+          {name:'fee05',type:'string'},
+          {name:'memo',type:'string'},
+        ],
+      },
+    },
+  };
+  const pattern = { // テストパターン(関数)の定義
+    constructor: [  // constructor関係のテスト
+      () => { // "target"シートをシートイメージから新規作成
+        v.deleteSheet('log');  // 既存なら削除
+        v.deleteSheet('PL');  // 既存なら削除
+        return SpreadDb(null,{tables:v.src.PL});
+      },
+    ],
+  };
+  console.log(`${v.whois} start.`);
+  try {
+
+    // テスト対象を絞る場合、以下のv.st,numの値を書き換え
+    v.p = 'constructor'; v.st = 0; v.num = 1 || pattern[v.p].length;
+
+    for( v.i=v.st ; v.i<v.st+v.num ; v.i++ ){
+      v.rv = pattern[v.p][v.i]();
+      if( v.rv instanceof Error ) throw v.rv;
+      console.log(`===== pattern.${v.i} end.\n${stringify(v.rv)}`);
+    }
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+    return e;
+  }
+}
