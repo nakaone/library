@@ -57,7 +57,7 @@ function updateRow(trans=[]){
 
         v.step = 2.4; // シート上の項目毎にチェック
         v.header.forEach(x => {
-          if( v.rObj.hasOwnProperty(x) && !isEqual(v.before[x],v.rObj[x]) ){
+          if( Object.hasOwn(v.rObj,x) && !isEqual(v.before[x],v.rObj[x]) ){
             v.step = 2.41; // 変更指定項目かつ値が変化していた場合、afterとdiffに新しい値を設定
             v.after[x] = v.diff[x] = v.rObj[x];
             v.colNo = v.header.findIndex(y => y === x);

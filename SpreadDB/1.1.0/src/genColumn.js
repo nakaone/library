@@ -83,7 +83,7 @@ function genColumn(arg={}){
 
     v.step = 2; // メンバに格納
     v.typedef.map(x => x.name).forEach(x => {
-      v.rv.column[x] = arg.hasOwnProperty(x) ? arg[x] : null;
+      v.rv.column[x] = Object.hasOwn(arg,x) ? arg[x] : null;
     });
 
     v.step = 3; // auto_incrementをオブジェクトに変換
@@ -112,7 +112,7 @@ function genColumn(arg={}){
       for( v.a in v.rv.column ){
         v.l = `${v.a}: "${v.rv.column[v.a]}"`;
         v.c = v.typedef.find(x => x.name === v.a);
-        if( v.c.hasOwnProperty('note') ) v.l += ` // ${v.c.note}`;
+        if( Object.hasOwn(v.c,'note') ) v.l += ` // ${v.c.note}`;
         v.x.push(v.l);
       }
       v.rv.note = v.x.join('\n');

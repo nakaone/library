@@ -235,13 +235,13 @@ function SpreadDb(query=[],opt={}){
           {name:'range',type:'string',note:'更新対象となった範囲名(テーブル名)',default:(o={})=>o.range||null},
           {name:'action',type:'string',note:'操作内容。append/update/delete/getLogのいずれか',default:(o={})=>o.action||null},
           {name:'argument',type:'string',note:'操作関数に渡された引数',default:(o={})=>
-            o.hasOwnProperty('argument')?(typeof o.argument === 'string' ? o.argument : JSON.stringify(o.argument)):null},
-          {name:'result',type:'boolean',note:'true:追加・更新が成功',default:(o={})=>o.hasOwnProperty('result')?o.result:true},
+            Object.hasOwn(o,'argument')?(typeof o.argument === 'string' ? o.argument : JSON.stringify(o.argument)):null},
+          {name:'result',type:'boolean',note:'true:追加・更新が成功',default:(o={})=>Object.hasOwn(o,'result')?o.result:true},
           {name:'message',type:'string',note:'エラーメッセージ',default:(o={})=>o.message||null},
-          {name:'before',type:'JSON',note:'更新前の行データオブジェクト',default:(o={})=>o.hasOwnProperty('before')?JSON.stringify(o.before):null},
-          {name:'after',type:'JSON',note:'更新後の行データオブジェクト',default:(o={})=>o.hasOwnProperty('after')?JSON.stringify(o.after):null},
+          {name:'before',type:'JSON',note:'更新前の行データオブジェクト',default:(o={})=>Object.hasOwn(o,'before')?JSON.stringify(o.before):null},
+          {name:'after',type:'JSON',note:'更新後の行データオブジェクト',default:(o={})=>Object.hasOwn(o,'after')?JSON.stringify(o.after):null},
           {name:'diff',type:'JSON',note:'追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式',
-            default:(o={})=>o.hasOwnProperty('diff')?JSON.stringify(o.diff):null},
+            default:(o={})=>Object.hasOwn(o,'diff')?JSON.stringify(o.diff):null},
         ],
       });
       if( pv.table[pv.opt.log] instanceof Error ) throw pv.table[pv.opt.log];
@@ -666,7 +666,7 @@ function SpreadDb(query=[],opt={}){
   
       v.step = 2; // メンバに格納
       v.typedef.map(x => x.name).forEach(x => {
-        v.rv.column[x] = arg.hasOwnProperty(x) ? arg[x] : null;
+        v.rv.column[x] = Object.hasOwn(arg,x) ? arg[x] : null;
       });
   
       v.step = 3; // auto_incrementをオブジェクトに変換
@@ -695,7 +695,7 @@ function SpreadDb(query=[],opt={}){
         for( v.a in v.rv.column ){
           v.l = `${v.a}: "${v.rv.column[v.a]}"`;
           v.c = v.typedef.find(x => x.name === v.a);
-          if( v.c.hasOwnProperty('note') ) v.l += ` // ${v.c.note}`;
+          if( Object.hasOwn(v.c,'note') ) v.l += ` // ${v.c.note}`;
           v.x.push(v.l);
         }
         v.rv.note = v.x.join('\n');
@@ -959,7 +959,7 @@ function SpreadDb(query=[],opt={}){
   
           v.step = 2.4; // シート上の項目毎にチェック
           v.header.forEach(x => {
-            if( v.rObj.hasOwnProperty(x) && !isEqual(v.before[x],v.rObj[x]) ){
+            if( Object.hasOwn(v.rObj,x) && !isEqual(v.before[x],v.rObj[x]) ){
               v.step = 2.41; // 変更指定項目かつ値が変化していた場合、afterとdiffに新しい値を設定
               v.after[x] = v.diff[x] = v.rObj[x];
               v.colNo = v.header.findIndex(y => y === x);
@@ -1342,7 +1342,7 @@ function mergeDeeply(pri,sub,opt={}){
   try {
 
     v.step = 1; // 既定値の設定
-    if( !opt.hasOwnProperty('array') ) opt.array = 'set';
+    if( !Object.hasOwn(opt,'array') ) opt.array = 'set';
 
     if( v.isObj(pri) && v.isObj(sub) ){
       v.step = 2; // sub,pri共にハッシュの場合
@@ -1350,7 +1350,7 @@ function mergeDeeply(pri,sub,opt={}){
       v.step = 2.1; // 優先・劣後Obj両方のハッシュキー(文字列)を、重複しない形でv.keysに保存
       v.keys = new Set([...Object.keys(pri),...Object.keys(sub)]);
       for( v.key of v.keys ){
-        if( pri.hasOwnProperty(v.key) && sub.hasOwnProperty(v.key) ){
+        if( Object.hasOwn(pri,v.key) && Object.hasOwn(sub,v.key) ){
           v.step = 2.2; // pri,sub両方がキーを持つ
           if( v.isObj(pri[v.key]) && v.isObj(sub[v.key]) || v.isArr(pri[v.key]) && v.isArr(sub[v.key]) ){
             v.step = 2.21; // 配列またはオブジェクトの場合は再帰呼出
@@ -1361,7 +1361,7 @@ function mergeDeeply(pri,sub,opt={}){
           }
         } else {
           v.step = 2.3; // pri,subいずれか片方しかキーを持っていない
-          v.rv[v.key] = pri.hasOwnProperty(v.key) ? pri[v.key] : sub[v.key];
+          v.rv[v.key] = Object.hasOwn(pri,v.key) ? pri[v.key] : sub[v.key];
         }
       }
     } else if( v.isArr(pri) && v.isArr(sub) ){

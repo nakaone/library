@@ -49,13 +49,13 @@ function SpreadDb(query=[],opt={}){
           {name:'range',type:'string',note:'更新対象となった範囲名(テーブル名)',default:(o={})=>o.range||null},
           {name:'action',type:'string',note:'操作内容。append/update/delete/getLogのいずれか',default:(o={})=>o.action||null},
           {name:'argument',type:'string',note:'操作関数に渡された引数',default:(o={})=>
-            o.hasOwnProperty('argument')?(typeof o.argument === 'string' ? o.argument : JSON.stringify(o.argument)):null},
-          {name:'result',type:'boolean',note:'true:追加・更新が成功',default:(o={})=>o.hasOwnProperty('result')?o.result:true},
+            Object.hasOwn(o,'argument')?(typeof o.argument === 'string' ? o.argument : JSON.stringify(o.argument)):null},
+          {name:'result',type:'boolean',note:'true:追加・更新が成功',default:(o={})=>Object.hasOwn(o,'result')?o.result:true},
           {name:'message',type:'string',note:'エラーメッセージ',default:(o={})=>o.message||null},
-          {name:'before',type:'JSON',note:'更新前の行データオブジェクト',default:(o={})=>o.hasOwnProperty('before')?JSON.stringify(o.before):null},
-          {name:'after',type:'JSON',note:'更新後の行データオブジェクト',default:(o={})=>o.hasOwnProperty('after')?JSON.stringify(o.after):null},
+          {name:'before',type:'JSON',note:'更新前の行データオブジェクト',default:(o={})=>Object.hasOwn(o,'before')?JSON.stringify(o.before):null},
+          {name:'after',type:'JSON',note:'更新後の行データオブジェクト',default:(o={})=>Object.hasOwn(o,'after')?JSON.stringify(o.after):null},
           {name:'diff',type:'JSON',note:'追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式',
-            default:(o={})=>o.hasOwnProperty('diff')?JSON.stringify(o.diff):null},
+            default:(o={})=>Object.hasOwn(o,'diff')?JSON.stringify(o.diff):null},
         ],
       });
       if( pv.table[pv.opt.log] instanceof Error ) throw pv.table[pv.opt.log];
