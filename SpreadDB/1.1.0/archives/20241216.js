@@ -1,8 +1,3 @@
-/*
-  SpreadDbテスト用ソース
-    GASの専用シートを用意、本ソースをコピペしてSpreadDbTest()を実行する
-*/
-
 function SpreadDbTest(){
   const v = {whois:'SpreadDbTest',step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
@@ -1149,9 +1144,6 @@ function SpreadDb(query=[],opt={}){
     }
   }
 }
-
-
-
 /** 二つの引数が同値か判断する
  * @param {any} v1 - 変数1
  * @param {any} v2 - 変数2
@@ -1641,4 +1633,3 @@ function whichType(arg,is){
     return rv;
   }
 }
-
