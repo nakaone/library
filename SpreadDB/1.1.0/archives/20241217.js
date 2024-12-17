@@ -223,21 +223,7 @@ function SpreadDb(query=[],opt={}){
     if( pv.opt.log ){
       pv.table[pv.opt.log] = genTable({
         name: pv.opt.log,
-        cols: [ // いまここ：genLogと併せ、defaultを検討
-          {name:'id',type:'UUID',note:'ログの一意キー項目',primaryKey:true,default:()=>Utilities.getUuid()},
-          {name:'timestamp',type:'string',note:'更新日時。yyyy-MM-ddThh:mm:ss.nnn+hh:mm形式',default:()=>toLocale(new Date())},
-          {name:'account',type:'string|number',note:'更新者の識別子',default:(o={})=>pv.opt.user.id||null},
-          {name:'range',type:'string',note:'更新対象となった範囲名(テーブル名)',default:(o={})=>o.range||null},
-          {name:'action',type:'string',note:'操作内容。append/update/delete/getLogのいずれか',default:(o={})=>o.action||null},
-          {name:'argument',type:'string',note:'操作関数に渡された引数',default:(o={})=>
-            o.hasOwnProperty('argument')?(typeof o.argument === 'string' ? o.argument : JSON.stringify(o.argument)):null},
-          {name:'result',type:'boolean',note:'true:追加・更新が成功',default:(o={})=>o.hasOwnProperty('result')?o.result:true},
-          {name:'message',type:'string',note:'エラーメッセージ',default:(o={})=>o.message||null},
-          {name:'before',type:'JSON',note:'更新前の行データオブジェクト',default:(o={})=>o.hasOwnProperty('before')?JSON.stringify(o.before):null},
-          {name:'after',type:'JSON',note:'更新後の行データオブジェクト',default:(o={})=>o.hasOwnProperty('after')?JSON.stringify(o.after):null},
-          {name:'diff',type:'JSON',note:'追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式',
-            default:(o={})=>o.hasOwnProperty('diff')?JSON.stringify(o.diff):null},
-        ],
+        cols: genLog(), // sdbLog各項目の定義集
       });
       if( pv.table[pv.opt.log] instanceof Error ) throw pv.table[pv.opt.log];
     }
@@ -254,7 +240,14 @@ function SpreadDb(query=[],opt={}){
         // ロック成功、シートの更新処理開始
         for( v.i=0 ; v.i<query.length ; v.i++ ){
 
+          // 戻り値、ログの既定値を設定
           v.queryResult = {query:query[v.i],isErr:false,message:'',data:null,log:null};
+          v.log = {
+            table: query[v.i].table,
+            command: query[v.i].command,
+            arg: query[v.i].arg,
+            // 以下で設定が必要なメンバ : result,message,before,after,diff
+          }
 
           v.step = 3.1; // pv.tableに対象シートのデータが無ければ作成
           if( !pv.table[query[v.i].table] ){
@@ -264,17 +257,23 @@ function SpreadDb(query=[],opt={}){
           }
 
           v.step = 3.2; // v.allowに対象シートに対するユーザの権限をセット
-          if( pv.opt.user === null ){ // nullの場合、全権限付与
-            v.allow = 'rwdos';
+          if( pv.opt.user === null ){
+            v.allow = 'rwdos'; // nullの場合、全権限付与
           } else {
             if( Object.hasOwn(pv.opt.user.authority,query[v.i].table) ){
               v.allow = pv.opt.user.authority[query[v.i].table];
             } else {
+              v.msg = `シートに対する権限が登録されていません`;
               Object.assign(v.queryResult,{
                 isErr: true,
-                message: `シートに対する権限が登録されていません`,
+                message: v.msg,
               });
-              // ログ出力用配列に結果を追加：いまここ。genLogメソッド作成？
+              v.r = genLog({  // 変更履歴シートにログ出力
+                result: false,
+                message: v.msg,
+                // before, after, diffは空欄
+              });
+              if( v.r instanceof Error ) throw v.r;
             }
           }
 
@@ -312,35 +311,66 @@ function SpreadDb(query=[],opt={}){
             if( v.isOK ){
               v.step = 3.41; // テーブル名のみでテーブル管理情報を必要としないgenSchema以外のメソッドにはテーブル管理情報を追加
               if( query[v.i] instanceof Object ) query[v.i].arg.table = pv.table[query[v.i].table];
+
               v.step = 3.42; // 処理実行
-              try {
-                v.r = v.func(query[v.i].arg);
-                if( v.r instanceof Error ) throw v.r;
-                if( query[v.i].command === 'select' || query[v.i].command === 'schema' ){
-                  // select, schemaは結果をdataにセット
-                  v.queryResult.data = v.r;
-                  // ログ出力用配列に結果を追加：いまここ
-                } else {
-                  // update, append, deleteは実行結果(sdbLog)をlogにセット
-                  v.queryResult.log = v.r;
-                  // ログ出力用配列に結果を追加
-                  v.log = [...v.log, ...v.r];
-                }
-              } catch(e) {
+              v.result = v.func(query[v.i].arg);
+              if( v.result instanceof Error ){
+                // selectRow, updateRow他のcommand系メソッドでエラー発生
                 // command系メソッドからエラーオブジェクトが帰ってきた場合はエラーとして処理
                 Object.assign(v.queryResult,{
                   isErr: true,
-                  message: e.message
+                  message: v.result.message
                 });
-                // ログ出力用配列に結果を追加：いまここ
+                v.r = genLog({  // 変更履歴シートにログ出力
+                  result: false,
+                  message: v.result.message,
+                  // before, after, diffは空欄
+                });
+                if( v.r instanceof Error ) throw v.r;
+              } else {
+                // command系メソッドが正常終了した場合の処理
+
+                if( query[v.i].command === 'select' || query[v.i].command === 'schema' ){
+                  // select, schemaは結果をdataにセット
+                  v.queryResult.data = v.result;
+                  v.r = genLog({  // 変更履歴シートにログ出力
+                    result: true,
+                    // messageは空欄
+                    // before, diffは空欄、afterに出力件数をセット
+                    after: `rownum=${v.result.length}`;
+                  });
+                  if( v.r instanceof Error ) throw v.r;
+                } else {
+                  // update, append, deleteは実行結果(sdbLog)をlogにセット
+                  v.queryResult.log = v.result;
+                  // ログ出力用配列に結果を追加
+                  v.log = [...v.log, ...v.r];
+                  v.r = genLog({  // 変更履歴シートにログ出力
+                    result: true,
+                    // messageは空欄
+                    before: v.result.before,
+                    after: v.result.after,
+                    diff: v.result.diff,
+                  });
+                  if( v.r instanceof Error ) throw v.r;
+                }
               }
+
             } else {
+
               // isOKではない場合
+              v.msg = `シート「${query[v.i].table}」に対して'${query[v.i].command}'する権限がありません`;
               Object.assign(v.queryResult,{
                 isErr: true,
-                message: `シート「${query[v.i].table}」に対して'${query[v.i].command}'する権限がありません`,
+                message: v.msg,
               });
-              // ログ出力用配列に結果を追加：いまここ
+
+              v.r = genLog({  // 変更履歴シートにログ出力
+                result: false,
+                message: v.msg,
+                // before, after, diffは空欄
+              });
+              if( v.r instanceof Error ) throw v.r;
             }
           }
           // 実行結果を戻り値に追加
@@ -769,24 +799,60 @@ function SpreadDb(query=[],opt={}){
    *   - column {sdbColumn}
    *   - note {string[]} メモ用の文字列
    */
-  function genLog(arg={}){
+  /** genLog: 変更履歴シートに追記
+   * @param {sdbLog|null} arg - 変更履歴シートの行オブジェクト
+   * @returns {sdbLog|sdbColumn[]} 変更履歴シートに追記した行オブジェクト、または変更履歴シート各項目の定義
+   */
+  function genLog(arg=null){
     const v = {whois:'SpreadDb.genColumn',step:0,rv:null};
     console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
 
-      v.rv = Object.assign({
-        id: Utilities.getUuid(), // {UUID} 一意キー項目
-        timestamp: toLocale(new Date()), // {string} 更新日時
-        account: pv.opt.user.id, // {string|number} uuid等、更新者の識別子
-        range: null, // {string} 更新対象となった範囲名(テーブル名)
-        action: null, // {string} 操作内容。command系内部関数名のいずれか
-        argument: null, // {string} 操作関数に渡された引数
-        result: true, // {boolean} true:追加・更新が成功
-        message: '', // {string} エラーメッセージ
-        before: null, // {JSON} 更新前の行データオブジェクト(JSON)
-        after: null, // {JSON} 更新後の行データオブジェクト(JSON)。selectの場合はここに格納
-        diff: null, // {JSON} 追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式
-      },arg);
+      v.logDef = [  v.step = 1.1; // 変更履歴シートの項目定義
+        {name:'id',type:'UUID',note:'ログの一意キー項目',primaryKey:true},
+        {name:'timestamp',type:'string',note:'更新日時。ISO8601拡張形式'},
+        {name:'account',type:'string|number',note:'ユーザの識別子'},
+        {name:'table',type:'string',note:'対象テーブル名'},
+        {name:'command',type:'string',note:'操作内容(コマンド名)'},
+        {name:'arg',type:'string',note:'操作関数に渡された引数'},
+        {name:'result',type:'boolean',note:'true:追加・更新が成功'},
+        {name:'message',type:'string',note:'エラーメッセージ'},
+        {name:'before',type:'JSON',note:'更新前の行データオブジェクト'},
+        {name:'after',type:'JSON',note:'更新後の行データオブジェクト'},
+        {name:'diff',type:'JSON',note:'差分情報。{項目名：[更新前,更新後]}形式'},
+      ];
+      
+      if( arg === null ){
+        v.step = 2; // 引数が指定されていない場合、変更履歴シート各項目の定義を返す
+        v.rv = v.logDef;
+      } else {
+        v.step = 3; // 引数としてオブジェクトが渡された場合、その値を設定したsdbLogオブジェクトを返す
+        v.rv = Object.assign({
+          id: Utilities.getUuid(), // {UUID} 一意キー項目
+          timestamp: toLocale(new Date()), // {string} 更新日時
+          account: pv.opt.user.id, // {string|number} uuid等、更新者の識別子
+          // 以下、本関数呼出元で設定する項目
+          table: null, // {string} 更新対象となった範囲名(テーブル名)
+          command: null, // {string} 操作内容。command系内部関数名のいずれか
+          arg: null, // {string} 操作関数に渡された引数
+          result: null, // {boolean} true:追加・更新が成功
+          message: null, // {string} エラーメッセージ
+          before: null, // {JSON} 更新前の行データオブジェクト(JSON)
+          after: null, // {JSON} 更新後の行データオブジェクト(JSON)。selectの場合はここに格納
+          diff: null, // {JSON} 追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式
+        },arg);
+
+        // 値が関数またはオブジェクトの場合、文字列化
+        for( v.x in v.rv ){
+          if( typeof v.rv[x] === 'function' ) v.rv[x] = v.rv[x].toString;
+          if( typeof v.rv[x] === 'object' ) v.rv[x] = JSON.stringify(v.rv[x]);
+        }
+
+        v.step = 4; // 変更履歴シートへの追加
+        v.row = [];
+        v.logDef.map(x => x.name).forEach(x => v.row.push(v.rv[x]));
+        pv.table[pv.opt.log].sheet.appendRow(v.row);
+      }
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
