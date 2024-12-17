@@ -783,7 +783,8 @@ function SpreadDb(query=[],opt={}){
     console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
 
-      v.logDef = [  v.step = 1.1; // 変更履歴シートの項目定義
+      v.step = 1; // 変更履歴シートの項目定義
+      v.logDef = [
         {name:'id',type:'UUID',note:'ログの一意キー項目',primaryKey:true},
         {name:'timestamp',type:'string',note:'更新日時。ISO8601拡張形式'},
         {name:'account',type:'string|number',note:'ユーザの識別子'},
@@ -817,18 +818,9 @@ function SpreadDb(query=[],opt={}){
           diff: null, // {JSON} 追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式
         },arg);
 
-        // 値が関数またはオブジェクトの場合、文字列化
-        for( v.x in v.rv ){
-          if( typeof v.rv[x] === 'function' ) v.rv[x] = v.rv[x].toString;
-          if( typeof v.rv[x] === 'object' ) v.rv[x] = JSON.stringify(v.rv[x]);
-        }
+        v.step = 4; // 値が関数またはオブジェクトの場合、文字列化
+        for( v.x in v.rv ) v.rv[v.x] = toString(v.rv[v.x]);
 
-        v.step = 4; // 変更履歴シートへの追加
-        /*
-        v.row = [];
-        v.logDef.map(x => x.name).forEach(x => v.row.push(v.rv[x]));
-        pv.table[pv.opt.log].sheet.appendRow(v.row);
-        */
       }
 
       v.step = 9; // 終了処理
@@ -945,6 +937,12 @@ function SpreadDb(query=[],opt={}){
       return e;
     }
   }
+  /** 関数またはオブジェクトの場合、文字列化 */
+  function toString(arg){
+    if( typeof arg === 'function' ) return arg.toString();
+    if( typeof arg === 'object' ) return JSON.stringify(arg);
+    return arg;
+  }
   /** selectRow: テーブルから該当行を抽出
    * @param {Object|Object[]} arg
    * @param {sdbTable} arg.table - 操作対象のテーブル管理情報
@@ -1015,7 +1013,6 @@ function SpreadDb(query=[],opt={}){
           //message, before, after, diffは後工程で追加
         });
         if( v.log instanceof Error ) throw v.log;
-
 
         v.step = 2.2; // auto_increment項目に値を設定
         // ※ auto_increment設定はuniqueチェックに先行
@@ -1237,80 +1234,79 @@ function SpreadDb(query=[],opt={}){
     }
   }
   /** deleteRow: 領域から指定行を物理削除
-   * @param {Object|Function|any} where=[] - 対象レコードの判定条件
+   * @param {Object} any
+   * @param {sdbTable} any.table - 操作対象のテーブル管理情報
+   * @param {Object|Function|any} any.where - 対象レコードの判定条件
    * @returns {sdbLog[]}
    *
    * - where句の指定方法
-   *   - Object ⇒ {key:キー項目名, value: キー項目の値}形式で、key:valueに該当するレコードを更新
+   *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
    *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
    *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
    */
-  function deleteRow(where){
-    const v = {whois:'sdbTable.deleteRow',step:0,rv:[],log:[],where:[],argument:JSON.stringify(where)};
-    console.log(`${v.whois} start.\nwhere(${whichType(where)})=${stringify(where)}`);
+  function deleteRow(arg){
+    const v = {whois:'sdbTable.deleteRow',step:0,rv:[],whereStr:[]};
+    console.log(`${v.whois} start.`);
     try {
 
       // 削除指定が複数の時、上の行を削除後に下の行を削除しようとすると添字や行番号が分かりづらくなる。
       // そこで対象となる行の添字(行番号)を洗い出した後、降順にソートし、下の行から順次削除を実行する
 
       v.step = 1.1; // 事前準備 : 引数を配列化
-      if( !Array.isArray(where)) where = [where];
+      if( !Array.isArray(arg.where)) arg.where = [arg.where];
 
       v.step = 1.2; // 該当レコードかの判別用関数を作成
-      for( v.i=0 ; v.i<where.length ; v.i++ ){
-        where[v.i] = pv.functionalize(where[v.i]);
-        if( where[v.i] instanceof Error ) throw where[v.i];
+      for( v.i=0 ; v.i<arg.where.length ; v.i++ ){
+        v.whereStr[v.i] = toString(arg.where[v.i]); // // 更新履歴記録用にwhereを文字列化
+        arg.where[v.i] = functionalize(arg.where[v.i]);
+        if( arg.where[v.i] instanceof Error ) throw arg.where[v.i];
       }
-      v.step = 1.3; // 引数argのいずれかに該当する場合trueを返す関数を作成
-      v.cond = o => {let rv = false;where.forEach(w => {if(w(o)) rv=true});return rv};
 
-      v.step = 2; // 対象レコードか一件ずつチェック
-      for( v.i=pv.values.length-1 ; v.i>=0 ; v.i-- ){
+      v.step = 1.3; // 複数あるwhereのいずれかに該当する場合trueを返す関数を作成
+      v.cond = o => {let rv = false;arg.where.forEach(w => {if(w(o)) rv=true});return rv};
+
+      v.step = 2; // 対象レコードか、後ろから一件ずつチェック
+      for( v.i=arg.table.values.length-1 ; v.i>=0 ; v.i-- ){
 
         v.step = 2.1; // 対象外判定ならスキップ
-        if( v.cond(pv.values[v.i]) === false ) continue;
+        if( v.cond(arg.table.values[v.i]) === false ) continue;
 
-        v.step = 2.2; // 更新履歴オブジェクトを作成
-        v.logObj = new sdbLog({account:pv.account,range:pv.name,
-          action:'delete',argument:v.argument,before:pv.values[v.i]});
-        v.logObj.diff = v.logObj.before;
-        v.log.push(v.logObj);
+        v.step = 2.2; // 一件分のログオブジェクトを作成
+        v.log = genLog({
+          table: arg.table.name,
+          command: 'delete',
+          arg: v.whereStr[v.i],
+          result: true,
+          before: arg.table.values[v.i],
+          // after, diffは空欄
+        });
+        if( v.log instanceof Error ) throw v.log;
+        v.rv.push(v.log);
 
-        v.step = 2.3; // 削除レコードのunique項目をpv.schema.uniqueから削除
-        // pv.schema.auto_incrementは削除の必要性が薄いので無視
+        v.step = 2.3; // 削除レコードのunique項目をarg.table.schema.uniqueから削除
+        // arg.table.schema.auto_incrementは削除の必要性が薄いので無視
         // ※必ずしも次回採番時に影響するとは限らず、影響したとしても欠番扱いで問題ないと判断
-        for( v.unique in pv.schema.unique ){
-          if( pv.values[v.i][v.unique] ){
-            v.idx = pv.schema.unique[v.unique].indexOf(pv.values[v.i][v.unique]);
-            if( v.idx >= 0 ) pv.schema.unique[v.unique].splice(v.idx,1);
+        for( v.unique in arg.table.schema.unique ){ // unique項目を順次チェック
+          if( arg.table.values[v.i][v.unique] ){  // 対象レコードの当該unique項目が有意な値
+            // unique項目一覧(配列)から対象レコードの値の位置を探して削除
+            v.idx = arg.table.schema.unique[v.unique].indexOf(arg.table.values[v.i][v.unique]);
+            if( v.idx >= 0 ) arg.table.schema.unique[v.unique].splice(v.idx,1);
           }
         }
 
-        v.step = 2.4; // pv.valuesから削除
-        pv.values.splice(v.i,1);
+        v.step = 2.4; // arg.table.valuesから削除
+        arg.table.values.splice(v.i,1);
 
         v.step = 2.5; // シートのセルを削除
-        v.range = pv.sheet.getRange(
-          pv.top + v.i + 1,  // +1(添字->行番号)
-          pv.left,
-          1,
-          pv.right - pv.left + 1,
-        );
-        v.range.deleteCells(SpreadsheetApp.Dimension.ROWS);
+        v.range = arg.table.sheet.deleteRow(v.i+1);
 
-        v.step = 2.6; // pv.bottomを書き換え
-        pv.bottom = pv.bottom - 1;
+        v.step = 2.6; // arg.table.bottomを書き換え
+        arg.table.rownum -= 1;
 
-      }
-
-      v.step = 3; // 変更履歴追記対象なら追記(変更履歴シートは追記対象外)
-      if( pv.log !== null && v.log.length > 0 ){
-        v.r = pv.log.append(v.log);
-        if( v.r instanceof Error ) throw v.r;
       }
 
       v.step = 9; // 終了処理
-      v.rv = v.log;
+      v.rv = v.rv;
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
       return v.rv;
 
@@ -1331,7 +1327,7 @@ function SpreadDb(query=[],opt={}){
 
       if( typeof arg === 'string' ) arg = [arg];
       arg.forEach(x => v.rv.push(pv.table[x].schema));
-      
+
       v.step = 9; // 終了処理
       v.rv = v.log;
       console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
