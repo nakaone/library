@@ -1,4 +1,49 @@
 function SpreadDbTest(){
+  /* テスト項目
+  - 新規テーブル生成
+    - 引数無し ⇒ エラー
+    - 不正command ⇒ 拒否される
+    - ログへの出力形式
+    - メモの中の形式
+  - select
+    - 権限指定無し(ゲスト) ⇒ 一般公開シートはアクセス可(ex.掲示板)
+    - 権限指定無し(ゲスト) ⇒ 非公開シートはアクセス不可(ex.ユーザ一覧)
+    - 読取権限のみのテーブルに追加
+    - 読取権限のみのテーブルに更新
+    - 読取権限のみのテーブルに削除
+    - 読取権限のみのテーブルにテーブル構造情報取得
+  - append
+    - オートインクリメント
+    - 既定値
+    - unique項目に重複値 ⇒ エラー
+  - update
+    - where,recordの複数指定(配列化) ⇒ 全て適用
+  - delete
+    - whereの複数指定(配列化) ⇒ 全て適用
+  - schema
+    - alasqlでテーブル生成
+    - メモの内容修正 ⇒ schemaの出力内容も修正
+  - 権限による制御
+    - 権限'o' ⇒ 自分のレコードが参照可能
+    - 権限'o' ⇒ 自分以外のレコードが参照不可能
+    - 管理者 ⇒ 全シートについてrwdos可
+  */
+  /* 引数の形式
+  - query {Object[]} 操作要求の内容
+    - table {string} 操作対象テーブル名
+    - command {string} 操作名。select/update/delete/append/schema
+    - arg {object} 操作に渡す引数。command系内部関数の引数参照
+  - opt {Object}={} オプション
+    - user {Object} ユーザのアカウント情報
+      - id {string}='guest' ユーザの識別子
+      - authority {Object.<string,string>}={} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式
+    - log {string}='log' 更新履歴テーブル名
+    - tables {Object[]} 新規作成するテーブルのデータ(genTablesの引数の配列)
+    - maxTrial {number}=5 テーブル更新時、ロックされていた場合の最大試行回数
+    - interval {number}=10000 テーブル更新時、ロックされていた場合の試行間隔(ミリ秒)
+    - guestAuthority {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
+    - AdminId {string} 管理者として扱うuserId
+  */
   const v = {whois:'SpreadDbTest',step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -149,6 +194,22 @@ function SpreadDbTest(){
           {name:'memo',type:'string'},
         ],
       },
+      account: {
+        name: 'account',
+        cols: [
+          {name:"userId",type:"string",primaryKey:true,note:"ユーザ識別子"},
+          {name:"note",type:"string",note:"備考"},
+          {name:"CPkey",type:"string",note:"クライアント側公開鍵"},
+          {name:"authority",type:"string",note:"シート毎のアクセス権限"},
+          {name:"trial",type:"string",note:"ログイン試行関連情報"},
+          {name:"unfreezing",type:"string",note:"凍結解除日時"},
+          {name:"expiry",type:"string",note:"CPkey有効期限"},
+          {name:"lastSync",type:"string",note:"前回同期日時"},
+          {name:"created",type:"string",default:"toLocale(Date.now())",note:"ユーザ登録日時"},
+          {name:"updated",type:"string",note:"最終更新日時"},
+          {name:"deleted",type:"string",note:"論理削除日時"},
+        ],
+      }
     },
   };
   const pattern = { // テストパターン(関数)の定義
