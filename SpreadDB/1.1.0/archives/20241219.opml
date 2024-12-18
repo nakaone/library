@@ -1,0 +1,381 @@
+<?xml version="1.0"?>
+<opml version="2.0">
+  <head>
+    <ownerEmail>
+      ena.kaon@gmail.com
+    </ownerEmail>
+  </head>
+  <body>
+    <outline text="SpreadDB 1.1.0">
+      <outline text="typeDefs">
+        <outline text="メンバ(pv)">
+          <outline text="whois {string} 'SpreadDb'固定" />
+          <outline text="&lt;a href=&quot;https://workflowy.com/#/83fc9661f4ca&quot;&gt;opt {Object}&lt;/a&gt; 起動時オプション。&lt;code&gt;&lt;a href=&quot;http://pv.opt.xxx&quot;&gt;pv.opt.xxx&lt;/a&gt;&lt;/code&gt; として保存" />
+          <outline text="内部設定項目(optと同列に配置)">
+            <outline text="spread {Spread} スプレッドシートオブジェクト" />
+            <outline text="table {Object.&amp;lt;string,&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;&amp;gt;} スプレッドシート上の各テーブル(領域)の情報" />
+            <outline text="log {&lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;[]}=[] 更新履歴シートオブジェクト" />
+          </outline>
+        </outline>
+        <outline text="sdbTable {Object} テーブルの管理情報">
+          <outline text="name {string} テーブル名(範囲名)" />
+          <outline text="account {string} 更新者のアカウント(識別子)" />
+          <outline text="sheet {&lt;a href=&quot;https://developers.google.com/apps-script/reference/spreadsheet/sheet?hl=ja&quot;&gt;Sheet&lt;/a&gt;} スプレッドシート内の操作対象シート(ex.&quot;master&quot;シート)" />
+          <outline text="schema {&lt;a href=&quot;https://workflowy.com/#/1807783e0064&quot;&gt;sdbSchema&lt;/a&gt;} シートの項目定義" />
+          <outline text="values {Object[]} 行オブジェクトの配列。&lt;code&gt;{項目名:値,..}&lt;/code&gt; 形式" />
+          <outline text="header {string[]} 項目名一覧(ヘッダ行)" />
+          <outline text="notes {string[]} ヘッダ行のメモ" />
+          <outline text="colnum {number} データ領域の列数" />
+          <outline text="rownum {number} データ領域の行数(ヘッダ行は含まず)" />
+          <outline text="7 Backlinks">
+            <outline text="genTable() : &lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;オブジェクトを生成" />
+            <outline text="table {&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;} 操作対象のテーブル管理情報" />
+            <outline text="table {&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;} 操作対象のテーブル管理情報" />
+            <outline text="table {&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;} 操作対象のテーブル管理情報" />
+            <outline text="table {&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;} 操作対象のテーブル管理情報" />
+            <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;}" />
+            <outline text="table {Object.&amp;lt;string,&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;&amp;gt;} スプレッドシート上の各テーブル(領域)の情報" />
+          </outline>
+        </outline>
+        <outline text="sdbSchema {Object} テーブルの構造情報">
+          <outline text="cols {&lt;a href=&quot;https://workflowy.com/#/c32e233a6008&quot;&gt;sdbColumn&lt;/a&gt;[]} 項目定義オブジェクトの配列" />
+          <outline text="primaryKey {string}='id' 一意キー項目名" />
+          <outline text="unique {Object.&amp;lt;string, any[]&amp;gt;} primaryKeyおよびunique属性項目の管理情報" _note="メンバ名はprimaryKey/uniqueの項目名&#10;" />
+          <outline text="auto_increment {Object.&amp;lt;string,Object&amp;gt;} auto_increment属性項目の管理情報" _note="メンバ名はauto_incrementの項目名&#10;">
+            <outline text="base {number} 基数" />
+            <outline text="step {number} 増減値" />
+            <outline text="current {number} 現在の最大(小)値" _note="currentはsdbTableインスタンスで操作する。" />
+          </outline>
+          <outline text="defaultRow {Object|function} 既定値項目で構成されたオブジェクト。appendの際のプロトタイプ" />
+          <outline text="3 Backlinks">
+            <outline text="genSchema() : &lt;a href=&quot;https://workflowy.com/#/1807783e0064&quot;&gt;sdbSchema&lt;/a&gt;オブジェクトを生成" />
+            <outline text="schema {&lt;a href=&quot;https://workflowy.com/#/1807783e0064&quot;&gt;sdbSchema&lt;/a&gt;}" />
+            <outline text="schema {&lt;a href=&quot;https://workflowy.com/#/1807783e0064&quot;&gt;sdbSchema&lt;/a&gt;} シートの項目定義" />
+          </outline>
+        </outline>
+        <outline text="sdbColumn {Object} 項目の構造情報">
+          <outline text="name {string} 項目名" />
+          <outline text="type {string} データ型。string,number,boolean,Date,JSON,UUID" />
+          <outline text="format {string} 表示形式。type=Dateの場合のみ指定" />
+          <outline text="options {string} 取り得る選択肢(配列)のJSON表現" _note="ex. [&quot;未入場&quot;,&quot;既収&quot;,&quot;未収&quot;,&quot;無料&quot;]" />
+          <outline text="default {function} 既定値を取得する関数。引数は当該行オブジェクト" _note="メモに文字列で記載する場合、Function()コンストラクタに渡す引数のJSON形式で記述。&#10;ex. &lt;code&gt;[&quot;x&quot;,&quot;return x+10&quot;]&lt;/code&gt; &#10;" />
+          <outline text="primaryKey {boolean}=false 一意キー項目ならtrue" />
+          <outline text="unique {boolean}=false primaryKey以外で一意な値を持つならtrue" />
+          <outline text="auto_increment {bloolean|null|number|number[]}=false 自動採番項目" _note="null ⇒ 自動採番しない&#10;boolean ⇒ true:自動採番する(基数=1,増減値=1)、false:自動採番しない&#10;number ⇒ 自動採番する(基数=指定値,増減値=1)&#10;number[] ⇒ 自動採番する(基数=添字0,増減値=添字1)" />
+          <outline text="suffix {string} &quot;not null&quot;等、上記以外のSQLのcreate table文のフィールド制約" />
+          <outline text="note {string} 本項目に関する備考。create table等では使用しない" />
+          <outline text="3 Backlinks">
+            <outline text="genColumn(): &lt;a href=&quot;https://workflowy.com/#/c32e233a6008&quot;&gt;sdbColumn&lt;/a&gt;オブジェクトを生成" />
+            <outline text="戻り値 {Object.&amp;lt;string,&lt;a href=&quot;https://workflowy.com/#/c32e233a6008&quot;&gt;sdbColumn&lt;/a&gt;[]&amp;gt;} {テーブル名：項目定義オブジェクトの配列}形式" />
+            <outline text="cols {&lt;a href=&quot;https://workflowy.com/#/c32e233a6008&quot;&gt;sdbColumn&lt;/a&gt;[]} 項目定義オブジェクトの配列" />
+          </outline>
+        </outline>
+        <outline text="sdbLog {Object} 更新履歴オブジェクト" _note="行頭[〜]はシート上の列番号＋列記号">
+          <outline text="[01A] id {UUID}=Utilities.getUuid() 一意キー項目" />
+          <outline text="[02B] timestamp {string}=toLocale(new Date()) 更新日時" />
+          <outline text="[03C] account {string|number} uuid等、更新者の識別子" />
+          <outline text="[04D] range {string} 更新対象となった範囲名(テーブル名)" />
+          <outline text="[05E] action {string} 操作内容。command系内部関数名のいずれか" />
+          <outline text="[06F] argument {string} 操作関数に渡された引数" />
+          <outline text="[07G] result {boolean} true:追加・更新が成功" />
+          <outline text="[08H] message {string} エラーメッセージ" />
+          <outline text="[09I] before {JSON} 更新前の行データオブジェクト(JSON)" />
+          <outline text="[10J] after {JSON} 更新後の行データオブジェクト(JSON)" _note="selectの場合はここに格納" />
+          <outline text="[11K] diff {JSON} 追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式" />
+          <outline text="7 Backlinks">
+            <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;}" />
+            <outline text="genLog() : &lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;オブジェクトを生成" />
+            <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;[]}" />
+            <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;[]}" />
+            <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;[]}" />
+            <outline text="log {&lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;[]}=[] 更新履歴シートオブジェクト" />
+            <outline text="log {&lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;[]} 更新履歴" />
+          </outline>
+        </outline>
+      </outline>
+      <outline text="概要">
+        <outline text="&lt;a href=&quot;https://workflowy.com/#/95fea07d3e11&quot;&gt;constructor() : メンバの初期値設定、更新履歴の準備&lt;/a&gt;" />
+        <outline text="スプレッドシートを凍結" />
+        <outline text="queryで渡された操作要求を順次処理">
+          <outline text="&lt;a href=&quot;https://workflowy.com/#/d307cfc95d98&quot;&gt;analyze() : テーブル情報をメンバpv.table に作成&lt;/a&gt;" />
+          <outline text="権限確認後、&lt;a href=&quot;https://workflowy.com/#/a4ffcd522269&quot;&gt;command系内部関数&lt;/a&gt;の呼び出し" />
+        </outline>
+        <outline text="スプレッドシートの凍結解除" />
+      </outline>
+      <outline text="引数">
+        <outline text="query {Object[]} 操作要求の内容">
+          <outline text="table {string} 操作対象テーブル名" />
+          <outline text="command {string} 操作名。select/update/delete/append/schema" />
+          <outline text="arg {object} 操作に渡す引数。command系内部関数の引数参照" />
+          <outline text="2 Backlinks">
+            <outline text="&lt;a href=&quot;https://workflowy.com/#/ceffd9e40da5&quot;&gt;query {Object} 操作要求の内容&lt;/a&gt;" />
+            <outline text="query {Object} 引数として渡された&lt;a href=&quot;https://workflowy.com/#/ceffd9e40da5&quot;&gt;query&lt;/a&gt;のコピー" />
+          </outline>
+        </outline>
+        <outline text="opt {Object}={} オプション">
+          <outline text="user {Object} ユーザのアカウント情報">
+            <outline text="id {string}='guest' ユーザの識別子" />
+            <outline text="authority {Object.&amp;lt;string,string&amp;gt;}={} テーブル毎のアクセス権限。&lt;code&gt;{シート名:rwdos文字列}&lt;/code&gt; 形式" _note="r:select(read), w:write, d:delete, s:schema, o:own only(指定シートのprimaryKeyがuserIdと一致するレコードのみ参照・変更可。削除不可)&#10;&#10;o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。&#10;また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可&#10;read/writeは自分のみ可、delete/schemaは実行不可&#10;" />
+          </outline>
+          <outline text="log {string}='log' 更新履歴テーブル名" _note="nullの場合、ログ出力は行わない。領域名 &amp;gt; A1記法 &amp;gt; シート名の順に解釈" />
+          <outline text="tables {Object[]} 新規作成するテーブルのデータ(&lt;a href=&quot;https://workflowy.com/#/f2cef46cfa0e&quot;&gt;genTablesの引数&lt;/a&gt;の配列)" />
+          <outline text="maxTrial {number}=5 テーブル更新時、ロックされていた場合の最大試行回数" />
+          <outline text="interval {number}=10000 テーブル更新時、ロックされていた場合の試行間隔(ミリ秒)" />
+          <outline text="guestAuthority {Object.&amp;lt;string,string&amp;gt;} ゲストに付与する権限。&lt;code&gt;{シート名:rwdos文字列}&lt;/code&gt; 形式" />
+          <outline text="AdminId {string} 管理者として扱うuserId" _note="管理者は全てのシートの全権限を持つ&#10;" />
+          <outline text="2 Backlinks">
+            <outline text="&lt;a href=&quot;https://workflowy.com/#/83fc9661f4ca&quot;&gt;opt {Object}&lt;/a&gt; 起動時オプション。&lt;code&gt;&lt;a href=&quot;http://pv.opt.xxx&quot;&gt;pv.opt.xxx&lt;/a&gt;&lt;/code&gt; として保存" />
+            <outline text="&lt;a href=&quot;https://workflowy.com/#/83fc9661f4ca&quot;&gt;opt {Object}={} オプション&lt;/a&gt;" />
+          </outline>
+        </outline>
+      </outline>
+      <outline text="戻り値">
+        <outline text="query {Object} 引数として渡された&lt;a href=&quot;https://workflowy.com/#/ceffd9e40da5&quot;&gt;query&lt;/a&gt;のコピー" />
+        <outline text="isErr {boolean}=false 正常終了ならtrue" />
+        <outline text="message {string} エラーメッセージ。isErr==trueの場合のみ。" />
+        <outline text="data {Object|Object[]}=null 操作結果。select/schemaの場合のみ。" />
+        <outline text="log {&lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;[]} 更新履歴" />
+      </outline>
+      <outline text="内部関数 - 非command系">
+        <outline text="constructor() : メンバの初期値設定、更新履歴の準備">
+          <outline text="概要">
+            <outline text="メンバの初期値設定" />
+            <outline text="「更新履歴」の準備" />
+          </outline>
+          <outline text="引数">
+            <outline text="&lt;a href=&quot;https://workflowy.com/#/ceffd9e40da5&quot;&gt;query {Object} 操作要求の内容&lt;/a&gt;" />
+            <outline text="&lt;a href=&quot;https://workflowy.com/#/83fc9661f4ca&quot;&gt;opt {Object}={} オプション&lt;/a&gt;" />
+          </outline>
+          <outline text="1 Backlink">
+            <outline text="&lt;a href=&quot;https://workflowy.com/#/95fea07d3e11&quot;&gt;constructor() : メンバの初期値設定、更新履歴の準備&lt;/a&gt;" />
+          </outline>
+        </outline>
+        <outline text="genTable() : &lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;オブジェクトを生成">
+          <outline text="引数">
+            <outline text="arg {Object}">
+              <outline text="name {string} - テーブル名" />
+              <outline text="[cols] {sdbColumn[]} - 新規作成シートの項目定義オブジェクトの配列" />
+              <outline text="[values] {Object[]|Array[]} - 新規作成シートに書き込む初期値" />
+              <outline text="1 Backlink">
+                <outline text="tables {Object[]} 新規作成するテーブルのデータ(&lt;a href=&quot;https://workflowy.com/#/f2cef46cfa0e&quot;&gt;genTablesの引数&lt;/a&gt;の配列)" />
+              </outline>
+            </outline>
+          </outline>
+          <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;}" />
+        </outline>
+        <outline text="genSchema() : &lt;a href=&quot;https://workflowy.com/#/1807783e0064&quot;&gt;sdbSchema&lt;/a&gt;オブジェクトを生成">
+          <outline text="引数">
+            <outline text="arg {Object}">
+              <outline text="cols {sdbColumn[]} - 項目定義オブジェクトの配列" />
+              <outline text="header {string[]} - ヘッダ行のシートイメージ(=項目名一覧)" />
+              <outline text="notes {string[]} - 項目定義メモの配列" />
+              <outline text="values {Object[]} - 初期データとなる行オブジェクトの配列" />
+            </outline>
+          </outline>
+          <outline text="戻り値 {Object}">
+            <outline text="schema {&lt;a href=&quot;https://workflowy.com/#/1807783e0064&quot;&gt;sdbSchema&lt;/a&gt;}" />
+            <outline text="notes {string[]} ヘッダ行に対応したメモ" />
+          </outline>
+        </outline>
+        <outline text="genColumn(): &lt;a href=&quot;https://workflowy.com/#/c32e233a6008&quot;&gt;sdbColumn&lt;/a&gt;オブジェクトを生成" />
+        <outline text="genLog() : &lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;オブジェクトを生成">
+          <outline text="概要" />
+          <outline text="引数">
+            <outline text="arg {Object.&amp;lt;string,any&amp;gt;} sdbLogに個別設定するメンバ名と値" />
+          </outline>
+          <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;}" />
+        </outline>
+        <outline text="convertRow() : シートイメージと行オブジェクトの相互変換" />
+        <outline text="functionalize() : where句のオブジェクト・文字列を関数化" />
+      </outline>
+      <outline text="内部変数 - command系">
+        <outline text="selectRow() : テーブルから条件に合致する行を抽出">
+          <outline text="概要" />
+          <outline text="引数">
+            <outline text="arg {Object|Object[]}">
+              <outline text="table {&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;} 操作対象のテーブル管理情報" />
+              <outline text="where {Object|Function|any} 対象レコードの判定条件。配列可" _note="where句の指定方法&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- その他 ⇒ 項目定義で&quot;primaryKey&quot;指定された項目の値で、primaryKey項目が指定値なら更新&#10;" />
+            </outline>
+          </outline>
+          <outline text="戻り値 {Object[]} 該当行オブジェクト" _note="抽出された行オブジェクトはafterに出力。セルの最大文字数は50,000なので、呼出元には抽出結果(行オブジェクトの配列)afterをJSON.parseして戻す&#10;" />
+        </outline>
+        <outline text="updateRow() : テーブルを更新">
+          <outline text="概要" />
+          <outline text="引数">
+            <outline text="arg {Object|Object[]}">
+              <outline text="table {&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;} 操作対象のテーブル管理情報" />
+              <outline text="where {Object|Function|any} 対象レコードの判定条件" _note="複数指定する場合、配列にする。この場合「いずれかに該当する(OR条件)」場合に対象レコードとする。&#10;&#10;where句の指定方法&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- その他 ⇒ 項目定義で&quot;primaryKey&quot;指定された項目の値で、primaryKey項目が指定値なら更新&#10;" />
+              <outline text="record {Object|Function} 更新する値" _note="record句の指定方法&#10;- Object ⇒ {更新対象項目名:セットする値}&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}" />
+            </outline>
+          </outline>
+          <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;[]}" />
+        </outline>
+        <outline text="appendRow() : テーブルに新規行を追加">
+          <outline text="概要" />
+          <outline text="引数">
+            <outline text="arg {Object|Object[]}">
+              <outline text="table {&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;} 操作対象のテーブル管理情報" />
+              <outline text="record {Object|Object[]} 追加する行オブジェクト" />
+            </outline>
+          </outline>
+          <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;[]}" />
+        </outline>
+        <outline text="deleteRow() : テーブルから条件に合致する行を削除">
+          <outline text="概要" />
+          <outline text="引数">
+            <outline text="arg {Object|Object[]}">
+              <outline text="table {&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;} 操作対象のテーブル管理情報" />
+              <outline text="where {Object|Function|any} 対象レコードの判定条件" _note="複数指定する場合、配列にする。この場合「いずれかに該当する(OR条件)」場合に対象レコードとする。&#10;&#10;where句の指定方法&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- その他 ⇒ 項目定義で&quot;primaryKey&quot;指定された項目の値で、primaryKey項目が指定値なら更新&#10;" />
+            </outline>
+          </outline>
+          <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/527c4b49ce41&quot;&gt;sdbLog&lt;/a&gt;[]}" />
+        </outline>
+        <outline text="getSchema() : 指定されたテーブルの構造情報を取得">
+          <outline text="概要" />
+          <outline text="引数">
+            <outline text="arg {string|string[]} 取得対象テーブル名" />
+          </outline>
+          <outline text="戻り値 {Object.&amp;lt;string,&lt;a href=&quot;https://workflowy.com/#/c32e233a6008&quot;&gt;sdbColumn&lt;/a&gt;[]&amp;gt;} {テーブル名：項目定義オブジェクトの配列}形式" />
+        </outline>
+        <outline text="1 Backlink">
+          <outline text="権限確認後、&lt;a href=&quot;https://workflowy.com/#/a4ffcd522269&quot;&gt;command系内部関数&lt;/a&gt;の呼び出し" />
+        </outline>
+      </outline>
+      <outline text="注意事項">
+        <outline text="関数での抽出条件・値の指定時の制約" _note="default(sdbColumn), where, record(update他)では関数での指定を可能にしている。&#10;これらをセル・メモで保存する場合、文字列に変換する必要があるが、以下のルールで対応する。&#10;&#10;- 引数は行オブジェクトのみ、変数名は'o'固定とする&#10;- default等として保存する文字列はロジック部分(引数直後の`{〜}`の内部)のみ&#10;- 関数に復元する場合`new Function('o',[ロジック部分文字列])`で関数化&#10;" />
+        <outline text="" />
+      </outline>
+      <outline text="ゴミ箱">
+        <outline text="analyze() : テーブル情報をメンバ&lt;code&gt;pv.table&lt;/code&gt; に作成">
+          <outline text="概要">
+            <outline text="pv.table[テーブル名]の初期値設定" />
+            <outline text="引数name,rangeから対象範囲絞り込み" />
+            <outline text="pv.table[テーブル名][schema](sdbSchema)の作成" />
+            <outline text="pv.table[テーブル名][values]の作成" />
+            <outline text="シート未作成の場合、追加" />
+            <outline text="pv.table[テーブル名][schema].unique,auto_incrementの作成" />
+          </outline>
+          <outline text="引数" />
+          <outline text="1 Backlink">
+            <outline text="&lt;a href=&quot;https://workflowy.com/#/d307cfc95d98&quot;&gt;analyze() : テーブル情報をメンバpv.table に作成&lt;/a&gt;" />
+          </outline>
+        </outline>
+        <outline text="class SpreadDB : スプレッド(シート)単位の管理">
+          <outline text="constructor()">
+            <outline text="処理概要">
+              <outline text="引数の既定値設定＋メンバ化、導出項目の計算">
+                <outline text="引数をメンバ化" />
+                <outline text="導出項目の計算(項目定義関係以外)" />
+                <outline text="項目定義関係の導出項目の計算" />
+                <outline text="シート名およびデータ領域の推定" />
+              </outline>
+              <outline text="旧：操作対象シートの読み込み" _note="以下は操作対象シートが未作成の場合の処理">
+                <outline text="引数に行オブジェクト配列が存在" />
+                <outline text="引数にシートイメージが存在" />
+                <outline text="シートも行オブジェクトもシートイメージも無し" />
+              </outline>
+              <outline text="操作対象シートの読み込み" _note="| No | シート | メモ | cols | data | raw | → | ヘッダ部 | データ部 | メモ | cols | 備考 |&#10;| --: | :-- | :--: | :--: | :--: | :--: | :--: | :-- | :-- | :-- | :-- | :-- |&#10;| 1 | 作成済 | 有 | — | — | — | → | — | — | — | メモで更新 | colsよりメモを優先(∵シートの手動修正はソース修正より容易)&amp;lt;br&amp;gt;項目数・項目名が一致しているか、併せて確認 |&#10;| 2 | 作成済 | 無 | 有 | — | — | → | — | — | colsから作成 | — |  |&#10;| 3 | 作成済 | 無 | 無 | — | — | → | — | — | 空メモを作成 | ヘッダから作成 | typeは最初に出てきた有効値のデータ型 |&#10;| 4 | 未作成 | — | 有 | 有 | — | → | colsから作成 | dataから作成 | colsから作成 | — |  |&#10;| 5 | 未作成 | — | 有 | 無 | 有 | → | colsから作成 | rawから作成 | colsから作成 | — | ヘッダとraw[0]が不一致ならヘッダ優先 |&#10;| 6 | 未作成 | — | 有 | 無 | 無 | → | colsから作成 | — | colsから作成 | — |  |&#10;| 7 | 未作成 | — | 無 | 有 | — | → | dataから作成 | dataから作成 | 空メモを作成 | dataから作成 | typeは最初に出てきた有効値のデータ型 |&#10;| 8 | 未作成 | — | 無 | 無 | 有 | → | raw[0]から作成 | rawから作成 | 空メモを作成 | rawから作成 | typeは最初に出てきた有効値のデータ型 |&#10;| 9 | 未作成 | — | 無 | 無 | 無 | → |  |  |  |  | エラー |">
+                <outline text="シート未作成ならthis.data/rawからシート作成" _note="this.data &amp;gt; this.rawで作成、いずれも無ければエラー" />
+                <outline text="ヘッダ行の属性メモが未作成なら作成" _note="this.colsから作成。this.colsが存在しないならデータから作成&#10;&#10;属性メモは&lt;a href=&quot;https://workflowy.com/#/7f319f47ac74&quot;&gt;cols&lt;/a&gt;のname属性を除く各項目を改行で並べたもの。項目名は手動修正を容易にするため省略しない。以下はサンプル&#10;- type: &quot;string&quot;&#10;- format: &quot;yyyy/MM&quot;&#10;- default: &quot;未入場&quot;&#10;- unique: false&#10;- auto_increment: false&#10;- suffix: &quot;&quot;&#10;- note: &quot;これはサンプルです&quot;&#10;&#10;this.colsが存在しない場合、type属性は最初に出現する有意値(※)のデータ型とする。&#10;※JavaScriptのif文でfalseとなる0,空文字列,false,null,undefined,NaN【以外】の値&#10;&#10;getValues()の戻り値となるデータ型&#10;- String -&amp;gt; string or JSON&#10;- Number&#10;- Date&#10;- Boolean&#10;参考：セルのデータ型 「Google公式 Class Range [getValue](&lt;a href=&quot;https://developers.google.com/apps-script/reference/spreadsheet/range?hl=ja#getvalue)%E3%80%8D&quot;&gt;https://developers.google.com/apps-script/reference/spreadsheet/range?hl=ja#getvalue)」&lt;/a&gt;&#10;&#10;データ型をどのように判断するかは保留。テストして判断する&#10;" />
+                <outline text="属性メモからcolsを更新" />
+                <outline text="" />
+                <outline text="" />
+                <outline text="シート未作成">
+                  <outline text="属性メモが存在" />
+                  <outline text="this.dataが存在" />
+                  <outline text="this.rawが存在" />
+                </outline>
+                <outline text="かつ属性メモも存在" />
+                <outline text="シート作成済かつ属性メモは不在" />
+                <outline text="操作対象シートが未作成の場合" />
+              </outline>
+              <outline text="指定有効範囲の特定">
+                <outline text="範囲行・列番号がデータの存在する範囲外だった場合、存在範囲内に変更" />
+                <outline text="ヘッダ行番号以下の有効範囲(行)をv.rawに取得" />
+                <outline text="ヘッダ行と項目定義の突き合わせ" />
+                <outline text="指定有効範囲の末端行を検索(中間の空行は残すが、末尾の空行は削除)" />
+                <outline text="this.raw/dataにデータをセット" />
+              </outline>
+              <outline text="&quot;log&quot;シート不在なら作成" />
+              <outline text="this.data取得後に導出可能になる項目の計算">
+                <outline text="this.uniqueの作成" />
+                <outline text="this.auto_incrementの作成" />
+              </outline>
+            </outline>
+            <outline text="引数">
+              <outline text="tables {string|string[]|Object|Object[]} 変更履歴を除く操作対象領域情報。stringならnameと看做す">
+                <outline text="name {string} 範囲名。スプレッドシート内で一意" />
+                <outline text="[range] {string} 対象データ範囲のA1記法。省略時はnameを流用、セル範囲指定は無しと看做す" />
+                <outline text="[cols] {&lt;a href=&quot;https://workflowy.com/#/9d48890fea1a&quot;&gt;sdbColumn&lt;/a&gt;[]} 新規作成シートの項目定義オブジェクトの配列" />
+                <outline text="[values] {Object[]|Array[]} 行オブジェクトまたはシートイメージ" />
+              </outline>
+              <outline text="opt {Object}={}">
+                <outline text="outputLog {boolean}=true ログ出力しないならfalse" />
+                <outline text="logSheetName {string}='log' 更新履歴テーブル名" />
+                <outline text="account {&lt;span class=&quot;colored c-red&quot;&gt;Object&lt;/span&gt;}=null 更新者のアカウント">
+                  <outline text="userId {UUID} 更新者識別子" />
+                  <outline text="authority {JSON} シート毎のアクセス権限。&lt;code&gt;{シート名:rudos文字列}&lt;/code&gt; 形式" _note="r:read, u:update, d:delete, s:schema, o:own only(自IDのみ参照・変更可)&#10;" />
+                </outline>
+                <outline text="maxTrial {number}=5 シート更新時、ロックされていた場合の最大試行回数" />
+                <outline text="interval {number}=10000 シート更新時、ロックされていた場合の試行間隔(ミリ秒)" />
+              </outline>
+            </outline>
+            <outline text="戻り値 {SingleTable|Error}" />
+          </outline>
+          <outline text="transact() : シートの操作">
+            <outline text="概要">
+              <outline text="テーブルに排他制御をかける" _note="参考：&lt;a href=&quot;https://note.com/tiger_oshima/n/nd727a9cd0641&quot;&gt;GASの排他制御について&lt;/a&gt;" />
+              <outline text="append/update/deleteを呼び出し、結果をログ(変数)に記録" />
+              <outline text="(this.outputLog=trueなら)ログ(変数)を更新履歴シートに記録" />
+              <outline text="テーブルの排他制御を解除" />
+            </outline>
+            <outline text="引数">
+              <outline text="trans {Object[]} 以下のメンバを持つオブジェクト(の配列)">
+                <outline text="name {string} 更新対象範囲名" _note="≒シート名" />
+                <outline text="action {string} 操作内容" _note="&quot;append&quot;, &quot;update&quot;, &quot;delete&quot;のいずれか" />
+                <outline text="arg {Object|Object[]} append/update/deleteの引数" />
+              </outline>
+              <outline text="opt {Object} 以下のメンバを持つオブジェクト" _note="自分の参加者情報更新に合わせて他者が更新した参加者情報や掲示板情報を取得したい等、通常のCRUDに付随して更新履歴オブジェクトの取得も可能にする。&#10;">
+                <outline text="getLogFrom {string|number|Date}=null 取得する更新履歴オブジェクトの時刻指定" _note="既定値(null)ではgetLogは行われない。全件取得の場合は明示的に設定(ex.0,1970/1/1)&#10;new Date(opt.getLogFrom)より後の履歴を対象とする(同一時刻は含まない)&#10;" />
+                <outline text="getLogOption {Object} getLogFrom≠nullの場合、getLogのオプション" />
+              </outline>
+            </outline>
+            <outline text="戻り値">
+              <outline text="getLogForm=nullの場合、&lt;a href=&quot;https://workflowy.com/#/9af4f6b59860&quot;&gt;更新履歴オブジェクト&lt;/a&gt;の&lt;span class=&quot;colored c-red&quot;&gt;配列&lt;/span&gt;" />
+              <outline text="getLogForm≠nullの場合、以下のメンバを持つ&lt;span class=&quot;colored c-red&quot;&gt;オブジェクト&lt;/span&gt;">
+                <outline text="result {&lt;a href=&quot;https://workflowy.com/#/9af4f6b59860&quot;&gt;Object&lt;/a&gt;[]} 更新対象または指定時刻以降の更新履歴オブジェクトの配列" />
+                <outline text="data {&lt;a href=&quot;https://workflowy.com/#/54d79b8c2df6&quot;&gt;Object&lt;/a&gt;} getLogの戻り値" />
+              </outline>
+            </outline>
+          </outline>
+        </outline>
+        <outline text="class sdbTable : テーブル単位の管理">
+          <outline text="read() : シートから指定条件の行オブジェクトを取得" />
+        </outline>
+        <outline text="class sdbLog : 更新履歴オブジェクト #copy">
+          <outline text="メンバ : typedef()で定義された各項目" />
+          <outline text="static typedef() : 更新履歴オブジェクトの項目定義">
+            <outline text="id {UUID} 一意キー項目" />
+            <outline text="timestamp {Date} 更新日時" />
+            <outline text="account {string|number} uuid等、更新者の識別子" />
+            <outline text="range {string} 更新対象となった範囲名(テーブル名)" />
+            <outline text="action {string} 操作内容。&lt;span class=&quot;colored c-red&quot;&gt;read&lt;/span&gt;/append/update/deleteのいずれか" />
+            <outline text="argument {string} 操作関数に渡された引数" />
+            <outline text="result {boolean} true:追加・更新が成功" />
+            <outline text="message {string} エラーメッセージ" />
+            <outline text="before {JSON} 更新前の行データオブジェクト(JSON)" />
+            <outline text="after {JSON} 更新後の行データオブジェクト(JSON)" />
+            <outline text="diff {JSON} 追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式" />
+          </outline>
+          <outline text="constructor()">
+            <outline text="処理概要" />
+            <outline text="引数">
+              <outline text="arg {&lt;a href=&quot;https://workflowy.com/#/9af4f6b59860&quot;&gt;Object&lt;/a&gt;} 更新履歴オブジェクトの項目定義(id,timestampを除く)" />
+            </outline>
+            <outline text="戻り値" />
+          </outline>
+        </outline>
+      </outline>
+    </outline>
+  </body>
+</opml>
