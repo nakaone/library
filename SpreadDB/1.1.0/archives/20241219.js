@@ -789,8 +789,8 @@ function SpreadDb(query=[],opt={}){
       });
 
       v.step = 3; // defaultを関数に変換
-      if( typeof v.rv.column.default !== 'function' ){
-        v.rv.column.default = new Function(...JSON.parse(v.rv.column.default));
+      if( v.rv.column.default !== null && typeof v.rv.column.default === 'string' ){
+        v.rv.column.default = new Function('o',v.rv.column.default);
       }
 
       v.step = 4; // auto_incrementをオブジェクトに変換
