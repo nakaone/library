@@ -4,6 +4,51 @@
 */
 
 function SpreadDbTest(){
+  /* テスト項目
+  - 新規テーブル生成
+    - 引数無し ⇒ エラー
+    - 不正command ⇒ 拒否される
+    - ログへの出力形式
+    - メモの中の形式
+  - select
+    - 権限指定無し(ゲスト) ⇒ 一般公開シートはアクセス可(ex.掲示板)
+    - 権限指定無し(ゲスト) ⇒ 非公開シートはアクセス不可(ex.ユーザ一覧)
+    - 読取権限のみのテーブルに追加
+    - 読取権限のみのテーブルに更新
+    - 読取権限のみのテーブルに削除
+    - 読取権限のみのテーブルにテーブル構造情報取得
+  - append
+    - オートインクリメント
+    - 既定値
+    - unique項目に重複値 ⇒ エラー
+  - update
+    - where,recordの複数指定(配列化) ⇒ 全て適用
+  - delete
+    - whereの複数指定(配列化) ⇒ 全て適用
+  - schema
+    - alasqlでテーブル生成
+    - メモの内容修正 ⇒ schemaの出力内容も修正
+  - 権限による制御
+    - 権限'o' ⇒ 自分のレコードが参照可能
+    - 権限'o' ⇒ 自分以外のレコードが参照不可能
+    - 管理者 ⇒ 全シートについてrwdos可
+  */
+  /* 引数の形式
+  - query {Object[]} 操作要求の内容
+    - table {string} 操作対象テーブル名
+    - command {string} 操作名。select/update/delete/append/schema
+    - arg {object} 操作に渡す引数。command系内部関数の引数参照
+  - opt {Object}={} オプション
+    - user {Object} ユーザのアカウント情報
+      - id {string}='guest' ユーザの識別子
+      - authority {Object.<string,string>}={} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式
+    - log {string}='log' 更新履歴テーブル名
+    - tables {Object[]} 新規作成するテーブルのデータ(genTablesの引数の配列)
+    - maxTrial {number}=5 テーブル更新時、ロックされていた場合の最大試行回数
+    - interval {number}=10000 テーブル更新時、ロックされていた場合の試行間隔(ミリ秒)
+    - guestAuthority {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
+    - AdminId {string} 管理者として扱うuserId
+  */
   const v = {whois:'SpreadDbTest',step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -22,146 +67,156 @@ function SpreadDbTest(){
         v.src[sheet].values.push(v.o);
       }
     },
-    // ----- テスト用ソース(サンプルデータ)
-    src: {
-      PL: {
-        name: 'PL',
-        values: [
-          ['大','中','勘定科目','一覧存否','L1','L2','SQ','本籍'],
-          ['売上高','','','',1,'','',''],
-          ['','売上高','','',1,1,'',''],
-          ['','','売上高',22,1,1,1,'貸'],
-          ['','売上原価','','',1,2,'',''],
-          ['','','仕入高',-1,1,2,1,'借'],
-          ['','','仕入値引高',-1,1,2,2,'借'],
-          ['','','仕入割戻し高',-1,1,2,3,'借'],
-          ['売上総利益','','','',2,'','',''],
-          ['','販売費および一般管理費','','',2,1,'',''],
-          ['','','役員報酬',35,2,1,1,'借'],
-          ['','','給料',-1,2,1,2,'借'],
-          ['','','賞与',-1,2,1,3,'借'],
-          ['','','退職金',-1,2,1,4,'借'],
-          ['','','法定福利費',52,2,1,5,'借'],
-          ['','','福利厚生費',57,2,1,6,'借'],
-          ['','','販売促進費',-1,2,1,7,'借'],
-          ['','','外注費',24,2,1,8,'借'],
-          ['','','広告宣伝費',29,2,1,9,'借'],
-          ['','','荷造運賃',-1,2,1,10,'借'],
-          ['','','会議費',9,2,1,11,'借'],
-          ['','','交際費',8,2,1,12,'借'],
-          ['','','寄附金',25,2,1,13,'借'],
-          ['','','旅費交通費',40,2,1,14,'借'],
-          ['','','通信費',63,2,1,15,'借'],
-          ['','','新聞図書費',39,2,1,16,'借'],
-          ['','','地代家賃',21,2,1,17,'借'],
-          ['','','水道光熱費',48,2,1,18,'借'],
-          ['','','修繕費',12,2,1,19,'借'],
-          ['','','消耗品費',53,2,1,20,'借'],
-          ['','','事務用品費',7,2,1,21,'借'],
-          ['','','賃借料',-1,2,1,22,'借'],
-          ['','','支払報酬料',37,2,1,22,'借'],
-          ['','','支払手数料',38,2,1,22,'借'],
-          ['','','保険料',11,2,1,23,'借'],
-          ['','','租税公課',58,2,1,24,'借'],
-          ['','','諸会費',60,2,1,26,'借'],
-          ['','','雑費',70,2,1,27,'借'],
-          ['','','減価償却費',55,2,1,25,'借'],
-          ['','','長期前払費用償却',66,2,1,25,'借'],
-          ['営業利益','','','',3,'','',''],
-          ['','営業外収益','','',3,1,'',''],
-          ['','','受取利息',18,3,1,1,'貸'],
-          ['','','受取配当金',-1,3,1,2,'貸'],
-          ['','','有価証券売却益',-1,3,1,3,'貸'],
-          ['','','有価証券評価益',-1,3,1,4,'貸'],
-          ['','','為替差益',-1,3,1,5,'貸'],
-          ['','','雑収入',33,3,1,6,'貸'],
-          ['','営業外費用','','',3,2,'',''],
-          ['','','支払利息',36,3,2,1,'借'],
-          ['','','有価証券評価損',-1,3,2,2,'借'],
-          ['','','創立費償却',-1,3,2,3,'借'],
-          ['','','開業費償却',-1,3,2,4,'借'],
-          ['','','貸倒損失',6,3,2,5,'借'],
-          ['','','雑損失',69,3,2,6,'借'],
-          ['経常利益','','','',4,'','',''],
-          ['','特別利益','','',4,1,'',''],
-          ['','','固定資産売却益',19,4,1,1,'貸'],
-          ['','','投資有価証券売却益',-1,4,1,2,'貸'],
-          ['','','貸倒引当金戻入額',-1,4,1,3,'貸'],
-          ['','特別損失','','',4,2,'',''],
-          ['','','固定資産売却損',-1,4,2,1,'借'],
-          ['','','固定資産除却損',-1,4,2,2,'借'],
-          ['','','投資有価証券売却損',-1,4,2,3,'借'],
-          ['税前利益','','','',5,'','',''],
-          ['','法人税・住民税及び事業税','','',5,1,'',''],
-          ['','','法人税',-1,5,1,1,'借'],
-          ['','','住民税',-1,5,1,2,'借'],
-          ['','','事業税',-1,5,1,3,'借'],
-          ['','','法人税等',49,5,1,4,'借'],
-          ['当期利益','','','',6,'','',''],
-          ['','','当期利益',32,6,'',1,'借'],
-        ],
-      },
-      master: { // "master"シート
-        name: 'master',
-        account: 'hoge',
-        values: [
-          ['タイムスタンプ','メールアドレス','申込者氏名','申込者カナ','申込者の参加','宿泊、テント','引取者氏名','参加者01氏名','参加者01カナ','参加者01所属','参加者02氏名','参加者02カナ','参加者02所属','参加者03氏名','参加者03カナ','参加者03所属','参加者04氏名','参加者04カナ','参加者04所属','参加者05カナ','参加者05氏名','参加者05所属','緊急連絡先','ボランティア募集','備考','キャンセル','authority','CPkey','entryNo','trial','editURL','entryTime','receptionist','fee00','fee01','fee02','fee03','fee04','fee05','memo'],
-          ['2024/10/06 19:51:06','nakaone.kunihiro@gmail.com','島津　邦浩','シマヅ　クニヒロ','スタッフとして申込者のみ参加(おやじの会メンバ)','宿泊しない','','','','','','','','','','','','','','','','','','','','','2','jZiM1isJ+1AZoVZ9NnWTvCoeghCm+FY05eb6jhz8wpT3DwqJbNnszW8PWDd3sq0N5mjN/Nshh+RGGrdkm7CC+sO32js+wm1YmYGr0FMaFxvMBDrWzyJ7qrPI4unbx2IkrPkXSmSEbw91n/LOu0x7br106XeJ9TXJbJS16rV0nzs=','1','{"passcode":920782,"created":1728874149915,"result":0,"log":[{"timestamp":1728874165893,"enterd":920782,"status":1}]}','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_ePpXliGgMlVVUYiSKgwX6SXBNrnwozwTMF09Ml1py7Ocp1N7_w5F7uqf52Ak63zBE','','','','','','','','',''],
-          ['2024/09/15 12:47:04','via1315r@yahoo.co.jp','前田　素直','マエダ　スナオ','参加予定(宿泊なし)','宿泊しない','宿泊予定なので不要','前田　若菜','マエダ　ワカナ','1年生','','','','','','','','','','','','','9013357002','できる','食事以外でも、お手伝い出来る事があれば。','','1','','2','','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_dWLvuoT6Wq0Hu-4tqFl5OyTK-Z7EwdMDEQGS1jKJVIa41Dh8nNJPtpFyPu8cyZYGo','','','','','','','','',''],
-          ['2024/09/15 13:51:37','kousuke.murata4690@gmail.com','小早川　晃祐','コバヤカワ　コウスケ','参加予定(宿泊あり)','宿泊する(テントあり)','宿泊予定なので不要','小早川　涼','コバヤカワ　リョウ','6年生','','','','','','','','','','','','','','できる','','','1','','3','','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_fKjD-xj5FN0GnTNIILVeJVwYJajCP8bZphy1zyleVl8UDLWqzUjDDFWZf7uMA0qtk','','','','','','','','',''],
-          ['2024/09/15 14:18:02','nakaone2001@gmail.com','島津　弘子','シマヅ　ヒロコ','参加予定(宿泊なし)','宿泊しない','','島津　悠奈','シマヅ　ユウナ','4年生','','','','','','','','','','','','','','','','','2','k5lfKMj3ybfMF6jocHPln98lLJIBIxKrrpLc4RhPenBIEg6OfgdXYQAVh907SoCg0MEBazhWic2oFaKNFJu9pa4prXWvTzYjRWw5XkmC9a7AdNQ0judVMATii7Xqp6drowisY6+Rul2zwrF2UKY8epoYP8ZkX9RyH6OFyglYQL8=','4','{"passcode":65698,"created":1729076868102,"result":0,"log":[{"timestamp":1728729400367,"enterd":119192,"status":1}]}','https://docs.google.com/forms/d/e/ULQ/viewform?edit2=2_eGXR29gyuz_kc4UMghOrIa_iNPhrkHdrW4zVI8KFW5aB2jsVCtjq79aasCFBWgTvI','','','','','','','','',''],
-        ],
-        cols: [
-          {name:'タイムスタンプ',type:'Date'},
-          {name:'メールアドレス',type:'string',unique:true},
-          {name:'申込者氏名',type:'string'},
-          {name:'申込者カナ',type:'string'},
-          {name:'申込者の参加',type:'string'},
-          {name:'宿泊、テント',type:'string'},
-          {name:'引取者氏名',type:'string'},
-          {name:'参加者01氏名',type:'string'},
-          {name:'参加者01カナ',type:'string'},
-          {name:'参加者01所属',type:'string'},
-          {name:'参加者02氏名',type:'string'},
-          {name:'参加者02カナ',type:'string'},
-          {name:'参加者02所属',type:'string'},
-          {name:'参加者03氏名',type:'string'},
-          {name:'参加者03カナ',type:'string'},
-          {name:'参加者03所属',type:'string'},
-          {name:'参加者04氏名',type:'string'},
-          {name:'参加者04カナ',type:'string'},
-          {name:'参加者04所属',type:'string'},
-          {name:'参加者05カナ',type:'string'},
-          {name:'参加者05氏名',type:'string'},
-          {name:'参加者05所属',type:'string'},
-          {name:'緊急連絡先',type:'string'},
-          {name:'ボランティア募集',type:'string'},
-          {name:'備考',type:'string'},
-          {name:'キャンセル',type:'string'},
-          {name:'authority',type:'number'},
-          {name:'CPkey',type:'string'},
-          {name:'entryNo',type:'number',primaryKey:true,auto_increment:[10,1]},
-          {name:'trial',type:'JSON'},
-          {name:'editURL',type:'string'},
-          {name:'entryTime',type:'string'},
-          {name:'receptionist',type:'string'},
-          {name:'fee00',type:'string'},
-          {name:'fee01',type:'string'},
-          {name:'fee02',type:'string'},
-          {name:'fee03',type:'string'},
-          {name:'fee04',type:'string'},
-          {name:'fee05',type:'string'},
-          {name:'memo',type:'string'},
-        ],
-      },
+  };
+  const src = { // テスト用サンプルデータ
+    status: { // "ユーザ管理"シート(colsのみ)
+      name: 'ユーザ管理',
+      cols: [
+        {name:'userId',type:'string'}, // ユーザ識別子(primaryKey)
+        {name:'note',type:'string'}, // 備考
+        {name:'CPkey',type:'string'}, // クライアント側公開鍵
+        {name:'authority',type:'JSON'}, // シート毎のアクセス権限。「シート名:rwdos文字列」形式
+        {name:'trial',type:'JSON'}, // ログイン試行関連情報
+        {name:'unfreezing',type:'string'}, // 凍結解除日時。通常undefined、凍結時にメンバ追加
+        {name:'expiry',type:'string'}, // CPkey有効期限。期限内に適切な暗号化・署名された要求はOKとする
+        {name:'lastSync',type:'string'}, // 前回同期日時
+        {name:'created',type:'string'}, // ユーザ登録日時
+        {name:'updated',type:'string'}, // 最終更新日時
+        {name:'deleted',type:'string'}, // 論理削除日時
+      ],
     },
+    PL: { // "損益計算書"シート(valuesのみ)
+      name: '損益計算書',
+      values: [
+        ['大','中','勘定科目','一覧存否','L1','L2','SQ','本籍'],
+        ['売上高','','','',1,'','',''],
+        ['','売上高','','',1,1,'',''],
+        ['','','売上高',22,1,1,1,'貸'],
+        ['','売上原価','','',1,2,'',''],
+        ['','','仕入高',-1,1,2,1,'借'],
+        ['','','仕入値引高',-1,1,2,2,'借'],
+        ['','','仕入割戻し高',-1,1,2,3,'借'],
+        ['売上総利益','','','',2,'','',''],
+        ['','販売費および一般管理費','','',2,1,'',''],
+        ['','','役員報酬',35,2,1,1,'借'],
+        ['','','給料',-1,2,1,2,'借'],
+        ['','','賞与',-1,2,1,3,'借'],
+        ['','','退職金',-1,2,1,4,'借'],
+        ['','','法定福利費',52,2,1,5,'借'],
+        ['','','福利厚生費',57,2,1,6,'借'],
+        ['','','販売促進費',-1,2,1,7,'借'],
+        ['','','外注費',24,2,1,8,'借'],
+        ['','','広告宣伝費',29,2,1,9,'借'],
+        ['','','荷造運賃',-1,2,1,10,'借'],
+        ['','','会議費',9,2,1,11,'借'],
+        ['','','交際費',8,2,1,12,'借'],
+        ['','','寄附金',25,2,1,13,'借'],
+        ['','','旅費交通費',40,2,1,14,'借'],
+        ['','','通信費',63,2,1,15,'借'],
+        ['','','新聞図書費',39,2,1,16,'借'],
+        ['','','地代家賃',21,2,1,17,'借'],
+        ['','','水道光熱費',48,2,1,18,'借'],
+        ['','','修繕費',12,2,1,19,'借'],
+        ['','','消耗品費',53,2,1,20,'借'],
+        ['','','事務用品費',7,2,1,21,'借'],
+        ['','','賃借料',-1,2,1,22,'借'],
+        ['','','支払報酬料',37,2,1,22,'借'],
+        ['','','支払手数料',38,2,1,22,'借'],
+        ['','','保険料',11,2,1,23,'借'],
+        ['','','租税公課',58,2,1,24,'借'],
+        ['','','諸会費',60,2,1,26,'借'],
+        ['','','雑費',70,2,1,27,'借'],
+        ['','','減価償却費',55,2,1,25,'借'],
+        ['','','長期前払費用償却',66,2,1,25,'借'],
+        ['営業利益','','','',3,'','',''],
+        ['','営業外収益','','',3,1,'',''],
+        ['','','受取利息',18,3,1,1,'貸'],
+        ['','','受取配当金',-1,3,1,2,'貸'],
+        ['','','有価証券売却益',-1,3,1,3,'貸'],
+        ['','','有価証券評価益',-1,3,1,4,'貸'],
+        ['','','為替差益',-1,3,1,5,'貸'],
+        ['','','雑収入',33,3,1,6,'貸'],
+        ['','営業外費用','','',3,2,'',''],
+        ['','','支払利息',36,3,2,1,'借'],
+        ['','','有価証券評価損',-1,3,2,2,'借'],
+        ['','','創立費償却',-1,3,2,3,'借'],
+        ['','','開業費償却',-1,3,2,4,'借'],
+        ['','','貸倒損失',6,3,2,5,'借'],
+        ['','','雑損失',69,3,2,6,'借'],
+        ['経常利益','','','',4,'','',''],
+        ['','特別利益','','',4,1,'',''],
+        ['','','固定資産売却益',19,4,1,1,'貸'],
+        ['','','投資有価証券売却益',-1,4,1,2,'貸'],
+        ['','','貸倒引当金戻入額',-1,4,1,3,'貸'],
+        ['','特別損失','','',4,2,'',''],
+        ['','','固定資産売却損',-1,4,2,1,'借'],
+        ['','','固定資産除却損',-1,4,2,2,'借'],
+        ['','','投資有価証券売却損',-1,4,2,3,'借'],
+        ['税前利益','','','',5,'','',''],
+        ['','法人税・住民税及び事業税','','',5,1,'',''],
+        ['','','法人税',-1,5,1,1,'借'],
+        ['','','住民税',-1,5,1,2,'借'],
+        ['','','事業税',-1,5,1,3,'借'],
+        ['','','法人税等',49,5,1,4,'借'],
+        ['当期利益','','','',6,'','',''],
+        ['','','当期利益',32,6,'',1,'借'],
+      ],
+    },
+    camp: { // "camp2024"シート(cols+values)
+      name: 'camp2024',
+      cols: [
+        {name:'タイムスタンプ',type:'string'},
+        {name:'メールアドレス',type:'string'},
+        {name:'申込者氏名',type:'string'},
+        {name:'申込者カナ',type:'string'},
+        {name:'申込者の参加',type:'string'},
+        {name:'宿泊、テント',type:'string'},
+        {name:'引取者氏名',type:'string'},
+        {name:'参加者01氏名',type:'string'},
+        {name:'参加者01カナ',type:'string'},
+        {name:'参加者01所属',type:'string'},
+        {name:'参加者02氏名',type:'string'},
+        {name:'参加者02カナ',type:'string'},
+        {name:'参加者02所属',type:'string'},
+        {name:'参加者03氏名',type:'string'},
+        {name:'参加者03カナ',type:'string'},
+        {name:'参加者03所属',type:'string'},
+        {name:'参加者04氏名',type:'string'},
+        {name:'参加者04カナ',type:'string'},
+        {name:'参加者04所属',type:'string'},
+        {name:'参加者05カナ',type:'string'},
+        {name:'参加者05氏名',type:'string'},
+        {name:'参加者05所属',type:'string'},
+        {name:'緊急連絡先',type:'string'},
+        {name:'ボランティア募集',type:'string'},
+        {name:'備考',type:'string'},
+        {name:'キャンセル',type:'string'},
+        {name:'authority',type:'string'},
+        {name:'CPkey',type:'string'},
+        {name:'entryNo',type:'number'},
+        {name:'trial',type:'string'},
+        {name:'editURL',type:'string'},
+        {name:'entryTime',type:'string'},
+        {name:'receptionist',type:'string'},
+        {name:'fee00',type:'string'},
+        {name:'fee01',type:'string'},
+        {name:'fee02',type:'string'},
+        {name:'fee03',type:'string'},
+        {name:'fee04',type:'string'},
+        {name:'fee05',type:'string'},
+        {name:'memo',type:'string'},
+      ],
+      values: [["タイムスタンプ","メールアドレス","申込者氏名","申込者カナ","申込者の参加","宿泊、テント","引取者氏名","参加者01氏名","参加者01カナ","参加者01所属","参加者02氏名","参加者02カナ","参加者02所属","参加者03氏名","参加者03カナ","参加者03所属","参加者04氏名","参加者04カナ","参加者04所属","参加者05カナ","参加者05氏名","参加者05所属","緊急連絡先","ボランティア募集","備考","キャンセル","authority","CPkey","entryNo","trial","editURL","entryTime","receptionist","fee00","fee01","fee02","fee03","fee04","fee05","memo"],["2024/10/06 19:51:06","nakairo@gmail.com","国生　邦浩","コクショウ　クニヒロ","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊しない","","","","","","","","","","","","","","","","","","","","","2","jZiM1isJ+1AZoVZ9NnWTvCoeghCm+FY05eb6jhz8wpT3DwqJbNnszW8PWDd3sq0N5mjN/Nshh+RGGrdkm7CC+sO32js+wm1YmYGr0FMaFxvMBDrWzyJ7qrPI4unbx2IkrPkXSmSEbw91n/LOu0x7br106XeJ9TXJbJS16rV0nzs=","1","{\"passcode\":920782,\"created\":1728874149915,\"result\":0,\"log\":[{\"timestamp\":1728874165893,\"enterd\":920782,\"status\":1}]}","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnuePpXliGgMlVVUYiSKgwX6SXBNrnwozwTMF09Ml1py7Ocp1N7_w5F7uqf52Ak63zBE","","","","","","","","",""],["2024/09/15 12:47:04","va15r@yahoo.co.jp","榎田　素直","エノキダ　スナオ","参加予定(宿泊なし)","宿泊しない","宿泊予定なので不要","榎田　若菜","エノキダ　ワカナ","1年生","","","","","","","","","","","","","9013357002","できる","食事以外でも、お手伝い出来る事があれば。","","1","","2","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnudWLvuoT6Wq0Hu-4tqFl5OyTK-Z7EwdMDEQGS1jKJVIa41Dh8nNJPtpFyPu8cyZYGo","","","","","","","","",""],["2024/09/15 13:51:37","kuke.m4690@gmail.com","吉野　晃祐","ヨシノ　コウスケ","参加予定(宿泊あり)","宿泊する(テントあり)","宿泊予定なので不要","吉野　涼","ヨシノ　リョウ","6年生","","","","","","","","","","","","","","できる","","","1","","3","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufKjD-xj5FN0GnTNIILVeJVwYJajCP8bZphy1zyleVl8UDLWqzUjDDFWZf7uMA0qtk","","","","","","","","",""],["2024/09/15 14:18:02","naka001@gmail.com","国生　弘子","コクショウ　ヒロコ","参加予定(宿泊なし)","宿泊しない","","国生　悠奈","コクショウ　ユウナ","4年生","","","","","","","","","","","","","","","","","2","k5lfKMj3ybfMF6jocHPln98lLJIBIxKrrpLc4RhPenBIEg6OfgdXYQAVh907SoCg0MEBazhWic2oFaKNFJu9pa4prXWvTzYjRWw5XkmC9a7AdNQ0judVMATii7Xqp6drowisY6+Rul2zwrF2UKY8epoYP8ZkX9RyH6OFyglYQL8=","4","{\"passcode\":65698,\"created\":1729076868102,\"result\":0,\"log\":[{\"timestamp\":1728729400367,\"enterd\":119192,\"status\":1}]}","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnueGXR29gyuz_kc4UMghOrIa_iNPhrkHdrW4zVI8KFW5aB2jsVCtjq79aasCFBWgTvI","","","","","","","","",""],["2024/09/15 18:17:44","takaki.173@icloud.com","新田　隆行","ニッタ　タカユキ","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊しない","","","","","","","","","","","","","","","","","9086493601","","","","2","","5","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufYUAyvDIMpF5sXyi49ICUvIq8eI73TSfNFSCfRzYvwwNX_f2M5991pGhnh7dHSS0Q","","","","","","","","",""],["2024/10/11 8:55:06","kafsnxo@cang.jp","中島　幸典","ナカジマ　ユキノリ","不参加","宿泊する(テントなし)","宿泊予定なので不要","中島　楓理","ナカジマ　フウリ","5年生","","","","","","","","","","","","","9035259368","できる","","","1","","6","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufFgoyc-O5e6v8H81HtPrm5LzbPk2h8e8Oy_kWf4_rlguFpTnJoFpJj_9FBPZcEB7o","","","","","","","","",""],["2024/09/16 15:56:10","o9098431480@gmail.com","樹原 幸司","キハラ コウジ","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊する(テントなし)","宿泊予定なので不要","","","","","","","","","","","","","","","","","","","","2","clhamUnWtGN6XNQUCwOBstn+69s/iTOgIyf0c52sQHrB7oxSt+fokoL5GhYC1tTO45CJaVrf8jRmd3PwS/UNhGVGH0Q8ePxMN342RETiQJvfiVTHB0rewLK0WWHD4zjxIbyfSoh3p1CBuP1cYlDHn3RS5Nv+NYT0QusxlBT/8i0=","7","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufL97OKOOWgne5ttIJyuOkI-i-hvbqB1p-5KP3tMy_1E-FfKl5BRs4W-mvoKZXI4Zo","","","","","","","","",""],["2024/09/16 17:02:23","sii23@yahoo.co.jp","友田　精一","トモダ　セイイチ","参加予定(宿泊あり)","宿泊する(テントなし)","申込者は参加しないが、申込者がお迎えに行く","友田　悠介","トモダ　ユウスケ","5年生","友田　菜月","トモダ　ナツキ","1年生","友田　綾乃","トモダ　アヤノ","保護者","","","","","","","9065080469","できる","","","1","","8","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnudO3FkforwL-KN-e20ZDBFiJdJS5X7mRIC3v1DLx55849cOSOnK0O40lZZkb9dvXMs","","","","","","","","",""],["2024/09/17 12:48:25","mak15@yahoo.ne.jp","奥田　誠","オクダ　マコト","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊しない","","","","","","","","","","","","","","","","","","できる","毎回お化け屋敷の設置と案内を担当をしています。","","2","gvxvWv/FkdlZu2OYYJNomOvmubs6//pL0ptfQP7s0RtXELkaoRpZv2hX1hAYMbxb1NQ9+l47tm4UrBMZV410fX/C+n087U0mH99DfzHIRHbHoxJf73O5HKl5p2DYv1YMIaDXJQdPMTw1mVyq5ovSyA9krKMhybLVFQxZlLdT1Q0=","9","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnueez5HR3gku37_CBxNV0sVK4fc6cP4IzX2sdO4nRS31NKDv-dGucV8-eEnPY2AvMAQ","","","","","","","","",""],["2024/09/17 14:56:11","sny.mae510@gmail.com","名越　裕香","ナゴシ　ユカ","参加予定(宿泊あり)","宿泊する(テントあり)","宿泊予定なので不要","名越　優芽乃","ナゴシ　ユメノ","1年生","名越　亮","ナゴシ　リョウ","保護者","名越　優翔","ナゴシ　ユウト","未就学児","","","","","","","8011376989","","","","1","","10","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnudOb6qOXKHbDi0l5dy9YRsFQVGI7lDmjU39r_485CMkdeAYQuxt4HWmfMpHQD37fUs","","","","","","","","",""]],
+    }
   };
   const pattern = { // テストパターン(関数)の定義
-    constructor: [  // constructor関係のテスト
+    create: [  // create関係のテスト
       () => { // "target"シートをシートイメージから新規作成
         v.deleteSheet('log');  // 既存なら削除
-        v.deleteSheet('PL');  // 既存なら削除
-        return SpreadDb(null,{tables:v.src.PL});
+        v.deleteSheet('ユーザ管理');  // 既存なら削除
+        SpreadDb({command:'create',arg:src.status},{user:{id:'Admin'},AdminId:'Admin'});
+        //SpreadDb(null,{tables:v.src.camp});
+        //SpreadDb(null,{tables:v.src.PL});
       },
     ],
   };
@@ -169,7 +224,7 @@ function SpreadDbTest(){
   try {
 
     // テスト対象を絞る場合、以下のv.st,numの値を書き換え
-    v.p = 'constructor'; v.st = 0; v.num = 1 || pattern[v.p].length;
+    v.p = 'create'; v.st = 0; v.num = 1 || pattern[v.p].length;
 
     for( v.i=v.st ; v.i<v.st+v.num ; v.i++ ){
       v.rv = pattern[v.p][v.i]();
@@ -212,8 +267,9 @@ function SpreadDb(query=[],opt={}){
       user: null, // {number|string}=null ユーザのアカウント情報。nullの場合、権限のチェックは行わない
       account: null, // {string}=null アカウント一覧のテーブル名
       log: 'log', // {string}='log' 更新履歴テーブル名
-      maxTrial: null, // number}=5 シート更新時、ロックされていた場合の最大試行回数
-      interval: null, // number}=10000 シート更新時、ロックされていた場合の試行間隔(ミリ秒)
+      maxTrial: 5, // number}=5 シート更新時、ロックされていた場合の最大試行回数
+      interval: 10000, // number}=10000 シート更新時、ロックされていた場合の試行間隔(ミリ秒)
+      guestAuthority: {}, // {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     },opt);
   
     v.step = 1.2; // メンバ登録：内部設定項目
@@ -224,161 +280,150 @@ function SpreadDb(query=[],opt={}){
       log: [], // {sdbLog[]}=null 更新履歴シートオブジェクト
     });
   
-    v.step = 2; // 変更履歴出力指定ありなら「変更履歴」テーブル情報の既定値をpv.tableに追加
-    if( pv.opt.log ){
-      pv.table[pv.opt.log] = genTable({
-        name: pv.opt.log,
-        cols: genLog(), // sdbLog各項目の定義集
-      });
-      if( pv.table[pv.opt.log] instanceof Error ) throw pv.table[pv.opt.log];
-    }
+    v.step = 2; // 変更履歴テーブルが無ければ作成
+    pv.table[pv.opt.log] = createTable({
+      name: pv.opt.log,
+      cols: genLog(), // sdbLog各項目の定義集
+    });
   
     v.step = 3; // queryを順次処理処理
   
-    v.allow = pv.opt.user === null ? 'rwdos' : pv.opt.user.authority;
     if( !Array.isArray(query) ) query = [query];  // queryを配列化
     v.lock = LockService.getDocumentLock(); // スプレッドシートのロックを取得
   
-    for( v.tryNo=pv.maxTrial ; v.tryNo > 0 ; v.tryNo-- ){
-      if( v.lock.tryLock(pv.interval) ){
+    for( v.tryNo=pv.opt.maxTrial ; v.tryNo > 0 ; v.tryNo-- ){
+      if( v.lock.tryLock(pv.opt.interval) ){
   
         v.step = 3.1; // ロック成功、シートの更新処理開始
         for( v.i=0 ; v.i<query.length ; v.i++ ){
   
-          v.step = 3.2; // 戻り値、ログの既定値を設定
+          v.step = 3.11; // 戻り値、ログの既定値を設定
           v.queryResult = {query:query[v.i],isErr:false,message:'',data:null,log:null};
+        
+          v.step = 3.12; // 管理者かどうかをv.isAdmin(boolean)にセット
+          // 判定条件：AdminIdとuserIdの両方が指定されており、かつ一致
+          v.isAdmin = Object.hasOwn(pv.opt,'AdminId')
+            && pv.opt.user !== null
+            && Object.hasOwn(pv.opt.user,'id')
+            && pv.opt.user.id !== null
+            && pv.opt.AdminId === pv.opt.user.id;
+          console.log(`l.304 v.isAdmin=${v.isAdmin}`)
   
-          v.step = 3.3; // pv.tableに対象シートのデータが無ければ作成
-          if( !pv.table[query[v.i].table] ){
-            v.r = genTable({name:query[v.i].table});
-            if( v.r instanceof Error ) throw v.r;
-            pv.table[query[v.i].table] = v.r;
-          }
-  
-          v.step = 3.4; // v.allowに対象シートに対するユーザの権限をセット
-          if( pv.opt.user === null ){
-            v.allow = 'rwdos'; // nullの場合、全権限付与
+          v.step = 3.13; // ユーザの操作対象シートに対する権限をv.allowにセット
+          v.allow = v.isAdmin ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
+          : ( (pv.opt.user !== null && Object.hasOwn(pv.opt.user,'authority'))
+          ? pv.opt.user.authority[query[v.i].table] // 通常ユーザは指定テーブルの権限
+          : pv.opt.guestAuthority[query[v.i].table] );  // ゲストはゲスト用権限。通常ユーザでも指定無しならゲスト扱い
+          console.log(`l.311 v.allow=${v.allow}`)
+        
+          v.step = 3.2; // 処理内容を元に、必要とされる権限が与えられているか確認
+          if( v.allow.includes('o') ){
+        
+            v.step = 3.21;
+            // o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
+            // また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
+            //read/writeは自分のみ可、delete/schemaは実行不可
+            query[v.i].arg.where = pv.opt.user.id;  // 自レコードのみ対象に限定
+            switch( query[v.i].command ){
+              case 'select': v.isOK = true; v.func = selectRow; break;
+              case 'update': v.isOK = true; v.func = updateRow; break;
+              default: v.isOK = false;
+            }
+        
           } else {
-            if( Object.hasOwn(pv.opt.user.authority,query[v.i].table) ){
-              v.allow = pv.opt.user.authority[query[v.i].table];
-            } else {
-              v.msg = `シートに対する権限が登録されていません`;
+        
+            v.step = 3.22;
+            switch( query[v.i].command ){
+              case 'create': v.isOK = v.allow.includes('c'); v.func = createTable; break;
+              case 'select': v.isOK = v.allow.includes('r'); v.func = selectRow; break;
+              case 'update': v.isOK = (v.allow.includes('r') && v.allow.includes('w')); v.func = updateRow; break;
+              case 'append': case 'insert': v.isOK = v.allow.includes('w'); v.func = appendRow; break;
+              case 'delete': v.isOK = v.allow.includes('d'); v.func = deleteRow; break;
+              case 'schema': v.isOK = v.allow.includes('s'); v.func = getSchema; break;
+              default: v.isOK = false;
+            }
+        
+          }
+        
+          // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
+          if( v.isOK ){
+            //v.step = 3.6; // テーブル名のみでテーブル管理情報を必要としないgenSchema以外のメソッドにはテーブル管理情報を追加
+            // genSchemaはテーブル管理情報を作成する関数なので、引数としてのテーブル管理情報は不要
+            //if( query[v.i] instanceof Object ) query[v.i].arg.table = pv.table[query[v.i].table];
+        
+            v.step = 3.3; // 処理実行
+            v.result = v.func(query[v.i].arg);
+            console.log(`l.350 v.result=${v.result}`)
+            if( v.result instanceof Error ){
+        
+              v.step = 3.31; // selectRow, updateRow他のcommand系メソッドでエラー発生
+              // command系メソッドからエラーオブジェクトが帰ってきた場合はエラーとして処理
               Object.assign(v.queryResult,{
                 isErr: true,
-                message: v.msg,
+                message: v.result.message
               });
-              v.queryResult.log = genLog({  // 変更履歴シートにログ出力
+              v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
                 result: false,
-                message: v.msg,
+                message: v.result.message,
                 // before, after, diffは空欄
               });
               if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
-            }
-          }
-  
-          v.step = 3.5; // 処理内容を元に、必要とされる権限が与えられているか確認
-          if( v.queryResult.isErr === false ){
-            if( v.allow.includes('o') ){
-  
-              v.step = 3.51;
-              // o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
-              // また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
-              //read/writeは自分のみ可、delete/schemaは実行不可
-              v.isOK = true;
-              query[v.i].arg.where = pv.opt.user.id;  // 自レコードのみ対象とする
-              switch( query[v.i].command ){
-                case 'select': v.func = selectRow; break;
-                case 'update': v.func = updateRow; break;
-                default: v.isOK = false;
-              }
-  
+        
             } else {
-  
-              v.step = 3.52;
-              switch( query[v.i].command ){
-                case 'select': v.isOK = v.allow.includes('r'); v.func = selectRow; break;
-                case 'update': v.isOK = (v.allow.includes('r') && v.allow.includes('w')); v.func = updateRow; break;
-                case 'append': case 'insert': v.isOK = v.allow.includes('w'); v.func = appendRow; break;
-                case 'delete': v.isOK = v.allow.includes('d'); v.func = deleteRow; break;
-                case 'schema': v.isOK = v.allow.includes('s'); v.func = getSchema; break;
-                default: v.isOK = false;
-              }
-  
-            }
-  
-            // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
-            if( v.isOK ){
-              v.step = 3.53; // テーブル名のみでテーブル管理情報を必要としないgenSchema以外のメソッドにはテーブル管理情報を追加
-              if( query[v.i] instanceof Object ) query[v.i].arg.table = pv.table[query[v.i].table];
-  
-              v.step = 3.54; // 処理実行
-              v.result = v.func(query[v.i].arg);
-              if( v.result instanceof Error ){
-  
-                v.step = 3.541; // selectRow, updateRow他のcommand系メソッドでエラー発生
-                // command系メソッドからエラーオブジェクトが帰ってきた場合はエラーとして処理
-                Object.assign(v.queryResult,{
-                  isErr: true,
-                  message: v.result.message
-                });
-                v.queryResult.log = genLog({  // 変更履歴シートにログ出力
-                  result: false,
-                  message: v.result.message,
-                  // before, after, diffは空欄
+        
+              v.step = 3.32; // command系メソッドが正常終了した場合の処理
+              if( query[v.i].command === 'select' || query[v.i].command === 'schema' ){
+                v.step = 3.321; // select, schemaは結果をdataにセット
+                v.queryResult.data = v.result;
+                v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
+                  result: true,
+                  // messageは空欄
+                  // before, diffは空欄、afterに出力件数をセット
+                  after: query[v.i].command === 'select' ? `rownum=${v.result.length}` : null,
                 });
                 if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
-  
               } else {
-  
-                v.step = 3.542; // command系メソッドが正常終了した場合の処理
-                if( query[v.i].command === 'select' || query[v.i].command === 'schema' ){
-                  // select, schemaは結果をdataにセット
-                  v.queryResult.data = v.result;
-                  v.queryResult.log = genLog({  // 変更履歴シートにログ出力
-                    result: true,
-                    // messageは空欄
-                    // before, diffは空欄、afterに出力件数をセット
-                    after: query[v.i].command === 'select' ? `rownum=${v.result.length}` : null,
-                  });
-                  if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
-                } else {
-                  // update, append, deleteは実行結果(sdbLog)をlogにセット
-                  v.queryResult.log = v.result;
-                }
+                v.step = 3.322; // update, append, deleteは実行結果(sdbLog)をlogにセット
+                v.queryResult.log = v.result;
               }
-  
-            } else {
-  
-              v.step = 3.543; // isOKではない場合
-              v.msg = `シート「${query[v.i].table}」に対して'${query[v.i].command}'する権限がありません`;
-              Object.assign(v.queryResult,{
-                isErr: true,
-                message: v.msg,
-              });
-              v.queryResult.log = genLog({  // 変更履歴シートにログ出力
-                result: false,
-                message: v.msg,
-                // before, after, diffは空欄
-              });
-              if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
             }
+        
+          } else {
+        
+            v.step = 3.4; // isOKではない場合
+            v.msg = `シート「${query[v.i].table}」に対して'${query[v.i].command}'する権限がありません`;
+            Object.assign(v.queryResult,{
+              isErr: true,
+              message: v.msg,
+            });
+            v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
+              result: false,
+              message: v.msg,
+              // before, after, diffは空欄
+            });
+            if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
           }
-          v.step = 3.6; // 実行結果を戻り値に追加
+          
+          v.step = 3.5; // 実行結果を戻り値に追加
           v.rv.push(v.queryResult);
         }
   
-        v.step = 3.7; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
-        v.r = appendRow({table:pv.table[pv.opt.log],record:v.queryResult.map(x => x.log)});
+        v.step = 3.6; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
+        console.log(`l.407 v.rv=${JSON.stringify(v.rv)}`)
+        v.r = appendRow({
+          table: pv.table[pv.opt.log],
+          record: v.rv.log
+        });
         if( v.r instanceof Error ) throw v.r;
   
-        v.step = 3.8; // ロック解除
+        v.step = 3.7; // ロック解除
         v.lock.releaseLock();
         v.tryNo = 0;
       }
     }
   
     v.step = 9; // 終了処理
-    console.log(`${pv.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+    console.log(`${pv.whois} normal end.`);
     return v.rv;
   
   } catch(e) {
@@ -394,7 +439,7 @@ function SpreadDb(query=[],opt={}){
    * @returns {sdbLog[]}
    */
   function appendRow(arg){
-    const v = {whois:`${pv.whois}.appendRow`,step:0,rv:[],argument:JSON.stringify(record)};
+    const v = {whois:`${pv.whois}.appendRow`,step:0,rv:[]};
     console.log(`${v.whois} start.`);
     try {
   
@@ -486,7 +531,7 @@ function SpreadDb(query=[],opt={}){
   
       v.step = 9; // 終了処理
       v.rv = v.rv;
-      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+      console.log(`${v.whois} normal end.`);
       return v.rv;
   
     } catch(e) {
@@ -546,7 +591,123 @@ function SpreadDb(query=[],opt={}){
       }
   
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+  
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${stringify(v)}`);
+      return e;
+    }
+  }
+  /** createTable: 新規にシートを作成
+   * @param {sdbTable} arg
+   * @param {string} arg.name - テーブル名
+   * @param {sdbColumn[]} arg.cols - 項目定義オブジェクトの配列
+   * @param {Object[]|any[][]} arg.values - 行オブジェクトの配列、またはシートイメージ
+   * @returns {sdbLog}
+   */
+  function createTable(arg){
+    const v = {whois:`${pv.whois}.createTable`,step:0,rv:[]};
+    console.log(`${v.whois} start. arg.name=${arg.name}`);
+    try {
+  
+      v.step = 1.1; // 一件分のログオブジェクトを作成
+      v.log = genLog({
+        table: arg.name,
+        command: 'create',
+        arg: arg.cols,
+        result: true,
+        after: `created ${Object.hasOwn(arg,'values') ? arg.values.length : 0} rows.`,
+        // before, diffは空欄
+      });
+      if( v.log instanceof Error ) throw v.log;
+  
+      v.step = 1.2; // sdbTableのプロトタイプ作成
+      pv.table[arg.name] = v.table = {
+        name: arg.name, // {string} テーブル名(範囲名)
+        account: pv.opt.user ? pv.opt.user.id : null, // {string} 更新者のアカウント
+        sheet: pv.spread.getSheetByName(arg.name), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
+        schema: null, // {sdbSchema} シートの項目定義
+        values: [], // {Object[]} 行オブジェクトの配列。{項目名:値,..} 形式
+        header: [], // {string[]} 項目名一覧(ヘッダ行)
+        notes: [], // {string[]} ヘッダ行のメモ
+        colnum: 0, // {number} データ領域の列数
+        rownum: 0, // {number} データ領域の行数
+      };
+  
+      // ----------------------------------------------
+      // テーブル管理情報の作成
+      // ----------------------------------------------
+  
+      if( arg.cols ){ // 項目定義情報が存在する場合
+  
+        v.step = 2; // 項目定義が存在する場合
+        v.table.header = arg.cols.map(x => x.name);
+        v.table.colnum = v.table.header.length;
+  
+        if( arg.values ){
+  
+          v.step = 3; // 項目定義と初期データの両方存在 ⇒ 項目の並びを指定してconvertRow
+          v.convertRow = convertRow(arg.values,v.table.header);
+          if( v.convertRow instanceof Error ) throw v.convertRow;
+          v.table.values = v.convertRow.obj;
+          v.table.rownum = v.convertRow.raw.length;
+  
+        } else {
+  
+          v.step = 4; // 項目定義のみ存在 ⇒ values, rownumは取得不能なので既定値のまま
+          v.convertRow = null;
+  
+        }
+  
+      } else { // 項目定義情報が存在しない場合
+  
+        if( arg.values ){
+  
+          v.step = 5; // 項目定義不在で初期データのみ存在の場合
+          v.convertRow = convertRow(arg.values);
+          if( v.convertRow instanceof Error ) throw v.convertRow;
+          v.table.values = v.convertRow.obj;
+          v.table.header = v.convertRow.header;
+          v.table.colnum = v.table.header.length;
+          v.table.rownum = v.convertRow.raw.length;
+  
+        } else {
+          v.step = 6; // シートも項目定義も初期データも無いならエラー
+          throw new Error(`シートも項目定義も初期データも存在しません`);
+        }
+      }
+  
+      v.step = 7; // スキーマをインスタンス化
+      v.r = genSchema({
+        cols: arg.cols || null,
+        header: v.table.header,
+        notes: v.table.notes,
+        values: v.table.values,
+      });
+      if( v.r instanceof Error ) throw v.r;
+      v.table.schema = v.r.schema;
+      v.table.notes = v.r.notes;
+  
+      // ----------------------------------------------
+      v.step = 8; // シートが存在しない場合、新規追加
+      // ----------------------------------------------
+      v.step = 8.1; // シートの追加
+      v.table.sheet = pv.spread.insertSheet();
+      v.table.sheet.setName(arg.name);
+  
+      v.step = 8.2; // シートイメージのセット
+      v.data = [v.table.header, ...(v.convertRow === null ? [] : v.convertRow.raw)];
+      v.table.sheet.getRange(1,1,v.data.length,v.table.colnum).setValues(v.data);
+      v.table.sheet.autoResizeColumns(1,v.table.colnum);  // 各列の幅を項目名の幅に調整
+  
+      v.step = 8.3; // 項目定義メモの追加
+      v.table.sheet.getRange(1,1,1,v.table.colnum).setNotes([v.table.notes]);
+  
+      v.step = 9; // 終了処理
+      v.rv = [v.log];
+      console.log(`${v.whois} normal end.`);
       return v.rv;
   
     } catch(e) {
@@ -567,7 +728,7 @@ function SpreadDb(query=[],opt={}){
    *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
    */
   function deleteRow(arg){
-    const v = {whois:'sdbTable.deleteRow',step:0,rv:[],whereStr:[]};
+    const v = {whois:`${pv.whois}.deleteRow`,step:0,rv:[],whereStr:[]};
     console.log(`${v.whois} start.`);
     try {
   
@@ -629,7 +790,7 @@ function SpreadDb(query=[],opt={}){
   
       v.step = 9; // 終了処理
       v.rv = v.rv;
-      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+      console.log(`${v.whois} normal end.`);
       return v.rv;
   
     } catch(e) {
@@ -645,7 +806,7 @@ function SpreadDb(query=[],opt={}){
    * - update/delete他、引数でwhereを渡されるメソッドで使用
    */
   function determineApplicable(arg){
-    const v = {whois:'sdbTable.determineApplicable',step:0,rv:null};
+    const v = {whois:`${pv.whois}.determineApplicable`,step:0,rv:null};
     console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
   
@@ -673,7 +834,7 @@ function SpreadDb(query=[],opt={}){
       }
   
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+      console.log(`${v.whois} normal end.`);
       return v.rv;
   
     } catch(e) {
@@ -735,7 +896,7 @@ function SpreadDb(query=[],opt={}){
             v.step = 4; // 一行毎に属性の表記かを判定
             v.rv = {};
             v.lines.forEach(prop => {
-              v.m = prop.trim().match(/^["']?(.+?)["']?\s*:\s*["']?(.+)["']?$/);
+              v.m = prop.trim().match(/^["']?(.+?)["']?\s*:\s*["']?(.+?)["']?$/);
               if( v.m ) v.rv[v.m[1]] = v.m[2];
             });
   
@@ -808,7 +969,7 @@ function SpreadDb(query=[],opt={}){
       }
   
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
+      console.log(`${v.whois} normal end.`);
       return v.rv;
   
     } catch(e) {
@@ -822,7 +983,7 @@ function SpreadDb(query=[],opt={}){
    * @returns {sdbLog|sdbColumn[]} 変更履歴シートに追記した行オブジェクト、または変更履歴シート各項目の定義
    */
   function genLog(arg=null){
-    const v = {whois:'SpreadDb.genColumn',step:0,rv:null};
+    const v = {whois:'SpreadDb.genLog',step:0,rv:null};
     console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
   
@@ -867,7 +1028,7 @@ function SpreadDb(query=[],opt={}){
       }
   
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
+      console.log(`${v.whois} normal end.`);
       return v.rv;
   
     } catch(e) {
@@ -997,7 +1158,7 @@ function SpreadDb(query=[],opt={}){
       });
   
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
+      console.log(`${v.whois} normal end.`);
       return v.rv;
   
     } catch(e) {
@@ -1034,94 +1195,30 @@ function SpreadDb(query=[],opt={}){
       };
   
   
-      if( v.rv.sheet !== null ){
-        // ----------------------------------------------
-        v.step = 2; // シートが存在する場合の戻り値作成処理
-        // ----------------------------------------------
+      // ----------------------------------------------
+      v.step = 2; // シートから各種情報を取得
+      // ----------------------------------------------
   
-        v.step = 2.1; // シートイメージから各種情報を取得
-        v.getDataRange = v.rv.sheet.getDataRange();
-        v.getValues = v.getDataRange.getValues();
-        v.rv.header = JSON.parse(JSON.stringify(v.getValues[0]));
-        v.r = convertRow(v.getValues);
-        if( v.r instanceof Error ) throw v.r;
-        v.rv.values = v.r.obj;
-        v.rv.notes = v.getDataRange.getNotes()[0];
-        v.rv.colnum = v.rv.header.length;
-        v.rv.rownum = v.rv.values.length;
+      v.step = 2.1; // シートイメージを読み込み
+      v.getDataRange = v.rv.sheet.getDataRange();
+      v.getValues = v.getDataRange.getValues();
+      v.rv.header = JSON.parse(JSON.stringify(v.getValues[0]));
+      v.r = convertRow(v.getValues);
+      if( v.r instanceof Error ) throw v.r;
+      v.rv.values = v.r.obj;
+      v.rv.notes = v.getDataRange.getNotes()[0];
+      v.rv.colnum = v.rv.header.length;
+      v.rv.rownum = v.rv.values.length;
   
-        v.step = 2.3; // スキーマをインスタンス化
-        v.r = genSchema({
-          cols: [], // notesを優先するので空配列を指定
-          header: v.rv.header,
-          notes: v.rv.notes,
-          values: v.rv.values,
-        });
-        if( v.r instanceof Error ) throw v.r;
-        v.rv.schema = v.r.schema;
-  
-      } else {
-        // ----------------------------------------------
-        // シートが存在しない場合の戻り値作成処理
-        // ----------------------------------------------
-  
-        if( arg.cols ){
-  
-          v.step = 3; // 項目定義が存在する場合
-          v.rv.header = arg.cols.map(x => x.name);
-          v.rv.colnum = v.rv.header.length;
-          if( arg.values ){
-            // 項目定義と初期データの両方存在 ⇒ 項目の並びを指定してconvertRow
-            v.convertRow = convertRow(arg.values,v.rv.header);
-            if( v.convertRow instanceof Error ) throw v.convertRow;
-            v.rv.values = v.convertRow.obj;
-            v.rv.rownum = v.convertRow.raw.length;
-          } else {
-            // 項目定義のみ存在 ⇒ values, rownumは取得不能なので既定値のまま
-            v.convertRow = null;
-          }
-  
-        } else {
-          if( arg.values ){
-            v.step = 4; // 項目定義不在で初期データのみ存在の場合
-            v.convertRow = convertRow(arg.values);
-            if( v.convertRow instanceof Error ) throw v.convertRow;
-            v.rv.values = v.convertRow.obj;
-            v.rv.header = v.convertRow.header;
-            v.rv.colnum = v.rv.header.length;
-            v.rv.rownum = v.convertRow.raw.length;
-          } else {
-            // シートも項目定義も初期データも無いならエラー
-            throw new Error(`シートも項目定義も初期データも存在しません`);
-          }
-        }
-  
-        v.step = 5; // スキーマをインスタンス化
-        v.r = genSchema({
-          cols: arg.cols || null,
-          header: v.rv.header,
-          notes: v.rv.notes,
-          values: v.rv.values,
-        });
-        if( v.r instanceof Error ) throw v.r;
-        v.rv.schema = v.r.schema;
-        v.rv.notes = v.r.notes;
-  
-        // ----------------------------------------------
-        v.step = 6; // シートが存在しない場合、新規追加
-        // ----------------------------------------------
-        v.step = 6.1; // シートの追加
-        v.rv.sheet = pv.spread.insertSheet();
-        v.rv.sheet.setName(arg.name);
-  
-        v.step = 6.2; // シートイメージのセット
-        v.data = [v.rv.header, ...(v.convertRow === null ? [] : v.convertRow.raw)];
-        v.rv.sheet.getRange(1,1,v.data.length,v.rv.colnum).setValues(v.data);
-  
-        v.step = 6.3; // 項目定義メモの追加
-        console.log(`l.391 v.rv.column=${JSON.stringify(v.rv.column)}\nv.rv.notes=${JSON.stringify(v.rv.notes)}`)
-        v.rv.sheet.getRange(1,1,1,v.rv.colnum).setNotes([v.rv.notes]);
-      }
+      v.step = 2.3; // スキーマをインスタンス化
+      v.r = genSchema({
+        cols: [], // notesを優先するので空配列を指定
+        header: v.rv.header,
+        notes: v.rv.notes,
+        values: v.rv.values,
+      });
+      if( v.r instanceof Error ) throw v.r;
+      v.rv.schema = v.r.schema;
   
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.`);
@@ -1138,7 +1235,7 @@ function SpreadDb(query=[],opt={}){
    * @returns {Object.<string,sdbColumn[]>} {テーブル名：項目定義オブジェクトの配列}形式
    */
   function getSchema(arg){
-    const v = {whois:'sdbTable.getSchema',step:0,rv:[]};
+    const v = {whois:`${pv.whois}.getSchema`,step:0,rv:[]};
     console.log(`${v.whois} start.`);
     try {
   
@@ -1147,7 +1244,7 @@ function SpreadDb(query=[],opt={}){
   
       v.step = 9; // 終了処理
       v.rv = v.log;
-      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+      console.log(`${v.whois} normal end.`);
       return v.rv;
   
     } catch(e) {
@@ -1219,7 +1316,7 @@ function SpreadDb(query=[],opt={}){
    *     【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
    */
   function updateRow(any){
-    const v = {whois:'sdbTable.updateRow',step:0,rv:[],
+    const v = {whois:`${pv.whois}.updateRow`,step:0,rv:[],
       top:Infinity,left:Infinity,right:0,bottom:0, // 更新範囲の行列番号
     };
     console.log(`${v.whois} start.\ntrans(${whichType(trans)})=${stringify(trans)}`);
@@ -1362,7 +1459,7 @@ function SpreadDb(query=[],opt={}){
       }
   
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+      console.log(`${v.whois} normal end.`);
       return v.rv;
   
     } catch(e) {

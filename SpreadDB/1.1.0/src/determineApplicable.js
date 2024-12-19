@@ -5,7 +5,7 @@
  * - update/delete他、引数でwhereを渡されるメソッドで使用
  */
 function determineApplicable(arg){
-  const v = {whois:'sdbTable.determineApplicable',step:0,rv:null};
+  const v = {whois:`${pv.whois}.determineApplicable`,step:0,rv:null};
   console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
   try {
 
@@ -33,7 +33,7 @@ function determineApplicable(arg){
     }
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+    console.log(`${v.whois} normal end.`);
     return v.rv;
 
   } catch(e) {

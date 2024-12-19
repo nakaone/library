@@ -16,7 +16,7 @@
  *     【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
  */
 function updateRow(any){
-  const v = {whois:'sdbTable.updateRow',step:0,rv:[],
+  const v = {whois:`${pv.whois}.updateRow`,step:0,rv:[],
     top:Infinity,left:Infinity,right:0,bottom:0, // 更新範囲の行列番号
   };
   console.log(`${v.whois} start.\ntrans(${whichType(trans)})=${stringify(trans)}`);
@@ -159,7 +159,7 @@ function updateRow(any){
     }
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+    console.log(`${v.whois} normal end.`);
     return v.rv;
 
   } catch(e) {

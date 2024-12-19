@@ -5,7 +5,7 @@
  * @returns {sdbLog[]}
  */
 function appendRow(arg){
-  const v = {whois:`${pv.whois}.appendRow`,step:0,rv:[],argument:JSON.stringify(record)};
+  const v = {whois:`${pv.whois}.appendRow`,step:0,rv:[]};
   console.log(`${v.whois} start.`);
   try {
 
@@ -97,7 +97,7 @@ function appendRow(arg){
 
     v.step = 9; // 終了処理
     v.rv = v.rv;
-    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+    console.log(`${v.whois} normal end.`);
     return v.rv;
 
   } catch(e) {

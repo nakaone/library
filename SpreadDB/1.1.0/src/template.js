@@ -20,6 +20,7 @@ function SpreadDb(query=[],opt={}){
   
   //::$src/appendRow.js::
   //::$src/convertRow.js::
+  //::$src/createTable.js::
   //::$src/deleteRow.js::
   //::$src/determineApplicable.js::
   //::$src/genColumn.js::

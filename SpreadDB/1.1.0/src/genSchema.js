@@ -119,7 +119,7 @@ function genSchema(arg){
     });
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
+    console.log(`${v.whois} normal end.`);
     return v.rv;
 
   } catch(e) {

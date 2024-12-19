@@ -3,7 +3,7 @@
  * @returns {Object.<string,sdbColumn[]>} {テーブル名：項目定義オブジェクトの配列}形式
  */
 function getSchema(arg){
-  const v = {whois:'sdbTable.getSchema',step:0,rv:[]};
+  const v = {whois:`${pv.whois}.getSchema`,step:0,rv:[]};
   console.log(`${v.whois} start.`);
   try {
 
@@ -12,7 +12,7 @@ function getSchema(arg){
 
     v.step = 9; // 終了処理
     v.rv = v.log;
-    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+    console.log(`${v.whois} normal end.`);
     return v.rv;
 
   } catch(e) {

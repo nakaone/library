@@ -10,7 +10,7 @@
  *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
  */
 function deleteRow(arg){
-  const v = {whois:'sdbTable.deleteRow',step:0,rv:[],whereStr:[]};
+  const v = {whois:`${pv.whois}.deleteRow`,step:0,rv:[],whereStr:[]};
   console.log(`${v.whois} start.`);
   try {
 
@@ -72,7 +72,7 @@ function deleteRow(arg){
 
     v.step = 9; // 終了処理
     v.rv = v.rv;
-    console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
+    console.log(`${v.whois} normal end.`);
     return v.rv;
 
   } catch(e) {
