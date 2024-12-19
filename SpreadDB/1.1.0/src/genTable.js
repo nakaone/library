@@ -109,6 +109,7 @@ function genTable(arg){
       v.step = 6.2; // シートイメージのセット
       v.data = [v.rv.header, ...(v.convertRow === null ? [] : v.convertRow.raw)];
       v.rv.sheet.getRange(1,1,v.data.length,v.rv.colnum).setValues(v.data);
+      v.rv.sheet.autoResizeColumns(1,v.rv.colnum);  // 各列の幅を項目名の幅に調整
 
       v.step = 6.3; // 項目定義メモの追加
       console.log(`l.391 v.rv.column=${JSON.stringify(v.rv.column)}\nv.rv.notes=${JSON.stringify(v.rv.notes)}`)
