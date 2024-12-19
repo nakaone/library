@@ -51,7 +51,7 @@ function genColumn(arg={}){
           v.step = 4; // 一行毎に属性の表記かを判定
           v.rv = {};
           v.lines.forEach(prop => {
-            v.m = prop.trim().match(/^["']?(.+?)["']?\s*:\s*["']?(.+)["']?$/);
+            v.m = prop.trim().match(/^["']?(.+?)["']?\s*:\s*["']?(.+?)["']?$/);
             if( v.m ) v.rv[v.m[1]] = v.m[2];
           });
 
