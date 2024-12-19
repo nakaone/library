@@ -1,73 +1,83 @@
 /** appendRow: 領域に新規行を追加
- * @param {Object|Object[]} record=[] - 追加するオブジェクトの配列
+ * @param {Object|Object[]} arg
+ * @param {sdbTable} arg.table - 操作対象のテーブル管理情報
+ * @param {Object|Object[]} arg.record=[] - 追加する行オブジェクト
  * @returns {sdbLog[]}
  */
-function appendRow(record){
+function appendRow(arg){
   const v = {whois:`${pv.whois}.appendRow`,step:0,rv:[],argument:JSON.stringify(record)};
-  console.log(`${v.whois} start.\nrecord(${whichType(record)})=${stringify(record)}`);
+  console.log(`${v.whois} start.`);
   try {
 
     // ------------------------------------------------
     v.step = 1; // 事前準備
     // ------------------------------------------------
-    if( !Array.isArray(record)) record = [record];
+    if( !Array.isArray(arg.record)) arg.record = [arg.record];
     v.target = [];  // 対象領域のシートイメージを準備
-    v.log = []; // 更新履歴のシートイメージを準備
 
     // ------------------------------------------------
     v.step = 2; // 追加レコードをシートイメージに展開
     // ------------------------------------------------
-    v.header = pv.schema.cols.map(x => x.name);
-    for( v.i=0 ; v.i<record.length ; v.i++ ){
+    for( v.i=0 ; v.i<arg.record.length ; v.i++ ){
 
-      v.logObj = new sdbLog({account: pv.account,range: pv.name,
-        action:'append',argument:v.argument});
+      v.step = 2.1; // 一件分のログオブジェクトを作成
+      v.log = genLog({
+        table: arg.table.name,
+        command: 'append',
+        arg: arg.record,
+        result: true,
+        //message, before, after, diffは後工程で追加
+      });
+      if( v.log instanceof Error ) throw v.log;
 
-      v.step = 2.1; // auto_increment項目の設定
+      v.step = 2.2; // auto_increment項目に値を設定
       // ※ auto_increment設定はuniqueチェックに先行
-      for( v.ai in pv.schema.auto_increment ){
-        if( !record[v.i][v.ai] ){
-          pv.schema.auto_increment[v.ai].current += pv.schema.auto_increment[v.ai].step;
-          record[v.i][v.ai] = pv.schema.auto_increment[v.ai].current;
+      for( v.ai in arg.table.schema.auto_increment ){
+        if( !arg.record[v.i][v.ai] ){ // 値が未設定だった場合は採番実行
+          arg.table.schema.auto_increment[v.ai].current += arg.table.schema.auto_increment[v.ai].step;
+          arg.record[v.i][v.ai] = arg.table.schema.auto_increment[v.ai].current;
         }
       }
 
-      v.step = 2.2; // 既定値の設定
-      record[v.i] = Object.assign({},pv.schema.defaultRow,record[v.i]);
+      v.step = 2.3; // 既定値の設定
+      for( v.dv in arg.table.schema.defaultRow ){
+        arg.record[v.i][v.dv] = arg.table.schema.deleteRow[v.dv](arg.record[v.i]);
+      }
 
-      v.step = 2.3; // 追加レコードの正当性チェック(unique重複チェック)
-      for( v.unique in pv.schema.unique ){
-        if( pv.schema.unique[v.unique].indexOf(record[v.i][v.unique]) >= 0 ){
+      v.step = 2.4; // 追加レコードの正当性チェック(unique重複チェック)
+      for( v.unique in arg.table.schema.unique ){
+        if( arg.table.schema.unique[v.unique].indexOf(arg.record[v.i][v.unique]) >= 0 ){
           // 登録済の場合はエラーとして処理
-          v.logObj.result = false;
+          v.log.result = false;
           // 複数項目のエラーメッセージに対応するため配列化を介在させる
-          v.logObj.message = v.logObj.message === null ? [] : v.logObj.message.split('\n');
-          v.logObj.message.push(`${v.unique}欄の値「${record[v.i][v.unique]}」が重複しています`);
-          v.logObj.message = v.logObj.message.join('\n');
+          v.log.message = v.log.message === null ? [] : v.log.message.split('\n');
+          v.log.message.push(`${v.unique}欄の値「${arg.record[v.i][v.unique]}」が重複しています`);
+          v.log.message = v.log.message.join('\n');
         } else {
-          // 未登録の場合pv.sdbSchema.uniqueに値を追加
-          pv.schema.unique[v.unique].push(record[v.i][v.unique]);
+          // 未登録の場合arg.table.sdbSchema.uniqueに値を追加
+          arg.table.schema.unique[v.unique].push(arg.record[v.i][v.unique]);
         }
       }
 
-      v.step = 2.4; // 正当性チェックOKの場合の処理
-      if( v.logObj.result ){
-        v.step = 2.41; // シートイメージに展開して登録
+      v.step = 2.5; // 正当性チェックOKの場合の処理
+      if( v.log.result ){
+
+        v.step = 2.51; // シートイメージに展開して登録
         v.row = [];
-        for( v.j=0 ; v.j<v.header.length ; v.j++ ){
-          v.row[v.j] = record[v.i][v.header[v.j]];
+        for( v.j=0 ; v.j<arg.table.header.length ; v.j++ ){
+          v.row[v.j] = arg.record[v.i][arg.table.header[v.j]];
         }
         v.target.push(v.row);
 
-        v.step = 2.42; // pv.valuesへの追加
-        pv.values.push(record[v.i]);
+        v.step = 2.52; // arg.table.valuesへの追加
+        arg.table.values.push(arg.record[v.i]);
 
-        v.step = 2.43; // ログに追加レコード情報を記載
-        v.logObj.after = v.logObj.diff = JSON.stringify(record[v.i]);
+        v.step = 2.53; // ログに追加レコード情報を記載
+        v.log.after = v.log.diff = JSON.stringify(arg.record[v.i]);
       }
 
-      v.step = 2.5; // 成否に関わらずログ出力対象に保存
-      v.log.push(v.logObj);
+      v.step = 2.6; // 成否に関わらず戻り値に保存
+      v.rv.push(v.log);
     }
 
     // ------------------------------------------------
@@ -75,24 +85,18 @@ function appendRow(record){
     // ------------------------------------------------
     v.step = 3.1; // 対象シートへの展開
     if( v.target.length > 0 ){
-      pv.sheet.getRange(
-        pv.bottom+1,
-        pv.left,
+      arg.table.sheet.getRange(
+        arg.table.rownum + 2,
+        1,
         v.target.length,
         v.target[0].length
       ).setValues(v.target);
     }
-    // pv.sdbTable.bottomの書き換え
-    pv.bottom += v.target.length;
-
-    v.step = 3.2; // 変更履歴追記対象なら追記(変更履歴シートは追記対象外)
-    if( pv.log !== null ){
-      v.r = pv.log.append(v.log);
-      if( v.r instanceof Error ) throw v.r;
-    }
+    v.step = 3.2; // arg.table.rownumの書き換え
+    arg.table.rownum += v.target.length;
 
     v.step = 9; // 終了処理
-    v.rv = v.log;
+    v.rv = v.rv;
     console.log(`${v.whois} normal end.\nv.rv(${whichType(v.rv)})=${stringify(v.rv)}`);
     return v.rv;
 

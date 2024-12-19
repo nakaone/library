@@ -5,7 +5,7 @@
  * @param [arg.notes] {string[]} - 項目定義メモの配列
  * @param [arg.values] {Object[]} - 初期データとなる行オブジェクトの配列
  * @returns {Object|Error}
- * 
+ *
  * - 戻り値のオブジェクト
  *   - schema {sdbSchema}
  *   - notes {string[]} ヘッダ行に対応したメモ

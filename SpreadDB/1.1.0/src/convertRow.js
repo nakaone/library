@@ -2,7 +2,7 @@
  * @param {any[][]|Object[]} data - 行データ。シートイメージか行オブジェクトの配列
  * @param {string[]} [header]=[] - ヘッダ行。rowが行オブジェクトで項目の並びを指定したい場合に使用
  * @returns {Object}
- * 
+ *
  * - 戻り値のオブジェクト
  *   - raw {any[][]} シートイメージ
  *   - obj {Object[]} 行オブジェクトの配列

@@ -81,10 +81,10 @@ function genTable(arg){
           v.rv.values = v.convertRow.obj;
           v.rv.header = v.convertRow.header;
           v.rv.colnum = v.rv.header.length;
-          v.rv.rownum = v.convertRow.raw.length;  
+          v.rv.rownum = v.convertRow.raw.length;
         } else {
           // シートも項目定義も初期データも無いならエラー
-          throw new Error(`シートも項目定義も初期データも存在しません`);            
+          throw new Error(`シートも項目定義も初期データも存在しません`);
         }
       }
 

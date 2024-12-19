@@ -1,13 +1,13 @@
 /** genColumn: sdbColumnオブジェクトを生成
  * @param arg {sdbColumn|string} - 項目定義オブジェクト、または項目定義メモまたは項目名
  * @returns {sdbColumn|Error}
- * 
+ *
  * - auto_incrementの記載ルール
  *   - null ⇒ 自動採番しない
  *   - boolean ⇒ true:自動採番する(基数=1,増減値=1)、false:自動採番しない
  *   - number ⇒ 自動採番する(基数=指定値,増減値=1)
  *   - number[] ⇒ 自動採番する(基数=添字0,増減値=添字1)
- * 
+ *
  * - 戻り値のオブジェクト
  *   - column {sdbColumn}
  *   - note {string[]} メモ用の文字列
@@ -37,33 +37,33 @@ function genColumn(arg={}){
         isJSON: (str) => {let r;try{r=JSON.parse(str)}catch(e){r=null} return r},
       };
       try {
-  
+
         v.step = 1; // コメントの削除
         arg = arg.replace(v.rex,'');
-  
+
         v.step = 2; // JSONで定義されていたらそのまま採用
         v.rv = v.isJSON(arg);
-  
+
         if( v.rv === null ){
           v.step = 3; // 非JSON文字列だった場合、改行で分割
           v.lines = arg.split('\n');
-  
+
           v.step = 4; // 一行毎に属性の表記かを判定
           v.rv = {};
           v.lines.forEach(prop => {
             v.m = prop.trim().match(/^["']?(.+?)["']?\s*:\s*["']?(.+)["']?$/);
             if( v.m ) v.rv[v.m[1]] = v.m[2];
           });
-  
+
           v.step = 5; // 属性項目が無ければ項目名と看做す
           if( Object.keys(v.rv).length === 0 ){
             v.rv = {name:arg.trim()};
           }
         }
-  
+
         v.step = 9; // 終了処理
         return v.rv;
-  
+
       } catch(e) {
         e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
         console.error(`${e.message}\nv=${stringify(v)}`);
@@ -83,10 +83,15 @@ function genColumn(arg={}){
 
     v.step = 2; // メンバに格納
     v.typedef.map(x => x.name).forEach(x => {
-      v.rv.column[x] = Object.hasOwn(arg,x) ? arg[x] : null;
+      v.rv.column[x] = arg.hasOwnProperty(x) ? arg[x] : null;
     });
 
-    v.step = 3; // auto_incrementをオブジェクトに変換
+    v.step = 3; // defaultを関数に変換
+    if( v.rv.column.default !== null && typeof v.rv.column.default === 'string' ){
+      v.rv.column.default = new Function('o',v.rv.column.default);
+    }
+
+    v.step = 4; // auto_incrementをオブジェクトに変換
     if( v.rv.column.auto_increment !== null && String(v.rv.column.auto_increment).toLowerCase() !== 'false' ){
       switch( whichType(v.rv.column.auto_increment) ){
         case 'Array': v.rv.column.auto_increment = {
@@ -112,7 +117,7 @@ function genColumn(arg={}){
       for( v.a in v.rv.column ){
         v.l = `${v.a}: "${v.rv.column[v.a]}"`;
         v.c = v.typedef.find(x => x.name === v.a);
-        if( Object.hasOwn(v.c,'note') ) v.l += ` // ${v.c.note}`;
+        if( v.c.hasOwnProperty('note') ) v.l += ` // ${v.c.note}`;
         v.x.push(v.l);
       }
       v.rv.note = v.x.join('\n');
