@@ -93,7 +93,7 @@ function SpreadDbTest(){
         {name:'deleted',type:'string'}, // 論理削除日時
       ],
     },
-    PL: { // "損益計算書"シート(valuesのみ)
+    PL: { // "損益計算書"シート(valuesのみ、先頭ヘッダ行)
       name: '損益計算書',
       values: [
         ['大','中','勘定科目','一覧存否','L1','L2','SQ','本籍'],
@@ -219,11 +219,13 @@ function SpreadDbTest(){
   };
   const pattern = { // テストパターン(関数)の定義
     create: [  // create関係のテスト
-      () => { // "target"シートをシートイメージから新規作成
+      () => { // 0.基本形
         v.deleteSheet(); // 既存シートを全部削除
-        SpreadDb({command:'create',arg:src.status},{user:{id:'Admin'},AdminId:'Admin'});
-        SpreadDb({command:'create',arg:src.camp},{user:{id:'Admin'},AdminId:'Admin'});
+        //SpreadDb({command:'create',arg:src.status},{user:{id:'Admin'},AdminId:'Admin'});
+        //SpreadDb({command:'create',arg:src.camp},{user:{id:'Admin'},AdminId:'Admin'});
         SpreadDb({command:'create',arg:src.PL},{user:{id:'Admin'},AdminId:'Admin'});
+      },
+      () => { // 1.管理者以外で作成できないことの確認
       },
     ],
   };
@@ -560,12 +562,12 @@ function SpreadDb(query=[],opt={}){
     console.log(`${v.whois} start.`);
     try {
   
-      if( Array.isArray(data)[0] ){
+      if( Array.isArray(data[0]) ){
         v.step = 1; // シートイメージ -> 行オブジェクト
         v.rv.raw = data;
         v.rv.obj = [];
         v.rv.header = data[0];
-        for( v.i=0 ; v.i<data.length ; v.i++ ){
+        for( v.i=1 ; v.i<data.length ; v.i++ ){
           v.o = {};
           for( v.j=0 ; v.j<data[v.i].length ; v.j++ ){
             if( data[v.i][v.j] ){
