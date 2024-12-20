@@ -44,7 +44,8 @@ function SpreadDbTest(){
     - guestAuthority {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - AdminId {string} 管理者として扱うuserId
   */
-  const v = {whois:'SpreadDbTest',step:0,rv:null,
+  const v = {do:{p:'create',st:1,num:0},//num=0なら全部
+    whois:'SpreadDbTest',step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
     deleteSheet: (sheetName=null) => {  // テスト用シートの削除関数
@@ -226,26 +227,13 @@ function SpreadDbTest(){
         SpreadDb({command:'create',arg:src.PL},{user:{id:'Admin'},AdminId:'Admin'});
       },
       () => { // 1.管理者以外で作成できないことの確認
+        v.deleteSheet(); // 既存シートを全部削除
+        v.r = SpreadDb({command:'create',arg:src.status},{user:{id:'pikumin'},AdminId:'Admin'});
+        console.log(`${v.whois} end: v.r(${whichType(v.r)})=${JSON.stringify(v.r,null,2)}`);
       },
     ],
   };
-  console.log(`${v.whois} start.`);
-  try {
-
-    // テスト対象を絞る場合、以下のv.st,numの値を書き換え
-    v.p = 'create'; v.st = 0; v.num = 1 || pattern[v.p].length;
-
-    for( v.i=v.st ; v.i<v.st+v.num ; v.i++ ){
-      v.rv = pattern[v.p][v.i]();
-      if( v.rv instanceof Error ) throw v.rv;
-      console.log(`===== pattern.${v.i} end.\n${stringify(v.rv)}`);
-    }
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
+  for( v.i=v.do.st ; v.i<(v.do.num===0 ? pattern[v.do.p].length : v.do.st+v.do.num) ; v.i++ ) pattern[v.do.p][v.i]();
 }
 
 /** SpreadDb: Google Spreadに対してRDBのようなCRUDを行う
