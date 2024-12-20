@@ -706,7 +706,7 @@ function SpreadDb(query=[],opt={}){
         v.table.sheet.setName(arg.name);
     
         v.step = 6.2; // シートイメージのセット
-        v.data = [v.table.header, ...(v.convertRow === null ? [] : v.convertRow.raw)];
+        v.data = v.convertRow === null ? [v.table.header] : v.convertRow.raw;
         v.table.sheet.getRange(1,1,v.data.length,v.table.colnum).setValues(v.data);
         v.table.sheet.autoResizeColumns(1,v.table.colnum);  // 各列の幅を項目名の幅に調整
     
