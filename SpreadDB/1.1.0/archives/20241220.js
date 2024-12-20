@@ -47,9 +47,22 @@ function SpreadDbTest(){
   const v = {whois:'SpreadDbTest',step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
-    deleteSheet: (sheetName) => {  // テスト用シートの削除関数
-      v.sheet = v.spread.getSheetByName(sheetName);
-      if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+    deleteSheet: (sheetName=null) => {  // テスト用シートの削除関数
+      /** deleteSheet: 指定されたテスト用シートを削除
+       * @param {string|string[]|null} sheetName=null - string:削除対象シート名(配列可)、null:readme以外全部削除
+       * @returns {void}
+       */
+      if( sheetName === null ){ // 全シート削除
+        sheetName = v.spread.getSheets().map(x => x.getName());
+      } else if( typeof sheetName === 'string' ){ // 単一のシート名指定
+        sheetName = [sheetName];
+      }
+      sheetName.forEach(x => {
+        if( x !== 'readme' ){ // readmeシートのみ削除対象外
+          v.sheet = v.spread.getSheetByName(x);
+          if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);  
+        }
+      });
     },
     raw2obj: sheet => { // シートイメージ(二次元配列)を行オブジェクトに変換
       v.data = JSON.parse(JSON.stringify(v.src[sheet].values));
@@ -207,11 +220,10 @@ function SpreadDbTest(){
   const pattern = { // テストパターン(関数)の定義
     create: [  // create関係のテスト
       () => { // "target"シートをシートイメージから新規作成
-        v.deleteSheet('log');  // 既存なら削除
-        v.deleteSheet('ユーザ管理');  // 既存なら削除
+        v.deleteSheet(); // 既存シートを全部削除
         SpreadDb({command:'create',arg:src.status},{user:{id:'Admin'},AdminId:'Admin'});
-        //SpreadDb(null,{tables:v.src.camp});
-        //SpreadDb(null,{tables:v.src.PL});
+        SpreadDb({command:'create',arg:src.camp},{user:{id:'Admin'},AdminId:'Admin'});
+        SpreadDb({command:'create',arg:src.PL},{user:{id:'Admin'},AdminId:'Admin'});
       },
     ],
   };
@@ -276,10 +288,11 @@ function SpreadDb(query=[],opt={}){
     });
   
     v.step = 2; // 変更履歴テーブルが無ければ作成
-    pv.table[pv.opt.log] = createTable({
+    v.r = createTable({
       name: pv.opt.log,
       cols: genLog(), // sdbLog各項目の定義集
     });
+    if( v.r instanceof Error ) throw v.r;
   
     v.step = 3; // queryを順次処理処理
   
@@ -302,14 +315,12 @@ function SpreadDb(query=[],opt={}){
             && Object.hasOwn(pv.opt.user,'id')
             && pv.opt.user.id !== null
             && pv.opt.AdminId === pv.opt.user.id;
-          console.log(`l.304 v.isAdmin=${v.isAdmin}`)
   
           v.step = 3.13; // ユーザの操作対象シートに対する権限をv.allowにセット
           v.allow = v.isAdmin ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
           : ( (pv.opt.user !== null && Object.hasOwn(pv.opt.user,'authority'))
           ? pv.opt.user.authority[query[v.i].table] // 通常ユーザは指定テーブルの権限
           : pv.opt.guestAuthority[query[v.i].table] );  // ゲストはゲスト用権限。通常ユーザでも指定無しならゲスト扱い
-          console.log(`l.311 v.allow=${v.allow}`)
         
           v.step = 3.2; // 処理内容を元に、必要とされる権限が与えられているか確認
           if( v.allow.includes('o') ){
@@ -347,19 +358,18 @@ function SpreadDb(query=[],opt={}){
             //if( query[v.i] instanceof Object ) query[v.i].arg.table = pv.table[query[v.i].table];
         
             v.step = 3.3; // 処理実行
-            v.result = v.func(query[v.i].arg);
-            console.log(`l.350 v.result=${v.result}`)
-            if( v.result instanceof Error ){
+            v.sdbLog = v.func(query[v.i].arg);
+            if( v.sdbLog instanceof Error ){
         
               v.step = 3.31; // selectRow, updateRow他のcommand系メソッドでエラー発生
               // command系メソッドからエラーオブジェクトが帰ってきた場合はエラーとして処理
               Object.assign(v.queryResult,{
                 isErr: true,
-                message: v.result.message
+                message: v.sdbLog.message
               });
               v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
                 result: false,
-                message: v.result.message,
+                message: v.sdbLog.message,
                 // before, after, diffは空欄
               });
               if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
@@ -369,17 +379,17 @@ function SpreadDb(query=[],opt={}){
               v.step = 3.32; // command系メソッドが正常終了した場合の処理
               if( query[v.i].command === 'select' || query[v.i].command === 'schema' ){
                 v.step = 3.321; // select, schemaは結果をdataにセット
-                v.queryResult.data = v.result;
+                v.queryResult.data = v.sdbLog;
                 v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
                   result: true,
                   // messageは空欄
                   // before, diffは空欄、afterに出力件数をセット
-                  after: query[v.i].command === 'select' ? `rownum=${v.result.length}` : null,
+                  after: query[v.i].command === 'select' ? `rownum=${v.sdbLog.length}` : null,
                 });
                 if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
               } else {
                 v.step = 3.322; // update, append, deleteは実行結果(sdbLog)をlogにセット
-                v.queryResult.log = v.result;
+                v.queryResult.log = v.sdbLog;
               }
             }
         
@@ -404,10 +414,9 @@ function SpreadDb(query=[],opt={}){
         }
   
         v.step = 3.6; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
-        console.log(`l.407 v.rv=${JSON.stringify(v.rv)}`)
         v.r = appendRow({
           table: pv.table[pv.opt.log],
-          record: v.rv.log
+          record: v.rv.map(x => x.log)[0],
         });
         if( v.r instanceof Error ) throw v.r;
   
@@ -435,9 +444,9 @@ function SpreadDb(query=[],opt={}){
    */
   function appendRow(arg){
     const v = {whois:`${pv.whois}.appendRow`,step:0,rv:[]};
-    console.log(`${v.whois} start.`);
+    console.log(`${v.whois} start: table="${arg.table}", rows=${arg.record.length}`);
     try {
-  
+
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
@@ -470,7 +479,7 @@ function SpreadDb(query=[],opt={}){
   
         v.step = 2.3; // 既定値の設定
         for( v.dv in arg.table.schema.defaultRow ){
-          arg.record[v.i][v.dv] = arg.table.schema.deleteRow[v.dv](arg.record[v.i]);
+          arg.record[v.i][v.dv] = arg.table.schema.defaultRow[v.dv](arg.record[v.i]);
         }
   
         v.step = 2.4; // 追加レコードの正当性チェック(unique重複チェック)
@@ -494,7 +503,8 @@ function SpreadDb(query=[],opt={}){
           v.step = 2.51; // シートイメージに展開して登録
           v.row = [];
           for( v.j=0 ; v.j<arg.table.header.length ; v.j++ ){
-            v.row[v.j] = arg.record[v.i][arg.table.header[v.j]];
+            v.a = arg.record[v.i][arg.table.header[v.j]];
+            v.row[v.j] = (v.a && v.a !== 'null' && v.a !== 'undefined') ? v.a : '';
           }
           v.target.push(v.row);
   
@@ -568,15 +578,15 @@ function SpreadDb(query=[],opt={}){
         v.step = 2; // 行オブジェクト -> シートイメージ
         v.rv.raw = [];
         v.rv.obj = data;
-        v.rv.header = Object.keys(data[0]);
+        v.rv.header = header.length > 0 ? header : Object.keys(data[0]);
         for( v.map={},v.i=0 ; v.i<v.rv.header ; v.i++ ){
           v.map[v.rv.header[v.i]] = v.i;
         }
         for( v.i=0 ; v.i<data.length ; v.i++ ){
           v.arr = [];
           for( v.j in data[v.i] ){
-            if( v.map[v.j] === undefined ){
-              // 未登録の項目があれば追加
+            if( v.map[v.j] === undefined && header.length === 0 ){
+              // ヘッダ行指定無しで未登録の項目があれば追加
               v.map[v.j] = v.rv.header.length;
               v.rv.header.push(v.j);
             }
@@ -619,7 +629,7 @@ function SpreadDb(query=[],opt={}){
       if( v.log instanceof Error ) throw v.log;
   
       v.step = 1.2; // sdbTableのプロトタイプ作成
-      pv.table[arg.name] = v.table = {
+      v.table = {
         name: arg.name, // {string} テーブル名(範囲名)
         account: pv.opt.user ? pv.opt.user.id : null, // {string} 更新者のアカウント
         sheet: pv.spread.getSheetByName(arg.name), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
@@ -701,6 +711,7 @@ function SpreadDb(query=[],opt={}){
       v.table.sheet.getRange(1,1,1,v.table.colnum).setNotes([v.table.notes]);
   
       v.step = 9; // 終了処理
+      pv.table[v.table.name] = v.table;
       v.rv = [v.log];
       console.log(`${v.whois} normal end.`);
       return v.rv;
@@ -911,7 +922,7 @@ function SpreadDb(query=[],opt={}){
         }
       },
     };
-    console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
+    console.log(`${v.whois} start.`);
     try {
   
       v.step = 1; // 引数が項目定義メモまたは項目名の場合、オブジェクトに変換
@@ -979,7 +990,7 @@ function SpreadDb(query=[],opt={}){
    */
   function genLog(arg=null){
     const v = {whois:'SpreadDb.genLog',step:0,rv:null};
-    console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
+    console.log(`${v.whois} start.`);
     try {
   
       v.step = 1; // 変更履歴シートの項目定義
@@ -1121,7 +1132,7 @@ function SpreadDb(query=[],opt={}){
         }
   
         v.step = 3.4; // default
-        if( String(v.rv.schema.cols[v.i].default).toLowerCase() !== 'null' ){
+        if( v.rv.schema.cols[v.i].default ){
           v.rv.schema.defaultRow[v.rv.schema.cols[v.i].name] = v.rv.schema.cols[v.i].default;
         }
       }
@@ -1464,8 +1475,6 @@ function SpreadDb(query=[],opt={}){
     }
   }
 }
-
-
 
 /** 二つの引数が同値か判断する
  * @param {any} v1 - 変数1
