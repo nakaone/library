@@ -34,15 +34,14 @@ function SpreadDbTest(){
     - command {string} 操作名。select/update/delete/append/schema
     - arg {object} 操作に渡す引数。command系内部関数の引数参照
   - opt {Object}={} オプション
-    - user {Object} ユーザのアカウント情報
-      - id {string}='guest' ユーザの識別子
-      - authority {Object.<string,string>}={} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式
+    - userId {string}='guest' ユーザの識別子
+    - userAuth {Object.<string,string>}={} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式
     - log {string}='log' 更新履歴テーブル名
     - tables {Object[]} 新規作成するテーブルのデータ(genTablesの引数の配列)
     - maxTrial {number}=5 テーブル更新時、ロックされていた場合の最大試行回数
     - interval {number}=10000 テーブル更新時、ロックされていた場合の試行間隔(ミリ秒)
-    - guestAuthority {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
-    - AdminId {string} 管理者として扱うuserId
+    - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
+    - adminId {string} 管理者として扱うuserId
   */
   const v = {do:{p:'create',st:1,num:0},//num=0なら全部
     whois:'SpreadDbTest',step:0,rv:null,
@@ -75,6 +74,18 @@ function SpreadDbTest(){
         }
         v.src[sheet].values.push(v.o);
       }
+    },
+    summary: a => { // 戻り値(Object[])の結果確認
+      let rv = [`${v.whois} end: return value type: ${whichType(a)}`];
+      a.forEach(o => {
+        let json = JSON.stringify({
+          command: o.query.command,
+          isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
+          message: `${o.message||''}(${whichType(o.message)})`,
+        },null,2);
+        rv = [...rv,...json.split('\n')]
+      });
+      console.log(rv.join('\n'));
     },
   };
   const src = { // テスト用サンプルデータ
@@ -222,21 +233,18 @@ function SpreadDbTest(){
     create: [  // create関係のテスト
       () => { // 0.基本形
         v.deleteSheet(); // 既存シートを全部削除
-        SpreadDb({command:'create',arg:src.status},{user:{id:'Admin'},AdminId:'Admin'});
-        SpreadDb({command:'create',arg:src.camp},{user:{id:'Admin'},AdminId:'Admin'});
-        SpreadDb({command:'create',arg:src.PL},{user:{id:'Admin'},AdminId:'Admin'});
+        SpreadDb({command:'create',arg:src.status},{userId:'Administrator'});
+        SpreadDb({command:'create',arg:src.camp},{userId:'Administrator'});
+        SpreadDb({command:'create',arg:src.PL},{userId:'Administrator'});
       },
       () => { // 1.管理者以外で作成できないことの確認
         v.deleteSheet();
         // 管理者とユーザが異なる
-        v.r = SpreadDb({command:'create',arg:src.status},{user:{id:'pikumin'},AdminId:'Admin'});
-        console.log(`${v.whois} end: v.r(${whichType(v.r)})=${JSON.stringify(v.r,null,2)}`);
+        v.summary(SpreadDb({command:'create',arg:src.status},{userId:'pikumin'}));
         // 管理者の指定無し
-        v.r = SpreadDb({command:'create',arg:src.camp},{user:{id:'pikumin'}});
-        console.log(`${v.whois} end: v.r(${whichType(v.r)})=${JSON.stringify(v.r,null,2)}`);
+        v.summary(SpreadDb({command:'create',arg:src.camp},{userId:'pikumin'}));
         // ユーザの指定無し
-        v.r = SpreadDb({command:'create',arg:src.PL},{AdminId:'Admin'});
-        console.log(`${v.whois} end: v.r(${whichType(v.r)})=${JSON.stringify(v.r,null,2)}`);
+        v.summary(SpreadDb({command:'create',arg:src.PL}));
       },
     ],
   };
@@ -252,7 +260,7 @@ function SpreadDbTest(){
  *     - テーブル名とシート名が一致
  *     - 左上隅のセルはA1に固定
  *   - 「更新履歴」の各項目の並び・属性他について、シート上の変更は反映されない(システム側で固定)
- *   - 各シートの権限チェックロジックを追加(opt.account)
+ *   - 各シートの権限チェックロジックを追加
  *   - クロージャを採用(append/update/deleteをprivate関数化)
  *     - select文を追加(従来のclass方式ではインスタンスから直接取得)
  *     - インスタンスを返す方式から、指定された操作(query)の結果オブジェクトを返すように変更
@@ -271,12 +279,13 @@ function SpreadDb(query=[],opt={}){
 
     v.step = 1.1; // メンバ登録：起動時オプション
     pv.opt = Object.assign({
-      user: null, // {number|string}=null ユーザのアカウント情報。nullの場合、権限のチェックは行わない
-      account: null, // {string}=null アカウント一覧のテーブル名
+      userId: 'guest', // {string} ユーザの識別子
+      userAuth: {}, // {Object.<string,string>} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式
       log: 'log', // {string}='log' 更新履歴テーブル名
       maxTrial: 5, // number}=5 シート更新時、ロックされていた場合の最大試行回数
       interval: 10000, // number}=10000 シート更新時、ロックされていた場合の試行間隔(ミリ秒)
-      guestAuthority: {}, // {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
+      guestAuth: {}, // {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
+      adminId: 'Administrator', // {string} 管理者として扱うuserId
     },opt);
 
     v.step = 1.2; // メンバ登録：内部設定項目
@@ -321,21 +330,12 @@ function SpreadDb(query=[],opt={}){
             pv.table[query[v.i].table] = v.r;
           }
 
-          v.step = 3.13; // 管理者かどうかをv.isAdmin(boolean)にセット
-          // 判定条件：AdminIdとuserIdの両方が指定されており、かつ一致
-          v.isAdmin = Object.hasOwn(pv.opt,'AdminId')
-            && pv.opt.user !== null
-            && Object.hasOwn(pv.opt.user,'id')
-            && pv.opt.user.id !== null
-            && pv.opt.AdminId === pv.opt.user.id;
+          v.step = 3.13; // ユーザの操作対象シートに対する権限をv.allowにセット
+          v.allow = (pv.opt.adminId === pv.opt.userId) ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
+          : ( pv.opt.userId === 'guest' ? (pv.opt.guestAuth[query[v.i].table] || '')  // ゲスト(userId指定無し)
+          : ( pv.opt.userAuth[query[v.i].table] || ''));  // 通常ユーザ
 
-          v.step = 3.14; // ユーザの操作対象シートに対する権限をv.allowにセット
-          v.allow = v.isAdmin ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
-          : ( (pv.opt.user !== null && Object.hasOwn(pv.opt.user,'authority'))
-          ? pv.opt.user.authority[query[v.i].table] // 通常ユーザは指定テーブルの権限
-          : (pv.opt.guestAuthority[query[v.i].table] || ''));  // ゲストはゲスト用権限。通常ユーザでも指定無しならゲスト扱い
-
-          v.step = 3.15; // createでテーブル名を省略した場合は補完
+          v.step = 3.14; // createでテーブル名を省略した場合は補完
           if( query[v.i].command === 'create' && !Object.hasOwn(query[v.i],'table') ){
             query[v.i].table = query[v.i].arg.name;
           }
@@ -347,7 +347,7 @@ function SpreadDb(query=[],opt={}){
             // o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
             // また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
             //read/writeは自分のみ可、delete/schemaは実行不可
-            query[v.i].arg.where = pv.opt.user.id;  // 自レコードのみ対象に限定
+            query[v.i].arg.where = pv.opt.userId;  // 自レコードのみ対象に限定
             switch( query[v.i].command ){
               case 'select': v.isOK = true; v.func = selectRow; break;
               case 'update': v.isOK = true; v.func = updateRow; break;
@@ -650,7 +650,7 @@ function SpreadDb(query=[],opt={}){
         v.step = 2; // sdbTableのプロトタイプ作成
         v.table = {
           name: arg.name, // {string} テーブル名(範囲名)
-          account: pv.opt.user ? pv.opt.user.id : null, // {string} 更新者のアカウント
+          account: pv.opt.userId, // {string} 更新者のアカウント
           sheet: pv.spread.getSheetByName(arg.name), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
           schema: null, // {sdbSchema} シートの項目定義
           values: [], // {Object[]} 行オブジェクトの配列。{項目名:値,..} 形式
@@ -1037,7 +1037,7 @@ function SpreadDb(query=[],opt={}){
         v.rv = Object.assign({
           id: Utilities.getUuid(), // {UUID} 一意キー項目
           timestamp: toLocale(new Date()), // {string} 更新日時
-          account: pv.opt.user.id, // {string|number} uuid等、更新者の識別子
+          account: pv.opt.userId, // {string|number} uuid等、更新者の識別子
           // 以下、本関数呼出元で設定する項目
           table: null, // {string} 更新対象となった範囲名(テーブル名)
           command: null, // {string} 操作内容。command系内部関数名のいずれか
@@ -1210,7 +1210,7 @@ function SpreadDb(query=[],opt={}){
       // ----------------------------------------------
       v.rv = {
         name: arg.name, // {string} テーブル名(範囲名)
-        account: pv.opt.user ? pv.opt.user.id : null, // {string} 更新者のアカウント
+        account: pv.opt.userId, // {string} 更新者のアカウント
         sheet: pv.spread.getSheetByName(arg.name), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
         schema: null, // {sdbSchema} シートの項目定義
         values: [], // {Object[]} 行オブジェクトの配列。{項目名:値,..} 形式
