@@ -4,7 +4,7 @@
  */
 function genLog(arg=null){
   const v = {whois:'SpreadDb.genLog',step:0,rv:null};
-  console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
+  console.log(`${v.whois} start.`);
   try {
 
     v.step = 1; // 変更履歴シートの項目定義
@@ -21,7 +21,7 @@ function genLog(arg=null){
       {name:'after',type:'JSON',note:'更新後の行データオブジェクト'},
       {name:'diff',type:'JSON',note:'差分情報。{項目名：[更新前,更新後]}形式'},
     ];
-    
+
     if( arg === null ){
       v.step = 2; // 引数が指定されていない場合、変更履歴シート各項目の定義を返す
       v.rv = v.logDef;

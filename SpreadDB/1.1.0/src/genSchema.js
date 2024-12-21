@@ -30,7 +30,6 @@ function genSchema(arg){
       notes: arg.notes || [], // ヘッダ行に対応したメモ
     };
 
-
     // -----------------------------------------------
     v.step = 2; // 項目定義オブジェクト(cols)の作成
     // -----------------------------------------------
@@ -87,7 +86,7 @@ function genSchema(arg){
       }
 
       v.step = 3.4; // default
-      if( String(v.rv.schema.cols[v.i].default).toLowerCase() !== 'null' ){
+      if( v.rv.schema.cols[v.i].default ){
         v.rv.schema.defaultRow[v.rv.schema.cols[v.i].name] = v.rv.schema.cols[v.i].default;
       }
     }

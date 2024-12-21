@@ -65,7 +65,7 @@ function deleteRow(arg){
       v.step = 2.5; // シートのセルを削除
       v.range = arg.table.sheet.deleteRow(v.i+1);
 
-      v.step = 2.6; // arg.table.bottomを書き換え
+      v.step = 2.6; // arg.table.rownumを書き換え
       arg.table.rownum -= 1;
 
     }

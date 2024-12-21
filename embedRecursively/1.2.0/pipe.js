@@ -120,7 +120,7 @@ function embedRecursively(content,opt={}){
           v.rv += opt.prefix + v.r;
         } else {
           v.step = 4; // 非タイトル・非挿入指定行
-          v.rv += opt.prefix + v.line + '\n';
+          v.rv += (opt.prefix + v.line).trimEnd() + '\n';
         }
       }
     }

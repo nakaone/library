@@ -42,13 +42,15 @@ tmp="$prj/tmp"; mkdir -p $tmp
 # ----------------------------------------------
 log "1";
 cat $src/template.js | awk 1 | \
-$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $prj/core.js
+$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $tmp/core.js
+sed -e 's/[ \t]+$//g' $tmp/core.js > $prj/core.js
 
 # ----------------------------------------------
 # 2. test.jsの作成
 # ----------------------------------------------
 log "2";
 cat $src/test.template.js | awk 1 | \
-$embed -prj:$prj -src:$src -lib:$lib -test:$test -tmp:$tmp > $prj/test.js
+$embed -prj:$prj -src:$src -lib:$lib -test:$test -tmp:$tmp > $tmp/test.js
+sed -e 's/[ \t]+$//g' $tmp/test.js > $prj/test.js
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"

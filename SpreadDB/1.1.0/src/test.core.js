@@ -44,12 +44,26 @@ function SpreadDbTest(){
     - guestAuthority {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - AdminId {string} 管理者として扱うuserId
   */
-  const v = {whois:'SpreadDbTest',step:0,rv:null,
+  const v = {do:{p:'create',st:1,num:0},//num=0なら全部
+    whois:'SpreadDbTest',step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
-    deleteSheet: (sheetName) => {  // テスト用シートの削除関数
-      v.sheet = v.spread.getSheetByName(sheetName);
-      if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+    deleteSheet: (sheetName=null) => {  // テスト用シートの削除関数
+      /** deleteSheet: 指定されたテスト用シートを削除
+       * @param {string|string[]|null} sheetName=null - string:削除対象シート名(配列可)、null:readme以外全部削除
+       * @returns {void}
+       */
+      if( sheetName === null ){ // 全シート削除
+        sheetName = v.spread.getSheets().map(x => x.getName());
+      } else if( typeof sheetName === 'string' ){ // 単一のシート名指定
+        sheetName = [sheetName];
+      }
+      sheetName.forEach(x => {
+        if( x !== 'readme' ){ // readmeシートのみ削除対象外
+          v.sheet = v.spread.getSheetByName(x);
+          if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
+        }
+      });
     },
     raw2obj: sheet => { // シートイメージ(二次元配列)を行オブジェクトに変換
       v.data = JSON.parse(JSON.stringify(v.src[sheet].values));
@@ -80,7 +94,7 @@ function SpreadDbTest(){
         {name:'deleted',type:'string'}, // 論理削除日時
       ],
     },
-    PL: { // "損益計算書"シート(valuesのみ)
+    PL: { // "損益計算書"シート(valuesのみ、先頭ヘッダ行)
       name: '損益計算書',
       values: [
         ['大','中','勘定科目','一覧存否','L1','L2','SQ','本籍'],
@@ -206,30 +220,18 @@ function SpreadDbTest(){
   };
   const pattern = { // テストパターン(関数)の定義
     create: [  // create関係のテスト
-      () => { // "target"シートをシートイメージから新規作成
-        v.deleteSheet('log');  // 既存なら削除
-        v.deleteSheet('ユーザ管理');  // 既存なら削除
+      () => { // 0.基本形
+        v.deleteSheet(); // 既存シートを全部削除
         SpreadDb({command:'create',arg:src.status},{user:{id:'Admin'},AdminId:'Admin'});
-        //SpreadDb(null,{tables:v.src.camp});
-        //SpreadDb(null,{tables:v.src.PL});
+        SpreadDb({command:'create',arg:src.camp},{user:{id:'Admin'},AdminId:'Admin'});
+        SpreadDb({command:'create',arg:src.PL},{user:{id:'Admin'},AdminId:'Admin'});
+      },
+      () => { // 1.管理者以外で作成できないことの確認
+        v.deleteSheet(); // 既存シートを全部削除
+        v.r = SpreadDb({command:'create',arg:src.status},{user:{id:'pikumin'},AdminId:'Admin'});
+        console.log(`${v.whois} end: v.r(${whichType(v.r)})=${JSON.stringify(v.r,null,2)}`);
       },
     ],
   };
-  console.log(`${v.whois} start.`);
-  try {
-
-    // テスト対象を絞る場合、以下のv.st,numの値を書き換え
-    v.p = 'create'; v.st = 0; v.num = 1 || pattern[v.p].length;
-
-    for( v.i=v.st ; v.i<v.st+v.num ; v.i++ ){
-      v.rv = pattern[v.p][v.i]();
-      if( v.rv instanceof Error ) throw v.rv;
-      console.log(`===== pattern.${v.i} end.\n${stringify(v.rv)}`);
-    }
-
-  } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
-    return e;
-  }
+  for( v.i=v.do.st ; v.i<(v.do.num===0 ? pattern[v.do.p].length : v.do.st+v.do.num) ; v.i++ ) pattern[v.do.p][v.i]();
 }

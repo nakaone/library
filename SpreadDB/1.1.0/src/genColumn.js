@@ -71,7 +71,7 @@ function genColumn(arg={}){
       }
     },
   };
-  console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
+  console.log(`${v.whois} start.`);
   try {
 
     v.step = 1; // 引数が項目定義メモまたは項目名の場合、オブジェクトに変換
@@ -87,9 +87,11 @@ function genColumn(arg={}){
     });
 
     v.step = 3; // defaultを関数に変換
-    if( v.rv.column.default !== null && typeof v.rv.column.default === 'string' ){
-      v.rv.column.default = new Function('o',v.rv.column.default);
-    }
+    v.rv.column.default = ( v.rv.column.default !== null
+      && typeof v.rv.column.default === 'string'
+      && v.rv.column.default !== 'null'
+      && v.rv.column.default !== 'undefined'
+    ) ? new Function('o',v.rv.column.default) : null;
 
     v.step = 4; // auto_incrementをオブジェクトに変換
     if( v.rv.column.auto_increment !== null && String(v.rv.column.auto_increment).toLowerCase() !== 'false' ){

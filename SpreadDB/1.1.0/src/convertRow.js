@@ -13,12 +13,12 @@ function convertRow(data,header=[]){
   console.log(`${v.whois} start.`);
   try {
 
-    if( Array.isArray(data)[0] ){
+    if( Array.isArray(data[0]) ){
       v.step = 1; // シートイメージ -> 行オブジェクト
       v.rv.raw = data;
       v.rv.obj = [];
       v.rv.header = data[0];
-      for( v.i=0 ; v.i<data.length ; v.i++ ){
+      for( v.i=1 ; v.i<data.length ; v.i++ ){
         v.o = {};
         for( v.j=0 ; v.j<data[v.i].length ; v.j++ ){
           if( data[v.i][v.j] ){
@@ -31,15 +31,15 @@ function convertRow(data,header=[]){
       v.step = 2; // 行オブジェクト -> シートイメージ
       v.rv.raw = [];
       v.rv.obj = data;
-      v.rv.header = Object.keys(data[0]);
+      v.rv.header = header.length > 0 ? header : Object.keys(data[0]);
       for( v.map={},v.i=0 ; v.i<v.rv.header ; v.i++ ){
         v.map[v.rv.header[v.i]] = v.i;
       }
       for( v.i=0 ; v.i<data.length ; v.i++ ){
         v.arr = [];
         for( v.j in data[v.i] ){
-          if( v.map[v.j] === undefined ){
-            // 未登録の項目があれば追加
+          if( v.map[v.j] === undefined && header.length === 0 ){
+            // ヘッダ行指定無しで未登録の項目があれば追加
             v.map[v.j] = v.rv.header.length;
             v.rv.header.push(v.j);
           }

@@ -6,7 +6,7 @@
  */
 function appendRow(arg){
   const v = {whois:`${pv.whois}.appendRow`,step:0,rv:[]};
-  console.log(`${v.whois} start.`);
+  console.log(`${v.whois} start: target="${arg.table.name}", rows=${arg.record.length}`);
   try {
 
     // ------------------------------------------------
@@ -41,7 +41,7 @@ function appendRow(arg){
 
       v.step = 2.3; // 既定値の設定
       for( v.dv in arg.table.schema.defaultRow ){
-        arg.record[v.i][v.dv] = arg.table.schema.deleteRow[v.dv](arg.record[v.i]);
+        arg.record[v.i][v.dv] = arg.table.schema.defaultRow[v.dv](arg.record[v.i]);
       }
 
       v.step = 2.4; // 追加レコードの正当性チェック(unique重複チェック)
@@ -65,7 +65,8 @@ function appendRow(arg){
         v.step = 2.51; // シートイメージに展開して登録
         v.row = [];
         for( v.j=0 ; v.j<arg.table.header.length ; v.j++ ){
-          v.row[v.j] = arg.record[v.i][arg.table.header[v.j]];
+          v.a = arg.record[v.i][arg.table.header[v.j]];
+          v.row[v.j] = (v.a && v.a !== 'null' && v.a !== 'undefined') ? v.a : '';
         }
         v.target.push(v.row);
 

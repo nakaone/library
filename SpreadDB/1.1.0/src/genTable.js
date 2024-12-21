@@ -3,7 +3,7 @@
  * @param arg.name {string} - シート名
  * @param [arg.cols] {sdbColumn[]} - 新規作成シートの項目定義オブジェクトの配列
  * @param [arg.values] {Object[]|Array[]} - 新規作成シートに書き込む初期値
- * @returns {sdbTable|Error}
+ * @returns {sdbTable|null} シート不存在ならnull
  */
 function genTable(arg){
   const v = {whois:`${pv.whois}.genTable`,step:0,rv:null};
@@ -24,7 +24,7 @@ function genTable(arg){
       colnum: 0, // {number} データ領域の列数
       rownum: 0, // {number} データ領域の行数
     };
-
+    if( v.rv.sheet === null ) return null;  // シート不存在ならnull
 
     // ----------------------------------------------
     v.step = 2; // シートから各種情報を取得
