@@ -16,6 +16,9 @@
  * - 仕様の詳細は[workflowy](https://workflowy.com/#/4e03d2d2c266)参照
  */
 function SpreadDb(query=[],opt={}){
+  /**
+   * main: SpreadDb主処理
+   */
   const v = {step:0,rv:[],log:[]};
   const pv = {whois:'SpreadDb'};  // private values: 擬似メンバ変数としてSpreadDb内で共有する値
   console.log(`${pv.whois} start.`);
@@ -23,12 +26,13 @@ function SpreadDb(query=[],opt={}){
 
     v.step = 1.1; // メンバ登録：起動時オプション
     pv.opt = Object.assign({
-      user: null, // {number|string}=null ユーザのアカウント情報。nullの場合、権限のチェックは行わない
-      account: null, // {string}=null アカウント一覧のテーブル名
+      userId: 'guest', // {string} ユーザの識別子
+      userAuth: {}, // {Object.<string,string>} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式
       log: 'log', // {string}='log' 更新履歴テーブル名
       maxTrial: 5, // number}=5 シート更新時、ロックされていた場合の最大試行回数
       interval: 10000, // number}=10000 シート更新時、ロックされていた場合の試行間隔(ミリ秒)
-      guestAuthority: {}, // {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
+      guestAuth: {}, // {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
+      adminId: 'Administrator', // {string} 管理者として扱うuserId
     },opt);
 
     v.step = 1.2; // メンバ登録：内部設定項目
@@ -73,21 +77,12 @@ function SpreadDb(query=[],opt={}){
             pv.table[query[v.i].table] = v.r;
           }
 
-          v.step = 3.13; // 管理者かどうかをv.isAdmin(boolean)にセット
-          // 判定条件：AdminIdとuserIdの両方が指定されており、かつ一致
-          v.isAdmin = Object.hasOwn(pv.opt,'AdminId')
-            && pv.opt.user !== null
-            && Object.hasOwn(pv.opt.user,'id')
-            && pv.opt.user.id !== null
-            && pv.opt.AdminId === pv.opt.user.id;
+          v.step = 3.13; // ユーザの操作対象シートに対する権限をv.allowにセット
+          v.allow = (pv.opt.adminId === pv.opt.userId) ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
+          : ( pv.opt.userId === 'guest' ? (pv.opt.guestAuth[query[v.i].table] || '')  // ゲスト(userId指定無し)
+          : ( pv.opt.userAuth[query[v.i].table] || ''));  // 通常ユーザ
 
-          v.step = 3.14; // ユーザの操作対象シートに対する権限をv.allowにセット
-          v.allow = v.isAdmin ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
-          : ( (pv.opt.user !== null && Object.hasOwn(pv.opt.user,'authority'))
-          ? pv.opt.user.authority[query[v.i].table] // 通常ユーザは指定テーブルの権限
-          : pv.opt.guestAuthority[query[v.i].table] );  // ゲストはゲスト用権限。通常ユーザでも指定無しならゲスト扱い
-
-          v.step = 3.15; // createでテーブル名を省略した場合は補完
+          v.step = 3.14; // createでテーブル名を省略した場合は補完
           if( query[v.i].command === 'create' && !Object.hasOwn(query[v.i],'table') ){
             query[v.i].table = query[v.i].arg.name;
           }
@@ -99,7 +94,7 @@ function SpreadDb(query=[],opt={}){
             // o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
             // また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
             //read/writeは自分のみ可、delete/schemaは実行不可
-            query[v.i].arg.where = pv.opt.user.id;  // 自レコードのみ対象に限定
+            query[v.i].arg.where = pv.opt.userId;  // 自レコードのみ対象に限定
             switch( query[v.i].command ){
               case 'select': v.isOK = true; v.func = selectRow; break;
               case 'update': v.isOK = true; v.func = updateRow; break;
@@ -124,7 +119,16 @@ function SpreadDb(query=[],opt={}){
           if( v.isOK ){
 
             v.step = 3.3; // 処理実行
+            if( query[v.i].command !== 'create' ){
+              // create以外の場合、操作対象のテーブル管理情報をcommand系メソッドの引数に追加
+              if( !pv.table[query[v.i].table] ){  // 以前のcommandでテーブル管理情報が作られていない場合は作成
+                pv.table[query[v.i].table] = genTable({name:query[v.i].table});
+                if( pv.table[query[v.i].table] instanceof Error ) throw pv.table[query[v.i].table];
+              }
+              query[v.i].arg.table = pv.table[query[v.i].table];
+            }
             v.sdbLog = v.func(query[v.i].arg);
+
             if( v.sdbLog instanceof Error ){
 
               v.step = 3.31; // selectRow, updateRow他のcommand系メソッドでエラー発生
@@ -402,7 +406,7 @@ function SpreadDb(query=[],opt={}){
         v.step = 2; // sdbTableのプロトタイプ作成
         v.table = {
           name: arg.name, // {string} テーブル名(範囲名)
-          account: pv.opt.user ? pv.opt.user.id : null, // {string} 更新者のアカウント
+          account: pv.opt.userId, // {string} 更新者のアカウント
           sheet: pv.spread.getSheetByName(arg.name), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
           schema: null, // {sdbSchema} シートの項目定義
           values: [], // {Object[]} 行オブジェクトの配列。{項目名:値,..} 形式
@@ -588,8 +592,7 @@ function SpreadDb(query=[],opt={}){
         case 'function': v.step = 2.1;  // 関数指定ならそのまま利用
           v.rv = arg;
           break;
-        case 'object':
-          v.step = 2.2;
+        case 'object': v.step = 2.2;
           v.keys = Object.keys(arg);
           if( v.keys.length === 2 && v.keys.includes('key') && v.keys.includes('value') ){
             v.step = 2.3; // {key:〜,value:〜}形式での指定の場合
@@ -603,8 +606,21 @@ function SpreadDb(query=[],opt={}){
             v.rv = new Function('o',`return (${v.c.join(' && ')})`);
           }
           break;
-        default: v.step = 2.5; // primaryKeyの値指定
-          v.rv = new Function('o',`return isEqual(o['${this.schema.primaryKey}'],${arg})`);
+        case 'string': v.step = 2.3;
+          v.fx = arg.match(/^function\s*\(([\w\s,]*)\)\s*\{([\s\S]*?)\}$/); // function(){〜}
+          v.ax = arg.match(/^\(?([\w\s,]*?)\)?\s*=>\s*\{?(.+?)\}?$/); // arrow関数
+          if( v.fx || v.ax ){
+            v.step = 2.31; // function文字列
+            v.a = (v.fx ? v.fx[1] : v.ax[1]).replaceAll(/\s/g,''); // 引数部分
+            v.a = v.a.length > 0 ? v.a.split(',') : [];
+            v.b = (v.fx ? v.fx[2] : v.ax[2]).replaceAll(/\s+/g,' ').trim(); // 論理部分
+            v.rv = new Function(...v.a, v.b);
+          } else {
+            v.step = 2.32; // 関数ではない文字列はprimaryKeyの値指定と看做す
+            v.rv = new Function('o',`return isEqual(o['${this.schema.primaryKey}'],${arg})`);
+          }
+          break;
+        default: throw new Error(`引数の型が不適切です`);
       }
 
       v.step = 9; // 終了処理
@@ -779,14 +795,17 @@ function SpreadDb(query=[],opt={}){
       ];
 
       if( arg === null ){
+
         v.step = 2; // 引数が指定されていない場合、変更履歴シート各項目の定義を返す
         v.rv = v.logDef;
+
       } else {
+
         v.step = 3; // 引数としてオブジェクトが渡された場合、その値を設定したsdbLogオブジェクトを返す
         v.rv = Object.assign({
           id: Utilities.getUuid(), // {UUID} 一意キー項目
           timestamp: toLocale(new Date()), // {string} 更新日時
-          account: pv.opt.user.id, // {string|number} uuid等、更新者の識別子
+          account: pv.opt.userId, // {string|number} uuid等、更新者の識別子
           // 以下、本関数呼出元で設定する項目
           table: null, // {string} 更新対象となった範囲名(テーブル名)
           command: null, // {string} 操作内容。command系内部関数名のいずれか
@@ -959,7 +978,7 @@ function SpreadDb(query=[],opt={}){
       // ----------------------------------------------
       v.rv = {
         name: arg.name, // {string} テーブル名(範囲名)
-        account: pv.opt.user ? pv.opt.user.id : null, // {string} 更新者のアカウント
+        account: pv.opt.userId, // {string} 更新者のアカウント
         sheet: pv.spread.getSheetByName(arg.name), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
         schema: null, // {sdbSchema} シートの項目定義
         values: [], // {Object[]} 行オブジェクトの配列。{項目名:値,..} 形式
@@ -1041,16 +1060,14 @@ function SpreadDb(query=[],opt={}){
    */
   function selectRow(arg){
     const v = {whois:`${pv.whois}.selectRow`,step:0,rv:[]};
-    console.log(`${v.whois} start.`);
+    console.log(`${v.whois} start.\nuserId=${pv.opt.userId}, table=${arg.table.name}, where=${arg.where}`);
     try {
 
-      // ------------------------------------------------
-      v.step = 1; // 事前準備
-      // ------------------------------------------------
-      // 判定条件を関数に統一
+      v.step = 1; // 判定条件を関数に統一
       v.where = determineApplicable(arg.where);
       if( v.where instanceof Error ) throw v.where;
 
+      v.step = 2; // 行オブジェクトを順次走査、該当行を戻り値に追加
       for( v.i=0 ; v.i<arg.table.values.length ; v.i++ ){
         if( v.where(arg.table.values[v.i]) ){
           v.rv.push(arg.table.values[v.i]);
@@ -1058,7 +1075,7 @@ function SpreadDb(query=[],opt={}){
       }
 
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.`);
+      console.log(`${v.whois} normal end.\nrows=${v.rv.length}`);
       return v.rv;
 
     } catch(e) {

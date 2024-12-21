@@ -15,7 +15,7 @@ function genTable(arg){
     // ----------------------------------------------
     v.rv = {
       name: arg.name, // {string} テーブル名(範囲名)
-      account: pv.opt.user ? pv.opt.user.id : null, // {string} 更新者のアカウント
+      account: pv.opt.userId, // {string} 更新者のアカウント
       sheet: pv.spread.getSheetByName(arg.name), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
       schema: null, // {sdbSchema} シートの項目定義
       values: [], // {Object[]} 行オブジェクトの配列。{項目名:値,..} 形式

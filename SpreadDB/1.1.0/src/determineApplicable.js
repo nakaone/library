@@ -13,8 +13,7 @@ function determineApplicable(arg){
       case 'function': v.step = 2.1;  // 関数指定ならそのまま利用
         v.rv = arg;
         break;
-      case 'object':
-        v.step = 2.2;
+      case 'object': v.step = 2.2;
         v.keys = Object.keys(arg);
         if( v.keys.length === 2 && v.keys.includes('key') && v.keys.includes('value') ){
           v.step = 2.3; // {key:〜,value:〜}形式での指定の場合
@@ -28,8 +27,21 @@ function determineApplicable(arg){
           v.rv = new Function('o',`return (${v.c.join(' && ')})`);
         }
         break;
-      default: v.step = 2.5; // primaryKeyの値指定
-        v.rv = new Function('o',`return isEqual(o['${this.schema.primaryKey}'],${arg})`);
+      case 'string': v.step = 2.3;
+        v.fx = arg.match(/^function\s*\(([\w\s,]*)\)\s*\{([\s\S]*?)\}$/); // function(){〜}
+        v.ax = arg.match(/^\(?([\w\s,]*?)\)?\s*=>\s*\{?(.+?)\}?$/); // arrow関数
+        if( v.fx || v.ax ){
+          v.step = 2.31; // function文字列
+          v.a = (v.fx ? v.fx[1] : v.ax[1]).replaceAll(/\s/g,''); // 引数部分
+          v.a = v.a.length > 0 ? v.a.split(',') : [];
+          v.b = (v.fx ? v.fx[2] : v.ax[2]).replaceAll(/\s+/g,' ').trim(); // 論理部分
+          v.rv = new Function(...v.a, v.b);
+        } else {
+          v.step = 2.32; // 関数ではない文字列はprimaryKeyの値指定と看做す
+          v.rv = new Function('o',`return isEqual(o['${this.schema.primaryKey}'],${arg})`);
+        }
+        break;
+      default: throw new Error(`引数の型が不適切です`);
     }
 
     v.step = 9; // 終了処理

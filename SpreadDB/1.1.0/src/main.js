@@ -1,3 +1,6 @@
+/**
+ * main: SpreadDb主処理
+ */
 const v = {step:0,rv:[],log:[]};
 const pv = {whois:'SpreadDb'};  // private values: 擬似メンバ変数としてSpreadDb内で共有する値
 console.log(`${pv.whois} start.`);
@@ -5,12 +8,13 @@ try {
 
   v.step = 1.1; // メンバ登録：起動時オプション
   pv.opt = Object.assign({
-    user: null, // {number|string}=null ユーザのアカウント情報。nullの場合、権限のチェックは行わない
-    account: null, // {string}=null アカウント一覧のテーブル名
+    userId: 'guest', // {string} ユーザの識別子
+    userAuth: {}, // {Object.<string,string>} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式
     log: 'log', // {string}='log' 更新履歴テーブル名
     maxTrial: 5, // number}=5 シート更新時、ロックされていた場合の最大試行回数
     interval: 10000, // number}=10000 シート更新時、ロックされていた場合の試行間隔(ミリ秒)
-    guestAuthority: {}, // {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
+    guestAuth: {}, // {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
+    adminId: 'Administrator', // {string} 管理者として扱うuserId
   },opt);
 
   v.step = 1.2; // メンバ登録：内部設定項目
@@ -55,21 +59,12 @@ try {
           pv.table[query[v.i].table] = v.r;
         }
 
-        v.step = 3.13; // 管理者かどうかをv.isAdmin(boolean)にセット
-        // 判定条件：AdminIdとuserIdの両方が指定されており、かつ一致
-        v.isAdmin = Object.hasOwn(pv.opt,'AdminId')
-          && pv.opt.user !== null
-          && Object.hasOwn(pv.opt.user,'id')
-          && pv.opt.user.id !== null
-          && pv.opt.AdminId === pv.opt.user.id;
+        v.step = 3.13; // ユーザの操作対象シートに対する権限をv.allowにセット
+        v.allow = (pv.opt.adminId === pv.opt.userId) ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
+        : ( pv.opt.userId === 'guest' ? (pv.opt.guestAuth[query[v.i].table] || '')  // ゲスト(userId指定無し)
+        : ( pv.opt.userAuth[query[v.i].table] || ''));  // 通常ユーザ
 
-        v.step = 3.14; // ユーザの操作対象シートに対する権限をv.allowにセット
-        v.allow = v.isAdmin ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
-        : ( (pv.opt.user !== null && Object.hasOwn(pv.opt.user,'authority'))
-        ? pv.opt.user.authority[query[v.i].table] // 通常ユーザは指定テーブルの権限
-        : pv.opt.guestAuthority[query[v.i].table] );  // ゲストはゲスト用権限。通常ユーザでも指定無しならゲスト扱い
-
-        v.step = 3.15; // createでテーブル名を省略した場合は補完
+        v.step = 3.14; // createでテーブル名を省略した場合は補完
         if( query[v.i].command === 'create' && !Object.hasOwn(query[v.i],'table') ){
           query[v.i].table = query[v.i].arg.name;
         }
@@ -81,7 +76,7 @@ try {
           // o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
           // また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
           //read/writeは自分のみ可、delete/schemaは実行不可
-          query[v.i].arg.where = pv.opt.user.id;  // 自レコードのみ対象に限定
+          query[v.i].arg.where = pv.opt.userId;  // 自レコードのみ対象に限定
           switch( query[v.i].command ){
             case 'select': v.isOK = true; v.func = selectRow; break;
             case 'update': v.isOK = true; v.func = updateRow; break;
@@ -106,7 +101,16 @@ try {
         if( v.isOK ){
 
           v.step = 3.3; // 処理実行
+          if( query[v.i].command !== 'create' ){
+            // create以外の場合、操作対象のテーブル管理情報をcommand系メソッドの引数に追加
+            if( !pv.table[query[v.i].table] ){  // 以前のcommandでテーブル管理情報が作られていない場合は作成
+              pv.table[query[v.i].table] = genTable({name:query[v.i].table});
+              if( pv.table[query[v.i].table] instanceof Error ) throw pv.table[query[v.i].table];
+            }
+            query[v.i].arg.table = pv.table[query[v.i].table];
+          }
           v.sdbLog = v.func(query[v.i].arg);
+
           if( v.sdbLog instanceof Error ){
 
             v.step = 3.31; // selectRow, updateRow他のcommand系メソッドでエラー発生

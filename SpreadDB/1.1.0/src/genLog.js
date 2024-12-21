@@ -23,14 +23,17 @@ function genLog(arg=null){
     ];
 
     if( arg === null ){
+
       v.step = 2; // 引数が指定されていない場合、変更履歴シート各項目の定義を返す
       v.rv = v.logDef;
+
     } else {
+
       v.step = 3; // 引数としてオブジェクトが渡された場合、その値を設定したsdbLogオブジェクトを返す
       v.rv = Object.assign({
         id: Utilities.getUuid(), // {UUID} 一意キー項目
         timestamp: toLocale(new Date()), // {string} 更新日時
-        account: pv.opt.user.id, // {string|number} uuid等、更新者の識別子
+        account: pv.opt.userId, // {string|number} uuid等、更新者の識別子
         // 以下、本関数呼出元で設定する項目
         table: null, // {string} 更新対象となった範囲名(テーブル名)
         command: null, // {string} 操作内容。command系内部関数名のいずれか

@@ -11,16 +11,14 @@
  */
 function selectRow(arg){
   const v = {whois:`${pv.whois}.selectRow`,step:0,rv:[]};
-  console.log(`${v.whois} start.`);
+  console.log(`${v.whois} start.\nuserId=${pv.opt.userId}, table=${arg.table.name}, where=${arg.where}`);
   try {
 
-    // ------------------------------------------------
-    v.step = 1; // 事前準備
-    // ------------------------------------------------
-    // 判定条件を関数に統一
+    v.step = 1; // 判定条件を関数に統一
     v.where = determineApplicable(arg.where);
     if( v.where instanceof Error ) throw v.where;
 
+    v.step = 2; // 行オブジェクトを順次走査、該当行を戻り値に追加
     for( v.i=0 ; v.i<arg.table.values.length ; v.i++ ){
       if( v.where(arg.table.values[v.i]) ){
         v.rv.push(arg.table.values[v.i]);
@@ -28,7 +26,7 @@ function selectRow(arg){
     }
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.`);
+    console.log(`${v.whois} normal end.\nrows=${v.rv.length}`);
     return v.rv;
 
   } catch(e) {
