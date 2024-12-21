@@ -227,8 +227,15 @@ function SpreadDbTest(){
         SpreadDb({command:'create',arg:src.PL},{user:{id:'Admin'},AdminId:'Admin'});
       },
       () => { // 1.管理者以外で作成できないことの確認
-        v.deleteSheet(); // 既存シートを全部削除
+        v.deleteSheet();
+        // 管理者とユーザが異なる
         v.r = SpreadDb({command:'create',arg:src.status},{user:{id:'pikumin'},AdminId:'Admin'});
+        console.log(`${v.whois} end: v.r(${whichType(v.r)})=${JSON.stringify(v.r,null,2)}`);
+        // 管理者の指定無し
+        v.r = SpreadDb({command:'create',arg:src.camp},{user:{id:'pikumin'}});
+        console.log(`${v.whois} end: v.r(${whichType(v.r)})=${JSON.stringify(v.r,null,2)}`);
+        // ユーザの指定無し
+        v.r = SpreadDb({command:'create',arg:src.PL},{AdminId:'Admin'});
         console.log(`${v.whois} end: v.r(${whichType(v.r)})=${JSON.stringify(v.r,null,2)}`);
       },
     ],
@@ -254,6 +261,9 @@ function SpreadDbTest(){
  * - 仕様の詳細は[workflowy](https://workflowy.com/#/4e03d2d2c266)参照
  */
 function SpreadDb(query=[],opt={}){
+  /** 
+   * main: SpreadDb主処理
+   */
   const v = {step:0,rv:[],log:[]};
   const pv = {whois:'SpreadDb'};  // private values: 擬似メンバ変数としてSpreadDb内で共有する値
   console.log(`${pv.whois} start.`);
@@ -323,7 +333,7 @@ function SpreadDb(query=[],opt={}){
           v.allow = v.isAdmin ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
           : ( (pv.opt.user !== null && Object.hasOwn(pv.opt.user,'authority'))
           ? pv.opt.user.authority[query[v.i].table] // 通常ユーザは指定テーブルの権限
-          : pv.opt.guestAuthority[query[v.i].table] );  // ゲストはゲスト用権限。通常ユーザでも指定無しならゲスト扱い
+          : (pv.opt.guestAuthority[query[v.i].table] || ''));  // ゲストはゲスト用権限。通常ユーザでも指定無しならゲスト扱い
 
           v.step = 3.15; // createでテーブル名を省略した場合は補完
           if( query[v.i].command === 'create' && !Object.hasOwn(query[v.i],'table') ){
@@ -1017,9 +1027,12 @@ function SpreadDb(query=[],opt={}){
       ];
 
       if( arg === null ){
+
         v.step = 2; // 引数が指定されていない場合、変更履歴シート各項目の定義を返す
         v.rv = v.logDef;
+
       } else {
+
         v.step = 3; // 引数としてオブジェクトが渡された場合、その値を設定したsdbLogオブジェクトを返す
         v.rv = Object.assign({
           id: Utilities.getUuid(), // {UUID} 一意キー項目
@@ -1482,8 +1495,6 @@ function SpreadDb(query=[],opt={}){
     }
   }
 }
-
-
 
 /** 二つの引数が同値か判断する
  * @param {any} v1 - 変数1
