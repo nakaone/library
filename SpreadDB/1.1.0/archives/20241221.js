@@ -43,7 +43,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'select',st:0,num:0},//num=0なら全部
+  const v = {do:{p:'select',st:1,num:0},//num=0なら全部
     whois:'SpreadDbTest',step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -317,14 +317,32 @@ function SpreadDbTest(){
           {command:'create',arg:src.camp},  // 「camp2024」シート作成
           {command:'create',arg:src.board},  // 「掲示板」シート作成
           {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 参照
+          // 日付の比較では"new Date()"を使用。ちなみにgetTime()無しで比較可能
+          {table:'掲示板',command:'select',arg:{where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"}},
         ],{userId:'Administrator'})); // 管理者でログイン
-        // いまここ：日付文字列で指定(ちゃんと比較できる？)
+      },
+      () => { // 1.ゲストによるアクセス
+        v.deleteSheet(); // 既存シートを全部削除
+        v.summary(SpreadDb([  // テスト用シートを準備
+          {command:'create',arg:src.board},  // 「掲示板」シート作成
+        ],{userId:'Administrator'})); // 管理者でログイン
 
-        // 権限指定無し(ゲスト) ⇒ 一般公開シートはアクセス可(ex.掲示板)
-        //v.summary(SpreadDb([
-        //  {command:'select',arg:{table:'掲示板',where:"o.from=='パパ'"}}
-        //],{guestAuth:{'掲示板':'r'}})); // guestにも掲示板のreadを許可
-        // 権限指定無し(ゲスト) ⇒ 非公開シートはアクセス不可(ex.ユーザ一覧)
+        v.summary(SpreadDb([  // ゲストに「掲示板」の読込を許可した場合
+          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
+        ],{
+          // ゲストなので、ユーザID,権限指定は無し
+          guestAuth:{'掲示板':'r'}, // ゲストに掲示板の読込権限付与
+        }));
+
+        v.summary(SpreadDb([  // ゲストに「掲示板」の読込を許可しなかった場合
+          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
+        ],{
+          // ゲストなので、ユーザID,権限指定は無し
+          //guestAuth:{'掲示板':'r'}, // ゲストに掲示板の読込権限付与
+        }));
+      },
+      () => { // 2.ユーザによるアクセス
+
       },
     ],
   };
@@ -349,7 +367,7 @@ function SpreadDbTest(){
  * - 仕様の詳細は[workflowy](https://workflowy.com/#/4e03d2d2c266)参照
  */
 function SpreadDb(query=[],opt={}){
-  /** 
+  /**
    * main: SpreadDb主処理
    */
   const v = {step:0,rv:[],log:[]};
@@ -458,8 +476,7 @@ function SpreadDb(query=[],opt={}){
                 pv.table[query[v.i].table] = genTable({name:query[v.i].table});
                 if( pv.table[query[v.i].table] instanceof Error ) throw pv.table[query[v.i].table];
               }
-              query[v.i].arg.table = pv.table[query[v.i].table];  
-              console.log(`l.459 query[v.i].arg=${JSON.stringify(query[v.i].arg)}`)
+              query[v.i].arg.table = pv.table[query[v.i].table];
             }
             v.sdbLog = v.func(query[v.i].arg);
 
@@ -1394,13 +1411,12 @@ function SpreadDb(query=[],opt={}){
    */
   function selectRow(arg){
     const v = {whois:`${pv.whois}.selectRow`,step:0,rv:[]};
-    console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
+    console.log(`${v.whois} start.\nuserId=${pv.opt.userId}, table=${arg.table.name}, where=${arg.where}`);
     try {
 
       v.step = 1; // 判定条件を関数に統一
       v.where = determineApplicable(arg.where);
       if( v.where instanceof Error ) throw v.where;
-      console.log(`l.1390 v.where(${whichType(v.where)})=${v.where}`)
 
       v.step = 2; // 行オブジェクトを順次走査、該当行を戻り値に追加
       for( v.i=0 ; v.i<arg.table.values.length ; v.i++ ){
