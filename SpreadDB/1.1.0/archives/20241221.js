@@ -78,11 +78,13 @@ function SpreadDbTest(){
     summary: a => { // 戻り値(Object[])の結果確認
       let rv = [`${v.whois} end: return value type: ${whichType(a)}`];
       a.forEach(o => {
-        let json = JSON.stringify({
+        let result = {
           command: o.query.command,
           isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
           message: `${o.message||''}(${whichType(o.message)})`,
-        },null,2);
+        };
+        if( Object.hasOwn(o,'data') ) result.data = o.data;
+        let json = JSON.stringify(result,null,2);
         rv = [...rv,...json.split('\n')]
       });
       console.log(rv.join('\n'));
@@ -314,8 +316,9 @@ function SpreadDbTest(){
         v.summary(SpreadDb([  // テスト用シートを準備
           {command:'create',arg:src.camp},  // 「camp2024」シート作成
           {command:'create',arg:src.board},  // 「掲示板」シート作成
-          {command:'select',arg:{table:'掲示板',where:"o=>{return o.from=='パパ'}"}}, // 参照
+          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 参照
         ],{userId:'Administrator'})); // 管理者でログイン
+        // いまここ：日付文字列で指定(ちゃんと比較できる？)
 
         // 権限指定無し(ゲスト) ⇒ 一般公開シートはアクセス可(ex.掲示板)
         //v.summary(SpreadDb([
@@ -449,12 +452,17 @@ function SpreadDb(query=[],opt={}){
           if( v.isOK ){
 
             v.step = 3.3; // 処理実行
-            if( !pv.table[query[v.i].table] ){
-              pv.table[query[v.i].table] = genTable({name:query[v.i].table});
-              if( pv.table[query[v.i].table] instanceof Error ) throw pv.table[query[v.i].table];
+            if( query[v.i].command !== 'create' ){
+              // create以外の場合、操作対象のテーブル管理情報をcommand系メソッドの引数に追加
+              if( !pv.table[query[v.i].table] ){  // 以前のcommandでテーブル管理情報が作られていない場合は作成
+                pv.table[query[v.i].table] = genTable({name:query[v.i].table});
+                if( pv.table[query[v.i].table] instanceof Error ) throw pv.table[query[v.i].table];
+              }
+              query[v.i].arg.table = pv.table[query[v.i].table];  
+              console.log(`l.459 query[v.i].arg=${JSON.stringify(query[v.i].arg)}`)
             }
-            query[v.i].arg.table = pv.table[query[v.i].table];
             v.sdbLog = v.func(query[v.i].arg);
+
             if( v.sdbLog instanceof Error ){
 
               v.step = 3.31; // selectRow, updateRow他のcommand系メソッドでエラー発生
@@ -1402,7 +1410,7 @@ function SpreadDb(query=[],opt={}){
       }
 
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.`);
+      console.log(`${v.whois} normal end.\nrows=${v.rv.length}`);
       return v.rv;
 
     } catch(e) {
