@@ -43,7 +43,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'select',st:1,num:0},//num=0なら全部
+  const v = {do:{p:'select',st:2,num:0},//num=0なら全部
     whois:'SpreadDbTest',step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -342,6 +342,30 @@ function SpreadDbTest(){
         }));
       },
       () => { // 2.ユーザによるアクセス
+        v.deleteSheet(); // 既存シートを全部削除
+        v.summary(SpreadDb([  // テスト用シートを準備
+          {command:'create',arg:src.board},  // 「掲示板」シート作成
+        ],{userId:'Administrator'})); // 管理者でログイン
+
+        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可した場合
+          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
+        ],{
+          userId: 'pikumin',
+          userAuth:{'掲示板':'r'}, // ユーザに掲示板の読込権限付与
+        }));
+
+        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可しなかった場合
+          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
+        ],{
+          userId: 'pikumin',
+          userAuth:{'掲示板':'w'}, // ユーザに掲示板の読込権限を付与しなかった場合
+        }));
+
+        v.summary(SpreadDb([  // ユーザの権限を未指定の場合
+          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
+        ],{
+          userId: 'pikumin',
+        }));
 
       },
     ],
