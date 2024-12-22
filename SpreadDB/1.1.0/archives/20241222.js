@@ -321,22 +321,22 @@ function SpreadDbTest(){
           {command:'create',arg:src.board},  // 「掲示板」シート作成
         ],{userId:'Administrator'})); // 管理者でログイン
 
-        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可した場合
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
+        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可した場合 ⇒ 該当データ取得
+          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}},
         ],{
           userId: 'pikumin',
           userAuth:{'掲示板':'r'}, // ユーザに掲示板の読込権限付与
         }));
 
-        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可しなかった場合
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
+        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
+          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}},
         ],{
           userId: 'pikumin',
-          userAuth:{'掲示板':'w'}, // ユーザに掲示板の読込権限を付与しなかった場合
+          userAuth:{'掲示板':'w'}, // ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
         }));
 
         v.summary(SpreadDb([  // ユーザの権限を未指定の場合
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
+          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}},
         ],{
           userId: 'pikumin',
         }));
@@ -346,6 +346,10 @@ function SpreadDbTest(){
     update: [ // updateRow関係のテスト
       () => { // 0.正常系(Administrator)
         // 複数項目の一括更新
+        // 複数テーブルの一括更新
+        // 更新対象の①関数による指定、②オブジェクトによる指定、③主キー値による指定
+        // 更新値の①関数による指定、②オブジェクトによる指定、③値による指定
+        // unique項目のチェック、また同一レコード複数unique項目の場合、全項目がエラーになるかチェック
       },
       () => { // 1.ゲスト
         // 権限付与した場合
@@ -908,46 +912,35 @@ function SpreadDb(query=[],opt={}){
   /** deleteRow: 領域から指定行を物理削除
    * @param {Object} any
    * @param {sdbTable} any.table - 操作対象のテーブル管理情報
-   * @param {Object|Function|any} any.where - 対象レコードの判定条件
+   * @param {Object|Function|string} any.where - 対象レコードの判定条件
    * @returns {sdbLog[]}
    *
-   * - where句の指定方法
-   *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
-   *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
-   *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
+   * - where句の指定方法: functionalyze参照
    */
   function deleteRow(arg){
     const v = {whois:`${pv.whois}.deleteRow`,step:0,rv:[],whereStr:[]};
     console.log(`${v.whois} start.`);
     try {
 
-      // 削除指定が複数の時、上の行を削除後に下の行を削除しようとすると添字や行番号が分かりづらくなる。
+      // 削除対象行が複数の時、上の行を削除後に下の行を削除しようとすると添字や行番号が分かりづらくなる。
       // そこで対象となる行の添字(行番号)を洗い出した後、降順にソートし、下の行から順次削除を実行する
 
-      v.step = 1.1; // 事前準備 : 引数を配列化
-      if( !Array.isArray(arg.where)) arg.where = [arg.where];
-
-      v.step = 1.2; // 該当レコードかの判別用関数を作成
-      for( v.i=0 ; v.i<arg.where.length ; v.i++ ){
-        v.whereStr[v.i] = toString(arg.where[v.i]); // 更新履歴記録用にwhereを文字列化
-        arg.where[v.i] = determineApplicable(arg.where[v.i]);
-        if( arg.where[v.i] instanceof Error ) throw arg.where[v.i];
-      }
-
-      v.step = 1.3; // 複数あるwhereのいずれかに該当する場合trueを返す関数を作成
-      v.cond = o => {let rv = false;arg.where.forEach(w => {if(w(o)) rv=true});return rv};
+      v.step = 1; // 該当レコードかの判別用関数を作成
+      v.whereStr = toString(arg.where); // 更新履歴記録用にwhereを文字列化
+      arg.where = functionalyze(arg.where);
+      if( arg.where instanceof Error ) throw arg.where;
 
       v.step = 2; // 対象レコードか、後ろから一件ずつチェック
       for( v.i=arg.table.values.length-1 ; v.i>=0 ; v.i-- ){
 
         v.step = 2.1; // 対象外判定ならスキップ
-        if( v.cond(arg.table.values[v.i]) === false ) continue;
+        if( arg.where(arg.table.values[v.i]) === false ) continue;
 
         v.step = 2.2; // 一件分のログオブジェクトを作成
         v.log = genLog({
           table: arg.table.name,
           command: 'delete',
-          arg: v.whereStr[v.i],
+          arg: v.whereStr,
           result: true,
           before: arg.table.values[v.i],
           // after, diffは空欄
@@ -988,14 +981,20 @@ function SpreadDb(query=[],opt={}){
       return e;
     }
   }
-  /** determineApplicable: オブジェクト・文字列を基にwhere句の条件に該当するか判断する関数を作成
-   * @param {Object|function|any} arg - where句で渡された内容
+  /** functionalyze: オブジェクト・文字列を基にObject/stringを関数化
+   * @param {Object|function|string} arg - 関数化するオブジェクトor文字列
    * @returns {function}
    *
    * - update/delete他、引数でwhereを渡されるメソッドで使用
+   * - 引数のデータ型により以下のように処理分岐
+   *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
+   *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
+   *   - string
+   *     - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化
+   *     - その他 ⇒ 項目定義で"primaryKey"を指定した項目の値   *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
    */
-  function determineApplicable(arg){
-    const v = {whois:`${pv.whois}.determineApplicable`,step:0,rv:null};
+  function functionalyze(arg){
+    const v = {whois:`${pv.whois}.functionalyze`,step:0,rv:null};
     console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
     try {
 
@@ -1133,11 +1132,8 @@ function SpreadDb(query=[],opt={}){
       });
 
       v.step = 3; // defaultを関数に変換
-      v.rv.column.default = ( v.rv.column.default !== null
-        && typeof v.rv.column.default === 'string'
-        && v.rv.column.default !== 'null'
-        && v.rv.column.default !== 'undefined'
-      ) ? new Function('o',v.rv.column.default) : null;
+      v.rv.column.default = v.rv.column.default ? functionalyze(v.rv.column.default) : null;
+      if( v.rv.column.default instanceof Error ) throw v.rv.column.default;
 
       v.step = 4; // auto_incrementをオブジェクトに変換
       if( v.rv.column.auto_increment !== null && String(v.rv.column.auto_increment).toLowerCase() !== 'false' ){
@@ -1330,7 +1326,7 @@ function SpreadDb(query=[],opt={}){
           v.rv.schema.auto_increment[v.rv.schema.cols[v.i].name].current = v.rv.schema.auto_increment[v.rv.schema.cols[v.i].name].base;
         }
 
-        v.step = 3.4; // default
+        v.step = 3.4; // defaultRowに既定値設定項目をセット。なおdefaultはgenColumnにて既に関数化済
         if( v.rv.schema.cols[v.i].default ){
           v.rv.schema.defaultRow[v.rv.schema.cols[v.i].name] = v.rv.schema.cols[v.i].default;
         }
@@ -1464,10 +1460,7 @@ function SpreadDb(query=[],opt={}){
    * @param {Object|function} arg.where - 対象レコード判定条件
    * @returns {Object[]} 該当行オブジェクト
    *
-   * - where句の指定方法
-   *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
-   *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
-   *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
+   * - where句の指定方法: functionalyze参照
    */
   function selectRow(arg){
     const v = {whois:`${pv.whois}.selectRow`,step:0,rv:[]};
@@ -1475,7 +1468,7 @@ function SpreadDb(query=[],opt={}){
     try {
 
       v.step = 1; // 判定条件を関数に統一
-      v.where = determineApplicable(arg.where);
+      v.where = functionalyze(arg.where);
       if( v.where instanceof Error ) throw v.where;
 
       v.step = 2; // 行オブジェクトを順次走査、該当行を戻り値に追加
@@ -1502,139 +1495,112 @@ function SpreadDb(query=[],opt={}){
     return arg;
   }
   /** updateRow: 領域に新規行を追加
-   * @param {Object} any
-   * @param {sdbTable} any.table - 操作対象のテーブル管理情報
-   * @param {Object|Object[]} any.query
-   * @param {Object|Function|any} any.query.where - 対象レコードの判定条件。配列可
-   * @param {Object|Function|any} any.query.record - 更新する値
+   * @param {Object} arg
+   * @param {sdbTable} arg.table - 操作対象のテーブル管理情報
+   * @param {Object|Function|string} arg.where - 対象レコードの判定条件
+   * @param {Object|Function|string} arg.record - 更新する値
    * @returns {sdbLog[]}
    *
-   * - where句の指定方法
-   *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
-   *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
-   *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
+   * - where句の指定方法: functionalyze参照
    * - record句の指定方法
    *   - Object ⇒ {更新対象項目名:セットする値}
    *   - Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数
    *     【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
    */
-  function updateRow(any){
+  function updateRow(arg){
     const v = {whois:`${pv.whois}.updateRow`,step:0,rv:[],
       top:Infinity,left:Infinity,right:0,bottom:0, // 更新範囲の行列番号
     };
     console.log(`${v.whois} start.\ntrans(${whichType(trans)})=${stringify(trans)}`);
     try {
 
-      v.step = 1.1; // 事前準備 : 引数を配列化
-      if( !Array.isArray(arg.query.where)) arg.query.where = [arg.query.where];
-
-      v.step = 1.2; // 該当レコードかの判別用関数を作成
-      for( v.i=0 ; v.i<arg.query.where.length ; v.i++ ){
-        v.queryStr = toString(arg.query[v.i].where); // 更新履歴記録用に文字列化
-        arg.query[v.i].where = determineApplicable(arg.query[v.i].where);
-        if( arg.query[v.i].where instanceof Error ) throw arg.query[v.i].where;
+      // ------------------------------------------------
+      v.step = 1; // 事前準備
+      // ------------------------------------------------
+      v.step = 1.1; // where,recordの存否確認
+      if( !arg.where ){
+        throw new Error(`テーブル「${arg.table.name}」の更新で、対象(where)が指定されていません`);
+      }
+      if( !arg.record ){
+        throw new Error(`テーブル「${arg.table.name}」の更新で、更新値(record)が指定されていません`);
       }
 
-      v.step = 1.3; // 複数あるwhereのいずれかに該当する場合trueを返す関数を作成
-      v.cond = o => {let rv = false;arg.query.where.forEach(w => {if(w(o)) rv=true});return rv};
+      v.step = 1.2; // 更新履歴記録用に文字列化
+      v.argStr = `{"where":"${toString(arg.where)}","record":"${toString(arg.record)}"}`;
+
+      v.step = 1.3; // 該当レコードかの判別用関数を作成
+      arg.where = functionalyze(arg.where);
+      if( arg.where instanceof Error ) throw arg.where;
 
       v.step = 1.4; // 更新する値を導出する関数を作成
-      // object: {欄名:値}のオブジェクト
-      // string: 引数'o'を行オブジェクトとし、上述のobjectを返す関数のソース部分
-      for( v.i=0 ; v.i<arg.query.record.length ; v.i++ ){
-        v.recordStr[v.i] = toString(arg.query.record[v.i]); // 更新履歴記録用に文字列化
-        arg.query.record[v.i] = typeof arg.query.record[v.i] === 'function' ? arg.query.record[v.i]
-        : new Function('o',(typeof arg.query.record[v.i] === 'string'
-          ? arg.query.record[v.i] : JSON.stringify(arg.query.record[v.i])));
-      }
-
-      v.step = 2; // 対象となる行オブジェクト判定式の作成
-      for( v.i=0 ; v.i<arg.query.length ; v.i++ ){
-
-        v.step = 2.1; // where,recordの存否確認
-        v.msg = `${v.whois}: _が指定されていません(${JSON.stringify(arg.query[v.i].where)})`;
-        if( !arg.query[v.i].where.where ) throw new Error(v.msg.replace('_','位置指定(where)'));
-        if( !arg.query[v.i].where.record ) throw new Error(v.msg.replace('_','更新データ(record)'));
-
-        v.step = 2.2; // 該当レコードかの判別用関数を作成
-        v.queryStr = toString(arg.query[v.i].query); // 更新履歴記録用に文字列化
-        arg.query[v.i].where = determineApplicable(arg.query[v.i].where);
-        if( arg.query[v.i].where instanceof Error ) throw arg.query[v.i].where;
-
-        v.step = 2.3; // 更新する値を導出する関数を作成
-        // object: {欄名:値}のオブジェクト
-        // string: 引数'o'を行オブジェクトとし、上述のobjectを返す関数のソース部分
-        arg.query.record[v.i] = typeof arg.query.record[v.i] === 'function'
-        ? arg.query.record[v.i] // 関数ならそのまま
-        : new Function('o',(typeof arg.query.record[v.i] === 'string'
-        ? arg.query.record[v.i] // 文字列なら導出関数のソース
-        : JSON.stringify(arg.query.record[v.i])));  // オブジェクトならそのまま返す関数
+      arg.record = functionalyze(arg.record);
+      if( arg.record instanceof Error ) throw arg.record;
 
 
-        // 対象レコードか一件ずつチェック
-        for( v.j=0 ; v.j<arg.table.values.length ; v.j++ ){
+      // ------------------------------------------------
+      v.step = 2; // table.valuesを更新、ログ作成
+      // ------------------------------------------------
+      for( v.i=0 ; v.i<arg.table.values.length ; v.i++ ){
 
-          v.step = 3.1; // 対象外判定ならスキップ
-          if( v.where(arg.table.values[v.j]) === false ) continue;
+        v.step = 2.1; // 対象外判定ならスキップ
+        if( v.where(arg.table.values[v.i]) === false ) continue;
 
-          v.step = 3.2; // v.before: 更新前の行オブジェクトのコピー
-          [v.after,v.diff] = [{},{}];
+        v.step = 2.2; // v.before(更新前の行オブジェクト),after,diffの初期値を用意
+        [v.before,v.after,v.diff] = [arg.table.values[v.i],{},{}];
 
-          v.step = 3.3; // v.rObj: 更新指定項目のみのオブジェクト
-          v.rObj = v.record(arg.table.values[v.j]);
+        v.step = 2.3; // v.rObj: 更新指定項目のみのオブジェクト
+        v.rObj = arg.record(arg.table.values[v.i]);
 
-          v.step = 3.4; // シート上の項目毎にチェック
-          arg.table.header.forEach(x => {
-            if( v.rObj.hasOwnProperty(x) && !isEqual(v.before[x],v.rObj[x]) ){
-              v.step = 3.41; // 変更指定項目かつ値が変化していた場合、afterとdiffに新しい値を設定
-              v.after[x] = v.diff[x] = v.rObj[x];
-              v.step = 3.42; // 更新対象範囲の見直し
-              v.colNo = arg.table.header.findIndex(y => y === x);
-              v.left = Math.min(v.left,v.colNo);
-              v.right = Math.max(v.right,v.colNo);
-            } else {
-              v.step = 3.43; // 非変更指定項目または変更指定項目だが値の変化が無い場合、beforeの値をセット
-              v.after[x] = v.before[x];
-            }
-          })
-
-          v.step = 3.5; // 更新履歴オブジェクトを作成
-          v.log = genLog({
-            table: arg.table.name,
-            command: 'update',
-            arg: v.queryStr,
-            result: true,
-            before: arg.table.values[v.i],
-            after: v.after,
-            diff: v.diff,
-          });
-          if( v.log instanceof Error ) throw v.log;
-          v.rv.push(v.log);
-
-          v.step = 3.6; // 更新レコードの正当性チェック(unique重複チェック)
-          for( v.unique in arg.table.schema.unique ){
-            if( arg.table.schema.unique[v.unique].indexOf(arg.query[v.i].where[v.unique]) >= 0 ){
-              v.step = 3.61; // 登録済の場合はエラーとして処理
-              v.log.result = false;
-              // 複数項目のエラーメッセージに対応するため場合分け
-              v.log.message = (v.log.message === null ? '' : '\n')
-              + `${v.unique}欄の値「${arg.query[v.i].where[v.unique]}」が重複しています`;
-            } else {
-              v.step = 3.62; // 未登録の場合arg.table.sdbSchema.uniqueに値を追加
-              arg.table.schema.unique[v.unique].push(arg.query[v.i].where[v.unique]);
-            }
+        v.step = 2.4; // 項目毎に値が変わるかチェック
+        arg.table.header.forEach(x => {
+          if( Object.hasOwn(v.rObj,x) && !isEqual(v.before[x],v.rObj[x]) ){
+            v.step = 2.41; // 変更指定項目かつ値が変化していた場合、afterとdiffに新しい値を設定
+            v.after[x] = v.diff[x] = v.rObj[x];
+            v.step = 2.42; // 更新対象範囲の見直し
+            v.colNo = arg.table.header.findIndex(y => y === x);
+            v.left = Math.min(v.left,v.colNo);
+            v.right = Math.max(v.right,v.colNo);
+          } else {
+            v.step = 2.43; // 非変更指定項目または変更指定項目だが値の変化が無い場合、beforeの値をセット
+            v.after[x] = v.before[x];
           }
+        })
 
-          v.step = 3.7; // 正当性チェックOKの場合の処理
-          if( v.log.result === true ){
-            v.top = Math.min(v.top, v.j);
-            v.bottom = Math.max(v.bottom, v.j);
-            arg.table.values[v.j] = v.after;
+        v.step = 2.5; // 更新履歴オブジェクトを作成
+        v.log = genLog({
+          table: arg.table.name,
+          command: 'update',
+          arg: v.argStr,
+          result: true,
+          before: v.before,
+          after: v.after,
+          diff: v.diff,
+        });
+        if( v.log instanceof Error ) throw v.log;
+
+        v.step = 2.6; // 更新レコードの正当性チェック(unique重複チェック)
+        for( v.unique in arg.table.schema.unique ){
+          if( arg.table.schema.unique[v.unique].indexOf(arg.where[v.unique]) >= 0 ){
+            v.step = 2.61; // 登録済の場合はエラーとして処理
+            v.log.result = false;
+            // 複数項目のエラーメッセージに対応するため場合分け
+            v.log.message = (v.log.message === null ? '' : '\n')
+            + `${v.unique}欄の値「${arg.where[v.unique]}」が重複しています`;
+          } else {
+            v.step = 2.62; // 未登録の場合arg.table.sdbSchema.uniqueに値を追加
+            arg.table.schema.unique[v.unique].push(arg.where[v.unique]);
           }
-
-          v.step = 2.8; // 成否に関わらずログ出力対象に保存
-          v.rv.push(v.log);
         }
+
+        v.step = 2.7; // 正当性チェックOKの場合、修正後のレコードを保存して書換範囲(range)を修正
+        if( v.log.result === true ){
+          v.top = Math.min(v.top, v.i);
+          v.bottom = Math.max(v.bottom, v.i);
+          arg.table.values[v.i] = v.after;
+        }
+
+        v.step = 2.8; // 成否に関わらずログ出力対象に保存
+        v.rv.push(v.log);
       }
 
       // ------------------------------------------------
@@ -1672,8 +1638,6 @@ function SpreadDb(query=[],opt={}){
     }
   }
 }
-
-
 
 /** 二つの引数が同値か判断する
  * @param {any} v1 - 変数1

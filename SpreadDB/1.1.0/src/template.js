@@ -22,7 +22,7 @@ function SpreadDb(query=[],opt={}){
   //::$src/convertRow.js::
   //::$src/createTable.js::
   //::$src/deleteRow.js::
-  //::$src/determineApplicable.js::
+  //::$src/functionalyze.js::
   //::$src/genColumn.js::
   //::$src/genLog.js::
   //::$src/genSchema.js::
