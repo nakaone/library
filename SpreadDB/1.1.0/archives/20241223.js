@@ -931,7 +931,11 @@ function SpreadDb(query=[],opt={}){
         v.headerRange.setNotes([v.table.notes]);  // メモのセット
         v.table.sheet.autoResizeColumns(1,v.table.colnum);  // 各列の幅を項目名の幅に調整
         v.table.sheet.setFrozenRows(1); // 先頭1行を固定
-        v.r = appendRow({table:v.table,record:v.table.values}); // 初期データの追加
+        // 初期データの追加
+        v.initData = JSON.parse(JSON.stringify(v.table.values));
+        v.table.rownum = 0; // appendで追加されるのでrownum, valuesをリセット
+        v.table.values = [];
+        v.r = appendRow({table:v.table,record:v.initData});
         if( v.r instanceof Error ) throw v.r;
       }
 
