@@ -22,11 +22,14 @@ function createTable(arg){
     if( v.log instanceof Error ) throw v.log;
 
     // ----------------------------------------------
-    // テーブル管理情報が未作成の場合、作成
+    v.step = 2; // テーブル管理情報の作成
     // ----------------------------------------------
-    if( Object.hasOwn(pv.table,arg.name) ) v.table = pv.table[arg.name]; else {
+    if( Object.hasOwn(pv.table,arg.name) ){
+      v.step = 2.1; // 作成済の場合、そのまま使用
+      v.table = pv.table[arg.name];
+    } else {  // 以下テーブル管理情報未作成の場合の処理
 
-      v.step = 2; // sdbTableのプロトタイプ作成
+      v.step = 2.2; // sdbTableのプロトタイプ作成
       v.table = {
         name: arg.name, // {string} テーブル名(範囲名)
         account: pv.opt.userId, // {string} 更新者のアカウント
@@ -39,12 +42,12 @@ function createTable(arg){
         rownum: 0, // {number} データ領域の行数
       };
 
-      if( arg.cols ){ v.step = 3; // 項目定義情報が存在する場合
+      if( arg.cols ){ v.step = 2.3; // 項目定義情報が存在する場合
 
         v.table.header = arg.cols.map(x => x.name);
         v.table.colnum = v.table.header.length;
 
-        if( arg.values ){ v.step = 3.1; // 項目定義と初期データの両方存在
+        if( arg.values ){ v.step = 2.31; // 項目定義と初期データの両方存在
 
           // 項目の並びを指定してconvertRow
           v.convertRow = convertRow(arg.values,v.table.header);
@@ -52,16 +55,17 @@ function createTable(arg){
           v.table.values = v.convertRow.obj;
           v.table.rownum = v.convertRow.raw.length;
 
-        } else {  v.step = 3.2; // 項目定義のみ存在
+        } else {  v.step = 2.32; // 項目定義のみ存在
 
           // values, rownumは取得不能なので既定値のまま
-          v.convertRow = null;
+          v.table.values = [];
+          v.table.rownum = 0;
 
         }
 
-      } else { v.step = 4; // 項目定義情報が存在しない場合
+      } else { v.step = 2.4; // 項目定義情報が存在しない場合
 
-        if( arg.values ){ v.step = 4.1; // 項目定義不在で初期データのみ存在
+        if( arg.values ){ v.step = 2.41; // 項目定義不在で初期データのみ存在
 
           v.convertRow = convertRow(arg.values);
           if( v.convertRow instanceof Error ) throw v.convertRow;
@@ -70,12 +74,12 @@ function createTable(arg){
           v.table.colnum = v.table.header.length;
           v.table.rownum = v.convertRow.raw.length;
 
-        } else {  v.step = 4.2; // シートも項目定義も初期データも無い
+        } else {  v.step = 2.42; // シートも項目定義も初期データも無い
           throw new Error(`シートも項目定義も初期データも存在しません`);
         }
       }
 
-      v.step = 5; // スキーマをインスタンス化
+      v.step = 2.5; // スキーマをインスタンス化
       v.r = genSchema({
         cols: arg.cols || null,
         header: v.table.header,
@@ -88,21 +92,28 @@ function createTable(arg){
     }
 
     // ----------------------------------------------
-    v.step = 6; // シートが存在しない場合、新規追加
+    v.step = 3; // シートが存在しない場合、新規追加
     // ----------------------------------------------
     v.table.sheet = pv.spread.getSheetByName(v.table.name);
     if( v.table.sheet === null ){
-      v.step = 6.1; // シートの追加
+      v.step = 3.1; // シートの追加
       v.table.sheet = pv.spread.insertSheet();
       v.table.sheet.setName(arg.name);
 
-      v.step = 6.2; // シートイメージのセット
-      v.data = v.convertRow === null ? [v.table.header] : v.convertRow.raw;
-      v.table.sheet.getRange(1,1,v.data.length,v.table.colnum).setValues(v.data);
+      v.step = 3.2; // シートイメージのセット
+      v.r = convertRow(v.table.values,v.table.header);
+      if( v.r instanceof Error ) throw v.r;
+      v.headerRange = v.table.sheet.getRange(1,1,1,v.table.colnum);
+      v.headerRange.setValues([v.table.header]);  // 項目名のセット
+      v.headerRange.setNotes([v.table.notes]);  // メモのセット
       v.table.sheet.autoResizeColumns(1,v.table.colnum);  // 各列の幅を項目名の幅に調整
-
-      v.step = 6.3; // 項目定義メモの追加
-      v.table.sheet.getRange(1,1,1,v.table.colnum).setNotes([v.table.notes]);
+      v.table.sheet.setFrozenRows(1); // 先頭1行を固定
+      // 初期データの追加
+      v.initData = JSON.parse(JSON.stringify(v.table.values));
+      v.table.rownum = 0; // appendで追加されるのでrownum, valuesをリセット
+      v.table.values = [];
+      v.r = appendRow({table:v.table,record:v.initData});
+      if( v.r instanceof Error ) throw v.r;
     }
 
     v.step = 9; // 終了処理

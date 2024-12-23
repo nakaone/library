@@ -81,7 +81,7 @@ function embedRecursively(content,opt={}){
          * 1. タイトル行のレベルがトップレベル(v.title[1].length === v.topLevel)
          */
         if(!(opt.depth>0 && !opt.useRoot && v.hasRoot && v.title[1].length===v.topLevel)){
-          v.rv += '#'.repeat(v.level) + ' ' + v.title[2] + '\n';
+          v.rv += '#'.repeat(v.level) + ' ' + v.title[2].trimEnd() + '\n';
         }
       } else {
         v.step = 3; // 挿入指定行の判定・処理
@@ -117,10 +117,10 @@ function embedRecursively(content,opt={}){
           v.step = 3.5; // 被挿入文書を再帰呼出
           v.r = embedRecursively(v.child, v.opt);
           if( v.r instanceof Error ) throw v.r;
-          v.rv += opt.prefix + v.r;
+          v.rv += opt.prefix + v.r.trimEnd() + '\n';
         } else {
           v.step = 4; // 非タイトル・非挿入指定行
-          v.rv += (opt.prefix + v.line).trimEnd() + '\n';
+          v.rv += opt.prefix + v.line.trimEnd() + '\n';
         }
       }
     }

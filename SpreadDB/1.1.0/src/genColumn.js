@@ -13,7 +13,7 @@
  *   - note {string[]} メモ用の文字列
  */
 function genColumn(arg={}){
-  const v = {whois:'SpreadDb.genColumn',step:0,rv:{column:{},note:null},
+  const v = {whois:`${pv.whois}.genColumn`,step:0,rv:{},
     typedef:[ // sdbColumnの属性毎にname,type,noteを定義
       {name:'name',type:'string',note:'項目名'},
       {name:'type',type:'string',note:'データ型。string,number,boolean,Date,JSON,UUID'},
@@ -31,97 +31,87 @@ function genColumn(arg={}){
       {name:'suffix',type:'string',note:'"not null"等、上記以外のSQLのcreate table文のフィールド制約'},
       {name:'note',type:'string',note:'本項目に関する備考。create table等では使用しない'},
     ],
-    str2obj: (arg) => {
-      const v = {whois:`${pv.whois}.genColumn.str2obj`,step:0,rv:null,
-        rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現
-        isJSON: (str) => {let r;try{r=JSON.parse(str)}catch(e){r=null} return r},
-      };
-      try {
-
-        v.step = 1; // コメントの削除
-        arg = arg.replace(v.rex,'');
-
-        v.step = 2; // JSONで定義されていたらそのまま採用
-        v.rv = v.isJSON(arg);
-
-        if( v.rv === null ){
-          v.step = 3; // 非JSON文字列だった場合、改行で分割
-          v.lines = arg.split('\n');
-
-          v.step = 4; // 一行毎に属性の表記かを判定
-          v.rv = {};
-          v.lines.forEach(prop => {
-            v.m = prop.trim().match(/^["']?(.+?)["']?\s*:\s*["']?(.+?)["']?$/);
-            if( v.m ) v.rv[v.m[1]] = v.m[2];
-          });
-
-          v.step = 5; // 属性項目が無ければ項目名と看做す
-          if( Object.keys(v.rv).length === 0 ){
-            v.rv = {name:arg.trim()};
-          }
-        }
-
-        v.step = 9; // 終了処理
-        return v.rv;
-
-      } catch(e) {
-        e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-        console.error(`${e.message}\nv=${stringify(v)}`);
-        return e;
-      }
-    },
+    rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現
   };
-  console.log(`${v.whois} start.`);
+  console.log(`${v.whois} start.\narg(${whichType(arg)})=${JSON.stringify(arg)}`);
   try {
 
-    v.step = 1; // 引数が項目定義メモまたは項目名の場合、オブジェクトに変換
-    if( whichType(arg,'String') ){
-      arg = v.str2obj(arg);
-      if( arg instanceof Error ) throw arg;
-      v.rv.note = arg;
+    // ------------------------------------------------
+    v.step = 1; // rv.columnの準備
+    // ------------------------------------------------
+    if( typeof arg === 'object' ){
+      v.step = 1.1; // 引数がオブジェクト(=sdbColumn)ならそのまま採用
+      v.rv.column = arg;
+      v.rv.note = {};
+    } else {  // 文字列で与えられたらオブジェクトに変換
+
+      v.step = 1.2; // コメントの削除、一行毎に分割
+      v.lines = arg.replace(v.rex,'').split('\n');
+
+      v.step = 1.3; // 一行毎に属性の表記かを判定
+      v.rv.column = {};
+      v.lines.forEach(prop => {
+        v.m = prop.trim().match(/^["']?(.+?)["']?\s*:\s*["']?(.+?)["']?$/);
+        if( v.m ) v.rv.column[v.m[1]] = v.m[2];
+      });
+
+      v.step = 1.4; 
+      if( Object.keys(v.rv.column).length === 0 ){
+        // 属性項目が無ければ項目名と看做す
+        v.rv.column = {name:arg.trim()};
+        v.rv.note = {};
+      } else {
+        // 属性項目があればシート上のメモの文字列と看做す
+        v.rv.note = arg;  // コメントを削除しないよう、オリジナルを適用
+      }
     }
 
-    v.step = 2; // メンバに格納
-    v.typedef.map(x => x.name).forEach(x => {
-      v.rv.column[x] = arg.hasOwnProperty(x) ? arg[x] : null;
+    // ------------------------------------------------
+    v.step = 2; // rv.column各メンバの値をチェック・整形
+    // ------------------------------------------------
+    v.step = 2.1; // 'null'はnullに変換
+    Object.keys(v.rv.column).forEach(x => {
+      if( v.rv.column[x] === 'null' ){
+        v.rv.column[x]=null;
+      } else if( whichType(v.rv.note,'Object') ){
+        v.rv.note[x] = v.rv.column[x];
+      }
     });
 
-    v.step = 3; // defaultを関数に変換
-    v.rv.column.default = ( v.rv.column.default !== null
-      && typeof v.rv.column.default === 'string'
-      && v.rv.column.default !== 'null'
-      && v.rv.column.default !== 'undefined'
-    ) ? new Function('o',v.rv.column.default) : null;
+    v.step = 2.2; // defaultを関数に変換
+    if( v.rv.column.default ){
+      v.rv.column.default = functionalyze(v.rv.column.default);
+    }
+    if( v.rv.column.default instanceof Error ) throw v.rv.column.default;
 
-    v.step = 4; // auto_incrementをオブジェクトに変換
-    if( v.rv.column.auto_increment !== null && String(v.rv.column.auto_increment).toLowerCase() !== 'false' ){
-      switch( whichType(v.rv.column.auto_increment) ){
-        case 'Array': v.rv.column.auto_increment = {
-          base: v.rv.column.auto_increment[0],
-          step: v.rv.column.auto_increment[1],
-        }; break;
-        case 'Number': v.rv.column.auto_increment = {
-          base: Number(v.rv.column.auto_increment),
-          step: 1,
-        }; break;
-        default: v.rv.column.auto_increment = {
-          base: 1,
-          step: 1,
-        };
-      }
-    } else {
-      v.rv.column.auto_increment = false;
+    v.step = 2.3; // auto_incrementをオブジェクトに変換
+    v.ac = {
+      Array: x => {return {obj:{start:x[0],step:(x[1]||1)},str:JSON.stringify(x)}},  // [start,step]形式
+      Number: x => {return {obj:{start:x,step:1},str:x}},  // startのみ数値で指定
+      Object: x => {return {obj:x, str:JSON.stringify(x)}}, // {start:m,step:n}形式
+      Null: x => {return {obj:false, str:'false'}}, // auto_incrementしない
+      Boolean: x => {return x ? {obj:{start:1,step:1}, str:'true'} : {obj:false, str:'false'}}, // trueは[1,1],falseはauto_incrementしない
+    };
+    if( v.rv.column.auto_increment ){
+      if( typeof v.rv.column.auto_increment === 'string' )
+        v.rv.column.auto_increment = JSON.parse(v.rv.column.auto_increment);
+      v.acObj = v.ac[whichType(v.rv.column.auto_increment)](v.rv.column.auto_increment);
+      v.rv.column.auto_increment = v.acObj.obj;
+      // 開始値はstart+stepになるので、予め-stepしておく
+      v.rv.column.auto_increment.start -= v.rv.column.auto_increment.step;
+      v.rv.note.auto_increment = v.acObj.str;
     }
 
-    v.step = 4; // メモの文字列を作成
-    if( v.rv.note === null ){
+    // ------------------------------------------------
+    v.step = 3; // シートのメモに記載する文字列を作成
+    // ------------------------------------------------
+    if( typeof v.rv.note === 'object' ){
       v.x = [];
-      for( v.a in v.rv.column ){
-        v.l = `${v.a}: "${v.rv.column[v.a]}"`;
-        v.c = v.typedef.find(x => x.name === v.a);
-        if( v.c.hasOwnProperty('note') ) v.l += ` // ${v.c.note}`;
-        v.x.push(v.l);
-      }
+      v.typedef.map(x => x.name).forEach(x => {
+        if( Object.hasOwn(v.rv.note,x) ){
+          v.x.push(`${x}: "${v.rv.note[x]}"`);
+        }
+      });
       v.rv.note = v.x.join('\n');
     }
 

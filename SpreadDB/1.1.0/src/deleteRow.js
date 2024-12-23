@@ -1,46 +1,35 @@
 /** deleteRow: 領域から指定行を物理削除
  * @param {Object} any
  * @param {sdbTable} any.table - 操作対象のテーブル管理情報
- * @param {Object|Function|any} any.where - 対象レコードの判定条件
+ * @param {Object|Function|string} any.where - 対象レコードの判定条件
  * @returns {sdbLog[]}
  *
- * - where句の指定方法
- *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
- *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
- *   - その他 ⇒ 項目定義で"primaryKey"指定された項目の値で、primaryKey項目が指定値なら更新
+ * - where句の指定方法: functionalyze参照
  */
 function deleteRow(arg){
   const v = {whois:`${pv.whois}.deleteRow`,step:0,rv:[],whereStr:[]};
   console.log(`${v.whois} start.`);
   try {
 
-    // 削除指定が複数の時、上の行を削除後に下の行を削除しようとすると添字や行番号が分かりづらくなる。
+    // 削除対象行が複数の時、上の行を削除後に下の行を削除しようとすると添字や行番号が分かりづらくなる。
     // そこで対象となる行の添字(行番号)を洗い出した後、降順にソートし、下の行から順次削除を実行する
 
-    v.step = 1.1; // 事前準備 : 引数を配列化
-    if( !Array.isArray(arg.where)) arg.where = [arg.where];
-
-    v.step = 1.2; // 該当レコードかの判別用関数を作成
-    for( v.i=0 ; v.i<arg.where.length ; v.i++ ){
-      v.whereStr[v.i] = toString(arg.where[v.i]); // 更新履歴記録用にwhereを文字列化
-      arg.where[v.i] = determineApplicable(arg.where[v.i]);
-      if( arg.where[v.i] instanceof Error ) throw arg.where[v.i];
-    }
-
-    v.step = 1.3; // 複数あるwhereのいずれかに該当する場合trueを返す関数を作成
-    v.cond = o => {let rv = false;arg.where.forEach(w => {if(w(o)) rv=true});return rv};
+    v.step = 1; // 該当レコードかの判別用関数を作成
+    v.whereStr = toString(arg.where); // 更新履歴記録用にwhereを文字列化
+    arg.where = functionalyze(arg.where);
+    if( arg.where instanceof Error ) throw arg.where;
 
     v.step = 2; // 対象レコードか、後ろから一件ずつチェック
     for( v.i=arg.table.values.length-1 ; v.i>=0 ; v.i-- ){
 
       v.step = 2.1; // 対象外判定ならスキップ
-      if( v.cond(arg.table.values[v.i]) === false ) continue;
+      if( arg.where(arg.table.values[v.i]) === false ) continue;
 
       v.step = 2.2; // 一件分のログオブジェクトを作成
       v.log = genLog({
         table: arg.table.name,
         command: 'delete',
-        arg: v.whereStr[v.i],
+        arg: v.whereStr,
         result: true,
         before: arg.table.values[v.i],
         // after, diffは空欄

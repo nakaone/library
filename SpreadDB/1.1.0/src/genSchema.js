@@ -24,7 +24,7 @@ function genSchema(arg){
         primaryKey: 'id', // {string}='id' 一意キー項目名
         unique: {}, // {Object.<string, any[]>} primaryKeyおよびunique属性項目の管理情報。メンバ名はprimaryKey/uniqueの項目名
         auto_increment: {}, // {Object.<string,Object>} auto_increment属性項目の管理情報。メンバ名はauto_incrementの項目名
-          // auto_incrementのメンバ : base {number} 基数, step {number} 増減値, current {number} 現在の最大(小)値
+          // auto_incrementのメンバ : start {number} 開始値, step {number} 増減値, current {number} 現在の最大(小)値
         defaultRow: {}, // {Object.<string,function>} 既定値項目で構成されたオブジェクト。appendの際のプロトタイプ
       },
       notes: arg.notes || [], // ヘッダ行に対応したメモ
@@ -82,10 +82,10 @@ function genSchema(arg){
       // ※sdbColumnでauto_incrementなら配列、違うならfalse設定済
       if( v.rv.schema.cols[v.i].auto_increment && v.rv.schema.cols[v.i].auto_increment !== false ){
         v.rv.schema.auto_increment[v.rv.schema.cols[v.i].name] = v.rv.schema.cols[v.i].auto_increment;
-        v.rv.schema.auto_increment[v.rv.schema.cols[v.i].name].current = v.rv.schema.auto_increment[v.rv.schema.cols[v.i].name].base;
+        v.rv.schema.auto_increment[v.rv.schema.cols[v.i].name].current = v.rv.schema.auto_increment[v.rv.schema.cols[v.i].name].start;
       }
 
-      v.step = 3.4; // default
+      v.step = 3.4; // defaultRowに既定値設定項目をセット。なおdefaultはgenColumnにて既に関数化済
       if( v.rv.schema.cols[v.i].default ){
         v.rv.schema.defaultRow[v.rv.schema.cols[v.i].name] = v.rv.schema.cols[v.i].default;
       }

@@ -1,11 +1,17 @@
-/** determineApplicable: オブジェクト・文字列を基にwhere句の条件に該当するか判断する関数を作成
- * @param {Object|function|any} arg - where句で渡された内容
+/** functionalyze: オブジェクト・文字列を基にObject/stringを関数化
+ * @param {Object|function|string} arg - 関数化するオブジェクトor文字列
  * @returns {function}
  *
  * - update/delete他、引数でwhereを渡されるメソッドで使用
+ * - 引数のデータ型により以下のように処理分岐
+ *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
+ *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
+ *   - string
+ *     - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化
+ *     - その他 ⇒ 項目定義で"primaryKey"を指定した項目の値   *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
  */
-function determineApplicable(arg){
-  const v = {whois:`${pv.whois}.determineApplicable`,step:0,rv:null};
+function functionalyze(arg){
+  const v = {whois:`${pv.whois}.functionalyze`,step:0,rv:null};
   console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
   try {
 

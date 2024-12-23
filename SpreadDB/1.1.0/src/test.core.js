@@ -14,8 +14,8 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'select',st:2,num:0},//num=0なら全部
-    whois:'SpreadDbTest',step:0,rv:null,
+  const v = {do:{p:'create',st:2,num:1},//num=0なら全部
+    whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
     deleteSheet: (sheetName=null) => {  // テスト用シートの削除関数
@@ -158,6 +158,7 @@ function SpreadDbTest(){
     camp: { // "camp2024"シート(cols+values)
       name: 'camp2024',
       cols: [
+        {name:'entryNo',type:'number',primaryKey:true},
         {name:'タイムスタンプ',type:'string'},
         {name:'メールアドレス',type:'string'},
         {name:'申込者氏名',type:'string'},
@@ -186,7 +187,6 @@ function SpreadDbTest(){
         {name:'キャンセル',type:'string'},
         {name:'authority',type:'string'},
         {name:'CPkey',type:'string'},
-        {name:'entryNo',type:'number'},
         {name:'trial',type:'string'},
         {name:'editURL',type:'string'},
         {name:'entryTime',type:'string'},
@@ -260,6 +260,21 @@ function SpreadDbTest(){
       ['2023/02/09 15:18:27','しまづパパ','スタッフ全員','129'],
       ['2023/02/10 15:27:38','嶋津パパ','スタッフ全員','r.1.4.4、リリースしました']],
     },
+    autoIncrement: {
+      name: 'AutoInc',
+      cols: [
+        {name:'pKey',auto_increment:10,primaryKey:true},
+        {name:'ラベル',type:'string'},
+        {name:'ぬる',auto_increment:null},
+        {name:'真',auto_increment:true},
+        {name:'偽',auto_increment:false},
+        {name:'配列①',auto_increment:[20]},
+        {name:'配列②',auto_increment:[30,-1]},
+        {name:'obj',auto_increment:{start:40,step:5}},
+        {name:'def関数',default:"o => toLocale(new Date())"},
+      ],
+      values: [{'ラベル':'fuga'},{'ラベル':'hoge'}],
+    }
   };
   const pattern = { /* テストパターン(関数)の定義
     - ログへの出力形式
@@ -282,6 +297,13 @@ function SpreadDbTest(){
         v.summary(SpreadDb({command:'create',arg:src.camp},{userId:'pikumin'}));
         // ユーザの指定無し
         v.summary(SpreadDb({command:'create',arg:src.PL}));
+      },
+      () => { // 2.auto_increment, defaultが設定されるかのテスト
+        v.deleteSheet(); // 既存シートを全部削除
+        v.summary(SpreadDb([  // 複数テーブルの作成
+          {command:'create',arg:src.autoIncrement},
+        ],{userId:'Administrator'}));
+
       },
     ],
     select : [  // selectRow関係のテスト
@@ -321,22 +343,22 @@ function SpreadDbTest(){
           {command:'create',arg:src.board},  // 「掲示板」シート作成
         ],{userId:'Administrator'})); // 管理者でログイン
 
-        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可した場合
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
+        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可した場合 ⇒ 該当データ取得
+          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}},
         ],{
           userId: 'pikumin',
           userAuth:{'掲示板':'r'}, // ユーザに掲示板の読込権限付与
         }));
 
-        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可しなかった場合
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
+        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
+          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}},
         ],{
           userId: 'pikumin',
-          userAuth:{'掲示板':'w'}, // ユーザに掲示板の読込権限を付与しなかった場合
+          userAuth:{'掲示板':'w'}, // ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
         }));
 
         v.summary(SpreadDb([  // ユーザの権限を未指定の場合
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
+          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}},
         ],{
           userId: 'pikumin',
         }));
@@ -346,6 +368,17 @@ function SpreadDbTest(){
     update: [ // updateRow関係のテスト
       () => { // 0.正常系(Administrator)
         // 複数項目の一括更新
+        // 複数テーブルの一括更新
+        // 更新対象の①関数による指定、②オブジェクトによる指定、③主キー値による指定
+        // 更新値の①関数による指定、②オブジェクトによる指定、③値による指定
+        // unique項目のチェック、また同一レコード複数unique項目の場合、全項目がエラーになるかチェック
+        v.deleteSheet(); // 既存シートを全部削除
+        v.summary(SpreadDb([  // 複数テーブルの作成
+          {command:'create',arg:src.camp},
+          {command:'create',arg:src.PL},
+        ],{userId:'Administrator'}));
+
+
       },
       () => { // 1.ゲスト
         // 権限付与した場合
@@ -358,7 +391,8 @@ function SpreadDbTest(){
     ],
     append: [ // appendRow関係のテスト
       () => { // 0.正常系(Administrator)
-        // オートインクリメント、既定値設定項目、unique項目に重複値
+        // AutoIncシートでオートインクリメント
+        // 既定値設定項目、unique項目に重複値
         // 複数レコードの追加
       },
       () => { // 1.ゲスト

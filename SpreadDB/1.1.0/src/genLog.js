@@ -3,7 +3,7 @@
  * @returns {sdbLog|sdbColumn[]} 変更履歴シートに追記した行オブジェクト、または変更履歴シート各項目の定義
  */
 function genLog(arg=null){
-  const v = {whois:'SpreadDb.genLog',step:0,rv:null};
+  const v = {whois:`${pv.whois}.genLog`,step:0,rv:null};
   console.log(`${v.whois} start.`);
   try {
 
