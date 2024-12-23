@@ -926,13 +926,13 @@ function SpreadDb(query=[],opt={}){
         v.step = 3.2; // シートイメージのセット
         v.r = convertRow(v.table.values,v.table.header);
         if( v.r instanceof Error ) throw v.r;
-        v.data = [v.table.header,...v.r.raw];
-        v.table.sheet.getRange(1,1,v.data.length,v.table.colnum).setValues(v.data);
+        v.headerRange = v.table.sheet.getRange(1,1,1,v.table.colnum);
+        v.headerRange.setValues([v.table.header]);  // 項目名のセット
+        v.headerRange.setNotes([v.table.notes]);  // メモのセット
         v.table.sheet.autoResizeColumns(1,v.table.colnum);  // 各列の幅を項目名の幅に調整
         v.table.sheet.setFrozenRows(1); // 先頭1行を固定
-
-        v.step = 3.3; // 項目定義メモの追加
-        v.table.sheet.getRange(1,1,1,v.table.colnum).setNotes([v.table.notes]);
+        v.r = appendRow({table:v.table,record:v.table.values}); // 初期データの追加
+        if( v.r instanceof Error ) throw v.r;
       }
 
       v.step = 9; // 終了処理
@@ -1205,7 +1205,8 @@ function SpreadDb(query=[],opt={}){
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
-  }  /** genLog: sdbLogオブジェクトを生成
+  }
+  /** genLog: sdbLogオブジェクトを生成
    * @param {sdbLog|null} arg - 変更履歴シートの行オブジェクト
    * @returns {sdbLog|sdbColumn[]} 変更履歴シートに追記した行オブジェクト、または変更履歴シート各項目の定義
    */
