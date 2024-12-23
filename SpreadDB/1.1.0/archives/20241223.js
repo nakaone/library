@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'update',st:0,num:1},//num=0なら全部
+  const v = {do:{p:'create',st:2,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -263,7 +263,8 @@ function SpreadDbTest(){
     autoIncrement: {
       name: 'AutoInc',
       cols: [
-        {name:'数値',auto_increment:10,primaryKey:true},
+        {name:'pKey',auto_increment:10,primaryKey:true},
+        {name:'ラベル',type:'string'},
         {name:'ぬる',auto_increment:null},
         {name:'真',auto_increment:true},
         {name:'偽',auto_increment:false},
@@ -271,9 +272,8 @@ function SpreadDbTest(){
         {name:'配列②',auto_increment:[30,-1]},
         {name:'obj',auto_increment:{base:40,step:5}},
         {name:'def関数',default:"o => toLocale(new Date())"},
-        {name:'def文字',default:"fuga"},
-        {name:'一意',unique:true},
-      ]
+      ],
+      values: [{'ラベル':'fuga'},{'ラベル':'hoge'}],
     }
   };
   const pattern = { /* テストパターン(関数)の定義
@@ -297,6 +297,13 @@ function SpreadDbTest(){
         v.summary(SpreadDb({command:'create',arg:src.camp},{userId:'pikumin'}));
         // ユーザの指定無し
         v.summary(SpreadDb({command:'create',arg:src.PL}));
+      },
+      () => { // 2.auto_increment, defaultが設定されるかのテスト
+        v.deleteSheet(); // 既存シートを全部削除
+        v.summary(SpreadDb([  // 複数テーブルの作成
+          {command:'create',arg:src.autoIncrement},
+        ],{userId:'Administrator'}));
+
       },
     ],
     select : [  // selectRow関係のテスト
