@@ -270,7 +270,7 @@ function SpreadDbTest(){
         {name:'偽',auto_increment:false},
         {name:'配列①',auto_increment:[20]},
         {name:'配列②',auto_increment:[30,-1]},
-        {name:'obj',auto_increment:{base:40,step:5}},
+        {name:'obj',auto_increment:{start:40,step:5}},
         {name:'def関数',default:"o => toLocale(new Date())"},
       ],
       values: [{'ラベル':'fuga'},{'ラベル':'hoge'}],
@@ -1173,17 +1173,19 @@ function SpreadDb(query=[],opt={}){
 
       v.step = 2.3; // auto_incrementをオブジェクトに変換
       v.ac = {
-        Array: x => {return {obj:{base:x[0],step:(x[1]||1)},str:JSON.stringify(x)}},  // [base,step]形式
-        Number: x => {return {obj:{base:x,step:1},str:x}},  // baseのみ数値で指定
-        Object: x => {return {obj:x, str:JSON.stringify(x)}}, // {base:m,step:n}形式
+        Array: x => {return {obj:{start:x[0],step:(x[1]||1)},str:JSON.stringify(x)}},  // [start,step]形式
+        Number: x => {return {obj:{start:x,step:1},str:x}},  // startのみ数値で指定
+        Object: x => {return {obj:x, str:JSON.stringify(x)}}, // {start:m,step:n}形式
         Null: x => {return {obj:false, str:'false'}}, // auto_incrementしない
-        Boolean: x => {return x ? {obj:{base:1,step:1}, str:'true'} : {obj:false, str:'false'}}, // trueは[1,1],falseはauto_incrementしない
+        Boolean: x => {return x ? {obj:{start:1,step:1}, str:'true'} : {obj:false, str:'false'}}, // trueは[1,1],falseはauto_incrementしない
       };
       if( v.rv.column.auto_increment ){
         if( typeof v.rv.column.auto_increment === 'string' )
           v.rv.column.auto_increment = JSON.parse(v.rv.column.auto_increment);
         v.acObj = v.ac[whichType(v.rv.column.auto_increment)](v.rv.column.auto_increment);
         v.rv.column.auto_increment = v.acObj.obj;
+        // 開始値はstart+stepになるので、予め-stepしておく
+        v.rv.column.auto_increment.start -= v.rv.column.auto_increment.step;
         v.rv.note.auto_increment = v.acObj.str;
       }
 
@@ -1298,7 +1300,7 @@ function SpreadDb(query=[],opt={}){
           primaryKey: 'id', // {string}='id' 一意キー項目名
           unique: {}, // {Object.<string, any[]>} primaryKeyおよびunique属性項目の管理情報。メンバ名はprimaryKey/uniqueの項目名
           auto_increment: {}, // {Object.<string,Object>} auto_increment属性項目の管理情報。メンバ名はauto_incrementの項目名
-            // auto_incrementのメンバ : base {number} 基数, step {number} 増減値, current {number} 現在の最大(小)値
+            // auto_incrementのメンバ : start {number} 開始値, step {number} 増減値, current {number} 現在の最大(小)値
           defaultRow: {}, // {Object.<string,function>} 既定値項目で構成されたオブジェクト。appendの際のプロトタイプ
         },
         notes: arg.notes || [], // ヘッダ行に対応したメモ
@@ -1356,7 +1358,7 @@ function SpreadDb(query=[],opt={}){
         // ※sdbColumnでauto_incrementなら配列、違うならfalse設定済
         if( v.rv.schema.cols[v.i].auto_increment && v.rv.schema.cols[v.i].auto_increment !== false ){
           v.rv.schema.auto_increment[v.rv.schema.cols[v.i].name] = v.rv.schema.cols[v.i].auto_increment;
-          v.rv.schema.auto_increment[v.rv.schema.cols[v.i].name].current = v.rv.schema.auto_increment[v.rv.schema.cols[v.i].name].base;
+          v.rv.schema.auto_increment[v.rv.schema.cols[v.i].name].current = v.rv.schema.auto_increment[v.rv.schema.cols[v.i].name].start;
         }
 
         v.step = 3.4; // defaultRowに既定値設定項目をセット。なおdefaultはgenColumnにて既に関数化済
