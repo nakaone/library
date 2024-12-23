@@ -260,6 +260,21 @@ function SpreadDbTest(){
       ['2023/02/09 15:18:27','しまづパパ','スタッフ全員','129'],
       ['2023/02/10 15:27:38','嶋津パパ','スタッフ全員','r.1.4.4、リリースしました']],
     },
+    autoIncrement: {
+      name: 'AutoInc',
+      cols: [
+        {name:'数値',auto_increment:10,primaryKey:true},
+        {name:'ぬる',auto_increment:null},
+        {name:'真',auto_increment:true},
+        {name:'偽',auto_increment:false},
+        {name:'配列①',auto_increment:[20]},
+        {name:'配列②',auto_increment:[30,-1]},
+        {name:'obj',auto_increment:{base:40,step:5}},
+        {name:'def関数',default:"o => toLocale(new Date())"},
+        {name:'def文字',default:"fuga"},
+        {name:'一意',unique:true},
+      ]
+    }
   };
   const pattern = { /* テストパターン(関数)の定義
     - ログへの出力形式
@@ -369,7 +384,8 @@ function SpreadDbTest(){
     ],
     append: [ // appendRow関係のテスト
       () => { // 0.正常系(Administrator)
-        // オートインクリメント、既定値設定項目、unique項目に重複値
+        // AutoIncシートでオートインクリメント
+        // 既定値設定項目、unique項目に重複値
         // 複数レコードの追加
       },
       () => { // 1.ゲスト
@@ -903,11 +919,10 @@ function SpreadDb(query=[],opt={}){
         v.step = 3.2; // シートイメージのセット
         v.r = convertRow(v.table.values,v.table.header);
         if( v.r instanceof Error ) throw v.r;
-        console.log(`l.903 v.r=${JSON.stringify(v.r)}`)
-        //console.log(`l.904 v.table.header=${JSON.stringify(v.table.header,null,2)}\nv.table.values=${JSON.stringify(v.table.values)}\nv.r.raw=${JSON.stringify(v.r.raw.slice(0,3))}`)
         v.data = [v.table.header,...v.r.raw];
         v.table.sheet.getRange(1,1,v.data.length,v.table.colnum).setValues(v.data);
         v.table.sheet.autoResizeColumns(1,v.table.colnum);  // 各列の幅を項目名の幅に調整
+        v.table.sheet.setFrozenRows(1); // 先頭1行を固定
 
         v.step = 3.3; // 項目定義メモの追加
         v.table.sheet.getRange(1,1,1,v.table.colnum).setNotes([v.table.notes]);
@@ -1074,7 +1089,7 @@ function SpreadDb(query=[],opt={}){
    *   - note {string[]} メモ用の文字列
    */
   function genColumn(arg={}){
-    const v = {whois:`${pv.whois}.genColumn`,step:0,rv:{column:{},note:null},
+    const v = {whois:`${pv.whois}.genColumn`,step:0,rv:{},
       typedef:[ // sdbColumnの属性毎にname,type,noteを定義
         {name:'name',type:'string',note:'項目名'},
         {name:'type',type:'string',note:'データ型。string,number,boolean,Date,JSON,UUID'},
@@ -1092,95 +1107,85 @@ function SpreadDb(query=[],opt={}){
         {name:'suffix',type:'string',note:'"not null"等、上記以外のSQLのcreate table文のフィールド制約'},
         {name:'note',type:'string',note:'本項目に関する備考。create table等では使用しない'},
       ],
-      str2obj: (arg) => {
-        const v = {whois:`${pv.whois}.genColumn.str2obj`,step:0,rv:null,
-          rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現
-          isJSON: (str) => {let r;try{r=JSON.parse(str)}catch(e){r=null} return r},
-        };
-        try {
-
-          v.step = 1; // コメントの削除
-          arg = arg.replace(v.rex,'');
-
-          v.step = 2; // JSONで定義されていたらそのまま採用
-          v.rv = v.isJSON(arg);
-
-          if( v.rv === null ){
-            v.step = 3; // 非JSON文字列だった場合、改行で分割
-            v.lines = arg.split('\n');
-
-            v.step = 4; // 一行毎に属性の表記かを判定
-            v.rv = {};
-            v.lines.forEach(prop => {
-              v.m = prop.trim().match(/^["']?(.+?)["']?\s*:\s*["']?(.+?)["']?$/);
-              if( v.m ) v.rv[v.m[1]] = v.m[2];
-            });
-
-            v.step = 5; // 属性項目が無ければ項目名と看做す
-            if( Object.keys(v.rv).length === 0 ){
-              v.rv = {name:arg.trim()};
-            }
-          }
-
-          v.step = 9; // 終了処理
-          return v.rv;
-
-        } catch(e) {
-          e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-          console.error(`${e.message}\nv=${stringify(v)}`);
-          return e;
-        }
-      },
+      rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現
     };
-    console.log(`${v.whois} start.`);
+    console.log(`${v.whois} start.\narg(${whichType(arg)})=${JSON.stringify(arg)}`);
     try {
 
-      v.step = 1; // 引数が項目定義メモまたは項目名の場合、オブジェクトに変換
-      if( whichType(arg,'String') ){
-        arg = v.str2obj(arg);
-        if( arg instanceof Error ) throw arg;
-        v.rv.note = arg;
+      // ------------------------------------------------
+      v.step = 1; // rv.columnの準備
+      // ------------------------------------------------
+      if( typeof arg === 'object' ){
+        v.step = 1.1; // 引数がオブジェクト(=sdbColumn)ならそのまま採用
+        v.rv.column = arg;
+        v.rv.note = {};
+      } else {  // 文字列で与えられたらオブジェクトに変換
+
+        v.step = 1.2; // コメントの削除、一行毎に分割
+        v.lines = arg.replace(v.rex,'').split('\n');
+
+        v.step = 1.3; // 一行毎に属性の表記かを判定
+        v.rv.column = {};
+        v.lines.forEach(prop => {
+          v.m = prop.trim().match(/^["']?(.+?)["']?\s*:\s*["']?(.+?)["']?$/);
+          if( v.m ) v.rv.column[v.m[1]] = v.m[2];
+        });
+
+        v.step = 1.4; 
+        if( Object.keys(v.rv.column).length === 0 ){
+          // 属性項目が無ければ項目名と看做す
+          v.rv.column = {name:arg.trim()};
+          v.rv.note = {};
+        } else {
+          // 属性項目があればシート上のメモの文字列と看做す
+          v.rv.note = arg;  // コメントを削除しないよう、オリジナルを適用
+        }
       }
 
-      v.step = 2; // メンバに格納
-      v.typedef.map(x => x.name).forEach(x => {
-        v.rv.column[x] = arg.hasOwnProperty(x) ? arg[x] : null;
+      // ------------------------------------------------
+      v.step = 2; // rv.column各メンバの値をチェック・整形
+      // ------------------------------------------------
+      v.step = 2.1; // 'null'はnullに変換
+      Object.keys(v.rv.column).forEach(x => {
+        if( v.rv.column[x] === 'null' ){
+          v.rv.column[x]=null;
+        } else if( whichType(v.rv.note,'Object') ){
+          v.rv.note[x] = v.rv.column[x];
+        }
       });
 
-      v.step = 3; // defaultを関数に変換
-      v.rv.column.default = (v.rv.column.default && v.rv.column.default !== 'null')
-        ? functionalyze(v.rv.column.default) : null;
+      v.step = 2.2; // defaultを関数に変換
+      if( v.rv.column.default ){
+        v.rv.column.default = functionalyze(v.rv.column.default);
+      }
       if( v.rv.column.default instanceof Error ) throw v.rv.column.default;
 
-      v.step = 4; // auto_incrementをオブジェクトに変換
-      if( v.rv.column.auto_increment !== null && String(v.rv.column.auto_increment).toLowerCase() !== 'false' ){
-        switch( whichType(v.rv.column.auto_increment) ){
-          case 'Array': v.rv.column.auto_increment = {
-            base: v.rv.column.auto_increment[0],
-            step: v.rv.column.auto_increment[1],
-          }; break;
-          case 'Number': v.rv.column.auto_increment = {
-            base: Number(v.rv.column.auto_increment),
-            step: 1,
-          }; break;
-          default: v.rv.column.auto_increment = {
-            base: 1,
-            step: 1,
-          };
-        }
-      } else {
-        v.rv.column.auto_increment = false;
+      v.step = 2.3; // auto_incrementをオブジェクトに変換
+      v.ac = {
+        Array: x => {return {obj:{base:x[0],step:(x[1]||1)},str:JSON.stringify(x)}},  // [base,step]形式
+        Number: x => {return {obj:{base:x,step:1},str:x}},  // baseのみ数値で指定
+        Object: x => {return {obj:x, str:JSON.stringify(x)}}, // {base:m,step:n}形式
+        Null: x => {return {obj:false, str:'false'}}, // auto_incrementしない
+        Boolean: x => {return x ? {obj:{base:1,step:1}, str:'true'} : {obj:false, str:'false'}}, // trueは[1,1],falseはauto_incrementしない
+      };
+      if( v.rv.column.auto_increment ){
+        if( typeof v.rv.column.auto_increment === 'string' )
+          v.rv.column.auto_increment = JSON.parse(v.rv.column.auto_increment);
+        v.acObj = v.ac[whichType(v.rv.column.auto_increment)](v.rv.column.auto_increment);
+        v.rv.column.auto_increment = v.acObj.obj;
+        v.rv.note.auto_increment = v.acObj.str;
       }
 
-      v.step = 4; // メモの文字列を作成
-      if( v.rv.note === null ){
+      // ------------------------------------------------
+      v.step = 3; // シートのメモに記載する文字列を作成
+      // ------------------------------------------------
+      if( typeof v.rv.note === 'object' ){
         v.x = [];
-        for( v.a in v.rv.column ){
-          v.l = `${v.a}: "${v.rv.column[v.a]}"`;
-          v.c = v.typedef.find(x => x.name === v.a);
-          if( v.c.hasOwnProperty('note') ) v.l += ` // ${v.c.note}`;
-          v.x.push(v.l);
-        }
+        v.typedef.map(x => x.name).forEach(x => {
+          if( Object.hasOwn(v.rv.note,x) ){
+            v.x.push(`${x}: "${v.rv.note[x]}"`);
+          }
+        });
         v.rv.note = v.x.join('\n');
       }
 
@@ -1193,8 +1198,7 @@ function SpreadDb(query=[],opt={}){
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
-  }
-  /** genLog: sdbLogオブジェクトを生成
+  }  /** genLog: sdbLogオブジェクトを生成
    * @param {sdbLog|null} arg - 変更履歴シートの行オブジェクト
    * @returns {sdbLog|sdbColumn[]} 変更履歴シートに追記した行オブジェクト、または変更履歴シート各項目の定義
    */
