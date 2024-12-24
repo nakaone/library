@@ -716,7 +716,7 @@ function SpreadDb(query=[],opt={}){
             // 登録済の場合はエラーとして処理
             v.log.result = false;
             // 複数項目のエラーメッセージに対応するため配列化を介在させる
-            v.log.message = v.log.message === null ? [] : v.log.message.split('\n');
+            v.log.message = v.log.message === 'null' ? [] : v.log.message.split('\n');
             v.log.message.push(`${v.unique}欄の値「${arg.record[v.i][v.unique]}」が重複しています`);
             v.log.message = v.log.message.join('\n');
           } else {
