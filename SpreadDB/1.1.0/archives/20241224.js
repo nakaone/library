@@ -371,11 +371,13 @@ function SpreadDbTest(){
 
         // AutoIncシートでオートインクリメント、既定値設定項目 ⇒ create No.2でテスト済
         // unique項目に重複値
-        /*
         v.summary(SpreadDb([
-          {command:'append',record:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}},
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a02'}}}, // 1レコードずつ一括
+          //{table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a03'},{'ラベル':'a04'}]}},  // 複数レコードの追加
+          //{table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a02'},{'ラベル':'a03'}]}},  // 複数レコードの追加
+          //{table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}}, // ⇒ 重複エラー
         ],{userId:'Administrator'}));
-        */
       },
       () => { // 1.ゲスト
         // 権限付与した場合
@@ -578,9 +580,9 @@ function SpreadDb(query=[],opt={}){
               }
               query[v.i].arg.table = pv.table[query[v.i].table];
             }
-            v.sdbLog = v.func(query[v.i].arg);
+            v.sdbLog = v.func(query[v.i].arg);  // 処理実行
 
-            if( v.sdbLog instanceof Error ){
+            if( v.sdbLog instanceof Error ){  // 戻り値がErrorオブジェクト
 
               v.step = 3.31; // selectRow, updateRow他のcommand系メソッドでエラー発生
               // command系メソッドからエラーオブジェクトが帰ってきた場合はエラーとして処理
@@ -595,7 +597,7 @@ function SpreadDb(query=[],opt={}){
               });
               if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
 
-            } else {
+            } else {  // 戻り値がErrorオブジェクト以外
 
               v.step = 3.32; // command系メソッドが正常終了した場合の処理
               if( query[v.i].command === 'select' || query[v.i].command === 'schema' ){
@@ -635,9 +637,11 @@ function SpreadDb(query=[],opt={}){
         }
 
         v.step = 3.6; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
+        v.log = [];
+        v.rv.forEach(x => v.log = [...v.log,...x.log]);
         v.r = appendRow({
           table: pv.table[pv.opt.log],
-          record: v.rv.map(x => x.log)[0],
+          record: v.log,
         });
         if( v.r instanceof Error ) throw v.r;
 
