@@ -271,7 +271,7 @@ function SpreadDbTest(){
         {name:'配列①',auto_increment:[20]},
         {name:'配列②',auto_increment:[30,-1]},
         {name:'obj',auto_increment:{start:40,step:5}},
-        {name:'def関数',default:"o => toLocale(new Date())"},
+        {name:'def関数',default:"o => {return toLocale(new Date())}"},
       ],
       values: [{'ラベル':'fuga'},{'ラベル':'hoge'}],
     }
@@ -1167,7 +1167,9 @@ function SpreadDb(query=[],opt={}){
 
       v.step = 2.2; // defaultを関数に変換
       if( v.rv.column.default ){
-        v.rv.column.default = functionalyze(v.rv.column.default);
+        v.r = functionalyze(v.rv.column.default);
+        if( v.r instanceof Error ) throw v.r;
+        v.rv.column.default = v.r;
       }
       if( v.rv.column.default instanceof Error ) throw v.rv.column.default;
 
