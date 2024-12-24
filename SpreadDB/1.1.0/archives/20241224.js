@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'create',st:2,num:1},//num=0なら全部
+  const v = {do:{p:'append',st:0,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -264,7 +264,7 @@ function SpreadDbTest(){
       name: 'AutoInc',
       cols: [
         {name:'pKey',auto_increment:10,primaryKey:true},
-        {name:'ラベル',type:'string'},
+        {name:'ラベル',type:'string',unique:true},
         {name:'ぬる',auto_increment:null},
         {name:'真',auto_increment:true},
         {name:'偽',auto_increment:false},
@@ -303,7 +303,6 @@ function SpreadDbTest(){
         v.summary(SpreadDb([  // 複数テーブルの作成
           {command:'create',arg:src.autoIncrement},
         ],{userId:'Administrator'}));
-
       },
     ],
     select : [  // selectRow関係のテスト
@@ -365,6 +364,28 @@ function SpreadDbTest(){
 
       },
     ],
+    append: [ // appendRow関係のテスト
+      () => { // 0.正常系(Administrator)
+        v.deleteSheet(); // 既存シートを全部削除
+        v.summary(SpreadDb({command:'create',arg:src.autoIncrement},{userId:'Administrator'}));
+
+        // AutoIncシートでオートインクリメント、既定値設定項目 ⇒ create No.2でテスト済
+        // unique項目に重複値
+        /*
+        v.summary(SpreadDb([
+          {command:'append',record:{'ラベル':'a01'}},
+        ],{userId:'Administrator'}));
+        */
+      },
+      () => { // 1.ゲスト
+        // 権限付与した場合
+        // 権限付与しなかった場合
+      },
+      () => { // 2.ユーザ
+        // 権限付与した場合
+        // 権限付与しなかった場合
+      },
+    ],
     update: [ // updateRow関係のテスト
       () => { // 0.正常系(Administrator)
         // 複数項目の一括更新
@@ -379,21 +400,6 @@ function SpreadDbTest(){
         ],{userId:'Administrator'}));
 
 
-      },
-      () => { // 1.ゲスト
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-      () => { // 2.ユーザ
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-    ],
-    append: [ // appendRow関係のテスト
-      () => { // 0.正常系(Administrator)
-        // AutoIncシートでオートインクリメント
-        // 既定値設定項目、unique項目に重複値
-        // 複数レコードの追加
       },
       () => { // 1.ゲスト
         // 権限付与した場合
@@ -829,11 +835,14 @@ function SpreadDb(query=[],opt={}){
    * @returns {sdbLog}
    */
   function createTable(arg){
-    const v = {whois:`${pv.whois}.createTable`,step:0,rv:[]};
+    const v = {whois:`${pv.whois}.createTable`,step:0,rv:[],convertRow:null};
     console.log(`${v.whois} start. arg.name=${arg.name}`);
     try {
 
-      v.step = 1; // 一件分のログオブジェクトを作成
+      // ----------------------------------------------
+      v.step = 1; // 事前準備
+      // ----------------------------------------------
+      v.step = 1.1; // 一件分のログオブジェクトを作成
       v.log = genLog({
         table: arg.name,
         command: 'create',
@@ -844,99 +853,81 @@ function SpreadDb(query=[],opt={}){
       });
       if( v.log instanceof Error ) throw v.log;
 
+      v.step = 1.2; // sdbTableのプロトタイプ作成
+      v.table = {
+        name: arg.name, // {string} テーブル名(範囲名)
+        account: pv.opt.userId, // {string} 更新者のアカウント
+        sheet: pv.spread.getSheetByName(arg.name), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
+        schema: null, // {sdbSchema} シートの項目定義
+        values: [], // {Object[]} 行オブジェクトの配列。{項目名:値,..} 形式
+        header: [], // {string[]} 項目名一覧(ヘッダ行)
+        notes: [], // {string[]} ヘッダ行のメモ
+        colnum: 0, // {number} データ領域の列数
+        rownum: 0, // {number} データ領域の行数
+      };
+
       // ----------------------------------------------
       v.step = 2; // テーブル管理情報の作成
       // ----------------------------------------------
-      if( Object.hasOwn(pv.table,arg.name) ){
-        v.step = 2.1; // 作成済の場合、そのまま使用
-        v.table = pv.table[arg.name];
-      } else {  // 以下テーブル管理情報未作成の場合の処理
+      if( arg.cols ){
+        
+        v.step = 2.1; // 項目定義情報が存在する場合
+        v.table.header = arg.cols.map(x => x.name);
+        v.table.colnum = v.table.header.length;
 
-        v.step = 2.2; // sdbTableのプロトタイプ作成
-        v.table = {
-          name: arg.name, // {string} テーブル名(範囲名)
-          account: pv.opt.userId, // {string} 更新者のアカウント
-          sheet: pv.spread.getSheetByName(arg.name), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
-          schema: null, // {sdbSchema} シートの項目定義
-          values: [], // {Object[]} 行オブジェクトの配列。{項目名:値,..} 形式
-          header: [], // {string[]} 項目名一覧(ヘッダ行)
-          notes: [], // {string[]} ヘッダ行のメモ
-          colnum: 0, // {number} データ領域の列数
-          rownum: 0, // {number} データ領域の行数
-        };
+      } else { // 項目定義情報が存在しない場合
 
-        if( arg.cols ){ v.step = 2.3; // 項目定義情報が存在する場合
-
-          v.table.header = arg.cols.map(x => x.name);
+        if( arg.values ){
+          
+          v.step = 2.2; // 項目定義不在で初期データのみ存在
+          v.convertRow = convertRow(arg.values);
+          if( v.convertRow instanceof Error ) throw v.convertRow;
+          v.table.header = v.convertRow.header;
           v.table.colnum = v.table.header.length;
 
-          if( arg.values ){ v.step = 2.31; // 項目定義と初期データの両方存在
+        } else {
+          
+          v.step = 2.3; // シートも項目定義も初期データも無い
+          throw new Error(`シートも項目定義も初期データも存在しません`);
 
-            // 項目の並びを指定してconvertRow
-            v.convertRow = convertRow(arg.values,v.table.header);
-            if( v.convertRow instanceof Error ) throw v.convertRow;
-            v.table.values = v.convertRow.obj;
-            v.table.rownum = v.convertRow.raw.length;
-
-          } else {  v.step = 2.32; // 項目定義のみ存在
-
-            // values, rownumは取得不能なので既定値のまま
-            v.table.values = [];
-            v.table.rownum = 0;
-
-          }
-
-        } else { v.step = 2.4; // 項目定義情報が存在しない場合
-
-          if( arg.values ){ v.step = 2.41; // 項目定義不在で初期データのみ存在
-
-            v.convertRow = convertRow(arg.values);
-            if( v.convertRow instanceof Error ) throw v.convertRow;
-            v.table.values = v.convertRow.obj;
-            v.table.header = v.convertRow.header;
-            v.table.colnum = v.table.header.length;
-            v.table.rownum = v.convertRow.raw.length;
-
-          } else {  v.step = 2.42; // シートも項目定義も初期データも無い
-            throw new Error(`シートも項目定義も初期データも存在しません`);
-          }
         }
-
-        v.step = 2.5; // スキーマをインスタンス化
-        v.r = genSchema({
-          cols: arg.cols || null,
-          header: v.table.header,
-          notes: v.table.notes,
-          values: v.table.values,
-        });
-        if( v.r instanceof Error ) throw v.r;
-        v.table.schema = v.r.schema;
-        v.table.notes = v.r.notes;
       }
+
+      v.step = 2.4; // スキーマをインスタンス化
+      v.r = genSchema({
+        cols: arg.cols || null,
+        header: v.table.header,
+        notes: v.table.notes,
+        values: v.table.values,
+      });
+      if( v.r instanceof Error ) throw v.r;
+      v.table.schema = v.r.schema;
+      v.table.notes = v.r.notes;
 
       // ----------------------------------------------
       v.step = 3; // シートが存在しない場合、新規追加
       // ----------------------------------------------
-      v.table.sheet = pv.spread.getSheetByName(v.table.name);
       if( v.table.sheet === null ){
         v.step = 3.1; // シートの追加
         v.table.sheet = pv.spread.insertSheet();
         v.table.sheet.setName(arg.name);
 
-        v.step = 3.2; // シートイメージのセット
-        v.r = convertRow(v.table.values,v.table.header);
-        if( v.r instanceof Error ) throw v.r;
+        v.step = 3.2; // ヘッダ行・メモのセット
         v.headerRange = v.table.sheet.getRange(1,1,1,v.table.colnum);
         v.headerRange.setValues([v.table.header]);  // 項目名のセット
         v.headerRange.setNotes([v.table.notes]);  // メモのセット
         v.table.sheet.autoResizeColumns(1,v.table.colnum);  // 各列の幅を項目名の幅に調整
         v.table.sheet.setFrozenRows(1); // 先頭1行を固定
-        // 初期データの追加
-        v.initData = JSON.parse(JSON.stringify(v.table.values));
-        v.table.rownum = 0; // appendで追加されるのでrownum, valuesをリセット
-        v.table.values = [];
-        v.r = appendRow({table:v.table,record:v.initData});
-        if( v.r instanceof Error ) throw v.r;
+
+        v.step = 3.3; // 初期データの追加
+        if( (arg.values||[]).length > 0 ){
+          if( v.convertRow === null ){
+            v.convertRow = convertRow(arg.values,v.table.header);
+            if( v.convertRow instanceof Error ) throw v.convertRow;
+          }
+          v.r = appendRow({table:v.table,record:v.convertRow.obj});
+          if( v.r instanceof Error ) throw v.r;  
+        }
       }
 
       v.step = 9; // 終了処理
@@ -950,8 +941,7 @@ function SpreadDb(query=[],opt={}){
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
-  }
-  /** deleteRow: 領域から指定行を物理削除
+  }  /** deleteRow: 領域から指定行を物理削除
    * @param {Object} any
    * @param {sdbTable} any.table - 操作対象のテーブル管理情報
    * @param {Object|Function|string} any.where - 対象レコードの判定条件
@@ -1157,10 +1147,17 @@ function SpreadDb(query=[],opt={}){
       v.step = 2; // rv.column各メンバの値をチェック・整形
       // ------------------------------------------------
       v.step = 2.1; // 'null'はnullに変換
+      v.map = {'null':null,'true':true,'false':false};
       Object.keys(v.rv.column).forEach(x => {
-        if( v.rv.column[x] === 'null' ){
-          v.rv.column[x]=null;
-        } else if( whichType(v.rv.note,'Object') ){
+
+        v.step = 2.11; // 文字列で指定された'null','true','false'は値にする
+        if( Object.hasOwn(v.map,v.rv.column[x]) ){
+          v.rv.column[x] = v.map[v.rv.column[x]];
+        }
+
+        v.step = 2.12; // メモ文字列を作成する場合(=引数がメモ文字列では無かった場合)
+        // かつ属性値が未定義(null)ではない場合、v.rv.columnにもメモ作成用の属性値をセット
+        if( whichType(v.rv.note,'Object') && v.rv.column[x] !== null ){
           v.rv.note[x] = v.rv.column[x];
         }
       });
@@ -1340,19 +1337,15 @@ function SpreadDb(query=[],opt={}){
       // -----------------------------------------------
       v.step = 3; // v.rv.schema.cols以外のメンバ作成
       // -----------------------------------------------
-      v.bool = arg => {  // 引数を真偽値として評価。真偽値として評価不能ならnull
-        let rv={"true":true,"false":false}[String(arg).toLowerCase()];
-        return typeof rv === 'boolean' ? rv : null
-      };
       for( v.i=0 ; v.i<v.rv.schema.cols.length ; v.i++ ){
         v.step = 3.1; // primaryKey
-        if( v.bool(v.rv.schema.cols[v.i].primaryKey) === true ){
+        if( Object.hasOwn(v.rv.schema.cols[v.i],'primaryKey') && v.rv.schema.cols[v.i].primaryKey === true ){
           v.rv.schema.primaryKey = v.rv.schema.cols[v.i].name;
           v.rv.schema.unique[v.rv.schema.cols[v.i].name] = [];
         }
 
         v.step = 3.2; // unique
-        if( v.bool(v.rv.schema.cols[v.i].unique) === true ){
+        if( Object.hasOwn(v.rv.schema.cols[v.i],'unique') && v.rv.schema.cols[v.i].unique === true ){
           v.rv.schema.unique[v.rv.schema.cols[v.i].name] = [];
         }
 
