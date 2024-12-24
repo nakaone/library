@@ -53,7 +53,10 @@ function SpreadDbTest(){
           command: o.query.command,
           isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
           message: `${o.message||''}(${whichType(o.message)})`,
+          logLen: o.log.length,
+          log: [],
         };
+        o.log.forEach(x => result.log.push(`result:${x.result}, arg=${x.arg}`));
         if( Object.hasOwn(o,'data') ) result.data = o.data;
         let json = JSON.stringify(result,null,2);
         rv = [...rv,...json.split('\n')]
@@ -374,9 +377,8 @@ function SpreadDbTest(){
         v.summary(SpreadDb([
           {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}},
           {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a02'}}}, // 1レコードずつ一括
-          //{table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a03'},{'ラベル':'a04'}]}},  // 複数レコードの追加
-          //{table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a02'},{'ラベル':'a03'}]}},  // 複数レコードの追加
-          //{table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}}, // ⇒ 重複エラー
+          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a03'},{'ラベル':'a04'}]}},  // recordが配列
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}}, // ⇒ 重複エラー
         ],{userId:'Administrator'}));
       },
       () => { // 1.ゲスト
@@ -613,6 +615,7 @@ function SpreadDb(query=[],opt={}){
               } else {
                 v.step = 3.322; // update, append, deleteは実行結果(sdbLog)をlogにセット
                 v.queryResult.log = v.sdbLog;
+                v.sdbLog.forEach(x => {if( x.result === false ){ v.queryResult.isErr = true; }});
               }
             }
 
