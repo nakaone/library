@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'create',st:2,num:1},//num=0なら全部
+  const v = {do:{p:'append',st:2,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -383,12 +383,44 @@ function SpreadDbTest(){
         ],{userId:'Administrator'}));
       },
       () => { // 1.ゲスト
+        v.deleteSheet(); // 既存シートを全部削除
+        v.summary(SpreadDb({command:'create',arg:src.autoIncrement},{userId:'Administrator'}));
+
         // 権限付与した場合
+        v.summary(SpreadDb([
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}},
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a02'}}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a03'},{'ラベル':'a04'}]}},  // recordが配列
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}}, // ⇒ 重複エラー
+        ],{guestAuth:{AutoInc:'w'}}));
+
         // 権限付与しなかった場合
+        v.summary(SpreadDb([
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}},
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a02'}}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a03'},{'ラベル':'a04'}]}},  // recordが配列
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}}, // ⇒ 重複エラー
+        ],{guestAuth:{AutoInc:'r'}}));
       },
       () => { // 2.ユーザ
+        v.deleteSheet(); // 既存シートを全部削除
+        v.summary(SpreadDb({command:'create',arg:src.autoIncrement},{userId:'Administrator'}));
+
         // 権限付与した場合
+        v.summary(SpreadDb([
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}},
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a02'}}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a03'},{'ラベル':'a04'}]}},  // recordが配列
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}}, // ⇒ 重複エラー
+        ],{userId:'pikumin',userAuth:{AutoInc:'w'}}));
+
         // 権限付与しなかった場合
+        v.summary(SpreadDb([
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}},
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a02'}}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a03'},{'ラベル':'a04'}]}},  // recordが配列
+          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}}, // ⇒ 重複エラー
+        ],{userId:'pikumin'}));
       },
     ],
     update: [ // updateRow関係のテスト
@@ -642,7 +674,6 @@ function SpreadDb(query=[],opt={}){
 
         v.step = 3.6; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
         v.log = [];
-        console.log(`l.644 v.rv=${JSON.stringify(v.rv)}`)
         v.rv.forEach(x => {
           if( Array.isArray(x.log) ){
             v.log = [...v.log,...x.log];
