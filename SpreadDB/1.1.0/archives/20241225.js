@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'create',st:0,num:1},//num=0なら全部
+  const v = {do:{p:'create',st:1,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -287,20 +287,13 @@ function SpreadDbTest(){
           {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},
         ]);
       },
-      () => { // 1.「シート「xxx」に対して'create'する権限がありません」
-        v.deleteSheet();
-        // 管理者とユーザが異なる
-        v.summary(SpreadDb({command:'create',arg:src.status},{userId:'pikumin'}));
-        // 管理者の指定無し
-        v.summary(SpreadDb({command:'create',arg:src.camp},{userId:'pikumin'}));
-        // ユーザの指定無し
-        v.summary(SpreadDb({command:'create',arg:src.PL}));
-      },
-      () => { // 2.auto_increment, defaultが設定されるかのテスト
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([  // 複数テーブルの作成
-          {command:'create',arg:src.autoIncrement},
-        ],{userId:'Administrator'}));
+      () => { // 1.管理者以外でcreateTable ⇒「シート「xxx」に対して'create'する権限がありません」
+        v.exe([ // 非管理者で実行
+          {command:'create',table:src.status.name,cols:src.status.cols},
+        ],{userId:'pikumin'});
+        v.exe([ // 管理者ID指定無し
+          {command:'create',table:src.status.name,cols:src.status.cols},
+        ],{});
       },
     ],
     select : [  // selectRow関係のテスト
