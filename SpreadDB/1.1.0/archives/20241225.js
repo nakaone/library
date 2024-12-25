@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'delete',st:0,num:1},//num=0なら全部
+  const v = {do:{p:'create',st:0,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -35,20 +35,12 @@ function SpreadDbTest(){
         }
       });
     },
-    raw2obj: sheet => { // シートイメージ(二次元配列)を行オブジェクトに変換
-      v.data = JSON.parse(JSON.stringify(v.src[sheet].values));
-      v.src[sheet].values = [];
-      for( v.i=1 ; v.i<v.data.length ; v.i++ ){
-        v.o = {};
-        for( v.j=0 ; v.j<v.data[v.i].length ; v.j++ ){
-          if( v.data[v.i][v.j] ) v.o[v.data[0][v.j]] = v.data[v.i][v.j];
-        }
-        v.src[sheet].values.push(v.o);
-      }
-    },
-    summary: a => { // 戻り値(Object[])の結果確認
-      let rv = [`${v.whois} end: return value type: ${whichType(a)}`];
-      a.forEach(o => {
+    exe: (query,opt={userId:'Administrator'}) => {  // テスト実行、結果表示
+      v.deleteSheet(); // 既存シートを全部削除
+      let rv = SpreadDb(query,opt); // query毎のsdbLog配列
+      let msg = [`${v.whois} end: return value type: ${whichType(rv)}`];
+
+      rv.forEach(o => {
         let result = {
           command: o.query.command,
           isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
@@ -58,11 +50,11 @@ function SpreadDbTest(){
         if( !Array.isArray(o.log) ) o.log = [o.log];
         result.logLen = o.log.length;
         o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
-        if( Object.hasOwn(o,'data') ) result.data = o.data;
+        if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
         let json = JSON.stringify(result,null,2);
-        rv = [...rv,...json.split('\n')]
+        msg = [...msg,...json.split('\n')]
       });
-      console.log(rv.join('\n'));
+      console.log(msg.join('\n'));
     },
   };
   const src = { // テスト用サンプルデータ
@@ -280,18 +272,20 @@ function SpreadDbTest(){
       values: [{'ラベル':'fuga'},{'ラベル':'hoge'}],
     }
   };
+
   const pattern = { /* テストパターン(関数)の定義
     - ログへの出力形式
     - メモの中の形式
     */
     create: [  // create関係のテスト
       () => { // 0.基本形
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([  // 複数テーブルの作成
-          {command:'create',arg:src.status},
-          {command:'create',arg:src.camp},
-          {command:'create',arg:src.PL},
-        ],{userId:'Administrator'}));
+        v.exe([
+          {command:'create',table:src.status.name,cols:src.status.cols},
+          {command:'create',table:src.PL.name,values:src.PL.values},
+          {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},
+          {command:'create',table:src.board.name,values:src.board.values},
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},
+        ]);
       },
       () => { // 1.「シート「xxx」に対して'create'する権限がありません」
         v.deleteSheet();
@@ -440,14 +434,6 @@ function SpreadDbTest(){
           {table:'AutoInc',command:'delete',arg:{where:11}},  // where = any(pKey)
         ],{userId:'Administrator'}));
       },
-      () => { // 1.ゲスト
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-      () => { // 2.ユーザ
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
     ],
     update: [ // updateRow関係のテスト
       () => { // 0.正常系(Administrator)
@@ -458,8 +444,9 @@ function SpreadDbTest(){
         // unique項目のチェック、また同一レコード複数unique項目の場合、全項目がエラーになるかチェック
         v.deleteSheet(); // 既存シートを全部削除
         v.summary(SpreadDb([  // 複数テーブルの作成
-          {command:'create',arg:src.camp},
-          {command:'create',arg:src.PL},
+          {command:'create',arg:src.autoIncrement},
+          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]}},
+
         ],{userId:'Administrator'}));
 
 
@@ -486,7 +473,7 @@ function SpreadDbTest(){
         // 権限付与しなかった場合
       },
     ],
-    own: [  // 権限'o'によるアクセス
+    auth: [  // 付与権限によるアクセス制御
       () => {
         // 自レコードは参照可
         // 自レコード以外は参照不可
@@ -550,7 +537,7 @@ function SpreadDb(query=[],opt={}){
     if( v.r instanceof Error ) throw v.r;
     if( v.r === null ){
       v.r = createTable({
-        name: pv.opt.log,
+        table: pv.opt.log,
         cols: genLog(), // sdbLog各項目の定義集
       });
       if( v.r instanceof Error ) throw v.r;
@@ -593,7 +580,7 @@ function SpreadDb(query=[],opt={}){
           if( v.allow.includes('o') ){
 
             v.step = 3.21;
-            // o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
+            // o(=own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
             // また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
             //read/writeは自分のみ可、delete/schemaは実行不可
             query[v.i].arg.where = pv.opt.userId;  // 自レコードのみ対象に限定
@@ -629,7 +616,7 @@ function SpreadDb(query=[],opt={}){
               }
               query[v.i].arg.table = pv.table[query[v.i].table];
             }
-            v.sdbLog = v.func(query[v.i].arg);  // 処理実行
+            v.sdbLog = v.func(query[v.i]);  // 処理実行
 
             if( v.sdbLog instanceof Error ){  // 戻り値がErrorオブジェクト
 
@@ -889,14 +876,14 @@ function SpreadDb(query=[],opt={}){
   }
   /** createTable: 新規にシートを作成
    * @param {sdbTable} arg
-   * @param {string} arg.name - テーブル名
+   * @param {string} arg.table - テーブル名
    * @param {sdbColumn[]} arg.cols - 項目定義オブジェクトの配列
    * @param {Object[]|any[][]} arg.values - 行オブジェクトの配列、またはシートイメージ
    * @returns {sdbLog}
    */
   function createTable(arg){
     const v = {whois:`${pv.whois}.createTable`,step:0,rv:[],convertRow:null};
-    console.log(`${v.whois} start. arg.name=${arg.name}`);
+    console.log(`${v.whois} start. arg.table=${arg.table}`);
     try {
 
       // ----------------------------------------------
@@ -904,7 +891,7 @@ function SpreadDb(query=[],opt={}){
       // ----------------------------------------------
       v.step = 1.1; // 一件分のログオブジェクトを作成
       v.log = genLog({
-        table: arg.name,
+        table: arg.table,
         command: 'create',
         arg: arg.cols,
         isErr: false,
@@ -915,9 +902,9 @@ function SpreadDb(query=[],opt={}){
 
       v.step = 1.2; // sdbTableのプロトタイプ作成
       v.table = {
-        name: arg.name, // {string} テーブル名(範囲名)
+        name: arg.table, // {string} テーブル名(範囲名)
         account: pv.opt.userId, // {string} 更新者のアカウント
-        sheet: pv.spread.getSheetByName(arg.name), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
+        sheet: pv.spread.getSheetByName(arg.table), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
         schema: null, // {sdbSchema} シートの項目定義
         values: [], // {Object[]} 行オブジェクトの配列。{項目名:値,..} 形式
         header: [], // {string[]} 項目名一覧(ヘッダ行)
@@ -970,7 +957,7 @@ function SpreadDb(query=[],opt={}){
       if( v.table.sheet === null ){
         v.step = 3.1; // シートの追加
         v.table.sheet = pv.spread.insertSheet();
-        v.table.sheet.setName(arg.name);
+        v.table.sheet.setName(arg.table);
 
         v.step = 3.2; // ヘッダ行・メモのセット
         v.headerRange = v.table.sheet.getRange(1,1,1,v.table.colnum);
@@ -993,7 +980,7 @@ function SpreadDb(query=[],opt={}){
       v.step = 9; // 終了処理
       pv.table[v.table.name] = v.table;
       v.rv = [v.log];
-      console.log(`${v.whois}: create "${arg.name}" normal end.`);
+      console.log(`${v.whois}: create "${arg.table}" normal end.`);
       return v.rv;
 
     } catch(e) {
