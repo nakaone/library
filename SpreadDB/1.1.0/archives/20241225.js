@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'create',st:1,num:1},//num=0なら全部
+  const v = {do:{p:'delete',st:0,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -412,20 +412,14 @@ function SpreadDbTest(){
     ],
     delete: [ // deleteRow関係のテスト
       () => { // 0.正常系(Administrator)
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([
-          {command:'create',arg:src.autoIncrement},
-          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]}},
-        ],{userId:'Administrator'}));
-
-        // where Object, function, string(func), any(pKey)
-        // 複数条件のor
-        v.summary(SpreadDb([
-          //{table:'AutoInc',command:'delete',arg:{where:{'配列①':-1}}},  // where = Object
-          //{table:'AutoInc',command:'delete',arg:{where:o=>{return o['配列②'] === -2}}},  // where = function
-          //{table:'AutoInc',command:'delete',arg:{where:'o => {return o["ラベル"].slice(0,1)==="a"'}},  // where = string(func)
-          {table:'AutoInc',command:'delete',arg:{where:11}},  // where = any(pKey)
-        ],{userId:'Administrator'}));
+        v.exe([
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
+          {table:'AutoInc',command:'delete',where:{'配列①':-1}},  // where = Object
+          {table:'AutoInc',command:'delete',where:o=>{return o['配列②'] === -2}},  // where = function
+          {table:'AutoInc',command:'delete',where:11},  // where = any(pKey)
+          {table:'AutoInc',command:'delete',where:'o => {return o["ラベル"].slice(0,1)==="a"'},  // where = string(func)
+        ]);
       },
     ],
     update: [ // updateRow関係のテスト
@@ -607,7 +601,7 @@ function SpreadDb(query=[],opt={}){
                 pv.table[query[v.i].table] = genTable({name:query[v.i].table});
                 if( pv.table[query[v.i].table] instanceof Error ) throw pv.table[query[v.i].table];
               }
-              query[v.i].arg.table = pv.table[query[v.i].table];
+              query[v.i].table = pv.table[query[v.i].table];
             }
             v.sdbLog = v.func(query[v.i]);  // 処理実行
 
