@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'append',st:2,num:1},//num=0なら全部
+  const v = {do:{p:'delete',st:0,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -423,6 +423,32 @@ function SpreadDbTest(){
         ],{userId:'pikumin'}));
       },
     ],
+    delete: [ // deleteRow関係のテスト
+      () => { // 0.正常系(Administrator)
+        v.deleteSheet(); // 既存シートを全部削除
+        v.summary(SpreadDb([
+          {command:'create',arg:src.autoIncrement},
+          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]}},
+        ],{userId:'Administrator'}));
+
+        // where Object, function, string(func), any(pKey)
+        // 複数条件のor
+        v.summary(SpreadDb([
+          //{table:'AutoInc',command:'delete',arg:{where:{'配列①':-1}}},  // where = Object
+          //{table:'AutoInc',command:'delete',arg:{where:o=>{return o['配列②'] === -2}}},  // where = function
+          //{table:'AutoInc',command:'delete',arg:{where:'o => {return o["ラベル"].slice(0,1)==="a"'}},  // where = string(func)
+          {table:'AutoInc',command:'delete',arg:{where:11}},  // where = any(pKey)
+        ],{userId:'Administrator'}));
+      },
+      () => { // 1.ゲスト
+        // 権限付与した場合
+        // 権限付与しなかった場合
+      },
+      () => { // 2.ユーザ
+        // 権限付与した場合
+        // 権限付与しなかった場合
+      },
+    ],
     update: [ // updateRow関係のテスト
       () => { // 0.正常系(Administrator)
         // 複数項目の一括更新
@@ -437,18 +463,6 @@ function SpreadDbTest(){
         ],{userId:'Administrator'}));
 
 
-      },
-      () => { // 1.ゲスト
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-      () => { // 2.ユーザ
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-    ],
-    delete: [ // deleteRow関係のテスト
-      () => { // 0.正常系(Administrator)
       },
       () => { // 1.ゲスト
         // 権限付与した場合
@@ -1041,7 +1055,7 @@ function SpreadDb(query=[],opt={}){
         arg.table.values.splice(v.i,1);
 
         v.step = 2.5; // シートのセルを削除
-        v.range = arg.table.sheet.deleteRow(v.i+1);
+        v.range = arg.table.sheet.deleteRow(v.i+2); // 添字->行番号で+1、ヘッダ行分で+1
 
         v.step = 2.6; // arg.table.rownumを書き換え
         arg.table.rownum -= 1;
@@ -1083,10 +1097,10 @@ function SpreadDb(query=[],opt={}){
         case 'object': v.step = 2.2;
           v.keys = Object.keys(arg);
           if( v.keys.length === 2 && v.keys.includes('key') && v.keys.includes('value') ){
-            v.step = 2.3; // {key:〜,value:〜}形式での指定の場合
+            v.step = 2.21; // {key:〜,value:〜}形式での指定の場合
             v.rv = new Function('o',`return isEqual(o['${arg.key}'],'${arg.value}')`);
           } else {
-            v.step = 2.4; // {キー項目名:値}形式での指定の場合
+            v.step = 2.22; // {キー項目名:値}形式での指定の場合
             v.c = [];
             for( v.j=0 ; v.j<v.keys.length ; v.j++ ){
               v.c.push(`isEqual(o['${v.keys[v.j]}'],'${arg[v.keys[v.j]]}')`);
@@ -1105,10 +1119,20 @@ function SpreadDb(query=[],opt={}){
             v.rv = new Function(...v.a, v.b);
           } else {
             v.step = 2.32; // 関数ではない文字列はprimaryKeyの値指定と看做す
-            v.rv = new Function('o',`return isEqual(o['${this.schema.primaryKey}'],${arg})`);
+            if( this.schema.primaryKey ){
+              v.rv = new Function('o',`return isEqual(o['${this.schema.primaryKey}'],${arg})`);
+            } else {
+              throw new Error(`引数の型が不適切です`);
+            }
           }
           break;
-        default: throw new Error(`引数の型が不適切です`);
+        default:
+          v.step = 2.4; // その他はprimaryKeyの値指定と看做す
+          if( this.schema.primaryKey ){
+            v.rv = new Function('o',`return isEqual(o['${this.schema.primaryKey}'],${arg})`);
+          } else {
+            throw new Error(`引数の型が不適切です`);
+          }
       }
 
       v.step = 9; // 終了処理
