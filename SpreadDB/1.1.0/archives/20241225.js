@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'delete',st:0,num:1},//num=0なら全部
+  const v = {do:{p:'select',st:1,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -280,134 +280,106 @@ function SpreadDbTest(){
     create: [  // create関係のテスト
       () => { // 0.基本形
         v.exe([
-          {command:'create',table:src.status.name,cols:src.status.cols},
-          {command:'create',table:src.PL.name,values:src.PL.values},
-          {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},
-          {command:'create',table:src.board.name,values:src.board.values},
-          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},
+          {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+          {command:'create',table:src.PL.name,values:src.PL.values},  // 「損益計算書」シート作成
+          {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
+          {command:'create',table:src.board.name,values:src.board.values},  // 「掲示板」シート作成
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
         ]);
-      },
-      () => { // 1.管理者以外でcreateTable ⇒「シート「xxx」に対して'create'する権限がありません」
-        v.exe([ // 非管理者で実行
-          {command:'create',table:src.status.name,cols:src.status.cols},
-        ],{userId:'pikumin'});
-        v.exe([ // 管理者ID指定無し
-          {command:'create',table:src.status.name,cols:src.status.cols},
-        ],{});
       },
     ],
     select : [  // selectRow関係のテスト
       () => { // 0.基本形
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([  // テスト用シートを準備
-          {command:'create',arg:src.camp},  // 「camp2024」シート作成
-          {command:'create',arg:src.board},  // 「掲示板」シート作成
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 参照
+        v.exe([
+          {command:'create',table:src.board.name,values:src.board.values},
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 参照
           // 日付の比較では"new Date()"を使用。ちなみにgetTime()無しで比較可能
-          {table:'掲示板',command:'select',arg:{where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"}},
-        ],{userId:'Administrator'})); // 管理者でログイン
+          {table:'掲示板',command:'select',where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"},
+        ]);
       },
-      () => { // 1.ゲストによるアクセス
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([  // テスト用シートを準備
-          {command:'create',arg:src.board},  // 「掲示板」シート作成
-        ],{userId:'Administrator'})); // 管理者でログイン
-
-        v.summary(SpreadDb([  // ゲストに「掲示板」の読込を許可した場合
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
-        ],{
-          // ゲストなので、ユーザID,権限指定は無し
-          guestAuth:{'掲示板':'r'}, // ゲストに掲示板の読込権限付与
-        }));
-
-        v.summary(SpreadDb([  // ゲストに「掲示板」の読込を許可しなかった場合
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
-        ],{
-          // ゲストなので、ユーザID,権限指定は無し
-          //guestAuth:{'掲示板':'r'}, // ゲストに掲示板の読込権限付与
-        }));
+      () => { // 1.ゲストに「掲示板」の読込を許可した場合
+        //v.exe({command:'create',table:src.board.name,values:src.board.values});
+        /*v.exe(
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与
+        );*/
+        v.rv = SpreadDb(
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与
+        );
+        console.log(`===== end\n${JSON.stringify(v.rv)}`)
       },
-      () => { // 2.ユーザによるアクセス
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([  // テスト用シートを準備
-          {command:'create',arg:src.board},  // 「掲示板」シート作成
-        ],{userId:'Administrator'})); // 管理者でログイン
-
-        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可した場合 ⇒ 該当データ取得
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}},
-        ],{
-          userId: 'pikumin',
-          userAuth:{'掲示板':'r'}, // ユーザに掲示板の読込権限付与
-        }));
-
-        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}},
-        ],{
-          userId: 'pikumin',
-          userAuth:{'掲示板':'w'}, // ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
-        }));
-
-        v.summary(SpreadDb([  // ユーザの権限を未指定の場合
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}},
-        ],{
-          userId: 'pikumin',
-        }));
-
+      () => {  // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
+        v.exe({command:'create',table:src.board.name,values:src.board.values});
+        v.exe(
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {},  // ゲストなので、ユーザID,権限指定は無し
+        );
+      },
+      () => { // 3.ユーザに掲示板の読込権限付与
+        v.exe({command:'create',table:src.board.name,values:src.board.values});
+        v.exe(
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {userId: 'pikumin',userAuth:{'掲示板':'r'}},
+        );
+      },
+      () => { // 4.ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
+        v.exe({command:'create',table:src.board.name,values:src.board.values});
+        v.exe(
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {userId: 'pikumin',userAuth:{'掲示板':'w'}},
+        );
+      },
+      () => { // 5.ユーザ権限未指定の場合 ⇒ 「権限無し」エラー
+        v.exe({command:'create',table:src.board.name,values:src.board.values});
+        v.exe(
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {userId: 'pikumin'},
+        );
       },
     ],
     append: [ // appendRow関係のテスト
       () => { // 0.正常系(Administrator)
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb({command:'create',arg:src.autoIncrement},{userId:'Administrator'}));
-
-        // AutoIncシートでオートインクリメント、既定値設定項目 ⇒ create No.2でテスト済
-        // unique項目に重複値
-        v.summary(SpreadDb([
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}},
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a02'}}}, // 1レコードずつ一括
-          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a03'},{'ラベル':'a04'}]}},  // recordが配列
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}}, // ⇒ 重複エラー
-        ],{userId:'Administrator'}));
+        // AutoIncシートでオートインクリメント、既定値設定項目
+        v.exe([
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}}, // ⇒ 重複エラー
+        ]);
       },
-      () => { // 1.ゲスト
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb({command:'create',arg:src.autoIncrement},{userId:'Administrator'}));
-
-        // 権限付与した場合
-        v.summary(SpreadDb([
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}},
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a02'}}}, // 1レコードずつ一括
-          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a03'},{'ラベル':'a04'}]}},  // recordが配列
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}}, // ⇒ 重複エラー
-        ],{guestAuth:{AutoInc:'w'}}));
-
-        // 権限付与しなかった場合
-        v.summary(SpreadDb([
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}},
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a02'}}}, // 1レコードずつ一括
-          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a03'},{'ラベル':'a04'}]}},  // recordが配列
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}}, // ⇒ 重複エラー
-        ],{guestAuth:{AutoInc:'r'}}));
+      () => { // 1.ゲストに権限付与した場合
+        v.exe([
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+        ],{guestAuth:{AutoInc:'w'}});
       },
-      () => { // 2.ユーザ
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb({command:'create',arg:src.autoIncrement},{userId:'Administrator'}));
-
-        // 権限付与した場合
-        v.summary(SpreadDb([
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}},
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a02'}}}, // 1レコードずつ一括
-          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a03'},{'ラベル':'a04'}]}},  // recordが配列
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}}, // ⇒ 重複エラー
-        ],{userId:'pikumin',userAuth:{AutoInc:'w'}}));
-
-        // 権限付与しなかった場合
-        v.summary(SpreadDb([
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}},
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a02'}}}, // 1レコードずつ一括
-          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a03'},{'ラベル':'a04'}]}},  // recordが配列
-          {table:'AutoInc',command:'append',arg:{record:{'ラベル':'a01'}}}, // ⇒ 重複エラー
-        ],{userId:'pikumin'}));
+      () => { // 1.ゲストに権限付与しなかった場合
+        v.exe([
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+        ],{guestAuth:{AutoInc:'r'}});
+      },
+      () => { // 1.ユーザに権限付与した場合
+        v.exe([
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+        ],{userId:'pikumin',userAuth:{AutoInc:'w'}});
+      },
+      () => { // 1.ユーザに権限付与しなかった場合
+        v.exe([
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+        ],{userId:'pikumin'});
       },
     ],
     delete: [ // deleteRow関係のテスト
@@ -429,12 +401,12 @@ function SpreadDbTest(){
         // 更新対象の①関数による指定、②オブジェクトによる指定、③主キー値による指定
         // 更新値の①関数による指定、②オブジェクトによる指定、③値による指定
         // unique項目のチェック、また同一レコード複数unique項目の場合、全項目がエラーになるかチェック
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([  // 複数テーブルの作成
-          {command:'create',arg:src.autoIncrement},
-          {table:'AutoInc',command:'append',arg:{record:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]}},
-
-        ],{userId:'Administrator'}));
+        v.exe([
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+        ],{userId:'pikumin'});
 
 
       },
@@ -461,6 +433,14 @@ function SpreadDbTest(){
       },
     ],
     auth: [  // 付与権限によるアクセス制御
+      () => { // 0.管理者以外でcreateTable ⇒「シート「xxx」に対して'create'する権限がありません」
+        v.exe([ // 非管理者で実行
+          {command:'create',table:src.status.name,cols:src.status.cols},
+        ],{userId:'pikumin'});
+        v.exe([ // 管理者ID指定無し
+          {command:'create',table:src.status.name,cols:src.status.cols},
+        ],{});
+      },
       () => {
         // 自レコードは参照可
         // 自レコード以外は参照不可
@@ -595,6 +575,7 @@ function SpreadDb(query=[],opt={}){
           if( v.isOK ){
 
             v.step = 3.3; // 処理実行
+            console.log(`l.573 query[${v.i}]=${toString(query[v.i])}`)
             if( query[v.i].command !== 'create' ){
               // create以外の場合、操作対象のテーブル管理情報をcommand系メソッドの引数に追加
               if( !pv.table[query[v.i].table] ){  // 以前のcommandでテーブル管理情報が作られていない場合は作成
@@ -627,10 +608,13 @@ function SpreadDb(query=[],opt={}){
                 v.step = 3.321; // select, schemaは結果をdataにセット
                 v.queryResult.data = v.sdbLog;
                 v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
+                  table: query[v.i].table.name,
+                  command: query[v.i].command,
+                  arg: query[v.i].command === 'select' ? toString(query[v.i].where) : '',
                   isErr: false,
+                  message: query[v.i].command === 'select' ? `rownum=${v.sdbLog.length}` : '',
                   // messageは空欄
-                  // before, diffは空欄、afterに出力件数をセット
-                  after: query[v.i].command === 'select' ? `rownum=${v.sdbLog.length}` : null,
+                  // before, after, diffは空欄
                 });
                 if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
               } else {
@@ -1138,6 +1122,7 @@ function SpreadDb(query=[],opt={}){
    */
   function genColumn(arg={}){
     const v = {whois:`${pv.whois}.genColumn`,step:0,rv:{},
+      idStr: 'arg=' + (typeof arg === 'string' ? arg : arg.name),
       typedef:[ // sdbColumnの属性毎にname,type,noteを定義
         {name:'name',type:'string',note:'項目名'},
         {name:'type',type:'string',note:'データ型。string,number,boolean,Date,JSON,UUID'},
@@ -1157,7 +1142,7 @@ function SpreadDb(query=[],opt={}){
       ],
       rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現
     };
-    console.log(`${v.whois} start.\narg(${whichType(arg)})=${JSON.stringify(arg)}`);
+    console.log(`${v.whois} start. ${v.idStr}`);
     try {
 
       // ------------------------------------------------
@@ -1249,7 +1234,7 @@ function SpreadDb(query=[],opt={}){
       }
 
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.`);
+      console.log(`${v.whois} normal end. ${v.idStr}`);
       return v.rv;
 
     } catch(e) {
@@ -1263,8 +1248,9 @@ function SpreadDb(query=[],opt={}){
    * @returns {sdbLog|sdbColumn[]} 変更履歴シートに追記した行オブジェクト、または変更履歴シート各項目の定義
    */
   function genLog(arg=null){
-    const v = {whois:`${pv.whois}.genLog`,step:0,rv:null};
-    console.log(`${v.whois} start.`);
+    const v = {whois:`${pv.whois}.genLog`,step:0,rv:null,
+      idStr: 'arg='+(arg===null?'null':`${arg.table}.${arg.command}`)};
+    console.log(`${v.whois} start. ${v.idStr}`);
     try {
 
       v.step = 1; // 変更履歴シートの項目定義
@@ -1311,7 +1297,7 @@ function SpreadDb(query=[],opt={}){
       }
 
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.`);
+      console.log(`${v.whois} normal end. ${v.idStr}`);
       return v.rv;
 
     } catch(e) {
@@ -1499,7 +1485,7 @@ function SpreadDb(query=[],opt={}){
       v.rv.schema = v.r.schema;
 
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.`);
+      console.log(`${v.whois} normal end. table=${arg.name}`);
       return v.rv;
 
     } catch(e) {
@@ -1514,7 +1500,7 @@ function SpreadDb(query=[],opt={}){
    */
   function getSchema(arg){
     const v = {whois:`${pv.whois}.getSchema`,step:0,rv:[]};
-    console.log(`${v.whois} start.`);
+    console.log(`${v.whois} start. table=${arg}`);
     try {
 
       if( typeof arg === 'string' ) arg = [arg];
@@ -1535,13 +1521,14 @@ function SpreadDb(query=[],opt={}){
    * @param {Object|Object[]} arg
    * @param {sdbTable} arg.table - 操作対象のテーブル管理情報
    * @param {Object|function} arg.where - 対象レコード判定条件
-   * @returns {Object[]} 該当行オブジェクト
+   * @returns {Object[]} 該当行オブジェクトの配列
    *
    * - where句の指定方法: functionalyze参照
    */
   function selectRow(arg){
     const v = {whois:`${pv.whois}.selectRow`,step:0,rv:[]};
-    console.log(`${v.whois} start.\nuserId=${pv.opt.userId}, table=${arg.table.name}, where=${arg.where}`);
+    console.log(`${v.whois} start.`);
+    console.log(toString(arg));
     try {
 
       v.step = 1; // 判定条件を関数に統一
