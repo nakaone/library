@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'append',st:0,num:1},//num=0なら全部
+  const v = {do:{p:'delete',st:0,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -362,16 +362,14 @@ function SpreadDbTest(){
       ]
     ],
     delete: [ // deleteRow関係のテスト
-      () => { // 0.正常系(Administrator)
-        v.exe([
-          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},
-          {table:'AutoInc',command:'append',record:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
-          {table:'AutoInc',command:'delete',where:{'配列①':-1}},  // where = Object
-          {table:'AutoInc',command:'delete',where:o=>{return o['配列②'] === -2}},  // where = function
-          {table:'AutoInc',command:'delete',where:11},  // where = any(pKey)
-          {table:'AutoInc',command:'delete',where:'o => {return o["ラベル"].slice(0,1)==="a"'},  // where = string(func)
-        ]);
-      },
+      [  // 0.正常系(Administrator)
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},
+        {table:'AutoInc',command:'append',record:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
+        {table:'AutoInc',command:'delete',where:{'配列①':-1}},  // where = Object
+        {table:'AutoInc',command:'delete',where:o=>{return o['配列②'] === -2}},  // where = function
+        {table:'AutoInc',command:'delete',where:11},  // where = any(pKey)
+        {table:'AutoInc',command:'delete',where:'o => {return o["ラベル"].slice(0,1)==="a"'},  // where = string(func)
+      ],
     ],
     update: [ // updateRow関係のテスト
       () => { // 0.正常系(Administrator)
@@ -462,7 +460,6 @@ function SpreadDbTest(){
         let rv = SpreadDb(...query[v.j]); // query毎のsdbLog配列
         v.msg.push(`===== argument\n${v.argStr}\n\n===== return value type: ${whichType(rv)}`);
         rv.forEach(o => { // query単位
-          console.log(`l.465 o=${JSON.stringify(o,null,2)}`)
           let result = {
             command: o.query.command,
             isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
