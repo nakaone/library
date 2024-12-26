@@ -35,26 +35,44 @@ function SpreadDbTest(){
         }
       });
     },
-    exe: (query,opt={userId:'Administrator'}) => {  // テスト実行、結果表示
+    exe: (q,o) => {  // テスト実行、結果表示
+      // テストパターンをクエリ＋オプションの配列としてqueryに保存
+      let query = []; // テスト用クエリ。[[q1,o1],[q2,o2]..]形式
+      // 同一アカウント(オプション)で複数のコマンドを実行する場合、qNは配列で指定する
+      let dopt = {userId:'Administrator'};
+      if( Array.isArray(q) ){
+        q.forEach(a => {
+          if( Array.isArray(a) ){
+            if( a.length === 1 ) a.push(dopt);
+            query.push(a);
+          } else {
+            query.push([a,dopt]);
+          }
+        })
+      } else {
+        query.push([q,(o||dopt)]);
+      }
+      // テストの実行
       v.deleteSheet(); // 既存シートを全部削除
-      let rv = SpreadDb(query,opt); // query毎のsdbLog配列
-      let msg = [`${v.whois} end: return value type: ${whichType(rv)}`];
-
-      rv.forEach(o => {
-        let result = {
-          command: o.query.command,
-          isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
-          message: `${o.message||''}(${whichType(o.message)})`,
-          log: [],
-        };
-        if( !Array.isArray(o.log) ) o.log = [o.log];
-        result.logLen = o.log.length;
-        o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
-        if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
-        let json = JSON.stringify(result,null,2);
-        msg = [...msg,...json.split('\n')]
+      query.forEach(o => {
+        let rv = SpreadDb(...o); // query毎のsdbLog配列
+        let msg = [`${v.whois} end: return value type: ${whichType(rv)}`];
+        rv.forEach(o => {
+          let result = {
+            command: o.query.command,
+            isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
+            message: `${o.message||''}(${whichType(o.message)})`,
+            log: [],
+          };
+          if( !Array.isArray(o.log) ) o.log = [o.log];
+          result.logLen = o.log.length;
+          o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
+          if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
+          let json = JSON.stringify(result,null,2);
+          msg = [...msg,...json.split('\n')]
+        });
+        console.log(msg.join('\n'));    
       });
-      console.log(msg.join('\n'));
     },
     sleep: (sec) =>  // 指定時間待機
       {return new Promise(resolve => setTimeout(resolve,sec))},
@@ -299,20 +317,14 @@ function SpreadDbTest(){
           {table:'掲示板',command:'select',where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"},
         ]);
       },
-      async () => { // 1.ゲストに「掲示板」の読込を許可した場合
-        v.exe({command:'create',table:src.board.name,values:src.board.values});
-        await v.sleep(60000); // いまここ：これが無いとエラーになる
-        v.exe(
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与
-        );
-        /*
-        v.rv = SpreadDb(
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与
-        );
-        console.log(`===== end\n${JSON.stringify(v.rv)}`)
-        */
+      () => { // 1.ゲストに「掲示板」の読込を許可した場合
+        v.exe([
+          {command:'create',table:src.board.name,values:src.board.values},
+          [
+            {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+            {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与  
+          ],
+        ]);
       },
       () => {  // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
         v.exe({command:'create',table:src.board.name,values:src.board.values});
