@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'append',st:0,num:0},//num=0なら全部
+  const v = {do:{p:'append',st:0,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -272,7 +272,6 @@ function SpreadDbTest(){
       values: [{'ラベル':'fuga'},{'ラベル':'hoge'}],
     }
   };
-
   const pattern = { /* テストパターン(関数)の定義
     - ログへの出力形式
     - メモの中の形式
@@ -431,51 +430,60 @@ function SpreadDbTest(){
       },
     ]
   };
-  for( v.i=v.do.st ; v.i<(v.do.num===0 ? pattern[v.do.p].length : v.do.st+v.do.num) ; v.i++ ){
-    if( typeof pattern[v.do.p][v.i] === 'function' ){
-      // 旧式対応：テストパターンが関数で指定されていた場合、それを実行
-      pattern[v.do.p][v.i]();
-      continue;
+  try {
+    for( v.i=v.do.st ; v.i<(v.do.num===0 ? pattern[v.do.p].length : v.do.st+v.do.num) ; v.i++ ){
+      if( typeof pattern[v.do.p][v.i] === 'function' ){
+        // 旧式対応：テストパターンが関数で指定されていた場合、それを実行
+        pattern[v.do.p][v.i]();
+        continue;
+      }
+  
+      // テストパターンをクエリ＋オプションの配列としてqueryに保存
+      let query = []; // テスト用クエリ。[[q1,o1],[q2,o2]..]形式
+      // 同一アカウント(オプション)で複数のコマンドを実行する場合、qNは配列で指定する
+      let dopt = {userId:'Administrator'};  // オプションの既定値
+      if( Array.isArray(pattern[v.do.p][v.i]) ){
+        pattern[v.do.p][v.i].forEach(a => {
+          if( Array.isArray(a) ){
+            if( a.length === 1 ) a.push(dopt);
+            query.push(a);
+          } else {
+            query.push([a,dopt]);
+          }
+        })
+      } else {
+        query.push([q,(o||dopt)]);
+      }
+      // テストの実行
+      v.deleteSheet(); // 既存シートを全部削除
+      for( v.j=0 ; v.j<query.length ; v.j++ ){
+        v.msg = [`${v.whois} ${v.do.p}.${v.i}.${v.j} end`];
+        v.argStr = JSON.stringify(query[v.j]);
+        let rv = SpreadDb(...query[v.j]); // query毎のsdbLog配列
+        v.msg.push(`===== argument\n${v.argStr}\n\n===== return value type: ${whichType(rv)}`);
+        rv.forEach(o => { // query単位
+          console.log(`l.465 o=${JSON.stringify(o,null,2)}`)
+          let result = {
+            command: o.query.command,
+            isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
+            message: `${o.message||''}(${whichType(o.message)})`,
+            log: [],
+          };
+          if( !Array.isArray(o.log) ) o.log = [o.log];
+          result.logLen = o.log.length;
+          //o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
+          o.log.forEach(x => result.log.push({arg:x.arg,isErr:x.isErr,message:x.message}));
+          if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
+          let json = JSON.stringify(result,null,2);
+          v.msg = [...v.msg,...json.split('\n')]
+        });
+        console.log(v.msg.join('\n'));
+      }
     }
-
-    // テストパターンをクエリ＋オプションの配列としてqueryに保存
-    let query = []; // テスト用クエリ。[[q1,o1],[q2,o2]..]形式
-    // 同一アカウント(オプション)で複数のコマンドを実行する場合、qNは配列で指定する
-    let dopt = {userId:'Administrator'};  // オプションの既定値
-    if( Array.isArray(pattern[v.do.p][v.i]) ){
-      pattern[v.do.p][v.i].forEach(a => {
-        if( Array.isArray(a) ){
-          if( a.length === 1 ) a.push(dopt);
-          query.push(a);
-        } else {
-          query.push([a,dopt]);
-        }
-      })
-    } else {
-      query.push([q,(o||dopt)]);
-    }
-    // テストの実行
-    v.deleteSheet(); // 既存シートを全部削除
-    for( v.j=0 ; v.j<query.length ; v.j++ ){
-      let msg = [`${v.whois} ${v.do.p}.${v.i}.${v.j} end`];
-      let rv = SpreadDb(...query[v.j]); // query毎のsdbLog配列
-      msg.push(`===== argument\n${JSON.stringify(query[v.j])}\n\n===== return value type: ${whichType(rv)}`);
-      rv.forEach(o => {
-        let result = {
-          command: o.query.command,
-          isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
-          message: `${o.message||''}(${whichType(o.message)})`,
-          log: [],
-        };
-        if( !Array.isArray(o.log) ) o.log = [o.log];
-        result.logLen = o.log.length;
-        o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
-        if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
-        let json = JSON.stringify(result,null,2);
-        msg = [...msg,...json.split('\n')]
-      });
-      console.log(msg.join('\n'));
-    }
+  
+  } catch(e) {
+    e.message = `${v.whois} abnormal end.\n${typeof v.msg==='object'?v.msg[0]:v.msg}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
   }
 }
 
@@ -600,7 +608,6 @@ function SpreadDb(query=[],opt={}){
           if( v.isOK ){
 
             v.step = 3.3; // 処理実行
-            console.log(`l.573 query[${v.i}]=${toString(query[v.i])}`)
             if( query[v.i].command !== 'create' ){
               // create以外の場合、操作対象のテーブル管理情報をcommand系メソッドの引数に追加
               if( !pv.table[query[v.i].table] ){  // 以前のcommandでテーブル管理情報が作られていない場合は作成
