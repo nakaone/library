@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'select',st:1,num:1},//num=0なら全部
+  const v = {do:{p:'select',st:0,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -35,47 +35,27 @@ function SpreadDbTest(){
         }
       });
     },
-    exe: (q,o) => {  // テスト実行、結果表示
-      // テストパターンをクエリ＋オプションの配列としてqueryに保存
-      let query = []; // テスト用クエリ。[[q1,o1],[q2,o2]..]形式
-      // 同一アカウント(オプション)で複数のコマンドを実行する場合、qNは配列で指定する
-      let dopt = {userId:'Administrator'};
-      if( Array.isArray(q) ){
-        q.forEach(a => {
-          if( Array.isArray(a) ){
-            if( a.length === 1 ) a.push(dopt);
-            query.push(a);
-          } else {
-            query.push([a,dopt]);
-          }
-        })
-      } else {
-        query.push([q,(o||dopt)]);
-      }
-      // テストの実行
+    exe: (query,opt={userId:'Administrator'}) => {  // テスト実行、結果表示
       v.deleteSheet(); // 既存シートを全部削除
-      query.forEach(o => {
-        let rv = SpreadDb(...o); // query毎のsdbLog配列
-        let msg = [`${v.whois} end: return value type: ${whichType(rv)}`];
-        rv.forEach(o => {
-          let result = {
-            command: o.query.command,
-            isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
-            message: `${o.message||''}(${whichType(o.message)})`,
-            log: [],
-          };
-          if( !Array.isArray(o.log) ) o.log = [o.log];
-          result.logLen = o.log.length;
-          o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
-          if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
-          let json = JSON.stringify(result,null,2);
-          msg = [...msg,...json.split('\n')]
-        });
-        console.log(msg.join('\n'));    
+      let rv = SpreadDb(query,opt); // query毎のsdbLog配列
+      let msg = [`${v.whois} end: return value type: ${whichType(rv)}`];
+
+      rv.forEach(o => {
+        let result = {
+          command: o.query.command,
+          isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
+          message: `${o.message||''}(${whichType(o.message)})`,
+          log: [],
+        };
+        if( !Array.isArray(o.log) ) o.log = [o.log];
+        result.logLen = o.log.length;
+        o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
+        if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
+        let json = JSON.stringify(result,null,2);
+        msg = [...msg,...json.split('\n')]
       });
+      console.log(msg.join('\n'));
     },
-    sleep: (sec) =>  // 指定時間待機
-      {return new Promise(resolve => setTimeout(resolve,sec))},
   };
   const src = { // テスト用サンプルデータ
     status: { // "ユーザ管理"シート(colsのみ)
@@ -298,62 +278,56 @@ function SpreadDbTest(){
     - メモの中の形式
     */
     create: [  // create関係のテスト
-      () => { // 0.基本形
-        v.exe([
-          {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
-          {command:'create',table:src.PL.name,values:src.PL.values},  // 「損益計算書」シート作成
-          {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
-          {command:'create',table:src.board.name,values:src.board.values},  // 「掲示板」シート作成
-          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-        ]);
-      },
+      [ // 0.基本形
+        {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+        {command:'create',table:src.PL.name,values:src.PL.values},  // 「損益計算書」シート作成
+        {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
+        {command:'create',table:src.board.name,values:src.board.values},  // 「掲示板」シート作成
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+      ],
     ],
-    select : [  // selectRow関係のテスト
-      () => { // 0.基本形
-        v.exe([
-          {command:'create',table:src.board.name,values:src.board.values},
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 参照
-          // 日付の比較では"new Date()"を使用。ちなみにgetTime()無しで比較可能
-          {table:'掲示板',command:'select',where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"},
-        ]);
-      },
-      () => { // 1.ゲストに「掲示板」の読込を許可した場合
-        v.exe([
-          {command:'create',table:src.board.name,values:src.board.values},
-          [
-            {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-            {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与  
-          ],
-        ]);
-      },
-      () => {  // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
-        v.exe({command:'create',table:src.board.name,values:src.board.values});
-        v.exe(
+    select : [  // 
+      [ // 0.基本形
+        {command:'create',table:src.board.name,values:src.board.values},
+        {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 参照
+        // 日付の比較では"new Date()"を使用。ちなみにgetTime()無しで比較可能
+        {table:'掲示板',command:'select',where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"},
+      ],
+      [ // 1.ゲストに「掲示板」の読込を許可した場合
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {},  // ゲストなので、ユーザID,権限指定は無し
-        );
-      },
-      () => { // 3.ユーザに掲示板の読込権限付与
-        v.exe({command:'create',table:src.board.name,values:src.board.values});
-        v.exe(
+          {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与  
+        ],
+      ],
+      [  // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {userId: 'pikumin',userAuth:{'掲示板':'r'}},
-        );
-      },
-      () => { // 4.ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
-        v.exe({command:'create',table:src.board.name,values:src.board.values});
-        v.exe(
+          {},  // ゲストなので、ユーザID,権限指定は無し  
+        ],
+      ],
+      [ // 3.ユーザに掲示板の読込権限付与
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {userId: 'pikumin',userAuth:{'掲示板':'w'}},
-        );
-      },
-      () => { // 5.ユーザ権限未指定の場合 ⇒ 「権限無し」エラー
-        v.exe({command:'create',table:src.board.name,values:src.board.values});
-        v.exe(
+          {userId: 'pikumin',userAuth:{'掲示板':'r'}}
+        ],
+      ],
+      [ // 4.ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {userId: 'pikumin'},
-        );
-      },
+          {userId: 'pikumin',userAuth:{'掲示板':'w'}}
+        ],
+      ],
+      [ // 5.ユーザ権限未指定の場合 ⇒ 「権限無し」エラー
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {userId: 'pikumin'}
+        ],
+      ],
     ],
     append: [ // appendRow関係のテスト
       () => { // 0.正常系(Administrator)
@@ -468,7 +442,52 @@ function SpreadDbTest(){
       },
     ]
   };
-  for( v.i=v.do.st ; v.i<(v.do.num===0 ? pattern[v.do.p].length : v.do.st+v.do.num) ; v.i++ ) pattern[v.do.p][v.i]();
+  for( v.i=v.do.st ; v.i<(v.do.num===0 ? pattern[v.do.p].length : v.do.st+v.do.num) ; v.i++ ){
+    if( typeof pattern[v.do.p][v.i] === 'function' ){
+      // 旧式対応：テストパターンが関数で指定されていた場合、それを実行
+      pattern[v.do.p][v.i]();
+      continue;
+    }
+
+    // テストパターンをクエリ＋オプションの配列としてqueryに保存
+    let query = []; // テスト用クエリ。[[q1,o1],[q2,o2]..]形式
+    // 同一アカウント(オプション)で複数のコマンドを実行する場合、qNは配列で指定する
+    let dopt = {userId:'Administrator'};  // オプションの既定値
+    if( Array.isArray(pattern[v.do.p][v.i]) ){
+      pattern[v.do.p][v.i].forEach(a => {
+        if( Array.isArray(a) ){
+          if( a.length === 1 ) a.push(dopt);
+          query.push(a);
+        } else {
+          query.push([a,dopt]);
+        }
+      })
+    } else {
+      query.push([q,(o||dopt)]);
+    }
+    // テストの実行
+    v.deleteSheet(); // 既存シートを全部削除
+    for( v.j=0 ; v.j<query.length ; v.j++ ){
+      let msg = [`${v.whois} ${v.do.p}.${v.i}.${v.j} end`];
+      let rv = SpreadDb(...query[v.j]); // query毎のsdbLog配列
+      msg.push(`===== argument\n${JSON.stringify(query[v.j])}\n\n===== return value type: ${whichType(rv)}`);
+      rv.forEach(o => {
+        let result = {
+          command: o.query.command,
+          isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
+          message: `${o.message||''}(${whichType(o.message)})`,
+          log: [],
+        };
+        if( !Array.isArray(o.log) ) o.log = [o.log];
+        result.logLen = o.log.length;
+        o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
+        if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
+        let json = JSON.stringify(result,null,2);
+        msg = [...msg,...json.split('\n')]
+      });
+      console.log(msg.join('\n'));
+    }
+  }
 }
 
 /** SpreadDb: Google Spreadに対してRDBのようなCRUDを行う
