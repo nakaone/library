@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'select',st:0,num:1},//num=0なら全部
+  const v = {do:{p:'append',st:0,num:0},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -292,36 +292,31 @@ function SpreadDbTest(){
         {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 参照
         // 日付の比較では"new Date()"を使用。ちなみにgetTime()無しで比較可能
         {table:'掲示板',command:'select',where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"},
-      ],
-      [ // 1.ゲストに「掲示板」の読込を許可した場合
+      ],[ // 1.ゲストに「掲示板」の読込を許可した場合
         {command:'create',table:src.board.name,values:src.board.values},
         [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
           {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与  
         ],
-      ],
-      [  // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
+      ],[  // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
         {command:'create',table:src.board.name,values:src.board.values},
         [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
           {},  // ゲストなので、ユーザID,権限指定は無し  
         ],
-      ],
-      [ // 3.ユーザに掲示板の読込権限付与
+      ],[ // 3.ユーザに掲示板の読込権限付与
         {command:'create',table:src.board.name,values:src.board.values},
         [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
           {userId: 'pikumin',userAuth:{'掲示板':'r'}}
         ],
-      ],
-      [ // 4.ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
+      ],[ // 4.ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
         {command:'create',table:src.board.name,values:src.board.values},
         [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
           {userId: 'pikumin',userAuth:{'掲示板':'w'}}
         ],
-      ],
-      [ // 5.ユーザ権限未指定の場合 ⇒ 「権限無し」エラー
+      ],[ // 5.ユーザ権限未指定の場合 ⇒ 「権限無し」エラー
         {command:'create',table:src.board.name,values:src.board.values},
         [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
@@ -330,48 +325,42 @@ function SpreadDbTest(){
       ],
     ],
     append: [ // appendRow関係のテスト
-      () => { // 0.正常系(Administrator)
+      [ // 0.正常系(Administrator)
         // AutoIncシートでオートインクリメント、既定値設定項目
-        v.exe([
-          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+        {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+        {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+        {table:'AutoInc',command:'append',record:{'ラベル':'a01'}}, // ⇒ 重複エラー
+      ],[ // 1.ゲストに権限付与した場合
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        [[
           {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
           {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
           {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
-          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}}, // ⇒ 重複エラー
-        ]);
-      },
-      () => { // 1.ゲストに権限付与した場合
-        v.exe([
-          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        ],{guestAuth:{AutoInc:'w'}}]
+      ],[ // 2.ゲストに権限付与しなかった場合
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        [[
           {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
           {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
           {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
-        ],{guestAuth:{AutoInc:'w'}});
-      },
-      () => { // 1.ゲストに権限付与しなかった場合
-        v.exe([
-          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        ],{guestAuth:{AutoInc:'r'}}]
+      ],[ // 3.ユーザに権限付与した場合
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        [[
           {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
           {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
           {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
-        ],{guestAuth:{AutoInc:'r'}});
-      },
-      () => { // 1.ユーザに権限付与した場合
-        v.exe([
-          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        ],{userId:'pikumin',userAuth:{AutoInc:'w'}}]
+      ],[ // 4.ユーザに権限付与しなかった場合
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        [[
           {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
           {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
           {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
-        ],{userId:'pikumin',userAuth:{AutoInc:'w'}});
-      },
-      () => { // 1.ユーザに権限付与しなかった場合
-        v.exe([
-          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
-          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
-          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
-        ],{userId:'pikumin'});
-      },
+        ],{userId:'pikumin'}]
+      ]
     ],
     delete: [ // deleteRow関係のテスト
       () => { // 0.正常系(Administrator)
