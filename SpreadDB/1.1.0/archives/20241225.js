@@ -56,6 +56,8 @@ function SpreadDbTest(){
       });
       console.log(msg.join('\n'));
     },
+    sleep: (sec) =>  // 指定時間待機
+      {return new Promise(resolve => setTimeout(resolve,sec))},
   };
   const src = { // テスト用サンプルデータ
     status: { // "ユーザ管理"シート(colsのみ)
@@ -297,17 +299,20 @@ function SpreadDbTest(){
           {table:'掲示板',command:'select',where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"},
         ]);
       },
-      () => { // 1.ゲストに「掲示板」の読込を許可した場合
-        //v.exe({command:'create',table:src.board.name,values:src.board.values});
-        /*v.exe(
+      async () => { // 1.ゲストに「掲示板」の読込を許可した場合
+        v.exe({command:'create',table:src.board.name,values:src.board.values});
+        await v.sleep(60000); // いまここ：これが無いとエラーになる
+        v.exe(
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
           {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与
-        );*/
+        );
+        /*
         v.rv = SpreadDb(
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
           {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与
         );
         console.log(`===== end\n${JSON.stringify(v.rv)}`)
+        */
       },
       () => {  // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
         v.exe({command:'create',table:src.board.name,values:src.board.values});
