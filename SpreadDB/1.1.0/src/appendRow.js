@@ -25,7 +25,7 @@ function appendRow(arg){
         table: arg.table.name,
         command: 'append',
         arg: arg.record,
-        result: true,
+        isErr: false,
         //message, before, after, diffは後工程で追加
       });
       if( v.log instanceof Error ) throw v.log;
@@ -48,9 +48,9 @@ function appendRow(arg){
       for( v.unique in arg.table.schema.unique ){
         if( arg.table.schema.unique[v.unique].indexOf(arg.record[v.i][v.unique]) >= 0 ){
           // 登録済の場合はエラーとして処理
-          v.log.result = false;
+          v.log.isErr = true;
           // 複数項目のエラーメッセージに対応するため配列化を介在させる
-          v.log.message = v.log.message === null ? [] : v.log.message.split('\n');
+          v.log.message = v.log.message === 'null' ? [] : v.log.message.split('\n');
           v.log.message.push(`${v.unique}欄の値「${arg.record[v.i][v.unique]}」が重複しています`);
           v.log.message = v.log.message.join('\n');
         } else {
@@ -60,7 +60,7 @@ function appendRow(arg){
       }
 
       v.step = 2.5; // 正当性チェックOKの場合の処理
-      if( v.log.result ){
+      if( v.log.isErr === false ){
 
         v.step = 2.51; // シートイメージに展開して登録
         v.row = [];

@@ -30,7 +30,7 @@ try {
   if( v.r instanceof Error ) throw v.r;
   if( v.r === null ){
     v.r = createTable({
-      name: pv.opt.log,
+      table: pv.opt.log,
       cols: genLog(), // sdbLog各項目の定義集
     });
     if( v.r instanceof Error ) throw v.r;
@@ -72,20 +72,42 @@ try {
         v.step = 3.2; // 処理内容を元に、必要とされる権限が与えられているか確認
         if( v.allow.includes('o') ){
 
-          v.step = 3.21;
-          // o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
-          // また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
-          //read/writeは自分のみ可、delete/schemaは実行不可
-          query[v.i].arg.where = pv.opt.userId;  // 自レコードのみ対象に限定
+          // o(=own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
+          // また対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
+          //read/write/append/deleteは自分のみ可、schemaは実行不可
+
+          v.step = 3.21;  // 操作対象レコードの絞り込み(検索・追加条件の変更)
+          if( query[v.i].command !== 'append' ){
+            v.step = 3.211; // select/update/deleteなら対象を自レコードに限定
+            query[v.i].where = pv.opt.userId;
+          } else {
+            v.step = 3.212; // appendの場合
+            v.pKey = pv.table[query[v.i].table].schema.primaryKey;
+            if( !v.pKey ){
+              v.step = 3.2121; // 追加先テーブルにprimaryKeyが不在ならエラー
+              Object.assign(v.queryResult,{
+                isErr: true,
+                message: `primaryKey未設定のテーブルには追加できません`
+              });
+            } else {
+              v.step = 2.2122; // 追加レコードの主キーはuserIdに変更
+              if( !Array.isArray(query[v.i].record) ) query[v.i].record = [query[v.i].record];
+              query[v.i].record.forEach(x => x[v.pKey] = pv.opt.userId);
+            }
+          }
+
+          v.step = 3.213; // 'o'の場合の呼出先メソッドを設定
           switch( query[v.i].command ){
             case 'select': v.isOK = true; v.func = selectRow; break;
             case 'update': v.isOK = true; v.func = updateRow; break;
+            case 'append': case 'insert': v.isOK = true; v.func = appendRow; break;
+            case 'delete': v.isOK = true; v.func = deleteRow; break;
             default: v.isOK = false;
           }
 
         } else {
 
-          v.step = 3.22;
+          v.step = 3.22;  // 'o'以外の場合の呼出先メソッドを設定
           switch( query[v.i].command ){
             case 'create': v.isOK = v.allow.includes('c'); v.func = createTable; break;
             case 'select': v.isOK = v.allow.includes('r'); v.func = selectRow; break;
@@ -101,17 +123,17 @@ try {
         if( v.isOK ){
 
           v.step = 3.3; // 処理実行
-          if( query[v.i].command !== 'create' ){
+          if( query[v.i].command !== 'create' && query[v.i].command !== 'schema' ){
             // create以外の場合、操作対象のテーブル管理情報をcommand系メソッドの引数に追加
             if( !pv.table[query[v.i].table] ){  // 以前のcommandでテーブル管理情報が作られていない場合は作成
               pv.table[query[v.i].table] = genTable({name:query[v.i].table});
               if( pv.table[query[v.i].table] instanceof Error ) throw pv.table[query[v.i].table];
             }
-            query[v.i].arg.table = pv.table[query[v.i].table];
+            query[v.i].table = pv.table[query[v.i].table];
           }
-          v.sdbLog = v.func(query[v.i].arg);
+          v.sdbLog = v.func(query[v.i]);  // 処理実行
 
-          if( v.sdbLog instanceof Error ){
+          if( v.sdbLog instanceof Error ){  // 戻り値がErrorオブジェクト
 
             v.step = 3.31; // selectRow, updateRow他のcommand系メソッドでエラー発生
             // command系メソッドからエラーオブジェクトが帰ってきた場合はエラーとして処理
@@ -120,28 +142,31 @@ try {
               message: v.sdbLog.message
             });
             v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
-              result: false,
+              isErr: true,
               message: v.sdbLog.message,
               // before, after, diffは空欄
             });
             if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
 
-          } else {
+          } else {  // 戻り値がErrorオブジェクト以外
 
             v.step = 3.32; // command系メソッドが正常終了した場合の処理
             if( query[v.i].command === 'select' || query[v.i].command === 'schema' ){
               v.step = 3.321; // select, schemaは結果をdataにセット
               v.queryResult.data = v.sdbLog;
               v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
-                result: true,
-                // messageは空欄
-                // before, diffは空欄、afterに出力件数をセット
-                after: query[v.i].command === 'select' ? `rownum=${v.sdbLog.length}` : null,
+                table: query[v.i].table.name,
+                command: query[v.i].command,
+                arg: toString(query[v.i].command === 'select' ? query[v.i].where : query[v.i].table),
+                isErr: false,
+                message: query[v.i].command === 'select' ? `rownum=${v.sdbLog.length}` : '',
+                // before, after, diffは空欄
               });
               if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
             } else {
               v.step = 3.322; // update, append, deleteは実行結果(sdbLog)をlogにセット
               v.queryResult.log = v.sdbLog;
+              v.sdbLog.forEach(x => {if( x.isErr === true ){ v.queryResult.isErr = true; }});
             }
           }
 
@@ -154,7 +179,7 @@ try {
             message: v.msg,
           });
           v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
-            result: false,
+            isErr: true,
             message: v.msg,
             // before, after, diffは空欄
           });
@@ -166,9 +191,17 @@ try {
       }
 
       v.step = 3.6; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
+      v.log = [];
+      v.rv.forEach(x => {
+        if( Array.isArray(x.log) ){
+          v.log = [...v.log,...x.log];
+        } else {
+          v.log.push(x.log);
+        }
+      });
       v.r = appendRow({
         table: pv.table[pv.opt.log],
-        record: v.rv.map(x => x.log)[0],
+        record: v.log,
       });
       if( v.r instanceof Error ) throw v.r;
 

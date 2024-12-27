@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'create',st:2,num:1},//num=0なら全部
+  const v = {do:{p:'auth',st:0,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -35,30 +35,26 @@ function SpreadDbTest(){
         }
       });
     },
-    raw2obj: sheet => { // シートイメージ(二次元配列)を行オブジェクトに変換
-      v.data = JSON.parse(JSON.stringify(v.src[sheet].values));
-      v.src[sheet].values = [];
-      for( v.i=1 ; v.i<v.data.length ; v.i++ ){
-        v.o = {};
-        for( v.j=0 ; v.j<v.data[v.i].length ; v.j++ ){
-          if( v.data[v.i][v.j] ) v.o[v.data[0][v.j]] = v.data[v.i][v.j];
-        }
-        v.src[sheet].values.push(v.o);
-      }
-    },
-    summary: a => { // 戻り値(Object[])の結果確認
-      let rv = [`${v.whois} end: return value type: ${whichType(a)}`];
-      a.forEach(o => {
+    exe: (query,opt={userId:'Administrator'}) => {  // テスト実行、結果表示
+      v.deleteSheet(); // 既存シートを全部削除
+      let rv = SpreadDb(query,opt); // query毎のsdbLog配列
+      let msg = [`${v.whois} end: return value type: ${whichType(rv)}`];
+
+      rv.forEach(o => {
         let result = {
           command: o.query.command,
           isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
           message: `${o.message||''}(${whichType(o.message)})`,
+          log: [],
         };
-        if( Object.hasOwn(o,'data') ) result.data = o.data;
+        if( !Array.isArray(o.log) ) o.log = [o.log];
+        result.logLen = o.log.length;
+        o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
+        if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
         let json = JSON.stringify(result,null,2);
-        rv = [...rv,...json.split('\n')]
+        msg = [...msg,...json.split('\n')]
       });
-      console.log(rv.join('\n'));
+      console.log(msg.join('\n'));
     },
   };
   const src = { // テスト用サンプルデータ
@@ -158,7 +154,7 @@ function SpreadDbTest(){
     camp: { // "camp2024"シート(cols+values)
       name: 'camp2024',
       cols: [
-        {name:'entryNo',type:'number',primaryKey:true},
+        {name:'userId',type:'number',primaryKey:true},
         {name:'タイムスタンプ',type:'string'},
         {name:'メールアドレス',type:'string'},
         {name:'申込者氏名',type:'string'},
@@ -199,7 +195,19 @@ function SpreadDbTest(){
         {name:'fee05',type:'string'},
         {name:'memo',type:'string'},
       ],
-      values: [["タイムスタンプ","メールアドレス","申込者氏名","申込者カナ","申込者の参加","宿泊、テント","引取者氏名","参加者01氏名","参加者01カナ","参加者01所属","参加者02氏名","参加者02カナ","参加者02所属","参加者03氏名","参加者03カナ","参加者03所属","参加者04氏名","参加者04カナ","参加者04所属","参加者05カナ","参加者05氏名","参加者05所属","緊急連絡先","ボランティア募集","備考","キャンセル","authority","CPkey","entryNo","trial","editURL","entryTime","receptionist","fee00","fee01","fee02","fee03","fee04","fee05","memo"],["2024/10/06 19:51:06","nakairo@gmail.com","国生　邦浩","コクショウ　クニヒロ","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊しない","","","","","","","","","","","","","","","","","","","","","2","jZiM1isJ+1AZoVZ9NnWTvCoeghCm+FY05eb6jhz8wpT3DwqJbNnszW8PWDd3sq0N5mjN/Nshh+RGGrdkm7CC+sO32js+wm1YmYGr0FMaFxvMBDrWzyJ7qrPI4unbx2IkrPkXSmSEbw91n/LOu0x7br106XeJ9TXJbJS16rV0nzs=","1","{\"passcode\":920782,\"created\":1728874149915,\"result\":0,\"log\":[{\"timestamp\":1728874165893,\"enterd\":920782,\"status\":1}]}","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnuePpXliGgMlVVUYiSKgwX6SXBNrnwozwTMF09Ml1py7Ocp1N7_w5F7uqf52Ak63zBE","","","","","","","","",""],["2024/09/15 12:47:04","va15r@yahoo.co.jp","榎田　素直","エノキダ　スナオ","参加予定(宿泊なし)","宿泊しない","宿泊予定なので不要","榎田　若菜","エノキダ　ワカナ","1年生","","","","","","","","","","","","","9013357002","できる","食事以外でも、お手伝い出来る事があれば。","","1","","2","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnudWLvuoT6Wq0Hu-4tqFl5OyTK-Z7EwdMDEQGS1jKJVIa41Dh8nNJPtpFyPu8cyZYGo","","","","","","","","",""],["2024/09/15 13:51:37","kuke.m4690@gmail.com","吉野　晃祐","ヨシノ　コウスケ","参加予定(宿泊あり)","宿泊する(テントあり)","宿泊予定なので不要","吉野　涼","ヨシノ　リョウ","6年生","","","","","","","","","","","","","","できる","","","1","","3","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufKjD-xj5FN0GnTNIILVeJVwYJajCP8bZphy1zyleVl8UDLWqzUjDDFWZf7uMA0qtk","","","","","","","","",""],["2024/09/15 14:18:02","naka001@gmail.com","国生　弘子","コクショウ　ヒロコ","参加予定(宿泊なし)","宿泊しない","","国生　悠奈","コクショウ　ユウナ","4年生","","","","","","","","","","","","","","","","","2","k5lfKMj3ybfMF6jocHPln98lLJIBIxKrrpLc4RhPenBIEg6OfgdXYQAVh907SoCg0MEBazhWic2oFaKNFJu9pa4prXWvTzYjRWw5XkmC9a7AdNQ0judVMATii7Xqp6drowisY6+Rul2zwrF2UKY8epoYP8ZkX9RyH6OFyglYQL8=","4","{\"passcode\":65698,\"created\":1729076868102,\"result\":0,\"log\":[{\"timestamp\":1728729400367,\"enterd\":119192,\"status\":1}]}","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnueGXR29gyuz_kc4UMghOrIa_iNPhrkHdrW4zVI8KFW5aB2jsVCtjq79aasCFBWgTvI","","","","","","","","",""],["2024/09/15 18:17:44","takaki.173@icloud.com","新田　隆行","ニッタ　タカユキ","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊しない","","","","","","","","","","","","","","","","","9086493601","","","","2","","5","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufYUAyvDIMpF5sXyi49ICUvIq8eI73TSfNFSCfRzYvwwNX_f2M5991pGhnh7dHSS0Q","","","","","","","","",""],["2024/10/11 8:55:06","kafsnxo@cang.jp","中島　幸典","ナカジマ　ユキノリ","不参加","宿泊する(テントなし)","宿泊予定なので不要","中島　楓理","ナカジマ　フウリ","5年生","","","","","","","","","","","","","9035259368","できる","","","1","","6","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufFgoyc-O5e6v8H81HtPrm5LzbPk2h8e8Oy_kWf4_rlguFpTnJoFpJj_9FBPZcEB7o","","","","","","","","",""],["2024/09/16 15:56:10","o9098431480@gmail.com","樹原 幸司","キハラ コウジ","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊する(テントなし)","宿泊予定なので不要","","","","","","","","","","","","","","","","","","","","2","clhamUnWtGN6XNQUCwOBstn+69s/iTOgIyf0c52sQHrB7oxSt+fokoL5GhYC1tTO45CJaVrf8jRmd3PwS/UNhGVGH0Q8ePxMN342RETiQJvfiVTHB0rewLK0WWHD4zjxIbyfSoh3p1CBuP1cYlDHn3RS5Nv+NYT0QusxlBT/8i0=","7","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufL97OKOOWgne5ttIJyuOkI-i-hvbqB1p-5KP3tMy_1E-FfKl5BRs4W-mvoKZXI4Zo","","","","","","","","",""],["2024/09/16 17:02:23","sii23@yahoo.co.jp","友田　精一","トモダ　セイイチ","参加予定(宿泊あり)","宿泊する(テントなし)","申込者は参加しないが、申込者がお迎えに行く","友田　悠介","トモダ　ユウスケ","5年生","友田　菜月","トモダ　ナツキ","1年生","友田　綾乃","トモダ　アヤノ","保護者","","","","","","","9065080469","できる","","","1","","8","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnudO3FkforwL-KN-e20ZDBFiJdJS5X7mRIC3v1DLx55849cOSOnK0O40lZZkb9dvXMs","","","","","","","","",""],["2024/09/17 12:48:25","mak15@yahoo.ne.jp","奥田　誠","オクダ　マコト","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊しない","","","","","","","","","","","","","","","","","","できる","毎回お化け屋敷の設置と案内を担当をしています。","","2","gvxvWv/FkdlZu2OYYJNomOvmubs6//pL0ptfQP7s0RtXELkaoRpZv2hX1hAYMbxb1NQ9+l47tm4UrBMZV410fX/C+n087U0mH99DfzHIRHbHoxJf73O5HKl5p2DYv1YMIaDXJQdPMTw1mVyq5ovSyA9krKMhybLVFQxZlLdT1Q0=","9","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnueez5HR3gku37_CBxNV0sVK4fc6cP4IzX2sdO4nRS31NKDv-dGucV8-eEnPY2AvMAQ","","","","","","","","",""],["2024/09/17 14:56:11","sny.mae510@gmail.com","名越　裕香","ナゴシ　ユカ","参加予定(宿泊あり)","宿泊する(テントあり)","宿泊予定なので不要","名越　優芽乃","ナゴシ　ユメノ","1年生","名越　亮","ナゴシ　リョウ","保護者","名越　優翔","ナゴシ　ユウト","未就学児","","","","","","","8011376989","","","","1","","10","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnudOb6qOXKHbDi0l5dy9YRsFQVGI7lDmjU39r_485CMkdeAYQuxt4HWmfMpHQD37fUs","","","","","","","","",""]],
+      values: [
+        ["タイムスタンプ","メールアドレス","申込者氏名","申込者カナ","申込者の参加","宿泊、テント","引取者氏名","参加者01氏名","参加者01カナ","参加者01所属","参加者02氏名","参加者02カナ","参加者02所属","参加者03氏名","参加者03カナ","参加者03所属","参加者04氏名","参加者04カナ","参加者04所属","参加者05カナ","参加者05氏名","参加者05所属","緊急連絡先","ボランティア募集","備考","キャンセル","authority","CPkey","userId","trial","editURL","entryTime","receptionist","fee00","fee01","fee02","fee03","fee04","fee05","memo"],
+        ["2024/10/06 19:51:06","nakairo@gmail.com","国生　邦浩","コクショウ　クニヒロ","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊しない","","","","","","","","","","","","","","","","","","","","","2","jZiM1isJ+1AZoVZ9NnWTvCoeghCm+FY05eb6jhz8wpT3DwqJbNnszW8PWDd3sq0N5mjN/Nshh+RGGrdkm7CC+sO32js+wm1YmYGr0FMaFxvMBDrWzyJ7qrPI4unbx2IkrPkXSmSEbw91n/LOu0x7br106XeJ9TXJbJS16rV0nzs=","1","{\"passcode\":920782,\"created\":1728874149915,\"result\":0,\"log\":[{\"timestamp\":1728874165893,\"enterd\":920782,\"status\":1}]}","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnuePpXliGgMlVVUYiSKgwX6SXBNrnwozwTMF09Ml1py7Ocp1N7_w5F7uqf52Ak63zBE","","","","","","","","",""],
+        ["2024/09/15 12:47:04","va15r@yahoo.co.jp","榎田　素直","エノキダ　スナオ","参加予定(宿泊なし)","宿泊しない","宿泊予定なので不要","榎田　若菜","エノキダ　ワカナ","1年生","","","","","","","","","","","","","9013357002","できる","食事以外でも、お手伝い出来る事があれば。","","1","","2","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnudWLvuoT6Wq0Hu-4tqFl5OyTK-Z7EwdMDEQGS1jKJVIa41Dh8nNJPtpFyPu8cyZYGo","","","","","","","","",""],
+        ["2024/09/15 13:51:37","kuke.m4690@gmail.com","吉野　晃祐","ヨシノ　コウスケ","参加予定(宿泊あり)","宿泊する(テントあり)","宿泊予定なので不要","吉野　涼","ヨシノ　リョウ","6年生","","","","","","","","","","","","","","できる","","","1","","3","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufKjD-xj5FN0GnTNIILVeJVwYJajCP8bZphy1zyleVl8UDLWqzUjDDFWZf7uMA0qtk","","","","","","","","",""],
+        ["2024/09/15 14:18:02","naka001@gmail.com","国生　弘子","コクショウ　ヒロコ","参加予定(宿泊なし)","宿泊しない","","国生　悠奈","コクショウ　ユウナ","4年生","","","","","","","","","","","","","","","","","2","k5lfKMj3ybfMF6jocHPln98lLJIBIxKrrpLc4RhPenBIEg6OfgdXYQAVh907SoCg0MEBazhWic2oFaKNFJu9pa4prXWvTzYjRWw5XkmC9a7AdNQ0judVMATii7Xqp6drowisY6+Rul2zwrF2UKY8epoYP8ZkX9RyH6OFyglYQL8=","4","{\"passcode\":65698,\"created\":1729076868102,\"result\":0,\"log\":[{\"timestamp\":1728729400367,\"enterd\":119192,\"status\":1}]}","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnueGXR29gyuz_kc4UMghOrIa_iNPhrkHdrW4zVI8KFW5aB2jsVCtjq79aasCFBWgTvI","","","","","","","","",""],
+        ["2024/09/15 18:17:44","takaki.173@icloud.com","新田　隆行","ニッタ　タカユキ","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊しない","","","","","","","","","","","","","","","","","9086493601","","","","2","","5","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufYUAyvDIMpF5sXyi49ICUvIq8eI73TSfNFSCfRzYvwwNX_f2M5991pGhnh7dHSS0Q","","","","","","","","",""],
+        ["2024/10/11 8:55:06","kafsnxo@cang.jp","中島　幸典","ナカジマ　ユキノリ","不参加","宿泊する(テントなし)","宿泊予定なので不要","中島　楓理","ナカジマ　フウリ","5年生","","","","","","","","","","","","","9035259368","できる","","","1","","6","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufFgoyc-O5e6v8H81HtPrm5LzbPk2h8e8Oy_kWf4_rlguFpTnJoFpJj_9FBPZcEB7o","","","","","","","","",""],
+        ["2024/09/16 15:56:10","o9098431480@gmail.com","樹原 幸司","キハラ コウジ","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊する(テントなし)","宿泊予定なので不要","","","","","","","","","","","","","","","","","","","","2","clhamUnWtGN6XNQUCwOBstn+69s/iTOgIyf0c52sQHrB7oxSt+fokoL5GhYC1tTO45CJaVrf8jRmd3PwS/UNhGVGH0Q8ePxMN342RETiQJvfiVTHB0rewLK0WWHD4zjxIbyfSoh3p1CBuP1cYlDHn3RS5Nv+NYT0QusxlBT/8i0=","7","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufL97OKOOWgne5ttIJyuOkI-i-hvbqB1p-5KP3tMy_1E-FfKl5BRs4W-mvoKZXI4Zo","","","","","","","","",""],
+        ["2024/09/16 17:02:23","sii23@yahoo.co.jp","友田　精一","トモダ　セイイチ","参加予定(宿泊あり)","宿泊する(テントなし)","申込者は参加しないが、申込者がお迎えに行く","友田　悠介","トモダ　ユウスケ","5年生","友田　菜月","トモダ　ナツキ","1年生","友田　綾乃","トモダ　アヤノ","保護者","","","","","","","9065080469","できる","","","1","","8","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnudO3FkforwL-KN-e20ZDBFiJdJS5X7mRIC3v1DLx55849cOSOnK0O40lZZkb9dvXMs","","","","","","","","",""],
+        ["2024/09/17 12:48:25","mak15@yahoo.ne.jp","奥田　誠","オクダ　マコト","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊しない","","","","","","","","","","","","","","","","","","できる","毎回お化け屋敷の設置と案内を担当をしています。","","2","gvxvWv/FkdlZu2OYYJNomOvmubs6//pL0ptfQP7s0RtXELkaoRpZv2hX1hAYMbxb1NQ9+l47tm4UrBMZV410fX/C+n087U0mH99DfzHIRHbHoxJf73O5HKl5p2DYv1YMIaDXJQdPMTw1mVyq5ovSyA9krKMhybLVFQxZlLdT1Q0=","9","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnueez5HR3gku37_CBxNV0sVK4fc6cP4IzX2sdO4nRS31NKDv-dGucV8-eEnPY2AvMAQ","","","","","","","","",""],
+        ["2024/09/17 14:56:11","sny.mae510@gmail.com","名越　裕香","ナゴシ　ユカ","参加予定(宿泊あり)","宿泊する(テントあり)","宿泊予定なので不要","名越　優芽乃","ナゴシ　ユメノ","1年生","名越　亮","ナゴシ　リョウ","保護者","名越　優翔","ナゴシ　ユウト","未就学児","","","","","","","8011376989","","","","1","","10","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnudOb6qOXKHbDi0l5dy9YRsFQVGI7lDmjU39r_485CMkdeAYQuxt4HWmfMpHQD37fUs","","","","","","","","",""]
+      ],
     },
     board: {
       name: '掲示板',
@@ -264,14 +272,14 @@ function SpreadDbTest(){
       name: 'AutoInc',
       cols: [
         {name:'pKey',auto_increment:10,primaryKey:true},
-        {name:'ラベル',type:'string'},
+        {name:'ラベル',type:'string',unique:true},
         {name:'ぬる',auto_increment:null},
         {name:'真',auto_increment:true},
         {name:'偽',auto_increment:false},
         {name:'配列①',auto_increment:[20]},
         {name:'配列②',auto_increment:[30,-1]},
         {name:'obj',auto_increment:{start:40,step:5}},
-        {name:'def関数',default:"o => toLocale(new Date())"},
+        {name:'def関数',default:"o => {return toLocale(new Date())}"},
       ],
       values: [{'ラベル':'fuga'},{'ラベル':'hoge'}],
     }
@@ -281,131 +289,144 @@ function SpreadDbTest(){
     - メモの中の形式
     */
     create: [  // create関係のテスト
-      () => { // 0.基本形
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([  // 複数テーブルの作成
-          {command:'create',arg:src.status},
-          {command:'create',arg:src.camp},
-          {command:'create',arg:src.PL},
-        ],{userId:'Administrator'}));
-      },
-      () => { // 1.管理者以外で作成できないことの確認
-        v.deleteSheet();
-        // 管理者とユーザが異なる
-        v.summary(SpreadDb({command:'create',arg:src.status},{userId:'pikumin'}));
-        // 管理者の指定無し
-        v.summary(SpreadDb({command:'create',arg:src.camp},{userId:'pikumin'}));
-        // ユーザの指定無し
-        v.summary(SpreadDb({command:'create',arg:src.PL}));
-      },
-      () => { // 2.auto_increment, defaultが設定されるかのテスト
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([  // 複数テーブルの作成
-          {command:'create',arg:src.autoIncrement},
-        ],{userId:'Administrator'}));
-
-      },
+      [ // 0.基本形
+        {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+        {command:'create',table:src.PL.name,values:src.PL.values},  // 「損益計算書」シート作成
+        {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
+        {command:'create',table:src.board.name,values:src.board.values},  // 「掲示板」シート作成
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+      ],
     ],
-    select : [  // selectRow関係のテスト
-      () => { // 0.基本形
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([  // テスト用シートを準備
-          {command:'create',arg:src.camp},  // 「camp2024」シート作成
-          {command:'create',arg:src.board},  // 「掲示板」シート作成
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 参照
-          // 日付の比較では"new Date()"を使用。ちなみにgetTime()無しで比較可能
-          {table:'掲示板',command:'select',arg:{where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"}},
-        ],{userId:'Administrator'})); // 管理者でログイン
-      },
-      () => { // 1.ゲストによるアクセス
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([  // テスト用シートを準備
-          {command:'create',arg:src.board},  // 「掲示板」シート作成
-        ],{userId:'Administrator'})); // 管理者でログイン
-
-        v.summary(SpreadDb([  // ゲストに「掲示板」の読込を許可した場合
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
-        ],{
-          // ゲストなので、ユーザID,権限指定は無し
-          guestAuth:{'掲示板':'r'}, // ゲストに掲示板の読込権限付与
-        }));
-
-        v.summary(SpreadDb([  // ゲストに「掲示板」の読込を許可しなかった場合
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}}, // 「掲示板」を参照
-        ],{
-          // ゲストなので、ユーザID,権限指定は無し
-          //guestAuth:{'掲示板':'r'}, // ゲストに掲示板の読込権限付与
-        }));
-      },
-      () => { // 2.ユーザによるアクセス
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([  // テスト用シートを準備
-          {command:'create',arg:src.board},  // 「掲示板」シート作成
-        ],{userId:'Administrator'})); // 管理者でログイン
-
-        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可した場合 ⇒ 該当データ取得
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}},
-        ],{
-          userId: 'pikumin',
-          userAuth:{'掲示板':'r'}, // ユーザに掲示板の読込権限付与
-        }));
-
-        v.summary(SpreadDb([  // ユーザに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}},
-        ],{
-          userId: 'pikumin',
-          userAuth:{'掲示板':'w'}, // ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
-        }));
-
-        v.summary(SpreadDb([  // ユーザの権限を未指定の場合
-          {table:'掲示板',command:'select',arg:{where:"o=>{return o.from=='パパ'}"}},
-        ],{
-          userId: 'pikumin',
-        }));
-
-      },
+    select : [  // 
+      [ // 0.基本形
+        {command:'create',table:src.board.name,values:src.board.values},
+        {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 参照
+        // 日付の比較では"new Date()"を使用。ちなみにgetTime()無しで比較可能
+        {table:'掲示板',command:'select',where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"},
+      ],[ // 1.ゲストに「掲示板」の読込を許可した場合
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与  
+        ],
+      ],[  // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {},  // ゲストなので、ユーザID,権限指定は無し  
+        ],
+      ],[ // 3.ユーザに掲示板の読込権限付与
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {userId: 'pikumin',userAuth:{'掲示板':'r'}}
+        ],
+      ],[ // 4.ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {userId: 'pikumin',userAuth:{'掲示板':'w'}}
+        ],
+      ],[ // 5.ユーザ権限未指定の場合 ⇒ 「権限無し」エラー
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {userId: 'pikumin'}
+        ],
+      ],
+    ],
+    append: [ // appendRow関係のテスト
+      [ // 0.正常系(Administrator)
+        // AutoIncシートでオートインクリメント、既定値設定項目
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+        {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+        {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+        {table:'AutoInc',command:'append',record:{'ラベル':'a01'}}, // ⇒ 重複エラー
+      ],[ // 1.ゲストに権限付与した場合
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        [[
+          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+        ],{guestAuth:{AutoInc:'w'}}]
+      ],[ // 2.ゲストに権限付与しなかった場合
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        [[
+          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+        ],{guestAuth:{AutoInc:'r'}}]
+      ],[ // 3.ユーザに権限付与した場合
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        [[
+          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+        ],{userId:'pikumin',userAuth:{AutoInc:'w'}}]
+      ],[ // 4.ユーザに権限付与しなかった場合
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        [[
+          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+        ],{userId:'pikumin'}]
+      ]
+    ],
+    delete: [ // deleteRow関係のテスト
+      [  // 0.正常系(Administrator)
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},
+        {table:'AutoInc',command:'append',record:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
+        {table:'AutoInc',command:'delete',where:{'配列①':-1}},  // where = Object
+        {table:'AutoInc',command:'delete',where:o=>{return o['配列②'] === -2}},  // where = function
+        {table:'AutoInc',command:'delete',where:11},  // where = any(pKey)
+        {table:'AutoInc',command:'delete',where:'o => {return o["ラベル"].slice(0,1)==="a"'},  // where = string(func)
+      ],
+      [  // 1.「該当無し」⇒ rv.log.length === 0
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},
+        {table:'AutoInc',command:'delete',where:{'ラベル':'fuga'}},
+        {table:'AutoInc',command:'delete',where:{'ラベル':'hoga'}},  // 該当無し
+      ],
     ],
     update: [ // updateRow関係のテスト
-      () => { // 0.正常系(Administrator)
-        // 複数項目の一括更新
-        // 複数テーブルの一括更新
+      [ // 0.正常系(Administrator)
         // 更新対象の①関数による指定、②オブジェクトによる指定、③主キー値による指定
         // 更新値の①関数による指定、②オブジェクトによる指定、③値による指定
         // unique項目のチェック、また同一レコード複数unique項目の場合、全項目がエラーになるかチェック
-        v.deleteSheet(); // 既存シートを全部削除
-        v.summary(SpreadDb([  // 複数テーブルの作成
-          {command:'create',arg:src.camp},
-          {command:'create',arg:src.PL},
-        ],{userId:'Administrator'}));
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,
+          values:[...src.autoIncrement.values,{'ラベル':'a01'},{'ラベル':'a02'},{'ラベル':'a03'},{'ラベル':'a04'},{'ラベル':'a05'}]},  // 「AutoInc」シート作成
+
+        // 関数
+        {command:'update',table:src.autoIncrement.name,where:o=>{return o['ラベル']==='a01'},record:()=>{return {'ラベル':'b01'}}},
+        // オブジェクト
+        {command:'update',table:src.autoIncrement.name,where:{'ラベル':'a02'},record:{'ぬる':'b02'}},
+        {command:'update',table:src.autoIncrement.name,where:{key:'ラベル',value:'a03'},record:{'真':'b03'}},
+        // 文字列(関数)
+        {command:'update',table:src.autoIncrement.name,where:"o=>{return o['ラベル']==='a04'}",record:"()=>{return {'偽':'b04'}}"},
+        // 文字列(非関数。where:主キーの値, record:JSON)
+        {command:'update',table:src.autoIncrement.name,where:16,record:JSON.stringify({'配列①':'b05'})},
+      ],[ // 1.正常系：複数項目・複数テーブルの一括更新
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
+
+        {command:'update',table:src.autoIncrement.name,where:o=>{return o['ラベル']==='fuga'},record:()=>{return {'ぬる':'b01','真':'b02','def関数':'関数っぽい列じゃないよね'}}},
+        [[
+          {command:'update',table:src.autoIncrement.name,where:o=>{return o['ラベル']==='hoge'},record:()=>{return {'ぬる':'c01','真':'c02','def関数':'なぜ日付か？'}}},
+          {command:'update',table:src.camp.name,where:1,record:{'申込者氏名':'島津　斉彬'}},
+        ]]
+      ],[ // 2.「該当無し」⇒ rv.log.length === 0
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        {command:'update',table:src.autoIncrement.name,where:o=>{return o['ラベル']==='hoga'},record:()=>{return {'ぬる':'b01','真':'b02','def関数':'関数っぽい列じゃないよね'}}},
+      ],
+      () => {
+        v.exe([
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
+        ],{userId:'pikumin'});
 
 
-      },
-      () => { // 1.ゲスト
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-      () => { // 2.ユーザ
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-    ],
-    append: [ // appendRow関係のテスト
-      () => { // 0.正常系(Administrator)
-        // AutoIncシートでオートインクリメント
-        // 既定値設定項目、unique項目に重複値
-        // 複数レコードの追加
-      },
-      () => { // 1.ゲスト
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-      () => { // 2.ユーザ
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-    ],
-    delete: [ // deleteRow関係のテスト
-      () => { // 0.正常系(Administrator)
       },
       () => { // 1.ゲスト
         // 権限付与した場合
@@ -417,8 +438,16 @@ function SpreadDbTest(){
       },
     ],
     schema: [ // getSchema関係のテスト
-      () => { // 0.正常系(Administrator)
-        // メモで内容修正後、その修正が反映されているか
+      [ // 0.正常系(Administrator)
+        // メモで内容修正後、その修正が反映されているかチェック
+        {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        {command:'create',table:src.PL.name,values:src.PL.values},  // 「損益計算書」シート作成
+
+        {command:'schema',table:src.PL.name},  // 単一
+        {command:'schema',table:[src.status.name,src.autoIncrement.name]},  // 複数
+      ],
+      () => {
       },
       () => { // 1.ゲスト
         // 権限付与した場合
@@ -429,16 +458,93 @@ function SpreadDbTest(){
         // 権限付与しなかった場合
       },
     ],
-    own: [  // 権限'o'によるアクセス
-      () => {
-        // 自レコードは参照可
-        // 自レコード以外は参照不可
-        // 自レコードは更新可
-        // 自レコード以外は更新不可
-        // 削除は自レコードを含め全て不可
-        // テーブル管理情報取得は全て不可
-      },
+    auth: [  // 付与権限によるアクセス制御
+      [ // 0.正常系(Administrator)
+        {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+        {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
+
+        /*
+        [ // 自分の参加情報を追加
+          {table:'camp2024',command:'append',record:{userId:'test','申込者氏名':'前'}},
+          {userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
+        ],
+        [ // 自分の参加情報を更新。
+          {table:'camp2024',command:'update',where:'test',record:{'申込者氏名':'後'}},
+          {userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
+        ],
+        */
+        [[
+          {table:'camp2024',command:'append',record:{userId:'uso','申込者氏名':'前'}}, // 追加
+          {table:'camp2024',command:'update',where:'test',record:{'申込者氏名':'後'}},  // 変更
+          {table:'camp2024',command:'select'},  // 参照
+          {table:'camp2024',command:'delete'},  // 削除
+          ],{userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
+        ],
+      ],[ // 1.自分以外の参加情報をCRUD
+        [ // 自分以外の参加情報を更新。読み書きがあっても'o'優先 ⇒ where句の指定は無視、自分に対する処理とする
+          {table:'camp2024',command:'update',where:'uso',record:{'申込者氏名':'後'}},
+          {userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
+        ],
+        [ // 自分以外の参加情報を参照 ⇒ where句の指定は無視、自分に対する処理とする
+          {table:'camp2024',command:'select',where:'uso'},
+          {userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
+        ],
+
+      ]
     ]
   };
-  for( v.i=v.do.st ; v.i<(v.do.num===0 ? pattern[v.do.p].length : v.do.st+v.do.num) ; v.i++ ) pattern[v.do.p][v.i]();
+  try {
+    for( v.i=v.do.st ; v.i<(v.do.num===0 ? pattern[v.do.p].length : v.do.st+v.do.num) ; v.i++ ){
+      if( typeof pattern[v.do.p][v.i] === 'function' ){
+        // 旧式対応：テストパターンが関数で指定されていた場合、それを実行
+        pattern[v.do.p][v.i]();
+        continue;
+      }
+  
+      // テストパターンをクエリ＋オプションの配列としてqueryに保存
+      let query = []; // テスト用クエリ。[[q1,o1],[q2,o2]..]形式
+      // 同一アカウント(オプション)で複数のコマンドを実行する場合、qNは配列で指定する
+      let dopt = {userId:'Administrator'};  // オプションの既定値
+      if( Array.isArray(pattern[v.do.p][v.i]) ){
+        pattern[v.do.p][v.i].forEach(a => {
+          if( Array.isArray(a) ){
+            if( a.length === 1 ) a.push(dopt);
+            query.push(a);
+          } else {
+            query.push([a,dopt]);
+          }
+        })
+      } else {
+        query.push([q,(o||dopt)]);
+      }
+      // テストの実行
+      v.deleteSheet(); // 既存シートを全部削除
+      for( v.j=0 ; v.j<query.length ; v.j++ ){
+        v.msg = [`${v.whois} ${v.do.p}.${v.i}.${v.j} end`];
+        v.argStr = JSON.stringify(query[v.j]);
+        let rv = SpreadDb(...query[v.j]); // query毎のsdbLog配列
+        v.msg.push(`===== argument\n${v.argStr}\n\n===== return value type: ${whichType(rv)}`);
+        rv.forEach(o => { // query単位
+          let result = {
+            command: o.query.command,
+            isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
+            message: `${o.message||''}(${whichType(o.message)})`,
+            log: [],
+          };
+          if( !Array.isArray(o.log) ) o.log = [o.log];
+          result.logLen = o.log.length;
+          //o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
+          o.log.forEach(x => result.log.push({arg:x.arg,isErr:x.isErr,message:x.message}));
+          if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
+          let json = JSON.stringify(result,null,2);
+          v.msg = [...v.msg,...json.split('\n')]
+        });
+        console.log(v.msg.join('\n'));
+      }
+    }
+  
+  } catch(e) {
+    e.message = `${v.whois} abnormal end.\n${typeof v.msg==='object'?v.msg[0]:v.msg}`;
+    console.error(`${e.message}\nv=${stringify(v)}`);
+  }
 }

@@ -3,8 +3,9 @@
  * @returns {sdbLog|sdbColumn[]} 変更履歴シートに追記した行オブジェクト、または変更履歴シート各項目の定義
  */
 function genLog(arg=null){
-  const v = {whois:`${pv.whois}.genLog`,step:0,rv:null};
-  console.log(`${v.whois} start.`);
+  const v = {whois:`${pv.whois}.genLog`,step:0,rv:null,
+    idStr: 'arg='+(arg===null?'null':`${arg.table}.${arg.command}`)};
+  console.log(`${v.whois} start. ${v.idStr}`);
   try {
 
     v.step = 1; // 変更履歴シートの項目定義
@@ -15,7 +16,7 @@ function genLog(arg=null){
       {name:'table',type:'string',note:'対象テーブル名'},
       {name:'command',type:'string',note:'操作内容(コマンド名)'},
       {name:'arg',type:'string',note:'操作関数に渡された引数'},
-      {name:'result',type:'boolean',note:'true:追加・更新が成功'},
+      {name:'isErr',type:'boolean',note:'true:追加・更新が失敗'},
       {name:'message',type:'string',note:'エラーメッセージ'},
       {name:'before',type:'JSON',note:'更新前の行データオブジェクト'},
       {name:'after',type:'JSON',note:'更新後の行データオブジェクト'},
@@ -38,7 +39,7 @@ function genLog(arg=null){
         table: null, // {string} 更新対象となった範囲名(テーブル名)
         command: null, // {string} 操作内容。command系内部関数名のいずれか
         arg: null, // {string} 操作関数に渡された引数
-        result: null, // {boolean} true:追加・更新が成功
+        isErr: null, // {boolean} true:追加・更新が失敗
         message: null, // {string} エラーメッセージ
         before: null, // {JSON} 更新前の行データオブジェクト(JSON)
         after: null, // {JSON} 更新後の行データオブジェクト(JSON)。selectの場合はここに格納
@@ -51,7 +52,7 @@ function genLog(arg=null){
     }
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.`);
+    console.log(`${v.whois} normal end. ${v.idStr}`);
     return v.rv;
 
   } catch(e) {

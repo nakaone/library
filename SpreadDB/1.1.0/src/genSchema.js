@@ -62,19 +62,15 @@ function genSchema(arg){
     // -----------------------------------------------
     v.step = 3; // v.rv.schema.cols以外のメンバ作成
     // -----------------------------------------------
-    v.bool = arg => {  // 引数を真偽値として評価。真偽値として評価不能ならnull
-      let rv={"true":true,"false":false}[String(arg).toLowerCase()];
-      return typeof rv === 'boolean' ? rv : null
-    };
     for( v.i=0 ; v.i<v.rv.schema.cols.length ; v.i++ ){
       v.step = 3.1; // primaryKey
-      if( v.bool(v.rv.schema.cols[v.i].primaryKey) === true ){
+      if( Object.hasOwn(v.rv.schema.cols[v.i],'primaryKey') && v.rv.schema.cols[v.i].primaryKey === true ){
         v.rv.schema.primaryKey = v.rv.schema.cols[v.i].name;
         v.rv.schema.unique[v.rv.schema.cols[v.i].name] = [];
       }
 
       v.step = 3.2; // unique
-      if( v.bool(v.rv.schema.cols[v.i].unique) === true ){
+      if( Object.hasOwn(v.rv.schema.cols[v.i],'unique') && v.rv.schema.cols[v.i].unique === true ){
         v.rv.schema.unique[v.rv.schema.cols[v.i].name] = [];
       }
 

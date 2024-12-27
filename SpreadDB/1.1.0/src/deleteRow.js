@@ -16,7 +16,7 @@ function deleteRow(arg){
 
     v.step = 1; // 該当レコードかの判別用関数を作成
     v.whereStr = toString(arg.where); // 更新履歴記録用にwhereを文字列化
-    arg.where = functionalyze(arg.where);
+    arg.where = functionalyze({table:arg.table,data:arg.where});
     if( arg.where instanceof Error ) throw arg.where;
 
     v.step = 2; // 対象レコードか、後ろから一件ずつチェック
@@ -30,7 +30,7 @@ function deleteRow(arg){
         table: arg.table.name,
         command: 'delete',
         arg: v.whereStr,
-        result: true,
+        isErr: false,
         before: arg.table.values[v.i],
         // after, diffは空欄
       });
@@ -52,7 +52,7 @@ function deleteRow(arg){
       arg.table.values.splice(v.i,1);
 
       v.step = 2.5; // シートのセルを削除
-      v.range = arg.table.sheet.deleteRow(v.i+1);
+      v.range = arg.table.sheet.deleteRow(v.i+2); // 添字->行番号で+1、ヘッダ行分で+1
 
       v.step = 2.6; // arg.table.rownumを書き換え
       arg.table.rownum -= 1;

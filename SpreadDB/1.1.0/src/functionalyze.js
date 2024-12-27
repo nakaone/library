@@ -1,5 +1,7 @@
 /** functionalyze: オブジェクト・文字列を基にObject/stringを関数化
- * @param {Object|function|string} arg - 関数化するオブジェクトor文字列
+ * @param {Object} arg
+ * @param {sdbTable} arg.table - 呼出元で処理対象としているテーブル
+ * @param {Object|function|string} arg.data - 関数化するオブジェクトor文字列
  * @returns {function}
  *
  * - update/delete他、引数でwhereを渡されるメソッドで使用
@@ -10,48 +12,59 @@
  *     - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化
  *     - その他 ⇒ 項目定義で"primaryKey"を指定した項目の値   *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
  */
-function functionalyze(arg){
+function functionalyze(arg=null){
   const v = {whois:`${pv.whois}.functionalyze`,step:0,rv:null};
-  console.log(`${v.whois} start.\narg(${whichType(arg)})=${stringify(arg)}`);
+  console.log(`${v.whois} start.`);
   try {
 
-    switch( typeof arg ){
+    v.step = 1; // 引数のチェック
+    if( typeof arg === 'string' ){
+      arg = {data:arg,table:null};
+    } else if( !whichType(arg,'Object') || !Object.hasOwn(arg,'data')){
+      throw new Error(`引数「${toString(arg)}」は適切な引数ではありません`);
+    }
+
+    switch( typeof arg.data ){
       case 'function': v.step = 2.1;  // 関数指定ならそのまま利用
-        v.rv = arg;
+        v.rv = arg.data;
         break;
       case 'object': v.step = 2.2;
-        v.keys = Object.keys(arg);
+        v.keys = Object.keys(arg.data);
         if( v.keys.length === 2 && v.keys.includes('key') && v.keys.includes('value') ){
-          v.step = 2.3; // {key:〜,value:〜}形式での指定の場合
-          v.rv = new Function('o',`return isEqual(o['${arg.key}'],'${arg.value}')`);
+          v.step = 2.21; // {key:〜,value:〜}形式での指定の場合
+          v.rv = new Function('o',`return isEqual(o['${arg.data.key}'],'${arg.data.value}')`);
         } else {
-          v.step = 2.4; // {キー項目名:値}形式での指定の場合
+          v.step = 2.22; // {キー項目名:値}形式での指定の場合
           v.c = [];
           for( v.j=0 ; v.j<v.keys.length ; v.j++ ){
-            v.c.push(`isEqual(o['${v.keys[v.j]}'],'${arg[v.keys[v.j]]}')`);
+            v.c.push(`isEqual(o['${v.keys[v.j]}'],'${arg.data[v.keys[v.j]]}')`);
           }
           v.rv = new Function('o',`return (${v.c.join(' && ')})`);
         }
         break;
       case 'string': v.step = 2.3;
-        v.fx = arg.match(/^function\s*\(([\w\s,]*)\)\s*\{([\s\S]*?)\}$/); // function(){〜}
-        v.ax = arg.match(/^\(?([\w\s,]*?)\)?\s*=>\s*\{?(.+?)\}?$/); // arrow関数
+        v.fx = arg.data.match(/^function\s*\(([\w\s,]*)\)\s*\{([\s\S]*?)\}$/); // function(){〜}
+        v.ax = arg.data.match(/^\(?([\w\s,]*?)\)?\s*=>\s*\{?(.+?)\}?$/); // arrow関数
         if( v.fx || v.ax ){
           v.step = 2.31; // function文字列
           v.a = (v.fx ? v.fx[1] : v.ax[1]).replaceAll(/\s/g,''); // 引数部分
           v.a = v.a.length > 0 ? v.a.split(',') : [];
           v.b = (v.fx ? v.fx[2] : v.ax[2]).replaceAll(/\s+/g,' ').trim(); // 論理部分
           v.rv = new Function(...v.a, v.b);
-        } else {
-          v.step = 2.32; // 関数ではない文字列はprimaryKeyの値指定と看做す
-          v.rv = new Function('o',`return isEqual(o['${this.schema.primaryKey}'],${arg})`);
+          break;
         }
-        break;
-      default: throw new Error(`引数の型が不適切です`);
+      default:
+        v.step = 2.4; // 関数ではない文字列、またはfunction/object/string以外の型はprimaryKeyの値指定と看做す
+        if( arg.table !== null && arg.table.schema.primaryKey ){
+          if( typeof arg.data === 'string') arg.data = `"${arg.data}"`;
+          v.rv = new Function('o',`return isEqual(o['${arg.table.schema.primaryKey}'],${arg.data})`);
+        } else {
+          throw new Error(`引数の型が不適切です`);
+        }
     }
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.`);
+    console.log(`${v.whois} normal end.\nrv=${toString(v.rv)}`);
     return v.rv;
 
   } catch(e) {

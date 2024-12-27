@@ -33,7 +33,7 @@ function convertRow(data,header=[]){
 
     } else { v.step = 2; // 行オブジェクト -> シートイメージ
 
-      v.rv.obj = data;        
+      v.rv.obj = data;
       if( header.length === 0 ){ // 引数headerが無ければメンバ名からrv.headerを生成
         v.rv.header = [...new Set(data.flatMap(d => Object.keys(d)))];
       }
@@ -50,7 +50,7 @@ function convertRow(data,header=[]){
     }
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.\nv.rv=${JSON.stringify(v.rv)}`);
+    console.log(`${v.whois} normal end.`);
     return v.rv;
 
   } catch(e) {

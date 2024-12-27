@@ -52,7 +52,7 @@ function genTable(arg){
     v.rv.schema = v.r.schema;
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.`);
+    console.log(`${v.whois} normal end. table=${arg.name}`);
     return v.rv;
 
   } catch(e) {

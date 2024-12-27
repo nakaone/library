@@ -14,6 +14,7 @@
  */
 function genColumn(arg={}){
   const v = {whois:`${pv.whois}.genColumn`,step:0,rv:{},
+    idStr: 'arg=' + (typeof arg === 'string' ? arg : arg.name),
     typedef:[ // sdbColumnの属性毎にname,type,noteを定義
       {name:'name',type:'string',note:'項目名'},
       {name:'type',type:'string',note:'データ型。string,number,boolean,Date,JSON,UUID'},
@@ -33,7 +34,7 @@ function genColumn(arg={}){
     ],
     rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現
   };
-  console.log(`${v.whois} start.\narg(${whichType(arg)})=${JSON.stringify(arg)}`);
+  console.log(`${v.whois} start. ${v.idStr}`);
   try {
 
     // ------------------------------------------------
@@ -55,7 +56,7 @@ function genColumn(arg={}){
         if( v.m ) v.rv.column[v.m[1]] = v.m[2];
       });
 
-      v.step = 1.4; 
+      v.step = 1.4;
       if( Object.keys(v.rv.column).length === 0 ){
         // 属性項目が無ければ項目名と看做す
         v.rv.column = {name:arg.trim()};
@@ -70,17 +71,26 @@ function genColumn(arg={}){
     v.step = 2; // rv.column各メンバの値をチェック・整形
     // ------------------------------------------------
     v.step = 2.1; // 'null'はnullに変換
+    v.map = {'null':null,'true':true,'false':false};
     Object.keys(v.rv.column).forEach(x => {
-      if( v.rv.column[x] === 'null' ){
-        v.rv.column[x]=null;
-      } else if( whichType(v.rv.note,'Object') ){
+
+      v.step = 2.11; // 文字列で指定された'null','true','false'は値にする
+      if( Object.hasOwn(v.map,v.rv.column[x]) ){
+        v.rv.column[x] = v.map[v.rv.column[x]];
+      }
+
+      v.step = 2.12; // メモ文字列を作成する場合(=引数がメモ文字列では無かった場合)
+      // かつ属性値が未定義(null)ではない場合、v.rv.columnにもメモ作成用の属性値をセット
+      if( whichType(v.rv.note,'Object') && v.rv.column[x] !== null ){
         v.rv.note[x] = v.rv.column[x];
       }
     });
 
     v.step = 2.2; // defaultを関数に変換
     if( v.rv.column.default ){
-      v.rv.column.default = functionalyze(v.rv.column.default);
+      v.r = functionalyze(v.rv.column.default);
+      if( v.r instanceof Error ) throw v.r;
+      v.rv.column.default = v.r;
     }
     if( v.rv.column.default instanceof Error ) throw v.rv.column.default;
 
@@ -116,7 +126,7 @@ function genColumn(arg={}){
     }
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.`);
+    console.log(`${v.whois} normal end. ${v.idStr}`);
     return v.rv;
 
   } catch(e) {
