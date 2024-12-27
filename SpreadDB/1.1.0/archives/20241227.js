@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'schema',st:0,num:1},//num=0なら全部
+  const v = {do:{p:'auth',st:0,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -154,7 +154,7 @@ function SpreadDbTest(){
     camp: { // "camp2024"シート(cols+values)
       name: 'camp2024',
       cols: [
-        {name:'entryNo',type:'number',primaryKey:true},
+        {name:'userId',type:'number',primaryKey:true},
         {name:'タイムスタンプ',type:'string'},
         {name:'メールアドレス',type:'string'},
         {name:'申込者氏名',type:'string'},
@@ -196,7 +196,7 @@ function SpreadDbTest(){
         {name:'memo',type:'string'},
       ],
       values: [
-        ["タイムスタンプ","メールアドレス","申込者氏名","申込者カナ","申込者の参加","宿泊、テント","引取者氏名","参加者01氏名","参加者01カナ","参加者01所属","参加者02氏名","参加者02カナ","参加者02所属","参加者03氏名","参加者03カナ","参加者03所属","参加者04氏名","参加者04カナ","参加者04所属","参加者05カナ","参加者05氏名","参加者05所属","緊急連絡先","ボランティア募集","備考","キャンセル","authority","CPkey","entryNo","trial","editURL","entryTime","receptionist","fee00","fee01","fee02","fee03","fee04","fee05","memo"],
+        ["タイムスタンプ","メールアドレス","申込者氏名","申込者カナ","申込者の参加","宿泊、テント","引取者氏名","参加者01氏名","参加者01カナ","参加者01所属","参加者02氏名","参加者02カナ","参加者02所属","参加者03氏名","参加者03カナ","参加者03所属","参加者04氏名","参加者04カナ","参加者04所属","参加者05カナ","参加者05氏名","参加者05所属","緊急連絡先","ボランティア募集","備考","キャンセル","authority","CPkey","userId","trial","editURL","entryTime","receptionist","fee00","fee01","fee02","fee03","fee04","fee05","memo"],
         ["2024/10/06 19:51:06","nakairo@gmail.com","国生　邦浩","コクショウ　クニヒロ","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊しない","","","","","","","","","","","","","","","","","","","","","2","jZiM1isJ+1AZoVZ9NnWTvCoeghCm+FY05eb6jhz8wpT3DwqJbNnszW8PWDd3sq0N5mjN/Nshh+RGGrdkm7CC+sO32js+wm1YmYGr0FMaFxvMBDrWzyJ7qrPI4unbx2IkrPkXSmSEbw91n/LOu0x7br106XeJ9TXJbJS16rV0nzs=","1","{\"passcode\":920782,\"created\":1728874149915,\"result\":0,\"log\":[{\"timestamp\":1728874165893,\"enterd\":920782,\"status\":1}]}","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnuePpXliGgMlVVUYiSKgwX6SXBNrnwozwTMF09Ml1py7Ocp1N7_w5F7uqf52Ak63zBE","","","","","","","","",""],
         ["2024/09/15 12:47:04","va15r@yahoo.co.jp","榎田　素直","エノキダ　スナオ","参加予定(宿泊なし)","宿泊しない","宿泊予定なので不要","榎田　若菜","エノキダ　ワカナ","1年生","","","","","","","","","","","","","9013357002","できる","食事以外でも、お手伝い出来る事があれば。","","1","","2","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnudWLvuoT6Wq0Hu-4tqFl5OyTK-Z7EwdMDEQGS1jKJVIa41Dh8nNJPtpFyPu8cyZYGo","","","","","","","","",""],
         ["2024/09/15 13:51:37","kuke.m4690@gmail.com","吉野　晃祐","ヨシノ　コウスケ","参加予定(宿泊あり)","宿泊する(テントあり)","宿泊予定なので不要","吉野　涼","ヨシノ　リョウ","6年生","","","","","","","","","","","","","","できる","","","1","","3","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnufKjD-xj5FN0GnTNIILVeJVwYJajCP8bZphy1zyleVl8UDLWqzUjDDFWZf7uMA0qtk","","","","","","","","",""],
@@ -459,22 +459,23 @@ function SpreadDbTest(){
       },
     ],
     auth: [  // 付与権限によるアクセス制御
-      () => { // 0.管理者以外でcreateTable ⇒「シート「xxx」に対して'create'する権限がありません」
-        v.exe([ // 非管理者で実行
-          {command:'create',table:src.status.name,cols:src.status.cols},
-        ],{userId:'pikumin'});
-        v.exe([ // 管理者ID指定無し
-          {command:'create',table:src.status.name,cols:src.status.cols},
-        ],{});
-      },
-      () => {
-        // 自レコードは参照可
-        // 自レコード以外は参照不可
-        // 自レコードは更新可
-        // 自レコード以外は更新不可
-        // 削除は自レコードを含め全て不可
-        // テーブル管理情報取得は全て不可
-      },
+      [ // 0.正常系(Administrator)
+        {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+        {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
+        // 参加情報の追加は管理者側で行うので、appendのテストは省略
+        [ // 自分の参加情報を更新。
+          {table:'camp2024',command:'update',where:1,record:{'申込者氏名':'テスト'}},
+          {userId:1,userAuth:{camp2024:'o'}} // rwdosで指定
+        ],
+        [ // 自分以外の参加情報を更新。読み書きがあっても'o'優先 ⇒ where句の指定は無視、自分に対する処理とする
+          {table:'camp2024',command:'update',where:1,record:{'申込者氏名':'テスト'}},
+          {userId:2,userAuth:{camp2024:'o'}} // rwdosで指定
+        ],
+        [ // 自分以外の参加情報を参照 ⇒ where句の指定は無視、自分に対する処理とする
+          {table:'camp2024',command:'select'},
+          {userId:2,userAuth:{camp2024:'o'}} // rwdosで指定
+        ],
+      ],
     ]
   };
   try {
@@ -629,7 +630,7 @@ function SpreadDb(query=[],opt={}){
             // o(=own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
             // また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
             //read/writeは自分のみ可、delete/schemaは実行不可
-            query[v.i].arg.where = pv.opt.userId;  // 自レコードのみ対象に限定
+            query[v.i].where = pv.opt.userId;  // 自レコードのみ対象に限定
             switch( query[v.i].command ){
               case 'select': v.isOK = true; v.func = selectRow; break;
               case 'update': v.isOK = true; v.func = updateRow; break;
@@ -1619,7 +1620,6 @@ function SpreadDb(query=[],opt={}){
   function selectRow(arg){
     const v = {whois:`${pv.whois}.selectRow`,step:0,rv:[]};
     console.log(`${v.whois} start.`);
-    console.log(toString(arg));
     try {
 
       v.step = 1; // 判定条件を関数に統一
