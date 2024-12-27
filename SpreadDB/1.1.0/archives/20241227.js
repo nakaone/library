@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'update',st:2,num:1},//num=0なら全部
+  const v = {do:{p:'schema',st:0,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -438,8 +438,16 @@ function SpreadDbTest(){
       },
     ],
     schema: [ // getSchema関係のテスト
-      () => { // 0.正常系(Administrator)
-        // メモで内容修正後、その修正が反映されているか
+      [ // 0.正常系(Administrator)
+        // メモで内容修正後、その修正が反映されているかチェック
+        {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+        {command:'create',table:src.PL.name,values:src.PL.values},  // 「損益計算書」シート作成
+
+        {command:'schema',table:src.PL.name},  // 単一
+        {command:'schema',table:[src.status.name,src.autoIncrement.name]},  // 複数
+      ],
+      () => {
       },
       () => { // 1.ゲスト
         // 権限付与した場合
@@ -646,7 +654,7 @@ function SpreadDb(query=[],opt={}){
           if( v.isOK ){
 
             v.step = 3.3; // 処理実行
-            if( query[v.i].command !== 'create' ){
+            if( query[v.i].command !== 'create' && query[v.i].command !== 'schema' ){
               // create以外の場合、操作対象のテーブル管理情報をcommand系メソッドの引数に追加
               if( !pv.table[query[v.i].table] ){  // 以前のcommandでテーブル管理情報が作られていない場合は作成
                 pv.table[query[v.i].table] = genTable({name:query[v.i].table});
@@ -680,7 +688,7 @@ function SpreadDb(query=[],opt={}){
                 v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
                   table: query[v.i].table.name,
                   command: query[v.i].command,
-                  arg: query[v.i].command === 'select' ? toString(query[v.i].where) : '',
+                  arg: toString(query[v.i].command === 'select' ? query[v.i].where : query[v.i].table),
                   isErr: false,
                   message: query[v.i].command === 'select' ? `rownum=${v.sdbLog.length}` : '',
                   // messageは空欄
@@ -1570,11 +1578,24 @@ function SpreadDb(query=[],opt={}){
    */
   function getSchema(arg){
     const v = {whois:`${pv.whois}.getSchema`,step:0,rv:[]};
-    console.log(`${v.whois} start. table=${arg}`);
+    console.log(`${v.whois} start.\narg(${whichType(arg)})=${JSON.stringify(arg)}`);
     try {
 
-      if( typeof arg === 'string' ) arg = [arg];
-      arg.forEach(x => v.rv.push(pv.table[x].schema));
+      v.step = 1.1; // 引数のデータ型チェック
+      if( !whichType(arg,'Object') || !Object.hasOwn(arg,'table') ){
+        throw new Error('引数にtableが含まれていません');
+      }
+      v.step = 1.2; // 対象テーブル名の配列化
+      v.arg = typeof arg.table === 'string' ? [arg.table]: arg.table;
+
+      v.step = 2; // 戻り値の作成
+      for( v.i=0 ; v.i<v.arg.length ; v.i++ ){
+        if( !pv.table[v.arg[v.i]] ){  // 以前のcommandでテーブル管理情報が作られていない場合は作成
+          pv.table[v.arg[v.i]] = genTable({name:v.arg[v.i]});
+          if( pv.table[v.arg[v.i]] instanceof Error ) throw pv.table[v.arg[v.i]];
+        }
+        v.rv.push(pv.table[v.arg[v.i]]);
+      }
 
       v.step = 9; // 終了処理
       v.rv = v.log;
