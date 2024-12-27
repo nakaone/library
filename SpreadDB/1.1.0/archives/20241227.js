@@ -462,20 +462,25 @@ function SpreadDbTest(){
       [ // 0.正常系(Administrator)
         {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
         {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
-        // 参加情報の追加は管理者側で行うので、appendのテストは省略
-        [ // 自分の参加情報を更新。
-          {table:'camp2024',command:'update',where:1,record:{'申込者氏名':'テスト'}},
-          {userId:1,userAuth:{camp2024:'o'}} // rwdosで指定
+
+        [[
+          {table:'camp2024',command:'append',record:{userId:'uso','申込者氏名':'前'}}, // 追加
+          {table:'camp2024',command:'update',where:'test',record:{'申込者氏名':'後'}},  // 変更
+          {table:'camp2024',command:'select'},  // 参照
+          {table:'camp2024',command:'delete'},  // 削除
+          ],{userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
         ],
+      ],[ // 1.自分以外の参加情報をCRUD
         [ // 自分以外の参加情報を更新。読み書きがあっても'o'優先 ⇒ where句の指定は無視、自分に対する処理とする
-          {table:'camp2024',command:'update',where:1,record:{'申込者氏名':'テスト'}},
-          {userId:2,userAuth:{camp2024:'o'}} // rwdosで指定
+          {table:'camp2024',command:'update',where:'uso',record:{'申込者氏名':'後'}},
+          {userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
         ],
         [ // 自分以外の参加情報を参照 ⇒ where句の指定は無視、自分に対する処理とする
-          {table:'camp2024',command:'select'},
-          {userId:2,userAuth:{camp2024:'o'}} // rwdosで指定
+          {table:'camp2024',command:'select',where:'uso'},
+          {userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
         ],
-      ],
+
+      ]
     ]
   };
   try {
@@ -626,20 +631,42 @@ function SpreadDb(query=[],opt={}){
           v.step = 3.2; // 処理内容を元に、必要とされる権限が与えられているか確認
           if( v.allow.includes('o') ){
 
-            v.step = 3.21;
             // o(=own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
-            // また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
-            //read/writeは自分のみ可、delete/schemaは実行不可
-            query[v.i].where = pv.opt.userId;  // 自レコードのみ対象に限定
+            // また対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
+            //read/write/append/deleteは自分のみ可、schemaは実行不可
+
+            v.step = 3.21;  // 操作対象レコードの絞り込み(検索・追加条件の変更)
+            if( query[v.i].command !== 'append' ){
+              v.step = 3.211; // select/update/deleteなら対象を自レコードに限定
+              query[v.i].where = pv.opt.userId;
+            } else {
+              v.step = 3.212; // appendの場合
+              v.pKey = pv.table[query[v.i].table].schema.primaryKey;
+              if( !v.pKey ){
+                v.step = 3.2121; // 追加先テーブルにprimaryKeyが不在ならエラー
+                Object.assign(v.queryResult,{
+                  isErr: true,
+                  message: `primaryKey未設定のテーブルには追加できません`
+                });
+              } else {
+                v.step = 2.2122; // 追加レコードの主キーはuserIdに変更
+                if( !Array.isArray(query[v.i].record) ) query[v.i].record = [query[v.i].record];
+                query[v.i].record.forEach(x => x[v.pKey] = pv.opt.userId);
+              }
+            }
+
+            v.step = 3.213; // 'o'の場合の呼出先メソッドを設定
             switch( query[v.i].command ){
               case 'select': v.isOK = true; v.func = selectRow; break;
               case 'update': v.isOK = true; v.func = updateRow; break;
+              case 'append': case 'insert': v.isOK = true; v.func = appendRow; break;
+              case 'delete': v.isOK = true; v.func = deleteRow; break;
               default: v.isOK = false;
             }
 
           } else {
 
-            v.step = 3.22;
+            v.step = 3.22;  // 'o'以外の場合の呼出先メソッドを設定
             switch( query[v.i].command ){
               case 'create': v.isOK = v.allow.includes('c'); v.func = createTable; break;
               case 'select': v.isOK = v.allow.includes('r'); v.func = selectRow; break;
@@ -1169,6 +1196,7 @@ function SpreadDb(query=[],opt={}){
         default:
           v.step = 2.4; // 関数ではない文字列、またはfunction/object/string以外の型はprimaryKeyの値指定と看做す
           if( arg.table !== null && arg.table.schema.primaryKey ){
+            if( typeof arg.data === 'string') arg.data = `"${arg.data}"`;
             v.rv = new Function('o',`return isEqual(o['${arg.table.schema.primaryKey}'],${arg.data})`);
           } else {
             throw new Error(`引数の型が不適切です`);
@@ -1176,7 +1204,7 @@ function SpreadDb(query=[],opt={}){
       }
 
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.`);
+      console.log(`${v.whois} normal end.\nrv=${toString(v.rv)}`);
       return v.rv;
 
     } catch(e) {
