@@ -1,0 +1,173 @@
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
+<title>crond</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<!--link rel="stylesheet" href="style.css"-->
+<style type="text/css">/*::CSS::*/</style>
+<!--::CDN::-->
+<!--script src="" type="text/javascript"></script-->
+</head>
+<body>
+<h1>crond test</h1>
+<ul>
+  <li>テスト内容・結果は開発者コンソール参照</li>
+  <li>コンソールで`crond.clear()`を行うと取消可能</li>
+</ul>
+</body>
+<script type="text/javascript">
+function toLocale(arg,format='yyyy-MM-ddThh:mm:ss.nnnZ'){
+  const v = {rv:format};
+  try {
+
+    let dObj = whichType(arg,'Date') ? arg : new Date(arg);
+    //dObj = String(Object.prototype.toString.call(arg).slice(8,-1)) !== 'Date' ? arg : new Date(arg);
+
+    v.step = 1; // 無効な日付なら空文字列を返して終了
+    if( isNaN(dObj.getTime()) ) return '';
+
+    v.local = { // 地方時ベース
+      y: dObj.getFullYear(),
+      M: dObj.getMonth()+1,
+      d: dObj.getDate(),
+      h: dObj.getHours(),
+      m: dObj.getMinutes(),
+      s: dObj.getSeconds(),
+      n: dObj.getMilliseconds(),
+      Z: Math.abs(dObj.getTimezoneOffset())
+    }
+    // タイムゾーン文字列の作成
+    v.local.Z = v.local.Z === 0 ? 'Z'
+    : ((dObj.getTimezoneOffset() < 0 ? '+' : '-')
+    + ('0' + Math.floor(v.local.Z / 60)).slice(-2)
+    + ':' + ('0' + (v.local.Z % 60)).slice(-2));
+
+    v.step = 2; // 日付文字列作成
+    for( v.x in v.local ){
+      v.m = v.rv.match(new RegExp(v.x+'+'));
+      if( v.m ){
+        v.str = v.m[0].length > 1
+          ? ('000'+v.local[v.x]).slice(-v.m[0].length)
+          : String(v.local[v.x]);
+        v.rv = v.rv.replace(v.m[0],v.str);
+      }
+    }
+
+    v.step = 3; // 終了処理
+    return v.rv;
+
+  } catch(e){
+    console.error(e,v);
+    return e;
+  }
+}
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
+  }
+}
+
+/** crond: 定期的に実行するジョブを管理する
+ * sessionが切れたらジョブを停止、管理情報も消去する
+ * 
+ * - crond.set({name:ジョブ名,func:ジョブ(関数),interval:実行間隔})
+ * - crond.clear(取消ジョブ名 or null(全件取消))
+ */
+const crond = {
+
+  /** set: 定期実行ジョブを設定
+   * @param {Object} arg
+   * @param {string} arg.name - ジョブを特定する名称
+   * @param {function} arg.func - ジョブ本体
+   * @param {number} arg.interval - 実行間隔。ミリ秒
+   * @returns {void}
+   */
+  set: (arg) => {
+    const v = {whois:'crond.set',step:0,rv:null};
+    console.log(`${v.whois} start.\narg=${JSON.stringify(arg,null,2)}`);
+    try {
+
+      v.step = 1; // 初期設定
+      if( !this.cron ){
+        this.cron = {}; // {ジョブ名:ジョブ番号}形式のオブジェクト
+        // ページ遷移時には登録された定期実行ジョブを全て抹消
+        window.addEventListener("beforeunload", (event) => {
+          // Cancel the event as stated by the standard.
+          event.preventDefault();
+          // Chrome requires returnValue to be set.
+          event.returnValue = "";
+          crond.clear();
+        });
+      }
+
+      v.step = 2; // 定期実行ジョブの登録
+      this.cron[arg.name] = setInterval(arg.func,arg.interval);
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+      return e;
+    }
+  },
+
+  /** clear: 設定済定期実行ジョブの取消
+   * @param {string} arg=null - 
+   * @param {string} arg.name - ジョブを特定する名称
+   * @param {function} arg.func - ジョブ本体
+   * @param {number} arg.interval - 実行間隔。ミリ秒
+   * @returns {void}
+   */
+   clear: (arg=null) => {
+    const v = {whois:'crond.clear',step:0,rv:null};
+    console.log(`${v.whois} start.\narg=${arg}`);
+    try {
+
+      v.step = 1; // 取消対象ジョブのリストアップ
+      v.arg = arg === null ? Object.keys(this.cron) : [arg];
+
+      v.step = 2; // 登録取消の実行
+      v.arg.forEach(x => {
+        clearInterval(this.cron[x]);
+        delete this.cron[x];
+      })
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+      return e;
+    }
+  },
+};
+
+window.addEventListener('DOMContentLoaded',() => {
+  const v = {whois:'DOMContentLoaded',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    crond.set({name:'sec05',func:()=>{console.log(`05:${toLocale(new Date())}`);},interval: 5000});
+    crond.set({name:'sec07',func:()=>{console.log(`07:${toLocale(new Date())}`);},interval: 7000});
+
+    v.step = 99; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    alert(e.message);
+  }
+});
+</script>
+</html>

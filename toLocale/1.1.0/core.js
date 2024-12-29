@@ -22,7 +22,6 @@
  * "12:34"[hh:mm] ⇒ ""
  * ```
  */
-
 function toLocale(arg,format='yyyy-MM-ddThh:mm:ss.nnnZ'){
   const v = {rv:format};
   try {
