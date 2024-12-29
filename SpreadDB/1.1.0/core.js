@@ -1291,4 +1291,3 @@ function SpreadDb(query=[],opt={}){
     }
   }
 }
-
