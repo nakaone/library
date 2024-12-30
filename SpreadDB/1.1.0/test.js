@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'auth',st:0,num:1},//num=0なら全部
+  const v = {do:{p:'create',st:1,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -295,7 +295,10 @@ function SpreadDbTest(){
         {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
         {command:'create',table:src.board.name,values:src.board.values},  // 「掲示板」シート作成
         {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-      ],
+      ],[ // 1.既存と同名のシート作成時のメッセージを「既に存在しています」に修正
+        {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+        {command:'create',table:src.status.name,cols:src.status.cols},
+      ]
     ],
     select : [  //
       [ // 0.基本形
@@ -1061,6 +1064,8 @@ function SpreadDb(query=[],opt={}){
           v.r = appendRow({table:v.table,record:v.convertRow.obj});
           if( v.r instanceof Error ) throw v.r;
         }
+      } else {
+        v.log.message = `"${v.table.name}" is already exist.`;
       }
 
       v.step = 9; // 終了処理
