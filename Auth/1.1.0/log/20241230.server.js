@@ -306,6 +306,8 @@ function authServer(arg,opt={}){
         {name:'phone',type:'string',note:'ユーザの電話番号'},
         {name:'address',type:'',note:'ユーザの住所'},
         {name:'note',type:'string',note:'その他ユーザ情報(備考)'},
+        {name:'validityStart',type:'string',note:'有効期間開始日時'},
+        {name:'validityEnd',type:'string',note:'有効期間終了日時'},
         {name:'CPkey',type:'string',note:'クライアント側公開鍵'},
         {name:'CPkeyExpiry',type:'string',note:'CPkey有効期限'},
         {name:'authority',type:'JSON',note:'シート毎のアクセス権限。{シート名:rwdos文字列} 形式'},
