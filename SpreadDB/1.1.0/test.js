@@ -1,8 +1,3 @@
-/*
-  SpreadDbテスト用ソース
-    GASの専用シートを用意、本ソースをコピペしてSpreadDbTest()を実行する
-*/
-
 function SpreadDbTest(){
   /* 引数の形式
   - query {Object[]} 操作要求の内容
@@ -2204,7 +2199,6 @@ function stringify(variable,opt={addType:false}){
  * "12:34"[hh:mm] ⇒ ""
  * ```
  */
-
 function toLocale(arg,format='yyyy-MM-ddThh:mm:ss.nnnZ'){
   const v = {rv:format};
   try {
@@ -2337,4 +2331,3 @@ function whichType(arg,is){
     return rv;
   }
 }
-
