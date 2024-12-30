@@ -38,19 +38,21 @@ test="$prj/test"
 tmp="$prj/tmp"; mkdir -p $tmp
 
 # ----------------------------------------------
-# 1. core.jsの作成
+# 0.3 関連ライブラリの最新化
 # ----------------------------------------------
-log "1";
-cat $src/template.js | awk 1 | \
-$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $tmp/core.js
-sed -e 's/[ \t]+$//g' $tmp/core.js > $prj/core.js
+$lib/SpreadDb/1.1.0/build.sh
 
 # ----------------------------------------------
-# 2. test.jsの作成
+# 1. authServer.jsの作成
 # ----------------------------------------------
-log "2";
-cat $src/test.template.js | awk 1 | \
-$embed -prj:$prj -src:$src -lib:$lib -test:$test -tmp:$tmp > $tmp/test.js
-sed -e 's/[ \t]+$//g' $tmp/test.js > $prj/test.js
+log "1.0";
+cat $src/server.js | awk 1 | \
+$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $tmp/server.js
+sed -e 's/[ \t]+$//g' $tmp/server.js > $prj/authServer.js
+
+log "1.1";
+cat $test/server.template.js | awk 1 | \
+$embed -prj:$prj -src:$src -lib:$lib -test:$test -tmp:$tmp > $tmp/server.js
+sed -e 's/[ \t]+$//g' $tmp/server.js > $test/authServer.js
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"
