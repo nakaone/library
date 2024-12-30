@@ -309,12 +309,14 @@ function authServer(arg,opt={}){
         {name:'phone',type:'string',note:'ユーザの電話番号'},
         {name:'address',type:'',note:'ユーザの住所'},
         {name:'note',type:'string',note:'その他ユーザ情報(備考)'},
+        {name:'validityStart',type:'string',note:'有効期間開始日時'},
+        {name:'validityEnd',type:'string',note:'有効期間終了日時'},
         {name:'CPkey',type:'string',note:'クライアント側公開鍵'},
         {name:'CPkeyExpiry',type:'string',note:'CPkey有効期限'},
         {name:'authority',type:'JSON',note:'シート毎のアクセス権限。{シート名:rwdos文字列} 形式'},
         {name:'trial',type:'JSON',note:'ログイン試行関連情報'},
-        {name:'created',type:'string',note:'ユーザ登録日時'},
-        {name:'updated',type:'string',note:'最終更新日時'},
+        {name:'created',type:'string',note:'ユーザ登録日時',default:'()=>{return toLocale(new Date())'},
+        {name:'updated',type:'string',note:'最終更新日時',default:'()=>{return toLocale(new Date())'},
         {name:'deleted',type:'string',note:'論理削除日時'},
       ]},{userId:'Administrator'});
 
