@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'create',st:1,num:1},//num=0なら全部
+  const v = {do:{p:'schema',st:0,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -449,17 +449,7 @@ function SpreadDbTest(){
 
         {command:'schema',table:src.PL.name},  // 単一
         {command:'schema',table:[src.status.name,src.autoIncrement.name]},  // 複数
-      ],
-      () => {
-      },
-      () => { // 1.ゲスト
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-      () => { // 2.ユーザ
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
+      ]
     ],
     auth: [  // 付与権限によるアクセス制御
       [ // 0.正常系(Administrator)
@@ -534,11 +524,15 @@ function SpreadDbTest(){
             message: `${o.message||''}(${whichType(o.message)})`,
             log: [],
           };
+          if( Object.hasOwn(o,'rows') && o.rows ) result.rows = o.rows;
+          if( Object.hasOwn(o,'schema') && o.schema ) result.schema = o.schema;
           if( !Array.isArray(o.log) ) o.log = [o.log];
           result.logLen = o.log.length;
-          //o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
-          o.log.forEach(x => result.log.push({arg:x.arg,isErr:x.isErr,message:x.message}));
-          if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
+          o.log.forEach(x => result.log.push({
+            arg:x.arg,
+            isErr:x.isErr,
+            message:x.message
+          }));
           let json = JSON.stringify(result,null,2);
           v.msg = [...v.msg,...json.split('\n')]
         });
@@ -622,7 +616,7 @@ function SpreadDb(query=[],opt={}){
         for( v.i=0 ; v.i<query.length ; v.i++ ){
 
           v.step = 3.11; // 戻り値、ログの既定値を設定
-          v.queryResult = {query:query[v.i],isErr:false,message:'',data:null,log:null};
+          v.queryResult = {query:query[v.i],isErr:false,message:'',rows:null,shcema:null,log:null};
 
           v.step = 3.12; // 操作対象のテーブル管理情報が無ければ作成
           if( !Object.hasOwn(pv.table,query[v.i].table) ){
@@ -724,8 +718,8 @@ function SpreadDb(query=[],opt={}){
 
               v.step = 3.32; // command系メソッドが正常終了した場合の処理
               if( query[v.i].command === 'select' || query[v.i].command === 'schema' ){
-                v.step = 3.321; // select, schemaは結果をdataにセット
-                v.queryResult.data = v.sdbLog;
+                v.step = 3.321; // select, schemaは結果をrow/schemaにセット
+                v.queryResult[query[v.i].command === 'select' ? 'rows' : 'schema'] = v.sdbLog;
                 v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
                   table: query[v.i].table.name,
                   command: query[v.i].command,
@@ -1641,7 +1635,6 @@ function SpreadDb(query=[],opt={}){
       }
 
       v.step = 9; // 終了処理
-      v.rv = v.log;
       console.log(`${v.whois} normal end.`);
       return v.rv;
 
