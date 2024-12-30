@@ -24,7 +24,6 @@ function getSchema(arg){
     }
 
     v.step = 9; // 終了処理
-    v.rv = v.log;
     console.log(`${v.whois} normal end.`);
     return v.rv;
 

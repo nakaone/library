@@ -14,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'auth',st:0,num:1},//num=0なら全部
+  const v = {do:{p:'select',st:0,num:1},//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -295,9 +295,12 @@ function SpreadDbTest(){
         {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
         {command:'create',table:src.board.name,values:src.board.values},  // 「掲示板」シート作成
         {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-      ],
+      ],[ // 1.既存と同名のシート作成時のメッセージを「既に存在しています」に修正
+        {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+        {command:'create',table:src.status.name,cols:src.status.cols},
+      ]
     ],
-    select : [  // 
+    select : [  //
       [ // 0.基本形
         {command:'create',table:src.board.name,values:src.board.values},
         {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 参照
@@ -307,13 +310,13 @@ function SpreadDbTest(){
         {command:'create',table:src.board.name,values:src.board.values},
         [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与  
+          {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与
         ],
       ],[  // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
         {command:'create',table:src.board.name,values:src.board.values},
         [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {},  // ゲストなので、ユーザID,権限指定は無し  
+          {},  // ゲストなので、ユーザID,権限指定は無し
         ],
       ],[ // 3.ユーザに掲示板の読込権限付与
         {command:'create',table:src.board.name,values:src.board.values},
@@ -446,17 +449,7 @@ function SpreadDbTest(){
 
         {command:'schema',table:src.PL.name},  // 単一
         {command:'schema',table:[src.status.name,src.autoIncrement.name]},  // 複数
-      ],
-      () => {
-      },
-      () => { // 1.ゲスト
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-      () => { // 2.ユーザ
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
+      ]
     ],
     auth: [  // 付与権限によるアクセス制御
       [ // 0.正常系(Administrator)
@@ -500,7 +493,7 @@ function SpreadDbTest(){
         pattern[v.do.p][v.i]();
         continue;
       }
-  
+
       // テストパターンをクエリ＋オプションの配列としてqueryに保存
       let query = []; // テスト用クエリ。[[q1,o1],[q2,o2]..]形式
       // 同一アカウント(オプション)で複数のコマンドを実行する場合、qNは配列で指定する
@@ -531,18 +524,22 @@ function SpreadDbTest(){
             message: `${o.message||''}(${whichType(o.message)})`,
             log: [],
           };
+          if( Object.hasOwn(o,'rows') && o.rows ) result.rows = o.rows;
+          if( Object.hasOwn(o,'schema') && o.schema ) result.schema = o.schema;
           if( !Array.isArray(o.log) ) o.log = [o.log];
           result.logLen = o.log.length;
-          //o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
-          o.log.forEach(x => result.log.push({arg:x.arg,isErr:x.isErr,message:x.message}));
-          if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
+          o.log.forEach(x => result.log.push({
+            arg:x.arg,
+            isErr:x.isErr,
+            message:x.message
+          }));
           let json = JSON.stringify(result,null,2);
           v.msg = [...v.msg,...json.split('\n')]
         });
         console.log(v.msg.join('\n'));
       }
     }
-  
+
   } catch(e) {
     e.message = `${v.whois} abnormal end.\n${typeof v.msg==='object'?v.msg[0]:v.msg}`;
     console.error(`${e.message}\nv=${stringify(v)}`);

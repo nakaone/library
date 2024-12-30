@@ -50,7 +50,7 @@ try {
       for( v.i=0 ; v.i<query.length ; v.i++ ){
 
         v.step = 3.11; // 戻り値、ログの既定値を設定
-        v.queryResult = {query:query[v.i],isErr:false,message:'',data:null,log:null};
+        v.queryResult = {query:query[v.i],isErr:false,message:'',rows:null,shcema:null,log:null};
 
         v.step = 3.12; // 操作対象のテーブル管理情報が無ければ作成
         if( !Object.hasOwn(pv.table,query[v.i].table) ){
@@ -152,8 +152,8 @@ try {
 
             v.step = 3.32; // command系メソッドが正常終了した場合の処理
             if( query[v.i].command === 'select' || query[v.i].command === 'schema' ){
-              v.step = 3.321; // select, schemaは結果をdataにセット
-              v.queryResult.data = v.sdbLog;
+              v.step = 3.321; // select, schemaは結果をrow/schemaにセット
+              v.queryResult[query[v.i].command === 'select' ? 'rows' : 'schema'] = v.sdbLog;
               v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
                 table: query[v.i].table.name,
                 command: query[v.i].command,

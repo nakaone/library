@@ -41,7 +41,7 @@ function createTable(arg){
     v.step = 2; // テーブル管理情報の作成
     // ----------------------------------------------
     if( arg.cols ){
-      
+
       v.step = 2.1; // 項目定義情報が存在する場合
       v.table.header = arg.cols.map(x => x.name);
       v.table.colnum = v.table.header.length;
@@ -49,7 +49,7 @@ function createTable(arg){
     } else { // 項目定義情報が存在しない場合
 
       if( arg.values ){
-        
+
         v.step = 2.2; // 項目定義不在で初期データのみ存在
         v.convertRow = convertRow(arg.values);
         if( v.convertRow instanceof Error ) throw v.convertRow;
@@ -57,7 +57,7 @@ function createTable(arg){
         v.table.colnum = v.table.header.length;
 
       } else {
-        
+
         v.step = 2.3; // シートも項目定義も初期データも無い
         throw new Error(`シートも項目定義も初期データも存在しません`);
 
@@ -97,8 +97,10 @@ function createTable(arg){
           if( v.convertRow instanceof Error ) throw v.convertRow;
         }
         v.r = appendRow({table:v.table,record:v.convertRow.obj});
-        if( v.r instanceof Error ) throw v.r;  
+        if( v.r instanceof Error ) throw v.r;
       }
+    } else {
+      v.log.message = `"${v.table.name}" is already exist.`;
     }
 
     v.step = 9; // 終了処理
