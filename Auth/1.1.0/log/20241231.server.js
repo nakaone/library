@@ -208,53 +208,144 @@ function authServer(arg,opt={}){
   console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
   try {
 
-    v.step = 1; // 事前準備
+    v.step = 0; // 事前準備
     v.rv = setup();
 
-    pv.user = null;
-    if( pv.arg.CPkey === null ){  // 引数にCPkeyが存在しない
-      if( pv.arg.userId === null && pv.arg.email === null ){  // 引数にuserId,emailとも存在しない
-        v.step = 2.1; // ユーザ情報=ゲスト
-        pv.user = Object.assign({},pv.opt.guest);
-      } else {  // 引数にuserIdかemailのどちらかまたは両方が存在
-        if( pv.arg.userId === null ){ // userIdが存在しない
-          v.step = 2.2; // ユーザ情報=emailをキーにユーザ管理シートを参照
-          v.where = {email:pv.arg.email};
-        } else {  // userIdが存在する
-          v.step = 2.3; // ユーザ情報=userIdをキーにユーザ管理シートを参照
-          v.where = pv.arg.userId;
-        }
-        v.step = 2.4; // ユーザ管理シートの検索
-        v.r = SpreadDb({table:pv.opt.accountTableName,command:'select',where:v.where});
-        if( v.r instanceof Error ) throw v.r;
-        v.step = 2.5; // 見つからなかった場合、No Accountエラー
-        if( v.r.rows.length === 0 ){
-          v.rv = {status:'Err:No Account'};          
+    v.step = '01'; // 引数にqueryが存在するかチェック
+    if( pv.arg.query === null ){
+      v.step = '01n'; // queryが存在しない場合、No Queryエラー
+      v.rv = {status:'Err:No Query'};
+    } else {
+      v.step = '02'; // 引数にtokenが存在するかチェック
+      if( pv.arg.token === null ){
+        v.step = '03'; // 引数にCPkeyとemailが存在するかチェック
+        if( pv.arg.CPkey === null || pv.arg.email === null ){
+          v.step = '03n'; // ユーザ情報=ゲスト
+          pv.user = Object.assign({},pv.opt.guest);
         } else {
-          pv.user = v.r[0];
+          v.step = '03y'; // ユーザ管理情報を生成、シートに追加
+          pv.user = Object.assign({},pv.opt.newcomer,{email:pv.arg.email,CPkey:pv.arg.CPkey});
+          v.r = SpreadDb({table:pv.opt.accountTableName,command:'append',record:pv.user});
+          if( v.r instanceof Error ) throw v.r;
+        }
+      } else {
+        v.step = '04'; // 引数にuserIdかemailが存在するかチェック
+        if( pv.arg.userId === null && pv.arg.email === null ){
+          v.step = '04n'; // 両方存在しない場合、No UserIdエラー
+          v.rv = {status:'Err:No UserId'};
+        } else {
+          v.step = '04y'; // どちらか存在する場合、存在する方をキーにユーザ管理情報取得
+          v.r = SpreadDb({
+            table: pv.opt.accountTableName,
+            command: 'select',
+            where: pv.arg.userId === null ? {email:pv.arg.email} : pv.arg.userId,
+          });
+          if( v.r instanceof Error ) throw v.r;
+          v.step = '05';  // ユーザ管理情報の取得に成功したかチェック
+          if( v.r.rows.length === 0 ){
+            v.step = '05n'; // 見つからなかった場合、No Accountエラー
+            v.rv = {status:'Err:No Account'};
+          } else {
+            pv.user = v.r[0];
+            v.step = '06';  // アカウントの有効期限内かチェック
+            v.now = Date.now();
+            v.st = pv.user.validityStart ? new Date(pv.user.validityStart).getTime() : -Infinity;
+            v.ed = pv.user.validityEnd ? new Date(pv.user.validityEnd).getTime() : Infinity;
+            if( v.now < v.st || v.ed < v.now ){
+              v.step = '06n'; // ユーザ情報=ゲスト
+              pv.user = Object.assign({},pv.opt.guest);
+            } else {
+              v.step = '07'; // tokenが復号可能かチェック
+              v.dec = cryptico.decrypt(pv.arg.token,pv.SSkey);
+              if( v.dec.status === 'failure' ){
+                v.step = '07n'; // 復号失敗の場合、Invalid SPkeyエラー
+                v.rv = {status:'retry:Invalid SPkey'};
+              } else {
+                v.step = '08';  // トークンの有効期間内かチェック
+                if( (v.now - new Date(Number(v.dec.plaintext)).getTime()) > pv.opt.tokenExpiry ){
+                  v.step = '08n';
+                  v.rv = {status:'retry:Token Expired'};
+                } else {
+                  v.step = '09';  // 署名有効：署名が登録済CPkeyと一致かつCPkeyが有効期限内かチェック
+                  if( v.dec.signature !== pv.user.CPkey || new Date(pv.user.CPkeyExpiry).getTime() < v.now ){
+                    v.step = '10';  // trial情報が存在するかのチェック
+                    if( !Object.hasOwn(pv.user,'trial') || !pv.user.trial ){
+                      v.step = '10n'; // trial情報不在の場合、生成してパスコード通知メール発行
+                    } else {
+                      v.step = '11'; // 凍結期間中かチェック
+                      if( v.now < new Date(pv.user.trial.unfreezing).getTime() ){
+                        v.step = '11y'; // 凍結期間中の場合、Freezingエラー
+                        v.rv = {status:'Err:Freezing'};
+                      } else {
+                        v.step = '12';  // パスコード通知メール送信後の経過時間が10分以内かチェック
+                        if( (v.now - new Date(pv.user.trial.dateTime).getTime()) > pv.opt.graceTime ){
+                          v.step = '12y'; // 10分超の場合、Passcode Expiredエラー
+                          v.rv = {status:'Err:Passcode Expired'};
+                        } else {
+                          v.step = '13';  // 引数にpasscodeが入っているかチェック
+                          if( pv.arg.passcode === null ){
+                            v.step = '13n'; // 入っていない場合、Tryingエラー
+                            v.rv = {status:'retry:Trying'};
+                          } else {
+                            v.step = '14';  // パスコードが一致するかチェック
+                            if( pv.arg.passcode === pv.user.trial.passcode ){
+                              v.step = '14y'; // パスコードが一致の場合、trial情報をクリアしてCPkey有効期限設定
+                            } else {
+                              v.step = '15';  // パスコード連続不一致回数のチェック
+                              if( (pv.user.trial.log.length + 1) == pv.opt.maxTrial ){
+                                v.step = '15y'; // 3回連続不一致の場合、凍結解除日時設定
+                                pv.user.trial.thawing = toLocale(new Date(v.now + pv.opt.freezing));
+                                pv.user.trial.log.push({
+                                  dt:toLocale(new Date(v.now)),
+                                  pc:pv.arg.passcode,
+                                  cd:'Freeze',
+                                });
+                                v.r = SpreadDb({
+                                  table:pv.opt.accountTableName,
+                                  command:'update',
+                                  where:pv.user.userId,
+                                  record:{trial:pv.user.trial},
+                                });
+                                if( v.r instanceof Error ) throw v.r;
+                                v.rv = {status:'Err:Freeze'};
+                              } else {
+                                v.step = '15n'; // 連続不一致が3回未満の場合、trialを書き換えてRetryエラー
+                                pv.user.trial.log.push({
+                                  dt:toLocale(new Date(v.now)),
+                                  pc:pv.arg.passcode,
+                                  cd:'Retry',
+                                });
+                                v.r = SpreadDb({
+                                  table:pv.opt.accountTableName,
+                                  command:'update',
+                                  where:pv.user.userId,
+                                  record:{trial:pv.user.trial},
+                                });
+                                if( v.r instanceof Error ) throw v.r;
+                                v.rv = {status:'retry:Retry'};
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
-    } else {  // 引数にCPkeyが存在
-      if( pv.arg.email === null ){  // 引数にemailが存在しない
-        v.step = 2.4; // No Mailエラー
-        v.rv = {status:'Err:No Mail'};
-      } else {  // 引数にemailが存在する
-        v.step = 2.5; // ユーザ情報=新規生成、シートに追加
-        pv.user = Object.assign({},pv.opt.newcomer,{email:pv.arg.email,CPkey:pv.arg.CPkey});
-        v.r = SpreadDb({table:pv.opt.accountTableName,command:'append',record:pv.user});
-        if( v.r instanceof Error ) throw v.r;
-      }
     }
 
-    // いまここ
-    // ユーザ情報が存在し、新規作成でもゲストでも無い場合、有効期間他の一連のチェックを行う
-    if( pv.user !== null && pv.user.userId !== pv.opt.guest.userId ){
 
-    }
+
 
     // 戻り値未設定(=Errでもretryでもない)場合、SpreadDbの処理結果を戻り値とする
     if( v.rv === null ){
       // pv.userでSpreadDb実行
+    } else if( v.rv.status.match(/^retry/) ){
+      // SPkeyとemailを追加
     }
 
     v.step = 9; // 終了処理
