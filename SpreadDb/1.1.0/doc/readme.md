@@ -1,10 +1,6 @@
-# SpreadDb rev.1.1.0
+# <a name="d488ebac-6d7f-49c8-ae6b-04cb35508546">SpreadDb</a> rev.1.1.0
 
-- [typedefs](#4b6d1866-70ca-43a0-88ef-b64656d0a153)
-  - [sdbTable](#4633fb93-038b-44db-b927-a0f5815265de)
-  - [sdbSchema](#e83945a7-e3e0-440f-b293-6de0c27aa556)
-  - [sdbColumn](#e23eb4c4-ab0d-4776-8038-775f6b018fc6)
-  - [sdbLog](#c8640a48-efb0-4999-8b78-e10dd39f16fc)
+<!--modifyMD:TOC-->
 
 ## <a name="726e2e5a-6be6-df18-acfa-3f73f91ef7f1">概要</a>
 

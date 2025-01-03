@@ -17,7 +17,6 @@ find $GitHub -name '.DS_Store' -type f -ls -delete
 # 0.13 build関係ツール
 embed="node $lib/embedRecursively/1.2.0/pipe.js"
 esed="node $lib/esed/1.0.0/core.js"
-modify="node $lib/modifyMD/2.0.0"
 querySelector="node $lib/querySelector/2.0.1/pipe.js"
 
 # 0.14 共通変数・関数の定義
@@ -30,36 +29,26 @@ function log(){  # 1.4 ログメッセージ出力関数
 # ----------------------------------------------
 # 0.2 事前準備(プロジェクト固有部分)
 # ----------------------------------------------
-prjName="SpreadDB"
-prj="$lib/$prjName/1.1.0"
-test="$prj/test"
+prjName="modifyMD"
+prj="$lib/$prjName/2.0.0"
 src="$prj/src"
-test="$prj/test"
-doc="$prj/doc"
 tmp="$prj/tmp"; mkdir -p $tmp
 
 # ----------------------------------------------
 # 1. core.jsの作成
 # ----------------------------------------------
 log "1";
-cat $src/template.js | awk 1 | \
-$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $tmp/core.js
-sed -e 's/[ \t]+$//g' $tmp/core.js > $prj/core.js
+cp $src/core.js $prj/core.js
+#cat $src/template.js | awk 1 | \
+#$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $tmp/core.js
+#sed -e 's/[ \t]+$//g' $tmp/core.js > $prj/core.js
 
 # ----------------------------------------------
-# 2. test.jsの作成
+# 2. pipe.jsの作成
 # ----------------------------------------------
 log "2";
-cat $src/test.template.js | awk 1 | \
-$embed -prj:$prj -src:$src -lib:$lib -test:$test -tmp:$tmp > $tmp/test.js
-sed -e 's/[ \t]+$//g' $tmp/test.js > $prj/test.js
-
-# ----------------------------------------------
-# 3. readme.mdの作成
-# ----------------------------------------------
-log "3";
-cat $doc/readme.md | awk 1 | \
-$embed -prj:$prj -src:$src -lib:$lib -test:$test -tmp:$tmp -doc:$doc > $tmp/readme.md
-cat $tmp/readme.md | $modify/pipe.js > $prj/readme.md
+cat $src/pipe.js | awk 1 | \
+$embed -prj:$prj -src:$src -lib:$lib -test:$test -tmp:$tmp > $tmp/pipe.js
+sed -e 's/[ \t]+$//g' $tmp/pipe.js > $prj/pipe.js
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"
