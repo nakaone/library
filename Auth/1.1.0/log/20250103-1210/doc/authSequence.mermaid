@@ -1,0 +1,33 @@
+sequenceDiagram
+  autonumber
+  participant html
+  participant ap as application
+  participant db as alaSQL
+  participant cl as authClient
+  participant sv as authServer
+  participant sp as SpreadDb
+  participant sh as Google Spread
+
+  html ->> html : 起動時、userId確認
+  html ->> ap : イベント
+  alt 参照のみ・更新無
+    ap ->> db : 参照(select)
+    ap ->> html : イベント処理結果
+  end
+  ap ->> cl : 更新要求(update,append,delete)
+  cl ->> sv : 更新要求
+  sv ->> sp : ユーザ情報要求
+  sp ->> sh : ユーザ情報参照
+  sp ->> sv : ユーザ情報
+  sv ->> sv : ユーザ状態確認
+  sv ->> cl : パスコード要求
+  cl ->> html : ダイアログ
+  cl ->> sv : パスコード
+  sv ->> sv : 権限確認
+  sv ->> sp : ユーザ権限＋更新要求
+  sp ->> sh : 更新
+  sp ->> sv : 更新結果
+  sv ->> cl : 更新結果
+  cl ->> db : 更新
+  cl ->> ap : 更新結果
+  ap ->> html : イベント処理結果

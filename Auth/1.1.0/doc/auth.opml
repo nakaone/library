@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<opml version="2.0">
+  <head>
+    <ownerEmail>
+      ena.kaon@gmail.com
+    </ownerEmail>
+  </head>
+  <body>
+    <outline text="Auth 1.1.0">
+      <outline text="typedefs">
+        <outline text="UserStatus {Object} 「ユーザ管理」シートの行オブジェクト">
+          <outline text="userId {string|number} ユーザ識別子(primaryKey)" _note="default:UUID, primaryKey" />
+          <outline text="email {string} ユーザのメールアドレス(unique)" _note="unique&#10;" />
+          <outline text="name {string} ユーザの氏名" />
+          <outline text="phone {string} ユーザの電話番号" />
+          <outline text="address {string} ユーザの住所" />
+          <outline text="note {string} その他ユーザ情報(備考)" />
+          <outline text="validityStart {string} 有効期間開始日時(ISO8601文字列)" />
+          <outline text="validityEnd {string} 有効期間終了日時(ISO8601文字列)" />
+          <outline text="CPkey {string} クライアント側公開鍵" />
+          <outline text="CPkeyExpiry {string} CPkey有効期限" _note="期限内に適切な暗号化・署名された要求はOKとする&#10;" />
+          <outline text="authority {JSON} シート毎のアクセス権限。&lt;code&gt;{シート名:rwdos文字列}&lt;/code&gt; 形式" />
+          <outline text="trial {JSON} ログイン試行関連情報" _note="default:''。ログイン成功時にクリア&#10;">
+            <outline text="passcode {number} 設定されたパスコード" />
+            <outline text="datetime {string} パスコード通知メール送信日時" _note="パスコード要求(client)&amp;gt;要求受領(server)&amp;gt;パスコード生成&amp;gt;通知メール送信の内、メール送信日時&#10;" />
+            <outline text="log {Object[]} 試行履歴情報">
+              <outline text="dt {string} パスコード検証日時" />
+              <outline text="pc {number} ユーザが入力したパスコード" />
+              <outline text="cd {number} エラーコード" />
+            </outline>
+            <outline text="thawing {string} 凍結解除日時。通常undefined、凍結時にメンバ追加" />
+          </outline>
+          <outline text="created {string} ユーザ登録日時" />
+          <outline text="updated {string} 最終更新日時" />
+          <outline text="deleted {string} 論理削除日時" />
+          <outline text="4 Backlinks">
+            <outline text="newcomer {&lt;a href=&quot;https://workflowy.com/#/fa0f16361253&quot;&gt;UserStatus&lt;/a&gt;}={} 新規ユーザの権限設定" />
+            <outline text="guest {&lt;a href=&quot;https://workflowy.com/#/fa0f16361253&quot;&gt;UserStatus&lt;/a&gt;}={userId:'guest'} ゲストの権限設定" />
+            <outline text="user {&lt;a href=&quot;https://workflowy.com/#/fa0f16361253&quot;&gt;UserStatus&lt;/a&gt;} 要求しているユーザの管理情報" />
+            <outline text="accountTableName {string}='ユーザ管理' 「&lt;a href=&quot;https://workflowy.com/#/fa0f16361253&quot;&gt;ユーザ管理&lt;/a&gt;」シートの名前" />
+          </outline>
+        </outline>
+      </outline>
+      <outline text="authClient" _note="classとするとグローバルに呼び出すのが困難になるため、メンバをsessionStorageに保存するクロージャとする。">
+        <outline text="概要" />
+        <outline text="保存する変数">
+          <outline text="localStorage">
+            <outline text="userId {string|number}=null ユーザ識別子。nullはゲスト" />
+          </outline>
+          <outline text="sessionStorage">
+            <outline text="CSkey {string} クライアント側秘密鍵" />
+            <outline text="CPkey {string} クライアント側公開鍵" />
+            <outline text="SPkey {string} サーバ側公開鍵" />
+          </outline>
+        </outline>
+        <outline text="引数">
+          <outline text="arg {Object}">
+            <outline text="userId {string|number}=null ユーザ識別子。nullはゲスト" />
+            <outline text="query {Object}">
+              <outline text="table {string} 操作対象テーブル名" _note="全commandで使用。command='schema'の場合、取得対象テーブル名またはその配列&#10;" />
+              <outline text="command {string} 操作名" _note="全commandで使用。update/delete/append" />
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/cde13ea2b6d2&quot;&gt;where&lt;/a&gt; {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用" />
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/18ae7059355f&quot;&gt;record&lt;/a&gt; {Object|Function} 追加・更新する値" _note="command='update','append'で使用" />
+            </outline>
+          </outline>
+        </outline>
+        <outline text="戻り値 {null|Error}" />
+        <outline text="dialog() : email/パスコード入力ダイアログの表示・入力">
+          <outline text="概要" />
+          <outline text="引数" />
+          <outline text="戻り値" />
+        </outline>
+        <outline text="request() : authServerに要求を送信" />
+        <outline text="createTable() : authServerからの&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;テーブルの管理情報&lt;/a&gt;を基にローカルDBのテーブルを作成" />
+        <outline text="syncDb() : authServerの更新結果をローカル側DBに反映">
+          <outline text="引数">
+            <outline text="arg {Object}">
+              <outline text="table {string} 操作対象テーブル名" />
+              <outline text="command {string} 操作名" />
+            </outline>
+          </outline>
+        </outline>
+      </outline>
+      <outline text="authServer">
+        <outline text="概要" />
+        <outline text="保存する変数">
+          <outline text="DocumentProperties" _note="プロパティ名はopt.DocPropNameで指定&#10;">
+            <outline text="SPkey {string} サーバ側公開鍵" />
+            <outline text="SSkey {string} サーバ側秘密鍵" _note="復元は`RSAKey.parse(v.r.sKey)`で行う" />
+          </outline>
+        </outline>
+        <outline text="擬似メンバ&quot;pv&quot;">
+          <outline text="&lt;a href=&quot;https://workflowy.com/#/13ce21699fba&quot;&gt;arg&lt;/a&gt; {Object} 引数argの内容" />
+          <outline text="&lt;a href=&quot;https://workflowy.com/#/ab046206f9d4&quot;&gt;opt&lt;/a&gt; {Object} 引数optの内容" />
+          <outline text="SSkey {Object} サーバ側秘密鍵" />
+          <outline text="SPkey {string} サーバ側公開鍵" />
+          <outline text="user {&lt;a href=&quot;https://workflowy.com/#/fa0f16361253&quot;&gt;UserStatus&lt;/a&gt;} 要求しているユーザの管理情報" />
+        </outline>
+        <outline text="引数">
+          <outline text="arg {Object}">
+            <outline text="[userId] {string|number} ユーザ識別子" />
+            <outline text="[email] {string} ユーザのメールアドレス" _note="userId, email両方指定されていない場合、ゲストと看做す&#10;" />
+            <outline text="[token] {string} 発信時刻(UNIX時刻)を暗号化・署名した文字列" _note="発信後tokenExpiryを超えたものは無効&#10;" />
+            <outline text="[CPkey] {string} ユーザの公開鍵" />
+            <outline text="query {Object|Object[]}">
+              <outline text="table {string} 操作対象テーブル名" _note="全commandで使用。command='schema'の場合、取得対象テーブル名またはその配列&#10;" />
+              <outline text="command {string} 操作名" _note="全commandで使用。update/delete/append" />
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/cde13ea2b6d2&quot;&gt;where&lt;/a&gt; {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用" />
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/18ae7059355f&quot;&gt;record&lt;/a&gt; {Object|Function} 追加・更新する値" _note="command='update','append'で使用" />
+            </outline>
+            <outline text="[passcode] {number} 入力されたパスコード" />
+            <outline text="1 Backlink">
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/13ce21699fba&quot;&gt;arg&lt;/a&gt; {Object} 引数argの内容" />
+            </outline>
+          </outline>
+          <outline text="opt {Object} ※pv.optとして参照可">
+            <outline text="DocPropKey {string}='authServer' DocumentPropertiesのプロパティ名" />
+            <outline text="accountTableName {string}='ユーザ管理' 「&lt;a href=&quot;https://workflowy.com/#/fa0f16361253&quot;&gt;ユーザ管理&lt;/a&gt;」シートの名前" />
+            <outline text="tokenExpiry {number}=10分 トークンの有効期間" />
+            <outline text="validityPeriod {number}=1日 ログイン有効期間" _note="有効期間を超えた場合は再ログインを必要とする" />
+            <outline text="graceTime {number}=10分 メール送信〜パスコード確認処理終了までの猶予時間(ミリ秒)" _note="&#10;" />
+            <outline text="passcodeValidityPeriod {number}=600000(10分) パスコードの有効期間。ミリ秒" _note="メール送信〜受領〜パスコード入力〜送信〜確認処理終了までの時間。通信に係る時間も含む。不正防止のため、始点/終点ともサーバ側で時刻を設定する。" />
+            <outline text="maxTrial {number}=3 パスコード入力の最大試行回数" />
+            <outline text="passcodeDigit {number}=6  パスコードの桁数" />
+            <outline text="freezing {number}=3600000 連続失敗した場合の凍結期間。ミリ秒。既定値1時間" />
+            <outline text="bits {number}=1024 鍵長" />
+            <outline text="guest {&lt;a href=&quot;https://workflowy.com/#/fa0f16361253&quot;&gt;UserStatus&lt;/a&gt;}={userId:'guest'} ゲストの権限設定" />
+            <outline text="newcomer {&lt;a href=&quot;https://workflowy.com/#/fa0f16361253&quot;&gt;UserStatus&lt;/a&gt;}={} 新規ユーザの権限設定" />
+            <outline text="1 Backlink">
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/ab046206f9d4&quot;&gt;opt&lt;/a&gt; {Object} 引数optの内容" />
+            </outline>
+          </outline>
+        </outline>
+        <outline text="戻り値">
+          <outline text="status {string} 処理結果。No Mail, Invalid SPkey, Send PC, Retry, etc." />
+          <outline text="[response] {&lt;a href=&quot;https://workflowy.com/#/f3f5e1e469cf&quot;&gt;Object&lt;/a&gt;[]} 要求に対する処理結果(=SpreadDb戻り値)" _note="Errまたはretryの場合、undefined" />
+          <outline text="[userId] {string|number} 引数にuserIdが無く、status=retryの時にシートから引用" />
+          <outline text="[SPkey] {string} サーバ側公開鍵。status=retryの時に設定" />
+        </outline>
+        <outline text="registUser() : ユーザ管理情報を生成、シートに追加" />
+        <outline text="" />
+        <outline text="account() : 「ユーザ管理」シートの読込・書込" />
+        <outline text="encrypt() : トークンの作成" />
+        <outline text="decrypt() : トークンの解読、書名検証" />
+      </outline>
+    </outline>
+  </body>
+</opml>
