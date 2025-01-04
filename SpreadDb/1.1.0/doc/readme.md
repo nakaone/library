@@ -20,10 +20,6 @@
 
 ## <a name="252d1755-0fdc-aa53-bbda-f5dcf05deaef">内部関数 - 非command系</a>
 
-### <a name="09870987-01ad-48b3-810c-f2d292f2fb5b">constructor</a>() : メンバの初期値設定、更新履歴の準備
-
-メンバの初期値設定および「更新履歴」シートの準備を行う
-
 #### <a name="1f04d940-6884-819a-956c-921763e531ea">引数</a>
 
 <!--::$doc/method.constructor.arg.md::-->

@@ -6,7 +6,6 @@
   - [引数](#52628041-f45a-f621-6883-3088a580542b)
   - [戻り値](#f2453d3b-59c3-5008-8f6b-b0e45ef23594)
   - [内部関数 - 非command系](#252d1755-0fdc-aa53-bbda-f5dcf05deaef)
-    - [constructor](#09870987-01ad-48b3-810c-f2d292f2fb5b)() : メンバの初期値設定、更新履歴の準備
       - [引数](#1f04d940-6884-819a-956c-921763e531ea)
       - [戻り値](#0e2570f7-932c-f77e-5a74-4e6f3284e349)
     - [genTable](#5549d99d-f8fd-a54a-0617-f96160ce4d28)() : sdbTableオブジェクトを生成
@@ -34,19 +33,30 @@
 1. スプレッドシートを凍結
 1. queryで渡された操作要求を順次処理
 1. 権限確認後、command系内部関数の呼び出し
+1. 結果を実行結果オブジェクトに保存
+1. 実行結果オブジェクトの配列を変更履歴シートに追記
 1. スプレッドシートの凍結解除
+
+![](doc/flowchart.main.webp)
 
 ## <a name="1afe004e-f22b-569f-1bc6-d2930948e979">メンバ</a>
 
 - whois {string} 'SpreadDb'固定
 - opt {Object} 起動時オプション。pv.opt.xxx として保存
-  - userId {string}='guest' ユーザの識別子<br>指定する場合、必ずuserAuthも併せて指定
-  - userAuth {Object.<string,string>}={} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式<br>r:select(read), w:write, d:delete, s:schema, o:own only(指定シートのprimaryKeyがuserIdと一致するレコードのみ参照・変更可。削除不可)。追加はwがあれば可<br>o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。<br>また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可<br>read/writeは自分のみ可、delete/schemaは実行不可
-  - log {string}='log' 更新履歴テーブル名<br>nullの場合、ログ出力は行わない。領域名 > A1記法 > シート名の順に解釈
+  - userId {string}='guest' ユーザの識別子
+    > 指定する場合、必ずuserAuthも併せて指定
+  - userAuth {Object.<string,string>}={} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式
+    > r:select(read), w:write, d:delete, s:schema, o:own only(指定シートのprimaryKeyがuserIdと一致するレコードのみ参照・変更可。削除不可)。追加はwがあれば可<br>
+    > o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。<br>
+    > また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可<br>
+    > read/writeは自分のみ可、delete/schemaは実行不可
+  - log {string}='log' 更新履歴テーブル名
+    > nullの場合、ログ出力は行わない。領域名 > A1記法 > シート名の順に解釈
   - maxTrial {number}=5 テーブル更新時、ロックされていた場合の最大試行回数
   - interval {number}=10000 テーブル更新時、ロックされていた場合の試行間隔(ミリ秒)
   - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
-  - adminId {string}='Administrator' 管理者として扱うuserId<br>管理者は全てのシートの全権限を持つ
+  - adminId {string}='Administrator' 管理者として扱うuserId
+    > 管理者は全てのシートの全権限を持つ
 - spread {Spread} スプレッドシートオブジェクト
 - table {Object.<string,[sdbTable](#4633fb93-038b-44db-b927-a0f5815265de)>} スプレッドシート上の各テーブル(領域)の情報
   - name {string} テーブル名(範囲名)
@@ -137,13 +147,20 @@
     - Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数
       【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
 - opt {Object}={} オプション
-  - userId {string}='guest' ユーザの識別子<br>指定する場合、必ずuserAuthも併せて指定
-  - userAuth {Object.<string,string>}={} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式<br>r:select(read), w:write, d:delete, s:schema, o:own only(指定シートのprimaryKeyがuserIdと一致するレコードのみ参照・変更可。削除不可)。追加はwがあれば可<br>o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。<br>また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可<br>read/writeは自分のみ可、delete/schemaは実行不可
-  - log {string}='log' 更新履歴テーブル名<br>nullの場合、ログ出力は行わない。領域名 > A1記法 > シート名の順に解釈
+  - userId {string}='guest' ユーザの識別子
+    > 指定する場合、必ずuserAuthも併せて指定
+  - userAuth {Object.<string,string>}={} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式
+    > r:select(read), w:write, d:delete, s:schema, o:own only(指定シートのprimaryKeyがuserIdと一致するレコードのみ参照・変更可。削除不可)。追加はwがあれば可<br>
+    > o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。<br>
+    > また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可<br>
+    > read/writeは自分のみ可、delete/schemaは実行不可
+  - log {string}='log' 更新履歴テーブル名
+    > nullの場合、ログ出力は行わない。領域名 > A1記法 > シート名の順に解釈
   - maxTrial {number}=5 テーブル更新時、ロックされていた場合の最大試行回数
   - interval {number}=10000 テーブル更新時、ロックされていた場合の試行間隔(ミリ秒)
   - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
-  - adminId {string}='Administrator' 管理者として扱うuserId<br>管理者は全てのシートの全権限を持つ
+  - adminId {string}='Administrator' 管理者として扱うuserId
+    > 管理者は全てのシートの全権限を持つ
 
 ## <a name="f2453d3b-59c3-5008-8f6b-b0e45ef23594">戻り値</a>
 
@@ -183,10 +200,6 @@ rv {Object[]} 以下のメンバを持つオブジェクトの配列
   - [11K] diff {JSON} 追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式
 
 ## <a name="252d1755-0fdc-aa53-bbda-f5dcf05deaef">内部関数 - 非command系</a>
-
-### <a name="09870987-01ad-48b3-810c-f2d292f2fb5b">constructor</a>() : メンバの初期値設定、更新履歴の準備
-
-メンバの初期値設定および「更新履歴」シートの準備を行う
 
 #### <a name="1f04d940-6884-819a-956c-921763e531ea">引数</a>
 
@@ -231,13 +244,20 @@ rv {Object[]} 以下のメンバを持つオブジェクトの配列
     - Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数
       【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
 - opt {Object}={} オプション
-  - userId {string}='guest' ユーザの識別子<br>指定する場合、必ずuserAuthも併せて指定
-  - userAuth {Object.<string,string>}={} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式<br>r:select(read), w:write, d:delete, s:schema, o:own only(指定シートのprimaryKeyがuserIdと一致するレコードのみ参照・変更可。削除不可)。追加はwがあれば可<br>o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。<br>また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可<br>read/writeは自分のみ可、delete/schemaは実行不可
-  - log {string}='log' 更新履歴テーブル名<br>nullの場合、ログ出力は行わない。領域名 > A1記法 > シート名の順に解釈
+  - userId {string}='guest' ユーザの識別子
+    > 指定する場合、必ずuserAuthも併せて指定
+  - userAuth {Object.<string,string>}={} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式
+    > r:select(read), w:write, d:delete, s:schema, o:own only(指定シートのprimaryKeyがuserIdと一致するレコードのみ参照・変更可。削除不可)。追加はwがあれば可<br>
+    > o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。<br>
+    > また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可<br>
+    > read/writeは自分のみ可、delete/schemaは実行不可
+  - log {string}='log' 更新履歴テーブル名
+    > nullの場合、ログ出力は行わない。領域名 > A1記法 > シート名の順に解釈
   - maxTrial {number}=5 テーブル更新時、ロックされていた場合の最大試行回数
   - interval {number}=10000 テーブル更新時、ロックされていた場合の試行間隔(ミリ秒)
   - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
-  - adminId {string}='Administrator' 管理者として扱うuserId<br>管理者は全てのシートの全権限を持つ
+  - adminId {string}='Administrator' 管理者として扱うuserId
+    > 管理者は全てのシートの全権限を持つ
 
 #### <a name="0e2570f7-932c-f77e-5a74-4e6f3284e349">戻り値</a>
 
