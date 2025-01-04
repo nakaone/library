@@ -1,12 +1,12 @@
 #!/bin/sh
 # -x  つけるとverbose
-set -e # エラー時点で停止
+# set -e # エラー時点で停止
 
 # パスの定義
 Desktop="/Users/ena.kaon/Desktop"
 GitHub="$Desktop/GitHub"
 lib="$GitHub/library"
-prj="$lib/SpreadDb/1.1.0"
+prj="$lib/SpreadDb/1.2.0"
 now=`date +"%Y%m%d-%H%M"`
 log="$prj/tmp/$now"
 
@@ -20,9 +20,11 @@ for d in "${array[@]}"; do
   echo $d
   mkdir -p "$log/$d"
   cp $prj/$d/* $log/$d/
+  chmod 444 $log/$d/*
 done
 cp $prj/*.js $log
 cp $prj/*.sh $log
+chmod 444 $log/*
 
 # archives配下にzip作成
 cd $log
