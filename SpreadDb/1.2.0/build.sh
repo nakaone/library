@@ -34,30 +34,31 @@ prjName="SpreadDB"
 prj="$lib/$prjName/1.2.0"
 src="$prj/src"
 doc="$prj/doc"
+test="$prj/test"
 tmp="$prj/tmp"; mkdir -p $tmp
 
 # ----------------------------------------------
 # 1. core.jsの作成
 # ----------------------------------------------
-#log "1";
-#cat $src/template.js | awk 1 | \
-#$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $tmp/core.js
-#sed -e 's/[ \t]+$//g' $tmp/core.js > $prj/core.js
+log "1";
+cat $src/proto.js | awk 1 | \
+$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $tmp/core.js
+sed -e 's/[ \t]+$//g' $tmp/core.js > $prj/core.js
 
 # ----------------------------------------------
 # 2. test.jsの作成
 # ----------------------------------------------
-#log "2";
-#cat $src/test.template.js | awk 1 | \
-#$embed -prj:$prj -src:$src -lib:$lib -test:$test -tmp:$tmp > $tmp/test.js
-#sed -e 's/[ \t]+$//g' $tmp/test.js > $prj/test.js
+log "2";
+cat $test/proto.js | awk 1 | \
+$embed -prj:$prj -src:$src -lib:$lib -test:$test -tmp:$tmp > $tmp/test.js
+sed -e 's/[ \t]+$//g' $tmp/test.js > $prj/test.js
 
 # ----------------------------------------------
 # 3. readme.mdの作成
 # ----------------------------------------------
-log "3";
-cat $doc/readme.md | awk 1 | \
-$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp -doc:$doc > $tmp/readme.md
-cat $tmp/readme.md | $modify/pipe.js > $prj/readme.md
+#log "3";
+#cat $doc/readme.md | awk 1 | \
+#$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp -doc:$doc > $tmp/readme.md
+#cat $tmp/readme.md | $modify/pipe.js > $prj/readme.md
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"
