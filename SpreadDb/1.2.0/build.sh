@@ -56,9 +56,8 @@ sed -e 's/[ \t]+$//g' $tmp/test.js > $prj/test.js
 # ----------------------------------------------
 # 3. readme.mdの作成
 # ----------------------------------------------
-#log "3";
-#cat $doc/readme.md | awk 1 | \
-#$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp -doc:$doc > $tmp/readme.md
-#cat $tmp/readme.md | $modify/pipe.js > $prj/readme.md
+log "3";
+cat $doc/workflowy.opml | awk 1 | \
+node doc/workflowy.js > $prj/readme.md
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"
