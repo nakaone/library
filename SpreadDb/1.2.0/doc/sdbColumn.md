@@ -1,0 +1,15 @@
+- name {string} 項目名
+- type {string} データ型。string,number,boolean,Date,JSON,UUID
+- format {string} 表示形式。type=Dateの場合のみ指定
+- options {string} 取り得る選択肢(配列)のJSON表現<br>ex. ["未入場","既収","未収","無料"]
+- default {function} 既定値を取得する関数。引数は当該行オブジェクト<br>指定の際は必ず{〜} で囲み、return文を付与のこと。<br>ex.o => {return toLocale(new Date())} 
+- primaryKey {boolean}=false 一意キー項目ならtrue
+- unique {boolean}=false primaryKey以外で一意な値を持つならtrue
+- auto_increment {bloolean|null|number|number[]}=false 自動採番項目
+  - null ⇒ 自動採番しない
+  - boolean ⇒ true:自動採番する(基数=1,増減値=1)、false:自動採番しない
+  - number ⇒ 自動採番する(基数=指定値,増減値=1)
+  - number[] ⇒ 自動採番する(基数=添字0,増減値=添字1)
+  - object ⇒ {start:m,step:n}形式
+- suffix {string} "not null"等、上記以外のSQLのcreate table文のフィールド制約
+- note {string} 本項目に関する備考。create table等では使用しない

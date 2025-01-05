@@ -1,0 +1,18 @@
+1. スプレッドシートを凍結
+1. queryで渡された操作要求を順次処理
+1. 権限確認後、command系内部関数の呼び出し
+1. 結果を実行結果オブジェクトに保存
+1. 実行結果オブジェクトの配列を変更履歴シートに追記
+1. スプレッドシートの凍結解除
+
+![](doc/flowchart.main.webp)
+
+- 引数
+
+  - <details><summary>query {Object[]} 操作要求の内容</summary>
+    <!--::$doc/query.md::-->
+    </details>
+  - opt {Object}={} オプション
+    <!--::$doc/opt.md::-->
+- 戻り値 {Object[]} 以下のメンバを持つオブジェクトの配列
+  <!--::$doc/opt.md::-->
