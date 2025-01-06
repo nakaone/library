@@ -1,8 +1,3 @@
-/*
-  SpreadDbテスト用ソース
-    GASの専用シートを用意、本ソースをコピペしてSpreadDbTest()を実行する
-*/
-
 function SpreadDbTest(){
   /* 引数の形式
   - query {Object[]} 操作要求の内容
@@ -19,7 +14,7 @@ function SpreadDbTest(){
     - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
     - adminId {string} 管理者として扱うuserId
   */
-  const v = {do:{p:'select',st:0,num:1},//num=0なら全部
+  const v = {scenario:'create',start:0,num:1,//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -39,27 +34,6 @@ function SpreadDbTest(){
           if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
         }
       });
-    },
-    exe: (query,opt={userId:'Administrator'}) => {  // テスト実行、結果表示
-      v.deleteSheet(); // 既存シートを全部削除
-      let rv = SpreadDb(query,opt); // query毎のsdbLog配列
-      let msg = [`${v.whois} end: return value type: ${whichType(rv)}`];
-
-      rv.forEach(o => {
-        let result = {
-          command: o.query.command,
-          isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
-          message: `${o.message||''}(${whichType(o.message)})`,
-          log: [],
-        };
-        if( !Array.isArray(o.log) ) o.log = [o.log];
-        result.logLen = o.log.length;
-        o.log.forEach(x => result.log.push(`isErr:${x.isErr}, arg=${x.arg}`));
-        if( Object.hasOwn(o,'data') && o.data ) result.data = o.data;
-        let json = JSON.stringify(result,null,2);
-        msg = [...msg,...json.split('\n')]
-      });
-      console.log(msg.join('\n'));
     },
   };
   const src = { // テスト用サンプルデータ
@@ -289,265 +263,58 @@ function SpreadDbTest(){
       values: [{'ラベル':'fuga'},{'ラベル':'hoge'}],
     }
   };
-  const pattern = { /* テストパターン(関数)の定義
-    - ログへの出力形式
-    - メモの中の形式
-    */
-    create: [  // create関係のテスト
-      [ // 0.基本形
-        {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
-        {command:'create',table:src.PL.name,values:src.PL.values},  // 「損益計算書」シート作成
-        {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
-        {command:'create',table:src.board.name,values:src.board.values},  // 「掲示板」シート作成
-        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-      ],[ // 1.既存と同名のシート作成時のメッセージを「既に存在しています」に修正
-        {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
-        {command:'create',table:src.status.name,cols:src.status.cols},
-      ]
-    ],
-    select : [  //
-      [ // 0.基本形
-        {command:'create',table:src.board.name,values:src.board.values},
-        {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 参照
-        // 日付の比較では"new Date()"を使用。ちなみにgetTime()無しで比較可能
-        {table:'掲示板',command:'select',where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"},
-      ],[ // 1.ゲストに「掲示板」の読込を許可した場合
-        {command:'create',table:src.board.name,values:src.board.values},
-        [
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与
+  const scenario = {
+    create: [ // create関係のテスト群
+      { // 0.基本形
+        query: [
+          {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+          {command:'create',table:src.PL.name,values:src.PL.values},  // 「損益計算書」シート作成
+          {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
+          {command:'create',table:src.board.name,values:src.board.values},  // 「掲示板」シート作成
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成  
         ],
-      ],[  // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
-        {command:'create',table:src.board.name,values:src.board.values},
-        [
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {},  // ゲストなので、ユーザID,権限指定は無し
-        ],
-      ],[ // 3.ユーザに掲示板の読込権限付与
-        {command:'create',table:src.board.name,values:src.board.values},
-        [
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {userId: 'pikumin',userAuth:{'掲示板':'r'}}
-        ],
-      ],[ // 4.ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
-        {command:'create',table:src.board.name,values:src.board.values},
-        [
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {userId: 'pikumin',userAuth:{'掲示板':'w'}}
-        ],
-      ],[ // 5.ユーザ権限未指定の場合 ⇒ 「権限無し」エラー
-        {command:'create',table:src.board.name,values:src.board.values},
-        [
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {userId: 'pikumin'}
-        ],
-      ],
-    ],
-    append: [ // appendRow関係のテスト
-      [ // 0.正常系(Administrator)
-        // AutoIncシートでオートインクリメント、既定値設定項目
-        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-        {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
-        {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
-        {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
-        {table:'AutoInc',command:'append',record:{'ラベル':'a01'}}, // ⇒ 重複エラー
-      ],[ // 1.ゲストに権限付与した場合
-        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-        [[
-          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
-          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
-          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
-        ],{guestAuth:{AutoInc:'w'}}]
-      ],[ // 2.ゲストに権限付与しなかった場合
-        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-        [[
-          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
-          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
-          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
-        ],{guestAuth:{AutoInc:'r'}}]
-      ],[ // 3.ユーザに権限付与した場合
-        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-        [[
-          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
-          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
-          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
-        ],{userId:'pikumin',userAuth:{AutoInc:'w'}}]
-      ],[ // 4.ユーザに権限付与しなかった場合
-        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-        [[
-          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
-          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
-          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
-        ],{userId:'pikumin'}]
-      ]
-    ],
-    delete: [ // deleteRow関係のテスト
-      [  // 0.正常系(Administrator)
-        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},
-        {table:'AutoInc',command:'append',record:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
-        {table:'AutoInc',command:'delete',where:{'配列①':-1}},  // where = Object
-        {table:'AutoInc',command:'delete',where:o=>{return o['配列②'] === -2}},  // where = function
-        {table:'AutoInc',command:'delete',where:11},  // where = any(pKey)
-        {table:'AutoInc',command:'delete',where:'o => {return o["ラベル"].slice(0,1)==="a"'},  // where = string(func)
-      ],
-      [  // 1.「該当無し」⇒ rv.log.length === 0
-        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},
-        {table:'AutoInc',command:'delete',where:{'ラベル':'fuga'}},
-        {table:'AutoInc',command:'delete',where:{'ラベル':'hoga'}},  // 該当無し
-      ],
-    ],
-    update: [ // updateRow関係のテスト
-      [ // 0.正常系(Administrator)
-        // 更新対象の①関数による指定、②オブジェクトによる指定、③主キー値による指定
-        // 更新値の①関数による指定、②オブジェクトによる指定、③値による指定
-        // unique項目のチェック、また同一レコード複数unique項目の場合、全項目がエラーになるかチェック
-        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,
-          values:[...src.autoIncrement.values,{'ラベル':'a01'},{'ラベル':'a02'},{'ラベル':'a03'},{'ラベル':'a04'},{'ラベル':'a05'}]},  // 「AutoInc」シート作成
-
-        // 関数
-        {command:'update',table:src.autoIncrement.name,where:o=>{return o['ラベル']==='a01'},record:()=>{return {'ラベル':'b01'}}},
-        // オブジェクト
-        {command:'update',table:src.autoIncrement.name,where:{'ラベル':'a02'},record:{'ぬる':'b02'}},
-        {command:'update',table:src.autoIncrement.name,where:{key:'ラベル',value:'a03'},record:{'真':'b03'}},
-        // 文字列(関数)
-        {command:'update',table:src.autoIncrement.name,where:"o=>{return o['ラベル']==='a04'}",record:"()=>{return {'偽':'b04'}}"},
-        // 文字列(非関数。where:主キーの値, record:JSON)
-        {command:'update',table:src.autoIncrement.name,where:16,record:JSON.stringify({'配列①':'b05'})},
-      ],[ // 1.正常系：複数項目・複数テーブルの一括更新
-        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-        {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
-
-        {command:'update',table:src.autoIncrement.name,where:o=>{return o['ラベル']==='fuga'},record:()=>{return {'ぬる':'b01','真':'b02','def関数':'関数っぽい列じゃないよね'}}},
-        [[
-          {command:'update',table:src.autoIncrement.name,where:o=>{return o['ラベル']==='hoge'},record:()=>{return {'ぬる':'c01','真':'c02','def関数':'なぜ日付か？'}}},
-          {command:'update',table:src.camp.name,where:1,record:{'申込者氏名':'島津　斉彬'}},
-        ]]
-      ],[ // 2.「該当無し」⇒ rv.log.length === 0
-        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-        {command:'update',table:src.autoIncrement.name,where:o=>{return o['ラベル']==='hoga'},record:()=>{return {'ぬる':'b01','真':'b02','def関数':'関数っぽい列じゃないよね'}}},
-      ],
-      () => {
-        v.exe([
-          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-          {table:'AutoInc',command:'append',record:{'ラベル':'a01'}},
-          {table:'AutoInc',command:'append',record:{'ラベル':'a02'}}, // 1レコードずつ一括
-          {table:'AutoInc',command:'append',record:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // recordが配列
-        ],{userId:'pikumin'});
-
-
-      },
-      () => { // 1.ゲスト
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-      () => { // 2.ユーザ
-        // 権限付与した場合
-        // 権限付与しなかった場合
-      },
-    ],
-    schema: [ // getSchema関係のテスト
-      [ // 0.正常系(Administrator)
-        // メモで内容修正後、その修正が反映されているかチェック
-        {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
-        {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
-        {command:'create',table:src.PL.name,values:src.PL.values},  // 「損益計算書」シート作成
-
-        {command:'schema',table:src.PL.name},  // 単一
-        {command:'schema',table:[src.status.name,src.autoIncrement.name]},  // 複数
-      ]
-    ],
-    auth: [  // 付与権限によるアクセス制御
-      [ // 0.正常系(Administrator)
-        {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
-        {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
-
-        /*
-        [ // 自分の参加情報を追加
-          {table:'camp2024',command:'append',record:{userId:'test','申込者氏名':'前'}},
-          {userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
-        ],
-        [ // 自分の参加情報を更新。
-          {table:'camp2024',command:'update',where:'test',record:{'申込者氏名':'後'}},
-          {userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
-        ],
-        */
-        [[
-          {table:'camp2024',command:'append',record:{userId:'uso','申込者氏名':'前'}}, // 追加
-          {table:'camp2024',command:'update',where:'test',record:{'申込者氏名':'後'}},  // 変更
-          {table:'camp2024',command:'select'},  // 参照
-          {table:'camp2024',command:'delete'},  // 削除
-          ],{userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
-        ],
-      ],[ // 1.自分以外の参加情報をCRUD
-        [ // 自分以外の参加情報を更新。読み書きがあっても'o'優先 ⇒ where句の指定は無視、自分に対する処理とする
-          {table:'camp2024',command:'update',where:'uso',record:{'申込者氏名':'後'}},
-          {userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
-        ],
-        [ // 自分以外の参加情報を参照 ⇒ where句の指定は無視、自分に対する処理とする
-          {table:'camp2024',command:'select',where:'uso'},
-          {userId:'test',userAuth:{camp2024:'o'}} // rwdosで指定
-        ],
-
-      ]
-    ]
-  };
-  try {
-    for( v.i=v.do.st ; v.i<(v.do.num===0 ? pattern[v.do.p].length : v.do.st+v.do.num) ; v.i++ ){
-      if( typeof pattern[v.do.p][v.i] === 'function' ){
-        // 旧式対応：テストパターンが関数で指定されていた場合、それを実行
-        pattern[v.do.p][v.i]();
-        continue;
-      }
-
-      // テストパターンをクエリ＋オプションの配列としてqueryに保存
-      let query = []; // テスト用クエリ。[[q1,o1],[q2,o2]..]形式
-      // 同一アカウント(オプション)で複数のコマンドを実行する場合、qNは配列で指定する
-      let dopt = {userId:'Administrator'};  // オプションの既定値
-      if( Array.isArray(pattern[v.do.p][v.i]) ){
-        pattern[v.do.p][v.i].forEach(a => {
-          if( Array.isArray(a) ){
-            if( a.length === 1 ) a.push(dopt);
-            query.push(a);
-          } else {
-            query.push([a,dopt]);
-          }
-        })
-      } else {
-        query.push([q,(o||dopt)]);
-      }
-      // テストの実行
-      v.deleteSheet(); // 既存シートを全部削除
-      for( v.j=0 ; v.j<query.length ; v.j++ ){
-        v.msg = [`${v.whois} ${v.do.p}.${v.i}.${v.j} end`];
-        v.argStr = JSON.stringify(query[v.j]);
-        let rv = SpreadDb(...query[v.j]); // query毎のsdbLog配列
-        v.msg.push(`===== argument\n${v.argStr}\n\n===== return value type: ${whichType(rv)}`);
-        rv.forEach(o => { // query単位
-          let result = {
-            command: o.query.command,
-            isErr: `${String(o.isErr)}(${whichType(o.isErr)})`,
-            message: `${o.message||''}(${whichType(o.message)})`,
-            log: [],
+        opt: {userId:'Administrator'},
+        check: sdbMain => { // 結果を分析、レポートを出力する関数
+          v.rv = [];
+          for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
+            v.rv.push(`query.${v.i} ----------`);
+            v.rv.push(`ErrCD: ${sdbMain[v.i].ErrCD}`);
+            v.rv.push(`command: ${sdbMain[v.i].query.command}`);
+            v.rv.push(`table: ${sdbMain[v.i].query.table}`);
           };
-          if( Object.hasOwn(o,'rows') && o.rows ) result.rows = o.rows;
-          if( Object.hasOwn(o,'schema') && o.schema ) result.schema = o.schema;
-          if( !Array.isArray(o.log) ) o.log = [o.log];
-          result.logLen = o.log.length;
-          o.log.forEach(x => result.log.push({
-            arg:x.arg,
-            isErr:x.isErr,
-            message:x.message
-          }));
-          let json = JSON.stringify(result,null,2);
-          v.msg = [...v.msg,...json.split('\n')]
-        });
-        console.log(v.msg.join('\n'));
-      }
+          v.rv = [...v.rv,
+            '【シート確認事項】',
+            '①対象シートは全て作成されているか',
+            '②メモの内容は適切か',
+            '③ユーザ管理シート以外、シートには初期データが入っているか',
+          ];
+          return v.rv.join('\n');
+        }
+      },
+    ],
+  };
+
+  try {
+
+    // 既存シートを全部削除
+    v.deleteSheet();
+
+    // v.scenarioで指定されたテスト群について、v.startからv.num個分を実行
+    for( v.idx=v.start ; v.idx<(v.num>0?(v.start+v.num):scenario[v.scenario].length) ; v.idx++ ){
+
+      v.r = SpreadDb( // scenarioからqueryとoptをセット
+        scenario[v.scenario][v.idx].query,
+        scenario[v.scenario][v.idx].opt
+      );
+      if( v.r instanceof Error ) throw v.r;
+
+      // テスト結果(サマリ)の表示
+      v.msg = `===== ${v.whois} end: scenario=${v.scenario}.${v.idx}\n`;
+      console.log(v.msg+scenario[v.scenario][v.idx].check(v.r));
     }
 
   } catch(e) {
-    e.message = `${v.whois} abnormal end.\n${typeof v.msg==='object'?v.msg[0]:v.msg}`;
-    console.error(`${e.message}\nv=${stringify(v)}`);
+    console.error(`${v.whois} abnormal end.\n${e.message}`);
   }
 }
 
@@ -557,11 +324,12 @@ function SpreadDbTest(){
  */
 function SpreadDb(query=[],opt={}){
   /** main: SpreadDb主処理 */
-  const v = {step:0,rv:[],log:[],idStr:`${idStr(query,['queryId','table','command'])}, ${idStr(opt,'userId')}`};
+  const v = {step:0,rv:[],log:[]};
   const pv = {whois:'SpreadDb'};  // private variables: 擬似メンバ変数としてSpreadDb内で共有する値
-  console.log(`${pv.whois} start: ${v.idStr}`);
   try {
-
+    v.idStr = `${idStr(query,['queryId','table','command'])}, ${idStr(opt,'userId')}`;
+    console.log(`${pv.whois} start: ${v.idStr}`);
+  
     v.step = 1; // 全体事前処理
     v.step = 1.11; // メンバ登録：起動時オプション
     pv.opt = Object.assign({
@@ -961,10 +729,10 @@ function SpreadDb(query=[],opt={}){
    * @returns {sdbLog}
    */
   function createTable(arg){
-    const v = {whois:`${pv.whois}.createTable`,step:0,rv:[],convertRow:null,
-      idStr:`arg.table=${arg.table}`};
-    console.log(`${v.whois} start: ${v.idStr}`);
+    const v = {whois:`${pv.whois}.createTable`,step:0,rv:[],convertRow:null};
     try {
+      v.idStr = `table=${arg.table}${Object.hasOwn(arg,'values')?(', values='+arg.values.length+'rows'):'undefined'}`;
+      console.log(`${v.whois} start: ${v.idStr}`);
 
       // ----------------------------------------------
       v.step = 1; // 事前準備
@@ -1551,8 +1319,8 @@ function SpreadDb(query=[],opt={}){
    * @returns {sdbTable|null} シート不存在ならnull
    */
   function genTable(arg){
-    const v = {whois:`${pv.whois}.genTable`,step:0,rv:null};
-    console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
+    const v = {whois:`${pv.whois}.genTable`,step:0,rv:null,idStr:`arg=${JSON.stringify(arg)}`};
+    console.log(`${v.whois} start: ${v.idStr}`);
     try {
 
       // ----------------------------------------------
@@ -1597,7 +1365,7 @@ function SpreadDb(query=[],opt={}){
       v.rv.schema = v.r.schema;
 
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end. table=${arg.name}`);
+      console.log(`${v.whois} normal end: ${v.idStr}`);
       return v.rv;
 
     } catch(e) {
@@ -1836,7 +1604,7 @@ function SpreadDb(query=[],opt={}){
     }
   }
   /** idStr: オブジェクトの指定メンバの値を文字列として返す
-   * @param {Object} o - 出力対象オブジェクト
+   * @param {Object|Object[]} o - 出力対象オブジェクト
    * @param {string|string[]} m - メンバ指定文字列。オブジェクト名(ex.'o')は省略のこと
    * @returns {string}
    * 
@@ -1846,19 +1614,22 @@ function SpreadDb(query=[],opt={}){
    */
   function idStr(o,m){
     const v = {rv:[]};
-    if( typeof m === 'string' ) m = [m];
-    for( v.i=0 ; v.i<m.length ; v.i++ ){
-      v.r = o;
-      v.a = m[v.i].split('.');
-      for( v.j=0 ; v.j<v.a.length ; v.j++ ){
-        if( Object.hasOwn(v.r,v.a[v.j]) ){
-          v.r = v.r[v.a[v.j]];
-        } else {  // 当該プロパティが未定義の場合
-          v.r = null;
-          break;
+    if( !Array.isArray(o) ) o = [o];
+    if( !Array.isArray(m) ) m = [m];
+    for( v.i=0 ; v.i<o.length ; v.i++ ){
+      for( v.j=0 ; v.j<m.length ; v.j++ ){
+        v.r = o[v.i];
+        v.a = m[v.j].split('.');
+        for( v.k=0 ; v.k<v.a.length ; v.k++ ){
+          if( Object.hasOwn(v.r,v.a[v.k]) ){
+            v.r = v.r[v.a[v.k]];
+          } else {  // 当該プロパティが未定義の場合
+            v.r = null;
+            break;
+          }
         }
+        if( v.r !== null ) v.rv.push(`${m[v.j]}=${toString(v.r)}`);
       }
-      if( v.r !== null ) v.rv.push(`${m[v.i]}=${toString(v.r)}`);
     }
     return v.rv.join(', ');
   }
@@ -2352,4 +2123,3 @@ function whichType(arg,is){
     return rv;
   }
 }
-
