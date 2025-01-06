@@ -24,7 +24,8 @@ for d in "${array[@]}"; do
 done
 cp $prj/*.js $log
 cp $prj/*.sh $log
-chmod 444 $log/*
+chmod 444 $log/*.js
+chmod 444 $log/*.sh
 
 # archives配下にzip作成
 cd $log
