@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'select',start:1,num:1,//num=0なら全部
+  const v = {scenario:'select',start:2,num:-1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -382,38 +382,98 @@ function SpreadDbTest(){
           };
           return v.rv.join('\n');
         }
+      },{ // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
+        reset: [], //['掲示板'],
+        query: [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+        ],
+        opt: {},  // ゲストなので、ユーザID,権限指定は無し
+        check: (sdbMain,query,opt) => { // 結果を分析、レポートを出力する関数
+          //console.log(JSON.stringify(sdbMain));
+          v.rv = [];
+          for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
+            v.result = sdbMain[v.i].ErrCD === 'No Authority' ? 'success' : 'failed';
+            v.rv = [...v.rv,
+              `query.${v.i} [${v.result}] ----------`,
+              `table.command: ${sdbMain[v.i].log.table}.${sdbMain[v.i].log.command}`,
+              `ErrCD(${whichType(sdbMain[v.i].ErrCD)}): ${sdbMain[v.i].ErrCD}`,
+              `rows: ${Array.isArray(sdbMain[v.i].rows) ? sdbMain[v.i].rows.length : sdbMain[v.i].rows}`,
+              `log.userId: ${sdbMain[v.i].log.userId}`,
+            ];
+          };
+          return v.rv.join('\n');
+        }
       }
       /*
-      {command:'create',table:src.board.name,values:src.board.values},
-      {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 参照
+      ],[  // 
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {},  // ゲストなので、ユーザID,権限指定は無し
+        ],
+      ],[ // 3.ユーザに掲示板の読込権限付与
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {userId: 'pikumin',userAuth:{'掲示板':'r'}}
+        ],
+      ],[ // 4.ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {userId: 'pikumin',userAuth:{'掲示板':'w'}}
+        ],
+      ],[ // 5.ユーザ権限未指定の場合 ⇒ 「権限無し」エラー
+        {command:'create',table:src.board.name,values:src.board.values},
+        [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+          {userId: 'pikumin'}
+        ],
+      ],
       */
     ],
   };
 
   try {
 
-    // v.scenarioで指定されたテスト群について、v.startからv.num個分を実行
-    for( v.idx=v.start ; v.idx<(v.num>0?(v.start+v.num):scenario[v.scenario].length) ; v.idx++ ){
-      // テスト用データをセット
+    v.step = 1; // v.scenarioで指定されたテスト群について、v.startからv.num個分を実行
+    if( v.num < 0 ){
+      v.step = 1.1; // 指定テスト群の後ろからv.num個
+      v.st = scenario[v.scenario].length + v.num;
+      v.ed = scenario[v.scenario].length;
+    } else if( v.num === 0 ){
+      v.step = 1.2; // 指定テスト群全部実行
+      v.st = v.start;
+      v.ed = scenario[v.scenario].length;
+    } else {
+      v.step = 1.3; // v.startからv.num個
+      v.st = v.start;
+      v.ed = v.start + v.num;
+    }
+
+    v.step = 2;
+    for( v.idx=v.st ; v.idx<v.ed ; v.idx++ ){
+      v.step = 2.1; // テスト用データをセット
       if( Object.hasOwn(scenario[v.scenario][v.idx],'reset') ){
         v.reset(scenario[v.scenario][v.idx].reset); // 再作成シート指定が有ればその指示に従う
       } else {
         v.deleteSheet(); // 既存シートを全部削除
       }
 
-      v.r = SpreadDb( // scenarioからqueryとoptをセット
+      v.step = 2.2; // scenarioからqueryとoptをセット
+      v.r = SpreadDb(
         scenario[v.scenario][v.idx].query,
         scenario[v.scenario][v.idx].opt
       );
       if( v.r instanceof Error ) throw v.r;
 
-      // テスト結果(サマリ)の表示
+      v.step = 2.3; // テスト結果(サマリ)の表示
       v.msg = `===== ${v.whois} end: scenario=${v.scenario}.${v.idx}\n`;
       console.log(v.msg+scenario[v.scenario][v.idx].check(v.r,scenario[v.scenario][v.idx].query,scenario[v.scenario][v.idx].opt));
     }
 
   } catch(e) {
-    console.error(`${v.whois} abnormal end.\n${e.message}`);
+    console.error(`${v.whois} abnormal end at step.${v.step}\n${e.message}`);
   }
 }
 
