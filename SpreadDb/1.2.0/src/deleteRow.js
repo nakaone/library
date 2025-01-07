@@ -30,7 +30,7 @@ function deleteRow(arg){
         table: arg.table.name,
         command: 'delete',
         arg: v.whereStr,
-        isErr: false,
+        ErrCD: null,
         before: arg.table.values[v.i],
         // after, diffは空欄
       });

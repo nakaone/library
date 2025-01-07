@@ -256,7 +256,7 @@
         <outline text="sdbMain {Object[]} 主処理、ひいてはSpreadDb全体の戻り値(b03c5ccd2f8f)">
           <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;[]} 引数として渡されたqueryのコピー" />
           <outline text="ErrCD {string}=null クエリ単位のエラーコード" _note="「&lt;a href=&quot;https://workflowy.com/#/0465ae3bbf61&quot;&gt;クエリのエラーとレコードのエラー&lt;/a&gt;」参照" />
-          <outline text="row {Object[]}=null selectの該当行オブジェクトの配列" _note="該当無しの場合、row.length===0" />
+          <outline text="rows {Object[]}=null selectの該当行オブジェクトの配列" _note="該当無しの場合、row.length===0" />
           <outline text="schema {Object.&amp;lt;string,&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]&amp;gt;} schemaで取得した{テーブル名：項目定義オブジェクトの配列}形式のオブジェクト" />
           <outline text="log {&lt;a href=&quot;https://workflowy.com/#/dab8cfcec9d8&quot;&gt;sdbLog&lt;/a&gt;[]} 変更履歴" _note="update,deleteで該当無しの場合、log.length===0&#10;" />
           <outline text="1 Backlink">

@@ -1,3 +1,8 @@
+/*
+  SpreadDbテスト用ソース
+    GASの専用シートを用意、本ソースをコピペしてSpreadDbTest()を実行する
+*/
+
 function SpreadDbTest(){
   const v = {scenario:'select',start:2,num:-1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
@@ -274,7 +279,7 @@ function SpreadDbTest(){
           {command:'create',table:src.PL.name,values:src.PL.values},  // 「損益計算書」シート作成
           {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
           {command:'create',table:src.board.name,values:src.board.values},  // 「掲示板」シート作成
-          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成  
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
         ],
         opt: {userId:'Administrator'},
         check: sdbMain => { // 結果を分析、レポートを出力する関数
@@ -405,7 +410,7 @@ function SpreadDbTest(){
         }
       }
       /*
-      ],[  // 
+      ],[  //
         {command:'create',table:src.board.name,values:src.board.values},
         [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
@@ -488,7 +493,7 @@ function SpreadDb(query=[],opt={}){
   try {
     v.idStr = `${idStr(query,['queryId','table','command'])}, ${idStr(opt,'userId')}`;
     console.log(`${pv.whois} start: ${v.idStr}`);
-  
+
     v.step = 1; // 全体事前処理
     v.step = 1.11; // メンバ登録：起動時オプション
     pv.opt = Object.assign({
@@ -1568,6 +1573,36 @@ function SpreadDb(query=[],opt={}){
       return e;
     }
   }
+  /** idStr: オブジェクトの指定メンバの値を文字列として返す
+   * @param {Object|Object[]} o - 出力対象オブジェクト
+   * @param {string|string[]} m - メンバ指定文字列。オブジェクト名(ex.'o')は省略のこと
+   * @returns {string}
+   *
+   * @example
+   * o={a:10,b:{c:'abc',d:x=>{x+10}}}, m=['a','b.d']
+   * -> "a=10, b.d='x=>{x+10}'"
+   */
+  function idStr(o,m){
+    const v = {rv:[]};
+    if( !Array.isArray(o) ) o = [o];
+    if( !Array.isArray(m) ) m = [m];
+    for( v.i=0 ; v.i<o.length ; v.i++ ){
+      for( v.j=0 ; v.j<m.length ; v.j++ ){
+        v.r = o[v.i];
+        v.a = m[v.j].split('.');
+        for( v.k=0 ; v.k<v.a.length ; v.k++ ){
+          if( Object.hasOwn(v.r,v.a[v.k]) ){
+            v.r = v.r[v.a[v.k]];
+          } else {  // 当該プロパティが未定義の場合
+            v.r = null;
+            break;
+          }
+        }
+        if( v.r !== null ) v.rv.push(`${m[v.j]}=${toString(v.r)}`);
+      }
+    }
+    return v.rv.join(', ');
+  }
   /** selectRow: テーブルから該当行を抽出
    * @param {Object|Object[]} arg
    * @param {sdbTable} arg.table - 操作対象のテーブル管理情報
@@ -1761,36 +1796,6 @@ function SpreadDb(query=[],opt={}){
       console.error(`${e.message}\nv=${stringify(v)}`);
       return e;
     }
-  }
-  /** idStr: オブジェクトの指定メンバの値を文字列として返す
-   * @param {Object|Object[]} o - 出力対象オブジェクト
-   * @param {string|string[]} m - メンバ指定文字列。オブジェクト名(ex.'o')は省略のこと
-   * @returns {string}
-   * 
-   * @example
-   * o={a:10,b:{c:'abc',d:x=>{x+10}}}, m=['a','b.d']
-   * -> "a=10, b.d='x=>{x+10}'"
-   */
-  function idStr(o,m){
-    const v = {rv:[]};
-    if( !Array.isArray(o) ) o = [o];
-    if( !Array.isArray(m) ) m = [m];
-    for( v.i=0 ; v.i<o.length ; v.i++ ){
-      for( v.j=0 ; v.j<m.length ; v.j++ ){
-        v.r = o[v.i];
-        v.a = m[v.j].split('.');
-        for( v.k=0 ; v.k<v.a.length ; v.k++ ){
-          if( Object.hasOwn(v.r,v.a[v.k]) ){
-            v.r = v.r[v.a[v.k]];
-          } else {  // 当該プロパティが未定義の場合
-            v.r = null;
-            break;
-          }
-        }
-        if( v.r !== null ) v.rv.push(`${m[v.j]}=${toString(v.r)}`);
-      }
-    }
-    return v.rv.join(', ');
   }
 }
 
@@ -2282,3 +2287,4 @@ function whichType(arg,is){
     return rv;
   }
 }
+

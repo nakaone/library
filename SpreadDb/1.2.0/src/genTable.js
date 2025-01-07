@@ -6,8 +6,8 @@
  * @returns {sdbTable|null} シート不存在ならnull
  */
 function genTable(arg){
-  const v = {whois:`${pv.whois}.genTable`,step:0,rv:null};
-  console.log(`${v.whois} start.\narg=${JSON.stringify(arg)}`);
+  const v = {whois:`${pv.whois}.genTable`,step:0,rv:null,idStr:`arg=${JSON.stringify(arg)}`};
+  console.log(`${v.whois} start: ${v.idStr}`);
   try {
 
     // ----------------------------------------------
@@ -52,7 +52,7 @@ function genTable(arg){
     v.rv.schema = v.r.schema;
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end. table=${arg.name}`);
+    console.log(`${v.whois} normal end: ${v.idStr}`);
     return v.rv;
 
   } catch(e) {

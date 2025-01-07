@@ -86,7 +86,7 @@ function updateRow(arg={}){
         table: arg.table.name,
         command: 'update',
         arg: v.argStr,
-        isErr: false,
+        ErrCD: '',
         before: v.before,
         after: v.after,
         diff: v.diff,
@@ -97,10 +97,9 @@ function updateRow(arg={}){
       for( v.unique in arg.table.schema.unique ){
         if( arg.table.schema.unique[v.unique].indexOf(v.where[v.unique]) >= 0 ){
           v.step = 2.61; // 登録済の場合はエラーとして処理
-          v.log.isErr = true;
-          // 複数項目のエラーメッセージに対応するため場合分け
-          v.log.message = (v.log.message === null ? '' : '\n')
-          + `${v.unique}欄の値「${v.where[v.unique]}」が重複しています`;
+          v.log.ErrCD = 'Duplicate';
+          if( !v.log.diff ) v.log.diff = {};
+          v.log.diff[v.unique] = v.where[v.unique]; // diffに{unique項目名:重複値}を保存
         } else {
           v.step = 2.62; // 未登録の場合arg.table.sdbSchema.uniqueに値を追加
           arg.table.schema.unique[v.unique].push(v.where[v.unique]);
@@ -108,7 +107,7 @@ function updateRow(arg={}){
       }
 
       v.step = 2.7; // 正当性チェックOKの場合、修正後のレコードを保存して書換範囲(range)を修正
-      if( v.log.isErr === false ){
+      if( v.log.ErrCD === null ){
         v.top = Math.min(v.top, v.i);
         v.bottom = Math.max(v.bottom, v.i);
         arg.table.values[v.i] = v.after;

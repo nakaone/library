@@ -2,7 +2,13 @@
 # <a name="d4369fcf4044">SpreadDb 1.2.0</a>
 
 
-## <a name="3eca2504fb57">概要</a>
+## <a name="6f8d7dc5cd54">使用例</a>
+
+
+## <a name="922be86d118e">主処理</a>
+
+
+### <a name="3eca2504fb57">概要</a>
 
   - 手順
 ![](doc/flowchart.main.webp)
@@ -15,10 +21,8 @@
   - 引数
     - query {[sdbQuery](#1e80990a7c63)[]} 操作要求、またはその配列
     - opt {[sdbOption](#a4a26014ccb3)}={} 起動時オプション
-  - 戻り値 {[sdbMain](#b03c5ccd2f8f)}
-
-## <a name="6f8d7dc5cd54">使用例</a>
-
+  - 戻り値 {[sdbMain](#b03c5ccd2f8f)[]}
+  - エラーコード
 
 ## <a name="a9f01a749b53">内部関数 - 非command系</a>
 
@@ -86,7 +90,7 @@
 
 ### <a name="77304ebfbc33">createTable() : データから新規テーブルを生成</a>
 
-管理者のみ実行可
+管理者のみ実行可。初期データが有った場合、件数を変更履歴シートafter欄に記載
   - 引数 : [genTable()の引数](#ea8faab5f9f2)と同じ
   - 戻り値 {[sdbLog](#dab8cfcec9d8)}
 
@@ -115,6 +119,8 @@ argの配列は使用しない。同一テーブルでも複数の条件で更�
       - table {[sdbTable](#976403e08f0e)} 操作対象のテーブル管理情報
       - [record](#58dde3944536) {Object|Object[]} 追加する行オブジェクト
   - 戻り値 {[sdbLog](#dab8cfcec9d8)[]}
+  - エラーコード
+- Duplicate: unique項目に重複した値を設定。diffに<code>{項目名:重複値}</code> 形式で記録
 
 ### <a name="30d4aa5c9fd7">deleteRow() : テーブルから条件に合致する行を削除</a>
 
@@ -133,33 +139,31 @@ argの配列は使用しない。同一テーブルでも複数の条件で更�
 ## <a name="5a75202c3db4">typedefs</a>
 
 
-### <a name="fa77053faee2">メンバ(pv = private variables)</a>
+### <a name="fa77053faee2">擬似メンバ"pv"</a>
 
+pv = private variables
   - whois {string} 'SpreadDb'固定
   - opt {[sdbOption](#a4a26014ccb3)} 起動時オプション
   - spread {<a href="https://developers.google.com/apps-script/reference/spreadsheet/spreadsheet?hl=ja">Spread</a>} スプレッドシートオブジェクト
   - table {Object.&lt;string,[sdbTable](#976403e08f0e)&gt;} スプレッドシート上の各テーブル(領域)の情報
-  - log {[sdbLog](#dab8cfcec9d8)[]}=[] 更新履歴シートオブジェクト
+  - log {[sdbLog](#dab8cfcec9d8)[]}=[] 変更履歴シートオブジェクト
 
 ### <a name="1e80990a7c63">sdbQuery {Object[]} 操作要求の内容</a>
 
-以下、行頭の「crudas」はコマンドの種類により必要となるパラメータ。'r'はselect(read)
-
+  - [queryId] {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列
   - table {string|string[]} 操作対象テーブル名
 全commandで使用。command='schema'の場合、取得対象テーブル名またはその配列
 
   - command {string} 操作名
 全commandで使用。「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
-  - cols {[sdbColumn](#df5b3c98954e)[]} - 新規作成シートの項目定義オブジェクトの配列
+  - [cols] {[sdbColumn](#df5b3c98954e)[]} 新規作成シートの項目定義オブジェクトの配列
 command='create'のみで使用
-  - values {Object[]|Array[]} - 新規作成シートに書き込む初期値
+  - [values] {Object[]|Array[]} - 新規作成シートに書き込む初期値
 command='create'のみで使用
-  - [where](#741ee9383b92) {Object|Function|string} 対象レコードの判定条件
+  - [[where](#741ee9383b92)] {Object|Function|string} 対象レコードの判定条件
 command='select','update','delete'で使用
-  - [record](#58dde3944536) {Object|Function} 追加・更新する値
+  - [[record](#58dde3944536)] {Object|Function} 追加・更新する値
 command='update','append'で使用
-  - isErr {boolean}=false command系メソッドで設定。対象レコード全てが正常終了ならfalse
-一つのqueryで複数の処理を指示した場合(ex.複数レコードの追加)、いずれか一つでもエラーになればisErrはtrueとなる。
 
 ### <a name="a4a26014ccb3">sdbOption {Object} オプション</a>
 
@@ -172,7 +176,7 @@ o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看�
 また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
 read/writeは自分のみ可、delete/schemaは実行不可
 
-  - log {string}='log' 更新履歴テーブル名
+  - log {string}='log' 変更履歴テーブル名
 nullの場合、ログ出力は行わない。領域名 &gt; A1記法 &gt; シート名の順に解釈
   - maxTrial {number}=5 テーブル更新時、ロックされていた場合の最大試行回数
   - interval {number}=10000 テーブル更新時、ロックされていた場合の試行間隔(ミリ秒)
@@ -233,29 +237,35 @@ object ⇒ {start:m,step:n}形式
   - note {string} 本項目に関する備考
 ローカル側のcreate table等では使用しない
 
-### <a name="dab8cfcec9d8">sdbLog {Object} 更新履歴オブジェクト</a>
+### <a name="dab8cfcec9d8">sdbLog {Object} 変更履歴オブジェクト</a>
+
+以下、既定値は[genLog()](#6fb9aba6d9f9)で設定される値
 
   - timestamp {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)
-  - userId {string|number} uuid等、更新者の識別子
-  - table {string} 更新対象テーブル名
-  - command {string} 操作内容
+  - userId {string|number}=[opt.userId](#5554e1d6a61d) ユーザ識別子(uuid等)
+  - queryId {string}=null SpreadDb呼出元で設定する、クエリ・結果突合用文字列
+未設定の場合、主処理でメソッド呼び出し前にUUIDを設定
+  - table {string}=null 対象テーブル名
+  - command {string}=null 操作内容(コマンド名)
 設定内容は「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
-  - argument {string} 操作関数に渡された引数(JSON)
-  - ErrCD {string} エラーコード
-rev.1.1.0 isErrとmessageを合併
+  - arg {string}=null 操作関数に渡された引数(JSON)
+  - ErrCD {string}=null レコード単位のエラーコード
+「[クエリのエラーとレコードのエラー](#0465ae3bbf61)」参照
 
-  - before {JSON} 更新前の行データオブジェクト(JSON)
-  - after {JSON} 更新後の行データオブジェクト(JSON)
-  - diff {JSON} 追加の場合は行オブジェクト、更新の場合は差分情報
+  - before {JSON}=null 更新前の行データオブジェクト(JSON)
+  - after {JSON}=null 更新後の行データオブジェクト(JSON)
+  - diff {JSON}=null 追加の場合は行オブジェクト、更新の場合は差分情報
 {項目名：[更新前,更新後],...}形式
 
 ### <a name="b03c5ccd2f8f">sdbMain {Object[]} 主処理、ひいてはSpreadDb全体の戻り値</a>
 
   - query {[sdbQuery](#1e80990a7c63)[]} 引数として渡されたqueryのコピー
-  - row {Object[]}=null selectの該当行オブジェクトの配列
+  - ErrCD {string}=null クエリ単位のエラーコード
+「[クエリのエラーとレコードのエラー](#0465ae3bbf61)」参照
+  - rows {Object[]}=null selectの該当行オブジェクトの配列
 該当無しの場合、row.length===0
   - schema {Object.&lt;string,[sdbColumn](#df5b3c98954e)[]&gt;} schemaで取得した{テーブル名：項目定義オブジェクトの配列}形式のオブジェクト
-  - log {[sdbLog](#dab8cfcec9d8)[]} 更新履歴
+  - log {[sdbLog](#dab8cfcec9d8)[]} 変更履歴
 update,deleteで該当無しの場合、log.length===0
 
 
@@ -331,6 +341,27 @@ commandの種類は下表の通り。&lt;br&gt;
     {userId:2,userAuth:{camp2024:'o'}}
   ); // -&gt; userId=2の氏名が「テスト」に
   ```
+  - クエリのエラーとレコードのエラー
+- クエリのエラー
+  - 指定テーブルへのアクセス権が無い等、クエリ単位で発生するエラー
+  - 
+  - command系メソッド内で予期せぬエラーが発生した場合(=戻り値がErrorオブジェクト)も該当&lt;br&gt;この場合、エラーコードにはError.messageがセットされる
+  - 主処理で判定
+  - SpreadDbの戻り値オブジェクトのErrCDに設定(sdbMain.ErrCD)
+  - エラーの種類
+    - No PrimaryKey: 権限"o"でappend先のテーブルに主キーが設定されていない
+    - No Authority: 対象テーブルに対するアクセス権が無い
+
+- レコードのエラー
+  - unique指定の有る項目に重複値を設定しようとした等、レコード単位で発生するエラー
+  - command系メソッドで判定(append, update, delete)
+  - 個別レコードのログオブジェクトのErrCDに設定(sdbLog.ErrCD = sdbMain.log.ErrCD)
+  - エラーの種類
+    - append
+      - Duplicate: unique項目に重複した値を設定。diffに{項目名:重複値} 形式で記録
+    - update
+    - delete
+
 
 ## <a name="d154b1fe324f">更新履歴</a>
 
@@ -338,3 +369,19 @@ commandの種類は下表の通り。&lt;br&gt;
   - エラー発生時、messageではなくエラーコードで返すよう変更
   - 1つの処理要求(query)で複数レコードを対象とする場合、一レコードでもエラーが発生したらエラーに
   - 変更履歴シートのUUIDは削除
+  - workflowyで作成した使用をmarkdown化する機能を追加
+  - queryにSpreadDb呼出元での突合用項目"queryId"を追加
+  
+- rev.1.1.0 : 2024/12/27
+  - 上・左余白不可、複数テーブル/シート不可に変更(∵ロジックが複雑で保守性低下)
+    - テーブル名とシート名が一致
+    - 左上隅のセルはA1に固定
+  - 「更新履歴」の各項目の並び・属性他について、シート上の変更は反映されない(システム側で固定)
+  - 各シートの権限チェックロジックを追加(opt.account)
+  - クロージャを採用(append/update/deleteをprivate関数化)
+    - select文を追加(従来のclass方式ではインスタンスから直接取得)
+    - インスタンスを返す方式から、指定された操作(query)の結果オブジェクトを返すように変更
+  - getSchemaメソッドを追加
+  - 旧版のgetLogは廃止(select文で代替)
+- 仕様の詳細は[workflowy](<a href="https://workflowy.com/#/4e03d2d2c266)参照">https://workflowy.com/#/4e03d2d2c266)参照</a>
+

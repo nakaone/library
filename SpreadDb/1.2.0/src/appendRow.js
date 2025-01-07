@@ -3,17 +3,19 @@
  * @param {sdbTable} arg.table - 操作対象のテーブル管理情報
  * @param {Object|Object[]} arg.record=[] - 追加する行オブジェクト
  * @returns {sdbLog[]}
+ *
+ * - 重複エラーが発生した場合、ErrCD='Duplicate' + diffに{項目名：重複値}形式で記録
  */
 function appendRow(arg){
-  const v = {whois:`${pv.whois}.appendRow`,step:0,rv:[]};
-  console.log(`${v.whois} start: target="${arg.table.name}", rows=${arg.record.length}`);
+  const v = {whois:`${pv.whois}.appendRow`,step:0,rv:[],target:[]};
   try {
 
     // ------------------------------------------------
     v.step = 1; // 事前準備
     // ------------------------------------------------
     if( !Array.isArray(arg.record)) arg.record = [arg.record];
-    v.target = [];  // 対象領域のシートイメージを準備
+    v.idStr = `table=${arg.table.name} record=${arg.record.length}rows`;
+    console.log(`${v.whois} start: ${v.idStr}\nsample=${JSON.stringify(arg.record[0])}`);
 
     // ------------------------------------------------
     v.step = 2; // 追加レコードをシートイメージに展開
@@ -25,8 +27,7 @@ function appendRow(arg){
         table: arg.table.name,
         command: 'append',
         arg: arg.record,
-        isErr: false,
-        //message, before, after, diffは後工程で追加
+        // before, after, diffは後工程で追加
       });
       if( v.log instanceof Error ) throw v.log;
 
@@ -48,11 +49,9 @@ function appendRow(arg){
       for( v.unique in arg.table.schema.unique ){
         if( arg.table.schema.unique[v.unique].indexOf(arg.record[v.i][v.unique]) >= 0 ){
           // 登録済の場合はエラーとして処理
-          v.log.isErr = true;
-          // 複数項目のエラーメッセージに対応するため配列化を介在させる
-          v.log.message = v.log.message === 'null' ? [] : v.log.message.split('\n');
-          v.log.message.push(`${v.unique}欄の値「${arg.record[v.i][v.unique]}」が重複しています`);
-          v.log.message = v.log.message.join('\n');
+          v.log.ErrCD = 'Duplicate';
+          if( !v.log.diff ) v.log.diff = {};
+          v.log.diff[v.unique] = arg.record[v.i][v.unique]; // diffに{unique項目名:重複値}を保存
         } else {
           // 未登録の場合arg.table.sdbSchema.uniqueに値を追加
           arg.table.schema.unique[v.unique].push(arg.record[v.i][v.unique]);
@@ -60,7 +59,7 @@ function appendRow(arg){
       }
 
       v.step = 2.5; // 正当性チェックOKの場合の処理
-      if( v.log.isErr === false ){
+      if( !v.log.ErrCD ){
 
         v.step = 2.51; // シートイメージに展開して登録
         v.row = [];
@@ -98,7 +97,7 @@ function appendRow(arg){
 
     v.step = 9; // 終了処理
     v.rv = v.rv;
-    console.log(`${v.whois} normal end.`);
+    console.log(`${v.whois} normal end: ${v.idStr}`);
     return v.rv;
 
   } catch(e) {

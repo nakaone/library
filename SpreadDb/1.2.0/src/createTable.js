@@ -7,8 +7,9 @@
  */
 function createTable(arg){
   const v = {whois:`${pv.whois}.createTable`,step:0,rv:[],convertRow:null};
-  console.log(`${v.whois} start. arg.table=${arg.table}`);
   try {
+    v.idStr = `table=${arg.table}${Object.hasOwn(arg,'values')?(', values='+arg.values.length+'rows'):'undefined'}`;
+    console.log(`${v.whois} start: ${v.idStr}`);
 
     // ----------------------------------------------
     v.step = 1; // 事前準備
@@ -18,8 +19,8 @@ function createTable(arg){
       table: arg.table,
       command: 'create',
       arg: arg.cols,
-      isErr: false,
-      message: `created ${Object.hasOwn(arg,'values') ? arg.values.length : 0} rows.`,
+      ErrCD: null,
+      after: `created ${Object.hasOwn(arg,'values') ? arg.values.length : 0} rows.`,
       // before, after, diffは空欄
     });
     if( v.log instanceof Error ) throw v.log;
@@ -92,7 +93,7 @@ function createTable(arg){
 
       v.step = 3.3; // 初期データの追加
       if( (arg.values||[]).length > 0 ){
-        if( v.convertRow === null ){
+        if( !v.convertRow ){
           v.convertRow = convertRow(arg.values,v.table.header);
           if( v.convertRow instanceof Error ) throw v.convertRow;
         }
@@ -106,7 +107,7 @@ function createTable(arg){
     v.step = 9; // 終了処理
     pv.table[v.table.name] = v.table;
     v.rv = [v.log];
-    console.log(`${v.whois}: create "${arg.table}" normal end.`);
+    console.log(`${v.whois} normal end: ${v.idStr}`);
     return v.rv;
 
   } catch(e) {

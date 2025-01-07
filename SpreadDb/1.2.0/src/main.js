@@ -1,10 +1,9 @@
-/**
- * main: SpreadDb主処理
- */
+/** main: SpreadDb主処理 */
 const v = {step:0,rv:[],log:[]};
-const pv = {whois:'SpreadDb'};  // private values: 擬似メンバ変数としてSpreadDb内で共有する値
-console.log(`${pv.whois} start.`);
+const pv = {whois:'SpreadDb'};  // private variables: 擬似メンバ変数としてSpreadDb内で共有する値
 try {
+  v.idStr = `${idStr(query,['queryId','table','command'])}, ${idStr(opt,'userId')}`;
+  console.log(`${pv.whois} start: ${v.idStr}`);
 
   v.step = 1; // 全体事前処理
   v.step = 1.11; // メンバ登録：起動時オプション
@@ -21,7 +20,6 @@ try {
   v.step = 1.12; // メンバ登録：内部設定項目
   Object.assign(pv,{
     spread: SpreadsheetApp.getActiveSpreadsheet(), // Spread} スプレッドシートオブジェクト
-    sheet: {}, // Object.<string,Sheet>} スプレッドシート上の各シート
     table: {}, // sdbTable[]} スプレッドシート上の各テーブル(領域)の情報
     log: [], // {sdbLog[]}=null 更新履歴シートオブジェクト
   });
@@ -53,8 +51,14 @@ try {
       for( v.i=0 ; v.i<query.length ; v.i++ ){
 
         v.step = 3; // 要求(query)実行準備
-        v.step = 3.1; //実行結果オブジェクト(v.queryResult)の初期化
-        v.queryResult = {query:query[v.i],isErr:false,message:'',rows:null,shcema:null,log:null};
+        v.step = 3.1; //実行結果オブジェクト(v.sdbMain)の初期化
+        v.sdbMain = {
+          query: query[v.i],
+          ErrCD: null,
+          rows:null,
+          shcema:null,
+          log:null,
+        };
 
         v.step = 3.2; // createでテーブル名を省略した場合は補完
         if( query[v.i].command === 'create' && !Object.hasOwn(query[v.i],'table') ){
@@ -89,10 +93,7 @@ try {
             v.pKey = pv.table[query[v.i].table].schema.primaryKey;
             if( !v.pKey ){
               v.step = 5.4; // 追加先テーブルにprimaryKeyが不在ならエラー
-              Object.assign(v.queryResult,{
-                isErr: true,
-                message: `primaryKey未設定のテーブルには追加できません`
-              });
+              v.sdbMain.ErrCD = 'No PrimaryKey';
             } else {
               v.step = 5.5; // 追加レコードの主キーはuserIdに変更
               if( !Array.isArray(query[v.i].record) ) query[v.i].record = [query[v.i].record];
@@ -124,7 +125,7 @@ try {
         }
 
         v.step = 6; // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
-        if( v.isOK ){
+        if( v.sdbMain.ErrCD === null && v.isOK === true ){
 
           v.step = 7; // 呼出先メソッド実行
           v.step = 7.1; // create以外の場合、操作対象のテーブル管理情報をcommand系メソッドの引数に追加
@@ -145,16 +146,12 @@ try {
             v.step = 9; // 異常終了時実行結果設定
             // selectRow, updateRow他のcommand系メソッドでエラー発生
             // command系メソッドからエラーオブジェクトが帰ってきた場合はエラーとして処理
-            Object.assign(v.queryResult,{
-              isErr: true,
-              message: v.sdbLog.message
-            });
-            v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
-              isErr: true,
-              message: v.sdbLog.message,
+            v.sdbMain.ErrCD = v.sdbLog.message;
+            v.sdbMain.log = genLog({  // sdbLogオブジェクトの作成
+              ErrCD: v.sdbLog.message,
               // before, after, diffは空欄
             });
-            if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
+            if( v.sdbMain.log instanceof Error ) throw v.sdbMain.log;
 
           } else {  // 戻り値がErrorオブジェクト以外
 
@@ -162,22 +159,21 @@ try {
             if( query[v.i].command === 'select' || query[v.i].command === 'schema' ){
 
               v.step = 10.1; // select, schemaは結果をrow/schemaにセット
-              v.queryResult[query[v.i].command === 'select' ? 'rows' : 'schema'] = v.sdbLog;
-              v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
+              v.sdbMain[query[v.i].command === 'select' ? 'rows' : 'schema'] = v.sdbLog;
+              v.sdbMain.log = genLog({  // sdbLogオブジェクトの作成
                 table: query[v.i].table.name,
                 command: query[v.i].command,
                 arg: toString(query[v.i].command === 'select' ? query[v.i].where : query[v.i].table),
-                isErr: false,
+                ErrCD: '',
                 message: query[v.i].command === 'select' ? `rownum=${v.sdbLog.length}` : '',
                 // before, after, diffは空欄
               });
-              if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
+              if( v.sdbMain.log instanceof Error ) throw v.sdbMain.log;
 
             } else {
 
               v.step = 10.2; // update, append, deleteは実行結果(sdbLog)をlogにセット
-              v.queryResult.log = v.sdbLog;
-              v.sdbLog.forEach(x => {if( x.isErr === true ){ v.queryResult.isErr = true; }});
+              v.sdbMain.log = v.sdbLog;
 
             }
           }
@@ -185,21 +181,17 @@ try {
         } else {
 
           v.step = 11; // isOKではない場合、無権限時実行結果設定
-          v.msg = `シート「${query[v.i].table}」に対して'${query[v.i].command}'する権限がありません`;
-          Object.assign(v.queryResult,{
-            isErr: true,
-            message: v.msg,
+          if( v.sdbMain.ErrCD === null ){
+            v.sdbMain.ErrCD = 'No Authority';
+          }
+          v.sdbMain.log = genLog({  // sdbLogオブジェクトの作成
+            ErrCD: v.sdbMain.ErrCD,
           });
-          v.queryResult.log = genLog({  // sdbLogオブジェクトの作成
-            isErr: true,
-            message: v.msg,
-            // before, after, diffは空欄
-          });
-          if( v.queryResult.log instanceof Error ) throw v.queryResult.log;
+          if( v.sdbMain.log instanceof Error ) throw v.sdbMain.log;
         }
 
         v.step = 12; // 実行結果を戻り値に追加
-        v.rv.push(v.queryResult);
+        v.rv.push(v.sdbMain);
       }
 
       v.step = 13; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
@@ -226,7 +218,7 @@ try {
   }
 
   v.step = 9; // 終了処理
-  console.log(`${pv.whois} normal end.`);
+  console.log(`${pv.whois} normal end: ${v.idStr}`);
   return v.rv;
 
 } catch(e) {

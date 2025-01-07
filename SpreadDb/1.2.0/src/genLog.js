@@ -10,14 +10,13 @@ function genLog(arg=null){
 
     v.step = 1; // 変更履歴シートの項目定義
     v.logDef = [
-      {name:'id',type:'UUID',note:'ログの一意キー項目',primaryKey:true},
-      {name:'timestamp',type:'string',note:'更新日時。ISO8601拡張形式'},
-      {name:'account',type:'string|number',note:'ユーザの識別子'},
+      {name:'timestamp',type:'string',note:'更新日時'},
+      {name:'userId',type:'string|number',note:'ユーザ識別子'},
+      {name:'queryId',type:'string',note:'クエリ・結果突合用識別子'},
       {name:'table',type:'string',note:'対象テーブル名'},
       {name:'command',type:'string',note:'操作内容(コマンド名)'},
       {name:'arg',type:'string',note:'操作関数に渡された引数'},
-      {name:'isErr',type:'boolean',note:'true:追加・更新が失敗'},
-      {name:'message',type:'string',note:'エラーメッセージ'},
+      {name:'ErrCD',type:'string',note:'エラーコード'},
       {name:'before',type:'JSON',note:'更新前の行データオブジェクト'},
       {name:'after',type:'JSON',note:'更新後の行データオブジェクト'},
       {name:'diff',type:'JSON',note:'差分情報。{項目名：[更新前,更新後]}形式'},
@@ -31,16 +30,17 @@ function genLog(arg=null){
     } else {
 
       v.step = 3; // 引数としてオブジェクトが渡された場合、その値を設定したsdbLogオブジェクトを返す
+      // シートへの追加だけなら必要な項目にdefault設定しておけば良いが、
+      // 呼出元への戻り値としても使用するので、ここで既定値設定を行う。
       v.rv = Object.assign({
-        id: Utilities.getUuid(), // {UUID} 一意キー項目
         timestamp: toLocale(new Date()), // {string} 更新日時
-        account: pv.opt.userId, // {string|number} uuid等、更新者の識別子
+        userId: pv.opt.userId, // {string|number} uuid等、更新者の識別子
         // 以下、本関数呼出元で設定する項目
+        queryId: null, // {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列
         table: null, // {string} 更新対象となった範囲名(テーブル名)
         command: null, // {string} 操作内容。command系内部関数名のいずれか
         arg: null, // {string} 操作関数に渡された引数
-        isErr: null, // {boolean} true:追加・更新が失敗
-        message: null, // {string} エラーメッセージ
+        ErrCD: null, // {string} エラーコード
         before: null, // {JSON} 更新前の行データオブジェクト(JSON)
         after: null, // {JSON} 更新後の行データオブジェクト(JSON)。selectの場合はここに格納
         diff: null, // {JSON} 追加の場合は行オブジェクト、更新の場合は差分情報。{項目名：[更新前,更新後],...}形式
