@@ -1,20 +1,5 @@
 function SpreadDbTest(){
-  /* 引数の形式
-  - query {Object[]} 操作要求の内容
-    - table {string} 操作対象テーブル名
-    - command {string} 操作名。select/update/delete/append/schema
-    - arg {object} 操作に渡す引数。command系内部関数の引数参照
-  - opt {Object}={} オプション
-    - userId {string}='guest' ユーザの識別子
-    - userAuth {Object.<string,string>}={} テーブル毎のアクセス権限。{シート名:rwdos文字列} 形式
-    - log {string}='log' 更新履歴テーブル名
-    - tables {Object[]} 新規作成するテーブルのデータ(genTablesの引数の配列)
-    - maxTrial {number}=5 テーブル更新時、ロックされていた場合の最大試行回数
-    - interval {number}=10000 テーブル更新時、ロックされていた場合の試行間隔(ミリ秒)
-    - guestAuth {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
-    - adminId {string} 管理者として扱うuserId
-  */
-  const v = {scenario:'create',start:0,num:1,//num=0なら全部
+  const v = {scenario:'select',start:1,num:1,//num=0なら全部
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -34,6 +19,24 @@ function SpreadDbTest(){
           if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
         }
       });
+    },
+    reset: (sheetName=[]) => {  // テストの使用するシートのみ再作成
+      if( !Array.isArray(sheetName) ) sheetName = [sheetName];
+      for( v.i=0 ; v.i<sheetName.length ; v.i++ ){
+        v.deleteSheet(sheetName[v.i]);  // シートを削除
+        for( v.si in src ){ // 対象シート情報検索
+          if( src[v.si].name === sheetName[v.i] ){
+            v.sh = src[v.si];
+            break;
+          }
+        }
+        SpreadDb({  // 対象シート作成
+          command:'create',
+          table:v.sh.name,
+          cols: (v.sh.cols || null),
+          values: (v.sh.values || null),
+        },{userId:'Administrator'});
+      }
     },
   };
   const src = { // テスト用サンプルデータ
@@ -294,17 +297,109 @@ function SpreadDbTest(){
           ];
           return v.rv.join('\n');
         }
+      },{ // 1.userId未指定では作成できないことの確認
+        query: {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+        // optは指定しない(ユーザ未定)
+        check: sdbMain => { // 結果を分析、レポートを出力する関数
+          v.rv = [];
+          for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
+            v.result = sdbMain[v.i].ErrCD === 'No Authority' ? 'success' : 'failed';
+            v.rv = [...v.rv,
+              `query.${v.i} [${v.result}] ----------`,
+              `ErrCD: ${sdbMain[v.i].ErrCD}`,
+              `command: ${sdbMain[v.i].query.command}`,
+              `table: ${sdbMain[v.i].query.table}`,
+            ];
+          };
+          return v.rv.join('\n');
+        }
+      },{ // 2.管理者以外は作成できないことの確認
+        query: {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+        opt: {userId:'fuga'},
+        check: (sdbMain,query,opt) => { // 結果を分析、レポートを出力する関数
+          v.rv = [];
+          for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
+            v.result = (sdbMain[v.i].ErrCD === 'No Authority'
+            && sdbMain[v.i].log.userId === opt.userId
+            ) ? 'success' : 'failed';
+            v.rv = [...v.rv,
+              `query.${v.i} [${v.result}] ----------`,
+              `ErrCD: ${sdbMain[v.i].ErrCD}`,
+              `log.userId: ${sdbMain[v.i].log.userId}`,
+              `command: ${sdbMain[v.i].query.command}`,
+              `table: ${sdbMain[v.i].query.table}`,
+            ];
+          };
+          return v.rv.join('\n');
+        }
       },
+    ],
+    select: [ // select関係のテスト群
+      { // 0.基本形
+        reset: ['掲示板'],
+        query: [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"},
+          // 日付の比較では"new Date()"を使用。ちなみにgetTime()無しで比較可能
+          {table:'掲示板',command:'select',where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"},
+        ],
+        opt: {userId:'Administrator'},
+        check: (sdbMain,query,opt) => { // 結果を分析、レポートを出力する関数
+          console.log(JSON.stringify(sdbMain));
+          v.rv = [];
+          for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
+            v.result = (sdbMain[v.i].ErrCD === null
+            && sdbMain[v.i].rows.length === 6
+            ) ? 'success' : 'failed';
+            v.rv = [...v.rv,
+              `query.${v.i} [${v.result}] ----------`,
+              `table.command: ${query.table}.${query.command}`,
+              `ErrCD: ${sdbMain[v.i].ErrCD}`,
+              `rows: ${sdbMain[v.i].rows.length}`,
+              `log.userId: ${sdbMain[v.i].log.userId}`,
+            ];
+          };
+          return v.rv.join('\n');
+        }
+      },{ // 1.ゲストに「掲示板」の読込を許可した場合
+        reset: [], //['掲示板'],
+        query: [
+          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+        ],
+        opt: {guestAuth:{'掲示板':'r'}},  // ゲストに掲示板の読込権限付与
+        check: (sdbMain,query,opt) => { // 結果を分析、レポートを出力する関数
+          console.log(JSON.stringify(sdbMain));
+          console.log(JSON.stringify(query));
+          v.rv = [];
+          for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
+            v.result = sdbMain[v.i].ErrCD === null ? 'success' : 'failed';
+            v.rv = [...v.rv,
+              `query.${v.i} [${v.result}] ----------`,
+              `table.command: ${sdbMain[v.i].log.table}.${sdbMain[v.i].log.command}`,
+              `ErrCD(${whichType(sdbMain[v.i].ErrCD)}): ${sdbMain[v.i].ErrCD}`,
+              `rows: ${sdbMain[v.i].rows.length}`,
+              `log.userId: ${sdbMain[v.i].log.userId}`,
+            ];
+          };
+          return v.rv.join('\n');
+        }
+      }
+      /*
+      {command:'create',table:src.board.name,values:src.board.values},
+      {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 参照
+      */
     ],
   };
 
   try {
 
-    // 既存シートを全部削除
-    v.deleteSheet();
-
     // v.scenarioで指定されたテスト群について、v.startからv.num個分を実行
     for( v.idx=v.start ; v.idx<(v.num>0?(v.start+v.num):scenario[v.scenario].length) ; v.idx++ ){
+      // テスト用データをセット
+      if( Object.hasOwn(scenario[v.scenario][v.idx],'reset') ){
+        v.reset(scenario[v.scenario][v.idx].reset); // 再作成シート指定が有ればその指示に従う
+      } else {
+        v.deleteSheet(); // 既存シートを全部削除
+      }
 
       v.r = SpreadDb( // scenarioからqueryとoptをセット
         scenario[v.scenario][v.idx].query,
@@ -314,7 +409,7 @@ function SpreadDbTest(){
 
       // テスト結果(サマリ)の表示
       v.msg = `===== ${v.whois} end: scenario=${v.scenario}.${v.idx}\n`;
-      console.log(v.msg+scenario[v.scenario][v.idx].check(v.r));
+      console.log(v.msg+scenario[v.scenario][v.idx].check(v.r,scenario[v.scenario][v.idx].query,scenario[v.scenario][v.idx].opt));
     }
 
   } catch(e) {
