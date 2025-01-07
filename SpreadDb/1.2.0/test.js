@@ -287,6 +287,10 @@ function SpreadDbTest(){
             '①対象シートは全て作成されているか',
             '②メモの内容は適切か',
             '③ユーザ管理シート以外、シートには初期データが入っているか',
+            '④掲示板シートのメッセージは改行されているか',
+            'camp2024のuserIdはprimaryKeyになっているか',
+            'camp2024の左端列はtimestampからuserIdに変更されているか',
+            '各シートのcreateがlogシートに出力されているか',
           ];
           return v.rv.join('\n');
         }
@@ -561,15 +565,15 @@ function SpreadDb(query=[],opt={}){
    * - 重複エラーが発生した場合、ErrCD='Duplicate' + diffに{項目名：重複値}形式で記録
    */
   function appendRow(arg){
-    const v = {whois:`${pv.whois}.appendRow`,step:0,rv:[]};
-    console.log(`${v.whois} start: ${idStr(arg,['table.name','record'])}`);
+    const v = {whois:`${pv.whois}.appendRow`,step:0,rv:[],target:[]};
     try {
 
       // ------------------------------------------------
       v.step = 1; // 事前準備
       // ------------------------------------------------
       if( !Array.isArray(arg.record)) arg.record = [arg.record];
-      v.target = [];  // 対象領域のシートイメージを準備
+      v.idStr = `table=${arg.table.name} record=${arg.record.length}rows`;
+      console.log(`${v.whois} start: ${v.idStr}\nsample=${JSON.stringify(arg.record[0])}`);
 
       // ------------------------------------------------
       v.step = 2; // 追加レコードをシートイメージに展開
@@ -816,7 +820,7 @@ function SpreadDb(query=[],opt={}){
 
         v.step = 3.3; // 初期データの追加
         if( (arg.values||[]).length > 0 ){
-          if( v.convertRow === null ){
+          if( !v.convertRow ){
             v.convertRow = convertRow(arg.values,v.table.header);
             if( v.convertRow instanceof Error ) throw v.convertRow;
           }
@@ -1446,7 +1450,7 @@ function SpreadDb(query=[],opt={}){
   /** 関数・オブジェクトを文字列化 */
   function toString(arg){
     if( typeof arg === 'function' ) return arg.toString();
-    if( typeof arg === 'object' ) return JSON.stringify(arg);
+    if( arg !== null && typeof arg === 'object' ) return JSON.stringify(arg);
     return arg;
   }
   /** updateRow: 領域に新規行を追加
