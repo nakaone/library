@@ -239,22 +239,53 @@ object ⇒ {start:m,step:n}形式
 
 ### <a name="dab8cfcec9d8">sdbLog {Object} 変更履歴オブジェクト</a>
 
+変更履歴はクエリ単位とし、個々のレコードの変更箇所はdiffとして持たせる
+
+| command | 権限 | status | ratio | record欄 | 備考 |
+| :-- | :--: | :-- | :-- | :-- | :-- |
+| create | — | Already Exist<br>No Cols and Data | — | [sdbColumn](#df5b3c98954e) | 管理者のみ実行可 |
+| select | r | No Table | 抽出失敗/対象 | — | 「対象なのに失敗」は考慮しない |
+| update | rw | No Table | 更新失敗/対象 | {sts:[OK\|Duplicate],<br>diff:{項目名:[更新前,更新後]}} |  |
+| append | w | No Table | 追加失敗/対象 | {sts:[OK\|Duplicate],<br>diff:追加行Obj} |  |
+| delete | d | No Table | 削除失敗/対象 | — | 「対象なのに失敗」は考慮しない |
+| schema | s | No Table | — | [sdbColumn](#df5b3c98954e) |  |
+
+- command系メソッドはstatus,num,recordを返す
+- command系メソッドは、成功件数が0件でも「正常終了」とし、status="OK"とする
+- 戻り値がErrorオブジェクトの場合、status="System",record=Error.messageとする
+- record欄は、実際は上記Objの【配列】のJSON文字列とする
+
 以下、既定値は[genLog()](#6fb9aba6d9f9)で設定される値
 
   - timestamp {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)
   - userId {string|number}=[opt.userId](#5554e1d6a61d) ユーザ識別子(uuid等)
   - queryId {string}=null SpreadDb呼出元で設定する、クエリ・結果突合用文字列
-未設定の場合、主処理でメソッド呼び出し前にUUIDを設定
+未設定の場合、メソッド呼び出し前にgenLogでUUIDを設定
+
   - table {string}=null 対象テーブル名
   - command {string}=null 操作内容(コマンド名)
 設定内容は「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
   - arg {string}=null 操作関数に渡された引数(JSON)
-  - ErrCD {string}=null レコード単位のエラーコード
+  - status {string}='OK' クエリの実行結果。エラー時は上表参照
+  - ratio {number}=0 レコード単位のエラー件数÷対象件数
+  - record {Object[]}=[] commandにより異なるため、上表参照
+  - 旧sdbLog {Object} 変更履歴オブジェクト(dab8cfcec9d8) #copy
+以下、既定値は[genLog()](#6fb9aba6d9f9)で設定される値
+
+    - timestamp {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)
+    - userId {string|number}=[opt.userId](#5554e1d6a61d) ユーザ識別子(uuid等)
+    - queryId {string}=null SpreadDb呼出元で設定する、クエリ・結果突合用文字列
+未設定の場合、主処理でメソッド呼び出し前にUUIDを設定
+    - table {string}=null 対象テーブル名
+    - command {string}=null 操作内容(コマンド名)
+設定内容は「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
+    - arg {string}=null 操作関数に渡された引数(JSON)
+    - ErrCD {string}=null レコード単位のエラーコード
 「[クエリのエラーとレコードのエラー](#0465ae3bbf61)」参照
 
-  - before {JSON}=null 更新前の行データオブジェクト(JSON)
-  - after {JSON}=null 更新後の行データオブジェクト(JSON)
-  - diff {JSON}=null 追加の場合は行オブジェクト、更新の場合は差分情報
+    - before {JSON}=null 更新前の行データオブジェクト(JSON)
+    - after {JSON}=null 更新後の行データオブジェクト(JSON)
+    - diff {JSON}=null 追加の場合は行オブジェクト、更新の場合は差分情報
 {項目名：[更新前,更新後],...}形式
 
 ### <a name="b03c5ccd2f8f">sdbMain {Object[]} 主処理、ひいてはSpreadDb全体の戻り値</a>
