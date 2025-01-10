@@ -151,6 +151,7 @@ pv = private variables
 ### <a name="1e80990a7c63">sdbQuery {Object[]} 操作要求の内容</a>
 
   - [queryId] {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列
+未設定の場合、メソッド呼び出し前にUUIDを設定
   - table {string|string[]} 操作対象テーブル名
 全commandで使用。command='schema'の場合、取得対象テーブル名またはその配列
 
@@ -158,11 +159,24 @@ pv = private variables
 全commandで使用。「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
   - [cols] {[sdbColumn](#df5b3c98954e)[]} 新規作成シートの項目定義オブジェクトの配列
 command='create'のみで使用
-  - [values] {Object[]|Array[]} - 新規作成シートに書き込む初期値
-command='create'のみで使用
   - [[where](#741ee9383b92)] {Object|Function|string} 対象レコードの判定条件
 command='select','update','delete'で使用
-  - [[record](#58dde3944536)] {Object|Function} 追加・更新する値
+  - [[set](#58dde3944536)] {Object|string|Function} 追加・更新する値
+command='create','update','append'で使用
+  - 【旧版】sdbQuery {Object[]} 操作要求の内容(1e80990a7c63) #copy
+    - [queryId] {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列
+    - table {string|string[]} 操作対象テーブル名
+全commandで使用。command='schema'の場合、取得対象テーブル名またはその配列
+
+    - command {string} 操作名
+全commandで使用。「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
+    - [cols] {[sdbColumn](#df5b3c98954e)[]} 新規作成シートの項目定義オブジェクトの配列
+command='create'のみで使用
+    - [values] {Object[]|Array[]} - 新規作成シートに書き込む初期値
+command='create'のみで使用
+    - [[where](#741ee9383b92)] {Object|Function|string} 対象レコードの判定条件
+command='select','update','delete'で使用
+    - [[record](#58dde3944536)] {Object|Function} 追加・更新する値
 command='update','append'で使用
 
 ### <a name="a4a26014ccb3">sdbOption {Object} オプション</a>
@@ -243,10 +257,10 @@ object ⇒ {start:m,step:n}形式
 
 | command | 権限 | status | ratio | record欄 | 備考 |
 | :-- | :--: | :-- | :-- | :-- | :-- |
-| create | — | Already Exist<br>No Cols and Data | — | [sdbColumn](#df5b3c98954e) | 管理者のみ実行可 |
+| create | — | Already Exist&lt;br&gt;No Cols and Data | — | [sdbColumn](#df5b3c98954e) | 管理者のみ実行可 |
 | select | r | No Table | 抽出失敗/対象 | — | 「対象なのに失敗」は考慮しない |
-| update | rw | No Table | 更新失敗/対象 | {sts:[OK\|Duplicate],<br>diff:{項目名:[更新前,更新後]}} |  |
-| append | w | No Table | 追加失敗/対象 | {sts:[OK\|Duplicate],<br>diff:追加行Obj} |  |
+| update | rw | No Table | 更新失敗/対象 | {sts:[OK|Duplicate],diff:{項目名:[更新前,更新後]}} |  |
+| append | w | No Table | 追加失敗/対象 | {sts:[OK|Duplicate],diff:追加行Obj} |  |
 | delete | d | No Table | 削除失敗/対象 | — | 「対象なのに失敗」は考慮しない |
 | schema | s | No Table | — | [sdbColumn](#df5b3c98954e) |  |
 
@@ -265,11 +279,16 @@ object ⇒ {start:m,step:n}形式
   - table {string}=null 対象テーブル名
   - command {string}=null 操作内容(コマンド名)
 設定内容は「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
-  - arg {string}=null 操作関数に渡された引数(JSON)
+  - [cols] {[sdbColumn](#df5b3c98954e)[]} 新規作成シートの項目定義オブジェクトの配列 #copy
+command='create'のみで使用
+  - [[where](#741ee9383b92)] {Object|Function|string} 対象レコードの判定条件 #copy
+command='select','update','delete'で使用
+  - [[set](#58dde3944536)] {Object|Function} 追加・更新する値 #copy
+command='create','update','append'で使用
   - status {string}='OK' クエリの実行結果。エラー時は上表参照
   - ratio {number}=0 レコード単位のエラー件数÷対象件数
   - record {Object[]}=[] commandにより異なるため、上表参照
-  - 旧sdbLog {Object} 変更履歴オブジェクト(dab8cfcec9d8) #copy
+  - 【旧版】sdbLog {Object} 変更履歴オブジェクト(dab8cfcec9d8) #copy
 以下、既定値は[genLog()](#6fb9aba6d9f9)で設定される値
 
     - timestamp {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)
@@ -326,13 +345,14 @@ sdbSchemaにメモ情報を付加
 - その他(Object,function,string以外) ⇒ 項目定義で"primaryKey"を指定した項目の値
 
 
-### <a name="58dde3944536">record {Object|string|Function} 更新する値</a>
+### <a name="58dde3944536">set {Object|string|Function} 更新する値</a>
 
-record句の指定方法
+set句の指定方法
 - Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}
 - string ⇒ 上記Objectに変換可能なJSON文字列
 - Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数
   【例】abc欄にfuga+hogeの値をセットする : {func: o=&gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}
+
 
 ## <a name="56eaf36cc785">用語解説、注意事項</a>
 
