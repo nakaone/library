@@ -14,11 +14,16 @@
  */
 function functionalyze(arg=null){
   const v = {whois:`${pv.whois}.functionalyze`,step:0,rv:null};
-  console.log(`${v.whois} start.`);
   try {
 
+    v.fId = `: arg(${whichType(arg)})=${toString(arg)}`;
+    console.log(`${v.whois} start${v.fId}`);
+
     v.step = 1; // 引数のチェック
-    if( typeof arg === 'string' ){
+    if( typeof arg === 'function' ){
+      console.log(`${v.whois} normal end${v.fId}`);
+      return arg;
+    } else if( typeof arg === 'string' ){
       arg = {data:arg,table:null};
     } else if( !whichType(arg,'Object') || !Object.hasOwn(arg,'data')){
       throw new Error(`引数「${toString(arg)}」は適切な引数ではありません`);
@@ -64,7 +69,7 @@ function functionalyze(arg=null){
     }
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.\nrv=${toString(v.rv)}`);
+    console.log(`${v.whois} normal end${v.fId}`);
     return v.rv;
 
   } catch(e) {

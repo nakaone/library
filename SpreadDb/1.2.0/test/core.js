@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'select',start:2,num:-1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'create',start:0,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -270,11 +270,13 @@ function SpreadDbTest(){
     create: [ // create関係のテスト群
       { // 0.基本形
         query: [
+          {command:'create',table:src.camp.name,cols:src.camp.cols,set:src.camp.values},  // 「camp2024」シート作成
+          /*
           {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
           {command:'create',table:src.PL.name,values:src.PL.values},  // 「損益計算書」シート作成
-          {command:'create',table:src.camp.name,cols:src.camp.cols,values:src.camp.values},  // 「camp2024」シート作成
           {command:'create',table:src.board.name,values:src.board.values},  // 「掲示板」シート作成
-          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成  
+          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,values:src.autoIncrement.values},  // 「AutoInc」シート作成
+          */
         ],
         opt: {userId:'Administrator'},
         check: sdbMain => { // 結果を分析、レポートを出力する関数
@@ -405,7 +407,7 @@ function SpreadDbTest(){
         }
       }
       /*
-      ],[  // 
+      ],[  //
         {command:'create',table:src.board.name,values:src.board.values},
         [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
@@ -473,6 +475,7 @@ function SpreadDbTest(){
     }
 
   } catch(e) {
-    console.error(`${v.whois} abnormal end at step.${v.step}\n${e.message}`);
+    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v,(key,val)=>typeof val==='function'?val.toString():val,2)}`);
   }
 }

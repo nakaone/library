@@ -35,7 +35,7 @@ prj="$lib/$prjName/1.2.0"
 src="$prj/src"
 doc="$prj/doc"
 test="$prj/test"
-tmp="$prj/tmp"; mkdir -p $tmp
+tmp="$prj/tmp"; mkdir -p $tmp; rm -rf $tmp/*
 
 # ----------------------------------------------
 # 1. core.jsの作成

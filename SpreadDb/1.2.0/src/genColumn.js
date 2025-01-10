@@ -14,27 +14,11 @@
  */
 function genColumn(arg={}){
   const v = {whois:`${pv.whois}.genColumn`,step:0,rv:{},
-    idStr: 'arg=' + (typeof arg === 'string' ? arg : arg.name),
-    typedef:[ // sdbColumnの属性毎にname,type,noteを定義
-      {name:'name',type:'string',note:'項目名'},
-      {name:'type',type:'string',note:'データ型。string,number,boolean,Date,JSON,UUID'},
-      {name:'format',type:'string',note:'表示形式。type=Dateの場合のみ指定'},
-      {name:'options',type:'number|string|boolean|Date',note:'取り得る選択肢(配列)のJSON表現。ex.["未入場","既収","未収","無料"]'},
-      {name:'default',type:'number|string|boolean|Date',note:'既定値'},
-      {name:'primaryKey',type:'boolean',note:'一意キー項目ならtrue'},
-      {name:'unique',type:'boolean',note:'primaryKey以外で一意な値を持つならtrue'},
-      {name:'auto_increment',type:'null|bloolean|number|number[]',note:'自動採番項目'
-        + '\n// null ⇒ 自動採番しない'
-        + '\n// boolean ⇒ true:自動採番する(基数=1,増減値=1)、false:自動採番しない'
-        + '\n// number ⇒ 自動採番する(基数=指定値,増減値=1)'
-        + '\n// number[] ⇒ 自動採番する(基数=添字0,増減値=添字1)'
-      },
-      {name:'suffix',type:'string',note:'"not null"等、上記以外のSQLのcreate table文のフィールド制約'},
-      {name:'note',type:'string',note:'本項目に関する備考。create table等では使用しない'},
-    ],
+    fId: 'arg=' + (typeof arg === 'string' ? arg : arg.name),
+    typedef:pv.opt.sdbColumn,
     rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現
   };
-  console.log(`${v.whois} start. ${v.idStr}`);
+  console.log(`${v.whois} start. ${v.fId}`);
   try {
 
     // ------------------------------------------------
@@ -126,7 +110,7 @@ function genColumn(arg={}){
     }
 
     v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end. ${v.idStr}`);
+    console.log(`${v.whois} normal end. ${v.fId}`);
     return v.rv;
 
   } catch(e) {

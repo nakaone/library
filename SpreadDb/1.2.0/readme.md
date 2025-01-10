@@ -11,12 +11,39 @@
 ### <a name="3eca2504fb57">概要</a>
 
   - 手順
+| 項目 | メンバ | query | main | create | select | append | update | delete | schema | 戻り値 | クエリ | レコード |
+| :-- | :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
+| timestamp |  |  | 〇 | ← | ← | ← | ← | ← | ← | ← | ← |  |
+| userId |  |  | 〇 | ← | ← | ← | ← | ← | ← | ← | ← |  |
+| queryId |  | ◎ | ← | ← | ← | ← | ← | ← | ← | ← | ← | 〇 |
+| table |  | ◎ | ← | ← | ← | ← | ← | ← | ← | ← | ← |  |
+| command |  | ◎ | ← | ← | ← | ← | ← | ← | ← | ← | ← |  |
+| cols |  | 〇 |  |  |  |  |  |  |  |  |  |  |
+| where |  | 〇 |  |  |  |  |  |  |  |  | ※4 |  |
+| set |  | 〇 |  |  |  |  |  |  |  |  |  |  |
+| qSts |  |  | 〇 | ※1 | ※3 | ※3 | ※3 | ※3 | ※3 | ← | 〇 |  |
+| record | rSts |  |  | ※2 |  | ※2 |  |  |  |  |  | 〇 |
+|  | recordId |  |  | 〇 | 〇 | 〇 | 〇 | 〇 | 〇 |  |  | 〇 |
+|  | diff |  |  | ※c | ※r | ※a | ※u | ※d | ※s |  |  | 〇 |
+
+- ※1 : OK, Already Exist, No Cols and Data
+- ※2 : OK, Duplicate
+- ※3 : OK, No Table
+- ※4 : createならcols、select/update/deleteならwhere、append/schemaなら空白。setの内容はrecordで確認する運用を想定
+- ※c : 初期値として追加した行オブジェクト
+- ※r : 抽出された行オブジェクト
+- ※a : 追加された行オブジェクト
+- ※u : 変更点。{変更された項目名:[変更前,変更後]}
+- ※d : 削除された行オブジェクト
+- ※s : 提供された項目定義(sdbColumn[])
+
 ![](doc/flowchart.main.webp)
+
     - スプレッドシートを凍結
     - queryで渡された操作要求を順次処理
     - 権限確認後、command系内部関数の呼び出し
-    - 結果を実行結果オブジェクトに保存
-    - 実行結果オブジェクトの配列を変更履歴シートに追記
+    - command系関数内で結果をqueryに追記
+    - queryの配列を変更履歴シートに追記
     - スプレッドシートの凍結解除
   - 引数
     - query {[sdbQuery](#1e80990a7c63)[]} 操作要求、またはその配列
@@ -143,6 +170,7 @@ argの配列は使用しない。同一テーブルでも複数の条件で更�
 
 pv = private variables
   - whois {string} 'SpreadDb'固定
+  - query {[sdbQuery](#1e80990a7c63)[]} 起動時の処理要求
   - opt {[sdbOption](#a4a26014ccb3)} 起動時オプション
   - spread {<a href="https://developers.google.com/apps-script/reference/spreadsheet/spreadsheet?hl=ja">Spread</a>} スプレッドシートオブジェクト
   - table {Object.&lt;string,[sdbTable](#976403e08f0e)&gt;} スプレッドシート上の各テーブル(領域)の情報
@@ -150,7 +178,7 @@ pv = private variables
 
 ### <a name="1e80990a7c63">sdbQuery {Object[]} 操作要求の内容</a>
 
-  - [queryId] {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列
+  - [<span class="colored c-red">queryId</span>] {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列
 未設定の場合、メソッド呼び出し前にUUIDを設定
   - table {string|string[]} 操作対象テーブル名
 全commandで使用。command='schema'の場合、取得対象テーブル名またはその配列
@@ -163,21 +191,6 @@ command='create'のみで使用
 command='select','update','delete'で使用
   - [[set](#58dde3944536)] {Object|string|Function} 追加・更新する値
 command='create','update','append'で使用
-  - 【旧版】sdbQuery {Object[]} 操作要求の内容(1e80990a7c63) #copy
-    - [queryId] {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列
-    - table {string|string[]} 操作対象テーブル名
-全commandで使用。command='schema'の場合、取得対象テーブル名またはその配列
-
-    - command {string} 操作名
-全commandで使用。「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
-    - [cols] {[sdbColumn](#df5b3c98954e)[]} 新規作成シートの項目定義オブジェクトの配列
-command='create'のみで使用
-    - [values] {Object[]|Array[]} - 新規作成シートに書き込む初期値
-command='create'のみで使用
-    - [[where](#741ee9383b92)] {Object|Function|string} 対象レコードの判定条件
-command='select','update','delete'で使用
-    - [[record](#58dde3944536)] {Object|Function} 追加・更新する値
-command='update','append'で使用
 
 ### <a name="a4a26014ccb3">sdbOption {Object} オプション</a>
 
@@ -253,8 +266,6 @@ object ⇒ {start:m,step:n}形式
 
 ### <a name="dab8cfcec9d8">sdbLog {Object} 変更履歴オブジェクト</a>
 
-変更履歴はクエリ単位とし、個々のレコードの変更箇所はdiffとして持たせる
-
 | command | 権限 | status | ratio | record欄 | 備考 |
 | :-- | :--: | :-- | :-- | :-- | :-- |
 | create | — | Already Exist&lt;br&gt;No Cols and Data | — | [sdbColumn](#df5b3c98954e) | 管理者のみ実行可 |
@@ -279,44 +290,35 @@ object ⇒ {start:m,step:n}形式
   - table {string}=null 対象テーブル名
   - command {string}=null 操作内容(コマンド名)
 設定内容は「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
-  - [cols] {[sdbColumn](#df5b3c98954e)[]} 新規作成シートの項目定義オブジェクトの配列 #copy
-command='create'のみで使用
-  - [[where](#741ee9383b92)] {Object|Function|string} 対象レコードの判定条件 #copy
-command='select','update','delete'で使用
-  - [[set](#58dde3944536)] {Object|Function} 追加・更新する値 #copy
-command='create','update','append'で使用
-  - status {string}='OK' クエリの実行結果。エラー時は上表参照
-  - ratio {number}=0 レコード単位のエラー件数÷対象件数
-  - record {Object[]}=[] commandにより異なるため、上表参照
-  - 【旧版】sdbLog {Object} 変更履歴オブジェクト(dab8cfcec9d8) #copy
-以下、既定値は[genLog()](#6fb9aba6d9f9)で設定される値
+  - [[data](#741ee9383b92)] {Object|Function|string} 所与のデータ
+createならcols、select/update/deleteならwhere、append/schemaなら空白。
+create/appendの追加レコード情報、selectの抽出レコード等はrecordで確認する運用を想定
 
-    - timestamp {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)
-    - userId {string|number}=[opt.userId](#5554e1d6a61d) ユーザ識別子(uuid等)
-    - queryId {string}=null SpreadDb呼出元で設定する、クエリ・結果突合用文字列
-未設定の場合、主処理でメソッド呼び出し前にUUIDを設定
-    - table {string}=null 対象テーブル名
-    - command {string}=null 操作内容(コマンド名)
-設定内容は「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
-    - arg {string}=null 操作関数に渡された引数(JSON)
-    - ErrCD {string}=null レコード単位のエラーコード
-「[クエリのエラーとレコードのエラー](#0465ae3bbf61)」参照
+  - [qSts](#a0484ae4e8cb) {string} クエリ単位の実行結果
+  - [rSts](#e6d17beebb65) {string} レコード単位でのエラーコード
+  - [diff](#361a1e9ff1fa) {Object} 当該レコードの変更点
 
-    - before {JSON}=null 更新前の行データオブジェクト(JSON)
-    - after {JSON}=null 更新後の行データオブジェクト(JSON)
-    - diff {JSON}=null 追加の場合は行オブジェクト、更新の場合は差分情報
-{項目名：[更新前,更新後],...}形式
+### <a name="b03c5ccd2f8f">sdbMain {Object} 処理中のクエリ状態管理</a>
 
-### <a name="b03c5ccd2f8f">sdbMain {Object[]} 主処理、ひいてはSpreadDb全体の戻り値</a>
+  - timestamp {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)
+  - userId {string|number}=[opt.userId](#5554e1d6a61d) ユーザ識別子(uuid等)
+  - query {[sdbQuery](#1e80990a7c63)} 操作要求
+  - qSts {string} クエリ単位の実行結果
+正常終了なら"OK"。エラーコードは以下の通り。
+- create : "Already Exist", "No Cols and Data"
+- その他 : "No Table"
+  - record {Object[]} レコード単位の実行結果
+    - recordId {string} 処理対象レコードの識別子
+    - rSts {string}='' レコード単位でのエラーコード
+append/updateで重複エラー時は"Duplicate"
 
-  - query {[sdbQuery](#1e80990a7c63)[]} 引数として渡されたqueryのコピー
-  - ErrCD {string}=null クエリ単位のエラーコード
-「[クエリのエラーとレコードのエラー](#0465ae3bbf61)」参照
-  - rows {Object[]}=null selectの該当行オブジェクトの配列
-該当無しの場合、row.length===0
-  - schema {Object.&lt;string,[sdbColumn](#df5b3c98954e)[]&gt;} schemaで取得した{テーブル名：項目定義オブジェクトの配列}形式のオブジェクト
-  - log {[sdbLog](#dab8cfcec9d8)[]} 変更履歴
-update,deleteで該当無しの場合、log.length===0
+    - diff {Object} 当該レコードの変更点
+create : 初期値として追加した行オブジェクト
+select : 抽出された行オブジェクト
+append : 追加された行オブジェクト
+update : 変更点。{変更された項目名:[変更前,変更後]}
+delete : 削除された行オブジェクト
+schema : 提供された項目定義(sdbColumn[])
 
 
 ### <a name="2609271977a8">sdbGenSchema {Object} genSchemaの戻り値</a>
@@ -348,7 +350,7 @@ sdbSchemaにメモ情報を付加
 ### <a name="58dde3944536">set {Object|string|Function} 更新する値</a>
 
 set句の指定方法
-- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}
+- Object ⇒ create/appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}
 - string ⇒ 上記Objectに変換可能なJSON文字列
 - Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数
   【例】abc欄にfuga+hogeの値をセットする : {func: o=&gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}
