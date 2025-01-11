@@ -521,7 +521,7 @@ function SpreadDb(query=[],opt={}){
           v.r = objectizeColumn('sdbLog');
           if( v.r instanceof Error ) throw v.r;
           v.qLog = Object.assign(v.r,pv.query[v.i]);
-          v.qLog.data = pv.query[v.i].command === 'create' ? pv.query[v.i].cols : (pv.query[v.i].where || '')
+          v.qLog.data = pv.query[v.i].command === 'create' ? JSON.stringify(pv.query[v.i].cols) : (pv.query[v.i].where || '')
           // レコード単位の実行結果、1行目はクエリ単位のそれに追加
           if( query[v.i].result.length > 0 ){
             v.qLog.pKey = query[v.i].result[0].pKey;
