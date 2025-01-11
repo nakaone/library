@@ -692,13 +692,55 @@ function SpreadDb(query=[],opt={}){
     try {
 
       // ------------------------------------------------
-      v.step = 1; // 事前準備
+      v.step = 1; // 引数チェック、v.fId作成
       // ------------------------------------------------
-      if( !Array.isArray(arg.record)) arg.record = [arg.record];
-      v.fId = `: table=${arg.table} record=${arg.record.length}rows`;
-      console.log(`${v.whois} start${v.fId}\nsample=${JSON.stringify(arg.record[0])}`);
 
-      v.table = pv.table[arg.table];
+      v.step = 1.1; // arg.tableの判定 ⇒ pv.tableに存在しなければエラー
+      if( !Object.hasOwn(arg,'table') || typeof arg.table !== 'string' || !Object.hasOwn(pv.table,arg.table) )
+        throw new Error(`Invalid Table`);
+      v.fId = `: table=${arg.table}`;
+      v.table = pv.table[arg.table];  // v.tableに対象のテーブル管理情報をセット
+
+      v.step = 1.2; // arg.recordの判定
+      if( !Object.hasOwn(arg,'record') ) throw new Error(`No Record`);  // arg.recordが不存在
+
+      v.step = 1.3;
+      // ①一行分のシートイメージ ⇒ any[] ⇒ 二次元配列化
+      // ②一行分の行オブジェクト ⇒ Object ⇒ 配列化
+      // ③複数行分のシートイメージ ⇒ any[][] ⇒ 行オブジェクトに変換
+      // ④複数行分の行オブジェクト ⇒ Object[] ⇒ そのまま使用
+      // ⑤上記以外 ⇒ エラー
+      if( Array.isArray(arg.record) ){
+        v.step = 1.31; // 配列の長さ0
+        if( arg.record.length === 0 ) throw new Error(`Length is 0`);
+        if( whichType(arg.record[0],'Object') ){
+          v.step = 1.32; // ④ ⇒ そのまま使用
+          v.fId += `, sample=${JSON.stringify(arg.record[0])}`;
+        } else {
+          if( Array.isArray(arg.record[0]) ){
+            v.step = 1.33; // ③ ⇒ 行オブジェクトに変換
+            v.fId += `, sample=${JSON.stringify(arg.record[0])}`;
+            v.r = convertRow(arg.record);
+            if( v.r instanceof Error ) throw v.r;
+            arg.record = v.r.obj;
+          } else {
+            v.step = 1.34;  // ① ⇒ 二次元配列化
+            v.fId += `, record=${JSON.stringify(arg.record)}`;
+            arg.record = [arg.record];
+          }
+        }
+      } else {
+        if( whichType(arg.record,'Object') ){
+          v.step = 1.35; // ② ⇒ 配列化
+          v.fId += `, record=${JSON.stringify(arg.record)}`;
+          arg.record = [arg.record];
+        } else {
+          v.step = 1.36; // ⑤ ⇒ エラー
+          throw new Error(`Invalid Record`);
+        }
+      }
+      v.step = 1.4;
+      console.log(`${v.whois} start${v.fId}`);
 
       // ------------------------------------------------
       v.step = 2; // 追加レコードをシートイメージに展開
@@ -708,13 +750,11 @@ function SpreadDb(query=[],opt={}){
         v.step = 2.1; // 1レコード分のログを準備
         v.log = objectizeColumn('sdbResult');
         if( v.log instanceof Error ) throw v.log;
-        vlog(v.log,596)
-        // 主キーの値をpKeyにセット
-        vlog(v.table.schema,597)
-        vlog(arg.record,598)
+
+        v.step = 2.2; // 主キーの値をpKeyにセット
         v.log.pKey = arg.record[v.i][v.table.schema.primaryKey];
 
-        v.step = 2.2; // auto_increment項目に値を設定
+        v.step = 2.3; // auto_increment項目に値を設定
         // ※ auto_increment設定はuniqueチェックに先行
         for( v.ai in v.table.schema.auto_increment ){
           if( !arg.record[v.i][v.ai] ){ // 値が未設定だった場合は採番実行
@@ -723,12 +763,12 @@ function SpreadDb(query=[],opt={}){
           }
         }
 
-        v.step = 2.3; // 既定値の設定
+        v.step = 2.4; // 既定値の設定
         for( v.dv in v.table.schema.defaultRow ){
           arg.record[v.i][v.dv] = v.table.schema.defaultRow[v.dv](arg.record[v.i]);
         }
 
-        v.step = 2.4; // 追加レコードの正当性チェック(unique重複チェック)
+        v.step = 2.5; // 追加レコードの正当性チェック(unique重複チェック)
         for( v.unique in v.table.schema.unique ){
           if( v.table.schema.unique[v.unique].indexOf(arg.record[v.i][v.unique]) >= 0 ){
             // 登録済の場合はエラーとして処理
@@ -740,10 +780,10 @@ function SpreadDb(query=[],opt={}){
           }
         }
 
-        v.step = 2.5; // 正当性チェックOKの場合の処理
+        v.step = 2.6; // 正当性チェックOKの場合の処理
         if( v.log.rSts === 'OK' ){
 
-          v.step = 2.51; // シートイメージに展開して登録
+          v.step = 2.61; // シートイメージに展開して登録
           v.row = [];
           for( v.j=0 ; v.j<v.table.header.length ; v.j++ ){
             v.a = arg.record[v.i][v.table.header[v.j]];
@@ -751,14 +791,14 @@ function SpreadDb(query=[],opt={}){
           }
           v.target.push(v.row);
 
-          v.step = 2.52; // v.table.valuesへの追加
+          v.step = 2.62; // v.table.valuesへの追加
           v.table.values.push(arg.record[v.i]);
 
-          v.step = 2.53; // ログに追加レコード情報を記載
+          v.step = 2.63; // ログに追加レコード情報を記載
           v.log.diff = JSON.stringify(arg.record[v.i]);
         }
 
-        v.step = 2.6; // 成否に関わらず戻り値に保存
+        v.step = 2.7; // 成否に関わらず戻り値に保存
         v.rv.push(v.log);
       }
 
@@ -887,8 +927,8 @@ function SpreadDb(query=[],opt={}){
       v.table.sheet.setFrozenRows(1); // 先頭1行を固定
 
       v.step = 3.3; // 初期データの追加
-      if( v.table.rownum > 0 ){
-        v.rv = appendRow({table:v.table.name,record:v.table.values});
+      if( query.set.length > 0 ){
+        v.rv = appendRow({table:v.table.name,record:query.set});
         if( v.rv instanceof Error ) throw v.r;
       }
 
@@ -982,9 +1022,6 @@ function SpreadDb(query=[],opt={}){
       v.fId = `: table=${query.table}, command=${query.command}`;
       console.log(`${v.whois} start${v.fId}`);
 
-      // -------------------------------------------------------------
-      // -------------------------------------------------------------
-
       v.step = 1; // queryの補完(未定義項目に既定値設定)
       v.r = objectizeColumn('sdbQuery');
       if( v.r instanceof Error ) throw v.r;
@@ -996,16 +1033,12 @@ function SpreadDb(query=[],opt={}){
         if( v.r instanceof Error ) throw v.r;
       }
 
-      // -------------------------------------------------------------
-      // -------------------------------------------------------------
-
       v.step = 3; // ユーザの操作対象シートに対する権限をv.allowにセット
       v.allow = (pv.opt.adminId === pv.opt.userId) ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
       : ( pv.opt.userId === 'guest' ? (pv.opt.guestAuth[query.table] || '')  // ゲスト(userId指定無し)
       : ( pv.opt.userAuth[query.table] || ''));  // 通常ユーザ
-      console.log(`l.860 ${v.whois}.${v.step} v.allow(${whichType(v.allow)})=${v.allow}`)
 
-      v.step = 5; // 呼出先メソッド設定
+      v.step = 4; // 呼出先メソッド設定
       if( v.allow.includes('o') ){
 
         // o(=own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
@@ -1040,7 +1073,7 @@ function SpreadDb(query=[],opt={}){
 
       } else {
 
-        v.step = 5.7;  // 'o'以外の場合の呼出先メソッドを設定
+        v.step = 6;  // 'o'以外の場合の呼出先メソッドを設定
         switch( query.command ){
           case 'create': v.isOK = v.allow.includes('c'); v.func = createTable; break;
           case 'select': v.isOK = v.allow.includes('r'); v.func = selectRow; break;
@@ -1051,18 +1084,15 @@ function SpreadDb(query=[],opt={}){
           default: v.isOK = false;
         }
       }
-      if( v.isOK === false ){
-        query.qSts = 'No Authority';
-      }
 
-      // -------------------------------------------------------------
-      // -------------------------------------------------------------
+      v.step = 7; // 無権限ならqStsにエラーコードをセット
+      if( v.isOK === false ) query.qSts = 'No Authority';
 
-      v.step = 6; // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
+      v.step = 7; // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
       if( query.qSts === 'OK' ){
 
-        v.step = 7; // 呼出先メソッド実行
-        v.step = 7.1; // create以外の場合、操作対象のテーブル管理情報をcommand系メソッドの引数に追加
+        // 呼出先メソッド実行
+        v.step = 8.1; // create以外の場合、操作対象のテーブル管理情報をcommand系メソッドの引数に追加
         if( query.command !== 'create' && query.command !== 'schema' ){
           if( !pv.table[query.table] ){  // 以前のcommandでテーブル管理情報が作られていない場合は作成
             pv.table[query.table] = genTable({name:query.table});
@@ -1070,19 +1100,17 @@ function SpreadDb(query=[],opt={}){
           }
         }
 
-        v.step = 7.2;  // メソッド実行
+        v.step = 8.2;  // メソッド実行
         v.r = v.func(query);
-
-        v.step = 8;  // 戻り値がErrorオブジェクト
         if( v.r instanceof Error ){
-          // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
+          v.step = 8.3; // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
           query.qSts = v.r.message;
           throw v.r;
+        } else {
+          v.step = 8.4; // 戻り値がエラーでない場合、レコード単位の実行結果をresultに保存
+          query.result = v.r;
         }
       }
-
-      v.step = 10; // 正常終了時実行結果設定(command系メソッドが正常終了した場合の処理)
-      query.result = v.r;
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end${v.fId}`);
@@ -1416,12 +1444,10 @@ function SpreadDb(query=[],opt={}){
       v.fId = `: name=${arg.name}`;
       console.log(`${v.whois} start${v.fId}`);
 
-      // 既にpv.tableに存在するなら何もしない
+      v.step = 1; // 既にpv.tableに存在するなら何もしない
       if( !pv.table[arg.name] ){
 
-        // ----------------------------------------------
-        v.step = 1; // メンバの初期化、既定値設定
-        // ----------------------------------------------
+        v.step = 2; // テーブルのプロトタイプを作成、初期化＋既定値設定
         v.r = objectizeColumn('sdbTable');
         if( v.r instanceof Error ) throw v.r;
         pv.table[arg.name] = v.table = Object.assign(v.r,{
@@ -1429,42 +1455,56 @@ function SpreadDb(query=[],opt={}){
           sheet: pv.spread.getSheetByName(arg.name), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
         });
 
+        v.step = 3; // シートの存否確認
         if( v.table.sheet === null ){
-          // シート不在なら引数から各種情報をセット
 
-          // 項目定義も初期データも無いならエラー
-          if( !arg.cols && !arg.values ) throw new Error('No Cols and Data');
-
-          if( arg.values ){
-            v.r = convertRow(arg.values);
-            if( v.r instanceof Error ) throw v.r;
-            v.table.header = v.r.header;
-            v.table.values = v.r.obj;
-          }
+          v.step = 4; // シート不在なら引数から項目定義を作成
           if( arg.cols ){
+            v.step = 4.1; // 引数に項目定義オブジェクトが存在
             v.table.schema.cols = arg.cols;
             v.table.header = arg.cols.map(x => x.name);
+          } else {
+            if( arg.values ){
+              v.step = 4.2; // 引数に項目定義オブジェクトが不存在だが初期データは存在
+              v.r = convertRow(arg.values);
+              if( v.r instanceof Error ) throw v.r;
+              v.table.header = v.r.header;
+            } else {
+              v.step = 4.3; // 項目定義も初期データも無いならエラー
+              throw new Error('No Cols and Data');
+            }
           }
+
+          v.step = 4.4; // 項目数・データ行数の設定
           v.table.colnum = v.table.header.length;
-          v.table.rownum = v.table.values.length;
+          v.table.rownum = 0;
+
+          // 尚v.table.notes(項目定義メモ)は設定不要
+          // ∵ step.6のgenSchema経由genColumnでcolsから作成される
 
         } else {
-          // シートが存在するならシートから各種情報を取得
 
-          v.step = 2.1; // シートイメージを読み込み
+          v.step = 5; // シートが存在するならシートから各種情報を取得
+          v.step = 5.1; // シートイメージを読み込み
           v.getDataRange = v.table.sheet.getDataRange();
           v.getValues = v.getDataRange.getValues();
-          v.table.header = JSON.parse(JSON.stringify(v.getValues[0]));
+
+          v.step = 5.2; // シートイメージからヘッダ行・行オブジェクトを作成
           v.r = convertRow(v.getValues);
           if( v.r instanceof Error ) throw v.r;
+
+          v.step = 5.3; // ヘッダ・データの設定
+          v.table.header = v.r.header;
           v.table.values = v.r.obj;
-          v.table.notes = v.getDataRange.getNotes()[0];
           v.table.colnum = v.table.header.length;
           v.table.rownum = v.table.values.length;
+
+          v.step = 5.4; // ヘッダ行のメモ(項目定義メモ)を取得
+          v.table.notes = v.getDataRange.getNotes()[0];
 
         }
 
-        v.step = 2.3; // スキーマをインスタンス化
+        v.step = 6; // スキーマをインスタンス化
         v.r = genSchema(v.table);
         if( v.r instanceof Error ) throw v.r;
       }
@@ -1535,10 +1575,8 @@ function SpreadDb(query=[],opt={}){
 
       v.step = 1;
       for( v.i=0 ; v.i<v.arg.length ; v.i++ ){
-        //console.log('l.1391',JSON.stringify(v.arg[v.i],(key,val)=>typeof val==='function'?val.toString():val,2))
         if( Object.hasOwn(v.arg[v.i],'default') && v.arg[v.i].default ){
           v.step = 2;
-          //console.log(`l.1394 v.arg[${v.i}].default(${whichType(v.arg[v.i].default)})=${toString(v.arg[v.i].default)}`)
           v.func = functionalyze(v.arg[v.i].default);
           if( v.func instanceof Error ) throw v.func;
           v.rv[v.arg[v.i].name] = v.func();
