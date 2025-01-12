@@ -4,8 +4,8 @@
  */
 function SpreadDb(query=[],opt={}){
   //::$src/main.js::
-  //::$src/constructor.js::
   //::$src/appendRow.js::
+  //::$src/constructor.js::
   //::$src/convertRow.js::
   //::$src/createTable.js::
   //::$src/deleteRow.js::

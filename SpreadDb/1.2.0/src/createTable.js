@@ -34,8 +34,8 @@ function createTable(query){
     v.table.sheet.setFrozenRows(1); // 先頭1行を固定
 
     v.step = 3.3; // 初期データの追加
-    if( v.table.rownum > 0 ){
-      v.rv = appendRow({table:v.table.name,record:v.table.values});
+    if( query.set.length > 0 ){
+      v.rv = appendRow({table:v.table.name,record:query.set});
       if( v.rv instanceof Error ) throw v.r;
     }
 

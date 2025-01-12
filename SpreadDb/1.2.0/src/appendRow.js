@@ -11,13 +11,55 @@ function appendRow(arg){
   try {
 
     // ------------------------------------------------
-    v.step = 1; // 事前準備
+    v.step = 1; // 引数チェック、v.fId作成
     // ------------------------------------------------
-    if( !Array.isArray(arg.record)) arg.record = [arg.record];
-    v.fId = `: table=${arg.table} record=${arg.record.length}rows`;
-    console.log(`${v.whois} start${v.fId}\nsample=${JSON.stringify(arg.record[0])}`);
 
-    v.table = pv.table[arg.table];
+    v.step = 1.1; // arg.tableの判定 ⇒ pv.tableに存在しなければエラー
+    if( !Object.hasOwn(arg,'table') || typeof arg.table !== 'string' || !Object.hasOwn(pv.table,arg.table) )
+      throw new Error(`Invalid Table`);
+    v.fId = `: table=${arg.table}`;
+    v.table = pv.table[arg.table];  // v.tableに対象のテーブル管理情報をセット
+
+    v.step = 1.2; // arg.recordの判定
+    if( !Object.hasOwn(arg,'record') ) throw new Error(`No Record`);  // arg.recordが不存在
+
+    v.step = 1.3;
+    // ①一行分のシートイメージ ⇒ any[] ⇒ 二次元配列化
+    // ②一行分の行オブジェクト ⇒ Object ⇒ 配列化
+    // ③複数行分のシートイメージ ⇒ any[][] ⇒ 行オブジェクトに変換
+    // ④複数行分の行オブジェクト ⇒ Object[] ⇒ そのまま使用
+    // ⑤上記以外 ⇒ エラー
+    if( Array.isArray(arg.record) ){
+      v.step = 1.31; // 配列の長さ0
+      if( arg.record.length === 0 ) throw new Error(`Length is 0`);
+      if( whichType(arg.record[0],'Object') ){
+        v.step = 1.32; // ④ ⇒ そのまま使用
+        v.img = `[4]sample=${JSON.stringify(arg.record[0])}`;
+      } else {
+        if( Array.isArray(arg.record[0]) ){
+          v.step = 1.33; // ③ ⇒ 行オブジェクトに変換
+          v.img = `[3]sample=${JSON.stringify(arg.record[0])}`;
+          v.r = convertRow(arg.record);
+          if( v.r instanceof Error ) throw v.r;
+          arg.record = v.r.obj;
+        } else {
+          v.step = 1.34;  // ① ⇒ 二次元配列化
+          v.img = `[1]record=${JSON.stringify(arg.record)}`;
+          arg.record = [arg.record];
+        }
+      }
+    } else {
+      if( whichType(arg.record,'Object') ){
+        v.step = 1.35; // ② ⇒ 配列化
+        v.img = `[2]record=${JSON.stringify(arg.record)}`;
+        arg.record = [arg.record];
+      } else {
+        v.step = 1.36; // ⑤ ⇒ エラー
+        throw new Error(`Invalid Record`);
+      }
+    }
+    v.step = 1.4;
+    console.log(`${v.whois} start${v.fId}\n${v.img}`);
 
     // ------------------------------------------------
     v.step = 2; // 追加レコードをシートイメージに展開
@@ -27,13 +69,11 @@ function appendRow(arg){
       v.step = 2.1; // 1レコード分のログを準備
       v.log = objectizeColumn('sdbResult');
       if( v.log instanceof Error ) throw v.log;
-      vlog(v.log,596)
-      // 主キーの値をpKeyにセット
-      vlog(v.table.schema,597)
-      vlog(arg.record,598)
+
+      v.step = 2.2; // 主キーの値をpKeyにセット
       v.log.pKey = arg.record[v.i][v.table.schema.primaryKey];
 
-      v.step = 2.2; // auto_increment項目に値を設定
+      v.step = 2.3; // auto_increment項目に値を設定
       // ※ auto_increment設定はuniqueチェックに先行
       for( v.ai in v.table.schema.auto_increment ){
         if( !arg.record[v.i][v.ai] ){ // 値が未設定だった場合は採番実行
@@ -42,12 +82,12 @@ function appendRow(arg){
         }
       }
 
-      v.step = 2.3; // 既定値の設定
+      v.step = 2.4; // 既定値の設定
       for( v.dv in v.table.schema.defaultRow ){
         arg.record[v.i][v.dv] = v.table.schema.defaultRow[v.dv](arg.record[v.i]);
       }
 
-      v.step = 2.4; // 追加レコードの正当性チェック(unique重複チェック)
+      v.step = 2.5; // 追加レコードの正当性チェック(unique重複チェック)
       for( v.unique in v.table.schema.unique ){
         if( v.table.schema.unique[v.unique].indexOf(arg.record[v.i][v.unique]) >= 0 ){
           // 登録済の場合はエラーとして処理
@@ -59,10 +99,10 @@ function appendRow(arg){
         }
       }
 
-      v.step = 2.5; // 正当性チェックOKの場合の処理
+      v.step = 2.6; // 正当性チェックOKの場合の処理
       if( v.log.rSts === 'OK' ){
 
-        v.step = 2.51; // シートイメージに展開して登録
+        v.step = 2.61; // シートイメージに展開して登録
         v.row = [];
         for( v.j=0 ; v.j<v.table.header.length ; v.j++ ){
           v.a = arg.record[v.i][v.table.header[v.j]];
@@ -70,14 +110,14 @@ function appendRow(arg){
         }
         v.target.push(v.row);
 
-        v.step = 2.52; // v.table.valuesへの追加
+        v.step = 2.62; // v.table.valuesへの追加
         v.table.values.push(arg.record[v.i]);
 
-        v.step = 2.53; // ログに追加レコード情報を記載
+        v.step = 2.63; // ログに追加レコード情報を記載
         v.log.diff = JSON.stringify(arg.record[v.i]);
       }
 
-      v.step = 2.6; // 成否に関わらず戻り値に保存
+      v.step = 2.7; // 成否に関わらず戻り値に保存
       v.rv.push(v.log);
     }
 
