@@ -1,6 +1,6 @@
 /** doQuery: 単体クエリの実行、変更履歴の作成 */
 function doQuery(query){
-  const v = {whois:`${pv.whois}.doQuery`,step:0,rv:null};
+  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.doQuery`,step:0,rv:null};
   try {
 
     v.step = 1; // 事前準備
@@ -25,24 +25,24 @@ function doQuery(query){
       // また対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
       //read/write/append/deleteは自分のみ可、schemaは実行不可
 
-      v.step = 5;  // 操作対象レコードの絞り込み(検索・追加条件の変更)
+      v.step = 4.1;  // 操作対象レコードの絞り込み(検索・追加条件の変更)
       if( query.command !== 'append' ){
-        v.step = 6; // select/update/deleteなら対象を自レコードに限定
+        v.step = 4.2; // select/update/deleteなら対象を自レコードに限定
         query.where = pv.opt.userId;
       } else {
-        v.step = 7; // appendの場合
+        v.step = 4.3; // appendの場合
         v.pKey = pv.table[query.table].schema.primaryKey;
         if( !v.pKey ){
-          v.step = 8; // 追加先テーブルにprimaryKeyが不在ならエラー
+          v.step = 4.4; // 追加先テーブルにprimaryKeyが不在ならエラー
           query.qSts = 'No PrimaryKey';
         } else {
-          v.step = 9; // 追加レコードの主キーはuserIdに変更
+          v.step = 4.5; // 追加レコードの主キーはuserIdに変更
           if( !Array.isArray(query.record) ) query.record = [query.record];
           query.record.forEach(x => x[v.pKey] = pv.opt.userId);
         }
       }
 
-      v.step = 10; // 'o'の場合の呼出先メソッドを設定
+      v.step = 4.6; // 'o'の場合の呼出先メソッドを設定
       switch( query.command ){
         case 'select': v.isOK = true; v.func = selectRow; break;
         case 'update': v.isOK = true; v.func = updateRow; break;
@@ -53,7 +53,7 @@ function doQuery(query){
 
     } else {
 
-      v.step = 11;  // 'o'以外の場合の呼出先メソッドを設定
+      v.step = 4.7;  // 'o'以外の場合の呼出先メソッドを設定
       switch( query.command ){
         case 'create': v.isOK = v.allow.includes('c'); v.func = createTable; break;
         case 'select': v.isOK = v.allow.includes('r'); v.func = selectRow; break;
@@ -65,34 +65,25 @@ function doQuery(query){
       }
     }
 
-    v.step = 12; // 無権限ならqStsにエラーコードをセット
+    v.step = 5; // 無権限ならqStsにエラーコードをセット
     if( v.isOK === false ) query.qSts = 'No Authority';
 
-    v.step = 13; // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
+    v.step = 6; // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
     if( query.qSts === 'OK' ){
 
-      // 呼出先メソッド実行
-      v.step = 14; // create以外の場合、操作対象のテーブル管理情報をcommand系メソッドの引数に追加
-      if( query.command !== 'create' && query.command !== 'schema' ){
-        if( !pv.table[query.table] ){  // 以前のcommandでテーブル管理情報が作られていない場合は作成
-          pv.table[query.table] = genTable({name:query.table});
-          if( pv.table[query.table] instanceof Error ) throw pv.table[query.table];
-        }
-      }
-
-      v.step = 15;  // メソッド実行
+      v.step = 6.1;  // メソッド実行
       v.r = v.func(query);
       if( v.r instanceof Error ){
-        v.step = 16; // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
+        v.step = 6.2; // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
         query.qSts = v.r.message;
         throw v.r;
       } else {
-        v.step = 17; // 戻り値がエラーでない場合、レコード単位の実行結果をresultに保存
+        v.step = 6.3; // 戻り値がエラーでない場合、レコード単位の実行結果をresultに保存
         query.result = v.r;
       }
     }
 
-    v.step = 99; // 終了処理
+    v.step = 9; // 終了処理
     console.log(`${v.whois} normal end${v.fId}`);
     return v.rv;
 

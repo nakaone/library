@@ -3,7 +3,7 @@
  * @returns {void}
  */
 function genSchema(table){
-  const v = {whois:`${pv.whois}.genSchema`,step:0,rv:null};
+  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.genSchema`,step:0,rv:null};
   try {
 
     v.fId = `: table=${table.name}`;
@@ -47,8 +47,6 @@ function genSchema(table){
         table.schema.primaryKey = table.schema.cols[v.i].name;
         table.schema.unique[table.schema.cols[v.i].name] = [];
       }
-      // 主キーがないテーブルはエラー
-      if( !table.schema.primaryKey ) throw new Error('No Primary Key');
 
       v.step = 3.2; // unique
       if( Object.hasOwn(table.schema.cols[v.i],'unique') && table.schema.cols[v.i].unique === true ){

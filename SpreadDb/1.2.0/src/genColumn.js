@@ -13,7 +13,7 @@
  *   - note {string[]} メモ用の文字列
  */
 function genColumn(arg={}){
-  const v = {whois:`${pv.whois}.genColumn`,step:0,rv:{},
+  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.genColumn`,step:0,rv:{},
     fId: 'arg=' + (typeof arg === 'string' ? arg : arg.name),
     typedef:pv.opt.sdbColumn,
     rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現

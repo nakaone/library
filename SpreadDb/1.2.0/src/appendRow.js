@@ -7,7 +7,7 @@
  * - 重複エラーが発生した場合、ErrCD='Duplicate' + diffに{項目名：重複値}形式で記録
  */
 function appendRow(arg){
-  const v = {whois:`${pv.whois}.appendRow`,step:0,rv:[],target:[]};
+  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.appendRow`,step:0,rv:[],target:[]};
   try {
 
     // ------------------------------------------------

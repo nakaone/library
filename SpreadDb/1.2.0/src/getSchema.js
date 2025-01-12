@@ -3,7 +3,7 @@
  * @returns {Object.<string,sdbColumn[]>} {テーブル名：項目定義オブジェクトの配列}形式
  */
 function getSchema(arg){
-  const v = {whois:`${pv.whois}.getSchema`,step:0,rv:[]};
+  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.getSchema`,step:0,rv:[]};
   console.log(`${v.whois} start.\narg(${whichType(arg)})=${JSON.stringify(arg)}`);
   try {
 

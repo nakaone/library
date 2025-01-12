@@ -12,7 +12,7 @@
  *     【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
  */
 function updateRow(arg={}){
-  const v = {whois:`${pv.whois}.updateRow`,step:0,rv:[],
+  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.updateRow`,step:0,rv:[],
     top:Infinity,left:Infinity,right:0,bottom:0, // 更新範囲の行列番号
   };
   console.log(`${v.whois} start.`);

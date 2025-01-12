@@ -9,14 +9,22 @@
  *   - header {string} ヘッダ行
  */
 function convertRow(data=[],header=[]){
-  const v = {whois:pv.whois+'.convertRow',step:0,rv:{raw:[],obj:[],header:header}};
-  console.log(`${v.whois} start.`);
+  const v = {whois:pv.whois+'.convertRow',step:0,rv:{raw:[],obj:data,header:header}};
   try {
 
-    if( data.length > 0 ){
-      if( Array.isArray(data[0]) ){ v.step = 1; // シートイメージ -> 行オブジェクト
+    console.log(`${v.whois} start\ndata=${JSON.stringify(data.slice(0,2))}\nheader=${JSON.stringify(header)}`);
 
-        v.step = 1.1; // シートイメージを一度行オブジェクトに変換(∵列の並びをheader指定に合わせる)
+    if( data.length > 0 ){
+
+      v.step = 1; // ヘッダ未定義の場合、dataがシートイメージなら先頭行、行オブジェクトならメンバ名から作成
+      // シートイメージの先頭行を使用する場合、createで主キー項目を追加(unshift)する場合に元データの先頭行も変化してしまうのでシャローコピーする
+      if( v.rv.header.length === 0 ){
+        v.rv.header = Array.isArray(data[0]) ? [...data[0]] : [...new Set(data.flatMap(d => Object.keys(d)))];
+      }
+
+      if( Array.isArray(data[0]) ){ // dataがシートイメージの場合
+        v.step = 2; // シートイメージを一度行オブジェクトに変換(∵列の並びをheader指定に合わせる)
+        v.rv.obj = [];
         for( v.i=1 ; v.i<data.length ; v.i++ ){
           v.o = {};
           for( v.j=0 ; v.j<data[v.i].length ; v.j++ ){
@@ -26,19 +34,6 @@ function convertRow(data=[],header=[]){
           }
           v.rv.obj.push(v.o);
         }
-
-        v.step = 1.2; // 引数headerが無ければrv.headerはシートイメージ先頭行とする
-        if( header.length === 0 ){
-          v.rv.header = data[0];
-        }
-
-      } else { v.step = 2; // 行オブジェクト -> シートイメージ
-
-        v.rv.obj = data;
-        if( header.length === 0 ){ // 引数headerが無ければメンバ名からrv.headerを生成
-          v.rv.header = [...new Set(data.flatMap(d => Object.keys(d)))];
-        }
-
       }
 
       v.step = 3; // ヘッダの項目名の並びに基づき、行オブジェクトからシートイメージを生成

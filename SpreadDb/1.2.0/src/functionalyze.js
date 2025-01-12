@@ -13,7 +13,7 @@
  *     - その他 ⇒ 項目定義で"primaryKey"を指定した項目の値   *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
  */
 function functionalyze(arg=null){
-  const v = {whois:`${pv.whois}.functionalyze`,step:0,rv:null};
+  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.functionalyze`,step:0,rv:null};
   try {
 
     v.fId = `: arg(${whichType(arg)})=${toString(arg)}`;

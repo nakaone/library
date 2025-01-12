@@ -137,6 +137,7 @@
       </outline>
       <outline text="typedefs(5a75202c3db4)">
         <outline text="擬似メンバ&quot;pv&quot;(fa77053faee2)" _note="pv = private variables">
+          <outline text="jobId {number}=0 SpreadDb内メソッド実行時の通番" />
           <outline text="whois {string} 'SpreadDb'固定" />
           <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;[]} 処理要求" />
           <outline text="opt {&lt;a href=&quot;https://workflowy.com/#/a4a26014ccb3&quot;&gt;sdbOption&lt;/a&gt;} 起動時オプション" />
@@ -194,6 +195,7 @@
           <outline text="interval {number}=10000 テーブル更新時、ロックされていた場合の試行間隔(ミリ秒)" />
           <outline text="guestAuth {Object.&amp;lt;string,string&amp;gt;}={} ゲストに付与する権限。&lt;code&gt;{シート名:rwdos文字列}&lt;/code&gt; 形式" />
           <outline text="adminId {string}='Administrator' 管理者として扱うuserId" _note="管理者は全てのシートの全権限を持つ&#10;" />
+          <outline text="additionalPrimaryKey {Object} createTableで主キー無指定時に追加設定される主キー項目名" _note="既定値は`{name:'rowId',type:'UUID',note:'主キー',primaryKey:true,default:()=&amp;gt;Utilities.getUuid()}`&#10;" />
           <outline text="2 Backlinks">
             <outline text="opt {&lt;a href=&quot;https://workflowy.com/#/a4a26014ccb3&quot;&gt;sdbOption&lt;/a&gt;}={} 起動時オプション" />
             <outline text="opt {&lt;a href=&quot;https://workflowy.com/#/a4a26014ccb3&quot;&gt;sdbOption&lt;/a&gt;} 起動時オプション" />
@@ -229,7 +231,7 @@
             <outline text="step {number} 増減値" />
             <outline text="current {number} 現在の最大(小)値" _note="currentはsdbTableインスタンスで操作する。" />
           </outline>
-          <outline text="defaultRow {Object|function} 既定値項目で構成されたオブジェクト。appendの際のプロトタイプ" />
+          <outline text="defaultRow {Object.&amp;lt;string,function&amp;gt;} 項目名：既定値算式で構成されたオブジェクト。appendの際のプロトタイプ" />
           <outline text="2 Backlinks">
             <outline text="schema {&lt;a href=&quot;https://workflowy.com/#/7b012b226f8e&quot;&gt;sdbSchema&lt;/a&gt;}" />
             <outline text="schema {&lt;a href=&quot;https://workflowy.com/#/7b012b226f8e&quot;&gt;sdbSchema&lt;/a&gt;} シートの項目定義" />

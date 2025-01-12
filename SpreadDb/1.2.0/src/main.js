@@ -1,6 +1,6 @@
 /** main: SpreadDb主処理 */
 const v = {step:0,rv:[],log:[]};
-const pv = {whois:'SpreadDb'};  // 擬似メンバ変数としてSpreadDb内で共有する値
+const pv = {whois:'SpreadDb',jobId:0};  // 擬似メンバ変数としてSpreadDb内で共有する値
 try {
 
   v.step = 1.1;

@@ -1,6 +1,6 @@
 /** constructor: 擬似メンバの値設定、変更履歴テーブルの準備 */
 function constructor(query,opt){
-  const v = {whois:`${pv.whois}.constructor`,step:0,rv:null};
+  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.constructor`,step:0,rv:null};
   try {
     console.log(`${v.whois} start`);
 
@@ -15,6 +15,8 @@ function constructor(query,opt){
         interval: 10000, // number}=10000 シート更新時、ロックされていた場合の試行間隔(ミリ秒)
         guestAuth: {}, // {Object.<string,string>} ゲストに付与する権限。{シート名:rwdos文字列} 形式
         adminId: 'Administrator', // {string} 管理者として扱うuserId
+        additionalPrimaryKey: // {string} createTableで主キー無指定時に追加設定される主キー項目名
+          {name:'rowId',type:'UUID',note:'主キー',primaryKey:true,default:()=>Utilities.getUuid()},
         sdbQuery: [
           {name:'timestamp',type:'string',note:'更新日時(ISO8601拡張形式)',default:()=>{return toLocale(new Date())}},
           {name:'userId',type:'string|number',note:'ユーザ識別子(uuid等)',default:()=>{return pv.opt.userId}},

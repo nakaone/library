@@ -7,7 +7,7 @@
  * - where句の指定方法: functionalyze参照
  */
 function deleteRow(arg){
-  const v = {whois:`${pv.whois}.deleteRow`,step:0,rv:[],whereStr:[]};
+  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.deleteRow`,step:0,rv:[],whereStr:[]};
   console.log(`${v.whois} start.`);
   try {
 

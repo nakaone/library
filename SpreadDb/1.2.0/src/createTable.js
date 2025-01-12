@@ -6,7 +6,7 @@
  * @returns {sdbLog}
  */
 function createTable(query){
-  const v = {whois:`${pv.whois}.createTable`,step:0,rv:[],convertRow:null};
+  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.createTable`,step:0,rv:[],convertRow:null};
   try {
     v.fId = `: table=${query.table}, set=${Object.hasOwn(query,'set')?(query.set.length+'rows'):'undefined'}`;
     console.log(`${v.whois} start${v.fId}`);
@@ -15,9 +15,37 @@ function createTable(query){
     if( v.table.sheet !== null ) throw new Error('Already Exist');
 
     v.step = 1.3; // query.colsをセット
-    if( v.table.schema.cols.length === 0 && v.table.values.length === 0 )
+    if( v.table.schema.cols.length === 0 && query.set.length === 0 )// && v.table.values.length === 0 )
       // シートも項目定義も初期データも無い
       throw new Error('No Cols and Data');
+
+    v.step = 2; // 主キーが存在しない場合は追加
+    if( !v.table.schema.cols.find(x => x.primaryKey === true) ){
+      v.unique = v.table.schema.cols.find(x => x.unique === true);
+      if( v.unique ){
+        // ユニーク項目が存在している場合、主キーに昇格
+        v.unique.primaryKey = true;
+        v.table.schema.primaryKey = v.unique.name;
+      } else {
+        // ユニーク項目が不存在の場合は追加
+        // schema.colsにopt.additionalPrimaryKeyを追加
+        v.table.schema.cols.unshift(pv.opt.additionalPrimaryKey);
+        // schema.primaryKeyに主キー項目名を設定
+        v.table.schema.primaryKey = pv.opt.additionalPrimaryKey.name;
+        // schema.uniqueに主キー項目名の空配列を設定
+        v.table.schema.unique[pv.opt.additionalPrimaryKey.name] = [];
+        // schema.defaultRowに主キー項目を追加
+        v.table.schema.defaultRow[pv.opt.additionalPrimaryKey.name] = pv.opt.additionalPrimaryKey.default;
+        // table.header先頭に主キー項目名を追加
+        v.table.header.unshift(pv.opt.additionalPrimaryKey.name);
+        // table.notes先頭に設定内容を追加
+        v.r = genColumn(pv.opt.additionalPrimaryKey);
+        if( v.r instanceof Error ) throw v.r;
+        v.table.notes.unshift(v.r.note);
+        // table.colnumを+1
+        v.table.colnum++;
+      }
+    }
 
     // ----------------------------------------------
     v.step = 3; // シートが存在しない場合、新規追加
