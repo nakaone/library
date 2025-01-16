@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'create',start:2,num:1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'create',start:3,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -847,21 +847,23 @@ function SpreadDb(query=[],opt={}){
         table: {}, // スプレッドシート上の各テーブル(領域)の情報
       });
 
-      v.step = 2; // 変更履歴テーブルのsdbTable準備
-      v.r = genTable({name:pv.opt.log,cols:pv.opt.sdbLog});
+      // 変更履歴テーブルのsdbTable準備
+      v.step = 2; // 変更履歴用のクエリを作成
+      v.r = objectizeColumn('sdbQuery');
+      if( v.r instanceof Error ) throw v.r;
+      v.query = Object.assign(v.r,{
+        userId: pv.opt.adminId,
+        table: pv.opt.log,
+        command: 'create',
+        cols: pv.opt.sdbLog,
+      });
+
+      v.step = 3; // テーブル管理情報を作成
+      v.r = genTable(v.query);
       if( v.r instanceof Error ) throw v.r;
 
       v.step = 4; // 変更履歴のシートが不在なら作成
       if( pv.table[pv.opt.log].sheet === null ){
-        v.r = objectizeColumn('sdbQuery');
-        if( v.r instanceof Error ) throw v.r;
-        v.query = Object.assign(v.r,{
-          userId: pv.opt.adminId,
-          table: pv.opt.log,
-          command: 'create',
-          cols: pv.opt.sdbLog,
-        });
-
         v.r = createTable(v.query);
         if( v.r instanceof Error ) throw v.r;
       }
@@ -954,9 +956,10 @@ function SpreadDb(query=[],opt={}){
         if( v.table.sheet !== null )
           throw new Error('Already Exist');
 
-        v.step = 1.2; // シートも項目定義も初期データも無い
-        if( v.table.schema.cols.length === 0 && query.set.length === 0 )
-          throw new Error('No Cols and Data');
+        // genTableでチェック済なので割愛
+        //v.step = 1.2; // シートも項目定義も初期データも無い
+        //if( v.table.schema.cols.length === 0 && query.set.length === 0 )
+        //  throw new Error('No Cols and Data');
 
       } catch(e) {
         query.qSts = e.message;
@@ -1106,7 +1109,7 @@ function SpreadDb(query=[],opt={}){
 
       v.step = 2; // 操作対象のテーブル管理情報を準備
       if( !Object.hasOwn(pv.table,query.table) ){
-        v.r = genTable({name:query.table,cols:query.cols,values:query.set});
+        v.r = genTable(query);//{name:query.table,cols:query.cols,values:query.set});
         if( v.r instanceof Error ) throw v.r;
       }
 
@@ -1495,45 +1498,57 @@ function SpreadDb(query=[],opt={}){
     }
   }
   /** genTable: pv.table(sdbTable)を生成
-   * @param arg {Object}
-   * @param arg.name {string} - シート名
-   * @param [arg.cols] {sdbColumn[]} - 新規作成シートの項目定義オブジェクトの配列
-   * @param [arg.values] {Object[]|Array[]} - 新規作成シートに書き込む初期値
+   * @param query {sdbQuery}
+   * @param query.table {string} - シート名
+   * @param [query.cols] {sdbColumn[]} - 新規作成シートの項目定義オブジェクトの配列
+   * @param [query.set] {Object[]|Array[]} - 新規作成シートに書き込む初期値
    * @returns {sdbTable|null} シート不存在ならnull
    */
-  function genTable(arg){
+  function genTable(query){
     const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.genTable`,step:0,rv:null};
     try {
 
-      if( !arg || !arg.name ) throw new Error(`No Name`);
-      v.fId = `: name=${arg.name}`;
-      console.log(`${v.whois} start${v.fId}`);
+      try {
 
-      v.step = 1; // 既にpv.tableに存在するなら何もしない
+        v.step = 1.1; // テーブル名が不在
+        if( !query || !query.table ) throw new Error(`No Name`);
+        v.fId = `: name=${query.table}`;
+        console.log(`${v.whois} start${v.fId}`);
+
+        v.step = 1.2; // テーブル管理情報が生成済
+        if( whichType(pv.query[query.table],'Object') ) throw new Error(`Already Generated`);
+
+      } catch(e) {
+        query.qSts = e.message;
+        e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+        console.error(`${e.message}`);
+        return v.rv;
+      }
+
       v.step = 2; // テーブルのプロトタイプを作成、初期化＋既定値設定
       v.r = objectizeColumn('sdbTable');
       if( v.r instanceof Error ) throw v.r;
-      pv.table[arg.name] = v.table = Object.assign(v.r,{
-        name: arg.name, // {string} テーブル名(範囲名)
-        sheet: pv.spread.getSheetByName(arg.name), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
+      pv.table[query.table] = v.table = Object.assign(v.r,{
+        name: query.table, // {string} テーブル名(範囲名)
+        sheet: pv.spread.getSheetByName(query.table), // {Sheet} スプレッドシート内の操作対象シート(ex."master"シート)
       });
 
       v.step = 3; // シートの存否確認
       if( v.table.sheet === null ){
         v.step = 4; // シート不在なら引数から項目定義を作成
-        if( arg.cols && arg.cols.length > 0 ){
+        if( query.cols && query.cols.length > 0 ){
           v.step = 4.1; // 引数に項目定義オブジェクトが存在
-          v.table.schema.cols = arg.cols;
-          v.table.header = arg.cols.map(x => x.name);
+          v.table.schema.cols = query.cols;
+          v.table.header = query.cols.map(x => x.name);
         } else {
-          if( arg.values && arg.values.length > 0 ){
+          if( query.set && query.set.length > 0 ){
             v.step = 4.2; // 引数に項目定義オブジェクトが不存在だが初期データは存在
-            v.r = convertRow(arg.values);
+            v.r = convertRow(query.set);
             if( v.r instanceof Error ) throw v.r;
             v.table.header = v.r.header;
           } else {
             v.step = 4.3; // 項目定義も初期データも無いならエラー
-            throw new Error('No Cols and Data');
+            query.qSts = 'No Cols and Data';
           }
         }
 
@@ -1549,17 +1564,17 @@ function SpreadDb(query=[],opt={}){
         v.step = 5; // シートが存在するならシートから各種情報を取得
         v.step = 5.1; // シートイメージを読み込み
         v.getDataRange = v.table.sheet.getDataRange();
-        v.getValues = v.getDataRange.getValues();
+        v.getset = v.getDataRange.getset();
 
         v.step = 5.2; // シートイメージからヘッダ行・行オブジェクトを作成
-        v.r = convertRow(v.getValues);
+        v.r = convertRow(v.getset);
         if( v.r instanceof Error ) throw v.r;
 
         v.step = 5.3; // ヘッダ・データの設定
         v.table.header = v.r.header;
-        v.table.values = v.r.obj;
+        v.table.set = v.r.obj;
         v.table.colnum = v.table.header.length;
-        v.table.rownum = v.table.values.length;
+        v.table.rownum = v.table.set.length;
 
         v.step = 5.4; // ヘッダ行のメモ(項目定義メモ)を取得
         v.table.notes = v.getDataRange.getNotes()[0];
@@ -1567,11 +1582,13 @@ function SpreadDb(query=[],opt={}){
       }
 
       v.step = 6; // スキーマをインスタンス化
-      v.r = genSchema(v.table);
-      if( v.r instanceof Error ) throw v.r;
+      if( query.qSts === 'OK' ){
+        v.r = genSchema(v.table);
+        if( v.r instanceof Error ) throw v.r;  
+      }
 
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end${v.fId}`);
+      console.log(`${v.whois} normal end${v.fId}\nv.table.schema=${JSON.stringify(v.table.schema)}`);
       return v.rv;
 
     } catch(e) {
