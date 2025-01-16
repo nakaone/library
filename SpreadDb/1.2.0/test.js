@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'create',start:0,num:1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'create',start:1,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -266,6 +266,15 @@ function SpreadDbTest(){
         {name:'def関数',default:"o => {return toLocale(new Date())}"},
       ],
       values: [{'ラベル':'fuga'},{'ラベル':'hoge'}],
+    },
+    Duplicate: {
+      name: 'Duplicate',
+      cols: [
+        {name:'pKey',auto_increment:10,primaryKey:true},
+        {name:'Col1',type:'number',unique:true},
+        {name:'Col2',type:'number'},
+      ],
+      values: [{Col1:11,Col2:12},{Col1:11,Col2:22}],  // Col1が重複
     }
   };
   const scenario = {  // テストシナリオ
@@ -299,6 +308,22 @@ function SpreadDbTest(){
           ];
           return v.rv.join('\n');
         }
+      },{ // 1.初期値のunique項目で重複値が存在
+        query: [
+          {command:'create',table:src.Duplicate.name,cols:src.Duplicate.cols,set:src.Duplicate.values},
+        ],
+        opt: {userId:'Administrator'},
+      },{ // 2.既存シートの新規作成指示⇒Already Existエラー
+        query: [
+          {command:'create',table:src.camp.name,cols:src.camp.cols,set:src.camp.values},  // 「camp2024」シート作成
+          {command:'create',table:src.camp.name,cols:src.camp.cols,set:src.camp.values},  // 「camp2024」シート作成
+        ],
+        opt: {userId:'Administrator'},
+      },{ // 3.colsもsetも指定無し⇒No Cols and Dataエラー
+        query: [
+          {command:'create',table:src.Duplicate.name},
+        ],
+        opt: {userId:'Administrator'},
       },{ // 1.userId未指定では作成できないことの確認
         query: {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
         // optは指定しない(ユーザ未定)
@@ -471,7 +496,13 @@ function SpreadDbTest(){
 
       v.step = 2.3; // テスト結果(サマリ)の表示
       v.msg = `===== ${v.whois} end: scenario=${v.scenario}.${v.idx}\n`;
-      console.log(v.msg+scenario[v.scenario][v.idx].check(v.r,scenario[v.scenario][v.idx].query,scenario[v.scenario][v.idx].opt));
+      if( scenario[v.scenario][v.idx].check ){
+        v.msg += scenario[v.scenario][v.idx].check(v.r,scenario[v.scenario][v.idx].query,scenario[v.scenario][v.idx].opt);
+      } else {
+        //v.msg += JSON.stringify(v,(key,val)=>typeof val==='function'?val.toString():val,2);
+        v.msg += JSON.stringify(v.r,null,2);
+      }
+      console.log(v.msg);
     }
 
   } catch(e) {
@@ -519,15 +550,20 @@ function SpreadDb(query=[],opt={}){
           v.r = doQuery(pv.query[v.i]);
           if( v.r instanceof Error ) throw v.r;
 
-          // 変更履歴の保存
-          v.step = 7.1; // クエリ単位の実行結果
+          v.step = 6.1; // 実行結果の戻り値への追加
+          v.o = {};
+          ['timestamp','queryId','table','command','qSts','result'].forEach(x => v.o[x]=pv.query[v.i][x]);
+          v.rv.push(v.o);
+
+          // 変更履歴シートへの保存
+          v.step = 6.21; // クエリ単位の実行結果
           v.r = objectizeColumn('sdbLog');
           if( v.r instanceof Error ) throw v.r;
           v.qLog = Object.assign(v.r,pv.query[v.i]);
           v.qLog.data = pv.query[v.i].command === 'create' ? JSON.stringify(pv.query[v.i].cols) : (pv.query[v.i].where || '')
           v.log.push(v.qLog);
 
-          v.step = 7.2; // レコード単位の実行結果
+          v.step = 6.22; // レコード単位の実行結果
           for( v.j=0 ; v.j<query[v.i].result.length ; v.j++ ){
             v.log.push({
               queryId: v.qLog.queryId,
@@ -538,23 +574,23 @@ function SpreadDb(query=[],opt={}){
           }
         }
 
-        v.step = 8; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
+        v.step = 7; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
         v.r = appendRow({
           table: pv.opt.log,
           record: v.log,
         });
         if( v.r instanceof Error ) throw v.r;
 
-        v.step = 9; // ロック解除
+        v.step = 8; // ロック解除
         v.lock.releaseLock();
         v.tryNo = -1; // maxTrial回ロック失敗時(=0)と判別するため、負数をセット
       }
     }
 
-    v.step = 10; // ロックができたか判定、不能時はエラー
+    v.step = 9; // ロックができたか判定、不能時はエラー
     if( v.tryNo === 0 ) throw new Error("Couldn't Lock");
 
-    v.step = 11; // 終了処理
+    v.step = 99; // 終了処理
     console.log(`${v.whois} normal end${v.fId}`);
     return v.rv;
 
@@ -635,10 +671,7 @@ function SpreadDb(query=[],opt={}){
         v.log = objectizeColumn('sdbResult');
         if( v.log instanceof Error ) throw v.log;
 
-        v.step = 2.2; // 主キーの値をpKeyにセット
-        v.log.pKey = arg.record[v.i][v.table.schema.primaryKey];
-
-        v.step = 2.3; // auto_increment項目に値を設定
+        v.step = 2.2; // auto_increment項目に値を設定
         // ※ auto_increment設定はuniqueチェックに先行
         for( v.ai in v.table.schema.auto_increment ){
           if( !arg.record[v.i][v.ai] ){ // 値が未設定だった場合は採番実行
@@ -647,12 +680,12 @@ function SpreadDb(query=[],opt={}){
           }
         }
 
-        v.step = 2.4; // 既定値の設定
+        v.step = 2.3; // 既定値の設定
         for( v.dv in v.table.schema.defaultRow ){
           arg.record[v.i][v.dv] = v.table.schema.defaultRow[v.dv](arg.record[v.i]);
         }
 
-        v.step = 2.5; // 追加レコードの正当性チェック(unique重複チェック)
+        v.step = 2.4; // 追加レコードの正当性チェック(unique重複チェック)
         for( v.unique in v.table.schema.unique ){
           if( v.table.schema.unique[v.unique].indexOf(arg.record[v.i][v.unique]) >= 0 ){
             // 登録済の場合はエラーとして処理
@@ -663,6 +696,10 @@ function SpreadDb(query=[],opt={}){
             v.table.schema.unique[v.unique].push(arg.record[v.i][v.unique]);
           }
         }
+
+        v.step = 2.5; // 主キーの値をpKeyにセット
+        // 主キーがauto_incrementまたはdefaultで設定される可能性があるため、pKeyセットはこれらの後工程
+        v.log.pKey = arg.record[v.i][v.table.schema.primaryKey];
 
         v.step = 2.6; // 正当性チェックOKの場合の処理
         if( v.log.rSts === 'OK' ){
@@ -702,7 +739,6 @@ function SpreadDb(query=[],opt={}){
       v.table.rownum += v.target.length;
 
       v.step = 9; // 終了処理
-      v.rv = v.rv;
       console.log(`${v.whois} normal end${v.fId}`);
       return v.rv;
 
@@ -1117,10 +1153,9 @@ function SpreadDb(query=[],opt={}){
         if( v.r instanceof Error ){
           v.step = 6.2; // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
           query.qSts = v.r.message;
-          throw v.r;
         } else {
           v.step = 6.3; // 戻り値がエラーでない場合、レコード単位の実行結果をresultに保存
-          query.result = v.r;
+          query.result = v.r; //JSON.parse(JSON.stringify(v.r));
         }
       }
 
