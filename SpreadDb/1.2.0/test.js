@@ -324,7 +324,7 @@ function SpreadDbTest(){
           {command:'create',table:src.Duplicate.name},
         ],
         opt: {userId:'Administrator'},
-      },{ // 1.userId未指定では作成できないことの確認
+      },{ // 4.userId未指定では作成できないことの確認
         query: {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
         // optは指定しない(ユーザ未定)
         check: sdbMain => { // 結果を分析、レポートを出力する関数
@@ -340,7 +340,7 @@ function SpreadDbTest(){
           };
           return v.rv.join('\n');
         }
-      },{ // 2.管理者以外は作成できないことの確認
+      },{ // 5.管理者以外は作成できないことの確認
         query: {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
         opt: {userId:'fuga'},
         check: (sdbMain,query,opt) => { // 結果を分析、レポートを出力する関数
@@ -517,8 +517,8 @@ function SpreadDbTest(){
  */
 function SpreadDb(query=[],opt={}){
   /** main: SpreadDb主処理 */
-  const v = {step:0,rv:[],log:[]};
   const pv = {whois:'SpreadDb',jobId:0};  // 擬似メンバ変数としてSpreadDb内で共有する値
+  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.main`,step:0,rv:[],log:[]};
   try {
 
     v.step = 1.1;
@@ -577,7 +577,8 @@ function SpreadDb(query=[],opt={}){
         v.step = 7; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
         v.r = appendRow({
           table: pv.opt.log,
-          record: v.log,
+          set: v.log,
+          result: [],
         });
         if( v.r instanceof Error ) throw v.r;
 
@@ -600,72 +601,79 @@ function SpreadDb(query=[],opt={}){
     return e;
   }
   /** appendRow: 領域に新規行を追加
-   * @param {Object|Object[]} arg
-   * @param {sdbTable} arg.table - 操作対象のテーブル名
-   * @param {Object|Object[]} arg.record=[] - 追加する行オブジェクト
+   * @param {sdbQuery|sdbQuery[]} query
+   * @param {sdbTable} query.table - 操作対象のテーブル名
+   * @param {Object|Object[]} query.set=[] - 追加する行オブジェクト
    * @returns {sdbLog[]}
    *
    * - 重複エラーが発生した場合、ErrCD='Duplicate' + diffに{項目名：重複値}形式で記録
    */
-  function appendRow(arg){
+  function appendRow(query){
     const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.appendRow`,step:0,rv:[],target:[]};
     try {
 
       // ------------------------------------------------
       v.step = 1; // 引数チェック、v.fId作成
       // ------------------------------------------------
+      try {
+        v.step = 1.1; // query.tableの判定 ⇒ pv.tableに存在しなければエラー
+        if( !Object.hasOwn(query,'table') || typeof query.table !== 'string' || !Object.hasOwn(pv.table,query.table) )
+          throw new Error(`Invalid Table`);
+        v.fId = `: table=${query.table}`;
+        v.table = pv.table[query.table];  // v.tableに対象のテーブル管理情報をセット
 
-      v.step = 1.1; // arg.tableの判定 ⇒ pv.tableに存在しなければエラー
-      if( !Object.hasOwn(arg,'table') || typeof arg.table !== 'string' || !Object.hasOwn(pv.table,arg.table) )
-        throw new Error(`Invalid Table`);
-      v.fId = `: table=${arg.table}`;
-      v.table = pv.table[arg.table];  // v.tableに対象のテーブル管理情報をセット
+        v.step = 1.2; // query.setの判定
+        if( !Object.hasOwn(query,'set') ) throw new Error(`No set`);  // query.setが不存在
 
-      v.step = 1.2; // arg.recordの判定
-      if( !Object.hasOwn(arg,'record') ) throw new Error(`No Record`);  // arg.recordが不存在
-
-      v.step = 1.3;
-      // ①一行分のシートイメージ ⇒ any[] ⇒ 二次元配列化
-      // ②一行分の行オブジェクト ⇒ Object ⇒ 配列化
-      // ③複数行分のシートイメージ ⇒ any[][] ⇒ 行オブジェクトに変換
-      // ④複数行分の行オブジェクト ⇒ Object[] ⇒ そのまま使用
-      // ⑤上記以外 ⇒ エラー
-      if( Array.isArray(arg.record) ){
-        v.step = 1.31; // 配列の長さ0
-        if( arg.record.length === 0 ) throw new Error(`Length is 0`);
-        if( whichType(arg.record[0],'Object') ){
-          v.step = 1.32; // ④ ⇒ そのまま使用
-          v.img = `[4]sample=${JSON.stringify(arg.record[0])}`;
-        } else {
-          if( Array.isArray(arg.record[0]) ){
-            v.step = 1.33; // ③ ⇒ 行オブジェクトに変換
-            v.img = `[3]sample=${JSON.stringify(arg.record[0])}`;
-            v.r = convertRow(arg.record);
-            if( v.r instanceof Error ) throw v.r;
-            arg.record = v.r.obj;
+        v.step = 1.3;
+        // ①一行分のシートイメージ ⇒ any[] ⇒ 二次元配列化
+        // ②一行分の行オブジェクト ⇒ Object ⇒ 配列化
+        // ③複数行分のシートイメージ ⇒ any[][] ⇒ 行オブジェクトに変換
+        // ④複数行分の行オブジェクト ⇒ Object[] ⇒ そのまま使用
+        // ⑤上記以外 ⇒ エラー
+        if( Array.isArray(query.set) ){
+          v.step = 1.31; // 配列の長さ0
+          if( query.set.length === 0 ) throw new Error(`Length is 0`);
+          if( whichType(query.set[0],'Object') ){
+            v.step = 1.32; // ④ ⇒ そのまま使用
+            v.img = `[4]sample=${JSON.stringify(query.set[0])}`;
           } else {
-            v.step = 1.34;  // ① ⇒ 二次元配列化
-            v.img = `[1]record=${JSON.stringify(arg.record)}`;
-            arg.record = [arg.record];
+            if( Array.isArray(query.set[0]) ){
+              v.step = 1.33; // ③ ⇒ 行オブジェクトに変換
+              v.img = `[3]sample=${JSON.stringify(query.set[0])}`;
+              v.r = convertRow(query.set);
+              if( v.r instanceof Error ) throw v.r;
+              query.set = v.r.obj;
+            } else {
+              v.step = 1.34;  // ① ⇒ 二次元配列化
+              v.img = `[1]set=${JSON.stringify(query.set)}`;
+              query.set = [query.set];
+            }
+          }
+        } else {
+          if( whichType(query.set,'Object') ){
+            v.step = 1.35; // ② ⇒ 配列化
+            v.img = `[2]set=${JSON.stringify(query.set)}`;
+            query.set = [query.set];
+          } else {
+            v.step = 1.36; // ⑤ ⇒ エラー
+            throw new Error(`Invalid set`);
           }
         }
-      } else {
-        if( whichType(arg.record,'Object') ){
-          v.step = 1.35; // ② ⇒ 配列化
-          v.img = `[2]record=${JSON.stringify(arg.record)}`;
-          arg.record = [arg.record];
-        } else {
-          v.step = 1.36; // ⑤ ⇒ エラー
-          throw new Error(`Invalid Record`);
-        }
+        v.step = 1.4;
+        console.log(`${v.whois} start${v.fId}\n${v.img}`);
+
+      } catch(e) {
+        query.qSts = e.message;
+        e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+        console.error(`${e.message}\nv=${stringify(v)}`);
+        return v.rv;
       }
-      v.step = 1.4;
-      console.log(`${v.whois} start${v.fId}\n${v.img}`);
 
       // ------------------------------------------------
       v.step = 2; // 追加レコードをシートイメージに展開
       // ------------------------------------------------
-      for( v.i=0 ; v.i<arg.record.length ; v.i++ ){
+      for( v.i=0 ; v.i<query.set.length ; v.i++ ){
 
         v.step = 2.1; // 1レコード分のログを準備
         v.log = objectizeColumn('sdbResult');
@@ -674,32 +682,32 @@ function SpreadDb(query=[],opt={}){
         v.step = 2.2; // auto_increment項目に値を設定
         // ※ auto_increment設定はuniqueチェックに先行
         for( v.ai in v.table.schema.auto_increment ){
-          if( !arg.record[v.i][v.ai] ){ // 値が未設定だった場合は採番実行
+          if( !query.set[v.i][v.ai] ){ // 値が未設定だった場合は採番実行
             v.table.schema.auto_increment[v.ai].current += v.table.schema.auto_increment[v.ai].step;
-            arg.record[v.i][v.ai] = v.table.schema.auto_increment[v.ai].current;
+            query.set[v.i][v.ai] = v.table.schema.auto_increment[v.ai].current;
           }
         }
 
         v.step = 2.3; // 既定値の設定
         for( v.dv in v.table.schema.defaultRow ){
-          arg.record[v.i][v.dv] = v.table.schema.defaultRow[v.dv](arg.record[v.i]);
+          query.set[v.i][v.dv] = v.table.schema.defaultRow[v.dv](query.set[v.i]);
         }
 
         v.step = 2.4; // 追加レコードの正当性チェック(unique重複チェック)
         for( v.unique in v.table.schema.unique ){
-          if( v.table.schema.unique[v.unique].indexOf(arg.record[v.i][v.unique]) >= 0 ){
+          if( v.table.schema.unique[v.unique].indexOf(query.set[v.i][v.unique]) >= 0 ){
             // 登録済の場合はエラーとして処理
             v.log.rSts = 'Duplicate';
-            v.log.diff[v.unique] = arg.record[v.i][v.unique]; // diffに{unique項目名:重複値}を保存
+            v.log.diff[v.unique] = query.set[v.i][v.unique]; // diffに{unique項目名:重複値}を保存
           } else {
             // 未登録の場合v.table.sdbSchema.uniqueに値を追加
-            v.table.schema.unique[v.unique].push(arg.record[v.i][v.unique]);
+            v.table.schema.unique[v.unique].push(query.set[v.i][v.unique]);
           }
         }
 
         v.step = 2.5; // 主キーの値をpKeyにセット
         // 主キーがauto_incrementまたはdefaultで設定される可能性があるため、pKeyセットはこれらの後工程
-        v.log.pKey = arg.record[v.i][v.table.schema.primaryKey];
+        v.log.pKey = query.set[v.i][v.table.schema.primaryKey];
 
         v.step = 2.6; // 正当性チェックOKの場合の処理
         if( v.log.rSts === 'OK' ){
@@ -707,20 +715,22 @@ function SpreadDb(query=[],opt={}){
           v.step = 2.61; // シートイメージに展開して登録
           v.row = [];
           for( v.j=0 ; v.j<v.table.header.length ; v.j++ ){
-            v.a = arg.record[v.i][v.table.header[v.j]];
+            v.a = query.set[v.i][v.table.header[v.j]];
             v.row[v.j] = (v.a && v.a !== 'null' && v.a !== 'undefined') ? v.a : '';
           }
           v.target.push(v.row);
 
           v.step = 2.62; // v.table.valuesへの追加
-          v.table.values.push(arg.record[v.i]);
+          v.table.values.push(query.set[v.i]);
 
           v.step = 2.63; // ログに追加レコード情報を記載
-          v.log.diff = JSON.stringify(arg.record[v.i]);
+          v.log.diff = JSON.stringify(query.set[v.i]);
         }
 
         v.step = 2.7; // 成否に関わらず戻り値に保存
-        v.rv.push(v.log);
+        console.log(`l.730 query.result(${whichType(query.result)})=${JSON.stringify(query.result)}`);
+        vlog(v.log,731)
+        query.result.push(v.log);
       }
 
       // ------------------------------------------------
@@ -943,7 +953,7 @@ function SpreadDb(query=[],opt={}){
         v.step = 1.1; // シートが既に存在
         if( v.table.sheet !== null )
           throw new Error('Already Exist');
-  
+
         v.step = 1.2; // シートも項目定義も初期データも無い
         if( v.table.schema.cols.length === 0 && query.set.length === 0 )
           throw new Error('No Cols and Data');
@@ -951,7 +961,7 @@ function SpreadDb(query=[],opt={}){
       } catch(e) {
         query.qSts = e.message;
         e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-        console.error(`${e.message}\nv=${stringify(v)}`);
+        console.error(`${e.message}`);
         return v.rv;
       }
 
@@ -999,7 +1009,7 @@ function SpreadDb(query=[],opt={}){
 
       v.step = 3.3; // 初期データの追加
       if( query.set.length > 0 ){
-        v.rv = appendRow({table:v.table.name,record:query.set});
+        v.rv = appendRow(query);
         if( v.rv instanceof Error ) throw v.r;
       }
 
