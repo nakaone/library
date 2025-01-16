@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'create',start:1,num:1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'create',start:2,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -938,12 +938,22 @@ function SpreadDb(query=[],opt={}){
       console.log(`${v.whois} start${v.fId}`);
 
       v.table = pv.table[query.table];
-      if( v.table.sheet !== null ) throw new Error('Already Exist');
+      try { // エラーチェック
 
-      v.step = 1.3; // query.colsをセット
-      if( v.table.schema.cols.length === 0 && query.set.length === 0 )// && v.table.values.length === 0 )
-        // シートも項目定義も初期データも無い
-        throw new Error('No Cols and Data');
+        v.step = 1.1; // シートが既に存在
+        if( v.table.sheet !== null )
+          throw new Error('Already Exist');
+  
+        v.step = 1.2; // シートも項目定義も初期データも無い
+        if( v.table.schema.cols.length === 0 && query.set.length === 0 )
+          throw new Error('No Cols and Data');
+
+      } catch(e) {
+        query.qSts = e.message;
+        e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+        console.error(`${e.message}\nv=${stringify(v)}`);
+        return v.rv;
+      }
 
       v.step = 2; // 主キーが存在しない場合は追加
       if( !v.table.schema.cols.find(x => x.primaryKey === true) ){
