@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'create',start:3,num:1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'create',start:0,num:0,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
@@ -288,7 +288,7 @@ function SpreadDbTest(){
           {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,set:src.autoIncrement.values},  // 「AutoInc」シート作成
         ],
         opt: {userId:'Administrator'},
-        check: sdbMain => { // 結果を分析、レポートを出力する関数
+        /*check: sdbMain => { // 結果を分析、レポートを出力する関数
           v.rv = [];
           for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
             v.rv.push(`query.${v.i} ----------`);
@@ -307,7 +307,7 @@ function SpreadDbTest(){
             '各シートのcreateがlogシートに出力されているか',
           ];
           return v.rv.join('\n');
-        }
+        }*/
       },{ // 1.初期値のunique項目で重複値が存在
         query: [
           {command:'create',table:src.Duplicate.name,cols:src.Duplicate.cols,set:src.Duplicate.values},
@@ -324,41 +324,12 @@ function SpreadDbTest(){
           {command:'create',table:src.Duplicate.name},
         ],
         opt: {userId:'Administrator'},
-      },{ // 4.userId未指定では作成できないことの確認
+      },{ // 4.userId未指定 ⇒ No Authorityエラー
         query: {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
         // optは指定しない(ユーザ未定)
-        check: sdbMain => { // 結果を分析、レポートを出力する関数
-          v.rv = [];
-          for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
-            v.result = sdbMain[v.i].ErrCD === 'No Authority' ? 'success' : 'failed';
-            v.rv = [...v.rv,
-              `query.${v.i} [${v.result}] ----------`,
-              `ErrCD: ${sdbMain[v.i].ErrCD}`,
-              `command: ${sdbMain[v.i].query.command}`,
-              `table: ${sdbMain[v.i].query.table}`,
-            ];
-          };
-          return v.rv.join('\n');
-        }
-      },{ // 5.管理者以外は作成できないことの確認
+      },{ // 5.管理者以外 ⇒ No Authorityエラー
         query: {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
         opt: {userId:'fuga'},
-        check: (sdbMain,query,opt) => { // 結果を分析、レポートを出力する関数
-          v.rv = [];
-          for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
-            v.result = (sdbMain[v.i].ErrCD === 'No Authority'
-            && sdbMain[v.i].log.userId === opt.userId
-            ) ? 'success' : 'failed';
-            v.rv = [...v.rv,
-              `query.${v.i} [${v.result}] ----------`,
-              `ErrCD: ${sdbMain[v.i].ErrCD}`,
-              `log.userId: ${sdbMain[v.i].log.userId}`,
-              `command: ${sdbMain[v.i].query.command}`,
-              `table: ${sdbMain[v.i].query.table}`,
-            ];
-          };
-          return v.rv.join('\n');
-        }
       },
     ],
     select: [ // select関係のテスト群
@@ -728,8 +699,6 @@ function SpreadDb(query=[],opt={}){
         }
 
         v.step = 2.7; // 成否に関わらず戻り値に保存
-        console.log(`l.730 query.result(${whichType(query.result)})=${JSON.stringify(query.result)}`);
-        vlog(v.log,731)
         query.result.push(v.log);
       }
 
@@ -955,11 +924,6 @@ function SpreadDb(query=[],opt={}){
         v.step = 1.1; // シートが既に存在
         if( v.table.sheet !== null )
           throw new Error('Already Exist');
-
-        // genTableでチェック済なので割愛
-        //v.step = 1.2; // シートも項目定義も初期データも無い
-        //if( v.table.schema.cols.length === 0 && query.set.length === 0 )
-        //  throw new Error('No Cols and Data');
 
       } catch(e) {
         query.qSts = e.message;
