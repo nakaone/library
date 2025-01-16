@@ -341,23 +341,6 @@ function SpreadDbTest(){
           {table:'掲示板',command:'select',where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"},
         ],
         opt: {userId:'Administrator'},
-        check: (sdbMain,query,opt) => { // 結果を分析、レポートを出力する関数
-          console.log(JSON.stringify(sdbMain));
-          v.rv = [];
-          for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
-            v.result = (sdbMain[v.i].ErrCD === null
-            && sdbMain[v.i].rows.length === 6
-            ) ? 'success' : 'failed';
-            v.rv = [...v.rv,
-              `query.${v.i} [${v.result}] ----------`,
-              `table.command: ${query.table}.${query.command}`,
-              `ErrCD: ${sdbMain[v.i].ErrCD}`,
-              `rows: ${sdbMain[v.i].rows.length}`,
-              `log.userId: ${sdbMain[v.i].log.userId}`,
-            ];
-          };
-          return v.rv.join('\n');
-        }
       },{ // 1.ゲストに「掲示板」の読込を許可した場合
         reset: [], //['掲示板'],
         query: [
@@ -575,12 +558,12 @@ function SpreadDb(query=[],opt={}){
    * @param {sdbQuery|sdbQuery[]} query
    * @param {sdbTable} query.table - 操作対象のテーブル名
    * @param {Object|Object[]} query.set=[] - 追加する行オブジェクト
-   * @returns {sdbLog[]}
+   * @returns {null|Error}
    *
    * - 重複エラーが発生した場合、ErrCD='Duplicate' + diffに{項目名：重複値}形式で記録
    */
   function appendRow(query){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.appendRow`,step:0,rv:[],target:[]};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.appendRow`,step:0,rv:null,target:[]};
     try {
 
       // ------------------------------------------------
@@ -1140,9 +1123,6 @@ function SpreadDb(query=[],opt={}){
         if( v.r instanceof Error ){
           v.step = 6.2; // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
           query.qSts = v.r.message;
-        } else {
-          v.step = 6.3; // 戻り値がエラーでない場合、レコード単位の実行結果をresultに保存
-          query.result = v.r; //JSON.parse(JSON.stringify(v.r));
         }
       }
 
