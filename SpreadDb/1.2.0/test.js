@@ -1,8 +1,3 @@
-/*
-  SpreadDbテスト用ソース
-    GASの専用シートを用意、本ソースをコピペしてSpreadDbTest()を実行する
-*/
-
 function SpreadDbTest(){
   const v = {scenario:'create',start:0,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
@@ -2266,4 +2261,3 @@ function whichType(arg,is){
     return rv;
   }
 }
-
