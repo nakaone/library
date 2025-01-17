@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'create',start:0,num:1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'select',start:0,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -248,49 +248,34 @@ function SpreadDbTest(){
         ],
         opt: {userId:'Administrator'},
       },{ // 1.初期値のunique項目で重複値が存在
+        reset: null, // 全シート強制削除
         query: [
           {command:'create',table:'Duplicate',cols:src['Duplicate'].cols,set:src['Duplicate'].set},
         ],
         opt: {userId:'Administrator'},
       },{ // 2.既存シートの新規作成指示⇒Already Existエラー
+        reset: null, // 全シート強制削除
         query: [
           {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
           {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
         ],
         opt: {userId:'Administrator'},
       },{ // 3.colsもsetも指定無し⇒No Cols and Dataエラー
+        reset: null, // 全シート強制削除
         query: [
           {command:'create',table:'Duplicate'},
         ],
         opt: {userId:'Administrator'},
       },{ // 4.userId未指定 ⇒ No Authorityエラー
+        reset: null, // 全シート強制削除
         query: {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
         // optは指定しない(ユーザ未定)
       },{ // 5.管理者以外 ⇒ No Authorityエラー
+        reset: null, // 全シート強制削除
         query: {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
         opt: {userId:'fuga'},
       },
     ],
-    /*check: sdbMain => { // 結果を分析、レポートを出力する関数
-        v.rv = [];
-        for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
-          v.rv.push(`query.${v.i} ----------`);
-          v.rv.push(`ErrCD: ${sdbMain[v.i].ErrCD}`);
-          v.rv.push(`command: ${sdbMain[v.i].query.command}`);
-          v.rv.push(`table: ${sdbMain[v.i].query.table}`);
-        };
-        v.rv = [...v.rv,
-          '【シート確認事項】',
-          '①対象シートは全て作成されているか',
-          '②メモの内容は適切か',
-          '③ユーザ管理シート以外、シートには初期データが入っているか',
-          '④掲示板シートのメッセージは改行されているか',
-          'camp2024のuserIdはprimaryKeyになっているか',
-          'camp2024の左端列はtimestampからuserIdに変更されているか',
-          '各シートのcreateがlogシートに出力されているか',
-        ];
-        return v.rv.join('\n');
-      }*/
     select: [ // select関係のテスト群
       { // 0.基本形
         reset: {'掲示板':false},
@@ -513,29 +498,44 @@ function SpreadDb(query=[],opt={}){
           v.step = 6; // クエリの実行
           v.r = doQuery(pv.query[v.i]);
           if( v.r instanceof Error ) throw v.r;
+          vlog(v.r,516);  // 全件null。正常終了
 
           v.step = 6.1; // 実行結果の戻り値への追加
-          v.o = {};
-          ['timestamp','queryId','table','command','qSts','result'].forEach(x => v.o[x]=pv.query[v.i][x]);
-          v.rv.push(v.o);
+          v.r = objectizeColumn('sdbMain');
+          if( v.r instanceof Error ) throw v.r;
+          v.map = pv.opt.sdbMain.map(x => x.name);
+          for( v.j=0 ; v.j<v.map.length ; v.j++ ){
+            v.r[v.map[v.j]] = pv.query[v.i][v.map[v.j]];
+          }
+          v.rv.push(v.r);
 
           // 変更履歴シートへの保存
           v.step = 6.21; // クエリ単位の実行結果
           v.r = objectizeColumn('sdbLog');
           if( v.r instanceof Error ) throw v.r;
-          v.qLog = Object.assign(v.r,pv.query[v.i]);
-          v.qLog.data = pv.query[v.i].command === 'create' ? JSON.stringify(pv.query[v.i].cols) : (pv.query[v.i].where || '')
-          v.log.push(v.qLog);
+          v.map = pv.opt.sdbLog.map(x => x.name);
+          for( v.j=0 ; v.j<v.map.length ; v.j++ ){
+            if( pv.query[v.i][v.map[v.j]] ){
+              v.r[v.map[v.j]] = pv.query[v.i][v.map[v.j]];
+            }
+          }
+          // command系関数に渡された引数をdata欄にセット
+          v.r.data = pv.query[v.i].command === 'create'
+          ? JSON.stringify(pv.query[v.i].cols)
+          : (pv.query[v.i].where || '');
+          v.log.push(v.r);
 
           v.step = 6.22; // レコード単位の実行結果
+          vlog(query[v.i].result,544)
           for( v.j=0 ; v.j<query[v.i].result.length ; v.j++ ){
             v.log.push({
-              queryId: v.qLog.queryId,
+              queryId: query[v.i].queryId,
               pKey: query[v.i].result[v.j].pKey,
               rSts: query[v.i].result[v.j].rSts,
               diff: query[v.i].result[v.j].diff,
             });
           }
+          vlog(v.log,553);
         }
 
         v.step = 7; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
@@ -806,6 +806,14 @@ function SpreadDb(query=[],opt={}){
             {name:'rSts',type:'string',note:'レコード単位の実行結果',default:()=>'OK'},
             {name:'diff',type:'Object',note:'当該レコードの変更点',default:()=>new Object()},
           ],
+          sdbMain: [
+            {name:'timestamp',type:'string',note:'更新日時(ISO8601拡張形式)'},
+            {name:'queryId',type:'string',note:'SpreadDb呼出元で設定する、クエリ・結果突合用文字列'},
+            {name:'table',type:'string|string[]',note:'操作対象テーブル名'},
+            {name:'command',type:'string',note:'操作名'},
+            {name:'qSts',type:'string',note:'クエリ単位の実行結果'},
+            {name:'result',type:'Object[]',note:'レコード単位の実行結果'},
+          ],
         },opt),
         spread: SpreadsheetApp.getActiveSpreadsheet(), // スプレッドシートオブジェクト
         table: {}, // スプレッドシート上の各テーブル(領域)の情報
@@ -901,11 +909,8 @@ function SpreadDb(query=[],opt={}){
     }
   }
   /** createTable: 新規にシートを作成
-   * @param {sdbTable} arg
-   * @param {string} arg.table - テーブル名
-   * @param {sdbColumn[]} arg.cols - 項目定義オブジェクトの配列
-   * @param {Object[]|any[][]} arg.values - 行オブジェクトの配列、またはシートイメージ
-   * @returns {sdbLog}
+   * @param {sdbQuery} query
+   * @returns {null|Error}
    */
   function createTable(query){
     const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.createTable`,step:0,rv:[],convertRow:null};
@@ -972,8 +977,8 @@ function SpreadDb(query=[],opt={}){
 
       v.step = 3.3; // 初期データの追加
       if( query.set.length > 0 ){
-        v.rv = appendRow(query);
-        if( v.rv instanceof Error ) throw v.r;
+        v.rv = appendRow(query);  // 初期データを追加した場合、戻り値はappendRowの戻り値とする
+        if( v.rv instanceof Error ) throw v.rv;
       }
 
       v.step = 9; // 終了処理
