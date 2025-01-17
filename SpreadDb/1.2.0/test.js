@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'select',start:0,num:1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'create',start:0,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -238,6 +238,7 @@ function SpreadDbTest(){
   const scenario = {  // テストシナリオ
     create: [ // create関係のテスト群
       { // 0.基本形
+        reset: null, // 全シート強制削除
         query: [
           {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
           {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
@@ -481,7 +482,7 @@ function SpreadDbTest(){
 function SpreadDb(query=[],opt={}){
   /** main: SpreadDb主処理 */
   const pv = {whois:'SpreadDb',jobId:0};  // 擬似メンバ変数としてSpreadDb内で共有する値
-  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.main`,step:0,rv:[],log:[]};
+  const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.main`,step:0,rv:[],log:[]};
   try {
 
     v.step = 1.1;
@@ -572,7 +573,7 @@ function SpreadDb(query=[],opt={}){
    * - 重複エラーが発生した場合、ErrCD='Duplicate' + diffに{項目名：重複値}形式で記録
    */
   function appendRow(query){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.appendRow`,step:0,rv:null,target:[]};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.appendRow`,step:0,rv:null,target:[]};
     try {
 
       // ------------------------------------------------
@@ -723,7 +724,7 @@ function SpreadDb(query=[],opt={}){
   }
   /** constructor: 擬似メンバの値設定、変更履歴テーブルの準備 */
   function constructor(query,opt){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.constructor`,step:0,rv:null};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.constructor`,step:0,rv:null};
     try {
       console.log(`${v.whois} start`);
 
@@ -907,7 +908,7 @@ function SpreadDb(query=[],opt={}){
    * @returns {sdbLog}
    */
   function createTable(query){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.createTable`,step:0,rv:[],convertRow:null};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.createTable`,step:0,rv:[],convertRow:null};
     try {
       try { // エラーチェック
         vlog(query,916)
@@ -994,7 +995,7 @@ function SpreadDb(query=[],opt={}){
    * - where句の指定方法: functionalyze参照
    */
   function deleteRow(arg){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.deleteRow`,step:0,rv:[],whereStr:[]};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.deleteRow`,step:0,rv:[],whereStr:[]};
     console.log(`${v.whois} start.`);
     try {
 
@@ -1059,7 +1060,7 @@ function SpreadDb(query=[],opt={}){
   }
   /** doQuery: 単体クエリの実行、変更履歴の作成 */
   function doQuery(query){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.doQuery`,step:0,rv:null};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.doQuery`,step:0,rv:null};
     try {
 
       v.step = 1; // 事前準備
@@ -1163,7 +1164,7 @@ function SpreadDb(query=[],opt={}){
    *     - その他 ⇒ 項目定義で"primaryKey"を指定した項目の値   *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
    */
   function functionalyze(arg=null){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.functionalyze`,step:0,rv:null};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.functionalyze`,step:0,rv:null};
     try {
 
       v.fId = `: arg(${whichType(arg)})=${toString(arg)}`;
@@ -1243,7 +1244,7 @@ function SpreadDb(query=[],opt={}){
    *   - note {string[]} メモ用の文字列
    */
   function genColumn(arg={}){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.genColumn`,step:0,rv:{},
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.genColumn`,step:0,rv:{},
       fId: 'arg=' + (typeof arg === 'string' ? arg : arg.name),
       typedef:pv.opt.sdbColumn,
       rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現
@@ -1354,7 +1355,7 @@ function SpreadDb(query=[],opt={}){
    * @returns {void}
    */
   function genSchema(table){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.genSchema`,step:0,rv:null};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.genSchema`,step:0,rv:null};
     try {
 
       v.fId = `: table=${table.name}`;
@@ -1461,7 +1462,7 @@ function SpreadDb(query=[],opt={}){
    * @returns {sdbTable|null} シート不存在ならnull
    */
   function genTable(query){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.genTable`,step:0,rv:null};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.genTable`,step:0,rv:null};
     try {
 
       try {
@@ -1558,7 +1559,7 @@ function SpreadDb(query=[],opt={}){
    * @returns {Object.<string,sdbColumn[]>} {テーブル名：項目定義オブジェクトの配列}形式
    */
   function getSchema(arg){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.getSchema`,step:0,rv:[]};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.getSchema`,step:0,rv:[]};
     console.log(`${v.whois} start.\narg(${whichType(arg)})=${JSON.stringify(arg)}`);
     try {
 
@@ -1595,7 +1596,7 @@ function SpreadDb(query=[],opt={}){
    * @returns {Object}
    */
   function objectizeColumn(arg){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.objectizeColumn`,step:0,rv:{}};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.objectizeColumn`,step:0,rv:{}};
     try {
 
       if( typeof arg === 'string' ){
@@ -1641,7 +1642,7 @@ function SpreadDb(query=[],opt={}){
    * - where句の指定方法: functionalyze参照
    */
   function selectRow(query){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.selectRow`,step:0,rv:null};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.selectRow`,step:0,rv:null};
     console.log(`${v.whois} start.`);
     try {
 
@@ -1696,7 +1697,7 @@ function SpreadDb(query=[],opt={}){
    *     【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
    */
   function updateRow(arg={}){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.updateRow`,step:0,rv:[],
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.updateRow`,step:0,rv:[],
       top:Infinity,left:Infinity,right:0,bottom:0, // 更新範囲の行列番号
     };
     console.log(`${v.whois} start.`);
