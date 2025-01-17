@@ -382,6 +382,7 @@ function SpreadDbTest(){
     v.step = 0.2; // readmeは削除対象から外す
     v.i = v.list.findIndex(x => x === 'readme');
     if( v.i >= 0 ) v.list.splice(v.i,1);
+    console.log(`l.385 v.list=${JSON.stringify(v.list)}`);
 
     for( v.i=0 ; v.i<v.list.length ; v.i++ ){
 
@@ -389,9 +390,10 @@ function SpreadDbTest(){
       v.key = v.list[v.i];
       v.value = (arg === null || typeof arg === 'boolean') ? arg : arg[v.key];
       v.exist = v.spread.getSheetByName(v.key) === null ? false : true;
+      console.log(`l.393 ${JSON.stringify(v,['key','value','exist'],2)}`);
 
       v.step = 0.4; // シートが存在し、強制再作成または強制削除なら削除
-      if( v.exist === true && (v.value === false || v.value === null) ){
+      if( v.exist === true && (v.value === true || v.value === null) ){
         v.sheet = v.spread.getSheetByName(v.key);
         v.spread.deleteSheet(v.sheet);
         console.log(`resetSheet: "${v.key}" is deleted.`);
@@ -401,7 +403,7 @@ function SpreadDbTest(){
       if( v.value === true || v.exist === false && v.value === false ){
         v.r = SpreadDb({  // 対象シート作成
           command:'create',
-          table: src[v.key].name,
+          table: v.key,
           cols: (src[v.key].cols || null),
           set: (src[v.key].set || null),
         },{userId:'Administrator'});
@@ -498,7 +500,6 @@ function SpreadDb(query=[],opt={}){
           v.step = 6; // クエリの実行
           v.r = doQuery(pv.query[v.i]);
           if( v.r instanceof Error ) throw v.r;
-          vlog(v.r,516);  // 全件null。正常終了
 
           v.step = 6.1; // 実行結果の戻り値への追加
           v.r = objectizeColumn('sdbMain');
@@ -516,26 +517,25 @@ function SpreadDb(query=[],opt={}){
           v.map = pv.opt.sdbLog.map(x => x.name);
           for( v.j=0 ; v.j<v.map.length ; v.j++ ){
             if( pv.query[v.i][v.map[v.j]] ){
-              v.r[v.map[v.j]] = pv.query[v.i][v.map[v.j]];
+              v.r[v.map[v.j]] = toString(pv.query[v.i][v.map[v.j]]);
             }
           }
           // command系関数に渡された引数をdata欄にセット
           v.r.data = pv.query[v.i].command === 'create'
-          ? JSON.stringify(pv.query[v.i].cols)
-          : (pv.query[v.i].where || '');
+          ? (pv.query[v.i].cols ? toString(pv.query[v.i].cols) : pv.query[v.i].cols)
+          : (pv.query[v.i].where ? toString(pv.query[v.i].where) : pv.query[v.i].where);
           v.log.push(v.r);
 
           v.step = 6.22; // レコード単位の実行結果
-          vlog(query[v.i].result,544)
           for( v.j=0 ; v.j<query[v.i].result.length ; v.j++ ){
             v.log.push({
               queryId: query[v.i].queryId,
               pKey: query[v.i].result[v.j].pKey,
               rSts: query[v.i].result[v.j].rSts,
-              diff: query[v.i].result[v.j].diff,
+              diff: toString(query[v.i].result[v.j].diff),
             });
           }
-          vlog(v.log,553);
+          vlog(v.log,539);
         }
 
         v.step = 7; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
@@ -1658,18 +1658,19 @@ function SpreadDb(query=[],opt={}){
       v.step = 2; // 行オブジェクトを順次走査、該当行を戻り値に追加
       v.table = pv.table[query.table];
       for( v.i=0 ; v.i<v.table.values.length ; v.i++ ){
-        v.step = 2.1; // 1レコード分のログを準備
-        v.log = objectizeColumn('sdbResult');
-        if( v.log instanceof Error ) throw v.log;
-
-        v.step = 2.5; // 主キーの値をpKeyにセット
-        v.log.pKey = v.table.values[v.i][v.table.schema.primaryKey];
-
         if( v.where(v.table.values[v.i]) ){
-          v.log.diff = v.table.values[v.i];
-        }
+          v.step = 3; // 抽出対象行の場合
+          // 1レコード分のログを準備
+          v.log = objectizeColumn('sdbResult');
+          if( v.log instanceof Error ) throw v.log;
 
-        query.result.push(v.log);
+          v.step = 4; // 主キーの値をpKeyに、抽出内容をdiffにセット
+          v.log.pKey = v.table.values[v.i][v.table.schema.primaryKey];
+          v.log.diff = v.table.values[v.i];
+
+          v.step = 5; // レコード単位のログに追加
+          query.result.push(v.log);
+        }
       }
 
       v.step = 9; // 終了処理
