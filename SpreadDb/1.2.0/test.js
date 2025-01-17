@@ -1,47 +1,10 @@
 function SpreadDbTest(){
-  const v = {scenario:'create',start:0,num:0,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'select',start:0,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
-    // ----- 定数・ユーティリティ関数群
     spread: SpreadsheetApp.getActiveSpreadsheet(),
-    deleteSheet: (sheetName=null) => {  // テスト用シートの削除関数
-      /** deleteSheet: 指定されたテスト用シートを削除
-       * @param {string|string[]|null} sheetName=null - string:削除対象シート名(配列可)、null:readme以外全部削除
-       * @returns {void}
-       */
-      if( sheetName === null ){ // 全シート削除
-        sheetName = v.spread.getSheets().map(x => x.getName());
-      } else if( typeof sheetName === 'string' ){ // 単一のシート名指定
-        sheetName = [sheetName];
-      }
-      sheetName.forEach(x => {
-        if( x !== 'readme' ){ // readmeシートのみ削除対象外
-          v.sheet = v.spread.getSheetByName(x);
-          if( v.sheet !== null ) v.spread.deleteSheet(v.sheet);
-        }
-      });
-    },
-    reset: (sheetName=[]) => {  // テストの使用するシートのみ再作成
-      if( !Array.isArray(sheetName) ) sheetName = [sheetName];
-      for( v.i=0 ; v.i<sheetName.length ; v.i++ ){
-        v.deleteSheet(sheetName[v.i]);  // シートを削除
-        for( v.si in src ){ // 対象シート情報検索
-          if( src[v.si].name === sheetName[v.i] ){
-            v.sh = src[v.si];
-            break;
-          }
-        }
-        SpreadDb({  // 対象シート作成
-          command:'create',
-          table:v.sh.name,
-          cols: (v.sh.cols || null),
-          values: (v.sh.values || null),
-        },{userId:'Administrator'});
-      }
-    },
   };
   const src = { // テスト用サンプルデータ
-    status: { // "ユーザ管理"シート(colsのみ)
-      name: 'ユーザ管理',
+    'ユーザ管理': { // "ユーザ管理"シート(colsのみ)
       cols: [
         {name:'userId',type:'string'}, // ユーザ識別子(primaryKey)
         {name:'note',type:'string'}, // 備考
@@ -56,9 +19,8 @@ function SpreadDbTest(){
         {name:'deleted',type:'string'}, // 論理削除日時
       ],
     },
-    PL: { // "損益計算書"シート(valuesのみ、先頭ヘッダ行)
-      name: '損益計算書',
-      values: [
+    '損益計算書': { // "損益計算書"シート(valuesのみ、先頭ヘッダ行)
+      set: [
         ['大','中','勘定科目','一覧存否','L1','L2','SQ','本籍'],
         ['売上高','','','',1,'','',''],
         ['','売上高','','',1,1,'',''],
@@ -133,8 +95,7 @@ function SpreadDbTest(){
         ['','','当期利益',32,6,'',1,'借'],
       ],
     },
-    camp: { // "camp2024"シート(cols+values)
-      name: 'camp2024',
+    'camp2024': { // "camp2024"シート(cols+values)
       cols: [
         {name:'userId',type:'number',primaryKey:true},
         {name:'タイムスタンプ',type:'string'},
@@ -177,7 +138,7 @@ function SpreadDbTest(){
         {name:'fee05',type:'string'},
         {name:'memo',type:'string'},
       ],
-      values: [
+      set: [
         ["タイムスタンプ","メールアドレス","申込者氏名","申込者カナ","申込者の参加","宿泊、テント","引取者氏名","参加者01氏名","参加者01カナ","参加者01所属","参加者02氏名","参加者02カナ","参加者02所属","参加者03氏名","参加者03カナ","参加者03所属","参加者04氏名","参加者04カナ","参加者04所属","参加者05カナ","参加者05氏名","参加者05所属","緊急連絡先","ボランティア募集","備考","キャンセル","authority","CPkey","userId","trial","editURL","entryTime","receptionist","fee00","fee01","fee02","fee03","fee04","fee05","memo"],
         ["2024/10/06 19:51:06","nakairo@gmail.com","国生　邦浩","コクショウ　クニヒロ","スタッフとして申込者のみ参加(おやじの会メンバ)","宿泊しない","","","","","","","","","","","","","","","","","","","","","2","jZiM1isJ+1AZoVZ9NnWTvCoeghCm+FY05eb6jhz8wpT3DwqJbNnszW8PWDd3sq0N5mjN/Nshh+RGGrdkm7CC+sO32js+wm1YmYGr0FMaFxvMBDrWzyJ7qrPI4unbx2IkrPkXSmSEbw91n/LOu0x7br106XeJ9TXJbJS16rV0nzs=","1","{\"passcode\":920782,\"created\":1728874149915,\"result\":0,\"log\":[{\"timestamp\":1728874165893,\"enterd\":920782,\"status\":1}]}","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnuePpXliGgMlVVUYiSKgwX6SXBNrnwozwTMF09Ml1py7Ocp1N7_w5F7uqf52Ak63zBE","","","","","","","","",""],
         ["2024/09/15 12:47:04","va15r@yahoo.co.jp","榎田　素直","エノキダ　スナオ","参加予定(宿泊なし)","宿泊しない","宿泊予定なので不要","榎田　若菜","エノキダ　ワカナ","1年生","","","","","","","","","","","","","9013357002","できる","食事以外でも、お手伝い出来る事があれば。","","1","","2","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnudWLvuoT6Wq0Hu-4tqFl5OyTK-Z7EwdMDEQGS1jKJVIa41Dh8nNJPtpFyPu8cyZYGo","","","","","","","","",""],
@@ -191,9 +152,8 @@ function SpreadDbTest(){
         ["2024/09/17 14:56:11","sny.mae510@gmail.com","名越　裕香","ナゴシ　ユカ","参加予定(宿泊あり)","宿泊する(テントあり)","宿泊予定なので不要","名越　優芽乃","ナゴシ　ユメノ","1年生","名越　亮","ナゴシ　リョウ","保護者","名越　優翔","ナゴシ　ユウト","未就学児","","","","","","","8011376989","","","","1","","10","","https://docs.google.com/forms/d/e/viewform?edit2=2_ABaOnudOb6qOXKHbDi0l5dy9YRsFQVGI7lDmjU39r_485CMkdeAYQuxt4HWmfMpHQD37fUs","","","","","","","","",""]
       ],
     },
-    board: {
-      name: '掲示板',
-      values: [
+    '掲示板': {
+      set: [
         ['timestamp','from','to','message'],
         ['2022-10-27T05:45:35.101Z','パパ','スタッフ全員','テスト\n改行\nしてみたぞ'],
         ['2022-10-27T06:23:43.168Z','パパ','本部','ご本部様\nご機嫌麗しく...'],
@@ -252,8 +212,7 @@ function SpreadDbTest(){
         ['2023/02/10 15:27:38','嶋津パパ','スタッフ全員','r.1.4.4、リリースしました'],
       ],
     },
-    autoIncrement: {
-      name: 'AutoInc',
+    'AutoInc': {
       cols: [
         {name:'pKey',auto_increment:10,primaryKey:true},
         {name:'ラベル',type:'string',unique:true},
@@ -265,76 +224,75 @@ function SpreadDbTest(){
         {name:'obj',auto_increment:{start:40,step:5}},
         {name:'def関数',default:"o => {return toLocale(new Date())}"},
       ],
-      values: [{'ラベル':'fuga'},{'ラベル':'hoge'}],
+      set: [{'ラベル':'fuga'},{'ラベル':'hoge'}],
     },
     Duplicate: {
-      name: 'Duplicate',
       cols: [
         {name:'pKey',auto_increment:10,primaryKey:true},
         {name:'Col1',type:'number',unique:true},
         {name:'Col2',type:'number'},
       ],
-      values: [{Col1:11,Col2:12},{Col1:11,Col2:22}],  // Col1が重複
+      set: [{Col1:11,Col2:12},{Col1:11,Col2:22}],  // Col1が重複
     }
   };
   const scenario = {  // テストシナリオ
     create: [ // create関係のテスト群
       { // 0.基本形
         query: [
-          {command:'create',table:src.camp.name,cols:src.camp.cols,set:src.camp.values},  // 「camp2024」シート作成
-          {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
-          {command:'create',table:src.PL.name,set:src.PL.values},  // 「損益計算書」シート作成
-          {command:'create',table:src.board.name,set:src.board.values},  // 「掲示板」シート作成
-          {command:'create',table:src.autoIncrement.name,cols:src.autoIncrement.cols,set:src.autoIncrement.values},  // 「AutoInc」シート作成
+          {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
+          {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
+          {command:'create',table:'損益計算書',set:src['損益計算書'].set},  // 「損益計算書」シート作成
+          {command:'create',table:'掲示板',set:src['掲示板'].set},  // 「掲示板」シート作成
+          {command:'create',table:'AutoInc',cols:src['AutoInc'].cols,set:src['AutoInc'].set},  // 「AutoInc」シート作成
         ],
         opt: {userId:'Administrator'},
-        /*check: sdbMain => { // 結果を分析、レポートを出力する関数
-          v.rv = [];
-          for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
-            v.rv.push(`query.${v.i} ----------`);
-            v.rv.push(`ErrCD: ${sdbMain[v.i].ErrCD}`);
-            v.rv.push(`command: ${sdbMain[v.i].query.command}`);
-            v.rv.push(`table: ${sdbMain[v.i].query.table}`);
-          };
-          v.rv = [...v.rv,
-            '【シート確認事項】',
-            '①対象シートは全て作成されているか',
-            '②メモの内容は適切か',
-            '③ユーザ管理シート以外、シートには初期データが入っているか',
-            '④掲示板シートのメッセージは改行されているか',
-            'camp2024のuserIdはprimaryKeyになっているか',
-            'camp2024の左端列はtimestampからuserIdに変更されているか',
-            '各シートのcreateがlogシートに出力されているか',
-          ];
-          return v.rv.join('\n');
-        }*/
       },{ // 1.初期値のunique項目で重複値が存在
         query: [
-          {command:'create',table:src.Duplicate.name,cols:src.Duplicate.cols,set:src.Duplicate.values},
+          {command:'create',table:'Duplicate',cols:src['Duplicate'].cols,set:src['Duplicate'].set},
         ],
         opt: {userId:'Administrator'},
       },{ // 2.既存シートの新規作成指示⇒Already Existエラー
         query: [
-          {command:'create',table:src.camp.name,cols:src.camp.cols,set:src.camp.values},  // 「camp2024」シート作成
-          {command:'create',table:src.camp.name,cols:src.camp.cols,set:src.camp.values},  // 「camp2024」シート作成
+          {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
+          {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
         ],
         opt: {userId:'Administrator'},
       },{ // 3.colsもsetも指定無し⇒No Cols and Dataエラー
         query: [
-          {command:'create',table:src.Duplicate.name},
+          {command:'create',table:'Duplicate'},
         ],
         opt: {userId:'Administrator'},
       },{ // 4.userId未指定 ⇒ No Authorityエラー
-        query: {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+        query: {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
         // optは指定しない(ユーザ未定)
       },{ // 5.管理者以外 ⇒ No Authorityエラー
-        query: {command:'create',table:src.status.name,cols:src.status.cols},  // 「ユーザ管理」シート作成
+        query: {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
         opt: {userId:'fuga'},
       },
     ],
+    /*check: sdbMain => { // 結果を分析、レポートを出力する関数
+        v.rv = [];
+        for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
+          v.rv.push(`query.${v.i} ----------`);
+          v.rv.push(`ErrCD: ${sdbMain[v.i].ErrCD}`);
+          v.rv.push(`command: ${sdbMain[v.i].query.command}`);
+          v.rv.push(`table: ${sdbMain[v.i].query.table}`);
+        };
+        v.rv = [...v.rv,
+          '【シート確認事項】',
+          '①対象シートは全て作成されているか',
+          '②メモの内容は適切か',
+          '③ユーザ管理シート以外、シートには初期データが入っているか',
+          '④掲示板シートのメッセージは改行されているか',
+          'camp2024のuserIdはprimaryKeyになっているか',
+          'camp2024の左端列はtimestampからuserIdに変更されているか',
+          '各シートのcreateがlogシートに出力されているか',
+        ];
+        return v.rv.join('\n');
+      }*/
     select: [ // select関係のテスト群
       { // 0.基本形
-        reset: ['掲示板'],
+        reset: {'掲示板':false},
         query: [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"},
           // 日付の比較では"new Date()"を使用。ちなみにgetTime()無しで比較可能
@@ -384,37 +342,90 @@ function SpreadDbTest(){
           };
           return v.rv.join('\n');
         }
+      },{ // 3.存在しないテーブルを指定
+        /*
+        ],[  //
+          {command:'create',table:'掲示板',set:src['掲示板'].set},
+          [
+            {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+            {},  // ゲストなので、ユーザID,権限指定は無し
+          ],
+        ],[ // 3.ユーザに掲示板の読込権限付与
+          {command:'create',table:'掲示板',set:src['掲示板'].set},
+          [
+            {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+            {userId: 'pikumin',userAuth:{'掲示板':'r'}}
+          ],
+        ],[ // 4.ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
+          {command:'create',table:'掲示板',set:src['掲示板'].set},
+          [
+            {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+            {userId: 'pikumin',userAuth:{'掲示板':'w'}}
+          ],
+        ],[ // 5.ユーザ権限未指定の場合 ⇒ 「権限無し」エラー
+          {command:'create',table:'掲示板',set:src['掲示板'].set},
+          [
+            {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+            {userId: 'pikumin'}
+          ],
+        ],
+        */
       }
-      /*
-      ],[  //
-        {command:'create',table:src.board.name,values:src.board.values},
-        [
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {},  // ゲストなので、ユーザID,権限指定は無し
-        ],
-      ],[ // 3.ユーザに掲示板の読込権限付与
-        {command:'create',table:src.board.name,values:src.board.values},
-        [
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {userId: 'pikumin',userAuth:{'掲示板':'r'}}
-        ],
-      ],[ // 4.ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
-        {command:'create',table:src.board.name,values:src.board.values},
-        [
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {userId: 'pikumin',userAuth:{'掲示板':'w'}}
-        ],
-      ],[ // 5.ユーザ権限未指定の場合 ⇒ 「権限無し」エラー
-        {command:'create',table:src.board.name,values:src.board.values},
-        [
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-          {userId: 'pikumin'}
-        ],
-      ],
-      */
     ],
   };
+  function resetSheet(arg=undefined){ /** テスト対象シートの再作成
+   * 引数argのメンバ名(=srcのメンバ)を対象シートとして以下を実施。
+   * - true: 強制的に再作成
+   * - false: 不在なら作成、存在なら再作成しない(不在時作成)
+   * - null: 強制削除。存在していれば削除、再作成はしない
+   * - undefined: 何もしない(既定値)
+   * 引数argが真偽値の場合、全シート対象に上記処理を行う。
+   */
+    console.log(`resetSheet start: arg=${JSON.stringify(arg)}`);
+    if( arg === undefined ){
+      console.log(`resetSheet normal end: arg=undefined`);
+      return null;
+    };
 
+    v.step = 0.1; // 対象シートのリストアップ
+    v.list = arg === null
+    ? v.spread.getSheets().map(x => x.getName())  // 全シート強制削除なら存在する全シート
+    : (typeof arg === 'boolean' ? Object.keys(src) // 全シート対象(真偽値)なら定義されているテスト用全シート
+    : Object.keys(arg));  // 全シート対象ではない場合、指定シート名
+
+    v.step = 0.2; // readmeは削除対象から外す
+    v.i = v.list.findIndex(x => x === 'readme');
+    if( v.i >= 0 ) v.list.splice(v.i,1);
+
+    for( v.i=0 ; v.i<v.list.length ; v.i++ ){
+
+      v.step = 0.3; // シート名と処理(真偽値)を特定
+      v.key = v.list[v.i];
+      v.value = (arg === null || typeof arg === 'boolean') ? arg : arg[v.key];
+      v.exist = v.spread.getSheetByName(v.key) === null ? false : true;
+
+      v.step = 0.4; // シートが存在し、強制再作成または強制削除なら削除
+      if( v.exist === true && (v.value === false || v.value === null) ){
+        v.sheet = v.spread.getSheetByName(v.key);
+        v.spread.deleteSheet(v.sheet);
+        console.log(`resetSheet: "${v.key}" is deleted.`);
+      }
+
+      v.step = 0.5; // 強制再作成、または存在しなければ作成
+      if( v.value === true || v.exist === false && v.value === false ){
+        v.r = SpreadDb({  // 対象シート作成
+          command:'create',
+          table: src[v.key].name,
+          cols: (src[v.key].cols || null),
+          set: (src[v.key].set || null),
+        },{userId:'Administrator'});
+        if( v.r instanceof Error ) return v.r;
+        console.log(`resetSheet: append "${v.key}"`);
+      }
+    }
+    console.log(`resetSheet normal end: arg=${JSON.stringify(arg)}`);
+    return null;
+  };
   try {
 
     v.step = 1; // v.scenarioで指定されたテスト群について、v.startからv.num個分を実行
@@ -434,12 +445,10 @@ function SpreadDbTest(){
 
     v.step = 2;
     for( v.idx=v.st ; v.idx<v.ed ; v.idx++ ){
+
       v.step = 2.1; // テスト用データをセット
-      if( Object.hasOwn(scenario[v.scenario][v.idx],'reset') ){
-        v.reset(scenario[v.scenario][v.idx].reset); // 再作成シート指定が有ればその指示に従う
-      } else {
-        v.deleteSheet(); // 既存シートを全部削除
-      }
+      v.r = resetSheet(scenario[v.scenario][v.idx].reset);
+      if( v.r instanceof Error ) throw v.r;
 
       v.step = 2.2; // scenarioからqueryとoptをセット
       v.r = SpreadDb(
@@ -644,7 +653,9 @@ function SpreadDb(query=[],opt={}){
 
         v.step = 2.3; // 既定値の設定
         for( v.dv in v.table.schema.defaultRow ){
-          query.set[v.i][v.dv] = v.table.schema.defaultRow[v.dv](query.set[v.i]);
+          if( !query.set[v.i][v.dv] ){
+            query.set[v.i][v.dv] = v.table.schema.defaultRow[v.dv](query.set[v.i]);
+          }
         }
 
         v.step = 2.4; // 追加レコードの正当性チェック(unique重複チェック)
@@ -731,7 +742,7 @@ function SpreadDb(query=[],opt={}){
             {name:'rowId',type:'UUID',note:'主キー',primaryKey:true,default:()=>Utilities.getUuid()},
           sdbQuery: [
             {name:'timestamp',type:'string',note:'更新日時(ISO8601拡張形式)',default:()=>{return toLocale(new Date())}},
-            {name:'userId',type:'string|number',note:'ユーザ識別子(uuid等)',default:()=>{return pv.opt.userId}},
+            {name:'userId',type:'string|number',note:'ユーザ識別子(uuid等)',default:()=>pv.opt.userId},
             {name:'queryId',type:'string',note:'SpreadDb呼出元で設定する、クエリ・結果突合用文字列。未設定の場合は主処理でUUIDを設定',default:()=>{return Utilities.getUuid()}},
             {name:'table',type:'string',note:'操作対象テーブル名',default:()=>''},
             {name:'command',type:'string',note:'操作名',default:()=>''},
@@ -743,7 +754,7 @@ function SpreadDb(query=[],opt={}){
           ],
           sdbTable: [
             {name:'name',type:'string',note:'テーブル名(範囲名)'},
-            {name:'account',type:'string',note:'更新者のuserId(識別子)',default:()=>{return pv.opt.userId}},
+            {name:'account',type:'string',note:'更新者のuserId(識別子)',default:()=>pv.opt.userId},
             {name:'sheet',type:'Sheet',note:'スプレッドシート内の操作対象シート(ex."master"シート)'},
             {name:'schema',type:'sdbSchema',note:'シートの項目定義',default:()=>objectizeColumn('sdbSchema')},
             {name:'values',type:'Object[]',note:'行オブジェクトの配列。{項目名:値,..} 形式',default:()=>[]},
@@ -779,7 +790,7 @@ function SpreadDb(query=[],opt={}){
           sdbLog: [
             {name:'logId',type:'UUID',primaryKey:true,default:()=>{return Utilities.getUuid()}},
             {name:'timestamp',type:'string',note:'更新日時'},
-            {name:'userId',type:'string',note:'ユーザ識別子',default:()=>{return pv.opt.userId}},
+            {name:'userId',type:'string',note:'ユーザ識別子',default:()=>{console.log(`l.788 pv=${JSON.stringify(pv.opt,null,2)}`);return pv.opt.userId}},
             {name:'queryId',type:'string',note:'クエリ・結果突合用識別子'},
             {name:'table',type:'string',note:'対象テーブル名'},
             {name:'command',type:'string',note:'操作内容(コマンド名)'},
@@ -898,11 +909,12 @@ function SpreadDb(query=[],opt={}){
   function createTable(query){
     const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.createTable`,step:0,rv:[],convertRow:null};
     try {
-      v.fId = `: table=${query.table}, set=${Object.hasOwn(query,'set')?(query.set.length+'rows'):'undefined'}`;
-      console.log(`${v.whois} start${v.fId}`);
-
-      v.table = pv.table[query.table];
       try { // エラーチェック
+        vlog(query,916)
+        if( !query.set ) query.set = [];
+        v.fId = `: table=${query.table}, set=${query.set.length}rows`;
+        v.table = pv.table[query.table];
+        console.log(`${v.whois} start${v.fId}`);
 
         v.step = 1.1; // シートが既に存在
         if( v.table.sheet !== null )
@@ -1056,7 +1068,7 @@ function SpreadDb(query=[],opt={}){
 
       v.step = 2; // 操作対象のテーブル管理情報を準備
       if( !Object.hasOwn(pv.table,query.table) ){
-        v.r = genTable(query);//{name:query.table,cols:query.cols,values:query.set});
+        v.r = genTable(query);
         if( v.r instanceof Error ) throw v.r;
       }
 
@@ -1508,17 +1520,17 @@ function SpreadDb(query=[],opt={}){
         v.step = 5; // シートが存在するならシートから各種情報を取得
         v.step = 5.1; // シートイメージを読み込み
         v.getDataRange = v.table.sheet.getDataRange();
-        v.getset = v.getDataRange.getset();
+        v.getValues = v.getDataRange.getValues();
 
         v.step = 5.2; // シートイメージからヘッダ行・行オブジェクトを作成
-        v.r = convertRow(v.getset);
+        v.r = convertRow(v.getValues);
         if( v.r instanceof Error ) throw v.r;
 
         v.step = 5.3; // ヘッダ・データの設定
         v.table.header = v.r.header;
-        v.table.set = v.r.obj;
+        v.table.values = v.r.obj;
         v.table.colnum = v.table.header.length;
-        v.table.rownum = v.table.set.length;
+        v.table.rownum = v.table.values.length;
 
         v.step = 5.4; // ヘッダ行のメモ(項目定義メモ)を取得
         v.table.notes = v.getDataRange.getNotes()[0];
@@ -1621,31 +1633,41 @@ function SpreadDb(query=[],opt={}){
     }
   }
   /** selectRow: テーブルから該当行を抽出
-   * @param {Object|Object[]} arg
-   * @param {sdbTable} arg.table - 操作対象のテーブル管理情報
-   * @param {Object|function} arg.where - 対象レコード判定条件
-   * @returns {Object[]} 該当行オブジェクトの配列
+   * @param {sdbQuery|sdbQuery[]} query
+   * @param {sdbTable} query.table - 操作対象のテーブル名
+   * @param {Object|function} query.where - 対象レコード判定条件
+   * @returns {null|Error}
    *
    * - where句の指定方法: functionalyze参照
    */
-  function selectRow(arg){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.selectRow`,step:0,rv:[]};
+  function selectRow(query){
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-6)}.selectRow`,step:0,rv:null};
     console.log(`${v.whois} start.`);
     try {
 
       v.step = 1; // 判定条件を関数に統一
-      v.where = functionalyze({table:arg.table,data:arg.where});
+      v.where = functionalyze({table:query.table,data:query.where});
       if( v.where instanceof Error ) throw v.where;
 
       v.step = 2; // 行オブジェクトを順次走査、該当行を戻り値に追加
-      for( v.i=0 ; v.i<arg.table.values.length ; v.i++ ){
-        if( v.where(arg.table.values[v.i]) ){
-          v.rv.push(arg.table.values[v.i]);
+      v.table = pv.table[query.table];
+      for( v.i=0 ; v.i<v.table.values.length ; v.i++ ){
+        v.step = 2.1; // 1レコード分のログを準備
+        v.log = objectizeColumn('sdbResult');
+        if( v.log instanceof Error ) throw v.log;
+
+        v.step = 2.5; // 主キーの値をpKeyにセット
+        v.log.pKey = v.table.values[v.i][v.table.schema.primaryKey];
+
+        if( v.where(v.table.values[v.i]) ){
+          v.log.diff = v.table.values[v.i];
         }
+
+        query.result.push(v.log);
       }
 
       v.step = 9; // 終了処理
-      console.log(`${v.whois} normal end.\nrows=${v.rv.length}`);
+      console.log(`${v.whois} normal end.\nrows=${query.result.length}`);
       return v.rv;
 
     } catch(e) {
