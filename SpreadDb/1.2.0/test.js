@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'append',start:1,num:1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'delete',start:0,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -237,7 +237,7 @@ function SpreadDbTest(){
   };
   const scenario = {  // テストシナリオ
     create: [ // create関係のテスト群
-      { // 0.基本形
+      { // 0.正常系
         reset: null, // 全シート強制削除
         query: [
           {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
@@ -277,7 +277,7 @@ function SpreadDbTest(){
       },
     ],
     select: [ // select関係のテスト群
-      { // 0.基本形
+      { // 0.正常系
         reset: {'log':false,'掲示板':false},
         query: [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"},
@@ -306,7 +306,7 @@ function SpreadDbTest(){
       }
     ],
     append: [
-      { // 0.基本形
+      { // 0.正常系
         reset: {'log':null,'AutoInc':false},
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},
@@ -350,6 +350,23 @@ function SpreadDbTest(){
         ],
         opt: {userId:'Administrator'},
       },
+    ],
+    delete: [
+      { // 0.正常系
+        reset: {'log':null,'AutoInc':null},
+        query: [
+          {table:'AutoInc',command:'append',record:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
+          {table:'AutoInc',command:'delete',where:{'配列①':-1}},  // where = Object
+          {table:'AutoInc',command:'delete',where:o=>{return o['配列②'] === -2}},  // where = function
+          {table:'AutoInc',command:'delete',where:11},  // where = any(pKey)
+          {table:'AutoInc',command:'delete',where:'o => {return o["ラベル"].slice(0,1)==="a"'},  // where = string(func)  
+        ],
+        opt: {userId:'Administrator'},
+      },{ // 1.該当無し ⇒ qSts='OK',num=0
+      },{ // 2.追加権限付与してゲストが実行 ⇒ OK
+      },{ // 3.追加権限付与せずゲストが実行 ⇒ No Authority
+      },{ // 4.存在しないテーブルでの削除 ⇒ No Table
+      }
     ],
   };
   function resetSheet(arg=undefined){ /** テスト対象シートの再作成
@@ -578,7 +595,7 @@ function SpreadDb(query=[],opt={}){
         v.fId = `: table=${query.table}`;
         v.table = pv.table[query.table];  // v.tableに対象のテーブル管理情報をセット
 
-        v.step = 1.2; // query.setの判定
+        v.step = 1.2; // query.setの存否判定
         if( !Object.hasOwn(query,'set') ) throw new Error(`No set`);  // query.setが不存在
 
         v.step = 1.3;
@@ -693,9 +710,9 @@ function SpreadDb(query=[],opt={}){
       query.num = query.result.filter(x => x.rSts === 'OK').length;
 
       // ------------------------------------------------
-      v.step = 3; // 対象シート・更新履歴に展開
+      v.step = 3; // 対象シートへの展開
       // ------------------------------------------------
-      v.step = 3.1; // 対象シートへの展開
+      v.step = 3.1; // 対象シートにsetValues
       if( v.target.length > 0 ){
         v.table.sheet.getRange(
           v.table.rownum + 2,
@@ -988,69 +1005,80 @@ function SpreadDb(query=[],opt={}){
     }
   }
   /** deleteRow: 領域から指定行を物理削除
-   * @param {Object} any
-   * @param {sdbTable} any.table - 操作対象のテーブル管理情報
-   * @param {Object|Function|string} any.where - 対象レコードの判定条件
-   * @returns {sdbLog[]}
-   *
-   * - where句の指定方法: functionalyze参照
+   * @param {sdbQuery|sdbQuery[]} query
+   * @param {sdbTable} query.table - 操作対象のテーブル名
+   * @param {Object|Object[]} query.where - 削除対象の指定
+   * @returns {null|Error}
    */
-  function deleteRow(arg){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.deleteRow`,step:0,rv:[],whereStr:[]};
-    console.log(`${v.whois} start.`);
+  function deleteRow(query){
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.deleteRow`,step:0,rv:null,whereStr:[]};
     try {
 
-      // 削除対象行が複数の時、上の行を削除後に下の行を削除しようとすると添字や行番号が分かりづらくなる。
-      // そこで対象となる行の添字(行番号)を洗い出した後、降順にソートし、下の行から順次削除を実行する
+      try {
+        v.step = 1.1; // query.tableの判定 ⇒ pv.tableに存在しなければエラー
+        if( !Object.hasOwn(query,'table') || typeof query.table !== 'string' || !Object.hasOwn(pv.table,query.table) )
+          throw new Error(`Invalid Table`);
+        v.fId = `: table=${query.table}`;
+        v.table = pv.table[query.table];  // v.tableに対象のテーブル管理情報をセット
 
-      v.step = 1; // 該当レコードかの判別用関数を作成
-      v.whereStr = toString(arg.where); // 更新履歴記録用にwhereを文字列化
-      arg.where = functionalyze({table:arg.table,data:arg.where});
-      if( arg.where instanceof Error ) throw arg.where;
+        v.step = 1.2; // query.whereの存否判定
+        if( !Object.hasOwn(query,'where') ) throw new Error(`No where`);  // query.whereが不存在
+        v.fId += `, where=${toString(query.where)}`;
+        console.log(`${v.whois} start${v.fId}`);
+
+        v.step = 1.3; // 該当レコードかの判別用関数を作成
+        v.whereStr = toString(query.where); // 更新履歴記録用にwhereを文字列化
+        query.where = functionalyze({table:query.table,data:query.where});
+        if( query.where instanceof Error ) throw query.where;
+
+      } catch(e){
+        query.qSts = e.message;
+        e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+        console.error(`${e.message}\nv=${stringify(v)}`);
+        return v.rv;
+      }
 
       v.step = 2; // 対象レコードか、後ろから一件ずつチェック
-      for( v.i=arg.table.values.length-1 ; v.i>=0 ; v.i-- ){
+      // 削除対象行が複数の時、上の行を削除後に下の行を削除しようとすると添字や行番号が分かりづらくなる。
+      // そこで対象となる行の添字(行番号)を洗い出した後、降順にソートし、下の行から順次削除を実行する
+      for( v.i=v.table.values.length-1 ; v.i>=0 ; v.i-- ){
 
         v.step = 2.1; // 対象外判定ならスキップ
-        if( arg.where(arg.table.values[v.i]) === false ) continue;
+        if( query.where(v.table.values[v.i]) === false ) continue;
 
-        v.step = 2.2; // 一件分のログオブジェクトを作成
-        v.log = genLog({
-          table: arg.table.name,
-          command: 'delete',
-          arg: v.whereStr,
-          ErrCD: null,
-          before: arg.table.values[v.i],
-          // after, diffは空欄
-        });
+        v.step = 2.2; // 1レコード分のログオブジェクトを作成
+        v.log = objectizeColumn('sdbResult');
         if( v.log instanceof Error ) throw v.log;
-        v.rv.push(v.log);
+        query.result.push(v.log);
 
-        v.step = 2.3; // 削除レコードのunique項目をarg.table.schema.uniqueから削除
-        // arg.table.schema.auto_incrementは削除の必要性が薄いので無視
+        v.step = 2.3; // 削除レコードのunique項目をv.table.schema.uniqueから削除
+        // v.table.schema.auto_incrementは削除の必要性が薄いので無視
         // ※必ずしも次回採番時に影響するとは限らず、影響したとしても欠番扱いで問題ないと判断
-        for( v.unique in arg.table.schema.unique ){ // unique項目を順次チェック
-          if( arg.table.values[v.i][v.unique] ){  // 対象レコードの当該unique項目が有意な値
+        for( v.unique in v.table.schema.unique ){ // unique項目を順次チェック
+          if( v.table.values[v.i][v.unique] ){  // 対象レコードの当該unique項目が有意な値
             // unique項目一覧(配列)から対象レコードの値の位置を探して削除
-            v.idx = arg.table.schema.unique[v.unique].indexOf(arg.table.values[v.i][v.unique]);
-            if( v.idx >= 0 ) arg.table.schema.unique[v.unique].splice(v.idx,1);
+            v.idx = v.table.schema.unique[v.unique].indexOf(v.table.values[v.i][v.unique]);
+            if( v.idx >= 0 ) v.table.schema.unique[v.unique].splice(v.idx,1);
           }
         }
 
-        v.step = 2.4; // arg.table.valuesから削除
-        arg.table.values.splice(v.i,1);
+        v.step = 2.4; // ログに追加レコード情報を記載
+        v.log.diff = JSON.stringify(v.table.values[v.i]);
+        query.num++; // 削除成功件数をインクリメント
 
-        v.step = 2.5; // シートのセルを削除
-        v.range = arg.table.sheet.deleteRow(v.i+2); // 添字->行番号で+1、ヘッダ行分で+1
+        v.step = 2.5; // v.table.valuesから削除
+        v.table.values.splice(v.i,1);
 
-        v.step = 2.6; // arg.table.rownumを書き換え
-        arg.table.rownum -= 1;
+        v.step = 2.6; // シートのセルを削除
+        v.range = v.table.sheet.deleteRow(v.i+2); // 添字->行番号で+1、ヘッダ行分で+1
+
+        v.step = 2.7; // v.table.rownumを書き換え
+        v.table.rownum -= 1;
 
       }
 
       v.step = 9; // 終了処理
-      v.rv = v.rv;
-      console.log(`${v.whois} normal end.`);
+      console.log(`${v.whois} normal end${v.fId}`);
       return v.rv;
 
     } catch(e) {
