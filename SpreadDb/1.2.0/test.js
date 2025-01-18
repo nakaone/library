@@ -325,19 +325,19 @@ function SpreadDbTest(){
           {table:'AutoInc',command:'append',set:[{'ラベル':'a02'},{'ラベル':'a02'}]}, // OK, Duplicate
         ],
         opt: {userId:'Administrator'},
-      },{ // 2.追加権限付与してゲストが実行 ⇒ OK
+      },{ // 2.権限付与してゲストが実行 ⇒ OK
         reset: {'log':false,'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {guestAuth:{AutoInc:'w'}},
-      },{ // 3.追加権限付与せずゲストが実行 ⇒ No Authority
+      },{ // 3.権限付与せずゲストが実行 ⇒ No Authority
         reset: {'log':false,'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {guestAuth:{AutoInc:'r'}},
-      },{ // 4.追加権限付与してユーザが実行 ⇒ OK
+      },{ // 4.権限付与してユーザが実行 ⇒ OK
         reset: {'log':false,'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:'pikumin',userAuth:{AutoInc:'w'}},
-      },{ // 5.追加権限付与せずユーザが実行 ⇒ No Authority
+      },{ // 5.権限付与せずユーザが実行 ⇒ No Authority
         reset: {'log':false,'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:'pikumin',userAuth:{AutoInc:'r'}},
@@ -352,21 +352,40 @@ function SpreadDbTest(){
       },
     ],
     delete: [
-      { // 0.正常系
-        reset: {'log':null,'AutoInc':null},
+      { // 0.正常系 ⇒ pKey=10の行のみ残っていればOK
+        reset: {'log':null,'AutoInc':true},
         query: [
-          {table:'AutoInc',command:'append',record:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
+          {table:'AutoInc',command:'append',set:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
           {table:'AutoInc',command:'delete',where:{'配列①':-1}},  // where = Object
           {table:'AutoInc',command:'delete',where:o=>{return o['配列②'] === -2}},  // where = function
           {table:'AutoInc',command:'delete',where:11},  // where = any(pKey)
-          {table:'AutoInc',command:'delete',where:'o => {return o["ラベル"].slice(0,1)==="a"'},  // where = string(func)  
+          {table:'AutoInc',command:'delete',where:'o => {return o["ラベル"].slice(0,1)==="a"'},  // where = string(func)
         ],
         opt: {userId:'Administrator'},
-      },{ // 1.該当無し ⇒ qSts='OK',num=0
-      },{ // 2.追加権限付与してゲストが実行 ⇒ OK
-      },{ // 3.追加権限付与せずゲストが実行 ⇒ No Authority
+      },{ // 1.該当レコード無し ⇒ qSts='OK',num=0
+      },{ // 2.権限付与してユーザが実行 ⇒ OK
+      },{ // 3.権限付与せずユーザが実行 ⇒ No Authority
       },{ // 4.存在しないテーブルでの削除 ⇒ No Table
-      }
+      },
+    ],
+    update: [
+      { // 0.正常系
+      },{ // 1.該当レコード無し ⇒ qSts='OK',num=0
+      },{ // 1.自レコードのみの更新権限で自レコードを更新 ⇒ qSts='OK'
+      },{ // 1.自レコードのみの更新権限で自レコード以外を更新 ⇒ qSts='OK'
+      },{ // 2.権限付与してユーザが実行 ⇒ OK
+      },{ // 3.権限付与せずユーザが実行 ⇒ No Authority
+      },{ // 4.存在しないテーブルでの更新 ⇒ No Table
+      },
+    ],
+    schema: [
+      { // 0.正常系
+      },{ // 1.該当テーブル無し ⇒ qSts='OK',num=0
+      },{ // 2.権限付与してユーザが実行 ⇒ OK
+      },{ // 3.権限付与せずユーザが実行 ⇒ No Authority
+      },{ // 4.存在しないテーブルの参照 ⇒ No Table
+      },{ // 4.シート上のメモを修正後、その修正が反映されているかの確認
+      },
     ],
   };
   function resetSheet(arg=undefined){ /** テスト対象シートの再作成
@@ -529,9 +548,12 @@ function SpreadDb(query=[],opt={}){
             }
           }
           v.r.userId = pv.opt.userId; // ユーザIDをセット
-          v.r.data = pv.query[v.i].command === 'create' // command系関数に渡された引数をdata欄にセット
-          ? (pv.query[v.i].cols ? toString(pv.query[v.i].cols) : pv.query[v.i].cols)
-          : (pv.query[v.i].where ? toString(pv.query[v.i].where) : pv.query[v.i].where);
+          if( v.r.data === null ){ // command系関数に渡された引数をdata欄にセット
+            // なおcommand系関数内でセット済の場合は置換しない
+            v.r.data = pv.query[v.i].command === 'create'
+            ? (pv.query[v.i].cols ? toString(pv.query[v.i].cols) : pv.query[v.i].cols)
+            : (pv.query[v.i].where ? toString(pv.query[v.i].where) : pv.query[v.i].where);
+          }
           v.log.push(v.r);
 
           v.step = 6.22; // レコード単位の実行結果
@@ -808,7 +830,7 @@ function SpreadDb(query=[],opt={}){
             {name:'queryId',type:'string',note:'クエリ・結果突合用識別子'},
             {name:'table',type:'string',note:'対象テーブル名'},
             {name:'command',type:'string',note:'操作内容(コマンド名)'},
-            {name:'data',type:'JSON',note:'操作関数に渡された引数'},
+            {name:'data',type:'JSON',note:'操作関数に渡された引数',default:()=>null},
             {name:'qSts',type:'string',note:'クエリ単位の実行結果'},
             {name:'num',type:'number',note:'変更された行数'},
             {name:'pKey',type:'string',note:'変更したレコードのprimaryKey'},
@@ -1011,7 +1033,7 @@ function SpreadDb(query=[],opt={}){
    * @returns {null|Error}
    */
   function deleteRow(query){
-    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.deleteRow`,step:0,rv:null,whereStr:[]};
+    const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.deleteRow`,step:0,rv:null};
     try {
 
       try {
@@ -1027,7 +1049,7 @@ function SpreadDb(query=[],opt={}){
         console.log(`${v.whois} start${v.fId}`);
 
         v.step = 1.3; // 該当レコードかの判別用関数を作成
-        v.whereStr = toString(query.where); // 更新履歴記録用にwhereを文字列化
+        query.data = toString(query.where); // 更新履歴記録用にwhereを文字列化
         query.where = functionalyze({table:query.table,data:query.where});
         if( query.where instanceof Error ) throw query.where;
 
@@ -1188,11 +1210,11 @@ function SpreadDb(query=[],opt={}){
   }
   /** functionalyze: オブジェクト・文字列を基にObject/stringを関数化
    * @param {Object} arg
-   * @param {sdbTable} arg.table - 呼出元で処理対象としているテーブル
+   * @param {sdbTable} [arg.table] - 呼出元で処理対象としているテーブル
    * @param {Object|function|string} arg.data - 関数化するオブジェクトor文字列
    * @returns {function}
    *
-   * - update/delete他、引数でwhereを渡されるメソッドで使用
+   * - update/delete他、引数でdataを渡されるメソッドで使用
    * - 引数のデータ型により以下のように処理分岐
    *   - Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
    *   - Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
@@ -1204,30 +1226,41 @@ function SpreadDb(query=[],opt={}){
     const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.functionalyze`,step:0,rv:null};
     try {
 
-      v.fId = `: arg(${whichType(arg)})=${toString(arg)}`;
-      console.log(`${v.whois} start${v.fId}`);
+      try {
 
-      v.step = 1; // 引数のチェック
-      if( typeof arg === 'function' ){
-        console.log(`${v.whois} normal end${v.fId}`);
-        return arg;
-      } else if( typeof arg === 'string' ){
-        arg = {data:arg,table:null};
-      } else if( !whichType(arg,'Object') || !Object.hasOwn(arg,'data')){
-        throw new Error(`引数「${toString(arg)}」は適切な引数ではありません`);
+        v.step = 1.1; // 開始をログに表示
+        v.fId = ': arg='+toString(arg);
+        console.log(`${v.whois} start${v.fId}`);
+
+        v.step = 1.2; // 引数の型チェック＋変換
+        if( typeof arg === 'function' ){
+          v.step = 1.1; // 引数が関数ならそのまま使用
+          console.log(`${v.whois} normal end${v.fId}`);
+          return arg;
+        } else if( typeof arg === 'string' ){
+          arg = {data:arg,table:null};
+        } else if( !whichType(arg,'Object') || !Object.hasOwn(arg,'data')){
+          throw new Error(`Invalid Argument`);
+        }
+
+      } catch(e){
+        arg.qSts = e.message;
+        e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+        console.error(`${e.message}\nv=${stringify(v)}`);
+        return v.rv;
       }
 
       switch( typeof arg.data ){
-        case 'function': v.step = 2.1;  // 関数指定ならそのまま利用
+        case 'function': v.step = 2;  // 関数指定ならそのまま利用
           v.rv = arg.data;
           break;
-        case 'object': v.step = 2.2;
+        case 'object': v.step = 3;
           v.keys = Object.keys(arg.data);
           if( v.keys.length === 2 && v.keys.includes('key') && v.keys.includes('value') ){
-            v.step = 2.21; // {key:〜,value:〜}形式での指定の場合
+            v.step = 3.1; // {key:〜,value:〜}形式での指定の場合
             v.rv = new Function('o',`return isEqual(o['${arg.data.key}'],'${arg.data.value}')`);
           } else {
-            v.step = 2.22; // {キー項目名:値}形式での指定の場合
+            v.step = 3.2; // {キー項目名:値}形式での指定の場合
             v.c = [];
             for( v.j=0 ; v.j<v.keys.length ; v.j++ ){
               v.c.push(`isEqual(o['${v.keys[v.j]}'],'${arg.data[v.keys[v.j]]}')`);
@@ -1235,24 +1268,25 @@ function SpreadDb(query=[],opt={}){
             v.rv = new Function('o',`return (${v.c.join(' && ')})`);
           }
           break;
-        case 'string': v.step = 2.3;
+        case 'string': v.step = 4;
           v.fx = arg.data.match(/^function\s*\(([\w\s,]*)\)\s*\{([\s\S]*?)\}$/); // function(){〜}
           v.ax = arg.data.match(/^\(?([\w\s,]*?)\)?\s*=>\s*\{?(.+?)\}?$/); // arrow関数
           if( v.fx || v.ax ){
-            v.step = 2.31; // function文字列
+            v.step = 4.1; // function文字列
             v.a = (v.fx ? v.fx[1] : v.ax[1]).replaceAll(/\s/g,''); // 引数部分
             v.a = v.a.length > 0 ? v.a.split(',') : [];
             v.b = (v.fx ? v.fx[2] : v.ax[2]).replaceAll(/\s+/g,' ').trim(); // 論理部分
             v.rv = new Function(...v.a, v.b);
             break;
           }
+          // 関数では無い文字列の場合はdefaultで処理するため、breakの記述は省略
         default:
-          v.step = 2.4; // 関数ではない文字列、またはfunction/object/string以外の型はprimaryKeyの値指定と看做す
-          if( arg.table !== null && arg.table.schema.primaryKey ){
+          v.step = 5; // 関数ではない文字列、またはfunction/object/string以外の型はprimaryKeyの値指定と看做す
+          if( arg.table !== null && pv.table[arg.table].schema.primaryKey ){
             if( typeof arg.data === 'string') arg.data = `"${arg.data}"`;
-            v.rv = new Function('o',`return isEqual(o['${arg.table.schema.primaryKey}'],${arg.data})`);
+            v.rv = new Function('o',`return isEqual(o['${pv.table[arg.table].schema.primaryKey}'],${arg.data})`);
           } else {
-            throw new Error(`引数の型が不適切です`);
+            throw new Error(`Invalid Argument`);
           }
       }
 
