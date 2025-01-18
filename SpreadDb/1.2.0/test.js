@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'select',start:3,num:1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'append',start:0,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -304,6 +304,26 @@ function SpreadDbTest(){
         ],
         opt: {},  // ゲストなので、ユーザID,権限指定は無し
       }
+    ],
+    append: [
+      { // 0.基本形
+        reset: {'log':null,'AutoInc':false},
+        query: [
+          {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',set:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // setが配列
+          //{table:'AutoInc',command:'append',set:{'ラベル':'a01'}}, // ⇒ 重複エラー  
+        ],
+        opt: {userId:'Administrator'},
+      },{ // 0.存在しないテーブルへの追加
+        reset: {'log':false,'AutoInc':null},  // AutoIncは強制削除
+        query: [
+          {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},
+          {table:'AutoInc',command:'append',set:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // setが配列
+        ],
+        opt: {userId:'Administrator'},
+      },
     ],
   };
   function resetSheet(arg=undefined){ /** テスト対象シートの再作成
@@ -1026,71 +1046,79 @@ function SpreadDb(query=[],opt={}){
       if( !Object.hasOwn(pv.table,query.table) ){
         v.r = genTable(query);
         if( v.r instanceof Error ) throw v.r;
-      }
-
-      v.step = 3; // ユーザの操作対象シートに対する権限をv.allowにセット
-      v.allow = (pv.opt.adminId === pv.opt.userId) ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
-      : ( pv.opt.userId === 'guest' ? (pv.opt.guestAuth[query.table] || '')  // ゲスト(userId指定無し)
-      : ( pv.opt.userAuth[query.table] || ''));  // 通常ユーザ
-
-      v.step = 4; // 呼出先メソッド設定
-      if( v.allow.includes('o') ){
-
-        // o(=own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
-        // また対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
-        //read/write/append/deleteは自分のみ可、schemaは実行不可
-
-        v.step = 4.1;  // 操作対象レコードの絞り込み(検索・追加条件の変更)
-        if( query.command !== 'append' ){
-          v.step = 4.2; // select/update/deleteなら対象を自レコードに限定
-          query.where = pv.opt.userId;
-        } else {
-          v.step = 4.3; // appendの場合
-          v.pKey = pv.table[query.table].schema.primaryKey;
-          if( !v.pKey ){
-            v.step = 4.4; // 追加先テーブルにprimaryKeyが不在ならエラー
-            query.qSts = 'No PrimaryKey';
-          } else {
-            v.step = 4.5; // 追加レコードの主キーはuserIdに変更
-            if( !Array.isArray(query.record) ) query.record = [query.record];
-            query.record.forEach(x => x[v.pKey] = pv.opt.userId);
-          }
-        }
-
-        v.step = 4.6; // 'o'の場合の呼出先メソッドを設定
-        switch( query.command ){
-          case 'select': v.isOK = true; v.func = selectRow; break;
-          case 'update': v.isOK = true; v.func = updateRow; break;
-          case 'append': case 'insert': v.isOK = true; v.func = appendRow; break;
-          case 'delete': v.isOK = true; v.func = deleteRow; break;
-          default: v.isOK = false;
-        }
-
       } else {
-
-        v.step = 4.7;  // 'o'以外の場合の呼出先メソッドを設定
-        switch( query.command ){
-          case 'create': v.isOK = v.allow.includes('c'); v.func = createTable; break;
-          case 'select': v.isOK = v.allow.includes('r'); v.func = selectRow; break;
-          case 'update': v.isOK = (v.allow.includes('r') && v.allow.includes('w')); v.func = updateRow; break;
-          case 'append': case 'insert': v.isOK = v.allow.includes('w'); v.func = appendRow; break;
-          case 'delete': v.isOK = v.allow.includes('d'); v.func = deleteRow; break;
-          case 'schema': v.isOK = v.allow.includes('s'); v.func = getSchema; break;
-          default: v.isOK = false;
+        // テーブル管理情報が存在しているがシートは不在の場合、create以外はエラー
+        if( query.command !== 'create' && pv.table[query.table].sheet === null ){
+          query.qSts = 'No Table';
         }
       }
 
-      v.step = 5; // 無権限ならqStsにエラーコードをセット
-      if( v.isOK === false && query.qSts === 'OK' ) query.qSts = 'No Authority';
-
-      v.step = 6; // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
       if( query.qSts === 'OK' ){
 
-        v.step = 6.1;  // メソッド実行
-        v.r = v.func(query);
-        if( v.r instanceof Error ){
-          v.step = 6.2; // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
-          query.qSts = v.r.message;
+        v.step = 3; // ユーザの操作対象シートに対する権限をv.allowにセット
+        v.allow = (pv.opt.adminId === pv.opt.userId) ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
+        : ( pv.opt.userId === 'guest' ? (pv.opt.guestAuth[query.table] || '')  // ゲスト(userId指定無し)
+        : ( pv.opt.userAuth[query.table] || ''));  // 通常ユーザ
+  
+        v.step = 4; // 呼出先メソッド設定
+        if( v.allow.includes('o') ){
+  
+          // o(=own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
+          // また対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
+          //read/write/append/deleteは自分のみ可、schemaは実行不可
+  
+          v.step = 4.1;  // 操作対象レコードの絞り込み(検索・追加条件の変更)
+          if( query.command !== 'append' ){
+            v.step = 4.2; // select/update/deleteなら対象を自レコードに限定
+            query.where = pv.opt.userId;
+          } else {
+            v.step = 4.3; // appendの場合
+            v.pKey = pv.table[query.table].schema.primaryKey;
+            if( !v.pKey ){
+              v.step = 4.4; // 追加先テーブルにprimaryKeyが不在ならエラー
+              query.qSts = 'No PrimaryKey';
+            } else {
+              v.step = 4.5; // 追加レコードの主キーはuserIdに変更
+              if( !Array.isArray(query.record) ) query.record = [query.record];
+              query.record.forEach(x => x[v.pKey] = pv.opt.userId);
+            }
+          }
+  
+          v.step = 4.6; // 'o'の場合の呼出先メソッドを設定
+          switch( query.command ){
+            case 'select': v.isOK = true; v.func = selectRow; break;
+            case 'update': v.isOK = true; v.func = updateRow; break;
+            case 'append': case 'insert': v.isOK = true; v.func = appendRow; break;
+            case 'delete': v.isOK = true; v.func = deleteRow; break;
+            default: v.isOK = false;
+          }
+  
+        } else {
+  
+          v.step = 4.7;  // 'o'以外の場合の呼出先メソッドを設定
+          switch( query.command ){
+            case 'create': v.isOK = v.allow.includes('c'); v.func = createTable; break;
+            case 'select': v.isOK = v.allow.includes('r'); v.func = selectRow; break;
+            case 'update': v.isOK = (v.allow.includes('r') && v.allow.includes('w')); v.func = updateRow; break;
+            case 'append': case 'insert': v.isOK = v.allow.includes('w'); v.func = appendRow; break;
+            case 'delete': v.isOK = v.allow.includes('d'); v.func = deleteRow; break;
+            case 'schema': v.isOK = v.allow.includes('s'); v.func = getSchema; break;
+            default: v.isOK = false;
+          }
+        }
+  
+        v.step = 5; // 無権限ならqStsにエラーコードをセット
+        if( v.isOK === false && query.qSts === 'OK' ) query.qSts = 'No Authority';
+  
+        v.step = 6; // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
+        if( query.qSts === 'OK' ){
+  
+          v.step = 6.1;  // メソッド実行
+          v.r = v.func(query);
+          if( v.r instanceof Error ){
+            v.step = 6.2; // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
+            query.qSts = v.r.message;
+          }
         }
       }
 
@@ -1606,7 +1634,7 @@ function SpreadDb(query=[],opt={}){
     const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.selectRow`,step:0,rv:null};
     console.log(`${v.whois} start.`);
     try {
-      vlog(query,1646)
+
       v.step = 1; // 判定条件を関数に統一
       v.where = functionalyze({table:query.table,data:query.where});
       if( v.where instanceof Error ) throw v.where;
