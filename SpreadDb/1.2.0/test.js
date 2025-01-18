@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'select',start:2,num:1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'select',start:3,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -299,33 +299,10 @@ function SpreadDbTest(){
         ],
         opt: {},  // ゲストなので、ユーザID,権限指定は無し
       },{ // 3.存在しないテーブルを指定
-        /*
-        ],[  //
-          {command:'create',table:'掲示板',set:src['掲示板'].set},
-          [
-            {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-            {},  // ゲストなので、ユーザID,権限指定は無し
-          ],
-        ],[ // 3.ユーザに掲示板の読込権限付与
-          {command:'create',table:'掲示板',set:src['掲示板'].set},
-          [
-            {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-            {userId: 'pikumin',userAuth:{'掲示板':'r'}}
-          ],
-        ],[ // 4.ユーザに掲示板の読込権限を付与しなかった場合 ⇒ 「権限無し」エラー
-          {command:'create',table:'掲示板',set:src['掲示板'].set},
-          [
-            {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-            {userId: 'pikumin',userAuth:{'掲示板':'w'}}
-          ],
-        ],[ // 5.ユーザ権限未指定の場合 ⇒ 「権限無し」エラー
-          {command:'create',table:'掲示板',set:src['掲示板'].set},
-          [
-            {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-            {userId: 'pikumin'}
-          ],
+        query: [
+          {table:'存在しないテーブル',command:'select',where:"o=>{return o.from=='パパ'}"},
         ],
-        */
+        opt: {},  // ゲストなので、ユーザID,権限指定は無し
       }
     ],
   };
@@ -1104,7 +1081,7 @@ function SpreadDb(query=[],opt={}){
       }
 
       v.step = 5; // 無権限ならqStsにエラーコードをセット
-      if( v.isOK === false ) query.qSts = 'No Authority';
+      if( v.isOK === false && query.qSts === 'OK' ) query.qSts = 'No Authority';
 
       v.step = 6; // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
       if( query.qSts === 'OK' ){
