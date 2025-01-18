@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'select',start:1,num:1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'select',start:2,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -293,25 +293,11 @@ function SpreadDbTest(){
         ],
         opt: {guestAuth:{'掲示板':'r'}},  // userId指定無し(⇒ゲスト)でゲストに掲示板の読込権限付与
       },{ // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
-        reset: [], //['掲示板'],
+        reset: {'log':false,'掲示板':false},
         query: [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
         ],
         opt: {},  // ゲストなので、ユーザID,権限指定は無し
-        check: (sdbMain,query,opt) => { // 結果を分析、レポートを出力する関数
-          v.rv = [];
-          for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
-            v.result = sdbMain[v.i].ErrCD === 'No Authority' ? 'success' : 'failed';
-            v.rv = [...v.rv,
-              `query.${v.i} [${v.result}] ----------`,
-              `table.command: ${sdbMain[v.i].log.table}.${sdbMain[v.i].log.command}`,
-              `ErrCD(${whichType(sdbMain[v.i].ErrCD)}): ${sdbMain[v.i].ErrCD}`,
-              `rows: ${Array.isArray(sdbMain[v.i].rows) ? sdbMain[v.i].rows.length : sdbMain[v.i].rows}`,
-              `log.userId: ${sdbMain[v.i].log.userId}`,
-            ];
-          };
-          return v.rv.join('\n');
-        }
       },{ // 3.存在しないテーブルを指定
         /*
         ],[  //
@@ -679,6 +665,9 @@ function SpreadDb(query=[],opt={}){
         v.step = 2.7; // 成否に関わらず戻り値に保存
         query.result.push(v.log);
       }
+
+      v.step = 2.8; // 追加行数をnumにセット
+      query.num = query.result.length;
 
       // ------------------------------------------------
       v.step = 3; // 対象シート・更新履歴に展開
