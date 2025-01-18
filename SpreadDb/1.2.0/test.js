@@ -512,12 +512,14 @@ function SpreadDb(query=[],opt={}){
 
           v.step = 6.22; // レコード単位の実行結果
           for( v.j=0 ; v.j<query[v.i].result.length ; v.j++ ){
-            v.log.push({
+              v.r = objectizeColumn('sdbLog');
+              if( v.r instanceof Error ) throw v.r;
+              v.log.push(Object.assign(v.r,{
               queryId: query[v.i].queryId,
               pKey: query[v.i].result[v.j].pKey,
               rSts: query[v.i].result[v.j].rSts,
               diff: toString(query[v.i].result[v.j].diff),
-            });
+            }));
           }
           vlog(v.log,539);
         }
@@ -584,24 +586,24 @@ function SpreadDb(query=[],opt={}){
           if( query.set.length === 0 ) throw new Error(`Length is 0`);
           if( whichType(query.set[0],'Object') ){
             v.step = 1.32; // ④ ⇒ そのまま使用
-            v.img = `[4]sample=[${JSON.stringify(query.set[0])}]`;
+            v.img = `[4]num=${query.set.length},sample=[${JSON.stringify(query.set[0])}]`;
           } else {
             if( Array.isArray(query.set[0]) ){
               v.step = 1.33; // ③ ⇒ 行オブジェクトに変換
-              v.img = `[3]sample=[${JSON.stringify(query.set[0])}]`;
+              v.img = `[3]num=${query.set.length},sample=[${JSON.stringify(query.set[0])}]`;
               v.r = convertRow(query.set);
               if( v.r instanceof Error ) throw v.r;
               query.set = v.r.obj;
             } else {
               v.step = 1.34;  // ① ⇒ 二次元配列化
-              v.img = `[1]set=${JSON.stringify(query.set)}`;
+              v.img = `[1]num=1,set=${JSON.stringify(query.set)}`;
               query.set = [query.set];
             }
           }
         } else {
           if( whichType(query.set,'Object') ){
             v.step = 1.35; // ② ⇒ 配列化
-            v.img = `[2]set=${JSON.stringify(query.set)}`;
+            v.img = `[2]num=1,set=${JSON.stringify(query.set)}`;
             query.set = [query.set];
           } else {
             v.step = 1.36; // ⑤ ⇒ エラー
@@ -626,7 +628,6 @@ function SpreadDb(query=[],opt={}){
         v.step = 2.1; // 1レコード分のログを準備
         v.log = objectizeColumn('sdbResult');
         if( v.log instanceof Error ) throw v.log;
-        vlog(v.log,645)
 
         v.step = 2.2; // auto_increment項目に値を設定
         // ※ auto_increment設定はuniqueチェックに先行
@@ -636,25 +637,16 @@ function SpreadDb(query=[],opt={}){
             query.set[v.i][v.ai] = v.table.schema.auto_increment[v.ai].current;
           }
         }
-        vlog(query.set[v.i],655)
 
         v.step = 2.3; // 既定値の設定
         for( v.dv in v.table.schema.defaultRow ){
           if( !query.set[v.i][v.dv] ){
-            console.log(`l.659 v.table.schema.defaultRow.${v.dv}`  // いまここ
-              + `(${whichType(v.table.schema.defaultRow[v.dv])})`
-              + `=${toString(v.table.schema.defaultRow[v.dv])}`
-              + `\nquery.set[${v.i}](${whichType(query.set[v.i])})=${toString(query.set[v.i])}`
-              + `\nquery.set[${v.i}][${v.dv}](${whichType(query.set[v.i][v.dv])})=${toString(query.set[v.i][v.dv])}`
-            );
             query.set[v.i][v.dv] = v.table.schema.defaultRow[v.dv](query.set[v.i]);
           }
         }
-        vlog(query.set[v.i],663)
 
         v.step = 2.4; // 追加レコードの正当性チェック(unique重複チェック)
         for( v.unique in v.table.schema.unique ){
-          console.log(`l.667 ${v.unique}=${toString(v.table.schema.unique[v.unique])}`)
           if( v.table.schema.unique[v.unique].indexOf(query.set[v.i][v.unique]) >= 0 ){
             // 登録済の場合はエラーとして処理
             v.log.rSts = 'Duplicate';
@@ -664,14 +656,13 @@ function SpreadDb(query=[],opt={}){
             v.table.schema.unique[v.unique].push(query.set[v.i][v.unique]);
           }
         }
-        vlog(v.log,676)
 
         v.step = 2.5; // 主キーの値をpKeyにセット
         // 主キーがauto_incrementまたはdefaultで設定される可能性があるため、pKeyセットはこれらの後工程
         v.log.pKey = query.set[v.i][v.table.schema.primaryKey];
-        vlog(v.log,681)
 
         v.step = 2.6; // 正当性チェックOKの場合の処理
+        vlog(v.log,664)
         if( v.log.rSts === 'OK' ){
 
           v.step = 2.61; // シートイメージに展開して登録
@@ -681,26 +672,23 @@ function SpreadDb(query=[],opt={}){
             v.row[v.j] = (v.a && v.a !== 'null' && v.a !== 'undefined') ? v.a : '';
           }
           v.target.push(v.row);
-          vlog(v.row,693)
 
           v.step = 2.62; // v.table.valuesへの追加
           v.table.values.push(query.set[v.i]);
-          vlog(query.set[v.i],697)
 
           v.step = 2.63; // ログに追加レコード情報を記載
           v.log.diff = JSON.stringify(query.set[v.i]);
-          vlog(v.log,701)
         }
 
         v.step = 2.7; // 成否に関わらず戻り値に保存
         query.result.push(v.log);
-        vlog(v.log,706)
       }
 
       // ------------------------------------------------
       v.step = 3; // 対象シート・更新履歴に展開
       // ------------------------------------------------
       v.step = 3.1; // 対象シートへの展開
+      vlog(v.target,689)
       if( v.target.length > 0 ){
         v.table.sheet.getRange(
           v.table.rownum + 2,
