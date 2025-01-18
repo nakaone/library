@@ -287,6 +287,7 @@ function SpreadDbTest(){
         opt: {userId:'Administrator'},
       },{ // 1.ゲストに「掲示板」の読込を許可した場合
         //reset: [], //['掲示板'],
+        reset: {'log':null,'掲示板':false},
         query: [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
         ],
@@ -298,7 +299,6 @@ function SpreadDbTest(){
         ],
         opt: {},  // ゲストなので、ユーザID,権限指定は無し
         check: (sdbMain,query,opt) => { // 結果を分析、レポートを出力する関数
-          //console.log(JSON.stringify(sdbMain));
           v.rv = [];
           for( v.i=0 ; v.i<sdbMain.length ; v.i++ ){
             v.result = sdbMain[v.i].ErrCD === 'No Authority' ? 'success' : 'failed';
@@ -366,7 +366,6 @@ function SpreadDbTest(){
     v.step = 0.2; // readmeは削除対象から外す
     v.i = v.list.findIndex(x => x === 'readme');
     if( v.i >= 0 ) v.list.splice(v.i,1);
-    console.log(`l.385 v.list=${JSON.stringify(v.list)}`);
 
     for( v.i=0 ; v.i<v.list.length ; v.i++ ){
 
@@ -374,7 +373,6 @@ function SpreadDbTest(){
       v.key = v.list[v.i];
       v.value = (arg === null || typeof arg === 'boolean') ? arg : arg[v.key];
       v.exist = v.spread.getSheetByName(v.key) === null ? false : true;
-      console.log(`l.393 ${JSON.stringify(v,['key','value','exist'],2)}`);
 
       v.step = 0.4; // シートが存在し、強制再作成または強制削除なら削除
       if( v.exist === true && (v.value === true || v.value === null) ){
@@ -521,7 +519,6 @@ function SpreadDb(query=[],opt={}){
               diff: toString(query[v.i].result[v.j].diff),
             }));
           }
-          vlog(v.log,539);
         }
 
         v.step = 7; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
@@ -662,7 +659,6 @@ function SpreadDb(query=[],opt={}){
         v.log.pKey = query.set[v.i][v.table.schema.primaryKey];
 
         v.step = 2.6; // 正当性チェックOKの場合の処理
-        vlog(v.log,664)
         if( v.log.rSts === 'OK' ){
 
           v.step = 2.61; // シートイメージに展開して登録
@@ -688,7 +684,6 @@ function SpreadDb(query=[],opt={}){
       v.step = 3; // 対象シート・更新履歴に展開
       // ------------------------------------------------
       v.step = 3.1; // 対象シートへの展開
-      vlog(v.target,689)
       if( v.target.length > 0 ){
         v.table.sheet.getRange(
           v.table.rownum + 2,
@@ -739,6 +734,7 @@ function SpreadDb(query=[],opt={}){
             {name:'where',type:'Object|Function|string',note:'対象レコードの判定条件',default:()=>null},
             {name:'set',type:'Object|string|Function',note:'追加・更新する値',default:()=>[]},
             {name:'qSts',type:'string',note:'クエリ単位の実行結果',default:()=>'OK'},
+            {name:'num',type:'number',note:'変更された行数',default:()=>0},
             {name:'result',type:'Object[]',note:'レコード単位の実行結果',default:()=>[]},
           ],
           sdbTable: [
@@ -785,6 +781,7 @@ function SpreadDb(query=[],opt={}){
             {name:'command',type:'string',note:'操作内容(コマンド名)'},
             {name:'data',type:'JSON',note:'操作関数に渡された引数'},
             {name:'qSts',type:'string',note:'クエリ単位の実行結果'},
+            {name:'num',type:'number',note:'変更された行数'},
             {name:'pKey',type:'string',note:'変更したレコードのprimaryKey'},
             {name:'rSts',type:'string',note:'レコード単位の実行結果'},
             {name:'diff',type:'JSON',note:'差分情報。{項目名：[更新前,更新後]}形式'},
@@ -904,7 +901,6 @@ function SpreadDb(query=[],opt={}){
     const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.createTable`,step:0,rv:[],convertRow:null};
     try {
       try { // エラーチェック
-        vlog(query,916)
         if( !query.set ) query.set = [];
         v.fId = `: table=${query.table}, set=${query.set.length}rows`;
         v.table = pv.table[query.table];
@@ -1611,10 +1607,8 @@ function SpreadDb(query=[],opt={}){
 
       v.step = 1;
       for( v.i=0 ; v.i<v.arg.length ; v.i++ ){
-        //console.log('l.1391',JSON.stringify(v.arg[v.i],(key,val)=>typeof val==='function'?val.toString():val,2))
         if( Object.hasOwn(v.arg[v.i],'default') && v.arg[v.i].default ){
           v.step = 2;
-          //console.log(`l.1394 v.arg[${v.i}].default(${whichType(v.arg[v.i].default)})=${toString(v.arg[v.i].default)}`)
           v.func = functionalyze(v.arg[v.i].default);
           if( v.func instanceof Error ) throw v.func;
           v.rv[v.arg[v.i].name] = v.func();
@@ -1646,7 +1640,7 @@ function SpreadDb(query=[],opt={}){
     const v = {whois:`${pv.whois+('000'+(pv.jobId++)).slice(-4)}.selectRow`,step:0,rv:null};
     console.log(`${v.whois} start.`);
     try {
-
+      vlog(query,1646)
       v.step = 1; // 判定条件を関数に統一
       v.where = functionalyze({table:query.table,data:query.where});
       if( v.where instanceof Error ) throw v.where;
@@ -1668,6 +1662,9 @@ function SpreadDb(query=[],opt={}){
           query.result.push(v.log);
         }
       }
+
+      v.step = 6; // 抽出行数をnumにセット
+      query.num = query.result.length;
 
       v.step = 9; // 終了処理
       console.log(`${v.whois} normal end.\nrows=${query.result.length}`);
