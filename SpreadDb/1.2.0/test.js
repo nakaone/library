@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'delete',start:3,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'delete',start:4,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
