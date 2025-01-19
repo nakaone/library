@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'update',start:0,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'update',start:2,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -399,11 +399,22 @@ function SpreadDbTest(){
         ],
         opt: {userId:'Administrator'},
       },{ // 1.該当レコード無し ⇒ qSts='OK',num=0
-      },{ // 1.自レコードのみの更新権限で自レコードを更新 ⇒ qSts='OK'
-      },{ // 1.自レコードのみの更新権限で自レコード以外を更新 ⇒ qSts='OK'
-      },{ // 2.権限付与してユーザが実行 ⇒ OK
-      },{ // 3.権限付与せずユーザが実行 ⇒ No Authority
-      },{ // 4.存在しないテーブルでの更新 ⇒ No Table
+        reset: {'log':null,'AutoInc':false},
+        query: [
+          {command:'update',table:'AutoInc',where:{'ラベル':'xxx'},set:{'ぬる':'b02'}},
+        ],
+        opt: {userId:'Administrator'},
+      },{ // 2.更新対象項目が存在しない ⇒ [abort] qSts='Undefined Column',num=0
+        reset: {'log':null,'AutoInc':false},
+        query: [
+          {command:'update',table:'AutoInc',where:{'ラベル':'fuga'},set:{'xxx':123}},
+        ],
+        opt: {userId:'Administrator'},
+      },{ // 3.自レコードのみの更新権限で自レコードを更新 ⇒ qSts='OK'
+      },{ // 4.自レコードのみの更新権限で自レコード以外を更新 ⇒ qSts='OK'
+      },{ // 5.権限付与してユーザが実行 ⇒ OK
+      },{ // 6.権限付与せずユーザが実行 ⇒ No Authority
+      },{ // 7.存在しないテーブルでの更新 ⇒ No Table
       },
     ],
     schema: [
@@ -1241,6 +1252,7 @@ function SpreadDb(query=[],opt={}){
           if( v.r instanceof Error ){
             v.step = 6.2; // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
             query.qSts = v.r.message;
+            throw v.r;
           }
         }
       }
@@ -1858,6 +1870,15 @@ function SpreadDb(query=[],opt={}){
           query.data = `{table:${query.table},where:${query.data.where},set:${query.data.set}}`;
           console.log(`${v.whois} query=${query.data}`);
 
+          v.step = 1.5; // 配列a1がa2の部分集合かどうかを判断する関数を用意
+          // 更新対象項目がテーブルの項目名リストに全て入っているかの判断で使用(step.3.2)
+          v.isSubset = (a1,a2) => {
+            for( let element of a1 )
+              if( !a2.includes(element) ) return false;
+            return true;
+          };
+
+
         } else {
           throw new Error(`No set`);
         }  
@@ -1866,17 +1887,30 @@ function SpreadDb(query=[],opt={}){
         query.qSts = e.message;
         e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
         console.error(`${e.message}\nv=${stringify(v)}`);
-        return v.rv;
+        return e;
       }
       console.log(`l.1871 v.where(${whichType(v.where)})=${toString(v.where)}\nv.set(${whichType(v.set)})=${toString(v.set)}`)
 
       // ------------------------------------------------
-      v.step = 2; // table.valuesを更新、ログ作成
+      // table.valuesを更新、ログ作成
       // ------------------------------------------------
       for( v.i=0 ; v.i<v.table.values.length ; v.i++ ){
 
-        v.step = 3; // 対象外判定ならスキップ
+        v.step = 2; // 対象外判定ならスキップ
         if( v.where(v.table.values[v.i]) === false ) continue;
+
+        v.step = 3.1; // v.rObj: 更新指定項目のみのオブジェクト
+        v.rObj = v.set(v.table.values[v.i]);
+
+        v.step = 3.2; // 更新対象項目が項目名リストに存在しない場合はエラー
+        // 本来事前チェックを行うべき項目だが、setをfunctionで指定していた場合
+        // レコード毎に更新対象項目が変動する可能性があるため、レコード毎にチェック
+        if( !v.isSubset(Object.keys(v.rObj),v.table.header) ){
+          v.err = new Error(`${v.whois} abnormal end at step.${v.step}\nUndefined Column`);
+          console.error(`${v.err.message}\nheader=${toString(v.table.header)}\nrObj=${toString(v.rObj)}`);
+          query.qSts = v.err.message;
+          return v.err;
+        }
 
         v.step = 4; // v.before(更新前の行オブジェクト),after,diffの初期値を用意
         [v.before,v.after] = [v.table.values[v.i],{}];
@@ -1887,34 +1921,31 @@ function SpreadDb(query=[],opt={}){
         v.log.pKey = v.table.values[v.i][v.table.schema.primaryKey];
         query.result.push(v.log);
 
-        v.step = 6; // v.rObj: 更新指定項目のみのオブジェクト
-        v.rObj = v.set(v.table.values[v.i]);
-
-        v.step = 7; // 項目毎に値が変わるかチェック
+        v.step = 6; // 項目毎に値が変わるかチェック
         v.table.header.forEach(x => {
           if( Object.hasOwn(v.rObj,x) && !isEqual(v.before[x],v.rObj[x]) ){
-            v.step = 7.1; // 変更指定項目かつ値が変化していた場合
+            v.step = 6.1; // 変更指定項目かつ値が変化していた場合
             v.after[x] = v.rObj[x]; // afterは変更後の値
             v.log.diff[x] = [v.before[x],v.rObj[x]];  // diffは[変更前,変更後]の配列
-            v.step = 7.2; // 更新対象範囲の見直し
+            v.step = 6.2; // 更新対象範囲の見直し
             v.colNo = v.table.header.findIndex(y => y === x);
             v.left = Math.min(v.left,v.colNo);
             v.right = Math.max(v.right,v.colNo);
           } else {
-            v.step = 7.3; // 非変更指定項目または変更指定項目だが値の変化が無い場合、beforeの値をセット
+            v.step = 6.3; // 非変更指定項目または変更指定項目だが値の変化が無い場合、beforeの値をセット
             v.after[x] = v.before[x];
           }
         });
 
-        v.step = 8; // 更新レコードの正当性チェック(unique重複チェック)
+        v.step = 7; // 更新レコードの正当性チェック(unique重複チェック)
         for( v.unique in v.table.schema.unique ){
           if( Object.hasOwn(v.log.diff,v.unique) ){
             // 変更後の値がschema.uniqueに登録済の場合はDuplicate
             if( v.table.schema.unique[v.unique].indexOf(v.after[v.unique]) >= 0 ){  // いまここ：全部Duplicate判定
-              v.step = 8.1; // 登録済の場合はエラー
+              v.step = 7.1; // 登録済の場合はエラー
               v.log.rSts = 'Duplicate';
             } else {
-              v.step = 8.2; // 未登録の場合、table.sdbSchema.uniqueから変更前の値を削除して変更後の値を追加
+              v.step = 7.2; // 未登録の場合、table.sdbSchema.uniqueから変更前の値を削除して変更後の値を追加
               vlog(v.table.schema.unique,1918)
               console.log(`l.1919 v.before[${v.unique}]=${v.before[v.unique]}`)
               v.idx = v.table.schema.unique[v.unique].findIndex(x => x === v.before[v.unique]);
@@ -1924,7 +1955,7 @@ function SpreadDb(query=[],opt={}){
           }
         }
 
-        v.step = 9; // 正当性チェックOKの場合、修正後のレコードを保存して書換範囲(range)を修正
+        v.step = 8; // 正当性チェックOKの場合、修正後のレコードを保存して書換範囲(range)を修正
         vlog(v.log,1921)
         if( v.log.rSts === 'OK' ){
           query.num++;
@@ -1937,9 +1968,9 @@ function SpreadDb(query=[],opt={}){
       vlog(query.result,1928)
 
       // ------------------------------------------------
-      v.step = 10; // 対象シート・更新履歴に展開
+      v.step = 9; // 対象シート・更新履歴に展開
       // ------------------------------------------------
-      v.step = 10.1; // シートイメージ(二次元配列)作成
+      v.step = 9.1; // シートイメージ(二次元配列)作成
       v.target = [];
       for( v.i=v.top ; v.i<=v.bottom ; v.i++ ){
         v.row = [];
@@ -1950,7 +1981,7 @@ function SpreadDb(query=[],opt={}){
       }
       vlog(v.target,1942)
 
-      v.step = 10.2; // シートに展開
+      v.step = 9.2; // シートに展開
       // v.top,bottom: 最初と最後の行オブジェクトの添字(≠行番号) ⇒ top+1 ≦ row ≦ bottom+1
       // v.left,right: 左端と右端の行配列の添字(≠列番号) ⇒ left+1 ≦ col ≦ right+1
       if( v.target.length > 0 ){
@@ -1962,7 +1993,7 @@ function SpreadDb(query=[],opt={}){
         ).setValues(v.target);
       }
 
-      v.step = 9; // 終了処理
+      v.step = 99; // 終了処理
       console.log(`${v.whois} normal end.`);
       return v.rv;
 
