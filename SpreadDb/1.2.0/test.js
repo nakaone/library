@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'delete',start:2,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'delete',start:3,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -542,17 +542,25 @@ function SpreadDb(query=[],opt={}){
           v.r = doQuery(pv.query[v.i]);
           if( v.r instanceof Error ) throw v.r;
 
-          v.step = 6.1; // 実行結果の戻り値への追加
+          v.step = 7; // 実行結果を戻り値の配列に追加
+          v.step = 7.1; // command系関数に渡された引数をv.comArgとして作成
+          // なおcommand系関数内でセット済の場合は置換しない
+          v.comArg = pv.query[v.i].command === 'create'
+          ? (pv.query[v.i].cols ? toString(pv.query[v.i].cols) : pv.query[v.i].cols)
+          : (pv.query[v.i].where ? toString(pv.query[v.i].where) : pv.query[v.i].where);          
+
+          v.step = 7.2; // 戻り値オブジェクトを作成
           v.r = objectizeColumn('sdbMain');
           if( v.r instanceof Error ) throw v.r;
           v.map = pv.opt.sdbMain.map(x => x.name);
           for( v.j=0 ; v.j<v.map.length ; v.j++ ){
             v.r[v.map[v.j]] = pv.query[v.i][v.map[v.j]];
           }
+          if( !v.r.data ) v.r.data = v.comArg;
           v.rv.push(v.r);
 
-          // 変更履歴シートへの保存
-          v.step = 6.21; // クエリ単位の実行結果
+          v.step = 8; // クエリ単位の実行結果を変更履歴シートへ追記
+          v.step = 8.1; // クエリ単位の実行結果オブジェクトを作成
           v.r = objectizeColumn('sdbLog');
           if( v.r instanceof Error ) throw v.r;
           v.map = pv.opt.sdbLog.map(x => x.name);
@@ -562,29 +570,32 @@ function SpreadDb(query=[],opt={}){
               v.r[v.map[v.j]] = toString(v.val);
             }
           }
-          v.r.userId = pv.opt.userId; // ユーザIDをセット
-          if( v.r.data === null ){ // command系関数に渡された引数をdata欄にセット
-            // なおcommand系関数内でセット済の場合は置換しない
-            v.r.data = pv.query[v.i].command === 'create'
-            ? (pv.query[v.i].cols ? toString(pv.query[v.i].cols) : pv.query[v.i].cols)
-            : (pv.query[v.i].where ? toString(pv.query[v.i].where) : pv.query[v.i].where);
-          }
+          v.step = 8.2; // ユーザIDをセット
+          v.r.userId = pv.opt.userId;
+          v.step = 8.3; // command系関数に渡された引数をdata欄にセット
+          if( !v.r.data ) v.r.data = v.comArg;
+          v.step = 8.4; // 配列に追加
           v.log.push(v.r);
 
-          v.step = 6.22; // レコード単位の実行結果
+          v.step = 9; // レコード単位の実行結果を変更履歴シートへ追記
           for( v.j=0 ; v.j<query[v.i].result.length ; v.j++ ){
-              v.r = objectizeColumn('sdbLog');
-              if( v.r instanceof Error ) throw v.r;
-              v.log.push(Object.assign(v.r,{
+
+            v.step = 9.1; // レコード単位の実行結果オブジェクトを作成
+            v.r = objectizeColumn('sdbLog');
+            if( v.r instanceof Error ) throw v.r;
+
+            v.step = 9.2; // 配列に追加
+            v.log.push(Object.assign(v.r,{
               queryId: query[v.i].queryId,
               pKey: query[v.i].result[v.j].pKey,
               rSts: query[v.i].result[v.j].rSts,
               diff: toString(query[v.i].result[v.j].diff),
             }));
+
           }
         }
 
-        v.step = 7; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
+        v.step = 10; // 一連のquery終了後、実行結果を変更履歴シートにまとめて追記
         v.r = appendRow({
           table: pv.opt.log,
           set: v.log,
@@ -592,13 +603,13 @@ function SpreadDb(query=[],opt={}){
         });
         if( v.r instanceof Error ) throw v.r;
 
-        v.step = 8; // ロック解除
+        v.step = 11; // ロック解除
         v.lock.releaseLock();
         v.tryNo = -1; // maxTrial回ロック失敗時(=0)と判別するため、負数をセット
       }
     }
 
-    v.step = 9; // ロックができたか判定、不能時はエラー
+    v.step = 12; // ロックができたか判定、不能時はエラー
     if( v.tryNo === 0 ) throw new Error("Couldn't Lock");
 
     v.step = 99; // 終了処理
@@ -862,6 +873,7 @@ function SpreadDb(query=[],opt={}){
             {name:'queryId',type:'string',note:'SpreadDb呼出元で設定する、クエリ・結果突合用文字列'},
             {name:'table',type:'string|string[]',note:'操作対象テーブル名'},
             {name:'command',type:'string',note:'操作名'},
+            {name:'data',type:'JSON',note:'操作関数に渡された引数',default:()=>null},
             {name:'qSts',type:'string',note:'クエリ単位の実行結果'},
             {name:'num',type:'number',note:'変更された行数'},
             {name:'result',type:'Object[]',note:'レコード単位の実行結果'},
