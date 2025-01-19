@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'delete',start:0,num:1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'delete',start:1,num:1,//num=0なら全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -363,6 +363,12 @@ function SpreadDbTest(){
         ],
         opt: {userId:'Administrator'},
       },{ // 1.該当レコード無し ⇒ qSts='OK',num=0
+        reset: {'log':null,'AutoInc':true},
+        query: [
+          {table:'AutoInc',command:'append',set:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
+          {table:'AutoInc',command:'delete',where:99},  // where = any(pKey)
+        ],
+        opt: {userId:'Administrator'},
       },{ // 2.権限付与してユーザが実行 ⇒ OK
       },{ // 3.権限付与せずユーザが実行 ⇒ No Authority
       },{ // 4.存在しないテーブルでの削除 ⇒ No Table
@@ -543,8 +549,9 @@ function SpreadDb(query=[],opt={}){
           if( v.r instanceof Error ) throw v.r;
           v.map = pv.opt.sdbLog.map(x => x.name);
           for( v.j=0 ; v.j<v.map.length ; v.j++ ){
-            if( pv.query[v.i][v.map[v.j]] ){
-              v.r[v.map[v.j]] = toString(pv.query[v.i][v.map[v.j]]);
+            v.val = pv.query[v.i][v.map[v.j]]
+            if( v.val || v.val === 0 || v.val === false ){
+              v.r[v.map[v.j]] = toString(v.val);
             }
           }
           v.r.userId = pv.opt.userId; // ユーザIDをセット
@@ -713,7 +720,7 @@ function SpreadDb(query=[],opt={}){
           v.row = [];
           for( v.j=0 ; v.j<v.table.header.length ; v.j++ ){
             v.a = query.set[v.i][v.table.header[v.j]];
-            v.row[v.j] = (v.a && v.a !== 'null' && v.a !== 'undefined') ? v.a : '';
+            v.row[v.j] = v.a;
           }
           v.target.push(v.row);
 
@@ -729,7 +736,7 @@ function SpreadDb(query=[],opt={}){
       }
 
       v.step = 2.8; // 追加成功行数をnumにセット
-      query.num = query.result.filter(x => x.rSts === 'OK').length;
+      query.num = query.result.filter(x => x.rSts === 'OK').length || 0;
 
       // ------------------------------------------------
       v.step = 3; // 対象シートへの展開
@@ -916,7 +923,7 @@ function SpreadDb(query=[],opt={}){
           for( v.i=1 ; v.i<data.length ; v.i++ ){
             v.o = {};
             for( v.j=0 ; v.j<data[v.i].length ; v.j++ ){
-              if( data[v.i][v.j] ){
+              if( data[v.i][v.j] || data[v.i][v.j] === 0 || data[v.i][v.j] === false ){
                 v.o[data[0][v.j]] = data[v.i][v.j];
               }
             }
@@ -928,7 +935,7 @@ function SpreadDb(query=[],opt={}){
         for( v.i=0 ; v.i<v.rv.obj.length ; v.i++ ){
           v.arr = [];
           for( v.j=0 ; v.j<v.rv.header.length ; v.j++ ){
-            v.arr.push(v.rv.obj[v.i][v.rv.header[v.j]] || '');
+            v.arr.push(v.rv.obj[v.i][v.rv.header[v.j]]);
           }
           v.rv.raw.push(v.arr);
         }
