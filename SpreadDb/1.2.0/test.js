@@ -1,23 +1,16 @@
 function SpreadDbTest(){
-  const v = {scenario:'update',start:2,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'update',start:3,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
   const src = { // テスト用サンプルデータ
     'ユーザ管理': { // "ユーザ管理"シート(colsのみ)
       cols: [
-        {name:'userId',type:'string'}, // ユーザ識別子(primaryKey)
-        {name:'note',type:'string'}, // 備考
-        {name:'CPkey',type:'string'}, // クライアント側公開鍵
-        {name:'authority',type:'JSON'}, // シート毎のアクセス権限。「シート名:rwdos文字列」形式
-        {name:'trial',type:'JSON'}, // ログイン試行関連情報
-        {name:'unfreezing',type:'string'}, // 凍結解除日時。通常undefined、凍結時にメンバ追加
-        {name:'expiry',type:'string'}, // CPkey有効期限。期限内に適切な暗号化・署名された要求はOKとする
-        {name:'lastSync',type:'string'}, // 前回同期日時
-        {name:'created',type:'string'}, // ユーザ登録日時
-        {name:'updated',type:'string'}, // 最終更新日時
-        {name:'deleted',type:'string'}, // 論理削除日時
+        {name:'userId',type:'string',primaryKey:true}, // ユーザ識別子(primaryKey)
+        {name:'name',type:'string'},
+        {name:'profile',type:'string'},
       ],
+      set:[{userId:10,name:'fuga',profile:'a0001'},{userId:11,name:'hoge',profile:'a0002'}],
     },
     '損益計算書': { // "損益計算書"シート(valuesのみ、先頭ヘッダ行)
       set: [
@@ -411,6 +404,9 @@ function SpreadDbTest(){
         ],
         opt: {userId:'Administrator'},
       },{ // 3.自レコードのみの更新権限で自レコードを更新 ⇒ qSts='OK'
+        reset: {log:null,'ユーザ管理':true},
+        query: {command:'update',table:'ユーザ管理',where:10,set:{profile:'xxx'}},
+        opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
       },{ // 4.自レコードのみの更新権限で自レコード以外を更新 ⇒ qSts='OK'
       },{ // 5.権限付与してユーザが実行 ⇒ OK
       },{ // 6.権限付与せずユーザが実行 ⇒ No Authority
