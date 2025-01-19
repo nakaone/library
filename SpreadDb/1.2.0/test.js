@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'delete',start:1,num:1,//num=0なら全部、マイナスならstart無視して後ろから
+  const v = {scenario:'delete',start:2,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -370,8 +370,16 @@ function SpreadDbTest(){
         ],
         opt: {userId:'Administrator'},
       },{ // 2.権限付与してユーザが実行 ⇒ OK
+        reset: {'log':null,'AutoInc':true},
+        query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
+        opt: {userId:'pikumin',userAuth:{AutoInc:'d'}},
       },{ // 3.権限付与せずユーザが実行 ⇒ No Authority
+        reset: {'log':null,'AutoInc':true},
+        query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
+        opt: {userId:'pikumin',userAuth:{AutoInc:'r'}},
       },{ // 4.存在しないテーブルでの削除 ⇒ No Table
+        query: {table:'不在テーブル',command:'delete',where:10},  // where = any(pKey)
+        opt: {userId:'Administrator'},
       },
     ],
     update: [
@@ -855,6 +863,7 @@ function SpreadDb(query=[],opt={}){
             {name:'table',type:'string|string[]',note:'操作対象テーブル名'},
             {name:'command',type:'string',note:'操作名'},
             {name:'qSts',type:'string',note:'クエリ単位の実行結果'},
+            {name:'num',type:'number',note:'変更された行数'},
             {name:'result',type:'Object[]',note:'レコード単位の実行結果'},
           ],
         },opt),
@@ -1091,17 +1100,22 @@ function SpreadDb(query=[],opt={}){
           }
         }
 
-        v.step = 2.4; // ログに追加レコード情報を記載
+        v.step = 2.4; // diffに削除レコード情報を記載
         v.log.diff = JSON.stringify(v.table.values[v.i]);
-        query.num++; // 削除成功件数をインクリメント
 
-        v.step = 2.5; // v.table.valuesから削除
+        v.step = 2.5; // 主キーの値をpKeyにセット
+        v.log.pKey = v.table.values[v.i][v.table.schema.primaryKey];
+
+        v.step = 2.6; // 削除成功件数をインクリメント
+        query.num++;
+
+        v.step = 2.7; // v.table.valuesから削除
         v.table.values.splice(v.i,1);
 
-        v.step = 2.6; // シートのセルを削除
+        v.step = 2.8; // シートのセルを削除
         v.range = v.table.sheet.deleteRow(v.i+2); // 添字->行番号で+1、ヘッダ行分で+1
 
-        v.step = 2.7; // v.table.rownumを書き換え
+        v.step = 2.9; // v.table.rownumを書き換え
         v.table.rownum -= 1;
 
       }
@@ -2176,10 +2190,8 @@ function mergeDeeply(pri,sub,opt={}){
     } else {
       v.step = 4; // subとpriのデータ型が異なる ⇒ priを優先してセット
       v.rv = whichType(pri,'Undefined') ? sub : pri;
-      //console.log(`l.228 pri=${stringify(pri)}, sub=${stringify(sub)} -> rv=${stringify(v.rv)}`)
     }
     v.step = 5;
-    //console.log(`${v.whois} normal end.`+`\npri=${stringify(pri)}`+`\nsub=${stringify(sub)}`+`\nopt=${stringify(opt)}`+`\nv.rv=${stringify(v.rv)}`)
     return v.rv;
 
   } catch(e) {
