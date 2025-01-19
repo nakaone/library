@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'delete',start:4,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'update',start:0,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -384,6 +384,20 @@ function SpreadDbTest(){
     ],
     update: [
       { // 0.正常系
+        reset: {'log':null,'AutoInc':true},
+        query: [
+          {table:'AutoInc',command:'append',set:[{'ラベル':'a01'},{'ラベル':'a02'},{'ラベル':'a03'},{'ラベル':'a04'},{'ラベル':'a05'}]},
+          // 関数
+          {command:'update',table:'AutoInc',where:o=>{return o['ラベル']==='a01'},set:()=>{return {'ラベル':'b01'}}},
+          // オブジェクト
+          {command:'update',table:'AutoInc',where:{'ラベル':'a02'},set:{'ぬる':'b02'}},
+          {command:'update',table:'AutoInc',where:{key:'ラベル',value:'a03'},set:{'真':'b03'}},
+          // 文字列(関数)
+          {command:'update',table:'AutoInc',where:"o=>{return o['ラベル']==='a04'}",set:"()=>{return {'偽':'b04'}}"},
+          // 文字列(非関数。where:主キーの値, set:JSON)
+          {command:'update',table:'AutoInc',where:16,set:JSON.stringify({'配列①':'b05'})},
+        ],
+        opt: {userId:'Administrator'},
       },{ // 1.該当レコード無し ⇒ qSts='OK',num=0
       },{ // 1.自レコードのみの更新権限で自レコードを更新 ⇒ qSts='OK'
       },{ // 1.自レコードのみの更新権限で自レコード以外を更新 ⇒ qSts='OK'
@@ -1842,8 +1856,7 @@ function SpreadDb(query=[],opt={}){
 
           v.step = 1.4; // 更新履歴記録用に文字列化
           query.data = `{table:${query.table},where:${query.data.where},set:${query.data.set}}`;
-          v.fId = `: query=${query.data}`;
-          console.log(`${v.whois} start${v.fId}`);
+          console.log(`${v.whois} query=${query.data}`);
 
         } else {
           throw new Error(`No set`);
@@ -1855,82 +1868,93 @@ function SpreadDb(query=[],opt={}){
         console.error(`${e.message}\nv=${stringify(v)}`);
         return v.rv;
       }
+      console.log(`l.1871 v.where(${whichType(v.where)})=${toString(v.where)}\nv.set(${whichType(v.set)})=${toString(v.set)}`)
 
       // ------------------------------------------------
       v.step = 2; // table.valuesを更新、ログ作成
       // ------------------------------------------------
-      for( v.i=0 ; v.i<query.table.values.length ; v.i++ ){
+      for( v.i=0 ; v.i<v.table.values.length ; v.i++ ){
 
-        v.step = 2.1; // 対象外判定ならスキップ
-        if( v.where(query.table.values[v.i]) === false ) continue;
+        v.step = 3; // 対象外判定ならスキップ
+        if( v.where(v.table.values[v.i]) === false ) continue;
 
-        v.step = 2.2; // v.before(更新前の行オブジェクト),after,diffの初期値を用意
-        [v.before,v.after,v.diff] = [query.table.values[v.i],{},{}];
+        v.step = 4; // v.before(更新前の行オブジェクト),after,diffの初期値を用意
+        [v.before,v.after] = [v.table.values[v.i],{}];
 
-        v.step = 2.3; // v.rObj: 更新指定項目のみのオブジェクト
-        v.rObj = v.set(query.table.values[v.i]);
+        v.step = 5; // レコード単位の更新履歴オブジェクトを作成
+        v.log = objectizeColumn('sdbResult');
+        if( v.log instanceof Error ) throw v.log;
+        v.log.pKey = v.table.values[v.i][v.table.schema.primaryKey];
+        query.result.push(v.log);
 
-        v.step = 2.4; // 項目毎に値が変わるかチェック
-        query.table.header.forEach(x => {
+        v.step = 6; // v.rObj: 更新指定項目のみのオブジェクト
+        v.rObj = v.set(v.table.values[v.i]);
+
+        v.step = 7; // 項目毎に値が変わるかチェック
+        v.table.header.forEach(x => {
           if( Object.hasOwn(v.rObj,x) && !isEqual(v.before[x],v.rObj[x]) ){
-            v.step = 2.41; // 変更指定項目かつ値が変化していた場合、afterとdiffに新しい値を設定
-            v.after[x] = v.diff[x] = v.rObj[x];
-            v.step = 2.42; // 更新対象範囲の見直し
-            v.colNo = query.table.header.findIndex(y => y === x);
+            v.step = 7.1; // 変更指定項目かつ値が変化していた場合
+            v.after[x] = v.rObj[x]; // afterは変更後の値
+            v.log.diff[x] = [v.before[x],v.rObj[x]];  // diffは[変更前,変更後]の配列
+            v.step = 7.2; // 更新対象範囲の見直し
+            v.colNo = v.table.header.findIndex(y => y === x);
             v.left = Math.min(v.left,v.colNo);
             v.right = Math.max(v.right,v.colNo);
           } else {
-            v.step = 2.43; // 非変更指定項目または変更指定項目だが値の変化が無い場合、beforeの値をセット
+            v.step = 7.3; // 非変更指定項目または変更指定項目だが値の変化が無い場合、beforeの値をセット
             v.after[x] = v.before[x];
           }
         });
 
-        v.step = 2.5; // レコード単位の更新履歴オブジェクトを作成
-        v.log = objectizeColumn('sdbResult');
-        if( v.log instanceof Error ) throw v.log;
-        v.log.pKey = query.set[v.i][v.table.schema.primaryKey];
-        v.log.diff = v.diff
-        query.result.push(v.log);
-
-        v.step = 2.6; // 更新レコードの正当性チェック(unique重複チェック)
-        for( v.unique in query.table.schema.unique ){
-          if( query.table.schema.unique[v.unique].indexOf(v.after[v.unique]) >= 0 ){
-            v.step = 2.61; // 登録済の場合はエラーとして処理
-            v.log.rSts = 'Duplicate';
-          } else {
-            v.step = 2.62; // 未登録の場合query.table.sdbSchema.uniqueに値を追加
-            query.table.schema.unique[v.unique].push(v.after[v.unique]);
+        v.step = 8; // 更新レコードの正当性チェック(unique重複チェック)
+        for( v.unique in v.table.schema.unique ){
+          if( Object.hasOwn(v.log.diff,v.unique) ){
+            // 変更後の値がschema.uniqueに登録済の場合はDuplicate
+            if( v.table.schema.unique[v.unique].indexOf(v.after[v.unique]) >= 0 ){  // いまここ：全部Duplicate判定
+              v.step = 8.1; // 登録済の場合はエラー
+              v.log.rSts = 'Duplicate';
+            } else {
+              v.step = 8.2; // 未登録の場合、table.sdbSchema.uniqueから変更前の値を削除して変更後の値を追加
+              vlog(v.table.schema.unique,1918)
+              console.log(`l.1919 v.before[${v.unique}]=${v.before[v.unique]}`)
+              v.idx = v.table.schema.unique[v.unique].findIndex(x => x === v.before[v.unique]);
+              v.table.schema.unique[v.unique].splice(v.idx,1);
+              v.table.schema.unique[v.unique].push(v.after[v.unique]);
+            }
           }
         }
 
-        v.step = 2.7; // 正当性チェックOKの場合、修正後のレコードを保存して書換範囲(range)を修正
+        v.step = 9; // 正当性チェックOKの場合、修正後のレコードを保存して書換範囲(range)を修正
+        vlog(v.log,1921)
         if( v.log.rSts === 'OK' ){
           query.num++;
           v.top = Math.min(v.top, v.i);
           v.bottom = Math.max(v.bottom, v.i);
-          query.table.values[v.i] = v.after;
+          v.table.values[v.i] = v.after;
+          vlog(v.after,1926)
         }
-
       }
+      vlog(query.result,1928)
 
       // ------------------------------------------------
-      v.step = 3; // 対象シート・更新履歴に展開
+      v.step = 10; // 対象シート・更新履歴に展開
       // ------------------------------------------------
-      v.step = 3.1; // シートイメージ(二次元配列)作成
+      v.step = 10.1; // シートイメージ(二次元配列)作成
       v.target = [];
       for( v.i=v.top ; v.i<=v.bottom ; v.i++ ){
         v.row = [];
         for( v.j=v.left ; v.j<=v.right ; v.j++ ){
-          v.row.push(query.table.values[v.i][query.table.header[v.j]]);
+          v.row.push(v.table.values[v.i][v.table.header[v.j]]);
         }
         v.target.push(v.row);
       }
+      vlog(v.target,1942)
 
-      v.step = 3.2; // シートに展開
+      v.step = 10.2; // シートに展開
       // v.top,bottom: 最初と最後の行オブジェクトの添字(≠行番号) ⇒ top+1 ≦ row ≦ bottom+1
       // v.left,right: 左端と右端の行配列の添字(≠列番号) ⇒ left+1 ≦ col ≦ right+1
       if( v.target.length > 0 ){
-        query.table.sheet.getRange(
+        v.table.sheet.getRange(
           v.top +2,  // +1(添字->行番号)+1(ヘッダ行)
           v.left +1,  // +1(添字->行番号)
           v.target.length,
