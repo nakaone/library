@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'update',start:3,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'update',start:4,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -408,6 +408,9 @@ function SpreadDbTest(){
         query: {command:'update',table:'ユーザ管理',where:10,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
       },{ // 4.自レコードのみの更新権限で自レコード以外を更新 ⇒ qSts='OK'
+        reset: {log:null,'ユーザ管理':true},
+        query: {command:'update',table:'ユーザ管理',where:11,set:{profile:'xxx'}},
+        opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
       },{ // 5.権限付与してユーザが実行 ⇒ OK
       },{ // 6.権限付与せずユーザが実行 ⇒ No Authority
       },{ // 7.存在しないテーブルでの更新 ⇒ No Table
