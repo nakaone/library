@@ -1,8 +1,9 @@
 function SpreadDbTest(){
-  const v = {scenario:'update',start:5,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'update',start:3,num:4,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
+  dev.start(v.whois);
   const src = { // テスト用サンプルデータ
     'ユーザ管理': { // "ユーザ管理"シート(colsのみ)
       cols: [
@@ -271,7 +272,7 @@ function SpreadDbTest(){
     ],
     select: [ // select関係のテスト群
       { // 0.正常系
-        reset: {'log':false,'掲示板':false},
+        reset: {'掲示板':false},
         query: [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"},
           // 日付の比較では"new Date()"を使用。ちなみにgetTime()無しで比較可能
@@ -280,13 +281,13 @@ function SpreadDbTest(){
         opt: {userId:'Administrator'},
       },{ // 1.ゲストに「掲示板」の読込を許可した場合
         //reset: [], //['掲示板'],
-        reset: {'log':null,'掲示板':false},
+        reset: {'掲示板':false},
         query: [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
         ],
         opt: {guestAuth:{'掲示板':'r'}},  // userId指定無し(⇒ゲスト)でゲストに掲示板の読込権限付与
       },{ // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
-        reset: {'log':false,'掲示板':false},
+        reset: {'掲示板':false},
         query: [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
         ],
@@ -300,7 +301,7 @@ function SpreadDbTest(){
     ],
     append: [
       { // 0.正常系
-        reset: {'log':null,'AutoInc':false},
+        reset: {'AutoInc':false},
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},
           {table:'AutoInc',command:'append',set:{'ラベル':'a02'}}, // 1レコードずつ一括
@@ -311,7 +312,7 @@ function SpreadDbTest(){
         // auto_increment指定の確認 : ぬる・真・偽・配列①・配列②・obj
         // default指定の確認 : def関数
       },{ // 1."unique=true"項目「ラベル」に重複値を指定して追加 ⇒ Duplicate
-        reset: {'log':false,'AutoInc':true},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},  // OK
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},  // Duplicate
@@ -319,23 +320,23 @@ function SpreadDbTest(){
         ],
         opt: {userId:'Administrator'},
       },{ // 2.権限付与してゲストが実行 ⇒ OK
-        reset: {'log':false,'AutoInc':true},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {guestAuth:{AutoInc:'w'}},
       },{ // 3.権限付与せずゲストが実行 ⇒ No Authority
-        reset: {'log':false,'AutoInc':true},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {guestAuth:{AutoInc:'r'}},
       },{ // 4.権限付与してユーザが実行 ⇒ OK
-        reset: {'log':false,'AutoInc':true},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:'pikumin',userAuth:{AutoInc:'w'}},
       },{ // 5.権限付与せずユーザが実行 ⇒ No Authority
-        reset: {'log':false,'AutoInc':true},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:'pikumin',userAuth:{AutoInc:'r'}},
       },{ // 6.存在しないテーブルへの追加 ⇒ No Table
-        reset: {'log':false,'AutoInc':null},  // AutoIncは強制削除
+        reset: {'AutoInc':null},  // AutoIncは強制削除
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},
           {table:'AutoInc',command:'append',set:{'ラベル':'a02'}}, // 1レコードずつ一括
@@ -346,7 +347,7 @@ function SpreadDbTest(){
     ],
     delete: [
       { // 0.正常系 ⇒ pKey=10の行のみ残っていればOK
-        reset: {'log':null,'AutoInc':true},
+        reset: {'AutoInc':true},
         query: [
           {table:'AutoInc',command:'append',set:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
           {table:'AutoInc',command:'delete',where:{'配列①':-1}},  // where = Object
@@ -356,18 +357,18 @@ function SpreadDbTest(){
         ],
         opt: {userId:'Administrator'},
       },{ // 1.該当レコード無し ⇒ qSts='OK',num=0
-        reset: {'log':null,'AutoInc':true},
+        reset: {'AutoInc':true},
         query: [
           {table:'AutoInc',command:'append',set:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
           {table:'AutoInc',command:'delete',where:99},  // where = any(pKey)
         ],
         opt: {userId:'Administrator'},
       },{ // 2.権限付与してユーザが実行 ⇒ OK
-        reset: {'log':null,'AutoInc':true},
+        reset: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:'pikumin',userAuth:{AutoInc:'d'}},
       },{ // 3.権限付与せずユーザが実行 ⇒ No Authority
-        reset: {'log':null,'AutoInc':true},
+        reset: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:'pikumin',userAuth:{AutoInc:'r'}},
       },{ // 4.存在しないテーブルでの削除 ⇒ No Table
@@ -377,7 +378,7 @@ function SpreadDbTest(){
     ],
     update: [
       { // 0.正常系
-        reset: {'log':null,'AutoInc':true},
+        reset: {'AutoInc':true},
         query: [
           {table:'AutoInc',command:'append',set:[{'ラベル':'a01'},{'ラベル':'a02'},{'ラベル':'a03'},{'ラベル':'a04'},{'ラベル':'a05'}]},
           // 関数
@@ -392,31 +393,31 @@ function SpreadDbTest(){
         ],
         opt: {userId:'Administrator'},
       },{ // 1.該当レコード無し ⇒ qSts='OK',num=0
-        reset: {'log':null,'AutoInc':false},
+        reset: {'AutoInc':false},
         query: [
           {command:'update',table:'AutoInc',where:{'ラベル':'xxx'},set:{'ぬる':'b02'}},
         ],
         opt: {userId:'Administrator'},
       },{ // 2.更新対象項目が存在しない ⇒ [abort] qSts='Undefined Column',num=0
-        reset: {'log':null,'AutoInc':false},
+        reset: {'AutoInc':false},
         query: [
           {command:'update',table:'AutoInc',where:{'ラベル':'fuga'},set:{'xxx':123}},
         ],
         opt: {userId:'Administrator'},
       },{ // 3.自レコードのみの更新権限で自レコードを更新 ⇒ qSts='OK'
-        reset: {log:null,'ユーザ管理':true},
+        reset: {log:false,'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:10,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
       },{ // 4.自レコードのみの更新権限で自レコードを更新だが、where句を関数で指定 ⇒ qSts='Invalid where clause'
-        reset: {log:null,'ユーザ管理':true},
+        reset: {log:false,'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:()=>10,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
       },{ // 5.自レコードのみの更新権限で自レコードを更新だが、where句をオブジェクトで指定 ⇒ qSts='Invalid where clause'
-        reset: {log:null,'ユーザ管理':true},
+        reset: {log:false,'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:{userId:10},set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
       },{ // 6.自レコードのみの更新権限で自レコード以外を更新 ⇒ qSts='No Authority'
-        reset: {log:null,'ユーザ管理':true},
+        reset: {log:false,'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:11,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
       },{ // 5.権限付与してユーザが実行 ⇒ OK
@@ -489,49 +490,48 @@ function SpreadDbTest(){
   };
   try {
 
-    v.step = 1; // v.scenarioで指定されたテスト群について、v.startからv.num個分を実行
+    dev.step(1); // v.scenarioで指定されたテスト群について、v.startからv.num個分を実行
     if( v.num < 0 ){
-      v.step = 1.1; // 指定テスト群の後ろからv.num個
+      dev.step(1.1); // 指定テスト群の後ろからv.num個
       v.st = scenario[v.scenario].length + v.num;
       v.ed = scenario[v.scenario].length;
     } else if( v.num === 0 ){
-      v.step = 1.2; // 指定テスト群全部実行
+      dev.step(1.2); // 指定テスト群全部実行
       v.st = v.start;
       v.ed = scenario[v.scenario].length;
     } else {
-      v.step = 1.3; // v.startからv.num個
+      dev.step(1.3); // v.startからv.num個
       v.st = v.start;
       v.ed = v.start + v.num;
     }
 
-    v.step = 2;
+    dev.step(2);
     for( v.idx=v.st ; v.idx<v.ed ; v.idx++ ){
 
-      v.step = 2.1; // テスト用データをセット
-      v.r = resetSheet(scenario[v.scenario][v.idx].reset);
+      dev.step(2.1); // テスト用データをセット
+      v.reset = scenario[v.scenario][v.idx].reset || {};
+      v.reset.log = v.idx === v.st ? null : false;  // テスト開始時はlog削除、それ以外は追記にする
+      v.r = resetSheet(v.reset);
       if( v.r instanceof Error ) throw v.r;
 
-      v.step = 2.2; // scenarioからqueryとoptをセット
+      dev.step(2.2); // scenarioからqueryとoptをセット
       v.r = SpreadDb(
         scenario[v.scenario][v.idx].query,
         scenario[v.scenario][v.idx].opt
       );
-      if( v.r instanceof Error ) throw v.r;
+      // エラーでも後続テストは続行
 
-      v.step = 2.3; // テスト結果(サマリ)の表示
-      v.msg = `===== ${v.whois} end: scenario=${v.scenario}.${v.idx}\n`;
-      if( scenario[v.scenario][v.idx].check ){
-        v.msg += scenario[v.scenario][v.idx].check(v.r,scenario[v.scenario][v.idx].query,scenario[v.scenario][v.idx].opt);
-      } else {
-        //v.msg += JSON.stringify(v,(key,val)=>typeof val==='function'?val.toString():val,2);
-        v.msg += JSON.stringify(v.r,null,2);
-      }
+      dev.step(2.3); // テスト結果(サマリ)の表示
+      v.msg = `===== ${v.whois} end: scenario=${v.scenario}.${v.idx}\n`
+      + ( v.r instanceof Error ? v.r.message : JSON.stringify(v.r,null,2));
       console.log(v.msg);
     }
 
   } catch(e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
-    console.error(`${e.message}\nv=${JSON.stringify(v,(key,val)=>typeof val==='function'?val.toString():val,2)}`);
+    dev.error(e);
+    return e;
+  } finally {
+
   }
 }
 
@@ -1178,28 +1178,30 @@ function SpreadDb(query=[],opt={}){
 
           dev.step(8); // where句の内容がopt.userIdと一致しているか確認
           if( !isEqual(pv.opt.userId,query.where) ){
-            dev.step(9); // 不一致の場合はqStsにエラーセット
-            query.qSts = ( typeof query.where === 'object' || typeof query.where === 'function' )
-            ? 'Invalid where clause' : 'No Authority';
+            dev.step(9); // 形式不正の場合、要ソース修正なのでエラーオブジェクトを返す
+            if( typeof query.where === 'object' || typeof query.where === 'function' )
+              throw new Error('Invalid where clause');
+            dev.step(10); // 不一致の場合はqStsにエラーセット
+            query.qSts = 'No Authority';
           } else {
-            dev.step(10);  // 操作対象レコードの絞り込み(検索・追加条件の変更)
+            dev.step(11);  // 操作対象レコードの絞り込み(検索・追加条件の変更)
             if( query.command !== 'append' ){
-              dev.step(11); // select/update/deleteなら対象を自レコードに限定
+              dev.step(12); // select/update/deleteなら対象を自レコードに限定
               query.where = pv.opt.userId;
             } else {
-              dev.step(12); // appendの場合
+              dev.step(13); // appendの場合
               v.pKey = pv.table[query.table].schema.primaryKey;
               if( !v.pKey ){
-                dev.step(13); // 追加先テーブルにprimaryKeyが不在ならエラー
+                dev.step(14); // 追加先テーブルにprimaryKeyが不在ならエラー
                 query.qSts = 'No PrimaryKey';
               } else {
-                dev.step(14); // 追加レコードの主キーはuserIdに変更
+                dev.step(15); // 追加レコードの主キーはuserIdに変更
                 if( !Array.isArray(query.set) ) query.set = [query.set];
                 query.set.forEach(x => x[v.pKey] = pv.opt.userId);
               }
             }
     
-            dev.step(15); // 'o'の場合の呼出先メソッドを設定
+            dev.step(16); // 'o'の場合の呼出先メソッドを設定
             switch( query.command ){
               case 'select': v.isOK = true; v.func = selectRow; break;
               case 'update': v.isOK = true; v.func = updateRow; break;
@@ -1210,7 +1212,7 @@ function SpreadDb(query=[],opt={}){
   
         } else {
   
-          dev.step(16);  // 'o'以外の場合の呼出先メソッドを設定
+          dev.step(17);  // 'o'以外の場合の呼出先メソッドを設定
           switch( query.command ){
             case 'create': v.isOK = v.allow.includes('c'); v.func = createTable; break;
             case 'select': v.isOK = v.allow.includes('r'); v.func = selectRow; break;
@@ -1222,16 +1224,16 @@ function SpreadDb(query=[],opt={}){
           }
         }
   
-        dev.step(17); // 無権限ならqStsにエラーコードをセット
+        dev.step(18); // 無権限ならqStsにエラーコードをセット
         if( v.isOK === false && query.qSts === 'OK' ) query.qSts = 'No Authority';
   
-        dev.step(18); // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
+        dev.step(19); // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
         if( query.qSts === 'OK' ){
   
-          dev.step(19);  // メソッド実行
+          dev.step(20);  // メソッド実行
           v.r = v.func(query);
           if( v.r instanceof Error ){
-            dev.step(20); // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
+            dev.step(21); // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
             query.qSts = v.r.message;
             throw v.r;
           }
@@ -1961,7 +1963,7 @@ function devTools(option){
   return {start:start,end:end,error:error,step:step,log:log};
 
   /** start: 呼出元関数情報の登録＋開始メッセージの表示 */
-  function start(name,arg){
+  function start(name,arg=null){
     seq++;
     const o = {
       name:name,
@@ -1971,11 +1973,10 @@ function devTools(option){
     stack.push(o);
     o.label = `${('000'+seq).slice(-4)}.${o.name}`;
     o.footprint = stack.map(x => x.name).join(' > ');
-    if( opt.start ){
+    if( opt.start && arg !== null ){
       msg = [];
       if( opt.arg ){
         arg.forEach(x => recursive(x));
-        //recursive(arg);
         msg[0] = `\n-- arguments -----\n${msg[0]}`;
       }
       console.log(`${o.label} start (${o.footprint})${msg.join('\n')}`);
