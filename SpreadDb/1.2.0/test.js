@@ -420,9 +420,9 @@ function SpreadDbTest(){
         reset: {log:false,'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:11,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
-      },{ // 5.権限付与してユーザが実行 ⇒ OK
-      },{ // 6.権限付与せずユーザが実行 ⇒ No Authority
-      },{ // 7.存在しないテーブルでの更新 ⇒ No Table
+      },{ // 7.権限付与してユーザが実行 ⇒ OK
+      },{ // 8.権限付与せずユーザが実行 ⇒ No Authority
+      },{ // 9.存在しないテーブルでの更新 ⇒ No Table
       },
     ],
     schema: [
