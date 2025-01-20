@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'update',start:4,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'update',start:5,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -407,7 +407,15 @@ function SpreadDbTest(){
         reset: {log:null,'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:10,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
-      },{ // 4.自レコードのみの更新権限で自レコード以外を更新 ⇒ qSts='OK'
+      },{ // 4.自レコードのみの更新権限で自レコードを更新だが、where句を関数で指定 ⇒ qSts='Invalid where clause'
+        reset: {log:null,'ユーザ管理':true},
+        query: {command:'update',table:'ユーザ管理',where:()=>10,set:{profile:'xxx'}},
+        opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
+      },{ // 5.自レコードのみの更新権限で自レコードを更新だが、where句をオブジェクトで指定 ⇒ qSts='Invalid where clause'
+        reset: {log:null,'ユーザ管理':true},
+        query: {command:'update',table:'ユーザ管理',where:{userId:10},set:{profile:'xxx'}},
+        opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
+      },{ // 6.自レコードのみの更新権限で自レコード以外を更新 ⇒ qSts='No Authority'
         reset: {log:null,'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:11,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
@@ -1141,58 +1149,68 @@ function SpreadDb(query=[],opt={}){
 
       dev.step(2); // 操作対象のテーブル管理情報を準備
       if( !Object.hasOwn(pv.table,query.table) ){
+        dev.step(3); // 未作成なら作成委
         v.r = genTable(query);
         if( v.r instanceof Error ) throw v.r;
       } else {
-        // テーブル管理情報が存在しているがシートは不在の場合、create以外はエラー
+        dev.step(4); // テーブル管理情報が存在しているがシートは不在の場合、create以外はエラー
         if( query.command !== 'create' && pv.table[query.table].sheet === null ){
           query.qSts = 'No Table';
         }
       }
 
+      dev.step(5); // エラーの場合は後続処理をスキップ
       if( query.qSts === 'OK' ){
 
-        dev.step(3); // ユーザの操作対象シートに対する権限をv.allowにセット
+        dev.step(6); // ユーザの操作対象シートに対する権限をv.allowにセット
         v.allow = (pv.opt.adminId === pv.opt.userId) ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
         : ( pv.opt.userId === 'guest' ? (pv.opt.guestAuth[query.table] || '')  // ゲスト(userId指定無し)
         : ( pv.opt.userAuth[query.table] || ''));  // 通常ユーザ
-  
-        dev.step(4); // 呼出先メソッド設定
+
+        dev.step(7); // 呼出先メソッド設定
         if( v.allow.includes('o') ){
   
-          // o(=own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
+          // o(=own set only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
           // また対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
-          //read/write/append/deleteは自分のみ可、schemaは実行不可
-  
-          dev.step(4.1);  // 操作対象レコードの絞り込み(検索・追加条件の変更)
-          if( query.command !== 'append' ){
-            dev.step(4.2); // select/update/deleteなら対象を自レコードに限定
-            query.where = pv.opt.userId;
+          // 自分のread/write(select,update)およびschemaのみ実行可。append/deleteは実行不可
+          // ∵新規登録(append)はシステム管理者の判断が必要。また誤ってdeleteした場合はappendが必要なのでこれも不可
+          // 'o'の場合、where句はuserId固定とする(Object,function,JSON他は不可)
+
+          dev.step(8); // where句の内容がopt.userIdと一致しているか確認
+          if( !isEqual(pv.opt.userId,query.where) ){
+            dev.step(9); // 不一致の場合はqStsにエラーセット
+            query.qSts = ( typeof query.where === 'object' || typeof query.where === 'function' )
+            ? 'Invalid where clause' : 'No Authority';
           } else {
-            dev.step(4.3); // appendの場合
-            v.pKey = pv.table[query.table].schema.primaryKey;
-            if( !v.pKey ){
-              dev.step(4.4); // 追加先テーブルにprimaryKeyが不在ならエラー
-              query.qSts = 'No PrimaryKey';
+            dev.step(10);  // 操作対象レコードの絞り込み(検索・追加条件の変更)
+            if( query.command !== 'append' ){
+              dev.step(11); // select/update/deleteなら対象を自レコードに限定
+              query.where = pv.opt.userId;
             } else {
-              dev.step(4.5); // 追加レコードの主キーはuserIdに変更
-              if( !Array.isArray(query.record) ) query.record = [query.record];
-              query.record.forEach(x => x[v.pKey] = pv.opt.userId);
+              dev.step(12); // appendの場合
+              v.pKey = pv.table[query.table].schema.primaryKey;
+              if( !v.pKey ){
+                dev.step(13); // 追加先テーブルにprimaryKeyが不在ならエラー
+                query.qSts = 'No PrimaryKey';
+              } else {
+                dev.step(14); // 追加レコードの主キーはuserIdに変更
+                if( !Array.isArray(query.set) ) query.set = [query.set];
+                query.set.forEach(x => x[v.pKey] = pv.opt.userId);
+              }
             }
-          }
-  
-          dev.step(4.6); // 'o'の場合の呼出先メソッドを設定
-          switch( query.command ){
-            case 'select': v.isOK = true; v.func = selectRow; break;
-            case 'update': v.isOK = true; v.func = updateRow; break;
-            case 'append': case 'insert': v.isOK = true; v.func = appendRow; break;
-            case 'delete': v.isOK = true; v.func = deleteRow; break;
-            default: v.isOK = false;
+    
+            dev.step(15); // 'o'の場合の呼出先メソッドを設定
+            switch( query.command ){
+              case 'select': v.isOK = true; v.func = selectRow; break;
+              case 'update': v.isOK = true; v.func = updateRow; break;
+              case 'schema': v.isOK = true; v.func = getSchema; break;
+              default: v.isOK = false;
+            }  
           }
   
         } else {
   
-          dev.step(4.7);  // 'o'以外の場合の呼出先メソッドを設定
+          dev.step(16);  // 'o'以外の場合の呼出先メソッドを設定
           switch( query.command ){
             case 'create': v.isOK = v.allow.includes('c'); v.func = createTable; break;
             case 'select': v.isOK = v.allow.includes('r'); v.func = selectRow; break;
@@ -1204,16 +1222,16 @@ function SpreadDb(query=[],opt={}){
           }
         }
   
-        dev.step(5); // 無権限ならqStsにエラーコードをセット
+        dev.step(17); // 無権限ならqStsにエラーコードをセット
         if( v.isOK === false && query.qSts === 'OK' ) query.qSts = 'No Authority';
   
-        dev.step(6); // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
+        dev.step(18); // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
         if( query.qSts === 'OK' ){
   
-          dev.step(6.1);  // メソッド実行
+          dev.step(19);  // メソッド実行
           v.r = v.func(query);
           if( v.r instanceof Error ){
-            dev.step(6.2); // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
+            dev.step(20); // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
             query.qSts = v.r.message;
             throw v.r;
           }
@@ -1988,12 +2006,16 @@ function devTools(option){
     }
   }
 
-  /** log: 渡された変数の内容を表示 */
-  function log(arg){
+  /** log: 渡された変数の内容を表示
+   * @param {any|any[]} arg - 表示する変数。複数の場合は配列で指定
+   * @param {number} line=null - 行番号
+   * @returns {void}
+   */
+  function log(arg,line=null){
     const o = stack[stack.length-1];
-    msg = [];
-    recursive(arg);
-    msg[0] = `${o.label} step.${o.step} : ` + msg[0];
+    if( !Array.isArray(arg) ) arg = [arg];
+    msg = [(line === null ? '' : `l.${line} `) + `${o.label} step.${o.step} : `];
+    arg.forEach(x => recursive(x));
     console.log(msg.join('\n'));
   }
   function recursive(arg,depth=0,label=''){
