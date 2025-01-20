@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'update',start:3,num:4,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'update',start:7,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -420,9 +420,10 @@ function SpreadDbTest(){
         reset: {log:false,'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:11,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
-      },{ // 7.権限付与してユーザが実行 ⇒ OK
-      },{ // 8.権限付与せずユーザが実行 ⇒ No Authority
-      },{ // 9.存在しないテーブルでの更新 ⇒ No Table
+      },{ // 7.存在しないテーブルでの更新 ⇒ No Table
+        reset: {'ユーザ管理':true},
+        query: {command:'update',table:'ふが',where:10,set:{profile:'xxx'}},
+        opt: {userId:'Administrator'},
       },
     ],
     schema: [
@@ -530,8 +531,6 @@ function SpreadDbTest(){
   } catch(e) {
     dev.error(e);
     return e;
-  } finally {
-
   }
 }
 
@@ -548,7 +547,6 @@ function SpreadDb(query=[],opt={}){
 
     dev.step(1.1);
     if( !Array.isArray(query) ) query = [query];  // 配列可の引数は配列に統一
-    v.fId = ``; // 何を対象にした処理かを特定する文字列
 
     dev.step(1.2); // メンバに引数・初期値をセット
     v.r = constructor(query,opt);
@@ -1143,31 +1141,27 @@ function SpreadDb(query=[],opt={}){
     dev.start(v.whois,[...arguments]);
     try {
 
-      dev.step(1); // 事前準備
-      v.fId = `: table=${query.table}, command=${query.command}`;
-      console.log(`${v.whois} ${v.fId}`);
-
-      dev.step(2); // 操作対象のテーブル管理情報を準備
+      dev.step(1); // 操作対象のテーブル管理情報を準備
       if( !Object.hasOwn(pv.table,query.table) ){
-        dev.step(3); // 未作成なら作成委
+        dev.step(1.1); // 未作成なら作成
         v.r = genTable(query);
         if( v.r instanceof Error ) throw v.r;
       } else {
-        dev.step(4); // テーブル管理情報が存在しているがシートは不在の場合、create以外はエラー
+        dev.step(1.2); // テーブル管理情報が存在しているがシートは不在の場合、create以外はエラー
         if( query.command !== 'create' && pv.table[query.table].sheet === null ){
           query.qSts = 'No Table';
         }
       }
 
-      dev.step(5); // エラーの場合は後続処理をスキップ
+      dev.step(2); // エラーの場合は後続処理をスキップ
       if( query.qSts === 'OK' ){
 
-        dev.step(6); // ユーザの操作対象シートに対する権限をv.allowにセット
+        dev.step(3); // ユーザの操作対象シートに対する権限をv.allowにセット
         v.allow = (pv.opt.adminId === pv.opt.userId) ? 'rwdsc'  // 管理者は全部−'o'(自分のみ)＋テーブル作成
         : ( pv.opt.userId === 'guest' ? (pv.opt.guestAuth[query.table] || '')  // ゲスト(userId指定無し)
         : ( pv.opt.userAuth[query.table] || ''));  // 通常ユーザ
 
-        dev.step(7); // 呼出先メソッド設定
+        dev.step(4); // 呼出先メソッド設定
         if( v.allow.includes('o') ){
   
           // o(=own set only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
@@ -1176,32 +1170,32 @@ function SpreadDb(query=[],opt={}){
           // ∵新規登録(append)はシステム管理者の判断が必要。また誤ってdeleteした場合はappendが必要なのでこれも不可
           // 'o'の場合、where句はuserId固定とする(Object,function,JSON他は不可)
 
-          dev.step(8); // where句の内容がopt.userIdと一致しているか確認
+          dev.step(5); // where句の内容がopt.userIdと一致しているか確認
           if( !isEqual(pv.opt.userId,query.where) ){
-            dev.step(9); // 形式不正の場合、要ソース修正なのでエラーオブジェクトを返す
+            dev.step(6); // 形式不正の場合、要ソース修正なのでエラーオブジェクトを返す
             if( typeof query.where === 'object' || typeof query.where === 'function' )
               throw new Error('Invalid where clause');
-            dev.step(10); // 不一致の場合はqStsにエラーセット
+            dev.step(7); // 不一致の場合はqStsにエラーセット
             query.qSts = 'No Authority';
           } else {
-            dev.step(11);  // 操作対象レコードの絞り込み(検索・追加条件の変更)
+            dev.step(8);  // 操作対象レコードの絞り込み(検索・追加条件の変更)
             if( query.command !== 'append' ){
-              dev.step(12); // select/update/deleteなら対象を自レコードに限定
+              dev.step(9); // select/update/deleteなら対象を自レコードに限定
               query.where = pv.opt.userId;
             } else {
-              dev.step(13); // appendの場合
+              dev.step(10); // appendの場合
               v.pKey = pv.table[query.table].schema.primaryKey;
               if( !v.pKey ){
-                dev.step(14); // 追加先テーブルにprimaryKeyが不在ならエラー
+                dev.step(11); // 追加先テーブルにprimaryKeyが不在ならエラー
                 query.qSts = 'No PrimaryKey';
               } else {
-                dev.step(15); // 追加レコードの主キーはuserIdに変更
+                dev.step(12); // 追加レコードの主キーはuserIdに変更
                 if( !Array.isArray(query.set) ) query.set = [query.set];
                 query.set.forEach(x => x[v.pKey] = pv.opt.userId);
               }
             }
     
-            dev.step(16); // 'o'の場合の呼出先メソッドを設定
+            dev.step(13); // 'o'の場合の呼出先メソッドを設定
             switch( query.command ){
               case 'select': v.isOK = true; v.func = selectRow; break;
               case 'update': v.isOK = true; v.func = updateRow; break;
@@ -1212,7 +1206,7 @@ function SpreadDb(query=[],opt={}){
   
         } else {
   
-          dev.step(17);  // 'o'以外の場合の呼出先メソッドを設定
+          dev.step(14);  // 'o'以外の場合の呼出先メソッドを設定
           switch( query.command ){
             case 'create': v.isOK = v.allow.includes('c'); v.func = createTable; break;
             case 'select': v.isOK = v.allow.includes('r'); v.func = selectRow; break;
@@ -1224,16 +1218,16 @@ function SpreadDb(query=[],opt={}){
           }
         }
   
-        dev.step(18); // 無権限ならqStsにエラーコードをセット
+        dev.step(15); // 無権限ならqStsにエラーコードをセット
         if( v.isOK === false && query.qSts === 'OK' ) query.qSts = 'No Authority';
   
-        dev.step(19); // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
+        dev.step(16); // 権限確認の結果、OKなら操作対象テーブル情報を付加してcommand系メソッドを呼び出し
         if( query.qSts === 'OK' ){
   
-          dev.step(20);  // メソッド実行
+          dev.step(17);  // メソッド実行
           v.r = v.func(query);
           if( v.r instanceof Error ){
-            dev.step(21); // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
+            dev.step(18); // command系メソッドからエラーオブジェクトが帰ってきた場合はqSts=message
             query.qSts = v.r.message;
             throw v.r;
           }
@@ -1342,7 +1336,6 @@ function SpreadDb(query=[],opt={}){
    */
   function genColumn(arg={}){
     const v = {whois:`${pv.whois}.genColumn`,step:0,rv:{},
-      fId: 'arg=' + (typeof arg === 'string' ? arg : arg.name),
       typedef:pv.opt.sdbColumn,
       rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現
     };
@@ -1453,9 +1446,6 @@ function SpreadDb(query=[],opt={}){
     const v = {whois:`${pv.whois}.genSchema`,step:0,rv:null};
     dev.start(v.whois,[...arguments]);
     try {
-
-      v.fId = `: table=${table.name}`;
-      console.log(`${v.whois} ${v.fId}`);
 
       // -----------------------------------------------
       dev.step(2); // 項目定義オブジェクト(cols)の作成
@@ -1651,7 +1641,6 @@ function SpreadDb(query=[],opt={}){
   function getSchema(arg){
     const v = {whois:`${pv.whois}.getSchema`,step:0,rv:[]};
     dev.start(v.whois,[...arguments]);
-    console.log(`${v.whois} .\narg(${whichType(arg)})=${JSON.stringify(arg)}`);
     try {
 
       dev.step(1.1); // 引数のデータ型チェック
@@ -1689,24 +1678,18 @@ function SpreadDb(query=[],opt={}){
     dev.start(v.whois,[...arguments]);
     try {
 
-      if( typeof arg === 'string' ){
-        v.arg = pv.opt[arg];
-        v.fId = `: name=${arg}`;
-      } else {
-        v.arg = Array.isArray(arg) ? arg : [arg];  // 配列可の引数は配列に統一
-        v.fId = '';
-      }
-      console.log(`${v.whois} start${v.fId}`);
+      dev.step(1);  // 文字列ならpv.opt以下に定義されているメンバ、それ以外は配列化
+      v.arg = typeof arg === 'string' ? pv.opt[arg] : (Array.isArray(arg) ? arg : [arg]);
 
-      dev.step(1);
+      dev.step(2);
       for( v.i=0 ; v.i<v.arg.length ; v.i++ ){
         if( Object.hasOwn(v.arg[v.i],'default') && v.arg[v.i].default ){
-          dev.step(2);
+          dev.step(3);
           v.func = functionalyze(v.arg[v.i].default);
           if( v.func instanceof Error ) throw v.func;
           v.rv[v.arg[v.i].name] = v.func();
         } else {
-          dev.step(3); // 既定値の指定が無い場合はnullとする
+          dev.step(4); // 既定値の指定が無い場合はnullとする
           v.rv[v.arg[v.i].name] = null;
         }
       }
@@ -1780,8 +1763,7 @@ function SpreadDb(query=[],opt={}){
    */
   function updateRow(query){
     const v = {whois:`${pv.whois}.updateRow`,step:0,rv:null,
-      top:Infinity,left:Infinity,right:0,bottom:0, // 更新範囲の行列番号
-    };
+      top:Infinity,left:Infinity,right:0,bottom:0}; // 更新範囲の行列番号
     dev.start(v.whois,[...arguments]);
     try {
 
@@ -1815,7 +1797,6 @@ function SpreadDb(query=[],opt={}){
 
         dev.step(1.4); // 更新履歴記録用に文字列化
         query.data = `{table:${query.table},where:${query.data.where},set:${query.data.set}}`;
-        console.log(`${v.whois} query=${query.data}`);
 
         dev.step(1.5); // 配列a1がa2の部分集合かどうかを判断する関数を用意
         // 更新対象項目がテーブルの項目名リストに全て入っているかの判断で使用(step.3.2)
@@ -1884,8 +1865,6 @@ function SpreadDb(query=[],opt={}){
               v.log.rSts = 'Duplicate';
             } else {
               dev.step(7.2); // 未登録の場合、table.sdbSchema.uniqueから変更前の値を削除して変更後の値を追加
-              vlog(v.table.schema.unique,1918)
-              console.log(`l.1919 v.before[${v.unique}]=${v.before[v.unique]}`)
               v.idx = v.table.schema.unique[v.unique].findIndex(x => x === v.before[v.unique]);
               v.table.schema.unique[v.unique].splice(v.idx,1);
               v.table.schema.unique[v.unique].push(v.after[v.unique]);
@@ -1894,16 +1873,13 @@ function SpreadDb(query=[],opt={}){
         }
 
         dev.step(8); // 正当性チェックOKの場合、修正後のレコードを保存して書換範囲(range)を修正
-        vlog(v.log,1921)
         if( v.log.rSts === 'OK' ){
           query.num++;
           v.top = Math.min(v.top, v.i);
           v.bottom = Math.max(v.bottom, v.i);
           v.table.values[v.i] = v.after;
-          vlog(v.after,1926)
         }
       }
-      vlog(query.result,1928)
 
       // ------------------------------------------------
       dev.step(9); // 対象シート・更新履歴に展開
@@ -1917,7 +1893,6 @@ function SpreadDb(query=[],opt={}){
         }
         v.target.push(v.row);
       }
-      vlog(v.target,1942)
 
       dev.step(9.2); // シートに展開
       // v.top,bottom: 最初と最後の行オブジェクトの添字(≠行番号) ⇒ top+1 ≦ row ≦ bottom+1
@@ -1938,14 +1913,6 @@ function SpreadDb(query=[],opt={}){
       dev.error(e);
       return e;
     }
-  }
-  function vlog(x,l=null){
-    console.log(
-      vlog.caller.name
-      + ( l === null ? '' : (' l.'+l+' ') )
-      + '\n'
-      + JSON.stringify(x,(key,val)=>typeof val==='function'?val.toString():val,2)
-    );
   }
 }
 
