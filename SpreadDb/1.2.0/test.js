@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'schema',start:4,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'create',start:5,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -241,31 +241,27 @@ function SpreadDbTest(){
           {command:'create',table:'AutoInc',cols:src['AutoInc'].cols,set:src['AutoInc'].set},  // 「AutoInc」シート作成
         ],
         opt: {userId:'Administrator'},
-      },{ // 1.初期値のunique項目で重複値が存在
-        reset: null, // 全シート強制削除
-        query: [
-          {command:'create',table:'Duplicate',cols:src['Duplicate'].cols,set:src['Duplicate'].set},
-        ],
+      },{ // 1.初期値のunique項目で重複値が存在 ⇒ qSts='OK', result[1].rSts='Duplicate'
+        reset: null,
+        query: {command:'create',table:'Duplicate',cols:src['Duplicate'].cols,set:src['Duplicate'].set},
         opt: {userId:'Administrator'},
-      },{ // 2.既存シートの新規作成指示⇒Already Existエラー
-        reset: null, // 全シート強制削除
+      },{ // 2.既存シートの新規作成指示 ⇒ qSts[0]='OK', qSts[1]='Already Exist'
+        reset: null,
         query: [
           {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
           {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
         ],
         opt: {userId:'Administrator'},
-      },{ // 3.colsもsetも指定無し⇒No Cols and Dataエラー
-        reset: null, // 全シート強制削除
-        query: [
-          {command:'create',table:'Duplicate'},
-        ],
+      },{ // 3.colsもsetも指定無し ⇒ qSts='No Cols and Data'
+        reset: null,
+        query: {command:'create',table:'Duplicate'},
         opt: {userId:'Administrator'},
-      },{ // 4.userId未指定 ⇒ No Authorityエラー
-        reset: null, // 全シート強制削除
+      },{ // 4.userId未指定 ⇒ qSts='No Authority'
+        reset: null,
         query: {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
         // optは指定しない(ユーザ未定)
-      },{ // 5.管理者以外 ⇒ No Authorityエラー
-        reset: null, // 全シート強制削除
+      },{ // 5.管理者以外 ⇒ qSts='No Authority'
+        reset: null,
         query: {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
         opt: {userId:'fuga'},
       },
@@ -443,11 +439,8 @@ function SpreadDbTest(){
         reset: {'ユーザ管理':false,'損益計算書':false},
         query: {command:'schema',table:'ユーザ管理'},
         opt: {userId:'pikumin',userAuth:{'ユーザ管理':''}},
-      },{ // 4.シート上のメモを修正後、その修正が反映されているかの確認
-        reset: {'ユーザ管理':false,'損益計算書':false},
-        query: {command:'schema',table:'ユーザ管理'},
-        opt: {userId:'pikumin',userAuth:{'ユーザ管理':'s'}},
       },
+      // シート上でシート上のメモを修正後、その修正が反映されているかの確認
     ],
   };
   function resetSheet(arg=undefined){ /** テスト対象シートの再作成
@@ -456,7 +449,7 @@ function SpreadDbTest(){
    * - false: 不在なら作成、存在なら再作成しない(不在時作成)
    * - null: 強制削除。存在していれば削除、再作成はしない
    * - undefined: 何もしない(既定値)
-   * 引数argが真偽値の場合、全シート対象に上記処理を行う。
+   * 引数argがオブジェクトではない場合、全シート対象に上記処理を行う。
    */
     console.log(`resetSheet start: arg=${JSON.stringify(arg)}`);
     if( arg === undefined ){
@@ -524,8 +517,11 @@ function SpreadDbTest(){
     for( v.idx=v.st ; v.idx<v.ed ; v.idx++ ){
 
       dev.step(2.1); // テスト用データをセット
-      v.reset = scenario[v.scenario][v.idx].reset || {};
-      v.reset.log = v.idx === v.st ? null : false;  // テスト開始時はlog削除、それ以外は追記にする
+      if( whichType(scenario[v.scenario][v.idx].reset,'Object') ){
+        v.reset.log = v.idx === v.st ? null : false;  // テスト開始時はlog削除、それ以外は追記にする
+      } else {
+        v.reset = scenario[v.scenario][v.idx].reset;
+      }
       v.r = resetSheet(v.reset);
       if( v.r instanceof Error ) throw v.r;
 
