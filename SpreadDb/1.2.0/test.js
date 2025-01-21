@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'select',start:1,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'append',start:7,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -311,28 +311,28 @@ function SpreadDbTest(){
       },{ // 1."unique=true"項目「ラベル」に重複値を指定して追加 ⇒ Duplicate
         reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: [
-          {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},  // OK
-          {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},  // Duplicate
-          {table:'AutoInc',command:'append',set:[{'ラベル':'a02'},{'ラベル':'a02'}]}, // OK, Duplicate
+          {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},  // qSts='OK', rSts[0]='OK'
+          {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},  // qSts='OK', rSts[0]='Duplicate'
+          {table:'AutoInc',command:'append',set:[{'ラベル':'a02'},{'ラベル':'a02'}]}, // qSts='OK', rSts=[OK, Duplicate]
         ],
         opt: {userId:'Administrator'},
-      },{ // 2.権限付与してゲストが実行 ⇒ OK
+      },{ // 2.権限付与してゲストが実行 ⇒ qSts='OK',rSts=[OK,OK]
         reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {guestAuth:{AutoInc:'w'}},
-      },{ // 3.権限付与せずゲストが実行 ⇒ No Authority
+      },{ // 3.権限付与せずゲストが実行 ⇒ qSts='No Authority'
         reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {guestAuth:{AutoInc:'r'}},
-      },{ // 4.権限付与してユーザが実行 ⇒ OK
+      },{ // 4.権限付与してユーザが実行 ⇒ qSts='OK',rSts=[OK,OK]
         reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:'pikumin',userAuth:{AutoInc:'w'}},
-      },{ // 5.権限付与せずユーザが実行 ⇒ No Authority
+      },{ // 5.権限付与せずユーザが実行 ⇒ qSts='No Authority'
         reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:'pikumin',userAuth:{AutoInc:'r'}},
-      },{ // 6.存在しないテーブルへの追加 ⇒ No Table
+      },{ // 6.存在しないテーブルへの追加 ⇒ qSts=['No Table','No Table','No Table']
         reset: {'AutoInc':null},  // AutoIncは強制削除
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},
@@ -340,6 +340,10 @@ function SpreadDbTest(){
           {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // setが配列
         ],
         opt: {userId:'Administrator'},
+      },{ // 7.権限'o'のユーザが実行 ⇒ qSts='No Authority'  // いまここ
+        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
+        opt: {userId:'pikumin',userAuth:{AutoInc:'o'}},
       },
     ],
     delete: [
