@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'schema',start:0,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'schema',start:4,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -431,11 +431,22 @@ function SpreadDbTest(){
         reset: {'ユーザ管理':false,'損益計算書':false},
         query: {command:'schema',table:'ユーザ管理'},
         opt: {userId:'Administrator'},
-      },{ // 1.該当テーブル無し ⇒ qSts='OK',num=0
+      },{ // 1.該当テーブル無し ⇒ qSts='No Table',num=0
+        reset: {'ユーザ管理':false,'損益計算書':false},
+        query: {command:'schema',table:'ふが'},
+        opt: {userId:'Administrator'},
       },{ // 2.権限付与してユーザが実行 ⇒ OK
+        reset: {'ユーザ管理':false,'損益計算書':false},
+        query: {command:'schema',table:'ユーザ管理'},
+        opt: {userId:'pikumin',userAuth:{'ユーザ管理':'s'}},
       },{ // 3.権限付与せずユーザが実行 ⇒ No Authority
-      },{ // 4.存在しないテーブルの参照 ⇒ No Table
+        reset: {'ユーザ管理':false,'損益計算書':false},
+        query: {command:'schema',table:'ユーザ管理'},
+        opt: {userId:'pikumin',userAuth:{'ユーザ管理':''}},
       },{ // 4.シート上のメモを修正後、その修正が反映されているかの確認
+        reset: {'ユーザ管理':false,'損益計算書':false},
+        query: {command:'schema',table:'ユーザ管理'},
+        opt: {userId:'pikumin',userAuth:{'ユーザ管理':'s'}},
       },
     ],
   };
