@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'update',start:7,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'schema',start:0,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -405,19 +405,19 @@ function SpreadDbTest(){
         ],
         opt: {userId:'Administrator'},
       },{ // 3.自レコードのみの更新権限で自レコードを更新 ⇒ qSts='OK'
-        reset: {log:false,'ユーザ管理':true},
+        reset: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:10,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
       },{ // 4.自レコードのみの更新権限で自レコードを更新だが、where句を関数で指定 ⇒ qSts='Invalid where clause'
-        reset: {log:false,'ユーザ管理':true},
+        reset: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:()=>10,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
       },{ // 5.自レコードのみの更新権限で自レコードを更新だが、where句をオブジェクトで指定 ⇒ qSts='Invalid where clause'
-        reset: {log:false,'ユーザ管理':true},
+        reset: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:{userId:10},set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
       },{ // 6.自レコードのみの更新権限で自レコード以外を更新 ⇒ qSts='No Authority'
-        reset: {log:false,'ユーザ管理':true},
+        reset: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:11,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
       },{ // 7.存在しないテーブルでの更新 ⇒ No Table
@@ -428,6 +428,9 @@ function SpreadDbTest(){
     ],
     schema: [
       { // 0.正常系
+        reset: {'ユーザ管理':false,'損益計算書':false},
+        query: {command:'schema',table:'ユーザ管理'},
+        opt: {userId:'Administrator'},
       },{ // 1.該当テーブル無し ⇒ qSts='OK',num=0
       },{ // 2.権限付与してユーザが実行 ⇒ OK
       },{ // 3.権限付与せずユーザが実行 ⇒ No Authority
@@ -1141,14 +1144,21 @@ function SpreadDb(query=[],opt={}){
     dev.start(v.whois,[...arguments]);
     try {
 
-      dev.step(1); // 操作対象のテーブル管理情報を準備
-      if( !Object.hasOwn(pv.table,query.table) ){
-        dev.step(1.1); // 未作成なら作成
-        v.r = genTable(query);
-        if( v.r instanceof Error ) throw v.r;
+      dev.step(1);  // 事前準備
+      if( !query.table || typeof query.table !== 'string' ){
+        dev.step(1.1);  // 必須パラメータの存否・形式確認：query.table
+        query.qSts = 'Invalid Table specify';
+      } else if( !query.command ||  ['create','select','update','append','delete','schema'].includes(query.command) !== true ){
+        dev.step(1.2);  // 必須パラメータの存否・形式確認：query.command
+        query.qSts = 'Invalid Command specify';
       } else {
-        dev.step(1.2); // テーブル管理情報が存在しているがシートは不在の場合、create以外はエラー
-        if( query.command !== 'create' && pv.table[query.table].sheet === null ){
+        dev.step(1.3); // 操作対象のテーブル管理情報を準備
+        if( !Object.hasOwn(pv.table,query.table) ){
+          dev.step(1.4); // 未作成なら作成
+          v.r = genTable(query);
+          if( v.r instanceof Error ) throw v.r;
+        } else if( query.command !== 'create' && pv.table[query.table].sheet === null ){
+          dev.step(1.5); // テーブル管理情報が存在しているがシートは不在の場合、create以外はエラー
           query.qSts = 'No Table';
         }
       }
@@ -1635,29 +1645,28 @@ function SpreadDb(query=[],opt={}){
     }
   }
   /** getSchema: 指定テーブルの項目定義情報を取得
-   * @param {string|string[]} arg - 取得対象テーブル名
-   * @returns {Object.<string,sdbColumn[]>} {テーブル名：項目定義オブジェクトの配列}形式
+   * @param {sdbQuery} query
+   * @param {string} query.table - 取得対象テーブル名。テーブルと構造情報の対応を明確にするため、複数テーブル指定不可
+   * @returns {null|Error}
+   * 
+   * - sdbResult.pKeyは空欄、rStsはOK固定、diffにsdbColumnをセット
    */
-  function getSchema(arg){
+  function getSchema(query){
     const v = {whois:`${pv.whois}.getSchema`,step:0,rv:[]};
     dev.start(v.whois,[...arguments]);
     try {
 
-      dev.step(1.1); // 引数のデータ型チェック
-      if( !whichType(arg,'Object') || !Object.hasOwn(arg,'table') ){
-        throw new Error('引数にtableが含まれていません');
+      dev.step(1); // テーブル管理情報を項目毎にresult.diffにセット
+      v.cols = pv.table[query.table].schema.cols;
+      for( v.i=0 ; v.i<v.cols.length ; v.i++ ){
+        query.result.push({
+          rSts: 'OK',
+          diff: v.cols[v.i],
+        });
       }
-      dev.step(1.2); // 対象テーブル名の配列化
-      v.arg = typeof arg.table === 'string' ? [arg.table]: arg.table;
 
-      dev.step(2); // 戻り値の作成
-      for( v.i=0 ; v.i<v.arg.length ; v.i++ ){
-        if( !pv.table[v.arg[v.i]] ){  // 以前のcommandでテーブル管理情報が作られていない場合は作成
-          pv.table[v.arg[v.i]] = genTable({name:v.arg[v.i]});
-          if( pv.table[v.arg[v.i]] instanceof Error ) throw pv.table[v.arg[v.i]];
-        }
-        v.rv.push(pv.table[v.arg[v.i]]);
-      }
+      dev.step(2); // 項目数をnumにセット
+      query.num = query.result.length;
 
       dev.end(); // 終了処理
       return v.rv;
