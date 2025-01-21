@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'create',start:5,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'select',start:1,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -275,24 +275,25 @@ function SpreadDbTest(){
           {table:'掲示板',command:'select',where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"},
         ],
         opt: {userId:'Administrator'},
-      },{ // 1.ゲストに「掲示板」の読込を許可した場合
-        //reset: [], //['掲示板'],
+      },{ // 1.ゲストに「掲示板」の読込を許可 ⇒ qSts='OK'
         reset: {'掲示板':false},
-        query: [
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-        ],
+        query: {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
         opt: {guestAuth:{'掲示板':'r'}},  // userId指定無し(⇒ゲスト)でゲストに掲示板の読込権限付与
-      },{ // 2.ゲストに「掲示板」の読込を許可しなかった場合 ⇒ 「権限無し」エラー
+      },{ // 2.ゲストに「掲示板」の読込を不許可 ⇒ qSts='No Authority'
         reset: {'掲示板':false},
-        query: [
-          {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
-        ],
+        query: {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
+        // ゲストなので、ユーザID,権限指定は無し
+      },{ // 3.存在しないテーブルを指定 ⇒ qSts='No Table'
+        query: {table:'存在しないテーブル',command:'select',where:"o=>{return o.from=='パパ'}"},
         opt: {},  // ゲストなので、ユーザID,権限指定は無し
-      },{ // 3.存在しないテーブルを指定
-        query: [
-          {table:'存在しないテーブル',command:'select',where:"o=>{return o.from=='パパ'}"},
-        ],
-        opt: {},  // ゲストなので、ユーザID,権限指定は無し
+      },{ // 4.権限'o'で自レコード取得 ⇒ qSts='OK'
+        reset: {'ユーザ管理':false},
+        query: {table:'ユーザ管理',command:'select',where:10},
+        opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
+      },{ // 5.権限'o'で自レコード以外の取得 ⇒ qSts='No Authority'
+        reset: {'ユーザ管理':false},
+        query: {table:'ユーザ管理',command:'select',where:11},
+        opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
       }
     ],
     append: [
@@ -517,10 +518,9 @@ function SpreadDbTest(){
     for( v.idx=v.st ; v.idx<v.ed ; v.idx++ ){
 
       dev.step(2.1); // テスト用データをセット
-      if( whichType(scenario[v.scenario][v.idx].reset,'Object') ){
+      v.reset = scenario[v.scenario][v.idx].reset;
+      if( whichType(v.reset,'Object') ){
         v.reset.log = v.idx === v.st ? null : false;  // テスト開始時はlog削除、それ以外は追記にする
-      } else {
-        v.reset = scenario[v.scenario][v.idx].reset;
       }
       v.r = resetSheet(v.reset);
       if( v.r instanceof Error ) throw v.r;
