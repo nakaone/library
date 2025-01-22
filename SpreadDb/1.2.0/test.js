@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'append',start:7,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'append',start:0,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -301,8 +301,8 @@ function SpreadDbTest(){
         reset: {'AutoInc':false},
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},
-          {table:'AutoInc',command:'append',set:{'ラベル':'a02'}}, // 1レコードずつ一括
-          {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // setが配列
+          //{table:'AutoInc',command:'append',set:{'ラベル':'a02'}}, // 1レコードずつ一括
+          //{table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // setが配列
         ],
         opt: {userId:'Administrator'},
         // 以下について、シート上で確認のこと。
@@ -340,7 +340,7 @@ function SpreadDbTest(){
           {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // setが配列
         ],
         opt: {userId:'Administrator'},
-      },{ // 7.権限'o'のユーザが実行 ⇒ qSts='No Authority'  // いまここ
+      },{ // 7.権限'o'のユーザが実行 ⇒ qSts='No Authority'
         reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:'pikumin',userAuth:{AutoInc:'o'}},
@@ -1147,38 +1147,31 @@ function SpreadDb(query=[],opt={}){
           // ∵新規登録(append)はシステム管理者の判断が必要。また誤ってdeleteした場合はappendが必要なのでこれも不可
           // 'o'の場合、where句はuserId固定とする(Object,function,JSON他は不可)
 
-          dev.step(2.21); // where句の内容がopt.userIdと一致しているか確認
-          if( !isEqual(pv.opt.userId,query.where) ){
-            dev.step(2.211); // 形式不正の場合、要ソース修正なのでエラーオブジェクトを返す
-            if( typeof query.where === 'object' || typeof query.where === 'function' )
-              throw new Error('Invalid where clause');
-            dev.step(2.212); // 不一致の場合はqStsにエラーセット
-            query.qSts = 'No Authority';
-          } else {
-            dev.step(2.213);  // 操作対象レコードの絞り込み(検索・追加条件の変更)
-            if( query.command !== 'append' ){
-              dev.step(2.214); // select/update/deleteなら対象を自レコードに限定
-              query.where = pv.opt.userId;
-            } else {
-              dev.step(2.215); // appendの場合
-              v.pKey = pv.table[query.table].schema.primaryKey;
-              if( !v.pKey ){
-                dev.step(2.216); // 追加先テーブルにprimaryKeyが不在ならエラー
-                query.qSts = 'No PrimaryKey';
+          switch( query.command ){
+            case 'scheme':
+              dev.step(2.211);  // command=schema
+              v.isOK = true;
+              v.func = getSchema;
+              break;
+            case 'select':
+            case 'update':
+              dev.step(2.212);  // command=select/update
+              if( !isEqual(pv.opt.userId,query.where) ){
+                dev.step(2.213);  // where句はuserId固定、かつ要一致
+                // 非プリミティブ型なら指定方法がNG、プリミティブ型なら無権限と判断
+                query.qSts = ( typeof query.where === 'object' || typeof query.where === 'function' )
+                ? 'Invalid where clause' : 'No Authority';
+                v.isOK = false;
               } else {
-                dev.step(2.217); // 追加レコードの主キーはuserIdに変更
-                if( !Array.isArray(query.set) ) query.set = [query.set];
-                query.set.forEach(x => x[v.pKey] = pv.opt.userId);
+                dev.step(2.214);  // select/updateでプリミティブ型の値が一致しているならOKと判断
+                query.where = pv.opt.userId;
+                v.isOK = true;
               }
-            }
-
-            dev.step(2.217); // 'o'の場合の呼出先メソッドを設定
-            switch( query.command ){
-              case 'select': v.isOK = true; v.func = selectRow; break;
-              case 'update': v.isOK = true; v.func = updateRow; break;
-              case 'schema': v.isOK = true; v.func = getSchema; break;
-              default: v.isOK = false;
-            }
+              v.func = query.command === 'select' ? selectRow : updateRow;
+              break;
+            default:
+              dev.step(2.215);
+              v.isOK = false;
           }
 
         } else {
@@ -1765,7 +1758,7 @@ function SpreadDb(query=[],opt={}){
   }
   /** 関数・オブジェクトを文字列化 */
   function toString(arg){
-    if( typeof arg === 'function' ) return arg.toString();
+    if( typeof arg === 'function' ) return arg.toString().replaceAll(/\n/g,'');
     if( arg !== null && typeof arg === 'object' ) return JSON.stringify(arg);
     return arg;
   }
@@ -1946,15 +1939,26 @@ function devTools(option){
 
   /** start: 呼出元関数情報の登録＋開始メッセージの表示 */
   function start(name,arg=null){
-    seq++;
     const o = {
-      name:name,
-      seq: seq,
-      step: 0,
+      class    : '',  // nameがクラス名.メソッド名だった場合のクラス名
+      name     : name,
+      seq      : seq++,
+      step     : 0,
+      footprint: [],
+    };
+    if( name.includes('.') ){
+      let a = name.split('.');
+      o.class = a[0]; o.name = a[1];
     }
+    o.sSeq = ('000'+o.seq).slice(-4);
+    // 呼出元と同じクラスならクラス名は省略
+    const caller = stack.length === 0 ? null : stack[stack.length-1];
+    o.label = (o.class === '' || caller.class === o.class) ? `${o.sSeq}.${o.name}` : `${o.sSeq}.${o.class}.${o.name}`;
+    // seq＋nameでfootprintを作成
+    stack.forEach(x => o.footprint.push(`${x.sSeq}.${x.name}`));
+    o.footprint = o.footprint.join(' > ');
+
     stack.push(o);
-    o.label = `${('000'+seq).slice(-4)}.${o.name}`;
-    o.footprint = stack.map(x => x.name).join(' > ');
     if( opt.start && arg !== null ){
       msg = [];
       if( opt.arg ){
@@ -1976,6 +1980,7 @@ function devTools(option){
   /** error: 異常終了時の呼出元関数情報の抹消＋終了メッセージの表示 */
   function error(e){
     const o = stack.pop();
+    // 参考 : e.lineNumber, e.columnNumber, e.causeを試したが、いずれもundefined
     e.message = `${o.label} abnormal end at step.${o.step}\n${e.message}\nfootprint = ${o.footprint}`;
     console.error(e.message);
   }
@@ -2012,21 +2017,30 @@ function devTools(option){
     let indent = '  '.repeat(depth);
     switch( type ){
       case 'Object':
-        msg.push(`${indent}${label}(Object): {`);
-        for( let mn in arg ) recursive(arg[mn],depth+1,mn+': ');
+        msg.push(`${indent}${label.length>0?label+': ':''}{`);
+        for( let mn in arg ) recursive(arg[mn],depth+1,mn);
         msg.push(`${indent}}`);
         break;
       case 'Array':
-        msg.push(`${indent}${label}(Array): [`);
-        for( let i=0 ; i<arg.length ; i++ ) recursive(arg[i],depth+1,i+': ');
+        msg.push(`${indent}${label.length>0?label+': ':''}[`);
+        for( let i=0 ; i<arg.length ; i++ ) recursive(arg[i],depth+1,String(i));
         msg.push(`${indent}]`);
         break;
       default:
-        msg.push(`${indent}${label}${arg}(${type})`);
+        let val = toString(arg);
+        // Class Sheetのメソッドのように、toStringが効かないnative codeは出力しない
+        if( typeof val !== 'string' || val.indexOf('[native code]') < 0 ){
+          msg.push(`${indent}${label.length>0?label+': ':''}${val}(${type})`);
+        }
     }
   }
+  /** 関数・オブジェクトを文字列化 */
+  function toString(arg){
+    if( typeof arg === 'function' ) return arg.toString();
+    if( arg !== null && typeof arg === 'object' ) return JSON.stringify(arg);
+    return arg;
+  }
 }
-
 /** 二つの引数が同値か判断する
  * @param {any} v1 - 変数1
  * @param {any} v2 - 変数2
