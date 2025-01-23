@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'delete',start:0,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'create',start:0,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -234,13 +234,20 @@ function SpreadDbTest(){
       { // 0.正常系
         reset: null, // 全シート強制削除
         query: [
-          {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
           {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
-          {command:'create',table:'損益計算書',set:src['損益計算書'].set},  // 「損益計算書」シート作成
-          {command:'create',table:'掲示板',set:src['掲示板'].set},  // 「掲示板」シート作成
           {command:'create',table:'AutoInc',cols:src['AutoInc'].cols,set:src['AutoInc'].set},  // 「AutoInc」シート作成
+          {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
+          {command:'create',table:'掲示板',set:src['掲示板'].set},  // 「掲示板」シート作成
+          {command:'create',table:'損益計算書',set:src['損益計算書'].set},  // 「損益計算書」シート作成
         ],
         opt: {userId:'Administrator'},
+        check: [
+          {"table": "ユーザ管理",qSts:'OK',num:0},
+          {"table": "AutoInc",qSts:'OK',num:2},
+          {"table": "camp2024",qSts:'OK',num:11},
+          {"table": "掲示板",qSts:'OK',num:55},
+          {"table": "損益計算書",qSts:'OK',num:72},
+        ],
       },{ // 1.初期値のunique項目で重複値が存在 ⇒ qSts='OK', result[1].rSts='Duplicate'
         reset: null,
         query: {command:'create',table:'Duplicate',cols:src['Duplicate'].cols,set:src['Duplicate'].set},
@@ -540,16 +547,14 @@ function SpreadDbTest(){
       if( v.r instanceof Error ) throw v.r;
 
       dev.step(3.2); // scenarioからqueryとoptをセット
-      v.r = SpreadDb(
-        scenario[v.scenario][v.idx].query,
-        scenario[v.scenario][v.idx].opt
-      );
-      // エラーでも後続テストは続行
-
-      dev.step(3.3); // テスト結果(サマリ)の表示
-      v.msg = `===== ${v.whois} end: scenario=${v.scenario}.${v.idx}\n`
-      + ( v.r instanceof Error ? v.r.message : JSON.stringify(v.r,null,2));
-      console.log(v.msg);
+      dev.check({
+        rv:SpreadDb(
+          scenario[v.scenario][v.idx].query,
+          scenario[v.scenario][v.idx].opt
+        ),
+        check:(scenario[v.scenario][v.idx].check||undefined),
+        msg: `===== ${v.whois} end: scenario=${v.scenario}.${v.idx}\n`
+      });
     }
 
   } catch(e) {
@@ -1812,7 +1817,7 @@ function SpreadDb(query=[],opt={}){
         }
 
         dev.step(1.4); // 更新履歴記録用に文字列化
-        query.arg = `{where:${query.data.where},set:${query.data.set}}`;
+        query.arg = JSON.stringify(query.arg);
 
         dev.step(1.5); // 配列a1がa2の部分集合かどうかを判断する関数を用意
         // 更新対象項目がテーブルの項目名リストに全て入っているかの判断で使用(step.3.2)
@@ -1939,11 +1944,17 @@ const dev = devTools({step:true});
  * @param {boolean} opt.arg=true - 引数を表示
  * @param {boolean} opt.step=false - step毎の進捗ログの出力
  */
+/** devTools: 開発支援関係メソッド集
+ * @param {Object} option
+ * @param {boolean} option.start=true - 開始・終了メッセージの表示
+ * @param {boolean} option.arg=true - 引数を表示
+ * @param {boolean} option.step=false - step毎の進捗ログの出力
+ */
 function devTools(option){
   let opt = Object.assign({start:true,arg:true,step:false},option);
   let seq = 0;  // 関数の呼出順
   let stack = []; // 呼出元関数情報のスタック
-  return {start:start,end:end,error:error,step:step,dump:dump};
+  return {start:start,end:end,error:error,step:step,dump:dump,check:check};
 
   /** start: 呼出元関数情報の登録＋開始メッセージの表示
    * @param {string} name - 関数名
@@ -1966,12 +1977,11 @@ function devTools(option){
     o.label = `[${o.sSeq}]` + ( (o.class === '' || caller.class === o.class) ? '' : `${o.class}.` ) + o.name;
     // footprintの作成
     stack.forEach(x => o.footprint.push(`${x.label}.${x.step}`));
-    o.footprint = o.footprint.join(' > ');
+    o.footprint = o.footprint.length === 0 ? '(root)' : o.footprint.join(' > ');
     // 引数情報の作成
     if( arg !== null ){
-      recursive(o.arg,arg);
-      //arg.forEach(x => recursive(o.arg,x));
-      o.arg = o.arg.join('\n');
+      recursiveDump(o.arg,arg);
+      o.arg = o.arg.length === 0 ? '(void)' : o.arg.join('\n');
     }
     // 作成した呼出元関数情報を保存
     stack.push(o);
@@ -2005,7 +2015,7 @@ function devTools(option){
     if( opt.step ) console.log(`${o.label} step.${o.step} ${msg}`);
   }
 
-  /** dump: 渡された変数の内容を表示
+  /** dump: 渡された変数の内容をコンソールに表示
    * @param {any|any[]} arg - 表示する変数。複数の場合は配列で指定
    * @param {number} line=null - 行番号
    * @returns {void}
@@ -2014,16 +2024,16 @@ function devTools(option){
     const o = stack[stack.length-1];
     if( !Array.isArray(arg) ) arg = [arg];
     msg = [(line === null ? '' : `l.${line} `) + `${o.label} step.${o.step} : `];
-    arg.forEach(x => recursive(msg,x));
+    arg.forEach(x => recursiveDump(msg,x));
     console.log(msg.join('\n'));
   }
-  /** recursive: 変数の内容を再帰的にメッセージ化
+  /** recursiveDump: 変数の内容を再帰的にメッセージ化
    * @param {string[]} msg - メッセージを保存する領域
    * @param {any} arg - 内容を表示する変数
    * @param {number} depth=0 - 階層の深さ 
    * @param {string} label - メンバ名または添字
    */
-  function recursive(msg,arg,depth=0,label=''){
+  function recursiveDump(msg,arg,depth=0,label=''){
     // データ型の判定
     let type = String(Object.prototype.toString.call(arg).slice(8,-1));
     switch(type){
@@ -2035,12 +2045,12 @@ function devTools(option){
     switch( type ){
       case 'Object':
         msg.push(`${indent}${label.length>0?label+': ':''}{`);
-        for( let mn in arg ) recursive(msg,arg[mn],depth+1,mn);
+        for( let mn in arg ) recursiveDump(msg,arg[mn],depth+1,mn);
         msg.push(`${indent}}`);
         break;
       case 'Array':
         msg.push(`${indent}${label.length>0?label+': ':''}[`);
-        for( let i=0 ; i<arg.length ; i++ ) recursive(msg,arg[i],depth+1,String(i));
+        for( let i=0 ; i<arg.length ; i++ ) recursiveDump(msg,arg[i],depth+1,String(i));
         msg.push(`${indent}]`);
         break;
       default:
@@ -2056,6 +2066,76 @@ function devTools(option){
     if( typeof arg === 'function' ) return arg.toString();
     if( arg !== null && typeof arg === 'object' ) return JSON.stringify(arg);
     return arg;
+  }
+  /** 実行結果の確認
+   * @param {Object} arg
+   * @param {any} arg.rv - 実行結果
+   * @param {any} arg.check - 確認すべきポイント(Check Point)。エラーの場合、エラーオブジェクトを渡す
+   * @param {string} arg.msg='' - 結果の前に表示するメッセージ
+   * @param {Object} [arg.opt] - isEqualに渡すオプション
+   * @returns {void}
+   */
+  function check(arg={}){
+    const recursiveCheck = (src,des,depth=0,label='') => {
+      let rv = true;
+      // データ型の判定
+      let type = String(Object.prototype.toString.call(des).slice(8,-1));
+      switch(type){
+        case 'Number': if(Number.isNaN(des)) type = 'NaN'; break;
+        case 'Function': if(!('prototype' in des)) type = 'Arrow'; break;
+      }
+      switch( type ){
+        case 'Object':
+          for( let mn in des ){
+            if( !Object.hasOwn(src,mn) ) return false; // 該当要素が不在
+            rv = recursiveCheck(src[mn],des[mn],depth+1,mn);
+            if( rv === false ) return false;  // 途中の要素で不一致ならfalse
+          }
+          break;
+        case 'Array':
+          for( let i=0 ; i<des.length ; i++ ){
+            if( src[i] === undefined && des[i] !== undefined ) return false; // 該当要素が不在
+            rv = recursiveCheck(src[i],des[i],depth+1,String(i));
+            if( rv === false ) return false;  // 途中の要素で不一致ならfalse
+          }
+          break;
+        default:
+          if( des === undefined ){
+            rv = true;
+          } else {
+            rv = isEqual(src,des,opt);
+            msg.push(`${'  '.repeat(depth)}${label.length>0?label+': ':''}${src} = ${des} -> ${rv}`);
+          }
+      }
+      return rv;
+    };
+
+    // 主処理
+    let msg = [];
+    let isOK = true;  // チェックOKならtrue
+
+    arg = Object.assign({msg:'',opt:{}},arg);
+    if( arg.check === undefined ){
+      // check未指定の場合、チェック省略、結果表示のみ
+      msg.push('????? devTool.check : No check');
+    } else {
+      // arg.rvとarg.checkのデータ型が異なる場合、またはrecursiveCheckで不一致が有った場合はエラーと判断
+      if ( String(Object.prototype.toString.call(arg.rv).slice(8,-1))
+        !== String(Object.prototype.toString.call(arg.check).slice(8,-1))
+        || recursiveCheck(arg.rv,arg.check,arg.opt) === false
+      ){
+        isOK = false;
+        msg.unshift('!!!!! devTool.check Error:');
+      } else {
+        msg.unshift('===== devTool.check OK:');
+      }      
+    }
+
+    // 引数として渡されたmsgおよび結果(JSON)を追記後、コンソールに表示
+    msg.push(arg.msg === '' ? '' : `\n${arg.msg}`);
+    msg.push(JSON.stringify(arg.rv,(k,v)=>typeof v==='function'?v.toString():v,2));
+    msg = msg.join('\n');
+    if( isOK ) console.log(msg); else console.error(msg);
   }
 }
 /** 二つの引数が同値か判断する
