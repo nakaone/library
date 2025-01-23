@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'append',start:7,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'append',start:7,num:0,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -298,7 +298,7 @@ function SpreadDbTest(){
     ],
     append: [
       { // 0.正常系
-        reset: {'AutoInc':false},
+        reset: {'AutoInc':true},
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},
           {table:'AutoInc',command:'append',set:{'ラベル':'a02'}}, // 1レコードずつ一括
@@ -309,7 +309,7 @@ function SpreadDbTest(){
         // auto_increment指定の確認 : ぬる・真・偽・配列①・配列②・obj
         // default指定の確認 : def関数
       },{ // 1."unique=true"項目「ラベル」に重複値を指定して追加 ⇒ Duplicate
-        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},  // qSts='OK', rSts[0]='OK'
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},  // qSts='OK', rSts[0]='Duplicate'
@@ -317,21 +317,21 @@ function SpreadDbTest(){
         ],
         opt: {userId:'Administrator'},
       },{ // 2.権限付与してゲストが実行 ⇒ qSts='OK',rSts=[OK,OK]
-        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {guestAuth:{AutoInc:'w'}},
       },{ // 3.権限付与せずゲストが実行 ⇒ qSts='No Authority'
-        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {guestAuth:{AutoInc:'r'}},
       },{ // 4.権限付与してユーザが実行 ⇒ qSts='OK',rSts=[OK,OK]
-        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
-        opt: {userId:'pikumin',userAuth:{AutoInc:'w'}},
+        opt: {userId:10,userAuth:{AutoInc:'w'}},
       },{ // 5.権限付与せずユーザが実行 ⇒ qSts='No Authority'
-        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
-        opt: {userId:'pikumin',userAuth:{AutoInc:'r'}},
+        opt: {userId:10,userAuth:{AutoInc:'r'}},
       },{ // 6.存在しないテーブルへの追加 ⇒ qSts=['No Table','No Table','No Table']
         reset: {'AutoInc':null},  // AutoIncは強制削除
         query: [
@@ -341,9 +341,9 @@ function SpreadDbTest(){
         ],
         opt: {userId:'Administrator'},
       },{ // 7.権限'o'のユーザが実行 ⇒ qSts='No Authority'
-        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
-        opt: {userId:'pikumin',userAuth:{AutoInc:'o'}},
+        opt: {userId:10,userAuth:{AutoInc:'o'}},
       },
     ],
     delete: [
@@ -367,14 +367,18 @@ function SpreadDbTest(){
       },{ // 2.権限付与してユーザが実行 ⇒ OK
         reset: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
-        opt: {userId:'pikumin',userAuth:{AutoInc:'d'}},
+        opt: {userId:10,userAuth:{AutoInc:'d'}},
       },{ // 3.権限付与せずユーザが実行 ⇒ No Authority
         reset: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
-        opt: {userId:'pikumin',userAuth:{AutoInc:'r'}},
+        opt: {userId:10,userAuth:{AutoInc:'r'}},
       },{ // 4.存在しないテーブルでの削除 ⇒ No Table
         query: {table:'不在テーブル',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:'Administrator'},
+      },{ // 5.権限'o'のユーザが実行 ⇒ qSts='No Authority'
+        reset: {'AutoInc':true},
+        query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
+        opt: {userId:10,userAuth:{AutoInc:'o'}},
       },
     ],
     update: [
@@ -503,25 +507,31 @@ function SpreadDbTest(){
   };
   try {
 
-    dev.step(1); // v.scenarioで指定されたテスト群について、v.startからv.num個分を実行
+    dev.step(1);  // scenario='reset'なら初期化のみ実行
+    if( v.scenario === 'reset' ){
+      resetSheet(null);
+      return null;
+    }
+
+    dev.step(2); // v.scenarioで指定されたテスト群について、v.startからv.num個分を実行
     if( v.num < 0 ){
-      dev.step(1.1); // 指定テスト群の後ろからv.num個
+      dev.step(2.1); // 指定テスト群の後ろからv.num個
       v.st = scenario[v.scenario].length + v.num;
       v.ed = scenario[v.scenario].length;
     } else if( v.num === 0 ){
-      dev.step(1.2); // 指定テスト群全部実行
+      dev.step(2.2); // 指定テスト群全部実行
       v.st = v.start;
       v.ed = scenario[v.scenario].length;
     } else {
-      dev.step(1.3); // v.startからv.num個
+      dev.step(2.3); // v.startからv.num個
       v.st = v.start;
       v.ed = v.start + v.num;
     }
 
-    dev.step(2);
+    dev.step(3);
     for( v.idx=v.st ; v.idx<v.ed ; v.idx++ ){
 
-      dev.step(2.1); // テスト用データをセット
+      dev.step(3.1); // テスト用データをセット
       v.reset = scenario[v.scenario][v.idx].reset;
       if( whichType(v.reset,'Object') ){
         v.reset.log = v.idx === v.st ? null : false;  // テスト開始時はlog削除、それ以外は追記にする
@@ -529,14 +539,14 @@ function SpreadDbTest(){
       v.r = resetSheet(v.reset);
       if( v.r instanceof Error ) throw v.r;
 
-      dev.step(2.2); // scenarioからqueryとoptをセット
+      dev.step(3.2); // scenarioからqueryとoptをセット
       v.r = SpreadDb(
         scenario[v.scenario][v.idx].query,
         scenario[v.scenario][v.idx].opt
       );
       // エラーでも後続テストは続行
 
-      dev.step(2.3); // テスト結果(サマリ)の表示
+      dev.step(3.3); // テスト結果(サマリ)の表示
       v.msg = `===== ${v.whois} end: scenario=${v.scenario}.${v.idx}\n`
       + ( v.r instanceof Error ? v.r.message : JSON.stringify(v.r,null,2));
       console.log(v.msg);
@@ -1310,7 +1320,7 @@ function SpreadDb(query=[],opt={}){
           }
           break;
         case 'string': dev.step(4);
-          v.fx = arg.data.match(/^function\s*\(([\w\s,]*)\)\s*\{([\s\S]*?)\}$/); // function(){〜}
+          v.fx = arg.data.match(/^function\s*\w*\s*\(([\w\s,]*)\)\s*\{([\s\S]*?)\}$/); // function(){〜}
           v.ax = arg.data.match(/^\(?([\w\s,]*?)\)?\s*=>\s*\{?(.+?)\}?$/); // arrow関数
           if( v.fx || v.ax ){
             dev.step(4.1); // function文字列
@@ -1341,7 +1351,7 @@ function SpreadDb(query=[],opt={}){
   }
   /** genColumn: sdbColumnオブジェクトを生成
    * @param arg {sdbColumn|string} - 項目定義オブジェクト、または項目定義メモまたは項目名
-   * @returns {sdbColumn|Error}
+   * @returns {Object|Error}
    *
    * - auto_incrementの記載ルール
    *   - null ⇒ 自動採番しない
@@ -1354,10 +1364,7 @@ function SpreadDb(query=[],opt={}){
    *   - note {string[]} メモ用の文字列
    */
   function genColumn(arg={}){
-    const v = {whois:`${pv.whois}.genColumn`,step:0,rv:{},
-      typedef:pv.opt.sdbColumn,
-      rex: /\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, // コメント削除の正規表現
-    };
+    const v = {whois:`${pv.whois}.genColumn`,step:0,rv:{}};
     dev.start(v.whois,[...arguments]);
     try {
 
@@ -1370,15 +1377,11 @@ function SpreadDb(query=[],opt={}){
         v.rv.note = {};
       } else {  // 文字列で与えられたらオブジェクトに変換
 
-        dev.step(1.2); // コメントの削除、一行毎に分割
-        v.lines = arg.replace(v.rex,'').split('\n');
+        dev.step(1.2); // コメントの削除
+        arg = arg.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm,'');
 
-        dev.step(1.3); // 一行毎に属性の表記かを判定
-        v.rv.column = {};
-        v.lines.forEach(prop => {
-          v.m = prop.trim().match(/^["']?(.+?)["']?\s*:\s*["']?(.+?)["']?$/);
-          if( v.m ) v.rv.column[v.m[1]] = v.m[2];
-        });
+        dev.step(1.3);  // オブジェクト化
+        v.rv.column = JSON.parse(arg);
 
         dev.step(1.4);
         if( Object.keys(v.rv.column).length === 0 ){
@@ -1440,13 +1443,20 @@ function SpreadDb(query=[],opt={}){
       dev.step(3); // シートのメモに記載する文字列を作成
       // ------------------------------------------------
       if( typeof v.rv.note === 'object' ){
+        // 元々シート上にメモが存在していた場合、step.1.4でオリジナルが保存されているので'string'
+        /*
         v.x = [];
-        v.typedef.map(x => x.name).forEach(x => {
+        pv.opt.sdbColumn.map(x => x.name).forEach(x => {
           if( Object.hasOwn(v.rv.note,x) ){
-            v.x.push(`${x}: "${v.rv.note[x]}"`);
+            v.val = toString(v.rv.note[x]);
+            if( typeof v.rv.note[x] === 'string' || typeof v.rv.note[x] === 'function' )
+              v.val = `"${v.val}"`;
+            v.x.push(`"${x}": ${v.val}`);
           }
         });
         v.rv.note = v.x.join('\n');
+        */
+        v.rv.note = JSON.stringify(v.rv.note,(k,v)=>typeof v==='function'?v.toString():v,2);
       }
 
       dev.end(); // 終了処理
@@ -1923,7 +1933,6 @@ function SpreadDb(query=[],opt={}){
     }
   }
 }
-
 const dev = devTools({step:true});
 /** オプション指定用オブジェクト
  * @param {boolean} opt.start=true - 開始・終了メッセージの表示
@@ -1934,8 +1943,7 @@ function devTools(option){
   let opt = Object.assign({start:true,arg:true,step:false},option);
   let seq = 0;  // 関数の呼出順
   let stack = []; // 呼出元関数情報のスタック
-  let msg = []; // logでstringify作成時に使用するワーク
-  return {start:start,end:end,error:error,step:step,log:log};
+  return {start:start,end:end,error:error,step:step,dump:dump};
 
   /** start: 呼出元関数情報の登録＋開始メッセージの表示
    * @param {string} name - 関数名
@@ -1961,7 +1969,8 @@ function devTools(option){
     o.footprint = o.footprint.join(' > ');
     // 引数情報の作成
     if( arg !== null ){
-      arg.forEach(x => recursive(o.arg,x));
+      recursive(o.arg,arg);
+      //arg.forEach(x => recursive(o.arg,x));
       o.arg = o.arg.join('\n');
     }
     // 作成した呼出元関数情報を保存
@@ -1982,10 +1991,11 @@ function devTools(option){
   function error(e){
     const o = stack.pop();
     // 参考 : e.lineNumber, e.columnNumber, e.causeを試したが、いずれもundefined
-    e.message = `${o.label} abnormal end at step.${o.step}\n${e.message}`
-    + `\n-- footprint\n${o.footprint}`
-    + `\n-- arguments\n${o.arg}`;
-    console.error(e.message);
+    e.message = `${o.label} abnormal end at step.${o.step}\n${e.message}`;
+    console.error(e.message
+      + `\n-- footprint\n${o.footprint}`
+      + `\n-- arguments\n${o.arg}`
+    );
   }
 
   /** step: 呼出元関数の進捗状況の登録＋メッセージの表示 */
@@ -1995,12 +2005,12 @@ function devTools(option){
     if( opt.step ) console.log(`${o.label} step.${o.step} ${msg}`);
   }
 
-  /** log: 渡された変数の内容を表示
+  /** dump: 渡された変数の内容を表示
    * @param {any|any[]} arg - 表示する変数。複数の場合は配列で指定
    * @param {number} line=null - 行番号
    * @returns {void}
    */
-  function log(arg,line=null){
+  function dump(arg,line=null){
     const o = stack[stack.length-1];
     if( !Array.isArray(arg) ) arg = [arg];
     msg = [(line === null ? '' : `l.${line} `) + `${o.label} step.${o.step} : `];
