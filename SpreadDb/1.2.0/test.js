@@ -1385,18 +1385,15 @@ function SpreadDb(query=[],opt={}){
         dev.step(1.2); // コメントの削除
         arg = arg.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm,'');
 
-        dev.step(1.3);  // オブジェクト化
+        dev.step(1.3);
         // JSON文字列ならparse、それ以外はname属性と判断
         v.r = (arg=>{try{return JSON.parse(arg)}catch{return null}})(arg);
-        v.rv.column = v.r ? v.r : {name:arg};
-
-        dev.step(1.4);
-        if( Object.keys(v.rv.column).length === 0 ){
-          // 属性項目が無ければ項目名と看做す
-          v.rv.column = {name:arg.trim()};
-          v.rv.note = {};
+        if( v.r === null ){
+          // JSON文字列ではない場合、項目名と看做す
+          v.rv.column = v.rv.note = {name:arg.trim()};
         } else {
-          // 属性項目があればシート上のメモの文字列と看做す
+          // JSON文字列ならオブジェクト化
+          v.rv.column = v.r;
           v.rv.note = arg;  // コメントを削除しないよう、オリジナルを適用
         }
       }
@@ -1413,11 +1410,13 @@ function SpreadDb(query=[],opt={}){
           v.rv.column[x] = v.map[v.rv.column[x]];
         }
 
+        /*
         dev.step(2.12); // メモ文字列を作成する場合(=引数がメモ文字列では無かった場合)
         // かつ属性値が未定義(null)ではない場合、v.rv.columnにもメモ作成用の属性値をセット
         if( whichType(v.rv.note,'Object') && v.rv.column[x] !== null ){
           v.rv.note[x] = v.rv.column[x];
         }
+        */
       });
 
       dev.step(2.2); // defaultを関数に変換
