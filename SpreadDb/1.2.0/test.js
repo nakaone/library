@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'append',start:0,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'append',start:7,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -301,8 +301,8 @@ function SpreadDbTest(){
         reset: {'AutoInc':false},
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},
-          //{table:'AutoInc',command:'append',set:{'ラベル':'a02'}}, // 1レコードずつ一括
-          //{table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // setが配列
+          {table:'AutoInc',command:'append',set:{'ラベル':'a02'}}, // 1レコードずつ一括
+          {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // setが配列
         ],
         opt: {userId:'Administrator'},
         // 以下について、シート上で確認のこと。
@@ -1937,7 +1937,10 @@ function devTools(option){
   let msg = []; // logでstringify作成時に使用するワーク
   return {start:start,end:end,error:error,step:step,log:log};
 
-  /** start: 呼出元関数情報の登録＋開始メッセージの表示 */
+  /** start: 呼出元関数情報の登録＋開始メッセージの表示
+   * @param {string} name - 関数名
+   * @param {any[]} arg - start呼出元関数に渡された引数([...arguments]固定)
+   */
   function start(name,arg=null){
     const o = {
       class    : '',  // nameがクラス名.メソッド名だった場合のクラス名
@@ -1945,43 +1948,43 @@ function devTools(option){
       seq      : seq++,
       step     : 0,
       footprint: [],
+      arg      : [],
     };
-    if( name.includes('.') ){
-      let a = name.split('.');
-      o.class = a[0]; o.name = a[1];
-    }
     o.sSeq = ('000'+o.seq).slice(-4);
-    // 呼出元と同じクラスならクラス名は省略
-    const caller = stack.length === 0 ? null : stack[stack.length-1];
-    o.label = (o.class === '' || caller.class === o.class) ? `${o.sSeq}.${o.name}` : `${o.sSeq}.${o.class}.${o.name}`;
-    // seq＋nameでfootprintを作成
-    stack.forEach(x => o.footprint.push(`${x.sSeq}.${x.name}`));
+    const caller = stack.length === 0 ? null : stack[stack.length-1]; // 呼出元
+    // nameがクラス名.メソッド名だった場合、クラス名をセット
+    if( name.includes('.') ) [o.class,o.name] = name.split('.');
+    // ラベル作成。呼出元と同じクラスならクラス名は省略
+    o.label = `[${o.sSeq}]` + ( (o.class === '' || caller.class === o.class) ? '' : `${o.class}.` ) + o.name;
+    // footprintの作成
+    stack.forEach(x => o.footprint.push(`${x.label}.${x.step}`));
     o.footprint = o.footprint.join(' > ');
-
+    // 引数情報の作成
+    if( arg !== null ){
+      arg.forEach(x => recursive(o.arg,x));
+      o.arg = o.arg.join('\n');
+    }
+    // 作成した呼出元関数情報を保存
     stack.push(o);
-    if( opt.start && arg !== null ){
-      msg = [];
-      if( opt.arg ){
-        arg.forEach(x => recursive(x));
-        msg[0] = `\n-- arguments -----\n${msg[0]}`;
-      }
-      console.log(`${o.label} start (${o.footprint})${msg.join('\n')}`);
+
+    if( opt.start ){  // 開始メッセージの表示指定が有った場合
+      console.log(`${o.label} start.\n-- footprint\n${o.footprint}` + (opt.arg ? `\n-- arguments\n${o.arg}` : ''));
     }
   }
 
   /** end: 正常終了時の呼出元関数情報の抹消＋終了メッセージの表示 */
   function end(){
     const o = stack.pop();
-    if( opt.start ){
-      console.log(`${o.label} normal end (${o.footprint})`);
-    }
+    if( opt.start ) console.log(`${o.label} normal end.`);
   }
 
   /** error: 異常終了時の呼出元関数情報の抹消＋終了メッセージの表示 */
   function error(e){
     const o = stack.pop();
     // 参考 : e.lineNumber, e.columnNumber, e.causeを試したが、いずれもundefined
-    e.message = `${o.label} abnormal end at step.${o.step}\n${e.message}\nfootprint = ${o.footprint}`;
+    e.message = `${o.label} abnormal end at step.${o.step}\n${e.message}`
+    + `\n-- footprint\n${o.footprint}`
+    + `\n-- arguments\n${o.arg}`;
     console.error(e.message);
   }
 
@@ -1989,9 +1992,7 @@ function devTools(option){
   function step(step,msg=''){
     const o = stack[stack.length-1];
     o.step = step;
-    if( opt.step ){
-      console.log(`${o.label} step.${o.step} ${msg}`)
-    }
+    if( opt.step ) console.log(`${o.label} step.${o.step} ${msg}`);
   }
 
   /** log: 渡された変数の内容を表示
@@ -2003,10 +2004,16 @@ function devTools(option){
     const o = stack[stack.length-1];
     if( !Array.isArray(arg) ) arg = [arg];
     msg = [(line === null ? '' : `l.${line} `) + `${o.label} step.${o.step} : `];
-    arg.forEach(x => recursive(x));
+    arg.forEach(x => recursive(msg,x));
     console.log(msg.join('\n'));
   }
-  function recursive(arg,depth=0,label=''){
+  /** recursive: 変数の内容を再帰的にメッセージ化
+   * @param {string[]} msg - メッセージを保存する領域
+   * @param {any} arg - 内容を表示する変数
+   * @param {number} depth=0 - 階層の深さ 
+   * @param {string} label - メンバ名または添字
+   */
+  function recursive(msg,arg,depth=0,label=''){
     // データ型の判定
     let type = String(Object.prototype.toString.call(arg).slice(8,-1));
     switch(type){
@@ -2018,12 +2025,12 @@ function devTools(option){
     switch( type ){
       case 'Object':
         msg.push(`${indent}${label.length>0?label+': ':''}{`);
-        for( let mn in arg ) recursive(arg[mn],depth+1,mn);
+        for( let mn in arg ) recursive(msg,arg[mn],depth+1,mn);
         msg.push(`${indent}}`);
         break;
       case 'Array':
         msg.push(`${indent}${label.length>0?label+': ':''}[`);
-        for( let i=0 ; i<arg.length ; i++ ) recursive(arg[i],depth+1,String(i));
+        for( let i=0 ; i<arg.length ; i++ ) recursive(msg,arg[i],depth+1,String(i));
         msg.push(`${indent}]`);
         break;
       default:
