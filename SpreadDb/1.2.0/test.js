@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'append',start:7,num:0,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'delete',start:0,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -364,18 +364,18 @@ function SpreadDbTest(){
           {table:'AutoInc',command:'delete',where:99},  // where = any(pKey)
         ],
         opt: {userId:'Administrator'},
-      },{ // 2.権限付与してユーザが実行 ⇒ OK
+      },{ // 2.権限付与してユーザが実行 ⇒ qSts='OK', num=1, rSts=['OK']
         reset: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:10,userAuth:{AutoInc:'d'}},
-      },{ // 3.権限付与せずユーザが実行 ⇒ No Authority
+      },{ // 3.権限付与せずユーザが実行 ⇒ qSts='No Authority', num=0
         reset: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:10,userAuth:{AutoInc:'r'}},
-      },{ // 4.存在しないテーブルでの削除 ⇒ No Table
+      },{ // 4.存在しないテーブルでの削除 ⇒ qSts='No Table', num=0
         query: {table:'不在テーブル',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:'Administrator'},
-      },{ // 5.権限'o'のユーザが実行 ⇒ qSts='No Authority'
+      },{ // 5.権限'o'のユーザが実行 ⇒ qSts='No Authority', num=0
         reset: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:10,userAuth:{AutoInc:'o'}},
