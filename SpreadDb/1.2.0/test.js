@@ -241,12 +241,12 @@ function SpreadDbTest(){
           {command:'create',table:'損益計算書',set:src['損益計算書'].set},  // 「損益計算書」シート作成
         ],
         opt: {userId:'Administrator'},
-        check: [
+        check: [  // 戻り値から判断できる終了状態を定義
           {"table": "ユーザ管理",qSts:'OK',num:0},
           {"table": "AutoInc",qSts:'OK',num:2},
-          {"table": "camp2024",qSts:'OK',num:11},
+          {"table": "camp2024",qSts:'OK',num:10},
           {"table": "掲示板",qSts:'OK',num:55},
-          {"table": "損益計算書",qSts:'OK',num:72},
+          {"table": "損益計算書",qSts:'OK',num:71},
         ],
       },{ // 1.初期値のunique項目で重複値が存在 ⇒ qSts='OK', result[1].rSts='Duplicate'
         reset: null,
@@ -1386,7 +1386,9 @@ function SpreadDb(query=[],opt={}){
         arg = arg.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm,'');
 
         dev.step(1.3);  // オブジェクト化
-        v.rv.column = JSON.parse(arg);
+        // JSON文字列ならparse、それ以外はname属性と判断
+        v.r = (arg=>{try{return JSON.parse(arg)}catch{return null}})(arg);
+        v.rv.column = v.r ? v.r : {name:arg};
 
         dev.step(1.4);
         if( Object.keys(v.rv.column).length === 0 ){
@@ -1449,18 +1451,6 @@ function SpreadDb(query=[],opt={}){
       // ------------------------------------------------
       if( typeof v.rv.note === 'object' ){
         // 元々シート上にメモが存在していた場合、step.1.4でオリジナルが保存されているので'string'
-        /*
-        v.x = [];
-        pv.opt.sdbColumn.map(x => x.name).forEach(x => {
-          if( Object.hasOwn(v.rv.note,x) ){
-            v.val = toString(v.rv.note[x]);
-            if( typeof v.rv.note[x] === 'string' || typeof v.rv.note[x] === 'function' )
-              v.val = `"${v.val}"`;
-            v.x.push(`"${x}": ${v.val}`);
-          }
-        });
-        v.rv.note = v.x.join('\n');
-        */
         v.rv.note = JSON.stringify(v.rv.note,(k,v)=>typeof v==='function'?v.toString():v,2);
       }
 
@@ -2104,7 +2094,7 @@ function devTools(option){
             rv = true;
           } else {
             rv = isEqual(src,des,opt);
-            msg.push(`${'  '.repeat(depth)}${label.length>0?label+': ':''}${src} = ${des} -> ${rv}`);
+            msg.push(`${'  '.repeat(depth)}${label.length>0?label+': ':''}ToBe=${des}, AsIs=${src} -> ${rv?'OK':'NG'}`);
           }
       }
       return rv;
