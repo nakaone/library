@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'create',start:1,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'create',start:2,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -252,7 +252,7 @@ function SpreadDbTest(){
         reset: null,
         query: {command:'create',table:'Duplicate',cols:src['Duplicate'].cols,set:src['Duplicate'].set},
         opt: {userId:'Administrator'},
-        check: [  // 戻り値から判断できる終了状態を定義
+        check: [
           {"table": "Duplicate",qSts:'OK',num:1,result:[{rSts:'OK'},{rSts:'Duplicate'}]},
         ],
       },{ // 2.既存シートの新規作成指示 ⇒ qSts[0]='OK', qSts[1]='Already Exist'
@@ -262,6 +262,10 @@ function SpreadDbTest(){
           {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
         ],
         opt: {userId:'Administrator'},
+        check: [
+          {"table": "camp2024",qSts:'OK',num:10},
+          {"table": "camp2024",qSts:'Already Exist',num:0},
+        ],
       },{ // 3.colsもsetも指定無し ⇒ qSts='No Cols and Data'
         reset: null,
         query: {command:'create',table:'Duplicate'},
