@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'create',start:2,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'create',start:5,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -252,9 +252,7 @@ function SpreadDbTest(){
         reset: null,
         query: {command:'create',table:'Duplicate',cols:src['Duplicate'].cols,set:src['Duplicate'].set},
         opt: {userId:'Administrator'},
-        check: [
-          {"table": "Duplicate",qSts:'OK',num:1,result:[{rSts:'OK'},{rSts:'Duplicate'}]},
-        ],
+        check: [{"table": "Duplicate",qSts:'OK',num:1,result:[{rSts:'OK'},{rSts:'Duplicate'}]}],
       },{ // 2.既存シートの新規作成指示 ⇒ qSts[0]='OK', qSts[1]='Already Exist'
         reset: null,
         query: [
@@ -270,14 +268,17 @@ function SpreadDbTest(){
         reset: null,
         query: {command:'create',table:'Duplicate'},
         opt: {userId:'Administrator'},
+        check: [{"table": "Duplicate",qSts:'No Cols and Data',num:0}],
       },{ // 4.userId未指定 ⇒ qSts='No Authority'
         reset: null,
         query: {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
         // optは指定しない(ユーザ未定)
+        check: [{"table": "ユーザ管理",qSts:'No Authority',num:0}],
       },{ // 5.管理者以外 ⇒ qSts='No Authority'
         reset: null,
         query: {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
         opt: {userId:'fuga'},
+        check: [{"table": "ユーザ管理",qSts:'No Authority',num:0}],
       },
     ],
     select: [ // select関係のテスト群
@@ -1920,11 +1921,6 @@ function SpreadDb(query=[],opt={}){
   }
 }
 const dev = devTools({step:true});
-/** オプション指定用オブジェクト
- * @param {boolean} opt.start=true - 開始・終了メッセージの表示
- * @param {boolean} opt.arg=true - 引数を表示
- * @param {boolean} opt.step=false - step毎の進捗ログの出力
- */
 /** devTools: 開発支援関係メソッド集
  * @param {Object} option
  * @param {boolean} option.start=true - 開始・終了メッセージの表示
@@ -2098,7 +2094,7 @@ function devTools(option){
     arg = Object.assign({msg:'',opt:{}},arg);
     if( arg.check === undefined ){
       // check未指定の場合、チェック省略、結果表示のみ
-      msg.push('????? devTool.check : No check');
+      msg.push('????? devTools.check : No check');
     } else {
       // arg.rvとarg.checkのデータ型が異なる場合、またはrecursiveCheckで不一致が有った場合はエラーと判断
       if ( String(Object.prototype.toString.call(arg.rv).slice(8,-1))
@@ -2106,9 +2102,9 @@ function devTools(option){
         || recursiveCheck(arg.rv,arg.check,arg.opt) === false
       ){
         isOK = false;
-        msg.unshift('!!!!! devTool.check Error:');
+        msg.unshift('!!!!! devTools.check Error:');
       } else {
-        msg.unshift('===== devTool.check OK:');
+        msg.unshift('===== devTools.check OK:');
       }      
     }
 
