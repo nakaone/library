@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'append',start:1,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'append',start:7,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -374,21 +374,42 @@ function SpreadDbTest(){
           {rSts:'Duplicate',},
         ]}],
       },{ // 2.権限付与してゲストが実行 ⇒ qSts='OK',rSts=[OK,OK]
-        reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {guestAuth:{AutoInc:'w'}},
+        check: [{"table": "AutoInc",qSts:'OK',num:2,result:[{
+          rSts:'OK',
+          pKey:12, // = auto_increment:10 + 初期データ2行
+          diff: { // diffはJSON文字列だが、オブジェクトとして記述
+            '真': 3, // = auto_increment:true + 初期データ2行
+            '配列①': 22, // = auto_increment:[20] + 初期データ2行
+            '配列②': 28, // = auto_increment:[30,-1] + 初期データ2行
+            'obj': 50, // = auto_increment:{start:40,step:5} + 初期データ2行
+            'def関数': o=>(new Date().getTime()-new Date(o).getTime())<180000
+          }
+        },{
+          rSts:'OK',
+          pKey:13, // = auto_increment:10 + 初期データ2行
+          diff: {'真':4,'配列①':23,'配列②':27,'obj':55,'def関数': o=>(new Date().getTime()-new Date(o).getTime())<180000}
+        }]}],
       },{ // 3.権限付与せずゲストが実行 ⇒ qSts='No Authority'
-        reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {guestAuth:{AutoInc:'r'}},
+        check: [{"table": "AutoInc",qSts:'No Authority',num:0,result:[]}],
       },{ // 4.権限付与してユーザが実行 ⇒ qSts='OK',rSts=[OK,OK]
-        reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:10,userAuth:{AutoInc:'w'}},
+        check: [{"table": "AutoInc",qSts:'OK',num:2,result:[
+          {rSts:'OK',pKey:12,diff: {'真':3,'配列①':22,'配列②':28,'obj':50,'def関数': o=>(new Date().getTime()-new Date(o).getTime())<180000}},
+          {rSts:'OK',pKey:13,diff: {'真':4,'配列①':23,'配列②':27,'obj':55,'def関数': o=>(new Date().getTime()-new Date(o).getTime())<180000}},
+        ]}],
       },{ // 5.権限付与せずユーザが実行 ⇒ qSts='No Authority'
-        reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:10,userAuth:{AutoInc:'r'}},
+        check: [{"table": "AutoInc",qSts:'No Authority',num:0,result:[]}],
       },{ // 6.存在しないテーブルへの追加 ⇒ qSts=['No Table','No Table','No Table']
         reset: {'AutoInc':null},  // AutoIncは強制削除
         query: [
@@ -397,10 +418,16 @@ function SpreadDbTest(){
           {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},  // setが配列
         ],
         opt: {userId:'Administrator'},
+        check: [
+          {"table": "AutoInc",qSts:'No Table',num:0,result:[]},
+          {"table": "AutoInc",qSts:'No Table',num:0,result:[]},
+          {"table": "AutoInc",qSts:'No Table',num:0,result:[]},
+        ],
       },{ // 7.権限'o'のユーザが実行 ⇒ qSts='No Authority'
-        reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:10,userAuth:{AutoInc:'o'}},
+        check: [{"table": "AutoInc",qSts:'No Authority',num:0,result:[]}],
       },
     ],
     delete: [
@@ -2122,8 +2149,6 @@ function devTools(option){
           }
           break;
         case 'Function': case 'Arrow':
-          console.log(`l.2105 tobe=${tobe.toString()}`)
-          console.log(`l.2106 ${tobe(asis)}`);
           rv = tobe(asis);  // 合格ならtrue, 不合格ならfalseを返す関数を定義
           msg.push(`${'  '.repeat(depth)}${label.length>0?label+': ':''}[${rv?'OK':'NG'}] ${tobe.toString()}`);
           break;
