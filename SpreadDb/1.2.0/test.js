@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'append',start:0,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'append',start:1,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -335,7 +335,7 @@ function SpreadDbTest(){
         check: [{"table": "AutoInc",qSts:'OK',num:1,result:[{
           rSts:'OK',
           pKey:12, // = auto_increment:10 + 初期データ2行
-          diff: { // JSON文字列だが、オブジェクトとして記述
+          diff: { // diffはJSON文字列だが、オブジェクトとして記述
             '真': 3, // = auto_increment:true + 初期データ2行
             '配列①': 22, // = auto_increment:[20] + 初期データ2行
             '配列②': 28, // = auto_increment:[30,-1] + 初期データ2行
@@ -349,13 +349,30 @@ function SpreadDbTest(){
           {rSts:'OK',pKey:15, diff:{'真':6,'配列①':25,'配列②':25,'obj':65,'def関数':o=>(new Date().getTime()-new Date(o).getTime())<180000}},
         ]}],
       },{ // 1."unique=true"項目「ラベル」に重複値を指定して追加 ⇒ Duplicate
-        reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
+        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},  // qSts='OK', rSts[0]='OK'
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},  // qSts='OK', rSts[0]='Duplicate'
           {table:'AutoInc',command:'append',set:[{'ラベル':'a02'},{'ラベル':'a02'}]}, // qSts='OK', rSts=[OK, Duplicate]
         ],
         opt: {userId:'Administrator'},
+        check: [{"table": "AutoInc",qSts:'OK',num:1,result:[{
+          rSts:'OK',
+          pKey:12, // = auto_increment:10 + 初期データ2行
+          diff: { // diffはJSON文字列だが、オブジェクトとして記述
+            '真': 3, // = auto_increment:true + 初期データ2行
+            '配列①': 22, // = auto_increment:[20] + 初期データ2行
+            '配列②': 28, // = auto_increment:[30,-1] + 初期データ2行
+            'obj': 50, // = auto_increment:{start:40,step:5} + 初期データ2行
+            'def関数': o=>(new Date().getTime()-new Date(o).getTime())<180000
+          }
+        }]},{"table": "AutoInc",qSts:'OK',num:0,result:[
+          {rSts:'Duplicate'},
+        ]},{"table": "AutoInc",qSts:'OK',num:1,result:[
+          {rSts:'OK',pKey:14, // 本来pKey=13だが、前query時にschema.auto_incrementが+1され戻していないため、14になる
+            diff:{'真':4,'配列①':23,'配列②':27,'obj':55,'def関数':o=>(new Date().getTime()-new Date(o).getTime())<180000}},
+          {rSts:'Duplicate',},
+        ]}],
       },{ // 2.権限付与してゲストが実行 ⇒ qSts='OK',rSts=[OK,OK]
         reset: {'AutoInc':false},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
