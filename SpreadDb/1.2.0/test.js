@@ -1,5 +1,5 @@
 function SpreadDbTest(){
-  const v = {scenario:'create',start:5,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'select',start:4,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -290,25 +290,34 @@ function SpreadDbTest(){
           {table:'掲示板',command:'select',where:"o=>{return new Date(o.timestamp) < new Date('2022/11/1')"},
         ],
         opt: {userId:'Administrator'},
+        check: [
+          {"table": "掲示板",qSts:'OK',num:6,result:[{from:'パパ'},{from:'パパ'},{from:'パパ'},{from:'パパ'},{from:'パパ'},{from:'パパ'}]},
+          {"table": "掲示板",qSts:'OK',num:16},
+        ],
       },{ // 1.ゲストに「掲示板」の読込を許可 ⇒ qSts='OK'
         reset: {'掲示板':false},
         query: {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
         opt: {guestAuth:{'掲示板':'r'}},  // userId指定無し(⇒ゲスト)でゲストに掲示板の読込権限付与
+        check: [{"table": "掲示板",qSts:'OK',num:6,result:[{from:'パパ'},{from:'パパ'},{from:'パパ'},{from:'パパ'},{from:'パパ'},{from:'パパ'}]}],
       },{ // 2.ゲストに「掲示板」の読込を不許可 ⇒ qSts='No Authority'
         reset: {'掲示板':false},
         query: {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
         // ゲストなので、ユーザID,権限指定は無し
+        check: [{"table": "掲示板",qSts:'No Authority',num:0}],
       },{ // 3.存在しないテーブルを指定 ⇒ qSts='No Table'
         query: {table:'存在しないテーブル',command:'select',where:"o=>{return o.from=='パパ'}"},
         opt: {},  // ゲストなので、ユーザID,権限指定は無し
+        check: [{"table": "存在しないテーブル",qSts:'No Table',num:0}],
       },{ // 4.権限'o'で自レコード取得 ⇒ qSts='OK'
         reset: {'ユーザ管理':false},
         query: {table:'ユーザ管理',command:'select',where:10},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
+        check: [{"table": "ユーザ管理",qSts:'OK',num:1}],
       },{ // 5.権限'o'で自レコード以外の取得 ⇒ qSts='No Authority'
         reset: {'ユーザ管理':false},
         query: {table:'ユーザ管理',command:'select',where:11},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
+        check: [{"table": "ユーザ管理",qSts:'No Authority',num:0}],
       }
     ],
     append: [
