@@ -1381,7 +1381,7 @@ function SpreadDb(query=[],opt={}){
     try {
 
       // ------------------------------------------------
-      dev.step(1); // rv.columnの準備
+      dev.step(1); // 項目定義情報(rv.column)の準備
       // ------------------------------------------------
       if( typeof arg === 'object' ){
         dev.step(1.1); // 引数がオブジェクト(=sdbColumn)ならそのまま採用
@@ -1406,35 +1406,26 @@ function SpreadDb(query=[],opt={}){
       }
 
       // ------------------------------------------------
-      dev.step(2); // rv.column各メンバの値をチェック・整形
+      dev.step(2); // シートのメモに記載する文字列を作成
       // ------------------------------------------------
-      dev.step(2.1); // 'null'はnullに変換
-      v.map = {'null':null,'true':true,'false':false};
-      Object.keys(v.rv.column).forEach(x => {
+      if( typeof v.rv.note === 'object' ){
+        // 元々シート上にメモが存在していた場合、step.1.4でオリジナルが保存されているので'string'
+        v.rv.note = JSON.stringify(v.rv.column,(k,v)=>typeof v==='function'?v.toString():v,2);
+      }
 
-        dev.step(2.11); // 文字列で指定された'null','true','false'は値にする
-        if( Object.hasOwn(v.map,v.rv.column[x]) ){
-          v.rv.column[x] = v.map[v.rv.column[x]];
-        }
-
-        /*
-        dev.step(2.12); // メモ文字列を作成する場合(=引数がメモ文字列では無かった場合)
-        // かつ属性値が未定義(null)ではない場合、v.rv.columnにもメモ作成用の属性値をセット
-        if( whichType(v.rv.note,'Object') && v.rv.column[x] !== null ){
-          v.rv.note[x] = v.rv.column[x];
-        }
-        */
-      });
-
-      dev.step(2.2); // defaultを関数に変換
+      // ------------------------------------------------
+      // default,auto_increment項目の準備
+      // ------------------------------------------------
+      dev.step(3); // defaultを関数に変換
       if( v.rv.column.default ){
+        dev.step(3.1);
         v.r = functionalyze(v.rv.column.default);
         if( v.r instanceof Error ) throw v.r;
         v.rv.column.default = v.r;
       }
       if( v.rv.column.default instanceof Error ) throw v.rv.column.default;
 
-      dev.step(2.3); // auto_incrementをオブジェクトに変換
+      dev.step(4); // auto_incrementをオブジェクトに変換
       v.ac = {
         Array: x => {return {obj:{start:x[0],step:(x[1]||1)},str:JSON.stringify(x)}},  // [start,step]形式
         Number: x => {return {obj:{start:x,step:1},str:x}},  // startのみ数値で指定
@@ -1443,21 +1434,15 @@ function SpreadDb(query=[],opt={}){
         Boolean: x => {return x ? {obj:{start:1,step:1}, str:'true'} : {obj:false, str:'false'}}, // trueは[1,1],falseはauto_incrementしない
       };
       if( v.rv.column.auto_increment ){
-        if( typeof v.rv.column.auto_increment === 'string' )
+        dev.step(3.1);
+        if( typeof v.rv.column.auto_increment === 'string' ){
           v.rv.column.auto_increment = JSON.parse(v.rv.column.auto_increment);
+        }
         v.acObj = v.ac[whichType(v.rv.column.auto_increment)](v.rv.column.auto_increment);
         v.rv.column.auto_increment = v.acObj.obj;
         // 開始値はstart+stepになるので、予め-stepしておく
         v.rv.column.auto_increment.start -= v.rv.column.auto_increment.step;
         v.rv.note.auto_increment = v.acObj.str;
-      }
-
-      // ------------------------------------------------
-      dev.step(3); // シートのメモに記載する文字列を作成
-      // ------------------------------------------------
-      if( typeof v.rv.note === 'object' ){
-        // 元々シート上にメモが存在していた場合、step.1.4でオリジナルが保存されているので'string'
-        v.rv.note = JSON.stringify(v.rv.note,(k,v)=>typeof v==='function'?v.toString():v,2);
       }
 
       dev.end(); // 終了処理
