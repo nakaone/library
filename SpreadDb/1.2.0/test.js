@@ -1,6 +1,6 @@
-const dev = devTools({start:false});//{step:true});
+const dev = devTools({step:true});// 開発時：{step:true}、通してテスト時：{start:false}
 function SpreadDbTest(){
-  const v = {scenario:'delete',start:5,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'update',start:2,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -505,18 +505,24 @@ function SpreadDbTest(){
           {command:'update',table:'AutoInc',where:16,set:JSON.stringify({'配列①':'b05'})},
         ],
         opt: {userId:'Administrator'},
+        check: [
+          {"table": "AutoInc",command:'append',qSts:'OK',num:5},
+          {"table": "AutoInc",command:'update',qSts:'OK',num:1,result:[{pKey:12,rSts:'OK',diff:{'ラベル':['a01','b01']}}]},
+          {"table": "AutoInc",command:'update',qSts:'OK',num:1,result:[{pKey:13,rSts:'OK',diff:{'ぬる':[null,'b02']}}]},
+          {"table": "AutoInc",command:'update',qSts:'OK',num:1,result:[{pKey:14,rSts:'OK',diff:{'真':[5,'b03']}}]},
+          {"table": "AutoInc",command:'update',qSts:'OK',num:1,result:[{pKey:15,rSts:'OK',diff:{'偽':[null,'b04']}}]},
+          {"table": "AutoInc",command:'update',qSts:'OK',num:1,result:[{pKey:16,rSts:'OK',diff:{'配列①':[26,'b05']}}]},
+        ],
       },{ // 1.該当レコード無し ⇒ qSts='OK',num=0
-        reset: {'AutoInc':false},
-        query: [
-          {command:'update',table:'AutoInc',where:{'ラベル':'xxx'},set:{'ぬる':'b02'}},
-        ],
+        reset: {'AutoInc':true},
+        query: {command:'update',table:'AutoInc',where:{'ラベル':'xxx'},set:{'ぬる':'b02'}},
         opt: {userId:'Administrator'},
+        check: [{"table": "AutoInc",command:'update',qSts:'OK',num:0}],
       },{ // 2.更新対象項目が存在しない ⇒ [abort] qSts='Undefined Column',num=0
-        reset: {'AutoInc':false},
-        query: [
-          {command:'update',table:'AutoInc',where:{'ラベル':'fuga'},set:{'xxx':123}},
-        ],
+        reset: {'AutoInc':true},
+        query: {command:'update',table:'AutoInc',where:{'ラベル':'fuga'},set:{'xxx':123}},
         opt: {userId:'Administrator'},
+        check: [{"table": "AutoInc",command:'update',qSts:'Undefined Column',num:0}],
       },{ // 3.自レコードのみの更新権限で自レコードを更新 ⇒ qSts='OK'
         reset: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:10,set:{profile:'xxx'}},
@@ -647,15 +653,15 @@ function SpreadDbTest(){
       v.r = resetSheet(v.reset);
       if( v.r instanceof Error ) throw v.r;
 
-      dev.step(3.2); // scenarioからqueryとoptをセット
-      dev.check({
+      dev.step(3.2); // scenarioからqueryとoptをセットしてテスト実施、NG時は中断
+      if(false === dev.check({
         asis: SpreadDb(
           scenario[v.scenario][v.idx].query,
           scenario[v.scenario][v.idx].opt
         ),
         tobe: (scenario[v.scenario][v.idx].check||undefined),
         title: `${v.whois}.${v.scenario}.${v.idx}`,
-      });
+      })) throw new Error(`check NG`);
     }
 
   } catch(e) {
@@ -2143,7 +2149,7 @@ function devTools(option){
    * @param {any} arg.tobe - 確認すべきポイント(Check Point)。エラーの場合、エラーオブジェクトを渡す
    * @param {string} arg.title='' - テストのタイトル(ex. SpreadDbTest.delete.4)
    * @param {Object} [arg.opt] - isEqualに渡すオプション
-   * @returns {void}
+   * @returns {boolean} - チェック結果OK:true, NG:false
    */
   function check(arg={}){
   
@@ -2169,10 +2175,12 @@ function devTools(option){
     }
 
     // 引数として渡されたmsgおよび結果(JSON)を先頭に追加後、コンソールに表示
-    msg = `===== ${arg.title} Returned Value\n`
+    msg = `::::: Verified by devTools.check\n`
+    + `===== ${arg.title} Returned Value\n`
     + JSON.stringify(arg.asis,(k,v)=>typeof v==='function'?v.toString():v,2)
     + `\n\n\n${msg.join('\n')}`;
     if( isOK ) console.log(msg); else console.error(msg);
+    return isOK;
   }
   function recursiveCheck(msg,asis,tobe,opt,depth=0,label=''){
     let rv;
