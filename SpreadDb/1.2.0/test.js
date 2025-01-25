@@ -1,6 +1,6 @@
 const dev = devTools({step:true});// 開発時：{step:true}、通してテスト時：{start:false}
 function SpreadDbTest(){
-  const v = {scenario:'create',start:6,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'select',start:6,num:2,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -287,7 +287,7 @@ function SpreadDbTest(){
         check: [{"table": "Duplicate",qSts:'Duplicate',num:1,result:[{rSts:'OK'},{rSts:'Duplicate'}]}],
       },
     ],
-    select: [ // select関係のテスト群
+    select: [ // select関係のテスト群(＋全体共通テスト)
       { // 0.正常系
         reset: {'掲示板':false},
         query: [
@@ -324,6 +324,16 @@ function SpreadDbTest(){
         query: {table:'ユーザ管理',command:'select',where:11},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
         check: [{"table": "ユーザ管理",qSts:'No Authority',num:0}],
+      },{ // 6.table指定無し ※select以外も含む、全体テスト
+        reset: {'ユーザ管理':false},
+        query: {command:'select',where:11},
+        opt: {userId:'Administrator'},
+        check: [{qSts:'Invalid table specify',num:0,result:[]}],
+      },{ // 7.command指定無し ※select以外も含む、全体テスト
+        reset: {'ユーザ管理':false},
+        query: {table:'ユーザ管理',where:11},
+        opt: {userId:'Administrator'},
+        check: [{qSts:'Invalid command specify',num:0,result:[]}],
       }
     ],
     append: [
@@ -434,7 +444,15 @@ function SpreadDbTest(){
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:10,userAuth:{AutoInc:'o'}},
         check: [{"table": "AutoInc",qSts:'No Authority',num:0,result:[]}],
-      },
+      },{ // 8.appendでsetが空
+        reset: {'AutoInc':true},
+        query: [
+          {table:'AutoInc',command:'append'}, // set自体無し
+          {table:'AutoInc',command:'append',set:{}}, // 項目無し
+          {table:'AutoInc',command:'append',set:[]},  // setが空配列
+        ],
+        opt: {userId:'Administrator'},
+      }
     ],
     delete: [
       { // 0.正常系 ⇒ pKey=10の行のみ残っていればOK
