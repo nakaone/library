@@ -518,11 +518,11 @@ function SpreadDbTest(){
         query: {command:'update',table:'AutoInc',where:{'ラベル':'xxx'},set:{'ぬる':'b02'}},
         opt: {userId:'Administrator'},
         check: [{"table": "AutoInc",command:'update',qSts:'OK',num:0}],
-      },{ // 2.更新対象項目が存在しない ⇒ [abort] qSts='Undefined Column',num=0
+      },{ // 2.更新対象項目が存在しない ⇒ qSts='OK', num=0, rSts=['Undefined Column']
         reset: {'AutoInc':true},
         query: {command:'update',table:'AutoInc',where:{'ラベル':'fuga'},set:{'xxx':123}},
         opt: {userId:'Administrator'},
-        check: [{"table": "AutoInc",command:'update',qSts:'Undefined Column',num:0}],
+        check: [{"table": "AutoInc",command:'update',qSts:'OK',num:0,result:[{rSts:'Undefined Column'}]}],
       },{ // 3.自レコードのみの更新権限で自レコードを更新 ⇒ qSts='OK'
         reset: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:10,set:{profile:'xxx'}},
@@ -1914,36 +1914,34 @@ function SpreadDb(query=[],opt={}){
 
       if( query.qSts === 'OK' ){
         // ------------------------------------------------
-        // table.valuesを更新、ログ作成
+        dev.step(2); // table.valuesを更新、ログ作成
         // ------------------------------------------------
         for( v.i=0 ; v.i<v.table.values.length ; v.i++ ){
 
-          dev.step(2); // 対象外判定ならスキップ
+          dev.step(2.1); // 対象外判定ならスキップ
           if( v.where(v.table.values[v.i]) === false ) continue;
 
-          dev.step(3.1); // v.rObj: 更新指定項目のみのオブジェクト
-          v.rObj = v.set(v.table.values[v.i]);
-
-          dev.step(3.2); // 更新対象項目が項目名リストに存在しない場合はエラー
-          // 本来事前チェックを行うべき項目だが、setをfunctionで指定していた場合
-          // レコード毎に更新対象項目が変動する可能性があるため、レコード毎にチェック
-          if( !v.isSubset(Object.keys(v.rObj),v.table.header) ){
-            v.err = new Error(`${v.whois} abnormal end at step.${v.step}\nUndefined Column`);
-            query.qSts = v.err.message;
-            dev.error(v.err);
-            return v.err;
-          }
-
-          dev.step(4); // v.before(更新前の行オブジェクト),after,diffの初期値を用意
-          [v.before,v.after] = [v.table.values[v.i],{}];
-
-          dev.step(5); // レコード単位の更新履歴オブジェクトを作成
+          dev.step(2.2); // レコード単位の更新履歴オブジェクトを作成
           v.log = objectizeColumn('sdbResult');
           if( v.log instanceof Error ) throw v.log;
           v.log.pKey = v.table.values[v.i][v.table.schema.primaryKey];
           query.result.push(v.log);
 
-          dev.step(6); // 項目毎に値が変わるかチェック
+          dev.step(2.3); // v.rObj: 更新指定項目のみのオブジェクト
+          v.rObj = v.set(v.table.values[v.i]);
+
+          dev.step(2.4); // 更新対象項目が項目名リストに存在しない場合はエラー
+          // 本来事前チェックを行うべき項目だが、setをfunctionで指定していた場合
+          // レコード毎に更新対象項目が変動する可能性があるため、レコード毎にチェック
+          if( !v.isSubset(Object.keys(v.rObj),v.table.header) ){
+            v.log.rSts = `Undefined Column`;
+            continue;
+          }
+
+          dev.step(2.5); // v.before(更新前の行オブジェクト),after,diffの初期値を用意
+          [v.before,v.after] = [v.table.values[v.i],{}];
+
+          dev.step(2.6); // 項目毎に値が変わるかチェック
           v.table.header.forEach(x => {
             if( Object.hasOwn(v.rObj,x) && !isEqual(v.before[x],v.rObj[x]) ){
               dev.step(6.1); // 変更指定項目かつ値が変化していた場合
@@ -1959,7 +1957,7 @@ function SpreadDb(query=[],opt={}){
             }
           });
 
-          dev.step(7); // 更新レコードの正当性チェック(unique重複チェック)
+          dev.step(2.7); // 更新レコードの正当性チェック(unique重複チェック)
           for( v.unique in v.table.schema.unique ){
             if( Object.hasOwn(v.log.diff,v.unique) ){
               // 変更後の値がschema.uniqueに登録済の場合はDuplicate
@@ -1975,7 +1973,7 @@ function SpreadDb(query=[],opt={}){
             }
           }
 
-          dev.step(8); // 正当性チェックOKの場合、修正後のレコードを保存して書換範囲(range)を修正
+          dev.step(2.8); // 正当性チェックOKの場合、修正後のレコードを保存して書換範囲(range)を修正
           if( v.log.rSts === 'OK' ){
             query.num++;
             v.top = Math.min(v.top, v.i);
@@ -1985,9 +1983,9 @@ function SpreadDb(query=[],opt={}){
         }
 
         // ------------------------------------------------
-        dev.step(9); // 対象シート・更新履歴に展開
+        dev.step(3); // 対象シート・更新履歴に展開
         // ------------------------------------------------
-        dev.step(9.1); // シートイメージ(二次元配列)作成
+        dev.step(3.1); // シートイメージ(二次元配列)作成
         v.target = [];
         for( v.i=v.top ; v.i<=v.bottom ; v.i++ ){
           v.row = [];
@@ -1997,7 +1995,7 @@ function SpreadDb(query=[],opt={}){
           v.target.push(v.row);
         }
 
-        dev.step(9.2); // シートに展開
+        dev.step(3.2); // シートに展開
         // v.top,bottom: 最初と最後の行オブジェクトの添字(≠行番号) ⇒ top+1 ≦ row ≦ bottom+1
         // v.left,right: 左端と右端の行配列の添字(≠列番号) ⇒ left+1 ≦ col ≦ right+1
         if( v.target.length > 0 ){
