@@ -1,5 +1,6 @@
+const dev = devTools({start:false});//{step:true});
 function SpreadDbTest(){
-  const v = {scenario:'append',start:7,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'delete',start:5,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -441,6 +442,17 @@ function SpreadDbTest(){
           {table:'AutoInc',command:'delete',where:'o => {return o["ラベル"].slice(0,1)==="a"'},  // where = string(func)
         ],
         opt: {userId:'Administrator'},
+        check: [
+          {"table": "AutoInc",command:'append',qSts:'OK',num:3,result:[
+            {pKey:12,rSts:'OK',diff:{'真':3,'配列①':-1,'配列②':28,'obj':50,'def関数':o=>(new Date().getTime()-new Date(o).getTime())<180000}},
+            {pKey:13,rSts:'OK',diff:{'真':4,'配列①':22,'配列②':-2,'obj':55,'def関数':o=>(new Date().getTime()-new Date(o).getTime())<180000}},
+            {pKey:14,rSts:'OK',diff:{'真':5,'配列①':23,'配列②':27,'obj':60,'def関数':o=>(new Date().getTime()-new Date(o).getTime())<180000}},
+          ]},
+          {"table": "AutoInc",command:'delete',qSts:'OK',num:1,result:[{rSts:'OK',diff:{'配列①':-1}}]},
+          {"table": "AutoInc",command:'delete',qSts:'OK',num:1,result:[{rSts:'OK',diff:{'配列②':-2}}]},
+          {"table": "AutoInc",command:'delete',qSts:'OK',num:1,result:[{rSts:'OK',diff:{pKey:11}}]},
+          {"table": "AutoInc",command:'delete',qSts:'OK',num:1,result:[{rSts:'OK',diff:{'ラベル':'a03'}}]},
+        ],
       },{ // 1.該当レコード無し ⇒ qSts='OK',num=0
         reset: {'AutoInc':true},
         query: [
@@ -448,21 +460,33 @@ function SpreadDbTest(){
           {table:'AutoInc',command:'delete',where:99},  // where = any(pKey)
         ],
         opt: {userId:'Administrator'},
+        check :[
+          {"table": "AutoInc",command:'append',qSts:'OK',num:3,result:[
+            {pKey:12,rSts:'OK',diff:{'真':3,'配列①':-1,'配列②':28,'obj':50,'def関数':o=>(new Date().getTime()-new Date(o).getTime())<180000}},
+            {pKey:13,rSts:'OK',diff:{'真':4,'配列①':22,'配列②':-2,'obj':55,'def関数':o=>(new Date().getTime()-new Date(o).getTime())<180000}},
+            {pKey:14,rSts:'OK',diff:{'真':5,'配列①':23,'配列②':27,'obj':60,'def関数':o=>(new Date().getTime()-new Date(o).getTime())<180000}},
+          ]},
+          {"table": "AutoInc",command:'delete',qSts:'OK',num:0},
+        ],
       },{ // 2.権限付与してユーザが実行 ⇒ qSts='OK', num=1, rSts=['OK']
         reset: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:10,userAuth:{AutoInc:'d'}},
+        check :[{"table": "AutoInc",command:'delete',qSts:'OK',num:1,result:[{pKey:10,rSts:'OK'}]}],
       },{ // 3.権限付与せずユーザが実行 ⇒ qSts='No Authority', num=0
         reset: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:10,userAuth:{AutoInc:'r'}},
+        check :[{"table": "AutoInc",command:'delete',qSts:'No Authority',num:0}],
       },{ // 4.存在しないテーブルでの削除 ⇒ qSts='No Table', num=0
         query: {table:'不在テーブル',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:'Administrator'},
+        check :[{"table": "不在テーブル",command:'delete',qSts:'No Table',num:0}],
       },{ // 5.権限'o'のユーザが実行 ⇒ qSts='No Authority', num=0
         reset: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:10,userAuth:{AutoInc:'o'}},
+        check :[{"table": "AutoInc",command:'delete',qSts:'No Authority',num:0}],
       },
     ],
     update: [
@@ -630,7 +654,7 @@ function SpreadDbTest(){
           scenario[v.scenario][v.idx].opt
         ),
         tobe: (scenario[v.scenario][v.idx].check||undefined),
-        msg: `===== ${v.whois} end: scenario=${v.scenario}.${v.idx}\n`
+        title: `${v.whois}.${v.scenario}.${v.idx}`,
       });
     }
 
@@ -1989,11 +2013,10 @@ function SpreadDb(query=[],opt={}){
     }
   }
 }
-const dev = devTools({step:true});
 /** devTools: 開発支援関係メソッド集
  * @param {Object} option
  * @param {boolean} option.start=true - 開始・終了メッセージの表示
- * @param {boolean} option.arg=true - 引数を表示
+ * @param {boolean} option.arg=true - 開始時に引数を表示
  * @param {boolean} option.step=false - step毎の進捗ログの出力
  */
 function devTools(option){
@@ -2118,50 +2141,11 @@ function devTools(option){
    * @param {Object} arg
    * @param {any} arg.asis - 実行結果
    * @param {any} arg.tobe - 確認すべきポイント(Check Point)。エラーの場合、エラーオブジェクトを渡す
-   * @param {string} arg.msg='' - 結果の前に表示するメッセージ
+   * @param {string} arg.title='' - テストのタイトル(ex. SpreadDbTest.delete.4)
    * @param {Object} [arg.opt] - isEqualに渡すオプション
    * @returns {void}
    */
   function check(arg={}){
-    const recursiveCheck = (asis,tobe,depth=0,label='') => {
-      let rv = true;
-      // JSON文字列はオブジェクト化
-      asis = (arg=>{try{return JSON.parse(arg)}catch{return arg}})(asis);
-      // データ型の判定
-      let type = String(Object.prototype.toString.call(tobe).slice(8,-1));
-      switch(type){
-        case 'Number': if(Number.isNaN(tobe)) type = 'NaN'; break;
-        case 'Function': if(!('prototype' in tobe)) type = 'Arrow'; break;
-      }
-      switch( type ){
-        case 'Object':
-          for( let mn in tobe ){
-            if( !Object.hasOwn(asis,mn) ) return false; // 該当要素が不在
-            rv = recursiveCheck(asis[mn],tobe[mn],depth+1,mn);
-            if( rv === false ) return false;  // 途中の要素で不一致ならfalse
-          }
-          break;
-        case 'Array':
-          for( let i=0 ; i<tobe.length ; i++ ){
-            if( asis[i] === undefined && tobe[i] !== undefined ) return false; // 該当要素が不在
-            rv = recursiveCheck(asis[i],tobe[i],depth+1,String(i));
-            if( rv === false ) return false;  // 途中の要素で不一致ならfalse
-          }
-          break;
-        case 'Function': case 'Arrow':
-          rv = tobe(asis);  // 合格ならtrue, 不合格ならfalseを返す関数を定義
-          msg.push(`${'  '.repeat(depth)}${label.length>0?label+': ':''}[${rv?'OK':'NG'}] ${tobe.toString()}`);
-          break;
-        default:
-          if( tobe === undefined ){
-            rv = true;
-          } else {
-            rv = isEqual(asis,tobe,opt);
-            msg.push(`${'  '.repeat(depth)}${label.length>0?label+': ':''}[${rv?'OK':'NG'}] ToBe=${tobe}, AsIs=${asis}`);
-          }
-      }
-      return rv;
-    };
   
     // 主処理
     let msg = [];
@@ -2170,25 +2154,73 @@ function devTools(option){
     arg = Object.assign({msg:'',opt:{}},arg);
     if( arg.tobe === undefined ){
       // check未指定の場合、チェック省略、結果表示のみ
-      msg.push('????? devTools.check : No check');
+      msg.push(`===== ${arg.title} Check Result : Not checked`);
     } else {
       // arg.asisとarg.tobeのデータ型が異なる場合、またはrecursiveCheckで不一致が有った場合はエラーと判断
       if ( String(Object.prototype.toString.call(arg.asis).slice(8,-1))
         !== String(Object.prototype.toString.call(arg.tobe).slice(8,-1))
-        || recursiveCheck(arg.asis,arg.tobe,arg.opt) === false
+        || recursiveCheck(msg,arg.asis,arg.tobe,arg.opt) === false
       ){
         isOK = false;
-        msg.unshift('!!!!! devTools.check Error:');
+        msg.unshift(`===== ${arg.title} Check Result : Error`);
       } else {
-        msg.unshift('===== devTools.check OK:');
-      }      
+        msg.unshift(`===== ${arg.title} Check Result : OK`);
+      }
     }
-  
-    // 引数として渡されたmsgおよび結果(JSON)を追記後、コンソールに表示
-    msg.push(arg.msg === '' ? '' : `\n${arg.msg}`);
-    msg.push(JSON.stringify(arg.asis,(k,v)=>typeof v==='function'?v.toString():v,2));
-    msg = msg.join('\n');
+
+    // 引数として渡されたmsgおよび結果(JSON)を先頭に追加後、コンソールに表示
+    msg = `===== ${arg.title} Returned Value\n`
+    + JSON.stringify(arg.asis,(k,v)=>typeof v==='function'?v.toString():v,2)
+    + `\n\n\n${msg.join('\n')}`;
     if( isOK ) console.log(msg); else console.error(msg);
+  }
+  function recursiveCheck(msg,asis,tobe,opt,depth=0,label=''){
+    let rv;
+    // JSON文字列はオブジェクト化
+    asis = (arg=>{try{return JSON.parse(arg)}catch{return arg}})(asis);
+    // データ型の判定
+    let type = String(Object.prototype.toString.call(tobe).slice(8,-1));
+    switch(type){
+      case 'Number': if(Number.isNaN(tobe)) type = 'NaN'; break;
+      case 'Function': if(!('prototype' in tobe)) type = 'Arrow'; break;
+    }
+    let indent = '  '.repeat(depth);
+    switch( type ){
+      case 'Object':
+        msg.push(`${indent}${label.length>0?label+': ':''}{`);
+        for( let mn in tobe ){
+          rv = !Object.hasOwn(asis,mn) ? false // 該当要素が不在
+          : recursiveCheck(msg,asis[mn],tobe[mn],opt,depth+1,mn);
+        }
+        msg.push(`${indent}}`);
+        break;
+      case 'Array':
+        msg.push(`${indent}${label.length>0?label+': ':''}[`);
+        for( let i=0 ; i<tobe.length ; i++ ){
+          rv = (asis[i] === undefined && tobe[i] !== undefined) ? false // 該当要素が不在
+          : recursiveCheck(msg,asis[i],tobe[i],opt,depth+1,String(i));
+        }
+        msg.push(`${indent}]`);
+        break;
+      case 'Function': case 'Arrow':
+        rv = tobe(asis);  // 合格ならtrue, 不合格ならfalseを返す関数を定義
+        msg.push(
+          indent + (label.length > 0 ? (label + ': ') : '')
+          + (rv ? asis : `[NG] (${tobe.toString()})(${asis}) -> false`)
+        );
+        break;
+      default:
+        if( tobe === undefined ){
+          rv = true;
+        } else {
+          rv = isEqual(asis,tobe,opt);
+          msg.push(
+            indent + (label.length > 0 ? (label + ': ') : '')
+            + (rv ? asis : `[NG] ToBe=${tobe}, AsIs=${asis}`)
+          );
+        }
+    }
+    return rv;
   }
 }
 /** 二つの引数が同値か判断する
