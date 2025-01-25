@@ -1,6 +1,6 @@
-const dev = devTools({step:true});// 開発時：{step:true}、通してテスト時：{start:false}
+const dev = devTools({start:false});// 開発時：{step:true}、通してテスト時：{start:false}
 function SpreadDbTest(){
-  const v = {scenario:'update',start:2,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'update',start:4,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -518,19 +518,21 @@ function SpreadDbTest(){
         query: {command:'update',table:'AutoInc',where:{'ラベル':'xxx'},set:{'ぬる':'b02'}},
         opt: {userId:'Administrator'},
         check: [{"table": "AutoInc",command:'update',qSts:'OK',num:0}],
-      },{ // 2.更新対象項目が存在しない ⇒ qSts='OK', num=0, rSts=['Undefined Column']
+      },{ // 2.更新対象項目が存在しない ⇒ qSts='Undefined Column', num=0
         reset: {'AutoInc':true},
         query: {command:'update',table:'AutoInc',where:{'ラベル':'fuga'},set:{'xxx':123}},
         opt: {userId:'Administrator'},
-        check: [{"table": "AutoInc",command:'update',qSts:'OK',num:0,result:[{rSts:'Undefined Column'}]}],
+        check: [{"table": "AutoInc",command:'update',qSts:'Undefined Column',num:0}],
       },{ // 3.自レコードのみの更新権限で自レコードを更新 ⇒ qSts='OK'
         reset: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:10,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
+        check: [{"table": "AutoInc",command:'update',qSts:'OK',num:1,result:[{pKey:10,rSts:'OK',diff:{profile:['a0001','xxx']}}]}],
       },{ // 4.自レコードのみの更新権限で自レコードを更新だが、where句を関数で指定 ⇒ qSts='Invalid where clause'
         reset: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:()=>10,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
+        check: [{"table": "ユーザ管理",command:'update',qSts:'Invalid where clause',num:0}],
       },{ // 5.自レコードのみの更新権限で自レコードを更新だが、where句をオブジェクトで指定 ⇒ qSts='Invalid where clause'
         reset: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:{userId:10},set:{profile:'xxx'}},
@@ -1921,22 +1923,22 @@ function SpreadDb(query=[],opt={}){
           dev.step(2.1); // 対象外判定ならスキップ
           if( v.where(v.table.values[v.i]) === false ) continue;
 
-          dev.step(2.2); // レコード単位の更新履歴オブジェクトを作成
+          dev.step(2.2); // v.rObj: 更新指定項目のみのオブジェクト
+          v.rObj = v.set(v.table.values[v.i]);
+
+          dev.step(2.3); // 更新対象項目が項目名リストに存在しない場合はエラー
+          // 本来事前チェックを行うべき項目だが、setをfunctionで指定していた場合
+          // レコード毎に更新対象項目が変動する可能性があるため、レコード毎にチェック
+          if( !v.isSubset(Object.keys(v.rObj),v.table.header) ){
+            query.qSts = `Undefined Column`;
+            break;
+          }
+
+          dev.step(2.4); // レコード単位の更新履歴オブジェクトを作成
           v.log = objectizeColumn('sdbResult');
           if( v.log instanceof Error ) throw v.log;
           v.log.pKey = v.table.values[v.i][v.table.schema.primaryKey];
           query.result.push(v.log);
-
-          dev.step(2.3); // v.rObj: 更新指定項目のみのオブジェクト
-          v.rObj = v.set(v.table.values[v.i]);
-
-          dev.step(2.4); // 更新対象項目が項目名リストに存在しない場合はエラー
-          // 本来事前チェックを行うべき項目だが、setをfunctionで指定していた場合
-          // レコード毎に更新対象項目が変動する可能性があるため、レコード毎にチェック
-          if( !v.isSubset(Object.keys(v.rObj),v.table.header) ){
-            v.log.rSts = `Undefined Column`;
-            continue;
-          }
 
           dev.step(2.5); // v.before(更新前の行オブジェクト),after,diffの初期値を用意
           [v.before,v.after] = [v.table.values[v.i],{}];
