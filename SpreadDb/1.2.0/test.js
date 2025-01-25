@@ -1,6 +1,6 @@
-const dev = devTools({start:false});// 開発時：{step:true}、通してテスト時：{start:false}
+const dev = devTools({step:true});// 開発時：{step:true}、通してテスト時：{start:false}
 function SpreadDbTest(){
-  const v = {scenario:'schema',start:0,num:0,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'create',start:6,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -221,14 +221,14 @@ function SpreadDbTest(){
       ],
       set: [{'ラベル':'fuga'},{'ラベル':'hoge'}],
     },
-    Duplicate: {
+    'Duplicate': {  // 初期値でunique(primaryKey)項目に重複値が存在
       cols: [
         {name:'pKey',auto_increment:10,primaryKey:true},
         {name:'Col1',type:'number',unique:true},
         {name:'Col2',type:'number'},
       ],
       set: [{Col1:11,Col2:12},{Col1:11,Col2:22}],  // Col1が重複
-    }
+    },
   };
   const scenario = {  // テストシナリオ
     create: [ // create関係のテスト群
@@ -265,11 +265,11 @@ function SpreadDbTest(){
           {"table": "camp2024",qSts:'OK',num:10},
           {"table": "camp2024",qSts:'Already Exist',num:0},
         ],
-      },{ // 3.colsもsetも指定無し ⇒ qSts='No Cols and Data'
+      },{ // 3.colsもsetも指定無し ⇒ qSts='No cols and data'
         reset: null,
         query: {command:'create',table:'Duplicate'},
         opt: {userId:'Administrator'},
-        check: [{"table": "Duplicate",qSts:'No Cols and Data',num:0}],
+        check: [{"table": "Duplicate",qSts:'No cols and data',num:0}],
       },{ // 4.userId未指定 ⇒ qSts='No Authority'
         reset: null,
         query: {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
@@ -280,6 +280,11 @@ function SpreadDbTest(){
         query: {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
         opt: {userId:'fuga'},
         check: [{"table": "ユーザ管理",qSts:'No Authority',num:0}],
+      },{ // 6.初期値でunique(primaryKey)項目に重複値が存在 ⇒ qSts='Duplicate'
+        reset: null,
+        query: {command:'create',table:'Duplicate',cols:src['Duplicate'].cols,set:src['Duplicate'].set},  // 「Duplicate」シート作成
+        opt: {userId:'Administrator'},
+        check: [{"table": "Duplicate",qSts:'Duplicate',num:1,result:[{rSts:'OK'},{rSts:'Duplicate'}]}],
       },
     ],
     select: [ // select関係のテスト群
@@ -734,7 +739,7 @@ function SpreadDb(query=[],opt={}){
     }
 
     dev.step(9); // ロックができたか判定、不能時はエラー
-    if( v.tryNo === 0 ) throw new Error("Couldn't Lock");
+    if( v.tryNo === 0 ) throw new Error("Could not Lock");
 
     dev.end(); // 終了処理
     return pv.rv;
@@ -773,7 +778,7 @@ function SpreadDb(query=[],opt={}){
       // ⑤上記以外 ⇒ エラー
       if( Array.isArray(query.set) ){
         dev.step(1.31); // 配列の長さ0
-        if( query.set.length === 0 ) query.qSts = `Empty Data`;
+        if( query.set.length === 0 ) query.qSts = `Empty set`;
         if( whichType(query.set[0],'Object') ){
           dev.step(1.32); // ④ ⇒ そのまま使用
         } else {
@@ -1141,6 +1146,10 @@ function SpreadDb(query=[],opt={}){
         if( query.set.length > 0 ){
           v.rv = appendRow(query);  // 初期データを追加した場合、戻り値はappendRowの戻り値とする
           if( v.rv instanceof Error ) throw v.rv;
+          dev.dump(query.result,1149)
+
+          dev.step(3.4);  // 初期レコードに重複が有った場合、qStsも"Duplicate"セット
+          if( query.result.map(x => x.rSts).includes('Duplicate') ) query.qSts = 'Duplicate';
         }
       }
 
@@ -1239,10 +1248,10 @@ function SpreadDb(query=[],opt={}){
       // -------------------------------------------------
       if( !query.table || typeof query.table !== 'string' ){
         dev.step(1.1);  // 必須パラメータの存否・形式確認：query.table
-        query.qSts = 'Invalid Table specify';
+        query.qSts = 'Invalid table specify';
       } else if( !query.command ||  ['create','select','update','append','delete','schema'].includes(query.command) !== true ){
         dev.step(1.2);  // 必須パラメータの存否・形式確認：query.command
-        query.qSts = 'Invalid Command specify';
+        query.qSts = 'Invalid command specify';
       } else {
         dev.step(1.3); // 操作対象のテーブル管理情報を準備
         if( !Object.hasOwn(pv.table,query.table) ){
@@ -1710,7 +1719,7 @@ function SpreadDb(query=[],opt={}){
               v.table.header = v.r.header;
             } else {
               dev.step(4.3); // 項目定義も初期データも無いならエラー
-              query.qSts = 'No Cols and Data';
+              query.qSts = 'No cols and data';
             }
           }
 
