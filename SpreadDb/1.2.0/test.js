@@ -1,6 +1,6 @@
 const dev = devTools({start:false});// 開発時：{step:true}、通してテスト時：{start:false}
 function SpreadDbTest(){
-  const v = {scenario:'update',start:4,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'update',start:0,num:0,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -537,14 +537,17 @@ function SpreadDbTest(){
         reset: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:{userId:10},set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
+        check: [{"table": "ユーザ管理",command:'update',qSts:'Invalid where clause',num:0}],
       },{ // 6.自レコードのみの更新権限で自レコード以外を更新 ⇒ qSts='No Authority'
         reset: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:11,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
+        check: [{"table": "ユーザ管理",command:'update',qSts:'No Authority',num:0}],
       },{ // 7.存在しないテーブルでの更新 ⇒ No Table
         reset: {'ユーザ管理':true},
         query: {command:'update',table:'ふが',where:10,set:{profile:'xxx'}},
         opt: {userId:'Administrator'},
+        check: [{"table": "ふが",command:'update',qSts:'No Table',num:0}],
       },
     ],
     schema: [
