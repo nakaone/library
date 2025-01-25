@@ -1,6 +1,6 @@
 const dev = devTools({step:true});// 開発時：{step:true}、通してテスト時：{start:false}
 function SpreadDbTest(){
-  const v = {scenario:'select',start:6,num:2,//num=0ならstart以降全部、マイナスならstart無視して後ろから
+  const v = {scenario:'append',start:8,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
@@ -448,10 +448,15 @@ function SpreadDbTest(){
         reset: {'AutoInc':true},
         query: [
           {table:'AutoInc',command:'append'}, // set自体無し
-          {table:'AutoInc',command:'append',set:{}}, // 項目無し
+          {table:'AutoInc',command:'append',set:{}}, // 項目無し ⇒ 既定値でレコード追加
           {table:'AutoInc',command:'append',set:[]},  // setが空配列
         ],
         opt: {userId:'Administrator'},
+        check: [
+          {"table": "AutoInc",qSts:'Empty set',num:0},
+          {"table": "AutoInc",qSts:'OK',num:1,result:[{pKey:12}]},
+          {"table": "AutoInc",qSts:'Empty set',num:0},
+        ]
       }
     ],
     delete: [
