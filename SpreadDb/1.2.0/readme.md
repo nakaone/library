@@ -10,41 +10,12 @@
 
 ### <a name="3eca2504fb57">概要</a>
 
-  - 手順
-| 項目 | メンバ | query | main | create | select | append | update | delete | schema | 戻り値 | クエリ | レコード |
-| :-- | :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :--: |
-| timestamp |  |  | 〇 | ← | ← | ← | ← | ← | ← | ← | ← |  |
-| userId |  |  | 〇 | ← | ← | ← | ← | ← | ← | ← | ← |  |
-| queryId |  | ◎ | ← | ← | ← | ← | ← | ← | ← | ← | ← | 〇 |
-| table |  | ◎ | ← | ← | ← | ← | ← | ← | ← | ← | ← |  |
-| command |  | ◎ | ← | ← | ← | ← | ← | ← | ← | ← | ← |  |
-| cols |  | 〇 |  |  |  |  |  |  |  |  |  |  |
-| where |  | 〇 |  |  |  |  |  |  |  |  | ※4 |  |
-| set |  | 〇 |  |  |  |  |  |  |  |  |  |  |
-| qSts |  |  | 〇 | ※1 | ※3 | ※3 | ※3 | ※3 | ※3 | ← | 〇 |  |
-| record | rSts |  |  | ※2 |  | ※2 |  |  |  |  |  | 〇 |
-|  | recordId |  |  | 〇 | 〇 | 〇 | 〇 | 〇 | 〇 |  |  | 〇 |
-|  | diff |  |  | ※c | ※r | ※a | ※u | ※d | ※s |  |  | 〇 |
-
-- ※1 : OK, Already Exist, No Cols and Data
-- ※2 : OK, Duplicate
-- ※3 : OK, No Table
-- ※4 : createならcols、select/update/deleteならwhere、append/schemaなら空白。setの内容はrecordで確認する運用を想定
-- ※c : 初期値として追加した行オブジェクト
-- ※r : 抽出された行オブジェクト
-- ※a : 追加された行オブジェクト
-- ※u : 変更点。{変更された項目名:[変更前,変更後]}
-- ※d : 削除された行オブジェクト
-- ※s : 提供された項目定義(sdbColumn[])
-
-![](doc/flowchart.main.webp)
-
-    - スプレッドシートを凍結
-    - queryで渡された操作要求を順次処理
-    - 権限確認後、command系内部関数の呼び出し
-    - command系関数内で結果をqueryに追記
-    - queryの配列を変更履歴シートに追記
-    - スプレッドシートの凍結解除
+  - スプレッドシートを凍結
+  - queryで渡された操作要求を順次処理
+  - 権限確認後、command系内部関数の呼び出し
+  - command系関数内で結果をqueryに追記
+  - queryの配列を変更履歴シートに追記
+  - スプレッドシートの凍結解除
   - 引数
     - query {[sdbQuery](#1e80990a7c63)[]} 操作要求、またはその配列
     - opt {[sdbOption](#a4a26014ccb3)}={} 起動時オプション
@@ -54,41 +25,6 @@
 ## <a name="a9f01a749b53">内部関数 - 非command系</a>
 
   - constructor() : 擬似メンバの値設定、変更履歴テーブルの準備
-  - doQuery() : 単体クエリの実行、変更履歴の作成
-    - 引数
-      - query {[sdbQuery](#1e80990a7c63)}
-    - 戻り値 {void}
-
-### <a name="f783913fe275">genTable() : sdbTableオブジェクトを生成</a>
-
-  - 引数
-    - arg {Object}
-      - name {string} - テーブル名
-      - [cols] {[sdbColumn](#df5b3c98954e)[]} - 新規作成シートの項目定義オブジェクトの配列
-      - [values] {Object[]|Array[]} - 新規作成シートに書き込む初期値
-行オブジェクトの配列、またはシートイメージ(プリミティブ型二次元配列)
-
-  - 戻り値 {[sdbTable](#976403e08f0e)}
-
-### <a name="74c07b6144cd">genSchema() : sdbSchemaオブジェクトを生成</a>
-
-  - 引数
-    - arg {[sdbTable](#976403e08f0e)}
-  - 戻り値 {[sdbGenSchema](#2609271977a8)}
-
-### <a name="a8e56dd4e3c7">genColumn() : sdbColumnオブジェクトを生成</a>
-
-  - 引数
-    - arg {string|[sdbColumn](#df5b3c98954e)} シート上のメモの文字列またはsdbColumn
-  - 戻り値 {Object}
-    - column {[sdbColumn](#df5b3c98954e)} 項目の定義情報
-    - note {string} シート上のメモの文字列
-
-### <a name="6fb9aba6d9f9">genLog() : sdbLogオブジェクトを生成</a>
-
-  - 引数
-    - arg {Object.&lt;string,any&gt;} [sdbLog](#dab8cfcec9d8)に個別設定するメンバ名と値
-  - 戻り値 {[sdbLog](#dab8cfcec9d8)}
 
 ### <a name="e65032ddce65">convertRow() : シートイメージと行オブジェクトの相互変換</a>
 
@@ -96,6 +32,10 @@
     - data {any[][]|Object[]} 行データ。シートイメージか行オブジェクトの配列
     - [header] {string[]}=[] - ヘッダ行。rowが行オブジェクトで項目の並びを指定したい場合に使用
   - 戻り値 {[sdbConvertRow](#01ee6b06c8a6)}
+  - doQuery() : 単体クエリの実行、変更履歴の作成
+    - 引数
+      - query {[sdbQuery](#1e80990a7c63)}
+    - 戻り値 {void}
 
 ### <a name="6d09e5d0363d">functionalize() : オブジェクト・文字列を基にObject/stringを関数化</a>
 
@@ -113,14 +53,77 @@
 
   - 戻り値 {function}
 
+### <a name="a8e56dd4e3c7">genColumn() : sdbColumnオブジェクトを生成</a>
+
+  - 引数
+    - arg {string|[sdbColumn](#df5b3c98954e)} シート上のメモの文字列またはsdbColumn
+  - 戻り値 {Object}
+    - column {[sdbColumn](#df5b3c98954e)} 項目の定義情報
+    - note {string} シート上のメモの文字列
+
+### <a name="74c07b6144cd">genSchema() : sdbSchemaオブジェクトを生成</a>
+
+  - 引数
+    - arg {[sdbTable](#976403e08f0e)}
+  - 戻り値 {[sdbGenSchema](#2609271977a8)}
+
+### <a name="f783913fe275">genTable() : sdbTableオブジェクトを生成</a>
+
+  - 引数
+    - query {[sdbQuery](#1e80990a7c63)}
+sdbQueryの内、必要なのは以下のメンバ
+
+      - table {string} テーブル名
+      - [cols] {[sdbColumn](#df5b3c98954e)[]} - 新規作成シートの項目定義オブジェクトの配列
+      - [set] {Object[]|Array[]} - 新規作成シートに書き込む初期値
+行オブジェクトの配列、またはシートイメージ(プリミティブ型二次元配列)
+
+      - qSts {string} クエリ単位の実行結果
+    - arg {Object}
+      - name {string} - テーブル名
+      - [cols] {[sdbColumn](#df5b3c98954e)[]} - 新規作成シートの項目定義オブジェクトの配列
+      - [values] {Object[]|Array[]} - 新規作成シートに書き込む初期値
+行オブジェクトの配列、またはシートイメージ(プリミティブ型二次元配列)
+
+  - 戻り値 {[sdbTable](#976403e08f0e)}
+  - objectizeColumn() : 項目定義メタ情報(JSDoc)からオブジェクトを生成
+  - toString() : 関数・オブジェクトを文字列化
+
 ## <a name="250e0f646160">内部関数 - command系</a>
 
+
+### <a name="288276ee622d">appendRow() : テーブルに新規行を追加</a>
+
+  - 引数
+    - arg {[sdbQuery](#1e80990a7c63)}
+sdbQueryの内、必要なのは以下のメンバ
+      - table {string} 操作対象テーブル名
+      - [set](#58dde3944536) {Object|Object[]} 追加する行オブジェクト
+      - result {[sdbResult](#d2f620e47c51)} レコード単位に追加結果を格納
+  - 戻り値 {null|Error}
+  - エラーコード
+- Duplicate: unique項目に重複した値を設定。diffに<code>{項目名:重複値}</code> 形式で記録
 
 ### <a name="77304ebfbc33">createTable() : データから新規テーブルを生成</a>
 
 管理者のみ実行可。初期データが有った場合、件数を変更履歴シートafter欄に記載
   - 引数 {[sdbQuery](#1e80990a7c63)}
-  - 戻り値 {[result](#d3d2e523c81d)}
+  - 戻り値 {null|Error}
+
+### <a name="30d4aa5c9fd7">deleteRow() : テーブルから条件に合致する行を削除</a>
+
+  - 引数
+    - query {[sdbQuery](#1e80990a7c63)}
+      - table {string} 操作対象のテーブル名
+      - [where](#741ee9383b92) {Object|Function|string} 対象レコードの判定条件
+  - 戻り値 {null|Error}
+
+### <a name="701a78c34e0a">getSchema() : 指定されたテーブルの構造情報を取得</a>
+
+  - 引数
+    - arg {string|string[]} 取得対象テーブル名
+  - 戻り値 {Object.&lt;string,[sdbColumn](#df5b3c98954e)[]&gt;} {テーブル名：項目定義オブジェクトの配列}形式
+  - 変更履歴シートへの記録
 
 ### <a name="a8ac2d5e7372">selectRow() : テーブルから条件に合致する行を抽出</a>
 
@@ -133,36 +136,12 @@
 ### <a name="206036f40579">updateRow() : テーブルを更新</a>
 
   - 引数
-    - arg {Object}
-argの配列は使用しない。同一テーブルでも複数の条件で更新する場合、SpreadDb.arg.query自体を別オブジェクトで用意する
-      - table {[sdbTable](#976403e08f0e)} 操作対象のテーブル管理情報
+    - query {[sdbQuery](#1e80990a7c63)}
+同一テーブルでも複数の条件で更新する場合、SpreadDb.arg.query自体を別オブジェクトで用意する
+      - table {string} 操作対象のテーブル名
       - [where](#741ee9383b92) {Object|Function|string} 対象レコードの判定条件
-      - [record](#58dde3944536) {Object|string|Function} 更新する値
-  - 戻り値 {[sdbLog](#dab8cfcec9d8)[]}
-
-### <a name="288276ee622d">appendRow() : テーブルに新規行を追加</a>
-
-  - 引数
-    - arg {Object|Object[]}
-      - table {[sdbTable](#976403e08f0e)} 操作対象のテーブル管理情報
-      - [record](#58dde3944536) {Object|Object[]} 追加する行オブジェクト
-  - 戻り値 {[sdbLog](#dab8cfcec9d8)[]}
-  - エラーコード
-- Duplicate: unique項目に重複した値を設定。diffに<code>{項目名:重複値}</code> 形式で記録
-
-### <a name="30d4aa5c9fd7">deleteRow() : テーブルから条件に合致する行を削除</a>
-
-  - 引数
-    - arg {Object|Object[]}
-      - table {[sdbTable](#976403e08f0e)} 操作対象のテーブル管理情報
-      - [where](#741ee9383b92) {Object|Function|string} 対象レコードの判定条件
-  - 戻り値 {[sdbLog](#dab8cfcec9d8)[]}
-
-### <a name="701a78c34e0a">getSchema() : 指定されたテーブルの構造情報を取得</a>
-
-  - 引数
-    - arg {string|string[]} 取得対象テーブル名
-  - 戻り値 {Object.&lt;string,[sdbColumn](#df5b3c98954e)[]&gt;} {テーブル名：項目定義オブジェクトの配列}形式
+      - [set](#58dde3944536) {Object|string|Function} 更新する値
+  - 戻り値 {null|Error}
 
 ## <a name="5a75202c3db4">typedefs</a>
 
@@ -170,8 +149,9 @@ argの配列は使用しない。同一テーブルでも複数の条件で更�
 ### <a name="fa77053faee2">擬似メンバ"pv"</a>
 
 pv = private variables
-  - jobId {number}=0 SpreadDb内メソッド実行時の通番
   - whois {string} 'SpreadDb'固定
+  - rv {sdbMain[]} 戻り値。クエリ毎の実行結果の配列
+  - log {sdbLog[]} 変更履歴シートへの追記イメージ
   - query {[sdbQuery](#1e80990a7c63)[]} 処理要求
   - opt {[sdbOption](#a4a26014ccb3)} 起動時オプション
   - spread {<a href="https://developers.google.com/apps-script/reference/spreadsheet/spreadsheet?hl=ja">Spread</a>} スプレッドシートオブジェクト
@@ -186,7 +166,7 @@ pv = private variables
   - ■[queryId] {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列
 未設定の場合は主処理でUUIDを設定
   - ■table {string} 操作対象テーブル名
-全commandで使用。command='schema'の場合、取得対象テーブル名またはその配列
+全commandで使用
 
   - ■command {string} 操作名
 全commandで使用。「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
@@ -196,34 +176,18 @@ command='create'のみで使用
 command='select','update','delete'で使用
   - ■[[set](#58dde3944536)] {Object|Object[]|string|string[]|Function} 追加・更新する値
 command='create','update','append'で使用
+  - 〇arg {string} 操作関数に渡された引数(データ)
+createならcols、select/update/deleteならwhere、append/schemaなら空白。
+create/appendの追加レコード情報、selectの抽出レコード等はrecordで確認する運用を想定
+
   - □qSts {string} クエリ単位の実行結果
 正常終了なら"OK"。エラーコードは以下の通り。
 - create : "Already Exist", "No Cols and Data"
 - その他 : "No Table"
+  - 〇num {number} 変更された行数
+create: 初期値の行数、append:追加行数、update:変更行数、delete:削除行数、select:抽出行数、schema:0(固定)
+
   - 〇result {[sdbResult](#d2f620e47c51)[]} レコード単位の実行結果
-
-### <a name="a4a26014ccb3">sdbOption {Object} オプション</a>
-
-  - userId {string}='guest' ユーザの識別子
-指定する場合、必ずuserAuthも併せて指定
-  - userAuth {Object.&lt;string,string&gt;}={} テーブル毎のアクセス権限。<code>{シート名:rwdos文字列}</code> 形式
-r:select(read), w:write, d:delete, s:schema, o:own only(指定シートのprimaryKeyがuserIdと一致するレコードのみ参照・変更可。削除不可)。追加はwがあれば可
-
-o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
-また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
-read/writeは自分のみ可、delete/schemaは実行不可
-
-  - log {string}='log' 変更履歴テーブル名
-nullの場合、ログ出力は行わない。領域名 &gt; A1記法 &gt; シート名の順に解釈
-  - maxTrial {number}=5 テーブル更新時、ロックされていた場合の最大試行回数
-  - interval {number}=10000 テーブル更新時、ロックされていた場合の試行間隔(ミリ秒)
-  - guestAuth {Object.&lt;string,string&gt;}={} ゲストに付与する権限。<code>{シート名:rwdos文字列}</code> 形式
-  - adminId {string}='Administrator' 管理者として扱うuserId
-管理者は全てのシートの全権限を持つ
-
-  - additionalPrimaryKey {Object} createTableで主キー無指定時に追加設定される主キー項目名
-既定値は`{name:'rowId',type:'UUID',note:'主キー',primaryKey:true,default:()=&gt;Utilities.getUuid()}`
-
 
 ### <a name="976403e08f0e">sdbTable {Object} テーブルの管理情報</a>
 
@@ -310,49 +274,38 @@ createならcols、select/update/deleteならwhere、append/schemaなら空白�
 create/appendの追加レコード情報、selectの抽出レコード等はrecordで確認する運用を想定
 
   - [qSt](#a0484ae4e8cb)s {string} クエリ単位の実行結果
+  - num {number} 変更された行数
+create: 初期値の行数、append:追加行数、update:変更行数、delete:削除行数、select:抽出行数、schema:0(固定)
+
   - [pKey](#6d2c404bdbd8) {string} 変更したレコードのprimaryKey
-  - [rSts](#e6d17beebb65) {string} レコード単位でのエラーコード
+  - rSts {string} レコード単位でのエラーコード
   - diff {Object} 当該レコードの変更点
 
-### <a name="b03c5ccd2f8f">sdbMain {Object} 主処理(=SpreadDb)の実行結果オブジェクト</a>
+### <a name="a4a26014ccb3">sdbOption {Object} オプション</a>
 
-  - [timestamp](#bf9d7d1a97d2) {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)
-  - [queryId](#e0188bfade27) {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列
-未設定の場合は主処理でUUIDを設定
-  - [table](#cd1ba8419dfc) {string|string[]} 操作対象テーブル名
-全commandで使用。command='schema'の場合、取得対象テーブル名またはその配列
+  - userId {string}='guest' ユーザの識別子
+指定する場合、必ずuserAuthも併せて指定
+  - userAuth {Object.&lt;string,string&gt;}={} テーブル毎のアクセス権限。<code>{シート名:rwdos文字列}</code> 形式
+r:select(read), w:write, d:delete, s:schema, o:own only(指定シートのprimaryKeyがuserIdと一致するレコードのみ参照・変更可。削除不可)。追加はwがあれば可
 
-  - command {string} 操作名
-全commandで使用。「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
-  - qSts {string} クエリ単位の実行結果
-正常終了なら"OK"。エラーコードは以下の通り。
-- create : "Already Exist", "No Cols and Data"
-- その他 : "No Table"
-  - result {Object[]} レコード単位の実行結果
-    - recordId {string} 処理対象レコードの識別子
-    - rSts {string}='' レコード単位でのエラーコード
-append/updateで重複エラー時は"Duplicate"
+o(own record only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
+また検索対象テーブルはprimaryKey要設定、検索条件もprimaryKeyの値のみ指定可
+read/writeは自分のみ可、delete/schemaは実行不可
 
-    - diff {Object} 当該レコードの変更点
-create : 初期値として追加した行オブジェクト
-select : 抽出された行オブジェクト
-append : 追加された行オブジェクト
-update : 変更点。{変更された項目名:[変更前,変更後]}
-delete : 削除された行オブジェクト
-schema : 提供された項目定義(sdbColumn[])
+  - log {string}='log' 変更履歴テーブル名
+nullの場合、ログ出力は行わない。領域名 &gt; A1記法 &gt; シート名の順に解釈
+  - maxTrial {number}=5 テーブル更新時、ロックされていた場合の最大試行回数
+  - interval {number}=10000 テーブル更新時、ロックされていた場合の試行間隔(ミリ秒)
+  - guestAuth {Object.&lt;string,string&gt;}={} ゲストに付与する権限。<code>{シート名:rwdos文字列}</code> 形式
+  - adminId {string}='Administrator' 管理者として扱うuserId
+管理者は全てのシートの全権限を持つ
 
+  - additionalPrimaryKey {Object} createTableで主キー無指定時に追加設定される主キー項目名
+既定値は`{name:'rowId',type:'UUID',note:'主キー',primaryKey:true,default:()=&gt;Utilities.getUuid()}`
 
-### <a name="2609271977a8">sdbGenSchema {Object} genSchemaの戻り値</a>
+  - 案：system {string[]} システム用シート名
+メモの修正による項目定義の変更を行うことが不適切なシートは「システム用シート」として、起動時引数での指定を可能にする。
 
-sdbSchemaにメモ情報を付加
-  - schema {[sdbSchema](#7b012b226f8e)}
-  - notes {string[]} ヘッダ行に対応したメモ
-
-### <a name="01ee6b06c8a6">sdbConvertRow {Object} convertRowの戻り値</a>
-
-  - raw {any[][]} シートイメージ
-  - obj {Object[]} 行オブジェクトの配列
-  - header {string} ヘッダ行
   - sdbResult {Object} レコード単位の実行結果
     - pKey {string} 処理対象レコードの識別子
     - rSts {string}='OK' レコード単位での実行結果
@@ -366,6 +319,29 @@ update : 変更点。{変更された項目名:[変更前,変更後]}
 delete : 削除された行オブジェクト
 schema : 提供された項目定義(sdbColumn[])
 
+
+### <a name="b03c5ccd2f8f">sdbMain {Object} 主処理(=SpreadDb)の実行結果オブジェクト</a>
+
+  - [timestamp](#bf9d7d1a97d2) {string} 更新日時(ISO8601拡張形式)
+  - [queryId](#e0188bfade27) {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列
+未設定の場合は主処理でUUIDを設定
+  - [table](#cd1ba8419dfc) {string|string[]} 操作対象テーブル名
+全commandで使用。command='schema'の場合、取得対象テーブル名またはその配列
+
+  - command {string} 操作名
+全commandで使用。「[commandの種類とrwdos文字列によるアクセス制御](#0055bda95f77)」参照
+  - [[data](#741ee9383b92)] {Object|Function|string} 操作関数に渡された引数(データ)
+createならcols、select/update/deleteならwhere、append/schemaなら空白。
+create/appendの追加レコード情報、selectの抽出レコード等はrecordで確認する運用を想定
+
+  - qSts {string} クエリ単位の実行結果
+正常終了なら"OK"。エラーコードは以下の通り。
+- create : "Already Exist", "No Cols and Data"
+- その他 : "No Table"
+  - num {number} 変更された行数
+create: 初期値の行数、append:追加行数、update:変更行数、delete:削除行数、select:抽出行数、schema:0(固定)
+
+  - result {[sdbResult](#d2f620e47c51)[]} レコード単位の実行結果
 
 ## <a name="235f8a9e77af">variables</a>
 
@@ -399,9 +375,10 @@ default(sdbColumn), where, record(update他)では関数での指定を可能に
 これらをセル・メモで保存する場合、文字列に変換する必要があるが、以下のルールで対応する。
 
 - 引数は行オブジェクトのみ(引数は必ず一つ)
-- 関数に復元する場合`new Function('o',[ロジック部分文字列])で関数化
+- 関数に復元する場合`new Function('o',[ロジック部分文字列])`で関数化
   - 必ず"{〜}"で囲み、return文を付ける
-
+- コメントは`//〜`または`/*〜*/`で指定。無指定の場合、前行の続きと看做す
+- 関数は一行で記述する(複数行は不可)
 
 ### <a name="0055bda95f77">commandの種類とrwdos文字列によるアクセス制御</a>
 
@@ -417,9 +394,17 @@ commandの種類は下表の通り。&lt;br&gt;
 削除 | delete | d
 テーブル管理情報取得 | schema | s
 
-特殊権限'o' : イベント申込情報等、本人以外の参照・更新を抑止するためのアクセス権限。
+  - 特殊権限'o'
+イベント申込情報等、本人以外の参照・更新を抑止するためのアクセス権限。
+
+- 自分のread/write(select,update)およびschemaのみ実行可。append/deleteは実行不可&lt;br&gt;
+  ∵新規登録(append)はシステム管理者の判断が必要。また誤ってdeleteした場合はappendが必要なのでこれも不可
+- o(=own set only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。
+- 対象テーブルはユーザ識別子項目をprimaryKeyとして要設定
+- 検索条件(where句)もprimaryKeyの値のみ指定可(Object,function,JSON他は不可)
+
+【旧仕様】
 - `userAuth:{シート名:o}`が指定された場合、当該シートのprimaryKey=userIdとなっているレコードのみ'r','w'可と看做す。
-- 'o'指定が有るシートのアクセス権として'rwds'が指定されていても'o'のみ指定されたと看做す
 - 'o'指定でselect/updateする場合、where句は無視され自情報に対する処理要求と看做す
   ex. userId=2の人がuserId=1の人の氏名の更新を要求 ⇒ userId=2の氏名が更新される
   ```
@@ -428,6 +413,7 @@ commandの種類は下表の通り。&lt;br&gt;
     {userId:2,userAuth:{camp2024:'o'}}
   ); // -&gt; userId=2の氏名が「テスト」に
   ```
+
   - クエリのエラーとレコードのエラー
 - クエリのエラー
   - 指定テーブルへのアクセス権が無い等、クエリ単位で発生するエラー
@@ -449,10 +435,44 @@ commandの種類は下表の通り。&lt;br&gt;
     - update
     - delete
 
+  - エラーの種類
+| No | コード | 設定項目 | 発生箇所 | 原因 |
+| --: | :-- | :-- | :-- | :-- |
+| 1 | Empty set | qSts | "createTable |
+| appendRow" | query.setが不在、または配列の長さが0 |
+| 2 | Invalid set | qSts | appendRow | query.setが非配列なのに要素がオブジェクトではない |
+| 3 | Already Exist | qSts | createTable | シートが既に存在している |
+| 4 | No Table | qSts | "doQuery |
+| genTable" | (create以外で)対象テーブルが無い |
+| 5 | No where | qSts | "deleteRow |
+| updateRow" | where句がqueryに無い |
+| 6 | No set | qSts | appendRow | queryにメンバ"set"が不在 |
+| 7 | No Table name | qSts | doQuery | query.tableが無い、または文字列では無い |
+| 8 | No command | qSts | doQuery | query.commandが無い、または文字列では無い |
+| 9 | Invalid where clause | qSts | doQuery | (権限"o"で)where句の値がプリミティブ型ではない |
+| 10 | No Authority | qSts | doQuery | 指定されたテーブル操作の権限が無い |
+| 11 | その他 | qSts | doQuery | エラーオブジェクトのmessage |
+| 12 | No cols and data | qSts | genTable | createで項目定義も初期データも無い |
+| 13 | No set | qSts | updateRow | set句がqueryに無い |
+| 14 | Undefined Column | qSts | updateRow | 更新対象項目がテーブルに無い |
+| 15 | Duplicate | qSts | createTable | 初期レコード内に重複が存在 |
+| 16 | Duplicate | rSts | "appendRow |
+| updateRow" | unique項目に重複した値を入れようとした |
+| 17 | Could not Lock | Error | main | 規定回数以上シートのロックに失敗した |
+| 18 | Invalid Argument | Error | functionalyze | 不適切な引数 |
+    - fatal error : ソース修正が必要な致命的エラー
+SpreadDbからの戻り値はErrorオブジェクト。変更履歴シートには残らない。
+
+    - warning error : データや権限の状態により発生するエラー
+ソース修正は不要。SpreadDbからの戻り値は通常のオブジェクト。変更履歴シートに残る。
+    - command系と非command系メソッドのエラー取扱の違い
+command系は他関数からの被呼出メソッドのため、エラーをqStsに持たせるだけで実行停止につながるErrorオブジェクトは返さない。
+非command系はこの制約が無いため、通常通りErrorオブジェクトを返す。Errorオブジェクトの扱いはcommand系メソッドで吸収する。
+
 
 ## <a name="d154b1fe324f">更新履歴</a>
 
-- rev.1.2.0 : 2025/01/04〜
+- rev.1.2.0 : 2025/01/04〜01/26
   - 設計思想を「クエリ単位に必要な情報を付加して実行、結果もクエリに付加」に変更
   - 変更履歴を「クエリの実行結果」と「(クエリ内の)レコードの実行結果」の二種類のレコードレイアウトを持つように変更
   - エラー発生時、messageではなくエラーコードで返すよう変更

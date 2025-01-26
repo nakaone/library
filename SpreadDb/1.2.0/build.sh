@@ -38,25 +38,15 @@ test="$prj/test"
 tmp="$prj/tmp"; mkdir -p $tmp; rm -rf $tmp/*
 
 # ----------------------------------------------
-# 1. core.jsの作成
+log "1"; # test.jsの作成
 # ----------------------------------------------
-log "1";
-cat $src/proto.js | awk 1 | \
-$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $tmp/core.js
-sed -e 's/[ \t]+$//g' $tmp/core.js > $prj/core.js
-
-# ----------------------------------------------
-# 2. test.jsの作成
-# ----------------------------------------------
-log "2";
 cat $test/proto.js | awk 1 | \
 $embed -prj:$prj -src:$src -lib:$lib -test:$test -tmp:$tmp > $tmp/test.js
 sed -e 's/[ \t]+$//g' $tmp/test.js > $prj/test.js
 
 # ----------------------------------------------
-# 3. readme.mdの作成
+log "2"; # readme.mdの作成
 # ----------------------------------------------
-log "3";
 cat $doc/workflowy.opml | awk 1 | \
 node doc/workflowy.js > $prj/readme.md
 
