@@ -326,12 +326,12 @@ function SpreadDbTest() {
         setup: { 'ユーザ管理': false },
         query: { command: 'select', where: 11 },
         opt: { userId: 'Administrator' },
-        check: [{ qSts: 'Invalid table specify', num: 0, result: [] }],
+        check: [{ qSts: 'No Table name', num: 0, result: [] }],
       }, { // 7.command指定無し ※select以外も含む、全体テスト
         setup: { 'ユーザ管理': false },
         query: { table: 'ユーザ管理', where: 11 },
         opt: { userId: 'Administrator' },
-        check: [{ qSts: 'Invalid command specify', num: 0, result: [] }],
+        check: [{ qSts: 'No command', num: 0, result: [] }],
       }
     ],
     append: [
@@ -1063,7 +1063,7 @@ function SpreadDb(query = [], opt = {}) {
         cols: pv.opt.sdbLog,
       });
 
-      dev.step(3); // テーブル管理情報を作成
+      dev.step(3); // 変更履歴のテーブル管理情報を作成
       v.r = genTable(v.query);
       if (v.r instanceof Error) throw v.r;
 
@@ -1304,10 +1304,10 @@ function SpreadDb(query = [], opt = {}) {
       // -------------------------------------------------
       if (!query.table || typeof query.table !== 'string') {
         dev.step(1.1);  // 必須パラメータの存否・形式確認：query.table
-        query.qSts = 'Invalid table specify';
+        query.qSts = 'No Table name';
       } else if (!query.command || ['create', 'select', 'update', 'append', 'delete', 'schema'].includes(query.command) !== true) {
         dev.step(1.2);  // 必須パラメータの存否・形式確認：query.command
-        query.qSts = 'Invalid command specify';
+        query.qSts = 'No command';
       } else {
         dev.step(1.3); // 操作対象のテーブル管理情報を準備
         if (!Object.hasOwn(pv.table, query.table)) {
@@ -1738,12 +1738,6 @@ function SpreadDb(query = [], opt = {}) {
     const v = { whois: `${pv.whois}.genTable`, step: 0, rv: null };
     dev.start(v.whois, [...arguments]);
     try {
-
-      dev.step(1.1); // テーブル名が不在
-      if (!query || !query.table) throw new Error(`No Table Name`);
-
-      dev.step(1.2); // テーブル管理情報が生成済
-      if (whichType(pv.query[query.table], 'Object')) throw new Error(`Already Generated`);
 
       dev.step(2); // テーブルのプロトタイプを作成、初期化＋既定値設定
       v.r = objectizeColumn('sdbTable');
