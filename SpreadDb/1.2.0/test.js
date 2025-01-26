@@ -2103,126 +2103,12 @@ function devTools(option) {
   let opt = Object.assign({ start: true, arg: true, step: false }, option);
   let seq = 0;  // 関数の呼出順
   let stack = []; // 呼出元関数情報のスタック
-  return { start: start, end: end, error: error, step: step, dump: dump, check: check, changeOption: changeOption };
+  return { changeOption: changeOption, check: check, dump: dump, end: end, error: error, start: start, step: step};
 
-  /** start: 呼出元関数情報の登録＋開始メッセージの表示
-   * @param {string} name - 関数名
-   * @param {any[]} arg - start呼出元関数に渡された引数([...arguments]固定)
-   */
-  function start(name, arg = []) {
-    const o = {
-      class: '',  // nameがクラス名.メソッド名だった場合のクラス名
-      name: name,
-      seq: seq++,
-      step: 0,
-      footprint: [],
-      arg: [],
-    };
-    o.sSeq = ('000' + o.seq).slice(-4);
-    const caller = stack.length === 0 ? null : stack[stack.length - 1]; // 呼出元
-    // nameがクラス名.メソッド名だった場合、クラス名をセット
-    if (name.includes('.')) [o.class, o.name] = name.split('.');
-    // ラベル作成。呼出元と同じクラスならクラス名は省略
-    o.label = `[${o.sSeq}]` + ((o.class === '' || caller.class === o.class) ? '' : `${o.class}.`) + o.name;
-    // footprintの作成
-    stack.forEach(x => o.footprint.push(`${x.label}.${x.step}`));
-    o.footprint = o.footprint.length === 0 ? '(root)' : o.footprint.join(' > ');
-    // 引数情報の作成
-    if (arg.length === 0) {
-      o.arg = '(void)';
-    } else {
-      for (let i = 0; i < arg.length; i++) o.arg[i] = stringify(arg[i]);
-      o.arg = o.arg.join('\n');
-    }
-    // 作成した呼出元関数情報を保存
-    stack.push(o);
-
-    if (opt.start) {  // 開始メッセージの表示指定が有った場合
-      console.log(`${o.label} start.\n-- footprint\n${o.footprint}` + (opt.arg ? `\n-- arguments\n${o.arg}` : ''));
-    }
-  }
-
-  /** end: 正常終了時の呼出元関数情報の抹消＋終了メッセージの表示 */
-  function end() {
-    const o = stack.pop();
-    if (opt.start) console.log(`${o.label} normal end.`);
-  }
-
-  /** error: 異常終了時の呼出元関数情報の抹消＋終了メッセージの表示 */
-  function error(e) {
-    const o = stack.pop();
-    // 参考 : e.lineNumber, e.columnNumber, e.causeを試したが、いずれもundefined
-    e.message = `${o.label} abnormal end at step.${o.step}\n${e.message}`;
-    console.error(e.message
-      + `\n-- footprint\n${o.footprint}`
-      + `\n-- arguments\n${o.arg}`
-    );
-  }
-
-  /** step: 呼出元関数の進捗状況の登録＋メッセージの表示 */
-  function step(step, msg = '') {
-    const o = stack[stack.length - 1];
-    o.step = step;
-    if (opt.step) console.log(`${o.label} step.${o.step} ${msg}`);
-  }
-
-  /** dump: 渡された変数の内容をコンソールに表示
-   * - 引数には対象変数を列記。最後の引数が数値だった場合、行番号と看做す
-   * @param {any|any[]} arg - 表示する変数および行番号
-   * @returns {void}
-   */
-  function dump() {
-    let arg = [...arguments];
-    let line = typeof arg[arg.length - 1] === 'number' ? arg.pop() : null;
-    const o = stack[stack.length - 1];
-    let msg = (line === null ? '' : `l.${line} `) + `${o.label} step.${o.step}`;
-    for (let i = 0; i < arg.length; i++) {
-      // 対象変数が複数有る場合、Noを追記
-      msg += '\n' + (arg.length > 0 ? `${i}: ` : '') + stringify(arg[i]);
-    }
-    console.log(msg);
-  }
-  /** stringify: 変数の内容をラベル＋データ型＋値の文字列として出力
-   * @param {any} arg - 文字列化する変数
-   * @returns {string}
-   */
-  function stringify(arg) {
-    /** recursive: 変数の内容を再帰的にメッセージ化
-     * @param {any} arg - 内容を表示する変数
-     * @param {number} depth=0 - 階層の深さ
-     * @param {string} label - メンバ名または添字
-     */
-    const recursive = (arg, depth = 0, label = '') => {
-      // データ型の判定
-      let type = String(Object.prototype.toString.call(arg).slice(8, -1));
-      switch (type) {
-        case 'Number': if (Number.isNaN(arg)) type = 'NaN'; break;
-        case 'Function': if (!('prototype' in arg)) type = 'Arrow'; break;
-      }
-      // ラベル＋データ型＋値の出力
-      let indent = '  '.repeat(depth);
-      switch (type) {
-        case 'Object':
-          msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}{`);
-          for (let mn in arg) recursive(arg[mn], depth + 1, mn);
-          msg.push(`${indent}}`);
-          break;
-        case 'Array':
-          msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}[`);
-          for (let i = 0; i < arg.length; i++) recursive(arg[i], depth + 1, String(i));
-          msg.push(`${indent}]`);
-          break;
-        default:
-          let val = typeof arg === 'function' ? `"${arg.toString()}"` : (typeof arg === 'string' ? `"${arg}"` : arg);
-          // Class Sheetのメソッドのように、toStringが効かないnative codeは出力しない
-          if (typeof val !== 'string' || val.indexOf('[native code]') < 0) {
-            msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}${val}(${type})`);
-          }
-      }
-    }
-    const msg = [];
-    recursive(arg);
-    return msg.join('\n');
+  /** オプションの変更 */
+  function changeOption(option) {
+    opt = Object.assign(opt, option);
+    console.log(`devTools.changeOption result: ${JSON.stringify(opt)}`);
   }
   /** 実行結果の確認
    * - JSON文字列の場合、オブジェクト化した上でオブジェクトとして比較する
@@ -2319,10 +2205,120 @@ function devTools(option) {
     if (isOK) console.log(msg); else console.error(msg);
     return isOK;
   }
-  /** オプションの変更 */
-  function changeOption(option) {
-    opt = Object.assign(opt, option);
-    console.log(`devTools.changeOption result: ${JSON.stringify(opt)}`);
+  /** dump: 渡された変数の内容をコンソールに表示
+   * - 引数には対象変数を列記。最後の引数が数値だった場合、行番号と看做す
+   * @param {any|any[]} arg - 表示する変数および行番号
+   * @returns {void}
+   */
+  function dump() {
+    let arg = [...arguments];
+    let line = typeof arg[arg.length - 1] === 'number' ? arg.pop() : null;
+    const o = stack[stack.length - 1];
+    let msg = (line === null ? '' : `l.${line} `) + `${o.label} step.${o.step}`;
+    for (let i = 0; i < arg.length; i++) {
+      // 対象変数が複数有る場合、Noを追記
+      msg += '\n' + (arg.length > 0 ? `${i}: ` : '') + stringify(arg[i]);
+    }
+    console.log(msg);
+  }
+  /** end: 正常終了時の呼出元関数情報の抹消＋終了メッセージの表示 */
+  function end() {
+    const o = stack.pop();
+    if (opt.start) console.log(`${o.label} normal end.`);
+  }
+  /** error: 異常終了時の呼出元関数情報の抹消＋終了メッセージの表示 */
+  function error(e) {
+    const o = stack.pop();
+    // 参考 : e.lineNumber, e.columnNumber, e.causeを試したが、いずれもundefined
+    e.message = `${o.label} abnormal end at step.${o.step}\n${e.message}`;
+    console.error(e.message
+      + `\n-- footprint\n${o.footprint}`
+      + `\n-- arguments\n${o.arg}`
+    );
+  }
+  /** start: 呼出元関数情報の登録＋開始メッセージの表示
+   * @param {string} name - 関数名
+   * @param {any[]} arg - start呼出元関数に渡された引数([...arguments]固定)
+   */
+  function start(name, arg = []) {
+    const o = {
+      class: '',  // nameがクラス名.メソッド名だった場合のクラス名
+      name: name,
+      seq: seq++,
+      step: 0,
+      footprint: [],
+      arg: [],
+    };
+    o.sSeq = ('000' + o.seq).slice(-4);
+    const caller = stack.length === 0 ? null : stack[stack.length - 1]; // 呼出元
+    // nameがクラス名.メソッド名だった場合、クラス名をセット
+    if (name.includes('.')) [o.class, o.name] = name.split('.');
+    // ラベル作成。呼出元と同じクラスならクラス名は省略
+    o.label = `[${o.sSeq}]` + ((o.class === '' || caller.class === o.class) ? '' : `${o.class}.`) + o.name;
+    // footprintの作成
+    stack.forEach(x => o.footprint.push(`${x.label}.${x.step}`));
+    o.footprint = o.footprint.length === 0 ? '(root)' : o.footprint.join(' > ');
+    // 引数情報の作成
+    if (arg.length === 0) {
+      o.arg = '(void)';
+    } else {
+      for (let i = 0; i < arg.length; i++) o.arg[i] = stringify(arg[i]);
+      o.arg = o.arg.join('\n');
+    }
+    // 作成した呼出元関数情報を保存
+    stack.push(o);
+
+    if (opt.start) {  // 開始メッセージの表示指定が有った場合
+      console.log(`${o.label} start.\n-- footprint\n${o.footprint}` + (opt.arg ? `\n-- arguments\n${o.arg}` : ''));
+    }
+  }
+  /** step: 呼出元関数の進捗状況の登録＋メッセージの表示 */
+  function step(step, msg = '') {
+    const o = stack[stack.length - 1];
+    o.step = step;
+    if (opt.step) console.log(`${o.label} step.${o.step} ${msg}`);
+  }
+  /** stringify: 変数の内容をラベル＋データ型＋値の文字列として出力
+   * @param {any} arg - 文字列化する変数
+   * @returns {string}
+   */
+  function stringify(arg) {
+    /** recursive: 変数の内容を再帰的にメッセージ化
+     * @param {any} arg - 内容を表示する変数
+     * @param {number} depth=0 - 階層の深さ
+     * @param {string} label - メンバ名または添字
+     */
+    const recursive = (arg, depth = 0, label = '') => {
+      // データ型の判定
+      let type = String(Object.prototype.toString.call(arg).slice(8, -1));
+      switch (type) {
+        case 'Number': if (Number.isNaN(arg)) type = 'NaN'; break;
+        case 'Function': if (!('prototype' in arg)) type = 'Arrow'; break;
+      }
+      // ラベル＋データ型＋値の出力
+      let indent = '  '.repeat(depth);
+      switch (type) {
+        case 'Object':
+          msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}{`);
+          for (let mn in arg) recursive(arg[mn], depth + 1, mn);
+          msg.push(`${indent}}`);
+          break;
+        case 'Array':
+          msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}[`);
+          for (let i = 0; i < arg.length; i++) recursive(arg[i], depth + 1, String(i));
+          msg.push(`${indent}]`);
+          break;
+        default:
+          let val = typeof arg === 'function' ? `"${arg.toString()}"` : (typeof arg === 'string' ? `"${arg}"` : arg);
+          // Class Sheetのメソッドのように、toStringが効かないnative codeは出力しない
+          if (typeof val !== 'string' || val.indexOf('[native code]') < 0) {
+            msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}${val}(${type})`);
+          }
+      }
+    }
+    const msg = [];
+    recursive(arg);
+    return msg.join('\n');
   }
 }
 /** 二つの引数が同値か判断する
@@ -2465,198 +2461,6 @@ function isEqual(v1 = undefined, v2 = undefined, opt = {}) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
       + `\n${e.message}\nv1(${typeof v1})=${typeof v1 === 'object' ? JSON.stringify(v1) : v1}`
       + `\nv2(${typeof v2})=${typeof v2 === 'object' ? JSON.stringify(v2) : v2}`;
-    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
-    return e;
-  }
-}
-/** 渡された変数内のオブジェクト・配列を再帰的にマージ
- * - pri,subともデータ型は不問。次項のデシジョンテーブルに基づき、結果を返す
- *
- * @param {any} pri - 優先される変数(priority)
- * @param {any} sub - 劣後する変数(subordinary)
- * @param {Object} opt - オプション
- * @returns {any|Error}
- *
- * #### デシジョンテーブル
- *
- * | 優先(pri) | 劣後(sub) | 結果 | 備考 |
- * | :--: | :--: | :--: | :-- |
- * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
- * |  A  |  B  |  A  | |
- * |  A  | [B] |  A  | |
- * |  A  | {B} |  A  | |
- * | [A] |  -  | [A] | |
- * | [A] |  B  | [A] | |
- * | [A] | [B] | [X] | 配列はopt.arrayによる |
- * | [A] | {B} | [A] | |
- * | {A} |  -  | {A} | |
- * | {A} |  B  | {A} | |
- * | {A} | [B] | {A} | |
- * | {A} | {B} | {A+B} | オブジェクトも置換ではなく結合する |
- * |  -  |  -  |  -  | |
- * |  -  |  B  |  B  | |
- * |  -  | [B] | [B] | |
- * |  -  | {B} | {B} | |
- *
- * #### opt.array : pri,sub双方配列の場合の処理方法を指定
- *
- * 例 pri:[1,2,{x:'a'},{a:10,b:20}], sub:[1,3,{x:'a'},{a:30,c:40}]
- *
- * - pri(priority): 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
- * - add: 値の重複に拘わらず、pri+subを返す ⇒ [1,2,{x:'a'},{a:10,b:20},1,3,{x:'a'},{a:30,c:40}]
- * - set(既定値): priに無いsubの要素をpriに追加 ⇒ [1,2,3,{x:'a'},{x:'a'},{a:10,b:20},{a:30,c:40}]
- *   ※`{x:'a'}`は別オブジェクトなので、重複排除されない事に注意。関数、Date等のオブジェクトも同様。
- * - str(strict): priに無いsubの要素をpriに追加。setと異なり、内容が同値なら重複排除<br>
- *   ⇒ [1,2,3,{x:'a'},{a:10,b:20},{a:30,c:40}]
- * - cmp(未実装): pri[n]とsub[n]を比較(comparison)。原則pri優先だが、例外として両方がObj or Arrならマージ<br>
- *   ⇒ [1,2,{x:'a'},{a:10,b:20,c:40}]
- */
-function mergeDeeply(pri, sub, opt = {}) {
-  const v = {
-    whois: 'mergeDeeply', rv: null, step: 0,
-    isObj: arg => arg && String(Object.prototype.toString.call(arg).slice(8, -1)) === 'Object',
-    isArr: arg => arg && Array.isArray(arg),
-  };
-  //console.log(`${v.whois} start.`+`\npri=${stringify(pri)}`+`\nsub=${stringify(sub)}`+`\nopt=${stringify(opt)}`);
-  try {
-
-    v.step = 1; // 既定値の設定
-    if (!opt.hasOwnProperty('array')) opt.array = 'set';
-
-    if (v.isObj(pri) && v.isObj(sub)) {
-      v.step = 2; // sub,pri共にハッシュの場合
-      v.rv = {};
-      v.step = 2.1; // 優先・劣後Obj両方のハッシュキー(文字列)を、重複しない形でv.keysに保存
-      v.keys = new Set([...Object.keys(pri), ...Object.keys(sub)]);
-      for (v.key of v.keys) {
-        if (pri.hasOwnProperty(v.key) && sub.hasOwnProperty(v.key)) {
-          v.step = 2.2; // pri,sub両方がキーを持つ
-          if (v.isObj(pri[v.key]) && v.isObj(sub[v.key]) || v.isArr(pri[v.key]) && v.isArr(sub[v.key])) {
-            v.step = 2.21; // 配列またはオブジェクトの場合は再帰呼出
-            v.rv[v.key] = mergeDeeply(pri[v.key], sub[v.key], opt);
-          } else {
-            v.step = 2.22; // 配列でもオブジェクトでもない場合は優先変数の値をセット
-            v.rv[v.key] = pri[v.key];
-          }
-        } else {
-          v.step = 2.3; // pri,subいずれか片方しかキーを持っていない
-          v.rv[v.key] = pri.hasOwnProperty(v.key) ? pri[v.key] : sub[v.key];
-        }
-      }
-    } else if (v.isArr(pri) && v.isArr(sub)) {
-      v.step = '3 ' + opt.array; // sub,pri共に配列の場合
-      switch (opt.array) {
-        case 'pri':
-          // pri: 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
-          v.rv = pri;
-          break;
-        case 'add':
-          // add: 値の重複に拘わらず、pri+subを返す ⇒ [1,2,{x:'a'},{a:10,b:20},1,3,{x:'a'},{a:30,c:40}]
-          v.rv = [...pri, ...sub];
-          break;
-        case 'str':
-          // str(strict): priに無いsubの要素をpriに追加。setと異なり、内容が同値なら重複排除<br>
-          // ⇒ [1,2,3,{x:'a'},{a:10,b:20},{a:30,c:40}]
-          v.rv = [];
-          pri.forEach(x => v.rv.push(x));
-          sub.forEach(s => {
-            v.flag = false;
-            pri.forEach(p => v.flag = v.flag || isEqual(s, p));
-            if (v.flag === false) v.rv.push(s);
-          });
-          break;
-        default:
-          // set(既定値): priに無いsubの要素をpriに追加 ⇒ [1,2,{x:'a'},{a:10,b:20},3,{x:'a'},{a:30,c:40}]
-          v.rv = [...new Set([...pri, ...sub])];
-      }
-    } else {
-      v.step = 4; // subとpriのデータ型が異なる ⇒ priを優先してセット
-      v.rv = whichType(pri, 'Undefined') ? sub : pri;
-    }
-    v.step = 5;
-    return v.rv;
-
-  } catch (e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`
-      + `\npri=${JSON.stringify(pri)}`
-      + `\nsub=${JSON.stringify(sub)}`
-      + `\nopt=${JSON.stringify(opt)}`;
-    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
-    return e;
-  }
-}
-/** 関数他を含め、変数を文字列化
- * - JSON.stringifyでは文字列化されない関数、シンボル、undefinedも文字列化して表示
- * - 関数はtoString()で文字列化
- * - シンボルは`Symbol(xxx)`という文字列とする
- * - undefinedは'undefined'(文字列)とする
- *
- * @param {Object} variable - 文字列化対象変数
- * @param {Object|boolean} opt - booleanの場合、opt.addTypeの値とする
- * @param {boolean} opt.addType=false - 文字列化の際、元のデータ型を追記
- * @returns {string}
- * @example
- *
- * ```
- * console.log(`l.424 v.td=${stringify(v.td,true)}`)
- * ⇒ l.424 v.td={
- *   "children":[{
- *     "attr":{"class":"[String]th"}, // opt.addType=trueなら[データ型名]がつく
- *     "text":"[String]タグ"
- *   },{
- *     "attr":{"class":"[String]td"},
- *     "text":"[String]#md"
- *   }],
- *   "style":{"gridColumn":"[String]1/13"},
- *   "attr":{"name":"[String]tag"}
- * }
- * ```
- */
-function stringify(variable, opt = { addType: false }) {
-  const v = { whois: 'stringify', rv: null, step: 0 };
-  const conv = arg => {
-    const w = { type: whichType(arg) };
-    w.pre = opt.addType ? `[${w.type}]` : '';
-    switch (w.type) {
-      case 'Function': case 'Arrow': case 'Symbol':
-        w.rv = w.pre + arg.toString(); break;
-      case 'BigInt':
-        w.rv = w.pre + parseInt(arg); break;
-      case 'Undefined':
-        w.rv = w.pre + 'undefined'; break;
-      case 'Object':
-        w.rv = {};
-        for (w.i in arg) {
-          // 自分自身(stringify)は出力対象外
-          if (w.i === 'stringify') continue;
-          w.rv[w.i] = conv(arg[w.i]);
-        }
-        break;
-      case 'Array':
-        w.rv = [];
-        for (w.i = 0; w.i < arg.length; w.i++) {
-          w.rv[w.i] = conv(arg[w.i]);
-        }
-        break;
-      default:
-        w.rv = w.pre + arg;
-    }
-    return w.rv;
-  };
-  //console.log(`${v.whois} start.\nvariable=${variable}\nopt=${JSON.stringify(opt)}`);
-  try {
-
-    v.step = 1; // 事前準備
-    if (typeof opt === 'boolean') opt = { addType: opt };
-
-    v.step = 2; // 終了処理
-    //console.log(`${v.whois} normal end.`);
-    return JSON.stringify(conv(variable));
-
-  } catch (e) {
-    e.message = `${v.whois} abnormal end at step.${v.step}`
-      + `\n${e.message}`;
     console.error(`${e.message}\nv=${JSON.stringify(v)}`);
     return e;
   }
