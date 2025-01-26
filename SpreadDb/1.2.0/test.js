@@ -1,9 +1,11 @@
-const dev = devTools({step:true});// 開発時：{step:true}、通してテスト時：{start:false}
+const dev = devTools();
 function SpreadDbTest(){
   const v = {scenario:'append',start:8,num:1,//num=0ならstart以降全部、マイナスならstart無視して後ろから
     whois:`SpreadDbTest`,step:0,rv:null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
   };
+  // 表示内容の指定。開発時：{step:true}、通しテスト時：{start:false}
+  dev.changeOption((v.num === 0 ? {start:false} : {step:true}));
   dev.start(v.whois);
   const src = { // テスト用サンプルデータ
     'ユーザ管理': { // "ユーザ管理"シート(colsのみ)
@@ -233,7 +235,7 @@ function SpreadDbTest(){
   const scenario = {  // テストシナリオ
     create: [ // create関係のテスト群
       { // 0.正常系
-        reset: null, // 全シート強制削除
+        setup: null, // 全シート強制削除
         query: [
           {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
           {command:'create',table:'AutoInc',cols:src['AutoInc'].cols,set:src['AutoInc'].set},  // 「AutoInc」シート作成
@@ -250,12 +252,12 @@ function SpreadDbTest(){
           {"table": "損益計算書",qSts:'OK',num:71},
         ],
       },{ // 1.初期値のunique項目で重複値が存在 ⇒ qSts='OK', result[1].rSts='Duplicate'
-        reset: null,
+        setup: null,
         query: {command:'create',table:'Duplicate',cols:src['Duplicate'].cols,set:src['Duplicate'].set},
         opt: {userId:'Administrator'},
         check: [{"table": "Duplicate",qSts:'OK',num:1,result:[{rSts:'OK'},{rSts:'Duplicate'}]}],
       },{ // 2.既存シートの新規作成指示 ⇒ qSts[0]='OK', qSts[1]='Already Exist'
-        reset: null,
+        setup: null,
         query: [
           {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
           {command:'create',table:'camp2024',cols:src['camp2024'].cols,set:src['camp2024'].set},  // 「camp2024」シート作成
@@ -266,22 +268,22 @@ function SpreadDbTest(){
           {"table": "camp2024",qSts:'Already Exist',num:0},
         ],
       },{ // 3.colsもsetも指定無し ⇒ qSts='No cols and data'
-        reset: null,
+        setup: null,
         query: {command:'create',table:'Duplicate'},
         opt: {userId:'Administrator'},
         check: [{"table": "Duplicate",qSts:'No cols and data',num:0}],
       },{ // 4.userId未指定 ⇒ qSts='No Authority'
-        reset: null,
+        setup: null,
         query: {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
         // optは指定しない(ユーザ未定)
         check: [{"table": "ユーザ管理",qSts:'No Authority',num:0}],
       },{ // 5.管理者以外 ⇒ qSts='No Authority'
-        reset: null,
+        setup: null,
         query: {command:'create',table:'ユーザ管理',cols:src['ユーザ管理'].cols},  // 「ユーザ管理」シート作成
         opt: {userId:'fuga'},
         check: [{"table": "ユーザ管理",qSts:'No Authority',num:0}],
       },{ // 6.初期値でunique(primaryKey)項目に重複値が存在 ⇒ qSts='Duplicate'
-        reset: null,
+        setup: null,
         query: {command:'create',table:'Duplicate',cols:src['Duplicate'].cols,set:src['Duplicate'].set},  // 「Duplicate」シート作成
         opt: {userId:'Administrator'},
         check: [{"table": "Duplicate",qSts:'Duplicate',num:1,result:[{rSts:'OK'},{rSts:'Duplicate'}]}],
@@ -289,7 +291,7 @@ function SpreadDbTest(){
     ],
     select: [ // select関係のテスト群(＋全体共通テスト)
       { // 0.正常系
-        reset: {'掲示板':false},
+        setup: {'掲示板':false},
         query: [
           {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"},
           // 日付の比較では"new Date()"を使用。ちなみにgetTime()無しで比較可能
@@ -301,12 +303,12 @@ function SpreadDbTest(){
           {"table": "掲示板",qSts:'OK',num:16,result:r=>{return r.length!==16 ? false : r.every(x => new Date(x.timestamp)<new Date('2022/11/1'))}},
         ],
       },{ // 1.ゲストに「掲示板」の読込を許可 ⇒ qSts='OK'
-        reset: {'掲示板':false},
+        setup: {'掲示板':false},
         query: {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
         opt: {guestAuth:{'掲示板':'r'}},  // userId指定無し(⇒ゲスト)でゲストに掲示板の読込権限付与
         check: [{"table": "掲示板",qSts:'OK',num:6,result:r=>{return r.length!==6 ? false : r.every(x => x.from === 'パパ')}}],
       },{ // 2.ゲストに「掲示板」の読込を不許可 ⇒ qSts='No Authority'
-        reset: {'掲示板':false},
+        setup: {'掲示板':false},
         query: {table:'掲示板',command:'select',where:"o=>{return o.from=='パパ'}"}, // 「掲示板」を参照
         // ゲストなので、ユーザID,権限指定は無し
         check: [{"table": "掲示板",qSts:'No Authority',num:0}],
@@ -315,22 +317,22 @@ function SpreadDbTest(){
         opt: {},  // ゲストなので、ユーザID,権限指定は無し
         check: [{"table": "存在しないテーブル",qSts:'No Table',num:0}],
       },{ // 4.権限'o'で自レコード取得 ⇒ qSts='OK'
-        reset: {'ユーザ管理':false},
+        setup: {'ユーザ管理':false},
         query: {table:'ユーザ管理',command:'select',where:10},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
         check: [{"table": "ユーザ管理",qSts:'OK',num:1}],
       },{ // 5.権限'o'で自レコード以外の取得 ⇒ qSts='No Authority'
-        reset: {'ユーザ管理':false},
+        setup: {'ユーザ管理':false},
         query: {table:'ユーザ管理',command:'select',where:11},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
         check: [{"table": "ユーザ管理",qSts:'No Authority',num:0}],
       },{ // 6.table指定無し ※select以外も含む、全体テスト
-        reset: {'ユーザ管理':false},
+        setup: {'ユーザ管理':false},
         query: {command:'select',where:11},
         opt: {userId:'Administrator'},
         check: [{qSts:'Invalid table specify',num:0,result:[]}],
       },{ // 7.command指定無し ※select以外も含む、全体テスト
-        reset: {'ユーザ管理':false},
+        setup: {'ユーザ管理':false},
         query: {table:'ユーザ管理',where:11},
         opt: {userId:'Administrator'},
         check: [{qSts:'Invalid command specify',num:0,result:[]}],
@@ -338,7 +340,7 @@ function SpreadDbTest(){
     ],
     append: [
       { // 0.正常系
-        reset: {'AutoInc':true},
+        setup: {'AutoInc':true},
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},
           {table:'AutoInc',command:'append',set:{'ラベル':'a02'}}, // 1レコードずつ一括
@@ -365,7 +367,7 @@ function SpreadDbTest(){
           {rSts:'OK',pKey:15, diff:{'真':6,'配列①':25,'配列②':25,'obj':65,'def関数':o=>(new Date().getTime()-new Date(o).getTime())<180000}},
         ]}],
       },{ // 1."unique=true"項目「ラベル」に重複値を指定して追加 ⇒ Duplicate
-        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        setup: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},  // qSts='OK', rSts[0]='OK'
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},  // qSts='OK', rSts[0]='Duplicate'
@@ -390,7 +392,7 @@ function SpreadDbTest(){
           {rSts:'Duplicate',},
         ]}],
       },{ // 2.権限付与してゲストが実行 ⇒ qSts='OK',rSts=[OK,OK]
-        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        setup: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {guestAuth:{AutoInc:'w'}},
         check: [{"table": "AutoInc",qSts:'OK',num:2,result:[{
@@ -409,12 +411,12 @@ function SpreadDbTest(){
           diff: {'真':4,'配列①':23,'配列②':27,'obj':55,'def関数': o=>(new Date().getTime()-new Date(o).getTime())<180000}
         }]}],
       },{ // 3.権限付与せずゲストが実行 ⇒ qSts='No Authority'
-        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        setup: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {guestAuth:{AutoInc:'r'}},
         check: [{"table": "AutoInc",qSts:'No Authority',num:0,result:[]}],
       },{ // 4.権限付与してユーザが実行 ⇒ qSts='OK',rSts=[OK,OK]
-        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        setup: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:10,userAuth:{AutoInc:'w'}},
         check: [{"table": "AutoInc",qSts:'OK',num:2,result:[
@@ -422,12 +424,12 @@ function SpreadDbTest(){
           {rSts:'OK',pKey:13,diff: {'真':4,'配列①':23,'配列②':27,'obj':55,'def関数': o=>(new Date().getTime()-new Date(o).getTime())<180000}},
         ]}],
       },{ // 5.権限付与せずユーザが実行 ⇒ qSts='No Authority'
-        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        setup: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:10,userAuth:{AutoInc:'r'}},
         check: [{"table": "AutoInc",qSts:'No Authority',num:0,result:[]}],
       },{ // 6.存在しないテーブルへの追加 ⇒ qSts=['No Table','No Table','No Table']
-        reset: {'AutoInc':null},  // AutoIncは強制削除
+        setup: {'AutoInc':null},  // AutoIncは強制削除
         query: [
           {table:'AutoInc',command:'append',set:{'ラベル':'a01'}},
           {table:'AutoInc',command:'append',set:{'ラベル':'a02'}}, // 1レコードずつ一括
@@ -440,12 +442,12 @@ function SpreadDbTest(){
           {"table": "AutoInc",qSts:'No Table',num:0,result:[]},
         ],
       },{ // 7.権限'o'のユーザが実行 ⇒ qSts='No Authority'
-        reset: {'AutoInc':true},  // AutoIncはテスト前に再作成
+        setup: {'AutoInc':true},  // AutoIncはテスト前に再作成
         query: {table:'AutoInc',command:'append',set:[{'ラベル':'a03'},{'ラベル':'a04'}]},
         opt: {userId:10,userAuth:{AutoInc:'o'}},
         check: [{"table": "AutoInc",qSts:'No Authority',num:0,result:[]}],
       },{ // 8.appendでsetが空
-        reset: {'AutoInc':true},
+        setup: {'AutoInc':true},
         query: [
           {table:'AutoInc',command:'append'}, // set自体無し
           {table:'AutoInc',command:'append',set:{}}, // 項目無し ⇒ 既定値でレコード追加
@@ -461,7 +463,7 @@ function SpreadDbTest(){
     ],
     delete: [
       { // 0.正常系 ⇒ pKey=10の行のみ残っていればOK
-        reset: {'AutoInc':true},
+        setup: {'AutoInc':true},
         query: [
           {table:'AutoInc',command:'append',set:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
           {table:'AutoInc',command:'delete',where:{'配列①':-1}},  // where = Object
@@ -482,7 +484,7 @@ function SpreadDbTest(){
           {"table": "AutoInc",command:'delete',qSts:'OK',num:1,result:[{rSts:'OK',diff:{'ラベル':'a03'}}]},
         ],
       },{ // 1.該当レコード無し ⇒ qSts='OK',num=0
-        reset: {'AutoInc':true},
+        setup: {'AutoInc':true},
         query: [
           {table:'AutoInc',command:'append',set:[{'ラベル':'a01','配列①':-1},{'ラベル':'a02','配列②':-2},{'ラベル':'a03'}]},
           {table:'AutoInc',command:'delete',where:99},  // where = any(pKey)
@@ -497,12 +499,12 @@ function SpreadDbTest(){
           {"table": "AutoInc",command:'delete',qSts:'OK',num:0},
         ],
       },{ // 2.権限付与してユーザが実行 ⇒ qSts='OK', num=1, rSts=['OK']
-        reset: {'AutoInc':true},
+        setup: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:10,userAuth:{AutoInc:'d'}},
         check :[{"table": "AutoInc",command:'delete',qSts:'OK',num:1,result:[{pKey:10,rSts:'OK'}]}],
       },{ // 3.権限付与せずユーザが実行 ⇒ qSts='No Authority', num=0
-        reset: {'AutoInc':true},
+        setup: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:10,userAuth:{AutoInc:'r'}},
         check :[{"table": "AutoInc",command:'delete',qSts:'No Authority',num:0}],
@@ -511,7 +513,7 @@ function SpreadDbTest(){
         opt: {userId:'Administrator'},
         check :[{"table": "不在テーブル",command:'delete',qSts:'No Table',num:0}],
       },{ // 5.権限'o'のユーザが実行 ⇒ qSts='No Authority', num=0
-        reset: {'AutoInc':true},
+        setup: {'AutoInc':true},
         query: {table:'AutoInc',command:'delete',where:10},  // where = any(pKey)
         opt: {userId:10,userAuth:{AutoInc:'o'}},
         check :[{"table": "AutoInc",command:'delete',qSts:'No Authority',num:0}],
@@ -519,7 +521,7 @@ function SpreadDbTest(){
     ],
     update: [
       { // 0.正常系
-        reset: {'AutoInc':true},
+        setup: {'AutoInc':true},
         query: [
           {table:'AutoInc',command:'append',set:[{'ラベル':'a01'},{'ラベル':'a02'},{'ラベル':'a03'},{'ラベル':'a04'},{'ラベル':'a05'}]},
           // 関数
@@ -542,37 +544,37 @@ function SpreadDbTest(){
           {"table": "AutoInc",command:'update',qSts:'OK',num:1,result:[{pKey:16,rSts:'OK',diff:{'配列①':[26,'b05']}}]},
         ],
       },{ // 1.該当レコード無し ⇒ qSts='OK',num=0
-        reset: {'AutoInc':true},
+        setup: {'AutoInc':true},
         query: {command:'update',table:'AutoInc',where:{'ラベル':'xxx'},set:{'ぬる':'b02'}},
         opt: {userId:'Administrator'},
         check: [{"table": "AutoInc",command:'update',qSts:'OK',num:0}],
       },{ // 2.更新対象項目が存在しない ⇒ qSts='Undefined Column', num=0
-        reset: {'AutoInc':true},
+        setup: {'AutoInc':true},
         query: {command:'update',table:'AutoInc',where:{'ラベル':'fuga'},set:{'xxx':123}},
         opt: {userId:'Administrator'},
         check: [{"table": "AutoInc",command:'update',qSts:'Undefined Column',num:0}],
       },{ // 3.自レコードのみの更新権限で自レコードを更新 ⇒ qSts='OK'
-        reset: {'ユーザ管理':true},
+        setup: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:10,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
         check: [{"table": "AutoInc",command:'update',qSts:'OK',num:1,result:[{pKey:10,rSts:'OK',diff:{profile:['a0001','xxx']}}]}],
       },{ // 4.自レコードのみの更新権限で自レコードを更新だが、where句を関数で指定 ⇒ qSts='Invalid where clause'
-        reset: {'ユーザ管理':true},
+        setup: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:()=>10,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
         check: [{"table": "ユーザ管理",command:'update',qSts:'Invalid where clause',num:0}],
       },{ // 5.自レコードのみの更新権限で自レコードを更新だが、where句をオブジェクトで指定 ⇒ qSts='Invalid where clause'
-        reset: {'ユーザ管理':true},
+        setup: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:{userId:10},set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
         check: [{"table": "ユーザ管理",command:'update',qSts:'Invalid where clause',num:0}],
       },{ // 6.自レコードのみの更新権限で自レコード以外を更新 ⇒ qSts='No Authority'
-        reset: {'ユーザ管理':true},
+        setup: {'ユーザ管理':true},
         query: {command:'update',table:'ユーザ管理',where:11,set:{profile:'xxx'}},
         opt: {userId:10,userAuth:{'ユーザ管理':'o'}},
         check: [{"table": "ユーザ管理",command:'update',qSts:'No Authority',num:0}],
       },{ // 7.存在しないテーブルでの更新 ⇒ No Table
-        reset: {'ユーザ管理':true},
+        setup: {'ユーザ管理':true},
         query: {command:'update',table:'ふが',where:10,set:{profile:'xxx'}},
         opt: {userId:'Administrator'},
         check: [{"table": "ふが",command:'update',qSts:'No Table',num:0}],
@@ -580,22 +582,22 @@ function SpreadDbTest(){
     ],
     schema: [
       { // 0.正常系
-        reset: {'ユーザ管理':false,'損益計算書':false},
+        setup: {'ユーザ管理':false,'損益計算書':false},
         query: {command:'schema',table:'ユーザ管理'},
         opt: {userId:'Administrator'},
         check: [{"table": "ユーザ管理",command:'schema',qSts:'OK',num:3}],
       },{ // 1.該当テーブル無し ⇒ qSts='No Table',num=0
-        reset: {'ユーザ管理':false,'損益計算書':false},
+        setup: {'ユーザ管理':false,'損益計算書':false},
         query: {command:'schema',table:'ふが'},
         opt: {userId:'Administrator'},
         check: [{"table": "ふが",command:'schema',qSts:'No Table',num:0}],
       },{ // 2.権限付与してユーザが実行 ⇒ OK
-        reset: {'ユーザ管理':false,'損益計算書':false},
+        setup: {'ユーザ管理':false,'損益計算書':false},
         query: {command:'schema',table:'ユーザ管理'},
         opt: {userId:'pikumin',userAuth:{'ユーザ管理':'s'}},
         check: [{"table": "ユーザ管理",command:'schema',qSts:'OK',num:3}],
       },{ // 3.権限付与せずユーザが実行 ⇒ No Authority
-        reset: {'ユーザ管理':false,'損益計算書':false},
+        setup: {'ユーザ管理':false,'損益計算書':false},
         query: {command:'schema',table:'ユーザ管理'},
         opt: {userId:'pikumin',userAuth:{'ユーザ管理':''}},
         check: [{"table": "ユーザ管理",command:'schema',qSts:'No Authority',num:0}],
@@ -603,7 +605,7 @@ function SpreadDbTest(){
       // シート上でシート上のメモを修正後、その修正が反映されているかの確認
     ],
   };
-  function resetSheet(arg=undefined){ /** テスト対象シートの再作成
+  function setupSheet(arg=undefined){ /** テスト対象シートの再作成
    * 引数argのメンバ名(=srcのメンバ)を対象シートとして以下を実施。
    * - true: 強制的に再作成
    * - false: 不在なら作成、存在なら再作成しない(不在時作成)
@@ -611,9 +613,9 @@ function SpreadDbTest(){
    * - undefined: 何もしない(既定値)
    * 引数argがオブジェクトではない場合、全シート対象に上記処理を行う。
    */
-    console.log(`resetSheet start: arg=${JSON.stringify(arg)}`);
+    console.log(`setupSheet start: arg=${JSON.stringify(arg)}`);
     if( arg === undefined ){
-      console.log(`resetSheet normal end: arg=undefined`);
+      console.log(`setupSheet normal end: arg=undefined`);
       return null;
     };
 
@@ -638,7 +640,7 @@ function SpreadDbTest(){
       if( v.exist === true && (v.value === true || v.value === null) ){
         v.sheet = v.spread.getSheetByName(v.key);
         v.spread.deleteSheet(v.sheet);
-        console.log(`resetSheet: "${v.key}" is deleted.`);
+        console.log(`setupSheet: "${v.key}" is deleted.`);
       }
 
       v.step = 0.5; // 強制再作成、または存在しなければ作成
@@ -650,55 +652,66 @@ function SpreadDbTest(){
           set: (src[v.key].set || null),
         },{userId:'Administrator'});
         if( v.r instanceof Error ) return v.r;
-        console.log(`resetSheet: append "${v.key}"`);
+        console.log(`setupSheet: append "${v.key}"`);
       }
     }
-    console.log(`resetSheet normal end: arg=${JSON.stringify(arg)}`);
+    console.log(`setupSheet normal end: arg=${JSON.stringify(arg)}`);
     return null;
   };
   try {
 
-    dev.step(1);  // scenario='reset'なら初期化のみ実行
-    if( v.scenario === 'reset' ){
-      resetSheet(null);
+    dev.step(1);  // scenario='setup'なら初期化のみ実行
+    if( v.scenario === 'setup' ){
+      setupSheet(null);
       return null;
     }
 
-    dev.step(2); // v.scenarioで指定されたテスト群について、v.startからv.num個分を実行
-    if( v.num < 0 ){
-      dev.step(2.1); // 指定テスト群の後ろからv.num個
-      v.st = scenario[v.scenario].length + v.num;
-      v.ed = scenario[v.scenario].length;
-    } else if( v.num === 0 ){
-      dev.step(2.2); // 指定テスト群全部実行
-      v.st = v.start;
-      v.ed = scenario[v.scenario].length;
+    dev.step(2);  // v.scenarioに対象シナリオ群を格納
+    if( v.scenario === 'all' ){
+      v.scenario = Object.keys(src);
+      v.start = 0;
+      v.num = 0;
     } else {
-      dev.step(2.3); // v.startからv.num個
-      v.st = v.start;
-      v.ed = v.start + v.num;
+      if( !Array.isArray(v.scenario) ) v.scenario = [v.scenario];
     }
 
     dev.step(3);
-    for( v.idx=v.st ; v.idx<v.ed ; v.idx++ ){
+    for( v.sno=0 ; v.sno<v.scenario.length ; v.sno++ ){
 
-      dev.step(3.1); // テスト用データをセット
-      v.reset = scenario[v.scenario][v.idx].reset;
-      if( whichType(v.reset,'Object') ){
-        v.reset.log = v.idx === v.st ? null : false;  // テスト開始時はlog削除、それ以外は追記にする
+      dev.step(4); // v.st, v.edを計算
+      if( v.num < 0 ){
+        dev.step(4.1); // 指定テストパターン群の後ろからv.num個
+        v.st = scenario[v.scenario[v.sno]].length + v.num;
+        v.ed = scenario[v.scenario[v.sno]].length;
+      } else if( v.num === 0 ){
+        dev.step(4.2); // 指定テストパターン群全部実行
+        v.st = v.start;
+        v.ed = scenario[v.scenario[v.sno]].length;
+      } else {
+        dev.step(4.3); // v.startからv.num個
+        v.st = v.start;
+        v.ed = v.start + v.num;
       }
-      v.r = resetSheet(v.reset);
-      if( v.r instanceof Error ) throw v.r;
 
-      dev.step(3.2); // scenarioからqueryとoptをセットしてテスト実施、NG時は中断
-      if(false === dev.check({
-        asis: SpreadDb(
-          scenario[v.scenario][v.idx].query,
-          scenario[v.scenario][v.idx].opt
-        ),
-        tobe: (scenario[v.scenario][v.idx].check||undefined),
-        title: `${v.whois}.${v.scenario}.${v.idx}`,
-      })) throw new Error(`check NG`);
+      dev.step(5);
+      for( v.idx=v.st ; v.idx<v.ed ; v.idx++ ){
+
+        dev.step(5.1); // シートの準備
+        v.setup = scenario[v.scenario[v.sno]][v.idx].setup || {};
+        v.setup.log = v.sno === 0 && v.idx === v.st ? null : false;  // テスト開始時はlog削除、それ以外は追記にする
+        v.r = setupSheet(v.setup);
+        if( v.r instanceof Error ) throw v.r;
+
+        dev.step(5.2); // scenarioからqueryとoptをセットしてテスト実施、NG時は中断
+        if(false === dev.check({
+          asis: SpreadDb(
+            scenario[v.scenario[v.sno]][v.idx].query,
+            scenario[v.scenario[v.sno]][v.idx].opt
+          ),
+          tobe: (scenario[v.scenario[v.sno]][v.idx].check||undefined),
+          title: `${v.whois}.${v.scenario[v.sno]}.${v.idx}`,
+        })) throw new Error(`check NG`);
+      }
     }
 
   } catch(e) {
@@ -2068,13 +2081,13 @@ function devTools(option){
   let opt = Object.assign({start:true,arg:true,step:false},option);
   let seq = 0;  // 関数の呼出順
   let stack = []; // 呼出元関数情報のスタック
-  return {start:start,end:end,error:error,step:step,dump:dump,check:check};
+  return {start:start,end:end,error:error,step:step,dump:dump,check:check,changeOption:changeOption};
 
   /** start: 呼出元関数情報の登録＋開始メッセージの表示
    * @param {string} name - 関数名
    * @param {any[]} arg - start呼出元関数に渡された引数([...arguments]固定)
    */
-  function start(name,arg=null){
+  function start(name,arg=[]){
     const o = {
       class    : '',  // nameがクラス名.メソッド名だった場合のクラス名
       name     : name,
@@ -2093,9 +2106,11 @@ function devTools(option){
     stack.forEach(x => o.footprint.push(`${x.label}.${x.step}`));
     o.footprint = o.footprint.length === 0 ? '(root)' : o.footprint.join(' > ');
     // 引数情報の作成
-    if( arg !== null ){
-      recursiveDump(o.arg,arg);
-      o.arg = o.arg.length === 0 ? '(void)' : o.arg.join('\n');
+    if( arg.length === 0 ){
+      o.arg = '(void)';
+    } else {
+      for( let i=0 ; i<arg.length ; i++ ) o.arg[i] = stringify(arg[i]);
+      o.arg = o.arg.join('\n');
     }
     // 作成した呼出元関数情報を保存
     stack.push(o);
@@ -2130,56 +2145,62 @@ function devTools(option){
   }
 
   /** dump: 渡された変数の内容をコンソールに表示
-   * @param {any|any[]} arg - 表示する変数。複数の場合は配列で指定
-   * @param {number} line=null - 行番号
+   * - 引数には対象変数を列記。最後の引数が数値だった場合、行番号と看做す
+   * @param {any|any[]} arg - 表示する変数および行番号
    * @returns {void}
    */
-  function dump(arg,line=null){
+  function dump(){
+    let arg = [...arguments];
+    let line = typeof arg[arg.length-1] === 'number' ? arg.pop() : null;
     const o = stack[stack.length-1];
-    if( !Array.isArray(arg) ) arg = [arg];
-    msg = [(line === null ? '' : `l.${line} `) + `${o.label} step.${o.step} : `];
-    arg.forEach(x => recursiveDump(msg,x));
-    console.log(msg.join('\n'));
+    let msg = (line === null ? '' : `l.${line} `) + `${o.label} step.${o.step}`;
+    for( let i=0 ; i<arg.length ; i++ ){
+      // 対象変数が複数有る場合、Noを追記
+      msg += '\n' + (arg.length > 0 ? `${i}: ` : '') + stringify(arg[i]);
+    }
+    console.log(msg);
   }
-  /** recursiveDump: 変数の内容を再帰的にメッセージ化
-   * @param {string[]} msg - メッセージを保存する領域
-   * @param {any} arg - 内容を表示する変数
-   * @param {number} depth=0 - 階層の深さ 
-   * @param {string} label - メンバ名または添字
+  /** stringify: 変数の内容をラベル＋データ型＋値の文字列として出力
+   * @param {any} arg - 文字列化する変数
+   * @returns {string}
    */
-  function recursiveDump(msg,arg,depth=0,label=''){
-    // データ型の判定
-    let type = String(Object.prototype.toString.call(arg).slice(8,-1));
-    switch(type){
-      case 'Number': if(Number.isNaN(arg)) type = 'NaN'; break;
-      case 'Function': if(!('prototype' in arg)) type = 'Arrow'; break;
+  function stringify(arg){
+    /** recursive: 変数の内容を再帰的にメッセージ化
+     * @param {any} arg - 内容を表示する変数
+     * @param {number} depth=0 - 階層の深さ
+     * @param {string} label - メンバ名または添字
+     */
+    const recursive = (arg,depth=0,label='') => {
+      // データ型の判定
+      let type = String(Object.prototype.toString.call(arg).slice(8,-1));
+      switch(type){
+        case 'Number': if(Number.isNaN(arg)) type = 'NaN'; break;
+        case 'Function': if(!('prototype' in arg)) type = 'Arrow'; break;
+      }
+      // ラベル＋データ型＋値の出力
+      let indent = '  '.repeat(depth);
+      switch( type ){
+        case 'Object':
+          msg.push(`${indent}${label.length>0?label+': ':''}{`);
+          for( let mn in arg ) recursive(arg[mn],depth+1,mn);
+          msg.push(`${indent}}`);
+          break;
+        case 'Array':
+          msg.push(`${indent}${label.length>0?label+': ':''}[`);
+          for( let i=0 ; i<arg.length ; i++ ) recursive(arg[i],depth+1,String(i));
+          msg.push(`${indent}]`);
+          break;
+        default:
+          let val = typeof arg === 'function' ? `"${arg.toString()}"` : (typeof arg === 'string' ? `"${arg}"` : arg);
+          // Class Sheetのメソッドのように、toStringが効かないnative codeは出力しない
+          if( typeof val !== 'string' || val.indexOf('[native code]') < 0 ){
+            msg.push(`${indent}${label.length>0?label+': ':''}${val}(${type})`);
+          }
+      }
     }
-    // ラベル＋データ型＋値の出力
-    let indent = '  '.repeat(depth);
-    switch( type ){
-      case 'Object':
-        msg.push(`${indent}${label.length>0?label+': ':''}{`);
-        for( let mn in arg ) recursiveDump(msg,arg[mn],depth+1,mn);
-        msg.push(`${indent}}`);
-        break;
-      case 'Array':
-        msg.push(`${indent}${label.length>0?label+': ':''}[`);
-        for( let i=0 ; i<arg.length ; i++ ) recursiveDump(msg,arg[i],depth+1,String(i));
-        msg.push(`${indent}]`);
-        break;
-      default:
-        let val = toString(arg);
-        // Class Sheetのメソッドのように、toStringが効かないnative codeは出力しない
-        if( typeof val !== 'string' || val.indexOf('[native code]') < 0 ){
-          msg.push(`${indent}${label.length>0?label+': ':''}${val}(${type})`);
-        }
-    }
-  }
-  /** 関数・オブジェクトを文字列化 */
-  function toString(arg){
-    if( typeof arg === 'function' ) return arg.toString();
-    if( arg !== null && typeof arg === 'object' ) return JSON.stringify(arg);
-    return arg;
+    const msg = [];
+    recursive(arg);
+    return msg.join('\n');
   }
   /** 実行結果の確認
    * - JSON文字列の場合、オブジェクト化した上でオブジェクトとして比較する
@@ -2191,20 +2212,75 @@ function devTools(option){
    * @returns {boolean} - チェック結果OK:true, NG:false
    */
   function check(arg={}){
-  
+    /** recursive: 変数の内容を再帰的にチェック
+     * @param {any} asis - 結果の値
+     * @param {any} tobe - 有るべき値
+     * @param {Object} opt - isEqualに渡すオプション
+     * @param {number} depth=0 - 階層の深さ
+     * @param {string} label - メンバ名または添字
+     */
+    const recursive = (asis,tobe,opt,depth=0,label='') => {
+      let rv;
+      // JSON文字列はオブジェクト化
+      asis = (arg=>{try{return JSON.parse(arg)}catch{return arg}})(asis);
+      // データ型の判定
+      let type = String(Object.prototype.toString.call(tobe).slice(8,-1));
+      switch(type){
+        case 'Number': if(Number.isNaN(tobe)) type = 'NaN'; break;
+        case 'Function': if(!('prototype' in tobe)) type = 'Arrow'; break;
+      }
+      let indent = '  '.repeat(depth);
+      switch( type ){
+        case 'Object':
+          msg.push(`${indent}${label.length>0?label+': ':''}{`);
+          for( let mn in tobe ){
+            rv = !Object.hasOwn(asis,mn) ? false // 該当要素が不在
+            : recursive(asis[mn],tobe[mn],opt,depth+1,mn);
+          }
+          msg.push(`${indent}}`);
+          break;
+        case 'Array':
+          msg.push(`${indent}${label.length>0?label+': ':''}[`);
+          for( let i=0 ; i<tobe.length ; i++ ){
+            rv = (asis[i] === undefined && tobe[i] !== undefined) ? false // 該当要素が不在
+            : recursive(asis[i],tobe[i],opt,depth+1,String(i));
+          }
+          msg.push(`${indent}]`);
+          break;
+        case 'Function': case 'Arrow':
+          rv = tobe(asis);  // 合格ならtrue, 不合格ならfalseを返す関数を定義
+          msg.push(
+            indent + (label.length > 0 ? (label + ': ') : '')
+            + (rv ? asis : `[NG] (${tobe.toString()})(${asis}) -> false`)
+          );
+          break;
+        default:
+          if( tobe === undefined ){
+            rv = true;
+          } else {
+            rv = isEqual(asis,tobe,opt);
+            msg.push(
+              indent + (label.length > 0 ? (label + ': ') : '')
+              + (rv ? asis : `[NG] ToBe=${tobe}, AsIs=${asis}`)
+            );
+          }
+      }
+      return rv;
+    }
+
     // 主処理
     let msg = [];
     let isOK = true;  // チェックOKならtrue
-  
+
     arg = Object.assign({msg:'',opt:{}},arg);
     if( arg.tobe === undefined ){
       // check未指定の場合、チェック省略、結果表示のみ
       msg.push(`===== ${arg.title} Check Result : Not checked`);
     } else {
-      // arg.asisとarg.tobeのデータ型が異なる場合、またはrecursiveCheckで不一致が有った場合はエラーと判断
+      // arg.asisとarg.tobeのデータ型が異なる場合、またはrecursiveで不一致が有った場合はエラーと判断
       if ( String(Object.prototype.toString.call(arg.asis).slice(8,-1))
         !== String(Object.prototype.toString.call(arg.tobe).slice(8,-1))
-        || recursiveCheck(msg,arg.asis,arg.tobe,arg.opt) === false
+        || recursive(arg.asis,arg.tobe,arg.opt) === false
       ){
         isOK = false;
         msg.unshift(`===== ${arg.title} Check Result : Error`);
@@ -2221,53 +2297,9 @@ function devTools(option){
     if( isOK ) console.log(msg); else console.error(msg);
     return isOK;
   }
-  function recursiveCheck(msg,asis,tobe,opt,depth=0,label=''){
-    let rv;
-    // JSON文字列はオブジェクト化
-    asis = (arg=>{try{return JSON.parse(arg)}catch{return arg}})(asis);
-    // データ型の判定
-    let type = String(Object.prototype.toString.call(tobe).slice(8,-1));
-    switch(type){
-      case 'Number': if(Number.isNaN(tobe)) type = 'NaN'; break;
-      case 'Function': if(!('prototype' in tobe)) type = 'Arrow'; break;
-    }
-    let indent = '  '.repeat(depth);
-    switch( type ){
-      case 'Object':
-        msg.push(`${indent}${label.length>0?label+': ':''}{`);
-        for( let mn in tobe ){
-          rv = !Object.hasOwn(asis,mn) ? false // 該当要素が不在
-          : recursiveCheck(msg,asis[mn],tobe[mn],opt,depth+1,mn);
-        }
-        msg.push(`${indent}}`);
-        break;
-      case 'Array':
-        msg.push(`${indent}${label.length>0?label+': ':''}[`);
-        for( let i=0 ; i<tobe.length ; i++ ){
-          rv = (asis[i] === undefined && tobe[i] !== undefined) ? false // 該当要素が不在
-          : recursiveCheck(msg,asis[i],tobe[i],opt,depth+1,String(i));
-        }
-        msg.push(`${indent}]`);
-        break;
-      case 'Function': case 'Arrow':
-        rv = tobe(asis);  // 合格ならtrue, 不合格ならfalseを返す関数を定義
-        msg.push(
-          indent + (label.length > 0 ? (label + ': ') : '')
-          + (rv ? asis : `[NG] (${tobe.toString()})(${asis}) -> false`)
-        );
-        break;
-      default:
-        if( tobe === undefined ){
-          rv = true;
-        } else {
-          rv = isEqual(asis,tobe,opt);
-          msg.push(
-            indent + (label.length > 0 ? (label + ': ') : '')
-            + (rv ? asis : `[NG] ToBe=${tobe}, AsIs=${asis}`)
-          );
-        }
-    }
-    return rv;
+  /** オプションの変更 */
+  function changeOption(option){
+    opt = Object.assign(opt,option);
   }
 }
 /** 二つの引数が同値か判断する
