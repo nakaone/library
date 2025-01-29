@@ -19,6 +19,7 @@ embed="node $lib/embedRecursively/1.2.0/pipe.js"
 esed="node $lib/esed/1.0.0/core.js"
 modify="node $lib/modifyMD/1.0.0/pipe.js"
 querySelector="node $lib/querySelector/2.0.1/pipe.js"
+workflowy="node $lib/workflowy/1.0.0/pipe.js markdown 3"
 
 # 0.14 共通変数・関数の定義
 echo "\n\n\n\n\n"  # 開始前に空白行をコンソールに出力
@@ -32,7 +33,7 @@ function log(){  # 1.4 ログメッセージ出力関数
 # ----------------------------------------------
 prjName="Auth"
 prj="$lib/$prjName/1.1.0"
-test="$prj/test"
+doc="$prj/doc"
 src="$prj/src"
 test="$prj/test"
 tmp="$prj/tmp"; mkdir -p $tmp
@@ -40,12 +41,21 @@ tmp="$prj/tmp"; mkdir -p $tmp
 # ----------------------------------------------
 # 0.3 関連ライブラリの最新化
 # ----------------------------------------------
-$lib/SpreadDb/1.2.0/build.sh
+#$lib/SpreadDb/1.2.0/build.sh
 
 # ----------------------------------------------
-# 1. authServer.jsの作成
+# 1 readme.mdの作成
 # ----------------------------------------------
 log "1.0";
+mmdc -i $doc/crud.mermaid -o $doc/crud.svg
+mmdc -i $doc/onload.mermaid -o $doc/onload.svg
+mmdc -i $doc/regist.mermaid -o $doc/regist.svg
+cat $doc/auth.opml | awk 1 | $workflowy > $prj/readme.md
+
+# ----------------------------------------------
+# authServer.jsの作成
+# ----------------------------------------------
+log "2.0";
 cat $src/server.js | awk 1 | \
 $embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $tmp/server.js
 sed -e 's/[ \t]+$//g' $tmp/server.js > $prj/authServer.js

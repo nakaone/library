@@ -7,6 +7,11 @@
   </head>
   <body>
     <outline text="Auth 1.1.0">
+      <outline text="処理概要">
+        <outline text="crud" _note="![](doc/crud.svg)" />
+        <outline text="onload" _note="![](doc/onload.svg)" />
+        <outline text="regist" _note="![](doc/regist.svg)" />
+      </outline>
       <outline text="typedefs">
         <outline text="UserStatus {Object} 「ユーザ管理」シートの行オブジェクト">
           <outline text="userId {string|number} ユーザ識別子(primaryKey)" _note="default:UUID, primaryKey" />
