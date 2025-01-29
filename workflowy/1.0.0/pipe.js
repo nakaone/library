@@ -1,6 +1,5 @@
 process.stdin.resume();
 process.stdin.setEncoding('utf8');
-const wf = workflowy();
 
 var lines = []; ; //標準入力から受け取ったデータを格納する配列
 var reader = require('readline').createInterface({　//readlineという機能を用いて標準入力からデータを受け取る
@@ -9,7 +8,15 @@ var reader = require('readline').createInterface({　//readlineという機能�
 });
 reader.on('line', line => lines.push(line));
 reader.on('close', () => {
-  console.log(wf.sample(lines.join('\n')));
+  const wf = workflowy();
+  lines = lines.join('\n');
+  switch( process.argv[2] ){
+    case 'sample':
+      console.log(wf.sample(lines));
+      break;
+    default:
+      console.log('default');
+  }
   //console.log(workflowy(lines));
 });
 

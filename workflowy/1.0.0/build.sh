@@ -38,8 +38,8 @@ test="$prj/test"
 tmp="$prj/tmp"; mkdir -p $tmp; rm -rf $tmp/*
 
 # ----------------------------------------------
-log "1"; # readme.mdの作成
+log "1"; # xml2jsonのサンプル作成
 # ----------------------------------------------
-cat $test/sample.opml | awk 1 | node $prj/pipe.js > $test/sample.json
+cat $test/sample.opml | awk 1 | node $prj/pipe.js sample > $test/sample.json
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"
