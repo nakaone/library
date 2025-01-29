@@ -8,7 +8,7 @@ function devTools(option) {
   let opt = Object.assign({ start: true, arg: true, step: false }, option);
   let seq = 0;  // 関数の呼出順
   let stack = []; // 呼出元関数情報のスタック
-  return { changeOption: changeOption, check: check, dump: dump, end: end, error: error, start: start, step: step};
+  return { changeOption: changeOption, check: check, dump: dump, end: end, error: error, start: start, step: step };
 
   /** オプションの変更 */
   function changeOption(option) {
