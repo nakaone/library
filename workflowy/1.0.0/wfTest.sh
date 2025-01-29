@@ -40,6 +40,12 @@ tmp="$prj/tmp"; mkdir -p $tmp; rm -rf $tmp/*
 # ----------------------------------------------
 log "1"; # xml2jsonのサンプル作成
 # ----------------------------------------------
-cat $test/sample.opml | awk 1 | node $prj/pipe.js sample > $test/sample.json
+#cat $test/sample.opml | awk 1 | node $prj/pipe.js sample > $test/sample.json
+
+# ----------------------------------------------
+log "2"; # テスト
+# ----------------------------------------------
+#cat $test/sample.opml | awk 1 | node $prj/pipe.js markdown 2 > $test/sample.md
+cat $test/SpreadDb.opml | awk 1 | node $prj/pipe.js markdown 3 > $test/SpreadDb.md
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"
