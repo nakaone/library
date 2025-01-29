@@ -1,0 +1,123 @@
+{
+  "declaration": {
+    "attributes": {
+      "version": "1.0"
+    }
+  },
+  "elements": [
+    {
+      "type": "element",
+      "name": "opml",
+      "attributes": {
+        "version": "2.0"
+      },
+      "elements": [
+        {
+          "type": "element",
+          "name": "head",
+          "elements": [
+            {
+              "type": "element",
+              "name": "ownerEmail",
+              "elements": [
+                {
+                  "type": "text",
+                  "text": "\n      ena.kaon@gmail.com\n    "
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "element",
+          "name": "body",
+          "elements": [
+            {
+              "type": "element",
+              "name": "outline",
+              "attributes": {
+                "text": "workflowy"
+              },
+              "elements": [
+                {
+                  "type": "element",
+                  "name": "outline",
+                  "attributes": {
+                    "text": "No.1",
+                    "_note": "No.1のノート\n- 項目1\n- 項目2"
+                  },
+                  "elements": [
+                    {
+                      "type": "element",
+                      "name": "outline",
+                      "attributes": {
+                        "text": "No.1.1",
+                        "_note": "ノート内で<a href=\"https://workflowy.com/#/a0376dbc8b20\">リンク</a>を張ってみた"
+                      }
+                    },
+                    {
+                      "type": "element",
+                      "name": "outline",
+                      "attributes": {
+                        "text": "No.1.2"
+                      },
+                      "elements": [
+                        {
+                          "type": "element",
+                          "name": "outline",
+                          "attributes": {
+                            "text": "2 Backlinks"
+                          },
+                          "elements": [
+                            {
+                              "type": "element",
+                              "name": "outline",
+                              "attributes": {
+                                "text": "No.1.1",
+                                "_note": "ノート内で<a href=\"https://workflowy.com/#/a0376dbc8b20\">リンク</a>を張ってみた"
+                              }
+                            },
+                            {
+                              "type": "element",
+                              "name": "outline",
+                              "attributes": {
+                                "text": "<a href=\"https://workflowy.com/#/a0376dbc8b20\">No.1.2</a>"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "element",
+                  "name": "outline",
+                  "attributes": {
+                    "text": "No.2。<b>太文字</b>と<span class=\"colored c-red\">赤文字</span>を使用"
+                  },
+                  "elements": [
+                    {
+                      "type": "element",
+                      "name": "outline",
+                      "attributes": {
+                        "text": "<a href=\"https://workflowy.com/#/a0376dbc8b20\">No.1.2</a>"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "element",
+                  "name": "outline",
+                  "attributes": {
+                    "text": "No.3 h1指定"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

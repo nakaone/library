@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<opml version="2.0">
+  <head>
+    <ownerEmail>
+      ena.kaon@gmail.com
+    </ownerEmail>
+  </head>
+  <body>
+    <outline text="workflowy">
+      <outline text="No.1" _note="No.1のノート&#10;- 項目1&#10;- 項目2">
+        <outline text="No.1.1" _note="ノート内で&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;リンク&lt;/a&gt;を張ってみた" />
+        <outline text="No.1.2">
+          <outline text="2 Backlinks">
+            <outline text="No.1.1" _note="ノート内で&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;リンク&lt;/a&gt;を張ってみた" />
+            <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;No.1.2&lt;/a&gt;" />
+          </outline>
+        </outline>
+      </outline>
+      <outline text="No.2。&lt;b&gt;太文字&lt;/b&gt;と&lt;span class=&quot;colored c-red&quot;&gt;赤文字&lt;/span&gt;を使用">
+        <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;No.1.2&lt;/a&gt;" />
+      </outline>
+      <outline text="No.3 h1指定" />
+    </outline>
+  </body>
+</opml>
