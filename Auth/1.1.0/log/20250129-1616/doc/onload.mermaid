@@ -1,0 +1,27 @@
+sequenceDiagram
+  autonumber
+  participant html
+  participant ap as application
+  participant db as alaSQL
+  participant cl as authClient
+  participant sv as authServer
+  participant sp as SpreadDb
+  participant sh as Google Spread
+
+%% 起動時。ゲスト用初期データ取得
+
+  html ->> html : 起動時、userId確認
+  html ->> ap : 初期画面表示要求
+  ap ->> cl : 初期データ要求
+  cl ->> cl : userId,鍵ペア不明時は生成
+  cl ->> sv : 初期データ要求(userId,CPkey)
+  sv ->> sp : ユーザ情報要求
+  sp ->> sh : ユーザ情報参照
+  sh ->> sh : userId未登録ならCPkey登録
+  sp ->> sv : ユーザ情報
+  sv ->> sv : 要求処理
+  sv ->> cl : 初期データ
+  cl ->> db : 初期データ保存
+  cl ->> ap : 初期データ取得通知
+  ap ->> db : 初期データ取得
+  ap ->> html : 初期画面
