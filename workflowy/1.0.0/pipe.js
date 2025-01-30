@@ -99,6 +99,8 @@ function workflowy(option={}){
         if( Object.hasOwn(obj.attributes,'_note') ){
           // ローカルリンクをa.hrefに変換
           obj.attributes._note = (obj.attributes._note.replaceAll(linkRex,"[$2](#$1)")).trim();
+          // 文中サニタイズされたhtml特殊文字は還元
+          obj.attributes._note = obj.attributes._note.replaceAll(/&lt;/g,'<').replaceAll(/&gt;/g,'>');
           obj.attributes._note.split('\n').forEach(l => {
             l = (depth < pv.opt.mdHeader ? '' : '\t'.repeat(depth-pv.opt.mdHeader)) + l;
             rv.push(l);

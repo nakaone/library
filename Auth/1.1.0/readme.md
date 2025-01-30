@@ -1,50 +1,44 @@
+===== [fatal] hrefs only: リンク有るのにアンカー未定義の項目
+cde13ea2b6d2: where
+18ae7059355f: record
+20e32e8d7cef: テーブルの管理情報
+13ce21699fba: arg
+ab046206f9d4: opt
+fa0f16361253: UserStatus
+f3f5e1e469cf: response] {[Object
+
 # Auth 1.1.0
 
-## 処理概要
+## 概要
 
-### crud
+"Auth"はクライアント側に"authClient"、サーバ側に"authServer"を配置し、クライアント側からのリクエストに応じてサーバ側テーブルの参照・更新・削除を行う。
+
+なお利用に当たっては「アカウント」を必要とし、適宜ログインを必要とする。「ゲスト」他のロール毎にテーブルのアクセス権を設定し、アカウント毎にロールを設定することでアクセス制御を行う。
+
+### ゲストとしてのアクセス
+
+![](doc/guest.svg)
+
+- ※1: 表示するページに必要な情報を要求するクエリ(ex.掲示板のやりとり)
+- ※2: userId, CPkeyをブラウザのlocal/sessionStorageから取得できないか試行。<br>なおゲストなので空振りするはず(何れも存在しない)
+- ※3: クエリのみ(userId, CPkeyともに無し)
+- ※4: userIdが無いのでゲストと判断
+- ※5: SpreadDbにクエリを送信。SpreadDbはゲスト権限で許容されるクエリかを判断、結果をauthServerに送信
+- ※6: 掲示板のやりとり等、ゲストに提供できる情報のみを返信
+
+### アカウント登録
+
+![](doc/regist.svg)
+
+### ログイン
+
+### 参照・更新
 
 ![](doc/crud.svg)
 
 ### onload
 
 ![](doc/onload.svg)
-
-### regist
-
-![](doc/regist.svg)
-
-## typedefs
-
-### UserStatus {Object} 「ユーザ管理」シートの行オブジェクト
-
-- userId {string|number} ユーザ識別子(primaryKey)<br>
-	default:UUID, primaryKey
-- email {string} ユーザのメールアドレス(unique)<br>
-	unique
-- name {string} ユーザの氏名
-- phone {string} ユーザの電話番号
-- address {string} ユーザの住所
-- note {string} その他ユーザ情報(備考)
-- validityStart {string} 有効期間開始日時(ISO8601文字列)
-- validityEnd {string} 有効期間終了日時(ISO8601文字列)
-- CPkey {string} クライアント側公開鍵
-- CPkeyExpiry {string} CPkey有効期限<br>
-	期限内に適切な暗号化・署名された要求はOKとする
-- authority {JSON} シート毎のアクセス権限。<code>{シート名:rwdos文字列}</code> 形式
-- trial {JSON} ログイン試行関連情報<br>
-	default:''。ログイン成功時にクリア
-	- passcode {number} 設定されたパスコード
-	- datetime {string} パスコード通知メール送信日時<br>
-		パスコード要求(client)&gt;要求受領(server)&gt;パスコード生成&gt;通知メール送信の内、メール送信日時
-	- log {Object[]} 試行履歴情報
-		- dt {string} パスコード検証日時
-		- pc {number} ユーザが入力したパスコード
-		- cd {number} エラーコード
-	- thawing {string} 凍結解除日時。通常undefined、凍結時にメンバ追加
-- created {string} ユーザ登録日時
-- updated {string} 最終更新日時
-- deleted {string} 論理削除日時
 
 ## authClient
 
@@ -167,3 +161,35 @@ classとするとグローバルに呼び出すのが困難になるため、メ
 ### encrypt() : トークンの作成
 
 ### decrypt() : トークンの解読、書名検証
+
+## typedefs
+
+### UserStatus {Object} 「ユーザ管理」シートの行オブジェクト
+
+- userId {string|number} ユーザ識別子(primaryKey)<br>
+	default:UUID, primaryKey
+- email {string} ユーザのメールアドレス(unique)<br>
+	unique
+- name {string} ユーザの氏名
+- phone {string} ユーザの電話番号
+- address {string} ユーザの住所
+- note {string} その他ユーザ情報(備考)
+- validityStart {string} 有効期間開始日時(ISO8601文字列)
+- validityEnd {string} 有効期間終了日時(ISO8601文字列)
+- CPkey {string} クライアント側公開鍵
+- CPkeyExpiry {string} CPkey有効期限<br>
+	期限内に適切な暗号化・署名された要求はOKとする
+- authority {JSON} シート毎のアクセス権限。<code>{シート名:rwdos文字列}</code> 形式
+- trial {JSON} ログイン試行関連情報<br>
+	default:''。ログイン成功時にクリア
+	- passcode {number} 設定されたパスコード
+	- datetime {string} パスコード通知メール送信日時<br>
+		パスコード要求(client)&gt;要求受領(server)&gt;パスコード生成&gt;通知メール送信の内、メール送信日時
+	- log {Object[]} 試行履歴情報
+		- dt {string} パスコード検証日時
+		- pc {number} ユーザが入力したパスコード
+		- cd {number} エラーコード
+	- thawing {string} 凍結解除日時。通常undefined、凍結時にメンバ追加
+- created {string} ユーザ登録日時
+- updated {string} 最終更新日時
+- deleted {string} 論理削除日時
