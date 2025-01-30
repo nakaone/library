@@ -30,6 +30,15 @@ f3f5e1e469cf: response] {[Object
 
 ![](doc/regist.svg)
 
+- ※1: authClient.regist()を呼び出し。application経由も可。
+- ※2: userId, CPkeyをブラウザのlocal/sessionStorageから取得できないか試行。<br>なおこの段階では空振りするはず(何れも存在しない)
+- ※3: メールアドレス、CP/CSkeyはsessionStorageに保存
+- ※4: 送付されたメールアドレスがアカウント一覧に登録されていないか確認、登録されていなければuserIdを採番しメアドとCPkeyを登録
+- ※5: 図ではhtml(ブラウザ)宛になっているが、実際にはメーラで確認
+- ※6: 採番されたuserId、サーバ側公開鍵(SPkey)も併せて通知
+- ※7: userIdはlocalStorageに、SPkeyはsessionStorageに保存
+- ※8: 以降、アカウント情報編集画面に遷移
+
 ### ログイン
 
 ### 参照・更新
@@ -184,7 +193,7 @@ classとするとグローバルに呼び出すのが困難になるため、メ
 	default:''。ログイン成功時にクリア
 	- passcode {number} 設定されたパスコード
 	- datetime {string} パスコード通知メール送信日時<br>
-		パスコード要求(client)&gt;要求受領(server)&gt;パスコード生成&gt;通知メール送信の内、メール送信日時
+		パスコード要求(client)>要求受領(server)>パスコード生成>通知メール送信の内、メール送信日時
 	- log {Object[]} 試行履歴情報
 		- dt {string} パスコード検証日時
 		- pc {number} ユーザが入力したパスコード

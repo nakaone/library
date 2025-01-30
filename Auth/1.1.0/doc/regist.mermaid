@@ -9,28 +9,32 @@ sequenceDiagram
   participant sp as SpreadDb
   participant sh as Google Spread
 
-%% メンバ登録(フォーム)
-html ->> ap : 登録要求
-ap ->> st : isReg参照
-alt isReg=false(サーバ側にメアド未登録)
-  ap ->> html : ダイアログ
-  html ->> ap : メアド
-end
-ap ->> cl : userId(+email)
-cl ->> sv : userId(+email)
-sv ->> sp : ユーザ情報要求
-sv ->> html : パスコード通知メール
+%% メンバ登録
+
+html ->> cl : 登録要求 ※1
+  %%※1: authClient.regist()を呼び出し。application経由も可。
+cl ->> st : 資格情報参照　※2
+  %%※2: userId, CPkeyをブラウザのlocal/sessionStorageから取得できないか試行。<br>なおこの段階では空振りするはず(何れも存在しない)
+cl ->> html : ダイアログ
+html ->> cl : メールアドレス
+cl ->> cl : 鍵ペア生成(CSkey,CPkey)
+cl ->> st : メアド・鍵保存 ※3
+  %%※3: メールアドレス、CP/CSkeyはsessionStorageに保存
+cl ->> sv : メアド・CPkey
+sv ->> sp : 登録状況確認 ※4
+  %%※4: 送付されたメールアドレスがアカウント一覧に登録されていないか確認<br>未登録ならuserIdを採番しメアドとCPkeyをアカウント一覧に登録
+sv ->> html : パスコード通知メール ※5
+  %%※5: 図ではhtml(ブラウザ)宛になっているが、実際にはメーラで確認
 sv ->> cl : パスコード要求
 cl ->> html : ダイアログ
 html ->> cl : パスコード
 cl ->> sv : パスコード
 sv ->> sv : 検証
-sv ->> cl : OK
-cl ->> ap : OK
+sv ->> cl : OK ※6
+  %%※6: 採番されたuserId、サーバ側公開鍵(SPkey)も併せて通知
+cl ->> st : userId,SPkey保存 ※7
+  %%※7: userIdはlocalStorageに、SPkeyはsessionStorageに保存
+cl ->> ap : OK ※8
+  %%※8: 以降、アカウント情報編集画面に遷移
 
-ap ->> html : フォーム
-html ->> ap : ユーザ情報
-ap ->> cl : ユーザ情報
-cl ->> sv : ユーザ情報更新要求
-sv ->> sp : ユーザ情報更新要求
-sp ->> sh : ユーザ情報
+%% 注釈のみ残す正規表現：^(?!\s*%%※).*\n+

@@ -9,7 +9,7 @@
     <outline text="Auth 1.1.0">
       <outline text="概要" _note="&quot;Auth&quot;はクライアント側に&quot;authClient&quot;、サーバ側に&quot;authServer&quot;を配置し、クライアント側からのリクエストに応じてサーバ側テーブルの参照・更新・削除を行う。&#10;&#10;なお利用に当たっては「アカウント」を必要とし、適宜ログインを必要とする。「ゲスト」他のロール毎にテーブルのアクセス権を設定し、アカウント毎にロールを設定することでアクセス制御を行う。&#10;">
         <outline text="ゲストとしてのアクセス" _note="![](doc/guest.svg)&#10;&#10;- ※1: 表示するページに必要な情報を要求するクエリ(ex.掲示板のやりとり)&#10;- ※2: userId, CPkeyをブラウザのlocal/sessionStorageから取得できないか試行。&amp;lt;br&amp;gt;なおゲストなので空振りするはず(何れも存在しない)&#10;- ※3: クエリのみ(userId, CPkeyともに無し)&#10;- ※4: userIdが無いのでゲストと判断&#10;- ※5: SpreadDbにクエリを送信。SpreadDbはゲスト権限で許容されるクエリかを判断、結果をauthServerに送信&#10;- ※6: 掲示板のやりとり等、ゲストに提供できる情報のみを返信&#10;" />
-        <outline text="アカウント登録" _note="![](doc/regist.svg)" />
+        <outline text="アカウント登録" _note="![](doc/regist.svg)&#10;&#10;- ※1: authClient.regist()を呼び出し。application経由も可。&#10;- ※2: userId, CPkeyをブラウザのlocal/sessionStorageから取得できないか試行。&amp;lt;br&amp;gt;なおこの段階では空振りするはず(何れも存在しない)&#10;- ※3: メールアドレス、CP/CSkeyはsessionStorageに保存&#10;- ※4: 送付されたメールアドレスがアカウント一覧に登録されていないか確認、登録されていなければuserIdを採番しメアドとCPkeyを登録&#10;- ※5: 図ではhtml(ブラウザ)宛になっているが、実際にはメーラで確認&#10;- ※6: 採番されたuserId、サーバ側公開鍵(SPkey)も併せて通知&#10;- ※7: userIdはlocalStorageに、SPkeyはsessionStorageに保存&#10;- ※8: 以降、アカウント情報編集画面に遷移&#10;" />
         <outline text="ログイン" />
         <outline text="参照・更新" _note="![](doc/crud.svg)" />
         <outline text="onload" _note="![](doc/onload.svg)&#10;" />
