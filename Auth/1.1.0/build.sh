@@ -47,10 +47,7 @@ tmp="$prj/tmp"; mkdir -p $tmp
 # 1 readme.mdの作成
 # ----------------------------------------------
 log "1.0";
-mmdc -i $doc/crud.mermaid -o $doc/crud.svg
-mmdc -i $doc/guest.mermaid -o $doc/guest.svg
-mmdc -i $doc/onload.mermaid -o $doc/onload.svg
-mmdc -i $doc/regist.mermaid -o $doc/regist.svg
+mmdc -i $doc/summary.mmd -o $doc/summary.svg
 cat $doc/auth.opml | awk 1 | $workflowy > $prj/readme.md
 
 # ----------------------------------------------

@@ -1,0 +1,26 @@
+sequenceDiagram
+  autonumber
+  participant cl as authClient
+  participant sv as authServer
+
+%% メンバ登録
+
+cl ->> sv : このクエリお願い
+
+alt ゲスト、またはログイン済
+sv ->> cl : OK、クエリの実行結果を返すね
+end
+
+alt 未ログイン(CPkey有効期間外)
+sv ->> cl : 未ログインだから、パスコード送ったよ
+cl ->> cl : ダイアログでパスコード入力
+cl ->> sv : パスコードを付けてクエリ再送します
+Note right of cl : 以降、先頭に戻る
+end
+
+alt userId未登録
+sv ->> cl : 未入会だよ
+cl ->> sv : 入れて(e-mail,CPkey)
+sv ->> cl : OK。仮登録したから、メールのパスコード入れて
+Note right of cl : 以降、未ログインと同じ
+end
