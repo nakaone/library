@@ -19,6 +19,7 @@ embed="node $lib/embedRecursively/1.2.0/pipe.js"
 esed="node $lib/esed/1.0.0/core.js"
 modify="node $lib/modifyMD/2.0.0"
 querySelector="node $lib/querySelector/2.0.1/pipe.js"
+workflowy="node $lib/workflowy/1.0.0/pipe.js markdown 3"
 
 # 0.14 共通変数・関数の定義
 echo "\n\n\n\n\n"  # 開始前に空白行をコンソールに出力
@@ -47,7 +48,6 @@ sed -e 's/[ \t]+$//g' $tmp/test.js > $prj/test.js
 # ----------------------------------------------
 log "2"; # readme.mdの作成
 # ----------------------------------------------
-cat $doc/workflowy.opml | awk 1 | \
-node doc/workflowy.js > $prj/readme.md
+cat $doc/workflowy.opml | awk 1 | $workflowy > $prj/readme.md
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"

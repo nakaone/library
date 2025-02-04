@@ -6,26 +6,23 @@
     </ownerEmail>
   </head>
   <body>
-    <outline text="SpreadDb 1.2.0(d4369fcf4044)">
-      <outline text="使用例(6f8d7dc5cd54)" />
+    <outline text="SpreadDb 1.2.0(d4369fcf4044)" _note="&quot;SpreadDb&quot;はGoogle Spread上のシートを記憶領域とし、参照・更新・削除およびテーブル構造情報取得を実現するライブラリ。&#10;&#10;なおパラメータで利用者の権限とシート毎のアクセス権を付与することでアクセス制御を行えるようにする。&#10;">
       <outline text="主処理(922be86d118e)">
-        <outline text="概要(3eca2504fb57)">
-          <outline text="スプレッドシートを凍結" />
-          <outline text="queryで渡された操作要求を順次処理" />
-          <outline text="権限確認後、command系内部関数の呼び出し" />
-          <outline text="command系関数内で結果をqueryに追記" />
-          <outline text="queryの配列を変更履歴シートに追記" />
-          <outline text="スプレッドシートの凍結解除" />
-        </outline>
+        <outline text="概要(3eca2504fb57)" _note="1. スプレッドシートを凍結&#10;1. queryで渡された操作要求を順次処理&#10;1. 権限確認後、command系内部関数の呼び出し&#10;1. command系関数内で結果をqueryに追記&#10;1. queryの配列を変更履歴シートに追記&#10;1. スプレッドシートの凍結解除" />
         <outline text="引数">
           <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;[]} 操作要求、またはその配列" />
           <outline text="opt {&lt;a href=&quot;https://workflowy.com/#/a4a26014ccb3&quot;&gt;sdbOption&lt;/a&gt;}={} 起動時オプション" />
         </outline>
-        <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/b03c5ccd2f8f&quot;&gt;sdbMain&lt;/a&gt;[]}" />
-        <outline text="エラーコード" />
+        <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/b03c5ccd2f8f&quot;&gt;sdbMain&lt;/a&gt;[]}" _note="エラーコードについては「&lt;a href=&quot;https://workflowy.com/#/60cbb24d684c&quot;&gt;エラーの種類&lt;/a&gt;」参照" />
       </outline>
       <outline text="内部関数 - 非command系(a9f01a749b53)">
-        <outline text="constructor() : 擬似メンバの値設定、変更履歴テーブルの準備" />
+        <outline text="constructor() : 擬似メンバの値設定、変更履歴テーブルの準備(0f493fed5cc9)">
+          <outline text="引数" _note="主処理と同じ。">
+            <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;[]} 操作要求、またはその配列" />
+            <outline text="opt {&lt;a href=&quot;https://workflowy.com/#/a4a26014ccb3&quot;&gt;sdbOption&lt;/a&gt;}={} 起動時オプション" />
+          </outline>
+          <outline text="戻り値 {null|Error}" />
+        </outline>
         <outline text="convertRow() : シートイメージと行オブジェクトの相互変換(e65032ddce65)">
           <outline text="引数">
             <outline text="data {any[][]|Object[]} 行データ。シートイメージか行オブジェクトの配列" />
@@ -111,7 +108,11 @@
           <outline text="引数">
             <outline text="arg {string|string[]} 取得対象テーブル名" />
           </outline>
-          <outline text="戻り値 {Object.&amp;lt;string,&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]&amp;gt;} {テーブル名：項目定義オブジェクトの配列}形式" />
+          <outline text="戻り値 {Object.&amp;lt;string,&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]&amp;gt;} {テーブル名：項目定義オブジェクトの配列}形式">
+            <outline text="1 Backlink">
+              <outline text="createTable() : authServer(SpreadDb.getSchema)の&lt;a href=&quot;https://workflowy.com/#/f76eb797d345&quot;&gt;戻り値&lt;/a&gt;を基にローカルDBにテーブルを作成" />
+            </outline>
+          </outline>
           <outline text="変更履歴シートへの記録" />
         </outline>
         <outline text="selectRow() : テーブルから条件に合致する行を抽出(a8ac2d5e7372)">
@@ -166,34 +167,20 @@
           <outline text="■[&lt;a href=&quot;https://workflowy.com/#/741ee9383b92&quot;&gt;where&lt;/a&gt;] {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用" />
           <outline text="■[&lt;a href=&quot;https://workflowy.com/#/58dde3944536&quot;&gt;set&lt;/a&gt;] {Object|Object[]|string|string[]|Function} 追加・更新する値" _note="command='create','update','append'で使用" />
           <outline text="〇arg {string} 操作関数に渡された引数(データ)" _note="createならcols、select/update/deleteならwhere、append/schemaなら空白。&#10;create/appendの追加レコード情報、selectの抽出レコード等はrecordで確認する運用を想定&#10;" />
-          <outline text="□qSts {string} クエリ単位の実行結果" _note="正常終了なら&quot;OK&quot;。エラーコードは以下の通り。&#10;- create : &quot;Already Exist&quot;, &quot;No Cols and Data&quot;&#10;- その他 : &quot;No Table&quot;">
+          <outline text="□qSts {string} クエリ単位の実行結果" _note="正常終了なら&quot;OK&quot;。エラーコードは&lt;a href=&quot;https://workflowy.com/#/60cbb24d684c&quot;&gt;エラーの種類&lt;/a&gt;参照。">
             <outline text="1 Backlink">
               <outline text="&lt;a href=&quot;https://workflowy.com/#/a0484ae4e8cb&quot;&gt;qSt&lt;/a&gt;s {string} クエリ単位の実行結果" />
             </outline>
           </outline>
           <outline text="〇num {number} 変更された行数" _note="create: 初期値の行数、append:追加行数、update:変更行数、delete:削除行数、select:抽出行数、schema:0(固定)&#10;" />
           <outline text="〇result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
-          <outline text="8 Backlinks">
-            <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;}" _note="同一テーブルでも複数の条件で更新する場合、SpreadDb.arg.query自体を別オブジェクトで用意する">
-              <outline text="table {string} 操作対象のテーブル名" />
-              <outline text="&lt;a href=&quot;https://workflowy.com/#/741ee9383b92&quot;&gt;where&lt;/a&gt; {Object|Function|string} 対象レコードの判定条件" />
-              <outline text="&lt;a href=&quot;https://workflowy.com/#/58dde3944536&quot;&gt;set&lt;/a&gt; {Object|string|Function} 更新する値" />
-            </outline>
-            <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;}">
-              <outline text="table {string} 操作対象のテーブル名" />
-              <outline text="&lt;a href=&quot;https://workflowy.com/#/741ee9383b92&quot;&gt;where&lt;/a&gt; {Object|Function|string} 対象レコードの判定条件" />
-            </outline>
-            <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;}" _note="sdbQueryの内、必要なのは以下のメンバ&#10;">
-              <outline text="table {string} テーブル名" />
-              <outline text="[cols] {&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]} - 新規作成シートの項目定義オブジェクトの配列" />
-              <outline text="[set] {Object[]|Array[]} - 新規作成シートに書き込む初期値" _note="行オブジェクトの配列、またはシートイメージ(プリミティブ型二次元配列)&#10;" />
-              <outline text="qSts {string} クエリ単位の実行結果" />
-            </outline>
-            <outline text="arg {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;}" _note="sdbQueryの内、必要なのは以下のメンバ">
-              <outline text="table {string} 操作対象テーブル名" />
-              <outline text="&lt;a href=&quot;https://workflowy.com/#/58dde3944536&quot;&gt;set&lt;/a&gt; {Object|Object[]} 追加する行オブジェクト" />
-              <outline text="result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;} レコード単位に追加結果を格納" />
-            </outline>
+          <outline text="10 Backlinks">
+            <outline text="authQuery {Object[]} 操作要求の内容(accf9448cecc)" _note="- ■：authClientへの引数、□：authServerへの引数(authClientでの追加項目)、〇：authServerでの追加項目&#10;- SpreadDbの&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;からの差分項目&#10;  - 削除項目：cols, arg&#10;  - 追加項目：email, CPkey, passcode, SPkey, status&#10;- command=&quot;delete&quot;(物理削除)は使用不可とし、論理削除で対応&amp;lt;br&amp;gt;(万一のハッキング時のリスク軽減)&#10;" />
+            <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;[]} 操作要求、またはその配列" />
+            <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;}" _note="同一テーブルでも複数の条件で更新する場合、SpreadDb.arg.query自体を別オブジェクトで用意する" />
+            <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;}" />
+            <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;}" _note="sdbQueryの内、必要なのは以下のメンバ&#10;" />
+            <outline text="arg {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;}" _note="sdbQueryの内、必要なのは以下のメンバ" />
             <outline text="引数 {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;}" />
             <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;}" />
             <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;[]} 処理要求" />
@@ -267,6 +254,9 @@
           <outline text="&lt;a href=&quot;https://workflowy.com/#/6d2c404bdbd8&quot;&gt;pKey&lt;/a&gt; {string} 変更したレコードのprimaryKey" />
           <outline text="rSts {string} レコード単位でのエラーコード" />
           <outline text="diff {Object} 当該レコードの変更点" />
+          <outline text="1 Backlink">
+            <outline text="log - SpreadDbのアクセスログシート" _note="詳細はSpreadDb.&lt;a href=&quot;https://workflowy.com/#/dab8cfcec9d8&quot;&gt;sdbLog&lt;/a&gt;参照" />
+          </outline>
         </outline>
         <outline text="sdbOption {Object} オプション(a4a26014ccb3)">
           <outline text="userId {string}='guest' ユーザの識別子" _note="指定する場合、必ずuserAuthも併せて指定">
@@ -283,7 +273,9 @@
           <outline text="adminId {string}='Administrator' 管理者として扱うuserId" _note="管理者は全てのシートの全権限を持つ&#10;" />
           <outline text="additionalPrimaryKey {Object} createTableで主キー無指定時に追加設定される主キー項目名" _note="既定値は`{name:'rowId',type:'UUID',note:'主キー',primaryKey:true,default:()=&amp;gt;Utilities.getUuid()}`&#10;" />
           <outline text="案：system {string[]} システム用シート名" _note="メモの修正による項目定義の変更を行うことが不適切なシートは「システム用シート」として、起動時引数での指定を可能にする。&#10;" />
-          <outline text="2 Backlinks">
+          <outline text="4 Backlinks">
+            <outline text="sdbOption {&lt;a href=&quot;https://workflowy.com/#/a4a26014ccb3&quot;&gt;sdbOption&lt;/a&gt;} SpreadDbのオプション" />
+            <outline text="opt {&lt;a href=&quot;https://workflowy.com/#/a4a26014ccb3&quot;&gt;sdbOption&lt;/a&gt;}={} 起動時オプション" />
             <outline text="opt {&lt;a href=&quot;https://workflowy.com/#/a4a26014ccb3&quot;&gt;sdbOption&lt;/a&gt;}={} 起動時オプション" />
             <outline text="opt {&lt;a href=&quot;https://workflowy.com/#/a4a26014ccb3&quot;&gt;sdbOption&lt;/a&gt;} 起動時オプション" />
           </outline>
@@ -296,7 +288,8 @@
           </outline>
           <outline text="rSts {string}='OK' レコード単位での実行結果" _note="append/updateで重複エラー時は&quot;Duplicate&quot;&#10;" />
           <outline text="diff {Object} 当該レコードの変更点" _note="create : 初期値として追加した行オブジェクト&#10;select : 抽出された行オブジェクト&#10;append : 追加された行オブジェクト。Duplicateエラーの場合、重複項目と値&#10;update : 変更点。{変更された項目名:[変更前,変更後]}&#10;delete : 削除された行オブジェクト&#10;schema : 提供された項目定義(sdbColumn[])&#10;" />
-          <outline text="3 Backlinks">
+          <outline text="4 Backlinks">
+            <outline text="〇result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
             <outline text="result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
             <outline text="result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;} レコード単位に追加結果を格納" />
             <outline text="〇result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
@@ -304,14 +297,14 @@
         </outline>
         <outline text="sdbMain {Object} 主処理(=SpreadDb)の実行結果オブジェクト(b03c5ccd2f8f)">
           <outline text="1 Backlink">
-            <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/b03c5ccd2f8f&quot;&gt;sdbMain&lt;/a&gt;[]}" />
+            <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/b03c5ccd2f8f&quot;&gt;sdbMain&lt;/a&gt;[]}" _note="エラーコードについては「&lt;a href=&quot;https://workflowy.com/#/60cbb24d684c&quot;&gt;エラーの種類&lt;/a&gt;」参照" />
           </outline>
           <outline text="&lt;a href=&quot;https://workflowy.com/#/bf9d7d1a97d2&quot;&gt;timestamp&lt;/a&gt; {string} 更新日時(ISO8601拡張形式)" />
           <outline text="&lt;a href=&quot;https://workflowy.com/#/e0188bfade27&quot;&gt;queryId&lt;/a&gt; {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列" _note="未設定の場合は主処理でUUIDを設定" />
           <outline text="&lt;a href=&quot;https://workflowy.com/#/cd1ba8419dfc&quot;&gt;table&lt;/a&gt; {string|string[]} 操作対象テーブル名" _note="全commandで使用。command='schema'の場合、取得対象テーブル名またはその配列&#10;" />
           <outline text="command {string} 操作名" _note="全commandで使用。「&lt;a href=&quot;https://workflowy.com/#/0055bda95f77&quot;&gt;commandの種類とrwdos文字列によるアクセス制御&lt;/a&gt;」参照" />
           <outline text="[&lt;a href=&quot;https://workflowy.com/#/741ee9383b92&quot;&gt;data&lt;/a&gt;] {Object|Function|string} 操作関数に渡された引数(データ)" _note="createならcols、select/update/deleteならwhere、append/schemaなら空白。&#10;create/appendの追加レコード情報、selectの抽出レコード等はrecordで確認する運用を想定&#10;" />
-          <outline text="qSts {string} クエリ単位の実行結果" _note="正常終了なら&quot;OK&quot;。エラーコードは以下の通り。&#10;- create : &quot;Already Exist&quot;, &quot;No Cols and Data&quot;&#10;- その他 : &quot;No Table&quot;" />
+          <outline text="qSts {string} クエリ単位の実行結果" _note="正常終了なら&quot;OK&quot;。エラーコードは&lt;a href=&quot;https://workflowy.com/#/60cbb24d684c&quot;&gt;エラーの種類&lt;/a&gt;参照" />
           <outline text="num {number} 変更された行数" _note="create: 初期値の行数、append:追加行数、update:変更行数、delete:削除行数、select:抽出行数、schema:0(固定)&#10;" />
           <outline text="result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
         </outline>
@@ -337,7 +330,7 @@
       </outline>
       <outline text="用語解説、注意事項(56eaf36cc785)">
         <outline text="関数での抽出条件・値の指定時の制約(2df536ff0f8d)" _note="default(sdbColumn), where, record(update他)では関数での指定を可能にしている。&#10;これらをセル・メモで保存する場合、文字列に変換する必要があるが、以下のルールで対応する。&#10;&#10;- 引数は行オブジェクトのみ(引数は必ず一つ)&#10;- 関数に復元する場合`new Function('o',[ロジック部分文字列])`で関数化&#10;  - 必ず&quot;{〜}&quot;で囲み、return文を付ける&#10;- コメントは`//〜`または`/*〜*/`で指定。無指定の場合、前行の続きと看做す&#10;- 関数は一行で記述する(複数行は不可)" />
-        <outline text="commandの種類とrwdos文字列によるアクセス制御(0055bda95f77)" _note="commandの種類は下表の通り。&amp;lt;br&amp;gt;&#10;&quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;削除 | delete | d&#10;テーブル管理情報取得 | schema | s&#10;">
+        <outline text="commandの種類とrwdos文字列によるアクセス制御(0055bda95f77)" _note="commandの種類は下表の通り。&#10;&quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;削除 | delete | d&#10;テーブル管理情報取得 | schema | s&#10;">
           <outline text="3 Backlinks">
             <outline text="command {string} 操作名" _note="全commandで使用。「&lt;a href=&quot;https://workflowy.com/#/0055bda95f77&quot;&gt;commandの種類とrwdos文字列によるアクセス制御&lt;/a&gt;」参照" />
             <outline text="■command {string} 操作名" _note="全commandで使用。「&lt;a href=&quot;https://workflowy.com/#/0055bda95f77&quot;&gt;commandの種類とrwdos文字列によるアクセス制御&lt;/a&gt;」参照" />
@@ -346,10 +339,15 @@
         </outline>
         <outline text="特殊権限'o'" _note="イベント申込情報等、本人以外の参照・更新を抑止するためのアクセス権限。&#10;&#10;- 自分のread/write(select,update)およびschemaのみ実行可。append/deleteは実行不可&amp;lt;br&amp;gt;&#10;  ∵新規登録(append)はシステム管理者の判断が必要。また誤ってdeleteした場合はappendが必要なのでこれも不可&#10;- o(=own set only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。&#10;- 対象テーブルはユーザ識別子項目をprimaryKeyとして要設定&#10;- 検索条件(where句)もprimaryKeyの値のみ指定可(Object,function,JSON他は不可)&#10;&#10;【旧仕様】&#10;- `userAuth:{シート名:o}`が指定された場合、当該シートのprimaryKey=userIdとなっているレコードのみ'r','w'可と看做す。&#10;- 'o'指定でselect/updateする場合、where句は無視され自情報に対する処理要求と看做す&#10;  ex. userId=2の人がuserId=1の人の氏名の更新を要求 ⇒ userId=2の氏名が更新される&#10;  ```&#10;  SpreadDb(&#10;    {table:'camp2024',command:'update',where:1,record:{'申込者氏名':'テスト'}},&#10;    {userId:2,userAuth:{camp2024:'o'}}&#10;  ); // -&amp;gt; userId=2の氏名が「テスト」に&#10;  ```&#10;" />
         <outline text="クエリのエラーとレコードのエラー" _note="- クエリのエラー&#10;  - 指定テーブルへのアクセス権が無い等、クエリ単位で発生するエラー&#10;  - &#10;  - command系メソッド内で予期せぬエラーが発生した場合(=戻り値がErrorオブジェクト)も該当&amp;lt;br&amp;gt;この場合、エラーコードにはError.messageがセットされる&#10;  - 主処理で判定&#10;  - SpreadDbの戻り値オブジェクトのErrCDに設定(sdbMain.ErrCD)&#10;  - エラーの種類&#10;    - No PrimaryKey: 権限&quot;o&quot;でappend先のテーブルに主キーが設定されていない&#10;    - No Authority: 対象テーブルに対するアクセス権が無い&#10;&#10;- レコードのエラー&#10;  - unique指定の有る項目に重複値を設定しようとした等、レコード単位で発生するエラー&#10;  - command系メソッドで判定(append, update, delete)&#10;  - 個別レコードのログオブジェクトのErrCDに設定(sdbLog.ErrCD = sdbMain.log.ErrCD)&#10;  - エラーの種類&#10;    - append&#10;      - Duplicate: unique項目に重複した値を設定。diffに{項目名:重複値} 形式で記録&#10;    - update&#10;    - delete&#10;" />
-        <outline text="エラーの種類" _note="| No | コード | 設定項目 | 発生箇所 | 原因 |&#10;| --: | :-- | :-- | :-- | :-- |&#10;| 1 | Empty set | qSts | &quot;createTable |&#10;| appendRow&quot; | query.setが不在、または配列の長さが0 |&#10;| 2 | Invalid set | qSts | appendRow | query.setが非配列なのに要素がオブジェクトではない |&#10;| 3 | Already Exist | qSts | createTable | シートが既に存在している |&#10;| 4 | No Table | qSts | &quot;doQuery |&#10;| genTable&quot; | (create以外で)対象テーブルが無い |&#10;| 5 | No where | qSts | &quot;deleteRow |&#10;| updateRow&quot; | where句がqueryに無い |&#10;| 6 | No set | qSts | appendRow | queryにメンバ&quot;set&quot;が不在 |&#10;| 7 | No Table name | qSts | doQuery | query.tableが無い、または文字列では無い |&#10;| 8 | No command | qSts | doQuery | query.commandが無い、または文字列では無い |&#10;| 9 | Invalid where clause | qSts | doQuery | (権限&quot;o&quot;で)where句の値がプリミティブ型ではない |&#10;| 10 | No Authority | qSts | doQuery | 指定されたテーブル操作の権限が無い |&#10;| 11 | その他 | qSts | doQuery | エラーオブジェクトのmessage |&#10;| 12 | No cols and data | qSts | genTable | createで項目定義も初期データも無い |&#10;| 13 | No set | qSts | updateRow | set句がqueryに無い |&#10;| 14 | Undefined Column | qSts | updateRow | 更新対象項目がテーブルに無い |&#10;| 15 | Duplicate | qSts | createTable | 初期レコード内に重複が存在 |&#10;| 16 | Duplicate | rSts | &quot;appendRow |&#10;| updateRow&quot; | unique項目に重複した値を入れようとした |&#10;| 17 | Could not Lock | Error | main | 規定回数以上シートのロックに失敗した |&#10;| 18 | Invalid Argument | Error | functionalyze | 不適切な引数 |">
+        <outline text="エラーの種類" _note="| No | 設定項目 | コード | 発生箇所 | 原因 |&#10;| --: | :-- | :-- | :-- | :-- |&#10;| 1 | qSts | No Authority | doQuery | 指定されたテーブル操作の権限が無い |&#10;| 2 | qSts | No command | doQuery | query.commandが無い、または文字列では無い |&#10;| 3 | qSts | No Table name | doQuery | query.tableが無い、または文字列では無い |&#10;| 4 | qSts | Invalid where clause | doQuery | (権限&quot;o&quot;で)where句の値がプリミティブ型ではない |&#10;| 5 | qSts | No Table | doQuery&amp;lt;br&amp;gt;genTable | (create以外で)対象テーブルが無い |&#10;| 6 | qSts | No cols and data | genTable | createで項目定義も初期データも無い |&#10;| 7 | qSts | Already Exist | createTable | シートが既に存在している |&#10;| 8 | qSts | Duplicate | createTable | 初期レコード内に重複が存在 |&#10;| 9 | qSts | Empty set | createTable&amp;lt;br&amp;gt;appendRow | query.setが不在、または配列の長さが0 |&#10;| 10 | qSts | Invalid set | appendRow | query.setが非配列なのに要素がオブジェクトではない |&#10;| 11 | qSts | No set | appendRow&amp;lt;br&amp;gt;updateRow | queryにメンバ&quot;set&quot;が不在 |&#10;| 12 | qSts | No where | deleteRow&amp;lt;br&amp;gt;updateRow | where句がqueryに無い |&#10;| 13 | qSts | Undefined Column | updateRow | 更新対象項目がテーブルに無い |&#10;| 14 | qSts | その他 | doQuery | エラーオブジェクトのmessage |&#10;| 15 | rSts | Duplicate | appendRow&amp;lt;br&amp;gt;updateRow | unique項目に重複した値を入れようとした |&#10;| 16 | Error | Invalid Argument | functionalyze | 不適切な引数 |&#10;| 17 | Error | Could not Lock | main | 規定回数以上シートのロックに失敗した |&#10;">
           <outline text="fatal error : ソース修正が必要な致命的エラー" _note="SpreadDbからの戻り値はErrorオブジェクト。変更履歴シートには残らない。&#10;" />
           <outline text="warning error : データや権限の状態により発生するエラー" _note="ソース修正は不要。SpreadDbからの戻り値は通常のオブジェクト。変更履歴シートに残る。" />
           <outline text="command系と非command系メソッドのエラー取扱の違い" _note="command系は他関数からの被呼出メソッドのため、エラーをqStsに持たせるだけで実行停止につながるErrorオブジェクトは返さない。&#10;非command系はこの制約が無いため、通常通りErrorオブジェクトを返す。Errorオブジェクトの扱いはcommand系メソッドで吸収する。&#10;" />
+          <outline text="3 Backlinks">
+            <outline text="qSts {string} クエリ単位の実行結果" _note="正常終了なら&quot;OK&quot;。エラーコードは&lt;a href=&quot;https://workflowy.com/#/60cbb24d684c&quot;&gt;エラーの種類&lt;/a&gt;参照" />
+            <outline text="□qSts {string} クエリ単位の実行結果" _note="正常終了なら&quot;OK&quot;。エラーコードは&lt;a href=&quot;https://workflowy.com/#/60cbb24d684c&quot;&gt;エラーの種類&lt;/a&gt;参照。" />
+            <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/b03c5ccd2f8f&quot;&gt;sdbMain&lt;/a&gt;[]}" _note="エラーコードについては「&lt;a href=&quot;https://workflowy.com/#/60cbb24d684c&quot;&gt;エラーの種類&lt;/a&gt;」参照" />
+          </outline>
         </outline>
       </outline>
       <outline text="更新履歴(d154b1fe324f)" _note="- rev.1.2.0 : 2025/01/04〜01/26&#10;  - 設計思想を「クエリ単位に必要な情報を付加して実行、結果もクエリに付加」に変更&#10;  - 変更履歴を「クエリの実行結果」と「(クエリ内の)レコードの実行結果」の二種類のレコードレイアウトを持つように変更&#10;  - エラー発生時、messageではなくエラーコードで返すよう変更&#10;  - 1つの処理要求(query)で複数レコードを対象とする場合、一レコードでもエラーが発生したらエラーに&#10;  - 変更履歴シートのUUIDは削除&#10;  - workflowyで作成した使用をmarkdown化する機能を追加&#10;  - queryにSpreadDb呼出元での突合用項目&quot;queryId&quot;を追加&#10;  &#10;- rev.1.1.0 : 2024/12/27&#10;  - 上・左余白不可、複数テーブル/シート不可に変更(∵ロジックが複雑で保守性低下)&#10;    - テーブル名とシート名が一致&#10;    - 左上隅のセルはA1に固定&#10;  - 「更新履歴」の各項目の並び・属性他について、シート上の変更は反映されない(システム側で固定)&#10;  - 各シートの権限チェックロジックを追加(opt.account)&#10;  - クロージャを採用(append/update/deleteをprivate関数化)&#10;    - select文を追加(従来のclass方式ではインスタンスから直接取得)&#10;    - インスタンスを返す方式から、指定された操作(query)の結果オブジェクトを返すように変更&#10;  - getSchemaメソッドを追加&#10;  - 旧版のgetLogは廃止(select文で代替)&#10;- 仕様の詳細は[workflowy](&lt;a href=&quot;https://workflowy.com/#/4e03d2d2c266)参照&quot;&gt;https://workflowy.com/#/4e03d2d2c266)参照&lt;/a&gt;&#10;" />

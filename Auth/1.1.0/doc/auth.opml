@@ -9,7 +9,7 @@
     <outline text="Auth 1.1.0">
       <outline text="概要">
         <outline text="おおまかな流れ" _note="![](doc/summary.svg)&#10;" />
-        <outline text="処理要求の流れ" _note="![](doc/query.svg)&#10;&#10;&amp;lt;details&amp;gt;&amp;lt;summary&amp;gt;①要求(クエリ)の作成&amp;lt;/summary&amp;gt;&amp;lt;img src=&quot;doc/query01.svg&quot; /&amp;gt;&amp;lt;/details&amp;gt;&#10;&amp;lt;details&amp;gt;&amp;lt;summary&amp;gt;②ゲストとして実行&amp;lt;/summary&amp;gt;&amp;lt;img src=&quot;doc/query02.svg&quot; /&amp;gt;&amp;lt;/details&amp;gt;&#10;&amp;lt;details&amp;gt;&amp;lt;summary&amp;gt;③アカウントを検証、ユーザとして実行&amp;lt;/summary&amp;gt;&amp;lt;img src=&quot;doc/query03.svg&quot; /&amp;gt;&amp;lt;/details&amp;gt;&#10;&amp;lt;details&amp;gt;&amp;lt;summary&amp;gt;④ログイン処理&amp;lt;/summary&amp;gt;&amp;lt;img src=&quot;doc/query04.svg&quot; /&amp;gt;&amp;lt;/details&amp;gt;&#10;&amp;lt;details&amp;gt;&amp;lt;summary&amp;gt;⑤アカウント不在なら新規登録、要権限ならパスコード入力&amp;lt;/summary&amp;gt;&amp;lt;img src=&quot;doc/query05.svg&quot; /&amp;gt;&amp;lt;/details&amp;gt;&#10;" />
+        <outline text="処理要求の流れ" _note="![](doc/query.svg)&#10;" />
         <outline text="新規登録の流れ" _note="![](doc/registration.svg)" />
       </outline>
       <outline text="authClient" _note="classとするとグローバルに呼び出すのが困難になるため、クロージャとする。">
@@ -30,7 +30,7 @@
               <outline text="■[where] {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用&#10;&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- string&#10;  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。&#10;  - その他 ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;- その他(Object,function,string以外) ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;" />
               <outline text="■[set] {Object|Object[]|string|string[]|Function} 追加・更新する値" _note="command='update','append'で使用&#10;&#10;- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;" />
             </outline>
-            <outline text="option {Object} &lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;に以下のメンバを加えた物">
+            <outline text="option {Object} &lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;に以下のメンバを加えた物(6e19dabbd5cc)">
               <outline text="saveLocalStorage {Object} localStorageに保存するか否か">
                 <outline text="userId {boolean}=true" />
                 <outline text="email {boolean}=false" />
@@ -71,7 +71,7 @@
               <outline text="□[CPkey] {string} ユーザの公開鍵" />
               <outline text="□[passcode] {number|string} 入力されたパスコード" _note="開発時はauthClient/authServerへの引数として扱う(∵自動テスト用)。リリース時には引数として与えるのは不可とする&#10;&#10;- authClientへの引数：ダイアログから入力されたパスコードの代替。配列可&#10;- authServerへの引数：乱数で発生させるパスコードの代替&#10;" />
             </outline>
-            <outline text="option {Object} &lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;に以下のメンバを加えた物">
+            <outline text="option {Object} &lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;に以下のメンバを加えた物(83ede73058e8)">
               <outline text="DocPropName {string}=&quot;authServer&quot; DocumentPropertiesの項目名" />
               <outline text="sdbOption {&lt;a href=&quot;https://workflowy.com/#/a4a26014ccb3&quot;&gt;sdbOption&lt;/a&gt;} SpreadDbのオプション" />
               <outline text="accountsTableName {string}='accounts' &lt;a href=&quot;https://workflowy.com/#/2f8a77eb6f10&quot;&gt;アカウント管理シート&lt;/a&gt;の名前" />
@@ -95,7 +95,7 @@
         <outline text="SSkey {string} サーバ側秘密鍵" _note="復元は`RSAKey.parse(v.r.sKey)`で行う" />
       </outline>
       <outline text="使用シートおよび項目定義">
-        <outline text="accounts - アカウント管理シートの項目">
+        <outline text="accounts - アカウント管理シートの項目(2f8a77eb6f10)">
           <outline text="userId {string|number}='guest' ユーザ識別子(primaryKey)" _note="default:101(0〜100はシステム用に留保), primaryKey&#10;" />
           <outline text="note {string}='' アカウント情報(備考)" />
           <outline text="validityStart {string}=Date.now() 有効期間開始日時(ISO8601文字列)" />
@@ -110,7 +110,7 @@
             <outline text="accountsTableName {string}='accounts' &lt;a href=&quot;https://workflowy.com/#/2f8a77eb6f10&quot;&gt;アカウント管理シート&lt;/a&gt;の名前" />
           </outline>
         </outline>
-        <outline text="devices - デバイス管理シートの項目" _note="複数デバイスでの単一アカウントの使用を可能にするため「account.userId(1) : device.userId(n)」で作成&#10;">
+        <outline text="devices - デバイス管理シートの項目(ae550a40dc50)" _note="複数デバイスでの単一アカウントの使用を可能にするため「account.userId(1) : device.userId(n)」で作成&#10;">
           <outline text="userId {string|number}='guest' ユーザ識別子" _note="not null" />
           <outline text="email {string}=opt.adminMail ユーザのメールアドレス(unique)" _note="primaryKey&#10;" />
           <outline text="name {string}='ゲスト' ユーザの氏名" />
@@ -164,7 +164,7 @@
           </outline>
           <outline text="thawing {string}='1970/01/01' 凍結解除日時" />
         </outline>
-        <outline text="commonOption {Object} authClient/authServer共通オプション" _note="以下は共通性維持のため、authClient/authServer起動時オプションでの変更は不可とする。&amp;lt;br&amp;gt;変更が必要な場合、build前のソースで変更する。">
+        <outline text="commonOption {Object} authClient/authServer共通オプション(3c211d58f127)" _note="以下は共通性維持のため、authClient/authServer起動時オプションでの変更は不可とする。&amp;lt;br&amp;gt;変更が必要な場合、build前のソースで変更する。">
           <outline text="tokenExpiry {number}=600,000(10分) トークンの有効期間(ミリ秒)" />
           <outline text="passcodeDigit {number}=6  パスコードの桁数" />
           <outline text="passcodeExpiry {number}=600,000(10分) パスコードの有効期間(ミリ秒)" _note="メール送信〜受領〜パスコード入力〜送信〜確認処理終了までの時間。通信に係る時間も含む。不正防止のため、始点/終点ともサーバ側で時刻を設定する。" />
@@ -176,11 +176,11 @@
           <outline text="adminMail {string} 管理者のメールアドレス" />
           <outline text="adminName {string} 管理者名" />
           <outline text="2 Backlinks">
-            <outline text="option {Object} &lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;に以下のメンバを加えた物" />
-            <outline text="option {Object} &lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;に以下のメンバを加えた物" />
+            <outline text="option {Object} &lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;に以下のメンバを加えた物(6e19dabbd5cc)" />
+            <outline text="option {Object} &lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;に以下のメンバを加えた物(83ede73058e8)" />
           </outline>
         </outline>
-        <outline text="cron {Object} 定期実行ジョブの引数" _note="crond.set(), crond.clear()共通&#10;">
+        <outline text="cron {Object} 定期実行ジョブの引数(53d27b6201fa)" _note="crond.set(), crond.clear()共通&#10;">
           <outline text="name {string} ジョブを特定する名称" />
           <outline text="func {function} ジョブ本体" />
           <outline text="interval {number} 実行間隔(ミリ秒)" />
@@ -188,6 +188,10 @@
             <outline text="crond {&lt;a href=&quot;https://workflowy.com/#/53d27b6201fa&quot;&gt;cron&lt;/a&gt;[]} 起動する定期実行ジョブ" />
           </outline>
         </outline>
+      </outline>
+      <outline text="その他" _note="用語解説、注意事項、更新履歴、他">
+        <outline text="【参考】SpreadDbのエラーコード" _note="| No | 設定項目 | コード | 発生箇所 | 原因 |&#10;| --: | :-- | :-- | :-- | :-- |&#10;| 1 | qSts | No Authority | doQuery | 指定されたテーブル操作の権限が無い |&#10;| 2 | qSts | No command | doQuery | query.commandが無い、または文字列では無い |&#10;| 3 | qSts | No Table name | doQuery | query.tableが無い、または文字列では無い |&#10;| 4 | qSts | Invalid where clause | doQuery | (権限&quot;o&quot;で)where句の値がプリミティブ型ではない |&#10;| 5 | qSts | No Table | doQuery&amp;lt;br&amp;gt;genTable | (create以外で)対象テーブルが無い |&#10;| 6 | qSts | No cols and data | genTable | createで項目定義も初期データも無い |&#10;| 7 | qSts | Already Exist | createTable | シートが既に存在している |&#10;| 8 | qSts | Duplicate | createTable | 初期レコード内に重複が存在 |&#10;| 9 | qSts | Empty set | createTable&amp;lt;br&amp;gt;appendRow | query.setが不在、または配列の長さが0 |&#10;| 10 | qSts | Invalid set | appendRow | query.setが非配列なのに要素がオブジェクトではない |&#10;| 11 | qSts | No set | appendRow&amp;lt;br&amp;gt;updateRow | queryにメンバ&quot;set&quot;が不在 |&#10;| 12 | qSts | No where | deleteRow&amp;lt;br&amp;gt;updateRow | where句がqueryに無い |&#10;| 13 | qSts | Undefined Column | updateRow | 更新対象項目がテーブルに無い |&#10;| 14 | qSts | その他 | doQuery | エラーオブジェクトのmessage |&#10;| 15 | rSts | Duplicate | appendRow&amp;lt;br&amp;gt;updateRow | unique項目に重複した値を入れようとした |&#10;| 16 | Error | Invalid Argument | functionalyze | 不適切な引数 |&#10;| 17 | Error | Could not Lock | main | 規定回数以上シートのロックに失敗した |" />
+        <outline text="更新履歴" />
       </outline>
     </outline>
   </body>
