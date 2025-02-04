@@ -1105,10 +1105,10 @@ function SpreadDb(query = [], opt = {}) {
     }
   }
   /** objectizeColumn: 項目定義メタ情報(JSDoc)からオブジェクトを生成
-   * @param arg {Object[]|string} - 文字列の場合、pv.opt以下に定義されているメンバ(typedef)と看做す
-   * @param arg.name {string}
-   * @param arg.default {string|function}
-   * @returns {Object}
+   * @param arg {Object[]|string} 文字列の場合、pv.opt以下に定義されているメンバ(typedef)と看做す
+   * @param arg.name {string} 生成するオブジェクト内のメンバ名
+   * @param arg.default {string|function} メンバ名にセットする値(functionalyzeの引数)
+   * @returns {Object} 生成されたオブジェクト
    */
   function objectizeColumn(arg) {
     const v = { whois: `${pv.whois}.objectizeColumn`, step: 0, rv: {} };
@@ -1184,7 +1184,7 @@ function SpreadDb(query = [], opt = {}) {
     if (arg !== null && typeof arg === 'object') return JSON.stringify(arg);
     return arg;
   }
-  /** updateRow: 領域に新規行を追加
+  /** updateRow: テーブルの既存行の内容を更新
    * @param {Object} query
    * @param {sdbTable} query.table - 操作対象のテーブル管理情報
    * @param {Object|Function|string} query.where - 対象レコードの判定条件
