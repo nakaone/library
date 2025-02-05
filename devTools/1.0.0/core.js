@@ -159,7 +159,7 @@ function devTools(option) {
     // nameがクラス名.メソッド名だった場合、クラス名をセット
     if (name.includes('.')) [o.class, o.name] = name.split('.');
     // ラベル作成。呼出元と同じクラスならクラス名は省略
-    o.label = `[${o.sSeq}]` + ((o.class === '' || caller.class === o.class) ? '' : `${o.class}.`) + o.name;
+    o.label = `[${o.sSeq}]` + (o.class && (!caller || caller.class !== o.class) ? o.class+'.' : '') + o.name;
     // footprintの作成
     stack.forEach(x => o.footprint.push(`${x.label}.${x.step}`));
     o.footprint = o.footprint.length === 0 ? '(root)' : o.footprint.join(' > ');
