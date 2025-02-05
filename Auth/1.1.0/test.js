@@ -5,7 +5,7 @@
 const dev = devTools();
 const authTest = () => doTest('dev',0,1); // 引数はscenario, start, num
 function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0->start以降全部、num<0->start無視して後ろから
-  const v = { whois: 'doTest', rv: null, sdb: SpreadDb(), counter: 0};
+  const v = { whois: 'doTest', rv: null, counter: 0};
   const sample = { // テスト用サンプルデータ
     '掲示板': {
       set: [
@@ -53,9 +53,12 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
      * - delete: 強制削除(defaultの既定値)。存在していれば削除、再作成はしない
      * - asis  : そのまま何もしない
      */
-    const v = { whois: 'setupSheet', rv: null, spread: SpreadsheetApp.getActiveSpreadsheet()};
+    const v = { whois: 'doTest.setupSheet', rv: null, spread: SpreadsheetApp.getActiveSpreadsheet()};
     dev.start(v.whois, [...arguments]);
     try {
+
+      // コンソールへの出力を抑止
+      dev.changeOption({start:false,arg:false,step:false});
 
       dev.step(1); // 指定が有るシートのリストアップ
       v.specified = Object.keys(arg);
@@ -71,24 +74,22 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
       dev.step(4); // readmeは削除対象から外す
       v.i = v.list.findIndex(x => x === 'readme');
       if (v.i >= 0) v.list.splice(v.i, 1);
-      dev.dump([v.specified,v.arg,v.list],74)
 
       for( v.i=0 ; v.i<v.list.length ; v.i++ ){
-        // シートに対する措置を特定
+        dev.step(5.1); // シートに対する措置を特定
         v.command = v.specified.includes(v.list[v.i]) ? v.arg[v.list[v.i]] : v.arg.default;
-        dev.dump([v.list[v.i],v.command],79)
 
-        // 強制的に再作成(force)、または強制削除(delete)ならシートを削除
+        dev.step(5.2); // 強制的に再作成(force)、または強制削除(delete)ならシートを削除
         if( v.command === 'force' || v.command === 'delete' ){
           v.spread.deleteSheet(v.spread.getSheetByName(v.list[v.i]));
         }
       }
 
       for( v.i=0 ; v.i<v.specified.length ; v.i++ ){
-        // シートに対する措置を特定
+        dev.step(6.1); // シートに対する措置を特定
         v.command = v.arg[v.specified[v.i]];
 
-        // 強制的に再作成(force)、またはシート不存在で不在時作成(ifnot)ならシートを作成
+        dev.step(6.2); // 強制的に再作成(force)、またはシート不存在で不在時作成(ifnot)ならシートを作成
         if( v.command === 'force' || (v.list.includes(v.specified[v.i]) === false && v.command === 'ifnot' )){
           v.r = SpreadDb({  // 対象シート作成
             command: 'create',
@@ -99,6 +100,9 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
           if (v.r instanceof Error) return v.r;
         }
       }
+
+      // コンソールへの出力を再開
+      dev.changeOption({start:true,arg:true,step:true});
 
       dev.end(); // 終了処理
       return v.rv;
@@ -147,15 +151,12 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
 
         dev.step(3.2); // scenarioからqueryとoptをセットしてテスト実施、NG時は中断
         if (false === dev.check({
-          asis: SpreadDb(v.scenario.query,v.scenario.opt),
+          asis: authClient(v.scenario.query,v.scenario.opt),
           tobe: (v.scenario.check || undefined),
           title: `${v.whois}.${v.scenarioList[v.sno]}.${v.idx}`,
         })) throw new Error(`check NG`);
       }
     }
-
-
-    //v.rv = authClient('q','o');
 
     dev.end(); // 終了処理
     return v.rv;
@@ -214,15 +215,91 @@ function authServer(query,option={}) {
 
   } catch (e) { dev.error(e); return e; }
 
-  function constructor(arg) {
+  function constructor(query,option) {
     const v = { whois: `${sv.whois}.constructor`, rv: null};
     dev.start(v.whois, [...arguments]);
     try {
 
       // -------------------------------------------------------------
-      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
+      dev.step(1); // 引数の型チェック＋変換
       // -------------------------------------------------------------
-      v.rv = {query:query,option:option};
+
+      // -------------------------------------------------------------
+      dev.step(1); // メンバ(sv)に引数を保存、未指定分には既定値を設定
+      // -------------------------------------------------------------
+      Object.assign(sv, {
+        typedefs: {
+          authQuery: [
+            {name:'table',type:'string',note:'操作対象テーブル名',default:()=>''},
+            {name:'command',type:'string',note:'操作名',default:()=>''},
+            {name:'where',type:'Object|Function|string',note:'対象レコードの判定条件',default:()=>null},
+            {name:'set',type:'Object|Object[]|string|string[]|Function',note:'追加・更新する値',default:()=>null},
+            {name:'timestamp',type:'string',note:'更新日時(ISO8601拡張形式)',default:()=>toLocale(new Date())},
+            {name:'userId',type:'string|number',note:'="ユーザ識別子(uuid等)',default:()=>'guest'},
+            {name:'queryId',type:'string',note:'クエリ・結果突合用文字列',default:()=>Utilities.getUuid()},
+            {name:'email',type:'string',note:'ユーザのメールアドレス',default:()=>''},
+            {name:'CPkey',type:'string',note:'ユーザの公開鍵',default:()=>''},
+            {name:'passcode',type:'number|string',note:'入力されたパスコード',default:()=>null},
+            {name:'SPkey',type:'string',note:'サーバ側公開鍵',default:()=>''},
+            {name:'qSts',type:'string',note:'クエリ単位の実行結果',default:()=>''},
+            {name:'num',type:'number',note:'変更された行数',default:()=>0},
+            {name:'result',type:'sdbResult[]',note:'レコード単位の実行結果',default:()=>new Object()},
+            {name:'status',type:'string',note:'authServerの実行結果',default:()=>'OK'},
+          ],
+        }
+      })
+
+      sv.query = typedefObj(sv.typedefs.authQuery,query);
+      if( sv.query instanceof Error ) throw sv.query;
+      dev.dump(sv,253)
+
+      // -------------------------------------------------------------
+      dev.step(1); // authClient/authServer共通オプションは引数で上書きしない
+      // -------------------------------------------------------------
+
+      // -------------------------------------------------------------
+      dev.step(1); // DocumentPropertiesからSS/SPkeyを取得
+      // 未生成なら生成、DocumentPropertiesに保存
+      // -------------------------------------------------------------
+
+      // -------------------------------------------------------------
+      dev.step(1); // accounts/devicesシートが未作成なら追加
+      // -------------------------------------------------------------
+
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { dev.error(e); return e; }
+  }
+
+  /** typedefObj: 指定された形式のオブジェクトを生成する
+   * - 項目定義からオブジェクトを生成、指定オブジェクトでメンバを上書きする
+   * - 階層のあるオブジェクトには非対応(メンバの属性はプリミティブ型限定)。必要な場合は事前に子階層をオブジェクト化し、overに指定のこと
+   * 
+   * @param {sdbColumn[]} typedef - オブジェクトの形式定義
+   * @param {Object} over={} - 上書きするオブジェクト。主に引数を想定
+   * @returns {Object} 生成されたオブジェクト
+   */
+  function typedefObj(typedef,over={}) {
+    const v = { whois: 'typedefObj', rv: {}};
+    dev.start(v.whois, [...arguments]);
+    try {
+
+      for( v.i=0 ; v.i<typedef.length ; v.i++ ){
+        v.rv[typedef[v.i].name] = null; // 既定値null
+        if( Object.hasOwn(over,typedef[v.i].name) ){
+          if( typeof over[typedef[v.i].name] !== 'function' ){
+            dev.step(1); // overに値があり且つ関数では無い場合、その値を使用(関数は安全性確保のため不可)
+            v.rv[typedef[v.i].name] = over[typedef[v.i].name];
+          }
+        } else {
+          if( Object.hasOwn(typedef[v.i],'default') ){
+            dev.step(2); // 項目定義にdefaultがある場合はその値を使用
+            v.rv[typedef[v.i].name] = typeof typedef[v.i].default === 'function' ? typedef[v.i].default() : typedef[v.i].default
+          }
+        }
+      }
 
       dev.end(); // 終了処理
       return v.rv;
@@ -1822,5 +1899,86 @@ function SpreadDb(query = [], opt = {}) {
       dev.error(e);
       return e;
     }
+  }
+}
+/** 日時を指定形式の文字列にして返す
+ * @param {string|Date} arg - 変換元の日時
+ * @param {string} [format='yyyy-MM-ddThh:mm:ss.nnnZ'] - 日時を指定する文字列。年:y,月:M,日:d,時:h,分:m,秒:s,ミリ秒:n,タイムゾーン:Z
+ * @returns {string} 指定形式に変換された文字列。無効な日付なら長さ0の文字列
+ *
+ * @example
+ * ```
+ * "1965/9/5"[yy/MM/dd hh:mm:ss.nnn] ⇒ "65/09/05 00:00:00.000"
+ * "1965/9/5"[yyyy-MM-dd] ⇒ "1965-09-05"
+ * "1965/9/5"[hh:mm] ⇒ "00:00"
+ * "1977-03-04"[yy/MM/dd hh:mm:ss.nnn] ⇒ "77/03/04 09:00:00.000"
+ * "1977-03-04"[yyyy-MM-dd] ⇒ "1977-03-04"
+ * "1977-03-04"[hh:mm] ⇒ "09:00"
+ * 1688189258262[yy/MM/dd hh:mm:ss.nnn] ⇒ "23/07/01 14:27:38.262"
+ * 1688189258262[yyyy-MM-dd] ⇒ "2023-07-01"
+ * 1688189258262[hh:mm] ⇒ "14:27"
+ * "Sat Jul 01 2023 14:16:30 GMT+0900"[yy/MM/dd hh:mm:ss.nnn] ⇒ "23/07/01 14:16:30.000"
+ * "Sat Jul 01 2023 14:16:30 GMT+0900"[yyyy-MM-dd] ⇒ "2023-07-01"
+ * "Sat Jul 01 2023 14:16:30 GMT+0900"[hh:mm] ⇒ "14:16"
+ * "12:34"[yy/MM/dd hh:mm:ss.nnn] ⇒ ""
+ * "12:34"[yyyy-MM-dd] ⇒ ""
+ * "12:34"[hh:mm] ⇒ ""
+ * ```
+ */
+function toLocale(arg,format='yyyy-MM-ddThh:mm:ss.nnnZ'){
+  const v = {rv:format};
+  try {
+
+    let dObj = whichType(arg,'Date') ? arg : new Date(arg);
+    //dObj = String(Object.prototype.toString.call(arg).slice(8,-1)) !== 'Date' ? arg : new Date(arg);
+
+    v.step = 1; // 無効な日付なら空文字列を返して終了
+    if( isNaN(dObj.getTime()) ) return '';
+
+    v.local = { // 地方時ベース
+      y: dObj.getFullYear(),
+      M: dObj.getMonth()+1,
+      d: dObj.getDate(),
+      h: dObj.getHours(),
+      m: dObj.getMinutes(),
+      s: dObj.getSeconds(),
+      n: dObj.getMilliseconds(),
+      Z: Math.abs(dObj.getTimezoneOffset())
+    }
+    // タイムゾーン文字列の作成
+    v.local.Z = v.local.Z === 0 ? 'Z'
+    : ((dObj.getTimezoneOffset() < 0 ? '+' : '-')
+    + ('0' + Math.floor(v.local.Z / 60)).slice(-2)
+    + ':' + ('0' + (v.local.Z % 60)).slice(-2));
+
+    v.step = 2; // 日付文字列作成
+    for( v.x in v.local ){
+      v.m = v.rv.match(new RegExp(v.x+'+'));
+      if( v.m ){
+        v.str = v.m[0].length > 1
+          ? ('000'+v.local[v.x]).slice(-v.m[0].length)
+          : String(v.local[v.x]);
+        v.rv = v.rv.replace(v.m[0],v.str);
+      }
+    }
+
+    v.step = 3; // 終了処理
+    return v.rv;
+
+  } catch(e){
+    console.error(e,v);
+    return e;
+  }
+}
+function whichType(arg,is){
+  let rv = String(Object.prototype.toString.call(arg).slice(8,-1));
+  switch(rv){
+    case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;
+    case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;
+  }
+  if( typeof is === 'string' ){
+    return rv.toLowerCase() === is.toLowerCase();
+  } else {
+    return rv;
   }
 }
