@@ -45,12 +45,23 @@ function authServer(query,option={}) {
             {name:'result',type:'sdbResult[]',note:'レコード単位の実行結果',default:()=>new Object()},
             {name:'status',type:'string',note:'authServerの実行結果',default:()=>'OK'},
           ],
+          asOption: [
+            {name:'SPkey',default:'えすぴーきー'},
+            {name:'SSkey',default:'えすえすきー'},
+          ],
         }
       })
 
+      // sv.queryの作成
       sv.query = typedefObj(sv.typedefs.authQuery,query);
       if( sv.query instanceof Error ) throw sv.query;
-      dev.dump(sv,253)
+      // sv.opt(authServer専用部分)の作成
+      sv.opt = typedefObj(sv.typedefs.asOption,option);
+      if( sv.opt instanceof Error ) throw sv.opt;
+      // sv.opt(authClient/Server共通部分)の作成
+      //::$src/commonOption.js::
+      sv.opt = Object.assign(sv.opt,commonOption);
+      dev.dump(sv,65)
 
       // -------------------------------------------------------------
       dev.step(1); // authClient/authServer共通オプションは引数で上書きしない

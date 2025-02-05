@@ -249,12 +249,34 @@ function authServer(query,option={}) {
             {name:'result',type:'sdbResult[]',note:'レコード単位の実行結果',default:()=>new Object()},
             {name:'status',type:'string',note:'authServerの実行結果',default:()=>'OK'},
           ],
+          asOption: [
+            {name:'SPkey',default:'えすぴーきー'},
+            {name:'SSkey',default:'えすえすきー'},
+          ],
         }
       })
 
+      // sv.queryの作成
       sv.query = typedefObj(sv.typedefs.authQuery,query);
       if( sv.query instanceof Error ) throw sv.query;
-      dev.dump(sv,253)
+      // sv.opt(authServer専用部分)の作成
+      sv.opt = typedefObj(sv.typedefs.asOption,option);
+      if( sv.opt instanceof Error ) throw sv.opt;
+      // sv.opt(authClient/Server共通部分)の作成
+      const commonOption = {
+        tokenExpiry: 600000,  //(10分) トークンの有効期間(ミリ秒)
+        passcodeDigit: 6, //  パスコードの桁数
+        passcodeExpiry: 600000, // (10分) パスコードの有効期間(ミリ秒)
+        maxTrial: 3, //パスコード入力の最大試行回数
+        validityExpiry: 86400000, // (1日) ログイン有効期間(ミリ秒)
+        maxDevices: 5,  // 単一アカウントで使用可能なデバイスの最大数
+        freezing: 3600000,  // 連続失敗した場合の凍結期間。ミリ秒。既定値1時間
+        bits: 2048, // RSA鍵ペアの鍵長
+        adminMail: null,  // 管理者のメールアドレス
+        adminName: null, //管理者名
+      }
+      sv.opt = Object.assign(sv.opt,commonOption);
+      dev.dump(sv,65)
 
       // -------------------------------------------------------------
       dev.step(1); // authClient/authServer共通オプションは引数で上書きしない
