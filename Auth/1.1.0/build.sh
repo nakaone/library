@@ -51,16 +51,11 @@ mmdc -i $doc/summary.mmd -o $doc/summary.svg
 cat $doc/auth.opml | awk 1 | $workflowy > $prj/readme.md
 
 # ----------------------------------------------
-# authServer.jsの作成
+# test.jsの作成
 # ----------------------------------------------
 log "2.0";
-cat $src/server.js | awk 1 | \
-$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $tmp/server.js
-sed -e 's/[ \t]+$//g' $tmp/server.js > $prj/authServer.js
-
-log "1.1";
-cat $test/server.template.js | awk 1 | \
-$embed -prj:$prj -src:$src -lib:$lib -test:$test -tmp:$tmp > $tmp/server.js
-sed -e 's/[ \t]+$//g' $tmp/server.js > $test/authServer.js
+cat $src/test.js | awk 1 | \
+$embed -prj:$prj -src:$src -lib:$lib -tmp:$tmp > $tmp/test.js
+sed -e 's/\s+$//g' $tmp/test.js > $prj/test.js
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"
