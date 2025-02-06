@@ -26,40 +26,52 @@ function authServer(query,option={}) {
       // -------------------------------------------------------------
       dev.step(1); // メンバ(sv)に引数を保存、未指定分には既定値を設定
       // -------------------------------------------------------------
+      //::authClient/Server共通設定::$src/commonOption.js::
       Object.assign(sv, {
-        typedefs: {
-          authQuery: [
-            {name:'table',type:'string',note:'操作対象テーブル名',default:()=>''},
-            {name:'command',type:'string',note:'操作名',default:()=>''},
-            {name:'where',type:'Object|Function|string',note:'対象レコードの判定条件',default:()=>null},
-            {name:'set',type:'Object|Object[]|string|string[]|Function',note:'追加・更新する値',default:()=>null},
-            {name:'timestamp',type:'string',note:'更新日時(ISO8601拡張形式)',default:()=>toLocale(new Date())},
-            {name:'userId',type:'string|number',note:'="ユーザ識別子(uuid等)',default:()=>'guest'},
-            {name:'queryId',type:'string',note:'クエリ・結果突合用文字列',default:()=>Utilities.getUuid()},
-            {name:'email',type:'string',note:'ユーザのメールアドレス',default:()=>''},
-            {name:'CPkey',type:'string',note:'ユーザの公開鍵',default:()=>''},
-            {name:'passcode',type:'number|string',note:'入力されたパスコード',default:()=>null},
-            {name:'SPkey',type:'string',note:'サーバ側公開鍵',default:()=>''},
-            {name:'qSts',type:'string',note:'クエリ単位の実行結果',default:()=>''},
-            {name:'num',type:'number',note:'変更された行数',default:()=>0},
-            {name:'result',type:'sdbResult[]',note:'レコード単位の実行結果',default:()=>new Object()},
-            {name:'status',type:'string',note:'authServerの実行結果',default:()=>'OK'},
-          ],
-          asOption: [
-            {name:'SPkey',default:'えすぴーきー'},
-            {name:'SSkey',default:'えすえすきー'},
-          ],
-        }
+        query: Object.assign({
+          queryId: Utilities.getUuid(), // {string} クエリ・結果突合用文字列
+          table: '', // {string} 操作対象テーブル名
+          command: '', // {string} 操作名
+          where: null, // {Object|Function|string} 対象レコードの判定条件
+          set: null, // {Object|Object[]|string|string[]|Function} 追加・更新する値
+          timestamp: toLocale(new Date()), // {string} 更新日時(ISO8601拡張形式)
+          userId: 'guest', // {string|number} ユーザ識別子(uuid等)
+          email: '', // {string} ユーザのメールアドレス
+          CPkey: '', // {string} ユーザの公開鍵
+          passcode: null, // {number|string} 入力されたパスコード
+          SPkey: null, // {string} サーバ側公開鍵
+          qSts: 'OK', // {string} クエリ単位の実行結果
+          num: 0, // {number} 変更された行数
+          result: [], // {sdbResult[]} レコード単位の実行結果
+          status: 'OK', // {string} authServerの実行結果
+        },query),
+        opt: Object.assign({
+          DocPropName: 'authServer', // DocumentPropertiesの項目名
+          sdbOption: {}, // SpreadDbのオプション
+          accountsTableName: 'accounts', // アカウント管理シートの名前
+          devicesTableName: 'devices', // デバイス管理シートの名前
+          guestAccount: null, // ゲストのアカウント管理設定
+          guestDevice: null, // ゲストのデバイス管理設定
+          newAccount: null, // 新規登録者のアカウント管理設定
+          newDevice: null, // 新規登録者のデバイス管理設定
+          validitySpan: 1209600000, // アカウントの有効期間(2週間)          
+        },option,commonOption),
+        SPkey: null,
+        SSkey: null,
+        account: null,
+        device: null,
+        typedefs: {},
+        DocumentProperties: PropertiesService.getDocumentProperties(),
       })
 
       // sv.queryの作成
       sv.query = typedefObj(sv.typedefs.authQuery,query);
       if( sv.query instanceof Error ) throw sv.query;
-      // sv.opt(authServer専用部分)の作成
-      sv.opt = typedefObj(sv.typedefs.asOption,option);
-      if( sv.opt instanceof Error ) throw sv.opt;
+
+      // sv.opt(authServer専用部分)に引数適用
+      sv.opt = Object.assign(sv.opt,option);
+
       // sv.opt(authClient/Server共通部分)の作成
-      //::$src/commonOption.js::
       sv.opt = Object.assign(sv.opt,commonOption);
       dev.dump(sv,65)
 
