@@ -35,7 +35,7 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
       setup: {obj:{'掲示板':'ifnot'},dp:'delete'},
       query: 'くえり',
       opt: {},
-      check: [],
+      check: {status:'OK'},
     }],
   }
   function setupEnvironment(arg,src=sample) {  // setupEnvironment: テストに必要なシートを準備
@@ -177,6 +177,21 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
   } catch (e) { dev.error(e); return e; }
 }
 
+const authCommon = {
+  option: {
+    tokenExpiry: 600000,  //(10分) トークンの有効期間(ミリ秒)
+    passcodeDigit: 6, //  パスコードの桁数
+    passcodeExpiry: 600000, // (10分) パスコードの有効期間(ミリ秒)
+    maxTrial: 3, //パスコード入力の最大試行回数
+    validityExpiry: 86400000, // (1日) ログイン有効期間(ミリ秒)
+    maxDevices: 5,  // 単一アカウントで使用可能なデバイスの最大数
+    freezing: 3600000,  // 連続失敗した場合の凍結期間。ミリ秒。既定値1時間
+    bits: 2048, // RSA鍵ペアの鍵長
+    adminMail: null,  // 管理者のメールアドレス
+    adminName: null, //管理者名
+  },
+}
+
 function authClient(query,option={}) {
   const cv = { whois: 'authClient' };
   const v = { rv: null};
@@ -236,18 +251,6 @@ function authServer(query,option={}) {
       // -------------------------------------------------------------
       dev.step(1); // メンバ(sv)に引数を保存、未指定分には既定値を設定
       // -------------------------------------------------------------
-      const commonOption = {
-        tokenExpiry: 600000,  //(10分) トークンの有効期間(ミリ秒)
-        passcodeDigit: 6, //  パスコードの桁数
-        passcodeExpiry: 600000, // (10分) パスコードの有効期間(ミリ秒)
-        maxTrial: 3, //パスコード入力の最大試行回数
-        validityExpiry: 86400000, // (1日) ログイン有効期間(ミリ秒)
-        maxDevices: 5,  // 単一アカウントで使用可能なデバイスの最大数
-        freezing: 3600000,  // 連続失敗した場合の凍結期間。ミリ秒。既定値1時間
-        bits: 2048, // RSA鍵ペアの鍵長
-        adminMail: null,  // 管理者のメールアドレス
-        adminName: null, //管理者名
-      }
       Object.assign(sv, {
         query: Object.assign({
           queryId: Utilities.getUuid(), // {string} クエリ・結果突合用文字列
@@ -276,20 +279,20 @@ function authServer(query,option={}) {
           newAccount: null, // 新規登録者のアカウント管理設定
           newDevice: null, // 新規登録者のデバイス管理設定
           validitySpan: 1209600000, // アカウントの有効期間(2週間)
-        },option,commonOption),
+        },option,authCommon.option),
         SPkey: null,
         SSkey: null,
         account: null,
         device: null,
         typedefs: {
           accountsSheet: [
-            {name:'userId',type:'string|number',note:'ユーザ識別子(primaryKey)',default:101,auto_increment:true,primaryKey:true},
+            {name:'userId',type:'string|number',note:'ユーザ識別子(primaryKey)',auto_increment:101,primaryKey:true},
             {name:'note',type:'string',note:'アカウント情報(備考)'},
-            {name:'validityStart',type:'string',note:'有効期間開始日時(ISO8601文字列)',default:v.now},
+            {name:'validityStart',type:'string',note:'有効期間開始日時(ISO8601文字列)',default:()=>toLocale(Date.now())},
             {name:'validityEnd',type:'string',note:'有効期間終了日時(ISO8601文字列)',default:()=>toLocale(Date.now()+sv.opt.validitySpan)},
-            {name:'authority',type:'JSON',note:'シート毎のアクセス権限。{シート名:rwdos文字列} 形式。既定値は無し',default:{}},
-            {name:'created',type:'string',note:'=Date.now() ユーザ登録日時(ISO8601拡張形式)',default:v.now},
-            {name:'updated',type:'string',note:'=Date.now() 最終更新日時(ISO8601拡張形式)',default:v.now},
+            {name:'authority',type:'JSON',note:'シート毎のアクセス権限。{シート名:rwdos文字列} 形式。既定値は無し'},
+            {name:'created',type:'string',note:'=Date.now() ユーザ登録日時(ISO8601拡張形式)',default:()=>toLocale(Date.now())},
+            {name:'updated',type:'string',note:'=Date.now() 最終更新日時(ISO8601拡張形式)',default:()=>toLocale(Date.now())},
             {name:'deleted',type:'string',note:'論理削除日時'},
           ],
           devicesSheet: [
@@ -309,7 +312,6 @@ function authServer(query,option={}) {
         },
         DocumentProperties: PropertiesService.getDocumentProperties(),
       });
-      dev.dump(sv,270)
 
       // -------------------------------------------------------------
       dev.step(2); // SSkey/SPkeyを準備
@@ -351,7 +353,6 @@ function authServer(query,option={}) {
       dev.step(3.2);
       v.r = SpreadDb(v.query, { userId: 'Administrator' });
       if( v.r instanceof Error ) throw v.r;
-      dev.dump(v.r,336)
 
       dev.end(); // 終了処理
       return v.rv;
@@ -662,6 +663,122 @@ function devTools(option) {
     const msg = [];
     recursive(arg);
     return msg.join('\n');
+  }
+}
+function isEqual(v1=undefined,v2=undefined,opt={}){
+  const v = {whois:'isEqual',rv:true,step:0,
+  };
+  try {
+
+    // -------------------------------------------
+    // 1. 事前準備
+    // -------------------------------------------
+    v.step = 1.1; // v.types: typeofの戻り値の内、objectを除いたもの
+    v.types = ['string','number','bigint','boolean','undefined','symbol','function'];
+    v.typeAll = [...v.types,'null','date','object','array'];
+
+    v.step = 1.2; // データ型判定関数の定義
+    // typeofの戻り値の内 string,number,bigint,boolean,undefined,symbol,function はそのまま
+    // objectは null,date,array,objectに分けて文字列として返す
+    // 引数:データ型判定対象変数、戻り値:v.typeallに列挙された文字列
+    v.which = x => {
+      if( x === null ) return 'null';
+      if( v.types.indexOf(typeof x) >= 0 ) return typeof x;
+      if( Array.isArray(x) ) return 'array';
+      return isNaN(new Date(x)) ? 'object' : 'date';
+    };
+
+    v.step = 1.3; // オプションに既定値を設定
+    v.opt = Object.assign({
+      force: null,
+      string_number: true, // trueなら文字列・数値型の相違を無視(ex.'10'=10と判断)
+      string_bigint: true, // trueなら文字列・長整数型の相違を無視(ex.'10'=10nと判断)
+      string_boolean: true, // trueなら文字列・真偽値の相違を無視(ex.'TruE'=trueと判断)
+      string_undefined: true, // trueなら文字列・undefinedの相違を無視(ex.'undefined'=undefinedと判断)
+      string_function: true, // trueなら文字列・関数の相違を無視(ex.'()=>true'と()=>trueは同値と判断)
+      string_null: true, // trueなら文字列・nullの相違を無視(ex.'Null'=nullと判断)
+      string_date: true, // trueなら文字列・Date型の相違を無視(ex.'1965/9/5'=new Date('1965-09-05')と判断)
+      number_bigint: true, // trueなら数値・長整数型の相違を無視(ex.10=10nと判断)
+      number_date: true, // trueなら数値・Date型の相違を無視(ex.-136458000000=new Date('1965-09-05')と判断)
+      bigint_date: true, // trueなら長整数・Date型の相違を無視(ex.-136458000000n=new Date('1965-09-05')と判断)
+    },opt);
+
+    v.step = 1.4; // オプションの適用マップ(v.map)を作成
+    // v1,v2でデータ型が異なる場合の判定方法として、次項(step.1.5)で定義する判定式を
+    // 適用する場合はtrueを、適用しない場合(=厳密比較する場合)はfalseを設定する。
+    // なおデータ型がv1,v2で不一致の場合はオプションの真偽値をセットするが、
+    // 一致する場合は必ず判定式が適用されるようtrueをセットしておく。
+    v.map = {};
+    v.typeAll.forEach(x => {
+      v.map[x] = {};
+      // `x === y` ⇒ データ型が一致する場合はtrue、不一致はfalseをセット
+      v.typeAll.forEach(y => v.map[x][y] = x === y);
+    });
+    // オプションの指定値をセット
+    for( v.prop in v.opt ){
+      v.m = v.prop.match(/^([a-z]+)_([a-z]+)$/);
+      if( v.m ) v.map[v.m[1]][v.m[2]] = v.map[v.m[2]][v.m[1]] = v.opt[v.prop];
+    }
+
+    v.step = 1.5; // 比較対象のデータ型に基づいた判定式の定義
+    v.f01 = (x,y) => x === y;  // ①厳密比較
+    v.f02 = (x,y) => x == y;   // ②緩い比較
+    v.f03 = (x,y) => {try{return BigInt(x) === BigInt(y)}catch{return false}};  // ③BigInt
+      // BigInt(Infinity) -> The number Infinity cannot be converted to a BigInt because it is not an integer
+      // これを回避するためtry〜catchとする
+    v.f04 = (x,y) => String(x).toLowerCase() === String(y).toLowerCase(); //Boolean(x) === Boolean(y),  // ④Boolean
+    v.f05 = (x,y) => String(x) === String(y);  // ⑤String
+    v.f06 = (x,y) => x.toString() === y.toString();  // ⑥toString()
+    v.f07 = (x,y) => {try{return new Date(x).getTime() === new Date(y).getTime()}catch{return false}};  // ⑦getTime()
+      // new Date(Infinity) -> Invalid Date
+      // これを回避するためtry〜catchとする
+    v.f08 = (x,y) => new Date(Number(x)).getTime() === new Date(Number(y)).getTime();  // ⑧getTime(num)
+
+    v.step = 1.6; // デシジョンテーブルの定義
+    // 比較対象のデータ型毎に、どの比較方法を採用するかを定義する
+    // ex. v.dt['string','number'] ⇒ v.f02(②緩い比較)で同一かを判定
+    v.dt = {
+      "string":{"string":v.f01,"number":v.f02,"bigint":v.f03,"boolean":v.f04,"undefined":v.f05,"function":v.f06,"null":v.f04,"date":v.f07},
+      "number":{"string":v.f02,"number":v.f01,"bigint":v.f03,"date":v.f07},
+      "bigint":{"string":v.f03,"number":v.f03,"bigint":v.f01,"date":v.f07},
+      "boolean":{"string":v.f04,"boolean":v.f01},
+      "undefined":{"string":v.f05,"undefined":v.f01},
+      "symbol":{"symbol":v.f06},
+      "function":{"string":v.f06,"function":v.f06},
+      "null": {"string":v.f04,"null":v.f01},
+      "date": {"string":v.f07,"number":v.f07,"bigint":v.f08,"date":v.f07},
+      "object": {"object":(x,y)=>{
+        // 直下のメンバが不一致ならfalseを返す(孫要素以降は不問)
+        if(JSON.stringify(Object.keys(x).sort()) !== JSON.stringify(Object.keys(y).sort())) return false;
+        // 個々のメンバを再帰呼出
+        for( let m in x ) if( isEqual(x[m],y[m],v.opt) === false ) return false;
+        return true;
+      }},
+      "array": {"array":(x,y)=>{
+        // 要素の個数が不一致ならfalseを返す(孫要素以降は不問)
+        if( x.length !== y.length ) return false;
+        // 個々のメンバを再帰呼出
+        for( let i=0 ; i<x.length ; i++ ) if( isEqual(x[i],y[i],v.opt) === false ) return false;
+        return true;
+      }},
+    };
+
+    // -------------------------------------------
+    v.step = 2; // 判定式を選択、結果を返す
+    // -------------------------------------------
+    // データ型の組み合わせパターンで判定式が定義されていればそれに基づき判定。
+    // 未定義なら「false固定」としてfalseを返す。
+    v.t1 = v.opt.force || v.which(v1); v.t2 = v.opt.force || v.which(v2);
+    v.f = v.map[v.t1][v.t2] ? v.dt[v.t1][v.t2] : v.f01;
+    //console.log(`t1:${v.t1}, t2:${v.t2}, f: ${v.f}`);
+    return v.f(v1,v2);
+
+  } catch(e) {
+    e.message = `${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}\nv1(${typeof v1})=${typeof v1 === 'object' ? JSON.stringify(v1) : v1}`
+    + `\nv2(${typeof v2})=${typeof v2 === 'object' ? JSON.stringify(v2) : v2}`;
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
   }
 }
 /** SpreadDb: Google Spreadに対してRDBのようなCRUDを行う
