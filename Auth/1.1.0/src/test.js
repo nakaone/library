@@ -3,6 +3,8 @@ const dev = devTools();
 const authTest = () => doTest('dev',0,1); // 引数はscenario, start, num
 //::$src/doTest.js::
 
+//::$src/authCommon.js::
+
 //::$src/authClient.js::
 
 //::$src/authServer.js::
@@ -25,7 +27,9 @@ function authPost(arg) {
   } catch (e) { dev.error(e); return e; }
 }
 
+//::$lib/createPassword/1.0.1/core.js::
 //::$lib/devTools/1.0.0/core.js::
+//::$lib/isEqual/1.1.0/core.js::
 //::$lib/SpreadDb/1.2.0/core.js::
 //::$lib/toLocale/1.1.0/core.js::
 //::$lib/whichType/1.0.1/core.js::

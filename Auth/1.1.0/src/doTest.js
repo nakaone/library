@@ -31,19 +31,24 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
         ['2023-01-31T05:42:42.836Z', '手簾戸', 'スタッフ全員', '投稿140'],
       ],
     },
+    dp :  // DocumentPropertiesにセットするSPkey,SSkey
+      '{"SPkey":"aktC48wZPjYAhKlQKSLAqUg9Lipf9UPFylWu67Uhk1x+g8jjbisFIoQplCDAwRPpFMsgaZ4vScth5wlJJSJgQULvl/G5nsll+PZv/ao2sESQjmbCciVXT8YGzchd9bdmjyl8+TECZQr2YDku62UGZ/+ipSOiMfnI3zeZ0i78vvXLsn6xD+6tRN0qNLhVid2f8HoFeFG8vKxwAtrFqiDVeza18iuCpxWVqJJJp4LLqX6yJbgX29mRgRcTh5lzvzbTl6vU+PpZvoX7YHwB5X3vjfeiRl1feqWWXjHHJ/hy3kI6zbzhqsfRPlbGUm5W95CzwVTVajXH76jTBWmhh4tBtw==","SSkey":{"coeff":"69da777c3c7a4a341ec75689cbe3ba4217a219beb6f796bacca84efb5ff13e4e73ddb744526b660fce73cce64b59d3c001d89386101c9a2e60743afe81288259d1ca5a184ce78b56b78b9e2c36d43897fd5450705d40bc0a3b5099dd030b83acbd1efd188875715ae9a2706ae8ea87b602c9e70704882bc8166b36c1b792802b","d":"46dcd7428810d424005870e01b6c8070dad3741c3ff8d7d9318e749d236bb792ff0285ecf41cae1702c662c08080b7f0b8876af1141f8687969a0630c36c402b81f50ff67bbf30eea5f99ffe7179cad8605eef2c4c18e4dfd959de8593f924ef0a1ba8a620ac435ca440261f4798aeefffc1c36d16cbfbdb3f7a668c1f5329f85301d0fb9e8cefe4d4ab5a04cd2447df9fea8d63fa3be3a958ec3d50a77344093669cd33615807dba7f7ca84bbb06f540030ff798316aeae1858bed739eefafca78d582df49c01e74a8c203ff5ef0e1a03b70d74c7715e365e54882f18b4500851492d7b79aa8758165aac1964f74ba47b75f2f9f198a945e721bfd890ea29eb","dmp1":"837697c14116c81610f3161d1908377a79cdd18093e324fd586557a41ab430cdbc330c175a2f15c12c3e94fa5ffa919ae887983c24fba3059fab7666b1b3628224d34e9e04508ff29087a4439bd15684665ec590eb36c243c46048af3fd379d5d581bb5674d021f67c9fd0de09e321de1fcea7549a3f1621cac0afc5695bdcaf","dmq1":"5bfe9663d5a610ddadd30858fd84bf108698fa1653097521995afce459ee6ed08731c8279b92f0c6f1807c45e6321abae3608daf952964a2575e25286187c70e43673c84adf9ed2a21d738d3073e3b1590565be337a9a33f716c5e91a26f74f8ab139519d8b53785a6df0f522075484a9049494d9802e05e30212c230ac17a8b","e":"3","n":"6a4b42e3cc193e360084a9502922c0a9483d2e2a5ff543c5ca55aeebb521935c7e83c8e36e2b052284299420c0c113e914cb20699e2f49cb61e709492522604142ef97f1b99ec965f8f66ffdaa36b044908e66c27225574fc606cdc85df5b7668f297cf93102650af660392eeb650667ffa2a523a231f9c8df3799d22efcbef5cbb27eb10feead44dd2a34b85589dd9ff07a057851bcbcac7002dac5aa20d57b36b5f22b82a71595a89249a782cba97eb225b817dbd991811713879973bf36d397abd4f8fa59be85fb607c01e57def8df7a2465d5f7aa5965e31c727f872de423acdbce1aac7d13e56c6526e56f790b3c154d56a35c7efa8d30569a1878b41b7","p":"c531e3a1e1a22c21196ca12ba58c5337b6b4ba40ddd4b77c04980376280e49349a4c92230746a0a1c25ddf778ff7da685ccb645a377974886f81319a0a8d13c3373cf5ed0678d7ebd8cb766569ba01c6998e285960d22365a6906d06dfbd36c0c0429901af3832f1baefb94d0ed4b2cd2fb5fafee75ea132b02107a81e09cb07","q":"89fde195c079194c84bc8c857c471e98c9e577217c8e2fb266087b5686e5a638cacaac3b695c692a6a40ba68d94b28185510d4875fbe16f3830d37bc924baa95651adac704f6e3bf32c2d53c8add58a0588189d4d37e74df2a228dda73a72f75009d5fa6c50fd3487a4e96fb30afec6fd86dedf46404508d4831c234902237d1"}}',
   };
   const scenario = {
     dev: [{ // dev.01: 掲示板から全件取得。ローカルDB用のデータは取得するが、生成は無い
-      setup: {'掲示板':'ifnot'},
-      query: 'くえり',
-      opt: {},
-      check: [],
+      setup: {obj:{'掲示板':'ifnot'},dp:'delete'},
+      query: {table:'掲示板',command:'append',set:'authTest.dev.0'},
+      opt: {mirror:[{name:'掲示板'}]},
+      check: {status:'OK'},
     }],
   }
-  function setupSheet(arg,src=sample) {  // setupSheet: テストに必要なシートを準備
+  function setupEnvironment(arg,src=sample) {  // setupEnvironment: テストに必要なシートを準備
     /**
-     * @param {Object.<string, string>} arg - {シート名：措置}形式のオブジェクト
-     * @param {Object} src=sample - シート定義情報をまとめたオブジェクト
+     * @param {Object} arg
+     * @param {Object.<string, string>} arg.obj - {シート名：措置}形式のオブジェクト
+     * @param {Object} arg.src=sample - シート定義情報をまとめたオブジェクト
+     * @param {string} arg.dp='asis' - DocumentPropertiesに対する措置
+     * @param {string} arg.dpName='authServer' - DocumentPropertyのキー名
      * なお「シート名='default'」は、メンバ名が存在しないシートに対して行う措置。
      * またreadmeシートは必ず残す。
      *
@@ -53,20 +58,32 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
      * - delete: 強制削除(defaultの既定値)。存在していれば削除、再作成はしない
      * - asis  : そのまま何もしない
      */
-    const v = { whois: 'doTest.setupSheet', rv: null, spread: SpreadsheetApp.getActiveSpreadsheet()};
+    const v = { whois: 'doTest.setupEnvironment', rv: null,
+      spread: SpreadsheetApp.getActiveSpreadsheet(), dp:PropertiesService.getDocumentProperties()};
     dev.start(v.whois, [...arguments]);
     try {
+
+      // 引数に既定値を設定
+      arg = Object.assign({src: sample,dp: 'asis',dpName: 'authServer'},arg);
+
+      // DocumentPropertyを措置
+      if( arg.dp === 'force' || arg.dp === 'delete' ){
+        v.dp.deleteProperty(arg.dpName);
+      }
+      if( arg.dp === 'force' || (arg.dp === 'ifnot' && !v.dp.getProperty(arg.dpName))){
+        v.dp.setProperty(arg.dpName,arg.src.dp);
+      }
 
       // コンソールへの出力を抑止
       dev.changeOption({start:false,arg:false,step:false});
 
       dev.step(1); // 指定が有るシートのリストアップ
-      v.specified = Object.keys(arg);
+      v.specified = Object.keys(arg.obj);
       v.i = v.specified.findIndex(x => x === 'default');
       if (v.i >= 0) v.specified.splice(v.i, 1);
 
       dev.step(2); // 既定値の設定
-      v.arg = Object.assign({'default':'delete'},arg);
+      v.obj = Object.assign({'default':'delete'},arg.obj);
 
       dev.step(3); // 存在する全シートのリストアップ
       v.list = v.spread.getSheets().map(x => x.getName());
@@ -77,7 +94,7 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
 
       for( v.i=0 ; v.i<v.list.length ; v.i++ ){
         dev.step(5.1); // シートに対する措置を特定
-        v.command = v.specified.includes(v.list[v.i]) ? v.arg[v.list[v.i]] : v.arg.default;
+        v.command = v.specified.includes(v.list[v.i]) ? v.obj[v.list[v.i]] : v.obj.default;
 
         dev.step(5.2); // 強制的に再作成(force)、または強制削除(delete)ならシートを削除
         if( v.command === 'force' || v.command === 'delete' ){
@@ -87,15 +104,15 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
 
       for( v.i=0 ; v.i<v.specified.length ; v.i++ ){
         dev.step(6.1); // シートに対する措置を特定
-        v.command = v.arg[v.specified[v.i]];
+        v.command = v.obj[v.specified[v.i]];
 
         dev.step(6.2); // 強制的に再作成(force)、またはシート不存在で不在時作成(ifnot)ならシートを作成
         if( v.command === 'force' || (v.list.includes(v.specified[v.i]) === false && v.command === 'ifnot' )){
           v.r = SpreadDb({  // 対象シート作成
             command: 'create',
             table: v.specified[v.i],
-            cols: (src[v.specified[v.i]].cols || null),
-            set: (src[v.specified[v.i]].set || null),
+            cols: (arg.src[v.specified[v.i]].cols || null),
+            set: (arg.src[v.specified[v.i]].set || null),
           }, { userId: 'Administrator' });
           if (v.r instanceof Error) return v.r;
         }
@@ -146,7 +163,7 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
         v.scenario = scenario[v.scenarioList[v.sno]][v.idx];
 
         dev.step(3.1); // シートの準備。テスト開始時はlogシートを削除、それ以外は追記にする
-        v.r = setupSheet(Object.assign(v.scenario.setup,{'log':(v.counter === 0 ? 'delete' : 'asis')}));
+        v.r = setupEnvironment(Object.assign(v.scenario.setup,{'log':(v.counter === 0 ? 'delete' : 'asis')}));
         if (v.r instanceof Error) throw v.r;
 
         dev.step(3.2); // scenarioからqueryとoptをセットしてテスト実施、NG時は中断
