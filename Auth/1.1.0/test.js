@@ -33,8 +33,8 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
   const scenario = {
     dev: [{ // dev.01: 掲示板から全件取得。ローカルDB用のデータは取得するが、生成は無い
       setup: {obj:{'掲示板':'ifnot'},dp:'delete'},
-      query: 'くえり',
-      opt: {},
+      query: {table:'掲示板',command:'append',set:'authTest.dev.0'},
+      opt: {mirror:[{name:'掲示板'}]},
       check: {status:'OK'},
     }],
   }
@@ -201,7 +201,7 @@ function authClient(query,option={}) {
     // -------------------------------------------------------------
     dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
     // -------------------------------------------------------------
-    constructor(query,option);
+    constructor(option);
     cv.query = {table:'accounts',command:'append'};
     v.rv = authPost(cv.query);
 
@@ -210,15 +210,40 @@ function authClient(query,option={}) {
 
   } catch (e) { dev.error(e); return e; }
 
-  function constructor(arg) {
+  function constructor(option) {
     const v = { whois: `${cv.whois}.constructor`, rv: null};
     dev.start(v.whois, [...arguments]);
     try {
 
       // -------------------------------------------------------------
-      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
+      dev.step(1);  // URLクエリ・localStorageからuserId/e-mail取得を試行
       // -------------------------------------------------------------
-      v.rv = {query:query,option:option};
+      v.userId = null;
+      v.email = null;
+
+      // -------------------------------------------------------------
+      dev.step(2); // メンバ(cv)に引数を保存、未指定分には既定値を設定
+      // -------------------------------------------------------------
+      Object.assign(cv, {
+        opt: Object.assign({
+          saveUserId: true,
+          saveEmail: false,
+        },option,authCommon.option),
+        userId: v.userId,
+        email: v.email,
+        CSkey: null,
+        CPkey: null,
+        SPkey: null,
+        mirror: option.mirror || [],
+      });
+      // オプションとして指定されたミラーリング指定はcv.opt.mirrorではなくcv.mirrorとして保存
+      if( Object.hasOwn(option,'mirror') ) delete option.mirror;
+
+      // -------------------------------------------------------------
+      dev.step(3); // CSkey/CPkeyを準備
+      // -------------------------------------------------------------
+      cv.CSkey = cryptico.generateRSAKey(createPassword(),cv.opt.bits);
+      cv.CPkey = cryptico.publicKeyString(cv.CSkey);
 
       dev.end(); // 終了処理
       return v.rv;
@@ -329,7 +354,6 @@ function authServer(query,option={}) {
         dev.step(2.22); // JSON化してDocumentPropertyに保存
         sv.DocumentProperties.setProperty(sv.opt.DocPropName,
           JSON.stringify({SPkey:v.prop.SPkey,SSkey:v.prop.SSkey.toJSON()}));
-          //{SPkey:v.prop.SPkey,SSkey:JSON.stringify(v.prop.SSkey.toJSON())});
       }
       dev.step(2.3); // メンバとして保存
       sv.query.SPkey = sv.SPkey = v.prop.SPkey;
