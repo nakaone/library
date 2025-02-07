@@ -1,0 +1,42 @@
+# テスト
+
+## [NG]liをmarkdown記法 -> l2-1で余計な項目を認識してしまう
+
+- <details><summary>l1-1</summary>
+  - <details><summary>l2-1</summary>
+    - l3-1
+    - l3-2
+    - l3-3
+    </details>
+  - l2-2
+  </details>
+- l1-2
+
+## [OK]liをhtml記法(1階層) 
+
+<ul>
+  <li>l1-1</li>
+  <li><details><summary>l1-2</summary><ul>
+    <li>l2-1</li>
+    <li>l2-2</li>
+    <li>l2-3</li>
+  </ul></details></li>
+  <li>l1-3</li>
+</ul>
+
+## [OK]liをhtml記法(2階層) 
+
+<ul>
+  <li>l1-1</li>
+  <li><details><summary>l1-2</summary><ul>
+    <li>l2-1</li>
+    <li><details><summary>l2-2</summary><ul>
+      <li>l3-1</li>
+      <li>l3-2</li>
+      <li>l3-3</li>
+    </ul></details></li>
+    <li>l2-3</li>
+  </ul></details></li>
+  <li>l1-3</li>
+</ul>
+隠蔽

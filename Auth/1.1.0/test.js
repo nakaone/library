@@ -261,7 +261,33 @@ function authClient(query, option = {}) {
     dev.start(v.whois, [...arguments]);
     try {
 
-      
+      // authServerの引数作成
+      // queryの作成
+      if ( !Array.isArray(query) ) query = [query];
+      query.forEach(x => x.queryId = Utilities.getUuid());
+
+      // optionの作成
+/* authServer引数
+*/
+
+
+/* sdbQuery
+■[queryId] {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列
+未設定の場合は主処理でUUIDを設定
+■table {string} 操作対象テーブル名
+全commandで使用
+■command {string} 操作名
+全commandで使用。「commandの種類とrwdos文字列によるアクセス制御」参照
+■[cols] {sdbColumn[]} 新規作成シートの項目定義オブジェクトの配列
+command='create'のみで使用
+■[where] {Object|Function|string} 対象レコードの判定条件
+command='select','update','delete'で使用
+■[set] {Object|Object[]|string|string[]|Function} 追加・更新する値
+command='create','update','append'で使用
+
+*/
+
+
       // -------------------------------------------------------------
       dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
       // -------------------------------------------------------------
