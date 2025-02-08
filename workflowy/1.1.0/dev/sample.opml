@@ -6,28 +6,83 @@
     </ownerEmail>
   </head>
   <body>
-    <outline text="テスト用サンプル">
-      <outline text="No.1" _note="No.1のノート&#10;- 項目1&#10;- 項目2">
-        <outline text="No.1.1" _note="ノート内で&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;リンク&lt;/a&gt;を張ってみた" />
-        <outline text="No.1.2(a0376dbc8b20)">
-          <outline text="5 Backlinks">
-            <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;[▽]リンク先&lt;/a&gt;子要素をリンク元の弟要素として追加" />
-            <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;[▼]リンク先&lt;/a&gt;子要素でリンク元を置換" />
-            <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;[■]リンク先&lt;/a&gt;でリンク元を置換(リンク先子要素も追加)" />
-            <outline text="No.1.1" _note="ノート内で&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;リンク&lt;/a&gt;を張ってみた" />
-            <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;No.1.2&lt;/a&gt;へのリンク" />
+    <outline text="workflowy : workflowy(OPML)をmarkdown文書に変換">
+      <outline text="1.0.0">
+        <outline text="typedefs">
+          <outline text="opmlXML {Object} require('xml-js').xml2json()によるopml処理により生成されるオブジェクト" _note="&lt;a href=&quot;https://www.npmjs.com/package/xml-js&quot;&gt;https://www.npmjs.com/package/xml-js&lt;/a&gt;">
+            <outline text="declaration {Object}">
+              <outline text="attributes {Object}">
+                <outline text="version {string} XMLバージョン" />
+              </outline>
+            </outline>
+            <outline text="elements {Object[]} head,body他の子要素" />
+          </outline>
+          <outline text="opmlObj {Object} opmlの一行分のオブジェクト">
+            <outline text="type {string} &quot;element&quot;固定" />
+            <outline text="name {string} タグ名。&quot;outline&quot;のみ対象とする" />
+            <outline text="elements {opmlObj[]} 子要素となるOPML一行分のオブジェクト" />
+            <outline text="attributes {Object}">
+              <outline text="text {striing} 表題のinnerHTML" _note="- 逆参照は&quot;n Backlinks&quot;" />
+              <outline text="_note {string} ノートのinnerHTML" _note="- 改行は'\n'&#10;&#10;" />
+            </outline>
           </outline>
         </outline>
       </outline>
-      <outline text="No.2。&lt;b&gt;太文字&lt;/b&gt;と&lt;span class=&quot;colored c-red&quot;&gt;赤文字&lt;/span&gt;を使用">
-        <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;No.1.2&lt;/a&gt;へのリンク" />
+      <outline text="1.1.0">
+        <outline text="workflowy主処理(main)">
+          <outline text="引数">
+            <outline text="option {&lt;a href=&quot;https://workflowy.com/#/63c52c5262e3&quot;&gt;workflowy_option&lt;/a&gt;} workflowyの動作設定用オプション指定" />
+          </outline>
+          <outline text="戻り値 {Function} markdown,sampleをメソッドとするクロージャ" />
+        </outline>
+        <outline text="markdown() : OPML形式のテキストをマークダウンに変換" />
+        <outline text="sample() : " />
+        <outline text="typedefs">
+          <outline text="workflowy_option {Object} workflowyの動作設定用オプション指定">
+            <outline text="mdHeader {number}=3 body直下を第1レベルとし、MarkDown化の際どのレベルまでheader化するかの指定" />
+            <outline text="1 Backlink">
+              <outline text="option {&lt;a href=&quot;https://workflowy.com/#/63c52c5262e3&quot;&gt;workflowy_option&lt;/a&gt;} workflowyの動作設定用オプション指定" />
+            </outline>
+          </outline>
+        </outline>
+        <outline text="readme">
+          <outline text="使用方法" _note="`node pipe.js markdown n`&#10;&#10;&quot;markdown&quot;は固定。nはヘッダとして扱う階層(2 -&amp;gt; h1,h2を作成、以下はliタグで処理)&#10;&#10;```&#10;cat $test/SpreadDb.opml | awk 1 | node $prj/pipe.js markdown 3 &amp;gt; $test/&lt;a href=&quot;http://SpreadDb.md&quot;&gt;SpreadDb.md&lt;/a&gt;&#10;```&#10;" />
+          <outline text="更新履歴">
+            <outline text="1.1.0 2025/02/07">
+              <outline text="他プログラムの要素も参照可能に" _note="ex. AuthからSpreadDbのtypedefを参照可能に" />
+              <outline text="参照先要素を参照元以下に展開" />
+            </outline>
+            <outline text="1.0.0 2025/01/30 - 初版" />
+          </outline>
+        </outline>
       </outline>
-      <outline text="No.3 : 置換関係">
-        <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;[■]リンク先&lt;/a&gt;でリンク元を置換(リンク先子要素も追加)" />
-        <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;[▼]リンク先&lt;/a&gt;子要素でリンク元を置換" />
-        <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;[▽]リンク先&lt;/a&gt;子要素をリンク元の弟要素として追加" />
+      <outline text="テスト用サンプル(33a7f77d9c25)">
+        <outline text="No.1" _note="No.1のノート&#10;- 項目1&#10;- 項目2">
+          <outline text="No.1.1" _note="ノート内で&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;リンク&lt;/a&gt;を張ってみた" />
+          <outline text="No.1.2(a0376dbc8b20)">
+            <outline text="No.1.2の子要素1">
+              <outline text="No.1.2の孫要素" />
+            </outline>
+            <outline text="No.1.2の子要素2" />
+            <outline text="5 Backlinks">
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;[▽]リンク先&lt;/a&gt;子要素をリンク元の弟要素として追加" />
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;[▼]リンク先&lt;/a&gt;子要素でリンク元を置換" />
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;[■]リンク先&lt;/a&gt;でリンク元を置換(リンク先子要素も追加)" />
+              <outline text="No.1.1" _note="ノート内で&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;リンク&lt;/a&gt;を張ってみた" />
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;No.1.2&lt;/a&gt;へのリンク" />
+            </outline>
+          </outline>
+        </outline>
+        <outline text="No.2。&lt;b&gt;太文字&lt;/b&gt;と&lt;span class=&quot;colored c-red&quot;&gt;赤文字&lt;/span&gt;を使用">
+          <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;No.1.2&lt;/a&gt;へのリンク" />
+        </outline>
+        <outline text="No.3 : 置換関係">
+          <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;[■]リンク先&lt;/a&gt;でリンク元を置換(リンク先子要素も追加)" />
+          <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;[▼]リンク先&lt;/a&gt;子要素でリンク元を置換" />
+          <outline text="&lt;a href=&quot;https://workflowy.com/#/a0376dbc8b20&quot;&gt;[▽]リンク先&lt;/a&gt;子要素をリンク元の弟要素として追加" />
+        </outline>
+        <outline text="No.4 h1指定" />
       </outline>
-      <outline text="No.4 h1指定" />
     </outline>
   </body>
 </opml>

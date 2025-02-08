@@ -38,6 +38,6 @@ dev="$prj/dev"
 # ----------------------------------------------
 log "1"; # テスト
 # ----------------------------------------------
-cat $dev/sample.opml | awk 1 | node $prj/pipe.js markdown 3 > $dev/sample.md
+cat $dev/sample.opml | awk 1 | node $prj/pipe.js markdown 33a7f77d9c25 2 > $dev/sample.md
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"

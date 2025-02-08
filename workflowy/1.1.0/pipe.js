@@ -8,9 +8,9 @@ var reader = require('readline').createInterface({　//readlineという機能�
 });
 reader.on('line', line => lines.push(line));
 reader.on('close', () => {
-  // `node pipe.js markdown n`形式ならnはopt.mdHeaderと看做す
-  const option = process.argv[3] && !Number.isNaN(process.argv[3])
-  ? {mdHeader:Number(process.argv[3])} : {};
+  // `node pipe.js markdown xxxxxxxx n`形式ならnはopt.mdHeaderと看做す
+  const option = process.argv[4] && !Number.isNaN(process.argv[4])
+  ? {mdHeader:Number(process.argv[4])} : {};
   const wf = workflowy(option);
   const text = lines.join('\n');
   switch( process.argv[2] ){
@@ -19,7 +19,7 @@ reader.on('close', () => {
       break;
     case 'markdown':
     default:
-      console.log(wf.markdown(text));
+      console.log(wf.markdown(text,process.argv[3]));
   }
 });
 
@@ -40,7 +40,6 @@ function workflowy(option={}){
    * @returns
    * ローカルリンクが有った場合、子要素または兄弟要素に追加
    * 無印 : hrefに置換。リンク先要素への置換・リンク先子要素の追加はしない
-   * □ : リンク元要素の子要素としてリンク先子要素を追加(従来のリンク元子要素は残置)
    * ■ : リンク元要素をリンク先要素に置換。(従来のリンク元子要素は削除)
    * ▽ : リンク元要素の弟要素としてリンク先子要素を追加
    * ▼ : リンク元要素を削除し、リンク先子要素をリンク元要素と同じレベルで追加
@@ -52,14 +51,16 @@ function workflowy(option={}){
     if( typeof obj === 'string' ){
       // 再帰呼出前、最初に呼ばれた時の処理
 
-      // hrefから呼び出されるリンク先リストを作成。リンク切れチェックの準備
-      let hrefs = new Set([...obj.matchAll(/workflowy\.com\/#\/([a-z0-9]{12})/g)].map(a => a[1]));
+      // 変換対象のルート要素を保存
+      [pv.root,parent] = parent ? [parent,null] : ['X000001',null];
+      console.error(`l.56 pv=${JSON.stringify(pv,null,2)}`)
 
       // outlineタグを再帰的にオブジェクト化
       obj = JSON.parse(convert.xml2json(obj));
       markdown(obj);
 
       rv = [];
+      // ローカルリンクを展開
       pv.map.forEach(outline => {
         // textにリンク設定が有った場合、ローカルリンクを展開
         if( outline.link.length > 0 ){
@@ -91,6 +92,7 @@ function workflowy(option={}){
         rv.push(JSON.stringify(outline)); // デバッグ用
       });
 
+      // markdown文書化
       return rv.join('\n'); // 備考：使わないようなら、depthの再帰内での設定は削除
 
       /*
