@@ -26,7 +26,8 @@ reader.on('close', () => {
 /** workflowy: Markdown形式でエクスポートされた内容を修正 */
 function workflowy(option={}){
   const convert = require('xml-js');
-  const pv = { whois: 'workflowy', id: 0 , map: new Map()};
+  const marked = require('marked');
+  const pv = { whois: 'workflowy', id: 1 , map: new Map()};
   pv.opt = Object.assign({
     mdHeader: 3,  // body直下を第1レベルとし、MarkDown化の際どのレベルまでheader化するかの指定
   },option);
@@ -61,29 +62,38 @@ function workflowy(option={}){
 
       rv = [];
       pv.map.forEach(outline => {
+        
         // textにリンク設定が有った場合、ローカルリンクを展開
         if( outline.link.length > 0 ){
           outline.link.forEach(link => {
-            if( link[2].match(/^□/) ){
-              // □ : リンク元要素の子要素としてリンク先子要素を追加(従来のリンク元子要素は残置)
-
-            } else if( link[2].match(/^■/) ){
+            const parent = pv.map.get(outline.parent);
+            const idx = parent.children.findIndex(x => x === outline.id);
+            if( link[2].match(/^\[■\]/) ){
               // ■ : リンク元要素をリンク先要素に置換。(従来のリンク元子要素は削除)
-
-            } else if( link[2].match(/^▽/) ){
+              // ⇒ parent.childrenのリンク元要素のIDを削除、その位置にリンク先要素のIDを追加
+              parent.children.splice(idx,1,link[1]);
+            } else if( link[2].match(/^\[▽\]/) ){
               // ▽ : リンク元要素の弟要素としてリンク先子要素を追加
-
-            } else if( link[2].match(/^▼/) ){
+              // ⇒ parent.childrenのリンク元要素の次に、リンク先子要素を挿入
+              parent.children.splice(idx,0,...pv.map.get(link[1]).children);
+            } else if( link[2].match(/^\[▼\]/) ){
               // ▼ : リンク元要素を削除し、リンク先子要素をリンク元要素と同じレベルで追加
-
+              // ⇒ parent.childrenのリンク元要素を削除、その位置にリンク先子要素のIDを挿入
+              parent.children.splice(idx,1,...pv.map.get(link[1]).children);
             } else {
               // 無印 : hrefに置換。リンク先要素への置換・リンク先子要素の追加はしない
+              // hrefにリンク先要素のIDを追加
+              outline.href = [...outline.href, [...outline.text.matchAll(linkRex)].map(x => x[1])];
+              // ローカルリンクをa.hrefに変換、html特殊文字は還元
+              outline.text = outline.text.replaceAll(linkRex,"<a href=\"#$1\">$2</a>")
+              .replaceAll(/&lt;/g,'<').replaceAll(/&gt;/g,'>').trim();
             }
           });
         }
         rv.push(JSON.stringify(outline)); // デバッグ用
       });
 
+      // noteはmarkedでhtml化してから追加？
       return rv.join('\n'); // 備考：使わないようなら、depthの再帰内での設定は削除
 
       /*
@@ -129,11 +139,13 @@ function workflowy(option={}){
         Object.assign(outline,{
           id: m ? m[2] : 'X'+('00000'+(pv.id++)).slice(-6),
           depth: depth,
-          text: m ? m[1] : obj.attributes.text,
+          text: m ? `<a name="${m[2]}">${m[1]}</a>` : obj.attributes.text,
+          //text: m ? m[1] : obj.attributes.text,
           link: [...obj.attributes.text.matchAll(linkRex)],  // textに含まれたリンク
-          note: obj.attributes._note ? (
+          note: obj.attributes._note ? marked.parse(  // markdown->html化
             obj.attributes._note.replaceAll(linkRex,"[$2](#$1)")  // ローカルリンクをa.hrefに変換
-            .replaceAll(/&lt;/g,'<').replaceAll(/&gt;/g,'>').trim() // html特殊文字は還元
+            .replaceAll(/&lt;/g,'<').replaceAll(/&gt;/g,'>') // html特殊文字は還元
+            .replaceAll(/\n/g,'<br>').trim()  // 改行はbrに変換
           ) : '',
           href: // 参照しているidの配列。この段階ではnote内のリンクのみ(textでのリンクは展開方法決定時に追加)
             obj.attributes._note ? [...obj.attributes._note.matchAll(linkRex)].map(x => x[1]) : [],
