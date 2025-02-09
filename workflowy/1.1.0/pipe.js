@@ -53,7 +53,6 @@ function workflowy(option={}){
 
       // 変換対象のルート要素を保存
       [pv.root,parent] = parent ? [parent,null] : ['X000001',null];
-      console.error(`l.56 pv=${JSON.stringify(pv,null,2)}`)
 
       // outlineタグを再帰的にオブジェクト化
       obj = JSON.parse(convert.xml2json(obj));
@@ -93,6 +92,16 @@ function workflowy(option={}){
       });
 
       // markdown文書化
+      function md(outline,depth=1){
+        rv.push((depth > pv.opt.mdHeader 
+          ? ('\t'.repeat(depth-pv.opt.mdHeader-1) + '- ')
+          : ('#'.repeat(depth) + ' ')) + outline.text);
+        outline.note.split('\n').forEach(l => rv.push('\t'.repeat(depth-1)+l));
+        if(outline.children.length > 0) outline.children.forEach(c => {
+          md(pv.map.get(c),depth+1);
+        });
+      }
+      md(pv.map.get(pv.root));
       return rv.join('\n'); // 備考：使わないようなら、depthの再帰内での設定は削除
 
       /*
@@ -131,7 +140,7 @@ function workflowy(option={}){
       if( obj.name === 'outline' && obj.attributes ){
 
         // Backlinksは処理対象外、子要素の再帰も無し。なお"Backlink"は1なら単数形、2以上は複数形
-        if( obj.attributes.text.match(/^\d+ Backlinks?$/) ) return [];
+        if( obj.attributes.text.match(/^\d+ Backlinks?$/) ) return null;
 
         // outlineオブジェクトのプロトタイプ作成、pv.mapに登録
         m = obj.attributes.text.match(anchorRex);
@@ -153,7 +162,11 @@ function workflowy(option={}){
 
       // elements(子要素)が有った場合、再帰呼出
       if( Array.isArray(obj.elements) ){
-        obj.elements.forEach(o => outline.children.push(markdown(o,outline.id,depth+1)));
+        obj.elements.forEach(o => {
+          // Backlinks以外の場合は子要素として追加
+          const r = markdown(o,outline.id,depth+1);
+          if( r !== null ) outline.children.push(r);
+        });
       }
       return outline.id;
     }

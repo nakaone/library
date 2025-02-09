@@ -21,7 +21,7 @@
 {"id":"X000021","children":[],"depth":3,"text":"markdown() : OPML形式のテキストをマークダウンに変換","link":[],"note":"","href":[],"parent":"X000016"}
 {"id":"X000022","children":[],"depth":3,"text":"sample() : ","link":[],"note":"","href":[],"parent":"X000016"}
 {"id":"X000023","children":["X000024"],"depth":3,"text":"typedefs","link":[],"note":"","href":[],"parent":"X000016"}
-{"id":"X000024","children":["X000025",[]],"depth":4,"text":"workflowy_option {Object} workflowyの動作設定用オプション指定","link":[],"note":"","href":[],"parent":"X000023"}
+{"id":"X000024","children":["X000025"],"depth":4,"text":"workflowy_option {Object} workflowyの動作設定用オプション指定","link":[],"note":"","href":[],"parent":"X000023"}
 {"id":"X000025","children":[],"depth":5,"text":"mdHeader {number}=3 body直下を第1レベルとし、MarkDown化の際どのレベルまでheader化するかの指定","link":[],"note":"","href":[],"parent":"X000024"}
 {"id":"X000026","children":["X000027","X000028"],"depth":3,"text":"readme","link":[],"note":"","href":[],"parent":"X000016"}
 {"id":"X000027","children":[],"depth":4,"text":"使用方法","link":[],"note":"`node pipe.js markdown n`\n\n\"markdown\"は固定。nはヘッダとして扱う階層(2 -> h1,h2を作成、以下はliタグで処理)\n\n```\ncat $test/SpreadDb.opml | awk 1 | node $prj/pipe.js markdown 3 > $test/<a href=\"http://SpreadDb.md\">SpreadDb.md</a>\n```","href":[],"parent":"X000026"}
@@ -33,7 +33,7 @@
 {"id":"33a7f77d9c25","children":["X000033","X000038","X000040","X000044"],"depth":2,"text":"<a name=\"33a7f77d9c25\">テスト用サンプル</a>","link":[],"note":"","href":[],"parent":"X000001"}
 {"id":"X000033","children":["X000034","a0376dbc8b20"],"depth":3,"text":"No.1","link":[],"note":"No.1のノート\n- 項目1\n- 項目2","href":[],"parent":"33a7f77d9c25"}
 {"id":"X000034","children":[],"depth":4,"text":"No.1.1","link":[],"note":"ノート内で[リンク](#a0376dbc8b20)を張ってみた","href":["a0376dbc8b20"],"parent":"X000033"}
-{"id":"a0376dbc8b20","children":["X000035","X000037",[]],"depth":4,"text":"<a name=\"a0376dbc8b20\">No.1.2</a>","link":[],"note":"","href":[],"parent":"X000033"}
+{"id":"a0376dbc8b20","children":["X000035","X000037"],"depth":4,"text":"<a name=\"a0376dbc8b20\">No.1.2</a>","link":[],"note":"","href":[],"parent":"X000033"}
 {"id":"X000035","children":["X000036"],"depth":5,"text":"No.1.2の子要素1","link":[],"note":"","href":[],"parent":"a0376dbc8b20"}
 {"id":"X000036","children":[],"depth":6,"text":"No.1.2の孫要素","link":[],"note":"","href":[],"parent":"X000035"}
 {"id":"X000037","children":[],"depth":5,"text":"No.1.2の子要素2","link":[],"note":"","href":[],"parent":"a0376dbc8b20"}
@@ -44,3 +44,49 @@
 {"id":"X000042","children":[],"depth":4,"text":"<a href=\"https://workflowy.com/#/a0376dbc8b20\">[▼]リンク先</a>子要素でリンク元を置換","link":[["<a href=\"https://workflowy.com/#/a0376dbc8b20\">[▼]リンク先</a>","a0376dbc8b20","[▼]リンク先"]],"note":"","href":[],"parent":"X000040"}
 {"id":"X000043","children":[],"depth":4,"text":"<a href=\"https://workflowy.com/#/a0376dbc8b20\">[▽]リンク先</a>子要素をリンク元の弟要素として追加","link":[["<a href=\"https://workflowy.com/#/a0376dbc8b20\">[▽]リンク先</a>","a0376dbc8b20","[▽]リンク先"]],"note":"","href":[],"parent":"X000040"}
 {"id":"X000044","children":[],"depth":3,"text":"No.4 h1指定","link":[],"note":"","href":[],"parent":"33a7f77d9c25"}
+# <a name="33a7f77d9c25">テスト用サンプル</a>
+
+## No.1
+	No.1のノート
+	- 項目1
+	- 項目2
+- No.1.1
+		ノート内で[リンク](#a0376dbc8b20)を張ってみた
+- <a name="a0376dbc8b20">No.1.2</a>
+		
+	- No.1.2の子要素1
+			
+		- No.1.2の孫要素
+				
+	- No.1.2の子要素2
+			
+## No.2。<b>太文字</b>と<span class="colored c-red">赤文字</span>を使用
+	
+- <a href="#a0376dbc8b20">No.1.2</a>へのリンク
+		
+## No.3 : 置換関係
+	
+- <a name="a0376dbc8b20">No.1.2</a>
+		
+	- No.1.2の子要素1
+			
+		- No.1.2の孫要素
+				
+	- No.1.2の子要素2
+			
+- No.1.2の子要素1
+		
+	- No.1.2の孫要素
+			
+- No.1.2の子要素2
+		
+- No.1.2の子要素1
+		
+	- No.1.2の孫要素
+			
+- No.1.2の子要素2
+		
+- <a href="https://workflowy.com/#/a0376dbc8b20">[▽]リンク先</a>子要素をリンク元の弟要素として追加
+		
+## No.4 h1指定
+	
