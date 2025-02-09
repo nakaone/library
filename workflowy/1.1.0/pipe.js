@@ -26,7 +26,7 @@ reader.on('close', () => {
 /** workflowy: Markdown形式でエクスポートされた内容を修正 */
 function workflowy(option={}){
   const convert = require('xml-js');
-  const pv = { whois: 'workflowy', id: 1 , map: new Map()};
+  const pv = { whois: 'workflowy', id: 1 , map: new Map(),anchor:new Set(),link:new Set()};
   pv.opt = Object.assign({
     mdHeader: 3,  // body直下を第1レベルとし、MarkDown化の際どのレベルまでheader化するかの指定
   },option);
@@ -58,7 +58,6 @@ function workflowy(option={}){
       obj = JSON.parse(convert.xml2json(obj));
       markdown(obj);
 
-      rv = [];
       // ローカルリンクを展開
       pv.map.forEach(outline => {
         // textにリンク設定が有った場合、ローカルリンクを展開
@@ -90,6 +89,15 @@ function workflowy(option={}){
         // デバッグ用 rv.push(JSON.stringify(outline));
       });
 
+      // リンク切れをチェック
+      // Set.differenceは使用不可(TypeError: pv.anchor.difference is not a function)
+      const anchors = [...pv.anchor.keys()];
+      const links = [...pv.link.keys()];
+      rv = ['# [作業用]リンク切れ一覧\n','## 被参照(anchor)のみ存在\n'];
+      anchors.filter(x => !links.includes(x)).forEach(x => rv.push(`1. ${x}`));
+      rv.push('\n## 参照(href)のみ存在\n');
+      links.filter(x => !anchors.includes(x)).forEach(x => rv.push(`1. ${x}`));
+
       // markdown文書化
       function md(outline,depth=1){
         if( depth > pv.opt.mdHeader ){
@@ -106,33 +114,6 @@ function workflowy(option={}){
       md(pv.map.get(pv.root));
       return rv.join('\n'); // 備考：使わないようなら、depthの再帰内での設定は削除
 
-      /*
-      rv = rv.join('\n').replaceAll(/\n\n+/g,'\n\n').trim(); // 連続する空白行は一つにまとめる
-
-      // リンク切れチェック
-      // a nameで定義されたアンカーのリストを作成
-      let names = new Set([...rv.matchAll(/<a name="([a-z0-9]{12})"/g)].map(a => a[1]))
-      let hrefsOnly = new Set([...hrefs].filter(e => (!names.has(e)))); // リンク有るのにアンカー無し
-      let namesOnly = new Set([...names].filter(e => (!hrefs.has(e)))); // アンカー有るのにリンク無し
-      let msg = [];
-      if( hrefsOnly.size > 0 ){
-        msg.push('===== [fatal] hrefs only: リンク有るのにアンカー未定義の項目');
-        [...hrefsOnly].forEach(x => {
-          m = rv.match(new RegExp(`\\[(.+)\\]\\(#${x}\\)`));
-          msg.push(`${x}: ${m?m[1]:''}`);
-        })
-      }
-      if( namesOnly.size > 0 ){
-        msg.push('===== [warning] names only: アンカー有るのにリンクは存在しない項目');
-        [...namesOnly].forEach(x => {
-          m = rv.match(new RegExp(`<a name="${x}">(.+)</a>`));
-          msg.push(`${x}: ${m?m[1]:''}`);
-        })
-      }
-
-      // リンク切れチェック結果を先頭に付けて処理結果を出力
-      return (msg.length > 0 ? msg.join('\n') + '\n\n' : '') + rv;
-      */
     } else {
       // opml > bodyタグ発見時、depthをリセット
       if( obj.name === 'body' ) depth = 0;
@@ -160,7 +141,10 @@ function workflowy(option={}){
             obj.attributes._note ? [...obj.attributes._note.matchAll(linkRex)].map(x => x[1]) : [],
           parent: parent,
         });
-        pv.map.set(outline.id, outline);
+        pv.map.set(outline.id, outline);  // outline一覧に追加
+        if( m ) pv.anchor.add(m[2]);  // アンカー一覧に追加
+        // ローカルリンクがあればリンク一覧に追加
+        if( outline.link.length > 0 ) outline.link.forEach(m => pv.link.add(m[1]));
       }
 
       // elements(子要素)が有った場合、再帰呼出

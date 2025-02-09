@@ -19,7 +19,8 @@ embed="node $lib/embedRecursively/1.2.0/pipe.js"
 esed="node $lib/esed/1.0.0/core.js"
 modify="node $lib/modifyMD/1.0.0/pipe.js"
 querySelector="node $lib/querySelector/2.0.1/pipe.js"
-workflowy="node $lib/workflowy/1.0.0/pipe.js markdown 3"
+opml="$lib/workflowy/opml"
+workflowy="node $lib/workflowy/1.0.0/pipe.js markdown ee755b0a70bd 3"
 
 # 0.14 共通変数・関数の定義
 echo "\n\n\n\n\n"  # 開始前に空白行をコンソールに出力

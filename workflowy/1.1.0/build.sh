@@ -10,6 +10,7 @@ set -e # エラー時点で停止
 Desktop="/Users/ena.kaon/Desktop"
 GitHub="$Desktop/GitHub"
 lib="$GitHub/library"
+opml="$lib/workflowy/opml"
 
 # 0.12 .DS_storeの全削除
 find $GitHub -name '.DS_Store' -type f -ls -delete
@@ -39,5 +40,10 @@ dev="$prj/dev"
 log "1"; # テスト
 # ----------------------------------------------
 cat $dev/sample.opml | awk 1 | node $prj/pipe.js markdown 33a7f77d9c25 2 > $dev/sample.md
+
+# ----------------------------------------------
+log "2"; # readme.md
+# ----------------------------------------------
+cat $opml/20250209.opml | awk 1 | node $prj/pipe.js markdown 5a8dd15033a4 2 > $prj/readme.md
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"
