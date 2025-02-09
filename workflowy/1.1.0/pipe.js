@@ -66,37 +66,39 @@ function workflowy(option={}){
           outline.link.forEach(link => {
             const parent = pv.map.get(outline.parent);
             const idx = parent.children.findIndex(x => x === outline.id);
-            if( link[2].match(/^\[■\]/) ){
-              // ■ : リンク元要素をリンク先要素に置換。(従来のリンク元子要素は削除)
-              // ⇒ parent.childrenのリンク元要素のIDを削除、その位置にリンク先要素のIDを追加
-              parent.children.splice(idx,1,link[1]);
-            } else if( link[2].match(/^\[▽\]/) ){
+            if( link[2].match(/^\[▽\]/) ){
               // ▽ : リンク元要素の弟要素としてリンク先子要素を追加
               // ⇒ parent.childrenのリンク元要素の次に、リンク先子要素を挿入
-              parent.children.splice(idx,0,...pv.map.get(link[1]).children);
+              parent.children.splice(idx+1,0,...pv.map.get(link[1]).children);
+              // ローカルリンクは削除
+              outline.text = outline.text.replaceAll(linkRex,"$2");
             } else if( link[2].match(/^\[▼\]/) ){
               // ▼ : リンク元要素を削除し、リンク先子要素をリンク元要素と同じレベルで追加
               // ⇒ parent.childrenのリンク元要素を削除、その位置にリンク先子要素のIDを挿入
               parent.children.splice(idx,1,...pv.map.get(link[1]).children);
+              // ローカルリンクは削除
+              outline.text = outline.text.replaceAll(linkRex,"$2");
             } else {
               // 無印 : hrefに置換。リンク先要素への置換・リンク先子要素の追加はしない
               // hrefにリンク先要素のIDを追加
               outline.href = [...outline.href, [...outline.text.matchAll(linkRex)].map(x => x[1])];
-              // ローカルリンクをa.hrefに変換、html特殊文字は還元
-              outline.text = outline.text.replaceAll(linkRex,"<a href=\"#$1\">$2</a>")
-              .replaceAll(/&lt;/g,'<').replaceAll(/&gt;/g,'>').trim();
+              // ローカルリンクをa.hrefに変換
+              outline.text = outline.text.replaceAll(linkRex,"<a href=\"#$1\">$2</a>");
             }
           });
         }
-        rv.push(JSON.stringify(outline)); // デバッグ用
+        // デバッグ用 rv.push(JSON.stringify(outline));
       });
 
       // markdown文書化
       function md(outline,depth=1){
-        rv.push((depth > pv.opt.mdHeader 
-          ? ('\t'.repeat(depth-pv.opt.mdHeader-1) + '- ')
-          : ('#'.repeat(depth) + ' ')) + outline.text);
-        outline.note.split('\n').forEach(l => rv.push('\t'.repeat(depth-1)+l));
+        if( depth > pv.opt.mdHeader ){
+          rv.push(`${'\t'.repeat(depth-pv.opt.mdHeader-1)}- ${outline.text}`);
+          outline.note.split('\n').forEach(l => rv.push('\t'.repeat(depth-pv.opt.mdHeader)+l));
+        } else {
+          rv.push(`${'#'.repeat(depth)} ${outline.text}`);
+          outline.note.split('\n').forEach(l => rv.push(l));
+        }
         if(outline.children.length > 0) outline.children.forEach(c => {
           md(pv.map.get(c),depth+1);
         });
@@ -146,8 +148,9 @@ function workflowy(option={}){
         m = obj.attributes.text.match(anchorRex);
         Object.assign(outline,{
           id: m ? m[2] : 'X'+('00000'+(pv.id++)).slice(-6),
-          depth: depth,
-          text: m ? `<a name="${m[2]}">${m[1]}</a>` : obj.attributes.text,
+          text: // html特殊文字は還元
+            (m ? `<a name="${m[2]}">${m[1]}</a>` : obj.attributes.text)
+            .replaceAll(/&lt;/g,'<').replaceAll(/&gt;/g,'>').trim(),
           link: [...obj.attributes.text.matchAll(linkRex)],  // textに含まれたリンク
           note: obj.attributes._note ? (
             obj.attributes._note.replaceAll(linkRex,"[$2](#$1)")  // ローカルリンクをa.hrefに変換
