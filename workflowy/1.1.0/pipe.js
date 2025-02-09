@@ -91,6 +91,7 @@ function workflowy(option = {}) {
 
       // リンク切れをチェック
       // Set.differenceは使用不可(TypeError: pv.anchor.difference is not a function)
+      rv = [];
       const anchors = [...pv.anchor.keys()];
       const links = [...pv.link.keys()];
       rv = ['# [作業用]リンク切れ一覧\n', '## 被参照(anchor)のみ存在\n'];
@@ -101,6 +102,7 @@ function workflowy(option = {}) {
 
       // markdown文書化
       function md(outline, depth = 1) {
+        let rv = [];
         if (depth > pv.opt.mdHeader) {
           rv.push(`${'\t'.repeat(depth - pv.opt.mdHeader - 1)}- ${outline.text}`);
           outline.note.split('\n').forEach(l => rv.push('\t'.repeat(depth - pv.opt.mdHeader) + l));
@@ -109,10 +111,11 @@ function workflowy(option = {}) {
           outline.note.split('\n').forEach(l => rv.push(l));
         }
         if (outline.children.length > 0) outline.children.forEach(c => {
-          md(pv.map.get(c), depth + 1);
+          rv = [...rv,...md(pv.map.get(c), depth + 1)];
         });
+        return rv;
       }
-      md(pv.map.get(pv.root));
+      rv = [...rv, ...md(pv.map.get(pv.root))];
       return rv.join('\n'); // 備考：使わないようなら、depthの再帰内での設定は削除
 
     } else {
