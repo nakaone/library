@@ -26,13 +26,16 @@ reader.on('close', () => {
 /** workflowy: Markdown形式でエクスポートされた内容を修正 */
 function workflowy(option = {}) {
   const convert = require('xml-js');
-  const pv = { whois: 'workflowy', id: 1, map: new Map(), anchor: new Set(), link: new Set()};
+  const pv = { whois: 'workflowy', id: 1,
+    outlines: new Map(),  // 入力ファイルに存在する全てのoutlineタグオブジェクト
+    anchor: new Set(),
+    link: new Set()};
   pv.opt = Object.assign({
     mdHeader: 3,  // body直下を第1レベルとし、MarkDown化の際どのレベルまでheader化するかの指定
   }, option);
   return { markdown: markdown, sample: sample };
 
-  /** markdown: outlineタグをpv.mapに格納
+  /** markdown: outlineタグをpv.outlinesに格納
    *
    * @param {*} obj
    * @param {*} parent
@@ -59,22 +62,22 @@ function workflowy(option = {}) {
       markdown(obj);
 
       // ローカルリンクを展開
-      pv.map.forEach(outline => {
+      pv.outlines.forEach(outline => {
         // textにリンク設定が有った場合、ローカルリンクを展開
         if (outline.link.length > 0) {
           outline.link.forEach(link => {
-            const parent = pv.map.get(outline.parent);
+            const parent = pv.outlines.get(outline.parent);
             const idx = parent.children.findIndex(x => x === outline.id);
             if (link[2].match(/^\[▽\]/)) {
               // ▽ : リンク元要素の弟要素としてリンク先子要素を追加
               // ⇒ parent.childrenのリンク元要素の次に、リンク先子要素を挿入
-              parent.children.splice(idx + 1, 0, ...pv.map.get(link[1]).children);
+              parent.children.splice(idx + 1, 0, ...pv.outlines.get(link[1]).children);
               // ローカルリンクは削除
               outline.text = outline.text.replaceAll(linkRex, "$2");
             } else if (link[2].match(/^\[▼\]/)) {
               // ▼ : リンク元要素を削除し、リンク先子要素をリンク元要素と同じレベルで追加
               // ⇒ parent.childrenのリンク元要素を削除、その位置にリンク先子要素のIDを挿入
-              parent.children.splice(idx, 1, ...pv.map.get(link[1]).children);
+              parent.children.splice(idx, 1, ...pv.outlines.get(link[1]).children);
               // ローカルリンクは削除
               outline.text = outline.text.replaceAll(linkRex, "$2");
             } else {
@@ -111,11 +114,11 @@ function workflowy(option = {}) {
           outline.note.split('\n').forEach(l => rv.push(l));
         }
         if (outline.children.length > 0) outline.children.forEach(c => {
-          rv = [...rv,...md(pv.map.get(c), depth + 1)];
+          rv = [...rv,...md(pv.outlines.get(c), depth + 1)];
         });
         return rv;
       }
-      rv = [...rv, ...md(pv.map.get(pv.root))];
+      rv = [...rv, ...md(pv.outlines.get(pv.root))];
       return rv.join('\n'); // 備考：使わないようなら、depthの再帰内での設定は削除
 
     } else {
@@ -129,7 +132,7 @@ function workflowy(option = {}) {
         // Backlinksは処理対象外、子要素の再帰も無し。なお"Backlink"は1なら単数形、2以上は複数形
         if (obj.attributes.text.match(/^\d+ Backlinks?$/)) return null;
 
-        // outlineオブジェクトのプロトタイプ作成、pv.mapに登録
+        // outlineオブジェクトのプロトタイプ作成、pv.outlinesに登録
         m = obj.attributes.text.match(anchorRex);
         Object.assign(outline, {
           id: m ? m[2] : 'X' + ('00000' + (pv.id++)).slice(-6),
@@ -146,7 +149,7 @@ function workflowy(option = {}) {
             obj.attributes._note ? [...obj.attributes._note.matchAll(linkRex)].map(x => x[1]) : [],
           parent: parent,
         });
-        pv.map.set(outline.id, outline);  // outline一覧に追加
+        pv.outlines.set(outline.id, outline);  // outline一覧に追加
         if( outline.isClan ){
           if (m) pv.anchor.add(m[2]);  // アンカー一覧に追加
           // ローカルリンクがあればリンク一覧に追加
