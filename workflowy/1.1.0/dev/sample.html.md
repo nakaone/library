@@ -1,5 +1,21 @@
 # テスト
 
+## リンク先がdetailsの場合、リンク元クリックでdetailsが開くかテスト
+
+- [リンク先](#anchor01)
+
+- <details><summary>リンク先タイトル</summary>
+
+  <a name="anchor01">リンク先</a>  
+
+  リンク先タイトルに付けても開かないが、details内部に付けた場合は開く
+
+  | No | ① | ② |
+  | :-- | :-- | :-- |
+  | 01 | セル① | セル② |
+
+</details>
+
 ## all markdown(details無し)
 
 ### l1-1
