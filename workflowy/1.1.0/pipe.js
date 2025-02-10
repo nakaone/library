@@ -28,8 +28,9 @@ function workflowy(option = {}) {
   const convert = require('xml-js');
   const pv = { whois: 'workflowy', id: 1,
     outlines: new Map(),  // 入力ファイルに存在する全てのoutlineタグオブジェクト
-    anchor: new Set(),
-    link: new Set()};
+    doc: new Set(), // ルート要素以下の、文書化対象要素のid文字列
+    anchor: new Set(),  // 文書化対象要素が持つanchor文字列(a name)
+    link: new Set()}; // 文書化対象要素から参照している要素のid文字列
   pv.opt = Object.assign({
     mdHeader: 3,  // body直下を第1レベルとし、MarkDown化の際どのレベルまでheader化するかの指定
   }, option);
@@ -48,7 +49,7 @@ function workflowy(option = {}) {
    * ▼ : リンク元要素を削除し、リンク先子要素をリンク元要素と同じレベルで追加
    */
   function markdown(obj, parent = null, depth = 0, isClan = false) {
-    let rv = []; let m;
+    let rv = []; let m; const v = {};
     const anchorRex = /^(.+)\s*\(([a-z0-9]{12})\)\s*$/;
     const linkRex = /<a href="https:\/\/workflowy\.com\/#\/([a-z0-9]{12})">(.+)<\/a>/g;
     if (typeof obj === 'string') {
@@ -61,23 +62,37 @@ function workflowy(option = {}) {
       obj = JSON.parse(convert.xml2json(obj));
       markdown(obj);
 
+      // copyChildren: リンク先子要素をコピー
+      function copyChildren(id){
+        const cc = o => {
+          o.id = 'X' + ('00000' + (pv.id++)).slice(-6); // idは新規採番
+          pv.doc.add(o.id); // 文書化要素一覧に追加
+          o.text = o.text.replaceAll(/<a name="[a-z0-9]{12}">(.+?)<\/a>/g,"$1");  // a nameタグは削除
+          o.children.forEach(x => cc(x)); // 子孫を再帰呼出
+        }
+        // 子孫を含めてまるごとコピー
+        const rv = JSON.parse(JSON.stringify(pv.outlines.get(id).children));
+        rv.forEach(o => cc(o));
+        return rv;
+      }
+
       // ローカルリンクを展開
       pv.outlines.forEach(outline => {
         // textにリンク設定が有った場合、ローカルリンクを展開
         if (outline.link.length > 0) {
           outline.link.forEach(link => {
             const parent = pv.outlines.get(outline.parent);
-            const idx = parent.children.findIndex(x => x === outline.id);
+            const idx = parent.children.findIndex(x => x.id === outline.id);
             if (link[2].match(/^\[▽\]/)) {
               // ▽ : リンク元要素の弟要素としてリンク先子要素を追加
               // ⇒ parent.childrenのリンク元要素の次に、リンク先子要素を挿入
-              parent.children.splice(idx + 1, 0, ...pv.outlines.get(link[1]).children);
+              parent.children.splice(idx + 1, 0, ...copyChildren(link[1]));
               // ローカルリンクは削除
               outline.text = outline.text.replaceAll(linkRex, "$2");
             } else if (link[2].match(/^\[▼\]/)) {
               // ▼ : リンク元要素を削除し、リンク先子要素をリンク元要素と同じレベルで追加
               // ⇒ parent.childrenのリンク元要素を削除、その位置にリンク先子要素のIDを挿入
-              parent.children.splice(idx, 1, ...pv.outlines.get(link[1]).children);
+              parent.children.splice(idx, 1, ...copyChildren(link[1]));
               // ローカルリンクは削除
               outline.text = outline.text.replaceAll(linkRex, "$2");
             } else {
@@ -114,12 +129,12 @@ function workflowy(option = {}) {
           outline.note.split('\n').forEach(l => rv.push(l));
         }
         if (outline.children.length > 0) outline.children.forEach(c => {
-          rv = [...rv,...md(pv.outlines.get(c), depth + 1)];
+          rv = [...rv,...md(c, depth + 1)];
         });
         return rv;
       }
       rv = [...rv, ...md(pv.outlines.get(pv.root))];
-      return rv.join('\n'); // 備考：使わないようなら、depthの再帰内での設定は削除
+      return rv.join('\n');
 
     } else {
       // opml > bodyタグ発見時、depthをリセット
@@ -151,6 +166,7 @@ function workflowy(option = {}) {
         });
         pv.outlines.set(outline.id, outline);  // outline一覧に追加
         if( outline.isClan ){
+          pv.doc.add(outline.id); // 文書化要素一覧に追加
           if (m) pv.anchor.add(m[2]);  // アンカー一覧に追加
           // ローカルリンクがあればリンク一覧に追加
           if (outline.link.length > 0) outline.link.forEach(m => pv.link.add(m[1]));
@@ -165,7 +181,7 @@ function workflowy(option = {}) {
           if (r !== null) outline.children.push(r);
         });
       }
-      return outline.id;
+      return outline;
     }
   }
 
