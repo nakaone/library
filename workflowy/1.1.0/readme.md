@@ -1,14 +1,3 @@
-# [作業用]リンク切れ一覧
-
-## 被参照(anchor)のみ存在
-
-1. 5a8dd15033a4
-
-## 参照(href)のみ存在
-
-1. 63c52c5262e3
-
-
 # <a name="5a8dd15033a4">workflowy.js 1.1.0</a>
 
 ## workflowy主処理(main)
@@ -53,4 +42,7 @@
 		- 参照先要素を参照元以下に展開
 			
 	- 1.0.0 2025/01/30 - 初版
-		
+		# 外部ライブラリ
+
+<p style="font-size:2rem;color:#f00">Error: Could not find 63c52c5262e3</p>
+

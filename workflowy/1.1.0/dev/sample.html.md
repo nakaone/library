@@ -4,9 +4,7 @@
 
 - [リンク先](#anchor01)
 
-- <details><summary>リンク先タイトル</summary>
-
-  <a name="anchor01">リンク先</a>  
+- <details><summary>リンク先タイトル</summary><a name="anchor01"></a>  
 
   リンク先タイトルに付けても開かないが、details内部に付けた場合は開く
 

@@ -107,17 +107,6 @@ function workflowy(option = {}) {
         // デバッグ用 rv.push(JSON.stringify(outline));
       });
 
-      // リンク切れをチェック
-      // Set.differenceは使用不可(TypeError: pv.anchor.difference is not a function)
-      rv = [];
-      const anchors = [...pv.anchor.keys()];
-      const links = [...pv.link.keys()];
-      rv = ['# [作業用]リンク切れ一覧\n', '## 被参照(anchor)のみ存在\n'];
-      anchors.filter(x => !links.includes(x)).forEach(x => rv.push(`1. ${x}`));
-      rv.push('\n## 参照(href)のみ存在\n');
-      links.filter(x => !anchors.includes(x)).forEach(x => rv.push(`1. ${x}`));
-      rv.push('\n');
-
       // markdown文書化
       function md(outline, depth = 1) {
         let rv = [];
@@ -133,8 +122,57 @@ function workflowy(option = {}) {
         });
         return rv;
       }
-      rv = [...rv, ...md(pv.outlines.get(pv.root))];
-      return rv.join('\n');
+      rv = md(pv.outlines.get(pv.root));
+
+      // 文書化対象外要素のmarkdown文書化　【いまここ】つくりかけ
+      function exmd(id, depth = 0) {
+        let rv = [];
+        let outline = pv.outlines.get(id);
+        if( depth === 0 ){
+          // a nameはsummary直後に入れるので、第一レベルの項目におけるa nameは削除
+          outline.text = outline.text.replaceAll(/<a name="[a-z0-9]{12}">(.+?)<\/a>/g,"$1");
+          rv.push
+        } else {
+
+        }
+        if (depth > pv.opt.mdHeader) {
+          rv.push(`${'\t'.repeat(depth - pv.opt.mdHeader - 1)}- ${outline.text}`);
+          outline.note.split('\n').forEach(l => rv.push('\t'.repeat(depth - pv.opt.mdHeader) + l));
+        } else {
+          rv.push(`${'#'.repeat(depth)} ${outline.text}`);
+          outline.note.split('\n').forEach(l => rv.push(l));
+        }
+        if (outline.children.length > 0) outline.children.forEach(c => {
+          rv = [...rv,...md(c, depth + 1)];
+        });
+        return rv;
+      }
+      rv = md(pv.outlines.get(pv.root));
+
+      // 文書化対象外への参照を追加　【孫要素が入っていない】
+      // Set.differenceは使用不可(TypeError: pv.anchor.difference is not a function)
+      v.exdoc = [`# 外部ライブラリ\n`];
+      v.docs = [...pv.doc.keys()];
+      v.links = [...pv.link.keys()];
+      // 参照先だが文書化されていない要素を抽出
+      v.links.filter(x => !v.docs.includes(x)).forEach(id => {
+        v.outline = pv.outlines.get(id);
+        if( v.outline ){
+          // a nameはsummary直後に入れるので、第一レベルの項目におけるa nameは削除
+          v.outline.text = v.outline.text.replaceAll(/<a name="[a-z0-9]{12}">(.+?)<\/a>/g,"$1");
+          v.exdoc = [...v.exdoc,
+            `<details><summary>${v.outline.text}</summary><a name="${id}"></a>\n\n`,
+            ...md(v.outline,pv.opt.mdHeader+1), // タイトルは#ではなく全てliになるようdepthを設定
+            `</details>\n\n`
+          ];  
+        } else {
+          v.msg = `Error: Could not find ${id}`;
+          v.exdoc.push(`<p style="font-size:2rem;color:#f00">${v.msg}</p>\n`);
+          console.error(v.msg);
+        }
+      });
+
+      return rv.join('\n') + v.exdoc.join('\n');
 
     } else {
       // opml > bodyタグ発見時、depthをリセット
