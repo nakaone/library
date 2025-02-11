@@ -39,11 +39,11 @@ dev="$prj/dev"
 # ----------------------------------------------
 log "1"; # テスト
 # ----------------------------------------------
-cat $dev/sample.opml | awk 1 | node $prj/pipe.js markdown 33a7f77d9c25 2 > $dev/sample.md
+cat $dev/sample.opml | awk 1 | node $prj/pipe.js -root:33a7f77d9c25 -lv:2 > $dev/sample.md
 
 # ----------------------------------------------
 log "2"; # readme.md
 # ----------------------------------------------
-cat $opml/20250209.opml | awk 1 | node $prj/pipe.js markdown 5a8dd15033a4 2 > $prj/readme.md
+cat $opml/20250209.opml | awk 1 | node $prj/pipe.js -root:5a8dd15033a4 -lv:2 > $prj/readme.md
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"
