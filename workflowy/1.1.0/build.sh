@@ -39,7 +39,7 @@ dev="$prj/dev"
 # ----------------------------------------------
 log "1"; # テスト
 # ----------------------------------------------
-cat $dev/sample.opml | awk 1 | node $prj/pipe.js -root:33a7f77d9c25 -lv:2 > $dev/sample.md
+#cat $dev/sample.opml | awk 1 | node $prj/pipe.js -root:33a7f77d9c25 -lv:2 > $dev/sample.md
 
 # ----------------------------------------------
 log "2"; # readme.md
