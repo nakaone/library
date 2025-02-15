@@ -47,18 +47,14 @@ function workflowy(opml,opt={}) {
     reduct: x => {return x.replaceAll(/&lt;/g, '<').replaceAll(/&gt;/g, '>')},
     getLink: o => { // outlineオブジェクトからリンク先IDを再帰的に抽出
       const rv = new Set();
-      console.error(`l.49 o=${JSON.stringify(o)}`)
       o.link.forEach(x => rv.add(x[1]));  // textの参照先を登録
       // noteの参照先を登録
       [...o.note.matchAll(/\[.+?\]\(#([a-z0-9]{12})\)/g)].forEach(x => rv.add(x[1]));
       // 参照先を再帰呼出
       if( rv.size > 0 ){
-        console.error(`l.55 rv=${JSON.stringify([...rv])}`);
         [...rv].forEach(x => {
-          console.error(`l.57 pv.outlines.get(${x})=${JSON.stringify(pv.outlines.get(x))}`)
           const outline = pv.outlines.get(x);
           if( outline ){
-            console.error(`l.58 util.getLink(pv.outlines.get(x))=${JSON.stringify(util.getLink(pv.outlines.get(x)))}`)
             util.getLink(outline).forEach(r => rv.add(r));  
           } else {
             pv.unlink.add(x); // リンク先が見つからない場合はエラーとして保存
@@ -85,8 +81,11 @@ function workflowy(opml,opt={}) {
   const appendixMD = appendix();
 
   // リンク切れ要素一覧の作成
-  [...pv.unlink].forEach(x => x = `1. ${x}`);
-  const unlinkMD = pv.unlink.size === 0 ? [] : [`# Error: リンク先が見つからない要素\n`, ...pv.unlink];
+  const unlinkMD = [];
+  if( pv.unlink.size > 0 ){
+    unlinkMD.push(`# Error: リンク先が見つからない要素\n`);
+    [...pv.unlink].forEach(x => unlinkMD.push(`1. ${x}`));
+  }
 
   return [...unlinkMD, ...scopedMD, ...appendixMD].join('\n'); 
 
@@ -230,29 +229,25 @@ function workflowy(opml,opt={}) {
     for( v.outline of pv.outlines ){
       if( v.outline[1].ancestor.includes(pv.root) ) v.docs.push(v.outline[1]);
     }
-    console.error(`l.210 v.docs=${JSON.stringify(v.docs)}`)
 
     // ②文書化対象要素から参照される要素を対象・非対象を問わずリストアップ
     v.docs.forEach(x => {
-      console.error(`l.217 x=${JSON.stringify(x)}`);
       util.getLink(x).forEach(y => v.href.add(y));
     });
-    console.error(`l.214 href=${JSON.stringify([...v.href])}`)
 
     // ③文書化対象要素から参照される非文書化対象要素をリストアップ(②-①)
     v.docs = v.docs.map(x => x.id);
+    console.error(`l.237 v.docs=${JSON.stringify(v.docs)}`);
     pv.appendix = new Set([...v.href].filter(x => !v.docs.includes(x)));
-    console.error(`l.219 pv.appendix=${JSON.stringify([...pv.appendix])}`)
 
     if( pv.appendix.size === 1 ){
       // ④ ③の要素が一つだけ ⇒ 当該要素を共通祖先と看做す
-      v.commonAncestor = [...pv.appendix][0];
+      v.commonAncestor = pv.outlines.get([...pv.appendix][0]).id;
     } else {
       // ④ ③の要素が複数 ⇒ 直近の共通祖先要素を特定
       for( v.id of pv.appendix ){ // ancestorの一覧(二次元配列)を作成
         v.ancestor.push(pv.outlines.get(v.id).ancestor);
       }
-      console.error(`l.225 v.ancestor=${JSON.stringify(v.ancestor)}`)
 
       for( v.c=1 ; v.c<v.ancestor[0].length ; v.c++ ){
         for( v.r=1 ; v.r<v.ancestor.length ; v.r++ ){
@@ -264,15 +259,16 @@ function workflowy(opml,opt={}) {
         }
       }
     }
-    console.error(`l.238 v.commonAncestor=${v.commonAncestor}`)
+    console.error(`l.262 v.commonAncestor=${v.commonAncestor}`)
 
     // ④opml内の出現順にリストに存在する要素を文書化
-    console.error(`l.270 `)
     v.caObj = pv.outlines.get(v.commonAncestor);
     if( v.caObj ){
       v.caObj.children.forEach(x => v.rv = [...v.rv, ...outOfScopeDocument(x)]);
     }
+    console.error(`l.264 rv=${JSON.stringify(v.rv,null,2)}`);
 
+    if( v.rv.length > 0 ) v.rv.unshift(`# 【参考】文書化対象外要素へのリンク\n`);
     return v.rv;
   }
 
@@ -299,8 +295,10 @@ function workflowy(opml,opt={}) {
     }
 
     // 子要素を再帰呼出
-    if (outline.children.length > 0) outline.children
-    .forEach(c => v.rv = [...v.rv,...outOfScopeDocument(c, depth + 1)]);
+    if (outline.children.length > 0) outline.children.forEach(c => {
+      console.error(`l.295 c=${JSON.stringify(c)}`);
+      v.rv = [...v.rv,...outOfScopeDocument(c, depth + 1)];
+    });
 
     return v.rv;
 
