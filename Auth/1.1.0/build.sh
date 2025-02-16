@@ -20,7 +20,7 @@ esed="node $lib/esed/1.0.0/core.js"
 modify="node $lib/modifyMD/1.0.0/pipe.js"
 querySelector="node $lib/querySelector/2.0.1/pipe.js"
 opml="$lib/workflowy/opml"
-workflowy="node $lib/workflowy/1.0.0/pipe.js markdown ee755b0a70bd 3"
+workflowy="node $lib/workflowy/1.1.0/pipe.js"
 
 # 0.14 共通変数・関数の定義
 echo "\n\n\n\n\n"  # 開始前に空白行をコンソールに出力
@@ -46,10 +46,10 @@ tmp="$prj/tmp"; mkdir -p $tmp
 
 # ----------------------------------------------
 # 1 readme.mdの作成
+log "1.0"; # Auth 1.1.0(ee755b0a70bd)
 # ----------------------------------------------
-log "1.0";
 mmdc -i $doc/summary.mmd -o $doc/summary.svg
-cat $doc/auth.opml | awk 1 | $workflowy > $prj/readme.md
+cat $doc/GitHub.opml | awk 1 | $workflowy -root:ee755b0a70bd -lv:2 > $prj/readme.md
 
 # ----------------------------------------------
 # test.jsの作成

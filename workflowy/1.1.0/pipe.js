@@ -252,6 +252,11 @@ function workflowy(opml, opt = {}) {
     // ④ ③でリストアップされた要素を順次追加
     if (pv.appendix.size > 0) {
       pv.appendix.forEach(id => {
+        if( !pv.outlines.get(id) ){
+          v.msg = `"${id}" is not anchored.`;
+          console.error(`\n${'='.repeat(50)}\n[workflowy.js] ${v.msg}\n${'='.repeat(50)}\n`);
+          throw new Error(v.msg);
+        }
         v.rv = [...v.rv, ...outOfScopeDocument(pv.outlines.get(id))];
       });
     }
