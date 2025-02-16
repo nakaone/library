@@ -37,7 +37,7 @@ tmp="$prj/tmp"; mkdir -p $tmp; rm -rf $tmp/*
 dev="$prj/dev"
 
 # ----------------------------------------------
-log "1"; # テスト
+log "1"; # テスト用サンプル(33a7f77d9c25)
 # ----------------------------------------------
 cat $dev/sample.opml | awk 1 | node $prj/pipe.js -root:33a7f77d9c25 -lv:2 > $dev/sample.md
 

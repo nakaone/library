@@ -48,11 +48,15 @@ function workflowy(opml,opt={}) {
     getLink: o => { // outlineオブジェクトからリンク先IDを再帰的に抽出
       const rv = new Set();
       o.link.forEach(x => rv.add(x[1]));  // textの参照先を登録
+      // 子孫を再帰呼出
+      o.children.forEach(outline => {
+        util.getLink(outline).forEach(r => rv.add(r));  
+      });
       // noteの参照先を登録
       [...o.note.matchAll(/\[.+?\]\(#([a-z0-9]{12})\)/g)].forEach(x => rv.add(x[1]));
       // 参照先を再帰呼出
       if( rv.size > 0 ){
-        [...rv].forEach(x => {
+        rv.forEach(x => {
           const outline = pv.outlines.get(x);
           if( outline ){
             util.getLink(outline).forEach(r => rv.add(r));  
@@ -61,7 +65,7 @@ function workflowy(opml,opt={}) {
           }
         });
       }
-      return [...rv];
+      return rv;
     },
   }
 
@@ -198,9 +202,10 @@ function workflowy(opml,opt={}) {
     let rv = [];
     // note内部のローカルリンクはMD形式に変換
     outline.note = outline.note.replaceAll(pv.linkRex, "[$2](#$1)");
+    if( outline.anchor ) outline.text = `<a name="${outline.anchor}">${outline.text}</a>`;
     if (depth > pv.lv) {
-      // ヘッダ化指定階層より深い場合 ⇒ liタグで階層化
-      rv.push(`${'\t'.repeat(depth - pv.lv - 1)}- ${outline.text}`);
+      // ヘッダ化指定階層より深い場合 ⇒ liタグで階層化。liタグでnoteが有る場合はbrを付加
+      rv.push(`${'\t'.repeat(depth - pv.lv - 1)}- ${outline.text}${outline.note ? '<br>' : ''}`);
       outline.note.split('\n').forEach(l => rv.push('\t'.repeat(depth - pv.lv) + l));
     } else {
       // ヘッダ化指定階層より浅い場合 ⇒ '#'で階層化
@@ -216,6 +221,10 @@ function workflowy(opml,opt={}) {
   /** appendix: ルート要素から外れた非文書化対象要素の内、文書化対象要素からのリンクが存在する要素のMarkdown文書化
    * @param {void}
    * @returns {string[]} 行毎に分割されたMarkdown文書
+   * 
+   * 外部参照要素は子孫要素も併せて表示する。
+   * ただ、他のリンク元から子孫要素を参照していた場合、子孫要素を二重に表示⇒同一アンカーも二重になる。
+   * よって、まず子孫を含めて外部参照要素のIDを重複がないようにリストアップし、それを順次追加する。
    */
   function appendix(){
     const v = {
@@ -225,48 +234,26 @@ function workflowy(opml,opt={}) {
       rv: [],
     };
 
-    // ①文書化対象要素をリストアップ
+    // ①文書化対象要素(=ルート要素配下)をリストアップ
     for( v.outline of pv.outlines ){
       if( v.outline[1].ancestor.includes(pv.root) ) v.docs.push(v.outline[1]);
     }
 
-    // ②文書化対象要素から参照される要素を対象・非対象を問わずリストアップ
+    // ②文書化対象要素から参照される外部参照要素を子孫を含めてリストアップ、v.hrefに格納
     v.docs.forEach(x => {
-      util.getLink(x).forEach(y => v.href.add(y));
+      v.a = util.getLink(x).forEach(y => v.href.add(y));
     });
 
     // ③文書化対象要素から参照される非文書化対象要素をリストアップ(②-①)
     v.docs = v.docs.map(x => x.id);
-    console.error(`l.237 v.docs=${JSON.stringify(v.docs)}`);
     pv.appendix = new Set([...v.href].filter(x => !v.docs.includes(x)));
 
-    if( pv.appendix.size === 1 ){
-      // ④ ③の要素が一つだけ ⇒ 当該要素を共通祖先と看做す
-      v.commonAncestor = pv.outlines.get([...pv.appendix][0]).id;
-    } else {
-      // ④ ③の要素が複数 ⇒ 直近の共通祖先要素を特定
-      for( v.id of pv.appendix ){ // ancestorの一覧(二次元配列)を作成
-        v.ancestor.push(pv.outlines.get(v.id).ancestor);
-      }
-
-      for( v.c=1 ; v.c<v.ancestor[0].length ; v.c++ ){
-        for( v.r=1 ; v.r<v.ancestor.length ; v.r++ ){
-          if( !v.ancestor[v.r][v.c] || v.ancestor[0][v.c] !== v.ancestor[v.r][v.c] ){
-            v.commonAncestor = v.ancestor[0][v.c-1];
-            v.c = v.ancestor[0].length;
-            v.r = v.ancestor.length;
-          }
-        }
-      }
+    // ④ ③でリストアップされた要素を順次追加
+    if( pv.appendix.size > 0 ){
+      pv.appendix.forEach(id => {
+        v.rv = [...v.rv, ...outOfScopeDocument(pv.outlines.get(id))];
+      });
     }
-    console.error(`l.262 v.commonAncestor=${v.commonAncestor}`)
-
-    // ④opml内の出現順にリストに存在する要素を文書化
-    v.caObj = pv.outlines.get(v.commonAncestor);
-    if( v.caObj ){
-      v.caObj.children.forEach(x => v.rv = [...v.rv, ...outOfScopeDocument(x)]);
-    }
-    console.error(`l.264 rv=${JSON.stringify(v.rv,null,2)}`);
 
     if( v.rv.length > 0 ) v.rv.unshift(`# 【参考】文書化対象外要素へのリンク\n`);
     return v.rv;
@@ -281,7 +268,10 @@ function workflowy(opml,opt={}) {
     const v = {rv:[],outline:{}};
 
     // textをインデント
-    v.outline.text = '\t'.repeat(depth-1) + '- ' + outline.text;
+    v.outline.text = `${'\t'.repeat(depth-1)}- `
+    + (outline.anchor ? `<a name="${outline.anchor}">${outline.text}</a>` : outline.text)
+    + (outline.note ? '<br>' : ''); // noteが有るならbrを付加
+    //v.outline.text = '\t'.repeat(depth-1) + '- ' + outline.text;
 
     if( pv.appendix.has(outline.id) ){
       // appendixとして表示すべき要素の場合
@@ -296,7 +286,6 @@ function workflowy(opml,opt={}) {
 
     // 子要素を再帰呼出
     if (outline.children.length > 0) outline.children.forEach(c => {
-      console.error(`l.295 c=${JSON.stringify(c)}`);
       v.rv = [...v.rv,...outOfScopeDocument(c, depth + 1)];
     });
 

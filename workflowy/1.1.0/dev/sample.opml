@@ -518,7 +518,7 @@
             </outline>
           </outline>
           <outline text="sdbOption {Object} オプション(a4a26014ccb3)">
-            <outline text="userId {string}='guest' ユーザの識別子" _note="指定する場合、必ずuserAuthも併せて指定">
+            <outline text="userId {string}='guest' ユーザの識別子(5554e1d6a61d)" _note="指定する場合、必ずuserAuthも併せて指定">
               <outline text="2 Backlinks">
                 <outline text="□userId {string|number}=&lt;a href=&quot;https://workflowy.com/#/5554e1d6a61d&quot;&gt;opt.userId&lt;/a&gt; ユーザ識別子(uuid等)" />
                 <outline text="userId {string}=&lt;a href=&quot;https://workflowy.com/#/5554e1d6a61d&quot;&gt;opt.userId&lt;/a&gt; ユーザ識別子(uuid等)" />
@@ -553,7 +553,7 @@
               <outline text="〇result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
             </outline>
           </outline>
-          <outline text="SpreadDb_query {Object} SpreadDbへの処理要求">
+          <outline text="SpreadDb_query {Object} SpreadDbへの処理要求(7f3649978774)">
             <outline text="■[queryId] {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列" _note="未設定の場合は主処理でUUIDを設定">
               <outline text="1 Backlink">
                 <outline text="&lt;a href=&quot;https://workflowy.com/#/e0188bfade27&quot;&gt;queryId&lt;/a&gt; {string} SpreadDb呼出元で設定する、クエリ・結果突合用文字列" _note="未設定の場合は主処理でUUIDを設定" />
