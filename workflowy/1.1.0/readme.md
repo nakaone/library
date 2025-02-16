@@ -1,46 +1,30 @@
-# Error: リンク先が見つからない要素
-
-1. 63c52c5262e3
-# workflowy.js 1.1.0
+# <a name="5a8dd15033a4">workflowy.js 1.1.0</a>
 
 ## workflowy主処理(main)
 
 - 引数
 	
-	- option {<a href="#63c52c5262e3">workflowy_option</a>} workflowyの動作設定用オプション指定
+	- opml {string} opmlテキスト
 		
-- 戻り値 {Function} markdown,sampleをメソッドとするクロージャ
-	
-## markdown() : OPML形式のテキストをマークダウンに変換
-
-## sample() :
-
-## typedefs
-
-- workflowy_option {Object} workflowyの動作設定用オプション指定
-	
-	- mdHeader {number}=3 body直下を第1レベルとし、MarkDown化の際どのレベルまでheader化するかの指定
+	- opt {Object}
 		
-## readme
+		- opt.root {string} 出力するルート要素のID。必須
+			
+		- opt.lv {number} body直下を第1レベルとし、MarkDown化の際どのレベルまでheader化するかの指定
+			
+- 戻り値 {string} opmlから変換されたMarkdownテキスト
+	
+## 使用上の注意
 
-- 使用方法
-	`node pipe.js aaaaaa xxxxxx n`
-	- aaaaaa : 'markdown' or 'sample'
-	- xxxxxx : ルート要素のID
-	- n : ヘッダとして扱う階層(2 -> h1,h2を作成、以下はliタグで処理)
+- ルート要素は必ずIDをworkflowy上の行末に記載<br>
+	ex. <code>workflowy.js 1.1.0(5a8dd15033a4)</code>
+- opmlは参照先をカバーする範囲で準備
 	
-	```
-	cat $test/SpreadDb.opml | awk 1 | node $prj/pipe.js markdown 909f842f7a95 3 > $test/<a href="http://SpreadDb.md">SpreadDb.md</a>
-	```
-- 開発時メモ
-	
-	- [NG] ■ : リンク元要素をリンク先要素に置換
-		リンク先要素がa nameを持っていた場合に重複エラーとなるため
 - 更新履歴
 	
-	- 1.1.0 2025/02/07〜09
+	- 1.1.0 2025/02/07〜16
 		
-		- 他プログラムの要素も参照可能に
+		- 他プログラムの要素も参照可能に<br>
 			ex. AuthからSpreadDbのtypedefを参照可能に
 		- 参照先要素を参照元以下に展開
 			

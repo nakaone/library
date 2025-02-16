@@ -42,8 +42,8 @@ log "1"; # テスト用サンプル(33a7f77d9c25)
 cat $dev/sample.opml | awk 1 | node $prj/pipe.js -root:33a7f77d9c25 -lv:2 > $dev/sample.md
 
 # ----------------------------------------------
-log "2"; # readme.md
+log "2"; # workflowy.js 1.1.0(5a8dd15033a4)
 # ----------------------------------------------
-#cat $opml/20250209.opml | awk 1 | node $prj/pipe.js -root:5a8dd15033a4 -lv:2 > $prj/readme.md
+cat $opml/GitHub.opml | awk 1 | node $prj/pipe.js -root:5a8dd15033a4 -lv:2 > $prj/readme.md
 
 echo "\n$separator`date +"%T"` [$prjName] end$separator"

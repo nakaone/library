@@ -10,14 +10,14 @@ var reader = require('readline').createInterface({　//readlineという機能�
 });
 reader.on('line', line => lines.push(line));
 reader.on('close', () => {
-  const opt = {values:[]};
-  for( let i=2 ; i<process.argv.length ; i++ ){
+  const opt = { values: [] };
+  for (let i = 2; i < process.argv.length; i++) {
     const m = process.argv[i].match(/^(\-+)(\w+):(.*)$/);
-    if( m && m[1].length > 0 ) opt[m[2]] = m[3];
+    if (m && m[1].length > 0) opt[m[2]] = m[3];
     else opt.values.push(process.argv[i]);
 
   }
-  console.log(workflowy(lines.join('\n'),opt));
+  console.log(workflowy(lines.join('\n'), opt));
 });
 
 /** workflowy: Markdown形式でエクスポートされた内容を修正
@@ -27,8 +27,9 @@ reader.on('close', () => {
  * @param opt.lv {number} - body直下を第1レベルとし、MarkDown化の際どのレベルまでheader化するかの指定
  * @returns {string} opmlから変換されたMarkdownテキスト
  */
-function workflowy(opml,opt={}) {
-  const pv = {whois: 'workflowy',
+function workflowy(opml, opt = {}) {
+  const pv = {
+    whois: 'workflowy',
     opml: opml, // {string} 入力されたOPMLテキスト
     root: opt.root,  // ルート要素のID
     lv: Number(opt.lv) || 3,  // {number} オプションで渡されたlv。既定値3
@@ -42,24 +43,24 @@ function workflowy(opml,opt={}) {
   };
   const util = {
     // 自動採番したIDを取得
-    getId: () => {return 'A' + ('00000' + (pv.id++)).slice(-6)},
+    getId: () => { return 'A' + ('00000' + (pv.id++)).slice(-6) },
     // HTML文字列を有効にするよう還元
-    reduct: x => {return x.replaceAll(/&lt;/g, '<').replaceAll(/&gt;/g, '>')},
+    reduct: x => { return x.replaceAll(/&lt;/g, '<').replaceAll(/&gt;/g, '>') },
     getLink: o => { // outlineオブジェクトからリンク先IDを再帰的に抽出
       const rv = new Set();
       o.link.forEach(x => rv.add(x[1]));  // textの参照先を登録
       // 子孫を再帰呼出
       o.children.forEach(outline => {
-        util.getLink(outline).forEach(r => rv.add(r));  
+        util.getLink(outline).forEach(r => rv.add(r));
       });
       // noteの参照先を登録
       [...o.note.matchAll(/\[.+?\]\(#([a-z0-9]{12})\)/g)].forEach(x => rv.add(x[1]));
       // 参照先を再帰呼出
-      if( rv.size > 0 ){
+      if (rv.size > 0) {
         rv.forEach(x => {
           const outline = pv.outlines.get(x);
-          if( outline ){
-            util.getLink(outline).forEach(r => rv.add(r));  
+          if (outline) {
+            util.getLink(outline).forEach(r => rv.add(r));
           } else {
             pv.unlink.add(x); // リンク先が見つからない場合はエラーとして保存
           }
@@ -73,7 +74,7 @@ function workflowy(opml,opt={}) {
   // 主処理
   // ----------------------------------------------
   // opmlをパースしたオブジェクトを分析、outlineオブジェクトを作成
-  objectifyXML({obj:pv.xml});
+  objectifyXML({ obj: pv.xml });
 
   // text文字列内のリンク設定について、子要素の追加・a.hrefへの変換を行う
   pv.outlines.forEach(outline => expandLink(outline));
@@ -86,12 +87,12 @@ function workflowy(opml,opt={}) {
 
   // リンク切れ要素一覧の作成
   const unlinkMD = [];
-  if( pv.unlink.size > 0 ){
+  if (pv.unlink.size > 0) {
     unlinkMD.push(`# Error: リンク先が見つからない要素\n`);
     [...pv.unlink].forEach(x => unlinkMD.push(`1. ${x}`));
   }
 
-  return [...unlinkMD, ...scopedMD, ...appendixMD].join('\n'); 
+  return [...unlinkMD, ...scopedMD, ...appendixMD].join('\n');
 
   /** objectifyXML: opmlをパースしたオブジェクトを分析、outlineオブジェクトを作成
    * @param {Object} arg
@@ -99,13 +100,13 @@ function workflowy(opml,opt={}) {
    * @param {number} arg.depth - opml文書内の階層
    * @param {string[]} arg.ancestor - outlineタグのルート要素から親要素までのIDの配列
    */
-  function objectifyXML(arg){
+  function objectifyXML(arg) {
 
     // 引数に既定値を適用
     arg = Object.assign({
       depth: 0,
       ancestor: [],
-    },arg);
+    }, arg);
 
     // opml > bodyタグ発見時、depthをリセット
     if (arg.obj.name === 'body') depth = 0;
@@ -119,13 +120,13 @@ function workflowy(opml,opt={}) {
 
       // outlineオブジェクトのプロトタイプ作成、pv.outlinesに登録
       m = arg.obj.attributes.text.match(pv.anchorRex);
-      Object.assign(outline,{
+      Object.assign(outline, {
         id: m ? m[2] : util.getId(),
         text: util.reduct(m ? m[1] : arg.obj.attributes.text).trim(),
         anchor: m ? m[2] : null,  // アンカーだった場合ID文字列
         link: [...arg.obj.attributes.text.matchAll(pv.linkRex)],  // textに含まれたリンク
         note: arg.obj.attributes._note  // ローカルリンクをMD形式に変換
-        ? util.reduct(arg.obj.attributes._note).trim() : '',
+          ? util.reduct(arg.obj.attributes._note).trim() : '',
         ancestor: arg.ancestor,
       });
       pv.outlines.set(outline.id, outline);  // outline一覧に追加
@@ -135,9 +136,9 @@ function workflowy(opml,opt={}) {
     if (Array.isArray(arg.obj.elements)) {
       arg.obj.elements.forEach(o => {
         const r = objectifyXML({
-          obj:o,
+          obj: o,
           depth: arg.depth + 1,
-          ancestor: outline.id === null ? [] : [...outline.ancestor,outline.id],
+          ancestor: outline.id === null ? [] : [...outline.ancestor, outline.id],
         });
         // Backlinks以外の場合は子要素として追加
         if (r !== null) outline.children.push(r);
@@ -150,13 +151,13 @@ function workflowy(opml,opt={}) {
    * @param {Object} outline - objectifyXMLで作成したoutlineオブジェクト
    * @returns {void}
    */
-  function expandLink(outline){
+  function expandLink(outline) {
     // copyChildren: リンク先子要素をコピーする内部関数
-    function copyChildren(id){
+    function copyChildren(id) {
       const cc = o => {
         o.id = util.getId(); // idは新規採番
         //pv.doc.add(o.id); // 文書化要素一覧に追加
-        o.text = o.text.replaceAll(/<a name="[a-z0-9]{12}">(.+?)<\/a>/g,"$1");  // a nameタグは削除
+        o.text = o.text.replaceAll(/<a name="[a-z0-9]{12}">(.+?)<\/a>/g, "$1");  // a nameタグは削除
         o.children.forEach(x => cc(x)); // 子孫を再帰呼出
       }
       // 子孫を含めてまるごとコピー
@@ -167,7 +168,7 @@ function workflowy(opml,opt={}) {
 
     if (outline.link.length > 0) {
       outline.link.forEach(link => {
-        const parent = pv.outlines.get(outline.ancestor[outline.ancestor.length-1]);
+        const parent = pv.outlines.get(outline.ancestor[outline.ancestor.length - 1]);
         const idx = parent.children.findIndex(x => x.id === outline.id);
         if (link[2].match(/^\[▽\]/)) {
           // ▽ : リンク元要素の弟要素としてリンク先子要素を追加
@@ -198,11 +199,11 @@ function workflowy(opml,opt={}) {
    * @param {number} depth - 指定ルート要素を1とした階層
    * @returns {string[]} 行毎に分割されたMarkdown文書
    */
-  function scopedDocument(outline,depth=1){
+  function scopedDocument(outline, depth = 1) {
     let rv = [];
     // note内部のローカルリンクはMD形式に変換
     outline.note = outline.note.replaceAll(pv.linkRex, "[$2](#$1)");
-    if( outline.anchor ) outline.text = `<a name="${outline.anchor}">${outline.text}</a>`;
+    if (outline.anchor) outline.text = `<a name="${outline.anchor}">${outline.text}</a>`;
     if (depth > pv.lv) {
       // ヘッダ化指定階層より深い場合 ⇒ liタグで階層化。liタグでnoteが有る場合はbrを付加
       rv.push(`${'\t'.repeat(depth - pv.lv - 1)}- ${outline.text}${outline.note ? '<br>' : ''}`);
@@ -213,7 +214,7 @@ function workflowy(opml,opt={}) {
       outline.note.split('\n').forEach(l => rv.push(l));
     }
     if (outline.children.length > 0) outline.children.forEach(c => {
-      rv = [...rv,...scopedDocument(c, depth + 1)];
+      rv = [...rv, ...scopedDocument(c, depth + 1)];
     });
     return rv;
   }
@@ -226,7 +227,7 @@ function workflowy(opml,opt={}) {
    * ただ、他のリンク元から子孫要素を参照していた場合、子孫要素を二重に表示⇒同一アンカーも二重になる。
    * よって、まず子孫を含めて外部参照要素のIDを重複がないようにリストアップし、それを順次追加する。
    */
-  function appendix(){
+  function appendix() {
     const v = {
       docs: [],  // {Object[]} 文書化対象要素の配列
       href: new Set(),  // {string} 文書化対象/非対象を問わず、被参照要素のID
@@ -235,8 +236,8 @@ function workflowy(opml,opt={}) {
     };
 
     // ①文書化対象要素(=ルート要素配下)をリストアップ
-    for( v.outline of pv.outlines ){
-      if( v.outline[1].ancestor.includes(pv.root) ) v.docs.push(v.outline[1]);
+    for (v.outline of pv.outlines) {
+      if (v.outline[1].ancestor.includes(pv.root)) v.docs.push(v.outline[1]);
     }
 
     // ②文書化対象要素から参照される外部参照要素を子孫を含めてリストアップ、v.hrefに格納
@@ -249,13 +250,13 @@ function workflowy(opml,opt={}) {
     pv.appendix = new Set([...v.href].filter(x => !v.docs.includes(x)));
 
     // ④ ③でリストアップされた要素を順次追加
-    if( pv.appendix.size > 0 ){
+    if (pv.appendix.size > 0) {
       pv.appendix.forEach(id => {
         v.rv = [...v.rv, ...outOfScopeDocument(pv.outlines.get(id))];
       });
     }
 
-    if( v.rv.length > 0 ) v.rv.unshift(`# 【参考】文書化対象外要素へのリンク\n`);
+    if (v.rv.length > 0) v.rv.unshift(`# 【参考】文書化対象外要素へのリンク\n`);
     return v.rv;
   }
 
@@ -264,29 +265,23 @@ function workflowy(opml,opt={}) {
    * @param {number} depth - 指定ルート要素を1とした階層
    * @returns {string[]} 行毎に分割されたMarkdown文書
    */
-  function outOfScopeDocument(outline,depth=1){
-    const v = {rv:[],outline:{}};
+  function outOfScopeDocument(outline, depth = 1) {
+    const v = { rv: [], outline: {} };
 
     // textをインデント
-    v.outline.text = `${'\t'.repeat(depth-1)}- `
-    + (outline.anchor ? `<a name="${outline.anchor}">${outline.text}</a>` : outline.text)
-    + (outline.note ? '<br>' : ''); // noteが有るならbrを付加
-    //v.outline.text = '\t'.repeat(depth-1) + '- ' + outline.text;
+    v.outline.text = `${'\t'.repeat(depth - 1)}- `
+      + (outline.anchor ? `<a name="${outline.anchor}">${outline.text}</a>` : outline.text)
+      + (outline.note ? '<br>' : ''); // noteが有るならbrを付加
 
-    if( pv.appendix.has(outline.id) ){
-      // appendixとして表示すべき要素の場合
-      v.rv.push(v.outline.text);
-      // note内部のローカルリンクはMD形式に変換、インデントを付加
-      outline.note.replaceAll(pv.linkRex, "[$2](#$1)").split('\n')
+    // appendixとして表示すべき要素の場合
+    v.rv.push(v.outline.text);
+    // note内部のローカルリンクはMD形式に変換、インデントを付加
+    outline.note.replaceAll(pv.linkRex, "[$2](#$1)").split('\n')
       .forEach(l => v.rv.push('\t'.repeat(depth) + l));
-    } else {
-      // appendix対象外 ⇒ リンクを外し、textのみ表示
-      v.rv.push(v.outline.text.replaceAll(pv.linkRex,"$2"));
-    }
 
     // 子要素を再帰呼出
     if (outline.children.length > 0) outline.children.forEach(c => {
-      v.rv = [...v.rv,...outOfScopeDocument(c, depth + 1)];
+      v.rv = [...v.rv, ...outOfScopeDocument(c, depth + 1)];
     });
 
     return v.rv;
