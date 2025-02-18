@@ -8,7 +8,7 @@
 	![](doc/query.svg)
 - 新規登録の流れ<br>
 	![](doc/registration.svg)
-## authCommon {Object} authClient/Server共通設定・関数集
+## authCommon: authClient/Server共通設定・関数集
 
 - <a name="a4bae9665fcc">option {Object} authClient/Server共通設定</a>
 	
@@ -32,7 +32,7 @@
 		
 	- adminName {number}=null 管理者名
 		
-## authClient {function} クライアント側処理用のクロージャ
+## authClient
 
 - pv - authClientのメンバ
 	
@@ -65,7 +65,7 @@
 		- <a name="e6693b2cc4bd">mirror {<a href="https://workflowy.com/#/53d27b6201fa">mirrorDef</a>[]} ローカル側にミラーを保持するテーブルの定義</a>
 			
 	- userId {string} ユーザ識別子<br>
-		ゲストの場合はundefined
+		ゲストの場合はnull
 	- email {string} ユーザの連絡先メールアドレス
 		
 	- CSkey {Object} クライアント側秘密鍵
@@ -76,41 +76,31 @@
 		
 - main: authClient主処理
 	
+	- 処理概要
+		
+		- URLクエリパラメータ・localStorageからuserId, e-mailの取得を試行<br>
+			取得できたらlocalStorageとメンバ(pv)に保存
+		- メンバ(cv)に引数を保存、未指定分には既定値を設定<br>
+			[authClient/authServer共通オプション](#3c211d58f127)は引数で上書きしない
+		- クライアント側鍵ペア未生成なら生成、メンバに保存
+			
+		- opt.mirrorに基づきauthServerにテーブル管理情報を要求、テーブルを作成
+			
 	- <a name="f96870e08d4a">引数</a>
+		
+		- <a name="20004cac4de5">option {<a href="#6e19dabbd5cc">acMain_option</a>} authClient独自設定値</a>
+			
+	- 戻り値 {Object.<string, function>} メソッドのオブジェクト
+		
+- request() : アプリケーションからの処理要求をauthServerに渡す
+	
+	- 引数
 		
 		- <a name="7f56d7bb30a1">query {<a href="#5d949f3a25ab">acMain_query</a>} サーバ側テーブルへの処理要求</a>
 			
-		- <a name="20004cac4de5">option {<a href="#6e19dabbd5cc">acMain_option</a>} authClient独自設定値</a>
-			
-	- 戻り値
+	- 戻り値 : 処理結果(要加筆)
 		
-- constructor() : メンバの値設定、クエリのプロトタイプ作成
-	
-	- 処理概要
-		
-		- 引数の型チェック＋変換
-			
-		- メンバ(cv)に引数を保存、未指定分には既定値を設定<br>
-			[authClient/authServer共通オプション](#3c211d58f127)は引数で上書きしない
-		- URLクエリパラメータからuserId, e-mailの取得を試行、取得できたらメンバおよびlocalStorageに保存
-			
-		- localStorageからuserId, e-mailの取得を試行、取得できたらメンバに保存
-			
-		- クライアント側鍵ペア未生成なら生成、メンバに保存
-			
-		- 要求(クエリ)のプロトタイプを作成
-			
-		- opt.crondが指定されていたらセット
-			
-		- opt.mirrorが指定されていたらauthServerにテーブル管理情報を要求、createTableメソッドでテーブルを作成
-			
-	- 引数
-		
-		- option : <a href="#20004cac4de5">mainの引数</a>がそのまま渡される
-			
-	- 戻り値 {null|Error}
-		
-## authServer {function} サーバ側処理用のクロージャ
+## authServer
 
 - pv - authServerのメンバ
 	

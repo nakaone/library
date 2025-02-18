@@ -1,9 +1,3 @@
-/*
-  authClient/Server 統合テスト
-    「authClient -> authPost(テスト用doGet) -> authServer」のテストを行う。
-    authClientへの戻り値はオブジェクトとし、alaSQL(create table)は割愛。
-    GASの専用シートを用意、本ソースをコピペしてauthTest()を実行
-*/
 function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0->start以降全部、num<0->start無視して後ろから
   const v = { whois: 'doTest', rv: null, counter: 0};
   const sample = { // テスト用サンプルデータ
@@ -131,6 +125,9 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
   dev.start(v.whois, [...arguments]);
   try {
 
+    // -------------------------------------------------------------
+    // 対象シナリオ群の特定
+    // -------------------------------------------------------------
     dev.step(1);  // v.scenarioListに対象シナリオ群を格納
     if (sce === 'all') {
       v.scenarioList = Object.keys(scenario);
@@ -143,7 +140,9 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
 
     for (v.sno = 0; v.sno < v.scenarioList.length; v.sno++) {
 
+      // -------------------------------------------------------------
       dev.step(2); // v.st, v.edを計算
+      // -------------------------------------------------------------
       if (num < 0) {
         dev.step(2.1); // 指定テストパターン群の後ろからnum個
         v.st = scenario[v.scenarioList[v.sno]].length - num;
@@ -158,7 +157,9 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
         v.ed = start + num;
       }
 
-      dev.step(3);
+      // -------------------------------------------------------------
+      dev.step(3); // シナリオを順次実行
+      // -------------------------------------------------------------
       for (v.idx = v.st; v.idx < v.ed; v.idx++) {
         v.scenario = scenario[v.scenarioList[v.sno]][v.idx];
 
@@ -166,9 +167,12 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
         v.r = setupEnvironment(Object.assign(v.scenario.setup,{'log':(v.counter === 0 ? 'delete' : 'asis')}));
         if (v.r instanceof Error) throw v.r;
 
-        dev.step(3.2); // scenarioからqueryとoptをセットしてテスト実施、NG時は中断
+        dev.step(3.2); // authClientのインスタンス化
+        v.ac = authClient(v.scenario.opt);
+
+        dev.step(3.3); // scenarioからqueryとoptをセットしてテスト実施、NG時は中断
         if (false === dev.check({
-          asis: authClient(v.scenario.query,v.scenario.opt),
+          asis: v.ac.request(v.scenario.query),
           tobe: (v.scenario.check || undefined),
           title: `${v.whois}.${v.scenarioList[v.sno]}.${v.idx}`,
         })) throw new Error(`check NG`);
