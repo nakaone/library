@@ -201,17 +201,17 @@ const authCommon = {
 }
 
 function authClient(query,option={}) {
-  const cv = { whois: 'authClient' };
+  const pv = { whois: 'authClient' };
   const v = { rv: null};
-  dev.start(cv.whois, [...arguments]);
+  dev.start(pv.whois, [...arguments]);
   try {
 
     // -------------------------------------------------------------
     dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
     // -------------------------------------------------------------
     constructor(option);
-    cv.query = {table:'accounts',command:'append'};
-    v.rv = authPost(cv.query);
+    pv.query = {table:'accounts',command:'append'};
+    v.rv = authPost(pv.query);
 
     dev.end(); // 終了処理
     return v.rv;
@@ -219,7 +219,7 @@ function authClient(query,option={}) {
   } catch (e) { dev.error(e); return e; }
 
   function constructor(option) {
-    const v = { whois: `${cv.whois}.constructor`, rv: null};
+    const v = { whois: `${pv.whois}.constructor`, rv: null};
     dev.start(v.whois, [...arguments]);
     try {
 
@@ -230,9 +230,9 @@ function authClient(query,option={}) {
       v.email = null;
 
       // -------------------------------------------------------------
-      dev.step(2); // メンバ(cv)に引数を保存、未指定分には既定値を設定
+      dev.step(2); // メンバ(pv)に引数を保存、未指定分には既定値を設定
       // -------------------------------------------------------------
-      Object.assign(cv, {
+      Object.assign(pv, {
         opt: Object.assign({
           saveUserId: true,
           saveEmail: false,
@@ -244,14 +244,14 @@ function authClient(query,option={}) {
         SPkey: null,
         mirror: option.mirror || [],
       });
-      // オプションとして指定されたミラーリング指定はcv.opt.mirrorではなくcv.mirrorとして保存
+      // オプションとして指定されたミラーリング指定はpv.opt.mirrorではなくpv.mirrorとして保存
       if( Object.hasOwn(option,'mirror') ) delete option.mirror;
 
       // -------------------------------------------------------------
       dev.step(3); // CSkey/CPkeyを準備
       // -------------------------------------------------------------
-      cv.CSkey = cryptico.generateRSAKey(createPassword(),cv.opt.bits);
-      cv.CPkey = cryptico.publicKeyString(cv.CSkey);
+      pv.CSkey = cryptico.generateRSAKey(createPassword(),pv.opt.bits);
+      pv.CPkey = cryptico.publicKeyString(pv.CSkey);
 
       dev.end(); // 終了処理
       return v.rv;
@@ -261,9 +261,9 @@ function authClient(query,option={}) {
 }
 
 function authServer(query,option={}) {
-  const sv = { whois: 'authServer' };
+  const pv = { whois: 'authServer' };
   const v = { rv: null, now:toLocale(Date.now()) };
-  dev.start(sv.whois, [...arguments]);
+  dev.start(pv.whois, [...arguments]);
   try {
 
     // -------------------------------------------------------------
@@ -272,19 +272,19 @@ function authServer(query,option={}) {
     constructor(query,option);
 
     dev.end(); // 終了処理
-    return sv.query;
+    return pv.query;
 
   } catch (e) { dev.error(e); return e; }
 
   function constructor(query,option) {
-    const v = { whois: `${sv.whois}.constructor`, rv: null};
+    const v = { whois: `${pv.whois}.constructor`, rv: null};
     dev.start(v.whois, [...arguments]);
     try {
 
       // -------------------------------------------------------------
-      dev.step(1); // メンバ(sv)に引数を保存、未指定分には既定値を設定
+      dev.step(1); // メンバ(pv)に引数を保存、未指定分には既定値を設定
       // -------------------------------------------------------------
-      Object.assign(sv, {
+      Object.assign(pv, {
         query: Object.assign({
           queryId: Utilities.getUuid(), // {string} クエリ・結果突合用文字列
           table: '', // {string} 操作対象テーブル名
@@ -322,7 +322,7 @@ function authServer(query,option={}) {
             {name:'userId',type:'string|number',note:'ユーザ識別子(primaryKey)',auto_increment:101,primaryKey:true},
             {name:'note',type:'string',note:'アカウント情報(備考)'},
             {name:'validityStart',type:'string',note:'有効期間開始日時(ISO8601文字列)',default:()=>toLocale(Date.now())},
-            {name:'validityEnd',type:'string',note:'有効期間終了日時(ISO8601文字列)',default:()=>toLocale(Date.now()+sv.opt.validitySpan)},
+            {name:'validityEnd',type:'string',note:'有効期間終了日時(ISO8601文字列)',default:()=>toLocale(Date.now()+pv.opt.validitySpan)},
             {name:'authority',type:'JSON',note:'シート毎のアクセス権限。{シート名:rwdos文字列} 形式。既定値は無し'},
             {name:'created',type:'string',note:'=Date.now() ユーザ登録日時(ISO8601拡張形式)',default:()=>toLocale(Date.now())},
             {name:'updated',type:'string',note:'=Date.now() 最終更新日時(ISO8601拡張形式)',default:()=>toLocale(Date.now())},
@@ -349,7 +349,7 @@ function authServer(query,option={}) {
       // -------------------------------------------------------------
       dev.step(2); // SSkey/SPkeyを準備
       // -------------------------------------------------------------
-      v.prop = sv.DocumentProperties.getProperty(sv.opt.DocPropName);
+      v.prop = pv.DocumentProperties.getProperty(pv.opt.DocPropName);
       if( v.prop ){
         dev.step(2.1); // JSON化された秘密鍵は復元
         v.prop = JSON.parse(v.prop);
@@ -357,29 +357,29 @@ function authServer(query,option={}) {
       } else {
         v.prop = {};
         dev.step(2.21); // RSA鍵ペア生成
-        v.prop.SSkey = cryptico.generateRSAKey(createPassword(),sv.opt.bits);
+        v.prop.SSkey = cryptico.generateRSAKey(createPassword(),pv.opt.bits);
         v.prop.SPkey = cryptico.publicKeyString(v.prop.SSkey);
         dev.step(2.22); // JSON化してDocumentPropertyに保存
-        sv.DocumentProperties.setProperty(sv.opt.DocPropName,
+        pv.DocumentProperties.setProperty(pv.opt.DocPropName,
           JSON.stringify({SPkey:v.prop.SPkey,SSkey:v.prop.SSkey.toJSON()}));
       }
       dev.step(2.3); // メンバとして保存
-      sv.query.SPkey = sv.SPkey = v.prop.SPkey;
-      sv.SSkey = v.prop.SSkey;
-      dev.dump(sv.DocumentProperties.getProperty(sv.opt.DocPropName),330)
+      pv.query.SPkey = pv.SPkey = v.prop.SPkey;
+      pv.SSkey = v.prop.SSkey;
+      dev.dump(pv.DocumentProperties.getProperty(pv.opt.DocPropName),330)
 
       // -------------------------------------------------------------
       dev.step(3); // accounts/devicesシートが未作成なら追加＋ユーザ情報取得
       // -------------------------------------------------------------
       v.query = [
-        {command: 'create',table:sv.opt.accountsTableName,cols:sv.typedefs.accountsSheet},
-        {command: 'create',table:sv.opt.devicesTableName,cols:sv.typedefs.devicesSheet},
+        {command: 'create',table:pv.opt.accountsTableName,cols:pv.typedefs.accountsSheet},
+        {command: 'create',table:pv.opt.devicesTableName,cols:pv.typedefs.devicesSheet},
       ];
-      if( sv.query.userId ){
+      if( pv.query.userId ){
         dev.step(3.1);
         v.query = [...v.query,[
-          {command:'select',table:sv.opt.accountsTableName,where:{userId:sv.query.userId}},
-          {command:'select',table:sv.opt.devicesTableName,where:{userId:sv.query.userId}},
+          {command:'select',table:pv.opt.accountsTableName,where:{userId:pv.query.userId}},
+          {command:'select',table:pv.opt.devicesTableName,where:{userId:pv.query.userId}},
         ]];
       }
       dev.step(3.2);
