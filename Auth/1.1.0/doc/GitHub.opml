@@ -13,35 +13,50 @@
           <outline text="処理要求の流れ" _note="![](doc/query.svg)&#10;" />
           <outline text="新規登録の流れ" _note="![](doc/registration.svg)" />
         </outline>
-        <outline text="authClient" _note="classとするとグローバルに呼び出すのが困難になるため、クロージャとする。&#10;但しクエリ呼び出しの都度CPkey他の設定値の変更を回避するため、onLoad時に変数として保存、クエリ実行時にはrequestメソッドを呼び出す形で運用する。&#10;">
-          <outline text="cv - authClientのメンバ(client variables)">
-            <outline text="opt {Object} authClientのオプション設定" _note="mirrorを除く起動時引数&quot;&lt;a href=&quot;https://workflowy.com/#/6e19dabbd5cc&quot;&gt;option&lt;/a&gt;&quot;に、引数での未定義項目に既定値を設定した物" />
+        <outline text="authCommon {Object} authClient/Server共通設定・関数集">
+          <outline text="option {Object} authClient/Server共通設定(a4bae9665fcc)">
+            <outline text="tokenExpiry {number}=600000 (10分) トークンの有効期間(ミリ秒)" />
+            <outline text="passcodeDigit {number}=6 パスコードの桁数" />
+            <outline text="passcodeExpiry {number}=600000 (10分) パスコードの有効期間(ミリ秒)" />
+            <outline text="maxTrial {number}=3 パスコード入力の最大試行回数" />
+            <outline text="validityExpiry {number}=86400000 (1日) ログイン有効期間(ミリ秒)" />
+            <outline text="maxDevices {number}=5 単一アカウントで使用可能なデバイスの最大数" />
+            <outline text="freezing {number}=3600000 連続失敗した場合の凍結期間。ミリ秒。既定値1時間" />
+            <outline text="bits {number}=2048 RSA鍵ペアの鍵長" />
+            <outline text="adminMail {number}=null 管理者のメールアドレス" />
+            <outline text="adminName {number}=null 管理者名" />
+            <outline text="2 Backlinks">
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/a4bae9665fcc&quot;&gt;[▼]&lt;/a&gt; authClient/Server共通設定" />
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/a4bae9665fcc&quot;&gt;[▼]&lt;/a&gt; authClient/Server共通設定" />
+            </outline>
+          </outline>
+        </outline>
+        <outline text="authClient {function} クライアント側処理用のクロージャ">
+          <outline text="pv - authClientのメンバ">
+            <outline text="opt {Object} authClientのオプション設定">
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/a4bae9665fcc&quot;&gt;[▼]&lt;/a&gt; authClient/Server共通設定" />
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/6e19dabbd5cc&quot;&gt;[▼]&lt;/a&gt; authClient独自設定" />
+            </outline>
             <outline text="userId {string} ユーザ識別子" _note="ゲストの場合はundefined" />
             <outline text="email {string} ユーザの連絡先メールアドレス" />
             <outline text="CSkey {Object} クライアント側秘密鍵" />
             <outline text="CPkey {string} クライアント側公開鍵" />
             <outline text="SPkey {string} サーバ側公開鍵" />
-            <outline text="&lt;a href=&quot;https://workflowy.com/#/e6693b2cc4bd&quot;&gt;mirror&lt;/a&gt; {mirrorDef[]} ローカル側にミラーを保持するテーブルの定義" />
           </outline>
           <outline text="main: authClient主処理">
             <outline text="引数(f96870e08d4a)">
-              <outline text="option {Object} &lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;に以下のメンバを加えた物(6e19dabbd5cc)">
-                <outline text="saveUserId {boolean}=true userIdをlocalStorageに保存するか否か" />
-                <outline text="saveEmail {boolean}=false e-mailをlocalStorageに保存するか否か" />
-                <outline text="mirror {&lt;a href=&quot;https://workflowy.com/#/53d27b6201fa&quot;&gt;mirrorDef&lt;/a&gt;[]} ローカル側にミラーを保持するテーブルの定義(e6693b2cc4bd)">
-                  <outline text="1 Backlink">
-                    <outline text="&lt;a href=&quot;https://workflowy.com/#/e6693b2cc4bd&quot;&gt;mirror&lt;/a&gt; {mirrorDef[]} ローカル側にミラーを保持するテーブルの定義" />
-                  </outline>
-                </outline>
+              <outline text="query {&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;acMain_query&lt;/a&gt;} サーバ側テーブルへの処理要求(7f56d7bb30a1)">
                 <outline text="1 Backlink">
-                  <outline text="opt {Object} authClientのオプション設定" _note="mirrorを除く起動時引数&quot;&lt;a href=&quot;https://workflowy.com/#/6e19dabbd5cc&quot;&gt;option&lt;/a&gt;&quot;に、引数での未定義項目に既定値を設定した物" />
+                  <outline text="query {&lt;a href=&quot;https://workflowy.com/#/7f56d7bb30a1&quot;&gt;authClient_query&lt;/a&gt;} authClientに渡す処理要求" />
                 </outline>
               </outline>
-              <outline text="1 Backlink">
-                <outline text="引数 : &lt;a href=&quot;https://workflowy.com/#/f96870e08d4a&quot;&gt;mainの引数&lt;/a&gt;がそのまま渡される" />
+              <outline text="option {&lt;a href=&quot;https://workflowy.com/#/6e19dabbd5cc&quot;&gt;acMain_option&lt;/a&gt;} authClient独自設定値(20004cac4de5)">
+                <outline text="1 Backlink">
+                  <outline text="option : &lt;a href=&quot;https://workflowy.com/#/20004cac4de5&quot;&gt;mainの引数&lt;/a&gt;がそのまま渡される" />
+                </outline>
               </outline>
             </outline>
-            <outline text="戻り値 - authClientオブジェクト" />
+            <outline text="戻り値" />
           </outline>
           <outline text="constructor() : メンバの値設定、クエリのプロトタイプ作成">
             <outline text="処理概要">
@@ -54,77 +69,33 @@
               <outline text="opt.crondが指定されていたらセット" />
               <outline text="opt.mirrorが指定されていたらauthServerにテーブル管理情報を要求、createTableメソッドでテーブルを作成" />
             </outline>
-            <outline text="引数 : &lt;a href=&quot;https://workflowy.com/#/f96870e08d4a&quot;&gt;mainの引数&lt;/a&gt;がそのまま渡される" />
+            <outline text="引数">
+              <outline text="option : &lt;a href=&quot;https://workflowy.com/#/20004cac4de5&quot;&gt;mainの引数&lt;/a&gt;がそのまま渡される" />
+            </outline>
             <outline text="戻り値 {null|Error}" />
           </outline>
-          <outline text="request() : authServerに要求を送信">
-            <outline text="引数">
-              <outline text="query {Object|Object[]} &lt;a href=&quot;https://workflowy.com/#/accf9448cecc&quot;&gt;authQuery&lt;/a&gt;の内、「■」で示された以下メンバ">
-                <outline text="■table {string} 操作対象テーブル名" />
-                <outline text="■command {string} 操作名" _note="commandの種類は下表の通り。&#10;&quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;テーブル管理情報取得 | schema | s" />
-                <outline text="■[where] {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用&#10;&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- string&#10;  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。&#10;  - その他 ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;- その他(Object,function,string以外) ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;" />
-                <outline text="■[set] {Object|Object[]|string|string[]|Function} 追加・更新する値" _note="command='update','append'で使用&#10;&#10;- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;" />
-              </outline>
-            </outline>
-            <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/accf9448cecc&quot;&gt;authQuery&lt;/a&gt;}" />
-          </outline>
-          <outline text="dialog() : email/パスコード入力ダイアログの表示・入力" />
-          <outline text="syncTable() : authServer(SpreadDb.getSchema)の&lt;a href=&quot;https://workflowy.com/#/f76eb797d345&quot;&gt;戻り値&lt;/a&gt;を基にローカルDBにテーブルを作成、同期する">
-            <outline text="処理概要">
-              <outline text="ローカルに指定テーブル" />
-            </outline>
-            <outline text="引数">
-              <outline text="arg {Object[]}">
-                <outline text="" />
-              </outline>
-            </outline>
-          </outline>
-          <outline text="syncDb() : authServerの更新結果をローカル側DBに反映" />
         </outline>
-        <outline text="authServer" _note="単一機能の提供のため、クロージャとする。">
-          <outline text="sv - authServerのメンバ(server variables)" _note="server variables">
-            <outline text="query {authQuery} 処理要求" _note="起動時は引数&quot;query&quot;のコピー、以降は各メソッドにより情報を付加&#10;" />
-            <outline text="opt {Object} authClientのオプション設定" _note="起動時引数&quot;&lt;a href=&quot;https://workflowy.com/#/83ede73058e8&quot;&gt;option&lt;/a&gt;&quot;＋&lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;。共通オプションは引数で上書きしない&#10;" />
+        <outline text="authServer {function} サーバ側処理用のクロージャ">
+          <outline text="pv - authServerのメンバ">
+            <outline text="query {&lt;a href=&quot;https://workflowy.com/#/94c13922ade7&quot;&gt;authServer&lt;/a&gt;} 処理要求" _note="起動時は引数&quot;query&quot;のコピー、以降は各メソッドにより情報を付加&#10;" />
+            <outline text="opt {Object} authServerのオプション設定">
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/a4bae9665fcc&quot;&gt;[▼]&lt;/a&gt; authClient/Server共通設定" />
+              <outline text="[▼] authServer独自設定" />
+            </outline>
             <outline text="SPkey {string} サーバ側公開鍵" />
             <outline text="SSkey {Object} サーバ側秘密鍵" _note="DocumentProperties.SSkeyを`RSAKey.parse(DP.SSkey)`で復元した物&#10;" />
             <outline text="account {Object} accountsシートから抽出したユーザ情報(行オブジェクト)" />
             <outline text="device {Object} devicesシートから抽出したユーザ情報(行オブジェクト)" />
-            <outline text="typedefs {Object.&amp;lt;string, &lt;a href=&quot;https://workflowy.com/#/b9bea3e5ffc9&quot;&gt;sdbColumn&lt;/a&gt;[]&amp;gt;} オブジェクトの項目定義集" />
-            <outline text="DocumentProperties {&lt;a href=&quot;https://developers.google.com/apps-script/reference/properties/properties-service?hl=ja&quot;&gt;PropertiesService&lt;/a&gt;} ドキュメントプロパティ本体" />
           </outline>
           <outline text="main: authServer主処理">
             <outline text="引数(6f1ce86a8fb5)">
-              <outline text="query {Object} &lt;a href=&quot;https://workflowy.com/#/accf9448cecc&quot;&gt;authQuery&lt;/a&gt;の内、「■」または「□」で示された以下メンバ" _note="ユーザ側にCS/SPkeyが有った場合、暗号化＋署名&#10;">
-                <outline text="■table {string} 操作対象テーブル名" />
-                <outline text="■command {string} 操作名" _note="commandの種類は下表の通り。&#10;&quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;テーブル管理情報取得 | schema | s" />
-                <outline text="■[where] {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用&#10;&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- string&#10;  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。&#10;  - その他 ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;- その他(Object,function,string以外) ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;" />
-                <outline text="■[set] {Object|Object[]|string|string[]|Function} 追加・更新する値" _note="command='update','append'で使用&#10;&#10;- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;" />
-                <outline text="□timestamp {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)" />
-                <outline text="□userId {string|number}=&quot;guest&quot; ユーザ識別子(uuid等)" />
-                <outline text="□queryId {string}=UUID クエリ・結果突合用文字列" />
-                <outline text="□[email] {string} ユーザのメールアドレス" />
-                <outline text="□[CPkey] {string} ユーザの公開鍵" />
-                <outline text="□[passcode] {number|string} 入力されたパスコード" _note="開発時はauthClient/authServerへの引数として扱う(∵自動テスト用)。リリース時には引数として与えるのは不可とする&#10;&#10;- authClientへの引数：ダイアログから入力されたパスコードの代替。配列可&#10;- authServerへの引数：乱数で発生させるパスコードの代替&#10;" />
-              </outline>
-              <outline text="option {Object} &lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;に以下のメンバを加えた物(83ede73058e8)">
-                <outline text="DocPropName {string}=&quot;authServer&quot; DocumentPropertiesの項目名" />
-                <outline text="sdbOption {&lt;a href=&quot;https://workflowy.com/#/a4a26014ccb3&quot;&gt;sdbOption&lt;/a&gt;} SpreadDbのオプション" />
-                <outline text="accountsTableName {string}='accounts' &lt;a href=&quot;https://workflowy.com/#/2f8a77eb6f10&quot;&gt;アカウント管理シート&lt;/a&gt;の名前" />
-                <outline text="devicesTableName {string}='devices' &lt;a href=&quot;https://workflowy.com/#/ae550a40dc50&quot;&gt;デバイス管理シート&lt;/a&gt;の名前" />
-                <outline text="guestAccount {&lt;a href=&quot;https://workflowy.com/#/2f8a77eb6f10&quot;&gt;accounts&lt;/a&gt;}={} ゲストのアカウント管理設定" _note="既定値はアカウント管理シートの既定値を流用" />
-                <outline text="guestDevice {&lt;a href=&quot;https://workflowy.com/#/ae550a40dc50&quot;&gt;devices&lt;/a&gt;}={} ゲストのデバイス管理設定" _note="既定値はデバイス管理シートの既定値を流用" />
-                <outline text="newAccount {&lt;a href=&quot;https://workflowy.com/#/2f8a77eb6f10&quot;&gt;accounts&lt;/a&gt;}={} 新規登録者のアカウント管理設定" _note="既定値はアカウント管理シートの既定値を流用" />
-                <outline text="newDevice {&lt;a href=&quot;https://workflowy.com/#/ae550a40dc50&quot;&gt;devices&lt;/a&gt;}={} 新規登録者のデバイス管理設定" _note="既定値はデバイス管理シートの既定値を流用" />
-                <outline text="validitySpan {number}=1,209,600,000(2週間) アカウントの有効期間" />
-                <outline text="1 Backlink">
-                  <outline text="opt {Object} authClientのオプション設定" _note="起動時引数&quot;&lt;a href=&quot;https://workflowy.com/#/83ede73058e8&quot;&gt;option&lt;/a&gt;&quot;＋&lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;。共通オプションは引数で上書きしない&#10;" />
-                </outline>
-              </outline>
+              <outline text="query {&lt;a href=&quot;https://workflowy.com/#/c9db0f7953c8&quot;&gt;asMain_query&lt;/a&gt;} クライアントからの処理要求" _note="ユーザ側にCS/SPkeyが有った場合、暗号化＋署名" />
+              <outline text="option {&lt;a href=&quot;https://workflowy.com/#/83ede73058e8&quot;&gt;asMain_option&lt;/a&gt;} authServer独自設定値" />
               <outline text="1 Backlink">
                 <outline text="引数 : &lt;a href=&quot;https://workflowy.com/#/6f1ce86a8fb5&quot;&gt;mainの引数&lt;/a&gt;がそのまま渡される" />
               </outline>
             </outline>
-            <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/accf9448cecc&quot;&gt;authQuery&lt;/a&gt;}" />
+            <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/94c13922ade7&quot;&gt;authServer&lt;/a&gt;}" />
           </outline>
           <outline text="constructor() : メンバの値設定、accounts/devicesシートの準備">
             <outline text="処理概要">
@@ -136,23 +107,12 @@
             <outline text="引数 : &lt;a href=&quot;https://workflowy.com/#/6f1ce86a8fb5&quot;&gt;mainの引数&lt;/a&gt;がそのまま渡される" />
             <outline text="戻り値 {null|Error}" />
           </outline>
-          <outline text="functionalyze() : オブジェクト・関数文字列から既定値を導出する関数を作成" _note="objectizeColumn()のdefaultを関数化する。" />
-          <outline text="objectizeColumn() : &lt;a href=&quot;https://workflowy.com/#/b9bea3e5ffc9&quot;&gt;項目定義メタ情報&lt;/a&gt;(JSDoc)からオブジェクトを生成">
-            <outline text="引数">
-              <outline text="arg {&lt;a href=&quot;https://workflowy.com/#/b9bea3e5ffc9&quot;&gt;sdbColumn&lt;/a&gt;[]|string} 文字列の場合、sv.opt以下に定義されているメンバ(typedef)と看做す">
-                <outline text="name {string} 生成するオブジェクト内のメンバ名" />
-                <outline text="default {string|function} メンバ名にセットする値(functionalyzeの引数)" />
-              </outline>
-            </outline>
-            <outline text="戻り値 {Object} 生成されたオブジェクト" />
-          </outline>
-          <outline text="registUser() : ユーザ管理情報を生成、シートに追加" />
         </outline>
         <outline text="DocumentProperties" _note="プロパティ名はauthServer.option.DocPropNameで指定&#10;">
           <outline text="SPkey {string} サーバ側公開鍵" />
           <outline text="SSkey {string} サーバ側秘密鍵" _note="復元は`RSAKey.parse(v.r.sKey)`で行う" />
         </outline>
-        <outline text="使用シートおよび項目定義">
+        <outline text="Google Spreadシートおよび項目定義">
           <outline text="accounts - アカウント管理シートの項目(2f8a77eb6f10)">
             <outline text="userId {string|number}='guest' ユーザ識別子(primaryKey)" _note="default:101(0〜100はシステム用に留保), primaryKey&#10;" />
             <outline text="note {string}='' アカウント情報(備考)" />
@@ -190,43 +150,63 @@
           <outline text="log - SpreadDbのアクセスログシート" _note="詳細はSpreadDb.&lt;a href=&quot;https://workflowy.com/#/dab8cfcec9d8&quot;&gt;sdbLog&lt;/a&gt;参照" />
         </outline>
         <outline text="typedefs">
-          <outline text="authQuery {Object[]} 操作要求の内容(accf9448cecc)" _note="- ■：authClientへの引数、□：authServerへの引数(authClientでの追加項目)、〇：authServerでの追加項目&#10;- SpreadDbの&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;からの差分項目&#10;  - 削除項目：cols, arg&#10;  - 追加項目：email, CPkey, passcode, SPkey, status&#10;- command=&quot;delete&quot;(物理削除)は使用不可とし、論理削除で対応&amp;lt;br&amp;gt;(万一のハッキング時のリスク軽減)&#10;">
-            <outline text="■table {string} 操作対象テーブル名" />
-            <outline text="■command {string} 操作名" _note="commandの種類は下表の通り。&#10;&quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;テーブル管理情報取得 | schema | s" />
-            <outline text="■[where] {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用&#10;&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- string&#10;  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。&#10;  - その他 ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;- その他(Object,function,string以外) ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;" />
-            <outline text="■[set] {Object|Object[]|string|string[]|Function} 追加・更新する値" _note="command='update','append'で使用&#10;&#10;- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;" />
-            <outline text="□queryId {string}=UUID クエリ・結果突合用文字列" />
-            <outline text="□timestamp {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)" />
-            <outline text="□userId {string|number}=&quot;guest&quot; ユーザ識別子(uuid等)" />
-            <outline text="□CPkey {string} ユーザの公開鍵" />
-            <outline text="□[email] {string} ユーザのメールアドレス" />
-            <outline text="□[passcode] {number|string} 入力されたパスコード" _note="開発時はauthClient/authServerへの引数として扱う(∵自動テスト用)。リリース時には引数として与えるのは不可とする&#10;&#10;- authClientへの引数：ダイアログから入力されたパスコードの代替。配列可&#10;- authServerへの引数：乱数で発生させるパスコードの代替&#10;" />
-            <outline text="〇SPkey {string} サーバ側公開鍵" />
-            <outline text="〇qSts {string} クエリ単位の実行結果" _note="正常終了なら&quot;OK&quot;。エラーコードは以下の通り。&#10;- create : &quot;Already Exist&quot;, &quot;No Cols and Data&quot;&#10;- その他 : &quot;No Table&quot;" />
-            <outline text="〇num {number} 変更された行数" _note="append:追加行数、update:変更行数、select:抽出行数、schema:0(固定)&#10;" />
-            <outline text="〇result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
-            <outline text="〇status {string} authServerの実行結果" _note="必要に応じてauthClientで追加変更" />
-            <outline text="4 Backlinks">
-              <outline text="query {Object} &lt;a href=&quot;https://workflowy.com/#/accf9448cecc&quot;&gt;authQuery&lt;/a&gt;の内、「■」または「□」で示された以下メンバ" _note="ユーザ側にCS/SPkeyが有った場合、暗号化＋署名&#10;">
-                <outline text="■table {string} 操作対象テーブル名" />
-                <outline text="■command {string} 操作名" _note="commandの種類は下表の通り。&#10;&quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;テーブル管理情報取得 | schema | s" />
-                <outline text="■[where] {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用&#10;&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- string&#10;  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。&#10;  - その他 ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;- その他(Object,function,string以外) ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;" />
-                <outline text="■[set] {Object|Object[]|string|string[]|Function} 追加・更新する値" _note="command='update','append'で使用&#10;&#10;- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;" />
-                <outline text="□timestamp {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)" />
-                <outline text="□userId {string|number}=&quot;guest&quot; ユーザ識別子(uuid等)" />
-                <outline text="□queryId {string}=UUID クエリ・結果突合用文字列" />
-                <outline text="□[email] {string} ユーザのメールアドレス" />
-                <outline text="□[CPkey] {string} ユーザの公開鍵" />
-                <outline text="□[passcode] {number|string} 入力されたパスコード" _note="開発時はauthClient/authServerへの引数として扱う(∵自動テスト用)。リリース時には引数として与えるのは不可とする&#10;&#10;- authClientへの引数：ダイアログから入力されたパスコードの代替。配列可&#10;- authServerへの引数：乱数で発生させるパスコードの代替&#10;" />
-              </outline>
-              <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/accf9448cecc&quot;&gt;authQuery&lt;/a&gt;}" />
-              <outline text="query {Object|Object[]} &lt;a href=&quot;https://workflowy.com/#/accf9448cecc&quot;&gt;authQuery&lt;/a&gt;の内、「■」で示された以下メンバ">
-                <outline text="■table {string} 操作対象テーブル名" />
-                <outline text="■command {string} 操作名" _note="commandの種類は下表の通り。&#10;&quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;テーブル管理情報取得 | schema | s" />
-                <outline text="■[where] {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用&#10;&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- string&#10;  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。&#10;  - その他 ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;- その他(Object,function,string以外) ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;" />
-                <outline text="■[set] {Object|Object[]|string|string[]|Function} 追加・更新する値" _note="command='update','append'で使用&#10;&#10;- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;" />
-              </outline>
-              <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/accf9448cecc&quot;&gt;authQuery&lt;/a&gt;}" />
+          <outline text="acMain_query {Object} authClientの引数&quot;query&quot;(5d949f3a25ab)">
+            <outline text="table {string} 操作対象テーブル名" />
+            <outline text="command {string} 操作名" _note="commandの種類は下表の通り。&#10;&quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;テーブル管理情報取得 | schema | s" />
+            <outline text="[where] {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用&#10;&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- string&#10;  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。&#10;  - その他 ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;- その他(Object,function,string以外) ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;" />
+            <outline text="[set] {Object|Object[]|string|string[]|Function} 追加・更新する値" _note="command='update','append'で使用&#10;&#10;- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;" />
+            <outline text="2 Backlinks">
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;[▼]&lt;/a&gt; authClientの引数&quot;query&quot;(acMain_query)の各メンバ" />
+              <outline text="query {&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;acMain_query&lt;/a&gt;} サーバ側テーブルへの処理要求(7f56d7bb30a1)" />
+            </outline>
+          </outline>
+          <outline text="acMain_option {Object} authClient独自設定値(6e19dabbd5cc)">
+            <outline text="saveUserId {boolean}=true userIdをlocalStorageに保存するか否か" />
+            <outline text="saveEmail {boolean}=false e-mailをlocalStorageに保存するか否か" />
+            <outline text="mirror {&lt;a href=&quot;https://workflowy.com/#/53d27b6201fa&quot;&gt;mirrorDef&lt;/a&gt;[]} ローカル側にミラーを保持するテーブルの定義(e6693b2cc4bd)" />
+            <outline text="3 Backlinks">
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/6e19dabbd5cc&quot;&gt;[▼]&lt;/a&gt; authClient独自設定" />
+              <outline text="option {&lt;a href=&quot;https://workflowy.com/#/6e19dabbd5cc&quot;&gt;acMain_option&lt;/a&gt;} authClient独自設定値(20004cac4de5)" />
+              <outline text="opt {&lt;a href=&quot;https://workflowy.com/#/6e19dabbd5cc&quot;&gt;authClient_option&lt;/a&gt;} authClientに渡す起動時オプション" />
+            </outline>
+          </outline>
+          <outline text="asMain_query {Object} authServerの引数&quot;query&quot;(c9db0f7953c8)">
+            <outline text="&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;[▼]&lt;/a&gt; authClientの引数&quot;query&quot;(acMain_query)の各メンバ" />
+            <outline text="queryId {string}=UUID クエリ・結果突合用文字列" />
+            <outline text="timestamp {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)" />
+            <outline text="userId {string|number}=&quot;guest&quot; ユーザ識別子(uuid等)" />
+            <outline text="CPkey {string} ユーザの公開鍵" />
+            <outline text="[email] {string} ユーザのメールアドレス" />
+            <outline text="[passcode] {number|string} 入力されたパスコード" _note="開発時はauthClient/authServerへの引数として扱う(∵自動テスト用)。リリース時には引数として与えるのは不可とする&#10;&#10;- authClientへの引数：ダイアログから入力されたパスコードの代替。配列可&#10;- authServerへの引数：乱数で発生させるパスコードの代替&#10;" />
+            <outline text="2 Backlinks">
+              <outline text="query {&lt;a href=&quot;https://workflowy.com/#/c9db0f7953c8&quot;&gt;asMain_query&lt;/a&gt;} クライアントからの処理要求" _note="ユーザ側にCS/SPkeyが有った場合、暗号化＋署名" />
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/c9db0f7953c8&quot;&gt;[▼]&lt;/a&gt; authServerの引数&quot;query&quot;(asMain_query)の各メンバ" />
+            </outline>
+          </outline>
+          <outline text="asMain_option {Object} authServer独自設定値(83ede73058e8)">
+            <outline text="DocPropName {string}=&quot;authServer&quot; DocumentPropertiesの項目名" />
+            <outline text="sdbOption {&lt;a href=&quot;https://workflowy.com/#/a4a26014ccb3&quot;&gt;sdbOption&lt;/a&gt;} SpreadDbのオプション" />
+            <outline text="accountsTableName {string}='accounts' &lt;a href=&quot;https://workflowy.com/#/2f8a77eb6f10&quot;&gt;アカウント管理シート&lt;/a&gt;の名前" />
+            <outline text="devicesTableName {string}='devices' &lt;a href=&quot;https://workflowy.com/#/ae550a40dc50&quot;&gt;デバイス管理シート&lt;/a&gt;の名前" />
+            <outline text="guestAccount {&lt;a href=&quot;https://workflowy.com/#/2f8a77eb6f10&quot;&gt;accounts&lt;/a&gt;}={} ゲストのアカウント管理設定" _note="既定値はアカウント管理シートの既定値を流用" />
+            <outline text="guestDevice {&lt;a href=&quot;https://workflowy.com/#/ae550a40dc50&quot;&gt;devices&lt;/a&gt;}={} ゲストのデバイス管理設定" _note="既定値はデバイス管理シートの既定値を流用" />
+            <outline text="newAccount {&lt;a href=&quot;https://workflowy.com/#/2f8a77eb6f10&quot;&gt;accounts&lt;/a&gt;}={} 新規登録者のアカウント管理設定" _note="既定値はアカウント管理シートの既定値を流用" />
+            <outline text="newDevice {&lt;a href=&quot;https://workflowy.com/#/ae550a40dc50&quot;&gt;devices&lt;/a&gt;}={} 新規登録者のデバイス管理設定" _note="既定値はデバイス管理シートの既定値を流用" />
+            <outline text="validitySpan {number}=1,209,600,000(2週間) アカウントの有効期間" />
+            <outline text="1 Backlink">
+              <outline text="option {&lt;a href=&quot;https://workflowy.com/#/83ede73058e8&quot;&gt;asMain_option&lt;/a&gt;} authServer独自設定値" />
+            </outline>
+          </outline>
+          <outline text="authServer {Object} authServerの戻り値(94c13922ade7)">
+            <outline text="&lt;a href=&quot;https://workflowy.com/#/c9db0f7953c8&quot;&gt;[▼]&lt;/a&gt; authServerの引数&quot;query&quot;(asMain_query)の各メンバ" />
+            <outline text="SPkey {string} サーバ側公開鍵" />
+            <outline text="qSts {string} クエリ単位の実行結果" _note="正常終了なら&quot;OK&quot;。エラーコードは以下の通り。&#10;- create : &quot;Already Exist&quot;, &quot;No Cols and Data&quot;&#10;- その他 : &quot;No Table&quot;" />
+            <outline text="num {number} 変更された行数" _note="append:追加行数、update:変更行数、select:抽出行数、schema:0(固定)&#10;" />
+            <outline text="result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
+            <outline text="status {string} authServerの実行結果" _note="必要に応じてauthClientで追加変更" />
+            <outline text="2 Backlinks">
+              <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/94c13922ade7&quot;&gt;authServer&lt;/a&gt;}" />
+              <outline text="query {&lt;a href=&quot;https://workflowy.com/#/94c13922ade7&quot;&gt;authServer&lt;/a&gt;} 処理要求" _note="起動時は引数&quot;query&quot;のコピー、以降は各メソッドにより情報を付加&#10;" />
             </outline>
           </outline>
           <outline text="authTrial {Object} ログイン試行関連情報(aaab38c8e75d)">
@@ -253,12 +233,9 @@
             <outline text="bits {number}=2048 RSA鍵ペアの鍵長" />
             <outline text="adminMail {string} 管理者のメールアドレス" />
             <outline text="adminName {string} 管理者名" />
-            <outline text="5 Backlinks">
-              <outline text="opt {Object} authClientのオプション設定" _note="起動時引数&quot;&lt;a href=&quot;https://workflowy.com/#/83ede73058e8&quot;&gt;option&lt;/a&gt;&quot;＋&lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;。共通オプションは引数で上書きしない&#10;" />
+            <outline text="2 Backlinks">
               <outline text="メンバ(sv)に引数を保存、未指定分には既定値を設定" _note="&lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/authServer共通オプション&lt;/a&gt;は引数で上書きしない&#10;" />
               <outline text="メンバ(cv)に引数を保存、未指定分には既定値を設定" _note="&lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/authServer共通オプション&lt;/a&gt;は引数で上書きしない&#10;" />
-              <outline text="option {Object} &lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;に以下のメンバを加えた物(6e19dabbd5cc)" />
-              <outline text="option {Object} &lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/Server共通オプション&lt;/a&gt;に以下のメンバを加えた物(83ede73058e8)" />
             </outline>
           </outline>
           <outline text="mirrorDef {Object} ミラーリングするテーブルの定義(53d27b6201fa)" _note="crond.set(), crond.clear()共通&#10;">
@@ -269,29 +246,58 @@
               <outline text="mirror {&lt;a href=&quot;https://workflowy.com/#/53d27b6201fa&quot;&gt;mirrorDef&lt;/a&gt;[]} ローカル側にミラーを保持するテーブルの定義(e6693b2cc4bd)" />
             </outline>
           </outline>
-          <outline text="sdbColumn {Object} 項目の構造情報(b9bea3e5ffc9)" _note="= 項目定義メタ情報(JSDoc)&#10;">
-            <outline text="name {string} 項目名" />
-            <outline text="type {string} データ型。string,number,boolean,Date,JSON,UUID" />
-            <outline text="format {string} 表示形式。type=Dateの場合のみ指定" />
-            <outline text="options {string} 取り得る選択肢(配列)のJSON表現" _note="ex. [&quot;未入場&quot;,&quot;既収&quot;,&quot;未収&quot;,&quot;無料&quot;]" />
-            <outline text="default {function} 既定値を取得する関数。引数は当該行オブジェクト" _note="指定の際は必ず&lt;code&gt;{〜}&lt;/code&gt; で囲み、return文を付与のこと。&#10;ex.&lt;code&gt;o =&amp;gt; {return toLocale(new Date())}&lt;/code&gt; &#10;" />
-            <outline text="primaryKey {boolean}=false 一意キー項目ならtrue" />
-            <outline text="unique {boolean}=false primaryKey以外で一意な値を持つならtrue" />
-            <outline text="auto_increment {bloolean|null|number|number[]}=false 自動採番項目" _note="null ⇒ 自動採番しない&#10;boolean ⇒ true:自動採番する(基数=1,増減値=1)、false:自動採番しない&#10;number ⇒ 自動採番する(基数=指定値,増減値=1)&#10;number[] ⇒ 自動採番する(基数=添字0,増減値=添字1)&#10;object ⇒ {start:m,step:n}形式" />
-            <outline text="suffix {string} &quot;not null&quot;等、上記以外のSQLのcreate table文のフィールド制約" />
-            <outline text="note {string} 本項目に関する備考" _note="ローカル側のcreate table等では使用しない" />
-            <outline text="3 Backlinks">
-              <outline text="typedefs {Object.&amp;lt;string, &lt;a href=&quot;https://workflowy.com/#/b9bea3e5ffc9&quot;&gt;sdbColumn&lt;/a&gt;[]&amp;gt;} オブジェクトの項目定義集" />
-              <outline text="arg {&lt;a href=&quot;https://workflowy.com/#/b9bea3e5ffc9&quot;&gt;sdbColumn&lt;/a&gt;[]|string} 文字列の場合、sv.opt以下に定義されているメンバ(typedef)と看做す" />
-              <outline text="objectizeColumn() : &lt;a href=&quot;https://workflowy.com/#/b9bea3e5ffc9&quot;&gt;項目定義メタ情報&lt;/a&gt;(JSDoc)からオブジェクトを生成" />
+          <outline text="scenarioDef {Object} テストの定義(5f4d3fd98b88)">
+            <outline text="1 Backlink">
+              <outline text="scenario {Object.&amp;lt;string, &lt;a href=&quot;https://workflowy.com/#/5f4d3fd98b88&quot;&gt;scenarioDef&lt;/a&gt;[]&amp;gt;} テストパターン毎の定義集" />
+            </outline>
+            <outline text="setup {&lt;a href=&quot;https://workflowy.com/#/9b7b74078d9e&quot;&gt;Object&lt;/a&gt;} setupEnvironmentに渡す引数" />
+            <outline text="query {&lt;a href=&quot;https://workflowy.com/#/7f56d7bb30a1&quot;&gt;authClient_query&lt;/a&gt;} authClientに渡す処理要求" />
+            <outline text="opt {&lt;a href=&quot;https://workflowy.com/#/6e19dabbd5cc&quot;&gt;authClient_option&lt;/a&gt;} authClientに渡す起動時オプション" />
+            <outline text="check {&lt;a href=&quot;https://workflowy.com/#/b9077d911a05&quot;&gt;devTools_check_arg&lt;/a&gt;} 実行結果の確認方法の定義" />
+          </outline>
+        </outline>
+        <outline text="開発環境">
+          <outline text="doTest() : テストパターン定義から、引数で指定されたテストを実行">
+            <outline text="引数">
+              <outline text="sce {string}='dev' テストパターン集の名前" />
+              <outline text="start {number}=0 テストパターンの開始位置(0オリジン)" />
+              <outline text="num {number}=1 実施するテストパターンの数" />
+            </outline>
+            <outline text="戻り値 {void}" />
+            <outline text="sample {Object.&amp;lt;string, Object&amp;gt;} テスト用サンプルデータ" _note="- オブジェクトの形式はsetupEnvironment()の&lt;a href=&quot;https://workflowy.com/#/38d23b83bbe7&quot;&gt;arg.src&lt;/a&gt;参照&#10;- メンバ&quot;dp&quot;のみ別形式(DocumentPropertiesにセットするSPkey,SSkeyのJSON)&#10;" />
+            <outline text="scenario {Object.&amp;lt;string, &lt;a href=&quot;https://workflowy.com/#/5f4d3fd98b88&quot;&gt;scenarioDef&lt;/a&gt;[]&amp;gt;} テストパターン毎の定義集" />
+            <outline text="setupEnvironment() : テスト環境構築：DocumentPropertiesのセット、テスト用シートの準備">
+              <outline text="引数">
+                <outline text="arg {Object} (9b7b74078d9e)">
+                  <outline text="obj {Object.&amp;lt;string,string&amp;gt;} {シート名：措置}形式のオブジェクト" _note="「シート名='default'」は、メンバ名が存在しないシートに対して行う措置。またreadmeシートは必ず残す。" />
+                  <outline text="src {Object}=sample シート定義情報をまとめたオブジェクト(38d23b83bbe7)">
+                    <outline text="[cols] {&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]} 新規作成シートの項目定義オブジェクトの配列" />
+                    <outline text="[&lt;a href=&quot;https://workflowy.com/#/58dde3944536&quot;&gt;set&lt;/a&gt;] {Object|Object[]|string|string[]|Function} 追加・更新する値" />
+                    <outline text="1 Backlink">
+                      <outline text="sample {Object.&amp;lt;string, Object&amp;gt;} テスト用サンプルデータ" _note="- オブジェクトの形式はsetupEnvironment()の&lt;a href=&quot;https://workflowy.com/#/38d23b83bbe7&quot;&gt;arg.src&lt;/a&gt;参照&#10;- メンバ&quot;dp&quot;のみ別形式(DocumentPropertiesにセットするSPkey,SSkeyのJSON)&#10;" />
+                    </outline>
+                  </outline>
+                  <outline text="dp {string}='asis' DocumentPropertiesに対する措置" _note="- force : 強制的に再作成&#10;- ifnot : 不在なら作成、存在なら再作成しない(不在時作成。if not exist)&#10;- delete: 強制削除(defaultの既定値)。存在していれば削除、再作成はしない&#10;- asis  : そのまま何もしない&#10;" />
+                  <outline text="dpName {string}='authServer' - DocumentPropertyのキー名" />
+                  <outline text="1 Backlink">
+                    <outline text="setup {&lt;a href=&quot;https://workflowy.com/#/9b7b74078d9e&quot;&gt;Object&lt;/a&gt;} setupEnvironmentに渡す引数" />
+                  </outline>
+                </outline>
+              </outline>
             </outline>
           </outline>
+          <outline text="authPost() : クライアント—サーバ間の通信を代行">
+            <outline text="引数">
+              <outline text="arg {any} authClientからauthServerに渡す引数" />
+            </outline>
+            <outline text="戻り値 {any} authClientに渡すauthServerの処理結果" />
+          </outline>
+          <outline text="テスト仕様" />
         </outline>
         <outline text="その他" _note="用語解説、注意事項、更新履歴、他">
           <outline text="【参考】SpreadDbのエラーコード" _note="| No | 設定項目 | コード | 発生箇所 | 原因 |&#10;| --: | :-- | :-- | :-- | :-- |&#10;| 1 | qSts | No Authority | doQuery | 指定されたテーブル操作の権限が無い |&#10;| 2 | qSts | No command | doQuery | query.commandが無い、または文字列では無い |&#10;| 3 | qSts | No Table name | doQuery | query.tableが無い、または文字列では無い |&#10;| 4 | qSts | Invalid where clause | doQuery | (権限&quot;o&quot;で)where句の値がプリミティブ型ではない |&#10;| 5 | qSts | No Table | doQuery&amp;lt;br&amp;gt;genTable | (create以外で)対象テーブルが無い |&#10;| 6 | qSts | No cols and data | genTable | createで項目定義も初期データも無い |&#10;| 7 | qSts | Already Exist | createTable | シートが既に存在している |&#10;| 8 | qSts | Duplicate | createTable | 初期レコード内に重複が存在 |&#10;| 9 | qSts | Empty set | createTable&amp;lt;br&amp;gt;appendRow | query.setが不在、または配列の長さが0 |&#10;| 10 | qSts | Invalid set | appendRow | query.setが非配列なのに要素がオブジェクトではない |&#10;| 11 | qSts | No set | appendRow&amp;lt;br&amp;gt;updateRow | queryにメンバ&quot;set&quot;が不在 |&#10;| 12 | qSts | No where | deleteRow&amp;lt;br&amp;gt;updateRow | where句がqueryに無い |&#10;| 13 | qSts | Undefined Column | updateRow | 更新対象項目がテーブルに無い |&#10;| 14 | qSts | その他 | doQuery | エラーオブジェクトのmessage |&#10;| 15 | rSts | Duplicate | appendRow&amp;lt;br&amp;gt;updateRow | unique項目に重複した値を入れようとした |&#10;| 16 | Error | Invalid Argument | functionalyze | 不適切な引数 |&#10;| 17 | Error | Could not Lock | main | 規定回数以上シートのロックに失敗した |" />
           <outline text="更新履歴" />
         </outline>
-        <outline text="テスト仕様" />
       </outline>
       <outline text="SpreadDb 1.2.0(d4369fcf4044)" _note="&quot;SpreadDb&quot;はGoogle Spread上のシートを記憶領域とし、参照・更新・削除およびテーブル構造情報取得を実現するライブラリ。&#10;&#10;なおパラメータで利用者の権限とシート毎のアクセス権を付与することでアクセス制御を行えるようにする。&#10;">
         <outline text="主処理(922be86d118e)">
@@ -395,11 +401,7 @@
             <outline text="引数">
               <outline text="arg {string|string[]} 取得対象テーブル名" />
             </outline>
-            <outline text="戻り値 {Object.&amp;lt;string,&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]&amp;gt;} {テーブル名：項目定義オブジェクトの配列}形式(f76eb797d345)">
-              <outline text="1 Backlink">
-                <outline text="syncTable() : authServer(SpreadDb.getSchema)の&lt;a href=&quot;https://workflowy.com/#/f76eb797d345&quot;&gt;戻り値&lt;/a&gt;を基にローカルDBにテーブルを作成、同期する" />
-              </outline>
-            </outline>
+            <outline text="戻り値 {Object.&amp;lt;string,&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]&amp;gt;} {テーブル名：項目定義オブジェクトの配列}形式(f76eb797d345)" />
             <outline text="変更履歴シートへの記録" />
           </outline>
           <outline text="selectRow() : テーブルから条件に合致する行を抽出(a8ac2d5e7372)">
@@ -448,9 +450,8 @@
             </outline>
             <outline text="〇num {number} 変更された行数" _note="create: 初期値の行数、append:追加行数、update:変更行数、delete:削除行数、select:抽出行数、schema:0(固定)&#10;" />
             <outline text="〇result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
-            <outline text="10 Backlinks">
+            <outline text="9 Backlinks">
               <outline text="No.4 : 外部リンク SpreadDb.&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;へのリンク" />
-              <outline text="authQuery {Object[]} 操作要求の内容(accf9448cecc)" _note="- ■：authClientへの引数、□：authServerへの引数(authClientでの追加項目)、〇：authServerでの追加項目&#10;- SpreadDbの&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;からの差分項目&#10;  - 削除項目：cols, arg&#10;  - 追加項目：email, CPkey, passcode, SPkey, status&#10;- command=&quot;delete&quot;(物理削除)は使用不可とし、論理削除で対応&amp;lt;br&amp;gt;(万一のハッキング時のリスク軽減)&#10;" />
               <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;[]} 操作要求、またはその配列" />
               <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;}" _note="同一テーブルでも複数の条件で更新する場合、SpreadDb.arg.query自体を別オブジェクトで用意する" />
               <outline text="query {&lt;a href=&quot;https://workflowy.com/#/1e80990a7c63&quot;&gt;sdbQuery&lt;/a&gt;}" />
@@ -504,7 +505,8 @@
             <outline text="auto_increment {bloolean|null|number|number[]}=false 自動採番項目" _note="null ⇒ 自動採番しない&#10;boolean ⇒ true:自動採番する(基数=1,増減値=1)、false:自動採番しない&#10;number ⇒ 自動採番する(基数=指定値,増減値=1)&#10;number[] ⇒ 自動採番する(基数=添字0,増減値=添字1)&#10;object ⇒ {start:m,step:n}形式" />
             <outline text="suffix {string} &quot;not null&quot;等、上記以外のSQLのcreate table文のフィールド制約" />
             <outline text="note {string} 本項目に関する備考" _note="ローカル側のcreate table等では使用しない" />
-            <outline text="9 Backlinks">
+            <outline text="10 Backlinks">
+              <outline text="[cols] {&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]} 新規作成シートの項目定義オブジェクトの配列" />
               <outline text="additionalPrimaryKey {&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;} createTableで主キー無指定時に追加設定される主キー項目名" _note="既定値は`{name:'rowId',type:'UUID',note:'主キー',primaryKey:true,default:()=&amp;gt;Utilities.getUuid()}`&#10;" />
               <outline text="[cols] {&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]} - 新規作成シートの項目定義オブジェクトの配列" />
               <outline text="sdbLog {Object} 変更履歴オブジェクト(dab8cfcec9d8)" _note="| command | 権限 | status | ratio | record欄 | 備考 |&#10;| :-- | :--: | :-- | :-- | :-- | :-- |&#10;| create | — | Already Exist&amp;lt;br&amp;gt;No Cols and Data | — | &lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt; | 管理者のみ実行可 |&#10;| select | r | No Table | 抽出失敗/対象 | — | 「対象なのに失敗」は考慮しない |&#10;| update | rw | No Table | 更新失敗/対象 | {sts:[OK|Duplicate],diff:{項目名:[更新前,更新後]}} |  |&#10;| append | w | No Table | 追加失敗/対象 | {sts:[OK|Duplicate],diff:追加行Obj} |  |&#10;| delete | d | No Table | 削除失敗/対象 | — | 「対象なのに失敗」は考慮しない |&#10;| schema | s | No Table | — | &lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt; |  |&#10;&#10;- command系メソッドはstatus,num,recordを返す&#10;- command系メソッドは、成功件数が0件でも「正常終了」とし、status=&quot;OK&quot;とする&#10;- 戻り値がErrorオブジェクトの場合、status=&quot;System&quot;,record=Error.messageとする&#10;- record欄は、実際は上記Objの【配列】のJSON文字列とする&#10;&#10;以下、既定値は&lt;a href=&quot;https://workflowy.com/#/6fb9aba6d9f9&quot;&gt;genLog()&lt;/a&gt;で設定される値&#10;" />
@@ -563,7 +565,7 @@
             <outline text="rSts {string}='OK' レコード単位での実行結果" _note="append/updateで重複エラー時は&quot;Duplicate&quot;&#10;" />
             <outline text="diff {Object} 当該レコードの変更点" _note="create : 初期値として追加した行オブジェクト&#10;select : 抽出された行オブジェクト&#10;append : 追加された行オブジェクト。Duplicateエラーの場合、重複項目と値&#10;update : 変更点。{変更された項目名:[変更前,変更後]}&#10;delete : 削除された行オブジェクト&#10;schema : 提供された項目定義(sdbColumn[])&#10;" />
             <outline text="4 Backlinks">
-              <outline text="〇result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
+              <outline text="result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
               <outline text="result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
               <outline text="result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;} レコード単位に追加結果を格納" />
               <outline text="〇result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
@@ -615,7 +617,8 @@
             </outline>
           </outline>
           <outline text="set {Object|Object[]|string|Function} 更新する値(58dde3944536)" _note="set句の指定方法&#10;- Object ⇒ create/appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;">
-            <outline text="3 Backlinks">
+            <outline text="4 Backlinks">
+              <outline text="[&lt;a href=&quot;https://workflowy.com/#/58dde3944536&quot;&gt;set&lt;/a&gt;] {Object|Object[]|string|string[]|Function} 追加・更新する値" />
               <outline text="&lt;a href=&quot;https://workflowy.com/#/58dde3944536&quot;&gt;set&lt;/a&gt; {Object|Object[]} 追加する行オブジェクト" />
               <outline text="&lt;a href=&quot;https://workflowy.com/#/58dde3944536&quot;&gt;set&lt;/a&gt; {Object|string|Function} 更新する値" />
               <outline text="■[&lt;a href=&quot;https://workflowy.com/#/58dde3944536&quot;&gt;set&lt;/a&gt;] {Object|Object[]|string|string[]|Function} 追加・更新する値" _note="command='create','update','append'で使用" />
@@ -646,16 +649,69 @@
         </outline>
         <outline text="更新履歴(d154b1fe324f)" _note="- rev.1.2.0 : 2025/01/04〜01/26&#10;  - 設計思想を「クエリ単位に必要な情報を付加して実行、結果もクエリに付加」に変更&#10;  - 変更履歴を「クエリの実行結果」と「(クエリ内の)レコードの実行結果」の二種類のレコードレイアウトを持つように変更&#10;  - エラー発生時、messageではなくエラーコードで返すよう変更&#10;  - 1つの処理要求(query)で複数レコードを対象とする場合、一レコードでもエラーが発生したらエラーに&#10;  - 変更履歴シートのUUIDは削除&#10;  - workflowyで作成した使用をmarkdown化する機能を追加&#10;  - queryにSpreadDb呼出元での突合用項目&quot;queryId&quot;を追加&#10;  &#10;- rev.1.1.0 : 2024/12/27&#10;  - 上・左余白不可、複数テーブル/シート不可に変更(∵ロジックが複雑で保守性低下)&#10;    - テーブル名とシート名が一致&#10;    - 左上隅のセルはA1に固定&#10;  - 「更新履歴」の各項目の並び・属性他について、シート上の変更は反映されない(システム側で固定)&#10;  - 各シートの権限チェックロジックを追加(opt.account)&#10;  - クロージャを採用(append/update/deleteをprivate関数化)&#10;    - select文を追加(従来のclass方式ではインスタンスから直接取得)&#10;    - インスタンスを返す方式から、指定された操作(query)の結果オブジェクトを返すように変更&#10;  - getSchemaメソッドを追加&#10;  - 旧版のgetLogは廃止(select文で代替)&#10;- 仕様の詳細は[workflowy](&lt;a href=&quot;https://workflowy.com/#/4e03d2d2c266)参照&quot;&gt;https://workflowy.com/#/4e03d2d2c266)参照&lt;/a&gt;&#10;" />
       </outline>
-      <outline text="class DebugTools">
-        <outline text="メンバ">
-          <outline text="step : 関数・メソッド内の進捗状況管理番号" />
-          <outline text="seq : 実行された関数・メソッドの通番管理" />
-          <outline text="mode : debug, verbose, etc" />
+      <outline text="devTools : 開発支援関係メソッド集(クロージャ)">
+        <outline text="1.0.0(e05eafbd41fe)">
+          <outline text="devTools主処理">
+            <outline text="引数">
+              <outline text="option {Object} devToolsの動作設定(8b526257f69f)">
+                <outline text="start {boolean}=true 開始・終了メッセージの表示" />
+                <outline text="arg {boolean}=true 開始時に引数を表示" />
+                <outline text="step {boolean}=false step毎の進捗ログの出力" />
+                <outline text="1 Backlink">
+                  <outline text="option {Object} 変更後の&lt;a href=&quot;https://workflowy.com/#/8b526257f69f&quot;&gt;オプション&lt;/a&gt;" />
+                </outline>
+              </outline>
+            </outline>
+            <outline text="戻り値 {devTools} 内部処理用のstringify以外をメソッドとして持つクロージャ" />
+          </outline>
+          <outline text="changeOption() : devToolsオプション(動作設定)の変更">
+            <outline text="引数">
+              <outline text="option {Object} 変更後の&lt;a href=&quot;https://workflowy.com/#/8b526257f69f&quot;&gt;オプション&lt;/a&gt;" />
+            </outline>
+            <outline text="戻り値 {void}" />
+          </outline>
+          <outline text="check() : 実行結果の確認" _note="引数として渡されたオブジェクトのメンバを再帰的にチェック、全ての値が一致(isEqual=true)ならOK、それ以外はNGとして順次比較結果をコンソールに表示する&#10;">
+            <outline text="引数">
+              <outline text="arg {Object} (b9077d911a05)">
+                <outline text="asis {any} 結果の値" />
+                <outline text="tobe {any} 有るべき値" />
+                <outline text="title {string}='' テストのタイトル(ex. SpreadDbTest.delete.4)" />
+                <outline text="[opt] {Object} isEqual()に渡すオプション" />
+                <outline text="1 Backlink">
+                  <outline text="check {&lt;a href=&quot;https://workflowy.com/#/b9077d911a05&quot;&gt;devTools_check_arg&lt;/a&gt;} 実行結果の確認方法の定義" />
+                </outline>
+              </outline>
+            </outline>
+            <outline text="戻り値 {boolean} チェック結果OK:true, NG:false" />
+          </outline>
+          <outline text="dump() : 渡された変数の内容をコンソールに表示">
+            <outline text="引数">
+              <outline text="arg {any|any[]} 表示する変数および行番号" _note="引数には対象変数を列記。最後の引数が数値だった場合、行番号と看做す" />
+            </outline>
+            <outline text="戻り値 {void}" />
+          </outline>
+          <outline text="end() : 正常終了時の呼出元関数情報の抹消＋終了メッセージの表示" _note="引数・戻り値無し。start/end/errorメソッドはまとめて使用のこと。&#10;" />
+          <outline text="error() : 異常終了時の呼出元関数情報の抹消＋終了メッセージの表示" _note="start/end/errorメソッドはまとめて使用のこと。">
+            <outline text="引数">
+              <outline text="e {Error} エラーオブジェクト" />
+            </outline>
+            <outline text="戻り値 {void}" />
+          </outline>
+          <outline text="start() : 呼出元関数情報の登録＋開始メッセージの表示" _note="引数・戻り値無し。start/end/errorメソッドはまとめて使用のこと。" />
+          <outline text="step() : 呼出元関数の進捗状況の登録＋メッセージの表示">
+            <outline text="引数">
+              <outline text="step {string|number} ステップ(進捗)を特定する値" />
+              <outline text="[msg] {string}='' ステップの表示に併記するメッセージ" />
+            </outline>
+            <outline text="戻り値 {void}" />
+          </outline>
+          <outline text="stringify() : 変数の内容をラベル＋データ型＋値の文字列として出力" _note="devToolsの各種メソッドで変数の値を表示する際、値を文字列に変換">
+            <outline text="引数">
+              <outline text="arg {any} 表示する変数" />
+            </outline>
+            <outline text="戻り値 {string} 文字列化された引数の値" />
+          </outline>
         </outline>
-        <outline text="step() : stepを書き換える" />
-        <outline text="log() : 指定された変数の内容を出力する" />
-        <outline text="constructor()" />
-        <outline text="ゴミ箱" _note="class DebugTools {&#10;  /**&#10;   * @param {Object} arg&#10;   * @param {string} arg.class=null - クラス名&#10;   * @param {string} arg.mode='debug'&#10;   */&#10;  constructor(arg){&#10;    this.step = 0;&#10;    this.seq = 0;&#10;    this.mode = arg.mode || 'debug';&#10;  }&#10;  step(arg){&#10;    this.step = arg;&#10;  }&#10;&#10;  /*&#10;  recursive(v,depth=0){&#10;    switch( this.whichType(v) ){&#10;      case 'Object':&#10;&#10;      case 'Array':&#10;    }&#10;  }&#10;  */&#10;  /**&#10;   * &#10;   * @param {Array|Array[]} arg &#10;   * @param {any} arg[0] - 変数。JSON.stringifyの第一引数&#10;   * @param {string[]}=null - JSON.stringfityの第二引数&#10;   * @param {number}=2 - JSON.stringifyの第三引数&#10;   * @returns &#10;   */&#10;  log(arg){&#10;    const v = {whois:&lt;a href=&quot;http://this.constructor.name&quot;&gt;this.constructor.name&lt;/a&gt;+'.log',step:0,rv:null};&#10;&#10;    if( !Array.isArray(arg[0]) ) arg = [arg];  // 配列可の引数は配列に統一&#10;&#10;    this.msg = [&#10;      (arg.class === null ? '' : arg.class + '.') + this.log.caller,&#10;    ];&#10;    for( v.i=0 ; v.i&amp;lt;arg.length ; v.i++ ){&#10;      //this.recursive(arg[v.i]);&#10;    }&#10;&#10;    v.step = 9; // 終了処理&#10;    return this.msg.join('\n');&#10;  }&#10;  &#10;  whichType(){&#10;    let rv = String(Object.prototype.toString.call(arg).slice(8,-1));&#10;    switch(rv){&#10;      case 'Number': if(Number.isNaN(arg)) rv = 'NaN'; break;&#10;      case 'Function': if(!('prototype' in arg)) rv = 'Arrow'; break;&#10;    }&#10;    return rv;&#10;  }&#10;}&#10;" />
       </outline>
       <outline text="表記上の注意事項">
         <outline text="バージョン番号は「抜本的見直し.インタフェース変更.デバッグ(インタフェース変更無し)」で採番" />
