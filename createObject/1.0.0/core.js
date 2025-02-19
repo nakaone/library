@@ -1,27 +1,3 @@
-const createObjectTest = () => {
-  const v = {};
-  const src = {
-    acArg: [
-      {name:'saveUserId',type:'boolean',value:true,note:''},
-      {name:'saveEmail',type:'boolean',value:false,note:''},
-      {name:'mirror',type:'acMirror',note:''},  // 独自データ型はvalue省略
-    ],
-    acMirror: [
-      {name:'name',type:'string',value:'',note:'ミラーリングするテーブル名'}, // valueのデータ型はtypeに一致させる
-      {name:'func',type:'function',value:()=>true,note:'定期実行ジョブ'},
-      {name:'interval',type:'number',value:300000,note:'実行間隔(ミリ秒)'},
-    ],
-  }
-  v.rv = createObject({
-    defs: {acArg:src.acArg,acMirror:src.acMirror},
-    root: 'acArg',
-    val: {saveUserId:false},
-    addTo: v.pv
-  });
-  console.log(JSON.stringify(v.rv,null,2));
-  console.log(v.rv.mirror.func.toString());
-}
-
 /** createObject: 定義と所与のオブジェクトから新たなオブジェクトを作成 */
 function createObject(arg) {
   const v = { whois: 'createObject', types:[  // typeofの戻り値となるデータ型
