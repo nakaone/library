@@ -24,6 +24,7 @@ function authPost(arg) {
   } catch (e) { dev.error(e); return e; }
 }
 
+//::$lib/createObject/1.0.0/core.js::
 //::$lib/createPassword/1.0.1/core.js::
 //::$lib/devTools/1.0.0/core.js::
 //::$lib/isEqual/1.1.0/core.js::

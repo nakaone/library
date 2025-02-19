@@ -22,13 +22,18 @@ const createObjectTest = () => {
   console.log(v.rv.mirror.func.toString());
 }
 
-/** createObject: 定義と所与のオブジェクトから新たなオブジェクトを作成 */
-function createObject(arg) {
+/** createObject: 定義と所与のオブジェクトから新たなオブジェクトを作成
+ * - arg.valに存在していてもarg.defsに存在しないメンバは廃棄される(余計なメンバ指定は許容しない)
+ */
+function createObject(arg,depth=16) {
   const v = { whois: 'createObject', types:[  // typeofの戻り値となるデータ型
     'undefined','object','boolean','number','bigint','string','symbol','function']};
   dev.start(v.whois, [...arguments]);
   try {
 
+    if( depth < 0 ) throw new Error('too deep recursive');
+
+    arg = Object.assign({defs:{},root:'',val:{},addTo:null},arg);
     dev.step(1.1); // 処理対象となる項目定義名
     v.root = arg.root || Object.keys(arg.defs)[0];
     dev.step(1.2); // 戻り値を設定
@@ -80,7 +85,7 @@ function createObject(arg) {
             defs: arg.defs,
             root: v.def.type,
             val: arg.val[v.def.name] || {},
-          });
+          },depth-1);
         }
       }
     }

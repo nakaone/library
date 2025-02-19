@@ -32,7 +32,7 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
     dev: [{ // dev.01: 掲示板から全件取得。ローカルDB用のデータは取得するが、生成は無い
       setup: {obj:{'掲示板':'ifnot'},dp:'delete'},
       query: {table:'掲示板',command:'append',set:'authTest.dev.0'},
-      opt: {mirror:[{name:'掲示板'}]},
+      opt: {mirror:[{name:'掲示板',interval:60000,func:()=>true}]},
       check: {status:'OK'},
     }],
   }

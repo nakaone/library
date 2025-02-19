@@ -1,3 +1,9 @@
+/*
+  authClient/Server 統合テスト
+    「authClient -> authPost(テスト用doGet) -> authServer」のテストを行う。
+    authClientへの戻り値はオブジェクトとし、alaSQL(create table)は割愛。
+    GASの専用シートを用意、本ソースをコピペしてauthTest()を実行
+*/
 const dev = devTools();
 const authTest = () => doTest('dev',0,1); // 引数はscenario, start, num
 function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0->start以降全部、num<0->start無視して後ろから
@@ -34,7 +40,7 @@ function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0
     dev: [{ // dev.01: 掲示板から全件取得。ローカルDB用のデータは取得するが、生成は無い
       setup: {obj:{'掲示板':'ifnot'},dp:'delete'},
       query: {table:'掲示板',command:'append',set:'authTest.dev.0'},
-      opt: {mirror:[{name:'掲示板'}]},
+      opt: {mirror:[{name:'掲示板',interval:60000,func:()=>true}]},
       check: {status:'OK'},
     }],
   }
@@ -204,8 +210,27 @@ const authCommon = {
 }
 
 function authClient(option={}) {
-  const pv = { whois: 'authClient' };
-  const v = { rv: null};
+  const pv = {whois:'authClient'}, v = {rv: null};
+  const typedefs = {
+    acMembers: [
+      {name:'opt',type:'object',value:{},note:''},
+      {name:'userId',type:'string',value:'',note:'ユーザ識別子'},
+      {name:'email',type:'string',value:'',note:'ユーザのメールアドレス'},
+      {name:'CSkey',type:'object',value:{},note:'クライアント側秘密鍵'},
+      {name:'CPkey',type:'string',value:'',note:'クライアント側公開鍵'},
+      {name:'SPkey',type:'string',value:'',note:'サーバ側公開鍵'},
+    ],
+    acMain_option:[
+      {name:'saveUserId',type:'boolean',value:true,note:'userIdをlocalStorageに保存するか否か'},
+      {name:'saveEmail',type:'boolean',value:false,note:'e-mailをlocalStorageに保存するか否か'},
+      {name:'mirror',type:'object',value:[],note:'ローカル側にミラーを保持するテーブルの定義'},
+    ],
+    mirrorDef: [
+      {name:'name',type:'string',value:'',note:'ミラーリングするテーブル名'}, // valueのデータ型はtypeに一致させる
+      {name:'func',type:'function',value:()=>true,note:'定期実行ジョブ'},
+      {name:'interval',type:'number',value:300000,note:'実行間隔(ミリ秒)'},
+    ],
+  };
   dev.start(pv.whois, [...arguments]);
   try { // 主処理(constructor)
 
@@ -218,18 +243,15 @@ function authClient(option={}) {
     // -------------------------------------------------------------
     dev.step(2); // メンバ(pv)に引数を保存、未指定分には既定値を設定
     // -------------------------------------------------------------
-    Object.assign(pv, {
-      opt: Object.assign({
-        saveUserId: true,
-        saveEmail: false,
-        mirror: option.mirror || [],
-      },option,authCommon.option),
-      userId: v.userId,
-      email: v.email,
-      CSkey: null,
-      CPkey: null,
-      SPkey: null,
-    });
+    // メンバの初期値を設定
+    v.r = createObject({defs:typedefs,root:'acMembers',addTo:pv});
+    if( v.r instanceof Error ) throw v.r;
+    // authClient/Server共通設定値
+    pv.opt = Object.assign({},authCommon.option);
+    // authClient独自設定値
+    v.r = createObject({defs:typedefs,root:'acMain_option',val:option,addTo:pv.opt});
+    if( v.r instanceof Error ) throw v.r;
+    dev.dump(pv,244);
 
     // -------------------------------------------------------------
     dev.step(3); // CSkey/CPkeyを準備
@@ -439,6 +461,79 @@ function authPost(arg) {
   } catch (e) { dev.error(e); return e; }
 }
 
+/** createObject: 定義と所与のオブジェクトから新たなオブジェクトを作成
+ * - arg.valに存在していてもarg.defsに存在しないメンバは廃棄される(余計なメンバ指定は許容しない)
+ */
+function createObject(arg,depth=16) {
+  const v = { whois: 'createObject', types:[  // typeofの戻り値となるデータ型
+    'undefined','object','boolean','number','bigint','string','symbol','function']};
+  dev.start(v.whois, [...arguments]);
+  try {
+
+    if( depth < 0 ) throw new Error('too deep recursive');
+
+    arg = Object.assign({defs:{},root:'',val:{},addTo:null},arg);
+    dev.step(1.1); // 処理対象となる項目定義名
+    v.root = arg.root || Object.keys(arg.defs)[0];
+    dev.step(1.2); // 戻り値を設定
+    v.rv = arg.addTo || {};
+    //dev.dump(arg,v.root,v.rv,35);
+
+    for( v.i=0 ; v.i<arg.defs[v.root].length ; v.i++ ){
+
+      dev.step(2);
+      v.def = arg.defs[v.root][v.i];  // 単体の項目定義オブジェクト
+      // 上書き指定が有ればそれを優先
+      v.val = Object.hasOwn(arg.val,v.def.name) ? arg.val[v.def.name] : v.def.value;
+      v.valType = typeof v.val;
+      if( !v.def.type ) v.def.type = v.valType;
+      //dev.dump(v.def,v.val,45);
+
+      if( v.def.type === v.valType ){
+        dev.step(3); // typeで指定されたデータ型と設定値の型が一致 ⇒ 設定値を採用
+        v.rv[v.def.name] = v.val;
+      } else {
+        dev.step(4); // typeで指定されたデータ型と設定値の型が不一致
+        if( v.types.includes(v.def.type) ){
+          dev.step(5); // 独自データ型ではない(typeofで返されるデータ型の一つ)
+          if( v.def.type === 'function' && v.valType !== 'function' ){
+            dev.step(5.11); // type == 'function' && typeof value != 'function' ⇒ valueを関数化
+            v.fx = arg.data.match(/^function\s*\w*\s*\(([\w\s,]*)\)\s*\{([\s\S]*?)\}$/); // function(){〜}
+            v.ax = arg.data.match(/^\(?([\w\s,]*?)\)?\s*=>\s*\{?(.+?)\}?$/); // arrow関数
+            dev.step(5.12);
+            if (v.fx || v.ax) {
+              dev.step(5.13); // function文字列
+              v.a = (v.fx ? v.fx[1] : v.ax[1]).replaceAll(/\s/g, ''); // 引数部分
+              v.a = v.a.length > 0 ? v.a.split(',') : [];
+              v.b = (v.fx ? v.fx[2] : v.ax[2]).replaceAll(/\s+/g, ' ').trim(); // 論理部分
+              v.rv[v.def.name] = new Function(...v.a, v.b);
+            } else {
+              dev.step(5.14);
+              throw new Error('invalid function definition');
+            }
+          } else if( v.def.type !== 'function' && v.valType === 'function' ){
+            dev.step(5.2); // type != 'function' && typeof value == 'function' ⇒ value(関数)の実行結果を設定
+            v.rv[v.def.name] = v.val();
+          } else {
+            dev.step(5.3);
+            throw new Error('data type of value unmatch type definition');
+          }
+        } else {
+          dev.step(6); // 独自データ型
+          v.rv[v.def.name] = createObject({
+            defs: arg.defs,
+            root: v.def.type,
+            val: arg.val[v.def.name] || {},
+          },depth-1);
+        }
+      }
+    }
+
+    dev.end(); // 終了処理
+    return v.rv;
+
+  } catch (e) { dev.error(e); return e; }
+}
 /** 長さ・文字種指定に基づき、パスワードを生成
  *
  * @param {number} [len=16] - パスワードの長さ
@@ -2308,3 +2403,4 @@ function whichType(arg,is){
     return rv;
   }
 }
+
