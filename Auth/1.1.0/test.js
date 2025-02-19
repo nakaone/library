@@ -1,9 +1,3 @@
-/*
-  authClient/Server 統合テスト
-    「authClient -> authPost(テスト用doGet) -> authServer」のテストを行う。
-    authClientへの戻り値はオブジェクトとし、alaSQL(create table)は割愛。
-    GASの専用シートを用意、本ソースをコピペしてauthTest()を実行
-*/
 const dev = devTools();
 const authTest = () => doTest('dev',0,1); // 引数はscenario, start, num
 function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0->start以降全部、num<0->start無視して後ろから
@@ -2314,4 +2308,3 @@ function whichType(arg,is){
     return rv;
   }
 }
-
