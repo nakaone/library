@@ -49,7 +49,7 @@ tmp="$prj/tmp"; mkdir -p $tmp
 log "1.0"; # Auth 1.1.0(ee755b0a70bd)
 # ----------------------------------------------
 mmdc -i $doc/summary.mmd -o $doc/summary.svg
-cat $doc/GitHub.opml | awk 1 | $workflowy -root:ee755b0a70bd -lv:2 > $prj/readme.md
+cat $doc/GitHub.opml | awk 1 | $workflowy -root:ee755b0a70bd -lv:3 > $prj/readme.md
 
 # ----------------------------------------------
 # test.jsの作成

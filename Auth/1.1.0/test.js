@@ -1,9 +1,3 @@
-/*
-  authClient/Server 統合テスト
-    「authClient -> authPost(テスト用doGet) -> authServer」のテストを行う。
-    authClientへの戻り値はオブジェクトとし、alaSQL(create table)は割愛。
-    GASの専用シートを用意、本ソースをコピペしてauthTest()を実行
-*/
 const dev = devTools();
 const authTest = () => doTest('dev',0,1); // 引数はscenario, start, num
 function doTest(sce='dev',start=0,num=1) { // sce='all'->全パターン、num=0->start以降全部、num<0->start無視して後ろから
@@ -207,12 +201,35 @@ const authCommon = {
     adminMail: null,  // 管理者のメールアドレス
     adminName: null, //管理者名
   },
+  typedefs: {
+    acRequest_query: [  // アプリからac.requestへの引数"query"
+      {name:'table',type:'string',value:'',note:''},
+      {name:'command',type:'string',value:'',note:''},
+      {name:'where',type:'object|function|string',value:'',note:''},
+      {name:'set',type:'object|function|string',value:'',note:''},
+    ],
+    asMain_query: [ // ac.requestからas.mainへのquery。acRequest_queryに以下のメンバを追加
+      {name:'queryId',type:'string',value:()=>Utilities.getUuid(),note:''},
+      {name:'timestamp',type:'string',value:()=>toLocale(new Date()),note:''},
+      {name:'userId',type:'string',value:'',note:''},
+      {name:'CPkey',type:'string',value:'',note:''},
+      {name:'email',type:'string',value:'',note:''},
+      {name:'passcode',type:'number',value:-1,note:''},
+    ],
+    authServer: [ // authServerの戻り値。asMain_query(含acRequest_query)に以下のメンバを追加
+      {name:'SPkey',type:'string',value:'',note:' サーバ側公開鍵'},
+      {name:'qSts',type:'string',value:'OK',note:' クエリ単位の実行結果'},
+      {name:'num',type:'number',value:-1,note:' 変更された行数。append:追加行数、update:変更行数、select:抽出行数、schema:0(固定)'},
+      {name:'result',type:'object[]',value:[],note:' レコード単位の実行結果'},
+      {name:'status',type:'string',value:'OK',note:' authServerの実行結果'},      
+    ],
+  }
 }
 
 function authClient(option={}) {
   const pv = {whois:'authClient'}, v = {rv: null};
   const typedefs = {
-    acMembers: [
+    acMembers: [  // pv(メンバ)
       {name:'opt',type:'object',value:{},note:''},
       {name:'userId',type:'string',value:'',note:'ユーザ識別子'},
       {name:'email',type:'string',value:'',note:'ユーザのメールアドレス'},
@@ -220,7 +237,7 @@ function authClient(option={}) {
       {name:'CPkey',type:'string',value:'',note:'クライアント側公開鍵'},
       {name:'SPkey',type:'string',value:'',note:'サーバ側公開鍵'},
     ],
-    acMain_option:[
+    acMain_option:[ // pv.optの内、authClient独自設定項目(引数により設定値の変更が可能な項目)
       {name:'saveUserId',type:'boolean',value:true,note:'userIdをlocalStorageに保存するか否か'},
       {name:'saveEmail',type:'boolean',value:false,note:'e-mailをlocalStorageに保存するか否か'},
       {name:'mirror',type:'object',value:[],note:'ローカル側にミラーを保持するテーブルの定義'},
@@ -243,10 +260,12 @@ function authClient(option={}) {
     // -------------------------------------------------------------
     dev.step(2); // メンバ(pv)に引数を保存、未指定分には既定値を設定
     // -------------------------------------------------------------
+    // authClient/Server共通データ型定義をtypedefsに追加
+    Object.keys(authCommon.typedefs).forEach(x => typedefs[x] = authCommon.typedefs[x]);
     // メンバの初期値を設定
     v.r = createObject({defs:typedefs,root:'acMembers',addTo:pv});
     if( v.r instanceof Error ) throw v.r;
-    // authClient/Server共通設定値
+    // authClient/Server共通オプション設定値
     pv.opt = Object.assign({},authCommon.option);
     // authClient独自設定値
     v.r = createObject({defs:typedefs,root:'acMain_option',val:option,addTo:pv.opt});
@@ -258,6 +277,24 @@ function authClient(option={}) {
     // -------------------------------------------------------------
     pv.CSkey = cryptico.generateRSAKey(createPassword(),pv.opt.bits);
     pv.CPkey = cryptico.publicKeyString(pv.CSkey);
+
+    // -------------------------------------------------------------
+    dev.step(4); // ミラーリングするテーブルの設定
+    // -------------------------------------------------------------
+    dev.dump(pv.opt.mirror,259);
+    v.query = [];
+    pv.opt.mirror.forEach(mirror => {
+      // ミラーするテーブルの構成情報とレコード全件の要求
+      v.query.push({table:mirror.name,command:'schema'});
+      v.query.push({table:mirror.name,command:'select',where:'()=>true'});
+    });
+    dev.dump(v.query,266);
+    v.r = request(v.query);
+    if( v.r instanceof Error ) throw v.r;
+    dev.dump(v.r,269);
+
+    // テーブルの作成とレコード全件のセット
+    // 差分取得のcrondセット
 
     dev.end(); // 終了処理
     v.rv = {request:request};
@@ -273,9 +310,7 @@ function authClient(option={}) {
       // -------------------------------------------------------------
       dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
       // -------------------------------------------------------------
-      pv.query = {table:'accounts',command:'append'};
-      v.rv = authPost(pv.query);
-
+      v.rv = authPost(query);
 
       dev.end(); // 終了処理
       return v.rv;
@@ -285,15 +320,94 @@ function authClient(option={}) {
 }
 
 function authServer(query,option={}) {
-  const pv = { whois: 'authServer' };
-  const v = { rv: null, now:toLocale(Date.now()) };
+  const pv = { whois: 'authServer' }, v = { rv: null, now:toLocale(Date.now()) };
+  const typedefs = {
+    asMembers: [  // pv(メンバ)
+      {name:'query',type:'object',value:{},note:''},
+      {name:'opt',type:'object',value:{},note:''},
+      {name:'SSkey',type:'object',value:{},note:'サーバ側秘密鍵'},
+      {name:'SPkey',type:'string',value:'',note:'サーバ側公開鍵'},
+      {name:'account',type:'object',value:{},note:'accountsシートから抽出したユーザ情報(行オブジェクト)'},
+      {name:'device',type:'object',value:{},note:'devicesシートから抽出したユーザ情報(行オブジェクト)'},
+    ],
+    asMain_option:[ // pv.optの内、authServer独自設定項目(引数により設定値の変更が可能な項目)
+      {name:'DocPropName',type:'string',value:"authServer",note:'DocumentPropertiesの項目名'},
+      {name:'sdbOption',type:'object',value:{},note:'SpreadDbのオプション'},
+      {name:'accountsTableName',type:'string',value:'accounts',note:'アカウント管理シートの名前'},
+      {name:'devicesTableName',type:'string',value:'devices',note:'デバイス管理シートの名前'},
+      {name:'guestAccount',type:'object',value:{},note:'ゲストのアカウント管理設定'},
+      {name:'guestDevice',type:'object',value:{},note:'ゲストのデバイス管理設定'},
+      {name:'newAccount',type:'object',value:{},note:'新規登録者のアカウント管理設定'},
+      {name:'newDevice',type:'object',value:{},note:'新規登録者のデバイス管理設定'},
+      {name:'validitySpan',type:'number',value:1209600000,note:'アカウントの有効期間(2週間)'},
+    ],
+    accountsSheet: [
+      {name:'userId',type:'string|number',note:'ユーザ識別子(primaryKey)',auto_increment:101,primaryKey:true},
+      {name:'note',type:'string',note:'アカウント情報(備考)'},
+      {name:'validityStart',type:'string',note:'有効期間開始日時(ISO8601文字列)',default:()=>toLocale(Date.now())},
+      {name:'validityEnd',type:'string',note:'有効期間終了日時(ISO8601文字列)',default:()=>toLocale(Date.now()+pv.opt.validitySpan)},
+      {name:'authority',type:'JSON',note:'シート毎のアクセス権限。{シート名:rwdos文字列} 形式。既定値は無し'},
+      {name:'created',type:'string',note:'=Date.now() ユーザ登録日時(ISO8601拡張形式)',default:()=>toLocale(Date.now())},
+      {name:'updated',type:'string',note:'=Date.now() 最終更新日時(ISO8601拡張形式)',default:()=>toLocale(Date.now())},
+      {name:'deleted',type:'string',note:'論理削除日時'},
+    ],
+    devicesSheet: [
+      {name:'userId',type:'string|number',note:'ユーザ識別子。not null'},
+      {name:'email',type:'string',note:'ユーザのメールアドレス(primaryKey)',primaryKey:true},
+      {name:'name',type:'string',note:'ユーザの氏名'},
+      {name:'phone',type:'string',note:'ユーザの電話番号'},
+      {name:'address',type:'string',note:'ユーザの住所'},
+      {name:'note',type:'string',note:'ユーザ情報(備考)'},
+      {name:'CPkey',type:'string',note:'クライアント側公開鍵'},
+      {name:'CPkeyExpiry',type:'string',note:'CPkey有効期限'},
+      {name:'trial',type:'authTrial',note:'ログイン試行情報'},
+      {name:'created',type:'string',note:'=Date.now() ユーザ登録日時(ISO8601拡張形式)'},
+      {name:'updated',type:'string',note:'=Date.now() 最終更新日時(ISO8601拡張形式)'},
+      {name:'deleted',type:'string',note:'論理削除日時'},
+    ],
+  };
   dev.start(pv.whois, [...arguments]);
   try {
+
+    // メンバ(pv)に引数を保存、未指定分には既定値を設定
+    // SSkey/SPkeyをメンバ(pv)に準備＋DocumentPropertiesに保存
+    // accounts/devicesシートが未作成なら追加＋ユーザ情報取得
+    if( userIdがqueryに不存在) {
+
+    } else {  // userIdが存在
+
+    }
+    // 処理要求を復元＋署名確認
+    // 処理要求を実行、戻り値を作成
+    // -------------------------------------------------------------
+    dev.step(2); // メンバ(pv)に引数を保存、未指定分には既定値を設定
+    // -------------------------------------------------------------
+    // authClient/Server共通データ型定義をtypedefsに追加
+    Object.keys(authCommon.typedefs).forEach(x => typedefs[x] = authCommon.typedefs[x]);
+    // メンバの初期値を設定
+    v.r = createObject({defs:typedefs,root:'asMembers',addTo:pv});
+    if( v.r instanceof Error ) throw v.r;
+    // authClient/Server共通設定値
+    pv.opt = Object.assign({},authCommon.option);
+    // authServer独自設定値
+    v.r = createObject({defs:typedefs,root:'asMain_option',val:option,addTo:pv.opt});
+    if( v.r instanceof Error ) throw v.r;
+
+    // 引数queryをpv.queryにセット
+    typedefs.asMain_query = typedefs.acRequest_query.concat(typedefs.asMain_query);
+    v.r = createObject({defs:typedefs,root:'asMain_query',val:query,addTo:pv.query});
+    if( v.r instanceof Error ) throw v.r;
+    // pv.queryにauthServer内でセットすべき項目を追加
+    v.r = createObject({defs:typedefs,root:'authServer',addTo:pv.query});
+    if( v.r instanceof Error ) throw v.r;
+
+    dev.dump(pv,394);
+
 
     // -------------------------------------------------------------
     dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
     // -------------------------------------------------------------
-    constructor(query,option);
+    //constructor(query,option);
 
     dev.end(); // 終了処理
     return pv.query;
@@ -308,6 +422,13 @@ function authServer(query,option={}) {
       // -------------------------------------------------------------
       dev.step(1); // メンバ(pv)に引数を保存、未指定分には既定値を設定
       // -------------------------------------------------------------
+
+
+
+
+
+
+
       Object.assign(pv, {
         query: Object.assign({
           queryId: Utilities.getUuid(), // {string} クエリ・結果突合用文字列
@@ -342,30 +463,6 @@ function authServer(query,option={}) {
         account: null,
         device: null,
         typedefs: {
-          accountsSheet: [
-            {name:'userId',type:'string|number',note:'ユーザ識別子(primaryKey)',auto_increment:101,primaryKey:true},
-            {name:'note',type:'string',note:'アカウント情報(備考)'},
-            {name:'validityStart',type:'string',note:'有効期間開始日時(ISO8601文字列)',default:()=>toLocale(Date.now())},
-            {name:'validityEnd',type:'string',note:'有効期間終了日時(ISO8601文字列)',default:()=>toLocale(Date.now()+pv.opt.validitySpan)},
-            {name:'authority',type:'JSON',note:'シート毎のアクセス権限。{シート名:rwdos文字列} 形式。既定値は無し'},
-            {name:'created',type:'string',note:'=Date.now() ユーザ登録日時(ISO8601拡張形式)',default:()=>toLocale(Date.now())},
-            {name:'updated',type:'string',note:'=Date.now() 最終更新日時(ISO8601拡張形式)',default:()=>toLocale(Date.now())},
-            {name:'deleted',type:'string',note:'論理削除日時'},
-          ],
-          devicesSheet: [
-            {name:'userId',type:'string|number',note:'ユーザ識別子。not null'},
-            {name:'email',type:'string',note:'ユーザのメールアドレス(primaryKey)',primaryKey:true},
-            {name:'name',type:'string',note:'ユーザの氏名'},
-            {name:'phone',type:'string',note:'ユーザの電話番号'},
-            {name:'address',type:'string',note:'ユーザの住所'},
-            {name:'note',type:'string',note:'ユーザ情報(備考)'},
-            {name:'CPkey',type:'string',note:'クライアント側公開鍵'},
-            {name:'CPkeyExpiry',type:'string',note:'CPkey有効期限'},
-            {name:'trial',type:'authTrial',note:'ログイン試行情報'},
-            {name:'created',type:'string',note:'=Date.now() ユーザ登録日時(ISO8601拡張形式)'},
-            {name:'updated',type:'string',note:'=Date.now() 最終更新日時(ISO8601拡張形式)'},
-            {name:'deleted',type:'string',note:'論理削除日時'},
-          ],
         },
         DocumentProperties: PropertiesService.getDocumentProperties(),
       });
@@ -415,40 +512,6 @@ function authServer(query,option={}) {
 
     } catch (e) { dev.error(e); return e; }
   }
-
-  /** typedefObj: 指定された形式のオブジェクトを生成する
-   * - 項目定義からオブジェクトを生成、指定オブジェクトでメンバを上書きする
-   * - 階層のあるオブジェクトには非対応(メンバの属性はプリミティブ型限定)。必要な場合は事前に子階層をオブジェクト化し、overに指定のこと
-   *
-   * @param {sdbColumn[]} typedef - オブジェクトの形式定義
-   * @param {Object} over={} - 上書きするオブジェクト。主に引数を想定
-   * @returns {Object} 生成されたオブジェクト
-   */
-  function typedefObj(typedef,over={}) {
-    const v = { whois: 'typedefObj', rv: {}};
-    dev.start(v.whois, [...arguments]);
-    try {
-
-      for( v.i=0 ; v.i<typedef.length ; v.i++ ){
-        v.rv[typedef[v.i].name] = null; // 既定値null
-        if( Object.hasOwn(over,typedef[v.i].name) ){
-          if( typeof over[typedef[v.i].name] !== 'function' ){
-            dev.step(1); // overに値があり且つ関数では無い場合、その値を使用(関数は安全性確保のため不可)
-            v.rv[typedef[v.i].name] = over[typedef[v.i].name];
-          }
-        } else {
-          if( Object.hasOwn(typedef[v.i],'default') ){
-            dev.step(2); // 項目定義にdefaultがある場合はその値を使用
-            v.rv[typedef[v.i].name] = typeof typedef[v.i].default === 'function' ? typedef[v.i].default() : typedef[v.i].default
-          }
-        }
-      }
-
-      dev.end(); // 終了処理
-      return v.rv;
-
-    } catch (e) { dev.error(e); return e; }
-  }
 }
 
 function authPost(arg) {
@@ -465,8 +528,8 @@ function authPost(arg) {
  * - arg.valに存在していてもarg.defsに存在しないメンバは廃棄される(余計なメンバ指定は許容しない)
  */
 function createObject(arg,depth=16) {
-  const v = { whois: 'createObject', types:[  // typeofの戻り値となるデータ型
-    'undefined','object','boolean','number','bigint','string','symbol','function']};
+  const v = { whois: 'createObject', typeofs:[  // typeofの戻り値となるデータ型
+    'undefined','object','boolean','number','bigint','string','symbol','function','null']};
   dev.start(v.whois, [...arguments]);
   try {
 
@@ -485,16 +548,24 @@ function createObject(arg,depth=16) {
       v.def = arg.defs[v.root][v.i];  // 単体の項目定義オブジェクト
       // 上書き指定が有ればそれを優先
       v.val = Object.hasOwn(arg.val,v.def.name) ? arg.val[v.def.name] : v.def.value;
-      v.valType = typeof v.val;
+      v.valType = v.val === null ? 'null' : typeof v.val; // nullはobjectとは別扱いにする
       if( !v.def.type ) v.def.type = v.valType;
+      v.defTypes = v.def.type.replaceAll(/\s/g,'').split('|');
       //dev.dump(v.def,v.val,45);
 
-      if( v.def.type === v.valType ){
+      if( v.defTypes.includes(v.valType) ){
         dev.step(3); // typeで指定されたデータ型と設定値の型が一致 ⇒ 設定値を採用
         v.rv[v.def.name] = v.val;
       } else {
         dev.step(4); // typeで指定されたデータ型と設定値の型が不一致
-        if( v.types.includes(v.def.type) ){
+        if( v.defTypes.length === 1 && !v.typeofs.includes(v.def.type) ){
+          dev.step(6); // 独自データ型
+          v.rv[v.def.name] = createObject({
+            defs: arg.defs,
+            root: v.def.type,
+            val: arg.val[v.def.name] || {},
+          },depth-1);
+        } else {
           dev.step(5); // 独自データ型ではない(typeofで返されるデータ型の一つ)
           if( v.def.type === 'function' && v.valType !== 'function' ){
             dev.step(5.11); // type == 'function' && typeof value != 'function' ⇒ valueを関数化
@@ -511,20 +582,13 @@ function createObject(arg,depth=16) {
               dev.step(5.14);
               throw new Error('invalid function definition');
             }
-          } else if( v.def.type !== 'function' && v.valType === 'function' ){
+          } else if( !v.defType.includes('function') && v.valType === 'function' ){
             dev.step(5.2); // type != 'function' && typeof value == 'function' ⇒ value(関数)の実行結果を設定
             v.rv[v.def.name] = v.val();
           } else {
             dev.step(5.3);
             throw new Error('data type of value unmatch type definition');
           }
-        } else {
-          dev.step(6); // 独自データ型
-          v.rv[v.def.name] = createObject({
-            defs: arg.defs,
-            root: v.def.type,
-            val: arg.val[v.def.name] || {},
-          },depth-1);
         }
       }
     }
@@ -2403,4 +2467,3 @@ function whichType(arg,is){
     return rv;
   }
 }
-

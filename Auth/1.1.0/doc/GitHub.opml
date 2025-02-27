@@ -645,7 +645,7 @@
             </outline>
             <outline text="request() : アプリケーションからの処理要求をauthServerに渡す">
               <outline text="引数">
-                <outline text="query {&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;acMain_query&lt;/a&gt;} サーバ側テーブルへの処理要求(7f56d7bb30a1)">
+                <outline text="query {&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;acRequest_query&lt;/a&gt;[]} サーバ側テーブルへの処理要求(7f56d7bb30a1)">
                   <outline text="1 Backlink">
                     <outline text="query {&lt;a href=&quot;https://workflowy.com/#/7f56d7bb30a1&quot;&gt;authClient_query&lt;/a&gt;} authClientに渡す処理要求" />
                   </outline>
@@ -666,7 +666,7 @@
               <outline text="account {Object} accountsシートから抽出したユーザ情報(行オブジェクト)" />
               <outline text="device {Object} devicesシートから抽出したユーザ情報(行オブジェクト)" />
             </outline>
-            <outline text="main: authServer主処理">
+            <outline text="main: authServer主処理" _note="![](doc/asMain.svg)">
               <outline text="引数(6f1ce86a8fb5)">
                 <outline text="query {&lt;a href=&quot;https://workflowy.com/#/c9db0f7953c8&quot;&gt;asMain_query&lt;/a&gt;} クライアントからの処理要求" _note="ユーザ側にCS/SPkeyが有った場合、暗号化＋署名" />
                 <outline text="option {&lt;a href=&quot;https://workflowy.com/#/83ede73058e8&quot;&gt;asMain_option&lt;/a&gt;} authServer独自設定値" />
@@ -686,6 +686,8 @@
               <outline text="引数 : &lt;a href=&quot;https://workflowy.com/#/6f1ce86a8fb5&quot;&gt;mainの引数&lt;/a&gt;がそのまま渡される" />
               <outline text="戻り値 {null|Error}" />
             </outline>
+            <outline text="verifyValidity() : アカウントの有効性検証" _note="![](doc/asVerifyValidity.svg)" />
+            <outline text="login() : ログイン処理" _note="![](doc/asLogin.svg)&#10;" />
           </outline>
           <outline text="DocumentProperties" _note="プロパティ名はauthServer.option.DocPropNameで指定&#10;">
             <outline text="SPkey {string} サーバ側公開鍵" />
@@ -694,6 +696,10 @@
           <outline text="Google Spreadシートおよび項目定義">
             <outline text="accounts - アカウント管理シートの項目(2f8a77eb6f10)">
               <outline text="userId {string|number}='guest' ユーザ識別子(primaryKey)" _note="default:101(0〜100はシステム用に留保), primaryKey&#10;" />
+              <outline text="email {string[]}=opt.adminMail ユーザのメールアドレス(unique)" />
+              <outline text="name {string}='ゲスト' ユーザの氏名" />
+              <outline text="phone {string}=''ユーザの電話番号" />
+              <outline text="address {string}='' ユーザの住所" />
               <outline text="note {string}='' アカウント情報(備考)" />
               <outline text="validityStart {string}=Date.now() 有効期間開始日時(ISO8601文字列)" />
               <outline text="validityEnd {string}=validityStart+opt.validitySpan 有効期間終了日時(ISO8601文字列)" />
@@ -709,13 +715,9 @@
             </outline>
             <outline text="devices - デバイス管理シートの項目(ae550a40dc50)" _note="複数デバイスでの単一アカウントの使用を可能にするため「account.userId(1) : device.userId(n)」で作成&#10;">
               <outline text="userId {string|number}='guest' ユーザ識別子" _note="not null" />
-              <outline text="email {string}=opt.adminMail ユーザのメールアドレス(unique)" _note="primaryKey&#10;" />
-              <outline text="name {string}='ゲスト' ユーザの氏名" />
-              <outline text="phone {string}=''ユーザの電話番号" />
-              <outline text="address {string}='' ユーザの住所" />
-              <outline text="note {string}='' ユーザ情報(備考)" />
-              <outline text="CPkey {string}='' クライアント側公開鍵" />
+              <outline text="CPkey {string}='' クライアント側公開鍵" _note="primaryKey" />
               <outline text="CPkeyExpiry {string}='' CPkey有効期限(ISO8601拡張形式)" _note="期限内に適切な暗号化・署名された要求はOKとする&#10;" />
+              <outline text="note {string}='' ユーザ情報(備考)" />
               <outline text="trial {&lt;a href=&quot;https://workflowy.com/#/aaab38c8e75d&quot;&gt;authTrial&lt;/a&gt;} ログイン試行情報" />
               <outline text="created {string}=Date.now() ユーザ登録日時(ISO8601拡張形式)" />
               <outline text="updated {string}=Date.now() 最終更新日時(ISO8601拡張形式)" />
@@ -726,17 +728,67 @@
                 <outline text="devicesTableName {string}='devices' &lt;a href=&quot;https://workflowy.com/#/ae550a40dc50&quot;&gt;デバイス管理シート&lt;/a&gt;の名前" />
               </outline>
             </outline>
+            <outline text="[old]">
+              <outline text="accounts - アカウント管理シートの項目(2f8a77eb6f10) #copy">
+                <outline text="userId {string|number}='guest' ユーザ識別子(primaryKey)" _note="default:101(0〜100はシステム用に留保), primaryKey&#10;" />
+                <outline text="note {string}='' アカウント情報(備考)" />
+                <outline text="validityStart {string}=Date.now() 有効期間開始日時(ISO8601文字列)" />
+                <outline text="validityEnd {string}=validityStart+opt.validitySpan 有効期間終了日時(ISO8601文字列)" />
+                <outline text="authority {JSON}={} シート毎のアクセス権限。&lt;code&gt;{シート名:rwdos文字列}&lt;/code&gt; 形式、既定値はアクセス権無し" />
+                <outline text="created {string}=Date.now() ユーザ登録日時(ISO8601拡張形式)" />
+                <outline text="updated {string}=Date.now() 最終更新日時(ISO8601拡張形式)" />
+                <outline text="deleted {string}='' 論理削除日時" />
+              </outline>
+              <outline text="devices - デバイス管理シートの項目(ae550a40dc50) #copy" _note="複数デバイスでの単一アカウントの使用を可能にするため「account.userId(1) : device.userId(n)」で作成&#10;">
+                <outline text="userId {string|number}='guest' ユーザ識別子" _note="not null" />
+                <outline text="email {string}=opt.adminMail ユーザのメールアドレス(unique)" _note="primaryKey&#10;" />
+                <outline text="name {string}='ゲスト' ユーザの氏名" />
+                <outline text="phone {string}=''ユーザの電話番号" />
+                <outline text="address {string}='' ユーザの住所" />
+                <outline text="note {string}='' ユーザ情報(備考)" />
+                <outline text="CPkey {string}='' クライアント側公開鍵" />
+                <outline text="CPkeyExpiry {string}='' CPkey有効期限(ISO8601拡張形式)" _note="期限内に適切な暗号化・署名された要求はOKとする&#10;" />
+                <outline text="trial {&lt;a href=&quot;https://workflowy.com/#/aaab38c8e75d&quot;&gt;authTrial&lt;/a&gt;} ログイン試行情報" />
+                <outline text="created {string}=Date.now() ユーザ登録日時(ISO8601拡張形式)" />
+                <outline text="updated {string}=Date.now() 最終更新日時(ISO8601拡張形式)" />
+                <outline text="deleted {string}='' 論理削除日時" />
+              </outline>
+            </outline>
             <outline text="log - SpreadDbのアクセスログシート" _note="詳細はSpreadDb.&lt;a href=&quot;https://workflowy.com/#/dab8cfcec9d8&quot;&gt;sdbLog&lt;/a&gt;参照" />
           </outline>
           <outline text="typedefs">
-            <outline text="acMain_query {Object} authClientの引数&quot;query&quot;(5d949f3a25ab)">
+            <outline text="acRequest_query {Object} authClientの引数&quot;query&quot;(5d949f3a25ab)">
               <outline text="table {string} 操作対象テーブル名" />
               <outline text="command {string} 操作名" _note="commandの種類は下表の通り。&#10;&quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;テーブル管理情報取得 | schema | s" />
               <outline text="[where] {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用&#10;&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- string&#10;  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。&#10;  - その他 ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;- その他(Object,function,string以外) ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;" />
               <outline text="[set] {Object|Object[]|string|string[]|Function} 追加・更新する値" _note="command='update','append'で使用&#10;&#10;- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;" />
               <outline text="2 Backlinks">
-                <outline text="&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;[▼]&lt;/a&gt; authClientの引数&quot;query&quot;(acMain_query)の各メンバ" />
-                <outline text="query {&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;acMain_query&lt;/a&gt;} サーバ側テーブルへの処理要求(7f56d7bb30a1)" />
+                <outline text="&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;[▼]&lt;/a&gt; authClient.requestの引数&quot;query&quot;(acRequest_query)の各メンバ" />
+                <outline text="query {&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;acRequest_query&lt;/a&gt;[]} サーバ側テーブルへの処理要求(7f56d7bb30a1)" />
+              </outline>
+            </outline>
+            <outline text="asMain_query {Object} authServerの引数&quot;query&quot;(c9db0f7953c8)">
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;[▼]&lt;/a&gt; authClient.requestの引数&quot;query&quot;(acRequest_query)の各メンバ" />
+              <outline text="userId {string|number}=&quot;guest&quot; ユーザ識別子(uuid等)" />
+              <outline text="queryId {string}=UUID クエリ・結果突合用文字列" />
+              <outline text="token {string} token生成日時(UNIX時刻)を署名・暗号化した文字列" _note="timestampと兼用" />
+              <outline text="[email] {string} ユーザのメールアドレス" />
+              <outline text="[passcode] {number|string} 入力されたパスコード" _note="開発時はauthClient/authServerへの引数として扱う(∵自動テスト用)。リリース時には引数として与えるのは不可とする&#10;&#10;- authClientへの引数：ダイアログから入力されたパスコードの代替。配列可&#10;- authServerへの引数：乱数で発生させるパスコードの代替&#10;" />
+              <outline text="2 Backlinks">
+                <outline text="query {&lt;a href=&quot;https://workflowy.com/#/c9db0f7953c8&quot;&gt;asMain_query&lt;/a&gt;} クライアントからの処理要求" _note="ユーザ側にCS/SPkeyが有った場合、暗号化＋署名" />
+                <outline text="&lt;a href=&quot;https://workflowy.com/#/c9db0f7953c8&quot;&gt;[▼]&lt;/a&gt; authServerの引数&quot;query&quot;(asMain_query)の各メンバ" />
+              </outline>
+            </outline>
+            <outline text="authServer {Object} authServerの戻り値(94c13922ade7)">
+              <outline text="&lt;a href=&quot;https://workflowy.com/#/c9db0f7953c8&quot;&gt;[▼]&lt;/a&gt; authServerの引数&quot;query&quot;(asMain_query)の各メンバ" />
+              <outline text="SPkey {string} サーバ側公開鍵" />
+              <outline text="qSts {string} クエリ単位の実行結果" _note="正常終了なら&quot;OK&quot;。エラーコードは以下の通り。&#10;- create : &quot;Already Exist&quot;, &quot;No Cols and Data&quot;&#10;- その他 : &quot;No Table&quot;" />
+              <outline text="num {number} 変更された行数" _note="append:追加行数、update:変更行数、select:抽出行数、schema:0(固定)&#10;" />
+              <outline text="result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
+              <outline text="status {string} authServerの実行結果" _note="必要に応じてauthClientで追加変更" />
+              <outline text="2 Backlinks">
+                <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/94c13922ade7&quot;&gt;authServer&lt;/a&gt;}" />
+                <outline text="query {&lt;a href=&quot;https://workflowy.com/#/94c13922ade7&quot;&gt;authServer&lt;/a&gt;} 処理要求" _note="起動時は引数&quot;query&quot;のコピー、以降は各メソッドにより情報を付加&#10;" />
               </outline>
             </outline>
             <outline text="acMain_option {Object} authClient独自設定値(6e19dabbd5cc)">
@@ -747,19 +799,6 @@
                 <outline text="&lt;a href=&quot;https://workflowy.com/#/6e19dabbd5cc&quot;&gt;[▼]&lt;/a&gt; authClient独自設定" />
                 <outline text="option {&lt;a href=&quot;https://workflowy.com/#/6e19dabbd5cc&quot;&gt;acMain_option&lt;/a&gt;} authClient独自設定値(20004cac4de5)" />
                 <outline text="opt {&lt;a href=&quot;https://workflowy.com/#/6e19dabbd5cc&quot;&gt;authClient_option&lt;/a&gt;} authClientに渡す起動時オプション" />
-              </outline>
-            </outline>
-            <outline text="asMain_query {Object} authServerの引数&quot;query&quot;(c9db0f7953c8)">
-              <outline text="&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;[▼]&lt;/a&gt; authClientの引数&quot;query&quot;(acMain_query)の各メンバ" />
-              <outline text="queryId {string}=UUID クエリ・結果突合用文字列" />
-              <outline text="timestamp {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)" />
-              <outline text="userId {string|number}=&quot;guest&quot; ユーザ識別子(uuid等)" />
-              <outline text="CPkey {string} ユーザの公開鍵" />
-              <outline text="[email] {string} ユーザのメールアドレス" />
-              <outline text="[passcode] {number|string} 入力されたパスコード" _note="開発時はauthClient/authServerへの引数として扱う(∵自動テスト用)。リリース時には引数として与えるのは不可とする&#10;&#10;- authClientへの引数：ダイアログから入力されたパスコードの代替。配列可&#10;- authServerへの引数：乱数で発生させるパスコードの代替&#10;" />
-              <outline text="2 Backlinks">
-                <outline text="query {&lt;a href=&quot;https://workflowy.com/#/c9db0f7953c8&quot;&gt;asMain_query&lt;/a&gt;} クライアントからの処理要求" _note="ユーザ側にCS/SPkeyが有った場合、暗号化＋署名" />
-                <outline text="&lt;a href=&quot;https://workflowy.com/#/c9db0f7953c8&quot;&gt;[▼]&lt;/a&gt; authServerの引数&quot;query&quot;(asMain_query)の各メンバ" />
               </outline>
             </outline>
             <outline text="asMain_option {Object} authServer独自設定値(83ede73058e8)">
@@ -776,18 +815,6 @@
                 <outline text="option {&lt;a href=&quot;https://workflowy.com/#/83ede73058e8&quot;&gt;asMain_option&lt;/a&gt;} authServer独自設定値" />
               </outline>
             </outline>
-            <outline text="authServer {Object} authServerの戻り値(94c13922ade7)">
-              <outline text="&lt;a href=&quot;https://workflowy.com/#/c9db0f7953c8&quot;&gt;[▼]&lt;/a&gt; authServerの引数&quot;query&quot;(asMain_query)の各メンバ" />
-              <outline text="SPkey {string} サーバ側公開鍵" />
-              <outline text="qSts {string} クエリ単位の実行結果" _note="正常終了なら&quot;OK&quot;。エラーコードは以下の通り。&#10;- create : &quot;Already Exist&quot;, &quot;No Cols and Data&quot;&#10;- その他 : &quot;No Table&quot;" />
-              <outline text="num {number} 変更された行数" _note="append:追加行数、update:変更行数、select:抽出行数、schema:0(固定)&#10;" />
-              <outline text="result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
-              <outline text="status {string} authServerの実行結果" _note="必要に応じてauthClientで追加変更" />
-              <outline text="2 Backlinks">
-                <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/94c13922ade7&quot;&gt;authServer&lt;/a&gt;}" />
-                <outline text="query {&lt;a href=&quot;https://workflowy.com/#/94c13922ade7&quot;&gt;authServer&lt;/a&gt;} 処理要求" _note="起動時は引数&quot;query&quot;のコピー、以降は各メソッドにより情報を付加&#10;" />
-              </outline>
-            </outline>
             <outline text="authTrial {Object} ログイン試行関連情報(aaab38c8e75d)">
               <outline text="passcode {number} 設定されたパスコード" />
               <outline text="datetime {string} パスコード通知メール送信日時" _note="パスコード要求(client)&amp;gt;要求受領(server)&amp;gt;パスコード生成&amp;gt;通知メール送信の内、メール送信日時&#10;" />
@@ -797,7 +824,8 @@
                 <outline text="st {number} ステータス(STatus)" />
               </outline>
               <outline text="thawing {string}='1970/01/01' 凍結解除日時" />
-              <outline text="1 Backlink">
+              <outline text="2 Backlinks">
+                <outline text="trial {&lt;a href=&quot;https://workflowy.com/#/aaab38c8e75d&quot;&gt;authTrial&lt;/a&gt;} ログイン試行情報" />
                 <outline text="trial {&lt;a href=&quot;https://workflowy.com/#/aaab38c8e75d&quot;&gt;authTrial&lt;/a&gt;} ログイン試行情報" />
               </outline>
             </outline>
