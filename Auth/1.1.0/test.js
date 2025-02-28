@@ -221,7 +221,7 @@ const authCommon = {
       {name:'qSts',type:'string',value:'OK',note:' クエリ単位の実行結果'},
       {name:'num',type:'number',value:-1,note:' 変更された行数。append:追加行数、update:変更行数、select:抽出行数、schema:0(固定)'},
       {name:'result',type:'object[]',value:[],note:' レコード単位の実行結果'},
-      {name:'status',type:'string',value:'OK',note:' authServerの実行結果'},      
+      {name:'status',type:'string',value:'OK',note:' authServerの実行結果'},
     ],
   }
 }
@@ -341,8 +341,12 @@ function authServer(query,option={}) {
       {name:'newDevice',type:'object',value:{},note:'新規登録者のデバイス管理設定'},
       {name:'validitySpan',type:'number',value:1209600000,note:'アカウントの有効期間(2週間)'},
     ],
-    accountsSheet: [
+    accountsSheet: [  // 「アカウント管理シート」の項目定義
       {name:'userId',type:'string|number',note:'ユーザ識別子(primaryKey)',auto_increment:101,primaryKey:true},
+      {name:'email',type:'string',note:'ユーザのメールアドレス(primaryKey)',primaryKey:true},
+      {name:'name',type:'string',note:'ユーザの氏名'},
+      {name:'phone',type:'string',note:'ユーザの電話番号'},
+      {name:'address',type:'string',note:'ユーザの住所'},
       {name:'note',type:'string',note:'アカウント情報(備考)'},
       {name:'validityStart',type:'string',note:'有効期間開始日時(ISO8601文字列)',default:()=>toLocale(Date.now())},
       {name:'validityEnd',type:'string',note:'有効期間終了日時(ISO8601文字列)',default:()=>toLocale(Date.now()+pv.opt.validitySpan)},
@@ -351,19 +355,27 @@ function authServer(query,option={}) {
       {name:'updated',type:'string',note:'=Date.now() 最終更新日時(ISO8601拡張形式)',default:()=>toLocale(Date.now())},
       {name:'deleted',type:'string',note:'論理削除日時'},
     ],
-    devicesSheet: [
+    devicesSheet: [ // 「デバイス管理シート」の項目定義
       {name:'userId',type:'string|number',note:'ユーザ識別子。not null'},
-      {name:'email',type:'string',note:'ユーザのメールアドレス(primaryKey)',primaryKey:true},
-      {name:'name',type:'string',note:'ユーザの氏名'},
-      {name:'phone',type:'string',note:'ユーザの電話番号'},
-      {name:'address',type:'string',note:'ユーザの住所'},
-      {name:'note',type:'string',note:'ユーザ情報(備考)'},
       {name:'CPkey',type:'string',note:'クライアント側公開鍵'},
       {name:'CPkeyExpiry',type:'string',note:'CPkey有効期限'},
+      {name:'note',type:'string',note:'ユーザ情報(備考)'},
       {name:'trial',type:'authTrial',note:'ログイン試行情報'},
       {name:'created',type:'string',note:'=Date.now() ユーザ登録日時(ISO8601拡張形式)'},
       {name:'updated',type:'string',note:'=Date.now() 最終更新日時(ISO8601拡張形式)'},
       {name:'deleted',type:'string',note:'論理削除日時'},
+    ],
+    authTrial: [  // ログイン試行関連情報
+      {name:'passcode',type:'number',note:'設定されたパスコード',
+        value:()=>{return Math.trunc(Math.random()*(10 ** pv.opt.passcodeDigit))}},
+      {name:'datetime',type:'string',note:'パスコード通知メール送信日時',value:()=>toLocale(Date.now())},
+      {name:'log',type:'authTrialLog',note:'試行履歴情報',value:{}},
+      {name:'thawing',type:'string',note:'凍結解除日時',value:null},
+    ],
+    authTrialLog: [ // authTrial.logにセットするオブジェクト
+      {name:'dt',type:'string',note:'パスコード検証日時',value:()=>toLocale(Date.now())},
+      {name:'pc',type:'number',note:'ユーザが入力したパスコード',value:null},
+      {name:'st',type:'number',note:'ステータス(連続失敗回数)。成功なら0',value:0},
     ],
   };
   dev.start(pv.whois, [...arguments]);
