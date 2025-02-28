@@ -238,6 +238,7 @@ function authClient(option={}) {
       {name:'SPkey',type:'string',value:'',note:'サーバ側公開鍵'},
     ],
     acMain_option:[ // pv.optの内、authClient独自設定項目(引数により設定値の変更が可能な項目)
+      {name:'storageKey',type:'string',value:'authClient',note:'localStorageのキー名'},
       {name:'saveUserId',type:'boolean',value:true,note:'userIdをlocalStorageに保存するか否か'},
       {name:'saveEmail',type:'boolean',value:false,note:'e-mailをlocalStorageに保存するか否か'},
       {name:'mirror',type:'object',value:[],note:'ローカル側にミラーを保持するテーブルの定義'},
@@ -252,13 +253,7 @@ function authClient(option={}) {
   try { // 主処理(constructor)
 
     // -------------------------------------------------------------
-    dev.step(1);  // URLクエリ・localStorageからuserId/e-mail取得を試行
-    // -------------------------------------------------------------
-    v.userId = null;
-    v.email = null;
-
-    // -------------------------------------------------------------
-    dev.step(2); // メンバ(pv)に引数を保存、未指定分には既定値を設定
+    dev.step(1); // メンバ(pv)に引数を保存、未指定分には既定値を設定
     // -------------------------------------------------------------
     // authClient/Server共通データ型定義をtypedefsに追加
     Object.keys(authCommon.typedefs).forEach(x => typedefs[x] = authCommon.typedefs[x]);
@@ -273,28 +268,54 @@ function authClient(option={}) {
     dev.dump(pv,244);
 
     // -------------------------------------------------------------
-    dev.step(3); // CSkey/CPkeyを準備
+    dev.step(2); // CSkey/CPkeyを準備
     // -------------------------------------------------------------
     pv.CSkey = cryptico.generateRSAKey(createPassword(),pv.opt.bits);
     pv.CPkey = cryptico.publicKeyString(pv.CSkey);
 
     // -------------------------------------------------------------
-    dev.step(4); // ミラーリングするテーブルの設定
+    dev.step(3);  // URLクエリ・localStorageからuserId/e-mail取得を試行
+    // -------------------------------------------------------------
+    // localStorageからの取得試行
+    v.ls = JSON.parse(localStorage.getItem(pv.opt.storageKey));
+    if( v.ls !== null ){
+      pv.userId = v.ls.userId || '';
+      pv.email = v.ls.email || '';
+    }
+    // URLクエリからの取得試行
+    for (const [key, value] of new URLSearchParams(location.search).entries()) {
+      if( key === 'userId' || key === 'email' ) pv[key] = value;
+    }
+    // userIdが何れにも存在しない場合、UUIDを設定(ゲスト)
+    if( pv.userId === '' ) pv.userId = Utilities.getUuid();
+
+    // -------------------------------------------------------------
+    dev.step(4); // ミラーリングするテーブルの全件データ要求
     // -------------------------------------------------------------
     dev.dump(pv.opt.mirror,259);
     v.query = [];
+    v.crond = [];
     pv.opt.mirror.forEach(mirror => {
       // ミラーするテーブルの構成情報とレコード全件の要求
       v.query.push({table:mirror.name,command:'schema'});
       v.query.push({table:mirror.name,command:'select',where:'()=>true'});
+      // 差分取得のcron定義(crondの引数オブジェクト)を作成
+      if( mirror.interval > 0 ){
+        v.crond.push({name:mirror.name,interval:mirror.interval,func:()=>{
+          v.r = alasql("select max(updated) as lastUpdate from "+mirror.name)[0].lastUpdate;
+          this.request({table:mirror.name,command:'select',
+            where:'o=>{return new Date(o.updated).getTime() > '+(new Date(v.r).getTime())+' ? true : false}'})
+        }});
+      }
     });
     dev.dump(v.query,266);
     v.r = request(v.query);
     if( v.r instanceof Error ) throw v.r;
+
+    // crondのセット
+    v.crond.forEach(x => crond.set(x));
     dev.dump(v.r,269);
 
-    // テーブルの作成とレコード全件のセット
-    // 差分取得のcrondセット
 
     dev.end(); // 終了処理
     v.rv = {request:request};
@@ -536,6 +557,85 @@ function authPost(arg) {
   } catch (e) { dev.error(e); return e; }
 }
 
+/** crond: 定期的に実行するジョブを管理する
+ * sessionが切れたらジョブを停止、管理情報も消去する
+ * 
+ * - crond.set({name:ジョブ名,func:ジョブ(関数),interval:実行間隔})
+ * - crond.clear(取消ジョブ名 or null(全件取消))
+ */
+const crond = {
+
+  /** set: 定期実行ジョブを設定
+   * @param {Object} arg
+   * @param {string} arg.name - ジョブを特定する名称
+   * @param {function} arg.func - ジョブ本体
+   * @param {number} arg.interval - 実行間隔。ミリ秒
+   * @returns {void}
+   */
+  set: (arg) => {
+    const v = {whois:'crond.set',step:0,rv:null};
+    console.log(`${v.whois} start.\narg=${JSON.stringify(arg,null,2)}`);
+    try {
+
+      v.step = 1; // 初期設定
+      if( !this.cron ){
+        this.cron = {}; // {ジョブ名:ジョブ番号}形式のオブジェクト
+        // ページ遷移時には登録された定期実行ジョブを全て抹消
+        window.addEventListener("beforeunload", (event) => {
+          // Cancel the event as stated by the standard.
+          event.preventDefault();
+          // Chrome requires returnValue to be set.
+          event.returnValue = "";
+          crond.clear();
+        });
+      }
+
+      v.step = 2; // 定期実行ジョブの登録
+      this.cron[arg.name] = setInterval(arg.func,arg.interval);
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+      return e;
+    }
+  },
+
+  /** clear: 設定済定期実行ジョブの取消
+   * @param {string} arg=null - 
+   * @param {string} arg.name - ジョブを特定する名称
+   * @param {function} arg.func - ジョブ本体
+   * @param {number} arg.interval - 実行間隔。ミリ秒
+   * @returns {void}
+   */
+   clear: (arg=null) => {
+    const v = {whois:'crond.clear',step:0,rv:null};
+    console.log(`${v.whois} start.\narg=${arg}`);
+    try {
+
+      v.step = 1; // 取消対象ジョブのリストアップ
+      v.arg = arg === null ? Object.keys(this.cron) : [arg];
+
+      v.step = 2; // 登録取消の実行
+      v.arg.forEach(x => {
+        clearInterval(this.cron[x]);
+        delete this.cron[x];
+      })
+
+      v.step = 9; // 終了処理
+      console.log(`${v.whois} normal end.`);
+      return v.rv;
+
+    } catch(e) {
+      e.message = `${v.whois} abnormal end at step.${v.step}\n${e.message}`;
+      console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+      return e;
+    }
+  },
+};
 /** createObject: 定義と所与のオブジェクトから新たなオブジェクトを作成
  * - arg.valに存在していてもarg.defsに存在しないメンバは廃棄される(余計なメンバ指定は許容しない)
  */
