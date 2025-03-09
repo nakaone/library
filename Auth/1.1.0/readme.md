@@ -1,13 +1,7 @@
 # <a name="ee755b0a70bd">Auth 1.1.0</a>
 
 ## 概要
-
-### おおまかな流れ
 ![](doc/summary.svg)
-### 処理要求の流れ
-![](doc/query.svg)
-### 新規登録の流れ
-![](doc/registration.svg)
 ## authCommon: authClient/Server共通設定・関数集
 
 ### <a name="a4bae9665fcc">option {Object} authClient/Server共通設定</a>
@@ -58,6 +52,8 @@
 		
 	- adminName {number}=null 管理者名
 		
+	- storageKey {string}='authClient' localStorageのキー名
+		
 	- saveUserId {boolean}=true userIdをlocalStorageに保存するか否か
 		
 	- saveEmail {boolean}=false e-mailをlocalStorageに保存するか否か
@@ -65,7 +61,7 @@
 	- <a name="e6693b2cc4bd">mirror {<a href="https://workflowy.com/#/53d27b6201fa">mirrorDef</a>[]} ローカル側にミラーを保持するテーブルの定義</a>
 		
 - userId {string} ユーザ識別子<br>
-	ゲストの場合はnull
+	ゲストも含めて識別するため、未定の場合は初期化時にUUIDを採番
 - email {string} ユーザの連絡先メールアドレス
 	
 - CSkey {Object} クライアント側秘密鍵
@@ -75,7 +71,10 @@
 - SPkey {string} サーバ側公開鍵
 	
 ### main: authClient主処理
+![](doc/acMain.svg)
 
+- crondが無くても全件データ要求を行いSPkeyを取得、localStorageに保存
+- URLクエリ・localStorageからuserId/e-mail取得を試行、取得できたらlocalStorageに保存
 - 処理概要
 	
 	- URLクエリパラメータ・localStorageからuserId, e-mailの取得を試行<br>
@@ -93,7 +92,7 @@
 - 戻り値 {Object.<string, function>} メソッドのオブジェクト
 	
 ### request() : アプリケーションからの処理要求をauthServerに渡す
-
+![](doc/acRequest.svg)
 - 引数
 	
 	- <a name="7f56d7bb30a1">query {<a href="#5d949f3a25ab">acRequest_query</a>[]} サーバ側テーブルへの処理要求</a>
@@ -206,8 +205,8 @@
 複数デバイスでの単一アカウントの使用を可能にするため「account.userId(1) : device.userId(n)」で作成
 - userId {string|number}='guest' ユーザ識別子<br>
 	not null
-- CPkey {string}='' クライアント側公開鍵<br>
-	primaryKey
+- CPkey {string}='' クライアント側公開鍵、兼デバイスID<br>
+	primaryKey。なおe-mailとデバイスIDの対応は取らない
 - CPkeyExpiry {string}='' CPkey有効期限(ISO8601拡張形式)<br>
 	期限内に適切な暗号化・署名された要求はOKとする
 - note {string}='' ユーザ情報(備考)
@@ -270,29 +269,30 @@
 詳細はSpreadDb.[sdbLog](#dab8cfcec9d8)参照
 ## typedefs
 
-### <a name="5d949f3a25ab">acRequest_query {Object} authClientの引数"query"</a>
+### <a name="5d949f3a25ab">acRequest_query {Object} authClient.requestの引数"query"</a>
 
 - table {string} 操作対象テーブル名
 	
 - command {string} 操作名<br>
-	commandの種類は下表の通り。
-	"rwdos"とは"Read/Write/Delete/Own/Schema"の頭文字。管理者のみ実行可能な"c"(createTable)と特殊権限"o"を加えてシート毎のアクセス制御を行う。
+	- commandの種類は下表の通り。なお新規アカウント登録はテーブル操作ではないので、rwdosの範囲外
+	- "rwdos"とは"Read/Write/Delete/Own/Schema"の頭文字。管理者のみ実行可能な"c"(createTable)と特殊権限"o"を加えてシート毎のアクセス制御を行う。
 	
 	内容 | command | rwdos
-	:-- | :-- | :-- 
+	:-- | :-- | :-- 
 	テーブル生成 | create | c
 	参照 | select | r
 	更新 | update | rw
 	追加 | append/insert | w
 	テーブル管理情報取得 | schema | s
+	新規アカウント登録 | regist | x
 - [where] {Object|Function|string} 対象レコードの判定条件<br>
 	command='select','update','delete'で使用
 	
 	- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
 	- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
 	- string
-	  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。
-	  - その他 ⇒ 項目定義で"primaryKey"を指定した項目の値
+	  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。
+	  - その他 ⇒ 項目定義で"primaryKey"を指定した項目の値
 	- その他(Object,function,string以外) ⇒ 項目定義で"primaryKey"を指定した項目の値
 - [set] {Object|Object[]|string|string[]|Function} 追加・更新する値<br>
 	command='update','append'で使用
@@ -300,30 +300,31 @@
 	- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}
 	- string ⇒ 上記Objectに変換可能なJSON文字列
 	- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数
-	  【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
+	  【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
 ### <a name="c9db0f7953c8">asMain_query {Object} authServerの引数"query"</a>
 
 - table {string} 操作対象テーブル名
 	
 - command {string} 操作名<br>
-	commandの種類は下表の通り。
-	"rwdos"とは"Read/Write/Delete/Own/Schema"の頭文字。管理者のみ実行可能な"c"(createTable)と特殊権限"o"を加えてシート毎のアクセス制御を行う。
+	- commandの種類は下表の通り。なお新規アカウント登録はテーブル操作ではないので、rwdosの範囲外
+	- "rwdos"とは"Read/Write/Delete/Own/Schema"の頭文字。管理者のみ実行可能な"c"(createTable)と特殊権限"o"を加えてシート毎のアクセス制御を行う。
 	
 	内容 | command | rwdos
-	:-- | :-- | :-- 
+	:-- | :-- | :-- 
 	テーブル生成 | create | c
 	参照 | select | r
 	更新 | update | rw
 	追加 | append/insert | w
 	テーブル管理情報取得 | schema | s
+	新規アカウント登録 | regist | x
 - [where] {Object|Function|string} 対象レコードの判定条件<br>
 	command='select','update','delete'で使用
 	
 	- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
 	- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
 	- string
-	  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。
-	  - その他 ⇒ 項目定義で"primaryKey"を指定した項目の値
+	  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。
+	  - その他 ⇒ 項目定義で"primaryKey"を指定した項目の値
 	- その他(Object,function,string以外) ⇒ 項目定義で"primaryKey"を指定した項目の値
 - [set] {Object|Object[]|string|string[]|Function} 追加・更新する値<br>
 	command='update','append'で使用
@@ -331,13 +332,13 @@
 	- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}
 	- string ⇒ 上記Objectに変換可能なJSON文字列
 	- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数
-	  【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
-- userId {string|number}="guest" ユーザ識別子(uuid等)
+	  【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
+- 【tokenに持たせるため削除】userId {string|number}="guest" ユーザ識別子(uuid等)
 	
 - queryId {string}=UUID クエリ・結果突合用文字列
 	
-- token {string} token生成日時(UNIX時刻)を署名・暗号化した文字列<br>
-	timestampと兼用
+- token {string} userIdを署名・暗号化した文字列
+	
 - [email] {string} ユーザのメールアドレス
 	
 - [passcode] {number|string} 入力されたパスコード<br>
@@ -350,24 +351,25 @@
 - table {string} 操作対象テーブル名
 	
 - command {string} 操作名<br>
-	commandの種類は下表の通り。
-	"rwdos"とは"Read/Write/Delete/Own/Schema"の頭文字。管理者のみ実行可能な"c"(createTable)と特殊権限"o"を加えてシート毎のアクセス制御を行う。
+	- commandの種類は下表の通り。なお新規アカウント登録はテーブル操作ではないので、rwdosの範囲外
+	- "rwdos"とは"Read/Write/Delete/Own/Schema"の頭文字。管理者のみ実行可能な"c"(createTable)と特殊権限"o"を加えてシート毎のアクセス制御を行う。
 	
 	内容 | command | rwdos
-	:-- | :-- | :-- 
+	:-- | :-- | :-- 
 	テーブル生成 | create | c
 	参照 | select | r
 	更新 | update | rw
 	追加 | append/insert | w
 	テーブル管理情報取得 | schema | s
+	新規アカウント登録 | regist | x
 - [where] {Object|Function|string} 対象レコードの判定条件<br>
 	command='select','update','delete'で使用
 	
 	- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新
 	- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新
 	- string
-	  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。
-	  - その他 ⇒ 項目定義で"primaryKey"を指定した項目の値
+	  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。
+	  - その他 ⇒ 項目定義で"primaryKey"を指定した項目の値
 	- その他(Object,function,string以外) ⇒ 項目定義で"primaryKey"を指定した項目の値
 - [set] {Object|Object[]|string|string[]|Function} 追加・更新する値<br>
 	command='update','append'で使用
@@ -375,13 +377,13 @@
 	- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}
 	- string ⇒ 上記Objectに変換可能なJSON文字列
 	- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数
-	  【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
-- userId {string|number}="guest" ユーザ識別子(uuid等)
+	  【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
+- 【tokenに持たせるため削除】userId {string|number}="guest" ユーザ識別子(uuid等)
 	
 - queryId {string}=UUID クエリ・結果突合用文字列
 	
-- token {string} token生成日時(UNIX時刻)を署名・暗号化した文字列<br>
-	timestampと兼用
+- token {string} userIdを署名・暗号化した文字列
+	
 - [email] {string} ユーザのメールアドレス
 	
 - [passcode] {number|string} 入力されたパスコード<br>
@@ -389,7 +391,7 @@
 	
 	- authClientへの引数：ダイアログから入力されたパスコードの代替。配列可
 	- authServerへの引数：乱数で発生させるパスコードの代替
-- SPkey {string} サーバ側公開鍵
+- timestamp {string} クエリ実行日時。ISO8601拡張形式
 	
 - qSts {string} クエリ単位の実行結果<br>
 	正常終了なら"OK"。エラーコードは以下の通り。
@@ -401,8 +403,12 @@
 	
 - status {string} authServerの実行結果<br>
 	必要に応じてauthClientで追加変更
+- SPkey {string} サーバ側公開鍵
+	
 ### <a name="6e19dabbd5cc">acMain_option {Object} authClient独自設定値</a>
 
+- storageKey {string}='authClient' localStorageのキー名
+	
 - saveUserId {boolean}=true userIdをlocalStorageに保存するか否か
 	
 - saveEmail {boolean}=false e-mailをlocalStorageに保存するか否か
@@ -441,7 +447,7 @@
 		
 	- pc {number} ユーザが入力したパスコード(PassCode)
 		
-	- st {number} ステータス(STatus)
+	- st {number} ステータス(STatus)。連続失敗回数、成功なら0
 		
 - thawing {string}='1970/01/01' 凍結解除日時
 	
@@ -473,7 +479,9 @@ crond.set(), crond.clear()共通
 	
 - func {function} ジョブ本体
 	
-- interval {number}=300000 実行間隔(ミリ秒)
+- interval {number}=300000 実行間隔(ミリ秒)<br>
+	0の場合はauthClientインスタンス化時のみ実行
+- 
 	
 ### <a name="5f4d3fd98b88">scenarioDef {Object} テストの定義</a>
 
@@ -522,7 +530,7 @@ crond.set(), crond.clear()共通
 				- force : 強制的に再作成
 				- ifnot : 不在なら作成、存在なら再作成しない(不在時作成。if not exist)
 				- delete: 強制削除(defaultの既定値)。存在していれば削除、再作成はしない
-				- asis  : そのまま何もしない
+				- asis  : そのまま何もしない
 			- dpName {string}='authServer' - DocumentPropertyのキー名
 				
 ### authPost() : クライアント—サーバ間の通信を代行
@@ -557,6 +565,19 @@ crond.set(), crond.clear()共通
 | 15 | rSts | Duplicate | appendRow<br>updateRow | unique項目に重複した値を入れようとした |
 | 16 | Error | Invalid Argument | functionalyze | 不適切な引数 |
 | 17 | Error | Could not Lock | main | 規定回数以上シートのロックに失敗した |
+### アカウントの状態遷移
+アカウントは以下①〜④の4種類のいずれかの状態を取る。
+
+| No | アカウント | userId |  ログイン | 状態 |
+| :--: | :-- | :-- | :-- | :-- |
+| ① | 未作成 |  |  | ゲスト、または新規登録希望だが未手続の人 |
+| ② | 作成済 | 不明 |  | 登録済だが登録と異なるデバイスでアクセスしている人 |
+| ③ |  | 判明 | 未 | 新規登録通知メールのURLクエリから開いた人<br>または申込に使用したデバイスからのアクセス |
+| ④ |  |  | 済 | 申込済かつログインした人 |
+### 注意事項
+
+- ミラーリングするテーブルには"updated"を必須とする<br>
+	更新対象レコードかの判別は"updated"を基準として行うため。
 ### 更新履歴
 
 # 【参考】文書化対象外要素へのリンク
@@ -628,10 +649,10 @@ crond.set(), crond.clear()共通
 	| :-- | :--: | :-- | :-- | :-- | :-- |
 	| create | — | Already Exist<br>No Cols and Data | — | [sdbColumn](#df5b3c98954e) | 管理者のみ実行可 |
 	| select | r | No Table | 抽出失敗/対象 | — | 「対象なのに失敗」は考慮しない |
-	| update | rw | No Table | 更新失敗/対象 | {sts:[OK|Duplicate],diff:{項目名:[更新前,更新後]}} |  |
-	| append | w | No Table | 追加失敗/対象 | {sts:[OK|Duplicate],diff:追加行Obj} |  |
+	| update | rw | No Table | 更新失敗/対象 | {sts:[OK|Duplicate],diff:{項目名:[更新前,更新後]}} |  |
+	| append | w | No Table | 追加失敗/対象 | {sts:[OK|Duplicate],diff:追加行Obj} |  |
 	| delete | d | No Table | 削除失敗/対象 | — | 「対象なのに失敗」は考慮しない |
-	| schema | s | No Table | — | [sdbColumn](#df5b3c98954e) |  |
+	| schema | s | No Table | — | [sdbColumn](#df5b3c98954e) |  |
 	
 	- command系メソッドはstatus,num,recordを返す
 	- command系メソッドは、成功件数が0件でも「正常終了」とし、status="OK"とする
@@ -682,7 +703,7 @@ crond.set(), crond.clear()共通
 	- Object ⇒ create/appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}
 	- string ⇒ 上記Objectに変換可能なJSON文字列
 	- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数
-	  【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
+	  【例】abc欄にfuga+hogeの値をセットする : {func: o=>{return {abc:(o.fuga||0)+(o.hoge||0)}}}
 - <a name="b9077d911a05">arg {Object}</a>
 	
 	- asis {any} 結果の値

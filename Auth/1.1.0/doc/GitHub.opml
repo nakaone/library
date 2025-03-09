@@ -596,11 +596,7 @@
           </outline>
         </outline>
         <outline text="Auth 1.1.0(ee755b0a70bd)">
-          <outline text="概要">
-            <outline text="おおまかな流れ" _note="![](doc/summary.svg)&#10;" />
-            <outline text="処理要求の流れ" _note="![](doc/query.svg)&#10;" />
-            <outline text="新規登録の流れ" _note="![](doc/registration.svg)" />
-          </outline>
+          <outline text="概要" _note="![](doc/summary.svg)" />
           <outline text="authCommon: authClient/Server共通設定・関数集">
             <outline text="option {Object} authClient/Server共通設定(a4bae9665fcc)">
               <outline text="tokenExpiry {number}=600000 (10分) トークンの有効期間(ミリ秒)" />
@@ -625,13 +621,13 @@
                 <outline text="&lt;a href=&quot;https://workflowy.com/#/a4bae9665fcc&quot;&gt;[▼]&lt;/a&gt; authClient/Server共通設定" />
                 <outline text="&lt;a href=&quot;https://workflowy.com/#/6e19dabbd5cc&quot;&gt;[▼]&lt;/a&gt; authClient独自設定" />
               </outline>
-              <outline text="userId {string} ユーザ識別子" _note="ゲストの場合はnull" />
+              <outline text="userId {string} ユーザ識別子" _note="ゲストも含めて識別するため、未定の場合は初期化時にUUIDを採番&#10;" />
               <outline text="email {string} ユーザの連絡先メールアドレス" />
               <outline text="CSkey {Object} クライアント側秘密鍵" />
               <outline text="CPkey {string} クライアント側公開鍵" />
               <outline text="SPkey {string} サーバ側公開鍵" />
             </outline>
-            <outline text="main: authClient主処理">
+            <outline text="main: authClient主処理" _note="![](doc/acMain.svg)&#10;&#10;- crondが無くても全件データ要求を行いSPkeyを取得、localStorageに保存&#10;- URLクエリ・localStorageからuserId/e-mail取得を試行、取得できたらlocalStorageに保存&#10;">
               <outline text="処理概要">
                 <outline text="URLクエリパラメータ・localStorageからuserId, e-mailの取得を試行" _note="取得できたらlocalStorageとメンバ(pv)に保存" />
                 <outline text="メンバ(cv)に引数を保存、未指定分には既定値を設定" _note="&lt;a href=&quot;https://workflowy.com/#/3c211d58f127&quot;&gt;authClient/authServer共通オプション&lt;/a&gt;は引数で上書きしない&#10;" />
@@ -643,7 +639,7 @@
               </outline>
               <outline text="戻り値 {Object.&amp;lt;string, function&amp;gt;} メソッドのオブジェクト" />
             </outline>
-            <outline text="request() : アプリケーションからの処理要求をauthServerに渡す">
+            <outline text="request() : アプリケーションからの処理要求をauthServerに渡す" _note="![](doc/acRequest.svg)">
               <outline text="引数">
                 <outline text="query {&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;acRequest_query&lt;/a&gt;[]} サーバ側テーブルへの処理要求(7f56d7bb30a1)">
                   <outline text="1 Backlink">
@@ -715,7 +711,7 @@
             </outline>
             <outline text="devices - デバイス管理シートの項目(ae550a40dc50)" _note="複数デバイスでの単一アカウントの使用を可能にするため「account.userId(1) : device.userId(n)」で作成&#10;">
               <outline text="userId {string|number}='guest' ユーザ識別子" _note="not null" />
-              <outline text="CPkey {string}='' クライアント側公開鍵" _note="primaryKey" />
+              <outline text="CPkey {string}='' クライアント側公開鍵、兼デバイスID" _note="primaryKey。なおe-mailとデバイスIDの対応は取らない" />
               <outline text="CPkeyExpiry {string}='' CPkey有効期限(ISO8601拡張形式)" _note="期限内に適切な暗号化・署名された要求はOKとする&#10;" />
               <outline text="note {string}='' ユーザ情報(備考)" />
               <outline text="trial {&lt;a href=&quot;https://workflowy.com/#/aaab38c8e75d&quot;&gt;authTrial&lt;/a&gt;} ログイン試行情報" />
@@ -757,11 +753,11 @@
             <outline text="log - SpreadDbのアクセスログシート" _note="詳細はSpreadDb.&lt;a href=&quot;https://workflowy.com/#/dab8cfcec9d8&quot;&gt;sdbLog&lt;/a&gt;参照" />
           </outline>
           <outline text="typedefs">
-            <outline text="acRequest_query {Object} authClientの引数&quot;query&quot;(5d949f3a25ab)">
+            <outline text="acRequest_query {Object} authClient.requestの引数&quot;query&quot;(5d949f3a25ab)">
               <outline text="table {string} 操作対象テーブル名" />
-              <outline text="command {string} 操作名" _note="commandの種類は下表の通り。&#10;&quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;テーブル管理情報取得 | schema | s" />
-              <outline text="[where] {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用&#10;&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- string&#10;  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。&#10;  - その他 ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;- その他(Object,function,string以外) ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;" />
-              <outline text="[set] {Object|Object[]|string|string[]|Function} 追加・更新する値" _note="command='update','append'で使用&#10;&#10;- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;" />
+              <outline text="command {string} 操作名" _note="- commandの種類は下表の通り。なお新規アカウント登録はテーブル操作ではないので、rwdosの範囲外&#10;- &quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;テーブル管理情報取得 | schema | s&#10;新規アカウント登録 | regist | x&#10;" />
+              <outline text="[where] {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用&#10;&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- string&#10;  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化。{〜} で囲みreturn文を付与。&#10;  - その他 ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;- その他(Object,function,string以外) ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;" />
+              <outline text="[set] {Object|Object[]|string|string[]|Function} 追加・更新する値" _note="command='update','append'で使用&#10;&#10;- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;" />
               <outline text="2 Backlinks">
                 <outline text="&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;[▼]&lt;/a&gt; authClient.requestの引数&quot;query&quot;(acRequest_query)の各メンバ" />
                 <outline text="query {&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;acRequest_query&lt;/a&gt;[]} サーバ側テーブルへの処理要求(7f56d7bb30a1)" />
@@ -769,9 +765,9 @@
             </outline>
             <outline text="asMain_query {Object} authServerの引数&quot;query&quot;(c9db0f7953c8)">
               <outline text="&lt;a href=&quot;https://workflowy.com/#/5d949f3a25ab&quot;&gt;[▼]&lt;/a&gt; authClient.requestの引数&quot;query&quot;(acRequest_query)の各メンバ" />
-              <outline text="userId {string|number}=&quot;guest&quot; ユーザ識別子(uuid等)" />
+              <outline text="【tokenに持たせるため削除】userId {string|number}=&quot;guest&quot; ユーザ識別子(uuid等)" />
               <outline text="queryId {string}=UUID クエリ・結果突合用文字列" />
-              <outline text="token {string} token生成日時(UNIX時刻)を署名・暗号化した文字列" _note="timestampと兼用" />
+              <outline text="token {string} userIdを署名・暗号化した文字列" />
               <outline text="[email] {string} ユーザのメールアドレス" />
               <outline text="[passcode] {number|string} 入力されたパスコード" _note="開発時はauthClient/authServerへの引数として扱う(∵自動テスト用)。リリース時には引数として与えるのは不可とする&#10;&#10;- authClientへの引数：ダイアログから入力されたパスコードの代替。配列可&#10;- authServerへの引数：乱数で発生させるパスコードの代替&#10;" />
               <outline text="2 Backlinks">
@@ -781,17 +777,19 @@
             </outline>
             <outline text="authServer {Object} authServerの戻り値(94c13922ade7)">
               <outline text="&lt;a href=&quot;https://workflowy.com/#/c9db0f7953c8&quot;&gt;[▼]&lt;/a&gt; authServerの引数&quot;query&quot;(asMain_query)の各メンバ" />
-              <outline text="SPkey {string} サーバ側公開鍵" />
+              <outline text="timestamp {string} クエリ実行日時。ISO8601拡張形式" />
               <outline text="qSts {string} クエリ単位の実行結果" _note="正常終了なら&quot;OK&quot;。エラーコードは以下の通り。&#10;- create : &quot;Already Exist&quot;, &quot;No Cols and Data&quot;&#10;- その他 : &quot;No Table&quot;" />
               <outline text="num {number} 変更された行数" _note="append:追加行数、update:変更行数、select:抽出行数、schema:0(固定)&#10;" />
               <outline text="result {&lt;a href=&quot;https://workflowy.com/#/d2f620e47c51&quot;&gt;sdbResult&lt;/a&gt;[]} レコード単位の実行結果" />
               <outline text="status {string} authServerの実行結果" _note="必要に応じてauthClientで追加変更" />
+              <outline text="SPkey {string} サーバ側公開鍵" />
               <outline text="2 Backlinks">
                 <outline text="戻り値 {&lt;a href=&quot;https://workflowy.com/#/94c13922ade7&quot;&gt;authServer&lt;/a&gt;}" />
                 <outline text="query {&lt;a href=&quot;https://workflowy.com/#/94c13922ade7&quot;&gt;authServer&lt;/a&gt;} 処理要求" _note="起動時は引数&quot;query&quot;のコピー、以降は各メソッドにより情報を付加&#10;" />
               </outline>
             </outline>
             <outline text="acMain_option {Object} authClient独自設定値(6e19dabbd5cc)">
+              <outline text="storageKey {string}='authClient' localStorageのキー名" />
               <outline text="saveUserId {boolean}=true userIdをlocalStorageに保存するか否か" />
               <outline text="saveEmail {boolean}=false e-mailをlocalStorageに保存するか否か" />
               <outline text="mirror {&lt;a href=&quot;https://workflowy.com/#/53d27b6201fa&quot;&gt;mirrorDef&lt;/a&gt;[]} ローカル側にミラーを保持するテーブルの定義(e6693b2cc4bd)" />
@@ -821,7 +819,7 @@
               <outline text="log {Object[]} 試行履歴情報">
                 <outline text="dt {string} パスコード検証日時(Date Time)" />
                 <outline text="pc {number} ユーザが入力したパスコード(PassCode)" />
-                <outline text="st {number} ステータス(STatus)" />
+                <outline text="st {number} ステータス(STatus)。連続失敗回数、成功なら0" />
               </outline>
               <outline text="thawing {string}='1970/01/01' 凍結解除日時" />
               <outline text="2 Backlinks">
@@ -848,7 +846,8 @@
             <outline text="mirrorDef {Object} ミラーリングするテーブルの定義(53d27b6201fa)" _note="crond.set(), crond.clear()共通&#10;">
               <outline text="name {string} テーブル名" />
               <outline text="func {function} ジョブ本体" />
-              <outline text="interval {number}=300000 実行間隔(ミリ秒)" />
+              <outline text="interval {number}=300000 実行間隔(ミリ秒)" _note="0の場合はauthClientインスタンス化時のみ実行&#10;" />
+              <outline text="" />
               <outline text="1 Backlink">
                 <outline text="mirror {&lt;a href=&quot;https://workflowy.com/#/53d27b6201fa&quot;&gt;mirrorDef&lt;/a&gt;[]} ローカル側にミラーを保持するテーブルの定義(e6693b2cc4bd)" />
               </outline>
@@ -884,7 +883,7 @@
                         <outline text="sample {Object.&amp;lt;string, Object&amp;gt;} テスト用サンプルデータ" _note="- オブジェクトの形式はsetupEnvironment()の&lt;a href=&quot;https://workflowy.com/#/38d23b83bbe7&quot;&gt;arg.src&lt;/a&gt;参照&#10;- メンバ&quot;dp&quot;のみ別形式(DocumentPropertiesにセットするSPkey,SSkeyのJSON)&#10;" />
                       </outline>
                     </outline>
-                    <outline text="dp {string}='asis' DocumentPropertiesに対する措置" _note="- force : 強制的に再作成&#10;- ifnot : 不在なら作成、存在なら再作成しない(不在時作成。if not exist)&#10;- delete: 強制削除(defaultの既定値)。存在していれば削除、再作成はしない&#10;- asis  : そのまま何もしない&#10;" />
+                    <outline text="dp {string}='asis' DocumentPropertiesに対する措置" _note="- force : 強制的に再作成&#10;- ifnot : 不在なら作成、存在なら再作成しない(不在時作成。if not exist)&#10;- delete: 強制削除(defaultの既定値)。存在していれば削除、再作成はしない&#10;- asis  : そのまま何もしない&#10;" />
                     <outline text="dpName {string}='authServer' - DocumentPropertyのキー名" />
                     <outline text="1 Backlink">
                       <outline text="setup {&lt;a href=&quot;https://workflowy.com/#/9b7b74078d9e&quot;&gt;Object&lt;/a&gt;} setupEnvironmentに渡す引数" />
@@ -903,6 +902,10 @@
           </outline>
           <outline text="その他" _note="用語解説、注意事項、更新履歴、他">
             <outline text="【参考】SpreadDbのエラーコード" _note="| No | 設定項目 | コード | 発生箇所 | 原因 |&#10;| --: | :-- | :-- | :-- | :-- |&#10;| 1 | qSts | No Authority | doQuery | 指定されたテーブル操作の権限が無い |&#10;| 2 | qSts | No command | doQuery | query.commandが無い、または文字列では無い |&#10;| 3 | qSts | No Table name | doQuery | query.tableが無い、または文字列では無い |&#10;| 4 | qSts | Invalid where clause | doQuery | (権限&quot;o&quot;で)where句の値がプリミティブ型ではない |&#10;| 5 | qSts | No Table | doQuery&amp;lt;br&amp;gt;genTable | (create以外で)対象テーブルが無い |&#10;| 6 | qSts | No cols and data | genTable | createで項目定義も初期データも無い |&#10;| 7 | qSts | Already Exist | createTable | シートが既に存在している |&#10;| 8 | qSts | Duplicate | createTable | 初期レコード内に重複が存在 |&#10;| 9 | qSts | Empty set | createTable&amp;lt;br&amp;gt;appendRow | query.setが不在、または配列の長さが0 |&#10;| 10 | qSts | Invalid set | appendRow | query.setが非配列なのに要素がオブジェクトではない |&#10;| 11 | qSts | No set | appendRow&amp;lt;br&amp;gt;updateRow | queryにメンバ&quot;set&quot;が不在 |&#10;| 12 | qSts | No where | deleteRow&amp;lt;br&amp;gt;updateRow | where句がqueryに無い |&#10;| 13 | qSts | Undefined Column | updateRow | 更新対象項目がテーブルに無い |&#10;| 14 | qSts | その他 | doQuery | エラーオブジェクトのmessage |&#10;| 15 | rSts | Duplicate | appendRow&amp;lt;br&amp;gt;updateRow | unique項目に重複した値を入れようとした |&#10;| 16 | Error | Invalid Argument | functionalyze | 不適切な引数 |&#10;| 17 | Error | Could not Lock | main | 規定回数以上シートのロックに失敗した |" />
+            <outline text="アカウントの状態遷移" _note="アカウントは以下①〜④の4種類のいずれかの状態を取る。&#10;&#10;| No | アカウント | userId |  ログイン | 状態 |&#10;| :--: | :-- | :-- | :-- | :-- |&#10;| ① | 未作成 |  |  | ゲスト、または新規登録希望だが未手続の人 |&#10;| ② | 作成済 | 不明 |  | 登録済だが登録と異なるデバイスでアクセスしている人 |&#10;| ③ |  | 判明 | 未 | 新規登録通知メールのURLクエリから開いた人&amp;lt;br&amp;gt;または申込に使用したデバイスからのアクセス |&#10;| ④ |  |  | 済 | 申込済かつログインした人 |&#10;" />
+            <outline text="注意事項">
+              <outline text="ミラーリングするテーブルには&quot;updated&quot;を必須とする" _note="更新対象レコードかの判別は&quot;updated&quot;を基準として行うため。&#10;" />
+            </outline>
             <outline text="更新履歴" />
           </outline>
         </outline>
@@ -998,7 +1001,7 @@
             <outline text="JavsScriptソースのclass挿入時、メソッドの1行目の空白が無視されるバグ修正" />
             <outline text="挿入指定文字列前のインデントを有効化" />
           </outline>
-          <outline text="呼出元の挿入指示文字列" _note="- 「::(パス)::」 ⇒ 該当部分をパスで指定されたファイルの内容で置換&#10;- 「::(メモ[+])::(パス)::」 ⇒ 子文書の内容についてのメモ。あくまで備忘であり、使用されない。&amp;lt;br&amp;gt;&#10;  末尾に'+'が無い場合、子文書のルート要素を削除する。&amp;lt;br&amp;gt;&#10;  '+'が有った場合、子文書のルート要素を挿入場所の1レベル下の要素として挿入する。&#10;&#10;「ルート要素」とは、被挿入文書の最高レベルの章題が単一だった場合、その章題。&#10;複数だった場合はルート要素とは看做さない。&#10;" />
+          <outline text="呼出元の挿入指示文字列" _note="- 「::(パス)::」 ⇒ 該当部分をパスで指定されたファイルの内容で置換&#10;- 「::(メモ[+])::(パス)::」 ⇒ 子文書の内容についてのメモ。あくまで備忘であり、使用されない。&amp;lt;br&amp;gt;&#10;  末尾に'+'が無い場合、子文書のルート要素を削除する。&amp;lt;br&amp;gt;&#10;  '+'が有った場合、子文書のルート要素を挿入場所の1レベル下の要素として挿入する。&#10;&#10;「ルート要素」とは、被挿入文書の最高レベルの章題が単一だった場合、その章題。&#10;複数だった場合はルート要素とは看做さない。&#10;" />
           <outline text="使用例" _note="1. 挿入指定文字列でメモ有り・子文書ルート指定あり&#10;&amp;lt;!--::test11+::$test/&lt;a href=&quot;http://ooChild.md&quot;&gt;ooChild.md&lt;/a&gt;::--&amp;gt;&#10;&#10;2. 挿入指定文字列でメモ有り・子文書ルート指定なし&#10;&amp;lt;!--::test21::$test/&lt;a href=&quot;http://ooChild.md&quot;&gt;ooChild.md&lt;/a&gt;::--&amp;gt;&#10;&#10;3. 挿入指定文字列でメモなし・子文書ルート指定あり&#10;&amp;lt;!--::+::$test/&lt;a href=&quot;http://ooChild.md&quot;&gt;ooChild.md&lt;/a&gt;::--&amp;gt;&#10;&#10;4. 挿入指定文字列でパスのみ指定&#10;&amp;lt;!--::$test/&lt;a href=&quot;http://ooChild.md&quot;&gt;ooChild.md&lt;/a&gt;::--&amp;gt;" />
           <outline text="変更履歴">
             <outline text="rev 1.0.0 2024/03/29 初版" />
@@ -1309,7 +1312,7 @@
                 <outline text="arg {Object}" _note="argの配列は使用しない。同一テーブルでも複数の条件で更新する場合、SpreadDb.arg.query自体を別オブジェクトで用意する">
                   <outline text="table {&lt;a href=&quot;https://workflowy.com/#/20e32e8d7cef&quot;&gt;sdbTable&lt;/a&gt;} 操作対象のテーブル管理情報" />
                   <outline text="&lt;a href=&quot;https://workflowy.com/#/cde13ea2b6d2&quot;&gt;where {Object|Function|string} 対象レコードの判定条件&lt;/a&gt;" />
-                  <outline text="record {Object|string|Function} 更新する値" _note="record句の指定方法&#10;- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}">
+                  <outline text="record {Object|string|Function} 更新する値" _note="record句の指定方法&#10;- Object ⇒ appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}">
                     <outline text="1 Backlink">
                       <outline text="&lt;a href=&quot;https://workflowy.com/#/18ae7059355f&quot;&gt;record&lt;/a&gt; {Object|Function} 追加・更新する値" _note="command='update','append'で使用" />
                     </outline>
@@ -1351,7 +1354,7 @@
           </outline>
           <outline text="注意事項">
             <outline text="関数での抽出条件・値の指定時の制約" _note="default(sdbColumn), where, record(update他)では関数での指定を可能にしている。&#10;これらをセル・メモで保存する場合、文字列に変換する必要があるが、以下のルールで対応する。&#10;&#10;- 引数は行オブジェクトのみ(引数は必ず一つ)&#10;- 関数に復元する場合`new Function('o',[ロジック部分文字列])で関数化&#10;  - 必ず&quot;{〜}&quot;で囲み、return文を付ける&#10;" />
-            <outline text="権限によるアクセス制限(rwdos)" _note="r:read, w:write, d:delete, o:own, s:schema + c:createの略。コマンド毎に以下の権限が必要になる。&#10;&#10;create(c): テーブル生成。管理者のみ実行可&#10;select(r): 参照&#10;update(rw): 更新&#10;append(w): 追加&#10;delete(d): 削除&#10;schema(s): テーブル管理情報の取得&#10;&#10;特殊権限'o' : イベント申込情報等、本人以外の参照・更新を抑止するためのアクセス権限。&#10;- `userAuth:{シート名:o}`が指定された場合、当該シートのprimaryKey=userIdとなっているレコードのみ'r','w'可と看做す。&#10;- 'o'指定が有るシートのアクセス権として'rwds'が指定されていても'o'のみ指定されたと看做す&#10;- 'o'指定でselect/updateする場合、where句は無視され自情報に対する処理要求と看做す&#10;  ex. userId=2の人がuserId=1の人の氏名の更新を要求 ⇒ userId=2の氏名が更新される&#10;  SpreadDb(&#10;    {table:'camp2024',command:'update',where:1,record:{'申込者氏名':'テスト'}},&#10;    {userId:2,userAuth:{camp2024:'o'}}&#10;  ); // -&amp;gt; userId=2の氏名が「テスト」に&#10;" />
+            <outline text="権限によるアクセス制限(rwdos)" _note="r:read, w:write, d:delete, o:own, s:schema + c:createの略。コマンド毎に以下の権限が必要になる。&#10;&#10;create(c): テーブル生成。管理者のみ実行可&#10;select(r): 参照&#10;update(rw): 更新&#10;append(w): 追加&#10;delete(d): 削除&#10;schema(s): テーブル管理情報の取得&#10;&#10;特殊権限'o' : イベント申込情報等、本人以外の参照・更新を抑止するためのアクセス権限。&#10;- `userAuth:{シート名:o}`が指定された場合、当該シートのprimaryKey=userIdとなっているレコードのみ'r','w'可と看做す。&#10;- 'o'指定が有るシートのアクセス権として'rwds'が指定されていても'o'のみ指定されたと看做す&#10;- 'o'指定でselect/updateする場合、where句は無視され自情報に対する処理要求と看做す&#10;  ex. userId=2の人がuserId=1の人の氏名の更新を要求 ⇒ userId=2の氏名が更新される&#10;  SpreadDb(&#10;    {table:'camp2024',command:'update',where:1,record:{'申込者氏名':'テスト'}},&#10;    {userId:2,userAuth:{camp2024:'o'}}&#10;  ); // -&amp;gt; userId=2の氏名が「テスト」に&#10;" />
           </outline>
         </outline>
         <outline text="SpreadDb 1.2.0(d4369fcf4044)" _note="&quot;SpreadDb&quot;はGoogle Spread上のシートを記憶領域とし、参照・更新・削除およびテーブル構造情報取得を実現するライブラリ。&#10;&#10;なおパラメータで利用者の権限とシート毎のアクセス権を付与することでアクセス制御を行えるようにする。&#10;">
@@ -1388,7 +1391,7 @@
               <outline text="引数">
                 <outline text="arg">
                   <outline text="table {&lt;a href=&quot;https://workflowy.com/#/976403e08f0e&quot;&gt;sdbTable&lt;/a&gt;} 呼出元で処理対象としているテーブル" />
-                  <outline text="data {Object|function|string} 関数化するオブジェクトor文字列" _note="引数のデータ型により以下のように処理分岐&#10;&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- string&#10;  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化&#10;  - その他 ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;" />
+                  <outline text="data {Object|function|string} 関数化するオブジェクトor文字列" _note="引数のデータ型により以下のように処理分岐&#10;&#10;- Object ⇒ {キー項目名:キー項目の値}形式で、key:valueに該当するレコードを更新&#10;- Function ⇒ 行オブジェクトを引数に対象ならtrueを返す関数で、trueが返されたレコードを更新&#10;- string&#10;  - 無名関数またはアロー関数のソース文字列 ⇒ new Functionで関数化&#10;  - その他 ⇒ 項目定義で&quot;primaryKey&quot;を指定した項目の値&#10;" />
                 </outline>
               </outline>
               <outline text="戻り値 {function}" />
@@ -1564,7 +1567,7 @@
                 <outline text="[cols] {&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]} 新規作成シートの項目定義オブジェクトの配列" />
                 <outline text="additionalPrimaryKey {&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;} createTableで主キー無指定時に追加設定される主キー項目名" _note="既定値は`{name:'rowId',type:'UUID',note:'主キー',primaryKey:true,default:()=&amp;gt;Utilities.getUuid()}`&#10;" />
                 <outline text="[cols] {&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]} - 新規作成シートの項目定義オブジェクトの配列" />
-                <outline text="sdbLog {Object} 変更履歴オブジェクト(dab8cfcec9d8)" _note="| command | 権限 | status | ratio | record欄 | 備考 |&#10;| :-- | :--: | :-- | :-- | :-- | :-- |&#10;| create | — | Already Exist&amp;lt;br&amp;gt;No Cols and Data | — | &lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt; | 管理者のみ実行可 |&#10;| select | r | No Table | 抽出失敗/対象 | — | 「対象なのに失敗」は考慮しない |&#10;| update | rw | No Table | 更新失敗/対象 | {sts:[OK|Duplicate],diff:{項目名:[更新前,更新後]}} |  |&#10;| append | w | No Table | 追加失敗/対象 | {sts:[OK|Duplicate],diff:追加行Obj} |  |&#10;| delete | d | No Table | 削除失敗/対象 | — | 「対象なのに失敗」は考慮しない |&#10;| schema | s | No Table | — | &lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt; |  |&#10;&#10;- command系メソッドはstatus,num,recordを返す&#10;- command系メソッドは、成功件数が0件でも「正常終了」とし、status=&quot;OK&quot;とする&#10;- 戻り値がErrorオブジェクトの場合、status=&quot;System&quot;,record=Error.messageとする&#10;- record欄は、実際は上記Objの【配列】のJSON文字列とする&#10;&#10;以下、既定値は&lt;a href=&quot;https://workflowy.com/#/6fb9aba6d9f9&quot;&gt;genLog()&lt;/a&gt;で設定される値&#10;" />
+                <outline text="sdbLog {Object} 変更履歴オブジェクト(dab8cfcec9d8)" _note="| command | 権限 | status | ratio | record欄 | 備考 |&#10;| :-- | :--: | :-- | :-- | :-- | :-- |&#10;| create | — | Already Exist&amp;lt;br&amp;gt;No Cols and Data | — | &lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt; | 管理者のみ実行可 |&#10;| select | r | No Table | 抽出失敗/対象 | — | 「対象なのに失敗」は考慮しない |&#10;| update | rw | No Table | 更新失敗/対象 | {sts:[OK|Duplicate],diff:{項目名:[更新前,更新後]}} |  |&#10;| append | w | No Table | 追加失敗/対象 | {sts:[OK|Duplicate],diff:追加行Obj} |  |&#10;| delete | d | No Table | 削除失敗/対象 | — | 「対象なのに失敗」は考慮しない |&#10;| schema | s | No Table | — | &lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt; |  |&#10;&#10;- command系メソッドはstatus,num,recordを返す&#10;- command系メソッドは、成功件数が0件でも「正常終了」とし、status=&quot;OK&quot;とする&#10;- 戻り値がErrorオブジェクトの場合、status=&quot;System&quot;,record=Error.messageとする&#10;- record欄は、実際は上記Objの【配列】のJSON文字列とする&#10;&#10;以下、既定値は&lt;a href=&quot;https://workflowy.com/#/6fb9aba6d9f9&quot;&gt;genLog()&lt;/a&gt;で設定される値&#10;" />
                 <outline text="戻り値 {Object.&amp;lt;string,&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]&amp;gt;} {テーブル名：項目定義オブジェクトの配列}形式(f76eb797d345)" />
                 <outline text="column {&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;} 項目の定義情報" />
                 <outline text="arg {string|&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;} シート上のメモの文字列またはsdbColumn" />
@@ -1573,7 +1576,7 @@
                 <outline text="cols {&lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt;[]} 項目定義オブジェクトの配列" />
               </outline>
             </outline>
-            <outline text="sdbLog {Object} 変更履歴オブジェクト(dab8cfcec9d8)" _note="| command | 権限 | status | ratio | record欄 | 備考 |&#10;| :-- | :--: | :-- | :-- | :-- | :-- |&#10;| create | — | Already Exist&amp;lt;br&amp;gt;No Cols and Data | — | &lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt; | 管理者のみ実行可 |&#10;| select | r | No Table | 抽出失敗/対象 | — | 「対象なのに失敗」は考慮しない |&#10;| update | rw | No Table | 更新失敗/対象 | {sts:[OK|Duplicate],diff:{項目名:[更新前,更新後]}} |  |&#10;| append | w | No Table | 追加失敗/対象 | {sts:[OK|Duplicate],diff:追加行Obj} |  |&#10;| delete | d | No Table | 削除失敗/対象 | — | 「対象なのに失敗」は考慮しない |&#10;| schema | s | No Table | — | &lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt; |  |&#10;&#10;- command系メソッドはstatus,num,recordを返す&#10;- command系メソッドは、成功件数が0件でも「正常終了」とし、status=&quot;OK&quot;とする&#10;- 戻り値がErrorオブジェクトの場合、status=&quot;System&quot;,record=Error.messageとする&#10;- record欄は、実際は上記Objの【配列】のJSON文字列とする&#10;&#10;以下、既定値は&lt;a href=&quot;https://workflowy.com/#/6fb9aba6d9f9&quot;&gt;genLog()&lt;/a&gt;で設定される値&#10;">
+            <outline text="sdbLog {Object} 変更履歴オブジェクト(dab8cfcec9d8)" _note="| command | 権限 | status | ratio | record欄 | 備考 |&#10;| :-- | :--: | :-- | :-- | :-- | :-- |&#10;| create | — | Already Exist&amp;lt;br&amp;gt;No Cols and Data | — | &lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt; | 管理者のみ実行可 |&#10;| select | r | No Table | 抽出失敗/対象 | — | 「対象なのに失敗」は考慮しない |&#10;| update | rw | No Table | 更新失敗/対象 | {sts:[OK|Duplicate],diff:{項目名:[更新前,更新後]}} |  |&#10;| append | w | No Table | 追加失敗/対象 | {sts:[OK|Duplicate],diff:追加行Obj} |  |&#10;| delete | d | No Table | 削除失敗/対象 | — | 「対象なのに失敗」は考慮しない |&#10;| schema | s | No Table | — | &lt;a href=&quot;https://workflowy.com/#/df5b3c98954e&quot;&gt;sdbColumn&lt;/a&gt; |  |&#10;&#10;- command系メソッドはstatus,num,recordを返す&#10;- command系メソッドは、成功件数が0件でも「正常終了」とし、status=&quot;OK&quot;とする&#10;- 戻り値がErrorオブジェクトの場合、status=&quot;System&quot;,record=Error.messageとする&#10;- record欄は、実際は上記Objの【配列】のJSON文字列とする&#10;&#10;以下、既定値は&lt;a href=&quot;https://workflowy.com/#/6fb9aba6d9f9&quot;&gt;genLog()&lt;/a&gt;で設定される値&#10;">
               <outline text="logId {string}=Utilities.getUuid() 変更履歴レコードの識別子" _note="primaryKey, default:UUID" />
               <outline text="timestamp {string}=toLocale(new Date()) 更新日時(ISO8601拡張形式)" />
               <outline text="userId {string}=&lt;a href=&quot;https://workflowy.com/#/5554e1d6a61d&quot;&gt;opt.userId&lt;/a&gt; ユーザ識別子(uuid等)" />
@@ -1671,7 +1674,7 @@
                 <outline text="■[&lt;a href=&quot;https://workflowy.com/#/741ee9383b92&quot;&gt;where&lt;/a&gt;] {Object|Function|string} 対象レコードの判定条件" _note="command='select','update','delete'で使用" />
               </outline>
             </outline>
-            <outline text="set {Object|Object[]|string|Function} 更新する値(58dde3944536)" _note="set句の指定方法&#10;- Object ⇒ create/appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;">
+            <outline text="set {Object|Object[]|string|Function} 更新する値(58dde3944536)" _note="set句の指定方法&#10;- Object ⇒ create/appendなら行オブジェクト、updateなら{更新対象項目名:セットする値}&#10;- string ⇒ 上記Objectに変換可能なJSON文字列&#10;- Function ⇒ 行オブジェクトを引数に、上記Objectを返す関数&#10;  【例】abc欄にfuga+hogeの値をセットする : {func: o=&amp;gt;{return {abc:(o.fuga||0)+(o.hoge||0)}}}&#10;">
               <outline text="4 Backlinks">
                 <outline text="[&lt;a href=&quot;https://workflowy.com/#/58dde3944536&quot;&gt;set&lt;/a&gt;] {Object|Object[]|string|string[]|Function} 追加・更新する値" />
                 <outline text="&lt;a href=&quot;https://workflowy.com/#/58dde3944536&quot;&gt;set&lt;/a&gt; {Object|Object[]} 追加する行オブジェクト" />
@@ -1681,16 +1684,16 @@
             </outline>
           </outline>
           <outline text="用語解説、注意事項(56eaf36cc785)">
-            <outline text="関数での抽出条件・値の指定時の制約(2df536ff0f8d)" _note="default(sdbColumn), where, record(update他)では関数での指定を可能にしている。&#10;これらをセル・メモで保存する場合、文字列に変換する必要があるが、以下のルールで対応する。&#10;&#10;- 引数は行オブジェクトのみ(引数は必ず一つ)&#10;- 関数に復元する場合`new Function('o',[ロジック部分文字列])`で関数化&#10;  - 必ず&quot;{〜}&quot;で囲み、return文を付ける&#10;- コメントは`//〜`または`/*〜*/`で指定。無指定の場合、前行の続きと看做す&#10;- 関数は一行で記述する(複数行は不可)" />
-            <outline text="commandの種類とrwdos文字列によるアクセス制御(0055bda95f77)" _note="commandの種類は下表の通り。&#10;&quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;削除 | delete | d&#10;テーブル管理情報取得 | schema | s&#10;">
+            <outline text="関数での抽出条件・値の指定時の制約(2df536ff0f8d)" _note="default(sdbColumn), where, record(update他)では関数での指定を可能にしている。&#10;これらをセル・メモで保存する場合、文字列に変換する必要があるが、以下のルールで対応する。&#10;&#10;- 引数は行オブジェクトのみ(引数は必ず一つ)&#10;- 関数に復元する場合`new Function('o',[ロジック部分文字列])`で関数化&#10;  - 必ず&quot;{〜}&quot;で囲み、return文を付ける&#10;- コメントは`//〜`または`/*〜*/`で指定。無指定の場合、前行の続きと看做す&#10;- 関数は一行で記述する(複数行は不可)" />
+            <outline text="commandの種類とrwdos文字列によるアクセス制御(0055bda95f77)" _note="commandの種類は下表の通り。&#10;&quot;rwdos&quot;とは&quot;Read/Write/Delete/Own/Schema&quot;の頭文字。管理者のみ実行可能な&quot;c&quot;(createTable)と特殊権限&quot;o&quot;を加えてシート毎のアクセス制御を行う。&#10;&#10;内容 | command | rwdos&#10;:-- | :-- | :-- &#10;テーブル生成 | create | c&#10;参照 | select | r&#10;更新 | update | rw&#10;追加 | append/insert | w&#10;削除 | delete | d&#10;テーブル管理情報取得 | schema | s&#10;">
               <outline text="3 Backlinks">
                 <outline text="command {string} 操作名" _note="全commandで使用。「&lt;a href=&quot;https://workflowy.com/#/0055bda95f77&quot;&gt;commandの種類とrwdos文字列によるアクセス制御&lt;/a&gt;」参照" />
                 <outline text="■command {string} 操作名" _note="全commandで使用。「&lt;a href=&quot;https://workflowy.com/#/0055bda95f77&quot;&gt;commandの種類とrwdos文字列によるアクセス制御&lt;/a&gt;」参照" />
                 <outline text="command {string}=null 操作内容(コマンド名)" _note="設定内容は「&lt;a href=&quot;https://workflowy.com/#/0055bda95f77&quot;&gt;commandの種類とrwdos文字列によるアクセス制御&lt;/a&gt;」参照" />
               </outline>
             </outline>
-            <outline text="特殊権限'o'" _note="イベント申込情報等、本人以外の参照・更新を抑止するためのアクセス権限。&#10;&#10;- 自分のread/write(select,update)およびschemaのみ実行可。append/deleteは実行不可&amp;lt;br&amp;gt;&#10;  ∵新規登録(append)はシステム管理者の判断が必要。また誤ってdeleteした場合はappendが必要なのでこれも不可&#10;- o(=own set only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。&#10;- 対象テーブルはユーザ識別子項目をprimaryKeyとして要設定&#10;- 検索条件(where句)もprimaryKeyの値のみ指定可(Object,function,JSON他は不可)&#10;&#10;【旧仕様】&#10;- `userAuth:{シート名:o}`が指定された場合、当該シートのprimaryKey=userIdとなっているレコードのみ'r','w'可と看做す。&#10;- 'o'指定でselect/updateする場合、where句は無視され自情報に対する処理要求と看做す&#10;  ex. userId=2の人がuserId=1の人の氏名の更新を要求 ⇒ userId=2の氏名が更新される&#10;  ```&#10;  SpreadDb(&#10;    {table:'camp2024',command:'update',where:1,record:{'申込者氏名':'テスト'}},&#10;    {userId:2,userAuth:{camp2024:'o'}}&#10;  ); // -&amp;gt; userId=2の氏名が「テスト」に&#10;  ```&#10;" />
-            <outline text="クエリのエラーとレコードのエラー" _note="- クエリのエラー&#10;  - 指定テーブルへのアクセス権が無い等、クエリ単位で発生するエラー&#10;  - &#10;  - command系メソッド内で予期せぬエラーが発生した場合(=戻り値がErrorオブジェクト)も該当&amp;lt;br&amp;gt;この場合、エラーコードにはError.messageがセットされる&#10;  - 主処理で判定&#10;  - SpreadDbの戻り値オブジェクトのErrCDに設定(sdbMain.ErrCD)&#10;  - エラーの種類&#10;    - No PrimaryKey: 権限&quot;o&quot;でappend先のテーブルに主キーが設定されていない&#10;    - No Authority: 対象テーブルに対するアクセス権が無い&#10;&#10;- レコードのエラー&#10;  - unique指定の有る項目に重複値を設定しようとした等、レコード単位で発生するエラー&#10;  - command系メソッドで判定(append, update, delete)&#10;  - 個別レコードのログオブジェクトのErrCDに設定(sdbLog.ErrCD = sdbMain.log.ErrCD)&#10;  - エラーの種類&#10;    - append&#10;      - Duplicate: unique項目に重複した値を設定。diffに{項目名:重複値} 形式で記録&#10;    - update&#10;    - delete&#10;" />
+            <outline text="特殊権限'o'" _note="イベント申込情報等、本人以外の参照・更新を抑止するためのアクセス権限。&#10;&#10;- 自分のread/write(select,update)およびschemaのみ実行可。append/deleteは実行不可&amp;lt;br&amp;gt;&#10;  ∵新規登録(append)はシステム管理者の判断が必要。また誤ってdeleteした場合はappendが必要なのでこれも不可&#10;- o(=own set only)の指定は他の'rwdos'に優先、'o'のみの指定と看做す(rwds指定は有っても無視)。&#10;- 対象テーブルはユーザ識別子項目をprimaryKeyとして要設定&#10;- 検索条件(where句)もprimaryKeyの値のみ指定可(Object,function,JSON他は不可)&#10;&#10;【旧仕様】&#10;- `userAuth:{シート名:o}`が指定された場合、当該シートのprimaryKey=userIdとなっているレコードのみ'r','w'可と看做す。&#10;- 'o'指定でselect/updateする場合、where句は無視され自情報に対する処理要求と看做す&#10;  ex. userId=2の人がuserId=1の人の氏名の更新を要求 ⇒ userId=2の氏名が更新される&#10;  ```&#10;  SpreadDb(&#10;    {table:'camp2024',command:'update',where:1,record:{'申込者氏名':'テスト'}},&#10;    {userId:2,userAuth:{camp2024:'o'}}&#10;  ); // -&amp;gt; userId=2の氏名が「テスト」に&#10;  ```&#10;" />
+            <outline text="クエリのエラーとレコードのエラー" _note="- クエリのエラー&#10;  - 指定テーブルへのアクセス権が無い等、クエリ単位で発生するエラー&#10;  - &#10;  - command系メソッド内で予期せぬエラーが発生した場合(=戻り値がErrorオブジェクト)も該当&amp;lt;br&amp;gt;この場合、エラーコードにはError.messageがセットされる&#10;  - 主処理で判定&#10;  - SpreadDbの戻り値オブジェクトのErrCDに設定(sdbMain.ErrCD)&#10;  - エラーの種類&#10;    - No PrimaryKey: 権限&quot;o&quot;でappend先のテーブルに主キーが設定されていない&#10;    - No Authority: 対象テーブルに対するアクセス権が無い&#10;&#10;- レコードのエラー&#10;  - unique指定の有る項目に重複値を設定しようとした等、レコード単位で発生するエラー&#10;  - command系メソッドで判定(append, update, delete)&#10;  - 個別レコードのログオブジェクトのErrCDに設定(sdbLog.ErrCD = sdbMain.log.ErrCD)&#10;  - エラーの種類&#10;    - append&#10;      - Duplicate: unique項目に重複した値を設定。diffに{項目名:重複値} 形式で記録&#10;    - update&#10;    - delete&#10;" />
             <outline text="エラーの種類" _note="| No | 設定項目 | コード | 発生箇所 | 原因 |&#10;| --: | :-- | :-- | :-- | :-- |&#10;| 1 | qSts | No Authority | doQuery | 指定されたテーブル操作の権限が無い |&#10;| 2 | qSts | No command | doQuery | query.commandが無い、または文字列では無い |&#10;| 3 | qSts | No Table name | doQuery | query.tableが無い、または文字列では無い |&#10;| 4 | qSts | Invalid where clause | doQuery | (権限&quot;o&quot;で)where句の値がプリミティブ型ではない |&#10;| 5 | qSts | No Table | doQuery&amp;lt;br&amp;gt;genTable | (create以外で)対象テーブルが無い |&#10;| 6 | qSts | No cols and data | genTable | createで項目定義も初期データも無い |&#10;| 7 | qSts | Already Exist | createTable | シートが既に存在している |&#10;| 8 | qSts | Duplicate | createTable | 初期レコード内に重複が存在 |&#10;| 9 | qSts | Empty set | createTable&amp;lt;br&amp;gt;appendRow | query.setが不在、または配列の長さが0 |&#10;| 10 | qSts | Invalid set | appendRow | query.setが非配列なのに要素がオブジェクトではない |&#10;| 11 | qSts | No set | appendRow&amp;lt;br&amp;gt;updateRow | queryにメンバ&quot;set&quot;が不在 |&#10;| 12 | qSts | No where | deleteRow&amp;lt;br&amp;gt;updateRow | where句がqueryに無い |&#10;| 13 | qSts | Undefined Column | updateRow | 更新対象項目がテーブルに無い |&#10;| 14 | qSts | その他 | doQuery | エラーオブジェクトのmessage |&#10;| 15 | rSts | Duplicate | appendRow&amp;lt;br&amp;gt;updateRow | unique項目に重複した値を入れようとした |&#10;| 16 | Error | Invalid Argument | functionalyze | 不適切な引数 |&#10;| 17 | Error | Could not Lock | main | 規定回数以上シートのロックに失敗した |&#10;">
               <outline text="fatal error : ソース修正が必要な致命的エラー" _note="SpreadDbからの戻り値はErrorオブジェクト。変更履歴シートには残らない。&#10;" />
               <outline text="warning error : データや権限の状態により発生するエラー" _note="ソース修正は不要。SpreadDbからの戻り値は通常のオブジェクト。変更履歴シートに残る。" />
@@ -1702,7 +1705,7 @@
               </outline>
             </outline>
           </outline>
-          <outline text="更新履歴(d154b1fe324f)" _note="- rev.1.2.0 : 2025/01/04〜01/26&#10;  - 設計思想を「クエリ単位に必要な情報を付加して実行、結果もクエリに付加」に変更&#10;  - 変更履歴を「クエリの実行結果」と「(クエリ内の)レコードの実行結果」の二種類のレコードレイアウトを持つように変更&#10;  - エラー発生時、messageではなくエラーコードで返すよう変更&#10;  - 1つの処理要求(query)で複数レコードを対象とする場合、一レコードでもエラーが発生したらエラーに&#10;  - 変更履歴シートのUUIDは削除&#10;  - workflowyで作成した使用をmarkdown化する機能を追加&#10;  - queryにSpreadDb呼出元での突合用項目&quot;queryId&quot;を追加&#10;  &#10;- rev.1.1.0 : 2024/12/27&#10;  - 上・左余白不可、複数テーブル/シート不可に変更(∵ロジックが複雑で保守性低下)&#10;    - テーブル名とシート名が一致&#10;    - 左上隅のセルはA1に固定&#10;  - 「更新履歴」の各項目の並び・属性他について、シート上の変更は反映されない(システム側で固定)&#10;  - 各シートの権限チェックロジックを追加(opt.account)&#10;  - クロージャを採用(append/update/deleteをprivate関数化)&#10;    - select文を追加(従来のclass方式ではインスタンスから直接取得)&#10;    - インスタンスを返す方式から、指定された操作(query)の結果オブジェクトを返すように変更&#10;  - getSchemaメソッドを追加&#10;  - 旧版のgetLogは廃止(select文で代替)&#10;- 仕様の詳細は[workflowy](&lt;a href=&quot;https://workflowy.com/#/4e03d2d2c266)参照&quot;&gt;https://workflowy.com/#/4e03d2d2c266)参照&lt;/a&gt;&#10;" />
+          <outline text="更新履歴(d154b1fe324f)" _note="- rev.1.2.0 : 2025/01/04〜01/26&#10;  - 設計思想を「クエリ単位に必要な情報を付加して実行、結果もクエリに付加」に変更&#10;  - 変更履歴を「クエリの実行結果」と「(クエリ内の)レコードの実行結果」の二種類のレコードレイアウトを持つように変更&#10;  - エラー発生時、messageではなくエラーコードで返すよう変更&#10;  - 1つの処理要求(query)で複数レコードを対象とする場合、一レコードでもエラーが発生したらエラーに&#10;  - 変更履歴シートのUUIDは削除&#10;  - workflowyで作成した使用をmarkdown化する機能を追加&#10;  - queryにSpreadDb呼出元での突合用項目&quot;queryId&quot;を追加&#10;  &#10;- rev.1.1.0 : 2024/12/27&#10;  - 上・左余白不可、複数テーブル/シート不可に変更(∵ロジックが複雑で保守性低下)&#10;    - テーブル名とシート名が一致&#10;    - 左上隅のセルはA1に固定&#10;  - 「更新履歴」の各項目の並び・属性他について、シート上の変更は反映されない(システム側で固定)&#10;  - 各シートの権限チェックロジックを追加(opt.account)&#10;  - クロージャを採用(append/update/deleteをprivate関数化)&#10;    - select文を追加(従来のclass方式ではインスタンスから直接取得)&#10;    - インスタンスを返す方式から、指定された操作(query)の結果オブジェクトを返すように変更&#10;  - getSchemaメソッドを追加&#10;  - 旧版のgetLogは廃止(select文で代替)&#10;- 仕様の詳細は[workflowy](&lt;a href=&quot;https://workflowy.com/#/4e03d2d2c266)参照&quot;&gt;https://workflowy.com/#/4e03d2d2c266)参照&lt;/a&gt;&#10;" />
         </outline>
       </outline>
       <outline text="workflowy : workflowy(OPML)をmarkdown文書に変換">
