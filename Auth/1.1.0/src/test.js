@@ -7,11 +7,8 @@
 const dev = devTools();
 const authTest = () => doTest('dev',0,1); // 引数はscenario, start, num
 //::$src/doTest.js::
-
 //::$src/authCommon.js::
-
 //::$src/authClient.js::
-
 //::$src/authServer.js::
 
 function authPost(arg) {
