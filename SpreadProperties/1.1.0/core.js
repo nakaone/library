@@ -1,7 +1,7 @@
 /** SpreadProperties: Google Spreadにおいて、各種属性を取得・保存する */
 class SpreadProperties {
   /** @constructor
-   * @param {Object} arg 
+   * @param {Object} arg
    * @param {number} arg.elapsLimit=300000 - 一処理当たりの制限時間(5分)
    * @param {number} arg.executionLimit=100 - 処理を分割した場合の最大処理数
    * @returns {SpreadProperties}
@@ -28,9 +28,9 @@ class SpreadProperties {
         count: 0, // {number} 実行回数。処理時間が5分を超え、分割実行の都度インクリメント
         SpreadId: this.SpreadId, // {string} セーブ対象のスプレッドシートのID
         sheetList: [], // {string[]} セーブ対象スプレッドシートのシート名一覧
-        propList: [], // {string[]} 出力するシート属性名の一覧。ex.Values ,Notes 
+        propList: [], // {string[]} 出力するシート属性名の一覧。ex.Values ,Notes
         next:{sheet:0,prop:0,row:0}, // {Object} 次に処理対象となるsheetList,propList,行の添字(0オリジン)
-        fileId: null // {string} 出力先ファイル(zip)のファイルID          
+        fileId: null // {string} 出力先ファイル(zip)のファイルID
       }
       this.spread = null; // {Spreadsheet} 対象のスプレッドシートオブジェクト
       this.srcFile = null; // {File} 対象スプレッドシートのファイルオブジェクト。spreadProperties()で設定
@@ -378,7 +378,6 @@ class SpreadProperties {
       return e;
     }
   }
-  
   /** spreadProperties: フォルダ・ファイル関連、スプレッドシート関連の属性情報取得
    * @param {void}
    * @returns {Object.<string,string>} 属性名：値形式
@@ -443,7 +442,6 @@ class SpreadProperties {
       return e;
     }
   }
-  
   /** scan: 属性情報が二次元の場合、一行毎に制限時間をチェックしながら文字列化
    * @param arg {Object}
    * @param arg.src {any[][]} - scanの呼出元で取得したソースとなる二次元配列
@@ -485,7 +483,6 @@ class SpreadProperties {
       return e;
     }
   }
-  
   /** getSheet: 指定されたシートの属性情報を取得
    * @param arg {string}=this.spread.getActiveSheet() - 取得対象となるシート名。未指定の場合表示中のシート
    * @returns {void} this.data.Sheet[取得対象シート名]
@@ -694,7 +691,7 @@ class SpreadProperties {
   
       v.step = 4; // body部分の作成
       v.step = 4.1; // セル単位のtd要素(ソース)生成関数を定義
-      v.td = o => { 
+      v.td = o => {
         if( o === null ) return '<td></td>';
         let rv = '<td';
         if( o.hasOwnProperty('attr') ){
@@ -751,7 +748,6 @@ class SpreadProperties {
       return e;
     }
   }
-  
   /** getRange: 現在選択中の範囲の属性情報を取得
    * @returns {Object}
    */
@@ -770,11 +766,10 @@ class SpreadProperties {
       return e;
     }
   }
-  
   /** saveSpread() : 指定スプレッドシートから各種属性情報を取得、Google Diverのスプレッドシートと同じフォルダにzip形式圧縮されたJSONとして保存
    * @param arg {string} - 呼出元の関数名
    * @returns {Object.<string,any>} 属性名：設定値形式のオブジェクト
-   * 
+   *
    * - 仕様は[workflowy](https://workflowy.com/#/415ca4c2d194)参照
    */
   saveSpread(arg=null){
@@ -856,6 +851,5 @@ class SpreadProperties {
       return e;
     }
   }
-  
 }
 
