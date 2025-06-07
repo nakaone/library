@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<opml version="2.0">
+  <head>
+    <ownerEmail>
+      ena.kaon@gmail.com
+    </ownerEmail>
+  </head>
+  <body>
+    <outline text="税務定期作業" _note="本作業は、年度初めは低頻度・年度末は高頻度にする。&#10;- 10,11,12月分 -&amp;gt; 1月頭&#10;- 1,2,3月分 -&amp;gt; 4月頭&#10;- 4,5月分 -&amp;gt; 6月頭&#10;- 6,7月分 -&amp;gt; 8月頭&#10;- 8月分 -&amp;gt; 9月頭&#10;- 9月分、その他遺漏分 -&amp;gt; 10月頭">
+      <outline text="作業手順">
+        <outline text="証憑の収集、PDF化して「電子証憑」フォルダに格納" _note="フォルダ格納時、タイプ別のファイル命名規則に拠ること!!">
+          <outline text="通帳" _note="保存先：ena.kaon &amp;gt; masters &amp;gt; 通帳 &amp;gt; [mufg|smbc]\d.yyyymmdd-yyyymmdd.pdf&#10;&#10;1. 事前に銀行で通帳に記帳&#10;2. 現状のpdfを上記保存先からダウンロード&#10;3. 不足するページをA5でスキャンして、DLしたファイルに追加&#10;4. 追加したファイルをアップロード(「版を管理」で更新)&#10;&#10;なお、現状の最新は以下の通り。&#10;- MUFG &lt;a href=&quot;https://drive.google.com/file/d/18OeCJIZcIom0nNgmytT94MYCPlwVKky-/view?usp=drive_link&quot;&gt;No.9&lt;/a&gt;&#10;- SMBC &lt;a href=&quot;https://drive.google.com/file/d/16kLggr5GAI3nYGmhmgA9Z3slC23A6jk4/view?usp=drive_link&quot;&gt;No.6&lt;/a&gt;" />
+          <outline text="クレジットカード利用明細(AMEX)" _note="「電子証憑」のフォルダを開き「20yyMM.pdf」がどこまで保存されているか確認する。&#10;未保存月の利用明細(PDF)をMUFGのサイトからダウンロードし、「電子証憑」フォルダに保存。&#10;&#10;MUFG News+ : &lt;a href=&quot;https://www2.cr.mufg.jp/newsplus/amex/?lid=news_amex&quot;&gt;https://www2.cr.mufg.jp/newsplus/amex/?lid=news_amex&lt;/a&gt;&#10;&amp;gt; ご請求額・利用明細照会&#10;ID,PWはGoogle Keepで「MUFGカードWEBサービス」を検索&#10;" />
+          <outline text="EF, CKレントロール" _note="TransCreationから送付の都度「電子証憑」のフォルダに保存(ファイルは月単位)。&#10;" />
+          <outline text="HSレントロール" _note="1. 確証貼付ノートの所定の位置に確証(定期清掃領収書)と併せて貼付&#10;2. 月単位にスキャンして&quot;HS20yyMM.pdf&quot;を作成、「電子証憑」フォルダに保存&#10;&#10;まとめてスキャン後、Macのプレビューでページごとに分割(サムネールをデスクトップにD&amp;D)。&#10;なおA4見開きに貼りきれない証憑は「確証貼付ノート」に貼付する。&#10;" />
+          <outline text="健保・年金、確定拠出年金" _note="1. 事前に「確証貼付ノート」の一部を健保・年金用に確保して領収書を貼付。&#10;1. まとめてスキャン後、Macのプレビューでページごとに分割(サムネールをデスクトップにD&amp;D)。&#10;1. ファイル名を&quot;pensionYYYYMM.pdf&quot;に修正して「電子証憑」フォルダに保存&#10;" />
+          <outline text="確証貼付ノート" _note="1. A4以上のサイズの場合はノート貼付前にスキャン、貼付予定ページ番号を元に&quot;noteYYYYNN.pdf&quot;を作成(YYYYは年度、NNはページ番号)&#10;2. 確証貼付ノートへの貼付。貼付後、宛先・摘要等必要事項を追記&#10;3. 1で事前にスキャンしたページ以外について、ページ単位にスキャンして&quot;noteYYYYNN.pdf&quot;を作成&#10;4. 作成したpdfを「電子証憑」フォルダに保存&#10;&#10;確証貼付ノートNo.1の不足時はNo.2を追加するが、ページ番号はNo1,2通しで採番する(No.2の最初のページはNo.1の最終ページ＋1)。&#10;" />
+          <outline text="電子証憑" _note="以下は主なもの。MUJI等、不定期に利用した購入先は都度追加する。">
+            <outline text="YFP税理士事務所" _note="GMailを&quot;YFP&quot;で検索して保存。概ね月央(15日前後)にメールで請求書が送られているので「電子証憑」に保存。&#10;&#10;※ファイル名は&quot;yyyyMMdd_400_xxx.pdf&quot;、xxx: 000-&amp;gt;税理士報酬分、003-&amp;gt;記帳代行分&#10;" />
+            <outline text="amazon" />
+            <outline text="yodobashi" />
+            <outline text="代行購入(弘子)" />
+            <outline text="Apple" _note="ena.kaonのGmail上で「領収書」をキーワードに検索" />
+            <outline text="モノタロウ" />
+            <outline text="その他サイト" />
+          </outline>
+          <outline text="交通費" />
+          <outline text="その他" _note="収支に関係ないが税理士と共有すべき資料があった場合、適宜保存した上でhtmlを編集してリンクを貼る(要手動対応)。" />
+        </outline>
+        <outline text="Google Driveから前回の税務定期作業関連ファイルをローカルにダウンロード" />
+        <outline text="前回提出レポート(index.html)をproto.htmlに名称変更" />
+        <outline text="Google Drive「ena.kaon &amp;gt; log &amp;gt; fy20xx &amp;gt; 電子証憑 &amp;gt; 証憑(Google Spread)」を開き「道具箱 &amp;gt; ファイル一覧更新」を実行" />
+        <outline text="masterシートに基づき作業">
+          <outline text="証憑種別(type)=「不明」の証憑は、適宜証憑種別を変更" _note="「電子証憑」以外は任意に設定可&#10;" />
+          <outline text="type=「電子証憑」でdate(取引日)他が空欄の証憑は追記" />
+          <outline text="使用しない証憑が&quot;isExist=true&quot;になっていたらbackupフォルダに移動" _note="これを行った場合、再度「道具箱 &amp;gt; ファイル一覧更新」を実行すること。" />
+        </outline>
+        <outline text="「道具箱 &amp;gt; ファイル一覧出力」を実行、master.jsonを作成" />
+        <outline text="build.shを実行、index.htmlを作成" />
+        <outline text="index.html?mode=debugで開き、以下の点をチェック">
+          <outline text="【削除済】タグ・master.json共に存在するが、isExist=false ⇒ proto.htmlからタグを削除 or 削除されたファイルの復活" />
+          <outline text="【証憑不足】タグに存在するがmaster.jsonに存在しない ⇒ 電子証憑フォルダに証憑のpdfを追加 or proto.htmlからタグを削除" />
+          <outline text="【タグ未設定】master.jsonでisExist=trueだが対応するタグが不在 ⇒ proto.htmlにタグを追加 or 電子証憑フォルダから該当ファイルを削除" />
+          <outline text="【項目未設定】type=「電子証憑」で必須項目が未設定" />
+        </outline>
+        <outline text="前段で何らかの修正を行った場合、「道具箱 &amp;gt; ファイル一覧更新」から再度実行" />
+        <outline text="税理士への提出">
+          <outline text="「連絡・質疑管理表」上の保留事項に回答記入" />
+          <outline text="税理士事務所に更新連絡" _note="【連絡】ena.kaon 証憑類を追加登録しました&#10;&#10;To: 武田様&#10;&#10;ena.kaonの嶋津です。お世話になっております。&#10;&#10;掲題の件、添付のように現時点で入手済の証憑類を追加しました。ご確認ください。&#10;&#10;以上、お取りはからいの程、宜しくお願いします。&#10;" />
+        </outline>
+        <outline text="Google Driveのバックアップ" _note="定期作業の都度、以下の手順に基づきバックアップを作成。&#10;&lt;a href=&quot;https://docs.google.com/document/d/1GE90XoxGWTH3cz6c708T3vZSsKeEtWhyAJQDfelNsaU/edit?usp=sharing)に基づきバックアップを作成。&quot;&gt;https://docs.google.com/document/d/1GE90XoxGWTH3cz6c708T3vZSsKeEtWhyAJQDfelNsaU/edit?usp=sharing&lt;/a&gt;&#10;" />
+      </outline>
+      <outline text="仕様書">
+        <outline text="masterシート設定項目(typedef Evidence)">
+          <outline text="auto: 自動取得・設定項目" _note="determineTypeにより機械的に値が決定される項目">
+            <outline text="id {string} - ファイルID。主キー" />
+            <outline text="name {string} - ファイル名" />
+            <outline text="mime {string} - ファイルのMIMEタイプ" />
+            <outline text="desc {string} - ファイルの説明" />
+            <outline text="url {string} - ファイルを開く際に使用するURL" />
+            <outline text="viewers {string[]} - 閲覧者・コメント投稿者のリスト" />
+            <outline text="editors {string[]} - 編集者(e-mail)のリスト" />
+            <outline text="created {string} - ファイルの作成日付。拡張ISO8601形式の文字列" />
+            <outline text="updated {string} - ファイルの最終更新日付。拡張ISO8601形式の文字列" />
+            <outline text="isExist {boolean} - Google Drive上に存在するならtrue" />
+          </outline>
+          <outline text="formula: 算式一括設定項目" _note="ファイルごとに値を計算せず、arrayformulaにより一括して算式を設定する項目&#10;">
+            <outline text="fill {boolean} - 手動追加項目の記入が必要な場合はtrue" _note="ex. 電子証憑で、日付・摘要・価格等の必須項目のいずれかが空欄の場合true&#10;" />
+          </outline>
+          <outline text="default: 既定値設定項目" _note="determineTypeで既定値が設定され、適宜手動で修正する項目">
+            <outline text="type {string} - 証憑の種類。「恵比寿」「MUFG通帳」等。" _note="&lt;a href=&quot;https://workflowy.com/#/a7142c258146&quot;&gt;証憑種類(type)判定式&lt;/a&gt;に基づいて設定。いずれの判定式にもマッチしなかった場合「不明」が設定される。&#10;" />
+            <outline text="prefix {string} - リンク文字列の前に付加する文字列" _note="prefix,suffixは動的に生成する場合に使用。ex. 「MUFG vol.XX page.YY」で、XXはリンク無し・YYをリンク文字列とする&#10;" />
+            <outline text="label {string} - リンク文字列" />
+            <outline text="suffix {string} - リンク文字列の後に付加する文字列" />
+          </outline>
+          <outline text="manual: 手動追加項目">
+            <outline text="date {string} - 取引日。ISO8601拡張形式" />
+            <outline text="abstract {string} - 摘要" />
+            <outline text="price {number} - 価格" />
+            <outline text="payby {string} - 支払方法。AMEX, 役員借入金" />
+            <outline text="note {string} - 備考" />
+          </outline>
+        </outline>
+        <outline text="Google Spread「証憑」Apps Script">
+          <outline text="refreshMaster()">
+            <outline text="既存masterシートの内容をv.masterに読み込み" />
+            <outline text="フォルダのファイル一覧をv.currentに読み込み" />
+            <outline text="v.currentの内容をv.masterに反映">
+              <outline text="v.currentにのみ存在する場合、v.masterに追加" />
+              <outline text="v.currentに存在する場合&quot;isExist=true&quot;、存在しない場合&quot;false&quot;を設定" />
+            </outline>
+            <outline text="シート「master」の名前を「previous」に変更" />
+          </outline>
+        </outline>
+        <outline text="証憑種類(type)判定式" _note="[&#10;  {m:/^(20\d{2})(\d{2})\.pdf$/,f:x=&amp;gt;{return {type:'AMEX',year:x[1],month:x[2]};}},&#10;  {m:/^(20\d{2})(\d{2})(\d{2})_400_000\.pdf$/,f:x=&amp;gt;{return {type:'YFP税務顧問報酬',year:x[1],month:x[2]};}},&#10;  {m:/^(20\d{2})(\d{2})(\d{2})_400_003\.pdf$/,f:x=&amp;gt;{return {type:'YFP記帳代行報酬',year:x[1],month:x[2]};}},&#10;  {m:/^Amazon.+ 注文番号 (\d{3}\-\d{7}\-\d{7})\.pdf$/,f:x=&amp;gt;{return {type:'Amazon',orderId:x[1]}}},&#10;  {m:/^EF(20\d{2})(\d{2})\.pdf$/,f:x=&amp;gt;{return {type:'恵比寿',year:x[1],month:x[2]}}},&#10;  {m:/^CK(20\d{2})(\d{2})\.pdf$/,f:x=&amp;gt;{return {type:'上池袋',year:x[1],month:x[2]}}},&#10;  {m:/^HS(20\d{2})(\d{2})\.pdf$/,f:x=&amp;gt;{return {type:'羽沢',year:x[1],month:x[2]}}},&#10;  {m:/^MUFG(\d{2})(\d{2})\.pdf$/,f:x=&amp;gt;{return {type:'MUFG',noteNumber:x[1],page:x[2]}}},&#10;  {m:/^SMBC(\d{2})(\d{2})\.pdf$/,f:x=&amp;gt;{return {type:'SMBC',noteNumber:x[1],page:x[2]}}},&#10;  {m:/^note(20\d{2})(\d{2})\.pdf$/,f:x=&amp;gt;{return {type:'確証貼付ノート',fy:x[1],page:x[2]}}},&#10;  {m:/^pension(20\d{2})(\d{2})\.pdf$$/,f:x=&amp;gt;{return {type:'健保・年金',year:x[1],month:x[2]}}},&#10;  {m:/^RC\d{9}\.pdf$/,f:x=&amp;gt;{return {type:'モノタロウ'}}},&#10;]">
+          <outline text="1 Backlink">
+            <outline text="type {string} - 証憑の種類。「恵比寿」「MUFG通帳」等。" _note="&lt;a href=&quot;https://workflowy.com/#/a7142c258146&quot;&gt;証憑種類(type)判定式&lt;/a&gt;に基づいて設定。いずれの判定式にもマッチしなかった場合「不明」が設定される。&#10;" />
+          </outline>
+        </outline>
+        <outline text="build.sh処理プロセス">
+          <outline text="proto.htmlにmaster.jsonの内容を埋め込み" />
+        </outline>
+        <outline text="proto.html">
+          <outline text="該当証憑一覧" _note="中に指定証憑種類を並べる、grid属性指定されたdivタグ。&#10;class = wrapper + 証憑種類名&#10;">
+            <outline text="type {string} 証憑種類名" />
+            <outline text="sorton {string} 並べ替えのキーとなる項目名(label or date)" />
+            <outline text="cols {number}=1 テーブル内に並べる項目数" />
+          </outline>
+          <outline text="プレースホルダ(data-phタグ属性)">
+            <outline text="rex {string} - ファイル名を特定する正規表現" _note="単一のファイルを指定するように設定する" />
+            <outline text="label {string}" />
+            <outline text="prefix {string}" />
+            <outline text="suffix {string}" />
+          </outline>
+          <outline text="スクリプト">
+            <outline text="data-phタグ一覧を取得" _note="- tagに存在&#10;  - masterに存在&#10;    - isExist==true ⇒ tagをmasterを基にしたa hrefに置換&#10;    - isExist==false ⇒ 【削除済】proto.html上でタグを削除 or 削除されたファイルの復活&#10;  - masterに不在 ⇒ 【証憑不足】data-phのinnerTextを赤字で表示&#10;- tagに不存在(masterには存在)&#10;  - isExist==true ⇒ 【タグ未設定】proto.htmlにタグを追加&#10;  - isExist==false ⇒ 【問題なし】&#10;" />
+            <outline text="電子証憑一覧を作成" />
+          </outline>
+        </outline>
+      </outline>
+      <outline text="参考">
+        <outline text="コマンドラインでPDFを結合" _note="&lt;a href=&quot;https://samurai20000.hatenablog.com/entry/20090815/1250340293&quot;&gt;[mac] コマンドラインからpdfを結合する&lt;/a&gt;&lt;a href=&quot;https://samurai20000.hatenablog.com/entry/20090815/1250340293&quot;&gt;&#10;&lt;/a&gt;&quot;/System/Library/Automator/Combine PDF Pages.action/Contents/Resources/&lt;a href=&quot;http://join.py/&quot;&gt;join.py&lt;/a&gt;&quot; --output &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/電子証憑2020.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/電子証憑目次.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業提出用/電子証憑2020.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/&lt;a href=&quot;http://amazon.co.jp/&quot;&gt;Amazon.co.jp&lt;/a&gt; - 注文番号 249-6282791-2819056.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/20210430_400_000.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/20210430_400_003.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/7996362158969757-1.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/&lt;a href=&quot;http://amazon.co.jp/&quot;&gt;Amazon.co.jp&lt;/a&gt; - 注文番号 250-2694451-2822212.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/経費外/&lt;a href=&quot;http://amazon.co.jp/&quot;&gt;Amazon.co.jp&lt;/a&gt; - 注文番号 250-8630669-9227067.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/20210531_400_000.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/20210531_400_003.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/経費外/&lt;a href=&quot;http://amazon.co.jp/&quot;&gt;Amazon.co.jp&lt;/a&gt; - 注文番号 250-1034571-1929447.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/経費外/&lt;a href=&quot;http://amazon.co.jp/&quot;&gt;Amazon.co.jp&lt;/a&gt; - 注文番号 250-1857913-7772636.pdf&quot;&#10; &quot;/Users/ena.kaon/Desktop/tmp/20210709_税務定期作業/電子証憑/&lt;a href=&quot;http://amazon.co.jp/&quot;&gt;Amazon.co.jp&lt;/a&gt; - 注文番号 250-6336387-1303803.pdf&quot;" />
+      </outline>
+    </outline>
+  </body>
+</opml>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!-- taxation ver.3.0.0 : 2025.06.07 -->
+<html xml:lang="ja" lang="ja">
+<head>
+  <title>ena.kaon 証憑</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+  <style type="text/css">
+    /*::$prj/local/proto.css::*/
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <p id="today" style="text-align: right;"></p>
+
+  <!--------------------------------------
+    ナビゲーション領域
+  --------------------------------------->
+  <div class="navi">
+
+    <div><h1>金融関係</h1>
+      <div><h2>銀行通帳</h2>
+        <div class="list" data-type="通帳"></div>
+      </div>
+      <div><h2>ローン関係</h2>
+        <div class="list" data-type="返済明細"></div>
+      </div>
+      <div><h2>クレジットカード利用明細</h2>
+        <div class="list" data-type="AMEX"></div>
+      </div>
+    </div>
+    
+    <div><h1>レントロール</h1>
+      <div><h2>恵比寿フェリシタ</h2>
+        <div class="list" data-type="恵比寿"></div>
+      </div>
+      <div><h2>クレセント上池袋</h2>
+        <div class="list" data-type="上池袋"></div>
+      </div>
+      <div><h2>羽沢眞和マンション</h2>
+        <div class="list" data-type="羽沢"></div>
+      </div>
+    </div>
+
+    <div><h1>証憑類</h1>
+      <div><h2>健保・年金、確定拠出年金</h2>
+        <div class="list" data-type="健保・年金"></div>
+      </div>
+      <div><h2>確証貼付ノート</h2>
+        <div class="list" data-type="確証貼付ノート"></div>
+      </div>
+      <div><h2>税理士(YFP)</h2>
+        <div class="list" data-type="YFP"></div>
+      </div>
+      <div><h2>電子証憑</h2>
+        <div class="list" data-type="電子証憑"></div>
+      </div>
+    </div>
+
+    <div><h1>その他</h1>
+      <div><h2>参考資料</h2>
+        <div class="list" data-type="参考"></div>
+      </div>
+      <div><h2>特記事項</h2>
+        <div class="list">
+          <!--::$prj/notes.html::-->
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+<script type="text/javascript">// master.json
+const data = 
+  //::$prj/master.json::
+;
+</script>
+<script type="text/javascript">// ライブラリ
+  //::$prj/local/library.js::
+</script>
+<script type="text/javascript">
+  const ctrlList = element => {
+    // ナビ領域のリストは隠蔽
+    document.querySelectorAll('.list').forEach(o => o.style.display = 'none');
+    // クリックされたナビメニューの下の明細を表示
+    element.target.parentElement.querySelector('.list').style.display = 'block';
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const v = { whois: 'DOMContentLoaded', rv: null };
+
+    // 作業日日付の設定
+    document.getElementById('today').innerText = toLocale(new Date(),'yyyy/MM/dd現在');
+    // 最初はリスト非表示。但し電子証憑のリストのみ表示
+    document.querySelectorAll('.list').forEach(o => o.style.display = 'none');
+    // クリック時イベントの定義
+    document.querySelectorAll('h2').forEach(o => o.addEventListener('click',ctrlList));
+
+    document.querySelectorAll('.list[data-type]').forEach(t => {
+      v.sql = `select * from ? where type="${t.getAttribute('data-type')}" order by label;`;
+      alasql(v.sql,[data]).forEach(d => {
+        // labelにaタグが無ければ追加
+        if( !d.label.match(/<a>/) ) d.label = `<a>${d.label}</a>`;
+        // <a>をhref化
+        d.label = d.label.replace('<a>',`<a href="https://drive.google.com/file/d/${d.id}"/preview" target="_blank">`);
+        // 要素をdiv.tableに追加
+        createElement({tag: 'div',html: d.label},t);
+      })
+    });
+
+});
+</script>
+</html>

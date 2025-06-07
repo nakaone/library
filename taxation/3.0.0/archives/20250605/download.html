@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script type='text/javascript'>
+    window.onload = function() {
+      handleDownload();
+    }
+    function handleDownload() {
+      var content = <?= getFileList(); ?>;
+      var blob = new Blob([content], { type: "application/json" });
+      var link = document.createElement('a');
+      link.download = "current.json"; // ファイル名を指定
+      link.href = window.URL.createObjectURL(blob);
+      link.click();
+      google.script.host.close();
+    }
+  </script>
+</head>
+</html>

@@ -1,0 +1,33 @@
+html {line-height: 1.5rem;}
+body {}
+h1 {
+  font-size: 1.6rem;
+  color: #fff;
+  background-color: #aaa;
+  border: solid 3px #888;
+  padding: 0.5rem;
+}
+h2 {
+  font-size: 1.2rem;
+}
+div.navi {
+  width: 600px;
+  margin: 0 auto;
+  background-color: #ccc;
+  padding: 1rem;
+}
+.num {text-align: right;}
+.detail {
+  background: #ddd;
+  padding: 1rem;
+}
+th, td {
+  padding: 0.2rem 0.5rem;
+}
+ul {
+  list-style: none;
+}
+li {
+  margin-bottom: 0.5rem;
+}
+.amendment {font-size: 0.7rem;}
