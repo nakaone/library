@@ -10,6 +10,8 @@ set -e # エラー時点で停止
 Desktop="/Users/ena.kaon/Desktop"
 GitHub="$Desktop/GitHub"
 lib="$GitHub/library"
+prj="$lib/taxation/3.0.0"
+src="$prj/src"
 
 # 0.12 .DS_storeの全削除
 find $GitHub -name '.DS_Store' -type f -ls -delete
@@ -22,13 +24,19 @@ querySelector="node $lib/querySelector/2.0.1/pipe.js"
 opml="$lib/workflowy/opml"
 workflowy="node $lib/workflowy/1.1.0/pipe.js"
 
+# ----------------------------------------------
+# 1. GAS用ソース作成
+#   通常の税務定期作業では不要。
+#   ソース変更時のみ「証憑yyyy」のスクリプトを以下で更新
+# ----------------------------------------------
+cat $src/code.js | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $prj/GAS/code.gs
+cp $src/download.html $prj/GAS/
 
-# カレントディレクトリは作業用フォルダとして実行
-prj=$PWD #"$Desktop/tmp/20250604_税務定期作業"
-cd $prj
+# ----------------------------------------------
+# 2. 提出用HTML作成
+# ----------------------------------------------
 pandoc $prj/notes.md -f markdown -t html -o $prj/notes.html
-cat $prj/local/proto.html | awk 1 | \
-$embed -prj:$prj -lib:$lib > $prj/index.html
+cat $src/proto.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $prj/index.html
 rm $prj/notes.html
 
 # ソースの最小化 : https://elon-task.com/1658-2/

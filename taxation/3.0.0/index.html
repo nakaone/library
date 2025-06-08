@@ -43,7 +43,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-  <p id="today" style="text-align: right;"></p>
+  <p id="today" style="text-align: right;padding-right: 2rem;"></p>
 
   <!--------------------------------------
     ナビゲーション領域
@@ -643,8 +643,38 @@ const data =
   ]
 ;
 </script>
-<script type="text/javascript">// ライブラリ
-  /** HTMLElementを生成する
+<script type="text/javascript">
+  const ctrlList = element => {
+    // ナビ領域のリストは隠蔽
+    document.querySelectorAll('.list').forEach(o => o.style.display = 'none');
+    // クリックされたナビメニューの下の明細を表示
+    element.target.parentElement.querySelector('.list').style.display = 'block';
+  }
+  
+  window.addEventListener('DOMContentLoaded', () => {
+    const v = { whois: 'DOMContentLoaded', rv: null };
+  
+    // 作業日日付の設定
+    document.getElementById('today').innerText = toLocale(new Date(),'yyyy/MM/dd現在');
+    // 最初はリスト非表示。但し電子証憑のリストのみ表示
+    document.querySelectorAll('.list').forEach(o => o.style.display = 'none');
+    // クリック時イベントの定義
+    document.querySelectorAll('h2').forEach(o => o.addEventListener('click',ctrlList));
+  
+    document.querySelectorAll('.list[data-type]').forEach(t => {
+      v.sql = `select * from ? where type="${t.getAttribute('data-type')}" order by label;`;
+      alasql(v.sql,[data]).forEach(d => {
+        // labelにaタグが無ければ追加
+        if( !d.label.match(/<a>/) ) d.label = `<a>${d.label}</a>`;
+        // <a>をhref化
+        d.label = d.label.replace('<a>',`<a href="https://drive.google.com/file/d/${d.id}"/preview" target="_blank">`);
+        // 要素をdiv.tableに追加
+        createElement({tag: 'div',html: d.label},t);
+      })
+    });
+  });
+  
+    /** HTMLElementを生成する
    * @param {CEDefObj|CEDefObj[]} arg - 生成するHTMLElementの定義
    * @param {HTMLElement|string} [parent=null] - 本関数内部で親要素への追加まで行う場合に指定
    * @returns {HTMLElement|Error}
@@ -734,8 +764,7 @@ const data =
       return e;
     }
   }
-  
-  /** devTools: 開発支援関係メソッド集
+    /** devTools: 開発支援関係メソッド集
    * @param {Object} option
    * @param {boolean} option.start=true - 開始・終了メッセージの表示
    * @param {boolean} option.arg=true - 開始時に引数を表示
@@ -963,8 +992,7 @@ const data =
       return msg.join('\n');
     }
   }
-  
-  /** 日時を指定形式の文字列にして返す
+    /** 日時を指定形式の文字列にして返す
    * @param {string|Date} arg - 変換元の日時
    * @param {string} [format='yyyy-MM-ddThh:mm:ss.nnnZ'] - 日時を指定する文字列。年:y,月:M,日:d,時:h,分:m,秒:s,ミリ秒:n,タイムゾーン:Z
    * @returns {string} 指定形式に変換された文字列。無効な日付なら長さ0の文字列
@@ -1033,7 +1061,7 @@ const data =
       return e;
     }
   }
-  /** 変数の型を判定
+    /** 変数の型を判定
    *
    * - 引数"is"が指定された場合、判定対象が"is"と等しいかの真偽値を返す。
    *
@@ -1085,38 +1113,6 @@ const data =
       return rv;
     }
   }
-</script>
-<script type="text/javascript">
-  const ctrlList = element => {
-    // ナビ領域のリストは隠蔽
-    document.querySelectorAll('.list').forEach(o => o.style.display = 'none');
-    // クリックされたナビメニューの下の明細を表示
-    element.target.parentElement.querySelector('.list').style.display = 'block';
-  }
-
-  window.addEventListener('DOMContentLoaded', () => {
-    const v = { whois: 'DOMContentLoaded', rv: null };
-
-    // 作業日日付の設定
-    document.getElementById('today').innerText = toLocale(new Date(),'yyyy/MM/dd現在');
-    // 最初はリスト非表示。但し電子証憑のリストのみ表示
-    document.querySelectorAll('.list').forEach(o => o.style.display = 'none');
-    // クリック時イベントの定義
-    document.querySelectorAll('h2').forEach(o => o.addEventListener('click',ctrlList));
-
-    document.querySelectorAll('.list[data-type]').forEach(t => {
-      v.sql = `select * from ? where type="${t.getAttribute('data-type')}" order by label;`;
-      alasql(v.sql,[data]).forEach(d => {
-        // labelにaタグが無ければ追加
-        if( !d.label.match(/<a>/) ) d.label = `<a>${d.label}</a>`;
-        // <a>をhref化
-        d.label = d.label.replace('<a>',`<a href="https://drive.google.com/file/d/${d.id}"/preview" target="_blank">`);
-        // 要素をdiv.tableに追加
-        createElement({tag: 'div',html: d.label},t);
-      })
-    });
-
-});
 </script>
 </html>
 
