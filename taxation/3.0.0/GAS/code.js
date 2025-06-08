@@ -279,3 +279,7 @@ function determineType(filename) {
 
   } catch (e) { dev.error(e); return e; }
 }
+
+//::$lib/devTools/1.0.0/core.js::
+//::$lib/toLocale/1.1.0/core.js::
+//::$lib/whichType/1.0.1/core.js::
