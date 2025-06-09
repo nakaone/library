@@ -28,6 +28,14 @@ window.addEventListener('DOMContentLoaded', () => {
       // <a>をhref化
       d.label = d.label.replace('<a>',`<a href="https://drive.google.com/file/d/${d.id}"/preview" target="_blank">`);
     };
+    // 交通費に合計行を追加
+    alasql.fn.cv = x => {return Number(x.replaceAll(',',''))};  // 文字列化された数値を合計する独自関数を定義
+    data.push({
+      type:'交通費',
+      "日付": toLocale(new Date(),'yyyy/MM/dd'),
+      "行先": "【合計】",
+      "金額": (alasql('select sum(cv(`金額`)) as s from ? where type="交通費"',[data])[0].s).toLocaleString(),
+    });
 
     document.querySelectorAll('.list[data-type]').forEach(t => {
       v.type = t.getAttribute('data-type');
