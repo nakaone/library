@@ -182,11 +182,16 @@ function refreshMaster() {
     v.mSheet.autoResizeColumns(v.colnum['isExist'], v.colnum['note'] - v.colnum['isExist'] + 1);
     dev.step(6.4); // 見出しとして1行目は固定
     v.mSheet.setFrozenRows(1);
-    dev.step(6.5); // フィルタを作成、type=不明 or type=電子証憑 and date=空欄のみ表示
+    dev.step(6.5); // フィルタを作成、要編集行のみ表示
     // 既存フィルタがあれば削除
     if (v.mSheet.getFilter() !== null) v.mSheet.getFilter().remove();
     // フィルタを設定
-    v.mSheet.getDataRange().createFilter()
+    v.filter = v.mSheet.getDataRange().createFilter();
+    // fill==='o'の行だけ表示
+    v.filter.setColumnFilterCriteria(11, SpreadsheetApp.newFilterCriteria()
+      .whenTextEqualTo('o')
+      .build()
+    );
 
     dev.step(6.6); // previousシートは非表示
     v.pSheet.hideSheet();
@@ -653,4 +658,3 @@ function whichType(arg,is){
     return rv;
   }
 }
-
