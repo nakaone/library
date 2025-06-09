@@ -27,7 +27,8 @@ workflowy="node $lib/workflowy/1.1.0/pipe.js"
 # ----------------------------------------------
 # 1. GAS用ソース作成
 #   通常の税務定期作業では不要。
-#   ソース変更時のみ「証憑yyyy」のスクリプトを以下で更新
+#   ソース変更時のみ、GASフォルダに生成される
+#   以下のソースで「証憑yyyy」のスクリプトを更新する
 # ----------------------------------------------
 cat $src/code.js | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $prj/GAS/code.gs
 cp $src/download.html $prj/GAS/
