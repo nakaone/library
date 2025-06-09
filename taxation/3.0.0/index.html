@@ -24,13 +24,21 @@
       background-color: #ccc;
       padding: 1rem;
     }
-    .num {text-align: right;}
-    .detail {
-      background: #ddd;
-      padding: 1rem;
+    div.list {
+      display: grid;
+      gap: 10%;
+      margin-bottom: 2rem;
+    }
+    div.monthly {
+      grid-template-columns: repeat(3, 1fr);
     }
     th, td {
       padding: 0.2rem 0.5rem;
+      background: #ddd;
+      border-left: solid 2px #fff;
+      border-right: solid 2px #888;
+      border-top: solid 2px #fff;
+      border-bottom: solid 2px #888;
     }
     ul {
       list-style: none;
@@ -58,28 +66,28 @@
         <div class="list" data-type="返済明細"></div>
       </div>
       <div><h2>クレジットカード利用明細</h2>
-        <div class="list" data-type="AMEX"></div>
+        <div class="list monthly" data-type="AMEX"></div>
       </div>
     </div>
 
     <div><h1>レントロール</h1>
       <div><h2>恵比寿フェリシタ</h2>
-        <div class="list" data-type="恵比寿"></div>
+        <div class="list monthly" data-type="恵比寿"></div>
       </div>
       <div><h2>クレセント上池袋</h2>
-        <div class="list" data-type="上池袋"></div>
+        <div class="list monthly" data-type="上池袋"></div>
       </div>
       <div><h2>羽沢眞和マンション</h2>
-        <div class="list" data-type="羽沢"></div>
+        <div class="list monthly" data-type="羽沢"></div>
       </div>
     </div>
 
     <div><h1>証憑類</h1>
       <div><h2>健保・年金、確定拠出年金</h2>
-        <div class="list" data-type="健保・年金"></div>
+        <div class="list monthly" data-type="健保・年金"></div>
       </div>
       <div><h2>確証貼付ノート</h2>
-        <div class="list" data-type="確証貼付ノート"></div>
+        <div class="list" data-type="確証貼付ノート" style="grid-template-columns: repeat(5, 1fr);"></div>
       </div>
       <div><h2>税理士(YFP)</h2>
         <div class="list" data-type="YFP"></div>
@@ -652,7 +660,7 @@ const data =
     // ナビ領域のリストは隠蔽
     document.querySelectorAll('.list').forEach(o => o.style.display = 'none');
     // クリックされたナビメニューの下の明細を表示
-    element.target.parentElement.querySelector('.list').style.display = 'block';
+    element.target.parentElement.querySelector('.list').style.display = 'grid';
   }
   
   window.addEventListener('DOMContentLoaded', () => {
@@ -697,7 +705,16 @@ const data =
               {name:'payby', label: '支払'},
               {name:'note', label: '備考'},
             ];
-            v.data.forEach(d => v.getURL(d)); // label内のaタグを編集
+            v.data.forEach(d => {
+              if( !d.date || !d.label || d.label === '不明' || !d.price || !d.payby ){
+                // 要追記事項に未記入項目が有る場合、【要追記】を表示
+                d.date = '【要追記】';
+                if( !d.label || d.label === '不明' ) d.label = d.name; // label未設定ならファイル名を設定
+              } else {
+                d.price = Number(d.price).toLocaleString();
+              }
+              v.getURL(d); // label内のaタグを編集
+            });
           } else {
             dev.step(2.3);  // 交通費はリンクがないのでcolsの定義のみ
             v.cols = [
@@ -861,7 +878,7 @@ const data =
         opt.cols.forEach(col => {
           v.o = {
             tag: 'td',
-            text: row[col],
+            html: row[col.name] === undefined ? '' : String(row[col.name]),
           };
           if( col.align && col.align !== "left" ){
             v.o.style = {"text-align": col.align };

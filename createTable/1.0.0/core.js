@@ -38,7 +38,7 @@ function createTable(data,opt) {
       opt.cols.forEach(col => {
         v.o = {
           tag: 'td',
-          text: row[col],
+          html: row[col.name] === undefined ? '' : String(row[col.name]),
         };
         if( col.align && col.align !== "left" ){
           v.o.style = {"text-align": col.align };

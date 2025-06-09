@@ -3,7 +3,7 @@ const ctrlList = element => {
   // ナビ領域のリストは隠蔽
   document.querySelectorAll('.list').forEach(o => o.style.display = 'none');
   // クリックされたナビメニューの下の明細を表示
-  element.target.parentElement.querySelector('.list').style.display = 'block';
+  element.target.parentElement.querySelector('.list').style.display = 'grid';
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -48,7 +48,16 @@ window.addEventListener('DOMContentLoaded', () => {
             {name:'payby', label: '支払'},
             {name:'note', label: '備考'},
           ];
-          v.data.forEach(d => v.getURL(d)); // label内のaタグを編集
+          v.data.forEach(d => {
+            if( !d.date || !d.label || d.label === '不明' || !d.price || !d.payby ){
+              // 要追記事項に未記入項目が有る場合、【要追記】を表示
+              d.date = '【要追記】';
+              if( !d.label || d.label === '不明' ) d.label = d.name; // label未設定ならファイル名を設定            
+            } else {
+              d.price = Number(d.price).toLocaleString();
+            }
+            v.getURL(d); // label内のaタグを編集
+          });
         } else {
           dev.step(2.3);  // 交通費はリンクがないのでcolsの定義のみ
           v.cols = [
