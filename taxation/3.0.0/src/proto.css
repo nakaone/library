@@ -1,5 +1,4 @@
 html {line-height: 1.5rem;}
-body {}
 h1 {
   font-size: 1.6rem;
   color: #fff;
@@ -27,10 +26,10 @@ div.monthly {
 th, td {
   padding: 0.2rem 0.5rem;
   background: #ddd;
-  border-left: solid 2px #fff;
-  border-right: solid 2px #888;
-  border-top: solid 2px #fff;
-  border-bottom: solid 2px #888;
+  border-left: solid 1px #fff;
+  border-right: solid 1px #888;
+  border-top: solid 1px #fff;
+  border-bottom: solid 1px #888;
 }
 ul {
   list-style: none;

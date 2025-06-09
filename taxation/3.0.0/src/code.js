@@ -14,12 +14,20 @@ function fileListDownload() {
 }
 
 /** masterJSONalyze : masterシートの内容をJSON化して返す */
-function masterJSONalyze(arg) {
+function masterJSONalyze() {
   const v = { whois: 'masterJSONalyze', rv: []};
   dev.start(v.whois, [...arguments]);
   try {
 
-    v.data = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('master').getDataRange().getDisplayValues();
+    // -------------------------------------------------------------
+    dev.step(1);  // 事前準備
+    // -------------------------------------------------------------
+    v.spread = SpreadsheetApp.getActiveSpreadsheet();
+
+    // -------------------------------------------------------------
+    dev.step(2);  // masterシートの内容出力
+    // -------------------------------------------------------------
+    v.data = v.spread.getSheetByName('master').getDataRange().getDisplayValues();
     for( v.r=1 ; v.r<v.data.length ; v.r++ ){
       if( !v.data[v.r][0] ) continue; // 空白行(id未設定行)は飛ばす
       // 行オブジェクトの作成
@@ -35,6 +43,22 @@ function masterJSONalyze(arg) {
         if( v.row[x] ) v.o[x] = v.row[x];
       });
       v.rv.push(v.o);
+    }
+
+    // -------------------------------------------------------------
+    dev.step(3);  // 交通費シートの内容出力
+    // -------------------------------------------------------------
+    v.data = v.spread.getSheetByName('交通費').getDataRange().getDisplayValues();
+    for( v.r=1 ; v.r<v.data.length ; v.r++ ){
+      if( !v.data[v.r][6] ) continue; // 金額未入力は飛ばす
+      // 行オブジェクトの作成
+      v.row = {type:'交通費'};
+      for( v.c=0 ; v.c<v.data[0].length ; v.c++ ){
+        if( v.data[v.r][v.c] !== '' ){
+          v.row[v.data[0][v.c]] = v.data[v.r][v.c];
+        }
+      }
+      v.rv.push(v.row);
     }
 
     dev.end(); // 終了処理

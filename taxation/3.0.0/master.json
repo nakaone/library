@@ -69,13 +69,13 @@
     "id": "1niqoqRwcbwxmKAJpXMTw8b9RquCm_1RJ",
     "name": "CK202504.pdf",
     "type": "上池袋",
-    "label": "2025/04"
+    "label": "2025/04/01"
   },
   {
     "id": "1RzMfno62JFt-1O6pzP3d4kP033qEEqiP",
     "name": "EF202504.pdf",
     "type": "恵比寿",
-    "label": "2025/04"
+    "label": "2025/04/01"
   },
   {
     "id": "1Bc1ZAMHhib6spfk-bGnUhRamFZOzAXDx",
@@ -120,91 +120,91 @@
     "id": "1lmP0_Xm1QqJJGOEWd4uM4QIYa4ddLbpV",
     "name": "pension202503.pdf",
     "type": "健保・年金",
-    "label": "2025/03"
+    "label": "2025/03/01"
   },
   {
     "id": "1x74FxGPSKP3_MU8endjZa_J1Kd7GBIUm",
     "name": "pension202502.pdf",
     "type": "健保・年金",
-    "label": "2025/02"
+    "label": "2025/02/01"
   },
   {
     "id": "1bb2PxD3bAIfcMbnTSFoCCr_kGrfn_R5Y",
     "name": "HS202503.pdf",
     "type": "羽沢",
-    "label": "2025/03"
+    "label": "2025/03/01"
   },
   {
     "id": "1rj2By92TP6pjqFzeYVSy7B2kBW7lCTjc",
     "name": "HS202502.pdf",
     "type": "羽沢",
-    "label": "2025/02"
+    "label": "2025/02/01"
   },
   {
     "id": "1naSwYUsHJ3br91OqrrNiWUA7KwTB8zVS",
     "name": "202504.pdf",
     "type": "AMEX",
-    "label": "2025/04"
+    "label": "2025/04/01"
   },
   {
     "id": "1aV2AaO8cS7x0O732W7-fbCeotsVWb5vg",
     "name": "202503.pdf",
     "type": "AMEX",
-    "label": "2025/03"
+    "label": "2025/03/01"
   },
   {
     "id": "14-zEmyDeTq55ya3MTc9fCcpnLcA3497l",
     "name": "202502.pdf",
     "type": "AMEX",
-    "label": "2025/02"
+    "label": "2025/02/01"
   },
   {
     "id": "1dpS_E7PbJYv-FfVGHIMxlfnZzLw5lbLF",
     "name": "20250228_400_000.pdf",
-    "type": "YFP税務顧問報酬",
+    "type": "YFP",
     "label": "2025/02 <a>顧問報酬</a>"
   },
   {
     "id": "1lkDFoTaOMbcjcFgv3gXOf8gYu4PnTqm0",
     "name": "20250228_400_003.pdf",
-    "type": "YFP記帳代行報酬",
+    "type": "YFP",
     "label": "2025/02 <a>記帳代行</a>"
   },
   {
     "id": "1Q0FrqOjnfjcl1bioBtydtdZZmoajRQXC",
     "name": "20250131_400_000.pdf",
-    "type": "YFP税務顧問報酬",
+    "type": "YFP",
     "label": "2025/01 <a>顧問報酬</a>"
   },
   {
     "id": "1ewPi8zV-IKpmLpSYNQiyGkzN_yBoALBQ",
     "name": "20250131_400_003.pdf",
-    "type": "YFP記帳代行報酬",
+    "type": "YFP",
     "label": "2025/01 <a>記帳代行</a>"
   },
   {
     "id": "1EF-b61LzHlJo-33zNWLupLLxRGl7dHGB",
     "name": "CK202503.pdf",
     "type": "上池袋",
-    "label": "2025/03"
+    "label": "2025/03/01"
   },
   {
     "id": "16Dmq8oqUV4zzBN6GjFryKjdfH-9Q-9tg",
     "name": "EF202503.pdf",
     "type": "恵比寿",
-    "label": "2025/03"
+    "label": "2025/03/01"
   },
   {
     "id": "1fNZ4pv2Xao-VYGXnCdpsseUrhfFnVZpq",
     "name": "CK202502.pdf",
     "type": "上池袋",
-    "label": "2025/02"
+    "label": "2025/02/01"
   },
   {
     "id": "1_dQYOWclrqs44JNF5KAJ40jsNnfpuBf4",
     "name": "EF202502.pdf",
     "type": "恵比寿",
-    "label": "2025/02"
+    "label": "2025/02/01"
   },
   {
     "id": "1mHSAOycMALDi4RGbVtlbW1H-9zmNoyCZ",
@@ -270,49 +270,49 @@
     "id": "1vFdsfFrDghjn1YVo3gFHNyUGSwEVoou4",
     "name": "pension202501.pdf",
     "type": "健保・年金",
-    "label": "2025/01"
+    "label": "2025/01/01"
   },
   {
     "id": "1s2et1wZc2kqW1c6CtCL79ZUUYEMEPmaj",
     "name": "pension202412.pdf",
     "type": "健保・年金",
-    "label": "2024/12"
+    "label": "2024/12/01"
   },
   {
     "id": "1COWbHg_AG286AfAttNgrg3ZMjrWRwx1u",
     "name": "pension202411.pdf",
     "type": "健保・年金",
-    "label": "2024/11"
+    "label": "2024/11/01"
   },
   {
     "id": "1-_XLb5MqiGnlBSj0hhV7q_oz0T2oVPW_",
     "name": "pension202410.pdf",
     "type": "健保・年金",
-    "label": "2024/10"
+    "label": "2024/10/01"
   },
   {
     "id": "1XFImLh3oQJ5xAWTwUv0QtDn03SGUpqNS",
     "name": "HS202501.pdf",
     "type": "羽沢",
-    "label": "2025/01"
+    "label": "2025/01/01"
   },
   {
     "id": "18PRA45x0i4h7EBoKpwFMQpSJUJU_poc_",
     "name": "HS202412.pdf",
     "type": "羽沢",
-    "label": "2024/12"
+    "label": "2024/12/01"
   },
   {
     "id": "1Z0B0sjEAm3taT9XxWtWGErQKp8_EkP67",
     "name": "HS202411.pdf",
     "type": "羽沢",
-    "label": "2024/11"
+    "label": "2024/11/01"
   },
   {
     "id": "1DMXrens7X7ddj-uODheqXLuZ2IdKuOzg",
     "name": "HS202410.pdf",
     "type": "羽沢",
-    "label": "2024/10"
+    "label": "2024/10/01"
   },
   {
     "id": "1YwnwWEOHIrcVxrKACi_iZaD64ifnT9ei",
@@ -381,85 +381,85 @@
     "id": "1DFKN2otaoWswY7-NcnbxLyYoyUYCuMCx",
     "name": "202501.pdf",
     "type": "AMEX",
-    "label": "2025/01"
+    "label": "2025/01/01"
   },
   {
     "id": "1yttzxFoy0zIw9AYRnIO248VSqMt8f9pB",
     "name": "202412.pdf",
     "type": "AMEX",
-    "label": "2024/12"
+    "label": "2024/12/01"
   },
   {
     "id": "1te4t3VlgpmamtirE6TXdRRPOF8QRaFCW",
     "name": "202411.pdf",
     "type": "AMEX",
-    "label": "2024/11"
+    "label": "2024/11/01"
   },
   {
     "id": "1YeL8afVQWWQ4kLbZy4SGpCiQFbRGdwN0",
     "name": "202410.pdf",
     "type": "AMEX",
-    "label": "2024/10"
+    "label": "2024/10/01"
   },
   {
     "id": "1L918Z3YTo2lfYaBoTVjSYIodV3ha8J3t",
     "name": "20241231_400_003.pdf",
-    "type": "YFP記帳代行報酬",
+    "type": "YFP",
     "label": "2024/12 <a>記帳代行</a>"
   },
   {
     "id": "1w7-YBX6Eg3cV489U8N4Rr_9XTKQYaKX8",
     "name": "20241231_400_000.pdf",
-    "type": "YFP税務顧問報酬",
+    "type": "YFP",
     "label": "2024/12 <a>顧問報酬</a>"
   },
   {
     "id": "1GLN4kWtVPiD2AQgjUn_s3rlYN30V49bS",
     "name": "20241130_400_003.pdf",
-    "type": "YFP記帳代行報酬",
+    "type": "YFP",
     "label": "2024/11 <a>記帳代行</a>"
   },
   {
     "id": "13YqXmS_WQXxUC0Hb1phNtbBqvQ-Pw16p",
     "name": "20241130_400_000.pdf",
-    "type": "YFP税務顧問報酬",
+    "type": "YFP",
     "label": "2024/11 <a>顧問報酬</a>"
   },
   {
     "id": "1Z8-FRUHfHIzuFZPzvRAjXZOmg3gmfrnZ",
     "name": "20241031_400_000.pdf",
-    "type": "YFP税務顧問報酬",
+    "type": "YFP",
     "label": "2024/10 <a>顧問報酬</a>"
   },
   {
     "id": "1aRcrF5P2Jf2doBWW5th5BuJu0YCzhwon",
     "name": "20241031_400_003.pdf",
-    "type": "YFP記帳代行報酬",
+    "type": "YFP",
     "label": "2024/10 <a>記帳代行</a>"
   },
   {
     "id": "16OnYUqZY3GNAZpPkvXiymN7leB2JDVo-",
     "name": "20240930_400_003.pdf",
-    "type": "YFP記帳代行報酬",
+    "type": "YFP",
     "label": "2024/09 <a>記帳代行</a>"
   },
   {
     "id": "1hb-AJG_fU9uXoZTIEV93-FvYwWaL2ROZ",
     "name": "20240930_400_000.pdf",
-    "type": "YFP税務顧問報酬",
+    "type": "YFP",
     "label": "2024/09 <a>顧問報酬</a>"
   },
   {
     "id": "1pavHX7kCuq5vo2w1SKjkHHo99ujBCQKV",
     "name": "EF202501.pdf",
     "type": "恵比寿",
-    "label": "2025/01"
+    "label": "2025/01/01"
   },
   {
     "id": "1uI1F3dE_cy2KZ-O_URWZscRFaQXqyKNQ",
     "name": "CK202501.pdf",
     "type": "上池袋",
-    "label": "2025/01"
+    "label": "2025/01/01"
   },
   {
     "id": "19jlv3d8sbcE7EDJnasyM5HQIgZjg1mu0",
@@ -477,37 +477,37 @@
     "id": "1ZSCRhUWPCdeZJldHgbFQgZTQKVAP2Bsc",
     "name": "CK202412.pdf",
     "type": "上池袋",
-    "label": "2024/12"
+    "label": "2024/12/01"
   },
   {
     "id": "1VnSjX38DoLGxfCzIg-tl8tDRRT3IVh4g",
     "name": "EF202412.pdf",
     "type": "恵比寿",
-    "label": "2024/12"
+    "label": "2024/12/01"
   },
   {
     "id": "1aJlK0Gk2IFQ1B_-Uph6ahGpU9RXDaG4L",
     "name": "CK202411.pdf",
     "type": "上池袋",
-    "label": "2024/11"
+    "label": "2024/11/01"
   },
   {
     "id": "1gHimOtXHVvzUCJwv4YA4R8DTKwPQTTH-",
     "name": "EF202411.pdf",
     "type": "恵比寿",
-    "label": "2024/11"
+    "label": "2024/11/01"
   },
   {
     "id": "1u5n77hzw84eTeMAkqTsr5v-ccarY62cK",
     "name": "CK202410.pdf",
     "type": "上池袋",
-    "label": "2024/10"
+    "label": "2024/10/01"
   },
   {
     "id": "1_01-0Z7dfKT18_gPzxUlPnfTqTTbnQwY",
     "name": "EF202410.pdf",
     "type": "恵比寿",
-    "label": "2024/10"
+    "label": "2024/10/01"
   },
   {
     "id": "1DgiN-KZkGljLdogLRstsUokQ-l_tObbj",
@@ -526,5 +526,146 @@
     "name": "MUFG09.pdf",
     "type": "通帳",
     "label": "MUFG vol.<a>09</a>"
+  },
+  {
+    "type": "交通費",
+    "日付": "2024/10/08",
+    "行先": "羽沢",
+    "目的": "現状確認",
+    "補助": "HS",
+    "経路": "笹塚 - 市ヶ谷 - 新桜台",
+    "人数": "1",
+    "金額": "1,240"
+  },
+  {
+    "type": "交通費",
+    "日付": "2024/11/08",
+    "行先": "上池袋",
+    "目的": "現状確認",
+    "補助": "CK",
+    "経路": "笹塚 - 新宿 - 板橋",
+    "人数": "1",
+    "金額": "640"
+  },
+  {
+    "type": "交通費",
+    "日付": "2024/12/09",
+    "行先": "恵比寿",
+    "目的": "現状確認",
+    "補助": "EF",
+    "経路": "笹塚 - 新宿 - 恵比寿",
+    "人数": "1",
+    "金額": "620"
+  },
+  {
+    "type": "交通費",
+    "日付": "2024/12/10",
+    "行先": "オーシャン",
+    "目的": "打合せ(登記変更依頼)",
+    "補助": "CO",
+    "経路": "代々木上原 - 表参道",
+    "人数": "1",
+    "金額": "360"
+  },
+  {
+    "type": "交通費",
+    "日付": "2025/01/08",
+    "行先": "羽沢",
+    "目的": "現状確認",
+    "補助": "HS",
+    "経路": "笹塚 - 市ヶ谷 - 新桜台",
+    "人数": "1",
+    "金額": "1,240"
+  },
+  {
+    "type": "交通費",
+    "日付": "2024/11/10",
+    "行先": "ふじやまビレジ",
+    "目的": "打合せ(方針論議)",
+    "補助": "CO",
+    "経路": "笹塚 - 上界戸",
+    "人数": "2",
+    "金額": "14,800",
+    "備考": "〜11/12"
+  },
+  {
+    "type": "交通費",
+    "日付": "2025/02/08",
+    "行先": "上池袋",
+    "目的": "現状確認",
+    "補助": "CK",
+    "経路": "笹塚 - 新宿 - 板橋",
+    "人数": "1",
+    "金額": "640"
+  },
+  {
+    "type": "交通費",
+    "日付": "2025/03/01",
+    "行先": "上池袋",
+    "目的": "SB現調",
+    "補助": "CK",
+    "経路": "笹塚 - 新宿 - 板橋",
+    "人数": "2",
+    "金額": "1,280"
+  },
+  {
+    "type": "交通費",
+    "日付": "2025/03/09",
+    "行先": "恵比寿",
+    "目的": "現状確認",
+    "補助": "EF",
+    "経路": "笹塚 - 新宿 - 恵比寿",
+    "人数": "1",
+    "金額": "620"
+  },
+  {
+    "type": "交通費",
+    "日付": "2025/03/26",
+    "行先": "上池袋",
+    "目的": "SB現調",
+    "補助": "CK",
+    "経路": "笹塚 - 新宿 - 板橋",
+    "人数": "1",
+    "金額": "640"
+  },
+  {
+    "type": "交通費",
+    "日付": "2025/04/08",
+    "行先": "羽沢",
+    "目的": "現状確認",
+    "補助": "HS",
+    "経路": "笹塚 - 市ヶ谷 - 新桜台",
+    "人数": "1",
+    "金額": "1,240"
+  },
+  {
+    "type": "交通費",
+    "日付": "2025/05/08",
+    "行先": "上池袋",
+    "目的": "現状確認",
+    "補助": "CK",
+    "経路": "笹塚 - 新宿 - 板橋",
+    "人数": "1",
+    "金額": "640"
+  },
+  {
+    "type": "交通費",
+    "日付": "2025/05/24",
+    "行先": "野方",
+    "目的": "現地調査",
+    "補助": "CO",
+    "経路": "笹塚 - 新宿 - 高田馬場 - 野方",
+    "人数": "2",
+    "金額": "1,880"
+  },
+  {
+    "type": "交通費",
+    "日付": "2025/06/08",
+    "行先": "恵比寿",
+    "目的": "現状確認",
+    "補助": "EF",
+    "経路": "笹塚 - 新宿 - 恵比寿",
+    "人数": "1",
+    "金額": "620"
   }
 ]
