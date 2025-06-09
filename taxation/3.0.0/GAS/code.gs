@@ -155,13 +155,13 @@ function refreshMaster() {
     // ------------------------------------------------------------------
     v.parts = ['=arrayformula(_)',
       'if(isblank(a2:a),"",_)',	// idが空欄なら何も表示しない
-      'if(l2:l="不明",true,_)',	// typeが「不明」なら対象
-      'if(l2:l="電子証憑",_,false)',	// typeが「電子証憑」ではないなら対象外
-      'if(m2:m="不明",true,_)',	// labelが「不明」なら対象
-      'if(isblank(m2:m),true,_)',	// labelが空欄なら対象
-      'if(isblank(n2:n),true,_)',	// dateが空欄なら対象
-      'if(isblank(o2:o),true,_)',	// priceが空欄なら対象
-      'if(isblank(p2:p),true,false)',	// paybyが空欄なら対象
+      'if(l2:l="不明","o",_)',	// typeが「不明」なら対象
+      'if(l2:l="電子証憑",_,"x")',	// typeが「電子証憑」ではないなら対象外
+      'if(m2:m="不明","o",_)',	// labelが「不明」なら対象
+      'if(isblank(m2:m),"o",_)',	// labelが空欄なら対象
+      'if(isblank(n2:n),"o",_)',	// dateが空欄なら対象
+      'if(isblank(o2:o),"o",_)',	// priceが空欄なら対象
+      'if(isblank(p2:p),"o","x")',	// paybyが空欄なら対象
     ];
     for (v.i = 1, v.formula = v.parts[0]; v.i < v.parts.length; v.i++) {
       v.formula = v.formula.replace('_', v.parts[v.i]);
@@ -175,8 +175,8 @@ function refreshMaster() {
     // ------------------------------------------------------------------
     dev.step(6.1); // name(ファイル名)欄の幅は入力内容に合わせる
     v.mSheet.autoResizeColumn(v.colnum['name']);
-    dev.step(6.2); // mime〜updated欄は非表示
-    v.mSheet.hideColumns(v.colnum['mime'], v.colnum['updated'] - v.colnum['mime'] + 1);
+    dev.step(6.2); // mime〜isExist欄は非表示
+    v.mSheet.hideColumns(v.colnum['mime'], v.colnum['isExist'] - v.colnum['mime'] + 1);
     dev.step(6.3); // isExist欄はチェックボックスに変更して幅縮小
     // チェックボックスへの変更は保留。isExist〜noteの幅を最適化
     v.mSheet.autoResizeColumns(v.colnum['isExist'], v.colnum['note'] - v.colnum['isExist'] + 1);
