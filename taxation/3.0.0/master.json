@@ -3,79 +3,101 @@
     "id": "15Dg2KLH-hpyZ2eNimQXavbJEYm1bH7GIQtuRp7G_CbU",
     "name": "開発用",
     "type": "非証憑",
-    "label": "不明"
+    "label": "taxation開発用スプレッドシート"
   },
   {
     "id": "1uu_NH-iGsQYC21pVZS3vohIVfhYaJrn_",
     "name": "2025年度給与所得等に係る税額決定通知書.pdf",
     "type": "参考",
-    "label": "不明"
+    "label": "2025年度給与所得等に係る特別徴収税額の決定通知書",
+    "date": "2025/05/16"
   },
   {
     "id": "1KaaezOsQMobZORAwm9-73788r48tRASRECfmOfXvWxc",
     "name": "証憑2024",
     "type": "非証憑",
-    "label": "不明"
+    "label": "本スプレッドシート"
   },
   {
     "id": "1DaGH1LmErJ0Pc7gcz4uP8PHgP9xyorJC",
     "name": "20250531_領収書 _ 無印良品.pdf",
     "type": "電子証憑",
-    "label": "不明"
+    "label": "備品(バスケット)",
+    "date": "2025/05/22",
+    "price": "5279",
+    "payby": "役員借入金"
   },
   {
     "id": "11pXYjxhKQIklRiAFQJNKQZ8JtpLUgKZC",
     "name": "20241025_スマホスタンド領収書.pdf",
     "type": "電子証憑",
-    "label": "不明"
+    "label": "スマホスタンド",
+    "date": "2024/10/28",
+    "price": "1850",
+    "payby": "役員借入金"
   },
   {
     "id": "1iLsevNUcaq9kp3rqCarZMwhG1HdFcgOL",
     "name": "20241206_スマホフィルム領収書.pdf",
     "type": "電子証憑",
-    "label": "不明"
+    "label": "スマホフィルム",
+    "date": "2024/12/05",
+    "price": "2520",
+    "payby": "役員借入金"
   },
   {
     "id": "1dEIdlcHtfkXresrJVvi7yqschZRA9N_W",
     "name": "20250125_ワイヤレスマウス領収書.pdf",
     "type": "電子証憑",
-    "label": "不明"
+    "label": "PC周辺機器",
+    "date": "2025/01/28",
+    "price": "1310",
+    "payby": "役員借入金"
   },
   {
     "id": "1A99DTWWEdXUq8KAFu-nq-hVuWer3T9WG",
     "name": "RC182643190.pdf",
     "type": "電子証憑",
-    "label": "不明"
+    "label": "営繕・補修用資材",
+    "date": "2025/05/07",
+    "price": "4747",
+    "payby": "役員借入金"
   },
   {
     "id": "1YamIvPbChf_wYt8lvs7wvWmQEQKdhL6D",
     "name": "RC182643445.pdf",
     "type": "電子証憑",
-    "label": "不明"
+    "label": "営繕・補修用資材",
+    "date": "2025/05/07",
+    "price": "123",
+    "payby": "役員借入金"
   },
   {
     "id": "1kdiuk2zTVwL9BAKBocuyCj5HltUvKDF-",
     "name": "RC182722417.pdf",
     "type": "電子証憑",
-    "label": "不明"
+    "label": "営繕・補修用資材",
+    "date": "2025/05/08",
+    "price": "2813",
+    "payby": "役員借入金"
   },
   {
     "id": "1xXxbijwGf65A75_BV54jjEQWBzYf8uss",
     "name": "20250421_SMBCローン返済明細書.pdf",
     "type": "返済明細",
-    "label": "不明"
+    "label": "SMBCローン返済明細(2025/04/21)"
   },
   {
     "id": "1niqoqRwcbwxmKAJpXMTw8b9RquCm_1RJ",
     "name": "CK202504.pdf",
     "type": "上池袋",
-    "label": "2025/04/01"
+    "label": "<a>2025/04</a>"
   },
   {
     "id": "1RzMfno62JFt-1O6pzP3d4kP033qEEqiP",
     "name": "EF202504.pdf",
     "type": "恵比寿",
-    "label": "2025/04/01"
+    "label": "<a>2025/04</a>"
   },
   {
     "id": "1Bc1ZAMHhib6spfk-bGnUhRamFZOzAXDx",
@@ -120,43 +142,43 @@
     "id": "1lmP0_Xm1QqJJGOEWd4uM4QIYa4ddLbpV",
     "name": "pension202503.pdf",
     "type": "健保・年金",
-    "label": "2025/03/01"
+    "label": "<a>2025/03</a>"
   },
   {
     "id": "1x74FxGPSKP3_MU8endjZa_J1Kd7GBIUm",
     "name": "pension202502.pdf",
     "type": "健保・年金",
-    "label": "2025/02/01"
+    "label": "<a>2025/02</a>"
   },
   {
     "id": "1bb2PxD3bAIfcMbnTSFoCCr_kGrfn_R5Y",
     "name": "HS202503.pdf",
     "type": "羽沢",
-    "label": "2025/03/01"
+    "label": "<a>2025/03</a>"
   },
   {
     "id": "1rj2By92TP6pjqFzeYVSy7B2kBW7lCTjc",
     "name": "HS202502.pdf",
     "type": "羽沢",
-    "label": "2025/02/01"
+    "label": "<a>2025/02</a>"
   },
   {
     "id": "1naSwYUsHJ3br91OqrrNiWUA7KwTB8zVS",
     "name": "202504.pdf",
     "type": "AMEX",
-    "label": "2025/04/01"
+    "label": "<a>2025/04</a>"
   },
   {
     "id": "1aV2AaO8cS7x0O732W7-fbCeotsVWb5vg",
     "name": "202503.pdf",
     "type": "AMEX",
-    "label": "2025/03/01"
+    "label": "<a>2025/03</a>"
   },
   {
     "id": "14-zEmyDeTq55ya3MTc9fCcpnLcA3497l",
     "name": "202502.pdf",
     "type": "AMEX",
-    "label": "2025/02/01"
+    "label": "<a>2025/02</a>"
   },
   {
     "id": "1dpS_E7PbJYv-FfVGHIMxlfnZzLw5lbLF",
@@ -186,25 +208,25 @@
     "id": "1EF-b61LzHlJo-33zNWLupLLxRGl7dHGB",
     "name": "CK202503.pdf",
     "type": "上池袋",
-    "label": "2025/03/01"
+    "label": "<a>2025/03</a>"
   },
   {
     "id": "16Dmq8oqUV4zzBN6GjFryKjdfH-9Q-9tg",
     "name": "EF202503.pdf",
     "type": "恵比寿",
-    "label": "2025/03/01"
+    "label": "<a>2025/03</a>"
   },
   {
     "id": "1fNZ4pv2Xao-VYGXnCdpsseUrhfFnVZpq",
     "name": "CK202502.pdf",
     "type": "上池袋",
-    "label": "2025/02/01"
+    "label": "<a>2025/02</a>"
   },
   {
     "id": "1_dQYOWclrqs44JNF5KAJ40jsNnfpuBf4",
     "name": "EF202502.pdf",
     "type": "恵比寿",
-    "label": "2025/02/01"
+    "label": "<a>2025/02</a>"
   },
   {
     "id": "1mHSAOycMALDi4RGbVtlbW1H-9zmNoyCZ",
@@ -264,55 +286,55 @@
     "id": "1sk5K2tTHlsoTCuxRCIEEstGJRWSqYbvD",
     "name": "SMTLF202501.pdf",
     "type": "返済明細",
-    "label": "不明"
+    "label": "SMTLFローン返済明細(2025/01〜06)"
   },
   {
     "id": "1vFdsfFrDghjn1YVo3gFHNyUGSwEVoou4",
     "name": "pension202501.pdf",
     "type": "健保・年金",
-    "label": "2025/01/01"
+    "label": "<a>2025/01</a>"
   },
   {
     "id": "1s2et1wZc2kqW1c6CtCL79ZUUYEMEPmaj",
     "name": "pension202412.pdf",
     "type": "健保・年金",
-    "label": "2024/12/01"
+    "label": "<a>2024/12</a>"
   },
   {
     "id": "1COWbHg_AG286AfAttNgrg3ZMjrWRwx1u",
     "name": "pension202411.pdf",
     "type": "健保・年金",
-    "label": "2024/11/01"
+    "label": "<a>2024/11</a>"
   },
   {
     "id": "1-_XLb5MqiGnlBSj0hhV7q_oz0T2oVPW_",
     "name": "pension202410.pdf",
     "type": "健保・年金",
-    "label": "2024/10/01"
+    "label": "<a>2024/10</a>"
   },
   {
     "id": "1XFImLh3oQJ5xAWTwUv0QtDn03SGUpqNS",
     "name": "HS202501.pdf",
     "type": "羽沢",
-    "label": "2025/01/01"
+    "label": "<a>2025/01</a>"
   },
   {
     "id": "18PRA45x0i4h7EBoKpwFMQpSJUJU_poc_",
     "name": "HS202412.pdf",
     "type": "羽沢",
-    "label": "2024/12/01"
+    "label": "<a>2024/12</a>"
   },
   {
     "id": "1Z0B0sjEAm3taT9XxWtWGErQKp8_EkP67",
     "name": "HS202411.pdf",
     "type": "羽沢",
-    "label": "2024/11/01"
+    "label": "<a>2024/11</a>"
   },
   {
     "id": "1DMXrens7X7ddj-uODheqXLuZ2IdKuOzg",
     "name": "HS202410.pdf",
     "type": "羽沢",
-    "label": "2024/10/01"
+    "label": "<a>2024/10</a>"
   },
   {
     "id": "1YwnwWEOHIrcVxrKACi_iZaD64ifnT9ei",
@@ -381,25 +403,25 @@
     "id": "1DFKN2otaoWswY7-NcnbxLyYoyUYCuMCx",
     "name": "202501.pdf",
     "type": "AMEX",
-    "label": "2025/01/01"
+    "label": "<a>2025/01</a>"
   },
   {
     "id": "1yttzxFoy0zIw9AYRnIO248VSqMt8f9pB",
     "name": "202412.pdf",
     "type": "AMEX",
-    "label": "2024/12/01"
+    "label": "<a>2024/12</a>"
   },
   {
     "id": "1te4t3VlgpmamtirE6TXdRRPOF8QRaFCW",
     "name": "202411.pdf",
     "type": "AMEX",
-    "label": "2024/11/01"
+    "label": "<a>2024/11</a>"
   },
   {
     "id": "1YeL8afVQWWQ4kLbZy4SGpCiQFbRGdwN0",
     "name": "202410.pdf",
     "type": "AMEX",
-    "label": "2024/10/01"
+    "label": "<a>2024/10</a>"
   },
   {
     "id": "1L918Z3YTo2lfYaBoTVjSYIodV3ha8J3t",
@@ -453,61 +475,65 @@
     "id": "1pavHX7kCuq5vo2w1SKjkHHo99ujBCQKV",
     "name": "EF202501.pdf",
     "type": "恵比寿",
-    "label": "2025/01/01"
+    "label": "<a>2025/01</a>"
   },
   {
     "id": "1uI1F3dE_cy2KZ-O_URWZscRFaQXqyKNQ",
     "name": "CK202501.pdf",
     "type": "上池袋",
-    "label": "2025/01/01"
+    "label": "<a>2025/01</a>"
   },
   {
     "id": "19jlv3d8sbcE7EDJnasyM5HQIgZjg1mu0",
     "name": "20250109_SMBCローン返済明細書.pdf",
     "type": "返済明細",
-    "label": "不明"
+    "label": "SMBCローン返済明細(2024/12/30)"
   },
   {
     "id": "18exrmCa45gXffolZO9vdU5GD0B2EAK1N",
     "name": "20241211_司法書士請求書.pdf",
     "type": "電子証憑",
-    "label": "不明"
+    "label": "司法書士(登記変更、他)",
+    "date": "2024/12/11",
+    "price": "93500",
+    "payby": "役員借入金",
+    "note": "p.2のみ"
   },
   {
     "id": "1ZSCRhUWPCdeZJldHgbFQgZTQKVAP2Bsc",
     "name": "CK202412.pdf",
     "type": "上池袋",
-    "label": "2024/12/01"
+    "label": "<a>2024/12</a>"
   },
   {
     "id": "1VnSjX38DoLGxfCzIg-tl8tDRRT3IVh4g",
     "name": "EF202412.pdf",
     "type": "恵比寿",
-    "label": "2024/12/01"
+    "label": "<a>2024/12</a>"
   },
   {
     "id": "1aJlK0Gk2IFQ1B_-Uph6ahGpU9RXDaG4L",
     "name": "CK202411.pdf",
     "type": "上池袋",
-    "label": "2024/11/01"
+    "label": "<a>2024/11</a>"
   },
   {
     "id": "1gHimOtXHVvzUCJwv4YA4R8DTKwPQTTH-",
     "name": "EF202411.pdf",
     "type": "恵比寿",
-    "label": "2024/11/01"
+    "label": "<a>2024/11</a>"
   },
   {
     "id": "1u5n77hzw84eTeMAkqTsr5v-ccarY62cK",
     "name": "CK202410.pdf",
     "type": "上池袋",
-    "label": "2024/10/01"
+    "label": "<a>2024/10</a>"
   },
   {
     "id": "1_01-0Z7dfKT18_gPzxUlPnfTqTTbnQwY",
     "name": "EF202410.pdf",
     "type": "恵比寿",
-    "label": "2024/10/01"
+    "label": "<a>2024/10</a>"
   },
   {
     "id": "1DgiN-KZkGljLdogLRstsUokQ-l_tObbj",
@@ -526,6 +552,18 @@
     "name": "MUFG09.pdf",
     "type": "通帳",
     "label": "MUFG vol.<a>09</a>"
+  },
+  {
+    "id": "1-jIEuChTyB7W3TX8jqUShy9jzH9E0_Qq",
+    "name": "202506.pdf",
+    "type": "AMEX",
+    "label": "<a>2025/06</a>"
+  },
+  {
+    "id": "19MTD3X6tmQFwh3Wp2h2wCdyz0Njc-lHR",
+    "name": "202505.pdf",
+    "type": "AMEX",
+    "label": "<a>2025/05</a>"
   },
   {
     "type": "交通費",

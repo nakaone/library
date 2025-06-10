@@ -156,12 +156,12 @@ function refreshMaster() {
     v.parts = ['=arrayformula(_)',
       'if(isblank(a2:a),"",_)',	// idが空欄なら何も表示しない
       'if(l2:l="不明","o",_)',	// typeが「不明」なら対象
-      'if(l2:l="電子証憑",_,"x")',	// typeが「電子証憑」ではないなら対象外
       'if(m2:m="不明","o",_)',	// labelが「不明」なら対象
-      'if(isblank(m2:m),"o",_)',	// labelが空欄なら対象
-      'if(isblank(n2:n),"o",_)',	// dateが空欄なら対象
-      'if(isblank(o2:o),"o",_)',	// priceが空欄なら対象
-      'if(isblank(p2:p),"o","x")',	// paybyが空欄なら対象
+      'if(l2:l="電子証憑",_,"x")',	// typeが「電子証憑」ではないなら対象外
+      'if(isblank(m2:m),"o",_)',	// typeが「電子証憑」でlabelが空欄なら対象
+      'if(isblank(n2:n),"o",_)',	// typeが「電子証憑」でdateが空欄なら対象
+      'if(isblank(o2:o),"o",_)',	// typeが「電子証憑」でpriceが空欄なら対象
+      'if(isblank(p2:p),"o","x")',	// typeが「電子証憑」でpaybyが空欄なら対象
     ];
     for (v.i = 1, v.formula = v.parts[0]; v.i < v.parts.length; v.i++) {
       v.formula = v.formula.replace('_', v.parts[v.i]);
@@ -260,21 +260,21 @@ function determineType(filename) {
       rex: /^SMBC(\d{2})\.pdf$/,
       f: x => { return { type: '通帳', label: `SMBC vol.<a>${('0' + x[1]).slice(-2)}</a>` } }
     }, {
-      // labelの先頭のダッシュが無いと、setValue時「2025/01」が「2025/1/1」と変換されてしまう
+      // 「yyyy/MM」形式は入力時日付と解釈され「yyyy/MM/dd」他に変換されてしまうため、事前にaタグで囲む
       rex: /^(20\d{2})(\d{2})\.pdf$/,
-      f: x => { return { type: 'AMEX', label: `'${x[1]}/${x[2]}` }; },
+      f: x => { return { type: 'AMEX', label: `<a>${x[1]}/${x[2]}</a>` }; },
     }, {
       rex: /^EF(20\d{2})(\d{2})\.pdf$/,
-      f: x => { return { type: '恵比寿', label: `'${x[1]}/${x[2]}` } }
+      f: x => { return { type: '恵比寿', label: `<a>${x[1]}/${x[2]}</a>` } }
     }, {
       rex: /^CK(20\d{2})(\d{2})\.pdf$/,
-      f: x => { return { type: '上池袋', label: `'${x[1]}/${x[2]}` } }
+      f: x => { return { type: '上池袋', label: `<a>${x[1]}/${x[2]}</a>` } }
     }, {
       rex: /^HS(20\d{2})(\d{2})\.pdf$/,
-      f: x => { return { type: '羽沢', label: `'${x[1]}/${x[2]}` } }
+      f: x => { return { type: '羽沢', label: `<a>${x[1]}/${x[2]}</a>` } }
     }, {
       rex: /^pension(20\d{2})(\d{2})\.pdf$$/,
-      f: x => { return { type: '健保・年金', label: `'${x[1]}/${x[2]}` } }
+      f: x => { return { type: '健保・年金', label: `<a>${x[1]}/${x[2]}</a>` } }
     }, {
       rex: /^note(20\d{2})(\d{2})\.pdf$/,
       f: x => { return { type: '確証貼付ノート', label: `p.${x[2]}` } }
@@ -285,6 +285,7 @@ function determineType(filename) {
       rex: /^(20\d{2})(\d{2})(\d{2})_400_003\.pdf$/,
       f: x => { return { type: 'YFP', label: `${x[1]}/${x[2]} <a>記帳代行</a>` }; }
     }, {
+      // 電子証憑は内容が多岐にわたるため、label=「不明」としてシート上で修正
       rex: /^Amazon.+ 注文番号 (\d{3}\-\d{7}\-\d{7})\.pdf$/,
       f: x => { return { type: '電子証憑', store: 'Amazon', orderId: x[1], label: '不明' } }
     }, {
@@ -301,6 +302,7 @@ function determineType(filename) {
       if (v.m) v.rv = v.list[v.i].f(v.m);
     }
 
+    dev.step(2); // いずれにも合致しない場合、type,label共「不明」を設定
     if (v.rv === null) v.rv = { type: '不明', label: '不明' };
 
     dev.end(); // 終了処理
@@ -658,3 +660,4 @@ function whichType(arg,is){
     return rv;
   }
 }
+
