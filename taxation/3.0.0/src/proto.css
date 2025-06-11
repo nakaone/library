@@ -17,11 +17,13 @@ div.navi {
 }
 div.list {
   display: grid;
-  gap: 10%;
   margin-bottom: 2rem;
 }
+div.list div {
+  margin-top: 0.5rem;
+}
 div.monthly {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(6, 1fr);
 }
 th, td {
   padding: 0.2rem 0.5rem;
@@ -37,4 +39,3 @@ ul {
 li {
   margin-bottom: 0.5rem;
 }
-.amendment {font-size: 0.7rem;}
