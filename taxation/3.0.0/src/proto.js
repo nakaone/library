@@ -6,10 +6,12 @@
 
 const dev = devTools();
 const ctrlList = element => {
+  // 現在の表示/非表示を保存
+  const d = element.target.parentElement.querySelector('.list').style.display;
   // ナビ領域のリストは隠蔽
   document.querySelectorAll('.list').forEach(o => o.style.display = 'none');
   // クリックされたナビメニューの下の明細を表示
-  element.target.parentElement.querySelector('.list').style.display = 'grid';
+  element.target.parentElement.querySelector('.list').style.display = d === 'none' ? 'grid' : 'none';
 }
 
 window.addEventListener('DOMContentLoaded', () => {
