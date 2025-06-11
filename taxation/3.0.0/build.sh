@@ -25,20 +25,32 @@ opml="$lib/workflowy/opml"
 workflowy="node $lib/workflowy/1.1.0/pipe.js"
 
 # ----------------------------------------------
-# 1. GAS用ソース作成
-#   通常の税務定期作業では不要。
-#   ソース変更時のみ、GASフォルダに生成される
-#   以下のソースで「証憑yyyy」のスクリプトを更新する
+# 以下で code.gs, download.html, index.htmlを作成、
+# Google Spread「証憑yyyy」にファイルとして登録する。
 # ----------------------------------------------
-cat $src/code.js | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $prj/GAS/code.gs
-cp $src/download.html $prj/GAS/
 
 # ----------------------------------------------
-# 2. 提出用HTML作成
+# 1. "code.gs" の作成
 # ----------------------------------------------
-pandoc $prj/notes.md -f markdown -t html -o $prj/notes.html
+cat $src/code.js | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $prj/code.gs
+
+# ----------------------------------------------
+# 2. "download.html" の作成
+# ----------------------------------------------
+cp $src/download.html $prj
+
+# ----------------------------------------------
+# 3. "index.html" の作成
+# ----------------------------------------------
 cat $src/proto.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $prj/index.html
-rm $prj/notes.html
+
+
+
+# ----------------------------------------------
+# 「特記事項」htmlの作成
+# ----------------------------------------------
+# pandoc $prj/notes.md -f markdown -t html -o $prj/notes.html
+# rm $prj/notes.html
 
 # ソースの最小化 : https://elon-task.com/1658-2/
 #npx html-minifier 20250408.html --collapse-whitespace --remove-comments -o index.html

@@ -6,10 +6,10 @@
       handleDownload();
     }
     function handleDownload() {
-      var content = <?= masterJSONalyze(); ?>;
-      var blob = new Blob([content], { type: "application/json" });
+      var content = <?= getIndexHTML(); ?>;
+      var blob = new Blob([content], { type: "text/html" });
       var link = document.createElement('a');
-      link.download = "master.json"; // ファイル名を指定
+      link.download = "index.html"; // ファイル名を指定
       link.href = window.URL.createObjectURL(blob);
       link.click();
       google.script.host.close();
