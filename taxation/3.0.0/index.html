@@ -1,13 +1,22 @@
 <!DOCTYPE html>
-<!-- taxation ver.3.0.0 : 2025.06.10
-  本htmlは提出用HTMLのテンプレートとして、GASに登録しておく
--->
+<!-- =======================================================
+[proto.html]
+  提出用HTML(index.html)のbody部分。
+  build.shでproto.css/jsを組み込み、「証憑yyyy」のGASにコピー
+======================================================= -->
+
 <html xml:lang="ja" lang="ja">
 <head>
   <title>ena.kaon 証憑</title>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
   <style type="text/css">
+    /* =======================================================
+    [proto.css]
+      提出用HTML(index.html)のCSS部分。
+      build.shでproto.htmlに組み込み、「証憑yyyy」のGASにコピー
+    ======================================================= */
+    
     html {line-height: 1.5rem;}
     h1 {
       font-size: 1.6rem;
@@ -27,11 +36,13 @@
     }
     div.list {
       display: grid;
-      gap: 10%;
       margin-bottom: 2rem;
     }
+    div.list div {
+      margin-top: 0.5rem;
+    }
     div.monthly {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(6, 1fr);
     }
     th, td {
       padding: 0.2rem 0.5rem;
@@ -47,7 +58,6 @@
     li {
       margin-bottom: 0.5rem;
     }
-    .amendment {font-size: 0.7rem;}
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
@@ -88,7 +98,7 @@
         <div class="list monthly" data-type="健保・年金"></div>
       </div>
       <div><h2>確証貼付ノート</h2>
-        <div class="list" data-type="確証貼付ノート" style="grid-template-columns: repeat(5, 1fr);"></div>
+        <div class="list" data-type="確証貼付ノート" style="grid-template-columns: repeat(10, 1fr);"></div>
       </div>
       <div><h2>税理士(YFP)</h2>
         <div class="list" data-type="YFP" style="grid-template-columns: repeat(2, 1fr);"></div>
@@ -114,6 +124,12 @@
 </body>
 <script type="text/javascript" id="master"></script>
 <script type="text/javascript">
+  /* =======================================================
+  [proto.js]
+    提出用HTML(index.html)のJavaScript部分。
+    build.shでproto.htmlに組み込み、「証憑yyyy」のGASにコピー
+  ======================================================= */
+  
   const dev = devTools();
   const ctrlList = element => {
     // ナビ領域のリストは隠蔽
@@ -153,11 +169,12 @@
         "金額": (alasql('select sum(cv(`金額`)) as s from ? where type="交通費"',[data])[0].s).toLocaleString(),
       });
   
+      // 明細表示エリア(class='list'でdata-type属性を持つタグ)を順次処理
       document.querySelectorAll('.list[data-type]').forEach(t => {
         v.type = t.getAttribute('data-type');
         if( v.type === '電子証憑' || v.type === '交通費' ){
           // -------------------------------------------------------------
-          dev.step(2); // テーブルを作成する場合
+          dev.step(2); // tableを作成する場合(電子証憑 or 交通費)
           // -------------------------------------------------------------
           dev.step(2.1);  // 対象データを取得
           v.sql = `select * from ? where type="${v.type}" order by date;`;
@@ -197,9 +214,31 @@
           dev.step(2.4);  // tableを追加
           createTable(v.data,{cols:v.cols,parent:t});
   
+        } else if( v.type === 'YFP' ){
+          // -------------------------------------------------------------
+          dev.step(3);  // 一つの明細に複数の証憑が紐付く場合(YFP)
+          // -------------------------------------------------------------
+          dev.step(3.1);  // 顧問報酬・記帳代行を問わず、YFP関係のデータを抽出
+          v.YFP = alasql('select * from ? where type="YFP";',[data]);
+          dev.step(3.2);  // date属性に対象年月をセット、label:にリンクを設定
+          v.YFP.forEach(x => {
+            v.m = x.label.match(/^(\d{4}\/\d{2}) <a>(.+?)<\/a>$/);
+            x.date = v.m[1];
+            x.label = `<a href="https://drive.google.com/file/d/${x.id}"/preview" target="_blank">${v.m[2]}</a>`;
+          });
+          dev.step(3.3);  // 顧問報酬(YFPa)・記帳代行(YFPb)に分けた上で、対象年月をキーにinner join
+          v.YFPa = alasql('select * from ? where type="YFP" and label like "%顧問報酬%"',[v.YFP]);
+          v.YFPb = alasql('select * from ? where type="YFP" and label like "%記帳代行%"',[v.YFP]);
+          v.sql = 'select concat(komon.date, " ", komon.label, " ", kicho.label) as label'
+          + ' from ? as komon inner join ? as kicho on komon.date=kicho.date'
+          + ' order by komon.date';
+          alasql(v.sql,[v.YFPa,v.YFPb]).forEach(d => {
+            // 要素をdiv.tableに追加
+            createElement({tag: 'div',html: d.label},t);
+          });
         } else {
           // -------------------------------------------------------------
-          dev.step(3); // 明細を並べる場合
+          dev.step(4); // 明細を並べる場合
           // -------------------------------------------------------------
           v.sql = `select * from ? where type="${v.type}" order by label;`;
           alasql(v.sql,[data]).forEach(d => {

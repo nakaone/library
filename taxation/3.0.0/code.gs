@@ -1,3 +1,10 @@
+/* =======================================================
+[code.js]
+  メニューおよびそこから呼ばれる関数の定義。
+  build.shで末尾で各種ライブラリを組み込み、
+  「証憑yyyy」のGASにcode.gsとしてコピー
+======================================================= */
+
 const dev = devTools();
 function onOpen() {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -259,6 +266,7 @@ function determineType(filename) {
   } catch (e) { dev.error(e); return e; }
 }
 
+/** fileListDownload : メニュー「提出用HTML出力」 */
 function fileListDownload() {
   var html = HtmlService.createTemplateFromFile("download").evaluate();
   SpreadsheetApp.getUi().showModalDialog(html, "作成中");

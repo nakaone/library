@@ -43,11 +43,12 @@ window.addEventListener('DOMContentLoaded', () => {
       "金額": (alasql('select sum(cv(`金額`)) as s from ? where type="交通費"',[data])[0].s).toLocaleString(),
     });
 
+    // 明細表示エリア(class='list'でdata-type属性を持つタグ)を順次処理
     document.querySelectorAll('.list[data-type]').forEach(t => {
       v.type = t.getAttribute('data-type');
       if( v.type === '電子証憑' || v.type === '交通費' ){
         // -------------------------------------------------------------
-        dev.step(2); // テーブルを作成する場合
+        dev.step(2); // tableを作成する場合(電子証憑 or 交通費)
         // -------------------------------------------------------------
         dev.step(2.1);  // 対象データを取得
         v.sql = `select * from ? where type="${v.type}" order by date;`;
@@ -87,9 +88,31 @@ window.addEventListener('DOMContentLoaded', () => {
         dev.step(2.4);  // tableを追加
         createTable(v.data,{cols:v.cols,parent:t});
 
+      } else if( v.type === 'YFP' ){
+        // -------------------------------------------------------------
+        dev.step(3);  // 一つの明細に複数の証憑が紐付く場合(YFP)
+        // -------------------------------------------------------------
+        dev.step(3.1);  // 顧問報酬・記帳代行を問わず、YFP関係のデータを抽出
+        v.YFP = alasql('select * from ? where type="YFP";',[data]);
+        dev.step(3.2);  // date属性に対象年月をセット、label:にリンクを設定
+        v.YFP.forEach(x => {
+          v.m = x.label.match(/^(\d{4}\/\d{2}) <a>(.+?)<\/a>$/);
+          x.date = v.m[1];
+          x.label = `<a href="https://drive.google.com/file/d/${x.id}"/preview" target="_blank">${v.m[2]}</a>`;
+        });
+        dev.step(3.3);  // 顧問報酬(YFPa)・記帳代行(YFPb)に分けた上で、対象年月をキーにinner join
+        v.YFPa = alasql('select * from ? where type="YFP" and label like "%顧問報酬%"',[v.YFP]);
+        v.YFPb = alasql('select * from ? where type="YFP" and label like "%記帳代行%"',[v.YFP]);
+        v.sql = 'select concat(komon.date, " ", komon.label, " ", kicho.label) as label'
+        + ' from ? as komon inner join ? as kicho on komon.date=kicho.date'
+        + ' order by komon.date';
+        alasql(v.sql,[v.YFPa,v.YFPb]).forEach(d => {
+          // 要素をdiv.tableに追加
+          createElement({tag: 'div',html: d.label},t);
+        });
       } else {
         // -------------------------------------------------------------
-        dev.step(3); // 明細を並べる場合
+        dev.step(4); // 明細を並べる場合
         // -------------------------------------------------------------
         v.sql = `select * from ? where type="${v.type}" order by label;`;
         alasql(v.sql,[data]).forEach(d => {
