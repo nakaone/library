@@ -8,17 +8,29 @@
 /** createTable : オブジェクトの配列からHTMLテーブルを生成
  * @param {Object[]} data - 行オブジェクトの配列
  * @param {Object} opt - オプション
- * @param {colDef[]} opt.cols - 項目定義オブジェクトの配列
+ * @param {colDef[]} [opt.cols] - 項目定義オブジェクトの配列
  * @param {HTMLElement|string} [opt.parent=null] - 本関数内部で親要素への追加まで行う場合に指定
  * @returns {HTMLElement|Error}
  */
-function createTable(data,opt) {
+function createTable(data,opt={}) {
   const v = { whois: 'createTable', rv: null};
   dev.start(v.whois, [...arguments]);
   try {
 
     // -------------------------------------------------------------
-    dev.step(1); // thead部の作成
+    dev.step(1);  // 事前準備
+    // -------------------------------------------------------------
+    // オプション既定値設定
+    opt = Object.assign({cols:[],parent:null},opt);
+    // 項目未定義ならオブジェクトのメンバ名で代用
+    if( opt.cols.length === 0 ){
+      v.map = [];
+      data.forEach(o => v.map = [...v.map, ...Object.keys(o)]);
+      new Set(v.map).forEach(x => opt.cols.push({name:x,label:x}));
+    }
+
+    // -------------------------------------------------------------
+    dev.step(2); // thead部の作成
     // -------------------------------------------------------------
     v.thead = [];
     opt.cols.forEach(col => {
@@ -30,7 +42,7 @@ function createTable(data,opt) {
     v.thead = [{tag:'tr', children:v.thead}];
 
     // -------------------------------------------------------------
-    dev.step(2); // tbody部の作成
+    dev.step(3); // tbody部の作成
     // -------------------------------------------------------------
     v.tbody = [];
     data.forEach(row => {
