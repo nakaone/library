@@ -9,10 +9,10 @@
  * @param {Object[]} data - 行オブジェクトの配列
  * @param {Object} opt - オプション
  * @param {colDef[]} [opt.cols] - 項目定義オブジェクトの配列
- * @param {HTMLElement|string} [opt.parent=null] - 本関数内部で親要素への追加まで行う場合に指定
+ * @param {HTMLElement|string} [opt.parent=null] - 本関数で親要素へ追加する場合に指定。文字列ならCSSセレクタと解釈
  * @returns {HTMLElement|Error}
  */
-function createTable(data,opt={}) {
+function createTable(data,opt=null) {
   const v = { whois: 'createTable', rv: null};
   dev.start(v.whois, [...arguments]);
   try {
@@ -20,9 +20,19 @@ function createTable(data,opt={}) {
     // -------------------------------------------------------------
     dev.step(1);  // 事前準備
     // -------------------------------------------------------------
-    // オプション既定値設定
-    opt = Object.assign({cols:[],parent:null},opt);
-    // 項目未定義ならオブジェクトのメンバ名で代用
+    dev.step(1.1); // オプション既定値設定
+    if( opt === null ){
+      opt = {cols:[],parent:null};
+    } else {
+      switch( typeof opt ){
+        case 'object': if( !opt.hasOwnProperty('cols') ) opt.cols = []; break;
+        case 'string': opt = {cols:[],parent:opt}; break;
+        default: throw new Error('"opt" must be object or string');
+      }
+    }
+    dev.dump(opt);
+    
+    dev.step(1.2); // 項目未定義ならオブジェクトのメンバ名で代用
     if( opt.cols.length === 0 ){
       v.map = [];
       data.forEach(o => v.map = [...v.map, ...Object.keys(o)]);
@@ -50,7 +60,10 @@ function createTable(data,opt={}) {
       opt.cols.forEach(col => {
         v.o = {
           tag: 'td',
-          html: row[col.name] === undefined ? '' : String(row[col.name]),
+          html: row[col.name] === undefined ? ''
+          : (col.hasOwnProperty('func')
+          ? col.func(row[col.name]) // 変換関数があれば適用
+          : String(row[col.name])),
         };
         if( col.align && col.align !== "left" ){
           v.o.style = {"text-align": col.align };
