@@ -1,48 +1,31 @@
 #!/bin/sh
 # -x  つけるとverbose
 set -e # エラー時点で停止
+source ~/Desktop/GitHub/tools/common.sh
 
 # ----------------------------------------------
-# 0.1 事前準備(buildの共通部分)
+# 0. 事前準備
 # ----------------------------------------------
-
-# 0.11 パスの定義
-Desktop="/Users/ena.kaon/Desktop"
-GitHub="$Desktop/GitHub"
-lib="$GitHub/library"
-prj="$lib/taxation/3.0.0"
+prj="$lib/taxation/3.1.0"
+arc="$prj/archives"
 src="$prj/src"
-
-# 0.12 .DS_storeの全削除
-find $GitHub -name '.DS_Store' -type f -ls -delete
-
-# 0.13 build関係ツール
-embed="node $lib/embedRecursively/1.2.0/pipe.js"
-esed="node $lib/esed/1.0.0/core.js"
-modify="node $lib/modifyMD/1.0.0/pipe.js"
-querySelector="node $lib/querySelector/2.0.1/pipe.js"
-opml="$lib/workflowy/opml"
-workflowy="node $lib/workflowy/1.1.0/pipe.js"
-
-# ----------------------------------------------
-# 以下で code.gs, download.html, index.htmlを作成、
-# Google Spread「証憑yyyy」にファイルとして登録する。
-# ----------------------------------------------
+doc="$prj/doc"
+dep="$prj/deploy"
 
 # ----------------------------------------------
 # 1. "code.gs" の作成
 # ----------------------------------------------
-cat $src/code.js | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $prj/code.gs
+cat $src/code.js | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $dep/code.gs
 
 # ----------------------------------------------
 # 2. "download.html" の作成
 # ----------------------------------------------
-cp $src/download.html $prj
+cp $src/download.html $dep
 
 # ----------------------------------------------
 # 3. "index.html" の作成
 # ----------------------------------------------
-cat $src/proto.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $prj/index.html
+#cat $src/proto.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $prj/index.html
 
 
 

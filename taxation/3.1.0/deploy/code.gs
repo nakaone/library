@@ -1,280 +1,30 @@
-/* =======================================================
-[code.js]
-  メニューおよびそこから呼ばれる関数の定義。
-  build.shで末尾で各種ライブラリを組み込み、
-  「証憑yyyy」のGASにcode.gsとしてコピー
-======================================================= */
-
 const dev = devTools();
+
 function onOpen() {
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var entries = [
-    { name: 'ファイル一覧更新', functionName: 'refreshMaster' },
-    { name: "提出用HTML出力", functionName: "fileListDownload" },
-  ];
-  spreadsheet.addMenu("道具箱", entries);
+  var ui = SpreadsheetApp.getUi();
+  var menu = ui.createMenu('道具箱');
+  menu.addItem('ファイル一覧更新', 'menuItem1');
+  menu.addItem('提出用HTML出力', 'menuItem2');
+  menu.addItem('作業手順書', 'menuItem3');
+  menu.addToUi();
 }
 
-/* ===============================================================
-「ファイル一覧更新」関係
-  refreshMaster, getFileList, determineType
-「提出用HTML出力」関係
-  fileListDownload, getIndexHTML
-=============================================================== */
-
-/** refreshMaster : メニュー「ファイル一覧更新」 */
-function refreshMaster() {
-  const v = {
-    whois: 'refreshMaster', rv: null, cols: [
-      // 自動取得・設定項目(機械的に値が決定される項目)
-      'id', 'name', 'mime', 'desc', 'url', 'viewers', 'editors', 'created', 'updated', 'isExist',
-      // 算式一括設定項目
-      'fill',
-      // 既定値設定項目(determineTypeで既定値が設定され、適宜手動で修正する項目)
-      'type', 'label',
-      // 手動追加項目(手動で追記が必要な項目)
-      'date', 'price', 'payby', 'note'
-    ], colnum: {}
-  };
-  dev.start(v.whois, [...arguments]);
-  try {
-
-    // -------------------------------------------------------------
-    dev.step(1); // 既存masterシートの内容をv.masterに読み込み
-    // -------------------------------------------------------------
-    v.spread = SpreadsheetApp.getActiveSpreadsheet();
-    v.mSheet = v.spread.getSheetByName('master');
-    v.master = {};
-    if (v.mSheet) {
-      dev.step(1.1);  // masterシートが存在する場合、内容をv.masterに読み込み
-      v.raw = v.mSheet.getDataRange().getValues();
-      for (v.r = 1; v.r < v.raw.length; v.r++) {  // ヘッダ行(0行目)は飛ばす
-        v.o = {};
-        for (v.c = 0; v.c < v.cols.length; v.c++) {
-          v.o[v.raw[0][v.c]] = v.raw[v.r][v.c];
-        }
-        v.o.isExist = 'x';  // isExistはこの時点で一度クリア
-        delete v.o.fill;  // 記入要否欄もクリア
-        v.master[v.o.id] = v.o;
-      }
-    } else {
-      dev.step(1.2);  // masterシートが不在の場合、ヘッダ行のみで新規作成
-      v.mSheet = v.spread.insertSheet('master');
-      v.mSheet.getRange(1, 1, 1, v.cols.length).setValues(v.cols);
-    }
-
-    // ------------------------------------------------------------------
-    dev.step(2); // フォルダのファイル一覧をv.currentに読み込み、v.masterに反映
-    // ------------------------------------------------------------------
-    v.current = getFileList();
-    for (v.id in v.current) {
-      // v.master,v.currentとも値が空白の項目は削除(∵Object.assignで有効値を空白が上書きするのを回避)
-      v.mObj = v.master[v.id] || {};
-      [v.mObj, v.current[v.id]].forEach(o => {
-        for (v.x in o) if (o[v.x] === '') delete o[v.x];
-      });
-      v.master[v.id] = Object.assign(
-        // 設定値は「既定値設定項目 < 既存シート < 自動取得・設定項目」順に優先する
-        determineType(v.current[v.id].name),
-        (v.master[v.id] || {}),
-        v.current[v.id]
-      );
-    }
-
-    // ------------------------------------------------------------------
-    dev.step(3); // シート「master」の名前を「previous」に変更
-    // ------------------------------------------------------------------
-    v.pSheet = v.spread.getSheetByName('previous');
-    if (v.pSheet) { // 既存のシート「previous」は削除
-      v.spread.deleteSheet(v.pSheet);
-    }
-    v.pSheet = v.spread.getSheetByName('master');
-    v.pSheet.setName('previous');
-
-    // ------------------------------------------------------------------
-    dev.step(4); // シート「master」を新規作成、v.masterを書き出し
-    // ------------------------------------------------------------------
-    v.mSheet = v.spread.insertSheet('master');
-    v.data = [v.cols];
-    for (v.id in v.master) {
-      v.row = [];
-      for (v.i = 0; v.i < v.cols.length; v.i++) {
-        v.row.push(v.master[v.id][v.cols[v.i]] || '');
-      }
-      v.data.push(v.row);
-    }
-    v.mSheet.getRange(1, 1, v.data.length, v.cols.length).setValues(v.data);
-
-    // ------------------------------------------------------------------
-    dev.step(5);  // 項目"fill"のトップに手動追加要否の判定式をセット
-    // ------------------------------------------------------------------
-    v.parts = ['=arrayformula(_)',
-      'if(isblank(a2:a),"",_)',	// idが空欄なら何も表示しない
-      'if(l2:l="不明","o",_)',	// typeが「不明」なら対象
-      'if(m2:m="不明","o",_)',	// labelが「不明」なら対象
-      'if(l2:l="電子証憑",_,"x")',	// typeが「電子証憑」ではないなら対象外
-      'if(isblank(m2:m),"o",_)',	// typeが「電子証憑」でlabelが空欄なら対象
-      'if(isblank(n2:n),"o",_)',	// typeが「電子証憑」でdateが空欄なら対象
-      'if(isblank(o2:o),"o",_)',	// typeが「電子証憑」でpriceが空欄なら対象
-      'if(isblank(p2:p),"o","x")',	// typeが「電子証憑」でpaybyが空欄なら対象
-    ];
-    for (v.i = 1, v.formula = v.parts[0]; v.i < v.parts.length; v.i++) {
-      v.formula = v.formula.replace('_', v.parts[v.i]);
-    }
-    // 前準備：各項目の列番号をv.colnumに用意
-    v.cols.forEach(x => v.colnum[x] = (v.cols.findIndex(y => x === y) + 1));
-    v.mSheet.getRange(2, v.colnum['fill']).setValue(v.formula);
-
-    // ------------------------------------------------------------------
-    dev.step(6);  // シート「master」を見やすく変更
-    // ------------------------------------------------------------------
-    dev.step(6.1); // name(ファイル名)欄の幅は入力内容に合わせる
-    v.mSheet.autoResizeColumn(v.colnum['name']);
-    dev.step(6.2); // mime〜isExist欄は非表示
-    v.mSheet.hideColumns(v.colnum['mime'], v.colnum['isExist'] - v.colnum['mime'] + 1);
-    dev.step(6.3); // isExist欄はチェックボックスに変更して幅縮小
-    // チェックボックスへの変更は保留。isExist〜noteの幅を最適化
-    v.mSheet.autoResizeColumns(v.colnum['isExist'], v.colnum['note'] - v.colnum['isExist'] + 1);
-    dev.step(6.4); // 見出しとして1行目は固定
-    v.mSheet.setFrozenRows(1);
-    dev.step(6.5); // フィルタを作成、要編集行のみ表示
-    // 既存フィルタがあれば削除
-    if (v.mSheet.getFilter() !== null) v.mSheet.getFilter().remove();
-    // フィルタを設定
-    v.filter = v.mSheet.getDataRange().createFilter();
-    // fill==='o'の行だけ表示
-    v.filter.setColumnFilterCriteria(11, SpreadsheetApp.newFilterCriteria()
-      .whenTextEqualTo('o')
-      .build()
-    );
-
-    dev.step(6.6); // previousシートは非表示
-    v.pSheet.hideSheet();
-
-    dev.end(); // 終了処理
-    return v.rv;
-
-  } catch (e) { dev.error(e); return e; }
-}
-
-/** getFileList : カレントディレクトリ直下のファイル一覧を取得
- * - 取得項目は自動取得項目のみ、手動追加項目は戻り値に含めない
- */
-function getFileList() {
-  const v = { rv: {}, base: new Date().getTime() };
-  // base: old.json作成用。使用時にはリスト化対象日時を指定(ex. new Date('2025/4/1'))
-
-  // 本スプレッドシートのIDを取得
-  v.spread = SpreadsheetApp.getActiveSpreadsheet();
-  v.spreadId = v.spread.getId();
-
-  // 親フォルダおよび直下のファイルを取得
-  v.parent = DriveApp.getFileById(v.spreadId).getParents();
-  v.folderId = v.parent.next().getId();
-  v.folder = DriveApp.getFolderById(v.folderId);
-  v.files = v.folder.getFiles();
-
-  while (v.files.hasNext()) {
-    v.file = v.files.next();
-    v.obj = {
-      id: v.file.getId(), // ID
-      name: v.file.getName(), // ファイル名
-      mime: v.file.getMimeType(),
-      desc: v.file.getDescription(),  // 説明
-      url: v.file.getUrl(), // ファイルを開くURL
-      //download : v.file.getDownloadUrl(),  // ダウンロードに使用するURL
-      viewers: [], // {string[]} 閲覧者・コメント投稿者のリスト
-      editors: [], // {string[]} 編集者(e-mail)のリスト
-      created: toLocale(v.file.getDateCreated()), // {string} ファイルの作成(アップロード)日付。拡張ISO8601形式の文字列
-      updated: toLocale(v.file.getLastUpdated()), // {string} ファイルの最終更新日付。拡張ISO8601形式の文字列
-      isExist: 'o',
-    };
-    // Userからe-mailを抽出
-    // class User: https://developers.google.com/apps-script/reference/drive/user?hl=ja
-    v.file.getViewers().forEach(x => v.obj.viewers.push(x.getEmail()));
-    v.file.getEditors().forEach(x => v.obj.editors.push(x.getEmail()));
-    // 指定日時以前に作成されたファイルを出力(old.json作成用)
-    if (v.file.getDateCreated().getTime() < v.base) {
-      v.rv[v.obj.id] = v.obj;
-    }
-  }
-
-  return v.rv;
-}
-
-/** determineType : ファイル名から証憑種別を識別。該当無しの場合「不明」とする
- * @param {string} filename - 証憑のファイル名
- * @returns {Object} - 識別結果のオブジェクト。メンバ"type"は共通、他メンバは証憑種別により変化
- */
-function determineType(filename) {
-  const v = {
-    whois: 'determineType', rv: null, list: [{
-      rex: /^MUFG(\d{2})\.pdf$/,
-      f: x => { return { type: '通帳', label: `MUFG vol.<a>${('0' + x[1]).slice(-2)}</a>` } }
-    }, {
-      rex: /^SMBC(\d{2})\.pdf$/,
-      f: x => { return { type: '通帳', label: `SMBC vol.<a>${('0' + x[1]).slice(-2)}</a>` } }
-    }, {
-      // 「yyyy/MM」形式は入力時日付と解釈され「yyyy/MM/dd」他に変換されてしまうため、事前にaタグで囲む
-      rex: /^(20\d{2})(\d{2})\.pdf$/,
-      f: x => { return { type: 'AMEX', label: `<a>${x[1]}/${x[2]}</a>` }; },
-    }, {
-      rex: /^EF(20\d{2})(\d{2})\.pdf$/,
-      f: x => { return { type: '恵比寿', label: `<a>${x[1]}/${x[2]}</a>` } }
-    }, {
-      rex: /^CK(20\d{2})(\d{2})\.pdf$/,
-      f: x => { return { type: '上池袋', label: `<a>${x[1]}/${x[2]}</a>` } }
-    }, {
-      rex: /^HS(20\d{2})(\d{2})\.pdf$/,
-      f: x => { return { type: '羽沢', label: `<a>${x[1]}/${x[2]}</a>` } }
-    }, {
-      rex: /^pension(20\d{2})(\d{2})\.pdf$$/,
-      f: x => { return { type: '健保・年金', label: `<a>${x[1]}/${x[2]}</a>` } }
-    }, {
-      rex: /^note(20\d{2})(\d{2})\.pdf$/,
-      f: x => { return { type: '確証貼付ノート', label: `p.${x[2]}` } }
-    }, {
-      rex: /^(20\d{2})(\d{2})(\d{2})_400_000\.pdf$/,
-      f: x => { return { type: 'YFP', label: `${x[1]}/${x[2]} <a>顧問報酬</a>` }; }
-    }, {
-      rex: /^(20\d{2})(\d{2})(\d{2})_400_003\.pdf$/,
-      f: x => { return { type: 'YFP', label: `${x[1]}/${x[2]} <a>記帳代行</a>` }; }
-    }, {
-      // 電子証憑は内容が多岐にわたるため、label=「不明」としてシート上で修正
-      rex: /^Amazon.+ 注文番号 (\d{3}\-\d{7}\-\d{7})\.pdf$/,
-      f: x => { return { type: '電子証憑', store: 'Amazon', orderId: x[1], label: '不明' } }
-    }, {
-      rex: /^RC\d{9}\.pdf$/,
-      f: x => { return { type: '電子証憑', store: 'モノタロウ', label: '不明' } }
-    }]
-  };
-  dev.start(v.whois, [...arguments]);
-  try {
-
-    dev.step(1); // 証憑種別を判定する正規表現が該当するか順次テスト
-    for (v.i = 0; v.i < v.list.length && v.rv === null; v.i++) {
-      v.m = filename.match(v.list[v.i].rex);
-      if (v.m) v.rv = v.list[v.i].f(v.m);
-    }
-
-    dev.step(2); // いずれにも合致しない場合、type,label共「不明」を設定
-    if (v.rv === null) v.rv = { type: '不明', label: '不明' };
-
-    dev.end(); // 終了処理
-    return v.rv;
-
-  } catch (e) { dev.error(e); return e; }
-}
-
-/** fileListDownload : メニュー「提出用HTML出力」 */
-function fileListDownload() {
+const menuItem1 = () => {};
+const menuItem2 = () => {
   var html = HtmlService.createTemplateFromFile("download").evaluate();
   SpreadsheetApp.getUi().showModalDialog(html, "作成中");
-}
-
-/** getIndexHTML : download.htmlから呼ばれ、税理士提出用のindex.htmlを生成する */
-function getIndexHTML() {
-  const v = { whois: 'getIndexHTML', rv: null};
+};
+const menuItem3 = () => {
+  /*
+  const html = HtmlService.createHtmlOutputFromFile('help')
+    .setWidth(800)
+    .setHeight(600);
+  SpreadsheetApp.getUi().showModalDialog(html, 'kzヘルプ');
+  */
+};
+/** createReport : download.htmlから呼ばれ、税理士提出用のindex.htmlを生成する */
+function createReport() {
+  const v = { whois: 'createReport', rv: null};
   dev.start(v.whois);
   try {
 
@@ -470,10 +220,13 @@ function devTools(option) {
     }
     console.log(msg);
   }
-  /** end: 正常終了時の呼出元関数情報の抹消＋終了メッセージの表示 */
-  function end() {
+  /** end: 正常終了時の呼出元関数情報の抹消＋終了メッセージの表示
+   * @param {Object} rt - end実行時に全体に優先させるオプション指定(run time option)
+   */
+  function end(rt={}) {
+    const localOpt = Object.assign(opt,rt);
     const o = stack.pop();
-    if (opt.start) console.log(`${o.label} normal end.`);
+    if (localOpt.start) console.log(`${o.label} normal end.`);
   }
   /** error: 異常終了時の呼出元関数情報の抹消＋終了メッセージの表示 */
   function error(e) {
@@ -488,8 +241,10 @@ function devTools(option) {
   /** start: 呼出元関数情報の登録＋開始メッセージの表示
    * @param {string} name - 関数名
    * @param {any[]} arg - start呼出元関数に渡された引数([...arguments]固定)
+   * @param {Object} rt - start実行時に全体に優先させるオプション指定(run time option)
    */
-  function start(name, arg = []) {
+  function start(name, arg = [], rt={}) {
+    const localOpt = Object.assign(opt,rt);
     const o = {
       class: '',  // nameがクラス名.メソッド名だった場合のクラス名
       name: name,
@@ -517,8 +272,9 @@ function devTools(option) {
     // 作成した呼出元関数情報を保存
     stack.push(o);
 
-    if (opt.start) {  // 開始メッセージの表示指定が有った場合
-      console.log(`${o.label} start.\n-- footprint\n${o.footprint}` + (opt.arg ? `\n-- arguments\n${o.arg}` : ''));
+    if (localOpt.start) {  // 開始メッセージの表示指定が有った場合
+      console.log(`${o.label} start.\n-- footprint\n${o.footprint}`
+        + (localOpt.arg ? `\n-- arguments\n${o.arg}` : ''));
     }
   }
   /** step: 呼出元関数の進捗状況の登録＋メッセージの表示 */
@@ -571,9 +327,21 @@ function devTools(option) {
   }
 }
 /** 日時を指定形式の文字列にして返す
- * @param {string|Date} arg - 変換元の日時
- * @param {string} [format='yyyy-MM-ddThh:mm:ss.nnnZ'] - 日時を指定する文字列。年:y,月:M,日:d,時:h,分:m,秒:s,ミリ秒:n,タイムゾーン:Z
+ * @param {string|Date} arg=null - 変換元の日時。nullなら現在日時
+ * @param {Object} opt - オプション。文字列型ならformat指定と看做す
+ * @param {boolean} opt.verbose=false - falseなら開始・終了時のログ出力を抑止
+ * @param {string} opt.format='yyyy-MM-ddThh:mm:ss.nnnZ' - 日時を指定する文字列
+ *   年:y,月:M,日:d,時:h,分:m,秒:s,ミリ秒:n,タイムゾーン:Z
+ * @param {boolean} opt.undecimber=false - "yyyy/13"を期末日として変換するならtrue
+ * @param {string} opt.fyEnd="3/31" - 期末日。opt.undecimber=trueなら必須。"\d+\/\d+"形式
+ * @param {string} opt.errValue='empty' - 変換不能時の戻り値。※不測のエラーはErrorオブジェクト。
+ *   empty:空文字列, error:Errorオブジェクト, null:null値, arg:引数argを無加工で返す
  * @returns {string} 指定形式に変換された文字列。無効な日付なら長さ0の文字列
+ *
+ * - arg無指定なら現在日時と看做す
+ * - optが文字列ならformatと看做す
+ * - 「yyyy/13」は期末日に置換
+ * - 和暦なら西暦に変換
  *
  * @example
  * ```
@@ -594,33 +362,80 @@ function devTools(option) {
  * "12:34"[hh:mm] ⇒ ""
  * ```
  */
-function toLocale(arg,format='yyyy-MM-ddThh:mm:ss.nnnZ'){
-  const v = {rv:format};
+function toLocale(arg=null,opt={}) {
+  const v = { whois: 'toLocale', rv: null,
+    wareki:{  // 元号の開始年定義
+      '明治':1867,'大正':1911,'昭和':1925,'平成':1988,'令和':2018,
+      M:1867,T:1911,S:1925,H:1988,R:2018,
+    },
+    errValues:{ // 変換不能時の戻り値定義
+      empty:'',
+      error:new Error(`Couldn't convert "${arg}" to date.`),
+      null: null,
+      arg: arg,
+    }
+  };
+  opt = Object.assign({
+    verbose: false,
+    format: 'yyyy-MM-ddThh:mm:ss.nnnZ',
+    undecimber : false,
+    fyEnd: '03/31',
+    errValue: 'empty'
+  },( typeof opt === 'string' ? {format:opt} : opt));
+  dev.start(v.whois, [...arguments], {start:opt.verbose});
   try {
 
-    let dObj = whichType(arg,'Date') ? arg : new Date(arg);
-    //dObj = String(Object.prototype.toString.call(arg).slice(8,-1)) !== 'Date' ? arg : new Date(arg);
-
-    v.step = 1; // 無効な日付なら空文字列を返して終了
-    if( isNaN(dObj.getTime()) ) return '';
-
-    v.local = { // 地方時ベース
-      y: dObj.getFullYear(),
-      M: dObj.getMonth()+1,
-      d: dObj.getDate(),
-      h: dObj.getHours(),
-      m: dObj.getMinutes(),
-      s: dObj.getSeconds(),
-      n: dObj.getMilliseconds(),
-      Z: Math.abs(dObj.getTimezoneOffset())
+    // -------------------------------------------------------------
+    dev.step(1);  // 処理対象をDate型に変換
+    // -------------------------------------------------------------
+    if( arg === null ){
+      dev.step(1.1);  // 無指定なら現在日時
+      v.dObj = new Date();
+    } else if( whichType(arg,'Date') ){
+      dev.step(1.2);  // 日付型はそのまま採用
+      v.dObj = arg;
+    } else {
+      dev.step(1.3);  // その他。和暦は修正(時分秒は割愛)した上でDate型に
+      arg = String(arg).replace(/元/,'1');
+      v.m = arg.match(/^([^\d]+)(\d+)[^\d]+(\d+)[^\d]+(\d+)/);
+      if( v.m ){
+        dev.step(1.4);  // 和暦
+        v.dObj = new Date(
+          v.wareki[v.m[1]] + Number(v.m[2]),
+          Number(v.m[3]) - 1,
+          Number(v.m[4])
+        );
+      } else {
+        dev.step(1.5);  // その他
+        v.dObj = opt.undecimber // trueなら「yyyy/13」は期末日に置換
+          ? new Date(arg.replace(/^(\d+)\/13$/,"$1/"+opt.fyEnd))
+          : new Date(arg);
+      }
+      dev.step(1.6);  // 無効な日付ならエラー値を返して終了
+      if( isNaN(v.dObj.getTime()) ) return v.errValues[opt.errValue];
     }
-    // タイムゾーン文字列の作成
+
+    // -------------------------------------------------------------
+    dev.step(2);  // 戻り値(文字列)の作成
+    // -------------------------------------------------------------
+    v.rv = opt.format;  // 戻り値の書式(テンプレート)
+    v.local = { // 地方時ベース
+      y: v.dObj.getFullYear(),
+      M: v.dObj.getMonth()+1,
+      d: v.dObj.getDate(),
+      h: v.dObj.getHours(),
+      m: v.dObj.getMinutes(),
+      s: v.dObj.getSeconds(),
+      n: v.dObj.getMilliseconds(),
+      Z: Math.abs(v.dObj.getTimezoneOffset())
+    }
+    dev.step(2.1);  // タイムゾーン文字列の作成
     v.local.Z = v.local.Z === 0 ? 'Z'
-    : ((dObj.getTimezoneOffset() < 0 ? '+' : '-')
+    : ((v.dObj.getTimezoneOffset() < 0 ? '+' : '-')
     + ('0' + Math.floor(v.local.Z / 60)).slice(-2)
     + ':' + ('0' + (v.local.Z % 60)).slice(-2));
 
-    v.step = 2; // 日付文字列作成
+    dev.step(2.2);// 日付文字列作成
     for( v.x in v.local ){
       v.m = v.rv.match(new RegExp(v.x+'+'));
       if( v.m ){
@@ -631,13 +446,10 @@ function toLocale(arg,format='yyyy-MM-ddThh:mm:ss.nnnZ'){
       }
     }
 
-    v.step = 3; // 終了処理
+    dev.end({start:opt.verbose}); // 終了処理
     return v.rv;
 
-  } catch(e){
-    console.error(e,v);
-    return e;
-  }
+  } catch (e) { dev.error(e); return e; }
 }
 /** 変数の型を判定
  *
@@ -691,3 +503,4 @@ function whichType(arg,is){
     return rv;
   }
 }
+
