@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<!-- =======================================================
+[download.html]
+  提出用HTML(index.html)をダウンロードするためのダイアログ。
+  「証憑yyyy」のGASにコピー
+======================================================= -->
+<head>
+  <script type='text/javascript'>
+    window.onload = function() {
+      handleDownload();
+    }
+    function handleDownload() {
+      var content = <?= getIndexHTML(); ?>;
+      var blob = new Blob([content], { type: "text/html" });
+      var link = document.createElement('a');
+      link.download = "index.html"; // ファイル名を指定
+      link.href = window.URL.createObjectURL(blob);
+      link.click();
+      google.script.host.close();
+    }
+  </script>
+</head>
+</html>
