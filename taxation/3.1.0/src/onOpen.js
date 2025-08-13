@@ -9,7 +9,7 @@ function onOpen() {
 }
 
 const menuItem1 = () => {};
-const menuItem2 = () => {};
+const menuItem2 = () => concatYFP();
 const menuItem3 = () => {
   var html = HtmlService.createTemplateFromFile("download").evaluate();
   SpreadsheetApp.getUi().showModalDialog(html, "作成中");

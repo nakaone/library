@@ -9,7 +9,7 @@ function SpreadDB(arg) {
     spread: SpreadsheetApp.getActiveSpreadsheet(),
     schema: arg.schema,
     tableDef: {}, // arg.schemaを基に{テーブル名:テーブル構造定義}に変換したObj
-    db: alasql.Database(),
+    db: new alasql.Database(),
   };
 
   /** loadSheet: シートからRDBへデータを保存する
