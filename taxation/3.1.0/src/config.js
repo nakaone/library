@@ -1,4 +1,16 @@
 const cf = {
+  /**
+   * @typedef {Object} schemaDef - DB構造定義オブジェクト
+   * @param {string} dbName - データベース名
+   * @param {Object[]} tables - DB内の個々のテーブルの定義
+   * @param {string} tables.name - テーブル名
+   * @param {string|string[]} tables.primaryKey - 主キーとなる項目名。複合キーの場合配列で指定
+   * @param {Object[]} tables.cols - 項目定義
+   * @param {string} tables.cols.name - 項目名
+   * @param {string} tables.cols.type - データ型。string/number/boolean
+   * @param {string|number|boolean|function} tables.cols.default - 既定値
+   * @param {string} tables.cols.note - 備考
+   */
   schema: {
     dbName: 'taxation',
     tables: [{
@@ -14,7 +26,7 @@ const cf = {
         {name:'editors',type:'string',note:'編集権限を持つアカウント'},
         {name:'created',type:'string',note:'作成日時。ISO8601拡張形式'},
         {name:'updated',type:'string',note:'更新日時。ISO8601拡張形式'},
-        {name:'isExist',type:'string',note:'GD上の状態(存否)。o:現在も存在、x:(一時期存在したが)現在不在'},
+        {name:'isExist',type:'string',default:'o',note:'GD上の状態(存否)。o:現在も存在、x:(一時期存在したが)現在不在'},
         // "FileInfoObj"ここまで。以下はmasterシート上のみの項目
         {name:'fill',type:'string',note:'o:追記が必要、x:(自動設定対象なので)追記不要'},
         {name:'type',type:'string',note:'証憑としての分類。report.html上の掲載するdiv[data-type]を設定'},
