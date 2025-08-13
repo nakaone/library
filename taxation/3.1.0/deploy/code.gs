@@ -1036,22 +1036,22 @@ function SpreadDB(arg) {
     dev.step(2);  // schema.tablesを基にテーブル・シートを初期化
     pv.schema.tables.forEach(table => {
       dev.step(2.1);  // RDBのテーブルは初期化
-      v.sql = `drop table if exists \`${table.name}\`;`
+      pv.sql = `drop table if exists \`${table.name}\`;`
       + `create table \`${tableName}\`;`;
-      v.r = execSQL(v.sql);
-      if( v.r instanceof Error ) throw v.r;
+      pv.r = execSQL(v.sql);
+      if( pv.r instanceof Error ) throw pv.r;
 
       dev.step(2.2);  // シートは存否確認のみ
-      v.sheet = pv.spread.getSheetByName(table.name);
-      if( !v.sheet ){
+      pv.sheet = pv.spread.getSheetByName(table.name);
+      if( !pv.sheet ){
         dev.step(2.3);  // 対象シートが不在の場合、ヘッダ行のみで新規作成
-        v.sheet = pv.spread.insertSheet(table.name);
-        v.cols = pv.tableDef[table.name].cols;
-        v.range = v.sheet.getRange(1, 1, 1, v.cols.length);
+        pv.sheet = pv.spread.insertSheet(table.name);
+        pv.cols = pv.tableDef[table.name].cols;
+        pv.range = pv.sheet.getRange(1, 1, 1, pv.cols.length);
         // 項目名のセット
-        v.range.setValues([v.cols.map(x => x.name)]);
+        pv.range.setValues([pv.cols.map(x => x.name)]);
         // メモのセット
-        v.range.setNotes([v.cols.map(x => (x.note||''))]);
+        pv.range.setNotes([pv.cols.map(x => (x.note||''))]);
       }
 
     });
