@@ -1037,8 +1037,8 @@ function SpreadDB(arg) {
     pv.schema.tables.forEach(table => {
       dev.step(2.1);  // RDBのテーブルは初期化
       pv.sql = `drop table if exists \`${table.name}\`;`
-      + `create table \`${tableName}\`;`;
-      pv.r = execSQL(v.sql);
+      + `create table \`${table.name}\`;`;
+      pv.r = execSQL(pv.sql);
       if( pv.r instanceof Error ) throw pv.r;
 
       dev.step(2.2);  // シートは存否確認のみ
