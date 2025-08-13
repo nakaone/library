@@ -1,8 +1,10 @@
 const dev = devTools();
+const db = SpreadDB();
 
 //::$src/onOpen.js::
 //::$src/createReport.js::
 //::$src/getFileList.js::
+//::$src/mergePDFs.js::
 //::$src/refreshMaster.js::
 //::$src/SpreadDB.js::
 

@@ -32,7 +32,6 @@ function getFileList() {
         editors: [], // {string[]} 編集者(e-mail)のリスト
         created: toLocale(v.file.getDateCreated()), // {string} ファイルの作成(アップロード)日付。拡張ISO8601形式の文字列
         updated: toLocale(v.file.getLastUpdated()), // {string} ファイルの最終更新日付。拡張ISO8601形式の文字列
-        isExist: 'o',
       };
 
       dev.step(3.2);  // Userからe-mailを抽出
