@@ -14,6 +14,7 @@ const cf = {
   schema: {
     dbName: 'taxation',
     tables: [{  // files: Google Driveのカレントフォルダに存在するファイル一覧
+      // 移動したファイルはリストアップ対象外(リストに残っていたら削除)
       name: 'files',
       primaryKey: 'id',
       cols: [
@@ -26,7 +27,6 @@ const cf = {
         {name:'editors',type:'string',note:'編集権限を持つアカウント'},
         {name:'created',type:'string',note:'作成日時。ISO8601拡張形式'},
         {name:'updated',type:'string',note:'更新日時。ISO8601拡張形式'},
-        {name:'isExist',type:'boolean',note:'GD上の状態(存否)'},
       ]
     },{ // 記入用: 記入用シート
       name: '記入用',

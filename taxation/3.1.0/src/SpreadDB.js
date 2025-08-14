@@ -83,24 +83,25 @@ function SpreadDB(arg) {
     dev.start(v.whois, [...arguments]);
     try {
 
-      (Array.isArray(arg) ? arg : [arg]).forEach(tableName => {
-        v.cols = pv.tableDef[tableName].cols;
+      dev.step(1);  // 対象テーブルリストを作成
+      v.tables = Array.isArray(arg) ? arg : ( typeof arg === 'string' ? [arg] : []);
+      if( v.tables.length === 0 ) throw new Error('テーブル指定が不適切です');
 
-        // 対象テーブル全件取得、行オブジェクト -> 二次元配列への変換
-        v.r = execSQL(`select * from \`${tableName}\`;`);
-        if( v.r instanceof Error ) throw v.r;
-        v.arr = [];
-        v.r.forEach(o => {
-          for( v.i=0,v.l=[] ; v.i<v.cols.length ; v.i++ ){
-            v.l[v.i] = v.r[v.cols[v.i].name] || '';
-          }
-          v.arr.push(v.l);
-        });
+      dev.step(2);  // 対象テーブルを順次格納
+      for( v.i=0 ; v.i<v.tables.length ; v.i++ ){
 
-        // シートを取得。メイン処理で初期化済なので不存在は考慮不要
-        v.sheet = pv.spread.getSheetByName(tableName);
+        dev.step(2.1);  // 項目定義をv.colsに格納
+        if( pv.tableDef.hasOwnProperty(v.tables[v.i]) ){
+          v.cols = pv.tableDef[v.tables[v.i]].cols;
+        } else {
+          throw new Error(`テーブル「${v.tables[v.i]}」は定義されてません`);
+        }
+        dev.dump(v.cols);
 
-        // 現状クリア：行固定解除、ヘッダを残し全データ行・列削除
+        dev.step(2.2);  // シートを取得。メイン処理で初期化済なので不存在は考慮不要
+        v.sheet = pv.spread.getSheetByName(v.tables[v.i]);
+
+        dev.step(2.3);  // 現状クリア：行固定解除、ヘッダを残し全データ行・列削除
         v.sheet.setFrozenRows(0);
         v.lastRow = v.sheet.getMaxRows();
         v.lastCol = v.sheet.getMaxColumns();
@@ -109,13 +110,26 @@ function SpreadDB(arg) {
         if( v.lastCol > v.cols.length )
           v.sheet.deleteColumns(v.cols.length+1, v.lastCol-v.cols.length);
 
+        dev.step(2.4);  // 対象テーブル全件取得
+        v.r = execSQL(`select * from \`${v.tables[v.i]}\`;`);
+        if( v.r instanceof Error ) throw v.r;
+        if( v.r.length === 0 ) continue;  // レコード数0なら保存対象外
+
+        dev.step(2.5);  // 行オブジェクト -> 二次元配列への変換
+        v.arr = [];
+        v.r.forEach(o => {
+          for( v.i=0,v.l=[] ; v.i<v.cols.length ; v.i++ ){
+            v.l[v.i] = o[v.cols[v.i].name] || '';
+          }
+          v.arr.push(v.l);
+        });
+
         // シートに出力
         v.sheet.getRange(2,1,v.arr.length,v.cols.length).setValues(v.arr);
 
         // シートの整形：1行目のみ固定化
         v.sheet.setFrozenRows(1);
-
-      });
+      }
 
       dev.end(); // 終了処理
       return v.rv;
