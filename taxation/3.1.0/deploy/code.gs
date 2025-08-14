@@ -578,7 +578,11 @@ const menuItem4 = () => {
   SpreadsheetApp.getUi().showModalDialog(html, 'kzヘルプ');
   */
 };
-/** concatYFP: YFP関係証憑の結合 */
+/** concatYFP: YFP関係証憑の結合
+ * - 入出力ともGD上のため、引数・戻り値共に無し
+ * @param {void}
+ * @returns {void}
+ */
 async function concatYFP() {
   const v = { whois: 'concatYFP', rv: null};
   dev.start(v.whois);
@@ -587,7 +591,7 @@ async function concatYFP() {
     // -------------------------------------------------------------
     dev.step(1); // カレントディレクトリ直下のファイル一覧を取得
     // -------------------------------------------------------------
-    v.r = getFileList();
+    v.r = db.do('select * from `files`');
     if( v.r instanceof Error ) throw v.r;
     dev.dump(v.r);
 
@@ -638,10 +642,10 @@ async function concatYFP() {
 
     dev.step(5);  // 顧問報酬に存在し結合済に不存在なら結合対象
     v.sql = 'select id1,id2,ym1 from YFP where id3 is null;';
-    v.r = db.do(v.sql);
-    if( v.r instanceof Error ) throw v.r;
+    v.list = db.do(v.sql);
+    if( v.list instanceof Error ) throw v.list;
 
-    if( v.r.length > 0 ){
+    if( v.list.length > 0 ){
       dev.step(6.1);  // フォルダIDの取得
       // スプレッドシートのIDを取得
       v.ssId = SpreadsheetApp.getActiveSpreadsheet().getId();
@@ -652,14 +656,25 @@ async function concatYFP() {
       // フォルダIDを取得
       v.folderId = v.parentFolder.getId();
 
-      dev.step(6.2);  // 結合処理を呼び出し
-      for( v.i=0 ; v.i<v.r.length ; v.i++ ){
-        await mergePDFs(
-          [v.r[v.i].id1,v.r[v.i].id2],  // ids: 結合したいPDFファイルのID
+      for( v.i=0 ; v.i<v.list.length ; v.i++ ){
+        dev.step(6.2);  // 結合処理を呼び出し
+        v.mergedFile = await mergePDFs(
+          [v.list[v.i].id1,v.list[v.i].id2],  // ids: 結合したいPDFファイルのID
           v.folderId, // 格納先のフォルダID
-          `YFP${v.r[v.i].ym1}.pdf`  // 結合後のPDFファイル名
+          `YFP${v.list[v.i].ym1}.pdf`  // 結合後のPDFファイル名
         );
+
+        dev.step(6.3);  // 結合したファイルをfilesテーブルに追加
+        v.propObj = getFileProperties(v.mergedFile);
+        v.r = db.do('insert into `files` select * from ?',[[v.propObj]]);
+        if( v.r instanceof Error ) throw v.r;
+        dev.dump(v.r,v.propObj);
       }
+
+      dev.step(6.4);  // 結合ファイルが追加されたfilesテーブルをシートに保存
+      dev.dump(db.do('select * from `files` where name like "YFP2025%";'));
+      v.r = db.save('files');
+      if( v.r instanceof Error ) throw v.r;
     }
 
     dev.end(); // 終了処理
@@ -757,27 +772,11 @@ function getFileList() {
     v.files = v.folder.getFiles();
 
     while (v.files.hasNext()) {
-      dev.step(3.1);  // ファイルを取得、戻り値となるFileInfoObjを作成
+      dev.step(3.1);  // ファイルを取得、その属性をオブジェクト化
       v.file = v.files.next();
-      v.obj = {
-        id: v.file.getId(), // ID
-        name: v.file.getName(), // ファイル名
-        mime: v.file.getMimeType(),
-        desc: v.file.getDescription(),  // 説明
-        url: v.file.getUrl(), // ファイルを開くURL
-        //download : v.file.getDownloadUrl(),  // ダウンロードに使用するURL
-        viewers: [], // {string[]} 閲覧者・コメント投稿者のリスト
-        editors: [], // {string[]} 編集者(e-mail)のリスト
-        created: toLocale(v.file.getDateCreated()), // {string} ファイルの作成(アップロード)日付。拡張ISO8601形式の文字列
-        updated: toLocale(v.file.getLastUpdated()), // {string} ファイルの最終更新日付。拡張ISO8601形式の文字列
-      };
+      v.obj = getFileProperties(v.file);
 
-      dev.step(3.2);  // Userからe-mailを抽出
-      // class User: https://developers.google.com/apps-script/reference/drive/user?hl=ja
-      v.file.getViewers().forEach(x => v.obj.viewers.push(x.getEmail()));
-      v.file.getEditors().forEach(x => v.obj.editors.push(x.getEmail()));
-
-      dev.step(3.3);  // 指定日時以前に作成されたファイルを出力(old.json作成用)
+      dev.step(3.2);  // 指定日時以前に作成されたファイルを出力(old.json作成用)
       if (v.file.getDateCreated().getTime() < v.base) {
         v.rv.push(v.obj);
       }
@@ -840,6 +839,8 @@ async function mergePDFs(ids,folderId,fileName="merged.pdf") {
   const mergedFileInFolder = DriveApp.getFileById(mergedFileId);
   DriveApp.getFolderById(folderId).addFile(mergedFileInFolder);
   DriveApp.getRootFolder().removeFile(mergedFileInFolder); // ルートフォルダから削除
+
+  return mergedFileInFolder;  // 結合したPDFファイルを戻り値とする
 }
 /** refreshMaster : メニュー「ファイル一覧更新」
  * 1. カレントフォルダ直下のファイル一覧をfilesテーブルに格納
@@ -875,8 +876,15 @@ function refreshMaster() {
     if( v.r instanceof Error ) throw v.r;
     dev.dump(v.r);
 
-    // YFPのPDFファイル結合
-    // 「記入用」シートの更新
+    // -------------------------------------------------------------
+    dev.step(2);  // YFPのPDFファイル結合
+    // -------------------------------------------------------------
+    v.r = concatYFP();
+    if( v.r instanceof Error ) throw v.r;
+
+    // -------------------------------------------------------------
+    dev.step(3);  // 「記入用」シートの更新
+    // -------------------------------------------------------------
 
     dev.end(); // 終了処理
     return v.rv;
@@ -1066,5 +1074,29 @@ function SpreadDB(arg) {
     return {do:execSQL,load:loadSheet,save:saveRDB};
 
   } catch (e) { dev.error(e); return e; }
+}
+/** getFileProperties: Fileオブジェクトから属性情報を取得、オブジェクト化
+ * @param {File} file - Fileオブジェクト
+ * @returns {Object}
+ */
+function getFileProperties(file){
+  const rv = {
+    id: file.getId(), // ID
+    name: file.getName(), // ファイル名
+    mime: file.getMimeType(),
+    desc: file.getDescription(),  // 説明
+    url: file.getUrl(), // ファイルを開くURL
+    //download : file.getDownloadUrl(),  // ダウンロードに使用するURL
+    viewers: [], // {string[]} 閲覧者・コメント投稿者のリスト
+    editors: [], // {string[]} 編集者(e-mail)のリスト
+    created: toLocale(file.getDateCreated()), // {string} ファイルの作成(アップロード)日付。拡張ISO8601形式の文字列
+    updated: toLocale(file.getLastUpdated()), // {string} ファイルの最終更新日付。拡張ISO8601形式の文字列
+  };
+
+  // Userからe-mailを抽出
+  // class User: https://developers.google.com/apps-script/reference/drive/user?hl=ja
+  file.getViewers().forEach(x => rv.viewers.push(x.getEmail()));
+  file.getEditors().forEach(x => rv.editors.push(x.getEmail()));
+  return rv;
 }
 

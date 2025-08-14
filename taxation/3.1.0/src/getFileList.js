@@ -19,27 +19,11 @@ function getFileList() {
     v.files = v.folder.getFiles();
 
     while (v.files.hasNext()) {
-      dev.step(3.1);  // ファイルを取得、戻り値となるFileInfoObjを作成
+      dev.step(3.1);  // ファイルを取得、その属性をオブジェクト化
       v.file = v.files.next();
-      v.obj = {
-        id: v.file.getId(), // ID
-        name: v.file.getName(), // ファイル名
-        mime: v.file.getMimeType(),
-        desc: v.file.getDescription(),  // 説明
-        url: v.file.getUrl(), // ファイルを開くURL
-        //download : v.file.getDownloadUrl(),  // ダウンロードに使用するURL
-        viewers: [], // {string[]} 閲覧者・コメント投稿者のリスト
-        editors: [], // {string[]} 編集者(e-mail)のリスト
-        created: toLocale(v.file.getDateCreated()), // {string} ファイルの作成(アップロード)日付。拡張ISO8601形式の文字列
-        updated: toLocale(v.file.getLastUpdated()), // {string} ファイルの最終更新日付。拡張ISO8601形式の文字列
-      };
+      v.obj = getFileProperties(v.file);
 
-      dev.step(3.2);  // Userからe-mailを抽出
-      // class User: https://developers.google.com/apps-script/reference/drive/user?hl=ja
-      v.file.getViewers().forEach(x => v.obj.viewers.push(x.getEmail()));
-      v.file.getEditors().forEach(x => v.obj.editors.push(x.getEmail()));
-
-      dev.step(3.3);  // 指定日時以前に作成されたファイルを出力(old.json作成用)
+      dev.step(3.2);  // 指定日時以前に作成されたファイルを出力(old.json作成用)
       if (v.file.getDateCreated().getTime() < v.base) {
         v.rv.push(v.obj);
       }

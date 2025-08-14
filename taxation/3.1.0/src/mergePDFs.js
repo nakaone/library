@@ -50,4 +50,6 @@ async function mergePDFs(ids,folderId,fileName="merged.pdf") {
   const mergedFileInFolder = DriveApp.getFileById(mergedFileId);
   DriveApp.getFolderById(folderId).addFile(mergedFileInFolder);
   DriveApp.getRootFolder().removeFile(mergedFileInFolder); // ルートフォルダから削除
+
+  return mergedFileInFolder;  // 結合したPDFファイルを戻り値とする
 }
