@@ -1,4 +1,5 @@
 function onOpen() {
+  db = SpreadDB(cf);
   var ui = SpreadsheetApp.getUi();
   var menu = ui.createMenu('道具箱');
   menu.addItem('ファイル一覧更新', 'menuItem1');

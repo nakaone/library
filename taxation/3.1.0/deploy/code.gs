@@ -645,9 +645,10 @@ const cf = {
   ],
 }
 const dev = devTools();
-const db = SpreadDB(cf);
+let db;
 
 function onOpen() {
+  db = SpreadDB(cf);
   var ui = SpreadsheetApp.getUi();
   var menu = ui.createMenu('道具箱');
   menu.addItem('ファイル一覧更新', 'menuItem1');
@@ -1002,6 +1003,7 @@ function refreshMaster() {
  * @param {Function} [func] - 表示時点で行う文字列の整形用関数
  * @param {string} [note] - 備考
  */
+
 /** SpreadDB: シートをテーブルとして扱うGAS内部のRDB
  * - ヘッダ行は1行目に固定、左端から隙間無く項目を並べる(空白セル不可)
  * @param {Object} arg
@@ -1055,7 +1057,7 @@ function SpreadDB(arg) {
               v.validCellNum++;
             } else {
               // セルが空欄または無効な値の場合、欄のデータ型に沿って値を設定
-              switch( pv.tableDef[sheetName].cols[v.c].type ){
+              switch( pv.tableDef[v.tables[v.i]].cols[v.c].type ){
                 case 'number' : v.o[v.cols[v.c].name] = 0; break;
                 case 'boolean' : v.o[v.cols[v.c].name] = false; break;
                 default: v.o[v.cols[v.c].name] = '';
@@ -1193,7 +1195,7 @@ function SpreadDB(arg) {
 
     dev.step(3);  // AlaSQLカスタム関数の用意
     if( pv.schema.hasOwnProperty('custom') ){
-      Object.keys(pv.schema.custom).forEach(x => pv.db.fn[x] = pv.schema.custom[x]);
+      Object.keys(pv.schema.custom).forEach(x => alasql.fn[x] = pv.schema.custom[x]);
     }
 
     dev.end(); // 終了処理
