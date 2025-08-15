@@ -425,19 +425,7 @@ e=this.table.databaseid||e;var t,n=this.table.tableid,r=w.databases[e];if(this.w
 },w.from.XLSX=function(e,t,n,r,a){return y(G(),e,t,n,r,a)},w.from.XML=function(e,t,n,r,a){var s;return w.utils.loadFile(e,!!n,function(e){s=S(e).root,n&&(s=n(s,r,a))}),s},w.from.GEXF=function(e,t,n,r,a){var s;return w("SEARCH FROM XML("+e+")",[],function(e){s=e,console.log(s),n&&(s=n(s))}),s},z.Help=function(e){return z.extend(this,e)},z.Help.prototype.toString=function(){var e="HELP";return this.subject&&(e+=" "+this.subject),e};var de=[{command:"ALTER TABLE table RENAME TO table"},{command:"ALTER TABLE table ADD COLUMN column coldef"},{command:"ALTER TABLE table MODIFY COLUMN column coldef"},{command:"ALTER TABLE table RENAME COLUMN column TO column"},{command:"ALTER TABLE table DROP column"},{command:"ATTACH engine DATABASE database"},{command:"ASSERT value"},{command:"BEGIN [TRANSACTION]"},{command:"COMMIT [TRANSACTION]"},{command:"CREATE [engine] DATABASE [IF NOT EXISTS] database"},{command:"CREATE TABLE [IF NOT EXISTS] table (column definitions)"},{command:"DELETE FROM table [WHERE expression]"},{command:"DETACH DATABASE database"},{command:"DROP [engine] DATABASE [IF EXISTS] database"},{command:"DROP TABLE [IF EXISTS] table"},{command:"INSERT INTO table VALUES value,..."},{command:"INSERT INTO table DEFAULT VALUES"},{command:"INSERT INTO table SELECT select"},{command:"HELP [subject]"},{command:"ROLLBACK [TRANSACTION]"},{command:"SELECT [modificator] columns [INTO table] [FROM table,...] [[mode] JOIN [ON] [USING]] [WHERE ] [GROUP BY] [HAVING] [ORDER BY] "},{command:"SET option value"},{command:"SHOW [engine] DATABASES"},{command:"SHOW TABLES"},{command:"SHOW CREATE TABLE table"},{command:"UPDATE table SET column1 = expression1, ... [WHERE expression]"},{command:"USE [DATABASE] database"},{command:"expression"},{command:'See also <a href="http://github/agershun/alasq">http://github/agershun/alasq</a> for more information'}];z.Help.prototype.execute=function(e,t,n){var r=[];return this.subject?r.push('See also <a href="http://github/agershun/alasq">http://github/agershun/alasq</a> for more information'):r=de,n&&(r=n(r)),r},z.Print=function(e){return z.extend(this,e)},z.Print.prototype.toString=function(){var e="PRINT";return this.statement&&(e+=" "+this.statement.toString()),e},z.Print.prototype.execute=function(e,t,n){var r=this,a=1;if(w.precompile(this,e,t),this.exprs&&this.exprs.length>0){var s=this.exprs.map(function(e){var n=new Function("params,alasql,p","var y;return "+e.toJS("({})","",null)).bind(r),a=n(t,w);return le(a)});console.log.apply(console,s)}else if(this.select){var i=this.select.execute(e,t);console.log(le(i))}else console.log();return n&&(a=n(a)),a},z.Source=function(e){return z.extend(this,e)},z.Source.prototype.toString=function(){var e="SOURCE";return this.url&&(e+=" '"+this.url+" '"),e},z.Source.prototype.execute=function(e,t,n){var r;return $(this.url,!!n,function(e){return r=w(e),n&&(r=n(r)),r},function(e){throw e}),r},z.Require=function(e){return z.extend(this,e)},z.Require.prototype.toString=function(){var e="REQUIRE";return this.paths&&this.paths.length>0&&(e+=this.paths.map(function(e){return e.toString()}).join(",")),this.plugins&&this.plugins.length>0&&(e+=this.plugins.map(function(e){return e.toUpperCase()}).join(",")),e},z.Require.prototype.execute=function(e,t,n){var r=this,a=0,s="";return this.paths&&this.paths.length>0?this.paths.forEach(function(e){$(e.value,!!n,function(e){a++,s+=e,a<r.paths.length||(new Function("params,alasql",s)(t,w),n&&(a=n(a)))})}):this.plugins&&this.plugins.length>0?this.plugins.forEach(function(e){w.plugins[e]||$(w.path+"/alasql-"+e.toLowerCase()+".js",!!n,function(i){a++,s+=i,a<r.plugins.length||(new Function("params,alasql",s)(t,w),w.plugins[e]=!0,n&&(a=n(a)))})}):n&&(a=n(a)),a},z.Assert=function(e){return z.extend(this,e)},z.Source.prototype.toString=function(){var e="ASSERT";return this.value&&(e+=" "+JSON.stringify(this.value)),e},z.Assert.prototype.execute=function(e){if(!V(w.res,this.value))throw new Error((this.message||"Assert wrong")+": "+JSON.stringify(w.res)+" == "+JSON.stringify(this.value));return 1};var fe=w.engines.WEBSQL=function(){};fe.createDatabase=function(e,t,n,r){var a=1,s=openDatabase(e,t[0],t[1],t[2]);if(this.dbid){var i=w.createDatabase(this.dbid);i.engineid="WEBSQL",i.wdbid=e,sb.wdb=i}if(!s)throw new Error('Cannot create WebSQL database "'+databaseid+'"');return r&&r(a),a},fe.dropDatabase=function(e){throw new Error("This is impossible to drop WebSQL database.")},fe.attachDatabase=function(e,t,n,r,a){var s=1;if(w.databases[t])throw new Error('Unable to attach database as "'+t+'" because it already exists');return alasqlopenDatabase(e,n[0],n[1],n[2]),s};var pe=w.engines.INDEXEDDB=function(){};C.hasIndexedDB&&("function"==typeof C.global.indexedDB.webkitGetDatabaseNames?pe.getDatabaseNames=C.global.indexedDB.webkitGetDatabaseNames.bind(C.global.indexedDB):(pe.getDatabaseNames=function(){var e={},t={contains:function(e){return!0},notsupported:!0};return setTimeout(function(){var n={target:{result:t}};e.onsuccess(n)},0),e},pe.getDatabaseNamesNotSupported=!0)),pe.showDatabases=function(e,t){var n=pe.getDatabaseNames();n.onsuccess=function(n){var r=n.target.result;if(pe.getDatabaseNamesNotSupported)throw new Error("SHOW DATABASE is not supported in this browser");var a=[];if(e)var s=new RegExp(e.value.replace(/\%/g,".*"),"g");for(var i=0;i<r.length;i++)e&&!r[i].match(s)||a.push({databaseid:r[i]});t(a)}},pe.createDatabase=function(e,t,n,r,a){console.log(arguments);var s=C.global.indexedDB;if(n){var i=s.open(e,1);i.onsuccess=function(e){e.target.result.close(),a&&a(1)}}else{var o=s.open(e,1);o.onupgradeneeded=function(e){console.log("abort"),e.target.transaction.abort()},o.onsuccess=function(t){if(console.log("success"),!n)throw new Error('IndexedDB: Cannot create new database "'+e+'" because it already exists');a&&a(0)}}},pe.createDatabase=function(e,t,n,r,a){var s=C.global.indexedDB;if(pe.getDatabaseNamesNotSupported)if(n){var i=!0,o=s.open(e);o.onupgradeneeded=function(e){i=!1},o.onsuccess=function(e){e.target.result.close(),i?a&&a(0):a&&a(1)}}else{var u=s.open(e);u.onupgradeneeded=function(e){e.target.transaction.abort()},u.onabort=function(e){a&&a(1)},u.onsuccess=function(t){throw t.target.result.close(),new Error('IndexedDB: Cannot create new database "'+e+'" because it already exists')}}else{var u=pe.getDatabaseNames();u.onsuccess=function(t){var r=t.target.result;if(r.contains(e)){if(n)return void(a&&a(0));throw new Error('IndexedDB: Cannot create new database "'+e+'" because it already exists')}var i=s.open(e,1);i.onsuccess=function(e){e.target.result.close(),a&&a(1)}}}},pe.dropDatabase=function(e,t,n){var r=C.global.indexedDB,a=pe.getDatabaseNames();a.onsuccess=function(a){var s=a.target.result;if(!s.contains(e)){if(t)return void(n&&n(0));throw new Error('IndexedDB: Cannot drop new database "'+e+'" because it does not exist')}var i=r.deleteDatabase(e);i.onsuccess=function(e){n&&n(1)}}},pe.attachDatabase=function(e,t,n,r,a){if(!C.hasIndexedDB)throw new Error("The current browser does not support IndexedDB");var s=C.global.indexedDB,i=pe.getDatabaseNames();i.onsuccess=function(n){var r=n.target.result;if(!r.contains(e))throw new Error('IndexedDB: Cannot attach database "'+e+'" because it does not exist');var i=s.open(e);i.onsuccess=function(n){var r=n.target.result,s=new w.Database(t||e);s.engineid="INDEXEDDB",s.ixdbid=e,s.tables=[];for(var i=r.objectStoreNames,o=0;o<i.length;o++)s.tables[i[o]]={};n.target.result.close(),a&&a(1)}}},pe.createTable=function(e,t,n,r){var a=C.global.indexedDB,s=w.databases[e].ixdbid,i=pe.getDatabaseNames();i.onsuccess=function(n){var i=n.target.result;if(!i.contains(s))throw new Error('IndexedDB: Cannot create table in database "'+s+'" because it does not exist');var o=a.open(s);o.onversionchange=function(e){e.target.result.close()},o.onsuccess=function(n){var i=n.target.result.version;n.target.result.close();var o=a.open(s,i+1);o.onupgradeneeded=function(e){var n=e.target.result;n.createObjectStore(t,{autoIncrement:!0})},o.onsuccess=function(e){e.target.result.close(),r&&r(1)},o.onerror=function(e){throw e},o.onblocked=function(n){throw new Error('Cannot create table "'+t+'" because database "'+e+'"  is blocked')}}}},pe.dropTable=function(e,t,n,r){var a=C.global.indexedDB,s=w.databases[e].ixdbid,i=pe.getDatabaseNames();i.onsuccess=function(i){var o=i.target.result;if(!o.contains(s))throw new Error('IndexedDB: Cannot drop table in database "'+s+'" because it does not exist');var u=a.open(s);u.onversionchange=function(e){e.target.result.close()},u.onsuccess=function(i){var o=i.target.result.version;i.target.result.close();var u=a.open(s,o+1);u.onupgradeneeded=function(r){var a=r.target.result;if(a.objectStoreNames.contains(t))a.deleteObjectStore(t),delete w.databases[e].tables[t];else if(!n)throw new Error('IndexedDB: Cannot drop table "'+t+'" because it does not exist')},u.onsuccess=function(e){e.target.result.close(),r&&r(1)},u.onerror=function(e){throw e},u.onblocked=function(n){throw new Error('Cannot drop table "'+t+'" because database "'+e+'" is blocked')}}}},pe.intoTable=function(e,t,n,r,a){var s=C.global.indexedDB,i=w.databases[e].ixdbid,o=s.open(i);o.onsuccess=function(e){for(var r=e.target.result,s=r.transaction([t],"readwrite"),i=s.objectStore(t),o=0,u=n.length;u>o;o++)i.add(n[o]);s.oncomplete=function(){r.close(),a&&a(u)}}},pe.fromTable=function(e,t,n,r,a){var s=C.global.indexedDB,i=w.databases[e].ixdbid,o=s.open(i);o.onsuccess=function(e){var s=[],i=e.target.result,o=i.transaction([t]),u=o.objectStore(t),c=u.openCursor();c.onblocked=function(e){},c.onerror=function(e){},c.onsuccess=function(e){var t=e.target.result;t?(s.push(t.value),t["continue"]()):(i.close(),n&&n(s,r,a))}}},pe.deleteFromTable=function(e,t,n,r,a){var s=C.global.indexedDB,i=w.databases[e].ixdbid,o=s.open(i);o.onsuccess=function(e){var s=e.target.result,i=s.transaction([t],"readwrite"),o=i.objectStore(t),u=o.openCursor(),c=0;u.onblocked=function(e){},u.onerror=function(e){},u.onsuccess=function(e){var t=e.target.result;t?(n&&!n(t.value,r)||(t["delete"](),c++),t["continue"]()):(s.close(),a&&a(c))}}},pe.updateTable=function(e,t,n,r,a,s){var i=C.global.indexedDB,o=w.databases[e].ixdbid,u=i.open(o);u.onsuccess=function(e){var i=e.target.result,o=i.transaction([t],"readwrite"),u=o.objectStore(t),c=u.openCursor(),l=0;c.onblocked=function(e){},c.onerror=function(e){},c.onsuccess=function(e){var t=e.target.result;if(t){if(!r||r(t.value,a)){var o=t.value;n(o,a),t.update(o),l++}t["continue"]()}else i.close(),s&&s(l)}}};var be=w.engines.LOCALSTORAGE=function(){};be.get=function(e){var t=localStorage.getItem(e);if("undefined"!=typeof t){var n=void 0;try{n=JSON.parse(t)}catch(r){throw new Error("Cannot parse JSON object from localStorage"+t)}return n}},be.set=function(e,t){"undefined"==typeof t?localStorage.removeItem(e):localStorage.setItem(e,JSON.stringify(t))},be.storeTable=function(e,t){var n=w.databases[e],r=n.tables[t],a={};a.columns=r.columns,a.data=r.data,a.identities=r.identities,be.set(n.lsdbid+"."+t,a)},be.restoreTable=function(e,t){var n=w.databases[e],r=be.get(n.lsdbid+"."+t),a=new w.Table;for(var s in r)a[s]=r[s];return n.tables[t]=a,a.indexColumns(),a},be.removeTable=function(e,t){var n=w.databases[e];localStorage.removeItem(n.lsdbid+"."+t)},be.createDatabase=function(e,t,n,r,a){var s=1,i=be.get("alasql");if(n&&i&&i.databases&&i.databases[e])s=0;else{if(i||(i={databases:{}}),i.databases&&i.databases[e])throw new Error('localStorage: Cannot create new database "'+e+'" because it already exists');i.databases[e]=!0,be.set("alasql",i),be.set(e,{databaseid:e,tables:{}})}return a&&(s=a(s)),s},be.dropDatabase=function(e,t,n){var r=1,a=be.get("alasql");if(t&&a&&a.databases&&!a.databases[e])r=0;else{if(!a){if(t)return n?n(0):0;throw new Error("There is no any AlaSQL databases in localStorage")}if(a.databases&&!a.databases[e])throw new Error('localStorage: Cannot drop database "'+e+'" because there is no such database');delete a.databases[e],be.set("alasql",a);var s=be.get(e);for(var i in s.tables)localStorage.removeItem(e+"."+i);localStorage.removeItem(e)}return n&&(r=n(r)),r},be.attachDatabase=function(e,t,n,r,a){var s=1;if(w.databases[t])throw new Error('Unable to attach database as "'+t+'" because it already exists');t||(t=e);var i=new w.Database(t);if(i.engineid="LOCALSTORAGE",i.lsdbid=e,i.tables=be.get(e).tables,!w.options.autocommit&&i.tables)for(var o in i.tables)be.restoreTable(t,o);return a&&(s=a(s)),s},be.showDatabases=function(e,t){var n=[],r=be.get("alasql");if(e)var a=new RegExp(e.value.replace(/\%/g,".*"),"g");if(r&&r.databases){for(dbid in r.databases)n.push({databaseid:dbid});e&&n&&n.length>0&&(n=n.filter(function(e){return e.databaseid.match(a)}))}return t&&(n=t(n)),n},be.createTable=function(e,t,n,r){var a=1,s=w.databases[e].lsdbid,i=be.get(s+"."+t);if(i&&!n)throw new Error('Table "'+t+'" alsready exists in localStorage database "'+s+'"');var o=be.get(s);w.databases[e].tables[t];return o.tables[t]=!0,be.set(s,o),be.storeTable(e,t),r&&(a=r(a)),a},be.dropTable=function(e,t,n,r){var a=1,s=w.databases[e].lsdbid;if(w.options.autocommit)var i=be.get(s);else var i=w.databases[e];if(!n&&!i.tables[t])throw new Error('Cannot drop table "'+t+'" in localStorage, because it does not exist');return delete i.tables[t],be.set(s,i),be.removeTable(e,t),r&&(a=r(a)),a},be.fromTable=function(e,t,n,r,a){var s=(w.databases[e].lsdbid,be.restoreTable(e,t).data);return n&&(s=n(s,r,a)),s},be.intoTable=function(e,t,n,r,a){var s=(w.databases[e].lsdbid,n.length),i=be.restoreTable(e,t);return i.data||(i.data=[]),i.data=i.data.concat(n),be.storeTable(e,t),a&&(s=a(s)),s},be.loadTableData=function(e,t){w.databases[e],w.databases[e].lsdbid;be.restoreTable(e,t)},be.saveTableData=function(e,t){var n=w.databases[e],r=w.databases[e].lsdbid;be.storeTable(r,t),n.tables[t].data=void 0},be.commit=function(e,t){var n=w.databases[e],r=w.databases[e].lsdbid,a={databaseid:r,tables:{}};if(n.tables)for(var s in n.tables)a.tables[s]=!0,be.storeTable(e,s);return be.set(r,a),t?t(1):1},be.begin=be.commit,be.rollback=function(e,t){return};var ge=w.engines.SQLITE=function(){};ge.createDatabase=function(e,t,n,r,a){throw new Error("Connot create SQLITE database in memory. Attach it.")},ge.dropDatabase=function(e){throw new Error("This is impossible to drop SQLite database. Detach it.")},ge.attachDatabase=function(e,t,n,r,a){var s=1;if(w.databases[t])throw new Error('Unable to attach database as "'+t+'" because it already exists');if(n[0]&&n[0]instanceof z.StringValue||n[0]instanceof z.ParamValue){if(n[0]instanceof z.StringValue)var i=n[0].value;else if(n[0]instanceof z.ParamValue)var i=r[n[0].param];return w.utils.loadBinaryFile(i,!0,function(n){var r=new w.Database(t||e);r.engineid="SQLITE",r.sqldbid=e;var s=r.sqldb=new SQL.Database(n);r.tables=[];var i=s.exec("SELECT * FROM sqlite_master WHERE type='table'")[0].values;i.forEach(function(e){r.tables[e[1]]={};var t=r.tables[e[1]].columns=[],n=w.parse(e[4]),a=n.statements[0].columns;a&&a.length>0&&a.forEach(function(e){t.push(e)})}),a(1)},function(e){throw new Error('Cannot open SQLite database file "'+n[0].value+'"')}),s}throw new Error("Cannot attach SQLite database without a file")},ge.fromTable=function(e,t,n,r,a){var s=w.databases[e].sqldb.exec("SELECT * FROM "+t),i=a.sources[r].columns=[];s[0].columns.length>0&&s[0].columns.forEach(function(e){i.push({columnid:e})});var o=[];s[0].values.length>0&&s[0].values.forEach(function(e){var t={};i.forEach(function(n,r){t[n.columnid]=e[r]}),o.push(t)}),n&&n(o,r,a)},ge.intoTable=function(e,t,n,r,a){for(var s=w.databases[e].sqldb,i=0,o=n.length;o>i;i++){var u="INSERT INTO "+t+" (",c=n[i],l=Object.keys(c);u+=l.join(","),u+=") VALUES (",u+=l.map(function(e){return v=c[e],"string"==typeof v&&(v="'"+v+"'"),v}).join(","),u+=")",s.exec(u)}var h=o;return a&&a(h),h};var me=w.engines.FILESTORAGE=w.engines.FILE=function(){};if(me.createDatabase=function(e,t,n,r,a){var s=1,i=t[0].value;return w.utils.fileExists(i,function(e){if(e){if(n)return s=0,a&&(s=a(s)),s;throw new Error("Cannot create new database file, because it alreagy exists")}var t={tables:{}};w.utils.saveFile(i,JSON.stringify(t),function(e){a&&(s=a(s))})}),s},me.dropDatabase=function(e,t,n){var r,a=e.value;return w.utils.fileExists(a,function(e){if(e)r=1,w.utils.deleteFile(a,function(){r=1,n&&(r=n(r))});else{if(!t)throw new Error("Cannot drop database file, because it does not exist");r=0,n&&(r=n(r))}}),r},me.attachDatabase=function(e,t,n,r,a){var s=1;if(w.databases[t])throw new Error('Unable to attach database as "'+t+'" because it already exists');var i=new w.Database(t||e);return i.engineid="FILESTORAGE",i.filename=n[0].value,$(i.filename,!!a,function(e){try{i.data=JSON.parse(e)}catch(t){throw new Error("Data in FileStorage database are corrupted")}if(i.tables=i.data.tables,!w.options.autocommit&&i.tables)for(var n in i.tables)i.tables[n].data=i.data[n];a&&(s=a(s))}),s},me.createTable=function(e,t,n,r){var a=w.databases[e],s=a.data[t],i=1;if(s&&!n)throw new Error('Table "'+t+'" alsready exists in the database "'+fsdbid+'"');var o=w.databases[e].tables[t];return a.data.tables[t]={columns:o.columns},a.data[t]=[],me.updateFile(e),r&&r(i),i},me.updateFile=function(e){var t=w.databases[e];return t.issaving?void(t.postsave=!0):(t.issaving=!0,t.postsave=!1,void w.utils.saveFile(t.filename,JSON.stringify(t.data),function(){t.issaving=!1,t.postsave&&setTimeout(function(){me.updateFile(e)},50)}))},me.dropTable=function(e,t,n,r){var a=1,s=w.databases[e];if(!n&&!s.tables[t])throw new Error('Cannot drop table "'+t+'" in fileStorage, because it does not exist');return delete s.tables[t],delete s.data.tables[t],delete s.data[t],me.updateFile(e),r&&r(a),a},me.fromTable=function(e,t,n,r,a){var s=w.databases[e],i=s.data[t];return n&&(i=n(i,r,a)),i},me.intoTable=function(e,t,n,r,a){var s=w.databases[e],i=n.length,o=s.data[t];return o||(o=[]),s.data[t]=o.concat(n),me.updateFile(e),a&&a(i),i},me.loadTableData=function(e,t){var n=w.databases[e];n.tables[t].data=n.data[t]},me.saveTableData=function(e,t){var n=w.databases[e];n.data[t]=n.tables[t].data,n.tables[t].data=null,me.updateFile(e)},me.commit=function(e,t){var n=w.databases[e];if(n.tables)for(var r in n.tables)n.data.tables[r]={columns:n.tables[r].columns},n.data[r]=n.tables[r].data;return me.updateFile(e),t?t(1):1},me.begin=me.commit,me.rollback=function(e,t){function n(){setTimeout(function(){return a.issaving?n():void w.loadFile(a.filename,!!t,function(n){a.data=n,a.tables={};for(var s in a.data.tables){var i=new w.Table({columns:a.data.tables[s].columns});P(i,a.data.tables[s]),a.tables[s]=i,w.options.autocommit||(a.tables[s].data=a.data[s]),a.tables[s].indexColumns()}delete w.databases[e],w.databases[e]=new w.Database(e),P(w.databases[e],a),w.databases[e].engineid="FILESTORAGE",w.databases[e].filename=a.filename,t&&(r=t(r))})},100)}var r=1,a=w.databases[e];a.dbversion++,n()},C.isBrowser&&!C.isWebWorker){var ve=ve||"undefined"!=typeof navigator&&navigator.msSaveOrOpenBlob&&navigator.msSaveOrOpenBlob.bind(navigator)||function(e){"use strict";if("undefined"==typeof navigator||!/MSIE [1-9]\./.test(navigator.userAgent)){var t=e.document,n=function(){return e.URL||e.webkitURL||e},r=t.createElementNS("http://www.w3.org/1999/xhtml","a"),a="download"in r,s=function(n){var r=t.createEvent("MouseEvents");r.initMouseEvent("click",!0,!1,e,0,0,0,0,0,!1,!1,!1,!1,0,null),n.dispatchEvent(r)},i=e.webkitRequestFileSystem,o=e.requestFileSystem||i||e.mozRequestFileSystem,u=function(t){(e.setImmediate||e.setTimeout)(function(){throw t},0)},c="application/octet-stream",l=0,h=500,d=function(t){var r=function(){"string"==typeof t?n().revokeObjectURL(t):t.remove()};e.chrome?r():setTimeout(r,h)},f=function(e,t,n){t=[].concat(t);for(var r=t.length;r--;){var a=e["on"+t[r]];if("function"==typeof a)try{a.call(e,n||e)}catch(s){u(s)}}},p=function(t,u){var h,p,b,g=this,m=t.type,v=!1,E=function(){f(g,"writestart progress write writeend".split(" "))},y=function(){if(!v&&h||(h=n().createObjectURL(t)),p)p.location.href=h;else{var r=e.open(h,"_blank");void 0==r&&"undefined"!=typeof safari&&(e.location.href=h)}g.readyState=g.DONE,E(),d(h)},S=function(e){return function(){return g.readyState!==g.DONE?e.apply(this,arguments):void 0}},w={create:!0,exclusive:!1};return g.readyState=g.INIT,u||(u="download"),a?(h=n().createObjectURL(t),r.href=h,r.download=u,s(r),g.readyState=g.DONE,E(),void d(h)):(/^\s*(?:text\/(?:plain|xml)|application\/xml|\S*\/\S*\+xml)\s*;.*charset\s*=\s*utf-8/i.test(t.type)&&(t=new Blob(["\ufeff",t],{type:t.type})),e.chrome&&m&&m!==c&&(b=t.slice||t.webkitSlice,t=b.call(t,0,t.size,c),v=!0),i&&"download"!==u&&(u+=".download"),(m===c||i)&&(p=e),o?(l+=t.size,void o(e.TEMPORARY,l,S(function(e){e.root.getDirectory("saved",w,S(function(e){var n=function(){e.getFile(u,w,S(function(e){e.createWriter(S(function(n){n.onwriteend=function(t){p.location.href=e.toURL(),g.readyState=g.DONE,f(g,"writeend",t),d(e)},n.onerror=function(){var e=n.error;e.code!==e.ABORT_ERR&&y()},"writestart progress write abort".split(" ").forEach(function(e){n["on"+e]=g["on"+e]}),n.write(t),g.abort=function(){n.abort(),g.readyState=g.DONE},g.readyState=g.WRITING}),y)}),y)};e.getFile(u,{create:!1},S(function(e){e.remove(),n()}),S(function(e){e.code===e.NOT_FOUND_ERR?n():y()}))}),y)}),y)):void y())},b=p.prototype,g=function(e,t){return new p(e,t)};return b.abort=function(){var e=this;e.readyState=e.DONE,f(e,"abort")},b.readyState=b.INIT=0,b.WRITING=1,b.DONE=2,b.error=b.onwritestart=b.onprogress=b.onwrite=b.onabort=b.onerror=b.onwriteend=null,g}}("undefined"!=typeof self&&self||"undefined"!=typeof window&&window||this.content);"undefined"!=typeof module&&module.exports?module.exports.saveAs=ve:"undefined"!=typeof define&&null!==define&&null!=define.amd&&define([],function(){return ve}),w.utils.saveAs=ve}return new X("alasql"),w.use("alasql"),w}),"undefined"==typeof location||!location.reload||"undefined"!=typeof process&&process.browser||"function"==typeof require&&"function"==typeof require.specified||(alasql.worker=function(e,t,n){if(e===!0&&(e=void 0),"undefined"==typeof e)for(var r=document.getElementsByTagName("script"),a=0;a<r.length;a++){if("alasql-worker.js"===r[a].src.substr(-16).toLowerCase()){e=r[a].src.substr(0,r[a].src.length-16)+"alasql.js";break}if("alasql-worker.min.js"===r[a].src.substr(-20).toLowerCase()){e=r[a].src.substr(0,r[a].src.length-20)+"alasql.min.js";break}if("alasql.js"===r[a].src.substr(-9).toLowerCase()){e=r[a].src;break}if("alasql.min.js"===r[a].src.substr(-13).toLowerCase()){e=r[a].src.substr(0,r[a].src.length-13)+"alasql.min.js";break}}if("undefined"==typeof e)throw new Error("Path to alasql.js is not specified");if(e!==!1){var s="importScripts('";s+=e,s+="');self.onmessage = function(event) {alasql(event.data.sql,event.data.params, function(data){postMessage({id:event.data.id, data:data});});}";var i=new Blob([s],{type:"text/plain"});if(alasql.webworker=new Worker(URL.createObjectURL(i)),alasql.webworker.onmessage=function(e){var t=e.data.id;alasql.buffer[t](e.data.data),delete alasql.buffer[t]},alasql.webworker.onerror=function(e){throw e},arguments.length>1){var o="REQUIRE "+t.map(function(e){return'"'+e+'"'}).join(",");alasql(o,[],n)}}else if(e===!1)return void delete alasql.webworker});
 
 const cf = {
-  /**
-   * @typedef {Object} schemaDef - DB構造定義オブジェクト
-   * @param {string} dbName - データベース名
-   * @param {Object[]} tables - DB内の個々のテーブルの定義
-   * @param {string} tables.name - テーブル名
-   * @param {string|string[]} tables.primaryKey - 主キーとなる項目名。複合キーの場合配列で指定
-   * @param {Object[]} tables.cols - 項目定義
-   * @param {string} tables.cols.name - 項目名
-   * @param {string} tables.cols.type - データ型。string/number/boolean
-   * @param {string|number|boolean|function} tables.cols.default - 既定値
-   * @param {string} tables.cols.note - 備考
-   */
-  schema: {
+  schema: { // データ構造については SpreadDB.js の typedef "schemaDef" 参照
     dbName: 'taxation',
     tables: [{  // files: Google Driveのカレントフォルダに存在するファイル一覧
       // 移動したファイルはリストアップ対象外(リストに残っていたら削除)
@@ -453,8 +441,11 @@ const cf = {
         {name:'editors',type:'string',note:'編集権限を持つアカウント'},
         {name:'created',type:'string',note:'作成日時。ISO8601拡張形式'},
         {name:'updated',type:'string',note:'更新日時。ISO8601拡張形式'},
-      ]
-    },{ // 記入用: 記入用シート
+      ],
+      initial: () => getFileList(),/*{  // YFP関係の結合処理実行後、ファイル一覧を返す
+        concatYFP().then(()=>{return getFileList()});
+      },*/
+    },{ // 記入用
       name: '記入用',
       primaryKey: 'id',
       cols: [
@@ -462,94 +453,196 @@ const cf = {
         {name:'name',type:'string',note:'ファイル(フォルダ)名'},  // シート上はファイルへのリンクを張る
         {name:'isExist',type:'boolean',note:'GD上の状態(存否)'},
         {name:'type',type:'string',note:'証憑としての分類。report.html上の掲載するdiv[data-type]'},
-        {name:'label',type:'string',note:'report.html上の証憑名'},
-        {name:'date',type:'string',note:'取引日。電子証憑・参考等、report.html上取引日の表示が必要な場合設定'},
-        {name:'price',type:'string',note:'価格。以降、電子証憑の場合のみ設定'},
-        {name:'payby',type:'number',note:'支払方法。"役員借入金"or"AMEX"'},
-        {name:'note',type:'string',note:'備考。pdf上の頁指定等で使用'},
-      ]
-    },{
-      name: '証憑分類',
-      primaryKey: 'type',
-      cols: [
-        {name:'type',type:'string',note:'証憑としての分類。report.html上の掲載するdiv[data-type]'},
-        {name:'rex',type:'string',note:'正規表現文字列'},
-        {name:'label',type:'string',note:''},
+        {name:'date',label:'取引日',type:'string',note:'取引日。電子証憑・参考等、report.html上取引日の表示が必要な場合設定'},
+        {name:'label',label:'摘要',type:'string',note:'摘要(電子証憑)、行き先(交通費)'},
+        {name:'price',label:'価格',type:'string',note:'価格'},
+        {name:'payby',label:'支払方法',type:'string',note:'支払方法。"役員借入金"or"AMEX"'},
+        {name:'note',label:'備考',type:'string',note:'備考。pdf上の頁指定等で使用'},
       ],
-      initialData: [
-        {path:['金融関係','銀行通帳'],type:'通帳',rex:'',label:''},
-        {path:['金融関係','ローン関係'],type:'返済明細',rex:'',label:''},
-        {path:['金融関係','クレジットカード利用明細'],type:'AMEX',rex:'',label:''},
-        {path:['レントロール','恵比寿フェリシタ'],type:'恵比寿',rex:'',label:''},
-        {path:['レントロール','クレセント上池袋'],type:'上池袋',rex:'',label:''},
-        {path:['レントロール','羽沢眞和マンション'],type:'羽沢',rex:'',label:''},
-        {path:['証憑類','健保・年金、確定拠出年金'],type:'健保・年金',rex:'',label:''},
-        {path:['証憑類','確証貼付ノート'],type:'確証貼付ノート',rex:'',label:''},
-        {path:['証憑類','税理士(YFP)'],type:'YFP',rex:'',label:''},
-        {path:['証憑類','電子証憑'],type:'電子証憑',rex:'',label:''},
-        {path:['その他','交通費'],type:'交通費',rex:'',label:''},
-        {path:['その他','参考資料'],type:'参考',rex:'',label:''},
-        // {path:['その他','特記事項'],type:'',rex:'',label:''},
-      ]
-    },{/* 旧版記入用シート。備忘
-      name: 'master',
-      primaryKey: 'url',
-      cols: [
-        {name:'id',type:'string',note:'ファイルのID'},
-        {name:'name',type:'string',note:'ファイル(フォルダ)名'},
-        {name:'url',type:'string',note:'ファイルのURL。File.getDownloadUrl()ではなくFile.getUrl()'},
-        // 以下getFileList()の戻り値オブジェクト"FileInfoObj"
-        {name:'name',type:'string',note:'ファイル(フォルダ)名'},
-        {name:'mime',type:'string',note:'MIMEタイプ。例:"application/pdf","application/vnd.google-apps.spreadsheet"'},
-        {name:'desc',type:'string',note:'ファイルの説明。「詳細を表示>詳細タグ>ファイルの詳細>説明」に設定された文字列'},
-        {name:'url',type:'string',note:'ファイルのURL。File.getDownloadUrl()ではなくFile.getUrl()'},
-        {name:'viewers',type:'string',note:'閲覧権限を持つアカウント'},
-        {name:'editors',type:'string',note:'編集権限を持つアカウント'},
-        {name:'created',type:'string',note:'作成日時。ISO8601拡張形式'},
-        {name:'updated',type:'string',note:'更新日時。ISO8601拡張形式'},
-        {name:'isExist',type:'string',default:'o',note:'GD上の状態(存否)。o:現在も存在、x:(一時期存在したが)現在不在'},
-        // "FileInfoObj"ここまで。以下はmasterシート上のみの項目
-        {name:'fill',type:'string',note:'o:追記が必要、x:(自動設定対象なので)追記不要'},
-        {name:'type',type:'string',note:'証憑としての分類。report.html上の掲載するdiv[data-type]を設定'},
-        {name:'label',type:'string',note:'report.html上の証憑名'},
-        {name:'date',type:'string',note:'取引日。電子証憑・参考等、report.html上取引日の表示が必要な場合設定'},
-        {name:'price',type:'string',note:'価格。以降、電子証憑の場合のみ設定'},
-        {name:'payby',type:'number',note:'支払方法。"役員借入金"or"AMEX"'},
-        {name:'note',type:'string',note:'備考。pdf上の頁指定等で使用'},
+      initial: () => [
+        {"id":"1uu_NH-iGsQYC21pVZS3vohIVfhYaJrn_","type":"参考","date":"2025/05/16","label":"2025年度給与所得等に係る特別徴収税額の決定通知書"},
+        {"id":"11pXYjxhKQIklRiAFQJNKQZ8JtpLUgKZC","type":"電子証憑","date":"2024/10/28","label":"スマホスタンド","price":1850,"payby":"役員借入金"},
+        {"id":"1WFRbAeaRy-9fkGkbaN4wzskEjHjC6DTr","type":"電子証憑","date":"2024/11/16","label":"ボールペン替芯","price":545,"payby":"AMEX"},
+        {"id":"1wUYvRxTDWigLenGmOvb3FzOD1DAklilJ","type":"電子証憑","date":"2024/11/16","label":"文具","price":3524,"payby":"AMEX"},
+        {"id":"1iLsevNUcaq9kp3rqCarZMwhG1HdFcgOL","type":"電子証憑","date":"2024/12/05","label":"スマホフィルム","price":2520,"payby":"役員借入金"},
+        {"id":"1yQfuzlIZWhcP0RNOZU_qT6EeyOLEBd-N","type":"電子証憑","date":"2024/12/07","label":"スマホ消耗品、書籍","price":3899,"payby":"AMEX"},
+        {"id":"1YwnwWEOHIrcVxrKACi_iZaD64ifnT9ei","type":"電子証憑","date":"2024/12/09","label":"書籍","price":3080,"payby":"AMEX"},
+        {"id":"1Ca2sWeFGd7ZkWfnCw4K6NnYxYU8BYJKF","type":"電子証憑","date":"2024/12/09","label":"プリンタインク","price":1180,"payby":"AMEX"},
+        {"id":"1Q7x6RsI6UcQMuKRkgtA6O6xzmk359CSo","type":"電子証憑","date":"2024/12/09","label":"USB充電器","price":3919,"payby":"AMEX"},
+        {"id":"195AbJCoKG74szRbjbo-19CrL2YTjgk3E","type":"電子証憑","date":"2024/12/11","label":"クリヤーブック","price":2220,"payby":"AMEX"},
+        {"id":"18exrmCa45gXffolZO9vdU5GD0B2EAK1N","type":"電子証憑","date":"2024/12/11","label":"司法書士(登記変更、他)","price":93500,"payby":"役員借入金","note":"p.2のみ"},
+        {"id":"1dEIdlcHtfkXresrJVvi7yqschZRA9N_W","type":"電子証憑","date":"2025/01/28","label":"PC周辺機器","price":1310,"payby":"役員借入金"},
+        {"id":"1Bc1ZAMHhib6spfk-bGnUhRamFZOzAXDx","type":"電子証憑","date":"2025/03/13","label":"養生テープ","price":1369,"payby":"AMEX"},
+        {"id":"1A99DTWWEdXUq8KAFu-nq-hVuWer3T9WG","type":"電子証憑","date":"2025/05/07","label":"営繕・補修用資材","price":4747,"payby":"役員借入金"},
+        {"id":"1YamIvPbChf_wYt8lvs7wvWmQEQKdhL6D","type":"電子証憑","date":"2025/05/07","label":"営繕・補修用資材","price":123,"payby":"役員借入金"},
+        {"id":"1kdiuk2zTVwL9BAKBocuyCj5HltUvKDF-","type":"電子証憑","date":"2025/05/08","label":"営繕・補修用資材","price":2813,"payby":"役員借入金"},
+        {"id":"1DaGH1LmErJ0Pc7gcz4uP8PHgP9xyorJC","type":"電子証憑","date":"2025/05/22","label":"備品(バスケット)","price":5279,"payby":"役員借入金"},
+        {"id":"1g3O_7tt7SBgD_-Ul2Yv9qEgndOWltMty","type":"電子証憑","date":"2025/07/03","label":"カメラ(本体)","price":136170,"payby":"役員借入金"},
+        {"id":"1Bun4eFNXtr7R_e9vz8yzoXfwLPDyNyyI","type":"電子証憑","date":"2025/08/06","label":"若宮宅残置物撤去","price":330000,"payby":"役員借入金"},
+        {"id":"19jlv3d8sbcE7EDJnasyM5HQIgZjg1mu0","type":"返済明細","label":"SMBCローン返済明細(2024/12/30)"},
+        {"id":"1xXxbijwGf65A75_BV54jjEQWBzYf8uss","type":"返済明細","label":"SMBCローン返済明細(2025/04/21)"},
+        {"id":"1sk5K2tTHlsoTCuxRCIEEstGJRWSqYbvD","type":"返済明細","label":"SMTLFローン返済明細"},
       ],
-    },{*/
+    },{ // 交通費
       name: '交通費',
       cols: [
-        {name:'日付',type:'string',note:'yyyy/MM/dd形式'},
-        {name:'行先',type:'string',note:''},
-        {name:'目的',type:'string',note:''},
-        {name:'補助',type:'string',note:'賦課部門。CO,EF,等'},
-        {name:'経路',type:'string',note:''},
-        {name:'人数',type:'number',note:''},
-        {name:'金額',type:'number',note:''},
-        {name:'備考',type:'string',note:''},
-      ]
-    },{
-      name: '特記事項',
-      cols: [
-        {name:'seq',type:'string',note:'記述の順番指定'},
-        {name:'md',type:'string',note:'記述内容。Markdown形式'},
-      ]
-    },{
-      name: '分類規則',
-      cols: [
-        {name:'label',type:'string',note:''},
-        {name:'type',type:'string',note:'証憑としての分類。report.html上の掲載するdiv[data-type]を設定'},
-        {name:'rex',type:'string',note:'正規表現文字列'},
-        {name:'replace',type:'string',note:''},
-      ]
+        {name:'date',label:'日付',type:'string'},
+        {name:'destination',label:'行先',type:'string'},
+        {name:'label',label:'目的',type:'string'},
+        {name:'route',label:'経路',type:'string'},
+        {name:'number',label:'人数',type:'number'},
+        {name:'price',label:'金額',type:'number',func:o=>Number(o.price).toLocaleString()},
+        {name:'note',label:'備考',type:'string'},
+      ],
+      initial: () => [
+        {"date":"2024/10/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
+        {"date":"2024/11/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
+        {"date":"2024/12/09","destination":"恵比寿","label":"現状確認","route":"笹塚 - 新宿 - 恵比寿","number":1,"price":620},
+        {"date":"2024/12/10","destination":"オーシャン","label":"打合せ(登記変更依頼)","route":"代々木上原 - 表参道","number":1,"price":360},
+        {"date":"2025/01/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
+        {"date":"2024/11/10","destination":"ふじやまビレジ","label":"打合せ(方針論議)","route":"笹塚 - 上界戸","number":2,"price":14800,"note":"〜11/12"},
+        {"date":"2025/02/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
+        {"date":"2025/03/01","destination":"上池袋","label":"SB現調","route":"笹塚 - 新宿 - 板橋","number":2,"price":1280},
+        {"date":"2025/03/09","destination":"恵比寿","label":"現状確認","route":"笹塚 - 新宿 - 恵比寿","number":1,"price":620},
+        {"date":"2025/03/26","destination":"上池袋","label":"SB現調","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
+        {"date":"2025/04/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
+        {"date":"2025/05/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
+        {"date":"2025/05/24","destination":"野方","label":"現地調査","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":2,"price":1880},
+        {"date":"2025/06/08","destination":"恵比寿","label":"現状確認","route":"笹塚 - 新宿 - 恵比寿","number":1,"price":620},
+        {"date":"2025/07/04","destination":"野方","label":"現状確認、清掃","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":1,"price":940},
+        {"date":"2025/07/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
+        {"date":"2025/07/23","destination":"野方","label":"現状確認、整理","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":2,"price":1880},
+        {"date":"2025/08/06","destination":"野方","label":"残置物搬出","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":2,"price":1880},
+        {"date":"2025/08/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640}
+      ],
     }],
+    custom: { // AlaSQLのカスタム関数(以下は使用例)
+      // alasql.fn.exclude = cf.custom.exclude;
+      // alasql('select * from `files` where exclude(`name`)');
+
+      // exclude: ファイル一覧で処理か判定。引数：ファイル名、戻り値：trueなら処理対象外
+      exclude: fn => /^(20\d{2})(\d{2})(\d{2})_400_00[0|3]\.pdf$/.test(fn),
+      // previewURL: ファイルIDとラベルからpreviewモードで当該ファイルを開くURLを返す
+      previewURL: (id,label) => `<a href="https://drive.google.com/file/d/${id}"/preview" target="_blank">${label}</a>`,
+    },
   },
   YFPrex: { // YFP関係PDFファイル名の正規表現
     '顧問報酬': /^(20\d{2})(\d{2})(\d{2})_400_000\.pdf$/,
     '記帳代行': /^(20\d{2})(\d{2})(\d{2})_400_003\.pdf$/,
     '結合済': /^YFP(\d{4})(\d{2})\.pdf$/,
   },
+  /**
+   * @typedef {Object} JSONstructure - 出力するJSONの形式。メンバ名はdata-type
+   * @param {number} colnum - 一行当たりの項目数。0:テーブル、>=1:箇条書き。数字は項目数/行
+   * @param {RegExp} rex - ファイル名を基にdata-typeを判定する正規表現。特定不能型はnull
+   * -- 以下、箇条書きの場合に設定される項目
+   * @param {Function} func - data.label生成関数
+   *   引数はo:「記入用」行オブジェクト・m:rexの結果、戻り値はHTML文字列。
+   *   なおoは何れの場合も必須なので第一引数、使用しない場合も有るmは第二引数とする。
+   * @param {Object[]} data - ファイル単位のデータ。以下は出力時に生成
+   * @param {string} data.id - ファイルのID。URL作成用
+   * @param {string} data.name - ファイル名
+   * @param {string} data.label - ラベル
+   * -- 以下、テーブルの場合に設定される項目
+   * @param {Object[]} cols - 項目定義
+   * @param {string} cols.name - 行オブジェクト内のメンバ名
+   * @param {string} [cols.label] - テーブルに表示する項目名。省略時はnameを流用
+   * @param {string} cols.type='string' - データ型。string/number/boolean
+   * @param {any} [cols.default=''] - 0,false以外の無効値の場合に設定する値
+   * @param {Function} [cols.func] - 桁区切りやリンク等のlabel生成関数
+   *   引数はo:「記入用」行オブジェクト・m:rexの結果、戻り値はHTML文字列
+   * @param {string} [cols.note] - 備考
+   * @param {Object[]} data - テーブルの行オブジェクト。以下は出力時に生成
+   */
+  JSONdef: {
+    // ----- 金融関係 ----------
+    '通帳': {
+      colnum: 4,  // 箇条書き型(4列/行)
+      rex: /^(\u{4})(\d{2})\.pdf$/,
+      func: (o,m) => `${m[1]} No.${previewURL(o.id,m[2])}`,
+    },
+    '返済明細': { // 記入項目：①資料名(label),②入手日(date)
+      colnum: 1,  // 箇条書き型(1件1行)
+      rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
+      func: o => previewURL(o.id,o.label) + (o.date?`(${o.date})`:''),
+    },
+    'AMEX': {
+      colnum: 6,  // 箇条書き型(月次型)
+      rex: /^(20\d{2})(\d{2})\.pdf$/,
+      func: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+    },
+    // ----- レントロール ----------
+    '恵比寿': {
+      colnum: 6,  // 箇条書き型(月次型)
+      rex: /^EF(20\d{2})(\d{2})\.pdf$/,
+      func: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+    },
+    '上池袋': {
+      colnum: 6,  // 箇条書き型(月次型)
+      rex: /^CK(20\d{2})(\d{2})\.pdf$/,
+      func: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+    },
+    '羽沢': {
+      colnum: 6,  // 箇条書き型(月次型)
+      rex: /^HS(20\d{2})(\d{2})\.pdf$/,
+      func: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+    },
+    // ----- 証憑類 ----------
+    '健保・年金': {
+      colnum: 6,  // 箇条書き型(月次型)
+      rex: /^pension(20\d{2})(\d{2})\.pdf$/,
+      func: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+    },
+    '確証貼付ノート': {
+      colnum: 10,  // 箇条書き型(10列/行)
+      rex: /^note(20\d{2})(\d{2})\.pdf$/,
+      func: (o,m) => 'p.' + previewURL(o.id,m[2]),
+    },
+    'YFP': {
+      colnum: 6,  // 箇条書き型(月次型)
+      rex: /^YFP(20\d{2})(\d{2})\.pdf$/,
+      func: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+    },
+    '電子証憑': {
+      colnum: 0,  // テーブル型
+      rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
+      cols: [
+        {name:'date',label:'取引日',type:'string',func:o=>previewURL(o.id,o.label)},
+        {name:'label',label:'摘要',type:'string'},
+        {name:'price',label:'価格',type:'number',func:o=>Number(o.price).toLocaleString()},
+        {name:'payby',label:'支払',type:'string'},
+        {name:'note',label:'備考',type:'string'},
+      ]
+    },
+    // ----- その他 ----------
+    '交通費': {
+      colnum: 0,  // テーブル型
+      rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
+      cols: [
+        {name:'date',label:'日付',type:'string'},
+        {name:'label',label:'行先',type:'string'},
+        {name:'route',label:'経路',type:'string'},
+        {name:'number',label:'人数',type:'string'},
+        {name:'price',label:'金額',type:'number',func:o=>Number(o.price).toLocaleString()},
+        {name:'payby',label:'支払',type:'string',default:'役員借入金'},
+        {name:'note',label:'備考',type:'string'},
+      ]
+    },
+    '参考資料': { // 記入項目：①資料名(label),②入手日(date)
+      colnum: 1,  // 箇条書き型(1件1行)
+      rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
+      func: o => previewURL(o.id,o.label) + (o.date?`(${o.date})`:''),
+    },
+    '特記事項': { // 記入項目：①タイトル(label),②内容(note),③記入日(date)
+      colnum: 1,  // 箇条書き型(1件1行)
+      rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
+      func: o => `<h3>${o.label}<h3><div>${o.note}</div>`
+      + `<div style="text-align:right">${o.date}</div>`,  // 記入日
+    },
+  },
+  ignore: [ // ファイル一覧で処理対象外となるファイル名
+    /^(20\d{2})(\d{2})(\d{2})_400_00[0|3]\.pdf$/, // 結合前のYFP顧問報酬(0),記帳代行(3)
+  ],
 }
 const dev = devTools();
 const db = SpreadDB(cf);
@@ -558,19 +651,17 @@ function onOpen() {
   var ui = SpreadsheetApp.getUi();
   var menu = ui.createMenu('道具箱');
   menu.addItem('ファイル一覧更新', 'menuItem1');
-  menu.addItem('YFP関係証憑の結合', 'menuItem2');
-  menu.addItem('提出用HTML出力', 'menuItem3');
-  menu.addItem('作業手順書', 'menuItem4');
+  menu.addItem('提出用HTML出力', 'menuItem2');
+  menu.addItem('作業手順書', 'menuItem3');
   menu.addToUi();
 }
 
-const menuItem1 = () => {};
-const menuItem2 = () => concatYFP();
-const menuItem3 = () => {
+const menuItem1 = () => refreshMaster();
+const menuItem2 = () => {
   var html = HtmlService.createTemplateFromFile("download").evaluate();
   SpreadsheetApp.getUi().showModalDialog(html, "作成中");
 };
-const menuItem4 = () => {
+const menuItem3 = () => {
   /*
   const html = HtmlService.createHtmlOutputFromFile('help')
     .setWidth(800)
@@ -891,6 +982,26 @@ function refreshMaster() {
 
   } catch (e) { dev.error(e); return e; }
 }
+/**
+ * @typedef {Object} schemaDef - DB構造定義オブジェクト
+ * @param {string} dbName - データベース名
+ * @param {tableDef[]} tables - DB内の個々のテーブルの定義
+ * @param {Object.<string,Function>} [custom] - AlaSQLのカスタム関数
+ *
+ * @typedef {Object} tableDef - テーブル構造定義オブジェクト
+ * @param {string} name - テーブル名。シート名も一致させる
+ * @param {string|string[]} [primaryKey] - 主キーとなる項目名。複合キーの場合配列で指定
+ * @param {colnumDef[]} cols - 項目定義
+ * @param {Function} [initial] - 初期設定用関数(テーブルに初期データ登録＋シート作成)
+ *
+ * @typedef {Object} colnumDef - 項目定義オブジェクト
+ * @param {string} name - 項目名
+ * @param {string} [label] - テーブル・シート表示時の項目名。省略時はnameを流用
+ * @param {string} type - データ型。string/number/boolean
+ * @param {any} [default] - 既定値。関数の場合、引数は行オブジェクト
+ * @param {Function} [func] - 表示時点で行う文字列の整形用関数
+ * @param {string} [note] - 備考
+ */
 /** SpreadDB: シートをテーブルとして扱うGAS内部のRDB
  * - ヘッダ行は1行目に固定、左端から隙間無く項目を並べる(空白セル不可)
  * @param {Object} arg
@@ -905,10 +1016,8 @@ function SpreadDB(arg) {
     db: new alasql.Database(),
   };
 
-  /** loadSheet: シートからRDBへデータを保存する
-   * @param {Object|string} arg - 文字列の場合arg.sheetNameと看做す
-   * @param {string|string[]} arg.sheetName - シート名。複数シートの場合配列で指定
-   * @param {Object[]} arg.initialData=[] - シートが存在しない場合に使用する行オブジェクトの配列
+  /** loadSheet: シートからRDBへデータをロードする
+   * @param {string|string[]} arg=[] - ロード対象テーブル名
    * @returns {void}
    */
   function loadSheet(arg) {
@@ -916,51 +1025,53 @@ function SpreadDB(arg) {
     dev.start(v.whois, [...arguments]);
     try {
 
-      // -------------------------------------------------------------
-      dev.step(1);  // 事前準備：引数の整形
-      // -------------------------------------------------------------
-      v.arg = Object.assign({},(typeof arg === 'string' ? {sheetName:arg} : arg));
-      if( !Array.isArray(v.arg.sheetName) )v.arg.sheetName = [v.arg.sheetName];
+      dev.step(1);  // 対象テーブルリストを作成
+      v.tables = Array.isArray(arg) ? arg : ( typeof arg === 'string' ? [arg] : []);
+      if( v.tables.length === 0 ) throw new Error('テーブル指定が不適切です');
 
-      // -------------------------------------------------------------
-      dev.step(2);  // シート毎にRDBに保存
-      // -------------------------------------------------------------
-      v.arg.sheetName.forEach(sheetName => {
-        v.sheet = pv.spread.getSheetByName(sheetName);
-        if(v.sheet) {
-          dev.step(2.1);  // シートが存在する場合、内容をv.rObjに読み込み
-          v.rObj = [];  // 対象シートの行オブジェクト配列
-          v.raw = v.sheet.getDataRange().getDisplayValues();
-          for (v.r = 1; v.r < v.raw.length; v.r++) {  // ヘッダ行(0行目)は飛ばす
-            v.o = {};
-            for (v.c = 0, v.validCellNum = 0; v.c < v.cols.length; v.c++) {
-              if( v.raw[v.r][v.c] ){
-                // セルの値が有効
-                v.o[v.raw[0][v.c]] = v.raw[v.r][v.c];
-                v.validCellNum++;
-              } else {
-                // セルが空欄または無効な値の場合、欄のデータ型に沿って値を設定
-                switch( pv.tableDef[sheetName].cols[v.c].type ){
-                  case 'number' : v.o[v.raw[0][v.c]] = 0; break;
-                  case 'boolean' : v.o[v.raw[0][v.c]] = false; break;
-                  default: v.o[v.raw[0][v.c]] = '';
-                }
+      dev.step(2);  // 対象テーブルを順次ロード
+      for( v.i=0 ; v.i<v.tables.length ; v.i++ ){
+
+        dev.step(2.1);  // 項目定義をv.colsに格納
+        if( pv.tableDef.hasOwnProperty(v.tables[v.i]) ){
+          v.cols = pv.tableDef[v.tables[v.i]].cols;
+        } else {
+          throw new Error(`テーブル「${v.tables[v.i]}」は定義されてません`);
+        }
+        dev.dump(v.cols);
+
+        dev.step(2.2);  // シートを取得。メイン処理で作成済なので不存在は考慮不要
+        v.sheet = pv.spread.getSheetByName(v.tables[v.i]);
+        v.raw = v.sheet.getDataRange().getDisplayValues();
+        v.rObj = [];  // 対象シートの行オブジェクト配列
+
+        dev.step(2.3);  // シートが存在する場合、内容をv.rObjに読み込み
+        for (v.r = 1; v.r < v.raw.length; v.r++) {  // ヘッダ行(0行目)は飛ばす
+          v.o = {}; // メンバ名はlabelではなくnameを使用
+          for (v.c = 0, v.validCellNum = 0; v.c < v.cols.length; v.c++) {
+            if( v.raw[v.r][v.c] ){
+              // セルの値が有効
+              v.o[v.cols[v.c].name] = v.raw[v.r][v.c];
+              v.validCellNum++;
+            } else {
+              // セルが空欄または無効な値の場合、欄のデータ型に沿って値を設定
+              switch( pv.tableDef[sheetName].cols[v.c].type ){
+                case 'number' : v.o[v.cols[v.c].name] = 0; break;
+                case 'boolean' : v.o[v.cols[v.c].name] = false; break;
+                default: v.o[v.cols[v.c].name] = '';
               }
             }
-            // 有効な値を持つセルが存在すれば有効行と看做す
-            if( v.validCellNum > 0 ) v.rObj.push(v.o);
           }
-        } else {
-          dev.step(2.2);  // 対象シートが不在の場合、有効データは無し
-          v.rObj = [];
+          // 有効な値を持つセルが存在すれば有効行と看做す
+          if( v.validCellNum > 0 ) v.rObj.push(v.o);
         }
-        dev.step(2.3);  // テーブルの作成
-        v.sql = `drop table if exists \`${sheetName}\`;`
-        + `create table \`${sheetName}\`;`
-        + `insert into \`${sheetName}\` select * from ?`;
+
+        dev.step(2.4);  // テーブルに追加
+        v.sql = `delete from \`${v.tables[v.i]}\`;` // 全件削除
+        + `insert into \`${v.tables[v.i]}\` select * from ?`;
         v.r = execSQL(v.sql,[v.rObj]);
         if( v.r instanceof Error ) throw v.r;
-      });
+      }
 
       dev.end(); // 終了処理
       return v.rv;
@@ -970,6 +1081,7 @@ function SpreadDB(arg) {
 
   /** saveRDB: RDBからシートへデータを保存する
    * @param {string|string[]} arg=[] - 保存対象テーブル名
+   * @returns {void}
    */
   function saveRDB(arg=[]) {
     const v = { whois: `${pv.whois}.saveRDB`, rv: null};
@@ -991,17 +1103,17 @@ function SpreadDB(arg) {
         }
         dev.dump(v.cols);
 
-        dev.step(2.2);  // シートを取得。メイン処理で初期化済なので不存在は考慮不要
+        dev.step(2.2);  // シートを取得。メイン処理で作成済なので不存在は考慮不要
         v.sheet = pv.spread.getSheetByName(v.tables[v.i]);
 
         dev.step(2.3);  // 現状クリア：行固定解除、ヘッダを残し全データ行・列削除
         v.sheet.setFrozenRows(0);
-        v.lastRow = v.sheet.getMaxRows();
-        v.lastCol = v.sheet.getMaxColumns();
-        if( v.lastRow > 1)
-          v.sheet.deleteRows(2,v.lastRow-1);
-        if( v.lastCol > v.cols.length )
-          v.sheet.deleteColumns(v.cols.length+1, v.lastCol-v.cols.length);
+        v.maxRows = v.sheet.getMaxRows();
+        v.maxCols = v.sheet.getMaxColumns();
+        if( v.maxRows > 1)
+          v.sheet.deleteRows(2,v.maxRows-1);
+        if( v.maxCols > v.cols.length )
+          v.sheet.deleteColumns(v.cols.length+1, v.maxCols-v.cols.length);
 
         dev.step(2.4);  // 対象テーブル全件取得
         v.r = execSQL(`select * from \`${v.tables[v.i]}\`;`);
@@ -1049,26 +1161,40 @@ function SpreadDB(arg) {
 
     dev.step(2);  // schema.tablesを基にテーブル・シートを初期化
     pv.schema.tables.forEach(table => {
-      dev.step(2.1);  // RDBのテーブルは初期化
+
+      dev.step(2.1);  // RDBのテーブルを初期化
       pv.sql = `drop table if exists \`${table.name}\`;`
       + `create table \`${table.name}\`;`;
       pv.r = execSQL(pv.sql);
       if( pv.r instanceof Error ) throw pv.r;
 
-      dev.step(2.2);  // シートは存否確認のみ
       pv.sheet = pv.spread.getSheetByName(table.name);
-      if( !pv.sheet ){
-        dev.step(2.3);  // 対象シートが不在の場合、ヘッダ行のみで新規作成
+      if( pv.sheet ){
+        dev.step(2.2);  // シート作成済の場合、シートからRDBにロード
+        pv.r = loadSheet(table.name);
+        if( pv.r instanceof Error ) throw pv.r;
+      } else {
+        dev.step(2.3);  // シート未作成の場合、シートを作成してヘッダ行を登録
         pv.sheet = pv.spread.insertSheet(table.name);
-        pv.cols = pv.tableDef[table.name].cols;
-        pv.range = pv.sheet.getRange(1, 1, 1, pv.cols.length);
-        // 項目名のセット
-        pv.range.setValues([pv.cols.map(x => x.name)]);
-        // メモのセット
-        pv.range.setNotes([pv.cols.map(x => (x.note||''))]);
-      }
+        pv.range = pv.sheet.getRange(1, 1, 1, table.cols.length);
+        pv.range.setValues([table.cols.map(x => x.label || x.name)]);
+        pv.range.setNotes([table.cols.map(x => (x.note||''))]);
 
+        if( table.hasOwnProperty('initial') ){
+          dev.step(2.4);  // 初期データが存在する場合、RDBに追加してシートに反映
+          pv.sql = `insert into \`${table.name}\` select * from ?;`;
+          pv.r = execSQL(pv.sql,[table.initial()]);
+          if( pv.r instanceof Error ) throw pv.r;
+          pv.r = saveRDB(table.name);
+          if( pv.r instanceof Error ) throw pv.r;
+        }
+      }
     });
+
+    dev.step(3);  // AlaSQLカスタム関数の用意
+    if( pv.schema.hasOwnProperty('custom') ){
+      Object.keys(pv.schema.custom).forEach(x => pv.db.fn[x] = pv.schema.custom[x]);
+    }
 
     dev.end(); // 終了処理
     return {do:execSQL,load:loadSheet,save:saveRDB};

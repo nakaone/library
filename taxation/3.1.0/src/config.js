@@ -1,25 +1,5 @@
 const cf = {
-  /**
-   * @typedef {Object} schemaDef - DB構造定義オブジェクト
-   * @param {string} dbName - データベース名
-   * @param {tableDef[]} tables - DB内の個々のテーブルの定義
-   * @param {Object.<string,Function>} [custom] - AlaSQLのカスタム関数
-   * 
-   * @typedef {Object} tableDef - テーブル構造定義オブジェクト
-   * @param {string} name - テーブル名。シート名も一致させる
-   * @param {string|string[]} [primaryKey] - 主キーとなる項目名。複合キーの場合配列で指定
-   * @param {colnumDef[]} cols - 項目定義
-   * @param {Function} [initial] - 初期設定用関数(テーブルに初期データ登録＋シート作成)
-   * 
-   * @typedef {Object} colnumDef - 項目定義オブジェクト
-   * @param {string} name - 項目名
-   * @param {string} [label] - テーブル・シート表示時の項目名。省略時はnameを流用
-   * @param {string} type - データ型。string/number/boolean
-   * @param {any} [default] - 既定値。関数の場合、引数は行オブジェクト
-   * @param {Function} [func] - 表示時点で行う文字列の整形用関数
-   * @param {string} [note] - 備考
-   */
-  schema: {
+  schema: { // データ構造については SpreadDB.js の typedef "schemaDef" 参照
     dbName: 'taxation',
     tables: [{  // files: Google Driveのカレントフォルダに存在するファイル一覧
       // 移動したファイルはリストアップ対象外(リストに残っていたら削除)
@@ -36,12 +16,9 @@ const cf = {
         {name:'created',type:'string',note:'作成日時。ISO8601拡張形式'},
         {name:'updated',type:'string',note:'更新日時。ISO8601拡張形式'},
       ],
-      initial: () => {
-        let sql = 'drop table is exists `files`;create table `files`;'
-        + 'insert into `files` select * from ?';
-        db.do(sql,[getFileList()]);
-        db.save('files');
-      },
+      initial: () => getFileList(),/*{  // YFP関係の結合処理実行後、ファイル一覧を返す
+        concatYFP().then(()=>{return getFileList()});
+      },*/
     },{ // 記入用
       name: '記入用',
       primaryKey: 'id',
@@ -56,35 +33,30 @@ const cf = {
         {name:'payby',label:'支払方法',type:'string',note:'支払方法。"役員借入金"or"AMEX"'},
         {name:'note',label:'備考',type:'string',note:'備考。pdf上の頁指定等で使用'},
       ],
-      initial: () => {
-        let sql = 'drop table is exists `記入用`;create table `記入用`;'
-        + 'insert into `記入用` select * from ?';
-        db.do(sql,[[
-          {"id":"1uu_NH-iGsQYC21pVZS3vohIVfhYaJrn_","type":"参考","date":"2025/05/16","label":"2025年度給与所得等に係る特別徴収税額の決定通知書"},
-          {"id":"11pXYjxhKQIklRiAFQJNKQZ8JtpLUgKZC","type":"電子証憑","date":"2024/10/28","label":"スマホスタンド","price":1850,"payby":"役員借入金"},
-          {"id":"1WFRbAeaRy-9fkGkbaN4wzskEjHjC6DTr","type":"電子証憑","date":"2024/11/16","label":"ボールペン替芯","price":545,"payby":"AMEX"},
-          {"id":"1wUYvRxTDWigLenGmOvb3FzOD1DAklilJ","type":"電子証憑","date":"2024/11/16","label":"文具","price":3524,"payby":"AMEX"},
-          {"id":"1iLsevNUcaq9kp3rqCarZMwhG1HdFcgOL","type":"電子証憑","date":"2024/12/05","label":"スマホフィルム","price":2520,"payby":"役員借入金"},
-          {"id":"1yQfuzlIZWhcP0RNOZU_qT6EeyOLEBd-N","type":"電子証憑","date":"2024/12/07","label":"スマホ消耗品、書籍","price":3899,"payby":"AMEX"},
-          {"id":"1YwnwWEOHIrcVxrKACi_iZaD64ifnT9ei","type":"電子証憑","date":"2024/12/09","label":"書籍","price":3080,"payby":"AMEX"},
-          {"id":"1Ca2sWeFGd7ZkWfnCw4K6NnYxYU8BYJKF","type":"電子証憑","date":"2024/12/09","label":"プリンタインク","price":1180,"payby":"AMEX"},
-          {"id":"1Q7x6RsI6UcQMuKRkgtA6O6xzmk359CSo","type":"電子証憑","date":"2024/12/09","label":"USB充電器","price":3919,"payby":"AMEX"},
-          {"id":"195AbJCoKG74szRbjbo-19CrL2YTjgk3E","type":"電子証憑","date":"2024/12/11","label":"クリヤーブック","price":2220,"payby":"AMEX"},
-          {"id":"18exrmCa45gXffolZO9vdU5GD0B2EAK1N","type":"電子証憑","date":"2024/12/11","label":"司法書士(登記変更、他)","price":93500,"payby":"役員借入金","note":"p.2のみ"},
-          {"id":"1dEIdlcHtfkXresrJVvi7yqschZRA9N_W","type":"電子証憑","date":"2025/01/28","label":"PC周辺機器","price":1310,"payby":"役員借入金"},
-          {"id":"1Bc1ZAMHhib6spfk-bGnUhRamFZOzAXDx","type":"電子証憑","date":"2025/03/13","label":"養生テープ","price":1369,"payby":"AMEX"},
-          {"id":"1A99DTWWEdXUq8KAFu-nq-hVuWer3T9WG","type":"電子証憑","date":"2025/05/07","label":"営繕・補修用資材","price":4747,"payby":"役員借入金"},
-          {"id":"1YamIvPbChf_wYt8lvs7wvWmQEQKdhL6D","type":"電子証憑","date":"2025/05/07","label":"営繕・補修用資材","price":123,"payby":"役員借入金"},
-          {"id":"1kdiuk2zTVwL9BAKBocuyCj5HltUvKDF-","type":"電子証憑","date":"2025/05/08","label":"営繕・補修用資材","price":2813,"payby":"役員借入金"},
-          {"id":"1DaGH1LmErJ0Pc7gcz4uP8PHgP9xyorJC","type":"電子証憑","date":"2025/05/22","label":"備品(バスケット)","price":5279,"payby":"役員借入金"},
-          {"id":"1g3O_7tt7SBgD_-Ul2Yv9qEgndOWltMty","type":"電子証憑","date":"2025/07/03","label":"カメラ(本体)","price":136170,"payby":"役員借入金"},
-          {"id":"1Bun4eFNXtr7R_e9vz8yzoXfwLPDyNyyI","type":"電子証憑","date":"2025/08/06","label":"若宮宅残置物撤去","price":330000,"payby":"役員借入金"},
-          {"id":"19jlv3d8sbcE7EDJnasyM5HQIgZjg1mu0","type":"返済明細","label":"SMBCローン返済明細(2024/12/30)"},
-          {"id":"1xXxbijwGf65A75_BV54jjEQWBzYf8uss","type":"返済明細","label":"SMBCローン返済明細(2025/04/21)"},
-          {"id":"1sk5K2tTHlsoTCuxRCIEEstGJRWSqYbvD","type":"返済明細","label":"SMTLFローン返済明細"},
-        ]]);
-        db.save('記入用');
-      },
+      initial: () => [
+        {"id":"1uu_NH-iGsQYC21pVZS3vohIVfhYaJrn_","type":"参考","date":"2025/05/16","label":"2025年度給与所得等に係る特別徴収税額の決定通知書"},
+        {"id":"11pXYjxhKQIklRiAFQJNKQZ8JtpLUgKZC","type":"電子証憑","date":"2024/10/28","label":"スマホスタンド","price":1850,"payby":"役員借入金"},
+        {"id":"1WFRbAeaRy-9fkGkbaN4wzskEjHjC6DTr","type":"電子証憑","date":"2024/11/16","label":"ボールペン替芯","price":545,"payby":"AMEX"},
+        {"id":"1wUYvRxTDWigLenGmOvb3FzOD1DAklilJ","type":"電子証憑","date":"2024/11/16","label":"文具","price":3524,"payby":"AMEX"},
+        {"id":"1iLsevNUcaq9kp3rqCarZMwhG1HdFcgOL","type":"電子証憑","date":"2024/12/05","label":"スマホフィルム","price":2520,"payby":"役員借入金"},
+        {"id":"1yQfuzlIZWhcP0RNOZU_qT6EeyOLEBd-N","type":"電子証憑","date":"2024/12/07","label":"スマホ消耗品、書籍","price":3899,"payby":"AMEX"},
+        {"id":"1YwnwWEOHIrcVxrKACi_iZaD64ifnT9ei","type":"電子証憑","date":"2024/12/09","label":"書籍","price":3080,"payby":"AMEX"},
+        {"id":"1Ca2sWeFGd7ZkWfnCw4K6NnYxYU8BYJKF","type":"電子証憑","date":"2024/12/09","label":"プリンタインク","price":1180,"payby":"AMEX"},
+        {"id":"1Q7x6RsI6UcQMuKRkgtA6O6xzmk359CSo","type":"電子証憑","date":"2024/12/09","label":"USB充電器","price":3919,"payby":"AMEX"},
+        {"id":"195AbJCoKG74szRbjbo-19CrL2YTjgk3E","type":"電子証憑","date":"2024/12/11","label":"クリヤーブック","price":2220,"payby":"AMEX"},
+        {"id":"18exrmCa45gXffolZO9vdU5GD0B2EAK1N","type":"電子証憑","date":"2024/12/11","label":"司法書士(登記変更、他)","price":93500,"payby":"役員借入金","note":"p.2のみ"},
+        {"id":"1dEIdlcHtfkXresrJVvi7yqschZRA9N_W","type":"電子証憑","date":"2025/01/28","label":"PC周辺機器","price":1310,"payby":"役員借入金"},
+        {"id":"1Bc1ZAMHhib6spfk-bGnUhRamFZOzAXDx","type":"電子証憑","date":"2025/03/13","label":"養生テープ","price":1369,"payby":"AMEX"},
+        {"id":"1A99DTWWEdXUq8KAFu-nq-hVuWer3T9WG","type":"電子証憑","date":"2025/05/07","label":"営繕・補修用資材","price":4747,"payby":"役員借入金"},
+        {"id":"1YamIvPbChf_wYt8lvs7wvWmQEQKdhL6D","type":"電子証憑","date":"2025/05/07","label":"営繕・補修用資材","price":123,"payby":"役員借入金"},
+        {"id":"1kdiuk2zTVwL9BAKBocuyCj5HltUvKDF-","type":"電子証憑","date":"2025/05/08","label":"営繕・補修用資材","price":2813,"payby":"役員借入金"},
+        {"id":"1DaGH1LmErJ0Pc7gcz4uP8PHgP9xyorJC","type":"電子証憑","date":"2025/05/22","label":"備品(バスケット)","price":5279,"payby":"役員借入金"},
+        {"id":"1g3O_7tt7SBgD_-Ul2Yv9qEgndOWltMty","type":"電子証憑","date":"2025/07/03","label":"カメラ(本体)","price":136170,"payby":"役員借入金"},
+        {"id":"1Bun4eFNXtr7R_e9vz8yzoXfwLPDyNyyI","type":"電子証憑","date":"2025/08/06","label":"若宮宅残置物撤去","price":330000,"payby":"役員借入金"},
+        {"id":"19jlv3d8sbcE7EDJnasyM5HQIgZjg1mu0","type":"返済明細","label":"SMBCローン返済明細(2024/12/30)"},
+        {"id":"1xXxbijwGf65A75_BV54jjEQWBzYf8uss","type":"返済明細","label":"SMBCローン返済明細(2025/04/21)"},
+        {"id":"1sk5K2tTHlsoTCuxRCIEEstGJRWSqYbvD","type":"返済明細","label":"SMTLFローン返済明細"},
+      ],
     },{ // 交通費
       name: '交通費',
       cols: [
@@ -96,32 +68,27 @@ const cf = {
         {name:'price',label:'金額',type:'number',func:o=>Number(o.price).toLocaleString()},
         {name:'note',label:'備考',type:'string'},
       ],
-      initial: () => {
-        let sql = 'drop table is exists `交通費`;create table `交通費`;'
-        + 'insert into `交通費` select * from ?';
-        db.do(sql,[[
-          {"date":"2024/10/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
-          {"date":"2024/11/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
-          {"date":"2024/12/09","destination":"恵比寿","label":"現状確認","route":"笹塚 - 新宿 - 恵比寿","number":1,"price":620},
-          {"date":"2024/12/10","destination":"オーシャン","label":"打合せ(登記変更依頼)","route":"代々木上原 - 表参道","number":1,"price":360},
-          {"date":"2025/01/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
-          {"date":"2024/11/10","destination":"ふじやまビレジ","label":"打合せ(方針論議)","route":"笹塚 - 上界戸","number":2,"price":14800,"note":"〜11/12"},
-          {"date":"2025/02/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
-          {"date":"2025/03/01","destination":"上池袋","label":"SB現調","route":"笹塚 - 新宿 - 板橋","number":2,"price":1280},
-          {"date":"2025/03/09","destination":"恵比寿","label":"現状確認","route":"笹塚 - 新宿 - 恵比寿","number":1,"price":620},
-          {"date":"2025/03/26","destination":"上池袋","label":"SB現調","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
-          {"date":"2025/04/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
-          {"date":"2025/05/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
-          {"date":"2025/05/24","destination":"野方","label":"現地調査","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":2,"price":1880},
-          {"date":"2025/06/08","destination":"恵比寿","label":"現状確認","route":"笹塚 - 新宿 - 恵比寿","number":1,"price":620},
-          {"date":"2025/07/04","destination":"野方","label":"現状確認、清掃","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":1,"price":940},
-          {"date":"2025/07/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
-          {"date":"2025/07/23","destination":"野方","label":"現状確認、整理","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":2,"price":1880},
-          {"date":"2025/08/06","destination":"野方","label":"残置物搬出","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":2,"price":1880},
-          {"date":"2025/08/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640}
-        ]]);
-        db.save('交通費');
-      },
+      initial: () => [
+        {"date":"2024/10/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
+        {"date":"2024/11/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
+        {"date":"2024/12/09","destination":"恵比寿","label":"現状確認","route":"笹塚 - 新宿 - 恵比寿","number":1,"price":620},
+        {"date":"2024/12/10","destination":"オーシャン","label":"打合せ(登記変更依頼)","route":"代々木上原 - 表参道","number":1,"price":360},
+        {"date":"2025/01/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
+        {"date":"2024/11/10","destination":"ふじやまビレジ","label":"打合せ(方針論議)","route":"笹塚 - 上界戸","number":2,"price":14800,"note":"〜11/12"},
+        {"date":"2025/02/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
+        {"date":"2025/03/01","destination":"上池袋","label":"SB現調","route":"笹塚 - 新宿 - 板橋","number":2,"price":1280},
+        {"date":"2025/03/09","destination":"恵比寿","label":"現状確認","route":"笹塚 - 新宿 - 恵比寿","number":1,"price":620},
+        {"date":"2025/03/26","destination":"上池袋","label":"SB現調","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
+        {"date":"2025/04/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
+        {"date":"2025/05/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
+        {"date":"2025/05/24","destination":"野方","label":"現地調査","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":2,"price":1880},
+        {"date":"2025/06/08","destination":"恵比寿","label":"現状確認","route":"笹塚 - 新宿 - 恵比寿","number":1,"price":620},
+        {"date":"2025/07/04","destination":"野方","label":"現状確認、清掃","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":1,"price":940},
+        {"date":"2025/07/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
+        {"date":"2025/07/23","destination":"野方","label":"現状確認、整理","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":2,"price":1880},
+        {"date":"2025/08/06","destination":"野方","label":"残置物搬出","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":2,"price":1880},
+        {"date":"2025/08/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640}
+      ],
     }],
     custom: { // AlaSQLのカスタム関数(以下は使用例)
       // alasql.fn.exclude = cf.custom.exclude;

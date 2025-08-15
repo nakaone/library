@@ -1,3 +1,23 @@
+/**
+ * @typedef {Object} schemaDef - DB構造定義オブジェクト
+ * @param {string} dbName - データベース名
+ * @param {tableDef[]} tables - DB内の個々のテーブルの定義
+ * @param {Object.<string,Function>} [custom] - AlaSQLのカスタム関数
+ * 
+ * @typedef {Object} tableDef - テーブル構造定義オブジェクト
+ * @param {string} name - テーブル名。シート名も一致させる
+ * @param {string|string[]} [primaryKey] - 主キーとなる項目名。複合キーの場合配列で指定
+ * @param {colnumDef[]} cols - 項目定義
+ * @param {Function} [initial] - 初期設定用関数(テーブルに初期データ登録＋シート作成)
+ * 
+ * @typedef {Object} colnumDef - 項目定義オブジェクト
+ * @param {string} name - 項目名
+ * @param {string} [label] - テーブル・シート表示時の項目名。省略時はnameを流用
+ * @param {string} type - データ型。string/number/boolean
+ * @param {any} [default] - 既定値。関数の場合、引数は行オブジェクト
+ * @param {Function} [func] - 表示時点で行う文字列の整形用関数
+ * @param {string} [note] - 備考
+ */
 /** SpreadDB: シートをテーブルとして扱うGAS内部のRDB
  * - ヘッダ行は1行目に固定、左端から隙間無く項目を並べる(空白セル不可)
  * @param {Object} arg
@@ -12,10 +32,8 @@ function SpreadDB(arg) {
     db: new alasql.Database(),
   };
 
-  /** loadSheet: シートからRDBへデータを保存する
-   * @param {Object|string} arg - 文字列の場合arg.sheetNameと看做す
-   * @param {string|string[]} arg.sheetName - シート名。複数シートの場合配列で指定
-   * @param {Object[]} arg.initialData=[] - シートが存在しない場合に使用する行オブジェクトの配列
+  /** loadSheet: シートからRDBへデータをロードする
+   * @param {string|string[]} arg=[] - ロード対象テーブル名
    * @returns {void}
    */
   function loadSheet(arg) {
@@ -23,51 +41,53 @@ function SpreadDB(arg) {
     dev.start(v.whois, [...arguments]);
     try {
 
-      // -------------------------------------------------------------
-      dev.step(1);  // 事前準備：引数の整形
-      // -------------------------------------------------------------
-      v.arg = Object.assign({},(typeof arg === 'string' ? {sheetName:arg} : arg));
-      if( !Array.isArray(v.arg.sheetName) )v.arg.sheetName = [v.arg.sheetName];
+      dev.step(1);  // 対象テーブルリストを作成
+      v.tables = Array.isArray(arg) ? arg : ( typeof arg === 'string' ? [arg] : []);
+      if( v.tables.length === 0 ) throw new Error('テーブル指定が不適切です');
 
-      // -------------------------------------------------------------
-      dev.step(2);  // シート毎にRDBに保存
-      // -------------------------------------------------------------
-      v.arg.sheetName.forEach(sheetName => {
-        v.sheet = pv.spread.getSheetByName(sheetName);
-        if(v.sheet) {
-          dev.step(2.1);  // シートが存在する場合、内容をv.rObjに読み込み
-          v.rObj = [];  // 対象シートの行オブジェクト配列
-          v.raw = v.sheet.getDataRange().getDisplayValues();
-          for (v.r = 1; v.r < v.raw.length; v.r++) {  // ヘッダ行(0行目)は飛ばす
-            v.o = {};
-            for (v.c = 0, v.validCellNum = 0; v.c < v.cols.length; v.c++) {
-              if( v.raw[v.r][v.c] ){
-                // セルの値が有効
-                v.o[v.raw[0][v.c]] = v.raw[v.r][v.c];
-                v.validCellNum++;
-              } else {
-                // セルが空欄または無効な値の場合、欄のデータ型に沿って値を設定
-                switch( pv.tableDef[sheetName].cols[v.c].type ){
-                  case 'number' : v.o[v.raw[0][v.c]] = 0; break;
-                  case 'boolean' : v.o[v.raw[0][v.c]] = false; break;
-                  default: v.o[v.raw[0][v.c]] = '';
-                }
+      dev.step(2);  // 対象テーブルを順次ロード
+      for( v.i=0 ; v.i<v.tables.length ; v.i++ ){
+
+        dev.step(2.1);  // 項目定義をv.colsに格納
+        if( pv.tableDef.hasOwnProperty(v.tables[v.i]) ){
+          v.cols = pv.tableDef[v.tables[v.i]].cols;
+        } else {
+          throw new Error(`テーブル「${v.tables[v.i]}」は定義されてません`);
+        }
+        dev.dump(v.cols);
+
+        dev.step(2.2);  // シートを取得。メイン処理で作成済なので不存在は考慮不要
+        v.sheet = pv.spread.getSheetByName(v.tables[v.i]);
+        v.raw = v.sheet.getDataRange().getDisplayValues();
+        v.rObj = [];  // 対象シートの行オブジェクト配列
+
+        dev.step(2.3);  // シートが存在する場合、内容をv.rObjに読み込み
+        for (v.r = 1; v.r < v.raw.length; v.r++) {  // ヘッダ行(0行目)は飛ばす
+          v.o = {}; // メンバ名はlabelではなくnameを使用
+          for (v.c = 0, v.validCellNum = 0; v.c < v.cols.length; v.c++) {
+            if( v.raw[v.r][v.c] ){
+              // セルの値が有効
+              v.o[v.cols[v.c].name] = v.raw[v.r][v.c];
+              v.validCellNum++;
+            } else {
+              // セルが空欄または無効な値の場合、欄のデータ型に沿って値を設定
+              switch( pv.tableDef[sheetName].cols[v.c].type ){
+                case 'number' : v.o[v.cols[v.c].name] = 0; break;
+                case 'boolean' : v.o[v.cols[v.c].name] = false; break;
+                default: v.o[v.cols[v.c].name] = '';
               }
             }
-            // 有効な値を持つセルが存在すれば有効行と看做す
-            if( v.validCellNum > 0 ) v.rObj.push(v.o);
           }
-        } else {
-          dev.step(2.2);  // 対象シートが不在の場合、有効データは無し
-          v.rObj = [];
+          // 有効な値を持つセルが存在すれば有効行と看做す
+          if( v.validCellNum > 0 ) v.rObj.push(v.o);
         }
-        dev.step(2.3);  // テーブルの作成
-        v.sql = `drop table if exists \`${sheetName}\`;`
-        + `create table \`${sheetName}\`;`
-        + `insert into \`${sheetName}\` select * from ?`;
+
+        dev.step(2.4);  // テーブルに追加
+        v.sql = `delete from \`${v.tables[v.i]}\`;` // 全件削除
+        + `insert into \`${v.tables[v.i]}\` select * from ?`;
         v.r = execSQL(v.sql,[v.rObj]);
         if( v.r instanceof Error ) throw v.r;
-      });
+      }
 
       dev.end(); // 終了処理
       return v.rv;
@@ -77,6 +97,7 @@ function SpreadDB(arg) {
 
   /** saveRDB: RDBからシートへデータを保存する
    * @param {string|string[]} arg=[] - 保存対象テーブル名
+   * @returns {void}
    */
   function saveRDB(arg=[]) {
     const v = { whois: `${pv.whois}.saveRDB`, rv: null};
@@ -98,17 +119,17 @@ function SpreadDB(arg) {
         }
         dev.dump(v.cols);
 
-        dev.step(2.2);  // シートを取得。メイン処理で初期化済なので不存在は考慮不要
+        dev.step(2.2);  // シートを取得。メイン処理で作成済なので不存在は考慮不要
         v.sheet = pv.spread.getSheetByName(v.tables[v.i]);
 
         dev.step(2.3);  // 現状クリア：行固定解除、ヘッダを残し全データ行・列削除
         v.sheet.setFrozenRows(0);
-        v.lastRow = v.sheet.getMaxRows();
-        v.lastCol = v.sheet.getMaxColumns();
-        if( v.lastRow > 1)
-          v.sheet.deleteRows(2,v.lastRow-1);
-        if( v.lastCol > v.cols.length )
-          v.sheet.deleteColumns(v.cols.length+1, v.lastCol-v.cols.length);
+        v.maxRows = v.sheet.getMaxRows();
+        v.maxCols = v.sheet.getMaxColumns();
+        if( v.maxRows > 1)
+          v.sheet.deleteRows(2,v.maxRows-1);
+        if( v.maxCols > v.cols.length )
+          v.sheet.deleteColumns(v.cols.length+1, v.maxCols-v.cols.length);
 
         dev.step(2.4);  // 対象テーブル全件取得
         v.r = execSQL(`select * from \`${v.tables[v.i]}\`;`);
@@ -156,26 +177,40 @@ function SpreadDB(arg) {
 
     dev.step(2);  // schema.tablesを基にテーブル・シートを初期化
     pv.schema.tables.forEach(table => {
-      dev.step(2.1);  // RDBのテーブルは初期化
+
+      dev.step(2.1);  // RDBのテーブルを初期化
       pv.sql = `drop table if exists \`${table.name}\`;`
       + `create table \`${table.name}\`;`;
       pv.r = execSQL(pv.sql);
       if( pv.r instanceof Error ) throw pv.r;
 
-      dev.step(2.2);  // シートは存否確認のみ
       pv.sheet = pv.spread.getSheetByName(table.name);
-      if( !pv.sheet ){
-        dev.step(2.3);  // 対象シートが不在の場合、ヘッダ行のみで新規作成
+      if( pv.sheet ){
+        dev.step(2.2);  // シート作成済の場合、シートからRDBにロード
+        pv.r = loadSheet(table.name);
+        if( pv.r instanceof Error ) throw pv.r;
+      } else {
+        dev.step(2.3);  // シート未作成の場合、シートを作成してヘッダ行を登録
         pv.sheet = pv.spread.insertSheet(table.name);
-        pv.cols = pv.tableDef[table.name].cols;
-        pv.range = pv.sheet.getRange(1, 1, 1, pv.cols.length);
-        // 項目名のセット
-        pv.range.setValues([pv.cols.map(x => x.name)]);
-        // メモのセット
-        pv.range.setNotes([pv.cols.map(x => (x.note||''))]);
-      }
+        pv.range = pv.sheet.getRange(1, 1, 1, table.cols.length);
+        pv.range.setValues([table.cols.map(x => x.label || x.name)]);
+        pv.range.setNotes([table.cols.map(x => (x.note||''))]);
 
+        if( table.hasOwnProperty('initial') ){
+          dev.step(2.4);  // 初期データが存在する場合、RDBに追加してシートに反映
+          pv.sql = `insert into \`${table.name}\` select * from ?;`;
+          pv.r = execSQL(pv.sql,[table.initial()]);
+          if( pv.r instanceof Error ) throw pv.r;
+          pv.r = saveRDB(table.name);
+          if( pv.r instanceof Error ) throw pv.r;
+        }
+      }
     });
+
+    dev.step(3);  // AlaSQLカスタム関数の用意
+    if( pv.schema.hasOwnProperty('custom') ){
+      Object.keys(pv.schema.custom).forEach(x => pv.db.fn[x] = pv.schema.custom[x]);
+    }
 
     dev.end(); // 終了処理
     return {do:execSQL,load:loadSheet,save:saveRDB};
