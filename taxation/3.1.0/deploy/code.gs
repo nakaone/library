@@ -442,7 +442,8 @@ const cf = {
         {name:'created',type:'string',note:'作成日時。ISO8601拡張形式'},
         {name:'updated',type:'string',note:'更新日時。ISO8601拡張形式'},
       ],
-      initial: () => getFileList(),/*{  // YFP関係の結合処理実行後、ファイル一覧を返す
+      initial: () => getFileList(), // ファイル一覧作成
+      /*{  // YFP関係の結合処理実行後、ファイル一覧を返す
         concatYFP().then(()=>{return getFileList()});
       },*/
     },{ // 記入用
@@ -652,6 +653,7 @@ function onOpen() {
   var ui = SpreadsheetApp.getUi();
   var menu = ui.createMenu('道具箱');
   menu.addItem('ファイル一覧更新', 'menuItem1');
+  // 「YFPのPDFファイル結合」はrefreshMaster内で行うのでメニュー化しない
   menu.addItem('提出用HTML出力', 'menuItem2');
   menu.addItem('作業手順書', 'menuItem3');
   menu.addToUi();

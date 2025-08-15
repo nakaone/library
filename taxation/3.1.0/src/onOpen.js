@@ -3,6 +3,7 @@ function onOpen() {
   var ui = SpreadsheetApp.getUi();
   var menu = ui.createMenu('道具箱');
   menu.addItem('ファイル一覧更新', 'menuItem1');
+  // 「YFPのPDFファイル結合」はrefreshMaster内で行うのでメニュー化しない
   menu.addItem('提出用HTML出力', 'menuItem2');
   menu.addItem('作業手順書', 'menuItem3');
   menu.addToUi();
