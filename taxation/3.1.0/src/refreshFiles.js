@@ -1,4 +1,4 @@
-/** refreshMaster : メニュー「ファイル一覧更新」
+/** refreshFiles : メニュー「ファイル一覧更新」
  * 1. カレントフォルダ直下のファイル一覧をfilesテーブルに格納
  *    ※ 移動したファイルはリストアップ対象外(リストに残っていたら削除)
  * 2. YFPのPDFファイル結合
@@ -6,8 +6,8 @@
  * @param {void}
  * @returns {void}
  */
-function refreshMaster() {
-  const v = { whois: 'refreshMaster', rv: null};
+function refreshFiles() {
+  const v = { whois: 'refreshFiles', rv: null};
   dev.start(v.whois);
   try {
 

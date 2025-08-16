@@ -12,6 +12,6 @@ let db;
 //::$src/createReport.js::
 //::$src/getFileList.js::
 //::$src/mergePDFs.js::
-//::$src/refreshMaster.js::
+//::$src/refreshFiles.js::
 //::$src/SpreadDB.js::
 //::$src/utilities.js::
