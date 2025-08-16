@@ -454,11 +454,11 @@ const cf = {
         {name:'name',type:'string',note:'ファイル(フォルダ)名'},  // シート上はファイルへのリンクを張る
         {name:'isExist',type:'boolean',note:'GD上の状態(存否)'},
         {name:'type',type:'string',note:'証憑としての分類。report.html上の掲載するdiv[data-type]'},
-        {name:'date',label:'取引日',type:'string',note:'取引日。電子証憑・参考等、report.html上取引日の表示が必要な場合設定'},
-        {name:'label',label:'摘要',type:'string',note:'摘要(電子証憑)、行き先(交通費)'},
-        {name:'price',label:'価格',type:'string',note:'価格'},
-        {name:'payby',label:'支払方法',type:'string',note:'支払方法。"役員借入金"or"AMEX"'},
-        {name:'note',label:'備考',type:'string',note:'備考。pdf上の頁指定等で使用'},
+        {name:'date',type:'string',note:'取引日。電子証憑・参考等、report.html上取引日の表示が必要な場合設定'},
+        {name:'label',type:'string',note:'摘要(電子証憑)、行き先(交通費)、資料名(参考)'},
+        {name:'price',label:'価格',type:'string'},
+        {name:'payby',label:'支払方法',type:'string',note:'役員借入金 or AMEX'},
+        {name:'note',label:'備考',type:'string',note:'pdf上の頁指定等で使用'},
       ],
       initial: () => [
         {"id":"1uu_NH-iGsQYC21pVZS3vohIVfhYaJrn_","type":"参考","date":"2025/05/16","label":"2025年度給与所得等に係る特別徴収税額の決定通知書"},
@@ -480,9 +480,9 @@ const cf = {
         {"id":"1DaGH1LmErJ0Pc7gcz4uP8PHgP9xyorJC","type":"電子証憑","date":"2025/05/22","label":"備品(バスケット)","price":5279,"payby":"役員借入金"},
         {"id":"1g3O_7tt7SBgD_-Ul2Yv9qEgndOWltMty","type":"電子証憑","date":"2025/07/03","label":"カメラ(本体)","price":136170,"payby":"役員借入金"},
         {"id":"1Bun4eFNXtr7R_e9vz8yzoXfwLPDyNyyI","type":"電子証憑","date":"2025/08/06","label":"若宮宅残置物撤去","price":330000,"payby":"役員借入金"},
-        {"id":"19jlv3d8sbcE7EDJnasyM5HQIgZjg1mu0","type":"返済明細","label":"SMBCローン返済明細(2024/12/30)"},
-        {"id":"1xXxbijwGf65A75_BV54jjEQWBzYf8uss","type":"返済明細","label":"SMBCローン返済明細(2025/04/21)"},
-        {"id":"1sk5K2tTHlsoTCuxRCIEEstGJRWSqYbvD","type":"返済明細","label":"SMTLFローン返済明細"},
+        {"id":"19jlv3d8sbcE7EDJnasyM5HQIgZjg1mu0","type":"返済明細","date":"2024/12/30","label":"SMBCローン返済明細"},
+        {"id":"1xXxbijwGf65A75_BV54jjEQWBzYf8uss","type":"返済明細","date":"2025/04/21","label":"SMBCローン返済明細"},
+        {"id":"1sk5K2tTHlsoTCuxRCIEEstGJRWSqYbvD","type":"返済明細","date":"2024/10/01","label":"SMTLFローン返済明細"},
       ],
     },{ // 交通費
       name: '交通費',
@@ -524,7 +524,16 @@ const cf = {
       // exclude: ファイル一覧で処理か判定。引数：ファイル名、戻り値：trueなら処理対象外
       exclude: fn => /^(20\d{2})(\d{2})(\d{2})_400_00[0|3]\.pdf$/.test(fn),
       // previewURL: ファイルIDとラベルからpreviewモードで当該ファイルを開くURLを返す
-      previewURL: (id,label) => `<a href="https://drive.google.com/file/d/${id}"/preview" target="_blank">${label}</a>`,
+      previewURL: (id,label) => `<a href="https://drive.google.com/file/d/${id}/preview" target="_blank">${label}</a>`,
+      // identifyType: ファイルの自動判別可否または処理対象外かを判定
+      identifyType: fileName => {
+        // 処理対象外のファイル
+        for( let rex of cf.ignore ) if( rex.test(fileName) ) return '対象外';
+        // 自動判別可能なら該当するメンバ名を、判別不可能なら「不明」を返す
+        for (const [key, value] of Object.entries(cf.classDef))
+          if (value.rex && value.rex.test(fileName)) return key;
+        return '不明';
+      },
     },
   },
   YFPrex: { // YFP関係PDFファイル名の正規表現
@@ -555,11 +564,11 @@ const cf = {
    * @param {string} [cols.note] - 備考
    * @param {Object[]} data - テーブルの行オブジェクト。以下は出力時に生成
    */
-  JSONdef: {
+  classDef: { // report.html上の証憑分類に関する定義(classify Definition)
     // ----- 金融関係 ----------
     '通帳': {
       colnum: 4,  // 箇条書き型(4列/行)
-      rex: /^(\u{4})(\d{2})\.pdf$/,
+      rex: /^([A-Z]{4})(\d{2})\.pdf$/,
       func: (o,m) => `${m[1]} No.${previewURL(o.id,m[2])}`,
     },
     '返済明細': { // 記入項目：①資料名(label),②入手日(date)
@@ -641,9 +650,12 @@ const cf = {
       + `<div style="text-align:right">${o.date}</div>`,  // 記入日
     },
   },
-  ignore: [ // ファイル一覧で処理対象外となるファイル名
+  ignore: [ // {RegExp[]} 存在しても処理対象外となるファイル名の正規表現集
+    /^(?!.*\.pdf$).*/,  // 末尾が".pdf"ではない
     /^(20\d{2})(\d{2})(\d{2})_400_00[0|3]\.pdf$/, // 結合前のYFP顧問報酬(0),記帳代行(3)
   ],
+  // ファイルプレビュー用のURL
+  previewURL: "https://drive.google.com/file/d/$1/preview",
 }
 const dev = devTools();
 let db;
@@ -979,6 +991,67 @@ function refreshFiles() {
     // -------------------------------------------------------------
     dev.step(3);  // 「記入用」シートの更新
     // -------------------------------------------------------------
+
+    dev.end(); // 終了処理
+    return v.rv;
+
+  } catch (e) { dev.error(e); return e; }
+}
+function refreshMaster() {
+  const v = { whois: 'refreshMaster', rv: null};
+  dev.start(v.whois);
+  try {
+    db = SpreadDB(cf);
+
+    // -------------------------------------------------------------
+    dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
+    // -------------------------------------------------------------
+
+    // 「記入用」と「files」を full outer join
+    v.sql = 'select `files`.id as id, `files`.name as name'
+    + ', `記入用`.id as mID, `記入用`.name as mName'
+    + ', `記入用`.type as type, `記入用`.date as date'
+    + ', `記入用`.label as label, `記入用`.price as price'
+    + ', `記入用`.payby as payby, `記入用`.note as note'
+    + ' from `files` full outer join `記入用` on `files`.id=`記入用`.id'
+    + ' where identifyType(`files`.name)="不明"'
+    + ';';
+    v.r = db.do(v.sql);
+    if( v.r instanceof Error ) throw v.r;
+    dev.dump(v.r);
+
+    dev.step(2);
+    //   ①両方存在 -> id,nameはfilesから引用、isExist=true、他は記入用を引用
+    //   ②記入用のみ存在 -> isExist=false、後は記入用を引用
+    //   ③filesのみ存在 -> id,nameはfilesから引用、isExist=true、他は空欄
+    v.list = [];
+    for( v.i=0 ; v.i<v.r.length ; v.i++ ){
+      if( v.r[v.i].mID ){
+        if( v.r[v.i].id ){ // ①両方存在
+          v.r[v.i].isExist = true;
+        } else {  // ②記入用のみ存在
+          v.r[v.i].isExist = false;
+          v.r[v.i].id = v.r[v.i].mId;
+        }
+        v.r[v.i].name = v.r[v.i].mName;
+        v.list.push(v.r[v.i]);
+      } else {  // ③filesのみ存在
+        v.r[v.i].isExist = true;
+        v.r[v.i].name = `=hyperlink("${cf.previewURL.replace('$1',v.r[v.i].id)}","${v.r[v.i].name}")`;
+        v.list.push(v.r[v.i]);
+      }
+    }
+    dev.dump(v.list);
+
+    dev.step(3.1);  // 更新内容を「記入用」テーブルに保存
+    v.sql = 'delete from `記入用`;'
+    + 'insert into `記入用` select * from ?;';
+    v.r = db.do(v.sql,[v.list]);
+    if( v.r instanceof Error ) throw v.r;
+
+    dev.step(3.2);  // シートに反映
+    v.r = db.save('記入用');
+    if( v.r instanceof Error ) throw v.r;
 
     dev.end(); // 終了処理
     return v.rv;

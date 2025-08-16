@@ -13,5 +13,6 @@ let db;
 //::$src/getFileList.js::
 //::$src/mergePDFs.js::
 //::$src/refreshFiles.js::
+//::$src/refreshMaster.js::
 //::$src/SpreadDB.js::
 //::$src/utilities.js::
