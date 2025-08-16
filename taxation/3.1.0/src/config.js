@@ -26,6 +26,7 @@ const cf = {
       cols: [
         {name:'id',type:'string',note:'ファイルのID'},
         {name:'name',type:'string',note:'ファイル(フォルダ)名'},  // シート上はファイルへのリンクを張る
+        {name:'link',type:'string',note:'プレビュー用URL'},
         {name:'isExist',type:'boolean',note:'GD上の状態(存否)'},
         {name:'type',type:'string',note:'証憑としての分類。report.html上の掲載するdiv[data-type]'},
         {name:'date',type:'string',note:'取引日。電子証憑・参考等、report.html上取引日の表示が必要な場合設定'},

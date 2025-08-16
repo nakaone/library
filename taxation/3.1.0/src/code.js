@@ -5,7 +5,7 @@
 
 //::$src/config.js::
 const dev = devTools();
-let db;
+const db = SpreadDB(cf);
 
 //::$src/onOpen.js::
 //::$src/concatYFP.js::
