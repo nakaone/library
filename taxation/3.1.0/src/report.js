@@ -7,11 +7,11 @@
 const dev = devTools();
 const ctrlList = element => {
   // 現在の表示/非表示を保存
-  const d = element.target.parentElement.querySelector('.list').style.display;
+  const d = element.target.parentElement.querySelector('[data-type]').style.display;
   // ナビ領域のリストは隠蔽
-  document.querySelectorAll('.list').forEach(o => o.style.display = 'none');
+  document.querySelectorAll('[data-type]').forEach(o => o.style.display = 'none');
   // クリックされたナビメニューの下の明細を表示
-  element.target.parentElement.querySelector('.list').style.display = d === 'none' ? 'grid' : 'none';
+  element.target.parentElement.querySelector('[data-type]').style.display = d === 'none' ? 'grid' : 'none';
 }
 
 window.addEventListener('DOMContentLoaded', () => {
