@@ -41,6 +41,8 @@ function refreshFiles() {
     // -------------------------------------------------------------
     dev.step(3);  // 「記入用」シートの更新
     // -------------------------------------------------------------
+    v.r = refreshMaster();
+    if( v.r instanceof Error ) throw v.r;
 
     dev.end(); // 終了処理
     return v.rv;

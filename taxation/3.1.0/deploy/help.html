@@ -1,8 +1,6 @@
-<h1 id="作業手順"><a name="74b2f24ee98e">作業手順</a></h1>
-<h2
-id="証憑の収集pdf化して電子証憑フォルダに格納">証憑の収集、PDF化して「電子証憑」フォルダに格納</h2>
-<p>フォルダ格納時、タイプ別のファイル命名規則に拠ること!! ###
-領収書発行サイトやメールからダウンロードしたものをそのまま保存するもの</p>
+<h1 id="税務作業手順書"><a name="9f9f262cba76">税務作業手順書</a></h1>
+<h2 id="定期作業">定期作業</h2>
+<h3 id="証憑の収集">1. 証憑の収集</h3>
 <ul>
 <li><p>クレジットカード利用明細(AMEX) : 「20yyMM.pdf」<br>
 未保存月の利用明細(PDF)をMUFGのサイトからダウンロードし、「電子証憑」フォルダに保存。</p>
@@ -27,8 +25,7 @@ ena.kaonのGmail上で「領収書」をキーワードに検索</p></li>
 <li><p>モノタロウ</p></li>
 </ul></li>
 <li><p>その他 ⇒ そのまま保存の上、「証憑」シート上で必要項目を記入<br>
-収支に関係ないが税理士と共有すべき資料があった場合、適宜保存した上でhtmlを編集してリンクを貼る(要手動対応)。
-### 紙の証憑をスキャンして、ファイルの命名が必要なもの</p></li>
+収支に関係ないが税理士と共有すべき資料があった場合、適宜保存した上でhtmlを編集してリンクを貼る(要手動対応)。</p></li>
 <li><p>通帳 : 「MUFGnn.pdf」 or 「SMBCnn.pdf」<br>
 前回提出日以降分について、電子証憑フォルダ内のpdfの末尾に未提出分を追加</p></li>
 <li><p>HSレントロール : 「HS20yyMM.pdf」<br></p>
@@ -52,43 +49,98 @@ ena.kaonのGmail上で「領収書」をキーワードに検索</p></li>
 <li>1で事前にスキャンしたページ以外について、ページ単位にスキャンして”noteYYYYNN.pdf”を作成</li>
 <li>作成したpdfを「電子証憑」フォルダに保存</li>
 </ol>
-<p>確証貼付ノートNo.1の不足時はNo.2を追加するが、ページ番号はNo1,2通しで採番する(No.2の最初のページはNo.1の最終ページ＋1)。
-### 交通費</p></li>
+<p>確証貼付ノートNo.1の不足時はNo.2を追加するが、ページ番号はNo1,2通しで採番する(No.2の最初のページはNo.1の最終ページ＋1)。</p></li>
+<li><p>返済明細</p></li>
+<li><p>参考資料</p></li>
 </ul>
-<h2 id="google-spread証憑20yyを開いて作業">Google
-Spread「証憑20yy」を開いて作業</h2>
-<h3
-id="マイドライブ-ena.kaon-log-fy20xx-電子証憑-証憑20yyを開き道具箱-ファイル一覧更新を実行">「マイドライブ
-&gt; ena.kaon &gt; log &gt; fy20xx &gt; 電子証憑 &gt;
-証憑20yy」を開き「道具箱 &gt; ファイル一覧更新」を実行</h3>
-<h3
-id="masterシート上で必要事項を記入">「master」シート上で必要事項を記入</h3>
+<h3 id="電子証憑yyyyでの作業">「電子証憑yyyy」での作業</h3>
 <ul>
-<li><p>「fill」欄(要記入)がtrueを抽出して要記入行を絞り込み<br> fill =
-“required to fill out” (要追加記入)。</p></li>
-<li><p>証憑種別(type)=「不明」の証憑は、適宜証憑種別を変更<br>
-①「電子証憑」、②「参考」(参考資料)、③「非証憑」のいずれかに変更</p></li>
-<li><p>label=「不明」の証憑は、label欄に摘要を記入</p></li>
-<li><p>type=「電子証憑」でdate(取引日)他が空欄の証憑は追記</p></li>
-<li><p>使用しない証憑が”isExist=true”になっていたらbackupフォルダに移動<br>
-これを行った場合、再度「道具箱 &gt;
-ファイル一覧更新」を実行すること。</p></li>
-<li><p>フォルダに存在しないファイルが一覧に残っていたら行削除</p></li>
+<li><p>「記入用」シートに必要事項を記入<br>
+「電子証憑yyyy」を開くと、フォルダ内のファイル一覧が「files」シートに作成され、ファイル名から内容が判断できなかったPDFファイルの一覧が「記入用」シートに出力される。</p>
+<p>ここではlink欄から適宜原本(PDF)を参照しつつ分類(type)他の必要事項を記入する。</p>
+<table>
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+<col style="width: 12%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">No</th>
+<th style="text-align: left;">type欄</th>
+<th style="text-align: left;">内容</th>
+<th style="text-align: left;">date欄</th>
+<th style="text-align: left;">label欄</th>
+<th style="text-align: left;">価格欄</th>
+<th style="text-align: left;">支払方法欄</th>
+<th style="text-align: left;">備考欄</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">電子証憑</td>
+<td
+style="text-align: left;">Amazonやヨドバシ等のサイトからPDF形式で取得した領収書</td>
+<td style="text-align: left;">取引日を設定</td>
+<td style="text-align: left;">摘要を記入(必須)</td>
+<td style="text-align: left;">必須</td>
+<td style="text-align: left;">役員借入金 or AMEX</td>
+<td style="text-align: left;">必要に応じて記入</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">返済明細</td>
+<td
+style="text-align: left;">銀行から送られてくる返済(払込)予定明細書</td>
+<td style="text-align: left;">取得日を設定。多少不正確でも可</td>
+<td
+style="text-align: left;">銀行名(MUFG,SMBC,LFAF)＋ローン返済明細</td>
+<td style="text-align: left;">記入不可</td>
+<td style="text-align: left;">記入不可</td>
+<td style="text-align: left;">必要に応じて記入</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">参考資料</td>
+<td
+style="text-align: left;">領収書以外で税理士さんに提示しておいた方が良いと思われる資料。<br>例：給与所得等に係る特別徴収税額の決定通知書、固都税納税通知書</td>
+<td style="text-align: left;">取得日を設定。多少不正確でも可</td>
+<td style="text-align: left;">発信元組織名＋内容</td>
+<td style="text-align: left;">記入不可</td>
+<td style="text-align: left;">記入不可</td>
+<td style="text-align: left;">必要に応じて記入</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4</td>
+<td style="text-align: left;">特記事項</td>
+<td
+style="text-align: left;">期中での取扱変更等、税理士さんに知らせておくべき情報</td>
+<td
+style="text-align: left;">始期を記入(例：バイト開始日、等)。<br>特定困難な場合は空欄可</td>
+<td
+style="text-align: left;">情報のタイトルを設定。「バイト採用(嶋津史奈)」等</td>
+<td style="text-align: left;">記入不可</td>
+<td style="text-align: left;">記入不可</td>
+<td style="text-align: left;">記入不可</td>
+</tr>
+</tbody>
+</table></li>
+<li><p>PDFを追加したら「道具箱 &gt; ファイル一覧更新」<br>
+ヨドバシが漏れていたのに気づいて追加した等、「電子証憑yyyy」フォルダ直下のPDFファイルが増えた場合、「道具箱
+&gt; ファイル一覧更新」を実行する。</p>
+<p>実行後「記入用」シートの追加ファイルの行に必要事項を追記する。</p></li>
+<li><p>不要なPDFが紛れていたら<br>
+税理士さんに提示が不要な資料が紛れ込んでいた場合、「電子証憑yyyy」から「電子証憑yyyy
+&gt; backup」フォルダに移動する。</p>
+<p>移動後「道具箱 &gt;
+ファイル一覧更新」を実行し、「記入用」シートの「isExist」欄がFALSEになっていることを確認する。</p></li>
+<li><p>「交通費」シートへの記入</p></li>
+<li><p>「道具箱 &gt; 提出用HTML出力」で税理士提出用HTMLを作成</p></li>
 </ul>
-<h3
-id="税理士に伝えるべき事があれば特記事項シートにhtmlで記述">税理士に伝えるべき事があれば「特記事項」シートにHTMLで記述</h3>
-<h3 id="道具箱-提出用html出力を実行">「道具箱 &gt;
-提出用HTML出力」を実行</h3>
-<h2 id="税理士への提出">税理士への提出</h2>
-<h3
-id="連絡質疑管理表上の保留事項に回答記入">「連絡・質疑管理表」上の保留事項に回答記入</h3>
-<h3
-id="index.htmlを添付し税理士事務所に更新連絡メールを送付">index.htmlを添付し、税理士事務所に更新連絡メールを送付</h3>
-<p>【連絡】ena.kaon 証憑類を追加登録しました</p>
-<p>To: 武田様</p>
-<p>ena.kaonの嶋津です。お世話になっております。</p>
-<p>掲題の件、添付のように現時点で入手済の証憑類を追加しました。ご確認ください。</p>
-<p>以上、お取りはからいの程、宜しくお願いします。 ## Google
-Driveのバックアップ
-定期作業の都度、以下の手順に基づきバックアップを作成。
-<a href="https://docs.google.com/document/d/1GE90XoxGWTH3cz6c708T3vZSsKeEtWhyAJQDfelNsaU/edit?usp=sharing)に基づきバックアップを作成。">https://docs.google.com/document/d/1GE90XoxGWTH3cz6c708T3vZSsKeEtWhyAJQDfelNsaU/edit?usp=sharing</a></p>
+<h2 id="年度切替時">年度切替時</h2>

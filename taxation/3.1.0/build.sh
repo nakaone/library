@@ -27,11 +27,11 @@ cat $src/report.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $dep/repor
 # ----------------------------------------------
 # 3. "help.html"の作成
 #   「作業手順書(help.html)」は以下のWorkFlowyで作成
-#   https://workflowy.com/#/74b2f24ee98e
+#   https://workflowy.com/#/9f9f262cba76
 #   作成後はdoc/help.opmlに保存、deploy/help.htmlをGASに保存
 # ----------------------------------------------
 # workflowy -> md
-cat $doc/help.opml | awk 1 | $workflowy -root:74b2f24ee98e -lv:3 > $doc/help.md
+cat $doc/help.opml | awk 1 | $workflowy -root:9f9f262cba76 -lv:3 > $doc/help.md
 # md -> html
 pandoc $doc/help.md -f markdown -t html -o $dep/help.html
 # rm $doc/help.md
