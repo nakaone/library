@@ -493,7 +493,7 @@ const cf = {
         {name:'label',label:'目的',type:'string'},
         {name:'route',label:'経路',type:'string'},
         {name:'number',label:'人数',type:'number'},
-        {name:'price',label:'金額',type:'number',func:o=>Number(o.price).toLocaleString()},
+        {name:'price',label:'金額',type:'number',printf:o=>Number(o.price).toLocaleString()},
         {name:'note',label:'備考',type:'string'},
       ],
       initial: () => [
@@ -547,7 +547,7 @@ const cf = {
    * @param {number} colnum - 一行当たりの項目数。0:テーブル、>=1:箇条書き。数字は項目数/行
    * @param {RegExp} rex - ファイル名を基にdata-typeを判定する正規表現。特定不能型はnull
    * -- 以下、箇条書きの場合に設定される項目
-   * @param {Function} func - data.label生成関数
+   * @param {Function} printf - data.label生成関数
    *   引数はo:「記入用」行オブジェクト・m:rexの結果、戻り値はHTML文字列。
    *   なおoは何れの場合も必須なので第一引数、使用しない場合も有るmは第二引数とする。
    * @param {Object[]} data - ファイル単位のデータ。以下は出力時に生成
@@ -560,7 +560,7 @@ const cf = {
    * @param {string} [cols.label] - テーブルに表示する項目名。省略時はnameを流用
    * @param {string} cols.type='string' - データ型。string/number/boolean
    * @param {any} [cols.default=''] - 0,false以外の無効値の場合に設定する値
-   * @param {Function} [cols.func] - 桁区切りやリンク等のlabel生成関数
+   * @param {Function} [cols.printf] - 桁区切りやリンク等のlabel生成関数
    *   引数はo:「記入用」行オブジェクト・m:rexの結果、戻り値はHTML文字列
    * @param {string} [cols.note] - 備考
    * @param {Object[]} data - テーブルの行オブジェクト。以下は出力時に生成
@@ -570,57 +570,57 @@ const cf = {
     '通帳': {
       colnum: 4,  // 箇条書き型(4列/行)
       rex: /^([A-Z]{4})(\d{2})\.pdf$/,
-      func: (o,m) => `${m[1]} No.${previewURL(o.id,m[2])}`,
+      printf: (o,m) => `${m[1]} No.${previewURL(o.id,m[2])}`,
     },
     '返済明細': { // 記入項目：①資料名(label),②入手日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
-      func: o => previewURL(o.id,o.label) + (o.date?`(${o.date})`:''),
+      printf: o => previewURL(o.id,o.label) + (o.date?`(${o.date})`:''),
     },
     'AMEX': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^(20\d{2})(\d{2})\.pdf$/,
-      func: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+      printf: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
     },
     // ----- レントロール ----------
     '恵比寿': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^EF(20\d{2})(\d{2})\.pdf$/,
-      func: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+      printf: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
     },
     '上池袋': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^CK(20\d{2})(\d{2})\.pdf$/,
-      func: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+      printf: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
     },
     '羽沢': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^HS(20\d{2})(\d{2})\.pdf$/,
-      func: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+      printf: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
     },
     // ----- 証憑類 ----------
     '健保・年金': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^pension(20\d{2})(\d{2})\.pdf$/,
-      func: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+      printf: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
     },
     '確証貼付ノート': {
       colnum: 10,  // 箇条書き型(10列/行)
       rex: /^note(20\d{2})(\d{2})\.pdf$/,
-      func: (o,m) => 'p.' + previewURL(o.id,m[2]),
+      printf: (o,m) => 'p.' + previewURL(o.id,m[2]),
     },
     'YFP': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^YFP(20\d{2})(\d{2})\.pdf$/,
-      func: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+      printf: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
     },
     '電子証憑': {
       colnum: 0,  // テーブル型
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
       cols: [
-        {name:'date',label:'取引日',type:'string',func:o=>previewURL(o.id,o.label)},
+        {name:'date',label:'取引日',type:'string',printf:o=>previewURL(o.id,o.label)},
         {name:'label',label:'摘要',type:'string'},
-        {name:'price',label:'価格',type:'number',func:o=>Number(o.price).toLocaleString()},
+        {name:'price',label:'価格',type:'number',printf:o=>Number(o.price).toLocaleString()},
         {name:'payby',label:'支払',type:'string'},
         {name:'note',label:'備考',type:'string'},
       ]
@@ -634,7 +634,7 @@ const cf = {
         {name:'label',label:'行先',type:'string'},
         {name:'route',label:'経路',type:'string'},
         {name:'number',label:'人数',type:'string'},
-        {name:'price',label:'金額',type:'number',func:o=>Number(o.price).toLocaleString()},
+        {name:'price',label:'金額',type:'number',printf:o=>Number(o.price).toLocaleString()},
         {name:'payby',label:'支払',type:'string',default:'役員借入金'},
         {name:'note',label:'備考',type:'string'},
       ]
@@ -642,12 +642,12 @@ const cf = {
     '参考資料': { // 記入項目：①資料名(label),②入手日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
-      func: o => previewURL(o.id,o.label) + (o.date?`(${o.date})`:''),
+      printf: o => previewURL(o.id,o.label) + (o.date?`(${o.date})`:''),
     },
     '特記事項': { // 記入項目：①タイトル(label),②内容(note),③記入日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
-      func: o => `<h3>${o.label}<h3><div>${o.note}</div>`
+      printf: o => `<h3>${o.label}<h3><div>${o.note}</div>`
       + `<div style="text-align:right">${o.date}</div>`,  // 記入日
     },
   },
@@ -678,20 +678,11 @@ const menuItem2 = () => refreshMaster();
 const menuItem3 = () => db.export();
 const menuItem4 = () => createReport();
 const menuItem5 = () => {
-  /*
   const html = HtmlService.createHtmlOutputFromFile('help')
     .setWidth(800)
     .setHeight(600);
-  SpreadsheetApp.getUi().showModalDialog(html, 'kzヘルプ');
-  */
+  SpreadsheetApp.getUi().showModalDialog(html, '作業手順書');
 };
-
-/*
-const menuItem3 = () => {
-  var html = HtmlService.createTemplateFromFile("download").evaluate();
-  SpreadsheetApp.getUi().showModalDialog(html, "作成中");
-};
-*/
 /** concatYFP: YFP関係証憑の結合
  * - 入出力ともGD上のため、引数・戻り値共に無し
  * @param {void}

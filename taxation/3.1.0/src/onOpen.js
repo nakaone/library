@@ -15,17 +15,8 @@ const menuItem2 = () => refreshMaster();
 const menuItem3 = () => db.export();
 const menuItem4 = () => createReport();
 const menuItem5 = () => {
-  /*
   const html = HtmlService.createHtmlOutputFromFile('help')
     .setWidth(800)
     .setHeight(600);
-  SpreadsheetApp.getUi().showModalDialog(html, 'kzヘルプ');
-  */
+  SpreadsheetApp.getUi().showModalDialog(html, '作業手順書');
 };
-
-/*
-const menuItem3 = () => {
-  var html = HtmlService.createTemplateFromFile("download").evaluate();
-  SpreadsheetApp.getUi().showModalDialog(html, "作成中");
-};
-*/

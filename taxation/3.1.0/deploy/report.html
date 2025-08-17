@@ -1,12 +1,9 @@
-<!DOCTYPE html>
+<!DOCTYPE html><html xml:lang="ja" lang="ja"><head>
 <!-- =======================================================
 [report.html]
   提出用HTML(index.html)のbody部分。
   build.shでreport.css/jsを組み込み、「証憑yyyy」のGASにコピー
 ======================================================= -->
-
-<html xml:lang="ja" lang="ja">
-<head>
   <title>ena.kaon 証憑</title>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
@@ -34,15 +31,9 @@
       background-color: #ccc;
       padding: 1rem;
     }
-    div.list {
+    div[data-type] {
       display: grid;
-      margin-bottom: 2rem;
-    }
-    div.list div {
-      margin-top: 0.5rem;
-    }
-    div.monthly {
-      grid-template-columns: repeat(6, 1fr);
+      margin: 1rem;
     }
     th, td {
       padding: 0.2rem 0.5rem;
@@ -58,6 +49,18 @@
     li {
       margin-bottom: 0.5rem;
     }
+    /*
+    div.list {
+      display: grid;
+      margin-bottom: 2rem;
+    }
+    div.list div {
+      margin-top: 0.5rem;
+    }
+    div.monthly {
+      grid-template-columns: repeat(6, 1fr);
+    }
+    */
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
@@ -71,52 +74,51 @@
 
     <div><h1>金融関係</h1>
       <div><h2>銀行通帳</h2>
-        <div class="list" data-type="通帳"></div>
-      </div>
+        <div data-type="通帳"></div></div>
       <div><h2>ローン関係</h2>
-        <div class="list" data-type="返済明細"></div>
+        <div data-type="返済明細"></div>
       </div>
       <div><h2>クレジットカード利用明細</h2>
-        <div class="list monthly" data-type="AMEX"></div>
+        <div data-type="AMEX"></div>
       </div>
     </div>
 
     <div><h1>レントロール</h1>
       <div><h2>恵比寿フェリシタ</h2>
-        <div class="list monthly" data-type="恵比寿"></div>
+        <div data-type="恵比寿"></div>
       </div>
       <div><h2>クレセント上池袋</h2>
-        <div class="list monthly" data-type="上池袋"></div>
+        <div data-type="上池袋"></div>
       </div>
       <div><h2>羽沢眞和マンション</h2>
-        <div class="list monthly" data-type="羽沢"></div>
+        <div data-type="羽沢"></div>
       </div>
     </div>
 
     <div><h1>証憑類</h1>
       <div><h2>健保・年金、確定拠出年金</h2>
-        <div class="list monthly" data-type="健保・年金"></div>
+        <div data-type="健保・年金"></div>
       </div>
       <div><h2>確証貼付ノート</h2>
-        <div class="list" data-type="確証貼付ノート" style="grid-template-columns: repeat(10, 1fr);"></div>
+        <div data-type="確証貼付ノート"></div>
       </div>
       <div><h2>税理士(YFP)</h2>
-        <div class="list" data-type="YFP" style="grid-template-columns: repeat(2, 1fr);"></div>
+        <div data-type="YFP"></div>
       </div>
       <div><h2>電子証憑</h2>
-        <div class="list" data-type="電子証憑"></div>
+        <div data-type="電子証憑"></div>
       </div>
     </div>
 
     <div><h1>その他</h1>
       <div><h2>交通費</h2>
-        <div class="list" data-type="交通費"></div>
+        <div data-type="交通費"></div>
       </div>
       <div><h2>参考資料</h2>
-        <div class="list" data-type="参考"></div>
+        <div data-type="参考"></div>
       </div>
       <div><h2>特記事項</h2>
-        <div class="list" id="notes"></div>
+        <div data-type="特記事項"></div>
       </div>
     </div>
   </div>
@@ -133,11 +135,11 @@
   const dev = devTools();
   const ctrlList = element => {
     // 現在の表示/非表示を保存
-    const d = element.target.parentElement.querySelector('.list').style.display;
+    const d = element.target.parentElement.querySelector('[data-type]').style.display;
     // ナビ領域のリストは隠蔽
-    document.querySelectorAll('.list').forEach(o => o.style.display = 'none');
+    document.querySelectorAll('[data-type]').forEach(o => o.style.display = 'none');
     // クリックされたナビメニューの下の明細を表示
-    element.target.parentElement.querySelector('.list').style.display = d === 'none' ? 'grid' : 'none';
+    element.target.parentElement.querySelector('[data-type]').style.display = d === 'none' ? 'grid' : 'none';
   }
   
   window.addEventListener('DOMContentLoaded', () => {

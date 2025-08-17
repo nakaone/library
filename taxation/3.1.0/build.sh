@@ -19,16 +19,23 @@ cat $src/code.js | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $dep/code.gs
 
 # ----------------------------------------------
 # 2. "report.html" の作成
+#   src/report.html(.js, .css)を作成・修正。
+#   deploy/report.htmlをGASに保存
 # ----------------------------------------------
 cat $src/report.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $dep/report.html
 
-
-
 # ----------------------------------------------
-# 「特記事項」htmlの作成
+# 3. "help.html"の作成
+#   「作業手順書(help.html)」は以下のWorkFlowyで作成
+#   https://workflowy.com/#/74b2f24ee98e
+#   作成後はdoc/help.opmlに保存、deploy/help.htmlをGASに保存
 # ----------------------------------------------
-# pandoc $prj/notes.md -f markdown -t html -o $prj/notes.html
-# rm $prj/notes.html
+# workflowy -> md
+cat $doc/help.opml | awk 1 | $workflowy -root:74b2f24ee98e -lv:3 > $doc/help.md
+# md -> html
+pandoc $doc/help.md -f markdown -t html -o $dep/help.html
+# rm $doc/help.md
+
 
 # ソースの最小化 : https://elon-task.com/1658-2/
 #npx html-minifier 20250408.html --collapse-whitespace --remove-comments -o index.html

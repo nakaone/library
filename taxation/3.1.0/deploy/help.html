@@ -1,0 +1,94 @@
+<h1 id="作業手順"><a name="74b2f24ee98e">作業手順</a></h1>
+<h2
+id="証憑の収集pdf化して電子証憑フォルダに格納">証憑の収集、PDF化して「電子証憑」フォルダに格納</h2>
+<p>フォルダ格納時、タイプ別のファイル命名規則に拠ること!! ###
+領収書発行サイトやメールからダウンロードしたものをそのまま保存するもの</p>
+<ul>
+<li><p>クレジットカード利用明細(AMEX) : 「20yyMM.pdf」<br>
+未保存月の利用明細(PDF)をMUFGのサイトからダウンロードし、「電子証憑」フォルダに保存。</p>
+<p>MUFG News+ :
+<a href="https://www2.cr.mufg.jp/newsplus/amex/?lid=news_amex">https://www2.cr.mufg.jp/newsplus/amex/?lid=news_amex</a>
+&gt; ご請求額・利用明細照会 ID,PWはGoogle
+Keepで「MUFGカードWEBサービス」を検索</p></li>
+<li><p>EF, CKレントロール : 「EF20yyMM.pdf」 or 「CK20yyMM.pdf」<br>
+TransCreationから送付の都度「電子証憑」のフォルダに保存(ファイルは月単位)。</p></li>
+<li><p>税理士領収書 : 「20yyMMdd_400_00n.pdf」<br>
+GMailを”YFP”で検索して保存。概ね月央(15日前後)にメールで請求書が送られているので「電子証憑」に保存。</p>
+<p>※ファイル名は”yyyyMMdd_400_xxx.pdf”、xxx:
+000-&gt;税理士報酬分、003-&gt;記帳代行分</p></li>
+<li><p>電子証憑 ⇒ そのまま保存の上、「証憑」シート上で必要項目を記入<br>
+以下は主なもの。MUJI等、不定期に利用した購入先は都度追加する。</p>
+<ul>
+<li><p>amazon</p></li>
+<li><p>yodobashi</p></li>
+<li><p>代行購入(弘子)</p></li>
+<li><p>Apple<br>
+ena.kaonのGmail上で「領収書」をキーワードに検索</p></li>
+<li><p>モノタロウ</p></li>
+</ul></li>
+<li><p>その他 ⇒ そのまま保存の上、「証憑」シート上で必要項目を記入<br>
+収支に関係ないが税理士と共有すべき資料があった場合、適宜保存した上でhtmlを編集してリンクを貼る(要手動対応)。
+### 紙の証憑をスキャンして、ファイルの命名が必要なもの</p></li>
+<li><p>通帳 : 「MUFGnn.pdf」 or 「SMBCnn.pdf」<br>
+前回提出日以降分について、電子証憑フォルダ内のpdfの末尾に未提出分を追加</p></li>
+<li><p>HSレントロール : 「HS20yyMM.pdf」<br></p>
+<ol type="1">
+<li>確証貼付ノートの所定の位置に確証(定期清掃領収書)と併せて貼付</li>
+<li>月単位にスキャンして”HS20yyMM.pdf”を作成、「電子証憑」フォルダに保存</li>
+</ol>
+<p>まとめてスキャン後、Macのプレビューでページごとに分割(サムネールをデスクトップにD&amp;D)。
+なおA4見開きに貼りきれない証憑は「確証貼付ノート」に貼付する。</p></li>
+<li><p>健保・年金、確定拠出年金 : 「pension20yyMM.pdf」<br></p>
+<ol type="1">
+<li>事前に「確証貼付ノート」の一部を健保・年金用に確保して領収書を貼付。</li>
+<li>まとめてスキャン後、Macのプレビューでページごとに分割(サムネールをデスクトップにD&amp;D)。</li>
+<li>ファイル名を”pensionYYYYMM.pdf”に修正して「電子証憑」フォルダに保存</li>
+</ol></li>
+<li><p>確証貼付ノート : 「note20yypp.pdf」<br>
+「20yy」の部分は会計年度、ppはページ番号。</p>
+<ol type="1">
+<li>A4以上のサイズの場合はノート貼付前にスキャン、貼付予定ページ番号を元に”noteYYYYNN.pdf”を作成(YYYYは年度、NNはページ番号)</li>
+<li>確証貼付ノートへの貼付。貼付後、宛先・摘要等必要事項を追記</li>
+<li>1で事前にスキャンしたページ以外について、ページ単位にスキャンして”noteYYYYNN.pdf”を作成</li>
+<li>作成したpdfを「電子証憑」フォルダに保存</li>
+</ol>
+<p>確証貼付ノートNo.1の不足時はNo.2を追加するが、ページ番号はNo1,2通しで採番する(No.2の最初のページはNo.1の最終ページ＋1)。
+### 交通費</p></li>
+</ul>
+<h2 id="google-spread証憑20yyを開いて作業">Google
+Spread「証憑20yy」を開いて作業</h2>
+<h3
+id="マイドライブ-ena.kaon-log-fy20xx-電子証憑-証憑20yyを開き道具箱-ファイル一覧更新を実行">「マイドライブ
+&gt; ena.kaon &gt; log &gt; fy20xx &gt; 電子証憑 &gt;
+証憑20yy」を開き「道具箱 &gt; ファイル一覧更新」を実行</h3>
+<h3
+id="masterシート上で必要事項を記入">「master」シート上で必要事項を記入</h3>
+<ul>
+<li><p>「fill」欄(要記入)がtrueを抽出して要記入行を絞り込み<br> fill =
+“required to fill out” (要追加記入)。</p></li>
+<li><p>証憑種別(type)=「不明」の証憑は、適宜証憑種別を変更<br>
+①「電子証憑」、②「参考」(参考資料)、③「非証憑」のいずれかに変更</p></li>
+<li><p>label=「不明」の証憑は、label欄に摘要を記入</p></li>
+<li><p>type=「電子証憑」でdate(取引日)他が空欄の証憑は追記</p></li>
+<li><p>使用しない証憑が”isExist=true”になっていたらbackupフォルダに移動<br>
+これを行った場合、再度「道具箱 &gt;
+ファイル一覧更新」を実行すること。</p></li>
+<li><p>フォルダに存在しないファイルが一覧に残っていたら行削除</p></li>
+</ul>
+<h3
+id="税理士に伝えるべき事があれば特記事項シートにhtmlで記述">税理士に伝えるべき事があれば「特記事項」シートにHTMLで記述</h3>
+<h3 id="道具箱-提出用html出力を実行">「道具箱 &gt;
+提出用HTML出力」を実行</h3>
+<h2 id="税理士への提出">税理士への提出</h2>
+<h3
+id="連絡質疑管理表上の保留事項に回答記入">「連絡・質疑管理表」上の保留事項に回答記入</h3>
+<h3
+id="index.htmlを添付し税理士事務所に更新連絡メールを送付">index.htmlを添付し、税理士事務所に更新連絡メールを送付</h3>
+<p>【連絡】ena.kaon 証憑類を追加登録しました</p>
+<p>To: 武田様</p>
+<p>ena.kaonの嶋津です。お世話になっております。</p>
+<p>掲題の件、添付のように現時点で入手済の証憑類を追加しました。ご確認ください。</p>
+<p>以上、お取りはからいの程、宜しくお願いします。 ## Google
+Driveのバックアップ
+定期作業の都度、以下の手順に基づきバックアップを作成。
+<a href="https://docs.google.com/document/d/1GE90XoxGWTH3cz6c708T3vZSsKeEtWhyAJQDfelNsaU/edit?usp=sharing)に基づきバックアップを作成。">https://docs.google.com/document/d/1GE90XoxGWTH3cz6c708T3vZSsKeEtWhyAJQDfelNsaU/edit?usp=sharing</a></p>
