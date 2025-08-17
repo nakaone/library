@@ -1,67 +1,64 @@
-/** createReport : download.htmlから呼ばれ、税理士提出用のindex.htmlを生成する */
+/** createReport : 税理士提出用のreport.htmlをダウンロード
+ * @param {void}
+ * @returns {void}
+ */
 function createReport() {
   const v = { whois: 'createReport', rv: null};
   dev.start(v.whois);
   try {
 
-    // -------------------------------------------------------------
-    dev.step(1);  // 事前準備
-    // -------------------------------------------------------------
-    v.spread = SpreadsheetApp.getActiveSpreadsheet();
+    dev.step(1);  // 使用するデータをテーブルから作成
+    v.data = {};
+    v.data['files'] = db.do('select id,name from `files`;');
+    if( v.data['files'] instanceof Error ) throw v.data['files'];
+    v.data['記入用'] = db.do('select id,type,date,label,price,payby,note from `記入用`;');
+    if( v.data['記入用'] instanceof Error ) throw v.data['記入用'];
+    v.data['交通費'] = db.do('select * from `交通費`;');
+    if( v.data['交通費'] instanceof Error ) throw v.data['交通費'];
+
 
     // -------------------------------------------------------------
-    dev.step(2);  // masterシートの内容出力
-    // -------------------------------------------------------------
-    v.master = [];
-    v.data = v.spread.getSheetByName('master').getDataRange().getDisplayValues();
-    for( v.r=1 ; v.r<v.data.length ; v.r++ ){
-      if( !v.data[v.r][0] ) continue; // 空白行(id未設定行)は飛ばす
-      // 行オブジェクトの作成
-      v.row = {};
-      for( v.c=0 ; v.c<v.data[0].length ; v.c++ ){
-        if( v.data[v.r][v.c] !== '' ){
-          v.row[v.data[0][v.c]] = v.data[v.r][v.c];
-        }
-      }
-      // 必要な項目に絞り込んで出力
-      v.o = {};
-      ['id','name','type','label','date','price','payby','note'].forEach(x => {
-        if( v.row[x] ) v.o[x] = v.row[x];
-      });
-      v.master.push(v.o);
-    }
+    // --- 1. report.htmlを読み込み ---
+    var template = HtmlService.createHtmlOutputFromFile("report").getContent();
 
-    // -------------------------------------------------------------
-    dev.step(3);  // 交通費シートの内容出力
-    // -------------------------------------------------------------
-    v.data = v.spread.getSheetByName('交通費').getDataRange().getDisplayValues();
-    for( v.r=1 ; v.r<v.data.length ; v.r++ ){
-      if( !v.data[v.r][6] ) continue; // 金額未入力は飛ばす
-      // 行オブジェクトの作成
-      v.row = {type:'交通費'};
-      for( v.c=0 ; v.c<v.data[0].length ; v.c++ ){
-        if( v.data[v.r][v.c] !== '' ){
-          v.row[v.data[0][v.c]] = v.data[v.r][v.c];
-        }
-      }
-      v.master.push(v.row);
-    }
+    // --- 2. <script>const data=...</script> を埋め込む ---
+    var dataScript = `<script>const data = ${JSON.stringify(v.data)};</script>`;
+    var reportHtml = template.replace("</body>", dataScript + "\n</body>");
 
-    // -------------------------------------------------------------
-    dev.step(4);  // index.htmlシートにmaster, notesを埋め込む
-    // -------------------------------------------------------------
-    v.notes = []; // 「特記事項」シートから全件読み込み、セパレータ無しで結合する
-    v.data = v.spread.getSheetByName('特記事項').getDataRange().getDisplayValues();
-    v.data.forEach(line => v.notes.push(line.join('')));
+    // ダイアログへ渡すためにエンコード
+    var encodedReport = encodeURIComponent(reportHtml);
 
-    v.rv = HtmlService.createTemplateFromFile("index").evaluate().getContent()
-    .replace(
-      'id="master">',
-      `id="master">const data = ${JSON.stringify(v.master,null,2)};`
-    ).replace(
-      'id="notes">',
-      `id="notes">${v.notes.join('')};`
-    );
+    // --- 3. ダイアログ用HTMLをソース内で作成 ---
+    var dialogHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head><base target="_top"></head>
+      <body>
+        <h3>report.html を自動ダウンロードしています...</h3>
+        <script>
+          // サーバーから渡された文字列を復号
+          const reportHtml = decodeURIComponent("${encodedReport}");
+
+          // Blobを作成してダウンロード開始
+          const blob = new Blob([reportHtml], {type: "text/html"});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "report.html";
+          a.click();
+          URL.revokeObjectURL(url);
+        </script>
+      </body>
+      </html>
+    `;
+
+    // --- 4. ダイアログを表示 ---
+    var htmlOutput = HtmlService.createHtmlOutput(dialogHtml)
+      .setWidth(400)
+      .setHeight(200);
+
+    SpreadsheetApp.getUi().showModalDialog(htmlOutput, "レポート出力");
+    
     dev.end(); // 終了処理
     return v.rv;
 

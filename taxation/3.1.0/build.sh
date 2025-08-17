@@ -18,14 +18,9 @@ dep="$prj/deploy"
 cat $src/code.js | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $dep/code.gs
 
 # ----------------------------------------------
-# 2. "download.html" の作成
+# 2. "report.html" の作成
 # ----------------------------------------------
-cp $src/download.html $dep
-
-# ----------------------------------------------
-# 3. "index.html" の作成
-# ----------------------------------------------
-#cat $src/proto.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $prj/index.html
+cat $src/proto.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $dep/report.html
 
 
 
