@@ -4,17 +4,21 @@ function onOpen() {
   menu.addItem('ファイル一覧(files)更新', 'menuItem1');
   // 「YFPのPDFファイル結合」はrefreshFiles内で行うのでメニュー化しない
   menu.addItem('記入用シート更新', 'menuItem2');
-  menu.addItem('提出用HTML出力', 'menuItem3');
-  menu.addItem('作業手順書', 'menuItem4');
+  menu.addItem('エクスポート', 'menuItem3');
+  menu.addItem('提出用HTML出力', 'menuItem4');
+  menu.addItem('作業手順書', 'menuItem5');
   menu.addToUi();
 }
 
 const menuItem1 = () => refreshFiles();
 const menuItem2 = () => refreshMaster();
+/*
 const menuItem3 = () => {
   var html = HtmlService.createTemplateFromFile("download").evaluate();
   SpreadsheetApp.getUi().showModalDialog(html, "作成中");
 };
+*/
+const menuItem3 = () => db.export('taxation.json');
 const menuItem4 = () => {
   /*
   const html = HtmlService.createHtmlOutputFromFile('help')

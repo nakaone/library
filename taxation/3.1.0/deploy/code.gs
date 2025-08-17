@@ -667,17 +667,21 @@ function onOpen() {
   menu.addItem('ファイル一覧(files)更新', 'menuItem1');
   // 「YFPのPDFファイル結合」はrefreshFiles内で行うのでメニュー化しない
   menu.addItem('記入用シート更新', 'menuItem2');
-  menu.addItem('提出用HTML出力', 'menuItem3');
-  menu.addItem('作業手順書', 'menuItem4');
+  menu.addItem('エクスポート', 'menuItem3');
+  menu.addItem('提出用HTML出力', 'menuItem4');
+  menu.addItem('作業手順書', 'menuItem5');
   menu.addToUi();
 }
 
 const menuItem1 = () => refreshFiles();
 const menuItem2 = () => refreshMaster();
+/*
 const menuItem3 = () => {
   var html = HtmlService.createTemplateFromFile("download").evaluate();
   SpreadsheetApp.getUi().showModalDialog(html, "作成中");
 };
+*/
+const menuItem3 = () => db.export('taxation.json');
 const menuItem4 = () => {
   /*
   const html = HtmlService.createHtmlOutputFromFile('help')
@@ -1073,15 +1077,16 @@ function refreshMaster() {
  * @typedef {Object} tableDef - テーブル構造定義オブジェクト
  * @param {string} name - テーブル名。シート名も一致させる
  * @param {string|string[]} [primaryKey] - 主キーとなる項目名。複合キーの場合配列で指定
- * @param {colnumDef[]} cols - 項目定義
+ * @param {columnDef[]} cols - 項目定義
  * @param {Function} [initial] - 初期設定用関数(テーブルに初期データ登録＋シート作成)
+ * @param {Object[]} data - テーブルの行オブジェクトの配列。import/export時のみ設定
  *
- * @typedef {Object} colnumDef - 項目定義オブジェクト
+ * @typedef {Object} columnDef - 項目定義オブジェクト
  * @param {string} name - 項目名
  * @param {string} [label] - テーブル・シート表示時の項目名。省略時はnameを流用
  * @param {string} type - データ型。string/number/boolean
  * @param {any} [default] - 既定値。関数の場合、引数は行オブジェクト
- * @param {Function} [func] - 表示時点で行う文字列の整形用関数
+ * @param {Function} [printf] - 表示時点で行う文字列の整形用関数
  * @param {string} [note] - 備考
  */
 
@@ -1098,6 +1103,15 @@ function SpreadDB(arg) {
     tableDef: {}, // arg.schemaを基に{テーブル名:テーブル構造定義}に変換したObj
     db: new alasql.Database(),
   };
+
+  /** execSQL: alasqlでSQLを実行
+   * @param {string} sql
+   * @param {Array[]} arg - alasqlの第二引数
+   * @returns {Object[]}
+   */
+  function execSQL(sql,arg=null) {
+    return arg === null ? pv.db.exec(sql) : pv.db.exec(sql,arg);
+  }
 
   /** loadSheet: シートからRDBへデータをロードする
    * @param {string|string[]} arg=[] - ロード対象テーブル名
@@ -1225,13 +1239,132 @@ function SpreadDB(arg) {
     } catch (e) { dev.error(e); return e; }
   }
 
-  /** execSQL: alasqlでSQLを実行
-   * @param {string} sql
-   * @param {Array[]} arg - alasqlの第二引数
-   * @returns {Object[]}
+  /** importJSON: JSONからテーブル・シートへデータを格納する
+   * @param {string|string[]} arg=[] - ロード対象テーブル名
+   * @returns {void}
    */
-  function execSQL(sql,arg=null) {
-    return arg === null ? pv.db.exec(sql) : pv.db.exec(sql,arg);
+  function importJSON(arg) {
+    const v = { whois: `${pv.whois}.importJSON`, rv: null};
+    dev.start(v.whois, [...arguments]);
+    try {
+
+      /*
+      dev.step(1);  // 汎用画面にインポート用画面を作成
+      cf.gpScr.innerHTML = '';
+      v.r = createElement([
+        {tag:'h1',text:'インポート'},
+        {tag:'input',attr:{type:'file'},event:{change:e=>ldb.import(e)}},
+        {tag:'textarea',attr:{cols:60,rows:15}},
+      ],cf.gpScr);
+
+
+    dev.step(1);  // オプションに既定値設定
+      pv.opt = Object.assign(pv.opt,arg);
+      dev.dump(pv.opt);
+
+      dev.step(2);
+      pv.idb = await openIndexedDB();
+
+      for( v.tableName in cf.tableDef.mappingTable){
+        dev.step(3);  // rdbからテーブル名をキーとして検索
+        v.existingData = await getIndexedDB(v.tableName);
+
+        if (v.existingData) {
+          dev.step(4.1);  // 存在すればrowsをJSON.parseしてpv.rdbに格納
+          pv.rdb.tables[v.tableName] = JSON.parse(v.existingData.rows);
+        } else {
+          dev.step(4.2);  // 存在しなければ新規登録
+          await setIndexedDB(v.tableName, '[]');
+          pv.rdb.exec(`create table \`${v.tableName}\``);
+        }
+      }
+      */
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { dev.error(e); return e; }
+  }
+
+  /** exportJSON: 全テーブルの構造及びデータをJSON化、ダウンロードする
+   * @param {string} fileName - ダウンロードファイル名。必須。
+   * @returns {void}
+   * - 出力されるJSONはschemaDef
+   */
+  function exportJSON() {
+    const v = { whois: `${pv.whois}.exportJSON`, rv: null};
+    dev.start(v.whois);
+    try {
+
+      dev.step(1);  // ダウンロードする内容の作成
+      dev.step(1.1);  // pv.schemaをv.contentにディープコピー
+      v.deepCopy = (value) => {
+        if (typeof value === 'function') {
+          return value.toString();  // 関数型は文字列化
+        } else if (Array.isArray(value)) {
+          return value.map(item => v.deepCopy(item));
+        } else if (value !== null && typeof value === 'object') {
+          const copy = {};
+          for (let key in value) {
+            if (value.hasOwnProperty(key)) {
+              copy[key] = v.deepCopy(value[key]);
+            }
+          }
+          return copy;
+        } else {
+          // プリミティブ型（number, string, boolean, null, undefined）はそのまま返す
+          return value;
+        }
+      };
+      v.content = v.deepCopy(pv.schema);
+
+      dev.step(1.2);  // 各テーブルのデータをセット
+      for( v.i=0 ; v.i<v.content.tables.length ; v.i++ ){
+        v.table = v.content.tables[v.i]
+        v.table.data = execSQL(`select * from \`${v.table.name}\`;`);
+        if( v.table.data instanceof Error ) throw v.table.data;
+      }
+
+      dev.step(1.3);  // 文字列化
+      const jsonStr = JSON.stringify(v.content);
+      dev.dump(jsonStr);
+
+      dev.step(2);  // HTMLをコード内で定義
+      const html = HtmlService.createHtmlOutput(`
+        <html>
+          <head><base target="_top"></head>
+          <body>
+            <p>JSONファイルのダウンロードを開始しています...</p>
+            <script>
+              const data = ${jsonStr};
+
+              // JSONとしてファイルを生成して自動ダウンロード
+              const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'data.json';
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              URL.revokeObjectURL(url);
+
+              // ダイアログを自動的に閉じる（少し待ってから）
+              setTimeout(() => {
+                google.script.host.close();
+              }, 1000);
+            </script>
+          </body>
+        </html>
+      `).setWidth(300).setHeight(100);
+
+      dev.step(3);  // ダイアログの表示
+      SpreadsheetApp.getUi().showModalDialog(html, 'JSONをダウンロード中');
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { dev.error(e); return e; }
   }
 
   // SpreadDBメイン処理
@@ -1280,7 +1413,7 @@ function SpreadDB(arg) {
     }
 
     dev.end(); // 終了処理
-    return {do:execSQL,load:loadSheet,save:saveRDB};
+    return {do:execSQL,load:loadSheet,save:saveRDB,import:importJSON,export:exportJSON};
 
   } catch (e) { dev.error(e); return e; }
 }
