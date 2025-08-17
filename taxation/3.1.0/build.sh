@@ -20,7 +20,7 @@ cat $src/code.js | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $dep/code.gs
 # ----------------------------------------------
 # 2. "report.html" の作成
 # ----------------------------------------------
-cat $src/proto.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $dep/report.html
+cat $src/report.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $dep/report.html
 
 
 
