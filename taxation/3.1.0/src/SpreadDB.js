@@ -32,7 +32,7 @@ function SpreadDB(arg) {
     spread: SpreadsheetApp.getActiveSpreadsheet(),
     schema: arg.schema,
     tableDef: {}, // arg.schemaを基に{テーブル名:テーブル構造定義}に変換したObj
-    db: new alasql.Database(),
+    rdb: new alasql.Database(),
   };
 
   /** execSQL: alasqlでSQLを実行
@@ -41,7 +41,7 @@ function SpreadDB(arg) {
    * @returns {Object[]}
    */
   function execSQL(sql,arg=null) {
-    return arg === null ? pv.db.exec(sql) : pv.db.exec(sql,arg);
+    return arg === null ? pv.rdb.exec(sql) : pv.rdb.exec(sql,arg);
   }
 
   /** loadSheet: シートからRDBへデータをロードする
@@ -301,6 +301,14 @@ function SpreadDB(arg) {
     } catch (e) { dev.error(e); return e; }
   }
 
+  /** hasTable: RDB(alasql)内にテーブルを持っているか確認
+   * @param {string} tableName
+   * @returns {boolean}
+   */
+  function hasTable(tableName) {
+    return tableName in pv.rdb.tables;
+  }
+
   // SpreadDBメイン処理
   dev.start(pv.whois, [...arguments]);
   try {
@@ -347,7 +355,14 @@ function SpreadDB(arg) {
     }
 
     dev.end(); // 終了処理
-    return {exec:execSQL,load:loadSheet,save:saveRDB,import:importJSON,export:exportJSON};
+    return {
+      'exec': execSQL,
+      'load': loadSheet,
+      'save': saveRDB,
+      'import': importJSON,
+      'export': exportJSON,
+      'hasTable': hasTable,
+    };
 
   } catch (e) { dev.error(e); return e; }
 }
