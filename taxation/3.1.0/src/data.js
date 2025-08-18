@@ -1605,7 +1605,7 @@ const data = {
           "name": "2025年度給与所得等に係る税額決定通知書.pdf",
           "link": "https://drive.google.com/file/d/1uu_NH-iGsQYC21pVZS3vohIVfhYaJrn_/preview",
           "isExist": "TRUE",
-          "type": "参考",
+          "type": "参考資料",
           "date": "2025/05/16",
           "label": "2025年度給与所得等に係る特別徴収税額の決定通知書",
           "price": "",

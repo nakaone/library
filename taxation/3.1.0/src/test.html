@@ -167,8 +167,8 @@
       + ', `記入用`.`note` as `note`'
       + ' from `files` full outer join `記入用`'
       + ' on `files`.`id`=`記入用`.`id`;'
-      // type=対象外は削除
-      + 'delete from `master` where `type`="対象外";';
+      // type=対象外(または空欄)は削除
+      + 'delete from `master` where `type`="対象外" or `type`="";';
       v.r = db.exec(v.sql);
       if( v.r instanceof Error ) throw v.r;
       // 結果を行オブジェクトの配列として取得
@@ -176,35 +176,33 @@
       if( v.master instanceof Error ) throw v.master;
       dev.dump(v.master.length,v.master.slice(0,5),177);
 
-      dev.step(2.2);  // 表示用ラベルをprintfで作成
-      v.pfMap = {}; // pfMap: メンバ名=type、値=printfとするマップ
+      dev.step(2.2);  // pfMap: リンクを含む表示用HTML文字列生成関数
+      // 引数oは行オブジェクト(固定)、戻り値は{項目名:HTML文字列}となるオブジェクト
+      v.pfMap = {}; // {type名:当該typeに適用する関数}
       for( [v.key, v.obj] of Object.entries(cf.classDef) ){
         if( v.obj.colnum === 0 ){
           // テーブル型の場合
-          v.pfMap[v.key] = o => 'hoge';
+          v.pfMap[v.key] = o => 'hoge'; // いまここ
         } else {
-          // 箇条書きの場合
-          if( cf.classDef[v.key].rex instanceof RegExp ){
+          // 箇条書きの場合、項目名は'label'(固定)
+          v.pfMap[v.key] = new Function('o',(
+            cf.classDef[v.key].rex instanceof RegExp
             // ファイル名からtypeを特定可能(rex != null)の場合
-            v.pfMap[v.key] = new Function('o',`const m = o.name.match(cf.classDef['${v.key}'].rex);`
-            + `return cf.classDef['${v.key}'].printf(o,m);`);
-          } else {
+            ? `const m = o.name.match(cf.classDef['${v.key}'].rex);`
+              + `return {label:cf.classDef['${v.key}'].printf(o,m)};`
             // ファイル名からtypeを特定不能(rex == null)の場合
-            v.pfMap[v.key] = new Function('o',`return cf.classDef['${v.key}'].printf(o);`);
-          }
+            : `return {label:cf.classDef['${v.key}'].printf(o)};`
+          ));
         }
       }
       dev.dump(v.pfMap);
 
       dev.step(2.3);
-      for( v.i=0 ; v.i<v.master.length ; v.i++ ){
-        dev.dump(v.master[v.i],200);
-        if( v.master[v.i].type && v.pfMap.hasOwnProperty(v.master[v.i].type) ){
-          // 箇条書きの場合
-          v.master[v.i].html = v.pfMap[v.master[v.i].type](v.master[v.i]);
-          dev.dump(v.master[v.i].html,204);
-        }
-      }
+      v.master.forEach(o => {
+        // pfMapの戻り値でlabel他を上書き
+        o = Object.assign(o,v.pfMap[o.type](o));
+        dev.dump(o);
+      });
 
     } catch (e) { dev.error(e); return e; }
   });
