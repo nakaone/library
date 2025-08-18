@@ -22,15 +22,9 @@
       background-color: #ccc;
       padding: 1rem;
     }
-    div.list {
+    div[data-type] {
       display: grid;
-      margin-bottom: 2rem;
-    }
-    div.list div {
-      margin-top: 0.5rem;
-    }
-    div.monthly {
-      grid-template-columns: repeat(6, 1fr);
+      margin: 1rem;
     }
     th, td {
       padding: 0.2rem 0.5rem;
@@ -62,52 +56,52 @@
 
     <div><h1>金融関係</h1>
       <div><h2>銀行通帳</h2>
-        <div class="list" data-type="通帳"></div>
+        <div data-type="通帳"></div>
       </div>
       <div><h2>ローン関係</h2>
-        <div class="list" data-type="返済明細"></div>
+        <div data-type="返済明細"></div>
       </div>
       <div><h2>クレジットカード利用明細</h2>
-        <div class="list monthly" data-type="AMEX"></div>
+        <div data-type="AMEX"></div>
       </div>
     </div>
 
     <div><h1>レントロール</h1>
       <div><h2>恵比寿フェリシタ</h2>
-        <div class="list monthly" data-type="恵比寿"></div>
+        <div data-type="恵比寿"></div>
       </div>
       <div><h2>クレセント上池袋</h2>
-        <div class="list monthly" data-type="上池袋"></div>
+        <div data-type="上池袋"></div>
       </div>
       <div><h2>羽沢眞和マンション</h2>
-        <div class="list monthly" data-type="羽沢"></div>
+        <div data-type="羽沢"></div>
       </div>
     </div>
 
     <div><h1>証憑類</h1>
       <div><h2>健保・年金、確定拠出年金</h2>
-        <div class="list monthly" data-type="健保・年金"></div>
+        <div data-type="健保・年金"></div>
       </div>
       <div><h2>確証貼付ノート</h2>
-        <div class="list" data-type="確証貼付ノート" style="grid-template-columns: repeat(10, 1fr);"></div>
+        <div data-type="確証貼付ノート"></div>
       </div>
       <div><h2>税理士(YFP)</h2>
-        <div class="list" data-type="YFP" style="grid-template-columns: repeat(2, 1fr);"></div>
+        <div data-type="YFP"></div>
       </div>
       <div><h2>電子証憑</h2>
-        <div class="list" data-type="電子証憑"></div>
+        <div data-type="電子証憑"></div>
       </div>
     </div>
 
     <div><h1>その他</h1>
       <div><h2>交通費</h2>
-        <div class="list" data-type="交通費"></div>
+        <div data-type="交通費"></div>
       </div>
       <div><h2>参考資料</h2>
-        <div class="list" data-type="参考"></div>
+        <div data-type="参考"></div>
       </div>
       <div><h2>特記事項</h2>
-        <div class="list" id="notes"></div>
+        <div data-type="特記事項"></div>
       </div>
     </div>
   </div>
