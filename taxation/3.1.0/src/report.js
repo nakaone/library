@@ -1,7 +1,7 @@
 /* =======================================================
-[proto.js]
+[report.js]
   提出用HTML(index.html)のJavaScript部分。
-  build.shでproto.htmlに組み込み、「証憑yyyy」のGASにコピー
+  build.shでreport.htmlに組み込み、「証憑yyyy」のGASにコピー
 ======================================================= */
 
 const dev = devTools();

@@ -459,7 +459,7 @@ const cf = {
         {name:'label',type:'string',note:'摘要(電子証憑)、行き先(交通費)、資料名(参考)'},
         {name:'price',label:'価格',type:'string'},
         {name:'payby',label:'支払方法',type:'string',note:'役員借入金 or AMEX'},
-        {name:'note',label:'備考',type:'string',note:'pdf上の頁指定等で使用'},
+        {name:'note',label:'備考',type:'string',note:'特記事項の本文(MD)、他はpdf上の頁指定等'},
       ],
       initial: () => [
         {"id":"1uu_NH-iGsQYC21pVZS3vohIVfhYaJrn_","type":"参考","date":"2025/05/16","label":"2025年度給与所得等に係る特別徴収税額の決定通知書"},
@@ -794,8 +794,12 @@ function createReport() {
   dev.start(v.whois);
   try {
 
+    // -------------------------------------------------------------
     dev.step(1);  // 使用するデータをテーブルから作成
-    v.data = {};
+    // -------------------------------------------------------------
+    // created: 作成日
+    v.data = {created:toLocale(new Date(),{format:'yyyy/MM/dd'})};
+    // テーブル名: 必要な項目に絞った行オブジェクトの配列
     v.data['files'] = db.do('select id,name from `files`;');
     if( v.data['files'] instanceof Error ) throw v.data['files'];
     v.data['記入用'] = db.do('select id,type,date,label,price,payby,note from `記入用`;');
@@ -805,17 +809,19 @@ function createReport() {
 
 
     // -------------------------------------------------------------
-    // --- 1. report.htmlを読み込み ---
+    dev.step(2);  // report.htmlの生成とダウンロード
+    // -------------------------------------------------------------
+    dev.step(2.1);  // report.htmlを読み込み
     var template = HtmlService.createHtmlOutputFromFile("report").getContent();
 
-    // --- 2. <script>const data=...</script> を埋め込む ---
+    dev.step(2.2);  // <script>const data=...</script> を埋め込む
     var dataScript = `<script>const data = ${JSON.stringify(v.data)};</script>`;
     var reportHtml = template.replace("</body>", dataScript + "\n</body>");
 
-    // ダイアログへ渡すためにエンコード
+    dev.step(2.3);  // ダイアログへ渡すためにエンコード
     var encodedReport = encodeURIComponent(reportHtml);
 
-    // --- 3. ダイアログ用HTMLをソース内で作成 ---
+    dev.step(2.4);  // ダイアログ用HTMLをソース内で作成
     var dialogHtml = `
       <!DOCTYPE html>
       <html>
@@ -843,11 +849,10 @@ function createReport() {
       </html>
     `;
 
-    // --- 4. ダイアログを表示 ---
+    dev.step(2.5);  // ダイアログを表示
     var htmlOutput = HtmlService.createHtmlOutput(dialogHtml)
       .setWidth(400)
       .setHeight(200);
-
     SpreadsheetApp.getUi().showModalDialog(htmlOutput, "レポート出力");
 
     dev.end(); // 終了処理
