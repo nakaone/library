@@ -42,12 +42,13 @@
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script type="text/javascript" src="./data.js"></script>
   <script type="text/javascript" src="../../../createElement/1.2.1/core.js"></script>
   <script type="text/javascript" src="../../../createTable/1.1.0/core.js"></script>
   <script type="text/javascript" src="../../../devTools/1.0.1/core.js"></script>
   <script type="text/javascript" src="../../../toLocale/1.2.0/core.js"></script>
   <script type="text/javascript" src="../../../whichType/1.0.1/core.js"></script>
+  <script type="text/javascript" src="./data.js"></script>
+  <script type="text/javascript" src="./LocalDB.js"></script>
 </head>
 <body>
   <p id="today" style="text-align: right;padding-right: 2rem;"></p>
@@ -105,10 +106,11 @@
       </div>
     </div>
   </div>
-
 </body>
 <script type="text/javascript">
   const dev = devTools();
+  const db = localDB();
+
   const ctrlList = element => {
     // 現在の表示/非表示を保存
     const d = element.target.parentElement.querySelector('.list').style.display;
@@ -122,12 +124,25 @@
     const v = { whois: 'DOMContentLoaded', rv: null};
     dev.start(v.whois);
     try {
-  
+      const a1 = ['a','b','return a+b'];
+      const f1 = Function(...a1);
+      console.log(f1(10,20));
+      
       // -------------------------------------------------------------
       dev.step(1); // 前準備
       // -------------------------------------------------------------
-      // 作業日日付の設定
+      dev.step(1.1);  // 作業日日付の設定
       document.getElementById('today').innerText = toLocale(data.created,'yyyy/MM/dd現在');
+      dev.step(1.2);  // RDBへの保存
+      data.tables.forEach(table => {
+        v.sql = `drop table if exists \`${table.name}\`;`
+        + `create table \`${table.name}\`;`
+        + `insert into \`${table.name}\` select * from ?;`;
+        v.r = db.exec(v.sql,[table.data]);
+        // 登録内容確認
+        v.r = db.exec(`select * from \`${table.name}\`;`);
+        dev.dump(v.r.length,v.r.slice(0,5));
+      });
 
     } catch (e) { dev.error(e); return e; }
   });
