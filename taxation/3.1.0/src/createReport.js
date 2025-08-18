@@ -7,8 +7,12 @@ function createReport() {
   dev.start(v.whois);
   try {
 
+    // -------------------------------------------------------------
     dev.step(1);  // 使用するデータをテーブルから作成
-    v.data = {};
+    // -------------------------------------------------------------
+    // created: 作成日
+    v.data = {created:toLocale(new Date(),{format:'yyyy/MM/dd'})};
+    // テーブル名: 必要な項目に絞った行オブジェクトの配列
     v.data['files'] = db.do('select id,name from `files`;');
     if( v.data['files'] instanceof Error ) throw v.data['files'];
     v.data['記入用'] = db.do('select id,type,date,label,price,payby,note from `記入用`;');
@@ -18,17 +22,19 @@ function createReport() {
 
 
     // -------------------------------------------------------------
-    // --- 1. report.htmlを読み込み ---
+    dev.step(2);  // report.htmlの生成とダウンロード
+    // -------------------------------------------------------------
+    dev.step(2.1);  // report.htmlを読み込み
     var template = HtmlService.createHtmlOutputFromFile("report").getContent();
 
-    // --- 2. <script>const data=...</script> を埋め込む ---
+    dev.step(2.2);  // <script>const data=...</script> を埋め込む
     var dataScript = `<script>const data = ${JSON.stringify(v.data)};</script>`;
     var reportHtml = template.replace("</body>", dataScript + "\n</body>");
 
-    // ダイアログへ渡すためにエンコード
+    dev.step(2.3);  // ダイアログへ渡すためにエンコード
     var encodedReport = encodeURIComponent(reportHtml);
 
-    // --- 3. ダイアログ用HTMLをソース内で作成 ---
+    dev.step(2.4);  // ダイアログ用HTMLをソース内で作成
     var dialogHtml = `
       <!DOCTYPE html>
       <html>
@@ -56,11 +62,10 @@ function createReport() {
       </html>
     `;
 
-    // --- 4. ダイアログを表示 ---
+    dev.step(2.5);  // ダイアログを表示
     var htmlOutput = HtmlService.createHtmlOutput(dialogHtml)
       .setWidth(400)
       .setHeight(200);
-
     SpreadsheetApp.getUi().showModalDialog(htmlOutput, "レポート出力");
     
     dev.end(); // 終了処理
