@@ -33,7 +33,7 @@ const cf = {
         {name:'label',type:'string',note:'摘要(電子証憑)、行き先(交通費)、資料名(参考)'},
         {name:'price',label:'価格',type:'string'},
         {name:'payby',label:'支払方法',type:'string',note:'役員借入金 or AMEX'},
-        {name:'note',label:'備考',type:'string',note:'pdf上の頁指定等で使用'},
+        {name:'note',label:'備考',type:'string',note:'特記事項の本文(MD)、他はpdf上の頁指定等'},
       ],
       initial: () => [
         {"id":"1uu_NH-iGsQYC21pVZS3vohIVfhYaJrn_","type":"参考","date":"2025/05/16","label":"2025年度給与所得等に係る特別徴収税額の決定通知書"},
