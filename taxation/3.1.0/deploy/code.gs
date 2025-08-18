@@ -1072,6 +1072,7 @@ function refreshMaster() {
  * @param {string} dbName - データベース名
  * @param {tableDef[]} tables - DB内の個々のテーブルの定義
  * @param {Object.<string,Function>} [custom] - AlaSQLのカスタム関数
+ * @param {string} created - 作成日時。export時に付記
  *
  * @typedef {Object} tableDef - テーブル構造定義オブジェクト
  * @param {string} name - テーブル名。シート名も一致させる
@@ -1317,6 +1318,8 @@ function SpreadDB(arg) {
         }
       };
       v.content = v.deepCopy(pv.schema);
+      // 作成日時を付記
+      v.content.created = toLocale();
 
       dev.step(1.2);  // 各テーブルのデータをセット
       for( v.i=0 ; v.i<v.content.tables.length ; v.i++ ){
