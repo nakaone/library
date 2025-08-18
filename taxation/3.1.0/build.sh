@@ -33,8 +33,11 @@ cat $src/report.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $dep/repor
 # workflowy -> md
 cat $doc/help.opml | awk 1 | $workflowy -root:9f9f262cba76 -lv:3 > $doc/help.md
 # md -> html
-pandoc $doc/help.md -f markdown -t html -o $dep/help.html
-# rm $doc/help.md
+pandoc $doc/help.md -f markdown -t html -o $doc/help.html
+# テンプレートに埋め込み
+cat $src/help.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src -doc:$doc > $dep/help.html
+rm $doc/help.md
+rm $doc/help.html
 
 
 # ソースの最小化 : https://elon-task.com/1658-2/
