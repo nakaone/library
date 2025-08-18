@@ -139,8 +139,8 @@ const cf = {
       colnum: 0,  // テーブル型
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
       cols: [
-        {name:'date',label:'取引日',type:'string',printf:o=>cf.getA(o.id,o.label)},
-        {name:'label',label:'摘要',type:'string'},
+        {name:'date',label:'取引日',type:'string'},
+        {name:'label',label:'摘要',type:'string',printf:o=>cf.getA(o.id,o.label)},
         {name:'price',label:'価格',type:'number',printf:o=>Number(o.price).toLocaleString()},
         {name:'payby',label:'支払',type:'string'},
         {name:'note',label:'備考',type:'string'},

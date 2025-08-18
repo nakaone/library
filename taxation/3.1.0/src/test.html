@@ -181,8 +181,12 @@
       v.pfMap = {}; // {type名:当該typeに適用する関数}
       for( [v.key, v.obj] of Object.entries(cf.classDef) ){
         if( v.obj.colnum === 0 ){
-          // テーブル型の場合
-          v.pfMap[v.key] = o => 'hoge'; // いまここ
+          // テーブル型の場合、設定項目はcf.classDef.colsによる
+          v.pfMap[v.key] = new Function('o','const rv = {};'
+            + `cf.classDef['${v.key}'].cols.forEach(col => {`
+            + `if(col.printf) rv[col.name]=col.printf(o);`
+            + `}); return rv;`
+          );
         } else {
           // 箇条書きの場合、項目名は'label'(固定)
           v.pfMap[v.key] = new Function('o',(
@@ -203,6 +207,10 @@
         o = Object.assign(o,v.pfMap[o.type](o));
         dev.dump(o);
       });
+      v.sql = 'delete from `master`;'
+      + 'insert into `master` select * from ?';
+      v.r = db.exec(v.sql,[v.master]);
+      if( v.r instanceof Error ) throw v.r;
 
     } catch (e) { dev.error(e); return e; }
   });
