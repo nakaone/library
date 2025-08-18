@@ -13,11 +13,11 @@ function createReport() {
     // created: 作成日
     v.data = {created:toLocale(new Date(),{format:'yyyy/MM/dd'})};
     // テーブル名: 必要な項目に絞った行オブジェクトの配列
-    v.data['files'] = db.do('select id,name from `files`;');
+    v.data['files'] = db.exec('select id,name from `files`;');
     if( v.data['files'] instanceof Error ) throw v.data['files'];
-    v.data['記入用'] = db.do('select id,type,date,label,price,payby,note from `記入用`;');
+    v.data['記入用'] = db.exec('select id,type,date,label,price,payby,note from `記入用`;');
     if( v.data['記入用'] instanceof Error ) throw v.data['記入用'];
-    v.data['交通費'] = db.do('select * from `交通費`;');
+    v.data['交通費'] = db.exec('select * from `交通費`;');
     if( v.data['交通費'] instanceof Error ) throw v.data['交通費'];
 
 

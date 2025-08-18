@@ -347,7 +347,7 @@ function SpreadDB(arg) {
     }
 
     dev.end(); // 終了処理
-    return {do:execSQL,load:loadSheet,save:saveRDB,import:importJSON,export:exportJSON};
+    return {exec:execSQL,load:loadSheet,save:saveRDB,import:importJSON,export:exportJSON};
 
   } catch (e) { dev.error(e); return e; }
 }

@@ -18,7 +18,7 @@ function refreshMaster() {
     + ' from `files` full outer join `記入用` on `files`.id=`記入用`.id'
     + ' where identifyType(`files`.name)="不明"'  // 自動判別可能なPDF、対象外は除外
     + ';';
-    v.r = db.do(v.sql);
+    v.r = db.exec(v.sql);
     if( v.r instanceof Error ) throw v.r;
     dev.dump(v.r);
 
@@ -51,7 +51,7 @@ function refreshMaster() {
     dev.step(3.1);  // 更新内容を「記入用」テーブルに保存
     v.sql = 'delete from `記入用`;'
     + 'insert into `記入用` select * from ? order by type, date;';
-    v.r = db.do(v.sql,[v.list]);
+    v.r = db.exec(v.sql,[v.list]);
     if( v.r instanceof Error ) throw v.r;
 
     dev.step(3.2);  // シートに反映

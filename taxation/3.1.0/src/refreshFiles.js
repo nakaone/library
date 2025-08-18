@@ -23,7 +23,7 @@ function refreshFiles() {
     v.sql = 'drop table if exists `files`;'
     + 'create table `files`;'
     + 'insert into `files` select * from ?;';
-    v.r = db.do(v.sql,[v.r]);
+    v.r = db.exec(v.sql,[v.r]);
     if( v.r instanceof Error ) throw v.r;
     dev.dump(v.r);
 
