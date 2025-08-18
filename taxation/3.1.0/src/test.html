@@ -49,6 +49,7 @@
   <script type="text/javascript" src="../../../whichType/1.0.1/core.js"></script>
   <script type="text/javascript" src="./data.js"></script>
   <script type="text/javascript" src="./LocalDB.js"></script>
+  <script type="text/javascript" src="./config.js"></script>
 </head>
 <body>
   <p id="today" style="text-align: right;padding-right: 2rem;"></p>
@@ -109,7 +110,7 @@
 </body>
 <script type="text/javascript">
   const dev = devTools();
-  const db = localDB();
+  const db = localDB(cf);
 
   const ctrlList = element => {
     // 現在の表示/非表示を保存
@@ -124,10 +125,7 @@
     const v = { whois: 'DOMContentLoaded', rv: null};
     dev.start(v.whois);
     try {
-      const a1 = ['a','b','return a+b'];
-      const f1 = Function(...a1);
-      console.log(f1(10,20));
-      
+
       // -------------------------------------------------------------
       dev.step(1); // 前準備
       // -------------------------------------------------------------
@@ -143,6 +141,70 @@
         v.r = db.exec(`select * from \`${table.name}\`;`);
         dev.dump(v.r.length,v.r.slice(0,5));
       });
+
+      dev.step(2.1);  // masterテーブル作成
+      v.sql =
+      // PDFファイルの存在を前提とする電子証憑・参考・返済明細でisExist=falseは予め削除。
+      // 但し特記事項は元々ファイルの存在を前提としないので、削除しない。
+      'delete from `記入用`'
+      + ' where `type`<>"特記事項" and `isExist`<>"TRUE";'
+      // masterテーブルを初期化
+      + 'drop table if exists `master`;'
+      + 'create table `master`;'
+      // files,記入用テーブルからmasterを作成
+      + 'insert into `master` select'
+      + ' `files`.`id` as `id`'
+      + ', `files`.`name` as `name`'
+      + ', case'
+      +   ' when `記入用`.`type` is null'
+      +   ' then identifyType(`files`.`name`)'
+      +   ' else `記入用`.`type`'
+      + ' end as `type`'
+      + ', `記入用`.`date` as `date`'
+      + ', `記入用`.`label` as `label`'
+      + ', `記入用`.`price` as `price`'
+      + ', `記入用`.`payby` as `payby`'
+      + ', `記入用`.`note` as `note`'
+      + ' from `files` full outer join `記入用`'
+      + ' on `files`.`id`=`記入用`.`id`;'
+      // type=対象外は削除
+      + 'delete from `master` where `type`="対象外";';
+      v.r = db.exec(v.sql);
+      if( v.r instanceof Error ) throw v.r;
+      // 結果を行オブジェクトの配列として取得
+      v.master = db.exec('select * from `master`;');
+      if( v.master instanceof Error ) throw v.master;
+      dev.dump(v.master.length,v.master.slice(0,5),177);
+
+      dev.step(2.2);  // 表示用ラベルをprintfで作成
+      v.pfMap = {}; // pfMap: メンバ名=type、値=printfとするマップ
+      for( [v.key, v.obj] of Object.entries(cf.classDef) ){
+        if( v.obj.colnum === 0 ){
+          // テーブル型の場合
+          v.pfMap[v.key] = o => 'hoge';
+        } else {
+          // 箇条書きの場合
+          if( cf.classDef[v.key].rex instanceof RegExp ){
+            // ファイル名からtypeを特定可能(rex != null)の場合
+            v.pfMap[v.key] = new Function('o',`const m = o.name.match(cf.classDef['${v.key}'].rex);`
+            + `return cf.classDef['${v.key}'].printf(o,m);`);
+          } else {
+            // ファイル名からtypeを特定不能(rex == null)の場合
+            v.pfMap[v.key] = new Function('o',`return cf.classDef['${v.key}'].printf(o);`);
+          }
+        }
+      }
+      dev.dump(v.pfMap);
+
+      dev.step(2.3);
+      for( v.i=0 ; v.i<v.master.length ; v.i++ ){
+        dev.dump(v.master[v.i],200);
+        if( v.master[v.i].type && v.pfMap.hasOwnProperty(v.master[v.i].type) ){
+          // 箇条書きの場合
+          v.master[v.i].html = v.pfMap[v.master[v.i].type](v.master[v.i]);
+          dev.dump(v.master[v.i].html,204);
+        }
+      }
 
     } catch (e) { dev.error(e); return e; }
   });

@@ -1,8 +1,11 @@
 /** localDB: IndexedDBを保存先とするブラウザ内RDB
- * @param {schemaDef} [schema={}] - DB構造定義オブジェクト
+ * @param {Object} arg
+ * @param {schemaDef} arg.schema={} - DB構造定義オブジェクト
+ * @returns {Object} 使用可能なメソッドのオブジェクト
  */
 function localDB(arg) {
   const pv = { whois: 'localDB', rv: null,
+    schema: arg.schema,
     idb: null,          // IndexedDB
     dbName: 'localDB',  // IndexedDBの名称
     storeName: 'JSON',  // IndexedDBのストア名
@@ -28,7 +31,12 @@ function localDB(arg) {
 
   dev.start(pv.whois, [...arguments]);
   try {
-    
+
+    dev.step(3);  // AlaSQLカスタム関数の用意
+    if( pv.schema.hasOwnProperty('custom') ){
+      Object.keys(pv.schema.custom).forEach(x => alasql.fn[x] = pv.schema.custom[x]);
+    }
+
     dev.end(); // 終了処理
     return {
       'exec': execSQL,
