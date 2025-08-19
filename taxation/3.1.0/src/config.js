@@ -84,6 +84,7 @@ const cf = {
    * @param {string} [cols.label] - テーブルに表示する項目名。省略時はnameを流用
    * @param {string} cols.type='string' - データ型。string/number/boolean
    * @param {Function} [cols.printf] - 桁区切りやリンク等のlabel生成関数
+   * @param {Function} cols.orderBy - ソートキー生成関数
    *   引数はo:「記入用」行オブジェクト・m:rexの結果、戻り値はHTML文字列
    */
   classDef: {
@@ -92,48 +93,57 @@ const cf = {
       colnum: 4,  // 箇条書き型(4列/行)
       rex: /^([A-Z]{4})(\d{2})\.pdf$/,
       printf: (o,m) => `${m[1]} No.${cf.getA(o.id,m[2])}`,
+      orderBy: (o,m) => m[1] + m[2],  // 銀行名＋通帳番号
     },
     '返済明細': { // 記入項目：①資料名(label),②入手日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
       printf: o => cf.getA(o.id,o.label) + (o.date?`(${o.date})`:''),
+      orderBy: o => o.date,
     },
     'AMEX': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^(20\d{2})(\d{2})\.pdf$/,
       printf: (o,m) => cf.getA(o.id,`${m[1]}/${m[2]}`),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     // ----- レントロール ----------
     '恵比寿': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^EF(20\d{2})(\d{2})\.pdf$/,
       printf: (o,m) => cf.getA(o.id,`${m[1]}/${m[2]}`),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     '上池袋': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^CK(20\d{2})(\d{2})\.pdf$/,
       printf: (o,m) => cf.getA(o.id,`${m[1]}/${m[2]}`),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     '羽沢': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^HS(20\d{2})(\d{2})\.pdf$/,
       printf: (o,m) => cf.getA(o.id,`${m[1]}/${m[2]}`),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     // ----- 証憑類 ----------
     '健保・年金': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^pension(20\d{2})(\d{2})\.pdf$/,
       printf: (o,m) => cf.getA(o.id,`${m[1]}/${m[2]}`),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     '確証貼付ノート': {
       colnum: 10,  // 箇条書き型(10列/行)
       rex: /^note(20\d{2})(\d{2})\.pdf$/,
       printf: (o,m) => 'p.' + cf.getA(o.id,m[2]),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     'YFP': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^YFP(20\d{2})(\d{2})\.pdf$/,
       printf: (o,m) => cf.getA(o.id,`${m[1]}/${m[2]}`),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     '電子証憑': {
       colnum: 0,  // テーブル型
@@ -144,7 +154,8 @@ const cf = {
         {name:'price',label:'価格',type:'number',printf:o=>Number(o.price).toLocaleString()},
         {name:'payby',label:'支払',type:'string'},
         {name:'note',label:'備考',type:'string'},
-      ]
+      ],
+      orderBy: o => o.date,
     },
     // ----- その他 ----------
     '交通費': {
@@ -158,18 +169,27 @@ const cf = {
         {name:'price',label:'金額',type:'number',printf:o=>Number(o.price).toLocaleString()},
         {name:'payby',label:'支払',type:'string',default:'役員借入金'},
         {name:'note',label:'備考',type:'string'},
-      ]
+      ],
+      orderBy: o => o.date,
     },
     '参考資料': { // 記入項目：①資料名(label),②入手日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
       printf: o => cf.getA(o.id,o.label) + (o.date?`(${o.date})`:''),
+      orderBy: o => o.date,
     },
     '特記事項': { // 記入項目：①タイトル(label),②内容(note),③記入日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
       printf: o => `<h3>${o.label}<h3><div>${o.note}</div>`
       + `<div style="text-align:right">${o.date}</div>`,  // 記入日
+      orderBy: o => o.date,
+    },
+    '不明': {
+      colnum: 1,  // 箇条書き型(1件1行)
+      rex: null,
+      printf: o => cf.getA(o.id,o.name),
+      orderBy: o => o.name,
     },
   },
   ignore: [ // {RegExp[]} 存在しても処理対象外となるファイル名の正規表現集

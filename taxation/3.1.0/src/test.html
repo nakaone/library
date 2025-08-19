@@ -56,6 +56,12 @@
 
   <div class="navi">
 
+    <div id="notFilled"><h1>未分類証憑</h1>
+      <p>以下の証憑は「記入用」シートのtype欄が未記入です。<br>
+      記入後、改めて「提出用HTML出力」を行ってください。</p>
+      <div data-type="不明"></div>
+    </div>
+
     <div><h1>金融関係</h1>
       <div><h2>銀行通帳</h2>
         <div data-type="通帳"></div>
@@ -100,7 +106,7 @@
         <div data-type="交通費"></div>
       </div>
       <div><h2>参考資料</h2>
-        <div data-type="参考"></div>
+        <div data-type="参考資料"></div>
       </div>
       <div><h2>特記事項</h2>
         <div data-type="特記事項"></div>
@@ -120,7 +126,35 @@
     // クリックされたナビメニューの下の明細を表示
     element.target.parentElement.querySelector('.list').style.display = d === 'none' ? 'grid' : 'none';
   }
-  
+
+  /** setupMaster: 一証憑(PDF)一行となるテーブル"master"を作成
+   * @param {void}
+   * @returns {void}
+   */
+  function setupMaster() {
+    const v = { whois: 'setupMaster', rv: null};
+    dev.start(v.whois);
+    try {
+
+
+
+      dev.step(2.3);
+      v.master.forEach(o => {
+        // pfMapの戻り値でlabel他を上書き
+        o = Object.assign(o,v.pfMap[o.type](o));
+        dev.dump(o);
+      });
+      v.sql = 'delete from `master`;'
+      + 'insert into `master` select * from ?';
+      v.r = db.exec(v.sql,[v.master]);
+      if( v.r instanceof Error ) throw v.r;
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { dev.error(e); return e; }
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
     const v = { whois: 'DOMContentLoaded', rv: null};
     dev.start(v.whois);
@@ -131,18 +165,17 @@
       // -------------------------------------------------------------
       dev.step(1.1);  // 作業日日付の設定
       document.getElementById('today').innerText = toLocale(data.created,'yyyy/MM/dd現在');
-      dev.step(1.2);  // RDBへの保存
+      dev.step(1.2);  // シートから出力されたdataのRDBへの保存
       data.tables.forEach(table => {
         v.sql = `drop table if exists \`${table.name}\`;`
         + `create table \`${table.name}\`;`
         + `insert into \`${table.name}\` select * from ?;`;
         v.r = db.exec(v.sql,[table.data]);
-        // 登録内容確認
-        v.r = db.exec(`select * from \`${table.name}\`;`);
-        dev.dump(v.r.length,v.r.slice(0,5));
       });
 
-      dev.step(2.1);  // masterテーブル作成
+      // -------------------------------------------------------------
+      dev.step(2);  // masterテーブル作成
+      // -------------------------------------------------------------
       v.sql =
       // PDFファイルの存在を前提とする電子証憑・参考・返済明細でisExist=falseは予め削除。
       // 但し特記事項は元々ファイルの存在を前提としないので、削除しない。
@@ -155,7 +188,7 @@
       + 'insert into `master` select'
       + ' `files`.`id` as `id`'
       + ', `files`.`name` as `name`'
-      + ', case'
+      + ', case'  // 「記入用」シート未記載(=自動判別可能PDF)にtypeを設定
       +   ' when `記入用`.`type` is null'
       +   ' then identifyType(`files`.`name`)'
       +   ' else `記入用`.`type`'
@@ -167,50 +200,79 @@
       + ', `記入用`.`note` as `note`'
       + ' from `files` full outer join `記入用`'
       + ' on `files`.`id`=`記入用`.`id`;'
-      // type=対象外(または空欄)は削除
-      + 'delete from `master` where `type`="対象外" or `type`="";';
+      // typeが空欄(=記入用シートでの記入漏れ)の場合「不明」を設定
+      + 'update `master` set `type`="不明" where `type`="";'
+      // type=対象外はmasterから削除
+      + 'delete from `master` where `type`="対象外";';
       v.r = db.exec(v.sql);
       if( v.r instanceof Error ) throw v.r;
-      // 結果を行オブジェクトの配列として取得
-      v.master = db.exec('select * from `master`;');
-      if( v.master instanceof Error ) throw v.master;
-      dev.dump(v.master.length,v.master.slice(0,5),177);
 
-      dev.step(2.2);  // pfMap: リンクを含む表示用HTML文字列生成関数
-      // 引数oは行オブジェクト(固定)、戻り値は{項目名:HTML文字列}となるオブジェクト
+      // -------------------------------------------------------------
+      dev.step(3);  // リンク(a href)文字列作成用関数pfMapの定義
+      // リンクはcf.classDef(証憑分類に関する定義)のprintf関数に基づき生成。
+      // printfにmasterの行オブジェクトを渡し、{項目名:リンク用HTML文字列}を取得、
+      // これをmasterの行オブジェクトに上書きする。
+      // -------------------------------------------------------------
+      dev.step(3.1);  // pfMap {Object.<string,Function>}
+      // リンクを含む表示用HTML文字列生成関数。メンバ名は記事(data-type)名。
+      // 引数：{Object} o - masterテーブルの行オブジェクト
+      // 戻り値：{
+      //   項目名 : HTML文字列,
+      //   sortKey : 記事の内容作成時、並び順の基準となる文字列
+      // }
       v.pfMap = {}; // {type名:当該typeに適用する関数}
       for( [v.key, v.obj] of Object.entries(cf.classDef) ){
-        if( v.obj.colnum === 0 ){
-          // テーブル型の場合、設定項目はcf.classDef.colsによる
-          v.pfMap[v.key] = new Function('o','const rv = {};'
-            + `cf.classDef['${v.key}'].cols.forEach(col => {`
-            + `if(col.printf) rv[col.name]=col.printf(o);`
-            + `}); return rv;`
-          );
-        } else {
-          // 箇条書きの場合、項目名は'label'(固定)
-          v.pfMap[v.key] = new Function('o',(
+        v.pfMap[v.key] = new Function('o',(
+          v.obj.colnum === 0 ? /* テーブル型の記事 */ `
+            const rv = {};
+            cf.classDef['${v.key}'].cols.forEach(col => {
+              if(col.printf) rv[col.name]=col.printf(o);
+            });
+            rv.sortKey = cf.classDef['${v.key}'].orderBy(o);
+            return rv;
+          ` : /* 箇条書き型の記事 */ (
             cf.classDef[v.key].rex instanceof RegExp
-            // ファイル名からtypeを特定可能(rex != null)の場合
-            ? `const m = o.name.match(cf.classDef['${v.key}'].rex);`
-              + `return {label:cf.classDef['${v.key}'].printf(o,m)};`
-            // ファイル名からtypeを特定不能(rex == null)の場合
-            : `return {label:cf.classDef['${v.key}'].printf(o)};`
-          ));
-        }
+            ? /* ファイル名からtypeを自動判別可能な場合 */ `
+              const m = o.name.match(cf.classDef['${v.key}'].rex);
+              return {
+                label: cf.classDef['${v.key}'].printf(o,m),
+                sortKey: cf.classDef['${v.key}'].orderBy(o,m),
+              };
+            ` : /* ファイル名からtypeを自動判別不能な場合 */ `
+              return {
+                label:cf.classDef['${v.key}'].printf(o),
+                sortKey:cf.classDef['${v.key}'].orderBy(o),
+              };
+            `
+          )
+        ));
       }
       dev.dump(v.pfMap);
 
-      dev.step(2.3);
+      dev.step(3.3);  // master上にリンク文字列セット＋sortKey設定
+      v.master = db.exec('select * from `master`;')
+      if( v.master instanceof Error ) throw v.master;
       v.master.forEach(o => {
-        // pfMapの戻り値でlabel他を上書き
-        o = Object.assign(o,v.pfMap[o.type](o));
         dev.dump(o);
+        o = Object.assign(o,v.pfMap[o.type](o));
       });
-      v.sql = 'delete from `master`;'
-      + 'insert into `master` select * from ?';
+      v.sql = 'delete from `master`;insert into `master` select * from ?;';
       v.r = db.exec(v.sql,[v.master]);
       if( v.r instanceof Error ) throw v.r;
+
+
+      // -------------------------------------------------------------
+      dev.step(4);  // 記事(data-type)毎に内容を作成
+      // -------------------------------------------------------------
+      document.querySelectorAll('[data-type]').forEach(node => {
+        v.type = node.getAttribute('data-type');
+        v.sql = 'select * from `master`'
+        + ` where \`type\`="${v.type}"`
+        + ` order by \`sortKey\`;`;
+        v.list = db.exec(v.sql);
+        if( v.list instanceof Error ) throw v.list;
+        dev.dump(v.type,v.list);
+      });
 
     } catch (e) { dev.error(e); return e; }
   });
