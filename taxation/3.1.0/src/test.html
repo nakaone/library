@@ -203,7 +203,9 @@
       // typeが空欄(=記入用シートでの記入漏れ)の場合「不明」を設定
       + 'update `master` set `type`="不明" where `type`="";'
       // type=対象外はmasterから削除
-      + 'delete from `master` where `type`="対象外";';
+      + 'delete from `master` where `type`="対象外";'
+      // 交通費をmasterテーブルに追加
+      + 'insert into `master` select "交通費" as type, * from `交通費` order by date;';
       v.r = db.exec(v.sql);
       if( v.r instanceof Error ) throw v.r;
 
