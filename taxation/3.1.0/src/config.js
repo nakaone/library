@@ -165,7 +165,7 @@ const cf = {
         {name:'date',label:'日付',type:'string'},
         {name:'label',label:'行先',type:'string'},
         {name:'route',label:'経路',type:'string'},
-        {name:'number',label:'人数',type:'string'},
+        {name:'number',label:'人数',type:'number'},
         {name:'price',label:'金額',type:'number',printf:o=>Number(o.price).toLocaleString()},
         {name:'payby',label:'支払',type:'string',default:'役員借入金'},
         {name:'note',label:'備考',type:'string'},
@@ -181,8 +181,8 @@ const cf = {
     '特記事項': { // 記入項目：①タイトル(label),②内容(note),③記入日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
-      printf: o => `<h3>${o.label}<h3><div>${o.note}</div>`
-      + `<div style="text-align:right">${o.date}</div>`,  // 記入日
+      printf: o => (o.date?`<li>${o.date}`:'<li>')  // 記入日
+      + `<span style="margin-left:1rem;font-size:1.4rem">${o.label}</span><br>${o.note}</li>`,
       orderBy: o => o.date,
     },
     '不明': {

@@ -52,7 +52,7 @@ function createTable(table,opt={}) {
           : String(row[col.name])),
         };
         if( col.type === "number" ){
-          v.o.style = {"text-align": col.align };
+          v.o.style = {"text-align": "right" };
         }
         v.tr.push(v.o);
       });

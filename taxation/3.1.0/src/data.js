@@ -1593,9 +1593,9 @@ const data = {
           "name": "20250605_固都税納税通知書.pdf",
           "link": "https://drive.google.com/file/d/1ydJXUwV6bwA6SgMoy1rkalemzPhtj-G9/preview",
           "isExist": "TRUE",
-          "type": "",
-          "date": "",
-          "label": "",
+          "type": "参考資料",
+          "date": "2025/06/05",
+          "label": "固都税納税通知書",
           "price": "",
           "payby": "",
           "note": ""
@@ -1874,7 +1874,7 @@ const data = {
           "label": "通信キャリア変更",
           "price": "",
           "payby": "",
-          "note": "2024/12にプロバイダ・キャリアをKDDI/UQ Mobile/Biglobeに変更"
+          "note": "プロバイダ・キャリアをKDDI/UQ Mobile/Biglobeに変更"
         },
         {
           "id": "",
@@ -1886,7 +1886,7 @@ const data = {
           "label": "アルバイト採用",
           "price": "",
           "payby": "",
-          "note": "2025/04/01よりアルバイトとして嶋津史奈を雇用。条件は以下の通り。\n- 作業内容：書類整理、会計業務補助\n- 時給1,200円、月25時間"
+          "note": "2025/04/01よりアルバイトとして嶋津史奈を雇用。条件は以下の通り。\n<ul>\n  <li>作業内容：書類整理、会計業務補助</li>\n  <li>時給1,200円、月25時間</li>\n</ul>"
         }
       ]
     },
@@ -2111,5 +2111,5 @@ const data = {
     "previewURL": "(id,label) => `<a href=\"https://drive.google.com/file/d/${id}/preview\" target=\"_blank\">${label}</a>`",
     "identifyType": "fileName => {\n        // 処理対象外のファイル\n        for( let rex of cf.ignore ) if( rex.test(fileName) ) return '対象外';\n        // 自動判別可能なら該当するメンバ名を、判別不可能なら「不明」を返す\n        for (const [key, value] of Object.entries(cf.classDef))\n          if (value.rex && value.rex.test(fileName)) return key;\n        return '不明';\n      }"
   },
-  "created": "2025-08-18T10:50:41.223+09:00"
+  "created": "2025-08-19T16:20:23.456+09:00"
 };
