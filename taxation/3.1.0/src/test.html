@@ -265,6 +265,7 @@
       dev.step(4);  // 記事(data-type)毎に内容を作成
       // -------------------------------------------------------------
       document.querySelectorAll('[data-type]').forEach(node => {
+        dev.step(4.1);  // データの抽出
         v.type = node.getAttribute('data-type');
         v.sql = 'select * from `master`'
         + ` where \`type\`="${v.type}"`
@@ -272,6 +273,14 @@
         v.list = db.exec(v.sql);
         if( v.list instanceof Error ) throw v.list;
         dev.dump(v.type,v.list);
+
+        if( cf.classDef[v.type].colnum > 0 ){ // 箇条書き型
+          dev.step(4.2);  // styleの指定
+          node.style.gridTemplateColumns = `repeat(${cf.classDef[v.type].colnum}, 1fr)`;
+          v.list.forEach(item => {
+            node.appendChild(createElement({html:item.label}));
+          });
+        } // テーブル型は未作成
       });
 
     } catch (e) { dev.error(e); return e; }
