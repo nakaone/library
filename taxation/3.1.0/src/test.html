@@ -122,39 +122,12 @@
 
   const ctrlList = element => {
     // 現在の表示/非表示を保存
-    const d = element.target.parentElement.querySelector('.list').style.display;
+    const d = element.target.parentElement.querySelector('[data-type]').style.display;
+    console.log('l.126',d);
     // ナビ領域のリストは隠蔽
-    document.querySelectorAll('.list').forEach(o => o.style.display = 'none');
+    document.querySelectorAll('[data-type]').forEach(o => o.style.display = 'none');
     // クリックされたナビメニューの下の明細を表示
-    element.target.parentElement.querySelector('.list').style.display = d === 'none' ? 'grid' : 'none';
-  }
-
-  /** setupMaster: 一証憑(PDF)一行となるテーブル"master"を作成
-   * @param {void}
-   * @returns {void}
-   */
-  function setupMaster() {
-    const v = { whois: 'setupMaster', rv: null};
-    dev.start(v.whois);
-    try {
-
-
-
-      dev.step(2.3);
-      v.master.forEach(o => {
-        // pfMapの戻り値でlabel他を上書き
-        o = Object.assign(o,v.pfMap[o.type](o));
-        dev.dump(o);
-      });
-      v.sql = 'delete from `master`;'
-      + 'insert into `master` select * from ?';
-      v.r = db.exec(v.sql,[v.master]);
-      if( v.r instanceof Error ) throw v.r;
-
-      dev.end(); // 終了処理
-      return v.rv;
-
-    } catch (e) { dev.error(e); return e; }
+    element.target.parentElement.querySelector('[data-type]').style.display = d === 'none' ? '' : 'none';
   }
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -174,6 +147,8 @@
         + `insert into \`${table.name}\` select * from ?;`;
         v.r = db.exec(v.sql,[table.data]);
       });
+      // ナビ領域のリストは隠蔽
+      document.querySelectorAll('[data-type]').forEach(o => o.style.display = 'none');
 
       // -------------------------------------------------------------
       dev.step(2);  // masterテーブル作成
@@ -269,6 +244,7 @@
       dev.step(4);  // 記事(data-type)毎に内容を作成
       // -------------------------------------------------------------
       document.querySelectorAll('[data-type]').forEach(node => {
+
         dev.step(4.1);  // データの抽出
         v.type = node.getAttribute('data-type');
         v.sql = 'select * from `master`'
@@ -278,6 +254,7 @@
         if( v.list instanceof Error ) throw v.list;
         dev.dump(v.type,v.list);
 
+        dev.step(4.2);  // 内容の追加
         if( cf.classDef[v.type].colnum > 0 ){ // 箇条書き型
           dev.step(4.2);  // styleの指定
           node.style.gridTemplateColumns = `repeat(${cf.classDef[v.type].colnum}, 1fr)`;
@@ -292,6 +269,9 @@
           },{parent:node});
           if( v.r instanceof Error ) throw v.r;
         }
+
+        dev.step(4.3);  // 開閉制御
+        node.parentElement.addEventListener('click',ctrlList);
       });
 
     } catch (e) { dev.error(e); return e; }
