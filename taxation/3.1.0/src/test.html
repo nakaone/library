@@ -280,7 +280,14 @@
           v.list.forEach(item => {
             node.appendChild(createElement({html:item.label}));
           });
-        } // テーブル型は未作成
+        } else {  // テーブル型
+          v.r = createTable({
+            name: v.type,
+            cols: cf.classDef[v.type].cols,
+            data: v.list,
+          },{parent:node});
+          if( v.r instanceof Error ) throw v.r;
+        }
       });
 
     } catch (e) { dev.error(e); return e; }

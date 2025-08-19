@@ -1,4 +1,4 @@
-/**
+/** SpreadDB/LocalDB/createTable共通
  * @typedef {Object} schemaDef - DB構造定義オブジェクト
  * @param {string} dbName - データベース名
  * @param {tableDef[]} tables - DB内の個々のテーブルの定義
@@ -17,7 +17,7 @@
  * @param {string} [label] - テーブル・シート表示時の項目名。省略時はnameを流用
  * @param {string} type - データ型。string/number/boolean
  * @param {any} [default] - 既定値。関数の場合、引数は行オブジェクト
- * @param {Function} [printf] - 表示時点で行う文字列の整形用関数
+ * @param {Function} [printf] - 表示時点で行う文字列の整形用関数。引数は行オブジェクト
  * @param {string} [note] - 備考
  */
 

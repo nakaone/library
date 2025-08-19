@@ -31,7 +31,7 @@ const cf = {
         {name:'type',type:'string',note:'証憑としての分類。report.html上の掲載するdiv[data-type]'},
         {name:'date',type:'string',note:'取引日。電子証憑・参考等、report.html上取引日の表示が必要な場合設定'},
         {name:'label',type:'string',note:'摘要(電子証憑)、行き先(交通費)、資料名(参考)'},
-        {name:'price',label:'価格',type:'string'},
+        {name:'price',label:'価格',type:'string',printf:o=>Number(o.price).toLocaleString()},
         {name:'payby',label:'支払方法',type:'string',note:'役員借入金 or AMEX'},
         {name:'note',label:'備考',type:'string',note:'特記事項の本文(MD)、他はpdf上の頁指定等'},
       ],
@@ -84,8 +84,8 @@ const cf = {
    * @param {string} [cols.label] - テーブルに表示する項目名。省略時はnameを流用
    * @param {string} cols.type='string' - データ型。string/number/boolean
    * @param {Function} [cols.printf] - 桁区切りやリンク等のlabel生成関数
-   * @param {Function} cols.orderBy - ソートキー生成関数
    *   引数はo:「記入用」行オブジェクト・m:rexの結果、戻り値はHTML文字列
+   * @param {Function} cols.orderBy - ソートキー生成関数
    */
   classDef: {
     // ----- 金融関係 ----------
