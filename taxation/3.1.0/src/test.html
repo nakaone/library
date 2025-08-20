@@ -123,7 +123,6 @@
   const ctrlList = element => {
     // 現在の表示/非表示を保存
     const d = element.target.parentElement.querySelector('[data-type]').style.display;
-    console.log('l.126',d);
     // ナビ領域のリストは隠蔽
     document.querySelectorAll('[data-type]').forEach(o => o.style.display = 'none');
     // クリックされたナビメニューの下の明細を表示
@@ -274,6 +273,13 @@
         node.parentElement.addEventListener('click',ctrlList);
       });
 
+      // -------------------------------------------------------------
+      dev.step(5);  // 未分類証憑が無ければ記事を隠蔽
+      // -------------------------------------------------------------
+      if( db.exec('select count(*) as num from `master` where `type`="不明"')[0].num === 0 ){
+        document.getElementById('notFilled').style.display = 'none';
+      }
+      
     } catch (e) { dev.error(e); return e; }
   });
 </script>
