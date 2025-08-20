@@ -24,29 +24,23 @@ function refreshMaster() {
 
     // -------------------------------------------------------------
     dev.step(2);  // ファイル存否状態に基づき項目を設定
-    // ①両方存在 -> id,nameはfilesから引用、isExist=true、他は記入用を引用
-    // ②記入用のみ存在 -> isExist=false、後は記入用を引用
-    // ③filesのみ存在 -> id,nameはfilesから引用、isExist=true、他は空欄
+    // 以下①〜④の存否はfiles/記入用のidの存否
+    // ①両方存在 -> isExist=true、id,nameはfilesから引用、他は記入用を引用
+    // ②filesのみ存在 -> isExist=true、id,nameはfilesから引用、他は空欄
+    // ③記入用のみ存在 -> isExist=false、id,nameを含め他は記入用を引用
+    // ④両方不在 -> isExist=false、他は記入用を引用(type=特記事項)
     // -------------------------------------------------------------
     v.list = [];
     for( v.i=0 ; v.i<v.r.length ; v.i++ ){
-      // プレビュー用URLを追加
-      v.r[v.i].link = cf.previewURL.replace('$1',v.r[v.i].id);
-      if( v.r[v.i].mID ){
-        if( v.r[v.i].id ){ // ①両方存在
-          v.r[v.i].isExist = true;
-        } else {  // ②記入用のみ存在
-          v.r[v.i].isExist = false;
-          v.r[v.i].id = v.r[v.i].mId;
-        }
-        v.r[v.i].name = v.r[v.i].mName || v.r[v.i].name;
-        v.list.push(v.r[v.i]);
-      } else {  // ③filesのみ存在
-        v.r[v.i].isExist = true;
-        v.list.push(v.r[v.i]);
-      }
+      v.list.push(Object.assign(v.r[v.i],{
+        link: cf.previewURL.replace('$1',v.r[v.i].id),  // プレビュー用URL
+        isExist: v.r[v.i].id ? true : false,
+        id: v.r[v.i].id || v.r[v.i].mId,
+        name: v.r[v.i].name || v.r[v.i].mName,
+        type: v.r[v.i].type || (!v.r[v.i].id && !v.r[v.i].mId ? '特記事項' : ''),
+      }));
     }
-    dev.dump(v.list);
+    dev.dump(v.list.length,v.list,1049);
 
     dev.step(3.1);  // 更新内容を「記入用」テーブルに保存
     v.sql = 'delete from `記入用`;'

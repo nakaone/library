@@ -54,6 +54,17 @@ const data = {
       "initial": "() => getFileList()",
       "data": [
         {
+          "id": "1j0Mabm7pMQMque4gT8Zr9xGku8FFWQbR",
+          "name": "20250808_健康保険・厚生年金保険被保険者標準報酬決定通知書.pdf",
+          "mime": "application/pdf",
+          "desc": "",
+          "url": "https://drive.google.com/file/d/1j0Mabm7pMQMque4gT8Zr9xGku8FFWQbR/view?usp=drivesdk",
+          "viewers": "",
+          "editors": "takeda-erika@tkcnf.or.jp",
+          "created": "2025-08-20T09:18:14.809+09:00",
+          "updated": "2025-08-20T10:16:32.710+09:00"
+        },
+        {
           "id": "1ATSxdgmIT1ZxIoXQrPTdeMGPNeDBCEcx7UC29FF2FcM",
           "name": "開発用",
           "mime": "application/vnd.google-apps.spreadsheet",
@@ -62,7 +73,7 @@ const data = {
           "viewers": "",
           "editors": "takeda-erika@tkcnf.or.jp",
           "created": "2025-08-13T12:22:14.243+09:00",
-          "updated": "2025-08-16T13:06:16.918+09:00"
+          "updated": "2025-08-19T16:20:14.510+09:00"
         },
         {
           "id": "1ydJXUwV6bwA6SgMoy1rkalemzPhtj-G9",
@@ -360,6 +371,28 @@ const data = {
           "editors": "takeda-erika@tkcnf.or.jp",
           "created": "2025-08-11T11:32:19.887+09:00",
           "updated": "2025-08-11T11:25:03.000+09:00"
+        },
+        {
+          "id": "10UUj51tcETH5KErSTR1yS-8B8nE-o_79",
+          "name": "CK202508.pdf",
+          "mime": "application/pdf",
+          "desc": "",
+          "url": "https://drive.google.com/file/d/10UUj51tcETH5KErSTR1yS-8B8nE-o_79/view?usp=drivesdk",
+          "viewers": "",
+          "editors": "takeda-erika@tkcnf.or.jp",
+          "created": "2025-08-19T17:18:03.944+09:00",
+          "updated": "2025-08-09T15:21:14.000+09:00"
+        },
+        {
+          "id": "1BoKOkNX_BMhOPSZLHBeZJShDMAPxtXCm",
+          "name": "EF202508.pdf",
+          "mime": "application/pdf",
+          "desc": "",
+          "url": "https://drive.google.com/file/d/1BoKOkNX_BMhOPSZLHBeZJShDMAPxtXCm/view?usp=drivesdk",
+          "viewers": "",
+          "editors": "takeda-erika@tkcnf.or.jp",
+          "created": "2025-08-19T17:18:10.036+09:00",
+          "updated": "2025-08-09T15:18:48.000+09:00"
         },
         {
           "id": "1Bun4eFNXtr7R_e9vz8yzoXfwLPDyNyyI",
@@ -1589,13 +1622,13 @@ const data = {
       "initial": "() => [\n        {\"id\":\"1uu_NH-iGsQYC21pVZS3vohIVfhYaJrn_\",\"type\":\"参考\",\"date\":\"2025/05/16\",\"label\":\"2025年度給与所得等に係る特別徴収税額の決定通知書\"},\n        {\"id\":\"11pXYjxhKQIklRiAFQJNKQZ8JtpLUgKZC\",\"type\":\"電子証憑\",\"date\":\"2024/10/28\",\"label\":\"スマホスタンド\",\"price\":1850,\"payby\":\"役員借入金\"},\n        {\"id\":\"1WFRbAeaRy-9fkGkbaN4wzskEjHjC6DTr\",\"type\":\"電子証憑\",\"date\":\"2024/11/16\",\"label\":\"ボールペン替芯\",\"price\":545,\"payby\":\"AMEX\"},\n        {\"id\":\"1wUYvRxTDWigLenGmOvb3FzOD1DAklilJ\",\"type\":\"電子証憑\",\"date\":\"2024/11/16\",\"label\":\"文具\",\"price\":3524,\"payby\":\"AMEX\"},\n        {\"id\":\"1iLsevNUcaq9kp3rqCarZMwhG1HdFcgOL\",\"type\":\"電子証憑\",\"date\":\"2024/12/05\",\"label\":\"スマホフィルム\",\"price\":2520,\"payby\":\"役員借入金\"},\n        {\"id\":\"1yQfuzlIZWhcP0RNOZU_qT6EeyOLEBd-N\",\"type\":\"電子証憑\",\"date\":\"2024/12/07\",\"label\":\"スマホ消耗品、書籍\",\"price\":3899,\"payby\":\"AMEX\"},\n        {\"id\":\"1YwnwWEOHIrcVxrKACi_iZaD64ifnT9ei\",\"type\":\"電子証憑\",\"date\":\"2024/12/09\",\"label\":\"書籍\",\"price\":3080,\"payby\":\"AMEX\"},\n        {\"id\":\"1Ca2sWeFGd7ZkWfnCw4K6NnYxYU8BYJKF\",\"type\":\"電子証憑\",\"date\":\"2024/12/09\",\"label\":\"プリンタインク\",\"price\":1180,\"payby\":\"AMEX\"},\n        {\"id\":\"1Q7x6RsI6UcQMuKRkgtA6O6xzmk359CSo\",\"type\":\"電子証憑\",\"date\":\"2024/12/09\",\"label\":\"USB充電器\",\"price\":3919,\"payby\":\"AMEX\"},\n        {\"id\":\"195AbJCoKG74szRbjbo-19CrL2YTjgk3E\",\"type\":\"電子証憑\",\"date\":\"2024/12/11\",\"label\":\"クリヤーブック\",\"price\":2220,\"payby\":\"AMEX\"},\n        {\"id\":\"18exrmCa45gXffolZO9vdU5GD0B2EAK1N\",\"type\":\"電子証憑\",\"date\":\"2024/12/11\",\"label\":\"司法書士(登記変更、他)\",\"price\":93500,\"payby\":\"役員借入金\",\"note\":\"p.2のみ\"},\n        {\"id\":\"1dEIdlcHtfkXresrJVvi7yqschZRA9N_W\",\"type\":\"電子証憑\",\"date\":\"2025/01/28\",\"label\":\"PC周辺機器\",\"price\":1310,\"payby\":\"役員借入金\"},\n        {\"id\":\"1Bc1ZAMHhib6spfk-bGnUhRamFZOzAXDx\",\"type\":\"電子証憑\",\"date\":\"2025/03/13\",\"label\":\"養生テープ\",\"price\":1369,\"payby\":\"AMEX\"},\n        {\"id\":\"1A99DTWWEdXUq8KAFu-nq-hVuWer3T9WG\",\"type\":\"電子証憑\",\"date\":\"2025/05/07\",\"label\":\"営繕・補修用資材\",\"price\":4747,\"payby\":\"役員借入金\"},\n        {\"id\":\"1YamIvPbChf_wYt8lvs7wvWmQEQKdhL6D\",\"type\":\"電子証憑\",\"date\":\"2025/05/07\",\"label\":\"営繕・補修用資材\",\"price\":123,\"payby\":\"役員借入金\"},\n        {\"id\":\"1kdiuk2zTVwL9BAKBocuyCj5HltUvKDF-\",\"type\":\"電子証憑\",\"date\":\"2025/05/08\",\"label\":\"営繕・補修用資材\",\"price\":2813,\"payby\":\"役員借入金\"},\n        {\"id\":\"1DaGH1LmErJ0Pc7gcz4uP8PHgP9xyorJC\",\"type\":\"電子証憑\",\"date\":\"2025/05/22\",\"label\":\"備品(バスケット)\",\"price\":5279,\"payby\":\"役員借入金\"},\n        {\"id\":\"1g3O_7tt7SBgD_-Ul2Yv9qEgndOWltMty\",\"type\":\"電子証憑\",\"date\":\"2025/07/03\",\"label\":\"カメラ(本体)\",\"price\":136170,\"payby\":\"役員借入金\"},\n        {\"id\":\"1Bun4eFNXtr7R_e9vz8yzoXfwLPDyNyyI\",\"type\":\"電子証憑\",\"date\":\"2025/08/06\",\"label\":\"若宮宅残置物撤去\",\"price\":330000,\"payby\":\"役員借入金\"},\n        {\"id\":\"19jlv3d8sbcE7EDJnasyM5HQIgZjg1mu0\",\"type\":\"返済明細\",\"date\":\"2024/12/30\",\"label\":\"SMBCローン返済明細\"},\n        {\"id\":\"1xXxbijwGf65A75_BV54jjEQWBzYf8uss\",\"type\":\"返済明細\",\"date\":\"2025/04/21\",\"label\":\"SMBCローン返済明細\"},\n        {\"id\":\"1sk5K2tTHlsoTCuxRCIEEstGJRWSqYbvD\",\"type\":\"返済明細\",\"date\":\"2024/10/01\",\"label\":\"SMTLFローン返済明細\"},\n      ]",
       "data": [
         {
-          "id": "1ydJXUwV6bwA6SgMoy1rkalemzPhtj-G9",
-          "name": "20250605_固都税納税通知書.pdf",
-          "link": "https://drive.google.com/file/d/1ydJXUwV6bwA6SgMoy1rkalemzPhtj-G9/preview",
+          "id": "1j0Mabm7pMQMque4gT8Zr9xGku8FFWQbR",
+          "name": "20250808_健康保険・厚生年金保険被保険者標準報酬決定通知書.pdf",
+          "link": "https://drive.google.com/file/d/1j0Mabm7pMQMque4gT8Zr9xGku8FFWQbR/preview",
           "isExist": "TRUE",
           "type": "参考資料",
-          "date": "2025/06/05",
-          "label": "固都税納税通知書",
+          "date": "2025/08/08",
+          "label": "健康保険・厚生年金保険被保険者標準報酬決定通知書",
           "price": "",
           "payby": "",
           "note": ""
@@ -1608,6 +1641,18 @@ const data = {
           "type": "参考資料",
           "date": "2025/05/16",
           "label": "2025年度給与所得等に係る特別徴収税額の決定通知書",
+          "price": "",
+          "payby": "",
+          "note": ""
+        },
+        {
+          "id": "1ydJXUwV6bwA6SgMoy1rkalemzPhtj-G9",
+          "name": "20250605_固都税納税通知書.pdf",
+          "link": "https://drive.google.com/file/d/1ydJXUwV6bwA6SgMoy1rkalemzPhtj-G9/preview",
+          "isExist": "TRUE",
+          "type": "参考資料",
+          "date": "2025/06/05",
+          "label": "固都税納税通知書",
           "price": "",
           "payby": "",
           "note": ""
@@ -1863,30 +1908,6 @@ const data = {
           "price": "330000",
           "payby": "役員借入金",
           "note": ""
-        },
-        {
-          "id": "",
-          "name": "",
-          "link": "",
-          "isExist": false,
-          "type": "特記事項",
-          "date": "2024/12/01",
-          "label": "通信キャリア変更",
-          "price": "",
-          "payby": "",
-          "note": "プロバイダ・キャリアをKDDI/UQ Mobile/Biglobeに変更"
-        },
-        {
-          "id": "",
-          "name": "",
-          "link": "",
-          "isExist": false,
-          "type": "特記事項",
-          "date": "2025/04/01",
-          "label": "アルバイト採用",
-          "price": "",
-          "payby": "",
-          "note": "2025/04/01よりアルバイトとして嶋津史奈を雇用。条件は以下の通り。\n<ul>\n  <li>作業内容：書類整理、会計業務補助</li>\n  <li>時給1,200円、月25時間</li>\n</ul>"
         }
       ]
     },
@@ -2111,5 +2132,5 @@ const data = {
     "previewURL": "(id,label) => `<a href=\"https://drive.google.com/file/d/${id}/preview\" target=\"_blank\">${label}</a>`",
     "identifyType": "fileName => {\n        // 処理対象外のファイル\n        for( let rex of cf.ignore ) if( rex.test(fileName) ) return '対象外';\n        // 自動判別可能なら該当するメンバ名を、判別不可能なら「不明」を返す\n        for (const [key, value] of Object.entries(cf.classDef))\n          if (value.rex && value.rex.test(fileName)) return key;\n        return '不明';\n      }"
   },
-  "created": "2025-08-19T16:20:23.456+09:00"
+  "created": "2025-08-20T10:20:20.099+09:00"
 };

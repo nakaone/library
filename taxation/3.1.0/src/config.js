@@ -57,6 +57,7 @@ const cf = {
       exclude: fn => /^(20\d{2})(\d{2})(\d{2})_400_00[0|3]\.pdf$/.test(fn),
       // identifyType: ファイルの自動判別可否または処理対象外かを判定
       identifyType: fileName => {
+        if( !fileName ) return '不明';
         // 処理対象外のファイル
         for( let rex of cf.ignore ) if( rex.test(fileName) ) return '対象外';
         // 自動判別可能なら該当するメンバ名を、判別不可能なら「不明」を返す
@@ -175,14 +176,19 @@ const cf = {
     '参考資料': { // 記入項目：①資料名(label),②入手日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
-      printf: o => cf.getA(o.id,o.label) + (o.date?`(${o.date})`:''),
+      printf: o => (o.date?`${o.date} : `:'') + cf.getA(o.id,o.label),
       orderBy: o => o.date,
     },
     '特記事項': { // 記入項目：①タイトル(label),②内容(note),③記入日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
-      printf: o => (o.date?`<li>${o.date}`:'<li>')  // 記入日
-      + `<span style="margin-left:1rem;font-size:1.4rem">${o.label}</span><br>${o.note}</li>`,
+      printf: o => {`<div>
+        <span>${o.date+' : '}</span>
+        <span>${o.label}</span><br>
+        <pre>${o.note}</pre>
+      </div>`},
+      //printf: o => (o.date?`<li>${o.date}`:'<li>')  // 記入日
+      //+ `<span style="margin-left:1rem;font-size:1.4rem">${o.label}</span><br>${o.note}</li>`,
       orderBy: o => o.date,
     },
     '不明': {

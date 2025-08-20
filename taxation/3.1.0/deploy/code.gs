@@ -457,34 +457,11 @@ const cf = {
         {name:'type',type:'string',note:'証憑としての分類。report.html上の掲載するdiv[data-type]'},
         {name:'date',type:'string',note:'取引日。電子証憑・参考等、report.html上取引日の表示が必要な場合設定'},
         {name:'label',type:'string',note:'摘要(電子証憑)、行き先(交通費)、資料名(参考)'},
-        {name:'price',label:'価格',type:'string'},
+        {name:'price',label:'価格',type:'string',printf:o=>Number(o.price).toLocaleString()},
         {name:'payby',label:'支払方法',type:'string',note:'役員借入金 or AMEX'},
         {name:'note',label:'備考',type:'string',note:'特記事項の本文(MD)、他はpdf上の頁指定等'},
       ],
-      initial: () => [
-        {"id":"1uu_NH-iGsQYC21pVZS3vohIVfhYaJrn_","type":"参考","date":"2025/05/16","label":"2025年度給与所得等に係る特別徴収税額の決定通知書"},
-        {"id":"11pXYjxhKQIklRiAFQJNKQZ8JtpLUgKZC","type":"電子証憑","date":"2024/10/28","label":"スマホスタンド","price":1850,"payby":"役員借入金"},
-        {"id":"1WFRbAeaRy-9fkGkbaN4wzskEjHjC6DTr","type":"電子証憑","date":"2024/11/16","label":"ボールペン替芯","price":545,"payby":"AMEX"},
-        {"id":"1wUYvRxTDWigLenGmOvb3FzOD1DAklilJ","type":"電子証憑","date":"2024/11/16","label":"文具","price":3524,"payby":"AMEX"},
-        {"id":"1iLsevNUcaq9kp3rqCarZMwhG1HdFcgOL","type":"電子証憑","date":"2024/12/05","label":"スマホフィルム","price":2520,"payby":"役員借入金"},
-        {"id":"1yQfuzlIZWhcP0RNOZU_qT6EeyOLEBd-N","type":"電子証憑","date":"2024/12/07","label":"スマホ消耗品、書籍","price":3899,"payby":"AMEX"},
-        {"id":"1YwnwWEOHIrcVxrKACi_iZaD64ifnT9ei","type":"電子証憑","date":"2024/12/09","label":"書籍","price":3080,"payby":"AMEX"},
-        {"id":"1Ca2sWeFGd7ZkWfnCw4K6NnYxYU8BYJKF","type":"電子証憑","date":"2024/12/09","label":"プリンタインク","price":1180,"payby":"AMEX"},
-        {"id":"1Q7x6RsI6UcQMuKRkgtA6O6xzmk359CSo","type":"電子証憑","date":"2024/12/09","label":"USB充電器","price":3919,"payby":"AMEX"},
-        {"id":"195AbJCoKG74szRbjbo-19CrL2YTjgk3E","type":"電子証憑","date":"2024/12/11","label":"クリヤーブック","price":2220,"payby":"AMEX"},
-        {"id":"18exrmCa45gXffolZO9vdU5GD0B2EAK1N","type":"電子証憑","date":"2024/12/11","label":"司法書士(登記変更、他)","price":93500,"payby":"役員借入金","note":"p.2のみ"},
-        {"id":"1dEIdlcHtfkXresrJVvi7yqschZRA9N_W","type":"電子証憑","date":"2025/01/28","label":"PC周辺機器","price":1310,"payby":"役員借入金"},
-        {"id":"1Bc1ZAMHhib6spfk-bGnUhRamFZOzAXDx","type":"電子証憑","date":"2025/03/13","label":"養生テープ","price":1369,"payby":"AMEX"},
-        {"id":"1A99DTWWEdXUq8KAFu-nq-hVuWer3T9WG","type":"電子証憑","date":"2025/05/07","label":"営繕・補修用資材","price":4747,"payby":"役員借入金"},
-        {"id":"1YamIvPbChf_wYt8lvs7wvWmQEQKdhL6D","type":"電子証憑","date":"2025/05/07","label":"営繕・補修用資材","price":123,"payby":"役員借入金"},
-        {"id":"1kdiuk2zTVwL9BAKBocuyCj5HltUvKDF-","type":"電子証憑","date":"2025/05/08","label":"営繕・補修用資材","price":2813,"payby":"役員借入金"},
-        {"id":"1DaGH1LmErJ0Pc7gcz4uP8PHgP9xyorJC","type":"電子証憑","date":"2025/05/22","label":"備品(バスケット)","price":5279,"payby":"役員借入金"},
-        {"id":"1g3O_7tt7SBgD_-Ul2Yv9qEgndOWltMty","type":"電子証憑","date":"2025/07/03","label":"カメラ(本体)","price":136170,"payby":"役員借入金"},
-        {"id":"1Bun4eFNXtr7R_e9vz8yzoXfwLPDyNyyI","type":"電子証憑","date":"2025/08/06","label":"若宮宅残置物撤去","price":330000,"payby":"役員借入金"},
-        {"id":"19jlv3d8sbcE7EDJnasyM5HQIgZjg1mu0","type":"返済明細","date":"2024/12/30","label":"SMBCローン返済明細"},
-        {"id":"1xXxbijwGf65A75_BV54jjEQWBzYf8uss","type":"返済明細","date":"2025/04/21","label":"SMBCローン返済明細"},
-        {"id":"1sk5K2tTHlsoTCuxRCIEEstGJRWSqYbvD","type":"返済明細","date":"2024/10/01","label":"SMTLFローン返済明細"},
-      ],
+      initial: () => [],
     },{ // 交通費
       name: '交通費',
       cols: [
@@ -496,27 +473,7 @@ const cf = {
         {name:'price',label:'金額',type:'number',printf:o=>Number(o.price).toLocaleString()},
         {name:'note',label:'備考',type:'string'},
       ],
-      initial: () => [
-        {"date":"2024/10/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
-        {"date":"2024/11/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
-        {"date":"2024/12/09","destination":"恵比寿","label":"現状確認","route":"笹塚 - 新宿 - 恵比寿","number":1,"price":620},
-        {"date":"2024/12/10","destination":"オーシャン","label":"打合せ(登記変更依頼)","route":"代々木上原 - 表参道","number":1,"price":360},
-        {"date":"2025/01/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
-        {"date":"2024/11/10","destination":"ふじやまビレジ","label":"打合せ(方針論議)","route":"笹塚 - 上界戸","number":2,"price":14800,"note":"〜11/12"},
-        {"date":"2025/02/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
-        {"date":"2025/03/01","destination":"上池袋","label":"SB現調","route":"笹塚 - 新宿 - 板橋","number":2,"price":1280},
-        {"date":"2025/03/09","destination":"恵比寿","label":"現状確認","route":"笹塚 - 新宿 - 恵比寿","number":1,"price":620},
-        {"date":"2025/03/26","destination":"上池袋","label":"SB現調","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
-        {"date":"2025/04/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
-        {"date":"2025/05/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640},
-        {"date":"2025/05/24","destination":"野方","label":"現地調査","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":2,"price":1880},
-        {"date":"2025/06/08","destination":"恵比寿","label":"現状確認","route":"笹塚 - 新宿 - 恵比寿","number":1,"price":620},
-        {"date":"2025/07/04","destination":"野方","label":"現状確認、清掃","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":1,"price":940},
-        {"date":"2025/07/08","destination":"羽沢","label":"現状確認","route":"笹塚 - 市ヶ谷 - 新桜台","number":1,"price":1240},
-        {"date":"2025/07/23","destination":"野方","label":"現状確認、整理","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":2,"price":1880},
-        {"date":"2025/08/06","destination":"野方","label":"残置物搬出","route":"笹塚 - 新宿 - 高田馬場 - 野方","number":2,"price":1880},
-        {"date":"2025/08/08","destination":"上池袋","label":"現状確認","route":"笹塚 - 新宿 - 板橋","number":1,"price":640}
-      ],
+      initial: () => [],
     }],
     custom: { // AlaSQLのカスタム関数(以下は使用例)
       // alasql.fn.exclude = cf.custom.exclude;
@@ -524,8 +481,6 @@ const cf = {
 
       // exclude: ファイル一覧で処理か判定。引数：ファイル名、戻り値：trueなら処理対象外
       exclude: fn => /^(20\d{2})(\d{2})(\d{2})_400_00[0|3]\.pdf$/.test(fn),
-      // previewURL: ファイルIDとラベルからpreviewモードで当該ファイルを開くURLを返す
-      previewURL: (id,label) => `<a href="https://drive.google.com/file/d/${id}/preview" target="_blank">${label}</a>`,
       // identifyType: ファイルの自動判別可否または処理対象外かを判定
       identifyType: fileName => {
         // 処理対象外のファイル
@@ -543,87 +498,90 @@ const cf = {
     '結合済': /^YFP(\d{4})(\d{2})\.pdf$/,
   },
   /**
-   * @typedef {Object} JSONstructure - 出力するJSONの形式。メンバ名はdata-type
+   * @typedef {Object} classDef - report.html上の証憑分類に関する定義(classify Definition)
    * @param {number} colnum - 一行当たりの項目数。0:テーブル、>=1:箇条書き。数字は項目数/行
    * @param {RegExp} rex - ファイル名を基にdata-typeを判定する正規表現。特定不能型はnull
-   * -- 以下、箇条書きの場合に設定される項目
-   * @param {Function} printf - data.label生成関数
-   *   引数はo:「記入用」行オブジェクト・m:rexの結果、戻り値はHTML文字列。
-   *   なおoは何れの場合も必須なので第一引数、使用しない場合も有るmは第二引数とする。
-   * @param {Object[]} data - ファイル単位のデータ。以下は出力時に生成
-   * @param {string} data.id - ファイルのID。URL作成用
-   * @param {string} data.name - ファイル名
-   * @param {string} data.label - ラベル
-   * -- 以下、テーブルの場合に設定される項目
+   * -- 以下、箇条書きの場合のみ設定される項目
+   * @param {Arrow} printf - 箇条書きの場合、aタグを含むラベルHTML文字列を作成する関数。
+   *   o:行オブジェクト、m:o.name.match(rex)の結果。戻り値はHTML文字列。
+   * -- 以下、テーブルの場合のみ設定される項目
    * @param {Object[]} cols - 項目定義
    * @param {string} cols.name - 行オブジェクト内のメンバ名
    * @param {string} [cols.label] - テーブルに表示する項目名。省略時はnameを流用
    * @param {string} cols.type='string' - データ型。string/number/boolean
-   * @param {any} [cols.default=''] - 0,false以外の無効値の場合に設定する値
    * @param {Function} [cols.printf] - 桁区切りやリンク等のlabel生成関数
    *   引数はo:「記入用」行オブジェクト・m:rexの結果、戻り値はHTML文字列
-   * @param {string} [cols.note] - 備考
-   * @param {Object[]} data - テーブルの行オブジェクト。以下は出力時に生成
+   * @param {Function} cols.orderBy - ソートキー生成関数
    */
-  classDef: { // report.html上の証憑分類に関する定義(classify Definition)
+  classDef: {
     // ----- 金融関係 ----------
     '通帳': {
       colnum: 4,  // 箇条書き型(4列/行)
       rex: /^([A-Z]{4})(\d{2})\.pdf$/,
-      printf: (o,m) => `${m[1]} No.${previewURL(o.id,m[2])}`,
+      printf: (o,m) => `${m[1]} No.${cf.getA(o.id,m[2])}`,
+      orderBy: (o,m) => m[1] + m[2],  // 銀行名＋通帳番号
     },
     '返済明細': { // 記入項目：①資料名(label),②入手日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
-      printf: o => previewURL(o.id,o.label) + (o.date?`(${o.date})`:''),
+      printf: o => cf.getA(o.id,o.label) + (o.date?`(${o.date})`:''),
+      orderBy: o => o.date,
     },
     'AMEX': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^(20\d{2})(\d{2})\.pdf$/,
-      printf: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+      printf: (o,m) => cf.getA(o.id,`${m[1]}/${m[2]}`),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     // ----- レントロール ----------
     '恵比寿': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^EF(20\d{2})(\d{2})\.pdf$/,
-      printf: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+      printf: (o,m) => cf.getA(o.id,`${m[1]}/${m[2]}`),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     '上池袋': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^CK(20\d{2})(\d{2})\.pdf$/,
-      printf: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+      printf: (o,m) => cf.getA(o.id,`${m[1]}/${m[2]}`),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     '羽沢': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^HS(20\d{2})(\d{2})\.pdf$/,
-      printf: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+      printf: (o,m) => cf.getA(o.id,`${m[1]}/${m[2]}`),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     // ----- 証憑類 ----------
     '健保・年金': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^pension(20\d{2})(\d{2})\.pdf$/,
-      printf: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+      printf: (o,m) => cf.getA(o.id,`${m[1]}/${m[2]}`),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     '確証貼付ノート': {
       colnum: 10,  // 箇条書き型(10列/行)
       rex: /^note(20\d{2})(\d{2})\.pdf$/,
-      printf: (o,m) => 'p.' + previewURL(o.id,m[2]),
+      printf: (o,m) => 'p.' + cf.getA(o.id,m[2]),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     'YFP': {
       colnum: 6,  // 箇条書き型(月次型)
       rex: /^YFP(20\d{2})(\d{2})\.pdf$/,
-      printf: (o,m) => previewURL(o.id,`${m[1]}/${m[2]}`),
+      printf: (o,m) => cf.getA(o.id,`${m[1]}/${m[2]}`),
+      orderBy: (o,m) => m[1] + m[2],  // 年＋月
     },
     '電子証憑': {
       colnum: 0,  // テーブル型
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
       cols: [
-        {name:'date',label:'取引日',type:'string',printf:o=>previewURL(o.id,o.label)},
-        {name:'label',label:'摘要',type:'string'},
+        {name:'date',label:'取引日',type:'string'},
+        {name:'label',label:'摘要',type:'string',printf:o=>cf.getA(o.id,o.label)},
         {name:'price',label:'価格',type:'number',printf:o=>Number(o.price).toLocaleString()},
         {name:'payby',label:'支払',type:'string'},
         {name:'note',label:'備考',type:'string'},
-      ]
+      ],
+      orderBy: o => o.date,
     },
     // ----- その他 ----------
     '交通費': {
@@ -633,22 +591,36 @@ const cf = {
         {name:'date',label:'日付',type:'string'},
         {name:'label',label:'行先',type:'string'},
         {name:'route',label:'経路',type:'string'},
-        {name:'number',label:'人数',type:'string'},
+        {name:'number',label:'人数',type:'number'},
         {name:'price',label:'金額',type:'number',printf:o=>Number(o.price).toLocaleString()},
         {name:'payby',label:'支払',type:'string',default:'役員借入金'},
         {name:'note',label:'備考',type:'string'},
-      ]
+      ],
+      orderBy: o => o.date,
     },
     '参考資料': { // 記入項目：①資料名(label),②入手日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
-      printf: o => previewURL(o.id,o.label) + (o.date?`(${o.date})`:''),
+      printf: o => (o.date?`${o.date} : `:'') + cf.getA(o.id,o.label),
+      orderBy: o => o.date,
     },
     '特記事項': { // 記入項目：①タイトル(label),②内容(note),③記入日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
-      printf: o => `<h3>${o.label}<h3><div>${o.note}</div>`
-      + `<div style="text-align:right">${o.date}</div>`,  // 記入日
+      printf: o => {`<div>
+        <span>${o.date+' : '}</span>
+        <span>${o.label}</span><br>
+        <pre>${o.note}</pre>
+      </div>`},
+      //printf: o => (o.date?`<li>${o.date}`:'<li>')  // 記入日
+      //+ `<span style="margin-left:1rem;font-size:1.4rem">${o.label}</span><br>${o.note}</li>`,
+      orderBy: o => o.date,
+    },
+    '不明': {
+      colnum: 1,  // 箇条書き型(1件1行)
+      rex: null,
+      printf: o => cf.getA(o.id,o.name),
+      orderBy: o => o.name,
     },
   },
   ignore: [ // {RegExp[]} 存在しても処理対象外となるファイル名の正規表現集
@@ -657,6 +629,8 @@ const cf = {
   ],
   // ファイルプレビュー用のURL
   previewURL: "https://drive.google.com/file/d/$1/preview",
+  // getA: ファイルIDとラベルからpreviewモードで当該ファイルを開くURLを返す
+  getA: (id,label) => `<a href="https://drive.google.com/file/d/${id}/preview" target="_blank">${label}</a>`,
 }
 const dev = devTools();
 const db = SpreadDB(cf);
@@ -1028,14 +1002,30 @@ function refreshMaster() {
 
     // -------------------------------------------------------------
     dev.step(2);  // ファイル存否状態に基づき項目を設定
-    // ①両方存在 -> id,nameはfilesから引用、isExist=true、他は記入用を引用
-    // ②記入用のみ存在 -> isExist=false、後は記入用を引用
-    // ③filesのみ存在 -> id,nameはfilesから引用、isExist=true、他は空欄
+    // 以下①〜④の存否はfiles/記入用のidの存否
+    // ①両方存在 -> isExist=true、id,nameはfilesから引用、他は記入用を引用
+    // ②記入用のみ存在 -> isExist=false、他は記入用を引用
+    // ③filesのみ存在 -> isExist=true、id,nameはfilesから引用、他は空欄
+    // ④両方不在 -> isExist=false、他は記入用を引用(type=特記事項)
+
+    // ①両方存在 -> isExist=true、id,nameはfilesから引用、他は記入用を引用
+    // ②filesのみ存在 -> isExist=true、id,nameはfilesから引用、他は空欄
+    // ③記入用のみ存在 -> isExist=false、id,nameを含め他は記入用を引用
+    // ④両方不在 -> isExist=false、他は記入用を引用(type=特記事項)
     // -------------------------------------------------------------
     v.list = [];
     for( v.i=0 ; v.i<v.r.length ; v.i++ ){
       // プレビュー用URLを追加
       v.r[v.i].link = cf.previewURL.replace('$1',v.r[v.i].id);
+      if( v.r[v.i].id ){
+        v.r[v.i].isExist = true;
+      } else {
+        v.r[v.i].isExist = false;
+        v.r[v.i].id = v.r[v.i].mId;
+        v.r[v.i].name = v.r[v.i].mName;
+      }
+      v.list.push(v.r[v.i]);
+      /*
       if( v.r[v.i].mID ){
         if( v.r[v.i].id ){ // ①両方存在
           v.r[v.i].isExist = true;
@@ -1045,10 +1035,16 @@ function refreshMaster() {
         }
         v.r[v.i].name = v.r[v.i].mName || v.r[v.i].name;
         v.list.push(v.r[v.i]);
-      } else {  // ③filesのみ存在
-        v.r[v.i].isExist = true;
-        v.list.push(v.r[v.i]);
+      } else {
+        if( v.r[v.i].id ){  // ③filesのみ存在
+          v.r[v.i].isExist = true;
+          v.list.push(v.r[v.i]);
+        } else {  // ④両方不在
+          v.r[v.i].isExist = false;
+
+        }
       }
+      */
     }
     dev.dump(v.list);
 
@@ -1067,7 +1063,7 @@ function refreshMaster() {
 
   } catch (e) { dev.error(e); return e; }
 }
-/**
+/** SpreadDB/LocalDB/createTable共通
  * @typedef {Object} schemaDef - DB構造定義オブジェクト
  * @param {string} dbName - データベース名
  * @param {tableDef[]} tables - DB内の個々のテーブルの定義
@@ -1086,7 +1082,7 @@ function refreshMaster() {
  * @param {string} [label] - テーブル・シート表示時の項目名。省略時はnameを流用
  * @param {string} type - データ型。string/number/boolean
  * @param {any} [default] - 既定値。関数の場合、引数は行オブジェクト
- * @param {Function} [printf] - 表示時点で行う文字列の整形用関数
+ * @param {Function} [printf] - 表示時点で行う文字列の整形用関数。引数は行オブジェクト
  * @param {string} [note] - 備考
  */
 
@@ -1101,7 +1097,7 @@ function SpreadDB(arg) {
     spread: SpreadsheetApp.getActiveSpreadsheet(),
     schema: arg.schema,
     tableDef: {}, // arg.schemaを基に{テーブル名:テーブル構造定義}に変換したObj
-    db: new alasql.Database(),
+    rdb: new alasql.Database(),
   };
 
   /** execSQL: alasqlでSQLを実行
@@ -1110,7 +1106,7 @@ function SpreadDB(arg) {
    * @returns {Object[]}
    */
   function execSQL(sql,arg=null) {
-    return arg === null ? pv.db.exec(sql) : pv.db.exec(sql,arg);
+    return arg === null ? pv.rdb.exec(sql) : pv.rdb.exec(sql,arg);
   }
 
   /** loadSheet: シートからRDBへデータをロードする
@@ -1370,6 +1366,14 @@ function SpreadDB(arg) {
     } catch (e) { dev.error(e); return e; }
   }
 
+  /** hasTable: RDB(alasql)内にテーブルを持っているか確認
+   * @param {string} tableName
+   * @returns {boolean}
+   */
+  function hasTable(tableName) {
+    return tableName in pv.rdb.tables;
+  }
+
   // SpreadDBメイン処理
   dev.start(pv.whois, [...arguments]);
   try {
@@ -1416,7 +1420,14 @@ function SpreadDB(arg) {
     }
 
     dev.end(); // 終了処理
-    return {do:execSQL,load:loadSheet,save:saveRDB,import:importJSON,export:exportJSON};
+    return {
+      'exec': execSQL,
+      'load': loadSheet,
+      'save': saveRDB,
+      'import': importJSON,
+      'export': exportJSON,
+      'hasTable': hasTable,
+    };
 
   } catch (e) { dev.error(e); return e; }
 }
