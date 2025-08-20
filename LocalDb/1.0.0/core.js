@@ -1,13 +1,13 @@
-/** localDB: IndexedDBを保存先とするブラウザ内RDB
+/** LocalDb: IndexedDBを保存先とするブラウザ内RDB
  * @param {Object} arg
  * @param {schemaDef} arg.schema={} - DB構造定義オブジェクト
  * @returns {Object} 使用可能なメソッドのオブジェクト
  */
-function localDB(arg) {
-  const pv = { whois: 'localDB', rv: null,
+function LocalDb(arg) {
+  const pv = { whois: 'LocalDb', rv: null,
     schema: arg.schema,
     idb: null,          // IndexedDB
-    dbName: 'localDB',  // IndexedDBの名称
+    dbName: 'LocalDb',  // IndexedDBの名称
     storeName: 'JSON',  // IndexedDBのストア名
     rdb: new alasql.Database(), // alasql
   };

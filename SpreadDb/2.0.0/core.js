@@ -1,4 +1,4 @@
-/** SpreadDB/LocalDB/createTable共通
+/** SpreadDb/LocalDb/createTable共通
  * @typedef {Object} schemaDef - DB構造定義オブジェクト
  * @param {string} dbName - データベース名
  * @param {tableDef[]} tables - DB内の個々のテーブルの定義
@@ -21,14 +21,14 @@
  * @param {string} [note] - 備考
  */
 
-/** SpreadDB: シートをテーブルとして扱うGAS内部のRDB
+/** SpreadDb: シートをテーブルとして扱うGAS内部のRDB
  * - ヘッダ行は1行目に固定、左端から隙間無く項目を並べる(空白セル不可)
  * @param {Object} arg
  * @param {schemaDef} arg.schema - DB構造定義オブジェクト
  * @returns {Object} 使用可能なメソッドのオブジェクト
  */
-function SpreadDB(arg) {
-  const pv = { whois: 'SpreadDB', rv: null,
+function SpreadDb(arg) {
+  const pv = { whois: 'SpreadDb', rv: null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
     schema: arg.schema,
     tableDef: {}, // arg.schemaを基に{テーブル名:テーブル構造定義}に変換したObj
@@ -309,7 +309,7 @@ function SpreadDB(arg) {
     return tableName in pv.rdb.tables;
   }
 
-  // SpreadDBメイン処理
+  // SpreadDbメイン処理
   dev.start(pv.whois, [...arguments]);
   try {
 

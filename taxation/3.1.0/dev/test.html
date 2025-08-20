@@ -24,6 +24,7 @@
     }
     div[data-type] {
       display: grid;
+      gap: 1rem;
       margin: 1rem;
     }
     th, td {
@@ -49,9 +50,9 @@
   <script type="text/javascript" src="../../../toLocale/1.2.0/core.js"></script>
   <script type="text/javascript" src="../../../whichType/1.0.1/core.js"></script>
   <script type="text/javascript" src="./data.js"></script>
-  <script type="text/javascript" src="./LocalDB.js"></script>
-  <script type="text/javascript" src="./config.js"></script>
-  <script type="text/javascript" src="./createTable.js"></script>
+  <script type="text/javascript" src="../../../LocalDb/1.0.0/core.js"></script>
+  <script type="text/javascript" src="../src/config.js"></script>
+  <script type="text/javascript" src="../../../createTable/1.2.0/core.js"></script>
 </head>
 <body>
   <p id="today" style="text-align: right;padding-right: 2rem;"></p>
@@ -118,7 +119,7 @@
 </body>
 <script type="text/javascript">
   const dev = devTools();
-  const db = localDB(cf);
+  const db = LocalDb(cf);
 
   const ctrlList = element => {
     // 現在の表示/非表示を保存
