@@ -182,11 +182,11 @@ const cf = {
     '特記事項': { // 記入項目：①タイトル(label),②内容(note),③記入日(date)
       colnum: 1,  // 箇条書き型(1件1行)
       rex: null,  // 特定不能型はマニュアルで型を特定、必要事項を記入するようにする
-      printf: o => {`<div>
-        <span>${o.date+' : '}</span>
+      printf: o => `<div>
+        <span style="font-size: 0.8rem;font-weight: normal;">${o.date+' : '}</span>
         <span>${o.label}</span><br>
-        <pre>${o.note}</pre>
-      </div>`},
+        <pre style="font-size: 0.8rem;font-weight: normal;margin-left:2rem;">${o.note}</pre>
+      </div>`,
       //printf: o => (o.date?`<li>${o.date}`:'<li>')  // 記入日
       //+ `<span style="margin-left:1rem;font-size:1.4rem">${o.label}</span><br>${o.note}</li>`,
       orderBy: o => o.date,
