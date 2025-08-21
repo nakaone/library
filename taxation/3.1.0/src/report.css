@@ -1,6 +1,6 @@
 /* =======================================================
 [report.css]
-  提出用HTML(index.html)のCSS部分。
+  提出用HTML(report.html)のCSS部分。
   build.shでreport.htmlに組み込み、「証憑yyyy」のGASにコピー
 ======================================================= */
 
@@ -12,42 +12,27 @@ h1 {
   border: solid 3px #888;
   padding: 0.5rem;
 }
-h2 {
-  font-size: 1.2rem;
-}
+h2 {font-size: 1.2rem;}
 div.navi {
-  width: 600px;
+  width: 800px;
   margin: 0 auto;
   background-color: #ccc;
   padding: 1rem;
 }
 div[data-type] {
   display: grid;
+  gap: 1rem;
   margin: 1rem;
 }
 th, td {
   padding: 0.2rem 0.5rem;
-  background: #ddd;
   border-left: solid 1px #fff;
   border-right: solid 1px #888;
   border-top: solid 1px #fff;
   border-bottom: solid 1px #888;
+  vertical-align: top;
 }
-ul {
-  list-style: none;
-}
-li {
-  margin-bottom: 0.5rem;
-}
-/*
-div.list {
-  display: grid;
-  margin-bottom: 2rem;
-}
-div.list div {
-  margin-top: 0.5rem;
-}
-div.monthly {
-  grid-template-columns: repeat(6, 1fr);
-}
-*/
+th {background: #ddd;}
+td {background: #fff;}
+ul {list-style: none;}
+li {margin-bottom: 0.5rem;}
