@@ -245,6 +245,9 @@ function devTools(option) {
  * @param {columnDef[]} cols - 項目定義
  * @param {Function} [initial] - 初期設定用関数(テーブルに初期データ登録＋シート作成)
  * @param {Object[]} data - テーブルの行オブジェクトの配列。import/export時のみ設定
+ * @param {Object} [exportDef={}] - export時の設定。exportDef=nullの場合、出力対象外とする
+ * @param {string[]} exportDef.select=[] - 出力項目を絞り込む場合の項目名リスト。空配列なら全項目出力
+ * @param {string} exportDef.where="" - 出力行を絞り込む場合の条件(SQLのwhere句)
  *
  * @typedef {Object} columnDef - 項目定義オブジェクト
  * @param {string} name - 項目名
@@ -814,6 +817,7 @@ const cf = {
       /*{  // YFP関係の結合処理実行後、ファイル一覧を返す
         concatYFP().then(()=>{return getFileList()});
       },*/
+      exportDef: {select:['id','name']},
     },{ // 記入用
       name: '記入用',
       primaryKey: 'id',
@@ -830,6 +834,10 @@ const cf = {
         {name:'note',label:'備考',type:'string',note:'特記事項の本文(MD)、他はpdf上の頁指定等'},
       ],
       initial: () => [],
+      exportDef: {
+        select:['id','type','date','label','price','payby','note'],
+        where:'`isExist`="TRUE"',
+      },
     },{ // 交通費
       name: '交通費',
       cols: [
@@ -1140,16 +1148,25 @@ function createReport() {
     // -------------------------------------------------------------
     dev.step(1);  // 使用するデータをテーブルから作成
     // -------------------------------------------------------------
-    // created: 作成日
-    v.data = {created:toLocale(new Date(),{format:'yyyy/MM/dd'})};
-    // テーブル名: 必要な項目に絞った行オブジェクトの配列
-    v.data['files'] = db.exec('select id,name from `files`;');
-    if( v.data['files'] instanceof Error ) throw v.data['files'];
-    v.data['記入用'] = db.exec('select id,type,date,label,price,payby,note from `記入用`;');
-    if( v.data['記入用'] instanceof Error ) throw v.data['記入用'];
-    v.data['交通費'] = db.exec('select * from `交通費`;');
-    if( v.data['交通費'] instanceof Error ) throw v.data['交通費'];
+    dev.step(1.1);  // cf.schemaからプロトタイプ作成
+    v.data = JSON.parse(JSON.stringify(cf.schema));
+    v.data.created = toLocale();  // 作成日時を付記
 
+    dev.step(1.2);  // 各テーブルのデータをセット
+    v.data.tables.forEach(table => {
+      // 出力定義(exportDef)に既定値設定
+      table.exportDef = Object.assign({select:[],where:''},table.exportDef||{},);
+      // 抽出用SQL文の作成・実行
+      v.sql = 'select '
+      + (table.exportDef.select.length === 0 ? '*'
+        : table.exportDef.select.map(x => '`'+x+'`').join(','))
+      + ` from \`${table.name}\``
+      + (table.exportDef.where ? ` where ${table.exportDef.where}` : '')
+      + ';';
+      v.r = db.exec(v.sql);
+      if( v.r instanceof Error ) throw v.r;
+      table.data = v.r;
+    });
 
     // -------------------------------------------------------------
     dev.step(2);  // report.htmlの生成とダウンロード

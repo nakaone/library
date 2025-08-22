@@ -20,6 +20,7 @@ const cf = {
       /*{  // YFP関係の結合処理実行後、ファイル一覧を返す
         concatYFP().then(()=>{return getFileList()});
       },*/
+      exportDef: {select:['id','name']},
     },{ // 記入用
       name: '記入用',
       primaryKey: 'id',
@@ -36,6 +37,10 @@ const cf = {
         {name:'note',label:'備考',type:'string',note:'特記事項の本文(MD)、他はpdf上の頁指定等'},
       ],
       initial: () => [],
+      exportDef: {
+        select:['id','type','date','label','price','payby','note'],
+        where:'`isExist`="TRUE"',
+      },
     },{ // 交通費
       name: '交通費',
       cols: [
