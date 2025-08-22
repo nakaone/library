@@ -5,14 +5,15 @@
  */
 function LocalDb(arg={}) {
   const pv = { whois: 'LocalDb', rv: null,
-    schema: arg.schema || {},
+    schema: arg.schema || {tables:[]},
     idb: null,          // IndexedDB
-    dbName: 'LocalDb',  // IndexedDBの名称
-    storeName: 'RDB',   // IndexedDBのストア名
     rdb: new alasql.Database(), // alasql
+    opt: {
+      dbName: arg.dbName || 'LocalDb',  // IndexedDBの名称
+      storeName: 'RDB',   // IndexedDBのストア名
+    },
   };
 
-  /*
   async function constructor(arg) {
     const v = { whois: `${pv.whois}.constructor`, rv: null};
     dev.start(v.whois, [...arguments]);
@@ -24,13 +25,13 @@ function LocalDb(arg={}) {
       dev.step(2);
       pv.idb = await openIndexedDB();
 
-      for( v.tableName in cf.tableDef.mappingTable){
+      for( v.tableName in pv.schema.tables.map(x => x.name)){
         dev.step(3);  // rdbからテーブル名をキーとして検索
         v.existingData = await getIndexedDB(v.tableName);
         
         if (v.existingData) {
-          dev.step(4.1);  // 存在すればrowsをJSON.parseしてpv.rdbに格納
-          pv.rdb.tables[v.tableName] = JSON.parse(v.existingData.rows);
+          dev.step(4.1);  // 存在すればdataをJSON.parseしてpv.rdbに格納
+          pv.rdb.tables[v.tableName] = JSON.parse(v.existingData.data);
         } else {
           dev.step(4.2);  // 存在しなければ新規登録
           await setIndexedDB(v.tableName, '[]');
@@ -63,11 +64,11 @@ function LocalDb(arg={}) {
     });
   }
 
-  async function getIndexedDB(key) {
+  async function getIndexedDB(tableName) {
     return new Promise((resolve) => {
       const transaction = pv.idb.transaction([pv.opt.storeName]);
       const store = transaction.objectStore(pv.opt.storeName);
-      const request = store.get(key);
+      const request = store.get(tableName);
 
       request.onsuccess = (event) => {
         resolve(event.target.result);
@@ -86,7 +87,6 @@ function LocalDb(arg={}) {
       };
     });
   }
-  */
 
   /** execSQL: alasqlでSQLを実行
    * @param {string} sql
@@ -113,29 +113,24 @@ function LocalDb(arg={}) {
       Object.keys(pv.schema.custom).forEach(x => alasql.fn[x] = pv.schema.custom[x]);
     }
 
-    /*
     constructor(arg).then(r => {
       dev.end(); // 終了処理
       return {
-        //'import': importJSON,
-        //'export': exportJSON,
-        //'save': saveRDB,
-        //'load': loadRDB,
-        'do': execSQL,
-        //'hasTable': hasTable,
+        'exec': execSQL,
+        'hasTable': hasTable,
       };
     });
-    */
 
+    /*
     dev.end(); // 終了処理
     return {
-      'exec': execSQL,
-      //'load': loadRDB,
-      //'save': saveRDB,
+      //'load': loadIDB,  IndexedDBからRDBへデータをロードする
+      //'save': saveRDB,  RDBからIndexedDBへデータを保存する
       //'import': importJSON,
       //'export': exportJSON,
-      'hasTable': hasTable,
     };
+    */
+
 
   } catch (e) { dev.error(e); return e; }
 }
