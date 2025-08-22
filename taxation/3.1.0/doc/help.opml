@@ -6,36 +6,47 @@
     </ownerEmail>
   </head>
   <body>
-    <outline text="税務作業手順書(9f9f262cba76)">
-      <outline text="定期作業">
-        <outline text="1. 証憑の収集">
-          <outline text="クレジットカード利用明細(AMEX) : 「20yyMM.pdf」" _note="未保存月の利用明細(PDF)をMUFGのサイトからダウンロードし、「電子証憑」フォルダに保存。&#10;&#10;MUFG News+ : &lt;a href=&quot;https://www2.cr.mufg.jp/newsplus/amex/?lid=news_amex&quot;&gt;https://www2.cr.mufg.jp/newsplus/amex/?lid=news_amex&lt;/a&gt;&#10;&amp;gt; ご請求額・利用明細照会&#10;ID,PWはGoogle Keepで「MUFGカードWEBサービス」を検索&#10;" />
-          <outline text="EF, CKレントロール : 「EF20yyMM.pdf」 or 「CK20yyMM.pdf」" _note="TransCreationから送付の都度「電子証憑」のフォルダに保存(ファイルは月単位)。&#10;" />
-          <outline text="税理士領収書 : 「20yyMMdd_400_00n.pdf」" _note="GMailを&quot;YFP&quot;で検索して保存。概ね月央(15日前後)にメールで請求書が送られているので「電子証憑」に保存。&#10;&#10;※ファイル名は&quot;yyyyMMdd_400_xxx.pdf&quot;、xxx: 000-&amp;gt;税理士報酬分、003-&amp;gt;記帳代行分&#10;" />
-          <outline text="電子証憑 ⇒ そのまま保存の上、「証憑」シート上で必要項目を記入" _note="以下は主なもの。MUJI等、不定期に利用した購入先は都度追加する。">
-            <outline text="amazon" />
-            <outline text="yodobashi" />
-            <outline text="代行購入(弘子)" />
-            <outline text="Apple" _note="ena.kaonのGmail上で「領収書」をキーワードに検索" />
-            <outline text="モノタロウ" />
-          </outline>
-          <outline text="その他 ⇒ そのまま保存の上、「証憑」シート上で必要項目を記入" _note="収支に関係ないが税理士と共有すべき資料があった場合、適宜保存した上でhtmlを編集してリンクを貼る(要手動対応)。" />
-          <outline text="通帳 : 「MUFGnn.pdf」 or 「SMBCnn.pdf」" _note="前回提出日以降分について、電子証憑フォルダ内のpdfの末尾に未提出分を追加" />
-          <outline text="HSレントロール : 「HS20yyMM.pdf」" _note="1. 確証貼付ノートの所定の位置に確証(定期清掃領収書)と併せて貼付&#10;2. 月単位にスキャンして&quot;HS20yyMM.pdf&quot;を作成、「電子証憑」フォルダに保存&#10;&#10;まとめてスキャン後、Macのプレビューでページごとに分割(サムネールをデスクトップにD&amp;D)。&#10;なおA4見開きに貼りきれない証憑は「確証貼付ノート」に貼付する。&#10;" />
-          <outline text="健保・年金、確定拠出年金 : 「pension20yyMM.pdf」" _note="1. 事前に「確証貼付ノート」の一部を健保・年金用に確保して領収書を貼付。&#10;1. まとめてスキャン後、Macのプレビューでページごとに分割(サムネールをデスクトップにD&amp;D)。&#10;1. ファイル名を&quot;pensionYYYYMM.pdf&quot;に修正して「電子証憑」フォルダに保存&#10;" />
-          <outline text="確証貼付ノート : 「note20yypp.pdf」" _note="「20yy」の部分は会計年度、ppはページ番号。&#10;&#10;1. A4以上のサイズの場合はノート貼付前にスキャン、貼付予定ページ番号を元に&quot;noteYYYYNN.pdf&quot;を作成(YYYYは年度、NNはページ番号)&#10;2. 確証貼付ノートへの貼付。貼付後、宛先・摘要等必要事項を追記&#10;3. 1で事前にスキャンしたページ以外について、ページ単位にスキャンして&quot;noteYYYYNN.pdf&quot;を作成&#10;4. 作成したpdfを「電子証憑」フォルダに保存&#10;&#10;確証貼付ノートNo.1の不足時はNo.2を追加するが、ページ番号はNo1,2通しで採番する(No.2の最初のページはNo.1の最終ページ＋1)。&#10;" />
-          <outline text="返済明細" />
-          <outline text="参考資料" />
+    <outline text="税務作業手順書">
+      <outline text="0. 用語解説" _note="本手順書内で使用する用語の解説。&#10;&#10;1. 証憑フォルダ&#10;   収集した証憑(PDF)と、管理用スプレッドシートを保存するフォルダ。&#10;   「Google Drive マイドライブ &amp;gt; ena.kaon &amp;gt; log &amp;gt; fy20yy &amp;gt; 電子証憑20yy」&#10;2. 証憑管理&#10;   管理用スプレッドシート。フォルダ直下のGoogle Spread「証憑管理20yy」。&#10;   「Google Drive マイドライブ &amp;gt; ena.kaon &amp;gt; log &amp;gt; fy20yy &amp;gt; 電子証憑20yy &amp;gt; 証憑管理20yy」&#10;3. backupフォルダ&#10;   税理士に提出する必要は無いが、念のため取っておく各種資料の保存場所。&#10;   「Google Drive マイドライブ &amp;gt; ena.kaon &amp;gt; log &amp;gt; fy20yy &amp;gt; 電子証憑20yy &amp;gt; backup」&#10;&#10;" />
+      <outline text="1. 定期作業：証憑の収集と税理士への提出" _note="税理士側・当方双方の手間を考え、年度初めは3ヶ月おき、だんだん間隔を狭めて年度末は毎月提出。&#10;⇒ 1,4,6,8,9月上旬に実施する。">
+        <outline text="1.1. 証憑の収集" _note="- 証憑は全てPDF化して証憑フォルダに保存&#10;- ファイル名の指定が有る場合、Google Drive上のファイル名はそれに則ること&#10;">
+          <outline text="(01) 銀行通帳" _note="- 前回提出日以降分について、証憑フォルダ内のpdfの末尾に未提出分を追加。&#10;- ファイル名は「MUFGnn.pdf」 or 「SMBCnn.pdf」(nnは通帳の通番)&#10;&#10;1. 銀行で記帳&#10;1. 前回提出以降分をスキャン＋PDF化&#10;1. 証憑フォルダから前回提出時の通帳PDFをダウンロード&#10;   ※新通帳に切り替えたら新規作成&#10;1. Macのプレビューで前回分と今回分の両方を開き、差分を前回分に反映&#10;1. Google Drive上で右ボタンクリック、「ファイル情報 &amp;gt; 版を管理 &amp;gt; 新版をアップロード」を選択、差分反映済の前回分をアップロード" />
+          <outline text="(02) クレジットカード利用明細(AMEX)" _note="- 未保存月の利用明細(PDF)をMUFGのサイトからダウンロードし、「電子証憑」フォルダに保存。&#10;- ファイル名は「20yyMM.pdf」&#10;&#10;MUFG News+ : &lt;a href=&quot;https://www2.cr.mufg.jp/newsplus/amex/?lid=news_amex&quot;&gt;https://www2.cr.mufg.jp/newsplus/amex/?lid=news_amex&lt;/a&gt;&#10;&amp;gt; ご請求額・利用明細照会&#10;ID,PWはGoogle Keepで「MUFGカードWEBサービス」を検索&#10;" />
+          <outline text="(03) EF, CKレントロール" _note="- TransCreationから送付の都度「電子証憑」のフォルダに保存(ファイルは月単位)。&#10;- 解凍用のパスワードは ena.Trans-yyyyMMdd (yyyyMMdd = メール送信日)&#10;- ファイル名は「EF20yyMM.pdf」 or 「CK20yyMM.pdf」&#10;" />
+          <outline text="(04) HSレントロール : 「HS20yyMM.pdf」" _note="1. 確証貼付ノートの所定の位置に確証(定期清掃領収書)と併せて貼付&#10;2. 月単位にスキャンして&quot;HS20yyMM.pdf&quot;を作成、「電子証憑」フォルダに保存&#10;&#10;まとめてスキャン後、Macのプレビューでページごとに分割(サムネールをデスクトップにD&amp;D)。&#10;なおA4見開きに貼りきれない証憑は「確証貼付ノート」に貼付する。&#10;" />
+          <outline text="(05) 確証貼付ノート" _note="- ファイル名は「note20yypp.pdf」。「20yy」の部分は会計年度、ppはページ番号。&#10;&#10;1. A4以上のサイズの場合はノート貼付前にスキャン、貼付予定ページ番号を元に&quot;noteYYYYNN.pdf&quot;を作成(YYYYは年度、NNはページ番号)&#10;2. 確証貼付ノートへの貼付。貼付後、宛先・摘要等必要事項を追記&#10;3. 1で事前にスキャンしたページ以外について、ページ単位にスキャンして&quot;noteYYYYNN.pdf&quot;を作成&#10;4. 作成したpdfを証憑フォルダに保存&#10;&#10;確証貼付ノートNo.1の不足時はNo.2を追加するが、ページ番号はNo1,2通しで採番する(No.2の最初のページはNo.1の最終ページ＋1)。&#10;" />
+          <outline text="(06) 健保・年金、確定拠出年金" _note="1. 事前に「確証貼付ノート」の一部を健保・年金用に確保して領収書を貼付。&#10;1. まとめてスキャン後、Macのプレビューで月ごとに分割(サムネールをデスクトップにD&amp;D)。&#10;1. ファイル名を&quot;pensionYYYYMM.pdf&quot;に修正して「電子証憑」フォルダに保存&#10;" />
+          <outline text="(07) 税理士領収書" _note="- GMailを&quot;YFP&quot;で検索して保存。概ね月央(15日前後)にメールで請求書が送られているので証憑フォルダに保存。&#10;- ファイル名は&quot;yyyyMMdd_400_xxx.pdf&quot;、xxx: 000-&amp;gt;税理士報酬分、003-&amp;gt;記帳代行分&#10;" />
+          <outline text="(08) 電子証憑" _note="- PDFファイルをそのまま保存の上、「証憑管理&amp;gt;記入用」シート上で必要項目を記入&#10;- 但し証憑フォルダに同じ名前のファイルが存在する場合、適当に修正する(ほぼあり得ないけど)&#10;- 以下は主なもの。MUJI等、不定期に利用した購入先は都度追加する。&#10;&#10;1. amazon&#10;1. yodobashi&#10;1. 代行購入(弘子)&#10;1. Apple(ena.kaonのGmail上で「領収書」をキーワードに検索)&#10;1. モノタロウ&#10;" />
+          <outline text="(09) 返済明細" _note="- 金利の変動が有った場合に銀行から送付される返済予定明細書(払込予定表)。&#10;- 返済金額の元金分・利息分は仕訳上「長期借入金」「支払利息」と勘定が異なるため、本明細を基に計上する&#10;" />
+          <outline text="(10) 参考資料、その他" _note="- 収支に関係ないが税理士と共有すべき資料&#10;- 固都税納税通知書、〇〇決定通知書等" />
         </outline>
-        <outline text="「電子証憑yyyy」での作業">
-          <outline text="「記入用」シートに必要事項を記入" _note="「電子証憑yyyy」を開くと、フォルダ内のファイル一覧が「files」シートに作成され、ファイル名から内容が判断できなかったPDFファイルの一覧が「記入用」シートに出力される。&#10;&#10;ここではlink欄から適宜原本(PDF)を参照しつつ分類(type)他の必要事項を記入する。&#10;&#10;| No | type欄 | 内容 | date欄 | label欄 | 価格欄 | 支払方法欄 | 備考欄 |&#10;| --: | :-- | :-- | :-- | :-- | :-- | :-- | :-- |&#10;| 1 | 電子証憑 | Amazonやヨドバシ等のサイトからPDF形式で取得した領収書 | 取引日を設定 | 摘要を記入(必須) | 必須 | 役員借入金 or AMEX | 必要に応じて記入 |&#10;| 2 | 返済明細 | 銀行から送られてくる返済(払込)予定明細書 | 取得日を設定。多少不正確でも可 | 銀行名(MUFG,SMBC,LFAF)＋ローン返済明細 | 記入不可 | 記入不可 | 必要に応じて記入 |&#10;| 3 | 参考資料 | 領収書以外で税理士さんに提示しておいた方が良いと思われる資料。&amp;lt;br&amp;gt;例：給与所得等に係る特別徴収税額の決定通知書、固都税納税通知書 | 取得日を設定。多少不正確でも可 | 発信元組織名＋内容 | 記入不可 | 記入不可 | 必要に応じて記入 |&#10;| 4 | 特記事項 | 期中での取扱変更等、税理士さんに知らせておくべき情報 | 始期を記入(例：バイト開始日、等)。&amp;lt;br&amp;gt;特定困難な場合は空欄可 | 情報のタイトルを設定。「バイト採用(嶋津史奈)」等 | 記入不可 | 記入不可 | 本文をMarkdownで記述 |&#10;" />
+        <outline text="1.2. Google Spread「証憑管理」での作業" _note="証憑yyyyを開くと、以下の処理が自動的に行われる。&#10;&#10;1. 証憑フォルダ直下のファイル一覧を「files」シートに作成&#10;1. ファイル名から内容が判断できなかったPDFファイルの一覧を「記入用」シートに出力&#10;1. 独自メニュー「道具箱」をメニューバーの右端に追加&#10;&#10;これらの処理に概ね1分程度かかる。よって以降の作業は「道具箱」メニューが追加されたことを確認の上、実行すること。&#10;">
+          <outline text="「記入用」シートに必要事項や特記事項を追記" _note="- 証憑類はlink欄から適宜原本(PDF)を参照しつつ分類(type)他の必要事項を記入&#10;- 特記事項があれば空白行を追加の上、下表の要領で記入&#10;  ※特記事項：税理士に伝えておくべき事項だが、PDF等の関連資料が無い事項&#10;&#10;| No | type欄 | 内容 | date欄 | label欄 | 価格欄 | 支払方法欄 | 備考欄 |&#10;| --: | :-- | :-- | :-- | :-- | :-- | :-- | :-- |&#10;| 1 | 電子証憑 | Amazonやヨドバシ等のサイトからPDF形式で取得した領収書 | 取引日を設定 | 摘要を記入(必須) | 必須 | 役員借入金 or AMEX | 必要に応じて記入 |&#10;| 2 | 返済明細 | 銀行から送られてくる返済(払込)予定明細書 | 取得日を設定。多少不正確でも可 | 銀行名(MUFG,SMBC,LFAF)＋ローン返済明細 | 記入不可 | 記入不可 | 必要に応じて記入 |&#10;| 3 | 参考資料 | 領収書以外で税理士さんに提示しておいた方が良いと思われる資料。&amp;lt;br&amp;gt;例：給与所得等に係る特別徴収税額の決定通知書、固都税納税通知書 | 取得日を設定。多少不正確でも可 | 発信元組織名＋内容 | 記入不可 | 記入不可 | 必要に応じて記入 |&#10;| 4 | 特記事項 | 期中での取扱変更等、税理士さんに知らせておくべき情報 | 始期を記入(例：バイト開始日、等)。&amp;lt;br&amp;gt;特定困難な場合は記入日 | 情報のタイトルを設定。「バイト採用(嶋津史奈)」等 | 記入不可 | 記入不可 | 本文を記述(セル内改行可) |&#10;" />
           <outline text="PDFを追加したら「道具箱 &amp;gt; ファイル一覧更新」" _note="ヨドバシが漏れていたのに気づいて追加した等、「電子証憑yyyy」フォルダ直下のPDFファイルが増えた場合、「道具箱 &amp;gt; ファイル一覧更新」を実行する。&#10;&#10;実行後「記入用」シートの追加ファイルの行に必要事項を追記する。" />
-          <outline text="不要なPDFが紛れていたら" _note="税理士さんに提示が不要な資料が紛れ込んでいた場合、「電子証憑yyyy」から「電子証憑yyyy &amp;gt; backup」フォルダに移動する。&#10;&#10;移動後「道具箱 &amp;gt; ファイル一覧更新」を実行し、「記入用」シートの「isExist」欄がFALSEになっていることを確認する。" />
-          <outline text="「交通費」シートへの記入" />
-          <outline text="「道具箱 &amp;gt; 提出用HTML出力」で税理士提出用HTMLを作成" />
+          <outline text="不要なPDFが紛れていたら" _note="税理士さんに提示が不要な資料が紛れ込んでいた場合、&#10;1. 不要なファイルを証憑フォルダからbackupフォルダに移動&#10;1. 「道具箱 &amp;gt; ファイル一覧更新」を実行&#10;1. 「記入用」シートの「isExist」欄がFALSEになっていることを確認&#10;" />
+          <outline text="「交通費」シートへの記入" _note="記入漏れがあれば追記" />
+          <outline text="「道具箱 &amp;gt; 提出用HTML出力」で税理士提出用HTMLを作成" _note="report.htmlという名前でダウンロードされるので、適当な場所に保存" />
+          <outline text="report.htmlを添付ファイルとしてメール送信" _note="宛先は takeda-erika@tkcnf.or.jp&#10;&#10;以下は文例。&#10;&#10;```&#10;【連絡】ena.kaon 証憑類を追加登録しました&#10;&#10;To: 武田様&#10;&#10;ena.kaonの嶋津です。お世話になっております。&#10;&#10;掲題の件、添付のように現時点で入手済の証憑類を追加しました。ご確認ください。&#10;&#10;以上、お取りはからいの程、宜しくお願いします。&#10;```&#10;" />
         </outline>
       </outline>
-      <outline text="年度切替時" />
+      <outline text="2. 年度切替時">
+        <outline text="2.1. 税理士へ最終レポート送付" />
+        <outline text="2.2. 税理士からの決算書類・納税票を受け、納税" />
+        <outline text="2.3. SMBCへの決算書送付" />
+        <outline text="2.4. 定時株主総会議事録作成" />
+        <outline text="2.5. 新年度の証憑フォルダ・証憑管理シートの作成" />
+        <outline text="2.6. 確証貼付ノート他の作成" />
+      </outline>
+      <outline text="3. その他">
+        <outline text="「連絡・質疑管理表」上の保留事項に回答記入" />
+        <outline text="Google Driveのバックアップ" _note="定期作業の都度、以下の手順に基づきバックアップを作成。&#10;&lt;a href=&quot;https://docs.google.com/document/d/1GE90XoxGWTH3cz6c708T3vZSsKeEtWhyAJQDfelNsaU/edit?usp=sharing)に基づきバックアップを作成。&quot;&gt;https://docs.google.com/document/d/1GE90XoxGWTH3cz6c708T3vZSsKeEtWhyAJQDfelNsaU/edit?usp=sharing&lt;/a&gt;&#10;" />
+        <outline text="参考：コマンドラインでPDFを結合" _note="&lt;a href=&quot;https://samurai20000.hatenablog.com/entry/20090815/1250340293&quot;&gt;[mac] コマンドラインからpdfを結合する&lt;/a&gt;" />
+        <outline text="本手順書の改訂" _note="- Workflowy上の「&lt;a href=&quot;https://workflowy.com/#/9f9f262cba76&quot;&gt;税務作業手順書&lt;/a&gt;」を修正&#10;- Workflowy上でopml形式でエクスポート、taxtion/3.1.0/doc/help.opmlを上書き&#10;- build.shを実行、taxtion/3.1.0/deploy/help.htmlをGASのhelp.htmlに上書き&#10;" />
+      </outline>
+      <outline text="1 Backlink">
+        <outline text="本手順書の改訂" _note="- Workflowy上の「&lt;a href=&quot;https://workflowy.com/#/9f9f262cba76&quot;&gt;税務作業手順書&lt;/a&gt;」を修正&#10;- Workflowy上でopml形式でエクスポート、taxtion/3.1.0/doc/help.opmlを上書き&#10;- build.shを実行、taxtion/3.1.0/deploy/help.htmlをGASのhelp.htmlに上書き&#10;" />
+      </outline>
     </outline>
   </body>
 </opml>

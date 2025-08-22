@@ -12,7 +12,7 @@
       提出用HTML(report.html)のCSS部分。
       build.shでreport.htmlに組み込み、「証憑yyyy」のGASにコピー
     ======================================================= */
-
+    
     html {line-height: 1.5rem;}
     h1 {
       font-size: 1.6rem;
@@ -64,28 +64,28 @@
         if( parent !== null ){
           v.parent = typeof parent === 'string' ? document.querySelector(parent) : parent;
         }
-
-
+    
+    
         for( v.i = 0 ; v.i<arg.length ; v.i++ ){
           v.step = 2; // 既定値の設定
           v.def = {tag: 'div',attr: {},style:{},event:{},text: '',html:'',children:[],name:''};
           Object.assign(v.def,(typeof arg[v.i] === 'string' ? {tag:arg} : arg[v.i]))
-
+    
           v.step = 3; // HTMLElementを生成、v.objとする
           v.obj = document.createElement(v.def.tag);
-
+    
           v.step = 4; // HTMLElementの属性を定義
           for( v.j in v.def.attr ){
             v.obj.setAttribute(v.j,v.x = v.def.attr[v.j]);
           }
-
+    
           v.step = 5; // 論理属性を定義(ex.checked)
           for( v.j in v.def.logical ){
             if( v.def.logical[v.j] ){
               v.obj.setAttribute(v.j,v.def.logical[v.j]);
             }
           }
-
+    
           v.step = 6; // style属性の定義
           for( v.j in v.def.style ){
             if( v.j.match(/^\-\-/) ){ // CSS変数
@@ -94,12 +94,12 @@
               v.obj.style[v.j] = v.def.style[v.j];
             }
           }
-
+    
           v.step = 7; // イベントの定義
           for( v.j in v.def.event ){
             v.obj.addEventListener(v.j,v.def.event[v.j],false);
           }
-
+    
           v.step = 8; // 内部文字列(html or text)
           if( v.def.html.length > 0 ){
             v.obj.innerHTML = v.def.html;
@@ -107,32 +107,32 @@
             // textareaの場合はvalueに、それ以外はinnerTextに内部文字列(text)をセット
             v.obj[v.def.tag.toLowerCase()==='textarea'?'value':'innerText'] = v.def.text;
           }
-
+    
           v.step = 9; // 子要素の追加(parentは指定しない)
           for( v.j=0 ; v.j<v.def.children.length ; v.j++ ){
             v.obj.appendChild(this.createElement(v.def.children[v.j]));
           }
-
+    
           v.step = 10; // 戻り値への登録
           v.rv.push(v.obj);
-
+    
           v.step = 11; // 親要素への追加
           if( parent !== null ){
             v.parent.appendChild(v.obj);
           }
-
+    
           v.step = 12; // メンバとして、また切替画面として登録
           if( v.def.name.length > 0 ){
             this[v.def.name] = v.obj;
             this.screenList[v.def.name] = v.obj;
           }
         }
-
+    
         v.step = 12; // 配列で渡されたら配列で、オブジェクトならオブジェクトを返す
         v.rv = v.isArr ? v.rv : v.rv[0];
         //console.log(v.whois+' normal end.\n',v.rv);
         return v.rv;
-
+    
       } catch(e){
         console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
         return e;
@@ -148,7 +148,7 @@
       const v = { whois: 'createTable', rv: null};
       dev.start(v.whois, [...arguments]);
       try {
-
+    
         // -------------------------------------------------------------
         dev.step(1);  // 事前準備
         // -------------------------------------------------------------
@@ -157,14 +157,14 @@
           parent: null,
         },opt);
         dev.dump(opt);
-
+    
         dev.step(1.2); // 項目未定義ならオブジェクトのメンバ名で代用
         if( !table.cols ){
           table.cols = [...new Set(table.data.flatMap(Object.keys))]
           .map(x => {return {'name':x,'type':'string'}});
         }
         dev.dump(table.cols);
-
+    
         // -------------------------------------------------------------
         dev.step(2); // thead部の作成
         // -------------------------------------------------------------
@@ -176,7 +176,7 @@
           });
         });
         v.thead = [{tag:'tr', children:v.thead}];
-
+    
         // -------------------------------------------------------------
         dev.step(3); // tbody部の作成
         // -------------------------------------------------------------
@@ -198,7 +198,7 @@
           });
           v.tbody.push({tag:'tr',children:v.tr});
         });
-
+    
         dev.end(); // 終了処理
         return createElement({
           tag:'table', children: [
@@ -206,7 +206,7 @@
             {tag:'tbody', children:v.tbody},
           ],
         },(opt.parent || null));
-
+    
       } catch (e) { dev.error(e); return e; }
     }
     /** devTools: 開発支援関係メソッド集
@@ -220,7 +220,7 @@
       let seq = 0;  // 関数の呼出順
       let stack = []; // 呼出元関数情報のスタック
       return { changeOption: changeOption, check: check, dump: dump, end: end, error: error, start: start, step: step };
-
+    
       /** オプションの変更 */
       function changeOption(option) {
         opt = Object.assign(opt, option);
@@ -291,11 +291,11 @@
           }
           return rv;
         }
-
+    
         // 主処理
         let msg = [];
         let isOK = true;  // チェックOKならtrue
-
+    
         arg = Object.assign({ msg: '', opt: {} }, arg);
         if (arg.tobe === undefined) {
           // check未指定の場合、チェック省略、結果表示のみ
@@ -312,7 +312,7 @@
             msg.unshift(`===== ${arg.title} Check Result : OK`);
           }
         }
-
+    
         // 引数として渡されたmsgおよび結果(JSON)を先頭に追加後、コンソールに表示
         msg = `::::: Verified by devTools.check\n`
           + `===== ${arg.title} Returned Value\n`
@@ -388,7 +388,7 @@
         }
         // 作成した呼出元関数情報を保存
         stack.push(o);
-
+    
         if (localOpt.start) {  // 開始メッセージの表示指定が有った場合
           console.log(`${o.label} start.\n-- footprint\n${o.footprint}`
             + (localOpt.arg ? `\n-- arguments\n${o.arg}` : ''));
@@ -456,7 +456,7 @@
         storeName: 'JSON',  // IndexedDBのストア名
         rdb: new alasql.Database(), // alasql
       };
-
+    
       /** execSQL: alasqlでSQLを実行
        * @param {string} sql
        * @param {Array[]} arg - alasqlの第二引数
@@ -465,7 +465,7 @@
       function execSQL(sql,arg=null) {
         return arg === null ? pv.rdb.exec(sql) : pv.rdb.exec(sql,arg);
       }
-
+    
       /** hasTable: RDB(alasql)内にテーブルを持っているか確認
        * @param {string} tableName
        * @returns {boolean}
@@ -473,15 +473,15 @@
       function hasTable(tableName) {
         return tableName in pv.rdb.tables;
       }
-
+    
       dev.start(pv.whois, [...arguments]);
       try {
-
+    
         dev.step(3);  // AlaSQLカスタム関数の用意
         if( pv.schema.hasOwnProperty('custom') ){
           Object.keys(pv.schema.custom).forEach(x => alasql.fn[x] = pv.schema.custom[x]);
         }
-
+    
         dev.end(); // 終了処理
         return {
           'exec': execSQL,
@@ -491,7 +491,7 @@
           //'export': exportJSON,
           'hasTable': hasTable,
         };
-
+    
       } catch (e) { dev.error(e); return e; }
     }
     /** 日時を指定形式の文字列にして返す
@@ -521,13 +521,13 @@
     function toLocale(arg,format='yyyy-MM-ddThh:mm:ss.nnnZ'){
       const v = {rv:format};
       try {
-
+    
         let dObj = whichType(arg,'Date') ? arg : new Date(arg);
         //dObj = String(Object.prototype.toString.call(arg).slice(8,-1)) !== 'Date' ? arg : new Date(arg);
-
+    
         v.step = 1; // 無効な日付なら空文字列を返して終了
         if( isNaN(dObj.getTime()) ) return '';
-
+    
         v.local = { // 地方時ベース
           y: dObj.getFullYear(),
           M: dObj.getMonth()+1,
@@ -543,7 +543,7 @@
         : ((dObj.getTimezoneOffset() < 0 ? '+' : '-')
         + ('0' + Math.floor(v.local.Z / 60)).slice(-2)
         + ':' + ('0' + (v.local.Z % 60)).slice(-2));
-
+    
         v.step = 2; // 日付文字列作成
         for( v.x in v.local ){
           v.m = v.rv.match(new RegExp(v.x+'+'));
@@ -554,10 +554,10 @@
             v.rv = v.rv.replace(v.m[0],v.str);
           }
         }
-
+    
         v.step = 3; // 終了処理
         return v.rv;
-
+    
       } catch(e){
         console.error(e,v);
         return e;
@@ -674,7 +674,7 @@
         custom: { // AlaSQLのカスタム関数(以下は使用例)
           // alasql.fn.exclude = cf.custom.exclude;
           // alasql('select * from `files` where exclude(`name`)');
-
+    
           // exclude: ファイル一覧で処理か判定。引数：ファイル名、戻り値：trueなら処理対象外
           exclude: fn => /^(20\d{2})(\d{2})(\d{2})_400_00[0|3]\.pdf$/.test(fn),
           // identifyType: ファイルの自動判別可否または処理対象外かを判定
@@ -900,10 +900,10 @@
     提出用HTML(report.html)のJavaScript部分。
     build.shでreport.htmlに組み込み、「証憑yyyy」のGASにコピー
   ======================================================= */
-
+  
   const dev = devTools();
   const db = LocalDb(cf);
-
+  
   const ctrlList = element => {
     // 現在の表示/非表示を保存
     const d = element.target.parentElement.querySelector('[data-type]').style.display;
@@ -912,12 +912,12 @@
     // クリックされたナビメニューの下の明細を表示
     element.target.parentElement.querySelector('[data-type]').style.display = d === 'none' ? '' : 'none';
   }
-
+  
   window.addEventListener('DOMContentLoaded', () => {
     const v = { whois: 'DOMContentLoaded', rv: null};
     dev.start(v.whois);
     try {
-
+  
       // -------------------------------------------------------------
       dev.step(1); // 前準備
       // -------------------------------------------------------------
@@ -932,7 +932,7 @@
       });
       // ナビ領域のリストは隠蔽
       document.querySelectorAll('[data-type]').forEach(o => o.style.display = 'none');
-
+  
       // -------------------------------------------------------------
       dev.step(2);  // masterテーブル作成
       // -------------------------------------------------------------
@@ -968,7 +968,7 @@
       + 'insert into `master` select "交通費" as type, * from `交通費` order by date;';
       v.r = db.exec(v.sql);
       if( v.r instanceof Error ) throw v.r;
-
+  
       // -------------------------------------------------------------
       dev.step(3);  // リンク(a href)文字列作成用関数pfMapの定義
       // リンクはcf.classDef(証憑分類に関する定義)のprintf関数に基づき生成。
@@ -1010,7 +1010,7 @@
         ));
       }
       dev.dump(v.pfMap);
-
+  
       dev.step(3.2);  // master上にリンク文字列セット＋sortKey設定
       v.master = db.exec('select * from `master`;')
       if( v.master instanceof Error ) throw v.master;
@@ -1021,13 +1021,13 @@
       v.sql = 'delete from `master`;insert into `master` select * from ?;';
       v.r = db.exec(v.sql,[v.master]);
       if( v.r instanceof Error ) throw v.r;
-
-
+  
+  
       // -------------------------------------------------------------
       dev.step(4);  // 記事(data-type)毎に内容を作成
       // -------------------------------------------------------------
       document.querySelectorAll('[data-type]').forEach(node => {
-
+  
         dev.step(4.1);  // データの抽出
         v.type = node.getAttribute('data-type');
         v.sql = 'select * from `master`'
@@ -1036,7 +1036,7 @@
         v.list = db.exec(v.sql);
         if( v.list instanceof Error ) throw v.list;
         dev.dump(v.type,v.list);
-
+  
         dev.step(4.2);  // 内容の追加
         if( cf.classDef[v.type].colnum > 0 ){ // 箇条書き型
           dev.step(4.2);  // styleの指定
@@ -1052,18 +1052,18 @@
           },{parent:node});
           if( v.r instanceof Error ) throw v.r;
         }
-
+  
         dev.step(4.3);  // 開閉制御
         node.parentElement.addEventListener('click',ctrlList);
       });
-
+  
       // -------------------------------------------------------------
       dev.step(5);  // 未分類証憑が無ければ記事を隠蔽
       // -------------------------------------------------------------
       if( db.exec('select count(*) as num from `master` where `type`="不明"')[0].num === 0 ){
         document.getElementById('notFilled').style.display = 'none';
       }
-
+  
     } catch (e) { dev.error(e); return e; }
   });
 </script>

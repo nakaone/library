@@ -30,13 +30,10 @@ cat $src/report.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src > $dep/repor
 #   https://workflowy.com/#/9f9f262cba76
 #   作成後はdoc/help.opmlに保存、deploy/help.htmlをGASに保存
 # ----------------------------------------------
-# workflowy -> md
-cat $doc/help.opml | awk 1 | $workflowy -root:9f9f262cba76 -lv:3 > $doc/help.md
-# md -> html
-pandoc $doc/help.md -f markdown -t html -o $doc/help.html
-# テンプレートに埋め込み
+# workflowy(opml) -> html
+pandoc $doc/help.opml -o $doc/help.html
+# html,style等のタグを追加
 cat $src/help.html | awk 1 | $embed -prj:$prj -lib:$lib -src:$src -doc:$doc > $dep/help.html
-rm $doc/help.md
 rm $doc/help.html
 
 
