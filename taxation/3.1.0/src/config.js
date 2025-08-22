@@ -39,7 +39,7 @@ const cf = {
       initial: () => [],
       exportDef: {
         select:['id','type','date','label','price','payby','note'],
-        where:'`isExist`="TRUE"',
+        where:'`type`="特記事項" or `isExist`="TRUE"',
       },
     },{ // 交通費
       name: '交通費',
