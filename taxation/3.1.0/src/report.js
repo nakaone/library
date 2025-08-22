@@ -166,6 +166,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if( db.exec('select count(*) as num from `master` where `type`="不明"')[0].num === 0 ){
       document.getElementById('notFilled').style.display = 'none';
     }
-    
+
   } catch (e) { dev.error(e); return e; }
 });

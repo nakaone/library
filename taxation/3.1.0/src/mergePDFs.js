@@ -2,16 +2,16 @@
 async function getFolderId() {
   // スプレッドシートのIDを取得
   var ssId = SpreadsheetApp.getActiveSpreadsheet().getId();
-  
+
   // スプレッドシートのファイルを取得
   var file = DriveApp.getFileById(ssId);
-  
+
   // 親フォルダを取得
   var parentFolder = file.getParents().next();
-  
+
   // フォルダIDを取得
   var folderId = parentFolder.getId();
-  
+
   // フォルダIDをログに出力
   Logger.log(folderId);
 
@@ -28,11 +28,11 @@ async function getFolderId() {
  */
 async function mergePDFs(ids,folderId,fileName="merged.pdf") {
   const data = ids.map((id) => new Uint8Array(DriveApp.getFileById(id).getBlob().getBytes()));
-  
+
   // PDF-libを読み込む
   const cdnjs = "https://cdn.jsdelivr.net/npm/pdf-lib/dist/pdf-lib.min.js";
   eval(UrlFetchApp.fetch(cdnjs).getContentText().replace(/setTimeout\(.*?,.*?(\d*?)\)/g, "Utilities.sleep(\$1);return t();"));
-  
+
   // PDFドキュメントを作成
   const pdfDoc = await PDFLib.PDFDocument.create();
   for (let i = 0; i < data.length; i++) {
@@ -40,7 +40,7 @@ async function mergePDFs(ids,folderId,fileName="merged.pdf") {
     const pages = await pdfDoc.copyPages(pdfData, [...Array(pdfData.getPageCount()).keys()]);
     pages.forEach(page => pdfDoc.addPage(page));
   }
-  
+
   const bytes = await pdfDoc.save();
   // 結合したPDFファイルを作成
   const mergedFile = DriveApp.createFile(Utilities.newBlob([...new Int8Array(bytes)], MimeType.PDF, fileName));
