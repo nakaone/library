@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xml:lang="ja" lang="ja">
+<head>
+  <title>LocalDb 1.1.0</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <!--link rel="stylesheet" href="style.css"-->
+  <style type="text/css"></style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="../../../../library/devTools/1.0.1/core.js"></script>
+  <script src="./data.js"></script>
+</head>
+<body>
+
+
+
+</body>
+<script type="text/javascript">
+  const dev = devTools();
+  window.addEventListener('DOMContentLoaded', () => {
+    const v = { whois: 'DOMContentLoaded', rv: null };
+    dev.start(v.whois);
+    try {
+      console.log(tData);
+
+      dev.end(); // 終了処理
+      return v.rv;
+    } catch (e) { dev.error(e); return e; }
+  });
+</script>
+</html>
