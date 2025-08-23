@@ -1,0 +1,200 @@
+以下の要件を満たすjavascriptのクロージャ関数'LocalDb'の実装例は？
+
+- 非同期にRDBを扱えるようにするため、javascript内では主にAlaSQLを使用する
+- データを保存するためIndexedDBを使用する
+- IndexedDBはデータベース名を'LocalDb'、ストア名を'RDB'とする(但しオプション(引数)で書き換え可)
+- 'RDB'のキーはAlaSQLのテーブル名、値は当該テーブルのオブジェクトの配列とする
+- AlaSQLのDBは隠蔽するため、LocalDbはクロージャ関数として作成
+- クロージャ関数内での共有のため、オブジェクトpvを定義。
+  const pv = { whois: 'LocalDb', rv: null,
+    schema: arg.schema || {tables:[]},
+    idb: null,          // IndexedDB
+    rdb: new alasql.Database(), // alasql
+    now: Date.now(),
+    opt: {
+      dbName: arg.dbName || 'LocalDb',  // IndexedDBの名称
+      storeName: 'RDB',   // IndexedDBのストア名
+    },
+  };
+- LocalDbの初期化処理としてIndexedDBの'RDB'の内容をAlaSQLにロードする
+- 以下のメンバ(内部関数)を戻り値とする
+  1. execSQL: SQL文字列を引数として、AlaSQLの実行結果を返す
+  2. loadIDB: IndexedDBの'RDB'の内容をAlaSQLにロードする
+  3. saveRDB: AlaSQLのテーブルからIndexedDBへデータを保存する
+  4. importJSON: ダイアログで指定されたJSONファイルを読み込み、AlaSQLとIndexedDBに保存する
+     JSONファイルの形式は、後掲の'schemaDef'参照
+  5. exportJSON: 全テーブルの構造及びデータをJSON化、ファイルとしてダウンロードする
+
+/** SpreadDb/LocalDb/createTable共通
+ * @typedef {Object} schemaDef - DB構造定義オブジェクト
+ * @param {string} dbName - データベース名
+ * @param {tableDef[]} tables - DB内の個々のテーブルの定義
+ * @param {Object.<string,Function>} [custom] - AlaSQLのカスタム関数
+ * @param {string} created - 作成日時。export時に付記
+ * 
+ * @typedef {Object} tableDef - テーブル構造定義オブジェクト
+ * @param {string} name - テーブル名。シート名も一致させる
+ * @param {string|string[]} [primaryKey] - 主キーとなる項目名。複合キーの場合配列で指定
+ * @param {columnDef[]} cols - 項目定義
+ * @param {Function} [initial] - 初期設定用関数(テーブルに初期データ登録＋シート作成)
+ * @param {Object[]} data - テーブルの行オブジェクトの配列。import/export時のみ設定
+ * @param {Object} [exportDef={}] - export時の設定。exportDef=nullの場合、出力対象外とする
+ * @param {string[]} exportDef.select=[] - 出力項目を絞り込む場合の項目名リスト。空配列なら全項目出力
+ * @param {string} exportDef.where="" - 出力行を絞り込む場合の条件(SQLのwhere句)
+ * 
+ * @typedef {Object} columnDef - 項目定義オブジェクト
+ * @param {string} name - 項目名
+ * @param {string} [label] - テーブル・シート表示時の項目名。省略時はnameを流用
+ * @param {string} type - データ型。string/number/boolean
+ * @param {any} [default] - 既定値。関数の場合、引数は行オブジェクト
+ * @param {Function} [printf] - 表示時点で行う文字列の整形用関数。引数は行オブジェクト
+ * @param {string} [note] - 備考
+ */
+
+
+【Feloの回答】
+
+ function LocalDb(arg) {
+    const pv = {
+        whois: 'LocalDb',
+        rv: null,
+        schema: arg.schema || { tables: [] },
+        idb: null, // IndexedDB
+        rdb: new alasql.Database(), // AlaSQL
+        now: Date.now(),
+        opt: {
+            dbName: arg.dbName || 'LocalDb', // IndexedDBの名称
+            storeName: arg.storeName || 'RDB', // IndexedDBのストア名
+        },
+    };
+
+    // IndexedDBの初期化
+    function initIDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(pv.opt.dbName);
+
+            request.onupgradeneeded = function (event) {
+                const db = event.target.result;
+                db.createObjectStore(pv.opt.storeName);
+            };
+
+            request.onsuccess = function (event) {
+                pv.idb = event.target.result;
+                loadIDB().then(resolve).catch(reject);
+            };
+
+            request.onerror = function (event) {
+                reject('IndexedDB error: ' + event.target.errorCode);
+            };
+        });
+    }
+
+    // IndexedDBの内容をAlaSQLにロード
+    function loadIDB() {
+        return new Promise((resolve, reject) => {
+            const transaction = pv.idb.transaction(pv.opt.storeName, 'readonly');
+            const store = transaction.objectStore(pv.opt.storeName);
+            const request = store.getAll();
+
+            request.onsuccess = function (event) {
+                const data = event.target.result;
+                data.forEach(item => {
+                    pv.rdb.exec(`CREATE TABLE IF NOT EXISTS ${item.key} AS SELECT * FROM ?`, [item.value]);
+                });
+                resolve();
+            };
+
+            request.onerror = function (event) {
+                reject('Load IDB error: ' + event.target.errorCode);
+            };
+        });
+    }
+
+    // AlaSQLのSQLを実行
+    function execSQL(sql) {
+        return pv.rdb.exec(sql);
+    }
+
+    // AlaSQLのテーブルからIndexedDBへデータを保存
+    function saveRDB() {
+        return new Promise((resolve, reject) => {
+            const transaction = pv.idb.transaction(pv.opt.storeName, 'readwrite');
+            const store = transaction.objectStore(pv.opt.storeName);
+
+            pv.rdb.tables.forEach(table => {
+                const data = pv.rdb.exec(`SELECT * FROM ${table.name}`);
+                store.put({ key: table.name, value: data });
+            });
+
+            transaction.oncomplete = function () {
+                resolve();
+            };
+
+            transaction.onerror = function (event) {
+                reject('Save RDB error: ' + event.target.errorCode);
+            };
+        });
+    }
+
+    // JSONファイルをインポート
+    function importJSON(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const jsonData = JSON.parse(event.target.result);
+                jsonData.tables.forEach(table => {
+                    pv.rdb.exec(`CREATE TABLE IF NOT EXISTS ${table.name} AS SELECT * FROM ?`, [table.data]);
+                });
+                saveRDB().then(resolve).catch(reject);
+            };
+            reader.onerror = function (event) {
+                reject('Import JSON error: ' + event.target.errorCode);
+            };
+            reader.readAsText(file);
+        });
+    }
+
+    // 全テーブルをJSON化してダウンロード
+    function exportJSON() {
+        const exportData = {
+            tables: pv.rdb.tables.map(table => {
+                return {
+                    name: table.name,
+                    data: pv.rdb.exec(`SELECT * FROM ${table.name}`)
+                };
+            })
+        };
+        const blob = new Blob([JSON.stringify(exportData)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'export.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // 初期化処理を実行
+    initIDB();
+
+    // メンバ関数を戻り値として返す
+    return {
+        execSQL,
+        loadIDB,
+        saveRDB,
+        importJSON,
+        exportJSON,
+    };
+}
+
+説明
+
+IndexedDBの初期化: initIDB関数でIndexedDBを開き、必要に応じてオブジェクトストアを作成します。
+データのロード: loadIDB関数でIndexedDBからデータを取得し、AlaSQLのテーブルに格納します。
+SQL実行: execSQL関数でAlaSQLのSQL文を実行します。
+データの保存: saveRDB関数でAlaSQLのテーブルのデータをIndexedDBに保存します。
+JSONのインポート: importJSON関数で指定されたJSONファイルを読み込み、AlaSQLとIndexedDBにデータを保存します。
+JSONのエクスポート: exportJSON関数で全テーブルのデータをJSON形式でダウンロードします。
+
+この実装は、要件に基づいており、非同期処理を考慮しています。必要に応じて、エラーハンドリングや追加機能を実装することができます。

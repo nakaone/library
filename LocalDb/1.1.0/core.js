@@ -1,136 +1,159 @@
-/** localDB: IndexedDBを保存先とするブラウザ内RDB
- * @param {Object} arg
- * @param {schemaDef} arg.schema={} - DB構造定義オブジェクト
- * @returns {Object} 使用可能なメソッドのオブジェクト
- */
-function LocalDb(arg={}) {
-  const pv = { whois: 'LocalDb', rv: null,
-    schema: arg.schema || {tables:[]},
-    idb: null,          // IndexedDB
-    rdb: new alasql.Database(), // alasql
+function LocalDb(arg) {
+  const pv = {
+    whois: 'LocalDb',
+    rv: null,
+    schema: arg.schema || { tables: [] },
+    idb: null, // IndexedDB
+    rdb: new alasql.Database(), // AlaSQL
+    now: Date.now(),
     opt: {
-      dbName: arg.dbName || 'LocalDb',  // IndexedDBの名称
-      storeName: 'RDB',   // IndexedDBのストア名
+      dbName: arg.dbName || 'LocalDb', // IndexedDBの名称
+      storeName: arg.storeName || 'RDB', // IndexedDBのストア名
     },
   };
 
-  async function constructor(arg) {
-    const v = { whois: `${pv.whois}.constructor`, rv: null};
-    dev.start(v.whois, [...arguments]);
-    return new Promise(async(resolve, reject) => {
-      dev.step(1);  // オプションに既定値設定
-      pv.opt = Object.assign(pv.opt,arg);
-      dev.dump(pv.opt);
-
-      dev.step(2);
-      pv.idb = await openIndexedDB();
-
-      for( v.tableName in pv.schema.tables.map(x => x.name)){
-        dev.step(3);  // rdbからテーブル名をキーとして検索
-        v.existingData = await getIndexedDB(v.tableName);
-        
-        if (v.existingData) {
-          dev.step(4.1);  // 存在すればdataをJSON.parseしてpv.rdbに格納
-          pv.rdb.tables[v.tableName] = JSON.parse(v.existingData.data);
-        } else {
-          dev.step(4.2);  // 存在しなければ新規登録
-          await setIndexedDB(v.tableName, '[]');
-          pv.rdb.exec(`create table \`${v.tableName}\``);
-        }
-      }
-
-      dev.end(); // 終了処理
-      return v.rv;
-
-    });
-  }
-
-  async function openIndexedDB() {
+  // IndexedDBの初期化
+  function initIDB() {
+    console.log(pv.whois+'.initIDB start.');
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(pv.opt.dbName, 1);
-      
-      request.onupgradeneeded = (event) => {
+      const request = indexedDB.open(pv.opt.dbName);
+
+      request.onupgradeneeded = function (event) {
+        const db = event.target.result;
+        db.createObjectStore(pv.opt.storeName);
+      };
+
+      request.onsuccess = function (event) {
         pv.idb = event.target.result;
-        pv.idb.createObjectStore(pv.opt.storeName, { keyPath: 'name' });
+        loadIDB().then(resolve).catch(reject);
       };
 
-      request.onsuccess = (event) => {
-        resolve(event.target.result);
-      };
-
-      request.onerror = (event) => {
-        reject(event.target.error);
+      request.onerror = function (event) {
+        reject('IndexedDB error: ' + event.target.errorCode);
       };
     });
   }
 
-  async function getIndexedDB(tableName) {
-    return new Promise((resolve) => {
-      const transaction = pv.idb.transaction([pv.opt.storeName]);
+  // IndexedDBの内容をAlaSQLにロード
+  function loadIDB() {
+    console.log(pv.whois+'.loadIDB start.');
+    return new Promise((resolve, reject) => {
+      const transaction = pv.idb.transaction(pv.opt.storeName, 'readonly');
       const store = transaction.objectStore(pv.opt.storeName);
-      const request = store.get(tableName);
+      const request = store.getAll();
 
-      request.onsuccess = (event) => {
-        resolve(event.target.result);
-      };
-    });
-  }
-
-  async function setIndexedDB(name, rows) {
-    return new Promise((resolve) => {
-      const transaction = pv.idb.transaction(pv.opt.storeName, 'readwrite');
-      const store = transaction.objectStore(pv.opt.storeName);
-      const request = store.put({ name: name, rows: rows });
-
-      request.onsuccess = () => {
+      request.onsuccess = function (event) {
+        const data = event.target.result;
+        data.forEach(item => {
+          pv.rdb.exec(
+            `drop table if exists \`${item.key}\`;`
+            + `create table \`${item.key}\`;`
+            + `insert into \`${item.key}\` select * from ?;`
+            //`CREATE TABLE IF NOT EXISTS ${item.key} AS SELECT * FROM ?`
+            , [item.value]
+          );
+        });
         resolve();
       };
-    });
-  }
 
-  /** execSQL: alasqlでSQLを実行
-   * @param {string} sql
-   * @param {Array[]} arg - alasqlの第二引数
-   * @returns {Object[]}
-   */
-  function execSQL(sql,arg=null) {
-    return arg === null ? pv.rdb.exec(sql) : pv.rdb.exec(sql,arg);
-  }
-
-  /** hasTable: RDB(alasql)内にテーブルを持っているか確認
-   * @param {string} tableName
-   * @returns {boolean}
-   */
-  function hasTable(tableName) {
-    return tableName in pv.rdb.tables;
-  }
-
-  dev.start(pv.whois, [...arguments]);
-  try {
-
-    dev.step(3);  // AlaSQLカスタム関数の用意
-    if( pv.schema.hasOwnProperty('custom') ){
-      Object.keys(pv.schema.custom).forEach(x => alasql.fn[x] = pv.schema.custom[x]);
-    }
-
-    constructor(arg).then(r => {
-      dev.end(); // 終了処理
-      return {
-        'exec': execSQL,
-        'hasTable': hasTable,
+      request.onerror = function (event) {
+        reject('Load IDB error: ' + event.target.errorCode);
       };
     });
+  }
 
-    /*
-    dev.end(); // 終了処理
-    return {
-      //'load': loadIDB,  IndexedDBからRDBへデータをロードする
-      //'save': saveRDB,  RDBからIndexedDBへデータを保存する
-      //'import': importJSON,
-      //'export': exportJSON,
+  // AlaSQLのSQLを実行
+  function execSQL(sql) {
+    return pv.rdb.exec(sql);
+  }
+
+  // AlaSQLのテーブルからIndexedDBへデータを保存
+  function saveRDB() {
+    console.log(pv.whois+'.saveRDB start.');
+    return new Promise((resolve, reject) => {
+      const transaction = pv.idb.transaction(pv.opt.storeName, 'readwrite');
+      const store = transaction.objectStore(pv.opt.storeName);
+
+      pv.rdb.tables.forEach(table => {
+        console.log('l.75',table);
+        const data = pv.rdb.exec(`SELECT * FROM ${table.name}`);
+        store.put({ key: table.name, value: data });
+      });
+
+      transaction.oncomplete = function () {
+        resolve();
+      };
+
+      transaction.onerror = function (event) {
+        reject('Save RDB error: ' + event.target.errorCode);
+      };
+    });
+  }
+
+  // JSONファイルをインポート
+  function importJSON() {
+    console.log(pv.whois+'.importJSON start.');
+    return new Promise((resolve, reject) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = function (event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const jsonData = JSON.parse(e.target.result);
+          jsonData.tables.forEach(table => {
+            pv.rdb.exec(
+              `drop table if exists \`${table.name}\`;`
+              + `create table \`${table.name}\`;`
+              + `insert into \`${table.name}\` select * from ?;`
+              //`CREATE TABLE IF NOT EXISTS ${table.name} AS SELECT * FROM ?`
+              , [table.data]
+            );
+          });
+          saveRDB().then(() => resolve(jsonData)).catch(reject);
+        };
+        reader.onerror = function (e) {
+          reject('Import JSON error: ' + e.target.errorCode);
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    });
+  }
+
+  // 全テーブルをJSON化してダウンロード
+  function exportJSON() {
+    console.log(pv.whois+'.exportJSON start.');
+    const exportData = {
+      tables: pv.rdb.tables.map(table => {
+        return {
+          name: table.name,
+          data: pv.rdb.exec(`SELECT * FROM ${table.name}`)
+        };
+      })
     };
-    */
+    const blob = new Blob([JSON.stringify(exportData)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'export.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 
+  // 初期化処理を実行
+  initIDB();
 
-  } catch (e) { dev.error(e); return e; }
+  // メンバ関数を戻り値として返す
+  console.log('LocalDb end.');
+  return {
+    exec: execSQL,
+    load: loadIDB,
+    save: saveRDB,
+    import: importJSON,
+    export: exportJSON,
+  };
 }

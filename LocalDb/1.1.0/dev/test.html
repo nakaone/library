@@ -12,18 +12,21 @@
 </head>
 <body>
 
-
+<button onclick="db.import()">import</button>
 
 </body>
 <script type="text/javascript">
   const dev = devTools();
-  const db = LocalDb();
+  const db = LocalDb(tData);
   
   window.addEventListener('DOMContentLoaded', () => {
     const v = { whois: 'DOMContentLoaded', rv: null };
     dev.start(v.whois);
+
     try {
-      console.log(tData);
+      dev.step(1);
+      console.log(tData,db);
+      dev.step(2);
 
       dev.end(); // 終了処理
       return v.rv;

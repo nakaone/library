@@ -1,0 +1,97 @@
+以下の要件を満たすjavascriptのクロージャ関数'LocalDb'はどのようなソースになるか？
+
+- 非同期にRDBを扱えるようにするため、javascript内では主にAlaSQLを使用する
+- データを保存するためIndexedDBを使用する
+- IndexedDBはデータベース名を'LocalDb'、ストア名を'RDB'とする(但しオプション(引数)で書き換え可)
+- 'RDB'のキーはAlaSQLのテーブル名、値は当該テーブルのオブジェクトの配列とする
+- AlaSQLのDBは隠蔽するため、LocalDbはクロージャ関数として作成
+- クロージャ関数内での共有のため、オブジェクトpvを定義。
+  const pv = { whois: 'LocalDb', rv: null,
+    schema: arg.schema || {tables:[]},
+    idb: null,          // IndexedDB
+    rdb: new alasql.Database(), // alasql
+    now: Date.now(),
+    opt: {
+      dbName: arg.dbName || 'LocalDb',  // IndexedDBの名称
+      storeName: 'RDB',   // IndexedDBのストア名
+    },
+  };
+- LocalDbの初期化処理としてIndexedDBの'RDB'の内容をAlaSQLにロードする
+
+const LocalDb = (arg) => {
+  const pv = {
+    whois: 'LocalDb',
+    rv: null,
+    schema: arg.schema || { tables: [] },
+    idb: null, // IndexedDB
+    rdb: new alasql.Database(), // AlaSQL
+    now: Date.now(),
+    opt: {
+      dbName: arg.dbName || 'LocalDb', // IndexedDBの名称
+      storeName: arg.storeName || 'RDB', // IndexedDBのストア名
+    },
+  };
+
+  // IndexedDBの初期化処理
+  const initDB = () => {
+    const request = indexedDB.open(pv.opt.dbName, 1);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(pv.opt.storeName)) {
+        db.createObjectStore(pv.opt.storeName, { keyPath: 'tableName' });
+      }
+    };
+
+    request.onsuccess = (event) => {
+      pv.idb = event.target.result;
+      loadToAlaSQL();
+    };
+
+    request.onerror = (event) => {
+      console.error('Database error:', event.target.error);
+    };
+  };
+
+  // IndexedDBからAlaSQLにデータをロードする
+  const loadToAlaSQL = () => {
+    const transaction = pv.idb.transaction(pv.opt.storeName, 'readonly');
+    const store = transaction.objectStore(pv.opt.storeName);
+    const request = store.getAll();
+
+    request.onsuccess = (event) => {
+      const data = event.target.result;
+      data.forEach((item) => {
+        pv.rdb.exec(`CREATE TABLE IF NOT EXISTS ${item.tableName} AS SELECT * FROM ?`, [item.data]);
+      });
+    };
+
+    request.onerror = (event) => {
+      console.error('Load error:', event.target.error);
+    };
+  };
+
+  // 初期化を実行
+  initDB();
+
+  // 他のメソッドをここに追加することができます
+  return {
+    // 例: データを追加するメソッド
+    addData: (tableName, data) => {
+      const transaction = pv.idb.transaction(pv.opt.storeName, 'readwrite');
+      const store = transaction.objectStore(pv.opt.storeName);
+      store.put({ tableName, data });
+
+      // AlaSQLにもデータを追加
+      pv.rdb.exec(`CREATE TABLE IF NOT EXISTS ${tableName} AS SELECT * FROM ?`, [data]);
+    },
+
+    // 例: データを取得するメソッド
+    getData: (tableName) => {
+      return pv.rdb.exec(`SELECT * FROM ${tableName}`);
+    },
+  };
+};
+
+// 使用例
+const localDbInstance = LocalDb({ schema: {}, dbName: 'LocalDb', storeName: 'RDB' });
