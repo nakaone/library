@@ -7,8 +7,8 @@ function LocalDb(arg) {
     rdb: new alasql.Database(), // AlaSQL
     now: Date.now(),
     opt: {
-      dbName: arg.dbName || 'LocalDb', // IndexedDBの名称
-      storeName: arg.storeName || 'RDB', // IndexedDBのストア名
+      dbName: 'LocalDb', // IndexedDBの名称
+      storeName: arg.dbName || 'RDB', // IndexedDBのストア名
     },
   };
 
@@ -44,15 +44,17 @@ function LocalDb(arg) {
 
       request.onsuccess = function (event) {
         const data = event.target.result;
-        data.forEach(item => {
-          pv.rdb.exec(
-            `drop table if exists \`${item.key}\`;`
-            + `create table \`${item.key}\`;`
-            + `insert into \`${item.key}\` select * from ?;`
-            //`CREATE TABLE IF NOT EXISTS ${item.key} AS SELECT * FROM ?`
-            , [item.value]
-          );
-        });
+        if( data ){
+          data.forEach(item => {
+            pv.rdb.exec(
+              `drop table if exists \`${item.key}\`;`
+              + `create table \`${item.key}\`;`
+              + `insert into \`${item.key}\` select * from ?;`
+              //`CREATE TABLE IF NOT EXISTS ${item.key} AS SELECT * FROM ?`
+              , [item.value]
+            );
+          });
+        }
         resolve();
       };
 
@@ -74,11 +76,10 @@ function LocalDb(arg) {
       const transaction = pv.idb.transaction(pv.opt.storeName, 'readwrite');
       const store = transaction.objectStore(pv.opt.storeName);
 
-      pv.rdb.tables.forEach(table => {
-        console.log('l.75',table);
-        const data = pv.rdb.exec(`SELECT * FROM ${table.name}`);
-        store.put({ key: table.name, value: data });
-      });
+      for( let table in pv.rdb.tables ){
+        const data = pv.rdb.exec(`SELECT * FROM \`${table}\``);
+        store.put(data,table);
+      }
 
       transaction.oncomplete = function () {
         resolve();
@@ -129,7 +130,7 @@ function LocalDb(arg) {
       tables: pv.rdb.tables.map(table => {
         return {
           name: table.name,
-          data: pv.rdb.exec(`SELECT * FROM ${table.name}`)
+          data: pv.rdb.exec(`SELECT * FROM \`${table.name}\``)
         };
       })
     };

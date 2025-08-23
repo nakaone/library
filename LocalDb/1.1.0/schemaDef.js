@@ -1,6 +1,6 @@
 /** SpreadDb/LocalDb/createTable共通
  * @typedef {Object} schemaDef - DB構造定義オブジェクト
- * @param {string} dbName - データベース名
+ * @param {string} dbName - データベース名(IndexedDB上ではストア名)
  * @param {tableDef[]} tables - DB内の個々のテーブルの定義
  * @param {Object.<string,Function>} [custom] - AlaSQLのカスタム関数
  * @param {string} created - 作成日時。export時に付記
