@@ -2174,5 +2174,5 @@ const tData = {
     "exclude": "fn => /^(20\\d{2})(\\d{2})(\\d{2})_400_00[0|3]\\.pdf$/.test(fn)",
     "identifyType": "fileName => {\n        if( !fileName ) return '不明';\n        // 処理対象外のファイル\n        for( let rex of cf.ignore ) if( rex.test(fileName) ) return '対象外';\n        // 自動判別可能なら該当するメンバ名を、判別不可能なら「不明」を返す\n        for (const [key, value] of Object.entries(cf.classDef))\n          if (value.rex && value.rex.test(fileName)) return key;\n        return '不明';\n      }"
   },
-  "created": "2025-08-22T16:23:47.665+09:00"
+  "created": "2025-08-22T17:34:19.202+09:00"
 };

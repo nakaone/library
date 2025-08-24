@@ -1,0 +1,368 @@
+# 質問01
+
+以下の要件を満たすjavascriptのクロージャ関数'LocalDb'の実装例は？
+
+- 非同期にRDBを扱えるようにするため、javascript内では主にAlaSQLを使用する
+- データを保存するためIndexedDBを使用する
+- 引数は以下のtypedefにおける"schemaDef"とする
+- IndexedDBストアのキーはAlaSQLのテーブル名、値は当該テーブルのオブジェクトの配列とする
+- AlaSQLのDBは隠蔽するため、LocalDbはクロージャ関数として作成
+- クロージャ関数内での共有のため、オブジェクトpvを定義。
+  const pv = { whois: 'LocalDb', rv: null,
+    schema: arg.schema || {tables:[]},
+    idb: null,          // IndexedDB
+    rdb: new alasql.Database(), // alasql
+    now: Date.now(),
+    dbName: 'LocalDb',  // IndexedDBの名称
+    storeName: arg.dbName || 'RDB',   // IndexedDBのストア名
+  };
+- LocalDbの初期化処理としてIndexedDBのストアの内容をAlaSQLにロードする
+- 以下の内部関数作成する
+  1. execSQL: SQL文字列を引数として、AlaSQLの実行結果を返す
+  2. loadIDB: IndexedDBの'RDB'の内容を取得、レコード毎にキーをテーブル名としてAlaSQLにテーブルを作成する
+  3. saveRDB: AlaSQLのテーブルからIndexedDBへデータを保存する
+  4. importJSON: ダイアログで指定されたJSONファイルを読み込み、AlaSQLとIndexedDBに保存する
+     引数は無し(void)、戻り値はJSONファイルをparseしたオブジェクト。
+     手順は以下の通り。
+     (1) ファイルを選択するダイアログを表示(input type="file")
+     (2) 選択されたファイル(JSON)を読み込み
+     (3) JSONをparseし、AlaSQLとIndexedDBに保存
+     JSONファイルの形式は、後掲の'schemaDef'参照。
+  5. exportJSON: 全テーブルの構造及びデータをJSON化、ファイルとしてダウンロードする
+- 内部関数は開始時に関数名をログに出力する
+  console.log(`${pv.whois}.${内部関数名}. start.`);
+- 戻り値は以下とする
+  return {
+    exec: execSQL,
+    load: loadIDB,
+    save: saveRDB,
+    import: importJSON,
+    export: exportJSON,
+  };
+- テーブル作成の際は一度テーブルを削除した後に再生成(以下はテーブル名をtable.nameとした例)
+  `drop table if exists \`${table.name}\`;`
+  + `create table \`${table.name}\`;`
+  + `insert into \`${table.name}\` select * from ?;`
+
+なお提示されるソースのインデントはスペース2桁でお願いします。
+
+/** SpreadDb/LocalDb/createTable共通
+ * @typedef {Object} schemaDef - DB構造定義オブジェクト
+ * @param {string} dbName - データベース名
+ * @param {tableDef[]} tables - DB内の個々のテーブルの定義
+ * @param {Object.<string,Function>} [custom] - AlaSQLのカスタム関数
+ * @param {string} created - 作成日時。export時に付記
+ * 
+ * @typedef {Object} tableDef - テーブル構造定義オブジェクト
+ * @param {string} name - テーブル名。シート名も一致させる
+ * @param {string|string[]} [primaryKey] - 主キーとなる項目名。複合キーの場合配列で指定
+ * @param {columnDef[]} cols - 項目定義
+ * @param {Function} [initial] - 初期設定用関数(テーブルに初期データ登録＋シート作成)
+ * @param {Object[]} data - テーブルの行オブジェクトの配列。import/export時のみ設定
+ * @param {Object} [exportDef={}] - export時の設定。exportDef=nullの場合、出力対象外とする
+ * @param {string[]} exportDef.select=[] - 出力項目を絞り込む場合の項目名リスト。空配列なら全項目出力
+ * @param {string} exportDef.where="" - 出力行を絞り込む場合の条件(SQLのwhere句)
+ * 
+ * @typedef {Object} columnDef - 項目定義オブジェクト
+ * @param {string} name - 項目名
+ * @param {string} [label] - テーブル・シート表示時の項目名。省略時はnameを流用
+ * @param {string} type - データ型。string/number/boolean
+ * @param {any} [default] - 既定値。関数の場合、引数は行オブジェクト
+ * @param {Function} [printf] - 表示時点で行う文字列の整形用関数。引数は行オブジェクト
+ * @param {string} [note] - 備考
+ */
+
+
+# 回答01
+
+## ソース
+
+```javascript
+function LocalDb(arg) {
+  const pv = {
+    whois: 'LocalDb',
+    rv: null,
+    schema: arg.schema || { tables: [] },
+    idb: null, // IndexedDB
+    rdb: new alasql.Database(), // AlaSQL
+    now: Date.now(),
+    dbName: 'LocalDb', // IndexedDBの名称
+    storeName: arg.dbName || 'RDB', // IndexedDBのストア名
+  };
+
+  // IndexedDBの初期化
+  const initIDB = () => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(pv.dbName, 1);
+      request.onupgradeneeded = (event) => {
+        pv.idb = event.target.result;
+        pv.schema.tables.forEach((table) => {
+          if (!pv.idb.objectStoreNames.contains(table.name)) {
+            pv.idb.createObjectStore(table.name);
+          }
+        });
+      };
+      request.onsuccess = (event) => {
+        pv.idb = event.target.result;
+        resolve();
+      };
+      request.onerror = (event) => {
+        reject(event.target.error);
+      };
+    });
+  };
+
+  // SQLを実行する関数
+  const execSQL = (sql) => {
+    console.log(`${pv.whois}.execSQL start.\n${sql}`);
+    return alasql(sql);
+  };
+
+  // IndexedDBからデータをロードする関数
+  const loadIDB = async () => {
+    console.log(`${pv.whois}.loadIDB.start.`);
+    const transaction = pv.idb.transaction(pv.storeName, 'readonly');
+    const store = transaction.objectStore(pv.storeName);
+    const tables = await new Promise((resolve) => {
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+    });
+
+    tables.forEach((table) => {
+      execSQL(`drop table if exists \`${table.name}\`;`);
+      execSQL(`create table \`${table.name}\`;`);
+      execSQL(`insert into \`${table.name}\` select * from ?;`, [table.data]);
+    });
+  };
+
+  // AlaSQLのテーブルからIndexedDBにデータを保存する関数
+  const saveRDB = async () => {
+    console.log(`${pv.whois}.saveRDB.start.`);
+    const transaction = pv.idb.transaction(pv.storeName, 'readwrite');
+    const store = transaction.objectStore(pv.storeName);
+
+    for (const table of pv.schema.tables) {
+      const data = execSQL(`select * from \`${table.name}\`;`);
+      await new Promise((resolve) => {
+        store.put({ name: table.name, data: data });
+        resolve();
+      });
+    }
+  };
+
+  // JSONファイルをインポートする関数
+  const importJSON = async () => {
+    console.log(`${pv.whois}.importJSON.start.`);
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json';
+    fileInput.onchange = async (event) => {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const jsonData = JSON.parse(e.target.result);
+        for (const table of jsonData.tables) {
+          execSQL(`drop table if exists \`${table.name}\`;`);
+          execSQL(`create table \`${table.name}\`;`);
+          execSQL(`insert into \`${table.name}\` select * from ?;`, [table.data]);
+        }
+        await saveRDB();
+      };
+      reader.readAsText(file);
+    };
+    fileInput.click();
+  };
+
+  // 全テーブルのデータをJSON化してダウンロードする関数
+  const exportJSON = () => {
+    console.log(`${pv.whois}.exportJSON.start.`);
+    const data = { tables: [] };
+    pv.schema.tables.forEach((table) => {
+      const tableData = execSQL(`select * from \`${table.name}\`;`);
+      data.tables.push({ name: table.name, data: tableData });
+    });
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'export.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // 初期化処理
+  initIDB().then(loadIDB);
+
+  return {
+    exec: execSQL,
+    load: loadIDB,
+    save: saveRDB,
+    import: importJSON,
+    export: exportJSON,
+  };
+}
+```
+
+# 質問02
+
+以下のtest.htmlを実行したところ`Uncaught (in promise) Error: Data source number 0 in undefined`エラーが出た。原因と対応方法を提示して欲しい。
+
+## test.html
+
+```html
+<!DOCTYPE html>
+<html xml:lang="ja" lang="ja">
+<head>
+  <title>LocalDb 1.1.0</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <!--link rel="stylesheet" href="style.css"-->
+  <style type="text/css"></style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="../../../../library/devTools/1.0.1/core.js"></script>
+  <script src="./data.js"></script>
+  <script src="../core.js"></script>
+</head>
+<body>
+
+<button onclick="db.import()">import</button>
+<button onclick="db.export()">export</button>
+
+</body>
+<script type="text/javascript">
+  const dev = devTools();
+  const db = LocalDb(tData);
+  
+  window.addEventListener('DOMContentLoaded', () => {
+    const v = { whois: 'DOMContentLoaded', rv: null };
+    dev.start(v.whois);
+
+    try {
+      dev.step(1);
+      console.log(tData,db);
+      dev.step(2);
+
+      dev.end(); // 終了処理
+      return v.rv;
+    } catch (e) { dev.error(e); return e; }
+  });
+</script>
+</html>
+```
+
+## data.js
+
+```javascript
+const tData = {"dbName": "taxation","tables": [{"name": "files","primaryKey": "id","cols": [{"name": "id","type": "string","note": "ファイルのID"},{"name": "name","type": "string","note": "ファイル(フォルダ)名"},{"name": "mime","type": "string","note": "MIMEタイプ。例:\"application/pdf\",\"application/vnd.google-apps.spreadsheet\""},{"name": "desc","type": "string","note": "ファイルの説明。「詳細を表示>詳細タグ>ファイルの詳細>説明」に設定された文字列"},{"name": "url","type": "string","note": "ファイルのURL。File.getDownloadUrl()ではなくFile.getUrl()"},{"name": "viewers","type": "string","note": "閲覧権限を持つアカウント"},{"name": "editors","type": "string","note": "編集権限を持つアカウント"},{"name": "created","type": "string","note": "作成日時。ISO8601拡張形式"},{"name": "updated","type": "string","note": "更新日時。ISO8601拡張形式"}],"initial": "() => getFileList()","exportDef": {"select": ["id","name"]},"data": [{"id": "1ATSxdgmIT1ZxIoXQrPTdeMGPNeDBCEcx7UC29FF2FcM","name": "開発用","mime": "application/vnd.google-apps.spreadsheet","desc": "","url": "https://docs.google.com/spreadsheets/d/1ATSxdgmIT1ZxIoXQrPTdeMGPNeDBCEcx7UC29FF2FcM/edit?usp=drivesdk","viewers": "","editors": "takeda-erika@tkcnf.or.jp","created": "2025-08-13T12:22:14.243+09:00","updated": "2025-08-22T08:49:52.176+09:00"},{"id": "1u5n77hzw84eTeMAkqTsr5v-ccarY62cK","name": "CK202410.pdf","mime": "application/pdf","desc": "","url": "https://drive.google.com/file/d/1u5n77hzw84eTeMAkqTsr5v-ccarY62cK/view?usp=drivesdk","viewers": "","editors": "takeda-erika@tkcnf.or.jp","created": "2024-10-10T11:44:34.400+09:00","updated": "2024-10-09T16:31:40.000+09:00"},{"id": "1_01-0Z7dfKT18_gPzxUlPnfTqTTbnQwY","name": "EF202410.pdf","mime": "application/pdf","desc": "","url": "https://drive.google.com/file/d/1_01-0Z7dfKT18_gPzxUlPnfTqTTbnQwY/view?usp=drivesdk","viewers": "","editors": "takeda-erika@tkcnf.or.jp","created": "2024-10-10T11:44:36.466+09:00","updated": "2024-10-09T15:58:24.000+09:00"}]},{"name": "記入用","primaryKey": "id","cols": [{"name": "id","type": "string","note": "ファイルのID"},{"name": "name","type": "string","note": "ファイル(フォルダ)名"},{"name": "link","type": "string","note": "プレビュー用URL"},{"name": "isExist","type": "boolean","note": "GD上の状態(存否)"},{"name": "type","type": "string","note": "証憑としての分類。report.html上の掲載するdiv[data-type]"},{"name": "date","type": "string","note": "取引日。電子証憑・参考等、report.html上取引日の表示が必要な場合設定"},{"name": "label","type": "string","note": "摘要(電子証憑)、行き先(交通費)、資料名(参考)"},{"name": "price","label": "価格","type": "string","printf": "o=>Number(o.price).toLocaleString()"},{"name": "payby","label": "支払方法","type": "string","note": "役員借入金 or AMEX"},{"name": "note","label": "備考","type": "string","note": "特記事項の本文(MD)、他はpdf上の頁指定等"}],"initial": "() => []","exportDef": {"select": ["id","type","date","label","price","payby","note"],"where": "`type`=\"特記事項\" or `isExist`=\"TRUE\""},"data": [{"id": "1uu_NH-iGsQYC21pVZS3vohIVfhYaJrn_","name": "2025年度給与所得等に係る税額決定通知書.pdf","link": "https://drive.google.com/file/d/1uu_NH-iGsQYC21pVZS3vohIVfhYaJrn_/preview","isExist": "TRUE","type": "参考資料","date": "2025/05/16","label": "2025年度給与所得等に係る特別徴収税額の決定通知書","price": "","payby": "","note": ""},]},{"name": "交通費","cols": [{"name": "date","label": "日付","type": "string"},{"name": "destination","label": "行先","type": "string"},{"name": "label","label": "目的","type": "string"},{"name": "route","label": "経路","type": "string"},{"name": "number","label": "人数","type": "number"},{"name": "price","label": "金額","type": "number","printf": "o=>Number(o.price).toLocaleString()"},{"name": "note","label": "備考","type": "string"}],"initial": "() => []","data": [{"date": "2024/10/08","destination": "羽沢","label": "現状確認","route": "笹塚 - 市ヶ谷 - 新桜台","number": "1","price": "1240","note": ""},]}],"custom": {"exclude": "fn => /^(20\\d{2})(\\d{2})(\\d{2})_400_00[0|3]\\.pdf$/.test(fn)","identifyType": "fileName => {\n        if( !fileName ) return '不明';\n        // 処理対象外のファイル\n        for( let rex of cf.ignore ) if( rex.test(fileName) ) return '対象外';\n        // 自動判別可能なら該当するメンバ名を、判別不可能なら「不明」を返す\n        for (const [key, value] of Object.entries(cf.classDef))\n          if (value.rex && value.rex.test(fileName)) return key;\n        return '不明';\n      }"},"created": "2025-08-22T16:23:47.665+09:00"};
+```
+
+# 回答02
+
+`Uncaught (in promise) Error: Data source number 0 in undefined`というエラーは、AlaSQLがデータソースを正しく認識できない場合に発生します。このエラーの原因と対応方法について考察します。
+
+## 原因
+
+1. データソースの不正: AlaSQLが期待するデータソースが提供されていない、または不正な形式である可能性があります。特に、SQLクエリで使用するデータが正しく設定されていない場合にこのエラーが発生します。
+
+2. テーブルの作成やデータの挿入の失敗: loadIDB関数内でIndexedDBからデータを読み込む際に、テーブルが正しく作成されていない、またはデータが正しく挿入されていない場合、AlaSQLがそのテーブルを認識できず、エラーが発生することがあります。
+
+3. 非同期処理の問題: importJSONやloadIDBなどの非同期処理が完了する前に、AlaSQLのクエリが実行されている場合、データソースが未定義のままクエリが実行されることがあります。
+
+## 対応方法
+
+1. データソースの確認: execSQL関数を呼び出す前に、データソースが正しく設定されているか確認します。特に、テーブルが存在し、データが正しく挿入されているかを確認してください。
+
+2. 非同期処理の完了を待つ: loadIDBやimportJSONのような非同期関数が完了するのを待ってから、AlaSQLのクエリを実行するようにします。async/awaitを使用して、非同期処理が完了するまで次の処理を待機することが重要です。
+```javascript
+await loadIDB(); // これを呼び出してから次の処理を行う
+```
+
+3. エラーハンドリングの追加: SQLクエリを実行する際に、エラーハンドリングを追加して、問題が発生した場合に詳細な情報を得られるようにします。
+```javascript
+try {
+  const result = execSQL("SELECT * FROM files");
+} catch (error) {
+  console.error("SQLエラー:", error);
+}
+```
+
+4. データの初期化: data.jsで定義されているデータが正しい形式であることを確認し、必要に応じてデータの初期化を行います。特に、dataフィールドが正しく設定されているかを確認してください。
+
+
+これらの対応を行うことで、Data source number 0 in undefinedエラーを解消できる可能性が高まります。回答を変換Newエクスポート
+
+# 質問03
+
+loadIDBのtablesはtableDef型のObjectの配列が期待されているのに([B]の箇所)、getAll()で取得されるのはtableDef型の属性dataに該当するデータ部分となっている。
+getAllの部分でテーブル名(ストア内のkeyの値)とデータオブジェクト(ストア内のvalue)を取得する方法は？
+
+```javascript
+const loadIDB = async () => {
+  console.log(`${pv.whois}.loadIDB.start.`);
+  const transaction = pv.idb.transaction(pv.storeName, 'readonly');
+  const store = transaction.objectStore(pv.storeName);
+  const tables = await new Promise((resolve) => {
+    const request = store.getAll(); // [A]
+    console.log('l.48',store);  // -> IDBObjectStore {name: 'taxation', keyPath: null, indexNames: DOMStringList, transaction: IDBTransaction, autoIncrement: false}
+    request.onsuccess = () => resolve(request.result);
+  });
+
+  tables.forEach((table) => { // [B]
+    console.log('l.53',JSON.stringify(table.slice(0,1))); // -> l.53 [{"id":"1ATSxdgmIT1ZxIoXQrPTdeMGPNeDBCEcx7UC29FF2FcM","name":"開発用","mime":"application/vnd.google-apps.spreadsheet","desc":"","url":"https://docs.google.com/spreadsheets/d/1ATSxdgmIT1ZxIoXQrPTdeMGPNeDBCEcx7UC29FF2FcM/edit?usp=drivesdk","viewers":"","editors":"takeda-erika@tkcnf.or.jp","created":"2025-08-13T12:22:14.243+09:00","updated":"2025-08-22T08:49:52.176+09:00"}]
+    execSQL(`drop table if exists \`${table.name}\`;`);
+    execSQL(`create table \`${table.name}\`;`);
+    execSQL(`insert into \`${table.name}\` select * from ?;`, [table.data]);
+  });
+};
+```
+
+# 回答03
+
+loadIDB関数内で、IndexedDBからテーブル名とデータオブジェクトを取得するためには、getAll()メソッドの代わりに、get()メソッドを使用して、各テーブルのキー（テーブル名）と値（データオブジェクト）を取得する必要があります。以下にその方法を示します。
+
+## 修正後のloadIDB関数
+
+```javascript
+const loadIDB = async () => {
+  console.log(`${pv.whois}.loadIDB.start.`);
+  const transaction = pv.idb.transaction(pv.storeName, 'readonly');
+  const store = transaction.objectStore(pv.storeName);
+  
+  // テーブル名とデータを格納する配列
+  const tables = [];
+
+  // ストア内の全てのキーを取得
+  const keys = await new Promise((resolve) => {
+    const request = store.getAllKeys(); // 全てのキーを取得
+    request.onsuccess = () => resolve(request.result);
+  });
+
+  // 各キーに対してデータを取得
+  for (const key of keys) {
+    const tableData = await new Promise((resolve) => {
+      const request = store.get(key); // 各キーに対するデータを取得
+      request.onsuccess = () => resolve({ name: key, data: request.result });
+    });
+    tables.push(tableData); // テーブル名とデータを配列に追加
+  }
+
+  // 取得したテーブル情報を使ってAlaSQLにテーブルを作成
+  tables.forEach((table) => {
+    console.log('l.53', JSON.stringify(table)); // テーブル名とデータを表示
+    execSQL(`drop table if exists \`${table.name}\`;`);
+    execSQL(`create table \`${table.name}\`;`);
+    execSQL(`insert into \`${table.name}\` select * from ?;`, [table.data]);
+  });
+};
+```
+
+## 説明
+
+1. 全てのキーを取得: store.getAllKeys()を使用して、IndexedDBストア内の全てのキー（テーブル名）を取得します。
+
+2. 各キーに対するデータを取得: 取得したキーをループし、store.get(key)を使用して、各テーブル名に対応するデータを取得します。このデータは、テーブル名と共にオブジェクトとして配列に格納されます。
+
+3. AlaSQLにテーブルを作成: 取得したテーブル情報を使用して、AlaSQLにテーブルを作成し、データを挿入します。
+
+この方法により、テーブル名とそのデータを正しく取得し、AlaSQLで使用できる形式に整えることができます。
+
+# EOD

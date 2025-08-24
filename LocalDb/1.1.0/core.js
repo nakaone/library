@@ -6,150 +6,129 @@ function LocalDb(arg) {
     idb: null, // IndexedDB
     rdb: new alasql.Database(), // AlaSQL
     now: Date.now(),
-    opt: {
-      dbName: 'LocalDb', // IndexedDBの名称
-      storeName: arg.dbName || 'RDB', // IndexedDBのストア名
-    },
+    dbName: 'LocalDb', // IndexedDBの名称
+    storeName: arg.dbName || 'RDB', // IndexedDBのストア名
   };
 
   // IndexedDBの初期化
-  function initIDB() {
-    console.log(pv.whois+'.initIDB start.');
+  const initIDB = () => {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(pv.opt.dbName);
-
-      request.onupgradeneeded = function (event) {
-        const db = event.target.result;
-        db.createObjectStore(pv.opt.storeName);
-      };
-
-      request.onsuccess = function (event) {
+      const request = indexedDB.open(pv.dbName, 1);
+      request.onupgradeneeded = (event) => {
         pv.idb = event.target.result;
-        loadIDB().then(resolve).catch(reject);
+        pv.schema.tables.forEach((table) => {
+          if (!pv.idb.objectStoreNames.contains(table.name)) {
+            pv.idb.createObjectStore(table.name);
+          }
+        });
       };
-
-      request.onerror = function (event) {
-        reject('IndexedDB error: ' + event.target.errorCode);
+      request.onsuccess = (event) => {
+        pv.idb = event.target.result;
+        resolve();
+      };
+      request.onerror = (event) => {
+        reject(event.target.error);
       };
     });
-  }
+  };
 
-  // IndexedDBの内容をAlaSQLにロード
-  function loadIDB() {
-    console.log(pv.whois+'.loadIDB start.');
-    return new Promise((resolve, reject) => {
-      const transaction = pv.idb.transaction(pv.opt.storeName, 'readonly');
-      const store = transaction.objectStore(pv.opt.storeName);
-      const request = store.getAll();
+  // SQLを実行する関数
+  const execSQL = (sql,opt=null) => {
+    console.log(`${pv.whois}.execSQL.start. sql="${sql}" opt=${opt===null?'null':JSON.stringify({num:opt.length,sample:opt[0]})}`);
+    return opt === null ? alasql(sql) : alasql(sql,opt);
+  };
 
-      request.onsuccess = function (event) {
-        const data = event.target.result;
-        if( data ){
-          data.forEach(item => {
-            pv.rdb.exec(
-              `drop table if exists \`${item.key}\`;`
-              + `create table \`${item.key}\`;`
-              + `insert into \`${item.key}\` select * from ?;`
-              //`CREATE TABLE IF NOT EXISTS ${item.key} AS SELECT * FROM ?`
-              , [item.value]
-            );
-          });
+  // IndexedDBからデータをロードする関数
+  const loadIDB = async () => {
+    console.log(`${pv.whois}.loadIDB.start.`);
+    const transaction = pv.idb.transaction(pv.storeName, 'readonly');
+    const store = transaction.objectStore(pv.storeName);
+    
+    // テーブル名とデータを格納する配列
+    const tables = [];
+
+    // ストア内の全てのキーを取得
+    const keys = await new Promise((resolve) => {
+      const request = store.getAllKeys(); // 全てのキーを取得
+      request.onsuccess = () => resolve(request.result);
+    });
+
+    // 各キーに対してデータを取得
+    for (const key of keys) {
+      const tableData = await new Promise((resolve) => {
+        const request = store.get(key); // 各キーに対するデータを取得
+        request.onsuccess = () => resolve({ name: key, data: request.result });
+      });
+      tables.push(tableData); // テーブル名とデータを配列に追加
+    }
+
+    // 取得したテーブル情報を使ってAlaSQLにテーブルを作成
+    tables.forEach((table) => {
+      console.log('l.53', JSON.stringify({name:table.name,num:table.data.length,sample:table.data[0]},null,2)); // テーブル名とデータを表示
+      execSQL(`drop table if exists \`${table.name}\`;`);
+      execSQL(`create table \`${table.name}\`;`);
+      execSQL(`insert into \`${table.name}\` select * from ?;`, [table.data]);
+    });
+  };
+
+  // AlaSQLのテーブルからIndexedDBにデータを保存する関数
+  const saveRDB = async () => {
+    console.log(`${pv.whois}.saveRDB.start.`);
+    const transaction = pv.idb.transaction(pv.storeName, 'readwrite');
+    const store = transaction.objectStore(pv.storeName);
+
+    for (const table of pv.schema.tables) {
+      const data = execSQL(`select * from \`${table.name}\`;`);
+      await new Promise((resolve) => {
+        store.put({ name: table.name, data: data });
+        resolve();
+      });
+    }
+  };
+
+  // JSONファイルをインポートする関数
+  const importJSON = async () => {
+    console.log(`${pv.whois}.importJSON.start.`);
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json';
+    fileInput.onchange = async (event) => {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const jsonData = JSON.parse(e.target.result);
+        for (const table of jsonData.tables) {
+          execSQL(`drop table if exists \`${table.name}\`;`);
+          execSQL(`create table \`${table.name}\`;`);
+          execSQL(`insert into \`${table.name}\` select * from ?;`, [table.data]);
         }
-        resolve();
+        await saveRDB();
       };
-
-      request.onerror = function (event) {
-        reject('Load IDB error: ' + event.target.errorCode);
-      };
-    });
-  }
-
-  // AlaSQLのSQLを実行
-  function execSQL(sql) {
-    return pv.rdb.exec(sql);
-  }
-
-  // AlaSQLのテーブルからIndexedDBへデータを保存
-  function saveRDB() {
-    console.log(pv.whois+'.saveRDB start.');
-    return new Promise((resolve, reject) => {
-      const transaction = pv.idb.transaction(pv.opt.storeName, 'readwrite');
-      const store = transaction.objectStore(pv.opt.storeName);
-
-      for( let table in pv.rdb.tables ){
-        const data = pv.rdb.exec(`SELECT * FROM \`${table}\``);
-        store.put(data,table);
-      }
-
-      transaction.oncomplete = function () {
-        resolve();
-      };
-
-      transaction.onerror = function (event) {
-        reject('Save RDB error: ' + event.target.errorCode);
-      };
-    });
-  }
-
-  // JSONファイルをインポート
-  function importJSON() {
-    console.log(pv.whois+'.importJSON start.');
-    return new Promise((resolve, reject) => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      input.onchange = function (event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          const jsonData = JSON.parse(e.target.result);
-          jsonData.tables.forEach(table => {
-            pv.rdb.exec(
-              `drop table if exists \`${table.name}\`;`
-              + `create table \`${table.name}\`;`
-              + `insert into \`${table.name}\` select * from ?;`
-              //`CREATE TABLE IF NOT EXISTS ${table.name} AS SELECT * FROM ?`
-              , [table.data]
-            );
-          });
-          saveRDB().then(() => resolve(jsonData)).catch(reject);
-        };
-        reader.onerror = function (e) {
-          reject('Import JSON error: ' + e.target.errorCode);
-        };
-        reader.readAsText(file);
-      };
-      input.click();
-    });
-  }
-
-  // 全テーブルをJSON化してダウンロード
-  function exportJSON() {
-    console.log(pv.whois+'.exportJSON start.');
-    const exportData = {
-      tables: pv.rdb.tables.map(table => {
-        return {
-          name: table.name,
-          data: pv.rdb.exec(`SELECT * FROM \`${table.name}\``)
-        };
-      })
+      reader.readAsText(file);
     };
-    const blob = new Blob([JSON.stringify(exportData)], { type: 'application/json' });
+    fileInput.click();
+  };
+
+  // 全テーブルのデータをJSON化してダウンロードする関数
+  const exportJSON = () => {
+    console.log(`${pv.whois}.exportJSON.start.`);
+    const data = { tables: [] };
+    pv.schema.tables.forEach((table) => {
+      const tableData = execSQL(`select * from \`${table.name}\`;`);
+      data.tables.push({ name: table.name, data: tableData });
+    });
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'export.json';
-    document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }
+  };
 
-  // 初期化処理を実行
-  initIDB();
+  // 初期化処理
+  initIDB().then(loadIDB);
 
-  // メンバ関数を戻り値として返す
-  console.log('LocalDb end.');
   return {
     exec: execSQL,
     load: loadIDB,
