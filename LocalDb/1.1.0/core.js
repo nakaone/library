@@ -12,15 +12,15 @@ function LocalDb(arg) {
 
   // IndexedDBの初期化
   const initIDB = () => {
+    console.log(`${pv.whois}.initIDB start.`);
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(pv.dbName, 1);
       request.onupgradeneeded = (event) => {
         pv.idb = event.target.result;
-        pv.schema.tables.forEach((table) => {
-          if (!pv.idb.objectStoreNames.contains(table.name)) {
-            pv.idb.createObjectStore(table.name);
-          }
-        });
+        // ストア未登録なら追加登録
+        if (!pv.idb.objectStoreNames.contains(pv.storeName)) {
+          pv.idb.createObjectStore(pv.storeName);
+        }
       };
       request.onsuccess = (event) => {
         pv.idb = event.target.result;
@@ -34,13 +34,15 @@ function LocalDb(arg) {
 
   // SQLを実行する関数
   const execSQL = (sql,opt=null) => {
-    console.log(`${pv.whois}.execSQL.start. sql="${sql}" opt=${opt===null?'null':JSON.stringify({num:opt.length,sample:opt[0]})}`);
+    console.log(`${pv.whois}.execSQL start.\nsql="${sql}"`
+      + `\nopt=${ opt === null ? 'null'
+        : JSON.stringify({num:opt.length,sample:opt[0]})}`);
     return opt === null ? alasql(sql) : alasql(sql,opt);
   };
 
   // IndexedDBからデータをロードする関数
   const loadIDB = async () => {
-    console.log(`${pv.whois}.loadIDB.start.`);
+    console.log(`${pv.whois}.loadIDB start.`);
     const transaction = pv.idb.transaction(pv.storeName, 'readonly');
     const store = transaction.objectStore(pv.storeName);
     
@@ -73,7 +75,7 @@ function LocalDb(arg) {
 
   // AlaSQLのテーブルからIndexedDBにデータを保存する関数
   const saveRDB = async () => {
-    console.log(`${pv.whois}.saveRDB.start.`);
+    console.log(`${pv.whois}.saveRDB start.`);
     const transaction = pv.idb.transaction(pv.storeName, 'readwrite');
     const store = transaction.objectStore(pv.storeName);
 
@@ -88,7 +90,7 @@ function LocalDb(arg) {
 
   // JSONファイルをインポートする関数
   const importJSON = async () => {
-    console.log(`${pv.whois}.importJSON.start.`);
+    console.log(`${pv.whois}.importJSON start.`);
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.json';
@@ -111,7 +113,7 @@ function LocalDb(arg) {
 
   // 全テーブルのデータをJSON化してダウンロードする関数
   const exportJSON = () => {
-    console.log(`${pv.whois}.exportJSON.start.`);
+    console.log(`${pv.whois}.exportJSON start.`);
     const data = { tables: [] };
     pv.schema.tables.forEach((table) => {
       const tableData = execSQL(`select * from \`${table.name}\`;`);
