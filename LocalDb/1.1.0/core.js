@@ -1,8 +1,12 @@
+/** LocalDb: ブラウザローカルのRDB、データはIndexedDBに保存
+ * @param {schemaDef} arg
+ * @returns {Object.<string,Function>} クロージャ関数
+ */
 function LocalDb(arg) {
   const pv = {
     whois: 'LocalDb',
     rv: null,
-    schema: arg.schema || { tables: [] },
+    schema: arg || { tables: [] },
     idb: null, // IndexedDB
     rdb: new alasql.Database(), // AlaSQL
     now: Date.now(),
@@ -82,7 +86,7 @@ function LocalDb(arg) {
     for (const table of pv.schema.tables) {
       const data = execSQL(`select * from \`${table.name}\`;`);
       await new Promise((resolve) => {
-        store.put({ name: table.name, data: data });
+        store.put(data,table.name);
         resolve();
       });
     }
