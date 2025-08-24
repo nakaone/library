@@ -118,10 +118,9 @@ function LocalDb(arg) {
   // 全テーブルのデータをJSON化してダウンロードする関数
   const exportJSON = () => {
     console.log(`${pv.whois}.exportJSON start.`);
-    const data = { tables: [] };
-    pv.schema.tables.forEach((table) => {
-      const tableData = execSQL(`select * from \`${table.name}\`;`);
-      data.tables.push({ name: table.name, data: tableData });
+    const data = JSON.parse(JSON.stringify(pv.schema));
+    data.tables.forEach(table => {
+      table.data = execSQL(`select * from \`${table.name}\`;`);
     });
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
