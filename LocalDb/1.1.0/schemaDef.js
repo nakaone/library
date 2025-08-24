@@ -1,4 +1,4 @@
-/** SpreadDb/LocalDb/createTable共通
+/** SpreadDb/LocalDb/createTable共通(2025/08/24)
  * @typedef {Object} schemaDef - DB構造定義オブジェクト
  * @param {string} dbName - データベース名(IndexedDB上ではストア名)
  * @param {tableDef[]} tables - DB内の個々のテーブルの定義
