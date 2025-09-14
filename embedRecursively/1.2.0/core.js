@@ -113,7 +113,7 @@ function embedRecursively(content,opt={}){
     }
 
     v.step = 9; // 終了処理
-    return v.rv;
+    return v.rv.trim();
 
   } catch(e) {
     e.message = `${v.whois} abnormal end at step.${v.step}`
