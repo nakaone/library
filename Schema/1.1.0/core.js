@@ -143,9 +143,26 @@ function Schema(schema) {
         // 「引数 > pv.schema > 既定値」の優先順位で値を設定
         v.table = mergeDeeply(v.table,mergeDeeply(v.schema.tableDef[v.table.def],pv.tableDef));
 
+        // 初期データの行オブジェクト化
         if( typeof v.table.data === 'string' && v.table.data !== '' ){
+          // CSV/TSVを行オブジェクトに変換
           v.table.data = parseCSVorTSV(v.table.data);
-          // いまここ：データ型に従って値変換
+          // データ型に従って値変換
+          v.table.data.forEach(x => {
+            for( v.i=0 ; v.i<v.table.colDef.length ; v.i++ ){
+              switch( v.table.colDef[v.i].type ){
+                case 'number':
+                  x[v.table.colDef[v.i].name] = Number(x[v.table.colDef[v.i].name]);
+                  break;
+                case 'boolean':
+                  x[v.table.colDef[v.i].name] = x[v.table.colDef[v.i].name] === '' ? ''
+                  : (String(x[v.table.colDef[v.i].name]).toLowerCase() === 'true' ? true : false);
+                  break;
+                default:
+                  break;
+              }
+            }
+          })
         }
         v.schema.tables[v.name] = v.table;
       }
