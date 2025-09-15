@@ -1,0 +1,2008 @@
+[0000]SchemaTest start.
+-- footprint
+(root)
+-- arguments
+(void)
+[0001]Schema start.
+-- footprint
+[0000]SchemaTest.1
+-- arguments
+{
+  dbName: "kz12"(String)
+  tables: [
+    0: {
+      tableName: "kz標準"(String)
+      label: [
+        0: "過年度CSV"(String)
+      ]
+      note: "kawazanyoで使用する仕訳日記帳の標準"(String)
+      primaryKey: [
+        0: "伝票番号"(String)
+        1: "明細番号"(String)
+      ]
+      cols: [
+        0: {
+          colName: "年度"(String)
+          type: "number"(String)
+        }
+        1: {
+          colName: "伝票番号"(String)
+          type: "number"(String)
+          note: "伝票を一意に特定する番号"(String)
+        }
+        2: {
+          colName: "明細番号"(String)
+          type: "number"(String)
+          note: "伝票内の明細行番号"(String)
+        }
+        3: {
+          colName: "取引日"(String)
+          type: "string"(String)
+          alias: [
+            0: "日付"(String)
+            1: "取引日付"(String)
+            2: "伝票日付"(String)
+          ]
+        }
+        4: {
+          colName: "摘要"(String)
+          type: "string"(String)
+          alias: [
+            0: "取引摘要"(String)
+          ]
+        }
+        5: {
+          colName: "補助摘要"(String)
+          type: "string"(String)
+        }
+        6: {
+          colName: "借方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方勘定科目"(String)
+            1: "借方科目名称"(String)
+          ]
+        }
+        7: {
+          colName: "借方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方補助科目"(String)
+            1: "借方補助科目名称"(String)
+          ]
+        }
+        8: {
+          colName: "借方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方部門名称"(String)
+          ]
+        }
+        9: {
+          colName: "借方本体"(String)
+          type: "number"(String)
+        }
+        10: {
+          colName: "借方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "借方税金額"(String)
+            1: "借方消費税"(String)
+          ]
+        }
+        11: {
+          colName: "借方金額"(String)
+          type: "number"(String)
+        }
+        12: {
+          colName: "貸方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方勘定科目"(String)
+            1: "貸方科目名称"(String)
+          ]
+        }
+        13: {
+          colName: "貸方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方補助科目"(String)
+            1: "貸方補助科目名称"(String)
+          ]
+        }
+        14: {
+          colName: "貸方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方部門名称"(String)
+          ]
+        }
+        15: {
+          colName: "貸方本体"(String)
+          type: "number"(String)
+        }
+        16: {
+          colName: "貸方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "貸方税金額"(String)
+            1: "貸方消費税"(String)
+          ]
+        }
+        17: {
+          colName: "貸方金額"(String)
+          type: "number"(String)
+        }
+        18: {
+          colName: "備考"(String)
+          type: "string"(String)
+        }
+      ]
+    }
+    1: {
+      tableName: "勘定科目"(String)
+      note: "kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル"(String)
+      cols: [
+        0: {
+          colName: "大分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の大分類"(String)
+        }
+        1: {
+          colName: "中分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の中分類"(String)
+        }
+        2: {
+          colName: "小分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の小分類"(String)
+        }
+        3: {
+          colName: "科目名"(String)
+          type: "string"(String)
+          note: "勘定科目名"(String)
+        }
+        4: {
+          colName: "CF分類"(String)
+          type: "string"(String)
+          note: "CF上の分類を' > 'で連結"(String)
+        }
+      ]
+    }
+    2: {
+      tableName: "過年度一覧"(String)
+      note: "過年度の仕訳日記帳データ(CSV)に関する情報"(String)
+      primaryKey: [
+        0: "年度"(String)
+      ]
+      cols: [
+        0: {
+          colName: "年度"(String)
+          type: "number"(String)
+          note: "会計年度"(String)
+        }
+        1: {
+          colName: "状態"(String)
+          type: "string"(String)
+          note: "未了 or 完了"(String)
+        }
+        2: {
+          colName: "パス"(String)
+          type: "string"(String)
+          note: "年度別仕訳日記帳(CSV)へのGoogle Driveのパス"(String)
+        }
+        3: {
+          colName: "ID"(String)
+          type: "string"(String)
+          note: "CSVのGoogle Drive上のファイルID"(String)
+        }
+        4: {
+          colName: "URL"(String)
+          type: "string"(String)
+          note: "CSVのURL。必ずプレビューで開くよう、IDから導出"(String)
+        }
+        5: {
+          colName: "文字コード"(String)
+          type: "string"(String)
+          note: "CSVの文字コード。Shift-JIS(MS932)対応"(String)
+        }
+        6: {
+          colName: "ヘッダ"(String)
+          type: "string"(String)
+          note: "CSV上のヘッダ行番号。基底=1"(String)
+        }
+        7: {
+          colName: "備考"(String)
+          type: "string"(String)
+          note: ""(String)
+        }
+        8: {
+          colName: "決算書パス"(String)
+          type: "string"(String)
+          note: "当該会計年度のBS/PL(PDF)へパス"(String)
+        }
+        9: {
+          colName: "決算書URL"(String)
+          type: "string"(String)
+          note: "同URL"(String)
+        }
+        10: {
+          colName: "頁"(String)
+          type: "string"(String)
+          note: "PDF上でBS/PLが掲載されている頁番号"(String)
+        }
+      ]
+    }
+  ]
+  custom: {
+    toLocale: "x => toLocale(x,{
+        verbose: false,
+        format:'yyyy/MM/dd',
+        undecimber: true,
+        fyEnd:'undefined',
+        errValue: 'error',
+      })"(String)
+    convertCharacters: "x => convertCharacters(x)"(String)
+  }
+}
+[0000]SchemaTest step.1
+0: {
+  dbName: "kz12"(String)
+  tables: [
+    0: {
+      tableName: "kz標準"(String)
+      label: [
+        0: "過年度CSV"(String)
+      ]
+      note: "kawazanyoで使用する仕訳日記帳の標準"(String)
+      primaryKey: [
+        0: "伝票番号"(String)
+        1: "明細番号"(String)
+      ]
+      cols: [
+        0: {
+          colName: "年度"(String)
+          type: "number"(String)
+        }
+        1: {
+          colName: "伝票番号"(String)
+          type: "number"(String)
+          note: "伝票を一意に特定する番号"(String)
+        }
+        2: {
+          colName: "明細番号"(String)
+          type: "number"(String)
+          note: "伝票内の明細行番号"(String)
+        }
+        3: {
+          colName: "取引日"(String)
+          type: "string"(String)
+          alias: [
+            0: "日付"(String)
+            1: "取引日付"(String)
+            2: "伝票日付"(String)
+          ]
+        }
+        4: {
+          colName: "摘要"(String)
+          type: "string"(String)
+          alias: [
+            0: "取引摘要"(String)
+          ]
+        }
+        5: {
+          colName: "補助摘要"(String)
+          type: "string"(String)
+        }
+        6: {
+          colName: "借方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方勘定科目"(String)
+            1: "借方科目名称"(String)
+          ]
+        }
+        7: {
+          colName: "借方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方補助科目"(String)
+            1: "借方補助科目名称"(String)
+          ]
+        }
+        8: {
+          colName: "借方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方部門名称"(String)
+          ]
+        }
+        9: {
+          colName: "借方本体"(String)
+          type: "number"(String)
+        }
+        10: {
+          colName: "借方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "借方税金額"(String)
+            1: "借方消費税"(String)
+          ]
+        }
+        11: {
+          colName: "借方金額"(String)
+          type: "number"(String)
+        }
+        12: {
+          colName: "貸方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方勘定科目"(String)
+            1: "貸方科目名称"(String)
+          ]
+        }
+        13: {
+          colName: "貸方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方補助科目"(String)
+            1: "貸方補助科目名称"(String)
+          ]
+        }
+        14: {
+          colName: "貸方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方部門名称"(String)
+          ]
+        }
+        15: {
+          colName: "貸方本体"(String)
+          type: "number"(String)
+        }
+        16: {
+          colName: "貸方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "貸方税金額"(String)
+            1: "貸方消費税"(String)
+          ]
+        }
+        17: {
+          colName: "貸方金額"(String)
+          type: "number"(String)
+        }
+        18: {
+          colName: "備考"(String)
+          type: "string"(String)
+        }
+      ]
+    }
+    1: {
+      tableName: "勘定科目"(String)
+      note: "kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル"(String)
+      cols: [
+        0: {
+          colName: "大分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の大分類"(String)
+        }
+        1: {
+          colName: "中分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の中分類"(String)
+        }
+        2: {
+          colName: "小分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の小分類"(String)
+        }
+        3: {
+          colName: "科目名"(String)
+          type: "string"(String)
+          note: "勘定科目名"(String)
+        }
+        4: {
+          colName: "CF分類"(String)
+          type: "string"(String)
+          note: "CF上の分類を' > 'で連結"(String)
+        }
+      ]
+    }
+    2: {
+      tableName: "過年度一覧"(String)
+      note: "過年度の仕訳日記帳データ(CSV)に関する情報"(String)
+      primaryKey: [
+        0: "年度"(String)
+      ]
+      cols: [
+        0: {
+          colName: "年度"(String)
+          type: "number"(String)
+          note: "会計年度"(String)
+        }
+        1: {
+          colName: "状態"(String)
+          type: "string"(String)
+          note: "未了 or 完了"(String)
+        }
+        2: {
+          colName: "パス"(String)
+          type: "string"(String)
+          note: "年度別仕訳日記帳(CSV)へのGoogle Driveのパス"(String)
+        }
+        3: {
+          colName: "ID"(String)
+          type: "string"(String)
+          note: "CSVのGoogle Drive上のファイルID"(String)
+        }
+        4: {
+          colName: "URL"(String)
+          type: "string"(String)
+          note: "CSVのURL。必ずプレビューで開くよう、IDから導出"(String)
+        }
+        5: {
+          colName: "文字コード"(String)
+          type: "string"(String)
+          note: "CSVの文字コード。Shift-JIS(MS932)対応"(String)
+        }
+        6: {
+          colName: "ヘッダ"(String)
+          type: "string"(String)
+          note: "CSV上のヘッダ行番号。基底=1"(String)
+        }
+        7: {
+          colName: "備考"(String)
+          type: "string"(String)
+          note: ""(String)
+        }
+        8: {
+          colName: "決算書パス"(String)
+          type: "string"(String)
+          note: "当該会計年度のBS/PL(PDF)へパス"(String)
+        }
+        9: {
+          colName: "決算書URL"(String)
+          type: "string"(String)
+          note: "同URL"(String)
+        }
+        10: {
+          colName: "頁"(String)
+          type: "string"(String)
+          note: "PDF上でBS/PLが掲載されている頁番号"(String)
+        }
+      ]
+    }
+  ]
+  custom: {
+    toLocale: "x => toLocale(x,{
+        verbose: false,
+        format:'yyyy/MM/dd',
+        undecimber: true,
+        fyEnd:'undefined',
+        errValue: 'error',
+      })"(Arrow)
+    convertCharacters: "x => convertCharacters(x)"(Arrow)
+  }
+  note: ""(String)
+  tableList: [
+    0: "過年度CSV"(String)
+    1: "勘定科目"(String)
+    2: "過年度一覧"(String)
+  ]
+  tableMap: {
+    過年度CSV: {
+      tableName: "kz標準"(String)
+      label: [
+        0: "過年度CSV"(String)
+      ]
+      note: "kawazanyoで使用する仕訳日記帳の標準"(String)
+      primaryKey: [
+        0: "伝票番号"(String)
+        1: "明細番号"(String)
+      ]
+      cols: [
+        0: {
+          colName: "年度"(String)
+          type: "number"(String)
+        }
+        1: {
+          colName: "伝票番号"(String)
+          type: "number"(String)
+          note: "伝票を一意に特定する番号"(String)
+        }
+        2: {
+          colName: "明細番号"(String)
+          type: "number"(String)
+          note: "伝票内の明細行番号"(String)
+        }
+        3: {
+          colName: "取引日"(String)
+          type: "string"(String)
+          alias: [
+            0: "日付"(String)
+            1: "取引日付"(String)
+            2: "伝票日付"(String)
+          ]
+        }
+        4: {
+          colName: "摘要"(String)
+          type: "string"(String)
+          alias: [
+            0: "取引摘要"(String)
+          ]
+        }
+        5: {
+          colName: "補助摘要"(String)
+          type: "string"(String)
+        }
+        6: {
+          colName: "借方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方勘定科目"(String)
+            1: "借方科目名称"(String)
+          ]
+        }
+        7: {
+          colName: "借方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方補助科目"(String)
+            1: "借方補助科目名称"(String)
+          ]
+        }
+        8: {
+          colName: "借方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方部門名称"(String)
+          ]
+        }
+        9: {
+          colName: "借方本体"(String)
+          type: "number"(String)
+        }
+        10: {
+          colName: "借方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "借方税金額"(String)
+            1: "借方消費税"(String)
+          ]
+        }
+        11: {
+          colName: "借方金額"(String)
+          type: "number"(String)
+        }
+        12: {
+          colName: "貸方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方勘定科目"(String)
+            1: "貸方科目名称"(String)
+          ]
+        }
+        13: {
+          colName: "貸方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方補助科目"(String)
+            1: "貸方補助科目名称"(String)
+          ]
+        }
+        14: {
+          colName: "貸方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方部門名称"(String)
+          ]
+        }
+        15: {
+          colName: "貸方本体"(String)
+          type: "number"(String)
+        }
+        16: {
+          colName: "貸方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "貸方税金額"(String)
+            1: "貸方消費税"(String)
+          ]
+        }
+        17: {
+          colName: "貸方金額"(String)
+          type: "number"(String)
+        }
+        18: {
+          colName: "備考"(String)
+          type: "string"(String)
+        }
+      ]
+      top: 1(Number)
+      left: 1(Number)
+      initial: [
+      ]
+      export: {
+        select: [
+          0: "*"(String)
+        ]
+        where: ""(String)
+      }
+      startingRowNumber: 2(Number)
+      colNames: [
+        0: "年度"(String)
+        1: "伝票番号"(String)
+        2: "明細番号"(String)
+        3: "取引日"(String)
+        4: "摘要"(String)
+        5: "補助摘要"(String)
+        6: "借方科目"(String)
+        7: "借方補助"(String)
+        8: "借方部門"(String)
+        9: "借方本体"(String)
+        10: "借方税額"(String)
+        11: "借方金額"(String)
+        12: "貸方科目"(String)
+        13: "貸方補助"(String)
+        14: "貸方部門"(String)
+        15: "貸方本体"(String)
+        16: "貸方税額"(String)
+        17: "貸方金額"(String)
+        18: "備考"(String)
+        19: "年度"(String)
+        20: "伝票番号"(String)
+        21: "明細番号"(String)
+        22: "取引日"(String)
+        23: "摘要"(String)
+        24: "補助摘要"(String)
+        25: "借方科目"(String)
+        26: "借方補助"(String)
+        27: "借方部門"(String)
+        28: "借方本体"(String)
+        29: "借方税額"(String)
+        30: "借方金額"(String)
+        31: "貸方科目"(String)
+        32: "貸方補助"(String)
+        33: "貸方部門"(String)
+        34: "貸方本体"(String)
+        35: "貸方税額"(String)
+        36: "貸方金額"(String)
+        37: "備考"(String)
+      ]
+      header: [
+        0: "年度"(String)
+        1: "伝票番号"(String)
+        2: "明細番号"(String)
+        3: "取引日"(String)
+        4: "摘要"(String)
+        5: "補助摘要"(String)
+        6: "借方科目"(String)
+        7: "借方補助"(String)
+        8: "借方部門"(String)
+        9: "借方本体"(String)
+        10: "借方税額"(String)
+        11: "借方金額"(String)
+        12: "貸方科目"(String)
+        13: "貸方補助"(String)
+        14: "貸方部門"(String)
+        15: "貸方本体"(String)
+        16: "貸方税額"(String)
+        17: "貸方金額"(String)
+        18: "備考"(String)
+        19: "年度"(String)
+        20: "伝票番号"(String)
+        21: "明細番号"(String)
+        22: "取引日"(String)
+        23: "摘要"(String)
+        24: "補助摘要"(String)
+        25: "借方科目"(String)
+        26: "借方補助"(String)
+        27: "借方部門"(String)
+        28: "借方本体"(String)
+        29: "借方税額"(String)
+        30: "借方金額"(String)
+        31: "貸方科目"(String)
+        32: "貸方補助"(String)
+        33: "貸方部門"(String)
+        34: "貸方本体"(String)
+        35: "貸方税額"(String)
+        36: "貸方金額"(String)
+        37: "備考"(String)
+      ]
+      colMap: {
+        0: {
+          colName: "年度"(String)
+          seq: 0(Number)
+          note: ""(String)
+          label: "年度"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        1: {
+          colName: "伝票番号"(String)
+          seq: 1(Number)
+          note: "伝票を一意に特定する番号"(String)
+          label: "伝票番号"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        2: {
+          colName: "明細番号"(String)
+          seq: 2(Number)
+          note: "伝票内の明細行番号"(String)
+          label: "明細番号"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        3: {
+          colName: "取引日"(String)
+          seq: 3(Number)
+          note: ""(String)
+          label: "取引日"(String)
+          type: "string"(String)
+          alias: [
+            0: "日付"(String)
+            1: "取引日付"(String)
+            2: "伝票日付"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        4: {
+          colName: "摘要"(String)
+          seq: 4(Number)
+          note: ""(String)
+          label: "摘要"(String)
+          type: "string"(String)
+          alias: [
+            0: "取引摘要"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        5: {
+          colName: "補助摘要"(String)
+          seq: 5(Number)
+          note: ""(String)
+          label: "補助摘要"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        6: {
+          colName: "借方科目"(String)
+          seq: 6(Number)
+          note: ""(String)
+          label: "借方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方勘定科目"(String)
+            1: "借方科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        7: {
+          colName: "借方補助"(String)
+          seq: 7(Number)
+          note: ""(String)
+          label: "借方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方補助科目"(String)
+            1: "借方補助科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        8: {
+          colName: "借方部門"(String)
+          seq: 8(Number)
+          note: ""(String)
+          label: "借方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方部門名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        9: {
+          colName: "借方本体"(String)
+          seq: 9(Number)
+          note: ""(String)
+          label: "借方本体"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        10: {
+          colName: "借方税額"(String)
+          seq: 10(Number)
+          note: ""(String)
+          label: "借方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "借方税金額"(String)
+            1: "借方消費税"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        11: {
+          colName: "借方金額"(String)
+          seq: 11(Number)
+          note: ""(String)
+          label: "借方金額"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        12: {
+          colName: "貸方科目"(String)
+          seq: 12(Number)
+          note: ""(String)
+          label: "貸方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方勘定科目"(String)
+            1: "貸方科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        13: {
+          colName: "貸方補助"(String)
+          seq: 13(Number)
+          note: ""(String)
+          label: "貸方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方補助科目"(String)
+            1: "貸方補助科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        14: {
+          colName: "貸方部門"(String)
+          seq: 14(Number)
+          note: ""(String)
+          label: "貸方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方部門名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        15: {
+          colName: "貸方本体"(String)
+          seq: 15(Number)
+          note: ""(String)
+          label: "貸方本体"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        16: {
+          colName: "貸方税額"(String)
+          seq: 16(Number)
+          note: ""(String)
+          label: "貸方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "貸方税金額"(String)
+            1: "貸方消費税"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        17: {
+          colName: "貸方金額"(String)
+          seq: 17(Number)
+          note: ""(String)
+          label: "貸方金額"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        18: {
+          colName: "備考"(String)
+          seq: 18(Number)
+          note: ""(String)
+          label: "備考"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        年度: {
+          colName: "年度"(String)
+          seq: 0(Number)
+          note: ""(String)
+          label: "年度"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        伝票番号: {
+          colName: "伝票番号"(String)
+          seq: 1(Number)
+          note: "伝票を一意に特定する番号"(String)
+          label: "伝票番号"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        明細番号: {
+          colName: "明細番号"(String)
+          seq: 2(Number)
+          note: "伝票内の明細行番号"(String)
+          label: "明細番号"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        取引日: {
+          colName: "取引日"(String)
+          seq: 3(Number)
+          note: ""(String)
+          label: "取引日"(String)
+          type: "string"(String)
+          alias: [
+            0: "日付"(String)
+            1: "取引日付"(String)
+            2: "伝票日付"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        日付: {
+          colName: "取引日"(String)
+          seq: 3(Number)
+          note: ""(String)
+          label: "取引日"(String)
+          type: "string"(String)
+          alias: [
+            0: "日付"(String)
+            1: "取引日付"(String)
+            2: "伝票日付"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        取引日付: {
+          colName: "取引日"(String)
+          seq: 3(Number)
+          note: ""(String)
+          label: "取引日"(String)
+          type: "string"(String)
+          alias: [
+            0: "日付"(String)
+            1: "取引日付"(String)
+            2: "伝票日付"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        伝票日付: {
+          colName: "取引日"(String)
+          seq: 3(Number)
+          note: ""(String)
+          label: "取引日"(String)
+          type: "string"(String)
+          alias: [
+            0: "日付"(String)
+            1: "取引日付"(String)
+            2: "伝票日付"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        摘要: {
+          colName: "摘要"(String)
+          seq: 4(Number)
+          note: ""(String)
+          label: "摘要"(String)
+          type: "string"(String)
+          alias: [
+            0: "取引摘要"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        取引摘要: {
+          colName: "摘要"(String)
+          seq: 4(Number)
+          note: ""(String)
+          label: "摘要"(String)
+          type: "string"(String)
+          alias: [
+            0: "取引摘要"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        補助摘要: {
+          colName: "補助摘要"(String)
+          seq: 5(Number)
+          note: ""(String)
+          label: "補助摘要"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方科目: {
+          colName: "借方科目"(String)
+          seq: 6(Number)
+          note: ""(String)
+          label: "借方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方勘定科目"(String)
+            1: "借方科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方勘定科目: {
+          colName: "借方科目"(String)
+          seq: 6(Number)
+          note: ""(String)
+          label: "借方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方勘定科目"(String)
+            1: "借方科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方科目名称: {
+          colName: "借方科目"(String)
+          seq: 6(Number)
+          note: ""(String)
+          label: "借方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方勘定科目"(String)
+            1: "借方科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方補助: {
+          colName: "借方補助"(String)
+          seq: 7(Number)
+          note: ""(String)
+          label: "借方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方補助科目"(String)
+            1: "借方補助科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方補助科目: {
+          colName: "借方補助"(String)
+          seq: 7(Number)
+          note: ""(String)
+          label: "借方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方補助科目"(String)
+            1: "借方補助科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方補助科目名称: {
+          colName: "借方補助"(String)
+          seq: 7(Number)
+          note: ""(String)
+          label: "借方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方補助科目"(String)
+            1: "借方補助科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方部門: {
+          colName: "借方部門"(String)
+          seq: 8(Number)
+          note: ""(String)
+          label: "借方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方部門名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方部門名称: {
+          colName: "借方部門"(String)
+          seq: 8(Number)
+          note: ""(String)
+          label: "借方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方部門名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方本体: {
+          colName: "借方本体"(String)
+          seq: 9(Number)
+          note: ""(String)
+          label: "借方本体"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方税額: {
+          colName: "借方税額"(String)
+          seq: 10(Number)
+          note: ""(String)
+          label: "借方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "借方税金額"(String)
+            1: "借方消費税"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方税金額: {
+          colName: "借方税額"(String)
+          seq: 10(Number)
+          note: ""(String)
+          label: "借方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "借方税金額"(String)
+            1: "借方消費税"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方消費税: {
+          colName: "借方税額"(String)
+          seq: 10(Number)
+          note: ""(String)
+          label: "借方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "借方税金額"(String)
+            1: "借方消費税"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        借方金額: {
+          colName: "借方金額"(String)
+          seq: 11(Number)
+          note: ""(String)
+          label: "借方金額"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方科目: {
+          colName: "貸方科目"(String)
+          seq: 12(Number)
+          note: ""(String)
+          label: "貸方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方勘定科目"(String)
+            1: "貸方科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方勘定科目: {
+          colName: "貸方科目"(String)
+          seq: 12(Number)
+          note: ""(String)
+          label: "貸方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方勘定科目"(String)
+            1: "貸方科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方科目名称: {
+          colName: "貸方科目"(String)
+          seq: 12(Number)
+          note: ""(String)
+          label: "貸方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方勘定科目"(String)
+            1: "貸方科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方補助: {
+          colName: "貸方補助"(String)
+          seq: 13(Number)
+          note: ""(String)
+          label: "貸方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方補助科目"(String)
+            1: "貸方補助科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方補助科目: {
+          colName: "貸方補助"(String)
+          seq: 13(Number)
+          note: ""(String)
+          label: "貸方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方補助科目"(String)
+            1: "貸方補助科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方補助科目名称: {
+          colName: "貸方補助"(String)
+          seq: 13(Number)
+          note: ""(String)
+          label: "貸方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方補助科目"(String)
+            1: "貸方補助科目名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方部門: {
+          colName: "貸方部門"(String)
+          seq: 14(Number)
+          note: ""(String)
+          label: "貸方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方部門名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方部門名称: {
+          colName: "貸方部門"(String)
+          seq: 14(Number)
+          note: ""(String)
+          label: "貸方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方部門名称"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方本体: {
+          colName: "貸方本体"(String)
+          seq: 15(Number)
+          note: ""(String)
+          label: "貸方本体"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方税額: {
+          colName: "貸方税額"(String)
+          seq: 16(Number)
+          note: ""(String)
+          label: "貸方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "貸方税金額"(String)
+            1: "貸方消費税"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方税金額: {
+          colName: "貸方税額"(String)
+          seq: 16(Number)
+          note: ""(String)
+          label: "貸方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "貸方税金額"(String)
+            1: "貸方消費税"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方消費税: {
+          colName: "貸方税額"(String)
+          seq: 16(Number)
+          note: ""(String)
+          label: "貸方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "貸方税金額"(String)
+            1: "貸方消費税"(String)
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        貸方金額: {
+          colName: "貸方金額"(String)
+          seq: 17(Number)
+          note: ""(String)
+          label: "貸方金額"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        備考: {
+          colName: "備考"(String)
+          seq: 18(Number)
+          note: ""(String)
+          label: "備考"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+      }
+    }
+    勘定科目: {
+      tableName: "勘定科目"(String)
+      note: "kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル"(String)
+      cols: [
+        0: {
+          colName: "大分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の大分類"(String)
+        }
+        1: {
+          colName: "中分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の中分類"(String)
+        }
+        2: {
+          colName: "小分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の小分類"(String)
+        }
+        3: {
+          colName: "科目名"(String)
+          type: "string"(String)
+          note: "勘定科目名"(String)
+        }
+        4: {
+          colName: "CF分類"(String)
+          type: "string"(String)
+          note: "CF上の分類を' > 'で連結"(String)
+        }
+      ]
+      label: ""(String)
+      top: 1(Number)
+      left: 1(Number)
+      primaryKey: [
+      ]
+      initial: [
+      ]
+      export: {
+        select: [
+          0: "*"(String)
+        ]
+        where: ""(String)
+      }
+      startingRowNumber: 2(Number)
+      colNames: [
+        0: "大分類"(String)
+        1: "中分類"(String)
+        2: "小分類"(String)
+        3: "科目名"(String)
+        4: "CF分類"(String)
+        5: "大分類"(String)
+        6: "中分類"(String)
+        7: "小分類"(String)
+        8: "科目名"(String)
+        9: "CF分類"(String)
+      ]
+      header: [
+        0: "大分類"(String)
+        1: "中分類"(String)
+        2: "小分類"(String)
+        3: "科目名"(String)
+        4: "CF分類"(String)
+        5: "大分類"(String)
+        6: "中分類"(String)
+        7: "小分類"(String)
+        8: "科目名"(String)
+        9: "CF分類"(String)
+      ]
+      colMap: {
+        0: {
+          colName: "大分類"(String)
+          seq: 0(Number)
+          note: "BS/PL上の大分類"(String)
+          label: "大分類"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        1: {
+          colName: "中分類"(String)
+          seq: 1(Number)
+          note: "BS/PL上の中分類"(String)
+          label: "中分類"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        2: {
+          colName: "小分類"(String)
+          seq: 2(Number)
+          note: "BS/PL上の小分類"(String)
+          label: "小分類"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        3: {
+          colName: "科目名"(String)
+          seq: 3(Number)
+          note: "勘定科目名"(String)
+          label: "科目名"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        4: {
+          colName: "CF分類"(String)
+          seq: 4(Number)
+          note: "CF上の分類を' > 'で連結"(String)
+          label: "CF分類"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        大分類: {
+          colName: "大分類"(String)
+          seq: 0(Number)
+          note: "BS/PL上の大分類"(String)
+          label: "大分類"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        中分類: {
+          colName: "中分類"(String)
+          seq: 1(Number)
+          note: "BS/PL上の中分類"(String)
+          label: "中分類"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        小分類: {
+          colName: "小分類"(String)
+          seq: 2(Number)
+          note: "BS/PL上の小分類"(String)
+          label: "小分類"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        科目名: {
+          colName: "科目名"(String)
+          seq: 3(Number)
+          note: "勘定科目名"(String)
+          label: "科目名"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        CF分類: {
+          colName: "CF分類"(String)
+          seq: 4(Number)
+          note: "CF上の分類を' > 'で連結"(String)
+          label: "CF分類"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+      }
+    }
+    過年度一覧: {
+      tableName: "過年度一覧"(String)
+      note: "過年度の仕訳日記帳データ(CSV)に関する情報"(String)
+      primaryKey: [
+        0: "年度"(String)
+      ]
+      cols: [
+        0: {
+          colName: "年度"(String)
+          type: "number"(String)
+          note: "会計年度"(String)
+        }
+        1: {
+          colName: "状態"(String)
+          type: "string"(String)
+          note: "未了 or 完了"(String)
+        }
+        2: {
+          colName: "パス"(String)
+          type: "string"(String)
+          note: "年度別仕訳日記帳(CSV)へのGoogle Driveのパス"(String)
+        }
+        3: {
+          colName: "ID"(String)
+          type: "string"(String)
+          note: "CSVのGoogle Drive上のファイルID"(String)
+        }
+        4: {
+          colName: "URL"(String)
+          type: "string"(String)
+          note: "CSVのURL。必ずプレビューで開くよう、IDから導出"(String)
+        }
+        5: {
+          colName: "文字コード"(String)
+          type: "string"(String)
+          note: "CSVの文字コード。Shift-JIS(MS932)対応"(String)
+        }
+        6: {
+          colName: "ヘッダ"(String)
+          type: "string"(String)
+          note: "CSV上のヘッダ行番号。基底=1"(String)
+        }
+        7: {
+          colName: "備考"(String)
+          type: "string"(String)
+          note: ""(String)
+        }
+        8: {
+          colName: "決算書パス"(String)
+          type: "string"(String)
+          note: "当該会計年度のBS/PL(PDF)へパス"(String)
+        }
+        9: {
+          colName: "決算書URL"(String)
+          type: "string"(String)
+          note: "同URL"(String)
+        }
+        10: {
+          colName: "頁"(String)
+          type: "string"(String)
+          note: "PDF上でBS/PLが掲載されている頁番号"(String)
+        }
+      ]
+      label: ""(String)
+      top: 1(Number)
+      left: 1(Number)
+      initial: [
+      ]
+      export: {
+        select: [
+          0: "*"(String)
+        ]
+        where: ""(String)
+      }
+      startingRowNumber: 2(Number)
+      colNames: [
+        0: "年度"(String)
+        1: "状態"(String)
+        2: "パス"(String)
+        3: "ID"(String)
+        4: "URL"(String)
+        5: "文字コード"(String)
+        6: "ヘッダ"(String)
+        7: "備考"(String)
+        8: "決算書パス"(String)
+        9: "決算書URL"(String)
+        10: "頁"(String)
+        11: "年度"(String)
+        12: "状態"(String)
+        13: "パス"(String)
+        14: "ID"(String)
+        15: "URL"(String)
+        16: "文字コード"(String)
+        17: "ヘッダ"(String)
+        18: "備考"(String)
+        19: "決算書パス"(String)
+        20: "決算書URL"(String)
+        21: "頁"(String)
+      ]
+      header: [
+        0: "年度"(String)
+        1: "状態"(String)
+        2: "パス"(String)
+        3: "ID"(String)
+        4: "URL"(String)
+        5: "文字コード"(String)
+        6: "ヘッダ"(String)
+        7: "備考"(String)
+        8: "決算書パス"(String)
+        9: "決算書URL"(String)
+        10: "頁"(String)
+        11: "年度"(String)
+        12: "状態"(String)
+        13: "パス"(String)
+        14: "ID"(String)
+        15: "URL"(String)
+        16: "文字コード"(String)
+        17: "ヘッダ"(String)
+        18: "備考"(String)
+        19: "決算書パス"(String)
+        20: "決算書URL"(String)
+        21: "頁"(String)
+      ]
+      colMap: {
+        0: {
+          colName: "年度"(String)
+          seq: 0(Number)
+          note: "会計年度"(String)
+          label: "年度"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        1: {
+          colName: "状態"(String)
+          seq: 1(Number)
+          note: "未了 or 完了"(String)
+          label: "状態"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        2: {
+          colName: "パス"(String)
+          seq: 2(Number)
+          note: "年度別仕訳日記帳(CSV)へのGoogle Driveのパス"(String)
+          label: "パス"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        3: {
+          colName: "ID"(String)
+          seq: 3(Number)
+          note: "CSVのGoogle Drive上のファイルID"(String)
+          label: "ID"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        4: {
+          colName: "URL"(String)
+          seq: 4(Number)
+          note: "CSVのURL。必ずプレビューで開くよう、IDから導出"(String)
+          label: "URL"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        5: {
+          colName: "文字コード"(String)
+          seq: 5(Number)
+          note: "CSVの文字コード。Shift-JIS(MS932)対応"(String)
+          label: "文字コード"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        6: {
+          colName: "ヘッダ"(String)
+          seq: 6(Number)
+          note: "CSV上のヘッダ行番号。基底=1"(String)
+          label: "ヘッダ"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        7: {
+          colName: "備考"(String)
+          seq: 7(Number)
+          note: ""(String)
+          label: "備考"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        8: {
+          colName: "決算書パス"(String)
+          seq: 8(Number)
+          note: "当該会計年度のBS/PL(PDF)へパス"(String)
+          label: "決算書パス"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        9: {
+          colName: "決算書URL"(String)
+          seq: 9(Number)
+          note: "同URL"(String)
+          label: "決算書URL"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        10: {
+          colName: "頁"(String)
+          seq: 10(Number)
+          note: "PDF上でBS/PLが掲載されている頁番号"(String)
+          label: "頁"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        年度: {
+          colName: "年度"(String)
+          seq: 0(Number)
+          note: "会計年度"(String)
+          label: "年度"(String)
+          type: "number"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        状態: {
+          colName: "状態"(String)
+          seq: 1(Number)
+          note: "未了 or 完了"(String)
+          label: "状態"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        パス: {
+          colName: "パス"(String)
+          seq: 2(Number)
+          note: "年度別仕訳日記帳(CSV)へのGoogle Driveのパス"(String)
+          label: "パス"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        ID: {
+          colName: "ID"(String)
+          seq: 3(Number)
+          note: "CSVのGoogle Drive上のファイルID"(String)
+          label: "ID"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        URL: {
+          colName: "URL"(String)
+          seq: 4(Number)
+          note: "CSVのURL。必ずプレビューで開くよう、IDから導出"(String)
+          label: "URL"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        文字コード: {
+          colName: "文字コード"(String)
+          seq: 5(Number)
+          note: "CSVの文字コード。Shift-JIS(MS932)対応"(String)
+          label: "文字コード"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        ヘッダ: {
+          colName: "ヘッダ"(String)
+          seq: 6(Number)
+          note: "CSV上のヘッダ行番号。基底=1"(String)
+          label: "ヘッダ"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        備考: {
+          colName: "備考"(String)
+          seq: 7(Number)
+          note: ""(String)
+          label: "備考"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        決算書パス: {
+          colName: "決算書パス"(String)
+          seq: 8(Number)
+          note: "当該会計年度のBS/PL(PDF)へパス"(String)
+          label: "決算書パス"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        決算書URL: {
+          colName: "決算書URL"(String)
+          seq: 9(Number)
+          note: "同URL"(String)
+          label: "決算書URL"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+        頁: {
+          colName: "頁"(String)
+          seq: 10(Number)
+          note: "PDF上でBS/PLが掲載されている頁番号"(String)
+          label: "頁"(String)
+          type: "string"(String)
+          alias: [
+          ]
+          default: null(Null)
+          printf: null(Null)
+        }
+      }
+    }
+  }
+  original: "{"dbName":"kz12","tables":[{"tableName":"kz標準","label":["過年度CSV"],"note":"kawazanyoで使用する仕訳日記帳の標準","primaryKey":["伝票番号","明細番号"],"cols":[{"colName":"年度","type":"number"},{"colName":"伝票番号","type":"number","note":"伝票を一意に特定する番号"},{"colName":"明細番号","type":"number","note":"伝票内の明細行番号"},{"colName":"取引日","type":"string","alias":["日付","取引日付","伝票日付"]},{"colName":"摘要","type":"string","alias":["取引摘要"]},{"colName":"補助摘要","type":"string"},{"colName":"借方科目","type":"string","alias":["借方勘定科目","借方科目名称"]},{"colName":"借方補助","type":"string","alias":["借方補助科目","借方補助科目名称"]},{"colName":"借方部門","type":"string","alias":["借方部門名称"]},{"colName":"借方本体","type":"number"},{"colName":"借方税額","type":"number","alias":["借方税金額","借方消費税"]},{"colName":"借方金額","type":"number"},{"colName":"貸方科目","type":"string","alias":["貸方勘定科目","貸方科目名称"]},{"colName":"貸方補助","type":"string","alias":["貸方補助科目","貸方補助科目名称"]},{"colName":"貸方部門","type":"string","alias":["貸方部門名称"]},{"colName":"貸方本体","type":"number"},{"colName":"貸方税額","type":"number","alias":["貸方税金額","貸方消費税"]},{"colName":"貸方金額","type":"number"},{"colName":"備考","type":"string"}]},{"tableName":"勘定科目","note":"kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル","cols":[{"colName":"大分類","type":"string","note":"BS/PL上の大分類"},{"colName":"中分類","type":"string","note":"BS/PL上の中分類"},{"colName":"小分類","type":"string","note":"BS/PL上の小分類"},{"colName":"科目名","type":"string","note":"勘定科目名"},{"colName":"CF分類","type":"string","note":"CF上の分類を' > 'で連結"}]},{"tableName":"過年度一覧","note":"過年度の仕訳日記帳データ(CSV)に関する情報","primaryKey":["年度"],"cols":[{"colName":"年度","type":"number","note":"会計年度"},{"colName":"状態","type":"string","note":"未了 or 完了"},{"colName":"パス","type":"string","note":"年度別仕訳日記帳(CSV)へのGoogle Driveのパス"},{"colName":"ID","type":"string","note":"CSVのGoogle Drive上のファイルID"},{"colName":"URL","type":"string","note":"CSVのURL。必ずプレビューで開くよう、IDから導出"},{"colName":"文字コード","type":"string","note":"CSVの文字コード。Shift-JIS(MS932)対応"},{"colName":"ヘッダ","type":"string","note":"CSV上のヘッダ行番号。基底=1"},{"colName":"備考","type":"string","note":""},{"colName":"決算書パス","type":"string","note":"当該会計年度のBS/PL(PDF)へパス"},{"colName":"決算書URL","type":"string","note":"同URL"},{"colName":"頁","type":"string","note":"PDF上でBS/PLが掲載されている頁番号"}]}],"custom":{"toLocale":"x => toLocale(x,{\n        verbose: false,\n        format:'yyyy/MM/dd',\n        undecimber: true,\n        fyEnd:'undefined',\n        errValue: 'error',\n      })","convertCharacters":"x => convertCharacters(x)"}}"(String)
+  created: "2025-09-15T10:25:47.349+09:00"(String)
+  data: {
+  }
+  expand: "function expandSchema(schema) {
+    const v = { whois: `${pv.whois}.expandSchema`, rv:{
+      dbName: '',
+      note: '',
+      tables: [],
+      custom: {},
+      tableList: [], // 実テーブル名の配列(インスタンス化時の追加項目)
+      tableMap: {},  // テーブル名->tableDefへのマップ(インスタンス化時の追加項目)
+      original: JSON.stringify(schema),  // インスタンス化前の引数(インスタンス化時の追加項目)
+      created: toLocale(null),
+      data: {},
+      expand: expandSchema, // 公開APIとしてexpandSchemaを"expand"として追加
+    }};
+    dev.start(v.whois, [...arguments]);
+    try {
+
+      dev.step(1);  // 「引数>pv.rv>既定値」の優先順位で統合
+      pv.rv = mergeDeeply(schema,mergeDeeply(pv.rv,v.rv));
+      if( pv.rv instanceof Error ) throw pv.rv;
+
+      dev.step(2);  // customを関数化
+      // 既に関数化されていた場合(再作成の場合)、何もしない
+      for( v.fn in pv.rv.custom ){
+        if( typeof pv.rv.custom[v.fn] !== 'function' )
+          pv.rv.custom[v.fn] = new Function('return '+pv.rv.custom[v.fn])();
+      }
+
+      dev.step(3);  // tableDefExを順次作成
+      pv.rv.tables.forEach(table => {
+        // name:存在 and label:不存在 -> label=nameとしてnameテーブルを作成
+        // name:存在 and label:存在 -> nameテーブルは作成しない、labelテーブルのみ作成
+        v.realTables = [...(!table.label  // {string[]} 実テーブル名の配列
+        ? [table.tableName] // label不在ならtableNameを引用、存在で非配列なら配列化
+        : (Array.isArray(table.label) ? table.label : [table.label]))];
+        v.realTables.forEach(x => {
+          // テーブルマップへの追加
+          pv.rv.tableMap[x] = expandTable(x,table)
+          pv.rv.tableMap[x] = expandTable(x,table);
+          if( pv.rv.tableMap[x] instanceof Error ) throw pv.rv.tableMap[x];
+          // 実テーブル名リストへの追加
+          pv.rv.tableList.push(x);
+        });
+      });
+
+      dev.end(); // 終了処理
+      return null;
+
+    } catch (e) { dev.error(e); return e; }
+  }"(Function)
+}
