@@ -162,7 +162,13 @@ function Schema(schema) {
                   break;
               }
             }
-          })
+          });
+          // RowNumber不在ならRowNumberを追加
+          if( v.table.startingRowNumber > 0 && typeof v.table.data[0].RowNumber === 'undefined' ){
+            for( v.i=0 ; v.i<v.table.data.length ; v.i++ ){
+              v.table.data[v.i].RowNumber = v.i + v.table.startingRowNumber;
+            }
+          }
         }
         v.schema.tables[v.name] = v.table;
       }
