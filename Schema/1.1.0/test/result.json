@@ -234,8 +234,109 @@
       def: "kz標準"(String)
     }
     勘定科目: {
+      data: "大分類	中分類	小分類	科目名	CF分類
+資産の部
+	流動資産
+			現金	現金または現金同等物
+			普通預金	現金または現金同等物
+			売掛金	営業活動によるキャッシュ・フロー > 支払・回収
+			前払金	営業活動によるキャッシュ・フロー > 支払・回収
+			立替金	営業活動によるキャッシュ・フロー > 支払・回収
+			未収金	営業活動によるキャッシュ・フロー > 支払・回収
+			預け金	営業活動によるキャッシュ・フロー > 支払・回収
+	固定資産
+		有形固定資産
+			建物	投資活動によるキャッシュ・フロー
+			建物附属設備	投資活動によるキャッシュ・フロー
+			工具器具備品	投資活動によるキャッシュ・フロー
+			土地	投資活動によるキャッシュ・フロー
+			減価償却累計額	投資活動によるキャッシュ・フロー
+		投資その他
+			差入保証金	営業活動によるキャッシュ・フロー > 支払・回収
+			長期前払費用	営業活動によるキャッシュ・フロー > 償却
+			出資金	投資活動によるキャッシュ・フロー
+負債の部
+	流動負債
+			役員借入金	財務活動によるキャッシュ・フロー
+			未払金	営業活動によるキャッシュ・フロー > 支払・回収
+			前受金	営業活動によるキャッシュ・フロー > 支払・回収
+			預り金	営業活動によるキャッシュ・フロー > 支払・回収
+			未払法人税等	営業活動によるキャッシュ・フロー > 租税公課
+	固定負債
+			長期借入金	財務活動によるキャッシュ・フロー
+			預り敷金・保証金	営業活動によるキャッシュ・フロー > 支払・回収
+純資産の部
+			資本金	財務活動によるキャッシュ・フロー
+			資本剰余金	財務活動によるキャッシュ・フロー
+	利益剰余金
+		その他利益剰余金
+			繰越利益剰余金	財務活動によるキャッシュ・フロー
+収益の部
+	売上高
+			売上高	営業活動によるキャッシュ・フロー
+	営業外収益
+			受取利息	財務活動によるキャッシュ・フロー
+			雑収入	営業活動によるキャッシュ・フロー
+	特別利益
+			固定資産売却益	投資活動によるキャッシュ・フロー
+費用の部
+	売上原価
+	販売費および一般管理費
+			役員報酬	営業活動によるキャッシュ・フロー > 販管費
+			給料	営業活動によるキャッシュ・フロー > 販管費
+			法定福利費	営業活動によるキャッシュ・フロー > 租税公課
+			福利厚生費	営業活動によるキャッシュ・フロー > 販管費
+			外注費	営業活動によるキャッシュ・フロー > 販管費
+			広告宣伝費	営業活動によるキャッシュ・フロー > 販管費
+			会議費	営業活動によるキャッシュ・フロー > 販管費
+			交際費	営業活動によるキャッシュ・フロー > 販管費
+			寄附金	営業活動によるキャッシュ・フロー > 販管費
+			旅費交通費	営業活動によるキャッシュ・フロー > 販管費
+			通信費	営業活動によるキャッシュ・フロー > 販管費
+			新聞図書費	営業活動によるキャッシュ・フロー > 販管費
+			地代家賃	営業活動によるキャッシュ・フロー > 販管費
+			水道光熱費	営業活動によるキャッシュ・フロー > 販管費
+			修繕費	営業活動によるキャッシュ・フロー > 販管費
+			消耗品費	営業活動によるキャッシュ・フロー > 販管費
+			事務用品費	営業活動によるキャッシュ・フロー > 販管費
+			支払報酬料	営業活動によるキャッシュ・フロー > 販管費
+			支払手数料	営業活動によるキャッシュ・フロー > 販管費
+			保険料	営業活動によるキャッシュ・フロー > 販管費
+			租税公課	営業活動によるキャッシュ・フロー > 租税公課
+			諸会費	営業活動によるキャッシュ・フロー > 販管費
+			雑費	営業活動によるキャッシュ・フロー > 販管費
+			減価償却費	投資活動によるキャッシュ・フロー
+			長期前払費用償却	営業活動によるキャッシュ・フロー > 償却
+	営業外費用
+			支払利息	財務活動によるキャッシュ・フロー
+			貸倒損失	営業活動によるキャッシュ・フロー > 支払・回収
+			雑損失	営業活動によるキャッシュ・フロー
+	特別損失
+			固定資産売却損	投資活動によるキャッシュ・フロー
+	法人税・住民税及び事業税
+			法人税	営業活動によるキャッシュ・フロー > 租税公課
+			住民税	営業活動によるキャッシュ・フロー > 租税公課
+			事業税	営業活動によるキャッシュ・フロー > 租税公課
+			法人税等	営業活動によるキャッシュ・フロー > 租税公課"(String)
     }
     過年度一覧: {
+      data: "年度	状態	パス	ID	URL	文字コード	ヘッダ	備考	決算書パス	決算書URL	頁
+2011	完了	ena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena第1期.csv	1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u	https://drive.google.com/file/d/1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u/preview	MS932	8		ena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena.kaon決算報告書(2011年度).pdf	https://drive.google.com/file/d/1DYuOjpHT1GtPmy0ch5nr4D2b6kj6p7t4/preview	15
+2012	完了	ena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena第2期.csv	1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ	https://drive.google.com/file/d/1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ/preview	MS932	8		ena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena.kaon決算報告書(2012年度).pdf	https://drive.google.com/file/d/1xFnjstCh9_GIZTkta47F0zIM8zQyN_mj/preview	16
+2013	完了	ena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena第3期.csv	1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx	https://drive.google.com/file/d/1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx/preview	MS932	8		ena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena.kaon決算報告書(2013年度).pdf	https://drive.google.com/file/d/1kKD1NVW_JiemOodtfKympnq9MlkVf2xA/preview	16
+2014	完了	ena.kaon > log > fy2015 > 20151118_第4期(2014年度)決算報告 > ena第4期.csv	1WcRLe7QdFNsJkQYC8O1Nv27xDVaQBLQW	https://drive.google.com/file/d/1WcRLe7QdFNsJkQYC8O1Nv27xDVaQBLQW/preview	MS932	8		ena.kaon > log > fy2015 > 20151118_第4期(2014年度)決算報告 > ena.kaon決算報告書(2014年度).pdf	https://drive.google.com/file/d/1omBSbBnB90bmobBUDgctZcakwSbOcA48/preview	28
+2015	完了	share > 税理士法人YFPクレア > log > fy2016 > 20161118_第5期(2015年度)決算報告 > ena第5期改.csv	16sJ66akRZLJJX69PRgHRd0xuH8IE4Uws	https://drive.google.com/file/d/16sJ66akRZLJJX69PRgHRd0xuH8IE4Uws/preview		1	"同一フォルダの「ena第5期.csv」が原本。
+ヘッダ行を加え、Shift-JIS -> UTF-8に変更"	share > 税理士法人YFPクレア > log > fy2016 > 20161118_第5期(2015年度)決算報告 > ena.kaon決算報告書(2015年度).pdf	https://drive.google.com/file/d/1sTiljIFDzngLRrnPgjtmhX9ra0VNQdeM/preview	24
+2016	完了	share > 税理士法人YFPクレア > log > fy2017 > 20171128_第6期(2016年度)決算報告 > 第6期.csv	1IIqShJen8b0bgKLha2rw7o11gyzuyGUK	https://drive.google.com/file/d/1IIqShJen8b0bgKLha2rw7o11gyzuyGUK/preview	MS932	8		share > 税理士法人YFPクレア > log > fy2017 > 20171128_第6期(2016年度)決算報告 > 決算書類2016.pdf	https://drive.google.com/file/d/1dWX8Oix51_Y3Bo4MW3ClNbb18DG21A6g/preview	19
+2017	完了	ena.kaon > log > fy2018 > 20181010_第7期(2017年度)決算 > 決算報告書2017 > 会計データ.csv	1Fx7qByvMp7UMYQWGicNG0Xa8cfxX1y6P	https://drive.google.com/file/d/1Fx7qByvMp7UMYQWGicNG0Xa8cfxX1y6P/preview	MS932	1	"同一フォルダの「会計データ.txt」が原本。
+ヘッダ行を追加(文字コードの変更は無し)"	ena.kaon > log > fy2018 > 20181010_第7期(2017年度)決算 > 決算報告書2017 > 決算報告書2017.pdf	https://drive.google.com/file/d/1enHmBfr07mieidfr59ioz1pI85h2Y2hO/preview	2
+2018	完了	share > 税理士法人YFPクレア > log > fy2019 > 20191122_会計データ > 仕訳日記帳.csv	1rgxJkm_FTpp6CaJHfBbwlQaohrXl1uq-	https://drive.google.com/file/d/1rgxJkm_FTpp6CaJHfBbwlQaohrXl1uq-/preview	MS932	1		share > 税理士法人YFPクレア > log > fy2019 > 20191126_第8期決算 > 申告書類.pdf	https://drive.google.com/file/d/1i5BMyv31tF0okcs3Ik68yi8lJIbvHznF/preview	31
+2019	完了	share > 税理士法人YFPクレア > log > fy2020 > 20201005_2019年度決算 > 20201207申告書決算書元帳データ > 20201207仕訳日記帳(第9期).csv	1czTmfkwuxz2lEIkPUlJ8BZyYWa58J6O9	https://drive.google.com/file/d/1czTmfkwuxz2lEIkPUlJ8BZyYWa58J6O9/preview		1		share > 税理士法人YFPクレア > log > fy2020 > 20201005_2019年度決算 > 20201207申告書決算書元帳データ > 20201207申告書類.pdf	https://drive.google.com/file/d/11X2xH70on4JDo6ZLrIhOfD6y0AXSbwSq/preview	23
+2020	完了	share > 税理士法人YFPクレア > log > fy2021 > 20211111_2020年度決算 > 20111111_会計データ > 202010-202109仕訳日記帳.csv	1XV2DuVMLl-X4chu5FLMdq5PD52InnpQ6	https://drive.google.com/file/d/1XV2DuVMLl-X4chu5FLMdq5PD52InnpQ6/preview	MS932	1		share > 税理士法人YFPクレア > log > fy2021 > 20211111_2020年度決算 > 20211202_提出済申告書・決算書・元帳 > 提出済申告書･決算書.pdf	https://drive.google.com/file/d/1a_TC_ureTmYp17P5wokTWe2ZiPJqs0EN/preview	24
+2021	完了	share > 税理士法人YFPクレア > log > fy2022 > 20221005_2021年度決算 > 20221107_会計データ > 仕訳日記帳.csv	1w5q6p1bQCGtqui7NN3mJTUuQewVZWYTy	https://drive.google.com/file/d/1w5q6p1bQCGtqui7NN3mJTUuQewVZWYTy/preview		1		share > 税理士法人YFPクレア > log > fy2022 > 20221005_2021年度決算 > 20221128_提出済申告書・決算書・元帳 > 株式会社ena.kaon-2022年9月-決算書.pdf	https://drive.google.com/file/d/1DVY1EcUS1My9U0Tw5DAlOppFT530hH_b/preview	2
+2022	完了	share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122会計データ > 仕訳日記帳2023.csv	138k67CeWYZb8grdK8-eFjBMQ5qXjiD3V	https://drive.google.com/file/d/138k67CeWYZb8grdK8-eFjBMQ5qXjiD3V/preview	MS932	1	"以下にも2022年度のCSVがあるが、後から提供された本表左のファイルを採用
+share > 税理士法人YFPクレア > log > fy2023 > 20231009_2022年度決算 > 20231214提出済申告書 > 202210-102311仕訳日記帳.csv"	share > 税理士法人YFPクレア > log > fy2023 > 20231009_2022年度決算 > 20231214提出済申告書 > 決算書.pdf	https://drive.google.com/file/d/1kCiQAl6f-nUl9oTO3kLYVF49XGTxEEvV/preview	2
+2023	完了	share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122会計データ > 仕訳日記帳2024.csv	1208k0gmxUcTmcqLpTpQUEpBgnPOeWpsW	https://drive.google.com/file/d/1208k0gmxUcTmcqLpTpQUEpBgnPOeWpsW/preview	MS932	1		share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122試算表(確定値) > 株式会社ena.kaon-2024年9月-決算書(20241122).pdf	https://drive.google.com/file/d/1lsXNpNqfK1BQvKshL76wMXUMqAQEb7zd/preview	2"(String)
     }
   }
   custom: {
@@ -480,8 +581,109 @@
       def: "kz標準"(String)
     }
     勘定科目: {
+      data: "大分類	中分類	小分類	科目名	CF分類
+資産の部
+	流動資産
+			現金	現金または現金同等物
+			普通預金	現金または現金同等物
+			売掛金	営業活動によるキャッシュ・フロー > 支払・回収
+			前払金	営業活動によるキャッシュ・フロー > 支払・回収
+			立替金	営業活動によるキャッシュ・フロー > 支払・回収
+			未収金	営業活動によるキャッシュ・フロー > 支払・回収
+			預け金	営業活動によるキャッシュ・フロー > 支払・回収
+	固定資産
+		有形固定資産
+			建物	投資活動によるキャッシュ・フロー
+			建物附属設備	投資活動によるキャッシュ・フロー
+			工具器具備品	投資活動によるキャッシュ・フロー
+			土地	投資活動によるキャッシュ・フロー
+			減価償却累計額	投資活動によるキャッシュ・フロー
+		投資その他
+			差入保証金	営業活動によるキャッシュ・フロー > 支払・回収
+			長期前払費用	営業活動によるキャッシュ・フロー > 償却
+			出資金	投資活動によるキャッシュ・フロー
+負債の部
+	流動負債
+			役員借入金	財務活動によるキャッシュ・フロー
+			未払金	営業活動によるキャッシュ・フロー > 支払・回収
+			前受金	営業活動によるキャッシュ・フロー > 支払・回収
+			預り金	営業活動によるキャッシュ・フロー > 支払・回収
+			未払法人税等	営業活動によるキャッシュ・フロー > 租税公課
+	固定負債
+			長期借入金	財務活動によるキャッシュ・フロー
+			預り敷金・保証金	営業活動によるキャッシュ・フロー > 支払・回収
+純資産の部
+			資本金	財務活動によるキャッシュ・フロー
+			資本剰余金	財務活動によるキャッシュ・フロー
+	利益剰余金
+		その他利益剰余金
+			繰越利益剰余金	財務活動によるキャッシュ・フロー
+収益の部
+	売上高
+			売上高	営業活動によるキャッシュ・フロー
+	営業外収益
+			受取利息	財務活動によるキャッシュ・フロー
+			雑収入	営業活動によるキャッシュ・フロー
+	特別利益
+			固定資産売却益	投資活動によるキャッシュ・フロー
+費用の部
+	売上原価
+	販売費および一般管理費
+			役員報酬	営業活動によるキャッシュ・フロー > 販管費
+			給料	営業活動によるキャッシュ・フロー > 販管費
+			法定福利費	営業活動によるキャッシュ・フロー > 租税公課
+			福利厚生費	営業活動によるキャッシュ・フロー > 販管費
+			外注費	営業活動によるキャッシュ・フロー > 販管費
+			広告宣伝費	営業活動によるキャッシュ・フロー > 販管費
+			会議費	営業活動によるキャッシュ・フロー > 販管費
+			交際費	営業活動によるキャッシュ・フロー > 販管費
+			寄附金	営業活動によるキャッシュ・フロー > 販管費
+			旅費交通費	営業活動によるキャッシュ・フロー > 販管費
+			通信費	営業活動によるキャッシュ・フロー > 販管費
+			新聞図書費	営業活動によるキャッシュ・フロー > 販管費
+			地代家賃	営業活動によるキャッシュ・フロー > 販管費
+			水道光熱費	営業活動によるキャッシュ・フロー > 販管費
+			修繕費	営業活動によるキャッシュ・フロー > 販管費
+			消耗品費	営業活動によるキャッシュ・フロー > 販管費
+			事務用品費	営業活動によるキャッシュ・フロー > 販管費
+			支払報酬料	営業活動によるキャッシュ・フロー > 販管費
+			支払手数料	営業活動によるキャッシュ・フロー > 販管費
+			保険料	営業活動によるキャッシュ・フロー > 販管費
+			租税公課	営業活動によるキャッシュ・フロー > 租税公課
+			諸会費	営業活動によるキャッシュ・フロー > 販管費
+			雑費	営業活動によるキャッシュ・フロー > 販管費
+			減価償却費	投資活動によるキャッシュ・フロー
+			長期前払費用償却	営業活動によるキャッシュ・フロー > 償却
+	営業外費用
+			支払利息	財務活動によるキャッシュ・フロー
+			貸倒損失	営業活動によるキャッシュ・フロー > 支払・回収
+			雑損失	営業活動によるキャッシュ・フロー
+	特別損失
+			固定資産売却損	投資活動によるキャッシュ・フロー
+	法人税・住民税及び事業税
+			法人税	営業活動によるキャッシュ・フロー > 租税公課
+			住民税	営業活動によるキャッシュ・フロー > 租税公課
+			事業税	営業活動によるキャッシュ・フロー > 租税公課
+			法人税等	営業活動によるキャッシュ・フロー > 租税公課"(String)
     }
     過年度一覧: {
+      data: "年度	状態	パス	ID	URL	文字コード	ヘッダ	備考	決算書パス	決算書URL	頁
+2011	完了	ena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena第1期.csv	1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u	https://drive.google.com/file/d/1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u/preview	MS932	8		ena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena.kaon決算報告書(2011年度).pdf	https://drive.google.com/file/d/1DYuOjpHT1GtPmy0ch5nr4D2b6kj6p7t4/preview	15
+2012	完了	ena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena第2期.csv	1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ	https://drive.google.com/file/d/1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ/preview	MS932	8		ena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena.kaon決算報告書(2012年度).pdf	https://drive.google.com/file/d/1xFnjstCh9_GIZTkta47F0zIM8zQyN_mj/preview	16
+2013	完了	ena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena第3期.csv	1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx	https://drive.google.com/file/d/1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx/preview	MS932	8		ena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena.kaon決算報告書(2013年度).pdf	https://drive.google.com/file/d/1kKD1NVW_JiemOodtfKympnq9MlkVf2xA/preview	16
+2014	完了	ena.kaon > log > fy2015 > 20151118_第4期(2014年度)決算報告 > ena第4期.csv	1WcRLe7QdFNsJkQYC8O1Nv27xDVaQBLQW	https://drive.google.com/file/d/1WcRLe7QdFNsJkQYC8O1Nv27xDVaQBLQW/preview	MS932	8		ena.kaon > log > fy2015 > 20151118_第4期(2014年度)決算報告 > ena.kaon決算報告書(2014年度).pdf	https://drive.google.com/file/d/1omBSbBnB90bmobBUDgctZcakwSbOcA48/preview	28
+2015	完了	share > 税理士法人YFPクレア > log > fy2016 > 20161118_第5期(2015年度)決算報告 > ena第5期改.csv	16sJ66akRZLJJX69PRgHRd0xuH8IE4Uws	https://drive.google.com/file/d/16sJ66akRZLJJX69PRgHRd0xuH8IE4Uws/preview		1	"同一フォルダの「ena第5期.csv」が原本。
+ヘッダ行を加え、Shift-JIS -> UTF-8に変更"	share > 税理士法人YFPクレア > log > fy2016 > 20161118_第5期(2015年度)決算報告 > ena.kaon決算報告書(2015年度).pdf	https://drive.google.com/file/d/1sTiljIFDzngLRrnPgjtmhX9ra0VNQdeM/preview	24
+2016	完了	share > 税理士法人YFPクレア > log > fy2017 > 20171128_第6期(2016年度)決算報告 > 第6期.csv	1IIqShJen8b0bgKLha2rw7o11gyzuyGUK	https://drive.google.com/file/d/1IIqShJen8b0bgKLha2rw7o11gyzuyGUK/preview	MS932	8		share > 税理士法人YFPクレア > log > fy2017 > 20171128_第6期(2016年度)決算報告 > 決算書類2016.pdf	https://drive.google.com/file/d/1dWX8Oix51_Y3Bo4MW3ClNbb18DG21A6g/preview	19
+2017	完了	ena.kaon > log > fy2018 > 20181010_第7期(2017年度)決算 > 決算報告書2017 > 会計データ.csv	1Fx7qByvMp7UMYQWGicNG0Xa8cfxX1y6P	https://drive.google.com/file/d/1Fx7qByvMp7UMYQWGicNG0Xa8cfxX1y6P/preview	MS932	1	"同一フォルダの「会計データ.txt」が原本。
+ヘッダ行を追加(文字コードの変更は無し)"	ena.kaon > log > fy2018 > 20181010_第7期(2017年度)決算 > 決算報告書2017 > 決算報告書2017.pdf	https://drive.google.com/file/d/1enHmBfr07mieidfr59ioz1pI85h2Y2hO/preview	2
+2018	完了	share > 税理士法人YFPクレア > log > fy2019 > 20191122_会計データ > 仕訳日記帳.csv	1rgxJkm_FTpp6CaJHfBbwlQaohrXl1uq-	https://drive.google.com/file/d/1rgxJkm_FTpp6CaJHfBbwlQaohrXl1uq-/preview	MS932	1		share > 税理士法人YFPクレア > log > fy2019 > 20191126_第8期決算 > 申告書類.pdf	https://drive.google.com/file/d/1i5BMyv31tF0okcs3Ik68yi8lJIbvHznF/preview	31
+2019	完了	share > 税理士法人YFPクレア > log > fy2020 > 20201005_2019年度決算 > 20201207申告書決算書元帳データ > 20201207仕訳日記帳(第9期).csv	1czTmfkwuxz2lEIkPUlJ8BZyYWa58J6O9	https://drive.google.com/file/d/1czTmfkwuxz2lEIkPUlJ8BZyYWa58J6O9/preview		1		share > 税理士法人YFPクレア > log > fy2020 > 20201005_2019年度決算 > 20201207申告書決算書元帳データ > 20201207申告書類.pdf	https://drive.google.com/file/d/11X2xH70on4JDo6ZLrIhOfD6y0AXSbwSq/preview	23
+2020	完了	share > 税理士法人YFPクレア > log > fy2021 > 20211111_2020年度決算 > 20111111_会計データ > 202010-202109仕訳日記帳.csv	1XV2DuVMLl-X4chu5FLMdq5PD52InnpQ6	https://drive.google.com/file/d/1XV2DuVMLl-X4chu5FLMdq5PD52InnpQ6/preview	MS932	1		share > 税理士法人YFPクレア > log > fy2021 > 20211111_2020年度決算 > 20211202_提出済申告書・決算書・元帳 > 提出済申告書･決算書.pdf	https://drive.google.com/file/d/1a_TC_ureTmYp17P5wokTWe2ZiPJqs0EN/preview	24
+2021	完了	share > 税理士法人YFPクレア > log > fy2022 > 20221005_2021年度決算 > 20221107_会計データ > 仕訳日記帳.csv	1w5q6p1bQCGtqui7NN3mJTUuQewVZWYTy	https://drive.google.com/file/d/1w5q6p1bQCGtqui7NN3mJTUuQewVZWYTy/preview		1		share > 税理士法人YFPクレア > log > fy2022 > 20221005_2021年度決算 > 20221128_提出済申告書・決算書・元帳 > 株式会社ena.kaon-2022年9月-決算書.pdf	https://drive.google.com/file/d/1DVY1EcUS1My9U0Tw5DAlOppFT530hH_b/preview	2
+2022	完了	share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122会計データ > 仕訳日記帳2023.csv	138k67CeWYZb8grdK8-eFjBMQ5qXjiD3V	https://drive.google.com/file/d/138k67CeWYZb8grdK8-eFjBMQ5qXjiD3V/preview	MS932	1	"以下にも2022年度のCSVがあるが、後から提供された本表左のファイルを採用
+share > 税理士法人YFPクレア > log > fy2023 > 20231009_2022年度決算 > 20231214提出済申告書 > 202210-102311仕訳日記帳.csv"	share > 税理士法人YFPクレア > log > fy2023 > 20231009_2022年度決算 > 20231214提出済申告書 > 決算書.pdf	https://drive.google.com/file/d/1kCiQAl6f-nUl9oTO3kLYVF49XGTxEEvV/preview	2
+2023	完了	share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122会計データ > 仕訳日記帳2024.csv	1208k0gmxUcTmcqLpTpQUEpBgnPOeWpsW	https://drive.google.com/file/d/1208k0gmxUcTmcqLpTpQUEpBgnPOeWpsW/preview	MS932	1		share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122試算表(確定値) > 株式会社ena.kaon-2024年9月-決算書(20241122).pdf	https://drive.google.com/file/d/1lsXNpNqfK1BQvKshL76wMXUMqAQEb7zd/preview	2"(String)
     }
   }
   custom: {
@@ -495,16 +697,29 @@
     convertCharacters: "x => convertCharacters(x)"(String)
   }
 }
-
-
-
-===== result
-
-
-[0000]SchemaTest step.1
-0: {
-  dbName: "kz12"(String)
+[0003]mergeDeeply start.
+-- footprint
+[0000]SchemaTest.1 > [0001]Schema.1 > [0002]Schema.expand.1.1
+-- arguments
+{
+}
+{
+  dbName: ""(String)
   note: ""(String)
+  tableDef: {
+  }
+  tables: {
+  }
+  custom: {
+  }
+}
+[0003]mergeDeeply normal end.
+[0004]mergeDeeply start.
+-- footprint
+[0000]SchemaTest.1 > [0001]Schema.1 > [0002]Schema.expand.1.1
+-- arguments
+{
+  dbName: "kz12"(String)
   tableDef: {
     kz標準: {
       note: "kawazanyoで使用する仕訳日記帳の標準"(String)
@@ -728,53 +943,1736 @@
   tables: {
     過年度CSV: {
       def: "kz標準"(String)
-      data: [
-      ]
-      note: ""(String)
+    }
+    勘定科目: {
+      data: "大分類	中分類	小分類	科目名	CF分類
+資産の部
+	流動資産
+			現金	現金または現金同等物
+			普通預金	現金または現金同等物
+			売掛金	営業活動によるキャッシュ・フロー > 支払・回収
+			前払金	営業活動によるキャッシュ・フロー > 支払・回収
+			立替金	営業活動によるキャッシュ・フロー > 支払・回収
+			未収金	営業活動によるキャッシュ・フロー > 支払・回収
+			預け金	営業活動によるキャッシュ・フロー > 支払・回収
+	固定資産
+		有形固定資産
+			建物	投資活動によるキャッシュ・フロー
+			建物附属設備	投資活動によるキャッシュ・フロー
+			工具器具備品	投資活動によるキャッシュ・フロー
+			土地	投資活動によるキャッシュ・フロー
+			減価償却累計額	投資活動によるキャッシュ・フロー
+		投資その他
+			差入保証金	営業活動によるキャッシュ・フロー > 支払・回収
+			長期前払費用	営業活動によるキャッシュ・フロー > 償却
+			出資金	投資活動によるキャッシュ・フロー
+負債の部
+	流動負債
+			役員借入金	財務活動によるキャッシュ・フロー
+			未払金	営業活動によるキャッシュ・フロー > 支払・回収
+			前受金	営業活動によるキャッシュ・フロー > 支払・回収
+			預り金	営業活動によるキャッシュ・フロー > 支払・回収
+			未払法人税等	営業活動によるキャッシュ・フロー > 租税公課
+	固定負債
+			長期借入金	財務活動によるキャッシュ・フロー
+			預り敷金・保証金	営業活動によるキャッシュ・フロー > 支払・回収
+純資産の部
+			資本金	財務活動によるキャッシュ・フロー
+			資本剰余金	財務活動によるキャッシュ・フロー
+	利益剰余金
+		その他利益剰余金
+			繰越利益剰余金	財務活動によるキャッシュ・フロー
+収益の部
+	売上高
+			売上高	営業活動によるキャッシュ・フロー
+	営業外収益
+			受取利息	財務活動によるキャッシュ・フロー
+			雑収入	営業活動によるキャッシュ・フロー
+	特別利益
+			固定資産売却益	投資活動によるキャッシュ・フロー
+費用の部
+	売上原価
+	販売費および一般管理費
+			役員報酬	営業活動によるキャッシュ・フロー > 販管費
+			給料	営業活動によるキャッシュ・フロー > 販管費
+			法定福利費	営業活動によるキャッシュ・フロー > 租税公課
+			福利厚生費	営業活動によるキャッシュ・フロー > 販管費
+			外注費	営業活動によるキャッシュ・フロー > 販管費
+			広告宣伝費	営業活動によるキャッシュ・フロー > 販管費
+			会議費	営業活動によるキャッシュ・フロー > 販管費
+			交際費	営業活動によるキャッシュ・フロー > 販管費
+			寄附金	営業活動によるキャッシュ・フロー > 販管費
+			旅費交通費	営業活動によるキャッシュ・フロー > 販管費
+			通信費	営業活動によるキャッシュ・フロー > 販管費
+			新聞図書費	営業活動によるキャッシュ・フロー > 販管費
+			地代家賃	営業活動によるキャッシュ・フロー > 販管費
+			水道光熱費	営業活動によるキャッシュ・フロー > 販管費
+			修繕費	営業活動によるキャッシュ・フロー > 販管費
+			消耗品費	営業活動によるキャッシュ・フロー > 販管費
+			事務用品費	営業活動によるキャッシュ・フロー > 販管費
+			支払報酬料	営業活動によるキャッシュ・フロー > 販管費
+			支払手数料	営業活動によるキャッシュ・フロー > 販管費
+			保険料	営業活動によるキャッシュ・フロー > 販管費
+			租税公課	営業活動によるキャッシュ・フロー > 租税公課
+			諸会費	営業活動によるキャッシュ・フロー > 販管費
+			雑費	営業活動によるキャッシュ・フロー > 販管費
+			減価償却費	投資活動によるキャッシュ・フロー
+			長期前払費用償却	営業活動によるキャッシュ・フロー > 償却
+	営業外費用
+			支払利息	財務活動によるキャッシュ・フロー
+			貸倒損失	営業活動によるキャッシュ・フロー > 支払・回収
+			雑損失	営業活動によるキャッシュ・フロー
+	特別損失
+			固定資産売却損	投資活動によるキャッシュ・フロー
+	法人税・住民税及び事業税
+			法人税	営業活動によるキャッシュ・フロー > 租税公課
+			住民税	営業活動によるキャッシュ・フロー > 租税公課
+			事業税	営業活動によるキャッシュ・フロー > 租税公課
+			法人税等	営業活動によるキャッシュ・フロー > 租税公課"(String)
+    }
+    過年度一覧: {
+      data: "年度	状態	パス	ID	URL	文字コード	ヘッダ	備考	決算書パス	決算書URL	頁
+2011	完了	ena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena第1期.csv	1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u	https://drive.google.com/file/d/1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u/preview	MS932	8		ena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena.kaon決算報告書(2011年度).pdf	https://drive.google.com/file/d/1DYuOjpHT1GtPmy0ch5nr4D2b6kj6p7t4/preview	15
+2012	完了	ena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena第2期.csv	1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ	https://drive.google.com/file/d/1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ/preview	MS932	8		ena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena.kaon決算報告書(2012年度).pdf	https://drive.google.com/file/d/1xFnjstCh9_GIZTkta47F0zIM8zQyN_mj/preview	16
+2013	完了	ena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena第3期.csv	1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx	https://drive.google.com/file/d/1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx/preview	MS932	8		ena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena.kaon決算報告書(2013年度).pdf	https://drive.google.com/file/d/1kKD1NVW_JiemOodtfKympnq9MlkVf2xA/preview	16
+2014	完了	ena.kaon > log > fy2015 > 20151118_第4期(2014年度)決算報告 > ena第4期.csv	1WcRLe7QdFNsJkQYC8O1Nv27xDVaQBLQW	https://drive.google.com/file/d/1WcRLe7QdFNsJkQYC8O1Nv27xDVaQBLQW/preview	MS932	8		ena.kaon > log > fy2015 > 20151118_第4期(2014年度)決算報告 > ena.kaon決算報告書(2014年度).pdf	https://drive.google.com/file/d/1omBSbBnB90bmobBUDgctZcakwSbOcA48/preview	28
+2015	完了	share > 税理士法人YFPクレア > log > fy2016 > 20161118_第5期(2015年度)決算報告 > ena第5期改.csv	16sJ66akRZLJJX69PRgHRd0xuH8IE4Uws	https://drive.google.com/file/d/16sJ66akRZLJJX69PRgHRd0xuH8IE4Uws/preview		1	"同一フォルダの「ena第5期.csv」が原本。
+ヘッダ行を加え、Shift-JIS -> UTF-8に変更"	share > 税理士法人YFPクレア > log > fy2016 > 20161118_第5期(2015年度)決算報告 > ena.kaon決算報告書(2015年度).pdf	https://drive.google.com/file/d/1sTiljIFDzngLRrnPgjtmhX9ra0VNQdeM/preview	24
+2016	完了	share > 税理士法人YFPクレア > log > fy2017 > 20171128_第6期(2016年度)決算報告 > 第6期.csv	1IIqShJen8b0bgKLha2rw7o11gyzuyGUK	https://drive.google.com/file/d/1IIqShJen8b0bgKLha2rw7o11gyzuyGUK/preview	MS932	8		share > 税理士法人YFPクレア > log > fy2017 > 20171128_第6期(2016年度)決算報告 > 決算書類2016.pdf	https://drive.google.com/file/d/1dWX8Oix51_Y3Bo4MW3ClNbb18DG21A6g/preview	19
+2017	完了	ena.kaon > log > fy2018 > 20181010_第7期(2017年度)決算 > 決算報告書2017 > 会計データ.csv	1Fx7qByvMp7UMYQWGicNG0Xa8cfxX1y6P	https://drive.google.com/file/d/1Fx7qByvMp7UMYQWGicNG0Xa8cfxX1y6P/preview	MS932	1	"同一フォルダの「会計データ.txt」が原本。
+ヘッダ行を追加(文字コードの変更は無し)"	ena.kaon > log > fy2018 > 20181010_第7期(2017年度)決算 > 決算報告書2017 > 決算報告書2017.pdf	https://drive.google.com/file/d/1enHmBfr07mieidfr59ioz1pI85h2Y2hO/preview	2
+2018	完了	share > 税理士法人YFPクレア > log > fy2019 > 20191122_会計データ > 仕訳日記帳.csv	1rgxJkm_FTpp6CaJHfBbwlQaohrXl1uq-	https://drive.google.com/file/d/1rgxJkm_FTpp6CaJHfBbwlQaohrXl1uq-/preview	MS932	1		share > 税理士法人YFPクレア > log > fy2019 > 20191126_第8期決算 > 申告書類.pdf	https://drive.google.com/file/d/1i5BMyv31tF0okcs3Ik68yi8lJIbvHznF/preview	31
+2019	完了	share > 税理士法人YFPクレア > log > fy2020 > 20201005_2019年度決算 > 20201207申告書決算書元帳データ > 20201207仕訳日記帳(第9期).csv	1czTmfkwuxz2lEIkPUlJ8BZyYWa58J6O9	https://drive.google.com/file/d/1czTmfkwuxz2lEIkPUlJ8BZyYWa58J6O9/preview		1		share > 税理士法人YFPクレア > log > fy2020 > 20201005_2019年度決算 > 20201207申告書決算書元帳データ > 20201207申告書類.pdf	https://drive.google.com/file/d/11X2xH70on4JDo6ZLrIhOfD6y0AXSbwSq/preview	23
+2020	完了	share > 税理士法人YFPクレア > log > fy2021 > 20211111_2020年度決算 > 20111111_会計データ > 202010-202109仕訳日記帳.csv	1XV2DuVMLl-X4chu5FLMdq5PD52InnpQ6	https://drive.google.com/file/d/1XV2DuVMLl-X4chu5FLMdq5PD52InnpQ6/preview	MS932	1		share > 税理士法人YFPクレア > log > fy2021 > 20211111_2020年度決算 > 20211202_提出済申告書・決算書・元帳 > 提出済申告書･決算書.pdf	https://drive.google.com/file/d/1a_TC_ureTmYp17P5wokTWe2ZiPJqs0EN/preview	24
+2021	完了	share > 税理士法人YFPクレア > log > fy2022 > 20221005_2021年度決算 > 20221107_会計データ > 仕訳日記帳.csv	1w5q6p1bQCGtqui7NN3mJTUuQewVZWYTy	https://drive.google.com/file/d/1w5q6p1bQCGtqui7NN3mJTUuQewVZWYTy/preview		1		share > 税理士法人YFPクレア > log > fy2022 > 20221005_2021年度決算 > 20221128_提出済申告書・決算書・元帳 > 株式会社ena.kaon-2022年9月-決算書.pdf	https://drive.google.com/file/d/1DVY1EcUS1My9U0Tw5DAlOppFT530hH_b/preview	2
+2022	完了	share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122会計データ > 仕訳日記帳2023.csv	138k67CeWYZb8grdK8-eFjBMQ5qXjiD3V	https://drive.google.com/file/d/138k67CeWYZb8grdK8-eFjBMQ5qXjiD3V/preview	MS932	1	"以下にも2022年度のCSVがあるが、後から提供された本表左のファイルを採用
+share > 税理士法人YFPクレア > log > fy2023 > 20231009_2022年度決算 > 20231214提出済申告書 > 202210-102311仕訳日記帳.csv"	share > 税理士法人YFPクレア > log > fy2023 > 20231009_2022年度決算 > 20231214提出済申告書 > 決算書.pdf	https://drive.google.com/file/d/1kCiQAl6f-nUl9oTO3kLYVF49XGTxEEvV/preview	2
+2023	完了	share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122会計データ > 仕訳日記帳2024.csv	1208k0gmxUcTmcqLpTpQUEpBgnPOeWpsW	https://drive.google.com/file/d/1208k0gmxUcTmcqLpTpQUEpBgnPOeWpsW/preview	MS932	1		share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122試算表(確定値) > 株式会社ena.kaon-2024年9月-決算書(20241122).pdf	https://drive.google.com/file/d/1lsXNpNqfK1BQvKshL76wMXUMqAQEb7zd/preview	2"(String)
+    }
+  }
+  custom: {
+    toLocale: "x => toLocale(x,{
+        verbose: false,
+        format:'yyyy/MM/dd',
+        undecimber: true,
+        fyEnd:'undefined',
+        errValue: 'error',
+      })"(String)
+    convertCharacters: "x => convertCharacters(x)"(String)
+  }
+}
+{
+  dbName: ""(String)
+  note: ""(String)
+  tableDef: {
+  }
+  tables: {
+  }
+  custom: {
+  }
+}
+[0005]mergeDeeply start.
+-- footprint
+[0000]SchemaTest.1 > [0001]Schema.1 > [0002]Schema.expand.1.1 > [0004]mergeDeeply.2.21
+-- arguments
+{
+  kz標準: {
+    note: "kawazanyoで使用する仕訳日記帳の標準"(String)
+    primaryKey: [
+      0: "伝票番号"(String)
+      1: "明細番号"(String)
+    ]
+    colDef: [
+      0: {
+        colName: "年度"(String)
+        type: "number"(String)
+      }
+      1: {
+        colName: "伝票番号"(String)
+        type: "number"(String)
+        note: "伝票を一意に特定する番号"(String)
+      }
+      2: {
+        colName: "明細番号"(String)
+        type: "number"(String)
+        note: "伝票内の明細行番号"(String)
+      }
+      3: {
+        colName: "取引日"(String)
+        type: "string"(String)
+        alias: [
+          0: "日付"(String)
+          1: "取引日付"(String)
+          2: "伝票日付"(String)
+        ]
+      }
+      4: {
+        colName: "摘要"(String)
+        type: "string"(String)
+        alias: [
+          0: "取引摘要"(String)
+        ]
+      }
+      5: {
+        colName: "補助摘要"(String)
+        type: "string"(String)
+      }
+      6: {
+        colName: "借方科目"(String)
+        type: "string"(String)
+        alias: [
+          0: "借方勘定科目"(String)
+          1: "借方科目名称"(String)
+        ]
+      }
+      7: {
+        colName: "借方補助"(String)
+        type: "string"(String)
+        alias: [
+          0: "借方補助科目"(String)
+          1: "借方補助科目名称"(String)
+        ]
+      }
+      8: {
+        colName: "借方部門"(String)
+        type: "string"(String)
+        alias: [
+          0: "借方部門名称"(String)
+        ]
+      }
+      9: {
+        colName: "借方本体"(String)
+        type: "number"(String)
+      }
+      10: {
+        colName: "借方税額"(String)
+        type: "number"(String)
+        alias: [
+          0: "借方税金額"(String)
+          1: "借方消費税"(String)
+        ]
+      }
+      11: {
+        colName: "借方金額"(String)
+        type: "number"(String)
+      }
+      12: {
+        colName: "貸方科目"(String)
+        type: "string"(String)
+        alias: [
+          0: "貸方勘定科目"(String)
+          1: "貸方科目名称"(String)
+        ]
+      }
+      13: {
+        colName: "貸方補助"(String)
+        type: "string"(String)
+        alias: [
+          0: "貸方補助科目"(String)
+          1: "貸方補助科目名称"(String)
+        ]
+      }
+      14: {
+        colName: "貸方部門"(String)
+        type: "string"(String)
+        alias: [
+          0: "貸方部門名称"(String)
+        ]
+      }
+      15: {
+        colName: "貸方本体"(String)
+        type: "number"(String)
+      }
+      16: {
+        colName: "貸方税額"(String)
+        type: "number"(String)
+        alias: [
+          0: "貸方税金額"(String)
+          1: "貸方消費税"(String)
+        ]
+      }
+      17: {
+        colName: "貸方金額"(String)
+        type: "number"(String)
+      }
+      18: {
+        colName: "備考"(String)
+        type: "string"(String)
+      }
+    ]
+  }
+  勘定科目: {
+    note: "kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル"(String)
+    colDef: [
+      0: {
+        colName: "大分類"(String)
+        type: "string"(String)
+        note: "BS/PL上の大分類"(String)
+      }
+      1: {
+        colName: "中分類"(String)
+        type: "string"(String)
+        note: "BS/PL上の中分類"(String)
+      }
+      2: {
+        colName: "小分類"(String)
+        type: "string"(String)
+        note: "BS/PL上の小分類"(String)
+      }
+      3: {
+        colName: "科目名"(String)
+        type: "string"(String)
+        note: "勘定科目名"(String)
+      }
+      4: {
+        colName: "CF分類"(String)
+        type: "string"(String)
+        note: "CF上の分類を' > 'で連結"(String)
+      }
+    ]
+  }
+  過年度一覧: {
+    note: "過年度の仕訳日記帳データ(CSV)に関する情報"(String)
+    primaryKey: [
+      0: "年度"(String)
+    ]
+    colDef: [
+      0: {
+        colName: "年度"(String)
+        type: "number"(String)
+        note: "会計年度"(String)
+      }
+      1: {
+        colName: "状態"(String)
+        type: "string"(String)
+        note: "未了 or 完了"(String)
+      }
+      2: {
+        colName: "パス"(String)
+        type: "string"(String)
+        note: "年度別仕訳日記帳(CSV)へのGoogle Driveのパス"(String)
+      }
+      3: {
+        colName: "ID"(String)
+        type: "string"(String)
+        note: "CSVのGoogle Drive上のファイルID"(String)
+      }
+      4: {
+        colName: "URL"(String)
+        type: "string"(String)
+        note: "CSVのURL。必ずプレビューで開くよう、IDから導出"(String)
+      }
+      5: {
+        colName: "文字コード"(String)
+        type: "string"(String)
+        note: "CSVの文字コード。Shift-JIS(MS932)対応"(String)
+      }
+      6: {
+        colName: "ヘッダ"(String)
+        type: "string"(String)
+        note: "CSV上のヘッダ行番号。基底=1"(String)
+      }
+      7: {
+        colName: "備考"(String)
+        type: "string"(String)
+        note: ""(String)
+      }
+      8: {
+        colName: "決算書パス"(String)
+        type: "string"(String)
+        note: "当該会計年度のBS/PL(PDF)へパス"(String)
+      }
+      9: {
+        colName: "決算書URL"(String)
+        type: "string"(String)
+        note: "同URL"(String)
+      }
+      10: {
+        colName: "頁"(String)
+        type: "string"(String)
+        note: "PDF上でBS/PLが掲載されている頁番号"(String)
+      }
+    ]
+  }
+}
+{
+}
+{
+  array: "str"(String)
+}
+[0005]mergeDeeply normal end.
+[0006]mergeDeeply start.
+-- footprint
+[0000]SchemaTest.1 > [0001]Schema.1 > [0002]Schema.expand.1.1 > [0004]mergeDeeply.2.21
+-- arguments
+{
+  過年度CSV: {
+    def: "kz標準"(String)
+  }
+  勘定科目: {
+    data: "大分類	中分類	小分類	科目名	CF分類
+資産の部
+	流動資産
+			現金	現金または現金同等物
+			普通預金	現金または現金同等物
+			売掛金	営業活動によるキャッシュ・フロー > 支払・回収
+			前払金	営業活動によるキャッシュ・フロー > 支払・回収
+			立替金	営業活動によるキャッシュ・フロー > 支払・回収
+			未収金	営業活動によるキャッシュ・フロー > 支払・回収
+			預け金	営業活動によるキャッシュ・フロー > 支払・回収
+	固定資産
+		有形固定資産
+			建物	投資活動によるキャッシュ・フロー
+			建物附属設備	投資活動によるキャッシュ・フロー
+			工具器具備品	投資活動によるキャッシュ・フロー
+			土地	投資活動によるキャッシュ・フロー
+			減価償却累計額	投資活動によるキャッシュ・フロー
+		投資その他
+			差入保証金	営業活動によるキャッシュ・フロー > 支払・回収
+			長期前払費用	営業活動によるキャッシュ・フロー > 償却
+			出資金	投資活動によるキャッシュ・フロー
+負債の部
+	流動負債
+			役員借入金	財務活動によるキャッシュ・フロー
+			未払金	営業活動によるキャッシュ・フロー > 支払・回収
+			前受金	営業活動によるキャッシュ・フロー > 支払・回収
+			預り金	営業活動によるキャッシュ・フロー > 支払・回収
+			未払法人税等	営業活動によるキャッシュ・フロー > 租税公課
+	固定負債
+			長期借入金	財務活動によるキャッシュ・フロー
+			預り敷金・保証金	営業活動によるキャッシュ・フロー > 支払・回収
+純資産の部
+			資本金	財務活動によるキャッシュ・フロー
+			資本剰余金	財務活動によるキャッシュ・フロー
+	利益剰余金
+		その他利益剰余金
+			繰越利益剰余金	財務活動によるキャッシュ・フロー
+収益の部
+	売上高
+			売上高	営業活動によるキャッシュ・フロー
+	営業外収益
+			受取利息	財務活動によるキャッシュ・フロー
+			雑収入	営業活動によるキャッシュ・フロー
+	特別利益
+			固定資産売却益	投資活動によるキャッシュ・フロー
+費用の部
+	売上原価
+	販売費および一般管理費
+			役員報酬	営業活動によるキャッシュ・フロー > 販管費
+			給料	営業活動によるキャッシュ・フロー > 販管費
+			法定福利費	営業活動によるキャッシュ・フロー > 租税公課
+			福利厚生費	営業活動によるキャッシュ・フロー > 販管費
+			外注費	営業活動によるキャッシュ・フロー > 販管費
+			広告宣伝費	営業活動によるキャッシュ・フロー > 販管費
+			会議費	営業活動によるキャッシュ・フロー > 販管費
+			交際費	営業活動によるキャッシュ・フロー > 販管費
+			寄附金	営業活動によるキャッシュ・フロー > 販管費
+			旅費交通費	営業活動によるキャッシュ・フロー > 販管費
+			通信費	営業活動によるキャッシュ・フロー > 販管費
+			新聞図書費	営業活動によるキャッシュ・フロー > 販管費
+			地代家賃	営業活動によるキャッシュ・フロー > 販管費
+			水道光熱費	営業活動によるキャッシュ・フロー > 販管費
+			修繕費	営業活動によるキャッシュ・フロー > 販管費
+			消耗品費	営業活動によるキャッシュ・フロー > 販管費
+			事務用品費	営業活動によるキャッシュ・フロー > 販管費
+			支払報酬料	営業活動によるキャッシュ・フロー > 販管費
+			支払手数料	営業活動によるキャッシュ・フロー > 販管費
+			保険料	営業活動によるキャッシュ・フロー > 販管費
+			租税公課	営業活動によるキャッシュ・フロー > 租税公課
+			諸会費	営業活動によるキャッシュ・フロー > 販管費
+			雑費	営業活動によるキャッシュ・フロー > 販管費
+			減価償却費	投資活動によるキャッシュ・フロー
+			長期前払費用償却	営業活動によるキャッシュ・フロー > 償却
+	営業外費用
+			支払利息	財務活動によるキャッシュ・フロー
+			貸倒損失	営業活動によるキャッシュ・フロー > 支払・回収
+			雑損失	営業活動によるキャッシュ・フロー
+	特別損失
+			固定資産売却損	投資活動によるキャッシュ・フロー
+	法人税・住民税及び事業税
+			法人税	営業活動によるキャッシュ・フロー > 租税公課
+			住民税	営業活動によるキャッシュ・フロー > 租税公課
+			事業税	営業活動によるキャッシュ・フロー > 租税公課
+			法人税等	営業活動によるキャッシュ・フロー > 租税公課"(String)
+  }
+  過年度一覧: {
+    data: "年度	状態	パス	ID	URL	文字コード	ヘッダ	備考	決算書パス	決算書URL	頁
+2011	完了	ena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena第1期.csv	1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u	https://drive.google.com/file/d/1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u/preview	MS932	8		ena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena.kaon決算報告書(2011年度).pdf	https://drive.google.com/file/d/1DYuOjpHT1GtPmy0ch5nr4D2b6kj6p7t4/preview	15
+2012	完了	ena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena第2期.csv	1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ	https://drive.google.com/file/d/1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ/preview	MS932	8		ena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena.kaon決算報告書(2012年度).pdf	https://drive.google.com/file/d/1xFnjstCh9_GIZTkta47F0zIM8zQyN_mj/preview	16
+2013	完了	ena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena第3期.csv	1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx	https://drive.google.com/file/d/1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx/preview	MS932	8		ena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena.kaon決算報告書(2013年度).pdf	https://drive.google.com/file/d/1kKD1NVW_JiemOodtfKympnq9MlkVf2xA/preview	16
+2014	完了	ena.kaon > log > fy2015 > 20151118_第4期(2014年度)決算報告 > ena第4期.csv	1WcRLe7QdFNsJkQYC8O1Nv27xDVaQBLQW	https://drive.google.com/file/d/1WcRLe7QdFNsJkQYC8O1Nv27xDVaQBLQW/preview	MS932	8		ena.kaon > log > fy2015 > 20151118_第4期(2014年度)決算報告 > ena.kaon決算報告書(2014年度).pdf	https://drive.google.com/file/d/1omBSbBnB90bmobBUDgctZcakwSbOcA48/preview	28
+2015	完了	share > 税理士法人YFPクレア > log > fy2016 > 20161118_第5期(2015年度)決算報告 > ena第5期改.csv	16sJ66akRZLJJX69PRgHRd0xuH8IE4Uws	https://drive.google.com/file/d/16sJ66akRZLJJX69PRgHRd0xuH8IE4Uws/preview		1	"同一フォルダの「ena第5期.csv」が原本。
+ヘッダ行を加え、Shift-JIS -> UTF-8に変更"	share > 税理士法人YFPクレア > log > fy2016 > 20161118_第5期(2015年度)決算報告 > ena.kaon決算報告書(2015年度).pdf	https://drive.google.com/file/d/1sTiljIFDzngLRrnPgjtmhX9ra0VNQdeM/preview	24
+2016	完了	share > 税理士法人YFPクレア > log > fy2017 > 20171128_第6期(2016年度)決算報告 > 第6期.csv	1IIqShJen8b0bgKLha2rw7o11gyzuyGUK	https://drive.google.com/file/d/1IIqShJen8b0bgKLha2rw7o11gyzuyGUK/preview	MS932	8		share > 税理士法人YFPクレア > log > fy2017 > 20171128_第6期(2016年度)決算報告 > 決算書類2016.pdf	https://drive.google.com/file/d/1dWX8Oix51_Y3Bo4MW3ClNbb18DG21A6g/preview	19
+2017	完了	ena.kaon > log > fy2018 > 20181010_第7期(2017年度)決算 > 決算報告書2017 > 会計データ.csv	1Fx7qByvMp7UMYQWGicNG0Xa8cfxX1y6P	https://drive.google.com/file/d/1Fx7qByvMp7UMYQWGicNG0Xa8cfxX1y6P/preview	MS932	1	"同一フォルダの「会計データ.txt」が原本。
+ヘッダ行を追加(文字コードの変更は無し)"	ena.kaon > log > fy2018 > 20181010_第7期(2017年度)決算 > 決算報告書2017 > 決算報告書2017.pdf	https://drive.google.com/file/d/1enHmBfr07mieidfr59ioz1pI85h2Y2hO/preview	2
+2018	完了	share > 税理士法人YFPクレア > log > fy2019 > 20191122_会計データ > 仕訳日記帳.csv	1rgxJkm_FTpp6CaJHfBbwlQaohrXl1uq-	https://drive.google.com/file/d/1rgxJkm_FTpp6CaJHfBbwlQaohrXl1uq-/preview	MS932	1		share > 税理士法人YFPクレア > log > fy2019 > 20191126_第8期決算 > 申告書類.pdf	https://drive.google.com/file/d/1i5BMyv31tF0okcs3Ik68yi8lJIbvHznF/preview	31
+2019	完了	share > 税理士法人YFPクレア > log > fy2020 > 20201005_2019年度決算 > 20201207申告書決算書元帳データ > 20201207仕訳日記帳(第9期).csv	1czTmfkwuxz2lEIkPUlJ8BZyYWa58J6O9	https://drive.google.com/file/d/1czTmfkwuxz2lEIkPUlJ8BZyYWa58J6O9/preview		1		share > 税理士法人YFPクレア > log > fy2020 > 20201005_2019年度決算 > 20201207申告書決算書元帳データ > 20201207申告書類.pdf	https://drive.google.com/file/d/11X2xH70on4JDo6ZLrIhOfD6y0AXSbwSq/preview	23
+2020	完了	share > 税理士法人YFPクレア > log > fy2021 > 20211111_2020年度決算 > 20111111_会計データ > 202010-202109仕訳日記帳.csv	1XV2DuVMLl-X4chu5FLMdq5PD52InnpQ6	https://drive.google.com/file/d/1XV2DuVMLl-X4chu5FLMdq5PD52InnpQ6/preview	MS932	1		share > 税理士法人YFPクレア > log > fy2021 > 20211111_2020年度決算 > 20211202_提出済申告書・決算書・元帳 > 提出済申告書･決算書.pdf	https://drive.google.com/file/d/1a_TC_ureTmYp17P5wokTWe2ZiPJqs0EN/preview	24
+2021	完了	share > 税理士法人YFPクレア > log > fy2022 > 20221005_2021年度決算 > 20221107_会計データ > 仕訳日記帳.csv	1w5q6p1bQCGtqui7NN3mJTUuQewVZWYTy	https://drive.google.com/file/d/1w5q6p1bQCGtqui7NN3mJTUuQewVZWYTy/preview		1		share > 税理士法人YFPクレア > log > fy2022 > 20221005_2021年度決算 > 20221128_提出済申告書・決算書・元帳 > 株式会社ena.kaon-2022年9月-決算書.pdf	https://drive.google.com/file/d/1DVY1EcUS1My9U0Tw5DAlOppFT530hH_b/preview	2
+2022	完了	share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122会計データ > 仕訳日記帳2023.csv	138k67CeWYZb8grdK8-eFjBMQ5qXjiD3V	https://drive.google.com/file/d/138k67CeWYZb8grdK8-eFjBMQ5qXjiD3V/preview	MS932	1	"以下にも2022年度のCSVがあるが、後から提供された本表左のファイルを採用
+share > 税理士法人YFPクレア > log > fy2023 > 20231009_2022年度決算 > 20231214提出済申告書 > 202210-102311仕訳日記帳.csv"	share > 税理士法人YFPクレア > log > fy2023 > 20231009_2022年度決算 > 20231214提出済申告書 > 決算書.pdf	https://drive.google.com/file/d/1kCiQAl6f-nUl9oTO3kLYVF49XGTxEEvV/preview	2
+2023	完了	share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122会計データ > 仕訳日記帳2024.csv	1208k0gmxUcTmcqLpTpQUEpBgnPOeWpsW	https://drive.google.com/file/d/1208k0gmxUcTmcqLpTpQUEpBgnPOeWpsW/preview	MS932	1		share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122試算表(確定値) > 株式会社ena.kaon-2024年9月-決算書(20241122).pdf	https://drive.google.com/file/d/1lsXNpNqfK1BQvKshL76wMXUMqAQEb7zd/preview	2"(String)
+  }
+}
+{
+}
+{
+  array: "str"(String)
+}
+[0006]mergeDeeply normal end.
+[0007]mergeDeeply start.
+-- footprint
+[0000]SchemaTest.1 > [0001]Schema.1 > [0002]Schema.expand.1.1 > [0004]mergeDeeply.2.21
+-- arguments
+{
+  toLocale: "x => toLocale(x,{
+        verbose: false,
+        format:'yyyy/MM/dd',
+        undecimber: true,
+        fyEnd:'undefined',
+        errValue: 'error',
+      })"(String)
+  convertCharacters: "x => convertCharacters(x)"(String)
+}
+{
+}
+{
+  array: "str"(String)
+}
+[0007]mergeDeeply normal end.
+[0004]mergeDeeply normal end.
+
+
+
+===== result
+
+
+[0000]SchemaTest step.1
+0: {
+  dbName: "kz12"(String)
+  tableDef: {
+    kz標準: {
+      note: "kawazanyoで使用する仕訳日記帳の標準"(String)
       primaryKey: [
+        0: "伝票番号"(String)
+        1: "明細番号"(String)
       ]
       colDef: [
+        0: {
+          colName: "年度"(String)
+          type: "number"(String)
+        }
+        1: {
+          colName: "伝票番号"(String)
+          type: "number"(String)
+          note: "伝票を一意に特定する番号"(String)
+        }
+        2: {
+          colName: "明細番号"(String)
+          type: "number"(String)
+          note: "伝票内の明細行番号"(String)
+        }
+        3: {
+          colName: "取引日"(String)
+          type: "string"(String)
+          alias: [
+            0: "日付"(String)
+            1: "取引日付"(String)
+            2: "伝票日付"(String)
+          ]
+        }
+        4: {
+          colName: "摘要"(String)
+          type: "string"(String)
+          alias: [
+            0: "取引摘要"(String)
+          ]
+        }
+        5: {
+          colName: "補助摘要"(String)
+          type: "string"(String)
+        }
+        6: {
+          colName: "借方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方勘定科目"(String)
+            1: "借方科目名称"(String)
+          ]
+        }
+        7: {
+          colName: "借方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方補助科目"(String)
+            1: "借方補助科目名称"(String)
+          ]
+        }
+        8: {
+          colName: "借方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方部門名称"(String)
+          ]
+        }
+        9: {
+          colName: "借方本体"(String)
+          type: "number"(String)
+        }
+        10: {
+          colName: "借方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "借方税金額"(String)
+            1: "借方消費税"(String)
+          ]
+        }
+        11: {
+          colName: "借方金額"(String)
+          type: "number"(String)
+        }
+        12: {
+          colName: "貸方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方勘定科目"(String)
+            1: "貸方科目名称"(String)
+          ]
+        }
+        13: {
+          colName: "貸方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方補助科目"(String)
+            1: "貸方補助科目名称"(String)
+          ]
+        }
+        14: {
+          colName: "貸方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方部門名称"(String)
+          ]
+        }
+        15: {
+          colName: "貸方本体"(String)
+          type: "number"(String)
+        }
+        16: {
+          colName: "貸方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "貸方税金額"(String)
+            1: "貸方消費税"(String)
+          ]
+        }
+        17: {
+          colName: "貸方金額"(String)
+          type: "number"(String)
+        }
+        18: {
+          colName: "備考"(String)
+          type: "string"(String)
+        }
+      ]
+    }
+    勘定科目: {
+      note: "kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル"(String)
+      colDef: [
+        0: {
+          colName: "大分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の大分類"(String)
+        }
+        1: {
+          colName: "中分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の中分類"(String)
+        }
+        2: {
+          colName: "小分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の小分類"(String)
+        }
+        3: {
+          colName: "科目名"(String)
+          type: "string"(String)
+          note: "勘定科目名"(String)
+        }
+        4: {
+          colName: "CF分類"(String)
+          type: "string"(String)
+          note: "CF上の分類を' > 'で連結"(String)
+        }
+      ]
+    }
+    過年度一覧: {
+      note: "過年度の仕訳日記帳データ(CSV)に関する情報"(String)
+      primaryKey: [
+        0: "年度"(String)
+      ]
+      colDef: [
+        0: {
+          colName: "年度"(String)
+          type: "number"(String)
+          note: "会計年度"(String)
+        }
+        1: {
+          colName: "状態"(String)
+          type: "string"(String)
+          note: "未了 or 完了"(String)
+        }
+        2: {
+          colName: "パス"(String)
+          type: "string"(String)
+          note: "年度別仕訳日記帳(CSV)へのGoogle Driveのパス"(String)
+        }
+        3: {
+          colName: "ID"(String)
+          type: "string"(String)
+          note: "CSVのGoogle Drive上のファイルID"(String)
+        }
+        4: {
+          colName: "URL"(String)
+          type: "string"(String)
+          note: "CSVのURL。必ずプレビューで開くよう、IDから導出"(String)
+        }
+        5: {
+          colName: "文字コード"(String)
+          type: "string"(String)
+          note: "CSVの文字コード。Shift-JIS(MS932)対応"(String)
+        }
+        6: {
+          colName: "ヘッダ"(String)
+          type: "string"(String)
+          note: "CSV上のヘッダ行番号。基底=1"(String)
+        }
+        7: {
+          colName: "備考"(String)
+          type: "string"(String)
+          note: ""(String)
+        }
+        8: {
+          colName: "決算書パス"(String)
+          type: "string"(String)
+          note: "当該会計年度のBS/PL(PDF)へパス"(String)
+        }
+        9: {
+          colName: "決算書URL"(String)
+          type: "string"(String)
+          note: "同URL"(String)
+        }
+        10: {
+          colName: "頁"(String)
+          type: "string"(String)
+          note: "PDF上でBS/PLが掲載されている頁番号"(String)
+        }
+      ]
+    }
+  }
+  tables: {
+    過年度CSV: {
+      def: "kz標準"(String)
+      name: "過年度CSV"(String)
+      note: "kawazanyoで使用する仕訳日記帳の標準"(String)
+      primaryKey: [
+        0: "伝票番号"(String)
+        1: "明細番号"(String)
+      ]
+      colDef: [
+        0: {
+          colName: "年度"(String)
+          type: "number"(String)
+        }
+        1: {
+          colName: "伝票番号"(String)
+          type: "number"(String)
+          note: "伝票を一意に特定する番号"(String)
+        }
+        2: {
+          colName: "明細番号"(String)
+          type: "number"(String)
+          note: "伝票内の明細行番号"(String)
+        }
+        3: {
+          colName: "取引日"(String)
+          type: "string"(String)
+          alias: [
+            0: "日付"(String)
+            1: "取引日付"(String)
+            2: "伝票日付"(String)
+          ]
+        }
+        4: {
+          colName: "摘要"(String)
+          type: "string"(String)
+          alias: [
+            0: "取引摘要"(String)
+          ]
+        }
+        5: {
+          colName: "補助摘要"(String)
+          type: "string"(String)
+        }
+        6: {
+          colName: "借方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方勘定科目"(String)
+            1: "借方科目名称"(String)
+          ]
+        }
+        7: {
+          colName: "借方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方補助科目"(String)
+            1: "借方補助科目名称"(String)
+          ]
+        }
+        8: {
+          colName: "借方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "借方部門名称"(String)
+          ]
+        }
+        9: {
+          colName: "借方本体"(String)
+          type: "number"(String)
+        }
+        10: {
+          colName: "借方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "借方税金額"(String)
+            1: "借方消費税"(String)
+          ]
+        }
+        11: {
+          colName: "借方金額"(String)
+          type: "number"(String)
+        }
+        12: {
+          colName: "貸方科目"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方勘定科目"(String)
+            1: "貸方科目名称"(String)
+          ]
+        }
+        13: {
+          colName: "貸方補助"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方補助科目"(String)
+            1: "貸方補助科目名称"(String)
+          ]
+        }
+        14: {
+          colName: "貸方部門"(String)
+          type: "string"(String)
+          alias: [
+            0: "貸方部門名称"(String)
+          ]
+        }
+        15: {
+          colName: "貸方本体"(String)
+          type: "number"(String)
+        }
+        16: {
+          colName: "貸方税額"(String)
+          type: "number"(String)
+          alias: [
+            0: "貸方税金額"(String)
+            1: "貸方消費税"(String)
+          ]
+        }
+        17: {
+          colName: "貸方金額"(String)
+          type: "number"(String)
+        }
+        18: {
+          colName: "備考"(String)
+          type: "string"(String)
+        }
+      ]
+      data: [
       ]
       top: 1(Number)
       left: 1(Number)
       startingRowNumber: 2(Number)
-      name: ""(String)
       header: [
       ]
       col: {
       }
     }
     勘定科目: {
-      def: ""(String)
       data: [
+        0: {
+          大分類: "資産の部"(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        1: {
+          大分類: ""(String)
+          中分類: "流動資産"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        2: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "現金"(String)
+          CF分類: "現金または現金同等物"(String)
+        }
+        3: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "普通預金"(String)
+          CF分類: "現金または現金同等物"(String)
+        }
+        4: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "売掛金"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 支払・回収"(String)
+        }
+        5: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "前払金"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 支払・回収"(String)
+        }
+        6: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "立替金"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 支払・回収"(String)
+        }
+        7: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "未収金"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 支払・回収"(String)
+        }
+        8: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "預け金"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 支払・回収"(String)
+        }
+        9: {
+          大分類: ""(String)
+          中分類: "固定資産"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        10: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: "有形固定資産"(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        11: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "建物"(String)
+          CF分類: "投資活動によるキャッシュ・フロー"(String)
+        }
+        12: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "建物附属設備"(String)
+          CF分類: "投資活動によるキャッシュ・フロー"(String)
+        }
+        13: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "工具器具備品"(String)
+          CF分類: "投資活動によるキャッシュ・フロー"(String)
+        }
+        14: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "土地"(String)
+          CF分類: "投資活動によるキャッシュ・フロー"(String)
+        }
+        15: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "減価償却累計額"(String)
+          CF分類: "投資活動によるキャッシュ・フロー"(String)
+        }
+        16: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: "投資その他"(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        17: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "差入保証金"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 支払・回収"(String)
+        }
+        18: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "長期前払費用"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 償却"(String)
+        }
+        19: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "出資金"(String)
+          CF分類: "投資活動によるキャッシュ・フロー"(String)
+        }
+        20: {
+          大分類: "負債の部"(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        21: {
+          大分類: ""(String)
+          中分類: "流動負債"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        22: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "役員借入金"(String)
+          CF分類: "財務活動によるキャッシュ・フロー"(String)
+        }
+        23: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "未払金"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 支払・回収"(String)
+        }
+        24: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "前受金"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 支払・回収"(String)
+        }
+        25: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "預り金"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 支払・回収"(String)
+        }
+        26: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "未払法人税等"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 租税公課"(String)
+        }
+        27: {
+          大分類: ""(String)
+          中分類: "固定負債"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        28: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "長期借入金"(String)
+          CF分類: "財務活動によるキャッシュ・フロー"(String)
+        }
+        29: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "預り敷金・保証金"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 支払・回収"(String)
+        }
+        30: {
+          大分類: "純資産の部"(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        31: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "資本金"(String)
+          CF分類: "財務活動によるキャッシュ・フロー"(String)
+        }
+        32: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "資本剰余金"(String)
+          CF分類: "財務活動によるキャッシュ・フロー"(String)
+        }
+        33: {
+          大分類: ""(String)
+          中分類: "利益剰余金"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        34: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: "その他利益剰余金"(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        35: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "繰越利益剰余金"(String)
+          CF分類: "財務活動によるキャッシュ・フロー"(String)
+        }
+        36: {
+          大分類: "収益の部"(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        37: {
+          大分類: ""(String)
+          中分類: "売上高"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        38: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "売上高"(String)
+          CF分類: "営業活動によるキャッシュ・フロー"(String)
+        }
+        39: {
+          大分類: ""(String)
+          中分類: "営業外収益"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        40: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "受取利息"(String)
+          CF分類: "財務活動によるキャッシュ・フロー"(String)
+        }
+        41: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "雑収入"(String)
+          CF分類: "営業活動によるキャッシュ・フロー"(String)
+        }
+        42: {
+          大分類: ""(String)
+          中分類: "特別利益"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        43: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "固定資産売却益"(String)
+          CF分類: "投資活動によるキャッシュ・フロー"(String)
+        }
+        44: {
+          大分類: "費用の部"(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        45: {
+          大分類: ""(String)
+          中分類: "売上原価"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        46: {
+          大分類: ""(String)
+          中分類: "販売費および一般管理費"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        47: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "役員報酬"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        48: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "給料"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        49: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "法定福利費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 租税公課"(String)
+        }
+        50: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "福利厚生費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        51: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "外注費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        52: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "広告宣伝費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        53: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "会議費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        54: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "交際費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        55: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "寄附金"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        56: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "旅費交通費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        57: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "通信費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        58: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "新聞図書費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        59: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "地代家賃"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        60: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "水道光熱費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        61: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "修繕費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        62: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "消耗品費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        63: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "事務用品費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        64: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "支払報酬料"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        65: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "支払手数料"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        66: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "保険料"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        67: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "租税公課"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 租税公課"(String)
+        }
+        68: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "諸会費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        69: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "雑費"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 販管費"(String)
+        }
+        70: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "減価償却費"(String)
+          CF分類: "投資活動によるキャッシュ・フロー"(String)
+        }
+        71: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "長期前払費用償却"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 償却"(String)
+        }
+        72: {
+          大分類: ""(String)
+          中分類: "営業外費用"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        73: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "支払利息"(String)
+          CF分類: "財務活動によるキャッシュ・フロー"(String)
+        }
+        74: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "貸倒損失"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 支払・回収"(String)
+        }
+        75: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "雑損失"(String)
+          CF分類: "営業活動によるキャッシュ・フロー"(String)
+        }
+        76: {
+          大分類: ""(String)
+          中分類: "特別損失"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        77: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "固定資産売却損"(String)
+          CF分類: "投資活動によるキャッシュ・フロー"(String)
+        }
+        78: {
+          大分類: ""(String)
+          中分類: "法人税・住民税及び事業税"(String)
+          小分類: ""(String)
+          科目名: ""(String)
+          CF分類: ""(String)
+        }
+        79: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "法人税"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 租税公課"(String)
+        }
+        80: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "住民税"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 租税公課"(String)
+        }
+        81: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "事業税"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 租税公課"(String)
+        }
+        82: {
+          大分類: ""(String)
+          中分類: ""(String)
+          小分類: ""(String)
+          科目名: "法人税等"(String)
+          CF分類: "営業活動によるキャッシュ・フロー > 租税公課"(String)
+        }
       ]
-      note: ""(String)
-      primaryKey: [
-      ]
+      def: "勘定科目"(String)
+      name: "勘定科目"(String)
+      note: "kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル"(String)
       colDef: [
+        0: {
+          colName: "大分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の大分類"(String)
+        }
+        1: {
+          colName: "中分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の中分類"(String)
+        }
+        2: {
+          colName: "小分類"(String)
+          type: "string"(String)
+          note: "BS/PL上の小分類"(String)
+        }
+        3: {
+          colName: "科目名"(String)
+          type: "string"(String)
+          note: "勘定科目名"(String)
+        }
+        4: {
+          colName: "CF分類"(String)
+          type: "string"(String)
+          note: "CF上の分類を' > 'で連結"(String)
+        }
+      ]
+      primaryKey: [
       ]
       top: 1(Number)
       left: 1(Number)
       startingRowNumber: 2(Number)
-      name: ""(String)
       header: [
       ]
       col: {
       }
     }
     過年度一覧: {
-      def: ""(String)
       data: [
+        0: {
+          年度: "2011"(String)
+          状態: "完了"(String)
+          パス: "ena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena第1期.csv"(String)
+          ID: "1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u"(String)
+          URL: "https://drive.google.com/file/d/1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u/preview"(String)
+          文字コード: "MS932"(String)
+          ヘッダ: "8"(String)
+          備考: ""(String)
+          決算書パス: "ena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena.kaon決算報告書(2011年度).pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/1DYuOjpHT1GtPmy0ch5nr4D2b6kj6p7t4/preview"(String)
+          頁: "15"(String)
+        }
+        1: {
+          年度: "2012"(String)
+          状態: "完了"(String)
+          パス: "ena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena第2期.csv"(String)
+          ID: "1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ"(String)
+          URL: "https://drive.google.com/file/d/1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ/preview"(String)
+          文字コード: "MS932"(String)
+          ヘッダ: "8"(String)
+          備考: ""(String)
+          決算書パス: "ena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena.kaon決算報告書(2012年度).pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/1xFnjstCh9_GIZTkta47F0zIM8zQyN_mj/preview"(String)
+          頁: "16"(String)
+        }
+        2: {
+          年度: "2013"(String)
+          状態: "完了"(String)
+          パス: "ena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena第3期.csv"(String)
+          ID: "1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx"(String)
+          URL: "https://drive.google.com/file/d/1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx/preview"(String)
+          文字コード: "MS932"(String)
+          ヘッダ: "8"(String)
+          備考: ""(String)
+          決算書パス: "ena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena.kaon決算報告書(2013年度).pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/1kKD1NVW_JiemOodtfKympnq9MlkVf2xA/preview"(String)
+          頁: "16"(String)
+        }
+        3: {
+          年度: "2014"(String)
+          状態: "完了"(String)
+          パス: "ena.kaon > log > fy2015 > 20151118_第4期(2014年度)決算報告 > ena第4期.csv"(String)
+          ID: "1WcRLe7QdFNsJkQYC8O1Nv27xDVaQBLQW"(String)
+          URL: "https://drive.google.com/file/d/1WcRLe7QdFNsJkQYC8O1Nv27xDVaQBLQW/preview"(String)
+          文字コード: "MS932"(String)
+          ヘッダ: "8"(String)
+          備考: ""(String)
+          決算書パス: "ena.kaon > log > fy2015 > 20151118_第4期(2014年度)決算報告 > ena.kaon決算報告書(2014年度).pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/1omBSbBnB90bmobBUDgctZcakwSbOcA48/preview"(String)
+          頁: "28"(String)
+        }
+        4: {
+          年度: "2015"(String)
+          状態: "完了"(String)
+          パス: "share > 税理士法人YFPクレア > log > fy2016 > 20161118_第5期(2015年度)決算報告 > ena第5期改.csv"(String)
+          ID: "16sJ66akRZLJJX69PRgHRd0xuH8IE4Uws"(String)
+          URL: "https://drive.google.com/file/d/16sJ66akRZLJJX69PRgHRd0xuH8IE4Uws/preview"(String)
+          文字コード: ""(String)
+          ヘッダ: "1"(String)
+          備考: "同一フォルダの「ena第5期.csv」が原本。
+ヘッダ行を加え、Shift-JIS -> UTF-8に変更"(String)
+          決算書パス: "share > 税理士法人YFPクレア > log > fy2016 > 20161118_第5期(2015年度)決算報告 > ena.kaon決算報告書(2015年度).pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/1sTiljIFDzngLRrnPgjtmhX9ra0VNQdeM/preview"(String)
+          頁: "24"(String)
+        }
+        5: {
+          年度: "2016"(String)
+          状態: "完了"(String)
+          パス: "share > 税理士法人YFPクレア > log > fy2017 > 20171128_第6期(2016年度)決算報告 > 第6期.csv"(String)
+          ID: "1IIqShJen8b0bgKLha2rw7o11gyzuyGUK"(String)
+          URL: "https://drive.google.com/file/d/1IIqShJen8b0bgKLha2rw7o11gyzuyGUK/preview"(String)
+          文字コード: "MS932"(String)
+          ヘッダ: "8"(String)
+          備考: ""(String)
+          決算書パス: "share > 税理士法人YFPクレア > log > fy2017 > 20171128_第6期(2016年度)決算報告 > 決算書類2016.pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/1dWX8Oix51_Y3Bo4MW3ClNbb18DG21A6g/preview"(String)
+          頁: "19"(String)
+        }
+        6: {
+          年度: "2017"(String)
+          状態: "完了"(String)
+          パス: "ena.kaon > log > fy2018 > 20181010_第7期(2017年度)決算 > 決算報告書2017 > 会計データ.csv"(String)
+          ID: "1Fx7qByvMp7UMYQWGicNG0Xa8cfxX1y6P"(String)
+          URL: "https://drive.google.com/file/d/1Fx7qByvMp7UMYQWGicNG0Xa8cfxX1y6P/preview"(String)
+          文字コード: "MS932"(String)
+          ヘッダ: "1"(String)
+          備考: "同一フォルダの「会計データ.txt」が原本。
+ヘッダ行を追加(文字コードの変更は無し)"(String)
+          決算書パス: "ena.kaon > log > fy2018 > 20181010_第7期(2017年度)決算 > 決算報告書2017 > 決算報告書2017.pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/1enHmBfr07mieidfr59ioz1pI85h2Y2hO/preview"(String)
+          頁: "2"(String)
+        }
+        7: {
+          年度: "2018"(String)
+          状態: "完了"(String)
+          パス: "share > 税理士法人YFPクレア > log > fy2019 > 20191122_会計データ > 仕訳日記帳.csv"(String)
+          ID: "1rgxJkm_FTpp6CaJHfBbwlQaohrXl1uq-"(String)
+          URL: "https://drive.google.com/file/d/1rgxJkm_FTpp6CaJHfBbwlQaohrXl1uq-/preview"(String)
+          文字コード: "MS932"(String)
+          ヘッダ: "1"(String)
+          備考: ""(String)
+          決算書パス: "share > 税理士法人YFPクレア > log > fy2019 > 20191126_第8期決算 > 申告書類.pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/1i5BMyv31tF0okcs3Ik68yi8lJIbvHznF/preview"(String)
+          頁: "31"(String)
+        }
+        8: {
+          年度: "2019"(String)
+          状態: "完了"(String)
+          パス: "share > 税理士法人YFPクレア > log > fy2020 > 20201005_2019年度決算 > 20201207申告書決算書元帳データ > 20201207仕訳日記帳(第9期).csv"(String)
+          ID: "1czTmfkwuxz2lEIkPUlJ8BZyYWa58J6O9"(String)
+          URL: "https://drive.google.com/file/d/1czTmfkwuxz2lEIkPUlJ8BZyYWa58J6O9/preview"(String)
+          文字コード: ""(String)
+          ヘッダ: "1"(String)
+          備考: ""(String)
+          決算書パス: "share > 税理士法人YFPクレア > log > fy2020 > 20201005_2019年度決算 > 20201207申告書決算書元帳データ > 20201207申告書類.pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/11X2xH70on4JDo6ZLrIhOfD6y0AXSbwSq/preview"(String)
+          頁: "23"(String)
+        }
+        9: {
+          年度: "2020"(String)
+          状態: "完了"(String)
+          パス: "share > 税理士法人YFPクレア > log > fy2021 > 20211111_2020年度決算 > 20111111_会計データ > 202010-202109仕訳日記帳.csv"(String)
+          ID: "1XV2DuVMLl-X4chu5FLMdq5PD52InnpQ6"(String)
+          URL: "https://drive.google.com/file/d/1XV2DuVMLl-X4chu5FLMdq5PD52InnpQ6/preview"(String)
+          文字コード: "MS932"(String)
+          ヘッダ: "1"(String)
+          備考: ""(String)
+          決算書パス: "share > 税理士法人YFPクレア > log > fy2021 > 20211111_2020年度決算 > 20211202_提出済申告書・決算書・元帳 > 提出済申告書･決算書.pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/1a_TC_ureTmYp17P5wokTWe2ZiPJqs0EN/preview"(String)
+          頁: "24"(String)
+        }
+        10: {
+          年度: "2021"(String)
+          状態: "完了"(String)
+          パス: "share > 税理士法人YFPクレア > log > fy2022 > 20221005_2021年度決算 > 20221107_会計データ > 仕訳日記帳.csv"(String)
+          ID: "1w5q6p1bQCGtqui7NN3mJTUuQewVZWYTy"(String)
+          URL: "https://drive.google.com/file/d/1w5q6p1bQCGtqui7NN3mJTUuQewVZWYTy/preview"(String)
+          文字コード: ""(String)
+          ヘッダ: "1"(String)
+          備考: ""(String)
+          決算書パス: "share > 税理士法人YFPクレア > log > fy2022 > 20221005_2021年度決算 > 20221128_提出済申告書・決算書・元帳 > 株式会社ena.kaon-2022年9月-決算書.pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/1DVY1EcUS1My9U0Tw5DAlOppFT530hH_b/preview"(String)
+          頁: "2"(String)
+        }
+        11: {
+          年度: "2022"(String)
+          状態: "完了"(String)
+          パス: "share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122会計データ > 仕訳日記帳2023.csv"(String)
+          ID: "138k67CeWYZb8grdK8-eFjBMQ5qXjiD3V"(String)
+          URL: "https://drive.google.com/file/d/138k67CeWYZb8grdK8-eFjBMQ5qXjiD3V/preview"(String)
+          文字コード: "MS932"(String)
+          ヘッダ: "1"(String)
+          備考: "以下にも2022年度のCSVがあるが、後から提供された本表左のファイルを採用
+share > 税理士法人YFPクレア > log > fy2023 > 20231009_2022年度決算 > 20231214提出済申告書 > 202210-102311仕訳日記帳.csv"(String)
+          決算書パス: "share > 税理士法人YFPクレア > log > fy2023 > 20231009_2022年度決算 > 20231214提出済申告書 > 決算書.pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/1kCiQAl6f-nUl9oTO3kLYVF49XGTxEEvV/preview"(String)
+          頁: "2"(String)
+        }
+        12: {
+          年度: "2023"(String)
+          状態: "完了"(String)
+          パス: "share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122会計データ > 仕訳日記帳2024.csv"(String)
+          ID: "1208k0gmxUcTmcqLpTpQUEpBgnPOeWpsW"(String)
+          URL: "https://drive.google.com/file/d/1208k0gmxUcTmcqLpTpQUEpBgnPOeWpsW/preview"(String)
+          文字コード: "MS932"(String)
+          ヘッダ: "1"(String)
+          備考: ""(String)
+          決算書パス: "share > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122試算表(確定値) > 株式会社ena.kaon-2024年9月-決算書(20241122).pdf"(String)
+          決算書URL: "https://drive.google.com/file/d/1lsXNpNqfK1BQvKshL76wMXUMqAQEb7zd/preview"(String)
+          頁: "2"(String)
+        }
       ]
-      note: ""(String)
+      def: "過年度一覧"(String)
+      name: "過年度一覧"(String)
+      note: "過年度の仕訳日記帳データ(CSV)に関する情報"(String)
       primaryKey: [
+        0: "年度"(String)
       ]
       colDef: [
+        0: {
+          colName: "年度"(String)
+          type: "number"(String)
+          note: "会計年度"(String)
+        }
+        1: {
+          colName: "状態"(String)
+          type: "string"(String)
+          note: "未了 or 完了"(String)
+        }
+        2: {
+          colName: "パス"(String)
+          type: "string"(String)
+          note: "年度別仕訳日記帳(CSV)へのGoogle Driveのパス"(String)
+        }
+        3: {
+          colName: "ID"(String)
+          type: "string"(String)
+          note: "CSVのGoogle Drive上のファイルID"(String)
+        }
+        4: {
+          colName: "URL"(String)
+          type: "string"(String)
+          note: "CSVのURL。必ずプレビューで開くよう、IDから導出"(String)
+        }
+        5: {
+          colName: "文字コード"(String)
+          type: "string"(String)
+          note: "CSVの文字コード。Shift-JIS(MS932)対応"(String)
+        }
+        6: {
+          colName: "ヘッダ"(String)
+          type: "string"(String)
+          note: "CSV上のヘッダ行番号。基底=1"(String)
+        }
+        7: {
+          colName: "備考"(String)
+          type: "string"(String)
+          note: ""(String)
+        }
+        8: {
+          colName: "決算書パス"(String)
+          type: "string"(String)
+          note: "当該会計年度のBS/PL(PDF)へパス"(String)
+        }
+        9: {
+          colName: "決算書URL"(String)
+          type: "string"(String)
+          note: "同URL"(String)
+        }
+        10: {
+          colName: "頁"(String)
+          type: "string"(String)
+          note: "PDF上でBS/PLが掲載されている頁番号"(String)
+        }
       ]
       top: 1(Number)
       left: 1(Number)
       startingRowNumber: 2(Number)
-      name: ""(String)
       header: [
       ]
       col: {
@@ -791,8 +2689,9 @@
       })"(Arrow)
     convertCharacters: "x => convertCharacters(x)"(Arrow)
   }
-  original: "{"dbName":"kz12","tableDef":{"kz標準":{"note":"kawazanyoで使用する仕訳日記帳の標準","primaryKey":["伝票番号","明細番号"],"colDef":[{"colName":"年度","type":"number"},{"colName":"伝票番号","type":"number","note":"伝票を一意に特定する番号"},{"colName":"明細番号","type":"number","note":"伝票内の明細行番号"},{"colName":"取引日","type":"string","alias":["日付","取引日付","伝票日付"]},{"colName":"摘要","type":"string","alias":["取引摘要"]},{"colName":"補助摘要","type":"string"},{"colName":"借方科目","type":"string","alias":["借方勘定科目","借方科目名称"]},{"colName":"借方補助","type":"string","alias":["借方補助科目","借方補助科目名称"]},{"colName":"借方部門","type":"string","alias":["借方部門名称"]},{"colName":"借方本体","type":"number"},{"colName":"借方税額","type":"number","alias":["借方税金額","借方消費税"]},{"colName":"借方金額","type":"number"},{"colName":"貸方科目","type":"string","alias":["貸方勘定科目","貸方科目名称"]},{"colName":"貸方補助","type":"string","alias":["貸方補助科目","貸方補助科目名称"]},{"colName":"貸方部門","type":"string","alias":["貸方部門名称"]},{"colName":"貸方本体","type":"number"},{"colName":"貸方税額","type":"number","alias":["貸方税金額","貸方消費税"]},{"colName":"貸方金額","type":"number"},{"colName":"備考","type":"string"}]},"勘定科目":{"note":"kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル","colDef":[{"colName":"大分類","type":"string","note":"BS/PL上の大分類"},{"colName":"中分類","type":"string","note":"BS/PL上の中分類"},{"colName":"小分類","type":"string","note":"BS/PL上の小分類"},{"colName":"科目名","type":"string","note":"勘定科目名"},{"colName":"CF分類","type":"string","note":"CF上の分類を' > 'で連結"}]},"過年度一覧":{"note":"過年度の仕訳日記帳データ(CSV)に関する情報","primaryKey":["年度"],"colDef":[{"colName":"年度","type":"number","note":"会計年度"},{"colName":"状態","type":"string","note":"未了 or 完了"},{"colName":"パス","type":"string","note":"年度別仕訳日記帳(CSV)へのGoogle Driveのパス"},{"colName":"ID","type":"string","note":"CSVのGoogle Drive上のファイルID"},{"colName":"URL","type":"string","note":"CSVのURL。必ずプレビューで開くよう、IDから導出"},{"colName":"文字コード","type":"string","note":"CSVの文字コード。Shift-JIS(MS932)対応"},{"colName":"ヘッダ","type":"string","note":"CSV上のヘッダ行番号。基底=1"},{"colName":"備考","type":"string","note":""},{"colName":"決算書パス","type":"string","note":"当該会計年度のBS/PL(PDF)へパス"},{"colName":"決算書URL","type":"string","note":"同URL"},{"colName":"頁","type":"string","note":"PDF上でBS/PLが掲載されている頁番号"}]}},"tables":{"過年度CSV":{"def":"kz標準"},"勘定科目":{},"過年度一覧":{}},"custom":{"toLocale":"x => toLocale(x,{\n        verbose: false,\n        format:'yyyy/MM/dd',\n        undecimber: true,\n        fyEnd:'undefined',\n        errValue: 'error',\n      })","convertCharacters":"x => convertCharacters(x)"}}"(String)
-  created: "2025-09-15T15:55:47.055+09:00"(String)
+  note: ""(String)
+  original: "{"dbName":"kz12","tableDef":{"kz標準":{"note":"kawazanyoで使用する仕訳日記帳の標準","primaryKey":["伝票番号","明細番号"],"colDef":[{"colName":"年度","type":"number"},{"colName":"伝票番号","type":"number","note":"伝票を一意に特定する番号"},{"colName":"明細番号","type":"number","note":"伝票内の明細行番号"},{"colName":"取引日","type":"string","alias":["日付","取引日付","伝票日付"]},{"colName":"摘要","type":"string","alias":["取引摘要"]},{"colName":"補助摘要","type":"string"},{"colName":"借方科目","type":"string","alias":["借方勘定科目","借方科目名称"]},{"colName":"借方補助","type":"string","alias":["借方補助科目","借方補助科目名称"]},{"colName":"借方部門","type":"string","alias":["借方部門名称"]},{"colName":"借方本体","type":"number"},{"colName":"借方税額","type":"number","alias":["借方税金額","借方消費税"]},{"colName":"借方金額","type":"number"},{"colName":"貸方科目","type":"string","alias":["貸方勘定科目","貸方科目名称"]},{"colName":"貸方補助","type":"string","alias":["貸方補助科目","貸方補助科目名称"]},{"colName":"貸方部門","type":"string","alias":["貸方部門名称"]},{"colName":"貸方本体","type":"number"},{"colName":"貸方税額","type":"number","alias":["貸方税金額","貸方消費税"]},{"colName":"貸方金額","type":"number"},{"colName":"備考","type":"string"}]},"勘定科目":{"note":"kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル","colDef":[{"colName":"大分類","type":"string","note":"BS/PL上の大分類"},{"colName":"中分類","type":"string","note":"BS/PL上の中分類"},{"colName":"小分類","type":"string","note":"BS/PL上の小分類"},{"colName":"科目名","type":"string","note":"勘定科目名"},{"colName":"CF分類","type":"string","note":"CF上の分類を' > 'で連結"}]},"過年度一覧":{"note":"過年度の仕訳日記帳データ(CSV)に関する情報","primaryKey":["年度"],"colDef":[{"colName":"年度","type":"number","note":"会計年度"},{"colName":"状態","type":"string","note":"未了 or 完了"},{"colName":"パス","type":"string","note":"年度別仕訳日記帳(CSV)へのGoogle Driveのパス"},{"colName":"ID","type":"string","note":"CSVのGoogle Drive上のファイルID"},{"colName":"URL","type":"string","note":"CSVのURL。必ずプレビューで開くよう、IDから導出"},{"colName":"文字コード","type":"string","note":"CSVの文字コード。Shift-JIS(MS932)対応"},{"colName":"ヘッダ","type":"string","note":"CSV上のヘッダ行番号。基底=1"},{"colName":"備考","type":"string","note":""},{"colName":"決算書パス","type":"string","note":"当該会計年度のBS/PL(PDF)へパス"},{"colName":"決算書URL","type":"string","note":"同URL"},{"colName":"頁","type":"string","note":"PDF上でBS/PLが掲載されている頁番号"}]}},"tables":{"過年度CSV":{"def":"kz標準"},"勘定科目":{"data":"大分類\t中分類\t小分類\t科目名\tCF分類\n資産の部\n\t流動資産\n\t\t\t現金\t現金または現金同等物\n\t\t\t普通預金\t現金または現金同等物\n\t\t\t売掛金\t営業活動によるキャッシュ・フロー > 支払・回収\n\t\t\t前払金\t営業活動によるキャッシュ・フロー > 支払・回収\n\t\t\t立替金\t営業活動によるキャッシュ・フロー > 支払・回収\n\t\t\t未収金\t営業活動によるキャッシュ・フロー > 支払・回収\n\t\t\t預け金\t営業活動によるキャッシュ・フロー > 支払・回収\n\t固定資産\n\t\t有形固定資産\n\t\t\t建物\t投資活動によるキャッシュ・フロー\n\t\t\t建物附属設備\t投資活動によるキャッシュ・フロー\n\t\t\t工具器具備品\t投資活動によるキャッシュ・フロー\n\t\t\t土地\t投資活動によるキャッシュ・フロー\n\t\t\t減価償却累計額\t投資活動によるキャッシュ・フロー\n\t\t投資その他\n\t\t\t差入保証金\t営業活動によるキャッシュ・フロー > 支払・回収\n\t\t\t長期前払費用\t営業活動によるキャッシュ・フロー > 償却\n\t\t\t出資金\t投資活動によるキャッシュ・フロー\n負債の部\n\t流動負債\n\t\t\t役員借入金\t財務活動によるキャッシュ・フロー\n\t\t\t未払金\t営業活動によるキャッシュ・フロー > 支払・回収\n\t\t\t前受金\t営業活動によるキャッシュ・フロー > 支払・回収\n\t\t\t預り金\t営業活動によるキャッシュ・フロー > 支払・回収\n\t\t\t未払法人税等\t営業活動によるキャッシュ・フロー > 租税公課\n\t固定負債\n\t\t\t長期借入金\t財務活動によるキャッシュ・フロー\n\t\t\t預り敷金・保証金\t営業活動によるキャッシュ・フロー > 支払・回収\n純資産の部\n\t\t\t資本金\t財務活動によるキャッシュ・フロー\n\t\t\t資本剰余金\t財務活動によるキャッシュ・フロー\n\t利益剰余金\n\t\tその他利益剰余金\n\t\t\t繰越利益剰余金\t財務活動によるキャッシュ・フロー\n収益の部\n\t売上高\n\t\t\t売上高\t営業活動によるキャッシュ・フロー\n\t営業外収益\n\t\t\t受取利息\t財務活動によるキャッシュ・フロー\n\t\t\t雑収入\t営業活動によるキャッシュ・フロー\n\t特別利益\n\t\t\t固定資産売却益\t投資活動によるキャッシュ・フロー\n費用の部\n\t売上原価\n\t販売費および一般管理費\n\t\t\t役員報酬\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t給料\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t法定福利費\t営業活動によるキャッシュ・フロー > 租税公課\n\t\t\t福利厚生費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t外注費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t広告宣伝費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t会議費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t交際費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t寄附金\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t旅費交通費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t通信費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t新聞図書費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t地代家賃\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t水道光熱費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t修繕費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t消耗品費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t事務用品費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t支払報酬料\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t支払手数料\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t保険料\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t租税公課\t営業活動によるキャッシュ・フロー > 租税公課\n\t\t\t諸会費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t雑費\t営業活動によるキャッシュ・フロー > 販管費\n\t\t\t減価償却費\t投資活動によるキャッシュ・フロー\n\t\t\t長期前払費用償却\t営業活動によるキャッシュ・フロー > 償却\n\t営業外費用\n\t\t\t支払利息\t財務活動によるキャッシュ・フロー\n\t\t\t貸倒損失\t営業活動によるキャッシュ・フロー > 支払・回収\n\t\t\t雑損失\t営業活動によるキャッシュ・フロー\n\t特別損失\n\t\t\t固定資産売却損\t投資活動によるキャッシュ・フロー\n\t法人税・住民税及び事業税\n\t\t\t法人税\t営業活動によるキャッシュ・フロー > 租税公課\n\t\t\t住民税\t営業活動によるキャッシュ・フロー > 租税公課\n\t\t\t事業税\t営業活動によるキャッシュ・フロー > 租税公課\n\t\t\t法人税等\t営業活動によるキャッシュ・フロー > 租税公課"},"過年度一覧":{"data":"年度\t状態\tパス\tID\tURL\t文字コード\tヘッダ\t備考\t決算書パス\t決算書URL\t頁\n2011\t完了\tena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena第1期.csv\t1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u\thttps://drive.google.com/file/d/1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u/preview\tMS932\t8\t\tena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena.kaon決算報告書(2011年度).pdf\thttps://drive.google.com/file/d/1DYuOjpHT1GtPmy0ch5nr4D2b6kj6p7t4/preview\t15\n2012\t完了\tena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena第2期.csv\t1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ\thttps://drive.google.com/file/d/1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ/preview\tMS932\t8\t\tena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena.kaon決算報告書(2012年度).pdf\thttps://drive.google.com/file/d/1xFnjstCh9_GIZTkta47F0zIM8zQyN_mj/preview\t16\n2013\t完了\tena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena第3期.csv\t1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx\thttps://drive.google.com/file/d/1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx/preview\tMS932\t8\t\tena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena.kaon決算報告書(2013年度).pdf\thttps://drive.google.com/file/d/1kKD1NVW_JiemOodtfKympnq9MlkVf2xA/preview\t16\n2014\t完了\tena.kaon > log > fy2015 > 20151118_第4期(2014年度)決算報告 > ena第4期.csv\t1WcRLe7QdFNsJkQYC8O1Nv27xDVaQBLQW\thttps://drive.google.com/file/d/1WcRLe7QdFNsJkQYC8O1Nv27xDVaQBLQW/preview\tMS932\t8\t\tena.kaon > log > fy2015 > 20151118_第4期(2014年度)決算報告 > ena.kaon決算報告書(2014年度).pdf\thttps://drive.google.com/file/d/1omBSbBnB90bmobBUDgctZcakwSbOcA48/preview\t28\n2015\t完了\tshare > 税理士法人YFPクレア > log > fy2016 > 20161118_第5期(2015年度)決算報告 > ena第5期改.csv\t16sJ66akRZLJJX69PRgHRd0xuH8IE4Uws\thttps://drive.google.com/file/d/16sJ66akRZLJJX69PRgHRd0xuH8IE4Uws/preview\t\t1\t\"同一フォルダの「ena第5期.csv」が原本。\nヘッダ行を加え、Shift-JIS -> UTF-8に変更\"\tshare > 税理士法人YFPクレア > log > fy2016 > 20161118_第5期(2015年度)決算報告 > ena.kaon決算報告書(2015年度).pdf\thttps://drive.google.com/file/d/1sTiljIFDzngLRrnPgjtmhX9ra0VNQdeM/preview\t24\n2016\t完了\tshare > 税理士法人YFPクレア > log > fy2017 > 20171128_第6期(2016年度)決算報告 > 第6期.csv\t1IIqShJen8b0bgKLha2rw7o11gyzuyGUK\thttps://drive.google.com/file/d/1IIqShJen8b0bgKLha2rw7o11gyzuyGUK/preview\tMS932\t8\t\tshare > 税理士法人YFPクレア > log > fy2017 > 20171128_第6期(2016年度)決算報告 > 決算書類2016.pdf\thttps://drive.google.com/file/d/1dWX8Oix51_Y3Bo4MW3ClNbb18DG21A6g/preview\t19\n2017\t完了\tena.kaon > log > fy2018 > 20181010_第7期(2017年度)決算 > 決算報告書2017 > 会計データ.csv\t1Fx7qByvMp7UMYQWGicNG0Xa8cfxX1y6P\thttps://drive.google.com/file/d/1Fx7qByvMp7UMYQWGicNG0Xa8cfxX1y6P/preview\tMS932\t1\t\"同一フォルダの「会計データ.txt」が原本。\nヘッダ行を追加(文字コードの変更は無し)\"\tena.kaon > log > fy2018 > 20181010_第7期(2017年度)決算 > 決算報告書2017 > 決算報告書2017.pdf\thttps://drive.google.com/file/d/1enHmBfr07mieidfr59ioz1pI85h2Y2hO/preview\t2\n2018\t完了\tshare > 税理士法人YFPクレア > log > fy2019 > 20191122_会計データ > 仕訳日記帳.csv\t1rgxJkm_FTpp6CaJHfBbwlQaohrXl1uq-\thttps://drive.google.com/file/d/1rgxJkm_FTpp6CaJHfBbwlQaohrXl1uq-/preview\tMS932\t1\t\tshare > 税理士法人YFPクレア > log > fy2019 > 20191126_第8期決算 > 申告書類.pdf\thttps://drive.google.com/file/d/1i5BMyv31tF0okcs3Ik68yi8lJIbvHznF/preview\t31\n2019\t完了\tshare > 税理士法人YFPクレア > log > fy2020 > 20201005_2019年度決算 > 20201207申告書決算書元帳データ > 20201207仕訳日記帳(第9期).csv\t1czTmfkwuxz2lEIkPUlJ8BZyYWa58J6O9\thttps://drive.google.com/file/d/1czTmfkwuxz2lEIkPUlJ8BZyYWa58J6O9/preview\t\t1\t\tshare > 税理士法人YFPクレア > log > fy2020 > 20201005_2019年度決算 > 20201207申告書決算書元帳データ > 20201207申告書類.pdf\thttps://drive.google.com/file/d/11X2xH70on4JDo6ZLrIhOfD6y0AXSbwSq/preview\t23\n2020\t完了\tshare > 税理士法人YFPクレア > log > fy2021 > 20211111_2020年度決算 > 20111111_会計データ > 202010-202109仕訳日記帳.csv\t1XV2DuVMLl-X4chu5FLMdq5PD52InnpQ6\thttps://drive.google.com/file/d/1XV2DuVMLl-X4chu5FLMdq5PD52InnpQ6/preview\tMS932\t1\t\tshare > 税理士法人YFPクレア > log > fy2021 > 20211111_2020年度決算 > 20211202_提出済申告書・決算書・元帳 > 提出済申告書･決算書.pdf\thttps://drive.google.com/file/d/1a_TC_ureTmYp17P5wokTWe2ZiPJqs0EN/preview\t24\n2021\t完了\tshare > 税理士法人YFPクレア > log > fy2022 > 20221005_2021年度決算 > 20221107_会計データ > 仕訳日記帳.csv\t1w5q6p1bQCGtqui7NN3mJTUuQewVZWYTy\thttps://drive.google.com/file/d/1w5q6p1bQCGtqui7NN3mJTUuQewVZWYTy/preview\t\t1\t\tshare > 税理士法人YFPクレア > log > fy2022 > 20221005_2021年度決算 > 20221128_提出済申告書・決算書・元帳 > 株式会社ena.kaon-2022年9月-決算書.pdf\thttps://drive.google.com/file/d/1DVY1EcUS1My9U0Tw5DAlOppFT530hH_b/preview\t2\n2022\t完了\tshare > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122会計データ > 仕訳日記帳2023.csv\t138k67CeWYZb8grdK8-eFjBMQ5qXjiD3V\thttps://drive.google.com/file/d/138k67CeWYZb8grdK8-eFjBMQ5qXjiD3V/preview\tMS932\t1\t\"以下にも2022年度のCSVがあるが、後から提供された本表左のファイルを採用\nshare > 税理士法人YFPクレア > log > fy2023 > 20231009_2022年度決算 > 20231214提出済申告書 > 202210-102311仕訳日記帳.csv\"\tshare > 税理士法人YFPクレア > log > fy2023 > 20231009_2022年度決算 > 20231214提出済申告書 > 決算書.pdf\thttps://drive.google.com/file/d/1kCiQAl6f-nUl9oTO3kLYVF49XGTxEEvV/preview\t2\n2023\t完了\tshare > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122会計データ > 仕訳日記帳2024.csv\t1208k0gmxUcTmcqLpTpQUEpBgnPOeWpsW\thttps://drive.google.com/file/d/1208k0gmxUcTmcqLpTpQUEpBgnPOeWpsW/preview\tMS932\t1\t\tshare > 税理士法人YFPクレア > log > fy2024 > 2023年度決算 > 20241122試算表(確定値) > 株式会社ena.kaon-2024年9月-決算書(20241122).pdf\thttps://drive.google.com/file/d/1lsXNpNqfK1BQvKshL76wMXUMqAQEb7zd/preview\t2"}},"custom":{"toLocale":"x => toLocale(x,{\n        verbose: false,\n        format:'yyyy/MM/dd',\n        undecimber: true,\n        fyEnd:'undefined',\n        errValue: 'error',\n      })","convertCharacters":"x => convertCharacters(x)"}}"(String)
+  created: "2025-09-15T17:07:45.273+09:00"(String)
   expand: "function expand(schema) {
     const v = { whois: `${pv.whois}.expand`, rv: null, schema:{}};
     dev.start(v.whois, [...arguments]);
@@ -803,10 +2702,8 @@
       // -------------------------------------------------------------
 
       dev.step(1.1);  // 「引数 > pv.schema > 既定値」の優先順位で値を設定
-      Object.keys(pv.schemaDef).forEach(x => {
-        v.schema[x] = typeof schema[x] !== 'undefined' ? schema[x]
-        : ( typeof pv.schema[x] !== 'undefined' ? pv.schema[x] : pv.schemaDef[x]);
-      });
+      v.schema = mergeDeeply(schema,mergeDeeply(pv.schema,pv.schemaDef));
+      if( v.schema instanceof Error ) throw v.schema;
 
       dev.step(1.2);  // 過去のoriginalが存在していればマージして再設定
       v.schema.original = JSON.stringify(typeof pv.schema.original !== 'undefined'
@@ -827,10 +2724,19 @@
       dev.step(2); // table毎の処理
       // -------------------------------------------------------------
       for( [v.name,v.table] of Object.entries(v.schema.tables) ){
-        // 未定義の項目があれば既定値を設定
-        Object.keys(pv.tableDef).forEach(x => {
-          if( typeof v.table[x] === 'undefined' ) v.table[x] = pv.tableDef[x];
-        });
+
+        // テーブル構造定義名・テーブル名が省略されていた場合は設定
+        if( !v.table.def ) v.table.def = v.name;
+        if( !v.table.name ) v.table.name = v.name;
+
+        // 「引数 > pv.schema > 既定値」の優先順位で値を設定
+        v.table = mergeDeeply(v.table,mergeDeeply(v.schema.tableDef[v.table.def],pv.tableDef));
+
+        if( typeof v.table.data === 'string' && v.table.data !== '' ){
+          v.table.data = parseCSVorTSV(v.table.data);
+          // いまここ：データ型に従って値変換
+        }
+        v.schema.tables[v.name] = v.table;
       }
 
       dev.end(); // 終了処理

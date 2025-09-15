@@ -73,8 +73,6 @@ function Schema(schema) {
       tables: {},
       custom: {},
     },
-    tableProto: { // schemaDefEx.tableに格納されるオブジェクト
-    },
     tableDef: { // tableDefEx形式の既定値
       def: '',
       data: [],
@@ -115,10 +113,8 @@ function Schema(schema) {
       // -------------------------------------------------------------
 
       dev.step(1.1);  // 「引数 > pv.schema > 既定値」の優先順位で値を設定
-      Object.keys(pv.schemaDef).forEach(x => {
-        v.schema[x] = typeof schema[x] !== 'undefined' ? schema[x]
-        : ( typeof pv.schema[x] !== 'undefined' ? pv.schema[x] : pv.schemaDef[x]);
-      });
+      v.schema = mergeDeeply(schema,mergeDeeply(pv.schema,pv.schemaDef));
+      if( v.schema instanceof Error ) throw v.schema;
 
       dev.step(1.2);  // 過去のoriginalが存在していればマージして再設定
       v.schema.original = JSON.stringify(typeof pv.schema.original !== 'undefined'
@@ -139,10 +135,19 @@ function Schema(schema) {
       dev.step(2); // table毎の処理
       // -------------------------------------------------------------
       for( [v.name,v.table] of Object.entries(v.schema.tables) ){
-        // 未定義の項目があれば既定値を設定
-        Object.keys(pv.tableDef).forEach(x => {
-          if( typeof v.table[x] === 'undefined' ) v.table[x] = pv.tableDef[x];
-        });
+
+        // テーブル構造定義名・テーブル名が省略されていた場合は設定
+        if( !v.table.def ) v.table.def = v.name;
+        if( !v.table.name ) v.table.name = v.name;
+
+        // 「引数 > pv.schema > 既定値」の優先順位で値を設定
+        v.table = mergeDeeply(v.table,mergeDeeply(v.schema.tableDef[v.table.def],pv.tableDef));
+
+        if( typeof v.table.data === 'string' && v.table.data !== '' ){
+          v.table.data = parseCSVorTSV(v.table.data);
+          // いまここ：データ型に従って値変換
+        }
+        v.schema.tables[v.name] = v.table;
       }
       
       dev.end(); // 終了処理
@@ -152,7 +157,95 @@ function Schema(schema) {
     } catch (e) { dev.error(e); return e; }
   }
 
-  
+  /**
+   * CSV/TSV 文字列をオブジェクトの配列に変換する
+   * - 区切り文字を自動判定（カンマ or タブ）
+   * - ダブルクォートあり/なし両対応
+   * - RFC4180 準拠（"" は "）
+   *
+   * @param {string} text - CSV/TSV 文字列
+   * @param {object} [options]
+   * @param {boolean} [options.headers=true] 1行目をヘッダ行として使うか
+   * @param {boolean} [options.trim=true] フィールドの前後空白を削除するか
+   * @returns {Object[] | string[][]}
+   */
+  function parseCSVorTSV(text, options = {}) {
+    const { headers = true, trim = true } = options;
+
+    if (typeof text !== "string") throw new TypeError("text must be a string");
+    if (text.charCodeAt(0) === 0xfeff) text = text.slice(1); // BOM 除去
+
+    // --- 区切り文字を自動判定 ---
+    const firstLine = text.split(/\r?\n/)[0];
+    const commaCount = (firstLine.match(/,/g) || []).length;
+    const tabCount = (firstLine.match(/\t/g) || []).length;
+    const delimiter = tabCount > commaCount ? "\t" : ",";
+
+    const rows = [];
+    let cur = "";
+    let row = [];
+    let inQuotes = false;
+    let i = 0;
+
+    while (i < text.length) {
+      const ch = text[i];
+
+      if (ch === '"') {
+        if (!inQuotes) {
+          inQuotes = true;
+          i++;
+          continue;
+        } else {
+          if (i + 1 < text.length && text[i + 1] === '"') {
+            cur += '"'; // エスケープされた "
+            i += 2;
+            continue;
+          } else {
+            inQuotes = false;
+            i++;
+            continue;
+          }
+        }
+      }
+
+      if (!inQuotes && ch === delimiter) {
+        row.push(trim ? cur.trim() : cur);
+        cur = "";
+        i++;
+        continue;
+      }
+
+      if (!inQuotes && (ch === "\n" || ch === "\r")) {
+        row.push(trim ? cur.trim() : cur);
+        rows.push(row);
+        row = [];
+        cur = "";
+
+        if (ch === "\r" && text[i + 1] === "\n") i++;
+        i++;
+        continue;
+      }
+
+      cur += ch;
+      i++;
+    }
+
+    row.push(trim ? cur.trim() : cur);
+    rows.push(row);
+
+    if (!headers) return rows;
+
+    const headerRow = rows.shift() || [];
+    return rows.map(r => {
+      const obj = {};
+      for (let j = 0; j < headerRow.length; j++) {
+        const key = headerRow[j] || `col${j}`;
+        obj[key] = r[j] !== undefined ? r[j] : "";
+      }
+      return obj;
+    });
+  }
+
   // -------------------------------------------------------------
   // メイン処理
   // -------------------------------------------------------------
