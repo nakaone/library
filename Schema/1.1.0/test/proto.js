@@ -15,6 +15,7 @@ function SchemaTest() {
 
     dev.step(1);
     v.r = Schema(kzConfig.schema);
+    console.log('\n\n\n===== result\n\n');
     dev.dump(v.r);
 
     dev.end(); // 終了処理
