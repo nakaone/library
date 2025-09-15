@@ -9,7 +9,7 @@
 -- arguments
 {
   dbName: "kz12"(String)
-  tables: [
+  tableDef: [
     0: {
       tableName: "kz標準"(String)
       label: [
@@ -20,7 +20,7 @@
         0: "伝票番号"(String)
         1: "明細番号"(String)
       ]
-      cols: [
+      colDef: [
         0: {
           colName: "年度"(String)
           type: "number"(String)
@@ -142,7 +142,7 @@
     1: {
       tableName: "勘定科目"(String)
       note: "kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル"(String)
-      cols: [
+      colDef: [
         0: {
           colName: "大分類"(String)
           type: "string"(String)
@@ -176,7 +176,7 @@
       primaryKey: [
         0: "年度"(String)
       ]
-      cols: [
+      colDef: [
         0: {
           colName: "年度"(String)
           type: "number"(String)
@@ -249,7 +249,7 @@
 [0000]SchemaTest step.1
 0: {
   dbName: "kz12"(String)
-  tables: [
+  tableDef: [
     0: {
       tableName: "kz標準"(String)
       label: [
@@ -260,7 +260,7 @@
         0: "伝票番号"(String)
         1: "明細番号"(String)
       ]
-      cols: [
+      colDef: [
         0: {
           colName: "年度"(String)
           type: "number"(String)
@@ -382,7 +382,7 @@
     1: {
       tableName: "勘定科目"(String)
       note: "kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル"(String)
-      cols: [
+      colDef: [
         0: {
           colName: "大分類"(String)
           type: "string"(String)
@@ -416,7 +416,7 @@
       primaryKey: [
         0: "年度"(String)
       ]
-      cols: [
+      colDef: [
         0: {
           colName: "年度"(String)
           type: "number"(String)
@@ -502,7 +502,7 @@
         0: "伝票番号"(String)
         1: "明細番号"(String)
       ]
-      cols: [
+      colDef: [
         0: {
           colName: "年度"(String)
           type: "number"(String)
@@ -1405,7 +1405,7 @@
     勘定科目: {
       tableName: "勘定科目"(String)
       note: "kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル"(String)
-      cols: [
+      colDef: [
         0: {
           colName: "大分類"(String)
           type: "string"(String)
@@ -1589,7 +1589,7 @@
       primaryKey: [
         0: "年度"(String)
       ]
-      cols: [
+      colDef: [
         0: {
           colName: "年度"(String)
           type: "number"(String)
@@ -1952,15 +1952,15 @@
       }
     }
   }
-  original: "{"dbName":"kz12","tables":[{"tableName":"kz標準","label":["過年度CSV"],"note":"kawazanyoで使用する仕訳日記帳の標準","primaryKey":["伝票番号","明細番号"],"cols":[{"colName":"年度","type":"number"},{"colName":"伝票番号","type":"number","note":"伝票を一意に特定する番号"},{"colName":"明細番号","type":"number","note":"伝票内の明細行番号"},{"colName":"取引日","type":"string","alias":["日付","取引日付","伝票日付"]},{"colName":"摘要","type":"string","alias":["取引摘要"]},{"colName":"補助摘要","type":"string"},{"colName":"借方科目","type":"string","alias":["借方勘定科目","借方科目名称"]},{"colName":"借方補助","type":"string","alias":["借方補助科目","借方補助科目名称"]},{"colName":"借方部門","type":"string","alias":["借方部門名称"]},{"colName":"借方本体","type":"number"},{"colName":"借方税額","type":"number","alias":["借方税金額","借方消費税"]},{"colName":"借方金額","type":"number"},{"colName":"貸方科目","type":"string","alias":["貸方勘定科目","貸方科目名称"]},{"colName":"貸方補助","type":"string","alias":["貸方補助科目","貸方補助科目名称"]},{"colName":"貸方部門","type":"string","alias":["貸方部門名称"]},{"colName":"貸方本体","type":"number"},{"colName":"貸方税額","type":"number","alias":["貸方税金額","貸方消費税"]},{"colName":"貸方金額","type":"number"},{"colName":"備考","type":"string"}]},{"tableName":"勘定科目","note":"kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル","cols":[{"colName":"大分類","type":"string","note":"BS/PL上の大分類"},{"colName":"中分類","type":"string","note":"BS/PL上の中分類"},{"colName":"小分類","type":"string","note":"BS/PL上の小分類"},{"colName":"科目名","type":"string","note":"勘定科目名"},{"colName":"CF分類","type":"string","note":"CF上の分類を' > 'で連結"}]},{"tableName":"過年度一覧","note":"過年度の仕訳日記帳データ(CSV)に関する情報","primaryKey":["年度"],"cols":[{"colName":"年度","type":"number","note":"会計年度"},{"colName":"状態","type":"string","note":"未了 or 完了"},{"colName":"パス","type":"string","note":"年度別仕訳日記帳(CSV)へのGoogle Driveのパス"},{"colName":"ID","type":"string","note":"CSVのGoogle Drive上のファイルID"},{"colName":"URL","type":"string","note":"CSVのURL。必ずプレビューで開くよう、IDから導出"},{"colName":"文字コード","type":"string","note":"CSVの文字コード。Shift-JIS(MS932)対応"},{"colName":"ヘッダ","type":"string","note":"CSV上のヘッダ行番号。基底=1"},{"colName":"備考","type":"string","note":""},{"colName":"決算書パス","type":"string","note":"当該会計年度のBS/PL(PDF)へパス"},{"colName":"決算書URL","type":"string","note":"同URL"},{"colName":"頁","type":"string","note":"PDF上でBS/PLが掲載されている頁番号"}]}],"custom":{"toLocale":"x => toLocale(x,{\n        verbose: false,\n        format:'yyyy/MM/dd',\n        undecimber: true,\n        fyEnd:'undefined',\n        errValue: 'error',\n      })","convertCharacters":"x => convertCharacters(x)"}}"(String)
-  created: "2025-09-15T10:57:23.733+09:00"(String)
+  original: "{"dbName":"kz12","tableDef":[{"tableName":"kz標準","label":["過年度CSV"],"note":"kawazanyoで使用する仕訳日記帳の標準","primaryKey":["伝票番号","明細番号"],"colDef":[{"colName":"年度","type":"number"},{"colName":"伝票番号","type":"number","note":"伝票を一意に特定する番号"},{"colName":"明細番号","type":"number","note":"伝票内の明細行番号"},{"colName":"取引日","type":"string","alias":["日付","取引日付","伝票日付"]},{"colName":"摘要","type":"string","alias":["取引摘要"]},{"colName":"補助摘要","type":"string"},{"colName":"借方科目","type":"string","alias":["借方勘定科目","借方科目名称"]},{"colName":"借方補助","type":"string","alias":["借方補助科目","借方補助科目名称"]},{"colName":"借方部門","type":"string","alias":["借方部門名称"]},{"colName":"借方本体","type":"number"},{"colName":"借方税額","type":"number","alias":["借方税金額","借方消費税"]},{"colName":"借方金額","type":"number"},{"colName":"貸方科目","type":"string","alias":["貸方勘定科目","貸方科目名称"]},{"colName":"貸方補助","type":"string","alias":["貸方補助科目","貸方補助科目名称"]},{"colName":"貸方部門","type":"string","alias":["貸方部門名称"]},{"colName":"貸方本体","type":"number"},{"colName":"貸方税額","type":"number","alias":["貸方税金額","貸方消費税"]},{"colName":"貸方金額","type":"number"},{"colName":"備考","type":"string"}]},{"tableName":"勘定科目","note":"kawazanyoで使用する勘定科目の一覧。ツリー構造のテーブル","colDef":[{"colName":"大分類","type":"string","note":"BS/PL上の大分類"},{"colName":"中分類","type":"string","note":"BS/PL上の中分類"},{"colName":"小分類","type":"string","note":"BS/PL上の小分類"},{"colName":"科目名","type":"string","note":"勘定科目名"},{"colName":"CF分類","type":"string","note":"CF上の分類を' > 'で連結"}]},{"tableName":"過年度一覧","note":"過年度の仕訳日記帳データ(CSV)に関する情報","primaryKey":["年度"],"colDef":[{"colName":"年度","type":"number","note":"会計年度"},{"colName":"状態","type":"string","note":"未了 or 完了"},{"colName":"パス","type":"string","note":"年度別仕訳日記帳(CSV)へのGoogle Driveのパス"},{"colName":"ID","type":"string","note":"CSVのGoogle Drive上のファイルID"},{"colName":"URL","type":"string","note":"CSVのURL。必ずプレビューで開くよう、IDから導出"},{"colName":"文字コード","type":"string","note":"CSVの文字コード。Shift-JIS(MS932)対応"},{"colName":"ヘッダ","type":"string","note":"CSV上のヘッダ行番号。基底=1"},{"colName":"備考","type":"string","note":""},{"colName":"決算書パス","type":"string","note":"当該会計年度のBS/PL(PDF)へパス"},{"colName":"決算書URL","type":"string","note":"同URL"},{"colName":"頁","type":"string","note":"PDF上でBS/PLが掲載されている頁番号"}]}],"custom":{"toLocale":"x => toLocale(x,{\n        verbose: false,\n        format:'yyyy/MM/dd',\n        undecimber: true,\n        fyEnd:'undefined',\n        errValue: 'error',\n      })","convertCharacters":"x => convertCharacters(x)"}}"(String)
+  created: "2025-09-15T10:57:48.762+09:00"(String)
   data: {
   }
   expand: "function expandSchema(schema) {
     const v = { whois: `${pv.whois}.expandSchema`, rv:{
       dbName: '',
       note: '',
-      tables: [],
+      tableDef: [],
       custom: {},
       tableList: [], // 実テーブル名の配列(インスタンス化時の追加項目)
       tableMap: {},  // テーブル名->tableDefへのマップ(インスタンス化時の追加項目)
@@ -1984,7 +1984,7 @@
       }
 
       dev.step(3);  // tableDefExを順次作成
-      pv.rv.tables.forEach(table => {
+      pv.rv.tableDef.forEach(table => {
         // name:存在 and label:不存在 -> label=nameとしてnameテーブルを作成
         // name:存在 and label:存在 -> nameテーブルは作成しない、labelテーブルのみ作成
         v.realTables = [...(!table.label  // {string[]} 実テーブル名の配列

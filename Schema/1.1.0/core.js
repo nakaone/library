@@ -2,7 +2,7 @@
  * @typedef {Object} schemaDef - DB構造定義オブジェクト(引数用)
  * @param {string} [dbName] - データベース名(IndexedDB上ではストア名)
  * @param {string} [note] - 備考
- * @param {tableDef[]} tables - DB内のテーブル定義
+ * @param {tableDef[]} tableDef - DB内のテーブル定義
  * @param {Object.<string,string>} [custom] - AlaSQLのカスタム関数。{関数名:toString()で文字列化した関数}
  */
 /** schemaDefEx: Schemaの戻り値となる、拡張済DB構造定義オブジェクト
@@ -31,7 +31,7 @@
  * @param {number} left=1 - シート・CSVイメージ上の開始列番号
  *   top,leftは外部提供CSVをインポートするような場合を想定
  * @param {string|string[]} [primaryKey] - 主キーとなる項目名。複合キーの場合配列で指定
- * @param {columnDef[]} cols - 項目定義
+ * @param {columnDef[]} colDef - 項目定義
  * @param {Object} [export={select:['*'],where:''}] - export時の設定。export=nullの場合、出力対象外とする
  * @param {string[]} [export.select=['*']] - 出力項目を絞り込む場合の項目名リスト。空配列なら全項目出力
  * @param {string} [export.where=""] - 出力行を絞り込む場合の条件(SQLのwhere句)
@@ -74,10 +74,10 @@ function Schema(schema) {
   const pv = { whois: 'Schema', rv: {}};
 
   /** expandTable: tableDefExを作成
-   * - colsとcolMapメンバは1:1対応、且つcolNames,headerの作成が必要なため
+   * - colDefとcolMapメンバは1:1対応、且つcolNames,headerの作成が必要なため
    *   columnの展開は本メソッド内で実行(expandColumnは作成しない)
    * @param {string} realTableName - 実テーブル名
-   * @param {tableDef} tableDefinition - schemaDef.tables配列の内、作成対象テーブル構造定義
+   * @param {tableDef} tableDefinition - schemaDef.tableDef配列の内、作成対象テーブル構造定義
    * @returns {tableDefEx}
    */
   function expandTable(realTableName,tableDefinition) {
@@ -89,7 +89,7 @@ function Schema(schema) {
         top: 1,
         left: 1,
         primaryKey: [],
-        cols: [],
+        colDef: [],
         initial: [],
         export: {select:['*'],where:''},
         startingRowNumber: 2,
@@ -128,10 +128,10 @@ function Schema(schema) {
       }
 
       dev.step(3);  // columnDefExを順次作成
-      for( v.i=0 ; v.i<v.rv.cols.length ; v.i++ ){
+      for( v.i=0 ; v.i<v.rv.colDef.length ; v.i++ ){
 
         dev.step(3.1);  // 「引数>pv.rv>既定値」の優先順位で統合
-        v.col = Object.assign({},v.columnProto,v.rv.cols[v.i],{seq:v.i});
+        v.col = Object.assign({},v.columnProto,v.rv.colDef[v.i],{seq:v.i});
 
         dev.step(3.2);  // default,printfを関数化
         ['default','printf'].forEach(x => {
@@ -164,7 +164,7 @@ function Schema(schema) {
     const v = { whois: `${pv.whois}.expandSchema`, rv:{
       dbName: '',
       note: '',
-      tables: [],
+      tableDef: [],
       custom: {},
       tableList: [], // 実テーブル名の配列(インスタンス化時の追加項目)
       tableMap: {},  // テーブル名->tableDefへのマップ(インスタンス化時の追加項目)
@@ -188,7 +188,7 @@ function Schema(schema) {
       }
 
       dev.step(3);  // tableDefExを順次作成
-      pv.rv.tables.forEach(table => {
+      pv.rv.tableDef.forEach(table => {
         // name:存在 and label:不存在 -> label=nameとしてnameテーブルを作成
         // name:存在 and label:存在 -> nameテーブルは作成しない、labelテーブルのみ作成
         v.realTables = [...(!table.label  // {string[]} 実テーブル名の配列
