@@ -21,3 +21,8 @@ $embed -prj:$prj -lib:$lib -test:$test > $test/test.js
 # ----------------------------------------------
 node $test/test.js > $test/result.json
 rm $test/test.js
+
+# ----------------------------------------------
+# 3. ついでに文書化
+# ----------------------------------------------
+JSDoc $prj/core.js -d $prj/doc

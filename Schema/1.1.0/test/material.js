@@ -57,7 +57,8 @@ const kzConfig = {
     },
     tables: {
       '過年度CSV': {def:'kz標準'},
-      '勘定科目': {data:`大分類	中分類	小分類	科目名	CF分類
+      '勘定科目': {data:  // スプレッドシートのコピペで可。
+`大分類	中分類	小分類	科目名	CF分類
 資産の部				
 	流動資産			
 			現金	現金または現金同等物
@@ -140,8 +141,10 @@ const kzConfig = {
 			法人税	営業活動によるキャッシュ・フロー > 租税公課
 			住民税	営業活動によるキャッシュ・フロー > 租税公課
 			事業税	営業活動によるキャッシュ・フロー > 租税公課
-			法人税等	営業活動によるキャッシュ・フロー > 租税公課`},
-      '過年度一覧': {data:`年度	状態	パス	ID	URL	文字コード	ヘッダ	備考	決算書パス	決算書URL	頁
+			法人税等	営業活動によるキャッシュ・フロー > 租税公課`
+      },
+      '過年度一覧': {data:  // スプレッドシートのコピペで可。
+`年度	状態	パス	ID	URL	文字コード	ヘッダ	備考	決算書パス	決算書URL	頁
 2011	完了	ena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena第1期.csv	1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u	https://drive.google.com/file/d/1vpWci_L2RAKRTd3mq6dc7uJxylx6Qu7u/preview	MS932	8		ena.kaon > log > fy2012 > 20121107_第1期(2011年度)決算報告 > ena.kaon決算報告書(2011年度).pdf	https://drive.google.com/file/d/1DYuOjpHT1GtPmy0ch5nr4D2b6kj6p7t4/preview	15
 2012	完了	ena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena第2期.csv	1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ	https://drive.google.com/file/d/1-gyWYQHRginZFHNTFfV7BS87Y5HSuezQ/preview	MS932	8		ena.kaon > log > fy2013 > 20131111_第2期(2012年度)決算報告 > ena.kaon決算報告書(2012年度).pdf	https://drive.google.com/file/d/1xFnjstCh9_GIZTkta47F0zIM8zQyN_mj/preview	16
 2013	完了	ena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena第3期.csv	1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx	https://drive.google.com/file/d/1AMafGuIpXPPtga_EODuFsqPlQ2o1LYIx/preview	MS932	8		ena.kaon > log > fy2014 > 20141121_第3期(2013年度)決算報告 > ena.kaon決算報告書(2013年度).pdf	https://drive.google.com/file/d/1kKD1NVW_JiemOodtfKympnq9MlkVf2xA/preview	16

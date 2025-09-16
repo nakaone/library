@@ -1,15 +1,43 @@
-/**
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: core.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: core.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
  * DB構造定義オブジェクト (引数用)
  * @typedef {Object} schemaDef
  * @property {string} [dbName] - データベース名(IndexedDB上ではストア名)
  * @property {string} [note] - 備考
- * @property {Object.<string, tableDef>} tableDef - テーブル構造定義名をメンバ名とするテーブル構造定義
+ * @property {Object.&lt;string, tableDef>} tableDef - テーブル構造定義名をメンバ名とするテーブル構造定義
  * @property {Object} tables - 実テーブル名をメンバ名とする実テーブルの定義
  * @property {string} [tables.def] - 使用するテーブル定義名。実テーブル名と定義名が一致する場合は省略可。
  * @property {string|Object[]} [tables.data] - テーブルに格納される初期データ
  *   - string: CSV/TSV形式。先頭行は項目名(labelの配列=header)。
  *   - Object[]: 行オブジェクトの配列
- * @property {Object.<string, string>} [custom] - AlaSQLのカスタム関数。{関数名: toString()で文字列化した関数}
+ * @property {Object.&lt;string, string>} [custom] - AlaSQLのカスタム関数。{関数名: toString()で文字列化した関数}
  */
 
 /**
@@ -32,7 +60,7 @@
  * @property {columnDef[]} colDef - 項目定義(順序を考慮するためオブジェクトでは無く配列で定義)
  * @property {number} [top=1] - シート・CSVイメージ上のヘッダ行番号
  * @property {number} [left=1] - シート・CSVイメージ上の開始列番号
- * @property {number} [startingRowNumber=2] - シート上の行番号"RowNumber"を追加する場合の開始行番号。<0なら追加しない。
+ * @property {number} [startingRowNumber=2] - シート上の行番号"RowNumber"を追加する場合の開始行番号。&lt;0なら追加しない。
  */
 
 /**
@@ -41,7 +69,7 @@
  * @typedef {Object} tableDefEx
  * @property {string} name - 実テーブル名
  * @property {string[]} header - columnDef.labelの配列
- * @property {Object.<string, columnObj>} cols - {columnDef.name: columnObj}
+ * @property {Object.&lt;string, columnObj>} cols - {columnDef.name: columnObj}
  */
 
 // =====================================================================
@@ -152,12 +180,12 @@ function Schema(schema) {
         v.table = mergeDeeply(v.table,mergeDeeply(v.schema.tableDef[v.table.def],pv.tableDef));
 
         dev.step(2.3);  // 初期データの行オブジェクト化
-        if( typeof v.table.data === 'string' && v.table.data !== '' ){
+        if( typeof v.table.data === 'string' &amp;&amp; v.table.data !== '' ){
           // CSV/TSVを行オブジェクトに変換
           v.table.data = parseCSVorTSV(v.table.data);
           // データ型に従って値変換
           v.table.data.forEach(x => {
-            for( v.i=0 ; v.i<v.table.colDef.length ; v.i++ ){
+            for( v.i=0 ; v.i&lt;v.table.colDef.length ; v.i++ ){
               switch( v.table.colDef[v.i].type ){
                 case 'number':
                   x[v.table.colDef[v.i].name] = Number(x[v.table.colDef[v.i].name]);
@@ -172,8 +200,8 @@ function Schema(schema) {
             }
           });
           // RowNumber不在ならRowNumberを追加
-          if( v.table.startingRowNumber > 0 && typeof v.table.data[0].RowNumber === 'undefined' ){
-            for( v.i=0 ; v.i<v.table.data.length ; v.i++ ){
+          if( v.table.startingRowNumber > 0 &amp;&amp; typeof v.table.data[0].RowNumber === 'undefined' ){
+            for( v.i=0 ; v.i&lt;v.table.data.length ; v.i++ ){
               v.table.data[v.i].RowNumber = v.i + v.table.startingRowNumber;
             }
           }
@@ -182,14 +210,14 @@ function Schema(schema) {
         // -------------------------------------------------------------
         dev.step(3); // column毎の処理
         // -------------------------------------------------------------
-        for( v.c=0 ; v.c<v.table.colDef.length ; v.c++ ){
+        for( v.c=0 ; v.c&lt;v.table.colDef.length ; v.c++ ){
 
           dev.step(3.1);  // 未定義項目に既定値設定
           v.colObj = Object.assign({},pv.columnDef,v.table.colDef[v.c]);
 
           dev.step(3.2);  // default,printfを関数化
           ['default','printf'].forEach(x => {
-            if( v.colObj[x] !== null && typeof v.colObj[x] !== 'function' )
+            if( v.colObj[x] !== null &amp;&amp; typeof v.colObj[x] !== 'function' )
               v.colObj[x] = new Function('return '+v.colObj[x])();
           });
 
@@ -254,7 +282,7 @@ function Schema(schema) {
     let inQuotes = false;
     let i = 0;
 
-    while (i < text.length) {
+    while (i &lt; text.length) {
       const ch = text[i];
 
       if (ch === '"') {
@@ -263,7 +291,7 @@ function Schema(schema) {
           i++;
           continue;
         } else {
-          if (i + 1 < text.length && text[i + 1] === '"') {
+          if (i + 1 &lt; text.length &amp;&amp; text[i + 1] === '"') {
             cur += '"'; // エスケープされた "
             i += 2;
             continue;
@@ -275,20 +303,20 @@ function Schema(schema) {
         }
       }
 
-      if (!inQuotes && ch === delimiter) {
+      if (!inQuotes &amp;&amp; ch === delimiter) {
         row.push(trim ? cur.trim() : cur);
         cur = "";
         i++;
         continue;
       }
 
-      if (!inQuotes && (ch === "\n" || ch === "\r")) {
+      if (!inQuotes &amp;&amp; (ch === "\n" || ch === "\r")) {
         row.push(trim ? cur.trim() : cur);
         rows.push(row);
         row = [];
         cur = "";
 
-        if (ch === "\r" && text[i + 1] === "\n") i++;
+        if (ch === "\r" &amp;&amp; text[i + 1] === "\n") i++;
         i++;
         continue;
       }
@@ -305,7 +333,7 @@ function Schema(schema) {
     const headerRow = rows.shift() || [];
     return rows.map(r => {
       const obj = {};
-      for (let j = 0; j < headerRow.length; j++) {
+      for (let j = 0; j &lt; headerRow.length; j++) {
         const key = headerRow[j] || `col${j}`;
         obj[key] = r[j] !== undefined ? r[j] : "";
       }
@@ -327,4 +355,26 @@ function Schema(schema) {
     return pv.rv;
 
   } catch (e) { dev.error(e); return e; }
-}
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#Schema">Schema</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Tue Sep 16 2025 11:56:59 GMT+0900 (日本標準時)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
