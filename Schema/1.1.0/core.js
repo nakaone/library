@@ -84,7 +84,7 @@ function Schema(schema) {
       startingRowNumber: 2,
       name: '',
       header: [],
-      col: {},
+      cols: {},
     },
     columnDef: {
       name: '',
@@ -136,14 +136,14 @@ function Schema(schema) {
       // -------------------------------------------------------------
       for( [v.name,v.table] of Object.entries(v.schema.tables) ){
 
-        // テーブル構造定義名・テーブル名が省略されていた場合は設定
+        dev.step(2.1);  // テーブル構造定義名・テーブル名が省略されていた場合は設定
         if( !v.table.def ) v.table.def = v.name;
         if( !v.table.name ) v.table.name = v.name;
 
-        // 「引数 > pv.schema > 既定値」の優先順位で値を設定
+        dev.step(2.2);  // 「引数 > pv.schema > 既定値」の優先順位で値を設定
         v.table = mergeDeeply(v.table,mergeDeeply(v.schema.tableDef[v.table.def],pv.tableDef));
 
-        // 初期データの行オブジェクト化
+        dev.step(2.3);  // 初期データの行オブジェクト化
         if( typeof v.table.data === 'string' && v.table.data !== '' ){
           // CSV/TSVを行オブジェクトに変換
           v.table.data = parseCSVorTSV(v.table.data);
@@ -170,6 +170,42 @@ function Schema(schema) {
             }
           }
         }
+
+        // -------------------------------------------------------------
+        dev.step(3); // column毎の処理
+        // -------------------------------------------------------------
+        for( v.c=0 ; v.c<v.table.colDef.length ; v.c++ ){
+
+          dev.step(3.1);  // 未定義項目に既定値設定
+          v.colObj = Object.assign({},pv.columnDef,v.table.colDef[v.c]);
+
+          dev.step(3.2);  // default,printfを関数化
+          ['default','printf'].forEach(x => {
+            if( v.colObj[x] !== null && typeof v.colObj[x] !== 'function' )
+              v.colObj[x] = new Function('return '+v.colObj[x])();
+          });
+
+          dev.step(3.3);  // seq,labelの設定、tables.headerへの登録
+          v.colObj.seq = v.c;
+          if( !v.colObj.label ) v.colObj.label = v.colObj.name;
+          v.table.header.push(v.colObj.label);
+
+          dev.step(3.4);  // 項目マップに登録
+          dev.dump(v.colObj,194);
+          // キーは①項目名(name)、②ラベル(label)、③別名(alias)、④出現順(数字)
+          v.keys = Array.from(new Set([
+            v.colObj.name,
+            v.colObj.label,
+            ...v.colObj.alias,
+            v.c
+          ]));
+          dev.dump(v.keys,v.table.cols,202);
+          // a = Array.from(new Set([1,2]));
+          v.keys.forEach(x => v.table.cols[x] = v.colObj);
+
+        }
+
+        dev.step(2.4);  // table毎の処理：作成したtableをschemaに登録して終了
         v.schema.tables[v.name] = v.table;
       }
       
