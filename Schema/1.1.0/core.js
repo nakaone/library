@@ -199,7 +199,6 @@ function Schema(schema) {
           v.table.header.push(v.colObj.label);
 
           dev.step(3.4);  // 項目マップに登録
-          dev.dump(v.colObj,194);
           // キーは①項目名(name)、②ラベル(label)、③別名(alias)、④出現順(数字)
           v.keys = Array.from(new Set([
             v.colObj.name,
@@ -207,8 +206,6 @@ function Schema(schema) {
             ...v.colObj.alias,
             v.c
           ]));
-          dev.dump(v.keys,v.table.cols,202);
-          // a = Array.from(new Set([1,2]));
           v.keys.forEach(x => v.table.cols[x] = v.colObj);
 
         }
