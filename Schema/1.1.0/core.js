@@ -74,36 +74,13 @@
  */
 function Schema(schema) {
   const pv = { whois: 'Schema', schema: {},
-    schemaDef: { // schemaDefEx形式の既定値。但しoriginal,created,expandはメソッド内で追加
-      dbName: '',
-      note: '',
-      tableDef: {},
-      tables: {},
-      custom: {},
-    },
-    tableDef: { // tableDefEx形式の既定値
-      def: '',
-      data: [],
-      note: '',
-      primaryKey: [],
-      colDef: [],
-      top: 1,
-      left: 1,
-      startingRowNumber: 2,
-      name: '',
-      header: [],
-      cols: {},
-    },
-    columnDef: {
-      name: '',
-      seq: 0,
-      note: '',
-      label: '',
-      type: 'string',
-      alias: [],
-      default: null,
-      printf: null,
-    }
+    schemaDef:  // schemaDefEx形式の既定値。但しoriginal,created,expandはメソッド内で追加
+      '{"dbName":"","note":"","tableDef":{},"tables":{},"custom":{}}',
+    tableDef: // tableDefEx形式の既定値
+      '{"def":"","data":[],"note":"","primaryKey":[],"colDef":[],'
+      + '"top":1,"left":1,"startingRowNumber":2,"name":"","header":[],"cols":{}}',
+    columnDef:  // columnDefEx形式の既定値
+      '{"name":"","seq":0,"note":"","label":"","type":"string","alias":[],"default":null,"printf":null}',
   };
 
   /**
@@ -121,7 +98,7 @@ function Schema(schema) {
       // -------------------------------------------------------------
 
       dev.step(1.1);  // 「引数 > pv.schema > 既定値」の優先順位で値を設定
-      v.schema = mergeDeeply(schema,mergeDeeply(pv.schema,pv.schemaDef));
+      v.schema = mergeDeeply(schema,mergeDeeply(pv.schema,JSON.parse(pv.schemaDef)));
       if( v.schema instanceof Error ) throw v.schema;
 
       dev.step(1.2);  // 過去のoriginalが存在していればマージして再設定
@@ -149,7 +126,7 @@ function Schema(schema) {
         if( !v.table.name ) v.table.name = v.name;
 
         dev.step(2.2);  // 「引数 > pv.schema > 既定値」の優先順位で値を設定
-        v.table = mergeDeeply(v.table,mergeDeeply(v.schema.tableDef[v.table.def],pv.tableDef));
+        v.table = mergeDeeply(v.table,mergeDeeply(v.schema.tableDef[v.table.def],JSON.parse(pv.tableDef)));
 
         dev.step(2.3);  // 初期データの行オブジェクト化
         if( typeof v.table.data === 'string' && v.table.data !== '' ){
@@ -185,7 +162,7 @@ function Schema(schema) {
         for( v.c=0 ; v.c<v.table.colDef.length ; v.c++ ){
 
           dev.step(3.1);  // 未定義項目に既定値設定
-          v.colObj = Object.assign({},pv.columnDef,v.table.colDef[v.c]);
+          v.colObj = Object.assign({},JSON.parse(pv.columnDef),v.table.colDef[v.c]);
 
           dev.step(3.2);  // default,printfを関数化
           ['default','printf'].forEach(x => {
