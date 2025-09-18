@@ -13,8 +13,12 @@
 
 /** GASutil: GAS 関連のユーティリティ集
  * @namespace GASutil
+ * @param {Object} arg={}
+ * @param {Object} [arg.db] - SpreadDbへの引数
+ * @param {Object} [arg.db.schema] - schema
+ * @param {Object} [arg.db.opt] - opt
  */
-function GASutil() {
+function GASutil(arg={}) {
   const pv = { whois: 'GASutil', rv: null};
 
   /** getFileProperties: Fileオブジェクトから属性情報を取得し、FilePropertiesオブジェクトとして返す
@@ -91,13 +95,18 @@ function GASutil() {
   dev.start(pv.whois);
   try {
 
-    dev.step(1);
+    dev.step(1);  // SpreadDbを使用する場合、pv.dbとして生成
+    if( typeof arg.db !== 'undefined' ){
+      if( typeof arg.db.opt === 'undefined' ) arg.db.opt = {};
+      pv.db = SpreadDb(arg.db.schema,arg.db.opt);
+      if( pv.db instanceof Error ) throw pv.db;
+    }
+
+    dev.end(); // 終了処理
     pv.rv = {
       listFiles,
       // overLimit: 最大起動時間を超えた場合、再試行するトリガーを生成
     };
-
-    dev.end(); // 終了処理
     return pv.rv;
 
   } catch (e) { dev.error(e); return e; }

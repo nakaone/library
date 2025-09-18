@@ -6,7 +6,7 @@
  * @property {string} [dbName] - データベース名(IndexedDB上ではストア名)
  * @property {string} [note] - 備考
  * @property {Object.<string, tableDef>} tableDef - テーブル構造定義名をメンバ名とするテーブル構造定義
- * @property {Object} tables - 実テーブル名をメンバ名とする実テーブルの定義
+ * @property {Object.<string, Object>} tables - 実テーブル名をメンバ名とする実テーブルの定義
  * @property {string} [tables.def] - 使用するテーブル定義名。実テーブル名と定義名が一致する場合は省略可。
  * @property {string|Object[]} [tables.data] - テーブルに格納される初期データ
  *   - string: CSV/TSV形式。先頭行は項目名(labelの配列=header)。
