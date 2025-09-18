@@ -6,11 +6,12 @@ source ~/Desktop/GitHub/tools/common.sh
 # ----------------------------------------------
 # 0. 事前準備
 # ----------------------------------------------
-prj="$lib/underDev/GASutil"
+dev="$lib/underDev"
+prj="$dev/GASutil"
 test="$prj/test"
 
 # ----------------------------------------------
 # 1. test.gsの作成
 # ----------------------------------------------
 cat $test/proto.js | awk 1 | \
-$embed -prj:$prj -lib:$lib -test:$test > $test/test.gs
+$embed -prj:$prj -lib:$lib -dev:$dev -test:$test > $test/test.gs

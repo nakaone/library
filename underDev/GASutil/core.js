@@ -13,27 +13,30 @@ function GASutil() {
 
       // -------------------------------------------------------------
       dev.step(1);  // 対象フォルダの特定
+      // -------------------------------------------------------------
       if( folderId === null ){
-        dev.step(1);  // 本スプレッドシートのIDを取得
+        dev.step(1.1);  // 本スプレッドシートのIDを取得
         v.spread = SpreadsheetApp.getActiveSpreadsheet();
         v.spreadId = v.spread.getId();
 
-        dev.step(2);  // 親フォルダおよび直下のファイルを取得
+        dev.step(1.2);  // 親フォルダおよび直下のファイルを取得
         v.parent = DriveApp.getFileById(v.spreadId).getParents();
         folderId = v.parent.next().getId();
       }
+
+      dev.step(1.3);  // 対象フォルダのFolderオブジェクトを取得
       v.folder = DriveApp.getFolderById(folderId);
+      if( v.folder instanceof Error ) throw v.folder;
+
+      dev.step(1.4);  // 対象フォルダ直下のファイルオブジェクトを取得
       v.files = v.folder.getFiles();
 
+      // -------------------------------------------------------------
+      dev.step(2);  // ファイルを取得、その属性をオブジェクト化
+      // -------------------------------------------------------------
       while (v.files.hasNext()) {
-        dev.step(3.1);  // ファイルを取得、その属性をオブジェクト化
         v.file = v.files.next();
-        v.obj = getFileProperties(v.file);
-
-        dev.step(3.2);  // 指定日時以前に作成されたファイルを出力(old.json作成用)
-        //if (v.file.getDateCreated().getTime() < v.base) {
-          v.rv.push(v.obj);
-        //}
+        v.rv.push(getFileProperties(v.file));
       }
 
       dev.end(); // 終了処理
@@ -73,6 +76,7 @@ function GASutil() {
     dev.step(1);
     pv.rv = {
       listFiles,
+      // overLimit: 最大起動時間を超えた場合、再試行するトリガーを生成
     };
 
     dev.end(); // 終了処理
