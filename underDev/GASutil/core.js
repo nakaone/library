@@ -1,3 +1,27 @@
+/* 【開発ロードマップ】
+  underDev/SpreadDb/core.js
+    create tableでpKey設定機能を追加
+    update(append)で更新＋追加機能をテスト
+  underDev/GASutil/test/proto.js
+    SpreadDbの元ソースをlibからunderDevに変更
+    configでファイル一覧に以下項目を追加
+      - 修正前：現状(マイドライブ〜所属フォルダ＋現ファイル名)
+          移動処理後は修正後(移動先フルパス)
+      - 修正後：移動先指定(移動先フルパス＋新ファイル名)
+          移動処理後は空欄
+      - 結果：処理前は空欄、処理後は修正前
+      - 備考
+  underDev/GASutil/getFilePropertiesメソッド
+    フルパス情報取得機能追加
+  underDev/GASutil/listFilesメソッド
+    シート更新機能を削除
+    テーブル更新はlistFilesで行う
+  underDev/GASutil/updateFileListメソッド(新規)
+    シート更新機能をlistFilesからここに移動
+  underDev/GASutil/moveFileメソッド(新規)
+    ファイル情報テーブルを元にファイル名変更＋フォルダ移動
+    ファイル情報テーブルを更新(修正前・修正後・結果)
+*/
 /**
  * @typedef {Object} FileProperties - ファイルの属性情報
  * @property {string} id - ファイルID
@@ -17,6 +41,7 @@
  * @param {Object} [arg.db] - SpreadDbへの引数
  * @param {Object} [arg.db.schema] - schema
  * @param {Object} [arg.db.opt] - opt
+ * @param {string} [arg.FileListSheetName=null] - ファイル一覧を保存するシート名
  */
 function GASutil(arg={}) {
   const pv = { whois: 'GASutil', rv: null};
@@ -50,9 +75,12 @@ function GASutil(arg={}) {
   /** listFiles: 指定フォルダ直下のファイル一覧を取得
    * @memberof GASutil
    * @param {string} [folderId=null] - フォルダID。nullの場合は現在のスプレッドシートが存在するフォルダ
+   * @param {string} [sheetName=null] - ファイル一覧を保存するシート名
+   *   - null: シートに保存しない
+   *   - 空文字列: シート名はpv.FileListSheetNameを参照
    * @returns {FileProperties[]} ファイル属性情報の配列
    */
-  function listFiles(folderId=null) {
+  function listFiles(folderId=null,sheetName=null) {
     const v = { whois: 'listFiles', rv: [], base: new Date().getTime() };
     // base: 開発用にold.jsonを作成する際、リスト化対象日時を指定(ex. new Date('2025/4/1'))
     dev.start(v.whois, [...arguments]);
@@ -85,6 +113,30 @@ function GASutil(arg={}) {
         v.file = v.files.next();
         v.rv.push(getFileProperties(v.file));
       }
+      dev.dump(v.rv);
+
+      // -------------------------------------------------------------
+      dev.step(3);  // シート保存指定が有れば格納
+      // -------------------------------------------------------------
+      if( typeof sheetName === 'string' ){
+        dev.step(3.1);  // 保存先テーブル・シート名の特定
+        if( sheetName === '' ){
+          if( pv.FileListSheetName ){
+            sheetName = pv.FileListSheetName;
+          } else {
+            throw new Error('Invalid FileListSheetName');
+          }
+        }
+
+        dev.step(3.2);  // RDBに格納
+        v.sql = `insert into ${sheetName} select * from ?;`;
+        v.r = pv.db.exec(v.sql,[v.rv]);
+        if( v.r instanceof Error ) throw v.r;
+
+        dev.step(3.3);  // シートにセーブ
+        v.r = pv.db.save(sheetName);
+        if( v.r instanceof Error ) throw v.r;
+      }
 
       dev.end(); // 終了処理
       return v.rv;
@@ -95,8 +147,15 @@ function GASutil(arg={}) {
   dev.start(pv.whois);
   try {
 
-    dev.step(1);  // SpreadDbを使用する場合、pv.dbとして生成
-    if( typeof arg.db !== 'undefined' ){
+    dev.step(1.1);  // 引数に既定値設定、pvに保存
+    arg = mergeDeeply(arg,{
+      db: null,
+      FileListSheetName: null,
+    });
+    Object.keys(arg).forEach(x => pv[x]=arg[x]);
+
+    dev.step(1.2);  // SpreadDbを使用する場合、pv.dbとして生成
+    if( arg.db !== null ){
       if( typeof arg.db.opt === 'undefined' ) arg.db.opt = {};
       pv.db = SpreadDb(arg.db.schema,arg.db.opt);
       if( pv.db instanceof Error ) throw pv.db;

@@ -1386,6 +1386,7 @@ e=this.table.databaseid||e;var t,n=this.table.tableid,r=w.databases[e];if(this.w
  * @param {Object} [arg.db] - SpreadDbへの引数
  * @param {Object} [arg.db.schema] - schema
  * @param {Object} [arg.db.opt] - opt
+ * @param {string} [arg.FileListSheetName=null] - ファイル一覧を保存するシート名
  */
 function GASutil(arg={}) {
   const pv = { whois: 'GASutil', rv: null};
@@ -1416,12 +1417,15 @@ function GASutil(arg={}) {
     return rv;
   }
 
-  /** listFiles: 指定フォルダ直下のファイル一覧を取得
+  /** listFiles: 指定フォルダ直下のファイル一覧を取得、シートに書き込み
    * @memberof GASutil
    * @param {string} [folderId=null] - フォルダID。nullの場合は現在のスプレッドシートが存在するフォルダ
+   * @param {string} [sheetName=null] - ファイル一覧を保存するシート名
+   *   - null: シートに保存しない
+   *   - 空文字列: シート名はpv.FileListSheetNameを参照
    * @returns {FileProperties[]} ファイル属性情報の配列
    */
-  function listFiles(folderId=null) {
+  function listFiles(folderId=null,sheetName=null) {
     const v = { whois: 'listFiles', rv: [], base: new Date().getTime() };
     // base: 開発用にold.jsonを作成する際、リスト化対象日時を指定(ex. new Date('2025/4/1'))
     dev.start(v.whois, [...arguments]);
@@ -1454,6 +1458,30 @@ function GASutil(arg={}) {
         v.file = v.files.next();
         v.rv.push(getFileProperties(v.file));
       }
+      dev.dump(v.rv);
+
+      // -------------------------------------------------------------
+      dev.step(3);  // シート保存指定が有れば格納
+      // -------------------------------------------------------------
+      if( typeof sheetName === 'string' ){
+        dev.step(3.1);  // 保存先テーブル・シート名の特定
+        if( sheetName === '' ){
+          if( pv.FileListSheetName ){
+            sheetName = pv.FileListSheetName;
+          } else {
+            throw new Error('Invalid FileListSheetName');
+          }
+        }
+
+        dev.step(3.2);  // RDBに格納
+        v.sql = `insert into ${sheetName} select * from ?;`;
+        v.r = pv.db.exec(v.sql,[v.rv]);
+        if( v.r instanceof Error ) throw v.r;
+
+        dev.step(3.3);  // シートにセーブ
+        v.r = pv.db.save(sheetName);
+        if( v.r instanceof Error ) throw v.r;
+      }
 
       dev.end(); // 終了処理
       return v.rv;
@@ -1464,8 +1492,15 @@ function GASutil(arg={}) {
   dev.start(pv.whois);
   try {
 
-    dev.step(1);  // SpreadDbを使用する場合、pv.dbとして生成
-    if( typeof arg.db !== 'undefined' ){
+    dev.step(1.1);  // 引数に既定値設定、pvに保存
+    arg = mergeDeeply(arg,{
+      db: null,
+      FileListSheetName: null,
+    });
+    Object.keys(arg).forEach(x => pv[x]=arg[x]);
+
+    dev.step(1.2);  // SpreadDbを使用する場合、pv.dbとして生成
+    if( arg.db !== null ){
       if( typeof arg.db.opt === 'undefined' ) arg.db.opt = {};
       pv.db = SpreadDb(arg.db.schema,arg.db.opt);
       if( pv.db instanceof Error ) throw pv.db;
@@ -1511,15 +1546,18 @@ const test = () => {
           }
         }
       },
+      //FileListSheetName: 'ファイル一覧',
     };
     const util = GASutil(config);
 
     dev.step(1); // fileId指定
-    const fId = '13J2Yvzc6QPCxnevxyiy70oCEislV-Y3T';  // 電子証憑2024
+    const fId = '1l83rcHCxdDEFDbFlJlbJY7fa5izVT36r';  // 0.12系
+    //const fId = '13J2Yvzc6QPCxnevxyiy70oCEislV-Y3T';  // 電子証憑2024
     v.r = util.listFiles(fId);
     if( v.r instanceof Error ) throw v.r;
     dev.dump(v.r);
 
+    /* 以下はGASutil起動時テスト
     dev.step(2);  // fileId無指定 ⇒ スプレッドシートが存在するフォルダ
     v.r = util.listFiles();
     if( v.r instanceof Error ) throw v.r;
@@ -1529,6 +1567,7 @@ const test = () => {
     v.r = util.listFiles('fuga');
     if( v.r instanceof Error ) throw v.r;
     dev.dump(v.r);
+    */
 
     dev.end();  // 終了処理
   } catch (e) { dev.error(e); return e; }
