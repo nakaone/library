@@ -1318,10 +1318,21 @@ function SpreadDb(schema={table:[]},opt={}) {
     Object.keys(pv.schema.tables).forEach(tableName => {
 
       dev.step(1.1);  // RDBのテーブルを初期化
+      pv.schema.tableDef[tableName].colDef.forEach(col => {
+        col.sql = col.name + ' ' + col.type
+        + (pv.schema.tableDef[tableName].primaryKey.includes(col.name)
+        ? ` not null` : '')
+      })
       pv.sql = `drop table if exists \`${tableName}\`;`
-      + `create table \`${tableName}\`;`;
+      //+ `create table \`${tableName}\`;`;
+      + `create table ${tableName} (${
+        pv.schema.tableDef[tableName].colDef.map(x => x.sql).join(',')
+      }) primary key (${
+        pv.schema.tableDef[tableName].primaryKey.join(',')
+      });`;
       pv.r = execSQL(pv.sql);
       if( pv.r instanceof Error ) throw pv.r;
+      dev.dump(pv.sql,`select * from INFORMATION_SCHEMA.COLUMNS where table_name=\`${tableName}\`;`);
 
       pv.sheet = pv.spread.getSheetByName(tableName);
       if( pv.sheet ){
@@ -1572,8 +1583,8 @@ const testArg = {
           {name:'mime', label:'MIME', type:'string', note:'MIMEタイプ'},
           {name:'desc', label:'説明', type:'string', note:'説明'},
           {name:'url', label:'URL', type:'string', note:'ファイルを開くURL'},
-          {name:'viewers', label:'閲覧者', type:'string[]', note:'閲覧者・コメント投稿者(e-mail)のリスト'},
-          {name:'editors', label:'編集者', type:'string[]', note:'編集者(e-mail)のリスト'},
+          {name:'viewers', label:'閲覧者', type:'string', note:'閲覧者・コメント投稿者(e-mail)のリスト。カンマ区切り'},
+          {name:'editors', label:'編集者', type:'string', note:'編集者(e-mail)のリスト。カンマ区切り'},
           {name:'created', label:'作成日時', type:'string', note:'ファイルの作成(アップロード)日付。拡張ISO8601形式の文字列'},
           {name:'updated', label:'更新日時', type:'string', note:'ファイルの最終更新日付。拡張ISO8601形式の文字列'},
           {name:'before', label:'修正前', type:'string', note:''},

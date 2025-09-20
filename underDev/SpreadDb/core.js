@@ -486,10 +486,21 @@ function SpreadDb(schema={table:[]},opt={}) {
     Object.keys(pv.schema.tables).forEach(tableName => {
 
       dev.step(1.1);  // RDBのテーブルを初期化
+      pv.schema.tableDef[tableName].colDef.forEach(col => {
+        col.sql = col.name + ' ' + col.type
+        + (pv.schema.tableDef[tableName].primaryKey.includes(col.name)
+        ? ` not null` : '')
+      })
       pv.sql = `drop table if exists \`${tableName}\`;`
-      + `create table \`${tableName}\`;`;
+      //+ `create table \`${tableName}\`;`;
+      + `create table ${tableName} (${
+        pv.schema.tableDef[tableName].colDef.map(x => x.sql).join(',')
+      }) primary key (${
+        pv.schema.tableDef[tableName].primaryKey.join(',')
+      });`;
       pv.r = execSQL(pv.sql);
       if( pv.r instanceof Error ) throw pv.r;
+      dev.dump(pv.sql,`select * from INFORMATION_SCHEMA.COLUMNS where table_name=\`${tableName}\`;`);
 
       pv.sheet = pv.spread.getSheetByName(tableName);
       if( pv.sheet ){
