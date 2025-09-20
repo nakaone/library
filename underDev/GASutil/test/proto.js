@@ -3,43 +3,46 @@
 //::$lib/toLocale/1.2.0/core.js::
 //::$lib/whichType/1.0.1/core.js::
 //::$lib/Schema/1.1.0/core.js::
-//::$lib/SpreadDb/2.1.0/core.js::
+//:xxx:$lib/SpreadDb/2.1.0/core.js::
+//::$dev/SpreadDb/core.js::
 //::$lib/AlaSQLonGAS/1.7.2/alasql.min.js::
 //::$prj/core.js::
 
 const dev = devTools();
+const testArg = {
+  db: {
+    schema: {
+      dbName: 'GASutil',
+      tableDef: {
+        primaryKey:'id',
+        colDef:[
+          {name:'id', label:'ファイルID', type:'string', note:'ファイルID'},
+          {name:'name', label:'ファイル名', type:'string', note:'ファイル名'},
+          {name:'mime', label:'MIME', type:'string', note:'MIMEタイプ'},
+          {name:'desc', label:'説明', type:'string', note:'説明'},
+          {name:'url', label:'URL', type:'string', note:'ファイルを開くURL'},
+          {name:'viewers', label:'閲覧者', type:'string[]', note:'閲覧者・コメント投稿者(e-mail)のリスト'},
+          {name:'editors', label:'編集者', type:'string[]', note:'編集者(e-mail)のリスト'},
+          {name:'created', label:'作成日時', type:'string', note:'ファイルの作成(アップロード)日付。拡張ISO8601形式の文字列'},
+          {name:'updated', label:'更新日時', type:'string', note:'ファイルの最終更新日付。拡張ISO8601形式の文字列'},
+          {name:'before', label:'修正前', type:'string', note:''},
+          {name:'after', label:'修正後', type:'string', note:''},
+          {name:'result', label:'結果', type:'string', note:''},
+          {name:'note', label:'備考', type:'string', note:''},
+        ]
+      },
+      tables: {'ファイル一覧':{data:[]}},
+      custom: {},
+    },
+  },
+  opt: {},  // 現状無し
+};
+const util = GASutil(testArg);
+
 const test = () => {
   const v = {whois:'test'};
   dev.start(v.whois);
   try {
-
-    const config = {
-      db: {
-        schema: {
-          dbName: 'GASutil',
-          tableDef: {
-            'ファイル一覧': {
-              colDef: [
-                {name:'id',label:'ファイルID',type:'string',note:''},
-                {name:'name',label:'ファイル名',type:'string',note:''},
-                {name:'mime',label:'MIME',type:'string',note:''},
-                {name:'desc',label:'説明',type:'string',note:''},
-                {name:'url',label:'URL',type:'string',note:''},
-                {name:'viewers',label:'閲覧者',type:'string',note:''},
-                {name:'editors',label:'編集者',type:'string',note:''},
-                {name:'created',label:'作成日時',type:'string',note:''},
-                {name:'updated',label:'更新日時',type:'string',note:''},
-              ]
-            }
-          },
-          tables: {
-            'ファイル一覧': {},
-          }
-        }
-      },
-      //FileListSheetName: 'ファイル一覧',
-    };
-    const util = GASutil(config);
 
     dev.step(1); // fileId指定
     const fId = '1l83rcHCxdDEFDbFlJlbJY7fa5izVT36r';  // 0.12系

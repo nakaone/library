@@ -38,9 +38,9 @@
 /** GASutil: GAS 関連のユーティリティ集
  * @namespace GASutil
  * @param {Object} arg={}
- * @param {Object} [arg.db] - SpreadDbへの引数
- * @param {Object} [arg.db.schema] - schema
- * @param {Object} [arg.db.opt] - opt
+ * @param {Object} [arg.db] - SpreadDbへの起動時引数
+ * @param {schemaDef} [arg.db.schema] - schema
+ * @param {Object} [arg.db.opt] - opt。現状無し
  * @param {string} [arg.FileListSheetName=null] - ファイル一覧を保存するシート名
  */
 function GASutil(arg={}) {

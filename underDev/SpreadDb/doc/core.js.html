@@ -1,4 +1,32 @@
-/* 【開発ロードマップ】
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: core.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: core.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/* 【開発ロードマップ】
   underDev/SpreadDb/core.js ◀いまここ
     create tableでpKey設定機能を追加
     update(append)で更新＋追加機能をテスト
@@ -28,13 +56,13 @@
  * @typedef {Object} schemaDef
  * @property {string} [dbName] - データベース名(IndexedDB上ではストア名)
  * @property {string} [note] - 備考
- * @property {Object.<string, tableDef>} tableDef - テーブル構造定義名をメンバ名とするテーブル構造定義
- * @property {Object.<string, Object>} tables - 実テーブル名をメンバ名とする実テーブルの定義
+ * @property {Object.&lt;string, tableDef>} tableDef - テーブル構造定義名をメンバ名とするテーブル構造定義
+ * @property {Object.&lt;string, Object>} tables - 実テーブル名をメンバ名とする実テーブルの定義
  * @property {string} [tables.def] - 使用するテーブル定義名。実テーブル名と定義名が一致する場合は省略可。
  * @property {string|Object[]} [tables.data] - テーブルに格納される初期データ
  *   - string: CSV/TSV形式。先頭行は項目名(labelの配列=header)。
  *   - Object[]: 行オブジェクトの配列
- * @property {Object.<string, string>} [custom] - AlaSQLのカスタム関数。{関数名: toString()で文字列化した関数}
+ * @property {Object.&lt;string, string>} [custom] - AlaSQLのカスタム関数。{関数名: toString()で文字列化した関数}
  */
 
 /** schemaDefEx: Schemaの戻り値となる拡張済DB構造定義オブジェクト
@@ -55,7 +83,7 @@
  * @property {columnDef[]} colDef - 項目定義(順序を考慮するためオブジェクトでは無く配列で定義)
  * @property {number} [top=1] - シート・CSVイメージ上のヘッダ行番号
  * @property {number} [left=1] - シート・CSVイメージ上の開始列番号
- * @property {number} [startingRowNumber=2] - シート上の行番号"RowNumber"を追加する場合の開始行番号。<0なら追加しない。
+ * @property {number} [startingRowNumber=2] - シート上の行番号"RowNumber"を追加する場合の開始行番号。&lt;0なら追加しない。
  */
 
 /** tableDefEx: Schemaの戻り値となる拡張済テーブル構造定義オブジェクト
@@ -63,7 +91,7 @@
  * @typedef {Object} tableDefEx
  * @property {string} name - 実テーブル名
  * @property {string[]} header - columnDef.labelの配列
- * @property {Object.<string, columnObj>} cols - {columnDef.name: columnObj}
+ * @property {Object.&lt;string, columnObj>} cols - {columnDef.name: columnObj}
  */
 
 // =====================================================================
@@ -106,7 +134,7 @@ function SpreadDb(schema={table:[]},opt={}) {
    * @param {string|number|boolean[][]} arg=[] - シートイメージの二次元配列。先頭行はヘッダ
    * @param {Object} opt - オプション
    * @param {number|null} opt.RowNumber=null - 行番号(RowNumber)追加ならヘッダ行の行番号、追加無しならnull
-   * @param {Object.<string,columnDefEx>|null} opt.cols=null - シートイメージの項目定義集
+   * @param {Object.&lt;string,columnDefEx>|null} opt.cols=null - シートイメージの項目定義集
    * @returns {Object[]} 行オブジェクトの配列
    */
   function array2obj(arg=[],opt={}) {
@@ -117,12 +145,12 @@ function SpreadDb(schema={table:[]},opt={}) {
       dev.step(1);  // オプションの既定値設定
       opt = Object.assign({RowNumber:null,cols:null},opt);
 
-      for (v.r = 1; v.r < arg.length; v.r++) {  // ヘッダ行(0行目)は飛ばす
+      for (v.r = 1; v.r &lt; arg.length; v.r++) {  // ヘッダ行(0行目)は飛ばす
 
         dev.step(2);  // 行オブジェクトの原型作成
         v.o = opt.RowNumber === null ? {} : {RowNumber:opt.RowNumber++};
 
-        for( v.c=0 ; v.c<arg[0].length ; v.c++ ){
+        for( v.c=0 ; v.c&lt;arg[0].length ; v.c++ ){
 
           dev.step(3);  // 項目名空欄は除外
           if( !arg[0][v.c] ) continue;
@@ -208,7 +236,7 @@ function SpreadDb(schema={table:[]},opt={}) {
       //v.content.data = {};
 
       dev.step(1.2);  // 各テーブルのデータをセット
-      for( v.i=0 ; v.i<arg.table.length ; v.i++ ){
+      for( v.i=0 ; v.i&lt;arg.table.length ; v.i++ ){
         v.r = execSQL(`select * from \`${arg.table[v.i]}\` order by RowNumber;`);
         if( v.r instanceof Error ) throw v.r;
         v.content.tables[arg.table[v.i]].data = v.r;
@@ -219,11 +247,11 @@ function SpreadDb(schema={table:[]},opt={}) {
 
       dev.step(2);  // HTMLをコード内で定義
       const html = HtmlService.createHtmlOutput(`
-        <html>
-          <head><base target="_top"></head>
-          <body>
-            <p>JSONファイルのダウンロードを開始しています...</p>
-            <script>
+        &lt;html>
+          &lt;head>&lt;base target="_top">&lt;/head>
+          &lt;body>
+            &lt;p>JSONファイルのダウンロードを開始しています...&lt;/p>
+            &lt;script>
               const data = ${v.json};
 
               // JSONとしてファイルを生成して自動ダウンロード
@@ -241,9 +269,9 @@ function SpreadDb(schema={table:[]},opt={}) {
               setTimeout(() => {
                 google.script.host.close();
               }, 1000);
-            </script>
-          </body>
-        </html>
+            &lt;/script>
+          &lt;/body>
+        &lt;/html>
       `).setWidth(300).setHeight(100);
 
       dev.step(3);  // ダイアログの表示
@@ -292,7 +320,7 @@ function SpreadDb(schema={table:[]},opt={}) {
       },opt);
 
       dev.step(1.2);  // テーブル構造定義が指定されていたらtableDefにセット
-      v.table = opt.table && pv.schema.tables.hasOwnProperty(opt.table)
+      v.table = opt.table &amp;&amp; pv.schema.tables.hasOwnProperty(opt.table)
       ? pv.schema.tables[opt.table] : null;
 
       // -------------------------------------------------------------
@@ -312,7 +340,7 @@ function SpreadDb(schema={table:[]},opt={}) {
       dev.step(3.2);  // テーブル構造定義が有る場合ヘッダ行を書き換え。該当項目無しの場合、項目名は空文字列
       if( v.table !== null ){
         v.rv = {header:v.table.header,data:[]};
-        for( v.c=0 ; v.c<v.csv[0].length ; v.c++ ){
+        for( v.c=0 ; v.c&lt;v.csv[0].length ; v.c++ ){
           v.csv[0][v.c] = v.table.cols.hasOwnProperty(v.csv[0][v.c])
           ? v.table.cols[v.csv[0][v.c]].name : '';
         }
@@ -392,7 +420,7 @@ function SpreadDb(schema={table:[]},opt={}) {
       if( v.tables.length === 0 ) throw new Error('テーブル指定が不適切です');
 
       dev.step(2);  // 対象テーブルを順次ロード
-      for( v.i=0 ; v.i<v.tables.length ; v.i++ ){
+      for( v.i=0 ; v.i&lt;v.tables.length ; v.i++ ){
 
         dev.step(2.1);  // シートを取得。メイン処理で作成済なので不存在は考慮不要
         v.table = pv.schema.tables[v.tables[v.i]];
@@ -433,7 +461,7 @@ function SpreadDb(schema={table:[]},opt={}) {
       if( v.list.length === 0 ) throw new Error('テーブル指定が不適切です');
 
       dev.step(2);  // 対象テーブルを順次格納
-      for( v.i=0 ; v.i<v.list.length ; v.i++ ){
+      for( v.i=0 ; v.i&lt;v.list.length ; v.i++ ){
 
         dev.step(2.1);  // 項目定義をv.colsに格納
         v.table = pv.schema.tables[v.list[v.i]];
@@ -459,7 +487,7 @@ function SpreadDb(schema={table:[]},opt={}) {
         dev.step(2.5);  // 行オブジェクト -> 二次元配列への変換
         v.arr = [];
         v.r.forEach(o => {
-          for( v.j=0,v.l=[] ; v.j<v.colnum ; v.j++ ){
+          for( v.j=0,v.l=[] ; v.j&lt;v.colnum ; v.j++ ){
             v.l[v.j] = o[v.table.cols[v.j].name] || '';
           }
           v.arr.push(v.l);
@@ -503,7 +531,7 @@ function SpreadDb(schema={table:[]},opt={}) {
         pv.range = pv.sheet.getRange(1, 1, 1, pv.table.header.length);
         pv.range.setValues([pv.table.header]);
         pv.noteArray = [];
-        for( pv.i=0 ; pv.i<pv.table.header.length ; pv.i++ ){
+        for( pv.i=0 ; pv.i&lt;pv.table.header.length ; pv.i++ ){
           pv.noteArray.push(pv.table.cols[pv.i].note);
         }
         pv.range.setNotes([pv.noteArray]);
@@ -539,4 +567,26 @@ function SpreadDb(schema={table:[]},opt={}) {
     };
 
   } catch (e) { dev.error(e); return e; }
-}
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#SpreadDb">SpreadDb</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Sep 20 2025 16:10:07 GMT+0900 (日本標準時)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
