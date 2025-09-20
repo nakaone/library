@@ -14,22 +14,24 @@ const testArg = {
     schema: {
       dbName: 'GASutil',
       tableDef: {
-        primaryKey:'id',
-        colDef:[
-          {name:'id', label:'ファイルID', type:'string', note:'ファイルID'},
-          {name:'name', label:'ファイル名', type:'string', note:'ファイル名'},
-          {name:'mime', label:'MIME', type:'string', note:'MIMEタイプ'},
-          {name:'desc', label:'説明', type:'string', note:'説明'},
-          {name:'url', label:'URL', type:'string', note:'ファイルを開くURL'},
-          {name:'viewers', label:'閲覧者', type:'string', note:'閲覧者・コメント投稿者(e-mail)のリスト。カンマ区切り'},
-          {name:'editors', label:'編集者', type:'string', note:'編集者(e-mail)のリスト。カンマ区切り'},
-          {name:'created', label:'作成日時', type:'string', note:'ファイルの作成(アップロード)日付。拡張ISO8601形式の文字列'},
-          {name:'updated', label:'更新日時', type:'string', note:'ファイルの最終更新日付。拡張ISO8601形式の文字列'},
-          {name:'before', label:'修正前', type:'string', note:''},
-          {name:'after', label:'修正後', type:'string', note:''},
-          {name:'result', label:'結果', type:'string', note:''},
-          {name:'note', label:'備考', type:'string', note:''},
-        ]
+        'ファイル一覧': {
+          primaryKey:'id',
+          colDef:[
+            {name:'id', label:'ファイルID', type:'string', note:'ファイルID'},
+            {name:'name', label:'ファイル名', type:'string', note:'ファイル名'},
+            {name:'mime', label:'MIME', type:'string', note:'MIMEタイプ'},
+            {name:'desc', label:'説明', type:'string', note:'説明'},
+            {name:'url', label:'URL', type:'string', note:'ファイルを開くURL'},
+            {name:'viewers', label:'閲覧者', type:'string', note:'閲覧者・コメント投稿者(e-mail)のリスト。カンマ区切り'},
+            {name:'editors', label:'編集者', type:'string', note:'編集者(e-mail)のリスト。カンマ区切り'},
+            {name:'created', label:'作成日時', type:'string', note:'ファイルの作成(アップロード)日付。拡張ISO8601形式の文字列'},
+            {name:'updated', label:'更新日時', type:'string', note:'ファイルの最終更新日付。拡張ISO8601形式の文字列'},
+            {name:'before', label:'修正前', type:'string', note:''},
+            {name:'after', label:'修正後', type:'string', note:''},
+            {name:'result', label:'結果', type:'string', note:''},
+            {name:'note', label:'備考', type:'string', note:''},
+          ]
+        },
       },
       tables: {'ファイル一覧':{data:[]}},
       custom: {},
