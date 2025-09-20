@@ -1585,8 +1585,9 @@ const testArg = {
       tables: {'ファイル一覧':{data:[]}},
       custom: {},
     },
+    opt: {},  // 現状無し
   },
-  opt: {},  // 現状無し
+  FileListSheetName: 'ファイル一覧',
 };
 const util = GASutil(testArg);
 
