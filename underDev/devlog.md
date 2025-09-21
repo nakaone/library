@@ -29,6 +29,9 @@
 
 # 20250921
 
+## [bug] SpreadDb.1.2: Parse error on line 1
+drop table if exists `ファイル一覧`;create table ファイル一覧 (id string not null,name string,mime string,desc string,url string,viewers string,editors string,created string,updated string,before string,after string,result string,note string) primary key (id)
+
 ## [bug] SpreadDb.1.1: pv.schema.tableDef[tableName].primaryKey.join is not a function
 
 # 20250920

@@ -465,19 +465,22 @@ function SpreadDb(schema={table:[]},opt={}) {
       // create tableの各項目用SQL文を作成
       pv.table.colDef.forEach(col => {
         // 項目名 データ型 主キーなら"not null"
-        col.sql = `${col.name} ${col.type}${
+        col.sql = `\`${col.name}\` ${col.type}${
           pv.table.primaryKey.includes(col.name) ? ' not null' : ''}`;
       })
 
       dev.step(1.2);  // テーブルの再作成
       pv.sql = `drop table if exists \`${pv.table.name}\`;`
-      + `create table ${pv.table.name} (${pv.table.colDef.map(x => x.sql).join(',')})`;
-      if( pv.table.primaryKey.length > 0 ){
-        pv.sql += ` primary key (${pv.table.primaryKey.join(',')})`;
-      }
+      + `create table \`${pv.table.name}\` (${pv.table.colDef.map(x => x.sql).join(',')}${
+        pv.table.primaryKey.length === 0 ? '' 
+        : `, primary key (${pv.table.primaryKey.map(x => '`'+x+'`').join(',')})`
+      });`;
       pv.r = execSQL(pv.sql);
       if( pv.r instanceof Error ) throw pv.r;
-      dev.dump(pv.sql,`select * from INFORMATION_SCHEMA.COLUMNS where table_name=\`${pv.table.name}\`;`);
+
+      dev.step(1.3);  // 作成結果確認
+      const { pk, columns }=pv.rdb.tables['ファイル一覧'];
+      dev.dump({ pk, columns });
 
       dev.step(2);  // シートの作成
       pv.sheet = pv.spread.getSheetByName(pv.table.name);
