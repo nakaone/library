@@ -119,7 +119,8 @@ function devTools(option) {
     let arg = [...arguments];
     let line = typeof arg[arg.length - 1] === 'number' ? arg.pop() : null;
     const o = stack[stack.length - 1];
-    let msg = (line === null ? '' : `l.${line} `) + `${o.label} step.${o.step}`;
+    let msg = (line === null ? '' : `l.${line} `)
+      + `::dump::${o.label}.${o.step}`;
     for (let i = 0; i < arg.length; i++) {
       // 対象変数が複数有る場合、Noを追記
       msg += '\n' + (arg.length > 0 ? `${i}: ` : '') + stringify(arg[i]);
