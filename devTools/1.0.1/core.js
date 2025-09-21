@@ -138,7 +138,7 @@ function devTools(option) {
   function error(e) {
     const o = stack.pop();
     // 参考 : e.lineNumber, e.columnNumber, e.causeを試したが、いずれもundefined
-    e.message = `${o.label} abnormal end at step.${o.step}\n${e.message}`;
+    e.message = `[Error] ${o.label}.${o.step}\n${e.message}`;
     console.error(e.message
       + `\n-- footprint\n${o.footprint}`
       + `\n-- arguments\n${o.arg}`

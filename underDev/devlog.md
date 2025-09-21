@@ -27,6 +27,10 @@
 
 - SpreadDb関係の修正はGASutil/test側で行う(∵テストケースが重複、データ共有)
 
+# 20250921
+
+## [bug] SpreadDb.1.1: pv.schema.tableDef[tableName].primaryKey.join is not a function
+
 # 20250920
 
 ## [bug] SpreadDb.1.1: Cannot read properties of undefined (reading 'colDef')

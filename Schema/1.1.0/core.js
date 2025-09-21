@@ -156,6 +156,11 @@ function Schema(schema) {
           }
         }
 
+        dev.step(2.4);  // primaryKeyが文字列なら配列化
+        if( typeof v.table.primaryKey === 'string' ){
+          v.table.primaryKey = [v.table.primaryKey];
+        }
+
         // -------------------------------------------------------------
         dev.step(3); // column毎の処理
         // -------------------------------------------------------------

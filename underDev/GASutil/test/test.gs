@@ -138,7 +138,7 @@ function devTools(option) {
   function error(e) {
     const o = stack.pop();
     // 参考 : e.lineNumber, e.columnNumber, e.causeを試したが、いずれもundefined
-    e.message = `${o.label} abnormal end at step.${o.step}\n${e.message}`;
+    e.message = `[Error] ${o.label}.${o.step}\n${e.message}`;
     console.error(e.message
       + `\n-- footprint\n${o.footprint}`
       + `\n-- arguments\n${o.arg}`
@@ -683,6 +683,11 @@ function Schema(schema) {
           }
         }
 
+        dev.step(2.4);  // primaryKeyが文字列なら配列化
+        if( typeof v.table.primaryKey === 'string' ){
+          v.table.primaryKey = [v.table.primaryKey];
+        }
+
         // -------------------------------------------------------------
         dev.step(3); // column毎の処理
         // -------------------------------------------------------------
@@ -830,30 +835,6 @@ function Schema(schema) {
   } catch (e) { dev.error(e); return e; }
 }
 //:xxx:$lib/SpreadDb/2.1.0/core.js::
-/* 【開発ロードマップ】
-  underDev/SpreadDb/core.js ◀いまここ
-    create tableでpKey設定機能を追加
-    update(append)で更新＋追加機能をテスト
-  underDev/GASutil/test/proto.js
-    SpreadDbの元ソースをlibからunderDevに変更
-    configでファイル一覧に以下項目を追加
-      - 修正前：現状(マイドライブ〜所属フォルダ＋現ファイル名)
-          移動処理後は修正後(移動先フルパス)
-      - 修正後：移動先指定(移動先フルパス＋新ファイル名)
-          移動処理後は空欄
-      - 結果：処理前は空欄、処理後は修正前
-      - 備考
-  underDev/GASutil/getFilePropertiesメソッド
-    フルパス情報取得機能追加
-  underDev/GASutil/listFilesメソッド
-    シート更新機能を削除
-    テーブル更新はlistFilesで行う
-  underDev/GASutil/updateFileListメソッド(新規)
-    シート更新機能をlistFilesからここに移動
-  underDev/GASutil/moveFileメソッド(新規)
-    ファイル情報テーブルを元にファイル名変更＋フォルダ移動
-    ファイル情報テーブルを更新(修正前・修正後・結果)
-*/
 // 以下、typedefはSchema 1.1.0より引用。
 
 /** schemaDef: DB構造定義オブジェクト (引数用)
@@ -1315,34 +1296,37 @@ function SpreadDb(schema={table:[]},opt={}) {
   try {
 
     dev.step(1);  // schema.tablesを基にテーブル・シートを初期化
-    Object.keys(pv.schema.tables).forEach(tableName => {
+    for( pv.table in Object.values(pv.schema.tables) ){
+      dev.dump(pv.table);
 
       dev.step(1.1);  // RDBのテーブルを初期化
-      pv.schema.tableDef[tableName].colDef.forEach(col => {
-        col.sql = col.name + ' ' + col.type
-        + (pv.schema.tableDef[tableName].primaryKey.includes(col.name)
-        ? ` not null` : '')
+      // create tableの各項目用SQL文を作成
+      pv.table.colDef.forEach(col => {
+        // 項目名 データ型 主キーなら"not null"
+        col.sql = `${col.name} ${col.type}${
+          pv.table.primaryKey.includes(col.name) ? ' not null' : ''}`;
       })
-      pv.sql = `drop table if exists \`${tableName}\`;`
-      //+ `create table \`${tableName}\`;`;
-      + `create table ${tableName} (${
-        pv.schema.tableDef[tableName].colDef.map(x => x.sql).join(',')
-      }) primary key (${
-        pv.schema.tableDef[tableName].primaryKey.join(',')
-      });`;
+
+      dev.step(1.2);  // テーブルの再作成
+      pv.sql = `drop table if exists \`${pv.table.name}\`;`
+      + `create table ${pv.table.name} (${pv.table.colDef.map(x => x.sql).join(',')})`;
+      if( pv.table.primaryKey.length > 0 ){
+        pv.sql += ` primary key (${pv.table.primaryKey.join(',')})`;
+      }
       pv.r = execSQL(pv.sql);
       if( pv.r instanceof Error ) throw pv.r;
-      dev.dump(pv.sql,`select * from INFORMATION_SCHEMA.COLUMNS where table_name=\`${tableName}\`;`);
+      dev.dump(pv.sql,`select * from INFORMATION_SCHEMA.COLUMNS where table_name=\`${pv.table.name}\`;`);
 
-      pv.sheet = pv.spread.getSheetByName(tableName);
+      dev.step(2);  // シートの作成
+      pv.sheet = pv.spread.getSheetByName(pv.table.name);
       if( pv.sheet ){
-        dev.step(1.2);  // シート作成済の場合、シートからRDBにロード
-        pv.r = loadSheet(tableName);
+        dev.step(2.1);  // シート作成済の場合、シートからRDBにロード
+        pv.r = loadSheet(pv.table.name);
         if( pv.r instanceof Error ) throw pv.r;
       } else {
-        dev.step(1.3);  // シート未作成の場合、シートを作成してヘッダ行を登録
-        pv.table = pv.schema.tables[tableName];
-        pv.sheet = pv.spread.insertSheet(tableName);
+        dev.step(2.2);  // シート未作成の場合、シートを作成してヘッダ行を登録
+        pv.table = pv.schema.tables[pv.table.name];
+        pv.sheet = pv.spread.insertSheet(pv.table.name);
         pv.range = pv.sheet.getRange(1, 1, 1, pv.table.header.length);
         pv.range.setValues([pv.table.header]);
         pv.noteArray = [];
@@ -1353,18 +1337,18 @@ function SpreadDb(schema={table:[]},opt={}) {
         pv.sheet.autoResizeColumns(1, pv.table.header.length);  // 各列の幅を項目名の幅に調整
         pv.sheet.setFrozenRows(1); // 先頭1行を固定
 
-        dev.step(1.4);  // 初期データが存在する場合、RDBに追加してシートに反映
         if( pv.table.data.length > 0 ){
-          pv.sql = `insert into \`${tableName}\` select * from ?;`;
+          dev.step(2.3);  // 初期データが存在する場合、RDBに追加してシートに反映
+          pv.sql = `insert into \`${pv.table.name}\` select * from ?;`;
           pv.r = execSQL(pv.sql,[pv.table.data]);
           if( pv.r instanceof Error ) throw pv.r;
-          pv.r = saveRDB(tableName);
+          pv.r = saveRDB(pv.table.name);
           if( pv.r instanceof Error ) throw pv.r;
         }
       }
-    });
+    }
 
-    dev.step(2);  // AlaSQLカスタム関数の用意
+    dev.step(3);  // AlaSQLカスタム関数の用意
     if( pv.schema.hasOwnProperty('custom') ){
       Object.keys(pv.schema.custom).forEach(x => alasql.fn[x] = pv.schema.custom[x]);
     }
