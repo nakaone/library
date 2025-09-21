@@ -2,10 +2,10 @@
 
 - underDev/SpreadDb/core.js
   - create tableでpKey設定機能を追加
-  - AlaSQLの予約語とSpreadDb.schemaの重複排除 ◀いまここ
+  - AlaSQLの予約語とSpreadDb.schemaの重複排除
     - SpreadDb.schema.tables -> tableMap
     - SpreadDb.schema.tables.cols -> colMap(予約語columnsと紛らわし)
-  - update(append)で更新＋追加機能をテスト
+  - update(append)で更新＋追加機能をテスト ◀いまここ
 - underDev/GASutil/test/proto.js
   - SpreadDbの元ソースをlibからunderDevに変更
   - configでファイル一覧に以下項目を追加
@@ -25,6 +25,14 @@
 - underDev/GASutil/moveFileメソッド(新規)
   - ファイル情報テーブルを元にファイル名変更＋フォルダ移動
   - ファイル情報テーブルを更新(修正前・修正後・結果)
+- underDev配下をlibraryに正式登録
+  - GASutil
+  - Schema
+  - SpreadDb
+  - underDev/GASutil/test/proto.js内のライブラリ引用元を修正、テスト
+- Schema,SpreadDb修正分のkz12iへの影響確認
+- kz12pの修正
+- kz12sの作成
 
 ## 注意事項
 
