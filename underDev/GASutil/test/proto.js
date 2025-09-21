@@ -2,7 +2,8 @@
 //::$lib/mergeDeeply/1.2.0/core.js::
 //::$lib/toLocale/1.2.0/core.js::
 //::$lib/whichType/1.0.1/core.js::
-//::$lib/Schema/1.1.0/core.js::
+//:xxx:$lib/Schema/1.1.0/core.js::
+//::$dev/Schema/core.js::
 //:xxx:$lib/SpreadDb/2.1.0/core.js::
 //::$dev/SpreadDb/core.js::
 //::$lib/AlaSQLonGAS/1.7.2/alasql.min.js::

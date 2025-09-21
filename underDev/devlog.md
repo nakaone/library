@@ -1,7 +1,10 @@
 # ロードマップ
 
-- underDev/SpreadDb/core.js ◀いまここ
+- underDev/SpreadDb/core.js
   - create tableでpKey設定機能を追加
+  - AlaSQLの予約語とSpreadDb.schemaの重複排除 ◀いまここ
+    - SpreadDb.schema.tables -> tableMap
+    - SpreadDb.schema.tables.cols -> colMap(予約語columnsと紛らわし)
   - update(append)で更新＋追加機能をテスト
 - underDev/GASutil/test/proto.js
   - SpreadDbの元ソースをlibからunderDevに変更

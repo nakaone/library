@@ -1,19 +1,17 @@
-/**
- * DB構造定義オブジェクト (引数用)
+/** schemaDef: DB構造定義オブジェクト (引数用)
  * @typedef {Object} schemaDef
  * @property {string} [dbName] - データベース名(IndexedDB上ではストア名)
  * @property {string} [note] - 備考
  * @property {Object.<string, tableDef>} tableDef - テーブル構造定義名をメンバ名とするテーブル構造定義
- * @property {Object} tables - 実テーブル名をメンバ名とする実テーブルの定義
- * @property {string} [tables.def] - 使用するテーブル定義名。実テーブル名と定義名が一致する場合は省略可。
- * @property {string|Object[]} [tables.data] - テーブルに格納される初期データ
+ * @property {Object.<string, Object>} tableMap - 実テーブル名をメンバ名とする実テーブルの定義
+ * @property {string} [tableMap.def] - 使用するテーブル定義名。実テーブル名と定義名が一致する場合は省略可。
+ * @property {string|Object[]} [tableMap.data] - テーブルに格納される初期データ
  *   - string: CSV/TSV形式。先頭行は項目名(labelの配列=header)。
  *   - Object[]: 行オブジェクトの配列
  * @property {Object.<string, string>} [custom] - AlaSQLのカスタム関数。{関数名: toString()で文字列化した関数}
  */
 
-/**
- * Schemaの戻り値となる拡張済DB構造定義オブジェクト
+/** schemaDefEx: Schemaの戻り値となる拡張済DB構造定義オブジェクト
  * 引数用のschemaDefに以下を追加・変更したもの
  * @typedef {Object} schemaDefEx
  * @property {string} original - インスタンス化前の引数(schemaDef)をJSON文字列化したもの  
@@ -24,8 +22,7 @@
 
 // =====================================================================
 
-/**
- * テーブル構造定義オブジェクト (引数用)
+/** tableDef: テーブル構造定義オブジェクト (引数用)
  * @typedef {Object} tableDef
  * @property {string} [note] - テーブルに関する備考
  * @property {string|string[]} [primaryKey] - 主キーとなる項目名。複合キーの場合は配列で指定
@@ -35,19 +32,17 @@
  * @property {number} [startingRowNumber=2] - シート上の行番号"RowNumber"を追加する場合の開始行番号。<0なら追加しない。
  */
 
-/**
- * Schemaの戻り値となる拡張済テーブル構造定義オブジェクト
+/** tableDefEx: Schemaの戻り値となる拡張済テーブル構造定義オブジェクト
  * 引数用のtableDefに以下の項目を追加・変更したもの
  * @typedef {Object} tableDefEx
  * @property {string} name - 実テーブル名
  * @property {string[]} header - columnDef.labelの配列
- * @property {Object.<string, columnObj>} cols - {columnDef.name: columnObj}
+ * @property {Object.<string, columnObj>} colDef - {columnDef.name: columnObj}
  */
 
 // =====================================================================
 
-/**
- * 項目定義オブジェクト (引数用)
+/** columnDef: 項目定義オブジェクト (引数用)
  * @typedef {Object} columnDef
  * @property {string} name - 項目名。原則英数字で構成(システム用)
  * @property {string} [note] - 備考
@@ -58,8 +53,7 @@
  * @property {string} [printf=null] - 表示整形用関数。引数を行オブジェクトとするtoString()化された文字列
  */
 
-/**
- * Schemaの戻り値となる拡張済項目定義オブジェクト
+/** columnDefEx: Schemaの戻り値となる拡張済項目定義オブジェクト
  * 引数用のcolumnDefに以下の項目を追加・変更したもの
  * @typedef {Object} columnDefEx
  * @property {number} seq - 左端を0とする列番号
@@ -75,10 +69,10 @@
 function Schema(schema) {
   const pv = { whois: 'Schema', schema: {},
     schemaDef:  // schemaDefEx形式の既定値。但しoriginal,created,expandはメソッド内で追加
-      '{"dbName":"","note":"","tableDef":{},"tables":{},"custom":{}}',
+      '{"dbName":"","note":"","tableDef":{},"tableMap":{},"custom":{}}',
     tableDef: // tableDefEx形式の既定値
       '{"def":"","data":[],"note":"","primaryKey":[],"colDef":[],'
-      + '"top":1,"left":1,"startingRowNumber":2,"name":"","header":[],"cols":{}}',
+      + '"top":1,"left":1,"startingRowNumber":2,"name":"","header":[],"colMap":{}}',
     columnDef:  // columnDefEx形式の既定値
       '{"name":"","seq":0,"note":"","label":"","type":"string","alias":[],"default":null,"printf":null}',
   };
@@ -119,7 +113,7 @@ function Schema(schema) {
       // -------------------------------------------------------------
       dev.step(2); // table毎の処理
       // -------------------------------------------------------------
-      for( [v.name,v.table] of Object.entries(v.schema.tables) ){
+      for( [v.name,v.table] of Object.entries(v.schema.tableMap) ){
 
         dev.step(2.1);  // テーブル構造定義名・テーブル名が省略されていた場合は設定
         if( !v.table.def ) v.table.def = v.name;
@@ -175,7 +169,7 @@ function Schema(schema) {
               v.colObj[x] = new Function('return '+v.colObj[x])();
           });
 
-          dev.step(3.3);  // seq,labelの設定、tables.headerへの登録
+          dev.step(3.3);  // seq,labelの設定、tableMap.headerへの登録
           v.colObj.seq = v.c;
           if( !v.colObj.label ) v.colObj.label = v.colObj.name;
           v.table.header.push(v.colObj.label);
@@ -188,12 +182,12 @@ function Schema(schema) {
             ...v.colObj.alias,
             v.c
           ]));
-          v.keys.forEach(x => v.table.cols[x] = v.colObj);
+          v.keys.forEach(x => v.table.colMap[x] = v.colObj);
 
         }
 
         dev.step(2.4);  // table毎の処理：作成したtableをschemaに登録して終了
-        v.schema.tables[v.name] = v.table;
+        v.schema.tableMap[v.name] = v.table;
       }
       
       dev.end(); // 終了処理

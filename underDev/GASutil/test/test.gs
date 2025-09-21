@@ -525,22 +525,21 @@ function whichType(arg,is){
     return rv;
   }
 }
-/**
- * DB構造定義オブジェクト (引数用)
+//:xxx:$lib/Schema/1.1.0/core.js::
+/** schemaDef: DB構造定義オブジェクト (引数用)
  * @typedef {Object} schemaDef
  * @property {string} [dbName] - データベース名(IndexedDB上ではストア名)
  * @property {string} [note] - 備考
  * @property {Object.<string, tableDef>} tableDef - テーブル構造定義名をメンバ名とするテーブル構造定義
- * @property {Object} tables - 実テーブル名をメンバ名とする実テーブルの定義
- * @property {string} [tables.def] - 使用するテーブル定義名。実テーブル名と定義名が一致する場合は省略可。
- * @property {string|Object[]} [tables.data] - テーブルに格納される初期データ
+ * @property {Object.<string, Object>} tableMap - 実テーブル名をメンバ名とする実テーブルの定義
+ * @property {string} [tableMap.def] - 使用するテーブル定義名。実テーブル名と定義名が一致する場合は省略可。
+ * @property {string|Object[]} [tableMap.data] - テーブルに格納される初期データ
  *   - string: CSV/TSV形式。先頭行は項目名(labelの配列=header)。
  *   - Object[]: 行オブジェクトの配列
  * @property {Object.<string, string>} [custom] - AlaSQLのカスタム関数。{関数名: toString()で文字列化した関数}
  */
 
-/**
- * Schemaの戻り値となる拡張済DB構造定義オブジェクト
+/** schemaDefEx: Schemaの戻り値となる拡張済DB構造定義オブジェクト
  * 引数用のschemaDefに以下を追加・変更したもの
  * @typedef {Object} schemaDefEx
  * @property {string} original - インスタンス化前の引数(schemaDef)をJSON文字列化したもの
@@ -551,8 +550,7 @@ function whichType(arg,is){
 
 // =====================================================================
 
-/**
- * テーブル構造定義オブジェクト (引数用)
+/** tableDef: テーブル構造定義オブジェクト (引数用)
  * @typedef {Object} tableDef
  * @property {string} [note] - テーブルに関する備考
  * @property {string|string[]} [primaryKey] - 主キーとなる項目名。複合キーの場合は配列で指定
@@ -562,19 +560,17 @@ function whichType(arg,is){
  * @property {number} [startingRowNumber=2] - シート上の行番号"RowNumber"を追加する場合の開始行番号。<0なら追加しない。
  */
 
-/**
- * Schemaの戻り値となる拡張済テーブル構造定義オブジェクト
+/** tableDefEx: Schemaの戻り値となる拡張済テーブル構造定義オブジェクト
  * 引数用のtableDefに以下の項目を追加・変更したもの
  * @typedef {Object} tableDefEx
  * @property {string} name - 実テーブル名
  * @property {string[]} header - columnDef.labelの配列
- * @property {Object.<string, columnObj>} cols - {columnDef.name: columnObj}
+ * @property {Object.<string, columnObj>} colDef - {columnDef.name: columnObj}
  */
 
 // =====================================================================
 
-/**
- * 項目定義オブジェクト (引数用)
+/** columnDef: 項目定義オブジェクト (引数用)
  * @typedef {Object} columnDef
  * @property {string} name - 項目名。原則英数字で構成(システム用)
  * @property {string} [note] - 備考
@@ -585,8 +581,7 @@ function whichType(arg,is){
  * @property {string} [printf=null] - 表示整形用関数。引数を行オブジェクトとするtoString()化された文字列
  */
 
-/**
- * Schemaの戻り値となる拡張済項目定義オブジェクト
+/** columnDefEx: Schemaの戻り値となる拡張済項目定義オブジェクト
  * 引数用のcolumnDefに以下の項目を追加・変更したもの
  * @typedef {Object} columnDefEx
  * @property {number} seq - 左端を0とする列番号
@@ -602,10 +597,10 @@ function whichType(arg,is){
 function Schema(schema) {
   const pv = { whois: 'Schema', schema: {},
     schemaDef:  // schemaDefEx形式の既定値。但しoriginal,created,expandはメソッド内で追加
-      '{"dbName":"","note":"","tableDef":{},"tables":{},"custom":{}}',
+      '{"dbName":"","note":"","tableDef":{},"tableMap":{},"custom":{}}',
     tableDef: // tableDefEx形式の既定値
       '{"def":"","data":[],"note":"","primaryKey":[],"colDef":[],'
-      + '"top":1,"left":1,"startingRowNumber":2,"name":"","header":[],"cols":{}}',
+      + '"top":1,"left":1,"startingRowNumber":2,"name":"","header":[],"colMap":{}}',
     columnDef:  // columnDefEx形式の既定値
       '{"name":"","seq":0,"note":"","label":"","type":"string","alias":[],"default":null,"printf":null}',
   };
@@ -646,7 +641,7 @@ function Schema(schema) {
       // -------------------------------------------------------------
       dev.step(2); // table毎の処理
       // -------------------------------------------------------------
-      for( [v.name,v.table] of Object.entries(v.schema.tables) ){
+      for( [v.name,v.table] of Object.entries(v.schema.tableMap) ){
 
         dev.step(2.1);  // テーブル構造定義名・テーブル名が省略されていた場合は設定
         if( !v.table.def ) v.table.def = v.name;
@@ -702,7 +697,7 @@ function Schema(schema) {
               v.colObj[x] = new Function('return '+v.colObj[x])();
           });
 
-          dev.step(3.3);  // seq,labelの設定、tables.headerへの登録
+          dev.step(3.3);  // seq,labelの設定、tableMap.headerへの登録
           v.colObj.seq = v.c;
           if( !v.colObj.label ) v.colObj.label = v.colObj.name;
           v.table.header.push(v.colObj.label);
@@ -715,12 +710,12 @@ function Schema(schema) {
             ...v.colObj.alias,
             v.c
           ]));
-          v.keys.forEach(x => v.table.cols[x] = v.colObj);
+          v.keys.forEach(x => v.table.colMap[x] = v.colObj);
 
         }
 
         dev.step(2.4);  // table毎の処理：作成したtableをschemaに登録して終了
-        v.schema.tables[v.name] = v.table;
+        v.schema.tableMap[v.name] = v.table;
       }
 
       dev.end(); // 終了処理
@@ -842,9 +837,9 @@ function Schema(schema) {
  * @property {string} [dbName] - データベース名(IndexedDB上ではストア名)
  * @property {string} [note] - 備考
  * @property {Object.<string, tableDef>} tableDef - テーブル構造定義名をメンバ名とするテーブル構造定義
- * @property {Object.<string, Object>} tables - 実テーブル名をメンバ名とする実テーブルの定義
- * @property {string} [tables.def] - 使用するテーブル定義名。実テーブル名と定義名が一致する場合は省略可。
- * @property {string|Object[]} [tables.data] - テーブルに格納される初期データ
+ * @property {Object.<string, Object>} tableMap - 実テーブル名をメンバ名とする実テーブルの定義
+ * @property {string} [tableMap.def] - 使用するテーブル定義名。実テーブル名と定義名が一致する場合は省略可。
+ * @property {string|Object[]} [tableMap.data] - テーブルに格納される初期データ
  *   - string: CSV/TSV形式。先頭行は項目名(labelの配列=header)。
  *   - Object[]: 行オブジェクトの配列
  * @property {Object.<string, string>} [custom] - AlaSQLのカスタム関数。{関数名: toString()で文字列化した関数}
@@ -876,7 +871,7 @@ function Schema(schema) {
  * @typedef {Object} tableDefEx
  * @property {string} name - 実テーブル名
  * @property {string[]} header - columnDef.labelの配列
- * @property {Object.<string, columnObj>} cols - {columnDef.name: columnObj}
+ * @property {Object.<string, columnObj>} colDef - {columnDef.name: columnObj}
  */
 
 // =====================================================================
@@ -919,7 +914,7 @@ function SpreadDb(schema={table:[]},opt={}) {
    * @param {string|number|boolean[][]} arg=[] - シートイメージの二次元配列。先頭行はヘッダ
    * @param {Object} opt - オプション
    * @param {number|null} opt.RowNumber=null - 行番号(RowNumber)追加ならヘッダ行の行番号、追加無しならnull
-   * @param {Object.<string,columnDefEx>|null} opt.cols=null - シートイメージの項目定義集
+   * @param {Object.<string,columnDefEx>|null} opt.colDef=null - シートイメージの項目定義集
    * @returns {Object[]} 行オブジェクトの配列
    */
   function array2obj(arg=[],opt={}) {
@@ -928,7 +923,7 @@ function SpreadDb(schema={table:[]},opt={}) {
     try {
 
       dev.step(1);  // オプションの既定値設定
-      opt = Object.assign({RowNumber:null,cols:null},opt);
+      opt = Object.assign({RowNumber:null,colDef:null},opt);
 
       for (v.r = 1; v.r < arg.length; v.r++) {  // ヘッダ行(0行目)は飛ばす
 
@@ -941,8 +936,8 @@ function SpreadDb(schema={table:[]},opt={}) {
           if( !arg[0][v.c] ) continue;
 
           dev.step(4);  // 項目定義上のデータ型を特定
-          v.type = typeof opt.cols[arg[0][v.c]].type === 'undefined'
-          ? 'undefined' : opt.cols[arg[0][v.c]].type;
+          v.type = typeof opt.colDef[arg[0][v.c]].type === 'undefined'
+          ? 'undefined' : opt.colDef[arg[0][v.c]].type;
 
           switch( v.type ){
             case 'number':
@@ -1024,7 +1019,7 @@ function SpreadDb(schema={table:[]},opt={}) {
       for( v.i=0 ; v.i<arg.table.length ; v.i++ ){
         v.r = execSQL(`select * from \`${arg.table[v.i]}\` order by RowNumber;`);
         if( v.r instanceof Error ) throw v.r;
-        v.content.tables[arg.table[v.i]].data = v.r;
+        v.content.tableMap[arg.table[v.i]].data = v.r;
       }
 
       dev.step(1.3);  // 文字列化
@@ -1073,7 +1068,7 @@ function SpreadDb(schema={table:[]},opt={}) {
    * @returns {boolean}
    */
   function hasTable(tableName) {
-    return tableName in pv.rdb.tables;
+    return tableName in pv.rdb.tableMap;
   }
 
   /** importGDCSV: Google Drive上のCSVからデータ取得、行オブジェクトの配列を返す
@@ -1105,8 +1100,8 @@ function SpreadDb(schema={table:[]},opt={}) {
       },opt);
 
       dev.step(1.2);  // テーブル構造定義が指定されていたらtableDefにセット
-      v.table = opt.table && pv.schema.tables.hasOwnProperty(opt.table)
-      ? pv.schema.tables[opt.table] : null;
+      v.table = opt.table && pv.schema.tableMap.hasOwnProperty(opt.table)
+        ? pv.schema.tableMap[opt.table] : null;
 
       // -------------------------------------------------------------
       dev.step(2);  // CSVファイルの読み込み
@@ -1126,15 +1121,15 @@ function SpreadDb(schema={table:[]},opt={}) {
       if( v.table !== null ){
         v.rv = {header:v.table.header,data:[]};
         for( v.c=0 ; v.c<v.csv[0].length ; v.c++ ){
-          v.csv[0][v.c] = v.table.cols.hasOwnProperty(v.csv[0][v.c])
-          ? v.table.cols[v.csv[0][v.c]].name : '';
+          v.csv[0][v.c] = v.table.colDef.hasOwnProperty(v.csv[0][v.c])
+          ? v.table.colDef[v.csv[0][v.c]].name : '';
         }
       }
 
       dev.step(3.3);  // 行オブジェクト化、戻り値(v.rv.data)に格納
       v.rv.data = array2obj(v.csv,{
         RowNumber: 1,
-        cols: ( v.table === null ? null : v.table.cols ),
+        colDef: ( v.table === null ? null : v.table.colDef ),
       });
       if( v.rv.data instanceof Error ) throw v.rv.data;
 
@@ -1159,7 +1154,7 @@ function SpreadDb(schema={table:[]},opt={}) {
       v.r = createElement([
         {tag:'h1',text:'インポート'},
         {tag:'input',attr:{type:'file'},event:{change:e=>ldb.import(e)}},
-        {tag:'textarea',attr:{cols:60,rows:15}},
+        {tag:'textarea',attr:{colDef:60,rows:15}},
       ],cf.gpScr);
 
 
@@ -1176,7 +1171,7 @@ function SpreadDb(schema={table:[]},opt={}) {
 
         if (v.existingData) {
           dev.step(4.1);  // 存在すればrowsをJSON.parseしてpv.rdbに格納
-          pv.rdb.tables[v.tableName] = JSON.parse(v.existingData.rows);
+          pv.rdb.tableMap[v.tableName] = JSON.parse(v.existingData.rows);
         } else {
           dev.step(4.2);  // 存在しなければ新規登録
           await setIndexedDB(v.tableName, '[]');
@@ -1201,14 +1196,14 @@ function SpreadDb(schema={table:[]},opt={}) {
     try {
 
       dev.step(1);  // 対象テーブルリストを作成
-      v.tables = Array.isArray(arg) ? arg : ( typeof arg === 'string' ? [arg] : []);
-      if( v.tables.length === 0 ) throw new Error('テーブル指定が不適切です');
+      v.list = Array.isArray(arg) ? arg : ( typeof arg === 'string' ? [arg] : []);
+      if( v.list.length === 0 ) throw new Error('テーブル指定が不適切です');
 
       dev.step(2);  // 対象テーブルを順次ロード
-      for( v.i=0 ; v.i<v.tables.length ; v.i++ ){
+      for( v.i=0 ; v.i<v.list.length ; v.i++ ){
 
         dev.step(2.1);  // シートを取得。メイン処理で作成済なので不存在は考慮不要
-        v.table = pv.schema.tables[v.tables[v.i]];
+        v.table = pv.schema.list[v.list[v.i]];
         v.sheet = pv.spread.getSheetByName(v.table.name);
         v.raw = v.sheet.getDataRange().getDisplayValues();
 
@@ -1216,12 +1211,12 @@ function SpreadDb(schema={table:[]},opt={}) {
         if( v.table.top > 1 ) v.raw.splice(0,v.table.top-1);
 
         dev.step(2.3);  // シートが存在する場合、内容をv.rObjに読み込み
-        v.rObj = array2obj(v.raw,{RowNumber:1,cols:v.table.cols});
+        v.rObj = array2obj(v.raw,{RowNumber:1,colDef:v.table.colDef});
         if( v.rObj instanceof Error ) throw v.rObj;
 
         dev.step(2.4);  // テーブルに追加
-        v.sql = `delete from \`${v.tables[v.i]}\`;` // 全件削除
-        + `insert into \`${v.tables[v.i]}\` select * from ?`;
+        v.sql = `delete from \`${v.list[v.i]}\`;` // 全件削除
+        + `insert into \`${v.list[v.i]}\` select * from ?`;
         v.r = execSQL(v.sql,[v.rObj]);
         if( v.r instanceof Error ) throw v.r;
       }
@@ -1248,8 +1243,8 @@ function SpreadDb(schema={table:[]},opt={}) {
       dev.step(2);  // 対象テーブルを順次格納
       for( v.i=0 ; v.i<v.list.length ; v.i++ ){
 
-        dev.step(2.1);  // 項目定義をv.colsに格納
-        v.table = pv.schema.tables[v.list[v.i]];
+        dev.step(2.1);  // 項目定義をv.colDefに格納
+        v.table = pv.schema.tableMap[v.list[v.i]];
         v.colnum = v.table.header.length;
 
         dev.step(2.2);  // シートを取得。メイン処理で作成済なので不存在は考慮不要
@@ -1273,7 +1268,7 @@ function SpreadDb(schema={table:[]},opt={}) {
         v.arr = [];
         v.r.forEach(o => {
           for( v.j=0,v.l=[] ; v.j<v.colnum ; v.j++ ){
-            v.l[v.j] = o[v.table.cols[v.j].name] || '';
+            v.l[v.j] = o[v.table.colDef[v.j].name] || '';
           }
           v.arr.push(v.l);
         });
@@ -1295,8 +1290,8 @@ function SpreadDb(schema={table:[]},opt={}) {
   dev.start(pv.whois, [...arguments]);
   try {
 
-    dev.step(1);  // schema.tablesを基にテーブル・シートを初期化
-    for( pv.table of Object.values(pv.schema.tables) ){
+    dev.step(1);  // schema.tableMapを基にテーブル・シートを初期化
+    for( pv.table of Object.values(pv.schema.tableMap) ){
 
       dev.step(1.1);  // RDBのテーブルを初期化
       // create tableの各項目用SQL文を作成
@@ -1314,7 +1309,10 @@ function SpreadDb(schema={table:[]},opt={}) {
       });`;
       pv.r = execSQL(pv.sql);
       if( pv.r instanceof Error ) throw pv.r;
-      dev.dump(pv.sql,execSQL(`select * from INFORMATION_SCHEMA.COLUMNS where table_name=\`${pv.table.name}\`;`));
+
+      dev.step(1.3);  // 作成結果確認
+      const { pk, columns }=pv.rdb.tableMap['ファイル一覧'];
+      dev.dump({ pk, columns });
 
       dev.step(2);  // シートの作成
       pv.sheet = pv.spread.getSheetByName(pv.table.name);
@@ -1324,13 +1322,13 @@ function SpreadDb(schema={table:[]},opt={}) {
         if( pv.r instanceof Error ) throw pv.r;
       } else {
         dev.step(2.2);  // シート未作成の場合、シートを作成してヘッダ行を登録
-        pv.table = pv.schema.tables[pv.table.name];
+        pv.table = pv.schema.tableMap[pv.table.name];
         pv.sheet = pv.spread.insertSheet(pv.table.name);
         pv.range = pv.sheet.getRange(1, 1, 1, pv.table.header.length);
         pv.range.setValues([pv.table.header]);
         pv.noteArray = [];
         for( pv.i=0 ; pv.i<pv.table.header.length ; pv.i++ ){
-          pv.noteArray.push(pv.table.cols[pv.i].note);
+          pv.noteArray.push(pv.table.colDef[pv.i].note);
         }
         pv.range.setNotes([pv.noteArray]);
         pv.sheet.autoResizeColumns(1, pv.table.header.length);  // 各列の幅を項目名の幅に調整
