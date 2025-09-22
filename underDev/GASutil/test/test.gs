@@ -120,7 +120,7 @@ function devTools(option) {
     let line = typeof arg[arg.length - 1] === 'number' ? arg.pop() : null;
     const o = stack[stack.length - 1];
     let msg = (line === null ? '' : `l.${line} `)
-      + `>> dump << ${o.label}.${o.step}`;
+      + `::dump::${o.label}.${o.step}`;
     for (let i = 0; i < arg.length; i++) {
       // 対象変数が複数有る場合、Noを追記
       msg += '\n' + (arg.length > 0 ? `${i}: ` : '') + stringify(arg[i]);
@@ -1541,6 +1541,13 @@ function GASutil(arg={}) {
       pv.db = SpreadDb(arg.db.schema,arg.db.opt);
       if( pv.db instanceof Error ) throw pv.db;
     }
+
+    dev.step(2);  // SpreadDb.appendテスト
+    pv.sql = 'insert into `ファイル一覧` values {id:1,name:"f01"};'
+    + 'insert into `ファイル一覧` values {id:2,name:"f02"};'
+    + 'select * from `ファイル一覧`;';
+    pv.r = pv.db.exec(pv.sql);
+    dev.dump(pv.r);
 
     dev.end(); // 終了処理
     pv.rv = {

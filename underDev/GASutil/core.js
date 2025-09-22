@@ -161,6 +161,15 @@ function GASutil(arg={}) {
       if( pv.db instanceof Error ) throw pv.db;
     }
 
+    dev.step(2);  // SpreadDb.appendテスト
+    pv.sql = 'insert into `ファイル一覧` (id,name) values (1,"f01");'
+    // 'insert into `ファイル一覧` values {id:1,name:"f01"};'
+    //+ 'insert into `ファイル一覧` values {id:2,name:"f02"};'
+    //+ 'select * from `ファイル一覧`;'
+    ;
+    pv.r = pv.db.exec(pv.sql);
+    dev.dump(pv.r);
+
     dev.end(); // 終了処理
     pv.rv = {
       listFiles,

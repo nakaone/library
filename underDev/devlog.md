@@ -38,6 +38,10 @@
 
 - SpreadDb関係の修正はGASutil/test側で行う(∵テストケースが重複、データ共有)
 
+# 20250922
+
+## GASutil.2: Cannot read properties of undefined (reading 'defaultfns')
+
 # 20250921
 
 ## [bug] SpreadDb.1.2: Parse error on line 1
