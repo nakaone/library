@@ -42,6 +42,11 @@
 
 # 20250922
 
+## [bug] SpreadDb.loadSheet.2.1:Cannot read properties of undefined (reading 'ファイル一覧')
+
+- v.table = pv.schema.list[v.list[v.i]];
++ v.table = pv.schema.tableMap[v.list[v.i]];
+
 ## [bug] SpreadDb.1.3:Cannot read properties of undefined (reading 'ファイル一覧')
 
 const { pk, columns }=pv.rdb.tableMap['ファイル一覧'];

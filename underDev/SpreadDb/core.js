@@ -371,7 +371,7 @@ function SpreadDb(schema={table:[]},opt={}) {
       for( v.i=0 ; v.i<v.list.length ; v.i++ ){
 
         dev.step(2.1);  // シートを取得。メイン処理で作成済なので不存在は考慮不要
-        v.table = pv.schema.list[v.list[v.i]];
+        v.table = pv.schema.tableMap[v.list[v.i]];
         v.sheet = pv.spread.getSheetByName(v.table.name);
         v.raw = v.sheet.getDataRange().getDisplayValues();
 

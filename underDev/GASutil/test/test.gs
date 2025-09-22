@@ -1204,7 +1204,7 @@ function SpreadDb(schema={table:[]},opt={}) {
       for( v.i=0 ; v.i<v.list.length ; v.i++ ){
 
         dev.step(2.1);  // シートを取得。メイン処理で作成済なので不存在は考慮不要
-        v.table = pv.schema.list[v.list[v.i]];
+        v.table = pv.schema.tableMap[v.list[v.i]];
         v.sheet = pv.spread.getSheetByName(v.table.name);
         v.raw = v.sheet.getDataRange().getDisplayValues();
 
@@ -1312,7 +1312,7 @@ function SpreadDb(schema={table:[]},opt={}) {
       if( pv.r instanceof Error ) throw pv.r;
 
       dev.step(1.3);  // 作成結果確認
-      const { pk, columns }=pv.schema.tableMap['ファイル一覧'];
+      const { pk, columns }=pv.rdb.tables['ファイル一覧'];
       dev.dump({ pk, columns });
 
       dev.step(2);  // シートの作成
