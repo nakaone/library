@@ -1,27 +1,3 @@
-/* 【開発ロードマップ】
-  underDev/SpreadDb/core.js
-    create tableでpKey設定機能を追加
-    update(append)で更新＋追加機能をテスト
-  underDev/GASutil/test/proto.js
-    SpreadDbの元ソースをlibからunderDevに変更
-    configでファイル一覧に以下項目を追加
-      - 修正前：現状(マイドライブ〜所属フォルダ＋現ファイル名)
-          移動処理後は修正後(移動先フルパス)
-      - 修正後：移動先指定(移動先フルパス＋新ファイル名)
-          移動処理後は空欄
-      - 結果：処理前は空欄、処理後は修正前
-      - 備考
-  underDev/GASutil/getFilePropertiesメソッド
-    フルパス情報取得機能追加
-  underDev/GASutil/listFilesメソッド
-    シート更新機能を削除
-    テーブル更新はlistFilesで行う
-  underDev/GASutil/updateFileListメソッド(新規)
-    シート更新機能をlistFilesからここに移動
-  underDev/GASutil/moveFileメソッド(新規)
-    ファイル情報テーブルを元にファイル名変更＋フォルダ移動
-    ファイル情報テーブルを更新(修正前・修正後・結果)
-*/
 /**
  * @typedef {Object} FileProperties - ファイルの属性情報
  * @property {string} id - ファイルID
@@ -162,10 +138,10 @@ function GASutil(arg={}) {
     }
 
     dev.step(2);  // SpreadDb.appendテスト
-    pv.sql = 'insert into `ファイル一覧` (id,name) values (1,"f01");'
+    pv.sql = //'insert into `ファイル一覧` (id,name) values (1,"f01");'
     // 'insert into `ファイル一覧` values {id:1,name:"f01"};'
     //+ 'insert into `ファイル一覧` values {id:2,name:"f02"};'
-    //+ 'select * from `ファイル一覧`;'
+    'select * from `ファイル一覧`;'
     ;
     pv.r = pv.db.exec(pv.sql);
     dev.dump(pv.r);

@@ -77,6 +77,7 @@ function SpreadDb(schema={table:[]},opt={}) {
     opt: Object.assign({},opt), // 現状、オプションは未定義
     rdb: new alasql.Database(),
   };
+  console.log('::dump:: l.80 after pv');
 
   /** array2obj: シートイメージの二次元配列を行オブジェクトの配列に変換
    * @param {string|number|boolean[][]} arg=[] - シートイメージの二次元配列。先頭行はヘッダ
@@ -455,6 +456,7 @@ function SpreadDb(schema={table:[]},opt={}) {
   }
 
   // SpreadDbメイン処理
+  console.log('::dump:: l.459 before start');
   dev.start(pv.whois, [...arguments]);
   try {
 

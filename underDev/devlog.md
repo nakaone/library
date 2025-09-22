@@ -40,7 +40,20 @@
 
 # 20250922
 
-## GASutil.2: Cannot read properties of undefined (reading 'defaultfns')
+## [bug] GASutil.2: Cannot read properties of undefined (reading 'xcolumns')
+
+- 'select * from `ファイル一覧`;' ⇒ Table does not exists: ファイル一覧
+
+∵ `for( pv.table of Object.values(pv.schema.tableMap) ){〜}`で括弧の内の処理が行われていない
+
+∵ `pv.schema.tableMap`が空オブジェクト
+
+∵ test.jsでの引数設定がtablesのまま(tobe:tableMap)
+
+## [bug] GASutil.2: Cannot read properties of undefined (reading 'defaultfns')
+
+'insert into `ファイル一覧` values {id:1,name:"f01"};'
+⇒ 'insert into `ファイル一覧` (id,name) values (1,"f01");'
 
 # 20250921
 

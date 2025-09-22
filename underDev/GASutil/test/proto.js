@@ -34,7 +34,7 @@ const testArg = {
           ]
         },
       },
-      tables: {'ファイル一覧':{data:[]}},
+      tableMap: {'ファイル一覧':{data:[]}},
       custom: {},
     },
     opt: {},  // 現状無し
