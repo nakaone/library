@@ -6,6 +6,8 @@
     - SpreadDb.schema.tables -> tableMap
     - SpreadDb.schema.tables.cols -> colMap(予約語columnsと紛らわし)
   - update(append)で更新＋追加機能をテスト ◀いまここ
+- unserDev/Schema/core.js
+  - 引数チェックを追加(ex.tableMapは必須)
 - underDev/GASutil/test/proto.js
   - SpreadDbの元ソースをlibからunderDevに変更
   - configでファイル一覧に以下項目を追加
@@ -39,6 +41,11 @@
 - SpreadDb関係の修正はGASutil/test側で行う(∵テストケースが重複、データ共有)
 
 # 20250922
+
+## [bug] SpreadDb.1.3:Cannot read properties of undefined (reading 'ファイル一覧')
+
+const { pk, columns }=pv.rdb.tableMap['ファイル一覧'];
+⇒ const { pk, columns }=pv.rdb.tables['ファイル一覧'];
 
 ## [bug] GASutil.2: Cannot read properties of undefined (reading 'xcolumns')
 
