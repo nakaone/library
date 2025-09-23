@@ -138,13 +138,18 @@ function GASutil(arg={}) {
     }
 
     dev.step(2);  // SpreadDb.appendテスト
-    pv.sql = //'insert into `ファイル一覧` (id,name) values (1,"f01");'
-    // 'insert into `ファイル一覧` values {id:1,name:"f01"};'
-    //+ 'insert into `ファイル一覧` values {id:2,name:"f02"};'
-    'select * from `ファイル一覧`;'
+    pv.sql
+    // ①テストデータをinsert
+    = 'insert into `ファイル一覧` (id,name) values (1,"f01"),(2,"f02"),(3,"f03");'
+    // ②一部を削除
+    + 'delete from `ファイル一覧` where id=2;'
+    // ③既存レコードの更新と新規レコード追加
+    + 'delete from `ファイル一覧` where id in(3,4);'  // 追加・更新対象を削除
+    + 'insert into `ファイル一覧` (id,name) values (3,"f03"),(4,"f04");'
     ;
     pv.r = pv.db.exec(pv.sql);
-    dev.dump(pv.r);
+    // ④：残っているのが①＋②−③になっていることを確認
+    dev.dump(pv.r,pv.db.exec('select * from `ファイル一覧`;'));
 
     dev.end(); // 終了処理
     pv.rv = {
