@@ -96,206 +96,6 @@
     
 
     
-        <h3 class="subsection-title">Methods</h3>
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="SpreadDb"><span class="type-signature"></span>SpreadDb<span class="signature">(schema, opt)</span><span class="type-signature"> &rarr; {Object}</span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    SpreadDb: シートをテーブルとして扱うGAS内部のRDB
-- ヘッダ行は1行目に固定、左端から隙間無く項目を並べる(空白セル不可)
-- シート上には存在しないが、テーブル上はRowNumber(シート上の行番号)を持たせる。データ部先頭は'2'
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-        <th>Default</th>
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>schema</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#schemaDef">schemaDef</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-                <td class="default">
-                
-                    {table[]}
-                
-                </td>
-            
-
-            <td class="description last">Schemaでインスタンス化後のDB構造定義オブジェクト。</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>opt</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-                <td class="default">
-                
-                </td>
-            
-
-            <td class="description last">オプション</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core.js.html">core.js</a>, <a href="core.js.html#line97">line 97</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    使用可能なメソッドのオブジェクト
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Object</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-
-
-        
-    
 
     
         <h3 class="subsection-title">Type Definitions</h3>
@@ -638,7 +438,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core.js.html">core.js</a>, <a href="core.js.html#line71">line 71</a>
+        <a href="core.js.html">core.js</a>, <a href="core.js.html#line47">line 47</a>
     </li></ul></dd>
     
 
@@ -763,7 +563,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core.js.html">core.js</a>, <a href="core.js.html#line82">line 82</a>
+        <a href="core.js.html">core.js</a>, <a href="core.js.html#line58">line 58</a>
     </li></ul></dd>
     
 
@@ -925,7 +725,7 @@
 
         <tr>
             
-                <td class="name"><code>tables</code></td>
+                <td class="name"><code>tableMap</code></td>
             
 
             <td class="type">
@@ -1111,7 +911,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core.js.html">core.js</a>, <a href="core.js.html#line27">line 27</a>
+        <a href="core.js.html">core.js</a>, <a href="core.js.html#line3">line 3</a>
     </li></ul></dd>
     
 
@@ -1305,7 +1105,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core.js.html">core.js</a>, <a href="core.js.html#line40">line 40</a>
+        <a href="core.js.html">core.js</a>, <a href="core.js.html#line16">line 16</a>
     </li></ul></dd>
     
 
@@ -1627,7 +1427,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core.js.html">core.js</a>, <a href="core.js.html#line51">line 51</a>
+        <a href="core.js.html">core.js</a>, <a href="core.js.html#line27">line 27</a>
     </li></ul></dd>
     
 
@@ -1743,7 +1543,7 @@
 
         <tr>
             
-                <td class="name"><code>cols</code></td>
+                <td class="name"><code>colDef</code></td>
             
 
             <td class="type">
@@ -1798,7 +1598,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="core.js.html">core.js</a>, <a href="core.js.html#line61">line 61</a>
+        <a href="core.js.html">core.js</a>, <a href="core.js.html#line37">line 37</a>
     </li></ul></dd>
     
 
@@ -1828,13 +1628,13 @@
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#SpreadDb">SpreadDb</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="SpreadDb.html">SpreadDb</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Sep 20 2025 16:10:07 GMT+0900 (日本標準時)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Sep 24 2025 16:50:27 GMT+0900 (日本標準時)
 </footer>
 
 <script> prettyPrint(); </script>

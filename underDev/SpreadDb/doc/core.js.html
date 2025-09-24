@@ -26,40 +26,16 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/* 【開発ロードマップ】
-  underDev/SpreadDb/core.js ◀いまここ
-    create tableでpKey設定機能を追加
-    update(append)で更新＋追加機能をテスト
-  underDev/GASutil/test/proto.js
-    SpreadDbの元ソースをlibからunderDevに変更
-    configでファイル一覧に以下項目を追加
-      - 修正前：現状(マイドライブ〜所属フォルダ＋現ファイル名)
-          移動処理後は修正後(移動先フルパス)
-      - 修正後：移動先指定(移動先フルパス＋新ファイル名)
-          移動処理後は空欄
-      - 結果：処理前は空欄、処理後は修正前
-      - 備考
-  underDev/GASutil/getFilePropertiesメソッド
-    フルパス情報取得機能追加
-  underDev/GASutil/listFilesメソッド
-    シート更新機能を削除
-    テーブル更新はlistFilesで行う
-  underDev/GASutil/updateFileListメソッド(新規)
-    シート更新機能をlistFilesからここに移動
-  underDev/GASutil/moveFileメソッド(新規)
-    ファイル情報テーブルを元にファイル名変更＋フォルダ移動
-    ファイル情報テーブルを更新(修正前・修正後・結果)
-*/
-// 以下、typedefはSchema 1.1.0より引用。
+            <pre class="prettyprint source linenums"><code>// 以下、typedefはSchema 1.1.0より引用。
 
 /** schemaDef: DB構造定義オブジェクト (引数用)
  * @typedef {Object} schemaDef
  * @property {string} [dbName] - データベース名(IndexedDB上ではストア名)
  * @property {string} [note] - 備考
  * @property {Object.&lt;string, tableDef>} tableDef - テーブル構造定義名をメンバ名とするテーブル構造定義
- * @property {Object.&lt;string, Object>} tables - 実テーブル名をメンバ名とする実テーブルの定義
- * @property {string} [tables.def] - 使用するテーブル定義名。実テーブル名と定義名が一致する場合は省略可。
- * @property {string|Object[]} [tables.data] - テーブルに格納される初期データ
+ * @property {Object.&lt;string, Object>} tableMap - 実テーブル名をメンバ名とする実テーブルの定義
+ * @property {string} [tableMap.def] - 使用するテーブル定義名。実テーブル名と定義名が一致する場合は省略可。
+ * @property {string|Object[]} [tableMap.data] - テーブルに格納される初期データ
  *   - string: CSV/TSV形式。先頭行は項目名(labelの配列=header)。
  *   - Object[]: 行オブジェクトの配列
  * @property {Object.&lt;string, string>} [custom] - AlaSQLのカスタム関数。{関数名: toString()で文字列化した関数}
@@ -91,7 +67,7 @@
  * @typedef {Object} tableDefEx
  * @property {string} name - 実テーブル名
  * @property {string[]} header - columnDef.labelの配列
- * @property {Object.&lt;string, columnObj>} cols - {columnDef.name: columnObj}
+ * @property {Object.&lt;string, columnObj>} colDef - {columnDef.name: columnObj}
  */
 
 // =====================================================================
@@ -118,11 +94,12 @@
 /** SpreadDb: シートをテーブルとして扱うGAS内部のRDB
  * - ヘッダ行は1行目に固定、左端から隙間無く項目を並べる(空白セル不可)
  * - シート上には存在しないが、テーブル上はRowNumber(シート上の行番号)を持たせる。データ部先頭は'2'
- * @param {schemaDef} schema={table[]} - Schemaでインスタンス化後のDB構造定義オブジェクト。
+ * @namespace SpreadDb
+ * @param {schemaDef} schema={tableMap:{}} - DB構造定義オブジェクト
  * @param {Object} opt - オプション
  * @returns {Object} 使用可能なメソッドのオブジェクト
  */
-function SpreadDb(schema={table:[]},opt={}) {
+function SpreadDb(schema={tableMap:{}},opt={}) {
   const pv = { whois: 'SpreadDb', rv: null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
     schema: Schema(schema),
@@ -131,10 +108,11 @@ function SpreadDb(schema={table:[]},opt={}) {
   };
 
   /** array2obj: シートイメージの二次元配列を行オブジェクトの配列に変換
+   * @memberof SpreadDb
    * @param {string|number|boolean[][]} arg=[] - シートイメージの二次元配列。先頭行はヘッダ
    * @param {Object} opt - オプション
    * @param {number|null} opt.RowNumber=null - 行番号(RowNumber)追加ならヘッダ行の行番号、追加無しならnull
-   * @param {Object.&lt;string,columnDefEx>|null} opt.cols=null - シートイメージの項目定義集
+   * @param {Object.&lt;string,columnDefEx>|null} opt.colDef=null - シートイメージの項目定義集
    * @returns {Object[]} 行オブジェクトの配列
    */
   function array2obj(arg=[],opt={}) {
@@ -143,7 +121,7 @@ function SpreadDb(schema={table:[]},opt={}) {
     try {
 
       dev.step(1);  // オプションの既定値設定
-      opt = Object.assign({RowNumber:null,cols:null},opt);
+      opt = Object.assign({RowNumber:null,colDef:null},opt);
 
       for (v.r = 1; v.r &lt; arg.length; v.r++) {  // ヘッダ行(0行目)は飛ばす
 
@@ -156,8 +134,8 @@ function SpreadDb(schema={table:[]},opt={}) {
           if( !arg[0][v.c] ) continue;
 
           dev.step(4);  // 項目定義上のデータ型を特定
-          v.type = typeof opt.cols[arg[0][v.c]].type === 'undefined'
-          ? 'undefined' : opt.cols[arg[0][v.c]].type;
+          v.type = typeof opt.colDef[arg[0][v.c]].type === 'undefined'
+          ? 'undefined' : opt.colDef[arg[0][v.c]].type;
 
           switch( v.type ){
             case 'number':
@@ -192,6 +170,7 @@ function SpreadDb(schema={table:[]},opt={}) {
   }
 
   /** execSQL: alasqlでSQLを実行
+   * @memberof SpreadDb
    * @param {string} sql
    * @param {Array[]} arg - alasqlの第二引数
    * @returns {Object[]}
@@ -206,6 +185,7 @@ function SpreadDb(schema={table:[]},opt={}) {
 
   /** exportFile: テーブルの構造及びデータをファイルとしてダウンロード
    * なおschema.tableDefが無い場合も出力自体は可能とする。
+   * @memberof SpreadDb
    * @param {Object|string} arg={} - 文字列型の場合、ダウンロードファイル名と看做す
    * @param {string} arg.file='data.json' - ダウンロードファイル名
    * @param {string|string[]} arg.table=[] - 出力対象テーブル名。無指定なら全テーブル
@@ -239,7 +219,7 @@ function SpreadDb(schema={table:[]},opt={}) {
       for( v.i=0 ; v.i&lt;arg.table.length ; v.i++ ){
         v.r = execSQL(`select * from \`${arg.table[v.i]}\` order by RowNumber;`);
         if( v.r instanceof Error ) throw v.r;
-        v.content.tables[arg.table[v.i]].data = v.r;
+        v.content.tableMap[arg.table[v.i]].data = v.r;
       }
 
       dev.step(1.3);  // 文字列化
@@ -284,14 +264,16 @@ function SpreadDb(schema={table:[]},opt={}) {
   }
 
   /** hasTable: RDB(alasql)内にテーブルを持っているか確認
+   * @memberof SpreadDb
    * @param {string} tableName
    * @returns {boolean}
    */
   function hasTable(tableName) {
-    return tableName in pv.rdb.tables;
+    return tableName in pv.rdb.tableMap;
   }
 
   /** importGDCSV: Google Drive上のCSVからデータ取得、行オブジェクトの配列を返す
+   * @memberof SpreadDb
    * @param {string} id - Google Drive上のファイルID
    * @param {Object} opt
    * @param {string} opt.table - schemaDefでテーブル定義されている場合、そのテーブル名
@@ -320,8 +302,8 @@ function SpreadDb(schema={table:[]},opt={}) {
       },opt);
 
       dev.step(1.2);  // テーブル構造定義が指定されていたらtableDefにセット
-      v.table = opt.table &amp;&amp; pv.schema.tables.hasOwnProperty(opt.table)
-      ? pv.schema.tables[opt.table] : null;
+      v.table = opt.table &amp;&amp; pv.schema.tableMap.hasOwnProperty(opt.table)
+        ? pv.schema.tableMap[opt.table] : null;
 
       // -------------------------------------------------------------
       dev.step(2);  // CSVファイルの読み込み
@@ -341,15 +323,15 @@ function SpreadDb(schema={table:[]},opt={}) {
       if( v.table !== null ){
         v.rv = {header:v.table.header,data:[]};
         for( v.c=0 ; v.c&lt;v.csv[0].length ; v.c++ ){
-          v.csv[0][v.c] = v.table.cols.hasOwnProperty(v.csv[0][v.c])
-          ? v.table.cols[v.csv[0][v.c]].name : '';
+          v.csv[0][v.c] = v.table.colDef.hasOwnProperty(v.csv[0][v.c])
+          ? v.table.colDef[v.csv[0][v.c]].name : '';
         }
       }
 
       dev.step(3.3);  // 行オブジェクト化、戻り値(v.rv.data)に格納
       v.rv.data = array2obj(v.csv,{
         RowNumber: 1,
-        cols: ( v.table === null ? null : v.table.cols ),
+        colDef: ( v.table === null ? null : v.table.colDef ),
       });
       if( v.rv.data instanceof Error ) throw v.rv.data;
 
@@ -360,6 +342,7 @@ function SpreadDb(schema={table:[]},opt={}) {
   }
 
   /** importJSON: JSONからテーブル・シートへデータを格納する
+   * @memberof SpreadDb
    * @param {string|string[]} arg=[] - ロード対象テーブル名
    * @returns {void}
    */
@@ -374,7 +357,7 @@ function SpreadDb(schema={table:[]},opt={}) {
       v.r = createElement([
         {tag:'h1',text:'インポート'},
         {tag:'input',attr:{type:'file'},event:{change:e=>ldb.import(e)}},
-        {tag:'textarea',attr:{cols:60,rows:15}},
+        {tag:'textarea',attr:{colDef:60,rows:15}},
       ],cf.gpScr);
 
 
@@ -391,7 +374,7 @@ function SpreadDb(schema={table:[]},opt={}) {
         
         if (v.existingData) {
           dev.step(4.1);  // 存在すればrowsをJSON.parseしてpv.rdbに格納
-          pv.rdb.tables[v.tableName] = JSON.parse(v.existingData.rows);
+          pv.rdb.tableMap[v.tableName] = JSON.parse(v.existingData.rows);
         } else {
           dev.step(4.2);  // 存在しなければ新規登録
           await setIndexedDB(v.tableName, '[]');
@@ -407,6 +390,7 @@ function SpreadDb(schema={table:[]},opt={}) {
   }
 
   /** loadSheet: シートからRDBへデータをロードする
+   * @memberof SpreadDb
    * @param {string|string[]} arg=[] - ロード対象テーブル名
    * @returns {void} 戻り値のメンバ名はcolumnDef.colName(labelではないことに注意)
    */
@@ -416,14 +400,14 @@ function SpreadDb(schema={table:[]},opt={}) {
     try {
 
       dev.step(1);  // 対象テーブルリストを作成
-      v.tables = Array.isArray(arg) ? arg : ( typeof arg === 'string' ? [arg] : []);
-      if( v.tables.length === 0 ) throw new Error('テーブル指定が不適切です');
+      v.list = Array.isArray(arg) ? arg : ( typeof arg === 'string' ? [arg] : []);
+      if( v.list.length === 0 ) throw new Error('テーブル指定が不適切です');
 
       dev.step(2);  // 対象テーブルを順次ロード
-      for( v.i=0 ; v.i&lt;v.tables.length ; v.i++ ){
+      for( v.i=0 ; v.i&lt;v.list.length ; v.i++ ){
 
         dev.step(2.1);  // シートを取得。メイン処理で作成済なので不存在は考慮不要
-        v.table = pv.schema.tables[v.tables[v.i]];
+        v.table = pv.schema.tableMap[v.list[v.i]];
         v.sheet = pv.spread.getSheetByName(v.table.name);
         v.raw = v.sheet.getDataRange().getDisplayValues();
 
@@ -431,12 +415,12 @@ function SpreadDb(schema={table:[]},opt={}) {
         if( v.table.top > 1 ) v.raw.splice(0,v.table.top-1);
 
         dev.step(2.3);  // シートが存在する場合、内容をv.rObjに読み込み
-        v.rObj = array2obj(v.raw,{RowNumber:1,cols:v.table.cols});
+        v.rObj = array2obj(v.raw,{RowNumber:1,colDef:v.table.colDef});
         if( v.rObj instanceof Error ) throw v.rObj;
 
         dev.step(2.4);  // テーブルに追加
-        v.sql = `delete from \`${v.tables[v.i]}\`;` // 全件削除
-        + `insert into \`${v.tables[v.i]}\` select * from ?`;
+        v.sql = `delete from \`${v.list[v.i]}\`;` // 全件削除
+        + `insert into \`${v.list[v.i]}\` select * from ?`;
         v.r = execSQL(v.sql,[v.rObj]);
         if( v.r instanceof Error ) throw v.r;
       }
@@ -448,6 +432,7 @@ function SpreadDb(schema={table:[]},opt={}) {
   }
 
   /** saveRDB: RDBからシートへデータを保存する
+   * @memberof SpreadDb
    * @param {string|string[]} arg=[] - 保存対象テーブル名
    * @returns {void}
    */
@@ -463,8 +448,8 @@ function SpreadDb(schema={table:[]},opt={}) {
       dev.step(2);  // 対象テーブルを順次格納
       for( v.i=0 ; v.i&lt;v.list.length ; v.i++ ){
 
-        dev.step(2.1);  // 項目定義をv.colsに格納
-        v.table = pv.schema.tables[v.list[v.i]];
+        dev.step(2.1);  // 項目定義をv.colDefに格納
+        v.table = pv.schema.tableMap[v.list[v.i]];
         v.colnum = v.table.header.length;
 
         dev.step(2.2);  // シートを取得。メイン処理で作成済なので不存在は考慮不要
@@ -488,7 +473,7 @@ function SpreadDb(schema={table:[]},opt={}) {
         v.arr = [];
         v.r.forEach(o => {
           for( v.j=0,v.l=[] ; v.j&lt;v.colnum ; v.j++ ){
-            v.l[v.j] = o[v.table.cols[v.j].name] || '';
+            v.l[v.j] = o[v.table.colDef[v.j].name] || '';
           }
           v.arr.push(v.l);
         });
@@ -506,50 +491,91 @@ function SpreadDb(schema={table:[]},opt={}) {
     } catch (e) { dev.error(e); return e; }
   }
 
+  /** upsert: 指定されたテーブルに対して、既存のレコードがあれば更新し、なければ挿入する
+   * @memberof SpreadDb
+   * @param {string} tableName - 操作対象テーブル名
+   * @param {Object[]} data - 挿入データの行オブジェクトの配列
+   *   シートイメージを処理したい場合、事前にarray2objでオブジェクト化しておく。
+   */
+  function upsert(tableName,data=[]) {
+    const v = { whois: `${pv.whois}.upsert`, rv: null};
+    dev.start(v.whois, [...arguments]);
+    try {
+
+      dev.step(1);
+      dev.dump(tableName,data);
+      // テーブル情報の存否確認
+      // データをデータ用テーブルに格納
+      // 値がユニークな項目をキーに指定テーブルと作業用テーブルを連結、primary keyを作業用テーブルに保存
+      // 作業用テーブルに存在する場合、updateを実行
+      // 作業用テーブルに存在しない場合、insertを実行
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { dev.error(e); return e; }
+  }
+
   // SpreadDbメイン処理
   dev.start(pv.whois, [...arguments]);
   try {
 
-    dev.step(1);  // schema.tablesを基にテーブル・シートを初期化
-    Object.keys(pv.schema.tables).forEach(tableName => {
+    dev.step(1);  // schema.tableMapを基にテーブル・シートを初期化
+    for( pv.table of Object.values(pv.schema.tableMap) ){
 
       dev.step(1.1);  // RDBのテーブルを初期化
-      pv.sql = `drop table if exists \`${tableName}\`;`
-      + `create table \`${tableName}\`;`;
+      // create tableの各項目用SQL文を作成
+      pv.table.colDef.forEach(col => {
+        // 項目名 データ型 主キーなら"not null"
+        col.sql = `\`${col.name}\` ${col.type}${
+          pv.table.primaryKey.includes(col.name) ? ' not null' : ''}`;
+      })
+
+      dev.step(1.2);  // テーブルの再作成
+      pv.sql = `drop table if exists \`${pv.table.name}\`;`
+      + `create table \`${pv.table.name}\` (${pv.table.colDef.map(x => x.sql).join(',')}${
+        pv.table.primaryKey.length === 0 ? '' 
+        : `, primary key (${pv.table.primaryKey.map(x => '`'+x+'`').join(',')})`
+      });`;
       pv.r = execSQL(pv.sql);
       if( pv.r instanceof Error ) throw pv.r;
 
-      pv.sheet = pv.spread.getSheetByName(tableName);
+      dev.step(1.3);  // 作成結果確認
+      const { pk, columns }=pv.rdb.tables['ファイル一覧'];
+      dev.dump({ pk, columns });
+
+      dev.step(2);  // シートの作成
+      pv.sheet = pv.spread.getSheetByName(pv.table.name);
       if( pv.sheet ){
-        dev.step(1.2);  // シート作成済の場合、シートからRDBにロード
-        pv.r = loadSheet(tableName);
+        dev.step(2.1);  // シート作成済の場合、シートからRDBにロード
+        pv.r = loadSheet(pv.table.name);
         if( pv.r instanceof Error ) throw pv.r;
       } else {
-        dev.step(1.3);  // シート未作成の場合、シートを作成してヘッダ行を登録
-        pv.table = pv.schema.tables[tableName];
-        pv.sheet = pv.spread.insertSheet(tableName);
+        dev.step(2.2);  // シート未作成の場合、シートを作成してヘッダ行を登録
+        pv.table = pv.schema.tableMap[pv.table.name];
+        pv.sheet = pv.spread.insertSheet(pv.table.name);
         pv.range = pv.sheet.getRange(1, 1, 1, pv.table.header.length);
         pv.range.setValues([pv.table.header]);
         pv.noteArray = [];
         for( pv.i=0 ; pv.i&lt;pv.table.header.length ; pv.i++ ){
-          pv.noteArray.push(pv.table.cols[pv.i].note);
+          pv.noteArray.push(pv.table.colDef[pv.i].note);
         }
         pv.range.setNotes([pv.noteArray]);
         pv.sheet.autoResizeColumns(1, pv.table.header.length);  // 各列の幅を項目名の幅に調整
         pv.sheet.setFrozenRows(1); // 先頭1行を固定
 
-        dev.step(1.4);  // 初期データが存在する場合、RDBに追加してシートに反映
         if( pv.table.data.length > 0 ){
-          pv.sql = `insert into \`${tableName}\` select * from ?;`;
+          dev.step(2.3);  // 初期データが存在する場合、RDBに追加してシートに反映
+          pv.sql = `insert into \`${pv.table.name}\` select * from ?;`;
           pv.r = execSQL(pv.sql,[pv.table.data]);
           if( pv.r instanceof Error ) throw pv.r;
-          pv.r = saveRDB(tableName);
+          pv.r = saveRDB(pv.table.name);
           if( pv.r instanceof Error ) throw pv.r;
         }
       }
-    });
+    }
 
-    dev.step(2);  // AlaSQLカスタム関数の用意
+    dev.step(3);  // AlaSQLカスタム関数の用意
     if( pv.schema.hasOwnProperty('custom') ){
       Object.keys(pv.schema.custom).forEach(x => alasql.fn[x] = pv.schema.custom[x]);
     }
@@ -557,13 +583,14 @@ function SpreadDb(schema={table:[]},opt={}) {
     dev.end(); // 終了処理
     return {
       'exec': execSQL,
-      'load': loadSheet,
-      'save': saveRDB,
+      'export': exportFile,
+      'getSchema': ()=>pv.schema,
+      'hasTable': hasTable,
       'import': importJSON,
       'importGDCSV': importGDCSV,
-      'export': exportFile,
-      'hasTable': hasTable,
-      'getSchema': ()=>pv.schema,
+      'load': loadSheet,
+      'save': saveRDB,
+      'upsert': upsert,
     };
 
   } catch (e) { dev.error(e); return e; }
@@ -577,13 +604,13 @@ function SpreadDb(schema={table:[]},opt={}) {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#SpreadDb">SpreadDb</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Namespaces</h3><ul><li><a href="SpreadDb.html">SpreadDb</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Sat Sep 20 2025 16:10:07 GMT+0900 (日本標準時)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Wed Sep 24 2025 16:50:27 GMT+0900 (日本標準時)
 </footer>
 
 <script> prettyPrint(); </script>

@@ -137,28 +137,6 @@ function GASutil(arg={}) {
       if( pv.db instanceof Error ) throw pv.db;
     }
 
-    dev.step(2);  // SpreadDb.appendテスト
-    dev.step(2.1);  // テストデータのセット
-    pv.sql
-    // ①テストデータをinsert
-    = 'insert into `ファイル一覧` (id,name) values (1,"f01"),(2,"f02"),(3,"f03");'
-    // ②一部を削除
-    + 'delete from `ファイル一覧` where id=2;'
-    // ③既存レコードの更新と新規レコード追加
-    + 'delete from `ファイル一覧` where id in(3,4);'  // 追加・更新対象を削除
-    + 'insert into `ファイル一覧` (id,name) values (3,"f03"),(4,"f04");'
-    ;
-    pv.r = pv.db.exec(pv.sql);
-    // ④：残っているのが①＋②−③になっていることを確認
-    dev.dump(pv.r,pv.db.exec('select * from `ファイル一覧`;'));
-
-    dev.step(2.2);  // テスト実施
-    pv.r = pv.db.upsert('ファイル一覧',[
-      {id:5,name:'f05'},  // insert(id有り)
-      {name:'f06',mime:'json'},  // insert(id無し)
-      {id:4,mime:'text'},  // update。nameは更新対象外
-    ]);
-
     dev.end(); // 終了処理
     pv.rv = {
       listFiles,
