@@ -5,7 +5,8 @@
   - AlaSQLの予約語とSpreadDb.schemaの重複排除
     - SpreadDb.schema.tables -> tableMap
     - SpreadDb.schema.tables.cols -> colMap(予約語columnsと紛らわし)
-  - update(append)で更新＋追加機能をテスト ◀いまここ
+  - update(append)で更新＋追加機能をテスト
+  - upsert機能の実装 ◀いまここ
 - unserDev/Schema/core.js
   - 引数チェックを追加(ex.tableMapは必須)
 - underDev/GASutil/test/proto.js
@@ -39,6 +40,31 @@
 ## 注意事項
 
 - SpreadDb関係の修正はGASutil/test側で行う(∵テストケースが重複、データ共有)
+
+# 20250924
+
+## [bug] SpreadDbメイン処理の起動メッセージログが出力されない
+
+- dev.start"SpreadDb start"の直前にconsole.logを挿入
+  ⇒ console.logは出力、dev.startは出力されない
+
+- devTools.startに`console.log(`:dump: l.154 name=${name}`);`セット
+  ⇒ :dump: l.154 name=SpreadDb がログ出力
+
+仮説：toLocaleでopt.start=falseを設定、その後全てのdev.startにstart=falseが適用され、dev.startが出力されなくなった
+
+  - toLocale
+    dev.start(v.whois, [...arguments], {start:opt.verbose});
+
+  - devTools.start
+    ```
+    function start(name, arg = [], rt={}) {
+      const localOpt = Object.assign(opt,rt);
+    ```
+    上記2行目でoptにrtが上書きされている？
+
+修正前：const localOpt = Object.assign(opt,rt);
+修正後：const localOpt = Object.assign({},opt,rt);
 
 # 20250922
 

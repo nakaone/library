@@ -131,7 +131,7 @@ function devTools(option) {
    * @param {Object} rt - end実行時に全体に優先させるオプション指定(run time option)
    */
   function end(rt={}) {
-    const localOpt = Object.assign(opt,rt);
+    const localOpt = Object.assign({},opt,rt);
     const o = stack.pop();
     if (localOpt.start) console.log(`${o.label} normal end.`);
   }
@@ -151,7 +151,7 @@ function devTools(option) {
    * @param {Object} rt - start実行時に全体に優先させるオプション指定(run time option)
    */
   function start(name, arg = [], rt={}) {
-    const localOpt = Object.assign(opt,rt);
+    const localOpt = Object.assign({},opt,rt);
     const o = {
       class: '',  // nameがクラス名.メソッド名だった場合のクラス名
       name: name,

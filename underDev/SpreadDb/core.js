@@ -66,11 +66,12 @@
 /** SpreadDb: シートをテーブルとして扱うGAS内部のRDB
  * - ヘッダ行は1行目に固定、左端から隙間無く項目を並べる(空白セル不可)
  * - シート上には存在しないが、テーブル上はRowNumber(シート上の行番号)を持たせる。データ部先頭は'2'
- * @param {schemaDef} schema={table[]} - Schemaでインスタンス化後のDB構造定義オブジェクト。
+ * @namespace SpreadDb
+ * @param {schemaDef} schema={tableMap:{}} - DB構造定義オブジェクト
  * @param {Object} opt - オプション
  * @returns {Object} 使用可能なメソッドのオブジェクト
  */
-function SpreadDb(schema={table:[]},opt={}) {
+function SpreadDb(schema={tableMap:{}},opt={}) {
   const pv = { whois: 'SpreadDb', rv: null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
     schema: Schema(schema),
@@ -79,6 +80,7 @@ function SpreadDb(schema={table:[]},opt={}) {
   };
 
   /** array2obj: シートイメージの二次元配列を行オブジェクトの配列に変換
+   * @memberof SpreadDb
    * @param {string|number|boolean[][]} arg=[] - シートイメージの二次元配列。先頭行はヘッダ
    * @param {Object} opt - オプション
    * @param {number|null} opt.RowNumber=null - 行番号(RowNumber)追加ならヘッダ行の行番号、追加無しならnull
@@ -140,6 +142,7 @@ function SpreadDb(schema={table:[]},opt={}) {
   }
 
   /** execSQL: alasqlでSQLを実行
+   * @memberof SpreadDb
    * @param {string} sql
    * @param {Array[]} arg - alasqlの第二引数
    * @returns {Object[]}
@@ -154,6 +157,7 @@ function SpreadDb(schema={table:[]},opt={}) {
 
   /** exportFile: テーブルの構造及びデータをファイルとしてダウンロード
    * なおschema.tableDefが無い場合も出力自体は可能とする。
+   * @memberof SpreadDb
    * @param {Object|string} arg={} - 文字列型の場合、ダウンロードファイル名と看做す
    * @param {string} arg.file='data.json' - ダウンロードファイル名
    * @param {string|string[]} arg.table=[] - 出力対象テーブル名。無指定なら全テーブル
@@ -232,6 +236,7 @@ function SpreadDb(schema={table:[]},opt={}) {
   }
 
   /** hasTable: RDB(alasql)内にテーブルを持っているか確認
+   * @memberof SpreadDb
    * @param {string} tableName
    * @returns {boolean}
    */
@@ -240,6 +245,7 @@ function SpreadDb(schema={table:[]},opt={}) {
   }
 
   /** importGDCSV: Google Drive上のCSVからデータ取得、行オブジェクトの配列を返す
+   * @memberof SpreadDb
    * @param {string} id - Google Drive上のファイルID
    * @param {Object} opt
    * @param {string} opt.table - schemaDefでテーブル定義されている場合、そのテーブル名
@@ -308,6 +314,7 @@ function SpreadDb(schema={table:[]},opt={}) {
   }
 
   /** importJSON: JSONからテーブル・シートへデータを格納する
+   * @memberof SpreadDb
    * @param {string|string[]} arg=[] - ロード対象テーブル名
    * @returns {void}
    */
@@ -355,6 +362,7 @@ function SpreadDb(schema={table:[]},opt={}) {
   }
 
   /** loadSheet: シートからRDBへデータをロードする
+   * @memberof SpreadDb
    * @param {string|string[]} arg=[] - ロード対象テーブル名
    * @returns {void} 戻り値のメンバ名はcolumnDef.colName(labelではないことに注意)
    */
@@ -396,6 +404,7 @@ function SpreadDb(schema={table:[]},opt={}) {
   }
 
   /** saveRDB: RDBからシートへデータを保存する
+   * @memberof SpreadDb
    * @param {string|string[]} arg=[] - 保存対象テーブル名
    * @returns {void}
    */
@@ -447,6 +456,31 @@ function SpreadDb(schema={table:[]},opt={}) {
         // シートの整形：1行目のみ固定化
         v.sheet.setFrozenRows(1);
       }
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { dev.error(e); return e; }
+  }
+
+  /** upsert: 指定されたテーブルに対して、既存のレコードがあれば更新し、なければ挿入する
+   * @memberof SpreadDb
+   * @param {string} tableName - 操作対象テーブル名
+   * @param {Object[]} data - 挿入データの行オブジェクトの配列
+   *   シートイメージを処理したい場合、事前にarray2objでオブジェクト化しておく。
+   */
+  function upsert(tableName,data=[]) {
+    const v = { whois: `${pv.whois}.upsert`, rv: null};
+    dev.start(v.whois, [...arguments]);
+    try {
+
+      dev.step(1);
+      dev.dump(tableName,data);
+      // テーブル情報の存否確認
+      // データをデータ用テーブルに格納
+      // 値がユニークな項目をキーに指定テーブルと作業用テーブルを連結、primary keyを作業用テーブルに保存
+      // 作業用テーブルに存在する場合、updateを実行
+      // 作業用テーブルに存在しない場合、insertを実行
 
       dev.end(); // 終了処理
       return v.rv;
@@ -521,13 +555,14 @@ function SpreadDb(schema={table:[]},opt={}) {
     dev.end(); // 終了処理
     return {
       'exec': execSQL,
-      'load': loadSheet,
-      'save': saveRDB,
+      'export': exportFile,
+      'getSchema': ()=>pv.schema,
+      'hasTable': hasTable,
       'import': importJSON,
       'importGDCSV': importGDCSV,
-      'export': exportFile,
-      'hasTable': hasTable,
-      'getSchema': ()=>pv.schema,
+      'load': loadSheet,
+      'save': saveRDB,
+      'upsert': upsert,
     };
 
   } catch (e) { dev.error(e); return e; }
