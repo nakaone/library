@@ -474,10 +474,16 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
     dev.start(v.whois, [...arguments]);
     try {
 
-      dev.step(1);
-      dev.dump(tableName,data);
-      // テーブル情報の存否確認
-      // データをデータ用テーブルに格納
+      dev.step(1);  // テーブル情報の存否確認
+      if( !pv.schema.tableMap.hasOwnProperty(tableName) )
+        throw new Error(`「${tableName}」は存在しません`);
+
+      dev.step(2);  // データをデータ用テーブル(dtbl)に格納
+      v.sql = 'insert into dtbl select * from ?;';
+      v.r = execSQL(v.sql,[data]);
+      if( v.r instanceof Error ) throw v.r;
+      dev.dump(execSQL('select * from dtbl'));
+
       // 値がユニークな項目をキーに指定テーブルと作業用テーブルを連結、primary keyを作業用テーブルに保存
       // 作業用テーブルに存在する場合、updateを実行
       // 作業用テーブルに存在しない場合、insertを実行

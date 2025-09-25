@@ -42,9 +42,12 @@ const test = () => {
   dev.start(v.whois);
   try {
 
-    dev.step(2);  // SpreadDb.appendテスト
+    dev.step(1);
     v.db = SpreadDb(testArg.schema,testArg.opt);
-    
+
+    // -------------------------------------------------------------
+    dev.step(2);  // SpreadDb.upsertテスト
+    // -------------------------------------------------------------
     dev.step(2.1);  // テストデータのセット
     v.sql
     // ①テストデータをinsert
@@ -59,7 +62,13 @@ const test = () => {
     // ④：残っているのが①＋②−③になっていることを確認
     dev.dump(v.r,v.db.exec('select * from `ファイル一覧`;'));
 
-    dev.step(2.2);  // テスト実施
+    /* テストOKにつきコメントアウト
+    dev.step(2.2);  // 存在しないテーブル ⇒ エラー
+    v.r = v.db.upsert('hoge');
+    dev.dump(v.r.message);
+    */
+    
+    dev.step(2.3);  // テスト実施
     v.r = v.db.upsert('ファイル一覧',[
       {id:5,name:'f05'},  // insert(id有り)
       {name:'f06',mime:'json'},  // insert(id無し)
