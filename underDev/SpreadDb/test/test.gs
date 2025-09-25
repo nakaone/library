@@ -1325,7 +1325,9 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
         throw new Error(`「${tableName}」は存在しません`);
 
       dev.step(2);  // データをデータ用テーブル(dtbl)に格納
-      v.sql = 'insert into dtbl select * from ?;';
+      v.sql = 'drop table if exists dtbl;'
+      + 'create table dtbl;'
+      + 'insert into dtbl select * from ?;';
       v.r = execSQL(v.sql,[data]);
       if( v.r instanceof Error ) throw v.r;
       dev.dump(execSQL('select * from dtbl'));
@@ -1335,6 +1337,8 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
       // 作業用テーブルに存在しない場合、insertを実行
 
       dev.end(); // 終了処理
+      v.r = execSQL('drop table dtbl;');
+      if( v.r instanceof Error ) throw v.r;
       return v.rv;
 
     } catch (e) { dev.error(e); return e; }

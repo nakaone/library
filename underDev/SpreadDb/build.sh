@@ -16,4 +16,5 @@ test="$prj/test"
 cat $test/proto.js | awk 1 | \
 $embed -prj:$prj -lib:$lib -dev:$dev -test:$test > $test/test.gs
 
-jsdoc core.js -d $prj/doc
+# 開発時、修正箇所が見にくくなるので暫定的にコメントアウト
+# jsdoc core.js -d $prj/doc

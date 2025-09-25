@@ -6,6 +6,7 @@
     - SpreadDb.schema.tables -> tableMap
     - SpreadDb.schema.tables.cols -> colMap(予約語columnsと紛らわし)
   - update(append)で更新＋追加機能をテスト
+  - upsert開発用にSpreadDbテスト環境構築
   - upsert機能の実装 ◀いまここ
 - unserDev/Schema/core.js
   - 引数チェックを追加(ex.tableMapは必須)
@@ -40,6 +41,13 @@
 ## 注意事項
 
 - SpreadDb関係の修正はGASutil/test側で行う(∵テストケースが重複、データ共有)
+
+# 20250925
+
+## [bug] SpreadDb.upsert.2: Cannot read properties of undefined (reading 'defaultfns')
+
+⇒ 'create table dtbl;'を追加
+
 
 # 20250924
 
