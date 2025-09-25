@@ -466,11 +466,11 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
   /** upsert: 指定されたテーブルに対して、既存のレコードがあれば更新し、なければ挿入する
    * @memberof SpreadDb
    * @param {string} tableName - 操作対象テーブル名
-   * @param {Object[]} data - 挿入データの行オブジェクトの配列
+   * @param {Object[]} upsertRows - 挿入データの行オブジェクトの配列
    *   シートイメージを処理したい場合、事前にarray2objでオブジェクト化しておく。
    * @returns {Object} {update:[],insert:[],error:[]}
    */
-  function upsert(tableName,data=[]) {
+  function upsert(tableName,upsertRows=[]) {
     const v = { whois: `${pv.whois}.upsert`, rv: {update:[],insert:[],error:[]}};
     dev.start(v.whois, [...arguments]);
     try {
@@ -488,15 +488,8 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
       dev.step(1.2);  // 挿入先テーブルのRowNumberの開始値を求める
       v.r = execSQL(`select max(RowNumber) as a from \`${tableName}\`;`);
       if( v.r instanceof Error ) throw v.r;
-      v.startingRowNumber = v.r.length === 1 ? (v.r[0].a + 1) : v.table.startingRowNumber;
-
-      dev.step(1.3);  // データをデータ用テーブル(dtbl)に格納
-      v.sql = 'drop table if exists dtbl;'
-      + 'create table dtbl;'
-      + 'insert into dtbl select * from ?;';
-      v.r = execSQL(v.sql,[data]);
-      if( v.r instanceof Error ) throw v.r;
-      dev.dump(execSQL('select * from dtbl'));
+      v.startingRowNumber = v.r[0].a ? (v.r[0].a + 1) : v.table.startingRowNumber;
+      dev.dump(v.r,v.startingRowNumber);
 
       // -------------------------------------------------------------
       dev.step(2);  // データをupdate対象とinsert対象に振り分け
@@ -504,34 +497,36 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
       if( v.table.primaryKey.length === 0 ){
         dev.step(2.1);  // 主キー不存在 ⇒ 全件insert
         v.updateRows = [];
-        v.insertRows = data;
+        v.insertRows = upsertRows;
       } else {
-        // 主キーが存在 ⇒ dataの主キーが挿入先テーブルに存在するかで振り分け
+        // 主キーが存在 ⇒ upsertRowsの主キーが挿入先テーブルに存在するかで振り分け
 
         dev.step(2.2);  // 挿入対象とデータ用テーブルを連結(SQLのON句)
         v.pColsOn = v.table.primaryKey
-          .map(x => `\`dtbl\`.\`${x}\`=\`${tableName}\`.\`${x}\``)
+          .map(x => `\`upsertRows\`.\`${x}\`=\`${tableName}\`.\`${x}\``)
           .join(' and ');
 
-        dev.step(2.3);  // dtbl.primaryKeyが未定義ならinsert
+        dev.step(2.3);  // upsertRows.primaryKeyが未定義ならinsert
         v.pColsWhere = v.table.primaryKey
           .map(x => `\`${tableName}\`.\`${x}\` is null`)
           .join(' and ');
-        v.sql = `select * from dtbl`
+        v.sql = `select * from ? as \`upsertRows\``
         + ` inner join \`${tableName}\` on ${v.pColsOn}`
         + ` where ${v.pColsWhere};`;
-        v.r = execSQL(v.sql);
+        dev.dump(v.sql);
+        v.r = execSQL(v.sql,[upsertRows]);
         if( v.r instanceof Error ) throw v.r;
         v.insertRows = v.r;
 
-        dev.step(2.4);  // dtbl.primaryKeyが定義済ならupdate
+        dev.step(2.4);  // upsertRows.primaryKeyが定義済ならupdate
         v.pColsWhere = v.table.primaryKey
           .map(x => `\`${tableName}\`.\`${x}\` is not null`)
           .join(' or ');
-        v.sql = `select * from dtbl`
+        v.sql = `select * from ? as \`upsertRows\``
         + ` inner join \`${tableName}\` on ${v.pColsOn}`
         + ` where ${v.pColsWhere};`;
-        v.r = execSQL(v.sql);
+        dev.dump(v.sql);
+        v.r = execSQL(v.sql,[upsertRows]);
         if( v.r instanceof Error ) throw v.r;
         v.updateRows = v.r;
       }
@@ -545,12 +540,16 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
           v.set = [];
           for( v.label in row )
             v.set.push(`\`${v.label}\`=${row[v.label]}`);
+
           dev.step(3.2);  // where句(pKey項目名=キー値)
           v.pKey = v.table.primaryKey.map(x => `\`${x}\`=${row[x]}`);
+
           dev.step(3.3);  // 一レコード分のSQLを作成、実行
           v.sql = `update \`${tableName}\` set ${v.set.join(',')} where ${v.pKey.join(' and ')};`;
+          dev.dump(v.sql);
           v.r = execSQL(v.sql);
           if( v.r instanceof Error ) throw v.r;
+
           dev.step(3.4);  // 結果を戻り値に保存
           v.rv[(v.r === 1 ? 'update' : 'error')].push(row);
         });
@@ -573,9 +572,6 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
       }
 
       dev.end(); // 終了処理
-      // 作業用テーブルの削除
-      v.r = execSQL('drop table dtbl;');
-      if( v.r instanceof Error ) throw v.r;
       return v.rv;
 
     } catch (e) { dev.error(e); return e; }
