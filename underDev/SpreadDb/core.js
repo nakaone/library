@@ -468,17 +468,29 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
    * @param {string} tableName - 操作対象テーブル名
    * @param {Object[]} data - 挿入データの行オブジェクトの配列
    *   シートイメージを処理したい場合、事前にarray2objでオブジェクト化しておく。
+   * @returns {Object} {update:[],insert:[],error:[]}
    */
   function upsert(tableName,data=[]) {
-    const v = { whois: `${pv.whois}.upsert`, rv: null};
+    const v = { whois: `${pv.whois}.upsert`, rv: {update:[],insert:[],error:[]}};
     dev.start(v.whois, [...arguments]);
     try {
 
-      dev.step(1);  // テーブル情報の存否確認
-      if( !pv.schema.tableMap.hasOwnProperty(tableName) )
+      // -------------------------------------------------------------
+      dev.step(1);  // 事前準備
+      // -------------------------------------------------------------
+      dev.step(1.1);  // テーブル情報の存否確認
+      if( pv.schema.tableMap.hasOwnProperty(tableName) ){
+        v.table = pv.schema.tableMap[tableName];
+      } else {
         throw new Error(`「${tableName}」は存在しません`);
+      }
 
-      dev.step(2);  // データをデータ用テーブル(dtbl)に格納
+      dev.step(1.2);  // 挿入先テーブルのRowNumberの開始値を求める
+      v.r = execSQL(`select max(RowNumber) as a from \`${tableName}\`;`);
+      if( v.r instanceof Error ) throw v.r;
+      v.startingRowNumber = v.r.length === 1 ? (v.r[0].a + 1) : v.table.startingRowNumber;
+
+      dev.step(1.3);  // データをデータ用テーブル(dtbl)に格納
       v.sql = 'drop table if exists dtbl;'
       + 'create table dtbl;'
       + 'insert into dtbl select * from ?;';
@@ -486,11 +498,82 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
       if( v.r instanceof Error ) throw v.r;
       dev.dump(execSQL('select * from dtbl'));
 
-      // 値がユニークな項目をキーに指定テーブルと作業用テーブルを連結、primary keyを作業用テーブルに保存
-      // 作業用テーブルに存在する場合、updateを実行
-      // 作業用テーブルに存在しない場合、insertを実行
+      // -------------------------------------------------------------
+      dev.step(2);  // データをupdate対象とinsert対象に振り分け
+      // -------------------------------------------------------------
+      if( v.table.primaryKey.length === 0 ){
+        dev.step(2.1);  // 主キー不存在 ⇒ 全件insert
+        v.updateRows = [];
+        v.insertRows = data;
+      } else {
+        // 主キーが存在 ⇒ dataの主キーが挿入先テーブルに存在するかで振り分け
+
+        dev.step(2.2);  // 挿入対象とデータ用テーブルを連結(SQLのON句)
+        v.pColsOn = v.table.primaryKey
+          .map(x => `\`dtbl\`.\`${x}\`=\`${tableName}\`.\`${x}\``)
+          .join(' and ');
+
+        dev.step(2.3);  // dtbl.primaryKeyが未定義ならinsert
+        v.pColsWhere = v.table.primaryKey
+          .map(x => `\`${tableName}\`.\`${x}\` is null`)
+          .join(' and ');
+        v.sql = `select * from dtbl`
+        + ` inner join \`${tableName}\` on ${v.pColsOn}`
+        + ` where ${v.pColsWhere};`;
+        v.r = execSQL(v.sql);
+        if( v.r instanceof Error ) throw v.r;
+        v.insertRows = v.r;
+
+        dev.step(2.4);  // dtbl.primaryKeyが定義済ならupdate
+        v.pColsWhere = v.table.primaryKey
+          .map(x => `\`${tableName}\`.\`${x}\` is not null`)
+          .join(' or ');
+        v.sql = `select * from dtbl`
+        + ` inner join \`${tableName}\` on ${v.pColsOn}`
+        + ` where ${v.pColsWhere};`;
+        v.r = execSQL(v.sql);
+        if( v.r instanceof Error ) throw v.r;
+        v.updateRows = v.r;
+      }
+
+      // -------------------------------------------------------------
+      dev.step(3);  // update分の実行
+      // -------------------------------------------------------------
+      if( v.updateRows.length > 0 ){
+        v.updateRows.forEach(row => {
+          dev.step(3.1);  // set句(更新項目名=更新値)
+          v.set = [];
+          for( v.label in row )
+            v.set.push(`\`${v.label}\`=${row[v.label]}`);
+          dev.step(3.2);  // where句(pKey項目名=キー値)
+          v.pKey = v.table.primaryKey.map(x => `\`${x}\`=${row[x]}`);
+          dev.step(3.3);  // 一レコード分のSQLを作成、実行
+          v.sql = `update \`${tableName}\` set ${v.set.join(',')} where ${v.pKey.join(' and ')};`;
+          v.r = execSQL(v.sql);
+          if( v.r instanceof Error ) throw v.r;
+          dev.step(3.4);  // 結果を戻り値に保存
+          v.rv[(v.r === 1 ? 'update' : 'error')].push(row);
+        });
+      }
+
+      // -------------------------------------------------------------
+      dev.step(4);  // insert分の実行
+      // -------------------------------------------------------------
+      if( v.insertRows.length > 0 ){
+        v.insertRows.forEach(row => {
+          dev.step(4.1);  // SQL文の作成と実行
+          row.RowNumber = v.startingRowNumber++;
+          v.sql = `insert into \`${tableName}\` ?`;
+          v.r = execSQL(v.sql,[row]);
+          if( v.r instanceof Error ) throw v.r;
+
+          dev.step(4.2);  // 結果を戻り値に保存
+          v.rv[(v.r === 1 ? 'insert' : 'error')].push(row);
+        });
+      }
 
       dev.end(); // 終了処理
+      // 作業用テーブルの削除
       v.r = execSQL('drop table dtbl;');
       if( v.r instanceof Error ) throw v.r;
       return v.rv;

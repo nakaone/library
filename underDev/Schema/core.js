@@ -26,6 +26,7 @@
  * @typedef {Object} tableDef
  * @property {string} [note] - テーブルに関する備考
  * @property {string|string[]} [primaryKey] - 主キーとなる項目名。複合キーの場合は配列で指定
+ * @property {string|string[]} [unique] - 主キー以外で値の重複が無い項目名。複数の場合は配列で指定
  * @property {columnDef[]} colDef - 項目定義(順序を考慮するためオブジェクトでは無く配列で定義)
  * @property {number} [top=1] - シート・CSVイメージ上のヘッダ行番号
  * @property {number} [left=1] - シート・CSVイメージ上の開始列番号
@@ -71,7 +72,7 @@ function Schema(schema) {
     schemaDef:  // schemaDefEx形式の既定値。但しoriginal,created,expandはメソッド内で追加
       '{"dbName":"","note":"","tableDef":{},"tableMap":{},"custom":{}}',
     tableDef: // tableDefEx形式の既定値
-      '{"def":"","data":[],"note":"","primaryKey":[],"colDef":[],'
+      '{"def":"","data":[],"note":"","primaryKey":[],"unique":[],"colDef":[],'
       + '"top":1,"left":1,"startingRowNumber":2,"name":"","header":[],"colMap":{}}',
     columnDef:  // columnDefEx形式の既定値
       '{"name":"","seq":0,"note":"","label":"","type":"string","alias":[],"default":null,"printf":null}',
@@ -151,9 +152,8 @@ function Schema(schema) {
         }
 
         dev.step(2.4);  // primaryKeyが文字列なら配列化
-        if( typeof v.table.primaryKey === 'string' ){
-          v.table.primaryKey = [v.table.primaryKey];
-        }
+        if( typeof v.table.primaryKey === 'string' ) v.table.primaryKey = [v.table.primaryKey];
+        if( typeof v.table.unique === 'string' ) v.table.unique = [v.table.unique];
 
         // -------------------------------------------------------------
         dev.step(3); // column毎の処理

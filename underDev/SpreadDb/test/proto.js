@@ -74,6 +74,7 @@ const test = () => {
       {name:'f06',mime:'json'},  // insert(id無し)
       {id:4,mime:'text'},  // update。nameは更新対象外
     ]);
+    dev.dump(v.r);
 
     dev.end();  // 終了処理
   } catch (e) { dev.error(e); return e; }
