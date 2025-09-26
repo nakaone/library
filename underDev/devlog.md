@@ -44,6 +44,9 @@
 
 # 20250925
 
+## [bug] insert対象レコードが追加されない　※いまここらへん
+## [bug] mime,desc他、更新対象項目以外がundefinedになる
+
 ## [bug] SpreadDb.upsert.2: Cannot read properties of undefined (reading 'defaultfns')
 
 ⇒ 'create table dtbl;'を追加
