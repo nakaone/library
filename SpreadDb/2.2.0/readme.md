@@ -4,6 +4,11 @@
 
 # 更新履歴
 
+- rev.2.2.0 : 2025/09/28
+  - upsert, getSchemaを追加実装
+  - create table時のprimary key対応追加
+  - AlaSQLとの競合回避のため、一部項目名変更(tables->tableMap, cols->colMap)
+
 - rev.2.1.0 : 2025/09/18
   - schemaのデータ型を修正
 
