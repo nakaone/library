@@ -7,8 +7,8 @@
     - SpreadDb.schema.tables.cols -> colMap(予約語columnsと紛らわし)
   - update(append)で更新＋追加機能をテスト
   - upsert開発用にSpreadDbテスト環境構築
-  - upsert機能の実装 ◀いまここ
-- unserDev/Schema/core.js
+  - upsert機能の実装
+- unserDev/Schema/core.js ◀いまここ
   - 引数チェックを追加(ex.tableMapは必須)
 - underDev/GASutil/test/proto.js
   - SpreadDbの元ソースをlibからunderDevに変更
