@@ -9,6 +9,20 @@
  *   - string: CSV/TSV形式。先頭行は項目名(labelの配列=header)。
  *   - Object[]: 行オブジェクトの配列
  * @property {Object.<string, string>} [custom] - AlaSQLのカスタム関数。{関数名: toString()で文字列化した関数}
+ * @example
+ * schema: {
+ *   dbName: 'camp2025',
+ *   tableDef: {
+ *     master: {
+ *       colDef:[
+ *         {name:'タイムスタンプ',type:'string'},
+ *         {name:'メールアドレス',type:'string'},
+ *         // (中略)
+ *       ],
+ *     },
+ *   },
+ *   tableMap: {master:{def:'master'}},
+ * },
  */
 
 /** schemaDefEx: Schemaの戻り値となる拡張済DB構造定義オブジェクト
