@@ -74,7 +74,7 @@
 function SpreadDb(schema={tableMap:{}},opt={}) {
   const pv = { whois: 'SpreadDb', rv: null,
     spread: SpreadsheetApp.getActiveSpreadsheet(),
-    schema: Schema(schema),
+    schema: null,
     opt: Object.assign({},opt), // 現状、オプションは未定義
     rdb: new alasql.Database(),
   };
@@ -582,6 +582,9 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
   try {
 
     dev.step(1);  // schema.tableMapを基にテーブル・シートを初期化
+    pv.schema = Schema(schema);
+    if( pv.schema instanceof Error ) throw pv.schema;
+    
     for( pv.table of Object.values(pv.schema.tableMap) ){
 
       dev.step(1.1);  // RDBのテーブルを初期化
@@ -613,7 +616,6 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
         if( pv.r instanceof Error ) throw pv.r;
       } else {
         dev.step(2.2);  // シート未作成の場合、シートを作成してヘッダ行を登録
-        pv.table = pv.schema.tableMap[pv.table.name];
         pv.sheet = pv.spread.insertSheet(pv.table.name);
         pv.range = pv.sheet.getRange(1, 1, 1, pv.table.header.length);
         pv.range.setValues([pv.table.header]);
