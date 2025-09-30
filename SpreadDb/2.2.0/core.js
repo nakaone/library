@@ -84,7 +84,7 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
    * @param {string|number|boolean[][]} arg=[] - シートイメージの二次元配列。先頭行はヘッダ
    * @param {Object} opt - オプション
    * @param {number|null} opt.RowNumber=null - 行番号(RowNumber)追加ならヘッダ行の行番号、追加無しならnull
-   * @param {Object.<string,columnDefEx>|null} opt.colDef=null - シートイメージの項目定義集
+   * @param {Object.<string,columnDefEx>|null} opt.colMap=null - シートイメージの項目定義集
    * @returns {Object[]} 行オブジェクトの配列
    */
   function array2obj(arg=[],opt={}) {
@@ -93,7 +93,7 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
     try {
 
       dev.step(1);  // オプションの既定値設定
-      opt = Object.assign({RowNumber:null,colDef:null},opt);
+      opt = Object.assign({RowNumber:null,colMap:null},opt);
 
       for (v.r = 1; v.r < arg.length; v.r++) {  // ヘッダ行(0行目)は飛ばす
 
@@ -106,8 +106,8 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
           if( !arg[0][v.c] ) continue;
 
           dev.step(4);  // 項目定義上のデータ型を特定
-          v.type = typeof opt.colDef[arg[0][v.c]].type === 'undefined'
-          ? 'undefined' : opt.colDef[arg[0][v.c]].type;
+          v.type = typeof opt.colMap[arg[0][v.c]].type === 'undefined'
+          ? 'undefined' : opt.colMap[arg[0][v.c]].type;
 
           switch( v.type ){
             case 'number':
@@ -303,7 +303,7 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
       dev.step(3.3);  // 行オブジェクト化、戻り値(v.rv.data)に格納
       v.rv.data = array2obj(v.csv,{
         RowNumber: 1,
-        colDef: ( v.table === null ? null : v.table.colDef ),
+        colMap: ( v.table === null ? null : v.table.colMap ),
       });
       if( v.rv.data instanceof Error ) throw v.rv.data;
 
@@ -387,7 +387,7 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
         if( v.table.top > 1 ) v.raw.splice(0,v.table.top-1);
 
         dev.step(2.3);  // シートが存在する場合、内容をv.rObjに読み込み
-        v.rObj = array2obj(v.raw,{RowNumber:1,colDef:v.table.colDef});
+        v.rObj = array2obj(v.raw,{RowNumber:1,colMap:v.table.colMap});
         if( v.rObj instanceof Error ) throw v.rObj;
 
         dev.step(2.4);  // テーブルに追加
