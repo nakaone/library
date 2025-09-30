@@ -605,7 +605,7 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
       if( pv.r instanceof Error ) throw pv.r;
 
       dev.step(1.3);  // 作成結果確認
-      const { pk, columns }=pv.rdb.tables['ファイル一覧'];
+      const { pk, columns }=pv.rdb.tables[pv.table.name];
       dev.dump({ pk, columns });
 
       dev.step(2);  // シートの作成
