@@ -391,7 +391,8 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
         if( v.rObj instanceof Error ) throw v.rObj;
 
         dev.step(2.4);  // テーブルに追加
-        v.sql = `delete from \`${v.list[v.i]}\`;` // 全件削除
+        v.sql = `drop table if exists \`${v.list[v.i]}\`;` // 全件削除
+        + `create table \`${v.list[v.i]}\`;`
         + `insert into \`${v.list[v.i]}\` select * from ?`;
         v.r = execSQL(v.sql,[v.rObj]);
         if( v.r instanceof Error ) throw v.r;
