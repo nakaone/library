@@ -486,7 +486,13 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
         throw new Error(`「${tableName}」は存在しません`);
       }
 
-      dev.step(1.2);  // 挿入先テーブルのRowNumberの開始値を求める
+      dev.step(1.2);  // 挿入データが無ければ終了
+      if( upsertRows.length === 0 ){
+        dev.end(); // 終了処理
+        return v.rv;
+      }
+
+      dev.step(1.3);  // 挿入先テーブルのRowNumberの開始値を求める
       v.r = execSQL(`select max(RowNumber) as a from \`${tableName}\`;`);
       if( v.r instanceof Error ) throw v.r;
       v.startingRowNumber = v.r[0].a ? (v.r[0].a + 1) : v.table.startingRowNumber;
