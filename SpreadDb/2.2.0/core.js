@@ -387,7 +387,7 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
         if( v.table.top > 1 ) v.raw.splice(0,v.table.top-1);
 
         dev.step(2.3);  // シートが存在する場合、内容をv.rObjに読み込み
-        v.rObj = array2obj(v.raw,{RowNumber:1,colMap:v.table.colMap});
+        v.rObj = array2obj(v.raw,{RowNumber:2,colMap:v.table.colMap});
         if( v.rObj instanceof Error ) throw v.rObj;
 
         dev.step(2.4);  // テーブルに追加
