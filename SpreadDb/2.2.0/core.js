@@ -335,7 +335,6 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
 
     dev.step(1);  // オプションに既定値設定
       pv.opt = Object.assign(pv.opt,arg);
-      dev.dump(pv.opt);
 
       dev.step(2);
       pv.idb = await openIndexedDB();
@@ -496,7 +495,6 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
       v.r = execSQL(`select max(RowNumber) as a from \`${tableName}\`;`);
       if( v.r instanceof Error ) throw v.r;
       v.startingRowNumber = v.r[0].a ? (v.r[0].a + 1) : v.table.startingRowNumber;
-      dev.dump(v.r,v.startingRowNumber);
 
       // -------------------------------------------------------------
       dev.step(2);  // データをupdate対象とinsert対象に振り分け
@@ -520,7 +518,6 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
         v.sql = `select * from ? as \`upsertRows\``
         + ` inner join \`${tableName}\` on ${v.pColsOn}`
         + ` where ${v.pColsWhere};`;
-        dev.dump(v.sql);
         v.r = execSQL(v.sql,[upsertRows]);
         if( v.r instanceof Error ) throw v.r;
         v.insertRows = v.r;
@@ -532,7 +529,6 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
         v.sql = `select * from ? as \`upsertRows\``
         + ` inner join \`${tableName}\` on ${v.pColsOn}`
         + ` where ${v.pColsWhere};`;
-        dev.dump(v.sql);
         v.r = execSQL(v.sql,[upsertRows]);
         if( v.r instanceof Error ) throw v.r;
         v.updateRows = v.r;
@@ -553,7 +549,6 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
 
           dev.step(3.3);  // 一レコード分のSQLを作成、実行
           v.sql = `update \`${tableName}\` set ${v.set.join(',')} where ${v.pKey.join(' and ')};`;
-          dev.dump(v.sql);
           v.r = execSQL(v.sql);
           if( v.r instanceof Error ) throw v.r;
 
