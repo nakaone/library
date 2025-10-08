@@ -16,6 +16,7 @@ img="$doc/img"
 # ----------------------------------------------
 
 mmdc -i $doc/joining.mermaid -o $img/joining.png
+mmdc -i $doc/authenticate.mermaid -o $img/authenticate.png
 
 cat $doc/spec.proto.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -doc:$doc > $doc/specification.md
