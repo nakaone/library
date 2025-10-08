@@ -1,0 +1,18 @@
+sequenceDiagram
+  participant auchClient
+  participant authServer
+  participant localStorage
+  participant memberList
+  participant admin
+
+  authServer->>authServer: ①公開鍵の準備
+  auchClient->>authServer: 加入要求
+  authServer->>auchClient: SPkey(平文)
+  localStorage->>authClient: ②鍵ペアの準備
+  auchClient->>auchClient: メールアドレス入力
+  auchClient->>authServer: メールアドレス
+  authServer->>memberList: メールアドレスとCPkey送信、保管
+  authServer->>admin: 加入要求連絡
+  admin->>authServer: ③加入可否検討
+  authServer->>auchClient: ④結果連絡
+
