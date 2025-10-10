@@ -9,7 +9,7 @@ source ~/Desktop/GitHub/tools/common.sh
 prj="$lib/underDev/Auth"
 arc="$prj/archives"
 doc="$prj/doc"
-img="$doc/img"
+img="$prj/img"
 
 # ----------------------------------------------
 # 1. 仕様書
@@ -18,5 +18,10 @@ img="$doc/img"
 mmdc -i $doc/joining.mermaid -o $img/joining.png
 mmdc -i $doc/authenticate.mermaid -o $img/authenticate.png
 
-cat $doc/spec.proto.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$doc > $doc/specification.md
+# 仕様書
+cat $doc/spec.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -doc:$doc > $prj/spec.md
+
+# AI質問用
+cat $doc/question.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -doc:$doc > $prj/question.md

@@ -1,16 +1,8 @@
 # 総説
 
-## 生成AIへ
-
-- 本文書はMarkdownで書かれています。画像へのリンク(`![画像名](リンク先)`)は無視してください。
-- 以下の仕様に基づき、ブラウザ側JavaScript関数"authClient"とGAS関数"authServer"を作成する予定ですが、今回は本仕様のレビューをお願いします。記述が無い・論理矛盾・不足している点や使用するツールの推薦をお願いします。
-- 開発スピード・安定稼働を重視し多少のリスクは許容しますが、重大なセキュリティホールは指摘してください。
-- GASライブラリは使えなくなる場合も有るため、CDNのように「ダウンロードして埋め込む」という選択肢がとれる範囲でお願いします。
-- 「ライブラリ」欄に記載された機能は過去に使用実績があるため、特に問題無ければそれを流用します。
+ブラウザ(クライアント)とGAS(サーバ)の間で認証された通信を行う。
 
 ## 要求仕様
-
-ブラウザ(クライアント)とGAS(サーバ)の間で認証された通信を行う。
 
 - 本システムは限られた人数のサークルや小学校のイベント等での利用を想定する。<br>
   よって恒久性・安全性よりは導入時の容易さ・技術的ハードルの低さ、運用の簡便性を重視する。
@@ -53,62 +45,15 @@
 
 ### class authTrial : サーバ側のログイン試行時のパスコード関係
 
-#### authTrial.constructor()
-
-- param {Object} arg
-- param {string} arg.sheetName - memberListのシート名
-- param {string} arg.memberId - メンバの識別子(=メールアドレス)
-- param {Object} opt - authTrialの設定値。authConfig.trialを想定
-- returns {authTrial[]}
-
-1. memberListからthis.memberIdの情報を取得、trial欄をオブジェクト化
-2. 新しいauthTrialインスタンスを生成
-3. authTrial.passcodeをcreatePassword()で生成、createdに現在時刻を設定
-4. authTrialインスタンスを先頭にセットした配列を戻り値とする
-5. opt.generationMax超の履歴は削除
-6. JSON化してtrial欄にセット
-
-#### authTrial.try() : クライアント側で入力されたパスコードの検証
-
-- param {Object} arg
-- param {string} arg.sheetName - memberListのシート名
-- param {string} arg.memberId - メンバの識別子(=メールアドレス)
-- param {string} arg.enterd - 入力されたパスコード
-- param {number} arg.timestamp - パスコード入力時刻
-- param {Object} opt - authTrialの設定値。authConfig.trialを想定
-- returns {authTrialLog}
-
-1. memberListからthis.memberIdの情報を取得、trial欄をオブジェクト化
-2. 凍結期間中ではないか判定(`Date.now() < opt.freezingUntil`)<br>
-  結果は`{result:-1, message:'freezing'}`として5.に飛ぶ
-3. パスコードの有効期間内か判定(`timestamp < authTrial.created+opt.passcodeLifeTime`)<br>
-  エラー時は`{result:-1, message:'expired'}`として5.に飛ぶ
-4. パスコードが一致するか判定(`Number(enterd)===Number(authTrial.passcode)`)<br>
-  一致なら`{result:1}`、不一致なら`{result:0, message:'unmatch'}`として5.に飛ぶ
-5. 結果を基にauthTrialLogインスタンスを生成、authTrial.logの先頭に追加
-6. 試行回数のチェック。`result===0 && authTrial.log.length===opt.maxTrial`の場合、凍結期間を設定(`freezingUntil=opt.freezing+Date.now()`)
-7. authTrialインスタンスをJSON化してmemberList.trialに記録(上書き)
-
-#### authTrial.updateCPkey() : 期限切れCPkeyの更新処理
-
-
-- param {authConfig} [config] - インスタンス化されたauthConfigオブジェクト。指定た場合、以下の指定は不要。
-- param {number} [memberLifeTime=31536000000] - メンバ加入承認後の有効期間。既定値：1年
-- param {number} [loginLifeTime=86400000] - ログイン成功後の有効期間(=CPkeyの有効期間)。既定値：1日
-- param {number} [maxTrial=3] パスコード入力の最大試行回数
-- param {number} [passcodeLifeTime=600000] - パスコードの有効期間。既定値：10分
-- param {number} [allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差。既定値：2分
-- param {number} [freezing=3600000] - 連続失敗した場合の凍結期間。既定値：1時間
-
-
+- [authTrial](doc/class.authTrial.md)参照
 
 ### function decryptRequest
 
-- [decryptRequest 関数 仕様書](./spec.decryptRequest.md)参照
+- [decryptRequest 関数 仕様書](doc/decryptRequest.md)参照
 
 ### function encryptRequest
 
-- [encryptRequest 関数 仕様書](./spec.encryptRequest.md)参照
+- [encryptRequest 関数 仕様書](doc/encryptRequest.md)参照
 
 # 処理手順
 
@@ -191,7 +136,7 @@
 - prop {string} accepted - 加入が承認されたメンバには承認日時を設定
 - prop {string} reportResult - 「加入登録」処理中で結果連絡メールを送信した日時
 - prop {string} expire - 加入承認の有効期間が切れる日時
-- prop {string} authority - メンバ間でサーバ側関数の実行権限に差がある場合に設定するJSON文字列
+- prop {string} profile - メンバの属性情報を保持するJSON文字列。サーバ側処理時のユーザ毎の実行権限等での利用を想定。
 - prop {string} trial - ログイン試行関連情報オブジェクト(authTrial[])のJSON文字列
 
 # データ型(typedef)
@@ -209,12 +154,17 @@ authClient/authServer共通で使用される設定値
 - prop {string} [system.name='auth'] - システム名
 - prop {string} [system.adminMail=''] - 管理者のメールアドレス
 - prop {string} [system.adminName=''] - 管理者名
-- prop {string} [system.memberList='memberList'] - memberListシート名
-
-- prop {Object.<string,Function|Arrow>} func - サーバ側の関数マップ。{関数名：関数}形式
 
 - prop {Object} RSA - 署名・暗号化関係の設定値
 - prop {number} [RSA.bits=2048] - 鍵ペアの鍵長
+
+## authServerConfig
+
+authConfigを継承した、authServerで使用する設定値
+
+- typedef {Object} authServerConfig
+- prop {string} [system.memberList='memberList'] - memberListシート名
+- prop {Object.<string,Function|Arrow>} func - サーバ側の関数マップ。{関数名：関数}形式
 
 - prop {Object} decryptRequest - decryptRequest関係の設定値
 - prop {number} [decryptRequest.memberLifeTime=31536000000] - メンバ加入承認後の有効期間。既定値：1年
@@ -227,13 +177,21 @@ authClient/authServer共通で使用される設定値
 - prop {number} [trial.passcodeLifeTime=600000] - パスコードの有効期間。既定値：10分
 - prop {number} [trial.generationMax=5] - ログイン試行履歴(authTrial)の最大保持数。既定値：5世代
 
-## authTrial, authTrialLog
+## authClientConfig
+
+authConfigを継承した、authClientで使用する設定値
+
+- typedef {Object} authClientConfig
+
+## authTrialLog
 
 - typedef {Object} authTrialLog
 - prop {string} enterd - 入力されたパスコード
 - prop {number} result - -1:恒久的エラー, 0:要リトライ, 1:パスコード一致
 - prop {string} message - エラーメッセージ
 - prop {number} timestamp - 判定処理日時
+
+## authTrial
 
 - typedef {Object} authTrial
 - prop {string} passcode - 設定されているパスコード
@@ -274,95 +232,3 @@ authServerからauthClientに送られる処理結果オブジェクト
 - prop {number} timestamp - 処理日時。UNIX時刻
 - prop {string} status - 処理結果。正常終了ならnull、異常終了ならErrorオブジェクトをJSON化した文字列
 - prop {string} response - 要求された関数の戻り値をJSON化した文字列
-
-# ライブラリ
-
-## createPassword()：長さ・文字種指定に基づき、パスワードを生成
-
-```
-/** 長さ・文字種指定に基づき、パスワードを生成
- * 
- * @param {number} [len=16] - パスワードの長さ
- * @param {Object} opt 
- * @param {boolean} [opt.lower=true] - 英小文字を使うならtrue
- * @param {boolean} [opt.upper=true] - 英大文字を使うならtrue
- * @param {boolean} [opt.symbol=true] - 記号を使うならtrue
- * @param {boolean} [opt.numeric=true] - 数字を使うならtrue
- * @returns {string}
- */
-function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:true}){
-  const v = {
-    whois: 'createPassword',
-    lower: 'abcdefghijklmnopqrstuvwxyz',
-    upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-    symbol: '!#$%&()=~|@[];:+-*<>?_>.,',
-    numeric: '0123456789',
-    base: '',
-    rv: '',
-  }
-  try {
-    Object.keys(opt).forEach(x => {
-      if( opt[x] ) v.base += v[x];
-    });
-    for( v.i=0 ; v.i<len ; v.i++ ){
-      v.rv += v.base.charAt(Math.floor(Math.random() * v.base.length));
-    }
-  } catch(e) {
-    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
-    v.rv = e;
-  } finally {
-    return v.rv;
-  }
-}
-```
-
-## sendMail()：
-
-```
-/** GASからメールを発信する
- * 実行に当たっては権限の承認を必要とする。
- * 
- * - [Google App Script メモ（メール送信制限 回避術）](https://zenn.dev/tatsuya_okzk/articles/259203cc416328)
- * - GAS公式[createDraft](https://developers.google.com/apps-script/reference/gmail/gmail-app?hl=ja#createdraftrecipient,-subject,-body,-options)
- * 
- * @param {String} recipient - 受信者のアドレス
- * @param {String} subject - 件名
- * @param {String} body - メールの本文
- * @param {Object} options - 詳細パラメータを指定する JavaScript オブジェクト（下記を参照）
- * @param {BlobSource[]} options.attachments - メールと一緒に送信するファイルの配列
- * @param {String} options.bcc - Bcc で送信するメールアドレスのカンマ区切りのリスト
- * @param {String} options.cc - Cc に含めるメールアドレスのカンマ区切りのリスト
- * @param {String} options.from - メールの送信元アドレス。getAliases() によって返される値のいずれかにする必要があります。
- * @param {String} options.htmlBody - 設定すると、HTML をレンダリングできるデバイスは、必須の本文引数の代わりにそれを使用します。メール用にインライン画像を用意する場合は、HTML 本文にオプションの inlineImages フィールドを追加できます。
- * @param {Object} options.inlineImages - 画像キー（String）から画像データ（BlobSource）へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、<img src="cid:imageKey" /> 形式でこれらの画像への参照が含まれていることを前提としています。
- * @param {String} options.name - メールの送信者の名前（デフォルト: ユーザー名）
- * @param {String} options.replyTo - デフォルトの返信先アドレスとして使用するメールアドレス（デフォルト: ユーザーのメールアドレス）
- * @returns {null|Error}
- */
-function sendmail(recipient,subject,body,options){
-  const v = {whois:'sendmail',rv:null,step:0};
-  console.log(`${v.whois} start.`);
-  try {
-
-    v.draft = GmailApp.createDraft(recipient,subject,body,options);
-    v.draftId = v.draft.getId();
-    GmailApp.getDraft(v.draftId).send();
-
-    console.log('Mail Remaining Daily Quota:'+MailApp.getRemainingDailyQuota());
-
-    v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.`);
-    return v.rv;
-
-  } catch(e) {
-    e.message = `\n${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}`
-    + `\nrecipient=${recipient}`
-    + `\nsubject=${subject}`
-    + `\nbody=${body}`
-    + `\n=options=${JSON.stringify(options)}`;  // 引数
-    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
-    return e;
-  }
-}
-```
