@@ -4,16 +4,23 @@
 - GASライブラリは使えなくなる場合も有るため、CDNのように「ダウンロードして埋め込む」という選択肢がとれる範囲でお願いします。
 - 「ライブラリ」欄に記載された機能は過去に使用実績があるため、特に問題無ければそれを流用します。
 
+===
+
+<!--::$prj/spec.md::-->
 
 # ライブラリ
 
 ## createPassword
 
-<!--::$lib/createPassword/1.0.1/core.js::-->
+```js
+//::$lib/createPassword/1.0.1/core.js::
+```
 
 ## sendMail
 
-<!--::$lib/sendMail/1.0.0/core.js::-->
+```js
+//::$lib/sendMail/1.0.0/core.js::
+```
 
 # 添付書類
 
