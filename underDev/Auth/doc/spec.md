@@ -85,14 +85,14 @@
 - ⑫ログイン済：「処理要求中 and アカウント有効期限内 and CPkey有効期限内」なら真。<br>
   ⇒ `処理要求中フラグ === true && Date.now() < IndexedDB.expireAccount && Date.now() < IndexedDB.expireCPkey`
 
-## authClient 要求前準備
+## 要求前準備
 
-![処理概要](img/initAuthClient.png)
+![処理概要](img/preparation.png)
 
 <details><summary>source</summary>
 
 ```mermaid
-<!--::$doc/initAuthClient.mermaid::-->
+<!--::$doc/preparation.mermaid::-->
 ```
 
 </details>
@@ -142,14 +142,14 @@
 - ④結果連絡：スプレッドシートのメニューから「結果連絡」処理を呼び出し、
   memberList.reportResultが空欄のメンバに対して加入可否検討結果をメールで送信
 
-## 処理要求手順
+## 処理要求
 
-![処理要求手順](img/authenticate.png)
+![処理要求](img/processingRequest.png)
 
 <details><summary>source</summary>
 
 ```mermaid
-<!--::$doc/authenticate.mermaid::-->
+<!--::$doc/processingRequest.mermaid::-->
 ```
 
 </details>
@@ -314,6 +314,8 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 1. 鍵ペアを再作成し、改めて送信
 2. CPkey再登録・ログイン終了後、改めて要求を送信
 
+### requestLogin() : ログイン要求
+
 ### login() : セッション状態確認(未ログイン)
 
 1. ダイアログを表示、authServerからのパスコード通知メールを待って入力
@@ -353,6 +355,8 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 
 スプレッドシートのメニューから「加入登録」処理を呼び出し、
   memberList.reportResultが空欄のメンバに対して加入可否検討結果をメールで送信
+
+### loginTrial() : クライアントからのログイン要求に基づくログイン可否判断
 
 ### inCaseOfWarning() : 復号時warningだった場合の処理
 

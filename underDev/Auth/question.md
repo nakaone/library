@@ -86,45 +86,11 @@ sequenceDiagram
     end
 
     alt ⑨未ログイン
-      alt ログイン試行中フラグ === false
-        authClient->>authServer: ログイン要求
-        authClient->>authClient: ログイン試行中フラグ=true
-        authServer->>authServer: 状態確認
-        alt アカウント有効かつパスコード未通知
-          authServer->>clientMail: パスコード通知メール
-        end
-        alt 待機時間内にauthServerから返信無し
-          authClient->>authClient: ⑩result==='fatal'
-        else 待機時間内にauthServerから返信あり
-          authServer->>authClient: 確認結果通知
-          alt result==='warning'
-            authClient->>authClient: warning処理
-          end
-        end
-      else ログイン試行中フラグ === true
-        clientMail->>authClient: パスコード入力
-        authClient->>authServer: パスコード
-        authServer->>authServer: パスコード確認
-        alt 待機時間内にauthServerから返信無し
-          authClient->>authClient: ⑩result==='fatal'
-        else 待機時間内にauthServerから返信あり
-          authServer->>authClient: 確認結果通知
-          alt result==='warning'
-            authClient->>authClient: warning処理
-          else result==='success'
-            authClient->>authClient: ⑪ログイン時処理
-          end
-        end
-      end
+      Note over authClient,authServer: ログイン要求
     end
 
     alt ⑫ログイン済
-      authClient->>authServer: 処理要求
-      authServer->>serverFunc: 処理要求＋メンバ属性情報
-      serverFunc->>authServer: 処理結果
-      authServer->>authClient: 処理結果
-      authClient->>localFunc: 処理結果
-      authClient->>authClient: 処理要求中フラグ=false
+      Note over authClient,authServer: 処理要求
     end
   end
 ```
@@ -159,9 +125,9 @@ sequenceDiagram
 - ⑫ログイン済：「処理要求中 and アカウント有効期限内 and CPkey有効期限内」なら真。<br>
   ⇒ `処理要求中フラグ === true && Date.now() < IndexedDB.expireAccount && Date.now() < IndexedDB.expireCPkey`
 
- authClient 要求前準備
+ 要求前準備
 
-![処理概要](img/initAuthClient.png)
+![処理概要](img/preparation.png)
 
 <details><summary>source</summary>
 
@@ -310,53 +276,86 @@ sequenceDiagram
 - ④結果連絡：スプレッドシートのメニューから「結果連絡」処理を呼び出し、
   memberList.reportResultが空欄のメンバに対して加入可否検討結果をメールで送信
 
- 処理要求手順
+ 処理要求
 
-![処理要求手順](img/authenticate.png)
+![処理要求](img/processingRequest.png)
 
 <details><summary>source</summary>
 
 ```mermaid
+%% 処理要求
+
 sequenceDiagram
-  %%participant clientMail
+  %%actor user
   participant localFunc
+  participant clientMail
+  %%participant encryptRequest
+  participant IndexedDB
   participant authClient
   participant authServer
-  participant decryptedRequest
   participant memberList
-  participant serverFunc
-  %%participant admin
+  %%participant decryptRequest
+  %%participant serverFunc
+  actor admin
 
-  localFunc->>authClient: 処理要求
-  authClient->>authClient: 処理要求中フラグ=true
-  loop 処理要求中フラグ==true
-    authClient->>authServer: 処理要求(authRequest)
+  localFunc->>+authClient: ②処理要求
+  Note right of authClient: main()
 
-    %% サーバ側処理
-    authServer->>decryptedRequest: 内容確認要求
-    decryptedRequest->>authServer: 確認結果
+  loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
 
-    alt result=normal
-      authServer->>serverFunc: 処理要求
-      serverFunc->>authServer: 処理結果
-      authServer->>authClient: 処理結果(authResponse)
-    else result=warning
-      authServer->>authServer: warning処理
-      authServer->>authClient: 処理結果(authResponse)
-    end
+    alt ⑫ログイン済
+      Note right of authClient: requestLogin()
 
-    %% クライアント側処理
-    alt authServerからの待機時間が2分超
-      authClient->>authClient: エラーメッセージを出し、処理要求中フラグ=false
-    else 待機時間が2分以内
-      alt result=warning
-        authClient->>authClient: warning処理
-      else result=normal
+      rect rgba(209, 247, 221, 1)
+
+        authClient->>authServer: 処理要求
+        authServer->>serverFunc: 処理要求＋メンバ属性情報
+        serverFunc->>authServer: 処理結果
+        authServer->>authClient: 処理結果
         authClient->>localFunc: 処理結果
+        authClient->>authClient: 処理要求中フラグ=false
+
       end
-      authClient->>authClient: 処理要求中フラグ=false
+
+      rect rgba(247, 209, 233, 1)
+
+        localFunc->>authClient: 処理要求
+        authClient->>authClient: 処理要求中フラグ=true
+        loop 処理要求中フラグ==true
+          authClient->>authServer: 処理要求(authRequest)
+
+          %% サーバ側処理
+          authServer->>decryptedRequest: 内容確認要求
+          decryptedRequest->>authServer: 確認結果
+
+          alt result=normal
+            authServer->>serverFunc: 処理要求
+            serverFunc->>authServer: 処理結果
+            authServer->>authClient: 処理結果(authResponse)
+          else result=warning
+            authServer->>authServer: warning処理
+            authServer->>authClient: 処理結果(authResponse)
+          end
+
+          %% クライアント側処理
+          alt authServerからの待機時間が2分超
+            authClient->>authClient: エラーメッセージを出し、処理要求中フラグ=false
+          else 待機時間が2分以内
+            alt result=warning
+              authClient->>authClient: warning処理
+            else result=normal
+              authClient->>localFunc: 処理結果
+            end
+            authClient->>authClient: 処理要求中フラグ=false
+          end
+        end
+
+
+      end
     end
   end
+
+  authClient->>-localFunc: 処理結果
 ```
 
 </details>
@@ -521,6 +520,8 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 1. 鍵ペアを再作成し、改めて送信
 2. CPkey再登録・ログイン終了後、改めて要求を送信
 
+ requestLogin() : ログイン要求
+
  login() : セッション状態確認(未ログイン)
 
 1. ダイアログを表示、authServerからのパスコード通知メールを待って入力
@@ -560,6 +561,8 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 
 スプレッドシートのメニューから「加入登録」処理を呼び出し、
   memberList.reportResultが空欄のメンバに対して加入可否検討結果をメールで送信
+
+ loginTrial() : クライアントからのログイン要求に基づくログイン可否判断
 
  inCaseOfWarning() : 復号時warningだった場合の処理
 

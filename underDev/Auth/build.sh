@@ -16,9 +16,9 @@ img="$prj/img"
 # ----------------------------------------------
 
 mmdc -i $doc/summary.mermaid -o $img/summary.png
-mmdc -i $doc/initAuthClient.mermaid -o $img/initAuthClient.png
+mmdc -i $doc/preparation.mermaid -o $img/preparation.png
 mmdc -i $doc/joining.mermaid -o $img/joining.png
-mmdc -i $doc/authenticate.mermaid -o $img/authenticate.png
+mmdc -i $doc/processingRequest.mermaid -o $img/processingRequest.png
 
 # 仕様書
 cat $doc/spec.md | awk 1 | \
