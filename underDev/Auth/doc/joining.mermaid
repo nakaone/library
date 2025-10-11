@@ -1,5 +1,6 @@
 sequenceDiagram
-  participant localStorage
+  participant clientMail
+  participant IndexedDB
   participant authClient
   participant authServer
   participant memberList
@@ -8,11 +9,12 @@ sequenceDiagram
   authServer->>authServer: ①公開鍵の準備
   authClient->>authServer: 加入要求
   authServer->>authClient: SPkey(平文)
-  localStorage->>authClient: ②鍵ペアの準備
+  IndexedDB->>authClient: ②鍵ペアの準備
   authClient->>authClient: メールアドレス入力
   authClient->>authServer: メールアドレス
   authServer->>memberList: メールアドレスとCPkey送信、保管
   authServer->>admin: 加入要求連絡
-  admin->>authServer: ③加入可否検討
-  authServer->>authClient: ④結果連絡
+  admin->>memberList: ③加入可否検討
+  memberList->>authServer: ④結果連絡
+  authServer->>clientMail: 加入可否検討結果
 

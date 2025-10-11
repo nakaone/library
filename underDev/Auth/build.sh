@@ -15,6 +15,7 @@ img="$prj/img"
 # 1. 仕様書
 # ----------------------------------------------
 
+mmdc -i $doc/summary.mermaid -o $img/summary.png
 mmdc -i $doc/joining.mermaid -o $img/joining.png
 mmdc -i $doc/authenticate.mermaid -o $img/authenticate.png
 

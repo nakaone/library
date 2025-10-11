@@ -1,5 +1,12 @@
 # class authTrial : サーバ側のログイン試行時のパスコード関係
 
+- typedef {Object} authTrial
+- prop {string} passcode - 設定されているパスコード
+- prop {number} created - パスコード生成日時
+- prop {number} [freezingUntil=0] - 凍結解除日時。最大試行回数を超えたら現在日時を設定
+- prop {number} [CPkeyUpdateUntil=0] - CPkey更新処理中の場合、更新期限をUNIX時刻でセット
+- prop {authTrialLog[]} [log=[]] - 試行履歴
+
 ## constructor()
 
 - param {Object} arg
@@ -46,3 +53,4 @@
 - param {number} [passcodeLifeTime=600000] - パスコードの有効期間。既定値：10分
 - param {number} [allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差。既定値：2分
 - param {number} [freezing=3600000] - 連続失敗した場合の凍結期間。既定値：1時間
+

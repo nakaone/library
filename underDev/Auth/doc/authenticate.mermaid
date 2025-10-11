@@ -1,56 +1,40 @@
 sequenceDiagram
-  participant clientMail
+  %%participant clientMail
   participant localFunc
-  participant localStorage
   participant authClient
   participant authServer
+  participant decryptedRequest
   participant memberList
   participant serverFunc
-  participant admin
+  %%participant admin
 
   localFunc->>authClient: 処理要求
   authClient->>authClient: 処理要求中フラグ=true
-  loop 処理要求中フラグ
-    authClient->>authServer: authRequestを送信
-    authServer->>authServer: ①内容確認
+  loop 処理要求中フラグ==true
+    authClient->>authServer: 処理要求(authRequest)
 
-    alt ログイン済
+    %% サーバ側処理
+    authServer->>decryptedRequest: 内容確認要求
+    decryptedRequest->>authServer: 確認結果
+
+    alt result=normal
       authServer->>serverFunc: 処理要求
       serverFunc->>authServer: 処理結果
-      authServer->>authClient: authResponse
-      authClient->>authClient: 処理要求中フラグ=false
-      authClient->>localFunc: 処理結果
-    else
-      alt ログイン拒否
-        authServer->>authClient: authResponse
-        authClient->>localFunc: エラー
-      else 未ログイン
-        %% サーバ側作業
-        authServer->>memberList: memberList.trialに新たなauthTrialをセット
-        authServer->>clientMail: パスコード通知メール
-        authServer->>authClient: 処理結果通知
+      authServer->>authClient: 処理結果(authResponse)
+    else result=warning
+      authServer->>authServer: warning処理
+      authServer->>authClient: 処理結果(authResponse)
+    end
 
-        %% クライアント側作業
-        alt memberList.CPkeyと一致しているが、ログイン成功後の有効期間切れ
-          authClient->>localStorage: 鍵ペアを再作成、保存
-        end
-
-        authClient->>authClient: ログイン試行中フラグ=true
-        loop ログイン試行中フラグ
-          authClient->>authClient: パスコード入力
-          authClient->>authServer: パスコード送信
-
-          %% サーバ側作業
-          authServer->>authServer: ②パスコード確認
-          authServer->>authClient: パスコード確認結果
-
-          alt パスコード確認結果=最終トライ失敗
-            authClient->>localFunc: エラー
-          end
-          alt パスコード確認結果=トライ成功
-            authClient->>authClient: ログイン試行中フラグ=false
-          end
-        end
+    %% クライアント側処理
+    alt authServerからの待機時間が2分超
+      authClient->>authClient: エラーメッセージを出し、処理要求中フラグ=false
+    else 待機時間が2分以内
+      alt result=warning
+        authClient->>authClient: warning処理
+      else result=normal
+        authClient->>localFunc: 処理結果
       end
+      authClient->>authClient: 処理要求中フラグ=false
     end
   end

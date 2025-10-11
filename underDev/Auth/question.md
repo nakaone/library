@@ -1,10 +1,10 @@
 - 本文書はMarkdownで書かれています。画像へのリンク(`![画像名](リンク先)`)は無視してください。
-- 以下の仕様に基づき、ブラウザ側JavaScript関数"authClient"とGAS関数"authServer"を作成する予定ですが、今回は本仕様のレビューをお願いします。記述が無い・論理矛盾・不足している点や使用するツールの推薦をお願いします。
+- 以下の仕様に基づき、「関数群」「添付書類」にある関数を作成する予定ですが、今回は本仕様のレビューをお願いします。記述が無い・論理矛盾・不足している点や使用するツールの推薦をお願いします。
 - 開発スピード・安定稼働を重視し多少のリスクは許容しますが、重大なセキュリティホールは指摘してください。
 - GASライブラリは使えなくなる場合も有るため、CDNのように「ダウンロードして埋め込む」という選択肢がとれる範囲でお願いします。
 - 「ライブラリ」欄に記載された機能は過去に使用実績があるため、特に問題無ければそれを流用します。
 
-===
+---
 
 総説
 
@@ -25,16 +25,16 @@
 - CPkey, CSkey：クライアント側の公開鍵(Client side Public key)と秘密鍵(Client side Secret key)
 - パスフレーズ：クライアント側鍵ペア作成時のキー文字列。JavaScriptで自動的に生成
 - パスワード：運用時、クライアント(人間)がブラウザ上で入力する本人確認用の文字列
-- パスコード：二段階認証実行時、サーバからクライアントに送られる6桁の数字
+- パスコード：二段階認証実行時、サーバからクライアントに送られる6桁※の数字<br>
+  ※既定値。実際の桁数はauthConfig.trial.passcodeLengthで規定
 
  暗号化・署名方式、運用
 
 - 署名方式 : RSA-PSS
 - 暗号化方式 : RSA-OAEP
 - ハッシュ関数 : SHA-256以上
-- 許容時差±120秒以内
-- authRequest.requestId を短期間保存して重複拒否
-
+- 許容時差±120秒※以内
+  ※既定値。実際の桁数はauthConfig.decryptRequest.allowableTimeDifferenceで規定
 - 順序は「暗号化->署名」ではなく「署名->暗号化」で行う
   1. クライアントがデータをJSON化
   2. 自身の秘密鍵で署名（署名→暗号化）
@@ -45,25 +45,126 @@
 - CPkeyの有効期限が切れた場合、以下の手順で更新する
   1. クライアント側から古いCPkeyで署名された要求を受信
   2. サーバ側で署名検証の結果、期限切れを確認
-    - memberList.trial.CPkeyUpdateUntilに「現在日時＋authConfig.loginLifeTime」をセット
+    - memberList.trial[0].CPkeyUpdateUntilに「現在日時＋authConfig.decryptRequest.loginLifeTime」をセット
     - クライアント側に通知
   3. クライアント側でCPkeyを更新、新CPkeyで再度リクエスト
-  4. サーバ側でauthConfig.loginLifeTimeを確認、期限内ならmemberList.CPkeyを書き換え。期限切れなら加入処理同様、adminによる個別承認を必要とする。
+  4. サーバ側でauthConfig.decryptRequest.loginLifeTimeを確認、期限内ならmemberList.CPkeyを書き換え。期限切れなら加入処理同様、adminによる個別承認を必要とする。
   5. 以降は未ログイン状態で要求が来た場合として処理を継続
 
- class authTrial : サーバ側のログイン試行時のパスコード関係
-
-- [authTrial](doc/class.authTrial.md)参照
-
- function decryptRequest
-
-- [decryptRequest 関数 仕様書](doc/decryptRequest.md)参照
-
- function encryptRequest
-
-- [encryptRequest 関数 仕様書](doc/encryptRequest.md)参照
-
  処理手順
+
+![処理概要](img/summary.png)
+
+<details><summary>source</summary>
+
+```mermaid
+sequenceDiagram
+  participant localFunc
+  participant clientMail
+  %%participant encryptRequest
+  participant IndexedDB
+  participant authClient
+  participant authServer
+  %%participant memberList
+  %%participant decryptRequest
+  participant serverFunc
+  %%participant admin
+
+  localFunc->>authClient: ①authClientインスタンス生成
+  IndexedDB->>authClient: memberId,アカウント・CPkey期限更新
+  localFunc->>authClient: ②処理要求
+
+  authClient->>authClient: 処理要求中フラグ=true,ログイン試行中フラグ=false
+  loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
+
+    alt ③アカウント有効期限切れ
+      alt ④加入未申請
+        authClient->>authServer: ⑤加入要求
+        %% 加入審査は人間系なので到着日時未定
+        authServer->>clientMail: 加入可否連絡メール
+      else 加入申請済
+        authClient->>authServer: 加入審査結果問合せ
+        authServer->>authClient: ⑥加入審査結果
+        authClient->>IndexedDB: ⑦アカウント・CPkey期限更新
+        alt 加入審査結果がNG
+          authClient->>authClient: ⑧リトライ意思確認
+        end
+      end
+    end
+
+    alt ⑨未ログイン
+      alt ログイン試行中フラグ === false
+        authClient->>authServer: ログイン要求
+        authClient->>authClient: ログイン試行中フラグ=true
+        authServer->>authServer: 状態確認
+        alt アカウント有効かつパスコード未通知
+          authServer->>clientMail: パスコード通知メール
+        end
+        alt 待機時間内にauthServerから返信無し
+          authClient->>authClient: ⑩result==='fatal'
+        else 待機時間内にauthServerから返信あり
+          authServer->>authClient: 確認結果通知
+          alt result==='warning'
+            authClient->>authClient: warning処理
+          end
+        end
+      else ログイン試行中フラグ === true
+        clientMail->>authClient: パスコード入力
+        authClient->>authServer: パスコード
+        authServer->>authServer: パスコード確認
+        alt 待機時間内にauthServerから返信無し
+          authClient->>authClient: ⑩result==='fatal'
+        else 待機時間内にauthServerから返信あり
+          authServer->>authClient: 確認結果通知
+          alt result==='warning'
+            authClient->>authClient: warning処理
+          else result==='success'
+            authClient->>authClient: ⑪ログイン時処理
+          end
+        end
+      end
+    end
+
+    alt ⑫ログイン済
+      authClient->>authServer: 処理要求
+      authServer->>serverFunc: 処理要求＋メンバ属性情報
+      serverFunc->>authServer: 処理結果
+      authServer->>authClient: 処理結果
+      authClient->>localFunc: 処理結果
+      authClient->>authClient: 処理要求中フラグ=false
+    end
+  end
+```
+
+- ①authClientインスタンス生成：この時点でIndexedDBに鍵ペア・メールアドレスを準備
+- ②処理要求：authClient側でIndexedDBの内容を取得
+
+- ③アカウント有効期限切れ：「処理要求中 and アカウント有効期限切れ」なら真。<br>
+  ⇒ `処理要求中フラグ === true && IndexedDB.expireAccount < Date.now()`
+  authServer.memberListが原本だが、クライアント側でも事前にチェックする
+- ④加入未申請：`IndexedDB.ApplicationForMembership < 0`なら真
+- ⑤加入要求：加入審査は人間系なので到着日時未定。この時点で一度処理を中断するため、authClientは以下の処理を行う
+  - IndexedDBに加入申請日時を記録
+  - 処理要求中フラグ=false
+
+- ⑥加入審査結果：memberListの検索結果(存在or不存在)、アカウント・CPkey期限(既存メンバは現在の設定値)
+- ⑦アカウント・CPkey期限更新：加入審査結果がNGだった場合、IndexedDB.expireAccount/expireCPkey共にnullを設定
+- ⑧リトライ意思確認：ダイアログでリトライするか確認。リトライしない場合、処理要求中フラグ=falseを設定
+
+- ⑨未ログイン：「処理要求中 and アカウント有効期限内 and CPkey有効期限切れ」なら真。<br>
+  ⇒ `処理要求中フラグ === true && Date.now() < IndexedDB.expireAccount && IndexedDB.expireCPkey < Date.now()`
+- ⑩result==='fatal'：authClientは以下の処理を行う
+  - IndexedDB.expireAccount/expireCPkeyをクリア(-1をセット)
+  - 処理要求中フラグ=false
+- ⑪ログイン時処理：authClientは以下の処理を行う
+  - IndexedDB.expireCPkeyを更新
+  - 処理要求中フラグ=false
+  - ログイン試行中フラグ=false
+
+- ⑫ログイン済：「処理要求中 and アカウント有効期限内 and CPkey有効期限内」なら真。<br>
+  ⇒ `処理要求中フラグ === true && Date.now() < IndexedDB.expireAccount && Date.now() < IndexedDB.expireCPkey`
+
+</details>
 
  加入手順
 
@@ -73,7 +174,8 @@
 
 ```mermaid
 sequenceDiagram
-  participant localStorage
+  participant clientMail
+  participant IndexedDB
   participant authClient
   participant authServer
   participant memberList
@@ -82,22 +184,24 @@ sequenceDiagram
   authServer->>authServer: ①公開鍵の準備
   authClient->>authServer: 加入要求
   authServer->>authClient: SPkey(平文)
-  localStorage->>authClient: ②鍵ペアの準備
+  IndexedDB->>authClient: ②鍵ペアの準備
   authClient->>authClient: メールアドレス入力
   authClient->>authServer: メールアドレス
   authServer->>memberList: メールアドレスとCPkey送信、保管
   authServer->>admin: 加入要求連絡
-  admin->>authServer: ③加入可否検討
-  authServer->>authClient: ④結果連絡
+  admin->>memberList: ③加入可否検討
+  memberList->>authServer: ④結果連絡
+  authServer->>clientMail: 加入可否検討結果
 ```
 
 </details>
 
 - ①公開鍵の準備：ScriptPropertiesから公開鍵を取得。鍵ペア未生成なら生成して保存
-- ②鍵ペアの準備：IndexedDBからパスフレーズを取得、CPkey/CSkeyを生成<br>
-  IndexedDBにパスフレーズが無い場合は新たに生成し、IndexedDBに生成時刻と共に保存
-- ③加入可否検討：加入可ならmemberList.acceptedに記入(不可なら空欄のまま)。処理後、スプレッドシートのメニューから「加入登録」処理を呼び出し
-- ④結果連絡：memberList.reportResultが空欄のメンバに対して加入可否検討結果をメールで送信
+- ②鍵ペアの準備：IndexedDBから鍵ペアを取得、authClientのメンバ変数に格納。<br>
+  IndexedDBに鍵ペアが無い場合は新たに生成し、生成時刻と共に保存
+- ③加入可否検討：加入可ならmemberList.acceptedに記入(不可なら空欄のまま)。<br>
+- ④結果連絡：スプレッドシートのメニューから「結果連絡」処理を呼び出し、
+  memberList.reportResultが空欄のメンバに対して加入可否検討結果をメールで送信
 
  処理要求手順
 
@@ -107,84 +211,48 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-  participant clientMail
+  %%participant clientMail
   participant localFunc
-  participant localStorage
   participant authClient
   participant authServer
+  participant decryptedRequest
   participant memberList
   participant serverFunc
-  participant admin
+  %%participant admin
 
   localFunc->>authClient: 処理要求
   authClient->>authClient: 処理要求中フラグ=true
-  loop 処理要求中フラグ
-    authClient->>authServer: authRequestを送信
-    authServer->>authServer: ①内容確認
+  loop 処理要求中フラグ==true
+    authClient->>authServer: 処理要求(authRequest)
 
-    alt ログイン済
+    %% サーバ側処理
+    authServer->>decryptedRequest: 内容確認要求
+    decryptedRequest->>authServer: 確認結果
+
+    alt result=normal
       authServer->>serverFunc: 処理要求
       serverFunc->>authServer: 処理結果
-      authServer->>authClient: authResponse
-      authClient->>authClient: 処理要求中フラグ=false
-      authClient->>localFunc: 処理結果
-    else
-      alt ログイン拒否
-        authServer->>authClient: authResponse
-        authClient->>localFunc: エラー
-      else 未ログイン
-        %% サーバ側作業
-        authServer->>memberList: memberList.trialに新たなauthTrialをセット
-        authServer->>clientMail: パスコード通知メール
-        authServer->>authClient: 処理結果通知
+      authServer->>authClient: 処理結果(authResponse)
+    else result=warning
+      authServer->>authServer: warning処理
+      authServer->>authClient: 処理結果(authResponse)
+    end
 
-        %% クライアント側作業
-        alt memberList.CPkeyと一致しているが、ログイン成功後の有効期間切れ
-          authClient->>localStorage: 鍵ペアを再作成、保存
-        end
-
-        authClient->>authClient: ログイン試行中フラグ=true
-        loop ログイン試行中フラグ
-          authClient->>authClient: パスコード入力
-          authClient->>authServer: パスコード送信
-
-          %% サーバ側作業
-          authServer->>authServer: ②パスコード確認
-          authServer->>authClient: パスコード確認結果
-
-          alt パスコード確認結果=最終トライ失敗
-            authClient->>localFunc: エラー
-          end
-          alt パスコード確認結果=トライ成功
-            authClient->>authClient: ログイン試行中フラグ=false
-          end
-        end
+    %% クライアント側処理
+    alt authServerからの待機時間が2分超
+      authClient->>authClient: エラーメッセージを出し、処理要求中フラグ=false
+    else 待機時間が2分以内
+      alt result=warning
+        authClient->>authClient: warning処理
+      else result=normal
+        authClient->>localFunc: 処理結果
       end
+      authClient->>authClient: 処理要求中フラグ=false
     end
   end
 ```
 
 </details>
-
-- ①内容確認：authRequestを復号し、以下の何れに該当するか判断
-  - ログイン拒否
-    - memberListにメールアドレスが登録されていない
-    - メンバ加入承認後の有効期間が過ぎている<br>
-      `Date.now() < memberList.accepted + authConfig.memberLifeTime`
-    - 凍結期間中である
-      `Date.now() < memberId.trial.freezingUntil`
-  - 未ログイン
-    - 署名がmemberList.CPkeyと不一致
-    - memberList.CPkeyと一致しているが、ログイン成功後の有効期間が過ぎている
-  - ログイン済
-    - 署名がmemberList.CPkeyと一致、かつログイン成功後の有効期間内
-- ②パスコード確認：以下の一連の作業
-  1. 復号後、memberList.CPkeyを署名で書き換え
-  2. 入力されたパスコードを元にmemberList.trial.logを追加、以下の何れに該当するか判断
-    - 最終トライ失敗：パスコード不一致で試行回数がauthConfig.maxTrialと一致
-    - トライ失敗：パスコード不一致だが試行回数がauthConfig.maxTrial未満
-    - トライ成功：パスコードが一致
-  3. 最終トライ失敗なら`memberId.trial.freezingUntil=Date.now()+authConfig.freezion*1000`をセット
 
  データ格納方法と形式
 
@@ -195,16 +263,23 @@ sequenceDiagram
 
 キー名は`authConfig.system.name`、データは以下のオブジェクトをJSON化した文字列。
 
+※生成AIへ：鍵ペアをどのような形で格納するのか、仕様書とサンプルソースの提示をお願いします。
+
 - typeof {Object} authScriptProperties - サーバのScriptPropertiesに保存するオブジェクト
-- prop {string} SPkey - サーバ側の公開鍵
+- prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())
 
  IndexedDB
 
-キー名は`authConfig.system.name`、データは以下のオブジェクトをJSON化した文字列。
+キー名は`authConfig.system.name`から取得
+
+※生成AIへ：鍵ペアをどのような形で格納するのか、仕様書とサンプルソースの提示をお願いします。
 
 - typeof {Object} authIndexedDB - クライアントのIndexedDBに保存するオブジェクト
-- prop {string} passPhrase - クライアント側鍵ペア生成用パスフレーズ
-- prop {number} keyGeneratedDateTime - パスフレーズ生成日時。UNIX時刻(new Date().getTime())
+- prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())
+- prop {string} memberId - メンバの識別子(=メールアドレス)
+- prop {number} [ApplicationForMembership=-1] - 加入申請実行日時。未申請時は-1
+- prop {string} [expireAccount=-1] - 加入承認の有効期間が切れる日時。未加入時は-1
+- prop {string} [expireCPkey=-1] - CPkeyの有効期限。未ログイン時は-1
 
  memberList(スプレッドシート)
 
@@ -220,6 +295,7 @@ sequenceDiagram
 
  データ型(typedef)
 
+- クラスとして定義
 - 時間・期間の単位はミリ秒
 
  authConfig
@@ -251,6 +327,7 @@ authConfigを継承した、authServerで使用する設定値
 - prop {number} [decryptRequest.allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差。既定値：2分
 
 - prop {Object} trial - ログイン試行関係の設定値
+- prop {number} [trial.passcodeLength=6] - パスコードの桁数
 - prop {number} [trial.freezing=3600000] - 連続失敗した場合の凍結期間。既定値：1時間
 - prop {number} [trial.maxTrial=3] パスコード入力の最大試行回数
 - prop {number} [trial.passcodeLifeTime=600000] - パスコードの有効期間。既定値：10分
@@ -272,12 +349,7 @@ authConfigを継承した、authClientで使用する設定値
 
  authTrial
 
-- typedef {Object} authTrial
-- prop {string} passcode - 設定されているパスコード
-- prop {number} created - パスコード生成日時
-- prop {number} [freezingUntil=0] - 凍結解除日時。最大試行回数を超えたら現在日時を設定
-- prop {number} [CPkeyUpdateUntil=0] - CPkey更新処理中の場合、更新期限をUNIX時刻でセット
-- prop {authTrialLog[]} [log=[]] - 試行履歴
+- [authTrial](doc/class.authTrial.md)参照
 
  authRequest
 
@@ -309,106 +381,78 @@ authServerからauthClientに送られる処理結果オブジェクト
 - typedef {Object} authResponse
 - prop {string} requestId - 要求の識別子。UUID
 - prop {number} timestamp - 処理日時。UNIX時刻
-- prop {string} status - 処理結果。正常終了ならnull、異常終了ならErrorオブジェクトをJSON化した文字列
+- prop {string} result - 処理結果。decryptRequst.result
+- prop {string} message - エラーメッセージ。decryptRequest.message
 - prop {string} response - 要求された関数の戻り値をJSON化した文字列
 
-# ライブラリ
+ 関数群
 
-## createPassword
+ authClient
 
-```js
-/** 長さ・文字種指定に基づき、パスワードを生成
- *
- * @param {number} [len=16] - パスワードの長さ
- * @param {Object} opt
- * @param {boolean} [opt.lower=true] - 英小文字を使うならtrue
- * @param {boolean} [opt.upper=true] - 英大文字を使うならtrue
- * @param {boolean} [opt.symbol=true] - 記号を使うならtrue
- * @param {boolean} [opt.numeric=true] - 数字を使うならtrue
- * @returns {string}
- */
-function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:true}){
-  const v = {
-    whois: 'createPassword',
-    lower: 'abcdefghijklmnopqrstuvwxyz',
-    upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-    symbol: '!#$%&()=~|@[];:+-*<>?_>.,',
-    numeric: '0123456789',
-    base: '',
-    rv: '',
-  }
-  try {
-    Object.keys(opt).forEach(x => {
-      if( opt[x] ) v.base += v[x];
-    });
-    for( v.i=0 ; v.i<len ; v.i++ ){
-      v.rv += v.base.charAt(Math.floor(Math.random() * v.base.length));
-    }
-  } catch(e) {
-    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
-    v.rv = e;
-  } finally {
-    return v.rv;
-  }
-}
-```
+ 初期化処理(メイン処理)
 
-## sendMail
+- 鍵ペアの準備：IndexedDBから鍵ペアを取得、authClientのメンバ変数に格納。<br>
+  IndexedDBに鍵ペアが無い場合は新たに生成し、生成時刻と共に保存
 
-```js
-/** GASからメールを発信する
- * 実行に当たっては権限の承認を必要とする。
- *
- * - [Google App Script メモ（メール送信制限 回避術）](https://zenn.dev/tatsuya_okzk/articles/259203cc416328)
- * - GAS公式[createDraft](https://developers.google.com/apps-script/reference/gmail/gmail-app?hl=ja#createdraftrecipient,-subject,-body,-options)
- *
- * @param {String} recipient - 受信者のアドレス
- * @param {String} subject - 件名
- * @param {String} body - メールの本文
- * @param {Object} options - 詳細パラメータを指定する JavaScript オブジェクト（下記を参照）
- * @param {BlobSource[]} options.attachments - メールと一緒に送信するファイルの配列
- * @param {String} options.bcc - Bcc で送信するメールアドレスのカンマ区切りのリスト
- * @param {String} options.cc - Cc に含めるメールアドレスのカンマ区切りのリスト
- * @param {String} options.from - メールの送信元アドレス。getAliases() によって返される値のいずれかにする必要があります。
- * @param {String} options.htmlBody - 設定すると、HTML をレンダリングできるデバイスは、必須の本文引数の代わりにそれを使用します。メール用にインライン画像を用意する場合は、HTML 本文にオプションの inlineImages フィールドを追加できます。
- * @param {Object} options.inlineImages - 画像キー（String）から画像データ（BlobSource）へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、<img src="cid:imageKey" /> 形式でこれらの画像への参照が含まれていることを前提としています。
- * @param {String} options.name - メールの送信者の名前（デフォルト: ユーザー名）
- * @param {String} options.replyTo - デフォルトの返信先アドレスとして使用するメールアドレス（デフォルト: ユーザーのメールアドレス）
- * @returns {null|Error}
- */
-function sendmail(recipient,subject,body,options){
-  const v = {whois:'sendmail',rv:null,step:0};
-  console.log(`${v.whois} start.`);
-  try {
+ joining() : 加入要求
 
-    v.draft = GmailApp.createDraft(recipient,subject,body,options);
-    v.draftId = v.draft.getId();
-    GmailApp.getDraft(v.draftId).send();
+- IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
+- 加入要求としてメールアドレス・CPkeyをサーバ側に送信する
 
-    console.log('Mail Remaining Daily Quota:'+MailApp.getRemainingDailyQuota());
+ request() : 処理要求
 
-    v.step = 9; // 終了処理
-    console.log(`${v.whois} normal end.`);
-    return v.rv;
+ inCaseOfWarning() : authResponse.result==warningだった場合の処理
 
-  } catch(e) {
-    e.message = `\n${v.whois} abnormal end at step.${v.step}`
-    + `\n${e.message}`
-    + `\nrecipient=${recipient}`
-    + `\nsubject=${subject}`
-    + `\nbody=${body}`
-    + `\n=options=${JSON.stringify(options)}`;  // 引数
-    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
-    return e;
-  }
-}
-```
+authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
+
+ accountExpired() : アカウント有効性確認(アカウント有効期限切れ対応)
+
+ updateCPkey() : 署名有効期限確認(CPkey有効期限切れ対応)
+
+1. 鍵ペアを再作成し、改めて送信
+2. CPkey再登録・ログイン終了後、改めて要求を送信
+
+ login() : セッション状態確認(未ログイン)
+
+1. ダイアログを表示、authServerからのパスコード通知メールを待って入力
+2. パスコードをauthServerに送信
+
+ reset() : IndexedDBに格納されている情報を再作成
+
+メールアドレス入力ミスの場合を想定。
+
+- 鍵ペアの再作成
+- ダイアログからメールアドレス入力。入力済のメールアドレスがあれば、流用も許容
+
+ authServer
+
+- authRequest.requestId を短期間保存して重複拒否
+
+ notifyAcceptance() : 加入要求の結果連絡
+
+スプレッドシートのメニューから「加入登録」処理を呼び出し、
+  memberList.reportResultが空欄のメンバに対して加入可否検討結果をメールで送信
+
+ inCaseOfWarning() : 復号時warningだった場合の処理
+
+| **⑧ アカウント有効性確認** | 承認済・有効期間内か | 期限切れ → `warning` |
+| **⑨ 署名有効期限確認** | `CPkey` の有効期限をチェック | 切れ → `warning` + 更新誘導 |
+| **⑩ セッション状態確認** | ログイン済みか・有効期間内か確認 | 未ログイン → `authTrial()` 実行 |
+
+
+ decryptRequest
+
+- [decryptRequest 関数 仕様書](doc/decryptRequest.md)参照
+
+ encryptRequest
+
+- [encryptRequest 関数 仕様書](doc/encryptRequest.md)参照
 
 # 添付書類
 
 以下は別ファイル(Markdown)として作成済みの仕様書。
 
-===
+---
 
 ### 概要
 
@@ -723,3 +767,97 @@ function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:tr
 ---
 
 © 2025 Auth System Design Team
+
+# ライブラリ
+
+以下はソースまで作成済、稼働実績のある自作関数。
+
+## createPassword
+
+```js
+/** 長さ・文字種指定に基づき、パスワードを生成
+ *
+ * @param {number} [len=16] - パスワードの長さ
+ * @param {Object} opt
+ * @param {boolean} [opt.lower=true] - 英小文字を使うならtrue
+ * @param {boolean} [opt.upper=true] - 英大文字を使うならtrue
+ * @param {boolean} [opt.symbol=true] - 記号を使うならtrue
+ * @param {boolean} [opt.numeric=true] - 数字を使うならtrue
+ * @returns {string}
+ */
+function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:true}){
+  const v = {
+    whois: 'createPassword',
+    lower: 'abcdefghijklmnopqrstuvwxyz',
+    upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    symbol: '!#$%&()=~|@[];:+-*<>?_>.,',
+    numeric: '0123456789',
+    base: '',
+    rv: '',
+  }
+  try {
+    Object.keys(opt).forEach(x => {
+      if( opt[x] ) v.base += v[x];
+    });
+    for( v.i=0 ; v.i<len ; v.i++ ){
+      v.rv += v.base.charAt(Math.floor(Math.random() * v.base.length));
+    }
+  } catch(e) {
+    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
+    v.rv = e;
+  } finally {
+    return v.rv;
+  }
+}
+```
+
+## sendMail
+
+```js
+/** GASからメールを発信する
+ * 実行に当たっては権限の承認を必要とする。
+ *
+ * - [Google App Script メモ（メール送信制限 回避術）](https://zenn.dev/tatsuya_okzk/articles/259203cc416328)
+ * - GAS公式[createDraft](https://developers.google.com/apps-script/reference/gmail/gmail-app?hl=ja#createdraftrecipient,-subject,-body,-options)
+ *
+ * @param {String} recipient - 受信者のアドレス
+ * @param {String} subject - 件名
+ * @param {String} body - メールの本文
+ * @param {Object} options - 詳細パラメータを指定する JavaScript オブジェクト（下記を参照）
+ * @param {BlobSource[]} options.attachments - メールと一緒に送信するファイルの配列
+ * @param {String} options.bcc - Bcc で送信するメールアドレスのカンマ区切りのリスト
+ * @param {String} options.cc - Cc に含めるメールアドレスのカンマ区切りのリスト
+ * @param {String} options.from - メールの送信元アドレス。getAliases() によって返される値のいずれかにする必要があります。
+ * @param {String} options.htmlBody - 設定すると、HTML をレンダリングできるデバイスは、必須の本文引数の代わりにそれを使用します。メール用にインライン画像を用意する場合は、HTML 本文にオプションの inlineImages フィールドを追加できます。
+ * @param {Object} options.inlineImages - 画像キー（String）から画像データ（BlobSource）へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、<img src="cid:imageKey" /> 形式でこれらの画像への参照が含まれていることを前提としています。
+ * @param {String} options.name - メールの送信者の名前（デフォルト: ユーザー名）
+ * @param {String} options.replyTo - デフォルトの返信先アドレスとして使用するメールアドレス（デフォルト: ユーザーのメールアドレス）
+ * @returns {null|Error}
+ */
+function sendmail(recipient,subject,body,options){
+  const v = {whois:'sendmail',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.draft = GmailApp.createDraft(recipient,subject,body,options);
+    v.draftId = v.draft.getId();
+    GmailApp.getDraft(v.draftId).send();
+
+    console.log('Mail Remaining Daily Quota:'+MailApp.getRemainingDailyQuota());
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `\n${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`
+    + `\nrecipient=${recipient}`
+    + `\nsubject=${subject}`
+    + `\nbody=${body}`
+    + `\n=options=${JSON.stringify(options)}`;  // 引数
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
+  }
+}
+```
