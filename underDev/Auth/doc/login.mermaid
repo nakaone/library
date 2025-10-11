@@ -13,8 +13,8 @@ sequenceDiagram
   %%participant serverFunc
   actor admin
 
-  localFunc->>+authClient: ②処理要求
-  Note right of authClient: main()
+  localFunc->>+authClient: 処理要求
+  Note right of authClient: 要求前準備(メイン処理)
 
   loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
 

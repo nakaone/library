@@ -1,33 +1,34 @@
 sequenceDiagram
-  actor user
+  %%actor user
   participant localFunc
-  participant clientMail
+  %%participant clientMail
   %%participant encryptRequest
-  participant IndexedDB
+  %%participant IndexedDB
   participant authClient
   participant authServer
   %%participant memberList
   %%participant decryptRequest
-  participant serverFunc
+  %%participant serverFunc
   %%actor admin
 
-  authClient->>localFunc: ①authClientインスタンス生成
-  Note over authClient,authServer: 要求前準備
-  localFunc->>authClient: ②処理要求
-  Note right of authClient: main()
+  authClient->>localFunc: authClientインスタンス生成
+  Note over authClient,authServer: ■■ 要求前準備 ■■
+  localFunc->>+authClient: 処理要求
+  Note right of authClient: 要求前準備(メイン処理)
 
   authClient->>authClient: 処理要求中フラグ=true,ログイン試行中フラグ=false
   loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
 
-    alt ③アカウント有効期限切れ
-      Note over authClient,authServer: 加入要求
+    alt ①アカウント有効期限切れ
+      Note over authClient,authServer: ■■ 加入要求 ■■
     end
 
-    alt ⑨未ログイン
-      Note over authClient,authServer: ログイン要求
+    alt ②未ログイン
+      Note over authClient,authServer: ■■ ログイン要求 ■■
     end
 
-    alt ⑫ログイン済
-      Note over authClient,authServer: 処理要求
+    alt ③ログイン済
+      Note over authClient,authServer: ■■ 処理要求 ■■
     end
   end
+  authClient->>-localFunc: 処理結果

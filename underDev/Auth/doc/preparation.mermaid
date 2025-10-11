@@ -16,13 +16,17 @@ sequenceDiagram
   %% IndexedDB格納項目のメンバ変数化 ----------
   alt IndexedDBのメンバ変数化が未了
     IndexedDB->>+authClient: 既存設定値の読み込み
-    Note right of authClient: setupMemberVariables()
+    Note right of authClient: 要求前準備(メイン処理)
     alt クライアント側鍵ペア未作成
       authClient->>authClient: 鍵ペア生成、生成日時設定
     end
     alt メールアドレス(memberId)未設定
       authClient->>user: ダイアログ表示
       user->>authClient: メールアドレス
+    end
+    alt メンバの氏名(memberName)未設定
+      authClient->>user: ダイアログ表示
+      user->>authClient: メンバ氏名
     end
     alt SPkey未入手
       authClient->>+authServer: CPkey(平文)

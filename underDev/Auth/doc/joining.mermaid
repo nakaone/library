@@ -13,26 +13,26 @@ sequenceDiagram
   %%participant serverFunc
   actor admin
 
-  localFunc->>+authClient: ②処理要求
-  Note right of authClient: main()
+  localFunc->>+authClient: 処理要求
+  Note right of authClient: 要求前準備(メイン処理)
 
   loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
 
-    alt ③アカウント有効期限切れ
+    alt ①アカウント有効期限切れ
 
       rect rgba(209, 247, 221, 1)
 
-        alt ①加入未申請 %% IndexedDB.ApplicationForMembership 加入申請実行日時。未申請時は-1
+        alt ②加入未申請
 
           Note right of authClient: joining()
-          authClient->>+authServer: ②加入要求
+          authClient->>+authServer: ③加入要求
           Note right of authServer: membershipRequest()
           authServer->>memberList: memberId, CPkey登録
           authServer->>admin: 加入要求があった旨、メール送信
           authServer->>-authClient: 加入要求登録が済んだ旨連絡
           authClient->>authClient: 加入申請実行日時を更新(IndexedDB.ApplicationForMembership)
 
-          admin->>memberList: 加入認否記入
+          admin->>memberList: ④加入認否記入
           admin->>+authServer: 認否記入終了時処理を起動
           Note right of authServer: notifyAcceptance()
           authServer->>clientMail: 加入審査結果連絡メール送信日時が空欄のメンバに結果メール送信
