@@ -55,8 +55,59 @@
 <!--::$doc/summary.mermaid::-->
 ```
 
+</details>
+
 - ①authClientインスタンス生成：この時点でIndexedDBに鍵ペア・メールアドレスを準備
 - ②処理要求：authClient側でIndexedDBの内容を取得
+
+- ③アカウント有効期限切れ：「処理要求中 and アカウント有効期限切れ」なら真。<br>
+  ⇒ `処理要求中フラグ === true && IndexedDB.expireAccount < Date.now()`<br>
+  ※authServer.memberListが原本だが、クライアント側でも事前にチェックする
+- ④加入未申請：`IndexedDB.ApplicationForMembership < 0`なら真
+- ⑤加入要求：加入審査は人間系なので到着日時未定。この時点で一度処理を中断するため、authClientは以下の処理を行う
+  - IndexedDBに加入申請日時を記録
+  - 処理要求中フラグ=false
+
+- ⑥加入審査結果：memberListの検索結果(存在or不存在)、アカウント・CPkey期限(既存メンバは現在の設定値)
+- ⑦アカウント・CPkey期限更新：加入審査結果がNGだった場合、IndexedDB.expireAccount/expireCPkey共にnullを設定
+- ⑧リトライ意思確認：ダイアログでリトライするか確認。リトライしない場合、処理要求中フラグ=falseを設定
+
+- ⑨未ログイン：「処理要求中 and アカウント有効期限内 and CPkey有効期限切れ」なら真。<br>
+  ⇒ `処理要求中フラグ === true && Date.now() < IndexedDB.expireAccount && IndexedDB.expireCPkey < Date.now()`
+- ⑩result==='fatal'：authClientは以下の処理を行う
+  - IndexedDB.expireAccount/expireCPkeyをクリア(-1をセット)
+  - 処理要求中フラグ=false
+- ⑪ログイン時処理：authClientは以下の処理を行う
+  - IndexedDB.expireCPkeyを更新
+  - 処理要求中フラグ=false
+  - ログイン試行中フラグ=false
+
+- ⑫ログイン済：「処理要求中 and アカウント有効期限内 and CPkey有効期限内」なら真。<br>
+  ⇒ `処理要求中フラグ === true && Date.now() < IndexedDB.expireAccount && Date.now() < IndexedDB.expireCPkey`
+
+## authClient 要求前準備
+
+![処理概要](img/initAuthClient.png)
+
+<details><summary>source</summary>
+
+```mermaid
+<!--::$doc/initAuthClient.mermaid::-->
+```
+
+</details>
+
+## 加入要求
+
+![加入要求](img/joining.png)
+
+<details><summary>source</summary>
+
+```mermaid
+<!--::$doc/joining.mermaid::-->
+```
+
+</details>
 
 - ③アカウント有効期限切れ：「処理要求中 and アカウント有効期限切れ」なら真。<br>
   ⇒ `処理要求中フラグ === true && IndexedDB.expireAccount < Date.now()`
@@ -83,29 +134,6 @@
 - ⑫ログイン済：「処理要求中 and アカウント有効期限内 and CPkey有効期限内」なら真。<br>
   ⇒ `処理要求中フラグ === true && Date.now() < IndexedDB.expireAccount && Date.now() < IndexedDB.expireCPkey`
 
-</details>
-
-## authClient 要求前準備
-
-![処理概要](img/initAuthClient.png)
-
-<details><summary>source</summary>
-
-```mermaid
-<!--::$doc/initAuthClient.mermaid::-->
-```
-
-## 加入手順
-
-![加入手順](img/joining.png)
-
-<details><summary>source</summary>
-
-```mermaid
-<!--::$doc/joining.mermaid::-->
-```
-
-</details>
 
 - ①公開鍵の準備：ScriptPropertiesから公開鍵を取得。鍵ペア未生成なら生成して保存
 - ②鍵ペアの準備：IndexedDBから鍵ペアを取得、authClientのメンバ変数に格納。<br>
@@ -263,14 +291,14 @@ authServerからauthClientに送られる処理結果オブジェクト
 
 ## authClient
 
-### 初期化処理(メイン処理)
+### 要求前準備(メイン処理)
 
 - 鍵ペアの準備：IndexedDBから鍵ペアを取得、authClientのメンバ変数に格納。<br>
   IndexedDBに鍵ペアが無い場合は新たに生成し、生成時刻と共に保存
+- IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
 
 ### joining() : 加入要求
 
-- IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
 - 加入要求としてメールアドレス・CPkeyをサーバ側に送信する
 
 ### request() : 処理要求
@@ -301,6 +329,25 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 ## authServer
 
 - authRequest.requestId を短期間保存して重複拒否
+- 引数が復号できない文字列の場合、SPkey要求の可能性があるので
+
+### メイン処理
+
+- decryptRequestで復号
+- 復号できた場合、authRequest.funcの値で分岐
+  - func.match(/::([a-zA-Z0-9+])::/) ⇒ authServer自体への処理要求<br>
+    ※下表の"func"は上記正規表現の$1の部分
+    | No | 要求名 | func | arguments | response | 備考 |
+    | --: | :-- | :-- | :-- | :-- | :-- |
+    | 1 | 加入要求 | membershipRequest | {CPkey} |  |  |
+    | 2 | 加入審査結果問合せ | examinationResultInquiry |  |  |  |
+    | 3 | ログイン要求 | logInRequest |  |  |  |
+    | 4 | パスコード | passcodeCheck |  |  |  |
+    | 5 | 処理要求 | 上記以外 |  |  |  |
+  - アンマッチ ⇒ サーバ側関数への処理要求。但しauthConfig.funcに含まれない場合はエラー
+- 復号できなかった場合はCPkeyと推定、公開鍵の形式チェックの上、OKならSPkeyを返す
+
+### membershipRequest() : 加入要求時処理
 
 ### notifyAcceptance() : 加入要求の結果連絡
 
@@ -312,6 +359,8 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 | **⑧ アカウント有効性確認** | 承認済・有効期間内か | 期限切れ → `warning` |
 | **⑨ 署名有効期限確認** | `CPkey` の有効期限をチェック | 切れ → `warning` + 更新誘導 |
 | **⑩ セッション状態確認** | ログイン済みか・有効期間内か確認 | 未ログイン → `authTrial()` 実行 |
+
+### examinationResultInquiry() : 加入審査結果問合せへの回答
 
 
 ## decryptRequest

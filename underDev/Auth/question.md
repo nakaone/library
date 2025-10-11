@@ -76,23 +76,13 @@ sequenceDiagram
   authClient->>localFunc: ①authClientインスタンス生成
   Note over authClient,authServer: 要求前準備
   localFunc->>authClient: ②処理要求
+  Note right of authClient: main()
 
   authClient->>authClient: 処理要求中フラグ=true,ログイン試行中フラグ=false
   loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
 
     alt ③アカウント有効期限切れ
-      alt ④加入未申請
-        authClient->>authServer: ⑤加入要求
-        %% 加入審査は人間系なので到着日時未定
-        authServer->>clientMail: 加入可否連絡メール
-      else 加入申請済
-        authClient->>authServer: 加入審査結果問合せ
-        authServer->>authClient: ⑥加入審査結果
-        authClient->>IndexedDB: ⑦アカウント・CPkey期限更新
-        alt 加入審査結果がNG
-          authClient->>authClient: ⑧リトライ意思確認
-        end
-      end
+      Note over authClient,authServer: 加入要求
     end
 
     alt ⑨未ログイン
@@ -139,12 +129,14 @@ sequenceDiagram
   end
 ```
 
+</details>
+
 - ①authClientインスタンス生成：この時点でIndexedDBに鍵ペア・メールアドレスを準備
 - ②処理要求：authClient側でIndexedDBの内容を取得
 
 - ③アカウント有効期限切れ：「処理要求中 and アカウント有効期限切れ」なら真。<br>
-  ⇒ `処理要求中フラグ === true && IndexedDB.expireAccount < Date.now()`
-  authServer.memberListが原本だが、クライアント側でも事前にチェックする
+  ⇒ `処理要求中フラグ === true && IndexedDB.expireAccount < Date.now()`<br>
+  ※authServer.memberListが原本だが、クライアント側でも事前にチェックする
 - ④加入未申請：`IndexedDB.ApplicationForMembership < 0`なら真
 - ⑤加入要求：加入審査は人間系なので到着日時未定。この時点で一度処理を中断するため、authClientは以下の処理を行う
   - IndexedDBに加入申請日時を記録
@@ -167,8 +159,6 @@ sequenceDiagram
 - ⑫ログイン済：「処理要求中 and アカウント有効期限内 and CPkey有効期限内」なら真。<br>
   ⇒ `処理要求中フラグ === true && Date.now() < IndexedDB.expireAccount && Date.now() < IndexedDB.expireCPkey`
 
-</details>
-
  authClient 要求前準備
 
 ![処理概要](img/initAuthClient.png)
@@ -176,7 +166,7 @@ sequenceDiagram
 <details><summary>source</summary>
 
 ```mermaid
-%% authClient要求前準備
+%% 要求前準備
 
 sequenceDiagram
   actor user
@@ -218,35 +208,100 @@ sequenceDiagram
   end
 ```
 
- 加入手順
+</details>
 
-![加入手順](img/joining.png)
+ 加入要求
+
+![加入要求](img/joining.png)
 
 <details><summary>source</summary>
 
 ```mermaid
+%% 加入要求
+
 sequenceDiagram
+  %%actor user
+  participant localFunc
   participant clientMail
+  %%participant encryptRequest
   participant IndexedDB
   participant authClient
   participant authServer
   participant memberList
-  participant admin
+  %%participant decryptRequest
+  %%participant serverFunc
+  actor admin
 
-  authServer->>authServer: ①公開鍵の準備
-  authClient->>authServer: 加入要求
-  authServer->>authClient: SPkey(平文)
-  IndexedDB->>authClient: ②鍵ペアの準備
-  authClient->>authClient: メールアドレス入力
-  authClient->>authServer: メールアドレス
-  authServer->>memberList: メールアドレスとCPkey送信、保管
-  authServer->>admin: 加入要求連絡
-  admin->>memberList: ③加入可否検討
-  memberList->>authServer: ④結果連絡
-  authServer->>clientMail: 加入可否検討結果
+  localFunc->>+authClient: ②処理要求
+  Note right of authClient: main()
+
+  loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
+
+    alt ③アカウント有効期限切れ
+
+      rect rgba(209, 247, 221, 1)
+
+        alt ①加入未申請 %% IndexedDB.ApplicationForMembership 加入申請実行日時。未申請時は-1
+
+          Note right of authClient: joining()
+          authClient->>+authServer: ②加入要求
+          Note right of authServer: membershipRequest()
+          authServer->>memberList: memberId, CPkey登録
+          authServer->>admin: 加入要求があった旨、メール送信
+          authServer->>-authClient: 加入要求登録が済んだ旨連絡
+          authClient->>authClient: 加入申請実行日時を更新(IndexedDB.ApplicationForMembership)
+
+          admin->>memberList: 加入認否記入
+          admin->>+authServer: 認否記入終了時処理を起動
+          Note right of authServer: notifyAcceptance()
+          authServer->>clientMail: 加入審査結果連絡メール送信日時が空欄のメンバに結果メール送信
+          authServer->>-admin: 処理結果をダイアログ表示
+
+        else 加入申請済
+
+          authClient->>+authServer: 加入審査結果問合せ
+          Note right of authServer: examinationResultInquiry()
+          authServer->>-authClient: ⑥加入審査結果
+          authClient->>IndexedDB: ⑦アカウント期限・CPkey期限更新
+          alt 加入審査結果がNG
+            authClient->>authClient: ⑧リトライ意思確認
+          end
+        end
+
+      end
+    end
+  end
+
+  authClient->>-localFunc: 処理結果
 ```
 
 </details>
+
+- ③アカウント有効期限切れ：「処理要求中 and アカウント有効期限切れ」なら真。<br>
+  ⇒ `処理要求中フラグ === true && IndexedDB.expireAccount < Date.now()`
+  authServer.memberListが原本だが、クライアント側でも事前にチェックする
+- ④加入未申請：`IndexedDB.ApplicationForMembership < 0`なら真
+- ⑤加入要求：加入審査は人間系なので到着日時未定。この時点で一度処理を中断するため、authClientは以下の処理を行う
+  - IndexedDBに加入申請日時を記録
+  - 処理要求中フラグ=false
+
+- ⑥加入審査結果：memberListの検索結果(存在or不存在)、アカウント・CPkey期限(既存メンバは現在の設定値)
+- ⑦アカウント・CPkey期限更新：加入審査結果がNGだった場合、IndexedDB.expireAccount/expireCPkey共にnullを設定
+- ⑧リトライ意思確認：ダイアログでリトライするか確認。リトライしない場合、処理要求中フラグ=falseを設定
+
+- ⑨未ログイン：「処理要求中 and アカウント有効期限内 and CPkey有効期限切れ」なら真。<br>
+  ⇒ `処理要求中フラグ === true && Date.now() < IndexedDB.expireAccount && IndexedDB.expireCPkey < Date.now()`
+- ⑩result==='fatal'：authClientは以下の処理を行う
+  - IndexedDB.expireAccount/expireCPkeyをクリア(-1をセット)
+  - 処理要求中フラグ=false
+- ⑪ログイン時処理：authClientは以下の処理を行う
+  - IndexedDB.expireCPkeyを更新
+  - 処理要求中フラグ=false
+  - ログイン試行中フラグ=false
+
+- ⑫ログイン済：「処理要求中 and アカウント有効期限内 and CPkey有効期限内」なら真。<br>
+  ⇒ `処理要求中フラグ === true && Date.now() < IndexedDB.expireAccount && Date.now() < IndexedDB.expireCPkey`
+
 
 - ①公開鍵の準備：ScriptPropertiesから公開鍵を取得。鍵ペア未生成なら生成して保存
 - ②鍵ペアの準備：IndexedDBから鍵ペアを取得、authClientのメンバ変数に格納。<br>
@@ -443,14 +498,14 @@ authServerからauthClientに送られる処理結果オブジェクト
 
  authClient
 
- 初期化処理(メイン処理)
+ 要求前準備(メイン処理)
 
 - 鍵ペアの準備：IndexedDBから鍵ペアを取得、authClientのメンバ変数に格納。<br>
   IndexedDBに鍵ペアが無い場合は新たに生成し、生成時刻と共に保存
+- IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
 
  joining() : 加入要求
 
-- IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
 - 加入要求としてメールアドレス・CPkeyをサーバ側に送信する
 
  request() : 処理要求
@@ -481,6 +536,25 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
  authServer
 
 - authRequest.requestId を短期間保存して重複拒否
+- 引数が復号できない文字列の場合、SPkey要求の可能性があるので
+
+ メイン処理
+
+- decryptRequestで復号
+- 復号できた場合、authRequest.funcの値で分岐
+  - func.match(/::([a-zA-Z0-9+])::/) ⇒ authServer自体への処理要求<br>
+    ※下表の"func"は上記正規表現の$1の部分
+    | No | 要求名 | func | arguments | response | 備考 |
+    | --: | :-- | :-- | :-- | :-- | :-- |
+    | 1 | 加入要求 | membershipRequest | {CPkey} |  |  |
+    | 2 | 加入審査結果問合せ | examinationResultInquiry |  |  |  |
+    | 3 | ログイン要求 | logInRequest |  |  |  |
+    | 4 | パスコード | passcodeCheck |  |  |  |
+    | 5 | 処理要求 | 上記以外 |  |  |  |
+  - アンマッチ ⇒ サーバ側関数への処理要求。但しauthConfig.funcに含まれない場合はエラー
+- 復号できなかった場合はCPkeyと推定、公開鍵の形式チェックの上、OKならSPkeyを返す
+
+ membershipRequest() : 加入要求時処理
 
  notifyAcceptance() : 加入要求の結果連絡
 
@@ -492,6 +566,8 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 | **⑧ アカウント有効性確認** | 承認済・有効期間内か | 期限切れ → `warning` |
 | **⑨ 署名有効期限確認** | `CPkey` の有効期限をチェック | 切れ → `warning` + 更新誘導 |
 | **⑩ セッション状態確認** | ログイン済みか・有効期間内か確認 | 未ログイン → `authTrial()` 実行 |
+
+ examinationResultInquiry() : 加入審査結果問合せへの回答
 
 
  decryptRequest

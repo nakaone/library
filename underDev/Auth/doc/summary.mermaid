@@ -14,23 +14,13 @@ sequenceDiagram
   authClient->>localFunc: ①authClientインスタンス生成
   Note over authClient,authServer: 要求前準備
   localFunc->>authClient: ②処理要求
+  Note right of authClient: main()
 
   authClient->>authClient: 処理要求中フラグ=true,ログイン試行中フラグ=false
   loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
 
     alt ③アカウント有効期限切れ
-      alt ④加入未申請
-        authClient->>authServer: ⑤加入要求
-        %% 加入審査は人間系なので到着日時未定
-        authServer->>clientMail: 加入可否連絡メール
-      else 加入申請済
-        authClient->>authServer: 加入審査結果問合せ
-        authServer->>authClient: ⑥加入審査結果
-        authClient->>IndexedDB: ⑦アカウント・CPkey期限更新
-        alt 加入審査結果がNG
-          authClient->>authClient: ⑧リトライ意思確認
-        end
-      end
+      Note over authClient,authServer: 加入要求
     end
 
     alt ⑨未ログイン
