@@ -45,6 +45,8 @@
 
 # 処理手順
 
+## 概要
+
 ![処理概要](img/summary.png)
 
 <details><summary>source</summary>
@@ -82,6 +84,16 @@
   ⇒ `処理要求中フラグ === true && Date.now() < IndexedDB.expireAccount && Date.now() < IndexedDB.expireCPkey`
 
 </details>
+
+## authClient 要求前準備
+
+![処理概要](img/initAuthClient.png)
+
+<details><summary>source</summary>
+
+```mermaid
+<!--::$doc/initAuthClient.mermaid::-->
+```
 
 ## 加入手順
 
@@ -137,6 +149,7 @@
 - typeof {Object} authIndexedDB - クライアントのIndexedDBに保存するオブジェクト
 - prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())
 - prop {string} memberId - メンバの識別子(=メールアドレス)
+- prop {string} SPkey - サーバ側の公開鍵
 - prop {number} [ApplicationForMembership=-1] - 加入申請実行日時。未申請時は-1
 - prop {string} [expireAccount=-1] - 加入承認の有効期間が切れる日時。未加入時は-1
 - prop {string} [expireCPkey=-1] - CPkeyの有効期限。未ログイン時は-1

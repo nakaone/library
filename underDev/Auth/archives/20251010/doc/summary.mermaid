@@ -1,5 +1,4 @@
 sequenceDiagram
-  actor user
   participant localFunc
   participant clientMail
   %%participant encryptRequest
@@ -9,10 +8,14 @@ sequenceDiagram
   %%participant memberList
   %%participant decryptRequest
   participant serverFunc
-  %%actor admin
+  %%participant admin
 
-  authClient->>localFunc: ①authClientインスタンス生成
-  Note over authClient,authServer: 要求前準備
+  localFunc->>authClient: ①authClientインスタンス生成
+  IndexedDB->>authClient: memberId,アカウント・CPkey期限更新
+  alt SPkey不明
+    authClient->>authServer: SPkey要求
+    authServer->>authClient: SPkey
+  end
   localFunc->>authClient: ②処理要求
 
   authClient->>authClient: 処理要求中フラグ=true,ログイン試行中フラグ=false

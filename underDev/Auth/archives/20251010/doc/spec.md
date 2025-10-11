@@ -45,90 +45,12 @@
 
 # 処理手順
 
-## 概要
-
 ![処理概要](img/summary.png)
 
 <details><summary>source</summary>
 
 ```mermaid
-sequenceDiagram
-  actor user
-  participant localFunc
-  participant clientMail
-  %%participant encryptRequest
-  participant IndexedDB
-  participant authClient
-  participant authServer
-  %%participant memberList
-  %%participant decryptRequest
-  participant serverFunc
-  %%actor admin
-
-  authClient->>localFunc: ①authClientインスタンス生成
-  Note over authClient,authServer: 要求前準備
-  localFunc->>authClient: ②処理要求
-
-  authClient->>authClient: 処理要求中フラグ=true,ログイン試行中フラグ=false
-  loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
-
-    alt ③アカウント有効期限切れ
-      alt ④加入未申請
-        authClient->>authServer: ⑤加入要求
-        %% 加入審査は人間系なので到着日時未定
-        authServer->>clientMail: 加入可否連絡メール
-      else 加入申請済
-        authClient->>authServer: 加入審査結果問合せ
-        authServer->>authClient: ⑥加入審査結果
-        authClient->>IndexedDB: ⑦アカウント・CPkey期限更新
-        alt 加入審査結果がNG
-          authClient->>authClient: ⑧リトライ意思確認
-        end
-      end
-    end
-
-    alt ⑨未ログイン
-      alt ログイン試行中フラグ === false
-        authClient->>authServer: ログイン要求
-        authClient->>authClient: ログイン試行中フラグ=true
-        authServer->>authServer: 状態確認
-        alt アカウント有効かつパスコード未通知
-          authServer->>clientMail: パスコード通知メール
-        end
-        alt 待機時間内にauthServerから返信無し
-          authClient->>authClient: ⑩result==='fatal'
-        else 待機時間内にauthServerから返信あり
-          authServer->>authClient: 確認結果通知
-          alt result==='warning'
-            authClient->>authClient: warning処理
-          end
-        end
-      else ログイン試行中フラグ === true
-        clientMail->>authClient: パスコード入力
-        authClient->>authServer: パスコード
-        authServer->>authServer: パスコード確認
-        alt 待機時間内にauthServerから返信無し
-          authClient->>authClient: ⑩result==='fatal'
-        else 待機時間内にauthServerから返信あり
-          authServer->>authClient: 確認結果通知
-          alt result==='warning'
-            authClient->>authClient: warning処理
-          else result==='success'
-            authClient->>authClient: ⑪ログイン時処理
-          end
-        end
-      end
-    end
-
-    alt ⑫ログイン済
-      authClient->>authServer: 処理要求
-      authServer->>serverFunc: 処理要求＋メンバ属性情報
-      serverFunc->>authServer: 処理結果
-      authServer->>authClient: 処理結果
-      authClient->>localFunc: 処理結果
-      authClient->>authClient: 処理要求中フラグ=false
-    end
-  end
+<!--::$doc/summary.mermaid::-->
 ```
 
 - ①authClientインスタンス生成：この時点でIndexedDBに鍵ペア・メールアドレスを準備
@@ -161,55 +83,6 @@ sequenceDiagram
 
 </details>
 
-## authClient 要求前準備
-
-![処理概要](img/initAuthClient.png)
-
-<details><summary>source</summary>
-
-```mermaid
-%% authClient要求前準備
-
-sequenceDiagram
-  actor user
-  participant localFunc
-  %%participant clientMail
-  %%participant encryptRequest
-  participant IndexedDB
-  participant authClient
-  participant authServer
-  %%participant memberList
-  %%participant decryptRequest
-  %%participant serverFunc
-  %%actor admin
-
-  %% IndexedDB格納項目のメンバ変数化 ----------
-  alt IndexedDBのメンバ変数化が未了
-    IndexedDB->>+authClient: 既存設定値の読み込み
-    Note right of authClient: setupMemberVariables()
-    alt クライアント側鍵ペア未作成
-      authClient->>authClient: 鍵ペア生成、生成日時設定
-    end
-    alt メールアドレス(memberId)未設定
-      authClient->>user: ダイアログ表示
-      user->>authClient: メールアドレス
-    end
-    alt SPkey未入手
-      authClient->>+authServer: CPkey(平文)
-      Note right of authServer: responseSPkey()
-      authServer->>authServer: 公開鍵か形式チェック、SPkeyをCPkeyで暗号化
-      authServer->>authClient: SPkey
-      alt 待機時間内にauthServerから返信有り
-        authServer->>-authClient: SPkeyをCSkeyで復号
-      else 待機時間内にauthServerから返信無し
-        authClient->>user: エラーメッセージをダイアログ表示
-        authClient->>localFunc: エラーオブジェクトを返して終了
-      end
-    end
-    authClient-->>-IndexedDB: 設定値の書き換え
-  end
-```
-
 ## 加入手順
 
 ![加入手順](img/joining.png)
@@ -217,25 +90,7 @@ sequenceDiagram
 <details><summary>source</summary>
 
 ```mermaid
-sequenceDiagram
-  participant clientMail
-  participant IndexedDB
-  participant authClient
-  participant authServer
-  participant memberList
-  participant admin
-
-  authServer->>authServer: ①公開鍵の準備
-  authClient->>authServer: 加入要求
-  authServer->>authClient: SPkey(平文)
-  IndexedDB->>authClient: ②鍵ペアの準備
-  authClient->>authClient: メールアドレス入力
-  authClient->>authServer: メールアドレス
-  authServer->>memberList: メールアドレスとCPkey送信、保管
-  authServer->>admin: 加入要求連絡
-  admin->>memberList: ③加入可否検討
-  memberList->>authServer: ④結果連絡
-  authServer->>clientMail: 加入可否検討結果
+<!--::$doc/joining.mermaid::-->
 ```
 
 </details>
@@ -254,46 +109,7 @@ sequenceDiagram
 <details><summary>source</summary>
 
 ```mermaid
-sequenceDiagram
-  %%participant clientMail
-  participant localFunc
-  participant authClient
-  participant authServer
-  participant decryptedRequest
-  participant memberList
-  participant serverFunc
-  %%participant admin
-
-  localFunc->>authClient: 処理要求
-  authClient->>authClient: 処理要求中フラグ=true
-  loop 処理要求中フラグ==true
-    authClient->>authServer: 処理要求(authRequest)
-
-    %% サーバ側処理
-    authServer->>decryptedRequest: 内容確認要求
-    decryptedRequest->>authServer: 確認結果
-
-    alt result=normal
-      authServer->>serverFunc: 処理要求
-      serverFunc->>authServer: 処理結果
-      authServer->>authClient: 処理結果(authResponse)
-    else result=warning
-      authServer->>authServer: warning処理
-      authServer->>authClient: 処理結果(authResponse)
-    end
-
-    %% クライアント側処理
-    alt authServerからの待機時間が2分超
-      authClient->>authClient: エラーメッセージを出し、処理要求中フラグ=false
-    else 待機時間が2分以内
-      alt result=warning
-        authClient->>authClient: warning処理
-      else result=normal
-        authClient->>localFunc: 処理結果
-      end
-      authClient->>authClient: 処理要求中フラグ=false
-    end
-  end
+<!--::$doc/authenticate.mermaid::-->
 ```
 
 </details>
@@ -321,7 +137,6 @@ sequenceDiagram
 - typeof {Object} authIndexedDB - クライアントのIndexedDBに保存するオブジェクト
 - prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())
 - prop {string} memberId - メンバの識別子(=メールアドレス)
-- prop {string} SPkey - サーバ側の公開鍵
 - prop {number} [ApplicationForMembership=-1] - 加入申請実行日時。未申請時は-1
 - prop {string} [expireAccount=-1] - 加入承認の有効期間が切れる日時。未加入時は-1
 - prop {string} [expireCPkey=-1] - CPkeyの有効期限。未ログイン時は-1
@@ -384,7 +199,7 @@ authConfigを継承した、authClientで使用する設定値
 
 - typedef {Object} authClientConfig
 - prop {string} x - サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`)
-
+  
 ## authTrialLog
 
 - typedef {Object} authTrialLog

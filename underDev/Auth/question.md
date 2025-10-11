@@ -53,12 +53,15 @@
 
  処理手順
 
+ 概要
+
 ![処理概要](img/summary.png)
 
 <details><summary>source</summary>
 
 ```mermaid
 sequenceDiagram
+  actor user
   participant localFunc
   participant clientMail
   %%participant encryptRequest
@@ -68,10 +71,10 @@ sequenceDiagram
   %%participant memberList
   %%participant decryptRequest
   participant serverFunc
-  %%participant admin
+  %%actor admin
 
-  localFunc->>authClient: ①authClientインスタンス生成
-  IndexedDB->>authClient: memberId,アカウント・CPkey期限更新
+  authClient->>localFunc: ①authClientインスタンス生成
+  Note over authClient,authServer: 要求前準備
   localFunc->>authClient: ②処理要求
 
   authClient->>authClient: 処理要求中フラグ=true,ログイン試行中フラグ=false
@@ -165,6 +168,55 @@ sequenceDiagram
   ⇒ `処理要求中フラグ === true && Date.now() < IndexedDB.expireAccount && Date.now() < IndexedDB.expireCPkey`
 
 </details>
+
+ authClient 要求前準備
+
+![処理概要](img/initAuthClient.png)
+
+<details><summary>source</summary>
+
+```mermaid
+%% authClient要求前準備
+
+sequenceDiagram
+  actor user
+  participant localFunc
+  %%participant clientMail
+  %%participant encryptRequest
+  participant IndexedDB
+  participant authClient
+  participant authServer
+  %%participant memberList
+  %%participant decryptRequest
+  %%participant serverFunc
+  %%actor admin
+
+  %% IndexedDB格納項目のメンバ変数化 ----------
+  alt IndexedDBのメンバ変数化が未了
+    IndexedDB->>+authClient: 既存設定値の読み込み
+    Note right of authClient: setupMemberVariables()
+    alt クライアント側鍵ペア未作成
+      authClient->>authClient: 鍵ペア生成、生成日時設定
+    end
+    alt メールアドレス(memberId)未設定
+      authClient->>user: ダイアログ表示
+      user->>authClient: メールアドレス
+    end
+    alt SPkey未入手
+      authClient->>+authServer: CPkey(平文)
+      Note right of authServer: responseSPkey()
+      authServer->>authServer: 公開鍵か形式チェック、SPkeyをCPkeyで暗号化
+      authServer->>authClient: SPkey
+      alt 待機時間内にauthServerから返信有り
+        authServer->>-authClient: SPkeyをCSkeyで復号
+      else 待機時間内にauthServerから返信無し
+        authClient->>user: エラーメッセージをダイアログ表示
+        authClient->>localFunc: エラーオブジェクトを返して終了
+      end
+    end
+    authClient-->>-IndexedDB: 設定値の書き換え
+  end
+```
 
  加入手順
 
@@ -277,6 +329,7 @@ sequenceDiagram
 - typeof {Object} authIndexedDB - クライアントのIndexedDBに保存するオブジェクト
 - prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())
 - prop {string} memberId - メンバの識別子(=メールアドレス)
+- prop {string} SPkey - サーバ側の公開鍵
 - prop {number} [ApplicationForMembership=-1] - 加入申請実行日時。未申請時は-1
 - prop {string} [expireAccount=-1] - 加入承認の有効期間が切れる日時。未加入時は-1
 - prop {string} [expireCPkey=-1] - CPkeyの有効期限。未ログイン時は-1
@@ -338,6 +391,7 @@ authConfigを継承した、authServerで使用する設定値
 authConfigを継承した、authClientで使用する設定値
 
 - typedef {Object} authClientConfig
+- prop {string} x - サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`)
 
  authTrialLog
 

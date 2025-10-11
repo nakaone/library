@@ -1,0 +1,40 @@
+%% authClient要求前準備
+
+sequenceDiagram
+  actor user
+  participant localFunc
+  %%participant clientMail
+  %%participant encryptRequest
+  participant IndexedDB
+  participant authClient
+  participant authServer
+  %%participant memberList
+  %%participant decryptRequest
+  %%participant serverFunc
+  %%actor admin
+
+  %% IndexedDB格納項目のメンバ変数化 ----------
+  alt IndexedDBのメンバ変数化が未了
+    IndexedDB->>+authClient: 既存設定値の読み込み
+    Note right of authClient: setupMemberVariables()
+    alt クライアント側鍵ペア未作成
+      authClient->>authClient: 鍵ペア生成、生成日時設定
+    end
+    alt メールアドレス(memberId)未設定
+      authClient->>user: ダイアログ表示
+      user->>authClient: メールアドレス
+    end
+    alt SPkey未入手
+      authClient->>+authServer: CPkey(平文)
+      Note right of authServer: responseSPkey()
+      authServer->>authServer: 公開鍵か形式チェック、SPkeyをCPkeyで暗号化
+      authServer->>authClient: SPkey
+      alt 待機時間内にauthServerから返信有り
+        authServer->>-authClient: SPkeyをCSkeyで復号
+      else 待機時間内にauthServerから返信無し
+        authClient->>user: エラーメッセージをダイアログ表示
+        authClient->>localFunc: エラーオブジェクトを返して終了
+      end
+    end
+    authClient-->>-IndexedDB: 設定値の書き換え
+  end

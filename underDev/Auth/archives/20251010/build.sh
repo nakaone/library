@@ -16,7 +16,6 @@ img="$prj/img"
 # ----------------------------------------------
 
 mmdc -i $doc/summary.mermaid -o $img/summary.png
-mmdc -i $doc/initAuthClient.mermaid -o $img/initAuthClient.png
 mmdc -i $doc/joining.mermaid -o $img/joining.png
 mmdc -i $doc/authenticate.mermaid -o $img/authenticate.png
 

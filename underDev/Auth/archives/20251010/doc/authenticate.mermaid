@@ -1,0 +1,40 @@
+sequenceDiagram
+  %%participant clientMail
+  participant localFunc
+  participant authClient
+  participant authServer
+  participant decryptedRequest
+  participant memberList
+  participant serverFunc
+  %%participant admin
+
+  localFunc->>authClient: 処理要求
+  authClient->>authClient: 処理要求中フラグ=true
+  loop 処理要求中フラグ==true
+    authClient->>authServer: 処理要求(authRequest)
+
+    %% サーバ側処理
+    authServer->>decryptedRequest: 内容確認要求
+    decryptedRequest->>authServer: 確認結果
+
+    alt result=normal
+      authServer->>serverFunc: 処理要求
+      serverFunc->>authServer: 処理結果
+      authServer->>authClient: 処理結果(authResponse)
+    else result=warning
+      authServer->>authServer: warning処理
+      authServer->>authClient: 処理結果(authResponse)
+    end
+
+    %% クライアント側処理
+    alt authServerからの待機時間が2分超
+      authClient->>authClient: エラーメッセージを出し、処理要求中フラグ=false
+    else 待機時間が2分以内
+      alt result=warning
+        authClient->>authClient: warning処理
+      else result=normal
+        authClient->>localFunc: 処理結果
+      end
+      authClient->>authClient: 処理要求中フラグ=false
+    end
+  end
