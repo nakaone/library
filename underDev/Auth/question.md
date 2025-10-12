@@ -197,6 +197,8 @@ sequenceDiagram
 
  加入要求
 
+本項の対象は下図背景色緑の部分。
+
 ![加入要求](img/joining.svg)
 
 <details><summary>source</summary>
@@ -273,7 +275,86 @@ sequenceDiagram
 - ④加入認否記入：承認する場合、管理者はmemberList.acceptedに`=now()`をセット、コピー後に「値だけ貼り付け」で承認日時を記録。<br>
   否認する場合は空欄のままとする。
 
+ ログイン要求
+
+本項の対象は下図背景色緑の部分。
+
+![ログイン要求](img/login.svg)
+
+<details><summary>source</summary>
+
+```mermaid
+%% ログイン要求
+
+sequenceDiagram
+  %%actor user
+  participant localFunc
+  participant clientMail
+  %%participant encryptRequest
+  participant IndexedDB
+  participant authClient
+  participant authServer
+  participant memberList
+  %%participant decryptRequest
+  %%participant serverFunc
+  actor admin
+
+  localFunc->>+authClient: 処理要求
+  Note right of authClient: 要求前準備(メイン処理)
+
+  loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
+
+    alt ⑨未ログイン
+
+      rect rgba(209, 247, 221, 1)
+        Note right of authClient: requestLogin()
+
+        alt ログイン試行中フラグ === false
+
+          authClient->>authClient: ログイン試行中フラグ=true
+          authClient->>+authServer: ログイン要求
+          Note right of authServer: loginTrial()
+          memberList->>authServer: 状態確認
+          alt アカウント有効かつパスコード未通知
+            authServer->>clientMail: パスコード通知メール
+          end
+          alt 待機時間内にauthServerから返信無し
+            authClient->>authClient: ⑩result==='fatal'
+          else 待機時間内にauthServerから返信あり
+            authServer->>-authClient: 確認結果通知
+            alt result==='warning'
+              authClient->>authClient: warning処理
+            end
+          end
+
+        else ログイン試行中フラグ === true
+
+          clientMail->>authClient: パスコード入力
+          authClient->>authServer: パスコード
+          authServer->>authServer: パスコード確認
+          alt 待機時間内にauthServerから返信無し
+            authClient->>authClient: ⑩result==='fatal'
+          else 待機時間内にauthServerから返信あり
+            authServer->>authClient: 確認結果通知
+            alt result==='warning'
+              authClient->>authClient: warning処理
+            else result==='success'
+              authClient->>authClient: ⑪ログイン時処理
+            end
+          end
+        end
+      end
+    end
+  end
+
+  authClient->>-localFunc: 処理結果
+```
+
+</details>
+
  処理要求
+
+本項の対象は下図背景色緑の部分。
 
 ![処理要求](img/processingRequest.svg)
 
@@ -361,6 +442,7 @@ sequenceDiagram
 
 - スプレッドシート以外で日時を文字列として記録する場合はISO8601拡張形式の文字列(`yyyy-MM-ddThh:mm:ss.nnn+09:00`)
 - 日時を数値として記録する場合はUNIX時刻(new Date().getTime())
+- スプレッドシート(memberList)については[Memberクラス仕様書](Member.md)参照
 
  ScriptProperties
 
@@ -378,25 +460,15 @@ sequenceDiagram
 ※生成AIへ：鍵ペアをどのような形で格納するのか、仕様書とサンプルソースの提示をお願いします。
 
 - typeof {Object} authIndexedDB - クライアントのIndexedDBに保存するオブジェクト
-- prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())
+- prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())<br>
+  なおサーバ側でCPkey更新中に異なるCPkeyを生成し、更なる更新要求が出てしまうのを割けるため、鍵ペア生成は30分以上の間隔を置くものとする。
 - prop {string} memberId - メンバの識別子(=メールアドレス)
-- prop {string} memberName - メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。
+- prop {Object} profile - メンバの属性
+- prop {string} profile.memberName - メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。
 - prop {string} SPkey - サーバ側の公開鍵
 - prop {number} [ApplicationForMembership=-1] - 加入申請実行日時。未申請時は-1
 - prop {string} [expireAccount=-1] - 加入承認の有効期間が切れる日時。未加入時は-1
 - prop {string} [expireCPkey=-1] - CPkeyの有効期限。未ログイン時は-1
-
- memberList(スプレッドシート)
-
-- typedef {Object} memberList
-- prop {string} memberId - メンバの識別子(=メールアドレス)
-- prop {string} CPkey - メンバの公開鍵
-- prop {string} CPkeyUpdated - 最新のCPkeyが登録された日時
-- prop {string} accepted - 加入が承認されたメンバには承認日時を設定
-- prop {string} reportResult - 「加入登録」処理中で結果連絡メールを送信した日時
-- prop {string} expire - 加入承認の有効期間が切れる日時
-- prop {string} profile - メンバの属性情報を保持するJSON文字列。サーバ側処理時のユーザ毎の実行権限等での利用を想定。
-- prop {string} trial - ログイン試行関連情報オブジェクト(authTrial[])のJSON文字列
 
  データ型(typedef)
 
@@ -418,18 +490,21 @@ authClient/authServer共通で使用される設定値
 - prop {Object} RSA - 署名・暗号化関係の設定値
 - prop {number} [RSA.bits=2048] - 鍵ペアの鍵長
 
+- prop {number} [allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差。既定値：2分
+
  authServerConfig
 
 authConfigを継承した、authServerで使用する設定値
 
 - typedef {Object} authServerConfig
 - prop {string} [system.memberList='memberList'] - memberListシート名
-- prop {Object.<string,Function|Arrow>} func - サーバ側の関数マップ。{関数名：関数}形式
-
-- prop {Object} decryptRequest - decryptRequest関係の設定値
-- prop {number} [decryptRequest.memberLifeTime=31536000000] - メンバ加入承認後の有効期間。既定値：1年
-- prop {number} [decryptRequest.loginLifeTime=86400000] - ログイン成功後の有効期間(=CPkeyの有効期間)。既定値：1日
-- prop {number} [decryptRequest.allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差。既定値：2分
+- prop {Object.<string,Object>} func - サーバ側の関数マップ
+- prop {number} func.authority - 当該関数実行のために必要となるユーザ権限<br>
+  `memberList.profile.authority & authServerConfig.func.authrity > 0`なら実行可能とする。
+- prop {Function|Arrow} func.do - 実行するサーバ側関数
+- prop {number} [defaultAuthority=0] - 新規加入メンバの権限の既定値
+- prop {number} [memberLifeTime=31536000000] - メンバ加入承認後の有効期間。既定値：1年
+- prop {number} [loginLifeTime=86400000] - ログイン成功後の有効期間(=CPkeyの有効期間)。既定値：1日
 
 - prop {Object} trial - ログイン試行関係の設定値
 - prop {number} [trial.passcodeLength=6] - パスコードの桁数
@@ -444,18 +519,6 @@ authConfigを継承した、authClientで使用する設定値
 
 - typedef {Object} authClientConfig
 - prop {string} x - サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`)
-
- authTrialLog
-
-- typedef {Object} authTrialLog
-- prop {string} enterd - 入力されたパスコード
-- prop {number} result - -1:恒久的エラー, 0:要リトライ, 1:パスコード一致
-- prop {string} message - エラーメッセージ
-- prop {number} timestamp - 判定処理日時
-
- authTrial
-
-- [authTrial](doc/class.authTrial.md)参照
 
  authRequest
 
@@ -536,6 +599,13 @@ authServerからauthClientに送られる処理結果オブジェクト
  */
 ```
 
+ requestLogin() : ログイン要求
+
+- authServer.loginTrialに`{func:"loginRequest"}`を送信
+
+
+<!-- 以降、未チェック -->
+
  request() : 処理要求
 
  inCaseOfWarning() : authResponse.result==warningだった場合の処理
@@ -548,8 +618,6 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 
 1. 鍵ペアを再作成し、改めて送信
 2. CPkey再登録・ログイン終了後、改めて要求を送信
-
- requestLogin() : ログイン要求
 
  login() : セッション状態確認(未ログイン)
 
@@ -569,6 +637,7 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 
  メイン処理
 
+- 引数無しの場合はsetupEnvironmentを呼び出して環境整備
 - decryptRequestで復号
 - 復号できた場合、authRequest.funcの値で分岐
   - func.match(/::([a-zA-Z0-9+])::/) ⇒ authServer自体への処理要求<br>
@@ -584,6 +653,12 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 - 復号できなかった場合はCPkeyと推定、公開鍵の形式チェックの上、OKならSPkeyを返す
 - authServer自体への処理要求・サーバ側関数への処理要求を問わず、Errorが帰ってきた場合は何も返さない
 - 呼出先からの戻り値がError以外の場合、authResponse形式に変換してauthClientに返す
+
+ setupEnvironment() : 実行環境整備
+
+- memberListが無ければシートを作成
+- ScriptPropertiesの作成
+- sendMailやシートへのアクセス等、GASでの権限承認が必要な処理をダミーで動かし、必要な権限を一括承認
 
  responseSPkey() : クライアント側にSPkeyを提供
 
@@ -633,6 +708,19 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 ```
 
  loginTrial() : クライアントからのログイン要求に基づくログイン可否判断
+
+- memberIdを元にmemberListから当該メンバの情報を取得
+- trial欄の
+
+- memberIdを元に[authTrialクラス](class.authTrial.md)をインスタンス化(仮に`const atObj = new authTrial({memberId:memberId})`とする)。
+-
+
+
+```js
+/**
+ * @param {string} memberId
+ */
+```
 
  inCaseOfWarning() : 復号時warningだった場合の処理
 
@@ -967,6 +1055,314 @@ function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:tr
 ---
 
 © 2025 Auth System Design Team
+
+## Member クラス仕様書
+
+【生成AIへ】
+- 複雑になるため「併存期間」状態の導入は見送ります
+
+### 概要
+
+`Member`はサーバ側でメンバの状態(加入、ログイン、鍵状態など)をマルチデバイス利用を前提に統一的に管理するためのクラスです。
+
+### 状態遷移
+
+```mermaid
+stateDiagram-v2
+  [*] --> 未加入
+  未加入 --> 審査中 : 加入要求
+  審査中 --> 加入中 : 承認
+  審査中 --> [*] : 否認
+  state 加入中 {
+    [*] --> 未ログイン
+    未ログイン --> ログイン試行中 : ログイン要求
+    ログイン試行中 --> ログイン中 : 成功
+    ログイン試行中 --> ログイン試行中 : 失敗(回数制限内)
+    ログイン中 --> ログイン期限切れ
+    ログイン期限切れ --> [*]
+    ログイン試行中 --> 凍結中 : 失敗(回数制限超)
+    凍結中 --> [*]
+  }
+  加入中 --> 加入期限切れ
+  加入期限切れ --> [*]
+```
+
+| No | 状態 | 説明・判定方法 |
+| --: | :-- | :-- |
+| 1 | 未加入 | memberListに存在しない<br>memberList.memberIdに無い |
+| 2 | 審査中 | 管理者承認待ち<br>0 < memberList.accepted |
+| 3 | 加入中 | 有効メンバ。期限内であれば認証可能<br>0 < memberList.accepted && Date.now() < memberList.expire |
+| 4 | &emsp;未ログイン | 未認証の状態 |
+| 5 | &emsp;ログイン試行中 | パスコードを入力し、認証成功・不成功が未定の状態 |
+| 6 | &emsp;ログイン中 | 認証が成功し、権限が必要な処理も要求できる状態<br>memberList[deviceId].CPkeyUpdated+ |
+| 7 | &emsp;ログイン期限切れ | CPキーの有効期限が切れて再作成が必要な状態 |
+| 8 | &emsp;凍結中 | 制限回数内に認証が成功せず、試行できない状態<br> |
+| 9 | 加入期限切れ | メンバ加入承認後の有効期間が切れた状態<br>memberList.expire < Date.now() |
+
+### データ型定義
+
+```js
+/**
+ * @typedef {Object} authTrialLog
+ * @prop {string} enterd - 入力されたパスコード
+ * @prop {number} result - -1:恒久的エラー, 0:要リトライ, 1:パスコード一致
+ * @prop {string} message - エラーメッセージ
+ * @prop {number} timestamp - 判定処理日時
+ */
+/**
+ * @typedef {Object} authTrial
+ * @prop {string} passcode - 設定されているパスコード
+ * @prop {number} created - パスコード生成日時(≒パスコード通知メール発信日時)
+ * @prop {number} [freezingUntil=0] - 凍結解除日時。最大試行回数を超えたら現在日時を設定
+ * @prop {number} [CPkeyUpdateUntil=0] - CPkey更新処理中の場合、更新期限をUNIX時刻でセット
+ * @prop {authTrialLog[]} [log=[]] - 試行履歴。常に最新が先頭(unshift()使用)
+ */
+/**
+ * @typedef {Object} MemberProfile
+ * @prop {number} authority - メンバのサーバ側処理時の実行権限
+ */
+/**
+ * @typedef {Object} Device
+ * @prop {string} deviceId - デバイスの識別子。UUID
+ * @prop {string} CPkey - メンバの公開鍵
+ * @prop {string} CPkeyUpdated - 最新のCPkeyが登録された日時
+ * @prop {string} trial - ログイン試行関連情報オブジェクト(authTrial[])のJSON文字列
+ */
+/**
+ * @typedef {Object} memberList
+ * @prop {string} memberId - メンバの識別子(=メールアドレス)
+ * @prop {string} name - メンバの氏名
+ * @prop {string} accepted - 加入が承認されたメンバには承認日時を設定
+ * @prop {string} reportResult - 「加入登録」処理中で結果連絡メールを送信した日時
+ * @prop {string} expire - 加入承認の有効期間が切れる日時
+ * @prop {string} profile - メンバの属性情報(MemberProfile)を保持するJSON文字列
+ * @prop {string} device - マルチデバイス対応のためのデバイス情報(Device)を保持するJSON文字列
+ * @prop {string} [note] - 当該メンバに対する備考
+ */
+```
+
+## class authTrial : サーバ側のログイン試行時のパスコード関係
+
+- typedef {Object} authTrial
+- prop {string} passcode - 設定されているパスコード
+- prop {number} created - パスコード生成日時(≒パスコード通知メール発信日時)
+- prop {number} [freezingUntil=0] - 凍結解除日時。最大試行回数を超えたら現在日時を設定
+- prop {number} [CPkeyUpdateUntil=0] - CPkey更新処理中の場合、更新期限をUNIX時刻でセット
+- prop {authTrialLog[]} [log=[]] - 試行履歴
+
+### constructor()
+
+- param {Object} arg
+- param {string} arg.sheetName - memberListのシート名
+- param {string} arg.memberId - メンバの識別子(=メールアドレス)
+- param {Object} opt - authTrialの設定値。authConfig.trialを想定
+- returns {authTrial[]}
+
+1. memberListからthis.memberIdの情報を取得、trial欄をオブジェクト化
+2. 新しいauthTrialインスタンスを生成
+3. authTrial.passcodeをcreatePassword()で生成、createdに現在時刻を設定
+4. authTrialインスタンスを先頭にセットした配列を戻り値とする
+5. opt.generationMax超の履歴は削除
+6. JSON化してtrial欄にセット
+
+### try() : クライアント側で入力されたパスコードの検証
+
+- param {Object} arg
+- param {string} arg.sheetName - memberListのシート名
+- param {string} arg.memberId - メンバの識別子(=メールアドレス)
+- param {string} arg.enterd - 入力されたパスコード
+- param {number} arg.timestamp - パスコード入力時刻
+- param {Object} opt - authTrialの設定値。authConfig.trialを想定
+- returns {authTrialLog}
+
+1. memberListからthis.memberIdの情報を取得、trial欄をオブジェクト化
+2. 凍結期間中ではないか判定(`Date.now() < opt.freezingUntil`)<br>
+  結果は`{result:-1, message:'freezing'}`として5.に飛ぶ
+3. パスコードの有効期間内か判定(`timestamp < authTrial.created+opt.passcodeLifeTime`)<br>
+  エラー時は`{result:-1, message:'expired'}`として5.に飛ぶ
+4. パスコードが一致するか判定(`Number(enterd)===Number(authTrial.passcode)`)<br>
+  一致なら`{result:1}`、不一致なら`{result:0, message:'unmatch'}`として5.に飛ぶ
+5. 結果を基にauthTrialLogインスタンスを生成、authTrial.logの先頭に追加
+6. 試行回数のチェック。`result===0 && authTrial.log.length===opt.maxTrial`の場合、凍結期間を設定(`freezingUntil=opt.freezing+Date.now()`)
+7. authTrialインスタンスをJSON化してmemberList.trialに記録(上書き)
+
+### updateCPkey() : 期限切れCPkeyの更新処理
+
+
+- param {authConfig} [config] - インスタンス化されたauthConfigオブジェクト。指定た場合、以下の指定は不要。
+- param {number} [memberLifeTime=31536000000] - メンバ加入承認後の有効期間。既定値：1年
+- param {number} [loginLifeTime=86400000] - ログイン成功後の有効期間(=CPkeyの有効期間)。既定値：1日
+- param {number} [maxTrial=3] パスコード入力の最大試行回数
+- param {number} [passcodeLifeTime=600000] - パスコードの有効期間。既定値：10分
+- param {number} [allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差。既定値：2分
+- param {number} [freezing=3600000] - 連続失敗した場合の凍結期間。既定値：1時間
+
+---
+
+## 備忘
+
+ChatGPTで初版作成時のソース。マルチデバイス導入等の変化もあり、備忘に移動
+
+
+### 状態定義(enum)
+
+```js
+const MemberState = Object.freeze({
+  UNREGISTERED: 'unregistered',       // 未加入
+  PENDING: 'pending',                 // 審査中(加入申請中)
+  ACTIVE: 'active',                   // 加入中(有効)
+  EXPIRED: 'expired',                 // 加入期限切れ
+  CPKEY_UPDATING: 'cpkey_updating',   // CPkey更新中
+  FROZEN: 'frozen',                   // 凍結中
+  LOGGED_OUT: 'logged_out',           // 未ログイン
+  LOGIN_TRIAL: 'login_trial',         // ログイン試行中
+  LOGGED_IN: 'logged_in',             // ログイン中
+  LOGIN_EXPIRED: 'login_expired'      // ログイン期限切れ
+});
+```
+
+---
+
+### クラス構造
+
+```js
+/**
+ * @class Member
+ * @desc クライアント側でメンバ状態を管理するクラス
+ */
+class Member {
+  /**
+   * @param {Object} config - authConfig.decryptRequestを想定
+   */
+  constructor(config) {
+    this.config = config;
+    this.state = MemberState.UNREGISTERED;
+    this.memberInfo = null;      // memberListの該当レコード相当
+    this.local = null;           // IndexedDB or localStorageの内容
+  }
+
+  /** IndexedDBから最新状態をロード */
+  async load() {
+    this.local = await this.#getLocalState();
+    this.state = this.#determineState();
+  }
+
+  /** 現在状態を返す */
+  getState() {
+    return this.state;
+  }
+
+  /** 状態遷移を明示的に更新する */
+  async updateState(nextState, extra = {}) {
+    console.info(`[StateManager] ${this.state} → ${nextState}`);
+    this.state = nextState;
+
+    switch (nextState) {
+      case MemberState.PENDING:
+        await this.#saveLocal({ ApplicationForMembership: Date.now() });
+        break;
+      case MemberState.ACTIVE:
+        await this.#saveLocal({ expireAccount: Date.now() + this.config.memberLifeTime });
+        break;
+      case MemberState.CPKEY_UPDATING:
+        await this.#saveLocal({ CPkeyUpdateUntil: Date.now() + this.config.loginLifeTime });
+        break;
+      case MemberState.LOGGED_IN:
+        await this.#saveLocal({
+          lastLogin: Date.now(),
+          expireCPkey: Date.now() + this.config.loginLifeTime
+        });
+        break;
+      case MemberState.FROZEN:
+        await this.#saveLocal({ freezingUntil: Date.now() + this.config.trial.freezing });
+        break;
+      case MemberState.LOGIN_EXPIRED:
+        await this.#saveLocal({ expireCPkey: 0 });
+        break;
+      default:
+        break;
+    }
+  }
+
+  /** 現在の状態を算出 */
+  #determineState() {
+    const now = Date.now();
+    const m = this.memberInfo;
+    const l = this.local;
+
+    if (!m) return MemberState.UNREGISTERED;
+    if (!m.accepted) return MemberState.PENDING;
+    if (m.expire < now) return MemberState.EXPIRED;
+    if (l?.freezingUntil && now < l.freezingUntil) return MemberState.FROZEN;
+    if (l?.CPkeyUpdateUntil && now < l.CPkeyUpdateUntil) return MemberState.CPKEY_UPDATING;
+    if (!l?.expireCPkey) return MemberState.LOGGED_OUT;
+    if (now < l.expireCPkey) return MemberState.LOGGED_IN;
+    return MemberState.LOGIN_EXPIRED;
+  }
+
+  /** IndexedDBから状態取得 */
+  async #getLocalState() {
+    return await idbKeyval.get(this.config.system.name);
+  }
+
+  /** IndexedDBに状態保存 */
+  async #saveLocal(data) {
+    const merged = { ...(this.local || {}), ...data };
+    this.local = merged;
+    await idbKeyval.set(this.config.system.name, merged);
+  }
+}
+```
+
+---
+
+### 利用例
+
+```js
+const stateMgr = new Member(authConfig.decryptRequest);
+await stateMgr.load();
+
+switch (stateMgr.getState()) {
+  case MemberState.UNREGISTERED:
+    showSignupPrompt();
+    break;
+  case MemberState.PENDING:
+    showPendingMessage();
+    break;
+  case MemberState.ACTIVE:
+    promptLogin();
+    break;
+  case MemberState.LOGGED_IN:
+    startSession();
+    break;
+  case MemberState.LOGIN_EXPIRED:
+    await stateMgr.updateState(MemberState.LOGGED_OUT);
+    promptReLogin();
+    break;
+}
+```
+
+---
+
+### 拡張予定
+
+- 🔒 `verifyCPkeyExpiry()`：サーバの通知時にクライアントで期限再確認
+- 🔁 `syncWithServer(memberRecord)`：サーバ`memberList`の内容で状態再計算
+- 🧹 `reset()`：強制的にIndexedDBの全状態をクリア(再ログイン用)
+- 📅 `getRemainingLifetime()`：CPkey・アカウント両方の残存期間を返す
+
+---
+
+### メリット
+
+| 観点 | 効果 |
+|:--|:--|
+| 状態管理の集中化 | 状態・期限・試行回数・凍結判定が一箇所で制御可能 |
+| サーバ同期が容易 | `syncWithServer()`で差分を吸収 |
+| UIとの連携 | 状態に応じた画面遷移を容易に切り替えられる |
+| テスト容易性 | 状態遷移をユニットテスト化しやすい |
+
+---
 
 # ライブラリ
 

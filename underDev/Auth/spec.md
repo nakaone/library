@@ -189,6 +189,8 @@ sequenceDiagram
 
 ## 加入要求
 
+本項の対象は下図背景色緑の部分。
+
 ![加入要求](img/joining.svg)
 
 <details><summary>source</summary>
@@ -265,7 +267,86 @@ sequenceDiagram
 - ④加入認否記入：承認する場合、管理者はmemberList.acceptedに`=now()`をセット、コピー後に「値だけ貼り付け」で承認日時を記録。<br>
   否認する場合は空欄のままとする。
 
+## ログイン要求
+
+本項の対象は下図背景色緑の部分。
+
+![ログイン要求](img/login.svg)
+
+<details><summary>source</summary>
+
+```mermaid
+%% ログイン要求
+
+sequenceDiagram
+  %%actor user
+  participant localFunc
+  participant clientMail
+  %%participant encryptRequest
+  participant IndexedDB
+  participant authClient
+  participant authServer
+  participant memberList
+  %%participant decryptRequest
+  %%participant serverFunc
+  actor admin
+
+  localFunc->>+authClient: 処理要求
+  Note right of authClient: 要求前準備(メイン処理)
+
+  loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
+
+    alt ⑨未ログイン
+
+      rect rgba(209, 247, 221, 1)
+        Note right of authClient: requestLogin()
+
+        alt ログイン試行中フラグ === false
+
+          authClient->>authClient: ログイン試行中フラグ=true
+          authClient->>+authServer: ログイン要求
+          Note right of authServer: loginTrial()
+          memberList->>authServer: 状態確認
+          alt アカウント有効かつパスコード未通知
+            authServer->>clientMail: パスコード通知メール
+          end
+          alt 待機時間内にauthServerから返信無し
+            authClient->>authClient: ⑩result==='fatal'
+          else 待機時間内にauthServerから返信あり
+            authServer->>-authClient: 確認結果通知
+            alt result==='warning'
+              authClient->>authClient: warning処理
+            end
+          end
+
+        else ログイン試行中フラグ === true
+
+          clientMail->>authClient: パスコード入力
+          authClient->>authServer: パスコード
+          authServer->>authServer: パスコード確認
+          alt 待機時間内にauthServerから返信無し
+            authClient->>authClient: ⑩result==='fatal'
+          else 待機時間内にauthServerから返信あり
+            authServer->>authClient: 確認結果通知
+            alt result==='warning'
+              authClient->>authClient: warning処理
+            else result==='success'
+              authClient->>authClient: ⑪ログイン時処理
+            end
+          end
+        end
+      end
+    end
+  end
+
+  authClient->>-localFunc: 処理結果
+```
+
+</details>
+
 ## 処理要求
+
+本項の対象は下図背景色緑の部分。
 
 ![処理要求](img/processingRequest.svg)
 
@@ -353,6 +434,7 @@ sequenceDiagram
 
 - スプレッドシート以外で日時を文字列として記録する場合はISO8601拡張形式の文字列(`yyyy-MM-ddThh:mm:ss.nnn+09:00`)
 - 日時を数値として記録する場合はUNIX時刻(new Date().getTime())
+- スプレッドシート(memberList)については[Memberクラス仕様書](Member.md)参照
 
 ## ScriptProperties
 
@@ -370,25 +452,15 @@ sequenceDiagram
 ※生成AIへ：鍵ペアをどのような形で格納するのか、仕様書とサンプルソースの提示をお願いします。
 
 - typeof {Object} authIndexedDB - クライアントのIndexedDBに保存するオブジェクト
-- prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())
+- prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())<br>
+  なおサーバ側でCPkey更新中に異なるCPkeyを生成し、更なる更新要求が出てしまうのを割けるため、鍵ペア生成は30分以上の間隔を置くものとする。
 - prop {string} memberId - メンバの識別子(=メールアドレス)
-- prop {string} memberName - メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。
+- prop {Object} profile - メンバの属性
+- prop {string} profile.memberName - メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。
 - prop {string} SPkey - サーバ側の公開鍵
 - prop {number} [ApplicationForMembership=-1] - 加入申請実行日時。未申請時は-1
 - prop {string} [expireAccount=-1] - 加入承認の有効期間が切れる日時。未加入時は-1
 - prop {string} [expireCPkey=-1] - CPkeyの有効期限。未ログイン時は-1
-
-## memberList(スプレッドシート)
-
-- typedef {Object} memberList
-- prop {string} memberId - メンバの識別子(=メールアドレス)
-- prop {string} CPkey - メンバの公開鍵
-- prop {string} CPkeyUpdated - 最新のCPkeyが登録された日時
-- prop {string} accepted - 加入が承認されたメンバには承認日時を設定
-- prop {string} reportResult - 「加入登録」処理中で結果連絡メールを送信した日時
-- prop {string} expire - 加入承認の有効期間が切れる日時
-- prop {string} profile - メンバの属性情報を保持するJSON文字列。サーバ側処理時のユーザ毎の実行権限等での利用を想定。
-- prop {string} trial - ログイン試行関連情報オブジェクト(authTrial[])のJSON文字列
 
 # データ型(typedef)
 
@@ -410,18 +482,21 @@ authClient/authServer共通で使用される設定値
 - prop {Object} RSA - 署名・暗号化関係の設定値
 - prop {number} [RSA.bits=2048] - 鍵ペアの鍵長
 
+- prop {number} [allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差。既定値：2分
+
 ## authServerConfig
 
 authConfigを継承した、authServerで使用する設定値
 
 - typedef {Object} authServerConfig
 - prop {string} [system.memberList='memberList'] - memberListシート名
-- prop {Object.<string,Function|Arrow>} func - サーバ側の関数マップ。{関数名：関数}形式
-
-- prop {Object} decryptRequest - decryptRequest関係の設定値
-- prop {number} [decryptRequest.memberLifeTime=31536000000] - メンバ加入承認後の有効期間。既定値：1年
-- prop {number} [decryptRequest.loginLifeTime=86400000] - ログイン成功後の有効期間(=CPkeyの有効期間)。既定値：1日
-- prop {number} [decryptRequest.allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差。既定値：2分
+- prop {Object.<string,Object>} func - サーバ側の関数マップ
+- prop {number} func.authority - 当該関数実行のために必要となるユーザ権限<br>
+  `memberList.profile.authority & authServerConfig.func.authrity > 0`なら実行可能とする。
+- prop {Function|Arrow} func.do - 実行するサーバ側関数
+- prop {number} [defaultAuthority=0] - 新規加入メンバの権限の既定値
+- prop {number} [memberLifeTime=31536000000] - メンバ加入承認後の有効期間。既定値：1年
+- prop {number} [loginLifeTime=86400000] - ログイン成功後の有効期間(=CPkeyの有効期間)。既定値：1日
 
 - prop {Object} trial - ログイン試行関係の設定値
 - prop {number} [trial.passcodeLength=6] - パスコードの桁数
@@ -436,18 +511,6 @@ authConfigを継承した、authClientで使用する設定値
 
 - typedef {Object} authClientConfig
 - prop {string} x - サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`)
-
-## authTrialLog
-
-- typedef {Object} authTrialLog
-- prop {string} enterd - 入力されたパスコード
-- prop {number} result - -1:恒久的エラー, 0:要リトライ, 1:パスコード一致
-- prop {string} message - エラーメッセージ
-- prop {number} timestamp - 判定処理日時
-
-## authTrial
-
-- [authTrial](doc/class.authTrial.md)参照
 
 ## authRequest
 
@@ -528,6 +591,13 @@ authServerからauthClientに送られる処理結果オブジェクト
  */
 ```
 
+### requestLogin() : ログイン要求
+
+- authServer.loginTrialに`{func:"loginRequest"}`を送信
+
+
+<!-- 以降、未チェック -->
+
 ### request() : 処理要求
 
 ### inCaseOfWarning() : authResponse.result==warningだった場合の処理
@@ -540,8 +610,6 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 
 1. 鍵ペアを再作成し、改めて送信
 2. CPkey再登録・ログイン終了後、改めて要求を送信
-
-### requestLogin() : ログイン要求
 
 ### login() : セッション状態確認(未ログイン)
 
@@ -561,6 +629,7 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 
 ### メイン処理
 
+- 引数無しの場合はsetupEnvironmentを呼び出して環境整備
 - decryptRequestで復号
 - 復号できた場合、authRequest.funcの値で分岐
   - func.match(/::([a-zA-Z0-9+])::/) ⇒ authServer自体への処理要求<br>
@@ -576,6 +645,12 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 - 復号できなかった場合はCPkeyと推定、公開鍵の形式チェックの上、OKならSPkeyを返す
 - authServer自体への処理要求・サーバ側関数への処理要求を問わず、Errorが帰ってきた場合は何も返さない
 - 呼出先からの戻り値がError以外の場合、authResponse形式に変換してauthClientに返す
+
+### setupEnvironment() : 実行環境整備
+
+- memberListが無ければシートを作成
+- ScriptPropertiesの作成
+- sendMailやシートへのアクセス等、GASでの権限承認が必要な処理をダミーで動かし、必要な権限を一括承認
 
 ### responseSPkey() : クライアント側にSPkeyを提供
 
@@ -625,6 +700,19 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 ```
 
 ### loginTrial() : クライアントからのログイン要求に基づくログイン可否判断
+
+- memberIdを元にmemberListから当該メンバの情報を取得
+- trial欄の
+
+- memberIdを元に[authTrialクラス](class.authTrial.md)をインスタンス化(仮に`const atObj = new authTrial({memberId:memberId})`とする)。
+-
+
+
+```js
+/**
+ * @param {string} memberId
+ */
+```
 
 ### inCaseOfWarning() : 復号時warningだった場合の処理
 

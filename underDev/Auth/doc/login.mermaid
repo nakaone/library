@@ -19,9 +19,9 @@ sequenceDiagram
   loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
 
     alt ⑨未ログイン
-      Note right of authClient: requestLogin()
 
       rect rgba(209, 247, 221, 1)
+        Note right of authClient: requestLogin()
 
         alt ログイン試行中フラグ === false
 
