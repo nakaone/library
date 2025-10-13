@@ -15,9 +15,9 @@ sequenceDiagram
 
   %% IndexedDB格納項目のメンバ変数化 ----------
   alt IndexedDBのメンバ変数化が未了
-    IndexedDB->>+authClient: 既存設定値の読み込み
-    Note right of authClient: 要求前準備(メイン処理)
-    alt クライアント側鍵ペア未作成
+    IndexedDB->>+authClient: 既存設定値の読み込み、メンバ変数に保存
+    Note right of authClient: メイン処理
+    alt (クライアント側鍵ペア未作成or前回作成から1日以上経過)and前回作成から30分以上経過
       authClient->>authClient: 鍵ペア生成、生成日時設定
     end
     alt メールアドレス(memberId)未設定
@@ -31,14 +31,15 @@ sequenceDiagram
     alt SPkey未入手
       authClient->>+authServer: CPkey(平文)
       Note right of authServer: responseSPkey()
+      %% 以下2行はauthServer.responseSPkey()の処理内容
       authServer->>authServer: 公開鍵か形式チェック、SPkeyをCPkeyで暗号化
-      authServer->>authClient: SPkey
+      authServer->>authClient: CPkeyで暗号化されたSPkey
       alt 待機時間内にauthServerから返信有り
-        authServer->>-authClient: SPkeyをCSkeyで復号
+        authServer->>-authClient: SPkeyをCSkeyで復号、メンバ変数に平文で保存
       else 待機時間内にauthServerから返信無し
         authClient->>user: エラーメッセージをダイアログ表示
         authClient->>localFunc: エラーオブジェクトを返して終了
       end
     end
-    authClient-->>-IndexedDB: 設定値の書き換え
+    authClient-->>-IndexedDB: メンバ変数を元に書き換え
   end

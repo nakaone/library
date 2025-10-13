@@ -8,27 +8,34 @@ sequenceDiagram
   participant authServer
   %%participant memberList
   %%participant decryptRequest
-  %%participant serverFunc
+  participant serverFunc
   %%actor admin
 
   authClient->>localFunc: authClientインスタンス生成
   Note over authClient,authServer: ■■ 要求前準備 ■■
   localFunc->>+authClient: 処理要求
-  Note right of authClient: 要求前準備(メイン処理)
+  Note right of authClient: メイン処理
 
-  authClient->>authClient: 処理要求中フラグ=true,ログイン試行中フラグ=false
-  loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
-
-    alt ①アカウント有効期限切れ
-      Note over authClient,authServer: ■■ 加入要求 ■■
-    end
-
-    alt ②未ログイン
-      Note over authClient,authServer: ■■ ログイン要求 ■■
-    end
-
-    alt ③ログイン済
-      Note over authClient,authServer: ■■ 処理要求 ■■
+  loop リトライ試行
+    authClient->>+authServer: encryptRequest(request) 実行 → 暗号化済み処理要求送信
+    Note right of authServer: メイン処理
+    authServer->>authServer: decryptRequest() 実行
+    alt 復号成功(decryptResult.result === "success")
+      authServer->>authServer: 状態確認(Member.getStatus(memberId[deviceId]))
+      alt 応答タイムアウト内にレスポンス無し
+        authClient->>authClient: 処理結果=「システムエラー」
+        authClient->>authClient: リトライ(loop)停止
+      else 応答タイムアウト内にレスポンスあり
+        alt result="warning"
+          authServer->>authClient: 処理結果=authResponse(result="warning")
+          authClient->>authClient: inCaseOfWarning()を呼び出し
+        else result="normal"
+          authServer->>-authClient: 処理結果=authResponse.response
+          authClient->>authClient: リトライ(loop)停止
+        end
+      end
+    else 復号失敗(decryptResult.result !== "success")
+      authServer->>authClient: responseSPkeyを実行、クライアント側にSPkeyを提供
     end
   end
   authClient->>-localFunc: 処理結果
