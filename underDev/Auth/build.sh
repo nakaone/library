@@ -23,7 +23,7 @@ mmdc -i $doc/preparation.mermaid -o $img/preparation.svg
 #mmdc -i $doc/processingRequest.mermaid -o $img/processingRequest.svg
 
 # typedef
-node $doc/typedef.js authScriptProperties > $tmp/authScriptProperties.md
+node $doc/typedef.js -o:$tmp
 
 # 仕様書
 cat $doc/spec.md | awk 1 | \

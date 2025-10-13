@@ -164,25 +164,16 @@ sequenceDiagram
 
 ## ScriptProperties
 
-キー名は`authConfig.system.name`、データは以下のオブジェクトをJSON化した文字列。
+<a name="authScriptProperties"></a>
 
+
+キー名は`authConfig.system.name`、データは以下のオブジェクトをJSON化した文字列。
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | keyGeneratedDateTime | ❌ | number | — | UNIX時刻 |
 | 2 | SPkey | ❌ | string | — | PEM形式の公開鍵文字列 |
 | 3 | SSkey | ❌ | string | — | PEM形式の秘密鍵文字列（暗号化済み） |
-
-キー名は`authConfig.system.name`、データは以下のオブジェクトをJSON化した文字列。
-
-```js
-/**
- * @typedef {Object} authScriptProperties
- * @prop {number} keyGeneratedDateTime - UNIX時刻
- * @prop {string} SPkey - PEM形式の公開鍵文字列
- * @prop {string} SSkey - PEM形式の秘密鍵文字列（暗号化済み）
- */
-```
 
 ## IndexedDB
 

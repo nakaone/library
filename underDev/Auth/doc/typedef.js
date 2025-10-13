@@ -1,6 +1,6 @@
-/** typedef.js : オブジェクトとして指定されたオブジェクト定義をMarkdownの表として出力
- * - 一回で一定義のみ(Markdownの本文として組み込むため)
+/** typedef.js : オブジェクトとして指定されたtypedefをMarkdown/JSDocとして出力
  * @exsample
+ * node typedef.js -o:$tmp/typedef
  * node typedef.js authScriptProperties > ~/Desktop/tmp/authScriptProperties.md
  */
 
@@ -15,7 +15,7 @@
 
 /**
  * @typedef {Object} DataType - データ型の定義
- * @prop {string} [type='"Object"'] - JavaScriptのデータ型
+ * @prop {string} [type='Object'] - JavaScriptのデータ型
  * @prop {string|string[]} [desc] - 当該項目の説明、補足。配列なら箇条書きする
  * @prop {Item[]} prop - 項目
  */
@@ -30,19 +30,19 @@ const typedef = {
   }
 }
 
-
-function main(){
-  const arg = analyzeArg();
-  console.log('\n');  // 先頭の空白行
+/** mdBody: Markdown文書の作成 */
+function mdBody(dName,obj){
+  const dObj = JSON.parse(JSON.stringify(obj));
+  const rv = [`\n<a name="${dName}"></a>\n`];  // 先頭の空白行
 
   // データ型定義に関する説明文
-  if( typedef[arg.val[0]].desc ){
-    if( typeof typedef[arg.val[0]].desc === 'string' ){
-      console.log(typedef[arg.val[0]].desc);
+  if( dObj.desc ){
+    if( typeof dObj.desc === 'string' ){
+      rv.push(dObj.desc);
     } else {
-      typedef[arg.val[0]].desc.forEach(x => console.log(`- ${x}`));
+      dObj.desc.forEach(x => rv.push(`- ${x}`));
     }
-    console.log('\n');
+    rv.push('');
   }
 
   // 項目一覧の出力
@@ -50,20 +50,68 @@ function main(){
     ['No','項目名','任意','データ型','既定値','説明'],
     ['--:',':--',':--:',':--',':--',':--'],
   ];
-  let num=1;
-  typedef[arg.val[0]].prop.forEach(o => {
-    // 既定値設定
-    o = Object.assign({num:num++,desc:'—',default:'—',optional:true},o);
-    // 必須とされてても既定値有りなら任意に変更
-    o.optional = o.default !== '—' ? 	'⭕' : (o.optional ? '❌' : '⭕' );
-    //o.name = o.default　!== '—' || o.optional === false ? `[${o.name}]` : o.name;
-    rows.push([o.num,o.name,o.optional,o.type,o.default,o.desc]);
+  dObj.prop.forEach(o => {
+    o.isOpt = o.isOpt ? '⭕' : '❌';
+    o.default = o.default ? String(o.default) : '—';
+    rows.push([o.num,o.name,o.isOpt,o.type,o.default,o.desc]);
   });
   rows.forEach(o => {
-    console.log(`| ${o.join(' | ')} |`);
+    rv.push(`| ${o.join(' | ')} |`);
   });
 
-  console.log('\n');  // 末尾の空白行
+  rv.push('');  // 末尾の空白行
+  return rv.join('\n');
+}
+
+/** jsdBody: JSDocの作成 */
+function jsdBody(dName,obj){
+  const dObj = JSON.parse(JSON.stringify(obj));
+  const rv = ['/**'];
+
+  // データ型定義に関する説明文
+  dObj.type = dObj.type || 'Object';
+  dObj.desc = dObj.desc ? ' - ' + [dObj.desc].join('\n * ') : '';
+  dObj.prop = dObj.prop || [],
+  rv.push(` * @typedef {${dObj.type}} ${dName}${dObj.desc}`);
+
+  // 項目一覧の出力
+  dObj.prop.forEach(o => {
+    o.default = o.default === '' ? ''
+      : (typeof o.default === 'string' ? `"${o.default}"` : String(o.default));
+    o.name = o.default ? `${o.name}=${o.default}` : o.name;
+    o.name = o.isOpt ? `[${o.name}]` : o.name;
+    o.desc = o.desc ? ` - ${o.desc}` : o.desc;
+    rv.push(` * @prop {${o.type}} ${o.name}${o.desc}`);
+  });
+  rv.push(' */');
+
+  return rv.join('\n');
+}
+/** メイン処理 */
+const fs = require("fs");
+function main(){
+  const arg = analyzeArg();
+  //console.log(JSON.stringify(arg,null,2));
+
+  Object.keys(typedef).forEach(x => {
+    // 各項目の既定値設定
+    for( let i=0 ; i<typedef[x].prop.length ; i++ ){
+      typedef[x].prop[i] = Object.assign({
+        num : i+1,
+        isOpt: typedef[x].prop[i].default ? true : (typedef[x].prop[i].isOpt || false),
+        default: '',
+        desc: '',
+      },typedef[x].prop[i]);
+    }
+
+    try {
+      fs.writeFileSync(`${arg.opt.o}/${x}.md`, mdBody(x,typedef[x]));
+      fs.writeFileSync(`${arg.opt.o}/${x}.js`, jsdBody(x,typedef[x]));
+      console.log(`write end : ${x}`);
+    }catch(e){
+      console.log(e);
+    }
+  });
 }
 main();
 
