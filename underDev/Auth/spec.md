@@ -162,9 +162,16 @@ sequenceDiagram
 - 日時を数値として記録する場合はUNIX時刻(new Date().getTime())
 - スプレッドシート(memberList)については[Memberクラス仕様書](Member.md)参照
 
-<a name="authScriptProperties"></a>
-
 ## ScriptProperties
+
+キー名は`authConfig.system.name`、データは以下のオブジェクトをJSON化した文字列。
+
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | keyGeneratedDateTime | ❌ | number | — | UNIX時刻 |
+| 2 | SPkey | ❌ | string | — | PEM形式の公開鍵文字列 |
+| 3 | SSkey | ❌ | string | — | PEM形式の秘密鍵文字列（暗号化済み） |
 
 キー名は`authConfig.system.name`、データは以下のオブジェクトをJSON化した文字列。
 
@@ -209,6 +216,49 @@ javascriptのクロージャ関数内でクラス定義を行う場合のサン�
 
 - クラスとして定義
 - 時間・期間の単位はミリ秒
+
+## データの流れと型
+
+```mermaid
+sequenceDiagram
+  %%actor user
+  participant localFunc
+  %%participant clientMail
+  participant encryptRequest
+  participant IndexedDB
+  participant authClient
+  participant authServer
+  participant memberList
+  participant decryptRequest
+  participant serverFunc
+  %%actor admin
+
+  rect rgba(209, 247, 221, 1)
+    Note over authClient, authServer: 環境構築・起動時
+    authClient->>authClient: authClientConfig型(ソース埋込)
+    IndexedDB->>authClient: authIndexedDB型
+    authServer->>authServer: authServerConfig型(ソース埋込)
+    ScriptProperties->>authServer: authScriptProperties型
+  end
+
+  rect rgba(248, 231, 247, 1)
+    Note over authClient, authServer: 処理要求時
+
+    localFunc->>authClient: 任意
+    IndexedDB->>authClient: IndexedDB
+    authClient->>encryptRequest: ①
+    encryptRequest->>authClient: encryptedRequest型
+    authClient->>authServer: authRequest型
+
+    authServer->>decryptRequest: authRequest型
+    memberList->>authServer: memberList型
+    decryptRequest->>authServer: decryptedRequest型
+    authServer->>serverFunc: 任意
+
+    authServer->>authClient: authResponse型
+    authClient->>localFunc: 任意
+  end
+```
 
 ## authConfig
 

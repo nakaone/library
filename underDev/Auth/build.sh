@@ -10,6 +10,7 @@ prj="$lib/underDev/Auth"
 arc="$prj/archives"
 doc="$prj/doc"
 img="$prj/img"
+tmp="$prj/tmp"
 
 # ----------------------------------------------
 # 1. 仕様書
@@ -17,14 +18,17 @@ img="$prj/img"
 
 mmdc -i $doc/summary.mermaid -o $img/summary.svg
 mmdc -i $doc/preparation.mermaid -o $img/preparation.svg
-mmdc -i $doc/joining.mermaid -o $img/joining.svg
-mmdc -i $doc/login.mermaid -o $img/login.svg
-mmdc -i $doc/processingRequest.mermaid -o $img/processingRequest.svg
+#mmdc -i $doc/joining.mermaid -o $img/joining.svg
+#mmdc -i $doc/login.mermaid -o $img/login.svg
+#mmdc -i $doc/processingRequest.mermaid -o $img/processingRequest.svg
+
+# typedef
+node $doc/typedef.js authScriptProperties > $tmp/authScriptProperties.md
 
 # 仕様書
 cat $doc/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$doc > $prj/spec.md
+$embed -prj:$prj -lib:$lib -doc:$doc -tmp:$tmp > $prj/spec.md
 
 # AI質問用
 cat $doc/question.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$doc > $prj/question.md
+$embed -prj:$prj -lib:$lib -doc:$doc -tmp:$tmp > $prj/question.md

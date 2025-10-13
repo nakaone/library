@@ -1,0 +1,109 @@
+/** typedef.js : オブジェクトとして指定されたオブジェクト定義をMarkdownの表として出力
+ * - 一回で一定義のみ(Markdownの本文として組み込むため)
+ * @exsample
+ * node typedef.js authScriptProperties > ~/Desktop/tmp/authScriptProperties.md
+ */
+
+/**
+ * @typedef {Object} Item - 各項目の定義
+ * @prop {string} name - 項目名
+ * @prop {string} type - JavaScriptのデータ型
+ * @prop {string} [desc] - 当該項目の説明
+ * @prop {string} [default] - 既定値。クォーテーションも付加のこと。
+ * @prop {boolean} [optional=true] - 任意項目ならfalse。defaultが設定されたら強制的にfalseに設定
+ */
+
+/**
+ * @typedef {Object} DataType - データ型の定義
+ * @prop {string} [type='"Object"'] - JavaScriptのデータ型
+ * @prop {string|string[]} [desc] - 当該項目の説明、補足。配列なら箇条書きする
+ * @prop {Item[]} prop - 項目
+ */
+const typedef = {
+  authScriptProperties: {
+    desc:'キー名は`authConfig.system.name`、データは以下のオブジェクトをJSON化した文字列。',
+    prop:[
+      {name:'keyGeneratedDateTime',type:'number',desc:'UNIX時刻'},
+      {name:'SPkey',type:'string',desc:'PEM形式の公開鍵文字列'},
+      {name:'SSkey',type:'string',desc:'PEM形式の秘密鍵文字列（暗号化済み）'},
+    ],
+  }
+}
+
+
+function main(){
+  const arg = analyzeArg();
+  console.log('\n');  // 先頭の空白行
+
+  // データ型定義に関する説明文
+  if( typedef[arg.val[0]].desc ){
+    if( typeof typedef[arg.val[0]].desc === 'string' ){
+      console.log(typedef[arg.val[0]].desc);
+    } else {
+      typedef[arg.val[0]].desc.forEach(x => console.log(`- ${x}`));
+    }
+    console.log('\n');
+  }
+
+  // 項目一覧の出力
+  const rows = [
+    ['No','項目名','任意','データ型','既定値','説明'],
+    ['--:',':--',':--:',':--',':--',':--'],
+  ];
+  let num=1;
+  typedef[arg.val[0]].prop.forEach(o => {
+    // 既定値設定
+    o = Object.assign({num:num++,desc:'—',default:'—',optional:true},o);
+    // 必須とされてても既定値有りなら任意に変更
+    o.optional = o.default !== '—' ? 	'⭕' : (o.optional ? '❌' : '⭕' );
+    //o.name = o.default　!== '—' || o.optional === false ? `[${o.name}]` : o.name;
+    rows.push([o.num,o.name,o.optional,o.type,o.default,o.desc]);
+  });
+  rows.forEach(o => {
+    console.log(`| ${o.join(' | ')} |`);
+  });
+
+  console.log('\n');  // 末尾の空白行
+}
+main();
+
+/**
+ * @typedef {object} AnalyzeArg - コマンドライン引数の分析結果
+ * @prop {Object.<string, number>} opt - スイッチを持つ引数について、スイッチ：値形式にしたオブジェクト
+ * @prop {string[]} val - スイッチを持たない引数の配列
+ */
+/**
+ * @desc コマンドラインから`node xxx.js aa bb`を実行した場合の引数(`aa`,`bb`)を取得し、オブジェクトにして返す。<br>
+ *
+ * @example
+ *
+ * ```
+ * node xxx.js -i:aaa.html bbb -o:ccc.json ddd eee
+ * ⇒ {opt:{i:"aaa.html",o:"ccc.json"},val:["bbb","ddd","eee"]}
+ * ```
+ *
+ * <caution>注意</caution>
+ *
+ * - スイッチは`(\-*)([0-9a-zA-Z]+):*(.*)$`形式であること
+ * - スイッチに該当しないものは配列`val`にそのまま格納される
+ *
+ * @param {void} - なし
+ * @returns {AnalyzeArg} 分析結果のオブジェクト
+ */
+function analyzeArg(){
+  const v = {whois:'analyzeArg',rv:{opt:{},val:[]}};
+  try {
+    for( v.i=2 ; v.i<process.argv.length ; v.i++ ){
+      v.m = process.argv[v.i].match(/^(\-*)([0-9a-zA-Z]+):*(.*)$/);
+      if( v.m && v.m[1].length > 0 ){
+        v.rv.opt[v.m[2]] = v.m[3];
+      } else {
+        v.rv.val.push(process.argv[v.i]);
+      }
+    }
+    return v.rv;
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
