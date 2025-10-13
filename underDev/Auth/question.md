@@ -23,7 +23,7 @@
  要求仕様
 
 - 本システムは限られた人数のサークルや小学校のイベント等での利用を想定する。<br>
-  よって恒久性・安全性よりは導入時の容易さ・技術的ハードルの低さ、運用の簡便性を重視する。
+  よってセキュリティ上の脅威は極力排除するが、恒久性・安全性より導入時の容易さ・技術的ハードルの低さ、運用の簡便性を重視する。
 - サーバ側(以下authServer)はスプレッドシートのコンテナバインドスクリプト、クライアント側(以下authClient)はHTMLのJavaScript
 - サーバ側・クライアント側とも鍵ペアを使用
 - 原則として通信は受信側公開鍵で暗号化＋発信側秘密鍵で署名
@@ -180,31 +180,48 @@ sequenceDiagram
 - 日時を数値として記録する場合はUNIX時刻(new Date().getTime())
 - スプレッドシート(memberList)については[Memberクラス仕様書](Member.md)参照
 
+<a name="authScriptProperties"></a>
+
  ScriptProperties
 
 キー名は`authConfig.system.name`、データは以下のオブジェクトをJSON化した文字列。
 
-※生成AIへ：鍵ペアをどのような形で格納するのか、仕様書とサンプルソースの提示をお願いします。
-
-- typeof {Object} authScriptProperties - サーバのScriptPropertiesに保存するオブジェクト
-- prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())
+```js
+/**
+ * @typedef {Object} authScriptProperties
+ * @prop {number} keyGeneratedDateTime - UNIX時刻
+ * @prop {string} SPkey - PEM形式の公開鍵文字列
+ * @prop {string} SSkey - PEM形式の秘密鍵文字列（暗号化済み）
+ */
+```
 
  IndexedDB
 
 キー名は`authConfig.system.name`から取得
 
-※生成AIへ：鍵ペアをどのような形で格納するのか、仕様書とサンプルソースの提示をお願いします。
+```js
+/**
+ * @typedef {Object} authIndexedDB- クライアントのIndexedDBに保存するオブジェクト
+ * @prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())<br>
+ * なおサーバ側でCPkey更新中に異なるCPkeyを生成し、更なる更新要求が出てしまうのを割けるため、鍵ペア生成は30分以上の間隔を置くものとする。
+ * @prop {string} memberId - メンバの識別子(=メールアドレス)
+ * @prop {Object} profile - メンバの属性
+ * @prop {string} profile.memberName - メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。
+ * @prop {CryptoKey} CSkeySign - 署名用秘密鍵
+ * @prop {CryptoKey} CPkeySign - 署名用公開鍵
+ * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵
+ * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵
+ * @prop {string} SPkey - サーバ公開鍵(Base64)
+ * @prop {number} [ApplicationForMembership=-1] - 加入申請実行日時。未申請時は-1
+ * @prop {number} [expireAccount=-1] - 加入承認の有効期間が切れる日時。未加入時は-1
+ * @prop {number} [expireCPkey=-1] - CPkeyの有効期限。未ログイン時は-1
+ */
+```
 
-- typeof {Object} authIndexedDB - クライアントのIndexedDBに保存するオブジェクト
-- prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())<br>
-  なおサーバ側でCPkey更新中に異なるCPkeyを生成し、更なる更新要求が出てしまうのを割けるため、鍵ペア生成は30分以上の間隔を置くものとする。
-- prop {string} memberId - メンバの識別子(=メールアドレス)
-- prop {Object} profile - メンバの属性
-- prop {string} profile.memberName - メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。
-- prop {string} SPkey - サーバ側の公開鍵
-- prop {number} [ApplicationForMembership=-1] - 加入申請実行日時。未申請時は-1
-- prop {string} [expireAccount=-1] - 加入承認の有効期間が切れる日時。未加入時は-1
-- prop {string} [expireCPkey=-1] - CPkeyの有効期限。未ログイン時は-1
+<!-- 旧版。実装対象外
+-->
+
+javascriptのクロージャ関数内でクラス定義を行う場合のサンプルソース
 
  データ型(typedef)
 
@@ -310,7 +327,7 @@ authServerからauthClientに送られる処理結果オブジェクト
  * @prop {number} timestamp - 処理日時。UNIX時刻
  * @prop {string} result - 処理結果。decryptRequst.result
  * @prop {string} message - エラーメッセージ。decryptRequest.message
- * @prop {string} response - 要求された関数の戻り値をJSON化した文字列
+ * @prop {string|Object} response - 要求された関数の戻り値をJSON化した文字列。適宜オブジェクトのまま返す。
  */
 ```
 
@@ -709,7 +726,7 @@ stateDiagram-v2
 ```js
 /**
  * @typedef {Object} authTrialLog
- * @prop {string} enterd - 入力されたパスコード
+ * @prop {string} entered - 入力されたパスコード
  * @prop {number} result - -1:恒久的エラー, 0:要リトライ, 1:パスコード一致
  * @prop {string} message - エラーメッセージ
  * @prop {number} timestamp - 判定処理日時
@@ -810,7 +827,7 @@ class Member {
 /**
  * 入力されたパスコードを検証する
  * @param {string} deviceId
- * @param {string} enterd - 入力パスコード
+ * @param {string} entered - 入力パスコード
  * @param {number} timestamp - 判定時刻
  * @returns {authTrialLog} 判定結果
  */
@@ -935,12 +952,25 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 
 - authRequest.requestId を短期間保存して重複拒否
 
-### メイン処理
+### プロパティ
+
+### authServer内部で定義されるクラス
+
+#### Properties
+
+- ScriptPropertiesに保存される[authScriptProperties](../spec.md#authScriptProperties)のCRUDを担当
+
+
+
+
+### メイン処理、メソッド
+
+#### メイン処理
 
 - 引数無しの場合はsetupEnvironmentを呼び出して環境整備
 - decryptRequestで復号
 - 復号できた場合、memberId[deviceId]を元に状態取得、以下のように分岐
-	| No | 状態 | 要求内容 | 呼出先 |
+	| No | 状態 | 要求内容 | 呼出メソッド |
   | --: | :-- | :-- | :-- |
 	| 1 | 未加入 | 加入要求 | membershipRequest() |
 	| 2 | 審査中 | 加入審査結果問合せ | examinationResultInquiry() |
@@ -955,13 +985,13 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
 - authServerのメソッド・サーバ側関数共、戻り値としてErrorが帰ってきた場合は何も返さない
 - 呼出先からの戻り値がError以外の場合、authResponse形式に変換してauthClientに返す
 
-### setupEnvironment() : 実行環境整備
+#### setupEnvironment() : 実行環境整備
 
 - memberListが無ければシートを作成
 - ScriptPropertiesの作成
 - sendMailやシートへのアクセス等、GASでの権限承認が必要な処理をダミーで動かし、必要な権限を一括承認
 
-### responseSPkey() : クライアント側にSPkeyを提供
+#### responseSPkey() : クライアント側にSPkeyを提供
 
 - 引数argはdecryptRequestで復号できなかった、authClientから渡された文字列
 - CPkeyと推定して公開鍵の形式を満たすかチェック
@@ -973,7 +1003,7 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
  */
 ```
 
-### membershipRequest() : 加入要求時処理
+#### membershipRequest() : 加入要求時処理
 
 - クライアント側からの加入要求を受け、memberListにmemberId,CPkeyを記録
 - 加入要求があったことをadminに連絡するため、メール送信
@@ -986,12 +1016,12 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
  */
 ```
 
-### notifyAcceptance() : 加入要求の結果連絡
+#### notifyAcceptance() : 加入要求の結果連絡
 
 - スプレッドシートのメニュー「加入登録の結果連絡」として使用
 - memberList.reportResultが空欄のメンバに対して加入可否検討結果をメールで送信
 
-### examinationResultInquiry() : 加入審査結果問合せへの回答
+#### examinationResultInquiry() : 加入審査結果問合せへの回答
 
 - 戻り値はアカウント有効期限・CPkey有効期限
   ```js
@@ -1008,7 +1038,7 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
  */
 ```
 
-### loginTrial() : クライアントからのログイン要求に基づくログイン可否判断
+#### loginTrial() : クライアントからのログイン要求に基づくログイン可否判断
 
 - memberIdを元にmemberListから当該メンバの情報を取得
 - trial欄の
@@ -1023,10 +1053,10 @@ authResponse.messageに従い、accountExpired/updateCPkey/loginに処理分岐
  */
 ```
 
-### inCaseOfWarning() : 復号時warningだった場合の処理
+#### inCaseOfWarning() : 復号時warningだった場合の処理
 
 | **⑧ アカウント有効性確認** | 承認済・有効期間内か | 期限切れ → `warning` |
 | **⑨ 署名有効期限確認** | `CPkey` の有効期限をチェック | 切れ → `warning` + 更新誘導 |
 | **⑩ セッション状態確認** | ログイン済みか・有効期間内か確認 | 未ログイン → `authTrial()` 実行 |
 
-### callFunction() : サーバ側関数の呼び出し
+#### callFunction() : サーバ側関数の呼び出し

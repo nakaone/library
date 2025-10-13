@@ -57,7 +57,7 @@ stateDiagram-v2
 ```js
 /**
  * @typedef {Object} authTrialLog
- * @prop {string} enterd - 入力されたパスコード
+ * @prop {string} entered - 入力されたパスコード
  * @prop {number} result - -1:恒久的エラー, 0:要リトライ, 1:パスコード一致
  * @prop {string} message - エラーメッセージ
  * @prop {number} timestamp - 判定処理日時
@@ -158,7 +158,7 @@ class Member {
 /**
  * 入力されたパスコードを検証する
  * @param {string} deviceId
- * @param {string} enterd - 入力パスコード
+ * @param {string} entered - 入力パスコード
  * @param {number} timestamp - 判定時刻
  * @returns {authTrialLog} 判定結果
  */
