@@ -1,4 +1,4 @@
-# 🔐 decryptRequest 関数 仕様書（改訂版・改善提案反映）
+# 🔐 cryptoServer 関数 仕様書（改訂版・改善提案反映）
 
 ## ■ 概要
 認証サーバ (`authServer`) から独立した復号・署名検証処理モジュール。  
@@ -19,7 +19,7 @@
 ## ■ 関数定義
 ```js
 /**
- * @function decryptRequest
+ * @function cryptoServer
  * @description クライアントからの暗号化要求を復号・署名検証し、結果を返す。
  * @param {Object} arg - 復号要求パラメータ
  * @param {string} arg.memberId - メンバ識別子（平文）
@@ -58,6 +58,8 @@
 | **⑨ 署名有効期限確認** | `CPkey` の有効期限をチェック | 切れ → `warning` + 更新誘導 |
 | **⑩ セッション状態確認** | ログイン済みか・有効期間内か確認 | 未ログイン → `authTrial()` 実行 |
 | **⑪ 正常処理** | 全て通過 | `result = "success"` |
+
+- 復号できなかった場合、公開鍵文字列として適切か判定、適切ならwarningとする
 
 ---
 

@@ -45,7 +45,7 @@
 - 暗号化方式 : RSA-OAEP
 - ハッシュ関数 : SHA-256以上
 - 許容時差±120秒※以内
-  ※既定値。実際の桁数はauthConfig.decryptRequest.allowableTimeDifferenceで規定
+  ※既定値。実際の桁数はauthConfig.cryptoServer.allowableTimeDifferenceで規定
 - 順序は「暗号化->署名」ではなく「署名->暗号化」で行う
   1. クライアントがデータをJSON化
   2. 自身の秘密鍵で署名（署名→暗号化）
@@ -56,10 +56,10 @@
 - CPkeyの有効期限が切れた場合、以下の手順で更新する
   1. クライアント側から古いCPkeyで署名された要求を受信
   2. サーバ側で署名検証の結果、期限切れを確認
-    - memberList.trial[0].CPkeyUpdateUntilに「現在日時＋authConfig.decryptRequest.loginLifeTime」をセット
+    - memberList.trial[0].CPkeyUpdateUntilに「現在日時＋authConfig.cryptoServer.loginLifeTime」をセット
     - クライアント側に通知
   3. クライアント側でCPkeyを更新、新CPkeyで再度リクエスト
-  4. サーバ側でauthConfig.decryptRequest.loginLifeTimeを確認、期限内ならmemberList.CPkeyを書き換え。期限切れなら加入処理同様、adminによる個別承認を必要とする。
+  4. サーバ側でauthConfig.cryptoServer.loginLifeTimeを確認、期限内ならmemberList.CPkeyを書き換え。期限切れなら加入処理同様、adminによる個別承認を必要とする。
   5. 以降は未ログイン状態で要求が来た場合として処理を継続
 
  処理手順
@@ -78,12 +78,12 @@ sequenceDiagram
   %%actor user
   participant localFunc
   %%participant clientMail
-  %%participant encryptRequest
+  %%participant cryptoClient
   %%participant IndexedDB
   participant authClient
   participant authServer
   %%participant memberList
-  %%participant decryptRequest
+  %%participant cryptoServer
   participant serverFunc
   %%actor admin
 
@@ -93,9 +93,9 @@ sequenceDiagram
   Note right of authClient: メイン処理
 
   loop リトライ試行
-    authClient->>+authServer: encryptRequest(request) 実行 → 暗号化済み処理要求送信
+    authClient->>+authServer: cryptoClient(request) 実行 → 暗号化済み処理要求送信
     Note right of authServer: メイン処理
-    authServer->>authServer: decryptRequest() 実行
+    authServer->>authServer: cryptoServer() 実行
     alt 復号成功(decryptResult.result === "success")
       authServer->>authServer: 状態確認(Member.getStatus(memberId[deviceId]))
       alt 応答タイムアウト内にレスポンス無し
@@ -132,12 +132,12 @@ sequenceDiagram
   actor user
   participant localFunc
   %%participant clientMail
-  %%participant encryptRequest
+  %%participant cryptoClient
   participant IndexedDB
   participant authClient
   participant authServer
   %%participant memberList
-  %%participant decryptRequest
+  %%participant cryptoServer
   %%participant serverFunc
   %%actor admin
 
@@ -244,12 +244,12 @@ sequenceDiagram
   %%actor user
   participant localFunc
   %%participant clientMail
-  participant encryptRequest
+  participant cryptoClient
   participant IndexedDB
   participant authClient
   participant authServer
   participant memberList
-  participant decryptRequest
+  participant cryptoServer
   participant serverFunc
   %%actor admin
 
@@ -266,13 +266,13 @@ sequenceDiagram
 
     localFunc->>authClient: 任意
     IndexedDB->>authClient: IndexedDB
-    authClient->>encryptRequest: ①
-    encryptRequest->>authClient: encryptedRequest型
+    authClient->>cryptoClient: ①
+    cryptoClient->>authClient: encryptedRequest型
     authClient->>authServer: authRequest型
 
-    authServer->>decryptRequest: authRequest型
+    authServer->>cryptoServer: authRequest型
     memberList->>authServer: memberList型
-    decryptRequest->>authServer: decryptedRequest型
+    cryptoServer->>authServer: decryptedRequest型
     authServer->>serverFunc: 任意
 
     authServer->>authClient: authResponse型
@@ -347,7 +347,7 @@ authClientからauthServerに送られる処理要求オブジェクト
 
 <a name="decryptedRequest"></a>
 
-decryptRequestで復号された処理要求オブジェクト
+cryptoServerで復号された処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
@@ -368,7 +368,7 @@ authServerからauthClientに送られる処理結果オブジェクト
 | 1 | requestId | ❌ | string | — | 要求の識別子。UUID |
 | 2 | timestamp | ❌ | number | — | 処理日時。UNIX時刻 |
 | 3 | result | ❌ | string | — | 処理結果。decryptRequst.result |
-| 4 | message | ❌ | string | — | エラーメッセージ。decryptRequest.message |
+| 4 | message | ❌ | string | — | エラーメッセージ。cryptoServer.message |
 | 5 | response | ❌ | string|Object | — | 要求された関数の戻り値をJSON化した文字列。適宜オブジェクトのまま返す。 |
 
  クラス・関数定義
@@ -376,22 +376,22 @@ authServerからauthClientに送られる処理結果オブジェクト
 - [authClient](doc/authClient.md) 関数 仕様書
 - [authServer](doc/authServer.md) 関数 仕様書
 - [Member](doc/Member.md) クラス 仕様書
-- [decryptRequest](doc/decryptRequest.md) 関数 仕様書
-- [encryptRequest](doc/encryptRequest.md) 関数 仕様書
+- [cryptoServer](doc/cryptoServer.md) 関数 仕様書
+- [cryptoClient](doc/cryptoClient.md) 関数 仕様書
 
 # 添付書類
 
 以下は別ファイル(Markdown)として作成済みの仕様書。
 
 ---
-**encryptRequest.md**
+**cryptoClient.md**
 ---
 
 ### 概要
 
 本仕様書は、クライアント側でサーバへ安全に処理要求を送信するための関数
-`encryptRequest` の設計および関連構成について記述する。\
-サーバ側仕様書（decryptRequest）と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
+`cryptoClient` の設計および関連構成について記述する。\
+サーバ側仕様書（cryptoServer）と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
 
 ------------------------------------------------------------------------
 
@@ -445,11 +445,11 @@ authServerからauthClientに送られる処理結果オブジェクト
 
 ### 3. 関数仕様
 
-#### 3.1 encryptRequest
+#### 3.1 cryptoClient
 
 ``` js
 /**
- * @function encryptRequest
+ * @function cryptoClient
  * @desc クライアント側関数からサーバへの処理要求を暗号化・署名し、結果を返す。
  * @param {authRequest} request - サーバへの処理要求オブジェクト
  * @returns {Promise<Object>} 暗号化済み要求オブジェクト（envelope形式）
@@ -553,7 +553,7 @@ function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:tr
 © 2025 Authentication System Design Draft
 
 ---
-**decryptRequest.md**
+**cryptoServer.md**
 ---
 
 ### ■ 概要
@@ -575,7 +575,7 @@ function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:tr
 ### ■ 関数定義
 ```js
 /**
- * @function decryptRequest
+ * @function cryptoServer
  * @description クライアントからの暗号化要求を復号・署名検証し、結果を返す。
  * @param {Object} arg - 復号要求パラメータ
  * @param {string} arg.memberId - メンバ識別子（平文）
@@ -1021,7 +1021,7 @@ authServerは、クライアント（authClient）からの暗号化通信リク
 メンバ状態と要求内容に応じてサーバ側処理を適切に振り分ける中核関数です。
 
 #### 主な責務
-1. 暗号化リクエストの復号・署名検証（decryptRequest）
+1. 暗号化リクエストの復号・署名検証（cryptoServer）
 2. 重複リクエスト防止（requestIdの短期キャッシュ）
 3. メンバ状態管理（Memberクラス連携）
 4. サーバ関数実行およびレスポンスの暗号化返却
@@ -1070,7 +1070,7 @@ authServerは、クライアント（authClient）からの暗号化通信リク
 | Properties | ScriptPropertiesのCRUDを抽象化。キーprefix管理とTTL管理を行う。 |
 | Member | メンバ状態判定・更新処理。スプレッドシート行の読み書きを担当。 |
 | MemberTrial | ログイン試行情報の履歴管理・失敗回数制御。 |
-| decryptRequest() | リクエスト復号・署名検証。authResponseのベース生成。 |
+| cryptoServer() | リクエスト復号・署名検証。authResponseのベース生成。 |
 | encryptResponse() | クライアントのCPkeyを用いた応答暗号化。 |
 
 ---

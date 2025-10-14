@@ -1,10 +1,10 @@
-# クライアント側暗号化・署名仕様書（encryptRequest）
+# クライアント側暗号化・署名仕様書（cryptoClient）
 
 ## 概要
 
 本仕様書は、クライアント側でサーバへ安全に処理要求を送信するための関数
-`encryptRequest` の設計および関連構成について記述する。\
-サーバ側仕様書（decryptRequest）と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
+`cryptoClient` の設計および関連構成について記述する。\
+サーバ側仕様書（cryptoServer）と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
 
 ------------------------------------------------------------------------
 
@@ -58,11 +58,11 @@
 
 ## 3. 関数仕様
 
-### 3.1 encryptRequest
+### 3.1 cryptoClient
 
 ``` js
 /**
- * @function encryptRequest
+ * @function cryptoClient
  * @desc クライアント側関数からサーバへの処理要求を暗号化・署名し、結果を返す。
  * @param {authRequest} request - サーバへの処理要求オブジェクト
  * @returns {Promise<Object>} 暗号化済み要求オブジェクト（envelope形式）

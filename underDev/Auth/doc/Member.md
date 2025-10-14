@@ -70,9 +70,9 @@ stateDiagram-v2
 
 <!--::$tmp/MemberProfile.md::-->
 
-### Device
+### MemberDevice
 
-<!--::$tmp/Device.md::-->
+<!--::$tmp/MemberDevice.md::-->
 
 ## クラス・メソッド定義
 

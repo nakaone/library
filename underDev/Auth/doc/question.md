@@ -1,6 +1,8 @@
-- "authTrial","authTrialLog" ⇒ "MemberTrial","MemberTrialLog"に名称変更
+- "authTrial","authTrialLog","Device" ⇒ "MemberTrial","MemberTrialLog","MemberDevice"に名称変更
   ∵「メンバ情報(Member)の一部項目」であり、MemberProfileとも整合した命名に。
 - プログラム間でやりとりされるオブジェクトを整理
+- サーバ->クライアント側への返信も暗号化(なんとなく平文で送るイメージだった)
+- サーバ・クライアントとも「署名＋暗号化」と「署名検証＋復号」の両方の機能を併せ持つクラスとして、"decryptRequest"⇒"cryptoServer","encryptRequest"⇒"cryptoClient"に名称変更。
 
 <!-- 以下は既述のため割愛
 - 本文書はMarkdownで書かれています。画像へのリンク(`![画像名](リンク先)`)は無視してください。
@@ -24,16 +26,16 @@
 以下は別ファイル(Markdown)として作成済みの仕様書。
 
 ---
-**encryptRequest.md**
+**cryptoClient.md**
 ---
 
-<!--::$doc/encryptRequest.md::-->
+<!--::$doc/cryptoClient.md::-->
 
 ---
-**decryptRequest.md**
+**cryptoServer.md**
 ---
 
-<!--::$doc/decryptRequest.md::-->
+<!--::$doc/cryptoServer.md::-->
 
 ---
 **Member.md**

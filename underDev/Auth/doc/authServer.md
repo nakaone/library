@@ -5,8 +5,69 @@
 authServerは、クライアント（authClient）からの暗号化通信リクエストを復号・検証し、
 メンバ状態と要求内容に応じてサーバ側処理を適切に振り分ける中核関数です。
 
+## 概要
+
+- 「■■　〜　■■」は別項で詳説
+- authClient, authServer 横の「xxx()」ラベルはそれぞれのメソッド名
+
+```mermaid
+sequenceDiagram
+  %%actor user
+  participant localFunc
+  %%participant clientMail
+  participant cryptoClient
+  %%participant IndexedDB
+  participant authClient
+  participant authServer
+  %%participant memberList
+  participant cryptoServer
+  participant serverFunc
+  %%actor admin
+
+  authClient->>localFunc: authClientインスタンス生成
+  Note over authClient,authServer: ■■ 要求前準備 ■■
+  localFunc->>+authClient: 処理要求(LocalRequest)
+  authClient->>cryptoClient: 署名・暗号化要求(LocalRequest)
+  cryptoClient->>authClient: encryptedRequest
+  Note right of authClient: メイン処理
+
+  loop リトライ試行
+    authClient->>+authServer: 処理要求(encryptedRequest)
+    Note right of authServer: メイン処理
+    authServer->>cryptoServer:復号要求(encryptedRequest)
+    cryptoServer->>authServer: decryptedRequest
+    alt 復号成功(decryptedRequest.result === "success")
+      authServer->>authServer: 状態確認(Member.getStatus(memberId[deviceId]))
+      alt 応答タイムアウト内にレスポンス無し
+        authClient->>authClient: 処理結果=「システムエラー」
+        authClient->>authClient: リトライ(loop)停止
+      else 応答タイムアウト内にレスポンスあり
+        alt result="warning"
+          authServer->>authClient: 処理結果=authResponse(result="warning")
+          authClient->>authClient: inCaseOfWarning()を呼び出し
+        else result="normal"
+          authServer->>-authClient: 処理結果=authResponse.response
+          authClient->>authClient: リトライ(loop)停止
+        end
+      end
+    else 復号失敗(decryptResult.result === "success")
+      authServer->>authClient: responseSPkeyを実行、クライアント側にSPkeyを提供
+    end
+  end
+  authClient->>-localFunc: 処理結果
+```
+
+## authScriptProperties
+
+<!--::$tmp/authScriptProperties.md::-->
+
+## Member
+
+<!--::$tmp/Member.md::-->
+
+
 ### 主な責務
-1. 暗号化リクエストの復号・署名検証（decryptRequest）
+1. 暗号化リクエストの復号・署名検証（cryptoServer）
 2. 重複リクエスト防止（requestIdの短期キャッシュ）
 3. メンバ状態管理（Memberクラス連携）
 4. サーバ関数実行およびレスポンスの暗号化返却
@@ -55,7 +116,7 @@ authServerは、クライアント（authClient）からの暗号化通信リク
 | Properties | ScriptPropertiesのCRUDを抽象化。キーprefix管理とTTL管理を行う。 |
 | Member | メンバ状態判定・更新処理。スプレッドシート行の読み書きを担当。 |
 | MemberTrial | ログイン試行情報の履歴管理・失敗回数制御。 |
-| decryptRequest() | リクエスト復号・署名検証。authResponseのベース生成。 |
+| cryptoServer() | リクエスト復号・署名検証。authResponseのベース生成。 |
 | encryptResponse() | クライアントのCPkeyを用いた応答暗号化。 |
 
 ---
