@@ -50,27 +50,99 @@
 - 「■■　〜　■■」は別項で詳説
 - authClient, authServer 横の「xxx()」ラベルはそれぞれのメソッド名
 
-![処理概要](img/summary.svg)
-
-<details><summary>source</summary>
-
 ```mermaid
-<!--::$doc/summary.mermaid::-->
-```
+sequenceDiagram
+  %%actor user
+  participant localFunc
+  %%participant clientMail
+  %%participant encryptRequest
+  %%participant IndexedDB
+  participant authClient
+  participant authServer
+  %%participant memberList
+  %%participant decryptRequest
+  participant serverFunc
+  %%actor admin
 
-</details>
+  authClient->>localFunc: authClientインスタンス生成
+  Note over authClient,authServer: ■■ 要求前準備 ■■
+  localFunc->>+authClient: 処理要求
+  Note right of authClient: メイン処理
+
+  loop リトライ試行
+    authClient->>+authServer: encryptRequest(request) 実行 → 暗号化済み処理要求送信
+    Note right of authServer: メイン処理
+    authServer->>authServer: decryptRequest() 実行
+    alt 復号成功(decryptResult.result === "success")
+      authServer->>authServer: 状態確認(Member.getStatus(memberId[deviceId]))
+      alt 応答タイムアウト内にレスポンス無し
+        authClient->>authClient: 処理結果=「システムエラー」
+        authClient->>authClient: リトライ(loop)停止
+      else 応答タイムアウト内にレスポンスあり
+        alt result="warning"
+          authServer->>authClient: 処理結果=authResponse(result="warning")
+          authClient->>authClient: inCaseOfWarning()を呼び出し
+        else result="normal"
+          authServer->>-authClient: 処理結果=authResponse.response
+          authClient->>authClient: リトライ(loop)停止
+        end
+      end
+    else 復号失敗(decryptResult.result !== "success")
+      authServer->>authClient: responseSPkeyを実行、クライアント側にSPkeyを提供
+    end
+  end
+  authClient->>-localFunc: 処理結果
+```
 
 ## 要求前準備
 
-![処理概要](img/preparation.svg)
-
-<details><summary>source</summary>
-
 ```mermaid
-<!--::$doc/preparation.mermaid::-->
-```
+%% 要求前準備
 
-</details>
+sequenceDiagram
+  actor user
+  participant localFunc
+  %%participant clientMail
+  %%participant encryptRequest
+  participant IndexedDB
+  participant authClient
+  participant authServer
+  %%participant memberList
+  %%participant decryptRequest
+  %%participant serverFunc
+  %%actor admin
+
+  %% IndexedDB格納項目のメンバ変数化 ----------
+  alt IndexedDBのメンバ変数化が未了
+    IndexedDB->>+authClient: 既存設定値の読み込み、メンバ変数に保存
+    Note right of authClient: メイン処理
+    alt (クライアント側鍵ペア未作成or前回作成から1日以上経過)and前回作成から30分以上経過
+      authClient->>authClient: 鍵ペア生成、生成日時設定
+    end
+    alt メールアドレス(memberId)未設定
+      authClient->>user: ダイアログ表示
+      user->>authClient: メールアドレス
+    end
+    alt メンバの氏名(memberName)未設定
+      authClient->>user: ダイアログ表示
+      user->>authClient: メンバ氏名
+    end
+    alt SPkey未入手
+      authClient->>+authServer: CPkey(平文)
+      Note right of authServer: responseSPkey()
+      %% 以下2行はauthServer.responseSPkey()の処理内容
+      authServer->>authServer: 公開鍵か形式チェック、SPkeyをCPkeyで暗号化
+      authServer->>authClient: CPkeyで暗号化されたSPkey
+      alt 待機時間内にauthServerから返信有り
+        authServer->>-authClient: SPkeyをCSkeyで復号、メンバ変数に平文で保存
+      else 待機時間内にauthServerから返信無し
+        authClient->>user: エラーメッセージをダイアログ表示
+        authClient->>localFunc: エラーオブジェクトを返して終了
+      end
+    end
+    authClient-->>-IndexedDB: メンバ変数を元に書き換え
+  end
+```
 
 # データ格納方法と形式
 
