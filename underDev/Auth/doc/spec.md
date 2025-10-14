@@ -57,32 +57,53 @@ sequenceDiagram
   participant authClient
   participant authServer
   %%participant memberList
-  %%participant cryptoServer
+  participant cryptoServer
   %%participant serverFunc
   %%actor admin
 
   authClient->>localFunc: authClientインスタンス生成
   localFunc->>+authClient: 処理要求(LocalRequest)
-  %%authClient->>cryptoClient: 署名・暗号化要求(LocalRequest)
-  %%cryptoClient->>authClient: encryptedRequest
+  authClient->>cryptoClient: 署名・暗号化要求(authRequest)
+  cryptoClient->>authClient: encryptedRequest
 
   loop リトライ試行
     authClient->>+authServer: 処理要求(encryptedRequest)
+    authServer->>cryptoServer: 復号・検証要求(encryptedRequest)
+    cryptoServer->>authServer: decryptedRequest
+    authServer->>authServer: ①サーバ内処理(decryptedRequest->authResponse)
+    alt authResponse.result !== 'fatal'
+      authServer->>cryptoServer: 署名・暗号化要求(authResponse)
+      cryptoServer->>authServer: encryptedResponse
+    end
 
     alt 応答タイムアウト内にレスポンス無し
       authClient->>localFunc: エラー通知(LocalResponse.result="fatal")
     else 応答タイムアウト内にレスポンスあり
-      authServer->>-authClient: authResponse
-      authClient->>authClient: 復号、authResponse.resultによる分岐
-      authClient->>-localFunc: 処理結果(LocalResponse)
+      authServer->>-authClient: encryptedResponse
+
+      authClient->>cryptoClient: 復号・検証要求(encryptedResponse)
+      cryptoClient->>authClient: decryptedResponse
+
+      alt decryptedResponse.result === 'fatal'
+        authClient->>localFunc: エラー通知(LocalResponse.result="fatal")
+      else
+        authClient->>authClient: ②decryptedResponse.sv.resultによる分岐処理
+        authClient->>-localFunc: 処理結果(LocalResponse)
+      end
     end
   end
 ```
 
 - `localFunc`とは、クライアント側(ブラウザ)内で動作するJavaScriptの関数を指す
-- 「リトライ試行」の継続条件は以下とする
-  - 応答タイムアウト内にauthServerからレスポンスが来る(`fetch timeout`。許容時間は`authConfig.allowableTimeDifference`)
-  - ①の場合、`authClient.inCaseOfWarning().result !== 'fatal'`
+- ①サーバ内処理
+  - decryptedRequestを入力としてメイン処理またはメソッドを実行、結果を
+- ②decryptedResponse.resultによる分岐処理
+  - decryptedResponse.result === 'normal' ⇒ LocalResponseの作成
+  - decryptedResponse.result === 'warning' ⇒ 
+    1. authClient.inCaseOfWarning(decryptedResponse)を実行
+    2. 1.の結果が'fatal'の場合、「リトライ試行」のループから脱出
+- 「リトライ試行」は応答タイムアウト内にauthServerからレスポンスが来なかった場合、停止する<br>
+  ※`fetch timeout`を使用。許容時間は`authConfig.allowableTimeDifference`
 
 # データ格納方法と形式
 
@@ -90,7 +111,7 @@ sequenceDiagram
 - 日時を数値として記録する場合はUNIX時刻(new Date().getTime())
 - スプレッドシート(memberList)については[Memberクラス仕様書](Member.md)参照
 
-# データ型(typedef)
+# 動作設定変数(config)
 
 - クラスとして定義
 - 時間・期間の単位はミリ秒
@@ -107,6 +128,8 @@ sequenceDiagram
 
 <!--::$tmp/authClientConfig.md::-->
 
+# データ型(typedef)
+
 ## LocalRequest
 
 <!--::$tmp/LocalRequest.md::-->
@@ -115,17 +138,29 @@ sequenceDiagram
 
 <!--::$tmp/authRequest.md::-->
 
-## decryptedRequest
-
-<!--::$tmp/decryptedRequest.md::-->
-
 ## encryptedRequest
 
 <!--::$tmp/encryptedRequest.md::-->
 
+## decryptedRequest
+
+<!--::$tmp/decryptedRequest.md::-->
+
 ## authResponse
 
 <!--::$tmp/authResponse.md::-->
+
+## encryptedResponse
+
+<!--::$tmp/encryptedResponse.md::-->
+
+## decryptedResponse
+
+<!--::$tmp/decryptedResponse.md::-->
+
+## LocalResponse
+
+<!--::$tmp/LocalResponse.md::-->
 
 # クラス・関数定義
 

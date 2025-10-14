@@ -16,8 +16,8 @@ tmp="$prj/tmp"
 # 1. 仕様書
 # ----------------------------------------------
 
-mmdc -i $doc/summary.mermaid -o $img/summary.svg
-mmdc -i $doc/preparation.mermaid -o $img/preparation.svg
+#mmdc -i $doc/summary.mermaid -o $img/summary.svg
+#mmdc -i $doc/preparation.mermaid -o $img/preparation.svg
 #mmdc -i $doc/joining.mermaid -o $img/joining.svg
 #mmdc -i $doc/login.mermaid -o $img/login.svg
 #mmdc -i $doc/processingRequest.mermaid -o $img/processingRequest.svg
