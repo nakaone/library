@@ -54,7 +54,7 @@ authServerは、クライアント（authClient）からの暗号化通信リク
 | :-- | :-- |
 | Properties | ScriptPropertiesのCRUDを抽象化。キーprefix管理とTTL管理を行う。 |
 | Member | メンバ状態判定・更新処理。スプレッドシート行の読み書きを担当。 |
-| authTrial | ログイン試行情報の履歴管理・失敗回数制御。 |
+| MemberTrial | ログイン試行情報の履歴管理・失敗回数制御。 |
 | decryptRequest() | リクエスト復号・署名検証。authResponseのベース生成。 |
 | encryptResponse() | クライアントのCPkeyを用いた応答暗号化。 |
 
@@ -98,7 +98,7 @@ authServerは、クライアント（authClient）からの暗号化通信リク
 - 審査結果を返却。CPkey有効期限や加入期限を含む。
 
 ### loginTrial(memberId)
-- ログイン要求を処理し、試行結果をauthTrialに記録。
+- ログイン要求を処理し、試行結果をMemberTrialに記録。
 
 ### inCaseOfWarning()
 - 各種期限切れなどの警告を分類し、適切なレスポンス生成。

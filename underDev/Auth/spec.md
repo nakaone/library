@@ -162,10 +162,9 @@ sequenceDiagram
 - 日時を数値として記録する場合はUNIX時刻(new Date().getTime())
 - スプレッドシート(memberList)については[Memberクラス仕様書](Member.md)参照
 
-## ScriptProperties
+## authScriptProperties
 
 <a name="authScriptProperties"></a>
-
 
 キー名は`authConfig.system.name`、データは以下のオブジェクトをJSON化した文字列。
 
@@ -175,33 +174,44 @@ sequenceDiagram
 | 2 | SPkey | ❌ | string | — | PEM形式の公開鍵文字列 |
 | 3 | SSkey | ❌ | string | — | PEM形式の秘密鍵文字列（暗号化済み） |
 
-## IndexedDB
+## authIndexedDB
 
-キー名は`authConfig.system.name`から取得
+<a name="authIndexedDB"></a>
 
-```js
-/**
- * @typedef {Object} authIndexedDB- クライアントのIndexedDBに保存するオブジェクト
- * @prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())<br>
- * なおサーバ側でCPkey更新中に異なるCPkeyを生成し、更なる更新要求が出てしまうのを割けるため、鍵ペア生成は30分以上の間隔を置くものとする。
- * @prop {string} memberId - メンバの識別子(=メールアドレス)
- * @prop {Object} profile - メンバの属性
- * @prop {string} profile.memberName - メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。
- * @prop {CryptoKey} CSkeySign - 署名用秘密鍵
- * @prop {CryptoKey} CPkeySign - 署名用公開鍵
- * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵
- * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵
- * @prop {string} SPkey - サーバ公開鍵(Base64)
- * @prop {number} [ApplicationForMembership=-1] - 加入申請実行日時。未申請時は-1
- * @prop {number} [expireAccount=-1] - 加入承認の有効期間が切れる日時。未加入時は-1
- * @prop {number} [expireCPkey=-1] - CPkeyの有効期限。未ログイン時は-1
- */
-```
+- クライアントのIndexedDBに保存するオブジェクト
+- IndexedDB保存時のキー名は`authConfig.system.name`から取得
 
-<!-- 旧版。実装対象外
--->
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | keyGeneratedDateTime | ❌ | number | — | 鍵ペア生成日時。UNIX時刻(new Date().getTime()),なおサーバ側でCPkey更新中にクライアント側で新たなCPkeyが生成されるのを避けるため、鍵ペア生成は30分以上の間隔を置く。 |
+| 2 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
+| 3 | profile | ❌ | Object | — | メンバの属性 |
+| 4 | profile.memberName | ❌ | string | — | メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。 |
+| 5 | CSkeySign | ❌ | CryptoKey | — | 署名用秘密鍵 |
+| 6 | CPkeySign | ❌ | CryptoKey | — | 署名用公開鍵 |
+| 7 | CSkeyEnc | ❌ | CryptoKey | — | 暗号化用秘密鍵 |
+| 8 | CPkeyEnc | ❌ | CryptoKey | — | 暗号化用公開鍵 |
+| 9 | SPkey | ❌ | string | — | サーバ公開鍵(Base64) |
+| 10 | ApplicationForMembership | ⭕ | number | -1 | 加入申請実行日時。未申請時は-1 |
+| 11 | expireAccount | ⭕ | number | -1 | 加入承認の有効期間が切れる日時。未加入時は-1 |
+| 12 | expireCPkey | ⭕ | number | -1 | CPkeyの有効期限。未ログイン時は-1 |
 
-javascriptのクロージャ関数内でクラス定義を行う場合のサンプルソース
+## Member
+
+<a name="Member"></a>
+
+メンバ一覧(アカウント管理表)上のメンバ単位の管理情報
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
+| 2 | name | ❌ | string | — | メンバの氏名 |
+| 3 | accepted | ❌ | string | — | 加入が承認されたメンバには承認日時を設定 |
+| 4 | reportResult | ❌ | string | — | 「加入登録」処理中で結果連絡メールを送信した日時 |
+| 5 | expire | ❌ | string | — | 加入承認の有効期間が切れる日時 |
+| 6 | profile | ❌ | string | — | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
+| 7 | device | ❌ | string | — | マルチデバイス対応のためのデバイス情報(Device)を保持するJSON文字列 |
+| 8 | note | ⭕ | string | — | 当該メンバに対する備考 |
 
 # データ型(typedef)
 
@@ -253,106 +263,94 @@ sequenceDiagram
 
 ## authConfig
 
-authClient/authServer共通で使用される設定値
+<a name="authConfig"></a>
 
-※ 実装時はクラス化を想定。その場合、サーバ側のみ・クライアント側のみで使用するパラメータはauthConfigを継承する別クラスで定義することも検討する。
+- authClient/authServer共通で使用される設定値。
+- authClientConfig, authServerConfigの親クラス
 
-```js
-/**
- * @typedef {Object} authConfig
- * @prop {string} [systemName='auth'] - システム名
- * @prop {string} [adminMail=''] - 管理者のメールアドレス
- * @prop {string} [adminName=''] - 管理者名
- * @prop {number} [allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差。既定値：2分
- *
- * @prop {Object} RSA - 署名・暗号化関係の設定値
- * @prop {number} [RSA.bits=2048] - 鍵ペアの鍵長
- */
-```
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | systemName | ⭕ | string | auth | システム名 |
+| 2 | adminMail | ❌ | string | — | 管理者のメールアドレス |
+| 3 | adminName | ❌ | string | — | 管理者名 |
+| 4 | allowableTimeDifference | ⭕ | string | 120000 | クライアント・サーバ間通信時の許容時差。既定値：2分 |
+| 5 | RSAbits | ⭕ | string | 2048 | 鍵ペアの鍵長 |
 
 ## authServerConfig
 
+<a name="authServerConfig"></a>
+
 authConfigを継承した、authServerで使用する設定値
 
-```js
-/**
- * @typedef {Object} authServerConfig
- * @prop {string} [memberList='memberList'] - memberListシート名
- * @prop {number} [defaultAuthority=0] - 新規加入メンバの権限の既定値
- * @prop {number} [memberLifeTime=31536000000] - メンバ加入承認後の有効期間。既定値：1年
- * @prop {number} [loginLifeTime=86400000] - ログイン成功後の有効期間(=CPkeyの有効期間)。既定値：1
- *
- * @prop {Object.<string,Object>} func - サーバ側の関数マップ
- * @prop {number} func.authority - 当該関数実行のために必要となるユーザ権限<br>
-  `memberList.profile.authority & authServerConfig.func.authrity > 0`なら実行可能とする。
- * @prop {Function|Arrow} func.do - 実行するサーバ側関数
- *
- * @prop {Object} trial - ログイン試行関係の設定値
- * @prop {number} [trial.passcodeLength=6] - パスコードの桁数
- * @prop {number} [trial.freezing=3600000] - 連続失敗した場合の凍結期間。既定値：1時間
- * @prop {number} [trial.maxTrial=3] パスコード入力の最大試行回数
- * @prop {number} [trial.passcodeLifeTime=600000] - パスコードの有効期間。既定値：10分
- * @prop {number} [trial.generationMax=5] - ログイン試行履歴(authTrial)の最大保持数。既定値：5世代
- */
-```
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | memberList | ⭕ | string | memberList | memberListシート名 |
+| 2 | defaultAuthority | ❌ | number | — | 新規加入メンバの権限の既定値 |
+| 3 | memberLifeTime | ⭕ | number | 31536000000 | メンバ加入承認後の有効期間。既定値：1年 |
+| 4 | loginLifeTime | ⭕ | number | 86400000 | ログイン成功後の有効期間(=CPkeyの有効期間)。既定値：1日 |
+| 5 | func | ❌ | Object.<string,Object> | — | サーバ側の関数マップ |
+| 6 | func.authority | ❌ | number | — | 当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authrity > 0`なら実行可とする。 |
+| 7 | func.do | ❌ | Function|Arrow | — | 実行するサーバ側関数 |
+| 8 | trial | ❌ | Object | — | ログイン試行関係の設定値 |
+| 9 | trial.passcodeLength | ⭕ | number | 6 | パスコードの桁数 |
+| 10 | trial.freezing | ⭕ | number | 3600000 | 連続失敗した場合の凍結期間。既定値：1時間 |
+| 11 | trial.maxTrial | ⭕ | number | 3 | パスコード入力の最大試行回数 |
+| 12 | trial.passcodeLifeTime | ⭕ | number | 600000 | パスコードの有効期間。既定値：10分 |
+| 13 | trial.generationMax | ⭕ | number | 5 | ログイン試行履歴(MemberTrial)の最大保持数。既定値：5世代 |
 
 ## authClientConfig
 
+<a name="authClientConfig"></a>
+
 authConfigを継承した、authClientで使用する設定値
 
-```js
-/**
- * @typedef {Object} authClientConfig
- * @prop {string} x - サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`)
- */
-```
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | x | ❌ | string | — | サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`) |
 
 ## authRequest
 
+<a name="authRequest"></a>
+
 authClientからauthServerに送られる処理要求オブジェクト
 
-```js
-/**
- * @typedef {Object} authRequest
- * @prop {string} memberId - メンバの識別子(=メールアドレス)
- * @prop {string} deviceId - デバイスの識別子
- * @prop {string} requestId - 要求の識別子。UUID
- * @prop {number} timestamp - 要求日時。UNIX時刻
- * @prop {string} func - サーバ側関数名
- * @prop {any[]} arguments - サーバ側関数に渡す引数
- * @prop {string} signature - クライアント側署名
- */
-```
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
+| 2 | deviceId | ❌ | string | — | デバイスの識別子 |
+| 3 | requestId | ❌ | string | — | 要求の識別子。UUID |
+| 4 | timestamp | ❌ | number | — | 要求日時。UNIX時刻 |
+| 5 | func | ❌ | string | — | サーバ側関数名 |
+| 6 | arguments | ❌ | any[] | — | サーバ側関数に渡す引数 |
+| 7 | signature | ❌ | string | — | クライアント側署名 |
 
 ## decryptedRequest
 
+<a name="decryptedRequest"></a>
+
 decryptRequestで復号された処理要求オブジェクト
 
-```js
-/**
- * @typedef {Object} decryptedRequest
- * @prop {string} result - 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "success"
- * @prop {string} message - エラーメッセージ
- * @prop {string|Object} detail - 詳細情報。ログイン試行した場合、その結果
- * @prop {authRequest} request - ユーザから渡された処理要求
- * @prop {string} timestamp - 復号処理実施日時。メール・ログでの閲覧が容易になるよう、文字列で保存
- */
-```
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | result | ❌ | string | — | 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "success" |
+| 2 | message | ❌ | string | — | エラーメッセージ |
+| 3 | detail | ❌ | string|Object | — | 詳細情報。ログイン試行した場合、その結果 |
+| 4 | request | ❌ | authRequest | — | ユーザから渡された処理要求 |
+| 5 | timestamp | ❌ | string | — | 復号処理実施日時。メール・ログでの閲覧が容易になるよう、文字列で保存 |
 
 ## authResponse
 
+<a name="authResponse"></a>
+
 authServerからauthClientに送られる処理結果オブジェクト
 
-```js
-/**
- * @typedef {Object} authResponse
- * @prop {string} requestId - 要求の識別子。UUID
- * @prop {number} timestamp - 処理日時。UNIX時刻
- * @prop {string} result - 処理結果。decryptRequst.result
- * @prop {string} message - エラーメッセージ。decryptRequest.message
- * @prop {string|Object} response - 要求された関数の戻り値をJSON化した文字列。適宜オブジェクトのまま返す。
- */
-```
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | requestId | ❌ | string | — | 要求の識別子。UUID |
+| 2 | timestamp | ❌ | number | — | 処理日時。UNIX時刻 |
+| 3 | result | ❌ | string | — | 処理結果。decryptRequst.result |
+| 4 | message | ❌ | string | — | エラーメッセージ。decryptRequest.message |
+| 5 | response | ❌ | string|Object | — | 要求された関数の戻り値をJSON化した文字列。適宜オブジェクトのまま返す。 |
 
 # クラス・関数定義
 

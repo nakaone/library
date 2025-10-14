@@ -103,7 +103,7 @@ ChatGPTへ：これは別途'Member.md'として依頼予定なので割愛
 - memberIdを元にmemberListから当該メンバの情報を取得
 - trial欄の
 
-- memberIdを元に[authTrialクラス](class.authTrial.md)をインスタンス化(仮に`const atObj = new authTrial({memberId:memberId})`とする)。
+- memberIdを元に[MemberTrialクラス](class.MemberTrial.md)をインスタンス化(仮に`const atObj = new MemberTrial({memberId:memberId})`とする)。
 - 
 
 
@@ -117,6 +117,6 @@ ChatGPTへ：これは別途'Member.md'として依頼予定なので割愛
 
 | **⑧ アカウント有効性確認** | 承認済・有効期間内か | 期限切れ → `warning` |
 | **⑨ 署名有効期限確認** | `CPkey` の有効期限をチェック | 切れ → `warning` + 更新誘導 |
-| **⑩ セッション状態確認** | ログイン済みか・有効期間内か確認 | 未ログイン → `authTrial()` 実行 |
+| **⑩ セッション状態確認** | ログイン済みか・有効期間内か確認 | 未ログイン → `MemberTrial()` 実行 |
 
 ### callFunction() : サーバ側関数の呼び出し

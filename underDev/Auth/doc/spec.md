@@ -78,37 +78,17 @@
 - 日時を数値として記録する場合はUNIX時刻(new Date().getTime())
 - スプレッドシート(memberList)については[Memberクラス仕様書](Member.md)参照
 
-## ScriptProperties
+## authScriptProperties
 
 <!--::$tmp/authScriptProperties.md::-->
 
-## IndexedDB
+## authIndexedDB
 
-キー名は`authConfig.system.name`から取得
+<!--::$tmp/authIndexedDB.md::-->
 
-```js
-/**
- * @typedef {Object} authIndexedDB- クライアントのIndexedDBに保存するオブジェクト
- * @prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻(new Date().getTime())<br>
- * なおサーバ側でCPkey更新中に異なるCPkeyを生成し、更なる更新要求が出てしまうのを割けるため、鍵ペア生成は30分以上の間隔を置くものとする。
- * @prop {string} memberId - メンバの識別子(=メールアドレス)
- * @prop {Object} profile - メンバの属性
- * @prop {string} profile.memberName - メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。
- * @prop {CryptoKey} CSkeySign - 署名用秘密鍵
- * @prop {CryptoKey} CPkeySign - 署名用公開鍵
- * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵
- * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵
- * @prop {string} SPkey - サーバ公開鍵(Base64)
- * @prop {number} [ApplicationForMembership=-1] - 加入申請実行日時。未申請時は-1
- * @prop {number} [expireAccount=-1] - 加入承認の有効期間が切れる日時。未加入時は-1
- * @prop {number} [expireCPkey=-1] - CPkeyの有効期限。未ログイン時は-1
- */
-```
+## Member
 
-<!-- 旧版。実装対象外
--->
-
-javascriptのクロージャ関数内でクラス定義を行う場合のサンプルソース
+<!--::$tmp/Member.md::-->
 
 # データ型(typedef)
 
@@ -160,106 +140,27 @@ sequenceDiagram
 
 ## authConfig
 
-authClient/authServer共通で使用される設定値
-
-※ 実装時はクラス化を想定。その場合、サーバ側のみ・クライアント側のみで使用するパラメータはauthConfigを継承する別クラスで定義することも検討する。
-
-```js
-/**
- * @typedef {Object} authConfig
- * @prop {string} [systemName='auth'] - システム名
- * @prop {string} [adminMail=''] - 管理者のメールアドレス
- * @prop {string} [adminName=''] - 管理者名
- * @prop {number} [allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差。既定値：2分
- * 
- * @prop {Object} RSA - 署名・暗号化関係の設定値
- * @prop {number} [RSA.bits=2048] - 鍵ペアの鍵長
- */
-```
+<!--::$tmp/authConfig.md::-->
 
 ## authServerConfig
 
-authConfigを継承した、authServerで使用する設定値
-
-```js
-/**
- * @typedef {Object} authServerConfig
- * @prop {string} [memberList='memberList'] - memberListシート名
- * @prop {number} [defaultAuthority=0] - 新規加入メンバの権限の既定値
- * @prop {number} [memberLifeTime=31536000000] - メンバ加入承認後の有効期間。既定値：1年
- * @prop {number} [loginLifeTime=86400000] - ログイン成功後の有効期間(=CPkeyの有効期間)。既定値：1
- * 
- * @prop {Object.<string,Object>} func - サーバ側の関数マップ
- * @prop {number} func.authority - 当該関数実行のために必要となるユーザ権限<br>
-  `memberList.profile.authority & authServerConfig.func.authrity > 0`なら実行可能とする。
- * @prop {Function|Arrow} func.do - 実行するサーバ側関数
- *
- * @prop {Object} trial - ログイン試行関係の設定値
- * @prop {number} [trial.passcodeLength=6] - パスコードの桁数
- * @prop {number} [trial.freezing=3600000] - 連続失敗した場合の凍結期間。既定値：1時間
- * @prop {number} [trial.maxTrial=3] パスコード入力の最大試行回数
- * @prop {number} [trial.passcodeLifeTime=600000] - パスコードの有効期間。既定値：10分
- * @prop {number} [trial.generationMax=5] - ログイン試行履歴(authTrial)の最大保持数。既定値：5世代
- */
-```
+<!--::$tmp/authServerConfig.md::-->
 
 ## authClientConfig
 
-authConfigを継承した、authClientで使用する設定値
-
-```js
-/**
- * @typedef {Object} authClientConfig
- * @prop {string} x - サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`)
- */
-```
+<!--::$tmp/authClientConfig.md::-->
 
 ## authRequest
 
-authClientからauthServerに送られる処理要求オブジェクト
-
-```js
-/**
- * @typedef {Object} authRequest
- * @prop {string} memberId - メンバの識別子(=メールアドレス)
- * @prop {string} deviceId - デバイスの識別子
- * @prop {string} requestId - 要求の識別子。UUID
- * @prop {number} timestamp - 要求日時。UNIX時刻
- * @prop {string} func - サーバ側関数名
- * @prop {any[]} arguments - サーバ側関数に渡す引数
- * @prop {string} signature - クライアント側署名
- */
-```
+<!--::$tmp/authRequest.md::-->
 
 ## decryptedRequest
 
-decryptRequestで復号された処理要求オブジェクト
-
-```js
-/**
- * @typedef {Object} decryptedRequest
- * @prop {string} result - 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "success"
- * @prop {string} message - エラーメッセージ
- * @prop {string|Object} detail - 詳細情報。ログイン試行した場合、その結果
- * @prop {authRequest} request - ユーザから渡された処理要求
- * @prop {string} timestamp - 復号処理実施日時。メール・ログでの閲覧が容易になるよう、文字列で保存
- */
-```
+<!--::$tmp/decryptedRequest.md::-->
 
 ## authResponse
 
-authServerからauthClientに送られる処理結果オブジェクト
-
-```js
-/**
- * @typedef {Object} authResponse
- * @prop {string} requestId - 要求の識別子。UUID
- * @prop {number} timestamp - 処理日時。UNIX時刻
- * @prop {string} result - 処理結果。decryptRequst.result
- * @prop {string} message - エラーメッセージ。decryptRequest.message
- * @prop {string|Object} response - 要求された関数の戻り値をJSON化した文字列。適宜オブジェクトのまま返す。
- */
-```
+<!--::$tmp/authResponse.md::-->
 
 # クラス・関数定義
 

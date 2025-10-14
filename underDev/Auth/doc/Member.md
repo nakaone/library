@@ -54,45 +54,25 @@ stateDiagram-v2
 
 ## データ型定義
 
-```js
-/**
- * @typedef {Object} authTrialLog
- * @prop {string} entered - 入力されたパスコード
- * @prop {number} result - -1:恒久的エラー, 0:要リトライ, 1:パスコード一致
- * @prop {string} message - エラーメッセージ
- * @prop {number} timestamp - 判定処理日時
- */
-/**
- * @typedef {Object} authTrial
- * @prop {string} passcode - 設定されているパスコード
- * @prop {number} created - パスコード生成日時(≒パスコード通知メール発信日時)
- * @prop {number} [freezingUntil=0] - 凍結解除日時。最大試行回数を超えたら現在日時を設定
- * @prop {number} [CPkeyUpdateUntil=0] - CPkey更新処理中の場合、更新期限をUNIX時刻でセット
- * @prop {authTrialLog[]} [log=[]] - 試行履歴。常に最新が先頭(unshift()使用)
- */
-/**
- * @typedef {Object} MemberProfile
- * @prop {number} authority - メンバのサーバ側処理時の実行権限
- */
-/**
- * @typedef {Object} Device
- * @prop {string} deviceId - デバイスの識別子。UUID
- * @prop {string} CPkey - メンバの公開鍵
- * @prop {string} CPkeyUpdated - 最新のCPkeyが登録された日時
- * @prop {string} trial - ログイン試行関連情報オブジェクト(authTrial[])のJSON文字列
- */
-/**
- * @typedef {Object} memberList
- * @prop {string} memberId - メンバの識別子(=メールアドレス)
- * @prop {string} name - メンバの氏名
- * @prop {string} accepted - 加入が承認されたメンバには承認日時を設定
- * @prop {string} reportResult - 「加入登録」処理中で結果連絡メールを送信した日時
- * @prop {string} expire - 加入承認の有効期間が切れる日時
- * @prop {string} profile - メンバの属性情報(MemberProfile)を保持するJSON文字列
- * @prop {string} device - マルチデバイス対応のためのデバイス情報(Device)を保持するJSON文字列
- * @prop {string} [note] - 当該メンバに対する備考
- */
-```
+### Member
+
+<!--::$tmp/Member.md::-->
+
+### authTrialLog
+
+<!--::$tmp/MemberTrialLog.md::-->
+
+### MemberTrial
+
+<!--::$tmp/MemberTrial.md::-->
+
+### MemberProfile
+
+<!--::$tmp/MemberProfile.md::-->
+
+### Device
+
+<!--::$tmp/Device.md::-->
 
 ## クラス・メソッド定義
 
@@ -148,7 +128,7 @@ class Member {
 /**
  * パスコード生成処理
  * @param {string} deviceId
- * @returns {authTrial} 新しい認証試行情報
+ * @returns {MemberTrial} 新しい認証試行情報
  */
 ```
 
@@ -160,7 +140,7 @@ class Member {
  * @param {string} deviceId
  * @param {string} entered - 入力パスコード
  * @param {number} timestamp - 判定時刻
- * @returns {authTrialLog} 判定結果
+ * @returns {MemberTrialLog} 判定結果
  */
 ```
 
