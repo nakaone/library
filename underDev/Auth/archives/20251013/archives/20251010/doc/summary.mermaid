@@ -1,0 +1,80 @@
+sequenceDiagram
+  participant localFunc
+  participant clientMail
+  %%participant encryptRequest
+  participant IndexedDB
+  participant authClient
+  participant authServer
+  %%participant memberList
+  %%participant decryptRequest
+  participant serverFunc
+  %%participant admin
+
+  localFunc->>authClient: ①authClientインスタンス生成
+  IndexedDB->>authClient: memberId,アカウント・CPkey期限更新
+  alt SPkey不明
+    authClient->>authServer: SPkey要求
+    authServer->>authClient: SPkey
+  end
+  localFunc->>authClient: ②処理要求
+
+  authClient->>authClient: 処理要求中フラグ=true,ログイン試行中フラグ=false
+  loop 処理要求中フラグ === true && 処理回数 < パスコード入力の最大試行回数
+
+    alt ③アカウント有効期限切れ
+      alt ④加入未申請
+        authClient->>authServer: ⑤加入要求
+        %% 加入審査は人間系なので到着日時未定
+        authServer->>clientMail: 加入可否連絡メール
+      else 加入申請済
+        authClient->>authServer: 加入審査結果問合せ
+        authServer->>authClient: ⑥加入審査結果
+        authClient->>IndexedDB: ⑦アカウント・CPkey期限更新
+        alt 加入審査結果がNG
+          authClient->>authClient: ⑧リトライ意思確認
+        end
+      end
+    end
+
+    alt ⑨未ログイン
+      alt ログイン試行中フラグ === false
+        authClient->>authServer: ログイン要求
+        authClient->>authClient: ログイン試行中フラグ=true
+        authServer->>authServer: 状態確認
+        alt アカウント有効かつパスコード未通知
+          authServer->>clientMail: パスコード通知メール
+        end
+        alt 待機時間内にauthServerから返信無し
+          authClient->>authClient: ⑩result==='fatal'
+        else 待機時間内にauthServerから返信あり
+          authServer->>authClient: 確認結果通知
+          alt result==='warning'
+            authClient->>authClient: warning処理
+          end
+        end
+      else ログイン試行中フラグ === true
+        clientMail->>authClient: パスコード入力
+        authClient->>authServer: パスコード
+        authServer->>authServer: パスコード確認
+        alt 待機時間内にauthServerから返信無し
+          authClient->>authClient: ⑩result==='fatal'
+        else 待機時間内にauthServerから返信あり
+          authServer->>authClient: 確認結果通知
+          alt result==='warning'
+            authClient->>authClient: warning処理
+          else result==='success'
+            authClient->>authClient: ⑪ログイン時処理
+          end
+        end
+      end
+    end
+
+    alt ⑫ログイン済
+      authClient->>authServer: 処理要求
+      authServer->>serverFunc: 処理要求＋メンバ属性情報
+      serverFunc->>authServer: 処理結果
+      authServer->>authClient: 処理結果
+      authClient->>localFunc: 処理結果
+      authClient->>authClient: 処理要求中フラグ=false
+    end
+  end

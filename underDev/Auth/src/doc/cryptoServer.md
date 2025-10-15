@@ -1,0 +1,84 @@
+# 🔐 cryptoServer 関数 仕様書
+
+## ■ 概要
+
+- 認証サーバ (`authServer`) から独立した復号・署名検証処理モジュール。
+- `encrypt`,`decrypt`の2つのメソッドを持つクロージャ関数
+- 暗号化ライブラリは `jsrsasign` を使用。
+
+## ■ 設計方針
+- 他システムでも利用可能な汎用API関数とする  
+- 署名→暗号化（Sign-then-Encrypt）方式に準拠  
+- 鍵ペアは `ScriptProperties` に保存（`SSkey`, `SPkey`）  
+- 鍵の更新は `refresh()` メソッドで実施（緊急対応のみ）  
+- 復号処理は副作用のない純関数構造を目指す（stateを持たない）
+
+# cryptoServer.decrypt()
+
+- authClient->authServerのメッセージを復号＋署名検証
+- クライアントから送信された暗号文を安全に復号・検証し、結果を構造化オブジェクトとして返す。
+- 本関数はauthServerから呼ばれるため、fatalエラーでも戻り値を返す
+
+## 引数：`encryptedRequest`
+
+<!--::$tmp/encryptedRequest.md::-->
+
+■参考：`authRequest`(復号化されたcipherTextの中身)
+
+<!--::$tmp/authRequest.md::-->
+
+## 戻り値：`decryptedRequest`
+
+<!--::$tmp/decryptedRequest.md::-->
+
+■参考：`authRequest`
+
+<!--::$tmp/authRequest.md::-->
+
+## 処理
+
+- memberId,deviceId,cipherTextが全て存在
+  - memberListシートからmemberId,deviceIdが合致するMemberオブジェクトの取得を試行
+  - Memberオブジェクトの取得成功 ⇒ 登録済メンバ<br>
+    ※以下、取得したMemberオブジェクトでdeviceIdが一致するものを`Member`と呼称
+    - 加入期限内(`Date.now() < Member.expire`)
+      - CPkey有効期限内(`Date.now() < Member.CPkeyUpdated + authConfig.loginLifeTime`)
+        - cipherTextのSSkeyでの復号成功、authRequestを取得
+          - `authRequest.signature`と署名とMemberList.CPkeyが全て一致
+            -`{result:'normal',response:authRequest}`を返して終了
+          - `authRequest.signature`と署名とMemberList.CPkeyのいずれかが不一致
+            - `{result:'fatal',message:'Signature unmatch'}`を返して終了
+        - cipherTextのSSkeyでの復号失敗
+          - `{result:'fatal',message:'decrypt failed'}`を返して終了
+      - CPkey有効期限外
+        - `{result:'warning',message:'CPkey has expired'}`を返して終了
+    - 加入期限切れ
+      - `{result:'warning',message:'Membership has expired'}`を返して終了
+  - Memberオブジェクトの取得不成功 ⇒ 新規加入要求
+    - memberId(=メールアドレス)がメールアドレスとして適切
+      - cipherTextのSSkeyでの復号を試行
+      - cipherTextのSSkeyでの復号成功、authRequestを取得
+        - `authRequest.signature`と署名が一致
+          - `{result:'warning',message:'Member registerd'}`を返して終了
+        - `authRequest.signature`と署名が不一致
+          - `{result:'fatal',message:'Signature unmatch'}`を返して終了
+      - cipherTextのSSkeyでの復号失敗
+          - `{result:'fatal',message:'decrypt failed'}`を返して終了
+    - memberId(=メールアドレス)がメールアドレスとして不適切
+      - `{result:'fatal',message:'Invalid mail address'}`を返して終了
+- memberId,deviceId,cipherTextのいずれかが欠落
+  - `{result:'fatal',message:'[memberId|deviceId|cipherText] not specified'}`を返して終了
+
+# cryptoServer.encrypt()
+
+- authServer->authClientのメッセージを暗号化＋署名
+
+# セキュリティ設計ポイント
+
+| 項目 | 対策 |
+|------|------|
+| **リプレイ攻撃** | requestIdキャッシュ（TTL付き）で検出・拒否 |
+| **タイミング攻撃** | 定数時間比較（署名・ハッシュ照合）を採用 |
+| **ログ漏えい防止** | 復号データは一切記録しない |
+| **エラー通知スパム** | メンバ単位で送信間隔を制御 |
+| **鍵管理** | `SSkey`/`SPkey` は ScriptProperties に格納し、Apps Script内でのみ参照可 |

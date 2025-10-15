@@ -8,6 +8,7 @@ source ~/Desktop/GitHub/tools/common.sh
 # ----------------------------------------------
 prj="$lib/underDev/Auth"
 arc="$prj/archives"
+src="$prj/src"
 doc="$prj/doc"
 img="$prj/img"
 tmp="$prj/tmp"
@@ -23,12 +24,18 @@ tmp="$prj/tmp"
 #mmdc -i $doc/processingRequest.mermaid -o $img/processingRequest.svg
 
 # typedef
-node $doc/typedef.js -o:$tmp
+node $src/doc/typedef.js -o:$tmp
 
 # 仕様書
-cat $doc/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$doc -tmp:$tmp > $prj/spec.md
+cat $src/doc/spec.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $prj/spec.md
+cat $src/doc/authServer.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/authServer.md
+cat $src/doc/cryptoServer.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/cryptoServer.md
+cat $src/doc/Member.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/Member.md
 
 # AI質問用
 cat $doc/question.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$doc -tmp:$tmp > $prj/question.md
+$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $prj/question.md

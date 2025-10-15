@@ -1,0 +1,56 @@
+sequenceDiagram
+  participant clientMail
+  participant localFunc
+  participant localStorage
+  participant authClient
+  participant authServer
+  participant memberList
+  participant serverFunc
+  participant admin
+
+  localFunc->>authClient: 処理要求
+  authClient->>authClient: 処理要求中フラグ=true
+  loop 処理要求中フラグ
+    authClient->>authServer: authRequestを送信
+    authServer->>authServer: ①内容確認
+
+    alt ログイン済
+      authServer->>serverFunc: 処理要求
+      serverFunc->>authServer: 処理結果
+      authServer->>authClient: authResponse
+      authClient->>authClient: 処理要求中フラグ=false
+      authClient->>localFunc: 処理結果
+    else
+      alt ログイン拒否
+        authServer->>authClient: authResponse
+        authClient->>localFunc: エラー
+      else 未ログイン
+        %% サーバ側作業
+        authServer->>memberList: memberList.trialに新たなauthTrialをセット
+        authServer->>clientMail: パスコード通知メール
+        authServer->>authClient: 処理結果通知
+
+        %% クライアント側作業
+        alt memberList.CPkeyと一致しているが、ログイン成功後の有効期間切れ
+          authClient->>localStorage: 鍵ペアを再作成、保存
+        end
+
+        authClient->>authClient: ログイン試行中フラグ=true
+        loop ログイン試行中フラグ
+          authClient->>authClient: パスコード入力
+          authClient->>authServer: パスコード送信
+
+          %% サーバ側作業
+          authServer->>authServer: ②パスコード確認
+          authServer->>authClient: パスコード確認結果
+
+          alt パスコード確認結果=最終トライ失敗
+            authClient->>localFunc: エラー
+          end
+          alt パスコード確認結果=トライ成功
+            authClient->>authClient: ログイン試行中フラグ=false
+          end
+        end
+      end
+    end
+  end
