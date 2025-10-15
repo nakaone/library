@@ -1,41 +1,61 @@
-# 🔐 cryptoServer 関数 仕様書
+# 🔐 cryptoServer クラス 仕様書
 
-## ■ 概要
+## 🧭 概要
 
 - 認証サーバ (`authServer`) から独立した復号・署名検証処理モジュール。
-- `encrypt`,`decrypt`の2つのメソッドを持つクロージャ関数
+- `encrypt`,`decrypt`の2つのstatic関数を持つ(`cryptoServer.encrypt()`形式での使用前提)
 - 暗号化ライブラリは `jsrsasign` を使用。
 
 ## ■ 設計方針
-- 他システムでも利用可能な汎用API関数とする  
+
 - 署名→暗号化（Sign-then-Encrypt）方式に準拠  
 - 鍵ペアは `ScriptProperties` に保存（`SSkey`, `SPkey`）  
-- 鍵の更新は `refresh()` メソッドで実施（緊急対応のみ）  
 - 復号処理は副作用のない純関数構造を目指す（stateを持たない）
 
-# cryptoServer.decrypt()
+## 🧩 内部構成
+
+### 内部依存クラス・モジュール
+
+- 以下はサンプル
+
+| クラス / モジュール | 主な責務 |
+| :-- | :-- |
+| Properties | ScriptPropertiesのCRUDを抽象化。キーprefix管理とTTL管理を行う。 |
+| Member | メンバ状態判定・更新処理。スプレッドシート行の読み書きを担当。 |
+| MemberTrial | ログイン試行情報の履歴管理・失敗回数制御。 |
+| cryptoServer() | リクエスト復号・署名検証。authResponseのベース生成。 |
+| encryptResponse() | クライアントのCPkeyを用いた応答暗号化。 |
+
+## 🧱 decrypt()メソッド
 
 - authClient->authServerのメッセージを復号＋署名検証
 - クライアントから送信された暗号文を安全に復号・検証し、結果を構造化オブジェクトとして返す。
 - 本関数はauthServerから呼ばれるため、fatalエラーでも戻り値を返す
 
-## 引数：`encryptedRequest`
+### 📤 入力項目
+
+#### `encryptedRequest`
 
 <!--::$tmp/encryptedRequest.md::-->
 
-■参考：`authRequest`(復号化されたcipherTextの中身)
+#### 参考：`authRequest`
+
+- 復号化されたcipherTextの中身
 
 <!--::$tmp/authRequest.md::-->
 
-## 戻り値：`decryptedRequest`
+### 📥 出力項目
+
+#### `decryptedRequest`
 
 <!--::$tmp/decryptedRequest.md::-->
 
-■参考：`authRequest`
+#### 参考：`authRequest`
 
 <!--::$tmp/authRequest.md::-->
 
-## 処理
+
+### 処理概要
 
 - memberId,deviceId,cipherTextが全て存在
   - memberListシートからmemberId,deviceIdが合致するMemberオブジェクトの取得を試行
@@ -69,11 +89,27 @@
 - memberId,deviceId,cipherTextのいずれかが欠落
   - `{result:'fatal',message:'[memberId|deviceId|cipherText] not specified'}`を返して終了
 
-# cryptoServer.encrypt()
+## 🧱 encrypt()メソッド
 
 - authServer->authClientのメッセージを暗号化＋署名
 
-# セキュリティ設計ポイント
+### 📤 入力項目
+
+#### authResponse
+
+<!--::$tmp/authResponse.md::-->
+
+### 📥 出力項目
+
+#### encryptedResponse
+
+<!--::$tmp/decryptedRequest.md::-->
+
+### 処理概要
+
+## ⏰ メンテナンス処理
+
+## 🔐 セキュリティ仕様
 
 | 項目 | 対策 |
 |------|------|
@@ -82,3 +118,14 @@
 | **ログ漏えい防止** | 復号データは一切記録しない |
 | **エラー通知スパム** | メンバ単位で送信間隔を制御 |
 | **鍵管理** | `SSkey`/`SPkey` は ScriptProperties に格納し、Apps Script内でのみ参照可 |
+
+## 🧾 エラーハンドリング仕様
+
+## 🗒️ ログ出力仕様
+
+| 種別 | 保存先 | 内容 |
+| :-- | :-- | :-- |
+| requestLog | ScriptProperties (TTL短期) | requestId, memberId, timestamp |
+| errorLog | Spreadsheetまたはログシート | 発生日時, memberId, errorMessage, stackTrace |
+| auditLog | Spreadsheet | 処理種別, 成功／警告／失敗, 対象メンバID |
+
