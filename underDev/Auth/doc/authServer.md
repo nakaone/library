@@ -1,4 +1,4 @@
-# authServer 関数 仕様書（改訂版）
+# authServer 関数 仕様書
 
 ## 概要
 

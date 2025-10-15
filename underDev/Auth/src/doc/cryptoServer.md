@@ -3,28 +3,26 @@
 ## 🧭 概要
 
 - 認証サーバ (`authServer`) から独立した復号・署名検証処理モジュール。
-- `encrypt`,`decrypt`の2つのstatic関数を持つ(`cryptoServer.encrypt()`形式での使用前提)
+- クライアント側仕様書（`cryptoClient`）と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
+- `cryptoServer.encrypt()`形式での使用を想定し、メソッドはstaticとする
 - 暗号化ライブラリは `jsrsasign` を使用。
 
 ## ■ 設計方針
 
 - 署名→暗号化（Sign-then-Encrypt）方式に準拠  
-- 鍵ペアは `ScriptProperties` に保存（`SSkey`, `SPkey`）  
+- 鍵ペアは `ScriptProperties` に保存（`SSkey`, `SPkey`）
+- `ScriptProperties`のキー名は`authConfig.system.name`に基づく
 - 復号処理は副作用のない純関数構造を目指す（stateを持たない）
 
-## 🧩 内部構成
+## 🧩 内部依存クラス・モジュール
 
-### 内部依存クラス・モジュール
+### authScriptProperties
 
-- 以下はサンプル
+<!--::$tmp/authScriptProperties.md::-->
 
-| クラス / モジュール | 主な責務 |
-| :-- | :-- |
-| Properties | ScriptPropertiesのCRUDを抽象化。キーprefix管理とTTL管理を行う。 |
-| Member | メンバ状態判定・更新処理。スプレッドシート行の読み書きを担当。 |
-| MemberTrial | ログイン試行情報の履歴管理・失敗回数制御。 |
-| cryptoServer() | リクエスト復号・署名検証。authResponseのベース生成。 |
-| encryptResponse() | クライアントのCPkeyを用いた応答暗号化。 |
+### Member
+
+<!--::$tmp/Member.md::-->
 
 ## 🧱 decrypt()メソッド
 

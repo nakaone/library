@@ -3,30 +3,47 @@
 ## 🧭 概要
 
 - 認証サーバ (`authServer`) から独立した復号・署名検証処理モジュール。
-- `encrypt`,`decrypt`の2つのメソッドを持つクロージャ関数
+- クライアント側仕様書（`cryptoClient`）と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
+- `cryptoServer.encrypt()`形式での使用を想定し、メソッドはstaticとする
 - 暗号化ライブラリは `jsrsasign` を使用。
 
 ## ■ 設計方針
 
-- 他システムでも利用可能な汎用API関数とする
 - 署名→暗号化（Sign-then-Encrypt）方式に準拠
 - 鍵ペアは `ScriptProperties` に保存（`SSkey`, `SPkey`）
-- 鍵の更新は `refresh()` メソッドで実施（緊急対応のみ）
+- `ScriptProperties`のキー名は`authConfig.system.name`に基づく
 - 復号処理は副作用のない純関数構造を目指す（stateを持たない）
 
-## 🧩 内部構成
+## 🧩 内部依存クラス・モジュール
 
-### 内部依存クラス・モジュール
+### authScriptProperties
 
-- 以下はサンプル
+<a name="authScriptProperties"></a>
 
-| クラス / モジュール | 主な責務 |
-| :-- | :-- |
-| Properties | ScriptPropertiesのCRUDを抽象化。キーprefix管理とTTL管理を行う。 |
-| Member | メンバ状態判定・更新処理。スプレッドシート行の読み書きを担当。 |
-| MemberTrial | ログイン試行情報の履歴管理・失敗回数制御。 |
-| cryptoServer() | リクエスト復号・署名検証。authResponseのベース生成。 |
-| encryptResponse() | クライアントのCPkeyを用いた応答暗号化。 |
+キー名は`authConfig.system.name`、データは以下のオブジェクトをJSON化した文字列。
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | keyGeneratedDateTime | ❌ | number | — | UNIX時刻 |
+| 2 | SPkey | ❌ | string | — | PEM形式の公開鍵文字列 |
+| 3 | SSkey | ❌ | string | — | PEM形式の秘密鍵文字列（暗号化済み） |
+
+### Member
+
+<a name="Member"></a>
+
+メンバ一覧(アカウント管理表)上のメンバ単位の管理情報
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
+| 2 | name | ❌ | string | — | メンバの氏名 |
+| 3 | accepted | ❌ | string | — | 加入が承認されたメンバには承認日時を設定 |
+| 4 | reportResult | ❌ | string | — | 「加入登録」処理中で結果連絡メールを送信した日時 |
+| 5 | expire | ❌ | string | — | 加入承認の有効期間が切れる日時 |
+| 6 | profile | ❌ | string | — | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
+| 7 | device | ❌ | string | — | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |
+| 8 | note | ⭕ | string | — | 当該メンバに対する備考 |
 
 ## 🧱 decrypt()メソッド
 
