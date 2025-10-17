@@ -2,6 +2,8 @@
 
 ブラウザ(クライアント)とGAS(サーバ)の間で認証された通信を行う。
 
+関連仕様書：[authClient](doc/authClient.md) | [authServer](doc/authServer.md) | [Member](doc/Member.md) | [cryptoServer](doc/cryptoServer.md) | [cryptoClient](doc/cryptoClient.md)
+
 ## 要求仕様
 
 - 本システムは限られた人数のサークルや小学校のイベント等での利用を想定する。<br>
@@ -128,40 +130,42 @@ sequenceDiagram
 | 1 | systemName | ⭕ | string | auth | システム名 |
 | 2 | adminMail | ❌ | string | — | 管理者のメールアドレス |
 | 3 | adminName | ❌ | string | — | 管理者名 |
-| 4 | allowableTimeDifference | ⭕ | string | 120000 | クライアント・サーバ間通信時の許容時差。既定値：2分 |
+| 4 | allowableTimeDifference | ⭕ | string | 120000 | クライアント・サーバ間通信時の許容時差。既定値は2分 |
 | 5 | RSAbits | ⭕ | string | 2048 | 鍵ペアの鍵長 |
 
 ## authServerConfig
 
 <a name="authServerConfig"></a>
 
-authConfigを継承した、authServerで使用する設定値
+authConfigを継承した、authServerでのみ使用する設定値
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | memberList | ⭕ | string | memberList | memberListシート名 |
 | 2 | defaultAuthority | ❌ | number | — | 新規加入メンバの権限の既定値 |
-| 3 | memberLifeTime | ⭕ | number | 31536000000 | メンバ加入承認後の有効期間。既定値：1年 |
-| 4 | loginLifeTime | ⭕ | number | 86400000 | ログイン成功後の有効期間(=CPkeyの有効期間)。既定値：1日 |
-| 5 | func | ❌ | Object.<string,Object> | — | サーバ側の関数マップ |
-| 6 | func.authority | ❌ | number | — | 当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authrity > 0`なら実行可とする。 |
-| 7 | func.do | ❌ | Function|Arrow | — | 実行するサーバ側関数 |
-| 8 | trial | ❌ | Object | — | ログイン試行関係の設定値 |
-| 9 | trial.passcodeLength | ⭕ | number | 6 | パスコードの桁数 |
-| 10 | trial.freezing | ⭕ | number | 3600000 | 連続失敗した場合の凍結期間。既定値：1時間 |
-| 11 | trial.maxTrial | ⭕ | number | 3 | パスコード入力の最大試行回数 |
-| 12 | trial.passcodeLifeTime | ⭕ | number | 600000 | パスコードの有効期間。既定値：10分 |
-| 13 | trial.generationMax | ⭕ | number | 5 | ログイン試行履歴(MemberTrial)の最大保持数。既定値：5世代 |
+| 3 | memberLifeTime | ⭕ | number | 31536000000 | 加入有効期間(=メンバ加入承認後の有効期間)。既定値は1年 |
+| 4 | prohibitedToJoin | ⭕ | number | 259200000 | 加入禁止期間(=管理者による加入否認後、再加入申請が自動的に却下される期間)。既定値は3日 |
+| 5 | loginLifeTime | ⭕ | number | 86400000 | 認証有効時間(=ログイン成功後の有効期間、CPkeyの有効期間)。既定値は1日 |
+| 6 | loginFreeze | ⭕ | number | 600000 | 認証凍結時間(=認証失敗後、再認証要求が禁止される期間)。既定値は10分 |
+| 7 | func | ❌ | Object.<string,Object> | — | サーバ側の関数マップ |
+| 8 | func.authority | ❌ | number | — | 当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authrity > 0`なら実行可とする。 |
+| 9 | func.do | ❌ | Function | — | 実行するサーバ側関数 |
+| 10 | trial | ❌ | Object | — | ログイン試行関係の設定値 |
+| 11 | trial.passcodeLength | ⭕ | number | 6 | パスコードの桁数 |
+| 12 | trial.maxTrial | ⭕ | number | 3 | パスコード入力の最大試行回数 |
+| 13 | trial.passcodeLifeTime | ⭕ | number | 600000 | パスコードの有効期間。既定値は10分 |
+| 14 | trial.generationMax | ⭕ | number | 5 | ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代 |
 
 ## authClientConfig
 
 <a name="authClientConfig"></a>
 
-authConfigを継承した、authClientで使用する設定値
+authConfigを継承した、authClientでのみ使用する設定値
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | x | ❌ | string | — | サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`) |
+| 2 | timeout | ⭕ | number | 300000 | サーバからの応答待機時間。これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分 |
 
 # データ型(typedef)
 

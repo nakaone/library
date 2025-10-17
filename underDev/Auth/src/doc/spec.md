@@ -2,6 +2,8 @@
 
 ブラウザ(クライアント)とGAS(サーバ)の間で認証された通信を行う。
 
+関連仕様書：[authClient](doc/authClient.md) | [authServer](doc/authServer.md) | [Member](doc/Member.md) | [cryptoServer](doc/cryptoServer.md) | [cryptoClient](doc/cryptoClient.md)
+
 ## 要求仕様
 
 - 本システムは限られた人数のサークルや小学校のイベント等での利用を想定する。<br>

@@ -1,45 +1,64 @@
 # Member クラス 仕様書
 
-## 概要
+## 🧭 概要
 
 - Member は サーバ側 でメンバ情報を一元的に管理するクラスです。
 - 加入・ログイン・パスコード試行・デバイス別CPkey管理などの状態を統一的に扱います。
 - マルチデバイス利用を前提とし、memberListスプレッドシートの1行を1メンバとして管理します。
 
-## 状態遷移
+### 状態遷移
 
 ```mermaid
+%% メンバ状態遷移図
+
 stateDiagram-v2
   [*] --> 未加入
-  未加入 --> 審査中 : 加入要求
-  審査中 --> 加入中 : 承認
-  審査中 --> [*] : 否認
+  未加入 --> 未審査 : 加入要求
+  未審査 --> 審査済 : 審査
+  審査済 --> 加入中 : 加入承認
+
   state 加入中 {
-    [*] --> 未ログイン
-    未ログイン --> ログイン試行中 : ログイン要求
-    ログイン試行中 --> ログイン中 : 成功
-    ログイン試行中 --> ログイン試行中 : 失敗(回数制限内)
-    ログイン中 --> ログイン期限切れ
-    ログイン期限切れ --> [*]
-    ログイン試行中 --> 凍結中 : 失敗(回数制限超)
-    凍結中 --> [*]
+    [*] --> 未認証
+    未認証 --> 試行中 : 認証要求
+    試行中 --> 認証中 : 認証成功
+    試行中 --> 試行中 : 再試行
+    認証中 --> 未認証 : 認証失効
+    試行中 --> 凍結中 : 認証失敗
+    凍結中 --> 未認証 : 凍結解除
   }
-  加入中 --> 加入期限切れ
-  加入期限切れ --> [*]
+  加入中 --> 未審査 : 加入失効
+  審査済 --> 加入禁止: 加入否認
+  加入禁止 --> 未審査 : 加入解禁
 ```
 
-| No | 状態 | 説明・判定方法 |
-| --: | :-- | :-- |
-| 1 | 未加入 | memberListに存在しない<br>memberList.memberIdに無い |
-| 2 | 審査中 | 管理者承認待ち<br>!memberList.accepted && !memberList.reportResult |
-| 3 | 加入中 | 有効メンバ。期限内であれば認証可能<br>0 < memberList.accepted && Date.now() < memberList.expire |
-| 4 | &emsp;未ログイン | 当該デバイスでは有効なCPkeyが未発行、または期限切れの状態<br>（他デバイスではログイン中であってもよい）<br>memberId[deviceId].CPkeyUpdated+authConfig.loginLifeTime < Date.now() |
-| 5 | &emsp;ログイン試行中 | 認証用パスコードを発行済みで、結果が未確定<br>Date.now() < memberList.memberId[deviceId].trial[0].created + authConfig.passcodeLifeTime |
-| 6 | &emsp;ログイン中 | 認証が成功し、権限が必要な処理も要求できる状態<br>Date.now() <= memberList.memberId[deviceId].CPkeyUpdated+authConfig.loginLifeTime |
-| 7 | &emsp;ログイン期限切れ | CPキーの有効期限が切れて再作成が必要な状態<br>memberList.memberId[deviceId].CPkeyUpdated+authConfig.loginLifeTime < Date.now() |
-| 8 | &emsp;凍結中 | 制限回数内に認証が成功せず、試行できない状態<br>Date.now() < memberList.memberId[deviceId].trial[0].freezingUntil |
-| 9 | 加入期限切れ | メンバ加入承認後の有効期間が切れた状態<br>memberList.expire < Date.now() |
+No | 状態 | 説明
+:-- | :-- | :--
+1 | 未加入 | memberList未登録
+2 | 未審査 | memberList登録済だが、管理者による加入認否が未決定
+3 | 審査済 | 管理者による加入認否が決定済
+4 | 加入中 | 管理者により加入が承認された状態
+4.1 | 未認証 | 認証(ログイン)不要の処理しか行えない状態
+4.2 | 試行中 | パスコードによる認証を試行している状態
+4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態
+4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態
+5 | 加入禁止 | 管理者により加入が否認された状態
 
+※ 下表内の変数名は`Member.log`のメンバ名
+
+状態 | 判定式
+:-- | :--
+未加入 | 加入要求をしたことが無い<br>joiningRequest === 0
+加入禁止 | 加入禁止されている<br>Date.now() <= unfreezeDenial
+未審査 | 管理者の認否が未決定<br>approval === 0 && denial === 0
+認証中 | 加入承認済かつ認証有効期限内<br>0 < approval && Date.now() ≦ loginExpiration
+凍結中 | 加入承認済かつ凍結期間内<br>0 < approval && loginFailure　<= Date.now() && Date.now() <= unfreezeLogin
+未認証 | 加入承認後認証要求されたことが無い<br>0 < approval && loginRequest === 0
+試行中 | 加入承認済かつ認証要求済(かつ認証中でも凍結中でもない)<br>0 < approval && 0 < loginRequest
+審査済 | 加入認否決定済<br>0 < approval || 0 < denial
+
+- 上から順に判定する(下順位の状態は上順位の何れにも該当しない)
+
+<!--
 ## 状態遷移時にセットすべき変数
 
 | 状態 | 更新されるプロパティ | 更新内容 |
@@ -51,8 +70,9 @@ stateDiagram-v2
 | ログイン中 → ログイン期限切れ | device[].CPkeyUpdated | 期限切れ判定により更新なし。再生成を要求 |
 | ログイン試行中 → 凍結中 | device[].trial[0].freezingUntil | 現在時刻＋freezingをセット |
 | 加入中 → 加入期限切れ | expire | 判定のみ。更新なし |
+-->
 
-## データ型定義
+## 🧩 内部構成(クラス変数)
 
 ### Member
 
@@ -64,12 +84,29 @@ stateDiagram-v2
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
 | 2 | name | ❌ | string | — | メンバの氏名 |
-| 3 | accepted | ❌ | string | — | 加入が承認されたメンバには承認日時を設定 |
-| 4 | reportResult | ❌ | string | — | 「加入登録」処理中で結果連絡メールを送信した日時 |
-| 5 | expire | ❌ | string | — | 加入承認の有効期間が切れる日時 |
-| 6 | profile | ❌ | string | — | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
-| 7 | device | ❌ | string | — | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |
-| 8 | note | ⭕ | string | — | 当該メンバに対する備考 |
+| 3 | log | ❌ | string | — | メンバの履歴情報(MemberLog)を保持するJSON文字列 |
+| 4 | profile | ❌ | string | — | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
+| 5 | device | ❌ | string | — | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |
+| 6 | note | ⭕ | string | — | 当該メンバに対する備考 |
+
+### MemberLog
+
+<a name="MemberLog"></a>
+
+メンバの各種要求・状態変化の時刻
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | joiningRequest | ❌ | number | — | 加入要求日時。加入要求をサーバ側で受信した日時 |
+| 2 | approval | ❌ | number | — | 加入承認日時。管理者がmemberList上で加入承認処理を行った日時。値設定は加入否認日時と択一 |
+| 3 | denial | ❌ | number | — | 加入否認日時。管理者がmemberList上で加入否認処理を行った日時。値設定は加入承認日時と択一 |
+| 4 | loginRequest | ❌ | number | — | 認証要求日時。未認証メンバからの処理要求をサーバ側で受信した日時 |
+| 5 | loginSuccess | ❌ | number | — | 認証成功日時。未認証メンバの認証要求が成功した最新日時 |
+| 6 | loginExpiration | ❌ | number | — | 認証有効期限。認証成功日時＋認証有効時間 |
+| 7 | loginFailure | ❌ | number | — | 認証失敗日時。未認証メンバの認証要求失敗が確定した最新日時 |
+| 8 | unfreezeLogin | ❌ | number | — | 認証無効期限。認証失敗日時＋認証凍結時間 |
+| 9 | joiningExpiration | ❌ | number | — | 加入有効期限。加入承認日時＋加入有効期間 |
+| 10 | unfreezeDenial | ❌ | number | — | 加入禁止期限。加入否認日時＋加入禁止期間 |
 
 ### MemberProfile
 
@@ -104,9 +141,7 @@ stateDiagram-v2
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | passcode | ❌ | string | — | 設定されているパスコード |
 | 2 | created | ❌ | number | — | パスコード生成日時(≒パスコード通知メール発信日時) |
-| 3 | freezingUntil | ❌ | number | — | 凍結解除日時。最大試行回数を超えたら現在日時を設定 |
-| 4 | CPkeyUpdateUntil | ❌ | number | — | CPkey更新処理中の場合、更新期限をUNIX時刻でセット |
-| 5 | log | ⭕ | MemberTrialLog[] |  | 試行履歴。常に最新が先頭(unshift()使用) |
+| 3 | log | ⭕ | MemberTrialLog[] |  | 試行履歴。常に最新が先頭(unshift()使用) |
 
 ### MemberTrialLog
 
@@ -120,3 +155,29 @@ MemberTrial.logに記載される、パスコード入力単位の試行記録
 | 2 | result | ❌ | number | — | -1:恒久的エラー, 0:要リトライ, 1:パスコード一致 |
 | 3 | message | ❌ | string | — | エラーメッセージ |
 | 4 | timestamp | ❌ | number | — | 判定処理日時 |
+
+## 🧱 constructor()
+
+### 概要
+
+
+- 指定されたmemberIdのインスタンスを返す
+- deviceIdの指定が有った場合は該当しないMemberDeviceオブジェクトは削除
+
+```js
+/**
+ * @param {string} memberId
+ * @param {string} [deviceId]
+ * @returns {Member}
+ */
+```
+
+## 🧱 getStatus()
+
+### 概要
+
+
+
+### 📤 入力項目
+
+### 📥 出力項目

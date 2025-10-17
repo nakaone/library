@@ -31,6 +31,11 @@
 | 2 | deviceId | ❌ | string | — | デバイスの識別子 |
 | 3 | ciphertext | ❌ | string | — | 暗号化した文字列 |
 
+## 🧱 constructor()
+
+- IndexedDB を開く。鍵ペアが存在しない場合、RSA-PSS と RSA-OAEPを生成。
+- 生成した鍵をメンバ変数に保持し、IndexedDB に保存。
+
 ## 🧱 decrypt()メソッド
 
 - authServer->authClientのメッセージを復号＋署名検証
@@ -116,12 +121,7 @@ authClientからauthServerに送られる処理要求オブジェクト
 
 ### 処理概要
 
-## init()メソッド
-
-- IndexedDB を開く。鍵ペアが存在しない場合、RSA-PSS と RSA-OAEPを生成。
-- 生成した鍵をメンバ変数に保持し、IndexedDB に保存。
-
-## updateCPkey()メソッド
+## 🧱 updateCPkey()メソッド
 
 - サーバ要求による公開鍵更新処理
 

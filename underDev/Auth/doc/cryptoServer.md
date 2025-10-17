@@ -38,12 +38,10 @@
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
 | 2 | name | ❌ | string | — | メンバの氏名 |
-| 3 | accepted | ❌ | string | — | 加入が承認されたメンバには承認日時を設定 |
-| 4 | reportResult | ❌ | string | — | 「加入登録」処理中で結果連絡メールを送信した日時 |
-| 5 | expire | ❌ | string | — | 加入承認の有効期間が切れる日時 |
-| 6 | profile | ❌ | string | — | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
-| 7 | device | ❌ | string | — | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |
-| 8 | note | ⭕ | string | — | 当該メンバに対する備考 |
+| 3 | log | ❌ | string | — | メンバの履歴情報(MemberLog)を保持するJSON文字列 |
+| 4 | profile | ❌ | string | — | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
+| 5 | device | ❌ | string | — | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |
+| 6 | note | ⭕ | string | — | 当該メンバに対する備考 |
 
 ## 🧱 decrypt()メソッド
 
