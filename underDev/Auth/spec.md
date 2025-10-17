@@ -65,17 +65,17 @@ sequenceDiagram
 
   authClient->>localFunc: authClientインスタンス生成
   localFunc->>+authClient: 処理要求(LocalRequest)
-  authClient->>cryptoClient: 署名・暗号化要求(authRequest)
-  cryptoClient->>authClient: encryptedRequest
+  authClient->>+cryptoClient: 署名・暗号化要求(authRequest)
+  cryptoClient->>-authClient: encryptedRequest
 
   loop リトライ試行
     authClient->>+authServer: 処理要求(encryptedRequest)
-    authServer->>cryptoServer: 復号・検証要求(encryptedRequest)
-    cryptoServer->>authServer: decryptedRequest
+    authServer->>+cryptoServer: 復号・検証要求(encryptedRequest)
+    cryptoServer->>-authServer: decryptedRequest
     authServer->>authServer: ①サーバ内処理(decryptedRequest->authResponse)
     alt authResponse.result !== 'fatal'
-      authServer->>cryptoServer: 署名・暗号化要求(authResponse)
-      cryptoServer->>authServer: encryptedResponse
+      authServer->>+cryptoServer: 署名・暗号化要求(authResponse)
+      cryptoServer->>-authServer: encryptedResponse
     end
 
     alt 応答タイムアウト内にレスポンス無し
@@ -83,13 +83,13 @@ sequenceDiagram
     else 応答タイムアウト内にレスポンスあり
       authServer->>-authClient: encryptedResponse
 
-      authClient->>cryptoClient: 復号・検証要求(encryptedResponse)
-      cryptoClient->>authClient: decryptedResponse
+      authClient->>+cryptoClient: 復号・検証要求(encryptedResponse)
+      cryptoClient->>-authClient: decryptedResponse
 
       alt decryptedResponse.result === 'fatal'
         authClient->>localFunc: エラー通知(LocalResponse.result="fatal")
       else
-        authClient->>authClient: ②decryptedResponse.sv.resultによる分岐処理
+        authClient->>authClient: ②クライアント内分岐処理
         authClient->>-localFunc: 処理結果(LocalResponse)
       end
     end
@@ -97,26 +97,19 @@ sequenceDiagram
 ```
 
 - `localFunc`とは、クライアント側(ブラウザ)内で動作するJavaScriptの関数を指す
-- ①サーバ内処理
-  - decryptedRequestを入力としてメイン処理またはメソッドを実行、結果を
-- ②decryptedResponse.resultによる分岐処理
-  - decryptedResponse.result === 'normal' ⇒ LocalResponseの作成
-  - decryptedResponse.result === 'warning' ⇒
-    1. authClient.inCaseOfWarning(decryptedResponse)を実行
-    2. 1.の結果が'fatal'の場合、「リトライ試行」のループから脱出
-- 「リトライ試行」は応答タイムアウト内にauthServerからレスポンスが来なかった場合、停止する<br>
-  ※`fetch timeout`を使用。許容時間は`authConfig.allowableTimeDifference`
+- ①サーバ内処理：decryptedRequestを入力としてメイン処理またはメソッドを実行
+- ②クライアント内分岐処理：decryptedResponse.sv.resultに基づきメイン処理またはメソッドを実行
+- 「リトライ試行」は以下の場合にループを抜ける
+  - 応答タイムアウト内にauthServerからレスポンスが来なかった場合<br>
+    ※`fetch timeout`を使用。許容時間は`authConfig.allowableTimeDifference`
+  - ②クライアント内分岐処理の結果が'fatal'だった場合
 
 # データ格納方法と形式
 
-- スプレッドシート以外で日時を文字列として記録する場合はISO8601拡張形式の文字列(`yyyy-MM-ddThh:mm:ss.nnn+09:00`)
-- 日時を数値として記録する場合はUNIX時刻(new Date().getTime())
+- 日時は特段の注記が無い限り、UNIX時刻でミリ秒単位で記録する(new Date().getTime())
 - スプレッドシート(memberList)については[Memberクラス仕様書](Member.md)参照
 
 # 動作設定変数(config)
-
-- クラスとして定義
-- 時間・期間の単位はミリ秒
 
 ## authConfig
 

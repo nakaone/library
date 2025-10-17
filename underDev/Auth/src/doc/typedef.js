@@ -55,9 +55,9 @@ const typedef = {
       {name:'CSkeyEnc',type:'CryptoKey',note:'暗号化用秘密鍵'},
       {name:'CPkeyEnc',type:'CryptoKey',note:'暗号化用公開鍵'},
       {name:'SPkey',type:'string',note:'サーバ公開鍵(Base64)'},
-      {name:'ApplicationForMembership',type:'number',note:'加入申請実行日時。未申請時は0',default:0},
-      {name:'expireAccount',type:'number',note:'加入承認の有効期間が切れる日時。未加入時は0',default:0},
-      {name:'expireCPkey',type:'number',note:'CPkeyの有効期限。未ログイン時は0',default:0},
+      //{name:'ApplicationForMembership',type:'number',note:'加入申請実行日時。未申請時は0',default:0},
+      //{name:'expireAccount',type:'number',note:'加入承認の有効期間が切れる日時。未加入時は0',default:0},
+      {name:'expireCPkey',type:'number',note:'CPkeyの有効期限(無効になる日時)。未ログイン時は0',default:0},
     ]
   },
   authRequest: {note:'authClientからauthServerに送られる処理要求オブジェクト',

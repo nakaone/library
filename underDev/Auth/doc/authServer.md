@@ -86,7 +86,7 @@ sequenceDiagram
   authServer->>-authClient: encryptedResponse
 ```
 
-### 処理分岐
+#### 処理分岐
 
 - cryptoServer.decryptでの復号・署名検証失敗
   - `responseSPkey()`メソッドを呼び出し
@@ -104,6 +104,43 @@ sequenceDiagram
     4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態<br>⇒ `callFunction()`メソッドを呼び出し
     4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態<br>⇒ `loginTrial()`メソッドを呼び出し
     5 | 加入禁止 | 管理者により加入が否認された状態<br>⇒ `notifyAcceptance()`メソッドを呼び出し
+
+#### 参考：メンバの状態遷移
+
+```mermaid
+%% メンバ状態遷移図
+
+stateDiagram-v2
+  [*] --> 未加入
+  未加入 --> 未審査 : 加入要求
+  未審査 --> 審査済 : 審査
+  審査済 --> 加入中 : 加入承認
+
+  state 加入中 {
+    [*] --> 未認証
+    未認証 --> 試行中 : 認証要求
+    試行中 --> 認証中 : 認証成功
+    試行中 --> 試行中 : 再試行
+    認証中 --> 未認証 : 認証失効
+    試行中 --> 凍結中 : 認証失敗
+    凍結中 --> 未認証 : 凍結解除
+  }
+  加入中 --> 未審査 : 加入失効
+  審査済 --> 加入禁止: 加入否認
+  加入禁止 --> 未審査 : 加入解禁
+```
+
+No | 状態 | 説明
+:-- | :-- | :--
+1 | 未加入 | memberList未登録
+2 | 未審査 | memberList登録済だが、管理者による加入認否が未決定
+3 | 審査済 | 管理者による加入認否が決定済
+4 | 加入中 | 管理者により加入が承認された状態
+4.1 | 未認証 | 認証(ログイン)不要の処理しか行えない状態
+4.2 | 試行中 | パスコードによる認証を試行している状態
+4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態
+4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態
+5 | 加入禁止 | 管理者により加入が否認された状態
 
 ### 📤 入力項目
 
@@ -162,19 +199,19 @@ sequenceDiagram
   - 認証要求日時を設定(`Member.log.loginRequest = Date.now()`)
   - `Member.trial.log`の先頭に試行ログ(MemberTrialLogオブジェクト)を追加
   - パスコード通知メールをメンバに送信
-- メンバが「試行中」の場合
-  - 入力されたパスコードが正しいか検証、正しかったら
+  - 戻り値は`{result:'warning',message:'send passcode'}`<br>⇒ authClientはこれを受けパスコード再入力画面を表示
+- メンバが「試行中」の場合、入力されたパスコードが正しいか検証
+  - 正しかった場合
     - 認証成功日時を設定(`Member.log.loginSuccess = Date.now()`)
     - 認証有効期限を設定(`Member.log.loginExpiration = Date.now() + authServerConfig.loginLifeTime`)
-  - 入力されたパスコードが正しくなかった場合
+    - callFunctionメソッドを呼び出し、その戻り値をloginTrialの戻り値とする
+  - 正しくなかった場合
     - 試行回数上限(authServerConfig.maxTrial)以下の場合
-      - 戻り値は`{result:'warning',message:'unmatch'}`<br>
-        ⇒ authClientはこれを受けパスコード再入力画面を表示
+      - 戻り値は`{result:'warning',message:'unmatch'}`<br>⇒ authClientはこれを受けパスコード再入力画面を表示
     - 試行回数が上限に達した場合は「凍結中」に遷移
       - 認証失敗日時を設定(`Member.log.loginFailure = Date.now()`)
       - 認証無効期限を設定(`Member.log.unfreezeLogin = Date.now() + authServerConfig.loginFreeze`)
-      - 戻り値は`{result:'warning',message:'freezing'}`<br>
-        ⇒ authClientはこれを受け「現在凍結中です」表示
+      - 戻り値は`{result:'warning',message:'freezing'}`<br>⇒ authClientはこれを受け「パスコードが連続して不一致だったため、現在アカウントは凍結中です。時間をおいて再試行してください」表示
 
 ### 🧱 callFunction()
 

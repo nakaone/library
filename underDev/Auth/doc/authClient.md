@@ -30,15 +30,13 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 | 6 | CSkeyEnc | ❌ | CryptoKey | — | 暗号化用秘密鍵 |
 | 7 | CPkeyEnc | ❌ | CryptoKey | — | 暗号化用公開鍵 |
 | 8 | SPkey | ❌ | string | — | サーバ公開鍵(Base64) |
-| 9 | ApplicationForMembership | ❌ | number | — | 加入申請実行日時。未申請時は0 |
-| 10 | expireAccount | ❌ | number | — | 加入承認の有効期間が切れる日時。未加入時は0 |
-| 11 | expireCPkey | ❌ | number | — | CPkeyの有効期限。未ログイン時は0 |
+| 9 | expireCPkey | ❌ | number | — | CPkeyの有効期限(無効になる日時)。未ログイン時は0 |
 
 ## 🧱 メイン処理
 
 ### 概要
 
-- classのconstructor()に相当
+- authClientインスタンス化時の処理。classのconstructor()に相当
 - 引数はauthClient内共有用の変数`pv`に保存
 - `cryptoClient.constructor()`で鍵ペアの準備
 - IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
@@ -47,6 +45,7 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 - SPkey未取得ならサーバ側に要求
 - 更新した内容はIndexedDBに書き戻す
 - SPkey取得がエラーになった場合、SPkey以外は書き戻す
+- IndexedDBの内容はauthClient内共有用変数`pv`に保存
 - サーバ側から一定時間レスポンスが無い場合、`{result:'fatal',message:'No response'}`を返して終了
 
 ```mermaid
@@ -66,10 +65,10 @@ sequenceDiagram
 
   %% IndexedDB格納項目のメンバ変数化 ----------
   alt IndexedDBのメンバ変数化が未了
-    IndexedDB->>+authClient: 既存設定値の読み込み、メンバ変数に保存
-    Note right of authClient: メイン処理
-    alt (クライアント側鍵ペア未作成or前回作成から1日以上経過)and前回作成から30分以上経過
-      authClient->>authClient: 鍵ペア生成、生成日時設定
+    IndexedDB->>+authClient: 既存設定値の読み込み(authIndexedDB)
+    authClient->>authClient: メンバ変数に保存、鍵ペア未生成or期限切れなら再生成
+    alt 鍵ペア未生成or期限切れ
+      authClient->>IndexedDB: authIndexedDB
     end
     alt メールアドレス(memberId)未設定
       authClient->>user: ダイアログ表示
@@ -142,9 +141,66 @@ authConfigを継承した、authClientでのみ使用する設定値
   - 待機時間内にレスポンスなし
     - LocalRequestに`{result:'fatal',message:'No response'}`をセット、呼出元ローカル関数に返して終了
 
-### 問合せ結果による分岐
+```mermaid
+sequenceDiagram
 
-問合せ結果はメンバの状態により内容が異なる。
+  actor user
+  participant localFunc
+  %%participant clientMail
+  participant cryptoClient
+  %%participant IndexedDB
+  %%participant pv
+  participant methods as authClient.methods
+  participant authClient as authClient.exec()
+  participant authServer
+  %%participant memberList
+  %%participant cryptoServer
+  %%participant serverFunc
+  %%actor admin
+
+  localFunc->>+authClient: 処理要求(LocalRequest)
+
+  authClient->>+cryptoClient: 署名・暗号化要求(authRequest)
+  cryptoClient->>-authClient: encryptedRequest
+
+  authClient->>authServer: 処理要求(encryptedRequest)
+
+  alt 応答タイムアウト内にレスポンス無し
+    authClient->>localFunc: エラー通知(LocalResponse.result="fatal")
+  else 応答タイムアウト内にレスポンスあり
+    authServer->>authClient: encryptedResponse
+
+    authClient->>+cryptoClient: 復号・検証要求(encryptedResponse)
+    cryptoClient->>-authClient: decryptedResponse
+
+    alt decryptedResponse.result === 'fatal'
+      authClient->>localFunc: エラー通知(LocalResponse.result="fatal")
+    else
+      alt decryptedResponse.sv.result === 'warning'
+        authClient->>+methods: decryptedResponse
+        Note left of authClient: 問合せ結果による分岐
+        methods->>-authClient: LocalResponse
+      else decryptedResponse.sv.result === 'normal'
+        authClient->>-localFunc: 処理結果(LocalResponse)
+      end
+    end
+  end
+```
+
+#### 問合せ結果による分岐
+
+- 問合せ結果(`decryptedResponse.sv.message`)により呼出先メソッドは分岐する。
+
+| message | 呼出先 | 処理概要 |
+| :-- | :-- | :-- |
+| registerd | showMessage() | authClientからの新規メンバ加入要求に対して、authServerがmemberListに登録＋管理者へメール通知を発行した場合のmessage<br>⇒ 「加入申請しました。管理者による加入認否結果は後程メールでお知らせします」表示 |
+| under review | showMessage() | authClientからの加入審査状況の問合せに対するauthServerからの「現在審査中」の回答<br>⇒ 「現在審査中です。今暫くお待ちください」表示 |
+| denial | showMessage() | authClientからの加入審査状況の問合せに対するauthServerからの「加入申請否認」の回答<br>⇒ 「残念ながら加入申請は否認されました」表示 |
+| send passcode | enterPasscode() | authClientからの処理要求に対するauthServerからの「未認証⇒パスコード通知済」の回答<br>⇒ パスコード入力画面を表示 |
+| unmatch | enterPasscode() | authClientで入力されたパスコードに対するauthServerからの「パスコード不一致(再試行可)」の回答<br>⇒ パスコード入力画面を表示 |
+| freezing | showMessage() | authClientで入力されたパスコードに対するauthServerからの「試行回数上限、凍結中」の回答<br>⇒ 「パスコードが連続して不一致だったため、現在アカウントは凍結中です。時間をおいて再試行してください」表示 |
+
+#### 参考：メンバの状態遷移
 
 ```mermaid
 %% メンバ状態遷移図
@@ -183,7 +239,7 @@ No | 状態 | 説明
 
 ### 📤 入力項目
 
-#### `LocalRequest`
+#### LocalRequest
 
 <a name="LocalRequest"></a>
 
@@ -197,7 +253,7 @@ No | 状態 | 説明
 
 ### 📥 出力項目
 
-#### `LocalResponse`
+#### LocalResponse
 
 <a name="LocalResponse"></a>
 
@@ -209,7 +265,7 @@ authClientからクライアント側関数に返される処理結果オブジ�
 | 2 | message | ⭕ | string | — | エラーメッセージ。normal時は`undefined`。 |
 | 3 | response | ⭕ | any | — | 要求された関数の戻り値。fatal/warning時は`undefined`。`JSON.parse(authResponse.response)` |
 
-#### 参考：`authResponse`
+#### 参考：authResponse
 
 <a name="authResponse"></a>
 
@@ -222,6 +278,31 @@ authServerからauthClientに返される処理結果オブジェクト
 | 3 | message | ⭕ | string | — | サーバ側からのエラーメッセージ。normal時は`undefined` |
 | 4 | request | ❌ | authRequest | — | 処理要求オブジェクト |
 | 5 | response | ⭕ | any | — | 要求されたサーバ側関数の戻り値。fatal/warning時は`undefined` |
+
+## 🧱 showMessage()メソッド
+
+- execメソッドから呼ばれる関数
+- 引数は`decryptedResponse`
+- 戻り値は`LocalResponse(={result:'fatal',message:decryptedResponse.sv.message,response:undefind})`
+- `decryptedResponse.sv.message`の値に基づき、メッセージをダイアログで表示
+  | message | メッセージ |
+  | :-- | :-- |
+  | registerd | 加入申請しました。管理者による加入認否結果は後程メールでお知らせします |
+  | under review | 現在審査中です。今暫くお待ちください |
+  | denial | 残念ながら加入申請は否認されました |
+  | freezing | パスコードが連続して不一致だったため、現在アカウントは凍結中です。時間をおいて再試行してください |
+
+## 🧱 enterPasscode()メソッド
+
+- execメソッドから呼ばれる関数
+- 引数は`decryptedResponse`
+- パスコードを入力するダイアログを表示
+- ダイアログに表示するメッセージは`decryptedResponse.sv.message`の値に基づき変更
+  | message | メッセージ |
+  | :-- | :-- |
+  | send passcode | パスコード通知メールを送信しました。記載されたパスコードを入力してください |
+  | unmatch | 入力されたパスコードが一致しません。再入力してください |
+- authClient.exec()を再帰呼出し、戻り値は再帰呼出先の戻り値とする
 
 ## ⏰ メンテナンス処理
 
