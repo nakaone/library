@@ -51,7 +51,7 @@ sequenceDiagram
   cryptoServer->>authServer: decryptedRequest
 
   alt 復号・署名検証失敗
-    authServer->>authServer: setupEnvironment()実行
+    authServer->>authServer: responseSPkey()実行
   else 復号・署名検証成功
     authServer->>authServer: 処理分岐(decryptedRequest->authResponse)
 
@@ -72,19 +72,26 @@ sequenceDiagram
 - cryptoServer.decryptでの復号・署名検証失敗
   - `responseSPkey()`メソッドを呼び出し
 - cryptoServer.decryptでの復号・署名検証成功
-  - 当該メンバの状態を確認(`Member.getStatus()`)
-  - 以下の表に従って処理分岐
+  - `decryptedResponse.request.func`がauthClient内発処理か判定(`func.match(/::(.+)::/)`)
+  - 内発処理の場合、文字列(`$1`の部分)に従ってメソッドを呼び出し
+    | 文字列 | 呼び出すメソッド |
+    | :-- | :-- |
+    | updateCPkey | updateCPkey() |
+    | passcode | loginTrial() |
+  - 内発処理では無い場合
+    - 当該メンバの状態を確認(`Member.getStatus()`)
+    - 以下の表に従って処理分岐
 
-    No | 状態 | 動作(①処理、②Member設定変更、③戻り値)
-    :-- | :-- | :--
-    1 | 未加入 | memberList未登録<br>⇒ `membershipRequest()`メソッドを呼び出し
-    2 | 未審査 | memberList登録済だが、管理者による加入認否が未決定(=加入審査状況の問合せ)<br>⇒ `notifyAcceptance()`メソッドを呼び出し
-    3 | 審査済 | 管理者による加入認否が決定済<br>⇒ `notifyAcceptance()`メソッドを呼び出し
-    4.1 | 未認証 | 認証(ログイン)不要の処理しか行えない状態。<br>無権限で行える処理 ⇒ `callFunction()`メソッドを呼び出し<br>無権限では行えない処理 ⇒ `loginTrial()`メソッドを呼び出し
-    4.2 | 試行中 | パスコードによる認証を試行している状態<br>⇒ `loginTrial()`メソッドを呼び出し
-    4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態<br>⇒ `callFunction()`メソッドを呼び出し
-    4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態<br>⇒ `loginTrial()`メソッドを呼び出し
-    5 | 加入禁止 | 管理者により加入が否認された状態<br>⇒ `notifyAcceptance()`メソッドを呼び出し
+      No | 状態 | 動作(①処理、②Member設定変更、③戻り値)
+      :-- | :-- | :--
+      1 | 未加入 | memberList未登録<br>⇒ `membershipRequest()`メソッドを呼び出し
+      2 | 未審査 | memberList登録済だが、管理者による加入認否が未決定(=加入審査状況の問合せ)<br>⇒ `notifyAcceptance()`メソッドを呼び出し
+      3 | 審査済 | 管理者による加入認否が決定済<br>⇒ `notifyAcceptance()`メソッドを呼び出し
+      4.1 | 未認証 | 認証(ログイン)不要の処理しか行えない状態。<br>無権限で行える処理 ⇒ `callFunction()`メソッドを呼び出し<br>無権限では行えない処理 ⇒ `loginTrial()`メソッドを呼び出し
+      4.2 | 試行中 | パスコードによる認証を試行している状態<br>⇒ `loginTrial()`メソッドを呼び出し
+      4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態<br>⇒ `callFunction()`メソッドを呼び出し
+      4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態<br>⇒ `loginTrial()`メソッドを呼び出し
+      5 | 加入禁止 | 管理者により加入が否認された状態<br>⇒ `notifyAcceptance()`メソッドを呼び出し
 
 #### 参考：メンバの状態遷移
 
@@ -135,7 +142,6 @@ sequenceDiagram
   - 正しかった場合
     - 認証成功日時を設定(`Member.log.loginSuccess = Date.now()`)
     - 認証有効期限を設定(`Member.log.loginExpiration = Date.now() + authServerConfig.loginLifeTime`)
-    - callFunctionメソッドを呼び出し、その戻り値をloginTrialの戻り値とする
   - 正しくなかった場合
     - 試行回数上限(authServerConfig.maxTrial)以下の場合
       - 戻り値は`{result:'warning',message:'unmatch'}`<br>⇒ authClientはこれを受けパスコード再入力画面を表示
@@ -147,6 +153,12 @@ sequenceDiagram
 ### 🧱 callFunction()
 
 - authServerConfig.funcを参照し、該当関数を実行。
+
+### 🧱 updateCPkey()
+
+- memberList上の該当するmemberId/deviceIdのCPkeyをauthRequest.signatureの値で更新する<br>
+- 未更新のMember.CPkeyでencryptedResonseを作成し、authClientに返す<br>
+- authClientはencryptedResonse受信時点では旧CPkeyで復号・署名検証を行い、サーバ側更新成功を受けてIndexedDBの更新を行う
 
 ## その他のメソッド群
 

@@ -119,11 +119,28 @@ authClientからauthServerに送られる処理要求オブジェクト
 | 2 | deviceId | ❌ | string | — | デバイスの識別子 |
 | 3 | ciphertext | ❌ | string | — | 暗号化した文字列 |
 
-### 処理概要
+## 🧱 generateKeys()メソッド
 
-## 🧱 updateCPkey()メソッド
+- 新たなクライアント側鍵ペアを作成する
+- 引数は無し、戻り値は`authClientKeys`
 
-- サーバ要求による公開鍵更新処理
+### authClientKeys
+
+<a name="authClientKeys"></a>
+
+クライアント側鍵ペア
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | CSkeySign | ❌ | CryptoKey | — | 署名用秘密鍵 |
+| 2 | CPkeySign | ❌ | CryptoKey | — | 署名用公開鍵 |
+| 3 | CSkeyEnc | ❌ | CryptoKey | — | 暗号化用秘密鍵 |
+| 4 | CPkeyEnc | ❌ | CryptoKey | — | 暗号化用公開鍵 |
+
+## 🧱 updateKeys()メソッド
+
+- 引数で渡された鍵ペアでIndexedDBの内容を更新する
+- 引数は`authClientKeys`、戻り値はnullまたはError
 
 ## ⏰ メンテナンス処理
 

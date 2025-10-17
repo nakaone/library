@@ -7,9 +7,13 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 サーバ側処理を経てローカル側に戻された結果を復号・検証し、
 処理結果に応じてクライアント側処理を適切に振り分ける中核関数です。
 
-## ■ 設計方針
+## ■ 設計方針、用語定義
 
 - クロージャ関数とする
+- ローカル関数からの要求に基づかない、authClientでの処理の必要上発生するauthServerへの問合せを「内発処理」と呼称
+  - CPkey更新：期限切れまたは残有効期間が短い場合のCPkey更新処理
+  - パスコード突合：メンバが未認証または試行中の場合のパスコード突き合わせ処理
+- 内発処理はローカル関数からの処理要求に先行して行う
 
 ## 🧩 内部構成(クラス変数)
 
@@ -31,6 +35,19 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 | 7 | CPkeyEnc | ❌ | CryptoKey | — | 暗号化用公開鍵 |
 | 8 | SPkey | ❌ | string | — | サーバ公開鍵(Base64) |
 | 9 | expireCPkey | ❌ | number | — | CPkeyの有効期限(無効になる日時)。未ログイン時は0 |
+
+### authClientKeys
+
+<a name="authClientKeys"></a>
+
+クライアント側鍵ペア
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | CSkeySign | ❌ | CryptoKey | — | 署名用秘密鍵 |
+| 2 | CPkeySign | ❌ | CryptoKey | — | 署名用公開鍵 |
+| 3 | CSkeyEnc | ❌ | CryptoKey | — | 暗号化用秘密鍵 |
+| 4 | CPkeyEnc | ❌ | CryptoKey | — | 暗号化用公開鍵 |
 
 ## 🧱 メイン処理
 
@@ -66,8 +83,8 @@ sequenceDiagram
   %% IndexedDB格納項目のメンバ変数化 ----------
   alt IndexedDBのメンバ変数化が未了
     IndexedDB->>+authClient: 既存設定値の読み込み(authIndexedDB)
-    authClient->>authClient: メンバ変数に保存、鍵ペア未生成or期限切れなら再生成
-    alt 鍵ペア未生成or期限切れ
+    authClient->>authClient: メンバ変数に保存、鍵ペア未生成なら再生成
+    alt 鍵ペア未生成
       authClient->>IndexedDB: authIndexedDB
     end
     alt メールアドレス(memberId)未設定
@@ -95,6 +112,8 @@ sequenceDiagram
   end
 ```
 
+- 鍵ペア(CPkey)の更新が必要な場合はexec()メソッドから行い、メイン処理では行わない。
+
 ### 📤 入力項目
 
 #### `authClientConfig`
@@ -105,8 +124,9 @@ authConfigを継承した、authClientでのみ使用する設定値
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | x | ❌ | string | — | サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`) |
+| 1 | api | ❌ | string | — | サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`) |
 | 2 | timeout | ⭕ | number | 300000 | サーバからの応答待機時間。これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分 |
+| 3 | CPkeyGraceTime | ⭕ | number | 600000 | CPkey期限切れまでの猶予時間。CPkey有効期間がこれを切ったら更新処理実行。既定値は10分 |
 
 #### 参考：`authConfig`
 
@@ -131,15 +151,33 @@ authConfigを継承した、authClientでのみ使用する設定値
 
 ### 概要
 
-ローカル関数からの要求を受けてauthServerに問合せを行い、返信された処理結果に基づき適宜メソッドを呼び出す
+- ローカル関数からの要求を受けてauthServerに問合せを行い、返信された処理結果に基づき適宜メソッドを呼び出す
 
-- cryptoClient.encryptを呼び出し、`encryptedRequest`を作成
-- authServerへの問合せを終了するまで繰り返し
+```js
+/**
+ * @param {LocalRequest} request - localFuncからの要求
+ * @param {authRequest} [internal] - authClient内発の先行処理
+ * @returns {LocalResponse}
+ */
+```
+- CPkeyの残有効期間をチェック(checkCPkeyメソッドの実行)
+
+- 内発処理が有った場合(`typeof internal !== 'undefined'`)は以下を実行
+  - `cryptoClient.encrypt`に`internal`を渡して`encryptedRequest`を作成
+  - authServerへの問合せ
   - 待機時間内にレスポンスあり
     - レスポンスの復号、署名検証
-    - 問合せ結果による分岐
+    - 結果がfatalだった場合、LocalRequestに`{result:'fatal',message:'No response'}`をセット、呼出元ローカル関数に返して終了
+    - internalを外してexec()を再帰呼出(`exec(request)`)
   - 待機時間内にレスポンスなし
     - LocalRequestに`{result:'fatal',message:'No response'}`をセット、呼出元ローカル関数に返して終了
+- `cryptoClient.encrypt`に`request`を渡して`encryptedRequest`を作成
+- authServerへの問合せ
+- 待機時間内にレスポンスあり
+  - レスポンスの復号、署名検証
+  - 問合せ結果による分岐
+- 待機時間内にレスポンスなし
+  - LocalRequestに`{result:'fatal',message:'No response'}`をセット、呼出元ローカル関数に返して終了
 
 ```mermaid
 sequenceDiagram
@@ -159,6 +197,20 @@ sequenceDiagram
   %%actor admin
 
   localFunc->>+authClient: 処理要求(LocalRequest)
+
+  authClient->>authClient: CPkey残有効期間チェック(checkCPkeyメソッド)
+  alt checkCPkey.result === 'fatal'
+    authClient->>localFunc: エラー通知(LocalResponse.result="fatal")
+  end
+
+  alt 引数internalの設定あり
+    authClient->>authClient: 内発処理
+    alt 内発処理の結果が result==='fatal'
+      authClient->>localFunc: LocalResponse
+    else
+      authClient->>authClient: internalを削除の上authClient.execの再帰呼出し
+    end
+  end
 
   authClient->>+cryptoClient: 署名・暗号化要求(authRequest)
   cryptoClient->>-authClient: encryptedRequest
@@ -251,6 +303,22 @@ No | 状態 | 説明
 | 1 | func | ❌ | string | — | サーバ側関数名 |
 | 2 | arguments | ❌ | any[] | — | サーバ側関数に渡す引数の配列 |
 
+#### authRequest
+
+<a name="authRequest"></a>
+
+authClientからauthServerに送られる処理要求オブジェクト
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
+| 2 | deviceId | ❌ | string | — | デバイスの識別子 |
+| 3 | requestId | ❌ | string | — | 要求の識別子。UUID |
+| 4 | timestamp | ❌ | number | — | 要求日時。UNIX時刻 |
+| 5 | func | ❌ | string | — | サーバ側関数名 |
+| 6 | arguments | ❌ | any[] | — | サーバ側関数に渡す引数の配列 |
+| 7 | signature | ❌ | string | — | クライアント側署名 |
+
 ### 📥 出力項目
 
 #### LocalResponse
@@ -295,14 +363,28 @@ authServerからauthClientに返される処理結果オブジェクト
 ## 🧱 enterPasscode()メソッド
 
 - execメソッドから呼ばれる関数
-- 引数は`decryptedResponse`
 - パスコードを入力するダイアログを表示
 - ダイアログに表示するメッセージは`decryptedResponse.sv.message`の値に基づき変更
   | message | メッセージ |
   | :-- | :-- |
   | send passcode | パスコード通知メールを送信しました。記載されたパスコードを入力してください |
   | unmatch | 入力されたパスコードが一致しません。再入力してください |
-- authClient.exec()を再帰呼出し、戻り値は再帰呼出先の戻り値とする
+- `authRequest(={func:'::passcode::',arguments:[入力されたパスコード]})`を作成
+- 作成したauthRequestをinternalとしてexecメソッドを再帰呼出
+- 再帰呼出先のexecの戻り値を自身の戻り値とする
+
+## 🧱 checkCPkey()メソッド
+
+- 引数は無し、戻り値は`authResponse`
+- CPkey残有効期間をチェック、期限切れまたは猶予時間未満になってないか計算<br>
+  `authIndexedDB.expireCPkey - Date.now() < authClientConfig.CPkeyGraceTime`
+- 残有効期間が十分な場合、`authResponse(={result:'normal'})`を返して終了
+- 残有効期間が不十分な場合
+  - 新しい鍵ペアを作成(`cryptoClient.generateKeys()`)
+  - `authRequest(={func:'::updateCPkey::',signature:更新後CPkey})`を作成
+  - 作成したauthRequestをinternalとしてexecメソッドを再帰呼出<br>
+    ※ この時点では古い鍵ペアで署名・暗号化される
+  - 再帰呼出先のexecが`result === 'normal'`ならIndexedDBも更新(`cryptoClient.updateKeys`)
 
 ## ⏰ メンテナンス処理
 

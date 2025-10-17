@@ -66,11 +66,19 @@
 
 <!--::$tmp/encryptedRequest.md::-->
 
-### 処理概要
+## 🧱 generateKeys()メソッド
 
-## 🧱 updateCPkey()メソッド
+- 新たなクライアント側鍵ペアを作成する
+- 引数は無し、戻り値は`authClientKeys`
 
-- サーバ要求による公開鍵更新処理
+### authClientKeys
+
+<!--::$tmp/authClientKeys.md::-->
+
+## 🧱 updateKeys()メソッド
+
+- 引数で渡された鍵ペアでIndexedDBの内容を更新する
+- 引数は`authClientKeys`、戻り値はnullまたはError
 
 ## ⏰ メンテナンス処理
 
