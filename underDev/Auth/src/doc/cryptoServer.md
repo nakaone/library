@@ -28,6 +28,9 @@
 
 - authClient->authServerのメッセージを復号＋署名検証
 - クライアントから送信された暗号文を安全に復号・検証し、結果を構造化オブジェクトとして返す。
+- 復号・署名検証直後に `authRequest.timestamp` と `Date.now()` の差を算出し、  
+  `authConfig.allowableTimeDifference` を超過した場合、`throw new Error('Timestamp difference too large')` を実行。<br>
+  処理結果は `{result:'fatal', message:'Timestamp difference too large'}`。
 - 本関数はauthServerから呼ばれるため、fatalエラーでも戻り値を返す
 
 ### 📤 入力項目

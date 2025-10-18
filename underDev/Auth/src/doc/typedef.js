@@ -82,6 +82,13 @@ const typedef = {
       {name:'signature',type:'string',note:'クライアント側署名'},
     ],
   },
+  authRequestLog: {note:'重複チェック用のリクエスト履歴。ScriptPropertiesに保存',
+    type: 'Object',
+    prop: [
+      {name:'timestamp',type:'number',note:'リクエストを受けたサーバ側日時',default:Date.now()},
+      {name:'requestId',type:'string',note:'クライアント側で採番されたリクエスト識別子。UUID'},
+    ],
+  },
   authResponse: {note:'authServerからauthClientに返される処理結果オブジェクト',
     type: 'Object',
     prop: [
@@ -98,6 +105,8 @@ const typedef = {
       {name:'keyGeneratedDateTime',type:'number',note:'UNIX時刻'},
       {name:'SPkey',type:'string',note:'PEM形式の公開鍵文字列'},
       {name:'SSkey',type:'string',note:'PEM形式の秘密鍵文字列（暗号化済み）'},
+      {name:'requestLog',type:'authRequestLog[]',note:'重複チェック用のリクエスト履歴'},
+      {name:'requ'}
     ],
   },
   authServerConfig: {note:'authConfigを継承した、authServerでのみ使用する設定値',
@@ -109,6 +118,7 @@ const typedef = {
       {name:'prohibitedToJoin',type:'number',note:'加入禁止期間(=管理者による加入否認後、再加入申請が自動的に却下される期間)。既定値は3日',default:259200000},
       {name:'loginLifeTime',type:'number',note:'認証有効時間(=ログイン成功後の有効期間、CPkeyの有効期間)。既定値は1日',default:86400000},
       {name:'loginFreeze',type:'number',note:'認証凍結時間(=認証失敗後、再認証要求が禁止される期間)。既定値は10分',default:600000},
+      {name:'requestIdRetention',type:'number',note:'重複リクエスト拒否となる時間。既定値は5分',default:300000},
 
       {name:'func',type:'Object.<string,Object>',note:'サーバ側の関数マップ'},
       {name:'func.authority',type:'number',note:[

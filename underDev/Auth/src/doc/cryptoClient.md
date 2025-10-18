@@ -30,6 +30,8 @@
 
 - authServer->authClientのメッセージを復号＋署名検証
 - サーバから送信された暗号文を安全に復号・検証し、結果を構造化オブジェクトとして返す。
+- レスポンスのタイムスタンプをチェックし、許容誤差(authConfig.allowableTimeDifference)を超えていないか確認。<br>
+  超過していれば`console.warn('[cryptoClient] Timestamp skew detected')` を出力。
 - 本関数はauthClientから呼ばれるため、fatalエラーでも戻り値を返す
 
 ### 📤 入力項目

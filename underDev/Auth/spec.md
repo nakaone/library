@@ -140,14 +140,15 @@ authConfigを継承した、authServerでのみ使用する設定値
 | 4 | prohibitedToJoin | ⭕ | number | 259200000 | 加入禁止期間(=管理者による加入否認後、再加入申請が自動的に却下される期間)。既定値は3日 |
 | 5 | loginLifeTime | ⭕ | number | 86400000 | 認証有効時間(=ログイン成功後の有効期間、CPkeyの有効期間)。既定値は1日 |
 | 6 | loginFreeze | ⭕ | number | 600000 | 認証凍結時間(=認証失敗後、再認証要求が禁止される期間)。既定値は10分 |
-| 7 | func | ❌ | Object.<string,Object> | — | サーバ側の関数マップ |
-| 8 | func.authority | ❌ | number | — | 当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authrity > 0`なら実行可とする。 |
-| 9 | func.do | ❌ | Function | — | 実行するサーバ側関数 |
-| 10 | trial | ❌ | Object | — | ログイン試行関係の設定値 |
-| 11 | trial.passcodeLength | ⭕ | number | 6 | パスコードの桁数 |
-| 12 | trial.maxTrial | ⭕ | number | 3 | パスコード入力の最大試行回数 |
-| 13 | trial.passcodeLifeTime | ⭕ | number | 600000 | パスコードの有効期間。既定値は10分 |
-| 14 | trial.generationMax | ⭕ | number | 5 | ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代 |
+| 7 | requestIdRetention | ⭕ | number | 300000 | 重複リクエスト拒否となる時間。既定値は5分 |
+| 8 | func | ❌ | Object.<string,Object> | — | サーバ側の関数マップ |
+| 9 | func.authority | ❌ | number | — | 当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authrity > 0`なら実行可とする。 |
+| 10 | func.do | ❌ | Function | — | 実行するサーバ側関数 |
+| 11 | trial | ❌ | Object | — | ログイン試行関係の設定値 |
+| 12 | trial.passcodeLength | ⭕ | number | 6 | パスコードの桁数 |
+| 13 | trial.maxTrial | ⭕ | number | 3 | パスコード入力の最大試行回数 |
+| 14 | trial.passcodeLifeTime | ⭕ | number | 600000 | パスコードの有効期間。既定値は10分 |
+| 15 | trial.generationMax | ⭕ | number | 5 | ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代 |
 
 ## authClientConfig
 

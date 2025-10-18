@@ -22,6 +22,8 @@ authServerは、クライアント（authClient）からの暗号化通信リク
 | 1 | keyGeneratedDateTime | ❌ | number | — | UNIX時刻 |
 | 2 | SPkey | ❌ | string | — | PEM形式の公開鍵文字列 |
 | 3 | SSkey | ❌ | string | — | PEM形式の秘密鍵文字列（暗号化済み） |
+| 4 | requestLog | ❌ | authRequestLog[] | — | 重複チェック用のリクエスト履歴 |
+| 5 | requ | ❌ |  | — |  |
 
 ### `memberList`シート
 
@@ -88,6 +90,9 @@ sequenceDiagram
 
 #### 処理分岐
 
+- 重複リクエストチェック。<br>
+  authScriptProperties.requestLogに重複したリクエストが存在しないかチェック、存在すればthrow。<br>
+  同時にauthServerConfig.requestIdRetention以上経過したリクエスト履歴は削除。
 - cryptoServer.decryptでの復号・署名検証失敗
   - `responseSPkey()`メソッドを呼び出し
 - cryptoServer.decryptでの復号・署名検証成功
@@ -228,6 +233,10 @@ No | 状態 | 説明
 - memberList上の該当するmemberId/deviceIdのCPkeyをauthRequest.signatureの値で更新する<br>
 - 未更新のMember.CPkeyでencryptedResonseを作成し、authClientに返す<br>
 - authClientはencryptedResonse受信時点では旧CPkeyで復号・署名検証を行い、サーバ側更新成功を受けてIndexedDBの更新を行う
+
+<!-- Review: CPkey更新時に同時アクセスを防止するロック管理を追加検討。
+⇒ ロック管理手順が複雑になりそうなこと、また運用上必要性が高いとは考えにくいことから見送り。
+-->
 
 ## その他のメソッド群
 

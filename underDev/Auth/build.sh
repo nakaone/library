@@ -41,5 +41,5 @@ cat $src/doc/Member.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/Member.md
 
 # AI質問用
-cat $doc/question.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $prj/question.md
+cat $src/doc/ChatGPT.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/ChatGPT.md
