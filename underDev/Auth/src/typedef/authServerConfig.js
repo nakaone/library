@@ -1,3 +1,5 @@
+//::$src/typedef/authConfig.js::
+
 /**
  * @typedef {Object} authServerConfig - authConfigを継承した、authServerでのみ使用する設定値
  * @prop {string} [memberList="memberList"] - memberListシート名
@@ -16,3 +18,24 @@
  * @prop {number} [trial.passcodeLifeTime=600000] - パスコードの有効期間。既定値は10分
  * @prop {number} [trial.generationMax=5] - ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代
  */
+class authServerConfig extends authConfig {
+  constructor(arg){
+    super(arg);
+
+    this.memberList = arg.memberList || "memberList";
+    this.defaultAuthority = arg.defaultAuthority || 0;
+    this.memberLifeTime = arg.memberLifeTime || 31536000000;
+    this.prohibitedToJoin = arg.prohibitedToJoin || 259200000;
+    this.loginLifeTime = arg.loginLifeTime || 86400000;
+    this.loginFreeze = arg.loginFreeze || 600000;
+    this.requestIdRetention = arg.requestIdRetention || 300000;
+    this.func = arg.func.authority || {};
+    arg.trial = arg.trial || {};
+    this.trial = {
+      passcodeLength: arg.trial.passcodeLength || 6,
+      maxTrial: arg.trial.maxTrial || 3,
+      passcodeLifeTime: arg.trial.passcodeLifeTime || 600000,
+      generationMax: arg.trial.generationMax || 5,
+    };
+  }
+}

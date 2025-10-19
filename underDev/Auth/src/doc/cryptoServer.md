@@ -13,6 +13,7 @@
 - 鍵ペアは `ScriptProperties` に保存（`SSkey`, `SPkey`）
 - `ScriptProperties`のキー名は`authConfig.system.name`に基づく
 - 復号処理は副作用のない純関数構造を目指す（stateを持たない）
+- 可能な範囲で「外部ライブラリ」を使用する
 
 ## 🧩 内部依存クラス・モジュール
 
@@ -20,9 +21,19 @@
 
 <!--::$tmp/authScriptProperties.md::-->
 
+### authRequestLog
+
+<!--::$tmp/authRequestLog.md::-->
+
 ### Member
 
 <!--::$tmp/Member.md::-->
+
+## 🧱 constructor()
+
+- ScriptPropertiesを取得、未作成なら作成
+- ScriptPropertiesが存在したらインスタンス変数'pv'に内容を保存
+- pv.SPkey/SSkey未作成なら作成、ScriptPropertiesに保存
 
 ## 🧱 decrypt()メソッド
 
@@ -108,6 +119,11 @@
 
 ### 処理概要
 
+## 🧱 reset()メソッド
+
+- 緊急時、サーバ側鍵ペアを変更する
+- pv.SPkey/SSkeyを更新、ScriptPropertiesに保存
+
 ## ⏰ メンテナンス処理
 
 ## 🔐 セキュリティ仕様
@@ -130,3 +146,13 @@
 | errorLog | Spreadsheetまたはログシート | 発生日時, memberId, errorMessage, stackTrace |
 | auditLog | Spreadsheet | 処理種別, 成功／警告／失敗, 対象メンバID |
 
+
+## 外部ライブラリ
+
+<details><summary>createPassword</summary>
+
+```js
+//::$lib/createPassword/1.0.1/core.js::
+```
+
+</details>

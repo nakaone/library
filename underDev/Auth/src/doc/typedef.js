@@ -105,8 +105,7 @@ const typedef = {
       {name:'keyGeneratedDateTime',type:'number',note:'UNIX時刻'},
       {name:'SPkey',type:'string',note:'PEM形式の公開鍵文字列'},
       {name:'SSkey',type:'string',note:'PEM形式の秘密鍵文字列（暗号化済み）'},
-      {name:'requestLog',type:'authRequestLog[]',note:'重複チェック用のリクエスト履歴'},
-      {name:'requ'}
+      {name:'requestLog',type:'authRequestLog[]',note:'重複チェック用のリクエスト履歴',default:[]},
     ],
   },
   authServerConfig: {note:'authConfigを継承した、authServerでのみ使用する設定値',

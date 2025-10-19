@@ -2,7 +2,7 @@
  * @typedef {Object} authConfig - authClient/authServer共通で使用される設定値。,authClientConfig, authServerConfigの親クラス
  * @prop {string} [systemName="auth"] - システム名
  * @prop {string} adminMail - 管理者のメールアドレス
- * @prop {string} adminName - 管理者名
+ * @prop {string} adminName - 管理者氏名
  * @prop {string} [allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差。既定値は2分
  * @prop {string} [RSAbits=2048] - 鍵ペアの鍵長
  */

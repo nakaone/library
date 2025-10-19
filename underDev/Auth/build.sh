@@ -17,12 +17,6 @@ tmp="$prj/tmp"
 # 1. 仕様書
 # ----------------------------------------------
 
-#mmdc -i $doc/summary.mermaid -o $img/summary.svg
-#mmdc -i $doc/preparation.mermaid -o $img/preparation.svg
-#mmdc -i $doc/joining.mermaid -o $img/joining.svg
-#mmdc -i $doc/login.mermaid -o $img/login.svg
-#mmdc -i $doc/processingRequest.mermaid -o $img/processingRequest.svg
-
 # typedef
 node $src/doc/typedef.js -o:$tmp
 
@@ -43,3 +37,6 @@ $embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/Member.md
 # AI質問用
 cat $src/doc/ChatGPT.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/ChatGPT.md
+
+cat $src/authServer/authServer.js | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -tmp:$tmp > $prj/authServer.gs

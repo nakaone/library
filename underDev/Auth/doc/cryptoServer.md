@@ -13,6 +13,7 @@
 - 鍵ペアは `ScriptProperties` に保存（`SSkey`, `SPkey`）
 - `ScriptProperties`のキー名は`authConfig.system.name`に基づく
 - 復号処理は副作用のない純関数構造を目指す（stateを持たない）
+- 可能な範囲で「外部ライブラリ」を使用する
 
 ## 🧩 内部依存クラス・モジュール
 
@@ -27,8 +28,18 @@
 | 1 | keyGeneratedDateTime | ❌ | number | — | UNIX時刻 |
 | 2 | SPkey | ❌ | string | — | PEM形式の公開鍵文字列 |
 | 3 | SSkey | ❌ | string | — | PEM形式の秘密鍵文字列（暗号化済み） |
-| 4 | requestLog | ❌ | authRequestLog[] | — | 重複チェック用のリクエスト履歴 |
-| 5 | requ | ❌ |  | — |  |
+| 4 | requestLog | ⭕ | authRequestLog[] |  | 重複チェック用のリクエスト履歴 |
+
+### authRequestLog
+
+<a name="authRequestLog"></a>
+
+重複チェック用のリクエスト履歴。ScriptPropertiesに保存
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | timestamp | ⭕ | number | 1760837169807 | リクエストを受けたサーバ側日時 |
+| 2 | requestId | ❌ | string | — | クライアント側で採番されたリクエスト識別子。UUID |
 
 ### Member
 
@@ -44,6 +55,12 @@
 | 4 | profile | ❌ | string | — | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
 | 5 | device | ❌ | string | — | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |
 | 6 | note | ⭕ | string | — | 当該メンバに対する備考 |
+
+## 🧱 constructor()
+
+- ScriptPropertiesを取得、未作成なら作成
+- ScriptPropertiesが存在したらインスタンス変数'pv'に内容を保存
+- pv.SPkey/SSkey未作成なら作成、ScriptPropertiesに保存
 
 ## 🧱 decrypt()メソッド
 
@@ -191,6 +208,11 @@ cryptoServerで復号された処理要求オブジェクト
 
 ### 処理概要
 
+## 🧱 reset()メソッド
+
+- 緊急時、サーバ側鍵ペアを変更する
+- pv.SPkey/SSkeyを更新、ScriptPropertiesに保存
+
 ## ⏰ メンテナンス処理
 
 ## 🔐 セキュリティ仕様
@@ -212,3 +234,47 @@ cryptoServerで復号された処理要求オブジェクト
 | requestLog | ScriptProperties (TTL短期) | requestId, memberId, timestamp |
 | errorLog | Spreadsheetまたはログシート | 発生日時, memberId, errorMessage, stackTrace |
 | auditLog | Spreadsheet | 処理種別, 成功／警告／失敗, 対象メンバID |
+
+
+## 外部ライブラリ
+
+<details><summary>createPassword</summary>
+
+```js
+/** 長さ・文字種指定に基づき、パスワードを生成
+ *
+ * @param {number} [len=16] - パスワードの長さ
+ * @param {Object} opt
+ * @param {boolean} [opt.lower=true] - 英小文字を使うならtrue
+ * @param {boolean} [opt.upper=true] - 英大文字を使うならtrue
+ * @param {boolean} [opt.symbol=true] - 記号を使うならtrue
+ * @param {boolean} [opt.numeric=true] - 数字を使うならtrue
+ * @returns {string}
+ */
+function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:true}){
+  const v = {
+    whois: 'createPassword',
+    lower: 'abcdefghijklmnopqrstuvwxyz',
+    upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    symbol: '!#$%&()=~|@[];:+-*<>?_>.,',
+    numeric: '0123456789',
+    base: '',
+    rv: '',
+  }
+  try {
+    Object.keys(opt).forEach(x => {
+      if( opt[x] ) v.base += v[x];
+    });
+    for( v.i=0 ; v.i<len ; v.i++ ){
+      v.rv += v.base.charAt(Math.floor(Math.random() * v.base.length));
+    }
+  } catch(e) {
+    console.error(v.whois+' abnormal end.\n'+e.stack+'\n'+JSON.stringify(v));
+    v.rv = e;
+  } finally {
+    return v.rv;
+  }
+}
+```
+
+</details>
