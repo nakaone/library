@@ -9,6 +9,7 @@ source ~/Desktop/GitHub/tools/common.sh
 prj="$lib/underDev/Auth"
 arc="$prj/archives"
 src="$prj/src"
+dep="$prj/deploy"
 doc="$prj/doc"
 img="$prj/img"
 tmp="$prj/tmp"
@@ -18,25 +19,36 @@ tmp="$prj/tmp"
 # ----------------------------------------------
 
 # typedef
-node $src/doc/typedef.js -o:$tmp
+node $src/typedef/typedef.js -o:$tmp
+
+# authClient
+cat $src/authClient/spec.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authClient.md
+
+# authServer
+cat $src/authServer/spec.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authServer.md
+cat $src/authServer/proto.js | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $src/authServer/core.js
+
+# cryptoClient
+cat $src/cryptoClient/spec.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cryptoClient.md
+
+# cryptoServer
+cat $src/cryptoServer/spec.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cryptoServer.md
+
+# Member
+cat $src/Member/spec.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/Member.md
+cat $src/Member/proto.js | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $src/Member/core.js
 
 # 仕様書
-cat $src/doc/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $prj/spec.md
-cat $src/doc/cryptoServer.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/cryptoServer.md
-cat $src/doc/cryptoClient.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/cryptoClient.md
-cat $src/doc/authServer.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/authServer.md
-cat $src/doc/authClient.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/authClient.md
-cat $src/doc/Member.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/Member.md
+cat $src/spec.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $prj/spec.md
 
-# AI質問用
-cat $src/doc/ChatGPT.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -doc:$src/doc -tmp:$tmp > $doc/ChatGPT.md
-
-cat $src/authServer/authServer.js | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -tmp:$tmp > $prj/authServer.gs
+# 統合版
+cat $src/authServer.js | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/code.gs

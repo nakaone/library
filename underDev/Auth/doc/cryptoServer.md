@@ -38,7 +38,7 @@
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | timestamp | ⭕ | number | 1760853427194 | リクエストを受けたサーバ側日時 |
+| 1 | timestamp | ⭕ | number | 1760862532961 | リクエストを受けたサーバ側日時 |
 | 2 | requestId | ❌ | string |  | クライアント側で採番されたリクエスト識別子。UUID |
 
 ### Member
@@ -51,7 +51,7 @@
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
 | 2 | name | ❌ | string |  | メンバの氏名 |
-| 3 | status | ❌ | string |  | メンバの状態。未加入,未審査,審査済,加入中,加入禁止 |
+| 3 | status | ⭕ | string | 未加入 | メンバの状態。未加入,未審査,審査済,加入中,加入禁止 |
 | 4 | log | ❌ | string |  | メンバの履歴情報(MemberLog)を保持するJSON文字列 |
 | 5 | profile | ❌ | string |  | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
 | 6 | device | ❌ | string |  | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |

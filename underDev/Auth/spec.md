@@ -123,7 +123,7 @@ sequenceDiagram
 | 1 | systemName | ⭕ | string | auth | システム名 |
 | 2 | adminMail | ❌ | string |  | 管理者のメールアドレス |
 | 3 | adminName | ❌ | string |  | 管理者名 |
-| 4 | allowableTimeDifference | ⭕ | string | 120000 | クライアント・サーバ間通信時の許容時差。既定値は2分 |
+| 4 | allowableTimeDifference | ⭕ | number | 120000 | クライアント・サーバ間通信時の許容時差。既定値は2分 |
 | 5 | RSAbits | ⭕ | string | 2048 | 鍵ペアの鍵長 |
 
 ## authServerConfig
@@ -142,7 +142,7 @@ authConfigを継承した、authServerでのみ使用する設定値
 | 6 | loginFreeze | ⭕ | number | 600000 | 認証凍結時間(=認証失敗後、再認証要求が禁止される期間)。既定値は10分 |
 | 7 | requestIdRetention | ⭕ | number | 300000 | 重複リクエスト拒否となる時間。既定値は5分 |
 | 8 | func | ❌ | Object.<string,Object> |  | サーバ側の関数マップ<br>例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}} |
-| 9 | func.authority | ❌ | number |  | 当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authrity > 0`なら実行可とする。 |
+| 9 | func.authority | ⭕ | number | 1 | サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authority > 0`なら実行可とする。 |
 | 10 | func.do | ❌ | Function |  | 実行するサーバ側関数 |
 | 11 | trial | ❌ | Object |  | ログイン試行関係の設定値 |
 | 12 | trial.passcodeLength | ⭕ | number | 6 | パスコードの桁数 |

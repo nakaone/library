@@ -45,7 +45,7 @@ const typedef = {
       {name:'systemName',type:'string',note:'システム名',default:'auth'},
       {name:'adminMail',type:'string',note:'管理者のメールアドレス'},
       {name:'adminName',type:'string',note:'管理者名'},
-      {name:'allowableTimeDifference',type:'string',note:'クライアント・サーバ間通信時の許容時差。既定値は2分',default:120000},
+      {name:'allowableTimeDifference',type:'number',note:'クライアント・サーバ間通信時の許容時差。既定値は2分',default:120000},
       {name:'RSAbits',type:'string',note:'鍵ペアの鍵長',default:2048},
     ],
   },
@@ -121,9 +121,9 @@ const typedef = {
 
       {name:'func',type:'Object.<string,Object>',note:'サーバ側の関数マップ<br>例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}}'},
       {name:'func.authority',type:'number',note:[
-        '当該関数実行のために必要となるユーザ権限',
-        '`Member.profile.authority & authServerConfig.func.authrity > 0`なら実行可とする。'
-      ]},
+        'サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限',
+        '`Member.profile.authority & authServerConfig.func.authority > 0`なら実行可とする。'
+      ],default:1},
       {name:'func.do',type:'Function',note:'実行するサーバ側関数'},
 
       {name:'trial',type:'Object',note:'ログイン試行関係の設定値'},
@@ -199,7 +199,7 @@ const typedef = {
     prop: [
       {name:'memberId',type:'string',note:'メンバの識別子(=メールアドレス)'},
       {name:'name',type:'string',note:'メンバの氏名'},
-      {name:'status',type:'string',note:'メンバの状態。未加入,未審査,審査済,加入中,加入禁止'},
+      {name:'status',type:'string',note:'メンバの状態。未加入,未審査,審査済,加入中,加入禁止',default:'未加入'},
       {name:'log',type:'string',note:'メンバの履歴情報(MemberLog)を保持するJSON文字列'},
       {name:'profile',type:'string',note:'メンバの属性情報(MemberProfile)を保持するJSON文字列'},
       {name:'device',type:'string',note:'マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列'},
@@ -210,10 +210,10 @@ const typedef = {
     type: 'Object',
     prop: [
       {name:'deviceId',type:'string',note:'デバイスの識別子。UUID'},
-      {name:'status',type:'string',note:'デバイスの状態。未認証,認証中,試行中,凍結中'},
+      {name:'status',type:'string',note:'デバイスの状態。未認証,認証中,試行中,凍結中',default:'未認証'},
       {name:'CPkey',type:'string',note:'メンバの公開鍵'},
       {name:'CPkeyUpdated',type:'number',note:'最新のCPkeyが登録された日時'},
-      {name:'trial',type:'string',note:'ログイン試行関連情報オブジェクト(MemberTrial[])のJSON文字列'},
+      {name:'trial',type:'string',note:'ログイン試行関連情報オブジェクト(MemberTrial[])。シート保存時はJSON文字列'},
     ],
   },
   MemberLog: {note:'メンバの各種要求・状態変化の時刻',
@@ -231,10 +231,20 @@ const typedef = {
       {name:'unfreezeDenial', type:'number', note:'加入禁止期限。加入否認日時＋加入禁止期間', default:0},
     ],
   },
+  MemberJudgeStatus: {note:'Memeber.judgeStatusメソッドの戻り値',
+    type: 'Object',
+    prop: [
+      {name:'memberId',type:'string',note:'メンバの識別子(=メールアドレス)'},
+      {name:'status',type:'string',note:'Member.deviceが空ならメンバの、空で無ければデバイスのstatus'},
+      {name:'memberStatus',type:'string',note:'メンバの状態。未加入,未審査,審査済,加入中,加入禁止'},
+      {name:'deviceId',type:'string',note:'デバイスの識別子。UUID',isOpt:true},
+      {name:'deviceStatus',type:'string',note:'デバイスの状態。未認証,認証中,試行中,凍結中',isOpt:true},
+    ],
+  },
   MemberProfile: {note:'メンバの属性情報(Member.profile)',
     type: 'Object',
     prop: [
-      {name:'authority',type:'string',note:'メンバの持つ権限。authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す',default:0},
+      {name:'authority',type:'number',note:'メンバの持つ権限。authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す',default:1},
     ],
   },
   MemberTrial: {note:'ログイン試行単位の試行情報(Member.trial)',
@@ -242,7 +252,7 @@ const typedef = {
     prop: [
       {name:'passcode',type:'string',note:'設定されているパスコード。最初の認証試行で作成',default:''},
       {name:'created',type:'number',note:'パスコード生成日時(≒パスコード通知メール発信日時)'},
-      {name:'log',type:'MemberTrialLog[]',note:'試行履歴。常に最新が先頭(unshift()使用)',default:[]},
+      {name:'log',type:'MemberTrialLog[]',note:'試行履歴。常に最新が先頭(unshift()使用)。保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。',default:[]},
     ],
   },
   MemberTrialLog: {note:'MemberTrial.logに記載される、パスコード入力単位の試行記録',

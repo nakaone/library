@@ -98,7 +98,7 @@ sequenceDiagram
 
 #### 参考：メンバの状態遷移
 
-<!--::$doc/stateTransition.md::-->
+<!--::$src/Member/stateTransition.md::-->
 
 ### 📤 入力項目
 

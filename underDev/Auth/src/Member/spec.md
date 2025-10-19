@@ -106,33 +106,32 @@ classDiagram
 ## 🧱 judgeStatus()
 
 - 後述「状態遷移」に基づき、引数で指定されたメンバ・デバイスの状態を判断
+- 引数は`Member`、戻り値は`MemberJudgeStatus`
 - 事前にgetMemberメソッドで、メンバ・デバイスは特定済の前提
+- memberList上のstatusは judgeStatus() の評価結果を反映して自動更新
 
-```js
-/**
- * @param {Member} arg
- * @returns {string} Member.deviceが空ならメンバの、空で無ければデバイスのstatus
- */
-```
+<!--::$tmp/MemberJudgeStatus.md::-->
 
 ### 状態遷移
 
 - メンバの状態遷移
 - 下表内の変数名は`MemberLog`のメンバ名
 
-<!--::$doc/stateTransition.md::-->
+<!--::$src/Member/stateTransition.md::-->
 
 状態 | 判定式
 :-- | :--
-未加入 | 加入要求をしたことが無い、または加入期限切れ<br>joiningRequest === 0 || 0 < joiningExpiration && joiningExpiration < Date.now()
-加入禁止 | 加入禁止されている<br>joiningRequest < 0 && Date.now() <= unfreezeDenial
+未加入 | 加入要求をしたことが無い、または加入期限切れ(失効)<br>joiningRequest === 0 || (0 < approval &&　0 < joiningExpiration && joiningExpiration < Date.now())
+加入禁止 | 加入禁止されている<br>0 < denial && Date.now() <= unfreezeDenial
 未審査 | 管理者の認否が未決定<br>approval === 0 && denial === 0
-認証中 | 加入承認済かつ認証有効期限内<br>0 < approval && Date.now() ≦ loginExpiration
-凍結中 | 加入承認済かつ凍結期間内<br>0 < approval && loginFailure < Date.now() && Date.now() <= unfreezeLogin
+認証中 | 加入承認済かつパスコード認証に成功し認証有効期間内の状態<br>0 < approval && Date.now() ≦ loginExpiration
+凍結中 | 加入承認済かつ凍結期間内<br>0 < approval && 0 < loginFailure && loginFailure < Date.now() && Date.now() <= unfreezeLogin
 未認証 | 加入承認後認証要求されたことが無い<br>0 < approval && loginRequest === 0
-試行中 | 加入承認済かつ認証要求済(かつ認証中でも凍結中でもない)<br>0 < approval && 0 < loginRequest
+試行中 | 加入承認済かつ認証要求済(かつ認証中でも凍結中でもない)<br>0 < approval && 0 < loginRequest && !(0 < loginFailure && loginFailure < Date.now() && Date.now() <= unfreezeLogin)
+
 
 - 上から順に判定する(下順位の状態は上順位の何れにも該当しない)
+- 試行中は「凍結中」「認証中」いずれにも該当しない場合にのみ成立
 
 ## 🧱 setMember()
 
@@ -145,12 +144,14 @@ classDiagram
     => memberList.device内のdevice.deviceIdをarg.deviceで置換
   - memberList.deviceにarg.device.deviceIdが存在しない場合<br>
     => memberList.deviceにarg.deviceを追加
+- Member.status は judgeStatus().memberStatus の結果を保存
+- 各 Member.device[n].status は judgeStatus().deviceStatus の結果を個別に保存
 - JSON文字列の項目は文字列化(Member.log, Member.profile, Member.device)
 
 ```js
 /**
  * @param {Member} arg
- * @returns {null|Error} 成功時はnull、失敗時はErrorオブジェクト
+ * @returns {Member|Error} 更新後のMemberインスタンスを返す。失敗時はError。
  */
 ```
 
@@ -163,3 +164,39 @@ classDiagram
 
 ### 📥 出力項目
 -->
+
+## 外部ライブラリ
+
+- ソース先頭(グローバル領域)に`const dev=devTools()`を挿入
+
+<details><summary>devTools</summary>
+
+```js
+//::$lib/devTools/1.0.1/core.js::
+```
+
+</details>
+
+<details><summary>SpreadDb</summary>
+
+```js
+//::$lib/SpreadDb/2.2.0/core.js::
+```
+
+</details>
+
+<details><summary>toLocale</summary>
+
+```js
+//::$lib/toLocale/1.2.0/core.js::
+```
+
+</details>
+
+<details><summary>whichType</summary>
+
+```js
+//::$lib/whichType/1.0.1/core.js::
+```
+
+</details>
