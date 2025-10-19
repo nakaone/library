@@ -119,7 +119,7 @@ const typedef = {
       {name:'loginFreeze',type:'number',note:'認証凍結時間(=認証失敗後、再認証要求が禁止される期間)。既定値は10分',default:600000},
       {name:'requestIdRetention',type:'number',note:'重複リクエスト拒否となる時間。既定値は5分',default:300000},
 
-      {name:'func',type:'Object.<string,Object>',note:'サーバ側の関数マップ'},
+      {name:'func',type:'Object.<string,Object>',note:'サーバ側の関数マップ<br>例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}}'},
       {name:'func.authority',type:'number',note:[
         '当該関数実行のために必要となるユーザ権限',
         '`Member.profile.authority & authServerConfig.func.authrity > 0`なら実行可とする。'
@@ -199,6 +199,7 @@ const typedef = {
     prop: [
       {name:'memberId',type:'string',note:'メンバの識別子(=メールアドレス)'},
       {name:'name',type:'string',note:'メンバの氏名'},
+      {name:'status',type:'string',note:'メンバの状態。未加入,未審査,審査済,加入中,加入禁止'},
       {name:'log',type:'string',note:'メンバの履歴情報(MemberLog)を保持するJSON文字列'},
       {name:'profile',type:'string',note:'メンバの属性情報(MemberProfile)を保持するJSON文字列'},
       {name:'device',type:'string',note:'マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列'},
@@ -209,8 +210,9 @@ const typedef = {
     type: 'Object',
     prop: [
       {name:'deviceId',type:'string',note:'デバイスの識別子。UUID'},
+      {name:'status',type:'string',note:'デバイスの状態。未認証,認証中,試行中,凍結中'},
       {name:'CPkey',type:'string',note:'メンバの公開鍵'},
-      {name:'CPkeyUpdated',type:'string',note:'最新のCPkeyが登録された日時'},
+      {name:'CPkeyUpdated',type:'number',note:'最新のCPkeyが登録された日時'},
       {name:'trial',type:'string',note:'ログイン試行関連情報オブジェクト(MemberTrial[])のJSON文字列'},
     ],
   },
@@ -232,13 +234,13 @@ const typedef = {
   MemberProfile: {note:'メンバの属性情報(Member.profile)',
     type: 'Object',
     prop: [
-      {name:'',type:'string',note:''},
+      {name:'authority',type:'string',note:'メンバの持つ権限。authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す',default:0},
     ],
   },
   MemberTrial: {note:'ログイン試行単位の試行情報(Member.trial)',
     type: 'Object',
     prop: [
-      {name:'passcode',type:'string',note:'設定されているパスコード'},
+      {name:'passcode',type:'string',note:'設定されているパスコード。最初の認証試行で作成',default:''},
       {name:'created',type:'number',note:'パスコード生成日時(≒パスコード通知メール発信日時)'},
       {name:'log',type:'MemberTrialLog[]',note:'試行履歴。常に最新が先頭(unshift()使用)',default:[]},
     ],
@@ -247,7 +249,7 @@ const typedef = {
     type: 'Object',
     prop: [
       {name:'entered',type:'string',note:'入力されたパスコード'},
-      {name:'result',type:'number',note:'-1:恒久的エラー, 0:要リトライ, 1:パスコード一致'},
+      {name:'result',type:'number',note:'-1:恒久的エラー(再試行不可), 0:要リトライ(再試行可), 1:成功(パスコード一致)'},
       {name:'message',type:'string',note:'エラーメッセージ'},
       {name:'timestamp',type:'number',note:'判定処理日時'},
     ],
@@ -284,7 +286,7 @@ function mdBody(dName,obj){
   ];
   dObj.prop.forEach(o => {
     o.isOpt = o.isOpt ? '⭕' : '❌';
-    o.default = o.default ? String(o.default) : '—';
+    o.default = typeof o.default !== 'undefined' ? String(o.default) : '—';
     rows.push([o.num,o.name,o.isOpt,o.type,o.default,o.note]);
   });
   rows.forEach(o => {
@@ -330,7 +332,9 @@ function main(){
     for( let i=0 ; i<typedef[x].prop.length ; i++ ){
       typedef[x].prop[i] = Object.assign({
         num : i+1,
-        isOpt: typedef[x].prop[i].default ? true : (typedef[x].prop[i].isOpt || false),
+        isOpt: typeof typedef[x].prop[i].default !== 'undefined' ? true : (
+          typeof typedef[x].prop[i].isOpt !== 'undefined'
+          ? typedef[x].prop[i].isOpt : false),
         default: '',
         note: '',
       },typedef[x].prop[i]);

@@ -121,8 +121,8 @@ sequenceDiagram
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | systemName | ⭕ | string | auth | システム名 |
-| 2 | adminMail | ❌ | string | — | 管理者のメールアドレス |
-| 3 | adminName | ❌ | string | — | 管理者名 |
+| 2 | adminMail | ❌ | string |  | 管理者のメールアドレス |
+| 3 | adminName | ❌ | string |  | 管理者名 |
 | 4 | allowableTimeDifference | ⭕ | string | 120000 | クライアント・サーバ間通信時の許容時差。既定値は2分 |
 | 5 | RSAbits | ⭕ | string | 2048 | 鍵ペアの鍵長 |
 
@@ -135,16 +135,16 @@ authConfigを継承した、authServerでのみ使用する設定値
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | memberList | ⭕ | string | memberList | memberListシート名 |
-| 2 | defaultAuthority | ❌ | number | — | 新規加入メンバの権限の既定値 |
+| 2 | defaultAuthority | ⭕ | number | 0 | 新規加入メンバの権限の既定値 |
 | 3 | memberLifeTime | ⭕ | number | 31536000000 | 加入有効期間(=メンバ加入承認後の有効期間)。既定値は1年 |
 | 4 | prohibitedToJoin | ⭕ | number | 259200000 | 加入禁止期間(=管理者による加入否認後、再加入申請が自動的に却下される期間)。既定値は3日 |
 | 5 | loginLifeTime | ⭕ | number | 86400000 | 認証有効時間(=ログイン成功後の有効期間、CPkeyの有効期間)。既定値は1日 |
 | 6 | loginFreeze | ⭕ | number | 600000 | 認証凍結時間(=認証失敗後、再認証要求が禁止される期間)。既定値は10分 |
 | 7 | requestIdRetention | ⭕ | number | 300000 | 重複リクエスト拒否となる時間。既定値は5分 |
-| 8 | func | ❌ | Object.<string,Object> | — | サーバ側の関数マップ |
-| 9 | func.authority | ❌ | number | — | 当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authrity > 0`なら実行可とする。 |
-| 10 | func.do | ❌ | Function | — | 実行するサーバ側関数 |
-| 11 | trial | ❌ | Object | — | ログイン試行関係の設定値 |
+| 8 | func | ❌ | Object.<string,Object> |  | サーバ側の関数マップ<br>例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}} |
+| 9 | func.authority | ❌ | number |  | 当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authrity > 0`なら実行可とする。 |
+| 10 | func.do | ❌ | Function |  | 実行するサーバ側関数 |
+| 11 | trial | ❌ | Object |  | ログイン試行関係の設定値 |
 | 12 | trial.passcodeLength | ⭕ | number | 6 | パスコードの桁数 |
 | 13 | trial.maxTrial | ⭕ | number | 3 | パスコード入力の最大試行回数 |
 | 14 | trial.passcodeLifeTime | ⭕ | number | 600000 | パスコードの有効期間。既定値は10分 |
@@ -158,7 +158,7 @@ authConfigを継承した、authClientでのみ使用する設定値
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | api | ❌ | string | — | サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`) |
+| 1 | api | ❌ | string |  | サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`) |
 | 2 | timeout | ⭕ | number | 300000 | サーバからの応答待機時間。これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分 |
 | 3 | CPkeyGraceTime | ⭕ | number | 600000 | CPkey期限切れまでの猶予時間。CPkey有効期間がこれを切ったら更新処理実行。既定値は10分 |
 
@@ -173,8 +173,8 @@ authConfigを継承した、authClientでのみ使用する設定値
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | func | ❌ | string | — | サーバ側関数名 |
-| 2 | arguments | ❌ | any[] | — | サーバ側関数に渡す引数の配列 |
+| 1 | func | ❌ | string |  | サーバ側関数名 |
+| 2 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
 
 ## authRequest
 
@@ -184,13 +184,13 @@ authClientからauthServerに送られる処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string | — | デバイスの識別子 |
-| 3 | requestId | ❌ | string | — | 要求の識別子。UUID |
-| 4 | timestamp | ❌ | number | — | 要求日時。UNIX時刻 |
-| 5 | func | ❌ | string | — | サーバ側関数名 |
-| 6 | arguments | ❌ | any[] | — | サーバ側関数に渡す引数の配列 |
-| 7 | signature | ❌ | string | — | クライアント側署名 |
+| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 3 | requestId | ❌ | string |  | 要求の識別子。UUID |
+| 4 | timestamp | ❌ | number |  | 要求日時。UNIX時刻 |
+| 5 | func | ❌ | string |  | サーバ側関数名 |
+| 6 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
+| 7 | signature | ❌ | string |  | クライアント側署名 |
 
 ## encryptedRequest
 
@@ -202,9 +202,9 @@ authClientからauthServerに送られる処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string | — | デバイスの識別子 |
-| 3 | ciphertext | ❌ | string | — | 暗号化した文字列 |
+| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 3 | ciphertext | ❌ | string |  | 暗号化した文字列 |
 
 ## decryptedRequest
 
@@ -214,10 +214,10 @@ cryptoServerで復号された処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | result | ❌ | string | — | 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "success" |
-| 2 | message | ⭕ | string | — | エラーメッセージ。result="normal"の場合`undefined` |
-| 3 | request | ❌ | authRequest | — | ユーザから渡された処理要求 |
-| 4 | timestamp | ❌ | string | — | 復号処理実施日時。メール・ログでの閲覧が容易になるよう、文字列で保存 |
+| 1 | result | ❌ | string |  | 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "success" |
+| 2 | message | ⭕ | string |  | エラーメッセージ。result="normal"の場合`undefined` |
+| 3 | request | ❌ | authRequest |  | ユーザから渡された処理要求 |
+| 4 | timestamp | ❌ | string |  | 復号処理実施日時。メール・ログでの閲覧が容易になるよう、文字列で保存 |
 
 ## authResponse
 
@@ -227,11 +227,11 @@ authServerからauthClientに返される処理結果オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | timestamp | ❌ | number | — | サーバ側処理日時。UNIX時刻 |
-| 2 | result | ❌ | string | — | サーバ側処理結果。fatal/warning/normal |
-| 3 | message | ⭕ | string | — | サーバ側からのエラーメッセージ。normal時は`undefined` |
-| 4 | request | ❌ | authRequest | — | 処理要求オブジェクト |
-| 5 | response | ⭕ | any | — | 要求されたサーバ側関数の戻り値。fatal/warning時は`undefined` |
+| 1 | timestamp | ❌ | number |  | サーバ側処理日時。UNIX時刻 |
+| 2 | result | ❌ | string |  | サーバ側処理結果。fatal/warning/normal |
+| 3 | message | ⭕ | string |  | サーバ側からのエラーメッセージ。normal時は`undefined` |
+| 4 | request | ❌ | authRequest |  | 処理要求オブジェクト |
+| 5 | response | ⭕ | any |  | 要求されたサーバ側関数の戻り値。fatal/warning時は`undefined` |
 
 ## encryptedResponse
 
@@ -242,7 +242,7 @@ authServerからauthClientに返される処理結果オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | ciphertext | ❌ | string | — | 暗号化した文字列 |
+| 1 | ciphertext | ❌ | string |  | 暗号化した文字列 |
 
 ## decryptedResponse
 
@@ -252,15 +252,15 @@ cryptoClientで復号された処理結果オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | timestamp | ❌ | number | — | cryptoClient処理日時。UNIX時刻 |
-| 2 | result | ❌ | string | — | cryptoClient処理結果。fatal/warning/normal |
-| 3 | message | ⭕ | string | — | cryptoClientからのエラーメッセージ。normal時は`undefined` |
-| 4 | request | ❌ | authRequest | — | 処理要求オブジェクト(authResponse.request) |
-| 5 | response | ⭕ | any | — | 要求されたサーバ側関数の戻り値(authResponse.response)。fatal/warning時は`undefined` |
-| 6 | sv | ❌ | Object | — |  |
-| 7 | sv.timestamp | ❌ | number | — | サーバ側処理日時。UNIX時刻 |
-| 8 | sv.result | ❌ | string | — | サーバ側処理結果。fatal/warning/normal |
-| 9 | sv.message | ⭕ | string | — | サーバ側からのエラーメッセージ。normal時は`undefined` |
+| 1 | timestamp | ❌ | number |  | cryptoClient処理日時。UNIX時刻 |
+| 2 | result | ❌ | string |  | cryptoClient処理結果。fatal/warning/normal |
+| 3 | message | ⭕ | string |  | cryptoClientからのエラーメッセージ。normal時は`undefined` |
+| 4 | request | ❌ | authRequest |  | 処理要求オブジェクト(authResponse.request) |
+| 5 | response | ⭕ | any |  | 要求されたサーバ側関数の戻り値(authResponse.response)。fatal/warning時は`undefined` |
+| 6 | sv | ❌ | Object |  |  |
+| 7 | sv.timestamp | ❌ | number |  | サーバ側処理日時。UNIX時刻 |
+| 8 | sv.result | ❌ | string |  | サーバ側処理結果。fatal/warning/normal |
+| 9 | sv.message | ⭕ | string |  | サーバ側からのエラーメッセージ。normal時は`undefined` |
 
 ## LocalResponse
 
@@ -270,9 +270,9 @@ authClientからクライアント側関数に返される処理結果オブジ�
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | result | ❌ | string | — | 処理結果。fatal/warning/normal |
-| 2 | message | ⭕ | string | — | エラーメッセージ。normal時は`undefined`。 |
-| 3 | response | ⭕ | any | — | 要求された関数の戻り値。fatal/warning時は`undefined`。`JSON.parse(authResponse.response)` |
+| 1 | result | ❌ | string |  | 処理結果。fatal/warning/normal |
+| 2 | message | ⭕ | string |  | エラーメッセージ。normal時は`undefined`。 |
+| 3 | response | ⭕ | any |  | 要求された関数の戻り値。fatal/warning時は`undefined`。`JSON.parse(authResponse.response)` |
 
 # クラス・関数定義
 

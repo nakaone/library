@@ -27,9 +27,9 @@
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string | — | デバイスの識別子 |
-| 3 | ciphertext | ❌ | string | — | 暗号化した文字列 |
+| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 3 | ciphertext | ❌ | string |  | 暗号化した文字列 |
 
 ## 🧱 constructor()
 
@@ -55,7 +55,7 @@
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | ciphertext | ❌ | string | — | 暗号化した文字列 |
+| 1 | ciphertext | ❌ | string |  | 暗号化した文字列 |
 
 ### 📥 出力項目
 
@@ -67,15 +67,15 @@ cryptoClientで復号された処理結果オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | timestamp | ❌ | number | — | cryptoClient処理日時。UNIX時刻 |
-| 2 | result | ❌ | string | — | cryptoClient処理結果。fatal/warning/normal |
-| 3 | message | ⭕ | string | — | cryptoClientからのエラーメッセージ。normal時は`undefined` |
-| 4 | request | ❌ | authRequest | — | 処理要求オブジェクト(authResponse.request) |
-| 5 | response | ⭕ | any | — | 要求されたサーバ側関数の戻り値(authResponse.response)。fatal/warning時は`undefined` |
-| 6 | sv | ❌ | Object | — |  |
-| 7 | sv.timestamp | ❌ | number | — | サーバ側処理日時。UNIX時刻 |
-| 8 | sv.result | ❌ | string | — | サーバ側処理結果。fatal/warning/normal |
-| 9 | sv.message | ⭕ | string | — | サーバ側からのエラーメッセージ。normal時は`undefined` |
+| 1 | timestamp | ❌ | number |  | cryptoClient処理日時。UNIX時刻 |
+| 2 | result | ❌ | string |  | cryptoClient処理結果。fatal/warning/normal |
+| 3 | message | ⭕ | string |  | cryptoClientからのエラーメッセージ。normal時は`undefined` |
+| 4 | request | ❌ | authRequest |  | 処理要求オブジェクト(authResponse.request) |
+| 5 | response | ⭕ | any |  | 要求されたサーバ側関数の戻り値(authResponse.response)。fatal/warning時は`undefined` |
+| 6 | sv | ❌ | Object |  |  |
+| 7 | sv.timestamp | ❌ | number |  | サーバ側処理日時。UNIX時刻 |
+| 8 | sv.result | ❌ | string |  | サーバ側処理結果。fatal/warning/normal |
+| 9 | sv.message | ⭕ | string |  | サーバ側からのエラーメッセージ。normal時は`undefined` |
 
 ### 処理概要
 
@@ -97,13 +97,13 @@ authClientからauthServerに送られる処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string | — | デバイスの識別子 |
-| 3 | requestId | ❌ | string | — | 要求の識別子。UUID |
-| 4 | timestamp | ❌ | number | — | 要求日時。UNIX時刻 |
-| 5 | func | ❌ | string | — | サーバ側関数名 |
-| 6 | arguments | ❌ | any[] | — | サーバ側関数に渡す引数の配列 |
-| 7 | signature | ❌ | string | — | クライアント側署名 |
+| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 3 | requestId | ❌ | string |  | 要求の識別子。UUID |
+| 4 | timestamp | ❌ | number |  | 要求日時。UNIX時刻 |
+| 5 | func | ❌ | string |  | サーバ側関数名 |
+| 6 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
+| 7 | signature | ❌ | string |  | クライアント側署名 |
 
 ### 📥 出力項目
 
@@ -117,9 +117,9 @@ authClientからauthServerに送られる処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string | — | デバイスの識別子 |
-| 3 | ciphertext | ❌ | string | — | 暗号化した文字列 |
+| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 3 | ciphertext | ❌ | string |  | 暗号化した文字列 |
 
 ## 🧱 generateKeys()メソッド
 
@@ -134,10 +134,10 @@ authClientからauthServerに送られる処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | CSkeySign | ❌ | CryptoKey | — | 署名用秘密鍵 |
-| 2 | CPkeySign | ❌ | CryptoKey | — | 署名用公開鍵 |
-| 3 | CSkeyEnc | ❌ | CryptoKey | — | 暗号化用秘密鍵 |
-| 4 | CPkeyEnc | ❌ | CryptoKey | — | 暗号化用公開鍵 |
+| 1 | CSkeySign | ❌ | CryptoKey |  | 署名用秘密鍵 |
+| 2 | CPkeySign | ❌ | CryptoKey |  | 署名用公開鍵 |
+| 3 | CSkeyEnc | ❌ | CryptoKey |  | 暗号化用秘密鍵 |
+| 4 | CPkeyEnc | ❌ | CryptoKey |  | 暗号化用公開鍵 |
 
 ## 🧱 updateKeys()メソッド
 

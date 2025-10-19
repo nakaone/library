@@ -25,9 +25,9 @@
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | keyGeneratedDateTime | ❌ | number | — | UNIX時刻 |
-| 2 | SPkey | ❌ | string | — | PEM形式の公開鍵文字列 |
-| 3 | SSkey | ❌ | string | — | PEM形式の秘密鍵文字列（暗号化済み） |
+| 1 | keyGeneratedDateTime | ❌ | number |  | UNIX時刻 |
+| 2 | SPkey | ❌ | string |  | PEM形式の公開鍵文字列 |
+| 3 | SSkey | ❌ | string |  | PEM形式の秘密鍵文字列（暗号化済み） |
 | 4 | requestLog | ⭕ | authRequestLog[] |  | 重複チェック用のリクエスト履歴 |
 
 ### authRequestLog
@@ -38,8 +38,8 @@
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | timestamp | ⭕ | number | 1760837169807 | リクエストを受けたサーバ側日時 |
-| 2 | requestId | ❌ | string | — | クライアント側で採番されたリクエスト識別子。UUID |
+| 1 | timestamp | ⭕ | number | 1760853427194 | リクエストを受けたサーバ側日時 |
+| 2 | requestId | ❌ | string |  | クライアント側で採番されたリクエスト識別子。UUID |
 
 ### Member
 
@@ -49,12 +49,13 @@
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
-| 2 | name | ❌ | string | — | メンバの氏名 |
-| 3 | log | ❌ | string | — | メンバの履歴情報(MemberLog)を保持するJSON文字列 |
-| 4 | profile | ❌ | string | — | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
-| 5 | device | ❌ | string | — | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |
-| 6 | note | ⭕ | string | — | 当該メンバに対する備考 |
+| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 2 | name | ❌ | string |  | メンバの氏名 |
+| 3 | status | ❌ | string |  | メンバの状態。未加入,未審査,審査済,加入中,加入禁止 |
+| 4 | log | ❌ | string |  | メンバの履歴情報(MemberLog)を保持するJSON文字列 |
+| 5 | profile | ❌ | string |  | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
+| 6 | device | ❌ | string |  | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |
+| 7 | note | ⭕ | string |  | 当該メンバに対する備考 |
 
 ## 🧱 constructor()
 
@@ -83,9 +84,9 @@
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string | — | デバイスの識別子 |
-| 3 | ciphertext | ❌ | string | — | 暗号化した文字列 |
+| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 3 | ciphertext | ❌ | string |  | 暗号化した文字列 |
 
 #### 参考：`authRequest`
 
@@ -97,13 +98,13 @@ authClientからauthServerに送られる処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string | — | デバイスの識別子 |
-| 3 | requestId | ❌ | string | — | 要求の識別子。UUID |
-| 4 | timestamp | ❌ | number | — | 要求日時。UNIX時刻 |
-| 5 | func | ❌ | string | — | サーバ側関数名 |
-| 6 | arguments | ❌ | any[] | — | サーバ側関数に渡す引数の配列 |
-| 7 | signature | ❌ | string | — | クライアント側署名 |
+| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 3 | requestId | ❌ | string |  | 要求の識別子。UUID |
+| 4 | timestamp | ❌ | number |  | 要求日時。UNIX時刻 |
+| 5 | func | ❌ | string |  | サーバ側関数名 |
+| 6 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
+| 7 | signature | ❌ | string |  | クライアント側署名 |
 
 ### 📥 出力項目
 
@@ -115,10 +116,10 @@ cryptoServerで復号された処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | result | ❌ | string | — | 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "success" |
-| 2 | message | ⭕ | string | — | エラーメッセージ。result="normal"の場合`undefined` |
-| 3 | request | ❌ | authRequest | — | ユーザから渡された処理要求 |
-| 4 | timestamp | ❌ | string | — | 復号処理実施日時。メール・ログでの閲覧が容易になるよう、文字列で保存 |
+| 1 | result | ❌ | string |  | 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "success" |
+| 2 | message | ⭕ | string |  | エラーメッセージ。result="normal"の場合`undefined` |
+| 3 | request | ❌ | authRequest |  | ユーザから渡された処理要求 |
+| 4 | timestamp | ❌ | string |  | 復号処理実施日時。メール・ログでの閲覧が容易になるよう、文字列で保存 |
 
 #### 参考：`authRequest`
 
@@ -128,13 +129,13 @@ authClientからauthServerに送られる処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string | — | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string | — | デバイスの識別子 |
-| 3 | requestId | ❌ | string | — | 要求の識別子。UUID |
-| 4 | timestamp | ❌ | number | — | 要求日時。UNIX時刻 |
-| 5 | func | ❌ | string | — | サーバ側関数名 |
-| 6 | arguments | ❌ | any[] | — | サーバ側関数に渡す引数の配列 |
-| 7 | signature | ❌ | string | — | クライアント側署名 |
+| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 3 | requestId | ❌ | string |  | 要求の識別子。UUID |
+| 4 | timestamp | ❌ | number |  | 要求日時。UNIX時刻 |
+| 5 | func | ❌ | string |  | サーバ側関数名 |
+| 6 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
+| 7 | signature | ❌ | string |  | クライアント側署名 |
 
 
 ### 処理概要
@@ -185,11 +186,11 @@ authServerからauthClientに返される処理結果オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | timestamp | ❌ | number | — | サーバ側処理日時。UNIX時刻 |
-| 2 | result | ❌ | string | — | サーバ側処理結果。fatal/warning/normal |
-| 3 | message | ⭕ | string | — | サーバ側からのエラーメッセージ。normal時は`undefined` |
-| 4 | request | ❌ | authRequest | — | 処理要求オブジェクト |
-| 5 | response | ⭕ | any | — | 要求されたサーバ側関数の戻り値。fatal/warning時は`undefined` |
+| 1 | timestamp | ❌ | number |  | サーバ側処理日時。UNIX時刻 |
+| 2 | result | ❌ | string |  | サーバ側処理結果。fatal/warning/normal |
+| 3 | message | ⭕ | string |  | サーバ側からのエラーメッセージ。normal時は`undefined` |
+| 4 | request | ❌ | authRequest |  | 処理要求オブジェクト |
+| 5 | response | ⭕ | any |  | 要求されたサーバ側関数の戻り値。fatal/warning時は`undefined` |
 
 ### 📥 出力項目
 
@@ -201,10 +202,10 @@ cryptoServerで復号された処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | result | ❌ | string | — | 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "success" |
-| 2 | message | ⭕ | string | — | エラーメッセージ。result="normal"の場合`undefined` |
-| 3 | request | ❌ | authRequest | — | ユーザから渡された処理要求 |
-| 4 | timestamp | ❌ | string | — | 復号処理実施日時。メール・ログでの閲覧が容易になるよう、文字列で保存 |
+| 1 | result | ❌ | string |  | 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "success" |
+| 2 | message | ⭕ | string |  | エラーメッセージ。result="normal"の場合`undefined` |
+| 3 | request | ❌ | authRequest |  | ユーザから渡された処理要求 |
+| 4 | timestamp | ❌ | string |  | 復号処理実施日時。メール・ログでの閲覧が容易になるよう、文字列で保存 |
 
 ### 処理概要
 
