@@ -135,20 +135,24 @@ authConfigを継承した、authServerでのみ使用する設定値
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | memberList | ⭕ | string | memberList | memberListシート名 |
-| 2 | defaultAuthority | ⭕ | number | 0 | 新規加入メンバの権限の既定値 |
+| 2 | defaultAuthority | ⭕ | number | 1 | 新規加入メンバの権限の既定値 |
 | 3 | memberLifeTime | ⭕ | number | 31536000000 | 加入有効期間(=メンバ加入承認後の有効期間)。既定値は1年 |
 | 4 | prohibitedToJoin | ⭕ | number | 259200000 | 加入禁止期間(=管理者による加入否認後、再加入申請が自動的に却下される期間)。既定値は3日 |
 | 5 | loginLifeTime | ⭕ | number | 86400000 | 認証有効時間(=ログイン成功後の有効期間、CPkeyの有効期間)。既定値は1日 |
 | 6 | loginFreeze | ⭕ | number | 600000 | 認証凍結時間(=認証失敗後、再認証要求が禁止される期間)。既定値は10分 |
 | 7 | requestIdRetention | ⭕ | number | 300000 | 重複リクエスト拒否となる時間。既定値は5分 |
-| 8 | func | ❌ | Object.<string,Object> |  | サーバ側の関数マップ<br>例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}} |
-| 9 | func.authority | ⭕ | number | 1 | サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authority > 0`なら実行可とする。 |
-| 10 | func.do | ❌ | Function |  | 実行するサーバ側関数 |
-| 11 | trial | ❌ | Object |  | ログイン試行関係の設定値 |
-| 12 | trial.passcodeLength | ⭕ | number | 6 | パスコードの桁数 |
-| 13 | trial.maxTrial | ⭕ | number | 3 | パスコード入力の最大試行回数 |
-| 14 | trial.passcodeLifeTime | ⭕ | number | 600000 | パスコードの有効期間。既定値は10分 |
-| 15 | trial.generationMax | ⭕ | number | 5 | ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代 |
+| 8 | errorLog | ⭕ | string | errorLog | エラーログのシート名 |
+| 9 | storageDaysOfErrorLog | ⭕ | number | 604800000 | 監査ログの保存日数。単位はミリ秒。既定値は7日分 |
+| 10 | auditLog | ⭕ | string | auditLog | 監査ログのシート名 |
+| 11 | storageDaysOfAuditLog | ⭕ | number | 604800000 | 監査ログの保存日数。単位はミリ秒。既定値は7日分 |
+| 12 | func | ❌ | Object.<string,Object> |  | サーバ側の関数マップ<br>例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}} |
+| 13 | func.authority | ⭕ | number | 1 | サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authority > 0`なら実行可とする。 |
+| 14 | func.do | ❌ | Function |  | 実行するサーバ側関数 |
+| 15 | trial | ❌ | Object |  | ログイン試行関係の設定値 |
+| 16 | trial.passcodeLength | ⭕ | number | 6 | パスコードの桁数 |
+| 17 | trial.maxTrial | ⭕ | number | 3 | パスコード入力の最大試行回数 |
+| 18 | trial.passcodeLifeTime | ⭕ | number | 600000 | パスコードの有効期間。既定値は10分 |
+| 19 | trial.generationMax | ⭕ | number | 5 | ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代 |
 
 ## authClientConfig
 
@@ -186,11 +190,11 @@ authClientからauthServerに送られる処理要求オブジェクト
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
 | 2 | deviceId | ❌ | string |  | デバイスの識別子 |
-| 3 | requestId | ❌ | string |  | 要求の識別子。UUID |
-| 4 | timestamp | ❌ | number |  | 要求日時。UNIX時刻 |
-| 5 | func | ❌ | string |  | サーバ側関数名 |
-| 6 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
-| 7 | signature | ❌ | string |  | クライアント側署名 |
+| 3 | signature | ❌ | string |  | クライアント側署名 |
+| 4 | requestId | ❌ | string |  | 要求の識別子。UUID |
+| 5 | timestamp | ❌ | number |  | 要求日時。UNIX時刻 |
+| 6 | func | ❌ | string |  | サーバ側関数名 |
+| 7 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
 
 ## encryptedRequest
 
@@ -217,7 +221,8 @@ cryptoServerで復号された処理要求オブジェクト
 | 1 | result | ❌ | string |  | 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "success" |
 | 2 | message | ⭕ | string |  | エラーメッセージ。result="normal"の場合`undefined` |
 | 3 | request | ❌ | authRequest |  | ユーザから渡された処理要求 |
-| 4 | timestamp | ❌ | string |  | 復号処理実施日時。メール・ログでの閲覧が容易になるよう、文字列で保存 |
+| 4 | timestamp | ❌ | number |  | 復号処理実施日時 |
+| 5 | status | ❌ | string |  | Member.deviceが空ならメンバの、空で無ければデバイスのstatus |
 
 ## authResponse
 

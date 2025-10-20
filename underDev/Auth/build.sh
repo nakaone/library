@@ -19,7 +19,7 @@ tmp="$prj/tmp"
 # ----------------------------------------------
 
 # typedef
-node $src/typedef/typedef.js -o:$tmp
+node $src/common/typedef.js -o:$tmp
 
 # authClient
 cat $src/authClient/spec.md | awk 1 | \

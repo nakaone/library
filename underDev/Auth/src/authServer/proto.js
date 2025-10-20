@@ -6,7 +6,7 @@
 const dev = devTools();
 function authServer(arg) {
 
-  //::$src/typedef/authServerConfig.js::
+  //::$src/common/authServerConfig.js::
 
   const pv = Object.assign(new authServerConfig,{whois:'authServer', rv:null});
 

@@ -177,14 +177,6 @@ classDiagram
 
 </details>
 
-<details><summary>SpreadDb</summary>
-
-```js
-//::$lib/SpreadDb/2.2.0/core.js::
-```
-
-</details>
-
 <details><summary>toLocale</summary>
 
 ```js

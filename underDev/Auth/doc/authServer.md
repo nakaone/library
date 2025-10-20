@@ -22,7 +22,9 @@ authServerは、クライアント（authClient）からの暗号化通信リク
 | 1 | keyGeneratedDateTime | ❌ | number |  | UNIX時刻 |
 | 2 | SPkey | ❌ | string |  | PEM形式の公開鍵文字列 |
 | 3 | SSkey | ❌ | string |  | PEM形式の秘密鍵文字列（暗号化済み） |
-| 4 | requestLog | ⭕ | authRequestLog[] |  | 重複チェック用のリクエスト履歴 |
+| 4 | oldSPkey | ❌ | string |  | cryptoServer.reset実行前にバックアップした公開鍵 |
+| 5 | oldSSkey | ❌ | string |  | cryptoServer.reset実行前にバックアップした秘密鍵 |
+| 6 | requestLog | ⭕ | authRequestLog[] |  | 重複チェック用のリクエスト履歴 |
 
 ### `memberList`シート
 
