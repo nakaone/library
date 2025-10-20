@@ -116,7 +116,7 @@ classDiagram
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | passcode | ⭕ | string |  | 設定されているパスコード。最初の認証試行で作成 |
-| 2 | created | ❌ | number |  | パスコード生成日時(≒パスコード通知メール発信日時) |
+| 2 | created | ⭕ | number | Date.now() | パスコード生成日時(≒パスコード通知メール発信日時) |
 | 3 | log | ⭕ | MemberTrialLog[] |  | 試行履歴。常に最新が先頭(unshift()使用)。保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。 |
 
 ### MemberTrialLog
@@ -184,25 +184,18 @@ authConfigを継承した、authServerでのみ使用する設定値
 
 ## 🧱 getMember()
 
-指定メンバ・デバイス情報をmemberListシートから取得
+指定メンバの情報をmemberListシートから取得
 
-```js
-/**
- * @param {string} memberId
- * @param {string} [deviceId]
- * @returns {Member}
- */
-```
-
-- 指定されたmemberIdのインスタンスを返す
+- 引数は`memberId`、戻り値は当該メンバの`Member`オブジェクト
 - JSON文字列の項目はオブジェクト化(Member.log, Member.profile, Member.device)
-- deviceIdの指定が有った場合、Member.deviceは当該MemberDeviceとする
 
 ## 🧱 judgeStatus()
 
+指定メンバ・デバイスの状態を判定
+
 - 後述「状態遷移」に基づき、引数で指定されたメンバ・デバイスの状態を判断
-- 引数は`Member`、戻り値は`MemberJudgeStatus`
-- 事前にgetMemberメソッドで、メンバ・デバイスは特定済の前提
+- 引数は`Member`、任意項目として`deviceId`
+- 戻り値は`MemberJudgeStatus`
 - memberList上のstatusは judgeStatus() の評価結果を反映して自動更新
 
 <a name="MemberJudgeStatus"></a>
@@ -300,6 +293,48 @@ No | 状態 | 説明
 
 ### 📥 出力項目
 -->
+
+## 🧱 addTrial()
+
+新しい試行を登録し、メンバにパスコード通知メールを発信
+
+- 引数は`authRequest`、戻り値は`Member`
+- 状態チェック
+  - authRequest.memberIdを基にgetMember()でMemberインスタンスを取得
+  - authRequest.deviceIdで対象デバイスを特定
+  - 状態が「未認証」以外はエラーを返して終了
+- 新しい試行を登録するに伴い、以下のメンバの値を更新する
+  - MemberDevice.status: 未認証 -> 試行中
+  - MemberTrial.passcode: '' -> ゼロパディングされたauthServerConfig.trial.passcodeLength桁の乱数
+  - MemberTrial.created: 現在日時(UNIX時刻)
+  - MemberTrial.log: [] ※空配列
+  - MemberLog.loginRequest: 現在日時(UNIX時刻)
+- 更新後の`Member`について、memberListシートを更新
+- メンバにパスコード通知メールを発信
+
+## 🧱 checkPasscode()
+
+入力されたパスコードをチェック、Member内部の各種メンバの値を更新の上、チェック結果を返す。
+
+- 引数は`authRequest`、戻り値は`Member`
+- `authRequest.func='::passcode::'`,`authRequest.arguments=[入力されたパスコード]`
+- 状態チェック
+  - authRequest.memberIdを基にgetMember()でMemberインスタンスを取得
+  - authRequest.deviceIdで対象デバイスを特定
+  - 状態が「試行中」以外はエラーを返して終了
+- パスコードをチェック、結果(MemberTrialLog)をMemberTrial.logの先頭に追加(unshift())
+- パスコードが一致した場合
+  - MemberDevice.status: 試行中 -> 認証中
+  - MemberLog.loginSuccess: 現在日時(UNIX時刻)
+  - MemberLog.loginExpiration: 現在日時＋authServerConfig.loginLifeTime
+- パスコードが不一致だった場合
+  - 試行回数の上限未満の場合(`MemberTrial.log.length < authServerConfig.trial.maxTrial`)<br>
+    ⇒ 変更すべき項目無し
+  - 試行回数の上限に達した場合(`MemberTrial.log.length === authServerConfig.trial.maxTrial`)
+    - MemberDevice.status: 試行中 -> 凍結中
+    - MemberLog.loginFailure: 現在日時(UNIX時刻)
+    - MemberLog.unfreezeLogin: 現在日時＋authServerConfig.loginFreeze
+- 更新後の`Member`について、memberListシートを更新
 
 ## 外部ライブラリ
 
@@ -541,6 +576,59 @@ function devTools(option) {
     const msg = [];
     recursive(arg);
     return msg.join('\n');
+  }
+}
+```
+
+</details>
+
+<details><summary>sendMail</summary>
+
+```js
+/** GASからメールを発信する
+ * 実行に当たっては権限の承認を必要とする。
+ *
+ * - [Google App Script メモ（メール送信制限 回避術）](https://zenn.dev/tatsuya_okzk/articles/259203cc416328)
+ * - GAS公式[createDraft](https://developers.google.com/apps-script/reference/gmail/gmail-app?hl=ja#createdraftrecipient,-subject,-body,-options)
+ *
+ * @param {String} recipient - 受信者のアドレス
+ * @param {String} subject - 件名
+ * @param {String} body - メールの本文
+ * @param {Object} options - 詳細パラメータを指定する JavaScript オブジェクト（下記を参照）
+ * @param {BlobSource[]} options.attachments - メールと一緒に送信するファイルの配列
+ * @param {String} options.bcc - Bcc で送信するメールアドレスのカンマ区切りのリスト
+ * @param {String} options.cc - Cc に含めるメールアドレスのカンマ区切りのリスト
+ * @param {String} options.from - メールの送信元アドレス。getAliases() によって返される値のいずれかにする必要があります。
+ * @param {String} options.htmlBody - 設定すると、HTML をレンダリングできるデバイスは、必須の本文引数の代わりにそれを使用します。メール用にインライン画像を用意する場合は、HTML 本文にオプションの inlineImages フィールドを追加できます。
+ * @param {Object} options.inlineImages - 画像キー（String）から画像データ（BlobSource）へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、<img src="cid:imageKey" /> 形式でこれらの画像への参照が含まれていることを前提としています。
+ * @param {String} options.name - メールの送信者の名前（デフォルト: ユーザー名）
+ * @param {String} options.replyTo - デフォルトの返信先アドレスとして使用するメールアドレス（デフォルト: ユーザーのメールアドレス）
+ * @returns {null|Error}
+ */
+function sendmail(recipient,subject,body,options){
+  const v = {whois:'sendmail',rv:null,step:0};
+  console.log(`${v.whois} start.`);
+  try {
+
+    v.draft = GmailApp.createDraft(recipient,subject,body,options);
+    v.draftId = v.draft.getId();
+    GmailApp.getDraft(v.draftId).send();
+
+    console.log('Mail Remaining Daily Quota:'+MailApp.getRemainingDailyQuota());
+
+    v.step = 9; // 終了処理
+    console.log(`${v.whois} normal end.`);
+    return v.rv;
+
+  } catch(e) {
+    e.message = `\n${v.whois} abnormal end at step.${v.step}`
+    + `\n${e.message}`
+    + `\nrecipient=${recipient}`
+    + `\nsubject=${subject}`
+    + `\nbody=${body}`
+    + `\n=options=${JSON.stringify(options)}`;  // 引数
+    console.error(`${e.message}\nv=${JSON.stringify(v)}`);
+    return e;
   }
 }
 ```

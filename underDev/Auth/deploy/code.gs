@@ -1215,6 +1215,8 @@ class Member {
    * @param {string} memberId
    * @param {string} [deviceId]
    * @returns {Member}
+   *
+   * - 要仕様変更：MemberTrialのため、対象外のデバイス情報も返すよう変更
    */
   getMember(memberId, deviceId) {
     dev.start('Member.getMember', arguments);

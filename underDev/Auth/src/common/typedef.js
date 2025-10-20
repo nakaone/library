@@ -58,6 +58,8 @@ const typedef = {
       {name:'adminName',type:'string',note:'管理者名'},
       {name:'allowableTimeDifference',type:'number',note:'クライアント・サーバ間通信時の許容時差。既定値は2分',default:120000},
       {name:'RSAbits',type:'string',note:'鍵ペアの鍵長',default:2048},
+      {name:'underDev',type:'Object',note:'テスト時の設定'},
+      {name:'underDev.isTest',type:'boolean',note:'開発モードならtrue',default:'false'},
     ],
   },
   authErrorLog: {note:'authServerのエラーログ',
@@ -159,6 +161,8 @@ const typedef = {
       {name:'trial.maxTrial',type:'number',note:'パスコード入力の最大試行回数',default:3},
       {name:'trial.passcodeLifeTime',type:'number',note:'パスコードの有効期間。既定値は10分',default:600000},
       {name:'trial.generationMax',type:'number',note:'ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代',default:5},
+
+      {name:'underDev.sendPasscode',type:'boolean',note:'開発中、パスコード通知メール送信を抑止するならtrue',default:'false'},
     ],
   },
   decryptedRequest: {note:'cryptoServerで復号された処理要求オブジェクト',
@@ -279,7 +283,7 @@ const typedef = {
     type: 'Object',
     prop: [
       {name:'passcode',type:'string',note:'設定されているパスコード。最初の認証試行で作成',default:''},
-      {name:'created',type:'number',note:'パスコード生成日時(≒パスコード通知メール発信日時)'},
+      {name:'created',type:'number',note:'パスコード生成日時(≒パスコード通知メール発信日時)',default:'Date.now()'},
       {name:'log',type:'MemberTrialLog[]',note:'試行履歴。常に最新が先頭(unshift()使用)。保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。',default:[]},
     ],
   },
