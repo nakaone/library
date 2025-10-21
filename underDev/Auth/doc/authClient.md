@@ -142,6 +142,8 @@ authConfigを継承した、authClientでのみ使用する設定値
 | 3 | adminName | ❌ | string |  | 管理者名 |
 | 4 | allowableTimeDifference | ⭕ | number | 120000 | クライアント・サーバ間通信時の許容時差。既定値は2分 |
 | 5 | RSAbits | ⭕ | string | 2048 | 鍵ペアの鍵長 |
+| 6 | underDev | ❌ | Object |  | テスト時の設定 |
+| 7 | underDev.isTest | ⭕ | boolean | false | 開発モードならtrue |
 
 ### 📥 出力項目
 
@@ -265,10 +267,12 @@ stateDiagram-v2
   state 加入中 {
     [*] --> 未認証
     未認証 --> 試行中 : 認証要求
+    試行中 --> 未認証 : CPkey更新
     試行中 --> 認証中 : 認証成功
     試行中 --> 試行中 : 再試行
-    認証中 --> 未認証 : 認証失効
+    認証中 --> 未認証 : 認証失効 or CPkey更新
     試行中 --> 凍結中 : 認証失敗
+    凍結中 --> 凍結中 : CPkey更新
     凍結中 --> 未認証 : 凍結解除
   }
   加入中 --> 未審査 : 加入失効

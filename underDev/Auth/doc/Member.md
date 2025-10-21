@@ -153,6 +153,8 @@ MemberTrial.logに記載される、パスコード入力単位の試行記録
 | 3 | adminName | ❌ | string |  | 管理者名 |
 | 4 | allowableTimeDifference | ⭕ | number | 120000 | クライアント・サーバ間通信時の許容時差。既定値は2分 |
 | 5 | RSAbits | ⭕ | string | 2048 | 鍵ペアの鍵長 |
+| 6 | underDev | ❌ | Object |  | テスト時の設定 |
+| 7 | underDev.isTest | ⭕ | boolean | false | 開発モードならtrue |
 
 #### authServerConfig
 
@@ -181,6 +183,8 @@ authConfigを継承した、authServerでのみ使用する設定値
 | 17 | trial.maxTrial | ⭕ | number | 3 | パスコード入力の最大試行回数 |
 | 18 | trial.passcodeLifeTime | ⭕ | number | 600000 | パスコードの有効期間。既定値は10分 |
 | 19 | trial.generationMax | ⭕ | number | 5 | ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代 |
+| 20 | underDev.sendPasscode | ⭕ | boolean | false | 開発中、パスコード通知メール送信を抑止するならtrue |
+| 21 | underDev.sendInvitation | ⭕ | boolean | false | 開発中、加入承認通知メール送信を抑止するならtrue |
 
 ## 🧱 getMember()
 
@@ -226,10 +230,12 @@ stateDiagram-v2
   state 加入中 {
     [*] --> 未認証
     未認証 --> 試行中 : 認証要求
+    試行中 --> 未認証 : CPkey更新
     試行中 --> 認証中 : 認証成功
     試行中 --> 試行中 : 再試行
-    認証中 --> 未認証 : 認証失効
+    認証中 --> 未認証 : 認証失効 or CPkey更新
     試行中 --> 凍結中 : 認証失敗
+    凍結中 --> 凍結中 : CPkey更新
     凍結中 --> 未認証 : 凍結解除
   }
   加入中 --> 未審査 : 加入失効
@@ -309,8 +315,12 @@ No | 状態 | 説明
   - MemberTrial.created: 現在日時(UNIX時刻)
   - MemberTrial.log: [] ※空配列
   - MemberLog.loginRequest: 現在日時(UNIX時刻)
+- 新しい試行(`authTrial`)をMember.trialの先頭に追加
+- ログイン試行履歴の最大保持数を超えた場合、古い世代を削除<br>
+  (`Member.trial.length >= authServerConfig.generationMax`)
 - 更新後の`Member`について、memberListシートを更新
-- メンバにパスコード通知メールを発信
+- メンバにパスコード通知メールを発信<br>
+  但し`authServerConfig.underDev.sendPasscode === false`なら発信を抑止(∵開発中)
 
 ## 🧱 checkPasscode()
 
@@ -330,11 +340,23 @@ No | 状態 | 説明
 - パスコードが不一致だった場合
   - 試行回数の上限未満の場合(`MemberTrial.log.length < authServerConfig.trial.maxTrial`)<br>
     ⇒ 変更すべき項目無し
-  - 試行回数の上限に達した場合(`MemberTrial.log.length === authServerConfig.trial.maxTrial`)
+  - 試行回数の上限に達した場合(`MemberTrial.log.length >= authServerConfig.trial.maxTrial`)
     - MemberDevice.status: 試行中 -> 凍結中
     - MemberLog.loginFailure: 現在日時(UNIX時刻)
     - MemberLog.unfreezeLogin: 現在日時＋authServerConfig.loginFreeze
-- 更新後の`Member`について、memberListシートを更新
+- judgeStatusメソッドに更新後Memberを渡し、状態を更新した上でmemberListシートを更新
+- 後続処理は戻り値(`Member.status`)で分岐先処理を判断
+
+## 🧱 updateCPkey()
+
+- 対象メンバ・デバイスの公開鍵を更新する
+- 引数は`authRequest`、戻り値は`Member`
+- `authRequest.func='::updateCPkey::'`,`authRequest.signature=更新後CPkey`
+- 状態チェック
+  - authRequest.memberIdを基にgetMember()でMemberインスタンスを取得
+  - authRequest.deviceIdで対象デバイスを特定
+  - 状態が「試行中」以外はエラーを返して終了
+
 
 ## 外部ライブラリ
 

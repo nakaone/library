@@ -163,6 +163,7 @@ const typedef = {
       {name:'trial.generationMax',type:'number',note:'ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代',default:5},
 
       {name:'underDev.sendPasscode',type:'boolean',note:'開発中、パスコード通知メール送信を抑止するならtrue',default:'false'},
+      {name:'underDev.sendInvitation',type:'boolean',note:'開発中、加入承認通知メール送信を抑止するならtrue',default:'false'},
     ],
   },
   decryptedRequest: {note:'cryptoServerで復号された処理要求オブジェクト',

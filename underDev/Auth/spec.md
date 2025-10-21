@@ -125,6 +125,8 @@ sequenceDiagram
 | 3 | adminName | ❌ | string |  | 管理者名 |
 | 4 | allowableTimeDifference | ⭕ | number | 120000 | クライアント・サーバ間通信時の許容時差。既定値は2分 |
 | 5 | RSAbits | ⭕ | string | 2048 | 鍵ペアの鍵長 |
+| 6 | underDev | ❌ | Object |  | テスト時の設定 |
+| 7 | underDev.isTest | ⭕ | boolean | false | 開発モードならtrue |
 
 ## authServerConfig
 
@@ -153,6 +155,8 @@ authConfigを継承した、authServerでのみ使用する設定値
 | 17 | trial.maxTrial | ⭕ | number | 3 | パスコード入力の最大試行回数 |
 | 18 | trial.passcodeLifeTime | ⭕ | number | 600000 | パスコードの有効期間。既定値は10分 |
 | 19 | trial.generationMax | ⭕ | number | 5 | ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代 |
+| 20 | underDev.sendPasscode | ⭕ | boolean | false | 開発中、パスコード通知メール送信を抑止するならtrue |
+| 21 | underDev.sendInvitation | ⭕ | boolean | false | 開発中、加入承認通知メール送信を抑止するならtrue |
 
 ## authClientConfig
 

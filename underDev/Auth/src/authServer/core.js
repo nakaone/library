@@ -1115,6 +1115,8 @@ function authServer(arg) {
    * @prop {number} [trial.maxTrial=3] - パスコード入力の最大試行回数
    * @prop {number} [trial.passcodeLifeTime=600000] - パスコードの有効期間。既定値は10分
    * @prop {number} [trial.generationMax=5] - ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代
+   * @prop {boolean} [underDev.sendPasscode="false"] - 開発中、パスコード通知メール送信を抑止するならtrue
+   * @prop {boolean} [underDev.sendInvitation="false"] - 開発中、加入承認通知メール送信を抑止するならtrue
    */
   class authServerConfig extends authConfig {
     constructor(arg){
