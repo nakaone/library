@@ -265,20 +265,6 @@ const typedef = {
       {name:'unfreezeDenial', type:'number', note:'加入禁止期限。加入否認日時＋加入禁止期間', default:0},
     ],
   },
-  /*
-  MemberJudgeStatus: {note:'Memeber.judgeStatusメソッドの戻り値',
-    type: 'Object',
-    prop: [
-      {name:'memberId',type:'string',note:'メンバの識別子(=メールアドレス)'},
-      {name:'status',type:'string',note:'メンバの状態。未加入,未審査,審査済,加入中,加入禁止'},
-      {name:'device',type:'Object',note:'デバイス毎のステータス。{[deviceId]:[デバイスの状態]}形式。未認証,認証中,試行中,凍結中'},
-      //{name:'status',type:'string',note:'Member.deviceが空ならメンバの、空で無ければデバイスのstatus'},
-      //{name:'memberStatus',type:'string',note:'メンバの状態。未加入,未審査,審査済,加入中,加入禁止'},
-      //{name:'deviceId',type:'string',note:'デバイスの識別子。UUID',isOpt:true},
-      //{name:'deviceStatus',type:'string',note:'デバイスの状態。未認証,認証中,試行中,凍結中',isOpt:true},
-    ],
-  },
-  */
   MemberProfile: {note:'メンバの属性情報(Member.profile)',
     type: 'Object',
     prop: [

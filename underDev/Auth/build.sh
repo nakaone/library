@@ -47,9 +47,9 @@ cat $src/Member/proto.js | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $src/Member/core.js
 
 # 仕様書
-cat $src/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $prj/spec.md
+cat $src/common/spec.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/spec.md
 
 # 統合版
-cat $src/authServer.js | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/code.gs
+#cat $src/authServer.js | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/code.gs
