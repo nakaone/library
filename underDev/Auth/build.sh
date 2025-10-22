@@ -13,6 +13,7 @@ dep="$prj/deploy"
 doc="$prj/doc"
 img="$prj/img"
 tmp="$prj/tmp"
+rm -rf $tmp/*
 
 # ----------------------------------------------
 # 1. 仕様書

@@ -343,10 +343,10 @@ authServerからauthClientに返される処理結果オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | timestamp | ❌ | number |  | サーバ側処理日時。UNIX時刻 |
-| 2 | result | ❌ | string |  | サーバ側処理結果。fatal/warning/normal |
-| 3 | message | ⭕ | string |  | サーバ側からのエラーメッセージ。normal時は`undefined` |
-| 4 | request | ❌ | authRequest |  | 処理要求オブジェクト |
+| 1 | timestamp | ⭕ | number | Date.now() | サーバ側処理日時。UNIX時刻 |
+| 2 | result | ⭕ | string | normal | サーバ側処理結果。fatal/warning/normal |
+| 3 | message | ⭕ | string |  | サーバ側からの(エラー)メッセージ |
+| 4 | request | ⭕ | authRequest |  | 処理要求オブジェクト |
 | 5 | response | ⭕ | any |  | 要求されたサーバ側関数の戻り値。fatal/warning時は`undefined` |
 
 ## 🧱 showMessage()メソッド

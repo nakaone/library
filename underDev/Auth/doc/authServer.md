@@ -37,8 +37,8 @@ authServerは、クライアント（authClient）からの暗号化通信リク
 | 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
 | 2 | name | ❌ | string |  | メンバの氏名 |
 | 3 | status | ⭕ | string | 未加入 | メンバの状態。未加入,未審査,審査済,加入中,加入禁止 |
-| 4 | log | ❌ | string |  | メンバの履歴情報(MemberLog)を保持するJSON文字列 |
-| 5 | profile | ❌ | string |  | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
+| 4 | log | ⭕ | string | new MemberLog() | メンバの履歴情報(MemberLog)を保持するJSON文字列 |
+| 5 | profile | ⭕ | string | new MemberProfile() | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
 | 6 | device | ❌ | string |  | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |
 | 7 | note | ⭕ | string |  | 当該メンバに対する備考 |
 
@@ -250,6 +250,7 @@ No | 状態 | 説明
 ### 🧱 setupEnvironment()
 
 - 初期環境の整備を行う。GAS初回実行時の権限確認処理も含む。
+- 「インストール型トリガー」認可トークン失効時も本メソッドを実行
 - クラスで`static`で定義した関数のように、`authServer.setupEnvironment()`形式での実行を想定
 - ScriptProperties未設定なら設定
 - memberListへのアクセス(ダミー)

@@ -177,6 +177,7 @@ sequenceDiagram
 ### 🧱 setupEnvironment()
 
 - 初期環境の整備を行う。GAS初回実行時の権限確認処理も含む。
+- 「インストール型トリガー」認可トークン失効時も本メソッドを実行
 - クラスで`static`で定義した関数のように、`authServer.setupEnvironment()`形式での実行を想定
 - ScriptProperties未設定なら設定
 - memberListへのアクセス(ダミー)
