@@ -48,8 +48,7 @@ classDiagram
   MemberTrial --> MemberTrialLog
 ```
 
-### Member
-
+<details><summary>Member</summary>
 <a name="Member"></a>
 
 メンバ一覧(アカウント管理表)上のメンバ単位の管理情報
@@ -63,9 +62,9 @@ classDiagram
 | 5 | profile | ⭕ | string | new MemberProfile() | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
 | 6 | device | ❌ | string |  | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |
 | 7 | note | ⭕ | string |  | 当該メンバに対する備考 |
+</details>
 
-### MemberLog
-
+<details><summary>MemberLog</summary>
 <a name="MemberLog"></a>
 
 メンバの各種要求・状態変化の時刻
@@ -82,19 +81,19 @@ classDiagram
 | 8 | unfreezeLogin | ⭕ | number | 0 | 認証無効期限。認証失敗日時＋認証凍結時間 |
 | 9 | joiningExpiration | ⭕ | number | 0 | 加入有効期限。加入承認日時＋加入有効期間 |
 | 10 | unfreezeDenial | ⭕ | number | 0 | 加入禁止期限。加入否認日時＋加入禁止期間 |
+</details>
 
-### MemberProfile
-
+<details><summary>MemberProfile</summary>
 <a name="MemberProfile"></a>
 
 メンバの属性情報(Member.profile)
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | authority | ⭕ | number | 1 | メンバの持つ権限。authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す |
+| 1 | authority | ⭕ | number | 0 | メンバの持つ権限。authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す |
+</details>
 
-### MemberDevice
-
+<details><summary>MemberDevice</summary>
 <a name="MemberDevice"></a>
 
 メンバが使用する通信機器の情報(マルチデバイス対応)
@@ -106,9 +105,9 @@ classDiagram
 | 3 | CPkey | ❌ | string |  | メンバの公開鍵 |
 | 4 | CPkeyUpdated | ⭕ | number | Date.now() | 最新のCPkeyが登録された日時 |
 | 5 | trial | ⭕ | string |  | ログイン試行関連情報オブジェクト(MemberTrial[])。シート保存時はJSON文字列 |
+</details>
 
-### MemberTrial
-
+<details><summary>MemberTrial</summary>
 <a name="MemberTrial"></a>
 
 ログイン試行単位の試行情報(Member.trial)
@@ -118,9 +117,9 @@ classDiagram
 | 1 | passcode | ⭕ | string |  | 設定されているパスコード。最初の認証試行で作成 |
 | 2 | created | ⭕ | number | Date.now() | パスコード生成日時(≒パスコード通知メール発信日時) |
 | 3 | log | ⭕ | MemberTrialLog[] |  | 試行履歴。常に最新が先頭(unshift()使用)。保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。 |
+</details>
 
-### MemberTrialLog
-
+<details><summary>MemberTrialLog</summary>
 <a name="MemberTrialLog"></a>
 
 MemberTrial.logに記載される、パスコード入力単位の試行記録
@@ -131,6 +130,7 @@ MemberTrial.logに記載される、パスコード入力単位の試行記録
 | 2 | result | ❌ | number |  | -1:恒久的エラー(再試行不可), 0:要リトライ(再試行可), 1:成功(パスコード一致) |
 | 3 | message | ❌ | string |  | エラーメッセージ |
 | 4 | timestamp | ❌ | number |  | 判定処理日時 |
+</details>
 
 ## 🧱 constructor()
 
@@ -176,7 +176,7 @@ authConfigを継承した、authServerでのみ使用する設定値
 | 10 | auditLog | ⭕ | string | auditLog | 監査ログのシート名 |
 | 11 | storageDaysOfAuditLog | ⭕ | number | 604800000 | 監査ログの保存日数。単位はミリ秒。既定値は7日分 |
 | 12 | func | ❌ | Object.<string,Object> |  | サーバ側の関数マップ<br>例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}} |
-| 13 | func.authority | ⭕ | number | 1 | サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authority > 0`なら実行可とする。 |
+| 13 | func.authority | ⭕ | number | 0 | サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限,`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。 |
 | 14 | func.do | ❌ | Function |  | 実行するサーバ側関数 |
 | 15 | trial | ❌ | Object |  | ログイン試行関係の設定値 |
 | 16 | trial.passcodeLength | ⭕ | number | 6 | パスコードの桁数 |
@@ -869,21 +869,21 @@ function devTools(option) {
 /** GASからメールを発信する
  * 実行に当たっては権限の承認を必要とする。
  *
- * - [Google App Script メモ(メール送信制限 回避術)](https://zenn.dev/tatsuya_okzk/articles/259203cc416328)
+ * - [Google App Script メモ（メール送信制限 回避術）](https://zenn.dev/tatsuya_okzk/articles/259203cc416328)
  * - GAS公式[createDraft](https://developers.google.com/apps-script/reference/gmail/gmail-app?hl=ja#createdraftrecipient,-subject,-body,-options)
  *
  * @param {String} recipient - 受信者のアドレス
  * @param {String} subject - 件名
  * @param {String} body - メールの本文
- * @param {Object} options - 詳細パラメータを指定する JavaScript オブジェクト(下記を参照)
+ * @param {Object} options - 詳細パラメータを指定する JavaScript オブジェクト（下記を参照）
  * @param {BlobSource[]} options.attachments - メールと一緒に送信するファイルの配列
  * @param {String} options.bcc - Bcc で送信するメールアドレスのカンマ区切りのリスト
  * @param {String} options.cc - Cc に含めるメールアドレスのカンマ区切りのリスト
  * @param {String} options.from - メールの送信元アドレス。getAliases() によって返される値のいずれかにする必要があります。
  * @param {String} options.htmlBody - 設定すると、HTML をレンダリングできるデバイスは、必須の本文引数の代わりにそれを使用します。メール用にインライン画像を用意する場合は、HTML 本文にオプションの inlineImages フィールドを追加できます。
- * @param {Object} options.inlineImages - 画像キー(String)から画像データ(BlobSource)へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、<img src="cid:imageKey" /> 形式でこれらの画像への参照が含まれていることを前提としています。
- * @param {String} options.name - メールの送信者の名前(デフォルト: ユーザー名)
- * @param {String} options.replyTo - デフォルトの返信先アドレスとして使用するメールアドレス(デフォルト: ユーザーのメールアドレス)
+ * @param {Object} options.inlineImages - 画像キー（String）から画像データ（BlobSource）へのマッピングを含む JavaScript オブジェクト。これは、htmlBody パラメータが使用され、<img src="cid:imageKey" /> 形式でこれらの画像への参照が含まれていることを前提としています。
+ * @param {String} options.name - メールの送信者の名前（デフォルト: ユーザー名）
+ * @param {String} options.replyTo - デフォルトの返信先アドレスとして使用するメールアドレス（デフォルト: ユーザーのメールアドレス）
  * @returns {null|Error}
  */
 function sendmail(recipient,subject,body,options){

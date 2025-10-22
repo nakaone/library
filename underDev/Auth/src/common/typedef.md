@@ -2,32 +2,28 @@
 備忘。ChatGPTから作成提案があったが、時間がかかるので凍結。以下は提案のプロトタイプ
 -->
 
-# 第1章. 概要
+## 第1章. 概要
 
-ドキュメントの目的
+- ドキュメントの目的
+	- 各クラス・データ型の定義を一覧化し、仕様の整合性を確保すること。
+- ファイル構成方針
+	- 状態遷移(stateTransition.md)などの補助文書との参照関係も記載。
+- データ型命名規約
+	- 例：auth* = 認証系, Member* = メンバ管理系, Local* = クライアント内通信系 など。
+- 依存関係図(Mermaid UMLで可視化)
 
-各クラス・データ型の定義を一覧化し、仕様の整合性を確保すること。
-
-ファイル構成方針
-
-typedef.jsで自動生成される各型定義ファイル(.md, .js)との対応関係を明示。
-
-状態遷移(stateTransition.md)などの補助文書との参照関係も記載。
-
-データ型命名規約
-
-例：auth* = 認証系, Member* = メンバ管理系, Local* = クライアント内通信系 など。
-
-依存関係図(Mermaid UMLで可視化)
-
+```mermaid
 graph TD
   authConfig --> authClientConfig
   authConfig --> authServerConfig
   Member --> MemberDevice
   MemberDevice --> MemberTrial
   MemberTrial --> MemberTrialLog
+```
 
-第2章. データ型一覧(索引)
+## 第2章. データ型一覧(索引)
+
+<!--
 区分	データ型名	概要	出力ファイル
 認証共通	authConfig
 	認証系共通設定値	authConfig.js
@@ -46,18 +42,25 @@ graph TD
 ...	...	...	...
 
 ※ 実際のテーブルはtypedefオブジェクトから自動生成可能(章冒頭に生成スクリプト記載)
+-->
 
-第3章. 型定義(詳細)
+## 第3章. 型定義(詳細)
 
 各ファイル(例：authRequest.md)をインクルードまたは埋め込み。
 
-3.1 認証系
+### 3.1 認証系
 
-authRequest
+#### authRequest
 
-authResponse
+<!--::$tmp/authRequest.md::-->
 
-authClientKeys
+#### authResponse
+
+<!--::$tmp/authResponse.md::-->
+
+#### authClientKeys
+
+<!--::$tmp/authClientKeys.md::-->
 
 authAuditLog
 
@@ -65,7 +68,9 @@ authErrorLog
 
 authScriptProperties
 
-3.2 メンバ管理系
+### 3.2 メンバ管理系
+
+<!--::$src/Member/Member.classDiagram.md::-->
 
 Member
 
@@ -79,7 +84,7 @@ MemberTrial
 
 MemberTrialLog
 
-3.3 通信・暗号化系
+### 3.3 通信・暗号化系
 
 encryptedRequest
 
@@ -89,16 +94,17 @@ decryptedRequest
 
 decryptedResponse
 
-3.4 クライアントローカル通信
+### 3.4 クライアントローカル通信
 
 LocalRequest
 
 LocalResponse
 
-第4章. 状態遷移図
+## 第4章. 状態遷移図
 
-stateTransition.md をインクルードまたは参照リンク。
+<!--::$src/Member/stateTransition.md::-->
 
+<!--
 4.1 メンバ状態遷移(Member.status)
 
 状態一覧：未加入 → 未審査 → 審査済 → 加入中 → 加入禁止
@@ -113,7 +119,7 @@ stateTransition.md をインクルードまたは参照リンク。
 
 トリガーイベント：loginRequest, loginSuccess, loginFailure, unfreezeLogin
 
-第5章. 参照関係と依存構造
+## 第5章. 参照関係と依存構造
 
 型間参照を一覧表で整理(自動抽出推奨)
 
@@ -166,3 +172,5 @@ JSDoc出力仕様
 2025-10-18	0.9	初版構成案
 2025-10-19	1.0	MemberTrial/MemberTrialLog追加
 2025-10-20	1.1	stateTransition分離
+
+-->

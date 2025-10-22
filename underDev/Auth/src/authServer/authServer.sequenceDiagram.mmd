@@ -1,0 +1,37 @@
+sequenceDiagram
+
+  %%actor user
+  %%participant localFunc
+  %%participant clientMail
+  %%participant cryptoClient
+  %%participant IndexedDB
+  participant authClient
+  participant authServer
+  participant memberList
+  participant cryptoServer
+  %%participant serverFunc
+  %%actor admin
+
+  authClient->>+authServer: 処理要求(encryptedRequest)
+
+  authServer->>memberList: memberId, deviceId
+  memberList->>authServer: Memberインスタンス
+
+  authServer->>cryptoServer: 復号・検証要求(encryptedRequest)
+  cryptoServer->>authServer: decryptedRequest
+
+  alt 復号・署名検証失敗
+    authServer->>authServer: responseSPkey()実行
+  else 復号・署名検証成功
+    authServer->>authServer: 処理分岐(decryptedRequest->authResponse)
+
+    alt authResponse.result === 'fatal'
+      authServer->>authServer: ログ出力
+    else authResponse.result !== 'fatal'
+      authServer->>cryptoServer: 署名・暗号化要求(authResponse)
+      cryptoServer->>authServer: encryptedResponse
+    end
+  end
+
+
+  authServer->>-authClient: encryptedResponse

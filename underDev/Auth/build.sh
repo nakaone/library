@@ -27,8 +27,10 @@ cat $src/authClient/spec.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authClient.md
 
 # authServer
+mmdc -i $src/authServer/authServer.sequenceDiagram.mmd -o $tmp/authServer.sequenceDiagram.svg
 cat $src/authServer/spec.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authServer.md
+
 cat $src/authServer/proto.js | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $src/authServer/core.js
 
@@ -45,6 +47,10 @@ cat $src/Member/spec.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/Member.md
 cat $src/Member/proto.js | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $src/Member/core.js
+
+# 型定義
+cat $src/common/typedef.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/typedef.md
 
 # 仕様書
 cat $src/common/spec.md | awk 1 | \

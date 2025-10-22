@@ -153,8 +153,8 @@ const typedef = {
       {name:'func',type:'Object.<string,Object>',note:'サーバ側の関数マップ<br>例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}}'},
       {name:'func.authority',type:'number',note:[
         'サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限',
-        '`Member.profile.authority & authServerConfig.func.authority > 0`なら実行可とする。'
-      ],default:1},
+        '`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。'
+      ],default:0},
       {name:'func.do',type:'Function',note:'実行するサーバ側関数'},
 
       {name:'trial',type:'Object',note:'ログイン試行関係の設定値'},
@@ -268,7 +268,7 @@ const typedef = {
   MemberProfile: {note:'メンバの属性情報(Member.profile)',
     type: 'Object',
     prop: [
-      {name:'authority',type:'number',note:'メンバの持つ権限。authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す',default:1},
+      {name:'authority',type:'number',note:'メンバの持つ権限。authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す',default:0},
     ],
   },
   MemberTrial: {note:'ログイン試行単位の試行情報(Member.trial)',

@@ -11,29 +11,29 @@
 
 <!--::$src/Member/Member.classDiagram.md::-->
 
-### Member
-
+<details><summary>Member</summary>
 <!--::$tmp/Member.md::-->
+</details>
 
-### MemberLog
-
+<details><summary>MemberLog</summary>
 <!--::$tmp/MemberLog.md::-->
+</details>
 
-### MemberProfile
-
+<details><summary>MemberProfile</summary>
 <!--::$tmp/MemberProfile.md::-->
+</details>
 
-### MemberDevice
-
+<details><summary>MemberDevice</summary>
 <!--::$tmp/MemberDevice.md::-->
+</details>
 
-### MemberTrial
-
+<details><summary>MemberTrial</summary>
 <!--::$tmp/MemberTrial.md::-->
+</details>
 
-### MemberTrialLog
-
+<details><summary>MemberTrialLog</summary>
 <!--::$tmp/MemberTrialLog.md::-->
+</details>
 
 ## 🧱 constructor()
 

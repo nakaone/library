@@ -88,7 +88,7 @@ authConfigを継承した、authServerでのみ使用する設定値
 | 10 | auditLog | ⭕ | string | auditLog | 監査ログのシート名 |
 | 11 | storageDaysOfAuditLog | ⭕ | number | 604800000 | 監査ログの保存日数。単位はミリ秒。既定値は7日分 |
 | 12 | func | ❌ | Object.<string,Object> |  | サーバ側の関数マップ<br>例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}} |
-| 13 | func.authority | ⭕ | number | 1 | サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authority > 0`なら実行可とする。 |
+| 13 | func.authority | ⭕ | number | 0 | サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限,`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。 |
 | 14 | func.do | ❌ | Function |  | 実行するサーバ側関数 |
 | 15 | trial | ❌ | Object |  | ログイン試行関係の設定値 |
 | 16 | trial.passcodeLength | ⭕ | number | 6 | パスコードの桁数 |

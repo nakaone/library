@@ -452,7 +452,7 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
               a.remove();
               URL.revokeObjectURL(url);
 
-              // ダイアログを自動的に閉じる(少し待ってから)
+              // ダイアログを自動的に閉じる（少し待ってから）
               setTimeout(() => {
                 google.script.host.close();
               }, 1000);
@@ -1108,7 +1108,7 @@ function authServer(arg) {
    * @prop {string} [auditLog="auditLog"] - 監査ログのシート名
    * @prop {number} [storageDaysOfAuditLog=604800000] - 監査ログの保存日数。単位はミリ秒。既定値は7日分
    * @prop {Object.<string,Object>} func - サーバ側の関数マップ<br>例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}}
-   * @prop {number} [func.authority=1] - サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限,`Member.profile.authority & authServerConfig.func.authority > 0`なら実行可とする。
+   * @prop {number} [func.authority=0] - サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限,`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。
    * @prop {Function} func.do - 実行するサーバ側関数
    * @prop {Object} trial - ログイン試行関係の設定値
    * @prop {number} [trial.passcodeLength=6] - パスコードの桁数
