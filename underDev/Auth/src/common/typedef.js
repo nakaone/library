@@ -129,7 +129,7 @@ const typedef = {
     prop:[
       {name:'keyGeneratedDateTime',type:'number',note:'UNIX時刻'},
       {name:'SPkey',type:'string',note:'PEM形式の公開鍵文字列'},
-      {name:'SSkey',type:'string',note:'PEM形式の秘密鍵文字列（暗号化済み）'},
+      {name:'SSkey',type:'string',note:'PEM形式の秘密鍵文字列(暗号化済み)'},
       {name:'oldSPkey',type:'string',note:'cryptoServer.reset実行前にバックアップした公開鍵'},
       {name:'oldSSkey',type:'string',note:'cryptoServer.reset実行前にバックアップした秘密鍵'},
       {name:'requestLog',type:'authRequestLog[]',note:'重複チェック用のリクエスト履歴',default:[]},

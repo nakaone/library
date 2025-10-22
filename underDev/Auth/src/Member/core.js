@@ -16,7 +16,7 @@ class Member {
       sheet.appendRow(headers);
   
       const notes = {
-        memberId: 'メンバ識別子（メールアドレスなど）',
+        memberId: 'メンバ識別子(メールアドレスなど)',
         name: '氏名',
         status: 'メンバ状態',
         log: 'MemberLog(JSON文字列)',

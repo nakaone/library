@@ -452,7 +452,7 @@ function SpreadDb(schema={tableMap:{}},opt={}) {
               a.remove();
               URL.revokeObjectURL(url);
 
-              // ダイアログを自動的に閉じる（少し待ってから）
+              // ダイアログを自動的に閉じる(少し待ってから)
               setTimeout(() => {
                 google.script.host.close();
               }, 1000);

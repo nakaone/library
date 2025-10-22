@@ -12,7 +12,7 @@
  *     loginLifeTime: 1000 * 60 * 60 * 24 * 7 // 7日
  *   };
  *
- *   // 初期化（必要なら）
+ *   // 初期化(必要なら)
  *   const server = new cryptoServer(authConfig);
  *
  *   // 復号 (static)
@@ -27,7 +27,7 @@
  */
 class cryptoServer {
   /**
-   * constructor: インスタンス用（静的メソッド利用が主だが、プロパティ取得目的で使用可）
+   * constructor: インスタンス用(静的メソッド利用が主だが、プロパティ取得目的で使用可)
    * @param {Object} authConfig
    */
   constructor(authConfig = {}) {
@@ -41,7 +41,7 @@ class cryptoServer {
       this.pv = {
         keyGeneratedDateTime: now,
         SPkey: kp.publicPEM,
-        SSkey: kp.privatePEMEncrypted || kp.privatePEM, // 暗号化保存を想定（簡略化）
+        SSkey: kp.privatePEMEncrypted || kp.privatePEM, // 暗号化保存を想定(簡略化)
         requestLog: [] // TTL付きキャッシュに使う
       };
       cryptoServer._saveScriptProperties(this.propName, this.pv);
@@ -79,12 +79,12 @@ class cryptoServer {
    */
   static _generateKeyPair() {
     try {
-      // KEYUTIL.generateKeypair の使用を想定（jsrsasign）
+      // KEYUTIL.generateKeypair の使用を想定(jsrsasign)
       // RSA 2048
       const kp = KEYUTIL.generateKeypair("RSA", 2048);
       const pubPEM = KEYUTIL.getPEM(kp.pubKeyObj); // 公開鍵PEM
       const privPEM = KEYUTIL.getPEM(kp.prvKeyObj, "PKCS1PRV"); // 秘密鍵PEM
-      // 実運用では秘密鍵はさらにApps Script側で暗号化して保存すべき（ここでは平文保存）
+      // 実運用では秘密鍵はさらにApps Script側で暗号化して保存すべき(ここでは平文保存)
       return { publicPEM: pubPEM, privatePEM: privPEM, privatePEMEncrypted: privPEM };
     } catch (e) {
       console.error('_generateKeyPair error', e);
@@ -112,12 +112,12 @@ class cryptoServer {
   }
 
   /**
-   * requestId の再生防止キャッシュ管理（TTL付き）
+   * requestId の再生防止キャッシュ管理(TTL付き)
    * ScriptProperties 内の requestLog を array に保存 (short TTL)
    * @param {Object} pv (プロパティオブジェクト)
    * @param {string} requestId
    * @param {number} ttlMs
-   * @returns { boolean } 既存なら false（重複） / 新規なら true
+   * @returns { boolean } 既存なら false(重複) / 新規なら true
    */
   static _checkAndPushRequestLog(pv, requestId, ttlMs = 1000 * 60 * 5) {
     try {
@@ -140,7 +140,7 @@ class cryptoServer {
   // --------------------
   /**
    * MemberList シートから memberId に一致するメンバを取得し、deviceId が含まれる device 情報を使って Member を返す
-   * 期待するシート構成（例）:
+   * 期待するシート構成(例):
    *   columns: memberId,name,log,profile,device,note
    * device カラムには JSON 文字列の配列 (MemberDevice[]) が入っている想定
    *
@@ -193,7 +193,7 @@ class cryptoServer {
   }
 
   // --------------------
-  // decrypt メソッド（static）
+  // decrypt メソッド(static)
   // --------------------
   /**
    * encryptedRequest を復号・検証して構造化オブジェクトを返す
@@ -201,7 +201,7 @@ class cryptoServer {
    * @param {Object} authConfig
    * @returns {Object} { result:'fatal'|'warning'|'normal', message?:string, request?:object, timestamp?:string }
    *
-   * 注意: fatal 系でもオブジェクトを返す（throw は内部で補助的に使用するが外向けはオブジェクト）
+   * 注意: fatal 系でもオブジェクトを返す(throw は内部で補助的に使用するが外向けはオブジェクト)
    */
   static decrypt(encryptedRequest, authConfig = {}) {
     const propName = (authConfig && authConfig.system && authConfig.system.name) || 'cryptoServer_default';
@@ -220,20 +220,20 @@ class cryptoServer {
         return Object.assign({ result: 'fatal', message: `[${missing}] not specified` }, rvBase);
       }
 
-      // 重複リクエストチェック（replay）
+      // 重複リクエストチェック(replay)
       if (!cryptoServer._checkAndPushRequestLog(pv, encryptedRequest.requestId || ('rid:' + ciphertext), authConfig.requestTTL || (1000 * 60 * 5))) {
         // 保存してから戻す
         cryptoServer._saveScriptProperties(propName, pv);
         return Object.assign({ result: 'fatal', message: 'Duplicate request' }, rvBase);
       }
-      // 一旦プロパティ保存（requestLog 更新）
+      // 一旦プロパティ保存(requestLog 更新)
       cryptoServer._saveScriptProperties(propName, pv);
 
       // member を取得
       const Member = cryptoServer._getMemberFromSheet(memberId, deviceId);
       const isExistingMember = !!Member;
 
-      // 秘密鍵（SSkey）を取得して復号を試行
+      // 秘密鍵(SSkey)を取得して復号を試行
       if (!pv.SSkey) {
         return Object.assign({ result: 'fatal', message: 'Server private key not found' }, rvBase);
       }
@@ -244,13 +244,13 @@ class cryptoServer {
       try {
         // jsrsasign での RSA OAEP 形式の復号を想定:
         // - ciphertext が base64 エンコードされた RSA-OAEP であることを想定
-        // 実装: KJUR.crypto.Cipher による復号など（環境に依る）
+        // 実装: KJUR.crypto.Cipher による復号など(環境に依る)
         // ここでは jsrsasign の RSAKey を使ったデモ形式を記載します。
         const prvKey = KEYUTIL.getKey(serverPrivatePEM);
-        // ciphertext は base64 string -> raw hex へ変換（環境依存）
+        // ciphertext は base64 string -> raw hex へ変換(環境依存)
         // 実運用ではクライアントと暗号化フォーマットを厳密に合わせてください。
         const b64 = ciphertext;
-        // KJUR.crypto.Cipher.decrypt の利用例（ライブラリにより関数名は変動）
+        // KJUR.crypto.Cipher.decrypt の利用例(ライブラリにより関数名は変動)
         // try OAEP:
         if (typeof KJUR !== 'undefined' && KJUR.crypto && KJUR.crypto.Cipher && KJUR.crypto.Cipher.decrypt) {
           // KJUR.crypto.Cipher.decrypt expects array of keys? this is illustrative.
@@ -321,7 +321,7 @@ class cryptoServer {
         let verified = false;
         try {
           const pubKey = KEYUTIL.getKey(CPkeyPEM);
-          // jsrsasign の verify を使用：RSASSA-PKCS1-v1_5 を想定（実運用で alg を統一）
+          // jsrsasign の verify を使用：RSASSA-PKCS1-v1_5 を想定(実運用で alg を統一)
           // 署名は base64 文字列を想定
           const sig = new KJUR.crypto.Signature({ "alg": "SHA256withRSA" });
           sig.init(pubKey);
@@ -332,7 +332,7 @@ class cryptoServer {
           verified = false;
         }
 
-        // 定数時間比較で安全に判定（結果の bool を文字列にして比較するなど）
+        // 定数時間比較で安全に判定(結果の bool を文字列にして比較するなど)
         if (!verified) {
           return Object.assign({ result: 'fatal', message: 'Signature unmatch' }, rvBase);
         }
@@ -341,14 +341,14 @@ class cryptoServer {
         return Object.assign({ result: 'normal', request: authRequest }, rvBase);
       } else {
         // 新規登録要求
-        // メールアドレスとして適切か（簡易チェック）
+        // メールアドレスとして適切か(簡易チェック)
         const mailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!mailRegex.test(memberId)) {
           return Object.assign({ result: 'fatal', message: 'Invalid mail address' }, rvBase);
         }
 
         // 署名検証：クライアントからの自己署名のみで OK (メンバ未登録のため CPkey は無い)
-        // ここでは authRequest にクライアント側が公開鍵を含めていることを期待する（例: authRequest.CPkey）
+        // ここでは authRequest にクライアント側が公開鍵を含めていることを期待する(例: authRequest.CPkey)
         const candidateCPkey = authRequest.CPkey || null;
         if (!candidateCPkey) {
           // client didn't include CPkey -> cannot verify
@@ -374,14 +374,14 @@ class cryptoServer {
           return Object.assign({ result: 'fatal', message: 'Signature unmatch' }, rvBase);
         }
 
-        // 登録可能な要求（warning として返す: 後続の登録処理が必要）
+        // 登録可能な要求(warning として返す: 後続の登録処理が必要)
         return Object.assign({ result: 'warning', message: 'Member registerd', request: authRequest }, rvBase);
       }
     } catch (e) {
       console.error('cryptoServer.decrypt unexpected error', e);
       return Object.assign({ result: 'fatal', message: e && e.message ? e.message : 'unknown error' }, rvBase);
     } finally {
-      // 最後に pv を保存する（requestLog 等が更新されている場合）
+      // 最後に pv を保存する(requestLog 等が更新されている場合)
       try {
         cryptoServer._saveScriptProperties(propName, pv);
       } catch (e) {
@@ -391,7 +391,7 @@ class cryptoServer {
   }
 
   // --------------------
-  // encrypt メソッド（static）
+  // encrypt メソッド(static)
   // --------------------
   /**
    * authResponse をクライアントの公開鍵で暗号化し、署名を付与して返す
@@ -416,7 +416,7 @@ class cryptoServer {
         return { result: 'fatal', message: 'server private key not found' };
       }
 
-      // 署名: server の秘密鍵で authResponse に署名（署名付与）
+      // 署名: server の秘密鍵で authResponse に署名(署名付与)
       const serverPrivatePEM = pv.SSkey;
       const payload = JSON.stringify(authResponse);
       let signature = null;
@@ -431,11 +431,11 @@ class cryptoServer {
         return { result: 'fatal', message: 'sign failed' };
       }
 
-      // 暗号化: クライアント公開鍵で RSA-OAEP 暗号化（cipherText を生成）
+      // 暗号化: クライアント公開鍵で RSA-OAEP 暗号化(cipherText を生成)
       let ciphertext = null;
       try {
         const pub = KEYUTIL.getKey(clientSPkeyPEM);
-        // jsrsasign による RSA-OAEP 暗号化の例（実際のAPIは環境で要確認）
+        // jsrsasign による RSA-OAEP 暗号化の例(実際のAPIは環境で要確認)
         if (typeof KJUR !== 'undefined' && KJUR.crypto && KJUR.crypto.Cipher && KJUR.crypto.Cipher.encrypt) {
           // illustrative
           ciphertext = KJUR.crypto.Cipher.encrypt(payload, pub);
@@ -465,7 +465,7 @@ class cryptoServer {
   }
 
   // --------------------
-  // reset メソッド（鍵ローテーション）
+  // reset メソッド(鍵ローテーション)
   // --------------------
   /**
    * 鍵ペアを生成して ScriptProperties に上書きする

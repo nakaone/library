@@ -1,8 +1,12 @@
+<!--
+auth全体の仕様書
+-->
+
 # 総説
 
 ブラウザ(クライアント)とGAS(サーバ)の間で認証された通信を行う。
 
-関連仕様書：[authClient](doc/authClient.md) | [authServer](doc/authServer.md) | [Member](doc/Member.md) | [cryptoServer](doc/cryptoServer.md) | [cryptoClient](doc/cryptoClient.md)
+関連仕様書：[authClient](authClient.md) | [authServer](authServer.md) | [Member](Member.md) | [cryptoServer](cryptoServer.md) | [cryptoClient](cryptoClient.md)
 
 ## 要求仕様
 
@@ -31,7 +35,7 @@
   ※既定値。実際の桁数はauthConfig.cryptoServer.allowableTimeDifferenceで規定
 - 順序は「暗号化->署名」ではなく「署名->暗号化」で行う
   1. クライアントがデータをJSON化
-  2. 自身の秘密鍵で署名（署名→暗号化）
+  2. 自身の秘密鍵で署名(署名→暗号化)
   3. サーバの公開鍵で暗号化
   4. サーバは復号後、クライアント公開鍵(memberList.CPkey)で署名を検証
 - パスワードの生成は「ライブラリ > createPassword」を使用
@@ -285,8 +289,8 @@ authClientからクライアント側関数に返される処理結果オブジ�
 
 # クラス・関数定義
 
-- [authClient](doc/authClient.md) 関数 仕様書
-- [authServer](doc/authServer.md) 関数 仕様書
-- [Member](doc/Member.md) クラス 仕様書
-- [cryptoServer](doc/cryptoServer.md) 関数 仕様書
-- [cryptoClient](doc/cryptoClient.md) 関数 仕様書
+- [authClient](authClient.md) 関数 仕様書
+- [authServer](authServer.md) 関数 仕様書
+- [Member](Member.md) クラス 仕様書
+- [cryptoServer](cryptoServer.md) 関数 仕様書
+- [cryptoClient](cryptoClient.md) 関数 仕様書

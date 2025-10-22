@@ -3,16 +3,16 @@
 ## 🧭 概要
 
 - クライアント側でサーバへ安全に処理要求を送信するための復号・署名検証処理モジュール
-- サーバ側仕様書（`cryptoServer`）と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
+- サーバ側仕様書(`cryptoServer`)と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
 - `cryptoClient.encrypt()`形式での使用を想定し、メソッドはstaticとする
 - 暗号化ライブラリは `jsrsasign` を使用。
 
 ## ■ 設計方針
 
 - 暗号化・署名には **Web Crypto API** を使用。
-- 鍵ペアは **署名用（RSA-PSS）** と **暗号化用（RSA-OAEP）**の2種類を生成し、それぞれ非エクスポータブル（`exportable: false`）として**IndexedDB** に保存。
+- 鍵ペアは **署名用(RSA-PSS)** と **暗号化用(RSA-OAEP)**の2種類を生成し、それぞれ非エクスポータブル(`exportable: false`)として**IndexedDB** に保存。
 - IndexedDB の store 名および keyPath は `authConfig.system.name`に基づく。
-- クライアント側公開鍵（CPkey）は`authConfig.loginLifeTime`（既定：1日）で有効期限管理。
+- クライアント側公開鍵(CPkey)は`authConfig.loginLifeTime`(既定：1日)で有効期限管理。
 - 暗号化・署名時に利用するハッシュ関数は **SHA-256** 以上を使用。
 
 ## 🧩 内部構成(クラス変数)

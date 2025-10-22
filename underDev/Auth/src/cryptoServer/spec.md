@@ -3,16 +3,16 @@
 ## 🧭 概要
 
 - 認証サーバ (`authServer`) から独立した復号・署名検証処理モジュール。
-- クライアント側仕様書（`cryptoClient`）と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
+- クライアント側仕様書(`cryptoClient`)と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
 - `cryptoServer.encrypt()`形式での使用を想定し、メソッドはstaticとする
 - 暗号化ライブラリは `jsrsasign` を使用。
 
 ## ■ 設計方針
 
-- 署名→暗号化（Sign-then-Encrypt）方式に準拠  
-- 鍵ペアは `ScriptProperties` に保存（`SSkey`, `SPkey`）
+- 署名→暗号化(Sign-then-Encrypt)方式に準拠  
+- 鍵ペアは `ScriptProperties` に保存(`SSkey`, `SPkey`)
 - `ScriptProperties`のキー名は`authConfig.system.name`に基づく
-- 復号処理は副作用のない純関数構造を目指す（stateを持たない）
+- 復号処理は副作用のない純関数構造を目指す(stateを持たない)
 - 可能な範囲で「外部ライブラリ」を使用する
 - timestamp検証は整数化・絶対値化してから比較する
 
@@ -144,7 +144,7 @@
 - authServer->authClientのメッセージを暗号化＋署名
 - authResponse.signatureは省略せず明示的に含める
 - 暗号化順序は Sign-then-Encrypt
-- 復号側（cryptoClient）では「Decrypt-then-Verify」
+- 復号側(cryptoClient)では「Decrypt-then-Verify」
 
 ### 📤 入力項目
 
@@ -172,8 +172,8 @@
 
 | 項目 | 対策 |
 |------|------|
-| **リプレイ攻撃** | requestIdキャッシュ（TTL付き）で検出・拒否 |
-| **タイミング攻撃** | 定数時間比較（署名・ハッシュ照合）を採用 |
+| **リプレイ攻撃** | requestIdキャッシュ(TTL付き)で検出・拒否 |
+| **タイミング攻撃** | 定数時間比較(署名・ハッシュ照合)を採用 |
 | **ログ漏えい防止** | 復号データは一切記録しない |
 | **エラー通知スパム** | メンバ単位で送信間隔を制御 |
 | **鍵管理** | `SSkey`/`SPkey` は ScriptProperties に格納し、Apps Script内でのみ参照可 |
