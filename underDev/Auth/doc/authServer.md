@@ -44,10 +44,43 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
 
 ## 🧱 メイン処理
 
-### 概要
-
 - classのconstructor()に相当
 - 引数はauthServer内共有用の変数`pv`に保存
+
+### 📤 入力項目
+
+<details><summary>encryptedRequest</summary>
+
+<a name="encryptedRequest"></a>
+
+- authClientからauthServerに送られる、暗号化された処理要求オブジェクト
+- ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列
+- memberId,deviceIdは平文
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 3 | ciphertext | ❌ | string |  | 暗号化した文字列 |
+
+</details>
+
+### 📥 出力項目
+
+<details><summary>encryptedResponse</summary>
+
+<a name="encryptedResponse"></a>
+
+- authServerからauthClientに返される、暗号化された処理結果オブジェクト
+- ciphertextはauthResponseをJSON化、RSA-OAEP暗号化＋署名付与した文字列
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | ciphertext | ❌ | string |  | 暗号化した文字列 |
+
+</details>
+
+### 処理手順
 
 <details><summary>シーケンス図</summary>
 
@@ -55,17 +88,17 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
 
 </details>
 
-#### 処理分岐
+#### 「処理分岐」手順詳説
 
-1. 戻り値用`authResponse`(pv.rv)と監査ログ用`authAuditLog`(pv.log)を準備
-1. 重複リクエストチェック
+- 戻り値用`authResponse`(pv.rv)と監査ログ用`authAuditLog`(pv.log)を準備
+- 重複リクエストチェック
   - authScriptProperties.requestLogで重複リクエストをチェック
   - エラーならエラーログに出力
     - `authErrorLog.result` = 'fatal'
     - `authErrorLog.message` = 'Duplicate requestId'
   - authServerConfig.requestIdRetention以上経過したリクエスト履歴は削除
   - Errorをthrowして終了
-1. authClient内発処理か判定
+- authClient内発処理か判定
   - `authRequest.func`が以下のいずれかの文字列ならauthClient内発処理と判定、メソッドを呼び出し
     | 文字列 | 呼び出すメソッド |
     | :-- | :-- |
@@ -74,11 +107,11 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
     | ::newMember:: | いまここ |
     | ::reissue:: | いまここ |
   - メソッドの戻り値をauthServerの戻り値として返して終了
-1. サーバ側関数が定義されているかチェック
+- サーバ側関数が定義されているかチェック
   - `authServerConfig.func`のメンバ名に処理要求関数名(`authRequest.func`)が無ければ以下を返して終了
-1. 権限不要な処理要求か判定
+- 権限不要な処理要求か判定
   - `authServerConfig.func[処理要求関数名].authority === 0`ならcallFunctionメソッドを呼び出し
-1. メンバ・デバイスの状態により処理分岐
+- メンバ・デバイスの状態により処理分岐
   - 当該メンバの状態を確認(`Member.getStatus()`)
   - 以下の表に従って処理分岐
     No | 状態 | 動作
@@ -91,42 +124,13 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
     4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態<br>⇒ `callFunction()`メソッドを呼び出し
     4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態<br>⇒ `loginTrial()`メソッドを呼び出し
     5 | 加入禁止 | 管理者により加入が否認された状態<br>⇒ `notifyAcceptance()`メソッドを呼び出し
-1. 監査ログ(pv.log)を出力して「処理分岐」は終了
+- 監査ログ(pv.log)を出力して「処理分岐」は終了
 
 <!--
 #### 参考：メンバの状態遷移
 
 <!-:$src/Member/stateTransition.md:->
 -->
-
-### 📤 入力項目
-
-#### encryptedRequest
-
-<a name="encryptedRequest"></a>
-
-- authClientからauthServerに渡す暗号化された処理要求オブジェクト
-- ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列
-- memberId,deviceIdは平文
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
-| 3 | ciphertext | ❌ | string |  | 暗号化した文字列 |
-
-### 📥 出力項目
-
-#### encryptedResponse
-
-<a name="encryptedResponse"></a>
-
-- authServerからauthClientに返す暗号化された処理結果オブジェクト
-- ciphertextはauthResponseをJSON化、RSA-OAEP暗号化＋署名付与した文字列
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | ciphertext | ❌ | string |  | 暗号化した文字列 |
 
 ## 🧱 membershipRequest()
 
@@ -222,13 +226,17 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
 <!--
 ## 🧱 proto()
 
-### 概要
-
 ### 📤 入力項目
+
+<details><summary></summary>
+
+</details>
 
 ### 📥 出力項目
 
 <details><summary></summary>
 
 </details>
+
+### 処理手順
 -->

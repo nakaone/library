@@ -43,6 +43,7 @@ cat $src/cryptoServer/spec.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cryptoServer.md
 
 # Member
+mmdc -i $src/Member/Member.classDiagram.mmd -o $tmp/Member.classDiagram.svg
 cat $src/Member/spec.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/Member.md
 cat $src/Member/proto.js | awk 1 | \

@@ -21,7 +21,7 @@
 
 <a name="encryptedRequest"></a>
 
-- authClientからauthServerに渡す暗号化された処理要求オブジェクト
+- authClientからauthServerに送られる、暗号化された処理要求オブジェクト
 - ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列
 - memberId,deviceIdは平文
 
@@ -50,7 +50,7 @@
 
 <a name="encryptedResponse"></a>
 
-- authServerからauthClientに返す暗号化された処理結果オブジェクト
+- authServerからauthClientに返される、暗号化された処理結果オブジェクト
 - ciphertextはauthResponseをJSON化、RSA-OAEP暗号化＋署名付与した文字列
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
@@ -63,7 +63,7 @@
 
 <a name="decryptedResponse"></a>
 
-cryptoClientで復号された処理結果オブジェクト
+encryptedResponseをcryptoClientで復号した処理結果オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
@@ -93,7 +93,7 @@ cryptoClientで復号された処理結果オブジェクト
 
 <a name="authRequest"></a>
 
-authClientからauthServerに送られる処理要求オブジェクト
+authClientからauthServerに送られる、暗号化前の処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
@@ -111,7 +111,7 @@ authClientからauthServerに送られる処理要求オブジェクト
 
 <a name="encryptedRequest"></a>
 
-- authClientからauthServerに渡す暗号化された処理要求オブジェクト
+- authClientからauthServerに送られる、暗号化された処理要求オブジェクト
 - ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列
 - memberId,deviceIdは平文
 

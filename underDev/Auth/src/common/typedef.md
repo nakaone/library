@@ -12,18 +12,10 @@
 	- 例：auth* = 認証系, Member* = メンバ管理系, Local* = クライアント内通信系 など。
 - 依存関係図(Mermaid UMLで可視化)
 
-```mermaid
-graph TD
-  authConfig --> authClientConfig
-  authConfig --> authServerConfig
-  Member --> MemberDevice
-  MemberDevice --> MemberTrial
-  MemberTrial --> MemberTrialLog
-```
-
-## 第2章. データ型一覧(索引)
 
 <!--
+## 第2章. データ型一覧(索引)
+
 区分	データ型名	概要	出力ファイル
 認証共通	authConfig
 	認証系共通設定値	authConfig.js
@@ -44,63 +36,151 @@ graph TD
 ※ 実際のテーブルはtypedefオブジェクトから自動生成可能(章冒頭に生成スクリプト記載)
 -->
 
-## 第3章. 型定義(詳細)
+## 第3章. データ型定義
 
-各ファイル(例：authRequest.md)をインクルードまたは埋め込み。
+### 3.1 動作環境設定
 
-### 3.1 認証系
+```mermaid
+graph TD
+  authConfig --> authClientConfig
+  authConfig --> authServerConfig
+```
 
-#### authRequest
+#### authConfig
 
-<!--::$tmp/authRequest.md::-->
+<!--::$tmp/authConfig.md::-->
 
-#### authResponse
+#### authClientConfig
 
-<!--::$tmp/authResponse.md::-->
+<!--::$tmp/authClientConfig.md::-->
+
+#### authServerConfig
+
+<!--::$tmp/authServerConfig.md::-->
+
+### 3.2 鍵ペア他の格納
+
+```mermaid
+classDiagram
+  class authScriptProperties {
+		number keyGeneratedDateTime
+    string SPkey
+    string SSkey
+    string oldSPkey
+    string oldSSkey
+    authRequestLog[] requestLog
+  }
+
+  class authRequestLog {
+    number timestamp
+    string requestId
+  }
+
+  authScriptProperties --> authRequestLog
+```
+
+#### authScriptProperties
+
+<!--::$tmp/authScriptProperties.md::-->
+
+#### authRequestLog
+
+<!--::$tmp/authRequestLog.md::-->
+
+```mermaid
+graph TD
+  authClientKeys --> authIndexedDB
+```
+
+#### authIndexedDB
+
+<!--::$tmp/authIndexedDB.md::-->
 
 #### authClientKeys
 
 <!--::$tmp/authClientKeys.md::-->
 
-authAuditLog
+### 3.3 通信・暗号化
 
-authErrorLog
+```mermaid
+<!--::$src/common/sequence.summary.mmd::-->
+```
 
-authScriptProperties
+#### LocalRequest
 
-### 3.2 メンバ管理系
+<!--::$tmp/LocalRequest.md::-->
 
-<!--::$src/Member/Member.classDiagram.md::-->
+#### authRequest
 
-Member
+<!--::$tmp/authRequest.md::-->
 
-MemberDevice
+#### encryptedRequest
 
-MemberProfile
+<!--::$tmp/encryptedRequest.md::-->
 
-MemberLog
+#### decryptedRequest
 
-MemberTrial
+<!--::$tmp/decryptedRequest.md::-->
 
-MemberTrialLog
+#### authResponse
 
-### 3.3 通信・暗号化系
+<!--::$tmp/authResponse.md::-->
 
-encryptedRequest
+#### encryptedResponse
 
-encryptedResponse
+<!--::$tmp/encryptedResponse.md::-->
 
-decryptedRequest
+#### decryptedResponse
 
-decryptedResponse
+<!--::$tmp/decryptedResponse.md::-->
 
-### 3.4 クライアントローカル通信
+#### LocalResponse
 
-LocalRequest
+<!--::$tmp/LocalResponse.md::-->
 
-LocalResponse
+### 3.4 メンバ管理
 
-## 第4章. 状態遷移図
+```mermaid
+<!--::$src/Member/Member.classDiagram.mmd::-->
+```
+
+#### Member
+
+<!--::$tmp/Member.md::-->
+
+#### MemberDevice
+
+<!--::$tmp/MemberDevice.md::-->
+
+#### MemberLog
+
+<!--::$tmp/MemberLog.md::-->
+
+#### MemberProfile
+
+<!--::$tmp/MemberProfile.md::-->
+
+#### MemberTrial
+
+<!--::$tmp/MemberTrial.md::-->
+
+#### MemberTrialLog
+
+<!--::$tmp/MemberTrialLog.md::-->
+
+### 3.5 監査・エラーログ
+
+#### authAuditLog
+
+<!--::$tmp/authAuditLog.md::-->
+
+#### authErrorLog
+
+<!--::$tmp/authErrorLog.md::-->
+
+<a name="stateTransition"></a>
+
+## 第4章. メンバの状態と遷移
 
 <!--::$src/Member/stateTransition.md::-->
 

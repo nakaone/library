@@ -6,7 +6,7 @@ auth全体の仕様書
 
 ブラウザ(クライアント)とGAS(サーバ)の間で認証された通信を行う。
 
-関連仕様書：[authClient](authClient.md) | [authServer](authServer.md) | [Member](Member.md) | [cryptoServer](cryptoServer.md) | [cryptoClient](cryptoClient.md)
+関連仕様書：[authClient](authClient.md) | [authServer](authServer.md) | [Member](Member.md) | [cryptoServer](cryptoServer.md) | [cryptoClient](cryptoClient.md) | [typedef](typedef.md)
 
 ## 要求仕様
 
@@ -192,7 +192,7 @@ authConfigを継承した、authClientでのみ使用する設定値
 
 <a name="authRequest"></a>
 
-authClientからauthServerに送られる処理要求オブジェクト
+authClientからauthServerに送られる、暗号化前の処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
@@ -208,7 +208,7 @@ authClientからauthServerに送られる処理要求オブジェクト
 
 <a name="encryptedRequest"></a>
 
-- authClientからauthServerに渡す暗号化された処理要求オブジェクト
+- authClientからauthServerに送られる、暗号化された処理要求オブジェクト
 - ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列
 - memberId,deviceIdは平文
 
@@ -222,11 +222,11 @@ authClientからauthServerに送られる処理要求オブジェクト
 
 <a name="decryptedRequest"></a>
 
-cryptoServerで復号された処理要求オブジェクト
+encryptedRequestをcryptoServerで復号した処理要求オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | result | ❌ | string |  | 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "success" |
+| 1 | result | ❌ | string |  | 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "normal" |
 | 2 | message | ⭕ | string |  | エラーメッセージ。result="normal"の場合`undefined` |
 | 3 | request | ❌ | authRequest |  | ユーザから渡された処理要求 |
 | 4 | timestamp | ❌ | number |  | 復号処理実施日時 |
@@ -236,7 +236,7 @@ cryptoServerで復号された処理要求オブジェクト
 
 <a name="authResponse"></a>
 
-authServerからauthClientに返される処理結果オブジェクト
+authServerからauthClientに返される、暗号化前の処理結果オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
@@ -250,7 +250,7 @@ authServerからauthClientに返される処理結果オブジェクト
 
 <a name="encryptedResponse"></a>
 
-- authServerからauthClientに返す暗号化された処理結果オブジェクト
+- authServerからauthClientに返される、暗号化された処理結果オブジェクト
 - ciphertextはauthResponseをJSON化、RSA-OAEP暗号化＋署名付与した文字列
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
@@ -261,7 +261,7 @@ authServerからauthClientに返される処理結果オブジェクト
 
 <a name="decryptedResponse"></a>
 
-cryptoClientで復号された処理結果オブジェクト
+encryptedResponseをcryptoClientで復号した処理結果オブジェクト
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |

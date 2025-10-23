@@ -9,7 +9,9 @@
 
 ## 🧩 内部構成(クラス変数)
 
-<!--::$src/Member/Member.classDiagram.md::-->
+<details><summary>クラス図</summary>
+<!--::$tmp/Member.classDiagram.svg::-->
+</details>
 
 <details><summary>Member</summary>
 <!--::$tmp/Member.md::-->
