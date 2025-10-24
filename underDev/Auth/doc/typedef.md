@@ -1,44 +1,13 @@
-<!--
-備忘。ChatGPTから作成提案があったが、時間がかかるので凍結。以下は提案のプロトタイプ
--->
-
-# 第1章. 概要
+# auth関係 データ型定義
 
 - ドキュメントの目的
 	- 各クラス・データ型の定義を一覧化し、仕様の整合性を確保すること。
-- ファイル構成方針
-	- 状態遷移(stateTransition.md)などの補助文書との参照関係も記載。
 - データ型命名規約
-	- 例：auth* = 認証系, Member* = メンバ管理系, Local* = クライアント内通信系 など。
-- 依存関係図(Mermaid UMLで可視化)
+	- 例：auth* = 内部処理系, Member* = メンバ管理系, Local* = クライアント内通信系
 
+ 第3章. データ型定義
 
-<!--
-# 第2章. データ型一覧(索引)
-
-区分	データ型名	概要	出力ファイル
-認証共通	authConfig
-	認証系共通設定値	authConfig.js
-認証クライアント	authClientConfig
-	クライアント専用設定	authClientConfig.js
-認証サーバ	authServerConfig
-	サーバ専用設定	authServerConfig.js
-メンバ管理	Member
-	メンバの基本情報	Member.js
-メンバ管理	MemberDevice
-	デバイス情報	MemberDevice.js
-メンバ管理	MemberTrial
-	パスコード試行情報	MemberTrial.js
-メンバ管理	MemberTrialLog
-	試行履歴	MemberTrialLog.js
-...	...	...	...
-
-※ 実際のテーブルはtypedefオブジェクトから自動生成可能(章冒頭に生成スクリプト記載)
--->
-
-# 第3章. データ型定義
-
-## 3.1 動作環境設定
+# 1 動作環境設定系
 
 ```mermaid
 graph TD
@@ -46,7 +15,7 @@ graph TD
   authConfig --> authServerConfig
 ```
 
-### authConfig
+## authConfig
 
 <a name="authConfig"></a>
 
@@ -63,7 +32,7 @@ graph TD
 | 6 | underDev | ❌ | Object |  | テスト時の設定 |
 | 7 | underDev.isTest | ⭕ | boolean | false | 開発モードならtrue |
 
-### authClientConfig
+## authClientConfig
 
 <a name="authClientConfig"></a>
 
@@ -75,7 +44,7 @@ authConfigを継承した、authClientでのみ使用する設定値
 | 2 | timeout | ⭕ | number | 300000 | サーバからの応答待機時間。これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分 |
 | 3 | CPkeyGraceTime | ⭕ | number | 600000 | CPkey期限切れまでの猶予時間。CPkey有効期間がこれを切ったら更新処理実行。既定値は10分 |
 
-### authServerConfig
+## authServerConfig
 
 <a name="authServerConfig"></a>
 
@@ -105,7 +74,7 @@ authConfigを継承した、authServerでのみ使用する設定値
 | 20 | underDev.sendPasscode | ⭕ | boolean | false | 開発中、パスコード通知メール送信を抑止するならtrue |
 | 21 | underDev.sendInvitation | ⭕ | boolean | false | 開発中、加入承認通知メール送信を抑止するならtrue |
 
-## 3.2 鍵ペア他の格納
+# 2 鍵ペア他の格納
 
 ```mermaid
 classDiagram
@@ -126,7 +95,7 @@ classDiagram
   authScriptProperties --> authRequestLog
 ```
 
-### authScriptProperties
+## authScriptProperties
 
 <a name="authScriptProperties"></a>
 
@@ -141,7 +110,7 @@ classDiagram
 | 5 | oldSSkey | ❌ | string |  | cryptoServer.reset実行前にバックアップした秘密鍵 |
 | 6 | requestLog | ⭕ | authRequestLog[] |  | 重複チェック用のリクエスト履歴 |
 
-### authRequestLog
+## authRequestLog
 
 <a name="authRequestLog"></a>
 
@@ -157,7 +126,7 @@ graph TD
   authClientKeys --> authIndexedDB
 ```
 
-### authIndexedDB
+## authIndexedDB
 
 <a name="authIndexedDB"></a>
 
@@ -172,7 +141,7 @@ graph TD
 | 4 | SPkey | ❌ | string |  | サーバ公開鍵(Base64) |
 | 5 | expireCPkey | ⭕ | number | 0 | CPkeyの有効期限(無効になる日時)。未ログイン時は0 |
 
-### authClientKeys
+## authClientKeys
 
 <a name="authClientKeys"></a>
 
@@ -185,7 +154,7 @@ graph TD
 | 3 | CSkeyEnc | ❌ | CryptoKey |  | 暗号化用秘密鍵 |
 | 4 | CPkeyEnc | ❌ | CryptoKey |  | 暗号化用公開鍵 |
 
-## 3.3 通信・暗号化
+# 3 通信・暗号化系
 
 ```mermaid
 sequenceDiagram
@@ -234,7 +203,7 @@ sequenceDiagram
   end
 ```
 
-### LocalRequest
+## LocalRequest
 
 <a name="LocalRequest"></a>
 
@@ -246,7 +215,7 @@ sequenceDiagram
 | 1 | func | ❌ | string |  | サーバ側関数名 |
 | 2 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
 
-### authRequest
+## authRequest
 
 <a name="authRequest"></a>
 
@@ -262,7 +231,7 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
 | 6 | func | ❌ | string |  | サーバ側関数名 |
 | 7 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
 
-### encryptedRequest
+## encryptedRequest
 
 <a name="encryptedRequest"></a>
 
@@ -276,7 +245,7 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
 | 2 | deviceId | ❌ | string |  | デバイスの識別子 |
 | 3 | ciphertext | ❌ | string |  | 暗号化した文字列 |
 
-### decryptedRequest
+## decryptedRequest
 
 <a name="decryptedRequest"></a>
 
@@ -290,7 +259,21 @@ encryptedRequestをcryptoServerで復号した処理要求オブジェクト
 | 4 | timestamp | ❌ | number |  | 復号処理実施日時 |
 | 5 | status | ❌ | string |  | Member.deviceが空ならメンバの、空で無ければデバイスのstatus |
 
-### authResponse
+### cryptoServer.decryptの処理結果
+
+No | 署名 | 復号 | 時差 | result | message | response
+:--: | :-- | :-- | :-- | :-- | :-- | :--
+1 | 一致 | 成功 | 誤差内 | normal | — | authRequest
+2 | 一致 | 成功 | 誤差超 | fatal | Timestamp difference too large | —
+3 | 一致 | 失敗 | — | fatal | decrypt failed | —
+4 | 不一致 | 成功 | 誤差内 | warning | Signature unmatch | authRequest
+5 | 不一致 | 成功 | 誤差超 | fatal | Timestamp difference too large | —
+6 | 不一致 | 失敗 | — | fatal | decrypt failed | —
+
+- 「時差」：`abs(Date.now() - request.timestamp) > allowableTimeDifference` ⇒ 誤差超
+- No.4は加入申請(SPkey取得済・CPkey未登録)時を想定
+
+## authResponse
 
 <a name="authResponse"></a>
 
@@ -304,7 +287,7 @@ authServerからauthClientに返される、暗号化前の処理結果オブジ
 | 4 | request | ⭕ | authRequest |  | 処理要求オブジェクト |
 | 5 | response | ⭕ | any |  | 要求されたサーバ側関数の戻り値。fatal/warning時は`undefined` |
 
-### encryptedResponse
+## encryptedResponse
 
 <a name="encryptedResponse"></a>
 
@@ -315,7 +298,7 @@ authServerからauthClientに返される、暗号化前の処理結果オブジ
 | --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | ciphertext | ❌ | string |  | 暗号化した文字列 |
 
-### decryptedResponse
+## decryptedResponse
 
 <a name="decryptedResponse"></a>
 
@@ -333,7 +316,7 @@ encryptedResponseをcryptoClientで復号した処理結果オブジェクト
 | 8 | sv.result | ❌ | string |  | サーバ側処理結果。fatal/warning/normal |
 | 9 | sv.message | ⭕ | string |  | サーバ側からのエラーメッセージ。normal時は`undefined` |
 
-### LocalResponse
+## LocalResponse
 
 <a name="LocalResponse"></a>
 
@@ -345,7 +328,7 @@ authClientからクライアント側関数に返される処理結果オブジ�
 | 2 | message | ⭕ | string |  | エラーメッセージ。normal時は`undefined`。 |
 | 3 | response | ⭕ | any |  | 要求された関数の戻り値。fatal/warning時は`undefined`。`JSON.parse(authResponse.response)` |
 
-## 3.4 メンバ管理
+# 4 メンバ管理系
 
 ```mermaid
 classDiagram
@@ -386,126 +369,9 @@ classDiagram
   MemberTrial --> MemberTrialLog
 ```
 
-### Member
-
-<a name="Member"></a>
-
-メンバ一覧(アカウント管理表)上のメンバ単位の管理情報
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 2 | name | ❌ | string |  | メンバの氏名 |
-| 3 | status | ⭕ | string | 未加入 | メンバの状態。未加入,未審査,審査済,加入中,加入禁止 |
-| 4 | log | ⭕ | string | new MemberLog() | メンバの履歴情報(MemberLog)を保持するJSON文字列 |
-| 5 | profile | ⭕ | string | new MemberProfile() | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
-| 6 | device | ❌ | string |  | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |
-| 7 | note | ⭕ | string |  | 当該メンバに対する備考 |
-
-### MemberDevice
-
-<a name="MemberDevice"></a>
-
-メンバが使用する通信機器の情報(マルチデバイス対応)
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | deviceId | ❌ | string |  | デバイスの識別子。UUID |
-| 2 | status | ⭕ | string | 未認証 | デバイスの状態。未認証,認証中,試行中,凍結中 |
-| 3 | CPkey | ❌ | string |  | メンバの公開鍵 |
-| 4 | CPkeyUpdated | ⭕ | number | Date.now() | 最新のCPkeyが登録された日時 |
-| 5 | trial | ⭕ | string |  | ログイン試行関連情報オブジェクト(MemberTrial[])。シート保存時はJSON文字列 |
-
-### MemberLog
-
-<a name="MemberLog"></a>
-
-メンバの各種要求・状態変化の時刻
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | joiningRequest | ⭕ | number | 0 | 加入要求日時。加入要求をサーバ側で受信した日時 |
-| 2 | approval | ⭕ | number | 0 | 加入承認日時。管理者がmemberList上で加入承認処理を行った日時。値設定は加入否認日時と択一 |
-| 3 | denial | ⭕ | number | 0 | 加入否認日時。管理者がmemberList上で加入否認処理を行った日時。値設定は加入承認日時と択一 |
-| 4 | loginRequest | ⭕ | number | 0 | 認証要求日時。未認証メンバからの処理要求をサーバ側で受信した日時 |
-| 5 | loginSuccess | ⭕ | number | 0 | 認証成功日時。未認証メンバの認証要求が成功した最新日時 |
-| 6 | loginExpiration | ⭕ | number | 0 | 認証有効期限。認証成功日時＋認証有効時間 |
-| 7 | loginFailure | ⭕ | number | 0 | 認証失敗日時。未認証メンバの認証要求失敗が確定した最新日時 |
-| 8 | unfreezeLogin | ⭕ | number | 0 | 認証無効期限。認証失敗日時＋認証凍結時間 |
-| 9 | joiningExpiration | ⭕ | number | 0 | 加入有効期限。加入承認日時＋加入有効期間 |
-| 10 | unfreezeDenial | ⭕ | number | 0 | 加入禁止期限。加入否認日時＋加入禁止期間 |
-
-### MemberProfile
-
-<a name="MemberProfile"></a>
-
-メンバの属性情報(Member.profile)
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | authority | ⭕ | number | 0 | メンバの持つ権限。authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す |
-
-### MemberTrial
-
-<a name="MemberTrial"></a>
-
-ログイン試行単位の試行情報(Member.trial)
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | passcode | ⭕ | string |  | 設定されているパスコード。最初の認証試行で作成 |
-| 2 | created | ⭕ | number | Date.now() | パスコード生成日時(≒パスコード通知メール発信日時) |
-| 3 | log | ⭕ | MemberTrialLog[] |  | 試行履歴。常に最新が先頭(unshift()使用)。保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。 |
-
-### MemberTrialLog
-
-<a name="MemberTrialLog"></a>
-
-MemberTrial.logに記載される、パスコード入力単位の試行記録
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | entered | ❌ | string |  | 入力されたパスコード |
-| 2 | result | ❌ | number |  | -1:恒久的エラー(再試行不可), 0:要リトライ(再試行可), 1:成功(パスコード一致) |
-| 3 | message | ❌ | string |  | エラーメッセージ |
-| 4 | timestamp | ❌ | number |  | 判定処理日時 |
-
-## 3.5 監査・エラーログ
-
-### authAuditLog
-
-<a name="authAuditLog"></a>
-
-authServerの監査ログ
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | timestamp | ⭕ | string | Date.now() | 要求日時。ISO8601拡張形式の文字列 |
-| 2 | duration | ❌ | number |  | 処理時間。ミリ秒単位 |
-| 3 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 4 | deviceId | ⭕ | string |  | デバイスの識別子 |
-| 5 | func | ⭕ | string |  | サーバ側関数名 |
-| 6 | result | ⭕ | string |  | サーバ側処理結果。fatal/warning/normal |
-| 7 | note | ❌ | string |  | 備考 |
-
-### authErrorLog
-
-<a name="authErrorLog"></a>
-
-authServerのエラーログ
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | timestamp | ❌ | string |  | 要求日時。ISO8601拡張形式の文字列 |
-| 2 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 3 | deviceId | ⭕ | string |  | デバイスの識別子 |
-| 4 | result | ⭕ | string |  | サーバ側処理結果。fatal/warning/normal |
-| 5 | message | ⭕ | string |  | サーバ側からのエラーメッセージ。normal時は`undefined` |
-| 6 | stackTrace | ⭕ | string |  | エラー発生時のスタックトレース。本項目は管理者への通知メール等、シート以外には出力不可 |
-
-# 第4章. メンバの状態と遷移
-
 <a name="stateTransition"></a>
+
+## メンバの状態と遷移
 
 ```mermaid
 %% メンバ状態遷移図
@@ -542,6 +408,186 @@ No | 状態 | 説明
 3.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態
 4 | 加入禁止 | 管理者により加入が否認された状態
 
+## Member
+
+<a name="Member"></a>
+
+メンバ一覧(アカウント管理表)上のメンバ単位の管理情報
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 2 | name | ❌ | string |  | メンバの氏名 |
+| 3 | status | ⭕ | string | 未加入 | メンバの状態。未加入,未審査,審査済,加入中,加入禁止 |
+| 4 | log | ⭕ | string | new MemberLog() | メンバの履歴情報(MemberLog)を保持するJSON文字列 |
+| 5 | profile | ⭕ | string | new MemberProfile() | メンバの属性情報(MemberProfile)を保持するJSON文字列 |
+| 6 | device | ❌ | string |  | マルチデバイス対応のためのデバイス情報(MemberDevice[])を保持するJSON文字列 |
+| 7 | note | ⭕ | string |  | 当該メンバに対する備考 |
+
+## MemberDevice
+
+<a name="MemberDevice"></a>
+
+メンバが使用する通信機器の情報(マルチデバイス対応)
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | deviceId | ❌ | string |  | デバイスの識別子。UUID |
+| 2 | status | ⭕ | string | 未認証 | デバイスの状態。未認証,認証中,試行中,凍結中 |
+| 3 | CPkey | ❌ | string |  | メンバの公開鍵 |
+| 4 | CPkeyUpdated | ⭕ | number | Date.now() | 最新のCPkeyが登録された日時 |
+| 5 | trial | ⭕ | string |  | ログイン試行関連情報オブジェクト(MemberTrial[])。シート保存時はJSON文字列 |
+
+## MemberLog
+
+<a name="MemberLog"></a>
+
+メンバの各種要求・状態変化の時刻
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | joiningRequest | ⭕ | number | 0 | 加入要求日時。加入要求をサーバ側で受信した日時 |
+| 2 | approval | ⭕ | number | 0 | 加入承認日時。管理者がmemberList上で加入承認処理を行った日時。値設定は加入否認日時と択一 |
+| 3 | denial | ⭕ | number | 0 | 加入否認日時。管理者がmemberList上で加入否認処理を行った日時。値設定は加入承認日時と択一 |
+| 4 | loginRequest | ⭕ | number | 0 | 認証要求日時。未認証メンバからの処理要求をサーバ側で受信した日時 |
+| 5 | loginSuccess | ⭕ | number | 0 | 認証成功日時。未認証メンバの認証要求が成功した最新日時 |
+| 6 | loginExpiration | ⭕ | number | 0 | 認証有効期限。認証成功日時＋認証有効時間 |
+| 7 | loginFailure | ⭕ | number | 0 | 認証失敗日時。未認証メンバの認証要求失敗が確定した最新日時 |
+| 8 | unfreezeLogin | ⭕ | number | 0 | 認証無効期限。認証失敗日時＋認証凍結時間 |
+| 9 | joiningExpiration | ⭕ | number | 0 | 加入有効期限。加入承認日時＋加入有効期間 |
+| 10 | unfreezeDenial | ⭕ | number | 0 | 加入禁止期限。加入否認日時＋加入禁止期間 |
+
+## MemberProfile
+
+<a name="MemberProfile"></a>
+
+メンバの属性情報(Member.profile)
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | authority | ⭕ | number | 0 | メンバの持つ権限。authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す |
+
+## MemberTrial
+
+<a name="MemberTrial"></a>
+
+ログイン試行単位の試行情報(Member.trial)
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | passcode | ⭕ | string |  | 設定されているパスコード。最初の認証試行で作成 |
+| 2 | created | ⭕ | number | Date.now() | パスコード生成日時(≒パスコード通知メール発信日時) |
+| 3 | log | ⭕ | MemberTrialLog[] |  | 試行履歴。常に最新が先頭(unshift()使用)。保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。 |
+
+## MemberTrialLog
+
+<a name="MemberTrialLog"></a>
+
+MemberTrial.logに記載される、パスコード入力単位の試行記録
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | entered | ❌ | string |  | 入力されたパスコード |
+| 2 | result | ❌ | number |  | -1:恒久的エラー(再試行不可), 0:要リトライ(再試行可), 1:成功(パスコード一致) |
+| 3 | message | ❌ | string |  | エラーメッセージ |
+| 4 | timestamp | ❌ | number |  | 判定処理日時 |
+
+# 5 監査・エラーログ系
+
+## authAuditLog
+
+<a name="authAuditLog"></a>
+
+authServerの監査ログ
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | timestamp | ⭕ | string | Date.now() | 要求日時。ISO8601拡張形式の文字列 |
+| 2 | duration | ❌ | number |  | 処理時間。ミリ秒単位 |
+| 3 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 4 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 5 | func | ❌ | string |  | サーバ側関数名 |
+| 6 | result | ⭕ | string | normal | サーバ側処理結果。fatal/warning/normal |
+| 7 | note | ❌ | string |  | 備考 |
+
+クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照)<br>
+暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
+
+### 🧱 constructor()
+
+- 📥 引数 {authRequest} arg={}
+- `authServerConfig.auditLog`シートが無ければ作成
+- 引数の内、authAuditLogと同一メンバ名があればthisに設定
+- 引数にnoteがあればthis.noteに設定
+- timestampに現在日時を設定
+
+### 🧱 log()
+
+- 📥 引数 {Object|string} arg={}
+- 引数がObjectの場合：func,result,noteがあればthisに上書き
+- 引数がstringの場合：this.funcにargをセット
+- `this.duration = Date.now() - this.timestamp`
+- timestampはISO8601拡張形式の文字列に変更
+- シートの末尾行にauthAuditLogオブジェクトを追加
+- メール通知：stackTraceは削除した上でauthConfig.adminMail宛にメール通知
+- 📤 戻り値：シートに出力したauthAuditLogオブジェクト
+
+### 🧱 reset()
+
+authAuditLogインスタンス変数の値を再設定
+
+- 📥 引数 {authRequest} arg={}
+- `authServerConfig.auditLog`シートが無ければ作成
+- 引数の内、authAuditLogと同一メンバ名があればthisに設定
+- 📤 戻り値：変更後のauthAuditLogオブジェクト
+
+## authErrorLog
+
+<a name="authErrorLog"></a>
+
+authServerのエラーログ
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | timestamp | ⭕ | string | Date.now() | 要求日時。ISO8601拡張形式の文字列 |
+| 2 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 3 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 4 | result | ⭕ | string | fatal | サーバ側処理結果。fatal/warning/normal |
+| 5 | message | ⭕ | string |  | サーバ側からのエラーメッセージ。normal時は`undefined` |
+| 6 | stackTrace | ⭕ | string |  | エラー発生時のスタックトレース。本項目は管理者への通知メール等、シート以外には出力不可 |
+
+クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照)<br>
+暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
+
+### 🧱 constructor()
+
+- 📥 引数 {authRequest} arg={}
+- `authServerConfig.errorLog`シートが無ければ作成
+- 引数の内、authErrorLogと同一メンバ名があればthisに設定
+- timestampに現在日時を設定
+
+### 🧱 log()
+
+- 📥 引数 {Error} e={}
+- this.message = e.message
+- this.stackTrace = e.stack
+- e.messageがJSON化可能な場合
+  - e.messageをオブジェクト化して`obj`に代入
+  - this.result = obj.result
+  - this.message = obj.message
+- シートの末尾行にauthErrorLogオブジェクトを追加
+- 📤 戻り値：シートに出力したauthErrorLogオブジェクト
+
+### 🧱 reset()
+
+authErrorLogインスタンス変数の値を再設定
+
+- 📥 引数 {authRequest} arg={}
+- `authServerConfig.auditLog`シートが無ければ作成
+- 引数の内、authErrorLogと同一メンバ名があればthisに設定
+- 📤 戻り値：変更後のauthErrorLogオブジェクト
+
+
 <!--
 4.1 メンバ状態遷移(Member.status)
 
@@ -557,7 +603,7 @@ No | 状態 | 説明
 
 トリガーイベント：loginRequest, loginSuccess, loginFailure, unfreezeLogin
 
-# 第5章. 参照関係と依存構造
+ 第5章. 参照関係と依存構造
 
 型間参照を一覧表で整理(自動抽出推奨)
 

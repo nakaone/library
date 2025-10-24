@@ -1,0 +1,103 @@
+# SPkey要求
+
+```mermaid
+sequenceDiagram
+  %%actor user
+  participant localFunc
+  %%participant clientMail
+  participant cryptoClient
+  %%participant IndexedDB
+  participant authClient
+  participant authServer
+  %%participant memberList
+  participant cryptoServer
+  %%participant serverFunc
+  %%actor admin
+
+  localFunc->>authClient: 処理要求
+  authClient->>authServer: encryptedRequest
+
+  authClient->>localFunc: authClientインスタンス生成
+  localFunc->>+authClient: 処理要求(LocalRequest)
+  authClient->>+cryptoClient: 署名・暗号化要求(authRequest)
+  cryptoClient->>-authClient: encryptedRequest
+
+  loop リトライ試行
+    authClient->>+authServer: 処理要求(encryptedRequest)
+    authServer->>+cryptoServer: 復号・検証要求(encryptedRequest)
+    cryptoServer->>-authServer: decryptedRequest
+    authServer->>authServer: サーバ内処理(decryptedRequest->authResponse)
+    alt authResponse.result !== 'fatal'
+      authServer->>+cryptoServer: 署名・暗号化要求(authResponse)
+      cryptoServer->>-authServer: encryptedResponse
+    end
+
+    alt 応答タイムアウト内にレスポンス無し
+      authClient->>localFunc: エラー通知(LocalResponse.result="fatal")
+    else 応答タイムアウト内にレスポンスあり
+      authServer->>-authClient: encryptedResponse
+
+      authClient->>+cryptoClient: 復号・検証要求(encryptedResponse)
+      cryptoClient->>-authClient: decryptedResponse
+
+      alt decryptedResponse.result === 'fatal'
+        authClient->>localFunc: エラー通知(LocalResponse.result="fatal")
+      else
+        authClient->>authClient: クライアント内分岐処理
+        authClient->>-localFunc: 処理結果(LocalResponse)
+      end
+    end
+  end
+```
+
+# 新規登録要求
+
+```mermaid
+sequenceDiagram
+  %%actor user
+  participant localFunc
+  %%participant clientMail
+  participant cryptoClient
+  %%participant IndexedDB
+  participant authClient
+  participant authServer
+  %%participant memberList
+  participant cryptoServer
+  %%participant serverFunc
+  %%actor admin
+
+  localFunc->>authClient: 処理要求
+  authClient->>authServer: encryptedRequest
+
+  authClient->>localFunc: authClientインスタンス生成
+  localFunc->>+authClient: 処理要求(LocalRequest)
+  authClient->>+cryptoClient: 署名・暗号化要求(authRequest)
+  cryptoClient->>-authClient: encryptedRequest
+
+  loop リトライ試行
+    authClient->>+authServer: 処理要求(encryptedRequest)
+    authServer->>+cryptoServer: 復号・検証要求(encryptedRequest)
+    cryptoServer->>-authServer: decryptedRequest
+    authServer->>authServer: サーバ内処理(decryptedRequest->authResponse)
+    alt authResponse.result !== 'fatal'
+      authServer->>+cryptoServer: 署名・暗号化要求(authResponse)
+      cryptoServer->>-authServer: encryptedResponse
+    end
+
+    alt 応答タイムアウト内にレスポンス無し
+      authClient->>localFunc: エラー通知(LocalResponse.result="fatal")
+    else 応答タイムアウト内にレスポンスあり
+      authServer->>-authClient: encryptedResponse
+
+      authClient->>+cryptoClient: 復号・検証要求(encryptedResponse)
+      cryptoClient->>-authClient: decryptedResponse
+
+      alt decryptedResponse.result === 'fatal'
+        authClient->>localFunc: エラー通知(LocalResponse.result="fatal")
+      else
+        authClient->>authClient: クライアント内分岐処理
+        authClient->>-localFunc: 処理結果(LocalResponse)
+      end
+    end
+  end
+```

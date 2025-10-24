@@ -46,45 +46,34 @@
 
 <!--::$tmp/authConfig.md::-->
 
+<a name="decrypt"></a>
+
 ## 🧱 decrypt()メソッド
 
-- authClient->authServerのメッセージを復号＋署名検証
-- クライアントから送信された暗号文を安全に復号・検証し、結果を構造化オブジェクトとして返す。
-- 復号・署名検証直後に `authRequest.timestamp` と `Date.now()` の差を算出し、  
-  `authConfig.allowableTimeDifference` を超過した場合、`throw new Error('Timestamp difference too large')` を実行。<br>
-  処理結果は `{result:'fatal', message:'Timestamp difference too large'}`。
-- 本関数はauthServerから呼ばれるため、fatalエラーでも戻り値を返す
-- fatal/warning分岐を軽量化するため、Signature検証統一関数を導入(以下は例)
-  ```js
-  const verifySignature = (data, signature, pubkey) => {
-    try {
-      const sig = new KJUR.crypto.Signature({ alg: 'SHA256withRSA' });
-      sig.init(pubkey);
-      sig.updateString(data);
-      return sig.verify(signature);
-    } catch (e) { return false; }
-  }
-  ```
+authClient->authServerのメッセージを復号＋署名検証<br>
+本関数はauthServerから呼ばれるため、fatalエラーでも戻り値を返す。<br>
+fatal/warning分岐を軽量化するため、Signature検証統一関数を導入
+<details><summary>Signature検証統一関数 実装例</summary>
 
-### 📤 入力項目
+```js
+const verifySignature = (data, signature, pubkey) => {
+  try {
+    const sig = new KJUR.crypto.Signature({ alg: 'SHA256withRSA' });
+    sig.init(pubkey);
+    sig.updateString(data);
+    return sig.verify(signature);
+  } catch (e) { return false; }
+}
+```
 
-#### encryptedRequest
+</details>
 
-<!--::$tmp/encryptedRequest.md::-->
+- 📥 引数
+  - [encryptedRequest](typedef.md#encryptedRequest)
+- 📤 戻り値
+  - [decryptedRequest](encryptedResponse.md#decryptedRequest)
 
-#### 参考：authRequest
-
-- 復号化されたcipherTextの中身
-
-<!--::$tmp/authRequest.md::-->
-
-### 📥 出力項目
-
-#### decryptedRequest
-
-<!--::$tmp/decryptedRequest.md::-->
-
-### 処理概要
+### 処理手順
 
 1. 入力検証
   - memberId, deviceId, cipherText がすべて存在しない場合<br>
@@ -93,17 +82,14 @@
   - Member.getMember()でメンバ情報取得
   - Member.judgeStatus()で状態判定、戻り値(`decryptedRequest.status`)にセット
 3. 署名検証・復号試行・時差判定
-  - 以下のデシジョンテーブルで判定、decryptedRequest各メンバの値を設定<br>
-    No | 署名 | 復号 | 時差 | result | message | response
-    :--: | :-- | :-- | :-- | :-- | :-- | :--
-    1 | 一致 | 成功 | 誤差内 | normal | — | authRequest
-    2 | 一致 | 成功 | 誤差超 | fatal | Timestamp difference too large | —
-    3 | 一致 | 失敗 | — | fatal | decrypt failed | —
-    4 | 不一致 | 成功 | 誤差内 | warning | Signature unmatch | authRequest
-    5 | 不一致 | 成功 | 誤差超 | fatal | Timestamp difference too large | —
-    6 | 不一致 | 失敗 | — | fatal | decrypt failed | —
-  - 「時差」：`abs(Date.now() - request.timestamp) > allowableTimeDifference` ⇒ 誤差超
-  - No.4は加入申請(SPkey取得済・CPkey未登録)時を想定
+  - 復号・署名検証直後に `authRequest.timestamp` と `Date.now()` の差を算出し、  
+    `authConfig.allowableTimeDifference` を超過した場合、`throw new Error('Timestamp difference too large')` を実行。<br>
+    処理結果は `{result:'fatal', message:'Timestamp difference too large'}`。
+  - 以下のデシジョンテーブルで判定、decryptedRequest各メンバの値を設定
+
+#### cryptoServer.decryptの処理結果
+
+<!--::$src/cryptoServer/decrypt.decision.md::-->
 
 <!--
 - memberId,deviceId,cipherTextが全て存在

@@ -1,44 +1,13 @@
-<!--
-備忘。ChatGPTから作成提案があったが、時間がかかるので凍結。以下は提案のプロトタイプ
--->
-
-## 第1章. 概要
+# auth関係 データ型定義
 
 - ドキュメントの目的
 	- 各クラス・データ型の定義を一覧化し、仕様の整合性を確保すること。
-- ファイル構成方針
-	- 状態遷移(stateTransition.md)などの補助文書との参照関係も記載。
 - データ型命名規約
-	- 例：auth* = 認証系, Member* = メンバ管理系, Local* = クライアント内通信系 など。
-- 依存関係図(Mermaid UMLで可視化)
+	- 例：auth* = 内部処理系, Member* = メンバ管理系, Local* = クライアント内通信系
 
+ 第3章. データ型定義
 
-<!--
-## 第2章. データ型一覧(索引)
-
-区分	データ型名	概要	出力ファイル
-認証共通	authConfig
-	認証系共通設定値	authConfig.js
-認証クライアント	authClientConfig
-	クライアント専用設定	authClientConfig.js
-認証サーバ	authServerConfig
-	サーバ専用設定	authServerConfig.js
-メンバ管理	Member
-	メンバの基本情報	Member.js
-メンバ管理	MemberDevice
-	デバイス情報	MemberDevice.js
-メンバ管理	MemberTrial
-	パスコード試行情報	MemberTrial.js
-メンバ管理	MemberTrialLog
-	試行履歴	MemberTrialLog.js
-...	...	...	...
-
-※ 実際のテーブルはtypedefオブジェクトから自動生成可能(章冒頭に生成スクリプト記載)
--->
-
-## 第3章. データ型定義
-
-### 3.1 動作環境設定
+# 1 動作環境設定系
 
 ```mermaid
 graph TD
@@ -46,19 +15,19 @@ graph TD
   authConfig --> authServerConfig
 ```
 
-#### authConfig
+## authConfig
 
 <!--::$tmp/authConfig.md::-->
 
-#### authClientConfig
+## authClientConfig
 
 <!--::$tmp/authClientConfig.md::-->
 
-#### authServerConfig
+## authServerConfig
 
 <!--::$tmp/authServerConfig.md::-->
 
-### 3.2 鍵ペア他の格納
+# 2 鍵ペア他の格納
 
 ```mermaid
 classDiagram
@@ -79,11 +48,11 @@ classDiagram
   authScriptProperties --> authRequestLog
 ```
 
-#### authScriptProperties
+## authScriptProperties
 
 <!--::$tmp/authScriptProperties.md::-->
 
-#### authRequestLog
+## authRequestLog
 
 <!--::$tmp/authRequestLog.md::-->
 
@@ -92,97 +61,164 @@ graph TD
   authClientKeys --> authIndexedDB
 ```
 
-#### authIndexedDB
+## authIndexedDB
 
 <!--::$tmp/authIndexedDB.md::-->
 
-#### authClientKeys
+## authClientKeys
 
 <!--::$tmp/authClientKeys.md::-->
 
-### 3.3 通信・暗号化
+# 3 通信・暗号化系
 
 ```mermaid
 <!--::$src/common/sequence.summary.mmd::-->
 ```
 
-#### LocalRequest
+## LocalRequest
 
 <!--::$tmp/LocalRequest.md::-->
 
-#### authRequest
+## authRequest
 
 <!--::$tmp/authRequest.md::-->
 
-#### encryptedRequest
+## encryptedRequest
 
 <!--::$tmp/encryptedRequest.md::-->
 
-#### decryptedRequest
+## decryptedRequest
 
 <!--::$tmp/decryptedRequest.md::-->
 
-#### authResponse
+### cryptoServer.decryptの処理結果
+
+<!--::$src/cryptoServer/decrypt.decision.md::-->
+
+## authResponse
 
 <!--::$tmp/authResponse.md::-->
 
-#### encryptedResponse
+## encryptedResponse
 
 <!--::$tmp/encryptedResponse.md::-->
 
-#### decryptedResponse
+## decryptedResponse
 
 <!--::$tmp/decryptedResponse.md::-->
 
-#### LocalResponse
+## LocalResponse
 
 <!--::$tmp/LocalResponse.md::-->
 
-### 3.4 メンバ管理
+# 4 メンバ管理系
 
 ```mermaid
 <!--::$src/Member/Member.classDiagram.mmd::-->
 ```
 
-#### Member
+<a name="stateTransition"></a>
+
+## メンバの状態と遷移
+
+<!--::$src/Member/stateTransition.md::-->
+
+## Member
 
 <!--::$tmp/Member.md::-->
 
-#### MemberDevice
+## MemberDevice
 
 <!--::$tmp/MemberDevice.md::-->
 
-#### MemberLog
+## MemberLog
 
 <!--::$tmp/MemberLog.md::-->
 
-#### MemberProfile
+## MemberProfile
 
 <!--::$tmp/MemberProfile.md::-->
 
-#### MemberTrial
+## MemberTrial
 
 <!--::$tmp/MemberTrial.md::-->
 
-#### MemberTrialLog
+## MemberTrialLog
 
 <!--::$tmp/MemberTrialLog.md::-->
 
-### 3.5 監査・エラーログ
+# 5 監査・エラーログ系
 
-#### authAuditLog
+## authAuditLog
 
 <!--::$tmp/authAuditLog.md::-->
 
-#### authErrorLog
+クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照)<br>
+暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
+
+### 🧱 constructor()
+
+- 📥 引数 {authRequest} arg={}
+- `authServerConfig.auditLog`シートが無ければ作成
+- 引数の内、authAuditLogと同一メンバ名があればthisに設定
+- 引数にnoteがあればthis.noteに設定
+- timestampに現在日時を設定
+
+### 🧱 log()
+
+- 📥 引数 {Object|string} arg={}
+- 引数がObjectの場合：func,result,noteがあればthisに上書き
+- 引数がstringの場合：this.funcにargをセット
+- `this.duration = Date.now() - this.timestamp`
+- timestampはISO8601拡張形式の文字列に変更
+- シートの末尾行にauthAuditLogオブジェクトを追加
+- メール通知：stackTraceは削除した上でauthConfig.adminMail宛にメール通知
+- 📤 戻り値：シートに出力したauthAuditLogオブジェクト
+
+### 🧱 reset()
+
+authAuditLogインスタンス変数の値を再設定
+
+- 📥 引数 {authRequest} arg={}
+- `authServerConfig.auditLog`シートが無ければ作成
+- 引数の内、authAuditLogと同一メンバ名があればthisに設定
+- 📤 戻り値：変更後のauthAuditLogオブジェクト
+
+## authErrorLog
 
 <!--::$tmp/authErrorLog.md::-->
 
-<a name="stateTransition"></a>
+クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照)<br>
+暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
 
-## 第4章. メンバの状態と遷移
+### 🧱 constructor()
 
-<!--::$src/Member/stateTransition.md::-->
+- 📥 引数 {authRequest} arg={}
+- `authServerConfig.errorLog`シートが無ければ作成
+- 引数の内、authErrorLogと同一メンバ名があればthisに設定
+- timestampに現在日時を設定
+
+### 🧱 log()
+
+- 📥 引数 {Error} e={}
+- this.message = e.message
+- this.stackTrace = e.stack
+- e.messageがJSON化可能な場合
+  - e.messageをオブジェクト化して`obj`に代入
+  - this.result = obj.result
+  - this.message = obj.message
+- シートの末尾行にauthErrorLogオブジェクトを追加
+- 📤 戻り値：シートに出力したauthErrorLogオブジェクト
+
+### 🧱 reset()
+
+authErrorLogインスタンス変数の値を再設定
+
+- 📥 引数 {authRequest} arg={}
+- `authServerConfig.auditLog`シートが無ければ作成
+- 引数の内、authErrorLogと同一メンバ名があればthisに設定
+- 📤 戻り値：変更後のauthErrorLogオブジェクト
+
 
 <!--
 4.1 メンバ状態遷移(Member.status)
@@ -199,7 +235,7 @@ graph TD
 
 トリガーイベント：loginRequest, loginSuccess, loginFailure, unfreezeLogin
 
-## 第5章. 参照関係と依存構造
+ 第5章. 参照関係と依存構造
 
 型間参照を一覧表で整理(自動抽出推奨)
 

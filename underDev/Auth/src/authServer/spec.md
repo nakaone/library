@@ -11,69 +11,60 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
 
 ## 🧩 内部構成(クラス変数)
 
-<details><summary>authScriptProperties</summary>
-<!--::$tmp/authScriptProperties.md::-->
-</details>
-
-<details><summary>Member</summary>
-<!--::$tmp/Member.md::-->
-</details>
+- [authScriptProperties](typedef.md#authScriptProperties)
+- [Member](typedef.md#Member)
 
 ## 🧱 メイン処理
 
-- classのconstructor()に相当
-- 引数はauthServer内共有用の変数`pv`に保存
+authClientからのencryptedRequestを受け、復号後メソッドに処理を依頼、結果がfatalでなければ暗号化してauthClientに返す。<br>
+結果がfatalの場合はログに出力して何も返さない。
 
-### 📤 入力項目
-
-<details><summary>encryptedRequest</summary>
-
-<!--::$tmp/encryptedRequest.md::-->
-
-</details>
-
-### 📥 出力項目
-
-<details><summary>encryptedResponse</summary>
-
-<!--::$tmp/encryptedResponse.md::-->
-
-</details>
+- 📥 引数
+  - [encryptedRequest](typedef.md#encryptedRequest)
+- 📤 戻り値
+  - [encryptedResponse](encryptedResponse.md#encryptedResponse)
 
 ### 処理手順
 
-<details><summary>シーケンス図</summary>
+※ 「事前準備」後、pv.rvがセットされたら「戻り値の暗号化」手順までの処理はスキップ
 
-<!--::$tmp/authServer.sequenceDiagram.svg::-->
-
-</details>
-
-#### 「処理分岐」手順詳説
-
-- 戻り値用`authResponse`(pv.rv)と監査ログ用`authAuditLog`(pv.log)を準備
-- 重複リクエストチェック
+- 1. 事前準備
+  - authServer内共有用の変数`pv`オブジェクトを用意
+  - `pv.cryptoServer`にcryptoServerインスタンスを作成
+  - 戻り値用に`pv.rv`に[authResponse](typedef.md#authResponse)インスタンスを作成
+  - 監査ログ用に`pv.audit`に[authAuditLog](typedef.md#authAuditLog)インスタンスを作成
+  - エラーログ用に`pv.error`に[authErrorLog](typedef.md#authErrorLog)インスタンスを作成
+- 2. 復号・署名検証
+  - encryptedRequestを渡して[cryptoServer.decrypt](cryptoServer.md#decrypt)を呼び出し
+  - 戻り値を`pv.decryptedRequest`に保存(後述「cryptoServer.decryptの処理結果」参照)
+  - `pv.decryptedRequest.result === 'fatal'`なら`Error('decrypt failed')`をthrow
+  - `pv.audit.reset`,`pv.error.reset`を実行、各インスタンス内のmemberId/deviceIdを確定
+  - 復号したauthRequestを共通変数にセット(`pv.authRequest = pv.decryptedRequest.request`)
+  - `pv.decryptedRequest.result === 'warning'`なら
+    - `pv.rv = responseSPkey(pv.authRequest)`メソッドを呼び出し
+    - `pv.rv.result === 'fatal'`なら`Error('Invalid CPkey')`をthrow
+- 3. 重複リクエストチェック
   - authScriptProperties.requestLogで重複リクエストをチェック
   - エラーならエラーログに出力
     - `authErrorLog.result` = 'fatal'
     - `authErrorLog.message` = 'Duplicate requestId'
   - authServerConfig.requestIdRetention以上経過したリクエスト履歴は削除
   - Errorをthrowして終了
-- authClient内発処理か判定
-  - `authRequest.func`が以下のいずれかの文字列ならauthClient内発処理と判定、メソッドを呼び出し
-    | 文字列 | 呼び出すメソッド |
-    | :-- | :-- |
-    | ::updateCPkey:: | updateCPkey() |
-    | ::passcode:: | loginTrial() |
-    | ::newMember:: | いまここ |
-    | ::reissue:: | いまここ |
-  - メソッドの戻り値をauthServerの戻り値として返して終了
-- サーバ側関数が定義されているかチェック
-  - `authServerConfig.func`のメンバ名に処理要求関数名(`authRequest.func`)が無ければ以下を返して終了
-- 権限不要な処理要求か判定
-  - `authServerConfig.func[処理要求関数名].authority === 0`ならcallFunctionメソッドを呼び出し
-- メンバ・デバイスの状態により処理分岐
+- 4. authClient内発処理判定
+  - `authRequest.func`が以下に該当するなら内発処理としてメソッドを呼び出し、その戻り値を`pv.rv`にセット
+    |  | authRequest.func | authServer.method |
+    | :-- | :-- | :-- |
+    | CPkey更新 | ::updateCPkey:: | updateCPkey() |
+    | パスコード入力 | ::passcode:: | loginTrial() |
+    | 新規登録要求 | ::newMember:: | Member.setMember() |
+    | パスコード再発行 | ::reissue:: | Member.reissuePasscode() |
+- 5. サーバ側関数の存否チェック
+  - `authServerConfig.func`のメンバ名に処理要求関数名(`authRequest.func`)が無ければ`Error('no func:'+authRequest.func)`をthrow
+- 6. サーバ側関数の権限要否を判定
+  - `authServerConfig.func[処理要求関数名].authority === 0`ならcallFunctionメソッドを呼び出し、その戻り値を`pv.rv`にセット
+- 7. メンバ・デバイスの状態により処理分岐
   - 当該メンバの状態を確認(`Member.getStatus()`)
-  - 以下の表に従って処理分岐
+  - 以下の表に従って処理分岐、呼出先メソッドの戻り値を`pv.rv`にセット
     No | 状態 | 動作
     :-- | :-- | :--
     1 | 未加入 | memberList未登録<br>⇒ `membershipRequest()`メソッドを呼び出し
@@ -84,15 +75,19 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
     4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態<br>⇒ `callFunction()`メソッドを呼び出し
     4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態<br>⇒ `loginTrial()`メソッドを呼び出し
     5 | 加入禁止 | 管理者により加入が否認された状態<br>⇒ `notifyAcceptance()`メソッドを呼び出し
-- 監査ログ(pv.log)を出力して「処理分岐」は終了
 
-<!--
-#### 参考：メンバの状態遷移
+#### cryptoServer.decryptの処理結果
 
-<!-:$src/Member/stateTransition.md:->
--->
+<!--::$src/cryptoServer/decrypt.decision.md::-->
+
+#### エラー処理
+
+- エラー発生時は必ず catch できるよう全体を try,catch で囲む
+- catch句に渡されたErrorオブジェクトを[authErrorLog](typedef.md#authErrorLog)(pv.error.log)に渡してシートに出力
 
 ## 🧱 membershipRequest()
+
+<!-- いまここ Member.setMember()に代替？ -->
 
 - 新規メンバ加入要求を登録。管理者へメール通知。
 - 引数は`authRequest`型、戻り値は`authResponse`型のオブジェクト
@@ -134,8 +129,25 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
 
 ## 🧱 callFunction()
 
-- authServerConfig.funcを参照し、該当関数を実行。
-- 引数は`authRequest`型、戻り値は`authResponse`型のオブジェクト
+authServerConfig.funcを参照し、該当関数を実行
+
+- 📥 引数
+  - [authRequest](typedef.md#authRequest)
+- 📤 戻り値
+  - [authResponse](typedef.md#authResponse)
+    |  | 正常時 | 異常時 |
+    | :-- | :-- | :-- |
+    | result | normal | fatal |
+    | message | — | Error.message |
+    | request | authRequest | authRequest |
+    | response | 呼出先関数の戻り値 | — |
+
+- 呼出先関数の戻り値がErrorオブジェクト
+  - エラーログに結果を出力(`pv.error.log(呼出先関数の戻り値)`)
+  - callFunctionの戻り値は上表の「異常時」
+- 呼出先関数の戻り値がErrorオブジェクト以外
+  - 監査ログに結果を出力(`pv.audit.log('responseSPkey')`)
+  - callFunctionの戻り値は上表の「正常時」
 
 ## 🧱 updateCPkey()
 
@@ -150,10 +162,22 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
 ## その他のメソッド群
 -->
 
-## 🧱 responseSPkey(arg)
+## 🧱 responseSPkey()
 
-- クライアントから送られた文字列がCPkeyと推定される場合に、SPkeyを暗号化して返却。
-- 公開鍵として不適切な文字列の場合、`{status:'fatal'}`を返す
+- 📥 引数
+  - [authRequest](typedef.md#authRequest)
+- 📤 戻り値
+  - [authResponse](typedef.md#authResponse)
+    |  | 正常時 | 異常時 |
+    | :-- | :-- | :-- |
+    | result | normal | fatal |
+    | message | — | Invalid public key |
+    | request | authRequest | authRequest |
+    | response | authScriptProperties.SPkey | — |
+
+- クライアントからの受信内容が(encryptedRequestではなく)CPkey文字列と推定される場合は「正常時」のオブジェクトを返す
+- 公開鍵として不適切な文字列の場合は[authErrorLog](typedef.md#authErrorLog)でエラー出力後、「異常時」のオブジェクトを返す
+- 監査ログに結果を出力(`pv.audit.log('responseSPkey')`)
 
 ## 🧱 setupEnvironment()
 

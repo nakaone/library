@@ -115,77 +115,34 @@ authConfigを継承した、authServerでのみ使用する設定値
 | 6 | underDev | ❌ | Object |  | テスト時の設定 |
 | 7 | underDev.isTest | ⭕ | boolean | false | 開発モードならtrue |
 
+<a name="decrypt"></a>
+
 ## 🧱 decrypt()メソッド
 
-- authClient->authServerのメッセージを復号＋署名検証
-- クライアントから送信された暗号文を安全に復号・検証し、結果を構造化オブジェクトとして返す。
-- 復号・署名検証直後に `authRequest.timestamp` と `Date.now()` の差を算出し、
-  `authConfig.allowableTimeDifference` を超過した場合、`throw new Error('Timestamp difference too large')` を実行。<br>
-  処理結果は `{result:'fatal', message:'Timestamp difference too large'}`。
-- 本関数はauthServerから呼ばれるため、fatalエラーでも戻り値を返す
-- fatal/warning分岐を軽量化するため、Signature検証統一関数を導入(以下は例)
-  ```js
-  const verifySignature = (data, signature, pubkey) => {
-    try {
-      const sig = new KJUR.crypto.Signature({ alg: 'SHA256withRSA' });
-      sig.init(pubkey);
-      sig.updateString(data);
-      return sig.verify(signature);
-    } catch (e) { return false; }
-  }
-  ```
+authClient->authServerのメッセージを復号＋署名検証<br>
+本関数はauthServerから呼ばれるため、fatalエラーでも戻り値を返す。<br>
+fatal/warning分岐を軽量化するため、Signature検証統一関数を導入
+<details><summary>Signature検証統一関数 実装例</summary>
 
-### 📤 入力項目
+```js
+const verifySignature = (data, signature, pubkey) => {
+  try {
+    const sig = new KJUR.crypto.Signature({ alg: 'SHA256withRSA' });
+    sig.init(pubkey);
+    sig.updateString(data);
+    return sig.verify(signature);
+  } catch (e) { return false; }
+}
+```
 
-#### encryptedRequest
+</details>
 
-<a name="encryptedRequest"></a>
+- 📥 引数
+  - [encryptedRequest](typedef.md#encryptedRequest)
+- 📤 戻り値
+  - [decryptedRequest](encryptedResponse.md#decryptedRequest)
 
-- authClientからauthServerに送られる、暗号化された処理要求オブジェクト
-- ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列
-- memberId,deviceIdは平文
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
-| 3 | ciphertext | ❌ | string |  | 暗号化した文字列 |
-
-#### 参考：authRequest
-
-- 復号化されたcipherTextの中身
-
-<a name="authRequest"></a>
-
-authClientからauthServerに送られる、暗号化前の処理要求オブジェクト
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
-| 3 | signature | ❌ | string |  | クライアント側署名 |
-| 4 | requestId | ❌ | string |  | 要求の識別子。UUID |
-| 5 | timestamp | ❌ | number |  | 要求日時。UNIX時刻 |
-| 6 | func | ❌ | string |  | サーバ側関数名 |
-| 7 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
-
-### 📥 出力項目
-
-#### decryptedRequest
-
-<a name="decryptedRequest"></a>
-
-encryptedRequestをcryptoServerで復号した処理要求オブジェクト
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | result | ❌ | string |  | 処理結果。"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "normal" |
-| 2 | message | ⭕ | string |  | エラーメッセージ。result="normal"の場合`undefined` |
-| 3 | request | ❌ | authRequest |  | ユーザから渡された処理要求 |
-| 4 | timestamp | ❌ | number |  | 復号処理実施日時 |
-| 5 | status | ❌ | string |  | Member.deviceが空ならメンバの、空で無ければデバイスのstatus |
-
-### 処理概要
+### 処理手順
 
 1. 入力検証
   - memberId, deviceId, cipherText がすべて存在しない場合<br>
@@ -194,17 +151,24 @@ encryptedRequestをcryptoServerで復号した処理要求オブジェクト
   - Member.getMember()でメンバ情報取得
   - Member.judgeStatus()で状態判定、戻り値(`decryptedRequest.status`)にセット
 3. 署名検証・復号試行・時差判定
-  - 以下のデシジョンテーブルで判定、decryptedRequest各メンバの値を設定<br>
-    No | 署名 | 復号 | 時差 | result | message | response
-    :--: | :-- | :-- | :-- | :-- | :-- | :--
-    1 | 一致 | 成功 | 誤差内 | normal | — | authRequest
-    2 | 一致 | 成功 | 誤差超 | fatal | Timestamp difference too large | —
-    3 | 一致 | 失敗 | — | fatal | decrypt failed | —
-    4 | 不一致 | 成功 | 誤差内 | warning | Signature unmatch | authRequest
-    5 | 不一致 | 成功 | 誤差超 | fatal | Timestamp difference too large | —
-    6 | 不一致 | 失敗 | — | fatal | decrypt failed | —
-  - 「時差」：`abs(Date.now() - request.timestamp) > allowableTimeDifference` ⇒ 誤差超
-  - No.4は加入申請(SPkey取得済・CPkey未登録)時を想定
+  - 復号・署名検証直後に `authRequest.timestamp` と `Date.now()` の差を算出し、
+    `authConfig.allowableTimeDifference` を超過した場合、`throw new Error('Timestamp difference too large')` を実行。<br>
+    処理結果は `{result:'fatal', message:'Timestamp difference too large'}`。
+  - 以下のデシジョンテーブルで判定、decryptedRequest各メンバの値を設定
+
+#### cryptoServer.decryptの処理結果
+
+No | 署名 | 復号 | 時差 | result | message | response
+:--: | :-- | :-- | :-- | :-- | :-- | :--
+1 | 一致 | 成功 | 誤差内 | normal | — | authRequest
+2 | 一致 | 成功 | 誤差超 | fatal | Timestamp difference too large | —
+3 | 一致 | 失敗 | — | fatal | decrypt failed | —
+4 | 不一致 | 成功 | 誤差内 | warning | Signature unmatch | authRequest
+5 | 不一致 | 成功 | 誤差超 | fatal | Timestamp difference too large | —
+6 | 不一致 | 失敗 | — | fatal | decrypt failed | —
+
+- 「時差」：`abs(Date.now() - request.timestamp) > allowableTimeDifference` ⇒ 誤差超
+- No.4は加入申請(SPkey取得済・CPkey未登録)時を想定
 
 <!--
 - memberId,deviceId,cipherTextが全て存在
@@ -339,9 +303,9 @@ authServerの監査ログ
 | 1 | timestamp | ⭕ | string | Date.now() | 要求日時。ISO8601拡張形式の文字列 |
 | 2 | duration | ❌ | number |  | 処理時間。ミリ秒単位 |
 | 3 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 4 | deviceId | ⭕ | string |  | デバイスの識別子 |
-| 5 | func | ⭕ | string |  | サーバ側関数名 |
-| 6 | result | ⭕ | string |  | サーバ側処理結果。fatal/warning/normal |
+| 4 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 5 | func | ❌ | string |  | サーバ側関数名 |
+| 6 | result | ⭕ | string | normal | サーバ側処理結果。fatal/warning/normal |
 | 7 | note | ❌ | string |  | 備考 |
 
 ### authErrorLog
@@ -352,10 +316,10 @@ authServerのエラーログ
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | timestamp | ❌ | string |  | 要求日時。ISO8601拡張形式の文字列 |
+| 1 | timestamp | ⭕ | string | Date.now() | 要求日時。ISO8601拡張形式の文字列 |
 | 2 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 3 | deviceId | ⭕ | string |  | デバイスの識別子 |
-| 4 | result | ⭕ | string |  | サーバ側処理結果。fatal/warning/normal |
+| 3 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 4 | result | ⭕ | string | fatal | サーバ側処理結果。fatal/warning/normal |
 | 5 | message | ⭕ | string |  | サーバ側からのエラーメッセージ。normal時は`undefined` |
 | 6 | stackTrace | ⭕ | string |  | エラー発生時のスタックトレース。本項目は管理者への通知メール等、シート以外には出力不可 |
 
