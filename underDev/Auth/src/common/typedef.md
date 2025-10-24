@@ -1,3 +1,5 @@
+<!--::$src/common/header.md::-->
+
 # auth関係 データ型定義
 
 - ドキュメントの目的
@@ -61,13 +63,55 @@ graph TD
   authClientKeys --> authIndexedDB
 ```
 
+## authClientKeys
+
+<!--::$tmp/authClientKeys.md::-->
+
+上掲の構造を持つ新たな鍵ペアを生成する関数。
+
+- 📥 引数 {authClientConfig} arg
+- authConfig.RSAbitsを参照、新たな鍵ペア生成
+- 📤 戻り値：authClientKeysオブジェクト
+
 ## authIndexedDB
 
 <!--::$tmp/authIndexedDB.md::-->
 
-## authClientKeys
+メイン処理を同期的に行うためasyncクロージャ関数として定義。<br>
+またauthClientConfigを参照するためauthClient内でインスタンス化。
 
-<!--::$tmp/authClientKeys.md::-->
+### 🧱 メイン処理
+
+- 📥 引数 {authClientConfig} arg={}
+- IndexedDBに`authConfig.systemName`があれば取得、メンバ変数に格納。
+- 無ければ新規に生成し、IndexedDBに格納。
+- SPkey未設定の場合、authServerに`authRequest`を要求、SPkeyをセット
+  - 
+
+- `authClientConfig.auditLog`シートが無ければ作成
+- 引数の内、authIndexedDBと同一メンバ名があればthisに設定
+- 引数にnoteがあればthis.noteに設定
+- timestampに現在日時を設定
+
+### 🧱 get()
+
+- 📥 引数 {Object|string} arg={}
+- 引数がObjectの場合：func,result,noteがあればthisに上書き
+- 引数がstringの場合：this.funcにargをセット
+- `this.duration = Date.now() - this.timestamp`
+- timestampはISO8601拡張形式の文字列に変更
+- シートの末尾行にauthAuditLogオブジェクトを追加
+- メール通知：stackTraceは削除した上でauthConfig.adminMail宛にメール通知
+- 📤 戻り値：シートに出力したauthAuditLogオブジェクト
+
+### 🧱 reset()
+
+authAuditLogインスタンス変数の値を再設定
+
+- 📥 引数 {authRequest} arg={}
+- `authClientConfig.auditLog`シートが無ければ作成
+- 引数の内、authAuditLogと同一メンバ名があればthisに設定
+- 📤 戻り値：変更後のauthAuditLogオブジェクト
 
 # 3 通信・暗号化系
 
@@ -153,7 +197,7 @@ graph TD
 
 <!--::$tmp/authAuditLog.md::-->
 
-クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照)<br>
+クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照するため)<br>
 暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
 
 ### 🧱 constructor()
@@ -188,7 +232,7 @@ authAuditLogインスタンス変数の値を再設定
 
 <!--::$tmp/authErrorLog.md::-->
 
-クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照)<br>
+クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照するため)<br>
 暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
 
 ### 🧱 constructor()

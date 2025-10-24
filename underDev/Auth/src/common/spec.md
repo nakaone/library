@@ -1,12 +1,8 @@
-<!--
-auth全体の仕様書
--->
+<!--::$src/common/header.md::-->
 
-# 総説
+# "auth"総説
 
 ブラウザ(クライアント)とGAS(サーバ)の間で認証された通信を行う。
-
-関連仕様書：[authClient](authClient.md) | [authServer](authServer.md) | [Member](Member.md) | [cryptoServer](cryptoServer.md) | [cryptoClient](cryptoClient.md) | [typedef](typedef.md)
 
 ## 要求仕様
 

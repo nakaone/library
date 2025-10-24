@@ -1,3 +1,9 @@
+<div style="text-align: right;">
+
+[総説](spec.md) | [authClient](authClient.md) | [authServer](authServer.md) | [cryptoClient](cryptoClient.md) | [cryptoServer](cryptoServer.md) | [Member](Member.md) | [データ型](typedef.md) | [内発処理](internalProcessing.md)
+
+</div>
+
 # authServer 関数 仕様書
 
 ## 🧭 概要
@@ -58,8 +64,23 @@ authClientからのencryptedRequestを受け、復号後メソッドに処理を
     | パスコード入力 | ::passcode:: | loginTrial() |
     | 新規登録要求 | ::newMember:: | Member.setMember() |
     | パスコード再発行 | ::reissue:: | Member.reissuePasscode() |
-- 5. サーバ側関数定義のチェック
-  - `authServerConfig.func`のメンバ名に処理要求関数名(`authRequest.func`)が無ければ`Error('no func'+)`をthrow
+- 5. サーバ側関数の存否チェック
+  - `authServerConfig.func`のメンバ名に処理要求関数名(`authRequest.func`)が無ければ`Error('no func:'+authRequest.func)`をthrow
+- 6. サーバ側関数の権限要否を判定
+  - `authServerConfig.func[処理要求関数名].authority === 0`ならcallFunctionメソッドを呼び出し、その戻り値を`pv.rv`にセット
+- 7. メンバ・デバイスの状態により処理分岐
+  - 当該メンバの状態を確認(`Member.getStatus()`)
+  - 以下の表に従って処理分岐、呼出先メソッドの戻り値を`pv.rv`にセット
+    No | 状態 | 動作
+    :-- | :-- | :--
+    1 | 未加入 | memberList未登録<br>⇒ `membershipRequest()`メソッドを呼び出し
+    2 | 未審査 | memberList登録済だが、管理者による加入認否が未決定(=加入審査状況の問合せ)<br>⇒ `notifyAcceptance()`メソッドを呼び出し
+    3 | 審査済 | 管理者による加入認否が決定済<br>⇒ `notifyAcceptance()`メソッドを呼び出し
+    4.1 | 未認証 | 認証(ログイン)不要の処理しか行えない状態。<br>無権限で行える処理 ⇒ `callFunction()`メソッドを呼び出し<br>無権限では行えない処理 ⇒ `loginTrial()`メソッドを呼び出し
+    4.2 | 試行中 | パスコードによる認証を試行している状態<br>⇒ `loginTrial()`メソッドを呼び出し
+    4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態<br>⇒ `callFunction()`メソッドを呼び出し
+    4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態<br>⇒ `loginTrial()`メソッドを呼び出し
+    5 | 加入禁止 | 管理者により加入が否認された状態<br>⇒ `notifyAcceptance()`メソッドを呼び出し
 
 #### cryptoServer.decryptの処理結果
 
@@ -80,33 +101,9 @@ No | 署名 | 復号 | 時差 | result | message | response
 - エラー発生時は必ず catch できるよう全体を try,catch で囲む
 - catch句に渡されたErrorオブジェクトを[authErrorLog](typedef.md#authErrorLog)(pv.error.log)に渡してシートに出力
 
-#### 旧版：「処理分岐」手順詳説
-
-- サーバ側関数が定義されているかチェック
-- 権限不要な処理要求か判定
-  - `authServerConfig.func[処理要求関数名].authority === 0`ならcallFunctionメソッドを呼び出し
-- メンバ・デバイスの状態により処理分岐
-  - 当該メンバの状態を確認(`Member.getStatus()`)
-  - 以下の表に従って処理分岐
-    No | 状態 | 動作
-    :-- | :-- | :--
-    1 | 未加入 | memberList未登録<br>⇒ `membershipRequest()`メソッドを呼び出し
-    2 | 未審査 | memberList登録済だが、管理者による加入認否が未決定(=加入審査状況の問合せ)<br>⇒ `notifyAcceptance()`メソッドを呼び出し
-    3 | 審査済 | 管理者による加入認否が決定済<br>⇒ `notifyAcceptance()`メソッドを呼び出し
-    4.1 | 未認証 | 認証(ログイン)不要の処理しか行えない状態。<br>無権限で行える処理 ⇒ `callFunction()`メソッドを呼び出し<br>無権限では行えない処理 ⇒ `loginTrial()`メソッドを呼び出し
-    4.2 | 試行中 | パスコードによる認証を試行している状態<br>⇒ `loginTrial()`メソッドを呼び出し
-    4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態<br>⇒ `callFunction()`メソッドを呼び出し
-    4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態<br>⇒ `loginTrial()`メソッドを呼び出し
-    5 | 加入禁止 | 管理者により加入が否認された状態<br>⇒ `notifyAcceptance()`メソッドを呼び出し
-- 監査ログ(pv.log)を出力して「処理分岐」は終了
-
-<!--
-#### 参考：メンバの状態遷移
-
-<!-:$src/Member/stateTransition.md:->
--->
-
 ## 🧱 membershipRequest()
+
+<!-- いまここ Member.setMember()に代替？ -->
 
 - 新規メンバ加入要求を登録。管理者へメール通知。
 - 引数は`authRequest`型、戻り値は`authResponse`型のオブジェクト
@@ -148,8 +145,25 @@ No | 署名 | 復号 | 時差 | result | message | response
 
 ## 🧱 callFunction()
 
-- authServerConfig.funcを参照し、該当関数を実行。
-- 引数は`authRequest`型、戻り値は`authResponse`型のオブジェクト
+authServerConfig.funcを参照し、該当関数を実行
+
+- 📥 引数
+  - [authRequest](typedef.md#authRequest)
+- 📤 戻り値
+  - [authResponse](typedef.md#authResponse)
+    |  | 正常時 | 異常時 |
+    | :-- | :-- | :-- |
+    | result | normal | fatal |
+    | message | — | Error.message |
+    | request | authRequest | authRequest |
+    | response | 呼出先関数の戻り値 | — |
+
+- 呼出先関数の戻り値がErrorオブジェクト
+  - エラーログに結果を出力(`pv.error.log(呼出先関数の戻り値)`)
+  - callFunctionの戻り値は上表の「異常時」
+- 呼出先関数の戻り値がErrorオブジェクト以外
+  - 監査ログに結果を出力(`pv.audit.log('responseSPkey')`)
+  - callFunctionの戻り値は上表の「正常時」
 
 ## 🧱 updateCPkey()
 
@@ -169,7 +183,7 @@ No | 署名 | 復号 | 時差 | result | message | response
 - 📥 引数
   - [authRequest](typedef.md#authRequest)
 - 📤 戻り値
-  - [authResponse](encryptedResponse.md#authResponse)
+  - [authResponse](typedef.md#authResponse)
     |  | 正常時 | 異常時 |
     | :-- | :-- | :-- |
     | result | normal | fatal |

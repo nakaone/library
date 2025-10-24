@@ -1,3 +1,5 @@
+<!--::$src/common/header.md::-->
+
 # Member クラス 仕様書
 
 ## 🧭 概要

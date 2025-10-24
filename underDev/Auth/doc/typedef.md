@@ -126,21 +126,6 @@ graph TD
   authClientKeys --> authIndexedDB
 ```
 
-## authIndexedDB
-
-<a name="authIndexedDB"></a>
-
-- authClientKeysを継承した、クライアントのIndexedDBに保存するオブジェクト
-- IndexedDB保存時のキー名は`authConfig.system.name`から取得
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | keyGeneratedDateTime | ❌ | number |  | 鍵ペア生成日時。UNIX時刻(new Date().getTime()),なおサーバ側でCPkey更新中にクライアント側で新たなCPkeyが生成されるのを避けるため、鍵ペア生成は30分以上の間隔を置く。 |
-| 2 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 3 | memberName | ❌ | string |  | メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。 |
-| 4 | SPkey | ❌ | string |  | サーバ公開鍵(Base64) |
-| 5 | expireCPkey | ⭕ | number | 0 | CPkeyの有効期限(無効になる日時)。未ログイン時は0 |
-
 ## authClientKeys
 
 <a name="authClientKeys"></a>
@@ -153,6 +138,64 @@ graph TD
 | 2 | CPkeySign | ❌ | CryptoKey |  | 署名用公開鍵 |
 | 3 | CSkeyEnc | ❌ | CryptoKey |  | 暗号化用秘密鍵 |
 | 4 | CPkeyEnc | ❌ | CryptoKey |  | 暗号化用公開鍵 |
+
+上掲の構造を持つ新たな鍵ペアを生成する関数。
+
+- 📥 引数 {authClientConfig} arg
+- authConfig.RSAbitsを参照、新たな鍵ペア生成
+- 📤 戻り値：authClientKeysオブジェクト
+
+## authIndexedDB
+
+<a name="authIndexedDB"></a>
+
+- authClientKeysを継承した、クライアントのIndexedDBに保存するオブジェクト
+- IndexedDB保存時のキー名は`authConfig.system.name`から取得
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | keyGeneratedDateTime | ❌ | number |  | 鍵ペア生成日時。UNIX時刻(new Date().getTime()),なおサーバ側でCPkey更新中にクライアント側で新たなCPkeyが生成されるのを避けるため、鍵ペア生成は30分以上の間隔を置く。 |
+| 2 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 3 | memberName | ❌ | string |  | メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。 |
+| 4 | deviceId | ❌ | string |  | デバイスの識別子 |
+| 5 | SPkey | ❌ | string |  | サーバ公開鍵(Base64) |
+| 6 | expireCPkey | ⭕ | number | 0 | CPkeyの有効期限(無効になる日時)。未ログイン時は0 |
+
+メイン処理を同期的に行うためasyncクロージャ関数として定義。<br>
+またauthClientConfigを参照するためauthClient内でインスタンス化。
+
+### 🧱 メイン処理
+
+- 📥 引数 {authClientConfig} arg={}
+- IndexedDBに`authConfig.systemName`があれば取得、メンバ変数に格納。
+- 無ければ新規に生成し、IndexedDBに格納。
+- SPkey未設定の場合、authServerに`authRequest`を要求、SPkeyをセット
+  -
+
+- `authClientConfig.auditLog`シートが無ければ作成
+- 引数の内、authIndexedDBと同一メンバ名があればthisに設定
+- 引数にnoteがあればthis.noteに設定
+- timestampに現在日時を設定
+
+### 🧱 get()
+
+- 📥 引数 {Object|string} arg={}
+- 引数がObjectの場合：func,result,noteがあればthisに上書き
+- 引数がstringの場合：this.funcにargをセット
+- `this.duration = Date.now() - this.timestamp`
+- timestampはISO8601拡張形式の文字列に変更
+- シートの末尾行にauthAuditLogオブジェクトを追加
+- メール通知：stackTraceは削除した上でauthConfig.adminMail宛にメール通知
+- 📤 戻り値：シートに出力したauthAuditLogオブジェクト
+
+### 🧱 reset()
+
+authAuditLogインスタンス変数の値を再設定
+
+- 📥 引数 {authRequest} arg={}
+- `authClientConfig.auditLog`シートが無ければ作成
+- 引数の内、authAuditLogと同一メンバ名があればthisに設定
+- 📤 戻り値：変更後のauthAuditLogオブジェクト
 
 # 3 通信・暗号化系
 
@@ -510,7 +553,7 @@ authServerの監査ログ
 | 6 | result | ⭕ | string | normal | サーバ側処理結果。fatal/warning/normal |
 | 7 | note | ❌ | string |  | 備考 |
 
-クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照)<br>
+クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照するため)<br>
 暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
 
 ### 🧱 constructor()
@@ -556,7 +599,7 @@ authServerのエラーログ
 | 5 | message | ⭕ | string |  | サーバ側からのエラーメッセージ。normal時は`undefined` |
 | 6 | stackTrace | ⭕ | string |  | エラー発生時のスタックトレース。本項目は管理者への通知メール等、シート以外には出力不可 |
 
-クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照)<br>
+クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照するため)<br>
 暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
 
 ### 🧱 constructor()

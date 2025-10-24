@@ -85,6 +85,7 @@ const typedef = {
       ]},
       {name:'memberId',type:'string',note:'メンバの識別子(=メールアドレス)'},
       {name:'memberName',type:'string',note:'メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。'},
+      {name:'deviceId',type:'string',note:'デバイスの識別子'},
       {name:'SPkey',type:'string',note:'サーバ公開鍵(Base64)'},
       //{name:'ApplicationForMembership',type:'number',note:'加入申請実行日時。未申請時は0',default:0},
       //{name:'expireAccount',type:'number',note:'加入承認の有効期間が切れる日時。未加入時は0',default:0},

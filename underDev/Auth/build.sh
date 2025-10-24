@@ -53,7 +53,11 @@ $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $src/Member/core.js
 cat $src/common/typedef.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/typedef.md
 
-# 仕様書
+# 内発処理
+cat $src/common/internalProcessing.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/internalProcessing.md
+
+# 総説
 cat $src/common/spec.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/spec.md
 

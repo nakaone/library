@@ -1,3 +1,5 @@
+<!--::$src/common/header.md::-->
+
 # authServer 関数 仕様書
 
 ## 🧭 概要
