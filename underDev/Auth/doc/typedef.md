@@ -177,7 +177,7 @@ graph TD
 メイン処理を同期的に行うためasyncクロージャ関数として定義。<br>
 またauthClientConfigを参照するためauthClient内でインスタンス化。
 
-### 🧱 メイン処理
+### <a name="authIndexedDB-main">🧱 メイン処理</a>
 
 - 📥 引数 {authClientConfig} arg={}
 - IndexedDBに`authConfig.systemName`があれば取得、メンバ変数に格納。
@@ -190,7 +190,7 @@ graph TD
 - 引数にnoteがあればthis.noteに設定
 - timestampに現在日時を設定
 
-### 🧱 get()
+### <a name="authIndexedDB-get">🧱 get()</a>
 
 - 📥 引数 {Object|string} arg={}
 - 引数がObjectの場合：func,result,noteがあればthisに上書き
@@ -201,7 +201,7 @@ graph TD
 - メール通知：stackTraceは削除した上でauthConfig.adminMail宛にメール通知
 - 📤 戻り値：シートに出力したauthAuditLogオブジェクト
 
-### 🧱 reset()
+### <a name="authIndexedDB-reset">🧱 reset()</a>
 
 authAuditLogインスタンス変数の値を再設定
 
@@ -611,7 +611,7 @@ authServerの監査ログ
 クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照するため)<br>
 暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
 
-### 🧱 constructor()
+### <a name="authAuditLog-constructor">🧱 constructor()</a>
 
 - 📥 引数 {authRequest} arg={}
 - `authServerConfig.auditLog`シートが無ければ作成
@@ -619,7 +619,7 @@ authServerの監査ログ
 - 引数にnoteがあればthis.noteに設定
 - timestampに現在日時を設定
 
-### 🧱 log()
+### <a name="authAuditLog-log">🧱 log()</a>
 
 - 📥 引数 {Object|string} arg={}
 - 引数がObjectの場合：func,result,noteがあればthisに上書き
@@ -630,7 +630,7 @@ authServerの監査ログ
 - メール通知：stackTraceは削除した上でauthConfig.adminMail宛にメール通知
 - 📤 戻り値：シートに出力したauthAuditLogオブジェクト
 
-### 🧱 reset()
+### <a name="authAuditLog-reset">🧱 reset()</a>
 
 authAuditLogインスタンス変数の値を再設定
 
@@ -657,14 +657,14 @@ authServerのエラーログ
 クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照するため)<br>
 暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
 
-### 🧱 constructor()
+### <a name="authErrorLog-constructor">🧱 constructor()</a>
 
 - 📥 引数 {authRequest} arg={}
 - `authServerConfig.errorLog`シートが無ければ作成
 - 引数の内、authErrorLogと同一メンバ名があればthisに設定
 - timestampに現在日時を設定
 
-### 🧱 log()
+### <a name="authErrorLog-log">🧱 log()</a>
 
 - 📥 引数 {Error} e={}
 - this.message = e.message
@@ -676,7 +676,7 @@ authServerのエラーログ
 - シートの末尾行にauthErrorLogオブジェクトを追加
 - 📤 戻り値：シートに出力したauthErrorLogオブジェクト
 
-### 🧱 reset()
+### <a name="authErrorLog-reset">🧱 reset()</a>
 
 authErrorLogインスタンス変数の値を再設定
 

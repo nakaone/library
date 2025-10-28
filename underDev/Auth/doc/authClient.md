@@ -4,60 +4,59 @@
 
 </div>
 
-# authClient 関数 仕様書
+# authClient クラス仕様書
 
-## 🧭 概要
+## <a name="summary">🧭 概要</a>
 
 authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を受け、
 サーバ側(authServer)への暗号化通信リクエストを署名・暗号化、
 サーバ側処理を経てローカル側に戻された結果を復号・検証し、
 処理結果に応じてクライアント側処理を適切に振り分ける中核関数です。
 
-## ■ 設計方針、用語定義
+### <a name="policy">設計方針</a>
 
-- クロージャ関数とする
+- クロージャ関数ではなくクラスとして作成
+
+### <a name="dictionary">用語定義</a>
+
 - ローカル関数からの要求に基づかない、authClientでの処理の必要上発生するauthServerへの問合せを「内発処理」と呼称
   - CPkey更新：期限切れまたは残有効期間が短い場合のCPkey更新処理
   - パスコード突合：メンバが未認証または試行中の場合のパスコード突き合わせ処理
 - 内発処理はローカル関数からの処理要求に先行して行う
 
-## 🧩 内部構成(クラス変数)
+### 🧩 <a name="internal">内部構成</a>
 
-### authIndexedDB
+- 項目名末尾に「()」が付いているのはメソッド<br>
+  (static:クラスメソッド、public:外部利用可、private:内部専用)
 
-<a name="authIndexedDB"></a>
+| 項目名 | データ型 | 内容 |
+| :-- | :-- | :-- |
+| idb | [authIndexedDB](typedef.md#authindexeddb) | IndexedDBの内容をauthClient内で共有 |
+| cf | [authClientConfig](typedef.md#authclientconfig) | authClientの動作設定変数 |
+| [constructor()](#constructor) | private | コンストラクタ |
+| [exec()](#exec) | public | ローカル関数からの要求を受けてauthServerに問合せを行う |
+| [showMessage()](#showMessage) | private | メッセージをダイアログで表示 |
+| [enterPasscode()](#enterPasscode) | private | パスコードを入力するダイアログを表示 |
+| [checkCPkey()](#checkCPkey) | private | CPkey残有効期間をチェック |
+| [setupEnvironment()](#setupEnvironment) | private | SPkey入手等、authClient動作環境整備 |
 
-- authClientKeysを継承した、クライアントのIndexedDBに保存するオブジェクト
-- IndexedDB保存時のキー名は`authConfig.system.name`から取得
+## <a name="constructor" href="#internal">🧱 constructor()</a>
 
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 2 | memberName | ❌ | string |  | メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。 |
-| 3 | deviceId | ⭕ | string | UUID | デバイスの識別子 |
-| 4 | keyGeneratedDateTime | ⭕ | number | Date.now() | 鍵ペア生成日時。UNIX時刻(new Date().getTime()),なおサーバ側でCPkey更新中にクライアント側で新たなCPkeyが生成されるのを避けるため、鍵ペア生成は30分以上の間隔を置く。 |
-| 5 | SPkey | ⭕ | string | null | サーバ公開鍵(Base64) |
-| 6 | expireCPkey | ⭕ | number | 0 | CPkeyの有効期限(無効になる日時)。未ログイン時は0 |
+authClientインスタンス化時の処理。
 
-### authClientKeys
+### <a name="constructor-param">📥 引数</a>
 
-<a name="authClientKeys"></a>
+| 項目名 | データ型 | 内容 |
+| :-- | :-- | :-- |
+| config | [authClientConfig](typedef.md#authclientconfig) | authClientの動作設定変数 |
 
-クライアント側鍵ペア
+### <a name="constructor-returns">📤 戻り値</a>
 
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | CSkeySign | ❌ | CryptoKey |  | 署名用秘密鍵 |
-| 2 | CPkeySign | ❌ | CryptoKey |  | 署名用公開鍵 |
-| 3 | CSkeyEnc | ❌ | CryptoKey |  | 暗号化用秘密鍵 |
-| 4 | CPkeyEnc | ❌ | CryptoKey |  | 暗号化用公開鍵 |
+- [authClient](#internal)
 
-## 🧱 メイン処理
+### <a name="constructor-process">🧾 処理手順</a>
 
-### 概要
-
-- authClientインスタンス化時の処理。classのconstructor()に相当
-- 引数はauthClient内共有用の変数`pv`に保存
+- 引数はauthClient内共有用の変数`cf`に保存
 - `cryptoClient.constructor()`で鍵ペアの準備
 - IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
 - IndexedDBからメンバの氏名を取得、存在しなければダイアログから入力
@@ -115,56 +114,23 @@ sequenceDiagram
   end
 ```
 
-- 鍵ペア(CPkey)の更新が必要な場合はexec()メソッドから行い、メイン処理では行わない。
+## <a name="exec" href="#internal">🧱 exec()</a>
 
-### 📤 入力項目
+ローカル関数からの要求を受けてauthServerに問合せを行い、返信された処理結果に基づき適宜メソッドを呼び出す。
 
-#### `authClientConfig`
-
-<a name="authClientConfig"></a>
-
-authConfigを継承した、authClientでのみ使用する設定値
+### <a name="exec-param">📥 引数</a>
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | api | ❌ | string |  | サーバ側WebアプリURLのID(`https://script.google.com/macros/s/(この部分)/exec`) |
-| 2 | timeout | ⭕ | number | 300000 | サーバからの応答待機時間。これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分 |
-| 3 | CPkeyGraceTime | ⭕ | number | 600000 | CPkey期限切れまでの猶予時間。CPkey有効期間がこれを切ったら更新処理実行。既定値は10分 |
+| 1 | request | ❌ | [LocalRequest](typedef.md#localrequest) | | ローカル関数からの処理要求 |
+| 2 | internal | ⭕ | [authRequest](typedef.md#authrequest) | — | authClient内発の先行処理 |
 
-#### 参考：`authConfig`
+### <a name="exec-returns">📤 戻り値</a>
 
-<a name="authConfig"></a>
+- [LocalResponse](typedef.md#localresponse)
 
-- authClient/authServer共通で使用される設定値。
-- authClientConfig, authServerConfigの親クラス
+### <a name="exec-process">🧾 処理手順</a>
 
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | systemName | ⭕ | string | auth | システム名 |
-| 2 | adminMail | ❌ | string |  | 管理者のメールアドレス |
-| 3 | adminName | ❌ | string |  | 管理者名 |
-| 4 | allowableTimeDifference | ⭕ | number | 120000 | クライアント・サーバ間通信時の許容時差。既定値は2分 |
-| 5 | RSAbits | ⭕ | string | 2048 | 鍵ペアの鍵長 |
-| 6 | underDev | ❌ | Object |  | テスト時の設定 |
-| 7 | underDev.isTest | ⭕ | boolean | false | 開発モードならtrue |
-
-### 📥 出力項目
-
-- 利用可能なメソッドのオブジェクト
-
-## 🧱 exec()メソッド
-
-### 概要
-
-- ローカル関数からの要求を受けてauthServerに問合せを行い、返信された処理結果に基づき適宜メソッドを呼び出す
-
-```js
-/**
- * @param {LocalRequest} request - localFuncからの要求
- * @param {authRequest} [internal] - authClient内発の先行処理
- * @returns {LocalResponse}
- */
-```
 - CPkeyの残有効期間をチェック(checkCPkeyメソッドの実行)
 
 - 内発処理が有った場合(`typeof internal !== 'undefined'`)は以下を実行
@@ -257,148 +223,23 @@ sequenceDiagram
 | unmatch | enterPasscode() | authClientで入力されたパスコードに対するauthServerからの「パスコード不一致(再試行可)」の回答<br>⇒ パスコード入力画面を表示 |
 | freezing | showMessage() | authClientで入力されたパスコードに対するauthServerからの「試行回数上限、凍結中」の回答<br>⇒ 「パスコードが連続して不一致だったため、現在アカウントは凍結中です。時間をおいて再試行してください」表示 |
 
-#### 参考：メンバの状態遷移
+## <a name="showMessage" href="#internal">🧱 showMessage()</a>
 
-```mermaid
-%% メンバ状態遷移図
+メッセージをダイアログで表示
 
-stateDiagram-v2
-  [*] --> 不使用
-  不使用 --> 未加入 : 処理要求
-  不使用 --> 未審査 : 処理要求
-  不使用 --> 加入禁止 : 処理要求
-  不使用 --> 加入中 : 処理要求
-  未加入 --> 未審査 : 加入要求
-  未審査 --> 加入中 : 加入承認
-  加入中 --> 未審査 : 加入失効
-  未審査 --> 加入禁止: 加入否認
-  加入禁止 --> 未審査 : 加入解禁
-  state 加入中 {
-    [*] --> 未認証
-    未認証 --> 試行中 : 認証要求
-    試行中 --> 未認証 : CPkey更新
-    試行中 --> 認証中 : 認証成功
-    試行中 --> 試行中 : 再試行
-    認証中 --> 未認証 : 認証失効 or CPkey更新
-    試行中 --> 凍結中 : 認証失敗
-    凍結中 --> 凍結中 : CPkey更新
-    凍結中 --> 未認証 : 凍結解除
-  }
-```
-
-| No | 状態 | 説明 | SPkey | CPkey | memberId/メンバ名 | 無権限関数 | 要権限関数 |
-| --: | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-| 1 | 不使用 | Auth不使用のコンテンツのみ表示 | 未取得 | 未生成(※1) | 未登録(※1) | 実行不可 | 実行不可 |
-| 2 | 未加入 | memberListにUUIDのmemberId/メンバ名で仮登録 | 取得済 | 生成済 | 仮登録(UUID) | 実行可 | 実行不可 |
-| 3 | 未審査 | memberListに本来のmemberId/メンバ名で登録済だが管理者による加入認否が未決定 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
-| 4 | 加入中 | 管理者により加入が承認された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
-| 4.1 | 未認証 | 未認証(未ログイン)で権限が必要な処理は行えない状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
-| 4.2 | 試行中 | パスコードによる認証を試行している状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
-| 4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行可 |
-| 4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
-| 5 | 加入禁止 | 管理者により加入が否認された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
-
-<!--
-
-```mermaid
-%% メンバ状態遷移図
-
-stateDiagram-v2
-  [*] x-> 未加入
-  未加入 x-> 未審査 : 加入要求
-  未審査 x-> 加入中 : 加入承認
-
-  state 加入中 {
-    [*] x-> 未認証
-    未認証 x-> 試行中 : 認証要求
-    試行中 x-> 未認証 : CPkey更新
-    試行中 x-> 認証中 : 認証成功
-    試行中 x-> 試行中 : 再試行
-    認証中 x-> 未認証 : 認証失効 or CPkey更新
-    試行中 x-> 凍結中 : 認証失敗
-    凍結中 x-> 凍結中 : CPkey更新
-    凍結中 x-> 未認証 : 凍結解除
-  }
-  加入中 x-> 未審査 : 加入失効
-  未審査 x-> 加入禁止: 加入否認
-  加入禁止 x-> 未審査 : 加入解禁
-```
-
-No | 状態 | 説明
-:-- | :-- | :--
-1 | 未加入 | memberList未登録
-2 | 未審査 | memberList登録済だが、管理者による加入認否が未決定
-3 | 加入中 | 管理者により加入が承認された状態
-3.1 | 未認証 | 認証(ログイン)不要の処理しか行えない状態
-3.2 | 試行中 | パスコードによる認証を試行している状態
-3.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態
-3.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態
-4 | 加入禁止 | 管理者により加入が否認された状態
--->
-
-### 📤 入力項目
-
-#### LocalRequest
-
-<a name="LocalRequest"></a>
-
-- クライアント側関数からauthClientに渡すオブジェクト
-- func,arg共、平文
+### <a name="showMessage-param">📥 引数</a>
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | func | ❌ | string |  | サーバ側関数名 |
-| 2 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
+| 1 | decryptedResponse | ❌ | [decryptedResponse](typedef.md#decryptedresponse) | — |  |
 
-#### authRequest
+### <a name="showMessage-returns">📤 戻り値</a>
 
-<a name="authRequest"></a>
+- [LocalResponse](typedef.md#localresponse)<br>
+  `={result:'fatal',message:decryptedResponse.sv.message,response:undefind}`
 
-authClientからauthServerに送られる、暗号化前の処理要求オブジェクト
+### <a name="showMessage-process">🧾 処理手順</a>
 
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
-| 3 | signature | ❌ | string |  | クライアント側署名 |
-| 4 | requestId | ❌ | string |  | 要求の識別子。UUID |
-| 5 | timestamp | ❌ | number |  | 要求日時。UNIX時刻 |
-| 6 | func | ❌ | string |  | サーバ側関数名 |
-| 7 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
-
-### 📥 出力項目
-
-#### LocalResponse
-
-<a name="LocalResponse"></a>
-
-authClientからクライアント側関数に返される処理結果オブジェクト
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | result | ❌ | string |  | 処理結果。fatal/warning/normal |
-| 2 | message | ⭕ | string |  | エラーメッセージ。normal時は`undefined`。 |
-| 3 | response | ⭕ | any |  | 要求された関数の戻り値。fatal/warning時は`undefined`。`JSON.parse(authResponse.response)` |
-
-#### 参考：authResponse
-
-<a name="authResponse"></a>
-
-authServerからauthClientに返される、暗号化前の処理結果オブジェクト
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | timestamp | ⭕ | number | Date.now() | サーバ側処理日時。UNIX時刻 |
-| 2 | result | ⭕ | string | normal | サーバ側処理結果。fatal/warning/normal |
-| 3 | message | ⭕ | string |  | サーバ側からの(エラー)メッセージ |
-| 4 | request | ⭕ | authRequest |  | 処理要求オブジェクト |
-| 5 | response | ⭕ | any |  | 要求されたサーバ側関数の戻り値。fatal/warning時は`undefined` |
-
-## 🧱 showMessage()メソッド
-
-- execメソッドから呼ばれる関数
-- 引数は`decryptedResponse`
-- 戻り値は`LocalResponse(={result:'fatal',message:decryptedResponse.sv.message,response:undefind})`
 - `decryptedResponse.sv.message`の値に基づき、メッセージをダイアログで表示
   | message | メッセージ |
   | :-- | :-- |
@@ -407,10 +248,20 @@ authServerからauthClientに返される、暗号化前の処理結果オブジ
   | denial | 残念ながら加入申請は否認されました |
   | freezing | パスコードが連続して不一致だったため、現在アカウントは凍結中です。時間をおいて再試行してください |
 
-## 🧱 enterPasscode()メソッド
+## <a name="enterPasscode" href="#internal">🧱 enterPasscode()</a>
 
-- execメソッドから呼ばれる関数
-- パスコードを入力するダイアログを表示
+パスコードを入力するダイアログを表示
+
+### <a name="enterPasscode-param">📥 引数</a>
+
+無し
+
+### <a name="enterPasscode-returns">📤 戻り値</a>
+
+- 再帰呼出先の[execの戻り値](#exec-returns)(=[LocalResponse](typedef.md#localresponse))
+
+### <a name="enterPasscode-process">🧾 処理手順</a>
+
 - ダイアログに表示するメッセージは`decryptedResponse.sv.message`の値に基づき変更
   | message | メッセージ |
   | :-- | :-- |
@@ -420,9 +271,20 @@ authServerからauthClientに返される、暗号化前の処理結果オブジ
 - 作成したauthRequestをinternalとしてexecメソッドを再帰呼出
 - 再帰呼出先のexecの戻り値を自身の戻り値とする
 
-## 🧱 checkCPkey()メソッド
+## <a name="checkCPkey" href="#internal">🧱 checkCPkey()</a>
 
-- 引数は無し、戻り値は`authResponse`
+CPkey残有効期間をチェック
+
+### <a name="checkCPkey-param">📥 引数</a>
+
+無し
+
+### <a name="checkCPkey-returns">📤 戻り値</a>
+
+- [authResponse](typedef.md#authresponse)
+
+### <a name="checkCPkey-process">🧾 処理手順</a>
+
 - CPkey残有効期間をチェック、期限切れまたは猶予時間未満になってないか計算<br>
   `authIndexedDB.expireCPkey - Date.now() < authClientConfig.CPkeyGraceTime`
 - 残有効期間が十分な場合、`authResponse(={result:'normal'})`を返して終了
@@ -433,11 +295,19 @@ authServerからauthClientに返される、暗号化前の処理結果オブジ
     ※ この時点では古い鍵ペアで署名・暗号化される
   - 再帰呼出先のexecが`result === 'normal'`ならIndexedDBも更新(`cryptoClient.updateKeys`)
 
-## setupEnvironment()
+## <a name="setupEnvironment" href="#internal">🧱 setupEnvironment()</a>
 
-<!--
-    authClient.setupEnvironment
--->
+SPkey入手等、authClient動作環境整備
+
+### <a name="setupEnvironment-param">📥 引数</a>
+
+無し
+
+### <a name="setupEnvironment-returns">📤 戻り値</a>
+
+- [](typedef.md#)
+
+### <a name="setupEnvironment-process">🧾 処理手順</a>
 
 - 不要なSPkey提供・通信を回避するため「(インスタンス生成時ではなく)処理要求があって初めてサーバ側との通信環境構築(SPkey取得)」とする
 - 図中"ac.setup"は`authClient.setupEnvironment`メソッドを、"ac.exec"は`authClient.exec`メソッドを指す。
@@ -535,9 +405,3 @@ sequenceDiagram
     ※`fetch timeout`を使用。許容時間は`authConfig.allowableTimeDifference`
   - ②クライアント内分岐処理の結果が'fatal'だった場合
 -->
-
-## ⏰ メンテナンス処理
-
-## 🔐 セキュリティ仕様
-
-## 🧾 エラーハンドリング仕様
