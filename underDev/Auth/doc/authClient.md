@@ -16,12 +16,6 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 ### <a name="policy">設計方針</a>
 
 - クロージャ関数ではなくクラスとして作成
-
-### <a name="dictionary">用語定義</a>
-
-- ローカル関数からの要求に基づかない、authClientでの処理の必要上発生するauthServerへの問合せを「内発処理」と呼称
-  - CPkey更新：期限切れまたは残有効期間が短い場合のCPkey更新処理
-  - パスコード突合：メンバが未認証または試行中の場合のパスコード突き合わせ処理
 - 内発処理はローカル関数からの処理要求に先行して行う
 
 ### 🧩 <a name="internal">内部構成</a>
@@ -31,8 +25,8 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 
 | 項目名 | データ型 | 内容 |
 | :-- | :-- | :-- |
+| cf | [authClientConfig](typedef.md#authclientconfig) | 動作設定変数(config) |
 | idb | [authIndexedDB](typedef.md#authindexeddb) | IndexedDBの内容をauthClient内で共有 |
-| cf | [authClientConfig](typedef.md#authclientconfig) | authClientの動作設定変数 |
 | [constructor()](#constructor) | private | コンストラクタ |
 | [exec()](#exec) | public | ローカル関数からの要求を受けてauthServerに問合せを行う |
 | [showMessage()](#showMessage) | private | メッセージをダイアログで表示 |

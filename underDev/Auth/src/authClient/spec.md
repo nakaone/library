@@ -21,8 +21,8 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 
 | 項目名 | データ型 | 内容 |
 | :-- | :-- | :-- |
+| cf | [authClientConfig](typedef.md#authclientconfig) | 動作設定変数(config) |
 | idb | [authIndexedDB](typedef.md#authindexeddb) | IndexedDBの内容をauthClient内で共有 |
-| cf | [authClientConfig](typedef.md#authclientconfig) | authClientの動作設定変数 |
 | [constructor()](#constructor) | private | コンストラクタ |
 | [exec()](#exec) | public | ローカル関数からの要求を受けてauthServerに問合せを行う |
 | [showMessage()](#showMessage) | private | メッセージをダイアログで表示 |
