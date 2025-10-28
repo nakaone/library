@@ -119,9 +119,7 @@ authClientからのencryptedRequestを受け、復号後メソッドに処理を
     4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態<br>⇒ `loginTrial()`メソッドを呼び出し
     5 | 加入禁止 | 管理者により加入が否認された状態<br>⇒ `notifyAcceptance()`メソッドを呼び出し
 
-#### cryptoServer.decryptの処理結果
-
-<!--::$src/cryptoServer/decrypt.decision.md::-->
+※ [cryptoServer.decryptの処理結果](cryptoServer.md#decrypt-returns)
 
 #### エラー処理
 
@@ -332,11 +330,3 @@ GAS初回実行時の権限確認を含む初期環境の整備。「インス�
 - 加入否認が未定のメンバをリストアップ、順次認否入力のダイアログを表示
 - 入力された認否をmemberListに記入(Member.log.approval/denial)
 - 認否が確定したメンバに対して結果通知メールを発行
-
-<!--
-## <a name="">⏰ メンテナンス処理</a>
-
-## <a name="">🔐 セキュリティ仕様</a>
-
-## <a name="">🧾 エラーハンドリング仕様</a>
--->

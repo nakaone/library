@@ -142,9 +142,7 @@ authAuditLogインスタンス変数の値を再設定
 
 <!--::$tmp/decryptedRequest.md::-->
 
-### cryptoServer.decryptの処理結果
-
-<!--::$src/cryptoServer/decrypt.decision.md::-->
+※ [cryptoServer.decryptの処理結果](cryptoServer.md#decrypt-returns)
 
 ## authResponse
 

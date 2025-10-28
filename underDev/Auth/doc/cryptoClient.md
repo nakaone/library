@@ -4,16 +4,15 @@
 
 </div>
 
-# 🔐 cryptoClient クラス 仕様書
+# cryptoClient クラス仕様書
 
-## 🧭 概要
+## <a name="summary">🧭 概要</a>
 
 - クライアント側でサーバへ安全に処理要求を送信するための復号・署名検証処理モジュール
 - サーバ側仕様書(`cryptoServer`)と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
-- `cryptoClient.encrypt()`形式での使用を想定し、メソッドはstaticとする
 - 暗号化ライブラリは `jsrsasign` を使用。
 
-## ■ 設計方針
+### <a name="policy">設計方針</a>
 
 - 暗号化・署名には **Web Crypto API** を使用。
 - 鍵ペアは **署名用(RSA-PSS)** と **暗号化用(RSA-OAEP)**の2種類を生成し、それぞれ非エクスポータブル(`exportable: false`)として**IndexedDB** に保存。
@@ -21,136 +20,109 @@
 - クライアント側公開鍵(CPkey)は`authConfig.loginLifeTime`(既定：1日)で有効期限管理。
 - 暗号化・署名時に利用するハッシュ関数は **SHA-256** 以上を使用。
 
-## 🧩 内部構成(クラス変数)
+### 🧩 <a name="internal">内部構成</a>
 
-### authIndexedDB
+- 項目名末尾に「()」が付いているのはメソッド<br>
+  (static:クラスメソッド、public:外部利用可、private:内部専用)
 
-<a name="encryptedRequest"></a>
+| 項目名 | データ型 | 内容 |
+| :-- | :-- | :-- |
+| cf | [authClientConfig](typedef.md#authclientconfig) | 動作設定変数(config) |
+| idb | [authIndexedDB](typedef.md#authindexeddb) | IndexedDBの内容をauthClient内で共有 |
+| [constructor()](#constructor) | private | コンストラクタ |
+| [decrypt()](#decrypt) | public | authServer->authClientのメッセージを復号＋署名検証 |
+| [encrypt()](#encrypt) | public | authClient->authServerのメッセージを暗号化＋署名 |
+| [generateKeys()](#generateKeys) | public | 新たなクライアント側鍵ペアを作成 |
+| [updateKeys()](#updateKeys) | public | 引数で渡された鍵ペアでIndexedDBの内容を更新 |
 
-- authClientからauthServerに送られる、暗号化された処理要求オブジェクト
-- ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列
-- memberId,deviceIdは平文
+## <a name="constructor" href="#internal">🧱 constructor()</a>
+
+### <a name="constructor-param">📥 引数</a>
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
-| 3 | ciphertext | ❌ | string |  | 暗号化した文字列 |
+| 1 | config | ❌ | [authClientConfig](typedef.md#authclientconfig) | — | authClientの動作設定変数 |
+| 2 | idb | ❌ | [authIndexedDB](typedef.md#authindexeddb) | — | IndexedDBの内容 |
 
-## 🧱 constructor()
+### <a name="constructor-returns">📤 戻り値</a>
+
+- [cryptoClient](#internal)
+
+### <a name="constructor-process">🧾 処理手順</a>
 
 - IndexedDB を開く。鍵ペアが存在しない場合、RSA-PSS と RSA-OAEPを生成。
 - 生成した鍵をメンバ変数に保持し、IndexedDB に保存。
 
-## 🧱 decrypt()メソッド
+## <a name="decrypt" href="#internal">🧱 decrypt()</a>
 
-- authServer->authClientのメッセージを復号＋署名検証
+authServer->authClientのメッセージを復号＋署名検証
+
+### <a name="decrypt-param">📥 引数</a>
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | response | ❌ | [encryptedResponse](typedef.md#encryptedresponse) | — | authServerからのメッセージ |
+
+### <a name="decrypt-returns">📤 戻り値</a>
+
+- [decryptedResponse](typedef.md#decryptedresponse)
+
+### <a name="decrypt-process">🧾 処理手順</a>
+
 - サーバから送信された暗号文を安全に復号・検証し、結果を構造化オブジェクトとして返す。
 - レスポンスのタイムスタンプをチェックし、許容誤差(authConfig.allowableTimeDifference)を超えていないか確認。<br>
   超過していれば`console.warn('[cryptoClient] Timestamp skew detected')` を出力。
 - 本関数はauthClientから呼ばれるため、fatalエラーでも戻り値を返す
 
-### 📤 入力項目
+## <a name="encrypt" href="#internal">🧱 encrypt()</a>
 
-#### `encryptedResponse`
+authClient->authServerのメッセージを暗号化＋署名
 
-<a name="encryptedResponse"></a>
-
-- authServerからauthClientに返される、暗号化された処理結果オブジェクト
-- ciphertextはauthResponseをJSON化、RSA-OAEP暗号化＋署名付与した文字列
+### <a name="encrypt-param">📥 引数</a>
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | ciphertext | ❌ | string |  | 暗号化した文字列 |
+| 1 | request | ❌ | [authRequest](typedef.md#authrequest) | — | 処理要求オブジェクト |
 
-### 📥 出力項目
+### <a name="encrypt-returns">📤 戻り値</a>
 
-#### `decryptedResponse`
+- [encryptedRequest](typedef.md#encryptedrequest)
 
-<a name="decryptedResponse"></a>
+### <a name="encrypt-process">🧾 処理手順</a>
 
-encryptedResponseをcryptoClientで復号した処理結果オブジェクト
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | timestamp | ❌ | number |  | cryptoClient処理日時。UNIX時刻 |
-| 2 | result | ❌ | string |  | cryptoClient処理結果。fatal/warning/normal |
-| 3 | message | ⭕ | string |  | cryptoClientからのエラーメッセージ。normal時は`undefined` |
-| 4 | request | ❌ | authRequest |  | 処理要求オブジェクト(authResponse.request) |
-| 5 | response | ⭕ | any |  | 要求されたサーバ側関数の戻り値(authResponse.response)。fatal/warning時は`undefined` |
-| 6 | sv | ❌ | Object |  |  |
-| 7 | sv.timestamp | ❌ | number |  | サーバ側処理日時。UNIX時刻 |
-| 8 | sv.result | ❌ | string |  | サーバ側処理結果。fatal/warning/normal |
-| 9 | sv.message | ⭕ | string |  | サーバ側からのエラーメッセージ。normal時は`undefined` |
-
-### 処理概要
-
-
-## 🧱 encrypt()メソッド
-
-- authClient->authServerのメッセージを暗号化＋署名
 - `authRequest`をJSON化し、RSA-PSS署名を付与。
 - 署名付きペイロードを RSA-OAEP により暗号化
 - 暗号文は Base64 エンコードし、`encryptedRequest`形式にして返す
 
-### 📤 入力項目
+## <a name="generateKeys" href="#internal">🧱 generateKeys()</a>
 
-#### authRequest
+新たなクライアント側鍵ペアを作成
 
-<a name="authRequest"></a>
+### <a name="generateKeys-param">📥 引数</a>
 
-authClientからauthServerに送られる、暗号化前の処理要求オブジェクト
+無し
 
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
-| 3 | signature | ❌ | string |  | クライアント側署名 |
-| 4 | requestId | ❌ | string |  | 要求の識別子。UUID |
-| 5 | timestamp | ❌ | number |  | 要求日時。UNIX時刻 |
-| 6 | func | ❌ | string |  | サーバ側関数名 |
-| 7 | arguments | ❌ | any[] |  | サーバ側関数に渡す引数の配列 |
+### <a name="generateKeys-returns">📤 戻り値</a>
 
-### 📥 出力項目
+- [authClientKeys](typedef.md#authclientkeys)
 
-#### encryptedRequest
+### <a name="generateKeys-process">🧾 処理手順</a>
 
-<a name="encryptedRequest"></a>
+## <a name="updateKeys" href="#internal">🧱 updateKeys()</a>
 
-- authClientからauthServerに送られる、暗号化された処理要求オブジェクト
-- ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列
-- memberId,deviceIdは平文
+引数で渡された鍵ペアでIndexedDBの内容を更新
+
+### <a name="updateKeys-param">📥 引数</a>
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 2 | deviceId | ❌ | string |  | デバイスの識別子 |
-| 3 | ciphertext | ❌ | string |  | 暗号化した文字列 |
+| 1 | keys | ❌ | [authClientKeys](typedef.md#authclientkeys) | — | 生成された鍵ペア |
 
-## 🧱 generateKeys()メソッド
+### <a name="updateKeys-returns">📤 戻り値</a>
 
-- 新たなクライアント側鍵ペアを作成する
-- 引数は無し、戻り値は`authClientKeys`
+無し
 
-### authClientKeys
-
-<a name="authClientKeys"></a>
-
-クライアント側鍵ペア
-
-| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | CSkeySign | ❌ | CryptoKey |  | 署名用秘密鍵 |
-| 2 | CPkeySign | ❌ | CryptoKey |  | 署名用公開鍵 |
-| 3 | CSkeyEnc | ❌ | CryptoKey |  | 暗号化用秘密鍵 |
-| 4 | CPkeyEnc | ❌ | CryptoKey |  | 暗号化用公開鍵 |
-
-## 🧱 updateKeys()メソッド
-
-- 引数で渡された鍵ペアでIndexedDBの内容を更新する
-- 引数は`authClientKeys`、戻り値はnullまたはError
-
-## ⏰ メンテナンス処理
+### <a name="updateKeys-process">🧾 処理手順</a>
 
 ## 🔐 セキュリティ仕様
 
@@ -182,5 +154,3 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
 | :-- | :-- | :-- | :-- | :-- |
 | 署名 | RSA-PSS | SHA-256 | authConfig.RSAbits | 鍵用途:sign |
 | 暗号化 | RSA-OAEP | SHA-256 | authConfig.RSAbits | 鍵用途:encrypt |
-
-## 🧾 エラーハンドリング仕様
