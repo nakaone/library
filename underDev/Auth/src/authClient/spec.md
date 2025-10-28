@@ -274,6 +274,10 @@ sequenceDiagram
     ※ この時点では古い鍵ペアで署名・暗号化される
   - 再帰呼出先のexecが`result === 'normal'`ならIndexedDBも更新(`cryptoClient.updateKeys`)
 
+## setupEnvironment()
+
+<!--::$src/authClient/setupEnvironment.md::-->
+
 ## ⏰ メンテナンス処理
 
 ## 🔐 セキュリティ仕様

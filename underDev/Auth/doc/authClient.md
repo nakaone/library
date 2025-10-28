@@ -32,11 +32,11 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
-| 1 | keyGeneratedDateTime | ❌ | number |  | 鍵ペア生成日時。UNIX時刻(new Date().getTime()),なおサーバ側でCPkey更新中にクライアント側で新たなCPkeyが生成されるのを避けるため、鍵ペア生成は30分以上の間隔を置く。 |
-| 2 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
-| 3 | memberName | ❌ | string |  | メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。 |
-| 4 | deviceId | ❌ | string |  | デバイスの識別子 |
-| 5 | SPkey | ❌ | string |  | サーバ公開鍵(Base64) |
+| 1 | memberId | ❌ | string |  | メンバの識別子(=メールアドレス) |
+| 2 | memberName | ❌ | string |  | メンバ(ユーザ)の氏名(ex."田中　太郎")。加入要求確認時に管理者が申請者を識別する他で使用。 |
+| 3 | deviceId | ⭕ | string | UUID | デバイスの識別子 |
+| 4 | keyGeneratedDateTime | ⭕ | number | Date.now() | 鍵ペア生成日時。UNIX時刻(new Date().getTime()),なおサーバ側でCPkey更新中にクライアント側で新たなCPkeyが生成されるのを避けるため、鍵ペア生成は30分以上の間隔を置く。 |
+| 5 | SPkey | ⭕ | string | null | サーバ公開鍵(Base64) |
 | 6 | expireCPkey | ⭕ | number | 0 | CPkeyの有効期限(無効になる日時)。未ログイン時は0 |
 
 ### authClientKeys
@@ -263,10 +263,16 @@ sequenceDiagram
 %% メンバ状態遷移図
 
 stateDiagram-v2
-  [*] --> 未加入
+  [*] --> 不使用
+  不使用 --> 未加入 : 処理要求
+  不使用 --> 未審査 : 処理要求
+  不使用 --> 加入禁止 : 処理要求
+  不使用 --> 加入中 : 処理要求
   未加入 --> 未審査 : 加入要求
   未審査 --> 加入中 : 加入承認
-
+  加入中 --> 未審査 : 加入失効
+  未審査 --> 加入禁止: 加入否認
+  加入禁止 --> 未審査 : 加入解禁
   state 加入中 {
     [*] --> 未認証
     未認証 --> 試行中 : 認証要求
@@ -278,9 +284,44 @@ stateDiagram-v2
     凍結中 --> 凍結中 : CPkey更新
     凍結中 --> 未認証 : 凍結解除
   }
-  加入中 --> 未審査 : 加入失効
-  未審査 --> 加入禁止: 加入否認
-  加入禁止 --> 未審査 : 加入解禁
+```
+
+| No | 状態 | 説明 | SPkey | CPkey | memberId/メンバ名 | 無権限関数 | 要権限関数 |
+| --: | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| 1 | 不使用 | Auth不使用のコンテンツのみ表示 | 未取得 | 未生成(※1) | 未登録(※1) | 実行不可 | 実行不可 |
+| 2 | 未加入 | memberListにUUIDのmemberId/メンバ名で仮登録 | 取得済 | 生成済 | 仮登録(UUID) | 実行可 | 実行不可 |
+| 3 | 未審査 | memberListに本来のmemberId/メンバ名で登録済だが管理者による加入認否が未決定 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+| 4 | 加入中 | 管理者により加入が承認された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+| 4.1 | 未認証 | 未認証(未ログイン)で権限が必要な処理は行えない状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+| 4.2 | 試行中 | パスコードによる認証を試行している状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+| 4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行可 |
+| 4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+| 5 | 加入禁止 | 管理者により加入が否認された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+
+<!--
+
+```mermaid
+%% メンバ状態遷移図
+
+stateDiagram-v2
+  [*] x-> 未加入
+  未加入 x-> 未審査 : 加入要求
+  未審査 x-> 加入中 : 加入承認
+
+  state 加入中 {
+    [*] x-> 未認証
+    未認証 x-> 試行中 : 認証要求
+    試行中 x-> 未認証 : CPkey更新
+    試行中 x-> 認証中 : 認証成功
+    試行中 x-> 試行中 : 再試行
+    認証中 x-> 未認証 : 認証失効 or CPkey更新
+    試行中 x-> 凍結中 : 認証失敗
+    凍結中 x-> 凍結中 : CPkey更新
+    凍結中 x-> 未認証 : 凍結解除
+  }
+  加入中 x-> 未審査 : 加入失効
+  未審査 x-> 加入禁止: 加入否認
+  加入禁止 x-> 未審査 : 加入解禁
 ```
 
 No | 状態 | 説明
@@ -293,6 +334,7 @@ No | 状態 | 説明
 3.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態
 3.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態
 4 | 加入禁止 | 管理者により加入が否認された状態
+-->
 
 ### 📤 入力項目
 
@@ -390,6 +432,109 @@ authServerからauthClientに返される、暗号化前の処理結果オブジ
   - 作成したauthRequestをinternalとしてexecメソッドを再帰呼出<br>
     ※ この時点では古い鍵ペアで署名・暗号化される
   - 再帰呼出先のexecが`result === 'normal'`ならIndexedDBも更新(`cryptoClient.updateKeys`)
+
+## setupEnvironment()
+
+<!--
+    authClient.setupEnvironment
+-->
+
+- 不要なSPkey提供・通信を回避するため「(インスタンス生成時ではなく)処理要求があって初めてサーバ側との通信環境構築(SPkey取得)」とする
+- 図中"ac.setup"は`authClient.setupEnvironment`メソッドを、"ac.exec"は`authClient.exec`メソッドを指す。
+- 本処理を実行することによりサーバ側では仮登録が行われ、ユーザの状態は「不使用」から「未加入」「未審査」「加入禁止」「加入中」のいずれかに変更される
+
+```mermaid
+sequenceDiagram
+  autonumber
+  %%actor user
+  participant localFunc
+  %%participant clientMail
+  participant exec as ac.exec
+  participant IndexedDB
+  participant setup as ac.setup
+  participant cryptoClient
+  participant authServer
+  participant Member
+  participant cryptoServer
+  %%participant serverFunc
+  %%actor admin
+
+  localFunc->>+exec: localRequest
+
+  rect rgba(218, 255, 255, 1)
+    alt pv.SPkey === null
+      exec->>+setup: 環境構築要求
+
+      %% CPkey(文字列)のみ送信
+      setup->>+cryptoClient: CPkey
+      Note right of cryptoClient: fetch()
+      cryptoClient->>+authServer: CPkey(平文)
+
+      %% decryptの引数は本来encryptedRequestだけど、CPkey文字列なら仮登録と解釈
+      authServer->>+cryptoServer: CPkey
+      Note right of cryptoServer: decrypt()
+      cryptoServer->>-authServer: authResponse
+
+      %% Member.setMemberで仮登録(memberId=UUID, name='dummy')
+      authServer->>+Member: authResponse
+      Note right of Member: setMember()
+      Member->>-authServer: authResponse
+
+      %% setupへの戻り値はCPkeyで暗号化＋SSkeyで署名
+      authServer->>+cryptoServer: authResponse
+      Note right of cryptoServer: encrypt()
+      cryptoServer->>-authServer: encryptedResponse
+      authServer->>-cryptoClient: encryptedResponse
+
+      %% setupで復号、SPkey＋状態を取得
+      cryptoClient->>-setup: authResponse
+
+      setup->>setup: `pv`にSPkey,memberId(仮)セット
+      %% IndexedDBにpvを保存
+      setup->>+IndexedDB: authIndexedDB
+      Note right of IndexedDB: save()
+      IndexedDB->>-setup: authResponse
+
+      setup->>-exec: authResponse
+    end
+  end
+
+```
+
+- ⑥ authIndexedDB生成(=authIndexedDBの初期値)
+  | No | 項目名 | 説明 | 設定値 | 備考 |
+  | --: | :-- | :-- | :-- | :-- |
+  | 1 | memberId | メンバの識別子 | UUID | 仮登録用 |
+  | 2 | memberName | メンバ(ユーザ)の氏名 | 'dummy' | 仮登録用 |
+  | 3 | deviceId | デバイスの識別子 | UUID |  |
+  | 4 | CSkeySign | 署名用秘密鍵 | CryptoKey | 自動生成 |
+  | 5 | CPkeySign | 署名用公開鍵 | CryptoKey | 自動生成 |
+  | 6 | CSkeyEnc | 暗号化用秘密鍵 | CryptoKey | 自動生成 |
+  | 7 | CPkeyEnc | 暗号化用公開鍵 | CryptoKey | 自動生成 |
+  | 8 | keyGeneratedDateTime | 鍵ペア生成日時 | Date.now() |  |
+  | 9 | SPkey | サーバ公開鍵 | null |  |
+  | 10 | expireCPkey | CPkey有効期限 | 0 |  |
+
+- ⑨ cryptoServer -> authServer: authResponse<br>
+  CPkey文字列かを判定
+  | No | 項目名 | 説明 | 設定値 | 備考 |
+  | --: | :-- | :-- | :-- | :-- |
+  | 1 | timestamp | サーバ側処理日時 | Date.now() |  |
+  | 2 | result | サーバ側処理結果 | **'warning'** |  |
+  | 3 | message | サーバ側からの(エラー)メッセージ | **'maybe CPkey'** |  |
+  | 4 | request | 処理要求オブジェクト | — |  |
+  | 5 | response | 要求されたサーバ側関数の戻り値 | — |  |
+
+
+
+<!--
+- ①サーバ内処理：decryptedRequestを入力としてメイン処理またはメソッドを実行
+- ②クライアント内分岐処理：decryptedResponse.sv.resultに基づきメイン処理またはメソッドを実行
+- 「リトライ試行」は以下の場合にループを抜ける
+  - 応答タイムアウト内にauthServerからレスポンスが来なかった場合<br>
+    ※`fetch timeout`を使用。許容時間は`authConfig.allowableTimeDifference`
+  - ②クライアント内分岐処理の結果が'fatal'だった場合
+-->
 
 ## ⏰ メンテナンス処理
 

@@ -7,11 +7,14 @@
 ## 要求仕様
 
 - 本システムは限られた人数のサークルや小学校のイベント等での利用を想定する。<br>
-  よってセキュリティ上の脅威は極力排除するが、恒久性・安全性より導入時の容易さ・技術的ハードルの低さ、運用の簡便性を重視する。
+  よってセキュリティ上の脅威は極力排除するが、一定水準の安全性・恒久性を確保した上で導入時の容易さ・技術的ハードルの低さ、運用の簡便性を重視する。
 - サーバ側(以下authServer)はスプレッドシートのコンテナバインドスクリプト、クライアント側(以下authClient)はHTMLのJavaScript
 - サーバ側・クライアント側とも鍵ペアを使用
+- サーバ側の動作環境設定・鍵ペアは[ScriptProperties](typedef.md#authscriptproperties)、クライアント側は[IndexedDB](typedef.md#authindexeddb)に保存
 - 原則として通信は受信側公開鍵で暗号化＋発信側秘密鍵で署名
 - クライアントの識別(ID)はメールアドレスで行う
+- 日時は特段の注記が無い限り、UNIX時刻でミリ秒単位で記録(`new Date().getTime()`)
+- メンバ情報は[スプレッドシート](typedef.md#member)に保存
 
 ## 用語
 
@@ -45,117 +48,85 @@
   4. サーバ側でauthConfig.cryptoServer.loginLifeTimeを確認、期限内ならmemberList.CPkeyを書き換え。期限切れなら加入処理同様、adminによる個別承認を必要とする。
   5. 以降は未ログイン状態で要求が来た場合として処理を継続
 
-# 処理手順
+# クライアント・サーバ間の通信手順
 
-## localFuncからの処理要求時
+- 以下は正常系のみ記載
+- `localFunc`とは、クライアント側(ブラウザ)内で動作するJavaScriptの関数
 
 ```mermaid
 sequenceDiagram
+  autonumber
   %%actor user
   participant localFunc
   %%participant clientMail
-  participant cryptoClient
   %%participant IndexedDB
   participant authClient
+  participant cryptoClient
   participant authServer
-  %%participant memberList
   participant cryptoServer
+  participant Member
   %%participant serverFunc
   %%actor admin
 
+  %% インスタンス生成時処理：authClientConfig読み込み、IndexedDB読み込み、pvへの保存
   authClient->>localFunc: authClientインスタンス生成
-  localFunc->>+authClient: 処理要求(LocalRequest)
-  authClient->>+cryptoClient: 署名・暗号化要求(authRequest)
-  cryptoClient->>-authClient: encryptedRequest
 
-  loop リトライ試行
-    authClient->>+authServer: 処理要求(encryptedRequest)
-    authServer->>+cryptoServer: 復号・検証要求(encryptedRequest)
-    cryptoServer->>-authServer: decryptedRequest
-    authServer->>authServer: ①サーバ内処理(decryptedRequest->authResponse)
-    alt authResponse.result !== 'fatal'
-      authServer->>+cryptoServer: 署名・暗号化要求(authResponse)
-      cryptoServer->>-authServer: encryptedResponse
-    end
+  localFunc->>localFunc: authClient不使用時の処理
+  localFunc->>+authClient: LocalRequest
+  Note right of authClient: exec()
 
-    alt 応答タイムアウト内にレスポンス無し
-      authClient->>localFunc: エラー通知(LocalResponse.result="fatal")
-    else 応答タイムアウト内にレスポンスあり
-      authServer->>-authClient: encryptedResponse
-
-      authClient->>+cryptoClient: 復号・検証要求(encryptedResponse)
-      cryptoClient->>-authClient: decryptedResponse
-
-      alt decryptedResponse.result === 'fatal'
-        authClient->>localFunc: エラー通知(LocalResponse.result="fatal")
-      else
-        authClient->>authClient: ②クライアント内分岐処理
-        authClient->>-localFunc: 処理結果(LocalResponse)
-      end
-    end
+  %% 環境構築(SPkey要求)
+  rect rgba(218, 255, 255, 1)
+    authClient->>authClient: 【環境構築】
   end
+
+  %% 処理要求
+  authClient->>+cryptoClient: authRequest
+  Note right of cryptoClient: fetch()
+
+  cryptoClient->>+authServer: encryptedRequest
+
+  authServer->>+cryptoServer: encryptedRequest
+  Note right of cryptoServer: decrypt()
+  cryptoServer->>-authServer: decryptedRequest
+
+  authServer->>+Member: authRequest
+  Note right of Member: getMember()
+  Member->>-authServer: Member
+
+  rect rgba(218, 255, 255, 1)
+    authServer->>authServer: 【返信内容作成】
+  end
+
+  authServer->>+cryptoServer: authResponse
+  Note right of cryptoServer: encrypt()
+  cryptoServer->>-authServer: encryptedResponse
+
+  authServer->>-cryptoClient: encryptedResponse
+  cryptoClient->>-authClient: authResponse
+
+  rect rgba(218, 255, 255, 1)
+    authClient->>authClient: 【後続処理分岐】
+  end
+
+  %% 新規登録要求
+  %% パスコード入力
+  %% パスコード再発行
+
+  authClient->>-localFunc: LocalResopnse
 ```
 
-- `localFunc`とは、クライアント側(ブラウザ)内で動作するJavaScriptの関数を指す
-- ①サーバ内処理：decryptedRequestを入力としてメイン処理またはメソッドを実行
-- ②クライアント内分岐処理：decryptedResponse.sv.resultに基づきメイン処理またはメソッドを実行
-- 「リトライ試行」は以下の場合にループを抜ける
-  - 応答タイムアウト内にauthServerからレスポンスが来なかった場合<br>
-    ※`fetch timeout`を使用。許容時間は`authConfig.allowableTimeDifference`
-  - ②クライアント内分岐処理の結果が'fatal'だった場合
-
-# データ格納方法と形式
-
-- 日時は特段の注記が無い限り、UNIX時刻でミリ秒単位で記録する(new Date().getTime())
-- スプレッドシート(memberList)については[Memberクラス仕様書](Member.md)参照
-
-# 動作設定変数(config)
-
-## authConfig
-
-<!--::$tmp/authConfig.md::-->
-
-## authServerConfig
-
-<!--::$tmp/authServerConfig.md::-->
-
-## authClientConfig
-
-<!--::$tmp/authClientConfig.md::-->
-
-# データ型(typedef)
-
-## LocalRequest
-
-<!--::$tmp/LocalRequest.md::-->
-
-## authRequest
-
-<!--::$tmp/authRequest.md::-->
-
-## encryptedRequest
-
-<!--::$tmp/encryptedRequest.md::-->
-
-## decryptedRequest
-
-<!--::$tmp/decryptedRequest.md::-->
-
-## authResponse
-
-<!--::$tmp/authResponse.md::-->
-
-## encryptedResponse
-
-<!--::$tmp/encryptedResponse.md::-->
-
-## decryptedResponse
-
-<!--::$tmp/decryptedResponse.md::-->
-
-## LocalResponse
-
-<!--::$tmp/LocalResponse.md::-->
+- ①：onLoad時、authClientインスタンス生成
+- ②：サーバ側との通信が不要な処理(メンバの状態は「不使用」)
+- ③：サーバ側との通信が必要になった場合、処理要求を発行
+- ④：【環境構築】として`authClient.setupEnvironment`を実行、SPkey入手等を行う<br>
+  詳細はauthClient.[setupEnvironment](authClient.md#setupenvironment)参照
+- ⑤：`authClient.exec`でauthRequest型オブジェクトに変換
+- ⑥：`cryptoClient.fetch`内部でencryptメソッドを呼び出し、暗号化＋署名
+- ⑦：`cryptoServer.decrypt`で署名検証＋復号
+- ⑨：要求者(メンバ)の状態をシートから取得
+- ⑪：【返信内容作成】メンバの状態を判断、適宜サーバ側関数の呼び出し<br>
+  詳細は[]
 
 # クラス・関数定義
 

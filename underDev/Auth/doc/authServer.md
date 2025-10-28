@@ -15,7 +15,7 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
 
 - クロージャ関数とする
 
-## 🧩 内部構成(クラス変数)
+## <a name="test">🧩 内部構成(クラス変数)</a>
 
 - [authScriptProperties](typedef.md#authScriptProperties)
 - [Member](typedef.md#Member)

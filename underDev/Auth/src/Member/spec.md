@@ -2,6 +2,10 @@
 
 # Member クラス 仕様書
 
+## 要修正点
+
+- getMemberメソッド：memberList未登録なら仮登録
+
 ## 🧭 概要
 
 - 'Member'はGoogle SpreadSheet上でメンバ(アカウント)情報・状態を一元的に管理するためのクラスです。
@@ -38,6 +42,10 @@
 <details><summary>MemberTrialLog</summary>
 <!--::$tmp/MemberTrialLog.md::-->
 </details>
+
+## 状態遷移
+
+<!--::$src/Member/stateTransition.md::-->
 
 ## 🧱 constructor()
 
@@ -300,12 +308,9 @@ deviceIdの指定が無い場合、memberIdが使用する凍結中デバイス�
   - `authResponse.request` = `{Member:引数のMember,deviceId:引数のdeviceId}`
   - `authResponse.response` = メンバ・デバイスのstatusを更新後の`Member`
 
-### 状態遷移
+### 状態判定式
 
-- メンバの状態遷移
 - 下表内の変数名は`MemberLog`のメンバ名
-
-<!--::$src/Member/stateTransition.md::-->
 
 状態 | 判定式
 :-- | :--
