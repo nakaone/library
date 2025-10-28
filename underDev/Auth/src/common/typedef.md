@@ -122,10 +122,6 @@ authAuditLogインスタンス変数の値を再設定
 
 # 3 通信・暗号化系
 
-```mermaid
-<!--::$src/common/sequence.summary.mmd::-->
-```
-
 ## LocalRequest
 
 <!--::$tmp/LocalRequest.md::-->
