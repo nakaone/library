@@ -27,12 +27,12 @@ cat $src/authClient/spec.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authClient.md
 
 # authServer
-mmdc -i $src/authServer/authServer.sequenceDiagram.mmd -o $tmp/authServer.sequenceDiagram.svg
+#mmdc -i $src/authServer/authServer.sequenceDiagram.mmd -o $tmp/authServer.sequenceDiagram.svg
 cat $src/authServer/spec.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authServer.md
 
-cat $src/authServer/proto.js | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $src/authServer/core.js
+#cat $src/authServer/proto.js | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/authServer.gs
 
 # cryptoClient
 cat $src/cryptoClient/spec.md | awk 1 | \
@@ -43,6 +43,7 @@ cat $src/cryptoServer/spec.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cryptoServer.md
 
 # Member
+# 複数箇所引用、かつdetailsタグ内での表示なのでSVG化
 mmdc -i $src/Member/Member.classDiagram.mmd -o $tmp/Member.classDiagram.svg
 cat $src/Member/spec.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/Member.md
