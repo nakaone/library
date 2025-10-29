@@ -30,10 +30,11 @@
 | cf | [authClientConfig](typedef.md#authclientconfig) | 動作設定変数(config) |
 | idb | [authIndexedDB](typedef.md#authindexeddb) | IndexedDBの内容をauthClient内で共有 |
 | [constructor()](#constructor) | private | コンストラクタ |
-| [decrypt()](#decrypt) | public | authServer->authClientのメッセージを復号＋署名検証 |
-| [encrypt()](#encrypt) | public | authClient->authServerのメッセージを暗号化＋署名 |
+| [decrypt()](#decrypt) | private | authServer->authClientのメッセージを復号＋署名検証 |
+| [encrypt()](#encrypt) | private | authClient->authServerのメッセージを暗号化＋署名 |
+| [fetch()](#fetch) | public | 処理要求を署名・暗号化してサーバ側に問合せ、結果を復号・署名検証 |
 | [generateKeys()](#generateKeys) | public | 新たなクライアント側鍵ペアを作成 |
-| [updateKeys()](#updateKeys) | public | 引数で渡された鍵ペアでIndexedDBの内容を更新 |
+| [updateKeys()](#updateKeys) | private | 引数で渡された鍵ペアでIndexedDBの内容を更新 |
 
 ## <a name="constructor" href="#internal">🧱 constructor()</a>
 
@@ -93,6 +94,26 @@ authClient->authServerのメッセージを暗号化＋署名
 - `authRequest`をJSON化し、RSA-PSS署名を付与。
 - 署名付きペイロードを RSA-OAEP により暗号化
 - 暗号文は Base64 エンコードし、`encryptedRequest`形式にして返す
+
+## <a name="fetch" href="#internal">🧱 fetch()</a>
+
+処理要求を署名・暗号化してサーバ側に問合せ、結果を復号・署名検証
+
+### <a name="fetch-param">📥 引数</a>
+
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | request | ❌ | string|[authRequest](typedef.md#authrequest) | — | authClientからの処理要求 |
+
+### <a name="fetch-returns">📤 戻り値</a>
+
+- [authResponse](typedef.md#authresponse)
+
+### <a name="fetch-process">🧾 処理手順</a>
+
+- requestが文字列の場合 ⇒ 新規登録要求のCPkey
+
+- requestがオブジェクトの場合 ⇒ 通常の処理要求
 
 ## <a name="generateKeys" href="#internal">🧱 generateKeys()</a>
 

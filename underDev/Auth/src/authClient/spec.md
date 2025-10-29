@@ -112,14 +112,23 @@ sequenceDiagram
 
 | No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | --: | :-- | :--: | :-- | :-- | :-- |
+| 1 | request | ❌ | [authRequest](typedef.md#authrequest)[]|[LocalRequest](typedef.md#localrequest)[] | | 処理要求(スタック) |
+
+<!--
+| No | 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| --: | :-- | :--: | :-- | :-- | :-- |
 | 1 | request | ❌ | [LocalRequest](typedef.md#localrequest) | | ローカル関数からの処理要求 |
 | 2 | internal | ⭕ | [authRequest](typedef.md#authrequest) | — | authClient内発の先行処理 |
+-->
 
 ### <a name="exec-returns">📤 戻り値</a>
 
 - [LocalResponse](typedef.md#localresponse)
 
 ### <a name="exec-process">🧾 処理手順</a>
+
+- requestがLocalRequest型だった場合、authRequestの配列(スタック)に変換
+- requestから先頭のauthRequestをpopし、処理対象とする
 
 - CPkeyの残有効期間をチェック(checkCPkeyメソッドの実行)
 
