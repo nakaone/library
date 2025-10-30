@@ -133,7 +133,7 @@ const classdef = {
   authConfig: { 
     label: 'authClient/authServer共通設定値',
     note: 'authClientConfig, authServerConfigの親クラス',
-    policy: '',
+    policy: [],
     inherit: '', // 親クラス名
     defaultVariableName: '',
 
@@ -159,7 +159,7 @@ const classdef = {
       },
     },
   },
-  authErrorLog: {  // {ClassDef} ■クラス定義■
+  authErrorLog: {
     label: 'authServerのエラーログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
     policy: [],	// {string[]} 設計方針欄。箇条書き
@@ -183,6 +183,39 @@ const classdef = {
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
           type: 'authErrorLog', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  authIndexedDB: {
+    label: 'クライアントのIndexedDB',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'authClientKeysを継承した、クライアントのIndexedDBに保存するオブジェクト<br>'
+    + 'IndexedDB保存時のキー名は`authConfig.system.name`から取得',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: 'authClientKeys',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
+      {name:'memberName',type:'string',label:'メンバ(ユーザ)の氏名',note:'例："田中　太郎"。加入要求確認時に管理者が申請者を識別する他で使用。'},
+      {name:'deviceId',type:'string',label:'デバイスの識別子',note:'',default:'UUID'},
+      {name:'keyGeneratedDateTime',type:'number',label:`鍵ペア生成日時`,
+        note: 'サーバ側でCPkey更新中にクライアント側で新たなCPkeyが生成されるのを避けるため、鍵ペア生成は30分以上の間隔を置く'
+      ,default:'Date.now()'},
+      {name:'SPkey',type:'string',label:'サーバ公開鍵',note:'Base64',default:null},
+      //{name:'ApplicationForMembership',type:'number',label:'加入申請実行日時。未申請時は0',note:'',default:0},
+      //{name:'expireAccount',type:'number',label:'加入承認の有効期間が切れる日時。未加入時は0',note:'',default:0},
+      {name:'expireCPkey',type:'number',label:'CPkeyの有効期限(無効になる日時)',note:'未ログイン時は0',default:0},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'authIndexedDB', // {string} データ型。authResponse等
         }],
       },
     },
@@ -469,17 +502,21 @@ const classdef = {
       ];
 
       // 設計方針
-      const policy = !this.policy ? [] : [
+      const policy = !this.policy || this.policy.length === 0 ? [] : [
         `### <a name="${cn}_policy">設計方針</a>`,'',
         ...this.policy
       ];
 
       // 内部構成：メンバ(一覧形式)
-      const internal = [
-        `### 🧩 <a name="${cn}_internal">内部構成</a>`,'','🔢 メンバ',
+      const internal = [`### 🧩 <a name="${cn}_internal">内部構成</a>`,'',];
+      // 親クラスへのリンク
+      if( this.inherit.length > 0 ){
+        [`- super class: [${this.inherit}](${this.inherit}.md)`,''].forEach(x => internal.push(x));        
+      }
+      ['🔢 メンバ',
         '| 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |',
         '| :-- | :-- | :-- | :-- | :-- | :-- |'
-      ];
+      ].forEach(x => internal.push(x));
       this.member.forEach(x => internal.push(x.md()));
 
       // 内部構成：メソッド(一覧形式)
