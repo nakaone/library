@@ -7,52 +7,115 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
-    member: [{  // {Member[]} ■メンバ(インスタンス変数)定義■
-      name: '',	// {string} メンバ名(変数名)。英数字表記
-      type: 'string',	// {string} データ型
-      label: '',	// {string} 端的な項目説明。ex."サーバ側処理結果"
-      note: '',	// {string|string[]} 当該項目に関する補足説明。ex."fatal/warning/normal"
-          // 配列の場合、箇条書きとして処理する。
-      default: '—',	// {any} 関数の場合'=Date.now()'のように記述
-      opt: false,	// {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
-    }];
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {
+        name: '',	// {string} メンバ名(変数名)。英数字表記
+        type: 'string',	// {string} データ型
+        label: '',	// {string} 端的な項目説明。ex."サーバ側処理結果"
+        note: '',	// {string|string[]} 当該項目に関する補足説明。ex."fatal/warning/normal"
+            // 配列の場合、箇条書きとして処理する。
+        default: '—',	// {any} 関数の場合'=Date.now()'のように記述
+        isOpt: false,	// {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
+      }
+    ],
 
     method: { // {Method} ■メソッド定義■
-      methodName: {
-        type: 'private'; ,	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      constructor: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: '' ,	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: '' ,	// {string} 注意事項。markdownで記載
         process: ''  ,	// {string} 処理手順。markdownで記載
         source: '' ,	// {string} 想定するJavaScriptソース
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
-        param = [{  // {Param[]} ■メソッド引数の定義■
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
           name: '',	// 引数としての変数名
           isOpt: false,  // 任意項目ならtrue
           type: '',	// データ型
           default: '—',	// 既定値
           note: '',	// 項目の説明
-        }],
+        ],
 
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'Object', // {string} データ型。authResponse等
           code: '',	// {string} エラーコード
           condition: '',	// {string} 該当条件
-          note: '',	// {string} メソッドに関する備忘
-          referrer: []; ,	// {string[]} 戻り値をCRUDするメソッド
-          obj: {  // 戻り値として返されるオブジェクト
-            type: 'Object'; // {string} データ型
-            member = [{ // 戻り値オブジェクトのメンバ
-                // 要設定項目のみ。typeの既定値のままとする項目は記載しない
-              name: '', // 設定するメンバ名
-              value: '', // 設定する値または算式
-              note: '', // メンバに関する備考
-            }],
-          },
+          note: '',	// {string} 備忘
+          member = [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
+        }],
+      },
+    },
+  */
+  authAuditLog: {  // {ClassDef} ■クラス定義■
+    label: 'authServerの監査ログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: '',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: 'audit', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'timestamp',type:'string',label:'要求日時',note:'ISO8601拡張形式の文字列',default:'Date.now()'},
+      {name:'duration',type:'number',label:'処理時間',note:'ミリ秒単位'},
+      {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
+      {name:'deviceId',type:'string',label:'デバイスの識別子',note:''},
+      {name:'func',type:'string',label:'サーバ側関数名',note:''},
+      {name:'result',type:'string',label:'サーバ側処理結果',note:'fatal/warning/normal',default:'normal'},
+      {name:'note',type:'string',label:'備考',note:''},
+    ],
+
+    method: { // {Method} ■メソッド定義■
+      constructor: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'コンストラクタ' ,	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: '' ,	// {string} 注意事項。markdownで記載
+        process: ''  ,	// {string} 処理手順。markdownで記載
+        source: '' ,	// {string} 想定するJavaScriptソース
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
+        ],
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'authAuditLog', // {string} データ型。authResponse等
         }],
       },
     },
   },
-  */
+  authClientConfig: { // メンバ名はクラス名
+    label: 'authClient専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'authConfigを継承', // クラスとしての補足説明
+    inherit: 'authConfig', // 親クラス名
+    member: [
+      {name:'api',type:'string',label:'サーバ側WebアプリURLのID',note:'`https://script.google.com/macros/s/(この部分)/exec`'},
+      {name:'timeout',type:'number',label:'サーバからの応答待機時間',note:'これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分',default:300000},
+      {name:'CPkeyGraceTime',type:'number',label:'CPkey期限切れまでの猶予時間',note:'CPkey有効期間がこれを切ったら更新処理実行。既定値は10分',default:600000},
+    ],
+    defaultVariableName: 'cf',  // 変数名の既定値。ex.(pv.)"audit"
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{
+          name: 'arg',
+          type: 'Object',
+          default: {},
+          note: '必須項目および変更する設定値',
+        }],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'authClientConfig', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
   authConfig: { 
     label: 'authClient/authServer共通設定値',
     note: 'authClientConfig, authServerConfigの親クラス',
@@ -71,45 +134,17 @@ const classdef = {
     method: {
       constructor: {
         label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
         param: [{
           name: 'arg',
           type: 'Object',
           default: {},
           note: '必須項目および変更する設定値',
         }],
-        returns: [{
-          obj: {type: 'authConfig'},
-          referrer: [],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'authConfig', // {string} データ型。authResponse等
         }],
-      },
-    },
-  },
-  authClientConfig: { // メンバ名はクラス名
-    label: 'authClient専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
-    note: 'authConfigを継承', // クラスとしての補足説明
-    inherit: 'authConfig', // 親クラス名
-    member: [
-      {name:'api',type:'string',label:'サーバ側WebアプリURLのID',note:'`https://script.google.com/macros/s/(この部分)/exec`'},
-      {name:'timeout',type:'number',label:'サーバからの応答待機時間',note:'これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分',default:300000},
-      {name:'CPkeyGraceTime',type:'number',label:'CPkey期限切れまでの猶予時間',note:'CPkey有効期間がこれを切ったら更新処理実行。既定値は10分',default:600000},
-    ],
-    defaultVariableName: 'cf',  // 変数名の既定値。ex.(pv.)"audit"
-    method: {
-      constructor: {
-        label: 'コンストラクタ',
-        param: [{
-          name: 'arg',
-          type: 'Object',
-          default: {},
-          note: '必須項目および変更する設定値',
-        }],
-        returns: [{
-          obj: {type: 'authClientConfig'},
-          referrer: [],
-        }],
-        process: ``,  // 処理手順。markdownで記載
-        note: ``, // 注意事項。markdownで記載
-        source: ``, // 想定するソース
       },
     },
   },
@@ -150,19 +185,17 @@ const classdef = {
     method: {
       constructor: {
         label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
         param: [{
           name: 'arg',
           type: 'Object',
           default: {},
           note: '必須項目および変更する設定値',
         }],
-        returns: [{
-          obj: {type: 'authServerConfig'},
-          referrer: [],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'authServerConfig', // {string} データ型。authResponse等
         }],
-        process: ``,  // 処理手順。markdownで記載
-        note: ``, // 注意事項。markdownで記載
-        source: ``, // 想定するソース
       },
     },
   },
@@ -195,55 +228,65 @@ const classdef = {
       this.note = arg.note || ''; // {string|string[]} 当該項目に関する補足説明。ex."fatal/warning/normal"
                   // 配列の場合、箇条書きとして処理する。
       this.default = arg.default || '—';  // {any} 関数の場合'=Date.now()'のように記述
-      this.opt = this.default !== '—' ? true : ( arg.opt || false); // {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
+      this.isOpt = this.default !== '—' ? true : ( arg.isOpt || false); // {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
     }
     md(){
       // 項目名 任意 データ型 既定値 説明 備考
-      return `| ${this.name} | ${this.opt?'⭕':'❌'} | ${this.type} | ${JSON.stringify(this.default)} | ${this.label} | ${this.note} | `;
+      return `| ${this.name} | ${this.isOpt?'⭕':'❌'} | ${this.type} | ${
+        typeof this.default === 'object' && this.default !== null
+        ? JSON.stringify(this.default) : this.default
+      } | ${this.label} | ${this.note} | `;
     }
   }
 
   class Param { // メソッドの引数
     constructor(arg){
       this.name = arg.name || ''; // 引数としての変数名
-      this.isOpt = arg.isOpt || false;  // 任意項目ならtrue
       this.type = arg.type || ''; // データ型
       this.default = arg.default || '—'; // 既定値
       this.note = arg.note || ''; // 項目の説明
+      this.isOpt = this.default !== '—' ? true : (arg.isOpt || false);  // 任意項目ならtrue
     }
 
     md(){
       // 項目名 任意 データ型 既定値 備考
-      return `| ${this.name} | ${this.opt?'⭕':'❌'} | ${this.type} | ${JSON.stringify(this.default)} | ${this.note} | `;
+      return `| ${this.name} | ${this.isOpt?'⭕':'❌'} | ${this.type} | ${
+        typeof this.default === 'object' && this.default !== null
+        ? JSON.stringify(this.default) : this.default
+      } | ${this.note} | `;
     }
   }
 
-  class Returns { // メソッドの戻り値(オブジェクト)
+  class Returns { // パターン毎のメソッドの戻り値(オブジェクト)
     // 本メソッドの戻り値。当該メソッドで正常時＋異常時の作成パターン毎にオブジェクト作成
     constructor(arg){
-      this.label = arg.label || ''	// {string} パターン名。ex.「正常時」「未認証時」等
-      this.code = arg.code || ''	// {string} エラーコード
-      this.condition = arg.condition || ''	// {string} 該当条件
-      this.note = arg.note || '', // {string} メソッドに関する備忘
-      this.referrer = arg.referrer || []; // {string[]} 戻り値をCRUDするメソッド
-      // 戻り値オブジェクト(this.obj)をインスタンス化したり(インスタンス化はconstructor限定)
-      // 引数として参照しているメソッド名の配列
+      this.label = arg.label || '';	// {string} パターン名。ex.「正常時」「未認証時」等
+      this.type = arg.type || 'Object';
+      this.code = arg.code || '';	// {string} エラーコード
+      this.condition = arg.condition || '';	// {string} 該当条件
+      this.note = arg.note || ''; // {string} メソッドに関する備忘
 
-      this.obj = {};  // 戻り値として返されるオブジェクト
-      if( typeof arg.obj !== 'undefined' ){
-        this.obj.type = arg.obj.type || 'Object'; // {string} データ型
-        this.obj.member = []; // 戻り値オブジェクトのメンバ
-            // 要設定項目のみ。typeの既定値のままとする項目は記載しない
-        if( typeof arg.obj.member !== 'undefined' && Array.isArray(arg.obj.member) ){
-          arg.obj.member.forEach(x => {
-            this.obj.member.push({
-              name: x.name || '', // 設定するメンバ名
-              value: x.value || '', // 設定する値または算式
-              note: x.note || '', // メンバに関する備考
-            });
+      this.member = []; // 値を設定する戻り値のメンバ
+      if( typeof arg.member !== 'undefined' && Array.isArray(arg.member) ){
+        arg.member.forEach(x => {
+          this.member.push({
+            name: x.name || '', // 設定するメンバ名
+            value: x.value || '', // 設定する値または算式
+            note: x.note || '', // メンバに関する備考
           });
-        }
+        });
       }
+    }
+
+    md(){
+      const rv = [`- ${this.label}: [${this.type}](${this.type}.md)`];
+      if( this.member.length > 0 ){
+        ['  | メンバ名 | 値 | 備考 |','  | :-- | :-- | :-- |'].forEach(x => rv.push(x));
+      }
+      this.member.forEach(x => {
+        rv.push(`  | ${x.name} | ${x.value} | ${x.note} |`)
+      });
+      return rv;
     }
   }
 
@@ -256,6 +299,7 @@ const classdef = {
       this.note = arg.note || ''; // {string} 注意事項。markdownで記載
       this.process = arg.process || '';  // {string} 処理手順。markdownで記載
       this.source = arg.source || ''; // {string} 想定するJavaScriptソース
+      this.referrer = arg.referrer || []; // {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
       this.param = [];  // 引数の定義
       if( typeof arg.param !== 'undefined' && Array.isArray(arg.param) ){
@@ -317,9 +361,14 @@ const classdef = {
       // 戻り値
       ['',`### <a name="${concatName}_returns">📤 戻り値</a>`,''].forEach(x => rv.push(x));
       this.returns.forEach(x => {
-        rv.push(`- [${x.obj.type}](${x.obj.type}.md)`)
+        x.md().forEach(x => rv.push(x));
       });
+
       // 処理手順
+      if( this.process !== '' ){
+        ['',`### <a name="${concatName}_process">🧾 処理手順</a>`,'',this.process]
+        .forEach(x => rv.push(x));
+      }
 
       return rv;
     }
