@@ -3,7 +3,7 @@ const classdef = {
   className: {  // {ClassDef} ■クラス定義■
     label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄
+    policy: [],	// {string[]} 設計方針欄。箇条書き
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -16,7 +16,7 @@ const classdef = {
             // 配列の場合、箇条書きとして処理する。
         default: '—',	// {any} 関数の場合'=Date.now()'のように記述
         isOpt: false,	// {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
-      }
+      },
     ],
 
     method: { // {Method} ■メソッド定義■
@@ -30,11 +30,11 @@ const classdef = {
 
         param: [  // {Param[]} ■メソッド引数の定義■
           {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
-          name: '',	// 引数としての変数名
-          isOpt: false,  // 任意項目ならtrue
-          type: '',	// データ型
-          default: '—',	// 既定値
-          note: '',	// 項目の説明
+          //name: '',	// 引数としての変数名
+          //isOpt: false,  // 任意項目ならtrue
+          //type: '',	// データ型
+          //default: '—',	// 既定値
+          //note: '',	// 項目の説明
         ],
 
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
@@ -51,8 +51,9 @@ const classdef = {
         }],
       },
     },
+  },
   */
-  authAuditLog: {  // {ClassDef} ■クラス定義■
+  authAuditLog: {
     label: 'authServerの監査ログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
     policy: [],	// {string[]} 設計方針欄
@@ -69,19 +70,11 @@ const classdef = {
       {name:'note',type:'string',label:'備考',note:''},
     ],
 
-    method: { // {Method} ■メソッド定義■
+    method: {
       constructor: {
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: 'コンストラクタ' ,	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        note: '' ,	// {string} 注意事項。markdownで記載
-        process: ''  ,	// {string} 処理手順。markdownで記載
-        source: '' ,	// {string} 想定するJavaScriptソース
+        label: 'コンストラクタ',
         referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
-
-        param: [  // {Param[]} ■メソッド引数の定義■
-          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
-        ],
-
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
           type: 'authAuditLog', // {string} データ型。authResponse等
@@ -89,29 +82,50 @@ const classdef = {
       },
     },
   },
-  authClientConfig: { // メンバ名はクラス名
+  authClientConfig: {
     label: 'authClient専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'authConfigを継承', // クラスとしての補足説明
     inherit: 'authConfig', // 親クラス名
+    defaultVariableName: 'cf',  // 変数名の既定値。ex.(pv.)"audit"
     member: [
       {name:'api',type:'string',label:'サーバ側WebアプリURLのID',note:'`https://script.google.com/macros/s/(この部分)/exec`'},
       {name:'timeout',type:'number',label:'サーバからの応答待機時間',note:'これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分',default:300000},
       {name:'CPkeyGraceTime',type:'number',label:'CPkey期限切れまでの猶予時間',note:'CPkey有効期間がこれを切ったら更新処理実行。既定値は10分',default:600000},
     ],
-    defaultVariableName: 'cf',  // 変数名の既定値。ex.(pv.)"audit"
     method: {
       constructor: {
         label: 'コンストラクタ',
         referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
-        param: [{
-          name: 'arg',
-          type: 'Object',
-          default: {},
-          note: '必須項目および変更する設定値',
-        }],
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
           type: 'authClientConfig', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  authClientKeys: {
+    label: 'クライアント側鍵ペア',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: '',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'CSkeySign',type:'CryptoKey',label:'署名用秘密鍵',note:''},
+      {name:'CPkeySign',type:'CryptoKey',label:'署名用公開鍵',note:''},
+      {name:'CSkeyEnc',type:'CryptoKey',label:'暗号化用秘密鍵',note:''},
+      {name:'CPkeyEnc',type:'CryptoKey',label:'暗号化用公開鍵',note:''},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'authClientKeys', // {string} データ型。authResponse等
         }],
       },
     },
@@ -122,6 +136,7 @@ const classdef = {
     policy: '',
     inherit: '', // 親クラス名
     defaultVariableName: '',
+
     member:[
       {name:'systemName',type:'string',label:'システム名',default:'auth'},
       {name:'adminMail',type:'string',label:'管理者のメールアドレス'},
@@ -131,16 +146,12 @@ const classdef = {
       {name:'underDev',type:'Object',label:'テスト時の設定'},
       {name:'underDev.isTest',type:'boolean',label:'開発モードならtrue',default:'false'},
     ],
+
     method: {
       constructor: {
         label: 'コンストラクタ',
         referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
-        param: [{
-          name: 'arg',
-          type: 'Object',
-          default: {},
-          note: '必須項目および変更する設定値',
-        }],
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
           type: 'authConfig', // {string} データ型。authResponse等
@@ -148,10 +159,40 @@ const classdef = {
       },
     },
   },
-  authServerConfig: { // メンバ名はクラス名
+  authErrorLog: {  // {ClassDef} ■クラス定義■
+    label: 'authServerのエラーログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: '',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'timestamp',type:'string',label:'要求日時',note:'ISO8601拡張形式の文字列',default:'Date.now()'},
+      {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
+      {name:'deviceId',type:'string',label:'デバイスの識別子',note:''},
+      {name:'result',type:'string',label:'サーバ側処理結果',note:'fatal/warning/normal',default:'fatal'},
+      {name:'message',type:'string',label:'サーバ側からのエラーメッセージ',note:'normal時は`undefined`',isOpt:true},
+      {name:'stackTrace',type:'string',label:'エラー発生時のスタックトレース',note:'本項目は管理者への通知メール等、シート以外には出力不可',isOpt:true},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'authErrorLog', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  authServerConfig: {
     label: 'authServer専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'authConfigを継承', // クラスとしての補足説明
     inherit: 'authConfig', // 親クラス名
+    defaultVariableName: 'cf',  // 変数名の既定値。ex.(pv.)"audit"
+
     member: [
       {name:'memberList',type:'string',label:'memberListシート名',default:'memberList'},
       {name:'defaultAuthority',type:'number',label:'新規加入メンバの権限の既定値',default:1},
@@ -181,17 +222,12 @@ const classdef = {
       {name:'underDev.sendPasscode',type:'boolean',label:'開発中識別フラグ',note:'パスコード通知メール送信を抑止するならtrue',default:'false'},
       {name:'underDev.sendInvitation',type:'boolean',label:'開発中の加入承認通知メール送信',note:'開発中に加入承認通知メール送信を抑止するならtrue',default:'false'},
     ],
-    defaultVariableName: 'cf',  // 変数名の既定値。ex.(pv.)"audit"
+    
     method: {
       constructor: {
         label: 'コンストラクタ',
         referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
-        param: [{
-          name: 'arg',
-          type: 'Object',
-          default: {},
-          note: '必須項目および変更する設定値',
-        }],
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
           type: 'authServerConfig', // {string} データ型。authResponse等
