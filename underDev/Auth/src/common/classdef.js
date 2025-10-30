@@ -255,7 +255,7 @@ const classdef = {
       {name:'underDev.sendPasscode',type:'boolean',label:'開発中識別フラグ',note:'パスコード通知メール送信を抑止するならtrue',default:'false'},
       {name:'underDev.sendInvitation',type:'boolean',label:'開発中の加入承認通知メール送信',note:'開発中に加入承認通知メール送信を抑止するならtrue',default:'false'},
     ],
-    
+
     method: {
       constructor: {
         label: 'コンストラクタ',
@@ -264,6 +264,484 @@ const classdef = {
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
           type: 'authServerConfig', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  authRequest: {
+    label: '暗号化前の処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'authClientからauthServerに送られる、暗号化前の処理要求オブジェクト',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
+      {name:'deviceId',type:'string',label:'デバイスの識別子',note:''},
+      {name:'signature',type:'string',label:'クライアント側署名',note:''},
+      {name:'requestId',type:'string',label:'要求の識別子',note:'UUID'},
+      {name:'timestamp',type:'number',label:'要求日時',note:'UNIX時刻'},
+      {name:'func',type:'string',label:'サーバ側関数名',note:''},
+      {name:'arguments',type:'any[]',label:'サーバ側関数に渡す引数の配列',note:''},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'authRequest', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  authRequestLog: {
+    label: '重複チェック用のリクエスト履歴',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'ScriptPropertiesに保存',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'timestamp',type:'number',label:'リクエストを受けたサーバ側日時',note:'',default:'Date.now()'},
+      {name:'requestId',type:'string',label:'クライアント側で採番されたリクエスト識別子',note:'UUID'},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'authRequestLog', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  authResponse: {
+    label: '暗号化前の処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'authServerからauthClientに返される、暗号化前の処理結果オブジェクト',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'timestamp',type:'number',label:'サーバ側処理日時',note:'UNIX時刻',default:'Date.now()'},
+      {name:'result',type:'string',label:'サーバ側処理結果',note:'fatal/warning/normal',default:'normal'},
+      {name:'message',type:'string',label:'サーバ側からの(エラー)メッセージ',note:'',isOpt:true},
+      {name:'request',type:'authRequest',label:'処理要求オブジェクト',note:'',isOpt:true},
+      {name:'response',type:'any',label:'要求されたサーバ側関数の戻り値',note:'fatal/warning時は`undefined`',isOpt:true},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'authResponse', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  authScriptProperties: {
+    label: 'サーバ側のScriptProperties',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'キー名は`authConfig.system.name`',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'keyGeneratedDateTime',type:'number',label:'UNIX時刻',note:''},
+      {name:'SPkey',type:'string',label:'PEM形式の公開鍵文字列',note:''},
+      {name:'SSkey',type:'string',label:'PEM形式の秘密鍵文字列(暗号化済み)',note:''},
+      {name:'oldSPkey',type:'string',label:'cryptoServer.reset実行前にバックアップした公開鍵',note:''},
+      {name:'oldSSkey',type:'string',label:'cryptoServer.reset実行前にバックアップした秘密鍵',note:''},
+      {name:'requestLog',type:'authRequestLog[]',label:'重複チェック用のリクエスト履歴',note:'',default:[]},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'authScriptProperties', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  authServerConfig: {
+    label: 'サーバ側設定値',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'authConfigを継承した、authServerでのみ使用する設定値',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: 'authConfig',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'memberList',type:'string',label:'memberListシート名',note:'',default:'memberList'},
+      {name:'defaultAuthority',type:'number',label:'新規加入メンバの権限の既定値',note:'',default:1},
+      {name:'memberLifeTime',type:'number',label:'加入有効期間',note:'メンバ加入承認後の有効期間。既定値は1年',default:31536000000},
+      {name:'prohibitedToJoin',type:'number',label:'加入禁止期間',note:'管理者による加入否認後、再加入申請が自動的に却下される期間。既定値は3日',default:259200000},
+      {name:'loginLifeTime',type:'number',label:'認証有効時間',note:'ログイン成功後の有効期間、CPkeyの有効期間。既定値は1日',default:86400000},
+      {name:'loginFreeze',type:'number',label:'認証凍結時間',note:'認証失敗後、再認証要求が禁止される期間。既定値は10分',default:600000},
+      {name:'requestIdRetention',type:'number',label:'重複リクエスト拒否となる時間',note:'既定値は5分',default:300000},
+      {name:'errorLog',type:'string',label:'エラーログのシート名',note:'',default:'errorLog'},
+      {name:'storageDaysOfErrorLog',type:'number',label:'監査ログの保存日数',note:'単位はミリ秒。既定値は7日分',default:604800000},
+      {name:'auditLog',type:'string',label:'監査ログのシート名',note:'',default:'auditLog'},
+      {name:'storageDaysOfAuditLog',type:'number',label:'監査ログの保存日数',note:'単位はミリ秒。既定値は7日分',default:604800000},
+
+      {name:'func',type:'Object.<string,Object>',label:'サーバ側の関数マップ',note:'例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}}'},
+      {name:'func.authority',type:'number',label:'サーバ実行権限',note:
+        'サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限。<br>' +
+        '`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。'
+      ,default:0},
+      {name:'func.do',type:'Function',label:'実行するサーバ側関数',note:''},
+
+      {name:'trial',type:'Object',label:'ログイン試行関係の設定値',note:''},
+      {name:'trial.passcodeLength',type:'number',label:'パスコードの桁数',note:'',default:6},
+      {name:'trial.maxTrial',type:'number',label:'パスコード入力の最大試行回数',note:'',default:3},
+      {name:'trial.passcodeLifeTime',type:'number',label:'パスコードの有効期間',note:'既定値は10分',default:600000},
+      {name:'trial.generationMax',type:'number',label:'ログイン試行履歴(MemberTrial)の最大保持数',note:'既定値は5世代',default:5},
+
+      {name:'underDev.sendPasscode',type:'boolean',label:'開発中パスコード通知抑止',note:'開発中、パスコード通知メール送信を抑止するならtrue',default:'false'},
+      {name:'underDev.sendInvitation',type:'boolean',label:'開発中加入承認通知抑止',note:'開発中、加入承認通知メール送信を抑止するならtrue',default:'false'},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'authServerConfig', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  decryptedRequest: {
+    label: '復号済の処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'encryptedRequestをcryptoServerで復号した処理要求オブジェクト',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'result',type:'string',label:'処理結果',note:'"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "normal"'},
+      {name:'message',type:'string',label:'エラーメッセージ',note:'result="normal"の場合`undefined`',isOpt:true},
+      {name:'request',type:'authRequest',label:'ユーザから渡された処理要求',note:''},
+      {name:'timestamp',type:'number',label:'復号処理実施日時',note:''},
+      {name:'status',type:'string',label:'ユーザ・デバイス状態',note:'Member.deviceが空ならメンバの、空で無ければデバイスのstatus'},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'decryptedRequest', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  decryptedResponse: {
+    label: '復号済の処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'encryptedResponseをcryptoClientで復号した処理結果オブジェクト',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'timestamp',type:'number',label:'cryptoClient処理日時',note:'UNIX時刻'},
+      {name:'result',type:'string',label:'cryptoClient処理結果',note:'fatal/warning/normal'},
+      {name:'message',type:'string',label:'cryptoClientからのエラーメッセージ',note:'normal時は`undefined`',isOpt:true},
+
+      {name:'request',type:'authRequest',label:'処理要求オブジェクト(authResponse.request)',note:''},
+      {name:'response',type:'any',label:'要求されたサーバ側関数の戻り値(authResponse.response)',note:'fatal/warning時は`undefined`',isOpt:true},
+      {name:'sv',type:'Object'},
+      {name:'sv.timestamp',type:'number',label:'サーバ側処理日時',note:'UNIX時刻'},
+      {name:'sv.result',type:'string',label:'サーバ側処理結果',note:'fatal/warning/normal'},
+      {name:'sv.message',type:'string',label:'サーバ側からのエラーメッセージ',note:'normal時は`undefined`',isOpt:true},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'decryptedResponse', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  encryptedRequest: {
+    label: '暗号化された処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'authClientからauthServerに送られる、暗号化された処理要求オブジェクト。<br>'
+      + 'ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列。<br>'
+      + 'memberId,deviceIdは平文',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
+      {name:'deviceId',type:'string',label:'デバイスの識別子',note:''},
+      {name:'ciphertext',type:'string',label:'暗号化した文字列',note:''},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'encryptedRequest', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  encryptedResponse: {
+    label: '暗号化された処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'authServerからauthClientに返される、暗号化された処理結果オブジェクト<br>'
+      + 'ciphertextはauthResponseをJSON化、RSA-OAEP暗号化＋署名付与した文字列',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'ciphertext',type:'string',label:'暗号化した文字列',note:''},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'encryptedResponse', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  LocalRequest: {
+    label: 'ローカル関数からの処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'クライアント側関数からauthClientに渡すオブジェクト。func,arg共、平文',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'func',type:'string',label:'サーバ側関数名',note:''},
+      {name:'arguments',type:'any[]',label:'サーバ側関数に渡す引数の配列',note:''},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'LocalRequest', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  LocalResponse: {
+    label: 'ローカル関数への処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'authClientからクライアント側関数に返される処理結果オブジェクト',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'result',type:'string',label:'処理結果。fatal/warning/normal',note:''},
+      {name:'message',type:'string',label:'エラーメッセージ',note:'normal時は`undefined`',isOpt:true},
+      {name:'response',type:'any',label:'要求された関数の戻り値',note:'fatal/warning時は`undefined`。`JSON.parse(authResponse.response)`',isOpt:true},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'LocalResponse', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  Member: {
+    label: 'メンバ単位の管理情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'メンバ一覧(アカウント管理表)上のメンバ単位の管理情報',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'memberId',type:'string',label:'メンバの識別子',note:'メールアドレス'},
+      {name:'name',type:'string',label:'メンバの氏名',note:''},
+      {name:'status',type:'string',label:'メンバの状態',note:'未加入,未審査,審査済,加入中,加入禁止',default:'未加入'},
+      {name:'log',type:'MemberLog',label:'メンバの履歴情報',note:'シート上はJSON文字列',default:'new MemberLog()'},
+      {name:'profile',type:'MemberProfile',label:'メンバの属性情報',note:'シート上はJSON文字列',default:'new MemberProfile()'},
+      {name:'device',type:'MemberDevice[]',label:'デバイス情報',note:'マルチデバイス対応用。シート上はJSON文字列'},
+      {name:'note',type:'string',label:'当該メンバに対する備考',note:'',isOpt:true},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'Member', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  MemberDevice: {
+    label: 'デバイス情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'メンバが使用する通信機器の情報(マルチデバイス対応)',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'deviceId',type:'string',label:'デバイスの識別子。UUID',note:''},
+      {name:'status',type:'string',label:'デバイスの状態',note:'未認証,認証中,試行中,凍結中',default:'未認証'},
+      {name:'CPkey',type:'string',label:'メンバの公開鍵',note:''},
+      {name:'CPkeyUpdated',type:'number',label:'最新のCPkeyが登録された日時',note:'',default:'Date.now()'},
+      {name:'trial',type:'MemberTrial[]',label:'ログイン試行関連情報オブジェクト',note:'シート上はJSON文字列',default:[]},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'MemberDevice', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  MemberLog: {
+    label: 'メンバの各種要求・状態変化の時刻',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: '',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'joiningRequest', type:'number', label:'加入要求日時',note:'加入要求をサーバ側で受信した日時', default:0},
+      {name:'approval', type:'number', label:'加入承認日時',note:'管理者がmemberList上で加入承認処理を行った日時。値設定は加入否認日時と択一', default:0},
+      {name:'denial', type:'number', label:'加入否認日時',note:'管理者がmemberList上で加入否認処理を行った日時。値設定は加入承認日時と択一', default:0},
+      {name:'loginRequest', type:'number', label:'認証要求日時',note:'未認証メンバからの処理要求をサーバ側で受信した日時', default:0},
+      {name:'loginSuccess', type:'number', label:'認証成功日時',note:'未認証メンバの認証要求が成功した最新日時', default:0},
+      {name:'loginExpiration', type:'number', label:'認証有効期限',note:'認証成功日時＋認証有効時間', default:0},
+      {name:'loginFailure', type:'number', label:'認証失敗日時',note:'未認証メンバの認証要求失敗が確定した最新日時', default:0},
+      {name:'unfreezeLogin', type:'number', label:'認証無効期限',note:'認証失敗日時＋認証凍結時間', default:0},
+      {name:'joiningExpiration', type:'number', label:'加入有効期限',note:'加入承認日時＋加入有効期間', default:0},
+      {name:'unfreezeDenial', type:'number', label:'加入禁止期限',note:'加入否認日時＋加入禁止期間', default:0},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'MemberLog', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  MemberProfile: {
+    label: 'メンバの属性情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: '',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'authority',type:'number',label:'メンバの持つ権限',note:'authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す',default:0},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'MemberProfile', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  MemberTrial: {
+    label: 'ログイン試行単位の試行情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: '',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'passcode',type:'string',label:'設定されているパスコード',note:'最初の認証試行で作成',default:''},
+      {name:'created',type:'number',label:'パスコード生成日時',note:'≒パスコード通知メール発信日時',default:'Date.now()'},
+      {name:'log',type:'MemberTrialLog[]',label:'試行履歴',note:'常に最新が先頭(unshift()使用)。保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。',default:[]},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'MemberTrial', // {string} データ型。authResponse等
+        }],
+      },
+    },
+  },
+  MemberTrialLog: {
+    label: 'パスコード入力単位の試行記録',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'MemberTrial.logに記載',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: [],	// {string[]} 設計方針欄。箇条書き
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'entered',type:'string',label:'入力されたパスコード',note:''},
+      {name:'result',type:'number',label:'試行結果',note:'-1:恒久的エラー(再試行不可), 0:要リトライ(再試行可), 1:成功(パスコード一致)'},
+      {name:'message',type:'string',label:'エラーメッセージ',note:''},
+      {name:'timestamp',type:'number',label:'判定処理日時',note:''},
+    ],
+
+    method: {
+      constructor: {
+        label: 'コンストラクタ',
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'MemberTrialLog', // {string} データ型。authResponse等
         }],
       },
     },
@@ -539,14 +1017,15 @@ const classdef = {
   const fs = require("fs");
   const arg = analyzeArg();
 
-  const classList = ['| クラス名 | 概要 |','| :-- | :-- |'];
+  const classList = ['| No | クラス名 | 概要 |','| --: | :-- | :-- |'];
+  let cnt = 1;
   Object.keys(classdef).forEach(x => {
     // クラス別Markdown作成
     const cdef = new ClassDef(x,classdef[x]);
     fs.writeFileSync(`${arg.opt.o}/${x}.md`, cdef.md());
 
     // クラス一覧に追加
-    classList.push(`| [${x}](${x}.md) | ${cdef.label} |`);
+    classList.push(`| ${cnt++} | [${x}](${x}.md) | ${cdef.label} |`);
   });
   fs.writeFileSync(`${arg.opt.o}/classList.md`, classList.join('\n'));
 
