@@ -20,43 +20,43 @@ rm -rf $tmp/*
 # ----------------------------------------------
 
 # typedef
-node $src/common/typedef.js -o:$tmp
+#node $src/common/typedef.js -o:$tmp
 
 # authClient
-cat $src/authClient/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authClient.md
+#cat $src/authClient/spec.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authClient.md
 
 # authServer
 #mmdc -i $src/authServer/authServer.sequenceDiagram.mmd -o $tmp/authServer.sequenceDiagram.svg
-cat $src/authServer/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authServer.md
+#cat $src/authServer/spec.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authServer.md
 
 #cat $src/authServer/proto.js | awk 1 | \
 #$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/authServer.gs
 
 # cryptoClient
-cat $src/cryptoClient/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cryptoClient.md
+#cat $src/cryptoClient/spec.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cryptoClient.md
 
 # cryptoServer
-cat $src/cryptoServer/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cryptoServer.md
+#cat $src/cryptoServer/spec.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cryptoServer.md
 
 # Member
 # 複数箇所引用、かつdetailsタグ内での表示なのでSVG化
-mmdc -i $src/Member/Member.classDiagram.mmd -o $tmp/Member.classDiagram.svg
-cat $src/Member/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/Member.md
-cat $src/Member/proto.js | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $src/Member/core.js
+#mmdc -i $src/Member/Member.classDiagram.mmd -o $tmp/Member.classDiagram.svg
+#cat $src/Member/spec.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/Member.md
+#cat $src/Member/proto.js | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $src/Member/core.js
 
 # 内発処理
-cat $src/common/internalProcessing.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/internalProcessing.md
+#cat $src/common/internalProcessing.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/internalProcessing.md
 
 # 総説
-cat $src/common/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/spec.md
+#cat $src/common/spec.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/spec.md
 
 # 型定義・ライブラリ
 #cat $src/common/typedef.md | awk 1 | \

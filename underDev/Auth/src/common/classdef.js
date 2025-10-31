@@ -780,6 +780,25 @@ const classdef = {
     }
   }
 
+  /**
+   * 与えられた文字列から、先頭末尾の空白行と共通インデントを削除する
+   * @param {string} str - 対象文字列（複数行）
+   * @returns {string} 加工後の文字列
+   */
+  function trimIndent(str) {
+    // 1. 先頭・末尾の空白行削除
+    const lines = str.replace(/^\s*\n+|\n+\s*$/g, '').split('\n');
+
+    // 2. 各行の共通インデント（スペース・タブ）を取得
+    const indents = lines
+      .filter(line => line.trim() !== '')
+      .map(line => line.match(/^[ \t]*/)[0].length);
+    const minIndent = indents.length ? Math.min(...indents) : 0;
+
+    // 3. 各行から共通インデント分を削除
+    return lines.map(line => line.slice(minIndent)).join('\n');
+  }
+
   class Member {  // メンバ(インスタンス変数)の定義
     constructor(arg){
       this.name = arg.name || ''; // {string} メンバ名(変数名)。英数字表記
@@ -926,7 +945,7 @@ const classdef = {
 
       // 処理手順
       if( this.process !== '' ){
-        ['',`### <span id="${concatName}_process">🧾 処理手順</span>`,'',this.process]
+        ['',`### <span id="${concatName}_process">🧾 処理手順</span>`,'',trimIndent(this.process)]
         .forEach(x => rv.push(x));
       }
 
