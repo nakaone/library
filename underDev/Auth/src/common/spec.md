@@ -50,7 +50,7 @@
   4. サーバ側でauthConfig.cryptoServer.loginLifeTimeを確認、期限内ならmemberList.CPkeyを書き換え。期限切れなら加入処理同様、adminによる個別承認を必要とする。
   5. 以降は未ログイン状態で要求が来た場合として処理を継続
 
-# クライアント・サーバ間の通信手順
+## クライアント・サーバ間の通信手順
 
 - 以下は正常系のみ記載
 - `localFunc`とは、クライアント側(ブラウザ)内で動作するJavaScriptの関数
@@ -130,10 +130,63 @@ sequenceDiagram
 - ⑪：【返信内容作成】メンバの状態を判断、適宜サーバ側関数の呼び出し<br>
   詳細は[]
 
-# クラス・関数定義
+## クラス・関数定義
 
-- [authClient](authClient.md) 関数 仕様書
-- [authServer](authServer.md) 関数 仕様書
-- [Member](Member.md) クラス 仕様書
-- [cryptoServer](cryptoServer.md) 関数 仕様書
-- [cryptoClient](cryptoClient.md) 関数 仕様書
+### クラス運用方針
+
+- データ型命名規約
+	- 例：auth* = 内部処理系, Member* = メンバ管理系, Local* = クライアント内通信系
+- クラスに限らずクロージャ関数も、一覧に記載のメンバをインスタンス変数として持つ
+- 全てのクラス・クロージャ関数はインスタンス生成時、起動時引数オブジェクトでインスタンス変数を上書きする
+- 起動時引数オブジェクトで定義に無いメンバは廃棄する(インスタンス変数として追加しない)
+
+### 1 動作環境設定系
+
+```mermaid
+graph TD
+  authConfig --> authClientConfig
+  authConfig --> authServerConfig
+```
+
+| No | クラス名 | 概要 |
+| --: | :-- | :-- |
+| 1 | [authConfig](authConfig.md) | authClient/authServer共通設定値 |
+| 2 | [authClientConfig](authClientConfig.md) | authClient専用の設定値 |
+| 3 | [authServerConfig](authServerConfig.md) | サーバ側設定値 |
+
+### 2 鍵ペア他の格納
+
+```mermaid
+classDiagram
+  class authScriptProperties {
+		number keyGeneratedDateTime
+    string SPkey
+    string SSkey
+    string oldSPkey
+    string oldSSkey
+    authRequestLog[] requestLog
+  }
+
+  class authRequestLog {
+    number timestamp
+    string requestId
+  }
+
+  authScriptProperties --> authRequestLog
+```
+
+| No | クラス名 | 概要 |
+| --: | :-- | :-- |
+| 1 | [authScriptProperties](authScriptProperties.md) | サーバ側のScriptProperties |
+| 2 | [authRequestLog](authRequestLog.md) | 重複チェック用のリクエスト履歴 |
+
+
+```mermaid
+graph TD
+  authClientKeys --> authIndexedDB
+```
+
+| No | クラス名 | 概要 |
+| --: | :-- | :-- |
+| 1 | [authClientKeys](authClientKeys.md) | クライアント側鍵ペア |
+| 2 | [authIndexedDB](authIndexedDB.md) | クライアントのIndexedDB |

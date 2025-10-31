@@ -22,10 +22,11 @@ const classdef = {
     method: { // {Method} ■メソッド定義■
       constructor: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: '' ,	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        note: '' ,	// {string} 注意事項。markdownで記載
-        process: ''  ,	// {string} 処理手順。markdownで記載
-        source: '' ,	// {string} 想定するJavaScriptソース
+        label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: '',	// {string} 注意事項。markdownで記載
+        process: ``,	// {string} 処理手順。markdownで記載
+        source: '',	// {string} 想定するJavaScriptソース
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
         referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
         param: [  // {Param[]} ■メソッド引数の定義■
@@ -111,6 +112,8 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
+
+    
     member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
       {name:'CSkeySign',type:'CryptoKey',label:'署名用秘密鍵',note:''},
       {name:'CPkeySign',type:'CryptoKey',label:'署名用公開鍵',note:''},
@@ -121,8 +124,18 @@ const classdef = {
     method: {
       constructor: {
         label: 'コンストラクタ',
+        lib: ['createPassword'],
         referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
-        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+
+        param: [
+          {name:'config',type:'authClientConfig',note:'鍵生成用の設定(RSA鍵長等)'},
+        ],
+
+        process: `
+          - [createPassword](library.md#createpassword)でパスワード生成
+          - [authConfig](authConfig.md#authconfig_internal).RSAbitsを参照、新たな鍵ペア生成
+        `,	// {string} 処理手順。markdownで記載
+
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
           type: 'authClientKeys', // {string} データ型。authResponse等
