@@ -861,15 +861,15 @@ const classdef = {
     }
 
     md(){/*
-      ## <a name="authserver_constructor" href="#internal">🧱 constructor()</a>
+      ## <span id="authserver_constructor">🧱 <a href="#authserver_method">constructor()</a></span>
 
         (概要＋注意事項)
 
-      ### <a name="authserver_constructor_param">📥 引数</a>
+      ### <span id="authserver_constructor_param">📥 引数</span>
 
         (引数の一覧)
 
-      ### <a name="authserver_constructor_returns">📤 戻り値</a>
+      ### <span id="authserver_constructor_returns">📤 戻り値</span>
 
       [authResponse](authResponse.md) - authServerから返される暗号化前の処理結果オブジェクト
 
@@ -882,7 +882,7 @@ const classdef = {
         | oldSSkey | ❌ | string |  |
         | requestLog | ⭕ | authRequestLog[] |  |
 
-      ### <a name="constructor-process">🧾 処理手順</a>
+      ### <span id="constructor-process">🧾 処理手順</span>
 
       - authServer内共有用の変数`pv`オブジェクトを用意
       - `pv.crypto`にcryptoServerインスタンスを作成
@@ -895,25 +895,25 @@ const classdef = {
 
       // 概要＋注意事項
       const rv = [
-        `## <a name="${concatName}" href="#${className}_internal">🧱 ${this.methodName}()</a>`,'',
+        `## <span id="${concatName}">🧱 <a href="#${className}_method">${this.methodName}()</a></span>`,'',
         this.label,'',this.note
       ];
 
       // 引数
-      ['',`### <a name="${concatName}_param">📥 引数</a>`,'',
+      ['',`### <span id="${concatName}_param">📥 引数</span>`,'',
         '| 項目名 | 任意 | データ型 | 既定値 | 説明 |','| :-- | :--: | :-- | :-- | :-- |']
       .forEach(x => rv.push(x));
       this.param.forEach(x => rv.push(x.md()));
 
       // 戻り値
-      ['',`### <a name="${concatName}_returns">📤 戻り値</a>`,''].forEach(x => rv.push(x));
+      ['',`### <span id="${concatName}_returns">📤 戻り値</span>`,''].forEach(x => rv.push(x));
       this.returns.forEach(x => {
         x.md().forEach(x => rv.push(x));
       });
 
       // 処理手順
       if( this.process !== '' ){
-        ['',`### <a name="${concatName}_process">🧾 処理手順</a>`,'',this.process]
+        ['',`### <span id="${concatName}_process">🧾 処理手順</span>`,'',this.process]
         .forEach(x => rv.push(x));
       }
 
@@ -954,39 +954,39 @@ const classdef = {
       /*
       # authServer クラス仕様書
 
-      ## <a name="authserver_summary">🧭 概要</a>
+      ## <span id="authserver_summary">🧭 概要</span>
 
       authServerは、クライアント(authClient)からの暗号化通信リクエストを復号・検証し、
       メンバ状態と要求内容に応じてサーバ側処理を適切に振り分ける中核関数です。
 
-      ### <a name="authserver_policy">設計方針</a>
+      ### <span id="authserver_policy">設計方針</span>
 
       - staticメソッドを利用するため、クラスとする
       - doGetからは`authServer.exec`を呼び出す
 
-      ### 🧩 <a name="authserver_internal">内部構成</a>
+      ### 🧩 <span id="authserver_internal">内部構成</span>
 
         (メンバの一覧)
         (メソッドの一覧)
 
       ※ 以降は Method.md() でメソッド毎に作成・追加
       */
-      const cn = this.className.toLowerCase();
+      const className = this.className.toLowerCase();
       // 概要
       const summary = [
-        `# <a name="${cn}">${this.className} クラス仕様書</a>`,'',
-        `## <a name="${cn}_summary">🧭 概要</a>`,'',
+        `# <span id="${className}">${this.className} クラス仕様書</span>`,'',
+        `## <span id="${className}_summary">🧭 概要</span>`,'',
         this.label,'',this.note
       ];
 
       // 設計方針
       const policy = !this.policy || this.policy.length === 0 ? [] : [
-        `### <a name="${cn}_policy">設計方針</a>`,'',
+        `### <span id="${className}_policy">設計方針</span>`,'',
         ...this.policy
       ];
 
       // 内部構成：メンバ(一覧形式)
-      const internal = [`### 🧩 <a name="${cn}_internal">内部構成</a>`,'',];
+      const internal = [`### 🧩 <span id="${className}_internal">内部構成</span>`,'',];
       // 親クラスへのリンク
       if( this.inherit.length > 0 ){
         [`- super class: [${this.inherit}](${this.inherit}.md)`,''].forEach(x => internal.push(x));        
@@ -998,9 +998,11 @@ const classdef = {
       this.member.forEach(x => internal.push(x.md()));
 
       // 内部構成：メソッド(一覧形式)
-      ['','🧱 メソッド','','| メソッド名 | 型 | 内容 |','| :-- | :-- | :-- |'].forEach(x => internal.push(x));
+      ['',`🧱 <span id="${className}_method">メソッド</span>`,'',
+        '| メソッド名 | 型 | 内容 |','| :-- | :-- | :-- |',
+      ].forEach(x => internal.push(x));
       Object.keys(this.method).forEach(x => {
-        internal.push(`| [${x}](#${x.toLowerCase()}) | ${this.method[x].type} | ${this.method[x].label}`)
+        internal.push(`| [${x}](#${className}_${x.toLowerCase()}) | ${this.method[x].type} | ${this.method[x].label}`)
       });
 
       // メソッド(詳細)
