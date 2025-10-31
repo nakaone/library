@@ -143,6 +143,44 @@ sequenceDiagram
 - クラスに限らずクロージャ関数も、一覧に記載のメンバをインスタンス変数として持つ
 - 全てのクラス・クロージャ関数はインスタンス生成時、起動時引数オブジェクトでインスタンス変数を上書きする
 - 起動時引数オブジェクトで定義に無いメンバは廃棄する(インスタンス変数として追加しない)
+- 以下のクラス定義で「クロージャ関数」と有った場合、以下のような構造を想定する。
+
+<details><summary>例：非同期初期化を持つクラス相当のクロージャ</summary>
+
+```js
+async function Example() {
+  // 非同期初期化処理
+  const data = await fetch('/api/data').then(r => r.json());
+
+  // プライベート変数。本仕様書内では「メンバ」として定義。
+  let count = 0;
+
+  // この部分を「メイン処理」と呼称、本仕様書内では"constructor"として記述
+
+  // メソッド群（クロージャとしてプライベート変数にアクセス可能）
+  return {
+    getData() {
+      return data;
+    },
+    increment() {
+      count++;
+      return count;
+    },
+    getCount() {
+      return count;
+    }
+  };
+}
+
+// 使用例
+(async () => {
+  const obj = await Example(); // awaitできる！
+  console.log(obj.getData());
+  console.log(obj.increment()); // => 1
+})();
+```
+
+</details>
 
 ### 1 動作環境設定系
 
@@ -154,9 +192,9 @@ graph TD
 
 | No | クラス名 | 概要 |
 | --: | :-- | :-- |
-| 1 | [authConfig](authConfig.md) | authClient/authServer共通設定値 |
-| 2 | [authClientConfig](authClientConfig.md) | authClient専用の設定値 |
-| 3 | [authServerConfig](authServerConfig.md) | サーバ側設定値 |
+| 1 | [authConfig](../tmp/authConfig.md) | authClient/authServer共通設定値 |
+| 2 | [authClientConfig](../tmp/authClientConfig.md) | authClient専用の設定値 |
+| 3 | [authServerConfig](../tmp/authServerConfig.md) | サーバ側設定値 |
 
 ### 2 鍵ペア他の格納
 
@@ -181,8 +219,8 @@ classDiagram
 
 | No | クラス名 | 概要 |
 | --: | :-- | :-- |
-| 1 | [authScriptProperties](authScriptProperties.md) | サーバ側のScriptProperties |
-| 2 | [authRequestLog](authRequestLog.md) | 重複チェック用のリクエスト履歴 |
+| 1 | [authScriptProperties](../tmp/authScriptProperties.md) | サーバ側のScriptProperties |
+| 2 | [authRequestLog](../tmp/authRequestLog.md) | 重複チェック用のリクエスト履歴 |
 
 
 ```mermaid
@@ -192,5 +230,5 @@ graph TD
 
 | No | クラス名 | 概要 |
 | --: | :-- | :-- |
-| 1 | [authClientKeys](authClientKeys.md) | クライアント側鍵ペア |
-| 2 | [authIndexedDB](authIndexedDB.md) | クライアントのIndexedDB |
+| 1 | [authClientKeys](../tmp/authClientKeys.md) | クライアント側鍵ペア |
+| 2 | [authIndexedDB](../tmp/authIndexedDB.md) | クライアントのIndexedDB |

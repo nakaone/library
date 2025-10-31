@@ -374,7 +374,7 @@ function main(){
     try {
       fs.writeFileSync(`${arg.opt.o}/${x}.md`, mdBody(x,typedef[x]));
       fs.writeFileSync(`${arg.opt.o}/${x}.js`, jsdBody(x,typedef[x]));
-      console.log(`write end : ${x}`);
+      //console.log(`write end : ${x}`);
     }catch(e){
       console.log(e);
     }

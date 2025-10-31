@@ -24,7 +24,6 @@ const classdef = {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: '',	// {string} 注意事項。markdownで記載
-        process: ``,	// {string} 処理手順。markdownで記載
         source: '',	// {string} 想定するJavaScriptソース
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
         referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
@@ -38,13 +37,15 @@ const classdef = {
           //note: '',	// 項目の説明
         ],
 
+        process: ``,	// {string} 処理手順。markdownで記載
+
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
-          label: '',	// {string} パターン名。ex.「正常時」「未認証時」等
+          label: '',	// {string} パターン名。ex.「正常終了」「未認証時」等
           type: 'Object', // {string} データ型。authResponse等
           code: '',	// {string} エラーコード
           condition: '',	// {string} 該当条件
           note: '',	// {string} 備忘
-          member = [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
             name: '', // 設定するメンバ名
             value: '', // 設定する値または算式
             note: '', // メンバに関する備考
@@ -223,12 +224,113 @@ const classdef = {
 
     method: {
       constructor: {
-        label: 'コンストラクタ',
-        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
-        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        label: 'メイン処理(コンストラクタ相当)',
+
+        param: [
+          {name:'config',type:'authClientConfig',note:'設定情報'},
+        ],
+
+        process: `
+          - IndexedDBに[authClientConfig](authClientConfig.md#authclientconfig_internal).systemNameを持つキーがあれば取得、メンバ変数に格納。
+          - 無ければ新規に生成し、IndexedDBに格納。
+          - SPkey未設定の場合、authServerにauthRequestを要求、SPkeyをセット
+            - 
+
+          - authClientConfig.auditLogシートが無ければ作成
+          - 引数の内、authIndexedDBと同一メンバ名があればthisに設定
+          - 引数にnoteがあればthis.noteに設定
+          - timestampに現在日時を設定
+        `,	// {string} 処理手順。markdownで記載
+
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
           type: 'authIndexedDB', // {string} データ型。authResponse等
+        }],
+      },
+      get: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'IndexedDBの値を取得',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        source: '',	// {string} 想定するJavaScriptソース
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+        ],
+
+        process: `
+          - 【要修正】authAuditLogに関する記述？？？
+          - 引数がObjectの場合：func,result,noteがあればthisに上書き
+          - 引数がstringの場合：this.funcにargをセット
+          - this.duration = Date.now() - this.timestamp
+          - timestampはISO8601拡張形式の文字列に変更
+          - シートの末尾行にauthAuditLogオブジェクトを追加
+          - メール通知：stackTraceは削除した上でauthConfig.adminMail宛にメール通知
+        `,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'authIndexedDB', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: '',	// {string} 備忘
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
+        }],
+      },
+      set: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'IndexedDBの値を更新(生成)',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        source: '',	// {string} 想定するJavaScriptソース
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',type:'authIndexedDB',default:{},note:'更新(生成)値(更新対象メンバのみで可)'},
+        ],
+
+        process: ``,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'authIndexedDB', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: 'IndexedDBに設定した値',	// {string} 備忘
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
+        }],
+      },
+      reset: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'IndexedDBの値を更新(生成)',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        source: '',	// {string} 想定するJavaScriptソース
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',type:'authIndexedDB',default:{},note:'更新(生成)値(更新対象メンバのみで可)'},
+        ],
+
+        process: `
+          - 【要修正】authAuditLogに関する記述？？？
+          - authClientConfig.auditLogシートが無ければ作成
+          - 引数の内、authAuditLogと同一メンバ名があればthisに設定
+        `,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'authIndexedDB', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: 'IndexedDBに設定した値',	// {string} 備忘
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
         }],
       },
     },
@@ -876,14 +978,16 @@ const classdef = {
       this.type = arg.type || 'private'; // {string} static:クラスメソッド、public:外部利用可、private:内部専用
       this.label = arg.label || ''; // {string} 端的なメソッドの説明。ex.'authServer監査ログ'
       this.note = arg.note || ''; // {string} 注意事項。markdownで記載
-      this.process = arg.process || '';  // {string} 処理手順。markdownで記載
       this.source = arg.source || ''; // {string} 想定するJavaScriptソース
+      this.lib = arg.lib || []; // {string[]} 本メソッドで使用するライブラリ
       this.referrer = arg.referrer || []; // {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
       this.param = [];  // 引数の定義
       if( typeof arg.param !== 'undefined' && Array.isArray(arg.param) ){
         arg.param.forEach(x => this.param.push(new Param(x)));
       }
+
+      this.process = arg.process || '';  // {string} 処理手順。markdownで記載
 
       this.returns = [];  // 戻り値の定義(パターン別)
       if( typeof arg.returns !== 'undefined' && Array.isArray(arg.returns) ){
@@ -932,10 +1036,14 @@ const classdef = {
       ];
 
       // 引数
-      ['',`### <span id="${concatName}_param">📥 引数</span>`,'',
-        '| 項目名 | 任意 | データ型 | 既定値 | 説明 |','| :-- | :--: | :-- | :-- | :-- |']
-      .forEach(x => rv.push(x));
-      this.param.forEach(x => rv.push(x.md()));
+      ['',`### <span id="${concatName}_param">📥 引数</span>`,''].forEach(x => rv.push(x));
+      if( this.param.length === 0 ){
+        rv.push(`- 無し(void)`);
+      } else {
+        ['| 項目名 | 任意 | データ型 | 既定値 | 説明 |','| :-- | :--: | :-- | :-- | :-- |']
+        .forEach(x => rv.push(x));
+        this.param.forEach(x => rv.push(x.md()));
+      }
 
       // 戻り値
       ['',`### <span id="${concatName}_returns">📤 戻り値</span>`,''].forEach(x => rv.push(x));
