@@ -2,18 +2,18 @@ const classdef = {
   /*
   className: {  // {ClassDef} ■クラス定義■
     label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: '',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
     member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      //{name:'',type:'string',label:'',note:''}, // default,isOpt
       {
         name: '',	// {string} メンバ名(変数名)。英数字表記
         type: 'string',	// {string} データ型
         label: '',	// {string} 端的な項目説明。ex."サーバ側処理結果"
         note: '',	// {string|string[]} 当該項目に関する補足説明。ex."fatal/warning/normal"
-            // 配列の場合、箇条書きとして処理する。
         default: '—',	// {any} 関数の場合'=Date.now()'のように記述
         isOpt: false,	// {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
       },
@@ -23,8 +23,8 @@ const classdef = {
       constructor: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        note: '',	// {string} 注意事項。markdownで記載
-        source: '',	// {string} 想定するJavaScriptソース
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
         referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
@@ -44,12 +44,13 @@ const classdef = {
           type: 'Object', // {string} データ型。authResponse等
           code: '',	// {string} エラーコード
           condition: '',	// {string} 該当条件
-          note: '',	// {string} 備忘
+          note: ``,	// {string} 備忘
           member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
             name: '', // 設定するメンバ名
             value: '', // 設定する値または算式
             note: '', // メンバに関する備考
           }],
+          assign: {項目名A:設定値A, 項目名B:設定値B}
         }],
       },
     },
@@ -57,8 +58,11 @@ const classdef = {
   */
   authAuditLog: {
     label: 'authServerの監査ログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: '',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄
+    note: `
+      クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照するため)<br>
+      暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
+    `,	// {string} クラスとしての補足説明。概要欄に記載
+    policy: ``,   // {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: 'audit', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -75,11 +79,339 @@ const classdef = {
     method: {
       constructor: {
         label: 'コンストラクタ',
-        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
-        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+
+        param: [],
+
+        process: `
+          - "[authServerConfig](authServerConfig.md#authserverconfig_internal).auditLog"シートが無ければ作成
+          - 引数の内、authAuditLogと同一メンバ名があればthisに設定
+          - 引数にnoteがあればthis.noteに設定
+          - timestampに現在日時を設定
+        `,
+
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
           type: 'authAuditLog', // {string} データ型。authResponse等
+        }],
+      },
+      log: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '監査ログシートに処理要求を追記',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: '',	// {string} 想定するJavaScriptソース
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',type:'authRequest|string',note:'処理要求オブジェクトまたは内発処理名'},
+        ],
+
+        process: `
+          - 引数がObjectの場合：func,result,noteがあればthisに上書き
+          - 引数がstringの場合：this.funcにargをセット
+          - 所要時間の計算(this.duration = Date.now() - this.timestamp)
+          - timestampはISO8601拡張形式の文字列に変更
+          - シートの末尾行にauthAuditLogオブジェクトを追加
+        `,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'authAuditLog', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: `シートに出力したauthAuditLogオブジェクト`,	// {string} 備忘
+          member: [], // 値を設定する戻り値のメンバ。既定値項目は不要
+        }],
+      },
+      reset: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'authAuditLogインスタンス変数の値を再設定',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: '',	// {string} 想定するJavaScriptソース
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'request',isOpt:true,type:'authRequest',default:{},note:'変更する設定値'},
+        ],
+
+        process: `
+          - 【要修正】用途を明確化、不要なら削除
+          - [authServerConfig](authServerConfig.md#authserverconfig_internal).auditLogシートが無ければ作成
+          - 引数の内、authAuditLogと同一メンバ名があればthisに設定
+        `,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'authAuditLog', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: `修正後のauthAuditLogオブジェクト`,	// {string} 備忘
+          member: [], // 値を設定する戻り値のメンバ。既定値項目は不要
+        }],
+      },
+    },
+  },
+  authClient: {  // {ClassDef} ■クラス定義■
+    label: 'クライアント側auth中核クラス',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `
+      authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を受け、
+      サーバ側(authServer)への暗号化通信リクエストを署名・暗号化、
+      サーバ側処理を経てローカル側に戻された結果を復号・検証し、
+      処理結果に応じてクライアント側処理を適切に振り分ける中核関数です。
+    `,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    policy: `
+      - クロージャ関数ではなくクラスとして作成
+      - 内発処理はローカル関数からの処理要求に先行して行う
+    `,	// {string} 設計方針欄(trimIndent対象)
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {name:'cf',type:'authClientConfig',label:'動作設定変数(config)',note:''}, // default,isOpt
+      {name:'crypto',type:'cryptoClient',label:'暗号化・復号用インスタンス',note:''}, // default,isOpt
+      {name:'idb',type:'authIndexedDB',label:'IndexedDB共有用',note:'IndexedDBの内容をauthClient内で共有'}, // default,isOpt
+    ],
+
+    method: { // {Method} ■メソッド定義■
+      constructor: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'config',type:'authClientConfig',note:'authClientの動作設定変数'},
+        ],
+
+        process: `
+          - 本クラスのメンバとして存在する引数のメンバはauthClient内共有用の変数"cf"に保存(存在しない引数のメンバは廃棄)
+          - "crypto"に[cryptoClient](cryptoClient.md#cryptoclient_constructor)を生成、鍵ペアを準備
+          - "idb"に[authIndexedDB](authIndexedDB.md#authindexeddb_constructor)を生成、IndexedDBの内容を取得
+          - idb.deviceId未採番なら採番(UUID)
+          - idb.SPkey未取得ならサーバ側に要求
+          - 更新した内容はIndexedDBに書き戻す
+          - SPkey取得がエラーになった場合、SPkey以外は書き戻す
+          - IndexedDBの内容はauthClient内共有用変数"pv"に保存
+          - サーバ側から一定時間レスポンスが無い場合、{result:'fatal',message:'No response'}を返して終了
+
+          \`\`\`mermaid
+          sequenceDiagram
+
+            actor user
+            participant localFunc
+            %%participant clientMail
+            %%participant cryptoClient
+            participant IndexedDB
+            participant authClient
+            participant authServer
+            %%participant memberList
+            %%participant cryptoServer
+            %%participant serverFunc
+            %%actor admin
+
+            %% IndexedDB格納項目のメンバ変数化 ----------
+            alt IndexedDBのメンバ変数化が未了
+              IndexedDB->>+authClient: 既存設定値の読み込み(authIndexedDB)
+              authClient->>authClient: メンバ変数に保存、鍵ペア未生成なら再生成
+              alt 鍵ペア未生成
+                authClient->>IndexedDB: authIndexedDB
+              end
+              alt メールアドレス(memberId)未設定
+                authClient->>user: ダイアログ表示
+                user->>authClient: メールアドレス
+              end
+              alt メンバの氏名(memberName)未設定
+                authClient->>user: ダイアログ表示
+                user->>authClient: メンバ氏名
+              end
+              alt SPkey未入手
+                authClient->>+authServer: CPkey(平文の文字列)
+
+                %% 以下2行はauthServer.responseSPkey()の処理内容
+                authServer->>authServer: 公開鍵か形式チェック、SPkeyをCPkeyで暗号化
+                authServer->>authClient: encryptedResponse(CPkeyで暗号化されたSPkey)
+
+                alt 待機時間内にauthServerから返信有り
+                  authClient->>authClient: encryptedResponseをCSkeyで復号、メンバ変数に平文で保存
+                else 待機時間内にauthServerから返信無し
+                  authClient->>localFunc: エラーオブジェクトを返して終了
+                end
+              end
+              authClient->>-IndexedDB: メンバ変数を元に書き換え
+            end
+          \`\`\`
+        `,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'authClient', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: ``,	// {string} 備忘
+          member: [],
+        }],
+      },
+      checkCPkey: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'CPkey残有効期間をチェック',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
+          //name: '',	// 引数としての変数名
+          //isOpt: false,  // 任意項目ならtrue
+          //type: '',	// データ型
+          //default: '—',	// 既定値
+          //note: '',	// 項目の説明
+        ],
+
+        process: ``,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'Object', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: ``,	// {string} 備忘
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
+        }],
+      },
+      enterPasscode: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'パスコード入力ダイアログを表示',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
+          //name: '',	// 引数としての変数名
+          //isOpt: false,  // 任意項目ならtrue
+          //type: '',	// データ型
+          //default: '—',	// 既定値
+          //note: '',	// 項目の説明
+        ],
+
+        process: ``,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'Object', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: ``,	// {string} 備忘
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
+        }],
+      },
+      exec: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'ローカル関数からの要求受付',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: `ローカル関数からの要求を受けてauthServerに問合せを行う`,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
+          //name: '',	// 引数としての変数名
+          //isOpt: false,  // 任意項目ならtrue
+          //type: '',	// データ型
+          //default: '—',	// 既定値
+          //note: '',	// 項目の説明
+        ],
+
+        process: ``,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'Object', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: ``,	// {string} 備忘
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
+        }],
+      },
+      setupEnvironment: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'SPkey入手等、authClient動作環境整備',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
+          //name: '',	// 引数としての変数名
+          //isOpt: false,  // 任意項目ならtrue
+          //type: '',	// データ型
+          //default: '—',	// 既定値
+          //note: '',	// 項目の説明
+        ],
+
+        process: ``,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'Object', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: ``,	// {string} 備忘
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
+        }],
+      },
+      showMessage: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'メッセージをダイアログで表示',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
+          //name: '',	// 引数としての変数名
+          //isOpt: false,  // 任意項目ならtrue
+          //type: '',	// データ型
+          //default: '—',	// 既定値
+          //note: '',	// 項目の説明
+        ],
+
+        process: ``,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'Object', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: ``,	// {string} 備忘
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
         }],
       },
     },
@@ -109,7 +441,7 @@ const classdef = {
   authClientKeys: {
     label: 'クライアント側鍵ペア',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -147,7 +479,7 @@ const classdef = {
   authConfig: { 
     label: 'authClient/authServer共通設定値',
     note: 'authClientConfig, authServerConfigの親クラス',
-    policy: [],
+    policy: ``,
     inherit: '', // 親クラス名
     defaultVariableName: '',
 
@@ -175,8 +507,10 @@ const classdef = {
   },
   authErrorLog: {
     label: 'authServerのエラーログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: '',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    note: `
+      クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照するため)<br>
+      暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。`,	// {string} クラスとしての補足説明。概要欄に記載
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -193,10 +527,81 @@ const classdef = {
       constructor: {
         label: 'コンストラクタ',
         referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
-        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        param: [],
+
+        process: `
+          - [authServerConfig](authServerConfig.md#authserverconfig_internal).auditLogシートが無ければ作成
+        `,
+
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
           type: 'authErrorLog', // {string} データ型。authResponse等
+        }],
+      },
+      log: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: '',	// {string} 想定するJavaScriptソース
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'e',type:'Error',note:'エラーオブジェクト'},
+        ],
+
+        process: `
+          - this.message = e.message
+          - this.stackTrace = e.stack
+          - e.messageがJSON化可能な場合
+            - e.messageをオブジェクト化してobjに代入
+            - this.result = obj.result
+            - this.message = obj.message
+          - シートの末尾行にauthErrorLogオブジェクトを追加
+        `,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'authErrorLog', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: `シートに出力したauthErrorLogオブジェクト`,	// {string} 備忘
+          member: [],
+        }],
+      },
+      reset: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'authErrorLogインスタンス変数の値を再設定',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: '',	// {string} 想定するJavaScriptソース
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
+          //name: '',	// 引数としての変数名
+          //isOpt: false,  // 任意項目ならtrue
+          //type: '',	// データ型
+          //default: '—',	// 既定値
+          //note: '',	// 項目の説明
+        ],
+
+        process: `
+          - 引数の内、authErrorLogと同一メンバ名があればthisに設定
+          - 📤 戻り値：変更後のauthErrorLogオブジェクト
+        `,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'Object', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: ``,	// {string} 備忘
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
         }],
       },
     },
@@ -205,7 +610,7 @@ const classdef = {
     label: 'クライアントのIndexedDB',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'authClientKeysを継承した、クライアントのIndexedDBに保存するオブジェクト<br>'
     + 'IndexedDB保存時のキー名は`authConfig.system.name`から取得',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: 'authClientKeys',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -335,6 +740,59 @@ const classdef = {
       },
     },
   },
+  authServer: {  // {ClassDef} ■クラス定義■
+    label: 'サーバ側auth中核クラス',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {
+        name: '',	// {string} メンバ名(変数名)。英数字表記
+        type: 'string',	// {string} データ型
+        label: '',	// {string} 端的な項目説明。ex."サーバ側処理結果"
+        note: '',	// {string|string[]} 当該項目に関する補足説明。ex."fatal/warning/normal"
+        default: '—',	// {any} 関数の場合'=Date.now()'のように記述
+        isOpt: false,	// {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
+      },
+    ],
+
+    method: { // {Method} ■メソッド定義■
+      constructor: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
+          //name: '',	// 引数としての変数名
+          //isOpt: false,  // 任意項目ならtrue
+          //type: '',	// データ型
+          //default: '—',	// 既定値
+          //note: '',	// 項目の説明
+        ],
+
+        process: ``,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'Object', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: ``,	// {string} 備忘
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
+        }],
+      },
+    },
+  },
   authServerConfig: {
     label: 'authServer専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'authConfigを継承', // クラスとしての補足説明
@@ -386,7 +844,7 @@ const classdef = {
   authRequest: {
     label: '暗号化前の処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'authClientからauthServerに送られる、暗号化前の処理要求オブジェクト',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -415,7 +873,7 @@ const classdef = {
   authRequestLog: {
     label: '重複チェック用のリクエスト履歴',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'ScriptPropertiesに保存',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -439,7 +897,7 @@ const classdef = {
   authResponse: {
     label: '暗号化前の処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'authServerからauthClientに返される、暗号化前の処理結果オブジェクト',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -466,7 +924,7 @@ const classdef = {
   authScriptProperties: {
     label: 'サーバ側のScriptProperties',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'キー名は`authConfig.system.name`',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -494,7 +952,7 @@ const classdef = {
   authServerConfig: {
     label: 'サーバ側設定値',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'authConfigを継承した、authServerでのみ使用する設定値',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: 'authConfig',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -540,10 +998,116 @@ const classdef = {
       },
     },
   },
+  cryptoClient: {  // {ClassDef} ■クラス定義■
+    label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {
+        name: '',	// {string} メンバ名(変数名)。英数字表記
+        type: 'string',	// {string} データ型
+        label: '',	// {string} 端的な項目説明。ex."サーバ側処理結果"
+        note: '',	// {string|string[]} 当該項目に関する補足説明。ex."fatal/warning/normal"
+        default: '—',	// {any} 関数の場合'=Date.now()'のように記述
+        isOpt: false,	// {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
+      },
+    ],
+
+    method: { // {Method} ■メソッド定義■
+      constructor: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
+          //name: '',	// 引数としての変数名
+          //isOpt: false,  // 任意項目ならtrue
+          //type: '',	// データ型
+          //default: '—',	// 既定値
+          //note: '',	// 項目の説明
+        ],
+
+        process: ``,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'Object', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: ``,	// {string} 備忘
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
+        }],
+      },
+    },
+  },
+  cryptoServer: {  // {ClassDef} ■クラス定義■
+    label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    inherit: '',	// {string} 親クラス名
+    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+
+    member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
+      {
+        name: '',	// {string} メンバ名(変数名)。英数字表記
+        type: 'string',	// {string} データ型
+        label: '',	// {string} 端的な項目説明。ex."サーバ側処理結果"
+        note: '',	// {string|string[]} 当該項目に関する補足説明。ex."fatal/warning/normal"
+        default: '—',	// {any} 関数の場合'=Date.now()'のように記述
+        isOpt: false,	// {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
+      },
+    ],
+
+    method: { // {Method} ■メソッド定義■
+      constructor: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
+          //name: '',	// 引数としての変数名
+          //isOpt: false,  // 任意項目ならtrue
+          //type: '',	// データ型
+          //default: '—',	// 既定値
+          //note: '',	// 項目の説明
+        ],
+
+        process: ``,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'Object', // {string} データ型。authResponse等
+          code: '',	// {string} エラーコード
+          condition: '',	// {string} 該当条件
+          note: ``,	// {string} 備忘
+          member: [{ // 値を設定する戻り値のメンバ。既定値項目は不要
+            name: '', // 設定するメンバ名
+            value: '', // 設定する値または算式
+            note: '', // メンバに関する備考
+          }],
+        }],
+      },
+    },
+  },
   decryptedRequest: {
     label: '復号済の処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'encryptedRequestをcryptoServerで復号した処理要求オブジェクト',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -570,7 +1134,7 @@ const classdef = {
   decryptedResponse: {
     label: '復号済の処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'encryptedResponseをcryptoClientで復号した処理結果オブジェクト',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -604,7 +1168,7 @@ const classdef = {
     note: 'authClientからauthServerに送られる、暗号化された処理要求オブジェクト。<br>'
       + 'ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列。<br>'
       + 'memberId,deviceIdは平文',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -630,7 +1194,7 @@ const classdef = {
     label: '暗号化された処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'authServerからauthClientに返される、暗号化された処理結果オブジェクト<br>'
       + 'ciphertextはauthResponseをJSON化、RSA-OAEP暗号化＋署名付与した文字列',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -653,7 +1217,7 @@ const classdef = {
   LocalRequest: {
     label: 'ローカル関数からの処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'クライアント側関数からauthClientに渡すオブジェクト。func,arg共、平文',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -677,7 +1241,7 @@ const classdef = {
   LocalResponse: {
     label: 'ローカル関数への処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'authClientからクライアント側関数に返される処理結果オブジェクト',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -702,7 +1266,7 @@ const classdef = {
   Member: {
     label: 'メンバ単位の管理情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'メンバ一覧(アカウント管理表)上のメンバ単位の管理情報',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -726,12 +1290,20 @@ const classdef = {
           type: 'Member', // {string} データ型。authResponse等
         }],
       },
+      flush: {
+        label: 'Memberオブジェクトの内容をシートに書き込む',
+        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
+          type: 'Member', // {string} データ型。authResponse等
+        }],
+      }
     },
   },
   MemberDevice: {
     label: 'デバイス情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'メンバが使用する通信機器の情報(マルチデバイス対応)',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -758,7 +1330,7 @@ const classdef = {
   MemberLog: {
     label: 'メンバの各種要求・状態変化の時刻',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -790,7 +1362,7 @@ const classdef = {
   MemberProfile: {
     label: 'メンバの属性情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -811,14 +1383,14 @@ const classdef = {
     },
   },
   MemberTrial: {
-    label: 'ログイン試行単位の試行情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    label: 'ログイン試行情報の管理・判定',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
     member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
-      {name:'passcode',type:'string',label:'設定されているパスコード',note:'最初の認証試行で作成',default:''},
+      {name:'passcode',type:'string',label:'設定されているパスコード',note:'最初の認証試行で作成'},
       {name:'created',type:'number',label:'パスコード生成日時',note:'≒パスコード通知メール発信日時',default:'Date.now()'},
       {name:'log',type:'MemberTrialLog[]',label:'試行履歴',note:'常に最新が先頭(unshift()使用)。保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。',default:[]},
     ],
@@ -826,34 +1398,103 @@ const classdef = {
     method: {
       constructor: {
         label: 'コンストラクタ',
-        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
-        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+
+        param: [
+          {name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}
+        ],
+
+        process: `
+          - this.passcode = [authServerConfig.trial.passcodeLength](authServerConfig.md#authserverconfig_internal)で設定された桁数の乱数
+          - this.created = Date.now()
+          - this.log = []
+        `,
+
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
           type: 'MemberTrial', // {string} データ型。authResponse等
         }],
       },
+      loginAttempt: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '入力されたパスコードの判定',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        param: [  // {Param[]} ■メソッド引数の定義■
+          {name:'request',type:'authRequest',note:'ユーザが入力したパスコードを含む処理要求'},
+        ],
+
+        process: `
+          - [MemberTrialLog](MemberTrialLog.md#membertriallog_constructor)を生成、this.logの先頭に保存(unshift())
+          - \`this.log[0].result === true\`なら「正答時」を返す
+          - \`this.log[0].result === false\`で最大試行回数([maxTrial](authServerConfig.md#authserverconfig_internal))未満なら「誤答・再挑戦可」を返す
+          - \`this.log[0].result === false\`で最大試行回数以上なら「誤答・再挑戦不可」を返す
+          - なお、シートへの保存は呼出元で行う
+        `,	// {string} 処理手順。markdownで記載
+
+        returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
+          label: 'default', // default: どのパターンにも共通して設定する値
+          type: 'authResponse', // {string} データ型。authResponse等
+          assign: {request:'引数"request"',value:'MemberTrialオブジェクト'},
+        },{
+          label: '正答時',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'authResponse', // {string} データ型。authResponse等
+          member: [
+            {name:'result',value:'normal',note:''},
+            {name:'request',value:'引数"request"',note:''},
+            {name:'response',value:'MemberTrialオブジェクト',note:''},
+          ],
+          assign: {result:'normal'},
+        },{
+          label: '誤答・再挑戦可',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'authResponse', // {string} データ型。authResponse等
+          member: [
+            {name:'result',value:'warning',note:''},
+            {name:'request',value:'引数"request"',note:''},
+            {name:'response',value:'MemberTrialオブジェクト',note:''},
+          ],
+          assign: {result:'warning'},
+        },{
+          label: '誤答・再挑戦不可',	// {string} パターン名。ex.「正常終了」「未認証時」等
+          type: 'authResponse', // {string} データ型。authResponse等
+          member: [
+            {name:'result',value:'fatal',note:''},
+            {name:'request',value:'引数"request"',note:''},
+            {name:'response',value:'MemberTrialオブジェクト',note:''},
+          ],
+          assign: {result:'fatal'},
+        }],
+      },
     },
   },
-  MemberTrialLog: {
-    label: 'パスコード入力単位の試行記録',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: 'MemberTrial.logに記載',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: [],	// {string[]} 設計方針欄。箇条書き
+  MemberTrialLog: { // 2025.10.31 reviewed
+    label: 'パスコード入力単位の試行記録を生成',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: '',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
     member: [  // {Member[]} ■メンバ(インスタンス変数)定義■
       {name:'entered',type:'string',label:'入力されたパスコード',note:''},
-      {name:'result',type:'number',label:'試行結果',note:'-1:恒久的エラー(再試行不可), 0:要リトライ(再試行可), 1:成功(パスコード一致)'},
-      {name:'message',type:'string',label:'エラーメッセージ',note:''},
+      {name:'result',type:'boolean',label:'試行結果',note:'正答：true、誤答：false'},
       {name:'timestamp',type:'number',label:'判定処理日時',note:''},
     ],
-
     method: {
       constructor: {
         label: 'コンストラクタ',
-        referrer: [],	// {string[]} 本メソッドを呼び出す"クラス.メソッド名"
-        param: [{name:'arg',type:'Object',default:{},note:'必須項目および変更する設定値'}],
+
+        param: [
+          {name:'entered',type:'string',note:'入力されたパスコード'},
+          {name:'result',type:'boolean',note:'試行結果'},
+        ],
+
+        process: `
+          - this.entered = entered
+          - this.result = result
+          - this.timestamp = Date.now()
+        `,
+
         returns: [{  // {Returns} ■(パターン別)メソッド戻り値の定義■
           label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
           type: 'MemberTrialLog', // {string} データ型。authResponse等
@@ -913,7 +1554,11 @@ const classdef = {
     }
     md(){
       // 項目名 任意 データ型 既定値 説明 備考
-      return `| ${this.name} | ${this.isOpt?'⭕':'❌'} | ${this.type} | ${
+      // データ型が本仕様書内のデータ型の場合はリンクを作成
+      return `| ${this.name} | ${this.isOpt?'⭕':'❌'} | ${
+        typeof classdef[this.type] === 'undefined'
+        ? this.type : `[${this.type}](${this.type}.md#${this.type.toLowerCase()}_internal)`
+      } | ${
         typeof this.default === 'object' && this.default !== null
         ? JSON.stringify(this.default) : this.default
       } | ${this.label} | ${this.note} | `;
@@ -931,7 +1576,10 @@ const classdef = {
 
     md(){
       // 項目名 任意 データ型 既定値 備考
-      return `| ${this.name} | ${this.isOpt?'⭕':'❌'} | ${this.type} | ${
+      return `| ${this.name} | ${this.isOpt?'⭕':'❌'} | ${
+        typeof classdef[this.type] === 'undefined' ? this.type
+        : `[${this.type}](${this.type}.md#${this.type.toLowerCase()}_internal)`        
+      } | ${
         typeof this.default === 'object' && this.default !== null
         ? JSON.stringify(this.default) : this.default
       } | ${this.note} | `;
@@ -946,6 +1594,7 @@ const classdef = {
       this.code = arg.code || '';	// {string} エラーコード
       this.condition = arg.condition || '';	// {string} 該当条件
       this.note = arg.note || ''; // {string} メソッドに関する備忘
+      this.assign = arg.assign || {}; // 
 
       this.member = []; // 値を設定する戻り値のメンバ
       if( typeof arg.member !== 'undefined' && Array.isArray(arg.member) ){
@@ -960,7 +1609,10 @@ const classdef = {
     }
 
     md(){
-      const rv = [`- ${this.label}: [${this.type}](${this.type}.md)`];
+      const rv = [`- ${this.label}: ` + (
+        typeof classdef[this.type] === 'undefined' ? this.type
+        : `[${this.type}](${this.type}.md#${this.type.toLowerCase()}_internal)`)];
+        //`];
       if( this.member.length > 0 ){
         ['  | メンバ名 | 値 | 備考 |','  | :-- | :-- | :-- |'].forEach(x => rv.push(x));
       }
@@ -993,7 +1645,6 @@ const classdef = {
       if( typeof arg.returns !== 'undefined' && Array.isArray(arg.returns) ){
         arg.returns.forEach(x => this.returns.push(new Returns(x)));
       }
-
     }
 
     md(){/*
@@ -1046,10 +1697,58 @@ const classdef = {
       }
 
       // 戻り値
+      console.log('l.1699',JSON.stringify({class:this.className,returns:this.returns},null,2));
       ['',`### <span id="${concatName}_returns">📤 戻り値</span>`,''].forEach(x => rv.push(x));
-      this.returns.forEach(x => {
-        x.md().forEach(x => rv.push(x));
-      });
+      if( Object.keys(this.returns[0].assign) === 0 ){
+        this.returns.forEach(x => {
+          x.md().forEach(x => rv.push(x));
+        });
+      } else {
+        this.returns.map(x => x.type).forEach(type => { // 戻り値のデータ型毎に以下の処理を実行
+          // データ型の名称表示
+          [`- [${type}](${type}.md#${type.toLowerCase()}_internal)`,''].forEach(x => rv.push(x));
+
+          /* data = {
+            項目名: {
+              '項目名': (メンバ名),
+              '生成時': 生成時に設定される値。既定値 or 「必須」or「任意」
+              '(パターン名)': 当該パターンの際に設定される値。assignにdefaultを上書き
+              '(パターン名2)': ...
+            },
+          }*/
+          const data = {};        
+          const colMap = classdef[type].member.map(x => x.name);
+          const patternMap = this.returns.filter(x => x.label !== 'default').map(x => x.label);
+
+          // 生成時の設定値
+          classdef[type].member.map(x => {
+            data[x.name] = {
+              '項目名': x.name,
+              '生成時': x.default !== '—' ? x.default : (x.isOpt ? '(任意)' : '(必須)'),
+            }
+          });
+          // def: どのパターンにも共通して設定する値
+          const def = this.returns.find(x => x.label === 'default') || {};
+
+          // パターン別に列を追加
+          this.returns.filter(x => x.type === type && x.label !== 'default').forEach(ret => {
+            colMap.forEach(col => {
+              data[col][ret.label] = typeof ret.assign[col] !== 'undefined' ? ret.assign[col]
+              : (typeof def[col] !== 'undefined' ? def[col] : '—');
+            });
+          });
+
+          // 文字列化してrvに追加
+          rv.push(`  | 項目名 | 生成時 | ${patternMap.join(' | ')} |`);
+          rv.push(`  | :-- | :-- |${' :-- |'.repeat(patternMap.length)}`);
+          colMap.forEach(col => {
+            const row = [col,data[col]['生成時']];
+            patternMap.forEach(pattern => row.push(data[col][pattern]));
+            rv.push(`  | ${row.join(' | ')} |`);
+          });
+        });
+      }
+      rv.push('');
 
       // 処理手順
       if( this.process !== '' ){
@@ -1066,7 +1765,7 @@ const classdef = {
       this.className = className;  // {string} クラス名
       this.label = arg.label || ''; // {string} 端的なクラスの説明。ex.'authServer監査ログ'
       this.note = arg.note || ''; // {string} クラスとしての補足説明。概要欄に記載
-      this.policy = arg.policy || []; // {string[]} 設計方針欄
+      this.policy = arg.policy || ``; // {string} 設計方針欄(trimIndent対象)
       this.inherit = arg.inherit || ''; // {string} 親クラス名
       this.defaultVariableName = arg.defaultVariableName || ''; // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -1109,24 +1808,32 @@ const classdef = {
         (メンバの一覧)
         (メソッドの一覧)
 
-      ※ 以降は Method.md() でメソッド毎に作成・追加
+
+      ## <span id="authserver_proto">🧱 proto()</span>
+      ※ メソッドは第2レベル。Method.md() でメソッド毎に作成・追加
+
+      ## <span id="authserver_maintenance">⏰ メンテナンス処理</span>
+      ## <span id="authserver_security">🔐 セキュリティ仕様</span>
+      ## <span id="authserver_errorhandling">🧾 エラーハンドリング仕様</span>
+      ## <span id="authserver_outputLog">🗒️ ログ出力仕様</span>
+
       */
       const className = this.className.toLowerCase();
       // 概要
       const summary = [
         `# <span id="${className}">${this.className} クラス仕様書</span>`,'',
         `## <span id="${className}_summary">🧭 概要</span>`,'',
-        this.label,'',this.note
+        this.label,'',trimIndent(this.note)
       ];
 
       // 設計方針
-      const policy = !this.policy || this.policy.length === 0 ? [] : [
+      const policy = this.policy.length === 0 ? '' : [
         `### <span id="${className}_policy">設計方針</span>`,'',
-        ...this.policy
+        trimIndent(this.policy)
       ];
 
       // 内部構成：メンバ(一覧形式)
-      const internal = [`### 🧩 <span id="${className}_internal">内部構成</span>`,'',];
+      const internal = [`### 🧩 <span id="${className}_internal">${this.className} 内部構成</span>`,'',];
       // 親クラスへのリンク
       if( this.inherit.length > 0 ){
         [`- super class: [${this.inherit}](${this.inherit}.md)`,''].forEach(x => internal.push(x));        

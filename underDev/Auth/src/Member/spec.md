@@ -359,6 +359,8 @@ deviceIdの指定が無い場合、memberIdが使用する凍結中デバイス�
 
 入力されたパスコードをチェック、Member内部の各種メンバの値を更新の上、チェック結果を返す。
 
+- ※ MemberTrial.loginAttemptメソッドを呼び出し。戻り値はシート未反映なので、ここで保存する
+
 - 引数は`authRequest`、戻り値は`authResponse`
 - `authRequest.func='::passcode::'`,`authRequest.arguments=[入力されたパスコード]`
 - 状態チェック
