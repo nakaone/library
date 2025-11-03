@@ -627,108 +627,6 @@ const classdef = {
       },
     },
   },
-  authServer: {
-    label: 'サーバ側auth中核クラス',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    policy: ``,	// {string} 設計方針欄(trimIndent対象)
-    inherit: '',	// {string} 親クラス名
-    defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
-
-    members: [  // {Member} ■メンバ(インスタンス変数)定義■
-      {
-        name: '',	// {string} メンバ名(変数名)。英数字表記
-        type: 'string',	// {string} データ型
-        label: '',	// {string} 端的な項目説明。ex."サーバ側処理結果"
-        note: '',	// {string|string[]} 当該項目に関する補足説明。ex."fatal/warning/normal"
-        default: '—',	// {any} 関数の場合'=Date.now()'のように記述
-        isOpt: false,	// {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
-      },
-    ],
-
-    methods: { // {Method} ■メソッド定義■
-      constructor: {
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        note: ``,	// {string} 注意事項。markdownで記載
-        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
-        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-
-        params: [  // {Params} ■メソッド引数の定義■
-          // list {string[]} 定義順の引数名一覧
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
-          //name: '',	// 引数としての変数名
-          //type: '',	// データ型
-          //note: '',	// 項目の説明
-          //default: '—',	// 既定値
-          //isOpt: false,  // 任意項目ならtrue
-        ],
-
-        process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
-
-        returns: {authServer:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
-      },
-    },
-  },
-  authServerConfig: {
-    label: 'authServer専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
-    note: 'authConfigを継承', // クラスとしての補足説明
-    inherit: 'authConfig', // 親クラス名
-    defaultVariableName: 'cf',  // 変数名の既定値。ex.(pv.)"audit"
-
-    members: [
-      {name:'memberList',type:'string',label:'memberListシート名',default:'memberList'},
-      {name:'defaultAuthority',type:'number',label:'新規加入メンバの権限の既定値',default:1},
-      {name:'memberLifeTime',type:'number',label:'加入有効期間',note:'メンバ加入承認後の有効期間。既定値は1年',default:31536000000},
-      {name:'prohibitedToJoin',type:'number',label:'加入禁止期間',note:'管理者による加入否認後、再加入申請が自動的に却下される期間。既定値は3日',default:259200000},
-      {name:'loginLifeTime',type:'number',label:'認証有効時間',note:'ログイン成功後の有効期間、CPkeyの有効期間。既定値は1日',default:86400000},
-      {name:'loginFreeze',type:'number',label:'認証凍結時間',note:'認証失敗後、再認証要求が禁止される期間。既定値は10分',default:600000},
-      {name:'requestIdRetention',type:'number',label:'重複リクエスト拒否となる時間',note:'既定値は5分',default:300000},
-      {name:'errorLog',type:'string',label:'エラーログのシート名',default:'errorLog'},
-      {name:'storageDaysOfErrorLog',type:'number',label:'監査ログの保存日数',note:'単位はミリ秒。既定値は7日分',default:604800000},
-      {name:'auditLog',type:'string',label:'監査ログのシート名',default:'auditLog'},
-      {name:'storageDaysOfAuditLog',type:'number',label:'監査ログの保存日数',note:'単位はミリ秒。既定値は7日分',default:604800000},
-
-      {name:'func',type:'Object.<string,Object>',label:'サーバ側の関数マップ',note:'例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}}'},
-      {name:'func.authority',type:'number',label:'サーバ側関数の所要権限',note:[
-        'サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限',
-        '`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。'
-      ],default:0},
-      {name:'func.do',type:'Function',label:'実行するサーバ側関数'},
-
-      {name:'trial',type:'Object',label:'ログイン試行関係の設定値'},
-      {name:'trial.passcodeLength',type:'number',label:'パスコードの桁数',default:6},
-      {name:'trial.maxTrial',type:'number',label:'パスコード入力の最大試行回数',default:3},
-      {name:'trial.passcodeLifeTime',type:'number',label:'パスコードの有効期間',note:'既定値は10分',default:600000},
-      {name:'trial.generationMax',type:'number',label:'ログイン試行履歴(MemberTrial)の最大保持数',note:'既定値は5世代',default:5},
-
-      {name:'underDev.sendPasscode',type:'boolean',label:'開発中識別フラグ',note:'パスコード通知メール送信を抑止するならtrue',default:'false'},
-      {name:'underDev.sendInvitation',type:'boolean',label:'開発中の加入承認通知メール送信',note:'開発中に加入承認通知メール送信を抑止するならtrue',default:'false'},
-    ],
-
-    methods: {
-      constructor: {
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        note: ``,	// {string} 注意事項。markdownで記載
-        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
-        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-
-        params: [  // {Params} ■メソッド引数の定義■
-          // list {string[]} 定義順の引数名一覧
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
-          //name: '',	// 引数としての変数名
-          //type: '',	// データ型
-          //note: '',	// 項目の説明
-          //default: '—',	// 既定値
-          //isOpt: false,  // 任意項目ならtrue
-        ],
-
-        process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
-
-        returns: {authServerConfig:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
-      },
-    },
-  },
   authRequest: {
     label: '暗号化前の処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'authClientからauthServerに送られる、暗号化前の処理要求オブジェクト',	// {string} クラスとしての補足説明。概要欄に記載
@@ -861,41 +759,81 @@ const classdef = {
       },
     },
   },
-  authServerConfig: {
-    label: 'サーバ側設定値',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: 'authConfigを継承した、authServerでのみ使用する設定値',	// {string} クラスとしての補足説明。概要欄に記載
+  authServer: {
+    label: 'サーバ側auth中核クラス',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
-    inherit: 'authConfig',	// {string} 親クラス名
+    inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
-      {name:'memberList',type:'string',label:'memberListシート名',note:'',default:'memberList'},
-      {name:'defaultAuthority',type:'number',label:'新規加入メンバの権限の既定値',note:'',default:1},
+      {
+        name: '',	// {string} メンバ名(変数名)。英数字表記
+        type: 'string',	// {string} データ型
+        label: '',	// {string} 端的な項目説明。ex."サーバ側処理結果"
+        note: '',	// {string|string[]} 当該項目に関する補足説明。ex."fatal/warning/normal"
+        default: '—',	// {any} 関数の場合'=Date.now()'のように記述
+        isOpt: false,	// {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
+      },
+    ],
+
+    methods: { // {Method} ■メソッド定義■
+      constructor: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          // list {string[]} 定義順の引数名一覧
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+          //name: '',	// 引数としての変数名
+          //type: '',	// データ型
+          //note: '',	// 項目の説明
+          //default: '—',	// 既定値
+          //isOpt: false,  // 任意項目ならtrue
+        ],
+
+        process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authServer:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+    },
+  },
+  authServerConfig: {
+    label: 'authServer専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
+    note: 'authConfigを継承した、authServerでのみ使用する設定値', // クラスとしての補足説明
+    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    inherit: 'authConfig', // 親クラス名
+    defaultVariableName: 'cf',  // 変数名の既定値。ex.(pv.)"audit"
+
+    members: [
+      {name:'memberList',type:'string',label:'memberListシート名',default:'memberList'},
+      {name:'defaultAuthority',type:'number',label:'新規加入メンバの権限の既定値',default:1},
       {name:'memberLifeTime',type:'number',label:'加入有効期間',note:'メンバ加入承認後の有効期間。既定値は1年',default:31536000000},
       {name:'prohibitedToJoin',type:'number',label:'加入禁止期間',note:'管理者による加入否認後、再加入申請が自動的に却下される期間。既定値は3日',default:259200000},
       {name:'loginLifeTime',type:'number',label:'認証有効時間',note:'ログイン成功後の有効期間、CPkeyの有効期間。既定値は1日',default:86400000},
       {name:'loginFreeze',type:'number',label:'認証凍結時間',note:'認証失敗後、再認証要求が禁止される期間。既定値は10分',default:600000},
       {name:'requestIdRetention',type:'number',label:'重複リクエスト拒否となる時間',note:'既定値は5分',default:300000},
-      {name:'errorLog',type:'string',label:'エラーログのシート名',note:'',default:'errorLog'},
+      {name:'errorLog',type:'string',label:'エラーログのシート名',default:'errorLog'},
       {name:'storageDaysOfErrorLog',type:'number',label:'監査ログの保存日数',note:'単位はミリ秒。既定値は7日分',default:604800000},
-      {name:'auditLog',type:'string',label:'監査ログのシート名',note:'',default:'auditLog'},
+      {name:'auditLog',type:'string',label:'監査ログのシート名',default:'auditLog'},
       {name:'storageDaysOfAuditLog',type:'number',label:'監査ログの保存日数',note:'単位はミリ秒。既定値は7日分',default:604800000},
 
       {name:'func',type:'Object.<string,Object>',label:'サーバ側の関数マップ',note:'例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}}'},
-      {name:'func.authority',type:'number',label:'サーバ実行権限',note:
-        'サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限。<br>' +
-        '`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。'
-      ,default:0},
-      {name:'func.do',type:'Function',label:'実行するサーバ側関数',note:''},
+      {name:'func.authority',type:'number',label:'サーバ側関数の所要権限',note:'サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限。<br>' +
+        '`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。',default:0},
+      {name:'func.do',type:'Function',label:'実行するサーバ側関数'},
 
-      {name:'trial',type:'Object',label:'ログイン試行関係の設定値',note:''},
-      {name:'trial.passcodeLength',type:'number',label:'パスコードの桁数',note:'',default:6},
-      {name:'trial.maxTrial',type:'number',label:'パスコード入力の最大試行回数',note:'',default:3},
+      {name:'trial',type:'Object',label:'ログイン試行関係の設定値'},
+      {name:'trial.passcodeLength',type:'number',label:'パスコードの桁数',default:6},
+      {name:'trial.maxTrial',type:'number',label:'パスコード入力の最大試行回数',default:3},
       {name:'trial.passcodeLifeTime',type:'number',label:'パスコードの有効期間',note:'既定値は10分',default:600000},
       {name:'trial.generationMax',type:'number',label:'ログイン試行履歴(MemberTrial)の最大保持数',note:'既定値は5世代',default:5},
 
-      {name:'underDev.sendPasscode',type:'boolean',label:'開発中パスコード通知抑止',note:'開発中、パスコード通知メール送信を抑止するならtrue',default:'false'},
-      {name:'underDev.sendInvitation',type:'boolean',label:'開発中加入承認通知抑止',note:'開発中、加入承認通知メール送信を抑止するならtrue',default:'false'},
+      {name:'underDev.sendPasscode',type:'boolean',label:'開発中識別フラグ',note:'パスコード通知メール送信を抑止するならtrue',default:'false'},
+      {name:'underDev.sendInvitation',type:'boolean',label:'開発中の加入承認通知メール送信',note:'開発中に加入承認通知メール送信を抑止するならtrue',default:'false'},
     ],
 
     methods: {
@@ -923,7 +861,7 @@ const classdef = {
     },
   },
   cryptoClient: {
-    label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    label: 'クライアント側の暗号化・復号処理',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
@@ -959,7 +897,7 @@ const classdef = {
     },
   },
   cryptoServer: {
-    label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    label: 'サーバ側の暗号化・復号処理',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
@@ -1191,19 +1129,101 @@ const classdef = {
   },
   Member: {
     label: 'メンバ単位の管理情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: 'メンバ一覧(アカウント管理表)上のメンバ単位の管理情報',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    note: 'メンバ一覧(アカウント管理表)シート上のメンバ単位の管理情報',	// {string} クラスとしての補足説明。概要欄に記載
+    policy: `
+      #### <span id="member_policy_statediagram">状態遷移図</span>
+
+      \`\`\`mermaid
+      %% メンバ状態遷移図
+
+      stateDiagram-v2
+        [*] --> 不使用
+        不使用 --> 未加入 : 処理要求
+        不使用 --> 未審査 : 処理要求
+        不使用 --> 加入禁止 : 処理要求
+        不使用 --> 加入中 : 処理要求
+        未加入 --> 未審査 : 加入要求
+        未審査 --> 加入中 : 加入承認
+        加入中 --> 未審査 : 加入失効
+        未審査 --> 加入禁止: 加入否認
+        加入禁止 --> 未審査 : 加入解禁
+        state 加入中 {
+          [*] --> 未認証
+          未認証 --> 試行中 : 認証要求
+          試行中 --> 未認証 : CPkey更新
+          試行中 --> 認証中 : 認証成功
+          試行中 --> 試行中 : 再試行
+          認証中 --> 未認証 : 認証失効 or CPkey更新
+          試行中 --> 凍結中 : 認証失敗
+          凍結中 --> 凍結中 : CPkey更新
+          凍結中 --> 未認証 : 凍結解除
+        }
+      \`\`\`
+
+      | No | 状態 | 説明 | SPkey | CPkey | memberId/メンバ名 | 無権限関数 | 要権限関数 |
+      | --: | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+      | 1 | 不使用 | Auth不使用のコンテンツのみ表示 | 未取得 | 未生成(※1) | 未登録(※1) | 実行不可 | 実行不可 |
+      | 2 | 未加入 | memberListにUUIDのmemberId/メンバ名で仮登録 | 取得済 | 生成済 | 仮登録(UUID) | 実行可 | 実行不可 |
+      | 3 | 未審査 | memberListに本来のmemberId/メンバ名で登録済だが管理者による加入認否が未決定 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+      | 4 | 加入中 | 管理者により加入が承認された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+      | 4.1 | 未認証 | 未認証(未ログイン)で権限が必要な処理は行えない状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+      | 4.2 | 試行中 | パスコードによる認証を試行している状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+      | 4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行可 |
+      | 4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+      | 5 | 加入禁止 | 管理者により加入が否認された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+
+      #### <span id="member_policy_classdiagram">クラス図</span>
+
+      \`\`\`mermaid
+      classDiagram
+        class Member {
+          string memberId
+          string name
+          string status
+          MemberLog log
+          MemberProfile profile
+          MemberDevice[] device
+        }
+
+        class MemberDevice {
+          string deviceId
+          string status
+          string CPkey
+          number CPkeyUpdated
+          MemberTrial[] trial
+        }
+
+        class MemberTrial {
+          string passcode
+          number created
+          MemberTrialLog[] log
+        }
+
+        class MemberTrialLog {
+          string entered
+          number result
+          string message
+          number timestamp
+        }
+
+        Member --> MemberLog
+        Member --> MemberProfile
+        Member --> MemberDevice
+        MemberDevice --> MemberTrial
+        MemberTrial --> MemberTrialLog
+      \`\`\`
+    `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
-      {name:'memberId',type:'string',label:'メンバの識別子',note:'メールアドレス'},
-      {name:'name',type:'string',label:'メンバの氏名',note:''},
-      {name:'status',type:'string',label:'メンバの状態',note:'未加入,未審査,審査済,加入中,加入禁止',default:'未加入'},
+      {name:'memberId',type:'string',label:'メンバの識別子',note:'メールアドレス',default:'UUID'},
+      {name:'name',type:'string',label:'メンバの氏名',note:'',default:'"dummy"'},
+      {name:'status',type:'string',label:'メンバの状態',note:'未加入,未審査,審査済,加入中,加入禁止',default:'"未加入"'},
       {name:'log',type:'MemberLog',label:'メンバの履歴情報',note:'シート上はJSON文字列',default:'new MemberLog()'},
       {name:'profile',type:'MemberProfile',label:'メンバの属性情報',note:'シート上はJSON文字列',default:'new MemberProfile()'},
-      {name:'device',type:'MemberDevice[]',label:'デバイス情報',note:'マルチデバイス対応用。シート上はJSON文字列'},
-      {name:'note',type:'string',label:'当該メンバに対する備考',note:'',isOpt:true},
+      {name:'device',type:'MemberDevice[]',label:'デバイス情報',note:'マルチデバイス対応のため配列。シート上はJSON文字列',default:'空配列'},
+      {name:'note',type:'string',label:'当該メンバに対する備考',note:'',default:'空文字列'},
     ],
 
     methods: {
@@ -1215,14 +1235,56 @@ const classdef = {
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
         params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+          {name:'config',type:'authServerConfig',note:'ユーザ指定の設定値'},
         ],
 
-        process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
+        process: `
+          - [authServerConfig.memberList](authServerConfig.md#internal)シートが存在しなければシートを新規作成
+            - シート上の項目名はMemberクラスのメンバ名
+            - 各項目の「説明」を項目名セルのメモとしてセット
+          - this.log = new [MemberLog()](MemberLog.md#memberlog_constructor)
+          - this.profile = new [MemberProfile()](MemberProfile.md#memberprofile_constructor)
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         returns: {Member:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
-      flush: {
+      getMember: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '指定メンバの情報をmemberListシートから取得',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'memberId',type:'string',note:'ユーザ識別子(メールアドレス)'},
+        ],
+
+        process: `
+          - JSON文字列の項目はオブジェクト化(Member.log, Member.profile, Member.device)
+          - memberIdがmemberListシート登録済なら「登録済」、未登録なら「未登録」パターンを返す
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{
+          default: {
+            request: `{memberId:引数のmemberId}`,
+          },
+          pattern: {
+            '登録済': {
+              assign: {
+                result: '"normal"',
+                response: `memberListシートのMemberインスタンス`,
+              },
+            },
+            '未登録': {
+              assign: {
+                result: '"fatal"',
+                message:'not exists',
+              }
+            }
+          }
+        }},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      /*flush: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: 'Memberオブジェクトの内容をシートに書き込む',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
@@ -1242,13 +1304,16 @@ const classdef = {
         process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         returns: {Member:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
-      }
+      }*/
     },
   },
   MemberDevice: {
-    label: 'デバイス情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    label: 'メンバのデバイス情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'メンバが使用する通信機器の情報(マルチデバイス対応)',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    policy: `
+      - [状態遷移図](Member.md#member_policy_statediagram)
+      - [クラス図](Member.md#member_policy_classdiagram)
+    `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -1281,7 +1346,10 @@ const classdef = {
   MemberLog: {
     label: 'メンバの各種要求・状態変化の時刻',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    policy: `
+      - [状態遷移図](Member.md#member_policy_statediagram)
+      - [クラス図](Member.md#member_policy_classdiagram)
+    `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -1319,7 +1387,10 @@ const classdef = {
   MemberProfile: {
     label: 'メンバの属性情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    policy: `
+      - [状態遷移図](Member.md#member_policy_statediagram)
+      - [クラス図](Member.md#member_policy_classdiagram)
+    `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -1348,7 +1419,10 @@ const classdef = {
   MemberTrial: {
     label: 'ログイン試行情報の管理・判定',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    policy: `
+      - [状態遷移図](Member.md#member_policy_statediagram)
+      - [クラス図](Member.md#member_policy_classdiagram)
+    `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -1410,16 +1484,19 @@ const classdef = {
     },
   },
   MemberTrialLog: {
-    label: 'パスコード入力単位の試行記録を生成',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    label: 'パスコード入力単位の試行記録',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    policy: `
+      - [状態遷移図](Member.md#member_policy_statediagram)
+      - [クラス図](Member.md#member_policy_classdiagram)
+    `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'entered',type:'string',label:'入力されたパスコード',note:''},
       {name:'result',type:'boolean',label:'試行結果',note:'正答：true、誤答：false'},
-      {name:'timestamp',type:'number',label:'判定処理日時',note:''},
+      {name:'timestamp',type:'number',label:'判定処理日時',note:'',default:'Date.now()'},
     ],
     methods: {
       constructor: {
@@ -1712,6 +1789,7 @@ const classdef = {
 
       // 1.概要
       [
+        `<p style="text-align:right;"><a href="classList.md">クラス一覧</a></p>`,'',
         `# <span id="${cn}">${this.className} クラス仕様書</span>`,'',
         `## <span id="${cn}_summary">🧭 概要</span>`,'',
         this.label
@@ -1775,7 +1853,7 @@ const classdef = {
       */
       const rv = [];
       if( this._list.length > 0 ){
-        ['','🔢 メンバ一覧','',
+        ['',`🔢 ${this.className} メンバ一覧`,'',
           '| 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |',
           '| :-- | :-- | :-- | :-- | :-- | :-- |'
         ].forEach(x => rv.push(x));
@@ -1838,7 +1916,7 @@ const classdef = {
 
     /** Markdown形式の一覧作成 */
     list(){
-      const rv = ['',`🧱 <span id="${this.className.toLowerCase()}_method">メソッド一覧</span>`,''];
+      const rv = ['',`🧱 <span id="${this.className.toLowerCase()}_method">${this.className} メソッド一覧</span>`,''];
       if( this._list.length === 0 ){
         rv.push(`- メソッド無し`);
       } else {
@@ -1898,7 +1976,7 @@ const classdef = {
 
       // 概要＋注意事項
       const rv = ['',
-        `## <span id="${cc}">🧱 <a href="#${cn}_method">${this.methodName}()</a></span>`,
+        `## <span id="${cc}">🧱 <a href="#${cn}_method">${this.className}.${this.methodName}()</a></span>`,
         '', this.label
       ];
       if( this.note ){
@@ -2176,7 +2254,7 @@ const classdef = {
     fs.writeFileSync(`${arg.opt.o}/${x}.md`, cdef[x].md());
 
     // クラス一覧に追加
-    classList.push(`| ${cnt++} | [${x}](${x}.md) | ${cdef.label} |`);
+    classList.push(`| ${cnt++} | [${x}](${x}.md) | ${cdef[x].label} |`);
   });
   fs.writeFileSync(`${arg.opt.o}/classList.md`, classList.join('\n'));
 
