@@ -150,7 +150,7 @@ const classdef = {
       },
     },
   },
-  authClient: {  // {ClassDef} ■クラス定義■
+  authClient: {
     label: 'クライアント側auth中核クラス',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `
       authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を受け、
@@ -504,7 +504,6 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-        // referrer {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
         params: [  // {Params} ■メソッド引数の定義■
           {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
@@ -594,7 +593,6 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-        // referrer {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
         params: [  // {Params} ■メソッド引数の定義■
           {name:'arg',type:'authIndexedDB',default:{},note:'更新(生成)値(更新対象メンバのみで可)'},
@@ -612,7 +610,6 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-        // referrer {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
         params: [  // {Params} ■メソッド引数の定義■
           {name:'arg',type:'authIndexedDB',default:{},note:'更新(生成)値(更新対象メンバのみで可)'},
@@ -655,7 +652,6 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-        // referrer {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
         params: [  // {Params} ■メソッド引数の定義■
           // list {string[]} 定義順の引数名一覧
@@ -757,7 +753,6 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-        // referrer {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
         params: [  // {Params} ■メソッド引数の定義■
           {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
@@ -788,7 +783,6 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-        // referrer {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
         params: [  // {Params} ■メソッド引数の定義■
           {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
@@ -822,7 +816,6 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-        // referrer {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
         params: [  // {Params} ■メソッド引数の定義■
           {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
@@ -912,7 +905,6 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-        // referrer {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
         params: [  // {Params} ■メソッド引数の定義■
           // list {string[]} 定義順の引数名一覧
@@ -1024,7 +1016,6 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-        // referrer {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
         params: [  // {Params} ■メソッド引数の定義■
           {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
@@ -1343,7 +1334,6 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-        // referrer {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
         params: [  // {Params} ■メソッド引数の定義■
           {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
@@ -1419,7 +1409,7 @@ const classdef = {
       },
     },
   },
-  MemberTrialLog: { // 2025.10.31 reviewed
+  MemberTrialLog: {
     label: 'パスコード入力単位の試行記録を生成',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
@@ -1438,7 +1428,6 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-        // referrer {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
         params: [  // {Params} ■メソッド引数の定義■
           {name:'entered',type:'string',note:'入力されたパスコード'},
@@ -2097,9 +2086,8 @@ const classdef = {
       
       // 各メンバ行
       if( typeof cdef[this.typeName] !== 'undefined' ){
-        cdef[this.typeName].members._list.forEach(x => {
-          console.log(`l.2085 ${JSON.stringify(dataLabels.map(label => this.pattern[label].assign ?? 'xxx'),null,2)}`);
-          const m = cdef[this.className].members[x];
+        cdef[this.typeName].members._list.forEach(x => {  // 戻り値データ型のメンバ名を順次呼出
+          const m = cdef[this.typeName].members[x];
           const cells = [
             m.name,
             m.type,
