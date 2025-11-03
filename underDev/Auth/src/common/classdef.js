@@ -29,7 +29,7 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-        // referrer {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+        // caller {Object[]} 本メソッドを呼び出す{class:クラス名,method:メソッド名}の配列
 
         params: [  // {Params} ■メソッド引数の定義■
           // list {string[]} 定義順の引数名一覧
@@ -941,7 +941,7 @@ const classdef = {
     ],
 
     methods: { // {Method} ■メソッド定義■
-      constructor: {
+      cOnstructor: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
@@ -1545,7 +1545,7 @@ const classdef = {
           "note": "",
           "source": "",
           "lib": [],
-          "referrer": [],
+          "caller": [],
           "params": {
             "className": "MemberTrial",
             "methodName": "constructor",
@@ -1596,7 +1596,7 @@ const classdef = {
           "note": "",
           "source": "",
           "lib": [],
-          "referrer": [],
+          "caller": [],
           "params": {
             "className": "MemberTrial",
             "methodName": "loginAttempt",
@@ -1746,6 +1746,11 @@ const classdef = {
 
       return rv.join('\n');
     }
+
+    /** 二次設定項目 */
+    secondary(){
+      this.methods.secondary();
+    }
   }
 
   /** メンバ(集合)の定義 */
@@ -1801,7 +1806,7 @@ const classdef = {
       // 項目名 任意 データ型 既定値 説明 備考
       // データ型が本仕様書内のデータ型の場合はリンクを作成
       return `| ${this.name} | ${this.isOpt?'⭕':'❌'} | ${
-        typeof classdef[this.type] === 'undefined'
+        typeof cdef[this.type] === 'undefined'
         ? this.type : `[${this.type}](${this.type}.md#${this.type.toLowerCase()}_internal)`
       } | ${
         typeof this.default === 'object' && this.default !== null
@@ -1815,8 +1820,10 @@ const classdef = {
     constructor(className,arg){
       this.className = className;
       this._list = [];
+      this._map = {}; // リンクで使用する小文字のメソッド名から、大文字を含めたメソッド名に変換
       Object.keys(arg).forEach(x => {
         this._list.push(x);
+        this._map[x.toLowerCase()] = x;
         this[x] = new Method(className,x,arg[x])
       });
     }
@@ -1840,6 +1847,11 @@ const classdef = {
       }
       return rv;
     }
+
+    /** 二次設定項目 */
+    secondary(){
+      this._list.forEach(x => this[x].secondary());
+    }
   }
 
   /** メソッド(単体)の定義 */
@@ -1852,7 +1864,7 @@ const classdef = {
       this.note = arg.note || ''; // {string} 注意事項。markdownで記載
       this.source = trimIndent(arg.source || ''); // {string} 想定するJavaScriptソース
       this.lib = arg.lib || []; // {string[]} 本メソッドで使用するライブラリ
-      this.referrer = arg.referrer || []; // {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+      this.caller = arg.caller || []; // {string[]} 本メソッドを呼び出す"クラス.メソッド名"
 
       this.params = new Params(className,methodName,arg.params); // 引数
       this.process = trimIndent(arg.process || '');  // {string} 処理手順。markdownで記載
@@ -1908,6 +1920,34 @@ const classdef = {
       return `| [${this.methodName}](#${this.className.toLowerCase()}_${this.methodName.toLowerCase()
         }) | ${this.type} | ${this.label} |`;
     }
+
+    /** 二次設定項目 */
+    secondary(){
+      const links = [];
+      const regex = /\[([^\]]+)\]\(([^)]+)\.md#([a-z0-9]+)_([a-z0-9]+)\)/gi;
+      let m;
+      while ((m = regex.exec(this.process)) !== null) {
+        // m[1]=①, m[2]=②, m[3]=③, m[4]=④
+        //links.push([m[1], m[2], m[3], m[4]]);
+        links.push({
+          linkText: m[1],
+          className: m[2],  // 参照先のクラス名(大文字含む)
+          lowerCase: m[3],  // 参照先のクラス名(小文字のみ)
+          methodName: m[4], // 当該クラスのメソッド名(小文字のみ)
+        })
+      }
+
+      if( links.length > 0 ){
+        links.forEach(link => {
+          const methods = cdef[link.className].methods; // 参照先クラスのメソッド(集合)
+          if( typeof methods._map[link.methodName] !== 'undefined' ){
+            const methodName = methods._map[link.methodName]; // 大文字含むメソッド名に変換
+            const caller = cdef[link.className].methods[methodName].caller;
+            caller.push({class:this.className,method:this.methodName}); // callerに追加
+          }
+        });
+      }
+    }
   }
 
   /** メソッドの引数(集合)定義 */
@@ -1924,12 +1964,27 @@ const classdef = {
 
     /** Markdown形式の引数一覧作成 */
     list(){
-      const rv = ['',`### <span id="${this.className.toLowerCase()}_${
-        this.methodName.toLowerCase()}_param">📥 引数</span>`,''];
+      const rv = [];
+      const cn = this.className.toLowerCase();
+      const mn = this.methodName.toLowerCase();
+      const cc = `${cn}_${mn}`;
+
+      // 呼出元関数(メソッド)へのリンク
+      if( cdef[this.className].methods[this.methodName].caller.length > 0 ){
+        ['',`### <span id="${cc}_caller">📞 呼出元</span>`,''].forEach(x => rv.push(x));
+        cdef[this.className].methods[this.methodName].caller.forEach(x => {
+          console.log(JSON.stringify({caller:{class:x.class,method:x.method},callee:{class:this.className,method:this.methodName}},null,2));
+          rv.push(`- [${x.class}.${x.method}()](${x.class}.md#${cc})`);
+        })
+      }
+
+      // 引数一覧
+      ['',`### <span id="${cc}_param">📥 引数</span>`,''].forEach(x => rv.push(x));
+
       if( this._list.length === 0 ){
-        rv.push(`- 無し(void)`);
+        ['',`- 無し(void)`].forEach(x => rv.push(x));
       } else {
-        ['| 項目名 | 任意 | データ型 | 既定値 | 説明 |','| :-- | :--: | :-- | :-- | :-- |']
+        ['','| 項目名 | 任意 | データ型 | 既定値 | 説明 |','| :-- | :--: | :-- | :-- | :-- |']
         .forEach(x => rv.push(x));
         this._list.forEach(x => this[x].list().forEach(l => rv.push(l)));
       }
@@ -1953,7 +2008,7 @@ const classdef = {
     list(){
       // 項目名 任意 データ型 既定値 備考
       return [`| ${this.name} | ${this.isOpt?'⭕':'❌'} | ${
-        typeof classdef[this.type] === 'undefined' ? this.type
+        typeof cdef[this.type] === 'undefined' ? this.type
         : `[${this.type}](${this.type}.md#${this.type.toLowerCase()}_internal)`        
       } | ${
         typeof this.default === 'object' && this.default !== null
@@ -2077,7 +2132,6 @@ const classdef = {
         cdef[this.className].label}`];
 
       const dataLabels = Object.keys(this.pattern);
-      console.log(`l.2076 ${JSON.stringify(this,null,2)}, ${dataLabels}`);
       
       // ヘッダー行
       const header = ['項目名','データ型','生成時', ...dataLabels];
@@ -2110,10 +2164,14 @@ const classdef = {
   // データ(cdef)生成
   Object.keys(classdef).forEach(x => cdef[x] = new ClassDef(x,classdef[x]));
 
+  // 二次設定項目(caller)のセット
+  //   cdef生成を一次設定としたとき、生成後の状態での検索・設定が必要になる項目のセット
+  Object.keys(cdef).forEach(x => cdef[x].secondary());
+
   // Markdown作成
   const classList = ['| No | クラス名 | 概要 |','| --: | :-- | :-- |'];
   let cnt = 1;
-  Object.keys(classdef).forEach(x => {
+  Object.keys(cdef).forEach(x => {
     //fs.writeFileSync(`${arg.opt.o}/${x}.md`, JSON.stringify(cdef[x],null,2));
     fs.writeFileSync(`${arg.opt.o}/${x}.md`, cdef[x].md());
 
