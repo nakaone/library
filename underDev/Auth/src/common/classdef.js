@@ -7,6 +7,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Members} ■メンバ(インスタンス変数)定義■
       //{name:'',type:'string',label:'',note:''}, // default,isOpt
@@ -183,6 +184,42 @@ const classdef = {
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: `
+      \`\`\`js
+      class authClient {
+        constructor(){
+          this.pv = {
+            member: new Member(),
+            audit: new authAuditLog(),
+            error: new authErrorLog(),
+          };
+        }
+      }
+      \`\`\`
+
+      \`\`\`html
+      <script type="text/javascript">
+        function devTools(){
+          // (中略)
+        }
+        // その他ライブラリ
+
+        const dev = devTools();
+        window.addEventListener('DOMContentLoaded', () => {
+          const v = { whois: 'DOMContentLoaded', rv: null };
+          dev.start(v.whois, [...arguments]);
+          try {
+
+            const ac = authClient();
+            // (中略)
+
+            dev.end(); // 終了処理
+            return v.rv;
+          } catch (e) { dev.error(e); return e; }
+        });
+      </script>
+      \`\`\`
+    `,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'cf',type:'authClientConfig',label:'動作設定変数(config)',note:''}, // default,isOpt
@@ -1684,18 +1721,14 @@ const classdef = {
       .map(line => line.match(/^[ \t]*/)[0].length);
     const minIndent = indents.length ? Math.min(...indents) : 0;
 
-    /*
-    const content = lines.map(line => line.slice(minIndent)).join('\n');
-    const m = content.match(/^([ \t]*)<evaluate>([\s\S]*?)<\/evaluate>/m);
-    if( m ) console.log(`l.1634 ${JSON.stringify(m,null,2)}\n${eval(m[2])}`);
-    */
+    // 4. evaluateタグ内部を評価
     const replaced = lines.map(line => line.slice(minIndent)).join('\n').replace(
       /^([ \t]*)<evaluate>([\s\S]*?)<\/evaluate>/gm,
       (_, indent, code) => {
         try {
           // その場で評価（comparisonTableが使えるスコープ）
           const result = eval(code);
-          return result.join('\n');
+          return typeof result === 'string' ? result : result.join('\n');
         } catch (e) {
           console.error('Error evaluating block:', e);
           return `${indent}[EVAL ERROR: ${e.message}]`;
@@ -1703,8 +1736,6 @@ const classdef = {
       }
     );
 
-    // 4. 各行から共通インデント分を削除
-    //return lines.map(line => line.slice(minIndent)).join('\n');
     return replaced;
   }
 
@@ -1755,183 +1786,6 @@ const classdef = {
 
   /**  */
   class ClassDef {
-    /* 出力サンプル
-    {
-      "className": "MemberTrial",
-      "label": "ログイン試行情報の管理・判定",
-      "note": "",
-      "policy": "",
-      "inherit": "",
-      "defaultVariableName": "",
-      "members": {
-        "className": "MemberTrial",
-        "_list": [
-          "passcode",
-          "created",
-          "log"
-        ],
-        "passcode": {
-          "className": "MemberTrial",
-          "name": "passcode",
-          "type": "string",
-          "label": "設定されているパスコード",
-          "note": "最初の認証試行で作成",
-          "default": "—",
-          "isOpt": false
-        },
-        "created": {
-          "className": "MemberTrial",
-          "name": "created",
-          "type": "number",
-          "label": "パスコード生成日時",
-          "note": "≒パスコード通知メール発信日時",
-          "default": "Date.now()",
-          "isOpt": true
-        },
-        "log": {
-          "className": "MemberTrial",
-          "name": "log",
-          "type": "MemberTrialLog[]",
-          "label": "試行履歴",
-          "note": "常に最新が先頭(unshift()使用)。保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。",
-          "default": [],
-          "isOpt": true
-        }
-      },
-      "methods": {
-        "className": "MemberTrial",
-        "_list": [
-          "constructor",
-          "loginAttempt"
-        ],
-        "constructor": {
-          "className": "MemberTrial",
-          "methodName": "constructor",
-          "type": "private",
-          "label": "コンストラクタ",
-          "note": "",
-          "source": "",
-          "lib": [],
-          "caller": [],
-          "params": {
-            "className": "MemberTrial",
-            "methodName": "constructor",
-            "_list": [
-              "arg"
-            ],
-            "arg": {
-              "className": "MemberTrial",
-              "methodName": "constructor",
-              "name": "arg",
-              "type": "Object",
-              "default": {},
-              "note": "必須項目および変更する設定値",
-              "isOpt": true
-            }
-          },
-          "process": "- this.passcode = [authServerConfig.trial.passcodeLength](authServerConfig.md#authserverconfig_internal)で設定された桁数の乱数\n- this.created = Date.now()\n- this.log = []",
-          "returns": {
-            "className": "MemberTrial",
-            "methodName": "constructor",
-            "MemberTrial": {
-              "className": "MemberTrial",
-              "methodName": "constructor",
-              "typeName": "MemberTrial",
-              "default": {},
-              "condition": "",
-              "note": "",
-              "pattern": {
-                "正常終了": {
-                  "patternName": "正常終了",
-                  "assign": {
-                    "passcode": "—",
-                    "created": "—",
-                    "log": "—"
-                  },
-                  "condition": "",
-                  "note": ""
-                }
-              }
-            }
-          }
-        },
-        "loginAttempt": {
-          "className": "MemberTrial",
-          "methodName": "loginAttempt",
-          "type": "public",
-          "label": "入力されたパスコードの判定",
-          "note": "",
-          "source": "",
-          "lib": [],
-          "caller": [],
-          "params": {
-            "className": "MemberTrial",
-            "methodName": "loginAttempt",
-            "_list": [
-              "request"
-            ],
-            "request": {
-              "className": "MemberTrial",
-              "methodName": "loginAttempt",
-              "name": "request",
-              "type": "authRequest",
-              "default": "—",
-              "note": "ユーザが入力したパスコードを含む処理要求",
-              "isOpt": false
-            }
-          },
-          "process": "- [MemberTrialLog](MemberTrialLog.md#membertriallog_constructor)を生成、this.logの先頭に保存(unshift())\n- `this.log[0].result === true`なら「正答時」を返す\n- `this.log[0].result === false`で最大試行回数([maxTrial](authServerConfig.md#authserverconfig_internal))未満なら「誤答・再挑戦可」を返す\n- `this.log[0].result === false`で最大試行回数以上なら「誤答・再挑戦不可」を返す\n- なお、シートへの保存は呼出元で行う",
-          "returns": {
-            "className": "MemberTrial",
-            "methodName": "loginAttempt",
-            "authResponse": {
-              "className": "MemberTrial",
-              "methodName": "loginAttempt",
-              "typeName": "authResponse",
-              "default": {
-                "request": "引数\"request\"",
-                "value": "MemberTrialオブジェクト"
-              },
-              "condition": "",
-              "note": "",
-              "pattern": {
-                "正答時": {
-                  "patternName": "正答時",
-                  "assign": {
-                    "request": "引数\"request\"",
-                    "value": "MemberTrialオブジェクト",
-                    "result": "**normal**"
-                  },
-                  "condition": "",
-                  "note": ""
-                },
-                "誤答・再挑戦可": {
-                  "patternName": "誤答・再挑戦可",
-                  "assign": {
-                    "request": "引数\"request\"",
-                    "value": "MemberTrialオブジェクト",
-                    "result": "**warning**"
-                  },
-                  "condition": "",
-                  "note": ""
-                },
-                "誤答・再挑戦不可": {
-                  "patternName": "誤答・再挑戦不可",
-                  "assign": {
-                    "request": "引数\"request\"",
-                    "value": "MemberTrialオブジェクト",
-                    "result": "**fatal**"
-                  },
-                  "condition": "",
-                  "note": ""
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    */
     constructor(className,arg){
       this.className = className;  // {string} クラス名
       this.label = arg.label || ''; // {string} 端的なクラスの説明。ex.'authServer監査ログ'
@@ -1939,41 +1793,13 @@ const classdef = {
       this.policy = trimIndent(arg.policy || ``); // {string} 設計方針欄(trimIndent対象)
       this.inherit = arg.inherit || ''; // {string} 親クラス名
       this.defaultVariableName = arg.defaultVariableName || ''; // {string} 変数名の既定値。ex.(pv.)"audit"
+      this.example = trimIndent(arg.example || ''); // {string} 想定する実装・使用例(Markdown,trimIndent対象)
       this.members = new Members(className,arg.members); // メンバ(インスタンス変数)定義
       this.methods = new Methods(className,arg.methods); // メソッド定義
     }
 
     /** Markdownの作成 */
     md(){
-      /*
-      # authServer クラス仕様書
-
-      ## <span id="authserver_summary">🧭 概要</span>
-
-      authServerは、クライアント(authClient)からの暗号化通信リクエストを復号・検証し、
-      メンバ状態と要求内容に応じてサーバ側処理を適切に振り分ける中核関数です。
-
-      ### <span id="authserver_policy">設計方針</span>
-
-      - staticメソッドを利用するため、クラスとする
-      - doGetからは`authServer.exec`を呼び出す
-
-      ### 🧩 <span id="authserver_internal">内部構成</span>
-
-      🔢 メンバ一覧
-        (メンバの一覧)
-
-      🧱 <span id="membertrial_method">メソッド一覧</span>
-        (メソッドの一覧)
-
-      ## <span id="authserver_proto">🧱 proto()</span>
-      ※ メソッドは第2レベル。Methods.md() で作成
-
-      ## <span id="authserver_maintenance">⏰ メンテナンス処理</span>
-      ## <span id="authserver_security">🔐 セキュリティ仕様</span>
-      ## <span id="authserver_errorhandling">🧾 エラーハンドリング仕様</span>
-      ## <span id="authserver_outputLog">🗒️ ログ出力仕様</span>
-      */
       const rv = [];
       const cn = this.className.toLowerCase();
 
@@ -1987,29 +1813,37 @@ const classdef = {
         ['',this.note].forEach(x => rv.push(x));
       }
 
-      // 2.設計方針
+      // 1.1 設計方針
       if( this.policy.length > 0 ){
         [
           '',`### <span id="${cn}_policy">設計方針</span>`,'',
           this.policy
         ].forEach(x => rv.push(x));
       }
-      
-      // 3.内部構成
-      // 3.1.メンバ一覧
+
+      // 1.2 実装例
+      if( this.example.length > 0 ){
+        [
+          '',`### <span id="${cn}_example">実装・使用例</span>`,'',
+          this.example
+        ].forEach(x => rv.push(x));
+      }
+
+      // 1.3 内部構成
+      // 1.3.1 メンバ一覧
       ['',`### 🧩 <span id="${cn}_internal">内部構成</span>`,
         ...this.members.md()].forEach(x => rv.push(x));
 
-      // 3.2.メソッド一覧
+      // 1.3.2 メソッド一覧
       this.methods.list().forEach(x => rv.push(x));
 
-      // 4.メソッド
+      // 2.メソッド
       this.methods.md().forEach(x => rv.push(x));
 
-      // 5.メンテナンス処理
-      // 6.セキュリティ仕様
-      // 7.エラーハンドリング仕様
-      // 8.ログ出力仕様
+      // 3.メンテナンス処理
+      // 4.セキュリティ仕様
+      // 5.エラーハンドリング仕様
+      // 6.ログ出力仕様
 
       return rv.join('\n');
     }

@@ -20,6 +20,43 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 - クロージャ関数ではなくクラスとして作成
 - 内発処理はローカル関数からの処理要求に先行して行う
 
+### <span id="authclient_example">実装・使用例</span>
+
+```js
+class authClient {
+  constructor(){
+    this.pv = {
+      member: new Member(),
+      audit: new authAuditLog(),
+      error: new authErrorLog(),
+    };
+  }
+}
+```
+
+```html
+<script type="text/javascript">
+  function devTools(){
+    // (中略)
+  }
+  // その他ライブラリ
+
+  const dev = devTools();
+  window.addEventListener('DOMContentLoaded', () => {
+    const v = { whois: 'DOMContentLoaded', rv: null };
+    dev.start(v.whois, [...arguments]);
+    try {
+
+      const ac = authClient();
+      // (中略)
+
+      dev.end(); // 終了処理
+      return v.rv;
+    } catch (e) { dev.error(e); return e; }
+  });
+</script>
+```
+
 ### 🧩 <span id="authclient_internal">内部構成</span>
 
 🔢 authClient メンバ一覧
