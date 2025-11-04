@@ -79,6 +79,7 @@ stateDiagram-v2
 | :-- | :-- | :-- |
 | [constructor](#member_constructor) | private | コンストラクタ |
 | [getMember](#member_getmember) | public | 指定メンバの情報をmemberListシートから取得 |
+| [removeMember](#member_removemember) | public | 登録中メンバをアカウント削除、または加入禁止にする |
 | [setMember](#member_setmember) | public | 指定メンバ情報をmemberListシートに保存 |
 
 ## <span id="member_constructor">🧱 <a href="#member_method">Member.constructor()</a></span>
@@ -139,6 +140,38 @@ stateDiagram-v2
   | message | string | [任意] | — | **not exists** |
   | request | authRequest | [任意] | {memberId:引数のmemberId} | {memberId:引数のmemberId} |
   | response | any | [任意] | **Member(シート)** | — |
+
+## <span id="member_removemember">🧱 <a href="#member_method">Member.removeMember()</a></span>
+
+登録中メンバをアカウント削除、または加入禁止にする
+
+
+          - memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
+        
+
+### <span id="member_removemember_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| memberId | ❌ | string | — | ユーザ識別子 | 
+| physical | ⭕ | boolean | false | 物理削除ならtrue、論理削除ならfalse | 
+
+### <span id="member_removemember_process">🧾 処理手順</span>
+
+手順の中で自他クラスのメソッドを呼ぶ場合、caller対応のため以下のように記述すること。
+[メソッド名](クラス名.md#クラス名(小文字表記)_メソッド名(小文字表記))
+
+### <span id="member_removemember_returns">📤 戻り値</span>
+
+- [authResponse](authResponse.md#internal): メンバ一覧シートに対応したメンバ単位の管理情報
+  | 項目名 | データ型 | 生成時 | 正答時 | 誤答・再挑戦可 | 誤答・再挑戦不可 |
+  | :-- | :-- | :-- | :-- | :-- | :-- |
+  | timestamp | number | Date.now() | — | — | — |
+  | result | string | normal | **normal** | **warning** | **fatal** |
+  | message | string | [任意] | — | — | — |
+  | request | authRequest | [任意] | 引数"request" | 引数"request" | 引数"request" |
+  | response | any | [任意] | — | — | — |
 
 ## <span id="member_setmember">🧱 <a href="#member_method">Member.setMember()</a></span>
 

@@ -55,7 +55,7 @@ const classdef = {
             note: ``,	// {string} 備忘(trimIndent対象)
             pattern: {
               '正答時': {
-                assign: {result:'normal'} // {Object.<string,string>} 当該パターンの設定値
+                assign: {result:'normal'}, // {Object.<string,string>} 当該パターンの設定値
                 condition: ``,	// {string} 該当条件(trimIndent対象)
                 note: ``,	// {string} 備忘(trimIndent対象)
               },
@@ -1253,6 +1253,45 @@ const classdef = {
           }
         }},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
+      removeMember: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '登録中メンバをアカウント削除、または加入禁止にする',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: `
+          - memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
+        `,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'memberId',type:'string',note:'ユーザ識別子'},
+          {name:'physical',type:'boolean',note:'物理削除ならtrue、論理削除ならfalse',default:'false'},
+        ],
+
+        process: `
+
+        手順の中で自他クラスのメソッドを呼ぶ場合、caller対応のため以下のように記述すること。
+        [メソッド名](クラス名.md#クラス名(小文字表記)_メソッド名(小文字表記))
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          authResponse: { // メンバ名は戻り値のデータ型名
+            default: {request:'引数"request"',value:'MemberTrialオブジェクト'},
+              // {Object.<string,string>} 各パターンの共通設定値
+            condition: ``,	// {string} データ型が複数の場合の選択条件指定(trimIndent対象)
+            note: ``,	// {string} 備忘(trimIndent対象)
+            pattern: {
+              '正答時': {
+                assign: {result:'normal'}, // {Object.<string,string>} 当該パターンの設定値
+                condition: ``,	// {string} 該当条件(trimIndent対象)
+                note: ``,	// {string} 備忘(trimIndent対象)
+              },
+              '誤答・再挑戦可': {assign: {result:'warning'}},
+              '誤答・再挑戦不可': {assign: {result:'fatal'}},
+            }
+          }
+        },
+      },
       setMember: {
         type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: '指定メンバ情報をmemberListシートに保存',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
@@ -1325,27 +1364,6 @@ const classdef = {
           }
         },
       },
-      /*flush: {
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: 'Memberオブジェクトの内容をシートに書き込む',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        note: ``,	// {string} 注意事項。markdownで記載
-        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
-        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-
-        params: [  // {Params} ■メソッド引数の定義■
-          // list {string[]} 定義順の引数名一覧
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
-          //name: '',	// 引数としての変数名
-          //type: '',	// データ型
-          //note: '',	// 項目の説明
-          //default: '—',	// 既定値
-          //isOpt: false,  // 任意項目ならtrue
-        ],
-
-        process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
-
-        returns: {Member:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
-      }*/
     },
   },
   MemberDevice: {
@@ -1602,6 +1620,49 @@ const classdef = {
 
     // 3. 各行から共通インデント分を削除
     return lines.map(line => line.slice(minIndent)).join('\n');
+  }
+
+  /**
+   * @typedef {Object} classDef
+   * @prop {string} typeName - 対象元(投入先)となるclassdef(cdef)上のクラス名
+   * @prop {Object.<string,string>} [default] - 各パターンの共通設定値。表記方法はassignと同じ
+   * @prop {Object} pattern - 設定パターン集
+   * @prop {Object.<string,string>} pattern.assign - 当該パターンの設定値
+   *   // ex. pattern: {'正常時':{assign:{result:'normal'}},'異常時':{assign:{result:'fatal'}}}
+   *   //     patternの孫要素に'assign'が無い場合、子要素=assignでcondition/noteは省略と看做す。
+   *   // ex. pattern: {'正常時':{result:'normal'},'異常時':{result:'fatal'}}
+   * @prop {string} [pattern.condition] - 該当条件(trimIndent対象)
+   * @prop {string} [pattern.note] - 備忘(trimIndent対象)
+   */
+  /** comparisonTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
+   * @param {classDef} arg - 原本となるデータ型(クラス)の情報オブジェクト
+   * @param {string} [indent=''] - 各行の先頭に付加するインデント文字列
+   */
+  function comparisonTable(arg,indent=''){
+    const rv = [];
+    const dataLabels = Object.keys(arg.pattern);
+    
+    // ヘッダー行
+    const header = ['項目名','データ型','生成時', ...dataLabels];
+    rv.push(`${indent}| ${header.join(' | ')} |`);
+    rv.push(`${indent}| ${header.map(() => ':--').join(' | ')} |`);
+    
+    // 各メンバ行
+    if( typeof cdef[arg.typeName] !== 'undefined' ){
+      cdef[arg.typeName].members._list.forEach(x => {  // 戻り値データ型のメンバ名を順次呼出
+        const m = cdef[arg.typeName].members[x];
+        const cells = [
+          m.name,
+          m.type,
+          m.default !== '—' ? m.default : (m.isOpt ? '[任意]' : '[必須]'),
+          ...dataLabels.map(label => arg.pattern[label].assign[x] ?? '')
+        ];
+        rv.push(`${indent}| ${cells.join(' | ')} |`);
+      });
+    }
+
+    return rv;
+
   }
 
   /**  */
@@ -2257,6 +2318,8 @@ const classdef = {
       const rv = ['',`- [${this.typeName}](${this.typeName}.md#internal): ${
         cdef[this.className].label}`];
 
+      comparisonTable(this,'  ').forEach(x => rv.push(x));
+      /*
       const dataLabels = Object.keys(this.pattern);
       
       // ヘッダー行
@@ -2277,6 +2340,7 @@ const classdef = {
           rv.push(`  | ${cells.join(' | ')} |`);
         });
       }
+      */
 
       return rv;
     }
