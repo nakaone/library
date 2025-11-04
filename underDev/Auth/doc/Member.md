@@ -141,10 +141,10 @@ stateDiagram-v2
     | 項目名 | データ型 | 生成時 | 登録済 | 未登録 |
     | :-- | :-- | :-- | :-- | :-- |
     | timestamp | number | Date.now() | — | — |
-    | result | string | normal | **"normal"** | **"fatal"** |
-    | message | string | 【任意】 | — | **not exists** |
+    | result | string | normal | "normal" | "fatal" |
+    | message | string | 【任意】 | — | not exists |
     | request | authRequest | 【任意】 | {memberId:引数のmemberId} | {memberId:引数のmemberId} |
-    | response | any | 【任意】 | **Member(シート)** | — |
+    | response | any | 【任意】 | Member(シート) | — |
 
 ## <span id="member_removemember">🧱 <a href="#member_method">Member.removeMember()</a></span>
 
@@ -181,12 +181,12 @@ stateDiagram-v2
     | 項目名 | データ型 | 生成時 | 物理削除 | 論理削除 |
     | :-- | :-- | :-- | :-- | :-- |
     | timestamp | string | Date.now() | — | — |
-    | duration | number | 【必須】 | — | — |
-    | memberId | string | 【必須】 | — | — |
-    | deviceId | string | 【必須】 | — | — |
-    | func | string | 【必須】 | physical removed | logical removed |
+    | duration | number | 【必須】 | Date.now() - start | Date.now() - start |
+    | memberId | string | 【必須】 | this.memberId | this.memberId |
+    | deviceId | string | 【任意】 | — | — |
+    | func | string | 【必須】 | "remove(physical)" | "remove(logical)" |
     | result | string | normal | — | — |
-    | note | string | 【必須】 | — | — |
+    | note | string | 【必須】 | 削除前Member(JSON) | 削除前Member(JSON) |
 
 ### <span id="member_removemember_returns">📤 戻り値</span>
 
@@ -194,10 +194,10 @@ stateDiagram-v2
     | 項目名 | データ型 | 生成時 | 物理削除 | 加入禁止 | キャンセル | 論理削除 |
     | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
     | timestamp | number | Date.now() | — | — | — | — |
-    | result | string | normal | **normal** | **warning** | **warning** | **normal** |
-    | message | string | 【任意】 | **physically removed** | **already banned from joining** | **logical remove canceled** | **logically removed** |
+    | result | string | normal | "normal" | "warning" | "warning" | "normal" |
+    | message | string | 【任意】 | "physically removed" | "already banned from joining" | "logical remove canceled" | "logically removed" |
     | request | authRequest | 【任意】 | {memberId, physical} | {memberId, physical} | {memberId, physical} | {memberId, physical} |
-    | response | any | 【任意】 | — | **更新前のMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
+    | response | any | 【任意】 | — | 更新前のMember | 更新前のMember | 更新<span style="color:red">後</span>のMember |
 
 ## <span id="member_setmember">🧱 <a href="#member_method">Member.setMember()</a></span>
 
@@ -249,7 +249,7 @@ stateDiagram-v2
     | 項目名 | データ型 | 生成時 | ① | ② | ③ | ④ | ⑤ |
     | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
     | timestamp | number | Date.now() | — | — | — | — | — |
-    | result | string | normal | **"fatal"** | **"normal"** | **"fatal"** | **"fatal"** | **"normal"** |
-    | message | string | 【任意】 | **"not exist"** | **"updated"** | **"already exist"** | **"Invalid registration request"** | **"appended"** |
+    | result | string | normal | "fatal" | "normal" | "fatal" | "fatal" | "normal" |
+    | message | string | 【任意】 | "not exist" | "updated" | "already exist" | "Invalid registration request" | "appended" |
     | request | authRequest | 【任意】 | arg | arg | arg | arg | arg |
-    | response | any | 【任意】 | — | **Member(更新済)** | — | — | **Member(新規作成)** |
+    | response | any | 【任意】 | — | Member(更新済) | — | — | Member(新規作成) |

@@ -22,7 +22,7 @@ authServerの監査ログ
 | timestamp | ⭕ | string | Date.now() | 要求日時 | ISO8601拡張形式の文字列 | 
 | duration | ❌ | number | — | 処理時間 | ミリ秒単位 | 
 | memberId | ❌ | string | — | メンバの識別子 | =メールアドレス | 
-| deviceId | ❌ | string | — | デバイスの識別子 |  | 
+| deviceId | ⭕ | string | — | デバイスの識別子 |  | 
 | func | ❌ | string | — | サーバ側関数名 |  | 
 | result | ⭕ | string | normal | サーバ側処理結果 | fatal/warning/normal | 
 | note | ❌ | string | — | 備考 |  | 
@@ -60,7 +60,7 @@ authServerの監査ログ
     | timestamp | string | Date.now() | — |
     | duration | number | 【必須】 | — |
     | memberId | string | 【必須】 | — |
-    | deviceId | string | 【必須】 | — |
+    | deviceId | string | 【任意】 | — |
     | func | string | 【必須】 | — |
     | result | string | normal | — |
     | note | string | 【必須】 | — |
@@ -92,7 +92,7 @@ authServerの監査ログ
     | timestamp | string | Date.now() | — |
     | duration | number | 【必須】 | — |
     | memberId | string | 【必須】 | — |
-    | deviceId | string | 【必須】 | — |
+    | deviceId | string | 【任意】 | — |
     | func | string | 【必須】 | — |
     | result | string | normal | — |
     | note | string | 【必須】 | — |
@@ -122,7 +122,7 @@ authAuditLogインスタンス変数の値を再設定
     | timestamp | string | Date.now() | — |
     | duration | number | 【必須】 | — |
     | memberId | string | 【必須】 | — |
-    | deviceId | string | 【必須】 | — |
+    | deviceId | string | 【任意】 | — |
     | func | string | 【必須】 | — |
     | result | string | normal | — |
     | note | string | 【必須】 | — |

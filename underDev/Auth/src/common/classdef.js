@@ -98,7 +98,7 @@ const classdef = {
       {name:'timestamp',type:'string',label:'要求日時',note:'ISO8601拡張形式の文字列',default:'Date.now()'},
       {name:'duration',type:'number',label:'処理時間',note:'ミリ秒単位'},
       {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
-      {name:'deviceId',type:'string',label:'デバイスの識別子',note:''},
+      {name:'deviceId',type:'string',label:'デバイスの識別子',note:'',isOpt:true},
       {name:'func',type:'string',label:'サーバ側関数名',note:''},
       {name:'result',type:'string',label:'サーバ側処理結果',note:'fatal/warning/normal',default:'normal'},
       {name:'note',type:'string',label:'備考',note:''},
@@ -1298,20 +1298,16 @@ const classdef = {
             - 監査ログに「論理削除」を記録
             - 戻り値「論理削除」を返して終了
           - 監査ログ出力項目
-            <evaluate>comparisonTable({ // comparisonTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
+            <evaluate>comparisonTable({
               typeName:'authAuditLog',  // 対象元(投入先)となるclassdef(cdef)上のクラス名
-              default: {request:'{memberId, physical}',note:'削除前Member(JSON)'},
+              default: {
+                duration: 'Date.now() - start',
+                memberId: 'this.memberId',
+                note:'削除前Member(JSON)'
+              },
               pattern:{ // 設定パターン集
-                '物理削除':{  // パターン名
-                  assign: { // {Object.<string,string>} 当該パターンの設定値
-                    func:'physical removed',
-                  },
-                },
-                '論理削除':{  // パターン名
-                  assign: { // {Object.<string,string>} 当該パターンの設定値
-                    func:'logical removed',
-                  },
-                },
+                '物理削除':{assign: {func:'"remove(physical)"'}},
+                '論理削除':{assign: {func:'"remove(logical)"'}},
               }
             },'  ')</evaluate>
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
@@ -1325,22 +1321,22 @@ const classdef = {
             note: ``,	// {string} 備忘(trimIndent対象)
             pattern: {
               '物理削除': {assign: {
-                result: 'normal',
-                message: 'physically removed',
+                result: '"normal"',
+                message: '"physically removed"',
               }},
               '加入禁止': {assign: {
-                result:'warning',
-                message: 'already banned from joining',
+                result:'"warning"',
+                message: '"already banned from joining"',
                 response: '更新前のMember'
               }},
               'キャンセル': {assign: {
-                result:'warning',
-                message: 'logical remove canceled',
+                result:'"warning"',
+                message: '"logical remove canceled"',
                 response: '更新前のMember'
               }},
               '論理削除': {assign: {
-                result:'normal',
-                message: 'logically removed',
+                result:'"normal"',
+                message: '"logically removed"',
                 response: '更新<span style="color:red">後</span>のMember'
               }},
             }
@@ -1747,7 +1743,7 @@ const classdef = {
           m.name,
           m.type,
           m.default !== '—' ? m.default : (m.isOpt ? '【任意】' : '【必須】'),
-          ...dataLabels.map(label => arg.pattern[label].assign[x] ?? '—')
+          ...dataLabels.map(label => arg.pattern[label].assign[x] ?? arg.default[x] ?? '—')
         ];
         rv.push(`${indent+'  '}| ${cells.join(' | ')} |`);
       });
@@ -2368,9 +2364,9 @@ const classdef = {
         if( typeof arg.pattern[x].assign === 'undefined' ){
           arg.pattern[x].assign = {};
         } else {
-          // パターン特有の設定値は強調表示
-          Object.keys(arg.pattern[x].assign).forEach(key =>
-            arg.pattern[x].assign[key] = `**${arg.pattern[x].assign[key]}**`);
+          // パターン特有の設定値は強調表示 ⇒ comparisonTableに機能移管
+          //Object.keys(arg.pattern[x].assign).forEach(key =>
+          //  arg.pattern[x].assign[key] = `**${arg.pattern[x].assign[key]}**`);
           // 「パターン特有設定値 > データ型共通設定値 > 基となるデータ型の引用項目」を設定
           arg.pattern[x].assign = Object.assign({},org,this.default,arg.pattern[x].assign);
         }

@@ -84,7 +84,7 @@
     | 項目名 | データ型 | 生成時 | 正答時 | 誤答・再挑戦可 | 誤答・再挑戦不可 |
     | :-- | :-- | :-- | :-- | :-- | :-- |
     | timestamp | number | Date.now() | — | — | — |
-    | result | string | normal | **normal** | **warning** | **fatal** |
+    | result | string | normal | normal | warning | fatal |
     | message | string | 【任意】 | — | — | — |
     | request | authRequest | 【任意】 | 引数"request" | 引数"request" | 引数"request" |
     | response | any | 【任意】 | — | — | — |
