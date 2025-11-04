@@ -39,6 +39,10 @@ ScriptPropertiesに保存
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="authrequestlog_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="authrequestlog_constructor_returns">📤 戻り値</span>
 
 - [authRequestLog](authRequestLog.md#internal): 重複チェック用のリクエスト履歴
@@ -46,6 +50,3 @@ ScriptPropertiesに保存
   | :-- | :-- | :-- | :-- |
   | timestamp | number | Date.now() | — |
   | requestId | string | [必須] | — |
-
-### <span id="authrequestlog_constructor_process">🧾 処理手順</span>
-

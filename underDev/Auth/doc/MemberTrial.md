@@ -43,6 +43,12 @@
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | 必須項目および変更する設定値 | 
 
+### <span id="membertrial_constructor_process">🧾 処理手順</span>
+
+- this.passcode = [authServerConfig.trial.passcodeLength](authServerConfig.md#authserverconfig_internal)で設定された桁数の乱数
+- this.created = Date.now()
+- this.log = []
+
 ### <span id="membertrial_constructor_returns">📤 戻り値</span>
 
 - [MemberTrial](MemberTrial.md#internal): ログイン試行情報の管理・判定
@@ -51,12 +57,6 @@
   | passcode | string | [必須] | — |
   | created | number | Date.now() | — |
   | log | MemberTrialLog[] |  | — |
-
-### <span id="membertrial_constructor_process">🧾 処理手順</span>
-
-- this.passcode = [authServerConfig.trial.passcodeLength](authServerConfig.md#authserverconfig_internal)で設定された桁数の乱数
-- this.created = Date.now()
-- this.log = []
 
 ## <span id="membertrial_loginattempt">🧱 <a href="#membertrial_method">MemberTrial.loginAttempt()</a></span>
 
@@ -69,6 +69,14 @@
 | :-- | :--: | :-- | :-- | :-- |
 | request | ❌ | [authRequest](authRequest.md#authrequest_internal) | — | ユーザが入力したパスコードを含む処理要求 | 
 
+### <span id="membertrial_loginattempt_process">🧾 処理手順</span>
+
+- [MemberTrialLog](MemberTrialLog.md#membertriallog_constructor)を生成、this.logの先頭に保存(unshift())
+- `this.log[0].result === true`なら「正答時」を返す
+- `this.log[0].result === false`で最大試行回数([maxTrial](authServerConfig.md#authserverconfig_internal))未満なら「誤答・再挑戦可」を返す
+- `this.log[0].result === false`で最大試行回数以上なら「誤答・再挑戦不可」を返す
+- なお、シートへの保存は呼出元で行う
+
 ### <span id="membertrial_loginattempt_returns">📤 戻り値</span>
 
 - [authResponse](authResponse.md#internal): ログイン試行情報の管理・判定
@@ -79,11 +87,3 @@
   | message | string | [任意] | — | — | — |
   | request | authRequest | [任意] | 引数"request" | 引数"request" | 引数"request" |
   | response | any | [任意] | — | — | — |
-
-### <span id="membertrial_loginattempt_process">🧾 処理手順</span>
-
-- [MemberTrialLog](MemberTrialLog.md#membertriallog_constructor)を生成、this.logの先頭に保存(unshift())
-- `this.log[0].result === true`なら「正答時」を返す
-- `this.log[0].result === false`で最大試行回数([maxTrial](authServerConfig.md#authserverconfig_internal))未満なら「誤答・再挑戦可」を返す
-- `this.log[0].result === false`で最大試行回数以上なら「誤答・再挑戦不可」を返す
-- なお、シートへの保存は呼出元で行う

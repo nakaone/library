@@ -42,6 +42,10 @@ authServerからauthClientに返される、暗号化前の処理結果オブジ
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="authresponse_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="authresponse_constructor_returns">📤 戻り値</span>
 
 - [authResponse](authResponse.md#internal): 暗号化前の処理結果
@@ -52,6 +56,3 @@ authServerからauthClientに返される、暗号化前の処理結果オブジ
   | message | string | [任意] | — |
   | request | authRequest | [任意] | — |
   | response | any | [任意] | — |
-
-### <span id="authresponse_constructor_process">🧾 処理手順</span>
-

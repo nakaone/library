@@ -38,12 +38,13 @@ authServerからauthClientに返される、暗号化された処理結果オブ
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="encryptedresponse_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="encryptedresponse_constructor_returns">📤 戻り値</span>
 
 - [encryptedResponse](encryptedResponse.md#internal): 暗号化された処理結果
   | 項目名 | データ型 | 生成時 | 正常終了 |
   | :-- | :-- | :-- | :-- |
   | ciphertext | string | [必須] | — |
-
-### <span id="encryptedresponse_constructor_process">🧾 処理手順</span>
-

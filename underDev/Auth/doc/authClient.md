@@ -52,15 +52,6 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 | :-- | :--: | :-- | :-- | :-- |
 | config | ❌ | [authClientConfig](authClientConfig.md#authclientconfig_internal) | — | authClientの動作設定変数 | 
 
-### <span id="authclient_constructor_returns">📤 戻り値</span>
-
-- [authClient](authClient.md#internal): クライアント側auth中核クラス
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | cf | authClientConfig | [必須] | — |
-  | crypto | cryptoClient | [必須] | — |
-  | idb | authIndexedDB | [必須] | — |
-
 ### <span id="authclient_constructor_process">🧾 処理手順</span>
 
 - 本クラスのメンバとして存在する引数のメンバはauthClient内共有用の変数"cf"に保存(存在しない引数のメンバは廃棄)
@@ -120,6 +111,15 @@ sequenceDiagram
   end
 ```
 
+### <span id="authclient_constructor_returns">📤 戻り値</span>
+
+- [authClient](authClient.md#internal): クライアント側auth中核クラス
+  | 項目名 | データ型 | 生成時 | 正常終了 |
+  | :-- | :-- | :-- | :-- |
+  | cf | authClientConfig | [必須] | — |
+  | crypto | cryptoClient | [必須] | — |
+  | idb | authIndexedDB | [必須] | — |
+
 ## <span id="authclient_checkcpkey">🧱 <a href="#authclient_method">authClient.checkCPkey()</a></span>
 
 CPkey残有効期間をチェック
@@ -130,6 +130,10 @@ CPkey残有効期間をチェック
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+
+### <span id="authclient_checkcpkey_process">🧾 処理手順</span>
+
+
 
 ### <span id="authclient_checkcpkey_returns">📤 戻り値</span>
 
@@ -142,10 +146,6 @@ CPkey残有効期間をチェック
   | request | authRequest | [任意] | — |
   | response | any | [任意] | — |
 
-### <span id="authclient_checkcpkey_process">🧾 処理手順</span>
-
-
-
 ## <span id="authclient_enterpasscode">🧱 <a href="#authclient_method">authClient.enterPasscode()</a></span>
 
 パスコード入力ダイアログを表示
@@ -157,6 +157,10 @@ CPkey残有効期間をチェック
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="authclient_enterpasscode_process">🧾 処理手順</span>
+
+
+
 ### <span id="authclient_enterpasscode_returns">📤 戻り値</span>
 
 - [authResponse](authResponse.md#internal): クライアント側auth中核クラス
@@ -167,10 +171,6 @@ CPkey残有効期間をチェック
   | message | string | [任意] | — |
   | request | authRequest | [任意] | — |
   | response | any | [任意] | — |
-
-### <span id="authclient_enterpasscode_process">🧾 処理手順</span>
-
-
 
 ## <span id="authclient_exec">🧱 <a href="#authclient_method">authClient.exec()</a></span>
 
@@ -185,6 +185,10 @@ CPkey残有効期間をチェック
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="authclient_exec_process">🧾 処理手順</span>
+
+
+
 ### <span id="authclient_exec_returns">📤 戻り値</span>
 
 - [authResponse](authResponse.md#internal): クライアント側auth中核クラス
@@ -195,10 +199,6 @@ CPkey残有効期間をチェック
   | message | string | [任意] | — |
   | request | authRequest | [任意] | — |
   | response | any | [任意] | — |
-
-### <span id="authclient_exec_process">🧾 処理手順</span>
-
-
 
 ## <span id="authclient_setupenvironment">🧱 <a href="#authclient_method">authClient.setupEnvironment()</a></span>
 
@@ -211,6 +211,10 @@ SPkey入手等、authClient動作環境整備
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="authclient_setupenvironment_process">🧾 処理手順</span>
+
+
+
 ### <span id="authclient_setupenvironment_returns">📤 戻り値</span>
 
 - [authResponse](authResponse.md#internal): クライアント側auth中核クラス
@@ -221,10 +225,6 @@ SPkey入手等、authClient動作環境整備
   | message | string | [任意] | — |
   | request | authRequest | [任意] | — |
   | response | any | [任意] | — |
-
-### <span id="authclient_setupenvironment_process">🧾 処理手順</span>
-
-
 
 ## <span id="authclient_showmessage">🧱 <a href="#authclient_method">authClient.showMessage()</a></span>
 
@@ -237,6 +237,10 @@ SPkey入手等、authClient動作環境整備
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="authclient_showmessage_process">🧾 処理手順</span>
+
+
+
 ### <span id="authclient_showmessage_returns">📤 戻り値</span>
 
 - [authResponse](authResponse.md#internal): クライアント側auth中核クラス
@@ -247,6 +251,3 @@ SPkey入手等、authClient動作環境整備
   | message | string | [任意] | — |
   | request | authRequest | [任意] | — |
   | response | any | [任意] | — |
-
-### <span id="authclient_showmessage_process">🧾 処理手順</span>
-

@@ -40,6 +40,10 @@ authConfigを継承
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="authclientconfig_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="authclientconfig_constructor_returns">📤 戻り値</span>
 
 - [authClientConfig](authClientConfig.md#internal): authClient専用の設定値
@@ -48,6 +52,3 @@ authConfigを継承
   | api | string | [必須] | — |
   | timeout | number | 300000 | — |
   | CPkeyGraceTime | number | 600000 | — |
-
-### <span id="authclientconfig_constructor_process">🧾 処理手順</span>
-

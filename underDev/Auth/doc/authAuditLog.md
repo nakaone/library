@@ -45,6 +45,13 @@ authServerの監査ログ
 
 - 無し(void)
 
+### <span id="authauditlog_constructor_process">🧾 処理手順</span>
+
+- "[authServerConfig](authServerConfig.md#authserverconfig_internal).auditLog"シートが無ければ作成
+- 引数の内、authAuditLogと同一メンバ名があればthisに設定
+- 引数にnoteがあればthis.noteに設定
+- timestampに現在日時を設定
+
 ### <span id="authauditlog_constructor_returns">📤 戻り値</span>
 
 - [authAuditLog](authAuditLog.md#internal): authServerの監査ログ
@@ -58,13 +65,6 @@ authServerの監査ログ
   | result | string | normal | — |
   | note | string | [必須] | — |
 
-### <span id="authauditlog_constructor_process">🧾 処理手順</span>
-
-- "[authServerConfig](authServerConfig.md#authserverconfig_internal).auditLog"シートが無ければ作成
-- 引数の内、authAuditLogと同一メンバ名があればthisに設定
-- 引数にnoteがあればthis.noteに設定
-- timestampに現在日時を設定
-
 ## <span id="authauditlog_log">🧱 <a href="#authauditlog_method">authAuditLog.log()</a></span>
 
 監査ログシートに処理要求を追記
@@ -75,6 +75,14 @@ authServerの監査ログ
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ❌ | [authRequest](authRequest.md#authrequest_internal) \| string | — | 処理要求オブジェクトまたは内発処理名 | 
+
+### <span id="authauditlog_log_process">🧾 処理手順</span>
+
+- 引数がObjectの場合：func,result,noteがあればthisに上書き
+- 引数がstringの場合：this.funcにargをセット
+- 所要時間の計算(this.duration = Date.now() - this.timestamp)
+- timestampはISO8601拡張形式の文字列に変更
+- シートの末尾行にauthAuditLogオブジェクトを追加
 
 ### <span id="authauditlog_log_returns">📤 戻り値</span>
 
@@ -89,14 +97,6 @@ authServerの監査ログ
   | result | string | normal | — |
   | note | string | [必須] | — |
 
-### <span id="authauditlog_log_process">🧾 処理手順</span>
-
-- 引数がObjectの場合：func,result,noteがあればthisに上書き
-- 引数がstringの場合：this.funcにargをセット
-- 所要時間の計算(this.duration = Date.now() - this.timestamp)
-- timestampはISO8601拡張形式の文字列に変更
-- シートの末尾行にauthAuditLogオブジェクトを追加
-
 ## <span id="authauditlog_reset">🧱 <a href="#authauditlog_method">authAuditLog.reset()</a></span>
 
 authAuditLogインスタンス変数の値を再設定
@@ -107,6 +107,12 @@ authAuditLogインスタンス変数の値を再設定
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
 | request | ⭕ | [authRequest](authRequest.md#authrequest_internal) | {} | 変更する設定値 | 
+
+### <span id="authauditlog_reset_process">🧾 処理手順</span>
+
+- 【要修正】用途を明確化、不要なら削除
+- [authServerConfig](authServerConfig.md#authserverconfig_internal).auditLogシートが無ければ作成
+- 引数の内、authAuditLogと同一メンバ名があればthisに設定
 
 ### <span id="authauditlog_reset_returns">📤 戻り値</span>
 
@@ -120,9 +126,3 @@ authAuditLogインスタンス変数の値を再設定
   | func | string | [必須] | — |
   | result | string | normal | — |
   | note | string | [必須] | — |
-
-### <span id="authauditlog_reset_process">🧾 処理手順</span>
-
-- 【要修正】用途を明確化、不要なら削除
-- [authServerConfig](authServerConfig.md#authserverconfig_internal).auditLogシートが無ければ作成
-- 引数の内、authAuditLogと同一メンバ名があればthisに設定

@@ -39,12 +39,20 @@
 
 コンストラクタ
 
+### <span id="memberdevice_constructor_caller">📞 呼出元</span>
+
+- [Member.setMember()](Member.md#memberdevice_constructor)
+
 ### <span id="memberdevice_constructor_param">📥 引数</span>
 
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+
+### <span id="memberdevice_constructor_process">🧾 処理手順</span>
+
+
 
 ### <span id="memberdevice_constructor_returns">📤 戻り値</span>
 
@@ -56,6 +64,3 @@
   | CPkey | string | [必須] | — |
   | CPkeyUpdated | number | Date.now() | — |
   | trial | MemberTrial[] |  | — |
-
-### <span id="memberdevice_constructor_process">🧾 処理手順</span>
-

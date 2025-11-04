@@ -92,6 +92,14 @@ stateDiagram-v2
 | :-- | :--: | :-- | :-- | :-- |
 | config | ❌ | [authServerConfig](authServerConfig.md#authserverconfig_internal) | — | ユーザ指定の設定値 | 
 
+### <span id="member_constructor_process">🧾 処理手順</span>
+
+- [authServerConfig.memberList](authServerConfig.md#internal)シートが存在しなければシートを新規作成
+  - シート上の項目名はMemberクラスのメンバ名
+  - 各項目の「説明」を項目名セルのメモとしてセット
+- this.log = new [MemberLog()](MemberLog.md#memberlog_constructor)
+- this.profile = new [MemberProfile()](MemberProfile.md#memberprofile_constructor)
+
 ### <span id="member_constructor_returns">📤 戻り値</span>
 
 - [Member](Member.md#internal): メンバ一覧シートに対応したメンバ単位の管理情報
@@ -105,14 +113,6 @@ stateDiagram-v2
   | device | MemberDevice[] | 空配列 | — |
   | note | string | 空文字列 | — |
 
-### <span id="member_constructor_process">🧾 処理手順</span>
-
-- [authServerConfig.memberList](authServerConfig.md#internal)シートが存在しなければシートを新規作成
-  - シート上の項目名はMemberクラスのメンバ名
-  - 各項目の「説明」を項目名セルのメモとしてセット
-- this.log = new [MemberLog()](MemberLog.md#memberlog_constructor)
-- this.profile = new [MemberProfile()](MemberProfile.md#memberprofile_constructor)
-
 ## <span id="member_getmember">🧱 <a href="#member_method">Member.getMember()</a></span>
 
 指定メンバの情報をmemberListシートから取得
@@ -124,6 +124,11 @@ stateDiagram-v2
 | :-- | :--: | :-- | :-- | :-- |
 | memberId | ❌ | string | — | ユーザ識別子(メールアドレス) | 
 
+### <span id="member_getmember_process">🧾 処理手順</span>
+
+- JSON文字列の項目はオブジェクト化(Member.log, Member.profile, Member.device)
+- memberIdがmemberListシート登録済なら「登録済」、未登録なら「未登録」パターンを返す
+
 ### <span id="member_getmember_returns">📤 戻り値</span>
 
 - [authResponse](authResponse.md#internal): メンバ一覧シートに対応したメンバ単位の管理情報
@@ -134,11 +139,6 @@ stateDiagram-v2
   | message | string | [任意] | — | **not exists** |
   | request | authRequest | [任意] | {memberId:引数のmemberId} | {memberId:引数のmemberId} |
   | response | any | [任意] | **Member(シート)** | — |
-
-### <span id="member_getmember_process">🧾 処理手順</span>
-
-- JSON文字列の項目はオブジェクト化(Member.log, Member.profile, Member.device)
-- memberIdがmemberListシート登録済なら「登録済」、未登録なら「未登録」パターンを返す
 
 ## <span id="member_setmember">🧱 <a href="#member_method">Member.setMember()</a></span>
 
@@ -153,17 +153,40 @@ stateDiagram-v2
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ❌ | [Member](Member.md#member_internal) \| [authRequest](authRequest.md#authrequest_internal) | — | 既存メンバ(Member)または新規登録要求 | 
 
+### <span id="member_setmember_process">🧾 処理手順</span>
+
+いまここ：Member.log/profile/deviceのメソッドにリンクが張られるよう修正
+- 引数がMember型の場合、既存メンバの更新と看做して以下の処理を行う
+  1. memberListシートに存在しない場合(エラー)、以下の戻り値①を返して終了
+  2. [judgeStatus](Member.md#member_judgestatus)でstatusを最新にしておく
+  3. JSON文字列の項目は文字列化した上でmemberListシートの該当者を更新(Member.log/profile/device)
+  4. 戻り値②を返して終了
+- 引数がauthRequestの場合、新規登録要求と看做して以下の処理を行う
+  1. memberListシートに存在する場合(エラー)、戻り値③を返して終了
+  2. authRequestが新規登録要求か確認
+    - 確認項目
+      - authRequest.func ==== '::newMember::'
+      - authRequest.arguments[0]にメンバの氏名(文字列)が入っている
+      - memberId, deviceId, signatureが全て設定されている
+    - 確認項目の全条件が満たされ無かった場合(エラー)、戻り値④を返して終了
+  3. Memberの新規作成
+    - Member.memberId = authRequest.memberId
+    - Member.name = authRequest.arguments[0]
+    - Member.device = [new MemberDevice](MemberDevice.md#memberdevice_constructor)({deviceId:authRequest.deviceId, CPkey:authRequest.signature})
+    - Member.log = [new MemberLog](MemberLog.md#memberlog_constructor)()
+    - [judgeStatus](Member.md#member_judgestatus)にMemberを渡し、状態を設定
+  4. JSON文字列の項目は文字列化した上でmemberListシートに追加(Member.log/profile/device)
+  5. 本番運用中なら加入要請メンバへの通知<br>
+    [authServerConfig.underDev.sendInvitation](authServerConfig.md#authserverconfig_internal) === falseなら開発中なので通知しない
+  6. 戻り値⑤を返して終了
+
 ### <span id="member_setmember_returns">📤 戻り値</span>
 
 - [authResponse](authResponse.md#internal): メンバ一覧シートに対応したメンバ単位の管理情報
-  | 項目名 | データ型 | 生成時 | 正答時 | 誤答・再挑戦可 | 誤答・再挑戦不可 |
-  | :-- | :-- | :-- | :-- | :-- | :-- |
-  | timestamp | number | Date.now() | — | — | — |
-  | result | string | normal | **normal** | **warning** | **fatal** |
-  | message | string | [任意] | — | — | — |
-  | request | authRequest | [任意] | 引数"request" | 引数"request" | 引数"request" |
-  | response | any | [任意] | — | — | — |
-
-### <span id="member_setmember_process">🧾 処理手順</span>
-
-- memberList(シート)上に存在しない場合、メンバ一覧記載の既定値の新規Memberを作成し、シートに追加
+  | 項目名 | データ型 | 生成時 | ① | ② | ③ | ④ | ⑤ |
+  | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+  | timestamp | number | Date.now() | — | — | — | — | — |
+  | result | string | normal | **"fatal"** | **"normal"** | **"fatal"** | **"fatal"** | **"normal"** |
+  | message | string | [任意] | **"not exist"** | **"updated"** | **"already exist"** | **"Invalid registration request"** | **"appended"** |
+  | request | authRequest | [任意] | arg | arg | arg | arg | arg |
+  | response | any | [任意] | — | **Member(更新済)** | — | — | **Member(新規作成)** |

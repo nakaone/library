@@ -43,6 +43,10 @@
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="authscriptproperties_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="authscriptproperties_constructor_returns">📤 戻り値</span>
 
 - [authScriptProperties](authScriptProperties.md#internal): サーバ側のScriptProperties
@@ -54,6 +58,3 @@
   | oldSPkey | string | [必須] | — |
   | oldSSkey | string | [必須] | — |
   | requestLog | authRequestLog[] |  | — |
-
-### <span id="authscriptproperties_constructor_process">🧾 処理手順</span>
-

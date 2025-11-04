@@ -44,6 +44,10 @@ authClientConfig, authServerConfigの親クラス
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="authconfig_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="authconfig_constructor_returns">📤 戻り値</span>
 
 - [authConfig](authConfig.md#internal): authClient/authServer共通設定値
@@ -56,6 +60,3 @@ authClientConfig, authServerConfigの親クラス
   | RSAbits | string | 2048 | — |
   | underDev | Object | [必須] | — |
   | underDev.isTest | boolean | false | — |
-
-### <span id="authconfig_constructor_process">🧾 処理手順</span>
-

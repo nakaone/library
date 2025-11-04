@@ -44,6 +44,10 @@ authServerのエラーログ
 
 - 無し(void)
 
+### <span id="autherrorlog_constructor_process">🧾 処理手順</span>
+
+- [authServerConfig](authServerConfig.md#authserverconfig_internal).auditLogシートが無ければ作成
+
 ### <span id="autherrorlog_constructor_returns">📤 戻り値</span>
 
 - [authErrorLog](authErrorLog.md#internal): authServerのエラーログ
@@ -56,10 +60,6 @@ authServerのエラーログ
   | message | string | [任意] | — |
   | stackTrace | string | [任意] | — |
 
-### <span id="autherrorlog_constructor_process">🧾 処理手順</span>
-
-- [authServerConfig](authServerConfig.md#authserverconfig_internal).auditLogシートが無ければ作成
-
 ## <span id="autherrorlog_log">🧱 <a href="#autherrorlog_method">authErrorLog.log()</a></span>
 
 エラーログをシートに出力
@@ -70,6 +70,16 @@ authServerのエラーログ
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
 | e | ❌ | Error | — | エラーオブジェクト | 
+
+### <span id="autherrorlog_log_process">🧾 処理手順</span>
+
+- this.message = e.message
+- this.stackTrace = e.stack
+- e.messageがJSON化可能な場合
+  - e.messageをオブジェクト化してobjに代入
+  - this.result = obj.result
+  - this.message = obj.message
+- シートの末尾行にauthErrorLogオブジェクトを追加
 
 ### <span id="autherrorlog_log_returns">📤 戻り値</span>
 
@@ -83,16 +93,6 @@ authServerのエラーログ
   | message | string | [任意] | — |
   | stackTrace | string | [任意] | — |
 
-### <span id="autherrorlog_log_process">🧾 処理手順</span>
-
-- this.message = e.message
-- this.stackTrace = e.stack
-- e.messageがJSON化可能な場合
-  - e.messageをオブジェクト化してobjに代入
-  - this.result = obj.result
-  - this.message = obj.message
-- シートの末尾行にauthErrorLogオブジェクトを追加
-
 ## <span id="autherrorlog_reset">🧱 <a href="#autherrorlog_method">authErrorLog.reset()</a></span>
 
 authErrorLogインスタンス変数の値を再設定
@@ -103,6 +103,11 @@ authErrorLogインスタンス変数の値を再設定
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+
+### <span id="autherrorlog_reset_process">🧾 処理手順</span>
+
+- 引数の内、authErrorLogと同一メンバ名があればthisに設定
+- 📤 戻り値：変更後のauthErrorLogオブジェクト
 
 ### <span id="autherrorlog_reset_returns">📤 戻り値</span>
 
@@ -115,8 +120,3 @@ authErrorLogインスタンス変数の値を再設定
   | result | string | fatal | — |
   | message | string | [任意] | — |
   | stackTrace | string | [任意] | — |
-
-### <span id="autherrorlog_reset_process">🧾 処理手順</span>
-
-- 引数の内、authErrorLogと同一メンバ名があればthisに設定
-- 📤 戻り値：変更後のauthErrorLogオブジェクト

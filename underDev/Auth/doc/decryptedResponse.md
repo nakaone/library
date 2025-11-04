@@ -46,6 +46,10 @@ encryptedResponseをcryptoClientで復号した処理結果オブジェクト
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="decryptedresponse_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="decryptedresponse_constructor_returns">📤 戻り値</span>
 
 - [decryptedResponse](decryptedResponse.md#internal): 復号済の処理結果
@@ -60,6 +64,3 @@ encryptedResponseをcryptoClientで復号した処理結果オブジェクト
   | sv.timestamp | number | [必須] | — |
   | sv.result | string | [必須] | — |
   | sv.message | string | [任意] | — |
-
-### <span id="decryptedresponse_constructor_process">🧾 処理手順</span>
-

@@ -39,6 +39,10 @@
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="localrequest_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="localrequest_constructor_returns">📤 戻り値</span>
 
 - [LocalRequest](LocalRequest.md#internal): ローカル関数からの処理要求
@@ -46,6 +50,3 @@
   | :-- | :-- | :-- | :-- |
   | func | string | [必須] | — |
   | arguments | any[] | [必須] | — |
-
-### <span id="localrequest_constructor_process">🧾 処理手順</span>
-

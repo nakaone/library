@@ -41,7 +41,10 @@ const classdef = {
           //isOpt: false,  // 任意項目ならtrue
         ],
 
-        process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
+        process: `
+        手順の中で自他クラスのメソッドを呼ぶ場合、caller対応のため以下のように記述すること。
+        [メソッド名](クラス名.md#クラス名(小文字表記)_メソッド名(小文字表記))
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
         returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
@@ -1263,24 +1266,61 @@ const classdef = {
         ],
 
         process: `
-          - memberList(シート)上に存在しない場合、メンバ一覧記載の既定値の新規Memberを作成し、シートに追加
+          いまここ：Member.log/profile/deviceのメソッドにリンクが張られるよう修正
+          - 引数がMember型の場合、既存メンバの更新と看做して以下の処理を行う
+            1. memberListシートに存在しない場合(エラー)、以下の戻り値①を返して終了
+            2. [judgeStatus](Member.md#member_judgestatus)でstatusを最新にしておく
+            3. JSON文字列の項目は文字列化した上でmemberListシートの該当者を更新(Member.log/profile/device)
+            4. 戻り値②を返して終了
+          - 引数がauthRequestの場合、新規登録要求と看做して以下の処理を行う
+            1. memberListシートに存在する場合(エラー)、戻り値③を返して終了
+            2. authRequestが新規登録要求か確認
+              - 確認項目
+                - authRequest.func ==== '::newMember::'
+                - authRequest.arguments[0]にメンバの氏名(文字列)が入っている
+                - memberId, deviceId, signatureが全て設定されている
+              - 確認項目の全条件が満たされ無かった場合(エラー)、戻り値④を返して終了
+            3. Memberの新規作成
+              - Member.memberId = authRequest.memberId
+              - Member.name = authRequest.arguments[0]
+              - Member.device = [new MemberDevice](MemberDevice.md#memberdevice_constructor)({deviceId:authRequest.deviceId, CPkey:authRequest.signature})
+              - Member.log = [new MemberLog](MemberLog.md#memberlog_constructor)()
+              - [judgeStatus](Member.md#member_judgestatus)にMemberを渡し、状態を設定
+            4. JSON文字列の項目は文字列化した上でmemberListシートに追加(Member.log/profile/device)
+            5. 本番運用中なら加入要請メンバへの通知<br>
+              [authServerConfig.underDev.sendInvitation](authServerConfig.md#authserverconfig_internal) === falseなら開発中なので通知しない
+            6. 戻り値⑤を返して終了
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
         returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
           authResponse: { // メンバ名は戻り値のデータ型名
-            default: {request:'引数"request"',value:'MemberTrialオブジェクト'},
+            default: {request:'arg'},
               // {Object.<string,string>} 各パターンの共通設定値
             condition: ``,	// {string} データ型が複数の場合の選択条件指定(trimIndent対象)
             note: ``,	// {string} 備忘(trimIndent対象)
             pattern: {
-              '正答時': {
-                assign: {result:'normal'}, // {Object.<string,string>} 当該パターンの設定値
-                condition: ``,	// {string} 該当条件(trimIndent対象)
-                note: ``,	// {string} 備忘(trimIndent対象)
-              },
-              '誤答・再挑戦可': {assign: {result:'warning'}},
-              '誤答・再挑戦不可': {assign: {result:'fatal'}},
+              '①':{assign:{
+                result: '"fatal"',
+                message: '"not exist"',
+              }},
+              '②':{assign:{
+                result: '"normal"',
+                message: '"updated"',
+                response: 'Member(更新済)',
+              }},
+              '③':{assign:{
+                result: '"fatal"',
+                message: '"already exist"',
+              }},
+              '④':{assign:{
+                result: '"fatal"',
+                message: '"Invalid registration request"',
+              }},
+              '⑤':{assign:{
+                result: '"normal"',
+                message: '"appended"',
+                response: 'Member(新規作成)',
+              }},
             }
           }
         },
@@ -1355,7 +1395,7 @@ const classdef = {
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
-      {name:'joiningRequest', type:'number', label:'加入要求日時',note:'加入要求をサーバ側で受信した日時', default:0},
+      {name:'joiningRequest', type:'number', label:'加入要求日時',note:'加入要求をサーバ側で受信した日時', default:'Date.new()'},
       {name:'approval', type:'number', label:'加入承認日時',note:'管理者がmemberList上で加入承認処理を行った日時。値設定は加入否認日時と択一', default:0},
       {name:'denial', type:'number', label:'加入否認日時',note:'管理者がmemberList上で加入否認処理を行った日時。値設定は加入承認日時と択一', default:0},
       {name:'loginRequest', type:'number', label:'認証要求日時',note:'未認証メンバからの処理要求をサーバ側で受信した日時', default:0},
@@ -1985,10 +2025,12 @@ const classdef = {
 
       // 引数
       this.params.list().forEach(x => rv.push(x));
-      // 戻り値
-      this.returns.md().forEach(x => rv.push(x));
+
       // 処理手順
       ['',`### <span id="${cc}_process">🧾 処理手順</span>`,'',this.process].forEach(x => rv.push(x));
+
+      // 戻り値
+      this.returns.md().forEach(x => rv.push(x));
 
       return rv;
     }

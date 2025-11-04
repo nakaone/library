@@ -36,12 +36,13 @@
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="authserver_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="authserver_constructor_returns">📤 戻り値</span>
 
 - [authServer](authServer.md#internal): サーバ側auth中核クラス
   | 項目名 | データ型 | 生成時 | 正常終了 |
   | :-- | :-- | :-- | :-- |
   |  | string | [必須] | — |
-
-### <span id="authserver_constructor_process">🧾 処理手順</span>
-

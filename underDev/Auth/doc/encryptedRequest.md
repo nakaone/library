@@ -40,6 +40,10 @@ authClientからauthServerに送られる、暗号化された処理要求オブ
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="encryptedrequest_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="encryptedrequest_constructor_returns">📤 戻り値</span>
 
 - [encryptedRequest](encryptedRequest.md#internal): 暗号化された処理要求
@@ -48,6 +52,3 @@ authClientからauthServerに送られる、暗号化された処理要求オブ
   | memberId | string | [必須] | — |
   | deviceId | string | [必須] | — |
   | ciphertext | string | [必須] | — |
-
-### <span id="encryptedrequest_constructor_process">🧾 処理手順</span>
-

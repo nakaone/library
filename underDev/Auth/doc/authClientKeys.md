@@ -39,13 +39,13 @@
 | :-- | :--: | :-- | :-- | :-- |
 | config | ❌ | [authClientConfig](authClientConfig.md#authclientconfig_internal) | — | 鍵生成用の設定(RSA鍵長等) | 
 
+### <span id="authclientkeys_constructor_process">🧾 処理手順</span>
+
+- [createPassword](JSLib.md#createpassword)でパスワード生成
+- [authConfig](authConfig.md#authconfig_internal).RSAbitsを参照、新たな鍵ペア生成
+
 ### <span id="authclientkeys_constructor_returns">📤 戻り値</span>
 
 - [0](0.md#internal): クライアント側鍵ペア
   | 項目名 | データ型 | 生成時 | 正常終了 |
   | :-- | :-- | :-- | :-- |
-
-### <span id="authclientkeys_constructor_process">🧾 処理手順</span>
-
-- [createPassword](JSLib.md#createpassword)でパスワード生成
-- [authConfig](authConfig.md#authconfig_internal).RSAbitsを参照、新たな鍵ペア生成

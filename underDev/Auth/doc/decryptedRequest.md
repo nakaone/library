@@ -42,6 +42,10 @@ encryptedRequestをcryptoServerで復号した処理要求オブジェクト
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="decryptedrequest_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="decryptedrequest_constructor_returns">📤 戻り値</span>
 
 - [decryptedRequest](decryptedRequest.md#internal): 復号済の処理要求
@@ -52,6 +56,3 @@ encryptedRequestをcryptoServerで復号した処理要求オブジェクト
   | request | authRequest | [必須] | — |
   | timestamp | number | [必須] | — |
   | status | string | [必須] | — |
-
-### <span id="decryptedrequest_constructor_process">🧾 処理手順</span>
-

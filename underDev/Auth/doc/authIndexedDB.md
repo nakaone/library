@@ -50,18 +50,6 @@ authClientKeysを継承した、クライアントのIndexedDBを操作するク
 | :-- | :--: | :-- | :-- | :-- |
 | config | ❌ | [authClientConfig](authClientConfig.md#authclientconfig_internal) | — | 設定情報 | 
 
-### <span id="authindexeddb_constructor_returns">📤 戻り値</span>
-
-- [authIndexedDB](authIndexedDB.md#internal): クライアントのIndexedDB
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | memberId | string | [必須] | — |
-  | memberName | string | [必須] | — |
-  | deviceId | string | UUID | — |
-  | keyGeneratedDateTime | number | Date.now() | — |
-  | SPkey | string | [必須] | — |
-  | expireCPkey | number | [必須] | — |
-
 ### <span id="authindexeddb_constructor_process">🧾 処理手順</span>
 
 - IndexedDBに[authClientConfig](authClientConfig.md#authclientconfig_internal).systemNameを持つキーがあれば取得、メンバ変数に格納。
@@ -74,6 +62,18 @@ authClientKeysを継承した、クライアントのIndexedDBを操作するク
 - 引数にnoteがあればthis.noteに設定
 - timestampに現在日時を設定
 
+### <span id="authindexeddb_constructor_returns">📤 戻り値</span>
+
+- [authIndexedDB](authIndexedDB.md#internal): クライアントのIndexedDB
+  | 項目名 | データ型 | 生成時 | 正常終了 |
+  | :-- | :-- | :-- | :-- |
+  | memberId | string | [必須] | — |
+  | memberName | string | [必須] | — |
+  | deviceId | string | UUID | — |
+  | keyGeneratedDateTime | number | Date.now() | — |
+  | SPkey | string | [必須] | — |
+  | expireCPkey | number | [必須] | — |
+
 ## <span id="authindexeddb_get">🧱 <a href="#authindexeddb_method">authIndexedDB.get()</a></span>
 
 IndexedDBの値を取得
@@ -82,6 +82,16 @@ IndexedDBの値を取得
 
 
 - 無し(void)
+
+### <span id="authindexeddb_get_process">🧾 処理手順</span>
+
+- 【要修正】authAuditLogに関する記述？？？
+- 引数がObjectの場合：func,result,noteがあればthisに上書き
+- 引数がstringの場合：this.funcにargをセット
+- this.duration = Date.now() - this.timestamp
+- timestampはISO8601拡張形式の文字列に変更
+- シートの末尾行にauthAuditLogオブジェクトを追加
+- メール通知：stackTraceは削除した上でauthConfig.adminMail宛にメール通知
 
 ### <span id="authindexeddb_get_returns">📤 戻り値</span>
 
@@ -95,16 +105,6 @@ IndexedDBの値を取得
   | SPkey | string | [必須] | — |
   | expireCPkey | number | [必須] | — |
 
-### <span id="authindexeddb_get_process">🧾 処理手順</span>
-
-- 【要修正】authAuditLogに関する記述？？？
-- 引数がObjectの場合：func,result,noteがあればthisに上書き
-- 引数がstringの場合：this.funcにargをセット
-- this.duration = Date.now() - this.timestamp
-- timestampはISO8601拡張形式の文字列に変更
-- シートの末尾行にauthAuditLogオブジェクトを追加
-- メール通知：stackTraceは削除した上でauthConfig.adminMail宛にメール通知
-
 ## <span id="authindexeddb_set">🧱 <a href="#authindexeddb_method">authIndexedDB.set()</a></span>
 
 IndexedDBの値を更新(生成)
@@ -115,6 +115,10 @@ IndexedDBの値を更新(生成)
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | [authIndexedDB](authIndexedDB.md#authindexeddb_internal) | {} | 更新(生成)値(更新対象メンバのみで可) | 
+
+### <span id="authindexeddb_set_process">🧾 処理手順</span>
+
+
 
 ### <span id="authindexeddb_set_returns">📤 戻り値</span>
 
@@ -128,10 +132,6 @@ IndexedDBの値を更新(生成)
   | SPkey | string | [必須] | — |
   | expireCPkey | number | [必須] | — |
 
-### <span id="authindexeddb_set_process">🧾 処理手順</span>
-
-
-
 ## <span id="authindexeddb_reset">🧱 <a href="#authindexeddb_method">authIndexedDB.reset()</a></span>
 
 IndexedDBの値を更新(生成)
@@ -142,6 +142,12 @@ IndexedDBの値を更新(生成)
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | [authIndexedDB](authIndexedDB.md#authindexeddb_internal) | {} | 更新(生成)値(更新対象メンバのみで可) | 
+
+### <span id="authindexeddb_reset_process">🧾 処理手順</span>
+
+- 【要修正】authAuditLogに関する記述？？？
+- authClientConfig.auditLogシートが無ければ作成
+- 引数の内、authAuditLogと同一メンバ名があればthisに設定
 
 ### <span id="authindexeddb_reset_returns">📤 戻り値</span>
 
@@ -154,9 +160,3 @@ IndexedDBの値を更新(生成)
   | keyGeneratedDateTime | number | Date.now() | — |
   | SPkey | string | [必須] | — |
   | expireCPkey | number | [必須] | — |
-
-### <span id="authindexeddb_reset_process">🧾 処理手順</span>
-
-- 【要修正】authAuditLogに関する記述？？？
-- authClientConfig.auditLogシートが無ければ作成
-- 引数の内、authAuditLogと同一メンバ名があればthisに設定

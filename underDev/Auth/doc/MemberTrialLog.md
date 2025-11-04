@@ -47,6 +47,12 @@
 | entered | ❌ | string | — | 入力されたパスコード | 
 | result | ❌ | boolean | — | 試行結果 | 
 
+### <span id="membertriallog_constructor_process">🧾 処理手順</span>
+
+- this.entered = entered
+- this.result = result
+- this.timestamp = Date.now()
+
 ### <span id="membertriallog_constructor_returns">📤 戻り値</span>
 
 - [MemberTrialLog](MemberTrialLog.md#internal): パスコード入力単位の試行記録
@@ -55,9 +61,3 @@
   | entered | string | [必須] | — |
   | result | boolean | [必須] | — |
   | timestamp | number | Date.now() | — |
-
-### <span id="membertriallog_constructor_process">🧾 処理手順</span>
-
-- this.entered = entered
-- this.result = result
-- this.timestamp = Date.now()

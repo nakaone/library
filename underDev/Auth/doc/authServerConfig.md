@@ -58,6 +58,10 @@ authConfigを継承した、authServerでのみ使用する設定値
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="authserverconfig_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="authserverconfig_constructor_returns">📤 戻り値</span>
 
 - [authServerConfig](authServerConfig.md#internal): authServer専用の設定値
@@ -84,6 +88,3 @@ authConfigを継承した、authServerでのみ使用する設定値
   | trial.generationMax | number | 5 | — |
   | underDev.sendPasscode | boolean | false | — |
   | underDev.sendInvitation | boolean | false | — |
-
-### <span id="authserverconfig_constructor_process">🧾 処理手順</span>
-

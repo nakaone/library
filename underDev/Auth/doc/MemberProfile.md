@@ -44,12 +44,13 @@
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="memberprofile_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="memberprofile_constructor_returns">📤 戻り値</span>
 
 - [MemberProfile](MemberProfile.md#internal): メンバの属性情報
   | 項目名 | データ型 | 生成時 | 正常終了 |
   | :-- | :-- | :-- | :-- |
   | authority | number | [必須] | — |
-
-### <span id="memberprofile_constructor_process">🧾 処理手順</span>
-

@@ -44,6 +44,10 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
+### <span id="authrequest_constructor_process">🧾 処理手順</span>
+
+
+
 ### <span id="authrequest_constructor_returns">📤 戻り値</span>
 
 - [authRequest](authRequest.md#internal): 暗号化前の処理要求
@@ -56,6 +60,3 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
   | timestamp | number | [必須] | — |
   | func | string | [必須] | — |
   | arguments | any[] | [必須] | — |
-
-### <span id="authrequest_constructor_process">🧾 処理手順</span>
-
