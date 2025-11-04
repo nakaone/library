@@ -64,27 +64,27 @@ authConfigを継承した、authServerでのみ使用する設定値
 
 ### <span id="authserverconfig_constructor_returns">📤 戻り値</span>
 
-- [authServerConfig](authServerConfig.md#internal): authServer専用の設定値
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | memberList | string | memberList | — |
-  | defaultAuthority | number | 1 | — |
-  | memberLifeTime | number | 31536000000 | — |
-  | prohibitedToJoin | number | 259200000 | — |
-  | loginLifeTime | number | 86400000 | — |
-  | loginFreeze | number | 600000 | — |
-  | requestIdRetention | number | 300000 | — |
-  | errorLog | string | errorLog | — |
-  | storageDaysOfErrorLog | number | 604800000 | — |
-  | auditLog | string | auditLog | — |
-  | storageDaysOfAuditLog | number | 604800000 | — |
-  | func | Object.<string,Object> | [必須] | — |
-  | func.authority | number | [必須] | — |
-  | func.do | Function | [必須] | — |
-  | trial | Object | [必須] | — |
-  | trial.passcodeLength | number | 6 | — |
-  | trial.maxTrial | number | 3 | — |
-  | trial.passcodeLifeTime | number | 600000 | — |
-  | trial.generationMax | number | 5 | — |
-  | underDev.sendPasscode | boolean | false | — |
-  | underDev.sendInvitation | boolean | false | — |
+  - [authServerConfig](authServerConfig.md#authserverconfig_internal): authServer専用の設定値
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | memberList | string | memberList | — |
+    | defaultAuthority | number | 1 | — |
+    | memberLifeTime | number | 31536000000 | — |
+    | prohibitedToJoin | number | 259200000 | — |
+    | loginLifeTime | number | 86400000 | — |
+    | loginFreeze | number | 600000 | — |
+    | requestIdRetention | number | 300000 | — |
+    | errorLog | string | errorLog | — |
+    | storageDaysOfErrorLog | number | 604800000 | — |
+    | auditLog | string | auditLog | — |
+    | storageDaysOfAuditLog | number | 604800000 | — |
+    | func | Object.<string,Object> | 【必須】 | — |
+    | func.authority | number | 【必須】 | — |
+    | func.do | Function | 【必須】 | — |
+    | trial | Object | 【必須】 | — |
+    | trial.passcodeLength | number | 6 | — |
+    | trial.maxTrial | number | 3 | — |
+    | trial.passcodeLifeTime | number | 600000 | — |
+    | trial.generationMax | number | 5 | — |
+    | underDev.sendPasscode | boolean | false | — |
+    | underDev.sendInvitation | boolean | false | — |

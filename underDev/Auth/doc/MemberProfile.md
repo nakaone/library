@@ -9,6 +9,7 @@
 ## <span id="memberprofile_summary">🧭 概要</span>
 
 メンバの属性情報
+
 ### <span id="memberprofile_policy">設計方針</span>
 
 - [状態遷移図](Member.md#member_policy_statediagram)
@@ -50,7 +51,7 @@
 
 ### <span id="memberprofile_constructor_returns">📤 戻り値</span>
 
-- [MemberProfile](MemberProfile.md#internal): メンバの属性情報
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | authority | number | [必須] | — |
+  - [MemberProfile](MemberProfile.md#memberprofile_internal): メンバの属性情報
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | authority | number | 【必須】 | — |

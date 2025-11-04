@@ -42,7 +42,7 @@
 
 ### <span id="authserver_constructor_returns">📤 戻り値</span>
 
-- [authServer](authServer.md#internal): サーバ側auth中核クラス
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  |  | string | [必須] | — |
+  - [authServer](authServer.md#authserver_internal): サーバ側auth中核クラス
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    |  | string | 【必須】 | — |

@@ -50,13 +50,13 @@ authClientConfig, authServerConfigの親クラス
 
 ### <span id="authconfig_constructor_returns">📤 戻り値</span>
 
-- [authConfig](authConfig.md#internal): authClient/authServer共通設定値
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | systemName | string | auth | — |
-  | adminMail | string | [必須] | — |
-  | adminName | string | [必須] | — |
-  | allowableTimeDifference | number | 120000 | — |
-  | RSAbits | string | 2048 | — |
-  | underDev | Object | [必須] | — |
-  | underDev.isTest | boolean | false | — |
+  - [authConfig](authConfig.md#authconfig_internal): authClient/authServer共通設定値
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | systemName | string | auth | — |
+    | adminMail | string | 【必須】 | — |
+    | adminName | string | 【必須】 | — |
+    | allowableTimeDifference | number | 120000 | — |
+    | RSAbits | string | 2048 | — |
+    | underDev | Object | 【必須】 | — |
+    | underDev.isTest | boolean | false | — |

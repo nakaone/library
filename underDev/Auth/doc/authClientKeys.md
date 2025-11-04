@@ -45,7 +45,3 @@
 - [authConfig](authConfig.md#authconfig_internal).RSAbitsを参照、新たな鍵ペア生成
 
 ### <span id="authclientkeys_constructor_returns">📤 戻り値</span>
-
-- [0](0.md#internal): クライアント側鍵ペア
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |

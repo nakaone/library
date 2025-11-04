@@ -48,11 +48,11 @@ authServerからauthClientに返される、暗号化前の処理結果オブジ
 
 ### <span id="authresponse_constructor_returns">📤 戻り値</span>
 
-- [authResponse](authResponse.md#internal): 暗号化前の処理結果
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | number | Date.now() | — |
-  | result | string | normal | — |
-  | message | string | [任意] | — |
-  | request | authRequest | [任意] | — |
-  | response | any | [任意] | — |
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |

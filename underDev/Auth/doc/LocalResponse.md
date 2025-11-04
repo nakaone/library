@@ -46,9 +46,9 @@ authClientからクライアント側関数に返される処理結果オブジ�
 
 ### <span id="localresponse_constructor_returns">📤 戻り値</span>
 
-- [LocalResponse](LocalResponse.md#internal): ローカル関数への処理結果
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | result | string | [必須] | — |
-  | message | string | [任意] | — |
-  | response | any | [任意] | — |
+  - [LocalResponse](LocalResponse.md#localresponse_internal): ローカル関数への処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | result | string | 【必須】 | — |
+    | message | string | 【任意】 | — |
+    | response | any | 【任意】 | — |

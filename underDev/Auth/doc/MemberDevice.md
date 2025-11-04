@@ -11,6 +11,7 @@
 メンバのデバイス情報
 
 メンバが使用する通信機器の情報(マルチデバイス対応)
+
 ### <span id="memberdevice_policy">設計方針</span>
 
 - [状態遷移図](Member.md#member_policy_statediagram)
@@ -56,11 +57,11 @@
 
 ### <span id="memberdevice_constructor_returns">📤 戻り値</span>
 
-- [MemberDevice](MemberDevice.md#internal): メンバのデバイス情報
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | deviceId | string | [必須] | — |
-  | status | string | 未認証 | — |
-  | CPkey | string | [必須] | — |
-  | CPkeyUpdated | number | Date.now() | — |
-  | trial | MemberTrial[] |  | — |
+  - [MemberDevice](MemberDevice.md#memberdevice_internal): メンバのデバイス情報
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | deviceId | string | 【必須】 | — |
+    | status | string | 未認証 | — |
+    | CPkey | string | 【必須】 | — |
+    | CPkeyUpdated | number | Date.now() | — |
+    | trial | MemberTrial[] |  | — |

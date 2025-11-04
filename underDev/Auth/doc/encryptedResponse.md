@@ -44,7 +44,7 @@ authServerからauthClientに返される、暗号化された処理結果オブ
 
 ### <span id="encryptedresponse_constructor_returns">📤 戻り値</span>
 
-- [encryptedResponse](encryptedResponse.md#internal): 暗号化された処理結果
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | ciphertext | string | [必須] | — |
+  - [encryptedResponse](encryptedResponse.md#encryptedresponse_internal): 暗号化された処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | ciphertext | string | 【必須】 | — |

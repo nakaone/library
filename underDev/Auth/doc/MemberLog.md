@@ -9,6 +9,7 @@
 ## <span id="memberlog_summary">🧭 概要</span>
 
 メンバの各種要求・状態変化の時刻
+
 ### <span id="memberlog_policy">設計方針</span>
 
 - [状態遷移図](Member.md#member_policy_statediagram)
@@ -60,16 +61,16 @@
 
 ### <span id="memberlog_constructor_returns">📤 戻り値</span>
 
-- [MemberLog](MemberLog.md#internal): メンバの各種要求・状態変化の時刻
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | joiningRequest | number | Date.new() | — |
-  | approval | number | [必須] | — |
-  | denial | number | [必須] | — |
-  | loginRequest | number | [必須] | — |
-  | loginSuccess | number | [必須] | — |
-  | loginExpiration | number | [必須] | — |
-  | loginFailure | number | [必須] | — |
-  | unfreezeLogin | number | [必須] | — |
-  | joiningExpiration | number | [必須] | — |
-  | unfreezeDenial | number | [必須] | — |
+  - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | joiningRequest | number | Date.new() | — |
+    | approval | number | 【必須】 | — |
+    | denial | number | 【必須】 | — |
+    | loginRequest | number | 【必須】 | — |
+    | loginSuccess | number | 【必須】 | — |
+    | loginExpiration | number | 【必須】 | — |
+    | loginFailure | number | 【必須】 | — |
+    | unfreezeLogin | number | 【必須】 | — |
+    | joiningExpiration | number | 【必須】 | — |
+    | unfreezeDenial | number | 【必須】 | — |

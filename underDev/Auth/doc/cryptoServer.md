@@ -42,7 +42,7 @@
 
 ### <span id="cryptoserver_constructor_returns">📤 戻り値</span>
 
-- [cryptoServer](cryptoServer.md#internal): サーバ側の暗号化・復号処理
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  |  | string | [必須] | — |
+  - [cryptoServer](cryptoServer.md#cryptoserver_internal): サーバ側の暗号化・復号処理
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    |  | string | 【必須】 | — |

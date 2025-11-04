@@ -50,15 +50,15 @@ authServerのエラーログ
 
 ### <span id="autherrorlog_constructor_returns">📤 戻り値</span>
 
-- [authErrorLog](authErrorLog.md#internal): authServerのエラーログ
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | string | Date.now() | — |
-  | memberId | string | [必須] | — |
-  | deviceId | string | [必須] | — |
-  | result | string | fatal | — |
-  | message | string | [任意] | — |
-  | stackTrace | string | [任意] | — |
+  - [authErrorLog](authErrorLog.md#autherrorlog_internal): authServerのエラーログ
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | — |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【必須】 | — |
+    | result | string | fatal | — |
+    | message | string | 【任意】 | — |
+    | stackTrace | string | 【任意】 | — |
 
 ## <span id="autherrorlog_log">🧱 <a href="#autherrorlog_method">authErrorLog.log()</a></span>
 
@@ -83,15 +83,15 @@ authServerのエラーログ
 
 ### <span id="autherrorlog_log_returns">📤 戻り値</span>
 
-- [authErrorLog](authErrorLog.md#internal): authServerのエラーログ
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | string | Date.now() | — |
-  | memberId | string | [必須] | — |
-  | deviceId | string | [必須] | — |
-  | result | string | fatal | — |
-  | message | string | [任意] | — |
-  | stackTrace | string | [任意] | — |
+  - [authErrorLog](authErrorLog.md#autherrorlog_internal): authServerのエラーログ
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | — |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【必須】 | — |
+    | result | string | fatal | — |
+    | message | string | 【任意】 | — |
+    | stackTrace | string | 【任意】 | — |
 
 ## <span id="autherrorlog_reset">🧱 <a href="#autherrorlog_method">authErrorLog.reset()</a></span>
 
@@ -111,12 +111,12 @@ authErrorLogインスタンス変数の値を再設定
 
 ### <span id="autherrorlog_reset_returns">📤 戻り値</span>
 
-- [authErrorLog](authErrorLog.md#internal): authServerのエラーログ
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | string | Date.now() | — |
-  | memberId | string | [必須] | — |
-  | deviceId | string | [必須] | — |
-  | result | string | fatal | — |
-  | message | string | [任意] | — |
-  | stackTrace | string | [任意] | — |
+  - [authErrorLog](authErrorLog.md#autherrorlog_internal): authServerのエラーログ
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | — |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【必須】 | — |
+    | result | string | fatal | — |
+    | message | string | 【任意】 | — |
+    | stackTrace | string | 【任意】 | — |

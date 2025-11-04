@@ -49,12 +49,12 @@
 
 ### <span id="authscriptproperties_constructor_returns">📤 戻り値</span>
 
-- [authScriptProperties](authScriptProperties.md#internal): サーバ側のScriptProperties
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | keyGeneratedDateTime | number | [必須] | — |
-  | SPkey | string | [必須] | — |
-  | SSkey | string | [必須] | — |
-  | oldSPkey | string | [必須] | — |
-  | oldSSkey | string | [必須] | — |
-  | requestLog | authRequestLog[] |  | — |
+  - [authScriptProperties](authScriptProperties.md#authscriptproperties_internal): サーバ側のScriptProperties
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | keyGeneratedDateTime | number | 【必須】 | — |
+    | SPkey | string | 【必須】 | — |
+    | SSkey | string | 【必須】 | — |
+    | oldSPkey | string | 【必須】 | — |
+    | oldSSkey | string | 【必須】 | — |
+    | requestLog | authRequestLog[] |  | — |

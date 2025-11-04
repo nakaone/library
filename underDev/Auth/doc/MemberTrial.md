@@ -9,6 +9,7 @@
 ## <span id="membertrial_summary">🧭 概要</span>
 
 ログイン試行情報の管理・判定
+
 ### <span id="membertrial_policy">設計方針</span>
 
 - [状態遷移図](Member.md#member_policy_statediagram)
@@ -51,12 +52,12 @@
 
 ### <span id="membertrial_constructor_returns">📤 戻り値</span>
 
-- [MemberTrial](MemberTrial.md#internal): ログイン試行情報の管理・判定
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | passcode | string | [必須] | — |
-  | created | number | Date.now() | — |
-  | log | MemberTrialLog[] |  | — |
+  - [MemberTrial](MemberTrial.md#membertrial_internal): ログイン試行情報の管理・判定
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | passcode | string | 【必須】 | — |
+    | created | number | Date.now() | — |
+    | log | MemberTrialLog[] |  | — |
 
 ## <span id="membertrial_loginattempt">🧱 <a href="#membertrial_method">MemberTrial.loginAttempt()</a></span>
 
@@ -79,11 +80,11 @@
 
 ### <span id="membertrial_loginattempt_returns">📤 戻り値</span>
 
-- [authResponse](authResponse.md#internal): ログイン試行情報の管理・判定
-  | 項目名 | データ型 | 生成時 | 正答時 | 誤答・再挑戦可 | 誤答・再挑戦不可 |
-  | :-- | :-- | :-- | :-- | :-- | :-- |
-  | timestamp | number | Date.now() | — | — | — |
-  | result | string | normal | **normal** | **warning** | **fatal** |
-  | message | string | [任意] | — | — | — |
-  | request | authRequest | [任意] | 引数"request" | 引数"request" | 引数"request" |
-  | response | any | [任意] | — | — | — |
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正答時 | 誤答・再挑戦可 | 誤答・再挑戦不可 |
+    | :-- | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — | — | — |
+    | result | string | normal | **normal** | **warning** | **fatal** |
+    | message | string | 【任意】 | — | — | — |
+    | request | authRequest | 【任意】 | 引数"request" | 引数"request" | 引数"request" |
+    | response | any | 【任意】 | — | — | — |

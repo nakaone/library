@@ -64,15 +64,15 @@ authClientKeysを継承した、クライアントのIndexedDBを操作するク
 
 ### <span id="authindexeddb_constructor_returns">📤 戻り値</span>
 
-- [authIndexedDB](authIndexedDB.md#internal): クライアントのIndexedDB
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | memberId | string | [必須] | — |
-  | memberName | string | [必須] | — |
-  | deviceId | string | UUID | — |
-  | keyGeneratedDateTime | number | Date.now() | — |
-  | SPkey | string | [必須] | — |
-  | expireCPkey | number | [必須] | — |
+  - [authIndexedDB](authIndexedDB.md#authindexeddb_internal): クライアントのIndexedDB
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | memberId | string | 【必須】 | — |
+    | memberName | string | 【必須】 | — |
+    | deviceId | string | UUID | — |
+    | keyGeneratedDateTime | number | Date.now() | — |
+    | SPkey | string | 【必須】 | — |
+    | expireCPkey | number | 【必須】 | — |
 
 ## <span id="authindexeddb_get">🧱 <a href="#authindexeddb_method">authIndexedDB.get()</a></span>
 
@@ -95,15 +95,15 @@ IndexedDBの値を取得
 
 ### <span id="authindexeddb_get_returns">📤 戻り値</span>
 
-- [authIndexedDB](authIndexedDB.md#internal): クライアントのIndexedDB
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | memberId | string | [必須] | — |
-  | memberName | string | [必須] | — |
-  | deviceId | string | UUID | — |
-  | keyGeneratedDateTime | number | Date.now() | — |
-  | SPkey | string | [必須] | — |
-  | expireCPkey | number | [必須] | — |
+  - [authIndexedDB](authIndexedDB.md#authindexeddb_internal): クライアントのIndexedDB
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | memberId | string | 【必須】 | — |
+    | memberName | string | 【必須】 | — |
+    | deviceId | string | UUID | — |
+    | keyGeneratedDateTime | number | Date.now() | — |
+    | SPkey | string | 【必須】 | — |
+    | expireCPkey | number | 【必須】 | — |
 
 ## <span id="authindexeddb_set">🧱 <a href="#authindexeddb_method">authIndexedDB.set()</a></span>
 
@@ -122,15 +122,15 @@ IndexedDBの値を更新(生成)
 
 ### <span id="authindexeddb_set_returns">📤 戻り値</span>
 
-- [authIndexedDB](authIndexedDB.md#internal): クライアントのIndexedDB
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | memberId | string | [必須] | — |
-  | memberName | string | [必須] | — |
-  | deviceId | string | UUID | — |
-  | keyGeneratedDateTime | number | Date.now() | — |
-  | SPkey | string | [必須] | — |
-  | expireCPkey | number | [必須] | — |
+  - [authIndexedDB](authIndexedDB.md#authindexeddb_internal): クライアントのIndexedDB
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | memberId | string | 【必須】 | — |
+    | memberName | string | 【必須】 | — |
+    | deviceId | string | UUID | — |
+    | keyGeneratedDateTime | number | Date.now() | — |
+    | SPkey | string | 【必須】 | — |
+    | expireCPkey | number | 【必須】 | — |
 
 ## <span id="authindexeddb_reset">🧱 <a href="#authindexeddb_method">authIndexedDB.reset()</a></span>
 
@@ -151,12 +151,12 @@ IndexedDBの値を更新(生成)
 
 ### <span id="authindexeddb_reset_returns">📤 戻り値</span>
 
-- [authIndexedDB](authIndexedDB.md#internal): クライアントのIndexedDB
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | memberId | string | [必須] | — |
-  | memberName | string | [必須] | — |
-  | deviceId | string | UUID | — |
-  | keyGeneratedDateTime | number | Date.now() | — |
-  | SPkey | string | [必須] | — |
-  | expireCPkey | number | [必須] | — |
+  - [authIndexedDB](authIndexedDB.md#authindexeddb_internal): クライアントのIndexedDB
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | memberId | string | 【必須】 | — |
+    | memberName | string | 【必須】 | — |
+    | deviceId | string | UUID | — |
+    | keyGeneratedDateTime | number | Date.now() | — |
+    | SPkey | string | 【必須】 | — |
+    | expireCPkey | number | 【必須】 | — |

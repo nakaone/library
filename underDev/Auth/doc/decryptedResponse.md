@@ -52,15 +52,15 @@ encryptedResponseをcryptoClientで復号した処理結果オブジェクト
 
 ### <span id="decryptedresponse_constructor_returns">📤 戻り値</span>
 
-- [decryptedResponse](decryptedResponse.md#internal): 復号済の処理結果
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | number | [必須] | — |
-  | result | string | [必須] | — |
-  | message | string | [任意] | — |
-  | request | authRequest | [必須] | — |
-  | response | any | [任意] | — |
-  | sv | Object | [必須] | — |
-  | sv.timestamp | number | [必須] | — |
-  | sv.result | string | [必須] | — |
-  | sv.message | string | [任意] | — |
+  - [decryptedResponse](decryptedResponse.md#decryptedresponse_internal): 復号済の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | 【必須】 | — |
+    | result | string | 【必須】 | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【必須】 | — |
+    | response | any | 【任意】 | — |
+    | sv | Object | 【必須】 | — |
+    | sv.timestamp | number | 【必須】 | — |
+    | sv.result | string | 【必須】 | — |
+    | sv.message | string | 【任意】 | — |

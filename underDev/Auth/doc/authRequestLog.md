@@ -45,8 +45,8 @@ ScriptPropertiesに保存
 
 ### <span id="authrequestlog_constructor_returns">📤 戻り値</span>
 
-- [authRequestLog](authRequestLog.md#internal): 重複チェック用のリクエスト履歴
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | number | Date.now() | — |
-  | requestId | string | [必須] | — |
+  - [authRequestLog](authRequestLog.md#authrequestlog_internal): 重複チェック用のリクエスト履歴
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | requestId | string | 【必須】 | — |

@@ -42,8 +42,24 @@ const classdef = {
         ],
 
         process: `
-        手順の中で自他クラスのメソッドを呼ぶ場合、caller対応のため以下のように記述すること。
-        [メソッド名](クラス名.md#クラス名(小文字表記)_メソッド名(小文字表記))
+          - 手順の中で自他クラスのメソッドを呼ぶ場合、caller対応のため以下のように記述すること。<br>
+            [メソッド名](クラス名.md#クラス名(小文字表記)_メソッド名(小文字表記))
+          - <evaluate>〜</evaluate>内部はMarkdown作成時に評価され、結果で置換される
+          - 物理削除 ※comparisonTableサンプル
+            <evaluate>comparisonTable({ // 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
+              typeName:'authAuditLog',  // 対象元(投入先)となるclassdef(cdef)上のクラス名
+              default: {request:'{memberId, physical}'},  // 各パターンの共通設定値。表記方法はassignと同じ
+              pattern:{ // 設定パターン集
+                '物理削除':{  // パターン名
+                  assign: { // {Object.<string,string>} 当該パターンの設定値
+                    func:'physical remove',
+                    note:'削除対象メンバのMember(JSON)'
+                  },
+                  condition: '',  // 該当条件(trimIndent対象)
+                  note: '',  // 備忘(trimIndent対象)
+                }
+              }
+            },'  ')</evaluate>
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
@@ -1268,9 +1284,29 @@ const classdef = {
         ],
 
         process: `
-
-        手順の中で自他クラスのメソッドを呼ぶ場合、caller対応のため以下のように記述すること。
-        [メソッド名](クラス名.md#クラス名(小文字表記)_メソッド名(小文字表記))
+          - 物理削除
+            <evaluate>comparisonTable({ // comparisonTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
+              typeName:'authAuditLog',  // 対象元(投入先)となるclassdef(cdef)上のクラス名
+              default: {request:'{memberId, physical}'},  // 各パターンの共通設定値。表記方法はassignと同じ
+              pattern:{ // 設定パターン集
+                '物理削除':{  // パターン名
+                  assign: { // {Object.<string,string>} 当該パターンの設定値
+                    func:'physical remove',
+                    note:'削除対象メンバのMember(JSON)'
+                  },
+                  condition: '',  // 該当条件(trimIndent対象)
+                  note: '',  // 備忘(trimIndent対象)
+                }
+              }
+            },'  ')</evaluate>
+          - 論理削除
+            <evaluate>comparisonTable({
+              typeName:'authAuditLog',
+              default: {request:'{memberId, physical}'},
+              pattern:{
+                '論理削除':{assign: {func:'logical remove',note:'削除対象メンバのMember(JSON)'}}
+              }
+            },'  ')</evaluate>
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
@@ -1612,14 +1648,43 @@ const classdef = {
     const lines = str.replace(/^\s*\n+|\n+\s*$/g, '').split('\n');
     if( lines.length === 0 ) return '';
 
-    // 2. 各行の共通インデント（スペース・タブ）を取得
+    // 2. 1行だけの場合、先頭のスペースを削除して終了
+    if( lines.length === 1 ) return lines[0].trim();
+
+    // 3. 複数行の場合、各行の共通インデント(スペース・タブ)を取得
     const indents = lines
       .filter(line => line.trim() !== '')
       .map(line => line.match(/^[ \t]*/)[0].length);
     const minIndent = indents.length ? Math.min(...indents) : 0;
 
-    // 3. 各行から共通インデント分を削除
-    return lines.map(line => line.slice(minIndent)).join('\n');
+    /*
+    const content = lines.map(line => line.slice(minIndent)).join('\n');
+    const m = content.match(/^([ \t]*)<evaluate>([\s\S]*?)<\/evaluate>/m);
+    if( m ) console.log(`l.1634 ${JSON.stringify(m,null,2)}\n${eval(m[2])}`);
+    */
+    const replaced = lines.map(line => line.slice(minIndent)).join('\n').replace(
+      /^([ \t]*)<evaluate>([\s\S]*?)<\/evaluate>/gm,
+      (_, indent, code) => {
+        try {
+          // その場で評価（comparisonTableが使えるスコープ）
+          const result = eval(code);
+          // indentを先頭に追加して整形
+          return result.join('\n');
+            /*
+            .split('\n')
+            .map(line => (line ? indent + line : line))
+            .join('\n');
+            */
+        } catch (e) {
+          console.error('Error evaluating block:', e);
+          return `${indent}[EVAL ERROR: ${e.message}]`;
+        }
+      }
+    );
+
+    // 4. 各行から共通インデント分を削除
+    //return lines.map(line => line.slice(minIndent)).join('\n');
+    return replaced;
   }
 
   /**
@@ -1641,23 +1706,25 @@ const classdef = {
   function comparisonTable(arg,indent=''){
     const rv = [];
     const dataLabels = Object.keys(arg.pattern);
-    
-    // ヘッダー行
     const header = ['項目名','データ型','生成時', ...dataLabels];
-    rv.push(`${indent}| ${header.join(' | ')} |`);
-    rv.push(`${indent}| ${header.map(() => ':--').join(' | ')} |`);
     
-    // 各メンバ行
     if( typeof cdef[arg.typeName] !== 'undefined' ){
+      ['',  // ヘッダー行
+        `${indent}- [${arg.typeName}](${arg.typeName}.md#${arg.typeName.toLowerCase()}_internal): ${cdef[arg.typeName].label}`,
+        `${indent+'  '}| ${header.join(' | ')} |`,
+        `${indent+'  '}| ${header.map(() => ':--').join(' | ')} |`,
+      ].forEach(x => rv.push(x));
+
+      // 各メンバ行
       cdef[arg.typeName].members._list.forEach(x => {  // 戻り値データ型のメンバ名を順次呼出
         const m = cdef[arg.typeName].members[x];
         const cells = [
           m.name,
           m.type,
-          m.default !== '—' ? m.default : (m.isOpt ? '[任意]' : '[必須]'),
-          ...dataLabels.map(label => arg.pattern[label].assign[x] ?? '')
+          m.default !== '—' ? m.default : (m.isOpt ? '【任意】' : '【必須】'),
+          ...dataLabels.map(label => arg.pattern[label].assign[x] ?? '—')
         ];
-        rv.push(`${indent}| ${cells.join(' | ')} |`);
+        rv.push(`${indent+'  '}| ${cells.join(' | ')} |`);
       });
     }
 
@@ -1902,7 +1969,7 @@ const classdef = {
       // 2.設計方針
       if( this.policy.length > 0 ){
         [
-          `### <span id="${cn}_policy">設計方針</span>`,'',
+          '',`### <span id="${cn}_policy">設計方針</span>`,'',
           this.policy
         ].forEach(x => rv.push(x));
       }
@@ -2040,7 +2107,7 @@ const classdef = {
       this.methodName = methodName; // メソッド名。引数から自動設定
       this.type = arg.type || 'private'; // {string} static:クラスメソッド、public:外部利用可、private:内部専用
       this.label = arg.label || ''; // {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-      this.note = arg.note || ''; // {string} 注意事項。markdownで記載
+      this.note = trimIndent(arg.note || ''); // {string} 注意事項。markdownで記載
       this.source = trimIndent(arg.source || ''); // {string} 想定するJavaScriptソース
       this.lib = arg.lib || []; // {string[]} 本メソッドで使用するライブラリ
       this.caller = arg.caller || []; // {string[]} 本メソッドを呼び出す"クラス.メソッド名"
@@ -2315,34 +2382,13 @@ const classdef = {
         }
       }
       */
-      const rv = ['',`- [${this.typeName}](${this.typeName}.md#internal): ${
+      /*const rv = ['',`- [${this.typeName}](${this.typeName}.md#internal): ${
         cdef[this.className].label}`];
 
       comparisonTable(this,'  ').forEach(x => rv.push(x));
-      /*
-      const dataLabels = Object.keys(this.pattern);
-      
-      // ヘッダー行
-      const header = ['項目名','データ型','生成時', ...dataLabels];
-      rv.push(`  | ${header.join(' | ')} |`);
-      rv.push(`  | ${header.map(() => ':--').join(' | ')} |`);
-      
-      // 各メンバ行
-      if( typeof cdef[this.typeName] !== 'undefined' ){
-        cdef[this.typeName].members._list.forEach(x => {  // 戻り値データ型のメンバ名を順次呼出
-          const m = cdef[this.typeName].members[x];
-          const cells = [
-            m.name,
-            m.type,
-            m.default !== '—' ? m.default : (m.isOpt ? '[任意]' : '[必須]'),
-            ...dataLabels.map(label => this.pattern[label].assign[x] ?? '')
-          ];
-          rv.push(`  | ${cells.join(' | ')} |`);
-        });
-      }
-      */
 
-      return rv;
+      return rv;*/
+      return comparisonTable(this,'  ');
     }
   }
 

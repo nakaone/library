@@ -9,6 +9,7 @@
 ## <span id="membertriallog_summary">🧭 概要</span>
 
 パスコード入力単位の試行記録
+
 ### <span id="membertriallog_policy">設計方針</span>
 
 - [状態遷移図](Member.md#member_policy_statediagram)
@@ -55,9 +56,9 @@
 
 ### <span id="membertriallog_constructor_returns">📤 戻り値</span>
 
-- [MemberTrialLog](MemberTrialLog.md#internal): パスコード入力単位の試行記録
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | entered | string | [必須] | — |
-  | result | boolean | [必須] | — |
-  | timestamp | number | Date.now() | — |
+  - [MemberTrialLog](MemberTrialLog.md#membertriallog_internal): パスコード入力単位の試行記録
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | entered | string | 【必須】 | — |
+    | result | boolean | 【必須】 | — |
+    | timestamp | number | Date.now() | — |

@@ -48,11 +48,11 @@ encryptedRequestをcryptoServerで復号した処理要求オブジェクト
 
 ### <span id="decryptedrequest_constructor_returns">📤 戻り値</span>
 
-- [decryptedRequest](decryptedRequest.md#internal): 復号済の処理要求
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | result | string | [必須] | — |
-  | message | string | [任意] | — |
-  | request | authRequest | [必須] | — |
-  | timestamp | number | [必須] | — |
-  | status | string | [必須] | — |
+  - [decryptedRequest](decryptedRequest.md#decryptedrequest_internal): 復号済の処理要求
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | result | string | 【必須】 | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【必須】 | — |
+    | timestamp | number | 【必須】 | — |
+    | status | string | 【必須】 | — |

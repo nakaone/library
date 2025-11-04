@@ -54,16 +54,16 @@ authServerの監査ログ
 
 ### <span id="authauditlog_constructor_returns">📤 戻り値</span>
 
-- [authAuditLog](authAuditLog.md#internal): authServerの監査ログ
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | string | Date.now() | — |
-  | duration | number | [必須] | — |
-  | memberId | string | [必須] | — |
-  | deviceId | string | [必須] | — |
-  | func | string | [必須] | — |
-  | result | string | normal | — |
-  | note | string | [必須] | — |
+  - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | — |
+    | duration | number | 【必須】 | — |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【必須】 | — |
+    | func | string | 【必須】 | — |
+    | result | string | normal | — |
+    | note | string | 【必須】 | — |
 
 ## <span id="authauditlog_log">🧱 <a href="#authauditlog_method">authAuditLog.log()</a></span>
 
@@ -86,16 +86,16 @@ authServerの監査ログ
 
 ### <span id="authauditlog_log_returns">📤 戻り値</span>
 
-- [authAuditLog](authAuditLog.md#internal): authServerの監査ログ
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | string | Date.now() | — |
-  | duration | number | [必須] | — |
-  | memberId | string | [必須] | — |
-  | deviceId | string | [必須] | — |
-  | func | string | [必須] | — |
-  | result | string | normal | — |
-  | note | string | [必須] | — |
+  - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | — |
+    | duration | number | 【必須】 | — |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【必須】 | — |
+    | func | string | 【必須】 | — |
+    | result | string | normal | — |
+    | note | string | 【必須】 | — |
 
 ## <span id="authauditlog_reset">🧱 <a href="#authauditlog_method">authAuditLog.reset()</a></span>
 
@@ -116,13 +116,13 @@ authAuditLogインスタンス変数の値を再設定
 
 ### <span id="authauditlog_reset_returns">📤 戻り値</span>
 
-- [authAuditLog](authAuditLog.md#internal): authServerの監査ログ
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | string | Date.now() | — |
-  | duration | number | [必須] | — |
-  | memberId | string | [必須] | — |
-  | deviceId | string | [必須] | — |
-  | func | string | [必須] | — |
-  | result | string | normal | — |
-  | note | string | [必須] | — |
+  - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | — |
+    | duration | number | 【必須】 | — |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【必須】 | — |
+    | func | string | 【必須】 | — |
+    | result | string | normal | — |
+    | note | string | 【必須】 | — |

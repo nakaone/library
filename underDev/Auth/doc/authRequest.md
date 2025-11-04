@@ -50,13 +50,13 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
 
 ### <span id="authrequest_constructor_returns">📤 戻り値</span>
 
-- [authRequest](authRequest.md#internal): 暗号化前の処理要求
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | memberId | string | [必須] | — |
-  | deviceId | string | [必須] | — |
-  | signature | string | [必須] | — |
-  | requestId | string | [必須] | — |
-  | timestamp | number | [必須] | — |
-  | func | string | [必須] | — |
-  | arguments | any[] | [必須] | — |
+  - [authRequest](authRequest.md#authrequest_internal): 暗号化前の処理要求
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【必須】 | — |
+    | signature | string | 【必須】 | — |
+    | requestId | string | 【必須】 | — |
+    | timestamp | number | 【必須】 | — |
+    | func | string | 【必須】 | — |
+    | arguments | any[] | 【必須】 | — |

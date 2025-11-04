@@ -13,6 +13,7 @@
 - 'Member'はGoogle SpreadSheet上でメンバ(アカウント)情報・状態を一元的に管理するためのクラスです。
 - 加入・ログイン・パスコード試行・デバイス別公開鍵(CPkey)管理などの状態を統一的に扱います。
 - マルチデバイス利用を前提とし、memberListスプレッドシートの1行を1メンバとして管理します。
+
 ### <span id="member_policy">設計方針</span>
 
 #### <span id="member_policy_statediagram">状態遷移図</span>
@@ -103,16 +104,16 @@ stateDiagram-v2
 
 ### <span id="member_constructor_returns">📤 戻り値</span>
 
-- [Member](Member.md#internal): メンバ一覧シートに対応したメンバ単位の管理情報
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | memberId | string | UUID | — |
-  | name | string | "dummy" | — |
-  | status | string | "未加入" | — |
-  | log | MemberLog | new MemberLog() | — |
-  | profile | MemberProfile | new MemberProfile() | — |
-  | device | MemberDevice[] | 空配列 | — |
-  | note | string | 空文字列 | — |
+  - [Member](Member.md#member_internal): メンバ一覧シートに対応したメンバ単位の管理情報
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | memberId | string | UUID | — |
+    | name | string | "dummy" | — |
+    | status | string | "未加入" | — |
+    | log | MemberLog | new MemberLog() | — |
+    | profile | MemberProfile | new MemberProfile() | — |
+    | device | MemberDevice[] | 空配列 | — |
+    | note | string | 空文字列 | — |
 
 ## <span id="member_getmember">🧱 <a href="#member_method">Member.getMember()</a></span>
 
@@ -132,22 +133,20 @@ stateDiagram-v2
 
 ### <span id="member_getmember_returns">📤 戻り値</span>
 
-- [authResponse](authResponse.md#internal): メンバ一覧シートに対応したメンバ単位の管理情報
-  | 項目名 | データ型 | 生成時 | 登録済 | 未登録 |
-  | :-- | :-- | :-- | :-- | :-- |
-  | timestamp | number | Date.now() | — | — |
-  | result | string | normal | **"normal"** | **"fatal"** |
-  | message | string | [任意] | — | **not exists** |
-  | request | authRequest | [任意] | {memberId:引数のmemberId} | {memberId:引数のmemberId} |
-  | response | any | [任意] | **Member(シート)** | — |
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 登録済 | 未登録 |
+    | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — | — |
+    | result | string | normal | **"normal"** | **"fatal"** |
+    | message | string | 【任意】 | — | **not exists** |
+    | request | authRequest | 【任意】 | {memberId:引数のmemberId} | {memberId:引数のmemberId} |
+    | response | any | 【任意】 | **Member(シート)** | — |
 
 ## <span id="member_removemember">🧱 <a href="#member_method">Member.removeMember()</a></span>
 
 登録中メンバをアカウント削除、または加入禁止にする
 
-
-          - memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
-        
+- memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
 
 ### <span id="member_removemember_param">📥 引数</span>
 
@@ -159,19 +158,41 @@ stateDiagram-v2
 
 ### <span id="member_removemember_process">🧾 処理手順</span>
 
-手順の中で自他クラスのメソッドを呼ぶ場合、caller対応のため以下のように記述すること。
-[メソッド名](クラス名.md#クラス名(小文字表記)_メソッド名(小文字表記))
+- 物理削除
+
+  - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
+    | 項目名 | データ型 | 生成時 | 物理削除 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | — |
+    | duration | number | 【必須】 | — |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【必須】 | — |
+    | func | string | 【必須】 | physical remove |
+    | result | string | normal | — |
+    | note | string | 【必須】 | 削除対象メンバのMember(JSON) |
+- 論理削除
+
+  - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
+    | 項目名 | データ型 | 生成時 | 論理削除 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | — |
+    | duration | number | 【必須】 | — |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【必須】 | — |
+    | func | string | 【必須】 | logical remove |
+    | result | string | normal | — |
+    | note | string | 【必須】 | 削除対象メンバのMember(JSON) |
 
 ### <span id="member_removemember_returns">📤 戻り値</span>
 
-- [authResponse](authResponse.md#internal): メンバ一覧シートに対応したメンバ単位の管理情報
-  | 項目名 | データ型 | 生成時 | 正答時 | 誤答・再挑戦可 | 誤答・再挑戦不可 |
-  | :-- | :-- | :-- | :-- | :-- | :-- |
-  | timestamp | number | Date.now() | — | — | — |
-  | result | string | normal | **normal** | **warning** | **fatal** |
-  | message | string | [任意] | — | — | — |
-  | request | authRequest | [任意] | 引数"request" | 引数"request" | 引数"request" |
-  | response | any | [任意] | — | — | — |
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正答時 | 誤答・再挑戦可 | 誤答・再挑戦不可 |
+    | :-- | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — | — | — |
+    | result | string | normal | **normal** | **warning** | **fatal** |
+    | message | string | 【任意】 | — | — | — |
+    | request | authRequest | 【任意】 | 引数"request" | 引数"request" | 引数"request" |
+    | response | any | 【任意】 | — | — | — |
 
 ## <span id="member_setmember">🧱 <a href="#member_method">Member.setMember()</a></span>
 
@@ -215,11 +236,11 @@ stateDiagram-v2
 
 ### <span id="member_setmember_returns">📤 戻り値</span>
 
-- [authResponse](authResponse.md#internal): メンバ一覧シートに対応したメンバ単位の管理情報
-  | 項目名 | データ型 | 生成時 | ① | ② | ③ | ④ | ⑤ |
-  | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-  | timestamp | number | Date.now() | — | — | — | — | — |
-  | result | string | normal | **"fatal"** | **"normal"** | **"fatal"** | **"fatal"** | **"normal"** |
-  | message | string | [任意] | **"not exist"** | **"updated"** | **"already exist"** | **"Invalid registration request"** | **"appended"** |
-  | request | authRequest | [任意] | arg | arg | arg | arg | arg |
-  | response | any | [任意] | — | **Member(更新済)** | — | — | **Member(新規作成)** |
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | ① | ② | ③ | ④ | ⑤ |
+    | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — | — | — | — | — |
+    | result | string | normal | **"fatal"** | **"normal"** | **"fatal"** | **"fatal"** | **"normal"** |
+    | message | string | 【任意】 | **"not exist"** | **"updated"** | **"already exist"** | **"Invalid registration request"** | **"appended"** |
+    | request | authRequest | 【任意】 | arg | arg | arg | arg | arg |
+    | response | any | 【任意】 | — | **Member(更新済)** | — | — | **Member(新規作成)** |

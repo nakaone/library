@@ -46,9 +46,9 @@ authClientからauthServerに送られる、暗号化された処理要求オブ
 
 ### <span id="encryptedrequest_constructor_returns">📤 戻り値</span>
 
-- [encryptedRequest](encryptedRequest.md#internal): 暗号化された処理要求
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | memberId | string | [必須] | — |
-  | deviceId | string | [必須] | — |
-  | ciphertext | string | [必須] | — |
+  - [encryptedRequest](encryptedRequest.md#encryptedrequest_internal): 暗号化された処理要求
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【必須】 | — |
+    | ciphertext | string | 【必須】 | — |

@@ -14,6 +14,7 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 サーバ側(authServer)への暗号化通信リクエストを署名・暗号化、
 サーバ側処理を経てローカル側に戻された結果を復号・検証し、
 処理結果に応じてクライアント側処理を適切に振り分ける中核関数です。
+
 ### <span id="authclient_policy">設計方針</span>
 
 - クロージャ関数ではなくクラスとして作成
@@ -113,12 +114,12 @@ sequenceDiagram
 
 ### <span id="authclient_constructor_returns">📤 戻り値</span>
 
-- [authClient](authClient.md#internal): クライアント側auth中核クラス
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | cf | authClientConfig | [必須] | — |
-  | crypto | cryptoClient | [必須] | — |
-  | idb | authIndexedDB | [必須] | — |
+  - [authClient](authClient.md#authclient_internal): クライアント側auth中核クラス
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | cf | authClientConfig | 【必須】 | — |
+    | crypto | cryptoClient | 【必須】 | — |
+    | idb | authIndexedDB | 【必須】 | — |
 
 ## <span id="authclient_checkcpkey">🧱 <a href="#authclient_method">authClient.checkCPkey()</a></span>
 
@@ -137,14 +138,14 @@ CPkey残有効期間をチェック
 
 ### <span id="authclient_checkcpkey_returns">📤 戻り値</span>
 
-- [authResponse](authResponse.md#internal): クライアント側auth中核クラス
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | number | Date.now() | — |
-  | result | string | normal | — |
-  | message | string | [任意] | — |
-  | request | authRequest | [任意] | — |
-  | response | any | [任意] | — |
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |
 
 ## <span id="authclient_enterpasscode">🧱 <a href="#authclient_method">authClient.enterPasscode()</a></span>
 
@@ -163,14 +164,14 @@ CPkey残有効期間をチェック
 
 ### <span id="authclient_enterpasscode_returns">📤 戻り値</span>
 
-- [authResponse](authResponse.md#internal): クライアント側auth中核クラス
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | number | Date.now() | — |
-  | result | string | normal | — |
-  | message | string | [任意] | — |
-  | request | authRequest | [任意] | — |
-  | response | any | [任意] | — |
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |
 
 ## <span id="authclient_exec">🧱 <a href="#authclient_method">authClient.exec()</a></span>
 
@@ -191,14 +192,14 @@ CPkey残有効期間をチェック
 
 ### <span id="authclient_exec_returns">📤 戻り値</span>
 
-- [authResponse](authResponse.md#internal): クライアント側auth中核クラス
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | number | Date.now() | — |
-  | result | string | normal | — |
-  | message | string | [任意] | — |
-  | request | authRequest | [任意] | — |
-  | response | any | [任意] | — |
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |
 
 ## <span id="authclient_setupenvironment">🧱 <a href="#authclient_method">authClient.setupEnvironment()</a></span>
 
@@ -217,14 +218,14 @@ SPkey入手等、authClient動作環境整備
 
 ### <span id="authclient_setupenvironment_returns">📤 戻り値</span>
 
-- [authResponse](authResponse.md#internal): クライアント側auth中核クラス
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | number | Date.now() | — |
-  | result | string | normal | — |
-  | message | string | [任意] | — |
-  | request | authRequest | [任意] | — |
-  | response | any | [任意] | — |
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |
 
 ## <span id="authclient_showmessage">🧱 <a href="#authclient_method">authClient.showMessage()</a></span>
 
@@ -243,11 +244,11 @@ SPkey入手等、authClient動作環境整備
 
 ### <span id="authclient_showmessage_returns">📤 戻り値</span>
 
-- [authResponse](authResponse.md#internal): クライアント側auth中核クラス
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | timestamp | number | Date.now() | — |
-  | result | string | normal | — |
-  | message | string | [任意] | — |
-  | request | authRequest | [任意] | — |
-  | response | any | [任意] | — |
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |

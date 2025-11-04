@@ -45,8 +45,8 @@
 
 ### <span id="localrequest_constructor_returns">📤 戻り値</span>
 
-- [LocalRequest](LocalRequest.md#internal): ローカル関数からの処理要求
-  | 項目名 | データ型 | 生成時 | 正常終了 |
-  | :-- | :-- | :-- | :-- |
-  | func | string | [必須] | — |
-  | arguments | any[] | [必須] | — |
+  - [LocalRequest](LocalRequest.md#localrequest_internal): ローカル関数からの処理要求
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | func | string | 【必須】 | — |
+    | arguments | any[] | 【必須】 | — |
