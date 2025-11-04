@@ -1774,7 +1774,10 @@ const classdef = {
           m.name,
           m.type,
           m.default !== '—' ? m.default : (m.isOpt ? '【任意】' : '【必須】'),
-          ...dataLabels.map(label => arg.pattern[label].assign[x] ?? arg.default[x] ?? '—')
+          ...dataLabels.map(label => typeof arg.pattern[label].assign[x] === 'undefined'
+            ? ( typeof arg.default[x] === 'undefined' ? '—' : arg.default[x])
+            : `**${arg.pattern[label].assign[x]}**`
+          )
         ];
         rv.push(`${indent+'  '}| ${cells.join(' | ')} |`);
       });
@@ -2197,12 +2200,6 @@ const classdef = {
       Object.keys(arg.pattern).forEach(x => {
         if( typeof arg.pattern[x].assign === 'undefined' ){
           arg.pattern[x].assign = {};
-        } else {
-          // パターン特有の設定値は強調表示 ⇒ comparisonTableに機能移管
-          //Object.keys(arg.pattern[x].assign).forEach(key =>
-          //  arg.pattern[x].assign[key] = `**${arg.pattern[x].assign[key]}**`);
-          // 「パターン特有設定値 > データ型共通設定値 > 基となるデータ型の引用項目」を設定
-          arg.pattern[x].assign = Object.assign({},org,this.default,arg.pattern[x].assign);
         }
 
         this.pattern[x] = {
