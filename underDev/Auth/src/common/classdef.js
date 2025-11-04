@@ -1751,7 +1751,6 @@ const classdef = {
 
       // 1.概要
       [
-        `<p style="text-align:right;"><a href="classList.md">クラス一覧</a></p>`,'',
         `# <span id="${cn}">${this.className} クラス仕様書</span>`,'',
         `## <span id="${cn}_summary">🧭 概要</span>`,'',
         this.label

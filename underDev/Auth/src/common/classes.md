@@ -1,5 +1,3 @@
-<!--::$src/common/header.md::-->
-
 # auth関係 データ型定義
 
 [クラス一覧](#list) | [動作環境設定系](#config) | [鍵ペア他の格納](storage) | [通信・暗号化系](#crypto) | [メンバ管理系](#member) | [監査・エラーログ系](#log)
