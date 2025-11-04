@@ -13,58 +13,81 @@ dep="$prj/deploy"
 doc="$prj/doc"
 img="$prj/img"
 tmp="$prj/tmp"
+rm -rf $doc/*
 rm -rf $tmp/*
 
 # ----------------------------------------------
 # 1. 仕様書
 # ----------------------------------------------
 
-# typedef
-node $src/common/typedef.js -o:$tmp
+# クラス別定義
+node $src/common/classdef.js -o:$tmp
 
-# authClient
-cat $src/authClient/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authClient.md
+# クラス一覧
+cat $src/common/classes.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $tmp/classes.md
+rm $tmp/classList.md
 
-# authServer
-#mmdc -i $src/authServer/authServer.sequenceDiagram.mmd -o $tmp/authServer.sequenceDiagram.svg
-cat $src/authServer/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authServer.md
-
-cat $src/authServer/proto.js | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/authServer.gs
-
-# cryptoClient
-cat $src/cryptoClient/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cryptoClient.md
-
-# cryptoServer
-cat $src/cryptoServer/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cryptoServer.md
-
-# Member
-# 複数箇所引用、かつdetailsタグ内での表示なのでSVG化
-mmdc -i $src/Member/Member.classDiagram.mmd -o $tmp/Member.classDiagram.svg
-cat $src/Member/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/Member.md
-cat $src/Member/proto.js | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $src/Member/core.js
-
-# 内発処理
-cat $src/common/internalProcessing.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/internalProcessing.md
+# JavaScriptライブラリ
+cat $src/common/JSLib.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $tmp/JSLib.md
 
 # 総説
 cat $src/common/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/spec.md
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $tmp/spec.md
+
+# header.mdを付加
+for f in $tmp/*.md; do
+  out="${f/tmp/doc}"
+  cat $src/common/header.md "$f" > "$out"
+done
+
+# typedef
+#node $src/common/typedef.js -o:$tmp
+
+# authClient
+#cat $src/authClient/spec.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authClient.md
+
+# authServer
+##mmdc -i $src/authServer/authServer.sequenceDiagram.mmd -o $tmp/authServer.sequenceDiagram.svg
+#cat $src/authServer/spec.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/authServer.md
+
+#cat $src/authServer/proto.js | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/authServer.gs
+
+# cryptoClient
+#cat $src/cryptoClient/spec.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cryptoClient.md
+
+# cryptoServer
+#cat $src/cryptoServer/spec.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cryptoServer.md
+
+# Member
+# 複数箇所引用、かつdetailsタグ内での表示なのでSVG化
+#mmdc -i $src/Member/Member.classDiagram.mmd -o $tmp/Member.classDiagram.svg
+#cat $src/Member/spec.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/Member.md
+#cat $src/Member/proto.js | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $src/Member/core.js
+
+# 内発処理
+#cat $src/common/internalProcessing.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/internalProcessing.md
+
+# 総説
+#cat $src/common/spec.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/spec.md
 
 # 型定義・ライブラリ
-cat $src/common/typedef.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/typedef.md
-rm -rf $tmp/*
-node $src/common/classdef.js -o:$tmp
-cat $src/common/library.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $tmp/library.md
+#cat $src/common/typedef.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/typedef.md
+#rm -rf $tmp/*
+#node $src/common/classdef.js -o:$doc
+#cat $src/common/library.md | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/library.md
 
 # 統合版
 #cat $src/authServer.js | awk 1 | \

@@ -393,7 +393,7 @@ const classdef = {
         ],
 
         process: `
-          - [createPassword](library.md#createpassword)でパスワード生成
+          - [createPassword](JSLib.md#createpassword)でパスワード生成
           - [authConfig](authConfig.md#authconfig_internal).RSAbitsを参照、新たな鍵ペア生成
         `,	// {string} 処理手順。markdownで記載
 
@@ -520,7 +520,8 @@ const classdef = {
   },
   authIndexedDB: {
     label: 'クライアントのIndexedDB',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: 'authClientKeysを継承した、クライアントのIndexedDBに保存するオブジェクト<br>'
+    note: 'authClientKeysを継承した、クライアントのIndexedDBを操作するクロージャ関数<br>'
+    + 'メイン処理を同期的に行うため、クラスでは無くasyncクロージャ関数として定義。'
     + 'IndexedDB保存時のキー名は`authConfig.system.name`から取得',	// {string} クラスとしての補足説明。概要欄に記載
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: 'authClientKeys',	// {string} 親クラス名
@@ -1172,47 +1173,8 @@ const classdef = {
       | 4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
       | 5 | 加入禁止 | 管理者により加入が否認された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
 
-      #### <span id="member_policy_classdiagram">クラス図</span>
-
-      \`\`\`mermaid
-      classDiagram
-        class Member {
-          string memberId
-          string name
-          string status
-          MemberLog log
-          MemberProfile profile
-          MemberDevice[] device
-        }
-
-        class MemberDevice {
-          string deviceId
-          string status
-          string CPkey
-          number CPkeyUpdated
-          MemberTrial[] trial
-        }
-
-        class MemberTrial {
-          string passcode
-          number created
-          MemberTrialLog[] log
-        }
-
-        class MemberTrialLog {
-          string entered
-          number result
-          string message
-          number timestamp
-        }
-
-        Member --> MemberLog
-        Member --> MemberProfile
-        Member --> MemberDevice
-        MemberDevice --> MemberTrial
-        MemberTrial --> MemberTrialLog
-      \`\`\`
-    `,	// {string} 設計方針欄(trimIndent対象)
+      - [クラス図](classes.md#member_classdiagram)
+      `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -1312,7 +1274,7 @@ const classdef = {
     note: 'メンバが使用する通信機器の情報(マルチデバイス対応)',	// {string} クラスとしての補足説明。概要欄に記載
     policy: `
       - [状態遷移図](Member.md#member_policy_statediagram)
-      - [クラス図](Member.md#member_policy_classdiagram)
+      - [クラス図](classes.md#member_classdiagram)
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
@@ -1348,7 +1310,7 @@ const classdef = {
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
     policy: `
       - [状態遷移図](Member.md#member_policy_statediagram)
-      - [クラス図](Member.md#member_policy_classdiagram)
+      - [クラス図](classes.md#member_classdiagram)
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
@@ -1389,7 +1351,7 @@ const classdef = {
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
     policy: `
       - [状態遷移図](Member.md#member_policy_statediagram)
-      - [クラス図](Member.md#member_policy_classdiagram)
+      - [クラス図](classes.md#member_classdiagram)
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
@@ -1421,7 +1383,7 @@ const classdef = {
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
     policy: `
       - [状態遷移図](Member.md#member_policy_statediagram)
-      - [クラス図](Member.md#member_policy_classdiagram)
+      - [クラス図](classes.md#member_classdiagram)
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
@@ -1488,7 +1450,7 @@ const classdef = {
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
     policy: `
       - [状態遷移図](Member.md#member_policy_statediagram)
-      - [クラス図](Member.md#member_policy_classdiagram)
+      - [クラス図](classes.md#member_classdiagram)
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
