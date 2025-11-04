@@ -1284,27 +1284,34 @@ const classdef = {
         ],
 
         process: `
-          - 物理削除
+          - 処理開始日時を記録("const start = Date.now()")
+          - [getMember](#member_getmember)で当該メンバのMemberを取得
+          - 物理削除の場合("physical === true")
+            - シート上に確認のダイアログを表示、OKが選択されたら当該メンバの行をmemberListから削除
+            - 監査ログに「物理削除」を記録
+            - 戻り値「物理削除」を返して終了
+          - 論理削除の場合("physical === false")
+            - 既に「加入禁止」なら戻り値「加入禁止」を返して終了
+            - シート上に確認のダイアログを表示、キャンセルが選択されたら戻り値「キャンセル」を返して終了
+            - [MemberLog.prohibitJoining](MemberLog.md#memberlog_prohibitjoining)で加入禁止状態に変更
+            - [setMember](#member_setmember)にMemberを渡してmemberListを更新
+            - 監査ログに「論理削除」を記録
+            - 戻り値「論理削除」を返して終了
+          - 監査ログ出力項目
             <evaluate>comparisonTable({ // comparisonTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
               typeName:'authAuditLog',  // 対象元(投入先)となるclassdef(cdef)上のクラス名
-              default: {request:'{memberId, physical}'},  // 各パターンの共通設定値。表記方法はassignと同じ
+              default: {request:'{memberId, physical}',note:'削除前Member(JSON)'},
               pattern:{ // 設定パターン集
                 '物理削除':{  // パターン名
                   assign: { // {Object.<string,string>} 当該パターンの設定値
-                    func:'physical remove',
-                    note:'削除対象メンバのMember(JSON)'
+                    func:'physical removed',
                   },
-                  condition: '',  // 該当条件(trimIndent対象)
-                  note: '',  // 備忘(trimIndent対象)
-                }
-              }
-            },'  ')</evaluate>
-          - 論理削除
-            <evaluate>comparisonTable({
-              typeName:'authAuditLog',
-              default: {request:'{memberId, physical}'},
-              pattern:{
-                '論理削除':{assign: {func:'logical remove',note:'削除対象メンバのMember(JSON)'}}
+                },
+                '論理削除':{  // パターン名
+                  assign: { // {Object.<string,string>} 当該パターンの設定値
+                    func:'logical removed',
+                  },
+                },
               }
             },'  ')</evaluate>
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
@@ -1312,18 +1319,30 @@ const classdef = {
         //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
         returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
           authResponse: { // メンバ名は戻り値のデータ型名
-            default: {request:'引数"request"',value:'MemberTrialオブジェクト'},
+            default: {request:'{memberId, physical}'},
               // {Object.<string,string>} 各パターンの共通設定値
             condition: ``,	// {string} データ型が複数の場合の選択条件指定(trimIndent対象)
             note: ``,	// {string} 備忘(trimIndent対象)
             pattern: {
-              '正答時': {
-                assign: {result:'normal'}, // {Object.<string,string>} 当該パターンの設定値
-                condition: ``,	// {string} 該当条件(trimIndent対象)
-                note: ``,	// {string} 備忘(trimIndent対象)
-              },
-              '誤答・再挑戦可': {assign: {result:'warning'}},
-              '誤答・再挑戦不可': {assign: {result:'fatal'}},
+              '物理削除': {assign: {
+                result: 'normal',
+                message: 'physically removed',
+              }},
+              '加入禁止': {assign: {
+                result:'warning',
+                message: 'already banned from joining',
+                response: '更新前のMember'
+              }},
+              'キャンセル': {assign: {
+                result:'warning',
+                message: 'logical remove canceled',
+                response: '更新前のMember'
+              }},
+              '論理削除': {assign: {
+                result:'normal',
+                message: 'logically removed',
+                response: '更新<span style="color:red">後</span>のMember'
+              }},
             }
           }
         },
@@ -1477,6 +1496,18 @@ const classdef = {
 
         returns: {MemberLog:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
+      prohibitJoining: {
+        type: 'public',
+        label: '「加入禁止」状態に変更する',
+        params: [],
+
+        process: `
+          - joiningExpiration = 現在日時(UNIX時刻)
+          - unfreezeDenial = 現在日時(UNIX時刻)＋[authServerConfig](authServerConfig.md#authserverconfig_internal).prohibitedToJoin
+        `,
+
+        returns: {MemberLog:{}},
+      }
     },
   },
   MemberProfile: {
@@ -1668,13 +1699,7 @@ const classdef = {
         try {
           // その場で評価（comparisonTableが使えるスコープ）
           const result = eval(code);
-          // indentを先頭に追加して整形
           return result.join('\n');
-            /*
-            .split('\n')
-            .map(line => (line ? indent + line : line))
-            .join('\n');
-            */
         } catch (e) {
           console.error('Error evaluating block:', e);
           return `${indent}[EVAL ERROR: ${e.message}]`;
@@ -2172,9 +2197,11 @@ const classdef = {
     /** 二次設定項目 */
     secondary(){
       const links = [];
-      const regex = /\[([^\]]+)\]\(([^)]+)\.md#([a-z0-9]+)_([a-z0-9]+)\)/gi;
+
+      // 外部リンク
+      const rexF = /\[([^\]]+)\]\(([^)]+)\.md#([a-z0-9]+)_([a-z0-9]+)\)/gi;
       let m;
-      while ((m = regex.exec(this.process)) !== null) {
+      while ((m = rexF.exec(this.process)) !== null) {
         // m[1]=①, m[2]=②, m[3]=③, m[4]=④
         //links.push([m[1], m[2], m[3], m[4]]);
         links.push({
@@ -2182,6 +2209,19 @@ const classdef = {
           className: m[2],  // 参照先のクラス名(大文字含む)
           lowerCase: m[3],  // 参照先のクラス名(小文字のみ)
           methodName: m[4], // 当該クラスのメソッド名(小文字のみ)
+        })
+      }
+
+      // ローカルリンク
+      const rexL = /\[([^\]]+)\]\(#([a-z0-9]+)_([a-z0-9]+)\)/gi;
+      while ((m = rexL.exec(this.process)) !== null) {
+        // m[1]=①, m[2]=②, m[3]=③, m[4]=④
+        //links.push([m[1], m[2], m[3], m[4]]);
+        links.push({
+          linkText: m[1],
+          className: this.className,  // 参照先のクラス名(大文字含む)
+          lowerCase: m[2],  // 参照先のクラス名(小文字のみ)
+          methodName: m[3], // 当該クラスのメソッド名(小文字のみ)
         })
       }
 

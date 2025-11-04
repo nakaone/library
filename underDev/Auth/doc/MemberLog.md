@@ -38,6 +38,7 @@
 | メソッド名 | 型 | 内容 |
 | :-- | :-- | :-- |
 | [constructor](#memberlog_constructor) | private | コンストラクタ |
+| [prohibitJoining](#memberlog_prohibitjoining) | public | 「加入禁止」状態に変更する |
 
 ## <span id="memberlog_constructor">🧱 <a href="#memberlog_method">MemberLog.constructor()</a></span>
 
@@ -60,6 +61,40 @@
 
 
 ### <span id="memberlog_constructor_returns">📤 戻り値</span>
+
+  - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | joiningRequest | number | Date.new() | — |
+    | approval | number | 【必須】 | — |
+    | denial | number | 【必須】 | — |
+    | loginRequest | number | 【必須】 | — |
+    | loginSuccess | number | 【必須】 | — |
+    | loginExpiration | number | 【必須】 | — |
+    | loginFailure | number | 【必須】 | — |
+    | unfreezeLogin | number | 【必須】 | — |
+    | joiningExpiration | number | 【必須】 | — |
+    | unfreezeDenial | number | 【必須】 | — |
+
+## <span id="memberlog_prohibitjoining">🧱 <a href="#memberlog_method">MemberLog.prohibitJoining()</a></span>
+
+「加入禁止」状態に変更する
+
+### <span id="memberlog_prohibitjoining_caller">📞 呼出元</span>
+
+- [Member.removeMember()](Member.md#memberlog_prohibitjoining)
+
+### <span id="memberlog_prohibitjoining_param">📥 引数</span>
+
+
+- 無し(void)
+
+### <span id="memberlog_prohibitjoining_process">🧾 処理手順</span>
+
+- joiningExpiration = 現在日時(UNIX時刻)
+- unfreezeDenial = 現在日時(UNIX時刻)＋[authServerConfig](authServerConfig.md#authserverconfig_internal).prohibitedToJoin
+
+### <span id="memberlog_prohibitjoining_returns">📤 戻り値</span>
 
   - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
     | 項目名 | データ型 | 生成時 | 正常終了 |

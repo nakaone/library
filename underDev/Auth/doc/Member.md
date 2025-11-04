@@ -119,6 +119,10 @@ stateDiagram-v2
 
 指定メンバの情報をmemberListシートから取得
 
+### <span id="member_getmember_caller">📞 呼出元</span>
+
+- [Member.removeMember()](Member.md#member_getmember)
+
 ### <span id="member_getmember_param">📥 引数</span>
 
 
@@ -158,47 +162,52 @@ stateDiagram-v2
 
 ### <span id="member_removemember_process">🧾 処理手順</span>
 
-- 物理削除
+- 処理開始日時を記録("const start = Date.now()")
+- [getMember](#member_getmember)で当該メンバのMemberを取得
+- 物理削除の場合("physical === true")
+  - シート上に確認のダイアログを表示、OKが選択されたら当該メンバの行をmemberListから削除
+  - 監査ログに「物理削除」を記録
+  - 戻り値「物理削除」を返して終了
+- 論理削除の場合("physical === false")
+  - 既に「加入禁止」なら戻り値「加入禁止」を返して終了
+  - シート上に確認のダイアログを表示、キャンセルが選択されたら戻り値「キャンセル」を返して終了
+  - [MemberLog.prohibitJoining](MemberLog.md#memberlog_prohibitjoining)で加入禁止状態に変更
+  - [setMember](#member_setmember)にMemberを渡してmemberListを更新
+  - 監査ログに「論理削除」を記録
+  - 戻り値「論理削除」を返して終了
+- 監査ログ出力項目
 
   - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
-    | 項目名 | データ型 | 生成時 | 物理削除 |
-    | :-- | :-- | :-- | :-- |
-    | timestamp | string | Date.now() | — |
-    | duration | number | 【必須】 | — |
-    | memberId | string | 【必須】 | — |
-    | deviceId | string | 【必須】 | — |
-    | func | string | 【必須】 | physical remove |
-    | result | string | normal | — |
-    | note | string | 【必須】 | 削除対象メンバのMember(JSON) |
-- 論理削除
-
-  - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
-    | 項目名 | データ型 | 生成時 | 論理削除 |
-    | :-- | :-- | :-- | :-- |
-    | timestamp | string | Date.now() | — |
-    | duration | number | 【必須】 | — |
-    | memberId | string | 【必須】 | — |
-    | deviceId | string | 【必須】 | — |
-    | func | string | 【必須】 | logical remove |
-    | result | string | normal | — |
-    | note | string | 【必須】 | 削除対象メンバのMember(JSON) |
+    | 項目名 | データ型 | 生成時 | 物理削除 | 論理削除 |
+    | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | — | — |
+    | duration | number | 【必須】 | — | — |
+    | memberId | string | 【必須】 | — | — |
+    | deviceId | string | 【必須】 | — | — |
+    | func | string | 【必須】 | physical removed | logical removed |
+    | result | string | normal | — | — |
+    | note | string | 【必須】 | — | — |
 
 ### <span id="member_removemember_returns">📤 戻り値</span>
 
   - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
-    | 項目名 | データ型 | 生成時 | 正答時 | 誤答・再挑戦可 | 誤答・再挑戦不可 |
-    | :-- | :-- | :-- | :-- | :-- | :-- |
-    | timestamp | number | Date.now() | — | — | — |
-    | result | string | normal | **normal** | **warning** | **fatal** |
-    | message | string | 【任意】 | — | — | — |
-    | request | authRequest | 【任意】 | 引数"request" | 引数"request" | 引数"request" |
-    | response | any | 【任意】 | — | — | — |
+    | 項目名 | データ型 | 生成時 | 物理削除 | 加入禁止 | キャンセル | 論理削除 |
+    | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — | — | — | — |
+    | result | string | normal | **normal** | **warning** | **warning** | **normal** |
+    | message | string | 【任意】 | **physically removed** | **already banned from joining** | **logical remove canceled** | **logically removed** |
+    | request | authRequest | 【任意】 | {memberId, physical} | {memberId, physical} | {memberId, physical} | {memberId, physical} |
+    | response | any | 【任意】 | — | **更新前のMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
 
 ## <span id="member_setmember">🧱 <a href="#member_method">Member.setMember()</a></span>
 
 指定メンバ情報をmemberListシートに保存
 
 登録済メンバの場合は更新、未登録の場合は新規登録(追加)を行う
+
+### <span id="member_setmember_caller">📞 呼出元</span>
+
+- [Member.removeMember()](Member.md#member_setmember)
 
 ### <span id="member_setmember_param">📥 引数</span>
 
