@@ -43,7 +43,7 @@ const classdef = {
 
         process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+        //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
         returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
           authResponse: { // メンバ名は戻り値のデータ型名
             default: {request:'引数"request"',value:'MemberTrialオブジェクト'},
@@ -1129,8 +1129,12 @@ const classdef = {
     },
   },
   Member: {
-    label: 'メンバ単位の管理情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: 'メンバ一覧(アカウント管理表)シート上のメンバ単位の管理情報',	// {string} クラスとしての補足説明。概要欄に記載
+    label: 'メンバ一覧シートに対応したメンバ単位の管理情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `
+      - 'Member'はGoogle SpreadSheet上でメンバ(アカウント)情報・状態を一元的に管理するためのクラスです。
+      - 加入・ログイン・パスコード試行・デバイス別公開鍵(CPkey)管理などの状態を統一的に扱います。
+      - マルチデバイス利用を前提とし、memberListスプレッドシートの1行を1メンバとして管理します。
+    `,	// {string} クラスとしての補足説明。概要欄に記載
     policy: `
       #### <span id="member_policy_statediagram">状態遷移図</span>
 
@@ -1234,7 +1238,7 @@ const classdef = {
             '登録済': {
               assign: {
                 result: '"normal"',
-                response: `memberListシートのMemberインスタンス`,
+                response: `Member(シート)`,
               },
             },
             '未登録': {
@@ -1245,6 +1249,41 @@ const classdef = {
             }
           }
         }},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      setMember: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '指定メンバ情報をmemberListシートに保存',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: `登録済メンバの場合は更新、未登録の場合は新規登録(追加)を行う`,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        // caller {Object[]} 本メソッドを呼び出す{class:クラス名,method:メソッド名}の配列
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Member|authRequest',note:'既存メンバ(Member)または新規登録要求'},
+        ],
+
+        process: `
+          - memberList(シート)上に存在しない場合、メンバ一覧記載の既定値の新規Memberを作成し、シートに追加
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          authResponse: { // メンバ名は戻り値のデータ型名
+            default: {request:'引数"request"',value:'MemberTrialオブジェクト'},
+              // {Object.<string,string>} 各パターンの共通設定値
+            condition: ``,	// {string} データ型が複数の場合の選択条件指定(trimIndent対象)
+            note: ``,	// {string} 備忘(trimIndent対象)
+            pattern: {
+              '正答時': {
+                assign: {result:'normal'}, // {Object.<string,string>} 当該パターンの設定値
+                condition: ``,	// {string} 該当条件(trimIndent対象)
+                note: ``,	// {string} 備忘(trimIndent対象)
+              },
+              '誤答・再挑戦可': {assign: {result:'warning'}},
+              '誤答・再挑戦不可': {assign: {result:'fatal'}},
+            }
+          }
+        },
       },
       /*flush: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
@@ -2012,7 +2051,7 @@ const classdef = {
       if( cdef[this.className].methods[this.methodName].caller.length > 0 ){
         ['',`### <span id="${cc}_caller">📞 呼出元</span>`,''].forEach(x => rv.push(x));
         cdef[this.className].methods[this.methodName].caller.forEach(x => {
-          console.log(JSON.stringify({caller:{class:x.class,method:x.method},callee:{class:this.className,method:this.methodName}},null,2));
+          //console.log(JSON.stringify({caller:{class:x.class,method:x.method},callee:{class:this.className,method:this.methodName}},null,2));
           rv.push(`- [${x.class}.${x.method}()](${x.class}.md#${cc})`);
         })
       }
@@ -2045,11 +2084,17 @@ const classdef = {
 
     /** Markdown形式の一覧作成 */
     list(){
+      // 引数が複数のデータ型の場合、分割して個別に作成(ex.{Member|authRequest})
+      const types = [];
+      this.type.split('|').forEach(type => {
+        type = type.trim();
+        types.push(typeof cdef[type] === 'undefined' ? type
+          // 定義済のデータ型ならそのメンバ一覧へのリンクを設定
+          : `[${type}](${type}.md#${type.toLowerCase()}_internal)`);
+      });
+
       // 項目名 任意 データ型 既定値 備考
-      return [`| ${this.name} | ${this.isOpt?'⭕':'❌'} | ${
-        typeof cdef[this.type] === 'undefined' ? this.type
-        : `[${this.type}](${this.type}.md#${this.type.toLowerCase()}_internal)`        
-      } | ${
+      return [`| ${this.name} | ${this.isOpt?'⭕':'❌'} | ${types.join(' \\| ')} | ${
         typeof this.default === 'object' && this.default !== null
         ? JSON.stringify(this.default) : this.default
       } | ${this.note} | `];

@@ -83,7 +83,7 @@ async function Example() {
 | 19 | [encryptedResponse](encryptedResponse.md) | 暗号化された処理結果 |
 | 20 | [LocalRequest](LocalRequest.md) | ローカル関数からの処理要求 |
 | 21 | [LocalResponse](LocalResponse.md) | ローカル関数への処理結果 |
-| 22 | [Member](Member.md) | メンバ単位の管理情報 |
+| 22 | [Member](Member.md) | メンバ一覧シートに対応したメンバ単位の管理情報 |
 | 23 | [MemberDevice](MemberDevice.md) | メンバのデバイス情報 |
 | 24 | [MemberLog](MemberLog.md) | メンバの各種要求・状態変化の時刻 |
 | 25 | [MemberProfile](MemberProfile.md) | メンバの属性情報 |

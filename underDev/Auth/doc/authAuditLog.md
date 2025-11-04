@@ -74,7 +74,7 @@ authServerの監査ログ
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
-| arg | ❌ | authRequest|string | — | 処理要求オブジェクトまたは内発処理名 | 
+| arg | ❌ | [authRequest](authRequest.md#authrequest_internal) \| string | — | 処理要求オブジェクトまたは内発処理名 | 
 
 ### <span id="authauditlog_log_returns">📤 戻り値</span>
 

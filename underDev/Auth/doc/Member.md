@@ -8,9 +8,11 @@
 
 ## <span id="member_summary">🧭 概要</span>
 
-メンバ単位の管理情報
+メンバ一覧シートに対応したメンバ単位の管理情報
 
-メンバ一覧(アカウント管理表)シート上のメンバ単位の管理情報
+- 'Member'はGoogle SpreadSheet上でメンバ(アカウント)情報・状態を一元的に管理するためのクラスです。
+- 加入・ログイン・パスコード試行・デバイス別公開鍵(CPkey)管理などの状態を統一的に扱います。
+- マルチデバイス利用を前提とし、memberListスプレッドシートの1行を1メンバとして管理します。
 ### <span id="member_policy">設計方針</span>
 
 #### <span id="member_policy_statediagram">状態遷移図</span>
@@ -77,6 +79,7 @@ stateDiagram-v2
 | :-- | :-- | :-- |
 | [constructor](#member_constructor) | private | コンストラクタ |
 | [getMember](#member_getmember) | public | 指定メンバの情報をmemberListシートから取得 |
+| [setMember](#member_setmember) | public | 指定メンバ情報をmemberListシートに保存 |
 
 ## <span id="member_constructor">🧱 <a href="#member_method">Member.constructor()</a></span>
 
@@ -91,7 +94,7 @@ stateDiagram-v2
 
 ### <span id="member_constructor_returns">📤 戻り値</span>
 
-- [Member](Member.md#internal): メンバ単位の管理情報
+- [Member](Member.md#internal): メンバ一覧シートに対応したメンバ単位の管理情報
   | 項目名 | データ型 | 生成時 | 正常終了 |
   | :-- | :-- | :-- | :-- |
   | memberId | string | UUID | — |
@@ -123,16 +126,44 @@ stateDiagram-v2
 
 ### <span id="member_getmember_returns">📤 戻り値</span>
 
-- [authResponse](authResponse.md#internal): メンバ単位の管理情報
+- [authResponse](authResponse.md#internal): メンバ一覧シートに対応したメンバ単位の管理情報
   | 項目名 | データ型 | 生成時 | 登録済 | 未登録 |
   | :-- | :-- | :-- | :-- | :-- |
   | timestamp | number | Date.now() | — | — |
   | result | string | normal | **"normal"** | **"fatal"** |
   | message | string | [任意] | — | **not exists** |
   | request | authRequest | [任意] | {memberId:引数のmemberId} | {memberId:引数のmemberId} |
-  | response | any | [任意] | **memberListシートのMemberインスタンス** | — |
+  | response | any | [任意] | **Member(シート)** | — |
 
 ### <span id="member_getmember_process">🧾 処理手順</span>
 
 - JSON文字列の項目はオブジェクト化(Member.log, Member.profile, Member.device)
 - memberIdがmemberListシート登録済なら「登録済」、未登録なら「未登録」パターンを返す
+
+## <span id="member_setmember">🧱 <a href="#member_method">Member.setMember()</a></span>
+
+指定メンバ情報をmemberListシートに保存
+
+登録済メンバの場合は更新、未登録の場合は新規登録(追加)を行う
+
+### <span id="member_setmember_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| arg | ❌ | [Member](Member.md#member_internal) \| [authRequest](authRequest.md#authrequest_internal) | — | 既存メンバ(Member)または新規登録要求 | 
+
+### <span id="member_setmember_returns">📤 戻り値</span>
+
+- [authResponse](authResponse.md#internal): メンバ一覧シートに対応したメンバ単位の管理情報
+  | 項目名 | データ型 | 生成時 | 正答時 | 誤答・再挑戦可 | 誤答・再挑戦不可 |
+  | :-- | :-- | :-- | :-- | :-- | :-- |
+  | timestamp | number | Date.now() | — | — | — |
+  | result | string | normal | **normal** | **warning** | **fatal** |
+  | message | string | [任意] | — | — | — |
+  | request | authRequest | [任意] | 引数"request" | 引数"request" | 引数"request" |
+  | response | any | [任意] | — | — | — |
+
+### <span id="member_setmember_process">🧾 処理手順</span>
+
+- memberList(シート)上に存在しない場合、メンバ一覧記載の既定値の新規Memberを作成し、シートに追加
