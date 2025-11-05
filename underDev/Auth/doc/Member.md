@@ -6,6 +6,12 @@
 
 # <span id="member">Member クラス仕様書</span>
 
+<div style="text-align:right">
+
+[状態遷移図](#member_policy_statediagram) | [状態一覧](#member_policy_statelist) | [状態決定表](#member_policy_decisiontable) | [メンバ一覧](#member_internal) | [メソッド一覧](#member_method)
+
+</div>
+
 ## <span id="member_summary">🧭 概要</span>
 
 メンバ一覧シートに対応したメンバ単位の管理情報
@@ -15,6 +21,8 @@
 - マルチデバイス利用を前提とし、memberListスプレッドシートの1行を1メンバとして管理します。
 
 ### <span id="member_policy">設計方針</span>
+
+- [クラス図](classes.md#member_classdiagram)
 
 #### <span id="member_policy_statediagram">状態遷移図</span>
 
@@ -45,6 +53,8 @@ stateDiagram-v2
   }
 ```
 
+#### <span id="member_policy_statelist">状態一覧</span>
+
 | No | 状態 | 説明 | SPkey | CPkey | memberId/メンバ名 | 無権限関数 | 要権限関数 |
 | --: | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
 | 1 | 不使用 | Auth不使用のコンテンツのみ表示 | 未取得 | 未生成(※1) | 未登録(※1) | 実行不可 | 実行不可 |
@@ -57,7 +67,33 @@ stateDiagram-v2
 | 4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
 | 5 | 加入禁止 | 管理者により加入が否認された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
 
-- [クラス図](classes.md#member_classdiagram)
+#### <span id="member_policy_decisiontable">状態決定表</span>
+
+| ①シート | ②memberId | ③加入禁止 | ④未審査 | **メンバ状態** | ⑤認証中 | ⑥凍結中 | ⑦未認証 | **デバイス状態** |
+| :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| 未登録 | — | — | — | **不使用** |  |  |  |  |
+| 登録済 | UUID | — | — | **未加入** |  |  |  |  |
+| 登録済 | e-mail | 該当 | — | **加入禁止** |  |  |  |  |
+| 登録済 | e-mail | 非該当 | 該当 | **未審査** |  |  |  |  |
+| 登録済 | e-mail | 非該当 | 非該当 | **加入中** | 該当 | — | — | **認証中** |
+|  |  |  |  | **加入中** | 非該当 | 該当 | — | **凍結中** |
+|  |  |  |  | **加入中** | 非該当 | 非該当 | 該当 | **未認証** |
+|  |  |  |  | **加入中** | 非該当 | 非該当 | 非該当 | **試行中** |
+
+※下表内の変数名はMemberLogのメンバ名
+
+- ①シート：memberListシートに登録されているか
+- ②memberId：メンバ識別子(文字列)の形式
+- ③加入禁止：加入禁止されている<br>
+  `0 < denial && Date.now() <= unfreezeDenial`
+- ④未審査：管理者の認否が未決定<br>
+  `approval === 0 && denial === 0`
+- ⑤認証中：パスコード認証に成功し認証有効期間内<br>
+  `0 < approval && Date.now() ≦ loginExpiration`
+- ⑥凍結中：凍結期間内<br>
+  `0 < approval && 0 < loginFailure && loginFailure < Date.now() && Date.now() <= unfreezeLogin`
+- ⑦未認証：加入承認後認証要求されたことが無い<br>
+  `0 < approval && loginRequest === 0`
 
 ### 🧩 <span id="member_internal">内部構成</span>
 
@@ -84,6 +120,7 @@ stateDiagram-v2
 | [removeMember](#member_removemember) | static | 登録中メンバをアカウント削除、または加入禁止にする |
 | [restoreMember](#member_restoremember) | static | 加入禁止(論理削除)されているメンバを復活させる |
 | [setMember](#member_setmember) | public | 指定メンバ情報をmemberListシートに保存 |
+| [unfreeze](#member_unfreeze) | static | 指定されたメンバ・デバイスの「凍結中」状態を強制的に解除 |
 
 ## <span id="member_constructor">🧱 <a href="#member_method">Member.constructor()</a></span>
 
@@ -170,8 +207,8 @@ stateDiagram-v2
 - memberListシート上に存在しないなら、戻り値「不存在」を返して終了
 - 状態が「未審査」ではないなら、戻り値「対象外」を返して終了
 - シート上にmemberId・氏名と「承認」「否認」「取消」ボタンを備えたダイアログ表示
-- 取消が選択されたら「キャンセル」を返して終了
-- Memberの以下項目を更新
+- 取消が選択されたら戻り値「キャンセル」を返して終了
+- MemberLogの以下項目を更新
 
   - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
     | 項目名 | データ型 | 生成時 | 承認時 | 否認時 |
@@ -186,7 +223,7 @@ stateDiagram-v2
     | unfreezeLogin | number | 【必須】 | — | — |
     | joiningExpiration | number | 【必須】 | **現在日時＋[memberLifeTime](authServerConfig.md#authserverconfig_internal)** | **0** |
     | unfreezeDenial | number | 【必須】 | **0** | **現在日時＋[prohibitedToJoin](authServerConfig.md#authserverconfig_internal)** |
-- [setMember](#member_setmember)にMemberを渡してmemberListを更新
+- [setMemberメソッド](#member_setmember)にMemberを渡してmemberListを更新
 - 戻り値「正常終了」を返して終了
 
 ### <span id="member_judgemember_returns">📤 戻り値</span>
@@ -313,6 +350,7 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
 - [Member.judgeMember()](Member.md#member_setmember)
 - [Member.removeMember()](Member.md#member_setmember)
 - [Member.restoreMember()](Member.md#member_setmember)
+- [Member.unfreeze()](Member.md#member_setmember)
 
 ### <span id="member_setmember_param">📥 引数</span>
 
@@ -358,3 +396,64 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
     | message | string | 【任意】 | **"not exist"** | **"updated"** | **"already exist"** | **"Invalid registration request"** | **"appended"** |
     | request | authRequest | 【任意】 | arg | arg | arg | arg | arg |
     | response | any | 【任意】 | — | **Member(更新済)** | — | — | **Member(新規作成)** |
+
+## <span id="member_unfreeze">🧱 <a href="#member_method">Member.unfreeze()</a></span>
+
+指定されたメンバ・デバイスの「凍結中」状態を強制的に解除
+
+- 引数でmemberIdが指定されなかった場合、**凍結中デバイス一覧の要求**と看做す
+- deviceIdの指定が無い場合、memberIdが使用する凍結中デバイス全てを対象とする
+- memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
+
+### <span id="member_unfreeze_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| memberId | ⭕ | string | null | メンバ識別子 | 
+| deviceId | ⭕ | string | — | デバイス識別子 | 
+
+### <span id="member_unfreeze_process">🧾 処理手順</span>
+
+- memberListシート全件を読み込み、`[MemberDevice.status](MemberDevice.md#memberdevice_internal) === '凍結中'`のデバイス一覧を作成
+- memberId無指定(=null)の場合、戻り値「一覧」を返して終了
+- 引数で渡されたmemberId, deviceIdがマッチするメンバ・デバイスを検索
+- 対象デバイスが存在しない場合、戻り値「該当無し」を返して終了
+- 凍結解除：対象デバイスそれぞれについて以下項目を更新
+
+  - [MemberDevice](MemberDevice.md#memberdevice_internal): メンバのデバイス情報
+    | 項目名 | データ型 | 生成時 | 更新内容 |
+    | :-- | :-- | :-- | :-- |
+    | deviceId | string | 【必須】 | — |
+    | status | string | 未認証 | **"未認証"** |
+    | CPkey | string | 【必須】 | — |
+    | CPkeyUpdated | number | Date.now() | — |
+    | trial | MemberTrial[] |  | **空配列** |
+
+
+  - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
+    | 項目名 | データ型 | 生成時 | 更新内容 |
+    | :-- | :-- | :-- | :-- |
+    | joiningRequest | number | Date.new() | — |
+    | approval | number | 【必須】 | — |
+    | denial | number | 【必須】 | — |
+    | loginRequest | number | 【必須】 | — |
+    | loginSuccess | number | 【必須】 | — |
+    | loginExpiration | number | 【必須】 | — |
+    | loginFailure | number | 【必須】 | — |
+    | unfreezeLogin | number | 【必須】 | **現在日時** |
+    | joiningExpiration | number | 【必須】 | — |
+    | unfreezeDenial | number | 【必須】 | — |
+- [setMemberメソッド](#member_setmember)にMemberを渡してmemberListを更新
+- 戻り値「正常終了」を返して終了
+
+### <span id="member_unfreeze_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 一覧 | 該当無し | 正常終了 |
+    | :-- | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — | — | — |
+    | result | string | normal | **"normal"** | **"warning"** | **"normal"** |
+    | message | string | 【任意】 | — | **no frozen devices** | **no frozen devices** |
+    | request | authRequest | 【任意】 | **list freezing** | **{memberId,deviceId:[引数で渡されたdeviceId]}** | **{memberId,deviceId:[凍結解除したdeviceId]}** |
+    | response | any | 【任意】 | **MemberDevice.status=="凍結中"とそのMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |

@@ -8,6 +8,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    navi: '', // {string} クラス内ナビ
 
     members: [  // {Members} ■メンバ(インスタンス変数)定義■
       //{name:'',type:'string',label:'',note:''}, // default,isOpt
@@ -1212,6 +1213,8 @@ const classdef = {
       - マルチデバイス利用を前提とし、memberListスプレッドシートの1行を1メンバとして管理します。
     `,	// {string} クラスとしての補足説明。概要欄に記載
     policy: `
+      - [クラス図](classes.md#member_classdiagram)
+
       #### <span id="member_policy_statediagram">状態遷移図</span>
 
       \`\`\`mermaid
@@ -1241,6 +1244,8 @@ const classdef = {
         }
       \`\`\`
 
+      #### <span id="member_policy_statelist">状態一覧</span>
+
       | No | 状態 | 説明 | SPkey | CPkey | memberId/メンバ名 | 無権限関数 | 要権限関数 |
       | --: | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
       | 1 | 不使用 | Auth不使用のコンテンツのみ表示 | 未取得 | 未生成(※1) | 未登録(※1) | 実行不可 | 実行不可 |
@@ -1253,11 +1258,38 @@ const classdef = {
       | 4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
       | 5 | 加入禁止 | 管理者により加入が否認された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
 
-      - [クラス図](classes.md#member_classdiagram)
-      `,	// {string} 設計方針欄(trimIndent対象)
+      #### <span id="member_policy_decisiontable">状態決定表</span>
+
+      | ①シート | ②memberId | ③加入禁止 | ④未審査 | **メンバ状態** | ⑤認証中 | ⑥凍結中 | ⑦未認証 | **デバイス状態** |
+      | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+      | 未登録 | — | — | — | **不使用** |  |  |  |  |
+      | 登録済 | UUID | — | — | **未加入** |  |  |  |  |
+      | 登録済 | e-mail | 該当 | — | **加入禁止** |  |  |  |  |
+      | 登録済 | e-mail | 非該当 | 該当 | **未審査** |  |  |  |  |
+      | 登録済 | e-mail | 非該当 | 非該当 | **加入中** | 該当 | — | — | **認証中** |
+      |  |  |  |  | **加入中** | 非該当 | 該当 | — | **凍結中** |
+      |  |  |  |  | **加入中** | 非該当 | 非該当 | 該当 | **未認証** |
+      |  |  |  |  | **加入中** | 非該当 | 非該当 | 非該当 | **試行中** |
+
+      ※下表内の変数名はMemberLogのメンバ名
+
+      - ①シート：memberListシートに登録されているか
+      - ②memberId：メンバ識別子(文字列)の形式
+      - ③加入禁止：加入禁止されている<br>
+        \`0 < denial && Date.now() <= unfreezeDenial\`
+      - ④未審査：管理者の認否が未決定<br>
+        \`approval === 0 && denial === 0\`
+      - ⑤認証中：パスコード認証に成功し認証有効期間内<br>
+        \`0 < approval && Date.now() ≦ loginExpiration\`
+      - ⑥凍結中：凍結期間内<br>
+        \`0 < approval && 0 < loginFailure && loginFailure < Date.now() && Date.now() <= unfreezeLogin\`
+      - ⑦未認証：加入承認後認証要求されたことが無い<br>
+        \`0 < approval && loginRequest === 0\`
+    `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    navi: `<div style="text-align:right">\n\n[状態遷移図](#member_policy_statediagram) | [状態一覧](#member_policy_statelist) | [状態決定表](#member_policy_decisiontable) | [メンバ一覧](#member_internal) | [メソッド一覧](#member_method)\n\n</div>`,
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',label:'メンバの識別子',note:'メールアドレス',default:'UUID'},
@@ -1565,6 +1597,65 @@ const classdef = {
                 result: '"normal"',
                 message: '"appended"',
                 response: 'Member(新規作成)',
+              }},
+            }
+          }
+        },
+      },
+      unfreeze: {
+        type: 'static',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '指定されたメンバ・デバイスの「凍結中」状態を強制的に解除',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: `
+          - 引数でmemberIdが指定されなかった場合、**凍結中デバイス一覧の要求**と看做す
+          - deviceIdの指定が無い場合、memberIdが使用する凍結中デバイス全てを対象とする
+          - memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
+        `,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        // caller {Object[]} 本メソッドを呼び出す{class:クラス名,method:メソッド名}の配列
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'memberId',type:'string',note:'メンバ識別子',default:'null'},
+          {name:'deviceId',type:'string',note:'デバイス識別子',isOpt:true},
+        ],
+
+        process: `
+          - memberListシート全件を読み込み、\`[MemberDevice.status](MemberDevice.md#memberdevice_internal) === '凍結中'\`のデバイス一覧を作成
+          - memberId無指定(=null)の場合、戻り値「一覧」を返して終了
+          - 引数で渡されたmemberId, deviceIdがマッチするメンバ・デバイスを検索
+          - 対象デバイスが存在しない場合、戻り値「該当無し」を返して終了
+          - 凍結解除：対象デバイスそれぞれについて以下項目を更新
+            <evaluate>comparisonTable({typeName:'MemberDevice',default:{},pattern:{'更新内容':{assign: {
+              status: '"未認証"',
+              trial: '空配列',
+            }}}},'  ')</evaluate>
+
+            <evaluate>comparisonTable({typeName:'MemberLog',default:{},pattern:{'更新内容':{assign: {
+              unfreezeLogin: '現在日時',
+            }}}},'  ')</evaluate>
+          - [setMemberメソッド](#member_setmember)にMemberを渡してmemberListを更新
+          - 戻り値「正常終了」を返して終了
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          authResponse: { // メンバ名は戻り値のデータ型名
+            pattern: {
+              '一覧': {assign:{
+                result: '"normal"',
+                request: 'list freezing',
+                response: 'MemberDevice.status=="凍結中"とそのMember',
+              }},
+              '該当無し': {assign:{
+                result: '"warning"',
+                message: 'no frozen devices',
+                request: '{memberId,deviceId:[引数で渡されたdeviceId]}',
+                response: '更新前のMember',
+              }},
+              '正常終了': {assign:{
+                result: '"normal"',
+                message: 'no frozen devices',
+                request: '{memberId,deviceId:[凍結解除したdeviceId]}',
+                response: '更新<span style="color:red">後</span>のMember',
               }},
             }
           }
@@ -1932,6 +2023,7 @@ const classdef = {
       this.example = trimIndent(arg.example || ''); // {string} 想定する実装・使用例(Markdown,trimIndent対象)
       this.members = new Members(className,arg.members); // メンバ(インスタンス変数)定義
       this.methods = new Methods(className,arg.methods); // メソッド定義
+      this.navi = arg.navi || ''; // {string} クラス内ナビ
     }
 
     /** Markdownの作成 */
@@ -1941,9 +2033,10 @@ const classdef = {
 
       // 1.概要
       [
-        `# <span id="${cn}">${this.className} クラス仕様書</span>`,'',
-        `## <span id="${cn}_summary">🧭 概要</span>`,'',
-        this.label
+        `# <span id="${cn}">${this.className} クラス仕様書</span>`,
+        ...(this.navi.length > 0 ? ['',this.navi] : []),
+        '',`## <span id="${cn}_summary">🧭 概要</span>`,
+        '',this.label
       ].forEach(x => rv.push(x));
       if( this.note.length > 0 ){
         ['',this.note].forEach(x => rv.push(x));
@@ -2110,25 +2203,6 @@ const classdef = {
 
     /** Markdownの作成 */
     md(){
-      /*
-      ## <span id="authserver_constructor">🧱 <a href="#authserver_method">constructor()</a></span>
-
-        (概要＋注意事項)
-
-      ### <span id="authserver_constructor_param">📥 引数</span>
-      ※ Params.list()で作成
-
-      ### <span id="authserver_constructor_returns">📤 戻り値</span>
-      ※ Returns.md()で作成
-
-      ### <span id="constructor-process">🧾 処理手順</span>
-
-      - authServer内共有用の変数`pv`オブジェクトを用意
-      - `pv.crypto`にcryptoServerインスタンスを作成
-      - 監査ログ用に`pv.audit`に[authAuditLog](typedef.md#authAuditLog)インスタンスを作成
-      - エラーログ用に`pv.error`に[authErrorLog](typedef.md#authErrorLog)インスタンスを作成
-      */
-
       const cn = this.className.toLowerCase();
       const mn = this.methodName.toLowerCase();
       const cc = `${cn}_${mn}`;
@@ -2353,48 +2427,6 @@ const classdef = {
 
     /** Markdownの作成 */
     md(){
-      /* 出力サンプル
-      - [authResponse](authResponse.md): 暗号化前の処理結果
-        | 項目名 | データ型 | 生成時 | 正常終了 | 異常終了 |
-        | :-- | :-- | :-- | :-- | :-- |
-        | timestamp | number | Date.now() | — | — |
-        | result | string | "normal" | "**normal**" | "**fatal**" |
-        | message | string　| ⭕ | — | "Invalid request" |
-        | request | authRequest | ⭕ | request | request |
-        | response | string | ⭕ | true | false |
-
-        "className": "MemberTrial",
-        "methodName": "loginAttempt",
-        "typeName": "authResponse",
-        "default": {
-          "request": "引数\"request\"",
-          "value": "MemberTrialオブジェクト"
-        },
-        "condition": "",
-        "note": "",
-        "pattern": {
-          "正答時": {
-            "patternName": "正答時",
-            "assign": {
-              "request": "引数\"request\"",
-              "value": "MemberTrialオブジェクト",
-              "result": "**normal**"
-            },
-            "condition": "",
-            "note": ""
-          },
-          "誤答・再挑戦可": {
-            (中略)
-          }
-        }
-      }
-      */
-      /*const rv = ['',`- [${this.typeName}](${this.typeName}.md#internal): ${
-        cdef[this.className].label}`];
-
-      comparisonTable(this,'  ').forEach(x => rv.push(x));
-
-      return rv;*/
       return comparisonTable(this,'  ');
     }
   }
