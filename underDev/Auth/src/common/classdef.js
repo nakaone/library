@@ -94,6 +94,7 @@ const classdef = {
     policy: ``,   // {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: 'audit', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'string',label:'要求日時',note:'ISO8601拡張形式の文字列',default:'Date.now()'},
@@ -402,6 +403,7 @@ const classdef = {
     note: 'authConfigを継承', // クラスとしての補足説明
     inherit: 'authConfig', // 親クラス名
     defaultVariableName: 'cf',  // 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
     members: [
       {name:'api',type:'string',label:'サーバ側WebアプリURLのID',note:'`https://script.google.com/macros/s/(この部分)/exec`'},
       {name:'timeout',type:'number',label:'サーバからの応答待機時間',note:'これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分',default:300000},
@@ -431,7 +433,8 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
-    
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'CSkeySign',type:'CryptoKey',label:'署名用秘密鍵',note:''},
       {name:'CPkeySign',type:'CryptoKey',label:'署名用公開鍵',note:''},
@@ -460,12 +463,13 @@ const classdef = {
       },
     },
   },
-  authConfig: { 
+  authConfig: {
     label: 'authClient/authServer共通設定値',
     note: 'authClientConfig, authServerConfigの親クラス',
     policy: ``,
     inherit: '', // 親クラス名
     defaultVariableName: '',
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members:[
       {name:'systemName',type:'string',label:'システム名',default:'auth'},
@@ -503,6 +507,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'string',label:'要求日時',note:'ISO8601拡張形式の文字列',default:'Date.now()'},
@@ -582,6 +587,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: 'authClientKeys',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
@@ -612,7 +618,7 @@ const classdef = {
           - IndexedDBに[authClientConfig](authClientConfig.md#authclientconfig_internal).systemNameを持つキーがあれば取得、メンバ変数に格納。
           - 無ければ新規に生成し、IndexedDBに格納。
           - SPkey未設定の場合、authServerにauthRequestを要求、SPkeyをセット
-            - 
+            -
 
           - authClientConfig.auditLogシートが無ければ作成
           - 引数の内、authIndexedDBと同一メンバ名があればthisに設定
@@ -690,6 +696,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
@@ -725,6 +732,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'number',label:'リクエストを受けたサーバ側日時',note:'',default:'Date.now()'},
@@ -755,6 +763,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'number',label:'サーバ側処理日時',note:'UNIX時刻',default:'Date.now()'},
@@ -788,6 +797,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'keyGeneratedDateTime',type:'number',label:'UNIX時刻',note:''},
@@ -822,6 +832,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {
@@ -864,6 +875,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: 'authConfig', // 親クラス名
     defaultVariableName: 'cf',  // 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [
       {name:'memberList',type:'string',label:'memberListシート名',default:'memberList'},
@@ -923,6 +935,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {
@@ -959,6 +972,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {
@@ -995,6 +1009,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'result',type:'string',label:'処理結果',note:'"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "normal"'},
@@ -1028,6 +1043,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'number',label:'cryptoClient処理日時',note:'UNIX時刻'},
@@ -1237,6 +1253,7 @@ const classdef = {
       `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',label:'メンバの識別子',note:'メールアドレス',default:'UUID'},
@@ -1463,6 +1480,7 @@ const classdef = {
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'deviceId',type:'string',label:'デバイスの識別子。UUID',note:''},
@@ -1499,6 +1517,7 @@ const classdef = {
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'joiningRequest', type:'number', label:'加入要求日時',note:'加入要求をサーバ側で受信した日時', default:'Date.new()'},
@@ -1552,6 +1571,7 @@ const classdef = {
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'authority',type:'number',label:'メンバの持つ権限',note:'authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す',default:0},
@@ -1584,6 +1604,7 @@ const classdef = {
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'passcode',type:'string',label:'設定されているパスコード',note:'最初の認証試行で作成'},
@@ -1651,6 +1672,7 @@ const classdef = {
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'entered',type:'string',label:'入力されたパスコード',note:''},
@@ -1759,7 +1781,7 @@ const classdef = {
     const rv = [];
     const dataLabels = Object.keys(arg.pattern);
     const header = ['項目名','データ型','生成時', ...dataLabels];
-    
+
     if( typeof cdef[arg.typeName] !== 'undefined' ){
       ['',  // ヘッダー行
         `${indent}- [${arg.typeName}](${arg.typeName}.md#${arg.typeName.toLowerCase()}_internal): ${cdef[arg.typeName].label}`,
