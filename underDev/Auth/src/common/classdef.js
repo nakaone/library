@@ -62,7 +62,7 @@ const classdef = {
               }
             },'  ')</evaluate>
             ※comparisonTable最小構成サンプル
-            <evaluate>comparisonTable({typeName:'MemberLog',pattern:{'更新内容':{assign: {
+            <evaluate>comparisonTable({typeName:'MemberLog',default:{},pattern:{'更新内容':{assign: {
               approval: 'examined === true ? Date.now() : 0',
               denial: 0,
               joiningExpiration: '現在日時(UNIX時刻)＋authServerConfig.memberLifeTime',
@@ -1330,6 +1330,60 @@ const classdef = {
           }
         }},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
+      judgeMember: {
+        type: 'static',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '加入審査画面から審査結果入力＋結果通知',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: `
+          - 加入審査画面を呼び出し、管理者が記入した結果をmemberListに登録、審査結果をメンバに通知する。
+          - memberListシートのGoogle Spreadのメニューから管理者が実行することを想定。
+        `,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'memberId',type:'string',note:'メンバ識別子'},
+        ],
+
+        process: `
+          - [getMemberメソッド](#member_getmember)で当該メンバのMemberを取得
+          - memberListシート上に存在しないなら、戻り値「不存在」を返して終了
+          - 状態が「未審査」ではないなら、戻り値「対象外」を返して終了
+          - シート上にmemberId・氏名と「承認」「否認」「取消」ボタンを備えたダイアログ表示
+          - 取消が選択されたら「キャンセル」を返して終了
+          - Memberの以下項目を更新
+            <evaluate>comparisonTable({typeName:'MemberLog',default:{},pattern:{
+              '承認時':{assign: {
+                approval: '現在日時(Date.now())',
+                denial: 0,
+                joiningExpiration: '現在日時＋[memberLifeTime](authServerConfig.md#authserverconfig_internal)',
+                unfreezeDenial: 0,
+              }},
+              '否認時':{assign: {
+                approval: 0,
+                denial: '現在日時',
+                joiningExpiration: 0,
+                unfreezeDenial: '現在日時＋[prohibitedToJoin](authServerConfig.md#authserverconfig_internal)',
+              }},
+            }},'  ')</evaluate>
+          - [setMember](#member_setmember)にMemberを渡してmemberListを更新
+          - 戻り値「正常終了」を返して終了
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          authResponse: { // メンバ名は戻り値のデータ型名
+            default: {request:'memberId'},
+              // {Object.<string,string>} 各パターンの共通設定値
+            condition: ``,	// {string} データ型が複数の場合の選択条件指定(trimIndent対象)
+            note: ``,	// {string} 備忘(trimIndent対象)
+            pattern: {
+              '不存在': {assign:{result:'"fatal"',message:'"not exists"'}},
+              '対象外': {assign:{result:'"warning"',message:'"not unexamined"',response:'更新前のMember'}},
+              'キャンセル': {assign:{result:'"warning"',message:'"examin canceled"',response:'更新前のMember'}},
+              '正常終了': {assign:{result:'"normal"',response:'更新<span style="color:red">後</span>のMember'}},
+            }
+          }
+        },
+      },
       removeMember: {
         type: 'static',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: '登録中メンバをアカウント削除、または加入禁止にする',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
@@ -1432,7 +1486,6 @@ const classdef = {
           - 戻り値「正常終了」を返して終了
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
         returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
           authResponse: { // メンバ名は戻り値のデータ型名
             default: {request:'{memberId, examined}'},
@@ -1804,7 +1857,7 @@ const classdef = {
           return typeof result === 'string' ? result : result.join('\n');
         } catch (e) {
           console.error('Error evaluating block:', e);
-          return `${indent}[EVAL ERROR: ${e.message}]`;
+          return `[EVAL ERROR: ${e.message}]`;
         }
       }
     );
@@ -1854,6 +1907,9 @@ const classdef = {
         ];
         rv.push(`${indent+'  '}| ${cells.join(' | ')} |`);
       });
+    } else {
+      console.error(`l.1911 cdef=${JSON.stringify(Object.keys(cdef))}`);
+      console.error(`comparisonTable error: cdef[arg.typeName]=${cdef[arg.typeName]}\narg=${JSON.stringify(arg,null,2)}`);
     }
 
     return rv;
@@ -2342,6 +2398,7 @@ const classdef = {
 
   // データ(cdef)生成
   Object.keys(classdef).forEach(x => cdef[x] = new ClassDef(x,classdef[x]));
+  console.log(`l.2401 cdef=${JSON.stringify(Object.keys(cdef))}`);
 
   // 二次設定項目(caller)のセット
   //   cdef生成を一次設定としたとき、生成後の状態での検索・設定が必要になる項目のセット
@@ -2351,7 +2408,8 @@ const classdef = {
   const classList = ['| No | クラス名 | 概要 |','| --: | :-- | :-- |'];
   let cnt = 1;
   Object.keys(cdef).forEach(x => {
-    //fs.writeFileSync(`${arg.opt.o}/${x}.md`, JSON.stringify(cdef[x],null,2));
+    // jsonはデバッグ用に出力、割愛可
+    fs.writeFileSync(`${arg.opt.o}/${x}.json`, JSON.stringify(cdef[x],null,2));
     fs.writeFileSync(`${arg.opt.o}/${x}.md`, cdef[x].md());
 
     // クラス一覧に追加

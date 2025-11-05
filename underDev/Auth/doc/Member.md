@@ -80,6 +80,7 @@ stateDiagram-v2
 | :-- | :-- | :-- |
 | [constructor](#member_constructor) | private | コンストラクタ |
 | [getMember](#member_getmember) | public | 指定メンバの情報をmemberListシートから取得 |
+| [judgeMember](#member_judgemember) | static | 加入審査画面から審査結果入力＋結果通知 |
 | [removeMember](#member_removemember) | static | 登録中メンバをアカウント削除、または加入禁止にする |
 | [restoreMember](#member_restoremember) | static | 加入禁止(論理削除)されているメンバを復活させる |
 | [setMember](#member_setmember) | public | 指定メンバ情報をmemberListシートに保存 |
@@ -122,6 +123,7 @@ stateDiagram-v2
 
 ### <span id="member_getmember_caller">📞 呼出元</span>
 
+- [Member.judgeMember()](Member.md#member_getmember)
 - [Member.removeMember()](Member.md#member_getmember)
 - [Member.restoreMember()](Member.md#member_getmember)
 
@@ -147,6 +149,43 @@ stateDiagram-v2
     | message | string | 【任意】 | — | **not exists** |
     | request | authRequest | 【任意】 | {memberId:引数のmemberId} | {memberId:引数のmemberId} |
     | response | any | 【任意】 | **Member(シート)** | — |
+
+## <span id="member_judgemember">🧱 <a href="#member_method">Member.judgeMember()</a></span>
+
+加入審査画面から審査結果入力＋結果通知
+
+- 加入審査画面を呼び出し、管理者が記入した結果をmemberListに登録、審査結果をメンバに通知する。
+- memberListシートのGoogle Spreadのメニューから管理者が実行することを想定。
+
+### <span id="member_judgemember_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| memberId | ❌ | string | — | メンバ識別子 | 
+
+### <span id="member_judgemember_process">🧾 処理手順</span>
+
+- [getMemberメソッド](#member_getmember)で当該メンバのMemberを取得
+- memberListシート上に存在しないなら、戻り値「不存在」を返して終了
+- 状態が「未審査」ではないなら、戻り値「対象外」を返して終了
+- シート上にmemberId・氏名と「承認」「否認」「取消」ボタンを備えたダイアログ表示
+- 取消が選択されたら「キャンセル」を返して終了
+- Memberの以下項目を更新
+
+- [setMember](#member_setmember)にMemberを渡してmemberListを更新
+- 戻り値「正常終了」を返して終了
+
+### <span id="member_judgemember_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 不存在 | 対象外 | キャンセル | 正常終了 |
+    | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — | — | — | — |
+    | result | string | normal | **"fatal"** | **"warning"** | **"warning"** | **"normal"** |
+    | message | string | 【任意】 | **"not exists"** | **"not unexamined"** | **"examin canceled"** | — |
+    | request | authRequest | 【任意】 | memberId | memberId | memberId | memberId |
+    | response | any | 【任意】 | — | **更新前のMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
 
 ## <span id="member_removemember">🧱 <a href="#member_method">Member.removeMember()</a></span>
 
@@ -245,6 +284,7 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
 
 ### <span id="member_setmember_caller">📞 呼出元</span>
 
+- [Member.judgeMember()](Member.md#member_setmember)
 - [Member.removeMember()](Member.md#member_setmember)
 - [Member.restoreMember()](Member.md#member_setmember)
 
