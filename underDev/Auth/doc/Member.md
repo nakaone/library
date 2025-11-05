@@ -80,7 +80,8 @@ stateDiagram-v2
 | :-- | :-- | :-- |
 | [constructor](#member_constructor) | private | コンストラクタ |
 | [getMember](#member_getmember) | public | 指定メンバの情報をmemberListシートから取得 |
-| [removeMember](#member_removemember) | public | 登録中メンバをアカウント削除、または加入禁止にする |
+| [removeMember](#member_removemember) | static | 登録中メンバをアカウント削除、または加入禁止にする |
+| [restoreMember](#member_restoremember) | static | 加入禁止(論理削除)されているメンバを復活させる |
 | [setMember](#member_setmember) | public | 指定メンバ情報をmemberListシートに保存 |
 
 ## <span id="member_constructor">🧱 <a href="#member_method">Member.constructor()</a></span>
@@ -122,6 +123,7 @@ stateDiagram-v2
 ### <span id="member_getmember_caller">📞 呼出元</span>
 
 - [Member.removeMember()](Member.md#member_getmember)
+- [Member.restoreMember()](Member.md#member_getmember)
 
 ### <span id="member_getmember_param">📥 引数</span>
 
@@ -199,6 +201,42 @@ stateDiagram-v2
     | request | authRequest | 【任意】 | {memberId, physical} | {memberId, physical} | {memberId, physical} | {memberId, physical} |
     | response | any | 【任意】 | — | **更新前のMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
 
+## <span id="member_restoremember">🧱 <a href="#member_method">Member.restoreMember()</a></span>
+
+加入禁止(論理削除)されているメンバを復活させる
+
+memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
+
+### <span id="member_restoremember_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| memberId | ❌ | string | — | ユーザ識別子 | 
+| examined | ⭕ | boolean | true | 「(審査済)未認証」にするならtrue、「未審査」にするならfalse。なお未審査にするなら改めて審査登録が必要 | 
+
+### <span id="member_restoremember_process">🧾 処理手順</span>
+
+- [getMemberメソッド](#member_getmember)で当該メンバのMemberを取得
+- memberListシート上に存在しないなら、戻り値「不存在」を返して終了
+- 状態が「加入禁止」ではないなら、戻り値「対象外」を返して終了
+- シート上に確認のダイアログを表示、キャンセルが選択されたら「キャンセル」を返して終了
+- Memberの以下項目を更新
+
+- [setMember](#member_setmember)にMemberを渡してmemberListを更新
+- 戻り値「正常終了」を返して終了
+
+### <span id="member_restoremember_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 不存在 | 対象外 | キャンセル | 正常終了 |
+    | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — | — | — | — |
+    | result | string | normal | **"fatal"** | **"warning"** | **"warning"** | **"normal"** |
+    | message | string | 【任意】 | **"not exists"** | **"not logically removed"** | **"restore canceled"** | — |
+    | request | authRequest | 【任意】 | {memberId, examined} | {memberId, examined} | {memberId, examined} | {memberId, examined} |
+    | response | any | 【任意】 | — | **更新前のMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
+
 ## <span id="member_setmember">🧱 <a href="#member_method">Member.setMember()</a></span>
 
 指定メンバ情報をmemberListシートに保存
@@ -208,6 +246,7 @@ stateDiagram-v2
 ### <span id="member_setmember_caller">📞 呼出元</span>
 
 - [Member.removeMember()](Member.md#member_setmember)
+- [Member.restoreMember()](Member.md#member_setmember)
 
 ### <span id="member_setmember_param">📥 引数</span>
 

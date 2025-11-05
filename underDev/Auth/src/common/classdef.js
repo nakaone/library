@@ -61,6 +61,13 @@ const classdef = {
                 }
               }
             },'  ')</evaluate>
+            ※comparisonTable最小構成サンプル
+            <evaluate>comparisonTable({typeName:'MemberLog',pattern:{'更新内容':{assign: {
+              approval: 'examined === true ? Date.now() : 0',
+              denial: 0,
+              joiningExpiration: '現在日時(UNIX時刻)＋authServerConfig.memberLifeTime',
+              unfreezeDenial: 0,
+            }}}},'  ')</evaluate>
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
@@ -1324,7 +1331,7 @@ const classdef = {
         }},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
       removeMember: {
-        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        type: 'static',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: '登録中メンバをアカウント削除、または加入禁止にする',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: `
           - memberListシートのGoogle Spreadのメニューから管理者が実行することを想定
@@ -1393,6 +1400,50 @@ const classdef = {
                 message: '"logically removed"',
                 response: '更新<span style="color:red">後</span>のMember'
               }},
+            }
+          }
+        },
+      },
+      restoreMember: {
+        type: 'static',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '加入禁止(論理削除)されているメンバを復活させる',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: `memberListシートのGoogle Spreadのメニューから管理者が実行することを想定`,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'memberId',type:'string',note:'ユーザ識別子'},
+          {name:'examined',type:'boolean',note:'「(審査済)未認証」にするならtrue、「未審査」にするならfalse。なお未審査にするなら改めて審査登録が必要',default:true},
+        ],
+
+        process: `
+          - [getMemberメソッド](#member_getmember)で当該メンバのMemberを取得
+          - memberListシート上に存在しないなら、戻り値「不存在」を返して終了
+          - 状態が「加入禁止」ではないなら、戻り値「対象外」を返して終了
+          - シート上に確認のダイアログを表示、キャンセルが選択されたら「キャンセル」を返して終了
+          - Memberの以下項目を更新
+            <evaluate>comparisonTable({typeName:'MemberLog',pattern:{'更新内容':{assign: {
+              approval: 'examined === true ? Date.now() : 0',
+              denial: 0,
+              joiningExpiration: '現在日時(UNIX時刻)＋authServerConfig.memberLifeTime',
+              unfreezeDenial: 0,
+            }}}},'  ')</evaluate>
+          - [setMember](#member_setmember)にMemberを渡してmemberListを更新
+          - 戻り値「正常終了」を返して終了
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          authResponse: { // メンバ名は戻り値のデータ型名
+            default: {request:'{memberId, examined}'},
+              // {Object.<string,string>} 各パターンの共通設定値
+            condition: ``,	// {string} データ型が複数の場合の選択条件指定(trimIndent対象)
+            note: ``,	// {string} 備忘(trimIndent対象)
+            pattern: {
+              '不存在': {assign:{result:'"fatal"',message:'"not exists"'}},
+              '対象外': {assign:{result:'"warning"',message:'"not logically removed"',response:'更新前のMember'}},
+              'キャンセル': {assign:{result:'"warning"',message:'"restore canceled"',response:'更新前のMember'}},
+              '正常終了': {assign:{result:'"normal"',response:'更新<span style="color:red">後</span>のMember'}},
             }
           }
         },
