@@ -173,6 +173,19 @@ stateDiagram-v2
 - 取消が選択されたら「キャンセル」を返して終了
 - Memberの以下項目を更新
 
+  - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
+    | 項目名 | データ型 | 生成時 | 承認時 | 否認時 |
+    | :-- | :-- | :-- | :-- | :-- |
+    | joiningRequest | number | Date.new() | — | — |
+    | approval | number | 【必須】 | **現在日時(Date.now())** | **0** |
+    | denial | number | 【必須】 | **0** | **現在日時** |
+    | loginRequest | number | 【必須】 | — | — |
+    | loginSuccess | number | 【必須】 | — | — |
+    | loginExpiration | number | 【必須】 | — | — |
+    | loginFailure | number | 【必須】 | — | — |
+    | unfreezeLogin | number | 【必須】 | — | — |
+    | joiningExpiration | number | 【必須】 | **現在日時＋[memberLifeTime](authServerConfig.md#authserverconfig_internal)** | **0** |
+    | unfreezeDenial | number | 【必須】 | **0** | **現在日時＋[prohibitedToJoin](authServerConfig.md#authserverconfig_internal)** |
 - [setMember](#member_setmember)にMemberを渡してmemberListを更新
 - 戻り値「正常終了」を返して終了
 
@@ -262,6 +275,19 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
 - シート上に確認のダイアログを表示、キャンセルが選択されたら「キャンセル」を返して終了
 - Memberの以下項目を更新
 
+  - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
+    | 項目名 | データ型 | 生成時 | 更新内容 |
+    | :-- | :-- | :-- | :-- |
+    | joiningRequest | number | Date.new() | — |
+    | approval | number | 【必須】 | **examined === true ? Date.now() : 0** |
+    | denial | number | 【必須】 | **0** |
+    | loginRequest | number | 【必須】 | — |
+    | loginSuccess | number | 【必須】 | — |
+    | loginExpiration | number | 【必須】 | — |
+    | loginFailure | number | 【必須】 | — |
+    | unfreezeLogin | number | 【必須】 | — |
+    | joiningExpiration | number | 【必須】 | **現在日時(UNIX時刻)＋authServerConfig.memberLifeTime** |
+    | unfreezeDenial | number | 【必須】 | **0** |
 - [setMember](#member_setmember)にMemberを渡してmemberListを更新
 - 戻り値「正常終了」を返して終了
 

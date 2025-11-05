@@ -1847,14 +1847,23 @@ const classdef = {
       .map(line => line.match(/^[ \t]*/)[0].length);
     const minIndent = indents.length ? Math.min(...indents) : 0;
 
-    // 4. evaluateタグ内部を評価
-    const replaced = lines.map(line => line.slice(minIndent)).join('\n').replace(
+    // 4. 共通インデントを削除、各行を結合した文字列を返す
+    return lines.map(line => line.slice(minIndent)).join('\n');
+  }
+
+  /**
+   * 文字列の中にevaluateタグがあれば、evalの評価結果で置換
+   * @param {string} str 
+   */
+  function evaluate(str){
+
+    return str.replace(
       /^([ \t]*)<evaluate>([\s\S]*?)<\/evaluate>/gm,
       (_, indent, code) => {
         try {
           // その場で評価（comparisonTableが使えるスコープ）
-          const result = eval(code);
-          return typeof result === 'string' ? result : result.join('\n');
+          const result = eval(code);  // 戻り値は{string[]}
+          return (typeof result === 'string' ? result : result.join('\n'));
         } catch (e) {
           console.error('Error evaluating block:', e);
           return `[EVAL ERROR: ${e.message}]`;
@@ -1862,7 +1871,6 @@ const classdef = {
       }
     );
 
-    return replaced;
   }
 
   /**
@@ -1901,9 +1909,8 @@ const classdef = {
           m.type,
           m.default !== '—' ? m.default : (m.isOpt ? '【任意】' : '【必須】'),
           ...dataLabels.map(label => typeof arg.pattern[label].assign[x] === 'undefined'
-            ? ( typeof arg.default[x] === 'undefined' ? '—' : arg.default[x])
-            : `**${arg.pattern[label].assign[x]}**`
-          )
+            ? ( typeof arg.default !== 'undefined' && typeof arg.default[x] !== 'undefined'
+            ? arg.default[x] : '—' ) : `**${arg.pattern[label].assign[x]}**`)
         ];
         rv.push(`${indent+'  '}| ${cells.join(' | ')} |`);
       });
@@ -2187,6 +2194,7 @@ const classdef = {
         })
       }
 
+      // 参照先メソッドのcallerにリンク元メソッドを追加
       if( links.length > 0 ){
         links.forEach(link => {
           const methods = cdef[link.className].methods; // 参照先クラスのメソッド(集合)
@@ -2200,6 +2208,9 @@ const classdef = {
           }
         });
       }
+
+      // evaluateタグの処理
+      this.process = evaluate(this.process);
     }
   }
 
@@ -2398,7 +2409,6 @@ const classdef = {
 
   // データ(cdef)生成
   Object.keys(classdef).forEach(x => cdef[x] = new ClassDef(x,classdef[x]));
-  console.log(`l.2401 cdef=${JSON.stringify(Object.keys(cdef))}`);
 
   // 二次設定項目(caller)のセット
   //   cdef生成を一次設定としたとき、生成後の状態での検索・設定が必要になる項目のセット
