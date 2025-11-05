@@ -463,10 +463,7 @@ const classdef = {
           - [authConfig](authConfig.md#authconfig_internal).RSAbitsを参照、新たな鍵ペア生成
         `,	// {string} 処理手順。markdownで記載
 
-        returns: [{  // {ReturnValues} ■(パターン別)メソッド戻り値の定義■
-          label: '正常終了時',	// {string} パターン名。ex.「正常時」「未認証時」等
-          type: 'authClientKeys', // {string} データ型。authResponse等
-        }],
+        returns: {authClientKeys:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
     },
   },

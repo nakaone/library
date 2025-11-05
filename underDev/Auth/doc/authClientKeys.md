@@ -45,3 +45,11 @@
 - [authConfig](authConfig.md#authconfig_internal).RSAbitsを参照、新たな鍵ペア生成
 
 ### <span id="authclientkeys_constructor_returns">📤 戻り値</span>
+
+  - [authClientKeys](authClientKeys.md#authclientkeys_internal): クライアント側鍵ペア
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | CSkeySign | CryptoKey | 【必須】 | — |
+    | CPkeySign | CryptoKey | 【必須】 | — |
+    | CSkeyEnc | CryptoKey | 【必須】 | — |
+    | CPkeyEnc | CryptoKey | 【必須】 | — |
