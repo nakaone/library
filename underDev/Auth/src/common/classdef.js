@@ -1325,14 +1325,14 @@ const classdef = {
           - [getMember](#member_getmember)で当該メンバのMemberを取得
           - 物理削除の場合("physical === true")
             - シート上に確認のダイアログを表示、OKが選択されたら当該メンバの行をmemberListから削除
-            - 監査ログに「物理削除」を記録
+            - 監査ログに「物理削除」を記録([authAuditLog.log](authAuditLog.md#authauditlog_log))
             - 戻り値「物理削除」を返して終了
           - 論理削除の場合("physical === false")
             - 既に「加入禁止」なら戻り値「加入禁止」を返して終了
             - シート上に確認のダイアログを表示、キャンセルが選択されたら戻り値「キャンセル」を返して終了
             - [MemberLog.prohibitJoining](MemberLog.md#memberlog_prohibitjoining)で加入禁止状態に変更
             - [setMember](#member_setmember)にMemberを渡してmemberListを更新
-            - 監査ログに「論理削除」を記録
+            - 監査ログに「論理削除」を記録([authAuditLog.log](authAuditLog.md#authauditlog_log))
             - 戻り値「論理削除」を返して終了
           - 監査ログ出力項目
             <evaluate>comparisonTable({
@@ -2064,7 +2064,10 @@ const classdef = {
           if( typeof methods._map[link.methodName] !== 'undefined' ){
             const methodName = methods._map[link.methodName]; // 大文字含むメソッド名に変換
             const caller = cdef[link.className].methods[methodName].caller;
-            caller.push({class:this.className,method:this.methodName}); // callerに追加
+            if( !(caller.find(x => x.class === this.className && x.method === this.methodName))){
+              // caller未登録なら追加登録
+              caller.push({class:this.className,method:this.methodName});
+            }
           }
         });
       }
