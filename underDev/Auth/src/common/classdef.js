@@ -1346,8 +1346,8 @@ const classdef = {
           - memberListシート上に存在しないなら、戻り値「不存在」を返して終了
           - 状態が「未審査」ではないなら、戻り値「対象外」を返して終了
           - シート上にmemberId・氏名と「承認」「否認」「取消」ボタンを備えたダイアログ表示
-          - 取消が選択されたら「キャンセル」を返して終了
-          - Memberの以下項目を更新
+          - 取消が選択されたら戻り値「キャンセル」を返して終了
+          - MemberLogの以下項目を更新
             <evaluate>comparisonTable({typeName:'MemberLog',default:{},pattern:{
               '承認時':{assign: {
                 approval: '現在日時(Date.now())',
@@ -1362,7 +1362,7 @@ const classdef = {
                 unfreezeDenial: '現在日時＋[prohibitedToJoin](authServerConfig.md#authserverconfig_internal)',
               }},
             }},'  ')</evaluate>
-          - [setMember](#member_setmember)にMemberを渡してmemberListを更新
+          - [setMemberメソッド](#member_setmember)にMemberを渡してmemberListを更新
           - 戻り値「正常終了」を返して終了
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
