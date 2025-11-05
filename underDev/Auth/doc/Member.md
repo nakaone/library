@@ -115,8 +115,10 @@ stateDiagram-v2
 | メソッド名 | 型 | 内容 |
 | :-- | :-- | :-- |
 | [constructor](#member_constructor) | private | コンストラクタ |
+| [addTrial](#member_addtrial) | public | 新しい試行を登録し、メンバにパスコード通知メールを発信 |
 | [getMember](#member_getmember) | public | 指定メンバの情報をmemberListシートから取得 |
 | [judgeMember](#member_judgemember) | static | 加入審査画面から審査結果入力＋結果通知 |
+| [judgeStatus](#member_judgestatus) | public | 指定メンバ・デバイスの状態を[状態決定表](#member_policy_decisiontable)により判定 |
 | [removeMember](#member_removemember) | static | 登録中メンバをアカウント削除、または加入禁止にする |
 | [restoreMember](#member_restoremember) | static | 加入禁止(論理削除)されているメンバを復活させる |
 | [setMember](#member_setmember) | public | 指定メンバ情報をmemberListシートに保存 |
@@ -154,13 +156,52 @@ stateDiagram-v2
     | device | MemberDevice[] | 空配列 | — |
     | note | string | 空文字列 | — |
 
+## <span id="member_addtrial">🧱 <a href="#member_method">Member.addTrial()</a></span>
+
+新しい試行を登録し、メンバにパスコード通知メールを発信
+
+### <span id="member_addtrial_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| request | ❌ | [authRequest](authRequest.md#authrequest_internal) | — | 処理要求 | 
+
+### <span id="member_addtrial_process">🧾 処理手順</span>
+
+- 状態チェック
+  - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
+  - request.deviceIdで指定されたデバイスの状態が「未認証」でなければ戻り値「不適格」を返して終了
+- 新しい試行を生成、Member.trialの先頭に追加<br>
+  ("Member.trial.unshift(new [MemberTrial](MemberTrial.md#membertrial_internal)())")
+- MemberLog.loginRequestに現在日時(UNIX時刻)を設定
+- ログイン試行履歴の最大保持数を超えた場合、古い世代を削除<br>
+  (Member.trial.length >= [authServerConfig](authServerConfig.md#authserverconfig_internal).generationMax)
+- 更新後のMemberを引数に[setMember](#member_setmember)を呼び出し、memberListシートを更新
+- メンバに[sendmail](JSLib.md#sendmail)でパスコード通知メールを発信<br>
+  但し[authServerConfig](authServerConfig.md#authserverconfig_internal).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
+- 戻り値「正常終了」を返して終了
+
+### <span id="member_addtrial_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 不適格 | 正常終了 |
+    | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — | — |
+    | result | string | normal | **"fatal"** | — |
+    | message | string | 【任意】 | **"invalid status"** | — |
+    | request | authRequest | 【任意】 | 引数"request" | 引数"request" |
+    | response | any | 【任意】 | **Member(更新前)** | **Member(更新後)** |
+
 ## <span id="member_getmember">🧱 <a href="#member_method">Member.getMember()</a></span>
 
 指定メンバの情報をmemberListシートから取得
 
 ### <span id="member_getmember_caller">📞 呼出元</span>
 
+- [Member.addTrial()](Member.md#member_getmember)
 - [Member.judgeMember()](Member.md#member_getmember)
+- [Member.judgeStatus()](Member.md#member_getmember)
 - [Member.removeMember()](Member.md#member_getmember)
 - [Member.restoreMember()](Member.md#member_getmember)
 
@@ -236,6 +277,37 @@ stateDiagram-v2
     | message | string | 【任意】 | **"not exists"** | **"not unexamined"** | **"examin canceled"** | — |
     | request | authRequest | 【任意】 | memberId | memberId | memberId | memberId |
     | response | any | 【任意】 | — | **更新前のMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
+
+## <span id="member_judgestatus">🧱 <a href="#member_method">Member.judgeStatus()</a></span>
+
+指定メンバ・デバイスの状態を[状態決定表](#member_policy_decisiontable)により判定
+
+### <span id="member_judgestatus_caller">📞 呼出元</span>
+
+- [Member.setMember()](Member.md#member_judgestatus)
+
+### <span id="member_judgestatus_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| arg | ❌ | [Member](Member.md#member_internal) \| string | — | Memberオブジェクトまたはユーザ識別子 | 
+
+### <span id="member_judgestatus_process">🧾 処理手順</span>
+
+- 引数がargが文字列(memberId)だった場合[getMemberメソッド](#member_getmember)でMemberを取得、戻り値の"request"にセット
+- [状態決定表](#member_policy_decisiontable)に基づき、引数で指定されたメンバおよびデバイス全ての状態を判断・更新
+
+### <span id="member_judgestatus_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | **Member(更新前)** |
+    | response | any | 【任意】 | **Member(更新後)** |
 
 ## <span id="member_removemember">🧱 <a href="#member_method">Member.removeMember()</a></span>
 
@@ -347,6 +419,7 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
 
 ### <span id="member_setmember_caller">📞 呼出元</span>
 
+- [Member.addTrial()](Member.md#member_setmember)
 - [Member.judgeMember()](Member.md#member_setmember)
 - [Member.removeMember()](Member.md#member_setmember)
 - [Member.restoreMember()](Member.md#member_setmember)

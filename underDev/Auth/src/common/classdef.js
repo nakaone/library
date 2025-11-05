@@ -1323,6 +1323,50 @@ const classdef = {
 
         returns: {Member:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
+      addTrial: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '新しい試行を登録し、メンバにパスコード通知メールを発信',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        // caller {Object[]} 本メソッドを呼び出す{class:クラス名,method:メソッド名}の配列
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'request',type:'authRequest',note:'処理要求'},
+        ],
+
+        process: `
+          - 状態チェック
+            - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
+            - request.deviceIdで指定されたデバイスの状態が「未認証」でなければ戻り値「不適格」を返して終了
+          - 新しい試行を生成、Member.trialの先頭に追加<br>
+            ("Member.trial.unshift(new [MemberTrial](MemberTrial.md#membertrial_internal)())")
+          - MemberLog.loginRequestに現在日時(UNIX時刻)を設定
+          - ログイン試行履歴の最大保持数を超えた場合、古い世代を削除<br>
+            (Member.trial.length >= [authServerConfig](authServerConfig.md#authserverconfig_internal).generationMax)
+          - 更新後のMemberを引数に[setMember](#member_setmember)を呼び出し、memberListシートを更新
+          - メンバに[sendmail](JSLib.md#sendmail)でパスコード通知メールを発信<br>
+            但し[authServerConfig](authServerConfig.md#authserverconfig_internal).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
+          - 戻り値「正常終了」を返して終了
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          authResponse: { // メンバ名は戻り値のデータ型名
+            default: {request:'引数"request"'},
+            pattern: {
+              '不適格': {assign: {
+                result:'"fatal"',
+                message: '"invalid status"',
+                response: 'Member(更新前)',
+              }},
+              '正常終了': {assign: {
+                response: 'Member(更新後)',
+              }},
+            }
+          }
+        },
+      },
       getMember: {
         type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: '指定メンバの情報をmemberListシートから取得',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
@@ -1409,6 +1453,37 @@ const classdef = {
               '対象外': {assign:{result:'"warning"',message:'"not unexamined"',response:'更新前のMember'}},
               'キャンセル': {assign:{result:'"warning"',message:'"examin canceled"',response:'更新前のMember'}},
               '正常終了': {assign:{result:'"normal"',response:'更新<span style="color:red">後</span>のMember'}},
+            }
+          }
+        },
+      },
+      judgeStatus: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '指定メンバ・デバイスの状態を[状態決定表](#member_policy_decisiontable)により判定',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        // caller {Object[]} 本メソッドを呼び出す{class:クラス名,method:メソッド名}の配列
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Member|string',note:'Memberオブジェクトまたはユーザ識別子'},
+        ],
+
+        process: `
+          - 引数がargが文字列(memberId)だった場合[getMemberメソッド](#member_getmember)でMemberを取得、戻り値の"request"にセット
+          - [状態決定表](#member_policy_decisiontable)に基づき、引数で指定されたメンバおよびデバイス全ての状態を判断・更新
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          authResponse: { // メンバ名は戻り値のデータ型名
+            pattern: {
+              '正常終了': {
+                assign: {
+                  request: 'Member(更新前)',
+                  response: 'Member(更新後)',
+                }, // {Object.<string,string>} 当該パターンの設定値
+              },
             }
           }
         },
