@@ -1367,6 +1367,72 @@ const classdef = {
           }
         },
       },
+      checkPasscode: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '認証時のパスコードチェック',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: `入力されたパスコードをチェック、Member内部の各種メンバの値を更新の上、チェック結果を返す。`,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'request',type:'authRequest',note:'処理要求オブジェクト'},
+        ],
+
+        process: `
+          - 引数チェック。"func"が指定以外、またはパスコードの形式不正の場合、戻り値「不正形式」を返して終了
+            <evaluate>comparisonTable({typeName:'authRequest',default:{},pattern:{'確認内容':{assign: {
+              func: '"::passcode::"',
+              arguments: '入力されたパスコード'
+            }}}},'  ')</evaluate>
+          - デバイス状態チェック
+            - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
+            - request.deviceIdで対象デバイスを特定、「試行中」以外は戻り値「非試行中」を返して終了
+          - パスコードをチェック、結果を先頭に追加(Member.trial.unshift(new [MemberTrialLog](MemberTrialLog.md#membertriallog_constructor)()))
+          - パスコードチェック
+            - パスコードが一致 ⇒ 「一致時」をセット
+            - パスコードが不一致
+              - 試行回数が上限未満(\`MemberTrial.log.length < [authServerConfig](authServerConfig.md#authserverconfig_internal).trial.maxTrial\`)<br>
+                ⇒ 変更すべき項目無し
+              - 試行回数が上限以上(\`MemberTrial.log.length >= [authServerConfig](authServerConfig.md#authserverconfig_internal).trial.maxTrial\`)<br>
+                ⇒ 「凍結時」をセット
+            - 設定項目と値は以下の通り。
+              <evaluate>comparisonTable({typeName:'MemberLog',default:{},pattern:{
+                '一致時':{assign: {
+                  loginSuccess: '現在日時(UNIX時刻)',
+                  loginExpiration: '現在日時＋[loginLifeTime](authServerConfig.md#authserverconfig_internal)'
+                }},
+                '上限到達':{assign: {
+                  loginFailure: '現在日時(UNIX時刻)',
+                  unfreezeLogin: '現在日時＋[loginFreeze](authServerConfig.md#authserverconfig_internal)'
+                }},
+              }},'  ')</evaluate>
+          - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
+            ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
+          - 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          authResponse: { // メンバ名は戻り値のデータ型名
+            default: {request:'request'},
+            condition: ``,	// {string} データ型が複数の場合の選択条件指定(trimIndent対象)
+            note: ``,	// {string} 備忘(trimIndent対象)
+            pattern: {
+              '不正形式':{assign:{
+                result:'"fatal"',
+                message: '"invalid request"',
+              }},
+              '非試行中':{assign:{
+                result:'"fatal"',
+                message: '"invalid status"',
+              }},
+              '正常終了':{assign:{
+                message: 'デバイスの状態(MemberDevice.status)',
+                response: '更新後のMember',
+              }},
+            }
+          }
+        },
+      },
       getMember: {
         type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: '指定メンバの情報をmemberListシートから取得',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'

@@ -116,6 +116,7 @@ stateDiagram-v2
 | :-- | :-- | :-- |
 | [constructor](#member_constructor) | private | コンストラクタ |
 | [addTrial](#member_addtrial) | public | 新しい試行を登録し、メンバにパスコード通知メールを発信 |
+| [checkPasscode](#member_checkpasscode) | public | 認証時のパスコードチェック |
 | [getMember](#member_getmember) | public | 指定メンバの情報をmemberListシートから取得 |
 | [judgeMember](#member_judgemember) | static | 加入審査画面から審査結果入力＋結果通知 |
 | [judgeStatus](#member_judgestatus) | public | 指定メンバ・デバイスの状態を[状態決定表](#member_policy_decisiontable)により判定 |
@@ -193,6 +194,74 @@ stateDiagram-v2
     | request | authRequest | 【任意】 | 引数"request" | 引数"request" |
     | response | any | 【任意】 | **Member(更新前)** | **Member(更新後)** |
 
+## <span id="member_checkpasscode">🧱 <a href="#member_method">Member.checkPasscode()</a></span>
+
+認証時のパスコードチェック
+
+入力されたパスコードをチェック、Member内部の各種メンバの値を更新の上、チェック結果を返す。
+
+### <span id="member_checkpasscode_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| request | ❌ | [authRequest](authRequest.md#authrequest_internal) | — | 処理要求オブジェクト | 
+
+### <span id="member_checkpasscode_process">🧾 処理手順</span>
+
+- 引数チェック。"func"が指定以外、またはパスコードの形式不正の場合、戻り値「不正形式」を返して終了
+
+  - [authRequest](authRequest.md#authrequest_internal): 暗号化前の処理要求
+    | 項目名 | データ型 | 生成時 | 確認内容 |
+    | :-- | :-- | :-- | :-- |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【必須】 | — |
+    | signature | string | 【必須】 | — |
+    | requestId | string | 【必須】 | — |
+    | timestamp | number | 【必須】 | — |
+    | func | string | 【必須】 | **"::passcode::"** |
+    | arguments | any[] | 【必須】 | **入力されたパスコード** |
+- デバイス状態チェック
+  - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
+  - request.deviceIdで対象デバイスを特定、「試行中」以外は戻り値「非試行中」を返して終了
+- パスコードをチェック、結果を先頭に追加(Member.trial.unshift(new [MemberTrialLog](MemberTrialLog.md#membertriallog_constructor)()))
+- パスコードチェック
+  - パスコードが一致 ⇒ 「一致時」をセット
+  - パスコードが不一致
+    - 試行回数が上限未満(`MemberTrial.log.length < [authServerConfig](authServerConfig.md#authserverconfig_internal).trial.maxTrial`)<br>
+      ⇒ 変更すべき項目無し
+    - 試行回数が上限以上(`MemberTrial.log.length >= [authServerConfig](authServerConfig.md#authserverconfig_internal).trial.maxTrial`)<br>
+      ⇒ 「凍結時」をセット
+  - 設定項目と値は以下の通り。
+
+  - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
+    | 項目名 | データ型 | 生成時 | 一致時 | 上限到達 |
+    | :-- | :-- | :-- | :-- | :-- |
+    | joiningRequest | number | Date.new() | — | — |
+    | approval | number | 【必須】 | — | — |
+    | denial | number | 【必須】 | — | — |
+    | loginRequest | number | 【必須】 | — | — |
+    | loginSuccess | number | 【必須】 | **現在日時(UNIX時刻)** | — |
+    | loginExpiration | number | 【必須】 | **現在日時＋[loginLifeTime](authServerConfig.md#authserverconfig_internal)** | — |
+    | loginFailure | number | 【必須】 | — | **現在日時(UNIX時刻)** |
+    | unfreezeLogin | number | 【必須】 | — | **現在日時＋[loginFreeze](authServerConfig.md#authserverconfig_internal)** |
+    | joiningExpiration | number | 【必須】 | — | — |
+    | unfreezeDenial | number | 【必須】 | — | — |
+- 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
+  ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
+- 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
+
+### <span id="member_checkpasscode_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 不正形式 | 非試行中 | 正常終了 |
+    | :-- | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — | — | — |
+    | result | string | normal | **"fatal"** | **"fatal"** | — |
+    | message | string | 【任意】 | **"invalid request"** | **"invalid status"** | **デバイスの状態(MemberDevice.status)** |
+    | request | authRequest | 【任意】 | request | request | request |
+    | response | any | 【任意】 | — | — | **更新後のMember** |
+
 ## <span id="member_getmember">🧱 <a href="#member_method">Member.getMember()</a></span>
 
 指定メンバの情報をmemberListシートから取得
@@ -200,6 +269,7 @@ stateDiagram-v2
 ### <span id="member_getmember_caller">📞 呼出元</span>
 
 - [Member.addTrial()](Member.md#member_getmember)
+- [Member.checkPasscode()](Member.md#member_getmember)
 - [Member.judgeMember()](Member.md#member_getmember)
 - [Member.judgeStatus()](Member.md#member_getmember)
 - [Member.removeMember()](Member.md#member_getmember)
@@ -420,6 +490,7 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
 ### <span id="member_setmember_caller">📞 呼出元</span>
 
 - [Member.addTrial()](Member.md#member_setmember)
+- [Member.checkPasscode()](Member.md#member_setmember)
 - [Member.judgeMember()](Member.md#member_setmember)
 - [Member.removeMember()](Member.md#member_setmember)
 - [Member.restoreMember()](Member.md#member_setmember)

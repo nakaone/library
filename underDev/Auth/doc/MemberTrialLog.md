@@ -38,6 +38,7 @@
 
 ### <span id="membertriallog_constructor_caller">📞 呼出元</span>
 
+- [Member.checkPasscode()](Member.md#membertriallog_constructor)
 - [MemberTrial.loginAttempt()](MemberTrial.md#membertriallog_constructor)
 
 ### <span id="membertriallog_constructor_param">📥 引数</span>
