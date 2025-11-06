@@ -71,6 +71,7 @@ authServerの監査ログ
 
 ### <span id="authauditlog_log_caller">📞 呼出元</span>
 
+- [Member.reissuePasscode()](Member.md#authauditlog_log)
 - [Member.removeMember()](Member.md#authauditlog_log)
 
 ### <span id="authauditlog_log_param">📥 引数</span>

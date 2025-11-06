@@ -1350,7 +1350,6 @@ const classdef = {
           - 戻り値「正常終了」を返して終了
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
         returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
           authResponse: { // メンバ名は戻り値のデータ型名
             default: {request:'引数"request"'},
@@ -1550,6 +1549,64 @@ const classdef = {
                   response: 'Member(更新後)',
                 }, // {Object.<string,string>} 当該パターンの設定値
               },
+            }
+          }
+        },
+      },
+      reissuePasscode: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'パスコードを再発行する',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'request',type:'authRequest',note:'処理要求オブジェクト'},
+        ],
+
+        process: `
+          - 引数チェック。"func"が指定以外の場合、戻り値「不正形式」を返して終了
+            <evaluate>comparisonTable({typeName:'authRequest',default:{},pattern:{'確認内容':{assign: {
+              func: '"::reissue::"',
+            }}}},'  ')</evaluate>
+          - デバイス状態チェック
+            - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
+            - request.deviceIdで対象デバイスを特定、「試行中」以外は戻り値「非試行中」を返して終了
+          - 現在試行中のMemberTrialについて、パスコードを書き換え<br>
+            ※ 試行回数他、状態管理変数は書き換えない(MemberDevice.status,MemberTrial.log,MemberLog.loginRequest)
+            <evaluate>comparisonTable({typeName:'MemberTrial',default:{},pattern:{'設定内容':{assign: {
+              passcode: '新パスコード',
+              created: '現在日時',
+            }}}},'  ')</evaluate>
+          - パスコード再発行を監査ログに記録([authAuditLog.log](authAuditLog.md#authauditlog_log))
+            <evaluate>comparisonTable({typeName:'authAuditLog',default:{},pattern:{'設定内容':{assign: {
+              func: '"reissuePasscode"',
+              note: '旧パスコード -> 新パスコード',
+            }}}},'  ')</evaluate>
+          - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
+            ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
+          - メンバにパスコード通知メールを発信<br>
+            但し[authServerConfig](authServerConfig.md#authserverconfig_internal).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
+          - 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          authResponse: { // メンバ名は戻り値のデータ型名
+            default: {request:'request'},
+            condition: ``,	// {string} データ型が複数の場合の選択条件指定(trimIndent対象)
+            note: ``,	// {string} 備忘(trimIndent対象)
+            pattern: {
+              '不正形式':{assign:{
+                result:'"fatal"',
+                message: '"invalid request"',
+              }},
+              '非試行中':{assign:{
+                result:'"fatal"',
+                message: '"invalid status"',
+              }},
+              '正常終了':{assign:{
+                response: '更新後のMember',
+              }},
             }
           }
         },
