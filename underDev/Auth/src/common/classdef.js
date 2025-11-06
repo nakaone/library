@@ -301,7 +301,7 @@ const classdef = {
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
         params: [  // {Param[]} ■メソッド引数の定義■
-          {name:'arg',isOpt:true,type:'Object',default:{},note:'ユーザ指定の設定値'},
+          {name:'request',isOpt:true,type:'authRequest[]',default:{},note:'処理要求(スタック)'},
           //name: '',	// 引数としての変数名
           //isOpt: false,  // 任意項目ならtrue
           //type: '',	// データ型
@@ -2626,9 +2626,10 @@ const classdef = {
       const types = [];
       this.type.split('|').forEach(type => {
         type = type.trim();
-        types.push(typeof cdef[type] === 'undefined' ? type
+        const typeName = type.replace(/\[\]/g, ''); // 配列を示す'[]'は削除
+        types.push(typeof cdef[typeName] === 'undefined' ? type
           // 定義済のデータ型ならそのメンバ一覧へのリンクを設定
-          : `[${type}](${type}.md#${type.toLowerCase()}_internal)`);
+          : `[${type}](${typeName}.md#${typeName.toLowerCase()}_internal)`);
       });
 
       // 項目名 任意 データ型 既定値 備考

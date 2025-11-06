@@ -170,7 +170,7 @@ CPkey残有効期間をチェック
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
-| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+| request | ⭕ | [authRequest[]](authRequest.md#authrequest_internal) | {} | 処理要求(スタック) | 
 
 ### <span id="authclient_exec_process">🧾 処理手順</span>
 
