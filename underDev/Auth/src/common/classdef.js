@@ -34,6 +34,7 @@ const classdef = {
         // caller {Object[]} 本メソッドを呼び出す{class:クラス名,method:メソッド名}の配列
 
         params: [  // {Params} ■メソッド引数の定義■
+          // 将来的にオブジェクト化、引数チェックロジックもここに記載
           // list {string[]} 定義順の引数名一覧
           {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
           //name: '',	// 引数としての変数名
@@ -122,7 +123,9 @@ const classdef = {
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
-        params: [],
+        params: [
+          {name:'config',type:'authServerConfig',note:'authServerの動作設定変数'},
+        ],
 
         process: `
           - "[authServerConfig](authServerConfig.md#authserverconfig_internal).auditLog"シートが無ければ作成
@@ -194,33 +197,27 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: `
-      \`\`\`js
-      class authClient {
-        constructor(){
-          this.pv = {
-            member: new Member(),
-            audit: new authAuditLog(),
-            error: new authErrorLog(),
-          };
-        }
-      }
-      \`\`\`
-
       \`\`\`html
       <script type="text/javascript">
-        function devTools(){
-          // (中略)
-        }
-        // その他ライブラリ
+        // ライブラリ関数定義
+        function devTools(){...}; // (中略)
 
+        // authClient関係クラス定義
+        class authClient{...}
+        class authConfig{...}
+        class authClientConfig{...} // (中略)
+
+        // グローバル変数定義
         const dev = devTools();
+        const acl = authClient({ // HTML要素のイベント対応のためグローバル領域でインスタンス化
+          // プロジェクト毎の独自パラメータ
+        });
+
         window.addEventListener('DOMContentLoaded', () => {
           const v = { whois: 'DOMContentLoaded', rv: null };
           dev.start(v.whois, [...arguments]);
           try {
 
-            const ac = authClient();
-            // (中略)
 
             dev.end(); // 終了処理
             return v.rv;
@@ -241,7 +238,18 @@ const classdef = {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
-        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        source: `
+          \`\`\`js
+          class authClient {
+            constructor(config){
+              this.cf = new authClientConfig(config); // 動作設定値をauthClient内で共有
+              this.pv = { // auth関係の主要クラスをインスタンス化
+                crypto: new cryptoClient(), // クライアント側の暗号化・復号処理
+              };
+            }
+          }
+          \`\`\`
+        `,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
         params: [  // {Param[]} ■メソッド引数の定義■
@@ -531,7 +539,9 @@ const classdef = {
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
-        params: [],
+        params: [
+          {name:'config',type:'authServerConfig',note:'authServerの動作設定変数'},
+        ],
 
         process: `
           - [authServerConfig](authServerConfig.md#authserverconfig_internal).auditLogシートが無ければ作成
@@ -837,7 +847,45 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
-    example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    example: `
+      \`\`\`js
+      // ライブラリ関数定義
+      function devTools(){...}; // (中略)
+
+      // authServer関係クラス定義
+      class authServer{...};
+      class cryptoServer{...};
+      class Member{...};  // (中略)
+
+      // グローバル変数定義
+      const dev = devTools();
+      const asv = authServer({
+        // プロジェクト毎の独自パラメータ
+      });
+
+      // Webアプリ定義
+      function doGet(e){
+        const rv = asv.exec(e);
+        if( rv !== null ){ // fatal(無応答)の場合はnullを返す
+          return ContentService.createTextOutput(rv);
+        }
+      }
+
+      // スプレッドシートメニュー定義
+      SpreadsheetApp.getUi().createMenu('追加したメニュー')
+        .addItem('実行環境の初期化', 'menu10')
+        .addItem('加入認否入力', 'menu20')
+        .addSeparator()
+        .addSubMenu(
+          ui.createMenu("システム関係")
+            .addItem("鍵ペアの更新", "menu31")
+        )
+        .addToUi();
+      const menu10 = () => asv.setupEnvironment();
+      const menu20 = () => asv.listNotYetDecided();
+      const menu31 = () => asv.resetSPkey();
+      \`\`\`
+    `,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {
@@ -855,7 +903,21 @@ const classdef = {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
-        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        source: `
+          \`\`\`js
+          class authServer {
+            constructor(config){
+              this.cf = config; // 動作設定値をauthServer内で共有
+              this.pv = { // auth関係の主要クラスをインスタンス化
+                crypto: new cryptoServer(), // サーバ側の暗号化・復号処理
+                member: new Member(config), // メンバ
+                audit: new authAuditLog(),  // 監査ログ
+                error: new authErrorLog(),  // エラーログ
+              };
+            }
+          }
+          \`\`\`
+        `,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
         params: [  // {Params} ■メソッド引数の定義■
@@ -954,15 +1016,15 @@ const classdef = {
     ],
 
     methods: { // {Method} ■メソッド定義■
-      cOnstructor: {
+      constructor: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
-        params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        params: [
+          {name:'config',type:'authClientConfig',note:'authClientの動作設定変数'},
         ],
 
         process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
@@ -999,7 +1061,7 @@ const classdef = {
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
         params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+          {name:'config',type:'authServerConfig',note:'authServerの動作設定変数'},
         ],
 
         process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
@@ -2490,6 +2552,11 @@ const classdef = {
       ];
       if( this.note ){
         ['', this.note].forEach(x => rv.push(x));
+      }
+
+      // 実装例
+      if( this.source ){
+        ['',`### <span id="{cc}_source">📄 実装例</span>`,'',this.source].forEach(x => rv.push(x));
       }
 
       // 引数

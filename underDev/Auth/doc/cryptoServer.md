@@ -34,7 +34,7 @@
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
-| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+| config | ❌ | [authServerConfig](authServerConfig.md#authserverconfig_internal) | — | authServerの動作設定変数 | 
 
 ### <span id="cryptoserver_constructor_process">🧾 処理手順</span>
 

@@ -22,33 +22,27 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 
 ### <span id="authclient_example">実装・使用例</span>
 
-```js
-class authClient {
-  constructor(){
-    this.pv = {
-      member: new Member(),
-      audit: new authAuditLog(),
-      error: new authErrorLog(),
-    };
-  }
-}
-```
-
 ```html
 <script type="text/javascript">
-  function devTools(){
-    // (中略)
-  }
-  // その他ライブラリ
+  // ライブラリ関数定義
+  function devTools(){...}; // (中略)
 
+  // authClient関係クラス定義
+  class authClient{...}
+  class authConfig{...}
+  class authClientConfig{...} // (中略)
+
+  // グローバル変数定義
   const dev = devTools();
+  const acl = authClient({ // HTML要素のイベント対応のためグローバル領域でインスタンス化
+    // プロジェクト毎の独自パラメータ
+  });
+
   window.addEventListener('DOMContentLoaded', () => {
     const v = { whois: 'DOMContentLoaded', rv: null };
     dev.start(v.whois, [...arguments]);
     try {
 
-      const ac = authClient();
-      // (中略)
 
       dev.end(); // 終了処理
       return v.rv;
@@ -82,6 +76,19 @@ class authClient {
 ## <span id="authclient_constructor">🧱 <a href="#authclient_method">authClient.constructor()</a></span>
 
 コンストラクタ
+
+### <span id="{cc}_source">📄 実装例</span>
+
+```js
+class authClient {
+  constructor(config){
+    this.cf = new authClientConfig(config); // 動作設定値をauthClient内で共有
+    this.pv = { // auth関係の主要クラスをインスタンス化
+      crypto: new cryptoClient(), // クライアント側の暗号化・復号処理
+    };
+  }
+}
+```
 
 ### <span id="authclient_constructor_param">📥 引数</span>
 

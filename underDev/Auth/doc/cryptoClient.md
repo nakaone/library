@@ -23,9 +23,9 @@
 
 | メソッド名 | 型 | 内容 |
 | :-- | :-- | :-- |
-| [cOnstructor](#cryptoclient_constructor) | private | コンストラクタ |
+| [constructor](#cryptoclient_constructor) | private | コンストラクタ |
 
-## <span id="cryptoclient_constructor">🧱 <a href="#cryptoclient_method">cryptoClient.cOnstructor()</a></span>
+## <span id="cryptoclient_constructor">🧱 <a href="#cryptoclient_method">cryptoClient.constructor()</a></span>
 
 コンストラクタ
 
@@ -38,7 +38,7 @@
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
-| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+| config | ❌ | [authClientConfig](authClientConfig.md#authclientconfig_internal) | — | authClientの動作設定変数 | 
 
 ### <span id="cryptoclient_constructor_process">🧾 処理手順</span>
 

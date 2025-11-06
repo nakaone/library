@@ -43,7 +43,9 @@ authServerの監査ログ
 ### <span id="authauditlog_constructor_param">📥 引数</span>
 
 
-- 無し(void)
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| config | ❌ | [authServerConfig](authServerConfig.md#authserverconfig_internal) | — | authServerの動作設定変数 | 
 
 ### <span id="authauditlog_constructor_process">🧾 処理手順</span>
 
