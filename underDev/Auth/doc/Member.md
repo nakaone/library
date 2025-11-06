@@ -131,6 +131,10 @@ stateDiagram-v2
 
 コンストラクタ
 
+### <span id="member_constructor_caller">📞 呼出元</span>
+
+- [authServer.constructor()](authServer.md#member_constructor)
+
 ### <span id="member_constructor_param">📥 引数</span>
 
 

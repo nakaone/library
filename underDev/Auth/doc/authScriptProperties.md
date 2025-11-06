@@ -36,6 +36,10 @@
 
 コンストラクタ
 
+### <span id="authscriptproperties_constructor_caller">📞 呼出元</span>
+
+- [authServer.constructor()](authServer.md#authscriptproperties_constructor)
+
 ### <span id="authscriptproperties_constructor_param">📥 引数</span>
 
 
@@ -45,7 +49,17 @@
 
 ### <span id="authscriptproperties_constructor_process">🧾 処理手順</span>
 
+- 鍵ペア未作成なら[createPassword](JSLib.md#createpassword)を使用して作成
 
+  - [authScriptProperties](authScriptProperties.md#authscriptproperties_internal): サーバ側のScriptProperties
+    | 項目名 | データ型 | 生成時 | 更新内容 |
+    | :-- | :-- | :-- | :-- |
+    | keyGeneratedDateTime | number | 【必須】 | **Date.now()** |
+    | SPkey | string | 【必須】 | **新規作成** |
+    | SSkey | string | 【必須】 | **新規作成** |
+    | oldSPkey | string | 【必須】 | — |
+    | oldSSkey | string | 【必須】 | — |
+    | requestLog | authRequestLog[] |  | — |
 
 ### <span id="authscriptproperties_constructor_returns">📤 戻り値</span>
 

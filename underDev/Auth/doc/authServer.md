@@ -56,7 +56,8 @@ const menu31 = () => asv.resetSPkey();
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-| cf | ❌ | [authClientConfig](authClientConfig.md#authclientconfig_internal) | — | 動作設定変数(config) |  | 
+| cf | ❌ | [authServerConfig](authServerConfig.md#authserverconfig_internal) | — | 動作設定変数(config) |  | 
+| prop | ❌ | [authScriptProperties](authScriptProperties.md#authscriptproperties_internal) | — | 鍵ペア等を格納 |  | 
 | crypto | ❌ | [cryptoServer](cryptoServer.md#cryptoserver_internal) | — | 暗号化・復号用インスタンス |  | 
 | member | ❌ | [Member](Member.md#member_internal) | — | 対象メンバのインスタンス |  | 
 | auditLog | ❌ | [authAuditLog](authAuditLog.md#authauditlog_internal) | — | 監査ログのインスタンス |  | 
@@ -74,40 +75,35 @@ const menu31 = () => asv.resetSPkey();
 
 コンストラクタ
 
-### <span id="{cc}_source">📄 実装例</span>
-
-```js
-class authServer {
-  constructor(config){
-    this.cf = config; // 動作設定値をauthServer内で共有
-    this.crypto = new cryptoServer(); // サーバ側の暗号化・復号処理
-    this.member = new Member(config); // メンバ
-    this.auditLog = new authAuditLog();  // 監査ログ
-    this.errorLog = new authErrorLog();  // エラーログ
-    this.pv = { // authServer内共通変数(public variables)
-      // 中略。constructorのメンバ一覧参照
-    };
-  }
-}
-```
-
 ### <span id="authserver_constructor_param">📥 引数</span>
 
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
-| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+| config | ⭕ | [authServerConfig](authServerConfig.md#authserverconfig_internal) | {}(空オブジェクト) | authClientの動作設定変数 | 
 
 ### <span id="authserver_constructor_process">🧾 処理手順</span>
 
+- インスタンス変数の設定
 
+  - [authServer](authServer.md#authserver_internal): サーバ側auth中核クラス
+    | 項目名 | データ型 | 生成時 | 設定内容 |
+    | :-- | :-- | :-- | :-- |
+    | cf | authServerConfig | 【必須】 | **new [authServerConfig](authServerConfig.md#authserverconfig_constructor)(config)** |
+    | prop | authScriptProperties | 【必須】 | **new [authScriptProperties](authScriptProperties.md#authscriptproperties_constructor)(config)** |
+    | crypto | cryptoServer | 【必須】 | **new [cryptoServer](cryptoServer.md#cryptoserver_constructor)(config)** |
+    | member | Member | 【必須】 | **new [Member](Member.md#member_constructor)(config)** |
+    | auditLog | authAuditLog | 【必須】 | **new [authAuditLog](authAuditLog.md#authauditlog_constructor)()** |
+    | errorLog | authErrorLog | 【必須】 | **new [authErrorLog](authErrorLog.md#autherrorlog_constructor)()** |
+    | pv | Object | 【必須】 | **空オブジェクト** |
 
 ### <span id="authserver_constructor_returns">📤 戻り値</span>
 
   - [authServer](authServer.md#authserver_internal): サーバ側auth中核クラス
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
-    | cf | authClientConfig | 【必須】 | — |
+    | cf | authServerConfig | 【必須】 | — |
+    | prop | authScriptProperties | 【必須】 | — |
     | crypto | cryptoServer | 【必須】 | — |
     | member | Member | 【必須】 | — |
     | auditLog | authAuditLog | 【必須】 | — |

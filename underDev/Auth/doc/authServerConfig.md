@@ -51,6 +51,10 @@ authConfigを継承した、authServerでのみ使用する設定値
 
 コンストラクタ
 
+### <span id="authserverconfig_constructor_caller">📞 呼出元</span>
+
+- [authServer.constructor()](authServer.md#authserverconfig_constructor)
+
 ### <span id="authserverconfig_constructor_param">📥 引数</span>
 
 

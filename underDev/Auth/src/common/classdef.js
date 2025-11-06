@@ -778,7 +778,14 @@ const classdef = {
           {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
         ],
 
-        process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
+        process: `
+          - 鍵ペア未作成なら[createPassword](JSLib.md#createpassword)を使用して作成
+            <evaluate>comparisonTable({typeName:'authScriptProperties',pattern:{'更新内容':{assign: {
+              keyGeneratedDateTime: 'Date.now()',
+              SPkey: '新規作成',
+              SSkey: '新規作成',
+            }}}},'  ')</evaluate>
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         returns: {authScriptProperties:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
@@ -831,7 +838,8 @@ const classdef = {
     `,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
-      {name:'cf',type:'authClientConfig',label:'動作設定変数(config)',note:''},
+      {name:'cf',type:'authServerConfig',label:'動作設定変数(config)',note:''},
+      {name:'prop',type:'authScriptProperties',label:'鍵ペア等を格納',note:''},
       {name:'crypto',type:'cryptoServer',label:'暗号化・復号用インスタンス',note:''},
       {name:'member',type:'Member',label:'対象メンバのインスタンス',note:''},
       {name:'auditLog',type:'authAuditLog',label:'監査ログのインスタンス',note:''},
@@ -844,35 +852,25 @@ const classdef = {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
-        source: `
-          \`\`\`js
-          class authServer {
-            constructor(config){
-              this.cf = config; // 動作設定値をauthServer内で共有
-              this.crypto = new cryptoServer(); // サーバ側の暗号化・復号処理
-              this.member = new Member(config); // メンバ
-              this.auditLog = new authAuditLog();  // 監査ログ
-              this.errorLog = new authErrorLog();  // エラーログ
-              this.pv = { // authServer内共通変数(public variables)
-                // 中略。constructorのメンバ一覧参照
-              };
-            }
-          }
-          \`\`\`
-        `,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
-        params: [  // {Params} ■メソッド引数の定義■
-          // list {string[]} 定義順の引数名一覧
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
-          //name: '',	// 引数としての変数名
-          //type: '',	// データ型
-          //note: '',	// 項目の説明
-          //default: '—',	// 既定値
-          //isOpt: false,  // 任意項目ならtrue
+        params: [  // {Param[]} ■メソッド引数の定義■
+          {name:'config',type:'authServerConfig',note:'authClientの動作設定変数',default:'{}(空オブジェクト)'},
         ],
 
-        process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
+        process: `
+          - インスタンス変数の設定
+            <evaluate>comparisonTable({typeName:'authServer',pattern:{'設定内容':{assign: {
+              cf: 'new [authServerConfig](authServerConfig.md#authserverconfig_constructor)(config)',
+              prop: 'new [authScriptProperties](authScriptProperties.md#authscriptproperties_constructor)(config)',
+              crypto: 'new [cryptoServer](cryptoServer.md#cryptoserver_constructor)(config)',
+              member: 'new [Member](Member.md#member_constructor)(config)',
+              auditLog: 'new [authAuditLog](authAuditLog.md#authauditlog_constructor)()',
+              errorLog: 'new [authErrorLog](authErrorLog.md#autherrorlog_constructor)()',
+              pv: '空オブジェクト',
+            }}}},'  ')</evaluate>
+        `,	// {string} 処理手順。markdownで記載
 
         returns: {authServer:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
@@ -1008,21 +1006,26 @@ const classdef = {
   },
   cryptoServer: {
     label: 'サーバ側の暗号化・復号処理',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    note: `
+      - 認証サーバ ([authServer](authServer.md)) から独立した復号・署名検証処理モジュール。
+      - クライアント側仕様書([cryptoClient](cryptoClient.md))と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
+      - 暗号化ライブラリは"jsrsasign"を使用
+      - 以下"cf","prop","crypto","member","auditLog","errorLog","pv"はauthServer内共通のインスタンス変数
+
+    `,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    policy: `
+      - 署名→暗号化(Sign-then-Encrypt)方式に準拠
+      - 鍵ペアは[ScriptProperties](authScriptProperties.md)に保存("SSkey", "SPkey")
+      - ScriptPropertiesのキー名は"[authServerConfig](authServerConfig.md#authserverconfig_internal).system.name"に基づく
+      - 復号処理は副作用のない純関数構造を目指す(stateを持たない)
+      - 可能な範囲で「外部ライブラリ」を使用する
+      - timestamp検証は整数化・絶対値化してから比較する
+    `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
-      {
-        name: '',	// {string} メンバ名(変数名)。英数字表記
-        type: 'string',	// {string} データ型
-        label: '',	// {string} 端的な項目説明。ex."サーバ側処理結果"
-        note: '',	// {string|string[]} 当該項目に関する補足説明。ex."fatal/warning/normal"
-        default: '—',	// {any} 関数の場合'=Date.now()'のように記述
-        isOpt: false,	// {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
-      },
     ],
 
     methods: { // {Method} ■メソッド定義■
