@@ -11,7 +11,7 @@ const classdef = {
     navi: '', // {string} クラス内ナビ
 
     members: [  // {Members} ■メンバ(インスタンス変数)定義■
-      //{name:'',type:'string',label:'',note:''}, // default,isOpt
+      //{name:'',type:'string',label:'',note:''},
       {
         name: '',	// {string} メンバ名(変数名)。英数字表記
         type: 'string',	// {string} データ型
@@ -228,9 +228,10 @@ const classdef = {
     `,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
-      {name:'cf',type:'authClientConfig',label:'動作設定変数(config)',note:''}, // default,isOpt
-      {name:'crypto',type:'cryptoClient',label:'暗号化・復号用インスタンス',note:''}, // default,isOpt
-      {name:'idb',type:'authIndexedDB',label:'IndexedDB共有用',note:'IndexedDBの内容をauthClient内で共有'}, // default,isOpt
+      {name:'cf',type:'authClientConfig',label:'動作設定変数(config)',note:''},
+      {name:'crypto',type:'cryptoClient',label:'暗号化・復号用インスタンス',note:''},
+      {name:'idb',type:'authIndexedDB',label:'IndexedDB共有用',note:'IndexedDBの内容をauthClient内で共有'},
+      {name:'pv',type:'Object',label:'authClient内共通変数',note:''},
     ],
 
     methods: { // {Method} ■メソッド定義■
@@ -238,81 +239,21 @@ const classdef = {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
-        source: `
-          \`\`\`js
-          class authClient {
-            constructor(config){
-              this.cf = new authClientConfig(config); // 動作設定値をauthClient内で共有
-              this.pv = { // auth関係の主要クラスをインスタンス化
-                crypto: new cryptoClient(), // クライアント側の暗号化・復号処理
-              };
-            }
-          }
-          \`\`\`
-        `,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
         params: [  // {Param[]} ■メソッド引数の定義■
-          {name:'config',type:'authClientConfig',note:'authClientの動作設定変数'},
+          {name:'config',type:'authClientConfig',note:'authClientの動作設定変数',default:'{}(空オブジェクト)'},
         ],
 
         process: `
-          - 本クラスのメンバとして存在する引数のメンバはauthClient内共有用の変数"cf"に保存(存在しない引数のメンバは廃棄)
-          - "crypto"に[cryptoClient](cryptoClient.md#cryptoclient_constructor)を生成、鍵ペアを準備
-          - "idb"に[authIndexedDB](authIndexedDB.md#authindexeddb_constructor)を生成、IndexedDBの内容を取得
-          - idb.deviceId未採番なら採番(UUID)
-          - idb.SPkey未取得ならサーバ側に要求
-          - 更新した内容はIndexedDBに書き戻す
-          - SPkey取得がエラーになった場合、SPkey以外は書き戻す
-          - IndexedDBの内容はauthClient内共有用変数"pv"に保存
-          - サーバ側から一定時間レスポンスが無い場合、{result:'fatal',message:'No response'}を返して終了
-
-          \`\`\`mermaid
-          sequenceDiagram
-
-            actor user
-            participant localFunc
-            %%participant clientMail
-            %%participant cryptoClient
-            participant IndexedDB
-            participant authClient
-            participant authServer
-            %%participant memberList
-            %%participant cryptoServer
-            %%participant serverFunc
-            %%actor admin
-
-            %% IndexedDB格納項目のメンバ変数化 ----------
-            alt IndexedDBのメンバ変数化が未了
-              IndexedDB->>+authClient: 既存設定値の読み込み(authIndexedDB)
-              authClient->>authClient: メンバ変数に保存、鍵ペア未生成なら再生成
-              alt 鍵ペア未生成
-                authClient->>IndexedDB: authIndexedDB
-              end
-              alt メールアドレス(memberId)未設定
-                authClient->>user: ダイアログ表示
-                user->>authClient: メールアドレス
-              end
-              alt メンバの氏名(memberName)未設定
-                authClient->>user: ダイアログ表示
-                user->>authClient: メンバ氏名
-              end
-              alt SPkey未入手
-                authClient->>+authServer: CPkey(平文の文字列)
-
-                %% 以下2行はauthServer.responseSPkey()の処理内容
-                authServer->>authServer: 公開鍵か形式チェック、SPkeyをCPkeyで暗号化
-                authServer->>authClient: encryptedResponse(CPkeyで暗号化されたSPkey)
-
-                alt 待機時間内にauthServerから返信有り
-                  authClient->>authClient: encryptedResponseをCSkeyで復号、メンバ変数に平文で保存
-                else 待機時間内にauthServerから返信無し
-                  authClient->>localFunc: エラーオブジェクトを返して終了
-                end
-              end
-              authClient->>-IndexedDB: メンバ変数を元に書き換え
-            end
-          \`\`\`
+          - インスタンス変数の設定
+            <evaluate>comparisonTable({typeName:'authClient',pattern:{'設定内容':{assign: {
+              cf: 'new [authClientConfig](authClientConfig.md#authclientconfig_constructor)(config)',
+              crypto: 'new [cryptoClient](cryptoClient.md#cryptoclient_constructor)(config)',
+              idb: 'new [authIndexedDB](authIndexedDB.md#authindexeddb_constructor)(config)',
+              pv: '空オブジェクト',
+            }}}},'  ')</evaluate>
         `,	// {string} 処理手順。markdownで記載
 
         returns: {authClient:{}},
@@ -632,14 +573,12 @@ const classdef = {
         process: `
           - IndexedDBに[authClientConfig](authClientConfig.md#authclientconfig_internal).systemNameを持つキーがあれば取得、メンバ変数に格納。
           - 無ければ新規に生成し、IndexedDBに格納。
-          - SPkey未設定の場合、authServerにauthRequestを要求、SPkeyをセット
-            -
-
           - authClientConfig.auditLogシートが無ければ作成
           - 引数の内、authIndexedDBと同一メンバ名があればthisに設定
           - 引数にnoteがあればthis.noteに設定
           - timestampに現在日時を設定
         `,	// {string} 処理手順。markdownで記載
+        // なおSPkeyは初回処理要求時に取得する予定なので、ここでは要求しない
 
         returns: {authIndexedDB:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
@@ -888,14 +827,12 @@ const classdef = {
     `,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
-      {
-        name: '',	// {string} メンバ名(変数名)。英数字表記
-        type: 'string',	// {string} データ型
-        label: '',	// {string} 端的な項目説明。ex."サーバ側処理結果"
-        note: '',	// {string|string[]} 当該項目に関する補足説明。ex."fatal/warning/normal"
-        default: '—',	// {any} 関数の場合'=Date.now()'のように記述
-        isOpt: false,	// {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
-      },
+      {name:'cf',type:'authClientConfig',label:'動作設定変数(config)',note:''},
+      {name:'crypto',type:'cryptoServer',label:'暗号化・復号用インスタンス',note:''},
+      {name:'member',type:'Member',label:'対象メンバのインスタンス',note:''},
+      {name:'auditLog',type:'authAuditLog',label:'監査ログのインスタンス',note:''},
+      {name:'errorLog',type:'authErrorLog',label:'エラーログのインスタンス',note:''},
+      {name:'pv',type:'Object',label:'authServer内共通変数',note:''},
     ],
 
     methods: { // {Method} ■メソッド定義■
@@ -908,11 +845,12 @@ const classdef = {
           class authServer {
             constructor(config){
               this.cf = config; // 動作設定値をauthServer内で共有
-              this.pv = { // auth関係の主要クラスをインスタンス化
-                crypto: new cryptoServer(), // サーバ側の暗号化・復号処理
-                member: new Member(config), // メンバ
-                audit: new authAuditLog(),  // 監査ログ
-                error: new authErrorLog(),  // エラーログ
+              this.crypto = new cryptoServer(); // サーバ側の暗号化・復号処理
+              this.member = new Member(config); // メンバ
+              this.auditLog = new authAuditLog();  // 監査ログ
+              this.errorLog = new authErrorLog();  // エラーログ
+              this.pv = { // authServer内共通変数(public variables)
+                // 中略。constructorのメンバ一覧参照
               };
             }
           }

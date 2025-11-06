@@ -56,7 +56,12 @@ const menu31 = () => asv.resetSPkey();
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-|  | ❌ | string | — |  |  | 
+| cf | ❌ | [authClientConfig](authClientConfig.md#authclientconfig_internal) | — | 動作設定変数(config) |  | 
+| crypto | ❌ | [cryptoServer](cryptoServer.md#cryptoserver_internal) | — | 暗号化・復号用インスタンス |  | 
+| member | ❌ | [Member](Member.md#member_internal) | — | 対象メンバのインスタンス |  | 
+| auditLog | ❌ | [authAuditLog](authAuditLog.md#authauditlog_internal) | — | 監査ログのインスタンス |  | 
+| errorLog | ❌ | [authErrorLog](authErrorLog.md#autherrorlog_internal) | — | エラーログのインスタンス |  | 
+| pv | ❌ | Object | — | authServer内共通変数 |  | 
 
 
 🧱 <span id="authserver_method">authServer メソッド一覧</span>
@@ -75,11 +80,12 @@ const menu31 = () => asv.resetSPkey();
 class authServer {
   constructor(config){
     this.cf = config; // 動作設定値をauthServer内で共有
-    this.pv = { // auth関係の主要クラスをインスタンス化
-      crypto: new cryptoServer(), // サーバ側の暗号化・復号処理
-      member: new Member(config), // メンバ
-      audit: new authAuditLog(),  // 監査ログ
-      error: new authErrorLog(),  // エラーログ
+    this.crypto = new cryptoServer(); // サーバ側の暗号化・復号処理
+    this.member = new Member(config); // メンバ
+    this.auditLog = new authAuditLog();  // 監査ログ
+    this.errorLog = new authErrorLog();  // エラーログ
+    this.pv = { // authServer内共通変数(public variables)
+      // 中略。constructorのメンバ一覧参照
     };
   }
 }
@@ -101,4 +107,9 @@ class authServer {
   - [authServer](authServer.md#authserver_internal): サーバ側auth中核クラス
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
-    |  | string | 【必須】 | — |
+    | cf | authClientConfig | 【必須】 | — |
+    | crypto | cryptoServer | 【必須】 | — |
+    | member | Member | 【必須】 | — |
+    | auditLog | authAuditLog | 【必須】 | — |
+    | errorLog | authErrorLog | 【必須】 | — |
+    | pv | Object | 【必須】 | — |

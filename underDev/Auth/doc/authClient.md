@@ -60,6 +60,7 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 | cf | ❌ | [authClientConfig](authClientConfig.md#authclientconfig_internal) | — | 動作設定変数(config) |  | 
 | crypto | ❌ | [cryptoClient](cryptoClient.md#cryptoclient_internal) | — | 暗号化・復号用インスタンス |  | 
 | idb | ❌ | [authIndexedDB](authIndexedDB.md#authindexeddb_internal) | — | IndexedDB共有用 | IndexedDBの内容をauthClient内で共有 | 
+| pv | ❌ | Object | — | authClient内共通変数 |  | 
 
 
 🧱 <span id="authclient_method">authClient メソッド一覧</span>
@@ -77,84 +78,24 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 
 コンストラクタ
 
-### <span id="{cc}_source">📄 実装例</span>
-
-```js
-class authClient {
-  constructor(config){
-    this.cf = new authClientConfig(config); // 動作設定値をauthClient内で共有
-    this.pv = { // auth関係の主要クラスをインスタンス化
-      crypto: new cryptoClient(), // クライアント側の暗号化・復号処理
-    };
-  }
-}
-```
-
 ### <span id="authclient_constructor_param">📥 引数</span>
 
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
-| config | ❌ | [authClientConfig](authClientConfig.md#authclientconfig_internal) | — | authClientの動作設定変数 | 
+| config | ⭕ | [authClientConfig](authClientConfig.md#authclientconfig_internal) | {}(空オブジェクト) | authClientの動作設定変数 | 
 
 ### <span id="authclient_constructor_process">🧾 処理手順</span>
 
-- 本クラスのメンバとして存在する引数のメンバはauthClient内共有用の変数"cf"に保存(存在しない引数のメンバは廃棄)
-- "crypto"に[cryptoClient](cryptoClient.md#cryptoclient_constructor)を生成、鍵ペアを準備
-- "idb"に[authIndexedDB](authIndexedDB.md#authindexeddb_constructor)を生成、IndexedDBの内容を取得
-- idb.deviceId未採番なら採番(UUID)
-- idb.SPkey未取得ならサーバ側に要求
-- 更新した内容はIndexedDBに書き戻す
-- SPkey取得がエラーになった場合、SPkey以外は書き戻す
-- IndexedDBの内容はauthClient内共有用変数"pv"に保存
-- サーバ側から一定時間レスポンスが無い場合、{result:'fatal',message:'No response'}を返して終了
+- インスタンス変数の設定
 
-```mermaid
-sequenceDiagram
-
-  actor user
-  participant localFunc
-  %%participant clientMail
-  %%participant cryptoClient
-  participant IndexedDB
-  participant authClient
-  participant authServer
-  %%participant memberList
-  %%participant cryptoServer
-  %%participant serverFunc
-  %%actor admin
-
-  %% IndexedDB格納項目のメンバ変数化 ----------
-  alt IndexedDBのメンバ変数化が未了
-    IndexedDB->>+authClient: 既存設定値の読み込み(authIndexedDB)
-    authClient->>authClient: メンバ変数に保存、鍵ペア未生成なら再生成
-    alt 鍵ペア未生成
-      authClient->>IndexedDB: authIndexedDB
-    end
-    alt メールアドレス(memberId)未設定
-      authClient->>user: ダイアログ表示
-      user->>authClient: メールアドレス
-    end
-    alt メンバの氏名(memberName)未設定
-      authClient->>user: ダイアログ表示
-      user->>authClient: メンバ氏名
-    end
-    alt SPkey未入手
-      authClient->>+authServer: CPkey(平文の文字列)
-
-      %% 以下2行はauthServer.responseSPkey()の処理内容
-      authServer->>authServer: 公開鍵か形式チェック、SPkeyをCPkeyで暗号化
-      authServer->>authClient: encryptedResponse(CPkeyで暗号化されたSPkey)
-
-      alt 待機時間内にauthServerから返信有り
-        authClient->>authClient: encryptedResponseをCSkeyで復号、メンバ変数に平文で保存
-      else 待機時間内にauthServerから返信無し
-        authClient->>localFunc: エラーオブジェクトを返して終了
-      end
-    end
-    authClient->>-IndexedDB: メンバ変数を元に書き換え
-  end
-```
+  - [authClient](authClient.md#authclient_internal): クライアント側auth中核クラス
+    | 項目名 | データ型 | 生成時 | 設定内容 |
+    | :-- | :-- | :-- | :-- |
+    | cf | authClientConfig | 【必須】 | **new [authClientConfig](authClientConfig.md#authclientconfig_constructor)(config)** |
+    | crypto | cryptoClient | 【必須】 | **new [cryptoClient](cryptoClient.md#cryptoclient_constructor)(config)** |
+    | idb | authIndexedDB | 【必須】 | **new [authIndexedDB](authIndexedDB.md#authindexeddb_constructor)(config)** |
+    | pv | Object | 【必須】 | **空オブジェクト** |
 
 ### <span id="authclient_constructor_returns">📤 戻り値</span>
 
@@ -164,6 +105,7 @@ sequenceDiagram
     | cf | authClientConfig | 【必須】 | — |
     | crypto | cryptoClient | 【必須】 | — |
     | idb | authIndexedDB | 【必須】 | — |
+    | pv | Object | 【必須】 | — |
 
 ## <span id="authclient_checkcpkey">🧱 <a href="#authclient_method">authClient.checkCPkey()</a></span>
 

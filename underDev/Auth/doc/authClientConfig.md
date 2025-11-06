@@ -33,6 +33,10 @@ authConfigを継承
 
 コンストラクタ
 
+### <span id="authclientconfig_constructor_caller">📞 呼出元</span>
+
+- [authClient.constructor()](authClient.md#authclientconfig_constructor)
+
 ### <span id="authclientconfig_constructor_param">📥 引数</span>
 
 
