@@ -170,21 +170,33 @@ CPkey残有効期間をチェック
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
-| request | ⭕ | [authRequest[]](authRequest.md#authrequest_internal) | {} | 処理要求(スタック) | 
+| request | ⭕ | [authRequest[]](authRequest.md#authrequest_internal) \| [LocalRequest[]](LocalRequest.md#localrequest_internal) | [] | 処理要求(スタック) | 
 
 ### <span id="authclient_exec_process">🧾 処理手順</span>
 
+- requestから先頭の要素をpopし、処理対象とする
+- 処理対象がLocalRequest型だった場合、[authRequest](authRequest.md#authrequest_constructor)型に変換
 
+  - [authRequest](authRequest.md#authrequest_internal): 暗号化前の処理要求
+    | 項目名 | データ型 | 生成時 | 項目対応 |
+    | :-- | :-- | :-- | :-- |
+    | memberId | string | idb.memberId | — |
+    | deviceId | string | idb.deviceId | — |
+    | signature | string | idb.CPkey | — |
+    | requestId | string | UUID | — |
+    | timestamp | number | Date.now() | — |
+    | func | string | 【必須】 | **LocalRequest.func** |
+    | arguments | any[] | 【必須】 | **LocalRequest.arguments** |
+- [crypto.fetch](cryptoClient.md#cryptoclient_fetch)に処理対象を渡して呼び出し
+- 以降、処理分岐。authServerの回答種別整理を待って記載
 
 ### <span id="authclient_exec_returns">📤 戻り値</span>
 
-  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+  - [LocalResponse](LocalResponse.md#localresponse_internal): ローカル関数への処理結果
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
-    | timestamp | number | Date.now() | — |
-    | result | string | normal | — |
+    | result | string | 【必須】 | — |
     | message | string | 【任意】 | — |
-    | request | authRequest | 【任意】 | — |
     | response | any | 【任意】 | — |
 
 ## <span id="authclient_setupenvironment">🧱 <a href="#authclient_method">authClient.setupEnvironment()</a></span>

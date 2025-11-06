@@ -19,7 +19,7 @@
 | 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- | :-- |
 | func | ❌ | string | — | サーバ側関数名 |  | 
-| arguments | ❌ | any[] | — | サーバ側関数に渡す引数の配列 |  | 
+| arguments | ⭕ | any[] | [](空配列) | サーバ側関数に渡す引数の配列 |  | 
 
 
 🧱 <span id="localrequest_method">LocalRequest メソッド一覧</span>
@@ -49,4 +49,4 @@
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
     | func | string | 【必須】 | — |
-    | arguments | any[] | 【必須】 | — |
+    | arguments | any[] | [](空配列) | — |

@@ -301,17 +301,21 @@ const classdef = {
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
         params: [  // {Param[]} ■メソッド引数の定義■
-          {name:'request',isOpt:true,type:'authRequest[]',default:{},note:'処理要求(スタック)'},
-          //name: '',	// 引数としての変数名
-          //isOpt: false,  // 任意項目ならtrue
-          //type: '',	// データ型
-          //default: '—',	// 既定値
-          //note: '',	// 項目の説明
+          {name:'request',isOpt:true,type:'authRequest[]|LocalRequest[]',default:'[]',note:'処理要求(スタック)'},
         ],
 
-        process: ``,	// {string} 処理手順。markdownで記載
+        process: `
+          - requestから先頭の要素をpopし、処理対象とする
+          - 処理対象がLocalRequest型だった場合、[authRequest](authRequest.md#authrequest_constructor)型に変換
+            <evaluate>comparisonTable({typeName:'authRequest',default:{},pattern:{'項目対応':{assign: {
+              func: 'LocalRequest.func',
+              arguments: 'LocalRequest.arguments',
+            }}}},'  ')</evaluate>
+          - [crypto.fetch](cryptoClient.md#cryptoclient_fetch)に処理対象を渡して呼び出し
+          - 以降、処理分岐。authServerの回答種別整理を待って記載
+        `,	// {string} 処理手順。markdownで記載
 
-        returns: {authResponse:{}},
+        returns: {LocalResponse:{}},
       },
       setupEnvironment: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
@@ -653,11 +657,11 @@ const classdef = {
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
-      {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
-      {name:'deviceId',type:'string',label:'デバイスの識別子',note:''},
-      {name:'signature',type:'string',label:'クライアント側署名',note:''},
-      {name:'requestId',type:'string',label:'要求の識別子',note:'UUID'},
-      {name:'timestamp',type:'number',label:'要求日時',note:'UNIX時刻'},
+      {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス',default:'idb.memberId'},
+      {name:'deviceId',type:'string',label:'デバイスの識別子',note:'',default:'idb.deviceId'},
+      {name:'signature',type:'string',label:'クライアント側署名',note:'',default:'idb.CPkey'},
+      {name:'requestId',type:'string',label:'要求の識別子',note:'UUID',default:'UUID'},
+      {name:'timestamp',type:'number',label:'要求日時',note:'UNIX時刻',default:'Date.now()'},
       {name:'func',type:'string',label:'サーバ側関数名',note:''},
       {name:'arguments',type:'any[]',label:'サーバ側関数に渡す引数の配列',note:''},
     ],
@@ -872,6 +876,7 @@ const classdef = {
 
         returns: {authServer:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
+      // execの戻り値(処理結果)一覧を作成、authClient.execの処理分岐と対応させること!!
     },
   },
   authServerConfig: {
@@ -969,7 +974,37 @@ const classdef = {
 
         returns: {cryptoClient:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
-    },
+      fetch: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '処理要求を署名・暗号化し、サーバ側に問合せを行う',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'request',type:'authRequest',note:'処理要求'},
+        ],
+
+        process: `
+          - requestを[encryptメソッド](#cryptoclient_encrypt)で署名・暗号化
+          - サーバ側に問合せを実行
+          - 一定時間経っても無応答の場合、戻り値「無応答」を返して終了
+          - サーバ側からの応答が有った場合、[decryptメソッド](#cryptoclient_decrypt)で復号・署名検証
+          - 復号・署名検証の結果をそのまま戻り値として返して終了
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          authResponse: { // メンバ名は戻り値のデータ型名
+            pattern: {
+              '無応答': {assign:{
+                request:'request',
+                result:'"fatal"',
+                message: '"no response"'
+              }},
+            }
+          }
+        },
+      },    },
   },
   cryptoServer: {
     label: 'サーバ側の暗号化・復号処理',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
@@ -1153,7 +1188,7 @@ const classdef = {
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'func',type:'string',label:'サーバ側関数名',note:''},
-      {name:'arguments',type:'any[]',label:'サーバ側関数に渡す引数の配列',note:''},
+      {name:'arguments',type:'any[]',label:'サーバ側関数に渡す引数の配列',note:'',default:'[](空配列)'},
     ],
 
     methods: {

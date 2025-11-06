@@ -216,11 +216,11 @@ stateDiagram-v2
   - [authRequest](authRequest.md#authrequest_internal): 暗号化前の処理要求
     | 項目名 | データ型 | 生成時 | 確認内容 |
     | :-- | :-- | :-- | :-- |
-    | memberId | string | 【必須】 | — |
-    | deviceId | string | 【必須】 | — |
-    | signature | string | 【必須】 | — |
-    | requestId | string | 【必須】 | — |
-    | timestamp | number | 【必須】 | — |
+    | memberId | string | idb.memberId | — |
+    | deviceId | string | idb.deviceId | — |
+    | signature | string | idb.CPkey | — |
+    | requestId | string | UUID | — |
+    | timestamp | number | Date.now() | — |
     | func | string | 【必須】 | **"::passcode::"** |
     | arguments | any[] | 【必須】 | **入力されたパスコード** |
 - デバイス状態チェック
@@ -401,11 +401,11 @@ stateDiagram-v2
   - [authRequest](authRequest.md#authrequest_internal): 暗号化前の処理要求
     | 項目名 | データ型 | 生成時 | 確認内容 |
     | :-- | :-- | :-- | :-- |
-    | memberId | string | 【必須】 | — |
-    | deviceId | string | 【必須】 | — |
-    | signature | string | 【必須】 | — |
-    | requestId | string | 【必須】 | — |
-    | timestamp | number | 【必須】 | — |
+    | memberId | string | idb.memberId | — |
+    | deviceId | string | idb.deviceId | — |
+    | signature | string | idb.CPkey | — |
+    | requestId | string | UUID | — |
+    | timestamp | number | Date.now() | — |
     | func | string | 【必須】 | **"::reissue::"** |
     | arguments | any[] | 【必須】 | — |
 - デバイス状態チェック
@@ -692,11 +692,11 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
   - [authRequest](authRequest.md#authrequest_internal): 暗号化前の処理要求
     | 項目名 | データ型 | 生成時 | 確認内容 |
     | :-- | :-- | :-- | :-- |
-    | memberId | string | 【必須】 | — |
-    | deviceId | string | 【必須】 | — |
-    | signature | string | 【必須】 | — |
-    | requestId | string | 【必須】 | — |
-    | timestamp | number | 【必須】 | — |
+    | memberId | string | idb.memberId | — |
+    | deviceId | string | idb.deviceId | — |
+    | signature | string | idb.CPkey | — |
+    | requestId | string | UUID | — |
+    | timestamp | number | Date.now() | — |
     | func | string | 【必須】 | **"::updateCPkey::"** |
     | arguments | any[] | 【必須】 | **更新後CPkey** |
   - 更新後CPkeyがRSAの公開鍵形式か(PEMフォーマットなど)チェック、不適合なら戻り値「鍵形式不正」を返して終了

@@ -18,11 +18,11 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-| memberId | ❌ | string | — | メンバの識別子 | =メールアドレス | 
-| deviceId | ❌ | string | — | デバイスの識別子 |  | 
-| signature | ❌ | string | — | クライアント側署名 |  | 
-| requestId | ❌ | string | — | 要求の識別子 | UUID | 
-| timestamp | ❌ | number | — | 要求日時 | UNIX時刻 | 
+| memberId | ⭕ | string | idb.memberId | メンバの識別子 | =メールアドレス | 
+| deviceId | ⭕ | string | idb.deviceId | デバイスの識別子 |  | 
+| signature | ⭕ | string | idb.CPkey | クライアント側署名 |  | 
+| requestId | ⭕ | string | UUID | 要求の識別子 | UUID | 
+| timestamp | ⭕ | number | Date.now() | 要求日時 | UNIX時刻 | 
 | func | ❌ | string | — | サーバ側関数名 |  | 
 | arguments | ❌ | any[] | — | サーバ側関数に渡す引数の配列 |  | 
 
@@ -36,6 +36,10 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
 ## <span id="authrequest_constructor">🧱 <a href="#authrequest_method">authRequest.constructor()</a></span>
 
 コンストラクタ
+
+### <span id="authrequest_constructor_caller">📞 呼出元</span>
+
+- [authClient.exec()](authClient.md#authrequest_constructor)
 
 ### <span id="authrequest_constructor_param">📥 引数</span>
 
@@ -53,10 +57,10 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
   - [authRequest](authRequest.md#authrequest_internal): 暗号化前の処理要求
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
-    | memberId | string | 【必須】 | — |
-    | deviceId | string | 【必須】 | — |
-    | signature | string | 【必須】 | — |
-    | requestId | string | 【必須】 | — |
-    | timestamp | number | 【必須】 | — |
+    | memberId | string | idb.memberId | — |
+    | deviceId | string | idb.deviceId | — |
+    | signature | string | idb.CPkey | — |
+    | requestId | string | UUID | — |
+    | timestamp | number | Date.now() | — |
     | func | string | 【必須】 | — |
     | arguments | any[] | 【必須】 | — |
