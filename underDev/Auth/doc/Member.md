@@ -106,7 +106,7 @@ stateDiagram-v2
 | status | ⭕ | string | "未加入" | メンバの状態 | 未加入,未審査,審査済,加入中,加入禁止 | 
 | log | ⭕ | [MemberLog](MemberLog.md#memberlog_internal) | new MemberLog() | メンバの履歴情報 | シート上はJSON文字列 | 
 | profile | ⭕ | [MemberProfile](MemberProfile.md#memberprofile_internal) | new MemberProfile() | メンバの属性情報 | シート上はJSON文字列 | 
-| device | ⭕ | MemberDevice[] | 空配列 | デバイス情報 | マルチデバイス対応のため配列。シート上はJSON文字列 | 
+| device | ⭕ | [MemberDevice](MemberDevice.md#memberdevice_internal)[] | 空配列 | デバイス情報 | マルチデバイス対応のため配列。シート上はJSON文字列 | 
 | note | ⭕ | string | 空文字列 | 当該メンバに対する備考 |  | 
 
 
@@ -125,6 +125,7 @@ stateDiagram-v2
 | [restoreMember](#member_restoremember) | static | 加入禁止(論理削除)されているメンバを復活させる |
 | [setMember](#member_setmember) | public | 指定メンバ情報をmemberListシートに保存 |
 | [unfreeze](#member_unfreeze) | static | 指定されたメンバ・デバイスの「凍結中」状態を強制的に解除 |
+| [updateCPkey](#member_updatecpkey) | public | 対象メンバ・デバイスの公開鍵を更新する |
 
 ## <span id="member_constructor">🧱 <a href="#member_method">Member.constructor()</a></span>
 
@@ -155,7 +156,7 @@ stateDiagram-v2
     | status | string | "未加入" | — |
     | log | MemberLog | new MemberLog() | — |
     | profile | MemberProfile | new MemberProfile() | — |
-    | device | MemberDevice[] | 空配列 | — |
+    | device | [MemberDevice](MemberDevice.md#memberdevice_internal)[] | 空配列 | — |
     | note | string | 空文字列 | — |
 
 ## <span id="member_addtrial">🧱 <a href="#member_method">Member.addTrial()</a></span>
@@ -276,6 +277,7 @@ stateDiagram-v2
 - [Member.reissuePasscode()](Member.md#member_getmember)
 - [Member.removeMember()](Member.md#member_getmember)
 - [Member.restoreMember()](Member.md#member_getmember)
+- [Member.updateCPkey()](Member.md#member_getmember)
 
 ### <span id="member_getmember_param">📥 引数</span>
 
@@ -418,6 +420,10 @@ stateDiagram-v2
     | passcode | string | 【必須】 | **新パスコード** |
     | created | number | Date.now() | **現在日時** |
     | log | MemberTrialLog[] |  | — |
+- 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
+  ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
+- メンバにパスコード通知メールを発信<br>
+  但し[authServerConfig](authServerConfig.md#authserverconfig_internal).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
 - パスコード再発行を監査ログに記録([authAuditLog.log](authAuditLog.md#authauditlog_log))
 
   - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
@@ -430,10 +436,6 @@ stateDiagram-v2
     | func | string | 【必須】 | **"reissuePasscode"** |
     | result | string | normal | — |
     | note | string | 【必須】 | **旧パスコード -> 新パスコード** |
-- 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
-  ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
-- メンバにパスコード通知メールを発信<br>
-  但し[authServerConfig](authServerConfig.md#authserverconfig_internal).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
 - 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
 
 ### <span id="member_reissuepasscode_returns">📤 戻り値</span>
@@ -564,6 +566,7 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
 - [Member.removeMember()](Member.md#member_setmember)
 - [Member.restoreMember()](Member.md#member_setmember)
 - [Member.unfreeze()](Member.md#member_setmember)
+- [Member.updateCPkey()](Member.md#member_setmember)
 
 ### <span id="member_setmember_param">📥 引数</span>
 
@@ -670,3 +673,90 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
     | message | string | 【任意】 | — | **no frozen devices** | **no frozen devices** |
     | request | authRequest | 【任意】 | **list freezing** | **{memberId,deviceId:[引数で渡されたdeviceId]}** | **{memberId,deviceId:[凍結解除したdeviceId]}** |
     | response | any | 【任意】 | **MemberDevice.status=="凍結中"とそのMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
+
+## <span id="member_updatecpkey">🧱 <a href="#member_method">Member.updateCPkey()</a></span>
+
+対象メンバ・デバイスの公開鍵を更新する
+
+### <span id="member_updatecpkey_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| request | ❌ | [authRequest](authRequest.md#authrequest_internal) | — | 処理要求オブジェクト | 
+
+### <span id="member_updatecpkey_process">🧾 処理手順</span>
+
+- 引数チェック
+
+  - [authRequest](authRequest.md#authrequest_internal): 暗号化前の処理要求
+    | 項目名 | データ型 | 生成時 | 確認内容 |
+    | :-- | :-- | :-- | :-- |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【必須】 | — |
+    | signature | string | 【必須】 | — |
+    | requestId | string | 【必須】 | — |
+    | timestamp | number | 【必須】 | — |
+    | func | string | 【必須】 | **"::updateCPkey::"** |
+    | arguments | any[] | 【必須】 | **更新後CPkey** |
+  - 更新後CPkeyがRSAの公開鍵形式か(PEMフォーマットなど)チェック、不適合なら戻り値「鍵形式不正」を返して終了
+- メンバの状態チェック
+  - request.memberIdを基に[getMemberメソッド](#member_getmember)を実行
+  - メンバの状態が「不使用("result === fatal")」だった場合、[getMemberの戻り値](#member_getmember_returns)をそのまま戻り値として返して終了
+  - **取得したMemberインスタンスをupdateCPkey内部のみのローカル変数**に格納。以下操作はローカル変数のMemberに対して行う。
+- デバイス存否チェック<br>
+  request.deviceId(=現在登録済のCPkey)で対象デバイスを特定。特定不能なら戻り値「機器未登録」を返して終了
+- 管理情報の書き換え
+  - CPkeyは書き換え
+
+    - [MemberDevice](MemberDevice.md#memberdevice_internal): メンバのデバイス情報
+      | 項目名 | データ型 | 生成時 | 更新項目 |
+      | :-- | :-- | :-- | :-- |
+      | deviceId | string | 【必須】 | — |
+      | status | string | 未認証 | — |
+      | CPkey | string | 【必須】 | 更新後CPkey |
+      | CPkeyUpdated | number | Date.now() | 現在日時 |
+      | trial | MemberTrial[] |  | — |
+  - デバイスの状態は、未認証・凍結中はそのまま、試行中・認証中は未認証に戻す
+
+    - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
+      | 項目名 | データ型 | 生成時 | 未認証 | 試行中 | 認証中 | 凍結中 |
+      | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+      | joiningRequest | number | Date.new() | — | — | — | — |
+      | approval | number | 【必須】 | — | — | — | — |
+      | denial | number | 【必須】 | — | — | — | — |
+      | loginRequest | number | 【必須】 | — | **0** | **0** | — |
+      | loginSuccess | number | 【必須】 | — | — | — | — |
+      | loginExpiration | number | 【必須】 | — | **0** | **0** | — |
+      | loginFailure | number | 【必須】 | — | — | — | — |
+      | unfreezeLogin | number | 【必須】 | — | — | — | — |
+      | joiningExpiration | number | 【必須】 | — | — | — | — |
+      | unfreezeDenial | number | 【必須】 | — | — | — | — |
+- 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
+  ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
+- **CPkeyを更新するのはmemberListシートのみ**。インスタンス化された'Member.device'以下は更新しない<br>
+  ※ authServer->authClientに送るencryptedResponseの暗号化は旧CPkeyで行い、authClient側ではauthServer側での処理結果を確認の上、新CPkeyへの置換を行うため
+- CPkey更新を監査ログに記録([authAuditLog.log](authAuditLog.md#authauditlog_log))
+
+  - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
+    | 項目名 | データ型 | 生成時 | 設定内容 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | — |
+    | duration | number | 【必須】 | — |
+    | memberId | string | 【必須】 | — |
+    | deviceId | string | 【任意】 | — |
+    | func | string | 【必須】 | **"updateCPkey"** |
+    | result | string | normal | — |
+    | note | string | 【必須】 | **旧CPkey -> 新CPkey** |
+- 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
+
+### <span id="member_updatecpkey_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 鍵形式不正 | 機器未登録 | 正常終了 |
+    | :-- | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — | — | — |
+    | result | string | normal | **"fatal"** | **"fatal"** | — |
+    | message | string | 【任意】 | **"invalid public key"** | **"no matching key"** | — |
+    | request | authRequest | 【任意】 | request | request | request |
+    | response | any | 【任意】 | — | — | **更新<span style="color:red">前</span>のMember** |

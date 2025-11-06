@@ -73,6 +73,7 @@ authServerの監査ログ
 
 - [Member.reissuePasscode()](Member.md#authauditlog_log)
 - [Member.removeMember()](Member.md#authauditlog_log)
+- [Member.updateCPkey()](Member.md#authauditlog_log)
 
 ### <span id="authauditlog_log_param">📥 引数</span>
 

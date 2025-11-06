@@ -1297,7 +1297,7 @@ const classdef = {
       {name:'status',type:'string',label:'メンバの状態',note:'未加入,未審査,審査済,加入中,加入禁止',default:'"未加入"'},
       {name:'log',type:'MemberLog',label:'メンバの履歴情報',note:'シート上はJSON文字列',default:'new MemberLog()'},
       {name:'profile',type:'MemberProfile',label:'メンバの属性情報',note:'シート上はJSON文字列',default:'new MemberProfile()'},
-      {name:'device',type:'MemberDevice[]',label:'デバイス情報',note:'マルチデバイス対応のため配列。シート上はJSON文字列',default:'空配列'},
+      {name:'device',type:'[MemberDevice](MemberDevice.md#memberdevice_internal)[]',label:'デバイス情報',note:'マルチデバイス対応のため配列。シート上はJSON文字列',default:'空配列'},
       {name:'note',type:'string',label:'当該メンバに対する備考',note:'',default:'空文字列'},
     ],
 
@@ -1578,15 +1578,15 @@ const classdef = {
               passcode: '新パスコード',
               created: '現在日時',
             }}}},'  ')</evaluate>
+          - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
+            ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
+          - メンバにパスコード通知メールを発信<br>
+            但し[authServerConfig](authServerConfig.md#authserverconfig_internal).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
           - パスコード再発行を監査ログに記録([authAuditLog.log](authAuditLog.md#authauditlog_log))
             <evaluate>comparisonTable({typeName:'authAuditLog',default:{},pattern:{'設定内容':{assign: {
               func: '"reissuePasscode"',
               note: '旧パスコード -> 新パスコード',
             }}}},'  ')</evaluate>
-          - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
-            ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
-          - メンバにパスコード通知メールを発信<br>
-            但し[authServerConfig](authServerConfig.md#authserverconfig_internal).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
           - 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
@@ -1854,6 +1854,84 @@ const classdef = {
                 message: 'no frozen devices',
                 request: '{memberId,deviceId:[凍結解除したdeviceId]}',
                 response: '更新<span style="color:red">後</span>のMember',
+              }},
+            }
+          }
+        },
+      },
+      updateCPkey: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '対象メンバ・デバイスの公開鍵を更新する',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'request',type:'authRequest',note:'処理要求オブジェクト'},
+        ],
+
+        process: `
+          - 引数チェック
+            <evaluate>comparisonTable({typeName:'authRequest',default:{},pattern:{'確認内容':{assign: {
+              func: '"::updateCPkey::"',
+              arguments: '更新後CPkey',
+            }}}},'  ')</evaluate>
+            - 更新後CPkeyがRSAの公開鍵形式か(PEMフォーマットなど)チェック、不適合なら戻り値「鍵形式不正」を返して終了
+          - メンバの状態チェック
+            - request.memberIdを基に[getMemberメソッド](#member_getmember)を実行
+            - メンバの状態が「不使用("result === fatal")」だった場合、[getMemberの戻り値](#member_getmember_returns)をそのまま戻り値として返して終了
+            - **取得したMemberインスタンスをupdateCPkey内部のみのローカル変数**に格納。以下操作はローカル変数のMemberに対して行う。
+          - デバイス存否チェック<br>
+            request.deviceId(=現在登録済のCPkey)で対象デバイスを特定。特定不能なら戻り値「機器未登録」を返して終了
+          - 管理情報の書き換え
+            - CPkeyは書き換え
+              <evaluate>comparisonTable({typeName:'MemberDevice',
+                default:{CPkey:'更新後CPkey',CPkeyUpdated:'現在日時'},
+                pattern:{
+                  '更新項目':{assign: {}},
+              }},'    ')</evaluate>
+            - デバイスの状態は、未認証・凍結中はそのまま、試行中・認証中は未認証に戻す
+              <evaluate>comparisonTable({typeName:'MemberLog',
+                pattern:{
+                  '未認証':{assign: {}},
+                  '試行中':{assign: {
+                    loginExpiration: 0,
+                    loginRequest: 0,
+                  }},
+                  '認証中':{assign: {
+                    loginExpiration: 0,
+                    loginRequest: 0,
+                  }},
+                  '凍結中':{assign: {}},
+              }},'    ')</evaluate>
+          - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
+            ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
+          - **CPkeyを更新するのはmemberListシートのみ**。インスタンス化された'Member.device'以下は更新しない<br>
+            ※ authServer->authClientに送るencryptedResponseの暗号化は旧CPkeyで行い、authClient側ではauthServer側での処理結果を確認の上、新CPkeyへの置換を行うため
+          - CPkey更新を監査ログに記録([authAuditLog.log](authAuditLog.md#authauditlog_log))
+            <evaluate>comparisonTable({typeName:'authAuditLog',default:{},pattern:{'設定内容':{assign: {
+              func: '"updateCPkey"',
+              note: '旧CPkey -> 新CPkey',
+            }}}},'  ')</evaluate>
+          - 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          authResponse: { // メンバ名は戻り値のデータ型名
+            default: {request:'request'},
+            condition: ``,	// {string} データ型が複数の場合の選択条件指定(trimIndent対象)
+            note: ``,	// {string} 備忘(trimIndent対象)
+            pattern: {
+              '鍵形式不正':{assign:{
+                result:'"fatal"',
+                message: '"invalid public key"',
+              }},
+              '機器未登録':{assign:{
+                result:'"fatal"',
+                message: '"no matching key"',
+              }},
+              '正常終了':{assign:{
+                response: '更新<span style="color:red">前</span>のMember',
               }},
             }
           }
