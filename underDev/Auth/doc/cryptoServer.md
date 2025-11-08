@@ -44,6 +44,7 @@
 | [constructor](#cryptoserver_constructor) | private | コンストラクタ |
 | [decrypt](#cryptoserver_decrypt) | public | authClientからのメッセージを復号＋署名検証 |
 | [encrypt](#cryptoserver_encrypt) | public | authClientへのメッセージを署名＋暗号化 |
+| [generateKeys](#cryptoserver_generatekeys) | public | 新たなサーバ側鍵ペアを作成 |
 
 ## <span id="cryptoserver_constructor">🧱 <a href="#cryptoserver_method">cryptoServer.constructor()</a></span>
 
@@ -162,3 +163,29 @@ authClientへのメッセージを署名＋暗号化
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
     | ciphertext | string | 【必須】 | — |
+
+## <span id="cryptoserver_generatekeys">🧱 <a href="#cryptoserver_method">cryptoServer.generateKeys()</a></span>
+
+新たなサーバ側鍵ペアを作成
+
+### <span id="cryptoserver_generatekeys_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+
+### <span id="cryptoserver_generatekeys_process">🧾 処理手順</span>
+
+
+
+### <span id="cryptoserver_generatekeys_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |

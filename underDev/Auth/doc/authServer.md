@@ -100,8 +100,16 @@ const menu22 = () => asv.resetSPkey();
 | メソッド名 | 型 | 内容 |
 | :-- | :-- | :-- |
 | [constructor](#authserver_constructor) | private | コンストラクタ |
+| [callFunction](#authserver_callfunction) | public | authServerConfig.funcを参照し、該当関数を実行 |
 | [exec](#authserver_exec) | public | doPostから呼ばれ、authClientからの要求を処理 |
-| [decodeRequest](#authserver_decoderequest) | private | クライアントからの要求を解読 |
+| [listNotYetDecided](#authserver_listnotyetdecided) | public | 加入認否未定メンバのリストアップと認否入力 |
+| [loginTrial](#authserver_logintrial) | public | ログイン要求を処理し、試行結果をMemberTrialに記録 |
+| [membershipRequest](#authserver_membershiprequest) | public | 新規メンバ加入要求を登録、管理者へメール通知。 |
+| [notifyAcceptance](#authserver_notifyacceptance) | public | 加入審査状況の問合せへの回答 |
+| [resetSPkey](#authserver_resetspkey) | public | 【緊急時用】authServerの鍵ペアを更新 |
+| [responseSPkey](#authserver_responsespkey) | public | クライアントからのSPkey要求への対応 |
+| [setupEnvironment](#authserver_setupenvironment) | public | GAS初回実行時の権限確認を含む初期環境の整備 |
+| [updateCPkey](#authserver_updatecpkey) | public | CPkey更新処理 |
 
 ## <span id="authserver_constructor">🧱 <a href="#authserver_method">authServer.constructor()</a></span>
 
@@ -141,6 +149,32 @@ const menu22 = () => asv.resetSPkey();
     | audit | authAuditLog | 【必須】 | — |
     | error | authErrorLog | 【必須】 | — |
     | pv | Object | 【必須】 | — |
+
+## <span id="authserver_callfunction">🧱 <a href="#authserver_method">authServer.callFunction()</a></span>
+
+authServerConfig.funcを参照し、該当関数を実行
+
+### <span id="authserver_callfunction_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+
+### <span id="authserver_callfunction_process">🧾 処理手順</span>
+
+
+
+### <span id="authserver_callfunction_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |
 
 ## <span id="authserver_exec">🧱 <a href="#authserver_method">authServer.exec()</a></span>
 
@@ -196,7 +230,7 @@ exec(request){
 
 ■ 中核処理(coreブロック)
 
-- 1. 復号・署名検証
+- 復号・署名検証
   - "v.dr = [crypto.decrypt](cryptoServer.md#cryptoserver_decrypt)(request)"を実行
   - "v.dr.result === 'normal'の場合、"v.request = v.dr.request"を実行
   - "v.dr.result === 'fatal'"の場合、'throw new Error(v.dr.message)'を実行
@@ -205,8 +239,8 @@ exec(request){
     - "v.response.result === 'normal'"の場合、中核処理を抜ける
     - "v.response.result === 'fatal'"の場合、'throw new Error(v.response.message)'を実行
 
-- 2. 重複リクエストチェック
-  - authScriptProperties.requestLogで重複リクエストをチェック
+- 重複リクエストチェック
+  - authScriptProperties.requestLogで重複リクエストをチェック いまここ
   - エラーならエラーログに出力
     - authErrorLog.result = 'fatal'
     - authErrorLog.message = 'Duplicate requestId'
@@ -252,55 +286,218 @@ exec(request){
     | :-- | :-- | :-- | :-- |
     | ciphertext | string | 【必須】 | — |
 
-## <span id="authserver_decoderequest">🧱 <a href="#authserver_method">authServer.decodeRequest()</a></span>
+## <span id="authserver_listnotyetdecided">🧱 <a href="#authserver_method">authServer.listNotYetDecided()</a></span>
 
-クライアントからの要求を解読
+加入認否未定メンバのリストアップと認否入力
 
-### <span id="authserver_decoderequest_param">📥 引数</span>
+### <span id="authserver_listnotyetdecided_param">📥 引数</span>
 
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
-| str | ❌ | string | — | クライアント側から送られたCPkey | 
+| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
-### <span id="authserver_decoderequest_process">🧾 処理手順</span>
+### <span id="authserver_listnotyetdecided_process">🧾 処理手順</span>
 
-- SPkey要求判定：引数"str"のオブジェクト化を試行
-  - オブジェクト化失敗の場合
-    - strがCPkey文字列として適切か判定
-      - 不適切なら戻り値「不正文字列」を返して終了 -> Error
-      - 適切ならMember.addMember(仮登録要求)を行い、それを戻り値とする -> authResponse
-  - オブジェクト化成功の場合
-    - encryptedRequest形式でないなら「形式不正」
-    - memberIdから対象者のMemberインスタンスを取得<br>
-       "member = member.[getMember](Member.md#member_getmember)(memberId)"
-    - 取得不能なら「未登録メンバ」
-    - cryptoServer.decrypt -> authRequest
-    - 
 
-       
 
-  - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
-    | 項目名 | データ型 | 生成時 | 更新内容 |
-    | :-- | :-- | :-- | :-- |
-    | joiningRequest | number | Date.now() | — |
-    | approval | number | 【必須】 | **examined === true ? Date.now() : 0** |
-    | denial | number | 【必須】 | **0** |
-    | loginRequest | number | 【必須】 | — |
-    | loginSuccess | number | 【必須】 | — |
-    | loginExpiration | number | 【必須】 | — |
-    | loginFailure | number | 【必須】 | — |
-    | unfreezeLogin | number | 【必須】 | — |
-    | joiningExpiration | number | 【必須】 | **現在日時(UNIX時刻)＋authServerConfig.memberLifeTime** |
-    | unfreezeDenial | number | 【必須】 | **0** |
-
-### <span id="authserver_decoderequest_returns">📤 戻り値</span>
+### <span id="authserver_listnotyetdecided_returns">📤 戻り値</span>
 
   - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
-    | 項目名 | データ型 | 生成時 | 正答時 | 誤答・再挑戦可 | 誤答・再挑戦不可 |
-    | :-- | :-- | :-- | :-- | :-- | :-- |
-    | timestamp | number | Date.now() | — | — | — |
-    | result | string | normal | **normal** | **warning** | **fatal** |
-    | message | string | 【任意】 | — | — | — |
-    | request | authRequest | 【任意】 | 引数"request" | 引数"request" | 引数"request" |
-    | response | any | 【任意】 | — | — | — |
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |
+
+## <span id="authserver_logintrial">🧱 <a href="#authserver_method">authServer.loginTrial()</a></span>
+
+ログイン要求を処理し、試行結果をMemberTrialに記録
+
+### <span id="authserver_logintrial_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+
+### <span id="authserver_logintrial_process">🧾 処理手順</span>
+
+
+
+### <span id="authserver_logintrial_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |
+
+## <span id="authserver_membershiprequest">🧱 <a href="#authserver_method">authServer.membershipRequest()</a></span>
+
+新規メンバ加入要求を登録、管理者へメール通知。
+
+Member.setMember()に代替？
+
+### <span id="authserver_membershiprequest_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+
+### <span id="authserver_membershiprequest_process">🧾 処理手順</span>
+
+
+
+### <span id="authserver_membershiprequest_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |
+
+## <span id="authserver_notifyacceptance">🧱 <a href="#authserver_method">authServer.notifyAcceptance()</a></span>
+
+加入審査状況の問合せへの回答
+
+### <span id="authserver_notifyacceptance_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+
+### <span id="authserver_notifyacceptance_process">🧾 処理手順</span>
+
+
+
+### <span id="authserver_notifyacceptance_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |
+
+## <span id="authserver_resetspkey">🧱 <a href="#authserver_method">authServer.resetSPkey()</a></span>
+
+【緊急時用】authServerの鍵ペアを更新
+
+### <span id="authserver_resetspkey_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+
+### <span id="authserver_resetspkey_process">🧾 処理手順</span>
+
+
+
+### <span id="authserver_resetspkey_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |
+
+## <span id="authserver_responsespkey">🧱 <a href="#authserver_method">authServer.responseSPkey()</a></span>
+
+クライアントからのSPkey要求への対応
+
+### <span id="authserver_responsespkey_caller">📞 呼出元</span>
+
+- [authServer.exec()](authServer.md#authserver_responsespkey)
+
+### <span id="authserver_responsespkey_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+
+### <span id="authserver_responsespkey_process">🧾 処理手順</span>
+
+
+
+### <span id="authserver_responsespkey_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |
+
+## <span id="authserver_setupenvironment">🧱 <a href="#authserver_method">authServer.setupEnvironment()</a></span>
+
+GAS初回実行時の権限確認を含む初期環境の整備
+
+- 「インストール型トリガー」認可トークン失効時も本メソッドを実行
+
+### <span id="authserver_setupenvironment_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+
+### <span id="authserver_setupenvironment_process">🧾 処理手順</span>
+
+
+
+### <span id="authserver_setupenvironment_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |
+
+## <span id="authserver_updatecpkey">🧱 <a href="#authserver_method">authServer.updateCPkey()</a></span>
+
+CPkey更新処理
+
+### <span id="authserver_updatecpkey_param">📥 引数</span>
+
+
+| 項目名 | 任意 | データ型 | 既定値 | 説明 |
+| :-- | :--: | :-- | :-- | :-- |
+| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+
+### <span id="authserver_updatecpkey_process">🧾 処理手順</span>
+
+
+
+### <span id="authserver_updatecpkey_returns">📤 戻り値</span>
+
+  - [authResponse](authResponse.md#authresponse_internal): 暗号化前の処理結果
+    | 項目名 | データ型 | 生成時 | 正常終了 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | number | Date.now() | — |
+    | result | string | normal | — |
+    | message | string | 【任意】 | — |
+    | request | authRequest | 【任意】 | — |
+    | response | any | 【任意】 | — |

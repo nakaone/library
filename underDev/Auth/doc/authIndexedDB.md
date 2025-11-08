@@ -31,9 +31,8 @@ authClientKeysを継承した、クライアントのIndexedDBを操作するク
 | メソッド名 | 型 | 内容 |
 | :-- | :-- | :-- |
 | [constructor](#authindexeddb_constructor) | private | メイン処理(コンストラクタ相当) |
-| [get](#authindexeddb_get) | private | IndexedDBの値を取得 |
-| [set](#authindexeddb_set) | private | IndexedDBの値を更新(生成) |
-| [reset](#authindexeddb_reset) | private | IndexedDBの値を更新(生成) |
+| [getProp](#authindexeddb_getprop) | private | IndexedDBの値を取得、インスタンス変数に格納 |
+| [setProp](#authindexeddb_setprop) | private | IndexedDBの値をインスタンス変数で更新(生成) |
 
 ## <span id="authindexeddb_constructor">🧱 <a href="#authindexeddb_method">authIndexedDB.constructor()</a></span>
 
@@ -71,16 +70,16 @@ authClientKeysを継承した、クライアントのIndexedDBを操作するク
     | SPkey | string | 【必須】 | — |
     | expireCPkey | number | 【必須】 | — |
 
-## <span id="authindexeddb_get">🧱 <a href="#authindexeddb_method">authIndexedDB.get()</a></span>
+## <span id="authindexeddb_getprop">🧱 <a href="#authindexeddb_method">authIndexedDB.getProp()</a></span>
 
-IndexedDBの値を取得
+IndexedDBの値を取得、インスタンス変数に格納
 
-### <span id="authindexeddb_get_param">📥 引数</span>
+### <span id="authindexeddb_getprop_param">📥 引数</span>
 
 
 - 無し(void)
 
-### <span id="authindexeddb_get_process">🧾 処理手順</span>
+### <span id="authindexeddb_getprop_process">🧾 処理手順</span>
 
 - 【要修正】authAuditLogに関する記述？？？
 - 引数がObjectの場合：func,result,noteがあればthisに上書き
@@ -90,7 +89,7 @@ IndexedDBの値を取得
 - シートの末尾行にauthAuditLogオブジェクトを追加
 - メール通知：stackTraceは削除した上でauthConfig.adminMail宛にメール通知
 
-### <span id="authindexeddb_get_returns">📤 戻り値</span>
+### <span id="authindexeddb_getprop_returns">📤 戻り値</span>
 
   - [authIndexedDB](authIndexedDB.md#authindexeddb_internal): クライアントのIndexedDB
     | 項目名 | データ型 | 生成時 | 正常終了 |
@@ -102,51 +101,22 @@ IndexedDBの値を取得
     | SPkey | string | 【必須】 | — |
     | expireCPkey | number | 【必須】 | — |
 
-## <span id="authindexeddb_set">🧱 <a href="#authindexeddb_method">authIndexedDB.set()</a></span>
+## <span id="authindexeddb_setprop">🧱 <a href="#authindexeddb_method">authIndexedDB.setProp()</a></span>
 
-IndexedDBの値を更新(生成)
+IndexedDBの値をインスタンス変数で更新(生成)
 
-### <span id="authindexeddb_set_param">📥 引数</span>
-
-
-| 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| :-- | :--: | :-- | :-- | :-- |
-| arg | ⭕ | [authIndexedDB](authIndexedDB.md#authindexeddb_internal) | {} | 更新(生成)値(更新対象メンバのみで可) | 
-
-### <span id="authindexeddb_set_process">🧾 処理手順</span>
-
-
-
-### <span id="authindexeddb_set_returns">📤 戻り値</span>
-
-  - [authIndexedDB](authIndexedDB.md#authindexeddb_internal): クライアントのIndexedDB
-    | 項目名 | データ型 | 生成時 | 正常終了 |
-    | :-- | :-- | :-- | :-- |
-    | memberId | string | 【必須】 | — |
-    | memberName | string | 【必須】 | — |
-    | deviceId | string | UUID | — |
-    | keyGeneratedDateTime | number | Date.now() | — |
-    | SPkey | string | 【必須】 | — |
-    | expireCPkey | number | 【必須】 | — |
-
-## <span id="authindexeddb_reset">🧱 <a href="#authindexeddb_method">authIndexedDB.reset()</a></span>
-
-IndexedDBの値を更新(生成)
-
-### <span id="authindexeddb_reset_param">📥 引数</span>
+### <span id="authindexeddb_setprop_param">📥 引数</span>
 
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
 | arg | ⭕ | [authIndexedDB](authIndexedDB.md#authindexeddb_internal) | {} | 更新(生成)値(更新対象メンバのみで可) | 
 
-### <span id="authindexeddb_reset_process">🧾 処理手順</span>
+### <span id="authindexeddb_setprop_process">🧾 処理手順</span>
 
-- 【要修正】authAuditLogに関する記述？？？
-- authClientConfig.auditLogシートが無ければ作成
-- 引数の内、authAuditLogと同一メンバ名があればthisに設定
 
-### <span id="authindexeddb_reset_returns">📤 戻り値</span>
+
+### <span id="authindexeddb_setprop_returns">📤 戻り値</span>
 
   - [authIndexedDB](authIndexedDB.md#authindexeddb_internal): クライアントのIndexedDB
     | 項目名 | データ型 | 生成時 | 正常終了 |

@@ -33,7 +33,6 @@ authServerのエラーログ
 | :-- | :-- | :-- |
 | [constructor](#autherrorlog_constructor) | private | コンストラクタ |
 | [log](#autherrorlog_log) | public | エラーログをシートに出力 |
-| [reset](#autherrorlog_reset) | public | authErrorLogインスタンス変数の値を再設定 |
 
 ## <span id="autherrorlog_constructor">🧱 <a href="#autherrorlog_method">authErrorLog.constructor()</a></span>
 
@@ -88,34 +87,6 @@ authServerのエラーログ
 - シートの末尾行にauthErrorLogオブジェクトを追加
 
 ### <span id="autherrorlog_log_returns">📤 戻り値</span>
-
-  - [authErrorLog](authErrorLog.md#autherrorlog_internal): authServerのエラーログ
-    | 項目名 | データ型 | 生成時 | 正常終了 |
-    | :-- | :-- | :-- | :-- |
-    | timestamp | string | Date.now() | — |
-    | memberId | string | 【必須】 | — |
-    | deviceId | string | 【必須】 | — |
-    | result | string | fatal | — |
-    | message | string | 【任意】 | — |
-    | stackTrace | string | 【任意】 | — |
-
-## <span id="autherrorlog_reset">🧱 <a href="#autherrorlog_method">authErrorLog.reset()</a></span>
-
-authErrorLogインスタンス変数の値を再設定
-
-### <span id="autherrorlog_reset_param">📥 引数</span>
-
-
-| 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| :-- | :--: | :-- | :-- | :-- |
-| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
-
-### <span id="autherrorlog_reset_process">🧾 処理手順</span>
-
-- 引数の内、authErrorLogと同一メンバ名があればthisに設定
-- 📤 戻り値：変更後のauthErrorLogオブジェクト
-
-### <span id="autherrorlog_reset_returns">📤 戻り値</span>
 
   - [authErrorLog](authErrorLog.md#autherrorlog_internal): authServerのエラーログ
     | 項目名 | データ型 | 生成時 | 正常終了 |

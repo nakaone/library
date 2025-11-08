@@ -34,7 +34,6 @@ authServerの監査ログ
 | :-- | :-- | :-- |
 | [constructor](#authauditlog_constructor) | private | コンストラクタ |
 | [log](#authauditlog_log) | public | 監査ログシートに処理要求を追記 |
-| [reset](#authauditlog_reset) | public | authAuditLogインスタンス変数の値を再設定 |
 
 ## <span id="authauditlog_constructor">🧱 <a href="#authauditlog_method">authAuditLog.constructor()</a></span>
 
@@ -97,36 +96,6 @@ authServerの監査ログ
 - シートの末尾行にauthAuditLogオブジェクトを追加
 
 ### <span id="authauditlog_log_returns">📤 戻り値</span>
-
-  - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
-    | 項目名 | データ型 | 生成時 | 正常終了 |
-    | :-- | :-- | :-- | :-- |
-    | timestamp | string | Date.now() | — |
-    | duration | number | 【必須】 | — |
-    | memberId | string | 【必須】 | — |
-    | deviceId | string | 【任意】 | — |
-    | func | string | 【必須】 | — |
-    | result | string | normal | — |
-    | note | string | 【必須】 | — |
-
-## <span id="authauditlog_reset">🧱 <a href="#authauditlog_method">authAuditLog.reset()</a></span>
-
-authAuditLogインスタンス変数の値を再設定
-
-### <span id="authauditlog_reset_param">📥 引数</span>
-
-
-| 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| :-- | :--: | :-- | :-- | :-- |
-| request | ⭕ | [authRequest](authRequest.md#authrequest_internal) | {} | 変更する設定値 | 
-
-### <span id="authauditlog_reset_process">🧾 処理手順</span>
-
-- 【要修正】用途を明確化、不要なら削除
-- [authServerConfig](authServerConfig.md#authserverconfig_internal).auditLogシートが無ければ作成
-- 引数の内、authAuditLogと同一メンバ名があればthisに設定
-
-### <span id="authauditlog_reset_returns">📤 戻り値</span>
 
   - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
     | 項目名 | データ型 | 生成時 | 正常終了 |

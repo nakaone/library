@@ -8,7 +8,7 @@
 
 ## <span id="authclientkeys_summary">🧭 概要</span>
 
-クライアント側鍵ペア
+クライアント側鍵ペアの生成
 
 ### 🧩 <span id="authclientkeys_internal">内部構成</span>
 
@@ -46,7 +46,7 @@
 
 ### <span id="authclientkeys_constructor_returns">📤 戻り値</span>
 
-  - [authClientKeys](authClientKeys.md#authclientkeys_internal): クライアント側鍵ペア
+  - [authClientKeys](authClientKeys.md#authclientkeys_internal): クライアント側鍵ペアの生成
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
     | CSkeySign | CryptoKey | 【必須】 | — |

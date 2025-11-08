@@ -14,7 +14,7 @@
 
 ## <span id="member_summary">🧭 概要</span>
 
-メンバ一覧シートに対応したメンバ単位の管理情報
+メンバ情報、管理
 
 - 'Member'はGoogle SpreadSheet上でメンバ(アカウント)情報・状態を一元的に管理するためのクラスです。
 - 加入・ログイン・パスコード試行・デバイス別公開鍵(CPkey)管理などの状態を統一的に扱います。
@@ -152,7 +152,7 @@ stateDiagram-v2
 
 ### <span id="member_constructor_returns">📤 戻り値</span>
 
-  - [Member](Member.md#member_internal): メンバ一覧シートに対応したメンバ単位の管理情報
+  - [Member](Member.md#member_internal): メンバ情報、管理
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
     | memberId | string | UUID | — |
@@ -274,7 +274,6 @@ stateDiagram-v2
 
 ### <span id="member_getmember_caller">📞 呼出元</span>
 
-- [authServer.decodeRequest()](authServer.md#member_getmember)
 - [cryptoServer.decrypt()](cryptoServer.md#member_getmember)
 - [Member.addTrial()](Member.md#member_getmember)
 - [Member.checkPasscode()](Member.md#member_getmember)

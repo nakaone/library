@@ -162,27 +162,6 @@ const classdef = {
           note: `シートに出力したauthAuditLogオブジェクト`,	// {string} 備忘
         }},
       },
-      reset: {
-        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: 'authAuditLogインスタンス変数の値を再設定',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        note: ``,	// {string} 注意事項。markdownで記載
-        source: '',	// {string} 想定するJavaScriptソース
-        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-
-        params: [  // {Param[]} ■メソッド引数の定義■
-          {name:'request',isOpt:true,type:'authRequest',default:{},note:'変更する設定値'},
-        ],
-
-        process: `
-          - 【要修正】用途を明確化、不要なら削除
-          - [authServerConfig](authServerConfig.md#authserverconfig_internal).auditLogシートが無ければ作成
-          - 引数の内、authAuditLogと同一メンバ名があればthisに設定
-        `,	// {string} 処理手順。markdownで記載
-
-        returns: {authAuditLog:{
-          note: `修正後のauthAuditLogオブジェクト`,	// {string} 備忘
-        }},
-      },
     },
   },
   authClient: {
@@ -392,7 +371,7 @@ const classdef = {
     },
   },
   authClientKeys: {
-    label: 'クライアント側鍵ペア',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    label: 'クライアント側鍵ペアの生成',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
@@ -522,24 +501,6 @@ const classdef = {
           note: `シートに出力したauthErrorLogオブジェクト`,	// {string} 備忘
         }},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
-      reset: {
-        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: 'authErrorLogインスタンス変数の値を再設定',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        note: ``,	// {string} 注意事項。markdownで記載
-        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
-        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-
-        params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
-        ],
-
-        process: `
-          - 引数の内、authErrorLogと同一メンバ名があればthisに設定
-          - 📤 戻り値：変更後のauthErrorLogオブジェクト
-        `,	// {string} 処理手順。markdownで記載
-
-        returns: {authErrorLog:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
-      },
     },
   },
   authIndexedDB: {
@@ -589,9 +550,9 @@ const classdef = {
 
         returns: {authIndexedDB:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
-      get: {
+      getProp: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: 'IndexedDBの値を取得',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        label: 'IndexedDBの値を取得、インスタンス変数に格納',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
@@ -611,9 +572,9 @@ const classdef = {
 
         returns: {authIndexedDB:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
-      set: {
+      setProp: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: 'IndexedDBの値を更新(生成)',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        label: 'IndexedDBの値をインスタンス変数で更新(生成)',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
@@ -623,27 +584,6 @@ const classdef = {
         ],
 
         process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
-
-        returns: {authIndexedDB:{
-          note: 'IndexedDBに設定した値',	// {string} 備忘
-        }},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
-      },
-      reset: {
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: 'IndexedDBの値を更新(生成)',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        note: ``,	// {string} 注意事項。markdownで記載
-        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
-        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
-
-        params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'authIndexedDB',default:{},note:'更新(生成)値(更新対象メンバのみで可)'},
-        ],
-
-        process: `
-          - 【要修正】authAuditLogに関する記述？？？
-          - authClientConfig.auditLogシートが無ければ作成
-          - 引数の内、authAuditLogと同一メンバ名があればthisに設定
-        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         returns: {authIndexedDB:{
           note: 'IndexedDBに設定した値',	// {string} 備忘
@@ -792,7 +732,86 @@ const classdef = {
 
         returns: {authScriptProperties:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
-      requestLog: {},
+      checkDuplicate: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'クライアントからの重複リクエストチェック',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      deleteProp: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'ScriptPropertiesを消去',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      getProp: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'ScriptPropertiesをインスタンス変数に格納',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      resetSPkey: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'SPkeyを更新、ScriptPropertiesに保存',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      setProp: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'インスタンス変数をScriptPropertiesに格納',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
     },
   },
   authServer: {
@@ -902,6 +921,26 @@ const classdef = {
 
         returns: {authServer:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
+      // execの戻り値(処理結果)一覧を作成、authClient.execの処理分岐と対応させること!!
+      // SPkey再設定はresetSPkeyとしてここに記述
+      // - SPkey/SSkeyを更新、ScriptPropertiesに保存
+      // - 本メソッドはシステム管理者がGAS編集画面から実行することを想定
+      callFunction: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'authServerConfig.funcを参照し、該当関数を実行',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
       exec: {
         type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: 'doPostから呼ばれ、authClientからの要求を処理',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
@@ -1006,66 +1045,135 @@ const classdef = {
         returns: {encryptedResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
         // エラー時はnullを返す
       },
-      // execの戻り値(処理結果)一覧を作成、authClient.execの処理分岐と対応させること!!
-      // SPkey再設定はresetSPkeyとしてここに記述
-      // - SPkey/SSkeyを更新、ScriptPropertiesに保存
-      // - 本メソッドはシステム管理者がGAS編集画面から実行することを想定
-
-      decodeRequest: {
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: 'クライアントからの要求を解読',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      listNotYetDecided: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '加入認否未定メンバのリストアップと認否入力',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
         params: [  // {Params} ■メソッド引数の定義■
-          {name:'str',type:'string',note:'クライアント側から送られたCPkey'},
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
         ],
 
         process: `
-          - SPkey要求判定：引数"str"のオブジェクト化を試行
-            - オブジェクト化失敗の場合
-              - strがCPkey文字列として適切か判定
-                - 不適切なら戻り値「不正文字列」を返して終了 -> Error
-                - 適切ならMember.addMember(仮登録要求)を行い、それを戻り値とする -> authResponse
-            - オブジェクト化成功の場合
-              - encryptedRequest形式でないなら「形式不正」
-              - memberIdから対象者のMemberインスタンスを取得<br>
-                 "member = member.[getMember](Member.md#member_getmember)(memberId)"
-              - 取得不能なら「未登録メンバ」
-              - cryptoServer.decrypt -> authRequest
-              - 
-
-                 
-            <evaluate>comparisonTable({typeName:'MemberLog',default:{},pattern:{'更新内容':{assign: {
-              approval: 'examined === true ? Date.now() : 0',
-              denial: 0,
-              joiningExpiration: '現在日時(UNIX時刻)＋authServerConfig.memberLifeTime',
-              unfreezeDenial: 0,
-            }}}},'  ')</evaluate>
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
-        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
-          authResponse: { // メンバ名は戻り値のデータ型名
-            default: {request:'引数"request"',value:'MemberTrialオブジェクト'},
-              // {Object.<string,string>} 各パターンの共通設定値
-            condition: ``,	// {string} データ型が複数の場合の選択条件指定(trimIndent対象)
-            note: ``,	// {string} 備忘(trimIndent対象)
-            pattern: {
-              '正答時': {
-                assign: {result:'normal'}, // {Object.<string,string>} 当該パターンの設定値
-                condition: ``,	// {string} 該当条件(trimIndent対象)
-                note: ``,	// {string} 備忘(trimIndent対象)
-              },
-              '誤答・再挑戦可': {assign: {result:'warning'}},
-              '誤答・再挑戦不可': {assign: {result:'fatal'}},
-            }
-          }
-        },
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      loginTrial: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'ログイン要求を処理し、試行結果をMemberTrialに記録',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
-        error: {  // エラー時処理
-        },
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      membershipRequest: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '新規メンバ加入要求を登録、管理者へメール通知。',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: `Member.setMember()に代替？`,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      notifyAcceptance: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '加入審査状況の問合せへの回答',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      resetSPkey: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '【緊急時用】authServerの鍵ペアを更新',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      responseSPkey: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'クライアントからのSPkey要求への対応',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      setupEnvironment: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'GAS初回実行時の権限確認を含む初期環境の整備',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: `
+          - 「インストール型トリガー」認可トークン失効時も本メソッドを実行
+        `,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      updateCPkey: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'CPkey更新処理',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
     },
   },
@@ -1132,7 +1240,38 @@ const classdef = {
   cryptoClient: {
     label: 'クライアント側の暗号化・復号処理',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    policy: `
+      ## 🔐 セキュリティ仕様
+
+      ### 鍵種別と用途
+
+      | 鍵名 | アルゴリズム | 用途 | 保存先 |
+      | :-- | :-- | :-- | :-- |
+      | CPkey-sign | RSA-PSS | 署名 | IndexedDB |
+      | CPkey-enc | RSA-OAEP | 暗号化 | IndexedDB |
+
+      ### 鍵生成時パラメータ
+
+      \`\`\` js
+      {
+        name: "RSA-PSS",
+        modulusLength: authConfig.RSAbits,
+        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+        hash: "SHA-256",
+        extractable: false,
+        keyUsages: ["sign", "verify"]
+      }
+      \`\`\`
+
+      暗号化鍵は'name:"RSA-OAEP"'、'keyUsages: ["encrypt", "decrypt"]'とする。
+
+      ### 暗号・署名パラメータ
+
+      | 区分 | アルゴリズム | ハッシュ | 鍵長 | 備考 |
+      | :-- | :-- | :-- | :-- | :-- |
+      | 署名 | RSA-PSS | SHA-256 | authConfig.RSAbits | 鍵用途:sign |
+      | 暗号化 | RSA-OAEP | SHA-256 | authConfig.RSAbits | 鍵用途:encrypt |
+    `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
@@ -1164,9 +1303,41 @@ const classdef = {
 
         returns: {cryptoClient:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
+      decrypt: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'authServer->authClientのメッセージを復号＋署名検証',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      encrypt: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'authClient->authServerのメッセージを暗号化＋署名',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
       fetch: {
         type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: '処理要求を署名・暗号化し、サーバ側に問合せを行う',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        label: '処理要求を署名・暗号化してサーバ側に問合せ、結果を復号・署名検証',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
@@ -1194,7 +1365,40 @@ const classdef = {
             }
           }
         },
-      },    },
+      },
+      generateKeys: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '新たなクライアント側鍵ペアを作成',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+      updateKeys: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '引数で渡された鍵ペアでIndexedDBの内容を更新',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+    },
   },
   cryptoServer: {
     label: 'サーバ側の暗号化・復号処理',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
@@ -1363,6 +1567,22 @@ const classdef = {
 
         returns: {encryptedResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
+      generateKeys: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '新たなサーバ側鍵ペアを作成',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        ],
+
+        process: `
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
     },
   },
   decryptedRequest: {
@@ -1504,7 +1724,8 @@ const classdef = {
   LocalRequest: {
     label: 'ローカル関数からの処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'クライアント側関数からauthClientに渡すオブジェクト。func,arg共、平文',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    policy: `
+    `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -1534,7 +1755,8 @@ const classdef = {
   LocalResponse: {
     label: 'ローカル関数への処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: 'authClientからクライアント側関数に返される処理結果オブジェクト',	// {string} クラスとしての補足説明。概要欄に記載
-    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    policy: `
+    `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
 
@@ -1563,7 +1785,7 @@ const classdef = {
     },
   },
   Member: {
-    label: 'メンバ一覧シートに対応したメンバ単位の管理情報',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    label: 'メンバ情報、管理',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `
       - 'Member'はGoogle SpreadSheet上でメンバ(アカウント)情報・状態を一元的に管理するためのクラスです。
       - 加入・ログイン・パスコード試行・デバイス別公開鍵(CPkey)管理などの状態を統一的に扱います。

@@ -65,7 +65,7 @@ async function Example() {
 | 1 | [authAuditLog](authAuditLog.md) | authServerの監査ログ |
 | 2 | [authClient](authClient.md) | クライアント側auth中核クラス |
 | 3 | [authClientConfig](authClientConfig.md) | authClient専用の設定値 |
-| 4 | [authClientKeys](authClientKeys.md) | クライアント側鍵ペア |
+| 4 | [authClientKeys](authClientKeys.md) | クライアント側鍵ペアの生成 |
 | 5 | [authConfig](authConfig.md) | authClient/authServer共通設定値 |
 | 6 | [authErrorLog](authErrorLog.md) | authServerのエラーログ |
 | 7 | [authIndexedDB](authIndexedDB.md) | クライアントのIndexedDB |
@@ -83,7 +83,7 @@ async function Example() {
 | 19 | [encryptedResponse](encryptedResponse.md) | 暗号化された処理結果 |
 | 20 | [LocalRequest](LocalRequest.md) | ローカル関数からの処理要求 |
 | 21 | [LocalResponse](LocalResponse.md) | ローカル関数への処理結果 |
-| 22 | [Member](Member.md) | メンバ一覧シートに対応したメンバ単位の管理情報 |
+| 22 | [Member](Member.md) | メンバ情報、管理 |
 | 23 | [MemberDevice](MemberDevice.md) | メンバのデバイス情報 |
 | 24 | [MemberLog](MemberLog.md) | メンバの各種要求・状態変化の時刻 |
 | 25 | [MemberProfile](MemberProfile.md) | メンバの属性情報 |
