@@ -9,6 +9,7 @@ const classdef = {
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
     navi: '', // {string} クラス内ナビ
+    implement:{client:false,server:false},  // 実装の有無
 
     members: [  // {Members} ■メンバ(インスタンス変数)定義■
       //{name:'',type:'string',label:'',note:''},
@@ -107,6 +108,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: 'audit', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'string',label:'要求日時',note:'ISO8601拡張形式の文字列',default:'Date.now()'},
@@ -208,6 +210,7 @@ const classdef = {
       </script>
       \`\`\`
     `,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:true,server:false},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'cf',type:'authClientConfig',label:'動作設定変数(config)',note:''},
@@ -347,11 +350,14 @@ const classdef = {
     inherit: 'authConfig', // 親クラス名
     defaultVariableName: 'cf',  // 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:true,server:false},  // 実装の有無
+
     members: [
       {name:'api',type:'string',label:'サーバ側WebアプリURLのID',note:'`https://script.google.com/macros/s/(この部分)/exec`'},
       {name:'timeout',type:'number',label:'サーバからの応答待機時間',note:'これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分',default:300000},
       {name:'CPkeyGraceTime',type:'number',label:'CPkey期限切れまでの猶予時間',note:'CPkey有効期間がこれを切ったら更新処理実行。既定値は10分',default:600000},
     ],
+
     methods: {
       constructor: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
@@ -377,6 +383,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:true,server:false},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'CSkeySign',type:'CryptoKey',label:'署名用秘密鍵',note:''},
@@ -410,6 +417,7 @@ const classdef = {
     inherit: '', // 親クラス名
     defaultVariableName: '',
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:true,server:true},  // 実装の有無
 
     members:[
       {name:'systemName',type:'string',label:'システム名',default:'auth'},
@@ -448,6 +456,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'string',label:'要求日時',note:'ISO8601拡張形式の文字列',default:'Date.now()'},
@@ -512,6 +521,7 @@ const classdef = {
     inherit: 'authClientKeys',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:true,server:false},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
@@ -598,6 +608,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:true,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス',default:'idb.memberId'},
@@ -634,6 +645,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'number',label:'リクエストを受けたサーバ側日時',note:'',default:'Date.now()'},
@@ -665,6 +677,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:true,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'number',label:'サーバ側処理日時',note:'UNIX時刻',default:'Date.now()'},
@@ -699,6 +712,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'keyGeneratedDateTime',type:'number',label:'UNIX時刻',note:''},
@@ -883,6 +897,7 @@ const classdef = {
       \`\`\`
     `,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
     navi: `<div style="text-align:right">\n\n[設計方針](#authserver_policy) | [実装・使用例](#authserver_example) | [メンバ一覧](#authserver_internal) | [メソッド一覧](#authserver_method)\n\n</div>`,
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'cf',type:'authServerConfig',label:'動作設定変数(config)',note:''},
@@ -1184,6 +1199,7 @@ const classdef = {
     inherit: 'authConfig', // 親クラス名
     defaultVariableName: 'cf',  // 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [
       {name:'memberList',type:'string',label:'memberListシート名',default:'memberList'},
@@ -1275,6 +1291,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:true,server:false},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {
@@ -1430,6 +1447,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
     ],
@@ -1592,6 +1610,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'result',type:'string',label:'処理結果',note:'"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "normal"',default:'"normal"'},
@@ -1626,6 +1645,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:true,server:false},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'number',label:'cryptoClient処理日時',note:'UNIX時刻'},
@@ -1666,6 +1686,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    implement:{client:true,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
@@ -1698,6 +1719,7 @@ const classdef = {
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    implement:{client:true,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'ciphertext',type:'string',label:'暗号化した文字列',note:''},
@@ -1728,6 +1750,7 @@ const classdef = {
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    implement:{client:true,server:false},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'func',type:'string',label:'サーバ側関数名',note:''},
@@ -1759,6 +1782,7 @@ const classdef = {
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
+    implement:{client:true,server:false},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'result',type:'string',label:'処理結果。fatal/warning/normal',note:''},
@@ -1869,6 +1893,7 @@ const classdef = {
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
     navi: `<div style="text-align:right">\n\n[状態遷移図](#member_policy_statediagram) | [状態一覧](#member_policy_statelist) | [状態決定表](#member_policy_decisiontable) | [メンバ一覧](#member_internal) | [メソッド一覧](#member_method)\n\n</div>`,
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',label:'メンバの識別子',note:'メールアドレス',default:'UUID'},
@@ -2528,6 +2553,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'deviceId',type:'string',label:'デバイスの識別子。UUID',note:''},
@@ -2565,6 +2591,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'joiningRequest', type:'number', label:'仮登録要求日時',note:'仮登録要求をサーバ側で受信した日時', default:'Date.now()'},
@@ -2619,6 +2646,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'authority',type:'number',label:'メンバの持つ権限',note:'authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す',default:0},
@@ -2652,6 +2680,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'passcode',type:'string',label:'設定されているパスコード',note:'最初の認証試行で作成'},
@@ -2720,6 +2749,7 @@ const classdef = {
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'entered',type:'string',label:'入力されたパスコード',note:''},
@@ -2879,6 +2909,7 @@ const classdef = {
       this.members = new Members(className,arg.members); // メンバ(インスタンス変数)定義
       this.methods = new Methods(className,arg.methods); // メソッド定義
       this.navi = arg.navi || ''; // {string} クラス内ナビ
+      this.implement = arg.implement || {client:false,server:false};  // 実装の有無
     }
 
     /** Markdownの作成 */
@@ -3305,7 +3336,10 @@ const classdef = {
   Object.keys(cdef).forEach(x => cdef[x].secondary());
 
   // Markdown作成
-  const classList = [`※ "constructorは省略"`,'','| No | クラス名 | 概要 |','| --: | :-- | :-- |'];
+  const classList = [`※ "constructorは省略"`,'',
+    '| No | CL | SV | クラス名 | 概要 |',
+    '| --: | :--: | :--: | :-- | :-- |',
+  ];
   let cnt = 1;
   Object.keys(cdef).forEach(x => {
     // jsonはデバッグ用に出力、割愛可
@@ -3313,10 +3347,12 @@ const classdef = {
     fs.writeFileSync(`${arg.opt.o}/${x}.md`, cdef[x].md());
 
     // クラス一覧・クラス名追加
-    classList.push(`| ${cnt++} | [${x}](${x}.md) | ${cdef[x].label} |`);
+    classList.push(`| ${cnt++} | ${
+      cdef[x].implement.client ? '⭕' : '❌'} |  ${
+      cdef[x].implement.server ? '⭕' : '❌'} | [${x}](${x}.md) | ${cdef[x].label} |`);
     // クラス一覧・メソッド名追加
     Object.keys(cdef[x].methods).filter(m => !/^_/.test(m) && m !== 'className' && m !== 'constructor' ).forEach(method => {
-      classList.push(`| | <span style="padding-left:2rem"><a href="${x}.md#${x.toLowerCase()}_${method.toLowerCase()}">${method}()</a></span> | ${cdef[x].methods[method].label} |`);
+      classList.push(`| | | | <span style="padding-left:2rem"><a href="${x}.md#${x.toLowerCase()}_${method.toLowerCase()}">${method}()</a></span> | ${cdef[x].methods[method].label} |`);
     });
   });
   fs.writeFileSync(`${arg.opt.o}/classList.md`, classList.join('\n'));
