@@ -33,6 +33,7 @@ const classdef = {
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
         // caller {Object[]} 本メソッドを呼び出す{class:クラス名,method:メソッド名}の配列
+        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
         params: [  // {Params} ■メソッド引数の定義■
           // 将来的にオブジェクト化、引数チェックロジックもここに記載
@@ -127,6 +128,7 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
         params: [
           {name:'config',type:'authServerConfig',note:'authServerの動作設定変数'},
@@ -147,6 +149,7 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: '',	// {string} 想定するJavaScriptソース
         lib: ['toLocale'],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
         params: [  // {Param[]} ■メソッド引数の定義■
           {name:'request',type:'authRequest|string',note:'処理要求オブジェクトまたは内発処理名'},
@@ -482,6 +485,7 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
         params: [
           {name:'config',type:'authServerConfig',note:'authServerの動作設定変数'},
@@ -501,6 +505,7 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
         params: [  // {Param[]} ■メソッド引数の定義■
           {name:'e',type:'Error',note:'エラーオブジェクト'},
@@ -3099,6 +3104,7 @@ const classdef = {
       this.source = trimIndent(arg.source || ''); // {string} 想定するJavaScriptソース
       this.lib = arg.lib || []; // {string[]} 本メソッドで使用するライブラリ
       this.caller = arg.caller || []; // {string[]} 本メソッドを呼び出す"クラス.メソッド名"
+      this.rev = arg.rev || 0;  // {number} 0:未着手 1:完了 0<n<1:作成途中
 
       this.params = new Params(className,methodName,arg.params); // 引数
       this.process = trimIndent(arg.process || '');  // {string} 処理手順。markdownで記載
@@ -3370,7 +3376,12 @@ const classdef = {
       cdef[x].implement.server ? '⭕' : '❌'} | [${x}](${x}.md) | ${cdef[x].label} |`);
     // クラス一覧・メソッド名追加
     Object.keys(cdef[x].methods).filter(m => !/^_/.test(m) && m !== 'className' && m !== 'constructor' ).forEach(method => {
-      classList.push(`| | | | <span style="padding-left:2rem"><a href="${x}.md#${x.toLowerCase()}_${method.toLowerCase()}">${method}()</a></span> | ${cdef[x].methods[method].label} |`);
+      const mn = `<span style="padding-left:2rem">${
+        `<span style="color:${cdef[x].methods[method].rev === 0 ? 'red' : (cdef[x].methods[method].rev === 1 ? 'black' : 'orange')}">${cdef[x].methods[method].type}</span> `
+        + `<a href="${x}.md#${x.toLowerCase()}_${method.toLowerCase()}">${method}()</a>`
+      }</span>`;
+      classList.push(`| | | | ${mn} | ${cdef[x].methods[method].label} |`);
+      //classList.push(`| | | | <span style="padding-left:2rem"><a href="${x}.md#${x.toLowerCase()}_${method.toLowerCase()}">${method}()</a></span> | ${cdef[x].methods[method].label} |`);
     });
   });
   fs.writeFileSync(`${arg.opt.o}/classList.md`, classList.join('\n'));
