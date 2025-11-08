@@ -3305,15 +3305,19 @@ const classdef = {
   Object.keys(cdef).forEach(x => cdef[x].secondary());
 
   // Markdown作成
-  const classList = ['| No | クラス名 | 概要 |','| --: | :-- | :-- |'];
+  const classList = [`※ "constructorは省略"`,'','| No | クラス名 | 概要 |','| --: | :-- | :-- |'];
   let cnt = 1;
   Object.keys(cdef).forEach(x => {
     // jsonはデバッグ用に出力、割愛可
     fs.writeFileSync(`${arg.opt.o}/${x}.json`, JSON.stringify(cdef[x],null,2));
     fs.writeFileSync(`${arg.opt.o}/${x}.md`, cdef[x].md());
 
-    // クラス一覧に追加
+    // クラス一覧・クラス名追加
     classList.push(`| ${cnt++} | [${x}](${x}.md) | ${cdef[x].label} |`);
+    // クラス一覧・メソッド名追加
+    Object.keys(cdef[x].methods).filter(m => !/^_/.test(m) && m !== 'className' && m !== 'constructor' ).forEach(method => {
+      classList.push(`| | <span style="padding-left:2rem"><a href="${x}.md#${x.toLowerCase()}_${method.toLowerCase()}">${method}()</a></span> | ${cdef[x].methods[method].label} |`);
+    });
   });
   fs.writeFileSync(`${arg.opt.o}/classList.md`, classList.join('\n'));
 
