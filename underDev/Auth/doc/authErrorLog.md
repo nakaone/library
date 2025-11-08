@@ -41,6 +41,9 @@ authServerのエラーログ
 ### <span id="autherrorlog_constructor_caller">📞 呼出元</span>
 
 - [authServer.exec()](authServer.md#autherrorlog_constructor)
+- [authServer.listNotYetDecided()](authServer.md#autherrorlog_constructor)
+- [authServer.resetSPkey()](authServer.md#autherrorlog_constructor)
+- [authServer.setupEnvironment()](authServer.md#autherrorlog_constructor)
 
 ### <span id="autherrorlog_constructor_param">📥 引数</span>
 
@@ -74,6 +77,9 @@ authServerのエラーログ
 ### <span id="autherrorlog_log_caller">📞 呼出元</span>
 
 - [authServer.exec()](authServer.md#autherrorlog_log)
+- [authServer.listNotYetDecided()](authServer.md#autherrorlog_log)
+- [authServer.resetSPkey()](authServer.md#autherrorlog_log)
+- [authServer.setupEnvironment()](authServer.md#autherrorlog_log)
 
 ### <span id="autherrorlog_log_param">📥 引数</span>
 

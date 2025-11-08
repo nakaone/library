@@ -375,12 +375,15 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
         params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+          {name:'config',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
         ],
 
-        process: ``,	// {string} 処理手順。markdownで記載
+        process: `
+          - configの値をメンバに格納
+        `,	// {string} 処理手順。markdownで記載
 
         returns: {authClientConfig:{}},
       },
@@ -1084,7 +1087,7 @@ const classdef = {
         // エラー時はnullを返す
       },
       listNotYetDecided: {
-        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        type: 'static',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: '加入認否未定メンバのリストアップと認否入力',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
@@ -1095,6 +1098,15 @@ const classdef = {
         ],
 
         process: `
+          - ログ出力準備
+            - インスタンス変数"audit"に監査ログインスタンスを作成(audit = new [authAuditLog()](authAuditLog.md#authauditlog_constructor))
+            - インスタンス変数"error"にエラーログインスタンスを作成(error = new [authErrorLog()](authErrorLog.md#autherrorlog_constructor))
+
+          ■ 正常終了時処理
+          - [audit.log](authAuditLog.md#authauditlog_log)で監査ログ出力
+
+          ■ 異常終了時処理(catch句内の処理)
+          - [error.log](authErrorLog.md#autherrorlog_log)でエラーログ出力
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
@@ -1148,7 +1160,7 @@ const classdef = {
         returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
       resetSPkey: {
-        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        type: 'static',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: '【緊急時用】authServerの鍵ペアを更新',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
@@ -1159,6 +1171,15 @@ const classdef = {
         ],
 
         process: `
+          - ログ出力準備
+            - インスタンス変数"audit"に監査ログインスタンスを作成(audit = new [authAuditLog()](authAuditLog.md#authauditlog_constructor))
+            - インスタンス変数"error"にエラーログインスタンスを作成(error = new [authErrorLog()](authErrorLog.md#autherrorlog_constructor))
+
+          ■ 正常終了時処理
+          - [audit.log](authAuditLog.md#authauditlog_log)で監査ログ出力
+
+          ■ 異常終了時処理(catch句内の処理)
+          - [error.log](authErrorLog.md#autherrorlog_log)でエラーログ出力
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
@@ -1180,7 +1201,7 @@ const classdef = {
         returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
       setupEnvironment: {
-        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        type: 'static',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
         label: 'GAS初回実行時の権限確認を含む初期環境の整備',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: `
           - 「インストール型トリガー」認可トークン失効時も本メソッドを実行
@@ -1193,6 +1214,15 @@ const classdef = {
         ],
 
         process: `
+          - ログ出力準備
+            - インスタンス変数"audit"に監査ログインスタンスを作成(audit = new [authAuditLog()](authAuditLog.md#authauditlog_constructor))
+            - インスタンス変数"error"にエラーログインスタンスを作成(error = new [authErrorLog()](authErrorLog.md#autherrorlog_constructor))
+
+          ■ 正常終了時処理
+          - [audit.log](authAuditLog.md#authauditlog_log)で監査ログ出力
+
+          ■ 異常終了時処理(catch句内の処理)
+          - [error.log](authErrorLog.md#autherrorlog_log)でエラーログ出力
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
@@ -3375,7 +3405,9 @@ const classdef = {
       cdef[x].implement.client ? '⭕' : '❌'} |  ${
       cdef[x].implement.server ? '⭕' : '❌'} | [${x}](${x}.md) | ${cdef[x].label} |`);
     // クラス一覧・メソッド名追加
-    Object.keys(cdef[x].methods).filter(m => !/^_/.test(m) && m !== 'className' && m !== 'constructor' ).forEach(method => {
+    Object.keys(cdef[x].methods).filter(m => !/^_/.test(m) && m !== 'className' )
+    //.filter( m => m !== 'constructor' )
+    .forEach(method => {
       const mn = `<span style="padding-left:2rem">${
         `<span style="color:${cdef[x].methods[method].rev === 0 ? 'red' : (cdef[x].methods[method].rev === 1 ? 'black' : 'orange')}">${cdef[x].methods[method].type}</span> `
         + `<a href="${x}.md#${x.toLowerCase()}_${method.toLowerCase()}">${method}()</a>`

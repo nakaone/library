@@ -102,13 +102,13 @@ const menu22 = () => asv.resetSPkey();
 | [constructor](#authserver_constructor) | private | コンストラクタ |
 | [callFunction](#authserver_callfunction) | public | authServerConfig.funcを参照し、該当関数を実行 |
 | [exec](#authserver_exec) | public | doPostから呼ばれ、authClientからの要求を処理 |
-| [listNotYetDecided](#authserver_listnotyetdecided) | public | 加入認否未定メンバのリストアップと認否入力 |
+| [listNotYetDecided](#authserver_listnotyetdecided) | static | 加入認否未定メンバのリストアップと認否入力 |
 | [loginTrial](#authserver_logintrial) | public | ログイン要求を処理し、試行結果をMemberTrialに記録 |
 | [membershipRequest](#authserver_membershiprequest) | public | 新規メンバ加入要求を登録、管理者へメール通知。 |
 | [notifyAcceptance](#authserver_notifyacceptance) | public | 加入審査状況の問合せへの回答 |
-| [resetSPkey](#authserver_resetspkey) | public | 【緊急時用】authServerの鍵ペアを更新 |
+| [resetSPkey](#authserver_resetspkey) | static | 【緊急時用】authServerの鍵ペアを更新 |
 | [responseSPkey](#authserver_responsespkey) | public | クライアントからのSPkey要求への対応 |
-| [setupEnvironment](#authserver_setupenvironment) | public | GAS初回実行時の権限確認を含む初期環境の整備 |
+| [setupEnvironment](#authserver_setupenvironment) | static | GAS初回実行時の権限確認を含む初期環境の整備 |
 | [updateCPkey](#authserver_updatecpkey) | public | CPkey更新処理 |
 
 ## <span id="authserver_constructor">🧱 <a href="#authserver_method">authServer.constructor()</a></span>
@@ -305,7 +305,15 @@ exec(request){
 
 ### <span id="authserver_listnotyetdecided_process">🧾 処理手順</span>
 
+- ログ出力準備
+  - インスタンス変数"audit"に監査ログインスタンスを作成(audit = new [authAuditLog()](authAuditLog.md#authauditlog_constructor))
+  - インスタンス変数"error"にエラーログインスタンスを作成(error = new [authErrorLog()](authErrorLog.md#autherrorlog_constructor))
 
+■ 正常終了時処理
+- [audit.log](authAuditLog.md#authauditlog_log)で監査ログ出力
+
+■ 異常終了時処理(catch句内の処理)
+- [error.log](authErrorLog.md#autherrorlog_log)でエラーログ出力
 
 ### <span id="authserver_listnotyetdecided_returns">📤 戻り値</span>
 
@@ -411,7 +419,15 @@ Member.setMember()に代替？
 
 ### <span id="authserver_resetspkey_process">🧾 処理手順</span>
 
+- ログ出力準備
+  - インスタンス変数"audit"に監査ログインスタンスを作成(audit = new [authAuditLog()](authAuditLog.md#authauditlog_constructor))
+  - インスタンス変数"error"にエラーログインスタンスを作成(error = new [authErrorLog()](authErrorLog.md#autherrorlog_constructor))
 
+■ 正常終了時処理
+- [audit.log](authAuditLog.md#authauditlog_log)で監査ログ出力
+
+■ 異常終了時処理(catch句内の処理)
+- [error.log](authErrorLog.md#autherrorlog_log)でエラーログ出力
 
 ### <span id="authserver_resetspkey_returns">📤 戻り値</span>
 
@@ -469,7 +485,15 @@ GAS初回実行時の権限確認を含む初期環境の整備
 
 ### <span id="authserver_setupenvironment_process">🧾 処理手順</span>
 
+- ログ出力準備
+  - インスタンス変数"audit"に監査ログインスタンスを作成(audit = new [authAuditLog()](authAuditLog.md#authauditlog_constructor))
+  - インスタンス変数"error"にエラーログインスタンスを作成(error = new [authErrorLog()](authErrorLog.md#autherrorlog_constructor))
 
+■ 正常終了時処理
+- [audit.log](authAuditLog.md#authauditlog_log)で監査ログ出力
+
+■ 異常終了時処理(catch句内の処理)
+- [error.log](authErrorLog.md#autherrorlog_log)でエラーログ出力
 
 ### <span id="authserver_setupenvironment_returns">📤 戻り値</span>
 

@@ -42,11 +42,11 @@ authConfigを継承
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
-| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+| config | ⭕ | Object | {} | ユーザ指定の設定値 | 
 
 ### <span id="authclientconfig_constructor_process">🧾 処理手順</span>
 
-
+- configの値をメンバに格納
 
 ### <span id="authclientconfig_constructor_returns">📤 戻り値</span>
 

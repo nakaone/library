@@ -42,6 +42,9 @@ authServerの監査ログ
 ### <span id="authauditlog_constructor_caller">📞 呼出元</span>
 
 - [authServer.exec()](authServer.md#authauditlog_constructor)
+- [authServer.listNotYetDecided()](authServer.md#authauditlog_constructor)
+- [authServer.resetSPkey()](authServer.md#authauditlog_constructor)
+- [authServer.setupEnvironment()](authServer.md#authauditlog_constructor)
 
 ### <span id="authauditlog_constructor_param">📥 引数</span>
 
@@ -77,6 +80,9 @@ authServerの監査ログ
 ### <span id="authauditlog_log_caller">📞 呼出元</span>
 
 - [authServer.exec()](authServer.md#authauditlog_log)
+- [authServer.listNotYetDecided()](authServer.md#authauditlog_log)
+- [authServer.resetSPkey()](authServer.md#authauditlog_log)
+- [authServer.setupEnvironment()](authServer.md#authauditlog_log)
 - [Member.reissuePasscode()](Member.md#authauditlog_log)
 - [Member.removeMember()](Member.md#authauditlog_log)
 - [Member.updateCPkey()](Member.md#authauditlog_log)
