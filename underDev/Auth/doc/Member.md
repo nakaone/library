@@ -226,7 +226,7 @@ stateDiagram-v2
     | requestId | string | UUID | — |
     | timestamp | number | Date.now() | — |
     | func | string | 【必須】 | **"::passcode::"** |
-    | arguments | any[] | 【必須】 | **入力されたパスコード** |
+    | arguments | any[] | [] | **入力されたパスコード** |
 - デバイス状態チェック
   - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
   - request.deviceIdで対象デバイスを特定、「試行中」以外は戻り値「非試行中」を返して終了
@@ -412,7 +412,7 @@ stateDiagram-v2
     | requestId | string | UUID | — |
     | timestamp | number | Date.now() | — |
     | func | string | 【必須】 | **"::reissue::"** |
-    | arguments | any[] | 【必須】 | — |
+    | arguments | any[] | [] | — |
 - デバイス状態チェック
   - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
   - request.deviceIdで対象デバイスを特定、「試行中」以外は戻り値「非試行中」を返して終了
@@ -703,7 +703,7 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
     | requestId | string | UUID | — |
     | timestamp | number | Date.now() | — |
     | func | string | 【必須】 | **"::updateCPkey::"** |
-    | arguments | any[] | 【必須】 | **更新後CPkey** |
+    | arguments | any[] | [] | **更新後CPkey** |
   - 更新後CPkeyがRSAの公開鍵形式か(PEMフォーマットなど)チェック、不適合なら戻り値「鍵形式不正」を返して終了
 - メンバの状態チェック
   - request.memberIdを基に[getMemberメソッド](#member_getmember)を実行

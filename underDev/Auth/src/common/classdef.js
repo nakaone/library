@@ -638,7 +638,7 @@ const classdef = {
       {name:'requestId',type:'string',label:'要求の識別子',note:'UUID',default:'UUID'},
       {name:'timestamp',type:'number',label:'要求日時',note:'UNIX時刻',default:'Date.now()'},
       {name:'func',type:'string',label:'サーバ側関数名',note:''},
-      {name:'arguments',type:'any[]',label:'サーバ側関数に渡す引数の配列',note:''},
+      {name:'arguments',type:'any[]',label:'サーバ側関数に渡す引数の配列',note:'',default:'[]'},
     ],
 
     methods: {
@@ -648,12 +648,20 @@ const classdef = {
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
         params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値'},
         ],
 
-        process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
+        process: `
+          - 引数チェック
+            - arg.func未指定の場合"new Error('func is not specified')"を返して終了
+          - 必須項目の設定
+            - "this.func = arg.func"
+            - "this.arguments = arg.arguments || []"
+          - その他項目：メンバと引数両方にある項目はargの値をメンバにセット
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         returns: {authRequest:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },

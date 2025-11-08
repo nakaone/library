@@ -186,7 +186,7 @@ CPkey残有効期間をチェック
     | requestId | string | UUID | — |
     | timestamp | number | Date.now() | — |
     | func | string | 【必須】 | **LocalRequest.func** |
-    | arguments | any[] | 【必須】 | **LocalRequest.arguments** |
+    | arguments | any[] | [] | **LocalRequest.arguments** |
 - [crypto.fetch](cryptoClient.md#cryptoclient_fetch)に処理対象を渡して呼び出し
 - 以降、処理分岐。authServerの回答種別整理を待って記載
 

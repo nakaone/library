@@ -88,7 +88,7 @@ async function Example() {
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authIndexedDB.md#authindexeddb_getprop">getProp()</a></span> | IndexedDBの値を取得、インスタンス変数に格納 |
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authIndexedDB.md#authindexeddb_setprop">setProp()</a></span> | IndexedDBの値をインスタンス変数で更新(生成) |
 | 8 | ⭕ |  ⭕ | [authRequest](authRequest.md) | 暗号化前の処理要求 |
-| | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authRequest.md#authrequest_constructor">constructor()</a></span> | コンストラクタ |
+| | | | <span style="padding-left:2rem"><span style="color:black">private</span> <a href="authRequest.md#authrequest_constructor">constructor()</a></span> | コンストラクタ |
 | 9 | ❌ |  ⭕ | [authRequestLog](authRequestLog.md) | 重複チェック用のリクエスト履歴 |
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authRequestLog.md#authrequestlog_constructor">constructor()</a></span> | コンストラクタ |
 | 10 | ⭕ |  ⭕ | [authResponse](authResponse.md) | 暗号化前の処理結果 |

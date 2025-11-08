@@ -24,7 +24,7 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
 | requestId | ⭕ | string | UUID | 要求の識別子 | UUID | 
 | timestamp | ⭕ | number | Date.now() | 要求日時 | UNIX時刻 | 
 | func | ❌ | string | — | サーバ側関数名 |  | 
-| arguments | ❌ | any[] | — | サーバ側関数に渡す引数の配列 |  | 
+| arguments | ⭕ | any[] | [] | サーバ側関数に渡す引数の配列 |  | 
 
 
 🧱 <span id="authrequest_method">authRequest メソッド一覧</span>
@@ -46,11 +46,16 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
-| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+| arg | ❌ | Object | — | ユーザ指定の設定値 | 
 
 ### <span id="authrequest_constructor_process">🧾 処理手順</span>
 
-
+- 引数チェック
+  - arg.func未指定の場合"new Error('func is not specified')"を返して終了
+- 必須項目の設定
+  - "this.func = arg.func"
+  - "this.arguments = arg.arguments || []"
+- その他項目：メンバと引数両方にある項目はargの値をメンバにセット
 
 ### <span id="authrequest_constructor_returns">📤 戻り値</span>
 
@@ -63,4 +68,4 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
     | requestId | string | UUID | — |
     | timestamp | number | Date.now() | — |
     | func | string | 【必須】 | — |
-    | arguments | any[] | 【必須】 | — |
+    | arguments | any[] | [] | — |
