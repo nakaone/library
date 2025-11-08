@@ -86,13 +86,13 @@ const menu22 = () => asv.resetSPkey();
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-| cf | ❌ | [authServerConfig](authServerConfig.md#authserverconfig_internal) | — | 動作設定変数(config) |  | 
-| prop | ❌ | [authScriptProperties](authScriptProperties.md#authscriptproperties_internal) | — | 鍵ペア等を格納 |  | 
-| crypto | ❌ | [cryptoServer](cryptoServer.md#cryptoserver_internal) | — | 暗号化・復号用インスタンス |  | 
-| member | ❌ | [Member](Member.md#member_internal) | — | 対象メンバのインスタンス |  | 
-| audit | ❌ | [authAuditLog](authAuditLog.md#authauditlog_internal) | — | 監査ログのインスタンス |  | 
-| error | ❌ | [authErrorLog](authErrorLog.md#autherrorlog_internal) | — | エラーログのインスタンス |  | 
-| pv | ❌ | Object | — | authServer内共通変数 |  | 
+| cf | ⭕ | [authServerConfig](authServerConfig.md#authserverconfig_internal) | null | 動作設定変数(config) |  | 
+| prop | ⭕ | [authScriptProperties](authScriptProperties.md#authscriptproperties_internal) | null | 鍵ペア等を格納 |  | 
+| crypto | ⭕ | [cryptoServer](cryptoServer.md#cryptoserver_internal) | null | 暗号化・復号用インスタンス |  | 
+| member | ⭕ | [Member](Member.md#member_internal) | null | 対象メンバのインスタンス |  | 
+| audit | ⭕ | [authAuditLog](authAuditLog.md#authauditlog_internal) | null | 監査ログのインスタンス |  | 
+| error | ⭕ | [authErrorLog](authErrorLog.md#autherrorlog_internal) | null | エラーログのインスタンス |  | 
+| pv | ⭕ | Object | {} | authServer内共通変数 |  | 
 
 
 🧱 <span id="authserver_method">authServer メソッド一覧</span>
@@ -129,26 +129,26 @@ const menu22 = () => asv.resetSPkey();
   - [authServer](authServer.md#authserver_internal): サーバ側auth中核クラス
     | 項目名 | データ型 | 生成時 | 設定内容 |
     | :-- | :-- | :-- | :-- |
-    | cf | authServerConfig | 【必須】 | **new [authServerConfig](authServerConfig.md#authserverconfig_constructor)(config)** |
-    | prop | authScriptProperties | 【必須】 | **new [authScriptProperties](authScriptProperties.md#authscriptproperties_constructor)(config)** |
-    | crypto | cryptoServer | 【必須】 | **new [cryptoServer](cryptoServer.md#cryptoserver_constructor)(config)** |
-    | member | Member | 【必須】 | **new [Member](Member.md#member_constructor)(config)** |
-    | audit | authAuditLog | 【必須】 | — |
-    | error | authErrorLog | 【必須】 | — |
-    | pv | Object | 【必須】 | **空オブジェクト** |
+    | cf | authServerConfig | null | **new [authServerConfig](authServerConfig.md#authserverconfig_constructor)(config)** |
+    | prop | authScriptProperties | null | **new [authScriptProperties](authScriptProperties.md#authscriptproperties_constructor)(config)** |
+    | crypto | cryptoServer | null | **new [cryptoServer](cryptoServer.md#cryptoserver_constructor)(config)** |
+    | member | Member | null | **new [Member](Member.md#member_constructor)(config)** |
+    | audit | authAuditLog | null | — |
+    | error | authErrorLog | null | — |
+    | pv | Object | {} | **空オブジェクト** |
 
 ### <span id="authserver_constructor_returns">📤 戻り値</span>
 
   - [authServer](authServer.md#authserver_internal): サーバ側auth中核クラス
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
-    | cf | authServerConfig | 【必須】 | — |
-    | prop | authScriptProperties | 【必須】 | — |
-    | crypto | cryptoServer | 【必須】 | — |
-    | member | Member | 【必須】 | — |
-    | audit | authAuditLog | 【必須】 | — |
-    | error | authErrorLog | 【必須】 | — |
-    | pv | Object | 【必須】 | — |
+    | cf | authServerConfig | null | — |
+    | prop | authScriptProperties | null | — |
+    | crypto | cryptoServer | null | — |
+    | member | Member | null | — |
+    | audit | authAuditLog | null | — |
+    | error | authErrorLog | null | — |
+    | pv | Object | {} | — |
 
 ## <span id="authserver_callfunction">🧱 <a href="#authserver_method">authServer.callFunction()</a></span>
 
@@ -228,6 +228,10 @@ exec(request){
 
 ### <span id="authserver_exec_process">🧾 処理手順</span>
 
+- ログ出力準備
+  - インスタンス変数"audit"に監査ログインスタンスを作成(audit = new [authAuditLog()](authAuditLog.md#authauditlog_constructor))
+  - インスタンス変数"error"にエラーログインスタンスを作成(error = new [authErrorLog()](authErrorLog.md#autherrorlog_constructor))
+
 ■ 中核処理(coreブロック)
 
 - 復号・署名検証
@@ -276,8 +280,10 @@ exec(request){
 
 
 ■ 正常終了時処理
+- [audit.log](authAuditLog.md#authauditlog_log)で監査ログ出力
 
 ■ 異常終了時処理(catch句内の処理)
+- [error.log](authErrorLog.md#autherrorlog_log)でエラーログ出力
 
 ### <span id="authserver_exec_returns">📤 戻り値</span>
 

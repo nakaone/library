@@ -10,8 +10,8 @@
 
 authServerの監査ログ
 
-クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照するため)<br>
-暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
+- 監査ログ出力が必要なメソッドの冒頭でインスタンス化、処理開始時刻等を記録
+- 出力時にlogメソッドを呼び出して処理時間を計算、シート出力
 
 ### 🧩 <span id="authauditlog_internal">内部構成</span>
 
@@ -41,7 +41,7 @@ authServerの監査ログ
 
 ### <span id="authauditlog_constructor_caller">📞 呼出元</span>
 
-- [authServer.constructor()](authServer.md#authauditlog_constructor)
+- [authServer.exec()](authServer.md#authauditlog_constructor)
 
 ### <span id="authauditlog_constructor_param">📥 引数</span>
 
@@ -76,6 +76,7 @@ authServerの監査ログ
 
 ### <span id="authauditlog_log_caller">📞 呼出元</span>
 
+- [authServer.exec()](authServer.md#authauditlog_log)
 - [Member.reissuePasscode()](Member.md#authauditlog_log)
 - [Member.removeMember()](Member.md#authauditlog_log)
 - [Member.updateCPkey()](Member.md#authauditlog_log)
@@ -85,15 +86,24 @@ authServerの監査ログ
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
-| arg | ❌ | [authRequest](authRequest.md#authrequest_internal) \| string | — | 処理要求オブジェクトまたは内発処理名 | 
+| request | ❌ | [authRequest](authRequest.md#authrequest_internal) \| string | — | 処理要求オブジェクトまたは内発処理名 | 
+| response | ❌ | [authResponse](authResponse.md#authresponse_internal) | — | 処理結果 | 
 
 ### <span id="authauditlog_log_process">🧾 処理手順</span>
 
-- 引数がObjectの場合：func,result,noteがあればthisに上書き
-- 引数がstringの場合：this.funcにargをセット
-- 所要時間の計算(this.duration = Date.now() - this.timestamp)
-- timestampはISO8601拡張形式の文字列に変更
-- シートの末尾行にauthAuditLogオブジェクトを追加
+- メンバに以下を設定
+
+  - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
+    | 項目名 | データ型 | 生成時 | 設定内容 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | **toLocale(this.timestamp)(ISO8601拡張形式)** |
+    | duration | number | 【必須】 | **Date.now() - this.timestamp** |
+    | memberId | string | 【必須】 | **request.memberId** |
+    | deviceId | string | 【任意】 | **request.deviceId** |
+    | func | string | 【必須】 | **request.func** |
+    | result | string | normal | **response.result** |
+    | note | string | 【必須】 | **this.note + response.message** |
+- メンバを"[authServerConfig](authServerConfig.md#authserverconfig_internal).auditLog"シートの末尾に出力
 
 ### <span id="authauditlog_log_returns">📤 戻り値</span>
 

@@ -76,7 +76,7 @@ async function Example() {
 | 4 | ⭕ |  ❌ | [authClientKeys](authClientKeys.md) | クライアント側鍵ペアの生成 |
 | 5 | ⭕ |  ⭕ | [authConfig](authConfig.md) | authClient/authServer共通設定値 |
 | 6 | ❌ |  ⭕ | [authErrorLog](authErrorLog.md) | authServerのエラーログ |
-| | | | <span style="padding-left:2rem"><a href="authErrorLog.md#autherrorlog_log">log()</a></span> | エラーログをシートに出力 |
+| | | | <span style="padding-left:2rem"><a href="authErrorLog.md#autherrorlog_log">log()</a></span> | エラーログシートにエラー情報を追記 |
 | 7 | ⭕ |  ❌ | [authIndexedDB](authIndexedDB.md) | クライアントのIndexedDB |
 | | | | <span style="padding-left:2rem"><a href="authIndexedDB.md#authindexeddb_getprop">getProp()</a></span> | IndexedDBの値を取得、インスタンス変数に格納 |
 | | | | <span style="padding-left:2rem"><a href="authIndexedDB.md#authindexeddb_setprop">setProp()</a></span> | IndexedDBの値をインスタンス変数で更新(生成) |

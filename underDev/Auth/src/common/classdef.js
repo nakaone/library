@@ -101,8 +101,8 @@ const classdef = {
   authAuditLog: {
     label: 'authServerの監査ログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `
-      クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照するため)<br>
-      暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
+      - 監査ログ出力が必要なメソッドの冒頭でインスタンス化、処理開始時刻等を記録
+      - 出力時にlogメソッドを呼び出して処理時間を計算、シート出力
     `,	// {string} クラスとしての補足説明。概要欄に記載
     policy: ``,   // {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
@@ -146,18 +146,25 @@ const classdef = {
         label: '監査ログシートに処理要求を追記',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
         source: '',	// {string} 想定するJavaScriptソース
-        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        lib: ['toLocale'],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
         params: [  // {Param[]} ■メソッド引数の定義■
-          {name:'arg',type:'authRequest|string',note:'処理要求オブジェクトまたは内発処理名'},
+          {name:'request',type:'authRequest|string',note:'処理要求オブジェクトまたは内発処理名'},
+          {name:'response',type:'authResponse',note:'処理結果'},
         ],
 
         process: `
-          - 引数がObjectの場合：func,result,noteがあればthisに上書き
-          - 引数がstringの場合：this.funcにargをセット
-          - 所要時間の計算(this.duration = Date.now() - this.timestamp)
-          - timestampはISO8601拡張形式の文字列に変更
-          - シートの末尾行にauthAuditLogオブジェクトを追加
+          - メンバに以下を設定
+            <evaluate>comparisonTable({typeName:'authAuditLog',pattern:{'設定内容':{assign: {
+              duration: 'Date.now() - this.timestamp',
+              timestamp: 'toLocale(this.timestamp)(ISO8601拡張形式)',
+              memberId: 'request.memberId',
+              deviceId: 'request.deviceId',
+              func: 'request.func',
+              result: 'response.result',
+              note: 'this.note + response.message',
+            }}}},'  ')</evaluate>
+          - メンバを"[authServerConfig](authServerConfig.md#authserverconfig_internal).auditLog"シートの末尾に出力
         `,	// {string} 処理手順。markdownで記載
 
         returns: {authAuditLog:{
@@ -450,8 +457,9 @@ const classdef = {
   authErrorLog: {
     label: 'authServerのエラーログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `
-      クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照するため)<br>
-      暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。`,	// {string} クラスとしての補足説明。概要欄に記載
+      - エラーログ出力の可能性があるメソッドの冒頭でインスタンス化、処理開始時刻等を記録
+      - 出力時にlogメソッドを呼び出して処理時間を計算、シート出力
+    `,	// {string} クラスとしての補足説明。概要欄に記載
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
@@ -464,7 +472,7 @@ const classdef = {
       {name:'deviceId',type:'string',label:'デバイスの識別子',note:''},
       {name:'result',type:'string',label:'サーバ側処理結果',note:'fatal/warning/normal',default:'fatal'},
       {name:'message',type:'string',label:'サーバ側からのエラーメッセージ',note:'normal時は`undefined`',isOpt:true},
-      {name:'stackTrace',type:'string',label:'エラー発生時のスタックトレース',note:'本項目は管理者への通知メール等、シート以外には出力不可',isOpt:true},
+      {name:'stack',type:'string',label:'エラー発生時のスタックトレース',note:'本項目は管理者への通知メール等、シート以外には出力不可',isOpt:true},
     ],
 
     methods: {
@@ -480,30 +488,36 @@ const classdef = {
         ],
 
         process: `
-          - [authServerConfig](authServerConfig.md#authserverconfig_internal).auditLogシートが無ければ作成
+          - [authServerConfig](authServerConfig.md#authserverconfig_internal).errorLogシートが無ければ作成
+          - 引数の内、authErrorLogと同一メンバ名があればthisに設定
+          - timestampに現在日時を設定
         `,	// {string} 処理手順。markdownで記載
 
         returns: {authErrorLog:{}},
       },
       log: {
         type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: 'エラーログをシートに出力',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        label: 'エラーログシートにエラー情報を追記',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
         note: ``,	// {string} 注意事項。markdownで記載
         source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
         lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
 
         params: [  // {Param[]} ■メソッド引数の定義■
           {name:'e',type:'Error',note:'エラーオブジェクト'},
+          {name:'response',type:'authResponse',note:'処理結果'},
         ],
 
         process: `
-          - this.message = e.message
-          - this.stackTrace = e.stack
-          - e.messageがJSON化可能な場合
-            - e.messageをオブジェクト化してobjに代入
-            - this.result = obj.result
-            - this.message = obj.message
-          - シートの末尾行にauthErrorLogオブジェクトを追加
+          - メンバに以下を設定
+            <evaluate>comparisonTable({typeName:'authErrorLog',pattern:{'設定内容':{assign: {
+              timestamp: 'toLocale(this.timestamp)(ISO8601拡張形式)',
+              memberId: 'response.request.memberId',
+              deviceId: 'response.request.deviceId',
+              result: 'response.result',
+              message: 'response.message',
+              stack: 'e.stack',
+            }}}},'  ')</evaluate>
+          - [authServerConfig](authServerConfig.md#authserverconfig_internal).errorLogシートの末尾行にauthErrorLogオブジェクトを追加
         `,	// {string} 処理手順。markdownで記載
 
         returns: {authErrorLog:{
@@ -551,7 +565,6 @@ const classdef = {
         process: `
           - IndexedDBに[authClientConfig](authClientConfig.md#authclientconfig_internal).systemNameを持つキーがあれば取得、メンバ変数に格納。
           - 無ければ新規に生成し、IndexedDBに格納。
-          - authClientConfig.auditLogシートが無ければ作成
           - 引数の内、authIndexedDBと同一メンバ名があればthisに設定
           - 引数にnoteがあればthis.noteに設定
           - timestampに現在日時を設定
@@ -900,13 +913,13 @@ const classdef = {
     implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
-      {name:'cf',type:'authServerConfig',label:'動作設定変数(config)',note:''},
-      {name:'prop',type:'authScriptProperties',label:'鍵ペア等を格納',note:''},
-      {name:'crypto',type:'cryptoServer',label:'暗号化・復号用インスタンス',note:''},
-      {name:'member',type:'Member',label:'対象メンバのインスタンス',note:''},
-      {name:'audit',type:'authAuditLog',label:'監査ログのインスタンス',note:''},
-      {name:'error',type:'authErrorLog',label:'エラーログのインスタンス',note:''},
-      {name:'pv',type:'Object',label:'authServer内共通変数',note:''},
+      {name:'cf',type:'authServerConfig',label:'動作設定変数(config)',note:'',default:'null'},
+      {name:'prop',type:'authScriptProperties',label:'鍵ペア等を格納',note:'',default:'null'},
+      {name:'crypto',type:'cryptoServer',label:'暗号化・復号用インスタンス',note:'',default:'null'},
+      {name:'member',type:'Member',label:'対象メンバのインスタンス',note:'',default:'null'},
+      {name:'audit',type:'authAuditLog',label:'監査ログのインスタンス',note:'',default:'null'},
+      {name:'error',type:'authErrorLog',label:'エラーログのインスタンス',note:'',default:'null'},
+      {name:'pv',type:'Object',label:'authServer内共通変数',note:'',default:'{}'},
     ],
 
     methods: { // {Method} ■メソッド定義■
@@ -928,8 +941,6 @@ const classdef = {
               prop: 'new [authScriptProperties](authScriptProperties.md#authscriptproperties_constructor)(config)',
               crypto: 'new [cryptoServer](cryptoServer.md#cryptoserver_constructor)(config)',
               member: 'new [Member](Member.md#member_constructor)(config)',
-              auditLog: 'new [authAuditLog](authAuditLog.md#authauditlog_constructor)()',
-              errorLog: 'new [authErrorLog](authErrorLog.md#autherrorlog_constructor)()',
               pv: '空オブジェクト',
             }}}},'  ')</evaluate>
         `,	// {string} 処理手順。markdownで記載
@@ -1005,6 +1016,10 @@ const classdef = {
         ],
 
         process: `
+          - ログ出力準備
+            - インスタンス変数"audit"に監査ログインスタンスを作成(audit = new [authAuditLog()](authAuditLog.md#authauditlog_constructor))
+            - インスタンス変数"error"にエラーログインスタンスを作成(error = new [authErrorLog()](authErrorLog.md#autherrorlog_constructor))
+
           ■ 中核処理(coreブロック)
 
           - 復号・署名検証
@@ -1053,8 +1068,11 @@ const classdef = {
 
 
           ■ 正常終了時処理
+          - [audit.log](authAuditLog.md#authauditlog_log)で監査ログ出力
 
           ■ 異常終了時処理(catch句内の処理)
+          - [error.log](authErrorLog.md#autherrorlog_log)でエラーログ出力
+
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         returns: {encryptedResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合

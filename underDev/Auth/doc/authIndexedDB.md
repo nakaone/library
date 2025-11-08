@@ -53,7 +53,6 @@ authClientKeysを継承した、クライアントのIndexedDBを操作するク
 
 - IndexedDBに[authClientConfig](authClientConfig.md#authclientconfig_internal).systemNameを持つキーがあれば取得、メンバ変数に格納。
 - 無ければ新規に生成し、IndexedDBに格納。
-- authClientConfig.auditLogシートが無ければ作成
 - 引数の内、authIndexedDBと同一メンバ名があればthisに設定
 - 引数にnoteがあればthis.noteに設定
 - timestampに現在日時を設定

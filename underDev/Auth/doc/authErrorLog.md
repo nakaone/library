@@ -10,8 +10,8 @@
 
 authServerのエラーログ
 
-クラスとして定義、authServer内でインスタンス化(∵authServerConfigを参照するため)<br>
-暗号化前encryptedRequest.memberId/deviceIdを基にインスタンス作成、その後resetメソッドで暗号化成功時に確定したauthRequest.memberId/deviceIdで上書きする想定。
+- エラーログ出力の可能性があるメソッドの冒頭でインスタンス化、処理開始時刻等を記録
+- 出力時にlogメソッドを呼び出して処理時間を計算、シート出力
 
 ### 🧩 <span id="autherrorlog_internal">内部構成</span>
 
@@ -24,7 +24,7 @@ authServerのエラーログ
 | deviceId | ❌ | string | — | デバイスの識別子 |  | 
 | result | ⭕ | string | fatal | サーバ側処理結果 | fatal/warning/normal | 
 | message | ⭕ | string | — | サーバ側からのエラーメッセージ | normal時は`undefined` | 
-| stackTrace | ⭕ | string | — | エラー発生時のスタックトレース | 本項目は管理者への通知メール等、シート以外には出力不可 | 
+| stack | ⭕ | string | — | エラー発生時のスタックトレース | 本項目は管理者への通知メール等、シート以外には出力不可 | 
 
 
 🧱 <span id="autherrorlog_method">authErrorLog メソッド一覧</span>
@@ -32,7 +32,7 @@ authServerのエラーログ
 | メソッド名 | 型 | 内容 |
 | :-- | :-- | :-- |
 | [constructor](#autherrorlog_constructor) | private | コンストラクタ |
-| [log](#autherrorlog_log) | public | エラーログをシートに出力 |
+| [log](#autherrorlog_log) | public | エラーログシートにエラー情報を追記 |
 
 ## <span id="autherrorlog_constructor">🧱 <a href="#autherrorlog_method">authErrorLog.constructor()</a></span>
 
@@ -40,7 +40,7 @@ authServerのエラーログ
 
 ### <span id="autherrorlog_constructor_caller">📞 呼出元</span>
 
-- [authServer.constructor()](authServer.md#autherrorlog_constructor)
+- [authServer.exec()](authServer.md#autherrorlog_constructor)
 
 ### <span id="autherrorlog_constructor_param">📥 引数</span>
 
@@ -51,7 +51,9 @@ authServerのエラーログ
 
 ### <span id="autherrorlog_constructor_process">🧾 処理手順</span>
 
-- [authServerConfig](authServerConfig.md#authserverconfig_internal).auditLogシートが無ければ作成
+- [authServerConfig](authServerConfig.md#authserverconfig_internal).errorLogシートが無ければ作成
+- 引数の内、authErrorLogと同一メンバ名があればthisに設定
+- timestampに現在日時を設定
 
 ### <span id="autherrorlog_constructor_returns">📤 戻り値</span>
 
@@ -63,11 +65,15 @@ authServerのエラーログ
     | deviceId | string | 【必須】 | — |
     | result | string | fatal | — |
     | message | string | 【任意】 | — |
-    | stackTrace | string | 【任意】 | — |
+    | stack | string | 【任意】 | — |
 
 ## <span id="autherrorlog_log">🧱 <a href="#autherrorlog_method">authErrorLog.log()</a></span>
 
-エラーログをシートに出力
+エラーログシートにエラー情報を追記
+
+### <span id="autherrorlog_log_caller">📞 呼出元</span>
+
+- [authServer.exec()](authServer.md#autherrorlog_log)
 
 ### <span id="autherrorlog_log_param">📥 引数</span>
 
@@ -75,16 +81,22 @@ authServerのエラーログ
 | 項目名 | 任意 | データ型 | 既定値 | 説明 |
 | :-- | :--: | :-- | :-- | :-- |
 | e | ❌ | Error | — | エラーオブジェクト | 
+| response | ❌ | [authResponse](authResponse.md#authresponse_internal) | — | 処理結果 | 
 
 ### <span id="autherrorlog_log_process">🧾 処理手順</span>
 
-- this.message = e.message
-- this.stackTrace = e.stack
-- e.messageがJSON化可能な場合
-  - e.messageをオブジェクト化してobjに代入
-  - this.result = obj.result
-  - this.message = obj.message
-- シートの末尾行にauthErrorLogオブジェクトを追加
+- メンバに以下を設定
+
+  - [authErrorLog](authErrorLog.md#autherrorlog_internal): authServerのエラーログ
+    | 項目名 | データ型 | 生成時 | 設定内容 |
+    | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | **toLocale(this.timestamp)(ISO8601拡張形式)** |
+    | memberId | string | 【必須】 | **response.request.memberId** |
+    | deviceId | string | 【必須】 | **response.request.deviceId** |
+    | result | string | fatal | **response.result** |
+    | message | string | 【任意】 | **response.message** |
+    | stack | string | 【任意】 | **e.stack** |
+- [authServerConfig](authServerConfig.md#authserverconfig_internal).errorLogシートの末尾行にauthErrorLogオブジェクトを追加
 
 ### <span id="autherrorlog_log_returns">📤 戻り値</span>
 
@@ -96,4 +108,4 @@ authServerのエラーログ
     | deviceId | string | 【必須】 | — |
     | result | string | fatal | — |
     | message | string | 【任意】 | — |
-    | stackTrace | string | 【任意】 | — |
+    | stack | string | 【任意】 | — |
