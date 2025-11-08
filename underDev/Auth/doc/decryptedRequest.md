@@ -1,6 +1,6 @@
 <div style="text-align: right;">
 
-[総説](spec.md) | [authClient](authClient.md) | [authServer](authServer.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
+[総説](spec.md) | [authClient](authClient.md) | [cryptoClient](cryptoClient.md) | [authServer](authServer.md) |  [cryptoServer](cryptoServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
 
 </div>
 
@@ -18,11 +18,11 @@ encryptedRequestをcryptoServerで復号した処理要求オブジェクト
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-| result | ❌ | string | — | 処理結果 | "fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "normal" | 
-| message | ⭕ | string | — | エラーメッセージ | result="normal"の場合`undefined` | 
-| request | ❌ | [authRequest](authRequest.md#authrequest_internal) | — | ユーザから渡された処理要求 |  | 
-| timestamp | ❌ | number | — | 復号処理実施日時 |  | 
-| status | ❌ | string | — | ユーザ・デバイス状態 | Member.deviceが空ならメンバの、空で無ければデバイスのstatus | 
+| result | ⭕ | string | "normal" | 処理結果 | "fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "normal" | 
+| message | ⭕ | string | — | エラーメッセージ |  | 
+| request | ⭕ | [authRequest](authRequest.md#authrequest_internal) | — | ユーザから渡された処理要求 |  | 
+| timestamp | ⭕ | number | Date.now() | 復号処理実施日時 |  | 
+| status | ⭕ | string | — | ユーザ・デバイス状態 | Member.deviceが空ならメンバの、空で無ければデバイスのstatus | 
 
 
 🧱 <span id="decryptedrequest_method">decryptedRequest メソッド一覧</span>
@@ -51,8 +51,8 @@ encryptedRequestをcryptoServerで復号した処理要求オブジェクト
   - [decryptedRequest](decryptedRequest.md#decryptedrequest_internal): 復号済の処理要求
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
-    | result | string | 【必須】 | — |
+    | result | string | "normal" | — |
     | message | string | 【任意】 | — |
-    | request | authRequest | 【必須】 | — |
-    | timestamp | number | 【必須】 | — |
-    | status | string | 【必須】 | — |
+    | request | authRequest | 【任意】 | — |
+    | timestamp | number | Date.now() | — |
+    | status | string | 【任意】 | — |

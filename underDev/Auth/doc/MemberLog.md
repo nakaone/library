@@ -1,6 +1,6 @@
 <div style="text-align: right;">
 
-[総説](spec.md) | [authClient](authClient.md) | [authServer](authServer.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
+[総説](spec.md) | [authClient](authClient.md) | [cryptoClient](cryptoClient.md) | [authServer](authServer.md) |  [cryptoServer](cryptoServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
 
 </div>
 
@@ -21,7 +21,7 @@
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-| joiningRequest | ⭕ | number | Date.new() | 加入要求日時 | 加入要求をサーバ側で受信した日時 | 
+| joiningRequest | ⭕ | number | Date.now() | 仮登録要求日時 | 仮登録要求をサーバ側で受信した日時 | 
 | approval | ❌ | number | — | 加入承認日時 | 管理者がmemberList上で加入承認処理を行った日時。値設定は加入否認日時と択一 | 
 | denial | ❌ | number | — | 加入否認日時 | 管理者がmemberList上で加入否認処理を行った日時。値設定は加入承認日時と択一 | 
 | loginRequest | ❌ | number | — | 認証要求日時 | 未認証メンバからの処理要求をサーバ側で受信した日時 | 
@@ -65,7 +65,7 @@
   - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
-    | joiningRequest | number | Date.new() | — |
+    | joiningRequest | number | Date.now() | — |
     | approval | number | 【必須】 | — |
     | denial | number | 【必須】 | — |
     | loginRequest | number | 【必須】 | — |
@@ -99,7 +99,7 @@
   - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
-    | joiningRequest | number | Date.new() | — |
+    | joiningRequest | number | Date.now() | — |
     | approval | number | 【必須】 | — |
     | denial | number | 【必須】 | — |
     | loginRequest | number | 【必須】 | — |

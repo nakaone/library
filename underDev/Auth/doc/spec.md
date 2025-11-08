@@ -1,6 +1,6 @@
 <div style="text-align: right;">
 
-[総説](spec.md) | [authClient](authClient.md) | [authServer](authServer.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
+[総説](spec.md) | [authClient](authClient.md) | [cryptoClient](cryptoClient.md) | [authServer](authServer.md) |  [cryptoServer](cryptoServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
 
 </div>
 
@@ -32,7 +32,9 @@
   ※既定値。実際の桁数はauthConfig.trial.passcodeLengthで規定
 - 内発処理：ローカル関数からの要求に基づかない、authClientでの処理の必要上発生するauthServerへの問合せ
 
-## 暗号化・署名方式、運用
+## 方針
+
+### 暗号化・署名方式、運用
 
 - 署名方式 : RSA-PSS
 - 暗号化方式 : RSA-OAEP
@@ -55,7 +57,7 @@
   4. サーバ側でauthConfig.cryptoServer.loginLifeTimeを確認、期限内ならmemberList.CPkeyを書き換え。期限切れなら加入処理同様、adminによる個別承認を必要とする。
   5. 以降は未ログイン状態で要求が来た場合として処理を継続
 
-## クライアント・サーバ間の通信手順
+### クライアント・サーバ間の通信手順
 
 - 以下は正常系のみ記載
 - `localFunc`とは、クライアント側(ブラウザ)内で動作するJavaScriptの関数
@@ -133,4 +135,24 @@ sequenceDiagram
 - ⑦：`cryptoServer.decrypt`で署名検証＋復号
 - ⑨：要求者(メンバ)の状態をシートから取得
 - ⑪：【返信内容作成】メンバの状態を判断、適宜サーバ側関数の呼び出し<br>
-  詳細は[]
+
+### 実装関係の方針
+
+- 関数・メソッドは原則として`try 〜 catch`で囲み、予期せぬエラーが発生した場合はErrorオブジェクトを返す。<br>
+  以下は各メソッドのプロトタイプ("pv"はインスタンス変数)
+  ```js
+  function prototype(arg) {
+    const v = { whois: `${pv.whois}.prototype`, rv: null};
+    dev.start(v.whois, [...arguments]);
+    try {
+
+      // -------------------------------------------------------------
+      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
+      // -------------------------------------------------------------
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { dev.error(e); return e; }
+  }
+  ```

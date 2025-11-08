@@ -1,6 +1,6 @@
 <div style="text-align: right;">
 
-[総説](spec.md) | [authClient](authClient.md) | [authServer](authServer.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
+[総説](spec.md) | [authClient](authClient.md) | [cryptoClient](cryptoClient.md) | [authServer](authServer.md) |  [cryptoServer](cryptoServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
 
 </div>
 
@@ -243,7 +243,7 @@ stateDiagram-v2
   - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
     | 項目名 | データ型 | 生成時 | 一致時 | 上限到達 |
     | :-- | :-- | :-- | :-- | :-- |
-    | joiningRequest | number | Date.new() | — | — |
+    | joiningRequest | number | Date.now() | — | — |
     | approval | number | 【必須】 | — | — |
     | denial | number | 【必須】 | — | — |
     | loginRequest | number | 【必須】 | — | — |
@@ -274,6 +274,8 @@ stateDiagram-v2
 
 ### <span id="member_getmember_caller">📞 呼出元</span>
 
+- [authServer.decodeRequest()](authServer.md#member_getmember)
+- [cryptoServer.decrypt()](cryptoServer.md#member_getmember)
 - [Member.addTrial()](Member.md#member_getmember)
 - [Member.checkPasscode()](Member.md#member_getmember)
 - [Member.judgeMember()](Member.md#member_getmember)
@@ -332,7 +334,7 @@ stateDiagram-v2
   - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
     | 項目名 | データ型 | 生成時 | 承認時 | 否認時 |
     | :-- | :-- | :-- | :-- | :-- |
-    | joiningRequest | number | Date.new() | — | — |
+    | joiningRequest | number | Date.now() | — | — |
     | approval | number | 【必須】 | **現在日時(Date.now())** | **0** |
     | denial | number | 【必須】 | **0** | **現在日時** |
     | loginRequest | number | 【必須】 | — | — |
@@ -531,7 +533,7 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
   - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
     | 項目名 | データ型 | 生成時 | 更新内容 |
     | :-- | :-- | :-- | :-- |
-    | joiningRequest | number | Date.new() | — |
+    | joiningRequest | number | Date.now() | — |
     | approval | number | 【必須】 | **examined === true ? Date.now() : 0** |
     | denial | number | 【必須】 | **0** |
     | loginRequest | number | 【必須】 | — |
@@ -654,7 +656,7 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
   - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
     | 項目名 | データ型 | 生成時 | 更新内容 |
     | :-- | :-- | :-- | :-- |
-    | joiningRequest | number | Date.new() | — |
+    | joiningRequest | number | Date.now() | — |
     | approval | number | 【必須】 | — |
     | denial | number | 【必須】 | — |
     | loginRequest | number | 【必須】 | — |
@@ -726,7 +728,7 @@ memberListシートのGoogle Spreadのメニューから管理者が実行する
     - [MemberLog](MemberLog.md#memberlog_internal): メンバの各種要求・状態変化の時刻
       | 項目名 | データ型 | 生成時 | 未認証 | 試行中 | 認証中 | 凍結中 |
       | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-      | joiningRequest | number | Date.new() | — | — | — | — |
+      | joiningRequest | number | Date.now() | — | — | — | — |
       | approval | number | 【必須】 | — | — | — | — |
       | denial | number | 【必須】 | — | — | — | — |
       | loginRequest | number | 【必須】 | — | **0** | **0** | — |

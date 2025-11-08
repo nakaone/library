@@ -90,6 +90,9 @@ const classdef = {
             }
           }
         },
+
+        error: {  // エラー時処理
+        },
       },
     },
   },
@@ -789,12 +792,35 @@ const classdef = {
 
         returns: {authScriptProperties:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
+      requestLog: {},
     },
   },
   authServer: {
     label: 'サーバ側auth中核クラス',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    policy: ``,	// {string} 設計方針欄(trimIndent対象)
+    note: `
+      authServerは、クライアント(authClient)からの暗号化通信リクエストを復号・検証し、
+      メンバ状態と要求内容に応じてサーバ側処理を適切に振り分ける中核関数です。
+    `,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    policy: `
+      - staticメソッドを利用するため、クラスとする
+      - doPostからはauthServer.execを呼び出す
+
+      #### <a name="outputLog">🗒️ ログ出力仕様</a>
+
+      | 種別 | 保存先 | 内容 |
+      | :-- | :-- | :-- |
+      | requestLog | ScriptProperties (TTL短期) | [authRequestLog](typedef.md#authrequestlog)記載項目 |
+      | errorLog | Spreadsheet(authServerConfig.errorLog) | [authErrorLog](typedef.md#autherrorlog)記載項目 |
+      | auditLog | Spreadsheet(authServerConfig.auditLog) | [authAuditLog](typedef.md#authauditlog)記載項目 |
+
+      ■ ログ出力のタイミング
+
+      | ログ種別 | タイミング | 理由 |
+      | :-- | :-- | :-- |
+      | **auditLog** | authServer各メソッド完了時 | イベントとして記録。finallyまたはreturn前に出力 |
+      | **errorLog** | authServer各メソッドからの戻り値がfatal、または予期せぬエラー発生時 | 原因箇所特定用。catch句内に記載 |
+    `,	// {string} 設計方針欄(trimIndent対象)
+    // | **requestLog** | decrypt 開始時 | 重複チェック(リプレイ防止)用。ScriptPropertiesに短期保存 |
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
     example: `
@@ -814,36 +840,38 @@ const classdef = {
       });
 
       // Webアプリ定義
-      function doGet(e){
-        const rv = asv.exec(e);
+      function doPost(e) {
+        const rv = asv.exec(e.postData.contents); // 受け取った本文(文字列)
         if( rv !== null ){ // fatal(無応答)の場合はnullを返す
-          return ContentService.createTextOutput(rv);
+          return ContentService
+            .createTextOutput(rv);
         }
       }
 
       // スプレッドシートメニュー定義
-      SpreadsheetApp.getUi().createMenu('追加したメニュー')
-        .addItem('実行環境の初期化', 'menu10')
-        .addItem('加入認否入力', 'menu20')
+      const ui = SpreadsheetApp.getUi();
+      ui.createMenu('追加したメニュー')
+        .addItem('加入認否入力', 'menu10')
         .addSeparator()
-        .addSubMenu(
-          ui.createMenu("システム関係")
-            .addItem("鍵ペアの更新", "menu31")
+        .addSubMenu(ui.createMenu("システム関係")
+          .addItem('実行環境の初期化', 'menu21')
+          .addItem("【緊急】鍵ペアの更新", "menu22")
         )
         .addToUi();
-      const menu10 = () => asv.setupEnvironment();
-      const menu20 = () => asv.listNotYetDecided();
-      const menu31 = () => asv.resetSPkey();
+      const menu10 = () => asv.listNotYetDecided();
+      const menu21 = () => asv.setupEnvironment();
+      const menu22 = () => asv.resetSPkey();
       \`\`\`
     `,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
+    navi: `<div style="text-align:right">\n\n[設計方針](#authserver_policy) | [実装・使用例](#authserver_example) | [メンバ一覧](#authserver_internal) | [メソッド一覧](#authserver_method)\n\n</div>`,
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'cf',type:'authServerConfig',label:'動作設定変数(config)',note:''},
       {name:'prop',type:'authScriptProperties',label:'鍵ペア等を格納',note:''},
       {name:'crypto',type:'cryptoServer',label:'暗号化・復号用インスタンス',note:''},
       {name:'member',type:'Member',label:'対象メンバのインスタンス',note:''},
-      {name:'auditLog',type:'authAuditLog',label:'監査ログのインスタンス',note:''},
-      {name:'errorLog',type:'authErrorLog',label:'エラーログのインスタンス',note:''},
+      {name:'audit',type:'authAuditLog',label:'監査ログのインスタンス',note:''},
+      {name:'error',type:'authErrorLog',label:'エラーログのインスタンス',note:''},
       {name:'pv',type:'Object',label:'authServer内共通変数',note:''},
     ],
 
@@ -874,7 +902,171 @@ const classdef = {
 
         returns: {authServer:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
+      exec: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'doPostから呼ばれ、authClientからの要求を処理',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: `
+          - authClientからの処理要求を受け、復号後サーバ内関数に処理を依頼、結果がfatalでなければ暗号化してauthClientに返す。
+          - 結果がfatalの場合はログに出力して何も返さない。
+        `,	// {string} 注意事項。markdownで記載
+        source: `
+          \`\`\`js
+          exec(request){
+            const v = {whois:pv.whois+'exec',rv:null,
+              request: null,  // {authRequest} 平文の処理要求
+              response:null,  // {authResponse} 平文の処理結果
+            }
+            try {
+              core: { // 中核処理
+                v.dr = crypto.decrypt(request);
+                if( v.dr instanceof Error ) throw v.dr; // 復号された要求
+                if( v.dr.result === 'warning' && v.dr.message === 'maybe CPkey' ){
+                  // CPkeyが平文で要求された場合
+                  v.response = responseSPkey(v.dr.request); // SPkeyを返す
+                  if ( v.response.result === 'normal' ){
+                    break core; // 中核処理を抜ける
+                  } else {
+                    throw new Error(v.response.message);
+                  }
+                }
+                // 中略
+              }
+
+              // 正常終了時処理
+              v.rv = crypto.encrypt(v.response);  // 処理結果を暗号化
+              audit.log(v.response);  // 監査ログ出力
+              return v.rv;
+
+            } catch(e) {
+              // 異常終了時処理
+              error.log(e); // エラーログを出力し、何も返さない
+            }
+          }
+          \`\`\`
+        `,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'request',type:'string',note:'CPkeyまたは暗号化された処理要求'},
+        ],
+
+        process: `
+          ■ 中核処理(coreブロック)
+
+          - 復号・署名検証
+            - "v.dr = [crypto.decrypt](cryptoServer.md#cryptoserver_decrypt)(request)"を実行
+            - "v.dr.result === 'normal'の場合、"v.request = v.dr.request"を実行
+            - "v.dr.result === 'fatal'"の場合、'throw new Error(v.dr.message)'を実行
+            - "v.dr.result === 'warning' && v.dr.message === 'maybe CPkey'"の場合、SPkey発行処理を実行
+              - 'v.response = [responseSPkey](#authserver_responsespkey)'を実行
+              - "v.response.result === 'normal'"の場合、中核処理を抜ける
+              - "v.response.result === 'fatal'"の場合、'throw new Error(v.response.message)'を実行
+
+          - 重複リクエストチェック
+            - authScriptProperties.requestLogで重複リクエストをチェック いまここ
+            - エラーならエラーログに出力
+              - authErrorLog.result = 'fatal'
+              - authErrorLog.message = 'Duplicate requestId'
+            - authServerConfig.requestIdRetention以上経過したリクエスト履歴は削除
+            - Errorをthrowして終了
+          - 3. authClient内発処理判定
+            - authRequest.funcが以下に該当するなら内発処理としてメソッドを呼び出し、その戻り値をpv.rvにセット
+              |  | authRequest.func | authServer.method |
+              | :-- | :-- | :-- |
+              | CPkey更新 | ::updateCPkey:: | updateCPkey() |
+              | パスコード入力 | ::passcode:: | loginTrial() |
+              | 新規登録要求 | ::newMember:: | Member.setMember() |
+              | パスコード再発行 | ::reissue:: | Member.reissuePasscode() |
+          - 4. サーバ側関数の存否チェック
+            - authServerConfig.funcのメンバ名に処理要求関数名(authRequest.func)が無ければError('no func:'+authRequest.func)をthrow
+          - 5. サーバ側関数の権限要否を判定
+            - authServerConfig.func[処理要求関数名].authority === 0ならcallFunctionメソッドを呼び出し、その戻り値をpv.rvにセット
+          - 6. メンバ・デバイスの状態により処理分岐
+            - 当該メンバの状態を確認(Member.getStatus())
+            - 以下の表に従って処理分岐、呼出先メソッドの戻り値をpv.rvにセット
+              No | 状態 | 動作
+              :-- | :-- | :--
+              1 | 未加入 | memberList未登録<br>⇒ membershipRequest()メソッドを呼び出し
+              2 | 未審査 | memberList登録済だが、管理者による加入認否が未決定(=加入審査状況の問合せ)<br>⇒ notifyAcceptance()メソッドを呼び出し
+              3 | 審査済 | 管理者による加入認否が決定済<br>⇒ notifyAcceptance()メソッドを呼び出し
+              4.1 | 未認証 | 認証(ログイン)不要の処理しか行えない状態。<br>無権限で行える処理 ⇒ callFunction()メソッドを呼び出し<br>無権限では行えない処理 ⇒ loginTrial()メソッドを呼び出し
+              4.2 | 試行中 | パスコードによる認証を試行している状態<br>⇒ loginTrial()メソッドを呼び出し
+              4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態<br>⇒ callFunction()メソッドを呼び出し
+              4.4 | 凍結中 | 規定の試行回数連続して認証に失敗し、再認証要求が禁止された状態<br>⇒ loginTrial()メソッドを呼び出し
+              5 | 加入禁止 | 管理者により加入が否認された状態<br>⇒ notifyAcceptance()メソッドを呼び出し
+
+
+
+
+          ■ 正常終了時処理
+
+          ■ 異常終了時処理(catch句内の処理)
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {encryptedResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+        // エラー時はnullを返す
+      },
       // execの戻り値(処理結果)一覧を作成、authClient.execの処理分岐と対応させること!!
+      // SPkey再設定はresetSPkeyとしてここに記述
+      // - SPkey/SSkeyを更新、ScriptPropertiesに保存
+      // - 本メソッドはシステム管理者がGAS編集画面から実行することを想定
+
+      decodeRequest: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'クライアントからの要求を解読',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: ``,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'str',type:'string',note:'クライアント側から送られたCPkey'},
+        ],
+
+        process: `
+          - SPkey要求判定：引数"str"のオブジェクト化を試行
+            - オブジェクト化失敗の場合
+              - strがCPkey文字列として適切か判定
+                - 不適切なら戻り値「不正文字列」を返して終了 -> Error
+                - 適切ならMember.addMember(仮登録要求)を行い、それを戻り値とする -> authResponse
+            - オブジェクト化成功の場合
+              - encryptedRequest形式でないなら「形式不正」
+              - memberIdから対象者のMemberインスタンスを取得<br>
+                 "member = member.[getMember](Member.md#member_getmember)(memberId)"
+              - 取得不能なら「未登録メンバ」
+              - cryptoServer.decrypt -> authRequest
+              - 
+
+                 
+            <evaluate>comparisonTable({typeName:'MemberLog',default:{},pattern:{'更新内容':{assign: {
+              approval: 'examined === true ? Date.now() : 0',
+              denial: 0,
+              joiningExpiration: '現在日時(UNIX時刻)＋authServerConfig.memberLifeTime',
+              unfreezeDenial: 0,
+            }}}},'  ')</evaluate>
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        //returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          authResponse: { // メンバ名は戻り値のデータ型名
+            default: {request:'引数"request"',value:'MemberTrialオブジェクト'},
+              // {Object.<string,string>} 各パターンの共通設定値
+            condition: ``,	// {string} データ型が複数の場合の選択条件指定(trimIndent対象)
+            note: ``,	// {string} 備忘(trimIndent対象)
+            pattern: {
+              '正答時': {
+                assign: {result:'normal'}, // {Object.<string,string>} 当該パターンの設定値
+                condition: ``,	// {string} 該当条件(trimIndent対象)
+                note: ``,	// {string} 備忘(trimIndent対象)
+              },
+              '誤答・再挑戦可': {assign: {result:'warning'}},
+              '誤答・再挑戦不可': {assign: {result:'fatal'}},
+            }
+          }
+        },
+
+        error: {  // エラー時処理
+        },
+      },
     },
   },
   authServerConfig: {
@@ -1020,6 +1212,16 @@ const classdef = {
       - 復号処理は副作用のない純関数構造を目指す(stateを持たない)
       - 可能な範囲で「外部ライブラリ」を使用する
       - timestamp検証は整数化・絶対値化してから比較する
+
+      #### <a name="security">🔐 セキュリティ仕様</a>
+
+      | 項目 | 対策 |
+      |------|------|
+      | **リプレイ攻撃** | requestIdキャッシュ(TTL付き)で検出・拒否 |
+      | **タイミング攻撃** | 定数時間比較(署名・ハッシュ照合)を採用 |
+      | **ログ漏えい防止** | 復号データは一切記録しない |
+      | **エラー通知スパム** | メンバ単位で送信間隔を制御 |
+      | **鍵管理** | SSkey/SPkey は ScriptProperties に格納し、Apps Script内でのみ参照可 |
     `,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
     defaultVariableName: '', // {string} 変数名の既定値。ex.(pv.)"audit"
@@ -1044,6 +1246,123 @@ const classdef = {
 
         returns: {cryptoServer:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
+      decrypt: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'authClientからのメッセージを復号＋署名検証',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: `
+          - 本メソッドはauthServerから呼ばれるため、fatalエラーでも戻り値を返す
+          - fatal/warning分岐を軽量化するため、Signature検証統一関数を導入(以下は実装例)
+            \`\`\`js
+            const verifySignature = (data, signature, pubkey) => {
+              try {
+                const sig = new KJUR.crypto.Signature({ alg: 'SHA256withRSA' });
+                sig.init(pubkey);
+                sig.updateString(data);
+                return sig.verify(signature);
+              } catch (e) { return false; }
+            }
+            \`\`\`
+        `,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+        // caller {Object[]} 本メソッドを呼び出す{class:クラス名,method:メソッド名}の配列
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'request',type:'string|encryptedRequest',note:'クライアント側からの暗号化された処理要求'},
+        ],
+
+        process: `
+          1. 入力データ型判定：引数(JSON文字列)のオブジェクト化を試行
+             - オブジェクト化成功の場合：次ステップへ
+             - オブジェクト化失敗の場合：requestがCPkey文字列として適切か判断
+               - 不適切なら戻り値「不正文字列」を返して終了
+               - 適切なら戻り値「CPkey」を返して終了
+          2. CPkeyをシートから取得
+             - memberId, deviceId, cipherText に欠落があれば戻り値「指定項目不足」を返して終了
+             - memberIdから対象者のMemberインスタンスを取得、シートに無かった場合は戻り値「対象者不在」を返して終了<br>
+               "member = member.[getMember](Member.md#member_getmember)(memberId)"
+             - deviceIdから対象機器のCPkeyを取得。未登録なら戻り値「機器未登録」を返して終了
+          3. 復号
+             - 復号失敗なら戻り値「復号失敗」を返して終了
+          4. 署名検証
+             - 以下が全部一致しなかったなら戻り値「不正署名」を返して終了
+               - 復号により現れた署名
+               - [decryptedRequest](decryptedRequest.md#decryptedrequest_internal).[request](authRequest.md#authrequest_internal).signature
+               - member.[device](MemberDevice.md#memberdevice_internal)\[n\].CPkey<br>
+                ※ "n"はdeviceIdから特定
+          5. 時差判定
+             - 復号・署名検証直後に timestamp と Date.now() の差を算出し、
+               [authServerConfig](authServerConfig.md#authserverconfig_internal).allowableTimeDifference を超過した場合、戻り値「時差超過」を返して終了
+          6. 戻り値「正常終了」を返して終了
+             - "request"には復号した[encryptedRequest](encryptedRequest.md#encryptedrequest_internal).ciphertext(=JSON化したauthRequest)をオブジェクト化してセット
+             - "status"にはdeviceId[n].statusを、deviceIdが見つからない場合はmember.statusをセット
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {  // 戻り値が複数のデータ型・パターンに分かれる場合
+          decryptedRequest: { // メンバ名は戻り値のデータ型名
+            default: {},
+            pattern: {
+              '不正文字列': {assign:{
+                result: '"fatal"',
+                message: '"invalid string"',
+              }},
+              'CPkey': {assign:{
+                result: '"warning"',
+                request: 'request',
+                message: '"maybe CPkey"',
+              }},
+              '対象者不在': {assign:{
+                result: '"fatal"',
+                message: '"not exists"',
+              }},
+              '機器未登録': {assign:{
+                result: '"fatal"',
+                message: '"device not registered"',
+              }},
+              '復号失敗': {assign:{
+                result: '"fatal"',
+                message: '"decrypt failed"',
+              }},
+              '指定項目不足': {assign:{
+                result: '"fatal"',
+                message: '"missing fields"',
+              }},
+              '不正署名': {assign:{
+                result: '"fatal"',
+                message: '"invalid signature"',
+              }},
+              '時差超過': {assign:{
+                result: '"fatal"',
+                message: '"timestamp difference too large"',
+              }},
+              '正常終了': {assign:{
+                request: '[authRequest](authRequest.md#authrequest_internal)',
+                status: '[member.device\[n\]](MemberDevice.md#memberdevice_internal).status or [member](Member.md#member_internal).status'
+              }},
+            }
+          }
+        },
+      },
+      encrypt: {
+        type: 'public',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: 'authClientへのメッセージを署名＋暗号化',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        note: `
+          - [authResponse](authResponse.md#authresponse_internal).signatureは省略せず明示的に含める
+          - 暗号化順序は Sign-then-Encrypt
+          - 復号側([cryptoClient](cryptoClient.md))では「Decrypt-then-Verify」
+          - 本メソッドはauthServerから呼ばれるため、fatalエラーでも戻り値を返す
+        `,	// {string} 注意事項。markdownで記載
+        source: ``,	// {string} 想定するJavaScriptソース(trimIndent対象)
+        lib: [],  // {string[]} 本メソッドで使用するライブラリ。"library/xxxx/0.0.0/core.js"の"xxxx"のみ表記
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'response',type:'authResponse',note:'暗号化対象オブジェクト'},
+        ],
+
+        process: ``,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {encryptedResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
     },
   },
   decryptedRequest: {
@@ -1055,11 +1374,11 @@ const classdef = {
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
-      {name:'result',type:'string',label:'処理結果',note:'"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "normal"'},
-      {name:'message',type:'string',label:'エラーメッセージ',note:'result="normal"の場合`undefined`',isOpt:true},
-      {name:'request',type:'authRequest',label:'ユーザから渡された処理要求',note:''},
-      {name:'timestamp',type:'number',label:'復号処理実施日時',note:''},
-      {name:'status',type:'string',label:'ユーザ・デバイス状態',note:'Member.deviceが空ならメンバの、空で無ければデバイスのstatus'},
+      {name:'result',type:'string',label:'処理結果',note:'"fatal"(後続処理不要なエラー), "warning"(後続処理が必要なエラー), "normal"',default:'"normal"'},
+      {name:'message',type:'string',label:'エラーメッセージ',note:'',isOpt:true},
+      {name:'request',type:'authRequest',label:'ユーザから渡された処理要求',note:'',isOpt:true},
+      {name:'timestamp',type:'number',label:'復号処理実施日時',note:'',default:'Date.now()'},
+      {name:'status',type:'string',label:'ユーザ・デバイス状態',note:'Member.deviceが空ならメンバの、空で無ければデバイスのstatus',isOpt:true},
     ],
 
     methods: {
@@ -2026,7 +2345,7 @@ const classdef = {
     example: ``,	// {string} 想定する実装・使用例(Markdown,trimIndent対象)
 
     members: [  // {Member} ■メンバ(インスタンス変数)定義■
-      {name:'joiningRequest', type:'number', label:'加入要求日時',note:'加入要求をサーバ側で受信した日時', default:'Date.new()'},
+      {name:'joiningRequest', type:'number', label:'仮登録要求日時',note:'仮登録要求をサーバ側で受信した日時', default:'Date.now()'},
       {name:'approval', type:'number', label:'加入承認日時',note:'管理者がmemberList上で加入承認処理を行った日時。値設定は加入否認日時と択一', default:0},
       {name:'denial', type:'number', label:'加入否認日時',note:'管理者がmemberList上で加入否認処理を行った日時。値設定は加入承認日時と択一', default:0},
       {name:'loginRequest', type:'number', label:'認証要求日時',note:'未認証メンバからの処理要求をサーバ側で受信した日時', default:0},
