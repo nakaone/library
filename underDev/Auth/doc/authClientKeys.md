@@ -8,7 +8,7 @@
 
 ## <span id="authclientkeys_summary">🧭 概要</span>
 
-クライアント側鍵ペアの生成
+RSA鍵ペアの生成
 
 ### 🧩 <span id="authclientkeys_internal">内部構成</span>
 
@@ -35,18 +35,16 @@
 ### <span id="authclientkeys_constructor_param">📥 引数</span>
 
 
-| 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| :-- | :--: | :-- | :-- | :-- |
-| config | ❌ | [authClientConfig](authClientConfig.md#authclientconfig_internal) | — | 鍵生成用の設定(RSA鍵長等) | 
+- 無し(void)
 
 ### <span id="authclientkeys_constructor_process">🧾 処理手順</span>
 
 - [createPassword](JSLib.md#createpassword)でパスワード生成
-- [authConfig](authConfig.md#authconfig_internal).RSAbitsを参照、新たな鍵ペア生成
+- [cf.RSAbits](authConfig.md#authconfig_internal)を参照、新たな鍵ペア生成
 
 ### <span id="authclientkeys_constructor_returns">📤 戻り値</span>
 
-  - [authClientKeys](authClientKeys.md#authclientkeys_internal): クライアント側鍵ペアの生成
+  - [authClientKeys](authClientKeys.md#authclientkeys_internal): RSA鍵ペアの生成
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
     | CSkeySign | CryptoKey | 【必須】 | — |

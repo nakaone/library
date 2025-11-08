@@ -390,7 +390,7 @@ const classdef = {
     },
   },
   authClientKeys: {
-    label: 'クライアント側鍵ペアの生成',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    label: 'RSA鍵ペアの生成',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: '',	// {string} クラスとしての補足説明。概要欄に記載
     policy: ``,	// {string} 設計方針欄(trimIndent対象)
     inherit: '',	// {string} 親クラス名
@@ -409,14 +409,14 @@ const classdef = {
       constructor: {
         label: 'コンストラクタ',
         lib: ['createPassword'],
+        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
         params: [
-          {name:'config',type:'authClientConfig',note:'鍵生成用の設定(RSA鍵長等)'},
         ],
 
         process: `
           - [createPassword](JSLib.md#createpassword)でパスワード生成
-          - [authConfig](authConfig.md#authconfig_internal).RSAbitsを参照、新たな鍵ペア生成
+          - [cf.RSAbits](authConfig.md#authconfig_internal)を参照、新たな鍵ペア生成
         `,	// {string} 処理手順。markdownで記載
 
         returns: {authClientKeys:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合

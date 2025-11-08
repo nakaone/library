@@ -76,8 +76,8 @@ async function Example() {
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authClient.md#authclient_showmessage">showMessage()</a></span> | メッセージをダイアログで表示 |
 | 3 | ⭕ |  ❌ | [authClientConfig](authClientConfig.md) | authClient専用の設定値 |
 | | | | <span style="padding-left:2rem"><span style="color:black">private</span> <a href="authClientConfig.md#authclientconfig_constructor">constructor()</a></span> | コンストラクタ |
-| 4 | ⭕ |  ❌ | [authClientKeys](authClientKeys.md) | クライアント側鍵ペアの生成 |
-| | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authClientKeys.md#authclientkeys_constructor">constructor()</a></span> | コンストラクタ |
+| 4 | ⭕ |  ❌ | [authClientKeys](authClientKeys.md) | RSA鍵ペアの生成 |
+| | | | <span style="padding-left:2rem"><span style="color:black">private</span> <a href="authClientKeys.md#authclientkeys_constructor">constructor()</a></span> | コンストラクタ |
 | 5 | ⭕ |  ⭕ | [authConfig](authConfig.md) | authClient/authServer共通設定値 |
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authConfig.md#authconfig_constructor">constructor()</a></span> | コンストラクタ |
 | 6 | ❌ |  ⭕ | [authErrorLog](authErrorLog.md) | authServerのエラーログ |
