@@ -1,6 +1,6 @@
 <div style="text-align: right;">
 
-[総説](spec.md) | [authClient](authClient.md) | [cryptoClient](cryptoClient.md) | [authServer](authServer.md) |  [cryptoServer](cryptoServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
+[総説](spec.md) | [authClient](authClient.md) | [authServer](authServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
 
 </div>
 
@@ -46,7 +46,7 @@ authClientConfig, authServerConfigの親クラス
 
 ### <span id="authconfig_constructor_process">🧾 処理手順</span>
 
-
+- メンバと引数両方にある項目は、引数の値をメンバとして設定
 
 ### <span id="authconfig_constructor_returns">📤 戻り値</span>
 

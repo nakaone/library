@@ -1,6 +1,6 @@
 <div style="text-align: right;">
 
-[総説](spec.md) | [authClient](authClient.md) | [cryptoClient](cryptoClient.md) | [authServer](authServer.md) |  [cryptoServer](cryptoServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
+[総説](spec.md) | [authClient](authClient.md) | [authServer](authServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
 
 </div>
 
@@ -8,9 +8,7 @@
 
 ## <span id="encryptedresponse_summary">🧭 概要</span>
 
-暗号化された処理結果
 
-authServerからauthClientに返される、暗号化された処理結果オブジェクト<br>ciphertextはauthResponseをJSON化、RSA-OAEP暗号化＋署名付与した文字列
 
 ### 🧩 <span id="encryptedresponse_internal">内部構成</span>
 
@@ -18,18 +16,18 @@ authServerからauthClientに返される、暗号化された処理結果オブ
 
 | 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- | :-- |
-| ciphertext | ❌ | string | — | 暗号化した文字列 |  | 
+|  | ❌ | string | — |  |  | 
 
 
 🧱 <span id="encryptedresponse_method">encryptedResponse メソッド一覧</span>
 
 | メソッド名 | 型 | 内容 |
 | :-- | :-- | :-- |
-| [constructor](#encryptedresponse_constructor) | private | コンストラクタ |
+| [constructor](#encryptedresponse_constructor) | private |  |
 
 ## <span id="encryptedresponse_constructor">🧱 <a href="#encryptedresponse_method">encryptedResponse.constructor()</a></span>
 
-コンストラクタ
+
 
 ### <span id="encryptedresponse_constructor_param">📥 引数</span>
 
@@ -40,11 +38,11 @@ authServerからauthClientに返される、暗号化された処理結果オブ
 
 ### <span id="encryptedresponse_constructor_process">🧾 処理手順</span>
 
-
+- メンバと引数両方にある項目は、引数の値をメンバとして設定
 
 ### <span id="encryptedresponse_constructor_returns">📤 戻り値</span>
 
-  - [encryptedResponse](encryptedResponse.md#encryptedresponse_internal): 暗号化された処理結果
+  - [encryptedResponse](encryptedResponse.md#encryptedresponse_internal): 
     | 項目名 | データ型 | 生成時 | 正常終了 |
     | :-- | :-- | :-- | :-- |
-    | ciphertext | string | 【必須】 | — |
+    |  | string | 【必須】 | — |

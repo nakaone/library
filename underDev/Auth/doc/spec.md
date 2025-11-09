@@ -1,6 +1,6 @@
 <div style="text-align: right;">
 
-[総説](spec.md) | [authClient](authClient.md) | [cryptoClient](cryptoClient.md) | [authServer](authServer.md) |  [cryptoServer](cryptoServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
+[総説](spec.md) | [authClient](authClient.md) | [authServer](authServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
 
 </div>
 
@@ -69,6 +69,87 @@ sequenceDiagram
   participant localFunc
   %%participant clientMail
   %%participant IndexedDB
+  participant cryptoClient
+  participant authClient
+  participant authServer
+  participant cryptoServer
+  participant Member
+  %%participant serverFunc
+  %%actor admin
+
+  %% インスタンス生成時処理：authClientConfig読み込み、IndexedDB読み込み、pvへの保存
+  authClient->>localFunc: authClientインスタンス生成
+
+  localFunc->>localFunc: authClient不使用時の処理
+  localFunc->>+authClient: LocalRequest
+  Note right of authClient: exec()
+
+  %% SPkey要求
+  alt SPkey未登録
+    authClient->>+authServer: CPkey(平文)
+    authServer->>-authClient: SPkey,仮ID,仮名
+  end
+
+  %% 環境構築(SPkey要求)
+  rect rgba(218, 255, 255, 1)
+    authClient->>authClient: 【環境構築】
+  end
+
+  %% 要求の暗号化
+  authClient->>+cryptoClient: authRequest
+  Note right of cryptoClient: encrypt()
+  cryptoClient->>-authClient: authResult
+
+  %% 処理要求
+  authClient->>authServer: encryptedRequest
+  Note right of authClient: fetch()
+
+  rect rgba(218, 255, 255, 1)
+    authServer->>authServer: 【インスタンス生成】
+  end
+
+  rect rgba(218, 255, 255, 1)
+    authServer->>authServer: 【返信内容作成】
+  end
+
+  authServer->>+cryptoServer: authResponse
+  Note right of cryptoServer: encrypt()
+  cryptoServer->>-authServer: encryptedResponse
+
+  authServer->>authClient: encryptedResponse
+  authClient->>cryptoClient: authResponse
+  cryptoClient->>authClient: encryptedResponse
+  cryptoClient->>authClient: authResponse
+
+  rect rgba(218, 255, 255, 1)
+    authClient->>authClient: 【後続処理分岐】
+  end
+
+  %% 新規登録要求
+  %% パスコード入力
+  %% パスコード再発行
+
+  authClient->>-localFunc: LocalResopnse
+```
+
+- ①：onLoad時、authClientインスタンス生成
+- ②：サーバ側との通信が不要な処理(メンバの状態は「不使用」)
+- ③：サーバ側との通信が必要になった場合、処理要求を発行
+- ④：【環境構築】として`authClient.setupEnvironment`を実行、SPkey入手等を行う<br>
+  詳細はauthClient.[setupEnvironment](authClient.md#setupenvironment)参照
+- ⑤：`authClient.exec`でauthRequest型オブジェクトに変換
+- ⑥：`cryptoClient.fetch`内部でencryptメソッドを呼び出し、暗号化＋署名
+- ⑦：`cryptoServer.decrypt`で署名検証＋復号
+- ⑨：要求者(メンバ)の状態をシートから取得
+- ⑪：【返信内容作成】メンバの状態を判断、適宜サーバ側関数の呼び出し<br>
+
+<!-- 2025/11/09 I/O変更前
+sequenceDiagram
+  autonumber
+  %%actor user
+  participant localFunc
+  %%participant clientMail
+  %%participant IndexedDB
   participant authClient
   participant cryptoClient
   participant authServer
@@ -123,18 +204,7 @@ sequenceDiagram
   %% パスコード再発行
 
   authClient->>-localFunc: LocalResopnse
-```
-
-- ①：onLoad時、authClientインスタンス生成
-- ②：サーバ側との通信が不要な処理(メンバの状態は「不使用」)
-- ③：サーバ側との通信が必要になった場合、処理要求を発行
-- ④：【環境構築】として`authClient.setupEnvironment`を実行、SPkey入手等を行う<br>
-  詳細はauthClient.[setupEnvironment](authClient.md#setupenvironment)参照
-- ⑤：`authClient.exec`でauthRequest型オブジェクトに変換
-- ⑥：`cryptoClient.fetch`内部でencryptメソッドを呼び出し、暗号化＋署名
-- ⑦：`cryptoServer.decrypt`で署名検証＋復号
-- ⑨：要求者(メンバ)の状態をシートから取得
-- ⑪：【返信内容作成】メンバの状態を判断、適宜サーバ側関数の呼び出し<br>
+-->
 
 ### 実装関係の方針
 

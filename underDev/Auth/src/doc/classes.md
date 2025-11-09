@@ -56,12 +56,13 @@ async function Example() {
 
 <!--::$tmp/classList.md::-->
 
+<!--
 ## <span id="config">1 動作環境設定系</span>
 
 ```mermaid
 graph TD
-  authConfig --> authClientConfig
-  authConfig --> authServerConfig
+  authConfig -x-> authClientConfig
+  authConfig -x-> authServerConfig
 ```
 
 | No | クラス名 | 概要 |
@@ -88,7 +89,7 @@ classDiagram
     string requestId
   }
 
-  authScriptProperties --> authRequestLog
+  authScriptProperties -x-> authRequestLog
 ```
 
 | No | クラス名 | 概要 |
@@ -98,7 +99,7 @@ classDiagram
 
 ```mermaid
 graph TD
-  authClientKeys --> authIndexedDB
+  authClientKeys -x-> authIndexedDB
 ```
 
 | No | クラス名 | 概要 |
@@ -161,11 +162,11 @@ classDiagram
     number timestamp
   }
 
-  Member --> MemberLog
-  Member --> MemberProfile
-  Member --> MemberDevice
-  MemberDevice --> MemberTrial
-  MemberTrial --> MemberTrialLog
+  Member -x-> MemberLog
+  Member -x-> MemberProfile
+  Member -x-> MemberDevice
+  MemberDevice -x-> MemberTrial
+  MemberTrial -x-> MemberTrialLog
 ```
 
 | No | クラス名 | 概要 |
@@ -183,3 +184,4 @@ classDiagram
 | --: | :-- | :-- |
 | 1 | [authAuditLog](authAuditLog.md) | authServerの監査ログ |
 | 6 | [authErrorLog](authErrorLog.md) | authServerのエラーログ |
+-->
