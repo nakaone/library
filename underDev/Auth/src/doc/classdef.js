@@ -99,7 +99,36 @@
     },
   },
 */
-const classdef = {
+/*  calssコア
+  className: {
+    label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    implement:{client:false,server:false},  // 実装の有無
+
+    members: [  // {Members} ■メンバ(インスタンス変数)定義■
+      {name:'',type:'string',label:'',note:''},
+    ],
+
+    methods: { // {Methods} ■メソッド定義■
+      constructor: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+        ],
+
+        process: `
+          - メンバと引数両方にある項目は、引数の値をメンバとして設定
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+    },
+  },
+*/
+console.log(JSON.stringify({
   authAuditLog: {
     label: 'authServerの監査ログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `
@@ -445,4 +474,4 @@ const classdef = {
       },
     },
   },
-};
+}));

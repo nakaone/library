@@ -21,8 +21,7 @@ rm -rf $tmp/*
 # ----------------------------------------------
 
 # クラス別定義
-cat $src/doc/classdef.js $prj/tools/classdef.js > $tmp/classdef.js
-node $tmp/classdef.js -o:$tmp
+node $src/doc/classdef.js | node $prj/tools/classdef.js -o:$tmp
 
 # クラス一覧
 cat $src/doc/classes.md | awk 1 | \
