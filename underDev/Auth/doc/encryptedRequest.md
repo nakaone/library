@@ -12,7 +12,7 @@
 
 ### 🧩 <span id="encryptedrequest_internal">内部構成</span>
 
- 🔢 encryptedRequest メンバ一覧
+🔢 encryptedRequest メンバ一覧
 
 | 項目名 | データ型 | 要否 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -30,10 +30,9 @@
 
 ### <span id="encryptedrequest_constructor_param">📥 引数</span>
 
-
-| 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| :-- | :--: | :-- | :-- | :-- |
-| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+| 項目名 | データ型 | 要否 | 説明 |
+| :-- | :-- | :-- | :-- |
+| arg | Object | {} |  |
 
 ### <span id="encryptedrequest_constructor_process">🧾 処理手順</span>
 

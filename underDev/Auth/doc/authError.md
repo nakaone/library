@@ -12,7 +12,7 @@ auth専用エラーオブジェクト
 
 ### 🧩 <span id="autherror_internal">内部構成</span>
 
- 🔢 authError メンバ一覧
+🔢 authError メンバ一覧
 
 | 項目名 | データ型 | 要否 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -36,11 +36,10 @@ auth専用エラーオブジェクト
 
 ### <span id="autherror_constructor_param">📥 引数</span>
 
-
-| 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| :-- | :--: | :-- | :-- | :-- |
-| e | ❌ | Error | — | エラーオブジェクト | 
-| v | ⭕ | Object | {} | 関数・メソッド内汎用変数 | 
+| 項目名 | データ型 | 要否 | 説明 |
+| :-- | :-- | :-- | :-- |
+| e | Error | **必須** |  |
+| v | Object | {} |  |
 
 ### <span id="autherror_constructor_process">🧾 処理手順</span>
 

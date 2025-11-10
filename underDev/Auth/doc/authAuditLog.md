@@ -15,7 +15,7 @@ authServerの監査ログ
 
 ### 🧩 <span id="authauditlog_internal">内部構成</span>
 
- 🔢 authAuditLog メンバ一覧
+🔢 authAuditLog メンバ一覧
 
 | 項目名 | データ型 | 要否 | 説明 |
 | :-- | :-- | :-- | :-- |
@@ -39,8 +39,9 @@ authServerの監査ログ
 
 ### <span id="authauditlog_constructor_param">📥 引数</span>
 
-
-- 無し(void)
+| 項目名 | データ型 | 要否 | 説明 |
+| :-- | :-- | :-- | :-- |
+| note | [authConfig](authConfig.md#authconfig_internal) \| [authAuditLog](authAuditLog.md#authauditlog_internal) | **必須** |  |
 
 ### <span id="authauditlog_constructor_process">🧾 処理手順</span>
 

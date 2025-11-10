@@ -164,20 +164,24 @@ function makeTable(data,opt){
       }
     }
 
-    // ヘッダ行の作成
-    v.rv.push(`\n${v.opt.indent}| ${v.cols.map(x => v.headerMap[x] || x).join(' | ')} |`);
-    v.rv.push(`${v.opt.indent}| ${v.cols.map(()=>':--').join(' | ')} |`);
-    for( v.i=0 ; v.i<v.params.length ; v.i++ ){
-      // データ型がcdefで定義済ならリンクを設定
-      v.params[v.i].type = v.params[v.i].type.split('|')
-      .map(x => x.trim().replace('\\',''))  // 個別のデータ型名
-      .map(x => cdef.hasOwnProperty(x) ? `[${x}](${x}.md#${x.toLowerCase()}_internal)` : x)
-      .join('\\|');
-      // 既定値欄の表示内容を作成
-      v.params[v.i].default = v.params[v.i].default !== '—' ? v.params[v.i].default
-      : (v.params[v.i].isOpt ? '任意' : '**必須**');
-      // 一項目分のデータ行を出力
-      v.rv.push(`${v.opt.indent}| ${v.cols.map(x => v.params[v.i][x]).join(' | ')} |`)
+    if( v.params.length === 0 ){
+      ['','- 無し(void)'].forEach(x => v.rv.push(x));
+    } else {
+      // ヘッダ行の作成
+      v.rv.push(`\n${v.opt.indent}| ${v.cols.map(x => v.headerMap[x] || x).join(' | ')} |`);
+      v.rv.push(`${v.opt.indent}| ${v.cols.map(()=>':--').join(' | ')} |`);
+      for( v.i=0 ; v.i<v.params.length ; v.i++ ){
+        // データ型がcdefで定義済ならリンクを設定
+        v.params[v.i].type = v.params[v.i].type.split('|')
+        .map(x => x.trim().replace('\\',''))  // 個別のデータ型名
+        .map(x => cdef.hasOwnProperty(x) ? `[${x}](${x}.md#${x.toLowerCase()}_internal)` : x)
+        .join(' \\| ');
+        // 既定値欄の表示内容を作成
+        v.params[v.i].default = v.params[v.i].default !== '—' ? v.params[v.i].default
+        : (v.params[v.i].isOpt ? '任意' : '**必須**');
+        // 一項目分のデータ行を出力
+        v.rv.push(`${v.opt.indent}| ${v.cols.map(x => v.params[v.i][x]).join(' | ')} |`)
+      }
     }
   };
 
@@ -188,7 +192,7 @@ function makeTable(data,opt){
 
   // タイトル行の作成
   if( v.opt.title.length > 0 ){
-    ['','#'.repeat(opt.level)+' '+opt.title].forEach(x => v.rv.push(x));
+    ['',opt.title].forEach(x => v.rv.push(x));
   }
 
   if( v.opt.caller === 'Members' || v.opt.caller === 'Params' ){
@@ -474,21 +478,13 @@ class Params {
     if( cdef[this.className].methods[this.methodName].caller.length > 0 ){
       ['',`### <span id="${cc}_caller">📞 呼出元</span>`,''].forEach(x => rv.push(x));
       cdef[this.className].methods[this.methodName].caller.forEach(x => {
-        //console.log(JSON.stringify({caller:{class:x.class,method:x.method},callee:{class:this.className,method:this.methodName}},null,2));
         rv.push(`- [${x.class}.${x.method}()](${x.class}.md#${cc})`);
       })
     }
 
     // 引数一覧
-    ['',`### <span id="${cc}_param">📥 引数</span>`,''].forEach(x => rv.push(x));
+    makeTable(this,{title:`### <span id="${cc}_param">📥 引数</span>`}).forEach(x => rv.push(x));
 
-    if( this._list.length === 0 ){
-      ['',`- 無し(void)`].forEach(x => rv.push(x));
-    } else {
-      ['','| 項目名 | 任意 | データ型 | 既定値 | 説明 |','| :-- | :--: | :-- | :-- | :-- |']
-      .forEach(x => rv.push(x));
-      this._list.forEach(x => this[x].list().forEach(l => rv.push(l)));
-    }
     return rv;
   }
 }
@@ -503,25 +499,6 @@ class Param {
     this.default = arg.default || '—'; // 既定値
     this.note = arg.note || ''; // 項目の説明
     this.isOpt = this.default !== '—' ? true : (arg.isOpt || false);  // 任意項目ならtrue
-  }
-
-  /** Markdown形式の一覧作成 */
-  list(){
-    // 引数が複数のデータ型の場合、分割して個別に作成(ex.{Member|authRequest})
-    const types = [];
-    this.type.split('|').forEach(type => {
-      type = type.trim();
-      const typeName = type.replace(/\[\]/g, ''); // 配列を示す'[]'は削除
-      types.push(typeof cdef[typeName] === 'undefined' ? type
-        // 定義済のデータ型ならそのメンバ一覧へのリンクを設定
-        : `[${type}](${typeName}.md#${typeName.toLowerCase()}_internal)`);
-    });
-
-    // 項目名 任意 データ型 既定値 備考
-    return [`| ${this.name} | ${this.isOpt?'⭕':'❌'} | ${types.join(' \\| ')} | ${
-      typeof this.default === 'object' && this.default !== null
-      ? JSON.stringify(this.default) : this.default
-    } | ${this.note} | `];
   }
 }
 

@@ -12,13 +12,13 @@ auth内メソッドの標準的な戻り値
 
 ### 🧩 <span id="authresult_internal">内部構成</span>
 
- 🔢 authResult メンバ一覧
+🔢 authResult メンバ一覧
 
 | 項目名 | データ型 | 要否 | 説明 |
 | :-- | :-- | :-- | :-- |
 | responseTime | number | Date.now() | 処理終了日時 |
 | status | string | "normal" | 終了状態 |
-| response | any\|[authError](authError.md#autherror_internal) | 任意 | 処理結果 |
+| response | any \| [authError](authError.md#autherror_internal) | 任意 | 処理結果 |
 
 🧱 <span id="authresult_method">authResult メソッド一覧</span>
 
@@ -32,10 +32,9 @@ auth内メソッドの標準的な戻り値
 
 ### <span id="authresult_constructor_param">📥 引数</span>
 
-
-| 項目名 | 任意 | データ型 | 既定値 | 説明 |
-| :-- | :--: | :-- | :-- | :-- |
-| arg | ⭕ | Object | {} | ユーザ指定の設定値 | 
+| 項目名 | データ型 | 要否 | 説明 |
+| :-- | :-- | :-- | :-- |
+| arg | Object | {} |  |
 
 ### <span id="authresult_constructor_process">🧾 処理手順</span>
 
