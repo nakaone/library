@@ -153,6 +153,8 @@ console.log(JSON.stringify({
         label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
 
         params: [
+      {name:'func',type:'string',label:'サーバ側関数名',note:''},
+      {name:'func2',type:'string',label:'サーバ側関数名',note:'かいとか'},
       {name:'note',type:'authConfig|authAuditLog',label:'備考',note:'test'},
         ],
 

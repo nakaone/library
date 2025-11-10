@@ -41,7 +41,9 @@ authServerの監査ログ
 
 | 項目名 | データ型 | 要否 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| note | [authConfig](authConfig.md#authconfig_internal) \| [authAuditLog](authAuditLog.md#authauditlog_internal) | <span style="color:red">必須</span> |  | test |
+| func | string | <span style="color:red">必須</span> | サーバ側関数名 |  |
+| func2 | string | <span style="color:red">必須</span> | サーバ側関数名 | かいとか |
+| note | [authConfig](authConfig.md#authconfig_internal) \| [authAuditLog](authAuditLog.md#authauditlog_internal) | <span style="color:red">必須</span> | 備考 | test |
 
 ### <span id="authauditlog_constructor_process">🧾 処理手順</span>
 

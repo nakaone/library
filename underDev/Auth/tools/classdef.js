@@ -127,6 +127,7 @@ function comparisonTable(arg,indent=''){
 function makeTable(data,opt={}){
   const v = {rv:[],headerMap:{name:'項目名',type:'データ型',default:'要否',label:'説明',note:'備考'}};
   const single = (arg) => {  // 1つ分のテーブル作成
+    //console.log(`l.130 ${JSON.stringify({arg:arg,opt:v.opt},null,2)}`)
 
     // 出力項目リストを作成
     v.cols = Object.keys(v.headerMap).filter(x => v.opt[x] === true);
@@ -503,6 +504,7 @@ class Param {
     this.methodName = methodName;
     this.name = arg.name || ''; // 引数としての変数名
     this.type = arg.type || ''; // データ型
+    this.label = arg.label || ''; // 項目の端的な説明
     this.default = arg.default || '—'; // 既定値
     this.note = arg.note || ''; // 項目の説明
     this.isOpt = this.default !== '—' ? true : (arg.isOpt || false);  // 任意項目ならtrue
