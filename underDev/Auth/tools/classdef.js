@@ -125,9 +125,9 @@ function comparisonTable(arg,indent=''){
  * @returns {string[]} 行毎に分割されたMarkdown
  */
 function makeTable(data,opt={}){
-  const v = {rv:[],headerMap:{name:'項目名',type:'データ型',default:'要否',label:'説明',note:'備考'}};
+  const v = {rv:[],headerMap:{name:'項目名',type:'データ型',default:'要否/既定値',label:'説明',note:'備考'}};
   const single = (arg) => {  // 1つ分のテーブル作成
-    console.log(`l.130 ${JSON.stringify({arg:arg,opt:v.opt},null,2)}`)
+    //console.log(`l.130 ${JSON.stringify({arg:arg,opt:v.opt},null,2)}`)
 
     if( arg.methodName === 'constructor' && v.opt.caller === 'Returns' ){
       // constructorの「戻り値」は「×××インスタンス」に固定

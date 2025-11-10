@@ -17,7 +17,7 @@ authServerの監査ログ
 
 🔢 authAuditLog メンバ一覧
 
-| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | timestamp | string | Date.now() | 要求日時 | ISO8601拡張形式の文字列 |
 | duration | number | <span style="color:red">必須</span> | 処理時間 | ミリ秒単位 |

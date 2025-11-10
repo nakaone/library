@@ -14,7 +14,7 @@ auth内メソッドの標準的な戻り値
 
 🔢 authResult メンバ一覧
 
-| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | responseTime | number | Date.now() | 処理終了日時 |  |
 | status | string | "normal" | 終了状態 | "normal"or"fatal"or警告メッセージ(warning) |
@@ -32,7 +32,7 @@ auth内メソッドの標準的な戻り値
 
 ### <span id="authresult_constructor_param">📥 引数</span>
 
-| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | arg | Object | {} |  | ユーザ指定の設定値 |
 

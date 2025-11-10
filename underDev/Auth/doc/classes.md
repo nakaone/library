@@ -68,8 +68,8 @@ async function Example() {
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authAuditLog.md#authauditlog_constructor">constructor()</a></span> | コンストラクタ |
 | 2 | ⭕ |  ⭕ | [authConfig](authConfig.md) | authClient/authServer共通設定値 |
 | | | | <span style="padding-left:2rem"><span style="color:black">private</span> <a href="authConfig.md#authconfig_constructor">constructor()</a></span> | コンストラクタ |
-| 3 | ❌ |  ❌ | [authClientConfig](authClientConfig.md) |  |
-| | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authClientConfig.md#authclientconfig_constructor">constructor()</a></span> |  |
+| 3 | ⭕ |  ❌ | [authClientConfig](authClientConfig.md) | authClient専用の設定値 |
+| | | | <span style="padding-left:2rem"><span style="color:black">private</span> <a href="authClientConfig.md#authclientconfig_constructor">constructor()</a></span> | コンストラクタ |
 | 4 | ⭕ |  ⭕ | [authError](authError.md) | auth専用エラーオブジェクト |
 | | | | <span style="padding-left:2rem"><span style="color:black">private</span> <a href="authError.md#autherror_constructor">constructor()</a></span> | コンストラクタ |
 | 5 | ❌ |  ❌ | [authErrorLog](authErrorLog.md) |  |

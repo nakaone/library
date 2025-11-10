@@ -10,20 +10,20 @@
 
 authClient/authServer共通設定値
 
-authClientConfig, authServerConfigの親クラス
+[authClientConfig](authClientConfig.md), [authServerConfig](authServerConfig.md)の親クラス
 
 ### 🧩 <span id="authconfig_internal">内部構成</span>
 
 🔢 authConfig メンバ一覧
 
-| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | systemName | string | auth | システム名 |  |
 | adminMail | string | <span style="color:red">必須</span> | 管理者のメールアドレス |  |
 | adminName | string | <span style="color:red">必須</span> | 管理者氏名 |  |
 | allowableTimeDifference | number | 120000 | クライアント・サーバ間通信時の許容時差 | 既定値は2分 |
 | RSAbits | string | 2048 | 鍵ペアの鍵長 |  |
-| underDev | Object | <span style="color:red">必須</span> | テスト時の設定 |  |
+| underDev | Object | 任意 | テスト時の設定 |  |
 | underDev.isTest | boolean | false | 開発モードならtrue |  |
 
 🧱 <span id="authconfig_method">authConfig メソッド一覧</span>
@@ -38,9 +38,9 @@ authClientConfig, authServerConfigの親クラス
 
 ### <span id="authconfig_constructor_param">📥 引数</span>
 
-| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| arg | Object | [object Object] |  | ユーザ指定の設定値 |
+| arg | Object | {} |  | ユーザ指定の設定値 |
 
 ### <span id="authconfig_constructor_process">🧾 処理手順</span>
 

@@ -165,7 +165,7 @@ console.log(JSON.stringify({
   },
   authConfig: {
     label: 'authClient/authServer共通設定値',
-    note: 'authClientConfig, authServerConfigの親クラス',
+    note: '[authClientConfig](authClientConfig.md), [authServerConfig](authServerConfig.md)の親クラス',
     implement:{client:true,server:true},  // 実装の有無
 
     members:[
@@ -174,7 +174,7 @@ console.log(JSON.stringify({
       {name:'adminName',type:'string',label:'管理者氏名'},
       {name:'allowableTimeDifference',type:'number',label:'クライアント・サーバ間通信時の許容時差',note:'既定値は2分',default:120000},
       {name:'RSAbits',type:'string',label:'鍵ペアの鍵長',default:2048},
-      {name:'underDev',type:'Object',label:'テスト時の設定'},
+      {name:'underDev',type:'Object',label:'テスト時の設定',isOpt:true},
       {name:'underDev.isTest',type:'boolean',label:'開発モードならtrue',default:'false'},
     ],
 
@@ -185,7 +185,7 @@ console.log(JSON.stringify({
         rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
         params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{}},
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
         ],
 
         process: `
@@ -197,22 +197,25 @@ console.log(JSON.stringify({
     },
   },
   authClientConfig: {
-    label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement:{client:false,server:false},  // 実装の有無
+    label: 'authClient専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
+    note: '[authConfig](authConfig.md)を継承', // クラスとしての補足説明
+    inherit: 'authConfig', // 親クラス名
+    implement:{client:true,server:false},  // 実装の有無
 
-    members: [  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'',type:'string',label:'',note:''},
+    members: [
+      {name:'api',type:'string',label:'サーバ側WebアプリURLのID',note:'`https://script.google.com/macros/s/(この部分)/exec`'},
+      {name:'timeout',type:'number',label:'サーバからの応答待機時間',note:'これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分',default:300000},
+      {name:'CPkeyGraceTime',type:'number',label:'CPkey期限切れまでの猶予時間',note:'CPkey有効期間がこれを切ったら更新処理実行。既定値は10分',default:600000},
     ],
 
     methods: { // {Methods} ■メソッド定義■
       constructor: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
+        label: 'コンストラクタ',
+        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
         params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+          {name:'config',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
         ],
 
         process: `
