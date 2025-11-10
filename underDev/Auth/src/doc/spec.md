@@ -137,6 +137,53 @@ sequenceDiagram
 - ⑨：要求者(メンバ)の状態をシートから取得
 - ⑪：【返信内容作成】メンバの状態を判断、適宜サーバ側関数の呼び出し<br>
 
+#### I/O項目対応表
+
+| LocalRequest | encryptedRequest | authRequest | authAuditLog | authErrorLog | authResponse |
+| :-- | :-- | :-- | :-- | :-- | :-- |
+|  | memberId | memberId | memberId | memberId | memberId |
+|  | deviceId | deviceId | deviceId | deviceId | deviceId |
+|  | CPkey | CPkey |  |  | CPkey |
+|  | requestTime | requestTime |  |  | requestTime |
+| func | func | func | func | func | func |
+| arguments | arguments | arguments | arguments | arguments | arguments |
+|  | requestId | requestId |  |  | requestId |
+|  |  | SPkey |  |  | SPkey |
+|  |  | response |  |  | response |
+|  |  | receptTime | receptTime | receptTime | receptTime |
+|  |  | responseTime |  |  | responseTime |
+|  |  | status | status |  |  |
+|  |  |  |  | errorType |  |
+|  |  |  |  | caller |  |
+|  |  |  |  | step |  |
+|  |  |  |  | variable |  |
+|  |  |  |  | message |  |
+|  |  |  |  | stack |  |
+|  |  |  | elaps | elaps |  |
+
+| No | メンバ名 | 説明 |
+| --: | :-- | :-- |
+| 1 | memberId | {number} - メンバ識別子。0〜999はシステムで予約 |
+| 2 | deviceId | {string} - デバイス識別子(UUID) |
+| 3 | CPkey | {string} - クライアント側公開鍵 |
+| 4 | requestTime | {number} - クライアント側の処理要求受付日時 |
+| 5 | func | {string} - サーバ側関数名 |
+| 6 | arguments | {any[]} - サーバ側関数に渡す引数の配列 |
+| 7 | requestId | {string} - 処理要求のUUID |
+| 8 | SPkey | {string} - サーバ側公開鍵 |
+| 9 | response | {any} - サーバ側関数の処理結果。Errorオブジェクトを含む |
+| 10 | receptTime | {number} - サーバ側の処理要求受付日時 |
+| 11 | responseTime | {number} - 処理終了日時。authErrorの場合エラー発生日時 |
+| 12 | status | {string|authError} - 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はauthErrorオブジェクト |
+| 13 | errorType | {string} - エラーの型(ex."ReferenceError") |
+| 14 | function | {string} - エラーが起きたクラス・メソッド名 |
+| 15 | step | {string} - エラーが起きたメソッド内の位置を示す文字列 |
+| 16 | variable | {string} - エラー時のメソッド内汎用変数(JSON文字列) |
+| 17 | message | {string} - エラーメッセージ |
+| 18 | stack | {string} - エラー時のスタックトレース |
+| 19 | elaps | {number} - 所要時間(ミリ秒) |
+
+
 <!-- 2025/11/09 I/O変更前
 sequenceDiagram
   autonumber
