@@ -40,6 +40,4 @@
 
 ### <span id="localresponse_constructor_returns">📤 戻り値</span>
 
-| [LocalResponse](LocalResponse.md#localresponse_internal) | データ型 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- |
-|  | string |  |  |
+- LocalResponseインスタンス

@@ -42,8 +42,4 @@ auth内メソッドの標準的な戻り値
 
 ### <span id="authresult_constructor_returns">📤 戻り値</span>
 
-| [authResult](authResult.md#authresult_internal) | データ型 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- |
-| responseTime | number | 処理終了日時 |  |
-| status | string | 終了状態 | "normal"or"fatal"or警告メッセージ(warning) |
-| response | any \| [authError](authError.md#autherror_internal) | 処理結果 | @returns {void}ならundefined。fatal時はauthError |
+- authResultインスタンス

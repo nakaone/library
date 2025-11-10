@@ -127,7 +127,13 @@ function comparisonTable(arg,indent=''){
 function makeTable(data,opt={}){
   const v = {rv:[],headerMap:{name:'項目名',type:'データ型',default:'要否',label:'説明',note:'備考'}};
   const single = (arg) => {  // 1つ分のテーブル作成
-    //console.log(`l.130 ${JSON.stringify({arg:arg,opt:v.opt},null,2)}`)
+    console.log(`l.130 ${JSON.stringify({arg:arg,opt:v.opt},null,2)}`)
+
+    if( arg.methodName === 'constructor' && v.opt.caller === 'Returns' ){
+      // constructorの「戻り値」は「×××インスタンス」に固定
+      ['',`- ${arg.className}インスタンス`].forEach(x => v.rv.push(x));
+      return;
+    }
 
     // 出力項目リストを作成
     v.cols = Object.keys(v.headerMap).filter(x => v.opt[x] === true);

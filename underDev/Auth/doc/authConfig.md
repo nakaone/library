@@ -48,12 +48,4 @@ authClientConfig, authServerConfigの親クラス
 
 ### <span id="authconfig_constructor_returns">📤 戻り値</span>
 
-| [authConfig](authConfig.md#authconfig_internal) | データ型 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- |
-| systemName | string | システム名 |  |
-| adminMail | string | 管理者のメールアドレス |  |
-| adminName | string | 管理者氏名 |  |
-| allowableTimeDifference | number | クライアント・サーバ間通信時の許容時差 | 既定値は2分 |
-| RSAbits | string | 鍵ペアの鍵長 |  |
-| underDev | Object | テスト時の設定 |  |
-| underDev.isTest | boolean | 開発モードならtrue |  |
+- authConfigインスタンス

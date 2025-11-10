@@ -153,12 +153,10 @@ console.log(JSON.stringify({
         label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
 
         params: [
-      {name:'func',type:'string',label:'サーバ側関数名',note:''},
-      {name:'func2',type:'string',label:'サーバ側関数名',note:'かいとか'},
-      {name:'note',type:'authConfig|authAuditLog',label:'備考',note:'test'},
         ],
 
         process: `
+          - メンバと引数両方にある項目は、引数の値をメンバとして設定
         `,
 
         returns: {authAuditLog:{}},
@@ -233,7 +231,7 @@ console.log(JSON.stringify({
     members: [  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'responseTime',type:'number',label:'エラー発生日時',note:'',default:'Date.now()'},
       {name:'errorType',type:'string',label:'エラーの型(ex."ReferenceError")',note:'',default:'Error.name'},
-      {name:'function',type:'string',label:'エラーが起きたクラス・メソッド名',note:'',default:'v.whoisの値'},
+      {name:'function',type:'string',label:'エラーが起きたクラス・メソッド名',note:'',default:'v.whois'},
       {name:'step',type:'string',label:'エラーが起きたメソッド内の位置',default:'v.step'},
       {name:'variable',type:'string',label:'エラー時のメソッド内汎用変数(JSON文字列)',note:'',default:'JSON.stringify(v)'},
       {name:'message',type:'string',label:'エラーメッセージ',default:'Error.message'},
@@ -253,6 +251,8 @@ console.log(JSON.stringify({
 
         process: `
           - メンバと引数両方にある項目は、引数の値をメンバとして設定
+          - variableはv.whois,v.stepを削除した上で、JSON化時150文字以上になる場合、以下のように処理
+            - 配列は"{length:v.xxx.length,sample:v.xxx.slice(0,3)}"に変換
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         returns: {authError:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合

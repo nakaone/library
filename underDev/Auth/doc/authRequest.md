@@ -40,6 +40,4 @@
 
 ### <span id="authrequest_constructor_returns">📤 戻り値</span>
 
-| [authRequest](authRequest.md#authrequest_internal) | データ型 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- |
-|  | string |  |  |
+- authRequestインスタンス

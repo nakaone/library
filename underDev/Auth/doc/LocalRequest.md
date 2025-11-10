@@ -42,6 +42,4 @@
 
 ### <span id="localrequest_constructor_returns">📤 戻り値</span>
 
-| [LocalRequest](LocalRequest.md#localrequest_internal) | データ型 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- |
-|  | string |  |  |
+- LocalRequestインスタンス

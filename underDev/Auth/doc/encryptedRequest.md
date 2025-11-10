@@ -40,6 +40,4 @@
 
 ### <span id="encryptedrequest_constructor_returns">📤 戻り値</span>
 
-| [encryptedRequest](encryptedRequest.md#encryptedrequest_internal) | データ型 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- |
-|  | string |  |  |
+- encryptedRequestインスタンス

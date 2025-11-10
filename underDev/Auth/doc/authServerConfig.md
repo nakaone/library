@@ -40,6 +40,4 @@
 
 ### <span id="authserverconfig_constructor_returns">📤 戻り値</span>
 
-| [authServerConfig](authServerConfig.md#authserverconfig_internal) | データ型 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- |
-|  | string |  |  |
+- authServerConfigインスタンス

@@ -39,24 +39,12 @@ authServerの監査ログ
 
 ### <span id="authauditlog_constructor_param">📥 引数</span>
 
-| 項目名 | データ型 | 要否 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| func | string | <span style="color:red">必須</span> | サーバ側関数名 |  |
-| func2 | string | <span style="color:red">必須</span> | サーバ側関数名 | かいとか |
-| note | [authConfig](authConfig.md#authconfig_internal) \| [authAuditLog](authAuditLog.md#authauditlog_internal) | <span style="color:red">必須</span> | 備考 | test |
+- 無し(void)
 
 ### <span id="authauditlog_constructor_process">🧾 処理手順</span>
 
-
+- メンバと引数両方にある項目は、引数の値をメンバとして設定
 
 ### <span id="authauditlog_constructor_returns">📤 戻り値</span>
 
-| [authAuditLog](authAuditLog.md#authauditlog_internal) | データ型 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- |
-| timestamp | string | 要求日時 | ISO8601拡張形式の文字列 |
-| duration | number | 処理時間 | ミリ秒単位 |
-| memberId | string | メンバの識別子 | =メールアドレス |
-| deviceId | string | デバイスの識別子 |  |
-| func | string | サーバ側関数名 |  |
-| result | string | サーバ側処理結果 | fatal/warning/normal |
-| note | string | 備考 |  |
+- authAuditLogインスタンス
