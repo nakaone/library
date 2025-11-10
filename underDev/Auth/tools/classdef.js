@@ -126,6 +126,8 @@ function comparisonTable(arg,indent=''){
  */
 function makeTable(data,opt={}){
   const v = {rv:[],headerMap:{name:'項目名',type:'データ型',default:'要否/既定値',label:'説明',note:'備考'}};
+  const fv = x => typeof x === 'string' ? x : 
+    ((typeof x === 'object' || Number.isNaN(x)) ? JSON.stringify(x) : x.toLocaleString());
   const single = (arg) => {  // 1つ分のテーブル作成
     //console.log(`l.130 ${JSON.stringify({arg:arg,opt:v.opt},null,2)}`)
 
@@ -188,10 +190,10 @@ function makeTable(data,opt={}){
         .map(x => cdef.hasOwnProperty(x) ? `[${x}](${x}.md#${x.toLowerCase()}_internal)` : x)
         .join(' \\| ');
         // 既定値欄の表示内容を作成
-        v.params[v.i].default = v.params[v.i].default !== '—' ? v.params[v.i].default
+        v.params[v.i].default = v.params[v.i].default !== '—' ? fv(v.params[v.i].default)
         : (v.params[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
         // 一項目分のデータ行を出力
-        v.rv.push(`${v.opt.indent}| ${v.cols.map(x => v.params[v.i][x]).join(' | ')} |`)
+        v.rv.push(`${v.opt.indent}| ${v.cols.map(x => fv(v.params[v.i][x])).join(' | ')} |`)
       }
     }
   };

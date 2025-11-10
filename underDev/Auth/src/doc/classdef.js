@@ -215,7 +215,7 @@ console.log(JSON.stringify({
         rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
         params: [  // {Params} ■メソッド引数の定義■
-          {name:'config',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
         ],
 
         process: `
@@ -316,6 +316,33 @@ console.log(JSON.stringify({
       },
     },
   },
+  authResponse: {
+    label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    implement:{client:false,server:false},  // 実装の有無
+
+    members: [  // {Members} ■メンバ(インスタンス変数)定義■
+      {name:'',type:'string',label:'',note:''},
+    ],
+
+    methods: { // {Methods} ■メソッド定義■
+      constructor: {
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
+
+        params: [  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+        ],
+
+        process: `
+          - メンバと引数両方にある項目は、引数の値をメンバとして設定
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+        returns: {authResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      },
+    },
+  },
   authResult: {
     label: 'auth内メソッドの標準的な戻り値',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
@@ -346,22 +373,47 @@ console.log(JSON.stringify({
     },
   },
   authServerConfig: {
-    label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement:{client:false,server:false},  // 実装の有無
+    label: 'authServer専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
+    note: '[authConfig](authConfig.md)を継承した、authServerでのみ使用する設定値', // クラスとしての補足説明
+    inherit: 'authConfig', // 親クラス名
+    implement:{client:false,server:true},  // 実装の有無
 
-    members: [  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'',type:'string',label:'',note:''},
+    members: [
+      {name:'memberList',type:'string',label:'memberListシート名',default:'memberList'},
+      {name:'defaultAuthority',type:'number',label:'新規加入メンバの権限の既定値',default:1},
+      {name:'memberLifeTime',type:'number',label:'加入有効期間',note:'メンバ加入承認後の有効期間。既定値は1年',default:31536000000},
+      {name:'prohibitedToJoin',type:'number',label:'加入禁止期間',note:'管理者による加入否認後、再加入申請が自動的に却下される期間。既定値は3日',default:259200000},
+      {name:'loginLifeTime',type:'number',label:'認証有効時間',note:'ログイン成功後の有効期間、CPkeyの有効期間。既定値は1日',default:86400000},
+      {name:'loginFreeze',type:'number',label:'認証凍結時間',note:'認証失敗後、再認証要求が禁止される期間。既定値は10分',default:600000},
+      {name:'requestIdRetention',type:'number',label:'重複リクエスト拒否となる時間',note:'既定値は5分',default:300000},
+      {name:'errorLog',type:'string',label:'エラーログのシート名',default:'errorLog'},
+      {name:'storageDaysOfErrorLog',type:'number',label:'監査ログの保存日数',note:'単位はミリ秒。既定値は7日分',default:604800000},
+      {name:'auditLog',type:'string',label:'監査ログのシート名',default:'auditLog'},
+      {name:'storageDaysOfAuditLog',type:'number',label:'監査ログの保存日数',note:'単位はミリ秒。既定値は7日分',default:604800000},
+
+      {name:'func',type:'Object.<string,Object>',label:'サーバ側の関数マップ',note:'例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}}'},
+      {name:'func.authority',type:'number',label:'サーバ側関数の所要権限',note:'サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限。<br>' +
+        '`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。',default:0},
+      {name:'func.do',type:'Function',label:'実行するサーバ側関数'},
+
+      {name:'trial',type:'Object',label:'ログイン試行関係の設定値'},
+      {name:'trial.passcodeLength',type:'number',label:'パスコードの桁数',default:6},
+      {name:'trial.maxTrial',type:'number',label:'パスコード入力の最大試行回数',default:3},
+      {name:'trial.passcodeLifeTime',type:'number',label:'パスコードの有効期間',note:'既定値は10分',default:600000},
+      {name:'trial.generationMax',type:'number',label:'ログイン試行履歴(MemberTrial)の最大保持数',note:'既定値は5世代',default:5},
+
+      {name:'underDev.sendPasscode',type:'boolean',label:'開発中識別フラグ',note:'パスコード通知メール送信を抑止するならtrue',default:'false'},
+      {name:'underDev.sendInvitation',type:'boolean',label:'開発中の加入承認通知メール送信',note:'開発中に加入承認通知メール送信を抑止するならtrue',default:'false'},
     ],
 
-    methods: { // {Methods} ■メソッド定義■
+    methods: {
       constructor: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
+        label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        rev: 1,
 
         params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
         ],
 
         process: `
@@ -399,33 +451,6 @@ console.log(JSON.stringify({
       },
     },
   },
-  encryptedResponse: {
-    label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement:{client:false,server:false},  // 実装の有無
-
-    members: [  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'',type:'string',label:'',note:''},
-    ],
-
-    methods: { // {Methods} ■メソッド定義■
-      constructor: {
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
-
-        params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
-        ],
-
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
-
-        returns: {encryptedResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
-      },
-    },
-  },
   LocalRequest: {
     label: 'ローカル関数からの処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `クライアント側関数からauthClientに渡す内容を確認、オブジェクト化する`,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
@@ -450,33 +475,6 @@ console.log(JSON.stringify({
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         returns: {LocalRequest:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
-      },
-    },
-  },
-  LocalResponse: {
-    label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement:{client:false,server:false},  // 実装の有無
-
-    members: [  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'',type:'string',label:'',note:''},
-    ],
-
-    methods: { // {Methods} ■メソッド定義■
-      constructor: {
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
-
-        params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
-        ],
-
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
-
-        returns: {LocalResponse:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
     },
   },

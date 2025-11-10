@@ -76,18 +76,16 @@ async function Example() {
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authErrorLog.md#autherrorlog_constructor">constructor()</a></span> |  |
 | 6 | ❌ |  ❌ | [authRequest](authRequest.md) |  |
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authRequest.md#authrequest_constructor">constructor()</a></span> |  |
-| 7 | ❌ |  ❌ | [authResult](authResult.md) | auth内メソッドの標準的な戻り値 |
+| 7 | ❌ |  ❌ | [authResponse](authResponse.md) |  |
+| | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authResponse.md#authresponse_constructor">constructor()</a></span> |  |
+| 8 | ❌ |  ❌ | [authResult](authResult.md) | auth内メソッドの標準的な戻り値 |
 | | | | <span style="padding-left:2rem"><span style="color:black">private</span> <a href="authResult.md#authresult_constructor">constructor()</a></span> | コンストラクタ |
-| 8 | ❌ |  ❌ | [authServerConfig](authServerConfig.md) |  |
-| | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authServerConfig.md#authserverconfig_constructor">constructor()</a></span> |  |
-| 9 | ❌ |  ❌ | [encryptedRequest](encryptedRequest.md) |  |
+| 9 | ❌ |  ⭕ | [authServerConfig](authServerConfig.md) | authServer専用の設定値 |
+| | | | <span style="padding-left:2rem"><span style="color:black">private</span> <a href="authServerConfig.md#authserverconfig_constructor">constructor()</a></span> | コンストラクタ |
+| 10 | ❌ |  ❌ | [encryptedRequest](encryptedRequest.md) |  |
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="encryptedRequest.md#encryptedrequest_constructor">constructor()</a></span> |  |
-| 10 | ❌ |  ❌ | [encryptedResponse](encryptedResponse.md) |  |
-| | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="encryptedResponse.md#encryptedresponse_constructor">constructor()</a></span> |  |
 | 11 | ⭕ |  ❌ | [LocalRequest](LocalRequest.md) | ローカル関数からの処理要求 |
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="LocalRequest.md#localrequest_constructor">constructor()</a></span> |  |
-| 12 | ❌ |  ❌ | [LocalResponse](LocalResponse.md) |  |
-| | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="LocalResponse.md#localresponse_constructor">constructor()</a></span> |  |
 
 <!--
 ## <span id="config">1 動作環境設定系</span>

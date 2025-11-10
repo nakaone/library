@@ -21,8 +21,8 @@ authClient/authServer共通設定値
 | systemName | string | auth | システム名 |  |
 | adminMail | string | <span style="color:red">必須</span> | 管理者のメールアドレス |  |
 | adminName | string | <span style="color:red">必須</span> | 管理者氏名 |  |
-| allowableTimeDifference | number | 120000 | クライアント・サーバ間通信時の許容時差 | 既定値は2分 |
-| RSAbits | string | 2048 | 鍵ペアの鍵長 |  |
+| allowableTimeDifference | number | 120,000 | クライアント・サーバ間通信時の許容時差 | 既定値は2分 |
+| RSAbits | string | 2,048 | 鍵ペアの鍵長 |  |
 | underDev | Object | 任意 | テスト時の設定 |  |
 | underDev.isTest | boolean | false | 開発モードならtrue |  |
 
