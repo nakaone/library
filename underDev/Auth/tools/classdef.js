@@ -77,7 +77,6 @@ function evaluate(str){
 /** comparisonTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
  * @param {classDef} arg - 原本となるデータ型(クラス)の情報オブジェクト
  * @param {string} [indent=''] - 各行の先頭に付加するインデント文字列
- */
 function comparisonTable(arg,indent=''){
   const rv = [];
   const dataLabels = Object.keys(arg.pattern);
@@ -110,6 +109,7 @@ function comparisonTable(arg,indent=''){
   return rv;
 
 }
+*/
 
 /**　makeTable: メンバ一覧の作成
  * @param {Members|Params|Returns} data
@@ -121,7 +121,7 @@ function comparisonTable(arg,indent=''){
  * @param {boolean} [opt.type=true] - 「データ型」欄の表示/非表示
  * @param {boolean} [opt.default=true] - 「既定値」欄の表示/非表示
  * @param {boolean} [opt.label=true] - 「説明」欄の表示/非表示
- * @param {boolean} [opt.note=false] - 「備考」欄の表示/非表示
+ * @param {boolean} [opt.note=true] - 「備考」欄の表示/非表示
  * @returns {string[]} 行毎に分割されたMarkdown
  */
 function makeTable(data,opt){
@@ -132,34 +132,38 @@ function makeTable(data,opt){
     v.cols = Object.keys(v.headerMap).filter(x => v.opt[x] === true);
 
     // 引数(Return型)をコピーして既定値設定
-    v.rObj = JSON.parse(JSON.stringify(arg));
-    //v.rObj = Object.assign({default:{},pattern:{}},JSON.parse(JSON.stringify(arg)));
+    v.arg = JSON.parse(JSON.stringify(arg));
 
     if( v.opt.caller === 'Members' || v.opt.caller === 'Params' ){
       // dataのデータ型がParams/Membersだった場合、オリジナルを壊さないようコピー
       // その際className,_list等、Param以外の要素は削除
-      v.params = Object.keys(v.rObj)
-      .filter(x => typeof v.rObj[x] === 'object' && !Array.isArray(v.rObj[x]))
-      .map(x => v.rObj[x]);
+      v.params = Object.keys(v.arg)
+      .filter(x => typeof v.arg[x] === 'object' && !Array.isArray(v.arg[x]))
+      .map(x => v.arg[x]);
     } else {
       // dataのデータ型がReturnsだった場合、Param形式に変更
       // データ型を左上端のセルにリンク付きで表示
-      v.headerMap.name = `[${v.rObj.typeName}](${v.rObj.typeName}.md#${v.rObj.typeName.toLowerCase()}_internal)`;
+      v.headerMap.name = `[${v.arg.typeName}](${v.arg.typeName}.md#${v.arg.typeName.toLowerCase()}_internal)`;
       // v.paramsにオリジナルクラスのメンバ一覧をコピー
-      v.params = JSON.parse(JSON.stringify(cdef[v.rObj.typeName].members));
+      v.org = JSON.parse(JSON.stringify(cdef[v.arg.className].members));
+      v.params = Object.keys(v.org)
+      .filter(x => typeof v.org[x] === 'object' && !Array.isArray(v.org[x]))
+      .map(x => v.org[x]);
 
-      v.patternList = Object.keys(v.rObj).pattern;  // パターン名の一覧
-      for( v.p=0 ; v.p<v.patternList.length ; v.p++ ){
-        v.pn = v.patternList[v.p]; // パターン名
-        v.cols.push(v.pn);  // 出力項目リストにパターンを追加
+      v.patternList = v.arg.hasOwnProperty('pattern') ? Object.keys(v.arg.pattern) : [];  // パターン名の一覧
+      if( v.patternList.length > 0 ){
+        for( v.p=0 ; v.p<v.patternList.length ; v.p++ ){
+          v.pn = v.patternList[v.p]; // パターン名
+          v.cols.push(v.pn);  // 出力項目リストにパターンを追加
 
-        // v.params(Param)に{パターン名：値}を追加
-        for( v.i=0 ; v.i<v.params.length ; v.i++ ){
-          v.params[v.i][v.pn] = v.rObj.pattern[v.pn].hasOwnProperty('assign')
-          && v.rObj.pattern[v.pn].assign.hasOwnProperty(v.params[v.i].name)
-          ? `**${v.rObj.pattern[v.pn].assign[v.params[v.i].name]}**` : (
-            v.rObj.default.hasOwnProperty(v.params[v.i].name) ? v.rObj.default[v.params[v.i].name] : '—'
-          )
+          // v.params(Param)に{パターン名：値}を追加
+          for( v.i=0 ; v.i<v.params.length ; v.i++ ){
+            v.params[v.i][v.pn] = v.arg.pattern[v.pn].hasOwnProperty('assign')
+            && v.arg.pattern[v.pn].assign.hasOwnProperty(v.params[v.i].name)
+            ? `**${v.arg.pattern[v.pn].assign[v.params[v.i].name]}**` : (
+              v.arg.default.hasOwnProperty(v.params[v.i].name) ? v.arg.default[v.params[v.i].name] : '—'
+            )
+          }
         }
       }
     }
@@ -186,7 +190,8 @@ function makeTable(data,opt){
   };
 
   // オプションの既定値設定
-  v.opt = Object.assign({title:'',level:2,indent:0,name:true,type:true,default:true,label:true,note:false},opt);
+  v.opt = Object.assign({title:'',level:2,indent:0,
+    name:true,type:true,default:true,label:true,note:true},opt);
   v.opt.indent = ' '.repeat(v.opt.indent);  // 桁数から文字列に変換
   v.opt.caller = data.constructor.name;
 
@@ -198,7 +203,9 @@ function makeTable(data,opt){
   if( v.opt.caller === 'Members' || v.opt.caller === 'Params' ){
     single(data);
   } else {  // dataのデータ型がReturnsだった場合
-    Object.keys(data).forEach(x => single(Object.assign({typeName:x},data[x])));
+    Object.keys(data)
+    .filter(x => typeof data[x] === 'object' && !Array.isArray(data[x]))
+    .forEach(x => single(Object.assign({typeName:x},data[x])));
   }
 
   return v.rv;
@@ -517,17 +524,8 @@ class Returns {
 
   /** Markdownの作成 */
   md(){
-    /* 出力サンプル
-    ### <span id="authserver_constructor_returns">📤 戻り値</span>
-    ※ Return.md()の結果を追加
-    */
-    const cn = this.className.toLowerCase();
-    const mn = this.methodName.toLowerCase();
-    const cc = `${cn}_${mn}`;
-    const rv = ['',`### <span id="${cc}_returns">📤 戻り値</span>`];
-
-    this._list.forEach(x => this[x].md().forEach(l => rv.push(l)));
-    return rv;
+    const cc = this.className.toLowerCase() + '_' + this.methodName.toLowerCase();
+    return makeTable(this,{title:`### <span id="${cc}_returns">📤 戻り値</span>`},{default:false});
   }
 }
 
@@ -548,14 +546,9 @@ class Return {
       classdef[typeName].members.forEach(x => org[x.name] = '—');
     }
 
-    // パターン指定が無い場合「正常終了」を追加
-    if( Object.keys(arg.pattern || {}).length === 0 ){
-      arg.pattern = {'正常終了':{assign:{}}};
-    }
-
     // パターン別のオブジェクト作成
     this.pattern = {};
-    Object.keys(arg.pattern).forEach(x => {
+    Object.keys(arg.pattern||{}).forEach(x => {
       if( typeof arg.pattern[x].assign === 'undefined' ){
         arg.pattern[x].assign = {};
       }
@@ -569,10 +562,10 @@ class Return {
     });
   }
 
-  /** Markdownの作成 */
+  /** Markdownの作成
   md(){
     return comparisonTable(this,'  ');
-  }
+  } */
 }
 
 

@@ -16,9 +16,9 @@
 
 🔢 LocalRequest メンバ一覧
 
-| 項目名 | データ型 | 要否 | 説明 |
-| :-- | :-- | :-- | :-- |
-|  | string | **必須** |  |
+| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+|  | string | **必須** |  |  |
 
 🧱 <span id="localrequest_method">LocalRequest メソッド一覧</span>
 
@@ -32,9 +32,9 @@
 
 ### <span id="localrequest_constructor_param">📥 引数</span>
 
-| 項目名 | データ型 | 要否 | 説明 |
-| :-- | :-- | :-- | :-- |
-| arg | Object | {} |  |
+| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| arg | Object | {} |  | ユーザ指定の設定値 |
 
 ### <span id="localrequest_constructor_process">🧾 処理手順</span>
 
@@ -42,7 +42,6 @@
 
 ### <span id="localrequest_constructor_returns">📤 戻り値</span>
 
-  - [LocalRequest](LocalRequest.md#localrequest_internal): ローカル関数からの処理要求
-    | 項目名 | データ型 | 生成時 | 正常終了 |
-    | :-- | :-- | :-- | :-- |
-    |  | string | 【必須】 | — |
+| [LocalRequest](LocalRequest.md#localrequest_internal) | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+|  | string | **必須** |  |  |

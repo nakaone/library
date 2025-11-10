@@ -14,11 +14,11 @@ auth内メソッドの標準的な戻り値
 
 🔢 authResult メンバ一覧
 
-| 項目名 | データ型 | 要否 | 説明 |
-| :-- | :-- | :-- | :-- |
-| responseTime | number | Date.now() | 処理終了日時 |
-| status | string | "normal" | 終了状態 |
-| response | any \| [authError](authError.md#autherror_internal) | 任意 | 処理結果 |
+| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| responseTime | number | Date.now() | 処理終了日時 |  |
+| status | string | "normal" | 終了状態 | "normal"or"fatal"or警告メッセージ(warning) |
+| response | any \| [authError](authError.md#autherror_internal) | 任意 | 処理結果 | @returns {void}ならundefined。fatal時はauthError |
 
 🧱 <span id="authresult_method">authResult メソッド一覧</span>
 
@@ -32,9 +32,9 @@ auth内メソッドの標準的な戻り値
 
 ### <span id="authresult_constructor_param">📥 引数</span>
 
-| 項目名 | データ型 | 要否 | 説明 |
-| :-- | :-- | :-- | :-- |
-| arg | Object | {} |  |
+| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| arg | Object | {} |  | ユーザ指定の設定値 |
 
 ### <span id="authresult_constructor_process">🧾 処理手順</span>
 
@@ -42,9 +42,8 @@ auth内メソッドの標準的な戻り値
 
 ### <span id="authresult_constructor_returns">📤 戻り値</span>
 
-  - [authResult](authResult.md#authresult_internal): auth内メソッドの標準的な戻り値
-    | 項目名 | データ型 | 生成時 | 正常終了 |
-    | :-- | :-- | :-- | :-- |
-    | responseTime | number | Date.now() | — |
-    | status | string | "normal" | — |
-    | response | any|authError | 【任意】 | — |
+| [authResult](authResult.md#authresult_internal) | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| responseTime | number | Date.now() | 処理終了日時 |  |
+| status | string | "normal" | 終了状態 | "normal"or"fatal"or警告メッセージ(warning) |
+| response | any \| [authError](authError.md#autherror_internal) | 任意 | 処理結果 | @returns {void}ならundefined。fatal時はauthError |

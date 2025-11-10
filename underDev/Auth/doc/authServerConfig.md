@@ -14,9 +14,9 @@
 
 🔢 authServerConfig メンバ一覧
 
-| 項目名 | データ型 | 要否 | 説明 |
-| :-- | :-- | :-- | :-- |
-|  | string | **必須** |  |
+| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+|  | string | **必須** |  |  |
 
 🧱 <span id="authserverconfig_method">authServerConfig メソッド一覧</span>
 
@@ -30,9 +30,9 @@
 
 ### <span id="authserverconfig_constructor_param">📥 引数</span>
 
-| 項目名 | データ型 | 要否 | 説明 |
-| :-- | :-- | :-- | :-- |
-| arg | Object | {} |  |
+| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| arg | Object | {} |  | ユーザ指定の設定値 |
 
 ### <span id="authserverconfig_constructor_process">🧾 処理手順</span>
 
@@ -40,7 +40,6 @@
 
 ### <span id="authserverconfig_constructor_returns">📤 戻り値</span>
 
-  - [authServerConfig](authServerConfig.md#authserverconfig_internal): 
-    | 項目名 | データ型 | 生成時 | 正常終了 |
-    | :-- | :-- | :-- | :-- |
-    |  | string | 【必須】 | — |
+| [authServerConfig](authServerConfig.md#authserverconfig_internal) | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+|  | string | **必須** |  |  |

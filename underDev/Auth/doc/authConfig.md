@@ -16,15 +16,15 @@ authClientConfig, authServerConfigの親クラス
 
 🔢 authConfig メンバ一覧
 
-| 項目名 | データ型 | 要否 | 説明 |
-| :-- | :-- | :-- | :-- |
-| systemName | string | auth | システム名 |
-| adminMail | string | **必須** | 管理者のメールアドレス |
-| adminName | string | **必須** | 管理者氏名 |
-| allowableTimeDifference | number | 120000 | クライアント・サーバ間通信時の許容時差 |
-| RSAbits | string | 2048 | 鍵ペアの鍵長 |
-| underDev | Object | **必須** | テスト時の設定 |
-| underDev.isTest | boolean | false | 開発モードならtrue |
+| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| systemName | string | auth | システム名 |  |
+| adminMail | string | **必須** | 管理者のメールアドレス |  |
+| adminName | string | **必須** | 管理者氏名 |  |
+| allowableTimeDifference | number | 120000 | クライアント・サーバ間通信時の許容時差 | 既定値は2分 |
+| RSAbits | string | 2048 | 鍵ペアの鍵長 |  |
+| underDev | Object | **必須** | テスト時の設定 |  |
+| underDev.isTest | boolean | false | 開発モードならtrue |  |
 
 🧱 <span id="authconfig_method">authConfig メソッド一覧</span>
 
@@ -38,9 +38,9 @@ authClientConfig, authServerConfigの親クラス
 
 ### <span id="authconfig_constructor_param">📥 引数</span>
 
-| 項目名 | データ型 | 要否 | 説明 |
-| :-- | :-- | :-- | :-- |
-| arg | Object | [object Object] |  |
+| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| arg | Object | [object Object] |  | ユーザ指定の設定値 |
 
 ### <span id="authconfig_constructor_process">🧾 処理手順</span>
 
@@ -48,13 +48,12 @@ authClientConfig, authServerConfigの親クラス
 
 ### <span id="authconfig_constructor_returns">📤 戻り値</span>
 
-  - [authConfig](authConfig.md#authconfig_internal): authClient/authServer共通設定値
-    | 項目名 | データ型 | 生成時 | 正常終了 |
-    | :-- | :-- | :-- | :-- |
-    | systemName | string | auth | — |
-    | adminMail | string | 【必須】 | — |
-    | adminName | string | 【必須】 | — |
-    | allowableTimeDifference | number | 120000 | — |
-    | RSAbits | string | 2048 | — |
-    | underDev | Object | 【必須】 | — |
-    | underDev.isTest | boolean | false | — |
+| [authConfig](authConfig.md#authconfig_internal) | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| systemName | string | auth | システム名 |  |
+| adminMail | string | **必須** | 管理者のメールアドレス |  |
+| adminName | string | **必須** | 管理者氏名 |  |
+| allowableTimeDifference | number | 120000 | クライアント・サーバ間通信時の許容時差 | 既定値は2分 |
+| RSAbits | string | 2048 | 鍵ペアの鍵長 |  |
+| underDev | Object | **必須** | テスト時の設定 |  |
+| underDev.isTest | boolean | false | 開発モードならtrue |  |

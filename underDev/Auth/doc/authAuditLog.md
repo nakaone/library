@@ -17,15 +17,15 @@ authServerの監査ログ
 
 🔢 authAuditLog メンバ一覧
 
-| 項目名 | データ型 | 要否 | 説明 |
-| :-- | :-- | :-- | :-- |
-| timestamp | string | Date.now() | 要求日時 |
-| duration | number | **必須** | 処理時間 |
-| memberId | string | **必須** | メンバの識別子 |
-| deviceId | string | 任意 | デバイスの識別子 |
-| func | string | **必須** | サーバ側関数名 |
-| result | string | normal | サーバ側処理結果 |
-| note | string | **必須** | 備考 |
+| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| timestamp | string | Date.now() | 要求日時 | ISO8601拡張形式の文字列 |
+| duration | number | **必須** | 処理時間 | ミリ秒単位 |
+| memberId | string | **必須** | メンバの識別子 | =メールアドレス |
+| deviceId | string | 任意 | デバイスの識別子 |  |
+| func | string | **必須** | サーバ側関数名 |  |
+| result | string | normal | サーバ側処理結果 | fatal/warning/normal |
+| note | string | **必須** | 備考 |  |
 
 🧱 <span id="authauditlog_method">authAuditLog メソッド一覧</span>
 
@@ -39,9 +39,9 @@ authServerの監査ログ
 
 ### <span id="authauditlog_constructor_param">📥 引数</span>
 
-| 項目名 | データ型 | 要否 | 説明 |
-| :-- | :-- | :-- | :-- |
-| note | [authConfig](authConfig.md#authconfig_internal) \| [authAuditLog](authAuditLog.md#authauditlog_internal) | **必須** |  |
+| 項目名 | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| note | [authConfig](authConfig.md#authconfig_internal) \| [authAuditLog](authAuditLog.md#authauditlog_internal) | **必須** |  | test |
 
 ### <span id="authauditlog_constructor_process">🧾 処理手順</span>
 
@@ -49,13 +49,12 @@ authServerの監査ログ
 
 ### <span id="authauditlog_constructor_returns">📤 戻り値</span>
 
-  - [authAuditLog](authAuditLog.md#authauditlog_internal): authServerの監査ログ
-    | 項目名 | データ型 | 生成時 | 正常終了 |
-    | :-- | :-- | :-- | :-- |
-    | timestamp | string | Date.now() | — |
-    | duration | number | 【必須】 | — |
-    | memberId | string | 【必須】 | — |
-    | deviceId | string | 【任意】 | — |
-    | func | string | 【必須】 | — |
-    | result | string | normal | — |
-    | note | string | 【必須】 | — |
+| [authAuditLog](authAuditLog.md#authauditlog_internal) | データ型 | 要否 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| timestamp | string | Date.now() | 要求日時 | ISO8601拡張形式の文字列 |
+| duration | number | **必須** | 処理時間 | ミリ秒単位 |
+| memberId | string | **必須** | メンバの識別子 | =メールアドレス |
+| deviceId | string | 任意 | デバイスの識別子 |  |
+| func | string | **必須** | サーバ側関数名 |  |
+| result | string | normal | サーバ側処理結果 | fatal/warning/normal |
+| note | string | **必須** | 備考 |  |
