@@ -14,18 +14,17 @@ authClientConfig, authServerConfigの親クラス
 
 ### 🧩 <span id="authconfig_internal">内部構成</span>
 
-🔢 authConfig メンバ一覧
+ 🔢 authConfig メンバ一覧
 
-| 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- | :-- |
-| systemName | ⭕ | string | auth | システム名 |  | 
-| adminMail | ❌ | string | — | 管理者のメールアドレス |  | 
-| adminName | ❌ | string | — | 管理者氏名 |  | 
-| allowableTimeDifference | ⭕ | number | 120000 | クライアント・サーバ間通信時の許容時差 | 既定値は2分 | 
-| RSAbits | ⭕ | string | 2048 | 鍵ペアの鍵長 |  | 
-| underDev | ❌ | Object | — | テスト時の設定 |  | 
-| underDev.isTest | ⭕ | boolean | false | 開発モードならtrue |  | 
-
+| 項目名 | データ型 | 要否 | 説明 |
+| :-- | :-- | :-- | :-- |
+| systemName | string | auth | システム名 |
+| adminMail | string | **必須** | 管理者のメールアドレス |
+| adminName | string | **必須** | 管理者氏名 |
+| allowableTimeDifference | number | 120000 | クライアント・サーバ間通信時の許容時差 |
+| RSAbits | string | 2048 | 鍵ペアの鍵長 |
+| underDev | Object | **必須** | テスト時の設定 |
+| underDev.isTest | boolean | false | 開発モードならtrue |
 
 🧱 <span id="authconfig_method">authConfig メソッド一覧</span>
 

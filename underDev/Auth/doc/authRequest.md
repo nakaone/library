@@ -12,12 +12,11 @@
 
 ### 🧩 <span id="authrequest_internal">内部構成</span>
 
-🔢 authRequest メンバ一覧
+ 🔢 authRequest メンバ一覧
 
-| 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- | :-- |
-|  | ❌ | string | — |  |  | 
-
+| 項目名 | データ型 | 要否 | 説明 |
+| :-- | :-- | :-- | :-- |
+|  | string | **必須** |  |
 
 🧱 <span id="authrequest_method">authRequest メソッド一覧</span>
 

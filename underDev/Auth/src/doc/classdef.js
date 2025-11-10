@@ -99,7 +99,7 @@
     },
   },
 */
-/*  calssコア
+/*  classコア
   className: {
     label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
@@ -318,7 +318,7 @@ console.log(JSON.stringify({
     members: [  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'responseTime',type:'number',label:'処理終了日時',note:'',default:'Date.now()'},
       {name:'status',type:'string',label:'終了状態',note:'"normal"or"fatal"or警告メッセージ(warning)',default:'"normal"'},
-      {name:'response',type:'any\\|authError',label:'処理結果',note:'@returns {void}ならundefined。fatal時はauthError',isOpt:true},
+      {name:'response',type:'any|authError',label:'処理結果',note:'@returns {void}ならundefined。fatal時はauthError',isOpt:true},
     ],
 
     methods: { // {Methods} ■メソッド定義■

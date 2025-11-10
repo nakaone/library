@@ -12,12 +12,11 @@
 
 ### 🧩 <span id="authclientconfig_internal">内部構成</span>
 
-🔢 authClientConfig メンバ一覧
+ 🔢 authClientConfig メンバ一覧
 
-| 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- | :-- |
-|  | ❌ | string | — |  |  | 
-
+| 項目名 | データ型 | 要否 | 説明 |
+| :-- | :-- | :-- | :-- |
+|  | string | **必須** |  |
 
 🧱 <span id="authclientconfig_method">authClientConfig メソッド一覧</span>
 

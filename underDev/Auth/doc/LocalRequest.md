@@ -14,12 +14,11 @@
 
 ### 🧩 <span id="localrequest_internal">内部構成</span>
 
-🔢 LocalRequest メンバ一覧
+ 🔢 LocalRequest メンバ一覧
 
-| 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- | :-- |
-|  | ❌ | string | — |  |  | 
-
+| 項目名 | データ型 | 要否 | 説明 |
+| :-- | :-- | :-- | :-- |
+|  | string | **必須** |  |
 
 🧱 <span id="localrequest_method">LocalRequest メソッド一覧</span>
 

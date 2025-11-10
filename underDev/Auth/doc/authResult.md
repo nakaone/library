@@ -12,14 +12,13 @@ auth内メソッドの標準的な戻り値
 
 ### 🧩 <span id="authresult_internal">内部構成</span>
 
-🔢 authResult メンバ一覧
+ 🔢 authResult メンバ一覧
 
-| 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- | :-- |
-| responseTime | ⭕ | number | Date.now() | 処理終了日時 |  | 
-| status | ⭕ | string | "normal" | 終了状態 | "normal"or"fatal"or警告メッセージ(warning) | 
-| response | ⭕ | any\|authError | — | 処理結果 | @returns {void}ならundefined。fatal時はauthError | 
-
+| 項目名 | データ型 | 要否 | 説明 |
+| :-- | :-- | :-- | :-- |
+| responseTime | number | Date.now() | 処理終了日時 |
+| status | string | "normal" | 終了状態 |
+| response | any\|[authError](authError.md#autherror_internal) | 任意 | 処理結果 |
 
 🧱 <span id="authresult_method">authResult メソッド一覧</span>
 
@@ -49,4 +48,4 @@ auth内メソッドの標準的な戻り値
     | :-- | :-- | :-- | :-- |
     | responseTime | number | Date.now() | — |
     | status | string | "normal" | — |
-    | response | any\|authError | 【任意】 | — |
+    | response | any|authError | 【任意】 | — |

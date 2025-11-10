@@ -12,12 +12,11 @@
 
 ### 🧩 <span id="encryptedresponse_internal">内部構成</span>
 
-🔢 encryptedResponse メンバ一覧
+ 🔢 encryptedResponse メンバ一覧
 
-| 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- | :-- |
-|  | ❌ | string | — |  |  | 
-
+| 項目名 | データ型 | 要否 | 説明 |
+| :-- | :-- | :-- | :-- |
+|  | string | **必須** |  |
 
 🧱 <span id="encryptedresponse_method">encryptedResponse メソッド一覧</span>
 

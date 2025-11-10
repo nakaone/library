@@ -111,6 +111,94 @@ function comparisonTable(arg,indent=''){
 
 }
 
+/**　makeTable: メンバ一覧の作成
+ * @param {Members|Params|Returns} data
+ * @param {Object} opt - 各欄の表示/非表示指定
+ * @param {string} [opt.title=''] - 表のタイトル。空文字列ならタイトルは付与しない
+ * @param {number} [opt.level=2] - タイトル行のレベル。1:'#', 2:'##', ...
+ * @param {number} [opt.indent=0] - 表のインデント桁数
+ * @param {boolean} [opt.name=true] - 「項目名」欄の表示/非表示
+ * @param {boolean} [opt.type=true] - 「データ型」欄の表示/非表示
+ * @param {boolean} [opt.default=true] - 「既定値」欄の表示/非表示
+ * @param {boolean} [opt.label=true] - 「説明」欄の表示/非表示
+ * @param {boolean} [opt.note=false] - 「備考」欄の表示/非表示
+ * @returns {string[]} 行毎に分割されたMarkdown
+ */
+function makeTable(data,opt){
+  const v = {rv:[],headerMap:{name:'項目名',type:'データ型',default:'要否',label:'説明',note:'備考'}};
+  const single = (arg) => {  // 1つ分のテーブル作成
+
+    // 出力項目リストを作成
+    v.cols = Object.keys(v.headerMap).filter(x => v.opt[x] === true);
+
+    // 引数(Return型)をコピーして既定値設定
+    v.rObj = JSON.parse(JSON.stringify(arg));
+    //v.rObj = Object.assign({default:{},pattern:{}},JSON.parse(JSON.stringify(arg)));
+
+    if( v.opt.caller === 'Members' || v.opt.caller === 'Params' ){
+      // dataのデータ型がParams/Membersだった場合、オリジナルを壊さないようコピー
+      // その際className,_list等、Param以外の要素は削除
+      v.params = Object.keys(v.rObj)
+      .filter(x => typeof v.rObj[x] === 'object' && !Array.isArray(v.rObj[x]))
+      .map(x => v.rObj[x]);
+    } else {
+      // dataのデータ型がReturnsだった場合、Param形式に変更
+      // データ型を左上端のセルにリンク付きで表示
+      v.headerMap.name = `[${v.rObj.typeName}](${v.rObj.typeName}.md#${v.rObj.typeName.toLowerCase()}_internal)`;
+      // v.paramsにオリジナルクラスのメンバ一覧をコピー
+      v.params = JSON.parse(JSON.stringify(cdef[v.rObj.typeName].members));
+
+      v.patternList = Object.keys(v.rObj).pattern;  // パターン名の一覧
+      for( v.p=0 ; v.p<v.patternList.length ; v.p++ ){
+        v.pn = v.patternList[v.p]; // パターン名
+        v.cols.push(v.pn);  // 出力項目リストにパターンを追加
+
+        // v.params(Param)に{パターン名：値}を追加
+        for( v.i=0 ; v.i<v.params.length ; v.i++ ){
+          v.params[v.i][v.pn] = v.rObj.pattern[v.pn].hasOwnProperty('assign')
+          && v.rObj.pattern[v.pn].assign.hasOwnProperty(v.params[v.i].name)
+          ? `**${v.rObj.pattern[v.pn].assign[v.params[v.i].name]}**` : (
+            v.rObj.default.hasOwnProperty(v.params[v.i].name) ? v.rObj.default[v.params[v.i].name] : '—'
+          )
+        }
+      }
+    }
+
+    // ヘッダ行の作成
+    v.rv.push(`\n${v.opt.indent}| ${v.cols.map(x => v.headerMap[x] || x).join(' | ')} |`);
+    v.rv.push(`${v.opt.indent}| ${v.cols.map(()=>':--').join(' | ')} |`);
+    for( v.i=0 ; v.i<v.params.length ; v.i++ ){
+      // データ型がcdefで定義済ならリンクを設定
+      v.params[v.i].type = v.params[v.i].type.split('|')
+      .map(x => x.trim().replace('\\',''))  // 個別のデータ型名
+      .map(x => cdef.hasOwnProperty(x) ? `[${x}](${x}.md#${x.toLowerCase()}_internal)` : x)
+      .join('\\|');
+      // 既定値欄の表示内容を作成
+      v.params[v.i].default = v.params[v.i].default !== '—' ? v.params[v.i].default
+      : (v.params[v.i].isOpt ? '任意' : '**必須**');
+      // 一項目分のデータ行を出力
+      v.rv.push(`${v.opt.indent}| ${v.cols.map(x => v.params[v.i][x]).join(' | ')} |`)
+    }
+  };
+
+  // オプションの既定値設定
+  v.opt = Object.assign({title:'',level:2,indent:0,name:true,type:true,default:true,label:true,note:false},opt);
+  v.opt.indent = ' '.repeat(v.opt.indent);  // 桁数から文字列に変換
+  v.opt.caller = data.constructor.name;
+
+  // タイトル行の作成
+  if( v.opt.title.length > 0 ){
+    ['','#'.repeat(opt.level)+' '+opt.title].forEach(x => v.rv.push(x));
+  }
+
+  if( v.opt.caller === 'Members' || v.opt.caller === 'Params' ){
+    single(data);
+  } else {  // dataのデータ型がReturnsだった場合
+    Object.keys(data).forEach(x => single(Object.assign({typeName:x},data[x])));
+  }
+
+  return v.rv;
+}
 /**  */
 class ClassDef {
   constructor(className,arg){
@@ -197,23 +285,7 @@ class Members {
 
   /** Markdown形式のメンバ一覧作成 */
   md(){
-    /*
-    ### 🧩 <span="membertrial_internal">内部構成</span>
-
-    🔢 メンバ一覧
-
-    🧱 <span id="membertrial_method">メソッド一覧</span>
-    */
-    const rv = [];
-    if( this._list.length > 0 ){
-      ['',`🔢 ${this.className} メンバ一覧`,'',
-        '| 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |',
-        '| :-- | :-- | :-- | :-- | :-- | :-- |'
-      ].forEach(x => rv.push(x));
-      this._list.forEach(x => rv.push(this[x].md()));
-    }
-    rv.push('');
-    return rv;
+    return makeTable(this,{title:`🔢 ${this.className} メンバ一覧`});
   }
 }
 
@@ -230,19 +302,6 @@ class Member {
       // {any} 関数の場合'=Date.now()'のように記述
     this.isOpt = this.default !== '—' ? true  : (arg.isOpt || false);
       // {boolean} 任意項目はtrue。defaultが設定されたら強制的にtrue
-  }
-
-  /** Markdownの作成 */
-  md(){
-    // 項目名 任意 データ型 既定値 説明 備考
-    // データ型が本仕様書内のデータ型の場合はリンクを作成
-    return `| ${this.name} | ${this.isOpt?'⭕':'❌'} | ${
-      typeof cdef[this.type] === 'undefined'
-      ? this.type : `[${this.type}](${this.type}.md#${this.type.toLowerCase()}_internal)`
-    } | ${
-      typeof this.default === 'object' && this.default !== null
-      ? JSON.stringify(this.default) : this.default
-    } | ${this.label} | ${this.note} | `;
   }
 }
 

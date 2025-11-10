@@ -15,18 +15,17 @@ authServerの監査ログ
 
 ### 🧩 <span id="authauditlog_internal">内部構成</span>
 
-🔢 authAuditLog メンバ一覧
+ 🔢 authAuditLog メンバ一覧
 
-| 項目名 | 任意 | データ型 | 既定値 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- | :-- |
-| timestamp | ⭕ | string | Date.now() | 要求日時 | ISO8601拡張形式の文字列 | 
-| duration | ❌ | number | — | 処理時間 | ミリ秒単位 | 
-| memberId | ❌ | string | — | メンバの識別子 | =メールアドレス | 
-| deviceId | ⭕ | string | — | デバイスの識別子 |  | 
-| func | ❌ | string | — | サーバ側関数名 |  | 
-| result | ⭕ | string | normal | サーバ側処理結果 | fatal/warning/normal | 
-| note | ❌ | string | — | 備考 |  | 
-
+| 項目名 | データ型 | 要否 | 説明 |
+| :-- | :-- | :-- | :-- |
+| timestamp | string | Date.now() | 要求日時 |
+| duration | number | **必須** | 処理時間 |
+| memberId | string | **必須** | メンバの識別子 |
+| deviceId | string | 任意 | デバイスの識別子 |
+| func | string | **必須** | サーバ側関数名 |
+| result | string | normal | サーバ側処理結果 |
+| note | string | **必須** | 備考 |
 
 🧱 <span id="authauditlog_method">authAuditLog メソッド一覧</span>
 
