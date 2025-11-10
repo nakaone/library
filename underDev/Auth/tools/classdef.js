@@ -113,7 +113,7 @@ function comparisonTable(arg,indent=''){
 
 /**　makeTable: メンバ一覧の作成
  * @param {Members|Params|Returns} data
- * @param {Object} opt - 各欄の表示/非表示指定
+ * @param {Object} [opt={}] - 各欄の表示/非表示指定
  * @param {string} [opt.title=''] - 表のタイトル。空文字列ならタイトルは付与しない
  * @param {number} [opt.level=2] - タイトル行のレベル。1:'#', 2:'##', ...
  * @param {number} [opt.indent=0] - 表のインデント桁数
@@ -124,7 +124,7 @@ function comparisonTable(arg,indent=''){
  * @param {boolean} [opt.note=true] - 「備考」欄の表示/非表示
  * @returns {string[]} 行毎に分割されたMarkdown
  */
-function makeTable(data,opt){
+function makeTable(data,opt={}){
   const v = {rv:[],headerMap:{name:'項目名',type:'データ型',default:'要否',label:'説明',note:'備考'}};
   const single = (arg) => {  // 1つ分のテーブル作成
 
@@ -197,7 +197,7 @@ function makeTable(data,opt){
 
   // タイトル行の作成
   if( v.opt.title.length > 0 ){
-    ['',opt.title].forEach(x => v.rv.push(x));
+    ['',v.opt.title].forEach(x => v.rv.push(x));
   }
 
   if( v.opt.caller === 'Members' || v.opt.caller === 'Params' ){
@@ -525,7 +525,7 @@ class Returns {
   /** Markdownの作成 */
   md(){
     const cc = this.className.toLowerCase() + '_' + this.methodName.toLowerCase();
-    return makeTable(this,{title:`### <span id="${cc}_returns">📤 戻り値</span>`},{default:false});
+    return makeTable(this,{title:`### <span id="${cc}_returns">📤 戻り値</span>`,default:false});
   }
 }
 
@@ -561,11 +561,6 @@ class Return {
       };
     });
   }
-
-  /** Markdownの作成
-  md(){
-    return comparisonTable(this,'  ');
-  } */
 }
 
 

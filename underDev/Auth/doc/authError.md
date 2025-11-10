@@ -47,12 +47,12 @@ auth専用エラーオブジェクト
 
 ### <span id="autherror_constructor_returns">📤 戻り値</span>
 
-| [authError](authError.md#autherror_internal) | データ型 | 要否 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| responseTime | number | Date.now() | エラー発生日時 |  |
-| errorType | string | Error.name | エラーの型(ex."ReferenceError") |  |
-| function | string | v.whoisの値 | エラーが起きたクラス・メソッド名 |  |
-| step | string | v.step | エラーが起きたメソッド内の位置 |  |
-| variable | string | JSON.stringify(v) | エラー時のメソッド内汎用変数(JSON文字列) |  |
-| message | string | Error.message | エラーメッセージ |  |
-| stack | string | Error.stack | エラー時のスタックトレース |  |
+| [authError](authError.md#autherror_internal) | データ型 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- |
+| responseTime | number | エラー発生日時 |  |
+| errorType | string | エラーの型(ex."ReferenceError") |  |
+| function | string | エラーが起きたクラス・メソッド名 |  |
+| step | string | エラーが起きたメソッド内の位置 |  |
+| variable | string | エラー時のメソッド内汎用変数(JSON文字列) |  |
+| message | string | エラーメッセージ |  |
+| stack | string | エラー時のスタックトレース |  |

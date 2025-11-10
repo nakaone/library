@@ -40,6 +40,6 @@
 
 ### <span id="encryptedresponse_constructor_returns">📤 戻り値</span>
 
-| [encryptedResponse](encryptedResponse.md#encryptedresponse_internal) | データ型 | 要否 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-|  | string | **必須** |  |  |
+| [encryptedResponse](encryptedResponse.md#encryptedresponse_internal) | データ型 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- |
+|  | string |  |  |

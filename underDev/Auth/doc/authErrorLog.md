@@ -40,6 +40,6 @@
 
 ### <span id="autherrorlog_constructor_returns">📤 戻り値</span>
 
-| [authErrorLog](authErrorLog.md#autherrorlog_internal) | データ型 | 要否 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-|  | string | **必須** |  |  |
+| [authErrorLog](authErrorLog.md#autherrorlog_internal) | データ型 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- |
+|  | string |  |  |

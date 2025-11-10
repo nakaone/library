@@ -49,12 +49,12 @@ authServerの監査ログ
 
 ### <span id="authauditlog_constructor_returns">📤 戻り値</span>
 
-| [authAuditLog](authAuditLog.md#authauditlog_internal) | データ型 | 要否 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-| timestamp | string | Date.now() | 要求日時 | ISO8601拡張形式の文字列 |
-| duration | number | **必須** | 処理時間 | ミリ秒単位 |
-| memberId | string | **必須** | メンバの識別子 | =メールアドレス |
-| deviceId | string | 任意 | デバイスの識別子 |  |
-| func | string | **必須** | サーバ側関数名 |  |
-| result | string | normal | サーバ側処理結果 | fatal/warning/normal |
-| note | string | **必須** | 備考 |  |
+| [authAuditLog](authAuditLog.md#authauditlog_internal) | データ型 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- |
+| timestamp | string | 要求日時 | ISO8601拡張形式の文字列 |
+| duration | number | 処理時間 | ミリ秒単位 |
+| memberId | string | メンバの識別子 | =メールアドレス |
+| deviceId | string | デバイスの識別子 |  |
+| func | string | サーバ側関数名 |  |
+| result | string | サーバ側処理結果 | fatal/warning/normal |
+| note | string | 備考 |  |

@@ -40,6 +40,6 @@
 
 ### <span id="authclientconfig_constructor_returns">📤 戻り値</span>
 
-| [authClientConfig](authClientConfig.md#authclientconfig_internal) | データ型 | 要否 | 説明 | 備考 |
-| :-- | :-- | :-- | :-- | :-- |
-|  | string | **必須** |  |  |
+| [authClientConfig](authClientConfig.md#authclientconfig_internal) | データ型 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- |
+|  | string |  |  |
