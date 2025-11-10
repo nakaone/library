@@ -20,12 +20,12 @@ authServerの監査ログ
 | 項目名 | データ型 | 要否 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | timestamp | string | Date.now() | 要求日時 | ISO8601拡張形式の文字列 |
-| duration | number | **必須** | 処理時間 | ミリ秒単位 |
-| memberId | string | **必須** | メンバの識別子 | =メールアドレス |
+| duration | number | <span style="color:red">必須</span> | 処理時間 | ミリ秒単位 |
+| memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス |
 | deviceId | string | 任意 | デバイスの識別子 |  |
-| func | string | **必須** | サーバ側関数名 |  |
+| func | string | <span style="color:red">必須</span> | サーバ側関数名 |  |
 | result | string | normal | サーバ側処理結果 | fatal/warning/normal |
-| note | string | **必須** | 備考 |  |
+| note | string | <span style="color:red">必須</span> | 備考 |  |
 
 🧱 <span id="authauditlog_method">authAuditLog メソッド一覧</span>
 
@@ -41,7 +41,7 @@ authServerの監査ログ
 
 | 項目名 | データ型 | 要否 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| note | [authConfig](authConfig.md#authconfig_internal) \| [authAuditLog](authAuditLog.md#authauditlog_internal) | **必須** |  | test |
+| note | [authConfig](authConfig.md#authconfig_internal) \| [authAuditLog](authAuditLog.md#authauditlog_internal) | <span style="color:red">必須</span> |  | test |
 
 ### <span id="authauditlog_constructor_process">🧾 処理手順</span>
 

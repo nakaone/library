@@ -182,7 +182,7 @@ function makeTable(data,opt={}){
         .join(' \\| ');
         // 既定値欄の表示内容を作成
         v.params[v.i].default = v.params[v.i].default !== '—' ? v.params[v.i].default
-        : (v.params[v.i].isOpt ? '任意' : '**必須**');
+        : (v.params[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
         // 一項目分のデータ行を出力
         v.rv.push(`${v.opt.indent}| ${v.cols.map(x => v.params[v.i][x]).join(' | ')} |`)
       }

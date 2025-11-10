@@ -18,7 +18,7 @@
 
 | 項目名 | データ型 | 要否 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-|  | string | **必須** |  |  |
+|  | string | <span style="color:red">必須</span> |  |  |
 
 🧱 <span id="localrequest_method">LocalRequest メソッド一覧</span>
 
