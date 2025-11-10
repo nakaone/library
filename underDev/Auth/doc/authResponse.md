@@ -8,7 +8,7 @@
 
 ## <span id="authresponse_summary">🧭 概要</span>
 
-
+クライアント側で復号されたサーバからの処理結果
 
 ### 🧩 <span id="authresponse_internal">内部構成</span>
 

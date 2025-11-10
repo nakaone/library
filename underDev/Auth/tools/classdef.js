@@ -129,11 +129,13 @@ function makeTable(data,opt={}){
   const fv = x => typeof x === 'string' ? x : 
     ((typeof x === 'object' || Number.isNaN(x)) ? JSON.stringify(x) : x.toLocaleString());
   const single = (arg) => {  // 1つ分のテーブル作成
-    //console.log(`l.130 ${JSON.stringify({arg:arg,opt:v.opt},null,2)}`)
+    //console.log(`l.132 ${JSON.stringify({arg:arg,opt:v.opt},null,2)}`)
 
-    if( arg.methodName === 'constructor' && v.opt.caller === 'Returns' ){
+    if( arg.methodName === 'constructor' && v.opt.caller === 'Returns'
+      && arg.className === arg.typeName // 自分のインスタンスを返す場合。authError等、他のデータ型は除外
+    ){
       // constructorの「戻り値」は「×××インスタンス」に固定
-      ['',`- ${arg.className}インスタンス`].forEach(x => v.rv.push(x));
+      ['',`- ${arg.typeName}インスタンス`].forEach(x => v.rv.push(x));
       return;
     }
 
@@ -154,7 +156,7 @@ function makeTable(data,opt={}){
       // データ型を左上端のセルにリンク付きで表示
       v.headerMap.name = `[${v.arg.typeName}](${v.arg.typeName}.md#${v.arg.typeName.toLowerCase()}_internal)`;
       // v.paramsにオリジナルクラスのメンバ一覧をコピー
-      v.org = JSON.parse(JSON.stringify(cdef[v.arg.className].members));
+      v.org = JSON.parse(JSON.stringify(cdef[v.arg.typeName].members));
       v.params = Object.keys(v.org)
       .filter(x => typeof v.org[x] === 'object' && !Array.isArray(v.org[x]))
       .map(x => v.org[x]);
@@ -535,7 +537,7 @@ class Returns {
   /** Markdownの作成 */
   md(){
     const cc = this.className.toLowerCase() + '_' + this.methodName.toLowerCase();
-    return makeTable(this,{title:`### <span id="${cc}_returns">📤 戻り値</span>`,default:false});
+    return makeTable(this,{title:`### <span id="${cc}_returns">📤 戻り値</span>`,note:false});
   }
 }
 

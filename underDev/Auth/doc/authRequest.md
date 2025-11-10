@@ -8,7 +8,7 @@
 
 ## <span id="authrequest_summary">🧭 概要</span>
 
-
+サーバ側で復号されたクライアントからの処理要求
 
 ### 🧩 <span id="authrequest_internal">内部構成</span>
 

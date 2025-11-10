@@ -290,9 +290,9 @@ console.log(JSON.stringify({
     },
   },
   authRequest: {
-    label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    label: 'サーバ側で復号されたクライアントからの処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement:{client:false,server:false},  // 実装の有無
+    implement:{client:false,server:true},  // 実装の有無
 
     members: [  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'',type:'string',label:'',note:''},
@@ -317,7 +317,7 @@ console.log(JSON.stringify({
     },
   },
   authResponse: {
-    label: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    label: 'クライアント側で復号されたサーバからの処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
     implement:{client:false,server:false},  // 実装の有無
 
@@ -457,24 +457,38 @@ console.log(JSON.stringify({
     implement:{client:true,server:false},  // 実装の有無
 
     members: [  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'',type:'string',label:'',note:''},
+      {name:'func',type:'string',label:'サーバ側関数名',note:''},
+      {name:'arguments',type:'any[]',label:'サーバ側関数に渡す引数の配列',
+        note:'プリミティブ値、及びプリミティブ値で構成された配列・オブジェクト',
+        default:[]},
     ],
 
     methods: { // {Methods} ■メソッド定義■
       constructor: {
         type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        label: '',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
+        label: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
         params: [  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+          {name:'func',type:'string',label:'サーバ側関数名',note:''},
+          {name:'arguments',type:'any[]',label:'サーバ側関数に渡す引数の配列',
+            note:'引数が一つでも配列として指定',default:[]},
         ],
 
         process: `
           - メンバと引数両方にある項目は、引数の値をメンバとして設定
+          - "func"は関数名として使用可能な文字種であることを確認<br>
+            \`^[A-Za-z_$][A-Za-z0-9_$]*$\`<br>
+            上記正規表現にマッチしなければ戻り値「func不正」を返して終了
+          - "arguments"は関数を排除するため、一度JSON化してからオブジェクト化<br>
+            \`JSON.parse(JSON.stringify(arguments))\`
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        returns: {LocalRequest:{}},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+        returns: {LocalRequest:{},
+          authError:{pattern:{'func不正':{assign:{
+            message: '"invalid func"',
+          }}}},
+        },  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
       },
     },
   },

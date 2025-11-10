@@ -74,9 +74,9 @@ async function Example() {
 | | | | <span style="padding-left:2rem"><span style="color:black">private</span> <a href="authError.md#autherror_constructor">constructor()</a></span> | コンストラクタ |
 | 5 | ❌ |  ❌ | [authErrorLog](authErrorLog.md) |  |
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authErrorLog.md#autherrorlog_constructor">constructor()</a></span> |  |
-| 6 | ❌ |  ❌ | [authRequest](authRequest.md) |  |
+| 6 | ❌ |  ⭕ | [authRequest](authRequest.md) | サーバ側で復号されたクライアントからの処理要求 |
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authRequest.md#authrequest_constructor">constructor()</a></span> |  |
-| 7 | ❌ |  ❌ | [authResponse](authResponse.md) |  |
+| 7 | ❌ |  ❌ | [authResponse](authResponse.md) | クライアント側で復号されたサーバからの処理結果 |
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="authResponse.md#authresponse_constructor">constructor()</a></span> |  |
 | 8 | ❌ |  ❌ | [authResult](authResult.md) | auth内メソッドの標準的な戻り値 |
 | | | | <span style="padding-left:2rem"><span style="color:black">private</span> <a href="authResult.md#authresult_constructor">constructor()</a></span> | コンストラクタ |
@@ -85,7 +85,7 @@ async function Example() {
 | 10 | ❌ |  ❌ | [encryptedRequest](encryptedRequest.md) |  |
 | | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="encryptedRequest.md#encryptedrequest_constructor">constructor()</a></span> |  |
 | 11 | ⭕ |  ❌ | [LocalRequest](LocalRequest.md) | ローカル関数からの処理要求 |
-| | | | <span style="padding-left:2rem"><span style="color:red">private</span> <a href="LocalRequest.md#localrequest_constructor">constructor()</a></span> |  |
+| | | | <span style="padding-left:2rem"><span style="color:black">private</span> <a href="LocalRequest.md#localrequest_constructor">constructor()</a></span> | コンストラクタ |
 
 <!--
 ## <span id="config">1 動作環境設定系</span>
