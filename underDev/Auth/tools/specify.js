@@ -41,6 +41,7 @@
  * 
  * ■ 凡例
  * - 🔢：導出項目(定義不要)
+ * - ✂️：trimIndent対象項目
  */
 
 /**
@@ -70,9 +71,9 @@ class FunctionsDef {
  * @typedef {Object} ClassDef
  * @prop {string} [extends=''] - 親クラス名 ※JS/TS共単一継承のみ(配列不可)
  * @prop {string} [desc=''] - 端的なクラスの説明。ex.'authServer監査ログ'
- * @prop {string} [note=''] - クラスとしての補足説明。概要欄に記載
- * @prop {string} [policy=''] - 設計方針欄(trimIndent対象)
- * @prop {string} [example=''] - 想定する実装・使用例(Markdown,trimIndent対象)
+ * @prop {string} [note=''] - ✂️クラスとしての補足説明。概要欄に記載
+ * @prop {string} [policy=''] - ✂️設計方針欄
+ * @prop {string} [example=''] - ✂️想定する実装・使用例(Markdown)
  * @prop {MembersDef} members - メンバ(インスタンス変数)定義
  * @prop {MethodsDef} methods - メソッド定義
  * @prop {Object.<string,boolean>} implement - 実装の有無(ex.{cl:false,sv:true})
@@ -86,9 +87,9 @@ class ClassDef {
   constructor(arg={},className){
     this.extends = arg.extends || '';
     this.desc = arg.desc || '';
-    this.note = arg.note || '';
-    this.policy = arg.policy || '';
-    this.example = arg.example || '';
+    this.note = trimIndent(arg.note || '');
+    this.policy = trimIndent(arg.policy || '');
+    this.example = trimIndent(arg.example || '');
     this.members = new MembersDef(arg.members,className);
     this.methods = new MethodsDef(arg.methods,className);
     this.implement = arg.implement || {};
@@ -129,7 +130,7 @@ class MembersDef {
  * @prop {string} [label=''] - テーブル・シート表示時の項目名。省略時はnameを流用
  * @prop {string[]} [alias=[]] - 複数タイプのCSVを統一フォーマットで読み込む際のnameの別名
  * @prop {string} [desc=''] - 端的なメンバの説明(詳細はnoteに記述)
- * @prop {string} [note=''] - 備考
+ * @prop {string} [note=''] - ✂️備考
  * @prop {string} [type='string'] - データ型。'|'で区切って複数記述可
  * @prop {string} [default=''] - 既定値
  *   テーブル定義(columnDef)の場合、行オブジェクトを引数とするtoString()化された文字列も可
@@ -151,7 +152,7 @@ class FieldDef {
     this.label = arg.label || '';
     this.alias = arg.alias || [];
     this.desc = arg.desc || '';
-    this.note = arg.note || '';
+    this.note = trimIndent(arg.note || '');
     this.type = arg.type || 'string';
     this.default = arg.default || '';
     this.isOpt = this.default === '' ? true : (arg.isOpt || false);
@@ -196,12 +197,12 @@ class MethodsDef {
  * @prop {string} [type=''] - 関数(メソッド)の分類
  *   public/private, static, async, get/set, accessor, etc
  * @prop {string} [desc=''] - 端的な関数(メソッド)の説明。ex.'authServer監査ログ'
- * @prop {string} [note=''] - 注意事項。Markdownで記載
- * @prop {string} [source=''] - 想定するソースコード
+ * @prop {string} [note=''] - ✂️注意事項。Markdownで記載
+ * @prop {string} [source=''] - ✂️想定するソースコード
  * @prop {string[]} [lib=[]] - 本関数(メソッド)で使用する外部ライブラリ
  * @prop {number} [rev=0] - 0:未着手 1:完了 0<n<1:作成途中
  * @prop {ParamsDef} params - 引数
- * @prop {string} process - 処理手順。Markdownで記載
+ * @prop {string} process - ✂️処理手順。Markdownで記載
  * @prop {ReturnsDef} returns - 戻り値の定義(パターン別)
  * @prop {string} [className=''] - 🔢所属するクラス名(メソッドのみ)
  * @prop {string[]} caller - 🔢本関数(メソッド)の呼出元関数(メソッド)。メソッドの場合"クラス.メソッド名"
@@ -215,12 +216,12 @@ class FunctionDef {
     this.name = arg.name;
     this.type = arg.type || '';
     this.desc = arg.desc || '';
-    this.note = arg.note || '';
-    this.source = arg.source || '';
+    this.note = trimIndent(arg.note || '');
+    this.source = trimIndent(arg.source || '');
     this.lib = arg.lib || '';
     this.rev = arg.rev || 0;
     this.params = new ParamsDef(arg.params,className,this.name);
-    this.process = trimIndent(arg.process) || '';
+    this.process = trimIndent(arg.process || '');
     this.returns = new ReturnsDef(arg.params,className,this.name);
     this.className = className;
     this.caller = [];
