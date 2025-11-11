@@ -345,7 +345,7 @@ console.log(JSON.stringify({
   },
   authResult: {
     label: 'auth内メソッドの標準的な戻り値',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    note: `authServer内の処理等、"warning"(処理継続)時の使用を想定。`,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
     implement:{client:false,server:false},  // 実装の有無
 
     members: [  // {Members} ■メンバ(インスタンス変数)定義■
