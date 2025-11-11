@@ -1,4 +1,4 @@
-console.log(JSON.stringify({
+console.log(JSON.stringify({ClassesDef:{
   authAuditLog: {
     desc: 'authServerの監査ログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `
@@ -352,4 +352,4 @@ console.log(JSON.stringify({
         ]},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
     }]},
   },
-}));
+}}));

@@ -45,7 +45,7 @@
 
 /**
  * @typedef {Object} ClassesDef - 特定のプロジェクトで使用するクラスの集合
- * @prop {Object.<string,ClassDef>} - クラス定義
+ * @prop {Object.<string,ClassDef>} - クラス定義({クラス名：クラス定義}形式)
  */
 class ClassesDef {
   /**
@@ -58,11 +58,11 @@ class ClassesDef {
 
 /**
  * @typedef {Object} FunctionsDef - 特定のプロジェクトで使用する関数の集合
- * @prop {Object.<string,FunctionDef>} - クラス定義
+ * @prop {Object.<string,FunctionDef>} - 関数定義({関数名：関数定義}形式)
  */
 class FunctionsDef {
   constructor(arg){
-
+    Object.keys(arg).forEach(x => this[x] = new FunctionDef(arg[x],x));
   }
 }
 
@@ -381,9 +381,16 @@ const arg = analyzeArg();
  * @param {ClassDef} arg
  */
 function main(arg){
-  const classdef = new ClassesDef(arg);
 
-  console.log(JSON.stringify(classdef,null,2));
+  const rv = {classes:null,functions:null}
+  if( arg.hasOwnProperty('ClassesDef')){
+    rv.classes = new ClassesDef(arg.ClassesDef);
+  }
+  if( arg.hasOwnProperty('FunctionsDef')){
+    rv.functions = new FunctionsDef(arg.FunctionsDef);
+  }
+
+  console.log(JSON.stringify(rv,null,2));
 }
 
 const lines = [];
