@@ -45,7 +45,7 @@
  */
 
 /**
- * @typedef {Object} BaseDef
+ * @typedef {Object} BaseDef - 各定義の基底クラス
  * @prop {ProjectDef} prj - ProjectDefインスタンス
  */
 class BaseDef {
@@ -77,7 +77,7 @@ class BaseDef {
 }
 
 /**
- * @typedef {Object} ProjectDef - プロジェクト全体の定義
+ * @typedef {Object} ProjectDef - プロジェクト全体定義
  * @prop {Object.<string,ClassDef|FunctionDef>} defs - 関数・クラスの定義集
  * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {Object.<string,string>} 🔢globals - 使用するグローバル領域毎のMarkdown保存場所
@@ -108,7 +108,7 @@ class ProjectDef extends BaseDef {
 }
 
 /**
- * @typedef {Object} ClassDef
+ * @typedef {Object} ClassDef - クラス・クロージャ関数定義
  * @prop {string} [extends=''] - 親クラス名 ※JS/TS共単一継承のみ(配列不可)
  * @prop {string} [desc=''] - 端的なクラスの説明。ex.'authServer監査ログ'
  * @prop {string} [note=''] - ✂️補足説明。概要欄に記載
