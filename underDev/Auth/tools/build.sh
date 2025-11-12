@@ -21,7 +21,7 @@ rm -rf $tmp/*
 # ----------------------------------------------
 
 # クラス別定義
-node $src/doc/specDef.js | node $prj/tools/specify.js -o:$tmp
+node $src/doc/specDef.js | node $prj/tools/specify.mjs -o:$tmp
 
 #node $src/doc/classdef.js | node $prj/tools/classdef.js -o:$tmp
 #

@@ -49,7 +49,7 @@
  * @prop {ProjectDef} prj - ProjectDefインスタンス
  */
 class BaseDef {
-  static prj;
+  implements = new Set();
   constructor(){}
   /**
    * 与えられた文字列から、先頭末尾の空白行と共通インデントを削除する
@@ -84,12 +84,24 @@ class BaseDef {
  *   ex globals.server.authServer = authServer.mdのMarkdown文書
  */
 class ProjectDef extends BaseDef {
-  constructor(arg){
+  /**
+   * @param {ProjectDef} arg 
+   * @param {Object} [opt={}] - オプション
+   * @param {string} [opt.autoOutput=true] - 二次設定後、作成したMarkdownを出力
+   * @param {string} [opt.folder] - 出力先フォルダ名。無指定の場合カレントフォルダ
+   * @param {boolean} [opt.makeList=true] - true:関数・クラス名一覧を作成
+   */
+  constructor(arg,opt={}){
     super();
 
     if( typeof arg === 'string' ) arg = JSON.parse(arg);
 
     // 一次設定：関数・クラス定義のインスタンスを順次作成
+    this.opt = Object.assign({
+      autoOutput: true,
+      folder: '.',
+      makeList: true,
+    },opt);
     this.defs = {};
     Object.keys(arg.defs).forEach(x => {
       if( arg.defs[x].hasOwnProperty('members') || arg.defs[x].hasOwnProperty('methods')){
@@ -100,10 +112,43 @@ class ProjectDef extends BaseDef {
         this.defs[x] = new FunctionDef(arg.defs[x],x);
       }
     });
-    this.prj = this; // 子孫インスタンスから他インスタンスへの参照用
 
-    // 二次集計：埋込・呼出元対応
+    // 二次設定：埋込・呼出元対応
 
+    // Markdownの出力
+    if( this.opt.autoOutput ) this.outputMD();
+  }
+
+  /** フォルダを作成、Markdownファイルを出力 */
+  outputMD(){
+    console.log(`l.124 this.opt=${JSON.stringify(this.opt,null,2)}`)
+    // 1️⃣ 指定されたフォルダが存在しない場合に作成
+    if (!fs.existsSync(this.opt.folder)) {
+      fs.mkdirSync(this.opt.folder, { recursive: true });
+    }
+
+    // 2️⃣ 指定フォルダ以下のファイル・フォルダを全部削除
+    for (const entry of fs.readdirSync(this.opt.folder)) {
+      const target = path.join(this.opt.folder, entry);
+      fs.rmSync(target, { recursive: true, force: true });
+    }
+
+    // 3️⃣ implement毎にフォルダを作成
+    const folder = {};
+    this.implements.forEach((value,key,set) => {
+      console.log(`l.139 value=${value},key=${key},set=${set}`);
+      folder[value] = path.join(this.opt.folder,value);
+      fs.mkdirSync(folder[value]);
+    });
+
+    // 4️⃣ 
+    Object.keys(this.defs).forEach(def => {
+      this.implements.forEach((value,key,set) => {
+        if( this.defs[def].implement.find(i => i === value) ){
+          fs.writeFileSync(path.join(folder[value], `${def}.md`), this.defs[def].markdown.content, "utf8");
+        }
+      });
+    });
   }
 }
 
@@ -112,11 +157,11 @@ class ProjectDef extends BaseDef {
  * @prop {string} [extends=''] - 親クラス名 ※JS/TS共単一継承のみ(配列不可)
  * @prop {string} [desc=''] - 端的なクラスの説明。ex.'authServer監査ログ'
  * @prop {string} [note=''] - ✂️補足説明。概要欄に記載
- * @prop {string} [policy=''] - ✂️設計方針欄
- * @prop {string} [example=''] - ✂️想定する実装・使用例(Markdown)
+ * @prop {string} [summary=''] - ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
  * @prop {MembersDef} members - メンバ(インスタンス変数)定義
  * @prop {MethodsDef} methods - メソッド定義
  * @prop {Object.<string,boolean>} implement - 実装の有無(ex.{cl:false,sv:true})
+ * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} name - 🔢クラス名
  */
 class ClassDef extends BaseDef {
@@ -125,16 +170,41 @@ class ClassDef extends BaseDef {
    * @param {string} className 
    */
   constructor(arg={},className){
+    const v = {lines:[],cn:className.toLowerCase()};
+
     super();
     this.extends = arg.extends || '';
     this.desc = arg.desc || '';
     this.note = this.trimIndent(arg.note || '');
-    this.policy = this.trimIndent(arg.policy || '');
-    this.example = this.trimIndent(arg.example || '');
+    this.summary = this.trimIndent(arg.summary || '');
     this.members = new MembersDef(arg.members,className);
     this.methods = new MethodsDef(arg.methods,className);
-    this.implement = arg.implement || {};
+    this.implement = arg.implement || [];
     this.name = className;
+
+    // 新しく出てきたimplement要素をprj.imprementsに追加登録
+    this.implement.forEach(x => this.implements.add(x));
+
+    // markdown.templateの既定値作成
+    if( this.desc.length > 0 )  // 端的なクラスの説明
+      v.lines = v.lines.concat(['',this.desc]);
+    if( this.note.length > 0 )  // 補足説明
+      v.lines = v.lines.concat(['',this.note]);
+    if( this.summary.length > 0 )  // 概要
+      v.lines = v.lines.concat(['',
+        `## <span id="${cn}_summary">🧭 ${className} クラス 概要</span>`,
+        '',this.summary]);
+    //v.lines.push(this.members.markdown.content);
+    //v.lines.push(this.methods.markdown.content);
+
+    this.markdown = Object.assign({
+      title: `${className} クラス仕様書`,
+      level: 1,
+      anchor: className.toLowerCase(),
+      link: '',
+      navi: '',
+      template: v.lines.join('\n'),
+    },(arg.markdown || {}));
   }
 }
 
@@ -179,6 +249,7 @@ class MembersDef extends BaseDef {
  *   テーブル定義(columnDef)の場合、行オブジェクトを引数とするtoString()化された文字列も可
  * @prop {boolean} [isOpt=false] - 必須項目ならfalse。defaultが定義されていた場合は強制的にtrue
  * @prop {string} [printf=null] - 表示整形用関数。行オブジェクトを引数とするtoString()化された文字列
+ * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {number} seq - 🔢左端を0とする列番号。Members.constructor()で設定
  * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
  * @prop {string} [functionName=''] - 🔢関数(メソッド)名(引数・戻り値の場合のみ)
@@ -248,6 +319,7 @@ class MethodsDef extends BaseDef {
  * @prop {ParamsDef} params - 引数
  * @prop {string} process - ✂️処理手順。Markdownで記載
  * @prop {ReturnsDef} returns - 戻り値の定義(パターン別)
+ * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} [className=''] - 🔢所属するクラス名(メソッドのみ)
  * @prop {string[]} caller - 🔢本関数(メソッド)の呼出元関数(メソッド)。メソッドの場合"クラス.メソッド名"
  */
@@ -276,6 +348,7 @@ class FunctionDef extends BaseDef {
 /**
  * @typedef {Object} ParamsDef - 関数(メソッド)引数定義
  * @prop {FieldDef[]} list - 引数
+ * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
  * @prop {string} [functionName=''] - 🔢関数(メソッド)名
  */
@@ -307,6 +380,7 @@ class ParamsDef extends BaseDef {
 /**
  * @typedef {Object} ReturnsDef - 関数(メソッド)戻り値定義集
  * @prop {ReturnDef[]} list - (データ型別)戻り値定義集
+ * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
  * @prop {string} [functionName=''] - 🔢関数(メソッド)名
  */
@@ -339,6 +413,7 @@ class ReturnsDef extends BaseDef {
  * @prop {string} type - 戻り値のデータ型
  * @prop {PatternDef} [default={}] - 全パターンの共通設定値
  * @prop {Object.<string,PatternDef>} [patterns={}] - 特定パターンへの設定値
+ * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
  * @prop {string} [functionName=''] - 🔢関数(メソッド)名
  */
@@ -365,21 +440,40 @@ class ReturnDef extends BaseDef {
 /**
  * @typedef {Object} MarkdownDef - Markdown文書作成時の定義
  * @prop {string} [title=''] - タイトル
- * @prop {number} [level=0] - 階層(自然数)。0ならタイトルに'#'を付けない
+ * @prop {number} [level=0] - 階層。0ならタイトルに'#'を付けない
  * @prop {string} [anchor=''] - タイトルに付けるアンカー
  *   "## <span id="[anchor]">タイトル</span>"
  * @prop {string} [link=''] - タイトルに付けるリンク
+ *   "## <a href="[link]">タイトル</a>"
+ *   "## <span id="[anchor]"><a href="[link]">タイトル</a></span>"
  * @prop {string} [navi=''] - ナビゲーション
  * @prop {string} [template=''] - 本文のテンプレート
  * @prop {string} [content=''] - 🔢スペーストリミング＋埋込対応済の本文
  */
 class MarkdownDef extends BaseDef {
   constructor(arg){
+    const v = {};
     super();
+    this.title = arg.title || '';
+    this.level = arg.level || 0;
+    this.anchor = arg.anchor || '';
+    this.link = arg.link || '';
+    this.navi = arg.navi || '';
+    this.template = arg.template || '';
+
+    v.title = this.title;
+    if( this.link.length > 0 )
+      v.title = `<a href="${this.link}">${v.title}</a>`;
+    if( this.anchor.length > 0 )
+      v.title = `<span id="${this.anchor}">${v.title}</span>`;
+    if( this.level > 0 )
+      v.title = `${'#'.repeat(this.level)} ${v.title}`;
+
+    this.content = arg.content || '';
+
     ['title','anchor','link','navi','template','content'].forEach(x => {
       this[x] = arg[x] || '';
     });
-    this.level = arg.level || 0;
   }
 }
 
@@ -401,16 +495,20 @@ function analyzeArg(){
   }
 }
 
+import fs from "fs";
+import path from "path";
+import readline from "readline";
+
 const lines = [];
-const rl = require('readline').createInterface({input: process.stdin});
-rl.on('line', x => lines.push(x)).on('close',() => {
-  rl.close();
-  const fs = require("fs");
+const rl = readline.createInterface({ input: process.stdin });
+
+rl.on('line', x => lines.push(x)).on('close', () => {
   const arg = analyzeArg();
-  const prj = new ProjectDef(lines.join('\n'));
+  console.log(`l.506 arg=${JSON.stringify(arg,null,2)}`);
+  const prj = new ProjectDef(lines.join('\n'),{folder:arg.opt.o});
   delete prj.prj; // 循環参照を削除
-  //console.log(JSON.stringify(prj,null,2));
 });
+
 
 /* classdef.js backup
 const fs = require("fs");
