@@ -44,15 +44,44 @@
  * - ✂️：trimIndent対象項目
  */
 
+class BaseDef {
+  static root;  // ProjectDefインスタンス
+  constructor(){}
+  /**
+   * 与えられた文字列から、先頭末尾の空白行と共通インデントを削除する
+   * @param {string} str - 対象文字列（複数行）
+   * @returns {string} 加工後の文字列
+   */
+  trimIndent(str) {
+    // 1. 先頭・末尾の空白行削除
+    if( !str ) return '';
+    const lines = str.replace(/^\s*\n+|\n+\s*$/g, '').split('\n');
+    if( lines.length === 0 ) return '';
+
+    // 2. 1行だけの場合、先頭のスペースを削除して終了
+    if( lines.length === 1 ) return lines[0].trim();
+
+    // 3. 複数行の場合、各行の共通インデント(スペース・タブ)を取得
+    const indents = lines
+      .filter(line => line.trim() !== '')
+      .map(line => line.match(/^[ \t]*/)[0].length);
+    const minIndent = indents.length ? Math.min(...indents) : 0;
+
+    // 4. 共通インデントを削除、各行を結合した文字列を返す
+    return lines.map(line => line.slice(minIndent)).join('\n');
+  }
+}
+
 /**
  * @typedef {Object} ClassesDef - 特定のプロジェクトで使用するクラスの集合
  * @prop {Object.<string,ClassDef>} - クラス定義({クラス名：クラス定義}形式)
  */
-class ClassesDef {
+class ClassesDef extends BaseDef {
   /**
    * @param {ClassesDef} arg 
    */
   constructor(arg){
+    super();
     Object.keys(arg).forEach(x => this[x] = new ClassDef(arg[x],x));
   }
 }
@@ -61,8 +90,9 @@ class ClassesDef {
  * @typedef {Object} FunctionsDef - 特定のプロジェクトで使用する関数の集合
  * @prop {Object.<string,FunctionDef>} - 関数定義({関数名：関数定義}形式)
  */
-class FunctionsDef {
+class FunctionsDef extends BaseDef {
   constructor(arg){
+    super();
     Object.keys(arg).forEach(x => this[x] = new FunctionDef(arg[x],x));
   }
 }
@@ -79,17 +109,18 @@ class FunctionsDef {
  * @prop {Object.<string,boolean>} implement - 実装の有無(ex.{cl:false,sv:true})
  * @prop {string} name - 🔢クラス名
  */
-class ClassDef {
+class ClassDef extends BaseDef {
   /**
    * @param {ClassDef} arg 
    * @param {string} className 
    */
   constructor(arg={},className){
+    super();
     this.extends = arg.extends || '';
     this.desc = arg.desc || '';
-    this.note = trimIndent(arg.note || '');
-    this.policy = trimIndent(arg.policy || '');
-    this.example = trimIndent(arg.example || '');
+    this.note = this.trimIndent(arg.note || '');
+    this.policy = this.trimIndent(arg.policy || '');
+    this.example = this.trimIndent(arg.example || '');
     this.members = new MembersDef(arg.members,className);
     this.methods = new MethodsDef(arg.methods,className);
     this.implement = arg.implement || {};
@@ -103,12 +134,13 @@ class ClassDef {
  * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} className - 🔢所属するクラス名
  */
-class MembersDef {
+class MembersDef extends BaseDef {
   /**
    * @param {MembersDef} arg 
    * @param {string} className 
    */
   constructor(arg,className){
+    super();
     for( let i=0 ; i<arg.list.length ; i++ ){
       arg.list[i] = new FieldDef(arg.list[i],i,className);
     }
@@ -140,7 +172,7 @@ class MembersDef {
  * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
  * @prop {string} [functionName=''] - 🔢関数(メソッド)名(引数・戻り値の場合のみ)
  */
-class FieldDef {
+class FieldDef extends BaseDef {
   /**
    * @param {FieldDef} arg 
    * @param {number} seq 
@@ -148,11 +180,12 @@ class FieldDef {
    * @param {string} [functionName=''] 
    */
   constructor(arg,seq,className='',functionName=''){
+    super();
     this.name = arg.name || '';
     this.label = arg.label || '';
     this.alias = arg.alias || [];
     this.desc = arg.desc || '';
-    this.note = trimIndent(arg.note || '');
+    this.note = this.trimIndent(arg.note || '');
     this.type = arg.type || 'string';
     this.default = arg.default || '';
     this.isOpt = this.default === '' ? true : (arg.isOpt || false);
@@ -169,13 +202,13 @@ class FieldDef {
  * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} className - 🔢所属するクラス名
  */
-class MethodsDef {
+class MethodsDef extends BaseDef {
   /**
    * @param {MethodsDef} arg 
    * @param {string} className 
    */
   constructor(arg,className){
-    console.log(`l.202 ${JSON.stringify(arg,null,2)}`);
+    super();
     for( let i=0 ; i<arg.list.length ; i++ ){
       arg.list[i] = new FunctionDef(arg.list[i],className);
     }
@@ -207,21 +240,22 @@ class MethodsDef {
  * @prop {string} [className=''] - 🔢所属するクラス名(メソッドのみ)
  * @prop {string[]} caller - 🔢本関数(メソッド)の呼出元関数(メソッド)。メソッドの場合"クラス.メソッド名"
  */
-class FunctionDef {
+class FunctionDef extends BaseDef {
   /**
    * @param {FunctionDef} arg 
    * @param {string} className 
    */
   constructor(arg,className){
+    super();
     this.name = arg.name;
     this.type = arg.type || '';
     this.desc = arg.desc || '';
-    this.note = trimIndent(arg.note || '');
-    this.source = trimIndent(arg.source || '');
+    this.note = this.trimIndent(arg.note || '');
+    this.source = this.trimIndent(arg.source || '');
     this.lib = arg.lib || '';
     this.rev = arg.rev || 0;
     this.params = new ParamsDef(arg.params,className,this.name);
-    this.process = trimIndent(arg.process || '');
+    this.process = this.trimIndent(arg.process || '');
     this.returns = new ReturnsDef(arg.params,className,this.name);
     this.className = className;
     this.caller = [];
@@ -234,13 +268,14 @@ class FunctionDef {
  * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
  * @prop {string} [functionName=''] - 🔢関数(メソッド)名
  */
-class ParamsDef {
+class ParamsDef extends BaseDef {
   /**
    * @param {ParamsDef} arg 
    * @param {string} [className=''] 
    * @param {string} [functionName=''] 
    */
   constructor(arg,className='',functionName=''){
+    super();
     for( let i=0 ; i<arg.list.length ; i++ ){
       arg.list[i] = new FieldDef(arg.list[i],i,className);
     }
@@ -263,13 +298,14 @@ class ParamsDef {
  * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
  * @prop {string} [functionName=''] - 🔢関数(メソッド)名
  */
-class ReturnsDef {
+class ReturnsDef extends BaseDef {
   /**
    * @param {ReturnsDef} arg 
    * @param {string} [className=''] 
    * @param {string} [functionName=''] 
    */
   constructor(arg,className='',functionName=''){
+    super();
     for( let i=0 ; i<arg.list.length ; i++ ){
       arg.list[i] = new ReturnDef(arg.list[i],className,functionName);
     }
@@ -298,13 +334,14 @@ class ReturnsDef {
  * @typedef {Object.<string,string>} PatternDef - パターンに設定する値
  * @example {name:'fuga'} ⇒ 戻り値のデータ型のメンバ'name'に'fuga'を設定
  */
-class ReturnDef {
+class ReturnDef extends BaseDef {
   /**
    * @param {ReturnDef} arg 
    * @param {string} [className=''] 
    * @param {string} [functionName=''] 
    */
   constructor(arg,className='',functionName=''){
+    super();
     this.type = arg.type || '';
     this.default = arg.default || {};
     this.patterns = arg.patterns || {};
@@ -324,8 +361,9 @@ class ReturnDef {
  * @prop {string} [template=''] - 本文のテンプレート
  * @prop {string} [content=''] - 🔢スペーストリミング＋埋込対応済の本文
  */
-class MarkdownDef {
+class MarkdownDef extends BaseDef {
   constructor(arg){
+    super();
     ['title','anchor','link','navi','template','content'].forEach(x => {
       this[x] = arg[x] || '';
     });
@@ -349,30 +387,6 @@ function analyzeArg(){
     console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
     return e;
   }
-}
-
-/**
- * 与えられた文字列から、先頭末尾の空白行と共通インデントを削除する
- * @param {string} str - 対象文字列（複数行）
- * @returns {string} 加工後の文字列
- */
-function trimIndent(str) {
-  // 1. 先頭・末尾の空白行削除
-  if( !str ) return '';
-  const lines = str.replace(/^\s*\n+|\n+\s*$/g, '').split('\n');
-  if( lines.length === 0 ) return '';
-
-  // 2. 1行だけの場合、先頭のスペースを削除して終了
-  if( lines.length === 1 ) return lines[0].trim();
-
-  // 3. 複数行の場合、各行の共通インデント(スペース・タブ)を取得
-  const indents = lines
-    .filter(line => line.trim() !== '')
-    .map(line => line.match(/^[ \t]*/)[0].length);
-  const minIndent = indents.length ? Math.min(...indents) : 0;
-
-  // 4. 共通インデントを削除、各行を結合した文字列を返す
-  return lines.map(line => line.slice(minIndent)).join('\n');
 }
 
 const fs = require("fs");
