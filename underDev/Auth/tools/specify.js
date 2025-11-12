@@ -44,8 +44,12 @@
  * - ✂️：trimIndent対象項目
  */
 
+/**
+ * @typedef {Object} BaseDef
+ * @prop {ProjectDef} prj - ProjectDefインスタンス
+ */
 class BaseDef {
-  static root;  // ProjectDefインスタンス
+  static prj;
   constructor(){}
   /**
    * 与えられた文字列から、先頭末尾の空白行と共通インデントを削除する
@@ -73,27 +77,33 @@ class BaseDef {
 }
 
 /**
- * @typedef {Object} ClassesDef - 特定のプロジェクトで使用するクラスの集合
- * @prop {Object.<string,ClassDef>} - クラス定義({クラス名：クラス定義}形式)
+ * @typedef {Object} ProjectDef - プロジェクト全体の定義
+ * @prop {Object.<string,ClassDef|FunctionDef>} defs - 関数・クラスの定義集
+ * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
+ * @prop {Object.<string,string>} 🔢globals - 使用するグローバル領域毎のMarkdown保存場所
+ *   ex globals.server.authServer = authServer.mdのMarkdown文書
  */
-class ClassesDef extends BaseDef {
-  /**
-   * @param {ClassesDef} arg 
-   */
+class ProjectDef extends BaseDef {
   constructor(arg){
     super();
-    Object.keys(arg).forEach(x => this[x] = new ClassDef(arg[x],x));
-  }
-}
 
-/**
- * @typedef {Object} FunctionsDef - 特定のプロジェクトで使用する関数の集合
- * @prop {Object.<string,FunctionDef>} - 関数定義({関数名：関数定義}形式)
- */
-class FunctionsDef extends BaseDef {
-  constructor(arg){
-    super();
-    Object.keys(arg).forEach(x => this[x] = new FunctionDef(arg[x],x));
+    if( typeof arg === 'string' ) arg = JSON.parse(arg);
+
+    // 一次設定：関数・クラス定義のインスタンスを順次作成
+    this.defs = {};
+    Object.keys(arg.defs).forEach(x => {
+      if( arg.defs[x].hasOwnProperty('members') || arg.defs[x].hasOwnProperty('methods')){
+        console.log(`ClassDef: ${x}`);
+        this.defs[x] = new ClassDef(arg.defs[x],x);
+      } else {
+        console.log(`FunctionDef: ${x}`);
+        this.defs[x] = new FunctionDef(arg.defs[x],x);
+      }
+    });
+    this.prj = this; // 子孫インスタンスから他インスタンスへの参照用
+
+    // 二次集計：埋込・呼出元対応
+
   }
 }
 
@@ -101,7 +111,7 @@ class FunctionsDef extends BaseDef {
  * @typedef {Object} ClassDef
  * @prop {string} [extends=''] - 親クラス名 ※JS/TS共単一継承のみ(配列不可)
  * @prop {string} [desc=''] - 端的なクラスの説明。ex.'authServer監査ログ'
- * @prop {string} [note=''] - ✂️クラスとしての補足説明。概要欄に記載
+ * @prop {string} [note=''] - ✂️補足説明。概要欄に記載
  * @prop {string} [policy=''] - ✂️設計方針欄
  * @prop {string} [example=''] - ✂️想定する実装・使用例(Markdown)
  * @prop {MembersDef} members - メンバ(インスタンス変数)定義
@@ -141,6 +151,7 @@ class MembersDef extends BaseDef {
    */
   constructor(arg,className){
     super();
+    //console.log(`l.154 ${JSON.stringify({arg:arg,className:className},null,2)}`);
     for( let i=0 ; i<arg.list.length ; i++ ){
       arg.list[i] = new FieldDef(arg.list[i],i,className);
     }
@@ -276,6 +287,7 @@ class ParamsDef extends BaseDef {
    */
   constructor(arg,className='',functionName=''){
     super();
+    //console.log(`l.287 arg=${JSON.stringify(arg,null,2)}`);
     for( let i=0 ; i<arg.list.length ; i++ ){
       arg.list[i] = new FieldDef(arg.list[i],i,className);
     }
@@ -389,30 +401,15 @@ function analyzeArg(){
   }
 }
 
-const fs = require("fs");
-const arg = analyzeArg();
-
-/** メイン処理
- * @param {ClassDef} arg
- */
-function main(arg){
-
-  const rv = {classes:null,functions:null}
-  if( arg.hasOwnProperty('ClassesDef')){
-    rv.classes = new ClassesDef(arg.ClassesDef);
-  }
-  if( arg.hasOwnProperty('FunctionsDef')){
-    rv.functions = new FunctionsDef(arg.FunctionsDef);
-  }
-
-  console.log(JSON.stringify(rv,null,2));
-}
-
 const lines = [];
 const rl = require('readline').createInterface({input: process.stdin});
 rl.on('line', x => lines.push(x)).on('close',() => {
   rl.close();
-  main(JSON.parse(lines.join('\n')));
+  const fs = require("fs");
+  const arg = analyzeArg();
+  const prj = new ProjectDef(lines.join('\n'));
+  delete prj.prj; // 循環参照を削除
+  //console.log(JSON.stringify(prj,null,2));
 });
 
 /* classdef.js backup

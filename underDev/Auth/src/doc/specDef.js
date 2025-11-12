@@ -1,4 +1,4 @@
-console.log(JSON.stringify({ClassesDef:{
+console.log(JSON.stringify({markdown:{},defs:{
   authAuditLog: {
     desc: 'authServerの監査ログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `
