@@ -5,7 +5,7 @@ console.log(JSON.stringify({markdown:{},defs:{
       - 監査ログ出力が必要なメソッドの冒頭でインスタンス化、処理開始時刻等を記録
       - 出力時にlogメソッドを呼び出して処理時間を計算、シート出力
     `,	// {string} クラスとしての補足説明。概要欄に記載
-    implement:{client:false,server:true},  // 実装の有無
+    implement: ['sv'],  // 実装の有無
 
     members: {list:[  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'string',desc:'要求日時',note:'ISO8601拡張形式の文字列',default:'Date.now()'},
@@ -35,7 +35,7 @@ console.log(JSON.stringify({markdown:{},defs:{
   authConfig: {
     desc: 'authClient/authServer共通設定値',
     note: '[authClientConfig](authClientConfig.md), [authServerConfig](authServerConfig.md)の親クラス',
-    implement:{client:true,server:true},  // 実装の有無
+    implement: ['cl','sv'],  // 実装の有無
 
     members:{list:[
       {name:'systemName',type:'string',desc:'システム名',default:'auth'},
@@ -68,7 +68,7 @@ console.log(JSON.stringify({markdown:{},defs:{
     desc: 'authClient専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
     note: '[authConfig](authConfig.md)を継承', // クラスとしての補足説明
     extends: 'authConfig', // 親クラス名
-    implement:{client:true,server:false},  // 実装の有無
+    implement: ['cl'],  // 実装の有無
 
     members: {list:[
       {name:'api',type:'string',desc:'サーバ側WebアプリURLのID',note:'`https://script.google.com/macros/s/(この部分)/exec`'},
@@ -96,7 +96,7 @@ console.log(JSON.stringify({markdown:{},defs:{
   authError: {
     desc: 'auth専用エラーオブジェクト',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement:{client:true,server:true},  // 実装の有無
+    implement: ['cl','sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'responseTime',type:'number',desc:'エラー発生日時',note:'',default:'Date.now()'},
@@ -131,7 +131,7 @@ console.log(JSON.stringify({markdown:{},defs:{
   authErrorLog: {
     desc: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement:{client:false,server:false},  // 実装の有無
+    implement: ['sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'',type:'string',desc:'',note:''},
@@ -157,7 +157,7 @@ console.log(JSON.stringify({markdown:{},defs:{
   authRequest: {
     desc: 'サーバ側で復号されたクライアントからの処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement:{client:false,server:true},  // 実装の有無
+    implement: ['sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'',type:'string',desc:'',note:''},
@@ -183,7 +183,7 @@ console.log(JSON.stringify({markdown:{},defs:{
   authResponse: {
     desc: 'クライアント側で復号されたサーバからの処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement:{client:false,server:false},  // 実装の有無
+    implement: ['cl'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'',type:'string',desc:'',note:''},
@@ -209,7 +209,7 @@ console.log(JSON.stringify({markdown:{},defs:{
   authResult: {
     desc: 'auth内メソッドの標準的な戻り値',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `authServer内の処理等、"warning"(処理継続)時の使用を想定。`,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement:{client:false,server:false},  // 実装の有無
+    implement: ['sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'responseTime',type:'number',desc:'処理終了日時',note:'',default:'Date.now()'},
@@ -238,7 +238,7 @@ console.log(JSON.stringify({markdown:{},defs:{
     desc: 'authServer専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
     note: '[authConfig](authConfig.md)を継承した、authServerでのみ使用する設定値', // クラスとしての補足説明
     extends: 'authConfig', // 親クラス名
-    implement:{client:false,server:true},  // 実装の有無
+    implement: ['sv'],  // 実装の有無
 
     members: {list:[
       {name:'memberList',type:'string',desc:'memberListシート名',default:'memberList'},
@@ -288,7 +288,7 @@ console.log(JSON.stringify({markdown:{},defs:{
   encryptedRequest: {
     desc: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement:{client:false,server:false},  // 実装の有無
+    implement: ['cl','sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'',type:'string',desc:'',note:''},
@@ -314,7 +314,7 @@ console.log(JSON.stringify({markdown:{},defs:{
   LocalRequest: {
     desc: 'ローカル関数からの処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `クライアント側関数からauthClientに渡す内容を確認、オブジェクト化する`,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement:{client:true,server:false},  // 実装の有無
+    implement: ['cl'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'func',type:'string',desc:'サーバ側関数名',note:''},
