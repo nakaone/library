@@ -53,7 +53,7 @@ class BaseDef {
   static _defMap = {};  // ClassDefのマップ
 
   constructor(){}
-  
+
   static get implements(){
     return this._implements;
   }
@@ -93,58 +93,80 @@ class BaseDef {
     // 4. 共通インデントを削除、各行を結合した文字列を返す
     return lines.map(line => line.slice(minIndent)).join('\n');
   }
-  /** comparisonTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成 */
-  comparisonTable(obj,indent=0){
+  /** comparisonTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
+   * @param {MembersDef|ParamsDef|ReturnsDef} - 表示対象を指定するオブジェクト
+   * @param {Object} [opt={}]
+   * @param {Object.<string,string>} opt.header - ヘッダ行の定義
+   * @returns {string} 作成した表(Markdown)
+   */
+  comparisonTable(obj,opt={}){
+    //console.log(`l.103 ${JSON.stringify(obj,null,2)}`);
 
-    const v = {type:obj.constructor.name};
+    // fv: 表示する値を整形して文字列化(format value)
+    const fv = x => typeof x === 'string' ? x : 
+      ((typeof x === 'object' || Number.isNaN(x)) ? JSON.stringify(x) : x.toLocaleString());
 
-    // 原本のメンバリストをv.listとして取得
-    if( v.type === 'MembersDef' || v.type === 'ParamsDef' ){
-      // メンバ一覧または引数一覧の場合は単一の表
-      v.list = [JSON.parse(JSON.stringify(obj.list))];
-      console.log(`l.104 ${JSON.stringify(BaseDef.defMap['authAuditLog'])}`);
-    } else {
-      // 戻り値の場合、複数のクラス定義
-      v.list = [];
-      obj.list.forEach(rObj => {
-        // いまここ。循環参照？
-      });
+    const v = {list:[],rv:[],header: Object.assign( // 表のヘッダの既定値
+      {name:'項目名',type:'データ型',default:'要否/既定値',label:'説明',note:'備考'},
+      (opt.header || {}))};
+
+    // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
+    switch( obj.constructor.name ){
+      case 'MembersDef':
+      case 'ParamsDef':
+        // メンバ一覧または引数一覧の場合は単一の表
+        v.obj = {
+          header:Object.assign({},v.header),
+          body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
+        };
+        v.list.push(v.obj);
+        break;
+      case 'ReturnsDef':
+        // 戻り値定義集の場合はReturns.typeを順次取得
+        for( v.i=0 ; v.i<obj.list.length ; v.i++ ){ // obj.list = 戻り値となるデータ型のリスト
+          v.rObj = obj.list[v.i]; // {ReturnDef} rObj - 特定のデータ型
+          v.obj = {
+            header: Object.assign({},v.header),
+            body: JSON.parse(JSON.stringify(BaseDef.defMap[rObj.type])).members.list,
+          };
+          v.patternList = Object.keys(v.rObj.patterns || {}); // 特定データ型内のパターン。ex.["正常終了","警告終了"]
+          for( v.j=0 ; v.j<v.patternList.length ; v.j++ ){
+            // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
+            v.obj.header[`_Col${v.j}`] = v.patternList[v.j];
+            // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
+            v.obj.body.forEach(col => {
+              col[`_Col${v.j}`] = v.rObj.patterns[col.name] ? `**${v.rObj.patterns[col.name]}**`
+              : (v.rObj.default[col.name] ? v.rObj.default[col.name] : '—');
+            })
+          }
+          v.list.push(v.obj);
+        }
+        break;
+      default:
+        return new Error('Invalid type');
     }
+    //console.log(`l.146 v.list=${JSON.stringify(v.list,null,2)}`);
+
+    v.list.forEach(list => {
+
+      // ヘッダ行の作成
+      v.cols = Object.keys(v.header);
+      v.rv.push(`\n| ${v.cols.map(x => v.header[x] || x).join(' | ')} |`);
+      v.rv.push(`| ${v.cols.map(()=>':--').join(' | ')} |`);
+
+      // データ行の作成
+      for( v.i=0 ; v.i<list.body.length ; v.i++ ){
+        // 既定値欄の表示内容を作成
+        list.body[v.i].default = list.body[v.i].default !== '—' ? fv(list.body[v.i].default)
+        : (list.body[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
+        // 一項目分のデータ行を出力
+        v.rv.push(`| ${v.cols.map(x => fv(list.body[v.i][x])).join(' | ')} |`);
+      }
+      //console.log(`l.163 v.rv=${JSON.stringify(v.rv,null,2)}`);
+    });
+
+    return v.rv.join('\n');
   }
-  /*
-  comparisonTable(arg,indent=''){
-    const rv = [];
-    const dataLabels = Object.keys(arg.pattern);
-    const header = ['項目名','データ型','生成時', ...dataLabels];
-
-    if( typeof cdef[arg.typeName] !== 'undefined' ){
-      ['',  // ヘッダー行
-        `${indent}- [${arg.typeName}](${arg.typeName}.md#${arg.typeName.toLowerCase()}_internal): ${cdef[arg.typeName].label}`,
-        `${indent+'  '}| ${header.join(' | ')} |`,
-        `${indent+'  '}| ${header.map(() => ':--').join(' | ')} |`,
-      ].forEach(x => rv.push(x));
-
-      // 各メンバ行
-      cdef[arg.typeName].members._list.forEach(x => {  // 戻り値データ型のメンバ名を順次呼出
-        const m = cdef[arg.typeName].members[x];
-        const cells = [
-          m.name,
-          m.type,
-          m.default !== '—' ? m.default : (m.isOpt ? '【任意】' : '【必須】'),
-          ...dataLabels.map(label => typeof arg.pattern[label].assign[x] === 'undefined'
-            ? ( typeof arg.default !== 'undefined' && typeof arg.default[x] !== 'undefined'
-            ? arg.default[x] : '—' ) : `**${arg.pattern[label].assign[x]}**`)
-        ];
-        rv.push(`${indent+'  '}| ${cells.join(' | ')} |`);
-      });
-    } else {
-      console.error(`comparisonTable error: cdef[arg.typeName]=${cdef[arg.typeName]}\narg=${JSON.stringify(arg,null,2)}`);
-    }
-
-    return rv;
-
-  }
-  */
 }
 
 /**
@@ -268,7 +290,7 @@ class ClassDef extends BaseDef {
       v.lines = v.lines.concat(['',
         `## <span id="${cn}_summary">🧭 ${className} クラス 概要</span>`,
         '',this.summary]);
-    //v.lines.push(this.members.markdown.content);
+    v.lines.push(this.members.markdown.content);
     //v.lines.push(this.methods.markdown.content);
 
     this.markdown = new MarkdownDef(Object.assign({
@@ -302,17 +324,18 @@ class MembersDef extends BaseDef {
       this.list[i] = new FieldDef(arg.list[i],i,className);
     }
 
-    this.comparisonTable(this);
-
+    const table = this.comparisonTable(this);
+    //console.log(`l.327 ${className} -----\n${table}`);
     // MarkdownDefインスタンスの作成
     this.markdown = new MarkdownDef(Object.assign({
       title: `🔢 ${className} メンバ一覧`,
-      level: 0,
+      level: 2,
       anchor: `${className.toLowerCase()}_members`,
       link: ``,
       navi: ``,
-      template: ``,
+      template: `${table}`,
     },(arg.markdown || {})));
+    console.log(`l.338 markdown=${JSON.stringify(this.markdown,null,2)}`);
     this.className = className;
   }
 }

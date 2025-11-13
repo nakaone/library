@@ -1,0 +1,99 @@
+l.338 markdown={
+  "title": "🔢 authAuditLog メンバ一覧",
+  "level": 2,
+  "anchor": "authauditlog_members",
+  "link": "",
+  "navi": "",
+  "template": "\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| timestamp | string | Date.now() |  | ISO8601拡張形式の文字列 |\n| duration | number |  |  | ミリ秒単位 |\n| memberId | string |  |  | =メールアドレス |\n| deviceId | string |  |  |  |\n| func | string |  |  |  |\n| result | string | normal |  | fatal/warning/normal |\n| note | string |  |  |  |",
+  "content": "\n## <span id=\"authauditlog_members\">🔢 authAuditLog メンバ一覧</span>\n\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| timestamp | string | Date.now() |  | ISO8601拡張形式の文字列 |\n| duration | number |  |  | ミリ秒単位 |\n| memberId | string |  |  | =メールアドレス |\n| deviceId | string |  |  |  |\n| func | string |  |  |  |\n| result | string | normal |  | fatal/warning/normal |\n| note | string |  |  |  |\n"
+}
+l.338 markdown={
+  "title": "🔢 authConfig メンバ一覧",
+  "level": 2,
+  "anchor": "authconfig_members",
+  "link": "",
+  "navi": "",
+  "template": "\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| systemName | string | auth |  |  |\n| adminMail | string |  |  |  |\n| adminName | string |  |  |  |\n| allowableTimeDifference | number | 120,000 |  | 既定値は2分 |\n| RSAbits | string | 2,048 |  |  |\n| underDev | Object |  |  |  |\n| underDev.isTest | boolean | false |  |  |",
+  "content": "\n## <span id=\"authconfig_members\">🔢 authConfig メンバ一覧</span>\n\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| systemName | string | auth |  |  |\n| adminMail | string |  |  |  |\n| adminName | string |  |  |  |\n| allowableTimeDifference | number | 120,000 |  | 既定値は2分 |\n| RSAbits | string | 2,048 |  |  |\n| underDev | Object |  |  |  |\n| underDev.isTest | boolean | false |  |  |\n"
+}
+l.338 markdown={
+  "title": "🔢 authClientConfig メンバ一覧",
+  "level": 2,
+  "anchor": "authclientconfig_members",
+  "link": "",
+  "navi": "",
+  "template": "\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| api | string |  |  | `https://script.google.com/macros/s/(この部分)/exec` |\n| timeout | number | 300,000 |  | これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分 |\n| CPkeyGraceTime | number | 600,000 |  | CPkey有効期間がこれを切ったら更新処理実行。既定値は10分 |",
+  "content": "\n## <span id=\"authclientconfig_members\">🔢 authClientConfig メンバ一覧</span>\n\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| api | string |  |  | `https://script.google.com/macros/s/(この部分)/exec` |\n| timeout | number | 300,000 |  | これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分 |\n| CPkeyGraceTime | number | 600,000 |  | CPkey有効期間がこれを切ったら更新処理実行。既定値は10分 |\n"
+}
+l.338 markdown={
+  "title": "🔢 authError メンバ一覧",
+  "level": 2,
+  "anchor": "autherror_members",
+  "link": "",
+  "navi": "",
+  "template": "\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| responseTime | number | Date.now() |  |  |\n| errorType | string | Error.name |  |  |\n| function | string | v.whois |  |  |\n| step | string | v.step |  |  |\n| variable | string | JSON.stringify(v) |  |  |\n| message | string | Error.message |  |  |\n| stack | string | Error.stack |  |  |",
+  "content": "\n## <span id=\"autherror_members\">🔢 authError メンバ一覧</span>\n\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| responseTime | number | Date.now() |  |  |\n| errorType | string | Error.name |  |  |\n| function | string | v.whois |  |  |\n| step | string | v.step |  |  |\n| variable | string | JSON.stringify(v) |  |  |\n| message | string | Error.message |  |  |\n| stack | string | Error.stack |  |  |\n"
+}
+l.338 markdown={
+  "title": "🔢 authErrorLog メンバ一覧",
+  "level": 2,
+  "anchor": "autherrorlog_members",
+  "link": "",
+  "navi": "",
+  "template": "\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n|  | string |  |  |  |",
+  "content": "\n## <span id=\"autherrorlog_members\">🔢 authErrorLog メンバ一覧</span>\n\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n|  | string |  |  |  |\n"
+}
+l.338 markdown={
+  "title": "🔢 authRequest メンバ一覧",
+  "level": 2,
+  "anchor": "authrequest_members",
+  "link": "",
+  "navi": "",
+  "template": "\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n|  | string |  |  |  |",
+  "content": "\n## <span id=\"authrequest_members\">🔢 authRequest メンバ一覧</span>\n\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n|  | string |  |  |  |\n"
+}
+l.338 markdown={
+  "title": "🔢 authResponse メンバ一覧",
+  "level": 2,
+  "anchor": "authresponse_members",
+  "link": "",
+  "navi": "",
+  "template": "\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n|  | string |  |  |  |",
+  "content": "\n## <span id=\"authresponse_members\">🔢 authResponse メンバ一覧</span>\n\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n|  | string |  |  |  |\n"
+}
+l.338 markdown={
+  "title": "🔢 authResult メンバ一覧",
+  "level": 2,
+  "anchor": "authresult_members",
+  "link": "",
+  "navi": "",
+  "template": "\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| responseTime | number | Date.now() |  |  |\n| status | string | \"normal\" |  | \"normal\"or\"fatal\"or警告メッセージ(warning) |\n| response | any|authError |  |  | @returns {void}ならundefined。fatal時はauthError |",
+  "content": "\n## <span id=\"authresult_members\">🔢 authResult メンバ一覧</span>\n\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| responseTime | number | Date.now() |  |  |\n| status | string | \"normal\" |  | \"normal\"or\"fatal\"or警告メッセージ(warning) |\n| response | any|authError |  |  | @returns {void}ならundefined。fatal時はauthError |\n"
+}
+l.338 markdown={
+  "title": "🔢 authServerConfig メンバ一覧",
+  "level": 2,
+  "anchor": "authserverconfig_members",
+  "link": "",
+  "navi": "",
+  "template": "\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| memberList | string | memberList |  |  |\n| defaultAuthority | number | 1 |  |  |\n| memberLifeTime | number | 31,536,000,000 |  | メンバ加入承認後の有効期間。既定値は1年 |\n| prohibitedToJoin | number | 259,200,000 |  | 管理者による加入否認後、再加入申請が自動的に却下される期間。既定値は3日 |\n| loginLifeTime | number | 86,400,000 |  | ログイン成功後の有効期間、CPkeyの有効期間。既定値は1日 |\n| loginFreeze | number | 600,000 |  | 認証失敗後、再認証要求が禁止される期間。既定値は10分 |\n| requestIdRetention | number | 300,000 |  | 既定値は5分 |\n| errorLog | string | errorLog |  |  |\n| storageDaysOfErrorLog | number | 604,800,000 |  | 単位はミリ秒。既定値は7日分 |\n| auditLog | string | auditLog |  |  |\n| storageDaysOfAuditLog | number | 604,800,000 |  | 単位はミリ秒。既定値は7日分 |\n| func | Object.<string,Object> |  |  | 例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}} |\n| func.authority | number |  |  | サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限。<br>`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。 |\n| func.do | Function |  |  |  |\n| trial | Object |  |  |  |\n| trial.passcodeLength | number | 6 |  |  |\n| trial.maxTrial | number | 3 |  |  |\n| trial.passcodeLifeTime | number | 600,000 |  | 既定値は10分 |\n| trial.generationMax | number | 5 |  | 既定値は5世代 |\n| underDev.sendPasscode | boolean | false |  | パスコード通知メール送信を抑止するならtrue |\n| underDev.sendInvitation | boolean | false |  | 開発中に加入承認通知メール送信を抑止するならtrue |",
+  "content": "\n## <span id=\"authserverconfig_members\">🔢 authServerConfig メンバ一覧</span>\n\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| memberList | string | memberList |  |  |\n| defaultAuthority | number | 1 |  |  |\n| memberLifeTime | number | 31,536,000,000 |  | メンバ加入承認後の有効期間。既定値は1年 |\n| prohibitedToJoin | number | 259,200,000 |  | 管理者による加入否認後、再加入申請が自動的に却下される期間。既定値は3日 |\n| loginLifeTime | number | 86,400,000 |  | ログイン成功後の有効期間、CPkeyの有効期間。既定値は1日 |\n| loginFreeze | number | 600,000 |  | 認証失敗後、再認証要求が禁止される期間。既定値は10分 |\n| requestIdRetention | number | 300,000 |  | 既定値は5分 |\n| errorLog | string | errorLog |  |  |\n| storageDaysOfErrorLog | number | 604,800,000 |  | 単位はミリ秒。既定値は7日分 |\n| auditLog | string | auditLog |  |  |\n| storageDaysOfAuditLog | number | 604,800,000 |  | 単位はミリ秒。既定値は7日分 |\n| func | Object.<string,Object> |  |  | 例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}} |\n| func.authority | number |  |  | サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限。<br>`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。 |\n| func.do | Function |  |  |  |\n| trial | Object |  |  |  |\n| trial.passcodeLength | number | 6 |  |  |\n| trial.maxTrial | number | 3 |  |  |\n| trial.passcodeLifeTime | number | 600,000 |  | 既定値は10分 |\n| trial.generationMax | number | 5 |  | 既定値は5世代 |\n| underDev.sendPasscode | boolean | false |  | パスコード通知メール送信を抑止するならtrue |\n| underDev.sendInvitation | boolean | false |  | 開発中に加入承認通知メール送信を抑止するならtrue |\n"
+}
+l.338 markdown={
+  "title": "🔢 encryptedRequest メンバ一覧",
+  "level": 2,
+  "anchor": "encryptedrequest_members",
+  "link": "",
+  "navi": "",
+  "template": "\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n|  | string |  |  |  |",
+  "content": "\n## <span id=\"encryptedrequest_members\">🔢 encryptedRequest メンバ一覧</span>\n\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n|  | string |  |  |  |\n"
+}
+l.338 markdown={
+  "title": "🔢 LocalRequest メンバ一覧",
+  "level": 2,
+  "anchor": "localrequest_members",
+  "link": "",
+  "navi": "",
+  "template": "\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| func | string |  |  |  |\n| arguments | any[] | [] |  | プリミティブ値、及びプリミティブ値で構成された配列・オブジェクト |",
+  "content": "\n## <span id=\"localrequest_members\">🔢 LocalRequest メンバ一覧</span>\n\n| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |\n| :-- | :-- | :-- | :-- | :-- |\n| func | string |  |  |  |\n| arguments | any[] | [] |  | プリミティブ値、及びプリミティブ値で構成された配列・オブジェクト |\n"
+}
