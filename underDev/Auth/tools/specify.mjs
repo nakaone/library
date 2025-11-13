@@ -49,9 +49,11 @@
  * @prop {ProjectDef} prj - ProjectDefインスタンス
  */
 class BaseDef {
-  static _implements = [];
-  constructor(){
-  }
+  static _implements = [];  // 実装環境の一覧
+  static _defMap = {};  // ClassDefのマップ
+
+  constructor(){}
+  
   static get implements(){
     return this._implements;
   }
@@ -61,6 +63,12 @@ class BaseDef {
         this._implements.push(imp);
       }
     });
+  }
+  static get defMap(){
+    return this._defMap;
+  }
+  static set defMap(arg){
+    this._defMap[arg.name] = arg;
   }
   /**
    * 与えられた文字列から、先頭末尾の空白行と共通インデントを削除する
@@ -85,6 +93,58 @@ class BaseDef {
     // 4. 共通インデントを削除、各行を結合した文字列を返す
     return lines.map(line => line.slice(minIndent)).join('\n');
   }
+  /** comparisonTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成 */
+  comparisonTable(obj,indent=0){
+
+    const v = {type:obj.constructor.name};
+
+    // 原本のメンバリストをv.listとして取得
+    if( v.type === 'MembersDef' || v.type === 'ParamsDef' ){
+      // メンバ一覧または引数一覧の場合は単一の表
+      v.list = [JSON.parse(JSON.stringify(obj.list))];
+      console.log(`l.104 ${JSON.stringify(BaseDef.defMap['authAuditLog'])}`);
+    } else {
+      // 戻り値の場合、複数のクラス定義
+      v.list = [];
+      obj.list.forEach(rObj => {
+        // いまここ。循環参照？
+      });
+    }
+  }
+  /*
+  comparisonTable(arg,indent=''){
+    const rv = [];
+    const dataLabels = Object.keys(arg.pattern);
+    const header = ['項目名','データ型','生成時', ...dataLabels];
+
+    if( typeof cdef[arg.typeName] !== 'undefined' ){
+      ['',  // ヘッダー行
+        `${indent}- [${arg.typeName}](${arg.typeName}.md#${arg.typeName.toLowerCase()}_internal): ${cdef[arg.typeName].label}`,
+        `${indent+'  '}| ${header.join(' | ')} |`,
+        `${indent+'  '}| ${header.map(() => ':--').join(' | ')} |`,
+      ].forEach(x => rv.push(x));
+
+      // 各メンバ行
+      cdef[arg.typeName].members._list.forEach(x => {  // 戻り値データ型のメンバ名を順次呼出
+        const m = cdef[arg.typeName].members[x];
+        const cells = [
+          m.name,
+          m.type,
+          m.default !== '—' ? m.default : (m.isOpt ? '【任意】' : '【必須】'),
+          ...dataLabels.map(label => typeof arg.pattern[label].assign[x] === 'undefined'
+            ? ( typeof arg.default !== 'undefined' && typeof arg.default[x] !== 'undefined'
+            ? arg.default[x] : '—' ) : `**${arg.pattern[label].assign[x]}**`)
+        ];
+        rv.push(`${indent+'  '}| ${cells.join(' | ')} |`);
+      });
+    } else {
+      console.error(`comparisonTable error: cdef[arg.typeName]=${cdef[arg.typeName]}\narg=${JSON.stringify(arg,null,2)}`);
+    }
+
+    return rv;
+
+  }
+  */
 }
 
 /**
@@ -116,10 +176,10 @@ class ProjectDef extends BaseDef {
     this.defs = {};
     Object.keys(arg.defs).forEach(x => {
       if( arg.defs[x].hasOwnProperty('members') || arg.defs[x].hasOwnProperty('methods')){
-        console.log(`ClassDef: ${x}`);
+        //console.log(`ClassDef: ${x}`);
         this.defs[x] = new ClassDef(arg.defs[x],x);
       } else {
-        console.log(`FunctionDef: ${x}`);
+        //console.log(`FunctionDef: ${x}`);
         this.defs[x] = new FunctionDef(arg.defs[x],x);
       }
     });
@@ -195,6 +255,9 @@ class ClassDef extends BaseDef {
     // 新しく出てきたimplement要素をprj.imprementsに追加登録
     BaseDef.implements = this.implement;
 
+    // 現在作成中のClassDefをBaseDefのマップに登録
+    BaseDef.defMap = this;
+
     // MarkdownDefインスタンスの作成
     // markdown.templateの既定値作成
     if( this.desc.length > 0 )  // 端的なクラスの説明
@@ -231,11 +294,17 @@ class MembersDef extends BaseDef {
    * @param {string} className 
    */
   constructor(arg,className){
-    super();
     //console.log(`l.154 ${JSON.stringify({arg:arg,className:className},null,2)}`);
+
+    super();
+    this.list = [];
     for( let i=0 ; i<arg.list.length ; i++ ){
-      arg.list[i] = new FieldDef(arg.list[i],i,className);
+      this.list[i] = new FieldDef(arg.list[i],i,className);
     }
+
+    this.comparisonTable(this);
+
+    // MarkdownDefインスタンスの作成
     this.markdown = new MarkdownDef(Object.assign({
       title: `🔢 ${className} メンバ一覧`,
       level: 0,
@@ -514,57 +583,3 @@ rl.on('line', x => lines.push(x)).on('close', () => {
   const prj = new ProjectDef(lines.join('\n'),{folder:arg.opt.o});
   delete prj.prj; // 循環参照を削除
 });
-
-
-/* classdef.js backup
-const fs = require("fs");
-const arg = analyzeArg();
-let classdef;
-const cdef = {};
-
-function main(){
-  // データ(cdef)生成
-  Object.keys(classdef).forEach(x => cdef[x] = new ClassDef(x,classdef[x]));
-
-  // 二次設定項目(caller)のセット
-  //   cdef生成を一次設定としたとき、生成後の状態での検索・設定が必要になる項目のセット
-  Object.keys(cdef).forEach(x => cdef[x].secondary());
-
-  // Markdown作成
-  const classList = [`※ "constructorは省略"`,'',
-    '| No | CL | SV | クラス名 | 概要 |',
-    '| --: | :--: | :--: | :-- | :-- |',
-  ];
-  let cnt = 1;
-  Object.keys(cdef).forEach(x => {
-    // jsonはデバッグ用に出力、割愛可
-    fs.writeFileSync(`${arg.opt.o}/${x}.json`, JSON.stringify(cdef[x],null,2));
-    fs.writeFileSync(`${arg.opt.o}/${x}.md`, cdef[x].md());
-
-    // クラス一覧・クラス名追加
-    classList.push(`| ${cnt++} | ${
-      cdef[x].implement.client ? '⭕' : '❌'} |  ${
-      cdef[x].implement.server ? '⭕' : '❌'} | [${x}](${x}.md) | ${cdef[x].label} |`);
-    // クラス一覧・メソッド名追加
-    Object.keys(cdef[x].methods).filter(m => !/^_/.test(m) && m !== 'className' )
-    //.filter( m => m !== 'constructor' )
-    .forEach(method => {
-      const mn = `<span style="padding-left:2rem">${
-        `<span style="color:${cdef[x].methods[method].rev === 0 ? 'red' : (cdef[x].methods[method].rev === 1 ? 'black' : 'orange')}">${cdef[x].methods[method].type}</span> `
-        + `<a href="${x}.md#${x.toLowerCase()}_${method.toLowerCase()}">${method}()</a>`
-      }</span>`;
-      classList.push(`| | | | ${mn} | ${cdef[x].methods[method].label} |`);
-      //classList.push(`| | | | <span style="padding-left:2rem"><a href="${x}.md#${x.toLowerCase()}_${method.toLowerCase()}">${method}()</a></span> | ${cdef[x].methods[method].label} |`);
-    });
-  });
-  fs.writeFileSync(`${arg.opt.o}/classList.md`, classList.join('\n'));
-}
-
-const lines = [];
-const rl = require('readline').createInterface({input: process.stdin});
-rl.on('line', x => lines.push(x)).on('close',() => {
-  rl.close();
-  classdef = JSON.parse(lines.join('\n'));
-  main();
-});
-*/
