@@ -155,8 +155,9 @@ class BaseDef {
 
       // データ行の作成
       for( v.i=0 ; v.i<list.body.length ; v.i++ ){
+        console.log(`l.158 ${JSON.stringify(list.body[v.i])}`);
         // 既定値欄の表示内容を作成
-        list.body[v.i].default = list.body[v.i].default !== '—' ? fv(list.body[v.i].default)
+        list.body[v.i].default = list.body[v.i].default !== '' ? fv(list.body[v.i].default)
         : (list.body[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
         // 一項目分のデータ行を出力
         v.rv.push(`| ${v.cols.map(x => fv(list.body[v.i][x])).join(' | ')} |`);
