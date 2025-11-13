@@ -1,4 +1,5 @@
 /** specify: JavaScriptオブジェクトで定義した内容をMarkdownで出力
+ * - グローバル関数は"global"クラスのメソッド、グローバル変数は"global"クラスのメンバとして処理
  * 
  * @example
  * 1. 定義部分(def.js)
@@ -170,8 +171,7 @@ class BaseDef {
  * @typedef {Object} ProjectDef - プロジェクト全体定義
  * @prop {Object.<string,ClassDef|FunctionDef>} defs - 関数・クラスの定義集
  * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
- * @prop {Object.<string,string>} 🔢globals - 使用するグローバル領域毎のMarkdown保存場所
- *   ex globals.server.authServer = authServer.mdのMarkdown文書
+ * @prop {Object} opt - 起動時オプション
  */
 class ProjectDef extends BaseDef {
   /**
@@ -408,6 +408,7 @@ class FieldDef extends BaseDef {
 /**
  * @typedef {Object} MethodsDef - クラスのメソッド集
  * @prop {FunctionDef[]} list - 所属するメソッドの配列
+ * @prop {Object} map - 小文字のメソッド名から本来のメソッド名への変換マップ
  * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} className - 🔢所属するクラス名
  */
@@ -419,8 +420,10 @@ class MethodsDef extends BaseDef {
   constructor(arg,className){
     super();
     this.list = [];
+    this.map = {};
     for( let i=0 ; i<arg.list.length ; i++ ){
       this.list[i] = new FunctionDef(arg.list[i],className);
+      this.map[this.list[i].name.toLowerCase()] = this.list[i];
     }
     this.markdown = arg.markdown || {};
     this.className = className;
@@ -466,7 +469,12 @@ class MethodsDef extends BaseDef {
  * @prop {ReturnsDef} returns - 戻り値の定義(パターン別)
  * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} [className=''] - 🔢所属するクラス名(メソッドのみ)
- * @prop {string[]} caller - 🔢本関数(メソッド)の呼出元関数(メソッド)。メソッドの場合"クラス.メソッド名"
+ * @prop {CallerDef[]} caller - 🔢本関数(メソッド)の呼出元関数(メソッド)。メソッドの場合"クラス.メソッド名"
+ */
+/**
+ * @typedef {Object} CallerDef - 呼出元関数情報
+ * @prop {string} class - 呼出元クラス名
+ * @prop {string} method - 呼出元メソッド名
  */
 class FunctionDef extends BaseDef {
   /**
@@ -493,6 +501,55 @@ class FunctionDef extends BaseDef {
   secondary(){  /** 二次設定 */
     this.params.secondary();
     this.returns.secondary();
+
+    const links = [];
+
+    // 外部リンク
+    const rexF = /\[([^\]]+)\]\(([^)]+)\.md#([a-z0-9]+)_([a-z0-9]+)\)/gi;
+    let m;
+    while ((m = rexF.exec(this.process)) !== null) {
+      // m[1]=①, m[2]=②, m[3]=③, m[4]=④
+      //links.push([m[1], m[2], m[3], m[4]]);
+      links.push({
+        linkText: m[1],
+        className: m[2],  // 参照先のクラス名(大文字含む)
+        lowerCN: m[3],  // 参照先のクラス名(小文字のみ)
+        methodName: '',   // 参照先のメソッド名(大文字含む)
+        lowerMN: m[4], // 参照先のメソッド名(小文字のみ)
+      })
+    }
+
+    // ローカルリンク
+    const rexL = /\[([^\]]+)\]\(#([a-z0-9]+)_([a-z0-9]+)\)/gi;
+    while ((m = rexL.exec(this.process)) !== null) {
+      // m[1]=①, m[2]=②, m[3]=③, m[4]=④
+      //links.push([m[1], m[2], m[3], m[4]]);
+      links.push({
+        linkText: m[1],
+        className: this.className,  // 参照先のクラス名(大文字含む)
+        lowerCN: m[2],  // 参照先のクラス名(小文字のみ)
+        methodName: '',   // 参照先のメソッド名(大文字含む)
+        lowerMN: m[3], // 参照先のメソッド名(小文字のみ)
+      })
+    }
+
+    // 参照先メソッドのcallerにリンク元メソッドを追加
+    if( links.length > 0 ){
+      links.forEach(link => {
+        const methods = BaseDef.defMap[link.className].methods; // 参照先クラスのメソッド(集合)
+        link.methodName = methods.map[lowerMN]; // 大文字を含むメソッド名
+        const method = methods.link.find(x => x.name === link.methodName);
+        if( typeof method !== 'undefined' ){
+          if( !(method.caller.find(x => x.class === link.className && x.method === link.methodName))){
+            // caller未登録なら追加登録
+            caller.push({class:link.className,method:link.methodName});
+          }
+        }
+      });
+    }
+
+    // evaluateタグの処理
+    //this.process = evaluate(this.process);
   }
   makeMd(){ /** Markdownの作成 */
     this.params.makeMd();
