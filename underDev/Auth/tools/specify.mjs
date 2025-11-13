@@ -49,8 +49,19 @@
  * @prop {ProjectDef} prj - ProjectDefインスタンス
  */
 class BaseDef {
-  implements = new Set();
-  constructor(){}
+  static _implements = [];
+  constructor(){
+  }
+  static get implements(){
+    return this._implements;
+  }
+  static set implements(arg){
+    arg.forEach(imp => {
+      if( !this._implements.find(x => x === imp) ){
+        this._implements.push(imp);
+      }
+    });
+  }
   /**
    * 与えられた文字列から、先頭末尾の空白行と共通インデントを削除する
    * @param {string} str - 対象文字列（複数行）
@@ -121,7 +132,6 @@ class ProjectDef extends BaseDef {
 
   /** フォルダを作成、Markdownファイルを出力 */
   outputMD(){
-    console.log(`l.124 this.opt=${JSON.stringify(this.opt,null,2)}`)
     // 1️⃣ 指定されたフォルダが存在しない場合に作成
     if (!fs.existsSync(this.opt.folder)) {
       fs.mkdirSync(this.opt.folder, { recursive: true });
@@ -135,17 +145,17 @@ class ProjectDef extends BaseDef {
 
     // 3️⃣ implement毎にフォルダを作成
     const folder = {};
-    this.implements.forEach((value,key,set) => {
-      console.log(`l.139 value=${value},key=${key},set=${set}`);
-      folder[value] = path.join(this.opt.folder,value);
-      fs.mkdirSync(folder[value]);
+    BaseDef.implements.forEach(x => {
+      folder[x] = path.join(this.opt.folder,x);
+      fs.mkdirSync(folder[x]);
     });
 
-    // 4️⃣ 
+    // 4️⃣ ClassDef毎にファイルを作成
     Object.keys(this.defs).forEach(def => {
-      this.implements.forEach((value,key,set) => {
-        if( this.defs[def].implement.find(i => i === value) ){
-          fs.writeFileSync(path.join(folder[value], `${def}.md`), this.defs[def].markdown.content, "utf8");
+      BaseDef.implements.forEach(x => {
+        if( this.defs[def].implement.find(i => i === x) ){
+          fs.writeFileSync(path.join(folder[x], `${def}.md`),
+            (this.defs[def].markdown.content || ''), "utf8");
         }
       });
     });
@@ -183,7 +193,7 @@ class ClassDef extends BaseDef {
     this.name = className;
 
     // 新しく出てきたimplement要素をprj.imprementsに追加登録
-    this.implement.forEach(x => this.implements.add(x));
+    BaseDef.implements = this.implement;
 
     // markdown.templateの既定値作成
     if( this.desc.length > 0 )  // 端的なクラスの説明
@@ -504,7 +514,6 @@ const rl = readline.createInterface({ input: process.stdin });
 
 rl.on('line', x => lines.push(x)).on('close', () => {
   const arg = analyzeArg();
-  console.log(`l.506 arg=${JSON.stringify(arg,null,2)}`);
   const prj = new ProjectDef(lines.join('\n'),{folder:arg.opt.o});
   delete prj.prj; // 循環参照を削除
 });
