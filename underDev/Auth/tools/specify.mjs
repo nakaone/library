@@ -169,7 +169,7 @@ class BaseDef {
 
 /**
  * @typedef {Object} ProjectDef - プロジェクト全体定義
- * @prop {Object.<string,ClassDef|FunctionDef>} defs - 関数・クラスの定義集
+ * @prop {Object.<string,ClassDef|MethodDef>} defs - 関数・クラスの定義集
  * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {Object} opt - 起動時オプション
  */
@@ -199,7 +199,7 @@ class ProjectDef extends BaseDef {
       if( arg.defs[x].hasOwnProperty('members') || arg.defs[x].hasOwnProperty('methods')){
         this.defs[x] = new ClassDef(arg.defs[x],x);
       } else {
-        this.defs[x] = new FunctionDef(arg.defs[x],x);
+        this.defs[x] = new MethodDef(arg.defs[x],x);
       }
     });
 
@@ -407,7 +407,7 @@ class FieldDef extends BaseDef {
 
 /**
  * @typedef {Object} MethodsDef - クラスのメソッド集
- * @prop {FunctionDef[]} list - 所属するメソッドの配列
+ * @prop {MethodDef[]} list - 所属するメソッドの配列
  * @prop {Object} map - 小文字のメソッド名から本来のメソッド名への変換マップ
  * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} className - 🔢所属するクラス名
@@ -422,7 +422,7 @@ class MethodsDef extends BaseDef {
     this.list = [];
     this.map = {};
     for( let i=0 ; i<arg.list.length ; i++ ){
-      this.list[i] = new FunctionDef(arg.list[i],className);
+      this.list[i] = new MethodDef(arg.list[i],className);
       this.map[this.list[i].name.toLowerCase()] = this.list[i];
     }
     this.markdown = arg.markdown || {};
@@ -437,7 +437,7 @@ class MethodsDef extends BaseDef {
       cn: this.className.toLowerCase(),
     };
 
-    this.list.forEach(x => {  // {FunctionDef}
+    this.list.forEach(x => {  // {MethodDef}
       x.makeMd(); // 各メソッドのMarkdown作成を呼び出す
       v.mn = x.name.toLowerCase();
       v.lines.push(`| ${`[${x.name}](#${v.cn}_${v.mn})`} | ${x.type} | ${x.desc}`);
@@ -455,7 +455,7 @@ class MethodsDef extends BaseDef {
 }
 
 /**
- * @typedef {Object} FunctionDef - 関数・アロー関数・メソッド定義
+ * @typedef {Object} MethodDef - 関数・アロー関数・メソッド定義
  * @prop {string} name - 関数(メソッド)名
  * @prop {string} [type=''] - 関数(メソッド)の分類
  *   public/private, static, async, get/set, accessor, etc
@@ -476,9 +476,9 @@ class MethodsDef extends BaseDef {
  * @prop {string} class - 呼出元クラス名
  * @prop {string} method - 呼出元メソッド名
  */
-class FunctionDef extends BaseDef {
+class MethodDef extends BaseDef {
   /**
-   * @param {FunctionDef} arg 
+   * @param {MethodDef} arg 
    * @param {string} className 
    */
   constructor(arg,className){
