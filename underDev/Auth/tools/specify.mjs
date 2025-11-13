@@ -155,7 +155,7 @@ class ProjectDef extends BaseDef {
       BaseDef.implements.forEach(x => {
         if( this.defs[def].implement.find(i => i === x) ){
           fs.writeFileSync(path.join(folder[x], `${def}.md`),
-            (this.defs[def].markdown.content || ''), "utf8");
+            (this.defs[def].markdown.content || '').trim(), "utf8");
         }
       });
     });
@@ -170,9 +170,9 @@ class ProjectDef extends BaseDef {
  * @prop {string} [summary=''] - ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
  * @prop {MembersDef} members - メンバ(インスタンス変数)定義
  * @prop {MethodsDef} methods - メソッド定義
- * @prop {Object.<string,boolean>} implement - 実装の有無(ex.{cl:false,sv:true})
- * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
+ * @prop {Object.<string,boolean>} implement - 実装の有無(ex.['cl','sv'])
  * @prop {string} name - 🔢クラス名
+ * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  */
 class ClassDef extends BaseDef {
   /**
@@ -195,6 +195,7 @@ class ClassDef extends BaseDef {
     // 新しく出てきたimplement要素をprj.imprementsに追加登録
     BaseDef.implements = this.implement;
 
+    // MarkdownDefインスタンスの作成
     // markdown.templateの既定値作成
     if( this.desc.length > 0 )  // 端的なクラスの説明
       v.lines = v.lines.concat(['',this.desc]);
@@ -207,14 +208,14 @@ class ClassDef extends BaseDef {
     //v.lines.push(this.members.markdown.content);
     //v.lines.push(this.methods.markdown.content);
 
-    this.markdown = Object.assign({
+    this.markdown = new MarkdownDef(Object.assign({
       title: `${className} クラス仕様書`,
       level: 1,
       anchor: className.toLowerCase(),
       link: '',
       navi: '',
       template: v.lines.join('\n'),
-    },(arg.markdown || {}));
+    },(arg.markdown || {})));
   }
 }
 
@@ -479,11 +480,7 @@ class MarkdownDef extends BaseDef {
     if( this.level > 0 )
       v.title = `${'#'.repeat(this.level)} ${v.title}`;
 
-    this.content = arg.content || '';
-
-    ['title','anchor','link','navi','template','content'].forEach(x => {
-      this[x] = arg[x] || '';
-    });
+    this.content = arg.content || `\n${v.title}\n${this.template}\n`;
   }
 }
 
