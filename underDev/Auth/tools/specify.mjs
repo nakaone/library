@@ -107,7 +107,7 @@ class BaseDef {
       ((typeof x === 'object' || Number.isNaN(x)) ? JSON.stringify(x) : x.toLocaleString());
 
     const v = {list:[],rv:[],header: Object.assign( // 表のヘッダの既定値
-      {name:'項目名',type:'データ型',default:'要否/既定値',label:'説明',note:'備考'},
+      {name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明',note:'備考'},
       (opt.header || {}))};
 
     // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
@@ -145,7 +145,6 @@ class BaseDef {
       default:
         return new Error('Invalid type');
     }
-    //console.log(`l.146 v.list=${JSON.stringify(v.list,null,2)}`);
 
     v.list.forEach(list => {
 
@@ -162,7 +161,6 @@ class BaseDef {
         // 一項目分のデータ行を出力
         v.rv.push(`| ${v.cols.map(x => fv(list.body[v.i][x])).join(' | ')} |`);
       }
-      //console.log(`l.163 v.rv=${JSON.stringify(v.rv,null,2)}`);
     });
 
     return v.rv.join('\n');
@@ -316,7 +314,6 @@ class MembersDef extends BaseDef {
    * @param {string} className 
    */
   constructor(arg,className){
-    //console.log(`l.154 ${JSON.stringify({arg:arg,className:className},null,2)}`);
 
     super();
     this.list = [];
@@ -325,7 +322,6 @@ class MembersDef extends BaseDef {
     }
 
     const table = this.comparisonTable(this);
-    //console.log(`l.327 ${className} -----\n${table}`);
     // MarkdownDefインスタンスの作成
     this.markdown = new MarkdownDef(Object.assign({
       title: `🔢 ${className} メンバ一覧`,
@@ -335,7 +331,6 @@ class MembersDef extends BaseDef {
       navi: ``,
       template: `${table}`,
     },(arg.markdown || {})));
-    console.log(`l.338 markdown=${JSON.stringify(this.markdown,null,2)}`);
     this.className = className;
   }
 }
@@ -463,7 +458,7 @@ class ParamsDef extends BaseDef {
    */
   constructor(arg,className='',functionName=''){
     super();
-    //console.log(`l.287 arg=${JSON.stringify(arg,null,2)}`);
+
     for( let i=0 ; i<arg.list.length ; i++ ){
       arg.list[i] = new FieldDef(arg.list[i],i,className);
     }
