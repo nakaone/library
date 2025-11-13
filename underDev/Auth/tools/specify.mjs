@@ -155,7 +155,6 @@ class BaseDef {
 
       // データ行の作成
       for( v.i=0 ; v.i<list.body.length ; v.i++ ){
-        console.log(`l.158 ${JSON.stringify(list.body[v.i])}`);
         // 既定値欄の表示内容を作成
         list.body[v.i].default = list.body[v.i].default !== '' ? fv(list.body[v.i].default)
         : (list.body[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
@@ -290,7 +289,7 @@ class ClassDef extends BaseDef {
         `## <span id="${cn}_summary">🧭 ${className} クラス 概要</span>`,
         '',this.summary]);
     v.lines.push(this.members.markdown.content);
-    //v.lines.push(this.methods.markdown.content);
+    v.lines.push(this.methods.markdown.content);
 
     this.markdown = new MarkdownDef(Object.assign({
       title: `${className} クラス仕様書`,
@@ -315,14 +314,14 @@ class MembersDef extends BaseDef {
    * @param {string} className 
    */
   constructor(arg,className){
-
     super();
+
+    // メンバの配列作成
     this.list = [];
     for( let i=0 ; i<arg.list.length ; i++ ){
       this.list[i] = new FieldDef(arg.list[i],i,className);
     }
 
-    const table = this.comparisonTable(this);
     // MarkdownDefインスタンスの作成
     this.markdown = new MarkdownDef(Object.assign({
       title: `🔢 ${className} メンバ一覧`,
@@ -330,7 +329,7 @@ class MembersDef extends BaseDef {
       anchor: `${className.toLowerCase()}_members`,
       link: ``,
       navi: ``,
-      template: `${table}`,
+      template: `${this.comparisonTable(this)}`,
     },(arg.markdown || {})));
     this.className = className;
   }
@@ -390,16 +389,26 @@ class MethodsDef extends BaseDef {
    */
   constructor(arg,className){
     super();
-    for( let i=0 ; i<arg.list.length ; i++ ){
-      arg.list[i] = new FunctionDef(arg.list[i],className);
+    const v = {lines:['',`| メソッド名 | 型 | 内容 |`,'| :-- | :-- | :-- |']};
+
+    // メソッドの配列作成
+    this.list = [];
+    for( v.i=0 ; v.i<arg.list.length ; v.i++ ){
+      v.o = new FunctionDef(arg.list[v.i],className);
+      this.list[v.i] = v.o;
+      v.mn = v.o.name.toLowerCase();  // method name
+      v.cn = className.toLowerCase() + '_' + v.mn;  // concat name
+      // メソッド一覧のテンプレート作成
+      v.lines.push(`| ${`[${v.o.name}](#${v.cn})`} | ${v.o.type} | ${v.o.desc}`);
     }
+    
     this.markdown = new MarkdownDef(Object.assign({
       title: `🧱 ${className} メソッド一覧`,
-      level: 0,
+      level: 2,
       anchor: `${className.toLowerCase()}_methods`,
       link: ``,
       navi: ``,
-      template: ``,
+      template: `${v.lines.join('\n')}`,
     },(arg.markdown || {})));
     this.className = className;
   }
