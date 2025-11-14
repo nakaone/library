@@ -10,10 +10,10 @@ console.log(JSON.stringify({markdown:{},defs:{
     members: {list:[  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'string',desc:'要求日時',note:'ISO8601拡張形式の文字列',default:'Date.now()'},
       {name:'duration',type:'number',desc:'処理時間',note:'ミリ秒単位'},
-      {name:'memberId',type:'string',desc:'メンバの識別子',note:'=メールアドレス'},
+      {name:'memberId',type:'string',desc:'メンバの識別子',note:''},
       {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'',isOpt:true},
       {name:'func',type:'string',desc:'サーバ側関数名',note:''},
-      {name:'result',type:'string',desc:'サーバ側処理結果',note:'fatal/warning/normal',default:'normal'},
+      {name:'result',type:'string',desc:'サーバ側処理結果',note:'"fatal","warning","normal"',default:'normal'},
       {name:'note',type:'string',desc:'備考',note:''},
     ]},
 
@@ -346,7 +346,7 @@ console.log(JSON.stringify({markdown:{},defs:{
 
         returns: {list:[
           {type:'LocalRequest'},
-          {type:'authError',patterns:{'func不正':{assign:{
+          {type:'authError',markdown:`エラー時の戻り値`,patterns:{'func不正':{assign:{
             message: '"invalid func"',
           }}}},
         ]},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合

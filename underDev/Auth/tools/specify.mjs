@@ -95,12 +95,69 @@ class BaseDef {
     return lines.map(line => line.slice(minIndent)).join('\n');
   }
   /** comparisonTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
-   * @param {MembersDef|ParamsDef|ReturnsDef} - 表示対象を指定するオブジェクト
+   * @param {MembersDef|ParamsDef|ReturnDef} - 表示対象を指定するオブジェクト
    * @param {Object} [opt={}]
    * @param {Object.<string,string>} opt.header - ヘッダ行の定義
    * @returns {string} 作成した表(Markdown)
    */
   comparisonTable(obj,opt={}){
+
+    // fv: 表示する値を整形して文字列化(format value)
+    const fv = x => typeof x === 'string' ? x : 
+      ((typeof x === 'object' || Number.isNaN(x)) ? JSON.stringify(x) : x.toLocaleString());
+
+    const v = {rv:[],header: Object.assign( // 表のヘッダの既定値
+      {name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明',note:'備考'},
+      (opt.header || {}))};
+
+    // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
+    switch( obj.constructor.name ){
+      case 'MembersDef':
+      case 'ParamsDef':
+        // メンバ一覧または引数一覧の場合は単一の表
+        v.obj = {
+          header:Object.assign({},v.header),
+          body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
+        };
+        break;
+      case 'ReturnDef':
+        v.obj = {
+          header: Object.assign({},v.header),
+          body: JSON.parse(JSON.stringify(BaseDef.defMap[obj.type])).members.list,
+        };
+        v.patternList = Object.keys(obj.patterns || {}); // 特定データ型内のパターン。ex.["正常終了","警告終了"]
+        for( v.j=0 ; v.j<v.patternList.length ; v.j++ ){
+          // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
+          v.obj.header[`_Col${v.j}`] = v.patternList[v.j];
+          // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
+          v.obj.body.forEach(col => {
+            col[`_Col${v.j}`] = obj.patterns[col.name] ? `**${obj.patterns[col.name]}**`
+            : (obj.default[col.name] ? obj.default[col.name] : '—');
+          })
+        }
+        break;
+      default:
+        return new Error('comparisonTable error: Invalid type\n'
+          + JSON.stringify({constructor:obj.constructor.name,obj:obj,opt:opt},null,2));
+    }
+
+    // ヘッダ行の作成
+    v.cols = Object.keys(v.header);
+    v.rv.push(`\n| ${v.cols.map(x => v.header[x] || x).join(' | ')} |`);
+    v.rv.push(`| ${v.cols.map(()=>':--').join(' | ')} |`);
+
+    // データ行の作成
+    for( v.i=0 ; v.i<v.obj.body.length ; v.i++ ){
+      // 既定値欄の表示内容を作成
+      v.obj.body[v.i].default = v.obj.body[v.i].default !== '' ? fv(v.obj.body[v.i].default)
+      : (v.obj.body[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
+      // 一項目分のデータ行を出力
+      v.rv.push(`| ${v.cols.map(x => fv(v.obj.body[v.i][x])).join(' | ')} |`);
+    }
+
+    return v.rv.join('\n');
+  }
+  /*comparisonTable(obj,opt={}){
 
     // fv: 表示する値を整形して文字列化(format value)
     const fv = x => typeof x === 'string' ? x : 
@@ -164,7 +221,7 @@ class BaseDef {
     });
 
     return v.rv.join('\n');
-  }
+  }*/
 }
 
 /**
@@ -267,9 +324,8 @@ class ClassDef extends BaseDef {
    * @param {string} className 
    */
   constructor(arg={},className){
-    const v = {cn:className.toLowerCase()};
-
     super();
+
     this.extends = arg.extends || '';
     this.desc = arg.desc || '';
     this.note = this.trimIndent(arg.note || '');
@@ -278,7 +334,7 @@ class ClassDef extends BaseDef {
     this.methods = new MethodsDef(arg.methods,className);
     this.implement = arg.implement || [];
     this.name = className;
-    this.markdown = arg.markdown || {};
+    this.markdown = MarkdownDef.setMd(arg.markdown);
 
     // 新しく出てきたimplement要素をprj.imprementsに追加登録
     BaseDef.implements = this.implement;
@@ -337,7 +393,7 @@ class MembersDef extends BaseDef {
     for( let i=0 ; i<arg.list.length ; i++ ){
       this.list[i] = new FieldDef(arg.list[i],i,className);
     }
-    this.markdown = arg.markdown || {};
+    this.markdown = MarkdownDef.setMd(arg.markdown);
     this.className = className;
   }
   secondary(){  /** 二次設定 */
@@ -384,6 +440,7 @@ class FieldDef extends BaseDef {
    */
   constructor(arg,seq,className='',functionName=''){
     super();
+
     this.name = arg.name || '';
     this.label = arg.label || '';
     this.alias = arg.alias || [];
@@ -419,13 +476,14 @@ class MethodsDef extends BaseDef {
    */
   constructor(arg,className){
     super();
+
     this.list = [];
     this.map = {};
     for( let i=0 ; i<arg.list.length ; i++ ){
       this.list[i] = new MethodDef(arg.list[i],className);
       this.map[this.list[i].name.toLowerCase()] = this.list[i];
     }
-    this.markdown = arg.markdown || {};
+    this.markdown = MarkdownDef.setMd(arg.markdown);
     this.className = className;
   }
   secondary(){  /** 二次設定 */
@@ -435,14 +493,17 @@ class MethodsDef extends BaseDef {
     const v = {
       lines:['',`| メソッド名 | 型 | 内容 |`,'| :-- | :-- | :-- |'],
       cn: this.className.toLowerCase(),
+      methodMd: [], // メソッド別詳細Markdown
     };
 
     this.list.forEach(x => {  // {MethodDef}
       x.makeMd(); // 各メソッドのMarkdown作成を呼び出す
+      v.methodMd.push(x.markdown.content);
       v.mn = x.name.toLowerCase();
       v.lines.push(`| ${`[${x.name}](#${v.cn}_${v.mn})`} | ${x.type} | ${x.desc}`);
     });
     
+    v.lines = [...v.lines, ...v.methodMd];
     this.markdown = new MarkdownDef(Object.assign({
       title: `🧱 ${this.className} メソッド一覧`,
       level: 2,
@@ -494,7 +555,7 @@ class MethodDef extends BaseDef {
     this.params = new ParamsDef(arg.params,className,this.name);
     this.process = this.trimIndent(arg.process || '');
     this.returns = new ReturnsDef(arg.returns,className,this.name);
-    this.markdown = arg.markdown || {};
+    this.markdown = MarkdownDef.setMd(arg.markdown);
     this.className = className;
     this.caller = [];
   }
@@ -569,7 +630,9 @@ class MethodDef extends BaseDef {
       anchor: v.baseAnchor + '_params',
       link: ``,
       navi: ``,
-      template: `${this.comparisonTable(this.params)}`,
+      template: `\n${this.params.list.length === 0
+        ? `- 引数無し(void)`
+        : this.comparisonTable(this.params)}`,
     });
 
     v.process = new MarkdownDef({
@@ -578,7 +641,7 @@ class MethodDef extends BaseDef {
       anchor: v.baseAnchor + '_process',
       link: ``,
       navi: ``,
-      template: `${this.process}`,
+      template: `\n${this.process}`,
     });
 
     v.returns = new MarkdownDef({
@@ -587,7 +650,9 @@ class MethodDef extends BaseDef {
       anchor: v.baseAnchor + '_returns',
       link: ``,
       navi: ``,
-      template: `${this.comparisonTable(this.returns)}`,
+      template: `${this.returns.list.length === 0
+        ? `- 戻り値無し(void)`
+        : this.returns.markdown.content}`,
     });
 
     // メソッドのMarkdownDef.templateの作成
@@ -627,7 +692,7 @@ class ParamsDef extends BaseDef {
     for( let i=0 ; i<arg.list.length ; i++ ){
       this.list[i] = new FieldDef(arg.list[i],i,className);
     }
-    this.markdown = arg.markdown || {};
+    this.markdown = MarkdownDef.setMd(arg.markdown);
     this.className = className;
     this.functionName = functionName;
   }
@@ -643,7 +708,7 @@ class ParamsDef extends BaseDef {
       fn: (this.className ? this.className + '.' : '') + this.functionName,
     };
     this.markdown = new MarkdownDef(Object.assign({
-      title: `📥 ${v.fn} 引数`,
+      title: `📥 ${v.fn}() 引数`,
       level: 0,
       anchor: `${v.cn}_${v.mn}_param`,
       link: ``,
@@ -673,7 +738,7 @@ class ReturnsDef extends BaseDef {
     for( let i=0 ; i<arg.list.length ; i++ ){
       this.list[i] = new ReturnDef(arg.list[i],className,functionName);
     }
-    this.markdown = arg.markdown || {};
+    this.markdown = MarkdownDef.setMd(arg.markdown);
     this.className = className;
     this.functionName = functionName;
   }
@@ -681,20 +746,26 @@ class ReturnsDef extends BaseDef {
     this.list.forEach(x => x.secondary());
   }
   makeMd(){ /** Markdownの作成 */
-    this.list.forEach(x => x.makeMd());
-
     const v = {
       cn: this.className.toLowerCase(),
       mn: this.functionName.toLowerCase(),
       fn: (this.className ? this.className + '.' : '') + this.functionName,
+      returnMd: [], // 戻り値(データ型)別詳細Markdown
     };
+
+    this.list.forEach(x => {
+      x.makeMd(); // 各戻り値(データ型)のMarkdown作成を呼び出す
+      v.returnMd.push(x.markdown.content);
+    });
+    clog(758,v.returnMd);
+
     this.markdown = new MarkdownDef(Object.assign({
-      title: `📤 ${v.fn} 戻り値`,
+      title: `📤 ${v.fn}() 戻り値`,
       level: 0,
       anchor: `${v.cn}_${v.fn}_return`,
       link: ``,
       navi: ``,
-      template: ``,
+      template: `${v.returnMd.join('\n')}`,
     },this.markdown));
   }
 }
@@ -720,10 +791,11 @@ class ReturnDef extends BaseDef {
    */
   constructor(arg,className='',functionName=''){
     super();
+
     this.type = arg.type || '';
     this.default = arg.default || {};
     this.patterns = arg.patterns || {};
-    this.markdown = arg.markdown || {};
+    this.markdown = MarkdownDef.setMd(arg.markdown);
     this.className = className;
     this.functionName = functionName;
   }
@@ -731,7 +803,14 @@ class ReturnDef extends BaseDef {
 
   }
   makeMd(){ /** Markdownの作成 */
-
+    this.markdown = new MarkdownDef(Object.assign({
+      title: ``,
+      level: 0,
+      anchor: ``,
+      link: ``,
+      navi: ``,
+      template: `${this.comparisonTable(this)}`,
+    },this.markdown));
   }
 }
 
@@ -752,6 +831,7 @@ class MarkdownDef extends BaseDef {
   constructor(arg){
     const v = {};
     super();
+
     this.title = arg.title || '';
     this.level = arg.level || 0;
     this.anchor = arg.anchor || '';
@@ -767,13 +847,17 @@ class MarkdownDef extends BaseDef {
     if( this.level > 0 )
       v.title = `${'#'.repeat(this.level)} ${v.title}`;
 
-    this.content = arg.content || `\n${v.title}\n${this.template}\n`;
+    this.content = (arg.content || `\n${v.title}\n${this.template}\n`)
+    .replaceAll(/\n\n\n+/g,'\n\n');
   }
   secondary(){  /** 二次設定 */
 
   }
   makeMd(){ /** Markdownの作成 */
 
+  }
+  static setMd(arg){  // 文字列が渡された場合はtemplateと看做す
+    return !arg ? {} : ( typeof arg === 'string' ? {template:arg} : arg);
   }
 }
 
