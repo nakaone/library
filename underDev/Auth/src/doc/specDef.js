@@ -345,15 +345,15 @@ console.log(JSON.stringify({markdown:{},defs:{
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
         returns: {list:[
-          {type:'LocalRequest'},
+          {markdown:`- 正常時の戻り値：LocalRequestインスタンス`},
           {markdown:`
-            エラー時の戻り値
+          - エラー時の戻り値
 
               <!--%%comparisonTable(new ReturnDef({
               type:'authError',
               patterns:{'func不正':{assign:{
-                message: '"invalid func"',}}}
-            }))%%-->
+                message: '"invalid func"',
+              }}}}))%%-->
           `},
           /*{type:'authError',patterns:{'func不正':{assign:{
             message: '"invalid func"',

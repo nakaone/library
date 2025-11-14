@@ -126,12 +126,16 @@ class BaseDef {
           body: JSON.parse(JSON.stringify(BaseDef.defMap[obj.type])).members.list,
         };
         v.patternList = Object.keys(obj.patterns || {}); // 特定データ型内のパターン。ex.["正常終了","警告終了"]
-        for( v.j=0 ; v.j<v.patternList.length ; v.j++ ){
+        for( v.i=0 ; v.i<v.patternList.length ; v.i++ ){
+          v.pn = v.patternList[v.i]; // パターン名
+          v.po = obj.patterns[v.pn];  // パターンのオブジェクト
+          v.cn = `_Col${v.i}`;  // カラム名
+          clog(133,{obj:obj,pn:v.pn,po:v.po,cn:v.cn});
           // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
-          v.obj.header[`_Col${v.j}`] = v.patternList[v.j];
+          v.obj.header[v.cn] = v.pn;  // パターン名をヘッダに追加
           // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
           v.obj.body.forEach(col => {
-            col[`_Col${v.j}`] = obj.patterns[col.name] ? `**${obj.patterns[col.name]}**`
+            col[v.cn] = v.po.assign[col.name] ? `**${v.po.assign[col.name]}**`
             : (obj.default[col.name] ? obj.default[col.name] : '—');
           })
         }
@@ -142,8 +146,9 @@ class BaseDef {
     }
 
     // ヘッダ行の作成
-    v.cols = Object.keys(v.header);
-    v.rv.push(`\n| ${v.cols.map(x => v.header[x] || x).join(' | ')} |`);
+    v.cols = Object.keys(v.obj.header);
+    clog(146,{obj:v.obj,cols:v.cols});
+    v.rv.push(`\n| ${v.cols.map(x => v.obj.header[x] || x).join(' | ')} |`);
     v.rv.push(`| ${v.cols.map(()=>':--').join(' | ')} |`);
 
     // データ行の作成
@@ -157,6 +162,10 @@ class BaseDef {
 
     return v.rv.join('\n');
   }
+  /** replaceTags: テキスト内の"<!--%%〜%%-->"を評価して結果で置換
+   * @param {string} str - 操作対象テキスト
+   * @returns {string} 評価・置換結果
+   */
   replaceTags(str){
     // 置換対象の文字列内の関数名には「this.」が付いてないので付加
     const comparisonTable = this.comparisonTable;
