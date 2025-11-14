@@ -346,9 +346,18 @@ console.log(JSON.stringify({markdown:{},defs:{
 
         returns: {list:[
           {type:'LocalRequest'},
-          {type:'authError',markdown:`エラー時の戻り値`,patterns:{'func不正':{assign:{
+          {markdown:`
+            エラー時の戻り値
+
+              <!--%%comparisonTable(new ReturnDef({
+              type:'authError',
+              patterns:{'func不正':{assign:{
+                message: '"invalid func"',}}}
+            }))%%-->
+          `},
+          /*{type:'authError',patterns:{'func不正':{assign:{
             message: '"invalid func"',
-          }}}},
+          }}}},*/
         ]},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
     }]},
   },

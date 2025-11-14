@@ -157,71 +157,25 @@ class BaseDef {
 
     return v.rv.join('\n');
   }
-  /*comparisonTable(obj,opt={}){
+  replaceTags(str){
+    // 置換対象の文字列内の関数名には「this.」が付いてないので付加
+    const comparisonTable = this.comparisonTable;
 
-    // fv: 表示する値を整形して文字列化(format value)
-    const fv = x => typeof x === 'string' ? x : 
-      ((typeof x === 'object' || Number.isNaN(x)) ? JSON.stringify(x) : x.toLocaleString());
-
-    const v = {list:[],rv:[],header: Object.assign( // 表のヘッダの既定値
-      {name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明',note:'備考'},
-      (opt.header || {}))};
-
-    // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
-    switch( obj.constructor.name ){
-      case 'MembersDef':
-      case 'ParamsDef':
-        // メンバ一覧または引数一覧の場合は単一の表
-        v.obj = {
-          header:Object.assign({},v.header),
-          body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
-        };
-        v.list.push(v.obj);
-        break;
-      case 'ReturnsDef':
-        // 戻り値定義集の場合はReturns.typeを順次取得
-        for( v.i=0 ; v.i<obj.list.length ; v.i++ ){ // obj.list = 戻り値となるデータ型のリスト
-          v.rObj = obj.list[v.i]; // {ReturnDef} rObj - 特定のデータ型
-          v.obj = {
-            header: Object.assign({},v.header),
-            body: JSON.parse(JSON.stringify(BaseDef.defMap[v.rObj.type])).members.list,
-          };
-          v.patternList = Object.keys(v.rObj.patterns || {}); // 特定データ型内のパターン。ex.["正常終了","警告終了"]
-          for( v.j=0 ; v.j<v.patternList.length ; v.j++ ){
-            // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
-            v.obj.header[`_Col${v.j}`] = v.patternList[v.j];
-            // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
-            v.obj.body.forEach(col => {
-              col[`_Col${v.j}`] = v.rObj.patterns[col.name] ? `**${v.rObj.patterns[col.name]}**`
-              : (v.rObj.default[col.name] ? v.rObj.default[col.name] : '—');
-            })
-          }
-          v.list.push(v.obj);
-        }
-        break;
-      default:
-        return new Error('Invalid type');
-    }
-
-    v.list.forEach(list => {
-
-      // ヘッダ行の作成
-      v.cols = Object.keys(v.header);
-      v.rv.push(`\n| ${v.cols.map(x => v.header[x] || x).join(' | ')} |`);
-      v.rv.push(`| ${v.cols.map(()=>':--').join(' | ')} |`);
-
-      // データ行の作成
-      for( v.i=0 ; v.i<list.body.length ; v.i++ ){
-        // 既定値欄の表示内容を作成
-        list.body[v.i].default = list.body[v.i].default !== '' ? fv(list.body[v.i].default)
-        : (list.body[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
-        // 一項目分のデータ行を出力
-        v.rv.push(`| ${v.cols.map(x => fv(list.body[v.i][x])).join(' | ')} |`);
-      }
-    });
-
-    return v.rv.join('\n');
-  }*/
+    const v = {str:this.trimIndent(str)};
+    [...v.str.matchAll(/(\n*)(\s*)<!--%%([\s\S]*?)%%-->/g)].forEach(x => {
+      // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)
+      // x[1]: 改行
+      // x[2]: タグ前のスペース
+      // x[3]: 式
+      // ①式を評価
+      v.result = eval(x[3]).trim();
+      clog(173,v.result)
+      // ②評価結果の各行頭にタグ前のスペースを追加
+      v.result = v.result.split('\n').map(l => x[2]+l).join('\n');
+      v.str = v.str.replace(x[0],x[1]+v.result);
+    })
+    return v.str;
+  }
 }
 
 /**
@@ -744,7 +698,7 @@ class ReturnsDef extends BaseDef {
     this.markdown = new MarkdownDef(Object.assign({
       title: `📤 戻り値`, // `📤 ${v.fn}() 戻り値`
       level: 4,
-      anchor: `${v.cn}_${v.fn}_return`,
+      anchor: `${v.cn}_${v.mn}_return`,
       link: ``,
       navi: ``,
       template: `${v.returnMd.join('\n')}`,
@@ -785,14 +739,16 @@ class ReturnDef extends BaseDef {
 
   }
   makeMd(){ /** Markdownの作成 */
-    this.markdown = new MarkdownDef(Object.assign({
-      title: ``,
-      level: 0,
-      anchor: ``,
-      link: ``,
-      navi: ``,
-      template: `${this.comparisonTable(this)}`,
-    },this.markdown));
+    const v = {};
+    if( typeof this.markdown.template === 'string' ){
+      // templateが文字列で定義されている場合
+      v.template = this.replaceTags(this.markdown.template);
+      clog(746,v.template);
+    } else {
+      // templateがReturnDef型で定義されている場合
+      v.template = this.comparisonTable(this);
+    }
+    this.markdown = new MarkdownDef(Object.assign(this.markdown,{template:v.template}));
   }
 }
 
@@ -810,6 +766,12 @@ class ReturnDef extends BaseDef {
  * @prop {string} [content=''] - 🔢スペーストリミング＋埋込対応済の本文
  */
 class MarkdownDef extends BaseDef {
+  /**
+   * - MarkdownDefのインスタンス化はmakeMd()で行われる<br>
+   *   ⇒ 二次設定が終了し、データは全て確定済
+   * @param {MarkdownDef} arg - ユーザ指定
+   * @returns {MarkdownDef}
+   */
   constructor(arg){
     const v = {};
     super();
@@ -838,8 +800,8 @@ class MarkdownDef extends BaseDef {
   makeMd(){ /** Markdownの作成 */
 
   }
-  static setMd(arg){  // 文字列が渡された場合はtemplateと看做す
-    return !arg ? {} : ( typeof arg === 'string' ? {template:arg} : arg);
+  static setMd(arg=null){  // 文字列が渡された場合はtemplateと看做す
+    return arg === null ? {} : ( typeof arg === 'string' ? {template:arg} : arg);
   }
 }
 
