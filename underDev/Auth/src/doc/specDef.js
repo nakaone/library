@@ -348,12 +348,11 @@ console.log(JSON.stringify({markdown:{},defs:{
           {markdown:`- 正常時の戻り値：LocalRequestインスタンス`},
           {markdown:`
           - エラー時の戻り値
-
-              <!--%%comparisonTable(new ReturnDef({
-              type:'authError',
-              patterns:{'func不正':{assign:{
-                message: '"invalid func"',
-              }}}}))%%-->
+            <!--%%comparisonTable(new ReturnDef({
+            type:'authError',
+            patterns:{'func不正':{assign:{
+              message: '"invalid func"',
+            }}}}),{desc:false,note:false})%%-->
           `},
           /*{type:'authError',patterns:{'func不正':{assign:{
             message: '"invalid func"',

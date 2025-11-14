@@ -98,17 +98,31 @@ class BaseDef {
    * @param {MembersDef|ParamsDef|ReturnDef} - 表示対象を指定するオブジェクト
    * @param {Object} [opt={}]
    * @param {Object.<string,string>} opt.header - ヘッダ行の定義
+   * @param {boolean} [opt.name=true] - 「項目名」欄の表示/非表示
+   * @param {boolean} [opt.type=true] - 「データ型」欄の表示/非表示
+   * @param {boolean} [opt.default=true] - 「既定値」欄の表示/非表示
+   * @param {boolean} [opt.desc=true] - 「説明」欄の表示/非表示
+   * @param {boolean} [opt.note=true] - 「備考」欄の表示/非表示
    * @returns {string} 作成した表(Markdown)
    */
   comparisonTable(obj,opt={}){
+    const v = {rv:[],header:Object.assign({name:'項目名',type:'データ型',
+      default:'要否/既定値',desc:'説明',note:'備考'},(opt.header || {}))};
+    // オプションの既定値設定
+    opt = Object.assign({name:true,type:true,default:true,label:true,note:true},opt);
 
     // fv: 表示する値を整形して文字列化(format value)
     const fv = x => typeof x === 'string' ? x : 
       ((typeof x === 'object' || Number.isNaN(x)) ? JSON.stringify(x) : x.toLocaleString());
 
-    const v = {rv:[],header: Object.assign( // 表のヘッダの既定値
+    // 出力項目リストを作成
+    Object.keys(v.header).forEach(x => {
+      if( opt[x] === false ) delete v.header[x];
+    })
+
+    /*const v = {rv:[],header: Object.assign( // 表のヘッダの既定値
       {name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明',note:'備考'},
-      (opt.header || {}))};
+      (opt.header || {}))};*/
 
     // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
     switch( obj.constructor.name ){
@@ -130,7 +144,6 @@ class BaseDef {
           v.pn = v.patternList[v.i]; // パターン名
           v.po = obj.patterns[v.pn];  // パターンのオブジェクト
           v.cn = `_Col${v.i}`;  // カラム名
-          clog(133,{obj:obj,pn:v.pn,po:v.po,cn:v.cn});
           // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
           v.obj.header[v.cn] = v.pn;  // パターン名をヘッダに追加
           // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
@@ -147,7 +160,6 @@ class BaseDef {
 
     // ヘッダ行の作成
     v.cols = Object.keys(v.obj.header);
-    clog(146,{obj:v.obj,cols:v.cols});
     v.rv.push(`\n| ${v.cols.map(x => v.obj.header[x] || x).join(' | ')} |`);
     v.rv.push(`| ${v.cols.map(()=>':--').join(' | ')} |`);
 
@@ -178,7 +190,6 @@ class BaseDef {
       // x[3]: 式
       // ①式を評価
       v.result = eval(x[3]).trim();
-      clog(173,v.result)
       // ②評価結果の各行頭にタグ前のスペースを追加
       v.result = v.result.split('\n').map(l => x[2]+l).join('\n');
       v.str = v.str.replace(x[0],x[1]+v.result);
@@ -752,10 +763,9 @@ class ReturnDef extends BaseDef {
     if( typeof this.markdown.template === 'string' ){
       // templateが文字列で定義されている場合
       v.template = this.replaceTags(this.markdown.template);
-      clog(746,v.template);
     } else {
       // templateがReturnDef型で定義されている場合
-      v.template = this.comparisonTable(this);
+      v.template = this.comparisonTable(this,{note:false});
     }
     this.markdown = new MarkdownDef(Object.assign(this.markdown,{template:v.template}));
   }
