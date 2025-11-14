@@ -624,17 +624,6 @@ class MethodDef extends BaseDef {
     };
     v.baseAnchor = `#${v.cn}_${v.mn}`;
 
-    v.params = new MarkdownDef({
-      title: `📥 引数`,
-      level: v.baseLevel+1,
-      anchor: v.baseAnchor + '_params',
-      link: ``,
-      navi: ``,
-      template: `\n${this.params.list.length === 0
-        ? `- 引数無し(void)`
-        : this.comparisonTable(this.params)}`,
-    });
-
     v.process = new MarkdownDef({
       title: `🧾 処理手順`,
       level: v.baseLevel+1,
@@ -642,17 +631,6 @@ class MethodDef extends BaseDef {
       link: ``,
       navi: ``,
       template: `\n${this.process}`,
-    });
-
-    v.returns = new MarkdownDef({
-      title: `📤 戻り値`,
-      level: v.baseLevel+1,
-      anchor: v.baseAnchor + '_returns',
-      link: ``,
-      navi: ``,
-      template: `${this.returns.list.length === 0
-        ? `- 戻り値無し(void)`
-        : this.returns.markdown.content}`,
     });
 
     // メソッドのMarkdownDef.templateの作成
@@ -664,9 +642,9 @@ class MethodDef extends BaseDef {
       navi: ``,
       template: [
         // 呼出元
-        '',v.params.content,  // 引数
+        '',this.params.markdown.content,  // 引数
         '',v.process.content,  // 処理手順
-        '',v.returns.content,  // 戻り値
+        '',this.returns.markdown.content,  // 戻り値
       ].join('\n'),
     },this.markdown));
   }
@@ -707,13 +685,14 @@ class ParamsDef extends BaseDef {
       mn: this.functionName.toLowerCase(),
       fn: (this.className ? this.className + '.' : '') + this.functionName,
     };
+
     this.markdown = new MarkdownDef(Object.assign({
-      title: `📥 ${v.fn}() 引数`,
-      level: 0,
+      title: `📥 引数`, //  `📥 ${v.fn}() 引数`
+      level: 4,
       anchor: `${v.cn}_${v.mn}_param`,
       link: ``,
       navi: ``,
-      template: ``,
+      template: (this.list.length === 0 ? `- 引数無し(void)` : `${this.comparisonTable(this)}`),
     },this.markdown));
   }
 }
@@ -753,15 +732,18 @@ class ReturnsDef extends BaseDef {
       returnMd: [], // 戻り値(データ型)別詳細Markdown
     };
 
-    this.list.forEach(x => {
-      x.makeMd(); // 各戻り値(データ型)のMarkdown作成を呼び出す
-      v.returnMd.push(x.markdown.content);
-    });
-    clog(758,v.returnMd);
+    if( this.list.length === 0 ){
+      v.returnMd = [`- 戻り値無し(void)`];
+    } else {
+      this.list.forEach(x => {
+        x.makeMd(); // 各戻り値(データ型)のMarkdown作成を呼び出す
+        v.returnMd.push(x.markdown.content);
+      });
+    }
 
     this.markdown = new MarkdownDef(Object.assign({
-      title: `📤 ${v.fn}() 戻り値`,
-      level: 0,
+      title: `📤 戻り値`, // `📤 ${v.fn}() 戻り値`
+      level: 4,
       anchor: `${v.cn}_${v.fn}_return`,
       link: ``,
       navi: ``,
