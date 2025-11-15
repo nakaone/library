@@ -1,3 +1,59 @@
+# specify
+
+## callerの表示
+
+呼出元の処理手順に以下の文法で呼出先メソッドの情報を記載する事で、
+①呼出先メソッドの引数・戻り値を表示可能にする
+②呼出先メソッド「呼出元」リストから呼出元メソッドへのリンクを作成する
+
+- 記述方法：`[▼aaa](bbb.md#ccc_ddd)`
+  - "aaa": 呼出先の名称(任意の文字列)
+  - "bbb.md": 呼出先クラス名＋".md"
+  - "ccc": 呼出先クラス名.toLowerCase()
+  - "ddd": 呼出先メソッド名.toLowerCase()
+  - 例：`[▼監査ログ](authAuditLog.md#authauditlog_constructor)を生成`
+  - "▼"が無い場合、特に追加処理無し(呼出先メソッドへのリンクを作成)
+  - "▼"が有る場合、本タグの次行に呼出先メソッドの引数・戻り値を展開
+  - 何れの場合も呼出先メソッドのcallerに呼出元情報を追加
+    `{class:呼出元クラス名, method:呼出元メソッド名}`
+
+- 被呼出メソッドに「呼出元」リスト追加(caller実装)
+- 相互参照を容易にするため、ProjectDefにメンバ"map"を追加
+  {Object} map - 小文字のクラス名から本来のクラス名への変換マップ
+
+
+## Markdown内のcfTableタグ再帰処理
+
+| No | MD作成箇所 | 引用元データ | 備考 |
+| :--: | :-- | :-- | :-- |
+| ① | メンバ一覧 | specDef.js | 初回で確定 |
+| ② | 引数 | メンバ一覧 | 2回目で確定 |
+| ② | 戻り値 | メンバ一覧 | 2回目で確定 |
+| ③ | 処理手順 | 引数・戻り値 | 3回目で確定 |
+
+- comparisonTable -> cfTable
+- cfTableが作成できない場合の戻り値をnullとし、nullならcontent=''になるよう修正(templateはそのまま)
+- secondaryにmakeMDを統合。一カ所でも作成できないMDが有った場合nullを返し、nullが無くなるまでループさせる
+- MarkdownDefでcfTable(template)がnullの場合はcontentにセットしない(contentは展開済文字列に限定)
+
+## その他ToDo
+
+- 戻り値クラスのメンバ一覧表示時、クラス名とリンクを表示(ex.「項目名」の欄)
+- クラス一覧出力(環境別)
+- 引数・メンバ一覧も説明文追加可能に
+  引数・メンバ一覧でMarkdownDef.constructor呼出時のテンプレートは
+  `%%cfTable(new Params(...))%%`形式で指定すれば良い？
+- メンバ一覧・引数・戻り値・処理手順のJSDoc(typedef)にcfTableタグの使用方法を追記
+- implementが一種類以下の場合、環境別に分けずに"-o"フォルダ直下に全ファイル作成
+- テンプレートに基づくソース作成
+
+## ゴミ箱
+
+- MarkdownDef.constructorの引数は文字列も受入可能に
+  -> わざわざ文字列にしなくても、呼出側でMarkdownDef.templateにセットして呼び出せば良い？
+
+# Auth
+
 - サーバ側仕様書作成・レビュー
   - 済：cryptoServerクラス
   - 済：Memberクラス

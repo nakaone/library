@@ -94,7 +94,7 @@ class BaseDef {
     // 4. 共通インデントを削除、各行を結合した文字列を返す
     return lines.map(line => line.slice(minIndent)).join('\n');
   }
-  /** comparisonTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
+  /** cfTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
    * @param {MembersDef|ParamsDef|ReturnDef} - 表示対象を指定するオブジェクト
    * @param {Object} [opt={}]
    * @param {Object.<string,string>} opt.header - ヘッダ行の定義
@@ -105,7 +105,7 @@ class BaseDef {
    * @param {boolean} [opt.note=true] - 「備考」欄の表示/非表示
    * @returns {string} 作成した表(Markdown)
    */
-  comparisonTable(obj,opt={}){
+  cfTable(obj,opt={}){
     const v = {rv:[],header:Object.assign({name:'項目名',type:'データ型',
       default:'要否/既定値',desc:'説明',note:'備考'},(opt.header || {}))};
     // オプションの既定値設定
@@ -154,7 +154,7 @@ class BaseDef {
         }
         break;
       default:
-        return new Error('comparisonTable error: Invalid type\n'
+        return new Error('cfTable error: Invalid type\n'
           + JSON.stringify({constructor:obj.constructor.name,obj:obj,opt:opt},null,2));
     }
 
@@ -180,7 +180,7 @@ class BaseDef {
    */
   replaceTags(str){
     // 置換対象の文字列内の関数名には「this.」が付いてないので付加
-    const comparisonTable = this.comparisonTable;
+    const cfTable = this.cfTable;
 
     const v = {str:this.trimIndent(str)};
     [...v.str.matchAll(/(\n*)(\s*)<!--%%([\s\S]*?)%%-->/g)].forEach(x => {
@@ -383,7 +383,7 @@ class MembersDef extends BaseDef {
       anchor: `${this.className.toLowerCase()}_members`,
       link: ``,
       navi: ``,
-      template: `${this.comparisonTable(this)}`,
+      template: `${this.cfTable(this)}`,
     },this.markdown));
   }
 }
@@ -666,7 +666,7 @@ class ParamsDef extends BaseDef {
       anchor: `${v.cn}_${v.mn}_param`,
       link: ``,
       navi: ``,
-      template: (this.list.length === 0 ? `- 引数無し(void)` : `${this.comparisonTable(this)}`),
+      template: (this.list.length === 0 ? `- 引数無し(void)` : `${this.cfTable(this)}`),
     },this.markdown));
   }
 }
@@ -765,7 +765,7 @@ class ReturnDef extends BaseDef {
       v.template = this.replaceTags(this.markdown.template);
     } else {
       // templateがReturnDef型で定義されている場合
-      v.template = this.comparisonTable(this,{note:false});
+      v.template = this.cfTable(this,{note:false});
     }
     this.markdown = new MarkdownDef(Object.assign(this.markdown,{template:v.template}));
   }
