@@ -1,5 +1,19 @@
 # specify
 
+## Markdown内のcfTableタグ再帰処理
+
+| No | MD作成箇所 | 引用元データ | 備考 |
+| :--: | :-- | :-- | :-- |
+| ① | メンバ一覧 | specDef.js | 初回で確定 |
+| ② | 引数 | メンバ一覧 | 2回目で確定 |
+| ② | 戻り値 | メンバ一覧 | 2回目で確定 |
+| ③ | 処理手順 | 引数・戻り値 | 3回目で確定 |
+
+- comparisonTable -> cfTable
+- cfTableが作成できない場合の戻り値をnullとし、nullならcontent=''になるよう修正(templateはそのまま)
+- secondaryにmakeMDを統合。一カ所でも作成できないMDが有った場合nullを返し、nullが無くなるまでループさせる
+- MarkdownDefでcfTable(template)がnullの場合はcontentにセットしない(contentは展開済文字列に限定)
+
 ## callerの表示
 
 呼出元の処理手順に以下の文法で呼出先メソッドの情報を記載する事で、
@@ -20,21 +34,6 @@
 - 被呼出メソッドに「呼出元」リスト追加(caller実装)
 - 相互参照を容易にするため、ProjectDefにメンバ"map"を追加
   {Object} map - 小文字のクラス名から本来のクラス名への変換マップ
-
-
-## Markdown内のcfTableタグ再帰処理
-
-| No | MD作成箇所 | 引用元データ | 備考 |
-| :--: | :-- | :-- | :-- |
-| ① | メンバ一覧 | specDef.js | 初回で確定 |
-| ② | 引数 | メンバ一覧 | 2回目で確定 |
-| ② | 戻り値 | メンバ一覧 | 2回目で確定 |
-| ③ | 処理手順 | 引数・戻り値 | 3回目で確定 |
-
-- comparisonTable -> cfTable
-- cfTableが作成できない場合の戻り値をnullとし、nullならcontent=''になるよう修正(templateはそのまま)
-- secondaryにmakeMDを統合。一カ所でも作成できないMDが有った場合nullを返し、nullが無くなるまでループさせる
-- MarkdownDefでcfTable(template)がnullの場合はcontentにセットしない(contentは展開済文字列に限定)
 
 ## その他ToDo
 
