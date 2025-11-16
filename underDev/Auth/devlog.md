@@ -15,14 +15,17 @@
 
 - 全般
   - 全体にtry〜catch追加、devTools追加
+  - clog削除
   - makeMdの内容をconstructorに移行
   - 一覧系の表は「配下の要素.markdown.fixedが全部trueになったら作成」に変更
   - secondary
     - 子要素のsecondaryを順次呼び出し(従前)
     - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
 - ProjectDef
+  - メンバにclassMapを追加(`{小文字クラス名:正式クラス名}`)
   - constructor
     - 二次設定(secondary)の戻り値がtrueになるか、最大ループ回数を超えるまでループ
+    - クラス毎にmap登録
     - makeMdの呼び出しは削除
 - BaseDef
   - cfTable修正

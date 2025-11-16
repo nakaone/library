@@ -337,13 +337,13 @@ console.log(JSON.stringify({markdown:{},defs:{
 
         process: `
           - メンバと引数両方にある項目は、引数の値をメンバとして設定
-          - テスト：[▼監査ログ](authAuditLog.md#authauditlog_constructor)インスタンス生成
           - "func"は関数名として使用可能な文字種であることを確認<br>
             \`^[A-Za-z_$][A-Za-z0-9_$]*$\`<br>
             上記正規表現にマッチしなければ戻り値「func不正」を返して終了
           - "arguments"は関数を排除するため、一度JSON化してからオブジェクト化<br>
             \`JSON.parse(JSON.stringify(arguments))\`
         `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+        // - テスト：[▼監査ログ](authAuditLog.md#authauditlog_constructor)インスタンス生成
 
         returns: {list:[
           {markdown:`- 正常時の戻り値：LocalRequestインスタンス`},
