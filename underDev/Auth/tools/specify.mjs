@@ -766,7 +766,7 @@ class ReturnDef extends BaseDef {
     if( this.fixed ) return true;
 
     // 戻り値のMarkdownDef.contentの作成
-    this.markdown.embeds();
+    this.markdown.content.embeds();
 
     return this.markdown.fixed;
   }

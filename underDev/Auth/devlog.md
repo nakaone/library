@@ -111,6 +111,10 @@
   {Object} map - 小文字のクラス名から本来のクラス名への変換マップ
 -->
 
+## bugs
+
+- TypeError: str.replace is not a function
+
 ## その他ToDo
 
 - 戻り値クラスのメンバ一覧表示時、クラス名とリンクを表示(ex.「項目名」の欄)
