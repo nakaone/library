@@ -686,7 +686,7 @@ class ReturnsDef extends BaseDef {
         content: `${v.returnMd.join('\n')}`,
       },this.markdown));
     }
-    
+
     return this.fixed;
   }
 }
@@ -723,17 +723,10 @@ class ReturnDef extends BaseDef {
   secondary(){  /** 二次設定 */
     if( this.fixed ) return true;
 
-  }
-  makeMd(){ /** Markdownの作成 */
-    const v = {};
-    if( typeof this.markdown.content === 'string' ){
-      // contentが文字列で定義されている場合
-      v.content = this.replaceTags(this.markdown.content);
-    } else {
-      // contentがReturnDef型で定義されている場合
-      v.content = this.cfTable(this,{note:false});
-    }
-    this.markdown = new MarkdownDef(Object.assign(this.markdown,{content:v.content}));
+    // 戻り値のMarkdownDef.contentの作成
+    this.markdown = new MarkdownDef(this.markdown);
+
+    return this.markdown.fixed;
   }
 }
 

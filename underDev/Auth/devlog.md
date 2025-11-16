@@ -60,12 +60,12 @@
   - secondary
     - 子要素のsecondaryを順次呼び出し(従前)
     - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
--->
 - ReturnDef
   - makeMdの内容をconstructorに移行
   - secondary
     - 子要素のsecondaryを順次呼び出し(従前)
     - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
+-->
 - MarkdownDef
   - メンバ
     - メンバ"{boolean} fixed=false"を追加
