@@ -220,11 +220,11 @@ class ProjectDef extends BaseDef {
     // 二次設定
     v.cnt = 10; // 最大ループ回数
     while( v.cnt > 0 ){
-      v.fixed = true;
+      this.fixed = true;
       Object.keys(this.defs).forEach(x => {
-        if( this.defs[x].secondary() === false ) v.fixed = false;
+        if( this.defs[x].secondary() === false ) this.fixed = false;
       });
-      v.cnt -= (v.fixed ? 10 : 1);
+      v.cnt -= (this.fixed ? 10 : 1);
     }
 
     // Markdownファイルの出力
@@ -303,10 +303,10 @@ class ClassDef extends BaseDef {
     const v = {lines:[]};
     this.members.secondary();
     this.methods.secondary();
-    v.rv = this.members.fixed && this.methods.fixed;
+    this.fixed = this.members.fixed && this.methods.fixed;
 
     // メンバ・メソッドとも確定したらクラス概要部分を作成
-    if( v.rv ){
+    if( this.fixed ){
       if( this.desc.length > 0 )  // 端的なクラスの説明
         v.lines = v.lines.concat(['',this.desc]);
       if( this.note.length > 0 )  // 補足説明
@@ -328,7 +328,7 @@ class ClassDef extends BaseDef {
       },this.markdown));
     }
 
-    return v.rv;
+    return this.fixed;
   }
 }
 
@@ -367,7 +367,7 @@ class MembersDef extends BaseDef {
         anchor: `${this.className.toLowerCase()}_members`,
         link: ``,
         navi: ``,
-        template: `${this.cfTable(this)}`,
+        content: `${this.cfTable(this)}`,
       },this.markdown));
     }
 
@@ -416,7 +416,8 @@ class FieldDef extends BaseDef {
     this.functionName = functionName;
   }
   secondary(){  /** 二次設定 */
-    return true;
+    this.fixed = true;
+    return this.fixed;
   }
 }
 
@@ -471,7 +472,7 @@ class MethodsDef extends BaseDef {
         anchor: `${v.cn}_methods`,
         link: ``,
         navi: ``,
-        template: `${v.lines.join('\n')}`,
+        content: `${v.lines.join('\n')}`,
       },this.markdown));
     }
 
@@ -524,94 +525,43 @@ class MethodDef extends BaseDef {
     this.caller = [];
   }
   secondary(){  /** 二次設定 */
-    this.params.secondary();
-    this.returns.secondary();
+    this.fixed = this.params.secondary() && this.returns.secondary();
 
-    const links = [];
+    // 引数・戻り値とも確定したらメソッド概要部分を作成
+    if( this.fixed ){
+      const v = {
+        baseLevel: 3,  // 各メソッドのレベル
+        cn: this.className.toLowerCase(),
+        mn: this.name.toLowerCase(),
+        fn: (this.className ? this.className + '.' : '') + this.name,
+      };
+      v.baseAnchor = `#${v.cn}_${v.mn}`;
 
-    // 外部リンク
-    const rexF = /\[([^\]]+)\]\(([^)]+)\.md#([a-z0-9]+)_([a-z0-9]+)\)/gi;
-    let m;
-    while ((m = rexF.exec(this.process)) !== null) {
-      // m[1]=①, m[2]=②, m[3]=③, m[4]=④
-      //links.push([m[1], m[2], m[3], m[4]]);
-      links.push({
-        linkText: m[1],
-        className: m[2],  // 参照先のクラス名(大文字含む)
-        lowerCN: m[3],  // 参照先のクラス名(小文字のみ)
-        methodName: '',   // 参照先のメソッド名(大文字含む)
-        lowerMN: m[4], // 参照先のメソッド名(小文字のみ)
-      })
-    }
-
-    // ローカルリンク
-    const rexL = /\[([^\]]+)\]\(#([a-z0-9]+)_([a-z0-9]+)\)/gi;
-    while ((m = rexL.exec(this.process)) !== null) {
-      // m[1]=①, m[2]=②, m[3]=③, m[4]=④
-      //links.push([m[1], m[2], m[3], m[4]]);
-      links.push({
-        linkText: m[1],
-        className: this.className,  // 参照先のクラス名(大文字含む)
-        lowerCN: m[2],  // 参照先のクラス名(小文字のみ)
-        methodName: '',   // 参照先のメソッド名(大文字含む)
-        lowerMN: m[3], // 参照先のメソッド名(小文字のみ)
-      })
-    }
-    clog(566,links);
-
-    // 参照先メソッドのcallerにリンク元メソッドを追加
-    if( links.length > 0 ){
-      links.forEach(link => {
-        const methods = BaseDef.defMap[link.className].methods; // 参照先クラスのメソッド(集合)
-        link.methodName = methods.methodMap[lowerMN]; // 大文字を含むメソッド名
-        const method = methods.link.find(x => x.name === link.methodName);
-        if( typeof method !== 'undefined' ){
-          if( !(method.caller.find(x => x.class === link.className && x.method === link.methodName))){
-            // caller未登録なら追加登録
-            caller.push({class:link.className,method:link.methodName});
-          }
-        }
+      v.process = new MarkdownDef({
+        title: `🧾 処理手順`,
+        level: v.baseLevel+1,
+        anchor: v.baseAnchor + '_process',
+        link: ``,
+        navi: ``,
+        content: `\n${this.process}`,
       });
+
+      // メソッドのMarkdownDef.contentの作成
+      this.markdown = new MarkdownDef(Object.assign({
+        title: `🧱 ${v.fn}()`,
+        level: v.baseLevel,
+        anchor: v.baseAnchor,
+        link: ``,
+        navi: ``,
+        content: [
+          // 呼出元
+          '',this.params.markdown.content,  // 引数
+          '',v.process.content,  // 処理手順
+          '',this.returns.markdown.content,  // 戻り値
+        ].join('\n'),
+      },this.markdown));
     }
-
-    // evaluateタグの処理
-    //this.process = evaluate(this.process);
-  }
-  makeMd(){ /** Markdownの作成 */
-    this.params.makeMd();
-    this.returns.makeMd();
-
-    const v = {
-      baseLevel: 3,  // 各メソッドのレベル
-      cn: this.className.toLowerCase(),
-      mn: this.name.toLowerCase(),
-      fn: (this.className ? this.className + '.' : '') + this.name,
-    };
-    v.baseAnchor = `#${v.cn}_${v.mn}`;
-
-    v.process = new MarkdownDef({
-      title: `🧾 処理手順`,
-      level: v.baseLevel+1,
-      anchor: v.baseAnchor + '_process',
-      link: ``,
-      navi: ``,
-      template: `\n${this.process}`,
-    });
-
-    // メソッドのMarkdownDef.templateの作成
-    this.markdown = new MarkdownDef(Object.assign({
-      title: `🧱 ${v.fn}()`,
-      level: v.baseLevel,
-      anchor: v.baseAnchor,
-      link: ``,
-      navi: ``,
-      template: [
-        // 呼出元
-        '',this.params.markdown.content,  // 引数
-        '',v.process.content,  // 処理手順
-        '',this.returns.markdown.content,  // 戻り値
-      ].join('\n'),
-    },this.markdown));
+    return this.fixed;
   }
 }
 
@@ -657,7 +607,7 @@ class ParamsDef extends BaseDef {
       anchor: `${v.cn}_${v.mn}_param`,
       link: ``,
       navi: ``,
-      template: (this.list.length === 0 ? `- 引数無し(void)` : `${this.cfTable(this)}`),
+      content: (this.list.length === 0 ? `- 引数無し(void)` : `${this.cfTable(this)}`),
     },this.markdown));
   }
 }
@@ -712,7 +662,7 @@ class ReturnsDef extends BaseDef {
       anchor: `${v.cn}_${v.mn}_return`,
       link: ``,
       navi: ``,
-      template: `${v.returnMd.join('\n')}`,
+      content: `${v.returnMd.join('\n')}`,
     },this.markdown));
   }
 }
@@ -751,14 +701,14 @@ class ReturnDef extends BaseDef {
   }
   makeMd(){ /** Markdownの作成 */
     const v = {};
-    if( typeof this.markdown.template === 'string' ){
-      // templateが文字列で定義されている場合
-      v.template = this.replaceTags(this.markdown.template);
+    if( typeof this.markdown.content === 'string' ){
+      // contentが文字列で定義されている場合
+      v.content = this.replaceTags(this.markdown.content);
     } else {
-      // templateがReturnDef型で定義されている場合
-      v.template = this.cfTable(this,{note:false});
+      // contentがReturnDef型で定義されている場合
+      v.content = this.cfTable(this,{note:false});
     }
-    this.markdown = new MarkdownDef(Object.assign(this.markdown,{template:v.template}));
+    this.markdown = new MarkdownDef(Object.assign(this.markdown,{content:v.content}));
   }
 }
 
@@ -772,8 +722,7 @@ class ReturnDef extends BaseDef {
  *   "## <a href="[link]">タイトル</a>"
  *   "## <span id="[anchor]"><a href="[link]">タイトル</a></span>"
  * @prop {string} [navi=''] - ナビゲーション
- * @prop {string} [template=''] - 本文のテンプレート
- * @prop {string} [content=''] - 🔢スペーストリミング＋埋込対応済の本文
+ * @prop {string} [content=''] - 本文のテンプレート
  */
 class MarkdownDef extends BaseDef {
   /**
@@ -791,7 +740,7 @@ class MarkdownDef extends BaseDef {
     this.anchor = arg.anchor || '';
     this.link = arg.link || '';
     this.navi = arg.navi || '';
-    this.template = arg.template || '';
+    this.content = arg.content || '';
 
     v.title = this.title;
     if( this.link.length > 0 )
@@ -801,10 +750,58 @@ class MarkdownDef extends BaseDef {
     if( this.level > 0 )
       v.title = `${'#'.repeat(this.level)} ${v.title}`;
 
-    this.content = (arg.content || `\n${v.title}\n${this.template}\n`)
+    this.content = (arg.content || `\n${v.title}\n${this.content}\n`)
     .replaceAll(/\n\n\n+/g,'\n\n');
   }
   secondary(){  /** 二次設定 */
+
+  }
+  evalContent(str){
+    const links = [];
+
+    // 外部リンク
+    const rexF = /\[([^\]]+)\]\(([^)]+)\.md#([a-z0-9]+)_([a-z0-9]+)\)/gi;
+    let m;
+    while ((m = rexF.exec(this.process)) !== null) {
+      // m[1]=①, m[2]=②, m[3]=③, m[4]=④
+      //links.push([m[1], m[2], m[3], m[4]]);
+      links.push({
+        linkText: m[1],
+        className: m[2],  // 参照先のクラス名(大文字含む)
+        lowerCN: m[3],  // 参照先のクラス名(小文字のみ)
+        methodName: '',   // 参照先のメソッド名(大文字含む)
+        lowerMN: m[4], // 参照先のメソッド名(小文字のみ)
+      })
+    }
+
+    // ローカルリンク
+    const rexL = /\[([^\]]+)\]\(#([a-z0-9]+)_([a-z0-9]+)\)/gi;
+    while ((m = rexL.exec(this.process)) !== null) {
+      // m[1]=①, m[2]=②, m[3]=③, m[4]=④
+      //links.push([m[1], m[2], m[3], m[4]]);
+      links.push({
+        linkText: m[1],
+        className: this.className,  // 参照先のクラス名(大文字含む)
+        lowerCN: m[2],  // 参照先のクラス名(小文字のみ)
+        methodName: '',   // 参照先のメソッド名(大文字含む)
+        lowerMN: m[3], // 参照先のメソッド名(小文字のみ)
+      })
+    }
+
+    // 参照先メソッドのcallerにリンク元メソッドを追加
+    if( links.length > 0 ){
+      links.forEach(link => {
+        const methods = BaseDef.defMap[link.className].methods; // 参照先クラスのメソッド(集合)
+        link.methodName = methods.methodMap[lowerMN]; // 大文字を含むメソッド名
+        const method = methods.link.find(x => x.name === link.methodName);
+        if( typeof method !== 'undefined' ){
+          if( !(method.caller.find(x => x.class === link.className && x.method === link.methodName))){
+            // caller未登録なら追加登録
+            caller.push({class:link.className,method:link.methodName});
+          }
+        }
+      });
+    }
 
   }
   /** replaceTags: テキスト内の"<!--%%〜%%-->"を評価して結果で置換
@@ -829,8 +826,8 @@ class MarkdownDef extends BaseDef {
     })
     return v.str;
   }
-  static setMd(arg=null){  // 文字列が渡された場合はtemplateと看做す
-    return arg === null ? {} : ( typeof arg === 'string' ? {template:arg} : arg);
+  static setMd(arg=null){  // 文字列が渡された場合はcontentと看做す
+    return arg === null ? {} : ( typeof arg === 'string' ? {content:arg} : arg);
   }
 }
 
