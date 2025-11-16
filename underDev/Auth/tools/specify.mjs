@@ -827,9 +827,28 @@ class MarkdownDef extends BaseDef {
    */
   embeds(){
     const v = {};
+    try {
 
+      // テキスト内の"<!--%%〜%%-->"を評価
+      v.r1 = this.evalTag(this.content);
+      if( v.r1 instanceof Error ) throw v.r1;
+      if( v.r1.status !== 'none' ) this.content = v.r1.result;
 
+      // 処理手順内の他メソッド呼出指示
+      v.r2 = this.callTag(this.content);
+      if( v.r2 instanceof Error ) throw v.r2;
+      if( v.r2.status !== 'none' ) this.content = v.r2.result;
+    
+      if( v.r1.status === 'none' && v.r2.status === 'none' ){
+        this.fixed = true;
+      }
 
+      return this.fixed;
+
+    } catch(e) {
+      console.error(e);
+      return e;
+    }
   }
   /** evalTag: テキスト内の"<!--%%〜%%-->"を評価して結果で置換
    * @param {string} str - 操作対象テキスト(this.content)
