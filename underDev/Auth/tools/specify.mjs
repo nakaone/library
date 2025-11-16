@@ -52,6 +52,7 @@
 class BaseDef {
   static _implements = [];  // 実装環境の一覧
   static _defMap = {};  // ClassDefのマップ
+  static _classMap = {};  // 小文字のクラス名から本来のクラス名への変換マップ
 
   constructor(){
     this.fixed = false; // 当該クラスの内容が確定したらtrue
@@ -72,6 +73,12 @@ class BaseDef {
   }
   static set defMap(arg){
     this._defMap[arg.name] = arg;
+  }
+  static get classMap(){
+    return this._classMap;
+  }
+  static set classMap(arg){
+    this._classMap[arg.toLowerCase()] = arg;
   }
   /**
    * 与えられた文字列から、先頭末尾の空白行と共通インデントを削除する
@@ -209,7 +216,7 @@ class ProjectDef extends BaseDef {
     // 一次設定：関数・クラス定義のインスタンスを順次作成
     this.defs = {};
     Object.keys(arg.defs).forEach(x => {
-      this.classMap[x.toLowerCase()] = x;
+      BaseDef.classMap = x; // クラス名変換マップ(小文字->正式名)
       if( arg.defs[x].hasOwnProperty('members') || arg.defs[x].hasOwnProperty('methods')){
         this.defs[x] = new ClassDef(arg.defs[x],x);
       } else {
@@ -291,7 +298,7 @@ class ClassDef extends BaseDef {
     this.methods = new MethodsDef(arg.methods,className);
     this.implement = arg.implement || [];
     this.name = className;
-    this.markdown = MarkdownDef.setMd(arg.markdown);
+    this.markdown = arg.markdown || {};
 
     // 新しく出てきたimplement要素をprj.imprementsに追加登録
     BaseDef.implements = this.implement;
@@ -327,6 +334,7 @@ class ClassDef extends BaseDef {
         link: '',
         navi: '',
         content: v.lines.join('\n'),
+        className: this.name,
       },this.markdown));
     }
 
@@ -352,7 +360,7 @@ class MembersDef extends BaseDef {
     for( let i=0 ; i<arg.list.length ; i++ ){
       this.list[i] = new FieldDef(arg.list[i],i,className);
     }
-    this.markdown = MarkdownDef.setMd(arg.markdown);
+    this.markdown = arg.markdown || {};
     this.className = className;
   }
   secondary(){  /** 二次設定 */
@@ -372,6 +380,7 @@ class MembersDef extends BaseDef {
         link: ``,
         navi: ``,
         content: `${this.cfTable(this)}`,
+        className: this.className,
       },this.markdown));
     }
 
@@ -394,16 +403,16 @@ class MembersDef extends BaseDef {
  * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {number} seq - 🔢左端を0とする列番号。Members.constructor()で設定
  * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
- * @prop {string} [functionName=''] - 🔢関数(メソッド)名(引数・戻り値の場合のみ)
+ * @prop {string} [methodName=''] - 🔢関数(メソッド)名(引数・戻り値の場合のみ)
  */
 class FieldDef extends BaseDef {
   /**
    * @param {FieldDef} arg 
    * @param {number} seq 
    * @param {string} [className='']
-   * @param {string} [functionName=''] 
+   * @param {string} [methodName=''] 
    */
-  constructor(arg,seq,className='',functionName=''){
+  constructor(arg,seq,className='',methodName=''){
     super();
 
     this.name = arg.name || '';
@@ -417,7 +426,7 @@ class FieldDef extends BaseDef {
     this.printf = arg.printf || null;
     this.seq = seq;
     this.className = className;
-    this.functionName = functionName;
+    this.methodName = methodName;
   }
   secondary(){  /** 二次設定 */
     if( this.fixed ) return true;
@@ -448,7 +457,7 @@ class MethodsDef extends BaseDef {
       this.list[i] = new MethodDef(arg.list[i],className);
       this.methodMap[this.list[i].name.toLowerCase()] = this.list[i];
     }
-    this.markdown = MarkdownDef.setMd(arg.markdown);
+    this.markdown = arg.markdown || {};
     this.className = className;
   }
   secondary(){  /** 二次設定 */
@@ -481,6 +490,7 @@ class MethodsDef extends BaseDef {
         link: ``,
         navi: ``,
         content: `${v.lines.join('\n')}`,
+        className: this.className,
       },this.markdown));
     }
 
@@ -528,7 +538,7 @@ class MethodDef extends BaseDef {
     this.params = new ParamsDef(arg.params,className,this.name);
     this.process = this.trimIndent(arg.process || '');
     this.returns = new ReturnsDef(arg.returns,className,this.name);
-    this.markdown = MarkdownDef.setMd(arg.markdown);
+    this.markdown = arg.markdown || {};
     this.className = className;
     this.caller = [];
   }
@@ -547,6 +557,20 @@ class MethodDef extends BaseDef {
       };
       v.baseAnchor = `#${v.cn}_${v.mn}`;
 
+      v.caller = new MarkdownDef({
+        title: `📞 呼出元`,
+        level: v.baseLevel+1,
+        anchor: v.baseAnchor + '_caller',
+        link: ``,
+        navi: ``,
+        content: `\n${this.caller.map(x => {
+          `- [${x.class}.${x.method}]`
+          + `(${x.class}.md#${x.class.toLowerCase()}_${x.method.toLowerCase()})`
+        }).join('\n')}`,
+        className: this.className,
+        methodName: this.name,
+      });
+
       v.process = new MarkdownDef({
         title: `🧾 処理手順`,
         level: v.baseLevel+1,
@@ -554,6 +578,8 @@ class MethodDef extends BaseDef {
         link: ``,
         navi: ``,
         content: `\n${this.process}`,
+        className: this.className,
+        methodName: this.name,
       });
 
       // メソッドのMarkdownDef.contentの作成
@@ -569,6 +595,8 @@ class MethodDef extends BaseDef {
           '',v.process.content,  // 処理手順
           '',this.returns.markdown.content,  // 戻り値
         ].join('\n'),
+        className: this.className,
+        methodName: this.name,
       },this.markdown));
     }
     return this.fixed;
@@ -580,24 +608,24 @@ class MethodDef extends BaseDef {
  * @prop {FieldDef[]} list - 引数
  * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
- * @prop {string} [functionName=''] - 🔢関数(メソッド)名
+ * @prop {string} [methodName=''] - 🔢関数(メソッド)名
  */
 class ParamsDef extends BaseDef {
   /**
    * @param {ParamsDef} arg 
    * @param {string} [className=''] 
-   * @param {string} [functionName=''] 
+   * @param {string} [methodName=''] 
    */
-  constructor(arg,className='',functionName=''){
+  constructor(arg,className='',methodName=''){
     super();
 
     this.list = [];
     for( let i=0 ; i<arg.list.length ; i++ ){
       this.list[i] = new FieldDef(arg.list[i],i,className);
     }
-    this.markdown = MarkdownDef.setMd(arg.markdown);
+    this.markdown = arg.markdown || {};
     this.className = className;
-    this.functionName = functionName;
+    this.methodName = methodName;
   }
   secondary(){  /** 二次設定 */
     if( this.fixed ) return true;
@@ -611,8 +639,8 @@ class ParamsDef extends BaseDef {
     if( this.fixed ){
       const v = {
         cn: this.className.toLowerCase(),
-        mn: this.functionName.toLowerCase(),
-        fn: (this.className ? this.className + '.' : '') + this.functionName,
+        mn: this.methodName.toLowerCase(),
+        fn: (this.className ? this.className + '.' : '') + this.methodName,
       };
 
       this.markdown = new MarkdownDef(Object.assign({
@@ -622,6 +650,8 @@ class ParamsDef extends BaseDef {
         link: ``,
         navi: ``,
         content: (this.list.length === 0 ? `- 引数無し(void)` : `${this.cfTable(this)}`),
+        className: this.className,
+        methodName: this.methodName,
       },this.markdown));
     }
     return this.fixed;
@@ -633,24 +663,24 @@ class ParamsDef extends BaseDef {
  * @prop {ReturnDef[]} list - (データ型別)戻り値定義集
  * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
- * @prop {string} [functionName=''] - 🔢関数(メソッド)名
+ * @prop {string} [methodName=''] - 🔢関数(メソッド)名
  */
 class ReturnsDef extends BaseDef {
   /**
    * @param {ReturnsDef} arg 
    * @param {string} [className=''] 
-   * @param {string} [functionName=''] 
+   * @param {string} [methodName=''] 
    */
-  constructor(arg,className='',functionName=''){
+  constructor(arg,className='',methodName=''){
     super();
 
     this.list = [];
     for( let i=0 ; i<arg.list.length ; i++ ){
-      this.list[i] = new ReturnDef(arg.list[i],className,functionName);
+      this.list[i] = new ReturnDef(arg.list[i],className,methodName);
     }
-    this.markdown = MarkdownDef.setMd(arg.markdown);
+    this.markdown = arg.markdown || {};
     this.className = className;
-    this.functionName = functionName;
+    this.methodName = methodName;
   }
   secondary(){  /** 二次設定 */
     if( this.fixed ) return true;
@@ -664,8 +694,8 @@ class ReturnsDef extends BaseDef {
     if( this.fixed ){
       const v = {
         cn: this.className.toLowerCase(),
-        mn: this.functionName.toLowerCase(),
-        fn: (this.className ? this.className + '.' : '') + this.functionName,
+        mn: this.methodName.toLowerCase(),
+        fn: (this.className ? this.className + '.' : '') + this.methodName,
         returnMd: [], // 戻り値(データ型)別詳細Markdown
       };
 
@@ -684,6 +714,8 @@ class ReturnsDef extends BaseDef {
         link: ``,
         navi: ``,
         content: `${v.returnMd.join('\n')}`,
+        className: this.className,
+        methodName: this.methodName,
       },this.markdown));
     }
 
@@ -698,7 +730,7 @@ class ReturnsDef extends BaseDef {
  * @prop {Object.<string,PatternDef>} [patterns={}] - 特定パターンへの設定値
  * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
- * @prop {string} [functionName=''] - 🔢関数(メソッド)名
+ * @prop {string} [methodName=''] - 🔢関数(メソッド)名
  */
 /**
  * @typedef {Object.<string,string>} PatternDef - パターンに設定する値
@@ -708,23 +740,23 @@ class ReturnDef extends BaseDef {
   /**
    * @param {ReturnDef} arg 
    * @param {string} [className=''] 
-   * @param {string} [functionName=''] 
+   * @param {string} [methodName=''] 
    */
-  constructor(arg,className='',functionName=''){
+  constructor(arg,className='',methodName=''){
     super();
 
     this.type = arg.type || '';
     this.default = arg.default || {};
     this.patterns = arg.patterns || {};
-    this.markdown = MarkdownDef.setMd(arg.markdown);
+    this.markdown = arg.markdown || {};
     this.className = className;
-    this.functionName = functionName;
+    this.methodName = methodName;
   }
   secondary(){  /** 二次設定 */
     if( this.fixed ) return true;
 
     // 戻り値のMarkdownDef.contentの作成
-    this.markdown = new MarkdownDef(this.markdown);
+    this.markdown.embeds();
 
     return this.markdown.fixed;
   }
@@ -741,6 +773,8 @@ class ReturnDef extends BaseDef {
  *   "## <span id="[anchor]"><a href="[link]">タイトル</a></span>"
  * @prop {string} [navi=''] - ナビゲーション
  * @prop {string} [content=''] - 本文のテンプレート
+ * @prop {string} [className=''] - 所属するクラス名
+ * @prop {string} [methodName=''] - 所属するクラス名
  */
 class MarkdownDef extends BaseDef {
   /**
@@ -749,9 +783,11 @@ class MarkdownDef extends BaseDef {
    * @param {MarkdownDef} arg - ユーザ指定
    * @returns {MarkdownDef}
    */
-  constructor(arg){
-    const v = {};
+  constructor(arg={}){
     super();
+
+    // 文字列が渡された場合はcontentと看做す
+    if( typeof arg === 'string' ) arg = {content:arg};
 
     this.title = arg.title || '';
     this.level = arg.level || 0;
@@ -759,94 +795,169 @@ class MarkdownDef extends BaseDef {
     this.link = arg.link || '';
     this.navi = arg.navi || '';
     this.content = arg.content || '';
+    this.className = arg.className || '';
+    this.methodName = arg.methodName || '';
 
-    v.title = this.title;
+    // タイトル行・ナビの作成
     if( this.link.length > 0 )
-      v.title = `<a href="${this.link}">${v.title}</a>`;
+      this.title = `<a href="${this.link}">${this.title}</a>`;
     if( this.anchor.length > 0 )
-      v.title = `<span id="${this.anchor}">${v.title}</span>`;
+      this.title = `<span id="${this.anchor}">${this.title}</span>`;
     if( this.level > 0 )
-      v.title = `${'#'.repeat(this.level)} ${v.title}`;
-
-    this.content = (arg.content || `\n${v.title}\n${this.content}\n`)
-    .replaceAll(/\n\n\n+/g,'\n\n');
+      this.title = `${'#'.repeat(this.level)} ${this.title}`;
+    if( this.navi.length > 0 )
+      this.title += this.navi;
   }
   secondary(){  /** 二次設定 */
     if( this.fixed ) return true;
 
+
+    // 確定時、タイトル行を追加
+    // 余分な空白行を削除
+    this.content = (arg.content || `\n${this.title}\n${this.content}\n`)
+    .replaceAll(/\n\n\n+/g,'\n\n');
   }
-  evalContent(str){
-    const links = [];
-
-    // 外部リンク
-    const rexF = /\[([^\]]+)\]\(([^)]+)\.md#([a-z0-9]+)_([a-z0-9]+)\)/gi;
-    let m;
-    while ((m = rexF.exec(this.process)) !== null) {
-      // m[1]=①, m[2]=②, m[3]=③, m[4]=④
-      //links.push([m[1], m[2], m[3], m[4]]);
-      links.push({
-        linkText: m[1],
-        className: m[2],  // 参照先のクラス名(大文字含む)
-        lowerCN: m[3],  // 参照先のクラス名(小文字のみ)
-        methodName: '',   // 参照先のメソッド名(大文字含む)
-        lowerMN: m[4], // 参照先のメソッド名(小文字のみ)
-      })
-    }
-
-    // ローカルリンク
-    const rexL = /\[([^\]]+)\]\(#([a-z0-9]+)_([a-z0-9]+)\)/gi;
-    while ((m = rexL.exec(this.process)) !== null) {
-      // m[1]=①, m[2]=②, m[3]=③, m[4]=④
-      //links.push([m[1], m[2], m[3], m[4]]);
-      links.push({
-        linkText: m[1],
-        className: this.className,  // 参照先のクラス名(大文字含む)
-        lowerCN: m[2],  // 参照先のクラス名(小文字のみ)
-        methodName: '',   // 参照先のメソッド名(大文字含む)
-        lowerMN: m[3], // 参照先のメソッド名(小文字のみ)
-      })
-    }
-
-    // 参照先メソッドのcallerにリンク元メソッドを追加
-    if( links.length > 0 ){
-      links.forEach(link => {
-        const methods = BaseDef.defMap[link.className].methods; // 参照先クラスのメソッド(集合)
-        link.methodName = methods.methodMap[lowerMN]; // 大文字を含むメソッド名
-        const method = methods.link.find(x => x.name === link.methodName);
-        if( typeof method !== 'undefined' ){
-          if( !(method.caller.find(x => x.class === link.className && x.method === link.methodName))){
-            // caller未登録なら追加登録
-            caller.push({class:link.className,method:link.methodName});
-          }
-        }
-      });
-    }
-
-  }
-  /** replaceTags: テキスト内の"<!--%%〜%%-->"を評価して結果で置換
-   * @param {string} str - 操作対象テキスト
-   * @returns {string} 評価・置換結果
+  /** embeds: 埋め込まれた置換指示タグに基づき、contentを置換
+   * - 評価タグ：`<!--::〜::-->`
+   * - 呼出タグ：`[▼監査ログ](authAuditLog.md#authauditlog_constructor)`
+   * - 評価・呼出タグの置換結果は逐次this.contentに反映
+   * - 全ての評価・呼出タグの置換が終了したらthis.fixed=true
+   * @param {void}
+   * @returns {boolean|Error} this.fixedの値、またはErrorオブジェクト
    */
-  replaceTags(str){
+  embeds(){
+    const v = {};
+
+
+
+  }
+  /** evalTag: テキスト内の"<!--%%〜%%-->"を評価して結果で置換
+   * @param {string} str - 操作対象テキスト(this.content)
+   * @returns {Object|Error} {status,result}形式のオブジェクト
+   * - status = "none" : str内に置換対象無し
+   * - status = "true" : str内の置換対象を全て置換
+   * - status = "false" : 一部置換不能な対象が残存
+   * - Error : システムエラー
+   */
+  evalTag(str){
     // 置換対象の文字列内の関数名には「this.」が付いてないので付加
     const cfTable = this.cfTable;
 
-    const v = {str:this.trimIndent(str)};
-    [...v.str.matchAll(/(\n*)(\s*)<!--%%([\s\S]*?)%%-->/g)].forEach(x => {
+    const v = {str:this.trimIndent(str),rv:{status:'true'}};
+    v.list = [...v.str.matchAll(/(\n*)(\s*)<!--%%([\s\S]*?)%%-->/g)];
+    if( v.list.length === 0 ) return {status:'none'};
+
+    v.list.forEach(x => {
       // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)
       // x[1]: 改行
       // x[2]: タグ前のスペース
       // x[3]: 式
       // ①式を評価
-      v.result = eval(x[3]).trim();
-      // ②評価結果の各行頭にタグ前のスペースを追加
-      v.result = v.result.split('\n').map(l => x[2]+l).join('\n');
-      v.str = v.str.replace(x[0],x[1]+v.result);
+      v.result = eval(x[3]);
+      // cfTableの戻り値がErrorの場合
+      if( v.result instanceof Error ){
+        if( v.result.message === 'unregistered type' ){
+          v.rv.result = 'false';
+        } else {
+          return v.result;  // その他システムエラー
+        }
+      } else {
+        // ②評価結果の各行頭にタグ前のスペースを追加
+        v.result = v.result.trim().split('\n').map(l => x[2]+l).join('\n');
+        v.str = v.str.replace(x[0],x[1]+v.result);
+      }
     })
-    return v.str;
+    return Object.assign(v.rv,{result:v.str});
   }
-  static setMd(arg=null){  // 文字列が渡された場合はcontentと看做す
-    return arg === null ? {} : ( typeof arg === 'string' ? {content:arg} : arg);
+  /** callTag: 処理手順内の他メソッド呼出指示をリンク化、適宜その引数と戻り値の一覧を追加
+   * - `[▼監査ログ](authAuditLog.md#authauditlog_constructor)`形式
+   * @param {string} str - 操作対象テキスト(this.content)
+   * @returns {Object|Error} {status,result}形式のオブジェクト
+   * - status = "none" : str内に置換対象無し
+   * - status = "true" : str内の置換対象を全て置換
+   * - status = "false" : 一部置換不能な対象が残存
+   * - Error : システムエラー
+   */
+  callTag(str){
+    const v = {
+      links: [],  // e/lLinkRexの結果オブジェクトの配列
+
+      // 呼出タグ①(外部リンク)：[0:マッチした文字列全体, 1:▼, 2:リンク文字列,
+      //     3:参照先クラス(大小文字), 4:参照先クラス(小文字), 5:参照先メソッド(小文字), 6:改行までの文字列]
+      externalRex: /\[(▼?)([^\]]+)\]\(([^)]+)\.md#([a-z0-9]+)_([a-z0-9]+)\)([^\n]*)/gi,
+
+      // 呼出タグ②(ローカルリンク)：[0:マッチした文字列全体, 1:▼, 2:リンク文字列,
+      //     3:参照先クラス(小文字), 4:参照先メソッド(小文字), 5:改行までの文字列]
+      localRex: /\[(▼?)([^\]]+)\]\(#([a-z0-9]+)_([a-z0-9]+)\)([^\n]*)/gi,
+    };
+    try {
+
+      // 呼出タグ①(外部リンク)
+      while( (v.m = v.externalRex.exec(this.content)) !== null ) v.links.push({
+        full: v.m[0],
+        doExpand: v.m[1] === '▼',
+        text: v.m[2],
+        link: `${v.m[3]}.md#${v.m[4]}_${v.m[5]}`,
+        uClass: v.m[3],
+        lClass: v.m[4],
+        uMethod: BaseDef.defMap[v.m[3]].methods.methodMap[v.m[5]],
+        lMethod: v.m[5],
+        suffix: v.m[6],
+      });
+
+      // 呼出タグ②(ローカルリンク)
+      while( (v.m = v.localRex.exec(this.content)) !== null ) v.links.push({
+        full: v.m[0],
+        doExpand: v.m[1] === '▼',
+        text: v.m[2],
+        link: `#${v.m[3]}_${v.m[4]}`,
+        uClass: BaseDef.classMap[v.m[3]],
+        lClass: v.m[3],
+        uMethod: BaseDef.defMap[BaseDef.classMap[v.m[3]]].methods.methodMap[v.m[4]],
+        lMethod: v.m[4],
+        suffix: v.m[5],
+      });
+
+      // 置換対象無し
+      if( v.links.length === 0 ) return {status:'none'};
+
+      v.rv = {status:'true',result:str};
+      v.links.forEach(link => {
+        // 呼出先メソッド
+        v.method = BaseDef.defMap[link.uClass].methods[link.uMethod];
+
+        // リンク元側
+        if( link.doExpand ){
+          // 展開指示子(▼)有り ⇒ ▼を削除してリンク作成＋引数・文字列を次行に追加
+          if( v.method.params.fixed && v.method.returns.fixed ){
+            // 引数・戻り値とも確定済の場合
+            v.rv.result.replace(link.full+link.suffix,[
+              `[${link.text}](${link.link})${link.suffix}`,
+              v.method.params.markdown.content,
+              v.method.returns.markdown.content,
+            ].join('\n'));
+          } else {
+            // 引数・戻り値のいずれかが未確定の場合
+            v.rv.status = 'false';
+          }
+
+        } else {
+          // 展開指示子(▼)無し ⇒ ▼のみ削除
+          v.rv.result.replace(link.full,`[${link.text}](${link.link})${link.suffix}`)
+        }
+
+        // リンク先側 ⇒ callerにリンク元メソッドを追加
+        if( !(v.method.caller.find(x => x.class === this.className && x.method === this.methodName))){
+          // caller未登録なら追加登録
+          v.method.caller.push({class:this.className, method:this.methodName});
+        }
+      });
+      return v.rv;
+
+    } catch(e) {
+      console.error(e);
+      return e;
+    }
   }
 }
 

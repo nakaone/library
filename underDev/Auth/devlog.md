@@ -1,8 +1,9 @@
 # specify
 
+<!--
+
 ## Markdown内のcfTableタグ再帰処理
 
-<!--
 | No | MD作成箇所 | 引用元データ | 備考 |
 | :--: | :-- | :-- | :-- |
 | ① | メンバ一覧 | specDef.js | 初回で確定 |
@@ -15,6 +16,7 @@
 - MarkdownDefでcfTable(template)がnullの場合はcontentにセットしない(contentは展開済文字列に限定)
 
 - BaseDef
+  - メンバ"{boolean} fixed=false"を追加
   - cfTable修正
     - `Invalid type` -> `invalid argument`に修正
     - `typeof BaseDef.defMap[obj.type] === 'undefined'`の場合、`unregistered type`を返すよう修正
@@ -65,15 +67,13 @@
   - secondary
     - 子要素のsecondaryを順次呼び出し(従前)
     - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
--->
 - MarkdownDef
   - メンバ
-    - メンバ"{boolean} fixed=false"を追加
     - templateは削除(contentに一本化)
   - evalContent作成
     - 引数は評価対象のcontent
-    - 中に"<!--%%〜%%-->"が無い場合、nullを返して終了
-    - 中に"<!--%%〜%%-->"が有る場合、評価タグの数だけループ
+    - 中に"<!--%%〜%%-x->"が無い場合、nullを返して終了
+    - 中に"<!--%%〜%%-x->"が有る場合、評価タグの数だけループ
       - 評価タグの中身を評価(eval(cfTable(..)))
       - 戻り値がErrorオブジェクト
         - `unregistered type` -> contentそのままで処理継続
@@ -109,6 +109,7 @@
 - 被呼出メソッドに「呼出元」リスト追加(caller実装)
 - 相互参照を容易にするため、ProjectDefにメンバ"map"を追加
   {Object} map - 小文字のクラス名から本来のクラス名への変換マップ
+-->
 
 ## その他ToDo
 
