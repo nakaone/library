@@ -112,7 +112,9 @@ class BaseDef {
    * @param {boolean} [opt.default=true] - 「既定値」欄の表示/非表示
    * @param {boolean} [opt.desc=true] - 「説明」欄の表示/非表示
    * @param {boolean} [opt.note=true] - 「備考」欄の表示/非表示
-   * @returns {string} 作成した表(Markdown)
+   * @returns {string|Error} 作成した表(Markdown)
+   * - unregistered type: 引用元が未作成
+   * - その他: システムエラー
    */
   cfTable(obj,opt={}){
     const v = {rv:[],header:Object.assign({name:'項目名',type:'データ型',
@@ -748,25 +750,32 @@ class ReturnDef extends BaseDef {
     this.type = arg.type || '';
     this.default = arg.default || {};
     this.patterns = arg.patterns || {};
-    this.markdown = new MarkdownDef(Object.assign({
-      title: ``,
-      level: 4,
-      anchor: ``,
-      link: ``,
-      navi: ``,
-      content: (arg.markdown && typeof arg.markdown === 'string'
-        ? arg.markdown : this.cfTable(this)),
-      className: this.className,
-      methodName: this.methodName,
-    },(arg.markdown || {})));
+    this.markdown = arg.markdown || {};
     this.className = className;
     this.methodName = methodName;
   }
   secondary(){  /** 二次設定 */
     if( this.fixed ) return true;
 
-    // 戻り値のMarkdownDef.contentの作成
-    this.markdown.content.embeds();
+    if( typeof this.markdown === 'string' ){
+      // specDefでReturnDef.markdownを文字列で定義した場合
+      this.markdown = new MarkdownDef(Object.assign({
+        title: ``,
+        level: 0,
+        anchor: ``,
+        link: ``,
+        navi: ``,
+        content: this.markdown,
+        className: this.className,
+        methodName: this.methodName,
+      },(arg.markdown || {})));
+    } else if( this.markdown.constructor.name === 'MarkdownDef' ){
+      // specDefでReturnDef.markdownを無指定または文字列で定義した場合
+      this.markdown = new MarkdownDef(this.markdown);
+    } else {
+      // this.markdownが既にMarkdownDefインスタンスになっている場合
+      this.markdown.content.embeds();
+    }
 
     return this.markdown.fixed;
   }

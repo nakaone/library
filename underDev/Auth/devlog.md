@@ -114,6 +114,7 @@
 ## bugs
 
 - TypeError: str.replace is not a function
+- TypeError: this.markdown.content.embeds is not a function
 
 ## その他ToDo
 
