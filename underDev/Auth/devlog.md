@@ -113,8 +113,9 @@
 
 ## bugs
 
-- TypeError: str.replace is not a function
+- TypeError: Cannot read properties of undefined (reading 'embeds')
 - TypeError: this.markdown.content.embeds is not a function
+- TypeError: str.replace is not a function
 
 ## その他ToDo
 

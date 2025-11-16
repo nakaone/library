@@ -769,7 +769,7 @@ class ReturnDef extends BaseDef {
         className: this.className,
         methodName: this.methodName,
       },(arg.markdown || {})));
-    } else if( this.markdown.constructor.name === 'MarkdownDef' ){
+    } else if( this.markdown.constructor.name !== 'MarkdownDef' ){
       // specDefでReturnDef.markdownを無指定または文字列で定義した場合
       this.markdown = new MarkdownDef(this.markdown);
     } else {
