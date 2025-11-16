@@ -300,6 +300,8 @@ class ClassDef extends BaseDef {
     BaseDef.defMap = this;
   }
   secondary(){  /** 二次設定 */
+    if( this.fixed ) return true;
+
     const v = {lines:[]};
     this.members.secondary();
     this.methods.secondary();
@@ -354,6 +356,8 @@ class MembersDef extends BaseDef {
     this.className = className;
   }
   secondary(){  /** 二次設定 */
+    if( this.fixed ) return true;
+
     this.fixed = true;
     this.list.forEach(x => {
       if( x.secondary() === false ) this.fixed = false;
@@ -416,6 +420,8 @@ class FieldDef extends BaseDef {
     this.functionName = functionName;
   }
   secondary(){  /** 二次設定 */
+    if( this.fixed ) return true;
+
     this.fixed = true;
     return this.fixed;
   }
@@ -446,6 +452,8 @@ class MethodsDef extends BaseDef {
     this.className = className;
   }
   secondary(){  /** 二次設定 */
+    if( this.fixed ) return true;
+
     this.fixed = true;
     this.list.forEach(x => {
       if( x.secondary() === false ) this.fixed = false;
@@ -525,6 +533,8 @@ class MethodDef extends BaseDef {
     this.caller = [];
   }
   secondary(){  /** 二次設定 */
+    if( this.fixed ) return true;
+
     this.fixed = this.params.secondary() && this.returns.secondary();
 
     // 引数・戻り値とも確定したらメソッド概要部分を作成
@@ -590,25 +600,31 @@ class ParamsDef extends BaseDef {
     this.functionName = functionName;
   }
   secondary(){  /** 二次設定 */
-    this.list.forEach(x => x.secondary());
-  }
-  makeMd(){ /** Markdownの作成 */
-    this.list.forEach(x => x.makeMd());
+    if( this.fixed ) return true;
 
-    const v = {
-      cn: this.className.toLowerCase(),
-      mn: this.functionName.toLowerCase(),
-      fn: (this.className ? this.className + '.' : '') + this.functionName,
-    };
+    this.fixed = true;
+    this.list.forEach(x => {
+      if( x.secondary() === false ) this.fixed = false;
+    });
 
-    this.markdown = new MarkdownDef(Object.assign({
-      title: `📥 引数`, //  `📥 ${v.fn}() 引数`
-      level: 4,
-      anchor: `${v.cn}_${v.mn}_param`,
-      link: ``,
-      navi: ``,
-      content: (this.list.length === 0 ? `- 引数無し(void)` : `${this.cfTable(this)}`),
-    },this.markdown));
+    // 引数が全て確定したら引数一覧を作成
+    if( this.fixed ){
+      const v = {
+        cn: this.className.toLowerCase(),
+        mn: this.functionName.toLowerCase(),
+        fn: (this.className ? this.className + '.' : '') + this.functionName,
+      };
+
+      this.markdown = new MarkdownDef(Object.assign({
+        title: `📥 引数`, //  `📥 ${v.fn}() 引数`
+        level: 4,
+        anchor: `${v.cn}_${v.mn}_param`,
+        link: ``,
+        navi: ``,
+        content: (this.list.length === 0 ? `- 引数無し(void)` : `${this.cfTable(this)}`),
+      },this.markdown));
+    }
+    return this.fixed;
   }
 }
 
@@ -637,6 +653,8 @@ class ReturnsDef extends BaseDef {
     this.functionName = functionName;
   }
   secondary(){  /** 二次設定 */
+    if( this.fixed ) return true;
+
     this.list.forEach(x => x.secondary());
   }
   makeMd(){ /** Markdownの作成 */
@@ -697,6 +715,7 @@ class ReturnDef extends BaseDef {
     this.functionName = functionName;
   }
   secondary(){  /** 二次設定 */
+    if( this.fixed ) return true;
 
   }
   makeMd(){ /** Markdownの作成 */
@@ -754,6 +773,7 @@ class MarkdownDef extends BaseDef {
     .replaceAll(/\n\n\n+/g,'\n\n');
   }
   secondary(){  /** 二次設定 */
+    if( this.fixed ) return true;
 
   }
   evalContent(str){
