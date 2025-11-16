@@ -133,6 +133,10 @@ class BaseDef {
         };
         break;
       case 'ReturnDef':
+        // 未定義のデータ型の場合"unregistered type"を返して終了
+        if( typeof BaseDef.defMap[obj.type] === 'undefined' ){
+          return new Error('unregistered type');
+        }
         v.obj = {
           header: Object.assign({},v.header),
           body: JSON.parse(JSON.stringify(BaseDef.defMap[obj.type])).members.list,
@@ -152,7 +156,7 @@ class BaseDef {
         }
         break;
       default:
-        return new Error('cfTable error: Invalid type\n'
+        return new Error('invalid argument\n'
           + JSON.stringify({constructor:obj.constructor.name,obj:obj,opt:opt},null,2));
     }
 
@@ -171,28 +175,6 @@ class BaseDef {
     }
 
     return v.rv.join('\n');
-  }
-  /** replaceTags: テキスト内の"<!--%%〜%%-->"を評価して結果で置換
-   * @param {string} str - 操作対象テキスト
-   * @returns {string} 評価・置換結果
-   */
-  replaceTags(str){
-    // 置換対象の文字列内の関数名には「this.」が付いてないので付加
-    const cfTable = this.cfTable;
-
-    const v = {str:this.trimIndent(str)};
-    [...v.str.matchAll(/(\n*)(\s*)<!--%%([\s\S]*?)%%-->/g)].forEach(x => {
-      // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)
-      // x[1]: 改行
-      // x[2]: タグ前のスペース
-      // x[3]: 式
-      // ①式を評価
-      v.result = eval(x[3]).trim();
-      // ②評価結果の各行頭にタグ前のスペースを追加
-      v.result = v.result.split('\n').map(l => x[2]+l).join('\n');
-      v.str = v.str.replace(x[0],x[1]+v.result);
-    })
-    return v.str;
   }
 }
 
@@ -825,8 +807,27 @@ class MarkdownDef extends BaseDef {
   secondary(){  /** 二次設定 */
 
   }
-  makeMd(){ /** Markdownの作成 */
+  /** replaceTags: テキスト内の"<!--%%〜%%-->"を評価して結果で置換
+   * @param {string} str - 操作対象テキスト
+   * @returns {string} 評価・置換結果
+   */
+  replaceTags(str){
+    // 置換対象の文字列内の関数名には「this.」が付いてないので付加
+    const cfTable = this.cfTable;
 
+    const v = {str:this.trimIndent(str)};
+    [...v.str.matchAll(/(\n*)(\s*)<!--%%([\s\S]*?)%%-->/g)].forEach(x => {
+      // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)
+      // x[1]: 改行
+      // x[2]: タグ前のスペース
+      // x[3]: 式
+      // ①式を評価
+      v.result = eval(x[3]).trim();
+      // ②評価結果の各行頭にタグ前のスペースを追加
+      v.result = v.result.split('\n').map(l => x[2]+l).join('\n');
+      v.str = v.str.replace(x[0],x[1]+v.result);
+    })
+    return v.str;
   }
   static setMd(arg=null){  // 文字列が渡された場合はtemplateと看做す
     return arg === null ? {} : ( typeof arg === 'string' ? {template:arg} : arg);

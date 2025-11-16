@@ -2,6 +2,7 @@
 
 ## Markdown内のcfTableタグ再帰処理
 
+<!--
 | No | MD作成箇所 | 引用元データ | 備考 |
 | :--: | :-- | :-- | :-- |
 | ① | メンバ一覧 | specDef.js | 初回で確定 |
@@ -13,19 +14,58 @@
 - secondaryにmakeMDを統合。一カ所でも作成できないMDが有った場合nullを返し、nullが無くなるまでループさせる
 - MarkdownDefでcfTable(template)がnullの場合はcontentにセットしない(contentは展開済文字列に限定)
 
-- 全般
-  - makeMdの内容をconstructorに移行
-  - 一覧系の表は「配下の要素.markdown.fixedが全部trueになったら作成」に変更
-  - secondary
-    - 子要素のsecondaryを順次呼び出し(従前)
-    - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
-- ProjectDef
-  - constructor
 - BaseDef
   - cfTable修正
     - `Invalid type` -> `invalid argument`に修正
     - `typeof BaseDef.defMap[obj.type] === 'undefined'`の場合、`unregistered type`を返すよう修正
   - replaceTags削除(MarkdownDef.evalContentに移動)
+- ProjectDef
+  - constructor
+- ClassDef
+  - makeMdの内容をconstructorに移行
+  - secondary
+    - 子要素のsecondaryを順次呼び出し(従前)
+    - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
+- MembersDef
+  - makeMdの内容をconstructorに移行
+  - 一覧系の表は「配下の要素.markdown.fixedが全部trueになったら作成」に変更
+  - secondary
+    - 子要素のsecondaryを順次呼び出し(従前)
+    - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
+- FieldDef
+  - makeMdの内容をconstructorに移行
+  - secondary
+    - 子要素のsecondaryを順次呼び出し(従前)
+    - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
+- MethodsDef
+  - makeMdの内容をconstructorに移行
+  - 一覧系の表は「配下の要素.markdown.fixedが全部trueになったら作成」に変更
+  - secondary
+    - 子要素のsecondaryを順次呼び出し(従前)
+    - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
+-->
+- MethodDef
+  - makeMdの内容をconstructorに移行
+  - secondary
+    - 子要素のsecondaryを順次呼び出し(従前)
+    - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
+- ParamsDef
+  - makeMdの内容をconstructorに移行
+  - 一覧系の表は「配下の要素.markdown.fixedが全部trueになったら作成」に変更
+  - secondary
+    - 子要素のsecondaryを順次呼び出し(従前)
+    - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
+- ReturnsDef
+  - makeMdの内容をconstructorに移行
+  - 一覧系の表は「配下の要素.markdown.fixedが全部trueになったら作成」に変更
+  - secondary
+    - 子要素のsecondaryを順次呼び出し(従前)
+    - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
+- ReturnDef
+  - makeMdの内容をconstructorに移行
+  - secondary
+    - 子要素のsecondaryを順次呼び出し(従前)
+    - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
 - MarkdownDef
   - メンバ
     - メンバ"{boolean} fixed=false"を追加
