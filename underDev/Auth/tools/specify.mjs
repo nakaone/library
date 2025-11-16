@@ -655,33 +655,39 @@ class ReturnsDef extends BaseDef {
   secondary(){  /** 二次設定 */
     if( this.fixed ) return true;
 
-    this.list.forEach(x => x.secondary());
-  }
-  makeMd(){ /** Markdownの作成 */
-    const v = {
-      cn: this.className.toLowerCase(),
-      mn: this.functionName.toLowerCase(),
-      fn: (this.className ? this.className + '.' : '') + this.functionName,
-      returnMd: [], // 戻り値(データ型)別詳細Markdown
-    };
+    this.fixed = true;
+    this.list.forEach(x => {
+      if( x.secondary() === false ) this.fixed = false;
+    });
 
-    if( this.list.length === 0 ){
-      v.returnMd = [`- 戻り値無し(void)`];
-    } else {
-      this.list.forEach(x => {
-        x.makeMd(); // 各戻り値(データ型)のMarkdown作成を呼び出す
-        v.returnMd.push(x.markdown.content);
-      });
+    // 引数が全て確定したら引数一覧を作成
+    if( this.fixed ){
+      const v = {
+        cn: this.className.toLowerCase(),
+        mn: this.functionName.toLowerCase(),
+        fn: (this.className ? this.className + '.' : '') + this.functionName,
+        returnMd: [], // 戻り値(データ型)別詳細Markdown
+      };
+
+      if( this.list.length === 0 ){
+        v.returnMd = [`- 戻り値無し(void)`];
+      } else {
+        this.list.forEach(x => {
+          v.returnMd.push(x.markdown.content);
+        });
+      }
+
+      this.markdown = new MarkdownDef(Object.assign({
+        title: `📤 戻り値`, // `📤 ${v.fn}() 戻り値`
+        level: 4,
+        anchor: `${v.cn}_${v.mn}_return`,
+        link: ``,
+        navi: ``,
+        content: `${v.returnMd.join('\n')}`,
+      },this.markdown));
     }
-
-    this.markdown = new MarkdownDef(Object.assign({
-      title: `📤 戻り値`, // `📤 ${v.fn}() 戻り値`
-      level: 4,
-      anchor: `${v.cn}_${v.mn}_return`,
-      link: ``,
-      navi: ``,
-      content: `${v.returnMd.join('\n')}`,
-    },this.markdown));
+    
+    return this.fixed;
   }
 }
 
