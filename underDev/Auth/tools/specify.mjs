@@ -95,7 +95,7 @@ class BaseDef {
     return lines.map(line => line.slice(minIndent)).join('\n');
   }
   /** cfTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
-   * @param {MembersDef|ParamsDef|ReturnDef} - 表示対象を指定するオブジェクト
+   * @param {MembersDef|ParamsDef|ReturnDef} obj - 表示対象を指定するオブジェクト
    * @param {Object} [opt={}]
    * @param {Object.<string,string>} opt.header - ヘッダ行の定義
    * @param {boolean} [opt.name=true] - 「項目名」欄の表示/非表示
@@ -119,10 +119,6 @@ class BaseDef {
     Object.keys(v.header).forEach(x => {
       if( opt[x] === false ) delete v.header[x];
     })
-
-    /*const v = {rv:[],header: Object.assign( // 表のヘッダの既定値
-      {name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明',note:'備考'},
-      (opt.header || {}))};*/
 
     // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
     switch( obj.constructor.name ){

@@ -9,10 +9,48 @@
 | ② | 戻り値 | メンバ一覧 | 2回目で確定 |
 | ③ | 処理手順 | 引数・戻り値 | 3回目で確定 |
 
-- comparisonTable -> cfTable
 - cfTableが作成できない場合の戻り値をnullとし、nullならcontent=''になるよう修正(templateはそのまま)
 - secondaryにmakeMDを統合。一カ所でも作成できないMDが有った場合nullを返し、nullが無くなるまでループさせる
 - MarkdownDefでcfTable(template)がnullの場合はcontentにセットしない(contentは展開済文字列に限定)
+
+- 全般
+  - 全体にtry〜catch追加、devTools追加
+  - makeMdの内容をconstructorに移行
+  - 一覧系の表は「配下の要素.markdown.fixedが全部trueになったら作成」に変更
+  - secondary
+    - 子要素のsecondaryを順次呼び出し(従前)
+    - 全要素が評価済ならtrue、未評価が残っている場合falseを返す
+- ProjectDef
+  - constructor
+    - 二次設定(secondary)の戻り値がtrueになるか、最大ループ回数を超えるまでループ
+    - makeMdの呼び出しは削除
+- BaseDef
+  - cfTable修正
+    - `Invalid type` -> `invalid argument`に修正
+    - `typeof BaseDef.defMap[obj.type] === 'undefined'`の場合、`unregistered type`を返すよう修正
+  - replaceTags削除(MarkdownDef.evalContentに移動)
+- MarkdownDef
+  - メンバ
+    - メンバ"{boolean} fixed=false"を追加
+    - templateは削除(contentに一本化)
+  - evalContent作成
+    - 引数は評価対象のcontent
+    - 中に"<!--%%〜%%-->"が無い場合、nullを返して終了
+    - 中に"<!--%%〜%%-->"が有る場合、評価タグの数だけループ
+      - 評価タグの中身を評価(eval(cfTable(..)))
+      - 戻り値がErrorオブジェクト
+        - `unregistered type` -> contentそのままで処理継続
+        - その他 -> throw
+      - 戻り値が文字列(=評価結果) -> contentを書き換え
+      - 全てOK -> fixed=true
+    - 戻り値は置換済のcontent
+  - constructor修正
+    - 引数はオブジェクトのみから文字列もOKに変更
+    - 文字列で与えられた場合はcontentとして扱う
+    - 「引数をメンバ変数へ設定」は従前
+    - evalContent呼び出し、content書き換え
+  - secondary作成
+    - fixed=falseならevalContent呼び出し、content書き換え
 
 ## callerの表示
 
