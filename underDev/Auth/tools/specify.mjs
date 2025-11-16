@@ -748,7 +748,17 @@ class ReturnDef extends BaseDef {
     this.type = arg.type || '';
     this.default = arg.default || {};
     this.patterns = arg.patterns || {};
-    this.markdown = arg.markdown || {};
+    this.markdown = new MarkdownDef(Object.assign({
+      title: ``,
+      level: 4,
+      anchor: ``,
+      link: ``,
+      navi: ``,
+      content: (arg.markdown && typeof arg.markdown === 'string'
+        ? arg.markdown : this.cfTable(this)),
+      className: this.className,
+      methodName: this.methodName,
+    },(arg.markdown || {})));
     this.className = className;
     this.methodName = methodName;
   }
