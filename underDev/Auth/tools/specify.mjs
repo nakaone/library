@@ -1,6 +1,13 @@
 /** specify: JavaScriptオブジェクトで定義した内容をMarkdownで出力
  * - グローバル関数は"global"クラスのメソッド、グローバル変数は"global"クラスのメンバとして処理
  * 
+ * - Markdown作成手順
+ *   - constructor : this.markdownにMarkdownDefインスタンス作成
+ *     この時点で確定している子要素はcontentとして定義
+ *     ex. ClassDef.title,level,summary等
+ *   - createMd : 子要素が有れば再帰呼出の上、子要素のcontentが確定したら
+ *     自要素のcontent = title + contentを作成、fixedをtrueとする
+ * 
  * @example
  * 1. 定義部分(def.js)
  *    ```js
@@ -219,11 +226,7 @@ class ProjectDef extends BaseDef {
     this.defs = {};
     Object.keys(arg.defs).forEach(x => {
       BaseDef.classMap = x; // クラス名変換マップ(小文字->正式名)
-      if( arg.defs[x].hasOwnProperty('members') || arg.defs[x].hasOwnProperty('methods')){
-        this.defs[x] = new ClassDef(arg.defs[x],x);
-      } else {
-        this.defs[x] = new MethodDef(arg.defs[x],x);
-      }
+      this.defs[x] = new ClassDef(arg.defs[x],x);
     });
 
     // Markdown作成
@@ -300,7 +303,29 @@ class ClassDef extends BaseDef {
     this.methods = new MethodsDef(arg.methods,className);
     this.implement = arg.implement || [];
     this.name = className;
-    this.markdown = arg.markdown || {};
+
+    // MarkdownDefインスタンスの作成
+    const v = {lines:[]};
+    if( this.desc.length > 0 )  // 端的なクラスの説明
+      v.lines = v.lines.concat(['',this.desc]);
+    if( this.note.length > 0 )  // 補足説明
+      v.lines = v.lines.concat(['',this.note]);
+    if( this.summary.length > 0 )  // 概要
+      v.lines = v.lines.concat(['',
+        `## <span id="${cn}_summary">🧭 ${this.name} クラス 概要</span>`,
+        '',this.summary]);
+    v.lines.push(this.members.markdown.content);
+    v.lines.push(this.methods.markdown.content);
+
+    this.markdown = new MarkdownDef(Object.assign({
+      title: `${this.name} クラス仕様書`,
+      level: 1,
+      anchor: this.name.toLowerCase(),
+      link: '',
+      navi: '',
+      content: v.lines.join('\n'),
+      className: this.name,
+    },this.markdown));
 
     // 新しく出てきたimplement要素をprj.imprementsに追加登録
     BaseDef.implements = this.implement;
@@ -311,33 +336,17 @@ class ClassDef extends BaseDef {
   createMd(){  /** Markdown作成 */
     if( this.fixed ) return true;
 
-    const v = {lines:[]};
     this.members.createMd();
     this.methods.createMd();
     this.fixed = this.members.fixed && this.methods.fixed;
 
-    // メンバ・メソッドとも確定したらクラス概要部分を作成
-    if( this.fixed ){
-      if( this.desc.length > 0 )  // 端的なクラスの説明
-        v.lines = v.lines.concat(['',this.desc]);
-      if( this.note.length > 0 )  // 補足説明
-        v.lines = v.lines.concat(['',this.note]);
-      if( this.summary.length > 0 )  // 概要
-        v.lines = v.lines.concat(['',
-          `## <span id="${cn}_summary">🧭 ${this.name} クラス 概要</span>`,
-          '',this.summary]);
-      v.lines.push(this.members.markdown.content);
-      v.lines.push(this.methods.markdown.content);
-
-      this.markdown = new MarkdownDef(Object.assign({
-        title: `${this.name} クラス仕様書`,
-        level: 1,
-        anchor: this.name.toLowerCase(),
-        link: '',
-        navi: '',
-        content: v.lines.join('\n'),
-        className: this.name,
-      },this.markdown));
+    if( this.fixed === true ){
+      this.markdown.content = [
+        this.markdown.title,
+        this.markdown.content,
+        '',this.members.markdown.content,
+        '',this.methods.markdown.content,
+      ].join('\n');
     }
 
     return this.fixed;
@@ -783,7 +792,7 @@ class ReturnDef extends BaseDef {
 
 /**
  * @typedef {Object} MarkdownDef - Markdown文書作成時の定義
- * @prop {string} [title=''] - タイトル
+ * @prop {string} [title=''] - タイトル。constructorでアンカー・リンク等が付加される
  * @prop {number} [level=0] - 階層。0ならタイトルに'#'を付けない
  * @prop {string} [anchor=''] - タイトルに付けるアンカー
  *   "## <span id="[anchor]">タイトル</span>"
@@ -828,11 +837,21 @@ class MarkdownDef extends BaseDef {
   createMd(){  /** Markdown作成 */
     if( this.fixed ) return true;
 
+    const v = {rv:this.embeds};
+    if( v.rv instanceof Error ){
+      console.error(v.rv);
+      return v.rv;
+    }
 
-    // 確定時、タイトル行を追加
-    // 余分な空白行を削除
-    this.content = (arg.content || `\n${this.title}\n${this.content}\n`)
-    .replaceAll(/\n\n\n+/g,'\n\n');
+    if( v.rv === true ){
+      // 確定時、タイトル行を追加
+      this.content = this.title + '\n' + this.content;
+      // 余分な空白行を削除
+      this.content = (arg.content || `\n${this.title}\n${this.content}\n`)
+      .replaceAll(/\n\n\n+/g,'\n\n');
+    }
+
+    return rv;
   }
   /** embeds: 埋め込まれた置換指示タグに基づき、contentを置換
    * - 評価タグ：`<!--::〜::-->`
@@ -848,15 +867,16 @@ class MarkdownDef extends BaseDef {
 
       // テキスト内の"<!--%%〜%%-->"を評価
       v.r1 = this.evalTag(this.content);
-      if( v.r1 instanceof Error ) throw v.r1;
-      if( v.r1.status !== 'none' ) this.content = v.r1.result;
+      if( v.r1 instanceof Error ) throw v.r1; // システムエラー
+      if( v.r1.status !== 'none' ) this.content = v.r1.result;  // 置換分をcontentにセット
 
       // 処理手順内の他メソッド呼出指示
       v.r2 = this.callTag(this.content);
-      if( v.r2 instanceof Error ) throw v.r2;
-      if( v.r2.status !== 'none' ) this.content = v.r2.result;
+      if( v.r2 instanceof Error ) throw v.r2; // システムエラー
+      if( v.r2.status !== 'none' ) this.content = v.r2.result;  // 置換分をcontentにセット
     
       if( v.r1.status === 'none' && v.r2.status === 'none' ){
+        // evalTagもcallTagも無いなら展開済 ⇒ this.fixed=true
         this.fixed = true;
       }
 
