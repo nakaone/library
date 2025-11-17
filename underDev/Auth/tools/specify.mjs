@@ -198,7 +198,7 @@ class ProjectDef extends BaseDef {
   /**
    * @param {ProjectDef} arg 
    * @param {Object} [opt={}] - オプション
-   * @param {string} [opt.autoOutput=true] - 二次設定後、作成したMarkdownを出力
+   * @param {string} [opt.autoOutput=true] - Markdown作成後、作成したMarkdownを出力
    * @param {string} [opt.folder] - 出力先フォルダ名。無指定の場合カレントフォルダ
    * @param {boolean} [opt.makeList=true] - true:関数・クラス名一覧を作成
    */
@@ -226,12 +226,12 @@ class ProjectDef extends BaseDef {
       }
     });
 
-    // 二次設定
+    // Markdown作成
     v.cnt = 10; // 最大ループ回数
     while( v.cnt > 0 ){
       this.fixed = true;
       Object.keys(this.defs).forEach(x => {
-        if( this.defs[x].secondary() === false ) this.fixed = false;
+        if( this.defs[x].createMd() === false ) this.fixed = false;
       });
       v.cnt -= (this.fixed ? 10 : 1);
     }
@@ -308,12 +308,12 @@ class ClassDef extends BaseDef {
     // 現在作成中のClassDefをBaseDefのマップに登録
     BaseDef.defMap = this;
   }
-  secondary(){  /** 二次設定 */
+  createMd(){  /** Markdown作成 */
     if( this.fixed ) return true;
 
     const v = {lines:[]};
-    this.members.secondary();
-    this.methods.secondary();
+    this.members.createMd();
+    this.methods.createMd();
     this.fixed = this.members.fixed && this.methods.fixed;
 
     // メンバ・メソッドとも確定したらクラス概要部分を作成
@@ -365,12 +365,12 @@ class MembersDef extends BaseDef {
     this.markdown = arg.markdown || {};
     this.className = className;
   }
-  secondary(){  /** 二次設定 */
+  createMd(){  /** Markdown作成 */
     if( this.fixed ) return true;
 
     this.fixed = true;
     this.list.forEach(x => {
-      if( x.secondary() === false ) this.fixed = false;
+      if( x.createMd() === false ) this.fixed = false;
     });
 
     // メンバが全て確定したらメンバ一覧を作成
@@ -430,7 +430,7 @@ class FieldDef extends BaseDef {
     this.className = className;
     this.methodName = methodName;
   }
-  secondary(){  /** 二次設定 */
+  createMd(){  /** Markdown作成 */
     if( this.fixed ) return true;
 
     this.fixed = true;
@@ -462,12 +462,12 @@ class MethodsDef extends BaseDef {
     this.markdown = arg.markdown || {};
     this.className = className;
   }
-  secondary(){  /** 二次設定 */
+  createMd(){  /** Markdown作成 */
     if( this.fixed ) return true;
 
     this.fixed = true;
     this.list.forEach(x => {
-      if( x.secondary() === false ) this.fixed = false;
+      if( x.createMd() === false ) this.fixed = false;
     });
 
     // メソッドが全て確定したらメソッド一覧を作成
@@ -544,10 +544,10 @@ class MethodDef extends BaseDef {
     this.className = className;
     this.caller = [];
   }
-  secondary(){  /** 二次設定 */
+  createMd(){  /** Markdown作成 */
     if( this.fixed ) return true;
 
-    this.fixed = this.params.secondary() && this.returns.secondary();
+    this.fixed = this.params.createMd() && this.returns.createMd();
 
     // 引数・戻り値とも確定したらメソッド概要部分を作成
     if( this.fixed ){
@@ -629,12 +629,12 @@ class ParamsDef extends BaseDef {
     this.className = className;
     this.methodName = methodName;
   }
-  secondary(){  /** 二次設定 */
+  createMd(){  /** Markdown作成 */
     if( this.fixed ) return true;
 
     this.fixed = true;
     this.list.forEach(x => {
-      if( x.secondary() === false ) this.fixed = false;
+      if( x.createMd() === false ) this.fixed = false;
     });
 
     // 引数が全て確定したら引数一覧を作成
@@ -684,12 +684,12 @@ class ReturnsDef extends BaseDef {
     this.className = className;
     this.methodName = methodName;
   }
-  secondary(){  /** 二次設定 */
+  createMd(){  /** Markdown作成 */
     if( this.fixed ) return true;
 
     this.fixed = true;
     this.list.forEach(x => {
-      if( x.secondary() === false ) this.fixed = false;
+      if( x.createMd() === false ) this.fixed = false;
     });
 
     // 引数が全て確定したら引数一覧を作成
@@ -754,7 +754,7 @@ class ReturnDef extends BaseDef {
     this.className = className;
     this.methodName = methodName;
   }
-  secondary(){  /** 二次設定 */
+  createMd(){  /** Markdown作成 */
     if( this.fixed ) return true;
 
     if( typeof this.markdown === 'string' ){
@@ -797,8 +797,6 @@ class ReturnDef extends BaseDef {
  */
 class MarkdownDef extends BaseDef {
   /**
-   * - MarkdownDefのインスタンス化はmakeMd()で行われる<br>
-   *   ⇒ 二次設定が終了し、データは全て確定済
    * @param {MarkdownDef} arg - ユーザ指定
    * @returns {MarkdownDef}
    */
@@ -827,7 +825,7 @@ class MarkdownDef extends BaseDef {
     if( this.navi.length > 0 )
       this.title += this.navi;
   }
-  secondary(){  /** 二次設定 */
+  createMd(){  /** Markdown作成 */
     if( this.fixed ) return true;
 
 

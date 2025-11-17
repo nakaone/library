@@ -113,11 +113,14 @@
 
 ## bugs
 
-- TypeError: this.markdown.content.embeds is not a function
-- ReferenceError: arg is not defined
-- TypeError: Cannot read properties of undefined (reading 'embeds')
-- TypeError: this.markdown.content.embeds is not a function
-- TypeError: str.replace is not a function
+- 未解決
+  - 概要他でラベル行が出力されない
+- 解決済
+  - TypeError: this.markdown.content.embeds is not a function
+  - ReferenceError: arg is not defined
+  - TypeError: Cannot read properties of undefined (reading 'embeds')
+  - TypeError: this.markdown.content.embeds is not a function
+  - TypeError: str.replace is not a function
 
 ## その他ToDo
 
