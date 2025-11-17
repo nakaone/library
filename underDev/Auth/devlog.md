@@ -113,6 +113,7 @@
 
 ## bugs
 
+- TypeError: this.markdown.content.embeds is not a function
 - ReferenceError: arg is not defined
 - TypeError: Cannot read properties of undefined (reading 'embeds')
 - TypeError: this.markdown.content.embeds is not a function

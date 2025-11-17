@@ -774,7 +774,7 @@ class ReturnDef extends BaseDef {
       this.markdown = new MarkdownDef(this.markdown);
     } else {
       // this.markdownが既にMarkdownDefインスタンスになっている場合
-      this.markdown.content.embeds();
+      this.markdown.embeds();
     }
 
     return this.markdown.fixed;
