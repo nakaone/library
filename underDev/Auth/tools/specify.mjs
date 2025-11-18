@@ -1,7 +1,6 @@
 /** BaseDef - 各定義の基底クラス
  * ===== メンバ =====
  * @typedef {Object} BaseDef - 各定義の基底クラス
- * @prop {ProjectDef} prj - ProjectDefインスタンス。再帰参照用
  * @prop {string} [className=''] - 所属するクラス名。ex.'authAuditLog'
  * @prop {string} [methodName=''] - 所属するメソッド名。ex.'log'
  * @prop {string} [anchor] - アンカーを付ける場合の文字列。ex.'authauditlog_constructor_params'
@@ -22,35 +21,247 @@
  *   - ※クラス名・メソッド名は大文字を含む正式名だけでなく、小文字のみのアンカー名でもアクセス可とする
  * 
  * ===== メソッド =====
- * @prop {Function} cfTable - メンバ一覧および対比表の作成
  * @prop {Function} article - タイトル行＋内容の作成
- * @prop {Function} evaluate - "%%〜%%"の「〜」を評価(eval)して置換
- *   - 一箇所でも評価できなかった場合は空文字列を返す
+ * @prop {Function} cfTable - メンバ一覧および対比表の作成
  * @prop {Function} createMd - 当該インスタンスのMarkdownを作成
  *   - this.content === '' ならthis.templateを評価、未作成のcontentが無ければthis.contentにセット
  *   - this.contentを返して終了
+ * @prop {Function} evaluate - "%%〜%%"の「〜」を評価(eval)して置換
+ *   - 一箇所でも評価できなかった場合は空文字列を返す
  * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
  */
-/** BaseDef.articleのパラメータ
- * @typedef {Object} 以下はarticleのパラメータ
- * @prop {string} [title=''] - タイトル。constructorでアンカー・リンク等が付加される
- * @prop {number} [level=0] - 階層。0ならタイトルに'#'を付けない
- * @prop {string} [anchor=''] - タイトルに付けるアンカー
- *   "## <span id="[anchor]">タイトル</span>"
- * @prop {string} [link=''] - タイトルに付けるリンク
- *   "## <a href="[link]">タイトル</a>"
- *   "## <span id="[anchor]"><a href="[link]">タイトル</a></span>"
- * @prop {string} [navi=''] - ナビゲーション
- * @prop {string} [body=''] - 本文
- * @prop {Object} [opt={}]
- * @prop {boolean} [opt.force=false] - trueなら本文空文字列でも作成
- * @returns {string}
- */
+class BaseDef {
+
+  constructor(arg){
+    this.className = arg.className || '';
+    this.methodName = arg.methodName || '';
+    this.anchor = arg.anchor || (this.className 
+      ? this.className.toLowerCase() + (this.methodName ?
+      '_' + this.methodName.toLowerCase() : '') : '');
+    this.title = arg.title || '';
+    this.template = arg.template || '';
+    this.content = arg.content || '';
+  }
+
+  static _implements = [];  // 実装環境の一覧
+  static get implements(){
+    return this._implements;
+  }
+  static set implements(arg){
+    arg.forEach(imp => {
+      // 未登録の場合のみ登録
+      if( !this._implements.find(x => x === imp) ){
+        this._implements.push(imp);
+      }
+    });
+  }
+
+  static _defs = {};  // ClassDefのマッピングオブジェクト
+  static get defs(){
+    return this._defs;
+  }
+  static set defs(arg){
+    this._defs[arg.name] = this._defs[arg.name.toLowerCase()] = arg;
+  }
+
+  /** article: タイトルと本文から記事を作成
+   * @param {Object} [arg={}]
+   * @param {string} title - タイトル。constructorでアンカー・リンク等が付加される
+   * @param {number} [level=0] - 階層。0ならタイトルに'#'を付けない
+   * @param {string} [anchor=''] - タイトルに付けるアンカー
+   *   "## <span id="[anchor]">タイトル</span>"
+   * @param {string} [link=''] - タイトルに付けるリンク
+   *   "## <a href="[link]">タイトル</a>"
+   *   "## <span id="[anchor]"><a href="[link]">タイトル</a></span>"
+   * @param {string} [navi=''] - ナビゲーション
+   * @param {string} [body=''] - 本文
+   * @param {Object} [opt={}]
+   * @param {boolean} [opt.force=false] - trueなら本文空文字列でも作成
+   * @returns {string} 作成した記事(Markdown)
+   */
+  article(arg){
+    const v = Object.assign({title:'',level:0,anchor:'',link:'',navi:'',body:''},arg,
+      {opt:Object.assign({force:false,},opt)});
+
+    // タイトル行・ナビの作成
+    if( v.link.length > 0 )
+      v.title = `<a href="${v.link}">${v.title}</a>`;
+    if( v.anchor.length > 0 )
+      v.title = `<span id="${v.anchor}">${v.title}</span>`;
+    if( v.level > 0 )
+      v.title = `${'#'.repeat(v.level)} ${v.title}`;
+    if( v.navi.length > 0 )
+      v.title += v.navi;
+
+    if( v.body.length > 0 || opt.force ){
+      v.title += v.body;
+    }
+
+    return v.title;
+  }
+
+  /** cfTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
+   * @param {MembersDef|ParamsDef|ReturnDef} obj - 表示対象を指定するオブジェクト
+   * @param {Object} [opt={}]
+   * @param {Object.<string,string>} opt.header - ヘッダ行の定義
+   * @param {boolean} [opt.name=true] - 「項目名」欄の表示/非表示
+   * @param {boolean} [opt.type=true] - 「データ型」欄の表示/非表示
+   * @param {boolean} [opt.default=true] - 「既定値」欄の表示/非表示
+   * @param {boolean} [opt.desc=true] - 「説明」欄の表示/非表示
+   * @param {boolean} [opt.note=true] - 「備考」欄の表示/非表示
+   * @returns {string|Error} 作成した表(Markdown)
+   * - unregistered type: 引用元が未作成
+   * - その他: システムエラー
+   */
+  cfTable(obj,opt={}){
+    const v = {rv:[],header:Object.assign({name:'項目名',type:'データ型',
+      default:'要否/既定値',desc:'説明',note:'備考'},(opt.header || {}))};
+    // オプションの既定値設定
+    opt = Object.assign({name:true,type:true,default:true,label:true,note:true},opt);
+
+    // fv: 表示する値を整形して文字列化(format value)
+    const fv = x => typeof x === 'string' ? x : 
+      ((typeof x === 'object' || Number.isNaN(x)) ? JSON.stringify(x) : x.toLocaleString());
+
+    // 出力項目リストを作成
+    Object.keys(v.header).forEach(x => {
+      if( opt[x] === false ) delete v.header[x];
+    })
+
+    // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
+    switch( obj.constructor.name ){
+      case 'MembersDef':
+      case 'ParamsDef':
+        // メンバ一覧または引数一覧の場合は単一の表
+        v.obj = {
+          header:Object.assign({},v.header),
+          body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
+        };
+        break;
+      case 'ReturnDef':
+        // 未定義のデータ型の場合"unregistered type"を返して終了
+        if( typeof BaseDef.defs[obj.type] === 'undefined' ){
+          return new Error('unregistered type');
+        }
+        v.obj = {
+          header: Object.assign({},v.header),
+          body: JSON.parse(JSON.stringify(BaseDef.defs[obj.type])).members.list,
+        };
+        v.patternList = Object.keys(obj.patterns || {}); // 特定データ型内のパターン。ex.["正常終了","警告終了"]
+        for( v.i=0 ; v.i<v.patternList.length ; v.i++ ){
+          v.pn = v.patternList[v.i]; // パターン名
+          v.po = obj.patterns[v.pn];  // パターンのオブジェクト
+          v.cn = `_Col${v.i}`;  // カラム名
+          // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
+          v.obj.header[v.cn] = v.pn;  // パターン名をヘッダに追加
+          // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
+          v.obj.body.forEach(col => {
+            col[v.cn] = v.po.assign[col.name] ? `**${v.po.assign[col.name]}**`
+            : (obj.default[col.name] ? obj.default[col.name] : '—');
+          })
+        }
+        break;
+      default:
+        return new Error('invalid argument\n'
+          + JSON.stringify({constructor:obj.constructor.name,obj:obj,opt:opt},null,2));
+    }
+
+    // ヘッダ行の作成
+    v.cols = Object.keys(v.obj.header);
+    v.rv.push(`\n| ${v.cols.map(x => v.obj.header[x] || x).join(' | ')} |`);
+    v.rv.push(`| ${v.cols.map(()=>':--').join(' | ')} |`);
+
+    // データ行の作成
+    for( v.i=0 ; v.i<v.obj.body.length ; v.i++ ){
+      // 既定値欄の表示内容を作成
+      v.obj.body[v.i].default = v.obj.body[v.i].default !== '' ? fv(v.obj.body[v.i].default)
+      : (v.obj.body[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
+      // 一項目分のデータ行を出力
+      v.rv.push(`| ${v.cols.map(x => fv(v.obj.body[v.i][x])).join(' | ')} |`);
+    }
+
+    return v.rv.join('\n');
+  }
+
+  /** createMd: 当該インスタンスのMarkdownを作成
+   * @param {void}
+   * @returns {string} 作成したcontent
+   */
+  createMd(){
+    const v = {};
+    if( this.content === '' ){
+      this.content = this.evaluate(this.template);
+    }
+    return this.content;
+  }
+
+  /** evaluate: "%%〜%%"の「〜」を評価(eval)して置換
+   * @param {string} str - 評価対象の文字列
+   * @returns {string} 評価結果。一箇所でも評価できなかった場合は空文字列
+   */
+  evaluate(str){
+    // 置換対象の文字列内の関数名には「this.」が付いてないので付加
+    const cfTable = this.cfTable;
+
+    const v = {str:this.trimIndent(str),rv:''};
+    v.list = [...v.str.matchAll(/(\n*)(\s*)%%([\s\S]*?)%%/g)];
+
+    // 評価箇所が無い場合はそのまま返す
+    if( v.list.length === 0 ) return v.str;
+
+    v.list.forEach(x => {
+      // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)
+      // x[1]: 改行
+      // x[2]: タグ前のスペース
+      // x[3]: 式
+      // ①式を評価
+      v.result = eval(x[3].trim());
+      // cfTableの戻り値がErrorの場合
+      if( v.result instanceof Error ){
+        if( v.result.message === 'unregistered type' ){
+          return '';
+        } else {
+          return v.result;  // その他システムエラー
+        }
+      } else {
+        // ②評価結果の各行頭にタグ前のスペースを追加
+        v.result = v.result.trim().split('\n').map(l => x[2]+l).join('\n');
+        v.str = v.str.replace(x[0],x[1]+v.result);
+      }
+    })
+    return v.str;
+
+  }
+
+  /**
+   * 与えられた文字列から、先頭末尾の空白行と共通インデントを削除する
+   * @param {string} str - 対象文字列（複数行）
+   * @returns {string} 加工後の文字列
+   */
+  trimIndent(str) {
+    // 1. 先頭・末尾の空白行削除
+    if( !str ) return '';
+    const lines = str.replace(/^\s*\n+|\n+\s*$/g, '').split('\n');
+    if( lines.length === 0 ) return '';
+
+    // 2. 1行だけの場合、先頭のスペースを削除して終了
+    if( lines.length === 1 ) return lines[0].trim();
+
+    // 3. 複数行の場合、各行の共通インデント(スペース・タブ)を取得
+    const indents = lines
+      .filter(line => line.trim() !== '')
+      .map(line => line.match(/^[ \t]*/)[0].length);
+    const minIndent = indents.length ? Math.min(...indents) : 0;
+
+    // 4. 共通インデントを削除、各行を結合した文字列を返す
+    return lines.map(line => line.slice(minIndent)).join('\n');
+  }
+}
 
 /** ProjectDef - プロジェクト全体定義
  * ===== メンバ =====
  * @typedef {Object} ProjectDef - プロジェクト全体定義
- * @prop {Object.<string, ClassDef>} defs - クラス・クロージャ関数定義集
+ * @prop {Object.<string, ClassDef>} classdef - クラス・クロージャ関数定義集
  * @prop {Object} [opt={}] - オプション
  * @prop {string} [opt.autoOutput=true] - 指示タグの展開後、作成したMarkdownを出力
  * @prop {string} [opt.folder] - 出力先フォルダ名。無指定の場合カレントフォルダ
@@ -62,6 +273,83 @@
  * ===== メソッド =====
  * @prop {Function} outputMD - フォルダを作成、Markdownファイルを出力
  */
+class ProjectDef extends BaseDef {
+  /**
+   * @param {ProjectDef} arg - ユーザ指定
+   * @param {Object} [opt={}] - オプション
+   * @param {string} [opt.autoOutput=true] - 指示タグの展開後、作成したMarkdownを出力
+   * @param {string} [opt.folder] - 出力先フォルダ名。無指定の場合カレントフォルダ
+   * @param {boolean} [opt.makeList=true] - true:関数・クラス名一覧を作成
+   */
+  constructor(arg={},opt={}){
+    super(arg);
+    const v = {};
+
+    // 文字列で渡された場合はオブジェクト化
+    if( typeof arg === 'string' ) arg = JSON.parse(arg);
+    // オプションの既定値設定
+    this.opt = Object.assign({
+      autoOutput: true,
+      folder: '.',
+      makeList: true,
+    },opt);
+
+    // 関数・クラス定義のインスタンスを順次作成
+    this.classdef = {};
+    Object.keys(arg.classdef).forEach(x => {
+      arg.classdef[x].className = x;
+      this.classdef[x] = new ClassDef(arg.classdef[x]);
+    });
+
+    // 指示タグの展開
+    v.cnt = 10; // 最大ループ回数
+    while( v.cnt > 0 ){
+      v.fixed = true;
+      Object.keys(this.classdef).forEach(x => {
+        if( this.classdef[x].createMd() === '' ) v.fixed = false;
+      });
+      v.cnt -= (v.fixed ? 10 : 1);
+    }
+
+    // Markdownファイルの出力
+    if( this.opt.autoOutput ) this.outputMD();
+  }
+
+  /** outputMD: フォルダを作成、Markdownファイルを出力
+   * @param {void}
+   * @returns {void}
+   */
+  outputMD(){
+    // 1️⃣ 指定されたフォルダが存在しない場合に作成
+    if (!fs.existsSync(this.opt.folder)) {
+      fs.mkdirSync(this.opt.folder, { recursive: true });
+    }
+
+    // 2️⃣ 指定フォルダ以下のファイル・フォルダを全部削除
+    for (const entry of fs.readdirSync(this.opt.folder)) {
+      const target = path.join(this.opt.folder, entry);
+      fs.rmSync(target, { recursive: true, force: true });
+    }
+
+    // 3️⃣ implement毎にフォルダを作成
+    const folder = {};
+    BaseDef.implements.forEach(x => {
+      folder[x] = path.join(this.opt.folder,x);
+      fs.mkdirSync(folder[x]);
+    });
+
+    // 4️⃣ ClassDef毎にファイルを作成
+    Object.keys(this.classdef).forEach(def => {
+      BaseDef.implements.forEach(x => {
+        if( this.classdef[def].implement.find(i => i === x) ){
+          fs.writeFileSync(path.join(folder[x], `${def}.md`),
+            (this.classdef[def].markdown.content || '').trim(), "utf8");
+        }
+      });
+    });
+  }
+
+}
 
 /** ClassDef - クラス・クロージャ関数定義
  * ===== メンバ =====
@@ -96,6 +384,29 @@
  * %% this.summary.length === 0 ? '' : `## <span id="${this.anchor}_summary">🧭 ${this.name} クラス 概要</span>\n\n${this.summary}` %%
  * ```
  */
+class ClassDef extends BaseDef {
+  constructor(arg={}){
+    super(arg);
+
+    this.name = arg.className || '';
+    this.extends = arg.extends || '';
+    this.desc = arg.desc || '';
+    this.note = this.trimIndent(arg.note || '');
+    this.summary = this.trimIndent(arg.summary || '');
+    //this.members = new MembersDef(arg.members,className);
+    //this.methods = new MethodsDef(arg.methods,className);
+    this.implement = arg.implement || [];
+    this.template = arg.template || this.trimIndent(`
+      %% this.desc %%
+
+      %% this.note %%
+
+      %% this.summary.length === 0 ? '' : \`## <span id="${this.anchor}_summary">🧭 ${this.name} クラス 概要</span>\n\n${this.summary}\` %%
+    `);
+
+    this.defs = this;
+  }
+}
 
 /** MembersDef - クラスの内部変数の定義
  * ===== メンバ =====
@@ -250,3 +561,54 @@
  * %% this.cfTable(this) %%
  * ```
  */
+
+function analyzeArg(){
+  const v = {whois:'analyzeArg',rv:{opt:{},val:[]}};
+  try {
+    for( v.i=2 ; v.i<process.argv.length ; v.i++ ){
+      v.m = process.argv[v.i].match(/^(\-*)([0-9a-zA-Z]+):*(.*)$/);
+      if( v.m && v.m[1].length > 0 ){
+        v.rv.opt[v.m[2]] = v.m[3];
+      } else {
+        v.rv.val.push(process.argv[v.i]);
+      }
+    }
+    return v.rv;
+  } catch(e){
+    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
+    return e;
+  }
+}
+
+/** removeDefs: 【検証用】オブジェクトからメンバ名"defs"を全て削除 */
+function removeDefs(obj) {
+  if (Array.isArray(obj)) {
+    // 配列なら要素ごとに再帰処理
+    return obj.map(removeDefs);
+  } else if (obj && typeof obj === "object") {
+    // オブジェクトなら新しいオブジェクトを作成
+    const result = {};
+    for (const key in obj) {
+      if (key === "defs") continue; // defs を削除
+      result[key] = removeDefs(obj[key]);
+    }
+    return result;
+  } else {
+    // プリミティブ型はそのまま
+    return obj;
+  }
+}
+
+import fs from "fs";
+import path from "path";
+import readline from "readline";
+
+const lines = [];
+const rl = readline.createInterface({ input: process.stdin });
+const clog = (l,x) => console.log(`l.${l} ${JSON.stringify(x,null,2)}`);
+
+rl.on('line', x => lines.push(x)).on('close', () => {
+  const arg = analyzeArg();
+  const prj = new ProjectDef(lines.join('\n'),{folder:arg.opt.o});
+  clog(9999,removeDefs(prj));
+});
