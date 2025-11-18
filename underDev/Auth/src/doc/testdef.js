@@ -5,6 +5,9 @@ console.log(JSON.stringify({classdef:{
       - 監査ログ出力が必要なメソッドの冒頭でインスタンス化、処理開始時刻等を記録
       - 出力時にlogメソッドを呼び出して処理時間を計算、シート出力
     `,	// {string} クラスとしての補足説明。概要欄に記載
+    summary: `
+      これはサマリ(クラス概要)です。
+    `,
     implement: ['sv'],  // 実装の有無
 
     members: {list:[  // {Member} ■メンバ(インスタンス変数)定義■

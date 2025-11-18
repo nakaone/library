@@ -30,6 +30,7 @@
  *   - 一箇所でも評価できなかった場合は空文字列を返す
  * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
  */
+
 class BaseDef {
 
   constructor(arg){
@@ -79,7 +80,7 @@ class BaseDef {
    * @param {boolean} [opt.force=false] - trueなら本文空文字列でも作成
    * @returns {string} 作成した記事(Markdown)
    */
-  article(arg){
+  article(arg={},opt={}){
     const v = Object.assign({title:'',level:0,anchor:'',link:'',navi:'',body:''},arg,
       {opt:Object.assign({force:false,},opt)});
 
@@ -190,7 +191,8 @@ class BaseDef {
   createMd(){
     const v = {};
     if( this.content === '' ){
-      this.content = this.evaluate(this.template);
+      v.r = this.evaluate(this.template);
+      this.content = v.r === '' ? '' : this.title + '\n\n' + v.r;
     }
     return this.content;
   }
@@ -241,7 +243,8 @@ class BaseDef {
   trimIndent(str) {
     // 1. 先頭・末尾の空白行削除
     if( !str ) return '';
-    const lines = str.replace(/^\s*\n+|\n+\s*$/g, '').split('\n');
+    const lines = str.replace(/^\n+/,'').replace(/[\s\n]+$/,'').split('\n');
+    //const lines = str.replace(/^\s*\n+|\n+\s*$/g, '').split('\n');
     if( lines.length === 0 ) return '';
 
     // 2. 1行だけの場合、先頭のスペースを削除して終了
@@ -250,7 +253,8 @@ class BaseDef {
     // 3. 複数行の場合、各行の共通インデント(スペース・タブ)を取得
     const indents = lines
       .filter(line => line.trim() !== '')
-      .map(line => line.match(/^[ \t]*/)[0].length);
+      .map(line => line.match(/^\s*/)[0].length);
+      //.map(line => line.match(/^[ \t]*/)[0].length);
     const minIndent = indents.length ? Math.min(...indents) : 0;
 
     // 4. 共通インデントを削除、各行を結合した文字列を返す
@@ -332,7 +336,6 @@ class ProjectDef extends BaseDef {
     }
 
     // 3️⃣ implement毎にフォルダを作成
-    clog(335,BaseDef.implements);
     const folder = {};
     BaseDef.implements.forEach(x => {
       folder[x] = path.join(this.opt.folder,x);
@@ -377,12 +380,13 @@ class ProjectDef extends BaseDef {
  * 
  * @example this.template初期値
  * ※ 出力時不要な改行は削除するので内容有無は不問
+ * ※ 改行(\n)、バッククォータ(`)は要エスケープに注意
  * ```
  * %% this.desc %%
  * 
- * %% this.note %%
+ * %% this.trimIndent(this.note) %%
  * 
- * %% this.summary.length === 0 ? '' : `## <span id="${this.anchor}_summary">🧭 ${this.name} クラス 概要</span>\n\n${this.summary}` %%
+ * %% this.summary.length === 0 ? '' : \`## <span id="${this.anchor}_summary">🧭 ${this.name} クラス 概要</span>\\n\\n${this.summary}\` %%
  * ```
  */
 class ClassDef extends BaseDef {
@@ -397,12 +401,24 @@ class ClassDef extends BaseDef {
     //this.members = new MembersDef(arg.members,className);
     //this.methods = new MethodsDef(arg.methods,className);
     this.implement = arg.implement || [];
-    this.template = arg.template || this.trimIndent(`
+
+    // BaseDefメンバに値設定
+    this.className = this.name;
+    this.methodName = '';
+    this.title = this.article({
+      title: `${this.name} クラス仕様書`,
+      level: 1,
+      anchor: this.anchor,
+      link: '',
+      navi: '',
+      body: '',
+    });
+    this.template = this.trimIndent(arg.template || `
       %% this.desc %%
 
-      %% this.note %%
+      %% this.trimIndent(this.note) %%
 
-      %% this.summary.length === 0 ? '' : \`## <span id="${this.anchor}_summary">🧭 ${this.name} クラス 概要</span>\n\n${this.summary}\` %%
+      %% this.summary.length === 0 ? '' : \`## <span id="${this.anchor}_summary">🧭 ${this.name} クラス 概要</span>\\n\\n${this.summary}\` %%
     `);
 
     // 新しく出てきたimplement要素をprj.imprementsに追加登録
