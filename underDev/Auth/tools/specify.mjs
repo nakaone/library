@@ -1,282 +1,72 @@
-/** specify: JavaScriptオブジェクトで定義した内容をMarkdownで出力
- * - グローバル関数は"global"クラスのメソッド、グローバル変数は"global"クラスのメンバとして処理
- * 
- * - Markdown作成手順
- *   - constructor : this.markdownにMarkdownDefインスタンス作成
- *     この時点で確定している子要素はcontentとして定義
- *     ex. ClassDef.title,level,summary等
- *   - createMd : 子要素が有れば再帰呼出の上、子要素のcontentが確定したら
- *     自要素のcontent = title + contentを作成、fixedをtrueとする
- * 
- * @example
- * 1. 定義部分(def.js)
- *    ```js
- *    console.log(JSON.stringify({  // オブジェクトで仕様を定義、JSONを標準出力に出力
- *      authAuditLog: {
- *        label: 'authServerの監査ログ',
- *        note: `
- *          - 監査ログ出力が必要なメソッドの冒頭でインスタンス化、処理開始時刻等を記録
- *          - 出力時にlogメソッドを呼び出して処理時間を計算、シート出力`,
- *        members: [...],
- *        methods: {
- *          constructor: {
- *            type: 'private',
- *            label: 'コンストラクタ',
- *            params: [],
- *            process: `- メンバと引数両方にある項目は、引数の値をメンバとして設定`,
- *            returns: {authAuditLog:{}},
- *          },
- *        },
- *      },
- *    }));
- *    ```
- * 2. 仕様書作成エンジン(specify.js)
- *    ```js
- *    // JSON化された定義を処理、出力先フォルダにMarkdownファイルを作成
- *    const lines = [];
- *    const rl = require('readline').createInterface({input: process.stdin});
- *    rl.on('line', x => lines.push(x)).on('close',() => {
- *      rl.close();
- *      classdef = JSON.parse(lines.join('\n'));
- *      main();
- *    });
- *    ```
- * 3. ビルダー(build.sh)
- *    ```zsh
- *    # クラス別定義
- *    node $src/doc/def.js | node $prj/tools/specify.js -o:$tmp
- *    ```
- * 
- * ■ 凡例
- * - 🔢：導出項目(定義不要)
- * - ✂️：trimIndent対象項目
- */
-
-/**
+/** BaseDef - 各定義の基底クラス
+ * ===== メンバ =====
  * @typedef {Object} BaseDef - 各定義の基底クラス
- * @prop {ProjectDef} prj - ProjectDefインスタンス
+ * @prop {ProjectDef} prj - ProjectDefインスタンス。再帰参照用
+ * @prop {string} [className=''] - 所属するクラス名。ex.'authAuditLog'
+ * @prop {string} [methodName=''] - 所属するメソッド名。ex.'log'
+ * @prop {string} [anchor] - アンカーを付ける場合の文字列。ex.'authauditlog_constructor_params'
+ *    クラス名・メソッド名はclassName,methodName(小文字)、セクション名は'XxxDef'->'xxx'
+ * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行。anchor,link設定済
+ * @prop {string} [template=''] - 🔢embed展開前のテンプレート。constructorでセット、以降不変
+ * @prop {string} [content=''] - 🔢embedを展開後の本文。embed展開終了時にセット
+ * 
+ * ===== ゲッター・セッター ===== ※以下はspecify全体の共有変数として定義
+ * @prop {string[]} [implement=[]] - 実装環境の一覧。空配列なら全てグローバル。ex.`["cl","sv"]`
+ * @prop {Object.<string,ClassDef|MethodDef>} defs - ClassDefのマッピングオブジェクト
+ * - defs
+ *   - defs[クラス名]                   -> ClassDef
+ *   - defs[クラス名].members           -> MembersDef
+ *   - defs[クラス名].members[項目名]    -> FieldDef
+ *   - defs[クラス名].methods           -> MethodsDef
+ *   - defs[クラス名].methods[メソッド名] -> MethodDef
+ *   - ※クラス名・メソッド名は大文字を含む正式名だけでなく、小文字のみのアンカー名でもアクセス可とする
+ * 
+ * ===== メソッド =====
+ * @prop {Function} cfTable - メンバ一覧および対比表の作成
+ * @prop {Function} article - タイトル行＋内容の作成
+ * @prop {Function} evaluate - "%%〜%%"の「〜」を評価(eval)して置換
+ *   - 一箇所でも評価できなかった場合は空文字列を返す
+ * @prop {Function} createMd - 当該インスタンスのMarkdownを作成
+ *   - this.content === '' ならthis.templateを評価、未作成のcontentが無ければthis.contentにセット
+ *   - this.contentを返して終了
+ * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
  */
-class BaseDef {
-  static _implements = [];  // 実装環境の一覧
-  static _defMap = {};  // ClassDefのマップ
-  static _classMap = {};  // 小文字のクラス名から本来のクラス名への変換マップ
+/** BaseDef.articleのパラメータ
+ * @typedef {Object} 以下はarticleのパラメータ
+ * @prop {string} [title=''] - タイトル。constructorでアンカー・リンク等が付加される
+ * @prop {number} [level=0] - 階層。0ならタイトルに'#'を付けない
+ * @prop {string} [anchor=''] - タイトルに付けるアンカー
+ *   "## <span id="[anchor]">タイトル</span>"
+ * @prop {string} [link=''] - タイトルに付けるリンク
+ *   "## <a href="[link]">タイトル</a>"
+ *   "## <span id="[anchor]"><a href="[link]">タイトル</a></span>"
+ * @prop {string} [navi=''] - ナビゲーション
+ * @prop {string} [body=''] - 本文
+ * @prop {Object} [opt={}]
+ * @prop {boolean} [opt.force=false] - trueなら本文空文字列でも作成
+ * @returns {string}
+ */
 
-  constructor(){
-    this.fixed = false; // 当該クラスの内容が確定したらtrue
-  }
-
-  static get implements(){
-    return this._implements;
-  }
-  static set implements(arg){
-    arg.forEach(imp => {
-      if( !this._implements.find(x => x === imp) ){
-        this._implements.push(imp);
-      }
-    });
-  }
-  static get defMap(){
-    return this._defMap;
-  }
-  static set defMap(arg){
-    this._defMap[arg.name] = arg;
-  }
-  static get classMap(){
-    return this._classMap;
-  }
-  static set classMap(arg){
-    this._classMap[arg.toLowerCase()] = arg;
-  }
-  /**
-   * 与えられた文字列から、先頭末尾の空白行と共通インデントを削除する
-   * @param {string} str - 対象文字列（複数行）
-   * @returns {string} 加工後の文字列
-   */
-  trimIndent(str) {
-    // 1. 先頭・末尾の空白行削除
-    if( !str ) return '';
-    const lines = str.replace(/^\s*\n+|\n+\s*$/g, '').split('\n');
-    if( lines.length === 0 ) return '';
-
-    // 2. 1行だけの場合、先頭のスペースを削除して終了
-    if( lines.length === 1 ) return lines[0].trim();
-
-    // 3. 複数行の場合、各行の共通インデント(スペース・タブ)を取得
-    const indents = lines
-      .filter(line => line.trim() !== '')
-      .map(line => line.match(/^[ \t]*/)[0].length);
-    const minIndent = indents.length ? Math.min(...indents) : 0;
-
-    // 4. 共通インデントを削除、各行を結合した文字列を返す
-    return lines.map(line => line.slice(minIndent)).join('\n');
-  }
-  /** cfTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
-   * @param {MembersDef|ParamsDef|ReturnDef} obj - 表示対象を指定するオブジェクト
-   * @param {Object} [opt={}]
-   * @param {Object.<string,string>} opt.header - ヘッダ行の定義
-   * @param {boolean} [opt.name=true] - 「項目名」欄の表示/非表示
-   * @param {boolean} [opt.type=true] - 「データ型」欄の表示/非表示
-   * @param {boolean} [opt.default=true] - 「既定値」欄の表示/非表示
-   * @param {boolean} [opt.desc=true] - 「説明」欄の表示/非表示
-   * @param {boolean} [opt.note=true] - 「備考」欄の表示/非表示
-   * @returns {string|Error} 作成した表(Markdown)
-   * - unregistered type: 引用元が未作成
-   * - その他: システムエラー
-   */
-  cfTable(obj,opt={}){
-    const v = {rv:[],header:Object.assign({name:'項目名',type:'データ型',
-      default:'要否/既定値',desc:'説明',note:'備考'},(opt.header || {}))};
-    // オプションの既定値設定
-    opt = Object.assign({name:true,type:true,default:true,label:true,note:true},opt);
-
-    // fv: 表示する値を整形して文字列化(format value)
-    const fv = x => typeof x === 'string' ? x : 
-      ((typeof x === 'object' || Number.isNaN(x)) ? JSON.stringify(x) : x.toLocaleString());
-
-    // 出力項目リストを作成
-    Object.keys(v.header).forEach(x => {
-      if( opt[x] === false ) delete v.header[x];
-    })
-
-    // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
-    switch( obj.constructor.name ){
-      case 'MembersDef':
-      case 'ParamsDef':
-        // メンバ一覧または引数一覧の場合は単一の表
-        v.obj = {
-          header:Object.assign({},v.header),
-          body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
-        };
-        break;
-      case 'ReturnDef':
-        // 未定義のデータ型の場合"unregistered type"を返して終了
-        if( typeof BaseDef.defMap[obj.type] === 'undefined' ){
-          return new Error('unregistered type');
-        }
-        v.obj = {
-          header: Object.assign({},v.header),
-          body: JSON.parse(JSON.stringify(BaseDef.defMap[obj.type])).members.list,
-        };
-        v.patternList = Object.keys(obj.patterns || {}); // 特定データ型内のパターン。ex.["正常終了","警告終了"]
-        for( v.i=0 ; v.i<v.patternList.length ; v.i++ ){
-          v.pn = v.patternList[v.i]; // パターン名
-          v.po = obj.patterns[v.pn];  // パターンのオブジェクト
-          v.cn = `_Col${v.i}`;  // カラム名
-          // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
-          v.obj.header[v.cn] = v.pn;  // パターン名をヘッダに追加
-          // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
-          v.obj.body.forEach(col => {
-            col[v.cn] = v.po.assign[col.name] ? `**${v.po.assign[col.name]}**`
-            : (obj.default[col.name] ? obj.default[col.name] : '—');
-          })
-        }
-        break;
-      default:
-        return new Error('invalid argument\n'
-          + JSON.stringify({constructor:obj.constructor.name,obj:obj,opt:opt},null,2));
-    }
-
-    // ヘッダ行の作成
-    v.cols = Object.keys(v.obj.header);
-    v.rv.push(`\n| ${v.cols.map(x => v.obj.header[x] || x).join(' | ')} |`);
-    v.rv.push(`| ${v.cols.map(()=>':--').join(' | ')} |`);
-
-    // データ行の作成
-    for( v.i=0 ; v.i<v.obj.body.length ; v.i++ ){
-      // 既定値欄の表示内容を作成
-      v.obj.body[v.i].default = v.obj.body[v.i].default !== '' ? fv(v.obj.body[v.i].default)
-      : (v.obj.body[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
-      // 一項目分のデータ行を出力
-      v.rv.push(`| ${v.cols.map(x => fv(v.obj.body[v.i][x])).join(' | ')} |`);
-    }
-
-    return v.rv.join('\n');
-  }
-}
-
-/**
+/** ProjectDef - プロジェクト全体定義
+ * ===== メンバ =====
  * @typedef {Object} ProjectDef - プロジェクト全体定義
- * @prop {Object.<string,ClassDef|MethodDef>} defs - 関数・クラスの定義集
- * @prop {Object.<string,string>} classMap - 小文字のクラス名から本来のクラス名への変換マップ
- * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
- * @prop {Object} opt - 起動時オプション
+ * @prop {Object.<string, ClassDef>} defs - クラス・クロージャ関数定義集
+ * @prop {Object} [opt={}] - オプション
+ * @prop {string} [opt.autoOutput=true] - 指示タグの展開後、作成したMarkdownを出力
+ * @prop {string} [opt.folder] - 出力先フォルダ名。無指定の場合カレントフォルダ
+ * @prop {boolean} [opt.makeList=true] - true:関数・クラス名一覧を作成
+ * 
+ * ===== ゲッター・セッター =====
+ * - 無し
+ * 
+ * ===== メソッド =====
+ * @prop {Function} outputMD - フォルダを作成、Markdownファイルを出力
  */
-class ProjectDef extends BaseDef {
-  /**
-   * @param {ProjectDef} arg 
-   * @param {Object} [opt={}] - オプション
-   * @param {string} [opt.autoOutput=true] - Markdown作成後、作成したMarkdownを出力
-   * @param {string} [opt.folder] - 出力先フォルダ名。無指定の場合カレントフォルダ
-   * @param {boolean} [opt.makeList=true] - true:関数・クラス名一覧を作成
-   */
-  constructor(arg,opt={}){
-    super();
-    const v = {};
 
-    // 文字列で渡された場合はオブジェクト化
-    if( typeof arg === 'string' ) arg = JSON.parse(arg);
-    // オプションの既定値設定
-    this.opt = Object.assign({
-      autoOutput: true,
-      folder: '.',
-      makeList: true,
-    },opt);
-
-    // 一次設定：関数・クラス定義のインスタンスを順次作成
-    this.defs = {};
-    Object.keys(arg.defs).forEach(x => {
-      BaseDef.classMap = x; // クラス名変換マップ(小文字->正式名)
-      this.defs[x] = new ClassDef(arg.defs[x],x);
-    });
-
-    // Markdown作成
-    v.cnt = 10; // 最大ループ回数
-    while( v.cnt > 0 ){
-      this.fixed = true;
-      Object.keys(this.defs).forEach(x => {
-        if( this.defs[x].createMd() === false ) this.fixed = false;
-      });
-      v.cnt -= (this.fixed ? 10 : 1);
-    }
-
-    // Markdownファイルの出力
-    if( this.opt.autoOutput ) this.outputMD();
-  }
-
-  /** フォルダを作成、Markdownファイルを出力 */
-  outputMD(){
-    // 1️⃣ 指定されたフォルダが存在しない場合に作成
-    if (!fs.existsSync(this.opt.folder)) {
-      fs.mkdirSync(this.opt.folder, { recursive: true });
-    }
-
-    // 2️⃣ 指定フォルダ以下のファイル・フォルダを全部削除
-    for (const entry of fs.readdirSync(this.opt.folder)) {
-      const target = path.join(this.opt.folder, entry);
-      fs.rmSync(target, { recursive: true, force: true });
-    }
-
-    // 3️⃣ implement毎にフォルダを作成
-    const folder = {};
-    BaseDef.implements.forEach(x => {
-      folder[x] = path.join(this.opt.folder,x);
-      fs.mkdirSync(folder[x]);
-    });
-
-    // 4️⃣ ClassDef毎にファイルを作成
-    Object.keys(this.defs).forEach(def => {
-      BaseDef.implements.forEach(x => {
-        if( this.defs[def].implement.find(i => i === x) ){
-          fs.writeFileSync(path.join(folder[x], `${def}.md`),
-            (this.defs[def].markdown.content || '').trim(), "utf8");
-        }
-      });
-    });
-  }
-}
-
-/**
+/** ClassDef - クラス・クロージャ関数定義
+ * ===== メンバ =====
  * @typedef {Object} ClassDef - クラス・クロージャ関数定義
+ * @prop {string} name - 🔢クラス名
  * @prop {string} [extends=''] - 親クラス名 ※JS/TS共単一継承のみ(配列不可)
  * @prop {string} [desc=''] - 端的なクラスの説明。ex.'authServer監査ログ'
  * @prop {string} [note=''] - ✂️補足説明。概要欄に記載
@@ -284,122 +74,48 @@ class ProjectDef extends BaseDef {
  * @prop {MembersDef} members - メンバ(インスタンス変数)定義
  * @prop {MethodsDef} methods - メソッド定義
  * @prop {Object.<string,boolean>} implement - 実装の有無(ex.['cl','sv'])
- * @prop {string} name - 🔢クラス名
- * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
+ * @prop {string} [template] - Markdown出力時のテンプレート
+ * 
+ * ===== ゲッター・セッター =====
+ * - 無し
+ * 
+ * ===== メソッド =====
+ * @prop {Function} createMd - BaseDef.createMdをオーバーライド
+ *   - this.content === '' なら
+ *     - this.templateを評価、未作成のcontentが無ければthis.contentにセット
+ *     - this.members, this.methodsのcreateMd()を呼び出し、this.contentに追加
+ *   - this.contentを返して終了
+ * 
+ * @example this.template初期値
+ * ※ 出力時不要な改行は削除するので内容有無は不問
+ * ```
+ * %% this.desc %%
+ * 
+ * %% this.note %%
+ * 
+ * %% this.summary.length === 0 ? '' : `## <span id="${this.anchor}_summary">🧭 ${this.name} クラス 概要</span>\n\n${this.summary}` %%
+ * ```
  */
-class ClassDef extends BaseDef {
-  /**
-   * @param {ClassDef} arg 
-   * @param {string} className 
-   */
-  constructor(arg={},className){
-    super();
 
-    this.extends = arg.extends || '';
-    this.desc = arg.desc || '';
-    this.note = this.trimIndent(arg.note || '');
-    this.summary = this.trimIndent(arg.summary || '');
-    this.members = new MembersDef(arg.members,className);
-    this.methods = new MethodsDef(arg.methods,className);
-    this.implement = arg.implement || [];
-    this.name = className;
-
-    // MarkdownDefインスタンスの作成
-    const v = {lines:[]};
-    if( this.desc.length > 0 )  // 端的なクラスの説明
-      v.lines = v.lines.concat(['',this.desc]);
-    if( this.note.length > 0 )  // 補足説明
-      v.lines = v.lines.concat(['',this.note]);
-    if( this.summary.length > 0 )  // 概要
-      v.lines = v.lines.concat(['',
-        `## <span id="${cn}_summary">🧭 ${this.name} クラス 概要</span>`,
-        '',this.summary]);
-    v.lines.push(this.members.markdown.content);
-    v.lines.push(this.methods.markdown.content);
-
-    this.markdown = new MarkdownDef(Object.assign({
-      title: `${this.name} クラス仕様書`,
-      level: 1,
-      anchor: this.name.toLowerCase(),
-      link: '',
-      navi: '',
-      content: v.lines.join('\n'),
-      className: this.name,
-    },this.markdown));
-
-    // 新しく出てきたimplement要素をprj.imprementsに追加登録
-    BaseDef.implements = this.implement;
-
-    // 現在作成中のClassDefをBaseDefのマップに登録
-    BaseDef.defMap = this;
-  }
-  createMd(){  /** Markdown作成 */
-    if( this.fixed ) return true;
-
-    this.members.createMd();
-    this.methods.createMd();
-    this.fixed = this.members.fixed && this.methods.fixed;
-
-    if( this.fixed === true ){
-      this.markdown.content = [
-        this.markdown.title,
-        this.markdown.content,
-        '',this.members.markdown.content,
-        '',this.methods.markdown.content,
-      ].join('\n');
-    }
-
-    return this.fixed;
-  }
-}
-
-/**
+/** MembersDef - クラスの内部変数の定義
+ * ===== メンバ =====
  * @typedef {Object} MembersDef - クラスの内部変数の定義
  * @prop {FieldDef[]} list - 所属するメンバの配列
- * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
- * @prop {string} className - 🔢所属するクラス名
+ * 
+ * ===== ゲッター・セッター =====
+ * - 無し
+ * 
+ * ===== メソッド =====
+ * - 無し
+ * 
+ * @example this.template初期値
+ * ```
+ * %% this.cfTable(this.defs[this.className].members) %%
+ * ```
  */
-class MembersDef extends BaseDef {
-  /**
-   * @param {MembersDef} arg 
-   * @param {string} className 
-   */
-  constructor(arg,className){
-    super();
 
-    this.list = [];
-    for( let i=0 ; i<arg.list.length ; i++ ){
-      this.list[i] = new FieldDef(arg.list[i],i,className);
-    }
-    this.markdown = arg.markdown || {};
-    this.className = className;
-  }
-  createMd(){  /** Markdown作成 */
-    if( this.fixed ) return true;
-
-    this.fixed = true;
-    this.list.forEach(x => {
-      if( x.createMd() === false ) this.fixed = false;
-    });
-
-    // メンバが全て確定したらメンバ一覧を作成
-    if( this.fixed ){
-      this.markdown = new MarkdownDef(Object.assign({
-        title: `🔢 ${this.className} メンバ一覧`,
-        level: 2,
-        anchor: `${this.className.toLowerCase()}_members`,
-        link: ``,
-        navi: ``,
-        content: `${this.cfTable(this)}`,
-        className: this.className,
-      },this.markdown));
-    }
-
-    return this.fixed;
-  }
-}
-
-/**
+/** FieldDef - メンバの定義(Schema.columnDef上位互換)
+ * ===== メンバ =====
  * @typedef {Object} FieldDef - メンバの定義(Schema.columnDef上位互換)
  * @prop {string} name - 項目(引数)名。原則英数字で構成(システム用)
  * @prop {string} [label=''] - テーブル・シート表示時の項目名。省略時はnameを流用
@@ -411,105 +127,43 @@ class MembersDef extends BaseDef {
  *   テーブル定義(columnDef)の場合、行オブジェクトを引数とするtoString()化された文字列も可
  * @prop {boolean} [isOpt=false] - 必須項目ならfalse。defaultが定義されていた場合は強制的にtrue
  * @prop {string} [printf=null] - 表示整形用関数。行オブジェクトを引数とするtoString()化された文字列
- * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
  * @prop {number} seq - 🔢左端を0とする列番号。Members.constructor()で設定
- * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
- * @prop {string} [methodName=''] - 🔢関数(メソッド)名(引数・戻り値の場合のみ)
+ * 
+ * ===== ゲッター・セッター =====
+ * - 無し
+ * 
+ * ===== メソッド =====
+ * - 無し
  */
-class FieldDef extends BaseDef {
-  /**
-   * @param {FieldDef} arg 
-   * @param {number} seq 
-   * @param {string} [className='']
-   * @param {string} [methodName=''] 
-   */
-  constructor(arg,seq,className='',methodName=''){
-    super();
 
-    this.name = arg.name || '';
-    this.label = arg.label || '';
-    this.alias = arg.alias || [];
-    this.desc = arg.desc || '';
-    this.note = this.trimIndent(arg.note || '');
-    this.type = arg.type || 'string';
-    this.default = arg.default || '';
-    this.isOpt = this.default === '' ? true : (arg.isOpt || false);
-    this.printf = arg.printf || null;
-    this.seq = seq;
-    this.className = className;
-    this.methodName = methodName;
-  }
-  createMd(){  /** Markdown作成 */
-    if( this.fixed ) return true;
-
-    this.fixed = true;
-    return this.fixed;
-  }
-}
-
-/**
+/** MethodsDef - クラスのメソッド集
+ * ===== メンバ =====
  * @typedef {Object} MethodsDef - クラスのメソッド集
  * @prop {MethodDef[]} list - 所属するメソッドの配列
- * @prop {Object} methodMap - 小文字のメソッド名から本来のメソッド名への変換マップ
- * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
- * @prop {string} className - 🔢所属するクラス名
+ * @prop {string} template - BaseDef.templateをオーバーライド
+ * 
+ * ===== ゲッター・セッター =====
+ * - 無し
+ * 
+ * ===== メソッド =====
+ * @prop {Function} methodsList - メソッド一覧をMarkdownで作成
+ * @prop {Function} createMd - BaseDef.createMdをオーバーライド
+ *   - this.content === '' なら
+ *     - this.templateを評価、未作成のcontentが無ければthis.contentにセット
+ *     - this.listのcreateMd()を呼び出し、this.contentに追加
+ *     - 途中でthis.list[x].createMd()から空文字列が返ったら中断
+ *   - this.contentを返して終了
+ * 
+ * @example this.template初期値(this.listはembeds要素が無いのでconstructorで作成可能)
+ * ```js
+ * this.template(文字列) = "['',`| メソッド名 | 型 | 内容 |`,'| :-- | :-- | :-- |',
+ *   this.list.map(x=>{`| ${x.name} | ${x.type} | ${x.label} |`}))
+ * ].join('\n')"
+ * ```
  */
-class MethodsDef extends BaseDef {
-  /**
-   * @param {MethodsDef} arg 
-   * @param {string} className 
-   */
-  constructor(arg,className){
-    super();
 
-    this.list = [];
-    this.methodMap = {};
-    for( let i=0 ; i<arg.list.length ; i++ ){
-      this.list[i] = new MethodDef(arg.list[i],className);
-      this.methodMap[this.list[i].name.toLowerCase()] = this.list[i];
-    }
-    this.markdown = arg.markdown || {};
-    this.className = className;
-  }
-  createMd(){  /** Markdown作成 */
-    if( this.fixed ) return true;
-
-    this.fixed = true;
-    this.list.forEach(x => {
-      if( x.createMd() === false ) this.fixed = false;
-    });
-
-    // メソッドが全て確定したらメソッド一覧を作成
-    if( this.fixed ){
-      const v = {
-        lines:['',`| メソッド名 | 型 | 内容 |`,'| :-- | :-- | :-- |'],
-        cn: this.className.toLowerCase(),
-        methodMd: [], // メソッド別詳細Markdown
-      };
-
-      this.list.forEach(x => {  // {MethodDef}
-        v.methodMd.push(x.markdown.content);
-        v.mn = x.name.toLowerCase();
-        v.lines.push(`| ${`[${x.name}](#${v.cn}_${v.mn})`} | ${x.type} | ${x.desc}`);
-      });
-      
-      v.lines = [...v.lines, ...v.methodMd];
-      this.markdown = new MarkdownDef(Object.assign({
-        title: `🧱 ${this.className} メソッド一覧`,
-        level: 2,
-        anchor: `${v.cn}_methods`,
-        link: ``,
-        navi: ``,
-        content: `${v.lines.join('\n')}`,
-        className: this.className,
-      },this.markdown));
-    }
-
-    return this.fixed;
-  }
-}
-
-/**
+/** MethodDef - 関数・アロー関数・メソッド定義
+ * ===== メンバ =====
  * @typedef {Object} MethodDef - 関数・アロー関数・メソッド定義
  * @prop {string} name - 関数(メソッド)名
  * @prop {string} [type=''] - 関数(メソッド)の分類
@@ -522,529 +176,77 @@ class MethodsDef extends BaseDef {
  * @prop {ParamsDef} params - 引数
  * @prop {string} process - ✂️処理手順。Markdownで記載
  * @prop {ReturnsDef} returns - 戻り値の定義(パターン別)
- * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
- * @prop {string} [className=''] - 🔢所属するクラス名(メソッドのみ)
- * @prop {CallerDef[]} caller - 🔢本関数(メソッド)の呼出元関数(メソッド)。メソッドの場合"クラス.メソッド名"
+ * @prop {Object[]} [caller=[]] - 🔢本関数(メソッド)の呼出元関数(メソッド)
+ * @prop {string} caller.class - 呼出元クラス名
+ * @prop {string} caller.method - 呼出元メソッド名
+ * 
+ * ===== ゲッター・セッター =====
+ * - 無し
+ * 
+ * ===== メソッド =====
+ * @prop {Function} createCaller - 呼出元一覧を作成(Markdown)「📞 呼出元」
+ * 
+ * @example this.template初期値
+ * ※ 出力時不要な改行は削除するので内容有無は不問
+ * ```
+ * %% this.article(this.note) %%
+ * %% this.article(this.sorce) %%
+ * %% this.createCaller() %%
+ * %% this.params.createMd() %%
+ * %% this.evaluate(this.process) %%
+ * %% this.returns.createMd() %%
+ * ```
  */
-/**
- * @typedef {Object} CallerDef - 呼出元関数情報
- * @prop {string} class - 呼出元クラス名
- * @prop {string} method - 呼出元メソッド名
- */
-class MethodDef extends BaseDef {
-  /**
-   * @param {MethodDef} arg 
-   * @param {string} className 
-   */
-  constructor(arg,className){
-    super();
 
-    this.name = arg.name;
-    this.type = arg.type || '';
-    this.desc = arg.desc || '';
-    this.note = this.trimIndent(arg.note || '');
-    this.source = this.trimIndent(arg.source || '');
-    this.lib = arg.lib || '';
-    this.rev = arg.rev || 0;
-    this.params = new ParamsDef(arg.params,className,this.name);
-    this.process = this.trimIndent(arg.process || '');
-    this.returns = new ReturnsDef(arg.returns,className,this.name);
-    this.markdown = arg.markdown || {};
-    this.className = className;
-    this.caller = [];
-  }
-  createMd(){  /** Markdown作成 */
-    if( this.fixed ) return true;
-
-    this.fixed = this.params.createMd() && this.returns.createMd();
-
-    // 引数・戻り値とも確定したらメソッド概要部分を作成
-    if( this.fixed ){
-      const v = {
-        baseLevel: 3,  // 各メソッドのレベル
-        cn: this.className.toLowerCase(),
-        mn: this.name.toLowerCase(),
-        fn: (this.className ? this.className + '.' : '') + this.name,
-      };
-      v.baseAnchor = `#${v.cn}_${v.mn}`;
-
-      v.caller = new MarkdownDef({
-        title: `📞 呼出元`,
-        level: v.baseLevel+1,
-        anchor: v.baseAnchor + '_caller',
-        link: ``,
-        navi: ``,
-        content: `\n${this.caller.map(x => {
-          `- [${x.class}.${x.method}]`
-          + `(${x.class}.md#${x.class.toLowerCase()}_${x.method.toLowerCase()})`
-        }).join('\n')}`,
-        className: this.className,
-        methodName: this.name,
-      });
-
-      v.process = new MarkdownDef({
-        title: `🧾 処理手順`,
-        level: v.baseLevel+1,
-        anchor: v.baseAnchor + '_process',
-        link: ``,
-        navi: ``,
-        content: `\n${this.process}`,
-        className: this.className,
-        methodName: this.name,
-      });
-
-      // メソッドのMarkdownDef.contentの作成
-      this.markdown = new MarkdownDef(Object.assign({
-        title: `🧱 ${v.fn}()`,
-        level: v.baseLevel,
-        anchor: v.baseAnchor,
-        link: ``,
-        navi: ``,
-        content: [
-          // 呼出元
-          '',this.params.markdown.content,  // 引数
-          '',v.process.content,  // 処理手順
-          '',this.returns.markdown.content,  // 戻り値
-        ].join('\n'),
-        className: this.className,
-        methodName: this.name,
-      },this.markdown));
-    }
-    return this.fixed;
-  }
-}
-
-/**
+/** ParamsDef - 関数(メソッド)引数定義
+ * ===== メンバ =====
  * @typedef {Object} ParamsDef - 関数(メソッド)引数定義
  * @prop {FieldDef[]} list - 引数
- * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
- * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
- * @prop {string} [methodName=''] - 🔢関数(メソッド)名
+ * 
+ * ===== ゲッター・セッター =====
+ * - 無し
+ * 
+ * ===== メソッド =====
+ * - 無し
+ * 
+ * @example this.template初期値
+ * ```
+ * %% this.cfTable(this.defs[this.className].methods[this.methodName].params) %%
+ * ```
  */
-class ParamsDef extends BaseDef {
-  /**
-   * @param {ParamsDef} arg 
-   * @param {string} [className=''] 
-   * @param {string} [methodName=''] 
-   */
-  constructor(arg,className='',methodName=''){
-    super();
 
-    this.list = [];
-    for( let i=0 ; i<arg.list.length ; i++ ){
-      this.list[i] = new FieldDef(arg.list[i],i,className);
-    }
-    this.markdown = arg.markdown || {};
-    this.className = className;
-    this.methodName = methodName;
-  }
-  createMd(){  /** Markdown作成 */
-    if( this.fixed ) return true;
-
-    this.fixed = true;
-    this.list.forEach(x => {
-      if( x.createMd() === false ) this.fixed = false;
-    });
-
-    // 引数が全て確定したら引数一覧を作成
-    if( this.fixed ){
-      const v = {
-        cn: this.className.toLowerCase(),
-        mn: this.methodName.toLowerCase(),
-        fn: (this.className ? this.className + '.' : '') + this.methodName,
-      };
-
-      this.markdown = new MarkdownDef(Object.assign({
-        title: `📥 引数`, //  `📥 ${v.fn}() 引数`
-        level: 4,
-        anchor: `${v.cn}_${v.mn}_param`,
-        link: ``,
-        navi: ``,
-        content: (this.list.length === 0 ? `- 引数無し(void)` : `${this.cfTable(this)}`),
-        className: this.className,
-        methodName: this.methodName,
-      },this.markdown));
-    }
-    return this.fixed;
-  }
-}
-
-/**
+/** ReturnsDef - 関数(メソッド)戻り値定義集
+ * ===== メンバ =====
  * @typedef {Object} ReturnsDef - 関数(メソッド)戻り値定義集
  * @prop {ReturnDef[]} list - (データ型別)戻り値定義集
- * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
- * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
- * @prop {string} [methodName=''] - 🔢関数(メソッド)名
+ * 
+ * ===== ゲッター・セッター =====
+ * - 無し
+ * 
+ * ===== メソッド =====
+ * - 無し
  */
-class ReturnsDef extends BaseDef {
-  /**
-   * @param {ReturnsDef} arg 
-   * @param {string} [className=''] 
-   * @param {string} [methodName=''] 
-   */
-  constructor(arg,className='',methodName=''){
-    super();
 
-    this.list = [];
-    for( let i=0 ; i<arg.list.length ; i++ ){
-      this.list[i] = new ReturnDef(arg.list[i],className,methodName);
-    }
-    this.markdown = arg.markdown || {};
-    this.className = className;
-    this.methodName = methodName;
-  }
-  createMd(){  /** Markdown作成 */
-    if( this.fixed ) return true;
-
-    this.fixed = true;
-    this.list.forEach(x => {
-      if( x.createMd() === false ) this.fixed = false;
-    });
-
-    // 引数が全て確定したら引数一覧を作成
-    if( this.fixed ){
-      const v = {
-        cn: this.className.toLowerCase(),
-        mn: this.methodName.toLowerCase(),
-        fn: (this.className ? this.className + '.' : '') + this.methodName,
-        returnMd: [], // 戻り値(データ型)別詳細Markdown
-      };
-
-      if( this.list.length === 0 ){
-        v.returnMd = [`- 戻り値無し(void)`];
-      } else {
-        this.list.forEach(x => {
-          v.returnMd.push(x.markdown.content);
-        });
-      }
-
-      this.markdown = new MarkdownDef(Object.assign({
-        title: `📤 戻り値`, // `📤 ${v.fn}() 戻り値`
-        level: 4,
-        anchor: `${v.cn}_${v.mn}_return`,
-        link: ``,
-        navi: ``,
-        content: `${v.returnMd.join('\n')}`,
-        className: this.className,
-        methodName: this.methodName,
-      },this.markdown));
-    }
-
-    return this.fixed;
-  }
-}
-
-/**
+/** ReturnDef - 関数(メソッド)戻り値定義
+ * ===== メンバ =====
  * @typedef {Object} ReturnDef - 関数(メソッド)戻り値定義
  * @prop {string} type - 戻り値のデータ型
  * @prop {PatternDef} [default={}] - 全パターンの共通設定値
  * @prop {Object.<string,PatternDef>} [patterns={}] - 特定パターンへの設定値
- * @prop {MarkdownDef} markdown - Markdown文書作成時の定義
- * @prop {string} [className=''] - 🔢メソッドが所属するクラス名(メソッドのみ)
- * @prop {string} [methodName=''] - 🔢関数(メソッド)名
+ * 
+ * ===== ゲッター・セッター =====
+ * - 無し
+ * 
+ * ===== メソッド =====
+ * - 無し
+ * 
+ * @example this.template初期値
+ * ```
+ * [${this.className}](this.defs[this.className].anchor)
+ * 
+ * // 戻り値データ型のメンバ一覧
+ * %% this.cfTable(this.defs[this.className].methods[this.methodName].params) %%
+ * // 対比表
+ * %% this.cfTable(this) %%
+ * ```
  */
-/**
- * @typedef {Object.<string,string>} PatternDef - パターンに設定する値
- * @example {name:'fuga'} ⇒ 戻り値のデータ型のメンバ'name'に'fuga'を設定
- */
-class ReturnDef extends BaseDef {
-  /**
-   * @param {ReturnDef} arg 
-   * @param {string} [className=''] 
-   * @param {string} [methodName=''] 
-   */
-  constructor(arg,className='',methodName=''){
-    super();
-
-    this.type = arg.type || '';
-    this.default = arg.default || {};
-    this.patterns = arg.patterns || {};
-    this.markdown = arg.markdown || {};
-    this.className = className;
-    this.methodName = methodName;
-  }
-  createMd(){  /** Markdown作成 */
-    if( this.fixed ) return true;
-
-    if( typeof this.markdown === 'string' ){
-      // specDefでReturnDef.markdownを文字列で定義した場合
-      this.markdown = new MarkdownDef(Object.assign({
-        title: ``,
-        level: 0,
-        anchor: ``,
-        link: ``,
-        navi: ``,
-        content: this.markdown,
-        className: this.className,
-        methodName: this.methodName,
-      },(this.markdown || {})));
-    } else if( this.markdown.constructor.name !== 'MarkdownDef' ){
-      // specDefでReturnDef.markdownを無指定または文字列で定義した場合
-      this.markdown = new MarkdownDef(this.markdown);
-    } else {
-      // this.markdownが既にMarkdownDefインスタンスになっている場合
-      this.markdown.embeds();
-    }
-
-    return this.markdown.fixed;
-  }
-}
-
-/**
- * @typedef {Object} MarkdownDef - Markdown文書作成時の定義
- * @prop {string} [title=''] - タイトル。constructorでアンカー・リンク等が付加される
- * @prop {number} [level=0] - 階層。0ならタイトルに'#'を付けない
- * @prop {string} [anchor=''] - タイトルに付けるアンカー
- *   "## <span id="[anchor]">タイトル</span>"
- * @prop {string} [link=''] - タイトルに付けるリンク
- *   "## <a href="[link]">タイトル</a>"
- *   "## <span id="[anchor]"><a href="[link]">タイトル</a></span>"
- * @prop {string} [navi=''] - ナビゲーション
- * @prop {string} [content=''] - 本文のテンプレート
- * @prop {string} [className=''] - 所属するクラス名
- * @prop {string} [methodName=''] - 所属するクラス名
- */
-class MarkdownDef extends BaseDef {
-  /**
-   * @param {MarkdownDef} arg - ユーザ指定
-   * @returns {MarkdownDef}
-   */
-  constructor(arg={}){
-    super();
-
-    // 文字列が渡された場合はcontentと看做す
-    if( typeof arg === 'string' ) arg = {content:arg};
-
-    this.title = arg.title || '';
-    this.level = arg.level || 0;
-    this.anchor = arg.anchor || '';
-    this.link = arg.link || '';
-    this.navi = arg.navi || '';
-    this.content = arg.content || '';
-    this.className = arg.className || '';
-    this.methodName = arg.methodName || '';
-
-    // タイトル行・ナビの作成
-    if( this.link.length > 0 )
-      this.title = `<a href="${this.link}">${this.title}</a>`;
-    if( this.anchor.length > 0 )
-      this.title = `<span id="${this.anchor}">${this.title}</span>`;
-    if( this.level > 0 )
-      this.title = `${'#'.repeat(this.level)} ${this.title}`;
-    if( this.navi.length > 0 )
-      this.title += this.navi;
-  }
-  createMd(){  /** Markdown作成 */
-    if( this.fixed ) return true;
-
-    const v = {rv:this.embeds};
-    if( v.rv instanceof Error ){
-      console.error(v.rv);
-      return v.rv;
-    }
-
-    if( v.rv === true ){
-      // 確定時、タイトル行を追加
-      this.content = this.title + '\n' + this.content;
-      // 余分な空白行を削除
-      this.content = (arg.content || `\n${this.title}\n${this.content}\n`)
-      .replaceAll(/\n\n\n+/g,'\n\n');
-    }
-
-    return rv;
-  }
-  /** embeds: 埋め込まれた置換指示タグに基づき、contentを置換
-   * - 評価タグ：`<!--::〜::-->`
-   * - 呼出タグ：`[▼監査ログ](authAuditLog.md#authauditlog_constructor)`
-   * - 評価・呼出タグの置換結果は逐次this.contentに反映
-   * - 全ての評価・呼出タグの置換が終了したらthis.fixed=true
-   * @param {void}
-   * @returns {boolean|Error} this.fixedの値、またはErrorオブジェクト
-   */
-  embeds(){
-    const v = {};
-    try {
-
-      // テキスト内の"<!--%%〜%%-->"を評価
-      v.r1 = this.evalTag(this.content);
-      if( v.r1 instanceof Error ) throw v.r1; // システムエラー
-      if( v.r1.status !== 'none' ) this.content = v.r1.result;  // 置換分をcontentにセット
-
-      // 処理手順内の他メソッド呼出指示
-      v.r2 = this.callTag(this.content);
-      if( v.r2 instanceof Error ) throw v.r2; // システムエラー
-      if( v.r2.status !== 'none' ) this.content = v.r2.result;  // 置換分をcontentにセット
-    
-      if( v.r1.status === 'none' && v.r2.status === 'none' ){
-        // evalTagもcallTagも無いなら展開済 ⇒ this.fixed=true
-        this.fixed = true;
-      }
-
-      return this.fixed;
-
-    } catch(e) {
-      console.error(e);
-      return e;
-    }
-  }
-  /** evalTag: テキスト内の"<!--%%〜%%-->"を評価して結果で置換
-   * @param {string} str - 操作対象テキスト(this.content)
-   * @returns {Object|Error} {status,result}形式のオブジェクト
-   * - status = "none" : str内に置換対象無し
-   * - status = "true" : str内の置換対象を全て置換
-   * - status = "false" : 一部置換不能な対象が残存
-   * - Error : システムエラー
-   */
-  evalTag(str){
-    // 置換対象の文字列内の関数名には「this.」が付いてないので付加
-    const cfTable = this.cfTable;
-
-    const v = {str:this.trimIndent(str),rv:{status:'true'}};
-    v.list = [...v.str.matchAll(/(\n*)(\s*)<!--%%([\s\S]*?)%%-->/g)];
-    if( v.list.length === 0 ) return {status:'none'};
-
-    v.list.forEach(x => {
-      // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)
-      // x[1]: 改行
-      // x[2]: タグ前のスペース
-      // x[3]: 式
-      // ①式を評価
-      v.result = eval(x[3]);
-      // cfTableの戻り値がErrorの場合
-      if( v.result instanceof Error ){
-        if( v.result.message === 'unregistered type' ){
-          v.rv.result = 'false';
-        } else {
-          return v.result;  // その他システムエラー
-        }
-      } else {
-        // ②評価結果の各行頭にタグ前のスペースを追加
-        v.result = v.result.trim().split('\n').map(l => x[2]+l).join('\n');
-        v.str = v.str.replace(x[0],x[1]+v.result);
-      }
-    })
-    return Object.assign(v.rv,{result:v.str});
-  }
-  /** callTag: 処理手順内の他メソッド呼出指示をリンク化、適宜その引数と戻り値の一覧を追加
-   * - `[▼監査ログ](authAuditLog.md#authauditlog_constructor)`形式
-   * @param {string} str - 操作対象テキスト(this.content)
-   * @returns {Object|Error} {status,result}形式のオブジェクト
-   * - status = "none" : str内に置換対象無し
-   * - status = "true" : str内の置換対象を全て置換
-   * - status = "false" : 一部置換不能な対象が残存
-   * - Error : システムエラー
-   */
-  callTag(str){
-    const v = {
-      links: [],  // e/lLinkRexの結果オブジェクトの配列
-
-      // 呼出タグ①(外部リンク)：[0:マッチした文字列全体, 1:▼, 2:リンク文字列,
-      //     3:参照先クラス(大小文字), 4:参照先クラス(小文字), 5:参照先メソッド(小文字), 6:改行までの文字列]
-      externalRex: /\[(▼?)([^\]]+)\]\(([^)]+)\.md#([a-z0-9]+)_([a-z0-9]+)\)([^\n]*)/gi,
-
-      // 呼出タグ②(ローカルリンク)：[0:マッチした文字列全体, 1:▼, 2:リンク文字列,
-      //     3:参照先クラス(小文字), 4:参照先メソッド(小文字), 5:改行までの文字列]
-      localRex: /\[(▼?)([^\]]+)\]\(#([a-z0-9]+)_([a-z0-9]+)\)([^\n]*)/gi,
-    };
-    try {
-
-      // 呼出タグ①(外部リンク)
-      while( (v.m = v.externalRex.exec(this.content)) !== null ) v.links.push({
-        full: v.m[0],
-        doExpand: v.m[1] === '▼',
-        text: v.m[2],
-        link: `${v.m[3]}.md#${v.m[4]}_${v.m[5]}`,
-        uClass: v.m[3],
-        lClass: v.m[4],
-        uMethod: BaseDef.defMap[v.m[3]].methods.methodMap[v.m[5]],
-        lMethod: v.m[5],
-        suffix: v.m[6],
-      });
-
-      // 呼出タグ②(ローカルリンク)
-      while( (v.m = v.localRex.exec(this.content)) !== null ) v.links.push({
-        full: v.m[0],
-        doExpand: v.m[1] === '▼',
-        text: v.m[2],
-        link: `#${v.m[3]}_${v.m[4]}`,
-        uClass: BaseDef.classMap[v.m[3]],
-        lClass: v.m[3],
-        uMethod: BaseDef.defMap[BaseDef.classMap[v.m[3]]].methods.methodMap[v.m[4]],
-        lMethod: v.m[4],
-        suffix: v.m[5],
-      });
-
-      // 置換対象無し
-      if( v.links.length === 0 ) return {status:'none'};
-
-      v.rv = {status:'true',result:str};
-      v.links.forEach(link => {
-        // 呼出先メソッド
-        v.method = BaseDef.defMap[link.uClass].methods[link.uMethod];
-
-        // リンク元側
-        if( link.doExpand ){
-          // 展開指示子(▼)有り ⇒ ▼を削除してリンク作成＋引数・文字列を次行に追加
-          if( v.method.params.fixed && v.method.returns.fixed ){
-            // 引数・戻り値とも確定済の場合
-            v.rv.result.replace(link.full+link.suffix,[
-              `[${link.text}](${link.link})${link.suffix}`,
-              v.method.params.markdown.content,
-              v.method.returns.markdown.content,
-            ].join('\n'));
-          } else {
-            // 引数・戻り値のいずれかが未確定の場合
-            v.rv.status = 'false';
-          }
-
-        } else {
-          // 展開指示子(▼)無し ⇒ ▼のみ削除
-          v.rv.result.replace(link.full,`[${link.text}](${link.link})${link.suffix}`)
-        }
-
-        // リンク先側 ⇒ callerにリンク元メソッドを追加
-        if( !(v.method.caller.find(x => x.class === this.className && x.method === this.methodName))){
-          // caller未登録なら追加登録
-          v.method.caller.push({class:this.className, method:this.methodName});
-        }
-      });
-      return v.rv;
-
-    } catch(e) {
-      console.error(e);
-      return e;
-    }
-  }
-}
-
-function analyzeArg(){
-  const v = {whois:'analyzeArg',rv:{opt:{},val:[]}};
-  try {
-    for( v.i=2 ; v.i<process.argv.length ; v.i++ ){
-      v.m = process.argv[v.i].match(/^(\-*)([0-9a-zA-Z]+):*(.*)$/);
-      if( v.m && v.m[1].length > 0 ){
-        v.rv.opt[v.m[2]] = v.m[3];
-      } else {
-        v.rv.val.push(process.argv[v.i]);
-      }
-    }
-    return v.rv;
-  } catch(e){
-    console.error(v.whois+' abnormal end(step.'+v.step+').',e,v);
-    return e;
-  }
-}
-
-import fs from "fs";
-import path from "path";
-import readline from "readline";
-
-const lines = [];
-const rl = readline.createInterface({ input: process.stdin });
-const clog = (l,x) => console.log(`l.${l} ${JSON.stringify(x,null,2)}`);
-
-rl.on('line', x => lines.push(x)).on('close', () => {
-  const arg = analyzeArg();
-  const prj = new ProjectDef(lines.join('\n'),{folder:arg.opt.o});
-  delete prj.prj; // 循環参照を削除
-});
