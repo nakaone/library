@@ -332,6 +332,7 @@ class ProjectDef extends BaseDef {
     }
 
     // 3️⃣ implement毎にフォルダを作成
+    clog(335,BaseDef.implements);
     const folder = {};
     BaseDef.implements.forEach(x => {
       folder[x] = path.join(this.opt.folder,x);
@@ -343,7 +344,7 @@ class ProjectDef extends BaseDef {
       BaseDef.implements.forEach(x => {
         if( this.classdef[def].implement.find(i => i === x) ){
           fs.writeFileSync(path.join(folder[x], `${def}.md`),
-            (this.classdef[def].markdown.content || '').trim(), "utf8");
+            (this.classdef[def].content || '').trim(), "utf8");
         }
       });
     });
@@ -404,7 +405,11 @@ class ClassDef extends BaseDef {
       %% this.summary.length === 0 ? '' : \`## <span id="${this.anchor}_summary">🧭 ${this.name} クラス 概要</span>\n\n${this.summary}\` %%
     `);
 
-    this.defs = this;
+    // 新しく出てきたimplement要素をprj.imprementsに追加登録
+    BaseDef.implements = this.implement;
+
+    // 現在作成中のClassDefをBaseDefのマップに登録
+    BaseDef.defMap = this;
   }
 }
 
