@@ -3,7 +3,9 @@
 ## bugs
 
 - 未解決
+  - 戻り値の型が自分のクラスの場合(constructorの場合)、インスタンスと表記
 - 解決済
+  - 個別メソッドの引数のタイトルが出ない
   - 個別メソッドが出ない
   - メソッド一覧が出ない
   - TypeError: Cannot read properties of undefined (reading 'length')

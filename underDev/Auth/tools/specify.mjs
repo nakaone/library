@@ -599,7 +599,9 @@ class MethodsDef extends BaseDef {
     // 子要素のインスタンス作成
     this.list = arg.list || [];
     for( v.i=0 ; v.i<this.list.length ; v.i++ ){
+      // methodNameを設定
       this.list[v.i].methodName = this.list[v.i].name;
+      // ClassDef.methodとlistにMethodDef登録
       this.list[v.i] = classdef.method[this.list[v.i].name]
       = classdef.method[this.list[v.i].name.toLowerCase()]
       = new MethodDef(this.list[v.i],this);
@@ -684,7 +686,14 @@ class MethodsDef extends BaseDef {
 class MethodDef extends BaseDef {
   constructor(arg={},methodsdef){
     super(arg);
+    clog(687,{cn:methodsdef.constructor.name,obj:methodsdef});
 
+    // BaseDefメンバに値設定
+    this.className = methodsdef.className;
+    this.methodName = arg.name;
+    this.anchor = methodsdef.anchor + '_' + arg.name.toLowerCase();
+
+    // 独自メンバに値設定
     this.name = arg.name;
     this.type = arg.type || '';
     this.desc = arg.desc || '';
@@ -697,26 +706,59 @@ class MethodDef extends BaseDef {
     this.returns = new ReturnsDef(arg.returns,this);
     this.caller = [];
 
-    // BaseDefメンバに値設定
-    this.className = methodsdef.className;
-    this.methodName = this.name;
+    // 個別メソッドのタイトル
     this.title = this.article({
       title: `🧱 ${this.className}.${this.methodName}()`,
       level: 3,
-      anchor: methodsdef.anchor + '_' + this.className.toLowerCase(),
+      anchor: this.anchor,
       link: '',
       navi: '',
       body: '',
     });
-    this.template = this.trimIndent(arg.template || `
-      %% cfTable(BaseDef.defs["${this.className}"].method["${this.methodName}"].params) %%
-    `);
+
+    // 処理手順をテンプレートとして作成
+    this.template = this.article({
+      title: `🧾 処理手順`,
+      level: 4,
+      anchor: this.anchor + '_process',
+      link: '',
+      navi: '',
+      body: '',
+    }) + '\n\n' + this.trimIndent(arg.template ||
+      `%% BaseDef.defs["${this.className}"].method["${this.methodName}"].process %%`);
   }
+
+  createMd(){ // BaseDef.createMdをオーバーライド
+    const v = {};
+    if( this.content === '' ){
+      // 引数の作成
+      v.params = this.params.createMd();
+      if( v.params === '' ) return '';
+      
+      // 自分(処理手順)の作成(BaseDefと同じ)
+      v.template = this.evaluate(this.template);
+      if( v.template === '' ) return '';
+
+      // 戻り値の作成
+      v.returns = this.returns.createMd();
+      if( v.returns === '' ) return '';
+
+      this.content = [
+        this.title,
+        '',v.params,
+        '',v.template,
+        '',v.returns,
+      ].join('\n');
+    }
+    return this.content;
+  }
+
 }
 /** ParamsDef - 関数(メソッド)引数定義
  * ===== メンバ =====
  * @typedef {Object} ParamsDef - 関数(メソッド)引数定義
  * @prop {FieldDef[]} list - 引数
+ * @prop {string} table - 🔢引数一覧のMarkdown
  * 
  * ===== ゲッター・セッター =====
  * - 無し
@@ -750,8 +792,12 @@ class ParamsDef extends BaseDef {
       navi: ``,
       body: '',
     });
-    this.template = (this.list.length === 0 ? `- 引数無し(void)`
-      : `${this.cfTable(this)}`);
+
+    // 引数一覧とテンプレートの作成
+    this.table = this.list.length === 0
+      ? '- 引数無し(void)' : this.cfTable(this);
+    this.template = this.trimIndent(arg.template || 
+      `%% BaseDef.defs["${this.className}"].method["${this.methodName}"].params.table %%`);
   }
 }
 
