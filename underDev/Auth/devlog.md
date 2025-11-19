@@ -4,6 +4,9 @@
 
 - 未解決
 - 解決済
+  - メソッド一覧が出ない
+  - TypeError: Cannot read properties of undefined (reading 'length')
+    at new ParamsDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:706:32)
   - ReferenceError: authAuditLog is not defined
     at eval: specify.mjs:220:18
   - メンバ一覧が出力されない

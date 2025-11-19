@@ -1,3 +1,10 @@
+/** specify: JavaScriptオブジェクトで定義したクラス仕様をMarkdownで出力
+ * 
+ * ■ 凡例
+ * - 🔢：導出項目(定義不要)
+ * - ✂️：trimIndent対象項目
+ */ 
+
 /** BaseDef - 各定義の基底クラス
  * ===== メンバ =====
  * @typedef {Object} BaseDef - 各定義の基底クラス
@@ -30,7 +37,6 @@
  *   - 一箇所でも評価できなかった場合は空文字列を返す
  * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
  */
-
 class BaseDef {
 
   constructor(arg){
@@ -139,14 +145,6 @@ class BaseDef {
 
     // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
     switch( obj.constructor.name ){
-      case 'MembersDef':
-      case 'ParamsDef':
-        // メンバ一覧または引数一覧の場合は単一の表
-        v.obj = {
-          header:Object.assign({},v.header),
-          body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
-        };
-        break;
       case 'ReturnDef':
         // 未定義のデータ型の場合"unregistered type"を返して終了
         if( typeof BaseDef.defs[obj.type] === 'undefined' ){
@@ -170,9 +168,18 @@ class BaseDef {
           })
         }
         break;
-      default:
-        return new Error('invalid argument\n'
-          + JSON.stringify({constructor:obj.constructor.name,obj:obj,opt:opt},null,2));
+      default: 
+      //case 'MembersDef':
+      //case 'ParamsDef':
+        // メンバ一覧または引数一覧の場合は単一の表
+        v.obj = {
+          header:Object.assign({},v.header),
+          body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
+        };
+        break;
+      //default:
+      //  return new Error('invalid argument\n'
+      //    + JSON.stringify({constructor:obj.constructor.name,obj:obj,opt:opt},null,2));
     }
 
     // ヘッダ行の作成
@@ -474,7 +481,7 @@ class ClassDef extends BaseDef {
  * 
  * @example this.template初期値
  * ```
- * %% this.cfTable(BaseDef.defs[this.className].members) %%
+ * %% this.cfTable(BaseDef.defs["${this.className}"].members) %%
  * ```
  */
 class MembersDef extends BaseDef {
@@ -555,6 +562,7 @@ class FieldDef extends BaseDef {
  * ===== メンバ =====
  * @typedef {Object} MethodsDef - クラスのメソッド集
  * @prop {MethodDef[]} list - 所属するメソッドの配列
+ * @prop {string} table - 🔢メソッド一覧のMarkdown
  * @prop {string} template - BaseDef.templateをオーバーライド
  * 
  * ===== ゲッター・セッター =====
@@ -579,27 +587,41 @@ class FieldDef extends BaseDef {
 class MethodsDef extends BaseDef {
   constructor(arg={},classdef){
     super(arg);
+    const v = {};
 
     // BaseDefメンバに値設定
     this.className = classdef.className;
     this.methodName = '';
+    this.anchor = `${classdef.anchor}_methods`
+
+    // 子要素のインスタンス作成
+    this.list = arg.list || [];
+    for( v.i=0 ; v.i<this.list.length ; v.i++ ){
+      this.list[v.i].methodName = this.list[v.i].name;
+      this.list[v.i] = classdef.method[this.list[v.i].name]
+      = classdef.method[this.list[v.i].name.toLowerCase()]
+      = new MethodDef(this.list[v.i],this);
+    }
+
+    // BaseDefメンバに値設定
     this.title = this.article({
       title: `🧱 ${this.className} メソッド一覧`,
       level: 2,
-      anchor: classdef.anchor + '_methods',
+      anchor: this.anchor,
       link: '',
       navi: '',
       body: '',
     });
-    this.template = this.trimIndent(arg.template || `
-      %% cfTable(BaseDef.defs["${this.className}"].methods) %%
-    `);
 
-    // 子要素のインスタンス作成
-    this.list = arg.list || [];
-    this.list.forEach(x => {
-      classdef.method[x.name] = classdef.method[x.name.toLowerCase()] = new MethodDef(x,this);
-    });
+    // メソッド一覧の作成
+    v.lines = ['','| メソッド名 | 分類 | 内容 | 備考 |',
+      '| :-- | :-- | :-- | :-- |'];
+    this.list.forEach(x => v.lines.push(`| ${
+      `[${x.name}()](#${classdef.anchor}_${x.name.toLowerCase()})`
+    } | ${x.type} | ${x.desc} | ${x.note} |`));
+    this.table = v.lines.join('\n');
+    this.template = this.trimIndent(arg.template || 
+      `%% BaseDef.defs["${this.className}"].methods.table %%`);
   }
 }
 
