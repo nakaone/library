@@ -692,6 +692,12 @@ class ParamsDef extends BaseDef {
   constructor(arg={},methoddef){
     super(arg);
 
+    // 子要素のインスタンス作成
+    this.list = [];
+    for( let i=0 ; i<arg.list.length ; i++ ){
+      this.list[i] = new FieldDef(arg.list[i],i,this);
+    }
+
     // BaseDefメンバに値設定
     this.className = methoddef.className;
     this.methodName = methoddef.methodName;
@@ -705,12 +711,6 @@ class ParamsDef extends BaseDef {
     });
     this.template = (this.list.length === 0 ? `- 引数無し(void)`
       : `${this.cfTable(this)}`);
-
-    // 子要素のインスタンス作成
-    this.list = [];
-    for( let i=0 ; i<arg.list.length ; i++ ){
-      this.list[i] = new FieldDef(arg.list[i],i,this);
-    }
   }
 }
 
@@ -729,6 +729,12 @@ class ReturnsDef extends BaseDef {
   constructor(arg={},methoddef){
     super(arg);
 
+    // 子要素のインスタンス作成
+    this.list = [];
+    for( let i=0 ; i<arg.list.length ; i++ ){
+      this.list[i] = new ReturnDef(arg.list[i],this);
+    }
+
     // BaseDefメンバに値設定
     this.className = methoddef.className;
     this.methodName = methoddef.methodName;
@@ -742,12 +748,6 @@ class ReturnsDef extends BaseDef {
     });
     this.template = (this.list.length === 0 ? `- 戻り値無し(void)`
       : `${this.cfTable(this)}`);
-
-    // 子要素のインスタンス作成
-    this.list = [];
-    for( let i=0 ; i<arg.list.length ; i++ ){
-      this.list[i] = new ReturnDef(arg.list[i],this);
-    }
   }
 }
 
