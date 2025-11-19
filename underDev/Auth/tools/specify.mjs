@@ -660,6 +660,7 @@ class MethodsDef extends BaseDef {
  * @prop {ParamsDef} params - 引数
  * @prop {string} process - ✂️処理手順。Markdownで記載
  * @prop {ReturnsDef} returns - 戻り値の定義(パターン別)
+ * @prop {Object.<number,ReturnDef>} return - 🔢戻り値のマップ。メンバ名は戻り値のデータ型
  * @prop {Object[]} [caller=[]] - 🔢本関数(メソッド)の呼出元関数(メソッド)
  * @prop {string} caller.class - 呼出元クラス名
  * @prop {string} caller.method - 呼出元メソッド名
@@ -686,12 +687,11 @@ class MethodsDef extends BaseDef {
 class MethodDef extends BaseDef {
   constructor(arg={},methodsdef){
     super(arg);
-    clog(687,{cn:methodsdef.constructor.name,obj:methodsdef});
 
     // BaseDefメンバに値設定
     this.className = methodsdef.className;
-    this.methodName = arg.name;
-    this.anchor = methodsdef.anchor + '_' + arg.name.toLowerCase();
+    this.methodName = arg.methodName;
+    this.anchor = methodsdef.anchor + '_' + arg.methodName.toLowerCase();
 
     // 独自メンバに値設定
     this.name = arg.name;
@@ -703,6 +703,7 @@ class MethodDef extends BaseDef {
     this.rev = arg.rev || 0;
     this.params = new ParamsDef(arg.params,this);
     this.process = this.trimIndent(arg.process || '');
+    this.return = {};
     this.returns = new ReturnsDef(arg.returns,this);
     this.caller = [];
 
@@ -752,8 +753,8 @@ class MethodDef extends BaseDef {
     }
     return this.content;
   }
-
 }
+
 /** ParamsDef - 関数(メソッド)引数定義
  * ===== メンバ =====
  * @typedef {Object} ParamsDef - 関数(メソッド)引数定義
@@ -815,16 +816,21 @@ class ParamsDef extends BaseDef {
 class ReturnsDef extends BaseDef {
   constructor(arg={},methoddef){
     super(arg);
-
-    // 子要素のインスタンス作成
-    this.list = [];
-    for( let i=0 ; i<arg.list.length ; i++ ){
-      this.list[i] = new ReturnDef(arg.list[i],this);
-    }
+    const v = {};
 
     // BaseDefメンバに値設定
     this.className = methoddef.className;
     this.methodName = methoddef.methodName;
+    this.anchor = methoddef.anchor + '_returns';
+
+    // 子要素のインスタンス作成
+    this.list = arg.list || [];
+    for( v.i=0 ; v.i<this.list.length ; v.i++ ){
+      // MethodDef.returnとlistにReturnDef登録
+      this.list[v.i] = methoddef.return[this.list[v.i].type]
+      = new ReturnDef(this.list[v.i],this);
+    }
+
     this.title = this.article({
       title: `📤 戻り値`, // `📤 ${v.fn}() 戻り値`
       level: 4,
@@ -844,6 +850,7 @@ class ReturnsDef extends BaseDef {
  * @prop {string} type - 戻り値のデータ型
  * @prop {PatternDef} [default={}] - 全パターンの共通設定値
  * @prop {Object.<string,PatternDef>} [patterns={}] - 特定パターンへの設定値
+ * @prop {string} table - 🔢戻り値(データ型のメンバ一覧・対比表)のMarkdown
  * 
  * ===== ゲッター・セッター =====
  * - 無し
@@ -873,7 +880,11 @@ class ReturnDef extends BaseDef {
     this.className = returnsdef.className;
     this.methodName = returnsdef.methodName;
     this.title = `[${this.type}](${this.type}.md#${this.type.toLowerCase()}_members)`;
-    this.template = `${this.cfTable(this)}`;      
+
+    // 戻り値のメンバ一覧とテンプレートの作成
+    this.table = this.cfTable(this);
+    this.template = this.trimIndent(arg.template || 
+      `%% BaseDef.defs["${this.className}"].method["${this.methodName}"].return["${this.type}"].table %%`);
   }
 }
 

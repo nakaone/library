@@ -21,18 +21,17 @@ console.log(JSON.stringify({classdef:{
     ]},
 
     methods: {list:[{
-        name: 'constructor',
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
 
-        params: {list:[
-        ]},
+      params: {list:[]},
 
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        `,
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+      `,
 
-        returns: {list:[{type:'authAuditLog'}]},
+      returns: {list:[{type:'authAuditLog'}]},
     }]},
   },
 
