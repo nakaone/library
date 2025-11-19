@@ -594,7 +594,7 @@ class MethodsDef extends BaseDef {
     // BaseDefメンバに値設定
     this.className = classdef.className;
     this.methodName = '';
-    this.anchor = `${classdef.anchor}_methods`
+    this.anchor = classdef.anchor;
 
     // 子要素のインスタンス作成
     this.list = arg.list || [];
@@ -609,7 +609,7 @@ class MethodsDef extends BaseDef {
     this.title = this.article({
       title: `🧱 ${this.className} メソッド一覧`,
       level: 2,
-      anchor: this.anchor,
+      anchor: `${classdef.anchor}_methods`,
       link: '',
       navi: '',
       body: '',
@@ -624,6 +624,23 @@ class MethodsDef extends BaseDef {
     this.table = v.lines.join('\n');
     this.template = this.trimIndent(arg.template || 
       `%% BaseDef.defs["${this.className}"].methods.table %%`);
+  }
+
+  createMd(){ // BaseDef.createMdをオーバーライド
+    const v = {};
+    if( this.content === '' ){
+      // ①自分(クラス概要)の作成(BaseDefと同じ)
+      v.r = this.evaluate(this.template);
+      this.content = v.r === '' ? '' : this.title + '\n\n' + v.r;
+
+      // ②MembersDef, MethodsDef のcreateMDを呼び出す(ClassDef特有)
+      for( v.i=0 ; v.i<this.list.length ; v.i++ ){
+        v.method = this.list[v.i].createMd();
+        if( v.method === '' ) return '';
+        this.content += '\n\n' + v.method;
+      }
+    }
+    return this.content;
   }
 }
 

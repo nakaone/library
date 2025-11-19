@@ -4,6 +4,7 @@
 
 - 未解決
 - 解決済
+  - 個別メソッドが出ない
   - メソッド一覧が出ない
   - TypeError: Cannot read properties of undefined (reading 'length')
     at new ParamsDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:706:32)
