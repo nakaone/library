@@ -472,6 +472,7 @@ class ClassDef extends BaseDef {
  * ===== メンバ =====
  * @typedef {Object} MembersDef - クラスの内部変数の定義
  * @prop {FieldDef[]} [list=[]] - 所属するメンバの配列
+ * @prop {string} table - 🔢メンバ一覧のMarkdown
  * 
  * ===== ゲッター・セッター =====
  * - 無し
@@ -499,15 +500,17 @@ class MembersDef extends BaseDef {
       navi: '',
       body: '',
     });
-    this.template = this.trimIndent(arg.template || `
-      %% cfTable(BaseDef.defs["${this.className}"].members) %%
-    `);
 
     // 子要素のインスタンス作成
     this.list = [];
     for( let i=0 ; i<arg.list.length ; i++ ){
       this.list[i] = new FieldDef(arg.list[i],i,this);
     }
+
+    // メンバ一覧とテンプレートの作成
+    this.table = this.cfTable(this);
+    this.template = this.trimIndent(arg.template || `
+      %% BaseDef.defs["${this.className}"].members.table %%`);
 
   }
 }
@@ -563,7 +566,6 @@ class FieldDef extends BaseDef {
  * @typedef {Object} MethodsDef - クラスのメソッド集
  * @prop {MethodDef[]} list - 所属するメソッドの配列
  * @prop {string} table - 🔢メソッド一覧のMarkdown
- * @prop {string} template - BaseDef.templateをオーバーライド
  * 
  * ===== ゲッター・セッター =====
  * - 無し
@@ -603,7 +605,7 @@ class MethodsDef extends BaseDef {
       = new MethodDef(this.list[v.i],this);
     }
 
-    // BaseDefメンバに値設定
+    // タイトルの作成
     this.title = this.article({
       title: `🧱 ${this.className} メソッド一覧`,
       level: 2,
@@ -613,7 +615,7 @@ class MethodsDef extends BaseDef {
       body: '',
     });
 
-    // メソッド一覧の作成
+    // メソッド一覧とテンプレートの作成
     v.lines = ['','| メソッド名 | 分類 | 内容 | 備考 |',
       '| :-- | :-- | :-- | :-- |'];
     this.list.forEach(x => v.lines.push(`| ${
