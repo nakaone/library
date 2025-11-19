@@ -1,5 +1,28 @@
 # specify
 
+## bugs
+
+- 未解決
+  - TypeError: Cannot read properties of undefined (reading 'authAuditLog')
+- 解決済
+  - 概要他でラベル行が出力されない
+  - TypeError: this.markdown.content.embeds is not a function
+  - ReferenceError: arg is not defined
+  - TypeError: Cannot read properties of undefined (reading 'embeds')
+  - TypeError: this.markdown.content.embeds is not a function
+  - TypeError: str.replace is not a function
+
+## その他ToDo
+
+- 戻り値クラスのメンバ一覧表示時、クラス名とリンクを表示(ex.「項目名」の欄)
+- クラス一覧出力(環境別)
+- 引数・メンバ一覧も説明文追加可能に
+  引数・メンバ一覧でMarkdownDef.constructor呼出時のテンプレートは
+  `%%cfTable(new Params(...))%%`形式で指定すれば良い？
+- メンバ一覧・引数・戻り値・処理手順のJSDoc(typedef)にcfTableタグの使用方法を追記
+- implementが一種類以下の場合、環境別に分けずに"-o"フォルダ直下に全ファイル作成
+- テンプレートに基づくソース作成
+
 <!--
 
 ## Markdown内のcfTableタグ再帰処理
@@ -110,28 +133,6 @@
 - 相互参照を容易にするため、ProjectDefにメンバ"map"を追加
   {Object} map - 小文字のクラス名から本来のクラス名への変換マップ
 -->
-
-## bugs
-
-- 未解決
-  - 概要他でラベル行が出力されない
-- 解決済
-  - TypeError: this.markdown.content.embeds is not a function
-  - ReferenceError: arg is not defined
-  - TypeError: Cannot read properties of undefined (reading 'embeds')
-  - TypeError: this.markdown.content.embeds is not a function
-  - TypeError: str.replace is not a function
-
-## その他ToDo
-
-- 戻り値クラスのメンバ一覧表示時、クラス名とリンクを表示(ex.「項目名」の欄)
-- クラス一覧出力(環境別)
-- 引数・メンバ一覧も説明文追加可能に
-  引数・メンバ一覧でMarkdownDef.constructor呼出時のテンプレートは
-  `%%cfTable(new Params(...))%%`形式で指定すれば良い？
-- メンバ一覧・引数・戻り値・処理手順のJSDoc(typedef)にcfTableタグの使用方法を追記
-- implementが一種類以下の場合、環境別に分けずに"-o"フォルダ直下に全ファイル作成
-- テンプレートに基づくソース作成
 
 ## ゴミ箱
 

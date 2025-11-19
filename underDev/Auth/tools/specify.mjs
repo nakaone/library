@@ -398,8 +398,6 @@ class ClassDef extends BaseDef {
     this.desc = arg.desc || '';
     this.note = this.trimIndent(arg.note || '');
     this.summary = this.trimIndent(arg.summary || '');
-    //this.members = new MembersDef(arg.members,className);
-    //this.methods = new MethodsDef(arg.methods,className);
     this.implement = arg.implement || [];
 
     // BaseDefメンバに値設定
@@ -425,14 +423,19 @@ class ClassDef extends BaseDef {
     BaseDef.implements = this.implement;
 
     // 現在作成中のClassDefをBaseDefのマップに登録
-    BaseDef.defMap = this;
+    BaseDef.defs = this;
+
+    // 子要素のインスタンス作成
+    this.members = new MembersDef(arg.members,this);
+    //this.methods = new MethodsDef(arg.methods,className);
+
   }
 }
 
 /** MembersDef - クラスの内部変数の定義
  * ===== メンバ =====
  * @typedef {Object} MembersDef - クラスの内部変数の定義
- * @prop {FieldDef[]} list - 所属するメンバの配列
+ * @prop {FieldDef[]} [list=[]] - 所属するメンバの配列
  * 
  * ===== ゲッター・セッター =====
  * - 無し
@@ -442,10 +445,34 @@ class ClassDef extends BaseDef {
  * 
  * @example this.template初期値
  * ```
- * %% this.cfTable(this.defs[this.className].members) %%
+ * %% this.cfTable(BaseDef.defs[this.className].members) %%
  * ```
  */
+class MembersDef extends BaseDef {
+  constructor(arg={},classdef){
+    super(arg);
 
+    this.list = arg.list || [];
+
+    // BaseDefメンバに値設定
+    this.className = classdef.className;
+    this.methodName = '';
+    this.title = this.article({
+      title: `🔢 ${this.className} メンバ一覧`,
+      level: 2,
+      anchor: classdef.anchor + '_members',
+      link: '',
+      navi: '',
+      body: '',
+    });
+    this.template = this.trimIndent(arg.template || `
+      %% cfTable(BaseDef.defs[${this.className}].members) %%
+    `);
+
+    BaseDef.defs[this.className].members = this;
+
+  }
+}
 /** FieldDef - メンバの定義(Schema.columnDef上位互換)
  * ===== メンバ =====
  * @typedef {Object} FieldDef - メンバの定義(Schema.columnDef上位互換)
@@ -631,5 +658,5 @@ const clog = (l,x) => console.log(`l.${l} ${JSON.stringify(x,null,2)}`);
 rl.on('line', x => lines.push(x)).on('close', () => {
   const arg = analyzeArg();
   const prj = new ProjectDef(lines.join('\n'),{folder:arg.opt.o});
-  clog(9999,removeDefs(prj));
+  //clog(9999,removeDefs(prj));
 });
