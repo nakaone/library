@@ -3,8 +3,11 @@
 ## bugs
 
 - 未解決
-  - TypeError: Cannot read properties of undefined (reading 'authAuditLog')
 - 解決済
+  - ReferenceError: authAuditLog is not defined
+    at eval: specify.mjs:220:18
+  - メンバ一覧が出力されない
+  - TypeError: Cannot read properties of undefined (reading 'authAuditLog')
   - 概要他でラベル行が出力されない
   - TypeError: this.markdown.content.embeds is not a function
   - ReferenceError: arg is not defined

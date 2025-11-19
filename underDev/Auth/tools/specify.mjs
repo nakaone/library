@@ -121,8 +121,16 @@ class BaseDef {
     opt = Object.assign({name:true,type:true,default:true,label:true,note:true},opt);
 
     // fv: 表示する値を整形して文字列化(format value)
-    const fv = x => typeof x === 'string' ? x : 
-      ((typeof x === 'object' || Number.isNaN(x)) ? JSON.stringify(x) : x.toLocaleString());
+    const fv = x => {
+      return typeof x === 'undefined' ? '—' : (
+        typeof x === 'string' ? x : (
+          (typeof x === 'object' || Number.isNaN(x))
+          ? JSON.stringify(x) : x.toLocaleString()
+        )
+      );
+    };
+    //const fv = x => typeof x === 'string' ? x : 
+    //  ((typeof x === 'object' || Number.isNaN(x)) ? JSON.stringify(x) : x.toLocaleString());
 
     // 出力項目リストを作成
     Object.keys(v.header).forEach(x => {
@@ -430,6 +438,21 @@ class ClassDef extends BaseDef {
     //this.methods = new MethodsDef(arg.methods,className);
 
   }
+
+  createMd(){ // BaseDef.createMdをオーバーライド
+    const v = {};
+    if( this.content === '' ){
+      // ①自分(クラス概要)の作成(BaseDefと同じ)
+      v.r = this.evaluate(this.template);
+      this.content = v.r === '' ? '' : this.title + '\n\n' + v.r;
+
+      // ②MembersDef, MethodsDef のcreateMDを呼び出す(ClassDef特有)
+      v.members = this.members.createMd();
+      if( v.members === '' ) return '';
+      this.content += '\n\n' + v.members;
+    }
+    return this.content;
+  }
 }
 
 /** MembersDef - クラスの内部変数の定義
@@ -466,7 +489,7 @@ class MembersDef extends BaseDef {
       body: '',
     });
     this.template = this.trimIndent(arg.template || `
-      %% cfTable(BaseDef.defs[${this.className}].members) %%
+      %% cfTable(BaseDef.defs["${this.className}"].members) %%
     `);
 
     BaseDef.defs[this.className].members = this;
