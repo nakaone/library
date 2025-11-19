@@ -193,6 +193,7 @@ class BaseDef {
   }
 
   /** createMd: 当該インスタンスのMarkdownを作成
+   * 子要素を作成するクラスはその処理を追加したcreateMdをオーバーライドすること
    * @param {void}
    * @returns {string} 作成したcontent
    */
@@ -372,7 +373,8 @@ class ProjectDef extends BaseDef {
  * @prop {string} [note=''] - ✂️補足説明。概要欄に記載
  * @prop {string} [summary=''] - ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
  * @prop {MembersDef} members - メンバ(インスタンス変数)定義
- * @prop {MethodsDef} methods - メソッド定義
+ * @prop {MethodsDef} methods - メソッド定義集
+ * @prop {Object.<string,MethodDef>} method - メソッド定義(マップ)
  * @prop {Object.<string,boolean>} implement - 実装の有無(ex.['cl','sv'])
  * @prop {string} [template] - Markdown出力時のテンプレート
  * 
@@ -435,7 +437,8 @@ class ClassDef extends BaseDef {
 
     // 子要素のインスタンス作成
     this.members = new MembersDef(arg.members,this);
-    //this.methods = new MethodsDef(arg.methods,className);
+    this.method = {};
+    this.methods = new MethodsDef(arg.methods,this);
 
   }
 
@@ -450,6 +453,9 @@ class ClassDef extends BaseDef {
       v.members = this.members.createMd();
       if( v.members === '' ) return '';
       this.content += '\n\n' + v.members;
+      v.methods = this.methods.createMd();
+      if( v.methods === '' ) return '';
+      this.content += '\n\n' + v.methods;
     }
     return this.content;
   }
@@ -475,8 +481,6 @@ class MembersDef extends BaseDef {
   constructor(arg={},classdef){
     super(arg);
 
-    this.list = arg.list || [];
-
     // BaseDefメンバに値設定
     this.className = classdef.className;
     this.methodName = '';
@@ -492,7 +496,11 @@ class MembersDef extends BaseDef {
       %% cfTable(BaseDef.defs["${this.className}"].members) %%
     `);
 
-    BaseDef.defs[this.className].members = this;
+    // 子要素のインスタンス作成
+    this.list = [];
+    for( let i=0 ; i<arg.list.length ; i++ ){
+      this.list[i] = new FieldDef(arg.list[i],i,this);
+    }
 
   }
 }
@@ -517,7 +525,32 @@ class MembersDef extends BaseDef {
  * ===== メソッド =====
  * - 無し
  */
+class FieldDef extends BaseDef {
+  /**
+   * @param {FieldDef} arg 
+   * @param {number} seq 
+   */
+  constructor(arg,seq,parent){
+    super(arg);
 
+    // BaseDefメンバに値設定
+    this.className = parent.className;
+    this.methodName = parent.methodName;
+    this.title = '';
+    this.template = '';
+
+    this.name = arg.name || '';
+    this.label = arg.label || '';
+    this.alias = arg.alias || [];
+    this.desc = arg.desc || '';
+    this.note = this.trimIndent(arg.note || '');
+    this.type = arg.type || 'string';
+    this.default = arg.default || '';
+    this.isOpt = this.default === '' ? true : (arg.isOpt || false);
+    this.printf = arg.printf || null;
+    this.seq = seq;
+  }
+}
 /** MethodsDef - クラスのメソッド集
  * ===== メンバ =====
  * @typedef {Object} MethodsDef - クラスのメソッド集
@@ -543,6 +576,32 @@ class MembersDef extends BaseDef {
  * ].join('\n')"
  * ```
  */
+class MethodsDef extends BaseDef {
+  constructor(arg={},classdef){
+    super(arg);
+
+    // BaseDefメンバに値設定
+    this.className = classdef.className;
+    this.methodName = '';
+    this.title = this.article({
+      title: `🧱 ${this.className} メソッド一覧`,
+      level: 2,
+      anchor: classdef.anchor + '_methods',
+      link: '',
+      navi: '',
+      body: '',
+    });
+    this.template = this.trimIndent(arg.template || `
+      %% cfTable(BaseDef.defs["${this.className}"].methods) %%
+    `);
+
+    // 子要素のインスタンス作成
+    this.list = arg.list || [];
+    this.list.forEach(x => {
+      classdef.method[x.name] = classdef.method[x.name.toLowerCase()] = new MethodDef(x,this);
+    });
+  }
+}
 
 /** MethodDef - 関数・アロー関数・メソッド定義
  * ===== メンバ =====
@@ -562,6 +621,8 @@ class MembersDef extends BaseDef {
  * @prop {string} caller.class - 呼出元クラス名
  * @prop {string} caller.method - 呼出元メソッド名
  * 
+ * - listで個々のメソッドを定義、MethodDefインスタンスはmemberに登録
+ * 
  * ===== ゲッター・セッター =====
  * - 無し
  * 
@@ -579,7 +640,38 @@ class MembersDef extends BaseDef {
  * %% this.returns.createMd() %%
  * ```
  */
+class MethodDef extends BaseDef {
+  constructor(arg={},methodsdef){
+    super(arg);
 
+    this.name = arg.name;
+    this.type = arg.type || '';
+    this.desc = arg.desc || '';
+    this.note = this.trimIndent(arg.note || '');
+    this.source = this.trimIndent(arg.source || '');
+    this.lib = arg.lib || '';
+    this.rev = arg.rev || 0;
+    this.params = new ParamsDef(arg.params,this);
+    this.process = this.trimIndent(arg.process || '');
+    this.returns = new ReturnsDef(arg.returns,this);
+    this.caller = [];
+
+    // BaseDefメンバに値設定
+    this.className = methodsdef.className;
+    this.methodName = this.name;
+    this.title = this.article({
+      title: `🧱 ${this.className}.${this.methodName}()`,
+      level: 3,
+      anchor: methodsdef.anchor + '_' + this.className.toLowerCase(),
+      link: '',
+      navi: '',
+      body: '',
+    });
+    this.template = this.trimIndent(arg.template || `
+      %% cfTable(BaseDef.defs["${this.className}"].method["${this.methodName}"].params) %%
+    `);
+  }
+}
 /** ParamsDef - 関数(メソッド)引数定義
  * ===== メンバ =====
  * @typedef {Object} ParamsDef - 関数(メソッド)引数定義
@@ -596,6 +688,31 @@ class MembersDef extends BaseDef {
  * %% this.cfTable(this.defs[this.className].methods[this.methodName].params) %%
  * ```
  */
+class ParamsDef extends BaseDef {
+  constructor(arg={},methoddef){
+    super(arg);
+
+    // BaseDefメンバに値設定
+    this.className = methoddef.className;
+    this.methodName = methoddef.methodName;
+    this.title = this.article({
+      title: `📥 引数`, //  `📥 ${v.fn}() 引数`
+      level: 4,
+      anchor: `${methoddef.anchor}_params`,
+      link: ``,
+      navi: ``,
+      body: '',
+    });
+    this.template = (this.list.length === 0 ? `- 引数無し(void)`
+      : `${this.cfTable(this)}`);
+
+    // 子要素のインスタンス作成
+    this.list = [];
+    for( let i=0 ; i<arg.list.length ; i++ ){
+      this.list[i] = new FieldDef(arg.list[i],i,this);
+    }
+  }
+}
 
 /** ReturnsDef - 関数(メソッド)戻り値定義集
  * ===== メンバ =====
@@ -608,6 +725,31 @@ class MembersDef extends BaseDef {
  * ===== メソッド =====
  * - 無し
  */
+class ReturnsDef extends BaseDef {
+  constructor(arg={},methoddef){
+    super(arg);
+
+    // BaseDefメンバに値設定
+    this.className = methoddef.className;
+    this.methodName = methoddef.methodName;
+    this.title = this.article({
+      title: `📤 戻り値`, // `📤 ${v.fn}() 戻り値`
+      level: 4,
+      anchor: `${methoddef.anchor}_returns`,
+      link: ``,
+      navi: ``,
+      body: '',
+    });
+    this.template = (this.list.length === 0 ? `- 戻り値無し(void)`
+      : `${this.cfTable(this)}`);
+
+    // 子要素のインスタンス作成
+    this.list = [];
+    for( let i=0 ; i<arg.list.length ; i++ ){
+      this.list[i] = new ReturnDef(arg.list[i],this);
+    }
+  }
+}
 
 /** ReturnDef - 関数(メソッド)戻り値定義
  * ===== メンバ =====
@@ -632,6 +774,21 @@ class MembersDef extends BaseDef {
  * %% this.cfTable(this) %%
  * ```
  */
+class ReturnDef extends BaseDef {
+  constructor(arg,returnsdef){
+    super(arg);
+
+    this.type = arg.type || '';
+    this.default = arg.default || {};
+    this.patterns = arg.patterns || {};
+    
+    // BaseDefメンバに値設定
+    this.className = returnsdef.className;
+    this.methodName = returnsdef.methodName;
+    this.title = `[${this.type}](${this.type}.md#${this.type.toLowerCase()}_members)`;
+    this.template = `${this.cfTable(this)}`;      
+  }
+}
 
 function analyzeArg(){
   const v = {whois:'analyzeArg',rv:{opt:{},val:[]}};
