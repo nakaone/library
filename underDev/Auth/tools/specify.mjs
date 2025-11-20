@@ -137,37 +137,37 @@ class BaseDef {
     };
 
     // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
-    switch( obj.constructor.name ){
-      case 'ReturnDef':
-        // 未定義のデータ型の場合"unregistered type"を返して終了
-        if( typeof BaseDef.defs[obj.type] === 'undefined' ){
-          return new Error('unregistered type');
-        }
-        v.obj = {
-          header: Object.assign({},v.header),
-          body: JSON.parse(JSON.stringify(BaseDef.defs[obj.type])).members.list,
-        };
-        v.patternList = Object.keys(obj.patterns || {}); // 特定データ型内のパターン。ex.["正常終了","警告終了"]
-        for( v.i=0 ; v.i<v.patternList.length ; v.i++ ){
-          v.pn = v.patternList[v.i]; // パターン名
-          v.po = obj.patterns[v.pn];  // パターンのオブジェクト
-          v.cn = `_Col${v.i}`;  // カラム名
-          // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
-          v.obj.header[v.cn] = v.pn;  // パターン名をヘッダに追加
-          // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
-          v.obj.body.forEach(col => {
-            col[v.cn] = v.po.assign[col.name] ? `**${v.po.assign[col.name]}**`
-            : (obj.default[col.name] ? obj.default[col.name] : '—');
-          })
-        }
-        break;
-      default: //case 'MembersDef' or 'ParamsDef':
-        // メンバ一覧または引数一覧の場合は単一の表
-        v.obj = {
-          header:Object.assign({},v.header),
-          body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
-        };
-        break;
+    if( obj.hasOwnProperty('list') ){
+      // メンバ一覧・引数一覧の場合({list:FieldDef[]}形式)
+      v.obj = {
+        header:Object.assign({},v.header),
+        body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
+      };
+    } else {
+      // 対比表の場合({type:クラス名}形式)
+      obj = Object.assign({default:{}},obj);  // defaultを追加
+
+      // 対比元のデータ型が未定義の場合、"unregistered type"を返して終了
+      if( typeof BaseDef.defs[obj.type] === 'undefined' ){
+        return new Error('unregistered type');
+      }
+      v.obj = {
+        header: Object.assign({},v.header),
+        body: JSON.parse(JSON.stringify(BaseDef.defs[obj.type])).members.list,
+      };
+      v.patternList = Object.keys(obj.patterns || {}); // 特定データ型内のパターン。ex.["正常終了","警告終了"]
+      for( v.i=0 ; v.i<v.patternList.length ; v.i++ ){
+        v.pn = v.patternList[v.i]; // パターン名
+        v.po = obj.patterns[v.pn];  // パターンのオブジェクト
+        v.cn = `_Col${v.i}`;  // カラム名
+        // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
+        v.obj.header[v.cn] = v.pn;  // パターン名をヘッダに追加
+        // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
+        v.obj.body.forEach(col => {
+          col[v.cn] = v.po[col.name] ? `**${v.po[col.name]}**`
+          : (obj.default[col.name] ? obj.default[col.name] : '—');
+        })
+      }
     }
 
     // ヘッダ行の作成
@@ -663,7 +663,8 @@ class MethodsDef extends BaseDef {
  * ===== メソッド =====
  * @prop {Function} createCaller - 呼出元一覧を作成(Markdown)「📞 呼出元」
  * 
- * @example this.template初期値
+ * 
+ * @example this.templateサンプル
  * ※ 出力時不要な改行は削除するので内容有無は不問
  * ```
  * %% this.article(this.note) %%
@@ -672,6 +673,16 @@ class MethodsDef extends BaseDef {
  * %% this.params.createMd() %%
  * %% this.evaluate(this.process) %%
  * %% this.returns.createMd() %%
+ * ```
+ * 
+ * @example this.processサンプル
+ * 「異常テスト」の場合、authError.messageに「テスト」を表示
+ * ```
+ * process: `
+ * - メンバと引数両方にある項目は、引数の値をメンバとして設定
+ * - テスト：[authConfig](authConfig.md#authconfig_constructor)をインスタンス化
+ * %% cfTable({type:'authError',patterns:{'異常テスト':{message:'テスト'}}},{indent:2}) %%
+ * `,
  * ```
  */
 class MethodDef extends BaseDef {
@@ -707,16 +718,16 @@ class MethodDef extends BaseDef {
       body: '',
     });
 
-    // 処理手順をテンプレートとして作成
-    this.template = this.article({
+    // 「処理手順」をテンプレートとして作成
+    this.template = arg.template ? this.trimIndent(arg.template)
+    : this.article({
       title: `🧾 処理手順`,
       level: 4,
       anchor: this.anchor + '_process',
       link: '',
       navi: '',
-      body: '',
-    }) + '\n\n' + this.trimIndent(arg.template ||
-      `%% BaseDef.defs["${this.className}"].method["${this.methodName}"].process %%`);
+      body: this.process,
+    });
   }
 
   createMd(){ // BaseDef.createMdをオーバーライド
@@ -743,9 +754,6 @@ class MethodDef extends BaseDef {
       if( v.params === '' ) return '';
       
       // 自分(処理手順)の作成(BaseDefと同じ)
-      v.template = this.evaluate(this.template);
-      if( this.className === 'authAuditLog')
-      if( this.template.includes('cfTable') ) clog(740,{before:this.template,after:v.template});
       if( v.template === '' ) return '';
       // 処理手順内のリンクを呼出先callerにセット
       [...v.template.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)].forEach(link => {
@@ -908,15 +916,31 @@ class ReturnsDef extends BaseDef {
  * ===== メソッド =====
  * - 無し
  * 
+ * @example ReturnDef設定サンプル
+ * ```
+ * returns: {list:[
+ *   {type:'LocalRequest',desc:'正常時の戻り値'},
+ *   {type:'',desc:'エラー時の戻り値',
+ *     template:`%% cfTable(
+ *       {
+ *         type:'authError',
+ *         patterns:{'func不正':{message:'"invalid func"'}}
+ *       },{  // オプション
+ *         indent:2,  // 表のインデントは2桁
+ *         header:{name:'項目名',  // BaseDef.cfTableのheaderを書き換え
+ *           type:'データ型',default:'要否/既定値',desc:'説明'}
+ *       }
+ *      ) %%`
+ * 　　},
+ * ]}
+ * ```
+ * 
  * @example this.template初期値
  * ```
- * [${this.className}](this.defs[this.className].anchor)
- * 
- * // 戻り値データ型のメンバ一覧
- * %% this.cfTable(this.defs[this.className].methods[this.methodName].params) %%
- * // 対比表
- * %% this.cfTable(this) %%
+ * - [戻り値データ型名](当該データ型メンバへのリンク)
+ *   当該データ型メンバ一覧
  * ```
+ * `%% BaseDef.defs["${this.className}"].method["${this.methodName}"].return["${this.type}"].table %%`
  */
 /**
  * @typedef {Object.<string,string>} PatternDef - パターンに設定する値
@@ -941,7 +965,6 @@ class ReturnDef extends BaseDef {
         this.type.toLowerCase()}_members)${
         this.desc === '' ? '' : ' : '+this.desc}`
     );
-    //this.title = `- [${this.type}](${this.type}.md#${this.type.toLowerCase()}_members)${this.desc === '' ? '' : ' : '+this.desc}`;
 
     // 戻り値のメンバ一覧とテンプレートの作成
     this.table = this.cfTable(this,{indent:2});

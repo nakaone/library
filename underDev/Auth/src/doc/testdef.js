@@ -28,7 +28,7 @@ console.log(JSON.stringify({classdef:{
       process: `
         - メンバと引数両方にある項目は、引数の値をメンバとして設定
         - テスト：[authConfig](authConfig.md#authconfig_constructor)をインスタンス化
-        %% cfTable(new ReturnDef({type:'authConfig',patterns:{'異常時':{fatal:'fuga'}}})) %%
+        %% cfTable({type:'authError',patterns:{'異常テスト':{message:'テスト'}}},{indent:2}) %%
       `,
 
       returns: {list:[{type:'authAuditLog'}]},
@@ -349,11 +349,7 @@ console.log(JSON.stringify({classdef:{
 
       returns: {list:[
         {type:'LocalRequest',desc:'正常時の戻り値'},
-        {type:'',desc:'エラー時の戻り値',template:`
-          cfTable(new ReturnDef({type:'authError',patterns:{
-            'func不正':{assign:{message:'"invalid func"'}}
-          }}),{desc:false,note:false})
-        `},
+        {type:'',desc:'エラー時の戻り値',template:`%% cfTable({type:'authError',patterns:{'func不正':{message:'"invalid func"'}}},{indent:2,header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}}) %%`},
       ]},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
     }]},
   },
