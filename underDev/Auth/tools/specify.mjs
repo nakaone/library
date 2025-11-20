@@ -110,21 +110,21 @@ class BaseDef {
   /** cfTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
    * @param {MembersDef|ParamsDef|ReturnDef} obj - 表示対象を指定するオブジェクト
    * @param {Object} [opt={}]
-   * @param {Object.<string,string>} opt.header - ヘッダ行の定義
-   * @param {boolean} [opt.name=true] - 「項目名」欄の表示/非表示
-   * @param {boolean} [opt.type=true] - 「データ型」欄の表示/非表示
-   * @param {boolean} [opt.default=true] - 「既定値」欄の表示/非表示
-   * @param {boolean} [opt.desc=true] - 「説明」欄の表示/非表示
-   * @param {boolean} [opt.note=true] - 「備考」欄の表示/非表示
+   * @param {Object.<string,string>} [opt.header=null] - ヘッダ行の定義
+   *   {メンバ名(英数):項目名(日本語)}形式。指定された場合、既定値を置換
+   *   既定値：{name:'項目名',type:'データ型',
+      default:'要否/既定値',desc:'説明',note:'備考'}
+   * @param {number} [opt.indent=0] - 表の前のインデント桁数
    * @returns {string|Error} 作成した表(Markdown)
    * - unregistered type: 引用元が未作成
    * - その他: システムエラー
    */
   cfTable(obj,opt={}){
-    const v = {rv:[],header:Object.assign({name:'項目名',type:'データ型',
-      default:'要否/既定値',desc:'説明',note:'備考'},(opt.header || {}))};
+    const v = {rv:[],header:{}};
     // オプションの既定値設定
-    opt = Object.assign({name:true,type:true,default:true,label:true,note:true},opt);
+    if( typeof opt.indent === 'undefined' ) opt.indent = 0;
+    v.header = opt.header ? opt.header :
+    {name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明',note:'備考'}
 
     // fv: 表示する値を整形して文字列化(format value)
     const fv = x => {
@@ -135,11 +135,6 @@ class BaseDef {
         )
       );
     };
-
-    // 出力項目リストを作成
-    Object.keys(v.header).forEach(x => {
-      if( opt[x] === false ) delete v.header[x];
-    })
 
     // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
     switch( obj.constructor.name ){
@@ -166,9 +161,7 @@ class BaseDef {
           })
         }
         break;
-      default: 
-      //case 'MembersDef':
-      //case 'ParamsDef':
+      default: //case 'MembersDef' or 'ParamsDef':
         // メンバ一覧または引数一覧の場合は単一の表
         v.obj = {
           header:Object.assign({},v.header),
@@ -179,8 +172,8 @@ class BaseDef {
 
     // ヘッダ行の作成
     v.cols = Object.keys(v.obj.header);
-    v.rv.push(`\n| ${v.cols.map(x => v.obj.header[x] || x).join(' | ')} |`);
-    v.rv.push(`| ${v.cols.map(()=>':--').join(' | ')} |`);
+    v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(x => v.obj.header[x] || x).join(' | ')} |`);
+    v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(()=>':--').join(' | ')} |`);
 
     // データ行の作成
     for( v.i=0 ; v.i<v.obj.body.length ; v.i++ ){
@@ -188,7 +181,7 @@ class BaseDef {
       v.obj.body[v.i].default = v.obj.body[v.i].default !== '' ? fv(v.obj.body[v.i].default)
       : (v.obj.body[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
       // 一項目分のデータ行を出力
-      v.rv.push(`| ${v.cols.map(x => fv(v.obj.body[v.i][x])).join(' | ')} |`);
+      v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(x => fv(v.obj.body[v.i][x])).join(' | ')} |`);
     }
 
     return v.rv.join('\n');
@@ -228,7 +221,7 @@ class BaseDef {
       // x[2]: タグ前のスペース
       // x[3]: 式
       // ①式を評価
-      v.result = eval(x[3].trim());
+      v.result = eval(x[3]);
       // cfTableの戻り値がErrorの場合
       if( v.result instanceof Error ){
         if( v.result.message === 'unregistered type' ){
@@ -238,7 +231,7 @@ class BaseDef {
         }
       } else {
         // ②評価結果の各行頭にタグ前のスペースを追加
-        v.result = v.result.trim().split('\n').map(l => x[2]+l).join('\n');
+        v.result = v.result.split('\n').map(l => x[2]+l).join('\n');
         v.str = v.str.replace(x[0],x[1]+v.result);
       }
     })
@@ -898,12 +891,12 @@ class ReturnDef extends BaseDef {
     // BaseDefメンバに値設定
     this.className = returnsdef.className;
     this.methodName = returnsdef.methodName;
-    this.title = `[${this.type}](${this.type}.md#${this.type.toLowerCase()}_members)`;
+    this.title = `- [${this.type}](${this.type}.md#${this.type.toLowerCase()}_members)`;
 
     // 戻り値のメンバ一覧とテンプレートの作成
-    this.table = this.cfTable(this);
-    this.template = this.trimIndent(arg.template || 
-      `%% BaseDef.defs["${this.className}"].method["${this.methodName}"].return["${this.type}"].table %%`);
+    this.table = this.cfTable(this,{indent:2});
+    this.template = arg.template || 
+      `%% BaseDef.defs["${this.className}"].method["${this.methodName}"].return["${this.type}"].table %%`;
   }
 }
 

@@ -31,7 +31,7 @@ console.log(JSON.stringify({classdef:{
         - メンバと引数両方にある項目は、引数の値をメンバとして設定
       `,
 
-      returns: {list:[{type:'authAuditLog'}]},
+      returns: {list:[{type:'authAuditLog'},{type:'authAuditLog'}]},
     }]},
   },
 
