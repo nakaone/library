@@ -2,16 +2,15 @@
 
 ## いまここ
 
-- Markdownファイル出力時、余計な改行削除(`\n\n\n+ -> \n\n`)
+- 共通ヘッダ対応
 
 ## その他ToDo
 
-- クラス一覧出力(環境別)
-- メンバ一覧・引数・戻り値・処理手順のJSDoc(typedef)にcfTableタグの使用方法を追記
 - implementが一種類以下の場合、環境別に分けずに"-o"フォルダ直下に全ファイル作成
 - 一次情報で設定できない項目はcreateMdに移動
   table作成時に他クラスのメンバ一覧を参照するReturnsDefで問題になる可能性あり
 - constructorの戻り値がインスタンスの場合はメンバ一覧を表示しない
+- クラス一覧出力(環境別)
 
 ## テスト項目
 
@@ -19,26 +18,28 @@
 
 ## bugs
 
-- 未解決
-- 解決済
-  - 処理手順内の対比表が展開されない
-  - ReturnDefで指定したtitleが存在しない
-  - 戻り値の型が自分のクラスの場合(constructorの場合)、インスタンスと表記
-  - 個別メソッドの引数のタイトルが出ない
-  - 個別メソッドが出ない
-  - メソッド一覧が出ない
-  - TypeError: Cannot read properties of undefined (reading 'length')
-    at new ParamsDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:706:32)
-  - ReferenceError: authAuditLog is not defined
-    at eval: specify.mjs:220:18
-  - メンバ一覧が出力されない
-  - TypeError: Cannot read properties of undefined (reading 'authAuditLog')
-  - 概要他でラベル行が出力されない
-  - TypeError: this.markdown.content.embeds is not a function
-  - ReferenceError: arg is not defined
-  - TypeError: Cannot read properties of undefined (reading 'embeds')
-  - TypeError: this.markdown.content.embeds is not a function
-  - TypeError: str.replace is not a function
+## 解決済
+
+- Markdownファイル出力時、余計な改行削除(`\n\n\n+ -> \n\n`)
+- メンバ一覧・引数・戻り値・処理手順のJSDoc(typedef)にcfTableタグの使用方法を追記
+- 処理手順内の対比表が展開されない
+- ReturnDefで指定したtitleが存在しない
+- 戻り値の型が自分のクラスの場合(constructorの場合)、インスタンスと表記
+- 個別メソッドの引数のタイトルが出ない
+- 個別メソッドが出ない
+- メソッド一覧が出ない
+- TypeError: Cannot read properties of undefined (reading 'length')
+  at new ParamsDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:706:32)
+- ReferenceError: authAuditLog is not defined
+  at eval: specify.mjs:220:18
+- メンバ一覧が出力されない
+- TypeError: Cannot read properties of undefined (reading 'authAuditLog')
+- 概要他でラベル行が出力されない
+- TypeError: this.markdown.content.embeds is not a function
+- ReferenceError: arg is not defined
+- TypeError: Cannot read properties of undefined (reading 'embeds')
+- TypeError: this.markdown.content.embeds is not a function
+- TypeError: str.replace is not a function
 
 
 <!--

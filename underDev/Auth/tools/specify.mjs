@@ -272,6 +272,7 @@ class BaseDef {
  * @prop {Object.<string, ClassDef>} classdef - クラス・クロージャ関数定義集
  * @prop {Object} [opt={}] - オプション
  * @prop {string} [opt.autoOutput=true] - 指示タグの展開後、作成したMarkdownを出力
+ * @prop {string} [opt.header] - クラス別ファイルの共通ヘッダファイル名
  * @prop {string} [opt.folder] - 出力先フォルダ名。無指定の場合カレントフォルダ
  * @prop {boolean} [opt.makeList=true] - true:関数・クラス名一覧を作成
  * 
@@ -298,6 +299,7 @@ class ProjectDef extends BaseDef {
     // オプションの既定値設定
     this.opt = Object.assign({
       autoOutput: true,
+      header: '',
       folder: '.',
       makeList: true,
     },opt);
@@ -328,30 +330,37 @@ class ProjectDef extends BaseDef {
    * @returns {void}
    */
   outputMD(){
-    // 1️⃣ 指定されたフォルダが存在しない場合に作成
+    // 指定されたフォルダが存在しない場合に作成
     if (!fs.existsSync(this.opt.folder)) {
       fs.mkdirSync(this.opt.folder, { recursive: true });
     }
 
-    // 2️⃣ 指定フォルダ以下のファイル・フォルダを全部削除
+    // 指定フォルダ以下のファイル・フォルダを全部削除
     for (const entry of fs.readdirSync(this.opt.folder)) {
       const target = path.join(this.opt.folder, entry);
       fs.rmSync(target, { recursive: true, force: true });
     }
 
-    // 3️⃣ implement毎にフォルダを作成
+    // implement毎にフォルダを作成
     const folder = {};
     BaseDef.implements.forEach(x => {
       folder[x] = path.join(this.opt.folder,x);
-      fs.mkdirSync(folder[x]);
+      fs.mkdirSync(path.join(folder[x]));
     });
 
-    // 4️⃣ ClassDef毎にファイルを作成
+    // 共通ヘッダの読み込み
+    let header = '';
+    if( this.opt.header !== '' ){
+      header = fs.readFileSync(this.opt.header)
+    }
+
+    // ClassDef毎にファイルを作成
     Object.keys(this.classdef).forEach(def => {
       BaseDef.implements.forEach(x => {
         if( this.classdef[def].implement.find(i => i === x) ){
           fs.writeFileSync(path.join(folder[x], `${def}.md`),
-            (this.classdef[def].content || '').trim().replaceAll(/\n\n\n+/g,'\n\n'), "utf8");
+            header + (this.classdef[def].content || '').trim()
+            .replaceAll(/\n\n\n+/g,'\n\n'), "utf8");
         }
       });
     });
@@ -1021,6 +1030,6 @@ const clog = (l,x) => console.log(`l.${l} ${JSON.stringify(x,null,2)}`);
 
 rl.on('line', x => lines.push(x)).on('close', () => {
   const arg = analyzeArg();
-  const prj = new ProjectDef(lines.join('\n'),{folder:arg.opt.o});
+  const prj = new ProjectDef(lines.join('\n'),{folder:arg.opt.o,header:arg.opt.h});
   //clog(9999,removeDefs(prj));
 });
