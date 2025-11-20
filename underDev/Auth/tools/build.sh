@@ -21,7 +21,7 @@ rm -rf $tmp/*
 # ----------------------------------------------
 
 # クラス別定義
-node $src/doc/testdef.js | node $prj/tools/specify.mjs -h:$src/doc/header.md -o:$tmp
+node $src/doc/specDef.js | node $prj/tools/specify.mjs -h:$src/doc/header.md -o:$doc
 
 #node $src/doc/classdef.js | node $prj/tools/classdef.js -o:$tmp
 #
@@ -33,11 +33,11 @@ node $src/doc/testdef.js | node $prj/tools/specify.mjs -h:$src/doc/header.md -o:
 ## JavaScriptライブラリ
 #cat $src/doc/JSLib.md | awk 1 | \
 #$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $tmp/JSLib.md
-#
-## 総説
-#cat $src/doc/spec.md | awk 1 | \
-#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $tmp/spec.md
-#
+
+# 総説
+cat $src/doc/spec.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/spec.md
+
 ## header.mdを付加
 #for f in $tmp/*.md; do
 #  out="${f/tmp/doc}"

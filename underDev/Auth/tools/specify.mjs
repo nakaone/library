@@ -378,7 +378,7 @@ class ProjectDef extends BaseDef {
 
     // クラス一覧を出力
     BaseDef.implements.forEach(x => {
-      const content = `# ${this.implements[x]} クラス一覧\n\n`
+      const content = header + `# ${this.implements[x]} クラス一覧\n\n`
       + list[x].map(c => `1. [${c.name}](${c.name}.md) - ${c.desc}`).join('\n');
       fs.writeFileSync(path.join(folder[x], `list.md`),content,"utf8");
     });

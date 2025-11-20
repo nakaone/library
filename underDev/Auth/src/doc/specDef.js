@@ -1,4 +1,4 @@
-console.log(JSON.stringify({markdown:{},defs:{
+console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ側'},classdef:{
   authAuditLog: {
     desc: 'authServerの監査ログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `
@@ -18,18 +18,20 @@ console.log(JSON.stringify({markdown:{},defs:{
     ]},
 
     methods: {list:[{
-        name: 'constructor',
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
 
-        params: {list:[
-        ]},
+      params: {list:[
+      ]},
 
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        `,
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+        - テスト：[authConfig](authConfig.md#authconfig_constructor)をインスタンス化
+        %% cfTable({type:'authError',patterns:{'異常テスト':{message:'テスト'}}},{indent:2}) %%
+      `,
 
-        returns: {list:[{type:'authAuditLog'}]},
+      returns: {list:[{type:'authAuditLog'}]},
     }]},
   },
   authConfig: {
@@ -48,20 +50,20 @@ console.log(JSON.stringify({markdown:{},defs:{
     ]},
 
     methods: {list:[{
-        name: 'constructor',
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
-        params: {list:[  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
-        ]},
+      params: {list:[  // {Params} ■メソッド引数の定義■
+        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+      ]},
 
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        `,	// {string} 処理手順。markdownで記載
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+      `,	// {string} 処理手順。markdownで記載
 
-        returns: {list:[{type:'authConfig'}]},
+      returns: {list:[{type:'authConfig'}]},
     }]},
   },
   authClientConfig: {
@@ -77,20 +79,20 @@ console.log(JSON.stringify({markdown:{},defs:{
     ]},
 
     methods: {list:[{
-        name: 'constructor',
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        desc: 'コンストラクタ',
-        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',
+      rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
-        params: {list:[  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
-        ]},
+      params: {list:[  // {Params} ■メソッド引数の定義■
+        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+      ]},
 
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        returns: {list:[{type:'authClientConfig'}]},
+      returns: {list:[{type:'authClientConfig'}]},
     }]},
   },
   authError: {
@@ -109,23 +111,23 @@ console.log(JSON.stringify({markdown:{},defs:{
     ]},
 
     methods: {list:[{
-        name: 'constructor',
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
-        params: {list:[  // {Params} ■メソッド引数の定義■
-          {name:'e',type:'Error',note:'エラーオブジェクト'},
-          {name:'v',type:'Object',note:'関数・メソッド内汎用変数',default:'{}'},
-        ]},
+      params: {list:[  // {Params} ■メソッド引数の定義■
+        {name:'e',type:'Error',note:'エラーオブジェクト'},
+        {name:'v',type:'Object',note:'関数・メソッド内汎用変数',default:'{}'},
+      ]},
 
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-          - variableはv.whois,v.stepを削除した上で、JSON化時150文字以上になる場合、以下のように処理
-            - 配列は"{length:v.xxx.length,sample:v.xxx.slice(0,3)}"に変換
-        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+        - variableはv.whois,v.stepを削除した上で、JSON化時150文字以上になる場合、以下のように処理
+          - 配列は"{length:v.xxx.length,sample:v.xxx.slice(0,3)}"に変換
+      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        returns: {list:[{type:'authError'}]},
+      returns: {list:[{type:'authError'}]},
     }]},
   },
   authErrorLog: {
@@ -138,20 +140,20 @@ console.log(JSON.stringify({markdown:{},defs:{
     ]},
 
     methods: {list:[{
-        name: 'constructor',
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
-        params: {list:[  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
-        ]},
+      params: {list:[  // {Params} ■メソッド引数の定義■
+        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+      ]},
 
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        returns: {list:[{type:'authErrorLog'}]},
+      returns: {list:[{type:'authErrorLog'}]},
     }]},
   },
   authRequest: {
@@ -164,20 +166,20 @@ console.log(JSON.stringify({markdown:{},defs:{
     ]},
 
     methods: {list:[{
-        name: 'constructor',
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
-        params: {list:[  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
-        ]},
+      params: {list:[  // {Params} ■メソッド引数の定義■
+        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+      ]},
 
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        returns: {list:[{type:'authRequest'}]},
+      returns: {list:[{type:'authRequest'}]},
     }]},
   },
   authResponse: {
@@ -190,20 +192,20 @@ console.log(JSON.stringify({markdown:{},defs:{
     ]},
 
     methods: {list:[{
-        name: 'constructor',
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
-        params: {list:[  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
-        ]},
+      params: {list:[  // {Params} ■メソッド引数の定義■
+        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+      ]},
 
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        returns: {list:[{type:'authResponse'}]},
+      returns: {list:[{type:'authResponse'}]},
     }]},
   },
   authResult: {
@@ -218,20 +220,20 @@ console.log(JSON.stringify({markdown:{},defs:{
     ]},
 
     methods: {list:[{
-        name: 'constructor',
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
-        params: {list:[  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
-        ]},
+      params: {list:[  // {Params} ■メソッド引数の定義■
+        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+      ]},
 
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        returns: {list:[{type:'authResult'}]},
+      returns: {list:[{type:'authResult'}]},
     }]},
   },
   authServerConfig: {
@@ -269,20 +271,20 @@ console.log(JSON.stringify({markdown:{},defs:{
     ]},
 
     methods: {list:[{
-        name: 'constructor',
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 1,
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      rev: 1,
 
-        params: {list:[  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
-        ]},
+      params: {list:[  // {Params} ■メソッド引数の定義■
+        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+      ]},
 
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        returns: {list:[{type:'authServerConfig'}]},
+      returns: {list:[{type:'authServerConfig'}]},
     }]},
   },
   encryptedRequest: {
@@ -295,20 +297,20 @@ console.log(JSON.stringify({markdown:{},defs:{
     ]},
 
     methods: {list:[{
-        name: 'constructor',
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
-        params: {list:[  // {Params} ■メソッド引数の定義■
-          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
-        ]},
+      params: {list:[  // {Params} ■メソッド引数の定義■
+        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+      ]},
 
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-        returns: {list:[{type:'encryptedRequest'}]},
+      returns: {list:[{type:'encryptedRequest'}]},
     }]},
   },
   LocalRequest: {
@@ -324,41 +326,31 @@ console.log(JSON.stringify({markdown:{},defs:{
     ]},
 
     methods: {list:[{
-        name: 'constructor',
-        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
-        params: {list:[  // {Params} ■メソッド引数の定義■
-          {name:'func',type:'string',desc:'サーバ側関数名',note:''},
-          {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',
-            note:'引数が一つでも配列として指定',default:[]},
-        ]},
+      params: {list:[  // {Params} ■メソッド引数の定義■
+        {name:'func',type:'string',desc:'サーバ側関数名',note:''},
+        {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',
+          note:'引数が一つでも配列として指定',default:[]},
+      ]},
 
-        process: `
-          - メンバと引数両方にある項目は、引数の値をメンバとして設定
-          - "func"は関数名として使用可能な文字種であることを確認<br>
-            \`^[A-Za-z_$][A-Za-z0-9_$]*$\`<br>
-            上記正規表現にマッチしなければ戻り値「func不正」を返して終了
-          - "arguments"は関数を排除するため、一度JSON化してからオブジェクト化<br>
-            \`JSON.parse(JSON.stringify(arguments))\`
-        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
-        // - テスト：[▼監査ログ](authAuditLog.md#authauditlog_constructor)インスタンス生成
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+        - "func"は関数名として使用可能な文字種であることを確認<br>
+          \`^[A-Za-z_$][A-Za-z0-9_$]*$\`<br>
+          上記正規表現にマッチしなければ戻り値「func不正」を返して終了
+        - "arguments"は関数を排除するため、一度JSON化してからオブジェクト化<br>
+          \`JSON.parse(JSON.stringify(arguments))\`
+      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+      // - テスト：[▼監査ログ](authAuditLog.md#authauditlog_constructor)インスタンス生成
 
-        returns: {list:[
-          {markdown:`- 正常時の戻り値：LocalRequestインスタンス`},
-          {markdown:`
-          - エラー時の戻り値
-            <!--%%cfTable(new ReturnDef({
-            type:'authError',
-            patterns:{'func不正':{assign:{
-              message: '"invalid func"',
-            }}}}),{desc:false,note:false})%%-->
-          `},
-          /*{type:'authError',patterns:{'func不正':{assign:{
-            message: '"invalid func"',
-          }}}},*/
-        ]},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+      returns: {list:[
+        {type:'LocalRequest',desc:'正常時の戻り値'},
+        {type:'',desc:'エラー時の戻り値',template:`%% cfTable({type:'authError',patterns:{'func不正':{message:'"invalid func"'}}},{indent:2,header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}}) %%`},
+      ]},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
     }]},
   },
 }}));
