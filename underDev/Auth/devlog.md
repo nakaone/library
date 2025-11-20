@@ -1,12 +1,23 @@
 # specify
 
+## いまここ：`📞 呼出元`の追加
+
+## その他ToDo
+
+- Markdownファイル出力時、余計な改行削除(`\n\n\n+ -> \n\n`)
+- クラス一覧出力(環境別)
+- メンバ一覧・引数・戻り値・処理手順のJSDoc(typedef)にcfTableタグの使用方法を追記
+- implementが一種類以下の場合、環境別に分けずに"-o"フォルダ直下に全ファイル作成
+- 一次情報で設定できない項目はcreateMdに移動
+  table作成時に他クラスのメンバ一覧を参照するReturnsDefで問題になる可能性あり
+
+## テスト項目
+
+- 戻り値が複数パターンの場合の動作確認
+
 ## bugs
 
 - 未解決
-  - 一次情報で設定できない項目はcreateMdに移動
-    table作成時に他クラスのメンバ一覧を参照するReturnsDefで問題になる可能性あり
-  - 戻り値が複数パターンの場合の動作確認
-  - `📞 呼出元`の追加
 - 解決済
   - ReturnDefで指定したtitleが存在しない
   - 戻り値の型が自分のクラスの場合(constructorの場合)、インスタンスと表記
@@ -26,16 +37,6 @@
   - TypeError: this.markdown.content.embeds is not a function
   - TypeError: str.replace is not a function
 
-## その他ToDo
-
-- 戻り値クラスのメンバ一覧表示時、クラス名とリンクを表示(ex.「項目名」の欄)
-- クラス一覧出力(環境別)
-- 引数・メンバ一覧も説明文追加可能に
-  引数・メンバ一覧でMarkdownDef.constructor呼出時のテンプレートは
-  `%%cfTable(new Params(...))%%`形式で指定すれば良い？
-- メンバ一覧・引数・戻り値・処理手順のJSDoc(typedef)にcfTableタグの使用方法を追記
-- implementが一種類以下の場合、環境別に分けずに"-o"フォルダ直下に全ファイル作成
-- テンプレートに基づくソース作成
 
 <!--
 
