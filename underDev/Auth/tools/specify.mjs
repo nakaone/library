@@ -135,8 +135,6 @@ class BaseDef {
         )
       );
     };
-    //const fv = x => typeof x === 'string' ? x : 
-    //  ((typeof x === 'object' || Number.isNaN(x)) ? JSON.stringify(x) : x.toLocaleString());
 
     // 出力項目リストを作成
     Object.keys(v.header).forEach(x => {
@@ -177,9 +175,6 @@ class BaseDef {
           body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
         };
         break;
-      //default:
-      //  return new Error('invalid argument\n'
-      //    + JSON.stringify({constructor:obj.constructor.name,obj:obj,opt:opt},null,2));
     }
 
     // ヘッダ行の作成
@@ -454,7 +449,8 @@ class ClassDef extends BaseDef {
     if( this.content === '' ){
       // ①自分(クラス概要)の作成(BaseDefと同じ)
       v.r = this.evaluate(this.template);
-      this.content = v.r === '' ? '' : this.title + '\n\n' + v.r;
+      if( v.r === '' ) return '';
+      this.content = this.title + '\n\n' + v.r;
 
       // ②MembersDef, MethodsDef のcreateMDを呼び出す(ClassDef特有)
       v.members = this.members.createMd();
@@ -633,7 +629,8 @@ class MethodsDef extends BaseDef {
     if( this.content === '' ){
       // ①自分(クラス概要)の作成(BaseDefと同じ)
       v.r = this.evaluate(this.template);
-      this.content = v.r === '' ? '' : this.title + '\n\n' + v.r;
+      if( v.r === '' ) return '';
+      this.content = this.title + '\n\n' + v.r;
 
       // ②MembersDef, MethodsDef のcreateMDを呼び出す(ClassDef特有)
       for( v.i=0 ; v.i<this.list.length ; v.i++ ){
@@ -839,8 +836,30 @@ class ReturnsDef extends BaseDef {
       navi: ``,
       body: '',
     });
-    this.template = (this.list.length === 0 ? `- 戻り値無し(void)`
-      : `${this.cfTable(this)}`);
+    this.template = this.list.length === 0 ? `- 戻り値無し(void)` : '';
+    //this.template = (this.list.length === 0 ? `- 戻り値無し(void)`
+    //  : `${this.cfTable(this)}`);
+  }
+
+  createMd(){ // BaseDef.createMdをオーバーライド
+    const v = {};
+    if( this.content === '' ){
+      // ①自分(クラス概要)の作成(BaseDefと同じ)
+      v.template = this.template;
+      if( v.template !== '' ){
+        v.template = this.evaluate(v.template);
+        if( v.template === '' ) return '';
+      }
+      this.content = this.title + '\n\n' + v.template;
+
+      // ②ReturnDef のcreateMDを呼び出す(ClassDef特有)
+      for( v.i=0 ; v.i<this.list.length ; v.i++ ){
+        v.return = this.list[v.i].createMd();
+        if( v.return === '' ) return '';
+        this.content += '\n\n' + v.return;
+      }
+    }
+    return this.content;
   }
 }
 
