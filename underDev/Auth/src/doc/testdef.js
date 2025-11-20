@@ -1,4 +1,4 @@
-console.log(JSON.stringify({classdef:{
+console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ側'},classdef:{
   authAuditLog: {
     desc: 'authServerの監査ログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `

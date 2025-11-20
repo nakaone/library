@@ -270,6 +270,7 @@ class BaseDef {
  * ===== メンバ =====
  * @typedef {Object} ProjectDef - プロジェクト全体定義
  * @prop {Object.<string, ClassDef>} classdef - クラス・クロージャ関数定義集
+ * @prop {Object.<string, string>} implements - 実装環境コード・名称
  * @prop {Object} [opt={}] - オプション
  * @prop {string} [opt.autoOutput=true] - 指示タグの展開後、作成したMarkdownを出力
  * @prop {string} [opt.header] - クラス別ファイルの共通ヘッダファイル名
@@ -303,6 +304,9 @@ class ProjectDef extends BaseDef {
       folder: '.',
       makeList: true,
     },opt);
+
+    // 実装環境一覧
+    this.implements = arg.implements || {};
 
     // 関数・クラス定義のインスタンスを順次作成
     this.classdef = {};
@@ -355,14 +359,28 @@ class ProjectDef extends BaseDef {
     }
 
     // ClassDef毎にファイルを作成
+    const list = {};  // 環境別クラス一覧
     Object.keys(this.classdef).forEach(def => {
       BaseDef.implements.forEach(x => {
+        if( !list.hasOwnProperty(x) ) list[x] = [];
         if( this.classdef[def].implement.find(i => i === x) ){
           fs.writeFileSync(path.join(folder[x], `${def}.md`),
             header + (this.classdef[def].content || '').trim()
             .replaceAll(/\n\n\n+/g,'\n\n'), "utf8");
+          // クラス一覧に追加
+          list[x].push({
+            name: this.classdef[def].name,
+            desc: this.classdef[def].desc,
+          });
         }
       });
+    });
+
+    // クラス一覧を出力
+    BaseDef.implements.forEach(x => {
+      const content = `# ${this.implements[x]} クラス一覧\n\n`
+      + list[x].map(c => `1. [${c.name}](${c.name}.md) - ${c.desc}`).join('\n');
+      fs.writeFileSync(path.join(folder[x], `list.md`),content,"utf8");
     });
   }
 
