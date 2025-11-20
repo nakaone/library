@@ -101,7 +101,7 @@ class BaseDef {
       v.title += v.navi;
 
     if( v.body.length > 0 || opt.force ){
-      v.title += v.body;
+      v.title += '\n\n' + v.body;
     }
 
     return v.title;
@@ -722,13 +722,49 @@ class MethodDef extends BaseDef {
   createMd(){ // BaseDef.createMdをオーバーライド
     const v = {};
     if( this.content === '' ){
+      // 呼出元の作成
+      v.caller = this.article({
+        title: `📞 呼出元`,
+        level: 4,
+        anchor: this.anchor + '_caller',
+        link: '',
+        navi: '',
+        body: this.caller.map(x => `- [${
+          BaseDef.defs[x.class].name
+        }.${
+          BaseDef.defs[x.class].method[x.method].name
+        }](${
+          BaseDef.defs[x.class].name
+        }.md#${x.class}_members)`).join('\n'),
+      })
+
       // 引数の作成
       v.params = this.params.createMd();
       if( v.params === '' ) return '';
       
       // 自分(処理手順)の作成(BaseDefと同じ)
       v.template = this.evaluate(this.template);
+      if( this.className === 'authAuditLog')
+      if( this.template.includes('cfTable') ) clog(740,{before:this.template,after:v.template});
       if( v.template === '' ) return '';
+      // 処理手順内のリンクを呼出先callerにセット
+      [...v.template.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)].forEach(link => {
+        v.m = link[2].match(/(.+)\.md#(.+)/);
+        if( v.m ){
+          // 外部リンクの場合
+          v.m = v.m[2].split('_');
+        } else {
+          // ローカルリンクの場合
+          v.m = v.template.split('_').map(x => x = x.replace('#',''));
+        }
+        v.className = v.m[0];
+        v.methodName = v.m[1];
+        if( typeof BaseDef.defs[v.className] !== 'undefined'
+          && typeof BaseDef.defs[v.className].method[v.methodName] !== 'undefined'
+        ){
+          BaseDef.defs[v.className].method[v.methodName].caller.push({class:this.className,method:this.methodName});
+        }
+      });
 
       // 戻り値の作成
       v.returns = this.returns.createMd();
@@ -736,6 +772,7 @@ class MethodDef extends BaseDef {
 
       this.content = [
         this.title,
+        '',v.caller,
         '',v.params,
         '',v.template,
         '',v.returns,
@@ -880,6 +917,10 @@ class ReturnsDef extends BaseDef {
  * // 対比表
  * %% this.cfTable(this) %%
  * ```
+ */
+/**
+ * @typedef {Object.<string,string>} PatternDef - パターンに設定する値
+ * @example {name:'fuga'} ⇒ 戻り値のデータ型のメンバ'name'に'fuga'を設定
  */
 class ReturnDef extends BaseDef {
   constructor(arg,returnsdef){

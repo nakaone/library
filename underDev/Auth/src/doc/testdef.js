@@ -27,6 +27,8 @@ console.log(JSON.stringify({classdef:{
 
       process: `
         - メンバと引数両方にある項目は、引数の値をメンバとして設定
+        - テスト：[authConfig](authConfig.md#authconfig_constructor)をインスタンス化
+        %% cfTable(new ReturnDef({type:'authConfig',patterns:{'異常時':{fatal:'fuga'}}})) %%
       `,
 
       returns: {list:[{type:'authAuditLog'}]},
