@@ -1,4 +1,39 @@
 /** specify: JavaScriptオブジェクトで定義したクラス仕様をMarkdownで出力
+ * - グローバル関数は"global"クラスのメソッド、グローバル変数は"global"クラスのメンバとして処理
+ * - クラスの構造
+ *   - ProjectDef: プロジェクト全体定義
+ *     - ClassDef: (プロジェクトに関連する)個別クラス定義
+ *       - MembersDef: クラスのメンバ(インスタンス変数)
+ *         - FieldDef: メンバとなる個別の変数
+ *       - MethodsDef: クラスのメソッド集
+ *         - MethodDef: 個々のメソッド定義
+ *           - ParamsDef: 当該メソッドの引数
+ *             - FieldDef: 引数となる個別の変数
+ *           - ReturnsDef: 当該メソッドの戻り値
+ *             - ReturnDef: (戻り値のデータ型が複数有る場合の)データ型別定義
+ * 
+ * @example 使用方法
+ * 1. クラス定義(specDef.js) : プロジェクトに関係するクラスを一括して定義
+ *    ※ 詳細は各クラスのJSDoc参照
+ *    ```
+ *    console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ側'},classdef:{
+ *      authAuditLog: {
+ *    // 後略
+ *    ```
+ * 2. 仕様書作成エンジン(specify.mjs) : 本JavaScript
+ * 3. ビルダー(build.sh) : クラス定義とエンジンからMarkdown文書を作成
+ *    ```zsh
+ *    # クラス別定義
+ *    node $src/doc/specDef.js | node $prj/tools/specify.mjs -h:$src/doc/header.md -o:$doc
+ *    ```
+ *    起動時オプション
+ *    - o: 出力先フォルダ
+ *    - h: 共通ヘッダファイル
+ * 
+ * ■ 次期開発項目
+ * - implementが一種類以下の場合、環境別に分けずに"-o"フォルダ直下に全ファイル作成
+ * - 一次情報で設定できない項目はcreateMdに移動
+ *   table作成時に他クラスのメンバ一覧を参照するReturnsDefで問題になる可能性あり
  * 
  * ■ 凡例
  * - 🔢：導出項目(定義不要)
