@@ -351,7 +351,7 @@ class ProjectDef extends BaseDef {
       BaseDef.implements.forEach(x => {
         if( this.classdef[def].implement.find(i => i === x) ){
           fs.writeFileSync(path.join(folder[x], `${def}.md`),
-            (this.classdef[def].content || '').trim(), "utf8");
+            (this.classdef[def].content || '').trim().replaceAll(/\n\n\n+/g,'\n\n'), "utf8");
         }
       });
     });
@@ -754,6 +754,7 @@ class MethodDef extends BaseDef {
       if( v.params === '' ) return '';
       
       // 自分(処理手順)の作成(BaseDefと同じ)
+      v.template = this.evaluate(this.template);
       if( v.template === '' ) return '';
       // 処理手順内のリンクを呼出先callerにセット
       [...v.template.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)].forEach(link => {
