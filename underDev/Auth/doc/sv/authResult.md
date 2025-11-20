@@ -43,10 +43,4 @@ authServer内の処理等、"warning"(処理継続)時の使用を想定。
 
 #### <span id="authresult_constructor_returns">📤 戻り値</span>
 
-- [authResult](authResult.md#authresult_members)
-
-  | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-  | :-- | :-- | :-- | :-- | :-- |
-  | responseTime | number | Date.now() | 処理終了日時 |  |
-  | status | string | "normal" | 終了状態 | "normal"or"fatal"or警告メッセージ(warning) |
-  | response | any|authError | 任意 | 処理結果 | @returns {void}ならundefined。fatal時はauthError |
+- [authResult](#authresult_members)インスタンス

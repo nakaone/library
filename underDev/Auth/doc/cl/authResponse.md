@@ -39,8 +39,4 @@
 
 #### <span id="authresponse_constructor_returns">📤 戻り値</span>
 
-- [authResponse](authResponse.md#authresponse_members)
-
-  | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-  | :-- | :-- | :-- | :-- | :-- |
-  |  | string | 任意 |  |  |
+- [authResponse](#authresponse_members)インスタンス

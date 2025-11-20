@@ -37,8 +37,4 @@
 
 #### <span id="encryptedrequest_constructor_returns">📤 戻り値</span>
 
-- [encryptedRequest](encryptedRequest.md#encryptedrequest_members)
-
-  | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-  | :-- | :-- | :-- | :-- | :-- |
-  |  | string | 任意 |  |  |
+- [encryptedRequest](#encryptedrequest_members)インスタンス

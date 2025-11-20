@@ -1021,18 +1021,27 @@ class ReturnDef extends BaseDef {
     // BaseDefメンバに値設定
     this.className = returnsdef.className;
     this.methodName = returnsdef.methodName;
-    this.title = this.type === '' ? (
-      this.desc === '' ? '' : `- ${this.desc}`
-    ) : (
-      `- [${this.type}](${this.type}.md#${
-        this.type.toLowerCase()}_members)${
-        this.desc === '' ? '' : ' : '+this.desc}`
-    );
 
     // 戻り値のメンバ一覧とテンプレートの作成
-    this.table = this.cfTable(this,{indent:2});
-    this.template = arg.template || 
-      `%% BaseDef.defs["${this.className}"].method["${this.methodName}"].return["${this.type}"].table %%`;
+    if( this.className === this.type && this.methodName === 'constructor' ){
+      // constructorの戻り値はインスタンスなのでメンバ一覧を表示しない
+      this.template = `- [${this.className}](#${this.className.toLowerCase()}_members)インスタンス`
+    } else {
+      // 通常の場合
+      // データ型名とそこへのリンクを作成
+      this.title = this.type === '' ? (
+        this.desc === '' ? '' : `- ${this.desc}`
+      ) : (
+        `- [${this.type}](${this.type}.md#${
+          this.type.toLowerCase()}_members)${
+          this.desc === '' ? '' : ' : '+this.desc}`
+      );
+      // 戻り値のデータ型のメンバ一覧を作成
+      this.table = this.cfTable(this,{indent:2});
+      this.template = arg.template || 
+        `%% BaseDef.defs["${this.className}"].method["${
+        this.methodName}"].return["${this.type}"].table %%`;
+    }
   }
 }
 

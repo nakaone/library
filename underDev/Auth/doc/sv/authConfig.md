@@ -49,14 +49,4 @@ authClient/authServer共通設定値
 
 #### <span id="authconfig_constructor_returns">📤 戻り値</span>
 
-- [authConfig](authConfig.md#authconfig_members)
-
-  | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-  | :-- | :-- | :-- | :-- | :-- |
-  | systemName | string | auth | システム名 |  |
-  | adminMail | string | 任意 | 管理者のメールアドレス |  |
-  | adminName | string | 任意 | 管理者氏名 |  |
-  | allowableTimeDifference | number | 120,000 | クライアント・サーバ間通信時の許容時差 | 既定値は2分 |
-  | RSAbits | string | 2,048 | 鍵ペアの鍵長 |  |
-  | underDev | Object | 任意 | テスト時の設定 |  |
-  | underDev.isTest | boolean | false | 開発モードならtrue |  |
+- [authConfig](#authconfig_members)インスタンス

@@ -56,14 +56,4 @@ authServerの監査ログ
 
 #### <span id="authauditlog_constructor_returns">📤 戻り値</span>
 
-- [authAuditLog](authAuditLog.md#authauditlog_members)
-
-  | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-  | :-- | :-- | :-- | :-- | :-- |
-  | timestamp | string | Date.now() | 要求日時 | ISO8601拡張形式の文字列 |
-  | duration | number | 任意 | 処理時間 | ミリ秒単位 |
-  | memberId | string | 任意 | メンバの識別子 |  |
-  | deviceId | string | 任意 | デバイスの識別子 |  |
-  | func | string | 任意 | サーバ側関数名 |  |
-  | result | string | normal | サーバ側処理結果 | "fatal","warning","normal" |
-  | note | string | 任意 | 備考 |  |
+- [authAuditLog](#authauditlog_members)インスタンス

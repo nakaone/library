@@ -48,12 +48,7 @@
 
 #### <span id="localrequest_constructor_returns">📤 戻り値</span>
 
-- [LocalRequest](LocalRequest.md#localrequest_members) : 正常時の戻り値
-
-  | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-  | :-- | :-- | :-- | :-- | :-- |
-  | func | string | 任意 | サーバ側関数名 |  |
-  | arguments | any[] | [] | サーバ側関数に渡す引数の配列 | プリミティブ値、及びプリミティブ値で構成された配列・オブジェクト |
+- [LocalRequest](#localrequest_members)インスタンス
 
 - エラー時の戻り値
 
