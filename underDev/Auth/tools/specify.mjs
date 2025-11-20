@@ -859,7 +859,8 @@ class ReturnsDef extends BaseDef {
 /** ReturnDef - 関数(メソッド)戻り値定義
  * ===== メンバ =====
  * @typedef {Object} ReturnDef - 関数(メソッド)戻り値定義
- * @prop {string} type - 戻り値のデータ型
+ * @prop {string} [type=''] - 戻り値のデータ型。対比表なら空文字列
+ * @prop {string} [desc=''] - 本データ型に関する説明。「正常終了時」等
  * @prop {PatternDef} [default={}] - 全パターンの共通設定値
  * @prop {Object.<string,PatternDef>} [patterns={}] - 特定パターンへの設定値
  * @prop {string} table - 🔢戻り値(データ型のメンバ一覧・対比表)のMarkdown
@@ -885,13 +886,21 @@ class ReturnDef extends BaseDef {
     super(arg);
 
     this.type = arg.type || '';
+    this.desc = arg.desc || '';
     this.default = arg.default || {};
     this.patterns = arg.patterns || {};
     
     // BaseDefメンバに値設定
     this.className = returnsdef.className;
     this.methodName = returnsdef.methodName;
-    this.title = `- [${this.type}](${this.type}.md#${this.type.toLowerCase()}_members)`;
+    this.title = this.type === '' ? (
+      this.desc === '' ? '' : `- ${this.desc}`
+    ) : (
+      `- [${this.type}](${this.type}.md#${
+        this.type.toLowerCase()}_members)${
+        this.desc === '' ? '' : ' : '+this.desc}`
+    );
+    //this.title = `- [${this.type}](${this.type}.md#${this.type.toLowerCase()}_members)${this.desc === '' ? '' : ' : '+this.desc}`;
 
     // 戻り値のメンバ一覧とテンプレートの作成
     this.table = this.cfTable(this,{indent:2});
