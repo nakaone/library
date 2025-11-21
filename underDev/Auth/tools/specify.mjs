@@ -50,11 +50,11 @@
     template: ``, // {string} Markdown出力時のテンプレート
 
     members: {list:[
-      {name:'',type:'string',label:'',desc:'',note:''},
-      // default, isOpt
+      {name:'',type:'string',desc:'',note:''},
+      // label(項目名), default, isOpt
     ]},
 
-    methods: {list:[
+    methods: {list:[{
       name: '', // {string} 関数(メソッド)名
       type: 'public', // {string} 関数(メソッド)の分類
       desc: '', // {string} 端的な関数(メソッド)の説明
@@ -64,7 +64,7 @@
       rev: 0, // {string} 本メソッド仕様書の版数
 
       params: {list:[
-        {name:'',type:'string',label:'',desc:'',note:''},
+        {name:'',type:'string',desc:'',note:''},
       ]},
 
       process: ``,
@@ -79,7 +79,7 @@
           },
         }
       ]},
-    ]},
+    }]},
   },
 */
 

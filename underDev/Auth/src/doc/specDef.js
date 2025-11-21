@@ -64,6 +64,63 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       returns: {list:[{type:'authConfig'}]},
     }]},
   },
+  authClient: {
+    extends: '', // {string} 親クラス名
+    desc: 'クライアント側中核クラス', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `
+      authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を受け、
+      サーバ側(authServer)への暗号化通信リクエストを署名・暗号化、
+      サーバ側処理を経てローカル側に戻された結果を復号・検証し、
+      処理結果に応じてクライアント側処理を適切に振り分ける中核関数です。
+    `, // {string} ✂️補足説明。概要欄に記載
+    summary: `
+      - クロージャ関数ではなくクラスとして作成
+      - 内発処理はローカル関数からの処理要求に先行して行う
+    `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['cl'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'cf',type:'authClientConfig',desc:'動作設定変数(config)',note:''},
+      {name:'crypto',type:'cryptoClient',desc:'クライアント側暗号関係処理',note:''},
+      {name:'idb',type:'authIndexedDB',desc:'IndexedDBの内容をauthClient内で共有',note:''},
+    ]},
+
+    methods: {list:[{
+      name: 'constructor', // {string} 関数(メソッド)名
+      type: 'private', // {string} 関数(メソッド)の分類
+      desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+      note: ``, // {string} ✂️注意事項。Markdownで記載
+      source: ``, // {string} ✂️想定するソースコード
+      lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+      rev: 0, // {string} 本メソッド仕様書の版数
+
+      params: {list:[
+        {name:'config',type:'authClientConfig',desc:'authClientの動作設定変数',note:''},
+      ]},
+
+      process: `
+        - メンバ変数の初期化
+          - authClient内共有用変数を準備("cf = new [authClientConfig](authClientConfig.md#authclientconfig_constructor)()")
+          - 鍵ペアを準備("crypto = new [cryptoClient](cryptoClient.md#cryptoclient_constructor)()")
+          - IndexedDbを準備("idb = new [authIndexedDb](authIndexedDb.md#authindexeddb_constructor)()")
+      `,
+      /*
+        - IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
+        - IndexedDBからメンバの氏名を取得、存在しなければダイアログから入力
+        - deviceId未採番なら採番(UUID)
+        - SPkey未取得ならサーバ側に要求
+        - 更新した内容はIndexedDBに書き戻す
+        - SPkey取得がエラーになった場合、SPkey以外は書き戻す
+        - IndexedDBの内容はauthClient内共有用変数`pv`に保存
+        - サーバ側から一定時間レスポンスが無い場合、`{result:'fatal',message:'No response'}`を返して終了
+      */
+
+      returns: {list:[
+        {type:'authClient'}, // コンストラクタは自データ型名
+      ]},
+    }]},
+  },
   authClientConfig: {
     desc: 'authClient専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
     note: '[authConfig](authConfig.md)を継承', // クラスとしての補足説明
