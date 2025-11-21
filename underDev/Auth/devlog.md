@@ -2,7 +2,6 @@
 
 ## bug
 
-- LocalRequestのメンバ"func"が必須項目なのに「任意」と表示される
 
 ## ToDo
 

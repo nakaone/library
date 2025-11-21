@@ -40,6 +40,48 @@
  * - 🔢：導出項目(定義不要)
  * - ✂️：trimIndent対象項目
  */ 
+/* テンプレート
+  className: {
+    extends: '', // {string} 親クラス名
+    desc: '', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: ``, // {string} ✂️補足説明。概要欄に記載
+    summary: ``,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: [], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'',type:'string',label:'',desc:'',note:''},
+      // default, isOpt
+    ]},
+
+    methods: {list:[
+      name: '', // {string} 関数(メソッド)名
+      type: 'public', // {string} 関数(メソッド)の分類
+      desc: '', // {string} 端的な関数(メソッド)の説明
+      note: ``, // {string} ✂️注意事項。Markdownで記載
+      source: ``, // {string} ✂️想定するソースコード
+      lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+      rev: 0, // {string} 本メソッド仕様書の版数
+
+      params: {list:[
+        {name:'',type:'string',label:'',desc:'',note:''},
+      ]},
+
+      process: ``,
+
+      returns: {list:[
+        {type:'className'}, // コンストラクタは自データ型名
+        { // 対比表形式
+          desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+          default: {},  // {Object.<string,string>} 全パターンの共通設定値
+          patterns: { // 特定パターンへの設定値
+            'パターン名':{項目名:値},
+          },
+        }
+      ]},
+    ]},
+  },
+*/
 
 /** BaseDef - 各定義の基底クラス
  * ===== メンバ =====
@@ -449,11 +491,11 @@ class ProjectDef extends BaseDef {
  * @prop {string} [desc=''] - 端的なクラスの説明。ex.'authServer監査ログ'
  * @prop {string} [note=''] - ✂️補足説明。概要欄に記載
  * @prop {string} [summary=''] - ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
- * @prop {MembersDef} members - メンバ(インスタンス変数)定義
- * @prop {MethodsDef} methods - メソッド定義集
- * @prop {Object.<string,MethodDef>} method - メソッド定義(マップ)
  * @prop {Object.<string,boolean>} implement - 実装の有無(ex.['cl','sv'])
  * @prop {string} [template] - Markdown出力時のテンプレート
+ * @prop {MembersDef} members - メンバ(インスタンス変数)定義
+ * @prop {MethodsDef} methods - メソッド定義集
+ * @prop {Object.<string,MethodDef>} 🔢method - メソッド定義(マップ)
  * 
  * ===== ゲッター・セッター =====
  * - 無し
@@ -589,11 +631,11 @@ class MembersDef extends BaseDef {
  * ===== メンバ =====
  * @typedef {Object} FieldDef - メンバの定義(Schema.columnDef上位互換)
  * @prop {string} name - 項目(引数)名。原則英数字で構成(システム用)
+ * @prop {string} [type='string'] - データ型。'|'で区切って複数記述可
  * @prop {string} [label=''] - テーブル・シート表示時の項目名。省略時はnameを流用
  * @prop {string[]} [alias=[]] - 複数タイプのCSVを統一フォーマットで読み込む際のnameの別名
  * @prop {string} [desc=''] - 端的なメンバの説明(詳細はnoteに記述)
  * @prop {string} [note=''] - ✂️備考
- * @prop {string} [type='string'] - データ型。'|'で区切って複数記述可
  * @prop {string} [default=''] - 既定値
  *   テーブル定義(columnDef)の場合、行オブジェクトを引数とするtoString()化された文字列も可
  * @prop {boolean} [isOpt=false] - 必須項目ならfalse。defaultが定義されていた場合は強制的にtrue
@@ -642,7 +684,6 @@ class FieldDef extends BaseDef {
  * - 無し
  * 
  * ===== メソッド =====
- * @prop {Function} methodsList - メソッド一覧をMarkdownで作成
  * @prop {Function} createMd - BaseDef.createMdをオーバーライド
  *   - this.content === '' なら
  *     - this.templateを評価、未作成のcontentが無ければthis.contentにセット
@@ -724,18 +765,18 @@ class MethodsDef extends BaseDef {
  * @prop {string} name - 関数(メソッド)名
  * @prop {string} [type=''] - 関数(メソッド)の分類
  *   public/private, static, async, get/set, accessor, etc
- * @prop {string} [desc=''] - 端的な関数(メソッド)の説明。ex.'authServer監査ログ'
+ * @prop {string} [desc=''] - 端的な関数(メソッド)の説明。ex.'コンストラクタ'
  * @prop {string} [note=''] - ✂️注意事項。Markdownで記載
  * @prop {string} [source=''] - ✂️想定するソースコード
  * @prop {string[]} [lib=[]] - 本関数(メソッド)で使用する外部ライブラリ
- * @prop {number} [rev=0] - 0:未着手 1:完了 0<n<1:作成途中
+ * @prop {number} [rev=0] - 本メソッド仕様書の版数
  * @prop {ParamsDef} params - 引数
  * @prop {string} process - ✂️処理手順。Markdownで記載
  * @prop {ReturnsDef} returns - 戻り値の定義(パターン別)
  * @prop {Object.<number,ReturnDef>} return - 🔢戻り値のマップ。メンバ名は戻り値のデータ型
  * @prop {Object[]} [caller=[]] - 🔢本関数(メソッド)の呼出元関数(メソッド)
- * @prop {string} caller.class - 呼出元クラス名
- * @prop {string} caller.method - 呼出元メソッド名
+ * @prop {string} caller.class - 🔢呼出元クラス名
+ * @prop {string} caller.method - 🔢呼出元メソッド名
  * 
  * - listで個々のメソッドを定義、MethodDefインスタンスはmemberに登録
  * 
@@ -743,15 +784,13 @@ class MethodsDef extends BaseDef {
  * - 無し
  * 
  * ===== メソッド =====
- * @prop {Function} createCaller - 呼出元一覧を作成(Markdown)「📞 呼出元」
- * 
+ * @prop {Function} createMd - BaseDef.createMdをオーバーライド
  * 
  * @example this.templateサンプル
  * ※ 出力時不要な改行は削除するので内容有無は不問
  * ```
  * %% this.article(this.note) %%
  * %% this.article(this.sorce) %%
- * %% this.createCaller() %%
  * %% this.params.createMd() %%
  * %% this.evaluate(this.process) %%
  * %% this.returns.createMd() %%
@@ -929,7 +968,7 @@ class ParamsDef extends BaseDef {
  * - 無し
  * 
  * ===== メソッド =====
- * - 無し
+ * @prop {Function} createMd - BaseDef.createMdをオーバーライド
  */
 class ReturnsDef extends BaseDef {
   constructor(arg={},methoddef){
