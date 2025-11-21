@@ -28,6 +28,12 @@ node $src/doc/specDef.js | node $prj/tools/specify.mjs -h:$src/doc/header.md -o:
 #$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $tmp/classes.md
 #rm $tmp/classList.md
 
+# クライアント・サーバ側仕様書
+cat $src/doc/header.md $src/doc/client.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cl/client.md
+cat $src/doc/header.md $src/doc/server.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/sv/server.md
+
 # JavaScriptライブラリ
 cat $src/doc/JSLib.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/JSLib.md
