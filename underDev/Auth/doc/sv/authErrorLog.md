@@ -18,7 +18,7 @@ authServerのエラーログ
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-|  | string | 任意 |  |  |
+|  | string | <span style="color:red">必須</span> |  |  |
 
 ## <span id="autherrorlog_methods">🧱 authErrorLog メソッド一覧</span>
 

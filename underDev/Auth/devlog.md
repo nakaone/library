@@ -1,11 +1,12 @@
 # auth
 
-- 旧版仕様書の移行(src/doc)
-  - 【済】spec.md
-  - 【済】classdef.js(確認後削除)
-  - classes.md
-  - 【済】JSlib.md
-  - 【済】testdef.js(削除)
+## bug
+
+- LocalRequestのメンバ"func"が必須項目なのに「任意」と表示される
+
+## ToDo
+
+- `archives/20251109`からの移行
 - サーバ側仕様書作成・レビュー
   - cryptoServerクラス
   - Memberクラス

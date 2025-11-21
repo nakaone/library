@@ -28,10 +28,10 @@ authServer専用の設定値
 | storageDaysOfErrorLog | number | 604,800,000 | 監査ログの保存日数 | 単位はミリ秒。既定値は7日分 |
 | auditLog | string | auditLog | 監査ログのシート名 |  |
 | storageDaysOfAuditLog | number | 604,800,000 | 監査ログの保存日数 | 単位はミリ秒。既定値は7日分 |
-| func | Object.<string,Object> | 任意 | サーバ側の関数マップ | 例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}} |
-| func.authority | number | 任意 | サーバ側関数の所要権限 | サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限。<br>`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。 |
-| func.do | Function | 任意 | 実行するサーバ側関数 |  |
-| trial | Object | 任意 | ログイン試行関係の設定値 |  |
+| func | Object.<string,Object> | <span style="color:red">必須</span> | サーバ側の関数マップ | 例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}} |
+| func.authority | number | <span style="color:red">必須</span> | サーバ側関数の所要権限 | サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限。<br>`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。 |
+| func.do | Function | <span style="color:red">必須</span> | 実行するサーバ側関数 |  |
+| trial | Object | <span style="color:red">必須</span> | ログイン試行関係の設定値 |  |
 | trial.passcodeLength | number | 6 | パスコードの桁数 |  |
 | trial.maxTrial | number | 3 | パスコード入力の最大試行回数 |  |
 | trial.passcodeLifeTime | number | 600,000 | パスコードの有効期間 | 既定値は10分 |

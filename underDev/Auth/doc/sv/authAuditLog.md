@@ -19,12 +19,12 @@ authServerの監査ログ
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | timestamp | string | Date.now() | 要求日時 | ISO8601拡張形式の文字列 |
-| duration | number | 任意 | 処理時間 | ミリ秒単位 |
-| memberId | string | 任意 | メンバの識別子 | メールアドレス |
+| duration | number | <span style="color:red">必須</span> | 処理時間 | ミリ秒単位 |
+| memberId | string | <span style="color:red">必須</span> | メンバの識別子 | メールアドレス |
 | deviceId | string | 任意 | デバイスの識別子 |  |
-| func | string | 任意 | サーバ側関数名 |  |
+| func | string | <span style="color:red">必須</span> | サーバ側関数名 |  |
 | result | string | normal | サーバ側処理結果 | "fatal","warning","normal" |
-| note | string | 任意 | 備考 |  |
+| note | string | <span style="color:red">必須</span> | 備考 |  |
 
 ## <span id="authauditlog_methods">🧱 authAuditLog メソッド一覧</span>
 

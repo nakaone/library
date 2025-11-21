@@ -627,7 +627,7 @@ class FieldDef extends BaseDef {
     this.note = this.trimIndent(arg.note || '');
     this.type = arg.type || 'string';
     this.default = arg.default || '';
-    this.isOpt = this.default === '' ? true : (arg.isOpt || false);
+    this.isOpt = this.default !== '' ? true : (arg.isOpt || false);
     this.printf = arg.printf || null;
     this.seq = seq;
   }

@@ -15,7 +15,7 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-|  | string | 任意 |  |  |
+|  | string | <span style="color:red">必須</span> |  |  |
 
 ## <span id="authresponse_methods">🧱 authResponse メソッド一覧</span>
 
