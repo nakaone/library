@@ -1,6 +1,6 @@
 <div style="text-align: right;">
 
-[総説](../spec.md) | [クライアント側クラス一覧](../cl/list.md) | [サーバ側クラス一覧](../sv/list.md)
+[総説](../spec.md) | [クライアント側仕様](../cl/list.md) | [サーバ側仕様](../sv/list.md) | [JavaScriptライブラリ](../JSLib.md)
 
 <!--
 [総説](spec.md) | [authClient](authClient.md) | [authServer](authServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
@@ -8,6 +8,11 @@
 </div>
 
 # <span id="autherrorlog">authErrorLog クラス仕様書</span>
+
+authServerのエラーログ
+
+- 各メソッドの冒頭でインスタンス化、処理開始時刻等を記録
+- 出力時にlogメソッドを呼び出して処理時間を計算、シート出力
 
 ## <span id="autherrorlog_members">🔢 authErrorLog メンバ一覧</span>
 

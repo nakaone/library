@@ -23,16 +23,14 @@ rm -rf $tmp/*
 # クラス別定義
 node $src/doc/specDef.js | node $prj/tools/specify.mjs -h:$src/doc/header.md -o:$doc
 
-#node $src/doc/classdef.js | node $prj/tools/classdef.js -o:$tmp
-#
 ## クラス一覧
 #cat $src/doc/classes.md | awk 1 | \
 #$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $tmp/classes.md
 #rm $tmp/classList.md
-#
-## JavaScriptライブラリ
-#cat $src/doc/JSLib.md | awk 1 | \
-#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $tmp/JSLib.md
+
+# JavaScriptライブラリ
+cat $src/doc/JSLib.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/JSLib.md
 
 # 総説
 cat $src/doc/spec.md | awk 1 | \

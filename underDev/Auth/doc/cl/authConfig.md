@@ -1,6 +1,6 @@
 <div style="text-align: right;">
 
-[総説](../spec.md) | [クライアント側クラス一覧](../cl/list.md) | [サーバ側クラス一覧](../sv/list.md)
+[総説](../spec.md) | [クライアント側仕様](../cl/list.md) | [サーバ側仕様](../sv/list.md) | [JavaScriptライブラリ](../JSLib.md)
 
 <!--
 [総説](spec.md) | [authClient](authClient.md) | [authServer](authServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
@@ -34,8 +34,6 @@ authClient/authServer共通設定値
 ### <span id="authconfig_constructor">🧱 authConfig.constructor()</span>
 
 #### <span id="authconfig_constructor_caller">📞 呼出元</span>
-
-- [authAuditLog.constructor](authAuditLog.md#authAuditLog_members)
 
 #### <span id="authconfig_constructor_params">📥 引数</span>
 

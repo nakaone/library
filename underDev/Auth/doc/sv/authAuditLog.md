@@ -1,6 +1,6 @@
 <div style="text-align: right;">
 
-[総説](../spec.md) | [クライアント側クラス一覧](../cl/list.md) | [サーバ側クラス一覧](../sv/list.md)
+[総説](../spec.md) | [クライアント側仕様](../cl/list.md) | [サーバ側仕様](../sv/list.md) | [JavaScriptライブラリ](../JSLib.md)
 
 <!--
 [総説](spec.md) | [authClient](authClient.md) | [authServer](authServer.md) |  [Member](Member.md) | [クラス一覧](classes.md#list) | [JSLib](JSLib.md)
@@ -20,7 +20,7 @@ authServerの監査ログ
 | :-- | :-- | :-- | :-- | :-- |
 | timestamp | string | Date.now() | 要求日時 | ISO8601拡張形式の文字列 |
 | duration | number | 任意 | 処理時間 | ミリ秒単位 |
-| memberId | string | 任意 | メンバの識別子 |  |
+| memberId | string | 任意 | メンバの識別子 | メールアドレス |
 | deviceId | string | 任意 | デバイスの識別子 |  |
 | func | string | 任意 | サーバ側関数名 |  |
 | result | string | normal | サーバ側処理結果 | "fatal","warning","normal" |
@@ -43,16 +43,6 @@ authServerの監査ログ
 #### <span id="authauditlog_constructor_process">🧾 処理手順</span>
 
 - メンバと引数両方にある項目は、引数の値をメンバとして設定
-- テスト：[authConfig](authConfig.md#authconfig_constructor)をインスタンス化
-  | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 異常テスト |
-  | :-- | :-- | :-- | :-- | :-- | :-- |
-  | responseTime | number | Date.now() | エラー発生日時 |  | — |
-  | errorType | string | Error.name | エラーの型(ex."ReferenceError") |  | — |
-  | function | string | v.whois | エラーが起きたクラス・メソッド名 |  | — |
-  | step | string | v.step | エラーが起きたメソッド内の位置 |  | — |
-  | variable | string | JSON.stringify(v) | エラー時のメソッド内汎用変数(JSON文字列) |  | — |
-  | message | string | Error.message | エラーメッセージ |  | **テスト** |
-  | stack | string | Error.stack | エラー時のスタックトレース |  | — |
 
 #### <span id="authauditlog_constructor_returns">📤 戻り値</span>
 
