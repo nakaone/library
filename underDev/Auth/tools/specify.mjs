@@ -29,6 +29,7 @@
  *    起動時オプション
  *    - o: 出力先フォルダ
  *    - h: 共通ヘッダファイル
+ *    - l: リスト一覧出力先フォルダ
  * 
  * ■ 次期開発項目
  * - implementが一種類以下の場合、環境別に分けずに"-o"フォルダ直下に全ファイル作成
@@ -310,6 +311,7 @@ class BaseDef {
  * @prop {string} [opt.autoOutput=true] - 指示タグの展開後、作成したMarkdownを出力
  * @prop {string} [opt.header] - クラス別ファイルの共通ヘッダファイル名
  * @prop {string} [opt.folder] - 出力先フォルダ名。無指定の場合カレントフォルダ
+ * @prop {string} [opt.list] - クラス一覧出力先フォルダ名。無指定の場合folderと同じ
  * @prop {boolean} [opt.makeList=true] - true:関数・クラス名一覧を作成
  * 
  * ===== ゲッター・セッター =====
@@ -339,6 +341,7 @@ class ProjectDef extends BaseDef {
       folder: '.',
       makeList: true,
     },opt);
+    this.opt.list = opt.list || this.opt.folder;
 
     // 実装環境一覧
     this.implements = arg.implements || {};
@@ -369,6 +372,8 @@ class ProjectDef extends BaseDef {
    * @returns {void}
    */
   outputMD(){
+    const v = {};
+
     // 指定されたフォルダが存在しない場合に作成
     if (!fs.existsSync(this.opt.folder)) {
       fs.mkdirSync(this.opt.folder, { recursive: true });
@@ -403,19 +408,34 @@ class ProjectDef extends BaseDef {
             header + (this.classdef[def].content || '').trim()
             .replaceAll(/\n\n\n+/g,'\n\n'), "utf8");
           // クラス一覧に追加
-          list[x].push({
-            name: this.classdef[def].name,
-            desc: this.classdef[def].desc,
-          });
+          list[x].push(this.classdef[def]);
+          //list[x].push({
+          //  name: this.classdef[def].name,
+          //  desc: this.classdef[def].desc,
+          //});
         }
       });
     });
 
     // クラス一覧を出力
     BaseDef.implements.forEach(x => {
-      const content = header + `# ${this.implements[x]} クラス一覧\n\n`
-      + list[x].map(c => `1. [${c.name}](${c.name}.md) - ${c.desc}`).join('\n');
-      fs.writeFileSync(path.join(folder[x], `list.md`),content,"utf8");
+      const content = ['| No | 名称 | 概要 |','| --: | :-- | :-- |'];
+      v.cnt = 1;
+      for( v.i=0 ; v.i<list[x].length ; v.i++ ){
+        v.class = list[x][v.i];
+        // クラス行出力
+        content.push(`| ${(v.i+1)+'.00'} | ${
+          `[${v.class.name}](${v.class.name}.md#${v.class.name.toLowerCase()}_members)`
+        } | ${v.class.desc} |`);
+        // メソッド行出力
+        for( v.j=0 ; v.j<v.class.methods.list.length ; v.j++ ){
+          v.method = v.class.methods.list[v.j];
+          content.push(`| ${(v.i+1)+'.'+('0'+(v.j+1)).slice(-2)} | ${
+          `<span style="padding-left:2rem">[${v.method.name}](${v.class.name}.md#${v.class.name.toLowerCase()}_${v.method.name.toLowerCase()})</span>`
+          } | ${v.method.desc} |`)
+        }
+      }
+      fs.writeFileSync(path.join(this.opt.list, `${x}.list.md`),content.join('\n'),"utf8");
     });
   }
 
@@ -1092,6 +1112,7 @@ const clog = (l,x) => console.log(`l.${l} ${JSON.stringify(x,null,2)}`);
 
 rl.on('line', x => lines.push(x)).on('close', () => {
   const arg = analyzeArg();
-  const prj = new ProjectDef(lines.join('\n'),{folder:arg.opt.o,header:arg.opt.h});
+  const prj = new ProjectDef(lines.join('\n'),{
+    folder:arg.opt.o,header:arg.opt.h,list:arg.opt.l});
   //clog(9999,removeDefs(prj));
 });

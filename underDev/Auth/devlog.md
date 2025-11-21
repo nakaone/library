@@ -6,7 +6,6 @@
   - classes.md
   - 【済】JSlib.md
   - 【済】testdef.js(削除)
-  - specDef.jsをdoc直下に移動
 - サーバ側仕様書作成・レビュー
   - cryptoServerクラス
   - Memberクラス

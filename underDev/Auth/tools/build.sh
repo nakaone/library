@@ -21,7 +21,7 @@ rm -rf $tmp/*
 # ----------------------------------------------
 
 # クラス別定義
-node $src/doc/specDef.js | node $prj/tools/specify.mjs -h:$src/doc/header.md -o:$doc
+node $src/doc/specDef.js | node $prj/tools/specify.mjs -h:$src/doc/header.md -o:$doc -l:$tmp
 
 ## クラス一覧
 #cat $src/doc/classes.md | awk 1 | \
