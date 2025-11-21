@@ -1,4 +1,26 @@
-# specify
+# auth
+
+- 旧版仕様書の移行(src/doc)
+  - spec.md
+  - classdef.js(確認後削除)
+  - classes.md
+  - JSlib.md
+  - testdef.js(削除)
+  - specDef.jsをdoc直下に移動
+- サーバ側仕様書作成・レビュー
+  - cryptoServerクラス
+  - Memberクラス
+  - authServer(クロージャ関数)仕様書のレビュー(サーバ側のフロント)
+- クライアント側仕様書作成・レビュー
+  - cryptoClientクラス仕様書のレビュー(cryptoServerと対になるクライアント側署名・暗号化・復号・検証機能)
+  - authClientクラス仕様書のレビュー(クライアント側のフロント)
+- spec.mdの再レビュー(サーバ側・クライアント側仕様変更を反映した後の、全体的な整合性チェック)
+- パーツとなるクラスの実装(MemberLog,MemberProfile等)
+- 主要クラス(cryptoClient/Server,authClient/Server,Member)のスケルトン作成
+- テスト仕様・ツールの作成
+- 主要クラスの実装
+
+# specify(〜2025/11/20)
 
 ## ToDo
 
@@ -153,18 +175,3 @@
 
 - MarkdownDef.constructorの引数は文字列も受入可能に
   -> わざわざ文字列にしなくても、呼出側でMarkdownDef.templateにセットして呼び出せば良い？
-
-# Auth
-
-- サーバ側仕様書作成・レビュー
-  - 済：cryptoServerクラス
-  - 済：Memberクラス
-  - authServer(クロージャ関数)仕様書のレビュー(サーバ側のフロント)
-- クライアント側仕様書作成・レビュー
-  - cryptoClientクラス仕様書のレビュー(cryptoServerと対になるクライアント側署名・暗号化・復号・検証機能)
-  - authClientクラス仕様書のレビュー(クライアント側のフロント)
-- spec.mdの再レビュー(サーバ側・クライアント側仕様変更を反映した後の、全体的な整合性チェック)
-- パーツとなるクラスの実装(MemberLog,MemberProfile等)
-- 主要クラス(cryptoClient/Server,authClient/Server,Member)のスケルトン作成
-- テスト仕様・ツールの作成
-- 主要クラスの実装
