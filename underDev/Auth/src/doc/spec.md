@@ -79,6 +79,7 @@ sequenceDiagram
   %% SPkey要求
   alt SPkey未登録
     authClient->>+authServer: CPkey(平文)
+    Note right of authServer: responseSPkey()
     authServer->>-authClient: SPkey,仮ID,仮名
   end
 
@@ -90,11 +91,13 @@ sequenceDiagram
   %% 要求の暗号化
   authClient->>+cryptoClient: authRequest
   Note right of cryptoClient: encrypt()
-  cryptoClient->>-authClient: authResult
+  cryptoClient->>-authClient: encryptedRequest
 
   %% 処理要求
-  authClient->>authServer: encryptedRequest
+  authClient->>+authServer: encryptedRequest
   Note right of authClient: fetch()
+
+  Note right of authServer: exec()
 
   rect rgba(218, 255, 255, 1)
     authServer->>authServer: 【インスタンス生成】
@@ -108,10 +111,10 @@ sequenceDiagram
   Note right of cryptoServer: encrypt()
   cryptoServer->>-authServer: encryptedResponse
 
-  authServer->>authClient: encryptedResponse
-  authClient->>cryptoClient: authResponse
-  cryptoClient->>authClient: encryptedResponse
-  cryptoClient->>authClient: authResponse
+  authServer->>-authClient: encryptedResponse
+  authClient->>+cryptoClient: encryptedResponse
+  Note right of cryptoClient: decrypt()
+  cryptoClient->>-authClient: authResponse
 
   rect rgba(218, 255, 255, 1)
     authClient->>authClient: 【後続処理分岐】

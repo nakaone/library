@@ -10,7 +10,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     members: {list:[  // {Member} ■メンバ(インスタンス変数)定義■
       {name:'timestamp',type:'string',desc:'要求日時',note:'ISO8601拡張形式の文字列',default:'Date.now()'},
       {name:'duration',type:'number',desc:'処理時間',note:'ミリ秒単位'},
-      {name:'memberId',type:'string',desc:'メンバの識別子',note:''},
+      {name:'memberId',type:'string',desc:'メンバの識別子',note:'メールアドレス'},
       {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'',isOpt:true},
       {name:'func',type:'string',desc:'サーバ側関数名',note:''},
       {name:'result',type:'string',desc:'サーバ側処理結果',note:'"fatal","warning","normal"',default:'normal'},
@@ -21,14 +21,12 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       name: 'constructor',
       type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
       desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
-      params: {list:[
-      ]},
+      params: {list:[]},
 
       process: `
         - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        - テスト：[authConfig](authConfig.md#authconfig_constructor)をインスタンス化
-        %% cfTable({type:'authError',patterns:{'異常テスト':{message:'テスト'}}},{indent:2}) %%
       `,
 
       returns: {list:[{type:'authAuditLog'}]},
@@ -131,8 +129,11 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     }]},
   },
   authErrorLog: {
-    desc: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    desc: 'authServerのエラーログ',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `
+      - 各メソッドの冒頭でインスタンス化、処理開始時刻等を記録
+      - 出力時にlogメソッドを呼び出して処理時間を計算、シート出力
+    `,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
     implement: ['sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
