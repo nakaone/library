@@ -1,11 +1,11 @@
 # auth
 
 - 旧版仕様書の移行(src/doc)
-  - spec.md
-  - classdef.js(確認後削除)
+  - 【済】spec.md
+  - 【済】classdef.js(確認後削除)
   - classes.md
-  - JSlib.md
-  - testdef.js(削除)
+  - 【済】JSlib.md
+  - 【済】testdef.js(削除)
   - specDef.jsをdoc直下に移動
 - サーバ側仕様書作成・レビュー
   - cryptoServerクラス
