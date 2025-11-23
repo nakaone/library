@@ -6,17 +6,17 @@
 
 # <span id="authclient">authClient クラス仕様書</span>
 
-      クライアント側中核クラス
+クライアント側中核クラス
 
-      authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を受け、
-      サーバ側(authServer)への暗号化通信リクエストを署名・暗号化、
-      サーバ側処理を経てローカル側に戻された結果を復号・検証し、
-      処理結果に応じてクライアント側処理を適切に振り分ける中核関数です。
+authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を受け、
+サーバ側(authServer)への暗号化通信リクエストを署名・暗号化、
+サーバ側処理を経てローカル側に戻された結果を復号・検証し、
+処理結果に応じてクライアント側処理を適切に振り分ける中核関数です。
 
-      ## <span id="authclient_summary">🧭 authClient クラス 概要</span>
-      
-      - クロージャ関数ではなくクラスとして作成
-      - 内発処理はローカル関数からの処理要求に先行して行う
+## <span id="authclient_summary">🧭 authClient クラス 概要</span>
+
+- クロージャ関数ではなくクラスとして作成
+- 内発処理はローカル関数からの処理要求に先行して行う
 
 ## <span id="authclient_members">🔢 authClient メンバ一覧</span>
 
