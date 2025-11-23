@@ -41,7 +41,7 @@
  * - ✂️：trimIndent対象項目
  */ 
 /* テンプレート
-  className: {
+  ClassName: {
     extends: '', // {string} 親クラス名
     desc: '', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``, // {string} ✂️補足説明。概要欄に記載
@@ -70,7 +70,7 @@
       process: ``,
 
       returns: {list:[
-        {type:'className'}, // コンストラクタは自データ型名
+        {type:'ClassName'}, // コンストラクタは自データ型名
         { // 対比表形式
           desc: '', // {string} 本データ型に関する説明。「正常終了時」等
           default: {},  // {Object.<string,string>} 全パターンの共通設定値
@@ -86,10 +86,12 @@
 /** BaseDef - 各定義の基底クラス
  * // メンバ
  * @typedef {Object} BaseDef - 各定義の基底クラス
- * @prop {string} [className=''] - 所属するクラス名。ex.'authAuditLog'
- * @prop {string} [methodName=''] - 所属するメソッド名。ex.'log'
+ * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
+ * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
+ * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
+ * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
  * @prop {string} [anchor] - アンカーを付ける場合の文字列。ex.'authauditlog_constructor_params'
- *    クラス名・メソッド名はclassName,methodName(小文字)、セクション名は'XxxDef'->'xxx'
+ *    クラス名・メソッド名はClassName,MethodName(小文字)、セクション名は'XxxDef'->'xxx'
  * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行。anchor,link設定済
  * @prop {string} [template=''] - 🔢embed展開前のテンプレート。constructorでセット、以降不変
  * @prop {string} [content=''] - 🔢embedを展開後の本文。embed展開終了時にセット
@@ -118,11 +120,13 @@
 class BaseDef {
 
   constructor(arg){
-    this.className = arg.className || '';
-    this.methodName = arg.methodName || '';
-    this.anchor = arg.anchor || (this.className 
-      ? this.className.toLowerCase() + (this.methodName ?
-      '_' + this.methodName.toLowerCase() : '') : '');
+    this.ClassName = arg.ClassName || '';
+    this.classname = this.ClassName.toLowerCase();
+    this.MethodName = arg.MethodName || '';
+    this.methodname = this.MethodName.toLowerCase();
+    this.anchor = arg.anchor || (this.ClassName 
+      ? this.ClassName.toLowerCase() + (this.MethodName ?
+      '_' + this.MethodName.toLowerCase() : '') : '');
     this.title = arg.title || '';
     this.template = arg.template || '';
     this.content = arg.content || '';
@@ -354,8 +358,10 @@ class BaseDef {
  * 
  * ===== BaseDef継承 ==========
  * // メンバ
- * @prop {string} [className=''] - 所属するクラス名
- * @prop {string} [methodName=''] - 所属するメソッド名
+ * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
+ * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
+ * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
+ * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
  * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
  * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
  * @prop {string} [template=''] - 🔢embed展開前のテンプレート
@@ -416,7 +422,7 @@ class ProjectDef extends BaseDef {
     // 関数・クラス定義のインスタンスを順次作成
     this.classdef = {};
     Object.keys(arg.classdef).forEach(x => {
-      arg.classdef[x].className = x;
+      arg.classdef[x].ClassName = x;
       this.classdef[x] = new ClassDef(arg.classdef[x]);
     });
 
@@ -513,8 +519,10 @@ class ProjectDef extends BaseDef {
  * 
  * ===== BaseDef継承 ==========
  * // メンバ
- * @prop {string} [className=''] - 所属するクラス名
- * @prop {string} [methodName=''] - 所属するメソッド名
+ * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
+ * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
+ * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
+ * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
  * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
  * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
  * @prop {string} [template=''] - 🔢embed展開前のテンプレート
@@ -567,14 +575,14 @@ class ClassDef extends BaseDef {
   constructor(arg={}){
     super(arg);
 
-    this.name = arg.className || '';
+    this.name = arg.ClassName || '';
     this.extends = arg.extends || '';
     this.desc = arg.desc || '';
     this.note = this.trimIndent(arg.note || '');
     this.implement = arg.implement || [];
 
     // BaseDefメンバに値設定
-    this.className = this.name;
+    this.ClassName = this.name;
     this.anchor = this.name.toLowerCase();
     this.title = this.article({
       title: `${this.name} クラス仕様書`,
@@ -644,8 +652,10 @@ class ClassDef extends BaseDef {
  * 
  * ===== BaseDef継承 ==========
  * // メンバ
- * @prop {string} [className=''] - 所属するクラス名
- * @prop {string} [methodName=''] - 所属するメソッド名
+ * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
+ * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
+ * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
+ * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
  * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
  * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
  * @prop {string} [template=''] - 🔢embed展開前のテンプレート
@@ -673,7 +683,7 @@ class ClassDef extends BaseDef {
  * 
  * @example this.template初期値
  * ```
- * %% this.cfTable(BaseDef.defs["${this.className}"].members) %%
+ * %% this.cfTable(BaseDef.defs["${this.ClassName}"].members) %%
  * ```
  */
 class MembersDef extends BaseDef {
@@ -681,10 +691,10 @@ class MembersDef extends BaseDef {
     super(arg);
 
     // BaseDefメンバに値設定
-    this.className = classdef.className;
-    this.methodName = '';
+    this.ClassName = classdef.ClassName;
+    this.MethodName = '';
     this.title = this.article({
-      title: `🔢 ${this.className} メンバ一覧`,
+      title: `🔢 ${this.ClassName} メンバ一覧`,
       level: 2,
       anchor: classdef.anchor + '_members',
       link: '',
@@ -700,7 +710,7 @@ class MembersDef extends BaseDef {
 
     // メンバ一覧とテンプレートの作成
     this.template = this.trimIndent(arg.template || `
-      %% BaseDef.defs["${this.className}"].members.table %%`);
+      %% BaseDef.defs["${this.ClassName}"].members.table %%`);
 
   }
 
@@ -729,8 +739,10 @@ class MembersDef extends BaseDef {
  * 
  * ===== BaseDef継承 ==========
  * // メンバ
- * @prop {string} [className=''] - 所属するクラス名
- * @prop {string} [methodName=''] - 所属するメソッド名
+ * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
+ * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
+ * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
+ * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
  * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
  * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
  * @prop {string} [template=''] - 🔢embed展開前のテンプレート
@@ -775,8 +787,8 @@ class FieldDef extends BaseDef {
     super(arg);
 
     // BaseDefメンバに値設定
-    this.className = parent.className;
-    this.methodName = parent.methodName;
+    this.ClassName = parent.ClassName;
+    this.MethodName = parent.MethodName;
     this.title = '';
     this.template = '';
 
@@ -821,8 +833,10 @@ class FieldDef extends BaseDef {
  * 
  * ===== BaseDef継承 ==========
  * // メンバ
- * @prop {string} [className=''] - 所属するクラス名
- * @prop {string} [methodName=''] - 所属するメソッド名
+ * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
+ * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
+ * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
+ * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
  * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
  * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
  * @prop {string} [template=''] - 🔢embed展開前のテンプレート
@@ -866,15 +880,15 @@ class MethodsDef extends BaseDef {
     const v = {};
 
     // BaseDefメンバに値設定
-    this.className = classdef.className;
-    this.methodName = '';
+    this.ClassName = classdef.ClassName;
+    this.MethodName = '';
     this.anchor = classdef.anchor;
 
     // 子要素のインスタンス作成
     this.list = arg.list || [];
     for( v.i=0 ; v.i<this.list.length ; v.i++ ){
-      // methodNameを設定
-      this.list[v.i].methodName = this.list[v.i].name;
+      // MethodNameを設定
+      this.list[v.i].MethodName = this.list[v.i].name;
       // ClassDef.methodとlistにMethodDef登録
       this.list[v.i] = classdef.method[this.list[v.i].name]
       = classdef.method[this.list[v.i].name.toLowerCase()]
@@ -883,7 +897,7 @@ class MethodsDef extends BaseDef {
 
     // タイトルの作成
     this.title = this.article({
-      title: `🧱 ${this.className} メソッド一覧`,
+      title: `🧱 ${this.ClassName} メソッド一覧`,
       level: 2,
       anchor: `${classdef.anchor}_methods`,
       link: '',
@@ -899,7 +913,7 @@ class MethodsDef extends BaseDef {
     } | ${x.type} | ${x.desc} | ${x.note} |`));
     this.table = v.lines.join('\n');
     this.template = this.trimIndent(arg.template || 
-      `%% BaseDef.defs["${this.className}"].methods.table %%`);
+      `%% BaseDef.defs["${this.ClassName}"].methods.table %%`);
   }
 
   createMd(){ // BaseDef.createMdをオーバーライド
@@ -926,8 +940,10 @@ class MethodsDef extends BaseDef {
  * 
  * ===== BaseDef継承 ==========
  * // メンバ
- * @prop {string} [className=''] - 所属するクラス名
- * @prop {string} [methodName=''] - 所属するメソッド名
+ * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
+ * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
+ * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
+ * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
  * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
  * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
  * @prop {string} [template=''] - 🔢embed展開前のテンプレート
@@ -993,9 +1009,9 @@ class MethodDef extends BaseDef {
     super(arg);
 
     // BaseDefメンバに値設定
-    this.className = methodsdef.className;
-    this.methodName = arg.methodName;
-    this.anchor = methodsdef.anchor + '_' + arg.methodName.toLowerCase();
+    this.ClassName = methodsdef.ClassName;
+    this.MethodName = arg.MethodName;
+    this.anchor = methodsdef.anchor + '_' + arg.MethodName.toLowerCase();
 
     // 独自メンバに値設定
     this.name = arg.name;
@@ -1013,7 +1029,7 @@ class MethodDef extends BaseDef {
 
     // 個別メソッドのタイトル
     this.title = this.article({
-      title: `🧱 ${this.className}.${this.methodName}()`,
+      title: `🧱 ${this.ClassName}.${this.MethodName}()`,
       level: 3,
       anchor: this.anchor,
       link: '',
@@ -1069,12 +1085,12 @@ class MethodDef extends BaseDef {
           // ローカルリンクの場合
           v.m = v.template.split('_').map(x => x = x.replace('#',''));
         }
-        v.className = v.m[0];
-        v.methodName = v.m[1];
-        if( typeof BaseDef.defs[v.className] !== 'undefined'
-          && typeof BaseDef.defs[v.className].method[v.methodName] !== 'undefined'
+        v.ClassName = v.m[0];
+        v.MethodName = v.m[1];
+        if( typeof BaseDef.defs[v.ClassName] !== 'undefined'
+          && typeof BaseDef.defs[v.ClassName].method[v.MethodName] !== 'undefined'
         ){
-          BaseDef.defs[v.className].method[v.methodName].caller.push({class:this.className,method:this.methodName});
+          BaseDef.defs[v.ClassName].method[v.MethodName].caller.push({class:this.ClassName,method:this.MethodName});
         }
       });
 
@@ -1099,8 +1115,10 @@ class MethodDef extends BaseDef {
  * 
  * ===== BaseDef継承 ==========
  * // メンバ
- * @prop {string} [className=''] - 所属するクラス名
- * @prop {string} [methodName=''] - 所属するメソッド名
+ * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
+ * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
+ * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
+ * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
  * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
  * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
  * @prop {string} [template=''] - 🔢embed展開前のテンプレート
@@ -1128,7 +1146,7 @@ class MethodDef extends BaseDef {
  * 
  * @example this.template初期値
  * ```
- * %% this.cfTable(this.defs[this.className].methods[this.methodName].params) %%
+ * %% this.cfTable(this.defs[this.ClassName].methods[this.MethodName].params) %%
  * ```
  */
 class ParamsDef extends BaseDef {
@@ -1142,8 +1160,8 @@ class ParamsDef extends BaseDef {
     }
 
     // BaseDefメンバに値設定
-    this.className = methoddef.className;
-    this.methodName = methoddef.methodName;
+    this.ClassName = methoddef.ClassName;
+    this.MethodName = methoddef.MethodName;
     this.title = this.article({
       title: `📥 引数`, //  `📥 ${v.fn}() 引数`
       level: 4,
@@ -1157,7 +1175,7 @@ class ParamsDef extends BaseDef {
     this.table = this.list.length === 0
       ? '- 引数無し(void)' : this.cfTable(this);
     this.template = this.trimIndent(arg.template || 
-      `%% BaseDef.defs["${this.className}"].method["${this.methodName}"].params.table %%`);
+      `%% BaseDef.defs["${this.ClassName}"].method["${this.MethodName}"].params.table %%`);
   }
 
   createMd(){ // BaseDef.createMdをオーバーライド
@@ -1181,8 +1199,10 @@ class ParamsDef extends BaseDef {
  * 
  * ===== BaseDef継承 ==========
  * // メンバ
- * @prop {string} [className=''] - 所属するクラス名
- * @prop {string} [methodName=''] - 所属するメソッド名
+ * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
+ * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
+ * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
+ * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
  * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
  * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
  * @prop {string} [template=''] - 🔢embed展開前のテンプレート
@@ -1213,8 +1233,8 @@ class ReturnsDef extends BaseDef {
     const v = {};
 
     // BaseDefメンバに値設定
-    this.className = methoddef.className;
-    this.methodName = methoddef.methodName;
+    this.ClassName = methoddef.ClassName;
+    this.MethodName = methoddef.MethodName;
     this.anchor = methoddef.anchor + '_returns';
 
     // 子要素のインスタンス作成
@@ -1265,8 +1285,10 @@ class ReturnsDef extends BaseDef {
  * 
  * ===== BaseDef継承 ==========
  * // メンバ
- * @prop {string} [className=''] - 所属するクラス名
- * @prop {string} [methodName=''] - 所属するメソッド名
+ * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
+ * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
+ * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
+ * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
  * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
  * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
  * @prop {string} [template=''] - 🔢embed展開前のテンプレート
@@ -1319,7 +1341,7 @@ class ReturnsDef extends BaseDef {
  * - [戻り値データ型名](当該データ型メンバへのリンク)
  *   当該データ型メンバ一覧
  * ```
- * `%% BaseDef.defs["${this.className}"].method["${this.methodName}"].return["${this.type}"].table %%`
+ * `%% BaseDef.defs["${this.ClassName}"].method["${this.MethodName}"].return["${this.type}"].table %%`
  */
 /**
  * @typedef {Object.<string,string>} PatternDef - パターンに設定する値
@@ -1335,13 +1357,13 @@ class ReturnDef extends BaseDef {
     this.patterns = arg.patterns || {};
     
     // BaseDefメンバに値設定
-    this.className = returnsdef.className;
-    this.methodName = returnsdef.methodName;
+    this.ClassName = returnsdef.ClassName;
+    this.MethodName = returnsdef.MethodName;
 
     // 戻り値のメンバ一覧とテンプレートの作成
-    if( this.className === this.type && this.methodName === 'constructor' ){
+    if( this.ClassName === this.type && this.MethodName === 'constructor' ){
       // constructorの戻り値はインスタンスなのでメンバ一覧を表示しない
-      this.template = `- [${this.className}](#${this.className.toLowerCase()}_members)インスタンス`
+      this.template = `- [${this.ClassName}](#${this.ClassName.toLowerCase()}_members)インスタンス`
     } else {
       // 通常の場合
       // データ型名とそこへのリンクを作成
@@ -1355,8 +1377,8 @@ class ReturnDef extends BaseDef {
       // 戻り値のデータ型のメンバ一覧を作成
       this.table = this.cfTable(this,{indent:2});
       this.template = arg.template || 
-        `%% BaseDef.defs["${this.className}"].method["${
-        this.methodName}"].return["${this.type}"].table %%`;
+        `%% BaseDef.defs["${this.ClassName}"].method["${
+        this.MethodName}"].return["${this.type}"].table %%`;
     }
   }
 }
