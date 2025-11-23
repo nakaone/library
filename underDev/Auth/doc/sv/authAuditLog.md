@@ -31,8 +31,6 @@ authServerの監査ログ
 
 ### <span id="authauditlog_constructor"><a href="#authauditlog_methods">🧱 authAuditLog.constructor()</a></span>
 
-#### <span id="authauditlog_constructor_referrer">📞 呼出元</span>
-
 #### <span id="authauditlog_constructor_params">📥 引数</span>
 
 - 引数無し(void)

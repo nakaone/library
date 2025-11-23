@@ -27,8 +27,6 @@ authServer内の処理等、"warning"(処理継続)時の使用を想定。
 
 ### <span id="authresult_constructor"><a href="#authresult_methods">🧱 authResult.constructor()</a></span>
 
-#### <span id="authresult_constructor_referrer">📞 呼出元</span>
-
 #### <span id="authresult_constructor_params">📥 引数</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |

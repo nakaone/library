@@ -34,8 +34,6 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 
 ### <span id="authclient_constructor"><a href="#authclient_methods">🧱 authClient.constructor()</a></span>
 
-#### <span id="authclient_constructor_referrer">📞 呼出元</span>
-
 #### <span id="authclient_constructor_params">📥 引数</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |

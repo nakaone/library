@@ -945,7 +945,7 @@ class MethodDef extends BaseDef {
           v.rv = new Error('not fixed');
       }
       if( v.rv instanceof Error ) throw v.rv;
-      v.referrer = this.article({
+      v.referrer = this.referrer.length === 0 ? '' : this.article({
         title: `📞 呼出元`,
         level: 4,
         anchor: this.anchor + '_referrer',

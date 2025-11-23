@@ -22,8 +22,6 @@
 
 ### <span id="authrequest_constructor"><a href="#authrequest_methods">🧱 authRequest.constructor()</a></span>
 
-#### <span id="authrequest_constructor_referrer">📞 呼出元</span>
-
 #### <span id="authrequest_constructor_params">📥 引数</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |

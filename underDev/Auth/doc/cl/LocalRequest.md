@@ -25,8 +25,6 @@
 
 ### <span id="localrequest_constructor"><a href="#localrequest_methods">🧱 LocalRequest.constructor()</a></span>
 
-#### <span id="localrequest_constructor_referrer">📞 呼出元</span>
-
 #### <span id="localrequest_constructor_params">📥 引数</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
