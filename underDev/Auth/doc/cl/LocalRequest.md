@@ -25,7 +25,7 @@
 
 ### <span id="localrequest_constructor">🧱 LocalRequest.constructor()</span>
 
-#### <span id="localrequest_constructor_caller">📞 呼出元</span>
+#### <span id="localrequest_constructor_referrer">📞 呼出元</span>
 
 #### <span id="localrequest_constructor_params">📥 引数</span>
 

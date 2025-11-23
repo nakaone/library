@@ -28,7 +28,7 @@ auth専用エラーオブジェクト
 
 ### <span id="autherror_constructor">🧱 authError.constructor()</span>
 
-#### <span id="autherror_constructor_caller">📞 呼出元</span>
+#### <span id="autherror_constructor_referrer">📞 呼出元</span>
 
 #### <span id="autherror_constructor_params">📥 引数</span>
 

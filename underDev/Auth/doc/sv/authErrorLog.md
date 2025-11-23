@@ -25,7 +25,7 @@ authServerのエラーログ
 
 ### <span id="autherrorlog_constructor">🧱 authErrorLog.constructor()</span>
 
-#### <span id="autherrorlog_constructor_caller">📞 呼出元</span>
+#### <span id="autherrorlog_constructor_referrer">📞 呼出元</span>
 
 #### <span id="autherrorlog_constructor_params">📥 引数</span>
 

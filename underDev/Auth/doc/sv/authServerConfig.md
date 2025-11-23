@@ -44,7 +44,7 @@ authServer専用の設定値
 
 ### <span id="authserverconfig_constructor">🧱 authServerConfig.constructor()</span>
 
-#### <span id="authserverconfig_constructor_caller">📞 呼出元</span>
+#### <span id="authserverconfig_constructor_referrer">📞 呼出元</span>
 
 #### <span id="authserverconfig_constructor_params">📥 引数</span>
 

@@ -30,7 +30,7 @@ authClient/authServer共通設定値
 
 ### <span id="authconfig_constructor">🧱 authConfig.constructor()</span>
 
-#### <span id="authconfig_constructor_caller">📞 呼出元</span>
+#### <span id="authconfig_constructor_referrer">📞 呼出元</span>
 
 #### <span id="authconfig_constructor_params">📥 引数</span>
 

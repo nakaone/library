@@ -11,6 +11,9 @@
  *             - FieldDef: 引数となる個別の変数
  *           - ReturnsDef: 当該メソッドの戻り値
  *             - ReturnDef: (戻り値のデータ型が複数有る場合の)データ型別定義
+ * - constructor: specDef.jsに基づき一義的に値が定まる項目について設定
+ * - secondary: 他の要素の値を参照して値を決定。決定した値はメンバに格納、
+ *     戻り値はbooleanとして値未定ならfalseを返す。
  * 
  * @example 使用方法
  * 1. クラス定義(specDef.js) : プロジェクトに関係するクラスを一括して定義
@@ -94,7 +97,7 @@
  *    クラス名・メソッド名はClassName,MethodName(小文字)、セクション名は'XxxDef'->'xxx'
  * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行。anchor,link設定済
  * @prop {string} [template=''] - 🔢embed展開前のテンプレート。constructorでセット、以降不変
- * @prop {string} [content=''] - 🔢embedを展開後の本文。embed展開終了時にセット
+ * @prop {string} [content=''] - 🔢embedを展開後の本文。embed展開終了時にセット * @prop {boolean} [fixed=false] - 🔢インスタンスの値が確定したらtrue
  * 
  * // ゲッター・セッター ※以下はspecify全体の共有変数として定義
  * @prop {string[]} [implement=[]] - 実装環境の一覧。空配列なら全てグローバル。ex.`["cl","sv"]`
@@ -119,17 +122,17 @@
  */
 class BaseDef {
 
-  constructor(arg){
-    this.ClassName = arg.ClassName || '';
+  constructor(arg,parent={}){
+    this.ClassName = arg.ClassName || parent.ClassName || '';
     this.classname = this.ClassName.toLowerCase();
-    this.MethodName = arg.MethodName || '';
+    this.MethodName = arg.MethodName || parent.MethodName || '';
     this.methodname = this.MethodName.toLowerCase();
-    this.anchor = arg.anchor || (this.ClassName 
-      ? this.ClassName.toLowerCase() + (this.MethodName ?
-      '_' + this.MethodName.toLowerCase() : '') : '');
+    this.anchor = arg.anchor || (this.classname ? this.classname
+      + (this.methodname ? '_' + this.methodname : '') : '');
     this.title = arg.title || '';
     this.template = arg.template || '';
     this.content = arg.content || '';
+    this.fixed = false;
   }
 
   static _implements = [];  // 実装環境の一覧
@@ -154,7 +157,7 @@ class BaseDef {
     return this._classList;
   }
   static set defs(arg){
-    this._defs[arg.name] = this._defs[arg.name.toLowerCase()] = arg;
+    this._defs[arg.ClassName] = this._defs[arg.classname] = arg;
     this._classList.push(arg.name); // クラス一覧に登録
   }
 
@@ -355,28 +358,6 @@ class BaseDef {
 
 /** ProjectDef - プロジェクト全体定義
  * @typedef {Object} ProjectDef - プロジェクト全体定義
- * 
- * ===== BaseDef継承 ==========
- * // メンバ
- * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
- * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
- * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
- * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
- * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
- * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
- * @prop {string} [template=''] - 🔢embed展開前のテンプレート
- * @prop {string} [content=''] - 🔢embedを展開後の本文
- * // ゲッター・セッター
- * @prop {string[]} [implement=[]] - 実装環境の一覧
- * @prop {Object.<string,ClassDef|MethodDef>} defs - ClassDefのマッピングオブジェクト
- * // メソッド
- * @prop {Function} article - タイトル行＋内容の作成
- * @prop {Function} cfTable - メンバ一覧および対比表の作成
- * @prop {Function} createMd - 当該インスタンスのMarkdownを作成
- * @prop {Function} evaluate - "%%〜%%"の「〜」を評価(eval)して置換
- * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
- * 
- * ===== 独自設定 ==========
  * // メンバ
  * @prop {Object.<string, ClassDef>} classdef - クラス・クロージャ関数定義集
  * @prop {Object.<string, string>} implements - 実装環境コード・名称
@@ -516,36 +497,16 @@ class ProjectDef extends BaseDef {
 
 /** ClassDef - クラス・クロージャ関数定義
  * @typedef {Object} ClassDef - クラス・クロージャ関数定義
- * 
- * ===== BaseDef継承 ==========
- * // メンバ
- * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
- * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
- * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
- * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
- * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
- * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
- * @prop {string} [template=''] - 🔢embed展開前のテンプレート
- * @prop {string} [content=''] - 🔢embedを展開後の本文
- * // ゲッター・セッター
- * @prop {string[]} [implement=[]] - 実装環境の一覧
- * @prop {Object.<string,ClassDef|MethodDef>} defs - ClassDefのマッピングオブジェクト
- * // メソッド
- * @prop {Function} article - タイトル行＋内容の作成
- * @prop {Function} cfTable - メンバ一覧および対比表の作成
- * @prop {Function} createMd - 当該インスタンスのMarkdownを作成
- * @prop {Function} evaluate - "%%〜%%"の「〜」を評価(eval)して置換
- * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
- * 
- * ===== 独自設定 ==========
  * // メンバ
  * @prop {string} name - 🔢クラス名
  * @prop {string} [extends=''] - 親クラス名 ※JS/TS共単一継承のみ(配列不可)
  * @prop {string} [desc=''] - 端的なクラスの説明。ex.'authServer監査ログ'
  * @prop {string} [note=''] - ✂️補足説明。概要欄に記載
  * @prop {string} [summary=''] - ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
- * @prop {Object.<string,boolean>} implement - 実装の有無(ex.['cl','sv'])
- * @prop {string} [template] - Markdown出力時のテンプレート
+ * @prop {string[]} implement - 実装の有無(ex.['cl','sv'])
+ * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
+ * @prop {string} [template=''] - 🔢embed展開前のテンプレート
+ * @prop {string} [content=''] - 🔢embedを展開後の本文
  * @prop {MembersDef} members - メンバ(インスタンス変数)定義
  * @prop {MethodsDef} methods - メソッド定義集
  * @prop {Object.<string,MethodDef>} 🔢method - メソッド定義(マップ)
@@ -575,27 +536,12 @@ class ClassDef extends BaseDef {
   constructor(arg={}){
     super(arg);
 
-    this.name = arg.ClassName || '';
+    this.name = this.ClassName;
     this.extends = arg.extends || '';
     this.desc = arg.desc || '';
     this.note = this.trimIndent(arg.note || '');
-    this.implement = arg.implement || [];
-
-    // BaseDefメンバに値設定
-    this.ClassName = this.name;
-    this.anchor = this.name.toLowerCase();
-    this.title = this.article({
-      title: `${this.name} クラス仕様書`,
-      level: 1,
-      anchor: this.anchor,
-      link: '',
-      navi: '',
-      body: '',
-    });
-
-    // クラス概要欄を作成
     this.summary = this.trimIndent(arg.summary || '');
-    if( this.summary.length > 0 ){
+    if( this.summary.length > 0 ){  // クラス概要欄
       this.summary = this.article({
         title: `🧭 ${this.name} クラス 概要`,
         level: 2,
@@ -605,6 +551,17 @@ class ClassDef extends BaseDef {
         body: this.summary,
       });
     }
+    this.implement = arg.implement || [];
+
+    // BaseDef再設定項目
+    this.title = this.article({
+      title: `${this.name} クラス仕様書`,
+      level: 1,
+      anchor: this.anchor,
+      link: '',
+      navi: '',
+      body: '',
+    });
 
     this.template = this.trimIndent(arg.template || `
       %% this.desc %%
@@ -649,28 +606,6 @@ class ClassDef extends BaseDef {
 
 /** MembersDef - クラスの内部変数の定義
  * @typedef {Object} MembersDef - クラスの内部変数の定義
- * 
- * ===== BaseDef継承 ==========
- * // メンバ
- * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
- * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
- * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
- * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
- * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
- * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
- * @prop {string} [template=''] - 🔢embed展開前のテンプレート
- * @prop {string} [content=''] - 🔢embedを展開後の本文
- * // ゲッター・セッター
- * @prop {string[]} [implement=[]] - 実装環境の一覧
- * @prop {Object.<string,ClassDef|MethodDef>} defs - ClassDefのマッピングオブジェクト
- * // メソッド
- * @prop {Function} article - タイトル行＋内容の作成
- * @prop {Function} cfTable - メンバ一覧および対比表の作成
- * @prop {Function} createMd - 当該インスタンスのMarkdownを作成
- * @prop {Function} evaluate - "%%〜%%"の「〜」を評価(eval)して置換
- * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
- * 
- * ===== 独自設定 ==========
  * // メンバ
  * @prop {FieldDef[]} [list=[]] - 所属するメンバの配列
  * @prop {string} table - 🔢メンバ一覧のMarkdown
@@ -688,15 +623,13 @@ class ClassDef extends BaseDef {
  */
 class MembersDef extends BaseDef {
   constructor(arg={},classdef){
-    super(arg);
+    super(arg,classdef);
 
-    // BaseDefメンバに値設定
-    this.ClassName = classdef.ClassName;
-    this.MethodName = '';
+    // BaseDef再設定項目
     this.title = this.article({
       title: `🔢 ${this.ClassName} メンバ一覧`,
       level: 2,
-      anchor: classdef.anchor + '_members',
+      anchor: this.anchor + '_members',
       link: '',
       navi: '',
       body: '',
@@ -736,28 +669,6 @@ class MembersDef extends BaseDef {
 
 /** FieldDef - メンバの定義(Schema.columnDef上位互換)
  * @typedef {Object} FieldDef - メンバの定義(Schema.columnDef上位互換)
- * 
- * ===== BaseDef継承 ==========
- * // メンバ
- * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
- * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
- * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
- * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
- * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
- * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
- * @prop {string} [template=''] - 🔢embed展開前のテンプレート
- * @prop {string} [content=''] - 🔢embedを展開後の本文
- * // ゲッター・セッター
- * @prop {string[]} [implement=[]] - 実装環境の一覧
- * @prop {Object.<string,ClassDef|MethodDef>} defs - ClassDefのマッピングオブジェクト
- * // メソッド
- * @prop {Function} article - タイトル行＋内容の作成
- * @prop {Function} cfTable - メンバ一覧および対比表の作成
- * @prop {Function} createMd - 当該インスタンスのMarkdownを作成
- * @prop {Function} evaluate - "%%〜%%"の「〜」を評価(eval)して置換
- * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
- * 
- * ===== 独自設定 ==========
  * // メンバ
  * @prop {string} name - 項目(引数)名。原則英数字で構成(システム用)
  * @prop {string} [type='string'] - データ型。'|'で区切って複数記述可
@@ -784,26 +695,19 @@ class FieldDef extends BaseDef {
    * @param {ParamsDef|MembersDef} parent - FieldDefのインスタンス化を呼び出す親要素
    */
   constructor(arg,seq,parent){
-    super(arg);
-
-    // BaseDefメンバに値設定
-    this.ClassName = parent.ClassName;
-    this.MethodName = parent.MethodName;
-    this.title = '';
-    this.template = '';
+    super(arg,parent);
 
     this.name = arg.name || '';
+    this.type = arg.type || 'string';
     this.label = arg.label || '';
     this.alias = arg.alias || [];
     this.desc = arg.desc || '';
     this.note = this.trimIndent(arg.note || '');
-    this.type = arg.type || 'string';
     this.default = arg.default || '';
     this.isOpt = this.default !== '' ? true : (arg.isOpt || false);
     this.printf = arg.printf || null;
     this.seq = seq;
 
-    // データ型にリンクを設定
   }
 
   createMd(){ // BaseDef.createMdをオーバーライド
@@ -826,32 +730,11 @@ class FieldDef extends BaseDef {
       this.content = this.title + '\n\n' + v.r;
     }
     return this.content;
-  }}
+  }
+}
 
 /** MethodsDef - クラスのメソッド集
  * @typedef {Object} MethodsDef - クラスのメソッド集
- * 
- * ===== BaseDef継承 ==========
- * // メンバ
- * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
- * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
- * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
- * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
- * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
- * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
- * @prop {string} [template=''] - 🔢embed展開前のテンプレート
- * @prop {string} [content=''] - 🔢embedを展開後の本文
- * // ゲッター・セッター
- * @prop {string[]} [implement=[]] - 実装環境の一覧
- * @prop {Object.<string,ClassDef|MethodDef>} defs - ClassDefのマッピングオブジェクト
- * // メソッド
- * @prop {Function} article - タイトル行＋内容の作成
- * @prop {Function} cfTable - メンバ一覧および対比表の作成
- * @prop {Function} createMd - 当該インスタンスのMarkdownを作成
- * @prop {Function} evaluate - "%%〜%%"の「〜」を評価(eval)して置換
- * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
- * 
- * ===== 独自設定 ==========
  * // メンバ
  * @prop {MethodDef[]} list - 所属するメソッドの配列
  * @prop {string} table - 🔢メソッド一覧のMarkdown
@@ -876,23 +759,19 @@ class FieldDef extends BaseDef {
  */
 class MethodsDef extends BaseDef {
   constructor(arg={},classdef){
-    super(arg);
+    super(arg,classdef);
     const v = {};
-
-    // BaseDefメンバに値設定
-    this.ClassName = classdef.ClassName;
-    this.MethodName = '';
-    this.anchor = classdef.anchor;
 
     // 子要素のインスタンス作成
     this.list = arg.list || [];
     for( v.i=0 ; v.i<this.list.length ; v.i++ ){
-      // MethodNameを設定
-      this.list[v.i].MethodName = this.list[v.i].name;
+      v.o = new MethodDef(Object.assign(this.list[v.i],
+        {MethodName:this.list[v.i].name}),this);
       // ClassDef.methodとlistにMethodDef登録
-      this.list[v.i] = classdef.method[this.list[v.i].name]
-      = classdef.method[this.list[v.i].name.toLowerCase()]
-      = new MethodDef(this.list[v.i],this);
+      this.list[v.i]
+      = classdef.method[v.o.MethodName]
+      = classdef.method[v.o.methodname]
+      = v.o;
     }
 
     // タイトルの作成
@@ -937,28 +816,6 @@ class MethodsDef extends BaseDef {
 
 /** MethodDef - 関数・アロー関数・メソッド定義
  * @typedef {Object} MethodDef - 関数・アロー関数・メソッド定義
- * 
- * ===== BaseDef継承 ==========
- * // メンバ
- * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
- * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
- * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
- * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
- * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
- * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
- * @prop {string} [template=''] - 🔢embed展開前のテンプレート
- * @prop {string} [content=''] - 🔢embedを展開後の本文
- * // ゲッター・セッター
- * @prop {string[]} [implement=[]] - 実装環境の一覧
- * @prop {Object.<string,ClassDef|MethodDef>} defs - ClassDefのマッピングオブジェクト
- * // メソッド
- * @prop {Function} article - タイトル行＋内容の作成
- * @prop {Function} cfTable - メンバ一覧および対比表の作成
- * @prop {Function} createMd - 当該インスタンスのMarkdownを作成
- * @prop {Function} evaluate - "%%〜%%"の「〜」を評価(eval)して置換
- * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
- * 
- * ===== 独自設定 ==========
  * // メンバ
  * @prop {string} name - 関数(メソッド)名
  * @prop {string} [type=''] - 関数(メソッド)の分類
@@ -972,9 +829,9 @@ class MethodsDef extends BaseDef {
  * @prop {string} process - ✂️処理手順。Markdownで記載
  * @prop {ReturnsDef} returns - 戻り値の定義(パターン別)
  * @prop {Object.<number,ReturnDef>} return - 🔢戻り値のマップ。メンバ名は戻り値のデータ型
- * @prop {Object[]} [caller=[]] - 🔢本関数(メソッド)の呼出元関数(メソッド)
- * @prop {string} caller.class - 🔢呼出元クラス名
- * @prop {string} caller.method - 🔢呼出元メソッド名
+ * @prop {Object[]} [referrer=[]] - 🔢本関数(メソッド)の呼出元関数(メソッド)
+ * @prop {string} referrer.class - 🔢呼出元クラス名
+ * @prop {string} referrer.method - 🔢呼出元メソッド名
  * 
  * - listで個々のメソッドを定義、MethodDefインスタンスはmemberに登録
  * 
@@ -1006,14 +863,8 @@ class MethodsDef extends BaseDef {
  */
 class MethodDef extends BaseDef {
   constructor(arg={},methodsdef){
-    super(arg);
+    super(arg,methodsdef);
 
-    // BaseDefメンバに値設定
-    this.ClassName = methodsdef.ClassName;
-    this.MethodName = arg.MethodName;
-    this.anchor = methodsdef.anchor + '_' + arg.MethodName.toLowerCase();
-
-    // 独自メンバに値設定
     this.name = arg.name;
     this.type = arg.type || '';
     this.desc = arg.desc || '';
@@ -1023,10 +874,11 @@ class MethodDef extends BaseDef {
     this.rev = arg.rev || 0;
     this.params = new ParamsDef(arg.params,this);
     this.process = this.trimIndent(arg.process || '');
-    this.return = {};
+    this.return = {}; // 中身はReturnsDefインスタンス化時に設定
     this.returns = new ReturnsDef(arg.returns,this);
-    this.caller = [];
+    this.referrer = [];
 
+    // BaseDef再設定項目
     // 個別メソッドのタイトル
     this.title = this.article({
       title: `🧱 ${this.ClassName}.${this.MethodName}()`,
@@ -1053,13 +905,13 @@ class MethodDef extends BaseDef {
     const v = {};
     if( this.content === '' ){
       // 呼出元の作成
-      v.caller = this.article({
+      v.referrer = this.article({
         title: `📞 呼出元`,
         level: 4,
-        anchor: this.anchor + '_caller',
+        anchor: this.anchor + '_referrer',
         link: '',
         navi: '',
-        body: this.caller.map(x => `- [${
+        body: this.referrer.map(x => `- [${
           BaseDef.defs[x.class].name
         }.${
           BaseDef.defs[x.class].method[x.method].name
@@ -1075,7 +927,7 @@ class MethodDef extends BaseDef {
       // 自分(処理手順)の作成(BaseDefと同じ)
       v.template = this.evaluate(this.template);
       if( v.template === '' ) return '';
-      // 処理手順内のリンクを呼出先callerにセット
+      // 処理手順内のリンクを呼出先referrerにセット
       [...v.template.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)].forEach(link => {
         v.m = link[2].match(/(.+)\.md#(.+)/);
         if( v.m ){
@@ -1090,7 +942,9 @@ class MethodDef extends BaseDef {
         if( typeof BaseDef.defs[v.ClassName] !== 'undefined'
           && typeof BaseDef.defs[v.ClassName].method[v.MethodName] !== 'undefined'
         ){
-          BaseDef.defs[v.ClassName].method[v.MethodName].caller.push({class:this.ClassName,method:this.MethodName});
+          clog(944,{defs:BaseDef.defs[v.ClassName],class:v.ClassName,method:v.MethodName,
+            obj:(BaseDef.defs[v.ClassName].method[v.MethodName]||'undefined')});
+          BaseDef.defs[v.ClassName].method[v.MethodName].referrer.push({class:this.ClassName,method:this.MethodName});
         }
       });
 
@@ -1100,7 +954,7 @@ class MethodDef extends BaseDef {
 
       this.content = [
         this.title,
-        '',v.caller,
+        '',v.referrer,
         '',v.params,
         '',v.template,
         '',v.returns,
@@ -1112,28 +966,6 @@ class MethodDef extends BaseDef {
 
 /** ParamsDef - 関数(メソッド)引数定義
  * @typedef {Object} ParamsDef - 関数(メソッド)引数定義
- * 
- * ===== BaseDef継承 ==========
- * // メンバ
- * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
- * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
- * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
- * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
- * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
- * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
- * @prop {string} [template=''] - 🔢embed展開前のテンプレート
- * @prop {string} [content=''] - 🔢embedを展開後の本文
- * // ゲッター・セッター
- * @prop {string[]} [implement=[]] - 実装環境の一覧
- * @prop {Object.<string,ClassDef|MethodDef>} defs - ClassDefのマッピングオブジェクト
- * // メソッド
- * @prop {Function} article - タイトル行＋内容の作成
- * @prop {Function} cfTable - メンバ一覧および対比表の作成
- * @prop {Function} createMd - 当該インスタンスのMarkdownを作成
- * @prop {Function} evaluate - "%%〜%%"の「〜」を評価(eval)して置換
- * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
- * 
- * ===== 独自設定 ==========
  * // メンバ
  * @prop {FieldDef[]} list - 引数
  * @prop {string} table - 🔢引数一覧のMarkdown
@@ -1151,7 +983,7 @@ class MethodDef extends BaseDef {
  */
 class ParamsDef extends BaseDef {
   constructor(arg={},methoddef){
-    super(arg);
+    super(arg,methoddef);
 
     // 子要素のインスタンス作成
     this.list = [];
@@ -1159,13 +991,12 @@ class ParamsDef extends BaseDef {
       this.list[i] = new FieldDef(arg.list[i],i,this);
     }
 
-    // BaseDefメンバに値設定
-    this.ClassName = methoddef.ClassName;
-    this.MethodName = methoddef.MethodName;
+    // BaseDef再設定項目
+    this.anchor += '_params'
     this.title = this.article({
       title: `📥 引数`, //  `📥 ${v.fn}() 引数`
       level: 4,
-      anchor: `${methoddef.anchor}_params`,
+      anchor: this.anchor,
       link: ``,
       navi: ``,
       body: '',
@@ -1196,28 +1027,6 @@ class ParamsDef extends BaseDef {
 
 /** ReturnsDef - 関数(メソッド)戻り値定義集
  * @typedef {Object} ReturnsDef - 関数(メソッド)戻り値定義集
- * 
- * ===== BaseDef継承 ==========
- * // メンバ
- * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
- * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
- * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
- * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
- * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
- * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
- * @prop {string} [template=''] - 🔢embed展開前のテンプレート
- * @prop {string} [content=''] - 🔢embedを展開後の本文
- * // ゲッター・セッター
- * @prop {string[]} [implement=[]] - 実装環境の一覧
- * @prop {Object.<string,ClassDef|MethodDef>} defs - ClassDefのマッピングオブジェクト
- * // メソッド
- * @prop {Function} article - タイトル行＋内容の作成
- * @prop {Function} cfTable - メンバ一覧および対比表の作成
- * @prop {Function} createMd - 当該インスタンスのMarkdownを作成
- * @prop {Function} evaluate - "%%〜%%"の「〜」を評価(eval)して置換
- * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
- * 
- * ===== 独自設定 ==========
  * // メンバ
  * @prop {ReturnDef[]} list - (データ型別)戻り値定義集
  * 
@@ -1229,13 +1038,8 @@ class ParamsDef extends BaseDef {
  */
 class ReturnsDef extends BaseDef {
   constructor(arg={},methoddef){
-    super(arg);
+    super(arg,methoddef);
     const v = {};
-
-    // BaseDefメンバに値設定
-    this.ClassName = methoddef.ClassName;
-    this.MethodName = methoddef.MethodName;
-    this.anchor = methoddef.anchor + '_returns';
 
     // 子要素のインスタンス作成
     this.list = arg.list || [];
@@ -1245,17 +1049,17 @@ class ReturnsDef extends BaseDef {
       = new ReturnDef(this.list[v.i],this);
     }
 
+    // BaseDef再設定項目
+    this.anchor += '_returns';
     this.title = this.article({
       title: `📤 戻り値`, // `📤 ${v.fn}() 戻り値`
       level: 4,
-      anchor: `${methoddef.anchor}_returns`,
+      anchor: this.anchor,
       link: ``,
       navi: ``,
       body: '',
     });
     this.template = this.list.length === 0 ? `- 戻り値無し(void)` : '';
-    //this.template = (this.list.length === 0 ? `- 戻り値無し(void)`
-    //  : `${this.cfTable(this)}`);
   }
 
   createMd(){ // BaseDef.createMdをオーバーライド
@@ -1282,28 +1086,6 @@ class ReturnsDef extends BaseDef {
 
 /** ReturnDef - 関数(メソッド)戻り値定義
  * @typedef {Object} ReturnDef - 関数(メソッド)戻り値定義
- * 
- * ===== BaseDef継承 ==========
- * // メンバ
- * @prop {string} [ClassName=''] - 所属するクラス名。ex.'authAuditLog'
- * @prop {string} classname - 🔢小文字のクラス名。ex.'authauditLog'
- * @prop {string} [MethodName=''] - 所属するメソッド名。ex.'log'
- * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
- * @prop {string} anchor - 🔢ローカルリンク用アンカー文字列
- * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行
- * @prop {string} [template=''] - 🔢embed展開前のテンプレート
- * @prop {string} [content=''] - 🔢embedを展開後の本文
- * // ゲッター・セッター
- * @prop {string[]} [implement=[]] - 実装環境の一覧
- * @prop {Object.<string,ClassDef|MethodDef>} defs - ClassDefのマッピングオブジェクト
- * // メソッド
- * @prop {Function} article - タイトル行＋内容の作成
- * @prop {Function} cfTable - メンバ一覧および対比表の作成
- * @prop {Function} createMd - 当該インスタンスのMarkdownを作成
- * @prop {Function} evaluate - "%%〜%%"の「〜」を評価(eval)して置換
- * @prop {Function} trimIndent - 先頭・末尾の空白行、共通インデントの削除
- * 
- * ===== 独自設定 ==========
  * // メンバ
  * @prop {string} [type=''] - 戻り値のデータ型。対比表なら空文字列
  * @prop {string} [desc=''] - 本データ型に関する説明。「正常終了時」等
@@ -1349,17 +1131,14 @@ class ReturnsDef extends BaseDef {
  */
 class ReturnDef extends BaseDef {
   constructor(arg,returnsdef){
-    super(arg);
+    super(arg,returnsdef);
 
     this.type = arg.type || '';
     this.desc = arg.desc || '';
     this.default = arg.default || {};
     this.patterns = arg.patterns || {};
     
-    // BaseDefメンバに値設定
-    this.ClassName = returnsdef.ClassName;
-    this.MethodName = returnsdef.MethodName;
-
+    // BaseDef再設定項目
     // 戻り値のメンバ一覧とテンプレートの作成
     if( this.ClassName === this.type && this.MethodName === 'constructor' ){
       // constructorの戻り値はインスタンスなのでメンバ一覧を表示しない

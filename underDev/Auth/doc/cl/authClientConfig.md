@@ -26,7 +26,7 @@ authClient専用の設定値
 
 ### <span id="authclientconfig_constructor">🧱 authClientConfig.constructor()</span>
 
-#### <span id="authclientconfig_constructor_caller">📞 呼出元</span>
+#### <span id="authclientconfig_constructor_referrer">📞 呼出元</span>
 
 - [authClient.constructor](authClient.md#authClient_members)
 
