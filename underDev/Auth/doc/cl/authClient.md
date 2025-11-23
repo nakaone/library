@@ -22,7 +22,7 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| cf | [authClientConfig](authClientConfig.md#authclientconfig_members) | <span style="color:red">必須</span> | 動作設定変数(config) |  |
+| cf | authClientConfig | <span style="color:red">必須</span> | 動作設定変数(config) |  |
 | crypto | cryptoClient | <span style="color:red">必須</span> | クライアント側暗号関係処理 |  |
 | idb | authIndexedDB | <span style="color:red">必須</span> | IndexedDBの内容をauthClient内で共有 |  |
 

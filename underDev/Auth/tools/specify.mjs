@@ -208,70 +208,76 @@ class BaseDef {
    */
   cfTable(obj,opt={}){
     const v = {rv:[],header:{}};
-    // オプションの既定値設定
-    if( typeof opt.indent === 'undefined' ) opt.indent = 0;
-    v.header = opt.header ? opt.header :
-    {name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明',note:'備考'}
+    try {
 
-    // fv: 表示する値を整形して文字列化(format value)
-    const fv = x => {
-      return typeof x === 'undefined' ? '—' : (
-        typeof x === 'string' ? x : (
-          (typeof x === 'object' || Number.isNaN(x))
-          ? JSON.stringify(x) : x.toLocaleString()
-        )
-      );
-    };
+      // オプションの既定値設定
+      if( typeof opt.indent === 'undefined' ) opt.indent = 0;
+      v.header = opt.header ? opt.header :
+      {name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明',note:'備考'}
 
-    // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
-    if( obj.hasOwnProperty('list') ){
-      // メンバ一覧・引数一覧の場合({list:FieldDef[]}形式)
-      v.obj = {
-        header:Object.assign({},v.header),
-        body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
+      // fv: 表示する値を整形して文字列化(format value)
+      const fv = x => {
+        return typeof x === 'undefined' ? '—' : (
+          typeof x === 'string' ? x : (
+            (typeof x === 'object' || Number.isNaN(x))
+            ? JSON.stringify(x) : x.toLocaleString()
+          )
+        );
       };
-    } else {
-      // 対比表の場合({type:クラス名}形式)
-      obj = Object.assign({default:{}},obj);  // defaultを追加
 
-      // 対比元のデータ型が未定義の場合、"unregistered type"を返して終了
-      if( typeof BaseDef.defs[obj.type] === 'undefined' ){
-        return new Error('unregistered type');
+      // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
+      if( obj.hasOwnProperty('list') ){
+        // メンバ一覧・引数一覧の場合({list:FieldDef[]}形式)
+        v.obj = {
+          header:Object.assign({},v.header),
+          body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
+        };
+      } else {
+        // 対比表の場合({type:クラス名}形式)
+        obj = Object.assign({default:{}},obj);  // defaultを追加
+
+        // 対比元のデータ型が未定義の場合、"unregistered type"を返して終了
+        if( typeof BaseDef.defs[obj.type] === 'undefined' )
+          throw new Error('unregistered type');
+        v.obj = {
+          header: Object.assign({},v.header),
+          body: JSON.parse(JSON.stringify(BaseDef.defs[obj.type])).members.list,
+        };
+        v.patternList = Object.keys(obj.patterns || {}); // 特定データ型内のパターン。ex.["正常終了","警告終了"]
+        for( v.i=0 ; v.i<v.patternList.length ; v.i++ ){
+          v.pn = v.patternList[v.i]; // パターン名
+          v.po = obj.patterns[v.pn];  // パターンのオブジェクト
+          v.cn = `_Col${v.i}`;  // カラム名
+          // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
+          v.obj.header[v.cn] = v.pn;  // パターン名をヘッダに追加
+          // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
+          v.obj.body.forEach(col => {
+            col[v.cn] = v.po[col.name] ? `**${v.po[col.name]}**`
+            : (obj.default[col.name] ? obj.default[col.name] : '—');
+          })
+        }
       }
-      v.obj = {
-        header: Object.assign({},v.header),
-        body: JSON.parse(JSON.stringify(BaseDef.defs[obj.type])).members.list,
-      };
-      v.patternList = Object.keys(obj.patterns || {}); // 特定データ型内のパターン。ex.["正常終了","警告終了"]
-      for( v.i=0 ; v.i<v.patternList.length ; v.i++ ){
-        v.pn = v.patternList[v.i]; // パターン名
-        v.po = obj.patterns[v.pn];  // パターンのオブジェクト
-        v.cn = `_Col${v.i}`;  // カラム名
-        // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
-        v.obj.header[v.cn] = v.pn;  // パターン名をヘッダに追加
-        // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
-        v.obj.body.forEach(col => {
-          col[v.cn] = v.po[col.name] ? `**${v.po[col.name]}**`
-          : (obj.default[col.name] ? obj.default[col.name] : '—');
-        })
+
+      // ヘッダ行の作成
+      v.cols = Object.keys(v.obj.header);
+      v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(x => v.obj.header[x] || x).join(' | ')} |`);
+      v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(()=>':--').join(' | ')} |`);
+
+      // データ行の作成
+      for( v.i=0 ; v.i<v.obj.body.length ; v.i++ ){
+        // 既定値欄の表示内容を作成
+        v.obj.body[v.i].default = v.obj.body[v.i].default !== '' ? fv(v.obj.body[v.i].default)
+        : (v.obj.body[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
+        // 一項目分のデータ行を出力
+        v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(x => fv(v.obj.body[v.i][x])).join(' | ')} |`);
       }
+
+      return v.rv.join('\n');
+
+    } catch(e) {
+      if( e.message !== 'unregistered type' ) console.error(e);
+      return e;
     }
-
-    // ヘッダ行の作成
-    v.cols = Object.keys(v.obj.header);
-    v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(x => v.obj.header[x] || x).join(' | ')} |`);
-    v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(()=>':--').join(' | ')} |`);
-
-    // データ行の作成
-    for( v.i=0 ; v.i<v.obj.body.length ; v.i++ ){
-      // 既定値欄の表示内容を作成
-      v.obj.body[v.i].default = v.obj.body[v.i].default !== '' ? fv(v.obj.body[v.i].default)
-      : (v.obj.body[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
-      // 一項目分のデータ行を出力
-      v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(x => fv(v.obj.body[v.i][x])).join(' | ')} |`);
-    }
-
-    return v.rv.join('\n');
   }
 
   /** evaluate: "%%〜%%"の「〜」を評価(eval)して置換
@@ -281,35 +287,35 @@ class BaseDef {
   evaluate(str){
     // 置換対象の文字列内の関数名には「this.」が付いてないので付加
     const cfTable = this.cfTable;
-
     const v = {str:this.trimIndent(str),rv:''};
     v.list = [...v.str.matchAll(/(\n*)(\s*)%%([\s\S]*?)%%/g)];
+    try {
 
-    // 評価箇所が無い場合はそのまま返す
-    if( v.list.length === 0 ) return v.str;
+      // 評価箇所が無い場合はそのまま返す
+      if( v.list.length === 0 ) return v.str;
 
-    v.list.forEach(x => {
-      // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)
-      // x[1]: 改行
-      // x[2]: タグ前のスペース
-      // x[3]: 式
-      // ①式を評価
-      v.result = eval(x[3]);
-      // cfTableの戻り値がErrorの場合
-      if( v.result instanceof Error ){
-        if( v.result.message === 'unregistered type' ){
-          return '';
+      v.list.forEach(x => {
+        // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)
+        // x[1]: 改行
+        // x[2]: タグ前のスペース
+        // x[3]: 式
+        // ①式を評価
+        v.result = eval(x[3]);
+        // cfTableの戻り値がErrorの場合
+        if( v.result instanceof Error ){
+          throw v.result;
         } else {
-          return v.result;  // その他システムエラー
+          // ②評価結果の各行頭にタグ前のスペースを追加
+          v.result = v.result.split('\n').map(l => x[2]+l).join('\n');
+          v.str = v.str.replace(x[0],x[1]+v.result);
         }
-      } else {
-        // ②評価結果の各行頭にタグ前のスペースを追加
-        v.result = v.result.split('\n').map(l => x[2]+l).join('\n');
-        v.str = v.str.replace(x[0],x[1]+v.result);
-      }
-    })
-    return v.str;
+      })
+      return v.str;
 
+    } catch(e) {
+      if( e.message !== 'unregistered type' ) console.error(e);
+      return e;
+    }
   }
 
   /**
@@ -395,7 +401,8 @@ class ProjectDef extends BaseDef {
     while( v.cnt > 0 ){
       v.fixed = true;
       Object.keys(this.classdef).forEach(x => {
-        if( this.classdef[x].createMd() === '' ) v.fixed = false;
+        if( this.classdef[x].createMd() instanceof Error )
+          v.fixed = false;
       });
       v.cnt -= (v.fixed ? 10 : 1);
     }
@@ -542,13 +549,13 @@ class ClassDef extends BaseDef {
       body: '',
     });
 
-    this.template = this.trimIndent(arg.template || `
+    this.template = this.evaluate(this.trimIndent(arg.template || `
       %% this.desc %%
 
       %% this.note %%
 
       %% this.summary %%
-    `);
+    `));
 
     // 新しく出てきたimplement要素をprj.imprementsに追加登録
     BaseDef.implements = this.implement;
@@ -563,23 +570,36 @@ class ClassDef extends BaseDef {
 
   }
 
-  createMd(){ // BaseDef.createMdをオーバーライド
+  /** createMd: 当該インスタンスのMarkdownを作成
+   * @param {void}
+   * @returns {string|Error} 確定ならMarkdown、未確定ならError
+   */
+  createMd(){
     const v = {};
-    if( this.content === '' ){
-      // ①自分(クラス概要)の作成(BaseDefと同じ)
-      v.r = this.evaluate(this.template);
-      if( v.r === '' ) return '';
-      this.content = this.title + '\n\n' + v.r;
+    try {
+      // 確定済ならcontentを返して終了
+      if( this.fixed ) return this.content;
 
-      // ②MembersDef, MethodsDef のcreateMDを呼び出す(ClassDef特有)
+      // MembersDef, MethodsDef のcreateMDを呼び出す(ClassDef特有)
       v.members = this.members.createMd();
-      if( v.members === '' ) return '';
-      this.content += '\n\n' + v.members;
       v.methods = this.methods.createMd();
-      if( v.methods === '' ) return '';
-      this.content += '\n\n' + v.methods;
+      if( v.members instanceof Error || v.methods instanceof Error )
+        throw new Error('not fixed');
+
+      // 確定済 ⇒ contentを作成して返す
+      this.content = [
+        this.title,
+        '',this.template,
+        '',v.members,
+        '',v.methods,
+      ].join('\n');
+      this.fixed = true;
+      return this.content;
+
+    } catch(e) {
+      if( e.message !== 'not fixed' ) console.error(e);
+      return e;
     }
-    return this.content;
   }
 }
 
@@ -604,45 +624,60 @@ class MembersDef extends BaseDef {
   constructor(arg={},classdef){
     super(arg,classdef);
 
-    // BaseDef再設定項目
-    this.title = this.article({
-      title: `🔢 ${this.ClassName} メンバ一覧`,
-      level: 2,
-      anchor: this.anchor + '_members',
-      link: '',
-      navi: '',
-      body: '',
-    });
-
     // 子要素のインスタンス作成
     this.list = [];
     for( let i=0 ; i<arg.list.length ; i++ ){
       this.list[i] = new FieldDef(arg.list[i],i,this);
     }
 
-    // メンバ一覧とテンプレートの作成
-    this.template = this.trimIndent(arg.template || `
-      %% BaseDef.defs["${this.ClassName}"].members.table %%`);
+    // BaseDef再設定項目
+    this.anchor += '_members';
+    this.title = this.article({
+      title: `🔢 ${this.ClassName} メンバ一覧`,
+      level: 2,
+      anchor: this.anchor,
+      link: '',
+      navi: '',
+      body: '',
+    });
+    this.template = this.trimIndent(arg.template || 
+      `%% BaseDef.defs["${this.ClassName}"].members.table %%`);
 
   }
 
-  createMd(){ // BaseDef.createMdをオーバーライド
+  /** createMd: 当該インスタンスのMarkdownを作成
+   * @param {void}
+   * @returns {string|Error} 確定ならMarkdown、未確定ならError
+   */
+  createMd(){
     const v = {};
-    if( this.content === '' ){
-      // ①子要素FieldDef.createMdの呼び出し
-      // 一覧の「データ型」表示に他クラスへのリンクを設定するため、全クラス作成後に実行
-      this.list.forEach(x => {
-        x.createMd();
-      });
-      // メンバ一覧の作成
-      this.table = this.cfTable(this);
+    try {
+      // 確定済ならcontentを返して終了
+      if( this.fixed ) return this.content;
 
-      // ②自分(クラス概要)の作成(BaseDefと同じ)
-      v.r = this.evaluate(this.template);
-      if( v.r === '' ) return '';
-      this.content = this.title + '\n\n' + v.r;
+      // メンバ一覧の作成
+      if( this.list.length === 0 ){
+        this.table = '- メンバ無し';
+      } else {
+        v.r = this.cfTable(this);
+        if( v.r instanceof Error ) throw v.r;
+        this.table = v.r;
+      }
+      v.template = this.evaluate(this.template);
+      if( v.template instanceof Error ) throw v.template;
+
+      // 確定済 ⇒ contentを作成して返す
+      this.content = [
+        this.title,
+        '',v.template,
+      ].join('\n');
+      this.fixed = true;
+      return this.content;
+
+    } catch(e) {
+      if( e.message !== 'not fixed' ) console.error(e);
+      return e;
     }
-    return this.content;
   }
 }
 
@@ -675,9 +710,17 @@ class FieldDef extends BaseDef {
    */
   constructor(arg,seq,parent){
     super(arg,parent);
+    const v = {};
 
     this.name = arg.name || '';
-    this.type = arg.type || 'string';
+    this.type = (arg.type || 'string').split('|').map(x => { // 他クラス定義へのリンク
+      v.type = x.trim();
+      if( BaseDef.classList.includes(v.type) ){
+        v.link = `[${v.type}](${v.type}.md#${v.type.toLowerCase()}_members)`;
+        x = x.replace(v.type,v.link);
+      }
+      return x;
+    }).join('\n');
     this.label = arg.label || '';
     this.alias = arg.alias || [];
     this.desc = arg.desc || '';
@@ -687,28 +730,6 @@ class FieldDef extends BaseDef {
     this.printf = arg.printf || null;
     this.seq = seq;
 
-  }
-
-  createMd(){ // BaseDef.createMdをオーバーライド
-    const v = {};
-    if( this.content === '' ){
-      // ①データ型に他クラス定義へのリンクを作成
-      v.list = Object.keys(BaseDef.defs);
-      this.type = this.type.split('|').map(x => {
-        v.type = x.trim();
-        if( v.list.includes(v.type) ){
-          v.link = `[${v.type}](${v.type}.md#${v.type.toLowerCase()}_members)`;
-          x = x.replace(v.type,v.link);
-        }
-        return x;
-      }).join('\n');
-
-      // ②自分(クラス概要)の作成(BaseDefと同じ)
-      v.r = this.evaluate(this.template);
-      if( v.r === '' ) return '';
-      this.content = this.title + '\n\n' + v.r;
-    }
-    return this.content;
   }
 }
 
@@ -774,22 +795,41 @@ class MethodsDef extends BaseDef {
       `%% BaseDef.defs["${this.ClassName}"].methods.table %%`);
   }
 
-  createMd(){ // BaseDef.createMdをオーバーライド
+  /** createMd: 当該インスタンスのMarkdownを作成
+   * @param {void}
+   * @returns {string|Error} 確定ならMarkdown、未確定ならError
+   */
+  createMd(){
     const v = {};
-    if( this.content === '' ){
-      // ①自分(クラス概要)の作成(BaseDefと同じ)
-      v.r = this.evaluate(this.template);
-      if( v.r === '' ) return '';
-      this.content = this.title + '\n\n' + v.r;
+    try {
+      // 確定済ならcontentを返して終了
+      if( this.fixed ) return this.content;
 
-      // ②MembersDef, MethodsDef のcreateMDを呼び出す(ClassDef特有)
-      for( v.i=0 ; v.i<this.list.length ; v.i++ ){
-        v.method = this.list[v.i].createMd();
-        if( v.method === '' ) return '';
-        this.content += '\n\n' + v.method;
+      // 子要素(個別メソッド)のMarkdown作成
+      for( v.i=0,v.rv=null,v.methods=[] ; v.i<this.list.length ; v.i++ ){
+        v.r = this.list[v.i].createMd();
+        if( v.r instanceof Error ) v.rv = v.r;
+        v.methods.push(v.r);
       }
+      if( v.rv instanceof Error ) throw v.rv;
+
+      // テンプレートのMarkdown作成
+      v.template = this.evaluate(this.template);
+      if( v.template instanceof Error ) throw v.template;
+
+      // 確定済 ⇒ contentを作成して返す
+      this.content = [
+        this.title,
+        '',v.template,
+        '',...v.methods,
+      ].join('\n');
+      this.fixed = true;
+      return this.content;
+
+    } catch(e) {
+      if( e.message !== 'not fixed' ) console.error(e);
+      return e;
     }
-    return this.content;
   }
 }
 
@@ -880,10 +920,23 @@ class MethodDef extends BaseDef {
     });
   }
 
-  createMd(){ // BaseDef.createMdをオーバーライド
+  /** createMd: 当該インスタンスのMarkdownを作成
+   * @param {void}
+   * @returns {string|Error} 確定ならMarkdown、未確定ならError
+   */
+  createMd(){
     const v = {};
-    if( this.content === '' ){
+    try {
+      // 確定済ならcontentを返して終了
+      if( this.fixed ) return this.content;
+
       // 呼出元の作成
+      for( v.i=0,v.rv=null,v.refList=[] ; v.i<this.referrer.length ; v.i++ ){
+        // ClassDef作成済かチェック
+        if( typeof BaseDef.defs[this.referrer[v.i].name] === 'undefined' )
+          v.rv = new Error('not fixed');
+      }
+      if( v.rv instanceof Error ) throw v.rv;
       v.referrer = this.article({
         title: `📞 呼出元`,
         level: 4,
@@ -901,11 +954,12 @@ class MethodDef extends BaseDef {
 
       // 引数の作成
       v.params = this.params.createMd();
-      if( v.params === '' ) return '';
-      
+      if( v.params instanceof Error ) throw v.params;
+
       // 自分(処理手順)の作成(BaseDefと同じ)
       v.template = this.evaluate(this.template);
-      if( v.template === '' ) return '';
+      if( v.template instanceof Error ) throw v.template;
+
       // 処理手順内のリンクを呼出先referrerにセット
       [...v.template.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)].forEach(link => {
         v.m = link[2].match(/(.+)\.md#(.+)/);
@@ -921,16 +975,15 @@ class MethodDef extends BaseDef {
         if( typeof BaseDef.defs[v.ClassName] !== 'undefined'
           && typeof BaseDef.defs[v.ClassName].method[v.MethodName] !== 'undefined'
         ){
-          clog(944,{defs:BaseDef.defs[v.ClassName],class:v.ClassName,method:v.MethodName,
-            obj:(BaseDef.defs[v.ClassName].method[v.MethodName]||'undefined')});
           BaseDef.defs[v.ClassName].method[v.MethodName].referrer.push({class:this.ClassName,method:this.MethodName});
         }
       });
 
       // 戻り値の作成
       v.returns = this.returns.createMd();
-      if( v.returns === '' ) return '';
+      if( v.returns instanceof Error ) throw v.returns;
 
+      // 確定済 ⇒ contentを作成して返す
       this.content = [
         this.title,
         '',v.referrer,
@@ -938,8 +991,13 @@ class MethodDef extends BaseDef {
         '',v.template,
         '',v.returns,
       ].join('\n');
+      this.fixed = true;
+      return this.content;
+
+    } catch(e) {
+      if( e.message !== 'not fixed' ) console.error(e);
+      return e;
     }
-    return this.content;
   }
 }
 
@@ -980,27 +1038,44 @@ class ParamsDef extends BaseDef {
       navi: ``,
       body: '',
     });
-
-    // 引数一覧とテンプレートの作成
-    this.table = this.list.length === 0
-      ? '- 引数無し(void)' : this.cfTable(this);
     this.template = this.trimIndent(arg.template || 
-      `%% BaseDef.defs["${this.ClassName}"].method["${this.MethodName}"].params.table %%`);
+      `%% BaseDef.defs["${this.ClassName
+        }"].method["${this.MethodName}"].params.table %%`);
   }
 
-  createMd(){ // BaseDef.createMdをオーバーライド
+  /** createMd: 当該インスタンスのMarkdownを作成
+   * @param {void}
+   * @returns {string|Error} 確定ならMarkdown、未確定ならError
+   */
+  createMd(){
     const v = {};
-    if( this.content === '' ){
-      // ①子要素FieldDef.createMdの呼び出し
-      // 一覧内の「データ型」表示に他クラスへのリンクを設定するため、全クラス作成後に要実行
-      this.list.forEach(x => x.createMd());
+    try {
+      // 確定済ならcontentを返して終了
+      if( this.fixed ) return this.content;
 
-      // ②自分(クラス概要)の作成(BaseDefと同じ)
-      v.r = this.evaluate(this.template);
-      if( v.r === '' ) return '';
-      this.content = this.title + '\n\n' + v.r;
+      // 引数一覧の作成
+      if( this.list.length === 0 ){
+        this.table = '- 引数無し(void)';
+      } else {
+        v.r = this.cfTable(this);
+        if( v.r instanceof Error ) throw v.r;
+        this.table = v.r;
+      }
+      v.template = this.evaluate(this.template);
+      if( v.template instanceof Error ) throw v.template;
+
+      // 確定済 ⇒ contentを作成して返す
+      this.content = [
+        this.title,
+        '',v.template,
+      ].join('\n');
+      this.fixed = true;
+      return this.content;
+
+    } catch(e) {
+      if( e.message !== 'not fixed' ) console.error(e);
+      return e;
     }
-    return this.content;
   }
 }
 
@@ -1041,25 +1116,40 @@ class ReturnsDef extends BaseDef {
     this.template = this.list.length === 0 ? `- 戻り値無し(void)` : '';
   }
 
-  createMd(){ // BaseDef.createMdをオーバーライド
+  /** createMd: 当該インスタンスのMarkdownを作成
+   * @param {void}
+   * @returns {string|Error} 確定ならMarkdown、未確定ならError
+   */
+  createMd(){
     const v = {};
-    if( this.content === '' ){
-      // ①自分(クラス概要)の作成(BaseDefと同じ)
-      v.template = this.template;
-      if( v.template !== '' ){
-        v.template = this.evaluate(v.template);
-        if( v.template === '' ) return '';
-      }
-      this.content = this.title + '\n\n' + v.template;
+    try {
+      // 確定済ならcontentを返して終了
+      if( this.fixed ) return this.content;
 
-      // ②ReturnDef のcreateMDを呼び出す(ClassDef特有)
-      for( v.i=0 ; v.i<this.list.length ; v.i++ ){
-        v.return = this.list[v.i].createMd();
-        if( v.return === '' ) return '';
-        this.content += '\n\n' + v.return;
+      // 子要素(ReturnDef)のMarkdown作成
+      for( v.i=0,v.rv=null,v.returns=[] ; v.i<this.list.length ; v.i++ ){
+        v.r = this.list[v.i].createMd();
+        if( v.r instanceof Error ) v.rv = v.r;
+        v.returns.push(v.r);
       }
+      if( v.rv instanceof Error ) throw v.rv;
+
+      v.template = this.evaluate(this.template);
+      if( v.template instanceof Error ) throw v.template;
+
+      // 確定済 ⇒ contentを作成して返す
+      this.content = [
+        this.title,
+        '',v.template,
+        '',...v.returns,
+      ].join('\n');
+      this.fixed = true;
+      return this.content;
+
+    } catch(e) {
+      if( e.message !== 'not fixed' ) console.error(e);
+      return e;
     }
-    return this.content;
   }
 }
 
@@ -1141,17 +1231,31 @@ class ReturnDef extends BaseDef {
   }
 
   /** createMd: 当該インスタンスのMarkdownを作成
-   * 子要素を作成するクラスはその処理を追加したcreateMdをオーバーライドすること
    * @param {void}
-   * @returns {string} 作成したcontent。いずれかが準備未完了の場合、空文字列を返す。
+   * @returns {string|Error} 確定ならMarkdown、未確定ならError
    */
   createMd(){
     const v = {};
-    if( this.content === '' ){
-      v.r = this.evaluate(this.template);
-      this.content = v.r === '' ? '' : this.title + '\n\n' + v.r;
+    try {
+      // 確定済ならcontentを返して終了
+      if( this.fixed ) return this.content;
+
+      // テンプレートのMarkdown作成
+      v.template = this.evaluate(this.template);
+      if( v.template instanceof Error ) throw v.template;
+
+      // 確定済 ⇒ contentを作成して返す
+      this.content = [
+        this.title,
+        '',this.template,
+      ].join('\n');
+      this.fixed = true;
+      return this.content;
+
+    } catch(e) {
+      if( e.message !== 'not fixed' ) console.error(e);
+      return e;
     }
-    return this.content;
   }
 }
 
