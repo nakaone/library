@@ -146,16 +146,19 @@ class BaseDef {
   }
 
   static _defs = {};  // ClassDefのマッピングオブジェクト
-  static _classList = []; // クラス一覧
   static get defs(){
     return this._defs;
   }
+  static set defs(arg){
+    this._defs[arg.ClassName] = this._defs[arg.classname] = arg;
+  }
+
+  static _classList = []; // クラス一覧
   static get classList(){
     return this._classList;
   }
-  static set defs(arg){
-    this._defs[arg.ClassName] = this._defs[arg.classname] = arg;
-    this._classList.push(arg.name); // クラス一覧に登録
+  static set classList(arg){
+    this._classList = Object.keys(arg);
   }
 
   /** article: タイトルと本文から記事を作成
@@ -388,6 +391,9 @@ class ProjectDef extends BaseDef {
 
     // 実装環境一覧
     this.implements = arg.implements || {};
+
+    // クラス名一覧
+    BaseDef.classList = arg.classdef;
 
     // 関数・クラス定義のインスタンスを順次作成
     this.classdef = {};
@@ -713,7 +719,9 @@ class FieldDef extends BaseDef {
     const v = {};
 
     this.name = arg.name || '';
-    this.type = (arg.type || 'string').split('|').map(x => { // 他クラス定義へのリンク
+    if( this.ClassName==='authClient') clog(716,BaseDef.classList);
+    this.type = (arg.type || 'string').split('|').map(x => {
+      // 他クラス定義へのリンクを追加
       v.type = x.trim();
       if( BaseDef.classList.includes(v.type) ){
         v.link = `[${v.type}](${v.type}.md#${v.type.toLowerCase()}_members)`;
