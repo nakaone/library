@@ -340,7 +340,6 @@ class BaseDef {
     const minIndent = indents.length ? Math.min(...indents) : 0;
 
     // 4. 共通インデントを削除、各行を結合した文字列を返す
-    clog(343,{lines:lines,filter:lines.filter(line => line.length > 0 ),indents:indents,min:minIndent,rv:lines.map(line => line.slice(minIndent)).join('\n')});
     return lines.map(line => line.slice(minIndent)).join('\n');
   }
 }
@@ -601,7 +600,6 @@ class ClassDef extends BaseDef {
 
       %% this.summary %%
     `);
-    if( this.name === 'authClient' ) clog(550,this);
 
     // 新しく出てきたimplement要素をprj.imprementsに追加登録
     BaseDef.implements = this.implement;
@@ -696,10 +694,28 @@ class MembersDef extends BaseDef {
     }
 
     // メンバ一覧とテンプレートの作成
-    this.table = this.cfTable(this);
     this.template = this.trimIndent(arg.template || `
       %% BaseDef.defs["${this.className}"].members.table %%`);
 
+  }
+
+  createMd(){ // BaseDef.createMdをオーバーライド
+    const v = {};
+    if( this.content === '' ){
+      // ①子要素FieldDef.createMdの呼び出し
+      // 一覧の「データ型」表示に他クラスへのリンクを設定するため、全クラス作成後に実行
+      this.list.forEach(x => {
+        x.createMd();
+      });
+      // メンバ一覧の作成
+      this.table = this.cfTable(this);
+
+      // ②自分(クラス概要)の作成(BaseDefと同じ)
+      v.r = this.evaluate(this.template);
+      if( v.r === '' ) return '';
+      this.content = this.title + '\n\n' + v.r;
+    }
+    return this.content;
   }
 }
 
@@ -747,7 +763,8 @@ class MembersDef extends BaseDef {
 class FieldDef extends BaseDef {
   /**
    * @param {FieldDef} arg 
-   * @param {number} seq 
+   * @param {number} [seq=0] - 親要素内の定義順
+   * @param {ParamsDef|MembersDef} parent - FieldDefのインスタンス化を呼び出す親要素
    */
   constructor(arg,seq,parent){
     super(arg);
@@ -768,8 +785,31 @@ class FieldDef extends BaseDef {
     this.isOpt = this.default !== '' ? true : (arg.isOpt || false);
     this.printf = arg.printf || null;
     this.seq = seq;
+
+    // データ型にリンクを設定
   }
-}
+
+  createMd(){ // BaseDef.createMdをオーバーライド
+    const v = {};
+    if( this.content === '' ){
+      // ①データ型に他クラス定義へのリンクを作成
+      v.list = Object.keys(BaseDef.defs);
+      this.type = this.type.split('|').map(x => {
+        v.type = x.trim();
+        if( v.list.includes(v.type) ){
+          v.link = `[${v.type}](${v.type}.md#${v.type.toLowerCase()}_members)`;
+          x = x.replace(v.type,v.link);
+        }
+        return x;
+      }).join('\n');
+
+      // ②自分(クラス概要)の作成(BaseDefと同じ)
+      v.r = this.evaluate(this.template);
+      if( v.r === '' ) return '';
+      this.content = this.title + '\n\n' + v.r;
+    }
+    return this.content;
+  }}
 
 /** MethodsDef - クラスのメソッド集
  * @typedef {Object} MethodsDef - クラスのメソッド集
@@ -1113,6 +1153,21 @@ class ParamsDef extends BaseDef {
       ? '- 引数無し(void)' : this.cfTable(this);
     this.template = this.trimIndent(arg.template || 
       `%% BaseDef.defs["${this.className}"].method["${this.methodName}"].params.table %%`);
+  }
+
+  createMd(){ // BaseDef.createMdをオーバーライド
+    const v = {};
+    if( this.content === '' ){
+      // ①子要素FieldDef.createMdの呼び出し
+      // 一覧内の「データ型」表示に他クラスへのリンクを設定するため、全クラス作成後に要実行
+      this.list.forEach(x => x.createMd());
+
+      // ②自分(クラス概要)の作成(BaseDefと同じ)
+      v.r = this.evaluate(this.template);
+      if( v.r === '' ) return '';
+      this.content = this.title + '\n\n' + v.r;
+    }
+    return this.content;
   }
 }
 
