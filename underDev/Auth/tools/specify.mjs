@@ -11,9 +11,6 @@
  *             - FieldDef: 引数となる個別の変数
  *           - ReturnsDef: 当該メソッドの戻り値
  *             - ReturnDef: (戻り値のデータ型が複数有る場合の)データ型別定義
- * - constructor: specDef.jsに基づき一義的に値が定まる項目について設定
- * - secondary: 他の要素の値を参照して値を決定。決定した値はメンバに格納、
- *     戻り値はbooleanとして値未定ならfalseを返す。
  * 
  * @example 使用方法
  * 1. クラス定義(specDef.js) : プロジェクトに関係するクラスを一括して定義
@@ -277,20 +274,6 @@ class BaseDef {
     return v.rv.join('\n');
   }
 
-  /** createMd: 当該インスタンスのMarkdownを作成
-   * 子要素を作成するクラスはその処理を追加したcreateMdをオーバーライドすること
-   * @param {void}
-   * @returns {string} 作成したcontent
-   */
-  createMd(){
-    const v = {};
-    if( this.content === '' ){
-      v.r = this.evaluate(this.template);
-      this.content = v.r === '' ? '' : this.title + '\n\n' + v.r;
-    }
-    return this.content;
-  }
-
   /** evaluate: "%%〜%%"の「〜」を評価(eval)して置換
    * @param {string} str - 評価対象の文字列
    * @returns {string} 評価結果。一箇所でも評価できなかった場合は空文字列
@@ -463,10 +446,6 @@ class ProjectDef extends BaseDef {
             .replaceAll(/\n\n\n+/g,'\n\n'), "utf8");
           // クラス一覧に追加
           list[x].push(this.classdef[def]);
-          //list[x].push({
-          //  name: this.classdef[def].name,
-          //  desc: this.classdef[def].desc,
-          //});
         }
       });
     });
@@ -1159,6 +1138,20 @@ class ReturnDef extends BaseDef {
         `%% BaseDef.defs["${this.ClassName}"].method["${
         this.MethodName}"].return["${this.type}"].table %%`;
     }
+  }
+
+  /** createMd: 当該インスタンスのMarkdownを作成
+   * 子要素を作成するクラスはその処理を追加したcreateMdをオーバーライドすること
+   * @param {void}
+   * @returns {string} 作成したcontent。いずれかが準備未完了の場合、空文字列を返す。
+   */
+  createMd(){
+    const v = {};
+    if( this.content === '' ){
+      v.r = this.evaluate(this.template);
+      this.content = v.r === '' ? '' : this.title + '\n\n' + v.r;
+    }
+    return this.content;
   }
 }
 
