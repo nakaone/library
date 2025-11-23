@@ -25,7 +25,7 @@ authServer内の処理等、"warning"(処理継続)時の使用を想定。
 | :-- | :-- | :-- | :-- |
 | [constructor()](#authresult_constructor) | private | コンストラクタ |  |
 
-### <span id="authresult_constructor">🧱 authResult.constructor()</span>
+### <span id="authresult_constructor"><a href="#authresult_methods">🧱 authResult.constructor()</a></span>
 
 #### <span id="authresult_constructor_referrer">📞 呼出元</span>
 

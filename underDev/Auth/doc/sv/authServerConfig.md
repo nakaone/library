@@ -42,7 +42,7 @@ authServer専用の設定値
 | :-- | :-- | :-- | :-- |
 | [constructor()](#authserverconfig_constructor) | private | コンストラクタ |  |
 
-### <span id="authserverconfig_constructor">🧱 authServerConfig.constructor()</span>
+### <span id="authserverconfig_constructor"><a href="#authserverconfig_methods">🧱 authServerConfig.constructor()</a></span>
 
 #### <span id="authserverconfig_constructor_referrer">📞 呼出元</span>
 

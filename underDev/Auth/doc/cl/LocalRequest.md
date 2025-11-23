@@ -23,7 +23,7 @@
 | :-- | :-- | :-- | :-- |
 | [constructor()](#localrequest_constructor) | private | コンストラクタ |  |
 
-### <span id="localrequest_constructor">🧱 LocalRequest.constructor()</span>
+### <span id="localrequest_constructor"><a href="#localrequest_methods">🧱 LocalRequest.constructor()</a></span>
 
 #### <span id="localrequest_constructor_referrer">📞 呼出元</span>
 

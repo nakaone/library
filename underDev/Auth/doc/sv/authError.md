@@ -26,7 +26,7 @@ auth専用エラーオブジェクト
 | :-- | :-- | :-- | :-- |
 | [constructor()](#autherror_constructor) | private | コンストラクタ |  |
 
-### <span id="autherror_constructor">🧱 authError.constructor()</span>
+### <span id="autherror_constructor"><a href="#autherror_methods">🧱 authError.constructor()</a></span>
 
 #### <span id="autherror_constructor_referrer">📞 呼出元</span>
 

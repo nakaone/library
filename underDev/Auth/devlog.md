@@ -2,12 +2,7 @@
 
 ## bug
 
-- TypeError: 'caller', 'callee', and 'arguments' properties may not be accessed on strict mode functions or the arguments objects for calls to them
-
 - authClient クラス仕様書
-  - メンバ一覧・引数の「データ型」欄にリンクが未設定
-    - FieldDefに新たなメンバ"link"を作成、"[this.name](...)"形式を設定。
-    - cfTable.header定義の既定値でnameの代わりにlinkを、無ければnameを設定するよう変更
   - メソッドのタイトル行からメソッド一覧へのリンクが未設定
   - 「呼出元」が無いのにタイトル行が表示されている
 

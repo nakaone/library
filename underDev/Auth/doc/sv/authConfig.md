@@ -28,7 +28,7 @@ authClient/authServer共通設定値
 | :-- | :-- | :-- | :-- |
 | [constructor()](#authconfig_constructor) | private | コンストラクタ |  |
 
-### <span id="authconfig_constructor">🧱 authConfig.constructor()</span>
+### <span id="authconfig_constructor"><a href="#authconfig_methods">🧱 authConfig.constructor()</a></span>
 
 #### <span id="authconfig_constructor_referrer">📞 呼出元</span>
 

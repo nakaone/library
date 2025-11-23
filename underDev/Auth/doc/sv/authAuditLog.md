@@ -29,7 +29,7 @@ authServerの監査ログ
 | :-- | :-- | :-- | :-- |
 | [constructor()](#authauditlog_constructor) | private | コンストラクタ |  |
 
-### <span id="authauditlog_constructor">🧱 authAuditLog.constructor()</span>
+### <span id="authauditlog_constructor"><a href="#authauditlog_methods">🧱 authAuditLog.constructor()</a></span>
 
 #### <span id="authauditlog_constructor_referrer">📞 呼出元</span>
 

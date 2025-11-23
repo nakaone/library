@@ -911,7 +911,7 @@ class MethodDef extends BaseDef {
       title: `🧱 ${this.ClassName}.${this.MethodName}()`,
       level: 3,
       anchor: this.anchor,
-      link: '',
+      link: `#${this.classname}_methods`,
       navi: '',
       body: '',
     });

@@ -20,7 +20,7 @@
 | :-- | :-- | :-- | :-- |
 | [constructor()](#authresponse_constructor) | private | コンストラクタ |  |
 
-### <span id="authresponse_constructor">🧱 authResponse.constructor()</span>
+### <span id="authresponse_constructor"><a href="#authresponse_methods">🧱 authResponse.constructor()</a></span>
 
 #### <span id="authresponse_constructor_referrer">📞 呼出元</span>
 

@@ -23,7 +23,7 @@ authServerのエラーログ
 | :-- | :-- | :-- | :-- |
 | [constructor()](#autherrorlog_constructor) | private | コンストラクタ |  |
 
-### <span id="autherrorlog_constructor">🧱 authErrorLog.constructor()</span>
+### <span id="autherrorlog_constructor"><a href="#autherrorlog_methods">🧱 authErrorLog.constructor()</a></span>
 
 #### <span id="autherrorlog_constructor_referrer">📞 呼出元</span>
 

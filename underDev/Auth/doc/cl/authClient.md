@@ -32,7 +32,7 @@ authClientは、ローカル関数(ブラウザ内JavaScript)からの要求を�
 | :-- | :-- | :-- | :-- |
 | [constructor()](#authclient_constructor) | private | コンストラクタ |  |
 
-### <span id="authclient_constructor">🧱 authClient.constructor()</span>
+### <span id="authclient_constructor"><a href="#authclient_methods">🧱 authClient.constructor()</a></span>
 
 #### <span id="authclient_constructor_referrer">📞 呼出元</span>
 
