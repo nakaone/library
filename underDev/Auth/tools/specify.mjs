@@ -142,11 +142,16 @@ class BaseDef {
   }
 
   static _defs = {};  // ClassDefのマッピングオブジェクト
+  static _classList = []; // クラス一覧
   static get defs(){
     return this._defs;
   }
+  static get classList(){
+    return this._classList;
+  }
   static set defs(arg){
     this._defs[arg.name] = this._defs[arg.name.toLowerCase()] = arg;
+    this._classList.push(arg.name); // クラス一覧に登録
   }
 
   /** article: タイトルと本文から記事を作成
