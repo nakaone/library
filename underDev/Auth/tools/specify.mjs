@@ -719,7 +719,6 @@ class FieldDef extends BaseDef {
     const v = {};
 
     this.name = arg.name || '';
-    if( this.ClassName==='authClient') clog(716,BaseDef.classList);
     this.type = (arg.type || 'string').split('|').map(x => {
       // 他クラス定義へのリンクを追加
       v.type = x.trim();

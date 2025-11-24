@@ -76,7 +76,49 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     summary: `
       - クロージャ関数ではなくクラスとして作成
       - 内発処理はローカル関数からの処理要求に先行して行う
-    `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+
+      ### 想定する実装
+
+      constructorは非同期処理を行えないので、initializeを別途用意する。
+
+      \`\`\`js
+      class authClient {
+        /**
+         * コンストラクタは同期的に動作し、非同期処理は行わない
+         */
+        constructor(data){
+          // 非同期処理の結果を使ってインスタンスのプロパティを初期化
+          this.data = data;
+          console.log("✅ インスタンスが初期化されました:", this.data);
+        }
+
+        /**
+         * ⚡ 非同期でデータを取得し、インスタンスを生成・返す静的ファクトリ関数
+         */
+        static async initialize(){
+
+          // --- IndexedDB等、初期化時に必要となる一連の非同期処理を実行 -----
+          const rawData = await new Promise(resolve => {
+            setTimeout(() => {
+              resolve(”非同期で取得されたデータ:"+resourceId);
+            }, 1000); // 1秒待機
+          });
+          // --- 非同期処理サンプルここまで -----
+
+          // 取得したデータを使ってインスタンスを生成し、返す
+          const instance = new authClient(rawData);
+          return instance;
+        }
+
+        /**
+         * 以降、その他メソッド
+         */
+        exec(){
+          // 省略
+        }
+      }
+      \`\`\`
+      `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
     implement: ['cl'], // {string[]} 実装の有無(ex.['cl','sv'])
     template: ``, // {string} Markdown出力時のテンプレート
 
@@ -96,14 +138,9 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       rev: 0, // {string} 本メソッド仕様書の版数
 
       params: {list:[
-        {name:'config',type:'authClientConfig',desc:'authClientの動作設定変数',note:''},
       ]},
 
       process: `
-        - メンバ変数の初期化
-          - authClient内共有用変数を準備("cf = new [authClientConfig](authClientConfig.md#authclientconfig_constructor)()")
-          - 鍵ペアを準備("crypto = new [cryptoClient](cryptoClient.md#cryptoclient_constructor)()")
-          - IndexedDbを準備("idb = new [authIndexedDb](authIndexedDb.md#authindexeddb_constructor)()")
       `,
       /*
         - IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
@@ -118,6 +155,62 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
       returns: {list:[
         {type:'authClient'}, // コンストラクタは自データ型名
+      ]},
+    },{
+      name: 'initialize', // {string} 関数(メソッド)名
+      type: 'async static', // {string} 関数(メソッド)の分類
+      desc: 'コンストラクタ(非同期処理対応)', // {string} 端的な関数(メソッド)の説明
+      note: ``, // {string} ✂️注意事項。Markdownで記載
+      source: `
+        static async initialize() {
+
+          // 初期化時に必要な一連の非同期処理を実行
+  
+          // 取得したデータを使ってインスタンスを生成し、返す
+          return new authClient();
+        }
+      `, // {string} ✂️想定するソースコード
+      lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+      rev: 0, // {string} 本メソッド仕様書の版数
+
+      params: {list:[
+        {name:'config',type:'authClientConfig',desc:'authClientの動作設定変数',note:''},
+      ]},
+
+      process: `
+        - メンバ変数の初期化
+          - authClient内共有用変数を準備("cf = new [authClientConfig](authClientConfig.md#authclientconfig_constructor)()")
+          - 鍵ペアを準備("crypto = new [cryptoClient](cryptoClient.md#cryptoclient_constructor)()")
+          - IndexedDbを準備("idb = new [authIndexedDb](authIndexedDb.md#authindexeddb_constructor)()")
+      `,
+
+      returns: {list:[
+        {type:'ClassName'}, // コンストラクタは自データ型名
+      ]},
+    },{
+      name: 'exec', // {string} 関数(メソッド)名
+      type: 'public', // {string} 関数(メソッド)の分類
+      desc: '', // {string} 端的な関数(メソッド)の説明
+      note: ``, // {string} ✂️注意事項。Markdownで記載
+      source: ``, // {string} ✂️想定するソースコード
+      lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+      rev: 0, // {string} 本メソッド仕様書の版数
+
+      params: {list:[
+        {name:'',type:'string',desc:'',note:''},
+      ]},
+
+      process: ``,
+
+      returns: {list:[
+        {type:'ClassName'}, // コンストラクタは自データ型名
+        { // 対比表形式
+          desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+          default: {},  // {Object.<string,string>} 全パターンの共通設定値
+          patterns: { // 特定パターンへの設定値
+            'パターン名':{項目名:値},
+          },
+        }
       ]},
     }]},
   },
