@@ -57,7 +57,12 @@
       try {
 
         dev.step(1);  // オプション設定値をメンバに登録
-        this.opt = opt;
+        this.opt = Object.assign({
+          dbName: 'auth',
+          storeName: 'config',
+          dbVersion: 1,
+        }, opt);
+        this.idb = {};
 
         dev.end();
 
@@ -73,12 +78,10 @@
       dev.start(v.whois, [...arguments]);
       try {
 
-        dev.step(1);  // オプションの既定値設定
-        opt = Object.assign({
-          dbName: 'auth',
-          storeName: 'config',
-          dbVersion: 1,
-        }, opt);
+        dev.step(1);  // インスタンス生成
+        // オプション既定値を先にメンバ変数に格納するため、constructorを先行
+        v.rv = new authClient(opt);
+        dev.dump(v.rv.opt,49);
 
         dev.step(2);  // DB接続：非同期処理なのでconstructorではなくinitializeで実行
         authClient._IndexedDB = await (()=>{
@@ -88,7 +91,7 @@
               return resolve(authClient._IndexedDB);
             }
 
-            const openRequest = indexedDB.open(opt.dbName, opt.dbVersion);
+            const openRequest = indexedDB.open(v.rv.opt.dbName, v.rv.opt.dbVersion);
 
             openRequest.onerror = (event) => {
               reject(new Error("IndexedDB接続エラー: " + event.target.error.message));
@@ -101,20 +104,20 @@
 
             openRequest.onupgradeneeded = (event) => {
               const db_upgrade = event.target.result;
-              if (!db_upgrade.objectStoreNames.contains(opt.storeName)) {
-                db_upgrade.createObjectStore(opt.storeName);
-                console.log(`✅ オブジェクトストア '${opt.storeName}' を作成しました。`);
+              if (!db_upgrade.objectStoreNames.contains(v.rv.opt.storeName)) {
+                db_upgrade.createObjectStore(v.rv.opt.storeName);
+                console.log(`✅ オブジェクトストア '${v.rv.opt.storeName}' を作成しました。`);
               }
             };
           });
         })();
 
         dev.step(3);  // オプション設定値をIndexedDBに保存
-        // static内からsetIndexedDBを呼び出すため、先にインスタンス作成
-        v.rv = new authClient(opt);
-        await v.rv.setIndexedDB(opt);
+        await v.rv.setIndexedDB(Object.assign({
+          fuga:`registared at ${new Date().toLocaleTimeString()}`,
+        },v.rv.opt)); // インスタンス変数・メソッドへのアクセスは"v.rv.xxx"で!!
 
-        dev.step(9);  // インスタンスを生成し、返す
+        dev.step(9);  // 終了処理
         dev.end();
         return v.rv;
 
@@ -137,6 +140,8 @@
 
         // 複数の put リクエストを順番に実行
         for ( [v.key, v.value] of Object.entries(obj)) {
+          // this.idbに登録
+          this.idb[v.key] = v.value;
 
           // putリクエストを実行。リクエストの成功/失敗を待つ必要は必ずしもないが、
           // エラーハンドリングのためにPromiseでラップするのが一般的。
@@ -166,7 +171,7 @@
       try {
 
         dev.end();
-        return this.opt;
+        return this.idb;
 
       } catch (e) { dev.error(e); return e; }
     }
