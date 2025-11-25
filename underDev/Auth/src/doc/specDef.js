@@ -469,6 +469,145 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       returns: {list:[{type:'authServerConfig'}]},
     }]},
   },
+  cryptoClient: {
+    extends: '', // {string} 親クラス名
+    desc: 'クライアント側の暗号化・復号処理', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: ``, // {string} ✂️補足説明。概要欄に記載
+    summary: `
+      ## 🔐 セキュリティ仕様
+
+      ### 鍵種別と用途
+
+      | 鍵名 | アルゴリズム | 用途 | 保存先 |
+      | :-- | :-- | :-- | :-- |
+      | CPkey-sign | RSA-PSS | 署名 | IndexedDB |
+      | CPkey-enc | RSA-OAEP | 暗号化 | IndexedDB |
+
+      ### 鍵生成時パラメータ
+
+      \`\`\` js
+      {
+        name: "RSA-PSS",
+        modulusLength: authConfig.RSAbits,
+        publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+        hash: "SHA-256",
+        extractable: false,
+        keyUsages: ["sign", "verify"]
+      }
+      \`\`\`
+
+      暗号化鍵は'name:"RSA-OAEP"'、'keyUsages: ["encrypt", "decrypt"]'とする。
+
+      ### 暗号・署名パラメータ
+
+      | 区分 | アルゴリズム | ハッシュ | 鍵長 | 備考 |
+      | :-- | :-- | :-- | :-- | :-- |
+      | 署名 | RSA-PSS | SHA-256 | authConfig.RSAbits | 鍵用途:sign |
+      | 暗号化 | RSA-OAEP | SHA-256 | authConfig.RSAbits | 鍵用途:encrypt |
+    `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['cl'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      //{name:'',type:'string',desc:'',note:''},
+      // label(項目名), default, isOpt
+    ]},
+
+    methods: {list:[
+      {
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'config',type:'authClientConfig',note:'authClientの動作設定変数'},
+        ]},
+
+        process: ``,
+
+        returns: {list:[
+          {type:'cryptoClient'}, // コンストラクタは自データ型名
+        ]},
+      },
+      {
+        name: 'decrypt', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'authServer->authClientのメッセージを復号＋署名検証', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'response',type:'encryptedResponse',desc:'暗号化された処理結果',note:''},
+        ]},
+
+        process: ``,
+
+        returns: {list:[
+          {type:'authResponse',desc:'復号された処理結果'},
+        ]},
+      },
+      {
+        name: 'encrypt', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'authClient->authServerのメッセージを暗号化＋署名', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'request',type:'authRequest',desc:'平文の処理要求',note:''},
+        ]},
+
+        process: ``,
+
+        returns: {list:[
+          {type:'encryptedRequest',desc:'暗号化された処理要求'}, // コンストラクタは自データ型名
+        ]},
+      },
+      {
+        name: 'generateKeys', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: '新たなクライアント側鍵ペアを作成', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: ['createPassword'], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          //{name:'',type:'string',desc:'',note:''},
+        ]},
+
+        process: `
+          - [createPassword](JSLib.md#createpassword)でパスワード生成
+          - [cf.RSAbits](authConfig.md#authconfig_internal)を参照、新たな鍵ペア生成
+        `,
+
+        returns: {list:[
+          /*
+          {name:'CSkeySign',type:'CryptoKey',label:'署名用秘密鍵',note:''},
+          {name:'CPkeySign',type:'CryptoKey',label:'署名用公開鍵',note:''},
+          {name:'CSkeyEnc',type:'CryptoKey',label:'暗号化用秘密鍵',note:''},
+          {name:'CPkeyEnc',type:'CryptoKey',label:'暗号化用公開鍵',note:''},
+          { // 対比表形式
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: { // 特定パターンへの設定値
+              'パターン名':{項目名:値},
+            },
+          }
+          */
+          {type:'cryptoClient'}, // コンストラクタは自データ型名
+        ]},
+      },
+    ]},
+  },
   encryptedRequest: {
     desc: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)

@@ -50,7 +50,7 @@
     template: ``, // {string} Markdown出力時のテンプレート
 
     members: {list:[
-      {name:'',type:'string',desc:'',note:''},
+      //{name:'',type:'string',desc:'',note:''},
       // label(項目名), default, isOpt
     ]},
 
@@ -65,7 +65,7 @@
         rev: 0, // {string} 本メソッド仕様書の版数
 
         params: {list:[
-          {name:'',type:'string',desc:'',note:''},
+          //{name:'',type:'string',desc:'',note:''},
         ]},
 
         process: ``,
@@ -75,12 +75,11 @@
           { // 対比表形式
             desc: '', // {string} 本データ型に関する説明。「正常終了時」等
             default: {},  // {Object.<string,string>} 全パターンの共通設定値
-            patterns: { // 特定パターンへの設定値
-              'パターン名':{項目名:値},
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
             },
           }
         ]},
-      }
+      },
     ]},
   },
 */
@@ -122,16 +121,22 @@
 class BaseDef {
 
   constructor(arg,parent={}){
-    this.ClassName = arg.ClassName || parent.ClassName || '';
-    this.classname = this.ClassName.toLowerCase();
-    this.MethodName = arg.MethodName || parent.MethodName || '';
-    this.methodname = this.MethodName.toLowerCase();
-    this.anchor = arg.anchor || (this.classname ? this.classname
-      + (this.methodname ? '_' + this.methodname : '') : '');
-    this.title = arg.title || '';
-    this.template = arg.template || '';
-    this.content = arg.content || '';
-    this.fixed = false;
+    const v = { whois: `${this.constructor.name}.constructor`, rv: null};
+    dev.start(v.whois);
+    try {
+      this.ClassName = arg.ClassName || parent.ClassName || '';
+      this.classname = this.ClassName.toLowerCase();
+      this.MethodName = arg.MethodName || parent.MethodName || '';
+      this.methodname = this.MethodName.toLowerCase();
+      this.anchor = arg.anchor || (this.classname ? this.classname
+        + (this.methodname ? '_' + this.methodname : '') : '');
+      this.title = arg.title || '';
+      this.template = arg.template || '';
+      this.content = arg.content || '';
+      this.fixed = false;
+
+      dev.end(); // 終了処理
+    } catch (e) { dev.error(e); return e; }
   }
 
   static _implements = [];  // 実装環境の一覧
@@ -180,23 +185,30 @@ class BaseDef {
    */
   article(arg={},opt={}){
     const v = Object.assign({title:'',level:0,anchor:'',link:'',navi:'',body:''},arg,
-      {opt:Object.assign({force:false,},opt)});
+      {opt:Object.assign({force:false,},opt)},
+      { whois: `${this.constructor.name}.article`, rv: null});
+    dev.start(v.whois);
+    try {
 
-    // タイトル行・ナビの作成
-    if( v.link.length > 0 )
-      v.title = `<a href="${v.link}">${v.title}</a>`;
-    if( v.anchor.length > 0 )
-      v.title = `<span id="${v.anchor}">${v.title}</span>`;
-    if( v.level > 0 )
-      v.title = `${'#'.repeat(v.level)} ${v.title}`;
-    if( v.navi.length > 0 )
-      v.title += v.navi;
+      // タイトル行・ナビの作成
+      if( v.link.length > 0 )
+        v.title = `<a href="${v.link}">${v.title}</a>`;
+      if( v.anchor.length > 0 )
+        v.title = `<span id="${v.anchor}">${v.title}</span>`;
+      if( v.level > 0 )
+        v.title = `${'#'.repeat(v.level)} ${v.title}`;
+      if( v.navi.length > 0 )
+        v.title += v.navi;
 
-    if( v.body.length > 0 || opt.force ){
-      v.title += '\n\n' + v.body;
-    }
+      if( v.body.length > 0 || opt.force ){
+        v.title += '\n\n' + v.body;
+      }
+      
+      dev.end(); // 終了処理
+      return v.title;
 
-    return v.title;
+    } catch (e) { dev.error(e); return e; }
+
   }
 
   /** cfTable: 原本となるクラスの各要素と、それぞれに設定する値の対比表を作成
@@ -212,15 +224,16 @@ class BaseDef {
    * - その他: システムエラー
    */
   cfTable(obj,opt={}){
-    const v = {rv:[],header:{}};
+    const v = { whois: `${this.constructor.name}.cfTable`, rv:[], header:{}};
+    dev.start(v.whois);
     try {
 
-      // オプションの既定値設定
+      dev.step(1);  // オプションの既定値設定
       if( typeof opt.indent === 'undefined' ) opt.indent = 0;
       v.header = opt.header ? opt.header :
       {name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明',note:'備考'}
 
-      // fv: 表示する値を整形して文字列化(format value)
+      dev.step(2);  // fv: 表示する値を整形して文字列化(format value)
       const fv = x => {
         return typeof x === 'undefined' ? '—' : (
           typeof x === 'string' ? x : (
@@ -232,31 +245,38 @@ class BaseDef {
 
       // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
       if( obj.hasOwnProperty('list') ){
-        // メンバ一覧・引数一覧の場合({list:FieldDef[]}形式)
+        dev.step(4);  // メンバ一覧・引数一覧の場合({list:FieldDef[]}形式)
         v.obj = {
           header:Object.assign({},v.header),
           body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
         };
       } else {
-        // 対比表の場合({type:クラス名}形式)
+        dev.step(5.1);  // 対比表の場合({type:クラス名}形式)
         obj = Object.assign({default:{}},obj);  // defaultを追加
 
-        // 対比元のデータ型が未定義の場合、"unregistered type"を返して終了
+        dev.step(5.2);  // 対比元のデータ型が未定義の場合、"unregistered type"を返して終了
         if( typeof BaseDef.defs[obj.type] === 'undefined' ){
-          throw new Error('unregistered type');
+          throw new Error(`unregistered type: "${obj.type}"`);
         }
+
+        dev.step(5.3);
         v.obj = {
           header: Object.assign({},v.header),
           body: JSON.parse(JSON.stringify(BaseDef.defs[obj.type])).members.list,
         };
+
+        dev.step(5.4);
         v.patternList = Object.keys(obj.patterns || {}); // 特定データ型内のパターン。ex.["正常終了","警告終了"]
         for( v.i=0 ; v.i<v.patternList.length ; v.i++ ){
+          dev.step(5.5);
           v.pn = v.patternList[v.i]; // パターン名
           v.po = obj.patterns[v.pn];  // パターンのオブジェクト
           v.cn = `_Col${v.i}`;  // カラム名
-          // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
+
+          dev.step(5.6);  // header：仮項目名として"_ColN"を、ラベルにパターン名を設定
           v.obj.header[v.cn] = v.pn;  // パターン名をヘッダに追加
-          // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
+
+          dev.step(5.7);  // body：「pattern > default > 指定無し('—')」の順に項目の値を設定
           v.obj.body.forEach(col => {
             col[v.cn] = v.po[col.name] ? `**${v.po[col.name]}**`
             : (obj.default[col.name] ? obj.default[col.name] : '—');
@@ -264,12 +284,12 @@ class BaseDef {
         }
       }
 
-      // ヘッダ行の作成
+      dev.step(6);  // ヘッダ行の作成
       v.cols = Object.keys(v.obj.header);
       v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(x => v.obj.header[x] || x).join(' | ')} |`);
       v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(()=>':--').join(' | ')} |`);
 
-      // データ行の作成
+      dev.step(7);  // データ行の作成
       for( v.i=0 ; v.i<v.obj.body.length ; v.i++ ){
         // 既定値欄の表示内容を作成
         v.obj.body[v.i].default = v.obj.body[v.i].default !== '' ? fv(v.obj.body[v.i].default)
@@ -278,11 +298,12 @@ class BaseDef {
         v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(x => fv(v.obj.body[v.i][x])).join(' | ')} |`);
       }
 
+      dev.end(); // 終了処理
       return v.rv.join('\n');
 
-    } catch(e) {
-      if( e.message !== 'unregistered type' ) console.error(e);
-      return e;
+    } catch (e) {
+      dev.error(e); return e;
+      //if( !e.message.includes('unregistered type') ) console.error(e);
     }
   }
 
@@ -293,34 +314,39 @@ class BaseDef {
   evaluate(str){
     // 置換対象の文字列内の関数名には「this.」が付いてないので付加
     const cfTable = this.cfTable;
-    const v = {str:this.trimIndent(str),rv:''};
+    const v = { whois: `${this.constructor.name}.evaluate`, str:this.trimIndent(str),rv:''};
     v.list = [...v.str.matchAll(/(\n*)(\s*)%%([\s\S]*?)%%/g)];
+    dev.start(v.whois);
     try {
 
-      // 評価箇所が無い場合はそのまま返す
+      dev.step(1);  // 評価箇所が無い場合はそのまま返す
       if( v.list.length === 0 ) return v.str;
-
+      
       v.list.forEach(x => {
         // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)
         // x[1]: 改行
         // x[2]: タグ前のスペース
         // x[3]: 式
         // ①式を評価
+        dev.step(2.1);
         v.result = eval(x[3]);
         // cfTableの戻り値がErrorの場合
         if( v.result instanceof Error ){
+          dev.step(2.2);
           throw v.result;
         } else {
-          // ②評価結果の各行頭にタグ前のスペースを追加
+          dev.step(2.3);  // ②評価結果の各行頭にタグ前のスペースを追加
           v.result = v.result.split('\n').map(l => x[2]+l).join('\n');
           v.str = v.str.replace(x[0],x[1]+v.result);
         }
-      })
+      });
+
+      dev.end(); // 終了処理
       return v.str;
 
     } catch(e) {
-      if( e.message !== 'unregistered type' ) console.error(e);
-      return e;
+      dev.error(e); return e;
+      //if( !e.message.includes('unregistered type') ) console.error(e);
     }
   }
 
@@ -330,24 +356,30 @@ class BaseDef {
    * @returns {string} 加工後の文字列
    */
   trimIndent(str) {
-    // 1. 先頭・末尾の空白行削除
-    if( !str ) return '';
-    const lines = str.replace(/^\n+/,'').replace(/[\s\n]+$/,'').split('\n');
-    if( lines.length === 0 ) return '';
+    const v = { whois: `${this.constructor.name}.trimIndent`, rv: null};
+    dev.start(v.whois);
+    try {
 
-    // 2. 1行だけの場合、先頭のスペースを削除して終了
-    if( lines.length === 1 ) return lines[0].trim();
+      dev.step(1);  // 先頭・末尾の空白行削除
+      if( !str ) return '';
+      const lines = str.replace(/^\n+/,'').replace(/[\s\n]+$/,'').split('\n');
+      if( lines.length === 0 ) return '';
 
-    // 3. 複数行の場合、各行の共通インデント(スペース・タブ)を取得
-    const indents = lines
-      .filter(line => line.length > 0 )
-      //.filter(line => line.trim() !== '')
-      .map(line => line.match(/^\s*/)[0].length);
-      //.map(line => line.match(/^[ \t]*/)[0].length);
-    const minIndent = indents.length ? Math.min(...indents) : 0;
+      dev.step(2);  // 1行だけの場合、先頭のスペースを削除して終了
+      if( lines.length === 1 ) return lines[0].trim();
 
-    // 4. 共通インデントを削除、各行を結合した文字列を返す
-    return lines.map(line => line.slice(minIndent)).join('\n');
+      dev.step(3);  // 複数行の場合、各行の共通インデント(スペース・タブ)を取得
+      const indents = lines
+        .filter(line => line.length > 0 ) // 空白行は飛ばす
+        .map(line => line.match(/^\s*/)[0].length); // 行頭空白桁数をカウント
+      const minIndent = indents.length ? Math.min(...indents) : 0;
+
+      dev.step(4);  // 共通インデントを削除、各行を結合した文字列を返す
+      v.rv = lines.map(line => line.slice(minIndent)).join('\n');
+
+      dev.end(); // 終了処理
+      return v.rv;
+    } catch (e) { dev.error(e); return e; }
   }
 }
 
@@ -1308,13 +1340,250 @@ function removeDefs(obj) {
   }
 }
 
+/** devTools: 開発支援関係メソッド集
+ * @param {Object} option
+ * @param {boolean} option.start=true - 開始・終了メッセージの表示
+ * @param {boolean} option.arg=true - 開始時に引数を表示
+ * @param {boolean} option.step=false - step毎の進捗ログの出力
+ */
+function devTools(option) {
+  let opt = Object.assign({ start: true, arg: true, step: false }, option);
+  let seq = 0;  // 関数の呼出順
+  let stack = []; // 呼出元関数情報のスタック
+  return { changeOption: changeOption, check: check, dump: dump, end: end, error: error, start: start, step: step };
+
+  /** オプションの変更 */
+  function changeOption(option) {
+    opt = Object.assign(opt, option);
+    console.log(`devTools.changeOption result: ${JSON.stringify(opt)}`);
+  }
+  /** 実行結果の確認
+   * - JSON文字列の場合、オブジェクト化した上でオブジェクトとして比較する
+   * @param {Object} arg
+   * @param {any} arg.asis - 実行結果
+   * @param {any} arg.tobe - 確認すべきポイント(Check Point)。エラーの場合、エラーオブジェクトを渡す
+   * @param {string} arg.title='' - テストのタイトル(ex. SpreadDbTest.delete.4)
+   * @param {Object} [arg.opt] - isEqualに渡すオプション
+   * @returns {boolean} - チェック結果OK:true, NG:false
+   */
+  function check(arg = {}) {
+    /** recursive: 変数の内容を再帰的にチェック
+     * @param {any} asis - 結果の値
+     * @param {any} tobe - 有るべき値
+     * @param {Object} opt - isEqualに渡すオプション
+     * @param {number} depth=0 - 階層の深さ
+     * @param {string} label - メンバ名または添字
+     */
+    const recursive = (asis, tobe, opt, depth = 0, label = '') => {
+      let rv;
+      // JSON文字列はオブジェクト化
+      asis = (arg => { try { return JSON.parse(arg) } catch { return arg } })(asis);
+      // データ型の判定
+      let type = String(Object.prototype.toString.call(tobe).slice(8, -1));
+      switch (type) {
+        case 'Number': if (Number.isNaN(tobe)) type = 'NaN'; break;
+        case 'Function': if (!('prototype' in tobe)) type = 'Arrow'; break;
+      }
+      let indent = '  '.repeat(depth);
+      switch (type) {
+        case 'Object':
+          msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}{`);
+          for (let mn in tobe) {
+            rv = !Object.hasOwn(asis, mn) ? false // 該当要素が不在
+              : recursive(asis[mn], tobe[mn], opt, depth + 1, mn);
+          }
+          msg.push(`${indent}}`);
+          break;
+        case 'Array':
+          msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}[`);
+          for (let i = 0; i < tobe.length; i++) {
+            rv = (asis[i] === undefined && tobe[i] !== undefined) ? false // 該当要素が不在
+              : recursive(asis[i], tobe[i], opt, depth + 1, String(i));
+          }
+          msg.push(`${indent}]`);
+          break;
+        case 'Function': case 'Arrow':
+          rv = tobe(asis);  // 合格ならtrue, 不合格ならfalseを返す関数を定義
+          msg.push(
+            indent + (label.length > 0 ? (label + ': ') : '')
+            + (rv ? asis : `[NG] (${tobe.toString()})(${asis}) -> false`)
+          );
+          break;
+        default:
+          if (tobe === undefined) {
+            rv = true;
+          } else {
+            rv = isEqual(asis, tobe, opt);
+            msg.push(
+              indent + (label.length > 0 ? (label + ': ') : '')
+              + (rv ? asis : `[NG] ToBe=${tobe}, AsIs=${asis}`)
+            );
+          }
+      }
+      return rv;
+    }
+
+    // 主処理
+    let msg = [];
+    let isOK = true;  // チェックOKならtrue
+
+    arg = Object.assign({ msg: '', opt: {} }, arg);
+    if (arg.tobe === undefined) {
+      // check未指定の場合、チェック省略、結果表示のみ
+      msg.push(`===== ${arg.title} Check Result : Not checked`);
+    } else {
+      // arg.asisとarg.tobeのデータ型が異なる場合、またはrecursiveで不一致が有った場合はエラーと判断
+      if (String(Object.prototype.toString.call(arg.asis).slice(8, -1))
+        !== String(Object.prototype.toString.call(arg.tobe).slice(8, -1))
+        || recursive(arg.asis, arg.tobe, arg.opt) === false
+      ) {
+        isOK = false;
+        msg.unshift(`===== ${arg.title} Check Result : Error`);
+      } else {
+        msg.unshift(`===== ${arg.title} Check Result : OK`);
+      }
+    }
+
+    // 引数として渡されたmsgおよび結果(JSON)を先頭に追加後、コンソールに表示
+    msg = `::::: Verified by devTools.check\n`
+      + `===== ${arg.title} Returned Value\n`
+      + JSON.stringify(arg.asis, (k, v) => typeof v === 'function' ? v.toString() : v, 2)
+      + `\n\n\n${msg.join('\n')}`;
+    if (isOK) console.log(msg); else console.error(msg);
+    return isOK;
+  }
+  /** dump: 渡された変数の内容をコンソールに表示
+   * - 引数には対象変数を列記。最後の引数が数値だった場合、行番号と看做す
+   * @param {any|any[]} arg - 表示する変数および行番号
+   * @returns {void}
+   */
+  function dump() {
+    let arg = [...arguments];
+    let line = typeof arg[arg.length - 1] === 'number' ? arg.pop() : null;
+    const o = stack[stack.length - 1];
+    let msg = (line === null ? '' : `l.${line} `)
+      + `::dump::${o.label}.${o.step}`;
+    for (let i = 0; i < arg.length; i++) {
+      // 対象変数が複数有る場合、Noを追記
+      msg += '\n' + (arg.length > 0 ? `${i}: ` : '') + stringify(arg[i]);
+    }
+    console.log(msg);
+  }
+  /** end: 正常終了時の呼出元関数情報の抹消＋終了メッセージの表示
+   * @param {Object} rt - end実行時に全体に優先させるオプション指定(run time option)
+   */
+  function end(rt={}) {
+    const localOpt = Object.assign({},opt,rt);
+    const o = stack.pop();
+    if (localOpt.start) console.log(`${o.label} normal end.`);
+  }
+  /** error: 異常終了時の呼出元関数情報の抹消＋終了メッセージの表示 */
+  function error(e) {
+    const o = stack.pop();
+    // 参考 : e.lineNumber, e.columnNumber, e.causeを試したが、いずれもundefined
+    e.message = `[Error] ${o.label}.${o.step}\n${e.message}`;
+    console.error(e.message
+      + `\n-- footprint\n${o.footprint}`
+      + `\n-- arguments\n${o.arg}`
+    );
+  }
+  /** start: 呼出元関数情報の登録＋開始メッセージの表示
+   * @param {string} name - 関数名
+   * @param {any[]} arg - start呼出元関数に渡された引数([...arguments]固定)
+   * @param {Object} rt - start実行時に全体に優先させるオプション指定(run time option)
+   */
+  function start(name, arg = [], rt={}) {
+    const localOpt = Object.assign({},opt,rt);
+    const o = {
+      class: '',  // nameがクラス名.メソッド名だった場合のクラス名
+      name: name,
+      seq: seq++,
+      step: 0,
+      footprint: [],
+      arg: [],
+    };
+    o.sSeq = ('000' + o.seq).slice(-4);
+    const caller = stack.length === 0 ? null : stack[stack.length - 1]; // 呼出元
+    // nameがクラス名.メソッド名だった場合、クラス名をセット
+    if (name.includes('.')) [o.class, o.name] = name.split('.');
+    // ラベル作成。呼出元と同じクラスならクラス名は省略
+    o.label = `[${o.sSeq}]` + (o.class && (!caller || caller.class !== o.class) ? o.class+'.' : '') + o.name;
+    // footprintの作成
+    stack.forEach(x => o.footprint.push(`${x.label}.${x.step}`));
+    o.footprint = o.footprint.length === 0 ? '(root)' : o.footprint.join(' > ');
+    // 引数情報の作成
+    if (arg.length === 0) {
+      o.arg = '(void)';
+    } else {
+      for (let i = 0; i < arg.length; i++) o.arg[i] = stringify(arg[i]);
+      o.arg = o.arg.join('\n');
+    }
+    // 作成した呼出元関数情報を保存
+    stack.push(o);
+
+    if (localOpt.start) {  // 開始メッセージの表示指定が有った場合
+      console.log(`${o.label} start.\n-- footprint\n${o.footprint}`
+        + (localOpt.arg ? `\n-- arguments\n${o.arg}` : ''));
+    }
+  }
+  /** step: 呼出元関数の進捗状況の登録＋メッセージの表示 */
+  function step(step, msg = '') {
+    const o = stack[stack.length - 1];
+    o.step = step;
+    if (opt.step) console.log(`${o.label} step.${o.step} ${msg}`);
+  }
+  /** stringify: 変数の内容をラベル＋データ型＋値の文字列として出力
+   * @param {any} arg - 文字列化する変数
+   * @returns {string}
+   */
+  function stringify(arg) {
+    /** recursive: 変数の内容を再帰的にメッセージ化
+     * @param {any} arg - 内容を表示する変数
+     * @param {number} depth=0 - 階層の深さ
+     * @param {string} label - メンバ名または添字
+     */
+    const recursive = (arg, depth = 0, label = '') => {
+      // データ型の判定
+      let type = String(Object.prototype.toString.call(arg).slice(8, -1));
+      switch (type) {
+        case 'Number': if (Number.isNaN(arg)) type = 'NaN'; break;
+        case 'Function': if (!('prototype' in arg)) type = 'Arrow'; break;
+      }
+      // ラベル＋データ型＋値の出力
+      let indent = '  '.repeat(depth);
+      switch (type) {
+        case 'Object':
+          msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}{`);
+          for (let mn in arg) recursive(arg[mn], depth + 1, mn);
+          msg.push(`${indent}}`);
+          break;
+        case 'Array':
+          msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}[`);
+          for (let i = 0; i < arg.length; i++) recursive(arg[i], depth + 1, String(i));
+          msg.push(`${indent}]`);
+          break;
+        default:
+          let val = typeof arg === 'function' ? `"${arg.toString()}"` : (typeof arg === 'string' ? `"${arg}"` : arg);
+          // Class Sheetのメソッドのように、toStringが効かないnative codeは出力しない
+          if (typeof val !== 'string' || val.indexOf('[native code]') < 0) {
+            msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}${val}(${type})`);
+          }
+      }
+    }
+    const msg = [];
+    recursive(arg);
+    return msg.join('\n');
+  }
+}
+
 import fs from "fs";
 import path from "path";
 import readline from "readline";
 
 const lines = [];
+const dev = devTools();
 const rl = readline.createInterface({ input: process.stdin });
-const clog = (l,x) => console.log(`l.${l} ${JSON.stringify(x,null,2)}`);
+const clog = (l,x,c=true) => {if(c) console.log(`l.${l} ${JSON.stringify(x,null,2)}`)};
 
 rl.on('line', x => lines.push(x)).on('close', () => {
   const arg = analyzeArg();

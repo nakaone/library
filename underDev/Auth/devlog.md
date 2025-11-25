@@ -4,7 +4,10 @@
 
 ### 目標
 
-- 旧版移行：authClientKeys.md
+- devTools導入
+- [bug] cryptoClient.mdの一部が出力されない
+- 旧版移行：cryptoClient.md
+- 旧版移行：authClientKeys.md ⇒ cryptoClientに統合
 - 旧版移行：authConfig.md
 - 旧版移行：authErrorLog.md
 - 旧版移行：authIndexedDB.md
@@ -15,7 +18,6 @@
 - 旧版移行：authServer.md
 - 旧版移行：authServerConfig.md
 - 旧版移行：classes.md
-- 旧版移行：cryptoClient.md
 - 旧版移行：cryptoServer.md
 - 旧版移行：decryptedRequest.md
 - 旧版移行：decryptedResponse.md
@@ -57,3 +59,15 @@
 - 主要クラス(cryptoClient/Server,authClient/Server,Member)のスケルトン作成
 - テスト仕様・ツールの作成
 - 主要クラスの実装
+
+## devTools改訂
+
+- dev.startで引数無しでもOKに
+- dev.endで戻り値格納
+- trace用stackには引数・戻り値・汎用変数を全て格納、エラー時のみ表示
+- dev.stepで変数指定で表示(dev.dump兼用)
+- footprintは非表示
+- verboseモード搭載
+- 
+
+## Error拡張

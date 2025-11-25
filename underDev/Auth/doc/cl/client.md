@@ -244,7 +244,12 @@
 | 4.01 | <span style="padding-left:2rem">[constructor](authError.md#autherror_constructor)</span> | コンストラクタ |
 | 5.00 | [authResponse](authResponse.md#authresponse_members) | クライアント側で復号されたサーバからの処理結果 |
 | 5.01 | <span style="padding-left:2rem">[constructor](authResponse.md#authresponse_constructor)</span> | コンストラクタ |
-| 6.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) |  |
-| 6.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |
-| 7.00 | [LocalRequest](LocalRequest.md#localrequest_members) | ローカル関数からの処理要求 |
-| 7.01 | <span style="padding-left:2rem">[constructor](LocalRequest.md#localrequest_constructor)</span> | コンストラクタ |
+| 6.00 | [cryptoClient](cryptoClient.md#cryptoclient_members) | クライアント側の暗号化・復号処理 |
+| 6.01 | <span style="padding-left:2rem">[constructor](cryptoClient.md#cryptoclient_constructor)</span> | コンストラクタ |
+| 6.02 | <span style="padding-left:2rem">[decrypt](cryptoClient.md#cryptoclient_decrypt)</span> | authServer->authClientのメッセージを復号＋署名検証 |
+| 6.03 | <span style="padding-left:2rem">[encrypt](cryptoClient.md#cryptoclient_encrypt)</span> | authClient->authServerのメッセージを暗号化＋署名 |
+| 6.04 | <span style="padding-left:2rem">[generateKeys](cryptoClient.md#cryptoclient_generatekeys)</span> | 新たなクライアント側鍵ペアを作成 |
+| 7.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) |  |
+| 7.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |
+| 8.00 | [LocalRequest](LocalRequest.md#localrequest_members) | ローカル関数からの処理要求 |
+| 8.01 | <span style="padding-left:2rem">[constructor](LocalRequest.md#localrequest_constructor)</span> | コンストラクタ |
