@@ -17,56 +17,58 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       {name:'note',type:'string',desc:'備考',note:''},
     ]},
 
-    methods: {list:[{
-      name: 'constructor',
-      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-      rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
+    methods: {list:[
+      {
+        name: 'constructor',
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
-      params: {list:[
-        {name:'config',type:'authServerConfig',desc:'authServerの動作設定変数',note:''},
-      ]},
+        params: {list:[
+          {name:'config',type:'authServerConfig',desc:'authServerの動作設定変数',note:''},
+        ]},
 
-      process: `
-        - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        - authServerConfig].[auditLog](authServerConfig.md#authserverconfig_members)シートが無ければ作成
-        - 引数の内、authAuditLogと同一メンバ名があればthisに設定
-        - 引数にnoteがあればthis.noteに設定
-        - timestampに現在日時を設定
-      `,
+        process: `
+          - メンバと引数両方にある項目は、引数の値をメンバとして設定
+          - authServerConfig].[auditLog](authServerConfig.md#authserverconfig_members)シートが無ければ作成
+          - 引数の内、authAuditLogと同一メンバ名があればthisに設定
+          - 引数にnoteがあればthis.noteに設定
+          - timestampに現在日時を設定
+        `,
 
-      returns: {list:[{type:'authAuditLog'}]},
-    },{
-      name: 'log', // {string} 関数(メソッド)名
-      type: 'public', // {string} 関数(メソッド)の分類
-      desc: '監査ログシートに処理要求を追記', // {string} 端的な関数(メソッド)の説明
-      note: ``, // {string} ✂️注意事項。Markdownで記載
-      source: ``, // {string} ✂️想定するソースコード
-      lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
-      rev: 0, // {string} 本メソッド仕様書の版数
+        returns: {list:[{type:'authAuditLog'}]},
+      },{
+        name: 'log', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: '監査ログシートに処理要求を追記', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 1, // {string} 本メソッド仕様書の版数
 
-      params: {list:[
-        {name:'request',type:'authRequest|string',desc:'処理要求オブジェクトまたは内発処理名',note:''},
-        {name:'response',type:'authResponse',desc:'処理結果',note:''},
-      ]},
+        params: {list:[
+          {name:'request',type:'authRequest|string',desc:'処理要求オブジェクトまたは内発処理名',note:''},
+          {name:'response',type:'authResponse',desc:'処理結果',note:''},
+        ]},
 
-      process: `
-        - メンバに以下を設定
-          %%cfTable({type:'authAuditLog',default:{
-            timestamp:"toLocale(this.timestamp)(ISO8601拡張形式)",
-            duration:"Date.now() - this.timestamp",
-            memberId:"request.memberId",
-            deviceId:"request.deviceId",
-            func:"request.func",
-            result:"response.result",
-            note:"this.note + response.message",
-          }})%%
-      `,
+        process: `
+          - メンバに以下を設定
+            %%cfTable({type:'authAuditLog',default:{
+              timestamp:"toLocale(this.timestamp)(ISO8601拡張形式)",
+              duration:"Date.now() - this.timestamp",
+              memberId:"request.memberId",
+              deviceId:"request.deviceId",
+              func:"request.func",
+              result:"response.result",
+              note:"this.note + response.message",
+            }})%%
+        `,
 
-      returns: {list:[
-        {type:'authAuditLog'}, // コンストラクタは自データ型名
-      ]},
-    }]},
+        returns: {list:[
+          {type:'authAuditLog'}, // コンストラクタは自データ型名
+        ]},
+      }
+    ]},
   },
   authConfig: {
     desc: 'authClient/authServer共通設定値',
@@ -262,7 +264,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
       params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+        {name:'config',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
       ]},
 
       process: `

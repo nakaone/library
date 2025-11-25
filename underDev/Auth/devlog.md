@@ -4,8 +4,6 @@
 
 ### 目標
 
-- 旧版移行：authAuditLog.md
-- 旧版移行：authClient.md
 - 旧版移行：authClientConfig.md
 - 旧版移行：authClientKeys.md
 - 旧版移行：authConfig.md
@@ -34,9 +32,11 @@
 - 旧版移行：MemberTrial.md
 - 旧版移行：MemberTrialLog.md
 - 旧版移行：spec.md
+- 旧版移行：authClient.md
 
 ### 対応済
 
+- 旧版移行：authAuditLog.md
 - LocalRequest: エラー時の戻り値が未評価
 - Error: unregistered type
 
