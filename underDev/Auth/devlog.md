@@ -4,10 +4,30 @@
 
 ### 目標
 
-- devTools導入
+- devTools導入(ProjectDef)
+- devTools導入(ClassDef)
+- devTools導入(MembersDef)
+- devTools導入(FieldDef)
+- devTools導入(MethodsDef)
+- devTools導入(MethodDef)
+- devTools導入(ParamsDef)
+- devTools導入(ReturnsDef)
+- devTools導入(ReturnDef)
 - [bug] cryptoClient.mdの一部が出力されない
 - 旧版移行：cryptoClient.md
 - 旧版移行：authClientKeys.md ⇒ cryptoClientに統合
+
+### 対応済
+
+- devTools導入、BaseDefのみソース修正
+- [bug] authClientConfig.mdの一部が出力されない
+- 旧版移行：authClientConfig.md
+- 旧版移行：authAuditLog.md
+- LocalRequest: エラー時の戻り値が未評価
+- Error: unregistered type
+
+## ToDo
+
 - 旧版移行：authConfig.md
 - 旧版移行：authErrorLog.md
 - 旧版移行：authIndexedDB.md
@@ -34,17 +54,6 @@
 - 旧版移行：MemberTrialLog.md
 - 旧版移行：spec.md
 - 旧版移行：authClient.md
-
-### 対応済
-
-- [bug] authClientConfig.mdの一部が出力されない
-- 旧版移行：authClientConfig.md
-- 旧版移行：authAuditLog.md
-- LocalRequest: エラー時の戻り値が未評価
-- Error: unregistered type
-
-## ToDo
-
 - 必要そうなクラスとメソッドを置く(引数・戻り値・処理は後工程で)
 - `archives/20251108_IO変更前/src/authClient/spec.md`からの移行
 - サーバ側仕様書作成・レビュー
@@ -67,7 +76,10 @@
 - trace用stackには引数・戻り値・汎用変数を全て格納、エラー時のみ表示
 - dev.stepで変数指定で表示(dev.dump兼用)
 - footprintは非表示
+- エラーは発生箇所以外表示しない
+- ISO8601拡張では無く、hh:mm:ss.nnnで短く表示
 - verboseモード搭載
-- 
+  - エラー以外出力しない
+  - 開始・終了時のみ
 
 ## Error拡張
