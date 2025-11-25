@@ -240,8 +240,10 @@ class BaseDef {
         obj = Object.assign({default:{}},obj);  // defaultを追加
 
         // 対比元のデータ型が未定義の場合、"unregistered type"を返して終了
-        if( typeof BaseDef.defs[obj.type] === 'undefined' )
+        if( typeof BaseDef.defs[obj.type] === 'undefined' ){
+          clog(244,obj);
           throw new Error('unregistered type');
+        }
         v.obj = {
           header: Object.assign({},v.header),
           body: JSON.parse(JSON.stringify(BaseDef.defs[obj.type])).members.list,

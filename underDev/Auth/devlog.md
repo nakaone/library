@@ -1,5 +1,7 @@
 # auth
 
+- Error: unregistered typeが繰り返し出てくる
+
 ## ToDo
 
 - 必要そうなクラスとメソッドを置く(引数・戻り値・処理は後工程で)

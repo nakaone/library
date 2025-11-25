@@ -185,7 +185,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       `,
 
       returns: {list:[
-        {type:'ClassName'}, // コンストラクタは自データ型名
+        {type:'authClient'}, // コンストラクタは自データ型名
       ]},
     },{
       name: 'exec', // {string} 関数(メソッド)名
@@ -203,14 +203,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       process: ``,
 
       returns: {list:[
-        {type:'ClassName'}, // コンストラクタは自データ型名
-        { // 対比表形式
-          desc: '', // {string} 本データ型に関する説明。「正常終了時」等
-          default: {},  // {Object.<string,string>} 全パターンの共通設定値
-          patterns: { // 特定パターンへの設定値
-            'パターン名':{項目名:値},
-          },
-        }
+        {type:'authClient'}, // コンストラクタは自データ型名
       ]},
     }]},
   },

@@ -1,3 +1,9 @@
+<div style="text-align: right;">
+
+[総説](../spec.md) | [クライアント側仕様](../cl/client.md) | [サーバ側仕様](../sv/server.md) | [JavaScriptライブラリ](../JSLib.md)
+
+</div>
+
 # authクライアント側仕様書
 
 ## 実装イメージ
@@ -73,7 +79,7 @@
   class authClient {
     static _IndexedDB = null; // データベース接続オブジェクトを格納する静的変数
     /** constructor: staticではない、一般のメンバに値を設定
-     * 
+     *
      */
     constructor(opt){
       const v = { whois: `authClient.constructor`, rv: null };
@@ -211,7 +217,7 @@
       dev.step(2);
       v.rv = auth.exec();
       dev.dump(v.whois,v.rv,174);
-      
+
       dev.end(); // 終了処理
       return v.rv;
     } catch (e) { dev.error(e); return e; }
@@ -224,4 +230,21 @@
 
 ## クラス一覧
 
-<!--::$tmp/cl.list.md::-->
+| No | 名称 | 概要 |
+| --: | :-- | :-- |
+| 1.00 | [authConfig](authConfig.md#authconfig_members) | authClient/authServer共通設定値 |
+| 1.01 | <span style="padding-left:2rem">[constructor](authConfig.md#authconfig_constructor)</span> | コンストラクタ |
+| 2.00 | [authClient](authClient.md#authclient_members) | クライアント側中核クラス |
+| 2.01 | <span style="padding-left:2rem">[constructor](authClient.md#authclient_constructor)</span> | コンストラクタ |
+| 2.02 | <span style="padding-left:2rem">[initialize](authClient.md#authclient_initialize)</span> | コンストラクタ(非同期処理対応) |
+| 2.03 | <span style="padding-left:2rem">[exec](authClient.md#authclient_exec)</span> |  |
+| 3.00 | [authClientConfig](authClientConfig.md#authclientconfig_members) | authClient専用の設定値 |
+| 3.01 | <span style="padding-left:2rem">[constructor](authClientConfig.md#authclientconfig_constructor)</span> | コンストラクタ |
+| 4.00 | [authError](authError.md#autherror_members) | auth専用エラーオブジェクト |
+| 4.01 | <span style="padding-left:2rem">[constructor](authError.md#autherror_constructor)</span> | コンストラクタ |
+| 5.00 | [authResponse](authResponse.md#authresponse_members) | クライアント側で復号されたサーバからの処理結果 |
+| 5.01 | <span style="padding-left:2rem">[constructor](authResponse.md#authresponse_constructor)</span> | コンストラクタ |
+| 6.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) |  |
+| 6.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |
+| 7.00 | [LocalRequest](LocalRequest.md#localrequest_members) | ローカル関数からの処理要求 |
+| 7.01 | <span style="padding-left:2rem">[constructor](LocalRequest.md#localrequest_constructor)</span> | コンストラクタ |
