@@ -410,7 +410,8 @@ class ProjectDef extends BaseDef {
     while( v.cnt > 0 ){
       v.fixed = true;
       Object.keys(this.classdef).forEach(x => {
-        if( this.classdef[x].createMd() instanceof Error )
+        v.md = this.classdef[x].createMd();
+        if( v.md instanceof Error )
           v.fixed = false;
       });
       v.cnt -= (v.fixed ? 10 : 1);
@@ -943,8 +944,9 @@ class MethodDef extends BaseDef {
       // 呼出元の作成
       for( v.i=0,v.rv=null,v.refList=[] ; v.i<this.referrer.length ; v.i++ ){
         // ClassDef作成済かチェック
-        if( typeof BaseDef.defs[this.referrer[v.i].name] === 'undefined' )
+        if( typeof BaseDef.defs[this.referrer[v.i].class] === 'undefined' ){
           v.rv = new Error('not fixed');
+        }
       }
       if( v.rv instanceof Error ) throw v.rv;
       v.referrer = this.referrer.length === 0 ? '' : this.article({

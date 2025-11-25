@@ -4,7 +4,6 @@
 
 ### 目標
 
-- 旧版移行：authClientConfig.md
 - 旧版移行：authClientKeys.md
 - 旧版移行：authConfig.md
 - 旧版移行：authErrorLog.md
@@ -36,6 +35,8 @@
 
 ### 対応済
 
+- [bug] authClientConfig.mdの一部が出力されない
+- 旧版移行：authClientConfig.md
 - 旧版移行：authAuditLog.md
 - LocalRequest: エラー時の戻り値が未評価
 - Error: unregistered type
