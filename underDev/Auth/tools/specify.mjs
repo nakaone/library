@@ -59,7 +59,7 @@
       type: 'public', // {string} 関数(メソッド)の分類
       desc: '', // {string} 端的な関数(メソッド)の説明
       note: ``, // {string} ✂️注意事項。Markdownで記載
-      source: ``, // {string} ✂️想定するソースコード
+      source: ``, // {string} ✂️想定するソースコード🧩
       lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
       rev: 0, // {string} 本メソッド仕様書の版数
 
@@ -728,7 +728,7 @@ class FieldDef extends BaseDef {
         x = x.replace(v.type,v.link);
       }
       return x;
-    }).join('\n');
+    }).join('\\|');
     this.label = arg.label || '';
     this.alias = arg.alias || [];
     this.desc = arg.desc || '';

@@ -1,0 +1,330 @@
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)
+SyntaxError: Unexpected token ')'
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:307:26
+    at Array.forEach (<anonymous>)
+    at MethodDef.evaluate (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:301:14)
+    at MethodDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:968:25)
+    at MethodsDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:818:30)
+    at ClassDef.createMd (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:592:32)
+    at file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:411:30
+    at Array.forEach (<anonymous>)
+    at new ProjectDef (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:410:34)
+    at Interface.<anonymous> (file:///Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tools/specify.mjs:1317:15)

@@ -18,6 +18,7 @@
 | --: | :-- | :-- |
 | 1.00 | [authAuditLog](authAuditLog.md#authauditlog_members) | authServerの監査ログ |
 | 1.01 | <span style="padding-left:2rem">[constructor](authAuditLog.md#authauditlog_constructor)</span> | コンストラクタ |
+| 1.02 | <span style="padding-left:2rem">[log](authAuditLog.md#authauditlog_log)</span> | 監査ログシートに処理要求を追記 |
 | 2.00 | [authConfig](authConfig.md#authconfig_members) | authClient/authServer共通設定値 |
 | 2.01 | <span style="padding-left:2rem">[constructor](authConfig.md#authconfig_constructor)</span> | コンストラクタ |
 | 3.00 | [authError](authError.md#autherror_members) | auth専用エラーオブジェクト |

@@ -16,8 +16,7 @@ authServer内の処理等、"warning"(処理継続)時の使用を想定。
 | :-- | :-- | :-- | :-- | :-- |
 | responseTime | number | Date.now() | 処理終了日時 |  |
 | status | string | "normal" | 終了状態 | "normal"or"fatal"or警告メッセージ(warning) |
-| response | any
-[authError](authError.md#autherror_members) | 任意 | 処理結果 | @returns {void}ならundefined。fatal時はauthError |
+| response | any\|[authError](authError.md#autherror_members) | 任意 | 処理結果 | @returns {void}ならundefined。fatal時はauthError |
 
 ## <span id="authresult_methods">🧱 authResult メソッド一覧</span>
 
