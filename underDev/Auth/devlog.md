@@ -1,6 +1,6 @@
 # auth
 
-- Error: unregistered typeが繰り返し出てくる
+- LocalRequest: エラー時の戻り値が未評価
 
 ## ToDo
 

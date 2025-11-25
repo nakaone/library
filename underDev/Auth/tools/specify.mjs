@@ -241,7 +241,6 @@ class BaseDef {
 
         // 対比元のデータ型が未定義の場合、"unregistered type"を返して終了
         if( typeof BaseDef.defs[obj.type] === 'undefined' ){
-          clog(244,obj);
           throw new Error('unregistered type');
         }
         v.obj = {
@@ -1256,7 +1255,7 @@ class ReturnDef extends BaseDef {
       // 確定済 ⇒ contentを作成して返す
       this.content = [
         this.title,
-        '',this.template,
+        '',v.template,
       ].join('\n');
       this.fixed = true;
       return this.content;
