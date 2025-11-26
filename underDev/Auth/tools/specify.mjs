@@ -1694,8 +1694,18 @@ const rl = readline.createInterface({ input: process.stdin });
 const clog = (l,x,c=true) => {if(c) console.log(`l.${l} ${JSON.stringify(x,null,2)}`)};
 
 rl.on('line', x => lines.push(x)).on('close', () => {
-  const arg = analyzeArg();
-  const prj = new ProjectDef(lines.join('\n'),{
-    folder:arg.opt.o,header:arg.opt.h,list:arg.opt.l});
-  //clog(9999,removeDefs(prj));
+  const v = {whois:`main`,arg:{},rv:null};
+  dev.start(v); // 汎用変数を引数とする
+  try {
+
+    dev.step(1); 
+    v.arg = analyzeArg();
+    dev.step(2); 
+    v.prj = new ProjectDef(lines.join('\n'),{
+      folder:v.arg.opt.o,header:v.arg.opt.h,list:v.arg.opt.l});
+
+    dev.end();  // 終了処理
+    //clog(9999,removeDefs(prj));
+
+  } catch(e) { return dev.error(e); }
 });
