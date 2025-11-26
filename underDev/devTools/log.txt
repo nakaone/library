@@ -1,4 +1,4 @@
-12:34:49.913 [0000] t01 start
+13:14:30.179 [0000] t01 start
 t01 step.1.1 {
   whois:"t01", // string
   arg:  {
@@ -6,38 +6,38 @@ t01 step.1.1 {
   }
   rv:null, // object
 }
-12:34:49.916 [0001] t02 start
+13:14:30.181 [0001] t02 start
 t02 step.1 {
   fuga:  [
     1, // number
     true, // boolean
   ], // Array
 }
-12:34:49.916 [0002] t03 start
+13:14:30.181 [0002] t03 start
 t03 step.3.1 null // null
-12:34:49.916 [0002] t03 normal end
-12:34:49.916 [0003] t03 start
+2025-11-26T13:14:30.181+09:00 [0002] t03 normal end
+13:14:30.182 [0003] t03 start
 t03 step.3.1 null // null
-12:34:49.916 [0003] t03 normal end
-12:34:49.916 [0001] t02 normal end
-12:34:49.916 [0004] t02 start
+2025-11-26T13:14:30.182+09:00 [0003] t03 normal end
+2025-11-26T13:14:30.182+09:00 [0001] t02 normal end
+13:14:30.182 [0004] t02 start
 t02 step.1 {
   fuga:  [
     1, // number
     true, // boolean
   ], // Array
 }
-12:34:49.916 [0005] t03 start
+13:14:30.182 [0005] t03 start
 t03 step.3.1 null // null
-12:34:49.916 [0005] t03 normal end
-12:34:49.916 [0006] t03 start
+2025-11-26T13:14:30.182+09:00 [0005] t03 normal end
+13:14:30.182 [0006] t03 start
 t03 step.3.1 null // null
 szError: Error: cnt>3
-    at Object.error (/Users/ena.kaon/Desktop/GitHub/library/underDev/devTools/core.js:103:55)
-    at t03 (/Users/ena.kaon/Desktop/GitHub/library/underDev/devTools/core.js:207:27)
-    at t02 (/Users/ena.kaon/Desktop/GitHub/library/underDev/devTools/core.js:216:18)
-    at t01 (/Users/ena.kaon/Desktop/GitHub/library/underDev/devTools/core.js:228:18)
-    at Object.<anonymous> (/Users/ena.kaon/Desktop/GitHub/library/underDev/devTools/core.js:235:1)
+    at Object.error (/Users/ena.kaon/Desktop/GitHub/library/underDev/devTools/core.js:108:55)
+    at t03 (/Users/ena.kaon/Desktop/GitHub/library/underDev/devTools/core.js:239:27)
+    at t02 (/Users/ena.kaon/Desktop/GitHub/library/underDev/devTools/core.js:248:18)
+    at t01 (/Users/ena.kaon/Desktop/GitHub/library/underDev/devTools/core.js:260:18)
+    at Object.<anonymous> (/Users/ena.kaon/Desktop/GitHub/library/underDev/devTools/core.js:267:1)
     at Module._compile (node:internal/modules/cjs/loader:1241:14)
     at Module._extensions..js (node:internal/modules/cjs/loader:1295:10)
     at Module.load (node:internal/modules/cjs/loader:1091:32)
@@ -48,8 +48,8 @@ szError: Error: cnt>3
   seq: 6,
   arg: {},
   rv: null,
-  start: 2025-11-26T03:34:49.916Z,
-  end: 2025-11-26T03:34:49.916Z,
+  start: '2025-11-26T13:14:30.182+09:00',
+  end: '2025-11-26T13:14:30.182+09:00',
   elaps: '0 msec',
   trace: '3.1'
 }
