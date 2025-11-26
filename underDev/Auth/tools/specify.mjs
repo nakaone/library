@@ -1437,8 +1437,8 @@ function devTools(opt){
   function step(label,val=null){
     // fi.traceにstepを追加
     fi.trace.push(label);
-    // valをJSON表示
-    if( opt.mode === 'dev' ){
+    // valが指定されていたらステップ名＋JSON表示
+    if( opt.mode === 'dev' && val ){
       console.log(`== ${fi.whois} step.${label} ${formatObject(val)}`);
     }
   }
@@ -1464,14 +1464,14 @@ function devTools(opt){
     // 終了時に確定する項目に値設定
     fi.end = new Date();
     fi.elaps = `${fi.end - fi.start} msec`;
-    fi.start = toLocale(fi.start);
-    fi.end = toLocale(fi.end);
   }
   /** error: エラー時処理 */
   function error(e){
 
     // 終了時に確定する項目に値設定
     finisher(fi);
+    fi.start = toLocale(fi.start);  // エラーログ出力時はISO8601拡張形式
+    fi.end = toLocale(fi.end);
 
     // 独自エラーオブジェクトを作成
     const rv = e.constructor.name === 'szError' ? e : new szError(fi,e);
