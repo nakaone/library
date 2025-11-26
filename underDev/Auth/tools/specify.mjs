@@ -184,13 +184,15 @@ class BaseDef {
    * @returns {string} 作成した記事(Markdown)
    */
   article(arg={},opt={}){
-    const v = Object.assign({title:'',level:0,anchor:'',link:'',navi:'',body:''},{arg},
-      {opt:Object.assign({force:false,},opt)},
-      { whois: `${this.constructor.name}.article`, rv: null});
+    const v = Object.assign({title:'',level:0,anchor:'',link:'',navi:'',body:''},
+      {whois:`${this.constructor.name}.article`, arg:{arg,opt}, rv: null});
     dev.start(v);
     try {
 
-      // タイトル行・ナビの作成
+      dev.step(1);  // オプションの既定値設定
+      v.opt = Object.assign({force:false,},opt);
+
+      dev.step(2);  // タイトル行・ナビの作成
       if( v.link.length > 0 )
         v.title = `<a href="${v.link}">${v.title}</a>`;
       if( v.anchor.length > 0 )
@@ -221,7 +223,7 @@ class BaseDef {
       default:'要否/既定値',desc:'説明',note:'備考'}
    * @param {number} [opt.indent=0] - 表の前のインデント桁数
    * @returns {string|Error} 作成した表(Markdown)
-   * - unregistered type: 引用元が未作成
+   * - not fixed: 引用元が未作成
    * - その他: システムエラー
    */
   cfTable(obj,opt={}){
@@ -255,9 +257,9 @@ class BaseDef {
         dev.step(5.1);  // 対比表の場合({type:クラス名}形式)
         obj = Object.assign({default:{}},obj);  // defaultを追加
 
-        dev.step(5.2);  // 対比元のデータ型が未定義の場合、"unregistered type"を返して終了
+        dev.step(5.2);  // 対比元のデータ型が未定義の場合、"not fixed"を返して終了
         if( typeof BaseDef.defs[obj.type] === 'undefined' ){
-          throw new Error(`unregistered type: "${obj.type}"`);
+          throw new Error(`not fixed: "${obj.type}"`);
         }
 
         dev.step(5.3);
@@ -318,27 +320,29 @@ class BaseDef {
     dev.start(v);
     try {
 
-      dev.step(1);  // 評価箇所が無い場合はそのまま返す
-      if( v.list.length === 0 ) return v.str;
+      mainBlock: {
+        dev.step(1);  // 評価箇所が無い場合はそのまま返す
+        if( v.list.length === 0 ) break mainBlock;
 
-      v.list.forEach(x => {
-        // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)
-        // x[1]: 改行
-        // x[2]: タグ前のスペース
-        // x[3]: 式
-        // ①式を評価
-        dev.step(2.1);
-        v.result = eval(x[3]);
-        // cfTableの戻り値がErrorの場合
-        if( v.result instanceof Error ){
-          dev.step(2.2);
-          throw v.result;
-        } else {
-          dev.step(2.3);  // ②評価結果の各行頭にタグ前のスペースを追加
-          v.result = v.result.split('\n').map(l => x[2]+l).join('\n');
-          v.str = v.str.replace(x[0],x[1]+v.result);
-        }
-      });
+        v.list.forEach(x => {
+          // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)
+          // x[1]: 改行
+          // x[2]: タグ前のスペース
+          // x[3]: 式
+          // ①式を評価
+          dev.step(2.1);
+          v.result = eval(x[3]);
+          // cfTableの戻り値がErrorの場合
+          if( v.result instanceof Error ){
+            dev.step(2.2);
+            throw v.result;
+          } else {
+            dev.step(2.3);  // ②評価結果の各行頭にタグ前のスペースを追加
+            v.result = v.result.split('\n').map(l => x[2]+l).join('\n');
+            v.str = v.str.replace(x[0],x[1]+v.result);
+          }
+        });
+      }
 
       v.rv = v.str;
       dev.end(); // 終了処理
@@ -353,29 +357,36 @@ class BaseDef {
    * @returns {string} 加工後の文字列
    */
   trimIndent(str) {
-    const v = { whois: `${this.constructor.name}.trimIndent`, rv: null, arg:{str}};
+    const v = { whois: `${this.constructor.name}.trimIndent`, rv: '', arg:{str:str}};
     dev.start(v);
     try {
 
-      dev.step(1);  // 先頭・末尾の空白行削除
-      if( !str ) return '';
-      const lines = str.replace(/^\n+/,'').replace(/[\s\n]+$/,'').split('\n');
-      if( lines.length === 0 ) return '';
+      mainBlock: {
+        dev.step(1);  // 先頭・末尾の空白行削除
+        if( !str ) break mainBlock;
 
-      dev.step(2);  // 1行だけの場合、先頭のスペースを削除して終了
-      if( lines.length === 1 ) return lines[0].trim();
+        const lines = str.replace(/^\n+/,'').replace(/[\s\n]+$/,'').split('\n');
+        if( lines.length === 0 ) break mainBlock;
 
-      dev.step(3);  // 複数行の場合、各行の共通インデント(スペース・タブ)を取得
-      const indents = lines
-        .filter(line => line.length > 0 ) // 空白行は飛ばす
-        .map(line => line.match(/^\s*/)[0].length); // 行頭空白桁数をカウント
-      const minIndent = indents.length ? Math.min(...indents) : 0;
+        dev.step(2);  // 1行だけの場合、先頭のスペースを削除して終了
+        if( lines.length === 1 ){
+          v.rv = lines[0].trim();
+          break mainBlock;
+        }
 
-      dev.step(4);  // 共通インデントを削除、各行を結合した文字列を返す
-      v.rv = lines.map(line => line.slice(minIndent)).join('\n');
+        dev.step(3);  // 複数行の場合、各行の共通インデント(スペース・タブ)を取得
+        const indents = lines
+          .filter(line => line.length > 0 ) // 空白行は飛ばす
+          .map(line => line.match(/^\s*/)[0].length); // 行頭空白桁数をカウント
+        const minIndent = indents.length ? Math.min(...indents) : 0;
+
+        dev.step(4);  // 共通インデントを削除、各行を結合した文字列を返す
+        v.rv = lines.map(line => line.slice(minIndent)).join('\n');
+      }
 
       dev.end(); // 終了処理
       return v.rv;
+
     } catch (e) { return dev.error(e); }
   }
 }
@@ -528,6 +539,7 @@ class ProjectDef extends BaseDef {
 
       dev.end();  // 終了処理
       return v.rv;
+
     } catch(e) { return dev.error(e); }
   }
 }
@@ -636,23 +648,26 @@ class ClassDef extends BaseDef {
     const v = {whois:`${this.constructor.name}.createMd`,arg:{},rv:null};
     dev.start(v); // 汎用変数を引数とする
     try {
-      // 確定済ならcontentを返して終了
-      if( this.fixed ) return this.content;
 
-      // MembersDef, MethodsDef のcreateMDを呼び出す(ClassDef特有)
-      v.members = this.members.createMd();
-      v.methods = this.methods.createMd();
-      if( v.members instanceof Error || v.methods instanceof Error )
-        throw new Error('not fixed');
+      mainBlock: {
+        dev.step(1); // 確定済ならcontentを返して終了
+        if( this.fixed ) break mainBlock;
 
-      // 確定済 ⇒ contentを作成して返す
-      this.content = [
-        this.title,
-        '',this.template,
-        '',v.members,
-        '',v.methods,
-      ].join('\n');
-      this.fixed = true;
+        dev.step(2); // MembersDef, MethodsDef のcreateMDを呼び出す(ClassDef特有)
+        v.members = this.members.createMd();
+        v.methods = this.methods.createMd();
+        if( v.members instanceof Error || v.methods instanceof Error )
+          throw new Error('not fixed');
+
+        dev.step(3); // 確定済 ⇒ contentを作成して返す
+        this.content = [
+          this.title,
+          '',this.template,
+          '',v.members,
+          '',v.methods,
+        ].join('\n');
+        this.fixed = true;
+      }
 
       v.rv = this.content;  // 終了処理
       dev.end();
@@ -719,26 +734,28 @@ class MembersDef extends BaseDef {
     dev.start(v); // 汎用変数を引数とする
     try {
 
-      dev.step(1); // 確定済ならcontentを返して終了
-      if( this.fixed ) return this.content;
+      mainBlock: {
+        dev.step(1); // 確定済ならcontentを返して終了
+        if( this.fixed ) break mainBlock;
 
-      dev.step(2); // メンバ一覧の作成
-      if( this.list.length === 0 ){
-        this.table = '- メンバ無し';
-      } else {
-        v.r = this.cfTable(this);
-        if( v.r instanceof Error ) throw v.r;
-        this.table = v.r;
+        dev.step(2); // メンバ一覧の作成
+        if( this.list.length === 0 ){
+          this.table = '- メンバ無し';
+        } else {
+          v.r = this.cfTable(this);
+          if( v.r instanceof Error ) throw v.r;
+          this.table = v.r;
+        }
+        v.template = this.evaluate(this.template);
+        if( v.template instanceof Error ) throw v.template;
+
+        dev.step(3); // 確定済 ⇒ contentを作成して返す
+        this.content = [
+          this.title,
+          '',v.template,
+        ].join('\n');
+        this.fixed = true;
       }
-      v.template = this.evaluate(this.template);
-      if( v.template instanceof Error ) throw v.template;
-
-      dev.step(3); // 確定済 ⇒ contentを作成して返す
-      this.content = [
-        this.title,
-        '',v.template,
-      ].join('\n');
-      this.fixed = true;
 
       v.rv = this.content;  // 終了処理
       dev.end();
@@ -777,7 +794,7 @@ class FieldDef extends BaseDef {
    */
   constructor(arg,seq,parent){
     super(arg,parent);
-    const v = {whois:`${this.constructor.name}.constructor`,arg:{arg,parent},rv:null};
+    const v = {whois:`${this.constructor.name}.constructor`,arg:{arg,seq,parent},rv:null};
     dev.start(v); // 汎用変数を引数とする
     try {
 
@@ -887,28 +904,30 @@ class MethodsDef extends BaseDef {
     dev.start(v); // 汎用変数を引数とする
     try {
 
-      dev.step(1); // 確定済ならcontentを返して終了
-      if( this.fixed ) return this.content;
+      mainBlock: {
+        dev.step(1); // 確定済ならcontentを返して終了
+        if( this.fixed ) break mainBlock;
 
-      dev.step(2); // 子要素(個別メソッド)のMarkdown作成
-      for( v.i=0,v.rv=null,v.methods=[] ; v.i<this.list.length ; v.i++ ){
-        v.r = this.list[v.i].createMd();
-        if( v.r instanceof Error ) v.rv = v.r;
-        v.methods.push(v.r);
+        dev.step(2); // 子要素(個別メソッド)のMarkdown作成
+        for( v.i=0,v.rv=null,v.methods=[] ; v.i<this.list.length ; v.i++ ){
+          v.r = this.list[v.i].createMd();
+          if( v.r instanceof Error ) v.rv = v.r;
+          v.methods.push(v.r);
+        }
+        if( v.rv instanceof Error ) throw v.rv;
+
+        dev.step(3); // テンプレートのMarkdown作成
+        v.template = this.evaluate(this.template);
+        if( v.template instanceof Error ) throw v.template;
+
+        dev.step(4); // 確定済 ⇒ contentを作成して返す
+        this.content = [
+          this.title,
+          '',v.template,
+          '',...v.methods,
+        ].join('\n');
+        this.fixed = true;
       }
-      if( v.rv instanceof Error ) throw v.rv;
-
-      dev.step(3); // テンプレートのMarkdown作成
-      v.template = this.evaluate(this.template);
-      if( v.template instanceof Error ) throw v.template;
-
-      dev.step(4); // 確定済 ⇒ contentを作成して返す
-      this.content = [
-        this.title,
-        '',v.template,
-        '',...v.methods,
-      ].join('\n');
-      this.fixed = true;
 
       v.rv = this.content;  // 終了処理
       dev.end();
@@ -1022,72 +1041,74 @@ class MethodDef extends BaseDef {
     dev.start(v); // 汎用変数を引数とする
     try {
 
-      dev.step(1); // 確定済ならcontentを返して終了
-      if( this.fixed ) return this.content;
+      mainBlock: {
+        dev.step(1); // 確定済ならcontentを返して終了
+        if( this.fixed ) break mainBlock;
 
-      dev.step(2); // 呼出元の作成
-      for( v.i=0,v.rv=null,v.refList=[] ; v.i<this.referrer.length ; v.i++ ){
-        // ClassDef作成済かチェック
-        if( typeof BaseDef.defs[this.referrer[v.i].class] === 'undefined' ){
-          v.rv = new Error('not fixed');
+        dev.step(2); // 呼出元の作成
+        for( v.i=0,v.rv=null,v.refList=[] ; v.i<this.referrer.length ; v.i++ ){
+          // ClassDef作成済かチェック
+          if( typeof BaseDef.defs[this.referrer[v.i].class] === 'undefined' ){
+            v.rv = new Error('not fixed');
+          }
         }
+        if( v.rv instanceof Error ) throw v.rv;
+        v.referrer = this.referrer.length === 0 ? '' : this.article({
+          title: `📞 呼出元`,
+          level: 4,
+          anchor: this.anchor + '_referrer',
+          link: '',
+          navi: '',
+          body: this.referrer.map(x => `- [${
+            BaseDef.defs[x.class].name
+          }.${
+            BaseDef.defs[x.class].method[x.method].name
+          }](${
+            BaseDef.defs[x.class].name
+          }.md#${x.class}_members)`).join('\n'),
+        })
+
+        dev.step(3); // 引数の作成
+        v.params = this.params.createMd();
+        if( v.params instanceof Error ) throw v.params;
+
+        dev.step(4); // 自分(処理手順)の作成(BaseDefと同じ)
+        v.template = this.evaluate(this.template);
+        if( v.template instanceof Error ) throw v.template;
+
+        dev.step(5); // 処理手順内のリンクを呼出先referrerにセット
+        [...v.template.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)].forEach(link => {
+          v.m = link[2].match(/(.+)\.md#(.+)/);
+          if( v.m ){
+            // 外部リンクの場合
+            v.m = v.m[2].split('_');
+          } else {
+            // ローカルリンクの場合
+            v.m = v.template.split('_').map(x => x = x.replace('#',''));
+          }
+          v.ClassName = v.m[0];
+          v.MethodName = v.m[1];
+          if( typeof BaseDef.defs[v.ClassName] !== 'undefined'
+            && typeof BaseDef.defs[v.ClassName].method[v.MethodName] !== 'undefined'
+          ){
+            BaseDef.defs[v.ClassName].method[v.MethodName].referrer.push({class:this.ClassName,method:this.MethodName});
+          }
+        });
+
+        dev.step(6); // 戻り値の作成
+        v.returns = this.returns.createMd();
+        if( v.returns instanceof Error ) throw v.returns;
+
+        dev.step(7); // 確定済 ⇒ contentを作成して返す
+        this.content = [
+          this.title,
+          '',v.referrer,
+          '',v.params,
+          '',v.template,
+          '',v.returns,
+        ].join('\n');
+        this.fixed = true;
       }
-      if( v.rv instanceof Error ) throw v.rv;
-      v.referrer = this.referrer.length === 0 ? '' : this.article({
-        title: `📞 呼出元`,
-        level: 4,
-        anchor: this.anchor + '_referrer',
-        link: '',
-        navi: '',
-        body: this.referrer.map(x => `- [${
-          BaseDef.defs[x.class].name
-        }.${
-          BaseDef.defs[x.class].method[x.method].name
-        }](${
-          BaseDef.defs[x.class].name
-        }.md#${x.class}_members)`).join('\n'),
-      })
-
-      dev.step(3); // 引数の作成
-      v.params = this.params.createMd();
-      if( v.params instanceof Error ) throw v.params;
-
-      dev.step(4); // 自分(処理手順)の作成(BaseDefと同じ)
-      v.template = this.evaluate(this.template);
-      if( v.template instanceof Error ) throw v.template;
-
-      dev.step(5); // 処理手順内のリンクを呼出先referrerにセット
-      [...v.template.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)].forEach(link => {
-        v.m = link[2].match(/(.+)\.md#(.+)/);
-        if( v.m ){
-          // 外部リンクの場合
-          v.m = v.m[2].split('_');
-        } else {
-          // ローカルリンクの場合
-          v.m = v.template.split('_').map(x => x = x.replace('#',''));
-        }
-        v.ClassName = v.m[0];
-        v.MethodName = v.m[1];
-        if( typeof BaseDef.defs[v.ClassName] !== 'undefined'
-          && typeof BaseDef.defs[v.ClassName].method[v.MethodName] !== 'undefined'
-        ){
-          BaseDef.defs[v.ClassName].method[v.MethodName].referrer.push({class:this.ClassName,method:this.MethodName});
-        }
-      });
-
-      dev.step(6); // 戻り値の作成
-      v.returns = this.returns.createMd();
-      if( v.returns instanceof Error ) throw v.returns;
-
-      dev.step(7); // 確定済 ⇒ contentを作成して返す
-      this.content = [
-        this.title,
-        '',v.referrer,
-        '',v.params,
-        '',v.template,
-        '',v.returns,
-      ].join('\n');
-      this.fixed = true;
 
       v.rv = this.content;  // 終了処理
       dev.end();
@@ -1156,26 +1177,28 @@ class ParamsDef extends BaseDef {
     dev.start(v); // 汎用変数を引数とする
     try {
 
-      dev.step(1); // 確定済ならcontentを返して終了
-      if( this.fixed ) return this.content;
+      mainBlock: {
+        dev.step(1); // 確定済ならcontentを返して終了
+        if( this.fixed ) break mainBlock;
 
-      dev.step(2); // 引数一覧の作成
-      if( this.list.length === 0 ){
-        this.table = '- 引数無し(void)';
-      } else {
-        v.r = this.cfTable(this);
-        if( v.r instanceof Error ) throw v.r;
-        this.table = v.r;
+        dev.step(2); // 引数一覧の作成
+        if( this.list.length === 0 ){
+          this.table = '- 引数無し(void)';
+        } else {
+          v.r = this.cfTable(this);
+          if( v.r instanceof Error ) throw v.r;
+          this.table = v.r;
+        }
+        v.template = this.evaluate(this.template);
+        if( v.template instanceof Error ) throw v.template;
+
+        dev.step(3); // 確定済 ⇒ contentを作成して返す
+        this.content = [
+          this.title,
+          '',v.template,
+        ].join('\n');
+        this.fixed = true;
       }
-      v.template = this.evaluate(this.template);
-      if( v.template instanceof Error ) throw v.template;
-
-      dev.step(3); // 確定済 ⇒ contentを作成して返す
-      this.content = [
-        this.title,
-        '',v.template,
-      ].join('\n');
-      this.fixed = true;
 
       v.rv = this.content;  // 終了処理
       dev.end();
@@ -1237,28 +1260,30 @@ class ReturnsDef extends BaseDef {
     dev.start(v); // 汎用変数を引数とする
     try {
 
-      dev.step(1); // 確定済ならcontentを返して終了
-      if( this.fixed ) return this.content;
+      mainBlock: {
+        dev.step(1); // 確定済ならcontentを返して終了
+        if( this.fixed ) break mainBlock;
 
-      dev.step(2); // 子要素(ReturnDef)のMarkdown作成
-      for( v.i=0,v.rv=null,v.returns=[] ; v.i<this.list.length ; v.i++ ){
-        v.r = this.list[v.i].createMd();
-        if( v.r instanceof Error ) v.rv = v.r;
-        v.returns.push(v.r);
+        dev.step(2); // 子要素(ReturnDef)のMarkdown作成
+        for( v.i=0,v.rv=null,v.returns=[] ; v.i<this.list.length ; v.i++ ){
+          v.r = this.list[v.i].createMd();
+          if( v.r instanceof Error ) v.rv = v.r;
+          v.returns.push(v.r);
+        }
+        if( v.rv instanceof Error ) throw v.rv;
+
+        dev.step(3); // templateの評価
+        v.template = this.evaluate(this.template);
+        if( v.template instanceof Error ) throw v.template;
+
+        dev.step(4); // 確定済 ⇒ contentを作成して返す
+        this.content = [
+          this.title,
+          '',v.template,
+          '',...v.returns,
+        ].join('\n');
+        this.fixed = true;
       }
-      if( v.rv instanceof Error ) throw v.rv;
-
-      dev.step(3); // templateの評価
-      v.template = this.evaluate(this.template);
-      if( v.template instanceof Error ) throw v.template;
-
-      dev.step(4); // 確定済 ⇒ contentを作成して返す
-      this.content = [
-        this.title,
-        '',v.template,
-        '',...v.returns,
-      ].join('\n');
-      this.fixed = true;
 
       v.rv = this.content;  // 終了処理
       dev.end();
@@ -1362,19 +1387,23 @@ class ReturnDef extends BaseDef {
     dev.start(v); // 汎用変数を引数とする
     try {
 
-      dev.step(1); // 確定済ならcontentを返して終了
-      if( this.fixed ) return this.content;
+      mainBlock: {
+        dev.step(1); // 確定済ならcontentを返して終了
+        if( this.fixed ) break mainBlock;
 
-      dev.step(2); // テンプレートのMarkdown作成
-      v.template = this.evaluate(this.template);
-      if( v.template instanceof Error ) throw v.template;
+        dev.step(2); // テンプレートのMarkdown作成
+        v.template = this.evaluate(this.template);
+        if( v.template instanceof Error && !v.template.message.includes('not fixed')){
+          throw v.template;
+        }
 
-      dev.step(3); // 確定済 ⇒ contentを作成して返す
-      this.content = [
-        this.title,
-        '',v.template,
-      ].join('\n');
-      this.fixed = true;
+        dev.step(3); // 確定済 ⇒ contentを作成して返す
+        this.content = [
+          this.title,
+          '',v.template,
+        ].join('\n');
+        this.fixed = true;
+      }
 
       v.rv = this.content;  // 終了処理
       dev.end();
@@ -1470,7 +1499,7 @@ function devTools(opt){
       this.seq = seq++; // {number} 実行順序
       this.arg = v.arg || {}; // {any} 起動時引数。{変数名：値}形式
       this.v = v || null; // {Object} 汎用変数
-      this.trace = [];  // {string[]} 実行順に並べたdev.step
+      this.log = [];  // {string[]} 実行順に並べたdev.step
       this.rv = v.rv || null; // {any} 戻り値
 
       this.start = new Date();  // {Date} 開始時刻
@@ -1492,7 +1521,7 @@ function devTools(opt){
       .forEach(x => this[x] = fi[x]);
 
       // エラーが起きた関数内でのstep実行順
-      this.trace = fi.trace.join(', ');
+      this.log = fi.log.join(', ');
 
     }
   }
@@ -1519,8 +1548,8 @@ function devTools(opt){
 
   /** step: 関数内の進捗状況管理＋変数のダンプ */
   function step(label,val=null){
-    // fi.traceにstepを追加
-    fi.trace.push(label);
+    // fi.logにstepを追加
+    fi.log.push(label);
     // valが指定されていたらステップ名＋JSON表示
     if( opt.mode === 'dev' && val ){
       console.log(`== ${fi.whois} step.${label} ${formatObject(val)}`);
@@ -1546,6 +1575,7 @@ function devTools(opt){
 
     trace.pop();  // 呼出元関数スタックから削除
     fi = trace[trace.length-1];
+    //console.log(`l.1576 len=${trace.length} ${JSON.stringify(trace.map(x => x.whois))}`);
   }
 
   /** finisher: end/error共通の終了時処理 */
@@ -1691,7 +1721,6 @@ import readline from "readline";
 const lines = [];
 const dev = devTools();
 const rl = readline.createInterface({ input: process.stdin });
-const clog = (l,x,c=true) => {if(c) console.log(`l.${l} ${JSON.stringify(x,null,2)}`)};
 
 rl.on('line', x => lines.push(x)).on('close', () => {
   const v = {whois:`main`,arg:{},rv:null};

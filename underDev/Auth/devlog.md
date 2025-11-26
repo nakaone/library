@@ -1,10 +1,22 @@
 # auth
 
-## 2025/11/25
+## 2025/11/26
 
 ### 目標
 
-- devTools導入(ProjectDef)
+- [bug] main処理終了のメッセージが出ない(main normal end)
+- [bug] ProjectDef.outputMD終了後もループが動いている
+  15:07:09.219 [1433] ProjectDef.outputMD normal end
+  15:07:09.219 [1426] MethodDef.trimIndent normal end
+  15:07:09.219 [1425] ParamsDef.createMd normal end
+
+- [bug] cryptoClient.mdの一部が出力されない
+- 旧版移行：cryptoClient.md
+- 旧版移行：authClientKeys.md ⇒ cryptoClientに統合
+
+### 対応済
+
+- devTools: 正常終了時、開始/終了時刻とelaps表示
 - devTools導入(ClassDef)
 - devTools導入(MembersDef)
 - devTools導入(FieldDef)
@@ -13,18 +25,26 @@
 - devTools導入(ParamsDef)
 - devTools導入(ReturnsDef)
 - devTools導入(ReturnDef)
-- [bug] cryptoClient.mdの一部が出力されない
-- 旧版移行：cryptoClient.md
-- 旧版移行：authClientKeys.md ⇒ cryptoClientに統合
-
-### 対応済
-
+- devTools導入(ProjectDef)
 - devTools導入、BaseDefのみソース修正
 - [bug] authClientConfig.mdの一部が出力されない
 - 旧版移行：authClientConfig.md
 - 旧版移行：authAuditLog.md
 - LocalRequest: エラー時の戻り値が未評価
 - Error: unregistered type
+
+#### devTools改訂・独自Error導入
+
+- dev.startで引数無しでもOKに
+- dev.endで戻り値格納
+- trace用stackには引数・戻り値・汎用変数を全て格納、エラー時のみ表示
+- dev.stepで変数指定で表示(dev.dump兼用)
+- footprintは非表示
+- エラーは発生箇所以外表示しない
+- ISO8601拡張では無く、hh:mm:ss.nnnで短く表示
+- verboseモード搭載
+  - エラー以外出力しない
+  - 開始・終了時のみ
 
 ## ToDo
 
@@ -68,18 +88,3 @@
 - 主要クラス(cryptoClient/Server,authClient/Server,Member)のスケルトン作成
 - テスト仕様・ツールの作成
 - 主要クラスの実装
-
-## devTools改訂
-
-- dev.startで引数無しでもOKに
-- dev.endで戻り値格納
-- trace用stackには引数・戻り値・汎用変数を全て格納、エラー時のみ表示
-- dev.stepで変数指定で表示(dev.dump兼用)
-- footprintは非表示
-- エラーは発生箇所以外表示しない
-- ISO8601拡張では無く、hh:mm:ss.nnnで短く表示
-- verboseモード搭載
-  - エラー以外出力しない
-  - 開始・終了時のみ
-
-## Error拡張
