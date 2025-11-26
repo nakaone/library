@@ -1,3 +1,25 @@
-2025-11-25T17:45:04.564 [0000] f0 start
-f0 transactions...
-2025-11-25T17:45:04.566 [0000] f0 normal end
+11:33:31.474 [0000] t01 start
+t01 step.1.1 {
+  whois:"t01", // string
+  arg:  {
+    x:"abc", // string
+  }
+  rv:null, // object
+}
+11:33:31.476 [0001] t02 start
+t02 step.1 {
+  fuga:  [
+    1, // number
+    true, // boolean
+  ], // Array
+}
+11:33:31.476 [0001] t02 normal end
+11:33:31.476 [0002] t02 start
+t02 step.1 {
+  fuga:  [
+    1, // number
+    true, // boolean
+  ], // Array
+}
+11:33:31.476 [0002] t02 normal end
+11:33:31.476 [0000] t01 normal end
