@@ -11,13 +11,14 @@
  *   | "dev" | ⭕ | ⭕ | ⭕ | 開発用 |
  */
 function devTools(opt){
+  /** functionInfo: 現在実行中の関数に関する情報 */
   class functionInfo {
     constructor(v){
       this.whois = v.whois || ''; // {string} 関数名またはクラス名.メソッド名
       this.seq = seq++; // {number} 実行順序
       this.arg = v.arg || {}; // {any} 起動時引数。{変数名：値}形式
       this.v = v || null; // {Object} 汎用変数
-      this.stack = [];  // {string[]} 実行順に並べたdev.step
+      this.trace = [];  // {string[]} 実行順に並べたdev.step
       this.rv = v.rv || null; // {any} 戻り値
 
       this.start = new Date();  // {Date} 開始時刻
@@ -26,19 +27,27 @@ function devTools(opt){
     }
   }
 
+  /** szError: 独自拡張したErrorオブジェクト */
   class szError extends Error {
     constructor(fi,...e){
       super(...e);
 
-      // 独自追加項目を個別に設定(Object.keysではstackが空欄等、壊れる)
+      // 呼出元関数
+      this.caller = trace.map(x => x.whois).join(' > ');
+
+      // 独自追加項目を個別に設定(Object.keysではtraceが空欄等、壊れる)
       ['whois','seq','arg','rv','start','end','elaps']
       .forEach(x => this[x] = fi[x]);
+
+      // エラーが起きた関数内でのstep実行順
+      this.trace = fi.trace.join(', ');
+
     }
   }
 
   opt = Object.assign({mode:'dev',digit:4},opt);
   let seq = 0;  // 関数の呼出順(連番)
-  const stack = []; // {functionInfo[]} 呼出元関数スタック
+  const trace = []; // {functionInfo[]} 呼出元関数スタック
   let fi; // 現在処理中の関数に関する情報
   return {start,step,end,error};
 
@@ -53,13 +62,13 @@ function devTools(opt){
         ('0'.repeat(opt.digit)+fi.seq).slice(-opt.digit)
       }] ${fi.whois} start`);
     }
-    stack.push(fi); // 呼出元関数スタックに保存
+    trace.push(fi); // 呼出元関数スタックに保存
   }
 
   /** step: 関数内の進捗状況管理＋変数のダンプ */
   function step(label,val=null){
-    // fi.stackにstepを追加
-    fi.stack.push(label);
+    // fi.traceにstepを追加
+    fi.trace.push(label);
     // valをJSON表示
     if( opt.mode === 'dev' ){
       console.log(`${fi.whois} step.${label} ${formatObject(val)}`);
@@ -68,9 +77,9 @@ function devTools(opt){
 
   /** end: 正常終了時処理 */
   function end(){
-
+    // 終了時に確定する項目に値設定
     fi.end = new Date();
-    fi.elaps = fi.end - fi.start;
+    fi.elaps = `${fi.end - fi.start} msec`;
 
     // ログ出力
     if( opt.mode === 'normal' || opt.mode === 'dev' ){
@@ -79,13 +88,29 @@ function devTools(opt){
       }] ${fi.whois} normal end`);
     }
 
-    stack.pop();  // 呼出元関数スタックから削除
-    fi = stack[stack.length-1];
+    trace.pop();  // 呼出元関数スタックから削除
+    fi = trace[trace.length-1];
   }
 
+  /** error: エラー時処理 */
   function error(e){
-    const rv = new szError(fi,e);
-    console.error('l.49',rv);
+
+    // 終了時に確定する項目に値設定
+    fi.end = new Date();
+    fi.elaps = `${fi.end - fi.start} msec`;
+
+    // 独自エラーオブジェクトを作成
+    const rv = e.constructor.name === 'szError' ? e : new szError(fi,e);
+
+    // ログ出力：エラーが発生した関数でのみ出力
+    if( opt.mode !== 'none' && fi.seq === rv.seq ){
+      console.error(rv);
+    }
+
+    trace.pop();  // 呼出元関数スタックから削除
+    fi = trace[trace.length-1] || {seq: -1};
+    //console.log(`l.107 ${JSON.stringify(fi,null,2)} ${JSON.stringify(rv,null,2)}`);
+
     return rv;
   }
 
@@ -170,12 +195,26 @@ function devTools(opt){
 }
 
 const dev = devTools();
+let cnt = 0;
+const t03 = () => {
+  const v = {whois:'t03',arg:null,rv:null};
+  dev.start(v);
+  try {
+    dev.step(3.1);
+    cnt++;
+    if(cnt>3) throw new Error('cnt>3');
+    dev.end();
+  } catch(e) { return dev.error(e); }
+}
 const t02 = () => {
   const v = {whois:'t02',arg:null,rv:null};
   dev.start(v);
   try {
     v.hoge = {fuga:[1,true]};
     dev.step(1,v.hoge);
+    for( v.i=0 ; v.i<2 ; v.i++ ){
+      if((v.rv = t03()) instanceof Error ) throw v.rv;
+    };
     dev.end();
   } catch(e) { return dev.error(e); }
 }
@@ -185,8 +224,10 @@ const t01 = (x) => {
   dev.start(v);
   try {
     dev.step(1.1,v);
-    //console.log('in t01: ',v);
-    for( v.i=0 ; v.i<2 ; v.i++ ) t02();
+    for( v.i=0 ; v.i<2 ; v.i++ ){
+      if((v.rv = t02()) instanceof Error ) throw v.rv;
+    };
+    //if(Date.now()>0) throw new Error('error test');
     dev.end();
     return v.rv;
   } catch(e) { return dev.error(e); }
