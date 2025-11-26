@@ -121,7 +121,7 @@
 class BaseDef {
 
   constructor(arg,parent={}){
-    const v = { whois: `${this.constructor.name}.constructor`, rv: null, arg:{arg,parent}};
+    const v = { whois: `${this.constructor.name}.BaseDef.constructor`, rv: null, arg:{arg,parent}};
     dev.start(v);
     try {
       this.ClassName = arg.ClassName || parent.ClassName || '';
@@ -408,46 +408,53 @@ class ProjectDef extends BaseDef {
    */
   constructor(arg={},opt={}){
     super(arg);
-    const v = {};
+    const v = {whois:`${this.constructor.name}.constructor`,arg:{arg,opt},rv:null};
+    dev.start(v); // 汎用変数を引数とする
+    try {
 
-    // 文字列で渡された場合はオブジェクト化
-    if( typeof arg === 'string' ) arg = JSON.parse(arg);
-    // オプションの既定値設定
-    this.opt = Object.assign({
-      autoOutput: true,
-      header: '',
-      folder: '.',
-      makeList: true,
-    },opt);
-    this.opt.list = opt.list || this.opt.folder;
+      dev.step(1.1); // 文字列で渡された場合はオブジェクト化
+      if( typeof arg === 'string' ) arg = JSON.parse(arg);
 
-    // 実装環境一覧
-    this.implements = arg.implements || {};
+      dev.step(1.2); // オプションの既定値設定
+      this.opt = Object.assign({
+        autoOutput: true,
+        header: '',
+        folder: '.',
+        makeList: true,
+      },opt);
+      this.opt.list = opt.list || this.opt.folder;
 
-    // クラス名一覧
-    BaseDef.classList = arg.classdef;
+      dev.step(1.3); // 実装環境一覧
+      this.implements = arg.implements || {};
 
-    // 関数・クラス定義のインスタンスを順次作成
-    this.classdef = {};
-    Object.keys(arg.classdef).forEach(x => {
-      arg.classdef[x].ClassName = x;
-      this.classdef[x] = new ClassDef(arg.classdef[x]);
-    });
+      dev.step(1.4); // クラス名一覧
+      BaseDef.classList = arg.classdef;
 
-    // 指示タグの展開
-    v.cnt = 10; // 最大ループ回数
-    while( v.cnt > 0 ){
-      v.fixed = true;
-      Object.keys(this.classdef).forEach(x => {
-        v.md = this.classdef[x].createMd();
-        if( v.md instanceof Error )
-          v.fixed = false;
+      dev.step(2); // 関数・クラス定義のインスタンスを順次作成
+      this.classdef = {};
+      Object.keys(arg.classdef).forEach(x => {
+        arg.classdef[x].ClassName = x;
+        this.classdef[x] = new ClassDef(arg.classdef[x]);
       });
-      v.cnt -= (v.fixed ? 10 : 1);
-    }
 
-    // Markdownファイルの出力
-    if( this.opt.autoOutput ) this.outputMD();
+      dev.step(3); // 指示タグの展開(%%〜%%のeval)
+      v.cnt = 10; // 最大ループ回数
+      while( v.cnt > 0 ){
+        v.fixed = true;
+        Object.keys(this.classdef).forEach(x => {
+          v.md = this.classdef[x].createMd();
+          if( v.md instanceof Error )
+            v.fixed = false;
+        });
+        v.cnt -= (v.fixed ? 10 : 1);
+      }
+
+      dev.step(4); // Markdownファイルの出力
+      if( this.opt.autoOutput ) this.outputMD();
+
+      dev.end();  // 終了処理
+
+    } catch(e) { return dev.error(e); }
   }
 
   /** outputMD: フォルダを作成、Markdownファイルを出力
@@ -455,69 +462,74 @@ class ProjectDef extends BaseDef {
    * @returns {void}
    */
   outputMD(){
-    const v = {};
+    const v = {whois:`${this.constructor.name}.outputMD`,arg:{},rv:null};
+    dev.start(v); // 汎用変数を引数とする
+    try {
 
-    // 指定されたフォルダが存在しない場合に作成
-    if (!fs.existsSync(this.opt.folder)) {
-      fs.mkdirSync(this.opt.folder, { recursive: true });
-    }
-
-    // 指定フォルダ以下のファイル・フォルダを全部削除
-    for (const entry of fs.readdirSync(this.opt.folder)) {
-      const target = path.join(this.opt.folder, entry);
-      fs.rmSync(target, { recursive: true, force: true });
-    }
-
-    // implement毎にフォルダを作成
-    const folder = {};
-    BaseDef.implements.forEach(x => {
-      folder[x] = path.join(this.opt.folder,x);
-      fs.mkdirSync(path.join(folder[x]));
-    });
-
-    // 共通ヘッダの読み込み
-    let header = '';
-    if( this.opt.header !== '' ){
-      header = fs.readFileSync(this.opt.header)
-    }
-
-    // ClassDef毎にファイルを作成
-    const list = {};  // 環境別クラス一覧
-    Object.keys(this.classdef).forEach(def => {
-      BaseDef.implements.forEach(x => {
-        if( !list.hasOwnProperty(x) ) list[x] = [];
-        if( this.classdef[def].implement.find(i => i === x) ){
-          fs.writeFileSync(path.join(folder[x], `${def}.md`),
-            header + (this.classdef[def].content || '').trim()
-            .replaceAll(/\n\n\n+/g,'\n\n'), "utf8");
-          // クラス一覧に追加
-          list[x].push(this.classdef[def]);
-        }
-      });
-    });
-
-    // クラス一覧を出力
-    BaseDef.implements.forEach(x => {
-      const content = ['| No | 名称 | 概要 |','| --: | :-- | :-- |'];
-      v.cnt = 1;
-      for( v.i=0 ; v.i<list[x].length ; v.i++ ){
-        v.class = list[x][v.i];
-        // クラス行出力
-        content.push(`| ${(v.i+1)+'.00'} | ${
-          `[${v.class.name}](${v.class.name}.md#${v.class.name.toLowerCase()}_members)`
-        } | ${v.class.desc} |`);
-        // メソッド行出力
-        for( v.j=0 ; v.j<v.class.methods.list.length ; v.j++ ){
-          v.method = v.class.methods.list[v.j];
-          content.push(`| ${(v.i+1)+'.'+('0'+(v.j+1)).slice(-2)} | ${
-          `<span style="padding-left:2rem">[${v.method.name}](${v.class.name}.md#${v.class.name.toLowerCase()}_${v.method.name.toLowerCase()})</span>`
-          } | ${v.method.desc} |`)
-        }
+      dev.step(1); // 指定されたフォルダが存在しない場合に作成
+      if (!fs.existsSync(this.opt.folder)) {
+        fs.mkdirSync(this.opt.folder, { recursive: true });
       }
-      fs.writeFileSync(path.join(this.opt.list, `${x}.list.md`),content.join('\n'),"utf8");
-    });
-  }
 
+      dev.step(2); // 指定フォルダ以下のファイル・フォルダを全部削除
+      for (const entry of fs.readdirSync(this.opt.folder)) {
+        const target = path.join(this.opt.folder, entry);
+        fs.rmSync(target, { recursive: true, force: true });
+      }
+
+      dev.step(3); // implement毎にフォルダを作成
+      const folder = {};
+      BaseDef.implements.forEach(x => {
+        folder[x] = path.join(this.opt.folder,x);
+        fs.mkdirSync(path.join(folder[x]));
+      });
+
+      dev.step(4); // 共通ヘッダの読み込み
+      let header = '';
+      if( this.opt.header !== '' ){
+        header = fs.readFileSync(this.opt.header)
+      }
+
+      dev.step(5); // ClassDef毎にファイルを作成
+      const list = {};  // 環境別クラス一覧
+      Object.keys(this.classdef).forEach(def => {
+        BaseDef.implements.forEach(x => {
+          if( !list.hasOwnProperty(x) ) list[x] = [];
+          if( this.classdef[def].implement.find(i => i === x) ){
+            fs.writeFileSync(path.join(folder[x], `${def}.md`),
+              header + (this.classdef[def].content || '').trim()
+              .replaceAll(/\n\n\n+/g,'\n\n'), "utf8");
+            // クラス一覧に追加
+            list[x].push(this.classdef[def]);
+          }
+        });
+      });
+
+      dev.step(6); // クラス一覧を出力
+      BaseDef.implements.forEach(x => {
+        const content = ['| No | 名称 | 概要 |','| --: | :-- | :-- |'];
+        v.cnt = 1;
+        for( v.i=0 ; v.i<list[x].length ; v.i++ ){
+          v.class = list[x][v.i];
+          // クラス行出力
+          content.push(`| ${(v.i+1)+'.00'} | ${
+            `[${v.class.name}](${v.class.name}.md#${v.class.name.toLowerCase()}_members)`
+          } | ${v.class.desc} |`);
+          // メソッド行出力
+          for( v.j=0 ; v.j<v.class.methods.list.length ; v.j++ ){
+            v.method = v.class.methods.list[v.j];
+            content.push(`| ${(v.i+1)+'.'+('0'+(v.j+1)).slice(-2)} | ${
+            `<span style="padding-left:2rem">[${v.method.name}](${v.class.name}.md#${v.class.name.toLowerCase()}_${v.method.name.toLowerCase()})</span>`
+            } | ${v.method.desc} |`)
+          }
+        }
+        fs.writeFileSync(path.join(this.opt.list, `${x}.list.md`),content.join('\n'),"utf8");
+      });
+      
+      dev.end();  // 終了処理
+      return v.rv;
+    } catch(e) { return dev.error(e); }
+  }
 }
 
 /** ClassDef - クラス・クロージャ関数定義
