@@ -73,11 +73,15 @@
         returns: {list:[
           {type:'ClassName'}, // コンストラクタは自データ型名
           { // 対比表形式
+            type: 'ClassName',  // 自クラスの場合、省略
             desc: '', // {string} 本データ型に関する説明。「正常終了時」等
             default: {},  // {Object.<string,string>} 全パターンの共通設定値
             patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
             },
-          }
+          },
+          // null/Error等、定義外のデータ型の場合"template:''"を追加
+          //{type:'null', desc:'正常終了時',template:''},
+          //{type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
         ]},
       },
     ]},
@@ -229,13 +233,14 @@ class BaseDef {
    * - その他: システムエラー
    */
   cfTable(obj,opt={}){
-    const v = { whois: `${this.constructor.name}.cfTable`, rv:[], header:{}};
+    const v = { whois: `${this.constructor.name}.cfTable`, rv:[],
+      arg:{obj,opt},header:{}};
     dev.start(v);
     try {
 
       dev.step(1);  // オプションの既定値設定
       if( typeof opt.indent === 'undefined' ) opt.indent = 0;
-      v.header = opt.header ? opt.header :
+      v.header = opt.hasOwnProperty('header') ? opt.header :
       {name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明',note:'備考'}
 
       dev.step(2);  // fv: 表示する値を整形して文字列化(format value)
@@ -251,26 +256,27 @@ class BaseDef {
       // 原本のメンバリストをv.listとして取得(複数パターンもあるので配列で)
       if( obj.hasOwnProperty('list') ){
         dev.step(4);  // メンバ一覧・引数一覧の場合({list:FieldDef[]}形式)
-        v.obj = {
+        v.obj = {  // header,bodyをv.objにセット
           header:Object.assign({},v.header),
           body: JSON.parse(JSON.stringify(obj.list)), // {FieldDef[]}
         };
-      } else {
-        dev.step(5.1);  // 対比表の場合({type:クラス名}形式)
+      } else if( BaseDef.classList.includes(obj.type) ){
+        dev.step(5.1);  // obj.typeのデータ型が定義(予定)
+          // ⇒ 対比表の場合({type:クラス名}形式)
         obj = Object.assign({default:{}},obj);  // defaultを追加
 
-        dev.step(5.2);  // 対比元のデータ型が未定義の場合、"not fixed"を返して終了
+        dev.step(5.2);  // ClassDef未作成の場合
         if( typeof BaseDef.defs[obj.type] === 'undefined' ){
           throw new Error(`not fixed: "${obj.type}"`);
         }
 
-        dev.step(5.3);
+        dev.step(5.3);  // header,bodyをv.objにセット
         v.obj = {
           header: Object.assign({},v.header),
           body: JSON.parse(JSON.stringify(BaseDef.defs[obj.type])).members.list,
         };
 
-        dev.step(5.4);
+        dev.step(5.4);  // default,patternsの値をv.obj.bodyにセット
         v.patternList = Object.keys(obj.patterns || {}); // 特定データ型内のパターン。ex.["正常終了","警告終了"]
         for( v.i=0 ; v.i<v.patternList.length ; v.i++ ){
           dev.step(5.5);
@@ -289,21 +295,28 @@ class BaseDef {
         }
       }
 
-      dev.step(6);  // ヘッダ行の作成
-      v.cols = Object.keys(v.obj.header);
-      v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(x => v.obj.header[x] || x).join(' | ')} |`);
-      v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(()=>':--').join(' | ')} |`);
+      // v.obj.header/bodyを基にテーブル作成
+      if( v.hasOwnProperty('obj' )){
+        dev.step(6);  // ヘッダ行の作成
+        v.cols = Object.keys(v.obj.header);
+        v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(x => v.obj.header[x] || x).join(' | ')} |`);
+        v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(()=>':--').join(' | ')} |`);
 
-      dev.step(7);  // データ行の作成
-      for( v.i=0 ; v.i<v.obj.body.length ; v.i++ ){
-        // 既定値欄の表示内容を作成
-        v.obj.body[v.i].default = v.obj.body[v.i].default !== '' ? fv(v.obj.body[v.i].default)
-        : (v.obj.body[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
-        // 一項目分のデータ行を出力
-        v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(x => fv(v.obj.body[v.i][x])).join(' | ')} |`);
+        dev.step(7);  // データ行の作成
+        for( v.i=0 ; v.i<v.obj.body.length ; v.i++ ){
+          // 既定値欄の表示内容を作成
+          v.obj.body[v.i].default = v.obj.body[v.i].default !== '' ? fv(v.obj.body[v.i].default)
+          : (v.obj.body[v.i].isOpt ? '任意' : '<span style="color:red">必須</span>');
+          // 一項目分のデータ行を出力
+          v.rv.push(`${' '.repeat(opt.indent)}| ${v.cols.map(x => fv(v.obj.body[v.i][x])).join(' | ')} |`);
+        }
+
+        v.rv = v.rv.join('\n');
+      } else {
+        dev.step(8);  // v.objが無い場合(=データ型が定義されていない場合)はテーブル作成しない
+        v.rv = '';
       }
 
-      v.rv = v.rv.join('\n');
       dev.end(); // 終了処理
       return v.rv;
 

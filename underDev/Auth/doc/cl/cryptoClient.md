@@ -58,7 +58,7 @@
 | [constructor()](#cryptoclient_constructor) | private | コンストラクタ |  |
 | [decrypt()](#cryptoclient_decrypt) | public | authServer->authClientのメッセージを復号＋署名検証 |  |
 | [encrypt()](#cryptoclient_encrypt) | public | authClient->authServerのメッセージを暗号化＋署名 |  |
-| [generateKeys()](#cryptoclient_generatekeys) | public | 新たなクライアント側鍵ペアを作成 |  |
+| [generateKeys()](#cryptoclient_generatekeys) | public | 新たなクライアント側RSA鍵ペアを作成 |  |
 
 ### <span id="cryptoclient_constructor"><a href="#cryptoclient_methods">🧱 cryptoClient.constructor()</a></span>
 
@@ -118,7 +118,7 @@ Error: Error: not fixed: "encryptedRequest"
 #### <span id="cryptoclient_generatekeys_process">🧾 処理手順</span>
 
 - [createPassword](JSLib.md#createpassword)でパスワード生成
-- [cf.RSAbits](authConfig.md#authconfig_internal)を参照、新たな鍵ペア生成
+- [cf.RSAbits](authConfig.md#authconfig_internal)を参照、新たな鍵ペア生成しメンバに保存
 
 #### <span id="cryptoclient_generatekeys_returns">📤 戻り値</span>
 

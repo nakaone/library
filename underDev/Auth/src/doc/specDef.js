@@ -577,7 +577,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       {
         name: 'generateKeys', // {string} 関数(メソッド)名
         type: 'public', // {string} 関数(メソッド)の分類
-        desc: '新たなクライアント側鍵ペアを作成', // {string} 端的な関数(メソッド)の説明
+        desc: '新たなクライアント側RSA鍵ペアを作成', // {string} 端的な関数(メソッド)の説明
         note: ``, // {string} ✂️注意事項。Markdownで記載
         source: ``, // {string} ✂️想定するソースコード🧩
         lib: ['createPassword'], // {string} 本関数(メソッド)で使用する外部ライブラリ
@@ -589,12 +589,12 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
         process: `
           - [createPassword](JSLib.md#createpassword)でパスワード生成
-          - [cf.RSAbits](authConfig.md#authconfig_internal)を参照、新たな鍵ペア生成
+          - [cf.RSAbits](authConfig.md#authconfig_internal)を参照、新たな鍵ペア生成しメンバに保存
         `,
 
         returns: {list:[
-          {name:'rv',type:'null', desc: '正常終了時',template:''},
-          {name:'rv',type:'Error', desc: '異常終了時',note:'messageはシステムメッセージ',template:''},
+          {type:'null', desc: '正常終了時',template:''},
+          {type:'Error', desc: '異常終了時',note:'messageはシステムメッセージ',template:''},
         ]},
       },
     ]},
