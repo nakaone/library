@@ -1452,8 +1452,8 @@ function removeDefs(obj) {
 
 /** devTools: 開発支援関係メソッド集
  * @param {Object} opt - 動作設定オプション
- * @param {string} [opt.mode='dev'] - 出力範囲指定
- * @param {number} [opt.digit=4] - 処理順(seq)の桁数
+ * @param {string} [opt.mode='dev'] - 出力モード
+ * @param {number} [opt.digit=4] - 処理順(seq)をログ出力する際の桁数
  *
  * - 出力モード
  *   | mode | エラー | 開始・終了 | dump/step |
@@ -1575,7 +1575,6 @@ function devTools(opt){
 
     trace.pop();  // 呼出元関数スタックから削除
     fi = trace[trace.length-1];
-    //console.log(`l.1576 len=${trace.length} ${JSON.stringify(trace.map(x => x.whois))}`);
   }
 
   /** finisher: end/error共通の終了時処理 */

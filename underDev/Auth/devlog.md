@@ -1,14 +1,8 @@
 # auth
 
-## 2025/11/26
+## 2025/11/27
 
 ### 目標
-
-- [bug] main処理終了のメッセージが出ない(main normal end)
-- [bug] ProjectDef.outputMD終了後もループが動いている
-  15:07:09.219 [1433] ProjectDef.outputMD normal end
-  15:07:09.219 [1426] MethodDef.trimIndent normal end
-  15:07:09.219 [1425] ParamsDef.createMd normal end
 
 - [bug] cryptoClient.mdの一部が出力されない
 - 旧版移行：cryptoClient.md
@@ -16,6 +10,21 @@
 
 ### 対応済
 
+## 2025/11/26
+
+### 目標
+
+- [bug] cryptoClient.mdの一部が出力されない
+- 旧版移行：cryptoClient.md
+- 旧版移行：authClientKeys.md ⇒ cryptoClientに統合
+
+### 対応済
+
+- [bug] main処理終了のメッセージが出ない(main normal end)
+- [bug] ProjectDef.outputMD終了後もループが動いている ⇒ 一つ前の派生バグ
+  15:07:09.219 [1433] ProjectDef.outputMD normal end
+  15:07:09.219 [1426] MethodDef.trimIndent normal end
+  15:07:09.219 [1425] ParamsDef.createMd normal end
 - devTools: 正常終了時、開始/終了時刻とelaps表示
 - devTools導入(ClassDef)
 - devTools導入(MembersDef)

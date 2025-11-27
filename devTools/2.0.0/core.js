@@ -1,17 +1,17 @@
 /** devTools: 開発支援関係メソッド集
  * @param {Object} opt - 動作設定オプション
- * @param {string} [opt.mode='dev'] - 出力範囲指定
- * @param {number} [opt.digit=4] - 処理順(seq)の桁数
- * 
+ * @param {string} [opt.mode='dev'] - 出力モード
+ * @param {number} [opt.digit=4] - 処理順(seq)をログ出力する際の桁数
+ *
  * - 出力モード
  *   | mode | エラー | 開始・終了 | dump/step |
  *   | "none" | ❌ | ❌ | ❌ | 出力無し(pipe処理等) |
  *   | "error" | ⭕ | ❌ | ❌ | エラーのみ出力 |
  *   | "normal" | ⭕ | ⭕ | ❌ | 本番用 |
  *   | "dev" | ⭕ | ⭕ | ⭕ | 開発用 |
- * 
+ *
  * @example
- * 
+ *
  * ```js
  * const dev = devTools();  // 本番時は devTools({mode:'normal'}) に変更
  * const t01 = (x) => {
@@ -19,12 +19,12 @@
  *   dev.start(v); // 汎用変数を引数とする
  *   try {
  *     dev.step(1.1,v);  // 場所を示す数値または文字列(＋表示したい変数)
- * 
+ *
  *     dev.end();  // v.rvを戻り値と看做す
  *     return v.rv;
  *   } catch(e) { return dev.error(e); }
  * }
- * 
+ *
  * - 変更履歴
  *   - rev.2.0.0
  *     - errorメソッドの戻り値を独自エラーオブジェクトに変更
@@ -47,7 +47,7 @@ function devTools(opt){
       this.seq = seq++; // {number} 実行順序
       this.arg = v.arg || {}; // {any} 起動時引数。{変数名：値}形式
       this.v = v || null; // {Object} 汎用変数
-      this.trace = [];  // {string[]} 実行順に並べたdev.step
+      this.log = [];  // {string[]} 実行順に並べたdev.step
       this.rv = v.rv || null; // {any} 戻り値
 
       this.start = new Date();  // {Date} 開始時刻
@@ -69,7 +69,7 @@ function devTools(opt){
       .forEach(x => this[x] = fi[x]);
 
       // エラーが起きた関数内でのstep実行順
-      this.trace = fi.trace.join(', ');
+      this.log = fi.log.join(', ');
 
     }
   }
@@ -96,10 +96,10 @@ function devTools(opt){
 
   /** step: 関数内の進捗状況管理＋変数のダンプ */
   function step(label,val=null){
-    // fi.traceにstepを追加
-    fi.trace.push(label);
-    // valをJSON表示
-    if( opt.mode === 'dev' ){
+    // fi.logにstepを追加
+    fi.log.push(label);
+    // valが指定されていたらステップ名＋JSON表示
+    if( opt.mode === 'dev' && val ){
       console.log(`== ${fi.whois} step.${label} ${formatObject(val)}`);
     }
   }
@@ -114,6 +114,11 @@ function devTools(opt){
       console.log(`${toLocale(fi.end,'hh:mm:ss.nnn')} [${
         ('0'.repeat(opt.digit)+fi.seq).slice(-opt.digit)
       }] ${fi.whois} normal end`);
+      if( fi.seq === 0 ){
+        console.log(`\tstart: ${toLocale(fi.start)
+        }\n\tend  : ${toLocale(fi.end)
+        }\n\telaps: ${fi.elaps}`);
+      }
     }
 
     trace.pop();  // 呼出元関数スタックから削除
@@ -125,14 +130,14 @@ function devTools(opt){
     // 終了時に確定する項目に値設定
     fi.end = new Date();
     fi.elaps = `${fi.end - fi.start} msec`;
-    fi.start = toLocale(fi.start);
-    fi.end = toLocale(fi.end);
   }
   /** error: エラー時処理 */
   function error(e){
 
     // 終了時に確定する項目に値設定
     finisher(fi);
+    fi.start = toLocale(fi.start);  // エラーログ出力時はISO8601拡張形式
+    fi.end = toLocale(fi.end);
 
     // 独自エラーオブジェクトを作成
     const rv = e.constructor.name === 'szError' ? e : new szError(fi,e);
@@ -204,7 +209,7 @@ function devTools(opt){
       const value = type === 'string' ? `"${obj}"` : obj;
       return `${indent}${value}, // ${type}`;
     }
-    
+
     // 関数 (function)
     if (type === 'function') {
       // 関数は文字列化してデータ型を表示しない
@@ -213,22 +218,22 @@ function devTools(opt){
     }
 
     // オブジェクト型 (Array, Object)
-    
+
     // Array の場合
     if (Array.isArray(obj)) {
       if (obj.length === 0) {
         return `${indent}[ /* Array, length 0 */ ], // object`;
       }
-      
-      const elements = obj.map(item => 
+
+      const elements = obj.map(item =>
         // Arrayの要素は名前がないため、インデントと値のみを返す
         formatObject(item, indentLevel + 1)
       ).join('\n');
-      
+
       // Arrayの要素はカンマではなく改行で区切ります
       return `${indent}[\n${elements}\n${indent}], // Array`;
     }
-    
+
     // 標準の Object の場合
     const keys = Object.keys(obj);
     if (keys.length === 0) {
@@ -239,14 +244,14 @@ function devTools(opt){
       const value = obj[key];
       const memberType = typeof value;
       const nextIndent = '  '.repeat(indentLevel + 1);
-      
+
       // オブジェクト/配列/関数は再帰呼び出し
       if (memberType === 'object' && value !== null || memberType === 'function') {
         // 複合型の場合は、キーと値の開始のみを記載
         const formattedValue = formatObject(value, indentLevel + 1);
         return `${nextIndent}${key}:${formattedValue}`;
       }
-      
+
       // プリミティブ型は一行で表示
       const formattedValue = memberType === 'string' ? `"${value}"` : value;
       return `${nextIndent}${key}:${formattedValue}, // ${memberType}`;
