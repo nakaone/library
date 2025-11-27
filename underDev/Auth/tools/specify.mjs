@@ -184,12 +184,13 @@ class BaseDef {
    * @returns {string} 作成した記事(Markdown)
    */
   article(arg={},opt={}){
-    const v = Object.assign({title:'',level:0,anchor:'',link:'',navi:'',body:''},
-      {whois:`${this.constructor.name}.article`, arg:{arg,opt}, rv: null});
+    const v = {whois:`${this.constructor.name}.article`, arg:{arg,opt}, rv: null};
     dev.start(v);
     try {
 
-      dev.step(1);  // オプションの既定値設定
+      dev.step(1);  // 既定値設定
+      v.default = {title:'',level:0,anchor:'',link:'',navi:'',body:''};
+      Object.keys(v.default).forEach(x => v[x] = arg[x] || v.default[x]);
       v.opt = Object.assign({force:false,},opt);
 
       dev.step(2);  // タイトル行・ナビの作成
@@ -697,6 +698,7 @@ class ClassDef extends BaseDef {
 class MembersDef extends BaseDef {
   constructor(arg={},classdef){
     super(arg,classdef);
+    console.log(99.703);
     const v = {whois:`${this.constructor.name}.constructor`,arg:{arg,classdef},rv:null};
     dev.start(v); // 汎用変数を引数とする
     try {
@@ -1546,12 +1548,19 @@ function devTools(opt){
     trace.push(fi); // 呼出元関数スタックに保存
   }
 
-  /** step: 関数内の進捗状況管理＋変数のダンプ */
-  function step(label,val=null){
+  /** step: 関数内の進捗状況管理＋変数のダンプ
+   * @param {number|string} label - dev.start〜end内での位置を特定するマーカー
+   * @param {any} [val=null] - ダンプ表示する変数
+   * @param {boolean} [cond=true] - 特定条件下でのみダンプ表示したい場合の条件
+   * @example 123行目でClassNameが"cryptoClient"の場合のみv.hogeを表示
+   *   dev.step(99.123,v.hoge,this.ClassName==='cryptoClient');
+   *   ※ 99はデバック、0.123は行番号の意で設定
+   */
+  function step(label,val=null,cond=true){
     // fi.logにstepを追加
     fi.log.push(label);
     // valが指定されていたらステップ名＋JSON表示
-    if( opt.mode === 'dev' && val ){
+    if( opt.mode === 'dev' && val && cond ){
       console.log(`== ${fi.whois} step.${label} ${formatObject(val)}`);
     }
   }

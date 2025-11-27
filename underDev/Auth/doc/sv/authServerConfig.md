@@ -4,9 +4,13 @@
 
 </div>
 
+# <span id="authserverconfig">authServerConfig クラス仕様書</span>
+
 authServer専用の設定値
 
 [authConfig](authConfig.md)を継承した、authServerでのみ使用する設定値
+
+## <span id="authserverconfig_members">🔢 authServerConfig メンバ一覧</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
@@ -32,12 +36,24 @@ authServer専用の設定値
 | underDev.sendPasscode | boolean | false | 開発中識別フラグ | パスコード通知メール送信を抑止するならtrue |
 | underDev.sendInvitation | boolean | false | 開発中の加入承認通知メール送信 | 開発中に加入承認通知メール送信を抑止するならtrue |
 
+## <span id="authserverconfig_methods">🧱 authServerConfig メソッド一覧</span>
+
 | メソッド名 | 分類 | 内容 | 備考 |
 | :-- | :-- | :-- | :-- |
 | [constructor()](#authserverconfig_constructor) | private | コンストラクタ |  |
 
+### <span id="authserverconfig_constructor"><a href="#authserverconfig_methods">🧱 authServerConfig.constructor()</a></span>
+
+#### <span id="authserverconfig_constructor_params">📥 引数</span>
+
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | arg | Object | {} |  | ユーザ指定の設定値 |
+
+#### <span id="authserverconfig_constructor_process">🧾 処理手順</span>
+
+- メンバと引数両方にある項目は、引数の値をメンバとして設定
+
+#### <span id="authserverconfig_constructor_returns">📤 戻り値</span>
 
 - [authServerConfig](#authserverconfig_members)インスタンス

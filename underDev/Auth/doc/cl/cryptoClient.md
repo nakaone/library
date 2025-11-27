@@ -4,9 +4,48 @@
 
 </div>
 
+# <span id="cryptoclient">cryptoClient クラス仕様書</span>
+
 クライアント側の暗号化・復号処理
 
+## <span id="cryptoclient_summary">🧭 cryptoClient クラス 概要</span>
+
+## 🔐 セキュリティ仕様
+
+### 鍵種別と用途
+
+| 鍵名 | アルゴリズム | 用途 | 保存先 |
+| :-- | :-- | :-- | :-- |
+| CPkey-sign | RSA-PSS | 署名 | IndexedDB |
+| CPkey-enc | RSA-OAEP | 暗号化 | IndexedDB |
+
+### 鍵生成時パラメータ
+
+``` js
+{
+  name: "RSA-PSS",
+  modulusLength: authConfig.RSAbits,
+  publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
+  hash: "SHA-256",
+  extractable: false,
+  keyUsages: ["sign", "verify"]
+}
+```
+
+暗号化鍵は'name:"RSA-OAEP"'、'keyUsages: ["encrypt", "decrypt"]'とする。
+
+### 暗号・署名パラメータ
+
+| 区分 | アルゴリズム | ハッシュ | 鍵長 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| 署名 | RSA-PSS | SHA-256 | authConfig.RSAbits | 鍵用途:sign |
+| 暗号化 | RSA-OAEP | SHA-256 | authConfig.RSAbits | 鍵用途:encrypt |
+
+## <span id="cryptoclient_members">🔢 cryptoClient メンバ一覧</span>
+
 - メンバ無し
+
+## <span id="cryptoclient_methods">🧱 cryptoClient メソッド一覧</span>
 
 | メソッド名 | 分類 | 内容 | 備考 |
 | :-- | :-- | :-- | :-- |
@@ -15,31 +54,67 @@
 | [encrypt()](#cryptoclient_encrypt) | public | authClient->authServerのメッセージを暗号化＋署名 |  |
 | [generateKeys()](#cryptoclient_generatekeys) | public | 新たなクライアント側鍵ペアを作成 |  |
 
+### <span id="cryptoclient_constructor"><a href="#cryptoclient_methods">🧱 cryptoClient.constructor()</a></span>
+
+#### <span id="cryptoclient_constructor_referrer">📞 呼出元</span>
+
+- [authClient.initialize](authClient.md#authClient_members)
+
+#### <span id="cryptoclient_constructor_params">📥 引数</span>
+
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | config | [authClientConfig](authClientConfig.md#authclientconfig_members) | <span style="color:red">必須</span> |  | authClientの動作設定変数 |
 
+#### <span id="cryptoclient_constructor_process">🧾 処理手順</span>
+
+#### <span id="cryptoclient_constructor_returns">📤 戻り値</span>
+
 - [cryptoClient](#cryptoclient_members)インスタンス
+### <span id="cryptoclient_decrypt"><a href="#cryptoclient_methods">🧱 cryptoClient.decrypt()</a></span>
+
+#### <span id="cryptoclient_decrypt_params">📥 引数</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | response | encryptedResponse | <span style="color:red">必須</span> | 暗号化された処理結果 |  |
+
+#### <span id="cryptoclient_decrypt_process">🧾 処理手順</span>
+
+#### <span id="cryptoclient_decrypt_returns">📤 戻り値</span>
 
 - [authResponse](authResponse.md#authresponse_members) : 復号された処理結果
 
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
   | :-- | :-- | :-- | :-- | :-- |
   |  | string | <span style="color:red">必須</span> |  |  |
+### <span id="cryptoclient_encrypt"><a href="#cryptoclient_methods">🧱 cryptoClient.encrypt()</a></span>
+
+#### <span id="cryptoclient_encrypt_params">📥 引数</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | request | [authRequest](authRequest.md#authrequest_members) | <span style="color:red">必須</span> | 平文の処理要求 |  |
 
+#### <span id="cryptoclient_encrypt_process">🧾 処理手順</span>
+
+#### <span id="cryptoclient_encrypt_returns">📤 戻り値</span>
+
 - [encryptedRequest](encryptedRequest.md#encryptedrequest_members) : 暗号化された処理要求
 
 Error: Error: not fixed: "encryptedRequest"
+### <span id="cryptoclient_generatekeys"><a href="#cryptoclient_methods">🧱 cryptoClient.generateKeys()</a></span>
+
+#### <span id="cryptoclient_generatekeys_params">📥 引数</span>
 
 - 引数無し(void)
+
+#### <span id="cryptoclient_generatekeys_process">🧾 処理手順</span>
+
+- [createPassword](JSLib.md#createpassword)でパスワード生成
+- [cf.RSAbits](authConfig.md#authconfig_internal)を参照、新たな鍵ペア生成
+
+#### <span id="cryptoclient_generatekeys_returns">📤 戻り値</span>
 
 - [cryptoClient](cryptoClient.md#cryptoclient_members)
 
