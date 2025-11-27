@@ -94,12 +94,19 @@ function devTools(opt){
     trace.push(fi); // 呼出元関数スタックに保存
   }
 
-  /** step: 関数内の進捗状況管理＋変数のダンプ */
-  function step(label,val=null){
+  /** step: 関数内の進捗状況管理＋変数のダンプ
+   * @param {number|string} label - dev.start〜end内での位置を特定するマーカー
+   * @param {any} [val=null] - ダンプ表示する変数
+   * @param {boolean} [cond=true] - 特定条件下でのみダンプ表示したい場合の条件
+   * @example 123行目でClassNameが"cryptoClient"の場合のみv.hogeを表示
+   *   dev.step(99.123,v.hoge,this.ClassName==='cryptoClient');
+   *   ※ 99はデバック、0.123は行番号の意で設定
+   */
+  function step(label,val=null,cond=true){
     // fi.logにstepを追加
     fi.log.push(label);
     // valが指定されていたらステップ名＋JSON表示
-    if( opt.mode === 'dev' && val ){
+    if( opt.mode === 'dev' && val && cond ){
       console.log(`== ${fi.whois} step.${label} ${formatObject(val)}`);
     }
   }
