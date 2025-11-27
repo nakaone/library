@@ -2,11 +2,13 @@
 
 ## 2025/11/27
 
+- 定義されたデータ型以外も"not fixed"が出る
 - 旧版移行：cryptoClient.md
 - 旧版移行：authClientKeys.md ⇒ cryptoClientに統合
 
 ### 対応済
 
+- ReturnDefで「戻り値はnull|Error」が表現できない
 - [bug] cryptoClient.mdのタイトル行が出力されない
 
 ### ToDo

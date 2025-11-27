@@ -43,7 +43,13 @@
 
 ## <span id="cryptoclient_members">🔢 cryptoClient メンバ一覧</span>
 
-- メンバ無し
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| CSkeySign | CryptoKey | <span style="color:red">必須</span> |  |  |
+| CPkeySign | CryptoKey | <span style="color:red">必須</span> |  |  |
+| CSkeyEnc | CryptoKey | <span style="color:red">必須</span> |  |  |
+| CPkeyEnc | CryptoKey | <span style="color:red">必須</span> |  |  |
+| SPkey | string | <span style="color:red">必須</span> |  |  |
 
 ## <span id="cryptoclient_methods">🧱 cryptoClient メソッド一覧</span>
 
@@ -116,7 +122,9 @@ Error: Error: not fixed: "encryptedRequest"
 
 #### <span id="cryptoclient_generatekeys_returns">📤 戻り値</span>
 
-- [cryptoClient](cryptoClient.md#cryptoclient_members)
+- [null](null.md#null_members) : 正常終了時
 
-  | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-  | :-- | :-- | :-- | :-- | :-- |
+Error: Error: not fixed: "null"
+- [Error](Error.md#error_members) : 異常終了時
+
+Error: Error: not fixed: "Error"

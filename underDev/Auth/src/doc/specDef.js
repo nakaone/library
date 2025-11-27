@@ -509,8 +509,11 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     template: ``, // {string} Markdown出力時のテンプレート
 
     members: {list:[
-      //{name:'',type:'string',desc:'',note:''},
-      // label(項目名), default, isOpt
+      {name:'CSkeySign',type:'CryptoKey',label:'署名用秘密鍵',note:''},
+      {name:'CPkeySign',type:'CryptoKey',label:'署名用公開鍵',note:''},
+      {name:'CSkeyEnc',type:'CryptoKey',label:'暗号化用秘密鍵',note:''},
+      {name:'CPkeyEnc',type:'CryptoKey',label:'暗号化用公開鍵',note:''},
+      {name:'SPkey',type:'string',label:'サーバ側公開鍵',note:''},
     ]},
 
     methods: {list:[
@@ -590,20 +593,8 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         `,
 
         returns: {list:[
-          /*
-          {name:'CSkeySign',type:'CryptoKey',label:'署名用秘密鍵',note:''},
-          {name:'CPkeySign',type:'CryptoKey',label:'署名用公開鍵',note:''},
-          {name:'CSkeyEnc',type:'CryptoKey',label:'暗号化用秘密鍵',note:''},
-          {name:'CPkeyEnc',type:'CryptoKey',label:'暗号化用公開鍵',note:''},
-          { // 対比表形式
-            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
-            default: {},  // {Object.<string,string>} 全パターンの共通設定値
-            patterns: { // 特定パターンへの設定値
-              'パターン名':{項目名:値},
-            },
-          }
-          */
-          {type:'cryptoClient'}, // コンストラクタは自データ型名
+          {name:'rv',type:'null', desc: '正常終了時'},
+          {name:'rv',type:'Error', desc: '異常終了時',note:'messageはシステムメッセージ'},
         ]},
       },
     ]},

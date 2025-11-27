@@ -93,8 +93,8 @@
  * @prop {string} methodname - 🔢所属するメソッド名。ex.'log'
  * @prop {string} [anchor] - アンカーを付ける場合の文字列。ex.'authauditlog_constructor_params'
  *    クラス名・メソッド名はClassName,MethodName(小文字)、セクション名は'XxxDef'->'xxx'
- * @prop {string} [title=''] - 🔢Markdown化した時のタイトル行。anchor,link設定済
- * @prop {string} [template=''] - 🔢embed展開前のテンプレート。constructorでセット、以降不変
+ * @prop {string} [title=''] - Markdown化した時のタイトル行。anchor,link設定済
+ * @prop {string} [template=''] - embed展開前のテンプレート。constructorでセット、以降不変
  * @prop {string} [content=''] - 🔢embedを展開後の本文。embed展開終了時にセット * @prop {boolean} [fixed=false] - 🔢インスタンスの値が確定したらtrue
  *
  * // ゲッター・セッター ※以下はspecify全体の共有変数として定義
@@ -698,7 +698,6 @@ class ClassDef extends BaseDef {
 class MembersDef extends BaseDef {
   constructor(arg={},classdef){
     super(arg,classdef);
-    console.log(99.703);
     const v = {whois:`${this.constructor.name}.constructor`,arg:{arg,classdef},rv:null};
     dev.start(v); // 汎用変数を引数とする
     try {
@@ -1311,23 +1310,32 @@ class ReturnsDef extends BaseDef {
  * - 無し
  *
  * @example ReturnDef設定サンプル
- * ```
- * returns: {list:[
- *   {type:'LocalRequest',desc:'正常時の戻り値'},
- *   {type:'',desc:'エラー時の戻り値',
- *     template:`%% cfTable(
- *       {
- *         type:'authError',
- *         patterns:{'func不正':{message:'"invalid func"'}}
- *       },{  // オプション
- *         indent:2,  // 表のインデントは2桁
- *         header:{name:'項目名',  // BaseDef.cfTableのheaderを書き換え
- *           type:'データ型',default:'要否/既定値',desc:'説明'}
- *       }
- *      ) %%`
- * 　　},
- * ]}
- * ```
+ * - 定義されたデータ型を返す場合
+ *   ```
+ *   returns: {list:[
+ *     {type:'LocalRequest',desc:'正常時の戻り値'},
+ *     {type:'',desc:'エラー時の戻り値',
+ *       template:`%% cfTable(
+ *         {
+ *           type:'authError',
+ *           patterns:{'func不正':{message:'"invalid func"'}}
+ *         },{  // オプション
+ *           indent:2,  // 表のインデントは2桁
+ *           header:{name:'項目名',  // BaseDef.cfTableのheaderを書き換え
+ *             type:'データ型',default:'要否/既定値',desc:'説明'}
+ *         }
+ *        ) %%`
+ *   　　},
+ *   ]}
+ *   ```
+ * 
+ * - null or Error を返す場合
+ *   ```
+ *   returns: {list:[
+ *     {type:'null', desc: '正常終了時'},
+ *     {type:'Error', desc: '異常終了時',note:'messageはシステムメッセージ'},
+ *   ]},
+ *   ```
  *
  * @example this.template初期値
  * ```
