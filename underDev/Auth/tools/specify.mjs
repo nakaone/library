@@ -107,6 +107,7 @@
  *   - defs[クラス名].methods           -> MethodsDef
  *   - defs[クラス名].methods[メソッド名] -> MethodDef
  *   - ※クラス名・メソッド名は大文字を含む正式名だけでなく、小文字のみのアンカー名でもアクセス可とする
+ * @prop {string[]} classList - 定義されたクラス名一覧
  *
  * // メソッド
  * @prop {Function} article - タイトル行＋内容の作成
@@ -1299,6 +1300,7 @@ class ReturnsDef extends BaseDef {
  * // メンバ
  * @prop {string} [type=''] - 戻り値のデータ型。対比表なら空文字列
  * @prop {string} [desc=''] - 本データ型に関する説明。「正常終了時」等
+ * @prop {string} [note=''] - 補足説明
  * @prop {PatternDef} [default={}] - 全パターンの共通設定値
  * @prop {Object.<string,PatternDef>} [patterns={}] - 特定パターンへの設定値
  * @prop {string} table - 🔢戻り値(データ型のメンバ一覧・対比表)のMarkdown
@@ -1332,8 +1334,8 @@ class ReturnsDef extends BaseDef {
  * - null or Error を返す場合
  *   ```
  *   returns: {list:[
- *     {type:'null', desc: '正常終了時'},
- *     {type:'Error', desc: '異常終了時',note:'messageはシステムメッセージ'},
+ *     {type:'null', desc:'正常終了時',template:''},
+ *     {type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
  *   ]},
  *   ```
  *
@@ -1358,6 +1360,7 @@ class ReturnDef extends BaseDef {
       dev.step(1);
       this.type = arg.type || '';
       this.desc = arg.desc || '';
+      this.note = arg.note || '';
       this.default = arg.default || {};
       this.patterns = arg.patterns || {};
 
@@ -1372,13 +1375,17 @@ class ReturnDef extends BaseDef {
         this.title = this.type === '' ? (
           this.desc === '' ? '' : `- ${this.desc}`
         ) : (
-          `- [${this.type}](${this.type}.md#${
+          // 定義されているデータ型はリンクをつけて表示
+          (BaseDef.classList.includes(this.type)
+          ? (`- [${this.type}](${this.type}.md#${
             this.type.toLowerCase()}_members)${
-            this.desc === '' ? '' : ' : '+this.desc}`
+            this.desc === '' ? '' : ' : '+this.desc}`)
+          : `- ${this.type} : ${this.desc}`)
+          + (this.note ? `(${this.note})` : '')
         );
         dev.step(2.3); // 戻り値のデータ型のメンバ一覧を作成
         this.table = this.cfTable(this,{indent:2});
-        this.template = arg.template ||
+        this.template = arg.hasOwnProperty('template') ? arg.template :
           `%% BaseDef.defs["${this.ClassName}"].method["${
           this.MethodName}"].return["${this.type}"].table %%`;
       }

@@ -122,9 +122,6 @@ Error: Error: not fixed: "encryptedRequest"
 
 #### <span id="cryptoclient_generatekeys_returns">📤 戻り値</span>
 
-- [null](null.md#null_members) : 正常終了時
+- null : 正常終了時
 
-Error: Error: not fixed: "null"
-- [Error](Error.md#error_members) : 異常終了時
-
-Error: Error: not fixed: "Error"
+- Error : 異常終了時(messageはシステムメッセージ)

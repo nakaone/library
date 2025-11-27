@@ -593,8 +593,8 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         `,
 
         returns: {list:[
-          {name:'rv',type:'null', desc: '正常終了時'},
-          {name:'rv',type:'Error', desc: '異常終了時',note:'messageはシステムメッセージ'},
+          {name:'rv',type:'null', desc: '正常終了時',template:''},
+          {name:'rv',type:'Error', desc: '異常終了時',note:'messageはシステムメッセージ',template:''},
         ]},
       },
     ]},
