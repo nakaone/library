@@ -75,10 +75,11 @@ sequenceDiagram
     authServer->>-authClient: SPkey,仮ID,仮名
   end
 
+  %% 以下、必要なら復活
   %% 環境構築(SPkey要求)
-  rect rgba(218, 255, 255, 1)
-    authClient->>authClient: 【環境構築】
-  end
+  %%rect rgba(218, 255, 255, 1)
+  %%  authClient->>authClient: 【環境構築】
+  %%end
 
   %% 要求の暗号化
   authClient->>+cryptoClient: authRequest
@@ -91,9 +92,14 @@ sequenceDiagram
 
   Note right of authServer: exec()
 
-  rect rgba(218, 255, 255, 1)
-    authServer->>authServer: 【インスタンス生成】
-  end
+  authServer->>+cryptoServer: encryptedRequest
+  Note right of cryptoServer: decrypt()
+  cryptoServer->>-authServer: authResponse
+
+  %% 以下、必要なら復活
+  %%rect rgba(218, 255, 255, 1)
+  %%  authServer->>authServer: 【インスタンス生成】
+  %%end
 
   rect rgba(218, 255, 255, 1)
     authServer->>authServer: 【返信内容作成】
@@ -116,7 +122,7 @@ sequenceDiagram
   %% パスコード入力
   %% パスコード再発行
 
-  authClient->>-localFunc: LocalResopnse
+  authClient->>-localFunc: LocalResponse
 ```
 
 - ①：onLoad時、authClientインスタンス生成

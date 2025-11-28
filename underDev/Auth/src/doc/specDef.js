@@ -339,12 +339,18 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     }]},
   },
   authRequest: {
-    desc: 'サーバ側で復号されたクライアントからの処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement: ['sv'],  // 実装の有無
+    desc: '暗号化前の処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `authClientからauthServerに送られる、暗号化前の処理要求オブジェクト`,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    implement: ['cl'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'',type:'string',desc:'',note:''},
+      {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス',default:'idb.memberId'},
+      {name:'deviceId',type:'string',label:'デバイスの識別子',note:'UUID',default:'idb.deviceId'},
+      {name:'signature',type:'string',label:'クライアント側署名',note:'',default:'idb.CPkey'},
+      {name:'requestId',type:'string',label:'要求の識別子',note:'UUID',default:'UUID'},
+      {name:'timestamp',type:'number',label:'要求日時',note:'UNIX時刻',default:'Date.now()'},
+      {name:'func',type:'string',label:'サーバ側関数名',note:''},
+      {name:'arguments',type:'any[]',label:'サーバ側関数に渡す引数の配列',note:'',default:'[]'},
     ]},
 
     methods: {list:[{
@@ -354,7 +360,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
       params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+        {name:'request',type:'LocalRequest',note:'ローカル関数からの処理要求'},
       ]},
 
       process: `

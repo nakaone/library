@@ -2,11 +2,11 @@
 
 ## 2025/11/28
 
-- TypeError: Cannot read properties of undefined (reading 'constructor')
-  @ MethodDef.evaluate
+- 旧版移行：authRequest.md
 
 ### 対応済
 
+- TypeError: Cannot read properties of undefined (reading 'constructor')
 - [bug] devTools.errorでstepがでない
 
 ### ToDo
@@ -14,7 +14,6 @@
 - 旧版移行：authConfig.md
 - 旧版移行：authErrorLog.md
 - 旧版移行：authIndexedDB.md
-- 旧版移行：authRequest.md
 - 旧版移行：authRequestLog.md
 - 旧版移行：authResponse.md
 - 旧版移行：authScriptProperties.md

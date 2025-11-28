@@ -25,11 +25,9 @@
 | 3.01 | <span style="padding-left:2rem">[constructor](authError.md#autherror_constructor)</span> | コンストラクタ |
 | 4.00 | [authErrorLog](authErrorLog.md#autherrorlog_members) | authServerのエラーログ |
 | 4.01 | <span style="padding-left:2rem">[constructor](authErrorLog.md#autherrorlog_constructor)</span> | コンストラクタ |
-| 5.00 | [authRequest](authRequest.md#authrequest_members) | サーバ側で復号されたクライアントからの処理要求 |
-| 5.01 | <span style="padding-left:2rem">[constructor](authRequest.md#authrequest_constructor)</span> | コンストラクタ |
-| 6.00 | [authResult](authResult.md#authresult_members) | auth内メソッドの標準的な戻り値 |
-| 6.01 | <span style="padding-left:2rem">[constructor](authResult.md#authresult_constructor)</span> | コンストラクタ |
-| 7.00 | [authServerConfig](authServerConfig.md#authserverconfig_members) | authServer専用の設定値 |
-| 7.01 | <span style="padding-left:2rem">[constructor](authServerConfig.md#authserverconfig_constructor)</span> | コンストラクタ |
-| 8.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) |  |
-| 8.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |
+| 5.00 | [authResult](authResult.md#authresult_members) | auth内メソッドの標準的な戻り値 |
+| 5.01 | <span style="padding-left:2rem">[constructor](authResult.md#authresult_constructor)</span> | コンストラクタ |
+| 6.00 | [authServerConfig](authServerConfig.md#authserverconfig_members) | authServer専用の設定値 |
+| 6.01 | <span style="padding-left:2rem">[constructor](authServerConfig.md#authserverconfig_constructor)</span> | コンストラクタ |
+| 7.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) |  |
+| 7.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |

@@ -6,13 +6,21 @@
 
 # <span id="authrequest">authRequest クラス仕様書</span>
 
-サーバ側で復号されたクライアントからの処理要求
+暗号化前の処理要求
+
+authClientからauthServerに送られる、暗号化前の処理要求オブジェクト
 
 ## <span id="authrequest_members">🔢 authRequest メンバ一覧</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-|  | string | <span style="color:red">必須</span> |  |  |
+| memberId | string | idb.memberId |  | =メールアドレス |
+| deviceId | string | idb.deviceId |  | UUID |
+| signature | string | idb.CPkey |  |  |
+| requestId | string | UUID |  | UUID |
+| timestamp | number | Date.now() |  | UNIX時刻 |
+| func | string | <span style="color:red">必須</span> |  |  |
+| arguments | any[] | [] |  |  |
 
 ## <span id="authrequest_methods">🧱 authRequest メソッド一覧</span>
 
@@ -26,7 +34,7 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| arg | Object | {} |  | ユーザ指定の設定値 |
+| request | [LocalRequest](LocalRequest.md#localrequest_members) | <span style="color:red">必須</span> |  | ローカル関数からの処理要求 |
 
 #### <span id="authrequest_constructor_process">🧾 処理手順</span>
 
