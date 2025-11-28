@@ -60,238 +60,273 @@ function createPassword(len=16,opt={lower:true,upper:true,symbol:true,numeric:tr
 
 ```js
 /** devTools: 開発支援関係メソッド集
- * @param {Object} option
- * @param {boolean} option.start=true - 開始・終了メッセージの表示
- * @param {boolean} option.arg=true - 開始時に引数を表示
- * @param {boolean} option.step=false - step毎の進捗ログの出力
+ * @param {Object} opt - 動作設定オプション
+ * @param {string} [opt.mode='dev'] - 出力モード
+ * @param {number} [opt.digit=4] - 処理順(seq)をログ出力する際の桁数
+ *
+ * - 出力モード
+ *   | mode | エラー | 開始・終了 | dump/step |
+ *   | "none" | ❌ | ❌ | ❌ | 出力無し(pipe処理等) |
+ *   | "error" | ⭕ | ❌ | ❌ | エラーのみ出力 |
+ *   | "normal" | ⭕ | ⭕ | ❌ | 本番用 |
+ *   | "dev" | ⭕ | ⭕ | ⭕ | 開発用 |
+ *
+ * @example
+ *
+ * ```js
+ * const dev = devTools();  // 本番時は devTools({mode:'normal'}) に変更
+ * const t01 = (x) => {
+ *   const v = {whois:'t01',arg:{x},rv:null}; // whois,arg,rvは指定推奨
+ *   dev.start(v); // 汎用変数を引数とする
+ *   try {
+ *     dev.step(1.1,v);  // 場所を示す数値または文字列(＋表示したい変数)
+ *
+ *     dev.end();  // v.rvを戻り値と看做す
+ *     return v.rv;
+ *   } catch(e) { return dev.error(e); }
+ * }
+ *
+ * - 変更履歴
+ *   - rev.2.0.0
+ *     - errorメソッドの戻り値を独自エラーオブジェクトに変更
+ *     - functionInfoクラスを導入、詳細情報を追加
+ *     - オプションを簡素化、出力モードに統合
+ *     - 機能を簡素化
+ *       - メソッドから削除：changeOption, check
+ *       - dump を step に統合
+ *     - stringify -> formatObject
+ *   - rev.1.0.1 : 2025/07/17
+ *     start/endでメッセージ表示を抑止するため、引数"rt(run time option)"を追加
+ *   - rev.1.0.0 : 2025/01/26
+ *     SpreadDb.1.2.0 test.jsとして作成していたのを分離
  */
-function devTools(option) {
-  let opt = Object.assign({ start: true, arg: true, step: false }, option);
-  let seq = 0;  // 関数の呼出順
-  let stack = []; // 呼出元関数情報のスタック
-  return { changeOption: changeOption, check: check, dump: dump, end: end, error: error, start: start, step: step };
+function devTools(opt){
+  /** functionInfo: 現在実行中の関数に関する情報 */
+  class functionInfo {
+    constructor(v){
+      this.whois = v.whois || ''; // {string} 関数名またはクラス名.メソッド名
+      this.seq = seq++; // {number} 実行順序
+      this.arg = v.arg || {}; // {any} 起動時引数。{変数名：値}形式
+      this.v = v || null; // {Object} 汎用変数
+      this.step = v.step || '';
+      this.log = [];  // {string[]} 実行順に並べたdev.step
+      this.rv = v.rv || null; // {any} 戻り値
 
-  /** オプションの変更 */
-  function changeOption(option) {
-    opt = Object.assign(opt, option);
-    console.log(`devTools.changeOption result: ${JSON.stringify(opt)}`);
-  }
-  /** 実行結果の確認
-   * - JSON文字列の場合、オブジェクト化した上でオブジェクトとして比較する
-   * @param {Object} arg
-   * @param {any} arg.asis - 実行結果
-   * @param {any} arg.tobe - 確認すべきポイント(Check Point)。エラーの場合、エラーオブジェクトを渡す
-   * @param {string} arg.title='' - テストのタイトル(ex. SpreadDbTest.delete.4)
-   * @param {Object} [arg.opt] - isEqualに渡すオプション
-   * @returns {boolean} - チェック結果OK:true, NG:false
-   */
-  function check(arg = {}) {
-    /** recursive: 変数の内容を再帰的にチェック
-     * @param {any} asis - 結果の値
-     * @param {any} tobe - 有るべき値
-     * @param {Object} opt - isEqualに渡すオプション
-     * @param {number} depth=0 - 階層の深さ
-     * @param {string} label - メンバ名または添字
-     */
-    const recursive = (asis, tobe, opt, depth = 0, label = '') => {
-      let rv;
-      // JSON文字列はオブジェクト化
-      asis = (arg => { try { return JSON.parse(arg) } catch { return arg } })(asis);
-      // データ型の判定
-      let type = String(Object.prototype.toString.call(tobe).slice(8, -1));
-      switch (type) {
-        case 'Number': if (Number.isNaN(tobe)) type = 'NaN'; break;
-        case 'Function': if (!('prototype' in tobe)) type = 'Arrow'; break;
-      }
-      let indent = '  '.repeat(depth);
-      switch (type) {
-        case 'Object':
-          msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}{`);
-          for (let mn in tobe) {
-            rv = !Object.hasOwn(asis, mn) ? false // 該当要素が不在
-              : recursive(asis[mn], tobe[mn], opt, depth + 1, mn);
-          }
-          msg.push(`${indent}}`);
-          break;
-        case 'Array':
-          msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}[`);
-          for (let i = 0; i < tobe.length; i++) {
-            rv = (asis[i] === undefined && tobe[i] !== undefined) ? false // 該当要素が不在
-              : recursive(asis[i], tobe[i], opt, depth + 1, String(i));
-          }
-          msg.push(`${indent}]`);
-          break;
-        case 'Function': case 'Arrow':
-          rv = tobe(asis);  // 合格ならtrue, 不合格ならfalseを返す関数を定義
-          msg.push(
-            indent + (label.length > 0 ? (label + ': ') : '')
-            + (rv ? asis : `[NG] (${tobe.toString()})(${asis}) -> false`)
-          );
-          break;
-        default:
-          if (tobe === undefined) {
-            rv = true;
-          } else {
-            rv = isEqual(asis, tobe, opt);
-            msg.push(
-              indent + (label.length > 0 ? (label + ': ') : '')
-              + (rv ? asis : `[NG] ToBe=${tobe}, AsIs=${asis}`)
-            );
-          }
-      }
-      return rv;
+      this.start = new Date();  // {Date} 開始時刻
+      this.end = 0; // {Date} 終了時刻
+      this.elaps = 0; // {number} 所要時間(ミリ秒)
     }
+  }
 
-    // 主処理
-    let msg = [];
-    let isOK = true;  // チェックOKならtrue
+  /** szError: 独自拡張したErrorオブジェクト */
+  class szError extends Error {
+    constructor(fi,...e){
+      super(...e);
 
-    arg = Object.assign({ msg: '', opt: {} }, arg);
-    if (arg.tobe === undefined) {
-      // check未指定の場合、チェック省略、結果表示のみ
-      msg.push(`===== ${arg.title} Check Result : Not checked`);
-    } else {
-      // arg.asisとarg.tobeのデータ型が異なる場合、またはrecursiveで不一致が有った場合はエラーと判断
-      if (String(Object.prototype.toString.call(arg.asis).slice(8, -1))
-        !== String(Object.prototype.toString.call(arg.tobe).slice(8, -1))
-        || recursive(arg.asis, arg.tobe, arg.opt) === false
-      ) {
-        isOK = false;
-        msg.unshift(`===== ${arg.title} Check Result : Error`);
-      } else {
-        msg.unshift(`===== ${arg.title} Check Result : OK`);
-      }
+      // 呼出元関数
+      this.caller = trace.map(x => x.whois).join(' > ');
+
+      // 独自追加項目を個別に設定(Object.keysではtraceが空欄等、壊れる)
+      ['whois','step','seq','arg','rv','start','end','elaps']
+      .forEach(x => this[x] = fi[x]);
+
+      // エラーが起きた関数内でのstep実行順
+      this.log = fi.log.join(', ');
+
     }
+  }
 
-    // 引数として渡されたmsgおよび結果(JSON)を先頭に追加後、コンソールに表示
-    msg = `::::: Verified by devTools.check\n`
-      + `===== ${arg.title} Returned Value\n`
-      + JSON.stringify(arg.asis, (k, v) => typeof v === 'function' ? v.toString() : v, 2)
-      + `\n\n\n${msg.join('\n')}`;
-    if (isOK) console.log(msg); else console.error(msg);
-    return isOK;
-  }
-  /** dump: 渡された変数の内容をコンソールに表示
-   * - 引数には対象変数を列記。最後の引数が数値だった場合、行番号と看做す
-   * @param {any|any[]} arg - 表示する変数および行番号
-   * @returns {void}
-   */
-  function dump() {
-    let arg = [...arguments];
-    let line = typeof arg[arg.length - 1] === 'number' ? arg.pop() : null;
-    const o = stack[stack.length - 1];
-    let msg = (line === null ? '' : `l.${line} `)
-      + `::dump::${o.label}.${o.step}`;
-    for (let i = 0; i < arg.length; i++) {
-      // 対象変数が複数有る場合、Noを追記
-      msg += '\n' + (arg.length > 0 ? `${i}: ` : '') + stringify(arg[i]);
-    }
-    console.log(msg);
-  }
-  /** end: 正常終了時の呼出元関数情報の抹消＋終了メッセージの表示
-   * @param {Object} rt - end実行時に全体に優先させるオプション指定(run time option)
-   */
-  function end(rt={}) {
-    const localOpt = Object.assign({},opt,rt);
-    const o = stack.pop();
-    if (localOpt.start) console.log(`${o.label} normal end.`);
-  }
-  /** error: 異常終了時の呼出元関数情報の抹消＋終了メッセージの表示 */
-  function error(e) {
-    const o = stack.pop();
-    // 参考 : e.lineNumber, e.columnNumber, e.causeを試したが、いずれもundefined
-    e.message = `[Error] ${o.label}.${o.step}\n${e.message}`;
-    console.error(e.message
-      + `\n-- footprint\n${o.footprint}`
-      + `\n-- arguments\n${o.arg}`
-    );
-  }
+  opt = Object.assign({mode:'dev',digit:4},opt);
+  let seq = 0;  // 関数の呼出順(連番)
+  const trace = []; // {functionInfo[]} 呼出元関数スタック
+  let fi; // 現在処理中の関数に関する情報
+  return {start,step,end,error};
+
   /** start: 呼出元関数情報の登録＋開始メッセージの表示
-   * @param {string} name - 関数名
-   * @param {any[]} arg - start呼出元関数に渡された引数([...arguments]固定)
-   * @param {Object} rt - start実行時に全体に優先させるオプション指定(run time option)
+   * @param {Object} v - 汎用変数。whois,arg,rvを含める
    */
-  function start(name, arg = [], rt={}) {
-    const localOpt = Object.assign({},opt,rt);
-    const o = {
-      class: '',  // nameがクラス名.メソッド名だった場合のクラス名
-      name: name,
-      seq: seq++,
-      step: 0,
-      footprint: [],
-      arg: [],
-    };
-    o.sSeq = ('000' + o.seq).slice(-4);
-    const caller = stack.length === 0 ? null : stack[stack.length - 1]; // 呼出元
-    // nameがクラス名.メソッド名だった場合、クラス名をセット
-    if (name.includes('.')) [o.class, o.name] = name.split('.');
-    // ラベル作成。呼出元と同じクラスならクラス名は省略
-    o.label = `[${o.sSeq}]` + (o.class && (!caller || caller.class !== o.class) ? o.class+'.' : '') + o.name;
-    // footprintの作成
-    stack.forEach(x => o.footprint.push(`${x.label}.${x.step}`));
-    o.footprint = o.footprint.length === 0 ? '(root)' : o.footprint.join(' > ');
-    // 引数情報の作成
-    if (arg.length === 0) {
-      o.arg = '(void)';
-    } else {
-      for (let i = 0; i < arg.length; i++) o.arg[i] = stringify(arg[i]);
-      o.arg = o.arg.join('\n');
+  function start(v){
+    fi = new functionInfo(v);
+    // ログ出力
+    if( opt.mode === 'normal' || opt.mode === 'dev' ){
+      console.log(`${toLocale(fi.start,'hh:mm:ss.nnn')} [${
+        ('0'.repeat(opt.digit)+fi.seq).slice(-opt.digit)
+      }] ${fi.whois} start`);
     }
-    // 作成した呼出元関数情報を保存
-    stack.push(o);
+    trace.push(fi); // 呼出元関数スタックに保存
+  }
 
-    if (localOpt.start) {  // 開始メッセージの表示指定が有った場合
-      console.log(`${o.label} start.\n-- footprint\n${o.footprint}`
-        + (localOpt.arg ? `\n-- arguments\n${o.arg}` : ''));
-    }
-  }
-  /** step: 呼出元関数の進捗状況の登録＋メッセージの表示 */
-  function step(step, msg = '') {
-    const o = stack[stack.length - 1];
-    o.step = step;
-    if (opt.step) console.log(`${o.label} step.${o.step} ${msg}`);
-  }
-  /** stringify: 変数の内容をラベル＋データ型＋値の文字列として出力
-   * @param {any} arg - 文字列化する変数
-   * @returns {string}
+  /** step: 関数内の進捗状況管理＋変数のダンプ
+   * @param {number|string} label - dev.start〜end内での位置を特定するマーカー
+   * @param {any} [val=null] - ダンプ表示する変数
+   * @param {boolean} [cond=true] - 特定条件下でのみダンプ表示したい場合の条件
+   * @example 123行目でClassNameが"cryptoClient"の場合のみv.hogeを表示
+   *   dev.step(99.123,v.hoge,this.ClassName==='cryptoClient');
+   *   ※ 99はデバック、0.123は行番号の意で設定
    */
-  function stringify(arg) {
-    /** recursive: 変数の内容を再帰的にメッセージ化
-     * @param {any} arg - 内容を表示する変数
-     * @param {number} depth=0 - 階層の深さ
-     * @param {string} label - メンバ名または添字
-     */
-    const recursive = (arg, depth = 0, label = '') => {
-      // データ型の判定
-      let type = String(Object.prototype.toString.call(arg).slice(8, -1));
-      switch (type) {
-        case 'Number': if (Number.isNaN(arg)) type = 'NaN'; break;
-        case 'Function': if (!('prototype' in arg)) type = 'Arrow'; break;
-      }
-      // ラベル＋データ型＋値の出力
-      let indent = '  '.repeat(depth);
-      switch (type) {
-        case 'Object':
-          msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}{`);
-          for (let mn in arg) recursive(arg[mn], depth + 1, mn);
-          msg.push(`${indent}}`);
-          break;
-        case 'Array':
-          msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}[`);
-          for (let i = 0; i < arg.length; i++) recursive(arg[i], depth + 1, String(i));
-          msg.push(`${indent}]`);
-          break;
-        default:
-          let val = typeof arg === 'function' ? `"${arg.toString()}"` : (typeof arg === 'string' ? `"${arg}"` : arg);
-          // Class Sheetのメソッドのように、toStringが効かないnative codeは出力しない
-          if (typeof val !== 'string' || val.indexOf('[native code]') < 0) {
-            msg.push(`${indent}${label.length > 0 ? label + ': ' : ''}${val}(${type})`);
-          }
+  function step(label,val=null,cond=true){
+    fi.step = String(label);  // stepを記録
+    fi.log.push(fi.step); // fi.logにstepを追加
+    // valが指定されていたらステップ名＋JSON表示
+    if( opt.mode === 'dev' && val && cond ){
+      console.log(`== ${fi.whois} step.${label} ${formatObject(val)}`);
+    }
+  }
+
+  /** end: 正常終了時処理 */
+  function end(){
+    // 終了時に確定する項目に値設定
+    finisher(fi);
+
+    // ログ出力
+    if( opt.mode === 'normal' || opt.mode === 'dev' ){
+      console.log(`${toLocale(fi.end,'hh:mm:ss.nnn')} [${
+        ('0'.repeat(opt.digit)+fi.seq).slice(-opt.digit)
+      }] ${fi.whois} normal end`);
+      if( fi.seq === 0 ){
+        console.log(`\tstart: ${toLocale(fi.start)
+        }\n\tend  : ${toLocale(fi.end)
+        }\n\telaps: ${fi.elaps}`);
       }
     }
-    const msg = [];
-    recursive(arg);
-    return msg.join('\n');
+
+    trace.pop();  // 呼出元関数スタックから削除
+    fi = trace[trace.length-1];
+  }
+
+  /** finisher: end/error共通の終了時処理 */
+  function finisher(fi){
+    // 終了時に確定する項目に値設定
+    fi.end = new Date();
+    fi.elaps = `${fi.end - fi.start} msec`;
+  }
+  /** error: エラー時処理 */
+  function error(e){
+
+    // 終了時に確定する項目に値設定
+    finisher(fi);
+    fi.start = toLocale(fi.start);  // エラーログ出力時はISO8601拡張形式
+    fi.end = toLocale(fi.end);
+
+    // 独自エラーオブジェクトを作成
+    const rv = e.constructor.name === 'szError' ? e : new szError(fi,e);
+
+    // ログ出力：エラーが発生した関数でのみ出力
+    if( opt.mode !== 'none' && fi.seq === rv.seq ){
+      console.error(rv);
+    }
+
+    trace.pop();  // 呼出元関数スタックから削除
+    fi = trace[trace.length-1] || {seq: -1};
+
+    return rv;
+  }
+
+  /** ログ出力用時刻文字列整形 */
+  function toLocale(date,opt='yyyy-MM-ddThh:mm:ss.nnnZ'){
+    const v = {rv:opt,dObj:date};
+    if( typeof date === 'string' ) return date;
+
+    v.local = { // 地方時ベース
+      y: v.dObj.getFullYear(),
+      M: v.dObj.getMonth()+1,
+      d: v.dObj.getDate(),
+      h: v.dObj.getHours(),
+      m: v.dObj.getMinutes(),
+      s: v.dObj.getSeconds(),
+      n: v.dObj.getMilliseconds(),
+      Z: Math.abs(v.dObj.getTimezoneOffset())
+    }
+
+    // タイムゾーン文字列の作成
+    v.local.Z = v.local.Z === 0 ? 'Z'
+    : ((v.dObj.getTimezoneOffset() < 0 ? '+' : '-')
+    + ('0' + Math.floor(v.local.Z / 60)).slice(-2)
+    + ':' + ('0' + (v.local.Z % 60)).slice(-2));
+
+    // 日付文字列作成
+    for( v.x in v.local ){
+      v.m = v.rv.match(new RegExp(v.x+'+'));
+      if( v.m ){
+        v.str = v.m[0].length > 1
+          ? ('000'+v.local[v.x]).slice(-v.m[0].length)
+          : String(v.local[v.x]);
+        v.rv = v.rv.replace(v.m[0],v.str);
+      }
+    }
+    return v.rv;
+  }
+
+  /**
+   * オブジェクトの各メンバーを「メンバ名: 値 // データ型」の形式で再帰的に整形する
+   * @param {any} obj - 整形対象のオブジェクトまたは配列
+   * @param {number} indentLevel - 現在のインデントレベル
+   * @returns {string} 整形された文字列
+   */
+  function formatObject(obj, indentLevel = 0) {
+    const indent = '  '.repeat(indentLevel); // インデント文字列
+
+    if (obj === null) {
+      return `${indent}null // null`;
+    }
+
+    const type = typeof obj;
+
+    // プリミティブ型 (number, string, boolean, null, undefined)
+    if (type !== 'object' && type !== 'function') {
+      // 文字列は二重引用符で囲む
+      const value = type === 'string' ? `"${obj}"` : obj;
+      return `${indent}${value}, // ${type}`;
+    }
+
+    // 関数 (function)
+    if (type === 'function') {
+      // 関数は文字列化してデータ型を表示しない
+      // toLocalISOString の例から、関数の値は引用符なしで表示します
+      return `${indent}${obj.toString()},`;
+    }
+
+    // オブジェクト型 (Array, Object)
+
+    // Array の場合
+    if (Array.isArray(obj)) {
+      if (obj.length === 0) {
+        return `${indent}[ /* Array, length 0 */ ], // object`;
+      }
+
+      const elements = obj.map(item =>
+        // Arrayの要素は名前がないため、インデントと値のみを返す
+        formatObject(item, indentLevel + 1)
+      ).join('\n');
+
+      // Arrayの要素はカンマではなく改行で区切ります
+      return `${indent}[\n${elements}\n${indent}], // Array`;
+    }
+
+    // 標準の Object の場合
+    const keys = Object.keys(obj);
+    if (keys.length === 0) {
+      return `${indent}{ /* Object, empty */ }, // object`;
+    }
+
+    const members = keys.map(key => {
+      const value = obj[key];
+      const memberType = typeof value;
+      const nextIndent = '  '.repeat(indentLevel + 1);
+
+      // オブジェクト/配列/関数は再帰呼び出し
+      if (memberType === 'object' && value !== null || memberType === 'function') {
+        // 複合型の場合は、キーと値の開始のみを記載
+        const formattedValue = formatObject(value, indentLevel + 1);
+        return `${nextIndent}${key}:${formattedValue}`;
+      }
+
+      // プリミティブ型は一行で表示
+      const formattedValue = memberType === 'string' ? `"${value}"` : value;
+      return `${nextIndent}${key}:${formattedValue}, // ${memberType}`;
+    }).join('\n');
+
+    return `${indent}{\n${members}\n${indent}}`;
   }
 }
 ```

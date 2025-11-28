@@ -20,7 +20,7 @@
 ### <span id="devTools"><a href="#list">devTools</a></span>
 
 ```js
-<!--::$lib/devTools/1.0.1/core.js::-->
+<!--::$lib/devTools/2.0.0/core.js::-->
 ```
 
 ### <span id="toLocale"><a href="#list">toLocale</a></span>

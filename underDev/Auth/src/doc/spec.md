@@ -23,11 +23,11 @@
   よってセキュリティ上の脅威は極力排除するが、一定水準の安全性・恒久性を確保した上で導入時の容易さ・技術的ハードルの低さ、運用の簡便性を重視する。
 - サーバ側(以下authServer)はスプレッドシートのコンテナバインドスクリプト、クライアント側(以下authClient)はHTMLのJavaScript
 - サーバ側・クライアント側とも鍵ペアを使用
-- サーバ側の動作環境設定・鍵ペアは[ScriptProperties](typedef.md#authscriptproperties)、クライアント側は[IndexedDB](typedef.md#authindexeddb)に保存
+- サーバ側の動作環境設定・鍵ペアはScriptProperties、クライアント側はIndexedDBに保存
 - 原則として通信は受信側公開鍵で暗号化＋発信側秘密鍵で署名
 - クライアントの識別(ID)はメールアドレスで行う
 - 日時は特段の注記が無い限り、UNIX時刻でミリ秒単位で記録(`new Date().getTime()`)
-- メンバ情報は[スプレッドシート](typedef.md#member)に保存
+- [メンバ情報](sv/Member.md#member_members)はスプレッドシートに保存
 - 定義したクラスのインスタンス変数は、セキュリティ強度向上のため特段の記述がない限りprivateとする
 - 日時は特段の指定が無い限り全てUNIX時刻(number型)。比較も全てミリ秒単位で行う
 
@@ -252,21 +252,21 @@ sequenceDiagram
 - 暗号化方式 : RSA-OAEP
 - ハッシュ関数 : SHA-256以上
 - 許容時差±120秒※以内
-  ※既定値。実際の桁数はauthConfig.cryptoServer.allowableTimeDifferenceで規定
+  ※既定値。実際の桁数はauthConfig.cryptoServer.[allowableTimeDifference](sv/authServerConfig.md#authserverconfig_members)で規定
 - 順序は「暗号化->署名」ではなく「署名->暗号化」で行う
   1. クライアントがデータをJSON化
   2. 自身の秘密鍵で署名(署名→暗号化)
   3. サーバの公開鍵で暗号化
-  4. サーバは復号後、クライアント公開鍵(memberList.CPkey)で署名を検証
+  4. サーバは復号後、クライアント公開鍵(CPkey)で署名を検証
 - パスワードの生成は「ライブラリ > createPassword」を使用
-- パスコードのメール送信は「ライブラリ > sendMail」を使用
+- パスコードのメール送信は「ライブラリ > [sendMail](JSLib.md#sendmail)」を使用
 - CPkeyの有効期限が切れた場合、以下の手順で更新する
   1. クライアント側から古いCPkeyで署名された要求を受信
   2. サーバ側で署名検証の結果、期限切れを確認
-    - memberList.trial[0].CPkeyUpdateUntilに「現在日時＋authConfig.cryptoServer.loginLifeTime」をセット
+    - memberList.trial[0].CPkeyUpdateUntilに「現在日時＋[loginLifeTime](authServerConfig.md#authserverconfig_members)」をセット
     - クライアント側に通知
   3. クライアント側でCPkeyを更新、新CPkeyで再度リクエスト
-  4. サーバ側でauthConfig.cryptoServer.loginLifeTimeを確認、期限内ならmemberList.CPkeyを書き換え。期限切れなら加入処理同様、adminによる個別承認を必要とする。
+  4. サーバ側で[loginLifeTime](authServerConfig.md#authserverconfig_members)を確認、期限内ならmemberList.CPkeyを書き換え。期限切れなら加入処理同様、adminによる個別承認を必要とする。
   5. 以降は未ログイン状態で要求が来た場合として処理を継続
 
 ## <span id="status"><a href="#top">メンバの状態遷移</a></span>
@@ -342,12 +342,13 @@ stateDiagram-v2
 
 ## <span id="policy"><a href="#top">実装方針</a></span>
 
+- サーバ・クライアント共に進捗・エラー管理に[devTools](JSLib.md#devtools)を使用
 - 関数・メソッドは原則として`try 〜 catch`で囲み、予期せぬエラーが発生した場合はErrorオブジェクトを返す。<br>
   以下は各メソッドのプロトタイプ("pv"はインスタンス変数)
   ```js
   function prototype(arg) {
-    const v = { whois: `${pv.whois}.prototype`, rv: null};
-    dev.start(v.whois, [...arguments]);
+    const v = {whois:`${pv.whois}.prototype`, arg:{arg}, rv:null};
+    dev.start(v);
     try {
 
       // -------------------------------------------------------------
@@ -357,6 +358,6 @@ stateDiagram-v2
       dev.end(); // 終了処理
       return v.rv;
 
-    } catch (e) { dev.error(e); return e; }
+    } catch (e) { return dev.error(e); }
   }
   ```
