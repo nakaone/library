@@ -329,7 +329,7 @@ class BaseDef {
    */
   evaluate(str){
     // 置換対象の文字列内の関数名には「this.」が付いてないので付加
-    const cfTable = this.cfTable;
+    //const cfTable = this.cfTable;
     const v = { whois: `${this.constructor.name}.evaluate`,rv:'',arg:{str}};
     dev.start(v);
     try {
@@ -338,10 +338,8 @@ class BaseDef {
         dev.step(1);  // 評価箇所が無い場合はそのまま返す
         v.str = this.trimIndent(str);
         if( v.str instanceof Error ) throw v.str;
-        //dev.step(99.341,v.str);
         v.list = [...v.str.matchAll(/(\n*)(\s*)%%([\s\S]*?)%%/g)];
         if( v.list.length === 0 ) break mainBlock;
-        //dev.step(99.344,v.list);
 
         v.list.forEach(x => {
           // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)

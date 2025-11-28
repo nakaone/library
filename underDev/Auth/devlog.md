@@ -1,16 +1,13 @@
 # 当日分
 
-## 2025/11/27
+## 2025/11/28
 
-- [bug] null/Errorでも"not fixed"エラーが発生
-- 旧版移行：cryptoClient.md
-- 旧版移行：authClientKeys.md ⇒ cryptoClientに統合
+- TypeError: Cannot read properties of undefined (reading 'constructor')
+  @ MethodDef.evaluate
 
 ### 対応済
 
-- 定義されたデータ型以外も"not fixed"が出る
-- ReturnDefで「戻り値はnull|Error」が表現できない
-- [bug] cryptoClient.mdのタイトル行が出力されない
+- [bug] devTools.errorでstepがでない
 
 ### ToDo
 
@@ -56,6 +53,20 @@
 - 主要クラスの実装
 
 # 開発履歴
+
+## 2025/11/27
+
+- TypeError: Cannot read properties of undefined (reading 'constructor')
+  @ MethodDef.evaluate
+
+### 対応済
+
+- [bug] null/Errorでも"not fixed"エラーが発生
+- 旧版移行：cryptoClient.md
+- 旧版移行：authClientKeys.md ⇒ cryptoClientに統合
+- 定義されたデータ型以外も"not fixed"が出る
+- ReturnDefで「戻り値はnull|Error」が表現できない
+- [bug] cryptoClient.mdのタイトル行が出力されない
 
 ## 2025/11/26
 

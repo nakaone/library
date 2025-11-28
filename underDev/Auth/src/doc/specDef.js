@@ -53,15 +53,15 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
         process: `
           - メンバに以下を設定
-            %%cfTable({type:'authAuditLog',default:{
-              timestamp:"toLocale(this.timestamp)(ISO8601拡張形式)",
-              duration:"Date.now() - this.timestamp",
-              memberId:"request.memberId",
-              deviceId:"request.deviceId",
-              func:"request.func",
-              result:"response.result",
-              note:"this.note + response.message",
-            }})%%
+            %% this.cfTable({'type':'authAuditLog','default':{
+              'timestamp':'"toLocale(this.timestamp)(ISO8601拡張形式)"',
+              'duration':'"Date.now() - this.timestamp"',
+              'memberId':'"request.memberId"',
+              'deviceId':'"request.deviceId"',
+              'func':'"request.func"',
+              'result':'"response.result"',
+              'note':'"this.note + response.message"',
+            }}) %%
         `,
 
         returns: {list:[
@@ -661,7 +661,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
       returns: {list:[
         {type:'LocalRequest',desc:'正常時の戻り値'},
-        {type:'',desc:'エラー時の戻り値',template:`%% cfTable({type:'authError',patterns:{'func不正':{message:'"invalid func"'}}},{indent:2,header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}}) %%`},
+        {type:'',desc:'エラー時の戻り値',template:`%% this.cfTable({type:'authError',patterns:{'func不正':{message:'"invalid func"'}}},{indent:2,header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}}) %%`},
       ]},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
     }]},
   },
