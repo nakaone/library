@@ -45,11 +45,11 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| CSkeySign | CryptoKey | <span style="color:red">必須</span> |  |  |
-| CPkeySign | CryptoKey | <span style="color:red">必須</span> |  |  |
-| CSkeyEnc | CryptoKey | <span style="color:red">必須</span> |  |  |
-| CPkeyEnc | CryptoKey | <span style="color:red">必須</span> |  |  |
-| SPkey | string | <span style="color:red">必須</span> |  |  |
+| CSkeySign | CryptoKey | <span style="color:red">必須</span> | 署名用秘密鍵 |  |
+| CPkeySign | CryptoKey | <span style="color:red">必須</span> | 署名用公開鍵 |  |
+| CSkeyEnc | CryptoKey | <span style="color:red">必須</span> | 暗号化用秘密鍵 |  |
+| CPkeyEnc | CryptoKey | <span style="color:red">必須</span> | 暗号化用公開鍵 |  |
+| SPkey | string | <span style="color:red">必須</span> | サーバ側公開鍵 |  |
 
 ## <span id="cryptoclient_methods">🧱 cryptoClient メソッド一覧</span>
 
@@ -93,7 +93,18 @@
 
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
   | :-- | :-- | :-- | :-- | :-- |
-  |  | string | <span style="color:red">必須</span> |  |  |
+  | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID |
+  | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  |
+  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID |
+  | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 |
+  | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  |
+  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  |
+  | SPkey | string | SPkey | サーバ側公開鍵 |  |
+  | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む |
+  | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  |
+  | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 |
+  | status | string | "normal" | サーバ側処理結果 | authServerの処理結果。responseとは必ずしも一致しない |
 ### <span id="cryptoclient_encrypt"><a href="#cryptoclient_methods">🧱 cryptoClient.encrypt()</a></span>
 
 #### <span id="cryptoclient_encrypt_params">📥 引数</span>

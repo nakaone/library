@@ -344,13 +344,13 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     implement: ['cl'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス',default:'idb.memberId'},
-      {name:'deviceId',type:'string',label:'デバイスの識別子',note:'UUID',default:'idb.deviceId'},
-      {name:'signature',type:'string',label:'クライアント側署名',note:'',default:'idb.CPkey'},
-      {name:'requestId',type:'string',label:'要求の識別子',note:'UUID',default:'UUID'},
-      {name:'timestamp',type:'number',label:'要求日時',note:'UNIX時刻',default:'Date.now()'},
-      {name:'func',type:'string',label:'サーバ側関数名',note:''},
-      {name:'arguments',type:'any[]',label:'サーバ側関数に渡す引数の配列',note:'',default:'[]'},
+      {name:'memberId',type:'string',desc:'メンバの識別子',note:'=メールアドレス',default:'idb.memberId'},
+      {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'UUID',default:'idb.deviceId'},
+      {name:'CPkey',type:'string',desc:'クライアント側署名',note:'',default:'idb.CPkey'},
+      {name:'requestId',type:'string',desc:'要求の識別子',note:'UUID',default:'UUID'},
+      {name:'requestTime',type:'number',desc:'要求日時',note:'UNIX時刻',default:'Date.now()'},
+      {name:'func',type:'string',desc:'サーバ側関数名',note:''},
+      {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',note:'',default:'[]'},
     ]},
 
     methods: {list:[{
@@ -371,12 +371,24 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     }]},
   },
   authResponse: {
-    desc: 'クライアント側で復号されたサーバからの処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement: ['cl'],  // 実装の有無
+    desc: 'サーバ側で復号された処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `クライアントからの処理要求(encryptedRequest)を復号して作成されるインスタンス。
+    サーバ側は本インスタンスに対して各種処理を行うと共に結果を付加する。`,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    implement: ['sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'',type:'string',desc:'',note:''},
+      {name:'memberId',type:'string',desc:'メンバの識別子',note:'=メールアドレス'},
+      {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'UUID'},
+      {name:'CPkey',type:'string',desc:'クライアント側署名',note:''},
+      {name:'requestId',type:'string',desc:'要求の識別子',note:'UUID'},
+      {name:'requestTime',type:'number',desc:'要求日時',note:'UNIX時刻'},
+      {name:'func',type:'string',desc:'サーバ側関数名',note:''},
+      {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',note:''},
+      {name:'SPkey',type:'string',desc:'サーバ側公開鍵',default:'SPkey'},
+      {name:'response',type:'any',desc:'サーバ側関数の戻り値',note:'Errorオブジェクトを含む',default:'null'},
+      {name:'receptTime',type:'number',desc:'サーバ側の処理要求受付日時',default:'Date.now()'},
+      {name:'responseTime',type:'number',desc:'サーバ側処理終了日時',note:'エラーの場合は発生日時',default:'0'},
+      {name:'status',type:'string',desc:'サーバ側処理結果',note:'authServerの処理結果。responseとは必ずしも一致しない',default:'"normal"'},
     ]},
 
     methods: {list:[{
@@ -386,7 +398,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
       params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+        {name:'request',type:'string',note:'暗号化された処理要求(encryptedRequest)'},
       ]},
 
       process: `
@@ -515,11 +527,11 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     template: ``, // {string} Markdown出力時のテンプレート
 
     members: {list:[
-      {name:'CSkeySign',type:'CryptoKey',label:'署名用秘密鍵',note:''},
-      {name:'CPkeySign',type:'CryptoKey',label:'署名用公開鍵',note:''},
-      {name:'CSkeyEnc',type:'CryptoKey',label:'暗号化用秘密鍵',note:''},
-      {name:'CPkeyEnc',type:'CryptoKey',label:'暗号化用公開鍵',note:''},
-      {name:'SPkey',type:'string',label:'サーバ側公開鍵',note:''},
+      {name:'CSkeySign',type:'CryptoKey',desc:'署名用秘密鍵',note:''},
+      {name:'CPkeySign',type:'CryptoKey',desc:'署名用公開鍵',note:''},
+      {name:'CSkeyEnc',type:'CryptoKey',desc:'暗号化用秘密鍵',note:''},
+      {name:'CPkeyEnc',type:'CryptoKey',desc:'暗号化用公開鍵',note:''},
+      {name:'SPkey',type:'string',desc:'サーバ側公開鍵',note:''},
     ]},
 
     methods: {list:[

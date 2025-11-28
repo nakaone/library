@@ -14,13 +14,13 @@ authClientからauthServerに送られる、暗号化前の処理要求オブジ
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| memberId | string | idb.memberId |  | =メールアドレス |
-| deviceId | string | idb.deviceId |  | UUID |
-| signature | string | idb.CPkey |  |  |
-| requestId | string | UUID |  | UUID |
-| timestamp | number | Date.now() |  | UNIX時刻 |
-| func | string | <span style="color:red">必須</span> |  |  |
-| arguments | any[] | [] |  |  |
+| memberId | string | idb.memberId | メンバの識別子 | =メールアドレス |
+| deviceId | string | idb.deviceId | デバイスの識別子 | UUID |
+| CPkey | string | idb.CPkey | クライアント側署名 |  |
+| requestId | string | UUID | 要求の識別子 | UUID |
+| requestTime | number | Date.now() | 要求日時 | UNIX時刻 |
+| func | string | <span style="color:red">必須</span> | サーバ側関数名 |  |
+| arguments | any[] | [] | サーバ側関数に渡す引数の配列 |  |
 
 ## <span id="authrequest_methods">🧱 authRequest メソッド一覧</span>
 

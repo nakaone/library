@@ -2,10 +2,11 @@
 
 ## 2025/11/28
 
-- 旧版移行：authRequest.md
+- 旧版移行：authResponse.md
 
 ### 対応済
 
+- 旧版移行：authRequest.md
 - TypeError: Cannot read properties of undefined (reading 'constructor')
 - [bug] devTools.errorでstepがでない
 
@@ -15,7 +16,6 @@
 - 旧版移行：authErrorLog.md
 - 旧版移行：authIndexedDB.md
 - 旧版移行：authRequestLog.md
-- 旧版移行：authResponse.md
 - 旧版移行：authScriptProperties.md
 - 旧版移行：authServer.md
 - 旧版移行：authServerConfig.md
