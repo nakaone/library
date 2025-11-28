@@ -2,11 +2,13 @@
 
 ## 2025/11/28
 
-- 旧版移行：encryptedRequest.md
-- 旧版移行：encryptedResponse.md
+- 旧版移行：decryptedRequest.md
+- 旧版移行：decryptedResponse.md
 
 ### 対応済
 
+- 旧版移行：encryptedRequest.md
+- 旧版移行：encryptedResponse.md
 - 旧版移行：authResponse.md
 - 旧版移行：authRequest.md
 - TypeError: Cannot read properties of undefined (reading 'constructor')
@@ -23,8 +25,6 @@
 - 旧版移行：authServerConfig.md
 - 旧版移行：classes.md
 - 旧版移行：cryptoServer.md
-- 旧版移行：decryptedRequest.md
-- 旧版移行：decryptedResponse.md
 - 旧版移行：JSLib.md
 - 旧版移行：LocalRequest.md
 - 旧版移行：LocalResponse.md

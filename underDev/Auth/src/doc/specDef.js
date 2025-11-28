@@ -340,7 +340,11 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
   },
   authRequest: {
     desc: '暗号化前の処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: `authClientからauthServerに送られる、暗号化前の処理要求オブジェクト`,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    note: `
+      - authClientからauthServerに送られる、暗号化前の処理要求オブジェクト
+      - cryptoClient.[encrypt](cryptoClient.md#cryptoclient_encrypt)で暗号化し、authServerに送られる
+      - サーバ側で受信後、cryptoServer.[decrypt](cryptoServer.md#cryptoserver_decrypt)でauthRequestに戻る
+    `,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
     implement: ['cl'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
@@ -372,9 +376,13 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
   },
   authResponse: {
     desc: 'サーバ側で復号された処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: `クライアントからの処理要求(encryptedRequest)を復号して作成されるインスタンス。
-    サーバ側は本インスタンスに対して各種処理を行うと共に結果を付加する。`,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement: ['sv'],  // 実装の有無
+    note: `
+    - サーバ側でauthClientから送られた[encryptedRequest](encryptedRequest.md#encryptedrequest_members)を復号して作成
+    - サーバ側は本インスタンスに対して各種処理を行い、結果を付加していく
+    - サーバ側処理終了後、cryptoServer.[encrypt](cryptoServer.md#encrypt)で暗号化してauthClientに戻す
+    - authClientはcryptoClient.[decrypt](../cl/cryptoClient.md#cryptoclient_decrypt)で復号、後続処理を実行する
+    `,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    implement: ['cl','sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',desc:'メンバの識別子',note:'=メールアドレス'},
@@ -389,6 +397,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       {name:'receptTime',type:'number',desc:'サーバ側の処理要求受付日時',default:'Date.now()'},
       {name:'responseTime',type:'number',desc:'サーバ側処理終了日時',note:'エラーの場合は発生日時',default:'0'},
       {name:'status',type:'string',desc:'サーバ側処理結果',note:'authServerの処理結果。responseとは必ずしも一致しない',default:'"normal"'},
+      {name:'decrypt',type:'string',desc:'クライアント側での復号処理結果',note:'"normal":正常、それ以外はエラーメッセージ',default:'"normal"'},
     ]},
 
     methods: {list:[{

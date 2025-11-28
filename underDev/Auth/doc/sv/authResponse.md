@@ -8,8 +8,10 @@
 
 サーバ側で復号された処理要求
 
-クライアントからの処理要求(encryptedRequest)を復号して作成されるインスタンス。
-    サーバ側は本インスタンスに対して各種処理を行うと共に結果を付加する。
+- authClientから送られた[encryptedRequest](encryptedRequest.md#encryptedrequest_members)を復号して作成
+- サーバ側は本インスタンスに対して各種処理を行い、結果を付加していく
+- サーバ側処理終了後、cryptoServer.[encrypt](cryptoServer.md#encrypt)で暗号化してauthClientに戻す
+- authClientはcryptoClient.[decrypt](../cl/cryptoClient.md#cryptoclient_decrypt)で復号、後続処理を実行する
 
 ## <span id="authresponse_members">🔢 authResponse メンバ一覧</span>
 
@@ -27,6 +29,7 @@
 | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  |
 | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 |
 | status | string | "normal" | サーバ側処理結果 | authServerの処理結果。responseとは必ずしも一致しない |
+| decrypt | string | "normal" | クライアント側での復号処理結果 | "normal":正常、それ以外はエラーメッセージ |
 
 ## <span id="authresponse_methods">🧱 authResponse メソッド一覧</span>
 

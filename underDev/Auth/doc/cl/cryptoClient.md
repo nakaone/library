@@ -105,6 +105,7 @@
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 |
   | status | string | "normal" | サーバ側処理結果 | authServerの処理結果。responseとは必ずしも一致しない |
+  | decrypt | string | "normal" | クライアント側での復号処理結果 | "normal":正常、それ以外はエラーメッセージ |
 ### <span id="cryptoclient_encrypt"><a href="#cryptoclient_methods">🧱 cryptoClient.encrypt()</a></span>
 
 #### <span id="cryptoclient_encrypt_params">📥 引数</span>

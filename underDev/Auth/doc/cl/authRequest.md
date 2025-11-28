@@ -8,7 +8,9 @@
 
 暗号化前の処理要求
 
-authClientからauthServerに送られる、暗号化前の処理要求オブジェクト
+- authClientからauthServerに送られる、暗号化前の処理要求オブジェクト
+- cryptoClient.[encrypt](cryptoClient.md#cryptoclient_encrypt)で暗号化し、authServerに送られる
+- サーバ側で受信後、cryptoServer.[decrypt](cryptoServer.md#cryptoserver_decrypt)でauthRequestに戻る
 
 ## <span id="authrequest_members">🔢 authRequest メンバ一覧</span>
 
