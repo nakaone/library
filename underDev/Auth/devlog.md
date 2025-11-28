@@ -2,11 +2,16 @@
 
 ## 2025/11/28
 
-- 旧版移行：decryptedRequest.md
-- 旧版移行：decryptedResponse.md
+- 旧版移行：authIndexedDB.md
+- 旧版移行：LocalRequest.md
+- 旧版移行：LocalResponse.md
+- 旧版移行：authClient.md
+- 旧版移行：authConfig.md
 
 ### 対応済
 
+- 旧版移行：decryptedRequest.md
+- 旧版移行：decryptedResponse.md
 - 旧版移行：encryptedRequest.md
 - 旧版移行：encryptedResponse.md
 - 旧版移行：authResponse.md
@@ -16,9 +21,7 @@
 
 ### ToDo
 
-- 旧版移行：authConfig.md
 - 旧版移行：authErrorLog.md
-- 旧版移行：authIndexedDB.md
 - 旧版移行：authRequestLog.md
 - 旧版移行：authScriptProperties.md
 - 旧版移行：authServer.md
@@ -26,8 +29,6 @@
 - 旧版移行：classes.md
 - 旧版移行：cryptoServer.md
 - 旧版移行：JSLib.md
-- 旧版移行：LocalRequest.md
-- 旧版移行：LocalResponse.md
 - 旧版移行：Member.md
 - 旧版移行：MemberDevice.md
 - 旧版移行：MemberLog.md
@@ -35,7 +36,6 @@
 - 旧版移行：MemberTrial.md
 - 旧版移行：MemberTrialLog.md
 - 旧版移行：spec.md
-- 旧版移行：authClient.md
 - 必要そうなクラスとメソッドを置く(引数・戻り値・処理は後工程で)
 - `archives/20251108_IO変更前/src/authClient/spec.md`からの移行
 - サーバ側仕様書作成・レビュー

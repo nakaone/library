@@ -163,7 +163,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     members: {list:[
       {name:'cf',type:'authClientConfig',desc:'動作設定変数(config)',note:''},
       {name:'crypto',type:'cryptoClient',desc:'クライアント側暗号関係処理',note:''},
-      {name:'idb',type:'authIndexedDB',desc:'IndexedDBの内容をauthClient内で共有',note:''},
+      {name:'idb',type:'static',desc:'IndexedDBの内容をauthClient内で共有',note:''},
     ]},
 
     methods: {list:[{

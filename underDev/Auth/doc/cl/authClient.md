@@ -66,7 +66,7 @@ class authClient {
 | :-- | :-- | :-- | :-- | :-- |
 | cf | [authClientConfig](authClientConfig.md#authclientconfig_members) | <span style="color:red">必須</span> | 動作設定変数(config) |  |
 | crypto | [cryptoClient](cryptoClient.md#cryptoclient_members) | <span style="color:red">必須</span> | クライアント側暗号関係処理 |  |
-| idb | authIndexedDB | <span style="color:red">必須</span> | IndexedDBの内容をauthClient内で共有 |  |
+| idb | static | <span style="color:red">必須</span> | IndexedDBの内容をauthClient内で共有 |  |
 
 ## <span id="authclient_methods">🧱 authClient メソッド一覧</span>
 
@@ -110,7 +110,7 @@ class authClient {
   | :-- | :-- | :-- | :-- | :-- |
   | cf | [authClientConfig](authClientConfig.md#authclientconfig_members) | <span style="color:red">必須</span> | 動作設定変数(config) |  |
   | crypto | [cryptoClient](cryptoClient.md#cryptoclient_members) | <span style="color:red">必須</span> | クライアント側暗号関係処理 |  |
-  | idb | authIndexedDB | <span style="color:red">必須</span> | IndexedDBの内容をauthClient内で共有 |  |
+  | idb | static | <span style="color:red">必須</span> | IndexedDBの内容をauthClient内で共有 |  |
 ### <span id="authclient_exec"><a href="#authclient_methods">🧱 authClient.exec()</a></span>
 
 #### <span id="authclient_exec_params">📥 引数</span>
@@ -129,4 +129,4 @@ class authClient {
   | :-- | :-- | :-- | :-- | :-- |
   | cf | [authClientConfig](authClientConfig.md#authclientconfig_members) | <span style="color:red">必須</span> | 動作設定変数(config) |  |
   | crypto | [cryptoClient](cryptoClient.md#cryptoclient_members) | <span style="color:red">必須</span> | クライアント側暗号関係処理 |  |
-  | idb | authIndexedDB | <span style="color:red">必須</span> | IndexedDBの内容をauthClient内で共有 |  |
+  | idb | static | <span style="color:red">必須</span> | IndexedDBの内容をauthClient内で共有 |  |
