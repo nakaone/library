@@ -257,3 +257,5 @@
 | 9.01 | <span style="padding-left:2rem">[constructor](encryptedResponse.md#encryptedresponse_constructor)</span> | コンストラクタ |
 | 10.00 | [LocalRequest](LocalRequest.md#localrequest_members) | ローカル関数からの処理要求 |
 | 10.01 | <span style="padding-left:2rem">[constructor](LocalRequest.md#localrequest_constructor)</span> | コンストラクタ |
+| 11.00 | [LocalResponse](LocalResponse.md#localresponse_members) | ローカル関数への処理結果 |
+| 11.01 | <span style="padding-left:2rem">[constructor](LocalResponse.md#localresponse_constructor)</span> | コンストラクタ |

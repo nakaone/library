@@ -2,7 +2,6 @@
 
 ## 2025/11/28
 
-- 旧版移行：authIndexedDB.md
 - 旧版移行：LocalRequest.md
 - 旧版移行：LocalResponse.md
 - 旧版移行：authClient.md
@@ -10,6 +9,7 @@
 
 ### 対応済
 
+- 旧版移行：authIndexedDB.md
 - 旧版移行：decryptedRequest.md
 - 旧版移行：decryptedResponse.md
 - 旧版移行：encryptedRequest.md

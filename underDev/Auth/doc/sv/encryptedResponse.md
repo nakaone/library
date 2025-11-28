@@ -15,7 +15,7 @@ authServerからauthClientに返される、暗号化された処理結果オブ
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| ciphertext | string | <span style="color:red">必須</span> |  |  |
+| ciphertext | string | <span style="color:red">必須</span> | 暗号化した文字列 |  |
 
 ## <span id="encryptedresponse_methods">🧱 encryptedResponse メソッド一覧</span>
 
@@ -41,6 +41,6 @@ authServerからauthClientに返される、暗号化された処理結果オブ
 
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
   | :-- | :-- | :-- | :-- | :-- |
-  | memberId | string | <span style="color:red">必須</span> |  | =メールアドレス |
-  | deviceId | string | <span style="color:red">必須</span> |  |  |
-  | ciphertext | string | <span style="color:red">必須</span> |  |  |
+  | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 |  |
+  | ciphertext | string | <span style="color:red">必須</span> | 暗号化した文字列 |  |

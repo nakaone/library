@@ -635,9 +635,9 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     implement: ['cl','sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
-      {name:'deviceId',type:'string',label:'デバイスの識別子',note:''},
-      {name:'ciphertext',type:'string',label:'暗号化した文字列',note:''},
+      {name:'memberId',type:'string',desc:'メンバの識別子',note:'=メールアドレス'},
+      {name:'deviceId',type:'string',desc:'デバイスの識別子',note:''},
+      {name:'ciphertext',type:'string',desc:'暗号化した文字列',note:''},
     ]},
 
     methods: {list:[{
@@ -665,7 +665,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     implement: ['cl','sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'ciphertext',type:'string',label:'暗号化した文字列',note:''},
+      {name:'ciphertext',type:'string',desc:'暗号化した文字列',note:''},
     ]},
 
     methods: {list:[{
@@ -722,6 +722,38 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       returns: {list:[
         {type:'LocalRequest',desc:'正常時の戻り値'},
         {type:'',desc:'エラー時の戻り値',template:`%% this.cfTable({type:'authError',patterns:{'func不正':{message:'"invalid func"'}}},{indent:2,header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}}) %%`},
+      ]},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
+    }]},
+  },
+  LocalResponse: {
+    desc: 'ローカル関数への処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `authClientからクライアント側関数に返される処理結果オブジェクト`,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    implement: ['cl'],  // 実装の有無
+
+    members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
+      {name:'result',type:'string',desc:'処理結果。fatal/warning/normal',note:''},
+      {name:'message',type:'string',desc:'エラーメッセージ',note:'normal時は`undefined`',isOpt:true},
+      {name:'response',type:'any',desc:'要求された関数の戻り値',note:'fatal/warning時は`undefined`。`JSON.parse(authResponse.response)`',isOpt:true},
+    ]},
+
+    methods: {list:[{
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
+
+      params: {list:[  // {Params} ■メソッド引数の定義■
+        {name:'response',type:'authResponse|Error',desc:'サーバ側処理結果',note:'ErrorはauthClient.[exec](authClient.md#authclient_exec)で設定'},
+      ]},
+
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+      // - テスト：[▼監査ログ](authAuditLog.md#authauditlog_constructor)インスタンス生成
+
+      returns: {list:[
+        {type:'LocalResponse',desc:'正常時の戻り値'},
+        {type:'Error',desc:'正常時の戻り値',note:'messageはauthClientで設定'},
       ]},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
     }]},
   },
