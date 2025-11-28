@@ -330,14 +330,18 @@ class BaseDef {
   evaluate(str){
     // 置換対象の文字列内の関数名には「this.」が付いてないので付加
     const cfTable = this.cfTable;
-    const v = { whois: `${this.constructor.name}.evaluate`, str:this.trimIndent(str),rv:'',arg:{str}};
-    v.list = [...v.str.matchAll(/(\n*)(\s*)%%([\s\S]*?)%%/g)];
+    const v = { whois: `${this.constructor.name}.evaluate`,rv:'',arg:{str}};
     dev.start(v);
     try {
 
       mainBlock: {
         dev.step(1);  // 評価箇所が無い場合はそのまま返す
+        v.str = this.trimIndent(str);
+        if( v.str instanceof Error ) throw v.str;
+        //dev.step(99.341,v.str);
+        v.list = [...v.str.matchAll(/(\n*)(\s*)%%([\s\S]*?)%%/g)];
         if( v.list.length === 0 ) break mainBlock;
+        //dev.step(99.344,v.list);
 
         v.list.forEach(x => {
           // x[0]: マッチした文字列(改行＋タグ前のスペース＋式)
@@ -1529,6 +1533,7 @@ function devTools(opt){
       this.seq = seq++; // {number} 実行順序
       this.arg = v.arg || {}; // {any} 起動時引数。{変数名：値}形式
       this.v = v || null; // {Object} 汎用変数
+      this.step = v.step || '';
       this.log = [];  // {string[]} 実行順に並べたdev.step
       this.rv = v.rv || null; // {any} 戻り値
 
@@ -1547,7 +1552,7 @@ function devTools(opt){
       this.caller = trace.map(x => x.whois).join(' > ');
 
       // 独自追加項目を個別に設定(Object.keysではtraceが空欄等、壊れる)
-      ['whois','seq','arg','rv','start','end','elaps']
+      ['whois','step','seq','arg','rv','start','end','elaps']
       .forEach(x => this[x] = fi[x]);
 
       // エラーが起きた関数内でのstep実行順
@@ -1585,8 +1590,8 @@ function devTools(opt){
    *   ※ 99はデバック、0.123は行番号の意で設定
    */
   function step(label,val=null,cond=true){
-    // fi.logにstepを追加
-    fi.log.push(label);
+    fi.step = String(label);  // stepを記録
+    fi.log.push(fi.step); // fi.logにstepを追加
     // valが指定されていたらステップ名＋JSON表示
     if( opt.mode === 'dev' && val && cond ){
       console.log(`== ${fi.whois} step.${label} ${formatObject(val)}`);
