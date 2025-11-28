@@ -249,7 +249,9 @@
 | 6.02 | <span style="padding-left:2rem">[decrypt](cryptoClient.md#cryptoclient_decrypt)</span> | authServer->authClientのメッセージを復号＋署名検証 |
 | 6.03 | <span style="padding-left:2rem">[encrypt](cryptoClient.md#cryptoclient_encrypt)</span> | authClient->authServerのメッセージを暗号化＋署名 |
 | 6.04 | <span style="padding-left:2rem">[generateKeys](cryptoClient.md#cryptoclient_generatekeys)</span> | 新たなクライアント側RSA鍵ペアを作成 |
-| 7.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) |  |
+| 7.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) | 暗号化された処理要求 |
 | 7.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |
-| 8.00 | [LocalRequest](LocalRequest.md#localrequest_members) | ローカル関数からの処理要求 |
-| 8.01 | <span style="padding-left:2rem">[constructor](LocalRequest.md#localrequest_constructor)</span> | コンストラクタ |
+| 8.00 | [encryptedResponse](encryptedResponse.md#encryptedresponse_members) | 暗号化された処理結果 |
+| 8.01 | <span style="padding-left:2rem">[constructor](encryptedResponse.md#encryptedresponse_constructor)</span> | コンストラクタ |
+| 9.00 | [LocalRequest](LocalRequest.md#localrequest_members) | ローカル関数からの処理要求 |
+| 9.01 | <span style="padding-left:2rem">[constructor](LocalRequest.md#localrequest_constructor)</span> | コンストラクタ |

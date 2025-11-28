@@ -6,11 +6,19 @@
 
 # <span id="encryptedrequest">encryptedRequest クラス仕様書</span>
 
+暗号化された処理要求
+
+authClientからauthServerに送られる、暗号化された処理要求オブジェクト。<br>
+      ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列。<br>
+      memberId,deviceIdは平文
+
 ## <span id="encryptedrequest_members">🔢 encryptedRequest メンバ一覧</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-|  | string | <span style="color:red">必須</span> |  |  |
+| memberId | string | <span style="color:red">必須</span> |  | =メールアドレス |
+| deviceId | string | <span style="color:red">必須</span> |  |  |
+| ciphertext | string | <span style="color:red">必須</span> |  |  |
 
 ## <span id="encryptedrequest_methods">🧱 encryptedRequest メソッド一覧</span>
 
@@ -24,7 +32,7 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| arg | Object | {} |  | ユーザ指定の設定値 |
+| request | [authRequest](authRequest.md#authrequest_members) | <span style="color:red">必須</span> |  | 平文の処理要求 |
 
 #### <span id="encryptedrequest_constructor_process">🧾 処理手順</span>
 

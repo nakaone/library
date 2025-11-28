@@ -398,7 +398,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
       params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'request',type:'string',note:'暗号化された処理要求(encryptedRequest)'},
+        {name:'request',type:'encryptedRequest',note:'暗号化された処理要求'},
       ]},
 
       process: `
@@ -618,12 +618,17 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     ]},
   },
   encryptedRequest: {
-    desc: '',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    desc: '暗号化された処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `authClientからauthServerに送られる、暗号化された処理要求オブジェクト。<br>
+      ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列。<br>
+      memberId,deviceIdは平文
+      `,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
     implement: ['cl','sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'',type:'string',desc:'',note:''},
+      {name:'memberId',type:'string',label:'メンバの識別子',note:'=メールアドレス'},
+      {name:'deviceId',type:'string',label:'デバイスの識別子',note:''},
+      {name:'ciphertext',type:'string',label:'暗号化した文字列',note:''},
     ]},
 
     methods: {list:[{
@@ -633,7 +638,35 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
       params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+        {name:'request',type:'authRequest',note:'平文の処理要求'},
+      ]},
+
+      process: `
+        - メンバと引数両方にある項目は、引数の値をメンバとして設定
+      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+
+      returns: {list:[{type:'encryptedRequest'}]},
+    }]},
+  },
+  encryptedResponse: {
+    desc: '暗号化された処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `authServerからauthClientに返される、暗号化された処理結果オブジェクト<br>
+      ciphertextはauthResponseをJSON化、RSA-OAEP暗号化＋署名付与した文字列
+      `,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+    implement: ['cl','sv'],  // 実装の有無
+
+    members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
+      {name:'ciphertext',type:'string',label:'暗号化した文字列',note:''},
+    ]},
+
+    methods: {list:[{
+      name: 'constructor',
+      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+      rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
+
+      params: {list:[  // {Params} ■メソッド引数の定義■
+        {name:'response',type:'authResponse',note:'平文の処理結果'},
       ]},
 
       process: `

@@ -83,7 +83,7 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| response | encryptedResponse | <span style="color:red">必須</span> | 暗号化された処理結果 |  |
+| response | [encryptedResponse](encryptedResponse.md#encryptedresponse_members) | <span style="color:red">必須</span> | 暗号化された処理結果 |  |
 
 #### <span id="cryptoclient_decrypt_process">🧾 処理手順</span>
 
