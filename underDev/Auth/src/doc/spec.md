@@ -34,6 +34,8 @@
 
 ## <span id="dictionary"><a href="#top">用語</a></span>
 
+- メンバ、デバイス：「メンバ」とは利用者を、「デバイス」とは利用者が使用する端末を指す。マルチデバイス対応のためメンバ：デバイスは"1:n"対応となる。<br>
+  メンバはメールアドレスで識別し、デバイスはauthClient呼出時に自動設定されるUUIDで識別する。
 - SPkey, SSkey：サーバ側の公開鍵(Server side Public key)と秘密鍵(Server side Secret key)
 - CPkey, CSkey：クライアント側の公開鍵(Client side Public key)と秘密鍵(Client side Secret key)
 - パスフレーズ：クライアント側鍵ペア作成時のキー文字列。JavaScriptで自動的に生成

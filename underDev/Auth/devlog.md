@@ -2,6 +2,7 @@
 
 ## 2025/12/05
 
+- spec.mdとtransaction.mdの統合
 
 # 開発履歴
 
