@@ -18,6 +18,7 @@
 | :-- | :-- | :-- | :-- | :-- |
 | memberId | string | idb.memberId | メンバの識別子 | =メールアドレス |
 | deviceId | string | idb.deviceId | デバイスの識別子 | UUID |
+| memberName | string | idb.memberName | メンバの氏名 | 管理者が加入認否判断のため使用 |
 | CPkey | string | idb.CPkey | クライアント側署名 |  |
 | requestId | string | UUID | 要求の識別子 | UUID |
 | requestTime | number | Date.now() | 要求日時 | UNIX時刻 |

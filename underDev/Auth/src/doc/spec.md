@@ -3,13 +3,14 @@
     text-align: right;
     font-size: 0.8rem;
   }
+  .nowrap td {white-space:nowrap;} /* 横長な表を横スクロール */
 </style>
 
 # <span id="top">"auth"総説</span>
 
 <div class="submenu">
 
-[要求仕様](#require) | [用語](#dictionary) | [通信手順](#protocol) | [暗号化・署名方式](#crypto) | [状態遷移](#status) | [実装方針](#policy)
+[要求仕様](#require) | [用語](#dictionary) | [通信手順](#protocol) | [暗号化・署名方式](#crypto) | [状態遷移](#status) | [状態別処理](#transaction) | [実装方針](#policy)
 
 </div>
 
@@ -64,7 +65,7 @@ sequenceDiagram
   %% インスタンス生成時処理：authClientConfig読み込み、IndexedDB読み込み、pvへの保存
   authClient->>localFunc: authClientインスタンス生成
 
-  localFunc->>localFunc: authClient不使用時の処理
+  localFunc->>localFunc: authClient未使用時の処理
   localFunc->>+authClient: LocalRequest
   Note right of authClient: exec()
 
@@ -126,7 +127,7 @@ sequenceDiagram
 ```
 
 - ①：onLoad時、authClientインスタンス生成
-- ②：サーバ側との通信が不要な処理(メンバの状態は「不使用」)
+- ②：サーバ側との通信が不要な処理(メンバの状態は「未使用」)
 - ③：サーバ側との通信が必要になった場合、処理要求を発行
 - ④：【環境構築】として`authClient.setupEnvironment`を実行、SPkey入手等を行う<br>
   詳細はauthClient.[setupEnvironment](authClient.md#setupenvironment)参照
@@ -201,7 +202,7 @@ sequenceDiagram
   %% インスタンス生成時処理：authClientConfig読み込み、IndexedDB読み込み、pvへの保存
   authClient->>localFunc: authClientインスタンス生成
 
-  localFunc->>localFunc: authClient不使用時の処理
+  localFunc->>localFunc: authClient未使用時の処理
   localFunc->>+authClient: LocalRequest
   Note right of authClient: exec()
 
@@ -275,11 +276,11 @@ sequenceDiagram
 %% メンバ状態遷移図
 
 stateDiagram-v2
-  [*] --> 不使用
-  不使用 --> 未加入 : 処理要求
-  不使用 --> 未審査 : 処理要求
-  不使用 --> 加入禁止 : 処理要求
-  不使用 --> 加入中 : 処理要求
+  [*] --> 未使用
+  未使用 --> 未加入 : 処理要求
+  %%未使用 --> 未審査 : 処理要求
+  %%未使用 --> 加入禁止 : 処理要求
+  %%未使用 --> 加入中 : 処理要求
   未加入 --> 未審査 : 加入要求
   未審査 --> 加入中 : 加入承認
   加入中 --> 未審査 : 加入失効
@@ -302,10 +303,10 @@ stateDiagram-v2
 
 | No | 状態 | 説明 | SPkey | CPkey | memberId/メンバ名 | 無権限関数 | 要権限関数 |
 | --: | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-| 1 | 不使用 | Auth不使用のコンテンツのみ表示 | 未取得 | 未生成(※1) | 未登録(※1) | 実行不可 | 実行不可 |
+| 1 | 未使用 | Auth未使用のコンテンツのみ表示 | 未取得 | 未生成(※1) | 未登録(※1) | 実行不可 | 実行不可 |
 | 2 | 未加入 | memberListにUUIDのmemberId/メンバ名で仮登録 | 取得済 | 生成済 | 仮登録(UUID) | 実行可 | 実行不可 |
 | 3 | 未審査 | memberListに本来のmemberId/メンバ名で登録済だが管理者による加入認否が未決定 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
-| 4 | 加入中 | 管理者により加入が承認された状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
+| 4 | 加入中 | 管理者により加入が承認された状態 |  |  |  |  |  |
 | 4.1 | 未認証 | 未認証(未ログイン)で権限が必要な処理は行えない状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
 | 4.2 | 試行中 | パスコードによる認証を試行している状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行不可 |
 | 4.3 | 認証中 | 認証が通り、ログインして認証が必要な処理も行える状態 | 取得済 | 生成済 | 本登録 | 実行可 | 実行可 |
@@ -316,7 +317,7 @@ stateDiagram-v2
 
 | ①シート | ②memberId | ③加入禁止 | ④未審査 | **メンバ状態** | ⑤認証中 | ⑥凍結中 | ⑦未認証 | **デバイス状態** |
 | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-| 未登録 | — | — | — | **不使用** |  |  |  |  |
+| 未登録 | — | — | — | **未使用** |  |  |  |  |
 | 登録済 | UUID | — | — | **未加入** |  |  |  |  |
 | 登録済 | e-mail | 該当 | — | **加入禁止** |  |  |  |  |
 | 登録済 | e-mail | 非該当 | 該当 | **未審査** |  |  |  |  |
@@ -339,6 +340,29 @@ stateDiagram-v2
   `0 < approval && 0 < loginFailure && loginFailure < Date.now() && Date.now() <= unfreezeLogin`
 - ⑦未認証：加入承認後認証要求されたことが無い<br>
   `0 < approval && loginRequest === 0`
+
+## <span id="transaction"><a href="#top">状態別処理</a></span>
+
+<div style="overflow-x: auto;" class="nowrap">
+
+| No | 状態 | サーバ側要求受領時処理 | 戻り値 | クライアント側後続処理 |
+| --: | :-- | :-- | :-- | :-- |
+| 1 | 未使用 | (戻り値無し) | not used | SPkeyの要求 |
+| 2 | 未加入 | SPkeyを返信 | not a member | 氏名・メールアドレス入力後再要求 |
+| 3 | 未審査 | 管理者にメール通知<br>管理者はメール受領後、シートに審査結果記入 | not approval | 「現在審査中」ダイアログ表示 |
+| 4 | 加入中 |  |  |  |
+| 4.1 | 未認証 | パスコード採番、メール通知 | uncertified | パスコード入力ダイアログ表示 |
+| 4.2 | 試行中 | パスコード正否チェック | under trial | パスコード入力ダイアログ表示 |
+| 4.3 | 認証中 | サーバ側関数実行 | logging in | ローカル関数に戻り値提供 |
+| 4.4 | 凍結中 | 凍結中を返信 | freezing | 「現在凍結中」ダイアログ表示 |
+| 5 | 加入禁止 | 加入否認を返信 | under ban | 「管理者が加入否認」ダイアログ表示 |
+
+</div>
+
+- 上表「処理結果」とはauthServerからauthClientに返される[authResponse.status](sv/authResponse.md#authresponse_members)に設定される文字列を指す
+- 実装上authClient側で事前に以下の処理を行うため、未使用・未加入状態での処理要求は通常運用では発生しない
+  - authClient側でSPkeyの存否チェック
+  
 
 ## <span id="policy"><a href="#top">実装方針</a></span>
 

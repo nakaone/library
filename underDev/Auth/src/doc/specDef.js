@@ -350,6 +350,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',desc:'メンバの識別子',note:'=メールアドレス',default:'idb.memberId'},
       {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'UUID',default:'idb.deviceId'},
+      {name:'memberName',type:'string',desc:'メンバの氏名',note:'管理者が加入認否判断のため使用',default:'idb.memberName'},
       {name:'CPkey',type:'string',desc:'クライアント側署名',note:'',default:'idb.CPkey'},
       {name:'requestId',type:'string',desc:'要求の識別子',note:'UUID',default:'UUID'},
       {name:'requestTime',type:'number',desc:'要求日時',note:'UNIX時刻',default:'Date.now()'},
