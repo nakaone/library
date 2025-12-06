@@ -375,6 +375,43 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       returns: {list:[{type:'authRequest'}]},
     }]},
   },
+  authRequestLog: {
+    extends: '', // {string} 親クラス名
+    desc: '重複チェック用のリクエスト履歴', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `
+      - ScriptPropertiesに保存
+    `, // {string} ✂️補足説明。概要欄に記載
+    summary: ``,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['sv'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'timestamp',type:'number',desc:'リクエストを受けたサーバ側日時',note:'',default:'Date.now()'},
+      {name:'requestId',type:'string',desc:'クライアント側で採番されたリクエスト識別子',note:'UUID'},
+    ]},
+
+    methods: {list:[
+      {
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'arg',type:'Object',desc:'ユーザ指定の設定値',default:{}},
+        ]},
+
+        process: ``,
+
+        returns: {list:[
+          {type:'authRequestLog'}, // コンストラクタは自データ型名
+        ]},
+      },
+    ]},
+  },
   authResponse: {
     desc: 'サーバ側で復号された処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `
