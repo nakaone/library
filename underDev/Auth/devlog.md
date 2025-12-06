@@ -2,6 +2,9 @@
 
 ## 2025/12/06
 
+- authServer.md
+- authScriptProperties.md
+- authRequestLog.md
 - authServerConfig.md
 - GitHub「旧版移行」ブランチ作成
 - CL/SV間通信手順整理

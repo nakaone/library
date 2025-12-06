@@ -627,6 +627,67 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       },
     ]},
   },
+  authServer: {
+    extends: '', // {string} 親クラス名
+    desc: 'サーバ側auth中核クラス', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `
+      authServerは、クライアント(authClient)からの暗号化通信リクエストを復号・検証し、
+      メンバ状態と要求内容に応じてサーバ側処理を適切に振り分ける中核関数です。
+    `, // {string} ✂️補足説明。概要欄に記載
+    summary: `
+      - staticメソッドを利用するため、クラスとする
+      - doPostからはauthServer.execを呼び出す
+
+      #### <a name="outputLog">🗒️ ログ出力仕様</a>
+
+      | 種別 | 保存先 | 内容 |
+      | :-- | :-- | :-- |
+      | requestLog | ScriptProperties (TTL短期) | [authRequestLog](typedef.md#authrequestlog)記載項目 |
+      | errorLog | Spreadsheet(authServerConfig.errorLog) | [authErrorLog](typedef.md#autherrorlog)記載項目 |
+      | auditLog | Spreadsheet(authServerConfig.auditLog) | [authAuditLog](typedef.md#authauditlog)記載項目 |
+
+      ■ ログ出力のタイミング
+
+      | ログ種別 | タイミング | 理由 |
+      | :-- | :-- | :-- |
+      | **auditLog** | authServer各メソッド完了時 | イベントとして記録。finallyまたはreturn前に出力 |
+      | **errorLog** | authServer各メソッドからの戻り値がfatal、または予期せぬエラー発生時 | 原因箇所特定用。catch句内に記載 |
+    `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['sv'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'cf',type:'authServerConfig',desc:'動作設定変数(config)',note:'',default:'null'},
+      {name:'prop',type:'authScriptProperties',desc:'鍵ペア等を格納',note:'',default:'null'},
+      {name:'crypto',type:'cryptoServer',desc:'暗号化・復号用インスタンス',note:'',default:'null'},
+      {name:'member',type:'Member',desc:'対象メンバのインスタンス',note:'',default:'null'},
+      {name:'audit',type:'authAuditLog',desc:'監査ログのインスタンス',note:'',default:'null'},
+      {name:'error',type:'authErrorLog',desc:'エラーログのインスタンス',note:'',default:'null'},
+      {name:'pv',type:'Object',desc:'authServer内共通変数',note:'',default:'{}'},
+    ]},
+
+    methods: {list:[  // 残課題：未定義。Member関係クラス作成後に対応
+      {
+        name: '', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: '', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          //{name:'',type:'string',desc:'',note:''},
+        ]},
+
+        process: ``,
+
+        returns: {list:[
+          {type:'authServer'}, // コンストラクタは自データ型名
+        ]},
+      },
+    ]},
+  },
   authServerConfig: {
     desc: 'authServer専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
     note: '[authConfig](authConfig.md)を継承した、authServerでのみ使用する設定値', // クラスとしての補足説明
