@@ -467,10 +467,10 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
       {name:'func',type:'Object.<string,Object>',desc:'サーバ側の関数マップ',note:'例：{registerMember:{authority:0b001,do:m=>register(m)},approveMember:{authority:0b100,do:m=>approve(m)}}'},
       {name:'func.authority',type:'number',desc:'サーバ側関数の所要権限',note:'サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限。<br>' +
-        '`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。',default:0},
+        '`authServerConfig.func.authority === 0 || (Member.profile.authority & authServerConfig.func.authority > 0)`なら実行可とする。',default:'0'},
       {name:'func.do',type:'Function',desc:'実行するサーバ側関数'},
 
-      {name:'trial',type:'Object',desc:'ログイン試行関係の設定値'},
+      {name:'trial',type:'Object',desc:'ログイン試行関係の設定値',default:'{}'},
       {name:'trial.passcodeLength',type:'number',desc:'パスコードの桁数',default:6},
       {name:'trial.maxTrial',type:'number',desc:'パスコード入力の最大試行回数',default:3},
       {name:'trial.passcodeLifeTime',type:'number',desc:'パスコードの有効期間',note:'既定値は10分',default:600000},
@@ -487,7 +487,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       rev: 1,
 
       params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        {name:'arg',type:'Object',desc:'ユーザ指定の設定値',default:{}},
       ]},
 
       process: `
