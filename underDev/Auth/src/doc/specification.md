@@ -234,10 +234,10 @@ sequenceDiagram
 ```
 
 | No  | 🔢mID | 🔢CP      | 🔢氏名  | 🔢dID    | 🔢SP | 🧩mID    | 🧩CP | 🧩氏名    | 🧩dID     | 🧩状態 |
-| --: | :--   | :--       | :--    | :--     | :--  | :--      | :-- | :--      | :--      | :--   |
-| 1   | —     | <b>有</b> | —      | —       | —    | —        | —  |  —       | —         | —     |
-| 3   | —     | 有        | —      | —       | —    | <b>仮</b> | 有  | <b>仮</b> | <b>有</b> | 仮登録 |
-| 6   |<b>仮</b>| 有      |<b>仮</b>|<b>有</b>|<b>有</b>| 仮     | 有  | 仮        | 有        | 仮登録 |
+| :-- | :--   | :--       | :--    | :--     | :--  | :--      | :-- | :--      | :--      | :--   |
+| ①CPkey送信 | —     | <b>有</b> | —      | —       | —    | —        | —  |  —       | —         | —     |
+| ③仮登録 | —     | 有        | —      | —       | —    | <b>仮</b> | 有  | <b>仮</b> | <b>有</b> | 仮登録 |
+| ⑥SPkey保存 |<b>仮</b>| 有      |<b>仮</b>|<b>有</b>|<b>有</b>| 仮     | 有  | 仮        | 有        | 仮登録 |
 
 #### 通信手順：初回処理要求時
 
@@ -261,6 +261,7 @@ sequenceDiagram
   Note right of Member: 仮登録
 
   authClient->>+authServer: encryptedRequest<br>(仮mID+dID)
+  activate authClient
   authServer->>+Member: メンバ情報要求
   Member->>-authServer: メンバ情報(CPkey)
   authServer->>authServer: 復号、権限要否判断
@@ -273,31 +274,35 @@ sequenceDiagram
 
   else 権限が必要なサーバ側処理要求
 
-    authServer->>authClient: 「仮登録」
+    authServer->>-authClient: 「仮登録」
     authClient->>user: ダイアログ表示
     user->>authClient: 氏名・メアド
     authClient->>authClient: IndexedDBに保存
-    authClient->>authServer: 氏名・メアド
+    authClient->>+authServer: 氏名・メアド
     authServer->>+Member: 氏名・メアド
     Member->>Member: 氏名・メアド保存
     Note right of Member: 仮登録⇒未審査
-    Member->>-admin: 審査要求メール
+    Member->>admin: 審査要求メール
+    Member->>-authServer: 仮登録結果
+    authServer->>-authClient: 仮登録結果
+    deactivate authClient
+
     admin->>+Member: 審査結果記入
     Note right of Member: 未審査⇒加入中(未認証)<br>or 加入禁止
     Member->>-authServer: 審査結果
+    activate authServer
     authServer->>clientMail: 審査結果通知メール
-
-    authServer->>-authClient: 審査結果
+    deactivate authServer
 
   end
 
 ```
 
 | No  | 🔢mID | 🔢CP | 🔢氏名 | 🔢dID | 🔢SP | 🧩mID | 🧩CP | 🧩氏名 | 🧩dID | 🧩状態 |
-| --: | :--   | :-- | :--   | :--   | :--  | :--  | :--  | :--   | :--   | :--   |
-| 0   | 仮    | 有   | 仮    | 有    | 有   | 仮    | 有   | 仮    | 有    | 仮登録 |
-| 11  |<b>有</b>| 有 |<b>有</b>| 有   | 有   | 仮    | 有   | 仮    | 有    | 仮登録 |
-| 14  | 有    | 有   | 有    | 有    | 有   |<b>有</b>| 有 |<b>有</b>| 有    | 仮登録 |
+| :-- | :--   | :-- | :--   | :--   | :--  | :--  | :--  | :--   | :--   | :--   |
+| 初期状態 | 仮    | 有   | 仮    | 有    | 有   | 仮    | 有   | 仮    | 有    | 仮登録 |
+| ⑪iDB保存 |<b>有</b>| 有 |<b>有</b>| 有   | 有   | 仮    | 有   | 仮    | 有    | 仮登録 |
+| ⑭メアド保存 | 有    | 有   | 有    | 有    | 有   |<b>有</b>| 有 |<b>有</b>| 有    | 仮登録 |
 
 ### <span id="device"><a href="#top">デバイスの状態遷移</a></span>
 
