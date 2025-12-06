@@ -32,8 +32,8 @@ $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/sv/server.md
 # doc直下文書用をrootHeader.mdとして作成
 cat $src/doc/header.md | sed 's|\.\./||g' > $tmp/rootHeader.md
 # 総説
-cat $tmp/rootHeader.md $src/doc/spec.md | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/spec.md
+cat $tmp/rootHeader.md $src/doc/specification.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/specification.md
 # JavaScriptライブラリ
 cat $tmp/rootHeader.md $src/doc/JSLib.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/JSLib.md

@@ -2,13 +2,13 @@
 
 ## 2025/12/05
 
-- spec.mdとtransaction.mdの統合
+- specification.mdとtransaction.mdの統合
 
 # 開発履歴
 
 ## 2025/11/28
 
-- 旧版移行：spec.md
+- 旧版移行：specification.md
 - 旧版移行：LocalRequest.md
 - 旧版移行：LocalResponse.md
 - 旧版移行：authIndexedDB.md
