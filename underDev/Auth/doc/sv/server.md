@@ -31,9 +31,16 @@
 | 6.01 | <span style="padding-left:2rem">[constructor](authResponse.md#authresponse_constructor)</span> | コンストラクタ |
 | 7.00 | [authResult](authResult.md#authresult_members) | auth内メソッドの標準的な戻り値 |
 | 7.01 | <span style="padding-left:2rem">[constructor](authResult.md#authresult_constructor)</span> | コンストラクタ |
-| 8.00 | [authServerConfig](authServerConfig.md#authserverconfig_members) | authServer専用の設定値 |
-| 8.01 | <span style="padding-left:2rem">[constructor](authServerConfig.md#authserverconfig_constructor)</span> | コンストラクタ |
-| 9.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) | 暗号化された処理要求 |
-| 9.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |
-| 10.00 | [encryptedResponse](encryptedResponse.md#encryptedresponse_members) | 暗号化された処理結果 |
-| 10.01 | <span style="padding-left:2rem">[constructor](encryptedResponse.md#encryptedresponse_constructor)</span> | コンストラクタ |
+| 8.00 | [authScriptProperties](authScriptProperties.md#authscriptproperties_members) | サーバ側のScriptProperties |
+| 8.01 | <span style="padding-left:2rem">[constructor](authScriptProperties.md#authscriptproperties_constructor)</span> | コンストラクタ |
+| 8.02 | <span style="padding-left:2rem">[checkDuplicate](authScriptProperties.md#authscriptproperties_checkduplicate)</span> | クライアントからの重複リクエストチェック |
+| 8.03 | <span style="padding-left:2rem">[deleteProp](authScriptProperties.md#authscriptproperties_deleteprop)</span> | ScriptPropertiesを消去 |
+| 8.04 | <span style="padding-left:2rem">[getProp](authScriptProperties.md#authscriptproperties_getprop)</span> | ScriptPropertiesをインスタンス変数に格納 |
+| 8.05 | <span style="padding-left:2rem">[resetSPkey](authScriptProperties.md#authscriptproperties_resetspkey)</span> | SPkeyを更新、ScriptPropertiesに保存 |
+| 8.06 | <span style="padding-left:2rem">[setProp](authScriptProperties.md#authscriptproperties_setprop)</span> | インスタンス変数をScriptPropertiesに格納 |
+| 9.00 | [authServerConfig](authServerConfig.md#authserverconfig_members) | authServer専用の設定値 |
+| 9.01 | <span style="padding-left:2rem">[constructor](authServerConfig.md#authserverconfig_constructor)</span> | コンストラクタ |
+| 10.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) | 暗号化された処理要求 |
+| 10.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |
+| 11.00 | [encryptedResponse](encryptedResponse.md#encryptedresponse_members) | 暗号化された処理結果 |
+| 11.01 | <span style="padding-left:2rem">[constructor](encryptedResponse.md#encryptedresponse_constructor)</span> | コンストラクタ |

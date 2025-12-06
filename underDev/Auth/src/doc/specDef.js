@@ -483,6 +483,150 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       returns: {list:[{type:'authResult'}]},
     }]},
   },
+  authScriptProperties: {
+    extends: '', // {string} 親クラス名
+    desc: 'サーバ側のScriptProperties', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `キー名は[authConfig.system.name](authConfig.md#authconfig_members)(既定値"auth")を使用`, // {string} ✂️補足説明。概要欄に記載
+    summary: ``,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['sv'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'keyGeneratedDateTime',type:'number',desc:'UNIX時刻',note:''},
+      {name:'SPkey',type:'string',desc:'PEM形式の公開鍵文字列',note:''},
+      {name:'SSkey',type:'string',desc:'PEM形式の秘密鍵文字列(暗号化済み)',note:''},
+      {name:'oldSPkey',type:'string',desc:'cryptoServer.reset実行前にバックアップした公開鍵',note:''},
+      {name:'oldSSkey',type:'string',desc:'cryptoServer.reset実行前にバックアップした秘密鍵',note:''},
+      {name:'requestLog',type:'authRequestLog[]',desc:'重複チェック用のリクエスト履歴',note:'',default:'[]'},
+    ]},
+
+    methods: {list:[
+      {
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'arg',type:'Object',desc:'ユーザ指定の設定値',default:'{}'},
+        ]},
+
+        process: `
+          - 鍵ペア未作成なら[createPassword](JSLib.md#createpassword)を使用して作成
+        `,
+
+        returns: {list:[
+          {type:'authScriptProperties'}, // コンストラクタは自データ型名
+        ]},
+      },
+      {
+        name: 'checkDuplicate', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'クライアントからの重複リクエストチェック', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'requestId',type:'string',desc:'処理要求識別子(UUID)',note:''},
+        ]},
+
+        process: ``,
+
+        returns: {list:[
+          {type:'null', desc:'正常終了時',template:''},
+          {type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
+        ]},
+      },
+      {
+        name: 'deleteProp', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'ScriptPropertiesを消去', // {string} 端的な関数(メソッド)の説明
+        note: `
+          - キー名[authConfig.system.name](authConfig.md#authconfig_members)を削除
+        `, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          //{name:'',type:'string',desc:'',note:''},
+        ]},
+
+        process: ``,
+
+        returns: {list:[
+          {type:'null', desc:'正常終了時',template:''},
+          {type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
+        ]},
+      },
+      {
+        name: 'getProp', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'ScriptPropertiesをインスタンス変数に格納', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          //{name:'',type:'string',desc:'',note:''},
+        ]},
+
+        process: ``,
+
+        returns: {list:[
+          {type:'null', desc:'正常終了時',template:''},
+          {type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
+        ]},
+      },
+      {
+        name: 'resetSPkey', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'SPkeyを更新、ScriptPropertiesに保存', // {string} 端的な関数(メソッド)の説明
+        note: `- 緊急対応時のみ使用を想定`, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          //{name:'',type:'string',desc:'',note:''},
+        ]},
+
+        process: `
+        `,
+
+        returns: {list:[
+          {type:'null', desc:'正常終了時',template:''},
+          {type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
+        ]},
+      },
+      {
+        name: 'setProp', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'インスタンス変数をScriptPropertiesに格納', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          //{name:'',type:'string',desc:'',note:''},
+        ]},
+
+        process: ``,
+
+        returns: {list:[
+          {type:'null', desc:'正常終了時',template:''},
+          {type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
+        ]},
+      },
+    ]},
+  },
   authServerConfig: {
     desc: 'authServer専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
     note: '[authConfig](authConfig.md)を継承した、authServerでのみ使用する設定値', // クラスとしての補足説明
