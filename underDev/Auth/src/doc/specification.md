@@ -15,7 +15,7 @@
 
 </div>
 
-利用者(メンバ)がブラウザ(クライアント)からサーバ側処理要求を発行、二要素認証を行ってメンバの権限を確認の上、サーバ側の処理結果を返す。
+"Auth"とは利用者(メンバ)がブラウザからサーバ側処理要求を発行、サーバ側は二要素認証を行ってメンバの権限を確認の上サーバ側の処理結果を返す、クライアント・サーバにまたがるシステムである。
 
 メンバの権限については管理者が事前にメンバ一覧(Google Spread)上で認否を行う。
 
@@ -23,6 +23,9 @@
 
 - 本システムは限られた人数のサークルや小学校のイベント等での利用を想定する。<br>
   よってセキュリティ上の脅威は極力排除するが、一定水準の安全性・恒久性を確保した上で導入時の容易さ・技術的ハードルの低さ、運用の簡便性を重視する。
+- 「セキュリティ上の脅威」として以下を想定、対策する。逆に想定外の攻撃は対策対象としない。
+  - 想定する攻撃：盗聴、中間者攻撃、端末紛失、リプレイ、誤設定
+  - 想定外の攻撃：高度持続的攻撃（APT）、大規模DoS、root化端末での攻撃、端末・サーバへの物理侵入
 - サーバ側(以下authServer)はスプレッドシートのコンテナバインドスクリプト、クライアント側(以下authClient)はHTMLのJavaScript
 - サーバ側・クライアント側とも鍵ペアを使用
 - サーバ側の動作環境設定・鍵ペアはScriptProperties、クライアント側はIndexedDBに保存
@@ -53,10 +56,15 @@
 - 許容時差±120秒※以内
   ※既定値。実際の桁数はauthConfig.cryptoServer.[allowableTimeDifference](sv/authServerConfig.md#authserverconfig_members)で規定
 - 順序は「暗号化->署名」ではなく「署名->暗号化」で行う
-  1. クライアントがデータをJSON化
-  2. 自身の秘密鍵で署名(署名→暗号化)
-  3. サーバの公開鍵で暗号化
-  4. サーバは復号後、クライアント公開鍵(CPkey)で署名を検証
+  - 理由
+    1. 署名を暗号化することで第三者による署名改ざん防止となる
+    1. 署名公開が不要になるためメタデータ漏洩による攻撃範囲が減る
+    1. リプレイ攻撃対策は requestTime + requestId で実施する
+  - 手順
+    1. クライアントがデータをJSON化
+    2. 自身の秘密鍵で署名(署名→暗号化)
+    3. サーバの公開鍵で暗号化
+    4. サーバは復号後、クライアント公開鍵(CPkey)で署名を検証
 - パスワードの生成は「ライブラリ > createPassword」を使用
 - パスコードのメール送信は「ライブラリ > [sendMail](JSLib.md#sendmail)」を使用
 - CPkeyの有効期限が切れた場合、以下の手順で更新する
@@ -71,24 +79,26 @@
 ## <span id="policy"><a href="#top">実装上の方針</a></span>
 
 - サーバ・クライアント共に進捗・エラー管理に[devTools](JSLib.md#devtools)を使用
-- 関数・メソッドは原則として`try 〜 catch`で囲み、予期せぬエラーが発生した場合はErrorオブジェクトを返す。<br>
-  以下は各メソッドのプロトタイプ("pv"はインスタンス変数)
-  ```js
-  function prototype(arg) {
-    const v = {whois:`${pv.whois}.prototype`, arg:{arg}, rv:null};
-    dev.start(v);
-    try {
+- 関数・メソッドは原則として`try 〜 catch`で囲み、予期せぬエラーが発生した場合はErrorオブジェクトを返す。
+- 呼出側は原則`if( returnValue instanceof Error ) throw returnValue;`でErrorオブジェクトが返されたら処理を中断する。
 
-      // -------------------------------------------------------------
-      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
-      // -------------------------------------------------------------
+以下は各メソッドのプロトタイプ("pv"はインスタンス変数)
+```js
+function prototype(arg) {
+  const v = {whois:`${pv.whois}.prototype`, arg:{arg}, rv:null};
+  dev.start(v);
+  try {
 
-      dev.end(); // 終了処理
-      return v.rv;
+    // -------------------------------------------------------------
+    dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
+    // -------------------------------------------------------------
 
-    } catch (e) { return dev.error(e); }
-  }
-  ```
+    dev.end(); // 終了処理
+    return v.rv;
+
+  } catch (e) { return dev.error(e); }
+}
+```
 
 ## <span id="protocol"><a href="#top">状態及び通信手順</a></span>
 
@@ -112,7 +122,7 @@
 
 | No | メンバ名 | 説明 | LocalRequest | authRequest<br>encryptedRequest | authResponse<br>encryptedResponse | LocalResponse |
 | --: | :-- | :-- | :-- | :-- | :-- | :-- |
-| 1 | memberId | {number} - メンバ識別子(メールアドレス) |  | memberId | <b>memberId</b> |  |
+| 1 | memberId | {number} - メンバ識別子(メールアドレス)<br>仮登録時はUUIDを使用 |  | memberId | <b>memberId</b> |  |
 | 2 | deviceId | {string} - デバイス識別子(UUID) |  | deviceId | <b>deviceId</b> |  |
 | 3 | memberName | {string} - メンバの氏名 |  | <b>memberName</b> | <b>memberName</b> |  |
 | 4 | CPkey | {string} - クライアント側公開鍵 |  | <b>CPkey</b> | <b>CPkey</b> |  |
@@ -136,53 +146,7 @@
 
 </div>
 
-<!--
-残課題：通信に関係するクラスに絞った上で最新化
-
-| LocalRequest | encryptedRequest | authRequest | authAuditLog | authErrorLog | authResponse |
-| :-- | :-- | :-- | :-- | :-- | :-- |
-|  | memberId | memberId | memberId | memberId | memberId |
-|  | deviceId | deviceId | deviceId | deviceId | deviceId |
-|  | CPkey | CPkey |  |  | CPkey |
-|  | requestTime | requestTime |  |  | requestTime |
-| func | func | func | func | func | func |
-| arguments | arguments | arguments | arguments | arguments | arguments |
-|  | requestId | requestId |  |  | requestId |
-|  |  | SPkey |  |  | SPkey |
-|  |  | response |  |  | response |
-|  |  | receptTime | receptTime | receptTime | receptTime |
-|  |  | responseTime |  |  | responseTime |
-|  |  | status | status |  |  |
-|  |  |  |  | errorType |  |
-|  |  |  |  | caller |  |
-|  |  |  |  | step |  |
-|  |  |  |  | variable |  |
-|  |  |  |  | message |  |
-|  |  |  |  | stack |  |
-|  |  |  | elaps | elaps |  |
-
-| No | メンバ名 | 説明 |
-| --: | :-- | :-- |
-| 1 | memberId | {number} - メンバ識別子。0〜999はシステムで予約 |
-| 2 | deviceId | {string} - デバイス識別子(UUID) |
-| 3 | CPkey | {string} - クライアント側公開鍵 |
-| 4 | requestTime | {number} - クライアント側の処理要求受付日時 |
-| 5 | func | {string} - サーバ側関数名 |
-| 6 | arguments | {any[]} - サーバ側関数に渡す引数の配列 |
-| 7 | requestId | {string} - 処理要求のUUID |
-| 8 | SPkey | {string} - サーバ側公開鍵 |
-| 9 | response | {any} - サーバ側関数の処理結果。Errorオブジェクトを含む |
-| 10 | receptTime | {number} - サーバ側の処理要求受付日時 |
-| 11 | responseTime | {number} - 処理終了日時。authErrorの場合エラー発生日時 |
-| 12 | status | {string|authError} - 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はauthErrorオブジェクト |
-| 13 | errorType | {string} - エラーの型(ex."ReferenceError") |
-| 14 | function | {string} - エラーが起きたクラス・メソッド名 |
-| 15 | step | {string} - エラーが起きたメソッド内の位置を示す文字列 |
-| 16 | variable | {string} - エラー時のメソッド内汎用変数(JSON文字列) |
-| 17 | message | {string} - エラーメッセージ |
-| 18 | stack | {string} - エラー時のスタックトレース |
-| 19 | elaps | {number} - 所要時間(ミリ秒) |
--->
+- ⑬status：status は「アプリケーションステータス」であり HTTP レスポンスとは無関係
 
 ### <span id="member"><a href="#protocol">メンバの状態遷移</a></span>
 
@@ -205,8 +169,8 @@ stateDiagram-v2
 | --: | :-- | :-- |
 | 1 | 仮登録 | シートに仮のmemberId(UUID)/メンバ名("dummy"固定)が登録され、権限不要な関数のみ実行可能な状態 |
 | 2 | 未審査 | シートに正しいmemberId(メアド)/メンバ名(氏名)が登録されているが、管理者からの加入認否が未定で権限不要な関数のみ実行可能な状態 |
-| 3 | 加入中 | 管理者により加入が承認された状態。権限不要な関数に加え、ログイン後は付与された範囲内の要権限サーバ側関数も実行可。 |
-| 4 | 加入禁止 | 管理者により加入が否認された状態。権限不要な関数のみ実行可能 |
+| 3 | 加入中 | 管理者により加入が承認された状態。権限不要な関数に加え、ログイン後は付与された範囲内の要権限サーバ側関数も実行可。<br>加入有効期間経過により、自動的に「未審査」状態に移行する |
+| 4 | 加入禁止 | 管理者により加入が否認された状態。権限不要な関数のみ実行可能<br>加入禁止期間経過により、自動的に「未審査」状態に移行する |
 
 ■ 状態決定表
 
@@ -261,7 +225,14 @@ sequenceDiagram
   authClient->>+authServer: CPkey
   authServer->>+Member: CPkey
 
-  alt CPkeyがMemberに未登録
+  alt CPkeyがMemberに登録済
+
+    Member->>authServer: 「CPkey重複」
+    authServer->>authClient: 「CPkey重複」
+    authClient->>authClient: CPkey再生成
+    authClient->>authServer: CPkey
+
+  else CPkeyがMemberに未登録
 
     Member->>Member: deviceId生成、CPkey登録<br>memberId/氏名はダミーを仮登録
     Note right of Member: 仮登録
@@ -272,6 +243,8 @@ sequenceDiagram
   authServer->>-authClient: SPkey,deviceId
   authClient->>authClient: SPkey,deviceId保存
 ```
+
+- CPkey重複チェックは送付の都度行う(⑥で再送されたCPkeyも重複していたら③に戻る)
 
 | No  | 🔢mID | 🔢CP      | 🔢氏名  | 🔢dID    | 🔢SP | 🧩mID    | 🧩CP | 🧩氏名    | 🧩dID     | 🧩状態 |
 | :-- | :--   | :--       | :--    | :--     | :--  | :--      | :-- | :--      | :--      | :--   |
@@ -335,7 +308,6 @@ sequenceDiagram
     deactivate authServer
 
   end
-
 ```
 
 | No  | 🔢mID | 🔢CP | 🔢氏名 | 🔢dID | 🔢SP | 🧩mID | 🧩CP | 🧩氏名 | 🧩dID | 🧩状態 |
@@ -639,4 +611,3 @@ sequenceDiagram
   end
 
 ```
-
