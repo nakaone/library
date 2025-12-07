@@ -4,6 +4,15 @@
 
 ## 2025/12/07
 
+- authIndexedDB
+- Member
+- MemberDevice
+- MemberLog
+- MemberProfile
+- MemberTrial
+- MemberTrialLog
+
+- authError -> dtError
 - cryptoServer.md
 - authErrorLog
 - authConfig

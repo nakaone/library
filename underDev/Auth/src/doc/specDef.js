@@ -352,6 +352,55 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       },
     ]},
   },
+  authIndexedDB: {
+    extends: '', // {string} 親クラス名
+    desc: 'クライアントのIndexedDB', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `IndexedDBの作成・入出力は[authClient](authClient.md)で行うため、ここでは格納する値の定義にとどめる。`, // {string} ✂️補足説明。概要欄に記載
+    summary: ``,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['cl'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'memberId',type:'string',desc:'メンバの識別子',note:'メールアドレス。仮登録時はUUID'},
+      {name:'memberName',type:'string',desc:'メンバ(ユーザ)の氏名',note:'例："田中　太郎"。加入要求確認時に管理者が申請者を識別する他で使用。'},
+      {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'',default:'UUID'},
+      {name:'keyGeneratedDateTime',type:'number',desc:`鍵ペア生成日時`,
+        note: 'サーバ側でCPkey更新中にクライアント側で新たなCPkeyが生成されるのを避けるため、鍵ペア生成は30分以上の間隔を置く'
+      ,default:'Date.now()'},
+      {name:'SPkey',type:'string',desc:'サーバ公開鍵',note:'Base64',default:null},
+      //{name:'ApplicationForMembership',type:'number',desc:'加入申請実行日時。未申請時は0',note:'',default:0},
+      //{name:'expireAccount',type:'number',desc:'加入承認の有効期間が切れる日時。未加入時は0',note:'',default:0},
+      {name:'expireCPkey',type:'number',desc:'CPkeyの有効期限(無効になる日時)',note:'未ログイン時は0',default:0},
+    ]},
+
+    methods: {list:[
+      {
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'private', // {string} 端的な関数(メソッド)の説明
+        note: `コンストラクタ`, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'config',type:'authClientConfig',note:'設定情報'},
+        ]},
+
+        process: `
+          - IndexedDBに[authClientConfig](authClientConfig.md#authclientconfig_internal).systemNameを持つキーがあれば取得、メンバ変数に格納。
+          - 無ければ新規に生成し、IndexedDBに格納。
+          - 引数の内、authIndexedDBと同一メンバ名があればthisに設定
+          - 引数にnoteがあればthis.noteに設定
+          - timestampに現在日時を設定
+        `,
+
+        returns: {list:[
+          {type:'authIndexedDB'}, // コンストラクタは自データ型名
+        ]},
+      },
+    ]},
+  },
   authRequest: {
     desc: '暗号化前の処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `
@@ -915,7 +964,6 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
     members: {list:[
       //{name:'',type:'string',desc:'',note:''},
-      // label(項目名), default, isOpt
     ]},
 
     methods: {list:[
