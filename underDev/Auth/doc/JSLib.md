@@ -118,8 +118,8 @@ function devTools(opt){
     }
   }
 
-  /** szError: 独自拡張したErrorオブジェクト */
-  class szError extends Error {
+  /** dtError: 独自拡張したErrorオブジェクト */
+  class dtError extends Error {
     constructor(fi,...e){
       super(...e);
 
@@ -209,7 +209,7 @@ function devTools(opt){
     fi.end = toLocale(fi.end);
 
     // 独自エラーオブジェクトを作成
-    const rv = e.constructor.name === 'szError' ? e : new szError(fi,e);
+    const rv = e.constructor.name === 'dtError' ? e : new dtError(fi,e);
 
     // ログ出力：エラーが発生した関数でのみ出力
     if( opt.mode !== 'none' && fi.seq === rv.seq ){

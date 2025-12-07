@@ -70,38 +70,6 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       }
     ]},
   },
-  authConfig: {
-    desc: 'authClient/authServer共通設定値',
-    note: '[authClientConfig](authClientConfig.md), [authServerConfig](authServerConfig.md)の親クラス',
-    implement: ['cl','sv'],  // 実装の有無
-
-    members:{list:[
-      {name:'systemName',type:'string',desc:'システム名',default:'Auth'},
-      {name:'adminMail',type:'string',desc:'管理者のメールアドレス'},
-      {name:'adminName',type:'string',desc:'管理者氏名'},
-      {name:'allowableTimeDifference',type:'number',desc:'クライアント・サーバ間通信時の許容時差',note:'既定値は2分',default:120000},
-      {name:'RSAbits',type:'string',desc:'鍵ペアの鍵長',default:2048},
-      {name:'underDev',type:'Object',desc:'テスト時の設定',isOpt:true},
-      {name:'underDev.isTest',type:'boolean',desc:'開発モードならtrue',default:'false'},
-    ]},
-
-    methods: {list:[{
-      name: 'constructor',
-      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-      rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
-
-      params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
-      ]},
-
-      process: `
-        - メンバと引数両方にある項目は、引数の値をメンバとして設定
-      `,	// {string} 処理手順。markdownで記載
-
-      returns: {list:[{type:'authConfig'}]},
-    }]},
-  },
   authClient: {
     extends: '', // {string} 親クラス名
     desc: 'クライアント側中核クラス', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
@@ -274,19 +242,19 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       returns: {list:[{type:'authClientConfig'}]},
     }]},
   },
-  authError: {
-    desc: 'auth専用エラーオブジェクト',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: ``,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
+  authConfig: {
+    desc: 'authClient/authServer共通設定値',
+    note: '[authClientConfig](authClientConfig.md), [authServerConfig](authServerConfig.md)の親クラス',
     implement: ['cl','sv'],  // 実装の有無
 
-    members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'responseTime',type:'number',desc:'エラー発生日時',note:'',default:'Date.now()'},
-      {name:'errorType',type:'string',desc:'エラーの型(ex."ReferenceError")',note:'',default:'Error.name'},
-      {name:'function',type:'string',desc:'エラーが起きたクラス・メソッド名',note:'',default:'v.whois'},
-      {name:'step',type:'string',desc:'エラーが起きたメソッド内の位置',default:'v.step'},
-      {name:'variable',type:'string',desc:'エラー時のメソッド内汎用変数(JSON文字列)',note:'',default:'JSON.stringify(v)'},
-      {name:'message',type:'string',desc:'エラーメッセージ',default:'Error.message'},
-      {name:'stack',type:'string',desc:'エラー時のスタックトレース',default:'Error.stack'},
+    members:{list:[
+      {name:'systemName',type:'string',desc:'システム名',default:'Auth'},
+      {name:'adminMail',type:'string',desc:'管理者のメールアドレス'},
+      {name:'adminName',type:'string',desc:'管理者氏名'},
+      {name:'allowableTimeDifference',type:'number',desc:'クライアント・サーバ間通信時の許容時差',note:'既定値は2分',default:120000},
+      {name:'RSAbits',type:'string',desc:'鍵ペアの鍵長',default:2048},
+      {name:'underDev',type:'Object',desc:'テスト時の設定',isOpt:true},
+      {name:'underDev.isTest',type:'boolean',desc:'開発モードならtrue',default:'false'},
     ]},
 
     methods: {list:[{
@@ -296,17 +264,14 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
       params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'e',type:'Error',note:'エラーオブジェクト'},
-        {name:'v',type:'Object',note:'関数・メソッド内汎用変数',default:'{}'},
+        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
       ]},
 
       process: `
         - メンバと引数両方にある項目は、引数の値をメンバとして設定
-        - variableはv.whois,v.stepを削除した上で、JSON化時150文字以上になる場合、以下のように処理
-          - 配列は"{length:v.xxx.length,sample:v.xxx.slice(0,3)}"に変換
-      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+      `,	// {string} 処理手順。markdownで記載
 
-      returns: {list:[{type:'authError'}]},
+      returns: {list:[{type:'authConfig'}]},
     }]},
   },
   authErrorLog: {
@@ -512,7 +477,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'responseTime',type:'number',desc:'処理終了日時',note:'',default:'Date.now()'},
       {name:'status',type:'string',desc:'終了状態',note:'"normal"or"fatal"or警告メッセージ(warning)',default:'"normal"'},
-      {name:'response',type:'any|authError',desc:'処理結果',note:'@returns {void}ならundefined。fatal時はauthError',isOpt:true},
+      {name:'response',type:'any|dtError',desc:'処理結果',note:'@returns {void}ならundefined。fatal時はauthError',isOpt:true},
     ]},
 
     methods: {list:[{
@@ -1033,14 +998,14 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
             desc: '', // {string} 本データ型に関する説明。「正常終了時」等
             default: {},  // {Object.<string,string>} 全パターンの共通設定値
             patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
-              '不正文字列': {status: 'new authError("invalid string")'},
+              '不正文字列': {status: 'dev.error("invalid string")'},
               'CPkey': {status:'"CPkey"'},
-              '対象者不在': {status: 'new authError("not exists")'},
-              '機器未登録': {status: 'new authError("device not registered")'},
-              '復号失敗': {status: 'new authError("decrypt failed")'},
-              '指定項目不足': {status: 'new authError("missing fields")'},
-              '不正署名': {status: 'new authError("invalid signature")'},
-              '時差超過': {status: 'new authError("timestamp difference too large")'},
+              '対象者不在': {status: 'dev.error("not exists")'},
+              '機器未登録': {status: 'dev.error("device not registered")'},
+              '復号失敗': {status: 'dev.error("decrypt failed")'},
+              '指定項目不足': {status: 'dev.error("missing fields")'},
+              '不正署名': {status: 'dev.error("invalid signature")'},
+              '時差超過': {status: 'dev.error("timestamp difference too large")'},
               '正常終了': {status: '[member.device\[n\]](MemberDevice.md#memberdevice_internal).status or [member](Member.md#member_internal).status'},
             },
           },
@@ -1091,6 +1056,57 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         returns: {list:[
           {type:'null', desc:'正常終了時',template:''},
           {type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
+        ]},
+      },
+    ]},
+  },
+  dtError: {
+    extends: 'Error', // {string} 親クラス名
+    desc: '標準Errorの独自拡張', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `
+      - [devTools](JSLib.md#devtools)内で定義
+      - \`devTools.error()\`でインスタンス作成
+    `, // {string} ✂️補足説明。概要欄に記載
+    summary: ``,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['cl','sv'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'caller',type:'string',desc:'呼出元関数の足跡リスト',note:''},
+      {name:'whois',type:'string',desc:'関数名またはクラス名.メソッド名',note:''},
+      {name:'step',type:'string',desc:'関数内の位置(step)',note:''},
+      {name:'seq',type:'number',desc:'実行順序',note:''},
+      {name:'arg',type:'string',desc:'引数',note:''},
+      {name:'rv',type:'string',desc:'戻り値',note:''},
+      {name:'start',type:'string',desc:'開始日時',note:''},
+      {name:'end',type:'string',desc:'終了日時',note:''},
+      {name:'elaps',type:'number',desc:'所要時間(ミリ秒)',note:''},
+      {name:'log',type:'string',desc:'実行順に並べたdev.step',note:''},
+    ]},
+
+    methods: {list:[
+      {
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'e',type:'Error',note:'エラーオブジェクト'},
+          {name:'v',type:'Object',note:'関数・メソッド内汎用変数',default:'{}'},
+        ]},
+
+        process: `
+          - メンバと引数両方にある項目は、引数の値をメンバとして設定
+          - variableはv.whois,v.stepを削除した上で、JSON化時150文字以上になる場合、以下のように処理
+            - 配列は"{length:v.xxx.length,sample:v.xxx.slice(0,3)}"に変換
+        `,
+
+        returns: {list:[
+          {type:'dtError'}, // コンストラクタは自データ型名
         ]},
       },
     ]},
@@ -1190,7 +1206,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
       returns: {list:[
         {type:'LocalRequest',desc:'正常時の戻り値'},
-        {type:'',desc:'エラー時の戻り値',template:`%% this.cfTable({type:'authError',patterns:{'func不正':{message:'"invalid func"'}}},{indent:2,header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}}) %%`},
+        {type:'',desc:'エラー時の戻り値',template:`%% this.cfTable({type:'dtError',patterns:{'func不正':{message:'"invalid func"'}}},{indent:2,header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}}) %%`},
       ]},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
     }]},
   },

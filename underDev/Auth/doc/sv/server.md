@@ -56,33 +56,33 @@ const menu22 = () => asv.resetSPkey();
 | 1.02 | <span style="padding-left:2rem">[log](authAuditLog.md#authauditlog_log)</span> | 監査ログシートに処理要求を追記 |
 | 2.00 | [authConfig](authConfig.md#authconfig_members) | authClient/authServer共通設定値 |
 | 2.01 | <span style="padding-left:2rem">[constructor](authConfig.md#authconfig_constructor)</span> | コンストラクタ |
-| 3.00 | [authError](authError.md#autherror_members) | auth専用エラーオブジェクト |
-| 3.01 | <span style="padding-left:2rem">[constructor](authError.md#autherror_constructor)</span> | コンストラクタ |
-| 4.00 | [authErrorLog](authErrorLog.md#autherrorlog_members) | authServerのエラーログ |
-| 4.01 | <span style="padding-left:2rem">[constructor](authErrorLog.md#autherrorlog_constructor)</span> | コンストラクタ |
-| 4.02 | <span style="padding-left:2rem">[log](authErrorLog.md#autherrorlog_log)</span> | エラーログシートにエラー情報を追記 |
-| 5.00 | [authRequestLog](authRequestLog.md#authrequestlog_members) | 重複チェック用のリクエスト履歴 |
-| 5.01 | <span style="padding-left:2rem">[constructor](authRequestLog.md#authrequestlog_constructor)</span> | コンストラクタ |
-| 6.00 | [authResponse](authResponse.md#authresponse_members) | サーバ側で復号された処理要求 |
-| 6.01 | <span style="padding-left:2rem">[constructor](authResponse.md#authresponse_constructor)</span> | コンストラクタ |
-| 7.00 | [authResult](authResult.md#authresult_members) | auth内メソッドの標準的な戻り値 |
-| 7.01 | <span style="padding-left:2rem">[constructor](authResult.md#authresult_constructor)</span> | コンストラクタ |
-| 8.00 | [authScriptProperties](authScriptProperties.md#authscriptproperties_members) | サーバ側のScriptProperties |
-| 8.01 | <span style="padding-left:2rem">[constructor](authScriptProperties.md#authscriptproperties_constructor)</span> | コンストラクタ |
-| 8.02 | <span style="padding-left:2rem">[checkDuplicate](authScriptProperties.md#authscriptproperties_checkduplicate)</span> | クライアントからの重複リクエストチェック |
-| 8.03 | <span style="padding-left:2rem">[deleteProp](authScriptProperties.md#authscriptproperties_deleteprop)</span> | ScriptPropertiesを消去 |
-| 8.04 | <span style="padding-left:2rem">[getProp](authScriptProperties.md#authscriptproperties_getprop)</span> | ScriptPropertiesをインスタンス変数に格納 |
-| 8.05 | <span style="padding-left:2rem">[resetSPkey](authScriptProperties.md#authscriptproperties_resetspkey)</span> | SPkeyを更新、ScriptPropertiesに保存 |
-| 8.06 | <span style="padding-left:2rem">[setProp](authScriptProperties.md#authscriptproperties_setprop)</span> | インスタンス変数をScriptPropertiesに格納 |
-| 9.00 | [authServer](authServer.md#authserver_members) | サーバ側auth中核クラス |
-| 9.01 | <span style="padding-left:2rem">[](authServer.md#authserver_)</span> |  |
-| 10.00 | [authServerConfig](authServerConfig.md#authserverconfig_members) | authServer専用の設定値 |
-| 10.01 | <span style="padding-left:2rem">[constructor](authServerConfig.md#authserverconfig_constructor)</span> | コンストラクタ |
-| 11.00 | [cryptoServer](cryptoServer.md#cryptoserver_members) | サーバ側の暗号化・復号処理 |
-| 11.01 | <span style="padding-left:2rem">[constructor](cryptoServer.md#cryptoserver_constructor)</span> | コンストラクタ |
-| 11.02 | <span style="padding-left:2rem">[decrypt](cryptoServer.md#cryptoserver_decrypt)</span> | authClientからのメッセージを復号＋署名検証 |
-| 11.03 | <span style="padding-left:2rem">[encrypt](cryptoServer.md#cryptoserver_encrypt)</span> | authClientへのメッセージを署名＋暗号化 |
-| 11.04 | <span style="padding-left:2rem">[generateKeys](cryptoServer.md#cryptoserver_generatekeys)</span> | 新たなサーバ側鍵ペアを作成 |
+| 3.00 | [authErrorLog](authErrorLog.md#autherrorlog_members) | authServerのエラーログ |
+| 3.01 | <span style="padding-left:2rem">[constructor](authErrorLog.md#autherrorlog_constructor)</span> | コンストラクタ |
+| 3.02 | <span style="padding-left:2rem">[log](authErrorLog.md#autherrorlog_log)</span> | エラーログシートにエラー情報を追記 |
+| 4.00 | [authRequestLog](authRequestLog.md#authrequestlog_members) | 重複チェック用のリクエスト履歴 |
+| 4.01 | <span style="padding-left:2rem">[constructor](authRequestLog.md#authrequestlog_constructor)</span> | コンストラクタ |
+| 5.00 | [authResponse](authResponse.md#authresponse_members) | サーバ側で復号された処理要求 |
+| 5.01 | <span style="padding-left:2rem">[constructor](authResponse.md#authresponse_constructor)</span> | コンストラクタ |
+| 6.00 | [authResult](authResult.md#authresult_members) | auth内メソッドの標準的な戻り値 |
+| 6.01 | <span style="padding-left:2rem">[constructor](authResult.md#authresult_constructor)</span> | コンストラクタ |
+| 7.00 | [authScriptProperties](authScriptProperties.md#authscriptproperties_members) | サーバ側のScriptProperties |
+| 7.01 | <span style="padding-left:2rem">[constructor](authScriptProperties.md#authscriptproperties_constructor)</span> | コンストラクタ |
+| 7.02 | <span style="padding-left:2rem">[checkDuplicate](authScriptProperties.md#authscriptproperties_checkduplicate)</span> | クライアントからの重複リクエストチェック |
+| 7.03 | <span style="padding-left:2rem">[deleteProp](authScriptProperties.md#authscriptproperties_deleteprop)</span> | ScriptPropertiesを消去 |
+| 7.04 | <span style="padding-left:2rem">[getProp](authScriptProperties.md#authscriptproperties_getprop)</span> | ScriptPropertiesをインスタンス変数に格納 |
+| 7.05 | <span style="padding-left:2rem">[resetSPkey](authScriptProperties.md#authscriptproperties_resetspkey)</span> | SPkeyを更新、ScriptPropertiesに保存 |
+| 7.06 | <span style="padding-left:2rem">[setProp](authScriptProperties.md#authscriptproperties_setprop)</span> | インスタンス変数をScriptPropertiesに格納 |
+| 8.00 | [authServer](authServer.md#authserver_members) | サーバ側auth中核クラス |
+| 8.01 | <span style="padding-left:2rem">[](authServer.md#authserver_)</span> |  |
+| 9.00 | [authServerConfig](authServerConfig.md#authserverconfig_members) | authServer専用の設定値 |
+| 9.01 | <span style="padding-left:2rem">[constructor](authServerConfig.md#authserverconfig_constructor)</span> | コンストラクタ |
+| 10.00 | [cryptoServer](cryptoServer.md#cryptoserver_members) | サーバ側の暗号化・復号処理 |
+| 10.01 | <span style="padding-left:2rem">[constructor](cryptoServer.md#cryptoserver_constructor)</span> | コンストラクタ |
+| 10.02 | <span style="padding-left:2rem">[decrypt](cryptoServer.md#cryptoserver_decrypt)</span> | authClientからのメッセージを復号＋署名検証 |
+| 10.03 | <span style="padding-left:2rem">[encrypt](cryptoServer.md#cryptoserver_encrypt)</span> | authClientへのメッセージを署名＋暗号化 |
+| 10.04 | <span style="padding-left:2rem">[generateKeys](cryptoServer.md#cryptoserver_generatekeys)</span> | 新たなサーバ側鍵ペアを作成 |
+| 11.00 | [dtError](dtError.md#dterror_members) | 標準Errorの独自拡張 |
+| 11.01 | <span style="padding-left:2rem">[constructor](dtError.md#dterror_constructor)</span> | コンストラクタ |
 | 12.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) | 暗号化された処理要求 |
 | 12.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |
 | 13.00 | [encryptedResponse](encryptedResponse.md#encryptedresponse_members) | 暗号化された処理結果 |

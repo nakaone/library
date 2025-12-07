@@ -4,6 +4,7 @@
 
 ## 2025/12/07
 
+- cryptoServer.md
 - authErrorLog
 - authConfig
 

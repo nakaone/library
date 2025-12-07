@@ -232,25 +232,25 @@
 
 | No | 名称 | 概要 |
 | --: | :-- | :-- |
-| 1.00 | [authConfig](authConfig.md#authconfig_members) | authClient/authServer共通設定値 |
-| 1.01 | <span style="padding-left:2rem">[constructor](authConfig.md#authconfig_constructor)</span> | コンストラクタ |
-| 2.00 | [authClient](authClient.md#authclient_members) | クライアント側中核クラス |
-| 2.01 | <span style="padding-left:2rem">[constructor](authClient.md#authclient_constructor)</span> | コンストラクタ |
-| 2.02 | <span style="padding-left:2rem">[initialize](authClient.md#authclient_initialize)</span> | コンストラクタ(非同期処理対応) |
-| 2.03 | <span style="padding-left:2rem">[exec](authClient.md#authclient_exec)</span> |  |
-| 3.00 | [authClientConfig](authClientConfig.md#authclientconfig_members) | authClient専用の設定値 |
-| 3.01 | <span style="padding-left:2rem">[constructor](authClientConfig.md#authclientconfig_constructor)</span> | コンストラクタ |
-| 4.00 | [authError](authError.md#autherror_members) | auth専用エラーオブジェクト |
-| 4.01 | <span style="padding-left:2rem">[constructor](authError.md#autherror_constructor)</span> | コンストラクタ |
-| 5.00 | [authRequest](authRequest.md#authrequest_members) | 暗号化前の処理要求 |
-| 5.01 | <span style="padding-left:2rem">[constructor](authRequest.md#authrequest_constructor)</span> | コンストラクタ |
-| 6.00 | [authResponse](authResponse.md#authresponse_members) | サーバ側で復号された処理要求 |
-| 6.01 | <span style="padding-left:2rem">[constructor](authResponse.md#authresponse_constructor)</span> | コンストラクタ |
-| 7.00 | [cryptoClient](cryptoClient.md#cryptoclient_members) | クライアント側の暗号化・復号処理 |
-| 7.01 | <span style="padding-left:2rem">[constructor](cryptoClient.md#cryptoclient_constructor)</span> | コンストラクタ |
-| 7.02 | <span style="padding-left:2rem">[decrypt](cryptoClient.md#cryptoclient_decrypt)</span> | authServer->authClientのメッセージを復号＋署名検証 |
-| 7.03 | <span style="padding-left:2rem">[encrypt](cryptoClient.md#cryptoclient_encrypt)</span> | authClient->authServerのメッセージを暗号化＋署名 |
-| 7.04 | <span style="padding-left:2rem">[generateKeys](cryptoClient.md#cryptoclient_generatekeys)</span> | 新たなクライアント側RSA鍵ペアを作成 |
+| 1.00 | [authClient](authClient.md#authclient_members) | クライアント側中核クラス |
+| 1.01 | <span style="padding-left:2rem">[constructor](authClient.md#authclient_constructor)</span> | コンストラクタ |
+| 1.02 | <span style="padding-left:2rem">[initialize](authClient.md#authclient_initialize)</span> | コンストラクタ(非同期処理対応) |
+| 1.03 | <span style="padding-left:2rem">[exec](authClient.md#authclient_exec)</span> |  |
+| 2.00 | [authClientConfig](authClientConfig.md#authclientconfig_members) | authClient専用の設定値 |
+| 2.01 | <span style="padding-left:2rem">[constructor](authClientConfig.md#authclientconfig_constructor)</span> | コンストラクタ |
+| 3.00 | [authConfig](authConfig.md#authconfig_members) | authClient/authServer共通設定値 |
+| 3.01 | <span style="padding-left:2rem">[constructor](authConfig.md#authconfig_constructor)</span> | コンストラクタ |
+| 4.00 | [authRequest](authRequest.md#authrequest_members) | 暗号化前の処理要求 |
+| 4.01 | <span style="padding-left:2rem">[constructor](authRequest.md#authrequest_constructor)</span> | コンストラクタ |
+| 5.00 | [authResponse](authResponse.md#authresponse_members) | サーバ側で復号された処理要求 |
+| 5.01 | <span style="padding-left:2rem">[constructor](authResponse.md#authresponse_constructor)</span> | コンストラクタ |
+| 6.00 | [cryptoClient](cryptoClient.md#cryptoclient_members) | クライアント側の暗号化・復号処理 |
+| 6.01 | <span style="padding-left:2rem">[constructor](cryptoClient.md#cryptoclient_constructor)</span> | コンストラクタ |
+| 6.02 | <span style="padding-left:2rem">[decrypt](cryptoClient.md#cryptoclient_decrypt)</span> | authServer->authClientのメッセージを復号＋署名検証 |
+| 6.03 | <span style="padding-left:2rem">[encrypt](cryptoClient.md#cryptoclient_encrypt)</span> | authClient->authServerのメッセージを暗号化＋署名 |
+| 6.04 | <span style="padding-left:2rem">[generateKeys](cryptoClient.md#cryptoclient_generatekeys)</span> | 新たなクライアント側RSA鍵ペアを作成 |
+| 7.00 | [dtError](dtError.md#dterror_members) | 標準Errorの独自拡張 |
+| 7.01 | <span style="padding-left:2rem">[constructor](dtError.md#dterror_constructor)</span> | コンストラクタ |
 | 8.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) | 暗号化された処理要求 |
 | 8.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |
 | 9.00 | [encryptedResponse](encryptedResponse.md#encryptedresponse_members) | 暗号化された処理結果 |

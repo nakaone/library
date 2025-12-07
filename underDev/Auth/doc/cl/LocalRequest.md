@@ -48,10 +48,13 @@
 
   | 項目名 | データ型 | 要否/既定値 | 説明 | func不正 |
   | :-- | :-- | :-- | :-- | :-- |
-  | responseTime | number | Date.now() | エラー発生日時 | — |
-  | errorType | string | Error.name | エラーの型(ex."ReferenceError") | — |
-  | function | string | v.whois | エラーが起きたクラス・メソッド名 | — |
-  | step | string | v.step | エラーが起きたメソッド内の位置 | — |
-  | variable | string | JSON.stringify(v) | エラー時のメソッド内汎用変数(JSON文字列) | — |
-  | message | string | Error.message | エラーメッセージ | **"invalid func"** |
-  | stack | string | Error.stack | エラー時のスタックトレース | — |
+  | caller | string | <span style="color:red">必須</span> | 呼出元関数の足跡リスト | — |
+  | whois | string | <span style="color:red">必須</span> | 関数名またはクラス名.メソッド名 | — |
+  | step | string | <span style="color:red">必須</span> | 関数内の位置(step) | — |
+  | seq | number | <span style="color:red">必須</span> | 実行順序 | — |
+  | arg | string | <span style="color:red">必須</span> | 引数 | — |
+  | rv | string | <span style="color:red">必須</span> | 戻り値 | — |
+  | start | string | <span style="color:red">必須</span> | 開始日時 | — |
+  | end | string | <span style="color:red">必須</span> | 終了日時 | — |
+  | elaps | number | <span style="color:red">必須</span> | 所要時間(ミリ秒) | — |
+  | log | string | <span style="color:red">必須</span> | 実行順に並べたdev.step | — |

@@ -124,7 +124,7 @@
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | — | — | — | — | — | — | — | — |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — | — | — | — | — | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — | — | — | — | — | — | — |
-  | status | string | "normal" | サーバ側処理結果 | authServerの処理結果。responseとは必ずしも一致しない | **new authError("invalid string")** | **"CPkey"** | **new authError("not exists")** | **new authError("device not registered")** | **new authError("decrypt failed")** | **new authError("missing fields")** | **new authError("invalid signature")** | **new authError("timestamp difference too large")** | **[member.device[n]](MemberDevice.md#memberdevice_internal).status or [member](Member.md#member_internal).status** |
+  | status | string | "normal" | サーバ側処理結果 | authServerの処理結果。responseとは必ずしも一致しない | **dev.error("invalid string")** | **"CPkey"** | **dev.error("not exists")** | **dev.error("device not registered")** | **dev.error("decrypt failed")** | **dev.error("missing fields")** | **dev.error("invalid signature")** | **dev.error("timestamp difference too large")** | **[member.device[n]](MemberDevice.md#memberdevice_internal).status or [member](Member.md#member_internal).status** |
   | decrypt | string | "normal" | クライアント側での復号処理結果 | "normal":正常、それ以外はエラーメッセージ | — | — | — | — | — | — | — | — | — |
 ### <span id="cryptoserver_encrypt"><a href="#cryptoserver_methods">🧱 cryptoServer.encrypt()</a></span>
 
