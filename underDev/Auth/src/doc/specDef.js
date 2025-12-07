@@ -76,7 +76,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     implement: ['cl','sv'],  // 実装の有無
 
     members:{list:[
-      {name:'systemName',type:'string',desc:'システム名',default:'auth'},
+      {name:'systemName',type:'string',desc:'システム名',default:'Auth'},
       {name:'adminMail',type:'string',desc:'管理者のメールアドレス'},
       {name:'adminName',type:'string',desc:'管理者氏名'},
       {name:'allowableTimeDifference',type:'number',desc:'クライアント・サーバ間通信時の許容時差',note:'既定値は2分',default:120000},
