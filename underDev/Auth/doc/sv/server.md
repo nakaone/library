@@ -60,6 +60,7 @@ const menu22 = () => asv.resetSPkey();
 | 3.01 | <span style="padding-left:2rem">[constructor](authError.md#autherror_constructor)</span> | コンストラクタ |
 | 4.00 | [authErrorLog](authErrorLog.md#autherrorlog_members) | authServerのエラーログ |
 | 4.01 | <span style="padding-left:2rem">[constructor](authErrorLog.md#autherrorlog_constructor)</span> | コンストラクタ |
+| 4.02 | <span style="padding-left:2rem">[log](authErrorLog.md#autherrorlog_log)</span> | エラーログシートにエラー情報を追記 |
 | 5.00 | [authRequestLog](authRequestLog.md#authrequestlog_members) | 重複チェック用のリクエスト履歴 |
 | 5.01 | <span style="padding-left:2rem">[constructor](authRequestLog.md#authrequestlog_constructor)</span> | コンストラクタ |
 | 6.00 | [authResponse](authResponse.md#authresponse_members) | サーバ側で復号された処理要求 |

@@ -318,25 +318,74 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     implement: ['sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'',type:'string',desc:'',note:''},
+      {name:'timestamp',type:'string',desc:'要求日時',note:'ISO8601拡張形式の文字列',default:'Date.now()'},
+      {name:'memberId',type:'string',desc:'メンバの識別子',note:'=メールアドレス'},
+      {name:'deviceId',type:'string',desc:'デバイスの識別子',note:''},
+      {name:'result',type:'string',desc:'サーバ側処理結果',note:'fatal/warning/normal',default:'fatal'},
+      {name:'message',type:'string',desc:'サーバ側からのエラーメッセージ',note:'normal時は`undefined`',isOpt:true},
+      {name:'stack',type:'string',desc:'エラー発生時のスタックトレース',note:'本項目は管理者への通知メール等、シート以外には出力不可',isOpt:true},
     ]},
 
-    methods: {list:[{
-      name: 'constructor',
-      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-      rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
+    methods: {list:[
+      {
+        name: 'constructor',
+        type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
+        desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
+        rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
-      params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
-      ]},
+        params: {list:[  // {Params} ■メソッド引数の定義■
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+        ]},
 
-      process: `
-        - メンバと引数両方にある項目は、引数の値をメンバとして設定
-      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
+        process: `
+          - メンバと引数両方にある項目は、引数の値をメンバとして設定
+          - authServerConfig.[errorLog](authServerConfig.md#authserverconfig_members)シートが無ければ作成
+          - timestampに現在日時を設定
+        `,	// {string} 処理手順。markdownで記載(trimIndent対象)
 
-      returns: {list:[{type:'authErrorLog'}]},
-    }]},
+        returns: {list:[{type:'authErrorLog'}]},
+      },
+      {
+        name: 'log', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'エラーログシートにエラー情報を追記', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'e',type:'Error',note:'エラーオブジェクト'},
+          {name:'response',type:'authResponse',note:'処理結果'},
+          //{name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+          //{name:'',type:'string',desc:'',note:''},
+        ]},
+
+        process: `
+          - メンバに以下を設定
+            %% this.cfTable({
+              type:'authErrorLog',
+              patterns:{
+                '設定内容':{
+                  timestamp: 'toLocale(this.timestamp)(ISO8601拡張形式)',
+                  memberId: 'response.request.memberId',
+                  deviceId: 'response.request.deviceId',
+                  result: 'response.result',
+                  message: 'response.message',
+                  stack: 'e.stack',
+                }
+              }
+            },{
+              indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
+            }) %%
+        `,
+
+        returns: {list:[
+          {type:'authErrorLog',desc:'シートに出力したauthErrorLogオブジェクト',template:''},
+        ]},
+      },
+    ]},
   },
   authRequest: {
     desc: '暗号化前の処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'

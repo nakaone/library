@@ -65,10 +65,25 @@
         rev: 0, // {string} 本メソッド仕様書の版数
 
         params: {list:[
+          //{name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
           //{name:'',type:'string',desc:'',note:''},
         ]},
 
-        process: ``,
+        process: `
+          - メンバと引数両方にある項目は、引数の値をメンバとして設定
+          - メンバに以下を設定
+            %% this.cfTable({
+              type:'authError',
+              patterns:{
+                'func不正':{
+                  message:'"invalid func"'
+                }
+              }
+            },{
+              indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
+            }) %%
+        `,
 
         returns: {list:[
           {type:'ClassName'}, // コンストラクタは自データ型名
@@ -80,6 +95,7 @@
             },
           },
           // null/Error等、定義外のデータ型の場合"template:''"を追加
+          // 定義外以外でも一覧不要なら"template:''"を追加
           //{type:'null', desc:'正常終了時',template:''},
           //{type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
         ]},

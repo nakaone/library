@@ -15,13 +15,19 @@ authServerのエラーログ
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-|  | string | <span style="color:red">必須</span> |  |  |
+| timestamp | string | Date.now() | 要求日時 | ISO8601拡張形式の文字列 |
+| memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス |
+| deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 |  |
+| result | string | fatal | サーバ側処理結果 | fatal/warning/normal |
+| message | string | 任意 | サーバ側からのエラーメッセージ | normal時は`undefined` |
+| stack | string | 任意 | エラー発生時のスタックトレース | 本項目は管理者への通知メール等、シート以外には出力不可 |
 
 ## <span id="autherrorlog_methods">🧱 authErrorLog メソッド一覧</span>
 
 | メソッド名 | 分類 | 内容 | 備考 |
 | :-- | :-- | :-- | :-- |
 | [constructor()](#autherrorlog_constructor) | private | コンストラクタ |  |
+| [log()](#autherrorlog_log) | public | エラーログシートにエラー情報を追記 |  |
 
 ### <span id="autherrorlog_constructor"><a href="#autherrorlog_methods">🧱 authErrorLog.constructor()</a></span>
 
@@ -34,7 +40,33 @@ authServerのエラーログ
 #### <span id="autherrorlog_constructor_process">🧾 処理手順</span>
 
 - メンバと引数両方にある項目は、引数の値をメンバとして設定
+- authServerConfig.[errorLog](authServerConfig.md#authserverconfig_members)シートが無ければ作成
+- timestampに現在日時を設定
 
 #### <span id="autherrorlog_constructor_returns">📤 戻り値</span>
 
 - [authErrorLog](#autherrorlog_members)インスタンス
+### <span id="autherrorlog_log"><a href="#autherrorlog_methods">🧱 authErrorLog.log()</a></span>
+
+#### <span id="autherrorlog_log_params">📥 引数</span>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| e | Error | <span style="color:red">必須</span> |  | エラーオブジェクト |
+| response | [authResponse](authResponse.md#authresponse_members) | <span style="color:red">必須</span> |  | 処理結果 |
+
+#### <span id="autherrorlog_log_process">🧾 処理手順</span>
+
+- メンバに以下を設定
+    | 項目名 | データ型 | 要否/既定値 | 説明 | 設定内容 |
+    | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | 要求日時 | **toLocale(this.timestamp)(ISO8601拡張形式)** |
+    | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | **response.request.memberId** |
+    | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | **response.request.deviceId** |
+    | result | string | fatal | サーバ側処理結果 | **response.result** |
+    | message | string | 任意 | サーバ側からのエラーメッセージ | **response.message** |
+    | stack | string | 任意 | エラー発生時のスタックトレース | **e.stack** |
+
+#### <span id="autherrorlog_log_returns">📤 戻り値</span>
+
+- [authErrorLog](authErrorLog.md#autherrorlog_members) : シートに出力したauthErrorLogオブジェクト
