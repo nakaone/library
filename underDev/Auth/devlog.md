@@ -1,5 +1,12 @@
 ※ToDoは[workflowy](https://workflowy.com/#/ed15b0e99a8d)参照
 
+# 開発履歴
+
+## 2025/12/07
+
+- authErrorLog
+- authConfig
+
 ## 2025/12/06
 
 - authServer.md
@@ -8,8 +15,6 @@
 - authServerConfig.md
 - GitHub「旧版移行」ブランチ作成
 - CL/SV間通信手順整理
-
-# 開発履歴
 
 ## 2025/12/05
 

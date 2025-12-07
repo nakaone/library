@@ -78,7 +78,12 @@ const menu22 = () => asv.resetSPkey();
 | 9.01 | <span style="padding-left:2rem">[](authServer.md#authserver_)</span> |  |
 | 10.00 | [authServerConfig](authServerConfig.md#authserverconfig_members) | authServer専用の設定値 |
 | 10.01 | <span style="padding-left:2rem">[constructor](authServerConfig.md#authserverconfig_constructor)</span> | コンストラクタ |
-| 11.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) | 暗号化された処理要求 |
-| 11.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |
-| 12.00 | [encryptedResponse](encryptedResponse.md#encryptedresponse_members) | 暗号化された処理結果 |
-| 12.01 | <span style="padding-left:2rem">[constructor](encryptedResponse.md#encryptedresponse_constructor)</span> | コンストラクタ |
+| 11.00 | [cryptoServer](cryptoServer.md#cryptoserver_members) | サーバ側の暗号化・復号処理 |
+| 11.01 | <span style="padding-left:2rem">[constructor](cryptoServer.md#cryptoserver_constructor)</span> | コンストラクタ |
+| 11.02 | <span style="padding-left:2rem">[decrypt](cryptoServer.md#cryptoserver_decrypt)</span> | authClientからのメッセージを復号＋署名検証 |
+| 11.03 | <span style="padding-left:2rem">[encrypt](cryptoServer.md#cryptoserver_encrypt)</span> | authClientへのメッセージを署名＋暗号化 |
+| 11.04 | <span style="padding-left:2rem">[generateKeys](cryptoServer.md#cryptoserver_generatekeys)</span> | 新たなサーバ側鍵ペアを作成 |
+| 12.00 | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) | 暗号化された処理要求 |
+| 12.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |
+| 13.00 | [encryptedResponse](encryptedResponse.md#encryptedresponse_members) | 暗号化された処理結果 |
+| 13.01 | <span style="padding-left:2rem">[constructor](encryptedResponse.md#encryptedresponse_constructor)</span> | コンストラクタ |

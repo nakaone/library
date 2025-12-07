@@ -37,7 +37,7 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
 | :-- | :-- | :-- | :-- | :-- |
 | cf | [authServerConfig](authServerConfig.md#authserverconfig_members) | null | 動作設定変数(config) |  |
 | prop | [authScriptProperties](authScriptProperties.md#authscriptproperties_members) | null | 鍵ペア等を格納 |  |
-| crypto | cryptoServer | null | 暗号化・復号用インスタンス |  |
+| crypto | [cryptoServer](cryptoServer.md#cryptoserver_members) | null | 暗号化・復号用インスタンス |  |
 | member | Member | null | 対象メンバのインスタンス |  |
 | audit | [authAuditLog](authAuditLog.md#authauditlog_members) | null | 監査ログのインスタンス |  |
 | error | [authErrorLog](authErrorLog.md#autherrorlog_members) | null | エラーログのインスタンス |  |
@@ -65,7 +65,7 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
   | :-- | :-- | :-- | :-- | :-- |
   | cf | [authServerConfig](authServerConfig.md#authserverconfig_members) | null | 動作設定変数(config) |  |
   | prop | [authScriptProperties](authScriptProperties.md#authscriptproperties_members) | null | 鍵ペア等を格納 |  |
-  | crypto | cryptoServer | null | 暗号化・復号用インスタンス |  |
+  | crypto | [cryptoServer](cryptoServer.md#cryptoserver_members) | null | 暗号化・復号用インスタンス |  |
   | member | Member | null | 対象メンバのインスタンス |  |
   | audit | [authAuditLog](authAuditLog.md#authauditlog_members) | null | 監査ログのインスタンス |  |
   | error | [authErrorLog](authErrorLog.md#autherrorlog_members) | null | エラーログのインスタンス |  |

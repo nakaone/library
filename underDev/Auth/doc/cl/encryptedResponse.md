@@ -29,7 +29,7 @@ authServerからauthClientに返される、暗号化された処理結果オブ
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| response | [authResponse](authResponse.md#authresponse_members) | <span style="color:red">必須</span> |  | 平文の処理結果 |
+| response | [authResponse](authResponse.md#authresponse_members) | <span style="color:red">必須</span> | 平文の処理結果 |  |
 
 #### <span id="encryptedresponse_constructor_process">🧾 処理手順</span>
 

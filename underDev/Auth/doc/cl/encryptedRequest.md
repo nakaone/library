@@ -32,7 +32,7 @@ authClientからauthServerに送られる、暗号化された処理要求オブ
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| request | [authRequest](authRequest.md#authrequest_members) | <span style="color:red">必須</span> |  | 平文の処理要求 |
+| request | [authRequest](authRequest.md#authrequest_members) | <span style="color:red">必須</span> | 平文の処理要求 |  |
 
 #### <span id="encryptedrequest_constructor_process">🧾 処理手順</span>
 

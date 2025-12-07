@@ -918,6 +918,183 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       },
     ]},
   },
+  cryptoServer: {
+    extends: '', // {string} 親クラス名
+    desc: 'サーバ側の暗号化・復号処理', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `
+      - 認証サーバ ([authServer](authServer.md)) から独立した復号・署名検証処理モジュール。
+      - クライアント側仕様書([cryptoClient](../cl/cryptoClient.md))と対になる設計であり、署名・暗号化・鍵管理を統一方針で運用する。
+      - 暗号化ライブラリは"jsrsasign"を使用
+      - 以下"cf","prop","crypto","member","audit","error","pv"は[authServer](authServer.md#authserver_members)内共通のインスタンス変数
+    `, // {string} ✂️補足説明。概要欄に記載
+    summary: `
+      #### <a name="security">🔐 セキュリティ仕様</a>
+
+      - 署名→暗号化(Sign-then-Encrypt)方式に準拠
+      - 鍵ペアは[ScriptProperties](authScriptProperties.md)に保存("SSkey", "SPkey")
+      - ScriptPropertiesのキー名は"[authServerConfig](authServerConfig.md#authserverconfig_internal).system.name"に基づく
+      - 復号処理は副作用のない純関数構造を目指す(stateを持たない)
+      - 可能な範囲で「外部ライブラリ」を使用する
+      - timestamp検証は整数化・絶対値化してから比較する
+
+      | 項目 | 対策 |
+      |------|------|
+      | **リプレイ攻撃** | requestIdキャッシュ(TTL付き)で検出・拒否 |
+      | **タイミング攻撃** | 定数時間比較(署名・ハッシュ照合)を採用 |
+      | **ログ漏えい防止** | 復号データは一切記録しない |
+      | **エラー通知スパム** | メンバ単位で送信間隔を制御 |
+      | **鍵管理** | SSkey/SPkey は ScriptProperties に格納し、Apps Script内でのみ参照可 |
+    `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['sv'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      //{name:'',type:'string',desc:'',note:''},
+      // label(項目名), default, isOpt
+    ]},
+
+    methods: {list:[
+      {
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'config',type:'authServerConfig',note:'authServerの動作設定変数'},
+        ]},
+
+        process: `
+        `,
+
+        returns: {list:[
+          {type:'cryptoServer'}, // コンストラクタは自データ型名
+        ]},
+      },
+      {
+        name: 'decrypt', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'authClientからのメッセージを復号＋署名検証', // {string} 端的な関数(メソッド)の説明
+        note: `
+          - 本メソッドはauthServerから呼ばれるため、fatalエラーでも戻り値を返す
+          - fatal/warning分岐を軽量化するため、Signature検証統一関数を導入(以下は実装例)
+            \`\`\`js
+            const verifySignature = (data, signature, pubkey) => {
+              try {
+                const sig = new KJUR.crypto.Signature({ alg: 'SHA256withRSA' });
+                sig.init(pubkey);
+                sig.updateString(data);
+                return sig.verify(signature);
+              } catch (e) { return false; }
+            }
+            \`\`\`
+        `, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'request',type:'string|encryptedRequest',note:'クライアント側からの暗号化された処理要求'},
+        ]},
+
+        process: `
+          1. 入力データ型判定：引数(JSON文字列)のオブジェクト化を試行
+             - オブジェクト化成功の場合：次ステップへ
+             - オブジェクト化失敗の場合：requestがCPkey文字列として適切か判断
+               - 不適切なら戻り値「不正文字列」を返して終了
+               - 適切なら戻り値「CPkey」を返して終了
+          2. CPkeyをシートから取得
+             - memberId, deviceId, cipherText に欠落があれば戻り値「指定項目不足」を返して終了
+             - memberIdから対象者のMemberインスタンスを取得、シートに無かった場合は戻り値「対象者不在」を返して終了<br>
+               "member = member.[getMember](Member.md#member_getmember)(memberId)"
+             - deviceIdから対象機器のCPkeyを取得。未登録なら戻り値「機器未登録」を返して終了
+          3. 復号
+             - 復号失敗なら戻り値「復号失敗」を返して終了
+          4. 署名検証
+             - 以下が全部一致しなかったなら戻り値「不正署名」を返して終了
+               - 復号により現れた署名
+               - [decryptedRequest](decryptedRequest.md#decryptedrequest_internal).[request](authRequest.md#authrequest_internal).signature
+               - member.[device](MemberDevice.md#memberdevice_internal)\[n\].CPkey<br>
+                ※ "n"はdeviceIdから特定
+          5. 時差判定
+             - 復号・署名検証直後に timestamp と Date.now() の差を算出し、
+               [authServerConfig](authServerConfig.md#authserverconfig_internal).allowableTimeDifference を超過した場合、戻り値「時差超過」を返して終了
+          6. 戻り値「正常終了」を返して終了
+             - "request"には復号した[encryptedRequest](encryptedRequest.md#encryptedrequest_internal).ciphertext(=JSON化したauthRequest)をオブジェクト化してセット
+             - "status"にはdeviceId[n].statusを、deviceIdが見つからない場合はmember.statusをセット
+        `,
+
+        returns: {list:[
+          {
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
+              '不正文字列': {status: 'new authError("invalid string")'},
+              'CPkey': {status:'"CPkey"'},
+              '対象者不在': {status: 'new authError("not exists")'},
+              '機器未登録': {status: 'new authError("device not registered")'},
+              '復号失敗': {status: 'new authError("decrypt failed")'},
+              '指定項目不足': {status: 'new authError("missing fields")'},
+              '不正署名': {status: 'new authError("invalid signature")'},
+              '時差超過': {status: 'new authError("timestamp difference too large")'},
+              '正常終了': {status: '[member.device\[n\]](MemberDevice.md#memberdevice_internal).status or [member](Member.md#member_internal).status'},
+            },
+          },
+        ]},
+      },
+      {
+        name: 'encrypt', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'authClientへのメッセージを署名＋暗号化', // {string} 端的な関数(メソッド)の説明
+        note: `
+          - [authResponse](authResponse.md#authresponse_internal).signatureは省略せず明示的に含める
+          - 暗号化順序は Sign-then-Encrypt
+          - 復号側([cryptoClient](../cl/cryptoClient.md))では「Decrypt-then-Verify」
+          - 本メソッドはauthServerから呼ばれるため、fatalエラーでも戻り値を返す
+        `, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'response',type:'authResponse',note:'暗号化対象オブジェクト'},
+        ]},
+
+        process: `
+        `,
+
+        returns: {list:[
+          {type:'encryptedResponse'}, // コンストラクタは自データ型名
+        ]},
+      },
+      {
+        name: 'generateKeys', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: '新たなサーバ側鍵ペアを作成', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          //{name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+          //{name:'',type:'string',desc:'',note:''},
+        ]},
+
+        process: `
+        `,
+
+        returns: {list:[
+          {type:'null', desc:'正常終了時',template:''},
+          {type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
+        ]},
+      },
+    ]},
+  },
   encryptedRequest: {
     desc: '暗号化された処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `authClientからauthServerに送られる、暗号化された処理要求オブジェクト。<br>
@@ -939,7 +1116,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
       params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'request',type:'authRequest',note:'平文の処理要求'},
+        {name:'request',type:'authRequest',desc:'平文の処理要求'},
       ]},
 
       process: `
@@ -967,7 +1144,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
       params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'response',type:'authResponse',note:'平文の処理結果'},
+        {name:'response',type:'authResponse',desc:'平文の処理結果'},
       ]},
 
       process: `
