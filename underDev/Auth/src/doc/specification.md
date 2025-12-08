@@ -82,23 +82,44 @@
 
 - サーバ・クライアント共に進捗・エラー管理に[devTools](JSLib.md#devtools)を使用
 - 関数・メソッドは原則として`try 〜 catch`で囲み、予期せぬエラーが発生した場合はErrorオブジェクトを返す。
-- 呼出側は原則`if( returnValue instanceof Error ) throw returnValue;`でErrorオブジェクトが返されたら処理を中断する。
+- 呼出側は原則Errorオブジェクトが返されたら処理を中断(`if( v.rv instanceof Error ) throw v.rv;`)
 
-以下は各メソッドのプロトタイプ("pv"はインスタンス変数)
+以下は各クラスのプロトタイプ
+
 ```js
-function prototype(arg) {
-  const v = {whois:`${pv.whois}.prototype`, arg:{arg}, rv:null};
-  dev.start(v);
-  try {
+class authProto {
 
-    // -------------------------------------------------------------
-    dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
-    // -------------------------------------------------------------
+  static _XXX = null;
 
-    dev.end(); // 終了処理
-    return v.rv;
+  constructor(arg) {
+    const v = {whois:`${this.constructor.name}.constructor`, arg:{arg}, rv:null};
+    dev.start(v);
+    try {
 
-  } catch (e) { return dev.error(e); }
+      // -------------------------------------------------------------
+      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
+      // -------------------------------------------------------------
+      this.pv = {}; // クラス内共用の汎用インスタンス変数
+
+      dev.end(); // 終了処理
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  prototype(arg) {
+    const v = {whois:`${this.constructor.name}.prototype`, arg:{arg}, rv:null};
+    dev.start(v);
+    try {
+
+      // -------------------------------------------------------------
+      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
+      // -------------------------------------------------------------
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
 }
 ```
 
@@ -106,7 +127,7 @@ function prototype(arg) {
 
 <div class="submenu">
 
-[I/O項目対応](#io) | [メンバ状態遷移](#member) | [初回ロード](#onLoad) | [初回要求](#onRequest) | [デバイス状態遷移](#device) | [事前処理](#preparation) | [認証中](#login) | [未認証](#unauthenticated) | [試行中](#tring)
+[I/O項目対応](#io) | [メンバ状態遷移](#member) | [初回ロード](#onLoad) | [初回要求](#onRequest) | [デバイス状態遷移](#device) | [事前処理](#preparation) | [認証中](#login) | [未認証](#unauthenticated) | [試行中](#tring) | [内発処理](#internalProcessing)
 
 </div>
 
@@ -438,6 +459,7 @@ sequenceDiagram
   - status = "fatal"
   - response = "CPkey expired"
 - ⑤新CPkey作成：authClient.IndexedDBの更新はこの時点では無く、authServerからの⑫変更終了通知を待って行う
+- ⑥新CPkey送付：`func = "::updateCPkey::"`
 
 #### <span id="login"><a href="#protocol">通信手順：「認証中」状態時</a></span>
 
@@ -510,34 +532,9 @@ sequenceDiagram
     authServer->>authClient: 「未認証」
     deactivate authServer
 
-    authClient->>user: パスコード入力ダイアログ
-    user->>authClient: パスコード
-    authClient->>cryptoClient: authRequest
-    cryptoClient->>authClient: encryptedRequest
-    authClient->>authServer: encryptedRequest
-    authServer->>+Member: memberId,deviceId
-    Member->>-authServer: authResponse
-    authServer->>+cryptoServer: encryptedRequest
-    cryptoServer->>-authServer: authRequest
-    authServer->>+Member: パスコード
-    Member->>Member: パスコード一致確認
-    Member->>-authServer: 「認証済」or「試行中」or「凍結中」
-
-    alt 認証済
-      Note over cryptoClient,cryptoServer: 状態別分岐：「認証中」を実行
-    else 試行中
-      authServer->>authClient: 「試行中」
-      Note over cryptoClient,cryptoServer: 状態別分岐：「試行中」を実行
-    else 凍結中
-      authServer->>authClient: 「凍結中」
-      Note over cryptoClient,cryptoServer: 事前処理内「凍結中」を実行
-      deactivate authClient
-    end
+    Note over cryptoClient, cryptoServer: ※ 以降「試行中⑥パスコード入力」から実行
   end
-
-
 ```
-
 
 #### <span id="tring"><a href="#protocol">通信手順：「試行中」状態時</a></span>
 
@@ -563,49 +560,74 @@ sequenceDiagram
   activate authServer
 
   alt 試行中
-    alt authRequest.func === "Reissue Passcode"
-      rect rgba(213, 246, 229, 1)
-        Note over authServer,Member: パスコード再発行
-        authServer->>+Member: パスコード再発行要求
-        Member->>-authServer: パスコード
-        authServer->>clientMail: パスコード通知メール
-      end
-    end
-
     authServer->>authClient: 「試行中」
     deactivate authServer
     authClient->>user: パスコード入力ダイアログ
-    user->>authClient: パスコード
-    authClient->>+cryptoClient: authRequest
-    cryptoClient->>-authClient: encryptedRequest
 
-    authClient->>authServer: encryptedRequest
-    activate authServer
+    alt パスコード再発行要求
 
-    %% Memberインスタンスの取得
-    authServer->>+Member: memberId,deviceId
-    Member->>-authServer: authResponse
+      rect rgba(213, 246, 229, 1)
+        Note over cryptoClient,cryptoServer: パスコード再発行
+        user->>authClient: パスコード再発行要求
+        authClient->>authServer: authRequest
+        activate authServer
+        authServer->>+Member: パスコード再発行要求
+        Member->>-authServer: パスコード
+        authServer->>clientMail: パスコード通知メール
+        authServer->>authClient: 再発行終了
+        deactivate authServer
+        authClient->>user: パスコード入力ダイアログ
+      end
 
-    %% 復号、署名検証
-    authServer->>+cryptoServer: encryptedRequest
-    cryptoServer->>-authServer: authRequest
+    else パスコード入力
 
-    %% パスコード確認
-    authServer->>+Member: パスコード
-    Member->>Member: パスコード一致確認
-    Member->>-authServer: 「認証済」or「試行中」or「凍結中」
+      user->>authClient: パスコード
+      authClient->>+cryptoClient: authRequest
+      cryptoClient->>-authClient: encryptedRequest
 
-    alt 認証済
-      Note right of authClient: 状態別分岐：「認証中」を実行
-    else 試行中
-      authServer->>authClient: 「試行中」
-      Note right of authClient: 状態別分岐：「試行中」を実行
-    else 凍結中
-      authServer->>authClient: 「凍結中」
-      deactivate authServer
-      deactivate authClient
-      Note right of authClient: 事前処理内「凍結中」を実行
+      authClient->>authServer: encryptedRequest
+      activate authServer
+
+      %% Memberインスタンスの取得
+      authServer->>+Member: memberId,deviceId
+      Member->>-authServer: authResponse
+
+      %% 復号、署名検証
+      authServer->>+cryptoServer: encryptedRequest
+      cryptoServer->>-authServer: authRequest
+
+      %% パスコード確認
+      authServer->>+Member: パスコード
+      Member->>Member: パスコード一致確認
+      Member->>-authServer: 「認証済」or「試行中」or「凍結中」
+
+      alt 認証済
+        Note over cryptoClient,cryptoServer: 状態別分岐：「認証中」を実行
+      else 試行中
+        authServer->>authClient: 「試行中」
+        Note over cryptoClient,cryptoServer: 状態別分岐：「試行中」を実行
+      else 凍結中
+        authServer->>authClient: 「凍結中」
+        Note over cryptoClient,cryptoServer: 事前処理内「凍結中」を実行
+        deactivate authClient
+      end
+
     end
+
   end
 
 ```
+
+- ③パスコード入力ダイアログには「再発行要求」ボタンを用意
+- ⑤(再発行要求後の)authRequest : `func="::reissue::"`
+- ⑫(パスコード入力後の)authRequest:`{func:"::passcode::",arguments:(入力されたパスコード)}`
+
+### <span id="internalProcessing"><a href="#protocol">内発処理</a></span>
+
+「内発処理」とはクライアント側ローカル関数からの処理要求に拠らない、Authシステム内部で発生する処理を指す。
+
+| No | 処理名 | func | 概要 |
+| --: | :-- | :-- | :-- |
+| 1 | CPkey更新 | ::updateCPkey:: | CPkeyの有効期限が切れた場合に発生。<br>詳細は「[通信手順：事前処理](#preparation)」の「CPkey更新」参照 |
+| 2 | パスコード入力 | ::passcode:: | ログインのためのパスコード入力。<br>詳細は「[通信手順：「試行中」](#tring)」参照 |
+| 3 | パスコード再発行要求 | ::reissue:: | ログイン試行中のメンバから要請された場合に発生。<br>詳細は「[通信手順：試行中](#tring)」の「パスコード再発行」参照 |

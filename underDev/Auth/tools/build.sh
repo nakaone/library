@@ -38,6 +38,13 @@ $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/specification.md
 cat $tmp/rootHeader.md $src/doc/JSLib.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/JSLib.md
 
+# AIレビュー用
+cat $doc/specification.md $doc/JSLib.md > $tmp/common.md
+cat $doc/cl/*.md > $tmp/cl.md
+cat $tmp/common.md $tmp/cl.md > $tmp/review.cl.md
+cat $doc/sv/*.md > $tmp/sv.md
+cat $tmp/common.md $tmp/sv.md > $tmp/review.sv.md
+
 
 ## header.mdを付加
 #for f in $tmp/*.md; do

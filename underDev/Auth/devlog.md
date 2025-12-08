@@ -4,6 +4,9 @@
 
 ## 2025/12/08
 
+- 内発処理をspecification.mdに追記
+- classプロトタイプ作成
+
 - specify.mjsのデバッグ
 
 - MemberLog

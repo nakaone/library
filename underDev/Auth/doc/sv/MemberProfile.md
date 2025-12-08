@@ -21,7 +21,6 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| name | string | <span style="color:red">必須</span> | メンバの氏名 |  |
 | authority | number | <span style="color:red">必須</span> | メンバの持つ権限 | authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す |
 
 ## <span id="memberprofile_methods">🧱 MemberProfile メソッド一覧</span>
