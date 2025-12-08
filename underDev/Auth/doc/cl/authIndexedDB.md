@@ -44,7 +44,7 @@ IndexedDBの作成・入出力は[authClient](authClient.md)で行うため、�
 
 #### <span id="authindexeddb_constructor_process">🧾 処理手順</span>
 
-- IndexedDBに[authClientConfig](authClientConfig.md#authclientconfig_internal).systemNameを持つキーがあれば取得、メンバ変数に格納。
+- IndexedDBに[authClientConfig](authClientConfig.md#authclientconfig_members).systemNameを持つキーがあれば取得、メンバ変数に格納。
 - 無ければ新規に生成し、IndexedDBに格納。
 - 引数の内、authIndexedDBと同一メンバ名があればthisに設定
 - 引数にnoteがあればthis.noteに設定

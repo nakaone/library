@@ -69,7 +69,7 @@ classDiagram
 | status | string | "未加入" | メンバの状態 | 未加入,未審査,審査済,加入中,加入禁止 |
 | log | MemberLog | new MemberLog() | メンバの履歴情報 | シート上はJSON文字列 |
 | profile | MemberProfile | new MemberProfile() | メンバの属性情報 | シート上はJSON文字列 |
-| device | [MemberDevice](MemberDevice.md#memberdevice_internal)[] | 空配列 | デバイス情報 | マルチデバイス対応のため配列。シート上はJSON文字列 |
+| device | [MemberDevice](MemberDevice.md#memberdevice_members)[] | 空配列 | デバイス情報 | マルチデバイス対応のため配列。シート上はJSON文字列 |
 | note | string | 空文字列 | 当該メンバに対する備考 |  |
 
 ## <span id="member_methods">🧱 Member メソッド一覧</span>
@@ -122,13 +122,13 @@ classDiagram
   - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
   - request.deviceIdで指定されたデバイスの状態が「未認証」でなければ戻り値「不適格」を返して終了
 - 新しい試行を生成、Member.trialの先頭に追加<br>
-  ("Member.trial.unshift(new [MemberTrial](MemberTrial.md#membertrial_internal)())")
+  ("Member.trial.unshift(new [MemberTrial](MemberTrial.md#membertrial_members)())")
 - MemberLog.loginRequestに現在日時(UNIX時刻)を設定
 - ログイン試行履歴の最大保持数を超えた場合、古い世代を削除<br>
-  (Member.trial.length >= [authServerConfig](authServerConfig.md#authserverconfig_internal).generationMax)
+  (Member.trial.length >= [authServerConfig](authServerConfig.md#authserverconfig_members).generationMax)
 - 更新後のMemberを引数に[setMember](#member_setmember)を呼び出し、memberListシートを更新
 - メンバに[sendmail](JSLib.md#sendmail)でパスコード通知メールを発信<br>
-  但し[authServerConfig](authServerConfig.md#authserverconfig_internal).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
+  但し[authServerConfig](authServerConfig.md#authserverconfig_members).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
 - 戻り値「正常終了」を返して終了
 
 #### <span id="member_addtrial_returns">📤 戻り値</span>
@@ -178,9 +178,9 @@ classDiagram
 - パスコードチェック
   - パスコードが一致 ⇒ 「一致時」をセット
   - パスコードが不一致
-    - 試行回数が上限未満(`MemberTrial.log.length < [authServerConfig](authServerConfig.md#authserverconfig_internal).trial.maxTrial`)<br>
+    - 試行回数が上限未満(`MemberTrial.log.length < [authServerConfig](authServerConfig.md#authserverconfig_members).trial.maxTrial`)<br>
       ⇒ 変更すべき項目無し
-    - 試行回数が上限以上(`MemberTrial.log.length >= [authServerConfig](authServerConfig.md#authserverconfig_internal).trial.maxTrial`)<br>
+    - 試行回数が上限以上(`MemberTrial.log.length >= [authServerConfig](authServerConfig.md#authserverconfig_members).trial.maxTrial`)<br>
       ⇒ 「凍結時」をセット
   - 設定項目と値は以下の通り。
     | 項目名 | データ型 | 要否/既定値 | 説明 | 一致時 | 上限到達 |
@@ -510,7 +510,7 @@ classDiagram
     - [judgeStatus](Member.md#member_judgestatus)にMemberを渡し、状態を設定
   4. JSON文字列の項目は文字列化した上でmemberListシートに追加(Member.log/profile/device)
   5. 本番運用中なら加入要請メンバへの通知<br>
-    [authServerConfig.underDev.sendInvitation](authServerConfig.md#authserverconfig_internal) === falseなら開発中なので通知しない
+    [authServerConfig.underDev.sendInvitation](authServerConfig.md#authserverconfig_members) === falseなら開発中なので通知しない
   6. 戻り値⑤を返して終了
 
 #### <span id="member_setmember_returns">📤 戻り値</span>
@@ -548,7 +548,13 @@ classDiagram
 - 引数で渡されたmemberId, deviceIdがマッチするメンバ・デバイスを検索
 - 対象デバイスが存在しない場合、戻り値「該当無し」を返して終了
 - 凍結解除：対象デバイスそれぞれについて以下項目を更新
-  
+    | 項目名 | データ型 | 要否/既定値 | 説明 | 更新内容 |
+    | :-- | :-- | :-- | :-- | :-- |
+    | deviceId | string | <span style="color:red">必須</span> |  | — |
+    | status | string | 未認証 |  | **"未認証"** |
+    | CPkey | string | <span style="color:red">必須</span> |  | — |
+    | CPkeyUpdated | number | Date.now() |  | — |
+    | trial | MemberTrial[] | [] |  | **空配列** |
 
   
 - [setMemberメソッド](#member_setmember)にMemberを渡してmemberListを更新
@@ -603,7 +609,13 @@ classDiagram
   request.deviceId(=現在登録済のCPkey)で対象デバイスを特定。特定不能なら戻り値「機器未登録」を返して終了
 - 管理情報の書き換え
   - CPkeyは書き換え
-    
+        | 項目名 | データ型 | 要否/既定値 | 説明 | 更新項目 |
+        | :-- | :-- | :-- | :-- | :-- |
+        | deviceId | string | <span style="color:red">必須</span> |  | — |
+        | status | string | 未認証 |  | — |
+        | CPkey | string | <span style="color:red">必須</span> |  | **更新後CPkey** |
+        | CPkeyUpdated | number | Date.now() |  | **現在日時** |
+        | trial | MemberTrial[] | [] |  | — |
   - デバイスの状態は、未認証・凍結中はそのまま、試行中・認証中は未認証に戻す
     
 - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>

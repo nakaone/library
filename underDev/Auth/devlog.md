@@ -2,15 +2,18 @@
 
 # 開発履歴
 
-## 2025/12/07
+## 2025/12/08
 
-- Member
-- specify.mjsのデバッグ
-- MemberDevice
 - MemberLog
 - MemberProfile
 - MemberTrial
 - MemberTrialLog
+- specify.mjsのデバッグ
+
+- MemberDevice
+- Member.md
+
+## 2025/12/07
 
 - authIndexedDB
 - authError -> dtError

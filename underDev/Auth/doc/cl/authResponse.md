@@ -46,7 +46,7 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| request | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) | <span style="color:red">必須</span> |  | 暗号化された処理要求 |
+| request | [encryptedRequest](encryptedRequest.md#encryptedrequest_members) | <span style="color:red">必須</span> | 暗号化された処理要求 |  |
 
 #### <span id="authresponse_constructor_process">🧾 処理手順</span>
 

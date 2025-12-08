@@ -22,7 +22,7 @@
 
 - 署名→暗号化(Sign-then-Encrypt)方式に準拠
 - 鍵ペアは[ScriptProperties](authScriptProperties.md)に保存("SSkey", "SPkey")
-- ScriptPropertiesのキー名は"[authServerConfig](authServerConfig.md#authserverconfig_internal).system.name"に基づく
+- ScriptPropertiesのキー名は"[authServerConfig](authServerConfig.md#authserverconfig_members).system.name"に基づく
 - 復号処理は副作用のない純関数構造を目指す(stateを持たない)
 - 可能な範囲で「外部ライブラリ」を使用する
 - timestamp検証は整数化・絶対値化してから比較する
@@ -56,7 +56,7 @@
     } catch (e) { return false; }
   }
   ``` |
-| [encrypt()](#cryptoserver_encrypt) | public | authClientへのメッセージを署名＋暗号化 | - [authResponse](authResponse.md#authresponse_internal).signatureは省略せず明示的に含める
+| [encrypt()](#cryptoserver_encrypt) | public | authClientへのメッセージを署名＋暗号化 | - [authResponse](authResponse.md#authresponse_members).signatureは省略せず明示的に含める
 - 暗号化順序は Sign-then-Encrypt
 - 復号側([cryptoClient](../cl/cryptoClient.md))では「Decrypt-then-Verify」
 - 本メソッドはauthServerから呼ばれるため、fatalエラーでも戻り値を返す |
@@ -100,14 +100,14 @@
 4. 署名検証
    - 以下が全部一致しなかったなら戻り値「不正署名」を返して終了
      - 復号により現れた署名
-     - [decryptedRequest](decryptedRequest.md#decryptedrequest_internal).[request](authRequest.md#authrequest_internal).signature
-     - member.[device](MemberDevice.md#memberdevice_internal)[n].CPkey<br>
+     - [decryptedRequest](decryptedRequest.md#decryptedrequest_members).[request](authRequest.md#authrequest_members).signature
+     - member.[device](MemberDevice.md#memberdevice_members)[n].CPkey<br>
       ※ "n"はdeviceIdから特定
 5. 時差判定
    - 復号・署名検証直後に timestamp と Date.now() の差を算出し、
-     [authServerConfig](authServerConfig.md#authserverconfig_internal).allowableTimeDifference を超過した場合、戻り値「時差超過」を返して終了
+     [authServerConfig](authServerConfig.md#authserverconfig_members).allowableTimeDifference を超過した場合、戻り値「時差超過」を返して終了
 6. 戻り値「正常終了」を返して終了
-   - "request"には復号した[encryptedRequest](encryptedRequest.md#encryptedrequest_internal).ciphertext(=JSON化したauthRequest)をオブジェクト化してセット
+   - "request"には復号した[encryptedRequest](encryptedRequest.md#encryptedrequest_members).ciphertext(=JSON化したauthRequest)をオブジェクト化してセット
    - "status"にはdeviceId[n].statusを、deviceIdが見つからない場合はmember.statusをセット
 
 #### <span id="cryptoserver_decrypt_returns">📤 戻り値</span>
@@ -127,7 +127,7 @@
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | — | — | — | — | — | — | — | — |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — | — | — | — | — | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — | — | — | — | — | — | — |
-  | status | string | "normal" | サーバ側処理結果 | authServerの処理結果。responseとは必ずしも一致しない | **dev.error("invalid string")** | **"CPkey"** | **dev.error("not exists")** | **dev.error("device not registered")** | **dev.error("decrypt failed")** | **dev.error("missing fields")** | **dev.error("invalid signature")** | **dev.error("timestamp difference too large")** | **[member.device[n]](MemberDevice.md#memberdevice_internal).status or [member](Member.md#member_internal).status** |
+  | status | string | "normal" | サーバ側処理結果 | authServerの処理結果。responseとは必ずしも一致しない | **dev.error("invalid string")** | **"CPkey"** | **dev.error("not exists")** | **dev.error("device not registered")** | **dev.error("decrypt failed")** | **dev.error("missing fields")** | **dev.error("invalid signature")** | **dev.error("timestamp difference too large")** | **[member.device[n]](MemberDevice.md#memberdevice_members).status or [member](Member.md#member_members).status** |
   | decrypt | string | "normal" | クライアント側での復号処理結果 | "normal":正常、それ以外はエラーメッセージ | — | — | — | — | — | — | — | — | — |
 ### <span id="cryptoserver_encrypt"><a href="#cryptoserver_methods">🧱 cryptoServer.encrypt()</a></span>
 

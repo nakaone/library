@@ -388,7 +388,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         ]},
 
         process: `
-          - IndexedDBに[authClientConfig](authClientConfig.md#authclientconfig_internal).systemNameを持つキーがあれば取得、メンバ変数に格納。
+          - IndexedDBに[authClientConfig](authClientConfig.md#authclientconfig_members).systemNameを持つキーがあれば取得、メンバ変数に格納。
           - 無ければ新規に生成し、IndexedDBに格納。
           - 引数の内、authIndexedDBと同一メンバ名があればthisに設定
           - 引数にnoteがあればthis.noteに設定
@@ -508,7 +508,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       rev: 0, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
       params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'request',type:'encryptedRequest',note:'暗号化された処理要求'},
+        {name:'request',type:'encryptedRequest',desc:'暗号化された処理要求'},
       ]},
 
       process: `
@@ -850,7 +850,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     ]},
 
     methods: {list:[
-      {
+      { // constructor
         name: 'constructor', // {string} 関数(メソッド)名
         type: 'private', // {string} 関数(メソッド)の分類
         desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
@@ -869,7 +869,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           {type:'cryptoClient'}, // コンストラクタは自データ型名
         ]},
       },
-      {
+      { // decrypt
         name: 'decrypt', // {string} 関数(メソッド)名
         type: 'public', // {string} 関数(メソッド)の分類
         desc: 'authServer->authClientのメッセージを復号＋署名検証', // {string} 端的な関数(メソッド)の説明
@@ -888,7 +888,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           {type:'authResponse',desc:'復号された処理結果'},
         ]},
       },
-      {
+      { // encrypt
         name: 'encrypt', // {string} 関数(メソッド)名
         type: 'public', // {string} 関数(メソッド)の分類
         desc: 'authClient->authServerのメッセージを暗号化＋署名', // {string} 端的な関数(メソッド)の説明
@@ -907,7 +907,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           {type:'encryptedRequest',desc:'暗号化された処理要求'}, // コンストラクタは自データ型名
         ]},
       },
-      {
+      { // generateKeys
         name: 'generateKeys', // {string} 関数(メソッド)名
         type: 'public', // {string} 関数(メソッド)の分類
         desc: '新たなクライアント側RSA鍵ペアを作成', // {string} 端的な関数(メソッド)の説明
@@ -922,7 +922,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
         process: `
           - [createPassword](JSLib.md#createpassword)でパスワード生成
-          - [cf.RSAbits](authConfig.md#authconfig_internal)を参照、新たな鍵ペア生成しメンバに保存
+          - [cf.RSAbits](authConfig.md#authconfig_members)を参照、新たな鍵ペア生成しメンバに保存
         `,
 
         returns: {list:[
@@ -946,7 +946,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
       - 署名→暗号化(Sign-then-Encrypt)方式に準拠
       - 鍵ペアは[ScriptProperties](authScriptProperties.md)に保存("SSkey", "SPkey")
-      - ScriptPropertiesのキー名は"[authServerConfig](authServerConfig.md#authserverconfig_internal).system.name"に基づく
+      - ScriptPropertiesのキー名は"[authServerConfig](authServerConfig.md#authserverconfig_members).system.name"に基づく
       - 復号処理は副作用のない純関数構造を目指す(stateを持たない)
       - 可能な範囲で「外部ライブラリ」を使用する
       - timestamp検証は整数化・絶対値化してから比較する
@@ -1029,14 +1029,14 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           4. 署名検証
              - 以下が全部一致しなかったなら戻り値「不正署名」を返して終了
                - 復号により現れた署名
-               - [decryptedRequest](decryptedRequest.md#decryptedrequest_internal).[request](authRequest.md#authrequest_internal).signature
-               - member.[device](MemberDevice.md#memberdevice_internal)\[n\].CPkey<br>
+               - [decryptedRequest](decryptedRequest.md#decryptedrequest_members).[request](authRequest.md#authrequest_members).signature
+               - member.[device](MemberDevice.md#memberdevice_members)\[n\].CPkey<br>
                 ※ "n"はdeviceIdから特定
           5. 時差判定
              - 復号・署名検証直後に timestamp と Date.now() の差を算出し、
-               [authServerConfig](authServerConfig.md#authserverconfig_internal).allowableTimeDifference を超過した場合、戻り値「時差超過」を返して終了
+               [authServerConfig](authServerConfig.md#authserverconfig_members).allowableTimeDifference を超過した場合、戻り値「時差超過」を返して終了
           6. 戻り値「正常終了」を返して終了
-             - "request"には復号した[encryptedRequest](encryptedRequest.md#encryptedrequest_internal).ciphertext(=JSON化したauthRequest)をオブジェクト化してセット
+             - "request"には復号した[encryptedRequest](encryptedRequest.md#encryptedrequest_members).ciphertext(=JSON化したauthRequest)をオブジェクト化してセット
              - "status"にはdeviceId[n].statusを、deviceIdが見つからない場合はmember.statusをセット
         `,
 
@@ -1054,7 +1054,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
               '指定項目不足': {status: 'dev.error("missing fields")'},
               '不正署名': {status: 'dev.error("invalid signature")'},
               '時差超過': {status: 'dev.error("timestamp difference too large")'},
-              '正常終了': {status: '[member.device\[n\]](MemberDevice.md#memberdevice_internal).status or [member](Member.md#member_internal).status'},
+              '正常終了': {status: '[member.device\[n\]](MemberDevice.md#memberdevice_members).status or [member](Member.md#member_members).status'},
             },
           },
         ]},
@@ -1064,7 +1064,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         type: 'public', // {string} 関数(メソッド)の分類
         desc: 'authClientへのメッセージを署名＋暗号化', // {string} 端的な関数(メソッド)の説明
         note: `
-          - [authResponse](authResponse.md#authresponse_internal).signatureは省略せず明示的に含める
+          - [authResponse](authResponse.md#authresponse_members).signatureは省略せず明示的に含める
           - 暗号化順序は Sign-then-Encrypt
           - 復号側([cryptoClient](../cl/cryptoClient.md))では「Decrypt-then-Verify」
           - 本メソッドはauthServerから呼ばれるため、fatalエラーでも戻り値を返す
@@ -1143,8 +1143,8 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         rev: 0, // {string} 本メソッド仕様書の版数
 
         params: {list:[
-          {name:'e',type:'Error',note:'エラーオブジェクト'},
-          {name:'v',type:'Object',note:'関数・メソッド内汎用変数',default:'{}'},
+          {name:'e',type:'Error',desc:'エラーオブジェクト'},
+          {name:'v',type:'Object',desc:'関数・メソッド内汎用変数',default:'{}'},
         ]},
 
         process: `
@@ -1351,7 +1351,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       {name:'status',type:'string',desc:'メンバの状態',note:'未加入,未審査,審査済,加入中,加入禁止',default:'"未加入"'},
       {name:'log',type:'MemberLog',desc:'メンバの履歴情報',note:'シート上はJSON文字列',default:'new MemberLog()'},
       {name:'profile',type:'MemberProfile',desc:'メンバの属性情報',note:'シート上はJSON文字列',default:'new MemberProfile()'},
-      {name:'device',type:'[MemberDevice](MemberDevice.md#memberdevice_internal)[]',desc:'デバイス情報',note:'マルチデバイス対応のため配列。シート上はJSON文字列',default:'空配列'},
+      {name:'device',type:'[MemberDevice](MemberDevice.md#memberdevice_members)[]',desc:'デバイス情報',note:'マルチデバイス対応のため配列。シート上はJSON文字列',default:'空配列'},
       {name:'note',type:'string',desc:'当該メンバに対する備考',note:'',default:'空文字列'},
     ]},
 
@@ -1399,13 +1399,13 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
             - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
             - request.deviceIdで指定されたデバイスの状態が「未認証」でなければ戻り値「不適格」を返して終了
           - 新しい試行を生成、Member.trialの先頭に追加<br>
-            ("Member.trial.unshift(new [MemberTrial](MemberTrial.md#membertrial_internal)())")
+            ("Member.trial.unshift(new [MemberTrial](MemberTrial.md#membertrial_members)())")
           - MemberLog.loginRequestに現在日時(UNIX時刻)を設定
           - ログイン試行履歴の最大保持数を超えた場合、古い世代を削除<br>
-            (Member.trial.length >= [authServerConfig](authServerConfig.md#authserverconfig_internal).generationMax)
+            (Member.trial.length >= [authServerConfig](authServerConfig.md#authserverconfig_members).generationMax)
           - 更新後のMemberを引数に[setMember](#member_setmember)を呼び出し、memberListシートを更新
           - メンバに[sendmail](JSLib.md#sendmail)でパスコード通知メールを発信<br>
-            但し[authServerConfig](authServerConfig.md#authserverconfig_internal).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
+            但し[authServerConfig](authServerConfig.md#authserverconfig_members).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
           - 戻り値「正常終了」を返して終了
         `,
 
@@ -1456,19 +1456,19 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           - パスコードチェック
             - パスコードが一致 ⇒ 「一致時」をセット
             - パスコードが不一致
-              - 試行回数が上限未満(\`MemberTrial.log.length < [authServerConfig](authServerConfig.md#authserverconfig_internal).trial.maxTrial\`)<br>
+              - 試行回数が上限未満(\`MemberTrial.log.length < [authServerConfig](authServerConfig.md#authserverconfig_members).trial.maxTrial\`)<br>
                 ⇒ 変更すべき項目無し
-              - 試行回数が上限以上(\`MemberTrial.log.length >= [authServerConfig](authServerConfig.md#authserverconfig_internal).trial.maxTrial\`)<br>
+              - 試行回数が上限以上(\`MemberTrial.log.length >= [authServerConfig](authServerConfig.md#authserverconfig_members).trial.maxTrial\`)<br>
                 ⇒ 「凍結時」をセット
             - 設定項目と値は以下の通り。
               %% this.cfTable({type:'authRequest',patterns:{
                 '一致時':{
                   loginSuccess: '現在日時(UNIX時刻)',
-                  loginExpiration: '現在日時＋[loginLifeTime](authServerConfig.md#authserverconfig_internal)'
+                  loginExpiration: '現在日時＋[loginLifeTime](authServerConfig.md#authserverconfig_members)'
                 },
                 '上限到達':{
                   loginFailure: '現在日時(UNIX時刻)',
-                  unfreezeLogin: '現在日時＋[loginFreeze](authServerConfig.md#authserverconfig_internal)'
+                  unfreezeLogin: '現在日時＋[loginFreeze](authServerConfig.md#authserverconfig_members)'
                 }
               }},{
                 indent:0,
@@ -1836,7 +1836,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
               - [judgeStatus](Member.md#member_judgestatus)にMemberを渡し、状態を設定
             4. JSON文字列の項目は文字列化した上でmemberListシートに追加(Member.log/profile/device)
             5. 本番運用中なら加入要請メンバへの通知<br>
-              [authServerConfig.underDev.sendInvitation](authServerConfig.md#authserverconfig_internal) === falseなら開発中なので通知しない
+              [authServerConfig.underDev.sendInvitation](authServerConfig.md#authserverconfig_members) === falseなら開発中なので通知しない
             6. 戻り値⑤を返して終了
         `,
 
@@ -1995,7 +1995,6 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       },
     ]},
   },
-  /*
   MemberDevice: {
     extends: '', // {string} 親クラス名
     desc: 'メンバのデバイス情報', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
@@ -2005,7 +2004,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       - [デバイス関係状態遷移図](../specification.md#device)
       - [Member関係クラス図](Member.md#member_classdiagram)
     `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
-    implement: [], // {string[]} 実装の有無(ex.['cl','sv'])
+    implement: ['sv'], // {string[]} 実装の有無(ex.['cl','sv'])
     template: ``, // {string} Markdown出力時のテンプレート
 
     members: {list:[
@@ -2039,5 +2038,4 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       },
     ]},
   },
-  */
 }}));

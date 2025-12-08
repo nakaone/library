@@ -103,3 +103,5 @@ const menu22 = () => asv.resetSPkey();
 | 14.10 | <span style="padding-left:2rem">[setMember](Member.md#member_setmember)</span> | 指定メンバ情報をmemberListシートに保存 |
 | 14.11 | <span style="padding-left:2rem">[unfreeze](Member.md#member_unfreeze)</span> | 指定されたメンバ・デバイスの「凍結中」状態を強制的に解除 |
 | 14.12 | <span style="padding-left:2rem">[updateCPkey](Member.md#member_updatecpkey)</span> | 対象メンバ・デバイスの公開鍵を更新 |
+| 15.00 | [MemberDevice](MemberDevice.md#memberdevice_members) | メンバのデバイス情報 |
+| 15.01 | <span style="padding-left:2rem">[constructor](MemberDevice.md#memberdevice_constructor)</span> | コンストラクタ |

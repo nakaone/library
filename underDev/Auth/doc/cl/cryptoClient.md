@@ -133,7 +133,7 @@ Error: Error: not fixed: "encryptedRequest"
 #### <span id="cryptoclient_generatekeys_process">🧾 処理手順</span>
 
 - [createPassword](JSLib.md#createpassword)でパスワード生成
-- [cf.RSAbits](authConfig.md#authconfig_internal)を参照、新たな鍵ペア生成しメンバに保存
+- [cf.RSAbits](authConfig.md#authconfig_members)を参照、新たな鍵ペア生成しメンバに保存
 
 #### <span id="cryptoclient_generatekeys_returns">📤 戻り値</span>
 
