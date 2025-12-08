@@ -1300,6 +1300,47 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     `, // {string} ✂️補足説明。概要欄に記載
     summary: `
       - 参考：auth総説 [メンバの状態遷移](../specification.md#member)
+
+      ### <span id="member_classdiagram">クラス図</span>
+
+      \`\`\`mermaid
+      classDiagram
+        class Member {
+          string memberId
+          string name
+          string status
+          MemberLog log
+          MemberProfile profile
+          MemberDevice[] device
+        }
+
+        class MemberDevice {
+          string deviceId
+          string status
+          string CPkey
+          number CPkeyUpdated
+          MemberTrial[] trial
+        }
+
+        class MemberTrial {
+          string passcode
+          number created
+          MemberTrialLog[] log
+        }
+
+        class MemberTrialLog {
+          string entered
+          number result
+          string message
+          number timestamp
+        }
+
+        Member --> MemberLog
+        Member --> MemberProfile
+        Member --> MemberDevice
+        MemberDevice --> MemberTrial
+        MemberTrial --> MemberTrialLog
+      \`\`\`
     `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
     implement: ['sv'], // {string[]} 実装の有無(ex.['cl','sv'])
     template: ``, // {string} Markdown出力時のテンプレート
@@ -1954,4 +1995,49 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       },
     ]},
   },
+  /*
+  MemberDevice: {
+    extends: '', // {string} 親クラス名
+    desc: 'メンバのデバイス情報', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `メンバが使用する通信機器の情報。マルチデバイスに対応する`, // {string} ✂️補足説明。概要欄に記載
+    summary: `
+      - [メンバ関係状態遷移図](../specification.md#member)
+      - [デバイス関係状態遷移図](../specification.md#device)
+      - [Member関係クラス図](Member.md#member_classdiagram)
+    `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: [], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'deviceId',type:'string',label:'デバイスの識別子。UUID',note:''},
+      {name:'status',type:'string',label:'デバイスの状態',note:'未認証,認証中,試行中,凍結中',default:'未認証'},
+      {name:'CPkey',type:'string',label:'メンバの公開鍵',note:''},
+      {name:'CPkeyUpdated',type:'number',label:'最新のCPkeyが登録された日時',note:'',default:'Date.now()'},
+      {name:'trial',type:'MemberTrial[]',label:'ログイン試行関連情報オブジェクト',note:'シート上はJSON文字列',default:[]},
+    ]},
+
+    methods: {list:[
+      {
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{}},
+        ]},
+
+        process: `
+        `,
+
+        returns: {list:[
+          {type:'MemberDevice'}, // コンストラクタは自データ型名
+        ]},
+      },
+    ]},
+  },
+  */
 }}));

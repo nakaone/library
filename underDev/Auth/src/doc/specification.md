@@ -142,32 +142,6 @@ function prototype(arg) {
 | 14 | message | string | メッセージ(statusの補足) |  |  | message |  |
 | 15 | decrypt | string | <span class="popup" title="正常に復号されたら'normal'、異常ならエラーメッセージ">クライアント側での復号結果</span> |  |  | decrypt |  |
 
-<!--
-| No | メンバ名 | 説明 | LocalRequest | authRequest<br>encryptedRequest | authResponse<br>encryptedResponse | LocalResponse |
-| --: | :-- | :-- | :-- | :-- | :-- | :-- |
-| 1 | memberId | {number} - メンバ識別子(メールアドレス)<br>仮登録時はUUIDを使用 |  | memberId | <b>memberId</b> |  |
-| 2 | deviceId | {string} - デバイス識別子(UUID) |  | deviceId | <b>deviceId</b> |  |
-| 3 | memberName | {string} - メンバの氏名 |  | <b>memberName</b> | <b>memberName</b> |  |
-| 4 | CPkey | {string} - クライアント側公開鍵 |  | <b>CPkey</b> | <b>CPkey</b> |  |
-| 5 | requestTime | {number} - クライアント側の処理要求受付日時 |  | <b>requestTime</b> | <b>requestTime</b> |  |
-| 6 | func | {string} - サーバ側関数名 | func | <b>func</b> | <b>func</b> |  |
-| 7 | arguments | {any[]} - サーバ側関数に渡す引数の配列 | arguments | <b>arguments</b> | <b>arguments</b> |  |
-| 8 | requestId | {string} - 処理要求のUUID |  | <b>requestId</b> | <b>requestId</b> |  |
-| 9 | SPkey | {string} - サーバ側公開鍵 |  |  | <b>SPkey</b> |  |
-| 10 | response | {any} - サーバ側関数の処理結果。<br>Errorオブジェクトを含む |  |  | <b>response</b> | response |
-| 11 | receptTime | {number} - サーバ側の処理要求受付日時 |  |  | <b>receptTime</b> |  |
-| 12 | responseTime | {number} - 処理終了日時。<br>authErrorの場合エラー発生日時 |  |  | <b>responseTime</b> |  |
-| 13 | status | {string\\|authError} - 正常終了："success"(文字列)<br>警告終了：エラーメッセージ、<br>致命的エラー：authErrorオブジェクト |  |  | status | status |
-| 14 | errorType | {string} - エラーの型(ex."ReferenceError") |  |  |  |  |
-| 15 | function | {string} - エラーが起きたクラス・メソッド名 |  |  |  |  |
-| 16 | step | {string} - エラーが起きたメソッド内の位置を示す文字列 |  |  |  |  |
-| 17 | variable | {string} - エラー時のメソッド内汎用変数(JSON文字列) |  |  |  |  |
-| 18 | message | {string} - エラーメッセージ |  |  |  |  |
-| 19 | stack | {string} - エラー時のスタックトレース |  |  |  |  |
-| 20 | elaps | {number} - 所要時間(ミリ秒) |  |  |  |  |
-| 21 | decrypt | {string} - 正常に復号されたら"normal"、<br>異常ならエラーメッセージ |  |  | decrypt |  |
--->
-
 </div>
 
 - ⑬status：status は「アプリケーションステータス」であり HTTP レスポンスとは無関係
