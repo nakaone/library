@@ -415,10 +415,10 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'UUID',default:'idb.deviceId'},
       {name:'memberName',type:'string',desc:'メンバの氏名',note:'管理者が加入認否判断のため使用',default:'idb.memberName'},
       {name:'CPkey',type:'string',desc:'クライアント側署名',note:'',default:'idb.CPkey'},
-      {name:'requestId',type:'string',desc:'要求の識別子',note:'UUID',default:'UUID'},
       {name:'requestTime',type:'number',desc:'要求日時',note:'UNIX時刻',default:'Date.now()'},
       {name:'func',type:'string',desc:'サーバ側関数名',note:''},
       {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',note:'',default:'[]'},
+      {name:'requestId',type:'string',desc:'要求の識別子',note:'UUID',default:'UUID'},
     ]},
 
     methods: {list:[{
@@ -488,17 +488,19 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',desc:'メンバの識別子',note:'=メールアドレス'},
       {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'UUID'},
+      {name:'memberName',type:'string',desc:'メンバの氏名'},
       {name:'CPkey',type:'string',desc:'クライアント側署名',note:''},
-      {name:'requestId',type:'string',desc:'要求の識別子',note:'UUID'},
       {name:'requestTime',type:'number',desc:'要求日時',note:'UNIX時刻'},
       {name:'func',type:'string',desc:'サーバ側関数名',note:''},
       {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',note:''},
+      {name:'requestId',type:'string',desc:'要求の識別子',note:'UUID'},
       {name:'SPkey',type:'string',desc:'サーバ側公開鍵',default:'SPkey'},
       {name:'response',type:'any',desc:'サーバ側関数の戻り値',note:'Errorオブジェクトを含む',default:'null'},
       {name:'receptTime',type:'number',desc:'サーバ側の処理要求受付日時',default:'Date.now()'},
       {name:'responseTime',type:'number',desc:'サーバ側処理終了日時',note:'エラーの場合は発生日時',default:'0'},
-      {name:'status',type:'string',desc:'サーバ側処理結果',note:'authServerの処理結果。responseとは必ずしも一致しない',default:'"normal"'},
-      {name:'decrypt',type:'string',desc:'クライアント側での復号処理結果',note:'"normal":正常、それ以外はエラーメッセージ',default:'"normal"'},
+      {name:'status',type:'string',desc:'サーバ側処理結果',note:'正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト',default:'"success"'},
+      {name:'message',type:'string',desc:'メッセージ(statusの補足)'},
+      {name:'decrypt',type:'string',desc:'クライアント側での復号処理結果',note:'"success":正常、それ以外はエラーメッセージ',default:'"normal"'},
     ]},
 
     methods: {list:[{
@@ -2095,7 +2097,6 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     template: ``, // {string} Markdown出力時のテンプレート
 
     members: {list:[
-      {name:'name',type:'string',desc:'メンバの氏名'},
       {name:'authority',type:'number',desc:'メンバの持つ権限',note:'authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す',default:0},
     ]},
 
