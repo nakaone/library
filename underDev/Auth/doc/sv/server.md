@@ -3,6 +3,9 @@
 [総説](../specification.md) | [クライアント側仕様](../cl/client.md) | [サーバ側仕様](../sv/server.md) | [JavaScriptライブラリ](../JSLib.md)
 
 </div>
+<style>
+  td {white-space:nowrap;}
+</style>
 
 # authサーバ側仕様書
 
@@ -98,3 +101,5 @@ const menu22 = () => asv.resetSPkey();
 | 14.08 | <span style="padding-left:2rem">[removeMember](Member.md#member_removemember)</span> | 登録中メンバをアカウント削除、または加入禁止にする |
 | 14.09 | <span style="padding-left:2rem">[restoreMember](Member.md#member_restoremember)</span> | 加入禁止(論理削除)されているメンバを復活させる |
 | 14.10 | <span style="padding-left:2rem">[setMember](Member.md#member_setmember)</span> | 指定メンバ情報をmemberListシートに保存 |
+| 14.11 | <span style="padding-left:2rem">[unfreeze](Member.md#member_unfreeze)</span> | 指定されたメンバ・デバイスの「凍結中」状態を強制的に解除 |
+| 14.12 | <span style="padding-left:2rem">[updateCPkey](Member.md#member_updatecpkey)</span> | 対象メンバ・デバイスの公開鍵を更新 |

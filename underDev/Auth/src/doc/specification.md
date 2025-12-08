@@ -5,6 +5,8 @@
   }
   .nowrap td {white-space:nowrap;} /* 横長な表を横スクロール */
   .nowrap b {background:yellow;}
+
+  .popup {color:#084} /* titleに文字列を設定した項目 */
 </style>
 
 # <span id="top">"auth"総説</span>
@@ -114,12 +116,33 @@ function prototype(arg) {
 
 ### <span id="io"><a href="#protocol">I/O項目対応表</a></span>
 
+※ <span class="popup">緑文字</span>はカーソルを合わせると補足説明をポップアップ
+
 ※ 背景色黄色は暗号化対象項目。例：
 - `encryptedRequest = {memberId,deviceId,cypherText}`
 - `cypherText = encrypt(JSON.stringify(memberName〜requestId))`
 
 <div style="overflow-x: auto;" class="nowrap">
 
+| No | メンバ名 | データ型 | 説明 | LocalRequest | authRequest<br>encryptedRequest | authResponse<br>encryptedResponse | LocalResponse |
+| --: | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| 1 | memberId | number | メンバ識別子(メールアドレス) |  | memberId | <b>memberId</b> |  |
+| 2 | deviceId | string | デバイス識別子(UUID) |  | deviceId | <b>deviceId</b> |  |
+| 3 | memberName | string | メンバの氏名 |  | <b>memberName</b> | <b>memberName</b> |  |
+| 4 | CPkey | string | クライアント側公開鍵 |  | <b>CPkey</b> | <b>CPkey</b> |  |
+| 5 | requestTime | number | クライアント側の処理要求受付日時 |  | <b>requestTime</b> | <b>requestTime</b> |  |
+| 6 | func | string | サーバ側関数名 | func | <b>func</b> | <b>func</b> |  |
+| 7 | arguments | any[] | サーバ側関数に渡す引数の配列 | arguments | <b>arguments</b> | <b>arguments</b> |  |
+| 8 | requestId | string | 処理要求のUUID |  | <b>requestId</b> | <b>requestId</b> |  |
+| 9 | SPkey | string | サーバ側公開鍵 |  |  | <b>SPkey</b> |  |
+| 10 | response | any | <span class="popup" title="Errorオブジェクトを含む">サーバ側関数の処理結果(戻り値)</span> |  |  | <b>response</b> | response |
+| 11 | receptTime | number | サーバ側の処理要求受付日時 |  |  | <b>receptTime</b> |  |
+| 12 | responseTime | number | 処理終了日時 |  |  | <b>responseTime</b> |  |
+| 13 | status | string\|authError | <span class="popup" title="正常終了時は'success'(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト">authServer他、サーバ側Auth処理結果</span> |  |  | status | status |
+| 14 | message | string | メッセージ(statusの補足) |  |  | message |  |
+| 15 | decrypt | string | <span class="popup" title="正常に復号されたら'normal'、異常ならエラーメッセージ">クライアント側での復号結果</span> |  |  | decrypt |  |
+
+<!--
 | No | メンバ名 | 説明 | LocalRequest | authRequest<br>encryptedRequest | authResponse<br>encryptedResponse | LocalResponse |
 | --: | :-- | :-- | :-- | :-- | :-- | :-- |
 | 1 | memberId | {number} - メンバ識別子(メールアドレス)<br>仮登録時はUUIDを使用 |  | memberId | <b>memberId</b> |  |
@@ -143,6 +166,7 @@ function prototype(arg) {
 | 19 | stack | {string} - エラー時のスタックトレース |  |  |  |  |
 | 20 | elaps | {number} - 所要時間(ミリ秒) |  |  |  |  |
 | 21 | decrypt | {string} - 正常に復号されたら"normal"、<br>異常ならエラーメッセージ |  |  | decrypt |  |
+-->
 
 </div>
 

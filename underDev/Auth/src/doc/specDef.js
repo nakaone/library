@@ -1315,7 +1315,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     ]},
 
     methods: {list:[
-      {
+      { // constructor
         name: 'constructor', // {string} 関数(メソッド)名
         type: 'private', // {string} 関数(メソッド)の分類
         desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
@@ -1340,7 +1340,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           {type:'Member'}, // コンストラクタは自データ型名
         ]},
       },
-      {
+      { // addTrial
         name: 'addTrial', // {string} 関数(メソッド)名
         type: 'public', // {string} 関数(メソッド)の分類
         desc: '新しい試行を登録し、メンバにパスコード通知メールを発信', // {string} 端的な関数(メソッド)の説明
@@ -1386,7 +1386,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           },
         ]},
       },
-      {
+      { // checkPasscode
         name: 'checkPasscode', // {string} 関数(メソッド)名
         type: 'public', // {string} 関数(メソッド)の分類
         desc: '認証時のパスコードチェック', // {string} 端的な関数(メソッド)の説明
@@ -1430,7 +1430,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
                   unfreezeLogin: '現在日時＋[loginFreeze](authServerConfig.md#authserverconfig_internal)'
                 }
               }},{
-                indent:4,
+                indent:0,
                 header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
               }) %%
           - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
@@ -1454,7 +1454,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           },
         ]},
       },
-      {
+      { // getMember
         name: 'getMember', // {string} 関数(メソッド)名
         type: 'public', // {string} 関数(メソッド)の分類
         desc: '指定メンバの情報をmemberListシートから取得', // {string} 端的な関数(メソッド)の説明
@@ -1489,7 +1489,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           },
         ]},
       },
-      {
+      { // judgeMember
         name: 'judgeMember', // {string} 関数(メソッド)名
         type: 'static', // {string} 関数(メソッド)の分類
         desc: '加入審査画面から審査結果入力＋結果通知', // {string} 端的な関数(メソッド)の説明
@@ -1549,7 +1549,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           },
         ]},
       },
-      {
+      { // judgeStatus
         name: 'judgeStatus', // {string} 関数(メソッド)名
         type: 'public', // {string} 関数(メソッド)の分類
         desc: '指定メンバ・デバイスの状態を[状態決定表](../specification.md#member)により判定',
@@ -1581,7 +1581,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           },
         ]},
       },
-      {
+      { // reissuePasscode
         name: 'reissuePasscode', // {string} 関数(メソッド)名
         type: 'public', // {string} 関数(メソッド)の分類
         desc: 'パスコードを再発行する', // {string} 端的な関数(メソッド)の説明
@@ -1643,7 +1643,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           },
         ]},
       },
-      {
+      { // removeMember
         name: 'removeMember', // {string} 関数(メソッド)名
         type: 'static', // {string} 関数(メソッド)の分類
         desc: '登録中メンバをアカウント削除、または加入禁止にする', // {string} 端的な関数(メソッド)の説明
@@ -1712,7 +1712,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           //{type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
         ]},
       },
-      {
+      { // restoreMember
         name: 'restoreMember', // {string} 関数(メソッド)名
         type: 'static', // {string} 関数(メソッド)の分類
         desc: '加入禁止(論理削除)されているメンバを復活させる', // {string} 端的な関数(メソッド)の説明
@@ -1759,7 +1759,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           },
         ]},
       },
-      {
+      { // setMember
         name: 'setMember', // {string} 関数(メソッド)名
         type: 'public', // {string} 関数(メソッド)の分類
         desc: '指定メンバ情報をmemberListシートに保存', // {string} 端的な関数(メソッド)の説明
@@ -1806,10 +1806,148 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
             default: {},  // {Object.<string,string>} 全パターンの共通設定値
             patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
               '①':{status:'dev.error("not exist")'},
-              '②':{status:'"success"',response: 'Member(更新済)'},
+              '②':{status:'"success"',message: '"updated"',response: 'Member(更新済)'},
               '③':{status:'dev.error("already exist")'},
               '④':{status:'dev.error("Invalid registration request")'},
-              '⑤':{status:'"success"',response: 'Member(新規作成)'},
+              '⑤':{status:'"success"',message: '"appended"',response: 'Member(新規作成)'},
+            },
+          },
+        ]},
+      },
+      { // unfreeze
+        name: 'unfreeze', // {string} 関数(メソッド)名
+        type: 'static', // {string} 関数(メソッド)の分類
+        desc: '指定されたメンバ・デバイスの「凍結中」状態を強制的に解除', // {string} 端的な関数(メソッド)の説明
+        note: `引数でmemberIdが指定されなかった場合、**凍結中デバイス一覧の要求**と看做す<br>deviceIdの指定が無い場合、memberIdが使用する凍結中デバイス全てを対象とする<br>memberListシートのGoogle Spreadのメニューから管理者が実行することを想定`, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'memberId',type:'string',note:'メンバ識別子',default:'null'},
+          {name:'deviceId',type:'string',note:'デバイス識別子',isOpt:true},
+        ]},
+
+        process: `
+          - memberListシート全件を読み込み、\`[MemberDevice.status](MemberDevice.md#memberdevice_members) === '凍結中'\`のデバイス一覧を作成
+          - memberId無指定(=null)の場合、戻り値「一覧」を返して終了
+          - 引数で渡されたmemberId, deviceIdがマッチするメンバ・デバイスを検索
+          - 対象デバイスが存在しない場合、戻り値「該当無し」を返して終了
+          - 凍結解除：対象デバイスそれぞれについて以下項目を更新
+            %% this.cfTable({type:'MemberDevice',patterns:{
+              '更新内容':{status: '"未認証"',trial: '空配列'},
+            }},{
+              indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
+            }) %%
+
+            %% this.cfTable({type:'MemberLog',patterns:{
+              '更新内容':{unfreezeLogin: '現在日時'},
+            }},{
+              indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
+            }) %%
+          - [setMemberメソッド](#member_setmember)にMemberを渡してmemberListを更新
+          - 戻り値「正常終了」を返して終了
+        `,
+
+        returns: {list:[
+          { // 対比表形式
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
+              '一覧':{
+                status:'"success"',
+                response: 'MemberDevice.status=="凍結中"とそのMember',
+              },
+              '該当無し': {
+                status: '"no frozen devices"',
+                request: '{memberId,deviceId:[引数で渡されたdeviceId]}',
+                response: '更新前のMember',
+              },
+              '正常終了': {
+                result: '"success"',
+                request: '{memberId,deviceId:[凍結解除したdeviceId]}',
+                response: '更新<span style="color:red">後</span>のMember',
+              },
+            },
+          },
+        ]},
+      },
+      { // updateCPkey
+        name: 'updateCPkey', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: '対象メンバ・デバイスの公開鍵を更新', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'request',type:'authRequest',note:'処理要求オブジェクト'},
+        ]},
+
+        process: `
+          - 引数チェック
+            %% this.cfTable({type:'authRequest',patterns:{'確認内容':{
+              func: '"::updateCPkey::"',
+              arguments: '更新後CPkey',
+            }}},{indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}}) %%
+            - 更新後CPkeyがRSAの公開鍵形式か(PEMフォーマットなど)チェック、不適合なら戻り値「鍵形式不正」を返して終了
+          - メンバの状態チェック
+            - request.memberIdを基に[getMemberメソッド](#member_getmember)を実行
+            - メンバの状態が「不使用("result === fatal")」だった場合、[getMemberの戻り値](#member_getmember_returns)をそのまま戻り値として返して終了
+            - **取得したMemberインスタンスをupdateCPkey内部のみのローカル変数**に格納。以下操作はローカル変数のMemberに対して行う。
+          - デバイス存否チェック<br>
+            request.deviceId(=現在登録済のCPkey)で対象デバイスを特定。特定不能なら戻り値「機器未登録」を返して終了
+          - 管理情報の書き換え
+            - CPkeyは書き換え
+              %% this.cfTable({type:'MemberDevice',patterns:{'更新項目':{
+                CPkey:'更新後CPkey',
+                CPkeyUpdated:'現在日時',
+              }}},{indent:4,
+                header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}}) %%
+            - デバイスの状態は、未認証・凍結中はそのまま、試行中・認証中は未認証に戻す
+              %% this.cfTable({type:'MemberLog',patterns:{
+                '未認証':{},
+                '試行中':{
+                  loginExpiration: 0,
+                  loginRequest: 0,
+                },
+                '認証中':{
+                  loginExpiration: 0,
+                  loginRequest: 0,
+                },
+                '凍結中':{},
+              }},{indent:4,
+                header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}}) %%
+          - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
+            ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
+          - **CPkeyを更新するのはmemberListシートのみ**。インスタンス化された'Member.device'以下は更新しない<br>
+            ※ authServer->authClientに送るencryptedResponseの暗号化は旧CPkeyで行い、authClient側ではauthServer側での処理結果を確認の上、新CPkeyへの置換を行うため
+          - CPkey更新を監査ログに記録([authAuditLog.log](authAuditLog.md#authauditlog_log))
+            %% this.cfTable({type:'authAuditLog',patterns:{'設定内容':{
+              func: '"updateCPkey"',
+              note: '旧CPkey -> 新CPkey',
+            }}},{indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}}) %%
+          - 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
+        `,
+
+        returns: {list:[
+          { // 対比表形式
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {request:'request'},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
+              '鍵形式不正':{status:'dev.error("invalid public key")'},
+              '機器未登録':{status:'dev.error("no matching key")'},
+              '正常終了':{
+                status: '"success"',
+                response: '更新<span style="color:red">前</span>のMember',
+              },
             },
           },
         ]},

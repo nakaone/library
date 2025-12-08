@@ -3,6 +3,9 @@
 [総説](../specification.md) | [クライアント側仕様](../cl/client.md) | [サーバ側仕様](../sv/server.md) | [JavaScriptライブラリ](../JSLib.md)
 
 </div>
+<style>
+  td {white-space:nowrap;}
+</style>
 
 # <span id="member">Member クラス仕様書</span>
 
@@ -42,6 +45,8 @@
 | [removeMember()](#member_removemember) | static | 登録中メンバをアカウント削除、または加入禁止にする | memberListシートのGoogle Spreadのメニューから管理者が実行することを想定 |
 | [restoreMember()](#member_restoremember) | static | 加入禁止(論理削除)されているメンバを復活させる | memberListシートのGoogle Spreadのメニューから管理者が実行することを想定 |
 | [setMember()](#member_setmember) | public | 指定メンバ情報をmemberListシートに保存 | 登録済メンバの場合は更新、未登録の場合は新規登録(追加)を行う |
+| [unfreeze()](#member_unfreeze) | static | 指定されたメンバ・デバイスの「凍結中」状態を強制的に解除 | 引数でmemberIdが指定されなかった場合、**凍結中デバイス一覧の要求**と看做す<br>deviceIdの指定が無い場合、memberIdが使用する凍結中デバイス全てを対象とする<br>memberListシートのGoogle Spreadのメニューから管理者が実行することを想定 |
+| [updateCPkey()](#member_updatecpkey) | public | 対象メンバ・デバイスの公開鍵を更新 |  |
 
 ### <span id="member_constructor"><a href="#member_methods">🧱 Member.constructor()</a></span>
 
@@ -137,16 +142,16 @@
     - 試行回数が上限以上(`MemberTrial.log.length >= [authServerConfig](authServerConfig.md#authserverconfig_internal).trial.maxTrial`)<br>
       ⇒ 「凍結時」をセット
   - 設定項目と値は以下の通り。
-        | 項目名 | データ型 | 要否/既定値 | 説明 | 一致時 | 上限到達 |
-        | :-- | :-- | :-- | :-- | :-- | :-- |
-        | memberId | string | idb.memberId | メンバの識別子 | — | — |
-        | deviceId | string | idb.deviceId | デバイスの識別子 | — | — |
-        | memberName | string | idb.memberName | メンバの氏名 | — | — |
-        | CPkey | string | idb.CPkey | クライアント側署名 | — | — |
-        | requestId | string | UUID | 要求の識別子 | — | — |
-        | requestTime | number | Date.now() | 要求日時 | — | — |
-        | func | string | <span style="color:red">必須</span> | サーバ側関数名 | — | — |
-        | arguments | any[] | [] | サーバ側関数に渡す引数の配列 | — | — |
+    | 項目名 | データ型 | 要否/既定値 | 説明 | 一致時 | 上限到達 |
+    | :-- | :-- | :-- | :-- | :-- | :-- |
+    | memberId | string | idb.memberId | メンバの識別子 | — | — |
+    | deviceId | string | idb.deviceId | デバイスの識別子 | — | — |
+    | memberName | string | idb.memberName | メンバの氏名 | — | — |
+    | CPkey | string | idb.CPkey | クライアント側署名 | — | — |
+    | requestId | string | UUID | 要求の識別子 | — | — |
+    | requestTime | number | Date.now() | 要求日時 | — | — |
+    | func | string | <span style="color:red">必須</span> | サーバ側関数名 | — | — |
+    | arguments | any[] | [] | サーバ側関数に渡す引数の配列 | — | — |
 - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
   ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
 - 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
@@ -486,3 +491,112 @@
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — | — | — |
   | status | string | "normal" | サーバ側処理結果 | authServerの処理結果。responseとは必ずしも一致しない | **dev.error("not exist")** | **"success"** | **dev.error("already exist")** | **dev.error("Invalid registration request")** | **"success"** |
   | decrypt | string | "normal" | クライアント側での復号処理結果 | "normal":正常、それ以外はエラーメッセージ | — | — | — | — | — |
+### <span id="member_unfreeze"><a href="#member_methods">🧱 Member.unfreeze()</a></span>
+
+#### <span id="member_unfreeze_params">📥 引数</span>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| memberId | string | null |  | メンバ識別子 |
+| deviceId | string | 任意 |  | デバイス識別子 |
+
+#### <span id="member_unfreeze_process">🧾 処理手順</span>
+
+- memberListシート全件を読み込み、`[MemberDevice.status](MemberDevice.md#memberdevice_members) === '凍結中'`のデバイス一覧を作成
+- memberId無指定(=null)の場合、戻り値「一覧」を返して終了
+- 引数で渡されたmemberId, deviceIdがマッチするメンバ・デバイスを検索
+- 対象デバイスが存在しない場合、戻り値「該当無し」を返して終了
+- 凍結解除：対象デバイスそれぞれについて以下項目を更新
+  
+
+  
+- [setMemberメソッド](#member_setmember)にMemberを渡してmemberListを更新
+- 戻り値「正常終了」を返して終了
+
+#### <span id="member_unfreeze_returns">📤 戻り値</span>
+
+- [authResponse](authResponse.md#authresponse_members)
+
+  | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 一覧 | 該当無し | 正常終了 |
+  | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+  | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — | — |
+  | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — |
+  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — | — |
+  | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — |
+  | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — |
+  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
+  | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — |
+  | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | **MemberDevice.status=="凍結中"とそのMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
+  | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — |
+  | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — |
+  | status | string | "normal" | サーバ側処理結果 | authServerの処理結果。responseとは必ずしも一致しない | **"success"** | **"no frozen devices"** | — |
+  | decrypt | string | "normal" | クライアント側での復号処理結果 | "normal":正常、それ以外はエラーメッセージ | — | — | — |
+### <span id="member_updatecpkey"><a href="#member_methods">🧱 Member.updateCPkey()</a></span>
+
+#### <span id="member_updatecpkey_params">📥 引数</span>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| request | [authRequest](authRequest.md#authrequest_members) | <span style="color:red">必須</span> |  | 処理要求オブジェクト |
+
+#### <span id="member_updatecpkey_process">🧾 処理手順</span>
+
+- 引数チェック
+    | 項目名 | データ型 | 要否/既定値 | 説明 | 確認内容 |
+    | :-- | :-- | :-- | :-- | :-- |
+    | memberId | string | idb.memberId | メンバの識別子 | — |
+    | deviceId | string | idb.deviceId | デバイスの識別子 | — |
+    | memberName | string | idb.memberName | メンバの氏名 | — |
+    | CPkey | string | idb.CPkey | クライアント側署名 | — |
+    | requestId | string | UUID | 要求の識別子 | — |
+    | requestTime | number | Date.now() | 要求日時 | — |
+    | func | string | <span style="color:red">必須</span> | サーバ側関数名 | **"::updateCPkey::"** |
+    | arguments | any[] | [] | サーバ側関数に渡す引数の配列 | **更新後CPkey** |
+  - 更新後CPkeyがRSAの公開鍵形式か(PEMフォーマットなど)チェック、不適合なら戻り値「鍵形式不正」を返して終了
+- メンバの状態チェック
+  - request.memberIdを基に[getMemberメソッド](#member_getmember)を実行
+  - メンバの状態が「不使用("result === fatal")」だった場合、[getMemberの戻り値](#member_getmember_returns)をそのまま戻り値として返して終了
+  - **取得したMemberインスタンスをupdateCPkey内部のみのローカル変数**に格納。以下操作はローカル変数のMemberに対して行う。
+- デバイス存否チェック<br>
+  request.deviceId(=現在登録済のCPkey)で対象デバイスを特定。特定不能なら戻り値「機器未登録」を返して終了
+- 管理情報の書き換え
+  - CPkeyは書き換え
+    
+  - デバイスの状態は、未認証・凍結中はそのまま、試行中・認証中は未認証に戻す
+    
+- 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
+  ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
+- **CPkeyを更新するのはmemberListシートのみ**。インスタンス化された'Member.device'以下は更新しない<br>
+  ※ authServer->authClientに送るencryptedResponseの暗号化は旧CPkeyで行い、authClient側ではauthServer側での処理結果を確認の上、新CPkeyへの置換を行うため
+- CPkey更新を監査ログに記録([authAuditLog.log](authAuditLog.md#authauditlog_log))
+    | 項目名 | データ型 | 要否/既定値 | 説明 | 設定内容 |
+    | :-- | :-- | :-- | :-- | :-- |
+    | timestamp | string | Date.now() | 要求日時 | — |
+    | duration | number | <span style="color:red">必須</span> | 処理時間 | — |
+    | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | — |
+    | deviceId | string | 任意 | デバイスの識別子 | — |
+    | func | string | <span style="color:red">必須</span> | サーバ側関数名 | **"updateCPkey"** |
+    | result | string | normal | サーバ側処理結果 | — |
+    | note | string | <span style="color:red">必須</span> | 備考 | **旧CPkey -> 新CPkey** |
+- 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
+
+#### <span id="member_updatecpkey_returns">📤 戻り値</span>
+
+- [authResponse](authResponse.md#authresponse_members)
+
+  | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 鍵形式不正 | 機器未登録 | 正常終了 |
+  | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+  | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — | — |
+  | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — |
+  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — | — |
+  | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — |
+  | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — |
+  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
+  | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — |
+  | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | — | **更新<span style="color:red">前</span>のMember** |
+  | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — |
+  | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — |
+  | status | string | "normal" | サーバ側処理結果 | authServerの処理結果。responseとは必ずしも一致しない | **dev.error("invalid public key")** | **dev.error("no matching key")** | **"success"** |
+  | decrypt | string | "normal" | クライアント側での復号処理結果 | "normal":正常、それ以外はエラーメッセージ | — | — | — |
