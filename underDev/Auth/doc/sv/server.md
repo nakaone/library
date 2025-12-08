@@ -105,3 +105,6 @@ const menu22 = () => asv.resetSPkey();
 | 14.12 | <span style="padding-left:2rem">[updateCPkey](Member.md#member_updatecpkey)</span> | 対象メンバ・デバイスの公開鍵を更新 |
 | 15.00 | [MemberDevice](MemberDevice.md#memberdevice_members) | メンバのデバイス情報 |
 | 15.01 | <span style="padding-left:2rem">[constructor](MemberDevice.md#memberdevice_constructor)</span> | コンストラクタ |
+| 16.00 | [MemberLog](MemberLog.md#memberlog_members) | メンバの各種要求・状態変化の時刻 |
+| 16.01 | <span style="padding-left:2rem">[constructor](MemberLog.md#memberlog_constructor)</span> | コンストラクタ |
+| 16.02 | <span style="padding-left:2rem">[prohibitJoining](MemberLog.md#memberlog_prohibitjoining)</span> | 「加入禁止」状態に変更する |

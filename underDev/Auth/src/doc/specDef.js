@@ -368,9 +368,9 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         note: 'サーバ側でCPkey更新中にクライアント側で新たなCPkeyが生成されるのを避けるため、鍵ペア生成は30分以上の間隔を置く'
       ,default:'Date.now()'},
       {name:'SPkey',type:'string',desc:'サーバ公開鍵',note:'Base64',default:null},
-      //{name:'ApplicationForMembership',type:'number',desc:'加入申請実行日時。未申請時は0',note:'',default:0},
-      //{name:'expireAccount',type:'number',desc:'加入承認の有効期間が切れる日時。未加入時は0',note:'',default:0},
-      {name:'expireCPkey',type:'number',desc:'CPkeyの有効期限(無効になる日時)',note:'未ログイン時は0',default:0},
+      //{name:'ApplicationForMembership',type:'number',desc:'加入申請実行日時。未申請時は0',note:'',default:'0'},
+      //{name:'expireAccount',type:'number',desc:'加入承認の有効期間が切れる日時。未加入時は0',note:'',default:'0'},
+      {name:'expireCPkey',type:'number',desc:'CPkeyの有効期限(無効になる日時)',note:'未ログイン時は0',default:'0'},
     ]},
 
     methods: {list:[
@@ -2008,11 +2008,11 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     template: ``, // {string} Markdown出力時のテンプレート
 
     members: {list:[
-      {name:'deviceId',type:'string',label:'デバイスの識別子。UUID',note:''},
-      {name:'status',type:'string',label:'デバイスの状態',note:'未認証,認証中,試行中,凍結中',default:'未認証'},
-      {name:'CPkey',type:'string',label:'メンバの公開鍵',note:''},
-      {name:'CPkeyUpdated',type:'number',label:'最新のCPkeyが登録された日時',note:'',default:'Date.now()'},
-      {name:'trial',type:'MemberTrial[]',label:'ログイン試行関連情報オブジェクト',note:'シート上はJSON文字列',default:[]},
+      {name:'deviceId',type:'string',desc:'デバイスの識別子。UUID',note:''},
+      {name:'status',type:'string',desc:'デバイスの状態',note:'未認証,認証中,試行中,凍結中',default:'未認証'},
+      {name:'CPkey',type:'string',desc:'メンバの公開鍵',note:''},
+      {name:'CPkeyUpdated',type:'number',desc:'最新のCPkeyが登録された日時',note:'',default:'Date.now()'},
+      {name:'trial',type:'MemberTrial[]',desc:'ログイン試行関連情報オブジェクト',note:'シート上はJSON文字列',default:[]},
     ]},
 
     methods: {list:[
@@ -2034,6 +2034,78 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
         returns: {list:[
           {type:'MemberDevice'}, // コンストラクタは自データ型名
+        ]},
+      },
+    ]},
+  },
+  MemberLog: {
+    extends: '', // {string} 親クラス名
+    desc: 'メンバの各種要求・状態変化の時刻', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: ``, // {string} ✂️補足説明。概要欄に記載
+    summary: `
+      - [メンバ関係状態遷移図](../specification.md#member)
+      - [デバイス関係状態遷移図](../specification.md#device)
+      - [Member関係クラス図](Member.md#member_classdiagram)
+    `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['sv'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'joiningRequest', type:'number', desc:'仮登録要求日時',note:'仮登録要求をサーバ側で受信した日時', default:'Date.now()'},
+      {name:'approval', type:'number', desc:'加入承認日時',note:'管理者がmemberList上で加入承認処理を行った日時。値設定は加入否認日時と択一', default:'0'},
+      {name:'denial', type:'number', desc:'加入否認日時',note:'管理者がmemberList上で加入否認処理を行った日時。値設定は加入承認日時と択一', default:'0'},
+      {name:'loginRequest', type:'number', desc:'認証要求日時',note:'未認証メンバからの処理要求をサーバ側で受信した日時', default:'0'},
+      {name:'loginSuccess', type:'number', desc:'認証成功日時',note:'未認証メンバの認証要求が成功した最新日時', default:'0'},
+      {name:'loginExpiration', type:'number', desc:'認証有効期限',note:'認証成功日時＋認証有効時間', default:'0'},
+      {name:'loginFailure', type:'number', desc:'認証失敗日時',note:'未認証メンバの認証要求失敗が確定した最新日時', default:'0'},
+      {name:'unfreezeLogin', type:'number', desc:'認証無効期限',note:'認証失敗日時＋認証凍結時間', default:'0'},
+      {name:'joiningExpiration', type:'number', desc:'加入有効期限',note:'加入承認日時＋加入有効期間', default:'0'},
+      {name:'unfreezeDenial', type:'number', desc:'加入禁止期限',note:'加入否認日時＋加入禁止期間', default:'0'},
+    ]},
+
+    methods: {list:[
+      { // constructor
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{}},
+        ]},
+
+        process: `
+        `,
+
+        returns: {list:[
+          {type:'MemberLog'}, // コンストラクタは自データ型名
+        ]},
+      },
+      { // prohibitJoining
+        name: 'prohibitJoining', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: '「加入禁止」状態に変更する', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          //{name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+          //{name:'',type:'string',desc:'',note:''},
+        ]},
+
+        process: `
+          - joiningExpiration = 現在日時(UNIX時刻)
+          - unfreezeDenial = 現在日時(UNIX時刻)＋[authServerConfig](authServerConfig.md#authserverconfig_internal).prohibitedToJoin
+        `,
+
+        returns: {list:[
+          {type:'null', desc:'正常終了時',template:''},
+          {type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
         ]},
       },
     ]},

@@ -22,7 +22,7 @@ IndexedDBの作成・入出力は[authClient](authClient.md)で行うため、�
 | deviceId | string | UUID | デバイスの識別子 |  |
 | keyGeneratedDateTime | number | Date.now() | 鍵ペア生成日時 | サーバ側でCPkey更新中にクライアント側で新たなCPkeyが生成されるのを避けるため、鍵ペア生成は30分以上の間隔を置く |
 | SPkey | string | <span style="color:red">必須</span> | サーバ公開鍵 | Base64 |
-| expireCPkey | number | <span style="color:red">必須</span> | CPkeyの有効期限(無効になる日時) | 未ログイン時は0 |
+| expireCPkey | number | 0 | CPkeyの有効期限(無効になる日時) | 未ログイン時は0 |
 
 ## <span id="authindexeddb_methods">🧱 authIndexedDB メソッド一覧</span>
 

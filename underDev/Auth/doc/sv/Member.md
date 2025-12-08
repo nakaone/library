@@ -67,7 +67,7 @@ classDiagram
 | memberId | string | UUID | メンバの識別子 | メールアドレス |
 | name | string | "dummy" | メンバの氏名 |  |
 | status | string | "未加入" | メンバの状態 | 未加入,未審査,審査済,加入中,加入禁止 |
-| log | MemberLog | new MemberLog() | メンバの履歴情報 | シート上はJSON文字列 |
+| log | [MemberLog](MemberLog.md#memberlog_members) | new MemberLog() | メンバの履歴情報 | シート上はJSON文字列 |
 | profile | MemberProfile | new MemberProfile() | メンバの属性情報 | シート上はJSON文字列 |
 | device | [MemberDevice](MemberDevice.md#memberdevice_members)[] | 空配列 | デバイス情報 | マルチデバイス対応のため配列。シート上はJSON文字列 |
 | note | string | 空文字列 | 当該メンバに対する備考 |  |
@@ -268,7 +268,18 @@ classDiagram
 - シート上にmemberId・氏名と「承認」「否認」「取消」ボタンを備えたダイアログ表示
 - 取消が選択されたら戻り値「キャンセル」を返して終了
 - MemberLogの以下項目を更新
-  
+    | 項目名 | データ型 | 要否/既定値 | 説明 | 承認時 | 否認時 |
+    | :-- | :-- | :-- | :-- | :-- | :-- |
+    | joiningRequest | number | Date.now() | 仮登録要求日時 | — | — |
+    | approval | number | 0 | 加入承認日時 | **現在日時(Date.now())** | — |
+    | denial | number | 0 | 加入否認日時 | — | **現在日時** |
+    | loginRequest | number | 0 | 認証要求日時 | — | — |
+    | loginSuccess | number | 0 | 認証成功日時 | — | — |
+    | loginExpiration | number | 0 | 認証有効期限 | — | — |
+    | loginFailure | number | 0 | 認証失敗日時 | — | — |
+    | unfreezeLogin | number | 0 | 認証無効期限 | — | — |
+    | joiningExpiration | number | 0 | 加入有効期限 | **現在日時＋[memberLifeTime](authServerConfig.md#authserverconfig_members)** | — |
+    | unfreezeDenial | number | 0 | 加入禁止期限 | — | **現在日時＋[prohibitedToJoin](authServerConfig.md#authserverconfig_members)** |
 - [setMemberメソッド](#member_setmember)にMemberを渡してmemberListを更新
 - 戻り値「正常終了」を返して終了
 
@@ -455,7 +466,18 @@ classDiagram
 - 状態が「加入禁止」ではないなら、戻り値「対象外」を返して終了
 - シート上に確認のダイアログを表示、キャンセルが選択されたら「キャンセル」を返して終了
 - Memberの以下項目を更新
-  
+    | 項目名 | データ型 | 要否/既定値 | 説明 | 更新内容 |
+    | :-- | :-- | :-- | :-- | :-- |
+    | joiningRequest | number | Date.now() | 仮登録要求日時 | — |
+    | approval | number | 0 | 加入承認日時 | **examined === true ? Date.now() : 0** |
+    | denial | number | 0 | 加入否認日時 | — |
+    | loginRequest | number | 0 | 認証要求日時 | — |
+    | loginSuccess | number | 0 | 認証成功日時 | — |
+    | loginExpiration | number | 0 | 認証有効期限 | — |
+    | loginFailure | number | 0 | 認証失敗日時 | — |
+    | unfreezeLogin | number | 0 | 認証無効期限 | — |
+    | joiningExpiration | number | 0 | 加入有効期限 | **現在日時(UNIX時刻)＋authServerConfig.memberLifeTime** |
+    | unfreezeDenial | number | 0 | 加入禁止期限 | — |
 - [setMember](#member_setmember)にMemberを渡してmemberListを更新
 - 戻り値「正常終了」を返して終了
 
@@ -550,13 +572,24 @@ classDiagram
 - 凍結解除：対象デバイスそれぞれについて以下項目を更新
     | 項目名 | データ型 | 要否/既定値 | 説明 | 更新内容 |
     | :-- | :-- | :-- | :-- | :-- |
-    | deviceId | string | <span style="color:red">必須</span> |  | — |
-    | status | string | 未認証 |  | **"未認証"** |
-    | CPkey | string | <span style="color:red">必須</span> |  | — |
-    | CPkeyUpdated | number | Date.now() |  | — |
-    | trial | MemberTrial[] | [] |  | **空配列** |
+    | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子。UUID | — |
+    | status | string | 未認証 | デバイスの状態 | **"未認証"** |
+    | CPkey | string | <span style="color:red">必須</span> | メンバの公開鍵 | — |
+    | CPkeyUpdated | number | Date.now() | 最新のCPkeyが登録された日時 | — |
+    | trial | MemberTrial[] | [] | ログイン試行関連情報オブジェクト | **空配列** |
 
-  
+    | 項目名 | データ型 | 要否/既定値 | 説明 | 更新内容 |
+    | :-- | :-- | :-- | :-- | :-- |
+    | joiningRequest | number | Date.now() | 仮登録要求日時 | — |
+    | approval | number | 0 | 加入承認日時 | — |
+    | denial | number | 0 | 加入否認日時 | — |
+    | loginRequest | number | 0 | 認証要求日時 | — |
+    | loginSuccess | number | 0 | 認証成功日時 | — |
+    | loginExpiration | number | 0 | 認証有効期限 | — |
+    | loginFailure | number | 0 | 認証失敗日時 | — |
+    | unfreezeLogin | number | 0 | 認証無効期限 | **現在日時** |
+    | joiningExpiration | number | 0 | 加入有効期限 | — |
+    | unfreezeDenial | number | 0 | 加入禁止期限 | — |
 - [setMemberメソッド](#member_setmember)にMemberを渡してmemberListを更新
 - 戻り値「正常終了」を返して終了
 
@@ -611,13 +644,24 @@ classDiagram
   - CPkeyは書き換え
         | 項目名 | データ型 | 要否/既定値 | 説明 | 更新項目 |
         | :-- | :-- | :-- | :-- | :-- |
-        | deviceId | string | <span style="color:red">必須</span> |  | — |
-        | status | string | 未認証 |  | — |
-        | CPkey | string | <span style="color:red">必須</span> |  | **更新後CPkey** |
-        | CPkeyUpdated | number | Date.now() |  | **現在日時** |
-        | trial | MemberTrial[] | [] |  | — |
+        | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子。UUID | — |
+        | status | string | 未認証 | デバイスの状態 | — |
+        | CPkey | string | <span style="color:red">必須</span> | メンバの公開鍵 | **更新後CPkey** |
+        | CPkeyUpdated | number | Date.now() | 最新のCPkeyが登録された日時 | **現在日時** |
+        | trial | MemberTrial[] | [] | ログイン試行関連情報オブジェクト | — |
   - デバイスの状態は、未認証・凍結中はそのまま、試行中・認証中は未認証に戻す
-    
+        | 項目名 | データ型 | 要否/既定値 | 説明 | 未認証 | 試行中 | 認証中 | 凍結中 |
+        | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+        | joiningRequest | number | Date.now() | 仮登録要求日時 | — | — | — | — |
+        | approval | number | 0 | 加入承認日時 | — | — | — | — |
+        | denial | number | 0 | 加入否認日時 | — | — | — | — |
+        | loginRequest | number | 0 | 認証要求日時 | — | — | — | — |
+        | loginSuccess | number | 0 | 認証成功日時 | — | — | — | — |
+        | loginExpiration | number | 0 | 認証有効期限 | — | — | — | — |
+        | loginFailure | number | 0 | 認証失敗日時 | — | — | — | — |
+        | unfreezeLogin | number | 0 | 認証無効期限 | — | — | — | — |
+        | joiningExpiration | number | 0 | 加入有効期限 | — | — | — | — |
+        | unfreezeDenial | number | 0 | 加入禁止期限 | — | — | — | — |
 - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
   ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
 - **CPkeyを更新するのはmemberListシートのみ**。インスタンス化された'Member.device'以下は更新しない<br>

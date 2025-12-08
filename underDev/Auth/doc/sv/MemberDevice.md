@@ -23,11 +23,11 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| deviceId | string | <span style="color:red">必須</span> |  |  |
-| status | string | 未認証 |  | 未認証,認証中,試行中,凍結中 |
-| CPkey | string | <span style="color:red">必須</span> |  |  |
-| CPkeyUpdated | number | Date.now() |  |  |
-| trial | MemberTrial[] | [] |  | シート上はJSON文字列 |
+| deviceId | string | <span style="color:red">必須</span> | デバイスの識別子。UUID |  |
+| status | string | 未認証 | デバイスの状態 | 未認証,認証中,試行中,凍結中 |
+| CPkey | string | <span style="color:red">必須</span> | メンバの公開鍵 |  |
+| CPkeyUpdated | number | Date.now() | 最新のCPkeyが登録された日時 |  |
+| trial | MemberTrial[] | [] | ログイン試行関連情報オブジェクト | シート上はJSON文字列 |
 
 ## <span id="memberdevice_methods">🧱 MemberDevice メソッド一覧</span>
 
