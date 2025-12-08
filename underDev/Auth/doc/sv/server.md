@@ -73,7 +73,7 @@ const menu22 = () => asv.resetSPkey();
 | 7.05 | <span style="padding-left:2rem">[resetSPkey](authScriptProperties.md#authscriptproperties_resetspkey)</span> | SPkeyを更新、ScriptPropertiesに保存 |
 | 7.06 | <span style="padding-left:2rem">[setProp](authScriptProperties.md#authscriptproperties_setprop)</span> | インスタンス変数をScriptPropertiesに格納 |
 | 8.00 | [authServer](authServer.md#authserver_members) | サーバ側auth中核クラス |
-| 8.01 | <span style="padding-left:2rem">[](authServer.md#authserver_)</span> |  |
+| 8.01 | <span style="padding-left:2rem">[constructor](authServer.md#authserver_constructor)</span> |  |
 | 9.00 | [authServerConfig](authServerConfig.md#authserverconfig_members) | authServer専用の設定値 |
 | 9.01 | <span style="padding-left:2rem">[constructor](authServerConfig.md#authserverconfig_constructor)</span> | コンストラクタ |
 | 10.00 | [cryptoServer](cryptoServer.md#cryptoserver_members) | サーバ側の暗号化・復号処理 |
@@ -87,3 +87,14 @@ const menu22 = () => asv.resetSPkey();
 | 12.01 | <span style="padding-left:2rem">[constructor](encryptedRequest.md#encryptedrequest_constructor)</span> | コンストラクタ |
 | 13.00 | [encryptedResponse](encryptedResponse.md#encryptedresponse_members) | 暗号化された処理結果 |
 | 13.01 | <span style="padding-left:2rem">[constructor](encryptedResponse.md#encryptedresponse_constructor)</span> | コンストラクタ |
+| 14.00 | [Member](Member.md#member_members) | メンバ情報をGoogle Spread上で管理 |
+| 14.01 | <span style="padding-left:2rem">[constructor](Member.md#member_constructor)</span> | コンストラクタ |
+| 14.02 | <span style="padding-left:2rem">[addTrial](Member.md#member_addtrial)</span> | 新しい試行を登録し、メンバにパスコード通知メールを発信 |
+| 14.03 | <span style="padding-left:2rem">[checkPasscode](Member.md#member_checkpasscode)</span> | 認証時のパスコードチェック |
+| 14.04 | <span style="padding-left:2rem">[getMember](Member.md#member_getmember)</span> | 指定メンバの情報をmemberListシートから取得 |
+| 14.05 | <span style="padding-left:2rem">[judgeMember](Member.md#member_judgemember)</span> | 加入審査画面から審査結果入力＋結果通知 |
+| 14.06 | <span style="padding-left:2rem">[judgeStatus](Member.md#member_judgestatus)</span> | 指定メンバ・デバイスの状態を[状態決定表](../specification.md#member)により判定 |
+| 14.07 | <span style="padding-left:2rem">[reissuePasscode](Member.md#member_reissuepasscode)</span> | パスコードを再発行する |
+| 14.08 | <span style="padding-left:2rem">[removeMember](Member.md#member_removemember)</span> | 登録中メンバをアカウント削除、または加入禁止にする |
+| 14.09 | <span style="padding-left:2rem">[restoreMember](Member.md#member_restoremember)</span> | 加入禁止(論理削除)されているメンバを復活させる |
+| 14.10 | <span style="padding-left:2rem">[setMember](Member.md#member_setmember)</span> | 指定メンバ情報をmemberListシートに保存 |

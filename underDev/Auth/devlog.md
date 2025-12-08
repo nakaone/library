@@ -4,14 +4,15 @@
 
 ## 2025/12/07
 
-- authIndexedDB
 - Member
+- specify.mjsのデバッグ
 - MemberDevice
 - MemberLog
 - MemberProfile
 - MemberTrial
 - MemberTrialLog
 
+- authIndexedDB
 - authError -> dtError
 - cryptoServer.md
 - authErrorLog

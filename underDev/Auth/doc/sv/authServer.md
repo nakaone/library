@@ -38,7 +38,7 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
 | cf | [authServerConfig](authServerConfig.md#authserverconfig_members) | null | 動作設定変数(config) |  |
 | prop | [authScriptProperties](authScriptProperties.md#authscriptproperties_members) | null | 鍵ペア等を格納 |  |
 | crypto | [cryptoServer](cryptoServer.md#cryptoserver_members) | null | 暗号化・復号用インスタンス |  |
-| member | Member | null | 対象メンバのインスタンス |  |
+| member | [Member](Member.md#member_members) | null | 対象メンバのインスタンス |  |
 | audit | [authAuditLog](authAuditLog.md#authauditlog_members) | null | 監査ログのインスタンス |  |
 | error | [authErrorLog](authErrorLog.md#autherrorlog_members) | null | エラーログのインスタンス |  |
 | pv | Object | {} | authServer内共通変数 |  |
@@ -47,26 +47,16 @@ authServerは、クライアント(authClient)からの暗号化通信リクエ�
 
 | メソッド名 | 分類 | 内容 | 備考 |
 | :-- | :-- | :-- | :-- |
-| [()](#authserver_) | public |  |  |
+| [constructor()](#authserver_constructor) | private |  |  |
 
-### <span id="authserver"><a href="#authserver_methods">🧱 authServer.()</a></span>
+### <span id="authserver_constructor"><a href="#authserver_methods">🧱 authServer.constructor()</a></span>
 
-#### <span id="authserver_params">📥 引数</span>
+#### <span id="authserver_constructor_params">📥 引数</span>
 
 - 引数無し(void)
 
-#### <span id="authserver_process">🧾 処理手順</span>
+#### <span id="authserver_constructor_process">🧾 処理手順</span>
 
-#### <span id="authserver_returns">📤 戻り値</span>
+#### <span id="authserver_constructor_returns">📤 戻り値</span>
 
-- [authServer](authServer.md#authserver_members)
-
-  | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-  | :-- | :-- | :-- | :-- | :-- |
-  | cf | [authServerConfig](authServerConfig.md#authserverconfig_members) | null | 動作設定変数(config) |  |
-  | prop | [authScriptProperties](authScriptProperties.md#authscriptproperties_members) | null | 鍵ペア等を格納 |  |
-  | crypto | [cryptoServer](cryptoServer.md#cryptoserver_members) | null | 暗号化・復号用インスタンス |  |
-  | member | Member | null | 対象メンバのインスタンス |  |
-  | audit | [authAuditLog](authAuditLog.md#authauditlog_members) | null | 監査ログのインスタンス |  |
-  | error | [authErrorLog](authErrorLog.md#autherrorlog_members) | null | エラーログのインスタンス |  |
-  | pv | Object | {} | authServer内共通変数 |  |
+- [authServer](#authserver_members)インスタンス

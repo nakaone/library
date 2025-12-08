@@ -731,8 +731,8 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
     methods: {list:[  // 残課題：未定義。Member関係クラス作成後に対応
       {
-        name: '', // {string} 関数(メソッド)名
-        type: 'public', // {string} 関数(メソッド)の分類
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
         desc: '', // {string} 端的な関数(メソッド)の説明
         note: ``, // {string} ✂️注意事項。Markdownで記載
         source: ``, // {string} ✂️想定するソースコード🧩
@@ -1289,5 +1289,531 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         {type:'Error',desc:'正常時の戻り値',note:'messageはauthClientで設定'},
       ]},  // コンストラクタ等、生成時のインスタンスをそのまま返す場合
     }]},
+  },
+  Member: {
+    extends: '', // {string} 親クラス名
+    desc: 'メンバ情報をGoogle Spread上で管理', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: `
+      - 'Member'はGoogle SpreadSheet上でメンバ(アカウント)情報・状態を一元的に管理するためのクラスです。
+      - 加入・ログイン・パスコード試行・デバイス別公開鍵(CPkey)管理などの状態を統一的に扱います。
+      - マルチデバイス利用を前提とし、memberListスプレッドシートの1行を1メンバとして管理します。
+    `, // {string} ✂️補足説明。概要欄に記載
+    summary: `
+      - 参考：auth総説 [メンバの状態遷移](../specification.md#member)
+    `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['sv'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'memberId',type:'string',desc:'メンバの識別子',note:'メールアドレス',default:'UUID'},
+      {name:'name',type:'string',desc:'メンバの氏名',note:'',default:'"dummy"'},
+      {name:'status',type:'string',desc:'メンバの状態',note:'未加入,未審査,審査済,加入中,加入禁止',default:'"未加入"'},
+      {name:'log',type:'MemberLog',desc:'メンバの履歴情報',note:'シート上はJSON文字列',default:'new MemberLog()'},
+      {name:'profile',type:'MemberProfile',desc:'メンバの属性情報',note:'シート上はJSON文字列',default:'new MemberProfile()'},
+      {name:'device',type:'[MemberDevice](MemberDevice.md#memberdevice_internal)[]',desc:'デバイス情報',note:'マルチデバイス対応のため配列。シート上はJSON文字列',default:'空配列'},
+      {name:'note',type:'string',desc:'当該メンバに対する備考',note:'',default:'空文字列'},
+    ]},
+
+    methods: {list:[
+      {
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'config',type:'authServerConfig',desc:'ユーザ指定の設定値'},
+        ]},
+
+        process: `
+          - [memberList](authServerConfig.md#authserverconfig_members)シートが存在しなければシートを新規作成
+            - シート上の項目名はMemberクラスのメンバ名
+            - 各項目の「説明」を項目名セルのメモとしてセット
+          - this.log = new [MemberLog()](MemberLog.md#memberlog_constructor)
+          - this.profile = new [MemberProfile()](MemberProfile.md#memberprofile_constructor)
+        `,
+
+        returns: {list:[
+          {type:'Member'}, // コンストラクタは自データ型名
+        ]},
+      },
+      {
+        name: 'addTrial', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: '新しい試行を登録し、メンバにパスコード通知メールを発信', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'request',type:'authRequest',desc:'処理要求'},
+        ]},
+
+        process: `
+          - 状態チェック
+            - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
+            - request.deviceIdで指定されたデバイスの状態が「未認証」でなければ戻り値「不適格」を返して終了
+          - 新しい試行を生成、Member.trialの先頭に追加<br>
+            ("Member.trial.unshift(new [MemberTrial](MemberTrial.md#membertrial_internal)())")
+          - MemberLog.loginRequestに現在日時(UNIX時刻)を設定
+          - ログイン試行履歴の最大保持数を超えた場合、古い世代を削除<br>
+            (Member.trial.length >= [authServerConfig](authServerConfig.md#authserverconfig_internal).generationMax)
+          - 更新後のMemberを引数に[setMember](#member_setmember)を呼び出し、memberListシートを更新
+          - メンバに[sendmail](JSLib.md#sendmail)でパスコード通知メールを発信<br>
+            但し[authServerConfig](authServerConfig.md#authserverconfig_internal).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
+          - 戻り値「正常終了」を返して終了
+        `,
+
+        returns: {list:[
+          { // 対比表形式
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: {
+              '不適格': {
+                status:'dev.error("invalid status")',
+                response: 'Member(更新前)',
+              },
+              '正常終了': {
+                status:'"success"',
+                response: 'Member(更新後)',
+              },
+            },
+          },
+        ]},
+      },
+      {
+        name: 'checkPasscode', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: '認証時のパスコードチェック', // {string} 端的な関数(メソッド)の説明
+        note: `入力されたパスコードをチェック、Member内部の各種メンバの値を更新`, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'request',type:'authRequest',desc:'処理要求オブジェクト'},
+        ]},
+
+        process: `
+          - 引数チェック。"func"が指定以外、またはパスコードの形式不正の場合、戻り値「不正形式」を返して終了
+            %% this.cfTable({type:'authRequest',patterns:{'確認内容':{
+              func: '"::passcode::"',
+              arguments: '入力されたパスコード'
+            }}},{
+              indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
+            }) %%
+          - デバイス状態チェック
+            - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
+            - request.deviceIdで対象デバイスを特定、「試行中」以外は戻り値「非試行中」を返して終了
+          - パスコードをチェック、結果を先頭に追加(Member.trial.unshift(new [MemberTrialLog](MemberTrialLog.md#membertriallog_constructor)()))
+          - パスコードチェック
+            - パスコードが一致 ⇒ 「一致時」をセット
+            - パスコードが不一致
+              - 試行回数が上限未満(\`MemberTrial.log.length < [authServerConfig](authServerConfig.md#authserverconfig_internal).trial.maxTrial\`)<br>
+                ⇒ 変更すべき項目無し
+              - 試行回数が上限以上(\`MemberTrial.log.length >= [authServerConfig](authServerConfig.md#authserverconfig_internal).trial.maxTrial\`)<br>
+                ⇒ 「凍結時」をセット
+            - 設定項目と値は以下の通り。
+              %% this.cfTable({type:'authRequest',patterns:{
+                '一致時':{
+                  loginSuccess: '現在日時(UNIX時刻)',
+                  loginExpiration: '現在日時＋[loginLifeTime](authServerConfig.md#authserverconfig_internal)'
+                },
+                '上限到達':{
+                  loginFailure: '現在日時(UNIX時刻)',
+                  unfreezeLogin: '現在日時＋[loginFreeze](authServerConfig.md#authserverconfig_internal)'
+                }
+              }},{
+                indent:4,
+                header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
+              }) %%
+          - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
+            ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
+          - 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
+        `,
+
+        returns: {list:[
+          { // 対比表形式
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {request:'request'},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
+              '不正形式':{status: 'dev.error("invalid request")'},
+              '非試行中':{status: 'dev.error("invalid status")'},
+              '正常終了':{
+                status: '"success"',
+                response: '更新後のMember',
+              },
+            },
+          },
+        ]},
+      },
+      {
+        name: 'getMember', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: '指定メンバの情報をmemberListシートから取得', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'memberId',type:'string',desc:'ユーザ識別子(メールアドレス)'},
+        ]},
+
+        process: `
+          - JSON文字列の項目はオブジェクト化(Member.log, Member.profile, Member.device)
+          - memberIdがmemberListシート登録済なら「登録済」、未登録なら「未登録」パターンを返す
+        `,
+
+        returns: {list:[
+          { // 対比表形式
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {request:`{memberId:引数のmemberId}`},
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
+              '登録済': {
+                status: '"success"',
+                response: `Member(シート)`,
+              },
+              '未登録': {
+                status: 'dev.error("not exists")',
+              }
+            },
+          },
+        ]},
+      },
+      {
+        name: 'judgeMember', // {string} 関数(メソッド)名
+        type: 'static', // {string} 関数(メソッド)の分類
+        desc: '加入審査画面から審査結果入力＋結果通知', // {string} 端的な関数(メソッド)の説明
+        note: `
+          加入審査画面を呼び出し、管理者が記入した結果をmemberListに登録、審査結果をメンバに通知する。<br>memberListシートのGoogle Spreadのメニューから管理者が実行することを想定。
+        `, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'memberId',type:'string',desc:'メンバ識別子'},
+        ]},
+
+        process: `
+          - [getMemberメソッド](#member_getmember)で当該メンバのMemberを取得
+          - memberListシート上に存在しないなら、戻り値「不存在」を返して終了
+          - 状態が「未審査」ではないなら、戻り値「対象外」を返して終了
+          - シート上にmemberId・氏名と「承認」「否認」「取消」ボタンを備えたダイアログ表示
+          - 取消が選択されたら戻り値「キャンセル」を返して終了
+          - MemberLogの以下項目を更新
+            %% this.cfTable({
+              type:'MemberLog',
+              patterns:{
+                '承認時':{
+                  approval: '現在日時(Date.now())',
+                  denial: 0,
+                  joiningExpiration: '現在日時＋[memberLifeTime](authServerConfig.md#authserverconfig_members)',
+                  unfreezeDenial: 0,
+                },
+                '否認時':{
+                  approval: 0,
+                  denial: '現在日時',
+                  joiningExpiration: 0,
+                  unfreezeDenial: '現在日時＋[prohibitedToJoin](authServerConfig.md#authserverconfig_members)',
+                },
+              }
+            },{
+              indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
+            }) %%
+          - [setMemberメソッド](#member_setmember)にMemberを渡してmemberListを更新
+          - 戻り値「正常終了」を返して終了
+        `,
+
+        returns: {list:[
+          { // 対比表形式
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {request:'memberId'},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
+              '不存在': {status:'dev.error("not exists")'},
+              '対象外': {status:'"not unexamined"',response:'更新前のMember'},
+              'キャンセル': {status:'"examin canceled"',response:'更新前のMember'},
+              '正常終了': {status:'"success"',response:'更新<span style="color:red">後</span>のMember'},
+            },
+          },
+        ]},
+      },
+      {
+        name: 'judgeStatus', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: '指定メンバ・デバイスの状態を[状態決定表](../specification.md#member)により判定',
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'arg',type:'Member|string',desc:'Memberオブジェクトまたはユーザ識別子'},
+        ]},
+
+        process: `
+          - 引数がargが文字列(memberId)だった場合[getMemberメソッド](#member_getmember)でMemberを取得、戻り値の"request"にセット
+          - [状態決定表](../specification.md#member)に基づき、引数で指定されたメンバおよびデバイス全ての状態を判断・更新
+        `,
+
+        returns: {list:[
+          { // 対比表形式
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
+              '正常終了': {
+                request: 'Member(更新前)',
+                response: 'Member(更新後)',
+              },
+            },
+          },
+        ]},
+      },
+      {
+        name: 'reissuePasscode', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'パスコードを再発行する', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'request',type:'authRequest',desc:'処理要求オブジェクト'},
+        ]},
+
+        process: `
+          - 引数チェック。"func"が指定以外の場合、戻り値「不正形式」を返して終了
+            %% this.cfTable({
+              type:'authRequest',
+              patterns:{'確認内容':{func:'"::reissue::"'}}
+            },{
+              indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
+            }) %%
+          - デバイス状態チェック
+            - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
+            - request.deviceIdで対象デバイスを特定、「試行中」以外は戻り値「非試行中」を返して終了
+          - 現在試行中のMemberTrialについて、パスコードを書き換え<br>
+            ※ 試行回数他、状態管理変数は書き換えない(MemberDevice.status,MemberTrial.log,MemberLog.loginRequest)
+            %% this.cfTable({type:'MemberTrial',patterns:{'設定内容':{
+              passcode: '新パスコード',
+              created: '現在日時',
+            }}},{
+              indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
+            }) %%
+          - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
+            ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
+          - メンバにパスコード通知メールを発信<br>
+            但し[authServerConfig](authServerConfig.md#authserverconfig_members).underDev.sendPasscode === falseなら発信を抑止(∵開発中)
+          - パスコード再発行を監査ログに記録([authAuditLog.log](authAuditLog.md#authauditlog_log))
+            %% this.cfTable({type:'authAuditLog',patterns:{'設定内容':{
+              func: '"reissuePasscode"',
+              note: '旧パスコード -> 新パスコード',
+            }}},{
+              indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
+            }) %%
+          - 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
+        `,
+
+        returns: {list:[
+          { // 対比表形式
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {request:'request'},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
+              '不正形式':{status:'dev.error("invalid request")'},
+              '非試行中':{status:'dev.error("invalid status")'},
+              '正常終了':{status:'"success"',response: '更新後のMember'},
+            },
+          },
+        ]},
+      },
+      {
+        name: 'removeMember', // {string} 関数(メソッド)名
+        type: 'static', // {string} 関数(メソッド)の分類
+        desc: '登録中メンバをアカウント削除、または加入禁止にする', // {string} 端的な関数(メソッド)の説明
+        note: `memberListシートのGoogle Spreadのメニューから管理者が実行することを想定`, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'memberId',type:'string',note:'ユーザ識別子'},
+          {name:'physical',type:'boolean',note:'物理削除ならtrue、論理削除ならfalse',default:'false'},
+        ]},
+
+        process: `
+          - 処理開始日時を記録("const start = Date.now()")
+          - [getMember](#member_getmember)で当該メンバのMemberを取得
+          - 物理削除の場合("physical === true")
+            - シート上に確認のダイアログを表示、OKが選択されたら当該メンバの行をmemberListから削除
+            - 監査ログに「物理削除」を記録([authAuditLog.log](authAuditLog.md#authauditlog_log))
+            - 戻り値「物理削除」を返して終了
+          - 論理削除の場合("physical === false")
+            - 既に「加入禁止」なら戻り値「加入禁止」を返して終了
+            - シート上に確認のダイアログを表示、キャンセルが選択されたら戻り値「キャンセル」を返して終了
+            - [MemberLog.prohibitJoining](MemberLog.md#memberlog_prohibitjoining)で加入禁止状態に変更
+            - [setMember](#member_setmember)にMemberを渡してmemberListを更新
+            - 監査ログに「論理削除」を記録([authAuditLog.log](authAuditLog.md#authauditlog_log))
+            - 戻り値「論理削除」を返して終了
+          - 監査ログ出力項目
+            %% this.cfTable({type:'authAuditLog',default:{
+              duration: 'Date.now() - start',
+              memberId: 'this.memberId',
+              note:'削除前Member(JSON)'
+            },patterns:{
+              '物理削除':{func:'"remove(physical)"'},
+              '論理削除':{func:'"remove(logical)"'},
+            }},{
+              indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
+            }) %%
+        `,
+
+        returns: {list:[
+          { // 対比表形式
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {request:'{memberId, physical}'},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
+              '物理削除': {status: '"success"'},
+              '加入禁止': {
+                status: '"already banned from joining"',
+                response: '更新前のMember'
+              },
+              'キャンセル': {
+                status: '"logical remove canceled"',
+                response: '更新前のMember'
+              },
+              '論理削除': {
+                status: '"success"',
+                response: '更新<span style="color:red">後</span>のMember'
+              },
+            },
+          },
+          // null/Error等、定義外のデータ型の場合"template:''"を追加
+          // 定義外以外でも一覧不要なら"template:''"を追加
+          //{type:'null', desc:'正常終了時',template:''},
+          //{type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
+        ]},
+      },
+      {
+        name: 'restoreMember', // {string} 関数(メソッド)名
+        type: 'static', // {string} 関数(メソッド)の分類
+        desc: '加入禁止(論理削除)されているメンバを復活させる', // {string} 端的な関数(メソッド)の説明
+        note: `memberListシートのGoogle Spreadのメニューから管理者が実行することを想定`, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'memberId',type:'string',desc:'ユーザ識別子'},
+          {name:'examined',type:'boolean',desc:'修正内容',note:'「(審査済)未認証」にするならtrue、「未審査」にするならfalse。なお未審査にするなら改めて審査登録が必要',default:true},
+        ]},
+
+        process: `
+          - [getMemberメソッド](#member_getmember)で当該メンバのMemberを取得
+          - memberListシート上に存在しないなら、戻り値「不存在」を返して終了
+          - 状態が「加入禁止」ではないなら、戻り値「対象外」を返して終了
+          - シート上に確認のダイアログを表示、キャンセルが選択されたら「キャンセル」を返して終了
+          - Memberの以下項目を更新
+            %% this.cfTable({type:'MemberLog',patterns:{'更新内容':{
+              approval: 'examined === true ? Date.now() : 0',
+              denial: 0,
+              joiningExpiration: '現在日時(UNIX時刻)＋authServerConfig.memberLifeTime',
+              unfreezeDenial: 0,
+            }}},{
+              indent:2,
+              header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
+            }) %%
+          - [setMember](#member_setmember)にMemberを渡してmemberListを更新
+          - 戻り値「正常終了」を返して終了
+        `,
+
+        returns: {list:[
+          { // 対比表形式
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {request:'{memberId, examined}'},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
+              '不存在': {status:'dev.error("not exists")'},
+              '対象外': {status:'"not logically removed"',response:'更新前のMember'},
+              'キャンセル': {status:'"restore canceled"',response:'更新前のMember'},
+              '正常終了': {status:'"success"',response:'更新<span style="color:red">後</span>のMember'},
+            },
+          },
+        ]},
+      },
+      {
+        name: 'setMember', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: '指定メンバ情報をmemberListシートに保存', // {string} 端的な関数(メソッド)の説明
+        note: `登録済メンバの場合は更新、未登録の場合は新規登録(追加)を行う`, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'arg',type:'Member|authRequest',desc:'既存メンバ(Member)または新規登録要求'},
+        ]},
+
+        process: `
+          いまここ：Member.log/profile/deviceのメソッドにリンクが張られるよう修正
+          - 引数がMember型の場合、既存メンバの更新と看做して以下の処理を行う
+            1. memberListシートに存在しない場合(エラー)、以下の戻り値①を返して終了
+            2. [judgeStatus](Member.md#member_judgestatus)でstatusを最新にしておく
+            3. JSON文字列の項目は文字列化した上でmemberListシートの該当者を更新(Member.log/profile/device)
+            4. 戻り値②を返して終了
+          - 引数がauthRequestの場合、新規登録要求と看做して以下の処理を行う
+            1. memberListシートに存在する場合(エラー)、戻り値③を返して終了
+            2. authRequestが新規登録要求か確認
+              - 確認項目
+                - authRequest.func ==== '::newMember::'
+                - authRequest.arguments[0]にメンバの氏名(文字列)が入っている
+                - memberId, deviceId, signatureが全て設定されている
+              - 確認項目の全条件が満たされ無かった場合(エラー)、戻り値④を返して終了
+            3. Memberの新規作成
+              - Member.memberId = authRequest.memberId
+              - Member.name = authRequest.arguments[0]
+              - Member.device = [new MemberDevice](MemberDevice.md#memberdevice_constructor)({deviceId:authRequest.deviceId, CPkey:authRequest.signature})
+              - Member.log = [new MemberLog](MemberLog.md#memberlog_constructor)()
+              - [judgeStatus](Member.md#member_judgestatus)にMemberを渡し、状態を設定
+            4. JSON文字列の項目は文字列化した上でmemberListシートに追加(Member.log/profile/device)
+            5. 本番運用中なら加入要請メンバへの通知<br>
+              [authServerConfig.underDev.sendInvitation](authServerConfig.md#authserverconfig_internal) === falseなら開発中なので通知しない
+            6. 戻り値⑤を返して終了
+        `,
+
+        returns: {list:[
+          { // 対比表形式
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
+              '①':{status:'dev.error("not exist")'},
+              '②':{status:'"success"',response: 'Member(更新済)'},
+              '③':{status:'dev.error("already exist")'},
+              '④':{status:'dev.error("Invalid registration request")'},
+              '⑤':{status:'"success"',response: 'Member(新規作成)'},
+            },
+          },
+        ]},
+      },
+    ]},
   },
 }}));
