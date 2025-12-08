@@ -56,9 +56,9 @@
 
     methods: {list:[
       {
-        name: '', // {string} 関数(メソッド)名
-        type: 'public', // {string} 関数(メソッド)の分類
-        desc: '', // {string} 端的な関数(メソッド)の説明
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
         note: ``, // {string} ✂️注意事項。Markdownで記載
         source: ``, // {string} ✂️想定するソースコード🧩
         lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ

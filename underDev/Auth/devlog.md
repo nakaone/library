@@ -4,12 +4,12 @@
 
 ## 2025/12/08
 
+- specify.mjsのデバッグ
+
 - MemberLog
 - MemberProfile
 - MemberTrial
 - MemberTrialLog
-- specify.mjsのデバッグ
-
 - MemberDevice
 - Member.md
 

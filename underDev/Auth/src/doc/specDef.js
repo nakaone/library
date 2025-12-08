@@ -518,34 +518,6 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       returns: {list:[{type:'authResponse'}]},
     }]},
   },
-  authResult: {
-    desc: 'auth内メソッドの標準的な戻り値',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
-    note: `authServer内の処理等、"warning"(処理継続)時の使用を想定。`,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement: ['sv'],  // 実装の有無
-
-    members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'responseTime',type:'number',desc:'処理終了日時',note:'',default:'Date.now()'},
-      {name:'status',type:'string',desc:'終了状態',note:'"normal"or"fatal"or警告メッセージ(warning)',default:'"normal"'},
-      {name:'response',type:'any|dtError',desc:'処理結果',note:'@returns {void}ならundefined。fatal時はauthError',isOpt:true},
-    ]},
-
-    methods: {list:[{
-      name: 'constructor',
-      type: 'private',	// {string} static:クラスメソッド、public:外部利用可、private:内部専用
-      desc: 'コンストラクタ',	// {string} 端的なメソッドの説明。ex.'authServer監査ログ'
-      rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
-
-      params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
-      ]},
-
-      process: `
-        - メンバと引数両方にある項目は、引数の値をメンバとして設定
-      `,	// {string} 処理手順。markdownで記載(trimIndent対象)
-
-      returns: {list:[{type:'authResult'}]},
-    }]},
-  },
   authScriptProperties: {
     extends: '', // {string} 親クラス名
     desc: 'サーバ側のScriptProperties', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
@@ -2106,6 +2078,169 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         returns: {list:[
           {type:'null', desc:'正常終了時',template:''},
           {type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
+        ]},
+      },
+    ]},
+  },
+  MemberProfile: {
+    extends: '', // {string} 親クラス名
+    desc: 'メンバの属性情報', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: ``, // {string} ✂️補足説明。概要欄に記載
+    summary: `
+      - [メンバ関係状態遷移図](../specification.md#member)
+      - [デバイス関係状態遷移図](../specification.md#device)
+      - [Member関係クラス図](Member.md#member_classdiagram)
+    `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['sv'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'name',type:'string',desc:'メンバの氏名'},
+      {name:'authority',type:'number',desc:'メンバの持つ権限',note:'authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す',default:0},
+    ]},
+
+    methods: {list:[
+      { // constructor
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{}},
+        ]},
+
+        process: `
+        `,
+
+        returns: {list:[
+          {type:'MemberProfile'}, // コンストラクタは自データ型名
+        ]},
+      },
+    ]},
+  },
+  MemberTrial: {
+    extends: '', // {string} 親クラス名
+    desc: 'ログイン試行情報の管理・判定', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: ``, // {string} ✂️補足説明。概要欄に記載
+    summary: `
+      - [メンバ関係状態遷移図](../specification.md#member)
+      - [デバイス関係状態遷移図](../specification.md#device)
+      - [Member関係クラス図](Member.md#member_classdiagram)
+    `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['sv'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'passcode',type:'string',desc:'設定されているパスコード',note:'最初の認証試行で作成'},
+      {name:'created',type:'number',desc:'パスコード生成日時',note:'≒パスコード通知メール発信日時',default:'Date.now()'},
+      {name:'log',type:'MemberTrialLog[]',desc:'試行履歴',note:'常に最新が先頭(unshift()使用)。保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。',default:[]},
+    ]},
+
+    methods: {list:[
+      { // constructor
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:'{}'},
+        ]},
+
+        process: `
+          - this.passcode = [authServerConfig.trial.passcodeLength](authServerConfig.md#authserverconfig_internal)で設定された桁数の乱数
+          - this.created = Date.now()
+          - this.log = []
+        `,
+
+        returns: {list:[
+          {type:'MemberTrial'}, // コンストラクタは自データ型名
+        ]},
+      },
+      {
+        name: 'loginAttempt', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: '入力されたパスコードの判定', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'request',type:'authRequest',note:'ユーザが入力したパスコードを含む処理要求'},
+        ]},
+
+        process: `
+          - [MemberTrialLog](MemberTrialLog.md#membertriallog_constructor)を生成、this.logの先頭に保存(unshift())
+          - \`this.log[0].result === true\`なら「正答時」を返す
+          - \`this.log[0].result === false\`で最大試行回数([maxTrial](authServerConfig.md#authserverconfig_internal))未満なら「誤答・再挑戦可」を返す
+          - \`this.log[0].result === false\`で最大試行回数以上なら「誤答・再挑戦不可」を返す
+          - なお、シートへの保存は呼出元で行う
+        `,
+
+        returns: {list:[
+          { // 対比表形式
+            type: 'authResponse',  // 自クラスの場合、省略
+            desc: '', // {string} 本データ型に関する説明。「正常終了時」等
+            default: {request:'引数"request"',response:'MemberTrialオブジェクト'},  // {Object.<string,string>} 全パターンの共通設定値
+            patterns: { // 特定パターンへの設定値。patterns:{'パターン名':{項目名:値}}形式,
+              '正答時':{status:'"success"'},
+              '誤答・再挑戦可':{status:'"failed"'},
+              '誤答・再挑戦不可':{status:'dev.error("failed")'},
+            },
+          },
+        ]},
+      },
+    ]},
+  },
+  MemberTrialLog: {
+    extends: '', // {string} 親クラス名
+    desc: 'パスコード入力単位の試行記録', // {string} 端的なクラスの説明。ex.'authServer監査ログ'
+    note: ``, // {string} ✂️補足説明。概要欄に記載
+    summary: `
+      - [メンバ関係状態遷移図](../specification.md#member)
+      - [デバイス関係状態遷移図](../specification.md#device)
+      - [Member関係クラス図](Member.md#member_classdiagram)
+    `,  // {string} ✂️概要(Markdown)。設計方針、想定する実装・使用例、等
+    implement: ['sv'], // {string[]} 実装の有無(ex.['cl','sv'])
+    template: ``, // {string} Markdown出力時のテンプレート
+
+    members: {list:[
+      {name:'entered',type:'string',desc:'入力されたパスコード',note:''},
+      {name:'result',type:'boolean',desc:'試行結果',note:'正答：true、誤答：false'},
+      {name:'timestamp',type:'number',desc:'判定処理日時',note:'',default:'Date.now()'},
+    ]},
+
+    methods: {list:[
+      { // constructor
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'entered',type:'string',desc:'入力されたパスコード'},
+          {name:'result',type:'boolean',desc:'試行結果'},
+        ]},
+
+        process: `
+          - this.entered = entered
+          - this.result = result
+          - this.timestamp = Date.now()
+        `,
+
+        returns: {list:[
+          {type:'MemberTrialLog'}, // コンストラクタは自データ型名
         ]},
       },
     ]},

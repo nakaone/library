@@ -68,7 +68,7 @@ classDiagram
 | name | string | "dummy" | メンバの氏名 |  |
 | status | string | "未加入" | メンバの状態 | 未加入,未審査,審査済,加入中,加入禁止 |
 | log | [MemberLog](MemberLog.md#memberlog_members) | new MemberLog() | メンバの履歴情報 | シート上はJSON文字列 |
-| profile | MemberProfile | new MemberProfile() | メンバの属性情報 | シート上はJSON文字列 |
+| profile | [MemberProfile](MemberProfile.md#memberprofile_members) | new MemberProfile() | メンバの属性情報 | シート上はJSON文字列 |
 | device | [MemberDevice](MemberDevice.md#memberdevice_members)[] | 空配列 | デバイス情報 | マルチデバイス対応のため配列。シート上はJSON文字列 |
 | note | string | 空文字列 | 当該メンバに対する備考 |  |
 
@@ -360,7 +360,11 @@ classDiagram
   - request.deviceIdで対象デバイスを特定、「試行中」以外は戻り値「非試行中」を返して終了
 - 現在試行中のMemberTrialについて、パスコードを書き換え<br>
   ※ 試行回数他、状態管理変数は書き換えない(MemberDevice.status,MemberTrial.log,MemberLog.loginRequest)
-  
+    | 項目名 | データ型 | 要否/既定値 | 説明 | 設定内容 |
+    | :-- | :-- | :-- | :-- | :-- |
+    | passcode | string | <span style="color:red">必須</span> | 設定されているパスコード | **新パスコード** |
+    | created | number | Date.now() | パスコード生成日時 | **現在日時** |
+    | log | MemberTrialLog[] | [] | 試行履歴 | — |
 - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
   ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
 - メンバにパスコード通知メールを発信<br>
