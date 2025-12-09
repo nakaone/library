@@ -1,14 +1,3 @@
-<style>
-  .submenu {
-    text-align: right;
-    font-size: 0.8rem;
-  }
-  .nowrap td {white-space:nowrap;} /* 横長な表を横スクロール */
-  .nowrap b {background:yellow;}
-
-  .popup {color:#084} /* titleに文字列を設定した項目 */
-</style>
-
 # <span id="top">"auth"総説</span>
 
 <div class="submenu">
