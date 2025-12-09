@@ -1,1 +1,1 @@
-npx jest ../__test__/htmlButton.test.js
+npx jest ../__tests__/htmlButton.test.js

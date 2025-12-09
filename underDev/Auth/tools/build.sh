@@ -29,6 +29,9 @@ $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cl/client.md
 cat $src/doc/header.md $src/doc/server.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/sv/server.md
 
+# 開発仕様
+cat $src/doc/header.md  $src/doc/dev.md > $doc/dev.md
+
 # doc直下文書用をrootHeader.mdとして作成
 cat $src/doc/header.md | sed 's|\.\./||g' > $tmp/rootHeader.md
 # 総説
@@ -41,8 +44,8 @@ $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/JSLib.md
 # ----------------------------------------------
 # 2. クライアント側
 # ----------------------------------------------
-cat $src/client/index.html | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/index.html
+cat $src/test.html | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/test.html
 
 
 

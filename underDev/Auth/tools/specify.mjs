@@ -1774,7 +1774,7 @@ import path from "path";
 import readline from "readline";
 
 const lines = [];
-const dev = devTools({mode:'error'});
+const dev = devTools({mode:'none'});
 const rl = readline.createInterface({ input: process.stdin });
 
 rl.on('line', x => lines.push(x)).on('close', () => {

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xml:lang="ja" lang="ja">
+<head>
+  <title>Auth(test)</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <!--link rel="stylesheet" href="style.css"-->
+  <style type="text/css"></style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- ライブラリ群 -->
+  <script src="../../../devTools/2.0.0/core.js"></script>
+  <script src="../src/client/authClient.js"></script>
+</head>
+<body>
+
+<button onclick="localFunc()">テスト</button>
+
+</body>
+
+<script type="text/javascript"> // グローバル変数定義
+const dev = devTools();
+let auth;  // authClient。HTML要素のイベント対応のためグローバル領域で宣言
+</script>
+
+<script type="text/javascript"> // テスト用関数
+function localFunc(){
+  const v = {whois:`localFunc`, rv:null};
+  dev.start(v);
+  try {
+    dev.step(1);
+    console.log(`${v.whois} ${auth.exec('abc')}`);
+
+    dev.end(); // 終了処理
+    return v.rv;
+
+  } catch (e) { return dev.error(e); }
+}
+</script>
+
+<script type="text/javascript"> // onLoad
+window.addEventListener('DOMContentLoaded', () => {
+  const v = { whois: 'DOMContentLoaded', rv: null };
+  dev.start(v.whois);
+  try {
+
+    dev.step(1);  // authClientインスタンス作成
+    auth = new authClient();
+
+    dev.end(); // 終了処理
+    return v.rv;
+  } catch (e) { dev.error(e); return e; }
+});
+</script>
+</html>

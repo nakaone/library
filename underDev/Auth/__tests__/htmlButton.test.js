@@ -6,6 +6,10 @@
 //import path from "path";
 const fs = require("fs");
 const path = require("path");
+const devTools = require('../../../devTools/2.0.0/core.js');
+global.dev = devTools();
+const authClient = require('../src/client/authClient.js');
+global.auth = new authClient();
 
 describe("HTML button test", () => {
   let html;
@@ -13,7 +17,7 @@ describe("HTML button test", () => {
   beforeEach(() => {
     // HTML を読み込み
     html = fs.readFileSync(
-      path.resolve(__dirname, "../deploy/index.html"),
+      path.resolve(__dirname, "../deploy/test.html"),
       "utf8"
     );
 
