@@ -51,7 +51,7 @@ cat $src/client/index.html | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/index.html
 
 # 2.1 テスト用のmjs作成
-echo "\nexport {devTools,authClient,localFunc};" >> $tmp/onLoad.js
+echo "\nexport {devTools,authClient,authClientConfig,authConfig,localFunc};" >> $tmp/onLoad.js
 mv $tmp/onLoad.js $tmp/onLoad.mjs
 
 # AIレビュー用

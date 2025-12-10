@@ -260,45 +260,6 @@ sequenceDiagram
 - 関数・メソッドは原則として`try 〜 catch`で囲み、予期せぬエラーが発生した場合はErrorオブジェクトを返す。
 - 呼出側は原則Errorオブジェクトが返されたら処理を中断(`if( v.rv instanceof Error ) throw v.rv;`)
 
-以下は各クラスのプロトタイプ
-
-```js
-class authProto {
-
-  static _XXX = null;
-
-  constructor(arg) {
-    const v = {whois:`${this.constructor.name}.constructor`, arg:{arg}, rv:null};
-    dev.start(v);
-    try {
-
-      // -------------------------------------------------------------
-      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
-      // -------------------------------------------------------------
-      this.pv = {}; // クラス内共用の汎用インスタンス変数
-
-      dev.end(); // 終了処理
-
-    } catch (e) { return dev.error(e); }
-  }
-
-  prototype(arg) {
-    const v = {whois:`${this.constructor.name}.prototype`, arg:{arg}, rv:null};
-    dev.start(v);
-    try {
-
-      // -------------------------------------------------------------
-      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
-      // -------------------------------------------------------------
-
-      dev.end(); // 終了処理
-      return v.rv;
-
-    } catch (e) { return dev.error(e); }
-  }
-}
-```
-
 ## <span id="protocol"><a href="#top">状態及び通信手順</a></span>
 
 <div class="submenu">

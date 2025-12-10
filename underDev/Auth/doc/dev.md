@@ -25,7 +25,7 @@ class authProto {
   static _XXX = null;
 
   constructor(arg) {
-    const v = {whois:`${this.constructor.name}.constructor`, arg:{arg}, rv:null};
+    const v = {whois:`authProto.constructor`, arg:{arg}, rv:null};
     dev.start(v);
     try {
 
@@ -65,13 +65,16 @@ class authProto {
 ├── deploy          // ブラウザ・GASに実装するソースファイル集
 ├── devlog.md       // 開発履歴
 ├── doc             // 仕様書集 ※buildの都度クリアして作成
-├── jest.config.js  // Jestの動作設定
+├── node_modules    // Auth開発関係(Jest)
+├── package-lock.json // Jest用設定
+├── package.json      // Jest用設定
 ├── src
-│   ├── library     // ライブラリ(シンボリックリンク)
 │   ├── client      // クライアント側ソースファイル集
 │   ├── doc         // 仕様書(原本・パーツ) ※buildの都度、これを加工してdocに出力
+│   ├── library     // ライブラリ(シンボリックリンク)
 │   └── server      // サーバ側ソースファイル集
 ├── tmp
+│   └── onLoad.mjs  // クライアント側テスト用(index.htmlのonLoad)
 └── tools
     ├── archives.sh // バックアップファイルを作成(除、archives/,tmp/)
     ├── build.sh    // ソース・仕様書を作成
@@ -86,6 +89,9 @@ class authProto {
 
 ## 変更履歴
 
+- build0003: authClientインスタンス作成時、authClientConfigを読み込み
+  - authClientConfigの既定値が設定されるか
+  - 引数を与えた場合、それが反映されるか
 - build0002: Jest用意
   - JestからauthClient.execに発行、そのまま返す
 - build0001: 仕様書作成(α版)

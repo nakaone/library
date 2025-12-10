@@ -3,6 +3,8 @@
 
 // authClient関係クラス定義
 //::$src/client/authClient.js::
+//::$src/client/authConfig.js::
+//::$src/client/authClientConfig.js::
 
 // グローバル変数定義
 const dev = devTools();
@@ -25,8 +27,6 @@ function localFunc(){
     // サーバ側関数'trans01'にrequestを渡して処理要求
     v.rv = auth.exec(v.request);
     if( v.rv instanceof Error ) throw v.rv;
-    dev.step(99.25,v.rv);
-    console.log(`l.26 ${typeof v.rv}\n${v.rv instanceof Error}\n${JSON.stringify(v.rv,null,2)}`);
 
     dev.end(); // 終了処理
     return v.rv;

@@ -322,6 +322,61 @@ class authClient {
     } catch (e) { return dev.error(e); }
   }
 }
+class authConfig {
+
+  constructor(arg) {
+    const v = {whois:`authConfig.constructor`, arg:{arg}, rv:null};
+    dev.start(v);
+    try {
+
+      dev.step(1); // メンバの値設定
+      this.systemName = arg.systemName || 'Auth'; // {string} システム名
+      if( arg.hasOwnProperty('adminMail') ){
+        this.adminMail = arg.adminMail;	// {string} 管理者のメールアドレス
+      } else {
+        throw new Error('"adminMail" is not specified.');
+      }
+      if( arg.hasOwnProperty('adminName') ){
+        this.adminName = arg.adminName;	// {string} 管理者氏名
+      } else {
+        throw new Error('"adminName" is not specified.');
+      }
+      this.allowableTimeDifference = arg.allowableTimeDifference || 120000;
+      // {number}	クライアント・サーバ間通信時の許容時差	既定値は2分
+      this.RSAbits = arg.RSAbits || 2048;	// {number} 鍵ペアの鍵長
+      this.underDev = {};	// {Object} テスト時の設定
+      this.underDev.isTest = // {boolean} 開発モードならtrue
+      ( arg.hasOwnProperty('underDev')
+      && arg.underDev.hasOwnProperty('isTest') )
+      ? arg.underDev.isTest : false;
+
+      dev.end(); // 終了処理
+
+    } catch (e) { return dev.error(e); }
+  }
+
+}
+class authClientConfig extends authConfig {
+
+  constructor(arg) {
+    const v = {whois:`authClientConfig.constructor`, arg:{arg}, rv:null};
+    dev.start(v);
+    try {
+      super(arg);
+
+      dev.step(1); // メンバの値設定
+      if( arg.hasOwnProperty('api') ){
+        this.api = arg.api;	// {string} サーバ側WebアプリURLのID
+      } else {
+        throw new Error('"api" is not specified.');
+      }
+      this.timeout = arg.timeout || 300000; // {number} サーバからの応答待機時間
+
+      dev.end(); // 終了処理
+
+    } catch (e) { return dev.error(e); }
+  }
+}
 
 // グローバル変数定義
 const dev = devTools();
@@ -344,8 +399,6 @@ function localFunc(){
     // サーバ側関数'trans01'にrequestを渡して処理要求
     v.rv = auth.exec(v.request);
     if( v.rv instanceof Error ) throw v.rv;
-    dev.step(99.25,v.rv);
-    console.log(`l.26 ${typeof v.rv}\n${v.rv instanceof Error}\n${JSON.stringify(v.rv,null,2)}`);
 
     dev.end(); // 終了処理
     return v.rv;

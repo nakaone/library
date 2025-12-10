@@ -1,5 +1,9 @@
 #!/bin/zsh
-node --experimental-vm-modules ../node_modules/jest/bin/jest.js ../__tests__/b0002.mjs
+node --experimental-vm-modules ../node_modules/jest/bin/jest.js --runTestsByPath "../__tests__/b0003.mjs"
+
+#node --experimental-vm-modules ../node_modules/jest/bin/jest.js ../__tests__/b0002.mjs
+
+
 #node --experimental-vm-modules ../node_modules/jest/bin/jest.js "$@"
 
 # __tests__ 内の全テストを実行

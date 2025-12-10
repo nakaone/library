@@ -8,7 +8,7 @@ class authProto {
   static _XXX = null;
 
   constructor(arg) {
-    const v = {whois:`${this.constructor.name}.constructor`, arg:{arg}, rv:null};
+    const v = {whois:`authProto.constructor`, arg:{arg}, rv:null};
     dev.start(v);
     try {
 
@@ -72,6 +72,9 @@ class authProto {
 
 ## 変更履歴
 
+- build0003: authClientインスタンス作成時、authClientConfigを読み込み
+  - authClientConfigの既定値が設定されるか
+  - 引数を与えた場合、それが反映されるか
 - build0002: Jest用意
   - JestからauthClient.execに発行、そのまま返す
 - build0001: 仕様書作成(α版)
