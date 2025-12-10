@@ -48,12 +48,16 @@ class authProto {
 ├── deploy          // ブラウザ・GASに実装するソースファイル集
 ├── devlog.md       // 開発履歴
 ├── doc             // 仕様書集 ※buildの都度クリアして作成
-├── jest.config.js  // Jestの動作設定
+├── node_modules    // Auth開発関係(Jest)
+├── package-lock.json // Jest用設定
+├── package.json      // Jest用設定
 ├── src
 │   ├── client      // クライアント側ソースファイル集
 │   ├── doc         // 仕様書(原本・パーツ) ※buildの都度、これを加工してdocに出力
+│   ├── library     // ライブラリ(シンボリックリンク)
 │   └── server      // サーバ側ソースファイル集
 ├── tmp
+│   └── onLoad.mjs  // クライアント側テスト用(index.htmlのonLoad)
 └── tools
     ├── archives.sh // バックアップファイルを作成(除、archives/,tmp/)
     ├── build.sh    // ソース・仕様書を作成
@@ -64,7 +68,7 @@ class authProto {
 
 ## テスト環境
 
-
+- import時、ファイルのパス指定を容易にするため`src/library`を置き、そこに引用元ソースファイルのシンボリックリンクを作成する
 
 ## 変更履歴
 

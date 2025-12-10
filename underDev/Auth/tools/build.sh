@@ -29,9 +29,6 @@ $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/cl/client.md
 cat $src/doc/header.md $src/doc/server.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/sv/server.md
 
-# 開発仕様
-cat $src/doc/header.md  $src/doc/dev.md > $doc/dev.md
-
 # doc直下文書用をrootHeader.mdとして作成
 cat $src/doc/header.md | sed 's|\.\./||g' > $tmp/rootHeader.md
 # 総説
@@ -40,14 +37,22 @@ $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/specification.md
 # JavaScriptライブラリ
 cat $tmp/rootHeader.md $src/doc/JSLib.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/JSLib.md
+# 開発仕様
+cat $tmp/rootHeader.md  $src/doc/dev.md > $doc/dev.md
 
 # ----------------------------------------------
 # 2. クライアント側
 # ----------------------------------------------
-cat $src/test.html | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/test.html
+#cat $src/test.html | awk 1 | \
+#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/test.html
+cat $src/client/onLoad.js | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $tmp/onLoad.js
+cat $src/client/index.html | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/index.html
 
-
+# 2.1 テスト用のmjs作成
+echo "\nexport {devTools,authClient,localFunc};" >> $tmp/onLoad.js
+mv $tmp/onLoad.js $tmp/onLoad.mjs
 
 # AIレビュー用
 #cat $doc/specification.md $doc/JSLib.md > $tmp/common.md

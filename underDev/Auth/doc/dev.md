@@ -11,7 +11,7 @@
 </style>
 <div style="text-align: right;">
 
-[総説](../specification.md) | [クライアント側仕様](../cl/client.md) | [サーバ側仕様](../sv/server.md) | [JavaScriptライブラリ](../JSLib.md) | [開発](../dev.md)
+[総説](specification.md) | [クライアント側仕様](cl/client.md) | [サーバ側仕様](sv/server.md) | [JavaScriptライブラリ](JSLib.md) | [開発](dev.md)
 
 </div>
 
@@ -67,6 +67,7 @@ class authProto {
 ├── doc             // 仕様書集 ※buildの都度クリアして作成
 ├── jest.config.js  // Jestの動作設定
 ├── src
+│   ├── library     // ライブラリ(シンボリックリンク)
 │   ├── client      // クライアント側ソースファイル集
 │   ├── doc         // 仕様書(原本・パーツ) ※buildの都度、これを加工してdocに出力
 │   └── server      // サーバ側ソースファイル集
@@ -78,6 +79,10 @@ class authProto {
     ├── specify.mjs // クラス定義から各クラスの仕様書を作成
     └── test.sh     // Jestテストを実行
 ```
+
+## テスト環境
+
+- import時、ファイルのパス指定を容易にするため`src/library`を置き、そこに引用元ソースファイルのシンボリックリンクを作成する
 
 ## 変更履歴
 
