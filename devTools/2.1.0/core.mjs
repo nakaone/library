@@ -28,6 +28,7 @@
  * - 変更履歴
  *   - rev.2.1.0
  *     - ES module対応のため、build.sh作成
+ *     - 原本をcore.jsからcore.mjsに変更
  *   - rev.2.0.0
  *     - errorメソッドの戻り値を独自エラーオブジェクトに変更
  *     - functionInfoクラスを導入、詳細情報を追加
@@ -41,7 +42,7 @@
  *   - rev.1.0.0 : 2025/01/26
  *     SpreadDb.1.2.0 test.jsとして作成していたのを分離
  */
-function devTools(opt){
+export function devTools(opt){
   /** functionInfo: 現在実行中の関数に関する情報 */
   class functionInfo {
     constructor(v){
@@ -270,5 +271,3 @@ function devTools(opt){
     return `${indent}{\n${members}\n${indent}}`;
   }
 }
-
-export {devTools};

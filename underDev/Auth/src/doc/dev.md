@@ -69,6 +69,16 @@ class authProto {
 
 - test.shはtoolsをカレントディレクトリとして起動
 
+## build.sh
+
+### ソース関係生成手順
+
+![](img/dev.build.source.svg)
+
+### 仕様書関係生成手順
+
+![](img/dev.build.doc.svg)
+
 ## テスト環境
 
 - import時、ファイルのパス指定を容易にするため`src/library`を置き、そこに引用元ソースファイルのシンボリックリンクを作成する

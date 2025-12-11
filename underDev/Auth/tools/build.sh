@@ -13,6 +13,7 @@ dep="$prj/deploy"
 doc="$prj/doc"
 img="$prj/img"
 tmp="$prj/tmp"
+rm -rf $dep/*
 rm -rf $doc/*
 rm -rf $tmp/*
 
@@ -38,7 +39,11 @@ $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/specification.md
 cat $tmp/rootHeader.md $src/doc/JSLib.md | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/JSLib.md
 # 開発仕様
-cat $tmp/rootHeader.md  $src/doc/dev.md > $doc/dev.md
+cat $tmp/rootHeader.md  $src/doc/dev.md | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $doc/dev.md
+# 図
+mkdir $doc/img
+cp $src/doc/img/* $doc/img
 
 # ----------------------------------------------
 # 2. クライアント側

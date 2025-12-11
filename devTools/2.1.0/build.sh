@@ -8,6 +8,5 @@ source ~/Desktop/GitHub/tools/common.sh
 # ----------------------------------------------
 prj="$lib/devTools/2.1.0"
 
-# ES Moduleの作成
-cp $prj/core.js $prj/core.mjs
-echo "\nexport {devTools};" >> $prj/core.mjs
+# ES Module対応版(core.mjs)から埋込用(core.js)を作成
+sed 's/^export //' core.mjs > core.js
