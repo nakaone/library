@@ -14,7 +14,17 @@
 </body>
 
 <script type="text/javascript">
-//::$tmp/onLoad.js::
+// ライブラリ関数定義
+//::$lib/devTools/2.1.0/core.js::
+
+// authClient関係クラス定義
+//::$src/client/authClient.js::
+//::$src/client/authConfig.js::
+//::$src/client/authClientConfig.js::
+
+// グローバル変数定義
+const dev = devTools();
+let auth;  // authClient。HTML要素のイベント対応のためグローバル領域で宣言
 window.addEventListener('DOMContentLoaded', onLoad());
 </script>
 </html>

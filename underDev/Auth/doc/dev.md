@@ -105,7 +105,7 @@ class authProto {
     またIndexedDBは要モック化等、各クラス・関数は別ファイル化した方が運用しやすい。<br>
     このため以下の対応を行う。
     - クラス・関数ソースにexport文追加
-    - src/client/onLoad.js廃止(削除)
+    - src/client/onLoad.jsはonloadのみに絞り込み
     - src/client/index.htmlにクラス・関数ソースの埋込指示追加
     - localFuncを別ファイル化
     - build.shを上の「build.sh」に合わせるよう修正
