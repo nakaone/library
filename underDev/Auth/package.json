@@ -2,6 +2,32 @@
   "type": "module",
   "jest": {
     "testEnvironment": "node",
-    "transform": {}
+    "transform": {},
+    "testMatch": [
+      "**/__tests__/**/*.mjs"
+    ],
+    "moduleDirectories": [
+      "deploy"
+    ],
+    "modulePathIgnorePatterns": [
+      "/node_modules/",
+      "/src/",
+      "/tmp/",
+      "/tools/",
+      "/doc/",
+      "/archives/"
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/src/",
+      "/tmp/",
+      "/tools/",
+      "/doc/",
+      "/archives/"
+    ]
+  },
+  "devDependencies": {
+    "source-map": "^0.7.6",
+    "vitest": "^4.0.15"
   }
 }

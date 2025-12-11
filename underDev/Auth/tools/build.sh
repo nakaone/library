@@ -52,7 +52,7 @@ $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/index.html
 
 # 2.1 テスト用のmjs作成
 echo "\nexport {devTools,authClient,authClientConfig,authConfig,localFunc};" >> $tmp/onLoad.js
-mv $tmp/onLoad.js $tmp/onLoad.mjs
+mv $tmp/onLoad.js $dep/onLoad.mjs
 
 # AIレビュー用
 #cat $doc/specification.md $doc/JSLib.md > $tmp/common.md

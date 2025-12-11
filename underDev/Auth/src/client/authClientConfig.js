@@ -13,6 +13,8 @@ class authClientConfig extends authConfig {
         throw new Error('"api" is not specified.');
       }
       this.timeout = arg.timeout || 300000; // {number} サーバからの応答待機時間
+      this.storeName = arg.storeName || 'config'; // {string} IndexedDBのストア名
+      this.dbVersion = arg.dbVersion || 1;  // {number} IndexedDBのバージョン
 
       dev.end(); // 終了処理
 

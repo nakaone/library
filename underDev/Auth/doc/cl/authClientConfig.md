@@ -27,6 +27,8 @@ authClient専用の設定値
 | :-- | :-- | :-- | :-- | :-- |
 | api | string | <span style="color:red">必須</span> | サーバ側WebアプリURLのID | `https://script.google.com/macros/s/(この部分)/exec` |
 | timeout | number | 300,000 | サーバからの応答待機時間 | これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分 |
+| storeName | string | "config" | IndexedDBのストア名 |  |
+| dbVersion | number | 1 | IndexedDBのバージョン |  |
 
 ## <span id="authclientconfig_methods">🧱 authClientConfig メソッド一覧</span>
 

@@ -44,8 +44,10 @@ class authProto {
 ```
 .
 ├── __tests__       // Jestテストパターン別ソースファイル集
+│   └── b0004.mjs
 ├── archives        // バックアップファイル(Git対象外)
 ├── deploy          // ブラウザ・GASに実装するソースファイル集
+│   └── onLoad.mjs  // クライアント側テスト用(index.htmlのonLoad)
 ├── devlog.md       // 開発履歴
 ├── doc             // 仕様書集 ※buildの都度クリアして作成
 ├── node_modules    // Auth開発関係(Jest)
@@ -57,7 +59,6 @@ class authProto {
 │   ├── library     // ライブラリ(シンボリックリンク)
 │   └── server      // サーバ側ソースファイル集
 ├── tmp
-│   └── onLoad.mjs  // クライアント側テスト用(index.htmlのonLoad)
 └── tools
     ├── archives.sh // バックアップファイルを作成(除、archives/,tmp/)
     ├── build.sh    // ソース・仕様書を作成
@@ -66,12 +67,18 @@ class authProto {
     └── test.sh     // Jestテストを実行
 ```
 
+- test.shはtoolsをカレントディレクトリとして起動
+
 ## テスト環境
 
 - import時、ファイルのパス指定を容易にするため`src/library`を置き、そこに引用元ソースファイルのシンボリックリンクを作成する
 
 ## 変更履歴
 
+- build0004: authClient.initialize/setIndexedDB作成
+  - authClientConfigに`{storeName:'config',dbVersion:1}`を追加
+  - localFuncでのauthClientインスタンス作成方法変更
+  - テスト終了後、specDef.js(authClient,authIndexedDB)を修正
 - build0003: authClientインスタンス作成時、authClientConfigを読み込み
   - authClientConfigの既定値が設定されるか
   - 引数を与えた場合、それが反映されるか
