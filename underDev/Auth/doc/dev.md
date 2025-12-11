@@ -96,10 +96,6 @@ class authProto {
 
 ![](img/dev.build.doc.svg)
 
-## テスト環境
-
-- import時、ファイルのパス指定を容易にするため`src/library`を置き、そこに引用元ソースファイルのシンボリックリンクを作成する
-
 ## 変更履歴
 
 - build0004: authClient.initialize/setIndexedDB作成
