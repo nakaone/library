@@ -82,6 +82,16 @@ class authProto {
 ## 変更履歴
 
 - build0004: authClient.initialize/setIndexedDB作成
+  - 【派生】クラス・関数ソースのES Module化＋ Jest から Vitest に変更<br>
+    最終成果物に合わせて関連クラス・関数は埋め込むようにしてきたが、
+    Vitest(Jest)では各関数を import する必要があるためES Module化が必要。<br>
+    またIndexedDBは要モック化等、各クラス・関数は別ファイル化した方が運用しやすい。<br>
+    このため以下の対応を行う。
+    - クラス・関数ソースにexport文追加
+    - src/client/onLoad.js廃止(削除)
+    - src/client/index.htmlにクラス・関数ソースの埋込指示追加
+    - localFuncを別ファイル化
+    - build.shを上の「build.sh」に合わせるよう修正
   - authClientConfigに`{storeName:'config',dbVersion:1}`を追加
   - localFuncでのauthClientインスタンス作成方法変更
   - テスト終了後、specDef.js(authClient,authIndexedDB)を修正
