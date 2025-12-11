@@ -1,4 +1,4 @@
-class authClient {
+export class authClient {
 
   static _IndexedDB = null; // データベース接続オブジェクトを格納する静的変数
 

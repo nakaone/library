@@ -1,4 +1,4 @@
-class authClientConfig extends authConfig {
+export class authClientConfig extends authConfig {
 
   constructor(arg) {
     const v = {whois:`authClientConfig.constructor`, arg:{arg}, rv:null};

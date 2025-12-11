@@ -1,4 +1,4 @@
-class authConfig {
+export class authConfig {
 
   constructor(arg) {
     const v = {whois:`authConfig.constructor`, arg:{arg}, rv:null};
