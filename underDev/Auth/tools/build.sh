@@ -48,27 +48,30 @@ cp $src/doc/img/* $doc/img
 # ----------------------------------------------
 # 2. クライアント側
 # ----------------------------------------------
-#cat $src/test.html | awk 1 | \
-#$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/test.html
-cat $src/client/onLoad.js | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $tmp/onLoad.js
+
+clsource="$tmp/client.source.md"
+echo "## 質問・依頼事項\n\n## 実行結果\n\n\`\`\`\n\n\`\`\`\n" > $clsource
+for f in $src/client/*.mjs; do
+  bn=$(basename "$f" ".mjs")
+  # import/export文の削除
+  sed '/^import /d; s/^export //' "$f" > "$tmp/$bn.js"
+  # 生成AI質問用ソース一覧作成
+  echo "## $bn.mjs\n\n\`\`\`js" >> $clsource
+  cat $f >> $clsource
+  echo "\n\`\`\`\n\n" >> $clsource
+done
+
+# index.htmlの作成
 cat $src/client/index.html | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/index.html
 
-# 2.1 テスト用のmjs作成
-echo "\nexport {devTools,authClient,authClientConfig,authConfig,localFunc};" >> $tmp/onLoad.js
-mv $tmp/onLoad.js $dep/onLoad.mjs
+# ----------------------------------------------
+# 3. サーバ側
+# ----------------------------------------------
 
-# AIレビュー用
-#cat $doc/specification.md $doc/JSLib.md > $tmp/common.md
-#cat $doc/cl/*.md > $tmp/cl.md
-#cat $tmp/common.md $tmp/cl.md > $tmp/review.cl.md
-#cat $doc/sv/*.md > $tmp/sv.md
-#cat $tmp/common.md $tmp/sv.md > $tmp/review.sv.md
-
-
-## header.mdを付加
-#for f in $tmp/*.md; do
-#  out="${f/tmp/doc}"
-#  cat $src/doc/header.md "$f" > "$out"
-#done
+# ----------------------------------------------
+# 4. テスト実行
+# ----------------------------------------------
+cd $prj
+npx vitest run "$prj/__tests__/b0004.test.mjs"
+cd tools/

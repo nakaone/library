@@ -1,3 +1,4 @@
+import { authConfig } from "./authConfig.mjs";
 export class authClientConfig extends authConfig {
 
   constructor(arg) {

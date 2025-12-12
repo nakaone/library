@@ -1,129 +1,132 @@
 /*
-localFuncを実行し、以下の項目をテストするJestおよびtest.shのソースをb0004.mjsとして提供願います。
+# 依頼内容
+
+localFuncを実行し、以下の項目をテストするVitestソースをb0004.test.mjsとして提供願います。
 - 必須引数のいずれかが指定されていない場合はエラーが返る(必須引数全パターンについてテスト)
 - 以下の項目がIndexedDBに格納されている
-  - memberId: 'dummyID',  // 仮IDはサーバ側で生成
+  - memberId: 'dummyID',
   - memberName: 'dummyName',
   - deviceId: crypto.randomUUID(),
   - keyGeneratedDateTime: Date.now(),
   - SPkey: 'dummySPkey',
 - 後続処理(authClient.exec)はIndexedDB格納後に実施されている
 
-=== フォルダ構成
+※以前同趣旨の質問をしたことがありますが、①クラス・関数毎にソースを分離(onLoad.jsから独立)、②クラス・関数にexport文を追加等、内容を変更しているので改めてご教示願います。
+
+# フォルダ構成
+
+```
 .
-├── __tests__       // Jestテストパターン別ソースファイル集
-│   └── b0004.mjs
-├── archives        // バックアップファイル(Git対象外)
-├── deploy          // ブラウザ・GASに実装するソースファイル集
-├── devlog.md       // 開発履歴
-├── doc             // 仕様書集 ※buildの都度クリアして作成
-├── node_modules    // Auth開発関係(Jest)
-├── package-lock.json // Jest用設定
-├── package.json      // Jest用設定
+├── __tests__
+│   └── b0004.test.mjs ◀これが欲しい
+├── deploy
+│   └── index.html
+├── package-lock.json
+├── package.json
 ├── src
-│   ├── client      // クライアント側ソースファイル集
-│   ├── doc         // 仕様書(原本・パーツ) ※buildの都度、これを加工してdocに出力
-│   ├── library     // ライブラリ(シンボリックリンク)
-│   └── server      // サーバ側ソースファイル集
-├── tmp
-│   └── onLoad.mjs  // クライアント側テスト用(index.htmlのonLoad)
+│   ├── client  ◀テスト対象のソースはここ(これ以外のフォルダにあるソースはテスト対象外)
+│   │   ├── authClient.mjs
+│   │   ├── authClientConfig.mjs
+│   │   ├── authConfig.mjs
+│   │   ├── index.html
+│   │   ├── localFunc.mjs
+│   │   └── onLoad.mjs
+│   ├── doc
+│   └── server
+│       └── jsrsasign-all-min.js
+├── tmp ◀このフォルダにあるソースはテスト対象外
 └── tools
-    ├── archives.sh // バックアップファイルを作成(除、archives/,tmp/)
-    ├── build.sh    // ソース・仕様書を作成
-    ├── mdTable.sh  // クリップボードのTSVからMarkdownの表を作成
-    ├── specify.mjs // クラス定義から各クラスの仕様書を作成
-    └── test.sh     // Jestテストを実行
+    ├── build.sh
+    └── test.sh ◀テスト時はこれを起動(`% ./test.sh`でテスト実行)
+```
 */
-import { vi, describe, test, expect, beforeEach } from 'vitest';
-import { localFunc } from '../deploy/onLoad.mjs';
+import { describe, test, it, expect, vi, beforeAll, beforeEach } from "vitest";
+import { indexedDB, IDBKeyRange } from "fake-indexeddb";
+import { authConfig } from "../src/client/authConfig.mjs";
+import { authClientConfig } from "../src/client/authClientConfig.mjs";
+import { authClient } from "../src/client/authClient.mjs";
+import { localFunc } from "../src/client/localFunc.mjs";
 
-// IndexedDB モック
-function createMockIndexedDB() {
-  const store = {};
-  return {
-    put: vi.fn(async (key, value) => {
-      store[key] = value;
-    }),
-    get: vi.fn(async (key) => store[key]),
-    _store: store
+// -------------------------------------------
+// 1. グローバル依存のモック
+// -------------------------------------------
+
+// IndexedDB
+beforeAll(() => {
+  globalThis.indexedDB = indexedDB;
+  globalThis.IDBKeyRange = IDBKeyRange;
+});
+
+// crypto.randomUUID
+beforeAll(() => {
+  vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue("UUID-TEST");
+});
+
+// Date.now
+const FIXED_TIME = 1700000000000;
+beforeAll(() => {
+  vi.spyOn(Date, "now").mockReturnValue(FIXED_TIME);
+});
+
+// dev のモック
+beforeAll(() => {
+  globalThis.dev = {
+    start: () => {},
+    step: () => {},
+    end: () => {},
+    error: (e) => e
   };
-}
+});
 
-// authClient.exec モック
-const mockAuthExec = vi.fn(async () => ({ result: true }));
+// DBリセット
+beforeEach(() => {
+  indexedDB.deleteDatabase("Auth");
+});
 
-describe('b0004 localFunc tests', () => {
-  let mockDB;
+// -------------------------------------------
+// テスト本体
+// -------------------------------------------
 
-  beforeEach(() => {
-    mockDB = createMockIndexedDB();
+test('authClientConfig: 必須引数を与えるとインスタンスが返る', () => {
 
-    localFunc.__setMockDB?.(mockDB);
-    localFunc.__setAuthExec?.(mockAuthExec);
-  });
+  const arg = {
+    adminMail: "fuga@gmail.com",
+    adminName: "田中一郎",
+    api: "abcdefghijklmnopqrstuvwxyz",
+  };
 
-  // ---------------------------------------------------------------
-  // ① 必須引数の欠落パターン
-  // ---------------------------------------------------------------
-  const requiredArgs = ['memberName', 'SPkey', 'serverURL'];
+  const inst = new authClientConfig(arg);
 
-  requiredArgs.forEach(arg => {
-    test(`必須引数「${arg}」が無い場合はエラー`, async () => {
-      const args = {
-        memberName: 'dummyName',
-        SPkey: 'dummySPkey',
-        serverURL: 'https://example.com'
-      };
-      delete args[arg];
+  expect(inst).toBeInstanceOf(authClientConfig);
+  expect(inst.adminMail).toBe(arg.adminMail);
+  expect(inst.adminName).toBe(arg.adminName);
+  expect(inst.api).toBe(arg.api);
+});
 
-      await expect(localFunc(args)).rejects.toThrow();
+describe("build0004テスト", () => {
+
+  // authClientConfigの必須引数チェック
+  const errorCases = [
+    [
+      { adminName: "x", api: "y" },
+      `"adminMail" is not specified.`
+    ],
+    [
+      { adminMail: "x", api: "y" },
+      `"adminName" is not specified.`
+    ],
+    [
+      { adminMail: "x", adminName: "y" },
+      `"api" is not specified.`
+    ]
+  ];
+
+  errorCases.forEach(([arg, msg]) => {
+    it(`必須引数欠落: ${msg}`, () => {
+      const rv = new authClientConfig(arg);
+      expect(rv).toBeInstanceOf(Error);
+      expect(rv.message).toContain(msg);
     });
   });
 
-  // ---------------------------------------------------------------
-  // ② IndexedDB に正しく保存されているか
-  // ---------------------------------------------------------------
-  test('IndexedDB に必要項目が保存されている', async () => {
-    const args = {
-      memberName: 'dummyName',
-      SPkey: 'dummySPkey',
-      serverURL: 'https://example.com'
-    };
-
-    const result = await localFunc(args);
-
-    expect(result).toHaveProperty('result', true);
-
-    const saved = mockDB._store['authRecord'];
-
-    expect(saved).toMatchObject({
-      memberId: 'dummyID',
-      memberName: 'dummyName',
-      SPkey: 'dummySPkey'
-    });
-
-    expect(typeof saved.deviceId).toBe('string');
-    expect(typeof saved.keyGeneratedDateTime).toBe('number');
-  });
-
-  // ---------------------------------------------------------------
-  // ③ IndexedDB 保存後に authClient.exec が実行されている
-  // ---------------------------------------------------------------
-  test('authClient.exec は IndexedDB 保存後に呼ばれる', async () => {
-    const args = {
-      memberName: 'dummyName',
-      SPkey: 'dummySPkey',
-      serverURL: 'https://example.com'
-    };
-
-    await localFunc(args);
-
-    expect(mockDB.put).toHaveBeenCalled();
-    expect(mockAuthExec).toHaveBeenCalled();
-
-    const putTime = mockDB.put.mock.invocationCallOrder[0];
-    const execTime = mockAuthExec.mock.invocationCallOrder[0];
-
-    expect(putTime).toBeLessThan(execTime);
-  });
 });

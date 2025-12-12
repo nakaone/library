@@ -34,7 +34,7 @@ export class authClient {
      * - その他インスタンス生成時に必要な非同期処理があれば、ここで処理する
      * - staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
      */
-    static async initialize(arg) {
+  static async initialize(arg) {
     const v = {whois:`authClient.initialize`, arg:{arg}, rv:null};
     dev.start(v);
     try {
@@ -42,6 +42,7 @@ export class authClient {
       dev.step(1);  // インスタンス生成
       // オプション既定値を先にメンバ変数に格納するため、constructorを先行
       v.rv = new authClient(arg);
+      dev.step(99.45,v.rv);
 
       dev.step(2);  // DB接続：非同期処理なのでconstructorではなくinitializeで実行
       authClient._IndexedDB = await (()=>{
@@ -51,7 +52,7 @@ export class authClient {
             return resolve(authClient._IndexedDB);
           }
 
-          const openRequest = indexedDB.open(v.rv.cf.dbName, v.rv.cf.dbVersion);
+          const openRequest = indexedDB.open(v.rv.cf.systemName, v.rv.cf.dbVersion);
 
           openRequest.onerror = (event) => {
             reject(new Error("IndexedDB接続エラー: " + event.target.error.message));
