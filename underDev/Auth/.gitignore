@@ -1,3 +1,3 @@
 archives/*
 tmp/*
-tools/build.txt
+node_modules/
