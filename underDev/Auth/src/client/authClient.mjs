@@ -1,3 +1,4 @@
+import { authClientConfig } from "./authClientConfig.mjs";
 export class authClient {
 
   static _IndexedDB = null; // データベース接続オブジェクトを格納する静的変数
@@ -30,10 +31,10 @@ export class authClient {
     } catch (e) { return dev.error(e); }
   }
 
-    /** initialize: IndexedDBの初期化
-     * - その他インスタンス生成時に必要な非同期処理があれば、ここで処理する
-     * - staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
-     */
+  /** initialize: IndexedDBの初期化
+   * - その他インスタンス生成時に必要な非同期処理があれば、ここで処理する
+   * - staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
+   */
   static async initialize(arg) {
     const v = {whois:`authClient.initialize`, arg:{arg}, rv:null};
     dev.start(v);
@@ -42,36 +43,30 @@ export class authClient {
       dev.step(1);  // インスタンス生成
       // オプション既定値を先にメンバ変数に格納するため、constructorを先行
       v.rv = new authClient(arg);
-      dev.step(99.45,v.rv);
 
       dev.step(2);  // DB接続：非同期処理なのでconstructorではなくinitializeで実行
-      authClient._IndexedDB = await (()=>{
-        return new Promise((resolve, reject) => {
-          // 既に接続があればそれを返す
-          if (authClient._IndexedDB) {
-            return resolve(authClient._IndexedDB);
+      authClient._IndexedDB = await new Promise((resolve, reject) => {
+        if (authClient._IndexedDB) {
+          return resolve(authClient._IndexedDB);
+        }
+
+        const openRequest = indexedDB.open(v.rv.cf.systemName, v.rv.cf.dbVersion);
+
+        openRequest.onerror = (event) =>
+          reject(new Error("IndexedDB接続エラー: " + event.target.error.message));
+
+        openRequest.onsuccess = (event) => {
+          authClient._IndexedDB = event.target.result;
+          resolve(authClient._IndexedDB);
+        };
+
+        openRequest.onupgradeneeded = (event) => {
+          const db_upgrade = event.target.result;
+          if (!db_upgrade.objectStoreNames.contains(v.rv.cf.storeName)) {
+            db_upgrade.createObjectStore(v.rv.cf.storeName);
           }
-
-          const openRequest = indexedDB.open(v.rv.cf.systemName, v.rv.cf.dbVersion);
-
-          openRequest.onerror = (event) => {
-            reject(new Error("IndexedDB接続エラー: " + event.target.error.message));
-          };
-
-          openRequest.onsuccess = (event) => {
-            authClient._IndexedDB = event.target.result;
-            resolve(authClient._IndexedDB);
-          };
-
-          openRequest.onupgradeneeded = (event) => {
-            const db_upgrade = event.target.result;
-            if (!db_upgrade.objectStoreNames.contains(v.rv.cf.storeName)) {
-              db_upgrade.createObjectStore(v.rv.cf.storeName);
-              console.log(`✅ オブジェクトストア '${v.rv.cf.storeName}' を作成しました。`);
-            }
-          };
-        });
-      })();
+        };
+      });
 
       dev.step(3);  // オプション設定値をIndexedDBに保存
       await v.rv.setIndexedDB({ // 内容はauthIndexedDB
@@ -110,16 +105,13 @@ export class authClient {
         await new Promise((resolve, reject) => {
           const putRequest = store.put(v.value, v.key);
 
-          putRequest.onsuccess = () => {
-            resolve();
-          };
+          putRequest.onsuccess = () => resolve();
 
           putRequest.onerror = (event) => {
             // 個別のリクエストエラーはトランザクション全体のエラーとなる
             reject(new Error(`PUT操作失敗 (Key: ${v.key}): ${event.target.error.message}`));
           };
         });
-
       }
 
       dev.end(); // 終了処理

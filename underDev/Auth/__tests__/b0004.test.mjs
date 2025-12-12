@@ -44,6 +44,7 @@ import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import { indexedDB, IDBKeyRange } from "fake-indexeddb";
 import { authClientConfig } from "../src/client/authClientConfig.mjs";
 import { authClient } from "../src/client/authClient.mjs";
+import { onLoad } from "../src/client/onLoad.mjs";
 import { localFunc } from "../src/client/localFunc.mjs";
 
 // -------------------------------------------
@@ -73,8 +74,14 @@ beforeAll(() => {
     start: () => {},
     step: () => {},
     end: () => {},
-    error: (e) => e
+    error: (e) => { throw e; }
   };
+});
+
+// authClientインスタンス作成
+beforeAll(async () => {
+  //global.auth = null;
+  await onLoad();
 });
 
 // DBリセット
@@ -91,9 +98,9 @@ describe("authClientConfig", () => {
   it('必須引数を与えるとインスタンスが返る', () => {
 
     const arg = {
-      adminMail: "fuga@gmail.com",
-      adminName: "田中一郎",
-      api: "abcdefghijklmnopqrstuvwxyz",
+      adminMail: 'ena.kaon@gmail.com',
+      adminName: 'あどみ',
+      api: 'abcdefghijklmnopqrstuvwxyz',
     };
 
     const inst = new authClientConfig(arg);
@@ -128,4 +135,29 @@ describe("authClientConfig", () => {
     });
   });
 
+});
+
+describe.only("authClient.exec", () => {
+
+  it('execテスト', () => {
+
+    const arg = {
+      memberId:"dummyID",
+      memberName:"dummyName",
+      deviceId:"UUID-TEST",
+      keyGeneratedDateTime:1700000000000,
+      SPkey:"dummySPkey",
+    };
+
+    console.log('auth:', JSON.stringify(globalThis.auth, null, 2));
+
+    const rv = localFunc();  // ★await 不要（同期で返る）
+    console.log('rv:', JSON.stringify(rv, null, 2));
+
+    expect(rv.exec.memberId).toBe(arg.memberId);
+    expect(rv.exec.memberName).toBe(arg.memberName);
+    expect(rv.exec.deviceId).toBe(arg.deviceId);
+    expect(rv.exec.keyGeneratedDateTime).toBe(arg.keyGeneratedDateTime);
+    expect(rv.exec.SPkey).toBe(arg.SPkey);
+  });
 });

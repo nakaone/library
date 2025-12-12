@@ -13,6 +13,7 @@ dep="$prj/deploy"
 doc="$prj/doc"
 img="$prj/img"
 tmp="$prj/tmp"
+test="$prj/__tests__/b0004.test.mjs"
 rm -rf $dep/*
 rm -rf $doc/*
 rm -rf $tmp/*
@@ -49,8 +50,16 @@ cp $src/doc/img/* $doc/img
 # 2. クライアント側
 # ----------------------------------------------
 
+# Vitestを実行
 clsource="$tmp/client.source.md"
-echo "## 質問・依頼事項\n\n## 実行結果\n\n\`\`\`\n\n\`\`\`\n" > $clsource
+echo "## 質問・依頼事項\n\n## テストソース\n\n\`\`\`js" > $clsource
+cat $test >> $clsource
+echo "\n\`\`\`\n\n## 実行結果\n\n\`\`\`zsh" >> $clsource
+cd $prj
+npx vitest run "$test" | sed 's/\x1b\[[0-9;]*m//g' >> $clsource
+cd tools/
+echo "\`\`\`\n" >> $clsource
+
 for f in $src/client/*.mjs; do
   bn=$(basename "$f" ".mjs")
   # import/export文の削除
@@ -68,10 +77,3 @@ $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/index.html
 # ----------------------------------------------
 # 3. サーバ側
 # ----------------------------------------------
-
-# ----------------------------------------------
-# 4. テスト実行
-# ----------------------------------------------
-cd $prj
-npx vitest run "$prj/__tests__/b0004.test.mjs"
-cd tools/
