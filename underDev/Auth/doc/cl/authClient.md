@@ -75,17 +75,17 @@ class authClient {
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| cf | [authClientConfig](authClientConfig.md#authclientconfig_members) | <span style="color:red">必須</span> | 動作設定変数(config) |  |
-| crypto | [cryptoClient](cryptoClient.md#cryptoclient_members) | <span style="color:red">必須</span> | クライアント側暗号関係処理 |  |
-| idb | static | <span style="color:red">必須</span> | IndexedDBの内容をauthClient内で共有 |  |
+| _IndexedDB | static | <span style="color:red">必須</span> | データベース接続オブジェクトを格納する静的変数 |  |
+| idb | public | <span style="color:red">必須</span> | IndexedDBの内容をauthClient内で共有 |  |
 
 ## <span id="authclient_methods">🧱 authClient メソッド一覧</span>
 
 | メソッド名 | 分類 | 内容 | 備考 |
 | :-- | :-- | :-- | :-- |
 | [constructor()](#authclient_constructor) | private | コンストラクタ |  |
-| [initialize()](#authclient_initialize) | async static | コンストラクタ(非同期処理対応) |  |
-| [exec()](#authclient_exec) | public |  |  |
+| [exec()](#authclient_exec) | public | ローカル関数の処理要求を処理 |  |
+| [initialize()](#authclient_initialize) | static async | コンストラクタ(非同期処理対応) |  |
+| [setIndexedDB()](#authclient_setindexeddb) | async | IndexedDBの更新(upsert) |  |
 
 ### <span id="authclient_constructor"><a href="#authclient_methods">🧱 authClient.constructor()</a></span>
 
@@ -95,23 +95,39 @@ class authClient {
 
 #### <span id="authclient_constructor_process">🧾 処理手順</span>
 
+- this.cfに[authClientConfig](authClientConfig.md#authclientconfig_members)をセット
+- this.idbを初期化
+
 #### <span id="authclient_constructor_returns">📤 戻り値</span>
 
 - [authClient](#authclient_members)インスタンス
+### <span id="authclient_exec"><a href="#authclient_methods">🧱 authClient.exec()</a></span>
+
+#### <span id="authclient_exec_params">📥 引数</span>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| arg | [LocalRequest](LocalRequest.md#localrequest_members) | <span style="color:red">必須</span> | ローカル関数からの処理要求 |  |
+
+#### <span id="authclient_exec_process">🧾 処理手順</span>
+
+#### <span id="authclient_exec_returns">📤 戻り値</span>
+
+- Object : 
+
 ### <span id="authclient_initialize"><a href="#authclient_methods">🧱 authClient.initialize()</a></span>
 
 #### <span id="authclient_initialize_params">📥 引数</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| config | [authClientConfig](authClientConfig.md#authclientconfig_members) | <span style="color:red">必須</span> | authClientの動作設定変数 |  |
+| arg | [authClientConfig](authClientConfig.md#authclientconfig_members) | <span style="color:red">必須</span> | authClientの動作設定変数 |  |
 
 #### <span id="authclient_initialize_process">🧾 処理手順</span>
 
-- メンバ変数の初期化
-  - authClient内共有用変数を準備("cf = new [authClientConfig](authClientConfig.md#authclientconfig_constructor)()")
-  - 鍵ペアを準備("crypto = new [cryptoClient](cryptoClient.md#cryptoclient_constructor)()")
-  - IndexedDbを準備("idb = new [authIndexedDb](authIndexedDb.md#authindexeddb_constructor)()")
+- authClientインスタンス作成
+- DB接続を実行、`_IndexedDB`に格納
+- オプション設定値をIndexedDBに保存
 
 #### <span id="authclient_initialize_returns">📤 戻り値</span>
 
@@ -119,25 +135,20 @@ class authClient {
 
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
   | :-- | :-- | :-- | :-- | :-- |
-  | cf | [authClientConfig](authClientConfig.md#authclientconfig_members) | <span style="color:red">必須</span> | 動作設定変数(config) |  |
-  | crypto | [cryptoClient](cryptoClient.md#cryptoclient_members) | <span style="color:red">必須</span> | クライアント側暗号関係処理 |  |
-  | idb | static | <span style="color:red">必須</span> | IndexedDBの内容をauthClient内で共有 |  |
-### <span id="authclient_exec"><a href="#authclient_methods">🧱 authClient.exec()</a></span>
+  | _IndexedDB | static | <span style="color:red">必須</span> | データベース接続オブジェクトを格納する静的変数 |  |
+  | idb | public | <span style="color:red">必須</span> | IndexedDBの内容をauthClient内で共有 |  |
+### <span id="authclient_setindexeddb"><a href="#authclient_methods">🧱 authClient.setIndexedDB()</a></span>
 
-#### <span id="authclient_exec_params">📥 引数</span>
+#### <span id="authclient_setindexeddb_params">📥 引数</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-|  | string | <span style="color:red">必須</span> |  |  |
+| arg | Object.<string,any> | <span style="color:red">必須</span> |  | 更新する{キー：値} |
 
-#### <span id="authclient_exec_process">🧾 処理手順</span>
+#### <span id="authclient_setindexeddb_process">🧾 処理手順</span>
 
-#### <span id="authclient_exec_returns">📤 戻り値</span>
+#### <span id="authclient_setindexeddb_returns">📤 戻り値</span>
 
-- [authClient](authClient.md#authclient_members)
+- null : 正常終了時
 
-  | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
-  | :-- | :-- | :-- | :-- | :-- |
-  | cf | [authClientConfig](authClientConfig.md#authclientconfig_members) | <span style="color:red">必須</span> | 動作設定変数(config) |  |
-  | crypto | [cryptoClient](cryptoClient.md#cryptoclient_members) | <span style="color:red">必須</span> | クライアント側暗号関係処理 |  |
-  | idb | static | <span style="color:red">必須</span> | IndexedDBの内容をauthClient内で共有 |  |
+- Error : 異常終了時(messageはシステムメッセージ)

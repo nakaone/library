@@ -17,8 +17,8 @@ export class authClient {
     } catch (e) { return dev.error(e); }
   }
 
-  exec(arg) {
-    const v = {whois:`${this.constructor.name}.exec`, arg:{arg}, rv:null};
+  exec(request) {
+    const v = {whois:`${this.constructor.name}.exec`, arg:{request}, rv:null};
     dev.start(v);
     try {
 

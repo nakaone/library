@@ -73,10 +73,6 @@
 
 ### <span id="cryptoclient_constructor"><a href="#cryptoclient_methods">🧱 cryptoClient.constructor()</a></span>
 
-#### <span id="cryptoclient_constructor_referrer">📞 呼出元</span>
-
-- [authClient.initialize](authClient.md#authClient_members)
-
 #### <span id="cryptoclient_constructor_params">📥 引数</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |

@@ -129,89 +129,161 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     template: ``, // {string} Markdown出力時のテンプレート
 
     members: {list:[
-      {name:'cf',type:'authClientConfig',desc:'動作設定変数(config)',note:''},
-      {name:'crypto',type:'cryptoClient',desc:'クライアント側暗号関係処理',note:''},
-      {name:'idb',type:'static',desc:'IndexedDBの内容をauthClient内で共有',note:''},
+      {name:'_IndexedDB',type:'static',desc:'データベース接続オブジェクトを格納する静的変数',note:''},
+      //{name:'cf',type:'authClientConfig',desc:'動作設定変数(config)',note:''},
+      //{name:'crypto',type:'cryptoClient',desc:'クライアント側暗号関係処理',note:''},
+      {name:'idb',type:'public',desc:'IndexedDBの内容をauthClient内で共有',note:''},
     ]},
 
-    methods: {list:[{
-      name: 'constructor', // {string} 関数(メソッド)名
-      type: 'private', // {string} 関数(メソッド)の分類
-      desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
-      note: ``, // {string} ✂️注意事項。Markdownで記載
-      source: ``, // {string} ✂️想定するソースコード
-      lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
-      rev: 0, // {string} 本メソッド仕様書の版数
+    methods: {list:[
+      { // constructor
+        name: 'constructor', // {string} 関数(メソッド)名
+        type: 'private', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
 
-      params: {list:[
-      ]},
+        params: {list:[
+        ]},
 
-      process: `
-      `,
-      /*
-        - IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
-        - IndexedDBからメンバの氏名を取得、存在しなければダイアログから入力
-        - deviceId未採番なら採番(UUID)
-        - SPkey未取得ならサーバ側に要求
-        - 更新した内容はIndexedDBに書き戻す
-        - SPkey取得がエラーになった場合、SPkey以外は書き戻す
-        - IndexedDBの内容はauthClient内共有用変数`pv`に保存
-        - サーバ側から一定時間レスポンスが無い場合、`{result:'fatal',message:'No response'}`を返して終了
-      */
+        process: `
+          - this.cfに[authClientConfig](authClientConfig.md#authclientconfig_members)をセット
+          - this.idbを初期化
+        `,
+        /*
+          - IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
+          - IndexedDBからメンバの氏名を取得、存在しなければダイアログから入力
+          - deviceId未採番なら採番(UUID)
+          - SPkey未取得ならサーバ側に要求
+          - 更新した内容はIndexedDBに書き戻す
+          - SPkey取得がエラーになった場合、SPkey以外は書き戻す
+          - IndexedDBの内容はauthClient内共有用変数`pv`に保存
+          - サーバ側から一定時間レスポンスが無い場合、`{result:'fatal',message:'No response'}`を返して終了
+        */
 
-      returns: {list:[
-        {type:'authClient'}, // コンストラクタは自データ型名
-      ]},
-    },{
-      name: 'initialize', // {string} 関数(メソッド)名
-      type: 'async static', // {string} 関数(メソッド)の分類
-      desc: 'コンストラクタ(非同期処理対応)', // {string} 端的な関数(メソッド)の説明
-      note: ``, // {string} ✂️注意事項。Markdownで記載
-      source: `
-        static async initialize() {
+        returns: {list:[
+          {type:'authClient'}, // コンストラクタは自データ型名
+        ]},
+      },{ // exec
+        name: 'exec', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'ローカル関数の処理要求を処理', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
 
-          // 初期化時に必要な一連の非同期処理を実行
-  
-          // 取得したデータを使ってインスタンスを生成し、返す
-          return new authClient();
-        }
-      `, // {string} ✂️想定するソースコード
-      lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
-      rev: 0, // {string} 本メソッド仕様書の版数
+        params: {list:[
+          {name:'arg',type:'LocalRequest',desc:'ローカル関数からの処理要求',note:''},
+        ]},
 
-      params: {list:[
-        {name:'config',type:'authClientConfig',desc:'authClientの動作設定変数',note:''},
-      ]},
+        process: ``,
 
-      process: `
-        - メンバ変数の初期化
-          - authClient内共有用変数を準備("cf = new [authClientConfig](authClientConfig.md#authclientconfig_constructor)()")
-          - 鍵ペアを準備("crypto = new [cryptoClient](cryptoClient.md#cryptoclient_constructor)()")
-          - IndexedDbを準備("idb = new [authIndexedDb](authIndexedDb.md#authindexeddb_constructor)()")
-      `,
+        returns: {list:[
+          {type:'Object'}//{type:'LocalResponse'}, // コンストラクタは自データ型名
+        ]},
+      },
+      { // initialize
+        name: 'initialize', // {string} 関数(メソッド)名
+        type: 'static async', // {string} 関数(メソッド)の分類
+        desc: 'コンストラクタ(非同期処理対応)', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: `
+          static async initialize(arg) {
+            const v = {whois:\`authClient.initialize\`, arg:{arg}, rv:null};
+            dev.start(v);
+            try {
 
-      returns: {list:[
-        {type:'authClient'}, // コンストラクタは自データ型名
-      ]},
-    },{
-      name: 'exec', // {string} 関数(メソッド)名
-      type: 'public', // {string} 関数(メソッド)の分類
-      desc: '', // {string} 端的な関数(メソッド)の説明
-      note: ``, // {string} ✂️注意事項。Markdownで記載
-      source: ``, // {string} ✂️想定するソースコード
-      lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
-      rev: 0, // {string} 本メソッド仕様書の版数
+              dev.step(1);  // インスタンス生成
+              // オプション既定値を先にメンバ変数に格納するため、constructorを先行
+              v.rv = new authClient(arg);
 
-      params: {list:[
-        {name:'',type:'string',desc:'',note:''},
-      ]},
+              dev.step(2);  // DB接続：非同期処理なのでconstructorではなくinitializeで実行
+              authClient._IndexedDB = await new Promise((resolve, reject) => {
+                if (authClient._IndexedDB) {
+                  return resolve(authClient._IndexedDB);
+                }
 
-      process: ``,
+                const openRequest = indexedDB.open(v.rv.cf.systemName, v.rv.cf.dbVersion);
 
-      returns: {list:[
-        {type:'authClient'}, // コンストラクタは自データ型名
-      ]},
-    }]},
+                openRequest.onerror = (event) =>
+                  reject(new Error("IndexedDB接続エラー: " + event.target.error.message));
+
+                openRequest.onsuccess = (event) => {
+                  authClient._IndexedDB = event.target.result;
+                  resolve(authClient._IndexedDB);
+                };
+
+                openRequest.onupgradeneeded = (event) => {
+                  const db_upgrade = event.target.result;
+                  if (!db_upgrade.objectStoreNames.contains(v.rv.cf.storeName)) {
+                    db_upgrade.createObjectStore(v.rv.cf.storeName);
+                  }
+                };
+              });
+
+              dev.step(3);  // オプション設定値をIndexedDBに保存
+              await v.rv.setIndexedDB({ // 内容はauthIndexedDB
+                memberId: 'dummyID',  // 仮IDはサーバ側で生成
+                memberName: 'dummyName',
+                deviceId: crypto.randomUUID(),
+                keyGeneratedDateTime: Date.now(),
+                SPkey: 'dummySPkey',
+              });
+
+              dev.end(); // 終了処理
+              return v.rv;
+
+            } catch (e) { return dev.error(e); }
+          }
+        `, // {string} ✂️想定するソースコード
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'arg',type:'authClientConfig',desc:'authClientの動作設定変数',note:''},
+        ]},
+
+        process: `
+          - authClientインスタンス作成
+          - DB接続を実行、\`_IndexedDB\`に格納
+          - オプション設定値をIndexedDBに保存
+        `,
+        /*
+          メンバ変数の初期化
+            - authClient内共有用変数を準備("cf = new [authClientConfig](authClientConfig.md#authclientconfig_constructor)()")
+            - 鍵ペアを準備("crypto = new [cryptoClient](cryptoClient.md#cryptoclient_constructor)()")
+            - IndexedDbを準備("idb = new [authIndexedDb](authIndexedDb.md#authindexeddb_constructor)()")
+        */
+
+        returns: {list:[
+          {type:'authClient'}, // コンストラクタは自データ型名
+        ]},
+      },
+      { // setIndexedDB
+        name: 'setIndexedDB', // {string} 関数(メソッド)名
+        type: 'async', // {string} 関数(メソッド)の分類
+        desc: 'IndexedDBの更新(upsert)', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード🧩
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'arg',type:'Object.<string,any>',note:'更新する{キー：値}'},
+        ]},
+
+        process: `
+        `,
+
+        returns: {list:[
+          {type:'null', desc:'正常終了時',template:''},
+          {type:'Error', desc:'異常終了時',note:'messageはシステムメッセージ',template:''},
+        ]},
+      },
+    ]},
   },
   authClientConfig: {
     desc: 'authClient専用の設定値',  // 端的なクラスの説明。ex.'authServer監査ログ'
@@ -234,7 +306,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       rev: 1, // {number} 0:未着手 1:完了 0<n<1:作成途中
 
       params: {list:[  // {Params} ■メソッド引数の定義■
-        {name:'config',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
+        {name:'arg',type:'Object',note:'ユーザ指定の設定値',default:{},isOpt:true},
       ]},
 
       process: `
@@ -372,10 +444,10 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       {name:'SPkey',type:'string',desc:'サーバ公開鍵',note:'Base64',default:null},
       //{name:'ApplicationForMembership',type:'number',desc:'加入申請実行日時。未申請時は0',note:'',default:'0'},
       //{name:'expireAccount',type:'number',desc:'加入承認の有効期間が切れる日時。未加入時は0',note:'',default:'0'},
-      {name:'expireCPkey',type:'number',desc:'CPkeyの有効期限(無効になる日時)',note:'未ログイン時は0',default:'0'},
+      //{name:'expireCPkey',type:'number',desc:'CPkeyの有効期限(無効になる日時)',note:'未ログイン時は0',default:'0'},
     ]},
 
-    methods: {list:[
+    methods: {},/*list:[
       {
         name: 'constructor', // {string} 関数(メソッド)名
         type: 'public', // {string} 関数(メソッド)の分類
@@ -402,6 +474,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         ]},
       },
     ]},
+    */
   },
   authRequest: {
     desc: '暗号化前の処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'

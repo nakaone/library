@@ -38,15 +38,11 @@ authClient専用の設定値
 
 ### <span id="authclientconfig_constructor"><a href="#authclientconfig_methods">🧱 authClientConfig.constructor()</a></span>
 
-#### <span id="authclientconfig_constructor_referrer">📞 呼出元</span>
-
-- [authClient.initialize](authClient.md#authClient_members)
-
 #### <span id="authclientconfig_constructor_params">📥 引数</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| config | Object | {} |  | ユーザ指定の設定値 |
+| arg | Object | {} |  | ユーザ指定の設定値 |
 
 #### <span id="authclientconfig_constructor_process">🧾 処理手順</span>
 
