@@ -40,9 +40,8 @@ localFuncを実行し、以下の項目をテストするVitestソースをb0004
     └── test.sh ◀テスト時はこれを起動(`% ./test.sh`でテスト実行)
 ```
 */
-import { describe, test, it, expect, vi, beforeAll, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import { indexedDB, IDBKeyRange } from "fake-indexeddb";
-import { authConfig } from "../src/client/authConfig.mjs";
 import { authClientConfig } from "../src/client/authClientConfig.mjs";
 import { authClient } from "../src/client/authClient.mjs";
 import { localFunc } from "../src/client/localFunc.mjs";
@@ -87,25 +86,25 @@ beforeEach(() => {
 // テスト本体
 // -------------------------------------------
 
-test('authClientConfig: 必須引数を与えるとインスタンスが返る', () => {
+describe("authClientConfig", () => {
 
-  const arg = {
-    adminMail: "fuga@gmail.com",
-    adminName: "田中一郎",
-    api: "abcdefghijklmnopqrstuvwxyz",
-  };
+  it('必須引数を与えるとインスタンスが返る', () => {
 
-  const inst = new authClientConfig(arg);
+    const arg = {
+      adminMail: "fuga@gmail.com",
+      adminName: "田中一郎",
+      api: "abcdefghijklmnopqrstuvwxyz",
+    };
 
-  expect(inst).toBeInstanceOf(authClientConfig);
-  expect(inst.adminMail).toBe(arg.adminMail);
-  expect(inst.adminName).toBe(arg.adminName);
-  expect(inst.api).toBe(arg.api);
-});
+    const inst = new authClientConfig(arg);
 
-describe("build0004テスト", () => {
+    expect(inst).toBeInstanceOf(authClientConfig);
+    expect(inst.adminMail).toBe(arg.adminMail);
+    expect(inst.adminName).toBe(arg.adminName);
+    expect(inst.api).toBe(arg.api);
+  });
 
-  // authClientConfigの必須引数チェック
+  // 必須引数チェック
   const errorCases = [
     [
       { adminName: "x", api: "y" },
