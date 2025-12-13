@@ -80,13 +80,13 @@
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 正答時 | 誤答・再挑戦可 | 誤答・再挑戦不可 |
   | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
   | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — | — |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUIDv4 | — | — | — |
   | memberName | string | <span style="color:red">必須</span> | メンバの氏名 |  | — | — | — |
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — |
   | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
-  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — | — |
+  | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | MemberTrialオブジェクト | MemberTrialオブジェクト | MemberTrialオブジェクト |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — |

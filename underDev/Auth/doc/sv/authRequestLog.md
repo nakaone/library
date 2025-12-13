@@ -26,7 +26,7 @@
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | timestamp | number | Date.now() | リクエストを受けたサーバ側日時 |  |
-| requestId | string | <span style="color:red">必須</span> | クライアント側で採番されたリクエスト識別子 | UUID |
+| nonce | string | <span style="color:red">必須</span> | クライアント側で採番されたリクエスト識別子 | UUIDv4 |
 
 ## <span id="authrequestlog_methods">🧱 authRequestLog メソッド一覧</span>
 

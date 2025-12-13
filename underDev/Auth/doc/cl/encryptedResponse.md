@@ -20,13 +20,20 @@
 暗号化された処理結果
 
 authServerからauthClientに返される、暗号化された処理結果オブジェクト<br>
-      ciphertextはauthResponseをJSON化、RSA-OAEP暗号化＋署名付与した文字列
+      ciphertextはauthResponseをJSON化し、AES-256-GCMで暗号化したもの。<br>
+      AES鍵はRSA-OAEPで暗号化し encryptedKey に格納
 
 ## <span id="encryptedresponse_members">🔢 encryptedResponse メンバ一覧</span>
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| ciphertext | string | <span style="color:red">必須</span> | 暗号化した文字列 |  |
+| cipher | string | <span style="color:red">必須</span> | 暗号化した文字列 |  |
+| signature | string | <span style="color:red">必須</span> | authResponseに対するRSA-PSS署名 |  |
+| encryptedKey | string | <span style="color:red">必須</span> | RSA-OAEPで暗号化されたAES共通鍵 |  |
+| iv | string | <span style="color:red">必須</span> | AES-GCM 初期化ベクトル |  |
+| tag | string | <span style="color:red">必須</span> | AES-GCM 認証タグ |  |
+| meta | Object | <span style="color:red">必須</span> | メタ情報 |  |
+| meta.rsabits | number | <span style="color:red">必須</span> | 暗号化に使用したRSA鍵長 |  |
 
 ## <span id="encryptedresponse_methods">🧱 encryptedResponse メソッド一覧</span>
 
@@ -52,6 +59,11 @@ authServerからauthClientに返される、暗号化された処理結果オブ
 
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
   | :-- | :-- | :-- | :-- | :-- |
-  | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 |  |
-  | ciphertext | string | <span style="color:red">必須</span> | 暗号化した文字列 |  |
+  | cipher | string | <span style="color:red">必須</span> | AES-256-GCMで暗号化されたauthRequest |  |
+  | signature | string | <span style="color:red">必須</span> | authRequestに対するRSA-PSS署名 |  |
+  | encryptedKey | string | <span style="color:red">必須</span> | RSA-OAEPで暗号化されたAES共通鍵 |  |
+  | iv | string | <span style="color:red">必須</span> | AES-GCM 初期化ベクトル |  |
+  | tag | string | <span style="color:red">必須</span> | AES-GCM 認証タグ |  |
+  | meta | Object | <span style="color:red">必須</span> | メタ情報 |  |
+  | meta.rsabits | number | <span style="color:red">必須</span> | 暗号化に使用したRSA鍵長 |  |
+  | meta.sym | string | <span style="color:red">必須</span> | 使用した共通鍵方式 | "AES-256-GCM" |

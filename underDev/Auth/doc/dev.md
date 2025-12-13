@@ -104,10 +104,20 @@ class authProto {
   - localRequestクラスを作成、authClient.execメソッドに組み込み
 - === いまここ =====
 - build0005: 初回HTMLロード時処理
-  - authClient.constructorに以下機能を追加
-    - CPkeyが無ければ生成(cryptoClient.generateKeys)
-    - SPkeyが無ければサーバ側にCPkeyを送信
-    - サーバから送られたSPkey, deviceIdをIndexedDBに保存
+  - 仕様書修正
+    - specification.md
+      - 暗号化・署名方式
+        - requestId -> nonce
+        - replay cache -> authScriptProperties.requestLog(TTL管理)
+      - I/O項目対応表
+    - authRequest
+    - encryptedRequest
+    - authResponse
+    - encryptedResponse
+    - authClient
+    - cryptoClient
+    - cryptoServer
+  - ソース作成
   - b0005.test.mjs作成
   - 【保留】[bug] cryptoClient:"Error: Error: not fixed: "encryptedRequest""
     原因不明。cryptoClient.encrypt(), cryptoServer.encrypt()で発生。

@@ -246,8 +246,9 @@
 | 1.00 | [authClient](authClient.md#authclient_members) | クライアント側中核クラス |
 | 1.01 | <span style="padding-left:2rem">[constructor](authClient.md#authclient_constructor)</span> | コンストラクタ |
 | 1.02 | <span style="padding-left:2rem">[exec](authClient.md#authclient_exec)</span> | ローカル関数の処理要求を処理 |
-| 1.03 | <span style="padding-left:2rem">[initialize](authClient.md#authclient_initialize)</span> | コンストラクタ(非同期処理対応) |
-| 1.04 | <span style="padding-left:2rem">[setIndexedDB](authClient.md#authclient_setindexeddb)</span> | IndexedDBの更新(upsert) |
+| 1.03 | <span style="padding-left:2rem">[fetch](authClient.md#authclient_fetch)</span> | サーバ側APIの呼び出し |
+| 1.04 | <span style="padding-left:2rem">[initialize](authClient.md#authclient_initialize)</span> | コンストラクタ(非同期処理対応) |
+| 1.05 | <span style="padding-left:2rem">[setIndexedDB](authClient.md#authclient_setindexeddb)</span> | IndexedDBの更新(upsert) |
 | 2.00 | [authClientConfig](authClientConfig.md#authclientconfig_members) | authClient専用の設定値 |
 | 2.01 | <span style="padding-left:2rem">[constructor](authClientConfig.md#authclientconfig_constructor)</span> | コンストラクタ |
 | 3.00 | [authConfig](authConfig.md#authconfig_members) | authClient/authServer共通設定値 |

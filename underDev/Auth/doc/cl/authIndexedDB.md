@@ -27,7 +27,7 @@ IndexedDBの作成・入出力は[authClient](authClient.md)で行うため、�
 | :-- | :-- | :-- | :-- | :-- |
 | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | メールアドレス。仮登録時はUUID |
 | memberName | string | <span style="color:red">必須</span> | メンバ(ユーザ)の氏名 | 例："田中　太郎"。加入要求確認時に管理者が申請者を識別する他で使用。 |
-| deviceId | string | UUID | デバイスの識別子 |  |
+| deviceId | string | UUIDv4 | デバイスの識別子 |  |
 | keyGeneratedDateTime | number | Date.now() | 鍵ペア生成日時 | サーバ側でCPkey更新中にクライアント側で新たなCPkeyが生成されるのを避けるため、鍵ペア生成は30分以上の間隔を置く |
 | SPkey | string | <span style="color:red">必須</span> | サーバ公開鍵 | Base64 |
 

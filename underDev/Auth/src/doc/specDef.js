@@ -160,7 +160,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         /*
           - IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
           - IndexedDBからメンバの氏名を取得、存在しなければダイアログから入力
-          - deviceId未採番なら採番(UUID)
+          - deviceId未採番なら採番(UUIDv4)
           - SPkey未取得ならサーバ側に要求
           - 更新した内容はIndexedDBに書き戻す
           - SPkey取得がエラーになった場合、SPkey以外は書き戻す
@@ -462,7 +462,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     members: {list:[
       {name:'memberId',type:'string',desc:'メンバの識別子',note:'メールアドレス。仮登録時はUUID'},
       {name:'memberName',type:'string',desc:'メンバ(ユーザ)の氏名',note:'例："田中　太郎"。加入要求確認時に管理者が申請者を識別する他で使用。'},
-      {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'',default:'UUID'},
+      {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'',default:'UUIDv4'},
       {name:'keyGeneratedDateTime',type:'number',desc:`鍵ペア生成日時`,
         note: 'サーバ側でCPkey更新中にクライアント側で新たなCPkeyが生成されるのを避けるため、鍵ペア生成は30分以上の間隔を置く'
       ,default:'Date.now()'},
@@ -504,7 +504,8 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
   authRequest: {
     desc: '暗号化前の処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `
-      - authClientからauthServerに送られる、暗号化前の処理要求オブジェクト
+      - authRequestは暗号化・署名の入力となる「正規化対象オブジェクト」であり、
+        cryptoClient.encrypt により署名 → AES暗号化 → RSA鍵暗号化が行われる
       - cryptoClient.[encrypt](cryptoClient.md#cryptoclient_encrypt)で暗号化し、authServerに送られる
       - サーバ側で受信後、cryptoServer.[decrypt](cryptoServer.md#cryptoserver_decrypt)でauthRequestに戻る
     `,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
@@ -512,13 +513,13 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',desc:'メンバの識別子',note:'=メールアドレス',default:'idb.memberId'},
-      {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'UUID',default:'idb.deviceId'},
+      {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'UUIDv4',default:'idb.deviceId'},
       {name:'memberName',type:'string',desc:'メンバの氏名',note:'管理者が加入認否判断のため使用',default:'idb.memberName'},
       {name:'CPkey',type:'string',desc:'クライアント側署名',note:'',default:'idb.CPkey'},
       {name:'requestTime',type:'number',desc:'要求日時',note:'UNIX時刻',default:'Date.now()'},
       {name:'func',type:'string',desc:'サーバ側関数名',note:''},
       {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',note:'',default:'[]'},
-      {name:'nonce',type:'string',desc:'要求の識別子',note:'UUID',default:'UUID'},
+      {name:'nonce',type:'string',desc:'要求の識別子',note:'UUIDv4',default:'UUIDv4'},
     ]},
 
     methods: {list:[{
@@ -550,7 +551,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
     members: {list:[
       {name:'timestamp',type:'number',desc:'リクエストを受けたサーバ側日時',note:'',default:'Date.now()'},
-      {name:'nonce',type:'string',desc:'クライアント側で採番されたリクエスト識別子',note:'UUID'},
+      {name:'nonce',type:'string',desc:'クライアント側で採番されたリクエスト識別子',note:'UUIDv4'},
     ]},
 
     methods: {list:[
@@ -578,6 +579,8 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
   authResponse: {
     desc: 'サーバ側で復号された処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `
+    - authResponseはサーバ側で復号・署名検証後に生成される処理結果オブジェクトであり、
+      cryptoServer.encrypt により署名 → AES暗号化 → RSA鍵暗号化される。
     - サーバ側でauthClientから送られた[encryptedRequest](encryptedRequest.md#encryptedrequest_members)を復号して作成
     - サーバ側は本インスタンスに対して各種処理を行い、結果を付加していく
     - サーバ側処理終了後、cryptoServer.[encrypt](cryptoServer.md#encrypt)で暗号化してauthClientに戻す
@@ -587,13 +590,13 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',desc:'メンバの識別子',note:'=メールアドレス'},
-      {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'UUID'},
+      {name:'deviceId',type:'string',desc:'デバイスの識別子',note:'UUIDv4'},
       {name:'memberName',type:'string',desc:'メンバの氏名'},
       {name:'CPkey',type:'string',desc:'クライアント側署名',note:''},
       {name:'requestTime',type:'number',desc:'要求日時',note:'UNIX時刻'},
       {name:'func',type:'string',desc:'サーバ側関数名',note:''},
       {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',note:''},
-      {name:'nonce',type:'string',desc:'要求の識別子',note:'UUID'},
+      {name:'nonce',type:'string',desc:'要求の識別子',note:'UUIDv4'},
       {name:'SPkey',type:'string',desc:'サーバ側公開鍵',default:'SPkey'},
       {name:'response',type:'any',desc:'サーバ側関数の戻り値',note:'Errorオブジェクトを含む',default:'null'},
       {name:'receptTime',type:'number',desc:'サーバ側の処理要求受付日時',default:'Date.now()'},
@@ -669,7 +672,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         rev: 0, // {string} 本メソッド仕様書の版数
 
         params: {list:[
-          {name:'nonce',type:'string',desc:'処理要求識別子(UUID)',note:''},
+          {name:'nonce',type:'string',desc:'処理要求識別子(UUIDv4)',note:''},
         ]},
 
         process: ``,
@@ -1236,15 +1239,20 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
   encryptedRequest: {
     desc: '暗号化された処理要求',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `authClientからauthServerに送られる、暗号化された処理要求オブジェクト。<br>
-      ciphertextはauthRequestをJSON化、RSA-OAEP暗号化＋署名付与した文字列。<br>
-      memberId,deviceIdは平文
+      cipherはauthRequestをJSON化し、AES-256-GCMで暗号化したもの。<br>
+      AES鍵はRSA-OAEPで暗号化し encryptedKey に格納
       `,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
     implement: ['cl','sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'memberId',type:'string',desc:'メンバの識別子',note:'=メールアドレス'},
-      {name:'deviceId',type:'string',desc:'デバイスの識別子',note:''},
-      {name:'ciphertext',type:'string',desc:'暗号化した文字列',note:''},
+      {name:'cipher',type:'string',desc:'AES-256-GCMで暗号化されたauthRequest',note:''},
+      {name:'signature',type:'string',desc:'authRequestに対するRSA-PSS署名'},
+      {name:'encryptedKey',type:'string',desc:'RSA-OAEPで暗号化されたAES共通鍵'},
+      {name:'iv',type:'string',desc:'AES-GCM 初期化ベクトル'},
+      {name:'tag',type:'string',desc:'AES-GCM 認証タグ'},
+      {name:'meta',type:'Object',desc:'メタ情報'},
+      {name:'meta.rsabits',type:'number',desc:'暗号化に使用したRSA鍵長'},
+      {name:'meta.sym',type:'string',desc:'使用した共通鍵方式',note:'"AES-256-GCM"'},
     ]},
 
     methods: {list:[{
@@ -1267,12 +1275,20 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
   encryptedResponse: {
     desc: '暗号化された処理結果',	// {string} 端的なクラスの説明。ex.'authServer監査ログ'
     note: `authServerからauthClientに返される、暗号化された処理結果オブジェクト<br>
-      ciphertextはauthResponseをJSON化、RSA-OAEP暗号化＋署名付与した文字列
+      ciphertextはauthResponseをJSON化し、AES-256-GCMで暗号化したもの。<br>
+      AES鍵はRSA-OAEPで暗号化し encryptedKey に格納
       `,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
     implement: ['cl','sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
-      {name:'ciphertext',type:'string',desc:'暗号化した文字列',note:''},
+      {name:'cipher',type:'string',desc:'暗号化した文字列',note:''},
+      {name:'signature',type:'string',desc:'authResponseに対するRSA-PSS署名'},
+      {name:'encryptedKey',type:'string',desc:'RSA-OAEPで暗号化されたAES共通鍵'},
+      {name:'iv',type:'string',desc:'AES-GCM 初期化ベクトル'},
+      {name:'tag',type:'string',desc:'AES-GCM 認証タグ'},
+      {name:'meta',type:'Object',desc:'メタ情報'},
+      {name:'meta.rsabits',type:'number',desc:'暗号化に使用したRSA鍵長'},
+      //{name:'ciphertext',type:'string',desc:'暗号化した文字列',note:''},
     ]},
 
     methods: {list:[{
@@ -1420,7 +1436,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     template: ``, // {string} Markdown出力時のテンプレート
 
     members: {list:[
-      {name:'memberId',type:'string',desc:'メンバの識別子',note:'メールアドレス',default:'UUID'},
+      {name:'memberId',type:'string',desc:'メンバの識別子',note:'メールアドレス',default:'UUIDv4'},
       {name:'name',type:'string',desc:'メンバの氏名',note:'',default:'"dummy"'},
       {name:'status',type:'string',desc:'メンバの状態',note:'未加入,未審査,審査済,加入中,加入禁止',default:'"未加入"'},
       {name:'log',type:'MemberLog',desc:'メンバの履歴情報',note:'シート上はJSON文字列',default:'new MemberLog()'},

@@ -84,6 +84,7 @@ class authClient {
 | :-- | :-- | :-- | :-- |
 | [constructor()](#authclient_constructor) | private | コンストラクタ |  |
 | [exec()](#authclient_exec) | public | ローカル関数の処理要求を処理 |  |
+| [fetch()](#authclient_fetch) | public | サーバ側APIの呼び出し |  |
 | [initialize()](#authclient_initialize) | static async | コンストラクタ(非同期処理対応) |  |
 | [setIndexedDB()](#authclient_setindexeddb) | async | IndexedDBの更新(upsert) |  |
 
@@ -97,6 +98,11 @@ class authClient {
 
 - this.cfに[authClientConfig](authClientConfig.md#authclientconfig_members)をセット
 - this.idbを初期化
+- CPkeyが無ければ生成、IndexedDBに保存(cryptoClient.generateKeysで作成)
+- SPkeyが無い場合fetchメソッドを呼び出し、fetchの戻り値がエラーならそれを戻り値とする
+  - サーバ側にCPkeyを送信
+  - サーバからSPkey・deviceIdが返ったらIndexedDBに保存
+  - サーバ側が無反応な場合
 
 #### <span id="authclient_constructor_returns">📤 戻り値</span>
 
@@ -112,6 +118,20 @@ class authClient {
 #### <span id="authclient_exec_process">🧾 処理手順</span>
 
 #### <span id="authclient_exec_returns">📤 戻り値</span>
+
+- Object : 
+
+### <span id="authclient_fetch"><a href="#authclient_methods">🧱 authClient.fetch()</a></span>
+
+#### <span id="authclient_fetch_params">📥 引数</span>
+
+| 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
+| :-- | :-- | :-- | :-- | :-- |
+| arg | [LocalRequest](LocalRequest.md#localrequest_members) | <span style="color:red">必須</span> | ローカル関数からの処理要求 |  |
+
+#### <span id="authclient_fetch_process">🧾 処理手順</span>
+
+#### <span id="authclient_fetch_returns">📤 戻り値</span>
 
 - Object : 
 

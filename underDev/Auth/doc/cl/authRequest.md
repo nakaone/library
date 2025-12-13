@@ -19,7 +19,8 @@
 
 暗号化前の処理要求
 
-- authClientからauthServerに送られる、暗号化前の処理要求オブジェクト
+- authRequestは暗号化・署名の入力となる「正規化対象オブジェクト」であり、
+  cryptoClient.encrypt により署名 → AES暗号化 → RSA鍵暗号化が行われる
 - cryptoClient.[encrypt](cryptoClient.md#cryptoclient_encrypt)で暗号化し、authServerに送られる
 - サーバ側で受信後、cryptoServer.[decrypt](cryptoServer.md#cryptoserver_decrypt)でauthRequestに戻る
 
@@ -28,13 +29,13 @@
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | memberId | string | idb.memberId | メンバの識別子 | =メールアドレス |
-| deviceId | string | idb.deviceId | デバイスの識別子 | UUID |
+| deviceId | string | idb.deviceId | デバイスの識別子 | UUIDv4 |
 | memberName | string | idb.memberName | メンバの氏名 | 管理者が加入認否判断のため使用 |
 | CPkey | string | idb.CPkey | クライアント側署名 |  |
 | requestTime | number | Date.now() | 要求日時 | UNIX時刻 |
 | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  |
 | arguments | any[] | [] | サーバ側関数に渡す引数の配列 |  |
-| requestId | string | UUID | 要求の識別子 | UUID |
+| nonce | string | UUIDv4 | 要求の識別子 | UUIDv4 |
 
 ## <span id="authrequest_methods">🧱 authRequest メソッド一覧</span>
 

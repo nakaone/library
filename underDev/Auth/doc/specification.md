@@ -103,13 +103,14 @@ sequenceDiagram
 ```
 
 - ①処理要求を署名・暗号化
-  1. payload を JSON 正規化
-  1. payload に署名（署名鍵）
-  1. payload+signature を暗号化（公開鍵）
+  1. authRequest を JSON 正規化
+  2. 正規化JSONに署名（RSA-PSS, クライアント秘密鍵）
+  3. authRequest + signature を AES-256-GCM で暗号化
+  4. AES共通鍵を RSA-OAEP（サーバ公開鍵）で暗号化
 - ③処理要求を復号・署名検証
-  1. 復号（秘密鍵）
-  1. 署名検証（公開鍵）
-  1. timestamp / nonce / issuer をチェック
+  1. RSA-OAEPでAES鍵を復号（サーバ秘密鍵）
+  2. AES-256-GCMでauthRequestを復号
+  3. 署名検証（RSA-PSS, クライアント公開鍵）
 - ⑤処理結果を署名・暗号化
   1. 応答データを署名
   1. 応答を暗号化
@@ -122,8 +123,10 @@ sequenceDiagram
 本項はAuth プロジェクトにおける**暗号化・署名の最終仕様**を一箇所にまとめたものである。他のAuth関係仕様書で本項と矛盾する記述が有った場合、本項が優先する。
 
 **前提**
-- 実装は RSA のみ（AES 等の対称暗号は用いない）。
-- `authConfig.md` の `RSAbits`（既定値 2048）で鍵長を指定する。
+- 実装は RSA + AES-256-GCM のハイブリッド暗号方式を用いる。
+  - ペイロード本体は AES-256-GCM で暗号化
+  - AES鍵（共通鍵）のみを RSA-OAEP で暗号化
+- `authConfig.md` の `RSAbits`(既定値 2048)で鍵長を指定する。
 - 環境はブラウザ（WebCrypto）クライアントと Google Apps Script（サーバ）を想定。GAS の制約（永続ストレージ・実行時間）に配慮する。
 
 ### 用語と略称
@@ -132,14 +135,18 @@ sequenceDiagram
 - RSA-PSS: RSA Probabilistic Signature Scheme（署名用）
 - RSAbits: RSA 鍵長（例: 2048）
 - nonce: 一意なリクエスト識別子（UUID v4 等）
-- timestamp: クライアント生成 UNIX ms（例: Date.now()）
-- replay cache: サーバで管理する最近利用された nonce の履歴（TTL 管理）
+- requestTime: クライアント生成 UNIX ms（例: Date.now()）
+- replay cache: サーバで管理する最近利用された nonce の履歴([authScriptProperties.requestLog](authScriptProperties.md#authscriptproperties_members)でTTL管理)
 
 ### 設計方針
 
-1. **機密性**: フルペイロードを RSA で直接暗号化する（ただし大きなペイロードは非推奨）
-2. **完全性/認証**: 署名は RSA-PSS（SHA-256）で行う
-3. **リプレイ対策**: `nonce` + `timestamp` の組合せを必須にする。サーバは nonce の一意性を検査し、同一 nonce は拒否する。
+1. **機密性**:
+   - authRequest / authResponse 全体を AES-256-GCM で暗号化する
+   - AES鍵（共通鍵）は RSA-OAEP で暗号化し、envelope に格納する
+2. **完全性/認証**:
+   - 署名は RSA-PSS（SHA-256）で行う
+   - 署名対象は「暗号化前の authRequest / authResponse（正規化JSON）」とする
+3. **リプレイ対策**: `nonce` + `requestTime` の組合せを必須にする。サーバは nonce の一意性を検査し、同一 nonce は拒否する。
 4. **可搬性**: 暗号パラメータは `authConfig.md` の `RSAbits` を参照する。
 5. **可観測性**: 失敗時は詳細な内部メッセージをログ（authErrorLog / authAuditLog）に残すが、クライアントには汎用的なエラーメッセージを返す。
 
@@ -150,66 +157,47 @@ sequenceDiagram
 - 署名方式: **RSA-PSS（saltLength = auto）**
 - 暗号化方式: **RSA-OAEP（SHA-256）**
 - nonce 型: **UUID v4**（文字列）
-- timestamp 許容誤差: **±5分（300,000 ms）** を初期推奨。運用で短縮可能（例: ±1分）。
+- 許容誤差: **±2分（120,000 ms）** authConfig.[allowableTimeDifference](sv/authConfig.md#authconfig_members)で規定。
 
-<!--
-■ChatGPT指摘
-※ RSA のみを使う設計は単純で理解しやすいが、長いデータ（>~2KB）には非効率かつ制限により失敗することがあります。その場合は「ハイブリッド（対称鍵を使い、その鍵をRSAで暗号化）」を検討してください（下記参照）。
+### 署名・暗号化対象JSON
 
-■方針
-ハイブリッドは「将来的検討課題」として、「記述はするが今回の実装からは外す」こととします。
--->
-
-### JSONリクエスト構造
-
-以下はクライアントが署名・暗号化する前の **正規化済み JSON** の例（インデント/ホワイトスペースはトーク化前に取り除く）:
-
-```json
-{
-  "header": {
-    "version": "1.0",
-    "clientId": "string",
-    "timestamp": 1700000000000,
-    "nonce": "uuid-v4-string"
-  },
-  "payload": {
-    "action": "string",
-    "resource": "string",
-    "data": { "..." : "..." }
-  }
-}
-```
-
-<!--
-ここで私が理解している「暗号化対象」(specification.md「I/O項目対応表」で背景色黄色にしている項目)はpayload.dataであり、headerやpayload.action/resourceは送受信時に付加されるという理解で正しいですか？
--->
+クライアントが署名・暗号化する対象は**JSONリクエスト構造ではなく authRequest インスタンスそのもの**とする。
 
 **署名対象**: `header` + `payload` の両方を canonicalize（キー順ソート、UTF-8）した文字列に対して `RSA-PSS(SHA-256)` で署名し、署名値を `signature` フィールドとして追加する。
 
-<!--
-ここでcanonicalizeはどのような必要性から行う事でしょうか？
--->
+**最終送信フォーマット**:
 
-**最終送信フォーマットの例**（暗号化あり）:
+- 処理要求 : [encryptedRequest](cl/encryptedRequest.md#encryptedrequest_members)
+- 処理結果 : [encryptedResponse](sv/encryptedResponse.md#encryptedresponse_members)
+
+※ encryptedResponse（サーバ→クライアント）は同一構造を持ち、暗号化対象が authResponse、署名鍵がサーバ鍵になる点のみが異なる。
+
+■ 最終送信フォーマットの例
+
 ```json
 {
   "envelope": {
-    "cipher": "<base64 RSA-OAEP で暗号化された JSON 文字列>"
+    "cipher": "<base64 AES-256-GCM で暗号化された JSON>",
+    "encryptedKey": "<base64 RSA-OAEP で暗号化された AES 共通鍵>",
+    "iv": "<base64 AES-GCM IV>",
+    "tag": "<base64 AES-GCM 認証タグ>"
   },
-  "signature": "<base64 RSA-PSS signature over plaintext canonical JSON>",
+  "signature": "<base64 RSA-PSS signature over canonical JSON>",
   "meta": {
-    "rsabits": 2048
+    "rsabits": 2048,
+    "sym": "AES-256-GCM"
   }
 }
 ```
 
 ### Nonce と Replay 防止
 
-- サーバは `timestamp` と `nonce` の両方を検査する。リプレイ閾値を満たす場合でも `nonce` が既に使われていれば拒否する。
+- サーバは `requestTime` と `nonce` の両方を検査する。リプレイ閾値を満たす場合でも `nonce` が既に使われていれば拒否する。
 - replay cacheの実装では、ScriptPropertiesにJSONバッファを持たせ、短時間のTTLとする
 
-#### サーバ側検査アルゴリズム（擬似）
-1. 受信 → `header.timestamp` が現在時刻と比較して許容誤差内か確認
+#### サーバ側検査アルゴリズム
+
+1. 受信 → `header.requestTime` が現在時刻と比較して許容誤差内か確認
 2. `header.nonce` が既に replay cache に存在するか確認
    - 存在する → 拒否（リプレイ）
    - 存在しない → 登録（TTL を設定）
@@ -217,59 +205,30 @@ sequenceDiagram
 4. 復号（該当する場合）
 5. 正常処理後、nonce の TTL 更新は行わない（使い捨て）
 
-### 署名・検証の順序（推奨）
+### 署名・検証の順序
+
 1. クライアントは canonical JSON を署名（RSA-PSS）
 2. クライアントは署名済みの JSON を暗号化（RSA-OAEP）して `envelope.cipher` に格納（暗号化する場合）
-3. サーバは受信 → 復号 → canonical JSON の署名検証 → timestamp/nonce チェック → 業務ロジック
+3. サーバは受信 → 復号 → canonical JSON の署名検証 → requestTime/nonce チェック → 業務ロジック
 
 > 注: 署名を暗号化の後に検証するケースや、暗号化後に署名（外側）を行うケースもあるが、上記の順序は「署名の透明性」と「復号の後で署名検証」が保証され、安全です。
 
-<!--
-以下のChatGPTの指摘はauthScriptPropertiesクラスで対応
+#### canonical JSON 仕様
 
-### 例外とエラーハンドリング（概要）
+署名対象となる canonical JSON は、以下の条件を満たすものとする。
 
-- 署名検証失敗 → 401 相当（E_SIG_VERIFY）を返却。サーバ側は authErrorLog に記録。
-- 復号失敗 → 400/401（E_DECRYPT）を返却。詳細はログのみに記録。
-- timestamp 範囲外 → 400（E_TIMESTAMP）を返却。
-- nonce 重複 → 409（E_REPLAY）を返却。
--->
+1. JSON オブジェクトのキー順は **辞書順（Unicode code point 昇順）**
+2. 数値は変換せず、そのままの数値表現を用いる
+3. 文字列は UTF-8 とし、エスケープは JSON 標準に従う
+4. 不要な空白・改行は含めない（minified JSON）
+5. undefined / function / Symbol 等は含めない
+
+この canonical JSON 文字列に対して RSA-PSS(SHA-256) 署名を行う。
 
 ### 互換性と拡張性の提案
-- `meta.rsabits` を送ることでクライアントとサーバが鍵長を協調できる（フォールバックを設けること）
-- 将来ハイブリッドに移行する場合は `envelope.symmetric` に AES-256 キーを RSA で暗号化する方式に拡張可能。
 
-
-<!--
-参考：修正前の本項(2025.12.09)
-
-- 署名方式 : RSA-PSS
-- 暗号化方式 : RSA-OAEP
-- ハッシュ関数 : SHA-256以上
-- 許容時差±120秒※以内
-  ※既定値。実際の桁数はauthConfig.cryptoServer.[allowableTimeDifference](sv/authServerConfig.md#authserverconfig_members)で規定
-- 順序は「暗号化->署名」ではなく「署名->暗号化」で行う
-  - 理由
-    1. 署名を暗号化することで第三者による署名改ざん防止となる
-    1. 署名公開が不要になるためメタデータ漏洩による攻撃範囲が減る
-    1. リプレイ攻撃対策は requestTime + requestId で実施する
-  - 手順
-    1. クライアントがデータをJSON化
-    2. 自身の秘密鍵で署名(署名→暗号化)
-    3. サーバの公開鍵で暗号化
-    4. サーバは復号後、クライアント公開鍵(CPkey)で署名を検証
-- パスワードの生成は「ライブラリ > createPassword」を使用
-- パスコードのメール送信は「ライブラリ > [sendMail](JSLib.md#sendmail)」を使用
-- CPkeyの有効期限が切れた場合、以下の手順で更新する
-  1. クライアント側から古いCPkeyで署名された要求を受信
-  2. サーバ側で署名検証の結果、期限切れを確認
-    - memberList.trial[0].CPkeyUpdateUntilに「現在日時＋[loginLifeTime](authServerConfig.md#authserverconfig_members)」をセット
-    - クライアント側に通知
-  3. クライアント側でCPkeyを更新、新CPkeyで再度リクエスト
-  4. サーバ側で[loginLifeTime](authServerConfig.md#authserverconfig_members)を確認、期限内ならmemberList.CPkeyを書き換え。期限切れなら加入処理同様、adminによる個別承認を必要とする。
-  5. 以降は未ログイン状態で要求が来た場合として処理を継続
-
--->
+- `meta.rsabits` を送ることでクライアントとサーバが鍵長を協調できる
+- `meta.sym` により共通鍵方式の将来的な差し替えが可能
 
 ## <span id="policy"><a href="#top">実装上の方針</a></span>
 
@@ -295,7 +254,7 @@ sequenceDiagram
 
 ※ 背景色黄色は暗号化対象項目。例：
 - `encryptedRequest = {memberId,deviceId,cypherText}`
-- `cypherText = encrypt(JSON.stringify(memberName〜requestId))`
+- `cypherText = encrypt(JSON.stringify(memberName〜nonce))`
 
 <div style="overflow-x: auto;" class="nowrap">
 
@@ -308,7 +267,7 @@ sequenceDiagram
 | 5 | requestTime | number | クライアント側の処理要求受付日時 |  | <b>requestTime</b> | <b>requestTime</b> |  |
 | 6 | func | string | サーバ側関数名 | func | <b>func</b> | <b>func</b> |  |
 | 7 | arguments | any[] | サーバ側関数に渡す引数の配列 | arguments | <b>arguments</b> | <b>arguments</b> |  |
-| 8 | requestId | string | 処理要求のUUID |  | <b>requestId</b> | <b>requestId</b> |  |
+| 8 | nonce | string | 処理要求のUUID |  | <b>nonce</b> | <b>nonce</b> |  |
 | 9 | SPkey | string | サーバ側公開鍵 |  |  | <b>SPkey</b> |  |
 | 10 | response | any | <span class="popup" title="Errorオブジェクトを含む">サーバ側関数の処理結果(戻り値)</span> |  |  | <b>response</b> | response |
 | 11 | receptTime | number | サーバ側の処理要求受付日時 |  |  | <b>receptTime</b> |  |

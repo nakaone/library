@@ -64,7 +64,7 @@
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| requestId | string | <span style="color:red">必須</span> | 処理要求識別子(UUID) |  |
+| nonce | string | <span style="color:red">必須</span> | 処理要求識別子(UUIDv4) |  |
 
 #### <span id="authscriptproperties_checkduplicate_process">🧾 処理手順</span>
 

@@ -72,7 +72,7 @@ classDiagram
 
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
-| memberId | string | UUID | メンバの識別子 | メールアドレス |
+| memberId | string | UUIDv4 | メンバの識別子 | メールアドレス |
 | name | string | "dummy" | メンバの氏名 |  |
 | status | string | "未加入" | メンバの状態 | 未加入,未審査,審査済,加入中,加入禁止 |
 | log | [MemberLog](MemberLog.md#memberlog_members) | new MemberLog() | メンバの履歴情報 | シート上はJSON文字列 |
@@ -146,13 +146,13 @@ classDiagram
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 不適格 | 正常終了 |
   | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
   | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUIDv4 | — | — |
   | memberName | string | <span style="color:red">必須</span> | メンバの氏名 |  | — | — |
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — |
   | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — |
-  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — |
+  | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | **Member(更新前)** | **Member(更新後)** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — |
@@ -180,7 +180,7 @@ classDiagram
     | requestTime | number | Date.now() | 要求日時 | — |
     | func | string | <span style="color:red">必須</span> | サーバ側関数名 | **"::passcode::"** |
     | arguments | any[] | [] | サーバ側関数に渡す引数の配列 | **入力されたパスコード** |
-    | requestId | string | UUID | 要求の識別子 | — |
+    | nonce | string | UUIDv4 | 要求の識別子 | — |
 - デバイス状態チェック
   - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
   - request.deviceIdで対象デバイスを特定、「試行中」以外は戻り値「非試行中」を返して終了
@@ -202,7 +202,7 @@ classDiagram
     | requestTime | number | Date.now() | 要求日時 | — | — |
     | func | string | <span style="color:red">必須</span> | サーバ側関数名 | — | — |
     | arguments | any[] | [] | サーバ側関数に渡す引数の配列 | — | — |
-    | requestId | string | UUID | 要求の識別子 | — | — |
+    | nonce | string | UUIDv4 | 要求の識別子 | — | — |
 - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
   ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
 - 戻り値「正常終了」を返して終了(後続処理は戻り値(authResponse.message)で分岐先処理を判断)
@@ -214,13 +214,13 @@ classDiagram
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 不正形式 | 非試行中 | 正常終了 |
   | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
   | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — | — |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUIDv4 | — | — | — |
   | memberName | string | <span style="color:red">必須</span> | メンバの氏名 |  | — | — | — |
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — |
   | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
-  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — | — |
+  | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | — | **更新後のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — |
@@ -252,13 +252,13 @@ classDiagram
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 登録済 | 未登録 |
   | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
   | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUIDv4 | — | — |
   | memberName | string | <span style="color:red">必須</span> | メンバの氏名 |  | — | — |
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — |
   | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — |
-  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — |
+  | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | **Member(シート)** | — |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — |
@@ -304,13 +304,13 @@ classDiagram
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 不存在 | 対象外 | キャンセル | 正常終了 |
   | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
   | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — | — | — |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUIDv4 | — | — | — | — |
   | memberName | string | <span style="color:red">必須</span> | メンバの氏名 |  | — | — | — | — |
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — | — |
   | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — |
-  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — | — | — |
+  | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | **更新前のMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — | — |
@@ -338,13 +338,13 @@ classDiagram
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 正常終了 |
   | :-- | :-- | :-- | :-- | :-- | :-- |
   | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUIDv4 | — |
   | memberName | string | <span style="color:red">必須</span> | メンバの氏名 |  | — |
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — |
   | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — |
-  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — |
+  | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | **Member(更新後)** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — |
@@ -372,7 +372,7 @@ classDiagram
     | requestTime | number | Date.now() | 要求日時 | — |
     | func | string | <span style="color:red">必須</span> | サーバ側関数名 | **"::reissue::"** |
     | arguments | any[] | [] | サーバ側関数に渡す引数の配列 | — |
-    | requestId | string | UUID | 要求の識別子 | — |
+    | nonce | string | UUIDv4 | 要求の識別子 | — |
 - デバイス状態チェック
   - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
   - request.deviceIdで対象デバイスを特定、「試行中」以外は戻り値「非試行中」を返して終了
@@ -406,13 +406,13 @@ classDiagram
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 不正形式 | 非試行中 | 正常終了 |
   | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
   | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — | — |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUIDv4 | — | — | — |
   | memberName | string | <span style="color:red">必須</span> | メンバの氏名 |  | — | — | — |
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — |
   | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
-  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — | — |
+  | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | — | **更新後のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — |
@@ -462,13 +462,13 @@ classDiagram
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 物理削除 | 加入禁止 | キャンセル | 論理削除 |
   | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
   | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — | — | — |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUIDv4 | — | — | — | — |
   | memberName | string | <span style="color:red">必須</span> | メンバの氏名 |  | — | — | — | — |
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — | — |
   | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — |
-  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — | — | — |
+  | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | **更新前のMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — | — |
@@ -514,13 +514,13 @@ classDiagram
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 不存在 | 対象外 | キャンセル | 正常終了 |
   | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
   | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — | — | — |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUIDv4 | — | — | — | — |
   | memberName | string | <span style="color:red">必須</span> | メンバの氏名 |  | — | — | — | — |
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — | — |
   | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — |
-  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — | — | — |
+  | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | **更新前のMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — | — |
@@ -570,13 +570,13 @@ classDiagram
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | ① | ② | ③ | ④ | ⑤ |
   | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
   | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — | — | — | — |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — | — | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUIDv4 | — | — | — | — | — |
   | memberName | string | <span style="color:red">必須</span> | メンバの氏名 |  | — | — | — | — | — |
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — | — | — |
   | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — | — |
-  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — | — | — | — |
+  | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | **Member(更新済)** | — | — | **Member(新規作成)** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — | — | — |
@@ -630,13 +630,13 @@ classDiagram
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 一覧 | 該当無し | 正常終了 |
   | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
   | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — | — |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUIDv4 | — | — | — |
   | memberName | string | <span style="color:red">必須</span> | メンバの氏名 |  | — | — | — |
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — |
   | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
-  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — | — |
+  | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | **MemberDevice.status=="凍結中"とそのMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — |
@@ -664,7 +664,7 @@ classDiagram
     | requestTime | number | Date.now() | 要求日時 | — |
     | func | string | <span style="color:red">必須</span> | サーバ側関数名 | **"::updateCPkey::"** |
     | arguments | any[] | [] | サーバ側関数に渡す引数の配列 | **更新後CPkey** |
-    | requestId | string | UUID | 要求の識別子 | — |
+    | nonce | string | UUIDv4 | 要求の識別子 | — |
   - 更新後CPkeyがRSAの公開鍵形式か(PEMフォーマットなど)チェック、不適合なら戻り値「鍵形式不正」を返して終了
 - メンバの状態チェック
   - request.memberIdを基に[getMemberメソッド](#member_getmember)を実行
@@ -717,13 +717,13 @@ classDiagram
   | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 | 鍵形式不正 | 機器未登録 | 正常終了 |
   | :-- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
   | memberId | string | <span style="color:red">必須</span> | メンバの識別子 | =メールアドレス | — | — | — |
-  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUID | — | — | — |
+  | deviceId | string | <span style="color:red">必須</span> | デバイスの識別子 | UUIDv4 | — | — | — |
   | memberName | string | <span style="color:red">必須</span> | メンバの氏名 |  | — | — | — |
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — |
   | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
-  | requestId | string | <span style="color:red">必須</span> | 要求の識別子 | UUID | — | — | — |
+  | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | — | **更新<span style="color:red">前</span>のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — |
