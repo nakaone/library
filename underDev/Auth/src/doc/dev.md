@@ -81,8 +81,8 @@ class authProto {
 
 ## 変更履歴
 
-
-- 【派生】LocalResponse is not defined(authClient.exec.return)
+- build0005: 処理要求の暗号化
+  - 【派生】cryptoClient:"Error: Error: not fixed: "encryptedRequest""
 - build0004: authClient.initialize/setIndexedDB作成
   - 【派生】クラス・関数ソースのES Module化＋ Jest から Vitest に変更<br>
     最終成果物に合わせて関連クラス・関数は埋め込むようにしてきたが、
