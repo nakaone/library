@@ -41,7 +41,7 @@
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  |
-| arguments | any[] | [] | サーバ側関数に渡す引数の配列 | 引数が一つでも配列として指定 |
+| arg | any[] | [] | サーバ側関数に渡す引数の配列 | 引数が一つでも配列として指定 |
 
 #### <span id="localrequest_constructor_process">🧾 処理手順</span>
 

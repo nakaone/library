@@ -151,6 +151,11 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         process: `
           - this.cfに[authClientConfig](authClientConfig.md#authclientconfig_members)をセット
           - this.idbを初期化
+          - CPkeyが無ければ生成、IndexedDBに保存(cryptoClient.generateKeysで作成)
+          - SPkeyが無い場合fetchメソッドを呼び出し、fetchの戻り値がエラーならそれを戻り値とする
+            - サーバ側にCPkeyを送信
+            - サーバからSPkey・deviceIdが返ったらIndexedDBに保存
+            - サーバ側が無反応な場合
         `,
         /*
           - IndexedDBからメールアドレスを取得、存在しなければダイアログから入力
@@ -166,10 +171,30 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         returns: {list:[
           {type:'authClient'}, // コンストラクタは自データ型名
         ]},
-      },{ // exec
+      },
+      { // exec
         name: 'exec', // {string} 関数(メソッド)名
         type: 'public', // {string} 関数(メソッド)の分類
         desc: 'ローカル関数の処理要求を処理', // {string} 端的な関数(メソッド)の説明
+        note: ``, // {string} ✂️注意事項。Markdownで記載
+        source: ``, // {string} ✂️想定するソースコード
+        lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
+        rev: 0, // {string} 本メソッド仕様書の版数
+
+        params: {list:[
+          {name:'arg',type:'LocalRequest',desc:'ローカル関数からの処理要求',note:''},
+        ]},
+
+        process: ``,
+
+        returns: {list:[
+          {type:'Object'}//{type:'LocalResponse'}, // コンストラクタは自データ型名
+        ]},
+      },
+      { // fetch
+        name: 'fetch', // {string} 関数(メソッド)名
+        type: 'public', // {string} 関数(メソッド)の分類
+        desc: 'サーバ側APIの呼び出し', // {string} 端的な関数(メソッド)の説明
         note: ``, // {string} ✂️注意事項。Markdownで記載
         source: ``, // {string} ✂️想定するソースコード
         lib: [], // {string} 本関数(メソッド)で使用する外部ライブラリ
@@ -1287,7 +1312,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
       params: {list:[  // {Params} ■メソッド引数の定義■
         {name:'func',type:'string',desc:'サーバ側関数名',note:''},
-        {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',
+        {name:'arg',type:'any[]',desc:'サーバ側関数に渡す引数の配列',
           note:'引数が一つでも配列として指定',default:[]},
       ]},
 

@@ -98,8 +98,20 @@ class authProto {
 
 ## 変更履歴
 
-- build0005: 処理要求の暗号化
-  - 【派生】cryptoClient:"Error: Error: not fixed: "encryptedRequest""
+- build0006: 処理要求の暗号化
+  - cryptoClient.constructor(), .encrypt()のみ作成
+  - authClient.cryptoメンバ作成(@constructor)
+  - localRequestクラスを作成、authClient.execメソッドに組み込み
+- === いまここ =====
+- build0005: 初回HTMLロード時処理
+  - authClient.constructorに以下機能を追加
+    - CPkeyが無ければ生成(cryptoClient.generateKeys)
+    - SPkeyが無ければサーバ側にCPkeyを送信
+    - サーバから送られたSPkey, deviceIdをIndexedDBに保存
+  - b0005.test.mjs作成
+  - 【保留】[bug] cryptoClient:"Error: Error: not fixed: "encryptedRequest""
+    原因不明。cryptoClient.encrypt(), cryptoServer.encrypt()で発生。
+    両方ともリンクは出来ており、実害は無いため対応保留。
 - build0004: authClient.initialize/setIndexedDB作成
   - 【派生】クラス・関数ソースのES Module化＋ Jest から Vitest に変更<br>
     最終成果物に合わせて関連クラス・関数は埋め込むようにしてきたが、
