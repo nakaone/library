@@ -90,7 +90,7 @@ class authProto {
   - 仕様書修正
     - specification.md
       - 暗号化・署名方式
-        - nonce -> requestId
+        - nonce -> nonce
         - replay cache -> authScriptProperties.requestLog(TTL管理)
       - I/O項目対応表
     - authRequest

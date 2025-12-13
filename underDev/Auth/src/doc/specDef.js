@@ -518,7 +518,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       {name:'requestTime',type:'number',desc:'要求日時',note:'UNIX時刻',default:'Date.now()'},
       {name:'func',type:'string',desc:'サーバ側関数名',note:''},
       {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',note:'',default:'[]'},
-      {name:'requestId',type:'string',desc:'要求の識別子',note:'UUID',default:'UUID'},
+      {name:'nonce',type:'string',desc:'要求の識別子',note:'UUID',default:'UUID'},
     ]},
 
     methods: {list:[{
@@ -550,7 +550,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
     members: {list:[
       {name:'timestamp',type:'number',desc:'リクエストを受けたサーバ側日時',note:'',default:'Date.now()'},
-      {name:'requestId',type:'string',desc:'クライアント側で採番されたリクエスト識別子',note:'UUID'},
+      {name:'nonce',type:'string',desc:'クライアント側で採番されたリクエスト識別子',note:'UUID'},
     ]},
 
     methods: {list:[
@@ -593,7 +593,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       {name:'requestTime',type:'number',desc:'要求日時',note:'UNIX時刻'},
       {name:'func',type:'string',desc:'サーバ側関数名',note:''},
       {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',note:''},
-      {name:'requestId',type:'string',desc:'要求の識別子',note:'UUID'},
+      {name:'nonce',type:'string',desc:'要求の識別子',note:'UUID'},
       {name:'SPkey',type:'string',desc:'サーバ側公開鍵',default:'SPkey'},
       {name:'response',type:'any',desc:'サーバ側関数の戻り値',note:'Errorオブジェクトを含む',default:'null'},
       {name:'receptTime',type:'number',desc:'サーバ側の処理要求受付日時',default:'Date.now()'},
@@ -669,7 +669,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         rev: 0, // {string} 本メソッド仕様書の版数
 
         params: {list:[
-          {name:'requestId',type:'string',desc:'処理要求識別子(UUID)',note:''},
+          {name:'nonce',type:'string',desc:'処理要求識別子(UUID)',note:''},
         ]},
 
         process: ``,

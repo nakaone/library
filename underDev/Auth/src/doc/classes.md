@@ -86,7 +86,7 @@ classDiagram
 
   class authRequestLog {
     number timestamp
-    string requestId
+    string nonce
   }
 
   authScriptProperties -x-> authRequestLog

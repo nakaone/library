@@ -235,7 +235,7 @@ sequenceDiagram
   - 理由
     1. 署名を暗号化することで第三者による署名改ざん防止となる
     1. 署名公開が不要になるためメタデータ漏洩による攻撃範囲が減る
-    1. リプレイ攻撃対策は requestTime + requestId で実施する
+    1. リプレイ攻撃対策は requestTime + nonce で実施する
   - 手順
     1. クライアントがデータをJSON化
     2. 自身の秘密鍵で署名(署名→暗号化)
@@ -278,7 +278,7 @@ sequenceDiagram
 
 ※ 背景色黄色は暗号化対象項目。例：
 - `encryptedRequest = {memberId,deviceId,cypherText}`
-- `cypherText = encrypt(JSON.stringify(memberName〜requestId))`
+- `cypherText = encrypt(JSON.stringify(memberName〜nonce))`
 
 <div style="overflow-x: auto;" class="nowrap">
 
@@ -291,7 +291,7 @@ sequenceDiagram
 | 5 | requestTime | number | クライアント側の処理要求受付日時 |  | <b>requestTime</b> | <b>requestTime</b> |  |
 | 6 | func | string | サーバ側関数名 | func | <b>func</b> | <b>func</b> |  |
 | 7 | arguments | any[] | サーバ側関数に渡す引数の配列 | arguments | <b>arguments</b> | <b>arguments</b> |  |
-| 8 | requestId | string | 処理要求のUUID |  | <b>requestId</b> | <b>requestId</b> |  |
+| 8 | nonce | string | 処理要求のUUID |  | <b>nonce</b> | <b>nonce</b> |  |
 | 9 | SPkey | string | サーバ側公開鍵 |  |  | <b>SPkey</b> |  |
 | 10 | response | any | <span class="popup" title="Errorオブジェクトを含む">サーバ側関数の処理結果(戻り値)</span> |  |  | <b>response</b> | response |
 | 11 | receptTime | number | サーバ側の処理要求受付日時 |  |  | <b>receptTime</b> |  |
