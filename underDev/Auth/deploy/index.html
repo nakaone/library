@@ -301,19 +301,108 @@ class authClient {
       dev.step(1); // メンバに値設定
       this.cf = new authClientConfig(arg);
       this.idb = {};
+      this.crypto = new cryptoClient(this.cf);
 
       dev.end(); // 終了処理
 
     } catch (e) { return dev.error(e); }
   }
 
-  exec(request) {
+  async exec(request) {
     const v = {whois:`${this.constructor.name}.exec`, arg:{request}, rv:null};
     dev.start(v);
     try {
 
-      dev.step(1);
-      v.rv = this.idb;  // オンメモリのIndexedDBの内容
+      if( !this.idb.SPkey ){
+        dev.step(1);  // SPkey未取得 ⇒ 内発処理「初期情報要求」を再帰呼出
+        v.authRequest = new authRequest('::initial::');
+        v.encryptedRequest = this.crypto.encrypt(v.authRequest);
+        v.response = await this.fetch(v.encryptedRequest);
+        v.authResponse = this.crypto.decrypt(v.response);
+
+        dev.step(1.4); // SPkey / deviceId 保存
+        await this.setIndexedDB({
+          SPkey: v.authResponse.SPkey,
+          deviceId: v.authResponse.deviceId
+        });
+
+        v.rv = this.exec(request);
+      } else {
+        // SPkey取得済
+
+      }
+
+
+      // 内発処理だった場合
+      // 通常の処理要求だった場合
+
+      dev.step(1); // SPkey 存在確認
+      if (!this.idb.SPkey) {
+
+        dev.step(1.1); // 初回 init リクエスト（署名のみ）
+        v.initRequest = new authRequest('::initial::');
+
+        dev.step(1.2); // 署名
+        const signedInit = await this.crypto.signOnly(initRequest);
+
+        dev.step(1.3); // サーバ通信
+        const authResponse = await this.fetch(signedInit);
+
+        dev.step(1.4); // SPkey / deviceId 保存
+        await this.setIndexedDB({
+          SPkey: authResponse.SPkey,
+          deviceId: authResponse.deviceId
+        });
+      }
+
+
+      dev.end();
+      return this.idb;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  async fetch(payload) {  // モック。実運用では fetch / UrlFetchApp 等に差し替え
+    const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{}, rv:null};
+    dev.start(v);
+    try {
+
+      //return this.cf.transport(payload);
+
+      v.rv = {};
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得 */
+  async getIndexedDB() {
+    const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{}, rv:null};
+    dev.start(v);
+    try {
+
+      v.db = authClient._IndexedDB;
+      if (!v.db) throw new Error("IndexedDB not initialized");
+
+      // 'readwrite' トランザクション
+      const transaction = v.db.transaction([this.cf.storeName], 'readwrite');
+      const store = transaction.objectStore(this.cf.storeName);
+
+      // 全てのキーを取得
+      v.rv = await new Promise((resolve, reject) => {
+        const putRequest = store.getAll();
+        putRequest.onsuccess = () => resolve();
+        putRequest.onerror = (event) => {
+          reject(new Error(`GET操作失敗: ${event.target.error.message}`));
+        };
+      });
+
+      // this.idbに登録
+      for ( [v.key, v.value] of Object.entries(v.rv)) {
+        this.idb[v.key] = v.value;
+      }
 
       dev.end(); // 終了処理
       return v.rv;
@@ -358,14 +447,26 @@ class authClient {
         };
       });
 
-      dev.step(3);  // オプション設定値をIndexedDBに保存
-      await v.rv.setIndexedDB({ // 内容はauthIndexedDB
-        memberId: 'dummyID',  // 仮IDはサーバ側で生成
-        memberName: 'dummyName',
-        deviceId: crypto.randomUUID(),
-        keyGeneratedDateTime: Date.now(),
-        SPkey: 'dummySPkey',
-      });
+      dev.step(3);  // IndexedDBの内容を取得
+      v.idb = await v.rv.getIndexedDB();
+
+      dev.step(4);  // IndexedDBが空の場合、既定値(初期値)をIndexedDBに保存
+      if( Object.keys(v.idb).length === 0 ){
+
+        v.idb = { // IndexedDBの初期値。内容はauthIndexedDB参照
+          memberId: 'dummyMemberID',  // 仮IDはサーバ側で生成
+          memberName: 'dummyMemberName',
+          deviceId: 'dummyDeviceID',
+          CPkey: this.crypto.CPkeyEnc,
+          keyGeneratedDateTime: Date.now(),
+          SPkey: null,
+        };
+        await v.rv.setIndexedDB(v.idb);
+
+      }
+
+      dev.step(5);  // IndexedDBの内容をメンバ変数に格納
+      Object.keys(v.idb).forEach(x => this[x] = v.idb[x]);
 
       dev.end(); // 終了処理
       return v.rv;
@@ -379,7 +480,7 @@ class authClient {
     try {
 
       v.db = authClient._IndexedDB;
-      if (!v.db) throw new Error("IndexedDBが初期化されていません。");
+      if (!v.db) throw new Error("IndexedDB not initialized");
 
       // 'readwrite' トランザクション
       const transaction = v.db.transaction([this.cf.storeName], 'readwrite');
@@ -394,9 +495,7 @@ class authClient {
         // エラーハンドリングのためにPromiseでラップするのが一般的。
         await new Promise((resolve, reject) => {
           const putRequest = store.put(v.value, v.key);
-
           putRequest.onsuccess = () => resolve();
-
           putRequest.onerror = (event) => {
             // 個別のリクエストエラーはトランザクション全体のエラーとなる
             reject(new Error(`PUT操作失敗 (Key: ${v.key}): ${event.target.error.message}`));

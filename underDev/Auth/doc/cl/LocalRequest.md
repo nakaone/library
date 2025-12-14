@@ -26,7 +26,7 @@
 | 項目名 | データ型 | 要否/既定値 | 説明 | 備考 |
 | :-- | :-- | :-- | :-- | :-- |
 | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  |
-| arguments | any[] | [] | サーバ側関数に渡す引数の配列 | プリミティブ値、及びプリミティブ値で構成された配列・オブジェクト |
+| arg | any[] | [] | サーバ側関数に渡す引数の配列 | プリミティブ値、及びプリミティブ値で構成された配列・オブジェクト |
 
 ## <span id="localrequest_methods">🧱 LocalRequest メソッド一覧</span>
 
@@ -49,8 +49,8 @@
 - "func"は関数名として使用可能な文字種であることを確認<br>
   `^[A-Za-z_$][A-Za-z0-9_$]*$`<br>
   上記正規表現にマッチしなければ戻り値「func不正」を返して終了
-- "arguments"は関数を排除するため、一度JSON化してからオブジェクト化<br>
-  `JSON.parse(JSON.stringify(arguments))`
+- "arg"は関数を排除するため、一度JSON化してからオブジェクト化<br>
+  `JSON.parse(JSON.stringify(arg))`
 
 #### <span id="localrequest_constructor_returns">📤 戻り値</span>
 

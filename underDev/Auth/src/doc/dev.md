@@ -3,7 +3,7 @@
 ## クラス・メソッド プロトタイプ
 
 ```js
-class authProto {
+export class authProto {
 
   static _XXX = null;
 
@@ -101,6 +101,12 @@ class authProto {
     - cryptoClient
     - cryptoServer
   - ソース作成
+    - サーバ側ダミークラス作成
+      - authResponse
+      - authServer
+      - authServerConfig
+      - cryptoServer
+      - Member
   - b0005.test.mjs作成
   - 【保留】[bug] cryptoClient:"Error: Error: not fixed: "encryptedRequest""
     原因不明。cryptoClient.encrypt(), cryptoServer.encrypt()で発生。

@@ -518,7 +518,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       {name:'CPkey',type:'string',desc:'クライアント側署名',note:'',default:'idb.CPkey'},
       {name:'requestTime',type:'number',desc:'要求日時',note:'UNIX時刻',default:'Date.now()'},
       {name:'func',type:'string',desc:'サーバ側関数名',note:''},
-      {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',note:'',default:'[]'},
+      {name:'arg',type:'any[]',desc:'サーバ側関数に渡す引数の配列',note:'',default:'[]'},
       {name:'nonce',type:'string',desc:'要求の識別子',note:'UUIDv4',default:'UUIDv4'},
     ]},
 
@@ -586,7 +586,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
     - サーバ側処理終了後、cryptoServer.[encrypt](cryptoServer.md#encrypt)で暗号化してauthClientに戻す
     - authClientはcryptoClient.[decrypt](../cl/cryptoClient.md#cryptoclient_decrypt)で復号、後続処理を実行する
     `,	// {string} クラスとしての補足説明(Markdown)。概要欄に記載(trimIndent対象)
-    implement: ['cl','sv'],  // 実装の有無
+    implement: ['sv'],  // 実装の有無
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'memberId',type:'string',desc:'メンバの識別子',note:'=メールアドレス'},
@@ -595,15 +595,15 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
       {name:'CPkey',type:'string',desc:'クライアント側署名',note:''},
       {name:'requestTime',type:'number',desc:'要求日時',note:'UNIX時刻'},
       {name:'func',type:'string',desc:'サーバ側関数名',note:''},
-      {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',note:''},
+      {name:'arg',type:'any[]',desc:'サーバ側関数に渡す引数の配列',note:''},
       {name:'nonce',type:'string',desc:'要求の識別子',note:'UUIDv4'},
       {name:'SPkey',type:'string',desc:'サーバ側公開鍵',default:'SPkey'},
       {name:'response',type:'any',desc:'サーバ側関数の戻り値',note:'Errorオブジェクトを含む',default:'null'},
       {name:'receptTime',type:'number',desc:'サーバ側の処理要求受付日時',default:'Date.now()'},
       {name:'responseTime',type:'number',desc:'サーバ側処理終了日時',note:'エラーの場合は発生日時',default:'0'},
       {name:'status',type:'string',desc:'サーバ側処理結果',note:'正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト',default:'"success"'},
-      {name:'message',type:'string',desc:'メッセージ(statusの補足)'},
-      {name:'decrypt',type:'string',desc:'クライアント側での復号処理結果',note:'"success":正常、それ以外はエラーメッセージ',default:'"normal"'},
+      {name:'message',type:'string',desc:'メッセージ(statusの補足)',default:'""'},
+      {name:'decrypt',type:'string',desc:'クライアント側での復号処理結果',note:'"success":正常、それ以外はエラーメッセージ',default:'"success"'},
     ]},
 
     methods: {list:[{
@@ -614,6 +614,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
       params: {list:[  // {Params} ■メソッド引数の定義■
         {name:'request',type:'encryptedRequest',desc:'暗号化された処理要求'},
+        {name:'SPkey',type:'Object',desc:'authServer公開鍵'},
       ]},
 
       process: `
@@ -1315,7 +1316,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
 
     members: {list:[  // {Members} ■メンバ(インスタンス変数)定義■
       {name:'func',type:'string',desc:'サーバ側関数名',note:''},
-      {name:'arguments',type:'any[]',desc:'サーバ側関数に渡す引数の配列',
+      {name:'arg',type:'any[]',desc:'サーバ側関数に渡す引数の配列',
         note:'プリミティブ値、及びプリミティブ値で構成された配列・オブジェクト',
         default:[]},
     ]},
@@ -1337,8 +1338,8 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
         - "func"は関数名として使用可能な文字種であることを確認<br>
           \`^[A-Za-z_$][A-Za-z0-9_$]*$\`<br>
           上記正規表現にマッチしなければ戻り値「func不正」を返して終了
-        - "arguments"は関数を排除するため、一度JSON化してからオブジェクト化<br>
-          \`JSON.parse(JSON.stringify(arguments))\`
+        - "arg"は関数を排除するため、一度JSON化してからオブジェクト化<br>
+          \`JSON.parse(JSON.stringify(arg))\`
       `,	// {string} 処理手順。markdownで記載(trimIndent対象)
       // - テスト：[▼監査ログ](authAuditLog.md#authauditlog_constructor)インスタンス生成
 
@@ -1534,7 +1535,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           - 引数チェック。"func"が指定以外、またはパスコードの形式不正の場合、戻り値「不正形式」を返して終了
             %% this.cfTable({type:'authRequest',patterns:{'確認内容':{
               func: '"::passcode::"',
-              arguments: '入力されたパスコード'
+              arg: '入力されたパスコード'
             }}},{
               indent:2,
               header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}
@@ -1915,12 +1916,12 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
             2. authRequestが新規登録要求か確認
               - 確認項目
                 - authRequest.func ==== '::newMember::'
-                - authRequest.arguments[0]にメンバの氏名(文字列)が入っている
+                - authRequest.arg[0]にメンバの氏名(文字列)が入っている
                 - memberId, deviceId, signatureが全て設定されている
               - 確認項目の全条件が満たされ無かった場合(エラー)、戻り値④を返して終了
             3. Memberの新規作成
               - Member.memberId = authRequest.memberId
-              - Member.name = authRequest.arguments[0]
+              - Member.name = authRequest.arg[0]
               - Member.device = [new MemberDevice](MemberDevice.md#memberdevice_constructor)({deviceId:authRequest.deviceId, CPkey:authRequest.signature})
               - Member.log = [new MemberLog](MemberLog.md#memberlog_constructor)()
               - [judgeStatus](Member.md#member_judgestatus)にMemberを渡し、状態を設定
@@ -2023,7 +2024,7 @@ console.log(JSON.stringify({implements:{cl:'クライアント側',sv:'サーバ
           - 引数チェック
             %% this.cfTable({type:'authRequest',patterns:{'確認内容':{
               func: '"::updateCPkey::"',
-              arguments: '更新後CPkey',
+              arg: '更新後CPkey',
             }}},{indent:2,
               header:{name:'項目名',type:'データ型',default:'要否/既定値',desc:'説明'}}) %%
             - 更新後CPkeyがRSAの公開鍵形式か(PEMフォーマットなど)チェック、不適合なら戻り値「鍵形式不正」を返して終了

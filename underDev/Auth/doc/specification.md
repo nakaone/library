@@ -741,6 +741,7 @@ sequenceDiagram
 
 | No | 処理名 | func | 概要 |
 | --: | :-- | :-- | :-- |
+| 1 | 初期情報要求 | ::initial:: | 初回HTMLロード時、SPkeyとdeviceIdをサーバ側に要求。<br>詳細は[通信手順：事前処理](#preparation)参照 |
 | 1 | CPkey更新 | ::updateCPkey:: | CPkeyの有効期限が切れた場合に発生。<br>詳細は「[通信手順：事前処理](#preparation)」の「CPkey更新」参照 |
 | 2 | パスコード入力 | ::passcode:: | ログインのためのパスコード入力。<br>詳細は「[通信手順：「試行中」](#tring)」参照 |
 | 3 | パスコード再発行要求 | ::reissue:: | ログイン試行中のメンバから要請された場合に発生。<br>詳細は「[通信手順：試行中](#tring)」の「パスコード再発行」参照 |

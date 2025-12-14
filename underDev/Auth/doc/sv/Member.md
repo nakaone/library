@@ -151,15 +151,15 @@ classDiagram
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — |
-  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — |
+  | arg | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — |
   | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | **Member(更新前)** | **Member(更新後)** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — |
   | status | string | "success" | サーバ側処理結果 | 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト | **dev.error("invalid status")** | **"success"** |
-  | message | string | <span style="color:red">必須</span> | メッセージ(statusの補足) |  | — | — |
-  | decrypt | string | "normal" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — |
+  | message | string | "" | メッセージ(statusの補足) |  | — | — |
+  | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — |
 ### <span id="member_checkpasscode"><a href="#member_methods">🧱 Member.checkPasscode()</a></span>
 
 #### <span id="member_checkpasscode_params">📥 引数</span>
@@ -179,7 +179,7 @@ classDiagram
     | CPkey | string | idb.CPkey | クライアント側署名 | — |
     | requestTime | number | Date.now() | 要求日時 | — |
     | func | string | <span style="color:red">必須</span> | サーバ側関数名 | **"::passcode::"** |
-    | arguments | any[] | [] | サーバ側関数に渡す引数の配列 | **入力されたパスコード** |
+    | arg | any[] | [] | サーバ側関数に渡す引数の配列 | **入力されたパスコード** |
     | nonce | string | UUIDv4 | 要求の識別子 | — |
 - デバイス状態チェック
   - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
@@ -201,7 +201,7 @@ classDiagram
     | CPkey | string | idb.CPkey | クライアント側署名 | — | — |
     | requestTime | number | Date.now() | 要求日時 | — | — |
     | func | string | <span style="color:red">必須</span> | サーバ側関数名 | — | — |
-    | arguments | any[] | [] | サーバ側関数に渡す引数の配列 | — | — |
+    | arg | any[] | [] | サーバ側関数に渡す引数の配列 | — | — |
     | nonce | string | UUIDv4 | 要求の識別子 | — | — |
 - 更新後のMemberを引数に[setMemberメソッド](#member_setmember)を呼び出し、memberListシートを更新<br>
   ※ setMember内でjudgeStatusメソッドを呼び出しているので、状態の最新化は担保
@@ -219,15 +219,15 @@ classDiagram
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — |
-  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
+  | arg | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
   | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | — | **更新後のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — |
   | status | string | "success" | サーバ側処理結果 | 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト | **dev.error("invalid request")** | **dev.error("invalid status")** | **"success"** |
-  | message | string | <span style="color:red">必須</span> | メッセージ(statusの補足) |  | — | — | — |
-  | decrypt | string | "normal" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — |
+  | message | string | "" | メッセージ(statusの補足) |  | — | — | — |
+  | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — |
 ### <span id="member_getmember"><a href="#member_methods">🧱 Member.getMember()</a></span>
 
 #### <span id="member_getmember_referrer">📞 呼出元</span>
@@ -257,15 +257,15 @@ classDiagram
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — |
-  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — |
+  | arg | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — |
   | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | **Member(シート)** | — |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — |
   | status | string | "success" | サーバ側処理結果 | 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト | **"success"** | **dev.error("not exists")** |
-  | message | string | <span style="color:red">必須</span> | メッセージ(statusの補足) |  | — | — |
-  | decrypt | string | "normal" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — |
+  | message | string | "" | メッセージ(statusの補足) |  | — | — |
+  | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — |
 ### <span id="member_judgemember"><a href="#member_methods">🧱 Member.judgeMember()</a></span>
 
 #### <span id="member_judgemember_params">📥 引数</span>
@@ -309,15 +309,15 @@ classDiagram
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — | — |
-  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — |
+  | arg | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — |
   | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | **更新前のMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — | — |
   | status | string | "success" | サーバ側処理結果 | 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト | **dev.error("not exists")** | **"not unexamined"** | **"examin canceled"** | **"success"** |
-  | message | string | <span style="color:red">必須</span> | メッセージ(statusの補足) |  | — | — | — | — |
-  | decrypt | string | "normal" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — | — |
+  | message | string | "" | メッセージ(statusの補足) |  | — | — | — | — |
+  | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — | — |
 ### <span id="member_judgestatus"><a href="#member_methods">🧱 Member.judgeStatus()</a></span>
 
 #### <span id="member_judgestatus_params">📥 引数</span>
@@ -343,15 +343,15 @@ classDiagram
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — |
-  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — |
+  | arg | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — |
   | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | **Member(更新後)** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — |
   | status | string | "success" | サーバ側処理結果 | 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト | — |
-  | message | string | <span style="color:red">必須</span> | メッセージ(statusの補足) |  | — |
-  | decrypt | string | "normal" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — |
+  | message | string | "" | メッセージ(statusの補足) |  | — |
+  | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — |
 ### <span id="member_reissuepasscode"><a href="#member_methods">🧱 Member.reissuePasscode()</a></span>
 
 #### <span id="member_reissuepasscode_params">📥 引数</span>
@@ -371,7 +371,7 @@ classDiagram
     | CPkey | string | idb.CPkey | クライアント側署名 | — |
     | requestTime | number | Date.now() | 要求日時 | — |
     | func | string | <span style="color:red">必須</span> | サーバ側関数名 | **"::reissue::"** |
-    | arguments | any[] | [] | サーバ側関数に渡す引数の配列 | — |
+    | arg | any[] | [] | サーバ側関数に渡す引数の配列 | — |
     | nonce | string | UUIDv4 | 要求の識別子 | — |
 - デバイス状態チェック
   - request.memberIdを基に[getMemberメソッド](#member_getmember)でMemberインスタンスを取得
@@ -411,15 +411,15 @@ classDiagram
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — |
-  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
+  | arg | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
   | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | — | **更新後のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — |
   | status | string | "success" | サーバ側処理結果 | 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト | **dev.error("invalid request")** | **dev.error("invalid status")** | **"success"** |
-  | message | string | <span style="color:red">必須</span> | メッセージ(statusの補足) |  | — | — | — |
-  | decrypt | string | "normal" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — |
+  | message | string | "" | メッセージ(statusの補足) |  | — | — | — |
+  | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — |
 ### <span id="member_removemember"><a href="#member_methods">🧱 Member.removeMember()</a></span>
 
 #### <span id="member_removemember_params">📥 引数</span>
@@ -467,15 +467,15 @@ classDiagram
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — | — |
-  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — |
+  | arg | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — |
   | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | **更新前のMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — | — |
   | status | string | "success" | サーバ側処理結果 | 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト | **"success"** | **"already banned from joining"** | **"logical remove canceled"** | **"success"** |
-  | message | string | <span style="color:red">必須</span> | メッセージ(statusの補足) |  | — | — | — | — |
-  | decrypt | string | "normal" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — | — |
+  | message | string | "" | メッセージ(statusの補足) |  | — | — | — | — |
+  | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — | — |
 ### <span id="member_restoremember"><a href="#member_methods">🧱 Member.restoreMember()</a></span>
 
 #### <span id="member_restoremember_params">📥 引数</span>
@@ -519,15 +519,15 @@ classDiagram
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — | — |
-  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — |
+  | arg | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — |
   | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | **更新前のMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — | — |
   | status | string | "success" | サーバ側処理結果 | 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト | **dev.error("not exists")** | **"not logically removed"** | **"restore canceled"** | **"success"** |
-  | message | string | <span style="color:red">必須</span> | メッセージ(statusの補足) |  | — | — | — | — |
-  | decrypt | string | "normal" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — | — |
+  | message | string | "" | メッセージ(statusの補足) |  | — | — | — | — |
+  | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — | — |
 ### <span id="member_setmember"><a href="#member_methods">🧱 Member.setMember()</a></span>
 
 #### <span id="member_setmember_params">📥 引数</span>
@@ -549,12 +549,12 @@ classDiagram
   2. authRequestが新規登録要求か確認
     - 確認項目
       - authRequest.func ==== '::newMember::'
-      - authRequest.arguments[0]にメンバの氏名(文字列)が入っている
+      - authRequest.arg[0]にメンバの氏名(文字列)が入っている
       - memberId, deviceId, signatureが全て設定されている
     - 確認項目の全条件が満たされ無かった場合(エラー)、戻り値④を返して終了
   3. Memberの新規作成
     - Member.memberId = authRequest.memberId
-    - Member.name = authRequest.arguments[0]
+    - Member.name = authRequest.arg[0]
     - Member.device = [new MemberDevice](MemberDevice.md#memberdevice_constructor)({deviceId:authRequest.deviceId, CPkey:authRequest.signature})
     - Member.log = [new MemberLog](MemberLog.md#memberlog_constructor)()
     - [judgeStatus](Member.md#member_judgestatus)にMemberを渡し、状態を設定
@@ -575,15 +575,15 @@ classDiagram
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — | — | — |
-  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — | — |
+  | arg | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — | — |
   | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | **Member(更新済)** | — | — | **Member(新規作成)** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — | — | — |
   | status | string | "success" | サーバ側処理結果 | 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト | **dev.error("not exist")** | **"success"** | **dev.error("already exist")** | **dev.error("Invalid registration request")** | **"success"** |
-  | message | string | <span style="color:red">必須</span> | メッセージ(statusの補足) |  | — | **"updated"** | — | — | **"appended"** |
-  | decrypt | string | "normal" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — | — | — |
+  | message | string | "" | メッセージ(statusの補足) |  | — | **"updated"** | — | — | **"appended"** |
+  | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — | — | — |
 ### <span id="member_unfreeze"><a href="#member_methods">🧱 Member.unfreeze()</a></span>
 
 #### <span id="member_unfreeze_params">📥 引数</span>
@@ -635,15 +635,15 @@ classDiagram
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — |
-  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
+  | arg | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
   | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | **MemberDevice.status=="凍結中"とそのMember** | **更新前のMember** | **更新<span style="color:red">後</span>のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — |
   | status | string | "success" | サーバ側処理結果 | 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト | **"success"** | **"no frozen devices"** | — |
-  | message | string | <span style="color:red">必須</span> | メッセージ(statusの補足) |  | — | — | — |
-  | decrypt | string | "normal" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — |
+  | message | string | "" | メッセージ(statusの補足) |  | — | — | — |
+  | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — |
 ### <span id="member_updatecpkey"><a href="#member_methods">🧱 Member.updateCPkey()</a></span>
 
 #### <span id="member_updatecpkey_params">📥 引数</span>
@@ -663,7 +663,7 @@ classDiagram
     | CPkey | string | idb.CPkey | クライアント側署名 | — |
     | requestTime | number | Date.now() | 要求日時 | — |
     | func | string | <span style="color:red">必須</span> | サーバ側関数名 | **"::updateCPkey::"** |
-    | arguments | any[] | [] | サーバ側関数に渡す引数の配列 | **更新後CPkey** |
+    | arg | any[] | [] | サーバ側関数に渡す引数の配列 | **更新後CPkey** |
     | nonce | string | UUIDv4 | 要求の識別子 | — |
   - 更新後CPkeyがRSAの公開鍵形式か(PEMフォーマットなど)チェック、不適合なら戻り値「鍵形式不正」を返して終了
 - メンバの状態チェック
@@ -722,12 +722,12 @@ classDiagram
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — |
-  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
+  | arg | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — |
   | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | — | **更新<span style="color:red">前</span>のMember** |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — |
   | status | string | "success" | サーバ側処理結果 | 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト | **dev.error("invalid public key")** | **dev.error("no matching key")** | **"success"** |
-  | message | string | <span style="color:red">必須</span> | メッセージ(statusの補足) |  | — | — | — |
-  | decrypt | string | "normal" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — |
+  | message | string | "" | メッセージ(statusの補足) |  | — | — | — |
+  | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — |

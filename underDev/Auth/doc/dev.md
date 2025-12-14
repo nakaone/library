@@ -20,7 +20,7 @@
 ## クラス・メソッド プロトタイプ
 
 ```js
-class authProto {
+export class authProto {
 
   static _XXX = null;
 

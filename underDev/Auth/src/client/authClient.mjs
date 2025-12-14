@@ -1,4 +1,5 @@
 import { authClientConfig } from "./authClientConfig.mjs";
+import { authRequest } from "./authRequest.mjs";
 export class authClient {
 
   static _IndexedDB = null; // データベース接続オブジェクトを格納する静的変数
@@ -11,7 +12,8 @@ export class authClient {
       dev.step(1); // メンバに値設定
       this.cf = new authClientConfig(arg);
       this.idb = {};
-      
+      this.crypto = new cryptoClient(this.cf);
+
       dev.end(); // 終了処理
 
     } catch (e) { return dev.error(e); }
@@ -22,33 +24,116 @@ export class authClient {
     dev.start(v);
     try {
 
-      dev.step(1); // SPkey 存在確認
-      if (!this.idb.SPkey) {
+      if( !this.idb.SPkey ){  // SPkey未取得
 
-        dev.step(2); // 初回 init リクエスト（署名のみ）
-        const initRequest = {
-          type: "init",
-          memberId: this.idb.memberId,
-          CPkey: this.idb.CPkey,
-          requestTime: Date.now(),
-          nonce: crypto.randomUUID()
-        };
+        dev.step(1.1);  // 内発処理「初期情報要求」用のauthRequestを作成
+        v.authRequest = new authRequest('::initial::');
 
-        dev.step(3); // 署名
-        const signedInit = await this.crypto.signOnly(initRequest);
+        dev.step(1.2);  // authRequestを暗号化
+        v.encryptedRequest = this.crypto.encrypt(v.authRequest);
+        if( v.encryptedRequest instanceof Error ) throw v.encryptedRequest;
 
-        dev.step(4); // サーバ通信
-        const authResponse = await this.cf.transport(signedInit);
+        dev.step(1.3);  // サーバ側に処理依頼
+        v.response = await this.fetch(v.encryptedRequest);
+        if( v.response instanceof Error ) throw v.response;
 
-        dev.step(7); // SPkey / deviceId 保存
+        dev.step(1.4);  // 処理結果を復号
+        v.authResponse = this.crypto.decrypt(v.response);
+        if( v.authResponse instanceof Error ) throw v.authResponse;
+
+        dev.step(1.5); // SPkey / deviceId 保存
         await this.setIndexedDB({
-          SPkey: authResponse.SPkey,
-          deviceId: authResponse.deviceId
+          SPkey: v.authResponse.SPkey,
+          deviceId: v.authResponse.deviceId
         });
+
+        dev.step(1.6);  // 元々の処理要求を再帰呼出
+        v.rv = this.exec(request);
+
+      } else {  // SPkey取得済
+
+        dev.step(2.1);  // authRequestを暗号化
+        v.encryptedRequest = this.crypto.encrypt(request);
+        if( v.encryptedRequest instanceof Error ) throw v.encryptedRequest;
+
+        dev.step(2.2);  // サーバ側に処理依頼
+        v.response = await this.fetch(v.encryptedRequest);
+        if( v.response instanceof Error ) throw v.response;
+
+        dev.step(2.3);  // 処理結果を復号
+        v.authResponse = this.crypto.decrypt(v.response);
+        if( v.authResponse instanceof Error ) throw v.authResponse;
+
+        switch( v.authResponse.status ){
+          case 'success': dev.step(3.1);  // サーバ側処理正常終了
+            v.rv = v.authResponse.response;
+            break;
+          case 'CPkey expired': dev.step(3.2);  // CPkey期限切れ
+            this.crypto.generateKeys();
+            v.rv = await this.exec('::updateCPkey::');
+            if( v.rv instanceof Error ) throw v.rv;
+            break;
+          case 'login required':  dev.step(3.3);  // 要ログイン(未認証)
+            break;
+          case 'retry required':  dev.step(3.4);  // パスコード不一致
+            break;
+          case 'freezing':  dev.step(3.5);  // アカウント凍結中
+            break;
+          default:  dev.step(3.6);  // その他エラー
+            throw v.authResponse.status;
+        }
       }
 
       dev.end();
       return this.idb;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  async fetch(payload) {  // モック。実運用では fetch / UrlFetchApp 等に差し替え
+    const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{}, rv:null};
+    dev.start(v);
+    try {
+      
+      //return this.cf.transport(payload);
+
+      v.rv = {};
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得 */
+  async getIndexedDB() {
+    const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{}, rv:null};
+    dev.start(v);
+    try {
+
+      v.db = authClient._IndexedDB;
+      if (!v.db) throw new Error("IndexedDB not initialized");
+
+      // 'readwrite' トランザクション
+      const transaction = v.db.transaction([this.cf.storeName], 'readwrite');
+      const store = transaction.objectStore(this.cf.storeName);
+
+      // 全てのキーを取得
+      v.rv = await new Promise((resolve, reject) => {
+        const putRequest = store.getAll();
+        putRequest.onsuccess = () => resolve();
+        putRequest.onerror = (event) => {
+          reject(new Error(`GET操作失敗: ${event.target.error.message}`));
+        };
+      });
+
+      // this.idbに登録
+      for ( [v.key, v.value] of Object.entries(v.rv)) {
+        this.idb[v.key] = v.value;
+      }
+
+      dev.end(); // 終了処理
+      return v.rv;
 
     } catch (e) { return dev.error(e); }
   }
@@ -61,20 +146,6 @@ export class authClient {
     const v = {whois:`authClient.initialize`, arg:{arg}, rv:null};
     dev.start(v);
     try {
-
-      /* 【依頼】initializeについて、以下のように修正してdiffで示してください
-      ①IndexedDBに以下の設定値が保存されているか確認、
-        存在する場合はauthClientのメンバとして保存(ex.this.memberId)
-          memberId: 'dummyID',  // 仮IDはサーバ側で生成
-          memberName: 'dummyName',
-          deviceId: crypto.randomUUID(),
-          keyGeneratedDateTime: Date.now(),
-          SPkey: 'dummySPkey',
-          CPkey: this.crypto.CPkeyEnc,
-          keyGeneratedDateTime: Date.now()
-      ②存在しない場合は生成してthis.idbに保存すると共にIndexedDBに格納
-      */
-
 
       dev.step(1);  // インスタンス生成
       // オプション既定値を先にメンバ変数に格納するため、constructorを先行
@@ -104,14 +175,26 @@ export class authClient {
         };
       });
 
-      dev.step(3);  // オプション設定値をIndexedDBに保存
-      await v.rv.setIndexedDB({ // 内容はauthIndexedDB
-        memberId: 'dummyID',  // 仮IDはサーバ側で生成
-        memberName: 'dummyName',
-        deviceId: crypto.randomUUID(),
-        keyGeneratedDateTime: Date.now(),
-        SPkey: 'dummySPkey',
-      });
+      dev.step(3);  // IndexedDBの内容を取得
+      v.idb = await v.rv.getIndexedDB();
+
+      dev.step(4);  // IndexedDBが空の場合、既定値(初期値)をIndexedDBに保存
+      if( Object.keys(v.idb).length === 0 ){
+
+        v.idb = { // IndexedDBの初期値。内容はauthIndexedDB参照
+          memberId: 'dummyMemberID',  // 仮IDはサーバ側で生成
+          memberName: 'dummyMemberName',
+          deviceId: 'dummyDeviceID',
+          CPkey: this.crypto.CPkeyEnc,
+          keyGeneratedDateTime: Date.now(),
+          SPkey: null,
+        };
+        await v.rv.setIndexedDB(v.idb);
+
+      }
+
+      dev.step(5);  // IndexedDBの内容をメンバ変数に格納
+      Object.keys(v.idb).forEach(x => this[x] = v.idb[x]);
 
       dev.end(); // 終了処理
       return v.rv;

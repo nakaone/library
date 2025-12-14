@@ -1,3 +1,5 @@
+import { authRequest } from "./authRequest.mjs";
+
 export class cryptoClient {
 
   constructor(config) {
@@ -20,17 +22,31 @@ export class cryptoClient {
     } catch (e) { return dev.error(e); }
   }
 
-  encrypt(arg) {  // b0005.test用スタブ
-    const v = {whois:`${this.constructor.name}.encrypt`, arg:{arg}, rv:null};
+  /**
+   * 
+   * @param {authRequest} request - 処理要求
+   * @param {boolean} [isSignOnly=false] - trueの場合、暗号化は行わず署名のみ行う
+   * @returns 
+   */
+  encrypt(arg,isSignOnly=false) {  // b0005.test用スタブ
+    const v = {whois:`${this.constructor.name}.encrypt`, arg:{arg,isSignOnly}, rv:null};
     dev.start(v);
     try {
 
-      dev.step(1);
-      v.rv = {
-        envelope: { cipher: "dummy" },
-        signature: "dummy",
-        meta: { rsabits: this.cf.RSAbits }
-      };
+      if( isSignOnly ){
+        dev.step(1);  // 初期情報要求用
+        v.rv = {
+          payload,
+          signature: "dummy-signature"
+        };
+      } else {
+        dev.step(2);  // 通常時
+        v.rv = {
+          envelope: { cipher: "dummy" },
+          signature: "dummy",
+          meta: { rsabits: this.cf.RSAbits }
+        };
+      }
 
       dev.end(); // 終了処理
       return v.rv;
@@ -88,13 +104,5 @@ export class cryptoClient {
       return v.rv;
 
     } catch (e) { return dev.error(e); }
-  }
-  
-  /** 初回用：署名のみ */
-  async signOnly(payload) {
-    return {
-      payload,
-      signature: "dummy-signature"
-    };
   }
 }

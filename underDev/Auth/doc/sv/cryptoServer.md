@@ -130,15 +130,15 @@
   | CPkey | string | <span style="color:red">必須</span> | クライアント側署名 |  | — | — | — | — | — | — | — | — | — |
   | requestTime | number | <span style="color:red">必須</span> | 要求日時 | UNIX時刻 | — | — | — | — | — | — | — | — | — |
   | func | string | <span style="color:red">必須</span> | サーバ側関数名 |  | — | — | — | — | — | — | — | — | — |
-  | arguments | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — | — | — | — | — | — |
+  | arg | any[] | <span style="color:red">必須</span> | サーバ側関数に渡す引数の配列 |  | — | — | — | — | — | — | — | — | — |
   | nonce | string | <span style="color:red">必須</span> | 要求の識別子 | UUIDv4 | — | — | — | — | — | — | — | — | — |
   | SPkey | string | SPkey | サーバ側公開鍵 |  | — | — | — | — | — | — | — | — | — |
   | response | any | null | サーバ側関数の戻り値 | Errorオブジェクトを含む | — | — | — | — | — | — | — | — | — |
   | receptTime | number | Date.now() | サーバ側の処理要求受付日時 |  | — | — | — | — | — | — | — | — | — |
   | responseTime | number | 0 | サーバ側処理終了日時 | エラーの場合は発生日時 | — | — | — | — | — | — | — | — | — |
   | status | string | "success" | サーバ側処理結果 | 正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、致命的エラーの場合はErrorオブジェクト | **dev.error("invalid string")** | **"CPkey"** | **dev.error("not exists")** | **dev.error("device not registered")** | **dev.error("decrypt failed")** | **dev.error("missing fields")** | **dev.error("invalid signature")** | **dev.error("timestamp difference too large")** | **[member.device[n]](MemberDevice.md#memberdevice_members).status or [member](Member.md#member_members).status** |
-  | message | string | <span style="color:red">必須</span> | メッセージ(statusの補足) |  | — | — | — | — | — | — | — | — | — |
-  | decrypt | string | "normal" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — | — | — | — | — | — | — |
+  | message | string | "" | メッセージ(statusの補足) |  | — | — | — | — | — | — | — | — | — |
+  | decrypt | string | "success" | クライアント側での復号処理結果 | "success":正常、それ以外はエラーメッセージ | — | — | — | — | — | — | — | — | — |
 ### <span id="cryptoserver_encrypt"><a href="#cryptoserver_methods">🧱 cryptoServer.encrypt()</a></span>
 
 #### <span id="cryptoserver_encrypt_params">📥 引数</span>
