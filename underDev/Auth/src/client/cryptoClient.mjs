@@ -89,4 +89,12 @@ export class cryptoClient {
 
     } catch (e) { return dev.error(e); }
   }
+  
+  /** 初回用：署名のみ */
+  async signOnly(payload) {
+    return {
+      payload,
+      signature: "dummy-signature"
+    };
+  }
 }

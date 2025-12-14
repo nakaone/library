@@ -25,34 +25,20 @@ export class authClient {
       dev.step(1); // SPkey 存在確認
       if (!this.idb.SPkey) {
 
-        dev.step(2); // CPkey 生成（未生成時）
-        if (!this.idb.CPkey) {
-          await this.crypto.generateKeys();
-          await this.setIndexedDB({
-            CPkey: this.crypto.CPkeyEnc,
-            keyGeneratedDateTime: Date.now()
-          });
-        }
-
-        dev.step(3); // authRequest 作成
-        const authRequest = {
+        dev.step(2); // 初回 init リクエスト（署名のみ）
+        const initRequest = {
+          type: "init",
           memberId: this.idb.memberId,
-          deviceId: this.idb.deviceId,
           CPkey: this.idb.CPkey,
           requestTime: Date.now(),
-          func: "::init::",
-          arguments: [],
           nonce: crypto.randomUUID()
         };
 
-        dev.step(4); // 暗号化
-        const encryptedRequest = await this.crypto.encrypt(authRequest);
+        dev.step(3); // 署名
+        const signedInit = await this.crypto.signOnly(initRequest);
 
-        dev.step(5); // サーバ通信（fetch は外部注入前提）
-        const encryptedResponse = await this.cf.transport(encryptedRequest);
-
-        dev.step(6); // 復号
-        const authResponse = await this.crypto.decrypt(encryptedResponse);
+        dev.step(4); // サーバ通信
+        const authResponse = await this.cf.transport(signedInit);
 
         dev.step(7); // SPkey / deviceId 保存
         await this.setIndexedDB({
@@ -75,6 +61,20 @@ export class authClient {
     const v = {whois:`authClient.initialize`, arg:{arg}, rv:null};
     dev.start(v);
     try {
+
+      /* 【依頼】initializeについて、以下のように修正してdiffで示してください
+      ①IndexedDBに以下の設定値が保存されているか確認、
+        存在する場合はauthClientのメンバとして保存(ex.this.memberId)
+          memberId: 'dummyID',  // 仮IDはサーバ側で生成
+          memberName: 'dummyName',
+          deviceId: crypto.randomUUID(),
+          keyGeneratedDateTime: Date.now(),
+          SPkey: 'dummySPkey',
+          CPkey: this.crypto.CPkeyEnc,
+          keyGeneratedDateTime: Date.now()
+      ②存在しない場合は生成してthis.idbに保存すると共にIndexedDBに格納
+      */
+
 
       dev.step(1);  // インスタンス生成
       // オプション既定値を先にメンバ変数に格納するため、constructorを先行
