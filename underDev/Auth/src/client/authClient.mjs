@@ -17,16 +17,52 @@ export class authClient {
     } catch (e) { return dev.error(e); }
   }
 
-  exec(request) {
+  async exec(request) {
     const v = {whois:`${this.constructor.name}.exec`, arg:{request}, rv:null};
     dev.start(v);
     try {
 
-      dev.step(1);
-      v.rv = this.idb;  // オンメモリのIndexedDBの内容
+      dev.step(1); // SPkey 存在確認
+      if (!this.idb.SPkey) {
 
-      dev.end(); // 終了処理
-      return v.rv;
+        dev.step(2); // CPkey 生成（未生成時）
+        if (!this.idb.CPkey) {
+          await this.crypto.generateKeys();
+          await this.setIndexedDB({
+            CPkey: this.crypto.CPkeyEnc,
+            keyGeneratedDateTime: Date.now()
+          });
+        }
+
+        dev.step(3); // authRequest 作成
+        const authRequest = {
+          memberId: this.idb.memberId,
+          deviceId: this.idb.deviceId,
+          CPkey: this.idb.CPkey,
+          requestTime: Date.now(),
+          func: "::init::",
+          arguments: [],
+          nonce: crypto.randomUUID()
+        };
+
+        dev.step(4); // 暗号化
+        const encryptedRequest = await this.crypto.encrypt(authRequest);
+
+        dev.step(5); // サーバ通信（fetch は外部注入前提）
+        const encryptedResponse = await this.cf.transport(encryptedRequest);
+
+        dev.step(6); // 復号
+        const authResponse = await this.crypto.decrypt(encryptedResponse);
+
+        dev.step(7); // SPkey / deviceId 保存
+        await this.setIndexedDB({
+          SPkey: authResponse.SPkey,
+          deviceId: authResponse.deviceId
+        });
+      }
+
+      dev.end();
+      return this.idb;
 
     } catch (e) { return dev.error(e); }
   }
@@ -89,7 +125,7 @@ export class authClient {
     try {
 
       v.db = authClient._IndexedDB;
-      if (!v.db) throw new Error("IndexedDBが初期化されていません。");
+      if (!v.db) throw new Error("IndexedDB not initialized");
 
       // 'readwrite' トランザクション
       const transaction = v.db.transaction([this.cf.storeName], 'readwrite');
@@ -104,9 +140,7 @@ export class authClient {
         // エラーハンドリングのためにPromiseでラップするのが一般的。
         await new Promise((resolve, reject) => {
           const putRequest = store.put(v.value, v.key);
-
           putRequest.onsuccess = () => resolve();
-
           putRequest.onerror = (event) => {
             // 個別のリクエストエラーはトランザクション全体のエラーとなる
             reject(new Error(`PUT操作失敗 (Key: ${v.key}): ${event.target.error.message}`));
