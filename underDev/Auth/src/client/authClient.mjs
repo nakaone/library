@@ -58,54 +58,72 @@ export class authClient {
     } catch (e) { return dev.error(e); }
   }
 
-  /** exec: ローカル関数の処理要求を処理
+  /**
+   * @typedef {Object} authRequest
+   * @prop {string} memberId=this.idb.memberId - メンバの識別子
+   * @prop {string} deviceId=this.idb.deviceId - デバイスの識別子UUIDv4
+   * @prop {string} memberName=this.idb.memberName - メンバの氏名管理者が加入認否判断のため使用
+   * @prop {string} CPkey=this.idb.CPkey - クライアント側署名
+   * @prop {number} requestTime=Date.now() - 要求日時UNIX時刻
+   * @prop {string} func - サーバ側関数名
+   * @prop {any[]} arg=[] - サーバ側関数に渡す引数の配列
+   * @prop {string} nonce=UUIDv4 - 要求の識別子UUIDv4
+   */
+  /** authRequest: authRequest型のオブジェクトを作成
    * @param {string} func - サーバ側関数名
    * @param {any[]} arg - サーバ側関数に渡す引数
+   * @returns {authRequest}
+   */
+  authRequest(func,arg=[]){
+    return {
+      memberId: this.idb.memberId,
+      deviceId: this.idb.deviceId,
+      memberName: this.idb.memberName,
+      CPkey: this.idb.CPkey,
+      requestTime: Date.now(),
+      func: func,
+      arg: arg,
+      nonce: crypto.randomUUID(),
+    }
+  }
+
+  /** exec: ローカル関数の処理要求を処理
+   * @param {string} func - サーバ側関数名
+   * @param {any[]} arg=[] - サーバ側関数に渡す引数
    * @returns {any|Error} 処理結果
    */
-  async exec(request) {
-    const v = {whois:`${this.constructor.name}.exec`, arg:{request}, rv:null};
+  async exec(func,arg=[]) {
+    const v = {whois:`${this.constructor.name}.exec`, arg:{func,arg}, rv:null};
     dev.start(v);
     try {
 
       if( !this.idb.SPkey ){  // SPkey未取得
 
         dev.step(1.1);  // 内発処理「初期情報要求」用のauthRequestを作成
-        v.authRequest = new authRequest('::initial::');
+        v.authRequest = this.authRequest('::initial::');
 
-        dev.step(1.2);  // authRequestを暗号化
-        v.encryptedRequest = this.crypto.encrypt(v.authRequest);
-        if( v.encryptedRequest instanceof Error ) throw v.encryptedRequest;
-
-        dev.step(1.3);  // サーバ側に処理依頼
-        v.response = await this.fetch(v.encryptedRequest);
-        if( v.response instanceof Error ) throw v.response;
-
-        dev.step(1.4);  // 処理結果を復号
-        v.authResponse = this.crypto.decrypt(v.response);
+        dev.step(1.2);  // サーバ側に処理依頼
+        v.authResponse = this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
-        dev.step(1.5); // SPkey / deviceId 保存
-        await this.setIndexedDB({
+        dev.step(1.3); // SPkey / deviceId 保存
+        v.r = await this.setIndexedDB({
           SPkey: v.authResponse.SPkey,
           deviceId: v.authResponse.deviceId
         });
+        if( v.r instanceof Error ) throw v.r;
 
-        dev.step(1.6);  // 元々の処理要求を再帰呼出
-        v.rv = this.exec(request);
+        dev.step(1.4);  // 元々の処理要求を再帰呼出
+        v.rv = this.exec(func,arg);
+        if( v.rv instanceof Error ) throw v.rv;
 
       } else {  // SPkey取得済
 
-        dev.step(2.1);  // authRequestを暗号化
-        v.encryptedRequest = this.crypto.encrypt(request);
-        if( v.encryptedRequest instanceof Error ) throw v.encryptedRequest;
+        dev.step(2.1);  // authRequestを作成
+        v.authRequest = this.authRequest(func,arg);
 
         dev.step(2.2);  // サーバ側に処理依頼
-        v.response = await this.fetch(v.encryptedRequest);
-        if( v.response instanceof Error ) throw v.response;
-
-        dev.step(2.3);  // 処理結果を復号
-        v.authResponse = this.crypto.decrypt(v.response);
+        v.authResponse = this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
         switch( v.authResponse.status ){
@@ -135,17 +153,53 @@ export class authClient {
   }
 
   /** fetch: サーバ側APIの呼び出し
-   * @param {encryptedRequest} request - 暗号化された処理要求
-   * @returns {encryptedResponse|Error} 暗号化された処理結果
+   * @param {authRequest} request - 処理要求
+   * @returns {authResponse|Error} 処理結果
    */
   async fetch(request) {  // モック。実運用では fetch / UrlFetchApp 等に差し替え
-    const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{}, rv:null};
+    const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{request}, rv:null};
     dev.start(v);
     try {
-      
-      //return this.cf.transport(request);
 
-      v.rv = {};
+      dev.step(1);  // authRequestを暗号化
+      v.encryptedRequest = this.crypto.encrypt(request);
+      if( v.encryptedRequest instanceof Error ) throw v.encryptedRequest;
+
+      // サーバ側に処理依頼
+      dev.step(2.1);  // タイムアウト処理を適用するPromise
+      v.timeoutPromise = new Promise((_, reject) => {
+        const ms = this.cf.allowableTimeDifference; // タイムアウト時間（ミリ秒）
+        const id = setTimeout(() => {
+          // 時間内に解決しなければエラーを発生
+          reject(new Error(`Fetch timed out after ${ms}ms.`));
+        }, ms);
+        // 元のPromiseが解決/拒否されたらタイマーを解除するためのCleanup関数
+        v.cleanupTimer = () => clearTimeout(id);
+      });
+
+      dev.step(2.2);  // fetch処理を行うPromise
+      v.fetchPromise = globalThis.fetch(this.cf.api, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify(v.encryptedRequest)
+      }).then(response => {
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        return response.json(); 
+      });
+
+      dev.step(2.3);  // 競合させて、先に結果が出た方（正常なレスポンスかタイムアウトエラー）を採用
+      try {
+        v.response = await Promise.race([v.fetchPromise, v.timeoutPromise]);
+      } finally {
+        v.cleanupTimer(); // タイムアウトタイマーを解除
+      }
+      if( v.response instanceof Error ) throw v.response;
+
+      dev.step(3);  // 処理結果を復号
+      v.rv = this.crypto.decrypt(v.response);
+      if( v.rv instanceof Error ) throw v.rv;
 
       dev.end(); // 終了処理
       return v.rv;
