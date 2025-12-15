@@ -3,10 +3,19 @@
 ## クラス・メソッド プロトタイプ
 
 ```js
+/**
+ * @class
+ * @classdesc
+ * @prop {string} fuga - ダミー
+ */
 export class authProto {
 
   static _XXX = null;
 
+  /**
+   * @constructor
+   * @param {string} arg - 引数
+   */
   constructor(arg) {
     const v = {whois:`authProto.constructor`, arg:{arg}, rv:null};
     dev.start(v);
@@ -22,6 +31,10 @@ export class authProto {
     } catch (e) { return dev.error(e); }
   }
 
+  /**
+   * @param {string} arg - 引数
+   * @returns {null|Error} 戻り値
+   */
   prototype(arg) {
     const v = {whois:`${this.constructor.name}.prototype`, arg:{arg}, rv:null};
     dev.start(v);
@@ -101,6 +114,7 @@ export class authProto {
     - cryptoClient
     - cryptoServer
   - ソース作成
+    - specDefを元にJSDocを追記　◀いまここ
     - サーバ側ダミークラス作成
       - authResponse
       - authServer

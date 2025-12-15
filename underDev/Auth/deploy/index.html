@@ -289,6 +289,10 @@ function devTools(opt){
 }
 
 // authClient関係クラス定義
+/**
+ * @class
+ * @classdesc クライアント側中核クラス
+ */
 class authClient {
 
   static _IndexedDB = null; // データベース接続オブジェクトを格納する静的変数
@@ -299,9 +303,9 @@ class authClient {
     try {
 
       dev.step(1); // メンバに値設定
-      this.cf = new authClientConfig(arg);
-      this.idb = {};
-      this.crypto = new cryptoClient(this.cf);
+      this.cf = new authClientConfig(arg);  // authClient設定情報
+      this.idb = {};  // IndexedDBと同期、authClient内で共有
+      this.crypto = new cryptoClient(this.cf);  // 暗号化・署名検証
 
       dev.end(); // 終了処理
 
@@ -313,48 +317,65 @@ class authClient {
     dev.start(v);
     try {
 
-      if( !this.idb.SPkey ){
-        dev.step(1);  // SPkey未取得 ⇒ 内発処理「初期情報要求」を再帰呼出
-        v.authRequest = new authRequest('::initial::');
-        v.encryptedRequest = this.crypto.encrypt(v.authRequest);
-        v.response = await this.fetch(v.encryptedRequest);
-        v.authResponse = this.crypto.decrypt(v.response);
+      if( !this.idb.SPkey ){  // SPkey未取得
 
-        dev.step(1.4); // SPkey / deviceId 保存
+        dev.step(1.1);  // 内発処理「初期情報要求」用のauthRequestを作成
+        v.authRequest = new authRequest('::initial::');
+
+        dev.step(1.2);  // authRequestを暗号化
+        v.encryptedRequest = this.crypto.encrypt(v.authRequest);
+        if( v.encryptedRequest instanceof Error ) throw v.encryptedRequest;
+
+        dev.step(1.3);  // サーバ側に処理依頼
+        v.response = await this.fetch(v.encryptedRequest);
+        if( v.response instanceof Error ) throw v.response;
+
+        dev.step(1.4);  // 処理結果を復号
+        v.authResponse = this.crypto.decrypt(v.response);
+        if( v.authResponse instanceof Error ) throw v.authResponse;
+
+        dev.step(1.5); // SPkey / deviceId 保存
         await this.setIndexedDB({
           SPkey: v.authResponse.SPkey,
           deviceId: v.authResponse.deviceId
         });
 
+        dev.step(1.6);  // 元々の処理要求を再帰呼出
         v.rv = this.exec(request);
-      } else {
-        // SPkey取得済
 
+      } else {  // SPkey取得済
+
+        dev.step(2.1);  // authRequestを暗号化
+        v.encryptedRequest = this.crypto.encrypt(request);
+        if( v.encryptedRequest instanceof Error ) throw v.encryptedRequest;
+
+        dev.step(2.2);  // サーバ側に処理依頼
+        v.response = await this.fetch(v.encryptedRequest);
+        if( v.response instanceof Error ) throw v.response;
+
+        dev.step(2.3);  // 処理結果を復号
+        v.authResponse = this.crypto.decrypt(v.response);
+        if( v.authResponse instanceof Error ) throw v.authResponse;
+
+        switch( v.authResponse.status ){
+          case 'success': dev.step(3.1);  // サーバ側処理正常終了
+            v.rv = v.authResponse.response;
+            break;
+          case 'CPkey expired': dev.step(3.2);  // CPkey期限切れ
+            this.crypto.generateKeys();
+            v.rv = await this.exec('::updateCPkey::');
+            if( v.rv instanceof Error ) throw v.rv;
+            break;
+          case 'login required':  dev.step(3.3);  // 要ログイン(未認証)
+            break;
+          case 'retry required':  dev.step(3.4);  // パスコード不一致
+            break;
+          case 'freezing':  dev.step(3.5);  // アカウント凍結中
+            break;
+          default:  dev.step(3.6);  // その他エラー
+            throw v.authResponse.status;
+        }
       }
-
-
-      // 内発処理だった場合
-      // 通常の処理要求だった場合
-
-      dev.step(1); // SPkey 存在確認
-      if (!this.idb.SPkey) {
-
-        dev.step(1.1); // 初回 init リクエスト（署名のみ）
-        v.initRequest = new authRequest('::initial::');
-
-        dev.step(1.2); // 署名
-        const signedInit = await this.crypto.signOnly(initRequest);
-
-        dev.step(1.3); // サーバ通信
-        const authResponse = await this.fetch(signedInit);
-
-        dev.step(1.4); // SPkey / deviceId 保存
-        await this.setIndexedDB({
-          SPkey: authResponse.SPkey,
-          deviceId: authResponse.deviceId
-        });
-      }
-
 
       dev.end();
       return this.idb;

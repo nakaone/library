@@ -1,24 +1,68 @@
 import { authClientConfig } from "./authClientConfig.mjs";
 import { authRequest } from "./authRequest.mjs";
+/**
+ * @class
+ * @classdesc クライアント側中核クラス
+ * - 初期化の際に非同期処理が必要なため、インスタンス作成は
+ *   `new authClient()`ではなく`authClient.initialize()`で行う
+ * @prop {authClientConfig} cf - authClient設定情報
+ * @prop {Object} idb - IndexedDBと同期、authClient内で共有
+ * @prop {cryptoClient} - 暗号化・署名検証
+ * 
+ * 
+ * 
+ * @example インスタンス作成のサンプル
+ * ```js
+ * async function onLoad(){
+ *   const v = {whois:`onLoad`, rv:null};
+ *   dev.start(v);
+ *   try {
+ * 
+ *     dev.step(1);  // authClientインスタンス作成
+ *     const auth = await authClient.initialize({
+ *       adminMail: 'ena.kaon@gmail.com',
+ *       adminName: 'あどみ',
+ *       api: 'abcdefghijklmnopqrstuvwxyz',
+ *     });
+ * 
+ *     dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット
+ *     globalThis.auth = auth;
+ *     v.rv = auth;
+ * 
+ *     dev.end(); // 終了処理
+ *     return v.rv;
+ * 
+ *   } catch (e) { return dev.error(e); }
+ * }
+ */
 export class authClient {
 
   static _IndexedDB = null; // データベース接続オブジェクトを格納する静的変数
 
-  constructor(arg) {
-    const v = {whois:`authClient.constructor`, arg:{arg}, rv:null};
+  /**
+   * @constructor
+   * @param {authClientConfig} config - authClient設定情報
+   */
+  constructor(config) {
+    const v = {whois:`authClient.constructor`, arg:{config}, rv:null};
     dev.start(v);
     try {
 
       dev.step(1); // メンバに値設定
-      this.cf = new authClientConfig(arg);
-      this.idb = {};
-      this.crypto = new cryptoClient(this.cf);
+      this.cf = new authClientConfig(config);  // authClient設定情報
+      this.idb = {};  // IndexedDBと同期、authClient内で共有
+      this.crypto = new cryptoClient(this.cf);  // 暗号化・署名検証
 
       dev.end(); // 終了処理
 
     } catch (e) { return dev.error(e); }
   }
 
+  /** exec: ローカル関数の処理要求を処理
+   * @param {string} func - サーバ側関数名
+   * @param {any[]} arg - サーバ側関数に渡す引数
+   * @returns {any|Error} 処理結果
+   */
   async exec(request) {
     const v = {whois:`${this.constructor.name}.exec`, arg:{request}, rv:null};
     dev.start(v);
@@ -90,12 +134,16 @@ export class authClient {
     } catch (e) { return dev.error(e); }
   }
 
-  async fetch(payload) {  // モック。実運用では fetch / UrlFetchApp 等に差し替え
+  /** fetch: サーバ側APIの呼び出し
+   * @param {encryptedRequest} request - 暗号化された処理要求
+   * @returns {encryptedResponse|Error} 暗号化された処理結果
+   */
+  async fetch(request) {  // モック。実運用では fetch / UrlFetchApp 等に差し替え
     const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{}, rv:null};
     dev.start(v);
     try {
       
-      //return this.cf.transport(payload);
+      //return this.cf.transport(request);
 
       v.rv = {};
 
@@ -105,7 +153,10 @@ export class authClient {
     } catch (e) { return dev.error(e); }
   }
 
-  /** getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得 */
+  /** getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得
+   * @param {void}
+   * @returns {Object<string,any>} IndexedDBの内容。{キー:値}形式
+   */
   async getIndexedDB() {
     const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{}, rv:null};
     dev.start(v);
@@ -138,18 +189,21 @@ export class authClient {
     } catch (e) { return dev.error(e); }
   }
 
-  /** initialize: IndexedDBの初期化
-   * - その他インスタンス生成時に必要な非同期処理があれば、ここで処理する
+  /** initialize: authClientインスタンス作成
+   * - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
    * - staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
+   * @static
+   * @param {authClientConfig} config - authClient設定情報
+   * @returns {authClient|Error}
    */
-  static async initialize(arg) {
-    const v = {whois:`authClient.initialize`, arg:{arg}, rv:null};
+  static async initialize(config) {
+    const v = {whois:`authClient.initialize`, arg:{config}, rv:null};
     dev.start(v);
     try {
 
       dev.step(1);  // インスタンス生成
       // オプション既定値を先にメンバ変数に格納するため、constructorを先行
-      v.rv = new authClient(arg);
+      v.rv = new authClient(config);
 
       dev.step(2);  // DB接続：非同期処理なのでconstructorではなくinitializeで実行
       authClient._IndexedDB = await new Promise((resolve, reject) => {
@@ -202,6 +256,10 @@ export class authClient {
     } catch (e) { return dev.error(e); }
   }
 
+  /** setIndexedDB: IndexedDBの更新(upsert)
+   * @param {Object<string, string>} arg 
+   * @returns {null|Error}
+   */
   async setIndexedDB(arg) {
     const v = {whois:`${this.constructor.name}.setIndexedDB`, arg:{arg}, rv:null};
     dev.start(v);
