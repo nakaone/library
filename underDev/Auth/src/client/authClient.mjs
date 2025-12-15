@@ -323,30 +323,36 @@ export class authClient {
         };
       });
 
-      dev.step(3);  // IndexedDBの内容を取得
-      v.idb = await v.rv.getIndexedDB();
+      dev.step(3);  // 暗号化・署名検証用インスタンス作成
+      this.crypto = new cryptoClient(this.idb,this.cf.RSAbits);
 
-      dev.step(4);  // IndexedDBが空の場合、既定値(初期値)をIndexedDBに保存
+      dev.step(4);  // IndexedDBの内容を取得
+      v.idb = await v.rv.getIndexedDB();
+      if( v.idb instanceof Error ) throw v.idb;
+
+      dev.step(5);  // IndexedDBが空の場合、既定値(初期値)をIndexedDBに保存
       if( Object.keys(v.idb).length === 0 ){
 
-        v.idb = { // IndexedDBの初期値。内容はauthIndexedDB参照
-          memberId: 'dummyMemberID',  // 仮IDはサーバ側で生成
+        dev.step(5.1);  // 鍵ペア生成
+        v.keys = this.crypto.generateKeys();
+        if( v.keys instanceof Error ) throw v.keys;
+
+        dev.step(5.2);  // CryptoKey以外のauthIndexedDBメンバと合わせて初期値作成
+        v.idb = Object.assign(v.keys,{ // IndexedDBの初期値。内容はauthIndexedDB参照
+          memberId: 'dummyMemberID',
           memberName: 'dummyMemberName',
           deviceId: 'dummyDeviceID',
-          CPkey: this.crypto.CPkeyEnc,
-          keyGeneratedDateTime: Date.now(),
           SPkey: null,
-        };
-        await v.rv.setIndexedDB(v.idb);
+        });
+
+        dev.step(5.3);  // IndexedDBに格納
+        v.r = await v.rv.setIndexedDB(v.idb);
+        if( v.r instanceof Error ) throw v.r;
 
       }
 
-      dev.step(5);  // IndexedDBの内容をメンバ変数に格納
+      dev.step(6);  // IndexedDBの内容をメンバ変数に格納
       Object.keys(v.idb).forEach(x => this[x] = v.idb[x]);
-
-      dev.step(6);  // 暗号化・署名検証用インスタンス作成
-      // cryptoClient.constructorでthis.idbを参照しているのでIndexedDB作成の後に実行
-      this.crypto = new cryptoClient(this.cf,this.idb);  // 暗号化・署名検証
 
       dev.end(); // 終了処理
       return v.rv;
