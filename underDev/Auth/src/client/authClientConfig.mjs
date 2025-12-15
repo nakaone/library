@@ -1,6 +1,18 @@
 import { authConfig } from "./authConfig.mjs";
+/**
+ * @class
+ * @classdesc クライアント側設定情報
+ * @prop {string} api - サーバ側WebアプリURLのID。https://script.google.com/macros/s/(この部分)/exec
+ * @prop {number} timeout=300000 - サーバからの応答待機時間。これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分
+ * @prop {string} storeName="config" - IndexedDBのストア名
+ * @prop {number} dbVersion=1 - IndexedDBのバージョン
+ */
 export class authClientConfig extends authConfig {
 
+  /**
+   * @constructor
+   * @param {authClientConfig} config - authClient設定情報(既定値からの変更部分)
+   */
   constructor(arg) {
     const v = {whois:`authClientConfig.constructor`, arg:{arg}, rv:null};
     dev.start(v);
