@@ -106,32 +106,41 @@ export class authClient {
     dev.start(v);
     try {
 
+      dev.step(1.1); // funcが関数名として有効かチェック
+      // なお「::〜::」は内発処理として有効とする
+      if( !/^(::[a-zA-Z_$][a-zA-Z0-9_$]*::|[a-zA-Z_$][a-zA-Z0-9_$]*)$/.test(func) ){
+        throw new Error('Invalid function');
+      }
+
+      dev.step(1.2);  // 引数は関数を排除するため、一度JSON化してからオブジェクト化
+      arg = JSON.parse(JSON.stringify(arg));
+
       if( !this.idb.SPkey ){  // SPkey未取得
 
-        dev.step(1.1);  // 内発処理「初期情報要求」用のauthRequestを作成
+        dev.step(2.1);  // 内発処理「初期情報要求」用のauthRequestを作成
         v.authRequest = this.authRequest('::initial::');
 
-        dev.step(1.2);  // サーバ側に処理依頼
+        dev.step(2.2);  // サーバ側に処理依頼
         v.authResponse = this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
-        dev.step(1.3); // SPkey / deviceId 保存
+        dev.step(2.3); // SPkey / deviceId 保存
         v.r = await this.setIndexedDB({
           SPkey: v.authResponse.SPkey,
           deviceId: v.authResponse.deviceId
         });
         if( v.r instanceof Error ) throw v.r;
 
-        dev.step(1.4);  // 元々の処理要求を再帰呼出
+        dev.step(2.4);  // 元々の処理要求を再帰呼出
         v.rv = this.exec(func,arg);
         if( v.rv instanceof Error ) throw v.rv;
 
       } else {  // SPkey取得済
 
-        dev.step(2.1);  // authRequestを作成
+        dev.step(3.1);  // authRequestを作成
         v.authRequest = this.authRequest(func,arg);
 
-        dev.step(2.2);  // サーバ側に処理依頼
+        dev.step(3.2);  // サーバ側に処理依頼
         v.authResponse = this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
