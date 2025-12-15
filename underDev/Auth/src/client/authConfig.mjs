@@ -1,5 +1,21 @@
+/**
+ * @class
+ * @classdesc クライアント・サーバ共通設定情報
+ * @prop {string} systemName=Auth - システム名
+ * @prop {string} adminMail=必須 - 管理者のメールアドレス
+ * @prop {string} adminName=必須 - 管理者氏名
+ * @prop {number} allowableTimeDifference=120000 - クライアント・サーバ間通信時の許容時差。既定値は2分
+ * @prop {string} RSAbits=2048 - 鍵ペアの鍵長
+ * @prop {Object} underDev=任意 - テスト時の設定
+ * @prop {boolean} underDev.isTest=FALSE - 開発モードならtrue
+ * @prop {string} =UUIDv4 - 要求の識別子UUIDv4
+ */
 export class authConfig {
 
+  /**
+   * @constructor
+   * @param {authConfig} config - 設定情報(既定値からの変更部分)
+   */
   constructor(arg) {
     const v = {whois:`authConfig.constructor`, arg:{arg}, rv:null};
     dev.start(v);
@@ -30,5 +46,4 @@ export class authConfig {
 
     } catch (e) { return dev.error(e); }
   }
-
 }
