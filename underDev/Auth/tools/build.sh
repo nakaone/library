@@ -56,7 +56,7 @@ echo "## 質問・依頼事項\n\n## テストソース\n\n\`\`\`js" > $clsource
 cat $test >> $clsource
 echo "\n\`\`\`\n\n## 実行結果\n\n\`\`\`zsh" >> $clsource
 cd $prj
-npx vitest run "$test" | sed 's/\x1b\[[0-9;]*m//g' >> $clsource
+#npx vitest run "$test" | sed 's/\x1b\[[0-9;]*m//g' >> $clsource
 cd tools/
 echo "\`\`\`\n" >> $clsource
 
