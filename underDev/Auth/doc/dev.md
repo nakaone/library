@@ -20,10 +20,17 @@
 ## クラス・メソッド プロトタイプ
 
 ```js
+/**
+ * @classdesc
+ */
 export class authProto {
 
   static _XXX = null;
 
+  /**
+   * @constructor
+   * @param {string} arg - 引数
+   */
   constructor(arg) {
     const v = {whois:`authProto.constructor`, arg:{arg}, rv:null};
     dev.start(v);
@@ -39,6 +46,10 @@ export class authProto {
     } catch (e) { return dev.error(e); }
   }
 
+  /**
+   * @param {string} arg - 引数
+   * @returns {null|Error} 戻り値
+   */
   prototype(arg) {
     const v = {whois:`${this.constructor.name}.prototype`, arg:{arg}, rv:null};
     dev.start(v);
@@ -118,6 +129,13 @@ export class authProto {
     - cryptoClient
     - cryptoServer
   - ソース作成
+    - specDefを元にJSDocを追記　◀いまここ
+    - サーバ側ダミークラス作成
+      - authResponse
+      - authServer
+      - authServerConfig
+      - cryptoServer
+      - Member
   - b0005.test.mjs作成
   - 【保留】[bug] cryptoClient:"Error: Error: not fixed: "encryptedRequest""
     原因不明。cryptoClient.encrypt(), cryptoServer.encrypt()で発生。
