@@ -9,8 +9,6 @@ import { authRequest } from "./authRequest.mjs";
  * @prop {Object} idb - IndexedDBと同期、authClient内で共有
  * @prop {cryptoClient} - 暗号化・署名検証
  * 
- * 
- * 
  * @example インスタンス作成のサンプル
  * ```js
  * async function onLoad(){
@@ -168,7 +166,7 @@ export class authClient {
       // サーバ側に処理依頼
       dev.step(2.1);  // タイムアウト処理を適用するPromise
       v.timeoutPromise = new Promise((_, reject) => {
-        const ms = this.cf.allowableTimeDifference; // タイムアウト時間（ミリ秒）
+        const ms = this.cf.timeout; // タイムアウト時間（ミリ秒）
         const id = setTimeout(() => {
           // 時間内に解決しなければエラーを発生
           reject(new Error(`Fetch timed out after ${ms}ms.`));
