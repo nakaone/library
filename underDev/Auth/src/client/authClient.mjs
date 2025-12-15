@@ -7,7 +7,7 @@ import { authRequest } from "./authRequest.mjs";
  *   `new authClient()`ではなく`authClient.initialize()`で行う
  * @prop {authClientConfig} cf - authClient設定情報
  * @prop {Object} idb - IndexedDBと同期、authClient内で共有
- * @prop {cryptoClient} - 暗号化・署名検証
+ * @prop {cryptoClient} crypto - 暗号化・署名検証
  * 
  * @example インスタンス作成のサンプル
  * ```js
@@ -37,7 +37,19 @@ export class authClient {
 
   static _IndexedDB = null; // データベース接続オブジェクトを格納する静的変数
 
-  /**
+  /** typedef authIndexedDB(=this.idb): IndexedDBに保存する内容
+   * @typedef {Object} authIndexedDB
+   * @prop {string} memberId='dummyMemberID' - メンバ識別子(メールアドレス。初期値は固定文字列)
+   * @prop {string} memberName='dummyMemberName' - メンバの氏名(初期値は固定文字列)
+   * @prop {string}　deviceId='dummyDeviceID' - サーバ側で生成(UUIDv4。初期値は固定文字列)
+   * @prop {CryptoKey} CSkeySign - 署名用秘密鍵
+   * @prop {CryptoKey} CPkeySign - 署名用公開鍵
+   * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵
+   * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵
+   * @prop {string} keyGeneratedDateTime: Date.now(),
+   * @prop {string} SPkey=null - サーバ側公開鍵
+   */
+  /** constructor
    * @constructor
    * @param {authClientConfig} config - authClient設定情報
    */
@@ -49,14 +61,13 @@ export class authClient {
       dev.step(1); // メンバに値設定
       this.cf = new authClientConfig(config);  // authClient設定情報
       this.idb = {};  // IndexedDBと同期、authClient内で共有
-      this.crypto = new cryptoClient(this.cf);  // 暗号化・署名検証
 
       dev.end(); // 終了処理
 
     } catch (e) { return dev.error(e); }
   }
 
-  /**
+  /** typedef authRequest
    * @typedef {Object} authRequest
    * @prop {string} memberId=this.idb.memberId - メンバの識別子
    * @prop {string} deviceId=this.idb.deviceId - デバイスの識別子UUIDv4
@@ -207,21 +218,22 @@ export class authClient {
 
   /** getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得
    * @param {void}
-   * @returns {Object<string,any>} IndexedDBの内容。{キー:値}形式
+   * @returns {Object<string,any>} this.idbに格納したIndexedDBの内容({キー:値}形式)
    */
   async getIndexedDB() {
     const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{}, rv:null};
     dev.start(v);
     try {
 
+      dev.step(1);  // IndexedDBを取得
       v.db = authClient._IndexedDB;
       if (!v.db) throw new Error("IndexedDB not initialized");
 
-      // 'readwrite' トランザクション
+      dev.step(2);  // 'readwrite' トランザクション
       const transaction = v.db.transaction([this.cf.storeName], 'readwrite');
       const store = transaction.objectStore(this.cf.storeName);
 
-      // 全てのキーを取得
+      dev.step(3);  // 全てのキーを取得
       v.rv = await new Promise((resolve, reject) => {
         const putRequest = store.getAll();
         putRequest.onsuccess = () => resolve();
@@ -230,7 +242,37 @@ export class authClient {
         };
       });
 
-      // this.idbに登録
+      dev.step(4);  // CryptoKey復元
+      v.rv.CSkeySign = await crypto.subtle.importKey(
+        "jwk",
+        v.rv.CSkeySign,
+        { name: "RSA-PSS", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      v.rv.CPkeySign = await crypto.subtle.importKey(
+        "jwk",
+        v.rv.CPkeySign,
+        { name: "RSA-PSS", hash: "SHA-256" },
+        false,
+        ["verify"]
+      );
+      v.rv.CSkeyEnc = await crypto.subtle.importKey(
+        "jwk",
+        v.rv.CSkeyEnc,
+        { name: "RSA-OAEP", hash: "SHA-256" },
+        false,
+        ["decrypt"]
+      );
+      v.rv.CPkeyEnc = await crypto.subtle.importKey(
+        "jwk",
+        stored.CPkeyEnc,
+        { name: "RSA-OAEP", hash: "SHA-256" },
+        false,
+        ["encrypt"]
+      );
+
+      dev.step(5);  // this.idbに登録
       for ( [v.key, v.value] of Object.entries(v.rv)) {
         this.idb[v.key] = v.value;
       }
@@ -302,6 +344,10 @@ export class authClient {
       dev.step(5);  // IndexedDBの内容をメンバ変数に格納
       Object.keys(v.idb).forEach(x => this[x] = v.idb[x]);
 
+      dev.step(6);  // 暗号化・署名検証用インスタンス作成
+      // cryptoClient.constructorでthis.idbを参照しているのでIndexedDB作成の後に実行
+      this.crypto = new cryptoClient(this.cf,this.idb);  // 暗号化・署名検証
+
       dev.end(); // 終了処理
       return v.rv;
 
@@ -317,19 +363,27 @@ export class authClient {
     dev.start(v);
     try {
 
+      dev.step(1);  // IndexedDBを取得
       v.db = authClient._IndexedDB;
       if (!v.db) throw new Error("IndexedDB not initialized");
 
-      // 'readwrite' トランザクション
+      dev.step(2);  // 'readwrite' トランザクション
       const transaction = v.db.transaction([this.cf.storeName], 'readwrite');
       const store = transaction.objectStore(this.cf.storeName);
 
       // 複数の put リクエストを順番に実行
       for ( [v.key, v.value] of Object.entries(arg)) {
-        // this.idbに登録
+
+        dev.step(3.1);  // CryptoKeyはIndexedDBに保存可能になるよう出力
+        if( /^(C[SP]key(Sign|Enc))$/.test(v.key) ){
+          v.value = await crypto.subtle.exportKey("jwk", v.value);
+        }
+
+        dev.step(3.2);  // this.idbに登録
         this.idb[v.key] = v.value;
 
-        // putリクエストを実行。リクエストの成功/失敗を待つ必要は必ずしもないが、
+        dev.step(3.3);  // putリクエストを実行
+        // リクエストの成功/失敗を待つ必要は必ずしもないが、
         // エラーハンドリングのためにPromiseでラップするのが一般的。
         await new Promise((resolve, reject) => {
           const putRequest = store.put(v.value, v.key);

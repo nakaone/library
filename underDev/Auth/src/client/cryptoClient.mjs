@@ -1,14 +1,29 @@
 import { authRequest } from "./authRequest.mjs";
-
+/**
+ * @class
+ * @classdesc 暗号化・署名検証
+ * @prop {CryptoKey} CSkeySign - 署名用秘密鍵
+ * @prop {CryptoKey} CPkeySign - 署名用公開鍵
+ * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵
+ * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵
+ * @prop {number} keyGeneratedDateTime - 鍵ペア生成日時(UNIX時刻)
+ * @prop {string} SPkey - サーバ側公開鍵
+ */
 export class cryptoClient {
 
-  constructor(config) {
-    const v = {whois:`cryptoClient.constructor`, arg:{config}, rv:null};
+  /**
+   * @constructor
+   * @param {authClientConfig} cf - authClientの設定情報
+   * @param {authIndexedDB} idb - IndexedDBの内容を保持するauthClientのメンバ変数
+   */
+  constructor(cf={},idb={}) {
+    const v = {whois:`cryptoClient.constructor`, arg:{ac}, rv:null};
     dev.start(v);
     try {
 
       dev.step(1); // メンバ変数をセット
-      this.cf = config;
+      this.cf = cf;
+      this.idb = idb;
 
       // 【依頼】ここでIndexedDB(this.idb)を参照し、CS/CP/SPkeyが登録済ならメンバ変数に格納するようにしてください
       this.CSkeySign = null;
@@ -74,8 +89,13 @@ export class cryptoClient {
     } catch (e) { return dev.error(e); }
   }
 
-  async generateKeys(arg) {
-    const v = {whois:`${this.constructor.name}.generateKeys`, arg:{arg}, rv:null};
+  /** generateKeys: RSA鍵ペアを生成
+   * - 生成のみ、IndexedDBやメンバ変数への格納は行わない
+   * @param {void}
+   * @returns {Object} 生成された鍵ペア
+   */
+  async generateKeys() {
+    const v = {whois:`${this.constructor.name}.generateKeys`, arg:{}, rv:null};
     dev.start(v);
     try {
 
@@ -85,7 +105,7 @@ export class cryptoClient {
         modulusLength: this.cf.RSAbits,
         publicExponent: new Uint8Array([1, 0, 1]),
         hash: "SHA-256"
-      }, false, ["sign", "verify"]);
+      }, true, ["sign", "verify"]);
 
       dev.step(2);  // 暗号化用
       const encKeys = await crypto.subtle.generateKey({
@@ -93,12 +113,16 @@ export class cryptoClient {
         modulusLength: this.cf.RSAbits,
         publicExponent: new Uint8Array([1, 0, 1]),
         hash: "SHA-256"
-      }, false, ["encrypt", "decrypt"]);
+      }, true, ["encrypt", "decrypt"]);
 
-      this.CSkeySign = signKeys.privateKey;
-      this.CPkeySign = signKeys.publicKey;
-      this.CSkeyEnc  = encKeys.privateKey;
-      this.CPkeyEnc  = encKeys.publicKey;
+      dev.step(3);  // 戻り値作成
+      v.rv = {
+        CSkeySign: signKeys.privateKey,
+        CPkeySign: signKeys.publicKey,
+        CSkeyEnc: encKeys.privateKey,
+        CPkeyEnc: encKeys.publicKey,
+        keyGeneratedDateTime: Date.now()
+      };
 
       dev.end(); // 終了処理
       return v.rv;
