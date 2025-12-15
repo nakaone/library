@@ -1,3 +1,7 @@
+/** localFunc: テスト用：処理要求発行
+ * @param {void}
+ * @returns 
+ */
 export function localFunc(){
   const v = { whois: 'localFunc', rv: null};
   dev.start(v);
