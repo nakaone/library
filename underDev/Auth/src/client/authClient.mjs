@@ -72,7 +72,7 @@ export class authClient {
    * @prop {string} memberId=this.idb.memberId - メンバの識別子
    * @prop {string} deviceId=this.idb.deviceId - デバイスの識別子UUIDv4
    * @prop {string} memberName=this.idb.memberName - メンバの氏名管理者が加入認否判断のため使用
-   * @prop {string} CPkey=this.idb.CPkey - クライアント側署名
+   * @prop {CryptoKey} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
    * @prop {number} requestTime=Date.now() - 要求日時UNIX時刻
    * @prop {string} func - サーバ側関数名
    * @prop {any[]} arg=[] - サーバ側関数に渡す引数の配列
@@ -88,7 +88,7 @@ export class authClient {
       memberId: this.idb.memberId,
       deviceId: this.idb.deviceId,
       memberName: this.idb.memberName,
-      CPkey: this.idb.CPkey,
+      CPkeySign: this.idb.CPkeySign,
       requestTime: Date.now(),
       func: func,
       arg: arg,

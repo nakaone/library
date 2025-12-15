@@ -354,6 +354,15 @@ sequenceDiagram
   %%participant serverFunc
   %%actor admin
 
+  authClient->>authClient: IndexedDB確認
+  alt 鍵あり
+    authClient->>authClient: importKey
+  else 鍵なし
+    authClient->>authClient: generateKey
+    authClient->>authClient: exportKey → IndexedDB保存
+    authClient->>authServer: CPkeySign / CPkeyEnc 登録
+  end
+
   authClient->>+authServer: CPkey
   authServer->>+Member: CPkey
 

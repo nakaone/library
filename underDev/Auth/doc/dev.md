@@ -21,7 +21,9 @@
 
 ```js
 /**
+ * @class
  * @classdesc
+ * @prop {string} fuga - ダミー
  */
 export class authProto {
 
