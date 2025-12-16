@@ -1,8 +1,3 @@
-/**
- * @class
- * @classdesc
- * @prop {authServerConfig} cf - authServer設定項目
- */
 export class authServer {
 
   /**

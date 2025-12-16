@@ -1,9 +1,3 @@
-/**
- * @class
- * @classdesc 暗号化・署名検証
- * @prop {authServerConfig} cf - authServer設定情報
- * @prop {cryptoServer} crypto - 暗号化・署名検証
- */
 export class cryptoServer {
 
   /** constructor

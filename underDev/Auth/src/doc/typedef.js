@@ -1,4 +1,39 @@
-/** authConfig: authClient/Server共通設定値
+/** authClient: クライアント側中核クラス
+ * @class
+ * @classdesc クライアント側中核クラス
+ * - 初期化の際に非同期処理が必要なため、インスタンス作成は
+ *   `new authClient()`ではなく`authClient.initialize()`で行う
+ * @prop {authClientConfig} cf - authClient設定情報
+ * @prop {Object} idb - IndexedDBと同期、authClient内で共有
+ * @prop {cryptoClient} crypto - 暗号化・署名検証
+ * 
+ * @example インスタンス作成のサンプル
+ * ```js
+ * async function onLoad(){
+ *   const v = {whois:`onLoad`, rv:null};
+ *   dev.start(v);
+ *   try {
+ * 
+ *     dev.step(1);  // authClientインスタンス作成
+ *     const auth = await authClient.initialize({
+ *       adminMail: 'ena.kaon@gmail.com',
+ *       adminName: 'あどみ',
+ *       api: 'abcdefghijklmnopqrstuvwxyz',
+ *     });
+ * 
+ *     dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット
+ *     globalThis.auth = auth;
+ *     v.rv = auth;
+ * 
+ *     dev.end(); // 終了処理
+ *     return v.rv;
+ * 
+ *   } catch (e) { return dev.error(e); }
+ * }
+ */
+/** authConfig: クライアント・サーバ共通設定情報
+ * @class
+ * @classdesc クライアント・サーバ共通設定情報
  * @prop {string} systemName="Auth" - システム名
  * @prop {string} adminMail - 管理者のメールアドレス
  * @prop {string} adminName - 管理者氏名
@@ -62,6 +97,11 @@
  * @prop {authRequestLog[]} requestLog=[] - 重複チェック用のリクエスト履歴
  * @prop {number} =300000 - 重複リクエスト拒否となる時間既定値は5分
  */
+/** authServer: サーバ側中核クラス
+ * @class
+ * @classdesc サーバ側中核クラス
+ * @prop {authServerConfig} cf - authServer設定項目
+ */
 /** authServerConfig: authServer特有の設定項目
  * @typedef {Object} authServerConfig - authServer特有の設定項目
  * @prop {string} memberList="memberList" - memberListシート名
@@ -124,6 +164,18 @@
  *   - 上の例ではauthRequest.funcとサーバ側実関数名は一致させているが、
  *     隠蔽等を目的で異なる形にしても問題ない。<br>
  *     例：`cmFunc:{authority:0,do:m=>commonFunc(...m)}`
+ */
+/** cryptoClient: クライアント側の暗号化・署名検証
+ * @class
+ * @classdesc クライアント側の暗号化・署名検証
+ * @prop {number} keyGeneratedDateTime - 鍵ペア生成日時(UNIX時刻)
+ * @prop {string} SPkey - サーバ側公開鍵
+ */
+/** cryptoServer: サーバ側の暗号化・署名検証
+ * @class
+ * @classdesc サーバ側の暗号化・署名検証
+ * @prop {authServerConfig} cf - authServer設定情報
+ * @prop {cryptoServer} crypto - 暗号化・署名検証
  */
 /** encryptedRequest: 暗号化された処理要求
  * @typedef {Object} encryptedRequest - 暗号化された処理要求
