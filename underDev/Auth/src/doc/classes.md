@@ -77,7 +77,7 @@ graph TD
 classDiagram
   class authScriptProperties {
 		number keyGeneratedDateTime
-    string SPkey
+    string SPkeySign
     string SSkey
     string oldSPkey
     string oldSSkey

@@ -79,7 +79,7 @@ export class cryptoServer {
         const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
         const encryptedKey = await crypto.subtle.encrypt(
           { name: "RSA-OAEP" },
-          this.idb.SPkey,
+          this.idb.SPkeySign,
           rawAesKey
         );
 
@@ -153,7 +153,7 @@ export class cryptoServer {
       // 4. 署名検証
       const ok = await crypto.subtle.verify(
         { name: "RSA-PSS", saltLength: 32 },
-        this.idb.SPkey,
+        this.idb.SPkeySign,
         signature,
         plain
       );

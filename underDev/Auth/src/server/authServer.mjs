@@ -49,6 +49,25 @@ export class authServer {
     } catch (e) { return dev.error(e); }
   }
 
+  /** authResponse: authResponse型のオブジェクトを作成
+   * @param {authRequest} request - 処理要求オブジェクト
+   * @returns {authResponse}
+   */
+  authResponse(request){
+    return {
+      memberId: request.memberId,
+      deviceId: request.deviceId,
+      memberName: request.memberName,
+      CPkeySign: request.CPkeySign,
+      requestTime: request.requestTime,
+      func: request.func,
+      arg: request.arg,
+      nonce: request.nonce,
+      SPkeySign: this.keys.SPkeySign,
+    }
+  }
+
+
   /**
    * @param {string} arg - 引数
    * @returns {null|Error} 戻り値

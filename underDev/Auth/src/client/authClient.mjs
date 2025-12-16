@@ -82,7 +82,7 @@ export class authClient {
       dev.step(1.2);  // 引数は関数を排除するため、一度JSON化してからオブジェクト化
       arg = JSON.parse(JSON.stringify(arg));
 
-      if( !this.idb.SPkey ){  // SPkey未取得
+      if( !this.idb.SPkeySign ){  // SPkey未取得
 
         dev.step(2.1);  // 内発処理「初期情報要求」用のauthRequestを作成
         v.authRequest = this.authRequest('::initial::');
@@ -91,9 +91,9 @@ export class authClient {
         v.authResponse = this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
-        dev.step(2.3); // SPkey / deviceId 保存
+        dev.step(2.3); // SPkeySign / deviceId 保存
         v.r = await this.setIndexedDB({
-          SPkey: v.authResponse.SPkey,
+          SPkeySign: v.authResponse.SPkeySign,
           deviceId: v.authResponse.deviceId
         });
         if( v.r instanceof Error ) throw v.r;
@@ -318,7 +318,7 @@ export class authClient {
           memberId: 'dummyMemberID',
           memberName: 'dummyMemberName',
           deviceId: 'dummyDeviceID',
-          SPkey: null,
+          SPkeySign: null,
         });
 
         dev.step(5.3);  // IndexedDBに格納

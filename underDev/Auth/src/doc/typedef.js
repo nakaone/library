@@ -62,30 +62,35 @@
  * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵
  * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵
  * @prop {string} keyGeneratedDateTime: Date.now(),
- * @prop {string} SPkey=null - サーバ側公開鍵
+ * @prop {string} SPkeySign=null - サーバ側公開鍵
  */
 /** authRequest: authClientからauthServerへの処理要求(平文)
  * @typedef {Object} authRequest
  * @prop {string} memberId=this.idb.memberId - メンバの識別子
  * @prop {string} deviceId=this.idb.deviceId - デバイスの識別子UUIDv4
  * @prop {string} memberName=this.idb.memberName - メンバの氏名管理者が加入認否判断のため使用
- * @prop {string} SPkey=this.idb.SPkey - クライアント側署名
+ * @prop {string} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
  * @prop {number} requestTime=Date.now() - 要求日時UNIX時刻
  * @prop {string} func - サーバ側関数名
  * @prop {any[]} arg=[] - サーバ側関数に渡す引数の配列
  * @prop {string} nonce=UUIDv4 - 要求の識別子UUIDv4
+ */
+/** authRequestLog: 重複チェック用のリクエスト履歴
+ * @typedef {Object} authRequestLog - 重複チェック用のリクエスト履歴
+ * @prop {number} timestamp=Date.now() - リクエストを受けたサーバ側日時
+ * @prop {string} nonce=必須 - クライアント側で採番されたリクエスト識別子UUIDv4
  */
 /** authResponse: authServerからauthClientへの処理結果(平文)
  * @typedef {Object} authResponse - authServerからauthClientへの処理結果(平文)
  * @prop {string} memberId - メンバの識別子
  * @prop {string} deviceId - デバイスの識別子。UUIDv4
  * @prop {string} memberName - メンバの氏名
- * @prop {CryptoKey} SPkeySign=this.idb.SPkeySign - クライアント側署名用公開鍵
+ * @prop {CryptoKey} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
  * @prop {number} requestTime - 要求日時UNIX時刻
  * @prop {string} func - サーバ側関数名
  * @prop {any[]} arg - サーバ側関数に渡す引数の配列
  * @prop {string} nonce - 要求の識別子UUIDv4
- * @prop {string} SPkey=SPkey - サーバ側公開鍵
+ * @prop {string} SPkeySign=this.keys.SPkeySign - サーバ側公開鍵
  * @prop {any} response=null - サーバ側関数の戻り値
  * @prop {number} receptTime=Date.now() - サーバ側の処理要求受付日時
  * @prop {number} responseTime=0 - サーバ側処理終了日時
@@ -100,17 +105,21 @@
 /** authScriptProperties: サーバ側ScriptPropertiesに保存する内容
  * @typedef {Object} authScriptProperties - サーバ側ScriptPropertiesに保存する内容
  * @prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻
- * @prop {string} SPkey - PEM形式の公開鍵文字列
- * @prop {string} SSkey - PEM形式の秘密鍵文字列(暗号化済み)
- * @prop {string} oldSPkey - cryptoServer.reset実行前にバックアップした公開鍵
- * @prop {string} oldSSkey - cryptoServer.reset実行前にバックアップした秘密鍵
+ * @prop {string} SSkeySign - 署名用秘密鍵(PEM形式)
+ * @prop {string} SPkeySign - 署名用公開鍵(PEM形式)
+ * @prop {string} SSkeyEnc - 暗号化用秘密鍵(PEM形式)
+ * @prop {string} SPkeyEnc - 暗号化用公開鍵(PEM形式)
+ * @prop {string} oldSSkeySign - バックアップ用署名用秘密鍵(PEM形式)
+ * @prop {string} oldSPkeySign - バックアップ用署名用公開鍵(PEM形式)
+ * @prop {string} oldSSkeyEnc - バックアップ用暗号化用秘密鍵(PEM形式)
+ * @prop {string} oldSPkeyEnc - バックアップ用暗号化用公開鍵(PEM形式)
  * @prop {authRequestLog[]} requestLog=[] - 重複チェック用のリクエスト履歴
- * @prop {number} =300000 - 重複リクエスト拒否となる時間既定値は5分
  */
 /** authServer: サーバ側中核クラス
  * @class
  * @classdesc サーバ側中核クラス
  * @prop {authServerConfig} cf - authServer設定項目
+ * @prop {authScriptProperties} keys - ScriptPropertiesに保存された鍵ペア情報
  */
 /** authServerConfig: authServer特有の設定項目
  * @typedef {Object} authServerConfig - authServer特有の設定項目
@@ -180,7 +189,7 @@
  * @class
  * @classdesc クライアント側の暗号化・署名検証
  * @prop {number} keyGeneratedDateTime - 鍵ペア生成日時(UNIX時刻)
- * @prop {string} SPkey - サーバ側公開鍵
+ * @prop {string} SPkeySign - サーバ側公開鍵
  */
 /** cryptoServer: サーバ側の暗号化・署名検証
  * @class
