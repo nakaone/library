@@ -31,6 +31,16 @@
  *   } catch (e) { return dev.error(e); }
  * }
  */
+/** authClientConfig: クライアント側特有の設定項目
+ * @typedef {Object} authClientConfig
+ * @extends {authConfig}
+ * @prop {string} api - サーバ側WebアプリURLのID
+ *   https://script.google.com/macros/s/(この部分)/exec
+ * @prop {number} timeout=300000 - サーバからの応答待機時間
+ *   これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分
+ * @prop {string} storeName="config" - IndexedDBのストア名
+ * @prop {number} dbVersion=1 - IndexedDBのバージョン
+ */
 /** authConfig: クライアント・サーバ共通設定情報
  * @class
  * @classdesc クライアント・サーバ共通設定情報
@@ -104,6 +114,7 @@
  */
 /** authServerConfig: authServer特有の設定項目
  * @typedef {Object} authServerConfig - authServer特有の設定項目
+ * @extends {authConfig}
  * @prop {string} memberList="memberList" - memberListシート名
  * @prop {number} defaultAuthority=1 - 新規加入メンバの権限の既定値
  * @prop {number} memberLifeTime=31536000000 - 加入有効期間

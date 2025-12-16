@@ -44,7 +44,6 @@ export class authServer {
         this.cf[x] = config[x] || v.authServerConfig[x];
       })
 
-
       dev.end(); // 終了処理
 
     } catch (e) { return dev.error(e); }

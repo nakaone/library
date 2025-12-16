@@ -14,8 +14,30 @@ export class authClient {
     dev.start(v);
     try {
 
-      dev.step(1); // メンバに値設定
-      this.cf = new authClientConfig(config);  // authClient設定情報
+      dev.step(1);  // config必須項目のチェック
+      if( !config.hasOwnProperty('api') )
+        throw new Error(`Required arguments not specified`);
+
+      // -------------------------------------------------------------
+      // 設定情報(this.cf)の作成
+      // -------------------------------------------------------------
+      dev.step(2.1);  // authClient特有の設定項目について既定値を定義
+      v.authClientConfig = {
+        api: config.api,
+        timeout: 300000,
+        storeName: 'config',
+        dbVersion: 1,
+      };
+
+      dev.step(2.2); // authClient/Server共通設定値に特有項目を追加
+      this.cf = new authConfig(config);
+      Object.keys(v.authClientConfig).forEach(x => {
+        this.cf[x] = config[x] || v.authClientConfig[x];
+      })
+
+      // -------------------------------------------------------------
+      dev.step(3);  // その他メンバの値設定
+      // -------------------------------------------------------------
       this.idb = {};  // IndexedDBと同期、authClient内で共有
 
       dev.end(); // 終了処理
