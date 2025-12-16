@@ -37,18 +37,6 @@ export class authClient {
 
   static _IndexedDB = null; // データベース接続オブジェクトを格納する静的変数
 
-  /** typedef authIndexedDB(=this.idb): IndexedDBに保存する内容
-   * @typedef {Object} authIndexedDB
-   * @prop {string} memberId='dummyMemberID' - メンバ識別子(メールアドレス。初期値は固定文字列)
-   * @prop {string} memberName='dummyMemberName' - メンバの氏名(初期値は固定文字列)
-   * @prop {string}　deviceId='dummyDeviceID' - サーバ側で生成(UUIDv4。初期値は固定文字列)
-   * @prop {CryptoKey} CSkeySign - 署名用秘密鍵
-   * @prop {CryptoKey} CPkeySign - 署名用公開鍵
-   * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵
-   * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵
-   * @prop {string} keyGeneratedDateTime: Date.now(),
-   * @prop {string} SPkey=null - サーバ側公開鍵
-   */
   /** constructor
    * @constructor
    * @param {authClientConfig} config - authClient設定情報
@@ -67,17 +55,6 @@ export class authClient {
     } catch (e) { return dev.error(e); }
   }
 
-  /** typedef authRequest
-   * @typedef {Object} authRequest
-   * @prop {string} memberId=this.idb.memberId - メンバの識別子
-   * @prop {string} deviceId=this.idb.deviceId - デバイスの識別子UUIDv4
-   * @prop {string} memberName=this.idb.memberName - メンバの氏名管理者が加入認否判断のため使用
-   * @prop {CryptoKey} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
-   * @prop {number} requestTime=Date.now() - 要求日時UNIX時刻
-   * @prop {string} func - サーバ側関数名
-   * @prop {any[]} arg=[] - サーバ側関数に渡す引数の配列
-   * @prop {string} nonce=UUIDv4 - 要求の識別子UUIDv4
-   */
   /** authRequest: authRequest型のオブジェクトを作成
    * @param {string} func - サーバ側関数名
    * @param {any[]} arg - サーバ側関数に渡す引数
