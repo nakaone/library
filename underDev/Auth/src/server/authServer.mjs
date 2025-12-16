@@ -63,7 +63,14 @@ export class authServer {
       func: request.func,
       arg: request.arg,
       nonce: request.nonce,
+
       SPkeySign: this.keys.SPkeySign,
+      response: null,
+      receptTime: Date.now(),
+      responseTime: 0,
+      status: 'success',
+      message: '',
+      // メンバ"decrypt"はクライアント側で付加
     }
   }
 

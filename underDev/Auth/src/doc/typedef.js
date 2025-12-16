@@ -90,6 +90,7 @@
  * @prop {string} func - サーバ側関数名
  * @prop {any[]} arg - サーバ側関数に渡す引数の配列
  * @prop {string} nonce - 要求の識別子UUIDv4
+ * 
  * @prop {string} SPkeySign=this.keys.SPkeySign - サーバ側公開鍵
  * @prop {any} response=null - サーバ側関数の戻り値
  * @prop {number} receptTime=Date.now() - サーバ側の処理要求受付日時
