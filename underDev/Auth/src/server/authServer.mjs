@@ -9,12 +9,14 @@ export class authServer {
     dev.start(v);
     try {
 
+      // -------------------------------------------------------------
       dev.step(1);  // config必須項目のチェック
+      // -------------------------------------------------------------
       if( !config.hasOwnProperty('func') )
         throw new Error(`Required arguments not specified`);
 
       // -------------------------------------------------------------
-      // 設定情報(this.cf)の作成
+      dev.step(2);  // 設定情報(this.cf)の作成
       // -------------------------------------------------------------
       dev.step(2.1);  // authServer特有の設定項目について既定値を定義
       v.authServerConfig = {
@@ -45,14 +47,10 @@ export class authServer {
       })
 
       // -------------------------------------------------------------
-      // 鍵ペアの取得(or生成)
+      dev.step(3);  // 暗号化・復号モジュール生成
       // -------------------------------------------------------------
-      this.keys = {};
-
-      // -------------------------------------------------------------
-      // 暗号化・復号モジュール生成
-      // -------------------------------------------------------------
-      this.crypto = new cryptoServer(this.cf);
+      this.crypto = cryptoServer.initialize(this.cf);
+      if( this.crypto instanceof Error ) throw this.crypto;
 
       dev.end(); // 終了処理
 

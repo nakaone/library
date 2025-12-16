@@ -198,7 +198,9 @@
  * @class
  * @classdesc サーバ側の暗号化・署名検証
  * @prop {authServerConfig} cf - authServer設定情報
+ * @prop {ScriptProperties} prop - PropertiesService.getScriptProperties()
  * @prop {authScriptProperties} keys - ScriptPropertiesに保存された鍵ペア情報
+ * @prop {string[]} keyList - ScriptPropertiesに保存された項目名の一覧
  */
 /** encryptedRequest: 暗号化された処理要求
  * @typedef {Object} encryptedRequest - 暗号化された処理要求
