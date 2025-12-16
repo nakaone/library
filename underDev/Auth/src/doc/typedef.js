@@ -1,3 +1,12 @@
+/** authConfig: authClient/Server共通設定値
+ * @prop {string} systemName="Auth" - システム名
+ * @prop {string} adminMail - 管理者のメールアドレス
+ * @prop {string} adminName - 管理者氏名
+ * @prop {number} allowableTimeDifference=120000 - クライアント・サーバ間通信時の許容時差既定値は2分
+ * @prop {string} RSAbits=2048 - 鍵ペアの鍵長
+ * @prop {Object} underDev - テスト時の設定
+ * @prop {boolean} underDev.isTest=false - 開発モードならtrue
+ */
 /** authIndexedDB: IndexedDBに保存する内容(=this.idb)
  * @typedef {Object} authIndexedDB - IndexedDBに保存する内容(=this.idb)
  * @prop {string} memberId='dummyMemberID' - メンバ識別子(メールアドレス。初期値は固定文字列)
