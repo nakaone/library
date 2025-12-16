@@ -79,7 +79,7 @@
 /** authRequestLog: 重複チェック用のリクエスト履歴
  * @typedef {Object[]} authRequestLog - 重複チェック用のリクエスト履歴
  * @prop {number} timestamp=Date.now() - リクエストを受けたサーバ側日時
- * @prop {string} nonce=必須 - クライアント側で採番されたリクエスト識別子UUIDv4
+ * @prop {string} nonce - クライアント側で採番されたリクエスト識別子UUIDv4
  */
 /** authResponse: authServerからauthClientへの処理結果(平文)
  * @typedef {Object} authResponse - authServerからauthClientへの処理結果(平文)
@@ -223,4 +223,66 @@
  * @prop {string} tag - AES-GCM 認証タグ
  * @prop {Object} meta - メタ情報
  * @prop {number} meta.rsabits - 暗号化に使用したRSA鍵長
+ */
+/** Member: メンバ情報をGoogle Spread上で管理
+ * @class
+ * @classdesc メンバ情報をGoogle Spread上で管理
+ * @prop {string} memberId="dummyMemberID" - メンバの識別子(メールアドレス)
+ * @prop {string} name="dummyMemberName" - メンバの氏名
+ * @prop {string} status="未加入" - メンバの状態
+ *   未加入,未審査,審査済,加入中,加入禁止
+ * @prop {MemberLog} log=new MemberLog() - メンバの履歴情報。シート上はJSON
+ * @prop {MemberProfile} profile=new MemberProfile() - メンバの属性情報。シート上はJSON
+ * @prop {MemberDevice[]} device=[] - デバイス情報
+ *   マルチデバイス対応のため配列。シート上はJSON
+ * @prop {string} note='' - 当該メンバに対する備考
+ */
+/** MemberDevice: メンバが使用する通信機器の情報
+ * @typedef {Object} MemberDevice - メンバが使用する通信機器の情報
+ * @prop {string} deviceId - デバイスの識別子。UUID
+ * @prop {string} status=未認証 - デバイスの状態未認証,認証中,試行中,凍結中
+ * @prop {string} CPkeySign - デバイスの署名用公開鍵
+ * @prop {string} CPkeyEnc - デバイスの暗号化用公開鍵
+ * @prop {number} CPkeyUpdated=Date.now() - 最新のCPkeyが登録された日時
+ * @prop {MemberTrial[]} trial=[] - ログイン試行関連情報オブジェクトシート上はJSON文字列
+ */
+/** MemberLog: メンバの各種要求・状態変化の時刻
+ * @typedef {Object} MemberLog - メンバの各種要求・状態変化の時刻
+ * @prop {number} joiningRequest=Date.now() - 仮登録要求日時仮登録要求をサーバ側で受信した日時
+ * @prop {number} approval=0 - 加入承認日時
+ *   管理者がmemberList上で加入承認処理を行った日時。値設定は加入否認日時と択一
+ * @prop {number} denial=0 - 加入否認日時
+ *   管理者がmemberList上で加入否認処理を行った日時。値設定は加入承認日時と択一
+ * @prop {number} loginRequest=0 - 認証要求日時
+ *   未認証メンバからの処理要求をサーバ側で受信した日時
+ * @prop {number} loginSuccess=0 - 認証成功日時
+ *   未認証メンバの認証要求が成功した最新日時
+ * @prop {number} loginExpiration=0 - 認証有効期限
+ *   認証成功日時＋認証有効時間
+ * @prop {number} loginFailure=0 - 認証失敗日時
+ *   未認証メンバの認証要求失敗が確定した最新日時
+ * @prop {number} unfreezeLogin=0 - 認証無効期限
+ *   認証失敗日時＋認証凍結時間
+ * @prop {number} joiningExpiration=0 - 加入有効期限
+ *   加入承認日時＋加入有効期間
+ * @prop {number} unfreezeDenial=0 - 加入禁止期限
+ *   加入否認日時＋加入禁止期間
+ */
+/** MemberProfile: メンバの属性情報
+ * @typedef {Object} MemberProfile - メンバの属性情報
+ * @prop {number} authority - メンバの持つ権限
+ *   authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す
+ */
+/** MemberTrial: ログイン試行情報の管理・判定
+ * @typedef {Object} MemberTrial - ログイン試行情報の管理・判定
+ * @prop {string} passcode - 設定されているパスコード最初の認証試行で作成
+ * @prop {number} created=Date.now() - パスコード生成日時≒パスコード通知メール発信日時
+ * @prop {MemberTrialLog[]} log=[] - 試行履歴常に最新が先頭(unshift()使用)
+ *   保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。
+ */
+/** MemberTrialLog: パスコード入力単位の試行記録
+ * @typedef {Object} MemberTrialLog - パスコード入力単位の試行記録
+ * @prop {string} entered - 入力されたパスコード
+ * @prop {boolean} result - 試行結果正答：true、誤答：false
+ * @prop {number} timestamp=Date.now() - 判定処理日時
  */
