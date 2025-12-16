@@ -9,168 +9,274 @@ export class cryptoServer {
     dev.start(v);
     try {
 
+      dev.step(1); // authServer設定情報をメンバに格納
       this.cf = cf;
 
-      dev.step(1); // ScriptPropertiesの内容を読み込み
+      dev.step(2); // ScriptPropertiesの内容を読み込み
+      this.keys = {};
+      v.list = [  // ScriptProperties保存項目の内、通常使用する項目のリスト
+        'keyGeneratedDateTime',
+        'SSkeySign',
+        'SPkeySign',
+        'SSkeyEnc',
+        'SPkeyEnc',
+        'requestLog',
+      ];
+      v.prop = PropertiesService.getScriptProperties();
+      v.list.forEach(key => {
+        this.keys[key] = v.prop.getProperty(key) || null;
+      })
 
-      dev.end(); // 終了処理
-
-    } catch (e) { return dev.error(e); }
-  }
-
-  /** encrypt: 処理要求を暗号化＋署名
-   * @param {authRequest} request - 処理要求
-   * @param {boolean} [isSignOnly=false] - trueの場合、暗号化は行わず署名のみ行う
-   * @returns 
-   */
-  async encrypt(request,isSignOnly=false) {
-    const v = {whois:`${this.constructor.name}.encrypt`, arg:{request,isSignOnly}, rv:null};
-    dev.start(v);
-    try {
-
-      dev.step(1);  // payload を UTF-8 化
-      const payloadBytes =
-        new TextEncoder().encode(JSON.stringify(request));
-
-      dev.step(2);  // 署名（共通）
-      const signature = await crypto.subtle.sign(
-        { name: "RSA-PSS", saltLength: 32 },
-        this.idb.SSkeySign,
-        payloadBytes
-      );
-
-      if (isSignOnly) {
-        dev.step(3);
-        // ========== 署名のみ ==========
-        v.rv = {
-          payload: btoa(
-            String.fromCharCode(...payloadBytes)
-          ),
-          signature: btoa(
-            String.fromCharCode(...new Uint8Array(signature))
-          ),
-          meta: {
-            signOnly: true,
-            rsabits: this.RSAbits
-          }
-        };
-
-      } else {
-        // ========== 通常（暗号化＋署名） ==========
-
-        dev.step(4.1);  // AES共通鍵生成
-        const aesKey = await crypto.subtle.generateKey(
-          { name: "AES-GCM", length: 256 },
-          true,
-          ["encrypt"]
-        );
-
-        dev.step(4.2);  // IV生成
-        const iv = crypto.getRandomValues(new Uint8Array(12));
-
-        dev.step(4.3);  // payload暗号化
-        const cipher = await crypto.subtle.encrypt(
-          { name: "AES-GCM", iv },
-          aesKey,
-          payloadBytes
-        );
-
-        dev.step(4.4);  // AES鍵をRSA-OAEPで暗号化
-        const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
-        const encryptedKey = await crypto.subtle.encrypt(
-          { name: "RSA-OAEP" },
-          this.idb.SPkeySign,
-          rawAesKey
-        );
-
-        dev.step(4.5);  // 戻り値の作成
-        v.rv = {
-          cipher: btoa(
-            String.fromCharCode(...new Uint8Array(cipher))
-          ),
-          encryptedKey: btoa(
-            String.fromCharCode(...new Uint8Array(encryptedKey))
-          ),
-          iv: btoa(
-            String.fromCharCode(...iv)
-          ),
-          signature: btoa(
-            String.fromCharCode(...new Uint8Array(signature))
-          ),
-          meta: {
-            signOnly: false,
-            rsabits: this.RSAbits,
-            sym: "AES-256-GCM"
-          }
-        };
+      dev.step(3);  // SPkeySign未生成なら鍵ペアを生成
+      if( this.keys.SPkeySign === null ){
+        v.keys = this.generateKeys();
+        if( v.keys instanceof Error ) throw v.keys;
+        // requestLogは初期値(空配列)とする
+        v.keys.requestLog = JSON.stringify([]);
+        // ScriptPropertiesに保存
+        v.list.forEach(key => {
+          v.prop.setProperty(key,v.keys[key]);
+        });
       }
 
       dev.end(); // 終了処理
-      return v.rv;
 
     } catch (e) { return dev.error(e); }
   }
 
-  /** decrypt: 暗号化された処理結果を復号・署名検証
-   * @param {encryptedResponse} response - 暗号化されたサーバ側処理結果
-   * @returns {authResponse}
+  /**
+   * PEM文字列 → ArrayBuffer
+   * @param {string} pem - PEM形式鍵
+   * @returns {ArrayBuffer}
    */
-  async decrypt(response) {
-    const v = {whois:`${this.constructor.name}.decrypt`, arg:{response}, rv:null};
+  pemToArrayBuffer(pem) {
+    const base64 = pem
+      .replace(/-----BEGIN [^-]+-----/, "")
+      .replace(/-----END [^-]+-----/, "")
+      .replace(/\s+/g, "");
+
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    return bytes.buffer;
+  }
+
+  /**
+   * ArrayBuffer → PEM文字列
+   * @param {ArrayBuffer} buffer
+   * @param {"PUBLIC KEY"|"PRIVATE KEY"} type
+   * @returns {string}
+   */
+  arrayBufferToPem(buffer, type) {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+
+    const base64 = btoa(binary);
+    const lines = base64.match(/.{1,64}/g).join("\n");
+
+    return `-----BEGIN ${type}-----\n${lines}\n-----END ${type}-----`;
+  }
+
+  /** encrypt: 処理結果を暗号化＋署名
+   * @param {authResponse} response - 処理結果
+   * @param {string} CPkeySign - クライアント側署名用公開鍵
+   * @returns {encryptedResponse}
+   */
+  async encrypt(response, CPkeySign) {
+    const v = {whois:`${this.constructor.name}.encrypt`, arg:{response,CPkeySign}, rv:null};
     dev.start(v);
     try {
 
-      // 1. Base64復元
-      const cipher = Uint8Array.from(atob(response.cipher), c => c.charCodeAt(0));
-      const encryptedKey = Uint8Array.from(atob(response.encryptedKey), c => c.charCodeAt(0));
-      const iv = Uint8Array.from(atob(response.iv), c => c.charCodeAt(0));
-      const signature = Uint8Array.from(atob(response.signature), c => c.charCodeAt(0));
+      dev.step(1); // payload UTF-8化
+      const payloadBytes =
+        new TextEncoder().encode(JSON.stringify(response));
 
-      // 2. AES鍵復号
-      const rawKey = await crypto.subtle.decrypt(
-        { name: "RSA-OAEP" },
-        this.idb.SSkeyEnc,
-        encryptedKey
-      );
-
-      const aesKey = await crypto.subtle.importKey(
-        "raw",
-        rawKey,
-        { name: "AES-GCM" },
+      dev.step(2); // サーバ署名用秘密鍵 import
+      const SSkeySign = await crypto.subtle.importKey(
+        "pkcs8",
+        this.pemToArrayBuffer(this.keys.SSkeySign),
+        { name: "RSA-PSS", hash: "SHA-256" },
         false,
-        ["decrypt"]
+        ["sign"]
       );
 
-      // 3. payload復号
-      const plain = await crypto.subtle.decrypt(
+      dev.step(3); // 署名
+      const signature = await crypto.subtle.sign(
+        { name: "RSA-PSS", saltLength: 32 },
+        SSkeySign,
+        payloadBytes
+      );
+
+      dev.step(4); // AES鍵生成
+      const aesKey = await crypto.subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt"]
+      );
+
+      dev.step(5); // IV生成
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+
+      dev.step(6); // payload暗号化
+      const cipher = await crypto.subtle.encrypt(
         { name: "AES-GCM", iv },
         aesKey,
-        cipher
+        payloadBytes
       );
 
-      const decoded = JSON.parse(new TextDecoder().decode(plain));
-
-      // 4. 署名検証
-      const ok = await crypto.subtle.verify(
-        { name: "RSA-PSS", saltLength: 32 },
-        this.idb.SPkeySign,
-        signature,
-        plain
+      dev.step(7); // クライアント暗号化用公開鍵 import
+      const CPkeyEnc = await crypto.subtle.importKey(
+        "spki",
+        this.pemToArrayBuffer(CPkeySign),
+        { name: "RSA-OAEP", hash: "SHA-256" },
+        false,
+        ["encrypt"]
       );
 
-      if (!ok) throw new Error("Signature verification failed");
+      dev.step(8); // AES鍵をRSA-OAEPで暗号化
+      const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
+      const encryptedKey = await crypto.subtle.encrypt(
+        { name: "RSA-OAEP" },
+        CPkeyEnc,
+        rawAesKey
+      );
 
-      v.rv = decoded;
-      v.rv.decrypt = "success";
+      dev.step(9); // 戻り値作成
+      v.rv = {
+        cipher: btoa(String.fromCharCode(...new Uint8Array(cipher))),
+        encryptedKey: btoa(String.fromCharCode(...new Uint8Array(encryptedKey))),
+        iv: btoa(String.fromCharCode(...iv)),
+        signature: btoa(String.fromCharCode(...new Uint8Array(signature))),
+        meta: {
+          rsabits: this.cf.RSAbits,
+          sym: "AES-256-GCM"
+        }
+      };
 
-      dev.end(); // 終了処理
+      dev.end();
       return v.rv;
 
     } catch (e) { return dev.error(e); }
   }
 
-  /** generateKeys: RSA鍵ペアを生成
-   * - 生成のみ、IndexedDBやメンバ変数への格納は行わない
+  /** decrypt: 暗号化された処理要求を復号・署名検証
+   * @param {encryptedRequest} request - 暗号化されたサーバ側処理結果
+   * @param {string} CPkeySign - クライアント側署名用公開鍵
+   * @returns {authRequest}
+   */
+  async decrypt(request, CPkeySign) {
+    const v = {whois:`${this.constructor.name}.decrypt`, arg:{request,CPkeySign}, rv:null};
+    dev.start(v);
+    try {
+
+      if (request.meta.signOnly === true) {
+
+        // ===== signOnly 判定 =====
+        dev.step(1.1); // payload復元
+        const payloadBytes = Uint8Array.from(
+          atob(request.payload),
+          c => c.charCodeAt(0)
+        );
+
+        dev.step(1.2); // signature復元
+        const signature = Uint8Array.from(
+          atob(request.signature),
+          c => c.charCodeAt(0)
+        );
+
+        dev.step(1.3); // 署名検証
+        const ok = await crypto.subtle.verify(
+          { name: "RSA-PSS", saltLength: 32 },
+          CPkeySign,
+          signature,
+          payloadBytes
+        );
+
+        if (!ok) throw new Error("Signature verification failed (signOnly)");
+
+        dev.step(1.4); // JSON復元
+        v.rv = JSON.parse(new TextDecoder().decode(payloadBytes));
+
+      } else {
+        // ===== 通常（暗号化＋署名） =====
+
+        dev.step(2.1); // Base64復元
+        const cipher = Uint8Array.from(atob(request.cipher), c => c.charCodeAt(0));
+        const encryptedKey = Uint8Array.from(atob(request.encryptedKey), c => c.charCodeAt(0));
+        const iv = Uint8Array.from(atob(request.iv), c => c.charCodeAt(0));
+        const signature = Uint8Array.from(atob(request.signature), c => c.charCodeAt(0));
+
+        dev.step(2.2); // サーバ秘密鍵（復号用）import
+        const SSkeyEnc = await crypto.subtle.importKey(
+          "pkcs8",
+          this.pemToArrayBuffer(this.keys.SSkeyEnc),
+          { name: "RSA-OAEP", hash: "SHA-256" },
+          false,
+          ["decrypt"]
+        );
+
+        dev.step(2.3); // AES鍵復号
+        const rawKey = await crypto.subtle.decrypt(
+          { name: "RSA-OAEP" },
+          SSkeyEnc,
+          encryptedKey
+        );
+
+        const aesKey = await crypto.subtle.importKey(
+          "raw",
+          rawKey,
+          { name: "AES-GCM" },
+          false,
+          ["decrypt"]
+        );
+
+        dev.step(2.4); // payload復号
+        const plain = await crypto.subtle.decrypt(
+          { name: "AES-GCM", iv },
+          aesKey,
+          cipher
+        );
+
+        dev.step(2.5); // クライアント署名用公開鍵 import
+        const CPkey = await crypto.subtle.importKey(
+          "spki",
+          this.pemToArrayBuffer(CPkeySign),
+          { name: "RSA-PSS", hash: "SHA-256" },
+          false,
+          ["verify"]
+        );
+
+        dev.step(2.6); // 署名検証
+        const ok = await crypto.subtle.verify(
+          { name: "RSA-PSS", saltLength: 32 },
+          CPkey,
+          signature,
+          plain
+        );
+
+        if (!ok) throw new Error("Signature verification failed");
+
+        dev.step(2.7); // JSON復元
+        v.rv = JSON.parse(new TextDecoder().decode(plain));
+
+      }
+
+      dev.end();
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** generateKeys: PEM形式のRSA鍵ペアを生成
+   * - 生成のみ、ScriptPropertiesやメンバ変数への格納は行わない
    * @param {void}
    * @returns {Object} 生成された鍵ペア
    */
@@ -179,32 +285,44 @@ export class cryptoServer {
     dev.start(v);
     try {
 
-      dev.step(1);  // 署名用
+      dev.step(1); // 署名用
       const signKeys = await crypto.subtle.generateKey({
         name: "RSA-PSS",
-        modulusLength: this.RSAbits,
+        modulusLength: this.cf.RSAbits,
         publicExponent: new Uint8Array([1, 0, 1]),
         hash: "SHA-256"
       }, true, ["sign", "verify"]);
 
-      dev.step(2);  // 暗号化用
+      dev.step(2); // 暗号化用
       const encKeys = await crypto.subtle.generateKey({
         name: "RSA-OAEP",
-        modulusLength: this.RSAbits,
+        modulusLength: this.cf.RSAbits,
         publicExponent: new Uint8Array([1, 0, 1]),
         hash: "SHA-256"
       }, true, ["encrypt", "decrypt"]);
 
-      dev.step(3);  // 戻り値作成
+      dev.step(3); // PEM変換
       v.rv = {
-        SSkeySign: signKeys.privateKey,
-        SPkeySign: signKeys.publicKey,
-        SSkeyEnc: encKeys.privateKey,
-        SPkeyEnc: encKeys.publicKey,
+        SSkeySign: this.arrayBufferToPem(
+          await crypto.subtle.exportKey("pkcs8", signKeys.privateKey),
+          "PRIVATE KEY"
+        ),
+        SPkeySign: this.arrayBufferToPem(
+          await crypto.subtle.exportKey("spki", signKeys.publicKey),
+          "PUBLIC KEY"
+        ),
+        SSkeyEnc: this.arrayBufferToPem(
+          await crypto.subtle.exportKey("pkcs8", encKeys.privateKey),
+          "PRIVATE KEY"
+        ),
+        SPkeyEnc: this.arrayBufferToPem(
+          await crypto.subtle.exportKey("spki", encKeys.publicKey),
+          "PUBLIC KEY"
+        ),
         keyGeneratedDateTime: Date.now()
       };
 
-      dev.end(); // 終了処理
+      dev.end();
       return v.rv;
 
     } catch (e) { return dev.error(e); }

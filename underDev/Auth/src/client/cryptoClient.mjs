@@ -81,7 +81,7 @@ export class cryptoClient {
         const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
         const encryptedKey = await crypto.subtle.encrypt(
           { name: "RSA-OAEP" },
-          this.idb.SPkeySign,
+          this.idb.SPkeyEnc,
           rawAesKey
         );
 

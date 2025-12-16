@@ -61,8 +61,9 @@
  * @prop {CryptoKey} CPkeySign - 署名用公開鍵
  * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵
  * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵
- * @prop {string} keyGeneratedDateTime: Date.now(),
- * @prop {string} SPkeySign=null - サーバ側公開鍵
+ * @prop {string} keyGeneratedDateTime - 鍵ペア生成日時(UNIX時刻)
+ * @prop {string} SPkeySign=null - サーバ側署名用公開鍵
+ * @prop {string} SPkeyEnc=null - サーバ側暗号化用公開鍵
  */
 /** authRequest: authClientからauthServerへの処理要求(平文)
  * @typedef {Object} authRequest
@@ -76,7 +77,7 @@
  * @prop {string} nonce=UUIDv4 - 要求の識別子UUIDv4
  */
 /** authRequestLog: 重複チェック用のリクエスト履歴
- * @typedef {Object} authRequestLog - 重複チェック用のリクエスト履歴
+ * @typedef {Object[]} authRequestLog - 重複チェック用のリクエスト履歴
  * @prop {number} timestamp=Date.now() - リクエストを受けたサーバ側日時
  * @prop {string} nonce=必須 - クライアント側で採番されたリクエスト識別子UUIDv4
  */
@@ -91,7 +92,8 @@
  * @prop {any[]} arg - サーバ側関数に渡す引数の配列
  * @prop {string} nonce - 要求の識別子UUIDv4
  * 
- * @prop {string} SPkeySign=this.keys.SPkeySign - サーバ側公開鍵
+ * @prop {string} SPkeySign=this.keys.SPkeySign - サーバ側署名用公開鍵
+ * @prop {string} SPkeyEnc=this.keys.SPkeyEnc - サーバ側暗号化用公開鍵
  * @prop {any} response=null - サーバ側関数の戻り値
  * @prop {number} receptTime=Date.now() - サーバ側の処理要求受付日時
  * @prop {number} responseTime=0 - サーバ側処理終了日時
@@ -103,7 +105,7 @@
  * @prop {string} decrypt="success" - クライアント側での復号処理結果
  *   "success":正常、それ以外はエラーメッセージ
  */
-/** authScriptProperties: サーバ側ScriptPropertiesに保存する内容
+/** authScriptProperties: サーバ側ScriptPropertiesに保存する情報
  * @typedef {Object} authScriptProperties - サーバ側ScriptPropertiesに保存する内容
  * @prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻
  * @prop {string} SSkeySign - 署名用秘密鍵(PEM形式)
@@ -114,13 +116,13 @@
  * @prop {string} oldSPkeySign - バックアップ用署名用公開鍵(PEM形式)
  * @prop {string} oldSSkeyEnc - バックアップ用暗号化用秘密鍵(PEM形式)
  * @prop {string} oldSPkeyEnc - バックアップ用暗号化用公開鍵(PEM形式)
- * @prop {authRequestLog[]} requestLog=[] - 重複チェック用のリクエスト履歴
+ * @prop {string} requestLog - 重複チェック用のリクエスト履歴。{authRequestLog[]}のJSON
  */
 /** authServer: サーバ側中核クラス
  * @class
  * @classdesc サーバ側中核クラス
  * @prop {authServerConfig} cf - authServer設定項目
- * @prop {authScriptProperties} keys - ScriptPropertiesに保存された鍵ペア情報
+ * @prop {cryptoServer} crypto - 暗号化・署名検証
  */
 /** authServerConfig: authServer特有の設定項目
  * @typedef {Object} authServerConfig - authServer特有の設定項目
@@ -189,14 +191,14 @@
 /** cryptoClient: クライアント側の暗号化・署名検証
  * @class
  * @classdesc クライアント側の暗号化・署名検証
- * @prop {number} keyGeneratedDateTime - 鍵ペア生成日時(UNIX時刻)
- * @prop {string} SPkeySign - サーバ側公開鍵
+ * @prop {authIndexedDB} idb - authClient.idb(IndexedDB)のコピー
+ * @prop {string} RSAbits - RSA鍵長(=authConfig.RSAbits)
  */
 /** cryptoServer: サーバ側の暗号化・署名検証
  * @class
  * @classdesc サーバ側の暗号化・署名検証
  * @prop {authServerConfig} cf - authServer設定情報
- * @prop {cryptoServer} crypto - 暗号化・署名検証
+ * @prop {authScriptProperties} keys - ScriptPropertiesに保存された鍵ペア情報
  */
 /** encryptedRequest: 暗号化された処理要求
  * @typedef {Object} encryptedRequest - 暗号化された処理要求
@@ -208,6 +210,7 @@
  * @prop {Object} meta - メタ情報
  * @prop {number} meta.rsabits - 暗号化に使用したRSA鍵長
  * @prop {string} meta.sym - 使用した共通鍵方式"AES-256-GCM"
+ * @prop {boolean} meta.signOnly - 暗号化せず署名のみで送信する場合true
  */
 /** encryptedResponse: 暗号化された処理結果
  * @typedef {Object} encryptedResponse - 暗号化された処理結果
