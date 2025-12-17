@@ -47,14 +47,168 @@ export class authServer {
       })
 
       // -------------------------------------------------------------
-      dev.step(3);  // 暗号化・復号モジュール生成
+      dev.step(3);  // 暗号化・復号モジュール生成(this.crypto)
       // -------------------------------------------------------------
       this.crypto = cryptoServer.initialize(this.cf);
       if( this.crypto instanceof Error ) throw this.crypto;
 
+      // -------------------------------------------------------------
+      dev.step(4);  // 監査ログ・エラーログシートの準備(this.audit, this.error)
+      // -------------------------------------------------------------
+
       dev.end(); // 終了処理
 
     } catch (e) { return dev.error(e); }
+  }
+
+  /** authAuditLog: サーバ側監査ログ（クロージャ版）
+   * @param {authServerConfig} config
+   * @returns {{ log: Function }}
+   */
+  authAuditLog(config) {
+
+    // ============================
+    // private (closure variables)
+    // ============================
+
+    const startedAt = Date.now();               // 処理開始時刻
+    const sheetName = config.auditLog;
+    const retentionMs = config.storageDaysOfAuditLog;
+
+    const state = {
+      timestamp: new Date(startedAt).toISOString(),
+      duration: null,
+      memberId: null,
+      deviceId: null,
+      func: null,
+      result: "normal",
+      note: ""
+    };
+
+    // ============================
+    // シート準備
+    // ============================
+
+    const ss = SpreadsheetApp.getActive();
+    let sheet = ss.getSheetByName(sheetName);
+
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+      sheet.appendRow([
+        "timestamp",
+        "duration",
+        "memberId",
+        "deviceId",
+        "func",
+        "result",
+        "note"
+      ]);
+    }
+
+    // ============================
+    // ローテーション（保存期限超過行の削除）
+    // ============================
+
+    function rotateIfNeeded() {
+      if (!retentionMs) return;
+
+      const now = Date.now();
+      const lastRow = sheet.getLastRow();
+      if (lastRow <= 1) return; // ヘッダのみ
+
+      const values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+
+      // 後ろから削除（行番号ズレ防止）
+      for (let i = values.length - 1; i >= 0; i--) {
+        const ts = values[i][0];
+        if (!ts) continue;
+
+        const time = new Date(ts).getTime();
+        if (isNaN(time)) continue;
+
+        if (now - time > retentionMs) {
+          sheet.deleteRow(i + 2);
+        }
+      }
+    }
+
+    // ============================
+    // public methods
+    // ============================
+
+    /** log: 監査ログ出力
+     * @param {authRequest|string} request
+     * @param {authResponse} response
+     * @returns {Object} authAuditLog record
+     */
+    function log(request, response) {
+
+      // ---------- ローテーション ----------
+      rotateIfNeeded();
+      
+      // ---------- duration ----------
+      const finishedAt = Date.now();
+      state.duration = finishedAt - startedAt;
+
+      // ---------- request 解析 ----------
+      if (typeof request === "string") {
+        // 内発処理
+        state.func = request;
+      } else if (request) {
+        state.memberId = request.memberId ?? state.memberId;
+        state.deviceId = request.deviceId ?? null;
+        state.func = request.func ?? state.func;
+      }
+
+      // ---------- response 解析 ----------
+      if (response) {
+        if (response.status instanceof Error) {
+          state.result = "fatal";
+          state.note = response.status.message || "fatal error";
+        } else if (typeof response.status === "string" && response.status !== "success") {
+          state.result = "warning";
+          state.note = response.status;
+        } else {
+          state.result = "normal";
+          state.note = response.message || "";
+        }
+      }
+
+      // ---------- 必須項目チェック ----------
+      if (!state.memberId) state.memberId = "unknown";
+      if (!state.func) state.func = "unknown";
+      if (!state.note) state.note = "";
+
+      // ---------- シート出力 ----------
+      sheet.appendRow([
+        state.timestamp,
+        state.duration,
+        state.memberId,
+        state.deviceId,
+        state.func,
+        state.result,
+        state.note
+      ]);
+
+      // ---------- 戻り値 ----------
+      return {
+        timestamp: state.timestamp,
+        duration: state.duration,
+        memberId: state.memberId,
+        deviceId: state.deviceId,
+        func: state.func,
+        result: state.result,
+        note: state.note
+      };
+    }
+
+    // ============================
+    // public API
+    // ============================
+
+    return {
+      log
+    };
   }
 
   /** authResponse: authResponse型のオブジェクトを作成
@@ -82,6 +236,31 @@ export class authServer {
     }
   }
 
+  /**
+   * @param {string} arg - 引数
+   * @returns {null|Error} 戻り値
+   */
+  exec(arg) {
+    const v = {whois:`${this.constructor.name}.prototype`, arg:{arg}, rv:null};
+    dev.start(v);
+    try {
+
+      // 処理要求を復号
+      // 該当のメンバ情報を取得
+      // if
+        // 内発処理の要求
+        // 一般的処理要求(非内発処理)
+      
+
+      // -------------------------------------------------------------
+      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
+      // -------------------------------------------------------------
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
 
   /**
    * @param {string} arg - 引数
