@@ -289,55 +289,10 @@ function devTools(opt){
 }
 
 // authClient関係クラス定義
-/**
- * @class
- * @classdesc クライアント側中核クラス
- * - 初期化の際に非同期処理が必要なため、インスタンス作成は
- *   `new authClient()`ではなく`authClient.initialize()`で行う
- * @prop {authClientConfig} cf - authClient設定情報
- * @prop {Object} idb - IndexedDBと同期、authClient内で共有
- * @prop {cryptoClient} crypto - 暗号化・署名検証
- *
- * @example インスタンス作成のサンプル
- * ```js
- * async function onLoad(){
- *   const v = {whois:`onLoad`, rv:null};
- *   dev.start(v);
- *   try {
- *
- *     dev.step(1);  // authClientインスタンス作成
- *     const auth = await authClient.initialize({
- *       adminMail: 'ena.kaon@gmail.com',
- *       adminName: 'あどみ',
- *       api: 'abcdefghijklmnopqrstuvwxyz',
- *     });
- *
- *     dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット
- *     globalThis.auth = auth;
- *     v.rv = auth;
- *
- *     dev.end(); // 終了処理
- *     return v.rv;
- *
- *   } catch (e) { return dev.error(e); }
- * }
- */
 class authClient {
 
   static _IndexedDB = null; // データベース接続オブジェクトを格納する静的変数
 
-  /** typedef authIndexedDB(=this.idb): IndexedDBに保存する内容
-   * @typedef {Object} authIndexedDB
-   * @prop {string} memberId='dummyMemberID' - メンバ識別子(メールアドレス。初期値は固定文字列)
-   * @prop {string} memberName='dummyMemberName' - メンバの氏名(初期値は固定文字列)
-   * @prop {string}　deviceId='dummyDeviceID' - サーバ側で生成(UUIDv4。初期値は固定文字列)
-   * @prop {CryptoKey} CSkeySign - 署名用秘密鍵
-   * @prop {CryptoKey} CPkeySign - 署名用公開鍵
-   * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵
-   * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵
-   * @prop {string} keyGeneratedDateTime: Date.now(),
-   * @prop {string} SPkey=null - サーバ側公開鍵
-   */
   /** constructor
    * @constructor
    * @param {authClientConfig} config - authClient設定情報
@@ -347,8 +302,30 @@ class authClient {
     dev.start(v);
     try {
 
-      dev.step(1); // メンバに値設定
-      this.cf = new authClientConfig(config);  // authClient設定情報
+      dev.step(1);  // config必須項目のチェック
+      if( !config.hasOwnProperty('api') )
+        throw new Error(`Required arguments not specified`);
+
+      // -------------------------------------------------------------
+      // 設定情報(this.cf)の作成
+      // -------------------------------------------------------------
+      dev.step(2.1);  // authClient特有の設定項目について既定値を定義
+      v.authClientConfig = {
+        api: config.api,
+        timeout: 300000,
+        storeName: 'config',
+        dbVersion: 1,
+      };
+
+      dev.step(2.2); // authClient/Server共通設定値に特有項目を追加
+      this.cf = new authConfig(config);
+      Object.keys(v.authClientConfig).forEach(x => {
+        this.cf[x] = config[x] || v.authClientConfig[x];
+      })
+
+      // -------------------------------------------------------------
+      dev.step(3);  // その他メンバの値設定
+      // -------------------------------------------------------------
       this.idb = {};  // IndexedDBと同期、authClient内で共有
 
       dev.end(); // 終了処理
@@ -356,17 +333,6 @@ class authClient {
     } catch (e) { return dev.error(e); }
   }
 
-  /** typedef authRequest
-   * @typedef {Object} authRequest
-   * @prop {string} memberId=this.idb.memberId - メンバの識別子
-   * @prop {string} deviceId=this.idb.deviceId - デバイスの識別子UUIDv4
-   * @prop {string} memberName=this.idb.memberName - メンバの氏名管理者が加入認否判断のため使用
-   * @prop {CryptoKey} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
-   * @prop {number} requestTime=Date.now() - 要求日時UNIX時刻
-   * @prop {string} func - サーバ側関数名
-   * @prop {any[]} arg=[] - サーバ側関数に渡す引数の配列
-   * @prop {string} nonce=UUIDv4 - 要求の識別子UUIDv4
-   */
   /** authRequest: authRequest型のオブジェクトを作成
    * @param {string} func - サーバ側関数名
    * @param {any[]} arg - サーバ側関数に渡す引数
@@ -395,32 +361,41 @@ class authClient {
     dev.start(v);
     try {
 
-      if( !this.idb.SPkey ){  // SPkey未取得
+      dev.step(1.1); // funcが関数名として有効かチェック
+      // なお「::〜::」は内発処理として有効とする
+      if( !/^(::[a-zA-Z_$][a-zA-Z0-9_$]*::|[a-zA-Z_$][a-zA-Z0-9_$]*)$/.test(func) ){
+        throw new Error('Invalid function');
+      }
 
-        dev.step(1.1);  // 内発処理「初期情報要求」用のauthRequestを作成
+      dev.step(1.2);  // 引数は関数を排除するため、一度JSON化してからオブジェクト化
+      arg = JSON.parse(JSON.stringify(arg));
+
+      if( !this.idb.SPkeySign ){  // SPkey未取得
+
+        dev.step(2.1);  // 内発処理「初期情報要求」用のauthRequestを作成
         v.authRequest = this.authRequest('::initial::');
 
-        dev.step(1.2);  // サーバ側に処理依頼
+        dev.step(2.2);  // サーバ側に処理依頼
         v.authResponse = this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
-        dev.step(1.3); // SPkey / deviceId 保存
+        dev.step(2.3); // SPkeySign / deviceId 保存
         v.r = await this.setIndexedDB({
-          SPkey: v.authResponse.SPkey,
+          SPkeySign: v.authResponse.SPkeySign,
           deviceId: v.authResponse.deviceId
         });
         if( v.r instanceof Error ) throw v.r;
 
-        dev.step(1.4);  // 元々の処理要求を再帰呼出
+        dev.step(2.4);  // 元々の処理要求を再帰呼出
         v.rv = this.exec(func,arg);
         if( v.rv instanceof Error ) throw v.rv;
 
       } else {  // SPkey取得済
 
-        dev.step(2.1);  // authRequestを作成
+        dev.step(3.1);  // authRequestを作成
         v.authRequest = this.authRequest(func,arg);
 
-        dev.step(2.2);  // サーバ側に処理依頼
+        dev.step(3.2);  // サーバ側に処理依頼
         v.authResponse = this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
@@ -631,7 +606,7 @@ class authClient {
           memberId: 'dummyMemberID',
           memberName: 'dummyMemberName',
           deviceId: 'dummyDeviceID',
-          SPkey: null,
+          SPkeySign: null,
         });
 
         dev.step(5.3);  // IndexedDBに格納
@@ -696,18 +671,6 @@ class authClient {
     } catch (e) { return dev.error(e); }
   }
 }
-/**
- * @class
- * @classdesc クライアント・サーバ共通設定情報
- * @prop {string} systemName=Auth - システム名
- * @prop {string} adminMail=必須 - 管理者のメールアドレス
- * @prop {string} adminName=必須 - 管理者氏名
- * @prop {number} allowableTimeDifference=120000 - クライアント・サーバ間通信時の許容時差。既定値は2分
- * @prop {string} RSAbits=2048 - 鍵ペアの鍵長
- * @prop {Object} underDev=任意 - テスト時の設定
- * @prop {boolean} underDev.isTest=FALSE - 開発モードならtrue
- * @prop {string} =UUIDv4 - 要求の識別子UUIDv4
- */
 class authConfig {
 
   /**
@@ -745,37 +708,216 @@ class authConfig {
     } catch (e) { return dev.error(e); }
   }
 }
-/**
- * @class
- * @classdesc クライアント側設定情報
- * @prop {string} api - サーバ側WebアプリURLのID。https://script.google.com/macros/s/(この部分)/exec
- * @prop {number} timeout=300000 - サーバからの応答待機時間。これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分
- * @prop {string} storeName="config" - IndexedDBのストア名
- * @prop {number} dbVersion=1 - IndexedDBのバージョン
- */
-class authClientConfig extends authConfig {
+class cryptoClient {
 
-  /**
+  /** constructor
    * @constructor
-   * @param {authClientConfig} config - authClient設定情報(既定値からの変更部分)
+   * @param {authIndexedDB} idb - IndexedDBの内容を保持するauthClientのメンバ変数
+   *   CPkeySign, CSkeySign, CPkeyEnc, CSkeyEncはこの下にCryptoKey形式で存在
+   * @param {number} RSAbits - RSA鍵長
    */
-  constructor(arg) {
-    const v = {whois:`authClientConfig.constructor`, arg:{arg}, rv:null};
+  constructor(idb,RSAbits) {
+    const v = {whois:`cryptoClient.constructor`, arg:{idb,RSAbits}, rv:null};
     dev.start(v);
     try {
-      super(arg);
 
-      dev.step(1); // メンバの値設定
-      if( arg.hasOwnProperty('api') ){
-        this.api = arg.api;	// {string} サーバ側WebアプリURLのID
-      } else {
-        throw new Error('"api" is not specified.');
-      }
-      this.timeout = arg.timeout || 300000; // {number} サーバからの応答待機時間
-      this.storeName = arg.storeName || 'config'; // {string} IndexedDBのストア名
-      this.dbVersion = arg.dbVersion || 1;  // {number} IndexedDBのバージョン
+      dev.step(1); // メンバ変数をセット
+      this.idb = idb;
+      this.RSAbits = RSAbits;
 
       dev.end(); // 終了処理
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** encrypt: 処理要求を暗号化＋署名
+   * @param {authRequest} request - 処理要求
+   * @param {boolean} [isSignOnly=false] - trueの場合、暗号化は行わず署名のみ行う
+   * @returns
+   */
+  async encrypt(request,isSignOnly=false) {
+    const v = {whois:`${this.constructor.name}.encrypt`, arg:{request,isSignOnly}, rv:null};
+    dev.start(v);
+    try {
+
+      dev.step(1);  // payload を UTF-8 化
+      const payloadBytes =
+        new TextEncoder().encode(JSON.stringify(request));
+
+      dev.step(2);  // 署名（共通）
+      const signature = await crypto.subtle.sign(
+        { name: "RSA-PSS", saltLength: 32 },
+        this.idb.CSkeySign,
+        payloadBytes
+      );
+
+      if (isSignOnly) {
+        dev.step(3);
+        // ========== 署名のみ ==========
+        v.rv = {
+          payload: btoa(
+            String.fromCharCode(...payloadBytes)
+          ),
+          signature: btoa(
+            String.fromCharCode(...new Uint8Array(signature))
+          ),
+          meta: {
+            signOnly: true,
+            rsabits: this.RSAbits
+          }
+        };
+
+      } else {
+        // ========== 通常（暗号化＋署名） ==========
+
+        dev.step(4.1);  // AES共通鍵生成
+        const aesKey = await crypto.subtle.generateKey(
+          { name: "AES-GCM", length: 256 },
+          true,
+          ["encrypt"]
+        );
+
+        dev.step(4.2);  // IV生成
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+
+        dev.step(4.3);  // payload暗号化
+        const cipher = await crypto.subtle.encrypt(
+          { name: "AES-GCM", iv },
+          aesKey,
+          payloadBytes
+        );
+
+        dev.step(4.4);  // AES鍵をRSA-OAEPで暗号化
+        const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
+        const encryptedKey = await crypto.subtle.encrypt(
+          { name: "RSA-OAEP" },
+          this.idb.SPkeyEnc,
+          rawAesKey
+        );
+
+        dev.step(4.5);  // 戻り値の作成
+        v.rv = {
+          cipher: btoa(
+            String.fromCharCode(...new Uint8Array(cipher))
+          ),
+          encryptedKey: btoa(
+            String.fromCharCode(...new Uint8Array(encryptedKey))
+          ),
+          iv: btoa(
+            String.fromCharCode(...iv)
+          ),
+          signature: btoa(
+            String.fromCharCode(...new Uint8Array(signature))
+          ),
+          meta: {
+            signOnly: false,
+            rsabits: this.RSAbits,
+            sym: "AES-256-GCM"
+          }
+        };
+      }
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** decrypt: 暗号化された処理結果を復号・署名検証
+   * @param {encryptedResponse} response - 暗号化されたサーバ側処理結果
+   * @returns {authResponse}
+   */
+  async decrypt(response) {
+    const v = {whois:`${this.constructor.name}.decrypt`, arg:{response}, rv:null};
+    dev.start(v);
+    try {
+
+      // 1. Base64復元
+      const cipher = Uint8Array.from(atob(response.cipher), c => c.charCodeAt(0));
+      const encryptedKey = Uint8Array.from(atob(response.encryptedKey), c => c.charCodeAt(0));
+      const iv = Uint8Array.from(atob(response.iv), c => c.charCodeAt(0));
+      const signature = Uint8Array.from(atob(response.signature), c => c.charCodeAt(0));
+
+      // 2. AES鍵復号
+      const rawKey = await crypto.subtle.decrypt(
+        { name: "RSA-OAEP" },
+        this.idb.CSkeyEnc,
+        encryptedKey
+      );
+
+      const aesKey = await crypto.subtle.importKey(
+        "raw",
+        rawKey,
+        { name: "AES-GCM" },
+        false,
+        ["decrypt"]
+      );
+
+      // 3. payload復号
+      const plain = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv },
+        aesKey,
+        cipher
+      );
+
+      const decoded = JSON.parse(new TextDecoder().decode(plain));
+
+      // 4. 署名検証
+      const ok = await crypto.subtle.verify(
+        { name: "RSA-PSS", saltLength: 32 },
+        this.idb.SPkeySign,
+        signature,
+        plain
+      );
+
+      if (!ok) throw new Error("Signature verification failed");
+
+      v.rv = decoded;
+      v.rv.decrypt = "success";
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** generateKeys: RSA鍵ペアを生成
+   * - 生成のみ、IndexedDBやメンバ変数への格納は行わない
+   * @param {void}
+   * @returns {Object} 生成された鍵ペア
+   */
+  async generateKeys() {
+    const v = {whois:`${this.constructor.name}.generateKeys`, arg:{}, rv:null};
+    dev.start(v);
+    try {
+
+      dev.step(1);  // 署名用
+      const signKeys = await crypto.subtle.generateKey({
+        name: "RSA-PSS",
+        modulusLength: this.RSAbits,
+        publicExponent: new Uint8Array([1, 0, 1]),
+        hash: "SHA-256"
+      }, true, ["sign", "verify"]);
+
+      dev.step(2);  // 暗号化用
+      const encKeys = await crypto.subtle.generateKey({
+        name: "RSA-OAEP",
+        modulusLength: this.RSAbits,
+        publicExponent: new Uint8Array([1, 0, 1]),
+        hash: "SHA-256"
+      }, true, ["encrypt", "decrypt"]);
+
+      dev.step(3);  // 戻り値作成
+      v.rv = {
+        CSkeySign: signKeys.privateKey,
+        CPkeySign: signKeys.publicKey,
+        CSkeyEnc: encKeys.privateKey,
+        CPkeyEnc: encKeys.publicKey,
+        keyGeneratedDateTime: Date.now()
+      };
+
+      dev.end(); // 終了処理
+      return v.rv;
 
     } catch (e) { return dev.error(e); }
   }
@@ -803,6 +945,10 @@ async function onLoad(){
 
   } catch (e) { return dev.error(e); }
 }
+/** localFunc: テスト用：処理要求発行
+ * @param {void}
+ * @returns
+ */
 function localFunc(){
   const v = { whois: 'localFunc', rv: null};
   dev.start(v);

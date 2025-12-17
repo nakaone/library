@@ -9,8 +9,22 @@
 // グローバル変数定義
 const dev = devTools();
 const asv = authServer({
-  // プロジェクト毎の独自パラメータ
+  adminMail: 'ena.kaon@gmail.com',
+  adminName: 'あどみ',
+  func: {
+    svTest: m => {serverFunc(...m)},
+  }
 });
+
+// テスト用サーバ側関数
+function serverFunc(arg){
+  const v = {whois:`serverFunc`, arg:{arg}, rv:null};
+  dev.start(v);
+  try {
+    console.log(`${v.whois}: arg=${JSON.stringify(arg,null,2)}`);
+    return true;
+  } catch (e) { return dev.error(e); }
+}
 
 // Webアプリ定義
 function doPost(e) {
