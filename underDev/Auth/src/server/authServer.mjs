@@ -53,263 +53,123 @@ export class authServer {
       if( this.crypto instanceof Error ) throw this.crypto;
 
       // -------------------------------------------------------------
-      dev.step(4);  // 監査ログ・エラーログシートの準備(this.audit, this.error)
+      dev.step(4);  // memberListシートの準備(this.member)
       // -------------------------------------------------------------
-      this.audit = this.authAuditLog();
-      this.error = this.authErrorLog();
+      this.member = new Member();
+
+      // -------------------------------------------------------------
+      dev.step(5);  // 監査ログ・エラーログシートの準備(this.audit, this.error)
+      // -------------------------------------------------------------
+      //this.audit = this.authAuditLog();
+      //this.error = this.authErrorLog();
 
       dev.end(); // 終了処理
 
     } catch (e) { return dev.error(e); }
   }
 
-  /** authAuditLog: サーバ側監査ログ（クロージャ版）
-   * @param {authServerConfig} config
-   * @returns {{ log: Function }}
+  /** authLogger: 監査ログ／エラーログを自動振り分けで出力
+   * @param {authResponse} response
+   * @returns {authResponse}
    */
-  authAuditLog(config) {
+  authLogger(response) {
+    const v = { whois: 'authServer.authLogger', arg: { response }, rv: null };
+    dev.start(v);
+    try {
 
-    // ============================
-    // private (closure variables)
-    // ============================
-
-    const startedAt = Date.now();               // 処理開始時刻
-    const sheetName = config.auditLog;
-    const retentionMs = config.storageDaysOfAuditLog;
-
-    const state = {
-      timestamp: new Date(startedAt).toISOString(),
-      duration: null,
-      memberId: null,
-      deviceId: null,
-      func: null,
-      result: "normal",
-      note: ""
-    };
-
-    // ============================
-    // シート準備
-    // ============================
-
-    const ss = SpreadsheetApp.getActive();
-    let sheet = ss.getSheetByName(sheetName);
-
-    if (!sheet) {
-      sheet = ss.insertSheet(sheetName);
-      sheet.appendRow([
-        "timestamp",
-        "duration",
-        "memberId",
-        "deviceId",
-        "func",
-        "result",
-        "note"
-      ]);
-    }
-
-    // ============================
-    // ローテーション（保存期限超過行の削除）
-    // ============================
-
-    function rotateIfNeeded() {
-      if (!retentionMs) return;
-
-      const now = Date.now();
-      const lastRow = sheet.getLastRow();
-      if (lastRow <= 1) return; // ヘッダのみ
-
-      const values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-
-      // 後ろから削除（行番号ズレ防止）
-      for (let i = values.length - 1; i >= 0; i--) {
-        const ts = values[i][0];
-        if (!ts) continue;
-
-        const time = new Date(ts).getTime();
-        if (isNaN(time)) continue;
-
-        if (now - time > retentionMs) {
-          sheet.deleteRow(i + 2);
-        }
-      }
-    }
-
-    // ============================
-    // public methods
-    // ============================
-
-    /** log: 監査ログ出力
-     * @param {authRequest|string} request
-     * @param {authResponse} response
-     * @returns {Object} authAuditLog record
-     */
-    function log(request, response) {
-
-      // ---------- ローテーション ----------
-      rotateIfNeeded();
-      
-      // ---------- duration ----------
-      const finishedAt = Date.now();
-      state.duration = finishedAt - startedAt;
-
-      // ---------- request 解析 ----------
-      if (typeof request === "string") {
-        // 内発処理
-        state.func = request;
-      } else if (request) {
-        state.memberId = request.memberId ?? state.memberId;
-        state.deviceId = request.deviceId ?? null;
-        state.func = request.func ?? state.func;
+      // -------------------------------------------------------------
+      dev.step(1); // ログ種別判定（normal / warning / fatal）
+      // -------------------------------------------------------------
+      let level = 'normal';
+      if (response.status instanceof Error) {
+        level = 'fatal';
+      } else if (typeof response.status === 'string' && response.status !== 'success') {
+        level = 'warning';
       }
 
-      // ---------- response 解析 ----------
-      if (response) {
-        if (response.status instanceof Error) {
-          state.result = "fatal";
-          state.note = response.status.message || "fatal error";
-        } else if (typeof response.status === "string" && response.status !== "success") {
-          state.result = "warning";
-          state.note = response.status;
-        } else {
-          state.result = "normal";
-          state.note = response.message || "";
+      // -------------------------------------------------------------
+      dev.step(2); // 出力先シート名決定
+      // -------------------------------------------------------------
+      const sheetName =
+        level === 'fatal'
+          ? this.cf.errorLog
+          : this.cf.auditLog;
+
+      const retentionMs =
+        level === 'fatal'
+          ? this.cf.storageDaysOfErrorLog
+          : this.cf.storageDaysOfAuditLog;
+
+      const ss = SpreadsheetApp.getActive();
+      let sheet = ss.getSheetByName(sheetName);
+
+      if (!sheet) {
+        sheet = ss.insertSheet(sheetName);
+        sheet.appendRow(
+          level === 'fatal'
+            ? ['timestamp', 'memberId', 'deviceId', 'result', 'message', 'stack']
+            : ['timestamp', 'duration', 'memberId', 'deviceId', 'func', 'result', 'note']
+        );
+      }
+
+      // -------------------------------------------------------------
+      dev.step(3); // ローテーション（保存期限超過行の削除）
+      // -------------------------------------------------------------
+      if (retentionMs) {
+        const now = Date.now();
+        const lastRow = sheet.getLastRow();
+        if (lastRow > 1) {
+          const values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+          for (let i = values.length - 1; i >= 0; i--) {
+            const t = new Date(values[i][0]).getTime();
+            if (!isNaN(t) && now - t > retentionMs) {
+              sheet.deleteRow(i + 2);
+            }
+          }
         }
       }
 
-      // ---------- 必須項目チェック ----------
-      if (!state.memberId) state.memberId = "unknown";
-      if (!state.func) state.func = "unknown";
-      if (!state.note) state.note = "";
+      // -------------------------------------------------------------
+      dev.step(4); // duration / timestamp 算出
+      // -------------------------------------------------------------
+      response.responseTime = Date.now();
+      const duration = response.responseTime - response.receptTime;
+      const timestamp = new Date(response.receptTime).toISOString();
 
-      // ---------- シート出力 ----------
-      sheet.appendRow([
-        state.timestamp,
-        state.duration,
-        state.memberId,
-        state.deviceId,
-        state.func,
-        state.result,
-        state.note
-      ]);
+      // -------------------------------------------------------------
+      dev.step(5); // ログ出力
+      // -------------------------------------------------------------
+      if (level === 'fatal') {
+        sheet.appendRow([
+          timestamp,
+          response.memberId,
+          response.deviceId,
+          'fatal',
+          response.message,
+          response.status?.stack,
+        ]);
 
-      // ---------- 戻り値 ----------
-      return {
-        timestamp: state.timestamp,
-        duration: state.duration,
-        memberId: state.memberId,
-        deviceId: state.deviceId,
-        func: state.func,
-        result: state.result,
-        note: state.note
-      };
-    }
+        // 管理者通知フック（必要なら）
+        // MailApp.sendEmail(this.cf.adminMail, 'auth fatal error', response.message);
 
-    // ============================
-    // public API
-    // ============================
-
-    return {
-      log
-    };
-  }
-
-  /** authErrorLog: authServer のエラーログ（クロージャ実装）
-  */
-  authErrorLog(config = {}, arg = {}) {
-
-    const ss = SpreadsheetApp.getActive();
-    const sheetName = config.errorLog;
-    const retentionMs = config.storageDaysOfErrorLog;
-
-    const state = {
-      timestamp: new Date().toISOString(),
-      memberId: undefined,
-      deviceId: undefined,
-      result: 'fatal',
-      message: undefined,
-      stack: undefined,
-    };
-
-    // ----------------------------
-    // arg → state マッピング
-    // ----------------------------
-    Object.keys(state).forEach(k => {
-      if (k in arg) state[k] = arg[k];
-    });
-
-    // ----------------------------
-    // シート取得 or 作成
-    // ----------------------------
-    let sheet = ss.getSheetByName(sheetName);
-    if (!sheet) {
-      sheet = ss.insertSheet(sheetName);
-      sheet.appendRow([
-        'timestamp',
-        'memberId',
-        'deviceId',
-        'result',
-        'message',
-        'stack',
-      ]);
-    }
-
-    // ============================
-    // ローテーション（保存期限超過行の削除）
-    // ============================
-    function rotateIfNeeded() {
-      if (!retentionMs) return;
-
-      const now = Date.now();
-      const lastRow = sheet.getLastRow();
-      if (lastRow <= 1) return;
-
-      const values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-
-      for (let i = values.length - 1; i >= 0; i--) {
-        const ts = values[i][0];
-        if (!ts) continue;
-
-        const time = new Date(ts).getTime();
-        if (isNaN(time)) continue;
-
-        if (now - time > retentionMs) {
-          sheet.deleteRow(i + 2);
-        }
+      } else {
+        sheet.appendRow([
+          timestamp,
+          duration,
+          response.memberId,
+          response.deviceId,
+          response.func,
+          level,
+          response.message || '',
+        ]);
       }
+
+      dev.end();
+      return response;
+
+    } catch (e) {
+      return dev.error(e);
     }
-
-    // ============================
-    // public: log
-    // ============================
-    function log(e, response) {
-
-      rotateIfNeeded();
-
-      state.timestamp = new Date().toISOString();
-      state.memberId = response?.request?.memberId;
-      state.deviceId = response?.request?.deviceId;
-      state.result = response?.result ?? 'fatal';
-      state.message = response?.message;
-      state.stack = e?.stack;
-
-      sheet.appendRow([
-        state.timestamp,
-        state.memberId,
-        state.deviceId,
-        state.result,
-        state.message,
-        state.stack, // ※シートのみ出力可（通知等は禁止）
-      ]);
-
-      return { ...state };
-    }
-
-    // ============================
-    // 公開API
-    // ============================
-    return {
-      log,
-    };
   }
 
   /** authResponse: authResponse型のオブジェクトを作成
@@ -341,21 +201,45 @@ export class authServer {
    * @param {string} arg - 引数
    * @returns {null|Error} 戻り値
    */
-  exec(arg) {
+  exec(arg) { // 現在作成中
     const v = {whois:`${this.constructor.name}.prototype`, arg:{arg}, rv:null};
     dev.start(v);
     try {
 
-      // 処理要求を復号
-      // 該当のメンバ情報を取得
-      // if
-        // 内発処理の要求
-        // 一般的処理要求(非内発処理)
-      
+      dev.step(1);  // 処理要求を復号
+      v.request = this.crypto.decrypt(arg);
+      if( v.request instanceof Error ) throw v.request;
 
-      // -------------------------------------------------------------
-      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
-      // -------------------------------------------------------------
+      if( v.request.func === '::initial::' ){
+        dev.step(2);  // 初回HTMLロード時(SPkey取得要求)の場合
+        // ⇒ Member.setMember: 指定メンバ情報をmemberListシートに保存。戻り値はauthResponse型
+        v.response = this.member.setMember(v.request);
+        if( v.response instanceof Error ) throw v.response;
+      } else {
+        if( /^::[A-Za-z0-9_]+::$/.test(v.request.func) ){
+          dev.step(3);  // 内発処理の要求
+          // ⇒ 要求の種類毎に分岐。戻り値はauthResponse型に統一
+        } else {
+          dev.step(4);  // 一般的処理要求(非内発処理)
+
+          // 該当のメンバ情報を取得
+          // メンバ・デバイスの状態・権限確認
+          // if 状態・権限OK
+            // サーバ側関数を実行、結果をauthResponseに組み込み
+          // else 状態・権限NG
+            // 状態・権限によりv.responseに値設定
+        }
+      }
+
+      dev.step(5);  // 処理結果を監査／エラーログに出力
+      this.authLogger(v.response);
+
+      dev.step(6);  // encryptedResponseの作成
+      v.rv = this.crypto.encrypt(v.response);
+
+      dev.step(6);  // encryptedResponseの作成
+      v.rv = this.crypto.encrypt(v.response);
+      if( v.rv instanceof Error ) throw v.rv;
 
       dev.end(); // 終了処理
       return v.rv;

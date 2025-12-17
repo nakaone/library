@@ -102,6 +102,7 @@
  */
 /** authResponse: authServerからauthClientへの処理結果(平文)
  * @typedef {Object} authResponse - authServerからauthClientへの処理結果(平文)
+ * == authClient設定項目(authRequestからの転記項目)
  * @prop {string} memberId - メンバの識別子
  * @prop {string} deviceId - デバイスの識別子。UUIDv4
  * @prop {string} memberName - メンバの氏名
@@ -111,6 +112,7 @@
  * @prop {any[]} arg - サーバ側関数に渡す引数の配列
  * @prop {string} nonce - 要求の識別子UUIDv4
  * 
+ * == authServer内での追加項目
  * @prop {string} SPkeySign=this.keys.SPkeySign - サーバ側署名用公開鍵
  * @prop {string} SPkeyEnc=this.keys.SPkeyEnc - サーバ側暗号化用公開鍵
  * @prop {any} response=null - サーバ側関数の戻り値
@@ -121,6 +123,8 @@
  *   正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、
  *   致命的エラーの場合はErrorオブジェクト
  * @prop {string} message="" - メッセージ(statusの補足)
+ * 
+ * == authClient設定項目(authServerからの返信を受け、authClient内で追加)
  * @prop {string} decrypt="success" - クライアント側での復号処理結果
  *   "success":正常、それ以外はエラーメッセージ
  */
