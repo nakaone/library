@@ -69,6 +69,8 @@ export class authServer {
   }
 
   /** authLogger: 監査ログ／エラーログを自動振り分けで出力
+   * - 監査ログ：authAuditLog型
+   * - エラーログ：authErrorLog型
    * @param {authResponse} response
    * @returns {authResponse}
    */
@@ -197,7 +199,7 @@ export class authServer {
     }
   }
 
-  /**
+  /** exec: 処理要求に対するサーバ側中核処理
    * @param {string} arg - 引数
    * @returns {null|Error} 戻り値
    */
