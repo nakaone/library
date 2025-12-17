@@ -55,6 +55,8 @@ export class authServer {
       // -------------------------------------------------------------
       dev.step(4);  // 監査ログ・エラーログシートの準備(this.audit, this.error)
       // -------------------------------------------------------------
+      this.audit = this.authAuditLog();
+      this.error = this.authErrorLog();
 
       dev.end(); // 終了処理
 
@@ -208,6 +210,105 @@ export class authServer {
 
     return {
       log
+    };
+  }
+
+  /** authErrorLog: authServer のエラーログ（クロージャ実装）
+  */
+  authErrorLog(config = {}, arg = {}) {
+
+    const ss = SpreadsheetApp.getActive();
+    const sheetName = config.errorLog;
+    const retentionMs = config.storageDaysOfErrorLog;
+
+    const state = {
+      timestamp: new Date().toISOString(),
+      memberId: undefined,
+      deviceId: undefined,
+      result: 'fatal',
+      message: undefined,
+      stack: undefined,
+    };
+
+    // ----------------------------
+    // arg → state マッピング
+    // ----------------------------
+    Object.keys(state).forEach(k => {
+      if (k in arg) state[k] = arg[k];
+    });
+
+    // ----------------------------
+    // シート取得 or 作成
+    // ----------------------------
+    let sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+      sheet.appendRow([
+        'timestamp',
+        'memberId',
+        'deviceId',
+        'result',
+        'message',
+        'stack',
+      ]);
+    }
+
+    // ============================
+    // ローテーション（保存期限超過行の削除）
+    // ============================
+    function rotateIfNeeded() {
+      if (!retentionMs) return;
+
+      const now = Date.now();
+      const lastRow = sheet.getLastRow();
+      if (lastRow <= 1) return;
+
+      const values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+
+      for (let i = values.length - 1; i >= 0; i--) {
+        const ts = values[i][0];
+        if (!ts) continue;
+
+        const time = new Date(ts).getTime();
+        if (isNaN(time)) continue;
+
+        if (now - time > retentionMs) {
+          sheet.deleteRow(i + 2);
+        }
+      }
+    }
+
+    // ============================
+    // public: log
+    // ============================
+    function log(e, response) {
+
+      rotateIfNeeded();
+
+      state.timestamp = new Date().toISOString();
+      state.memberId = response?.request?.memberId;
+      state.deviceId = response?.request?.deviceId;
+      state.result = response?.result ?? 'fatal';
+      state.message = response?.message;
+      state.stack = e?.stack;
+
+      sheet.appendRow([
+        state.timestamp,
+        state.memberId,
+        state.deviceId,
+        state.result,
+        state.message,
+        state.stack, // ※シートのみ出力可（通知等は禁止）
+      ]);
+
+      return { ...state };
+    }
+
+    // ============================
+    // 公開API
+    // ============================
+    return {
+      log,
     };
   }
 
