@@ -1,35 +1,120 @@
 export class Member {
 
-  static _XXX = null;
-
-  /**
+  /** constructor: 該当メンバのMemberインスタンス作成
+   * - 新規メンバ(SPkey要求時)は新規作成
    * @constructor
-   * @param {authServerConfig} config - ユーザ指定の設定値
+   * @param {authServerConfig} config - authServerの設定値
+   * @param {authRequest} request - 処理要求
    */
-  constructor(arg) {
-    const v = {whois:`Member.constructor`, arg:{arg}, rv:null};
+  constructor(config,request) {
+    const v = {whois:`Member.constructor`, arg:{request}, rv:null};
     dev.start(v);
     try {
 
-      this.cf = arg;
+      this.cf = config; // authServer設定値をメンバとして格納
 
-      const ss = SpreadsheetApp.getActive();
-      let sheet = ss.getSheetByName(this.cf.memberList);
-      if (!sheet) {
-        sheet = ss.insertSheet(this.cf.memberList);
-        const headers = [
-          'memberId','name','status','log','profile','device','note'
+      // -------------------------------------------------------------
+      dev.step(1);  // memberListシートの準備
+      // -------------------------------------------------------------
+
+      dev.step(1.1);  // シートの取得
+      v.spread = SpreadsheetApp.getActive();
+      v.sheet = v.spread.getSheetByName(this.cf.memberList);
+
+      // memberListシートが存在しなければシートを新規作成
+      if( !v.sheet ){
+
+        dev.step(1.2);  // シートを追加
+        v.sheet = v.spread.insertSheet(this.cf.memberList);
+
+        dev.step(1.3);  // シート上の項目定義
+        v.colsDef = [
+          {name:'memberId',type:'string',desc:'メンバの識別子',note:'メールアドレス',default:'UUIDv4'},
+          {name:'name',type:'string',desc:'メンバの氏名',note:'',default:'"dummy"'},
+          {name:'status',type:'string',desc:'メンバの状態',note:'未加入,未審査,審査済,加入中,加入禁止',default:'"未加入"'},
+          {name:'log',type:'MemberLog',desc:'メンバの履歴情報',note:'シート上はJSON文字列',default:'new MemberLog()'},
+          {name:'profile',type:'MemberProfile',desc:'メンバの属性情報',note:'シート上はJSON文字列',default:'new MemberProfile()'},
+          {name:'device',type:'[MemberDevice](MemberDevice.md#memberdevice_members)[]',desc:'デバイス情報',note:'マルチデバイス対応のため配列。シート上はJSON文字列',default:'空配列'},
+          {name:'note',type:'string',desc:'当該メンバに対する備考',note:'',default:'空文字列'},
         ];
-        sheet.appendRow(headers);
-        headers.forEach((h,i)=>{
-          sheet.getRange(1,i+1).setNote(h);
-        });
+
+        dev.step(1.4);  // 項目名のセット
+        v.label = v.colsDef.map(x => x.name);
+        v.sheet.appendRow(v.label);
+
+        dev.step(1.5);  // メモのセット
+        v.notes = v.colsDef.map(x => x.desc + (x.note ? `\n${x.note}` : ''));
+        v.notes.forEach((h,i)=>{
+          v.sheet.getRange(1,i+1).setNote(h);
+        })
       }
 
-      this.log = new MemberLog();
-      this.profile = new MemberProfile();
-      this.device = [];
-      this.note = '';
+      // -------------------------------------------------------------
+      dev.step(2);  // 対象メンバ・デバイスの特定
+      // -------------------------------------------------------------
+
+      dev.step(2.1); // memberId で検索
+      v.values = v.sheet.getDataRange().getValues();
+      v.labels = v.values.shift();
+
+      v.idx = v.labels.indexOf('memberId');
+      v.row = v.values.find(r => r[v.idx] === request.memberId);
+
+      if (v.row) {  // シート上にmemberId有り
+
+        // ---------------------------------------------------------
+        dev.step(2.2); // 既存メンバ
+        // ---------------------------------------------------------
+        v.obj = {};
+        v.labels.forEach((k, i) => v.obj[k] = v.row[i]);
+
+        this.memberId = v.obj.memberId;
+        this.name     = v.obj.name;
+        this.status   = v.obj.status;
+        this.log      = JSON.parse(v.obj.log || '{}');
+        this.profile  = JSON.parse(v.obj.profile || '{}');
+        this.device   = JSON.parse(v.obj.device || '{}');
+        this.note     = v.obj.note || '';
+
+        // ---------------------------------------------------------
+        dev.step(2.3); // デバイス確認
+        // ---------------------------------------------------------
+        if (!this.device.hasOwnProperty(request.deviceId)) {
+
+          dev.step(2.4); // 未登録デバイス
+          v.device = this.MemberDevice();
+          this.device[v.device.deviceId] = v.device;
+        }
+
+      } else {  // シート上にmemberId無し
+
+        // ---------------------------------------------------------
+        dev.step(2.5); // 未登録メンバ
+        // ---------------------------------------------------------
+        if (request.func === '::initial::') {
+          // HTML初回ロード時(SPkey要求)
+
+          dev.step(2.6); // 仮登録
+          this.memberId = 'dummyMemberID';
+          this.name     = 'dummyMemberName';
+          this.status   = 'TR';
+          this.log      = this.MemberLog();
+          this.profile  = this.MemberProfile();
+          this.device   = {};
+
+          v.device = this.MemberDevice();
+          this.device[v.device.deviceId] = v.device;
+
+          this.note = '';
+
+        } else {
+
+          // -----------------------------------------------------
+          dev.step(2.7); // 不正要求
+          // -----------------------------------------------------
+          throw new Error('unregistered member access');
+        }
+      }
 
       v.rv = this;
 
@@ -236,6 +321,78 @@ export class Member {
     try {
 
       dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /**
+   * MemberDevice: デバイス情報の初期オブジェクト生成
+   * @returns {MemberDevice}
+   */
+  MemberDevice() {
+    const v = { whois: 'Member.MemberDevice', arg: {}, rv: null };
+    dev.start(v);
+    try {
+
+      v.rv = {
+        deviceId: Utilities.getUuid(),
+        status: 'UC',             // uncertified
+        CPkeySign: '',
+        CPkeyEnc: '',
+        CPkeyUpdated: Date.now(),
+        trial: [],
+      };
+
+      dev.end();
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /**
+   * MemberLog: メンバ履歴情報初期化
+   * @returns {MemberLog}
+   */
+  MemberLog() {
+    const v = { whois: 'Member.MemberLog', arg: {}, rv: null };
+    dev.start(v);
+    try {
+
+      const now = Date.now();
+      v.rv = {
+        joiningRequest: now,
+        approval: 0,
+        denial: 0,
+        loginRequest: 0,
+        loginSuccess: 0,
+        loginExpiration: 0,
+        loginFailure: 0,
+        unfreezeLogin: 0,
+        joiningExpiration: 0,
+        unfreezeDenial: 0,
+      };
+
+      dev.end();
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /**
+   * MemberProfile: メンバ属性情報初期化
+   * @returns {MemberProfile}
+   */
+  MemberProfile() {
+    const v = { whois: 'Member.MemberProfile', arg: {}, rv: null };
+    dev.start(v);
+    try {
+
+      v.rv = {
+        authority: 0,
+      };
+
+      dev.end();
       return v.rv;
 
     } catch (e) { return dev.error(e); }
