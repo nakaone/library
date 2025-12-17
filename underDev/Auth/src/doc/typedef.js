@@ -1,3 +1,13 @@
+/** authAuditLog: authServerの監査ログをシートに出力
+ * @typedef {Object} authAuditLog - authServerの監査ログをシートに出力
+ * @prop {string} timestamp=Date.now() - 要求日時ISO8601拡張形式の文字列
+ * @prop {number} duration - 処理時間ミリ秒単位
+ * @prop {string} memberId - メンバの識別子メールアドレス
+ * @prop {string} [deviceId] - デバイスの識別子
+ * @prop {string} func - サーバ側関数名
+ * @prop {string} result=normal - サーバ側処理結果"fatal","warning","normal"
+ * @prop {string} note - 備考
+ */
 /** authClient: クライアント側中核クラス
  * @class
  * @classdesc クライアント側中核クラス
@@ -51,6 +61,15 @@
  * @prop {string} RSAbits=2048 - 鍵ペアの鍵長
  * @prop {Object} underDev - テスト時の設定
  * @prop {boolean} underDev.isTest=false - 開発モードならtrue
+ */
+/** authErrorLog: authServerのエラーログをシートに出力
+ * @typedef {Object} authErrorLog - authServerのエラーログをシートに出力
+ * @prop {string} timestamp=Date.now() - 要求日時ISO8601拡張形式の文字列
+ * @prop {string} memberId - メンバの識別子
+ * @prop {string} deviceId - デバイスの識別子
+ * @prop {string} result=fatal - サーバ側処理結果fatal/warning/normal
+ * @prop {string} [message] - サーバ側からのエラーメッセージnormal時はundefined
+ * @prop {string} [stack] - エラー発生時のスタックトレース本項目は管理者への通知メール等、シート以外には出力不可
  */
 /** authIndexedDB: IndexedDBに保存する内容(=this.idb)
  * @typedef {Object} authIndexedDB - IndexedDBに保存する内容(=this.idb)
