@@ -252,22 +252,29 @@
  * @classdesc メンバ情報をGoogle Spread上で管理
  * @prop {string} memberId="dummyMemberID" - メンバの識別子(メールアドレス)
  * @prop {string} name="dummyMemberName" - メンバの氏名
- * @prop {string} status="未加入" - メンバの状態
- *   未加入,未審査,審査済,加入中,加入禁止
+ * @prop {string} status="TR" - メンバの状態
+ *   仮登録 : TR(temporary registrated)
+ *   未審査 : NE(not examined)
+ *   加入中 : CJ(currentry joining)
+ *   加入禁止 : PJ(prohibited to join)
  * @prop {MemberLog} log=new MemberLog() - メンバの履歴情報。シート上はJSON
  * @prop {MemberProfile} profile=new MemberProfile() - メンバの属性情報。シート上はJSON
- * @prop {MemberDevice[]} device=[] - デバイス情報
+ * @prop {Object.<string,MemberDevice>} device - デバイス情報。{deviceId:MemberDevice}形式
  *   マルチデバイス対応のため配列。シート上はJSON
  * @prop {string} note='' - 当該メンバに対する備考
  */
 /** MemberDevice: メンバが使用する通信機器の情報
  * @typedef {Object} MemberDevice - メンバが使用する通信機器の情報
- * @prop {string} deviceId - デバイスの識別子。UUID
- * @prop {string} status=未認証 - デバイスの状態未認証,認証中,試行中,凍結中
+ * @prop {string} deviceId=UUIDv4 - デバイスの識別子
+ * @prop {string} status="UC" - デバイスの状態
+ *   未認証 : UC(uncertified)
+ *   認証中 : LI(log in)
+ *   試行中 : TR(tring)
+ *   凍結中 : FR(freezed)
  * @prop {string} CPkeySign - デバイスの署名用公開鍵
  * @prop {string} CPkeyEnc - デバイスの暗号化用公開鍵
  * @prop {number} CPkeyUpdated=Date.now() - 最新のCPkeyが登録された日時
- * @prop {MemberTrial[]} trial=[] - ログイン試行関連情報オブジェクトシート上はJSON文字列
+ * @prop {MemberTrial[]} trial=[] - ログイン試行関連情報。オブジェクトシート上はJSON文字列
  */
 /** MemberLog: メンバの各種要求・状態変化の時刻
  * @typedef {Object} MemberLog - メンバの各種要求・状態変化の時刻
@@ -299,13 +306,14 @@
 /** MemberTrial: ログイン試行情報の管理・判定
  * @typedef {Object} MemberTrial - ログイン試行情報の管理・判定
  * @prop {string} passcode - 設定されているパスコード最初の認証試行で作成
+ *   初期値はauthServerConfig.passcodeLengthで指定された桁数の数値
  * @prop {number} created=Date.now() - パスコード生成日時≒パスコード通知メール発信日時
  * @prop {MemberTrialLog[]} log=[] - 試行履歴常に最新が先頭(unshift()使用)
  *   保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。
  */
 /** MemberTrialLog: パスコード入力単位の試行記録
  * @typedef {Object} MemberTrialLog - パスコード入力単位の試行記録
- * @prop {string} entered - 入力されたパスコード
+ * @prop {number} entered - 入力されたパスコード
  * @prop {boolean} result - 試行結果正答：true、誤答：false
  * @prop {number} timestamp=Date.now() - 判定処理日時
  */
