@@ -73,6 +73,7 @@ done
 # index.htmlの作成
   # deployフォルダに置くとGASにコピーされてしまうため、
   # 直接GitHub/public/authに出力
+rm -r $dep/index.html
 cat $src/client/index.html | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp \
 > $GitHub/public/auth/index.html
@@ -104,3 +105,9 @@ cp $src/server/jsrsasign-all-min.js $dep/jsrsasign.gs
 cd $prj/deploy
 clasp push
 cd $prj/tools
+
+# ----------------------------------------------
+# 4. 事後処理
+# ----------------------------------------------
+# index.htmlをデバッグ用にdeploy以下にコピー
+cp $GitHub/public/auth/index.html $dep/index.html
