@@ -34,4 +34,45 @@ export class authConfig {
 
     } catch (e) { return dev.error(e); }
   }
+
+  /** sanitizeArg: プリミティブ型のみで構成されるよう無毒化
+   * @param {*} value - チェック対象の変数
+   * @param {string} path='$' - エラーメッセージ用にオブジェクト内の階層を保持
+   * @returns 
+   */
+  sanitizeArg(value, path = '$') {
+    if( value === null ||
+      typeof value === 'string' ||
+      (typeof value === 'number' && Number.isFinite(value)) ||
+      typeof value === 'boolean'
+    ) return value;
+
+    if (Array.isArray(value)) {
+      return value.map((v, i) => this.sanitizeArg(v, `${path}[${i}]`));
+    }
+
+    if (typeof value === 'object') {
+      // 明示的に禁止したい型
+      if (
+        value instanceof CryptoKey ||
+        value instanceof Date ||
+        value instanceof Error ||
+        value instanceof Map ||
+        value instanceof Set
+      ) {
+        throw new Error(`Unsupported argument type at ${path}`);
+      }
+
+      const obj = {};
+      for (const [k, v] of Object.entries(value)) {
+        if (typeof v === 'function') {
+          throw new Error(`Function not allowed in arg at ${path}.${k}`);
+        }
+        obj[k] = this.sanitizeArg(v, `${path}.${k}`);
+      }
+      return obj;
+    }
+
+    throw new Error(`Unsupported value type at ${path}`);
+  }
 }
