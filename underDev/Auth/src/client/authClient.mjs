@@ -273,12 +273,12 @@ export class authClient {
           req.onerror = e => reject(e.target.error);
         })
       );
-      dev.step(99.276,{raw:v.raw});
 
       dev.step(2);  // [{key, value}]形式の値配列を{key:value}形式に再構成
       v.rv = {};
       if( Array.isArray(v.raw) && v.raw.length > 0 ){
 
+        dev.step(2.1);  // レコードキーを全て取得
         v.keys = await this._withStore('readonly', store =>
           new Promise((resolve, reject) => {
             const req = store.getAllKeys();
@@ -287,15 +287,15 @@ export class authClient {
           })
         );
 
+        dev.step(2.2);  // {key:value}形式に再構成
         v.keys.forEach((k, i) => v.rv[k] = v.raw[i]);
 
-        // CryptoKey復元（存在するものだけ）
+        dev.step(2.3);  // CryptoKey復元（存在するものだけ）
         for(const [k,vv] of Object.entries(v.rv)){
           v.rv[k] = await this._importIfCryptoKey(k, vv);
           this.idb[k] = v.rv[k];
         }
       }
-      dev.step(99.298,{rv:v.rv});
 
       dev.end(); // 終了処理
       return v.rv;
@@ -347,14 +347,17 @@ export class authClient {
       v.idb = await v.rv.getIndexedDB();
       if( v.idb instanceof Error ) throw v.idb;
 
-      dev.step(4);  // IndexedDBが空の場合、既定値(初期値)をIndexedDBに保存
+      dev.step(4);  // 暗号化・署名検証用インスタンス作成
+      v.rv.crypto = new cryptoClient(v.rv.idb,v.rv.cf.RSAbits);
+
+      dev.step(5);  // IndexedDBが空の場合、既定値(初期値)をIndexedDBに保存
       if( Object.keys(v.idb).length === 0 ){
 
-        dev.step(4.1);  // 鍵ペア生成
+        dev.step(5.1);  // 鍵ペア生成
         v.keys = v.rv.crypto.generateKeys();
         if( v.keys instanceof Error ) throw v.keys;
 
-        dev.step(4.2);  // CryptoKey以外のauthIndexedDBメンバと合わせて初期値作成
+        dev.step(5.2);  // CryptoKey以外のauthIndexedDBメンバと合わせて初期値作成
         v.idb = Object.assign(v.keys,{ // IndexedDBの初期値。内容はauthIndexedDB参照
           memberId: 'dummyMemberID',
           memberName: 'dummyMemberName',
@@ -362,14 +365,11 @@ export class authClient {
           SPkeySign: null,
         });
 
-        dev.step(4.3);  // IndexedDBに格納
+        dev.step(5.3);  // IndexedDBに格納
         v.r = await v.rv.setIndexedDB(v.idb);
         if( v.r instanceof Error ) throw v.r;
 
       }
-
-      dev.step(5);  // 暗号化・署名検証用インスタンス作成
-      v.rv.crypto = new cryptoClient(v.rv.idb,v.rv.cf.RSAbits);
 
       dev.step(6);  // IndexedDBの内容をメンバ変数に格納
       Object.keys(v.idb).forEach(x => v.rv[x] = v.idb[x]);
