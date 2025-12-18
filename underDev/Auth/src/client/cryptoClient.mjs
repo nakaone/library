@@ -45,7 +45,7 @@ export class cryptoClient {
         payloadBytes
       );
 
-      if (isSignOnly) {
+      if ( isSignOnly ) {
         dev.step(3);
         // ========== 署名のみ ==========
         v.rv = {
@@ -82,14 +82,25 @@ export class cryptoClient {
         );
 
         dev.step(4.4);  // AES鍵をRSA-OAEPで暗号化
-        const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
-        const encryptedKey = await crypto.subtle.encrypt(
-          { name: "RSA-OAEP" },
-          this.idb.SPkeyEnc,
-          rawAesKey
-        );
+        let encryptedKey = null;  // 初回HTMLロード時(SPkey未取得)ではnullのまま
 
-        dev.step(4.5);  // 戻り値の作成
+        if ( this.idb.SPkeyEnc ) {  // 通常時(SPkey取得済)
+
+          dev.step(4.5);  // SPkeyEncのデータ型を確認
+          if (!(this.idb.SPkeyEnc instanceof CryptoKey)) {
+            throw new Error("SPkeyEnc exists but is not CryptoKey");
+          }
+
+          dev.step(4.6);  // AESキーを含める
+          const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
+          encryptedKey = await crypto.subtle.encrypt(
+            { name: "RSA-OAEP" },
+            this.idb.SPkeyEnc,
+            rawAesKey
+          );
+        }
+
+        dev.step(4.7);  // 戻り値の作成
         v.rv = {
           cipher: btoa(
             String.fromCharCode(...new Uint8Array(cipher))
