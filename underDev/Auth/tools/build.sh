@@ -18,6 +18,13 @@ test="$prj/__tests__/b0004.test.mjs"
 rm -rf $doc/*
 rm -rf $tmp/*
 
+# doPush: GitHub/claspで更新するならtrue
+# ./build.sh -p ⇒ doPush === true
+doPush=false
+if [[ "$1" == "-p" ]]; then
+  doPush=true
+fi
+
 # ----------------------------------------------
 # 1. 仕様書
 # ----------------------------------------------
@@ -80,13 +87,15 @@ echo "<p style='text-align:right'>$(date "+%Y/%m/%d %H:%M:%S")</p>" \
 cat $src/client/index.html | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp \
 > $GitHub/public/auth/index.html
-cd $GitHub/public/
-git add auth/
-if ! git diff --cached --quiet; then
-  git commit -m "$(date "+%Y%m%d-%H%M")"
-  git push origin main
+if $doPush; then
+  cd $GitHub/public/
+  git add auth/
+  if ! git diff --cached --quiet; then
+    git commit -m "$(date "+%Y%m%d-%H%M")"
+    git push origin main
+  fi
+  cd $prj/tools
 fi
-cd $prj/tools
 
 # ----------------------------------------------
 # 3. サーバ側
@@ -105,9 +114,11 @@ $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp >> $dep/Code.gs
 # jsrsasignのコピー
 cp $src/server/jsrsasign-all-min.js $dep/jsrsasign.gs
 # GASへ反映
-cd $prj/deploy
-clasp push --force
-cd $prj/tools
+if $doPush; then
+  cd $prj/deploy
+  clasp push --force
+  cd $prj/tools
+fi
 
 # ----------------------------------------------
 # 4. 事後処理
