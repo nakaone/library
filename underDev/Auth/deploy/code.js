@@ -320,6 +320,9 @@ class authServer {
       Object.keys(v.authServerConfig).forEach(x => {
         this.cf[x] = config[x] || v.authServerConfig[x];
       })
+      dev.step(2.3);  // authServerConfig 必須チェック
+      if (!this.cf || !this.cf.memberList)
+        throw new Error('invalid authServerConfig: memberList missing');
 
       // -------------------------------------------------------------
       dev.step(3);  // 暗号化・復号モジュール生成(this.crypto)
@@ -350,7 +353,7 @@ class authServer {
    * @returns {authResponse}
    */
   authLogger(response) {
-    const v = { whois: 'authServer.authLogger', arg: { response }, rv: null };
+    const v = { whois: `${this.constructor.name}.authLogger`, arg: { response }, rv: null };
     dev.start(v);
     try {
 
@@ -478,14 +481,19 @@ class authServer {
    * @param {string} arg - 引数
    * @returns {null|Error} 戻り値
    */
-  exec(arg) { // 現在作成中
-    const v = {whois:`${this.constructor.name}.prototype`, arg:{arg}, rv:null};
+  exec(arg) {
+    const v = {whois:`${this.constructor.name}.exec`, arg:{arg}, rv:null};
     dev.start(v);
     try {
 
-      dev.step(1);  // 処理要求を復号
+      dev.step(1.1);  // request存在・最低限チェック
+      if( !arg ) throw new Error('invalid request: empty body');
+      dev.step(1.2);  // 処理要求を復号
       v.request = this.crypto.decrypt(arg);
       if( v.request instanceof Error ) throw v.request;
+      dev.step(1.3);  // // request.func チェック
+      if (!v.request || !v.request.func)
+        throw new Error('invalid request: func missing');
 
       if( v.request.func === '::initial::' ){
         dev.step(2);  // 初回HTMLロード時(SPkey取得要求)の場合
@@ -520,6 +528,58 @@ class authServer {
 
       dev.end(); // 終了処理
       return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** setupEnvironment: 初回実行時に必要なOAuth権限を一括取得
+   * - 管理者が Spread メニューから手動実行する
+   * @param {void}
+   * @returns {null}
+   */
+  static setupEnvironment() {
+    const v = {whois:`${this.constructor.name}.setupEnvironment`, arg: {}, rv: null };
+    dev.start(v);
+    try {
+
+      // -------------------------------------------------------------
+      dev.step(1); // Spreadsheet 権限
+      // -------------------------------------------------------------
+      const ss = SpreadsheetApp.getActive();
+      const sheet = ss.getActiveSheet();
+      sheet.getActiveCell().getValue();
+
+      // -------------------------------------------------------------
+      dev.step(2); // PropertiesService 権限
+      // -------------------------------------------------------------
+      const prop = PropertiesService.getScriptProperties();
+      prop.getProperty('dummy');
+      prop.setProperty('dummy', Date.now());
+
+      // -------------------------------------------------------------
+      dev.step(3); // Utilities / UUID
+      // -------------------------------------------------------------
+      Utilities.getUuid();
+
+      // -------------------------------------------------------------
+      dev.step(4); // Mail 権限（空メール or テスト通知）
+      // -------------------------------------------------------------
+      if (this.cf.adminMail) {
+        MailApp.sendEmail({
+          to: this.cf.adminMail,
+          subject: '[authServer] OAuth test',
+          body: 'OAuth authorization test: ' + new Date().toISOString(),
+          noReply: true
+        });
+      }
+
+      // -------------------------------------------------------------
+      dev.step(5); // LockService（将来用）
+      // -------------------------------------------------------------
+      LockService.getScriptLock().tryLock(1);
+
+      dev.end();
+      return null;
 
     } catch (e) { return dev.error(e); }
   }

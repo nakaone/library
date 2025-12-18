@@ -73,6 +73,15 @@ done
 # index.htmlの作成
 cat $src/client/index.html | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/index.html
+# GitHub開発環境にコピー
+cp $dep/index.html $GitHub/public/auth/index.html
+cd $GitHub/public/
+git add auth/
+if ! git diff --cached --quiet; then
+  git commit -m "$(date "+%Y%m%d-%H%M")"
+  git push origin main
+fi
+cd $prj/tools
 
 # ----------------------------------------------
 # 3. サーバ側
@@ -82,10 +91,6 @@ for f in $src/server/*.mjs; do
   bn=$(basename "$f" ".mjs")
   # import/export文の削除
   sed '/^import /d; s/^export //' "$f" > "$tmp/$bn.js"
-  # 生成AI質問用ソース一覧作成
-  #echo "## $bn.mjs\n\n\`\`\`js" >> $clsource
-  #cat $f >> $clsource
-  #echo "\n\`\`\`\n\n" >> $clsource
 done
 
 # code.jsの作成

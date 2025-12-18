@@ -111,12 +111,7 @@ export class authProto {
 
 ## 変更履歴
 
-- build0007: 処理要求の暗号化
-  - cryptoClient.constructor(), .encrypt()のみ作成
-  - authClient.cryptoメンバ作成(@constructor)
-  - localRequestクラスを作成、authClient.execメソッドに組み込み
-- build0006: 初回HTMLロード時処理
-- === いまここ =====
+- build0006: 初回HTMLロード時処理 ◀いまここ
 - build0005: 一連のソースを作成
   - 仕様書修正
     - specification.md
