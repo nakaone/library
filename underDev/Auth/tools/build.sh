@@ -73,7 +73,7 @@ done
 # index.htmlの作成
   # deployフォルダに置くとGASにコピーされてしまうため、
   # 一度deploy以下のindex.htmlは消去し、直接GitHub/public/authに出力
-rm -r $dep/index.html
+[[ -f $dep/index.html ]] && rm $dep/index.html
 # 開発時の更新確認のため、index.htmlに現在日時を挿入
 echo "<p style='text-align:right'>$(date "+%Y/%m/%d %H:%M:%S")</p>" \
 > $tmp/timestamp.html
@@ -106,7 +106,7 @@ $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp >> $dep/Code.gs
 cp $src/server/jsrsasign-all-min.js $dep/jsrsasign.gs
 # GASへ反映
 cd $prj/deploy
-clasp push
+clasp push --force
 cd $prj/tools
 
 # ----------------------------------------------
