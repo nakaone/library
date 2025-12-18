@@ -118,8 +118,10 @@ export function devTools(opt){
     }
   }
 
-  /** end: 正常終了時処理 */
-  function end(arg=null){
+  /** end: 正常終了時処理
+   * @param {any} [arg] - 終了時ダンプする変数
+   */
+  function end(arg){
     // 終了時に確定する項目に値設定
     finisher(fi);
 
@@ -129,7 +131,7 @@ export function devTools(opt){
         ('0'.repeat(opt.digit)+fi.seq).slice(-opt.digit)
       }] ${fi.whois} normal end`;
       // 引数があればダンプ出力
-      if( arg !== null ) msg += '\n' + formatObject(arg)
+      if( typeof arg !== 'undefined' ) msg += '\n' + formatObject(arg)
       // 大本の呼出元ではstart/end/elaps表示
       if( fi.seq === 0 ){
         msg += '\n' + `\tstart: ${toLocale(fi.start)
