@@ -589,7 +589,7 @@ class authClient {
       });
 
       dev.step(3);  // 暗号化・署名検証用インスタンス作成
-      this.crypto = new cryptoClient(this.idb,this.cf.RSAbits);
+      v.rv.crypto = new cryptoClient(v.rv.idb,v.rv.cf.RSAbits);
 
       dev.step(4);  // IndexedDBの内容を取得
       v.idb = await v.rv.getIndexedDB();
@@ -599,7 +599,7 @@ class authClient {
       if( Object.keys(v.idb).length === 0 ){
 
         dev.step(5.1);  // 鍵ペア生成
-        v.keys = this.crypto.generateKeys();
+        v.keys = v.rv.crypto.generateKeys();
         if( v.keys instanceof Error ) throw v.keys;
 
         dev.step(5.2);  // CryptoKey以外のauthIndexedDBメンバと合わせて初期値作成
@@ -617,7 +617,7 @@ class authClient {
       }
 
       dev.step(6);  // IndexedDBの内容をメンバ変数に格納
-      Object.keys(v.idb).forEach(x => this[x] = v.idb[x]);
+      Object.keys(v.idb).forEach(x => v.rv[x] = v.idb[x]);
 
       dev.end(); // 終了処理
       return v.rv;
