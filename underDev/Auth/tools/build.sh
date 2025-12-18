@@ -72,8 +72,11 @@ done
 
 # index.htmlの作成
   # deployフォルダに置くとGASにコピーされてしまうため、
-  # 直接GitHub/public/authに出力
+  # 一度deploy以下のindex.htmlは消去し、直接GitHub/public/authに出力
 rm -r $dep/index.html
+# 開発時の更新確認のため、index.htmlに現在日時を挿入
+echo "<p style='text-align:right'>$(date "+%Y/%m/%d %H:%M:%S")</p>" \
+> $tmp/timestamp.html
 cat $src/client/index.html | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp \
 > $GitHub/public/auth/index.html
