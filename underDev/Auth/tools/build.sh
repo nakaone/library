@@ -14,7 +14,7 @@ doc="$prj/doc"
 img="$prj/img"
 tmp="$prj/tmp"
 test="$prj/__tests__/b0004.test.mjs"
-rm -rf $dep/*
+#rm -rf $dep/*
 rm -rf $doc/*
 rm -rf $tmp/*
 
@@ -71,10 +71,11 @@ for f in $src/client/*.mjs; do
 done
 
 # index.htmlの作成
+  # deployフォルダに置くとGASにコピーされてしまうため、
+  # 直接GitHub/public/authに出力
 cat $src/client/index.html | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/index.html
-# GitHub開発環境にコピー
-cp $dep/index.html $GitHub/public/auth/index.html
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp \
+> $GitHub/public/auth/index.html
 cd $GitHub/public/
 git add auth/
 if ! git diff --cached --quiet; then
@@ -93,6 +94,13 @@ for f in $src/server/*.mjs; do
   sed '/^import /d; s/^export //' "$f" > "$tmp/$bn.js"
 done
 
-# code.jsの作成
+# Code.gsの作成
+echo "// $(date "+%Y%m%d-%H%M%S")" > $dep/Code.gs
 cat $src/server/code.js | awk 1 | \
-$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/code.js
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp >> $dep/Code.gs
+# jsrsasignのコピー
+cp $src/server/jsrsasign-all-min.js $dep/jsrsasign.gs
+# GASへ反映
+cd $prj/deploy
+clasp push
+cd $prj/tools
