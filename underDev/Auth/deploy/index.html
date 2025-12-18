@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-<p style='text-align:right'>2025/12/18 11:26:04</p>
+<p style='text-align:right'>2025/12/18 12:58:43</p>
 <h1>SPkey要求テスト</h1>
 
 <button onclick="localFunc()">localFuncテスト</button>
@@ -335,6 +335,70 @@ class authClient {
     } catch (e) { return dev.error(e); }
   }
 
+  /** _exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換
+   * @param {string} key - 鍵名。"CPkeySign"等
+   * @param {CryptoKey} value - 鍵の内容
+   * @returns {string}
+   */
+  async _exportIfCryptoKey(key, value){
+    if( /^(C[SP]key(Sign|Enc))$/.test(key) && value instanceof CryptoKey ){
+      return await crypto.subtle.exportKey("jwk", value);
+    }
+    return value;
+  }
+
+  /** _importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換
+   * @param {string} key - 鍵名。"CPkeySign"等
+   * @param {string} value - IndexedDBに保存された鍵の内容
+   * @returns {CryptoKey}
+   */
+  async _importIfCryptoKey(key, value){
+    if(!value) return value;
+
+    switch(key){
+      case 'CSkeySign':
+        return crypto.subtle.importKey(
+          "jwk", value, { name:"RSA-PSS", hash:"SHA-256" }, false, ["sign"]
+        );
+      case 'CPkeySign':
+        return crypto.subtle.importKey(
+          "jwk", value, { name:"RSA-PSS", hash:"SHA-256" }, false, ["verify"]
+        );
+      case 'CSkeyEnc':
+        return crypto.subtle.importKey(
+          "jwk", value, { name:"RSA-OAEP", hash:"SHA-256" }, false, ["decrypt"]
+        );
+      case 'CPkeyEnc':
+        return crypto.subtle.importKey(
+          "jwk", value, { name:"RSA-OAEP", hash:"SHA-256" }, false, ["encrypt"]
+        );
+      default:
+        return value;
+    }
+  }
+
+  /** _withStore: IndexedDB操作共通ラッパ
+   * @param {'readonly'|'readwrite'} mode
+   * @param {(store: IDBObjectStore)=>Promise<any>} fn
+   */
+  async _withStore(mode, fn){
+    const db = authClient._IndexedDB;
+    if (!db) throw new Error("IndexedDB not initialized");
+
+    const tx = db.transaction([this.cf.storeName], mode);
+    const store = tx.objectStore(this.cf.storeName);
+
+    const rv = await fn(store);
+
+    await new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+
+    return rv;
+  }
+
   /** authRequest: authRequest型のオブジェクトを作成
    * @param {string} func - サーバ側関数名
    * @param {any[]} arg - サーバ側関数に渡す引数
@@ -431,7 +495,7 @@ class authClient {
    * @param {authRequest} request - 処理要求
    * @returns {authResponse|Error} 処理結果
    */
-  async fetch(request) {  // モック。実運用では fetch / UrlFetchApp 等に差し替え
+  async fetch(request) {
     const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{request}, rv:null};
     dev.start(v);
     try {
@@ -491,57 +555,37 @@ class authClient {
     dev.start(v);
     try {
 
-      dev.step(1);  // IndexedDBを取得
-      v.db = authClient._IndexedDB;
-      if (!v.db) throw new Error("IndexedDB not initialized");
-
-      dev.step(2);  // 'readwrite' トランザクション
-      const transaction = v.db.transaction([this.cf.storeName], 'readwrite');
-      const store = transaction.objectStore(this.cf.storeName);
-
-      dev.step(3);  // 全てのキーを取得
-      v.rv = await new Promise((resolve, reject) => {
-        const putRequest = store.getAll();
-        putRequest.onsuccess = () => resolve();
-        putRequest.onerror = (event) => {
-          reject(new Error(`GET操作失敗: ${event.target.error.message}`));
-        };
-      });
-
-      dev.step(4);  // CryptoKey復元
-      v.rv.CSkeySign = await crypto.subtle.importKey(
-        "jwk",
-        v.rv.CSkeySign,
-        { name: "RSA-PSS", hash: "SHA-256" },
-        false,
-        ["sign"]
+      dev.step(1);  // IndexedDBに保存された項目を全て配列で取得
+      v.raw = await this._withStore('readonly', store =>
+        new Promise((resolve, reject) => {
+          const req = store.getAll();
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = e => reject(e.target.error);
+        })
       );
-      v.rv.CPkeySign = await crypto.subtle.importKey(
-        "jwk",
-        v.rv.CPkeySign,
-        { name: "RSA-PSS", hash: "SHA-256" },
-        false,
-        ["verify"]
-      );
-      v.rv.CSkeyEnc = await crypto.subtle.importKey(
-        "jwk",
-        v.rv.CSkeyEnc,
-        { name: "RSA-OAEP", hash: "SHA-256" },
-        false,
-        ["decrypt"]
-      );
-      v.rv.CPkeyEnc = await crypto.subtle.importKey(
-        "jwk",
-        stored.CPkeyEnc,
-        { name: "RSA-OAEP", hash: "SHA-256" },
-        false,
-        ["encrypt"]
-      );
+      dev.step(99.276,{raw:v.raw});
 
-      dev.step(5);  // this.idbに登録
-      for ( [v.key, v.value] of Object.entries(v.rv)) {
-        this.idb[v.key] = v.value;
+      dev.step(2);  // [{key, value}]形式の値配列を{key:value}形式に再構成
+      v.rv = {};
+      if( Array.isArray(v.raw) && v.raw.length > 0 ){
+
+        v.keys = await this._withStore('readonly', store =>
+          new Promise((resolve, reject) => {
+            const req = store.getAllKeys();
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = e => reject(e.target.error);
+          })
+        );
+
+        v.keys.forEach((k, i) => v.rv[k] = v.raw[i]);
+
+        // CryptoKey復元（存在するものだけ）
+        for(const [k,vv] of Object.entries(v.rv)){
+          v.rv[k] = await this._importIfCryptoKey(k, vv);
+          this.idb[k] = v.rv[k];
+        }
       }
+      dev.step(99.298,{rv:v.rv});
 
       dev.end(); // 終了処理
       return v.rv;
@@ -589,21 +633,18 @@ class authClient {
         };
       });
 
-      dev.step(3);  // 暗号化・署名検証用インスタンス作成
-      v.rv.crypto = new cryptoClient(v.rv.idb,v.rv.cf.RSAbits);
-
-      dev.step(4);  // IndexedDBの内容を取得
+      dev.step(3);  // IndexedDBの内容を取得
       v.idb = await v.rv.getIndexedDB();
       if( v.idb instanceof Error ) throw v.idb;
 
-      dev.step(5);  // IndexedDBが空の場合、既定値(初期値)をIndexedDBに保存
+      dev.step(4);  // IndexedDBが空の場合、既定値(初期値)をIndexedDBに保存
       if( Object.keys(v.idb).length === 0 ){
 
-        dev.step(5.1);  // 鍵ペア生成
+        dev.step(4.1);  // 鍵ペア生成
         v.keys = v.rv.crypto.generateKeys();
         if( v.keys instanceof Error ) throw v.keys;
 
-        dev.step(5.2);  // CryptoKey以外のauthIndexedDBメンバと合わせて初期値作成
+        dev.step(4.2);  // CryptoKey以外のauthIndexedDBメンバと合わせて初期値作成
         v.idb = Object.assign(v.keys,{ // IndexedDBの初期値。内容はauthIndexedDB参照
           memberId: 'dummyMemberID',
           memberName: 'dummyMemberName',
@@ -611,11 +652,14 @@ class authClient {
           SPkeySign: null,
         });
 
-        dev.step(5.3);  // IndexedDBに格納
+        dev.step(4.3);  // IndexedDBに格納
         v.r = await v.rv.setIndexedDB(v.idb);
         if( v.r instanceof Error ) throw v.r;
 
       }
+
+      dev.step(5);  // 暗号化・署名検証用インスタンス作成
+      v.rv.crypto = new cryptoClient(v.rv.idb,v.rv.cf.RSAbits);
 
       dev.step(6);  // IndexedDBの内容をメンバ変数に格納
       Object.keys(v.idb).forEach(x => v.rv[x] = v.idb[x]);
@@ -630,47 +674,30 @@ class authClient {
    * @param {Object<string, string>} arg
    * @returns {null|Error}
    */
-  async setIndexedDB(arg) {
+  async setIndexedDB(arg){
     const v = {whois:`${this.constructor.name}.setIndexedDB`, arg:{arg}, rv:null};
     dev.start(v);
     try {
 
-      dev.step(1);  // IndexedDBを取得
-      v.db = authClient._IndexedDB;
-      if (!v.db) throw new Error("IndexedDB not initialized");
+      await this._withStore('readwrite', async store => {
+        for(const [k,val] of Object.entries(arg)){
 
-      dev.step(2);  // 'readwrite' トランザクション
-      const transaction = v.db.transaction([this.cf.storeName], 'readwrite');
-      const store = transaction.objectStore(this.cf.storeName);
+          const stored = await this._exportIfCryptoKey(k, val);
 
-      // 複数の put リクエストを順番に実行
-      for ( [v.key, v.value] of Object.entries(arg)) {
+          this.idb[k] = val;
 
-        dev.step(3.1);  // CryptoKeyはIndexedDBに保存可能になるよう出力
-        if( /^(C[SP]key(Sign|Enc))$/.test(v.key) ){
-          v.value = await crypto.subtle.exportKey("jwk", v.value);
+          await new Promise((resolve, reject) => {
+            const req = store.put(stored, k);
+            req.onsuccess = () => resolve();
+            req.onerror = e => reject(e.target.error);
+          });
         }
+      });
 
-        dev.step(3.2);  // this.idbに登録
-        this.idb[v.key] = v.value;
+      dev.end();
+      return null;
 
-        dev.step(3.3);  // putリクエストを実行
-        // リクエストの成功/失敗を待つ必要は必ずしもないが、
-        // エラーハンドリングのためにPromiseでラップするのが一般的。
-        await new Promise((resolve, reject) => {
-          const putRequest = store.put(v.value, v.key);
-          putRequest.onsuccess = () => resolve();
-          putRequest.onerror = (event) => {
-            // 個別のリクエストエラーはトランザクション全体のエラーとなる
-            reject(new Error(`PUT操作失敗 (Key: ${v.key}): ${event.target.error.message}`));
-          };
-        });
-      }
-
-      dev.end(); // 終了処理
-      return v.rv;
-
-    } catch (e) { return dev.error(e); }
+    } catch(e){ return dev.error(e); }
   }
 }
 class authConfig {
