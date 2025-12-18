@@ -27,6 +27,7 @@ export class authClient {
         timeout: 300000,
         storeName: 'config',
         dbVersion: 1,
+        maxDepth: 10,
       };
 
       dev.step(2.2); // authClient/Server共通設定値に特有項目を追加
@@ -130,12 +131,17 @@ export class authClient {
   /** exec: ローカル関数の処理要求を処理
    * @param {string} func - サーバ側関数名
    * @param {any[]} arg=[] - サーバ側関数に渡す引数
+   * @param {number} depth=0 - 再帰呼出時の階層
    * @returns {any|Error} 処理結果
    */
-  async exec(func,arg=[]) {
+  async exec(func,arg=[],depth=0) {
     const v = {whois:`${this.constructor.name}.exec`, arg:{func,arg}, rv:null};
     dev.start(v);
     try {
+
+      dev.step(1.1);  // 再帰呼出時の階層チェック
+      if( depth > this.cf.maxDepth )
+        throw new Error('maximum recursion depth exceeded');
 
       dev.step(1.1); // funcが関数名として有効かチェック
       // なお「::〜::」は内発処理として有効とする
@@ -143,8 +149,8 @@ export class authClient {
         throw new Error('Invalid function');
       }
 
-      dev.step(1.2);  // 引数は関数を排除するため、一度JSON化してからオブジェクト化
-      arg = JSON.parse(JSON.stringify(arg));
+      dev.step(1.2);  // サーバ側に渡す引数を無毒化
+      arg = this.cf.sanitizeArg(arg);
 
       if( !this.idb.SPkeySign ){  // SPkey未取得
 
@@ -163,7 +169,7 @@ export class authClient {
         if( v.r instanceof Error ) throw v.r;
 
         dev.step(2.4);  // 元々の処理要求を再帰呼出
-        v.rv = this.exec(func,arg);
+        v.rv = await this.exec(func,arg,depth+1);
         if( v.rv instanceof Error ) throw v.rv;
 
       } else {  // SPkey取得済
@@ -180,7 +186,7 @@ export class authClient {
             v.rv = v.authResponse.response;
             break;
           case 'CPkey expired': dev.step(3.2);  // CPkey期限切れ
-            this.crypto.generateKeys();
+            await this.crypto.generateKeys();
             v.rv = await this.exec('::updateCPkey::');
             if( v.rv instanceof Error ) throw v.rv;
             break;
@@ -354,7 +360,7 @@ export class authClient {
       if( Object.keys(v.idb).length === 0 ){
 
         dev.step(5.1);  // 鍵ペア生成
-        v.keys = v.rv.crypto.generateKeys();
+        v.keys = await v.rv.crypto.generateKeys();
         if( v.keys instanceof Error ) throw v.keys;
 
         dev.step(5.2);  // CryptoKey以外のauthIndexedDBメンバと合わせて初期値作成
@@ -373,6 +379,8 @@ export class authClient {
 
       dev.step(6);  // IndexedDBの内容をメンバ変数に格納
       Object.keys(v.idb).forEach(x => v.rv[x] = v.idb[x]);
+
+      dev.step(7,{IndexedDB:v.rv.idb});  // 念のためIndexedDBをダンプ
 
       dev.end(); // 終了処理
       return v.rv;

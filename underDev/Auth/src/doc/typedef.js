@@ -50,6 +50,7 @@
  *   これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分
  * @prop {string} storeName="config" - IndexedDBのストア名
  * @prop {number} dbVersion=1 - IndexedDBのバージョン
+ * @prop {number} maxDepth=10 - exec再帰呼出時の最大階層
  */
 /** authConfig: クライアント・サーバ共通設定情報
  * @class
