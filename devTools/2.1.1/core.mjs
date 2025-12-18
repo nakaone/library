@@ -27,7 +27,8 @@
  *
  * - 変更履歴
  *   - rev.2.1.1
- *     - ブラウザの開発モードでmessage以外が出力されないバグを修正
+ *     - error():ブラウザの開発モードでエラー時message以外が出力されないバグを修正
+ *     - end():引数があればダンプ出力を追加
  *   - rev.2.1.0
  *     - ES module対応のため、build.sh作成
  *     - 原本をcore.jsからcore.mjsに変更
@@ -118,20 +119,24 @@ export function devTools(opt){
   }
 
   /** end: 正常終了時処理 */
-  function end(){
+  function end(arg=null){
     // 終了時に確定する項目に値設定
     finisher(fi);
 
     // ログ出力
     if( opt.mode === 'normal' || opt.mode === 'dev' ){
-      console.log(`${toLocale(fi.end,'hh:mm:ss.nnn')} [${
+      let msg = `${toLocale(fi.end,'hh:mm:ss.nnn')} [${
         ('0'.repeat(opt.digit)+fi.seq).slice(-opt.digit)
-      }] ${fi.whois} normal end`);
+      }] ${fi.whois} normal end`;
+      // 引数があればダンプ出力
+      if( arg !== null ) msg += '\n' + formatObject(arg)
+      // 大本の呼出元ではstart/end/elaps表示
       if( fi.seq === 0 ){
-        console.log(`\tstart: ${toLocale(fi.start)
+        msg += '\n' + `\tstart: ${toLocale(fi.start)
         }\n\tend  : ${toLocale(fi.end)
-        }\n\telaps: ${fi.elaps}`);
+        }\n\telaps: ${fi.elaps}`;
       }
+      console.log(msg);
     }
 
     trace.pop();  // 呼出元関数スタックから削除
@@ -157,7 +162,7 @@ export function devTools(opt){
 
     // ログ出力：エラーが発生した関数でのみ出力
     if( opt.mode !== 'none' && fi.seq === rv.seq ){
-      console.error(rv.message+'\n'+JSON.stringify(rv,null,2));
+      console.error(rv.message+'\n'+formatObject(rv));
     }
 
     trace.pop();  // 呼出元関数スタックから削除
