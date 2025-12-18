@@ -203,10 +203,10 @@ export class cryptoClient {
 
       dev.step(3);  // 戻り値作成
       v.rv = {
-        CSkeySign: signKeys.privateKey,
-        CPkeySign: signKeys.publicKey,
-        CSkeyEnc: encKeys.privateKey,
-        CPkeyEnc: encKeys.publicKey,
+        CSkeySign: signKeys.privateKey, // CryptoKeyオブジェクト
+        CPkeySign: signKeys.publicKey,  // 同上
+        CSkeyEnc: encKeys.privateKey,   // 同上
+        CPkeyEnc: encKeys.publicKey,    // 同上
         keyGeneratedDateTime: Date.now()
       };
 

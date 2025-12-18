@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-<p style='text-align:right'>2025/12/18 15:55:48</p>
+<p style='text-align:right'>2025/12/18 16:30:36</p>
 <h1>SPkey要求テスト</h1>
 
 <button onclick="localFunc()">localFuncテスト</button>
@@ -652,6 +652,7 @@ class authClient {
         dev.step(5.1);  // 鍵ペア生成
         v.keys = await v.rv.crypto.generateKeys();
         if( v.keys instanceof Error ) throw v.keys;
+        dev.step(99.365,{keys:v.keys});
 
         dev.step(5.2);  // CryptoKey以外のauthIndexedDBメンバと合わせて初期値作成
         v.idb = Object.assign(v.keys,{ // IndexedDBの初期値。内容はauthIndexedDB参照
@@ -818,6 +819,7 @@ class cryptoClient {
     dev.start(v);
     try {
 
+      dev.step(1.1);  // 暗号化用秘密鍵の型チェック
       if (!(this.idb.CSkeySign instanceof CryptoKey))
         throw new Error('CSkeySign is not initialized (not CryptoKey)');
 
@@ -990,10 +992,10 @@ class cryptoClient {
 
       dev.step(3);  // 戻り値作成
       v.rv = {
-        CSkeySign: signKeys.privateKey,
-        CPkeySign: signKeys.publicKey,
-        CSkeyEnc: encKeys.privateKey,
-        CPkeyEnc: encKeys.publicKey,
+        CSkeySign: signKeys.privateKey, // CryptoKeyオブジェクト
+        CPkeySign: signKeys.publicKey,  // 同上
+        CSkeyEnc: encKeys.privateKey,   // 同上
+        CPkeyEnc: encKeys.publicKey,    // 同上
         keyGeneratedDateTime: Date.now()
       };
 
