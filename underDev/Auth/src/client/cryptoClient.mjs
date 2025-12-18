@@ -30,7 +30,11 @@ export class cryptoClient {
     dev.start(v);
     try {
 
-      dev.step(1);  // payload を UTF-8 化
+      dev.step(1.1);  // 暗号化用秘密鍵の型チェック
+      if (!(this.idb.CSkeySign instanceof CryptoKey))
+        throw new Error('CSkeySign is not initialized (not CryptoKey)');
+
+      dev.step(1.2);  // payload を UTF-8 化
       const payloadBytes =
         new TextEncoder().encode(JSON.stringify(request));
 
