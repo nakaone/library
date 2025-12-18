@@ -1,5 +1,5 @@
 // ライブラリ関数定義
-//::$lib/devTools/2.1.0/core.js::
+//::$lib/devTools/2.1.1/core.js::
 
 // authServer関係クラス定義
 //::$tmp/authServer.js::

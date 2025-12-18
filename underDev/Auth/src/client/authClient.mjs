@@ -380,9 +380,7 @@ export class authClient {
       dev.step(6);  // IndexedDBの内容をメンバ変数に格納
       Object.keys(v.idb).forEach(x => v.rv[x] = v.idb[x]);
 
-      dev.step(7,{IndexedDB:v.rv.idb});  // 念のためIndexedDBをダンプ
-
-      dev.end(); // 終了処理
+      dev.end({IndexedDB:v.rv.idb}); // 終了処理
       return v.rv;
 
     } catch (e) { return dev.error(e); }
