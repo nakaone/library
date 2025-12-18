@@ -1,3 +1,4 @@
 archives/*
 tmp/*
 node_modules/
+deploy/
