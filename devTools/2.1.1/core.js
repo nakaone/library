@@ -26,8 +26,11 @@
  * }
  *
  * - 変更履歴
+ *   - rev.2.1.1
+ *     - ブラウザの開発モードでmessage以外が出力されないバグを修正
  *   - rev.2.1.0
  *     - ES module対応のため、build.sh作成
+ *     - 原本をcore.jsからcore.mjsに変更
  *   - rev.2.0.0
  *     - errorメソッドの戻り値を独自エラーオブジェクトに変更
  *     - functionInfoクラスを導入、詳細情報を追加
@@ -154,7 +157,7 @@ function devTools(opt){
 
     // ログ出力：エラーが発生した関数でのみ出力
     if( opt.mode !== 'none' && fi.seq === rv.seq ){
-      console.error(rv);
+      console.error(rv.message+'\n'+JSON.stringify(rv,null,2));
     }
 
     trace.pop();  // 呼出元関数スタックから削除
