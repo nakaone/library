@@ -19,10 +19,11 @@ rm -rf $doc/*
 rm -rf $tmp/*
 
 # doPush: GitHub/claspで更新するならtrue
-# ./build.sh -p ⇒ doPush === true
-doPush=false
-if [[ "$1" == "-p" ]]; then
-  doPush=true
+# ./build.sh -l ⇒ doPush === false
+#   -l : local test only
+doPush=true
+if [[ "$1" == "-l" ]]; then
+  doPush=false
 fi
 
 # ----------------------------------------------

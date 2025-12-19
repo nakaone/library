@@ -212,13 +212,12 @@ export class authClient {
    * @returns {authResponse|Error} 処理結果
    */
   async fetch(request) {
-    const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{request}, rv:null};
+    const v = {whois:`${this.constructor.name}.fetch`, arg:{request}, rv:null};
     dev.start(v);
     try {
 
       dev.step(1);  // authRequestを暗号化
-      // SPkey未取得の場合、第2引数(isSignOnly)をtrueにしておく。
-      v.encryptedRequest = this.crypto.encrypt(request,!this.idb.SPkeyEnc);
+      v.encryptedRequest = await this.crypto.encrypt(request);
       if( v.encryptedRequest instanceof Error ) throw v.encryptedRequest;
 
       // サーバ側に処理依頼

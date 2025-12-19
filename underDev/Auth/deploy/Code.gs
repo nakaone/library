@@ -1,4 +1,4 @@
-// 20251218-163036
+// 20251219-134410
 // ライブラリ関数定義
 /** devTools: 開発支援関係メソッド集
  * @param {Object} opt - 動作設定オプション
@@ -28,8 +28,12 @@
  * }
  *
  * - 変更履歴
+ *   - rev.2.1.1
+ *     - error():ブラウザの開発モードでエラー時message以外が出力されないバグを修正
+ *     - end():引数があればダンプ出力を追加
  *   - rev.2.1.0
  *     - ES module対応のため、build.sh作成
+ *     - 原本をcore.jsからcore.mjsに変更
  *   - rev.2.0.0
  *     - errorメソッドの戻り値を独自エラーオブジェクトに変更
  *     - functionInfoクラスを導入、詳細情報を追加
@@ -116,21 +120,27 @@ function devTools(opt){
     }
   }
 
-  /** end: 正常終了時処理 */
-  function end(){
+  /** end: 正常終了時処理
+   * @param {any} [arg] - 終了時ダンプする変数
+   */
+  function end(arg){
     // 終了時に確定する項目に値設定
     finisher(fi);
 
     // ログ出力
     if( opt.mode === 'normal' || opt.mode === 'dev' ){
-      console.log(`${toLocale(fi.end,'hh:mm:ss.nnn')} [${
+      let msg = `${toLocale(fi.end,'hh:mm:ss.nnn')} [${
         ('0'.repeat(opt.digit)+fi.seq).slice(-opt.digit)
-      }] ${fi.whois} normal end`);
+      }] ${fi.whois} normal end`;
+      // 引数があればダンプ出力
+      if( typeof arg !== 'undefined' ) msg += '\n' + formatObject(arg)
+      // 大本の呼出元ではstart/end/elaps表示
       if( fi.seq === 0 ){
-        console.log(`\tstart: ${toLocale(fi.start)
+        msg += '\n' + `\tstart: ${toLocale(fi.start)
         }\n\tend  : ${toLocale(fi.end)
-        }\n\telaps: ${fi.elaps}`);
+        }\n\telaps: ${fi.elaps}`;
       }
+      console.log(msg);
     }
 
     trace.pop();  // 呼出元関数スタックから削除
@@ -156,7 +166,7 @@ function devTools(opt){
 
     // ログ出力：エラーが発生した関数でのみ出力
     if( opt.mode !== 'none' && fi.seq === rv.seq ){
-      console.error(rv);
+      console.error(rv.message+'\n'+formatObject(rv));
     }
 
     trace.pop();  // 呼出元関数スタックから削除

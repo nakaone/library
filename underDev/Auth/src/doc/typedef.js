@@ -228,15 +228,19 @@
  */
 /** encryptedRequest: 暗号化された処理要求
  * @typedef {Object} encryptedRequest - 暗号化された処理要求
- * @prop {string} cipher - AES-256-GCMで暗号化されたauthRequest
+ * @prop {string} payload=null - 平文のauthRequest
+ *   cipherと排他。SPkey要求時(meta.keyProvisioning===true)のみ設定
+ * @prop {string} cipher=null - AES-256-GCMで暗号化されたauthRequest。payloadと排他
+ * @prop {string} iv=null - AES-GCM 初期化ベクトル
  * @prop {string} signature - authRequestに対するRSA-PSS署名
- * @prop {string} encryptedKey - RSA-OAEPで暗号化されたAES共通鍵
- * @prop {string} iv - AES-GCM 初期化ベクトル
- * @prop {string} tag - AES-GCM 認証タグ
+ * @prop {string} encryptedKey=null - RSA-OAEPで暗号化されたAES共通鍵
  * @prop {Object} meta - メタ情報
+ * @prop {boolean} meta.signOnly=false - 暗号化せず署名のみで送信する場合true
+ * @prop {string} meta.sym=null - 使用した共通鍵方式"AES-256-GCM"
  * @prop {number} meta.rsabits - 暗号化に使用したRSA鍵長
- * @prop {string} meta.sym - 使用した共通鍵方式"AES-256-GCM"
- * @prop {boolean} meta.signOnly - 暗号化せず署名のみで送信する場合true
+ * @prop {boolean} meta.keyProvisioning=false - 鍵配布・鍵更新目的ならtrue
+ *   「通常業務」ではなく、「鍵を配る／更新するための通信」であることの宣言。
+ *   通常signOnlyと一致するが、運用時の利用目的が異なるため別項目とする。
  */
 /** encryptedResponse: 暗号化された処理結果
  * @typedef {Object} encryptedResponse - 暗号化された処理結果
