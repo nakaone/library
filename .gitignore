@@ -1,3 +1,5 @@
 .DS_Store
 *tmp/
-/underDev/Auth/deploy
+*archives/
+*node_modules/
+/underDev/Auth/deploy/

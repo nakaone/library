@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-<p style='text-align:right'>2025/12/19 13:44:09</p>
+<p style='text-align:right'>2025/12/19 13:57:58</p>
 <h1>SPkey要求テスト</h1>
 
 <button onclick="localFunc()">localFuncテスト</button>
@@ -461,7 +461,7 @@ class authClient {
         v.authResponse = this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
-        dev.step(2.3); // SPkeySign / deviceId 保存
+        dev.step(2.3,v.authResponse); // SPkeySign / deviceId 保存
         v.r = await this.setIndexedDB({
           SPkeySign: v.authResponse.SPkeySign,
           deviceId: v.authResponse.deviceId
@@ -1048,14 +1048,14 @@ async function onLoad(){
  * @param {void}
  * @returns
  */
-function localFunc(){
+async function localFunc(){
   const v = { whois: 'localFunc', rv: null};
   dev.start(v);
   try {
 
     dev.step(1);  // execテスト
     // サーバ側関数名はsrc/server/code.js「グローバル変数定義」参照
-    v.exec = globalThis.auth.exec('svTest');
+    v.exec = await globalThis.auth.exec('svTest');
     if( v.exec instanceof Error ) throw v.exec;
     dev.step(99.9,v.exec);  // ブラウザ上でのテスト結果確認
 

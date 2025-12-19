@@ -2,14 +2,14 @@
  * @param {void}
  * @returns 
  */
-export function localFunc(){
+export async function localFunc(){
   const v = { whois: 'localFunc', rv: null};
   dev.start(v);
   try {
 
     dev.step(1);  // execテスト
     // サーバ側関数名はsrc/server/code.js「グローバル変数定義」参照
-    v.exec = globalThis.auth.exec('svTest');
+    v.exec = await globalThis.auth.exec('svTest');
     if( v.exec instanceof Error ) throw v.exec;
     dev.step(99.9,v.exec);  // ブラウザ上でのテスト結果確認
 

@@ -161,7 +161,7 @@ export class authClient {
         v.authResponse = this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
-        dev.step(2.3); // SPkeySign / deviceId 保存
+        dev.step(2.3,v.authResponse); // SPkeySign / deviceId 保存
         v.r = await this.setIndexedDB({
           SPkeySign: v.authResponse.SPkeySign,
           deviceId: v.authResponse.deviceId
