@@ -1,38 +1,29 @@
 /** devTools: 開発支援関係メソッド集
- * @param {Object} opt - 動作設定オプション
- * @param {string} [opt.mode='dev'] - 出力モード
- * @param {number} [opt.digit=4] - 処理順(seq)をログ出力する際の桁数
- *
- * - 出力モード
- *   | mode | エラー | 開始・終了 | dump/step |
- *   | "none" | ❌ | ❌ | ❌ | 出力無し(pipe処理等) |
- *   | "error" | ⭕ | ❌ | ❌ | エラーのみ出力 |
- *   | "normal" | ⭕ | ⭕ | ❌ | 本番用 |
- *   | "dev" | ⭕ | ⭕ | ⭕ | 開発用 |
- *
- * @example
- *
- * ```js
- * const dev = devTools();  // 本番時は devTools({mode:'normal'}) に変更
- * const t01 = (x) => {
- *   const v = {whois:'t01',arg:{x},rv:null}; // whois,arg,rvは指定推奨
- *   dev.start(v); // 汎用変数を引数とする
- *   try {
- *     dev.step(1.1,v);  // 場所を示す数値または文字列(＋表示したい変数)
- *
- *     dev.end();  // v.rvを戻り値と看做す
- *     return v.rv;
- *   } catch(e) { return dev.error(e); }
- * }
- *
+ * @class
+ * @classdesc 開発支援関係メソッド集
+ * @prop {string} id=UUIDv4 - 関数・メソッドの識別子
+ * @prop {string} whois='' - 関数名またはクラス名.メソッド名
+ * @prop {Object.<string, any>} arg={} - 起動時引数。{変数名：値}形式
+ * @prop {Object} v={} - 関数・メソッド内汎用変数
+ * @prop {string} step=1 - 関数・メソッド内の現在位置
+ * @prop {string[]} log=[] - {string[]} 実行順に並べたdev.step
+ * @prop {number} start=Date.now() - 開始時刻
+ * @prop {number} end - 終了時刻
+ * @prop {number} elaps - 所要時間(ミリ秒)
+ * 
  * - 変更履歴
- *   - rev.2.1.1
+ *   - rev.3.0.0 : 2025/12/19
+ *     - 非同期(平行)処理だとグローバル変数dev内でスタックが混乱、step()で別処理のwhoisを表示
+ *       ⇒ グローバル変数内スタックでの呼出・被呼出管理を断念、「関数・メソッド内で完結」に方針転換
+ *     - 呼出元との関係(スタック)は断念、標準Errorのstack表示を利用
+ *     - クロージャ関数 ⇒ クラス化(∵多重呼出による使用メモリ量増大を抑制)
+ *   - rev.2.1.1 : 2025/12/18
  *     - error():ブラウザの開発モードでエラー時message以外が出力されないバグを修正
  *     - end():引数があればダンプ出力を追加
- *   - rev.2.1.0
+ *   - rev.2.1.0 : 2025/12/12
  *     - ES module対応のため、build.sh作成
  *     - 原本をcore.jsからcore.mjsに変更
- *   - rev.2.0.0
+ *   - rev.2.0.0 : 2025/12/08
  *     - errorメソッドの戻り値を独自エラーオブジェクトに変更
  *     - functionInfoクラスを導入、詳細情報を追加
  *     - オプションを簡素化、出力モードに統合
@@ -44,61 +35,70 @@
  *     start/endでメッセージ表示を抑止するため、引数"rt(run time option)"を追加
  *   - rev.1.0.0 : 2025/01/26
  *     SpreadDb.1.2.0 test.jsとして作成していたのを分離
+ * 
+ * @example
+ * function xxx(o){
+ *   const v = {whois:'xxx',arg:{o},rv:null};
+ *   const dev = new devTools(v); // 従来のdev.startを代替
+ *   try {
+ *     dev.step(1);
+ *     ...
+ *     dev.end(); // 省略可
+ *   } catch(e) {
+ *     return dev.error(e);
+ *   }
+ * }
+ * 
  */
-export function devTools(opt){
-  /** functionInfo: 現在実行中の関数に関する情報 */
-  class functionInfo {
-    constructor(v){
-      this.whois = v.whois || ''; // {string} 関数名またはクラス名.メソッド名
-      this.seq = seq++; // {number} 実行順序
-      this.arg = v.arg || {}; // {any} 起動時引数。{変数名：値}形式
-      this.v = v || null; // {Object} 汎用変数
-      this.step = v.step || '';
-      this.log = [];  // {string[]} 実行順に並べたdev.step
-      this.rv = v.rv || null; // {any} 戻り値
+export class devTools {
 
-      this.start = new Date();  // {Date} 開始時刻
-      this.end = 0; // {Date} 終了時刻
-      this.elaps = 0; // {number} 所要時間(ミリ秒)
+  /** constructor
+   * @constructor
+   * @param {Object} v={} - 関数・メソッド内汎用変数
+   * @param {Object} opt={}
+   * @param {string} opt.mode='dev' - 出力モード
+   * @param {boolean} opt.footer=false - 実行結果(start,end,elaps)を出力するならtrue
+	 * - 出力モード
+	 *   | mode     | エラー | 開始・終了 | dump/step | 用途・備考          |
+   *   | :--      | :--:  | :--:     | :--:      | :--               |
+	 *   | "none"   | ❌    | ❌        | ❌        | 出力無し(pipe処理等) |
+	 *   | "error"  | ⭕    | ❌        | ❌        | エラーのみ出力       |
+	 *   | "normal" | ⭕    | ⭕        | ❌        | 本番用              |
+	 *   | "dev"    | ⭕    | ⭕        | ⭕        | 開発用              |
+   */
+  constructor(v={},opt={}){
+
+    // 状態管理変数の初期値設定
+		//this.id = self.crypto.randomUUID();
+		this.whois = v.whois ?? '';
+		this.arg = v.arg ?? {};
+    this.v = v ?? {};
+		this.step = 1;
+		this.log = [];
+		this.start = new Date();
+		this.end = 0;
+		this.elaps = 0;
+
+    // オプションの既定値設定
+    this.opt = {
+      mode: opt.mode ?? 'dev',
+      footer: opt.footer ?? false,
+    };
+
+    // 開始ログ出力
+    if( opt.mode === 'normal' || opt.mode === 'dev' ){
+      console.log(`${toLocale(this.start,'hh:mm:ss.nnn')} ${fi.whois} start`);
     }
   }
 
-  /** dtError: 独自拡張したErrorオブジェクト */
-  class dtError extends Error {
-    constructor(fi,...e){
+  static devToolsError = class extends Error {
+    constructor(dtObj,...e){
       super(...e);
 
-      // 呼出元関数
-      this.caller = trace.map(x => x.whois).join(' > ');
-
-      // 独自追加項目を個別に設定(Object.keysではtraceが空欄等、壊れる)
-      ['whois','step','seq','arg','rv','start','end','elaps']
-      .forEach(x => this[x] = fi[x]);
-
-      // エラーが起きた関数内でのstep実行順
-      this.log = fi.log.join(', ');
-
+      // 独自追加項目を個別に設定
+      ['whois','arg','step','log','start','end','elaps','v']
+      .forEach(x => this[x] = dtObj[x] ?? null);
     }
-  }
-
-  opt = Object.assign({mode:'dev',digit:4},opt);
-  let seq = 0;  // 関数の呼出順(連番)
-  const trace = []; // {functionInfo[]} 呼出元関数スタック
-  let fi; // 現在処理中の関数に関する情報
-  return {start,step,end,error};
-
-  /** start: 呼出元関数情報の登録＋開始メッセージの表示
-   * @param {Object} v - 汎用変数。whois,arg,rvを含める
-   */
-  function start(v){
-    fi = new functionInfo(v);
-    // ログ出力
-    if( opt.mode === 'normal' || opt.mode === 'dev' ){
-      console.log(`${toLocale(fi.start,'hh:mm:ss.nnn')} [${
-        ('0'.repeat(opt.digit)+fi.seq).slice(-opt.digit)
-      }] ${fi.whois} start`);
-    }
-    trace.push(fi); // 呼出元関数スタックに保存
   }
 
   /** step: 関数内の進捗状況管理＋変数のダンプ
@@ -109,73 +109,74 @@ export function devTools(opt){
    *   dev.step(99.123,v.hoge,this.ClassName==='cryptoClient');
    *   ※ 99はデバック、0.123は行番号の意で設定
    */
-  function step(label,val=null,cond=true){
-    fi.step = String(label);  // stepを記録
-    fi.log.push(fi.step); // fi.logにstepを追加
+  step(label, val=null, cond=true){
+    this.step = String(label);
+    this.log.push(this.step);
     // valが指定されていたらステップ名＋JSON表示
-    if( opt.mode === 'dev' && val && cond ){
+    if( this.opt.mode === 'dev' && val && cond ){
       console.log(`== ${fi.whois} step.${label} ${formatObject(val)}`);
     }
   }
 
   /** end: 正常終了時処理
    * @param {any} [arg] - 終了時ダンプする変数
+   * @returns {void}
    */
-  function end(arg){
+  end(arg){
     // 終了時に確定する項目に値設定
-    finisher(fi);
+    this.finisher();
 
     // ログ出力
-    if( opt.mode === 'normal' || opt.mode === 'dev' ){
-      let msg = `${toLocale(fi.end,'hh:mm:ss.nnn')} [${
-        ('0'.repeat(opt.digit)+fi.seq).slice(-opt.digit)
-      }] ${fi.whois} normal end`;
+    if( this.opt.mode === 'normal' || this.opt.mode === 'dev' ){
+      let msg = `${toLocale(this.end,'hh:mm:ss.nnn')} ${this.whois} normal end`;
       // 引数があればダンプ出力
       if( typeof arg !== 'undefined' ) msg += '\n' + formatObject(arg)
       // 大本の呼出元ではstart/end/elaps表示
-      if( fi.seq === 0 ){
+      if( this.opt.footer ){
         msg += '\n' + `\tstart: ${toLocale(fi.start)
         }\n\tend  : ${toLocale(fi.end)
         }\n\telaps: ${fi.elaps}`;
       }
       console.log(msg);
     }
+  }
 
-    trace.pop();  // 呼出元関数スタックから削除
-    fi = trace[trace.length-1];
+  error(e){
+    // 終了時に確定する項目に値設定
+    this.finisher();
+    // エラーログ出力時はISO8601拡張形式
+    this.start = this.toLocale(this.start);
+    this.end = this.toLocale(this.end);
+
+    if( e instanceof devToolsError ){
+      // 引数がdevToolsError型
+      // ⇒ 自関数・メソッドでは無く、呼出先から返されたError
+      // ⇒ メッセージを出力せず、そのまま返す
+      return e;
+    } else {
+      // 引数がdevToolsError型ではない
+      // ⇒ 自関数・メソッドで発生またはthrowされたError
+      // ⇒ メッセージを出力し、devToolsErrorにして情報を付加
+      e = new devTools.devToolsError(this,e);
+      console.error(e.message+'\n'+this.formatObject(e));
+      return e;
+    }
   }
 
   /** finisher: end/error共通の終了時処理 */
-  function finisher(fi){
+  finisher(){
     // 終了時に確定する項目に値設定
-    fi.end = new Date();
-    fi.elaps = `${fi.end - fi.start} msec`;
-  }
-  /** error: エラー時処理 */
-  function error(e){
-
-    // 終了時に確定する項目に値設定
-    finisher(fi);
-    fi.start = toLocale(fi.start);  // エラーログ出力時はISO8601拡張形式
-    fi.end = toLocale(fi.end);
-
-    // 独自エラーオブジェクトを作成
-    const rv = e.constructor.name === 'dtError' ? e : new dtError(fi,e);
-
-    // ログ出力：エラーが発生した関数でのみ出力
-    if( opt.mode !== 'none' && fi.seq === rv.seq ){
-      console.error(rv.message+'\n'+formatObject(rv));
-    }
-
-    trace.pop();  // 呼出元関数スタックから削除
-    fi = trace[trace.length-1] || {seq: -1};
-
-    return rv;
+    this.log = this.log.join(', ');
+    this.end = new Date();
+    this.elaps = `${this.end - this.start} msec`;
   }
 
-  /** ログ出力用時刻文字列整形 */
-  function toLocale(date,opt='yyyy-MM-ddThh:mm:ss.nnnZ'){
-    const v = {rv:opt,dObj:date};
+  /** toLocale: ログ出力用時刻文字列整形
+   * @param {Date} date - 整形対象Dateオブジェクト
+   * @param {string} template - テンプレート
+   */
+  toLocale(date,template='yyyy-MM-ddThh:mm:ss.nnnZ'){
+    const v = {rv:template,dObj:date};
     if( typeof date === 'string' ) return date;
 
     v.local = { // 地方時ベース
@@ -208,13 +209,12 @@ export function devTools(opt){
     return v.rv;
   }
 
-  /**
-   * オブジェクトの各メンバーを「メンバ名: 値 // データ型」の形式で再帰的に整形する
+  /** formatObject: オブジェクトの各メンバーを「メンバ名: 値 // データ型」の形式で再帰的に整形する
    * @param {any} obj - 整形対象のオブジェクトまたは配列
    * @param {number} indentLevel - 現在のインデントレベル
    * @returns {string} 整形された文字列
    */
-  function formatObject(obj, indentLevel = 0) {
+  formatObject(obj, indentLevel = 0) {
     const indent = '  '.repeat(indentLevel); // インデント文字列
 
     if (obj === null) {
