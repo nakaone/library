@@ -217,7 +217,8 @@ export class authClient {
     try {
 
       dev.step(1);  // authRequestを暗号化
-      v.encryptedRequest = this.crypto.encrypt(request);
+      // SPkey未取得の場合、第2引数(isSignOnly)をtrueにしておく。
+      v.encryptedRequest = this.crypto.encrypt(request,!this.idb.SPkeyEnc);
       if( v.encryptedRequest instanceof Error ) throw v.encryptedRequest;
 
       // サーバ側に処理依頼
