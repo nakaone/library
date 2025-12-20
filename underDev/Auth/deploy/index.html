@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-<p style='text-align:right'>2025/12/20 11:17:38</p>
+<p style='text-align:right'>2025/12/20 14:15:55</p>
 <h1>SPkey要求テスト</h1>
 
 <button onclick="localFunc()">localFuncテスト</button>
@@ -336,14 +336,17 @@ class authClient {
       this.cf = new authConfig(config);
       Object.keys(v.authClientConfig).forEach(x => {
         this.cf[x] = config[x] || v.authClientConfig[x];
-      })
+      });
+
+      dev.step(2.3);  // this.apiをIDからURLに書き換え
+      this.cf.api = `https://script.google.com/macros/s/${this.cf.api}/exec`;
 
       // -------------------------------------------------------------
       dev.step(3);  // その他メンバの値設定
       // -------------------------------------------------------------
       this.idb = {};  // IndexedDBと同期、authClient内で共有
 
-      dev.end(); // 終了処理
+      dev.end(this); // 終了処理
 
     } catch (e) { return dev.error(e); }
   }
@@ -460,7 +463,7 @@ class authClient {
         v.authRequest = this.authRequest('::initial::');
 
         dev.step(2.2);  // サーバ側に処理依頼
-        v.authResponse = this.fetch(v.authRequest);
+        v.authResponse = await this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
         dev.step(2.3,v.authResponse); // SPkeySign / deviceId 保存
@@ -480,7 +483,7 @@ class authClient {
         v.authRequest = this.authRequest(func,arg);
 
         dev.step(3.2);  // サーバ側に処理依頼
-        v.authResponse = this.fetch(v.authRequest);
+        v.authResponse = await this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
         switch( v.authResponse.status ){
@@ -1034,7 +1037,7 @@ async function onLoad(){
     const auth = await authClient.initialize({
       adminMail: 'ena.kaon@gmail.com',
       adminName: 'あどみ',
-      api: 'AKfycbwoI7t1j5YjJgChds6jccBujdboHlBiCPZirNuBqvFRtSot0VtCXMlaLBYm6UgKnU5',
+      api: 'AKfycbz_LptOchzsuF58ZutmSjScac-z4xbUiJzQhneZZHHirl25nPhddFZPxzrMxe2BUU7e',
     });
 
     dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット

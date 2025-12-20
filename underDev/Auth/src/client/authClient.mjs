@@ -34,14 +34,17 @@ export class authClient {
       this.cf = new authConfig(config);
       Object.keys(v.authClientConfig).forEach(x => {
         this.cf[x] = config[x] || v.authClientConfig[x];
-      })
+      });
+
+      dev.step(2.3);  // this.apiをIDからURLに書き換え
+      this.cf.api = `https://script.google.com/macros/s/${this.cf.api}/exec`;
 
       // -------------------------------------------------------------
       dev.step(3);  // その他メンバの値設定
       // -------------------------------------------------------------
       this.idb = {};  // IndexedDBと同期、authClient内で共有
 
-      dev.end(); // 終了処理
+      dev.end(this); // 終了処理
 
     } catch (e) { return dev.error(e); }
   }
@@ -158,7 +161,7 @@ export class authClient {
         v.authRequest = this.authRequest('::initial::');
 
         dev.step(2.2);  // サーバ側に処理依頼
-        v.authResponse = this.fetch(v.authRequest);
+        v.authResponse = await this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
         dev.step(2.3,v.authResponse); // SPkeySign / deviceId 保存
@@ -178,7 +181,7 @@ export class authClient {
         v.authRequest = this.authRequest(func,arg);
 
         dev.step(3.2);  // サーバ側に処理依頼
-        v.authResponse = this.fetch(v.authRequest);
+        v.authResponse = await this.fetch(v.authRequest);
         if( v.authResponse instanceof Error ) throw v.authResponse;
 
         switch( v.authResponse.status ){
