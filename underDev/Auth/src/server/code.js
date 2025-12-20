@@ -1,5 +1,5 @@
 // ライブラリ関数定義
-//::$lib/devTools/2.1.1/core.js::
+//::$lib/devTools/3.0.0/core.js::
 
 // authServer関係クラス定義
 //::$tmp/authServer.js::
@@ -7,7 +7,6 @@
 //::$tmp/Member.js::
 
 // グローバル変数定義
-const dev = devTools();
 const asv = authServer({
   adminMail: 'ena.kaon@gmail.com',
   adminName: 'あどみ',

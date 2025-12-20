@@ -6,7 +6,7 @@ export class authServer {
    */
   constructor(config={}) {
     const v = {whois:`authServer.constructor`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       // -------------------------------------------------------------
@@ -79,7 +79,7 @@ export class authServer {
    */
   authLogger(response) {
     const v = { whois: `${this.constructor.name}.authLogger`, arg: { response }, rv: null };
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       // -------------------------------------------------------------
@@ -208,7 +208,7 @@ export class authServer {
    */
   exec(arg) {
     const v = {whois:`${this.constructor.name}.exec`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1.1);  // request存在・最低限チェック
@@ -264,7 +264,7 @@ export class authServer {
    */
   static setupEnvironment() {
     const v = {whois:`${this.constructor.name}.setupEnvironment`, arg: {}, rv: null };
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       // -------------------------------------------------------------
@@ -315,7 +315,7 @@ export class authServer {
    */
   prototype(arg) {
     const v = {whois:`${this.constructor.name}.prototype`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       // -------------------------------------------------------------

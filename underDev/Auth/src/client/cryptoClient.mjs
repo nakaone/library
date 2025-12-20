@@ -8,7 +8,7 @@ export class cryptoClient {
    */
   constructor(idb,RSAbits) {
     const v = {whois:`cryptoClient.constructor`, arg:{idb,RSAbits}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1); // メンバ変数をセット
@@ -26,7 +26,7 @@ export class cryptoClient {
    */
   async encrypt(request) {
     const v = { whois: `${this.constructor.name}.encrypt`, arg: { request }, rv: null };
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1.1);  // encryptedRequestオブジェクト生成関数を定義
@@ -132,7 +132,7 @@ export class cryptoClient {
    */
   async decrypt(response) {
     const v = {whois:`${this.constructor.name}.decrypt`, arg:{response}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       // 1. Base64復元
@@ -191,7 +191,7 @@ export class cryptoClient {
    */
   async generateKeys() {
     const v = {whois:`${this.constructor.name}.generateKeys`, arg:{}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1);  // 署名用

@@ -6,7 +6,7 @@ export class cryptoServer {
    */
   constructor(cf) {
     const v = {whois:`cryptoServer.constructor`, arg:{cf}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1); // authServer設定情報をメンバに格納
@@ -80,7 +80,7 @@ export class cryptoServer {
    */
   async encrypt(response, CPkeySign) {
     const v = {whois:`${this.constructor.name}.encrypt`, arg:{response,CPkeySign}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1); // payload UTF-8化
@@ -162,7 +162,7 @@ export class cryptoServer {
    */
   async decrypt(request, CPkeySign) {
     const v = {whois:`${this.constructor.name}.decrypt`, arg:{request,CPkeySign}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       if (request.meta.signOnly === true) {
@@ -270,7 +270,7 @@ export class cryptoServer {
    */
   async generateKeys() {
     const v = {whois:`${this.constructor.name}.generateKeys`, arg:{}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1); // 署名用
@@ -325,7 +325,7 @@ export class cryptoServer {
    */
   static async initialize(config) {
     const v = {whois:`authClient.initialize`, arg:{config}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1);  // インスタンス生成

@@ -8,7 +8,7 @@ export class Member {
    */
   constructor(config,request) {
     const v = {whois:`Member.constructor`, arg:{request}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       this.cf = config; // authServer設定値をメンバとして格納
@@ -130,7 +130,7 @@ export class Member {
    */
   addTrial(arg) {
     const v = {whois:`${this.constructor.name}.addTrial`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       const req = arg;
@@ -175,7 +175,7 @@ export class Member {
    */
   checkPasscode(arg) {
     const v = {whois:`${this.constructor.name}.checkPasscode`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       const req = arg;
@@ -227,7 +227,7 @@ export class Member {
    */
   getMember(arg) {
     const v = {whois:`${this.constructor.name}.getMember`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       const memberId = arg;
@@ -265,7 +265,7 @@ export class Member {
    */
   static judgeMember(arg) {
     const v = {whois:`${this.constructor.name}.judgeMember`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       const memberId = arg;
@@ -317,7 +317,7 @@ export class Member {
    */
   judgeStatus(arg) {
     const v = {whois:`${this.constructor.name}.judgeStatus`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.end(); // 終了処理
@@ -332,7 +332,7 @@ export class Member {
    */
   MemberDevice() {
     const v = { whois: 'Member.MemberDevice', arg: {}, rv: null };
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       v.rv = {
@@ -356,7 +356,7 @@ export class Member {
    */
   MemberLog() {
     const v = { whois: 'Member.MemberLog', arg: {}, rv: null };
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       const now = Date.now();
@@ -385,7 +385,7 @@ export class Member {
    */
   MemberProfile() {
     const v = { whois: 'Member.MemberProfile', arg: {}, rv: null };
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       v.rv = {
@@ -404,7 +404,7 @@ export class Member {
    */
   reissuePasscode(arg) {
     const v = {whois:`${this.constructor.name}.reissuePasscode`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.end(); // 終了処理
@@ -420,7 +420,7 @@ export class Member {
    */
   static removeMember(arg) {
     const v = {whois:`${this.constructor.name}.removeMember`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       // getMember + 状態更新 + setMember の組み合わせで実装できます。
@@ -439,7 +439,7 @@ export class Member {
    */
   static restoreMember(arg) {
     const v = {whois:`${this.constructor.name}.restoreMember`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       // getMember + 状態更新 + setMember の組み合わせで実装できます。
@@ -458,7 +458,7 @@ export class Member {
    */
   setMember(arg) {
     const v = {whois:`${this.constructor.name}.setMember`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       const m = arg;
@@ -496,7 +496,7 @@ export class Member {
    */
   static unfreeze(arg) {
     const v = {whois:`${this.constructor.name}.unfreeze`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       // getMember + 状態更新 + setMember の組み合わせで実装できます。
@@ -514,7 +514,7 @@ export class Member {
    */
   updateCPkey(arg) {
     const v = {whois:`${this.constructor.name}.updateCPkey`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       // getMember + 状態更新 + setMember の組み合わせで実装できます。

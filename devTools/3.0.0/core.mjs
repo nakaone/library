@@ -5,10 +5,10 @@
  * @prop {string} whois='' - 関数名またはクラス名.メソッド名
  * @prop {Object.<string, any>} arg={} - 起動時引数。{変数名：値}形式
  * @prop {Object} v={} - 関数・メソッド内汎用変数
- * @prop {string} step=1 - 関数・メソッド内の現在位置
- * @prop {string[]} log=[] - {string[]} 実行順に並べたdev.step
- * @prop {number} start=Date.now() - 開始時刻
- * @prop {number} end - 終了時刻
+ * @prop {string} stepNo=1 - 関数・メソッド内の現在位置
+ * @prop {string[]} log=[] - {string[]} 実行順に並べたdev.stepNo
+ * @prop {number} startTime=Date.now() - 開始時刻
+ * @prop {number} endTime - 終了時刻
  * @prop {number} elaps - 所要時間(ミリ秒)
  * 
  * - 変更履歴
@@ -57,7 +57,7 @@ export class devTools {
    * @param {Object} v={} - 関数・メソッド内汎用変数
    * @param {Object} opt={}
    * @param {string} opt.mode='dev' - 出力モード
-   * @param {boolean} opt.footer=false - 実行結果(start,end,elaps)を出力するならtrue
+   * @param {boolean} opt.footer=false - 実行結果(startTime,endTime,elaps)を出力するならtrue
 	 * - 出力モード
 	 *   | mode     | エラー | 開始・終了 | dump/step | 用途・備考          |
    *   | :--      | :--:  | :--:     | :--:      | :--               |
@@ -73,10 +73,10 @@ export class devTools {
 		this.whois = v.whois ?? '';
 		this.arg = v.arg ?? {};
     this.v = v ?? {};
-		this.step = 1;
+		this.stepNo = 1;
 		this.log = [];
-		this.start = new Date();
-		this.end = 0;
+		this.startTime = new Date();
+		this.endTime = 0;
 		this.elaps = 0;
 
     // オプションの既定値設定
@@ -86,19 +86,21 @@ export class devTools {
     };
 
     // 開始ログ出力
-    if( opt.mode === 'normal' || opt.mode === 'dev' ){
-      console.log(`${toLocale(this.start,'hh:mm:ss.nnn')} ${fi.whois} start`);
+    if( this.opt.mode === 'normal' || this.opt.mode === 'dev' ){
+      console.log(`${this.toLocale(this.startTime,'hh:mm:ss.nnn')} ${this.whois} start`);
     }
   }
 
-  static devToolsError = class extends Error {
-    constructor(dtObj,...e){
-      super(...e);
+  /** devToolsError: devTools専用拡張エラークラス */
+  static devToolsError(dtObj,...e){
+    const rv = new Error(...e);
 
-      // 独自追加項目を個別に設定
-      ['whois','arg','step','log','start','end','elaps','v']
-      .forEach(x => this[x] = dtObj[x] ?? null);
-    }
+    // 独自追加項目を個別に設定
+    ['whois','arg','stepNo','log','startTime','endTime','elaps','v']
+    .forEach(x => rv[x] = dtObj[x] ?? null);
+
+    rv.name = 'devToolsError';
+    return rv;
   }
 
   /** step: 関数内の進捗状況管理＋変数のダンプ
@@ -110,11 +112,11 @@ export class devTools {
    *   ※ 99はデバック、0.123は行番号の意で設定
    */
   step(label, val=null, cond=true){
-    this.step = String(label);
-    this.log.push(this.step);
+    this.stepNo = String(label);
+    this.log.push(this.stepNo);
     // valが指定されていたらステップ名＋JSON表示
     if( this.opt.mode === 'dev' && val && cond ){
-      console.log(`== ${fi.whois} step.${label} ${formatObject(val)}`);
+      console.log(`== ${this.whois} step.${label} ${this.formatObject(val)}`);
     }
   }
 
@@ -128,14 +130,14 @@ export class devTools {
 
     // ログ出力
     if( this.opt.mode === 'normal' || this.opt.mode === 'dev' ){
-      let msg = `${toLocale(this.end,'hh:mm:ss.nnn')} ${this.whois} normal end`;
+      let msg = `${this.toLocale(this.endTime,'hh:mm:ss.nnn')} ${this.whois} normal end`;
       // 引数があればダンプ出力
-      if( typeof arg !== 'undefined' ) msg += '\n' + formatObject(arg)
+      if( typeof arg !== 'undefined' ) msg += '\n' + this.formatObject(arg)
       // 大本の呼出元ではstart/end/elaps表示
       if( this.opt.footer ){
-        msg += '\n' + `\tstart: ${toLocale(fi.start)
-        }\n\tend  : ${toLocale(fi.end)
-        }\n\telaps: ${fi.elaps}`;
+        msg += '\n' + `\tstart: ${this.toLocale(this.startTime)
+        }\n\tend  : ${this.toLocale(this.endTime)
+        }\n\telaps: ${this.elaps}`;
       }
       console.log(msg);
     }
@@ -145,10 +147,10 @@ export class devTools {
     // 終了時に確定する項目に値設定
     this.finisher();
     // エラーログ出力時はISO8601拡張形式
-    this.start = this.toLocale(this.start);
-    this.end = this.toLocale(this.end);
+    this.startTime = this.toLocale(this.startTime);
+    this.endTime = this.toLocale(this.endTime);
 
-    if( e instanceof devToolsError ){
+    if( e.name === 'devToolsError' ){
       // 引数がdevToolsError型
       // ⇒ 自関数・メソッドでは無く、呼出先から返されたError
       // ⇒ メッセージを出力せず、そのまま返す
@@ -157,7 +159,7 @@ export class devTools {
       // 引数がdevToolsError型ではない
       // ⇒ 自関数・メソッドで発生またはthrowされたError
       // ⇒ メッセージを出力し、devToolsErrorにして情報を付加
-      e = new devTools.devToolsError(this,e);
+      e = devTools.devToolsError(this,e);
       console.error(e.message+'\n'+this.formatObject(e));
       return e;
     }
@@ -166,9 +168,9 @@ export class devTools {
   /** finisher: end/error共通の終了時処理 */
   finisher(){
     // 終了時に確定する項目に値設定
-    this.log = this.log.join(', ');
-    this.end = new Date();
-    this.elaps = `${this.end - this.start} msec`;
+    if( Array.isArray(this.log) ) this.log = this.log.join(', ');
+    this.endTime = new Date();
+    this.elaps = `${this.endTime - this.startTime} msec`;
   }
 
   /** toLocale: ログ出力用時刻文字列整形
@@ -247,7 +249,7 @@ export class devTools {
 
       const elements = obj.map(item =>
         // Arrayの要素は名前がないため、インデントと値のみを返す
-        formatObject(item, indentLevel + 1)
+        this.formatObject(item, indentLevel + 1)
       ).join('\n');
 
       // Arrayの要素はカンマではなく改行で区切ります
@@ -268,7 +270,7 @@ export class devTools {
       // オブジェクト/配列/関数は再帰呼び出し
       if (memberType === 'object' && value !== null || memberType === 'function') {
         // 複合型の場合は、キーと値の開始のみを記載
-        const formattedValue = formatObject(value, indentLevel + 1);
+        const formattedValue = this.formatObject(value, indentLevel + 1);
         return `${nextIndent}${key}:${formattedValue}`;
       }
 

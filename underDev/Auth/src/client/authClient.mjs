@@ -11,7 +11,7 @@ export class authClient {
    */
   constructor(config) {
     const v = {whois:`authClient.constructor`, arg:{config}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1);  // config必須項目のチェック
@@ -136,7 +136,7 @@ export class authClient {
    */
   async exec(func,arg=[],depth=0) {
     const v = {whois:`${this.constructor.name}.exec`, arg:{func,arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1.1);  // 再帰呼出時の階層チェック
@@ -213,7 +213,7 @@ export class authClient {
    */
   async fetch(request) {
     const v = {whois:`${this.constructor.name}.fetch`, arg:{request}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1);  // authRequestを暗号化
@@ -268,7 +268,7 @@ export class authClient {
    */
   async getIndexedDB() {
     const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1);  // IndexedDBに保存された項目を全て配列で取得
@@ -318,7 +318,7 @@ export class authClient {
    */
   static async initialize(config) {
     const v = {whois:`authClient.initialize`, arg:{config}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       dev.step(1);  // インスタンス生成
@@ -392,7 +392,7 @@ export class authClient {
    */
   async setIndexedDB(arg){
     const v = {whois:`${this.constructor.name}.setIndexedDB`, arg:{arg}, rv:null};
-    dev.start(v);
+    const dev = new devTools(v);
     try {
 
       await this._withStore('readwrite', async store => {

@@ -4,7 +4,7 @@
  */
 export async function localFunc(){
   const v = { whois: 'localFunc', rv: null};
-  dev.start(v);
+  const dev = new devTools(v);
   try {
 
     dev.step(1);  // execテスト

@@ -1,7 +1,7 @@
 import { authClient } from "./authClient.mjs";
 export async function onLoad(){
   const v = {whois:`onLoad`, rv:null};
-  dev.start(v);
+  const dev = new devTools(v);
   try {
 
     dev.step(1);  // authClientインスタンス作成
