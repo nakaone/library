@@ -1,10 +1,11 @@
-// 20251220-141556
+// 20251220-151958
 // ライブラリ関数定義
 /** devTools: 開発支援関係メソッド集
  * @class
  * @classdesc 開発支援関係メソッド集
  * @prop {string} id=UUIDv4 - 関数・メソッドの識別子
  * @prop {string} whois='' - 関数名またはクラス名.メソッド名
+ * @prop {number} seq - 関数・メソッドの呼出順
  * @prop {Object.<string, any>} arg={} - 起動時引数。{変数名：値}形式
  * @prop {Object} v={} - 関数・メソッド内汎用変数
  * @prop {string} stepNo=1 - 関数・メソッド内の現在位置
@@ -58,8 +59,9 @@ class devTools {
    * @constructor
    * @param {Object} v={} - 関数・メソッド内汎用変数
    * @param {Object} opt={}
-   * @param {string} opt.mode='dev' - 出力モード
-   * @param {boolean} opt.footer=false - 実行結果(startTime,endTime,elaps)を出力するならtrue
+   * @param {string} [opt.mode]='dev' - 出力モード
+   * @param {number} [opt.digit=4] - 処理順(seq)をログ出力する際の桁数
+   * @param {boolean} [opt.footer=false] - 実行結果(startTime,endTime,elaps)を出力するならtrue
 	 * - 出力モード
 	 *   | mode     | エラー | 開始・終了 | dump/step | 用途・備考          |
    *   | :--      | :--:  | :--:     | :--:      | :--               |
@@ -73,6 +75,7 @@ class devTools {
     // 状態管理変数の初期値設定
 		//this.id = self.crypto.randomUUID();
 		this.whois = v.whois ?? '';
+    this.seq = devTools.sequence++;
 		this.arg = v.arg ?? {};
     this.v = v ?? {};
 		this.stepNo = 1;
@@ -84,12 +87,14 @@ class devTools {
     // オプションの既定値設定
     this.opt = {
       mode: opt.mode ?? 'dev',
+      digit: opt.digit ?? 4,
       footer: opt.footer ?? false,
     };
 
     // 開始ログ出力
     if( this.opt.mode === 'normal' || this.opt.mode === 'dev' ){
-      console.log(`${this.toLocale(this.startTime,'hh:mm:ss.nnn')} ${this.whois} start`);
+      console.log(`${this.toLocale(this.startTime,'hh:mm:ss.nnn')} [${
+        ('000'+this.seq).slice(-this.opt.digit)}]${this.whois} start`);
     }
   }
 
@@ -98,7 +103,7 @@ class devTools {
     const rv = new Error(...e);
 
     // 独自追加項目を個別に設定
-    ['whois','arg','stepNo','log','startTime','endTime','elaps','v']
+    ['whois','seq','arg','stepNo','log','startTime','endTime','elaps','v']
     .forEach(x => rv[x] = dtObj[x] ?? null);
 
     rv.name = 'devToolsError';
@@ -118,7 +123,8 @@ class devTools {
     this.log.push(this.stepNo);
     // valが指定されていたらステップ名＋JSON表示
     if( this.opt.mode === 'dev' && val && cond ){
-      console.log(`== ${this.whois} step.${label} ${this.formatObject(val)}`);
+      console.log(`== [${('000'+this.seq).slice(-this.opt.digit)
+        }]${this.whois} step.${label} ${this.formatObject(val)}`);
     }
   }
 
@@ -132,7 +138,8 @@ class devTools {
 
     // ログ出力
     if( this.opt.mode === 'normal' || this.opt.mode === 'dev' ){
-      let msg = `${this.toLocale(this.endTime,'hh:mm:ss.nnn')} ${this.whois} normal end`;
+      let msg = `${this.toLocale(this.endTime,'hh:mm:ss.nnn')} [${
+        ('000'+this.seq).slice(-this.opt.digit)}]${this.whois} normal end`;
       // 引数があればダンプ出力
       if( typeof arg !== 'undefined' ) msg += '\n' + this.formatObject(arg)
       // 大本の呼出元ではstart/end/elaps表示
@@ -162,7 +169,8 @@ class devTools {
       // ⇒ 自関数・メソッドで発生またはthrowされたError
       // ⇒ メッセージを出力し、devToolsErrorにして情報を付加
       e = devTools.devToolsError(this,e);
-      console.error(e.message+'\n'+this.formatObject(e));
+      console.error(`[${('000'+e.seq).slice(this.opt.digit)}]${e.whois
+        } step.${e.stepNo}\n${e.message}\n${this.formatObject(e)}`);
       return e;
     }
   }
@@ -284,6 +292,7 @@ class devTools {
     return `${indent}{\n${members}\n${indent}}`;
   }
 }
+devTools.sequence = 1; // 関数・メソッドの呼出順を初期化
 
 // authServer関係クラス定義
 class authServer {
@@ -1521,12 +1530,24 @@ function serverFunc(arg){
   } catch (e) { return dev.error(e); }
 }
 
+function doOptions(e) {
+  return ContentService
+    .createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT)
+    .setHeader('Access-Control-Allow-Origin', '*')
+    .setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
 // Webアプリ定義
 function doPost(e) {
+  console.log('doPost called');
   const rv = asv.exec(e.postData.contents); // 受け取った本文(文字列)
   if( rv !== null ){ // fatal(無応答)の場合はnullを返す
     return ContentService
-      .createTextOutput(rv);
+      .createTextOutput('{}')
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader('Access-Control-Allow-Origin', '*');
   }
 }
 

@@ -52,7 +52,6 @@
  * 
  */
 class devTools {
-  static sequence = 1; // 関数・メソッドの呼出順
 
   /** constructor
    * @constructor
@@ -168,7 +167,8 @@ class devTools {
       // ⇒ 自関数・メソッドで発生またはthrowされたError
       // ⇒ メッセージを出力し、devToolsErrorにして情報を付加
       e = devTools.devToolsError(this,e);
-      console.error(e.message+'\n'+this.formatObject(e));
+      console.error(`[${('000'+e.seq).slice(this.opt.digit)}]${e.whois
+        } step.${e.stepNo}\n${e.message}\n${this.formatObject(e)}`);
       return e;
     }
   }
@@ -290,3 +290,4 @@ class devTools {
     return `${indent}{\n${members}\n${indent}}`;
   }
 }
+devTools.sequence = 1; // 関数・メソッドの呼出順を初期化
