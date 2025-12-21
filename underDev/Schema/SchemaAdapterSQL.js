@@ -1,7 +1,29 @@
-/**
- * SchemaAdapterSQL: Schema を SQL(AlaSQL/SQLite等) に適用する Adapter
+/** SchemaAdapterSQL: Schema を SQL(AlaSQL/SQLite等) に適用する Adapter
+ * @class
+ * @classdesc Schema を SQL(AlaSQL/SQLite等) に適用する Adapter
+ * 
+ * 【Schema から移管された項目】
+ * - schema.tableMap
+ *   - 実テーブル名管理
+ *   - tableMap.def : 論理tableDefとの対応
+ *   - tableMap.data : 初期INSERT用データ
+ *
+ * - schema.custom
+ *   - SQLエンジン用ユーザー定義関数
+ *
+ * - columnDef.alias
+ *   - CSV/IMPORT時のカラム名吸収
+ *
+ * - columnDef.seq
+ *   - CREATE TABLE / INSERT の列順保証
+ *
+ * - created
+ *   - export / snapshot 用メタ情報
  *
  * 【責務】
+ * - 論理型 → SQL物理型変換
+ * - CREATE / INSERT / SELECT 文生成
+ * 
  * - schemaDef を SQL構文に変換
  * - 論理型 -> SQL物理型の解決
  * - CREATE TABLE / INSERT / SELECT 文生成
@@ -21,3 +43,19 @@
   selectSQL(tableDef, condition)
   mapLogicalType(columnDef)
  */
+class SchemaAdapterSQL {
+  /** constructor
+   * @constructor
+   * - tableMapの作成
+   * @param {Schema} schema 
+   */
+  constructor(schema){
+    // ここは空欄でOK
+  }
+
+  /** import: インポートデータをシートに登録
+   * @param {tableDef} arg - インポートするデータ
+   * @returns {tableDef} インポートしたデータ
+   */
+  import(){}
+}

@@ -6,12 +6,9 @@
  * - DBの論理構造を定義する
  * - Adapter / DB 実装に依存しない
  *
- * @property {string} [name] - Schemaの論理名
- * ※schemaName->name(∵tableDef/columnDefに合わせる)
+ * @property {string} name - Schemaの論理名
  * @property {string} [version] - Schemaのバージョン識別子(例:'1.2.0')
- * ※schemaVersion->version(他にversionが無いので簡略化)
- * @property {string} [dbName] - 物理DB名（IndexedDB上ではストア名）
- * ※dbName、要ります？Adapter寄りでは？
+ * @property {string} [dbName=''] - 物理DB名（Adapter が参照する場合のみ使用）
  * @property {string} [note] - Schema全体に関する備考
  * @property {Object.<string, tableDef>} tableDef - 論理テーブル名をキーとするテーブル定義
  * @property {string} original - schemaDefインスタンス生成時のスナップショット(JSON)
@@ -53,10 +50,10 @@
 /** columnDef: 項目定義 (引数用)
  * @typedef {Object} columnDef
  * @property {string} name - 項目名（英数字・システム用）
- * @property {string} [label] - 表示用ラベル（省略時は columnName）
+ * @property {string} [label] - 表示用ラベル（省略時は name)
  * @property {string} [note] - 備考・意味説明
  * @property {string} [type='string'] - 論理データ型
- *   - JavaScriptのデータ型(ex.'string','number','boolean','object','Date',etc)
+ *   - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime'
  * @property {boolean} [nullable=true] - null を許可するか
  * @property {any} [default=null] - 既定値
  *   - 関数の場合は toString() 化された文字列
