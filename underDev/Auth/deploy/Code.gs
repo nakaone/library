@@ -1,9 +1,8 @@
-// 20251220-151958
+// 20251220-160812
 // ライブラリ関数定義
 /** devTools: 開発支援関係メソッド集
  * @class
  * @classdesc 開発支援関係メソッド集
- * @prop {string} id=UUIDv4 - 関数・メソッドの識別子
  * @prop {string} whois='' - 関数名またはクラス名.メソッド名
  * @prop {number} seq - 関数・メソッドの呼出順
  * @prop {Object.<string, any>} arg={} - 起動時引数。{変数名：値}形式
@@ -73,7 +72,6 @@ class devTools {
   constructor(v={},opt={}){
 
     // 状態管理変数の初期値設定
-		//this.id = self.crypto.randomUUID();
 		this.whois = v.whois ?? '';
     this.seq = devTools.sequence++;
 		this.arg = v.arg ?? {};
@@ -169,7 +167,7 @@ class devTools {
       // ⇒ 自関数・メソッドで発生またはthrowされたError
       // ⇒ メッセージを出力し、devToolsErrorにして情報を付加
       e = devTools.devToolsError(this,e);
-      console.error(`[${('000'+e.seq).slice(this.opt.digit)}]${e.whois
+      console.error(`[${('000'+e.seq).slice(-this.opt.digit)}]${e.whois
         } step.${e.stepNo}\n${e.message}\n${this.formatObject(e)}`);
       return e;
     }
@@ -508,12 +506,12 @@ class authServer {
     const dev = new devTools(v);
     try {
 
-      dev.step(1.1);  // request存在・最低限チェック
+      dev.step(1.1,arg);  // request存在・最低限チェック
       if( !arg ) throw new Error('invalid request: empty body');
-      dev.step(1.2);  // 処理要求を復号
-      v.request = this.crypto.decrypt(arg);
+      dev.step(1.2,JSON.parse(arg));  // 処理要求を復号
+      v.request = this.crypto.decrypt(JSON.parse(arg));
       if( v.request instanceof Error ) throw v.request;
-      dev.step(1.3);  // // request.func チェック
+      dev.step(1.3,v.request);  // // request.func チェック
       if (!v.request || !v.request.func)
         throw new Error('invalid request: func missing');
 
@@ -1530,22 +1528,13 @@ function serverFunc(arg){
   } catch (e) { return dev.error(e); }
 }
 
-function doOptions(e) {
-  return ContentService
-    .createTextOutput('')
-    .setMimeType(ContentService.MimeType.TEXT)
-    .setHeader('Access-Control-Allow-Origin', '*')
-    .setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
-}
-
 // Webアプリ定義
 function doPost(e) {
   console.log('doPost called');
   const rv = asv.exec(e.postData.contents); // 受け取った本文(文字列)
   if( rv !== null ){ // fatal(無応答)の場合はnullを返す
     return ContentService
-      .createTextOutput('{}')
+      .createTextOutput(JSON.stringify(rv))
       .setMimeType(ContentService.MimeType.JSON)
       .setHeader('Access-Control-Allow-Origin', '*');
   }

@@ -1,7 +1,6 @@
 /** devTools: 開発支援関係メソッド集
  * @class
  * @classdesc 開発支援関係メソッド集
- * @prop {string} id=UUIDv4 - 関数・メソッドの識別子
  * @prop {string} whois='' - 関数名またはクラス名.メソッド名
  * @prop {number} seq - 関数・メソッドの呼出順
  * @prop {Object.<string, any>} arg={} - 起動時引数。{変数名：値}形式
@@ -71,7 +70,6 @@ class devTools {
   constructor(v={},opt={}){
 
     // 状態管理変数の初期値設定
-		//this.id = self.crypto.randomUUID();
 		this.whois = v.whois ?? '';
     this.seq = devTools.sequence++;
 		this.arg = v.arg ?? {};
@@ -167,7 +165,7 @@ class devTools {
       // ⇒ 自関数・メソッドで発生またはthrowされたError
       // ⇒ メッセージを出力し、devToolsErrorにして情報を付加
       e = devTools.devToolsError(this,e);
-      console.error(`[${('000'+e.seq).slice(this.opt.digit)}]${e.whois
+      console.error(`[${('000'+e.seq).slice(-this.opt.digit)}]${e.whois
         } step.${e.stepNo}\n${e.message}\n${this.formatObject(e)}`);
       return e;
     }

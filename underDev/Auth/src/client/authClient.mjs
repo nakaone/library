@@ -238,8 +238,9 @@ export class authClient {
       dev.step(2.2);  // fetch処理を行うPromise
       v.fetchPromise = globalThis.fetch(this.cf.api, {
         method: 'POST',
+        mode: 'cors',
         headers: {
-          'Content-Type': 'application/json' 
+          'Content-Type': 'text/plain'
         },
         body: JSON.stringify(v.encryptedRequest)
       }).then(response => {

@@ -211,12 +211,12 @@ export class authServer {
     const dev = new devTools(v);
     try {
 
-      dev.step(1.1);  // request存在・最低限チェック
+      dev.step(1.1,arg);  // request存在・最低限チェック
       if( !arg ) throw new Error('invalid request: empty body');
-      dev.step(1.2);  // 処理要求を復号
-      v.request = this.crypto.decrypt(arg);
+      dev.step(1.2,JSON.parse(arg));  // 処理要求を復号
+      v.request = this.crypto.decrypt(JSON.parse(arg));
       if( v.request instanceof Error ) throw v.request;
-      dev.step(1.3);  // // request.func チェック
+      dev.step(1.3,v.request);  // // request.func チェック
       if (!v.request || !v.request.func)
         throw new Error('invalid request: func missing');
 

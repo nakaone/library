@@ -165,7 +165,7 @@ export class devTools {
       // ⇒ 自関数・メソッドで発生またはthrowされたError
       // ⇒ メッセージを出力し、devToolsErrorにして情報を付加
       e = devTools.devToolsError(this,e);
-      console.error(`[${('000'+e.seq).slice(this.opt.digit)}]${e.whois
+      console.error(`[${('000'+e.seq).slice(-this.opt.digit)}]${e.whois
         } step.${e.stepNo}\n${e.message}\n${this.formatObject(e)}`);
       return e;
     }

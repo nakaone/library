@@ -25,22 +25,13 @@ function serverFunc(arg){
   } catch (e) { return dev.error(e); }
 }
 
-function doOptions(e) {
-  return ContentService
-    .createTextOutput('')
-    .setMimeType(ContentService.MimeType.TEXT)
-    .setHeader('Access-Control-Allow-Origin', '*')
-    .setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
-}
-
 // Webアプリ定義
 function doPost(e) {
   console.log('doPost called');
   const rv = asv.exec(e.postData.contents); // 受け取った本文(文字列)
   if( rv !== null ){ // fatal(無応答)の場合はnullを返す
     return ContentService
-      .createTextOutput('{}')
+      .createTextOutput(JSON.stringify(rv))
       .setMimeType(ContentService.MimeType.JSON)
       .setHeader('Access-Control-Allow-Origin', '*');
   }

@@ -1,5 +1,71 @@
 # auth開発・システム関係仕様書
 
+## 変更履歴
+
+- build0008: 初回HTMLロード時処理<br>
+  従来の開発内容を密結合方式を前提に書き換え
+  - Client/ServerAdapterクラス設計
+  - Client/ServerDBクラス設計
+  - 変更箇所の明確化
+    - authAudit/ErrorLog
+    - Member
+    - authClient / authServer
+    - cryptoClient / cryptoServer
+  - 移行・書き換え
+- build0007: Schema ver.1.3.0作成   ◀いまここ
+  - Schemaのデータ構造検討
+  - 現状(typedef.js)からschema.jsへの移行
+- build0006: 【中止】初回HTMLロード時処理
+  - fetchはGoogleの仕様でCORSエラー発生、回避不能が判明
+  - 疎結合から密結合(Google Spreadコンテナバインド方式)に方針転換
+- build0005: 一連のソースを作成
+  - 仕様書修正
+    - specification.md
+      - 暗号化・署名方式
+        - requestId -> nonce
+        - replay cache -> authScriptProperties.requestLog(TTL管理)
+      - I/O項目対応表
+    - authRequest
+    - encryptedRequest
+    - authResponse
+    - encryptedResponse
+    - authClient
+    - cryptoClient
+    - cryptoServer
+  - ソース作成
+    - specDefを元にJSDocを追記
+    - サーバ側クラス作成
+      - authResponse
+      - authServer
+      - authServerConfig
+      - cryptoServer
+      - Member
+  - b0005.test.mjs作成
+  - 【保留】[bug] cryptoClient:"Error: Error: not fixed: "encryptedRequest""
+    原因不明。cryptoClient.encrypt(), cryptoServer.encrypt()で発生。
+    両方ともリンクは出来ており、実害は無いため対応保留。
+- build0004: authClient.initialize/setIndexedDB作成
+  - 【派生】クラス・関数ソースのES Module化＋ Jest から Vitest に変更<br>
+    最終成果物に合わせて関連クラス・関数は埋め込むようにしてきたが、
+    Vitest(Jest)では各関数を import する必要があるためES Module化が必要。<br>
+    またIndexedDBは要モック化等、各クラス・関数は別ファイル化した方が運用しやすい。<br>
+    このため以下の対応を行う。
+    - クラス・関数ソースにexport文追加
+    - src/client/onLoad.jsはonloadのみに絞り込み
+    - src/client/index.htmlにクラス・関数ソースの埋込指示追加
+    - localFuncを別ファイル化
+    - build.shを上の「build.sh」に合わせるよう修正
+  - authClientConfigに`{storeName:'config',dbVersion:1}`を追加
+  - localFuncでのauthClientインスタンス作成方法変更
+  - テスト終了後、specDef.js(authClient,authIndexedDB)を修正
+- build0003: authClientインスタンス作成時、authClientConfigを読み込み
+  - authClientConfigの既定値が設定されるか
+  - 引数を与えた場合、それが反映されるか
+- build0002: Jest用意
+  - JestからauthClient.execに発行、そのまま返す
+- build0001: 仕様書作成(α版)
+  - 2025.12.09 とりあえず版完成、ChatGPTレビュー済
+
 ## クラス・メソッド プロトタイプ
 
 ```js
@@ -234,57 +300,3 @@ function doPost(e) {
 - clasp + WebApp 開発では **GCP プロジェクト作成は事実上必須**
 - 一度設定すれば以後は意識不要
 - README にこの手順を入れておくと利用者が詰まらない
-
----
-
-
-## 変更履歴
-
-- build0006: 初回HTMLロード時処理 ◀いまここ
-- build0005: 一連のソースを作成
-  - 仕様書修正
-    - specification.md
-      - 暗号化・署名方式
-        - requestId -> nonce
-        - replay cache -> authScriptProperties.requestLog(TTL管理)
-      - I/O項目対応表
-    - authRequest
-    - encryptedRequest
-    - authResponse
-    - encryptedResponse
-    - authClient
-    - cryptoClient
-    - cryptoServer
-  - ソース作成
-    - specDefを元にJSDocを追記
-    - サーバ側クラス作成
-      - authResponse
-      - authServer
-      - authServerConfig
-      - cryptoServer
-      - Member
-  - b0005.test.mjs作成
-  - 【保留】[bug] cryptoClient:"Error: Error: not fixed: "encryptedRequest""
-    原因不明。cryptoClient.encrypt(), cryptoServer.encrypt()で発生。
-    両方ともリンクは出来ており、実害は無いため対応保留。
-- build0004: authClient.initialize/setIndexedDB作成
-  - 【派生】クラス・関数ソースのES Module化＋ Jest から Vitest に変更<br>
-    最終成果物に合わせて関連クラス・関数は埋め込むようにしてきたが、
-    Vitest(Jest)では各関数を import する必要があるためES Module化が必要。<br>
-    またIndexedDBは要モック化等、各クラス・関数は別ファイル化した方が運用しやすい。<br>
-    このため以下の対応を行う。
-    - クラス・関数ソースにexport文追加
-    - src/client/onLoad.jsはonloadのみに絞り込み
-    - src/client/index.htmlにクラス・関数ソースの埋込指示追加
-    - localFuncを別ファイル化
-    - build.shを上の「build.sh」に合わせるよう修正
-  - authClientConfigに`{storeName:'config',dbVersion:1}`を追加
-  - localFuncでのauthClientインスタンス作成方法変更
-  - テスト終了後、specDef.js(authClient,authIndexedDB)を修正
-- build0003: authClientインスタンス作成時、authClientConfigを読み込み
-  - authClientConfigの既定値が設定されるか
-  - 引数を与えた場合、それが反映されるか
-- build0002: Jest用意
-  - JestからauthClient.execに発行、そのまま返す
-- build0001: 仕様書作成(α版)
-  - 2025.12.09 とりあえず版完成、ChatGPTレビュー済
