@@ -79,24 +79,12 @@ for f in $src/client/*.mjs; do
 done
 
 # index.htmlの作成
-  # deployフォルダに置くとGASにコピーされてしまうため、
-  # 一度deploy以下のindex.htmlは消去し、直接GitHub/public/authに出力
-[[ -f $dep/index.html ]] && rm $dep/index.html
 # 開発時の更新確認のため、index.htmlに現在日時を挿入
 echo "<p style='text-align:right'>$(date "+%Y/%m/%d %H:%M:%S")</p>" \
 > $tmp/timestamp.html
 cat $src/client/index.html | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp \
-> $GitHub/public/auth/index.html
-if $doPush; then
-  cd $GitHub/public/
-  git add auth/
-  if ! git diff --cached --quiet; then
-    git commit -m "$(date "+%Y%m%d-%H%M")"
-    git push origin main
-  fi
-  cd $prj/tools
-fi
+> $dep/index.html
 
 # ----------------------------------------------
 # 3. サーバ側
