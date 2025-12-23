@@ -12,8 +12,8 @@
     - authClient / authServer
     - cryptoClient / cryptoServer
   - 移行・書き換え
-- build0007: Schema ver.1.3.0作成   ◀いまここ
-  - Schemaのデータ構造検討
+- build0007: 疎結合⇒密結合
+  - Schemaのデータ構造検討(Schema ver.1.3.0作成)   ◀いまここ
   - 現状(typedef.js)からschema.jsへの移行
 - build0006: 【中止】初回HTMLロード時処理
   - fetchはGoogleの仕様でCORSエラー発生、回避不能が判明
