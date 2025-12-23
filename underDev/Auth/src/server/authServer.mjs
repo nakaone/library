@@ -308,23 +308,4 @@ export class authServer {
 
     } catch (e) { return dev.error(e); }
   }
-
-  /**
-   * @param {string} arg - 引数
-   * @returns {null|Error} 戻り値
-   */
-  prototype(arg) {
-    const v = {whois:`${this.constructor.name}.prototype`, arg:{arg}, rv:null};
-    const dev = new devTools(v);
-    try {
-
-      // -------------------------------------------------------------
-      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
-      // -------------------------------------------------------------
-
-      dev.end(); // 終了処理
-      return v.rv;
-
-    } catch (e) { return dev.error(e); }
-  }
 }
