@@ -235,7 +235,20 @@ export class authClient {
         v.cleanupTimer = () => clearTimeout(id);
       });
 
-      dev.step(2.2);  // fetch処理を行うPromise
+      dev.step(2.2);  // fetch処理
+      v.response = await globalThis.fetch(this.cf.api,{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        },
+        body: JSON.stringify(v.encryptedRequest),
+      });
+      if( !v.response.ok ){
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      } else {
+        v.response = v.response.json();
+      }
+      /*dev.step(2.2);  // fetch処理を行うPromise
       v.fetchPromise = globalThis.fetch(this.cf.api, {
         method: 'POST',
         mode: 'cors',
@@ -246,7 +259,7 @@ export class authClient {
       }).then(response => {
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         return response.json(); 
-      });
+      });*/
 
       dev.step(2.3);  // 競合させて、先に結果が出た方（正常なレスポンスかタイムアウトエラー）を採用
       try {
