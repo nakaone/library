@@ -1,11 +1,36 @@
+export const schemaDef = {
+  name: 'auth',
+  version: '1.0.0',
+  tableDef: {
+    template: { desc: `コピペ用テンプレート`,  // descは開始括弧'{'に続いて記述、VSCodeで畳んだとき見えるように
+      primaryKey: [], // templateでは存在する項目も、実際には不要なら削除
+      unique: [],
+      colDef: [
+        {name:'',type:'string',desc:'',default:''}, // 一項目一行で
+      ]
+    },
+    authAuditLog: { desc: `authServerの監査ログをシートに出力`,
+      colDef: [
+        {name:'timestamp',type:'datetime',desc:'要求日時',default:'Date.now()',note:'ISO8601拡張形式'},
+        {name:'duration',type:'number',desc:'処理時間',note:'ミリ秒'},
+        {name:'memberId',type:'string',desc:'メンバ識別子',note:'メールアドレス'},
+        {name:'deviceId',type:'string',desc:'デバイス識別子(UUID v4)'},
+        {name:'func',type:'string',desc:'サーバ関数名'},
+        {name:'result',type:'string',desc:'サーバ側処理結果',default:'success'},
+        {name:'note',type:'string',desc:'備考'},
+      ]
+    },
+  }
+}
+
 /** authAuditLog: authServerの監査ログをシートに出力
  * @typedef {Object} authAuditLog - authServerの監査ログをシートに出力
- * @prop {string} timestamp=Date.now() - 要求日時ISO8601拡張形式の文字列
+ * @prop {number} timestamp=Date.now() - 要求日時ISO8601拡張形式の文字列
  * @prop {number} duration - 処理時間ミリ秒単位
  * @prop {string} memberId - メンバの識別子メールアドレス
  * @prop {string} [deviceId] - デバイスの識別子
  * @prop {string} func - サーバ側関数名
- * @prop {string} result=normal - サーバ側処理結果"fatal","warning","normal"
+ * @prop {string} result=success - サーバ側処理結果
  * @prop {string} note - 備考
  */
 /** authClient: クライアント側中核クラス

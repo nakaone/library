@@ -7,9 +7,10 @@
  * - Adapter / DB 実装に依存しない
  *
  * @property {string} name - Schemaの論理名
- * @property {string} [version] - Schemaのバージョン識別子(例:'1.2.0')
+ * @property {string} [version='0.0.0'] - Schemaのバージョン識別子(例:'1.2.0')
  * @property {string} [dbName=''] - 物理DB名（Adapter が参照する場合のみ使用）
- * @property {string} [note] - Schema全体に関する備考
+ * @property {string} [desc=''] - Schema全体に関する概要説明
+ * @property {string} [note=''] - Schema全体に関する備考
  * @property {Object.<string, tableDef>} tableDef - 論理テーブル名をキーとするテーブル定義
  * @property {string} original - schemaDefインスタンス生成時のスナップショット(JSON)
  * 
@@ -41,17 +42,19 @@
  * @typedef {Object} tableDef
  * @property {string} [name] - 論理的な識別名（tableDef のキー）
  *   - クラス・API・ログで使用。例: 'Member', 'AuthAuditLog'
- * @property {string} [note] - テーブルに関する備考
- * @property {string|string[]} [primaryKey] - 主キー項目名
- *   - 複合キーは配列で指定
- * @property {string|string[]} [unique] - 主キー以外の一意制約
+ *   - constructorに渡す定義オブジェクトでは省略(メンバ名を引用)
+ * @property {string} [desc=''] - テーブルに関する概要説明
+ * @property {string} [note=''] - テーブルに関する備考
+ * @property {string[]} [primaryKey=[]] - 主キー項目名
+ * @property {string[]} [unique=[]] - 主キー以外の一意制約
  * @property {columnDef[]} colDef - 項目定義（順序を考慮するため配列）
  */
 /** columnDef: 項目定義 (引数用)
  * @typedef {Object} columnDef
  * @property {string} name - 項目名（英数字・システム用）
  * @property {string} [label] - 表示用ラベル（省略時は name)
- * @property {string} [note] - 備考・意味説明
+ * @property {string} [desc=''] - 項目に関する概要説明
+ * @property {string} [note=''] - 項目に関する備考・意味説明
  * @property {string} [type='string'] - 論理データ型
  *   - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime'
  * @property {boolean} [nullable=true] - null を許可するか
