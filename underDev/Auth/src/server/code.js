@@ -7,7 +7,9 @@
 //::$tmp/Member.js::
 
 // グローバル変数定義
-const asv = authServer({
+console.log(`l.10 ${typeof authServer}`);
+console.log(`l.11 ${authServer.toString()}`);
+const asv = new authServer({
   adminMail: 'ena.kaon@gmail.com',
   adminName: 'あどみ',
   func: {
@@ -25,6 +27,12 @@ function serverFunc(arg){
   } catch (e) { return dev.error(e); }
 }
 
+// クライアント側HTML配信
+function doGet(){
+  return HtmlService
+    .createHtmlOutputFromFile('index')
+    .setTitle('Auth(test)');
+}
 // Webアプリ定義
 function doPost(e) {
   console.log('doPost called');
@@ -32,8 +40,8 @@ function doPost(e) {
   if( rv !== null ){ // fatal(無応答)の場合はnullを返す
     return ContentService
       .createTextOutput(JSON.stringify(rv))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeader('Access-Control-Allow-Origin', '*');
+      .setMimeType(ContentService.MimeType.JSON);
+      //.setHeader('Access-Control-Allow-Origin', '*');
   }
 }
 

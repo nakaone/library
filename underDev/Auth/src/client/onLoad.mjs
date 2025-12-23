@@ -8,7 +8,7 @@ export async function onLoad(){
     const auth = await authClient.initialize({
       adminMail: 'ena.kaon@gmail.com',
       adminName: 'あどみ',
-      api: 'AKfycbz5-GZTXzXj8yYb4jzFU5ul2uOeOEHE_NbIUWcwZAXT16vFA2vACg8MVmwMavDJUjsJ',
+      api: 'AKfycbwWtG4Atap06jEHLvAfhKJRcayEX-Gqci6yrspVCBTPIoaisbVoCF2gduyh0RleMc3d',
     });
 
     dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット

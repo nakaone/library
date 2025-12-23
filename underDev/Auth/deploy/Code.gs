@@ -1,4 +1,4 @@
-// 20251220-160812
+// 20251223-152826
 // ライブラリ関数定義
 /** devTools: 開発支援関係メソッド集
  * @class
@@ -600,25 +600,6 @@ class authServer {
 
       dev.end();
       return null;
-
-    } catch (e) { return dev.error(e); }
-  }
-
-  /**
-   * @param {string} arg - 引数
-   * @returns {null|Error} 戻り値
-   */
-  prototype(arg) {
-    const v = {whois:`${this.constructor.name}.prototype`, arg:{arg}, rv:null};
-    const dev = new devTools(v);
-    try {
-
-      // -------------------------------------------------------------
-      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
-      // -------------------------------------------------------------
-
-      dev.end(); // 終了処理
-      return v.rv;
 
     } catch (e) { return dev.error(e); }
   }
@@ -1510,7 +1491,9 @@ class Member {
 }
 
 // グローバル変数定義
-const asv = authServer({
+console.log(`l.10 ${typeof authServer}`);
+console.log(`l.11 ${authServer.toString()}`);
+const asv = new authServer({
   adminMail: 'ena.kaon@gmail.com',
   adminName: 'あどみ',
   func: {
@@ -1528,6 +1511,12 @@ function serverFunc(arg){
   } catch (e) { return dev.error(e); }
 }
 
+// クライアント側HTML配信
+function doGet(){
+  return HtmlService
+    .createHtmlOutputFromFile('index')
+    .setTitle('Auth(test)');
+}
 // Webアプリ定義
 function doPost(e) {
   console.log('doPost called');
@@ -1535,8 +1524,8 @@ function doPost(e) {
   if( rv !== null ){ // fatal(無応答)の場合はnullを返す
     return ContentService
       .createTextOutput(JSON.stringify(rv))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeader('Access-Control-Allow-Origin', '*');
+      .setMimeType(ContentService.MimeType.JSON);
+      //.setHeader('Access-Control-Allow-Origin', '*');
   }
 }
 
