@@ -35,7 +35,7 @@
  * ```
  */
 function toLocale(arg=null,opt={}) {
-  const v = { whois: 'toLocale', rv: null,
+  const v = { whois: 'toLocale', rv: null, arg:{arg,opt},
     wareki:{  // 元号の開始年定義
       '明治':1867,'大正':1911,'昭和':1925,'平成':1988,'令和':2018,
       M:1867,T:1911,S:1925,H:1988,R:2018,
@@ -54,7 +54,7 @@ function toLocale(arg=null,opt={}) {
     fyEnd: '03/31',
     errValue: 'empty'
   },( typeof opt === 'string' ? {format:opt} : opt));
-  dev.start(v.whois, [...arguments], {start:opt.verbose});
+  const dev = new devTools(v);
   try {
 
     // -------------------------------------------------------------
