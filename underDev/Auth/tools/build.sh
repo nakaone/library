@@ -10,7 +10,7 @@ prj="$lib/underDev/Auth"
 arc="$prj/archives"
 dep="$prj/deploy"
 doc="$prj/doc"
-rm -rf $dep/^*.json
+rm -rf $dep/*.gs $dep/*.html
 tmp="$prj/tmp"
 rm -rf $tmp/*
 

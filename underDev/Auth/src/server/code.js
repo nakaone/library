@@ -2,9 +2,9 @@
 //::$lib/devTools/3.0.0/core.js::
 
 // authServer関係クラス定義
-//::$tmp/authServer.js::
-//::$tmp/cryptoServer.js::
-//::$tmp/Member.js::
+//:x:$tmp/authServer.js::
+//:x:$tmp/cryptoServer.js::
+//:x:$tmp/Member.js::
 
 // 動作設定定義
 //::$tmp/config.js::
@@ -32,4 +32,4 @@ async function doPost(e) {
 }
 
 // スプレッドシートメニュー定義
-//::$src/server/menu.js::
+//:x:$src/server/menu.js::
