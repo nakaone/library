@@ -14,7 +14,7 @@ doc="$prj/doc"
 img="$prj/img"
 tmp="$prj/tmp"
 test="$prj/__tests__/b0004.test.mjs"
-#rm -rf $dep/*
+rm -rf $dep/*
 rm -rf $doc/*
 rm -rf $tmp/*
 
@@ -86,6 +86,9 @@ cat $src/client/index.html | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp \
 > $dep/index.html
 
+# テスト：test.htmlでindex.htmlを上書き
+cp $src/client/test.html $dep/index.html
+
 # ----------------------------------------------
 # 3. サーバ側
 # ----------------------------------------------
@@ -100,6 +103,11 @@ done
 echo "// $(date "+%Y%m%d-%H%M%S")" > $dep/Code.gs
 cat $src/server/code.js | awk 1 | \
 $embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp >> $dep/Code.gs
+
+# テスト：test.jsでCode.gsを上書き
+cat $src/server/test.js | awk 1 | \
+$embed -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp > $dep/Code.gs
+
 # jsrsasignのコピー
 cp $src/server/jsrsasign-all-min.js $dep/jsrsasign.gs
 # GASへ反映

@@ -1,3 +1,4 @@
+
 // クライアント側HTML配信
 function doGet(){
   return HtmlService
