@@ -6,26 +6,11 @@
 //::$tmp/cryptoServer.js::
 //::$tmp/Member.js::
 
-// グローバル変数定義
-console.log(`l.10 ${typeof authServer}`);
-console.log(`l.11 ${authServer.toString()}`);
-const config = {
-  adminMail: 'ena.kaon@gmail.com',
-  adminName: 'あどみ',
-  func: {
-    svTest: m => {serverFunc(...m)},
-  }
-};
+// 動作設定定義
+//::$tmp/config.js::
 
 // テスト用サーバ側関数
-function serverFunc(arg){
-  const v = {whois:`serverFunc`, arg:{arg}, rv:null};
-  dev.start(v);
-  try {
-    console.log(`${v.whois}: arg=${JSON.stringify(arg,null,2)}`);
-    return true;
-  } catch (e) { return dev.error(e); }
-}
+//::$src/server/serverFunc.js::
 
 // クライアント側HTML配信
 function doGet(){
@@ -36,8 +21,9 @@ function doGet(){
 // Webアプリ定義
 async function doPost(e) {
   console.log('doPost called');
-  const asv = await authServer.initialize(globalThis.config);
-  const rv = asv.exec(e.postData.contents); // 受け取った本文(文字列)
+  //const asv = await authServer.initialize(globalThis.config);
+  //const rv = asv.exec(e.postData.contents); // 受け取った本文(文字列)
+  const rv = {msg:'doPost response'};
   if( rv !== null ){ // fatal(無応答)の場合はnullを返す
     return ContentService
       .createTextOutput(JSON.stringify(rv))
@@ -46,15 +32,4 @@ async function doPost(e) {
 }
 
 // スプレッドシートメニュー定義
-const ui = SpreadsheetApp.getUi();
-ui.createMenu('追加したメニュー')
-  .addItem('加入認否入力', 'menu10')
-  .addSeparator()
-  .addSubMenu(ui.createMenu("システム関係")
-    .addItem('実行環境の初期化', 'menu21')
-    .addItem("【緊急】鍵ペアの更新", "menu22")
-  )
-  .addToUi();
-const menu10 = () => asv.listNotYetDecided();
-const menu21 = () => asv.setupEnvironment();
-const menu22 = () => asv.resetSPkey();
+//::$src/server/menu.js::

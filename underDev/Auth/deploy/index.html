@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-<p style='text-align:right'>2025/12/20 16:08:11</p>
+<p style='text-align:right'>2025/12/24 10:47:45</p>
 <h1>SPkey要求テスト</h1>
 
 <button onclick="localFunc()">localFuncテスト</button>
@@ -544,7 +544,20 @@ class authClient {
         v.cleanupTimer = () => clearTimeout(id);
       });
 
-      dev.step(2.2);  // fetch処理を行うPromise
+      dev.step(2.2);  // fetch処理
+      v.response = await globalThis.fetch(this.cf.api,{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        },
+        body: JSON.stringify(v.encryptedRequest),
+      });
+      if( !v.response.ok ){
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      } else {
+        v.response = v.response.json();
+      }
+      /*dev.step(2.2);  // fetch処理を行うPromise
       v.fetchPromise = globalThis.fetch(this.cf.api, {
         method: 'POST',
         mode: 'cors',
@@ -555,7 +568,7 @@ class authClient {
       }).then(response => {
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         return response.json();
-      });
+      });*/
 
       dev.step(2.3);  // 競合させて、先に結果が出た方（正常なレスポンスかタイムアウトエラー）を採用
       try {
@@ -1042,11 +1055,7 @@ async function onLoad(){
   try {
 
     dev.step(1);  // authClientインスタンス作成
-    const auth = await authClient.initialize({
-      adminMail: 'ena.kaon@gmail.com',
-      adminName: 'あどみ',
-      api: 'AKfycbz5-GZTXzXj8yYb4jzFU5ul2uOeOEHE_NbIUWcwZAXT16vFA2vACg8MVmwMavDJUjsJ',
-    });
+    const auth = await authClient.initialize(config);
 
     dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット
     globalThis.auth = auth;

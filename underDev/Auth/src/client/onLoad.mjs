@@ -5,11 +5,7 @@ export async function onLoad(){
   try {
 
     dev.step(1);  // authClientインスタンス作成
-    const auth = await authClient.initialize({
-      adminMail: 'ena.kaon@gmail.com',
-      adminName: 'あどみ',
-      api: 'AKfycbwWtG4Atap06jEHLvAfhKJRcayEX-Gqci6yrspVCBTPIoaisbVoCF2gduyh0RleMc3d',
-    });
+    const auth = await authClient.initialize(config);
 
     dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット
     globalThis.auth = auth;
