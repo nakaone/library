@@ -324,7 +324,7 @@ export class cryptoServer {
    * @returns {cryptoServer|Error}
    */
   static async initialize(config) {
-    const v = {whois:`authClient.initialize`, arg:{config}, rv:null};
+    const v = {whois:`cryptoServer.initialize`, arg:{config}, rv:null};
     const dev = new devTools(v);
     try {
 

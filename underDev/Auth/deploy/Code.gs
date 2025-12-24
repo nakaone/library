@@ -1,4 +1,4 @@
-// 20251223-152826
+// 20251224-090456
 // ライブラリ関数定義
 /** devTools: 開発支援関係メソッド集
  * @class
@@ -300,7 +300,7 @@ class authServer {
    * @param {authConfig} config - authClient/Server共通設定値オブジェクト
    */
   constructor(config={}) {
-    const v = {whois:`authServer.constructor`, arg:{arg}, rv:null};
+    const v = {whois:`authServer.constructor`, arg:{config}, rv:null};
     const dev = new devTools(v);
     try {
 
@@ -335,7 +335,7 @@ class authServer {
         udSendInvitation: false,
       };
 
-      dev.step(2.2); // authClient/Server共通設定値に特有項目を追加
+      dev.step(2.2); // authServer/Server共通設定値に特有項目を追加
       this.cf = new authConfig(config);
       Object.keys(v.authServerConfig).forEach(x => {
         this.cf[x] = config[x] || v.authServerConfig[x];
@@ -343,23 +343,6 @@ class authServer {
       dev.step(2.3);  // authServerConfig 必須チェック
       if (!this.cf || !this.cf.memberList)
         throw new Error('invalid authServerConfig: memberList missing');
-
-      // -------------------------------------------------------------
-      dev.step(3);  // 暗号化・復号モジュール生成(this.crypto)
-      // -------------------------------------------------------------
-      this.crypto = cryptoServer.initialize(this.cf);
-      if( this.crypto instanceof Error ) throw this.crypto;
-
-      // -------------------------------------------------------------
-      dev.step(4);  // memberListシートの準備(this.member)
-      // -------------------------------------------------------------
-      this.member = new Member();
-
-      // -------------------------------------------------------------
-      dev.step(5);  // 監査ログ・エラーログシートの準備(this.audit, this.error)
-      // -------------------------------------------------------------
-      //this.audit = this.authAuditLog();
-      //this.error = this.authErrorLog();
 
       dev.end(); // 終了処理
 
@@ -497,11 +480,52 @@ class authServer {
     }
   }
 
+  /** initialize: authServerインスタンス作成
+   * - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
+   * - staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
+   * @static
+   * @param {authConfig} config - authClient/Server共通設定値オブジェクト
+   * @returns {authServer|Error}
+   */
+  static async initialize(config) {
+    const v = {whois:`authServer.initialize`, arg:{config}, rv:null};
+    const dev = new devTools(v);
+    try {
+
+      // -------------------------------------------------------------
+      dev.step(1);  // インスタンス生成
+      // オプション既定値を先にメンバ変数に格納するため、constructorを先行
+      // -------------------------------------------------------------
+      v.rv = new authServer(config);
+
+      // -------------------------------------------------------------
+      dev.step(2);  // 暗号化・復号モジュール生成(v.rv.crypto)
+      // -------------------------------------------------------------
+      v.rv.crypto = await cryptoServer.initialize(v.rv.cf);
+      if( v.rv.crypto instanceof Error ) throw v.rv.crypto;
+
+      // -------------------------------------------------------------
+      dev.step(3);  // memberListシートの準備(v.rv.member)
+      // -------------------------------------------------------------
+      v.rv.member = new Member(v.rv.cf);
+
+      // -------------------------------------------------------------
+      dev.step(4);  // 監査ログ・エラーログシートの準備(v.rv.audit, v.rv.error)
+      // -------------------------------------------------------------
+      //v.rv.audit = v.rv.authAuditLog();
+      //v.rv.error = v.rv.authErrorLog();
+
+      dev.end({IndexedDB:v.rv.idb}); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
   /** exec: 処理要求に対するサーバ側中核処理
    * @param {string} arg - 引数
    * @returns {null|Error} 戻り値
    */
-  exec(arg) {
+  async exec(arg) {
     const v = {whois:`${this.constructor.name}.exec`, arg:{arg}, rv:null};
     const dev = new devTools(v);
     try {
@@ -509,7 +533,7 @@ class authServer {
       dev.step(1.1,arg);  // request存在・最低限チェック
       if( !arg ) throw new Error('invalid request: empty body');
       dev.step(1.2,JSON.parse(arg));  // 処理要求を復号
-      v.request = this.crypto.decrypt(JSON.parse(arg));
+      v.request = await this.crypto.decrypt(JSON.parse(arg), this.cf.CPkeySign);
       if( v.request instanceof Error ) throw v.request;
       dev.step(1.3,v.request);  // // request.func チェック
       if (!v.request || !v.request.func)
@@ -540,10 +564,7 @@ class authServer {
       this.authLogger(v.response);
 
       dev.step(6);  // encryptedResponseの作成
-      v.rv = this.crypto.encrypt(v.response);
-
-      dev.step(6);  // encryptedResponseの作成
-      v.rv = this.crypto.encrypt(v.response);
+      v.rv = await this.crypto.encrypt(v.response, v.response.CPkeySign);
       if( v.rv instanceof Error ) throw v.rv;
 
       dev.end(); // 終了処理
@@ -930,7 +951,7 @@ class cryptoServer {
    * @returns {cryptoServer|Error}
    */
   static async initialize(config) {
-    const v = {whois:`authClient.initialize`, arg:{config}, rv:null};
+    const v = {whois:`cryptoServer.initialize`, arg:{config}, rv:null};
     const dev = new devTools(v);
     try {
 
@@ -1493,13 +1514,13 @@ class Member {
 // グローバル変数定義
 console.log(`l.10 ${typeof authServer}`);
 console.log(`l.11 ${authServer.toString()}`);
-const asv = new authServer({
+const config = {
   adminMail: 'ena.kaon@gmail.com',
   adminName: 'あどみ',
   func: {
     svTest: m => {serverFunc(...m)},
   }
-});
+};
 
 // テスト用サーバ側関数
 function serverFunc(arg){
@@ -1518,14 +1539,14 @@ function doGet(){
     .setTitle('Auth(test)');
 }
 // Webアプリ定義
-function doPost(e) {
+async function doPost(e) {
   console.log('doPost called');
+  const asv = await authServer.initialize(globalThis.config);
   const rv = asv.exec(e.postData.contents); // 受け取った本文(文字列)
   if( rv !== null ){ // fatal(無応答)の場合はnullを返す
     return ContentService
       .createTextOutput(JSON.stringify(rv))
       .setMimeType(ContentService.MimeType.JSON);
-      //.setHeader('Access-Control-Allow-Origin', '*');
   }
 }
 

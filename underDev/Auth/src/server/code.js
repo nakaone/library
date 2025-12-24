@@ -9,13 +9,13 @@
 // グローバル変数定義
 console.log(`l.10 ${typeof authServer}`);
 console.log(`l.11 ${authServer.toString()}`);
-const asv = new authServer({
+const config = {
   adminMail: 'ena.kaon@gmail.com',
   adminName: 'あどみ',
   func: {
     svTest: m => {serverFunc(...m)},
   }
-});
+};
 
 // テスト用サーバ側関数
 function serverFunc(arg){
@@ -34,14 +34,14 @@ function doGet(){
     .setTitle('Auth(test)');
 }
 // Webアプリ定義
-function doPost(e) {
+async function doPost(e) {
   console.log('doPost called');
+  const asv = await authServer.initialize(globalThis.config);
   const rv = asv.exec(e.postData.contents); // 受け取った本文(文字列)
   if( rv !== null ){ // fatal(無応答)の場合はnullを返す
     return ContentService
       .createTextOutput(JSON.stringify(rv))
       .setMimeType(ContentService.MimeType.JSON);
-      //.setHeader('Access-Control-Allow-Origin', '*');
   }
 }
 

@@ -13,8 +13,9 @@
     - cryptoClient / cryptoServer
   - 移行・書き換え
 - build0007: 疎結合⇒密結合
-  - Schemaのデータ構造検討(Schema ver.1.3.0作成)   ◀いまここ
-  - 現状(typedef.js)からschema.jsへの移行
+  - doGet追加、authServer/Client修正   ◀いまここ
+  - フォルダ構成修正(src/common追加、src/doc削除)
+  - config.js追加(authConfig必須パラメータ)、schemaDefにSchemaクラス適用
 - build0006: 【中止】初回HTMLロード時処理
   - fetchはGoogleの仕様でCORSエラー発生、回避不能が判明
   - 疎結合から密結合(Google Spreadコンテナバインド方式)に方針転換
