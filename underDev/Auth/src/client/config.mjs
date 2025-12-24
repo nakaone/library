@@ -3,5 +3,5 @@ import { commonConfig } from "../common/config.mjs";
 
 // config: authClientConfigの必須設定項目
 export const config = Object.assign(commonConfig,{
-  api: 'AKfycbwWtG4Atap06jEHLvAfhKJRcayEX-Gqci6yrspVCBTPIoaisbVoCF2gduyh0RleMc3d',
+  api: 'AKfycbz36fiUF9jospUvp7SbfB1_rDmoHaPYZsuDqzoS1pvnxvsQy2aFdCrESlmAZjR_Vx5J',
 });

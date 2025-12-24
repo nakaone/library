@@ -13,6 +13,7 @@ doc="$prj/doc"
 rm -rf $dep/*.gs $dep/*.html
 tmp="$prj/tmp"
 rm -rf $tmp/*
+dt=$(date "+%Y/%m/%d %H:%M:%S")
 
 src="$prj/src"
 # $embedに渡すパラメータ
@@ -60,6 +61,9 @@ for f in $src/common/*.mjs; do
   sed '/^import /d; s/^export //' "$f" > "$tmp/$bn.js"
 done
 
+# === 1.3 共通configの作成
+sed '/^import /d; s/^export //' "$src/common/config.mjs" > "$tmp/commonConfig.js"
+
 # ----------------------------------------------
 # 2. クライアント側
 # ----------------------------------------------
@@ -72,9 +76,12 @@ for f in $src/client/*.mjs; do
   sed '/^import /d; s/^export //' "$f" > "$tmp/$bn.js"
 done
 
-# === 2.2 index.htmlの作成
+# === 2.2 クライアント側configの作成
+sed '/^import /d; s/^export //' "$src/client/config.mjs" > "$tmp/clientConfig.js"
+
+# === 2.3 index.htmlの作成
 # 開発時の更新確認のため、index.htmlに現在日時を挿入
-echo "<p style='text-align:right'>$(date "+%Y/%m/%d %H:%M:%S")</p>" \
+echo "<script>const VERSION ='$dt';</script><p style='text-align:right'>$dt</p>" \
 > $tmp/timestamp.html
 cat $src/client/index.html | awk 1 | $embed $opts > $dep/index.html
 
@@ -89,12 +96,15 @@ for f in $src/server/*.mjs; do
   sed '/^import /d; s/^export //' "$f" > "$tmp/$bn.js"
 done
 
-# === 3.2 Code.gsの作成
-echo "// $(date "+%Y%m%d-%H%M%S")" > $dep/Code.gs
+# === 3.2 サーバ側configの作成
+sed '/^import /d; s/^export //' "$src/server/config.mjs" > "$tmp/serverConfig.js"
+
+# === 3.3 Code.gsの作成
+echo "// $dt" > $dep/Code.gs
 cat $src/server/Code.js | awk 1 | \
 $embed $opts >> $dep/Code.gs
 
-# === 3.3 jsrsasignのコピー
+# === 3.4 jsrsasignのコピー
 #cp $src/server/jsrsasign-all-min.js $dep/jsrsasign.gs
 
 # ----------------------------------------------
@@ -105,20 +115,7 @@ $embed $opts >> $dep/Code.gs
 if [[ "$1" != "-l" ]]; then
   cd $prj/deploy
   clasp push --force
+  clasp version "$dt"
+  clasp deploy
   cd $prj/tools
 fi
-
-# Vitestを実行
-#clsource="$tmp/client.source.md"
-#echo "## 質問・依頼事項\n\n## テストソース\n\n\`\`\`js" > $clsource
-#cat $test >> $clsource
-#echo "\n\`\`\`\n\n## 実行結果\n\n\`\`\`zsh" >> $clsource
-#cd $prj
-#npx vitest run "$test" | sed 's/\x1b\[[0-9;]*m//g' >> $clsource
-#cd tools/
-#echo "\`\`\`\n" >> $clsource
-
-  # 生成AI質問用ソース一覧作成
-  #echo "## $bn.mjs\n\n\`\`\`js" >> $clsource
-  #cat $f >> $clsource
-  #echo "\n\`\`\`\n\n" >> $clsource
