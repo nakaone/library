@@ -14,6 +14,7 @@ rm -rf $dep/*.gs $dep/*.html
 tmp="$prj/tmp"
 rm -rf $tmp/*
 dt=$(date "+%Y/%m/%d %H:%M:%S")
+echo $dt
 
 src="$prj/src"
 # $embedに渡すパラメータ
@@ -81,8 +82,7 @@ sed '/^import /d; s/^export //' "$src/client/config.mjs" > "$tmp/clientConfig.js
 
 # === 2.3 index.htmlの作成
 # 開発時の更新確認のため、index.htmlに現在日時を挿入
-echo "<script>const VERSION ='$dt';</script><p style='text-align:right'>$dt</p>" \
-> $tmp/timestamp.html
+echo "<p style='text-align:right'>$dt</p>" > $tmp/timestamp.html
 cat $src/client/index.html | awk 1 | $embed $opts > $dep/index.html
 
 # ----------------------------------------------
@@ -113,9 +113,21 @@ $embed $opts >> $dep/Code.gs
 # ※ 反映しない場合、起動時オプションに"-l"を追加(local test)
 # ./build.sh -l
 if [[ "$1" != "-l" ]]; then
+  DEPLOYMENT_ID="AKfycbwOxJWC-FtcGrXSOfu1EwAqqK03KaCpvIsqGf6xexPUvtyQyd6petMWGW9lNEARn_5J"
+
   cd $prj/deploy
   clasp push --force
   clasp version "$dt"
-  clasp deploy
+  LATEST_VERSION=$(clasp versions \
+    | grep -E '^[[:space:]]*[0-9]+' \
+    | awk '{print $1}' \
+    | tail -n 1)
+
+  echo "Deploying version ${LATEST_VERSION}..."
+
+  clasp deploy \
+    --deploymentId "$DEPLOYMENT_ID" \
+    --versionNumber "$LATEST_VERSION"
+
   cd $prj/tools
 fi

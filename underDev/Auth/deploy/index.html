@@ -8,7 +8,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-<script>const VERSION ='2025/12/24 12:26:13';</script><p style='text-align:right'>2025/12/24 12:26:13</p>
+<p style='text-align:right'>2025/12/24 17:22:16</p>
+<p style="text-align: right;"><?= VERSION ?></p>
 <h1>SPkey要求テスト</h1>
 
 <button onclick="localFunc()">localFuncテスト</button>
@@ -318,7 +319,7 @@ const commonConfig = {
 
 // config: authClientConfigの必須設定項目
 const config = Object.assign(commonConfig,{
-  api: 'AKfycbz36fiUF9jospUvp7SbfB1_rDmoHaPYZsuDqzoS1pvnxvsQy2aFdCrESlmAZjR_Vx5J',
+  api: 'AKfycbwOxJWC-FtcGrXSOfu1EwAqqK03KaCpvIsqGf6xexPUvtyQyd6petMWGW9lNEARn_5J',
 });
 class authClient {
 
@@ -363,6 +364,7 @@ class authClient {
       // -------------------------------------------------------------
       this.idb = {};  // IndexedDBと同期、authClient内で共有
 
+      console.log('authClient.constructor final api =', this.cf.api);
       dev.end(this); // 終了処理
 
     } catch (e) { return dev.error(e); }
@@ -762,6 +764,7 @@ class authConfig {
     const v = {whois:`authConfig.constructor`, arg:{arg}, rv:null};
     const dev = new devTools(v);
     try {
+      console.log('authConfig input api =', config.api);
 
       dev.step(1); // メンバの値設定
       this.systemName = arg.systemName || 'Auth'; // {string} システム名
@@ -1065,7 +1068,8 @@ async function onLoad(){
   try {
 
     dev.step(1);  // authClientインスタンス作成
-    const auth = await authClient.initialize(config);
+    let auth = null; // GASからindex.htmlを取得する場合は要クリア
+    auth = await authClient.initialize(config);
 
     dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット
     globalThis.auth = auth;

@@ -8,6 +8,7 @@ export class authConfig {
     const v = {whois:`authConfig.constructor`, arg:{arg}, rv:null};
     const dev = new devTools(v);
     try {
+      console.log('authConfig input api =', config.api);
 
       dev.step(1); // メンバの値設定
       this.systemName = arg.systemName || 'Auth'; // {string} システム名

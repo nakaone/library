@@ -5,7 +5,8 @@ export async function onLoad(){
   try {
 
     dev.step(1);  // authClientインスタンス作成
-    const auth = await authClient.initialize(config);
+    let auth = null; // GASからindex.htmlを取得する場合は要クリア
+    auth = await authClient.initialize(config);
 
     dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット
     globalThis.auth = auth;

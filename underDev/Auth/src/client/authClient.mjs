@@ -44,6 +44,7 @@ export class authClient {
       // -------------------------------------------------------------
       this.idb = {};  // IndexedDBと同期、authClient内で共有
 
+      console.log('authClient.constructor final api =', this.cf.api);
       dev.end(this); // 終了処理
 
     } catch (e) { return dev.error(e); }
