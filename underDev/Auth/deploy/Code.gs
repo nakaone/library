@@ -1,4 +1,4 @@
-// 20251224-105437
+// 20251224-112655
 // ライブラリ関数定義
 /** devTools: 開発支援関係メソッド集
  * @class
@@ -298,14 +298,18 @@ devTools.sequence = 1; // 関数・メソッドの呼出順を初期化
 //:x:$tmp/Member.js::
 
 // 動作設定定義
-const config = {
+// authConfigの必須設定項目
+const commonConfig = {
   adminMail: 'ena.kaon@gmail.com',
   adminName: 'あどみ',
-  api: 'AKfycbwWtG4Atap06jEHLvAfhKJRcayEX-Gqci6yrspVCBTPIoaisbVoCF2gduyh0RleMc3d',
+};
+
+// config: authServerConfigの必須設定項目
+const config = Object.assign(commonConfig,{
   func: {
     svTest: m => {serverFunc(...m)},
   }
-};
+});
 
 // テスト用サーバ側関数
 // テスト用サーバ側関数
