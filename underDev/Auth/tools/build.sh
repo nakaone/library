@@ -113,21 +113,7 @@ $embed $opts >> $dep/Code.gs
 # ※ 反映しない場合、起動時オプションに"-l"を追加(local test)
 # ./build.sh -l
 if [[ "$1" != "-l" ]]; then
-  DEPLOYMENT_ID="AKfycbwOxJWC-FtcGrXSOfu1EwAqqK03KaCpvIsqGf6xexPUvtyQyd6petMWGW9lNEARn_5J"
-
   cd $prj/deploy
   clasp push --force
-  clasp version "$dt"
-  LATEST_VERSION=$(clasp versions \
-    | grep -E '^[[:space:]]*[0-9]+' \
-    | awk '{print $1}' \
-    | tail -n 1)
-
-  echo "Deploying version ${LATEST_VERSION}..."
-
-  clasp deploy \
-    --deploymentId "$DEPLOYMENT_ID" \
-    --versionNumber "$LATEST_VERSION"
-
   cd $prj/tools
 fi
