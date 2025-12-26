@@ -1,3 +1,14 @@
+/** authConfig: クライアント・サーバ共通設定情報
+ * @class
+ * @classdesc クライアント・サーバ共通設定情報
+ * @prop {string} systemName="Auth" - システム名
+ * @prop {string} adminMail - 管理者のメールアドレス
+ * @prop {string} adminName - 管理者氏名
+ * @prop {number} allowableTimeDifference=120000 - クライアント・サーバ間通信時の許容時差既定値は2分
+ * @prop {string} RSAbits=2048 - 鍵ペアの鍵長
+ * @prop {Object} underDev - テスト時の設定
+ * @prop {boolean} underDev.isTest=false - 開発モードならtrue
+ */
 export class authConfig {
 
   /**

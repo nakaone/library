@@ -1,3 +1,9 @@
+/** cryptoClient: クライアント側の暗号化・署名検証
+ * @class
+ * @classdesc クライアント側の暗号化・署名検証
+ * @prop {authIndexedDB} idb - authClient.idb(IndexedDB)のコピー
+ * @prop {string} RSAbits - RSA鍵長(=authConfig.RSAbits)
+ */
 export class cryptoClient {
 
   /** constructor

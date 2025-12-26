@@ -1,3 +1,11 @@
+/** cryptoServer: サーバ側の暗号化・署名検証
+ * @class
+ * @classdesc サーバ側の暗号化・署名検証
+ * @prop {authServerConfig} cf - authServer設定情報
+ * @prop {ScriptProperties} prop - PropertiesService.getScriptProperties()
+ * @prop {authScriptProperties} keys - ScriptPropertiesに保存された鍵ペア情報
+ * @prop {string[]} keyList - ScriptPropertiesに保存された項目名の一覧
+ */
 export class cryptoServer {
 
   /** constructor

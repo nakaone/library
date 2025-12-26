@@ -1,6 +1,39 @@
 import { authClientConfig } from "./authClientConfig.mjs";
 import { authRequest } from "./authRequest.mjs";
 
+/** authClient: クライアント側中核クラス
+ * @class
+ * @classdesc クライアント側中核クラス
+ * - 初期化の際に非同期処理が必要なため、インスタンス作成は
+ *   `new authClient()`ではなく`authClient.initialize()`で行う
+ * @prop {authClientConfig} cf - authClient設定情報
+ * @prop {Object} idb - IndexedDBと同期、authClient内で共有
+ * @prop {cryptoClient} crypto - 暗号化・署名検証
+ * 
+ * @example インスタンス作成のサンプル
+ * ```js
+ * async function onLoad(){
+ *   const v = {whois:`onLoad`, rv:null};
+ *   dev.start(v);
+ *   try {
+ * 
+ *     dev.step(1);  // authClientインスタンス作成
+ *     const auth = await authClient.initialize({
+ *       adminMail: 'ena.kaon@gmail.com',
+ *       adminName: 'あどみ',
+ *       api: 'abcdefghijklmnopqrstuvwxyz',
+ *     });
+ * 
+ *     dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット
+ *     globalThis.auth = auth;
+ *     v.rv = auth;
+ * 
+ *     dev.end(); // 終了処理
+ *     return v.rv;
+ * 
+ *   } catch (e) { return dev.error(e); }
+ * }
+ */
 export class authClient {
 
   static _IndexedDB = null; // データベース接続オブジェクトを格納する静的変数

@@ -1,3 +1,9 @@
+/** authServer: サーバ側中核クラス
+ * @class
+ * @classdesc サーバ側中核クラス
+ * @prop {authServerConfig} cf - authServer設定項目
+ * @prop {cryptoServer} crypto - 暗号化・署名検証
+ */
 export class authServer {
 
   /**
