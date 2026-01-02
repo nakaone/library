@@ -9,5 +9,8 @@ ui.createMenu('追加したメニュー')
   )
   .addToUi();
 const menu10 = () => asv.listNotYetDecided();
-const menu21 = () => asv.setupEnvironment();
+const menu21 = async () => {
+  const asv = await authServer.initialize(config);
+  asv.setupEnvironment();
+};
 const menu22 = () => asv.resetSPkey();

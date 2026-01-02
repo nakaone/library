@@ -3,9 +3,9 @@
 //::$lib/toLocale/1.2.1/core.js::
 
 // authServer関係クラス定義
-//:x:$tmp/authServer.js::
-//:x:$tmp/cryptoServer.js::
-//:x:$tmp/Member.js::
+//::$tmp/authServer.js::
+//::$tmp/cryptoServer.js::
+//::$tmp/Member.js::
 
 // 動作設定定義
 //::$tmp/serverConfig.js::
@@ -35,4 +35,4 @@ async function doPost(e) {
 }
 
 // スプレッドシートメニュー定義
-//:x:$src/server/menu.js::
+//::$src/server/menu.js::

@@ -19,8 +19,9 @@
 
 ## 変更履歴
 
-- build0008: 初回HTMLロード時処理<br>
-  従来の開発内容を密結合方式を前提に書き換え
+- build0008: 初回HTMLロード時処理
+  - authServer.setupEnvironment
+
   - Client/ServerAdapterクラス設計
   - Client/ServerDBクラス設計
   - 変更箇所の明確化
@@ -29,7 +30,8 @@
     - authClient / authServer
     - cryptoClient / cryptoServer
   - 移行・書き換え
-- build0007: 疎結合⇒密結合
+- build0007: 疎結合⇒密結合<br>
+  従来の開発内容を密結合方式を前提に書き換え
   - doGet追加、authServer/Client修正
   - フォルダ構成修正(src/common追加、src/doc削除)
   - config.js追加(authConfig必須パラメータ)
