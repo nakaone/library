@@ -8,6 +8,7 @@
  * @prop {string} RSAbits=2048 - 鍵ペアの鍵長
  * @prop {Object} underDev - テスト時の設定
  * @prop {boolean} underDev.isTest=false - 開発モードならtrue
+ * @prop {schemaDef} typeDef - データ型定義
  */
 export const commonConfig = {
   adminMail: 'ena.kaon@gmail.com',
@@ -82,8 +83,8 @@ export const commonConfig = {
       /** authRequest: authClientからauthServerへの処理要求(平文)
        * @typedef {Object} authRequest
        * @prop {string} memberId=this.idb.memberId - メンバの識別子
-       * @prop {string} deviceId=this.idb.deviceId - デバイスの識別子UUIDv4
-       * @prop {string} memberName=this.idb.memberName - メンバの氏名管理者が加入認否判断のため使用
+       * @prop {string} deviceId=this.idb.deviceId - デバイスの識別子(UUIDv4)
+       * @prop {string} memberName=this.idb.memberName - メンバの氏名。管理者が加入認否判断のため使用
        * @prop {string} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
        * @prop {number} requestTime=Date.now() - 要求日時UNIX時刻
        * @prop {string} func - サーバ側関数名
@@ -92,15 +93,27 @@ export const commonConfig = {
        */
       authRequest: {desc: 'クライアント→サーバ要求',
         colDef: [
-          {name:'memberId',type:'string'},
-          {name:'deviceId',type:'string'},
-          {name:'memberName',type:'string'},
-          {name:'CPkeySign',type:'string'},
-          {name:'requestTime',type:'datetime',default:'Date.now()'},
-          {name:'func',type:'string'},
-          {name:'arg',type:'array',default:'[]'},
-          {name:'nonce',type:'string'},
+          {name:'memberId',type:'string',desc:'メンバの識別子'},
+          {name:'deviceId',type:'string',desc:'デバイスの識別子(UUIDv4)'},
+          {name:'memberName',type:'string',desc:'メンバの氏名',note:'管理者が加入認否判断のため使用'},
+          {name:'CPkeySign',type:'string',desc:'クライアント側署名用公開鍵'},
+          {name:'requestTime',type:'datetime',desc:'要求日時',default:'Date.now()'},
+          {name:'func',type:'string',desc:'サーバ側関数名'},
+          {name:'arg',type:'array',desc:'サーバ側関数に渡す引数の配列',default:'[]'},
+          {name:'nonce',type:'string',desc:'要求の識別子'},
         ],
+        constructor: o => { // {idb,func[,arg]}
+          return {  // idb: authClient.idb(IndexedDB)
+            memberId: o.idb.memberId,
+            deviceId: o.idb.deviceId,
+            memberName: o.idb.memberName,
+            CPkeySign: o.idb.CPkeySign,
+            requestTime: Date.now(),
+            func: o.func,
+            arg: o.arg ?? [],
+            nonce: crypto.randomUUID(),
+          }
+        }
       },
       /** authResponse: authServerからauthClientへの処理結果(平文)
        * @typedef {Object} authResponse - authServerからauthClientへの処理結果(平文)

@@ -34,6 +34,7 @@ import { commonConfig } from "../common/config.mjs";
  * @prop {boolean} udSendPasscode=false - 開発中識別フラグパスコード通知メール送信を抑止するならtrue
  * @prop {boolean} udSendInvitation=false - 開発中の加入承認通知メール送信
  *   開発中に加入承認通知メール送信を抑止するならtrue
+ * @prop {schemaDef} typeDef - データ型定義
  */
 export const config = Object.assign(commonConfig,{
   func: {   // データ型はauthServerFuncDef参照

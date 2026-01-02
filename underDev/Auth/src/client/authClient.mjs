@@ -147,24 +147,6 @@ export class authClient {
     return rv;
   }
 
-  /** authRequest: authRequest型のオブジェクトを作成
-   * @param {string} func - サーバ側関数名
-   * @param {any[]} arg - サーバ側関数に渡す引数
-   * @returns {authRequest}
-   */
-  authRequest(func,arg=[]){
-    return {
-      memberId: this.idb.memberId,
-      deviceId: this.idb.deviceId,
-      memberName: this.idb.memberName,
-      CPkeySign: this.idb.CPkeySign,
-      requestTime: Date.now(),
-      func: func,
-      arg: arg,
-      nonce: crypto.randomUUID(),
-    }
-  }
-
   /** exec: ローカル関数の処理要求を処理
    * @param {string} func - サーバ側関数名
    * @param {any[]} arg=[] - サーバ側関数に渡す引数
@@ -192,7 +174,8 @@ export class authClient {
       if( !this.idb.SPkeySign ){  // SPkey未取得
 
         dev.step(2.1);  // 内発処理「初期情報要求」用のauthRequestを作成
-        v.authRequest = this.authRequest('::initial::');
+        v.authRequest = this.cf.typeDef.tableDef.authRequest.constructor({idb:this.idb,func:'::initial::'});
+        //v.authRequest = this.authRequest('::initial::');
 
         dev.step(2.2);  // サーバ側に処理依頼
         v.authResponse = await this.fetch(v.authRequest);

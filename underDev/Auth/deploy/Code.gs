@@ -1,4 +1,4 @@
-// 2025/12/25 11:14:00
+// 2026/01/02 10:33:45
 // ライブラリ関数定義
 /** devTools: 開発支援関係メソッド集
  * @class
@@ -423,17 +423,484 @@ function toLocale(arg=null,opt={}) {
 //:x:$tmp/Member.js::
 
 // 動作設定定義
-// authConfigの必須設定項目
+/** authConfig: クライアント・サーバ共通設定情報
+ * @class
+ * @classdesc クライアント・サーバ共通設定情報
+ * @prop {string} systemName="Auth" - システム名
+ * @prop {string} adminMail - 管理者のメールアドレス
+ * @prop {string} adminName - 管理者氏名
+ * @prop {number} allowableTimeDifference=120000 - クライアント・サーバ間通信時の許容時差既定値は2分
+ * @prop {string} RSAbits=2048 - 鍵ペアの鍵長
+ * @prop {Object} underDev - テスト時の設定
+ * @prop {boolean} underDev.isTest=false - 開発モードならtrue
+ * @prop {schemaDef} typeDef - データ型定義
+ */
 const commonConfig = {
   adminMail: 'ena.kaon@gmail.com',
   adminName: 'あどみ',
+  /** schemaDef: DB構造定義オブジェクト (論理Schema・引数用)
+   * @class
+   * @classdesc DB構造定義オブジェクト
+   *
+   * 【責務】
+   * - DBの論理構造を定義する
+   * - Adapter / DB 実装に依存しない
+   *
+   * @property {string} name - Schemaの論理名
+   * @property {string} [version='0.0.0'] - Schemaのバージョン識別子(例:'1.2.0')
+   * @property {string} [dbName=''] - 物理DB名（Adapter が参照する場合のみ使用）
+   * @property {string} [desc=''] - Schema全体に関する概要説明
+   * @property {string} [note=''] - Schema全体に関する備考
+   * @property {Object.<string, tableDef>} tableDef - 論理テーブル名をキーとするテーブル定義
+   * @property {string} original - schemaDefインスタンス生成時のスナップショット(JSON)
+   *
+   * @example
+   * ```
+   * {
+   *   name: 'camp2025',
+   *   tableDef: {
+   *     master: {
+   *       colDef:[
+   *         {name:'タイムスタンプ',type:'string'},
+   *         {name:'メールアドレス',type:'string'},
+   *         // (中略)
+   *       ],
+   *     },
+   *   },
+   * },
+   * ```
+   *
+   * @history
+   * 2.0.0 2025-12-21 構造簡潔化＋Adapterと役割分担
+   * 1.2.0 2025-09-21 AlaSQLの予約語とSpreadDb.schemaの重複排除
+   *   - SpreadDb.schema.tables -> tableMap
+   *   - SpreadDb.schema.tables.cols -> colMap(∵予約語columnsと紛らわしい)
+   * 1.1.0 2025-09-15 構造の見直し、メンバ名の修正
+   * 1.0.0 2025-09-15 初版
+   */
+  /** tableDef: 論理テーブル構造定義 (引数用)
+   * @typedef {Object} tableDef
+   * @property {string} [name] - 論理的な識別名（tableDef のキー）
+   *   - クラス・API・ログで使用。例: 'Member', 'AuthAuditLog'
+   *   - constructorに渡す定義オブジェクトでは省略(メンバ名を引用)
+   * @property {string} [desc=''] - テーブルに関する概要説明
+   * @property {string} [note=''] - テーブルに関する備考
+   * @property {string[]} [primaryKey=[]] - 主キー項目名
+   * @property {string[]} [unique=[]] - 主キー以外の一意制約
+   * @property {columnDef[]} colDef - 項目定義（順序を考慮するため配列）
+   */
+  /** columnDef: 項目定義 (引数用)
+   * @typedef {Object} columnDef
+   * @property {string} name - 項目名（英数字・システム用）
+   * @property {string} [label] - 表示用ラベル（省略時は name)
+   * @property {string} [desc=''] - 項目に関する概要説明
+   * @property {string} [note=''] - 項目に関する備考・意味説明
+   * @property {string} [type='string'] - 論理データ型
+   *   - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime'
+   * @property {boolean} [nullable=true] - null を許可するか
+   * @property {any} [default=null] - 既定値
+   *   - 関数の場合は toString() 化された文字列
+   */
+  typeDef: {
+    name: 'auth',
+    version: '1.0.0',
+    tableDef: {
+      /** authRequest: authClientからauthServerへの処理要求(平文)
+       * @typedef {Object} authRequest
+       * @prop {string} memberId=this.idb.memberId - メンバの識別子
+       * @prop {string} deviceId=this.idb.deviceId - デバイスの識別子(UUIDv4)
+       * @prop {string} memberName=this.idb.memberName - メンバの氏名。管理者が加入認否判断のため使用
+       * @prop {string} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
+       * @prop {number} requestTime=Date.now() - 要求日時UNIX時刻
+       * @prop {string} func - サーバ側関数名
+       * @prop {any[]} arg=[] - サーバ側関数に渡す引数の配列
+       * @prop {string} nonce=UUIDv4 - 要求の識別子UUIDv4
+       */
+      authRequest: {desc: 'クライアント→サーバ要求',
+        colDef: [
+          {name:'memberId',type:'string',desc:'メンバの識別子'},
+          {name:'deviceId',type:'string',desc:'デバイスの識別子(UUIDv4)'},
+          {name:'memberName',type:'string',desc:'メンバの氏名',note:'管理者が加入認否判断のため使用'},
+          {name:'CPkeySign',type:'string',desc:'クライアント側署名用公開鍵'},
+          {name:'requestTime',type:'datetime',desc:'要求日時',default:'Date.now()'},
+          {name:'func',type:'string',desc:'サーバ側関数名'},
+          {name:'arg',type:'array',desc:'サーバ側関数に渡す引数の配列',default:'[]'},
+          {name:'nonce',type:'string',desc:'要求の識別子'},
+        ],
+        constructor: o => { // {idb,func[,arg]}
+          return {  // idb: authClient.idb(IndexedDB)
+            memberId: o.idb.memberId,
+            deviceId: o.idb.deviceId,
+            memberName: o.idb.memberName,
+            CPkeySign: o.idb.CPkeySign,
+            requestTime: Date.now(),
+            func: o.func,
+            arg: o.arg ?? [],
+            nonce: crypto.randomUUID(),
+          }
+        }
+      },
+      /** authResponse: authServerからauthClientへの処理結果(平文)
+       * @typedef {Object} authResponse - authServerからauthClientへの処理結果(平文)
+       * == authClient設定項目(authRequestからの転記項目)
+       * @prop {string} memberId - メンバの識別子
+       * @prop {string} deviceId - デバイスの識別子。UUIDv4
+       * @prop {string} memberName - メンバの氏名
+       * @prop {CryptoKey} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
+       * @prop {number} requestTime - 要求日時UNIX時刻
+       * @prop {string} func - サーバ側関数名
+       * @prop {any[]} arg - サーバ側関数に渡す引数の配列
+       * @prop {string} nonce - 要求の識別子UUIDv4
+       *
+       * == authServer内での追加項目
+       * @prop {string} SPkeySign=this.keys.SPkeySign - サーバ側署名用公開鍵
+       * @prop {string} SPkeyEnc=this.keys.SPkeyEnc - サーバ側暗号化用公開鍵
+       * @prop {any} response=null - サーバ側関数の戻り値
+       * @prop {number} receptTime=Date.now() - サーバ側の処理要求受付日時
+       * @prop {number} responseTime=0 - サーバ側処理終了日時
+       *   エラーの場合は発生日時
+       * @prop {string} status="success" - サーバ側処理結果
+       *   正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、
+       *   致命的エラーの場合はErrorオブジェクト
+       * @prop {string} message="" - メッセージ(statusの補足)
+       *
+       * == authClient設定項目(authServerからの返信を受け、authClient内で追加)
+       * @prop {string} decrypt="success" - クライアント側での復号処理結果
+       *   "success":正常、それ以外はエラーメッセージ
+       */
+      authResponse: {desc: 'サーバ→クライアント応答',
+        colDef: [
+          {name:'memberId',type:'string'},
+          {name:'deviceId',type:'string'},
+          {name:'memberName',type:'string'},
+          {name:'CPkeySign',type:'string'},
+          {name:'requestTime',type:'datetime'},
+          {name:'func',type:'string'},
+          {name:'arg',type:'array'},
+          {name:'nonce',type:'string'},
+          {name:'SPkeySign',type:'string'},
+          {name:'SPkeyEnc',type:'string'},
+          {name:'response',type:'any',nullable:true },
+          {name:'receptTime',type:'datetime',default:'Date.now()'},
+          {name:'responseTime',type:'datetime',default:0 },
+          {name:'status',type:'string',default:'success'},
+          {name:'message',type:'string',default:''},
+          {name:'decrypt',type:'string',default:'success'},
+        ],
+      },
+      /** encryptedRequest: 暗号化された処理要求
+       * @typedef {Object} encryptedRequest - 暗号化された処理要求
+       * @prop {string} payload=null - 平文のauthRequest
+       *   cipherと排他。SPkey要求時(meta.keyProvisioning===true)のみ設定
+       * @prop {string} cipher=null - AES-256-GCMで暗号化されたauthRequest。payloadと排他
+       * @prop {string} iv=null - AES-GCM 初期化ベクトル
+       * @prop {string} signature - authRequestに対するRSA-PSS署名
+       * @prop {string} encryptedKey=null - RSA-OAEPで暗号化されたAES共通鍵
+       * @prop {Object} meta - メタ情報
+       * @prop {boolean} meta.signOnly=false - 暗号化せず署名のみで送信する場合true
+       * @prop {string} meta.sym=null - 使用した共通鍵方式"AES-256-GCM"
+       * @prop {number} meta.rsabits - 暗号化に使用したRSA鍵長
+       * @prop {boolean} meta.keyProvisioning=false - 鍵配布・鍵更新目的ならtrue
+       *   「通常業務」ではなく、「鍵を配る／更新するための通信」であることの宣言。
+       *   通常signOnlyと一致するが、運用時の利用目的が異なるため別項目とする。
+       */
+      encryptedRequest: {desc: '暗号化された要求',
+        colDef: [
+          {name:'payload',type:'string',nullable:true },
+          {name:'cipher',type:'string',nullable:true },
+          {name:'iv',type:'string',nullable:true },
+          {name:'signature',type:'string'},
+          {name:'encryptedKey',type:'string',nullable:true },
+          {name:'meta',type:'object'},
+        ],
+      },
+      /** encryptedResponse: 暗号化された処理結果
+       * @typedef {Object} encryptedResponse - 暗号化された処理結果
+       * @prop {string} cipher - 暗号化した文字列
+       * @prop {string} signature - authResponseに対するRSA-PSS署名
+       * @prop {string} encryptedKey - RSA-OAEPで暗号化されたAES共通鍵
+       * @prop {string} iv - AES-GCM 初期化ベクトル
+       * @prop {string} tag - AES-GCM 認証タグ
+       * @prop {Object} meta - メタ情報
+       * @prop {number} meta.rsabits - 暗号化に使用したRSA鍵長
+       */
+      encryptedResponse: {desc: '暗号化された応答',
+        colDef: [
+          {name:'cipher',type:'string'},
+          {name:'signature',type:'string'},
+          {name:'encryptedKey',type:'string'},
+          {name:'iv',type:'string'},
+          {name:'tag',type:'string'},
+          {name:'meta',type:'object'},
+        ],
+      },
+    },
+  },
 };
 
-// config: authServerConfigの必須設定項目
+/** authServerConfig: authServer特有の設定項目
+ * @typedef {Object} authServerConfig - authServer特有の設定項目
+ * @extends {authConfig}
+ * @prop {string} memberList="memberList" - memberListシート名
+ * @prop {number} defaultAuthority=1 - 新規加入メンバの権限の既定値
+ * @prop {number} memberLifeTime=31536000000 - 加入有効期間
+ *   メンバ加入承認後の有効期間。既定値は1年
+ * @prop {number} prohibitedToJoin=259200000 - 加入禁止期間
+ *   管理者による加入否認後、再加入申請が自動的に却下される期間。既定値は3日
+ * @prop {number} loginLifeTime=86400000 - 認証有効時間
+ *   ログイン成功後の有効期間、CPkeyの有効期間。既定値は1日
+ * @prop {number} loginFreeze=600000 - 認証凍結時間
+ *   認証失敗後、再認証要求が禁止される期間。既定値は10分
+ * @prop {number} requestIdRetention=300000 - 重複リクエスト拒否となる時間。既定値は5分
+ * @prop {string} errorLog="errorLog" - エラーログのシート名
+ * @prop {number} storageDaysOfErrorLog=604800000 - エラーログの保存日数
+ *   単位はミリ秒。既定値は7日分
+ * @prop {string} auditLog="auditLog" - 監査ログのシート名
+ * @prop {number} storageDaysOfAuditLog=604800000 - 監査ログの保存日数
+ *   単位はミリ秒。既定値は7日分
+ *
+ * @prop {authServerFuncDef} func={} - サーバ側関数設定
+ *
+ * ログイン試行関係の設定値
+ * @prop {number} passcodeLength=6 - パスコードの桁数
+ * @prop {number} maxTrial=3 - パスコード入力の最大試行回数
+ * @prop {number} passcodeLifeTime=600000 - パスコードの有効期間。既定値は10分
+ * @prop {number} maxTrialLog=5 - ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代
+ *
+ * 開発関係の設定値
+ * @prop {boolean} udSendPasscode=false - 開発中識別フラグパスコード通知メール送信を抑止するならtrue
+ * @prop {boolean} udSendInvitation=false - 開発中の加入承認通知メール送信
+ *   開発中に加入承認通知メール送信を抑止するならtrue
+ * @prop {schemaDef} typeDef - データ型定義
+ */
 const config = Object.assign(commonConfig,{
-  func: {
+  func: {   // データ型はauthServerFuncDef参照
     svTest: m => {serverFunc(...m)},
-  }
+  },
+  typeDef: {
+    name: 'auth',
+    version: '1.0.0',
+    tableDef: {
+      /** authAuditLog: authServerの監査ログをシートに出力
+       * @typedef {Object} authAuditLog - authServerの監査ログをシートに出力
+       * @prop {number} timestamp=Date.now() - 要求日時ISO8601拡張形式の文字列
+       * @prop {number} duration - 処理時間ミリ秒単位
+       * @prop {string} memberId - メンバの識別子メールアドレス
+       * @prop {string} [deviceId] - デバイスの識別子
+       * @prop {string} func - サーバ側関数名
+       * @prop {string} result=success - サーバ側処理結果
+       * @prop {string} note - 備考
+       */
+      authAuditLog: {desc: 'authServerの監査ログ',
+        colDef: [
+          {name:'timestamp',type:'datetime',desc:'要求日時',default:'Date.now()',note:'ISO8601拡張形式'},
+          {name:'duration',type:'number',desc:'処理時間(ms)'},
+          {name:'memberId',type:'string',desc:'メンバ識別子(メール)'},
+          {name:'deviceId',type:'string',desc:'デバイス識別子(UUIDv4)',nullable:true },
+          {name:'func',type:'string',desc:'サーバ関数名'},
+          {name:'result',type:'string',desc:'処理結果',default:'success'},
+          {name:'note',type:'string',desc:'備考',nullable:true },
+        ],
+      },
+      /** authErrorLog: authServerのエラーログをシートに出力
+       * @typedef {Object} authErrorLog - authServerのエラーログをシートに出力
+       * @prop {string} timestamp=Date.now() - 要求日時ISO8601拡張形式の文字列
+       * @prop {string} memberId - メンバの識別子
+       * @prop {string} deviceId - デバイスの識別子
+       * @prop {string} result=fatal - サーバ側処理結果fatal/warning/normal
+       * @prop {string} [message] - サーバ側からのエラーメッセージnormal時はundefined
+       * @prop {string} [stack] - エラー発生時のスタックトレース本項目は管理者への通知メール等、シート以外には出力不可
+       */
+      authErrorLog: {desc: 'authServerのエラーログ',
+        colDef: [
+          {name:'timestamp',type:'datetime',default:'Date.now()'},
+          {name:'memberId',type:'string'},
+          {name:'deviceId',type:'string'},
+          {name:'result',type:'string',default:'fatal',note:'fatal/warning/normal'},
+          {name:'message',type:'string',nullable:true },
+          {name:'stack',type:'string',nullable:true,note:'管理者通知専用'},
+        ],
+      },
+      /** authRequestLog: 重複チェック用のリクエスト履歴
+       * @typedef {Object[]} authRequestLog - 重複チェック用のリクエスト履歴
+       * @prop {number} timestamp=Date.now() - リクエストを受けたサーバ側日時
+       * @prop {string} nonce - クライアント側で採番されたリクエスト識別子UUIDv4
+       */
+      authRequestLog: {desc: '重複チェック用リクエスト履歴',
+        colDef: [
+          {name:'timestamp',type:'datetime',default:'Date.now()'},
+          {name:'nonce',type:'string'},
+        ],
+      },
+      /** authScriptProperties: サーバ側ScriptPropertiesに保存する情報
+       * @typedef {Object} authScriptProperties - サーバ側ScriptPropertiesに保存する内容
+       * @prop {number} keyGeneratedDateTime - 鍵ペア生成日時。UNIX時刻
+       * @prop {string} SSkeySign - 署名用秘密鍵(PEM形式)
+       * @prop {string} SPkeySign - 署名用公開鍵(PEM形式)
+       * @prop {string} SSkeyEnc - 暗号化用秘密鍵(PEM形式)
+       * @prop {string} SPkeyEnc - 暗号化用公開鍵(PEM形式)
+       * @prop {string} oldSSkeySign - バックアップ用署名用秘密鍵(PEM形式)
+       * @prop {string} oldSPkeySign - バックアップ用署名用公開鍵(PEM形式)
+       * @prop {string} oldSSkeyEnc - バックアップ用暗号化用秘密鍵(PEM形式)
+       * @prop {string} oldSPkeyEnc - バックアップ用暗号化用公開鍵(PEM形式)
+       * @prop {string} requestLog - 重複チェック用のリクエスト履歴。{authRequestLog[]}のJSON
+       */
+      /** authServerFuncDef: サーバ側関数設定オブジェクト
+       * @typedef {Object.<string,Function|Arror>} authServerFuncDef - サーバ側関数設定
+       * @prop {number} func.authority=0 - サーバ側関数の所要権限
+       *   サーバ側関数毎に設定される当該関数実行のために必要となるユーザ権限
+       *   ex. authServerConfig.func.authority === 0
+       * @prop {Function} func.do - 実行するサーバ側関数
+       *
+       * @example サーバ側関数マップ(func)の設定例
+       *
+       * - サーバ側関数(例)
+       *   - commonFunc() : 誰でも実行可能なサーバ側処理(掲示板情報の提供など)。必要な権限は'0'(=0b00)
+       *   - staffFunc() : 係員のみ実行可能なサーバ関数(受付処理など)。必要な権限は'2'(=0b10)
+       * - 設定
+       *   ```js
+       *   func = {
+       *     "commonFunc": {
+       *         "authority": 0,
+       *         "do": m => commonFunc(...m) // 引数mにはauthRequest.argを渡す
+       *     },
+       *     "staffFunc": {
+       *         "authority": 2,
+       *         "do": m => staffFunc(...m)
+       *     },
+       *   }
+       *   ```
+       * - 備考
+       *   - 上の例ではauthRequest.funcとサーバ側実関数名は一致させているが、
+       *     隠蔽等を目的で異なる形にしても問題ない。<br>
+       *     例：`cmFunc:{authority:0,do:m=>commonFunc(...m)}`
+       */
+      /** Member: メンバ情報をGoogle Spread上で管理
+       * @class
+       * @classdesc メンバ情報をGoogle Spread上で管理
+       * @prop {string} memberId="dummyMemberID" - メンバの識別子(メールアドレス)
+       * @prop {string} name="dummyMemberName" - メンバの氏名
+       * @prop {string} status="TR" - メンバの状態
+       *   仮登録 : TR(temporary registrated)
+       *   未審査 : NE(not examined)
+       *   加入中 : CJ(currentry joining)
+       *   加入禁止 : PJ(prohibited to join)
+       * @prop {MemberLog} log=new MemberLog() - メンバの履歴情報。シート上はJSON
+       * @prop {MemberProfile} profile=new MemberProfile() - メンバの属性情報。シート上はJSON
+       * @prop {Object.<string,MemberDevice>} device - デバイス情報。{deviceId:MemberDevice}形式
+       *   マルチデバイス対応のため配列。シート上はJSON
+       * @prop {string} note='' - 当該メンバに対する備考
+       */
+      Member: {desc: 'メンバ情報',
+        colDef: [
+          {name:'memberId',type:'string'},
+          {name:'name',type:'string'},
+          {name:'status',type:'string',default:'TR'},
+          {name:'log',type:'object'},
+          {name:'profile',type:'object'},
+          {name:'device',type:'object'},
+          {name:'note',type:'string',default:''},
+        ],
+      },
+      /** MemberDevice: メンバが使用する通信機器の情報
+       * @typedef {Object} MemberDevice - メンバが使用する通信機器の情報
+       * @prop {string} deviceId=UUIDv4 - デバイスの識別子
+       * @prop {string} status="UC" - デバイスの状態
+       *   未認証 : UC(uncertified)
+       *   認証中 : LI(log in)
+       *   試行中 : TR(tring)
+       *   凍結中 : FR(freezed)
+       * @prop {string} CPkeySign - デバイスの署名用公開鍵
+       * @prop {string} CPkeyEnc - デバイスの暗号化用公開鍵
+       * @prop {number} CPkeyUpdated=Date.now() - 最新のCPkeyが登録された日時
+       * @prop {MemberTrial[]} trial=[] - ログイン試行関連情報。オブジェクトシート上はJSON文字列
+       */
+      MemberDevice: {desc: 'メンバ端末',
+        colDef: [
+          {name:'deviceId',type:'string'},
+          {name:'status',type:'string',default:'UC'},
+          {name:'CPkeySign',type:'string'},
+          {name:'CPkeyEnc',type:'string'},
+          {name:'CPkeyUpdated',type:'datetime',default:'Date.now()'},
+          {name:'trial',type:'array',default:'[]'},
+        ],
+      },
+      /** MemberLog: メンバの各種要求・状態変化の時刻
+       * @typedef {Object} MemberLog - メンバの各種要求・状態変化の時刻
+       * @prop {number} joiningRequest=Date.now() - 仮登録要求日時仮登録要求をサーバ側で受信した日時
+       * @prop {number} approval=0 - 加入承認日時
+       *   管理者がmemberList上で加入承認処理を行った日時。値設定は加入否認日時と択一
+       * @prop {number} denial=0 - 加入否認日時
+       *   管理者がmemberList上で加入否認処理を行った日時。値設定は加入承認日時と択一
+       * @prop {number} loginRequest=0 - 認証要求日時
+       *   未認証メンバからの処理要求をサーバ側で受信した日時
+       * @prop {number} loginSuccess=0 - 認証成功日時
+       *   未認証メンバの認証要求が成功した最新日時
+       * @prop {number} loginExpiration=0 - 認証有効期限
+       *   認証成功日時＋認証有効時間
+       * @prop {number} loginFailure=0 - 認証失敗日時
+       *   未認証メンバの認証要求失敗が確定した最新日時
+       * @prop {number} unfreezeLogin=0 - 認証無効期限
+       *   認証失敗日時＋認証凍結時間
+       * @prop {number} joiningExpiration=0 - 加入有効期限
+       *   加入承認日時＋加入有効期間
+       * @prop {number} unfreezeDenial=0 - 加入禁止期限
+       *   加入否認日時＋加入禁止期間
+       */
+      MemberLog: {desc: 'メンバ履歴',
+        colDef: [
+          {name:'joiningRequest',type:'datetime',default:'Date.now()'},
+          {name:'approval',type:'datetime',default:0 },
+          {name:'denial',type:'datetime',default:0 },
+          {name:'loginRequest',type:'datetime',default:0 },
+          {name:'loginSuccess',type:'datetime',default:0 },
+          {name:'loginExpiration',type:'datetime',default:0 },
+          {name:'loginFailure',type:'datetime',default:0 },
+          {name:'unfreezeLogin',type:'datetime',default:0 },
+          {name:'joiningExpiration',type:'datetime',default:0 },
+          {name:'unfreezeDenial',type:'datetime',default:0 },
+        ],
+      },
+      /** MemberProfile: メンバの属性情報
+       * @typedef {Object} MemberProfile - メンバの属性情報
+       * @prop {number} authority - メンバの持つ権限
+       *   authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す
+       */
+      MemberProfile: {desc: 'メンバ属性',
+        colDef: [
+          {name:'authority',type:'number'},
+        ],
+      },
+      /** MemberTrial: ログイン試行情報の管理・判定
+       * @typedef {Object} MemberTrial - ログイン試行情報の管理・判定
+       * @prop {string} passcode - 設定されているパスコード最初の認証試行で作成
+       *   初期値はauthServerConfig.passcodeLengthで指定された桁数の数値
+       * @prop {number} created=Date.now() - パスコード生成日時≒パスコード通知メール発信日時
+       * @prop {MemberTrialLog[]} log=[] - 試行履歴常に最新が先頭(unshift()使用)
+       *   保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。
+       */
+      MemberTrial: {desc: 'ログイン試行',
+        colDef: [
+          {name:'passcode',type:'string'},
+          {name:'created',type:'datetime',default:'Date.now()'},
+          {name:'log',type:'array',default:'[]'},
+        ],
+      },
+      /** MemberTrialLog: パスコード入力単位の試行記録
+       * @typedef {Object} MemberTrialLog - パスコード入力単位の試行記録
+       * @prop {number} entered - 入力されたパスコード
+       * @prop {boolean} result - 試行結果正答：true、誤答：false
+       * @prop {number} timestamp=Date.now() - 判定処理日時
+       */
+      MemberTrialLog: {desc: '試行履歴',
+        colDef: [
+          {name:'entered',type:'string'},
+          {name:'result',type:'boolean'},
+          {name:'timestamp',type:'datetime',default:'Date.now()'},
+        ],
+      },
+    },
+  },
 });
 
 // テスト用サーバ側関数

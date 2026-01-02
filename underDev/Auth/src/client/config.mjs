@@ -11,6 +11,7 @@ import { commonConfig } from "../common/config.mjs";
  * @prop {string} storeName="config" - IndexedDBのストア名
  * @prop {number} dbVersion=1 - IndexedDBのバージョン
  * @prop {number} maxDepth=10 - exec再帰呼出時の最大階層
+ * @prop {schemaDef} typeDef - データ型定義
  */
 export const config = Object.assign(commonConfig,{
   api: 'AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT',
