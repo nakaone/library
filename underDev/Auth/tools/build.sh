@@ -17,7 +17,7 @@ dt=$(date "+%Y/%m/%d %H:%M:%S")
 echo $dt
 
 src="$prj/src"
-# $embedに渡すパラメータ
+# $embedに渡すパラメータを一括指定
 opts="-prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp"
 
 # ----------------------------------------------

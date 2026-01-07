@@ -1,0 +1,17 @@
+function onOpen(e){
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu('道具箱')
+    .addItem('加入認否入力', 'menu10')
+    .addSeparator()
+    .addSubMenu(ui.createMenu("システム関係")
+      .addItem('実行環境の初期化', 'menu21')
+      .addItem("【緊急】鍵ペアの更新", "menu22")
+    )
+    .addToUi();
+  const menu10 = () => asv.listNotYetDecided();
+  const menu21 = async () => {
+    const asv = await authServer.initialize(config);
+    asv.setupEnvironment();
+  };
+  const menu22 = () => asv.resetSPkey();
+}

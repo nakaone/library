@@ -3,8 +3,10 @@
 ## 変更履歴
 
 - build0008: 初回HTMLロード時処理
-  - authServer.setupEnvironment
-
+  - authServer.setupEnvironment(menu21)
+    - [bug] メニューが表示されない   ◀いまここ
+    - authServer.constructor step.2.2
+      ReferenceError: authConfig is not defined
   - Client/ServerAdapterクラス設計
   - Client/ServerDBクラス設計
   - 変更箇所の明確化
@@ -18,7 +20,7 @@
   - doGet追加、authServer/Client修正
   - フォルダ構成修正(src/common追加、src/doc削除)
   - config.js追加(authConfig必須パラメータ)
-  - schemaDefにSchemaクラス適用   ◀いまここ
+  - schemaDefにSchemaクラス適用
 - build0006: 【中止】初回HTMLロード時処理
   - fetchはGoogleの仕様でCORSエラー発生、回避不能が判明
   - 疎結合から密結合(Google Spreadコンテナバインド方式)に方針転換

@@ -1,3 +1,6 @@
+// 動作設定定義
+//::/server/config.js::$tmp/serverConfig.js::
+
 // ライブラリ関数定義
 //::$lib/devTools/3.0.0/core.js::
 //::$lib/toLocale/1.2.1/core.js::
@@ -6,9 +9,6 @@
 //::$tmp/authServer.js::
 //::$tmp/cryptoServer.js::
 //::$tmp/Member.js::
-
-// 動作設定定義
-//::$tmp/serverConfig.js::
 
 // テスト用サーバ側関数
 //::$src/server/serverFunc.js::
@@ -35,4 +35,4 @@ async function doPost(e) {
 }
 
 // スプレッドシートメニュー定義
-//::$src/server/menu.js::
+//::$src/server/onOpen.js::
