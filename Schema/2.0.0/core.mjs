@@ -4,11 +4,11 @@
  * 
  * @property {string} name - Schemaの論理名
  * @property {string} [version='0.0.0'] - Schemaのバージョン識別子(例:'1.2.0')
- * @property {string} [dbName='db'] - 物理DB名
+ * @property {string} [dbName] - 物理DB名。省略時はnameを流用
  * @property {string} [desc=''] - Schema全体に関する概要説明
  * @property {string} [note=''] - Schema全体に関する備考
  * @property {Object.<string, TypeDef>} types - 論理テーブル名をキーとするテーブル定義
- * @property {string} original - Schemaインスタンス生成時の引数(JSON)
+ * @property {string} original - Schemaインスタンス生成時の引数(JSON)。自動生成、設定不可
  * @property {string[]} allowedColumnTypes - 許容するColumnのデータ型のリスト。自動生成、設定不可
  *   - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function'
  * 
@@ -63,7 +63,7 @@ export class Schema {
         dev.step(3);  // 既定値・初期値の設定
         this.name = arg[v.i].name ?? this.name ?? null;
         this.version = arg[v.i].version ?? this.version ?? '0.0.0';
-        this.dbName = arg[v.i].db ?? this.dbName ?? 'db';
+        this.dbName = arg[v.i].db ?? this.dbName ?? this.name;
         this.desc = arg[v.i].desc ?? this.desc ?? '';
         this.note = arg[v.i].note ?? this.note ?? '';
         // 既に存在するthis.typesはarg[v.i].typesで上書きしない
