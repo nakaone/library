@@ -47,34 +47,10 @@ export class authClient {
     const dev = new devTools(v);
     try {
 
-      dev.step(1);  // config必須項目のチェック
-      if( !config.hasOwnProperty('api') )
-        throw new Error(`Required arguments not specified`);
+      dev.step(1);  // 各種設定値をthis.cfに格納
+      this.cf = new authClientConfig(config);
 
-      // -------------------------------------------------------------
-      // 設定情報(this.cf)の作成
-      // -------------------------------------------------------------
-      dev.step(2.1);  // authClient特有の設定項目について既定値を定義
-      v.authClientConfig = {
-        api: config.api,
-        timeout: 300000,
-        storeName: 'config',
-        dbVersion: 1,
-        maxDepth: 10,
-      };
-
-      dev.step(2.2); // authClient/Server共通設定値に特有項目を追加
-      this.cf = new authConfig(config);
-      Object.keys(v.authClientConfig).forEach(x => {
-        this.cf[x] = config[x] || v.authClientConfig[x];
-      });
-
-      dev.step(2.3);  // this.apiをIDからURLに書き換え
-      this.cf.api = `https://script.google.com/macros/s/${this.cf.api}/exec`;
-
-      // -------------------------------------------------------------
-      dev.step(3);  // その他メンバの値設定
-      // -------------------------------------------------------------
+      dev.step(2);  // その他メンバの値設定
       this.idb = {};  // IndexedDBと同期、authClient内で共有
 
       console.log('authClient.constructor final api =', this.cf.api);

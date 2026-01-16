@@ -1,4 +1,5 @@
 import { Schema } from "../../../../Schema/2.0.0/core.mjs";
+import { mergeDeeply } from "../../../../mergeDeeply/2.0.0/core.mjs"
 
 /** authConfig: クライアント・サーバ共通設定情報
  * @class
@@ -15,7 +16,7 @@ import { Schema } from "../../../../Schema/2.0.0/core.mjs";
 export class authConfig extends Schema {
   /**
    * @constructor
-   * @param {authConfig} config - 設定情報(既定値からの変更部分)
+   * @param {authConfig} arg - 設定情報(既定値からの変更部分)
    */
   constructor(arg) {
     const v = {whois:`authConfig.constructor`, arg:{arg}, rv:null};
@@ -168,7 +169,7 @@ export class authConfig extends Schema {
     }
     try {
       dev.step(1);  // スーパークラス(Schema)の生成
-      super(Object.assign(schema,arg));
+      super(mergeDeeply(v.schema,arg));
 
       dev.step(2);  // 必須項目の設定
       v.required.forEach(x => {

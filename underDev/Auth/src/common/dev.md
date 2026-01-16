@@ -5,7 +5,14 @@
 - build0008: 初回HTMLロード時処理
   - authServer.setupEnvironment(menu21)
     - [bug] メニューが表示されない
-    - menu21:authServer.constructor step.2.2   ◀いまここ
+    - config.mjsの構成見直し
+      - config.jsonの作成
+      - class authClientConfig作成   ◀いまここ
+        - Object.assignだとtypesがマージされない ⇒ mergeDeeplyへ変更
+          - pri,subの順番をObject.assignに合わせる
+          - devToolsアップデート対応
+      - class authServerConfig作成
+    - menu21:authServer.constructor step.2.2
       ReferenceError: authConfig is not defined
   - Client/ServerAdapterクラス設計
   - Client/ServerDBクラス設計

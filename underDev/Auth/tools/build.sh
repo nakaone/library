@@ -62,8 +62,11 @@ for f in $src/common/*.mjs; do
   sed '/^import /d; s/^export //' "$f" > "$tmp/$bn.js"
 done
 
-# === 1.3 共通configの作成
-sed '/^import /d; s/^export //' "$src/common/config.mjs" > "$tmp/commonConfig.js"
+# === 1.3 configの作成
+cat $src/common/config.json | \
+node config.mjs -v:config -s:common -s:client > $tmp/clientConfig.mjs
+cat $src/common/config.json | \
+node config.mjs -v:config -s:common -s:server > $tmp/serverConfig.mjs
 
 # ----------------------------------------------
 # 2. クライアント側
