@@ -4,8 +4,8 @@
 
 - build0008: 初回HTMLロード時処理
   - authServer.setupEnvironment(menu21)
-    - [bug] メニューが表示されない   ◀いまここ
-    - authServer.constructor step.2.2
+    - [bug] メニューが表示されない
+    - menu21:authServer.constructor step.2.2   ◀いまここ
       ReferenceError: authConfig is not defined
   - Client/ServerAdapterクラス設計
   - Client/ServerDBクラス設計
