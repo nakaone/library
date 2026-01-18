@@ -78,10 +78,17 @@ export class authClient {
 
     try {
 
-      // -------------------------------------------------------------
-      // 設定情報(this.cf)の作成：共通設定情報にauthClient特有項目を追加
-      // -------------------------------------------------------------
-      dev.step(1.1);  // {authConfig} this.cfの作成
+      /** this.cf(authClientConfig): 共通設定情報にauthClient特有項目
+       * @typedef {Object}
+       * @extends {authConfig}
+       * @prop {string} api - サーバ側WebアプリURLのID
+       *   https://script.google.com/macros/s/(この部分)/exec
+       * @prop {number} timeout=300000 - サーバからの応答待機時間
+       *   これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分
+       * @prop {string} storeName="config" - IndexedDBのストア名
+       * @prop {number} dbVersion=1 - IndexedDBのバージョン
+       */
+      dev.step(1.1);  // this.cfの作成
       this.cf = new authConfig(mergeDeeply(v.schema,config));
 
       dev.step(1.2);  // 必須項目の設定

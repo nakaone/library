@@ -13,47 +13,89 @@ export class authServer {
   constructor(config={}) {
     const v = {whois:`authServer.constructor`, arg:{config}, rv:null};
     const dev = new devTools(v);
+    // -------------------------------------------------------------
+    // authServer専用設定値・データ型(Schema)定義
+    //   ※authClient/Server共用はauthConfigクラスで定義
+    // -------------------------------------------------------------
+    // Schemaクラスの指定項目＋authClient専用データ型定義
+    v.schema = {
+      types: {
+      }
+    };
+    // 必須指定項目の一覧
+    v.required = ['func'];
+    // 任意指定項目と既定値
+    v.option = {
+      memberList: 'memberList',
+      defaultAuthority: 1,
+      memberLifeTime: 31536000000,
+      prohibitedToJoin: 259200000,
+      loginLifeTime: 86400000,
+      loginFreeze: 600000,
+      requestIdRetention: 300000,
+      errorLog: "errorLog",
+      storageDaysOfErrorLog: 604800000,
+      auditLog: "auditLog",
+      storageDaysOfAuditLog: 604800000,
+      func: config.func,
+      passcodeLength: 6,
+      maxTrial: 3,
+      passcodeLifeTime: 600000,
+      maxTrialLog: 5,
+      udSendPasscode: false,
+      udSendInvitation: false,
+    }
     try {
 
-      // -------------------------------------------------------------
-      dev.step(1);  // config必須項目のチェック
-      // -------------------------------------------------------------
-      if( !config.hasOwnProperty('func') )
-        throw new Error(`Required arguments not specified`);
+      /** this.cf(authServerConfig): 共通設定情報にauthServer特有項目を追加
+       * @typedef {Object} authServerConfig - authServer特有の設定項目
+       * @extends {authConfig}
+       * @prop {string} memberList="memberList" - memberListシート名
+       * @prop {number} defaultAuthority=1 - 新規加入メンバの権限の既定値
+       * @prop {number} memberLifeTime=31536000000 - 加入有効期間
+       *   メンバ加入承認後の有効期間。既定値は1年
+       * @prop {number} prohibitedToJoin=259200000 - 加入禁止期間
+       *   管理者による加入否認後、再加入申請が自動的に却下される期間。既定値は3日
+       * @prop {number} loginLifeTime=86400000 - 認証有効時間
+       *   ログイン成功後の有効期間、CPkeyの有効期間。既定値は1日
+       * @prop {number} loginFreeze=600000 - 認証凍結時間
+       *   認証失敗後、再認証要求が禁止される期間。既定値は10分
+       * @prop {number} requestIdRetention=300000 - 重複リクエスト拒否となる時間。既定値は5分
+       * @prop {string} errorLog="errorLog" - エラーログのシート名
+       * @prop {number} storageDaysOfErrorLog=604800000 - エラーログの保存日数
+       *   単位はミリ秒。既定値は7日分
+       * @prop {string} auditLog="auditLog" - 監査ログのシート名
+       * @prop {number} storageDaysOfAuditLog=604800000 - 監査ログの保存日数
+       *   単位はミリ秒。既定値は7日分
+       * 
+       * @prop {authServerFuncDef} func={} - サーバ側関数設定
+       * 
+       * ログイン試行関係の設定値
+       * @prop {number} passcodeLength=6 - パスコードの桁数
+       * @prop {number} maxTrial=3 - パスコード入力の最大試行回数
+       * @prop {number} passcodeLifeTime=600000 - パスコードの有効期間。既定値は10分
+       * @prop {number} maxTrialLog=5 - ログイン試行履歴(MemberTrial)の最大保持数。既定値は5世代
+       * 
+       * 開発関係の設定値
+       * @prop {boolean} udSendPasscode=false - 開発中識別フラグパスコード通知メール送信を抑止するならtrue
+       * @prop {boolean} udSendInvitation=false - 開発中の加入承認通知メール送信
+       *   開発中に加入承認通知メール送信を抑止するならtrue
+       * @prop {schemaDef} typeDef - データ型定義
+       */
+      dev.step(1.1);  // this.cfの作成
+      this.cf = new authConfig(mergeDeeply(v.schema,config));
 
-      // -------------------------------------------------------------
-      dev.step(2);  // 設定情報(this.cf)の作成
-      // -------------------------------------------------------------
-      dev.step(2.1);  // authServer特有の設定項目について既定値を定義
-      v.authServerConfig = {
-        memberList: 'memberList',
-        defaultAuthority: 1,
-        memberLifeTime: 31536000000,
-        prohibitedToJoin: 259200000,
-        loginLifeTime: 86400000,
-        loginFreeze: 600000,
-        requestIdRetention: 300000,
-        errorLog: "errorLog",
-        storageDaysOfErrorLog: 604800000,
-        auditLog: "auditLog",
-        storageDaysOfAuditLog: 604800000,
-        func: config.func,
-        passcodeLength: 6,
-        maxTrial: 3,
-        passcodeLifeTime: 600000,
-        maxTrialLog: 5,
-        udSendPasscode: false,
-        udSendInvitation: false,
-      };
+      dev.step(1.2);  // 必須項目の設定
+      v.required.forEach(x => {
+        if( typeof config[x] === 'undefined' )
+          throw new Error(`"${x}" is not specified.`);
+        this.cf[x] = config[x];
+      });
 
-      dev.step(2.2); // authServer/Server共通設定値に特有項目を追加
-      this.cf = new authConfig(config);
-      Object.keys(v.authServerConfig).forEach(x => {
-        this.cf[x] = config[x] || v.authServerConfig[x];
-      })
-      dev.step(2.3);  // authServerConfig 必須チェック
-      if (!this.cf || !this.cf.memberList)
-        throw new Error('invalid authServerConfig: memberList missing');
+      dev.step(1.3);  // 任意項目の設定
+      Object.keys(v.option).forEach(x => {
+        this.cf[x] = config[x] ?? v.option[x];
+      });
 
       dev.end(); // 終了処理
 
