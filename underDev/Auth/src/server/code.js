@@ -1,5 +1,5 @@
 // 動作設定定義
-//::/server/config.js::$tmp/serverConfig.js::
+//::$tmp/config.js::
 
 // ライブラリ関数定義
 //::$lib/devTools/3.0.0/core.js::

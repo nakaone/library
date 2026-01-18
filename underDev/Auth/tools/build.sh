@@ -62,12 +62,6 @@ for f in $src/common/*.mjs; do
   sed '/^import /d; s/^export //' "$f" > "$tmp/$bn.js"
 done
 
-# === 1.3 configの作成
-cat $src/common/config.json | \
-node config.mjs -v:config -s:common -s:client > $tmp/clientConfig.mjs
-cat $src/common/config.json | \
-node config.mjs -v:config -s:common -s:server > $tmp/serverConfig.mjs
-
 # ----------------------------------------------
 # 2. クライアント側
 # ----------------------------------------------
@@ -81,7 +75,7 @@ for f in $src/client/*.mjs; do
 done
 
 # === 2.2 クライアント側configの作成
-sed '/^import /d; s/^export //' "$src/client/config.mjs" > "$tmp/clientConfig.js"
+#sed '/^import /d; s/^export //' "$src/client/config.mjs" > "$tmp/clientConfig.js"
 
 # === 2.3 index.htmlの作成
 # 開発時の更新確認のため、index.htmlに現在日時を挿入
@@ -100,7 +94,7 @@ for f in $src/server/*.mjs; do
 done
 
 # === 3.2 サーバ側configの作成
-sed '/^import /d; s/^export //' "$src/server/config.mjs" > "$tmp/serverConfig.js"
+#sed '/^import /d; s/^export //' "$src/server/config.mjs" > "$tmp/serverConfig.js"
 
 # === 3.3 Code.gsの作成
 echo "// $dt" > $dep/Code.gs

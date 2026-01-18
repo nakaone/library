@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-<p style='text-align:right'>2026/01/07 10:05:46</p>
+<p style='text-align:right'>2026/01/18 14:24:14</p>
 <p style="text-align: right;"><?= VERSION ?></p>
 <h1>SPkey要求テスト</h1>
 
@@ -309,257 +309,325 @@ class devTools {
   }
 }
 devTools.sequence = 1; // 関数・メソッドの呼出順を初期化
+/** 渡された変数内のオブジェクト・配列を再帰的にマージ
+ * - pri,subともデータ型は不問。次項のデシジョンテーブルに基づき、結果を返す
+ *
+ * @param {any} pri - 優先される変数(priority)
+ * @param {any} sub - 劣後する変数(subordinary)
+ * @param {Object} opt - オプション
+ * @param {string} opt.array - 配列の扱いを指定
+ * @returns {any|Error}
+ *
+ * #### デシジョンテーブル
+ *
+ * | 優先(pri) | 劣後(sub) | 結果 | 備考 |
+ * | :--: | :--: | :--: | :-- |
+ * |  A  |  -  |  A  | 優先(A)のみ存在するメンバはそのまま |
+ * |  A  |  B  |  A  | |
+ * |  A  | [B] |  A  | |
+ * |  A  | {B} |  A  | |
+ * | [A] |  -  | [A] | |
+ * | [A] |  B  | [A] | |
+ * | [A] | [B] | [X] | 配列はopt.arrayによる |
+ * | [A] | {B} | [A] | |
+ * | {A} |  -  | {A} | |
+ * | {A} |  B  | {A} | |
+ * | {A} | [B] | {A} | |
+ * | {A} | {B} | {A+B} | オブジェクトも置換ではなく結合する |
+ * |  -  |  -  |  -  | |
+ * |  -  |  B  |  B  | |
+ * |  -  | [B] | [B] | |
+ * |  -  | {B} | {B} | |
+ *
+ * #### opt.array : pri,sub双方配列の場合の処理方法を指定
+ *
+ * 例 pri:[1,2,{x:'a'},{a:10,b:20}], sub:[1,3,{x:'a'},{a:30,c:40}]
+ *
+ * - pri(priority): 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
+ * - add: 値の重複に拘わらず、pri+subを返す ⇒ [1,2,{x:'a'},{a:10,b:20},1,3,{x:'a'},{a:30,c:40}]
+ * - set: priに無いsubの要素をpriに追加 ⇒ [1,2,3,{x:'a'},{x:'a'},{a:10,b:20},{a:30,c:40}]
+ *   ※`{x:'a'}`は別オブジェクトなので、重複排除されない事に注意。関数、Date等のオブジェクトも同様。
+ * - str(strict): 【既定値】priに無いsubの要素をpriに追加。setと異なり、内容が同値なら重複排除<br>
+ *   ⇒ [1,2,3,{x:'a'},{a:10,b:20},{a:30,c:40}]
+ * - cmp(未実装): pri[n]とsub[n]を比較(comparison)。原則pri優先だが、例外として両方がObj or Arrならマージ<br>
+ *   ⇒ [1,2,{x:'a'},{a:10,b:20,c:40}]
+ *
+ * @history
+ * - rev.2.0.0 : 2026/01/16
+ *   - pri,subの順番をObject.assignに合わせる
+ *   - devToolsアップデート対応(2系->3.0.0)
+ * - rev.1.2.0 : 2025/09/14
+ *   - priまたはsubがErrorならそのままエラーとして返すよう修正(複数変数統合対応)
+ *   - devTool対応
+ * - rev.1.1.0 : 2024/02/17
+ *   - deepcopyと統合
+ *   - 配列の統合方法を整理、オプションとして指定可能に変更
+ * - rev.1.0.0 : 2023/10/21 初版
+ */
+function mergeDeeply(sub,pri,opt={}){
+  const v = {whois:`mergeDeeply`, arg:{sub,pri,opt}, rv:null,
+    isObj: arg => arg && String(Object.prototype.toString.call(arg).slice(8,-1)) === 'Object',
+    isArr: arg => arg && Array.isArray(arg),
+  };
+  const dev = new devTools(v);
+  try {
+
+    dev.step(1.1);  // 引数チェック
+    if( pri instanceof Error ) throw pri;
+    if( sub instanceof Error ) throw sub;
+
+    dev.step(1.2);  // 既定値の設定
+    if( !opt.hasOwnProperty('array') ) opt.array = 'str';
+
+    if( v.isObj(pri) && v.isObj(sub) ){
+      dev.step(2); // sub,pri共にハッシュの場合
+      v.rv = {};
+      dev.step(2.1); // 優先・劣後Obj両方のハッシュキー(文字列)を、重複しない形でv.keysに保存
+      v.keys = new Set([...Object.keys(pri),...Object.keys(sub)]);
+      for( v.key of v.keys ){
+        if( pri.hasOwnProperty(v.key) && sub.hasOwnProperty(v.key) ){
+          dev.step(2.2); // pri,sub両方がキーを持つ
+          if( v.isObj(pri[v.key]) && v.isObj(sub[v.key]) || v.isArr(pri[v.key]) && v.isArr(sub[v.key]) ){
+            dev.step(2.21); // 配列またはオブジェクトの場合は再帰呼出
+            v.rv[v.key] = mergeDeeply(pri[v.key],sub[v.key],opt);
+          } else {
+            dev.step(2.22); // 配列でもオブジェクトでもない場合は優先変数の値をセット
+            v.rv[v.key] = pri[v.key];
+          }
+        } else {
+          dev.step(2.3); // pri,subいずれか片方しかキーを持っていない
+          v.rv[v.key] = pri.hasOwnProperty(v.key) ? pri[v.key] : sub[v.key];
+        }
+      }
+    } else if( v.isArr(pri) && v.isArr(sub) ){
+      dev.step(3); // sub,pri共に配列の場合
+      switch( opt.array ){
+        case 'pri':
+          dev.step(3.1);  // pri: 単純にpriをセット。subは全て廃棄 ⇒ [1,2,{x:'a'},{a:10,b:20}]
+          v.rv = pri;
+          break;
+        case 'add':
+          dev.step(3.2);  // add: 値の重複に拘わらず、pri+subを返す ⇒ [1,2,{x:'a'},{a:10,b:20},1,3,{x:'a'},{a:30,c:40}]
+          v.rv = [...pri, ...sub];
+          break;
+        case 'str':
+          dev.step(3.3);
+          // str(strict): priに無いsubの要素をpriに追加。setと異なり、内容が同値なら重複排除<br>
+          // ⇒ [1,2,3,{x:'a'},{a:10,b:20},{a:30,c:40}]
+          v.rv = [];
+          pri.forEach(x => v.rv.push(x));
+          sub.forEach(s => {
+            v.flag = false;
+            pri.forEach(p => v.flag = v.flag || isEqual(s,p));
+            if( v.flag === false ) v.rv.push(s);
+          });
+          break;
+        default:
+          dev.step(3.4);
+          // set(既定値): priに無いsubの要素をpriに追加 ⇒ [1,2,{x:'a'},{a:10,b:20},3,{x:'a'},{a:30,c:40}]
+          v.rv = [...new Set([...pri,...sub])];
+      }
+    } else {
+      dev.step(4); // subとpriのデータ型が異なる ⇒ priを優先してセット
+      v.rv = whichType(pri,'Undefined') ? sub : pri;
+    }
+
+    dev.end(); // 終了処理
+    return v.rv;
+
+  } catch (e) { return dev.error(e); }
+}
 
 // authClient関係クラス定義
 /** authConfig: クライアント・サーバ共通設定情報
  * @class
  * @classdesc クライアント・サーバ共通設定情報
- * @prop {string} systemName="Auth" - システム名
+ * @prop {string} [systemName="auth"] - システム名
  * @prop {string} adminMail - 管理者のメールアドレス
  * @prop {string} adminName - 管理者氏名
- * @prop {number} allowableTimeDifference=120000 - クライアント・サーバ間通信時の許容時差既定値は2分
- * @prop {string} RSAbits=2048 - 鍵ペアの鍵長
+ * @prop {number} [allowableTimeDifference=120000] - クライアント・サーバ間通信時の許容時差既定値は2分
+ * @prop {string} [RSAbits=2048] - 鍵ペアの鍵長
+ * @prop {number} [maxDepth=10] - 再帰呼出時の最大階層
  * @prop {Object} underDev - テスト時の設定
  * @prop {boolean} underDev.isTest=false - 開発モードならtrue
- * @prop {schemaDef} typeDef - データ型定義
  */
-const commonConfig = {
-  adminMail: 'ena.kaon@gmail.com',
-  adminName: 'あどみ',
-  /** schemaDef: DB構造定義オブジェクト (論理Schema・引数用)
-   * @class
-   * @classdesc DB構造定義オブジェクト
-   *
-   * 【責務】
-   * - DBの論理構造を定義する
-   * - Adapter / DB 実装に依存しない
-   *
-   * @property {string} name - Schemaの論理名
-   * @property {string} [version='0.0.0'] - Schemaのバージョン識別子(例:'1.2.0')
-   * @property {string} [dbName=''] - 物理DB名（Adapter が参照する場合のみ使用）
-   * @property {string} [desc=''] - Schema全体に関する概要説明
-   * @property {string} [note=''] - Schema全体に関する備考
-   * @property {Object.<string, tableDef>} tableDef - 論理テーブル名をキーとするテーブル定義
-   * @property {string} original - schemaDefインスタンス生成時のスナップショット(JSON)
-   *
-   * @example
-   * ```
-   * {
-   *   name: 'camp2025',
-   *   tableDef: {
-   *     master: {
-   *       colDef:[
-   *         {name:'タイムスタンプ',type:'string'},
-   *         {name:'メールアドレス',type:'string'},
-   *         // (中略)
-   *       ],
-   *     },
-   *   },
-   * },
-   * ```
-   *
-   * @history
-   * 2.0.0 2025-12-21 構造簡潔化＋Adapterと役割分担
-   * 1.2.0 2025-09-21 AlaSQLの予約語とSpreadDb.schemaの重複排除
-   *   - SpreadDb.schema.tables -> tableMap
-   *   - SpreadDb.schema.tables.cols -> colMap(∵予約語columnsと紛らわしい)
-   * 1.1.0 2025-09-15 構造の見直し、メンバ名の修正
-   * 1.0.0 2025-09-15 初版
+class authConfig extends Schema {
+  /**
+   * @constructor
+   * @param {authConfig} arg - 設定情報(既定値からの変更部分)
    */
-  /** tableDef: 論理テーブル構造定義 (引数用)
-   * @typedef {Object} tableDef
-   * @property {string} [name] - 論理的な識別名（tableDef のキー）
-   *   - クラス・API・ログで使用。例: 'Member', 'AuthAuditLog'
-   *   - constructorに渡す定義オブジェクトでは省略(メンバ名を引用)
-   * @property {string} [desc=''] - テーブルに関する概要説明
-   * @property {string} [note=''] - テーブルに関する備考
-   * @property {string[]} [primaryKey=[]] - 主キー項目名
-   * @property {string[]} [unique=[]] - 主キー以外の一意制約
-   * @property {columnDef[]} colDef - 項目定義（順序を考慮するため配列）
-   */
-  /** columnDef: 項目定義 (引数用)
-   * @typedef {Object} columnDef
-   * @property {string} name - 項目名（英数字・システム用）
-   * @property {string} [label] - 表示用ラベル（省略時は name)
-   * @property {string} [desc=''] - 項目に関する概要説明
-   * @property {string} [note=''] - 項目に関する備考・意味説明
-   * @property {string} [type='string'] - 論理データ型
-   *   - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime'
-   * @property {boolean} [nullable=true] - null を許可するか
-   * @property {any} [default=null] - 既定値
-   *   - 関数の場合は toString() 化された文字列
-   */
-  typeDef: {
-    name: 'auth',
-    version: '1.0.0',
-    tableDef: {
-      /** authRequest: authClientからauthServerへの処理要求(平文)
-       * @typedef {Object} authRequest
-       * @prop {string} memberId=this.idb.memberId - メンバの識別子
-       * @prop {string} deviceId=this.idb.deviceId - デバイスの識別子(UUIDv4)
-       * @prop {string} memberName=this.idb.memberName - メンバの氏名。管理者が加入認否判断のため使用
-       * @prop {string} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
-       * @prop {number} requestTime=Date.now() - 要求日時UNIX時刻
-       * @prop {string} func - サーバ側関数名
-       * @prop {any[]} arg=[] - サーバ側関数に渡す引数の配列
-       * @prop {string} nonce=UUIDv4 - 要求の識別子UUIDv4
-       */
-      authRequest: {desc: 'クライアント→サーバ要求',
-        colDef: [
-          {name:'memberId',type:'string',desc:'メンバの識別子'},
-          {name:'deviceId',type:'string',desc:'デバイスの識別子(UUIDv4)'},
-          {name:'memberName',type:'string',desc:'メンバの氏名',note:'管理者が加入認否判断のため使用'},
-          {name:'CPkeySign',type:'string',desc:'クライアント側署名用公開鍵'},
-          {name:'requestTime',type:'datetime',desc:'要求日時',default:'Date.now()'},
-          {name:'func',type:'string',desc:'サーバ側関数名'},
-          {name:'arg',type:'array',desc:'サーバ側関数に渡す引数の配列',default:'[]'},
-          {name:'nonce',type:'string',desc:'要求の識別子'},
-        ],
-        constructor: o => { // {idb,func[,arg]}
-          return {  // idb: authClient.idb(IndexedDB)
-            memberId: o.idb.memberId,
-            deviceId: o.idb.deviceId,
-            memberName: o.idb.memberName,
-            CPkeySign: o.idb.CPkeySign,
-            requestTime: Date.now(),
-            func: o.func,
-            arg: o.arg ?? [],
-            nonce: crypto.randomUUID(),
+  constructor(arg) {
+    const v = {whois:`authConfig.constructor`, arg:{arg}, rv:null};
+    const dev = new devTools(v);
+    // Schemaクラスの指定項目＋authClient/Server共用データ型定義
+    v.schema = {
+      name: arg.systemName ?? 'auth',
+      version: '1.0.0',
+      types: {
+        /** authRequest: authClientからauthServerへの処理要求(平文)
+         * @typedef {Object} authRequest
+         * @prop {string} memberId=this.idb.memberId - メンバの識別子
+         * @prop {string} deviceId=this.idb.deviceId - デバイスの識別子(UUIDv4)
+         * @prop {string} memberName=this.idb.memberName - メンバの氏名。管理者が加入認否判断のため使用
+         * @prop {string} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
+         * @prop {number} requestTime=Date.now() - 要求日時UNIX時刻
+         * @prop {string} func - サーバ側関数名
+         * @prop {any[]} arg=[] - サーバ側関数に渡す引数の配列
+         * @prop {string} nonce=UUIDv4 - 要求の識別子UUIDv4
+         */
+        authRequest: {desc: 'クライアント→サーバ要求',
+          colDef: [
+            {name:'memberId',type:'string',desc:'メンバの識別子'},
+            {name:'deviceId',type:'string',desc:'デバイスの識別子(UUIDv4)'},
+            {name:'memberName',type:'string',desc:'メンバの氏名',note:'管理者が加入認否判断のため使用'},
+            {name:'CPkeySign',type:'string',desc:'クライアント側署名用公開鍵'},
+            {name:'requestTime',type:'datetime',desc:'要求日時',default:'Date.now()'},
+            {name:'func',type:'string',desc:'サーバ側関数名'},
+            {name:'arg',type:'array',desc:'サーバ側関数に渡す引数の配列',default:'[]'},
+            {name:'nonce',type:'string',desc:'要求の識別子'},
+          ],
+          constructor: o => { // {idb,func[,arg]}
+            return {  // idb: authClient.idb(IndexedDB)
+              memberId: o.idb.memberId,
+              deviceId: o.idb.deviceId,
+              memberName: o.idb.memberName,
+              CPkeySign: o.idb.CPkeySign,
+              requestTime: Date.now(),
+              func: o.func,
+              arg: o.arg ?? [],
+              nonce: crypto.randomUUID(),
+            }
           }
-        }
-      },
-      /** authResponse: authServerからauthClientへの処理結果(平文)
-       * @typedef {Object} authResponse - authServerからauthClientへの処理結果(平文)
-       * == authClient設定項目(authRequestからの転記項目)
-       * @prop {string} memberId - メンバの識別子
-       * @prop {string} deviceId - デバイスの識別子。UUIDv4
-       * @prop {string} memberName - メンバの氏名
-       * @prop {CryptoKey} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
-       * @prop {number} requestTime - 要求日時UNIX時刻
-       * @prop {string} func - サーバ側関数名
-       * @prop {any[]} arg - サーバ側関数に渡す引数の配列
-       * @prop {string} nonce - 要求の識別子UUIDv4
-       *
-       * == authServer内での追加項目
-       * @prop {string} SPkeySign=this.keys.SPkeySign - サーバ側署名用公開鍵
-       * @prop {string} SPkeyEnc=this.keys.SPkeyEnc - サーバ側暗号化用公開鍵
-       * @prop {any} response=null - サーバ側関数の戻り値
-       * @prop {number} receptTime=Date.now() - サーバ側の処理要求受付日時
-       * @prop {number} responseTime=0 - サーバ側処理終了日時
-       *   エラーの場合は発生日時
-       * @prop {string} status="success" - サーバ側処理結果
-       *   正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、
-       *   致命的エラーの場合はErrorオブジェクト
-       * @prop {string} message="" - メッセージ(statusの補足)
-       *
-       * == authClient設定項目(authServerからの返信を受け、authClient内で追加)
-       * @prop {string} decrypt="success" - クライアント側での復号処理結果
-       *   "success":正常、それ以外はエラーメッセージ
-       */
-      authResponse: {desc: 'サーバ→クライアント応答',
-        colDef: [
-          {name:'memberId',type:'string'},
-          {name:'deviceId',type:'string'},
-          {name:'memberName',type:'string'},
-          {name:'CPkeySign',type:'string'},
-          {name:'requestTime',type:'datetime'},
-          {name:'func',type:'string'},
-          {name:'arg',type:'array'},
-          {name:'nonce',type:'string'},
-          {name:'SPkeySign',type:'string'},
-          {name:'SPkeyEnc',type:'string'},
-          {name:'response',type:'any',nullable:true },
-          {name:'receptTime',type:'datetime',default:'Date.now()'},
-          {name:'responseTime',type:'datetime',default:0 },
-          {name:'status',type:'string',default:'success'},
-          {name:'message',type:'string',default:''},
-          {name:'decrypt',type:'string',default:'success'},
-        ],
-      },
-      /** encryptedRequest: 暗号化された処理要求
-       * @typedef {Object} encryptedRequest - 暗号化された処理要求
-       * @prop {string} payload=null - 平文のauthRequest
-       *   cipherと排他。SPkey要求時(meta.keyProvisioning===true)のみ設定
-       * @prop {string} cipher=null - AES-256-GCMで暗号化されたauthRequest。payloadと排他
-       * @prop {string} iv=null - AES-GCM 初期化ベクトル
-       * @prop {string} signature - authRequestに対するRSA-PSS署名
-       * @prop {string} encryptedKey=null - RSA-OAEPで暗号化されたAES共通鍵
-       * @prop {Object} meta - メタ情報
-       * @prop {boolean} meta.signOnly=false - 暗号化せず署名のみで送信する場合true
-       * @prop {string} meta.sym=null - 使用した共通鍵方式"AES-256-GCM"
-       * @prop {number} meta.rsabits - 暗号化に使用したRSA鍵長
-       * @prop {boolean} meta.keyProvisioning=false - 鍵配布・鍵更新目的ならtrue
-       *   「通常業務」ではなく、「鍵を配る／更新するための通信」であることの宣言。
-       *   通常signOnlyと一致するが、運用時の利用目的が異なるため別項目とする。
-       */
-      encryptedRequest: {desc: '暗号化された要求',
-        colDef: [
-          {name:'payload',type:'string',nullable:true },
-          {name:'cipher',type:'string',nullable:true },
-          {name:'iv',type:'string',nullable:true },
-          {name:'signature',type:'string'},
-          {name:'encryptedKey',type:'string',nullable:true },
-          {name:'meta',type:'object'},
-        ],
-      },
-      /** encryptedResponse: 暗号化された処理結果
-       * @typedef {Object} encryptedResponse - 暗号化された処理結果
-       * @prop {string} cipher - 暗号化した文字列
-       * @prop {string} signature - authResponseに対するRSA-PSS署名
-       * @prop {string} encryptedKey - RSA-OAEPで暗号化されたAES共通鍵
-       * @prop {string} iv - AES-GCM 初期化ベクトル
-       * @prop {string} tag - AES-GCM 認証タグ
-       * @prop {Object} meta - メタ情報
-       * @prop {number} meta.rsabits - 暗号化に使用したRSA鍵長
-       */
-      encryptedResponse: {desc: '暗号化された応答',
-        colDef: [
-          {name:'cipher',type:'string'},
-          {name:'signature',type:'string'},
-          {name:'encryptedKey',type:'string'},
-          {name:'iv',type:'string'},
-          {name:'tag',type:'string'},
-          {name:'meta',type:'object'},
-        ],
-      },
-    },
-  },
-};
+        },
+        /** authResponse: authServerからauthClientへの処理結果(平文)
+         * @typedef {Object} authResponse - authServerからauthClientへの処理結果(平文)
+         * == authClient設定項目(authRequestからの転記項目)
+         * @prop {string} memberId - メンバの識別子
+         * @prop {string} deviceId - デバイスの識別子。UUIDv4
+         * @prop {string} memberName - メンバの氏名
+         * @prop {CryptoKey} CPkeySign=this.idb.CPkeySign - クライアント側署名用公開鍵
+         * @prop {number} requestTime - 要求日時UNIX時刻
+         * @prop {string} func - サーバ側関数名
+         * @prop {any[]} arg - サーバ側関数に渡す引数の配列
+         * @prop {string} nonce - 要求の識別子UUIDv4
+         *
+         * == authServer内での追加項目
+         * @prop {string} SPkeySign=this.keys.SPkeySign - サーバ側署名用公開鍵
+         * @prop {string} SPkeyEnc=this.keys.SPkeyEnc - サーバ側暗号化用公開鍵
+         * @prop {any} response=null - サーバ側関数の戻り値
+         * @prop {number} receptTime=Date.now() - サーバ側の処理要求受付日時
+         * @prop {number} responseTime=0 - サーバ側処理終了日時
+         *   エラーの場合は発生日時
+         * @prop {string} status="success" - サーバ側処理結果
+         *   正常終了時は"success"(文字列)、警告終了の場合はエラーメッセージ、
+         *   致命的エラーの場合はErrorオブジェクト
+         * @prop {string} message="" - メッセージ(statusの補足)
+         *
+         * == authClient設定項目(authServerからの返信を受け、authClient内で追加)
+         * @prop {string} decrypt="success" - クライアント側での復号処理結果
+         *   "success":正常、それ以外はエラーメッセージ
+         */
+        authResponse: {desc: 'サーバ→クライアント応答',
+          colDef: [
+            {name:'memberId',type:'string'},
+            {name:'deviceId',type:'string'},
+            {name:'memberName',type:'string'},
+            {name:'CPkeySign',type:'string'},
+            {name:'requestTime',type:'datetime'},
+            {name:'func',type:'string'},
+            {name:'arg',type:'array'},
+            {name:'nonce',type:'string'},
+            {name:'SPkeySign',type:'string'},
+            {name:'SPkeyEnc',type:'string'},
+            {name:'response',type:'any',nullable:true },
+            {name:'receptTime',type:'datetime',default:'Date.now()'},
+            {name:'responseTime',type:'datetime',default:0 },
+            {name:'status',type:'string',default:'success'},
+            {name:'message',type:'string',default:''},
+            {name:'decrypt',type:'string',default:'success'},
+          ],
+        },
+        /** encryptedRequest: 暗号化された処理要求
+         * @typedef {Object} encryptedRequest - 暗号化された処理要求
+         * @prop {string} payload=null - 平文のauthRequest
+         *   cipherと排他。SPkey要求時(meta.keyProvisioning===true)のみ設定
+         * @prop {string} cipher=null - AES-256-GCMで暗号化されたauthRequest。payloadと排他
+         * @prop {string} iv=null - AES-GCM 初期化ベクトル
+         * @prop {string} signature - authRequestに対するRSA-PSS署名
+         * @prop {string} encryptedKey=null - RSA-OAEPで暗号化されたAES共通鍵
+         * @prop {Object} meta - メタ情報
+         * @prop {boolean} meta.signOnly=false - 暗号化せず署名のみで送信する場合true
+         * @prop {string} meta.sym=null - 使用した共通鍵方式"AES-256-GCM"
+         * @prop {number} meta.rsabits - 暗号化に使用したRSA鍵長
+         * @prop {boolean} meta.keyProvisioning=false - 鍵配布・鍵更新目的ならtrue
+         *   「通常業務」ではなく、「鍵を配る／更新するための通信」であることの宣言。
+         *   通常signOnlyと一致するが、運用時の利用目的が異なるため別項目とする。
+         */
+        encryptedRequest: {desc: '暗号化された要求',
+          colDef: [
+            {name:'payload',type:'string',nullable:true },
+            {name:'cipher',type:'string',nullable:true },
+            {name:'iv',type:'string',nullable:true },
+            {name:'signature',type:'string'},
+            {name:'encryptedKey',type:'string',nullable:true },
+            {name:'meta',type:'object'},
+          ],
+        },
+        /** encryptedResponse: 暗号化された処理結果
+         * @typedef {Object} encryptedResponse - 暗号化された処理結果
+         * @prop {string} cipher - 暗号化した文字列
+         * @prop {string} signature - authResponseに対するRSA-PSS署名
+         * @prop {string} encryptedKey - RSA-OAEPで暗号化されたAES共通鍵
+         * @prop {string} iv - AES-GCM 初期化ベクトル
+         * @prop {string} tag - AES-GCM 認証タグ
+         * @prop {Object} meta - メタ情報
+         * @prop {number} meta.rsabits - 暗号化に使用したRSA鍵長
+         */
+        encryptedResponse: {desc: '暗号化された応答',
+          colDef: [
+            {name:'cipher',type:'string'},
+            {name:'signature',type:'string'},
+            {name:'encryptedKey',type:'string'},
+            {name:'iv',type:'string'},
+            {name:'tag',type:'string'},
+            {name:'meta',type:'object'},
+          ],
+        },
+      }
+    };
+    // 必須指定項目の一覧
+    v.required = ['adminMail','adminName'];
+    // 任意指定項目と既定値
+    v.option = {
+      systemName: 'auth',
+      allowableTimeDifference: 120000,
+      RSAbits: 2048,
+      maxDepth: 10,
+      underDev: {isTest:false},
+    }
+    try {
+      dev.step(1);  // スーパークラス(Schema)の生成
+      super(mergeDeeply(v.schema,arg));
 
-/** authClientConfig: クライアント側特有の設定項目
- * @typedef {Object} authClientConfig
- * @extends {authConfig}
- * @prop {string} api - サーバ側WebアプリURLのID
- *   https://script.google.com/macros/s/(この部分)/exec
- * @prop {number} timeout=300000 - サーバからの応答待機時間
- *   これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分
- * @prop {string} storeName="config" - IndexedDBのストア名
- * @prop {number} dbVersion=1 - IndexedDBのバージョン
- * @prop {number} maxDepth=10 - exec再帰呼出時の最大階層
- * @prop {schemaDef} typeDef - データ型定義
- */
-const config = Object.assign(commonConfig,{
-  api: 'AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT',
-  typeDef: {
-    name: 'auth',
-    version: '1.0.0',
-    tableDef: {
-      /** authIndexedDB: IndexedDBに保存する内容(=this.idb)
-       * @typedef {Object} authIndexedDB - IndexedDBに保存する内容(=this.idb)
-       * @prop {string} memberId='dummyMemberID' - メンバ識別子(メールアドレス。初期値は固定文字列)
-       * @prop {string} memberName='dummyMemberName' - メンバの氏名(初期値は固定文字列)
-       * @prop {string}　deviceId='dummyDeviceID' - サーバ側で生成(UUIDv4。初期値は固定文字列)
-       * @prop {CryptoKey} CSkeySign - 署名用秘密鍵
-       * @prop {CryptoKey} CPkeySign - 署名用公開鍵
-       * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵
-       * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵
-       * @prop {string} keyGeneratedDateTime - 鍵ペア生成日時(UNIX時刻)
-       * @prop {string} SPkeySign=null - サーバ側署名用公開鍵
-       * @prop {string} SPkeyEnc=null - サーバ側暗号化用公開鍵
-       */
-    },
-  },
-});
+      dev.step(2);  // 必須項目の設定
+      v.required.forEach(x => {
+        if( typeof arg[x] === 'undefined' )
+          throw new Error(`"${x}" is not specified.`);
+        this[x] = arg[x];
+      });
+
+      dev.step(3);  // 任意項目の設定
+      Object.keys(v.option).forEach(x => {
+        this[x] = arg[x] ?? v.option[x];
+      });
+      if( typeof this.underDev.isTest === 'undefined' )
+        this.underDev.isTest = v.option.underDev.isTest;
+
+      dev.end(); // 終了処理
+
+    } catch (e) { return dev.error(e); }
+  }
+}
 /** authClient: クライアント側中核クラス
  * @class
  * @classdesc クライアント側中核クラス
@@ -599,46 +667,78 @@ class authClient {
 
   /** constructor
    * @constructor
-   * @param {authClientConfig} config - authClient設定情報
+   * @param {authConfig} config - authClient/Server共通設定情報
    */
   constructor(config) {
     const v = {whois:`authClient.constructor`, arg:{config}, rv:null};
     const dev = new devTools(v);
+    // -------------------------------------------------------------
+    // authClient専用設定値・データ型(Schema)定義
+    //   ※authClient/Server共用はauthConfigクラスで定義
+    // -------------------------------------------------------------
+    // Schemaクラスの指定項目＋authClient専用データ型定義
+    v.schema = {
+      types: {
+        /** authIndexedDB: IndexedDBに保存する内容(=this.idb)
+         * @typedef {Object} authIndexedDB - IndexedDBに保存する内容(=this.idb)
+         * @prop {string} memberId='dummyMemberID' - メンバ識別子(メールアドレス。初期値は固定文字列)
+         * @prop {string} memberName='dummyMemberName' - メンバの氏名(初期値は固定文字列)
+         * @prop {string}　deviceId='dummyDeviceID' - サーバ側で生成(UUIDv4。初期値は固定文字列)
+         * @prop {CryptoKey} CSkeySign - 署名用秘密鍵
+         * @prop {CryptoKey} CPkeySign - 署名用公開鍵
+         * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵
+         * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵
+         * @prop {string} keyGeneratedDateTime - 鍵ペア生成日時(UNIX時刻)
+         * @prop {string} SPkeySign=null - サーバ側署名用公開鍵
+         * @prop {string} SPkeyEnc=null - サーバ側暗号化用公開鍵
+         */
+      }
+    };
+    // 必須指定項目の一覧
+    v.required = ['api'];
+    // 任意指定項目と既定値
+    v.option = {
+      timeout: 300000,
+      storeName: 'config',
+      dbVersion: 1,
+    }
+
     try {
 
-      dev.step(1);  // config必須項目のチェック
-      if( !config.hasOwnProperty('api') )
-        throw new Error(`Required arguments not specified`);
+      /** this.cf(authClientConfig): 共通設定情報にauthClient特有項目を追加
+       * @typedef {Object} authClientConfig - authClient特有の設定項目
+       * @extends {authConfig}
+       * @prop {string} api - サーバ側WebアプリURLのID
+       *   https://script.google.com/macros/s/(この部分)/exec
+       * @prop {number} timeout=300000 - サーバからの応答待機時間
+       *   これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分
+       * @prop {string} storeName="config" - IndexedDBのストア名
+       * @prop {number} dbVersion=1 - IndexedDBのバージョン
+       */
+      dev.step(1.1);  // this.cfの作成
+      this.cf = new authConfig(mergeDeeply(v.schema,config));
 
-      // -------------------------------------------------------------
-      // 設定情報(this.cf)の作成
-      // -------------------------------------------------------------
-      dev.step(2.1);  // authClient特有の設定項目について既定値を定義
-      v.authClientConfig = {
-        api: config.api,
-        timeout: 300000,
-        storeName: 'config',
-        dbVersion: 1,
-        maxDepth: 10,
-      };
-
-      dev.step(2.2); // authClient/Server共通設定値に特有項目を追加
-      this.cf = new authConfig(config);
-      Object.keys(v.authClientConfig).forEach(x => {
-        this.cf[x] = config[x] || v.authClientConfig[x];
+      dev.step(1.2);  // 必須項目の設定
+      v.required.forEach(x => {
+        if( typeof config[x] === 'undefined' )
+          throw new Error(`"${x}" is not specified.`);
+        this.cf[x] = config[x];
       });
 
-      dev.step(2.3);  // this.apiをIDからURLに書き換え
+      dev.step(1.3);  // 任意項目の設定
+      Object.keys(v.option).forEach(x => {
+        this.cf[x] = config[x] ?? v.option[x];
+      });
+
+      dev.step(1.4);  // this.apiをIDからURLに書き換え
       this.cf.api = `https://script.google.com/macros/s/${this.cf.api}/exec`;
 
       // -------------------------------------------------------------
-      dev.step(3);  // その他メンバの値設定
+      dev.step(2);  // その他メンバの値設定
       // -------------------------------------------------------------
       this.idb = {};  // IndexedDBと同期、authClient内で共有
 
-      console.log('authClient.constructor final api =', this.cf.api);
       dev.end(this); // 終了処理
-
     } catch (e) { return dev.error(e); }
   }
 
@@ -915,8 +1015,9 @@ class authClient {
     try {
 
       dev.step(1);  // インスタンス生成
+      v.cf = new authClientConfig(config);
       // オプション既定値を先にメンバ変数に格納するため、constructorを先行
-      v.rv = new authClient(config);
+      v.rv = new authClient(v.cv);
 
       dev.step(2);  // DB接続：非同期処理なのでconstructorではなくinitializeで実行
       authClient._IndexedDB = await new Promise((resolve, reject) => {
@@ -1007,96 +1108,6 @@ class authClient {
       return null;
 
     } catch(e){ return dev.error(e); }
-  }
-}
-/** authConfig: クライアント・サーバ共通設定情報
- * @class
- * @classdesc クライアント・サーバ共通設定情報
- * @prop {string} systemName="Auth" - システム名
- * @prop {string} adminMail - 管理者のメールアドレス
- * @prop {string} adminName - 管理者氏名
- * @prop {number} allowableTimeDifference=120000 - クライアント・サーバ間通信時の許容時差既定値は2分
- * @prop {string} RSAbits=2048 - 鍵ペアの鍵長
- * @prop {Object} underDev - テスト時の設定
- * @prop {boolean} underDev.isTest=false - 開発モードならtrue
- */
-class authConfig {
-
-  /**
-   * @constructor
-   * @param {authConfig} config - 設定情報(既定値からの変更部分)
-   */
-  constructor(arg) {
-    const v = {whois:`authConfig.constructor`, arg:{arg}, rv:null};
-    const dev = new devTools(v);
-    try {
-      console.log('authConfig input api =', config.api);
-
-      dev.step(1); // メンバの値設定
-      this.systemName = arg.systemName || 'Auth'; // {string} システム名
-      if( arg.hasOwnProperty('adminMail') ){
-        this.adminMail = arg.adminMail;	// {string} 管理者のメールアドレス
-      } else {
-        throw new Error('"adminMail" is not specified.');
-      }
-      if( arg.hasOwnProperty('adminName') ){
-        this.adminName = arg.adminName;	// {string} 管理者氏名
-      } else {
-        throw new Error('"adminName" is not specified.');
-      }
-      this.allowableTimeDifference = arg.allowableTimeDifference || 120000;
-      // {number}	クライアント・サーバ間通信時の許容時差	既定値は2分
-      this.RSAbits = arg.RSAbits || 2048;	// {number} 鍵ペアの鍵長
-      this.underDev = {};	// {Object} テスト時の設定
-      this.underDev.isTest = // {boolean} 開発モードならtrue
-      ( arg.hasOwnProperty('underDev')
-      && arg.underDev.hasOwnProperty('isTest') )
-      ? arg.underDev.isTest : false;
-
-      dev.end(); // 終了処理
-
-    } catch (e) { return dev.error(e); }
-  }
-
-  /** sanitizeArg: プリミティブ型のみで構成されるよう無毒化
-   * @param {*} value - チェック対象の変数
-   * @param {string} path='$' - エラーメッセージ用にオブジェクト内の階層を保持
-   * @returns
-   */
-  sanitizeArg(value, path = '$') {
-    if( value === null ||
-      typeof value === 'string' ||
-      (typeof value === 'number' && Number.isFinite(value)) ||
-      typeof value === 'boolean'
-    ) return value;
-
-    if (Array.isArray(value)) {
-      return value.map((v, i) => this.sanitizeArg(v, `${path}[${i}]`));
-    }
-
-    if (typeof value === 'object') {
-      // 明示的に禁止したい型
-      if (
-        value instanceof CryptoKey ||
-        value instanceof Date ||
-        value instanceof Error ||
-        value instanceof Map ||
-        value instanceof Set
-      ) {
-        throw new Error(`Unsupported argument type at ${path}`);
-      }
-
-      const obj = {};
-      for (const [k, v] of Object.entries(value)) {
-        if (typeof v === 'function') {
-          throw new Error(`Function not allowed in arg at ${path}.${k}`);
-        }
-        obj[k] = this.sanitizeArg(v, `${path}.${k}`);
-      }
-      return obj;
-    }
-
-    throw new Error(`Unsupported value type at ${path}`);
   }
 }
 /** cryptoClient: クライアント側の暗号化・署名検証
@@ -1374,6 +1385,26 @@ async function localFunc(){
 }
 
 // グローバル変数定義
+/** config: アプリケーションの設定情報
+ * - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする
+ * - 秘匿情報はここで設定せず、アプリ側で追加・修正する
+ */
+const config = {
+  // -------------------------------------------------------------
+  // authClient/Server共通設定情報
+  // -------------------------------------------------------------
+  "adminMail":"ena.kaon@gmail.com",
+  "adminName":"あどみ",
+
+  // -------------------------------------------------------------
+  // authClient専用設定情報
+  // -------------------------------------------------------------
+  "api":"AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT",
+
+  // -------------------------------------------------------------
+  // authServer専用設定情報
+  // -------------------------------------------------------------
+};
 let auth;  // authClient。HTML要素のイベント対応のためグローバル領域で宣言
 window.addEventListener('DOMContentLoaded', onLoad());
 </script>
