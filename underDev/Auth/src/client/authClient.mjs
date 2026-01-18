@@ -45,12 +45,68 @@ export class authClient {
   constructor(config) {
     const v = {whois:`authClient.constructor`, arg:{config}, rv:null};
     const dev = new devTools(v);
+    // -------------------------------------------------------------
+    // authClient専用設定値・データ型(Schema)定義
+    //   ※authClient/Server共用はauthConfigクラスで定義
+    // -------------------------------------------------------------
+    // Schemaクラスの指定項目＋authClient専用データ型定義
+    v.schema = {
+      types: {
+        /** authIndexedDB: IndexedDBに保存する内容(=this.idb)
+         * @typedef {Object} authIndexedDB - IndexedDBに保存する内容(=this.idb)
+         * @prop {string} memberId='dummyMemberID' - メンバ識別子(メールアドレス。初期値は固定文字列)
+         * @prop {string} memberName='dummyMemberName' - メンバの氏名(初期値は固定文字列)
+         * @prop {string}　deviceId='dummyDeviceID' - サーバ側で生成(UUIDv4。初期値は固定文字列)
+         * @prop {CryptoKey} CSkeySign - 署名用秘密鍵
+         * @prop {CryptoKey} CPkeySign - 署名用公開鍵
+         * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵
+         * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵
+         * @prop {string} keyGeneratedDateTime - 鍵ペア生成日時(UNIX時刻)
+         * @prop {string} SPkeySign=null - サーバ側署名用公開鍵
+         * @prop {string} SPkeyEnc=null - サーバ側暗号化用公開鍵
+         */
+      }
+    };
+    // 必須指定項目の一覧
+    v.required = ['api'];
+    // 任意指定項目と既定値
+    v.option = {
+      timeout: 300000,
+      storeName: 'config',
+      dbVersion: 1,
+    }
+
+
     try {
 
-      dev.step(1);  // 各種設定値をthis.cfに格納
-      this.cf = new authClientConfig(config);
+      dev.step(1);  // config必須項目のチェック
+      if( !config.hasOwnProperty('api') )
+        throw new Error(`Required arguments not specified`);
 
-      dev.step(2);  // その他メンバの値設定
+      // -------------------------------------------------------------
+      // 設定情報(this.cf)の作成
+      // -------------------------------------------------------------
+      dev.step(2.1);  // authClient特有の設定項目について既定値を定義
+      v.authClientConfig = {
+        api: config.api,
+        timeout: 300000,
+        storeName: 'config',
+        dbVersion: 1,
+        maxDepth: 10,
+      };
+
+      dev.step(2.2); // authClient/Server共通設定値に特有項目を追加
+      this.cf = new authConfig(config);
+      Object.keys(v.authClientConfig).forEach(x => {
+        this.cf[x] = config[x] || v.authClientConfig[x];
+      });
+
+      dev.step(2.3);  // this.apiをIDからURLに書き換え
+      this.cf.api = `https://script.google.com/macros/s/${this.cf.api}/exec`;
+
+      // -------------------------------------------------------------
+      dev.step(3);  // その他メンバの値設定
+      // -------------------------------------------------------------
       this.idb = {};  // IndexedDBと同期、authClient内で共有
 
       console.log('authClient.constructor final api =', this.cf.api);
@@ -332,8 +388,9 @@ export class authClient {
     try {
 
       dev.step(1);  // インスタンス生成
+      v.cf = new authClientConfig(config);
       // オプション既定値を先にメンバ変数に格納するため、constructorを先行
-      v.rv = new authClient(config);
+      v.rv = new authClient(v.cv);
 
       dev.step(2);  // DB接続：非同期処理なのでconstructorではなくinitializeで実行
       authClient._IndexedDB = await new Promise((resolve, reject) => {

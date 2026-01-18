@@ -19,6 +19,9 @@ export class authClientConfig extends authConfig {
   constructor(arg){
     const v = {whois:`authConfig.constructor`, arg:{arg}, rv:null};
     const dev = new devTools(v);
+    // -------------------------------------------------------------
+    // authClient/Server共用設定値・データ型(Schema)定義
+    // -------------------------------------------------------------
     // Schemaクラスの指定項目＋authClient専用データ型定義
     v.schema = {
       types: {
