@@ -78,8 +78,8 @@ export class authClient {
 
     try {
 
-      /** this.cf(authClientConfig): 共通設定情報にauthClient特有項目
-       * @typedef {Object}
+      /** this.cf(authClientConfig): 共通設定情報にauthClient特有項目を追加
+       * @typedef {Object} authClientConfig - authClient特有の設定項目
        * @extends {authConfig}
        * @prop {string} api - サーバ側WebアプリURLのID
        *   https://script.google.com/macros/s/(この部分)/exec
