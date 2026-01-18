@@ -3,14 +3,18 @@
  * - 秘匿情報はここで設定せず、アプリ側で追加・修正する
  */
 export const config = {
-  "auth":{
-    "common":{
-      "adminMail":"ena.kaon@gmail.com",
-      "adminName":"あどみ"
-    },
-    "client":{
-      "api":"AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT"
-    },
-    "server":{}
-  }
+  // -------------------------------------------------------------
+  // authClient/Server共通設定情報
+  // -------------------------------------------------------------
+  "adminMail":"ena.kaon@gmail.com",
+  "adminName":"あどみ",
+  
+  // -------------------------------------------------------------
+  // authClient専用設定情報
+  // -------------------------------------------------------------
+  "api":"AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT",
+
+  // -------------------------------------------------------------
+  // authServer専用設定情報
+  // -------------------------------------------------------------
 };
