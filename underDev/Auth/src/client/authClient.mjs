@@ -1,5 +1,5 @@
-import { authClientConfig } from "./authClientConfig.mjs";
-import { authRequest } from "./authRequest.mjs";
+import { mergeDeeply } from "../../../../mergeDeeply/2.0.0/core.mjs";
+import { authConfig } from "../common/authConfig.mjs";
 
 /** authClient: クライアント側中核クラス
  * @class
@@ -40,7 +40,7 @@ export class authClient {
 
   /** constructor
    * @constructor
-   * @param {authClientConfig} config - authClient設定情報
+   * @param {authConfig} config - authClient/Server共通設定情報
    */
   constructor(config) {
     const v = {whois:`authClient.constructor`, arg:{config}, rv:null};
@@ -76,42 +76,35 @@ export class authClient {
       dbVersion: 1,
     }
 
-
     try {
 
-      dev.step(1);  // config必須項目のチェック
-      if( !config.hasOwnProperty('api') )
-        throw new Error(`Required arguments not specified`);
-
       // -------------------------------------------------------------
-      // 設定情報(this.cf)の作成
+      // 設定情報(this.cf)の作成：共通設定情報にauthClient特有項目を追加
       // -------------------------------------------------------------
-      dev.step(2.1);  // authClient特有の設定項目について既定値を定義
-      v.authClientConfig = {
-        api: config.api,
-        timeout: 300000,
-        storeName: 'config',
-        dbVersion: 1,
-        maxDepth: 10,
-      };
+      dev.step(1.1);  // {authConfig} this.cfの作成
+      this.cf = new authConfig(mergeDeeply(v.schema,config));
 
-      dev.step(2.2); // authClient/Server共通設定値に特有項目を追加
-      this.cf = new authConfig(config);
-      Object.keys(v.authClientConfig).forEach(x => {
-        this.cf[x] = config[x] || v.authClientConfig[x];
+      dev.step(1.2);  // 必須項目の設定
+      v.required.forEach(x => {
+        if( typeof config[x] === 'undefined' )
+          throw new Error(`"${x}" is not specified.`);
+        this.cf[x] = config[x];
       });
 
-      dev.step(2.3);  // this.apiをIDからURLに書き換え
+      dev.step(1.3);  // 任意項目の設定
+      Object.keys(v.option).forEach(x => {
+        this.cf[x] = config[x] ?? v.option[x];
+      });
+
+      dev.step(1.4);  // this.apiをIDからURLに書き換え
       this.cf.api = `https://script.google.com/macros/s/${this.cf.api}/exec`;
 
       // -------------------------------------------------------------
-      dev.step(3);  // その他メンバの値設定
+      dev.step(2);  // その他メンバの値設定
       // -------------------------------------------------------------
       this.idb = {};  // IndexedDBと同期、authClient内で共有
 
-      console.log('authClient.constructor final api =', this.cf.api);
       dev.end(this); // 終了処理
-
     } catch (e) { return dev.error(e); }
   }
 

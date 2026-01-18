@@ -1,4 +1,6 @@
 import { authClient } from "./authClient.mjs";
+import { config } from "../common/config.mjs";
+
 export async function onLoad(){
   const v = {whois:`onLoad`, rv:null};
   const dev = new devTools(v);
