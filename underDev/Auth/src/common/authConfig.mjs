@@ -38,7 +38,7 @@ export class authConfig extends Schema {
          * @prop {string} nonce=UUIDv4 - 要求の識別子UUIDv4
          */
         authRequest: {desc: 'クライアント→サーバ要求',
-          colDef: [
+          cols: [
             {name:'memberId',type:'string',desc:'メンバの識別子'},
             {name:'deviceId',type:'string',desc:'デバイスの識別子(UUIDv4)'},
             {name:'memberName',type:'string',desc:'メンバの氏名',note:'管理者が加入認否判断のため使用'},
@@ -48,18 +48,6 @@ export class authConfig extends Schema {
             {name:'arg',type:'array',desc:'サーバ側関数に渡す引数の配列',default:'[]'},
             {name:'nonce',type:'string',desc:'要求の識別子'},
           ],
-          constructor: o => { // {idb,func[,arg]}
-            return {  // idb: authClient.idb(IndexedDB)
-              memberId: o.idb.memberId,
-              deviceId: o.idb.deviceId,
-              memberName: o.idb.memberName,
-              CPkeySign: o.idb.CPkeySign,
-              requestTime: Date.now(),
-              func: o.func,
-              arg: o.arg ?? [],
-              nonce: crypto.randomUUID(),
-            }
-          }
         },
         /** authResponse: authServerからauthClientへの処理結果(平文)
          * @typedef {Object} authResponse - authServerからauthClientへの処理結果(平文)
@@ -90,7 +78,7 @@ export class authConfig extends Schema {
          *   "success":正常、それ以外はエラーメッセージ
          */
         authResponse: {desc: 'サーバ→クライアント応答',
-          colDef: [
+          cols: [
             {name:'memberId',type:'string'},
             {name:'deviceId',type:'string'},
             {name:'memberName',type:'string'},
@@ -126,7 +114,7 @@ export class authConfig extends Schema {
          *   通常signOnlyと一致するが、運用時の利用目的が異なるため別項目とする。
          */
         encryptedRequest: {desc: '暗号化された要求',
-          colDef: [
+          cols: [
             {name:'payload',type:'string',nullable:true },
             {name:'cipher',type:'string',nullable:true },
             {name:'iv',type:'string',nullable:true },
@@ -146,7 +134,7 @@ export class authConfig extends Schema {
          * @prop {number} meta.rsabits - 暗号化に使用したRSA鍵長
          */
         encryptedResponse: {desc: '暗号化された応答',
-          colDef: [
+          cols: [
             {name:'cipher',type:'string'},
             {name:'signature',type:'string'},
             {name:'encryptedKey',type:'string'},

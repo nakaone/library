@@ -21,6 +21,7 @@
 
 - build0008: 初回HTMLロード時処理
   - authServer.setupEnvironment(menu21)   ◀いまここ
+    - [bug] authConfig.typedef step.1.1 : Error: argument "obj" must be object.
   - authClient動作確認
   - config構成見直し(20260118_configブランチ)
   <!--
