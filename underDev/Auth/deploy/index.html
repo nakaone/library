@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-<p style='text-align:right'>2026/01/19 16:21:51</p>
+<p style='text-align:right'>2026/01/19 16:46:57</p>
 <p style="text-align: right;"><?= VERSION ?></p>
 <h1>SPkey要求テスト</h1>
 
@@ -760,17 +760,23 @@ const config = {
   // -------------------------------------------------------------
   // authClient/Server共通設定情報
   // -------------------------------------------------------------
-  "adminMail":"ena.kaon@gmail.com",
-  "adminName":"あどみ",
+  adminMail:"ena.kaon@gmail.com",
+  adminName:"あどみ",
 
   // -------------------------------------------------------------
   // authClient専用設定情報
   // -------------------------------------------------------------
-  "api":"AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT",
+  api:"AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT",
 
   // -------------------------------------------------------------
   // authServer専用設定情報
   // -------------------------------------------------------------
+  func:{
+    svFunc: {
+      authority: 0,
+      do: x => serverFunc(x)
+    },
+  }
 };
 /** authConfig: クライアント・サーバ共通設定情報
  * @class
@@ -1714,17 +1720,23 @@ const config = {
   // -------------------------------------------------------------
   // authClient/Server共通設定情報
   // -------------------------------------------------------------
-  "adminMail":"ena.kaon@gmail.com",
-  "adminName":"あどみ",
+  adminMail:"ena.kaon@gmail.com",
+  adminName:"あどみ",
 
   // -------------------------------------------------------------
   // authClient専用設定情報
   // -------------------------------------------------------------
-  "api":"AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT",
+  api:"AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT",
 
   // -------------------------------------------------------------
   // authServer専用設定情報
   // -------------------------------------------------------------
+  func:{
+    svFunc: {
+      authority: 0,
+      do: x => serverFunc(x)
+    },
+  }
 };
 let auth;  // authClient。HTML要素のイベント対応のためグローバル領域で宣言
 window.addEventListener('DOMContentLoaded', onLoad());

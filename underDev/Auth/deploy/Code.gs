@@ -1,4 +1,4 @@
-// 2026/01/19 16:21:51
+// 2026/01/19 16:46:57
 // スプレッドシートメニュー定義
 function onOpen(e){
   const ui = SpreadsheetApp.getUi();
@@ -886,17 +886,23 @@ const config = {
   // -------------------------------------------------------------
   // authClient/Server共通設定情報
   // -------------------------------------------------------------
-  "adminMail":"ena.kaon@gmail.com",
-  "adminName":"あどみ",
+  adminMail:"ena.kaon@gmail.com",
+  adminName:"あどみ",
 
   // -------------------------------------------------------------
   // authClient専用設定情報
   // -------------------------------------------------------------
-  "api":"AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT",
+  api:"AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT",
 
   // -------------------------------------------------------------
   // authServer専用設定情報
   // -------------------------------------------------------------
+  func:{
+    svFunc: {
+      authority: 0,
+      do: x => serverFunc(x)
+    },
+  }
 };
 /** authConfig: クライアント・サーバ共通設定情報
  * @class
