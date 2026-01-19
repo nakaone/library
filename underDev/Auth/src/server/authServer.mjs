@@ -1,3 +1,5 @@
+import { mergeDeeply } from "../../../../mergeDeeply/2.0.0/core.mjs";
+
 /** authServer: サーバ側中核クラス
  * @class
  * @classdesc サーバ側中核クラス

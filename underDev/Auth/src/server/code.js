@@ -3,6 +3,7 @@
 
 // ライブラリ関数定義
 //::$lib/devTools/3.0.0/core.js::
+//::$lib/mergeDeeply/2.0.0/core.js::
 //::$lib/Schema/2.0.0/core.js::
 //::$lib/toLocale/1.2.1/core.js::
 
