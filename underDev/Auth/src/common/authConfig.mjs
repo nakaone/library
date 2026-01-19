@@ -89,7 +89,7 @@ export class authConfig extends Schema {
             {name:'nonce',type:'string'},
             {name:'SPkeySign',type:'string'},
             {name:'SPkeyEnc',type:'string'},
-            {name:'response',type:'any',nullable:true },
+            {name:'response',type:'string',nullable:true,default:null},
             {name:'receptTime',type:'datetime',default:'Date.now()'},
             {name:'responseTime',type:'datetime',default:0 },
             {name:'status',type:'string',default:'success'},

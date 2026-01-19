@@ -1,4 +1,4 @@
-// 2026/01/19 14:49:41
+// 2026/01/19 14:55:04
 // スプレッドシートメニュー定義
 function onOpen(e){
   const ui = SpreadsheetApp.getUi();
@@ -945,20 +945,6 @@ class authConfig extends Schema {
             {name:'arg',type:'array',desc:'サーバ側関数に渡す引数の配列',default:'[]'},
             {name:'nonce',type:'string',desc:'要求の識別子'},
           ],
-          /*
-          constructor: o => { // {idb,func[,arg]}
-            return {  // idb: authClient.idb(IndexedDB)
-              memberId: o.idb.memberId,
-              deviceId: o.idb.deviceId,
-              memberName: o.idb.memberName,
-              CPkeySign: o.idb.CPkeySign,
-              requestTime: Date.now(),
-              func: o.func,
-              arg: o.arg ?? [],
-              nonce: crypto.randomUUID(),
-            }
-          }
-          */
         },
         /** authResponse: authServerからauthClientへの処理結果(平文)
          * @typedef {Object} authResponse - authServerからauthClientへの処理結果(平文)
@@ -1000,7 +986,7 @@ class authConfig extends Schema {
             {name:'nonce',type:'string'},
             {name:'SPkeySign',type:'string'},
             {name:'SPkeyEnc',type:'string'},
-            {name:'response',type:'any',nullable:true },
+            {name:'response',type:'string',nullable:true,default:null},
             {name:'receptTime',type:'datetime',default:'Date.now()'},
             {name:'responseTime',type:'datetime',default:0 },
             {name:'status',type:'string',default:'success'},
