@@ -20,9 +20,9 @@
 ## 変更履歴
 
 - build0008: 初回HTMLロード時処理
-  - authServer.setupEnvironment(menu21)
+  - authServer.setupEnvironment(menu21)   ◀いまここ
   - authClient動作確認
-  - config構成見直し(20260118_configブランチ)   ◀いまここ
+  - config構成見直し(20260118_configブランチ)
   <!--
   - authServer.setupEnvironment(menu21)
     - [bug] メニューが表示されない

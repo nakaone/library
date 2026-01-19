@@ -8,10 +8,10 @@ function onOpen(e){
       .addItem("【緊急】鍵ペアの更新", "menu22")
     )
     .addToUi();
-  const menu10 = () => asv.listNotYetDecided();
-  const menu21 = async () => {
-    const asv = await authServer.initialize(config);
-    asv.setupEnvironment();
-  };
-  const menu22 = () => asv.resetSPkey();
 }
+const menu10 = () => asv.listNotYetDecided();
+const menu21 = async () => {
+  const asv = await authServer.initialize(config);
+  asv.setupEnvironment();
+};
+const menu22 = () => asv.resetSPkey();

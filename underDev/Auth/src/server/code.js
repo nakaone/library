@@ -1,11 +1,13 @@
-// 動作設定定義
-//::$tmp/config.js::
+// スプレッドシートメニュー定義
+//::$src/server/onOpen.js::
 
 // ライブラリ関数定義
 //::$lib/devTools/3.0.0/core.js::
 //::$lib/toLocale/1.2.1/core.js::
 
-// authServer関係クラス定義
+// auth関係クラス定義・動作設定
+//::$tmp/config.js::
+//::$tmp/authConfig.js::
 //::$tmp/authServer.js::
 //::$tmp/cryptoServer.js::
 //::$tmp/Member.js::
@@ -13,15 +15,13 @@
 // テスト用サーバ側関数
 //::$src/server/serverFunc.js::
 
-// クライアント側HTML配信
+// クライアント側HTML配信・Webアプリ(doGet/Post)
 function doGet(e) {
   const tpl = HtmlService.createTemplateFromFile('index');
   tpl.VERSION = toLocale(new Date(),'yyyy/MM/dd hh:mm:ss');
   return tpl.evaluate()
     .setTitle('Auth(test)');
 }
-
-// Webアプリ定義
 async function doPost(e) {
   console.log('doPost called');
   //const asv = await authServer.initialize(globalThis.config);
@@ -33,6 +33,3 @@ async function doPost(e) {
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
-
-// スプレッドシートメニュー定義
-//::$src/server/onOpen.js::

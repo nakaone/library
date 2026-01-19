@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-<p style='text-align:right'>2026/01/18 14:24:14</p>
+<p style='text-align:right'>2026/01/19 09:24:29</p>
 <p style="text-align: right;"><?= VERSION ?></p>
 <h1>SPkey要求テスト</h1>
 
@@ -438,7 +438,27 @@ function mergeDeeply(sub,pri,opt={}){
   } catch (e) { return dev.error(e); }
 }
 
-// authClient関係クラス定義
+// auth関係クラス定義・動作設定
+/** config: アプリケーションの設定情報
+ * - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする
+ * - 秘匿情報はここで設定せず、アプリ側で追加・修正する
+ */
+const config = {
+  // -------------------------------------------------------------
+  // authClient/Server共通設定情報
+  // -------------------------------------------------------------
+  "adminMail":"ena.kaon@gmail.com",
+  "adminName":"あどみ",
+
+  // -------------------------------------------------------------
+  // authClient専用設定情報
+  // -------------------------------------------------------------
+  "api":"AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT",
+
+  // -------------------------------------------------------------
+  // authServer専用設定情報
+  // -------------------------------------------------------------
+};
 /** authConfig: クライアント・サーバ共通設定情報
  * @class
  * @classdesc クライアント・サーバ共通設定情報
