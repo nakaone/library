@@ -7,7 +7,9 @@
   - config構成見直し(20260118_configブランチ)
   - authServer.setupEnvironment(menu21)
     - [bug] authConfig.typedef step.1.1 : Error: argument "obj" must be object.
-    - [bug] authConfig.columndef step.3 : Error: "response" is invalid type.   ◀いまここ
+    - [bug] authConfig.columndef step.3 : Error: "response" is invalid type.
+    - [bug]authConfig.typedef step.1.2 : Error: cols must be array of length 1 or greater.   ◀いまここ
+    - [0002]authServer.constructor step.1.2 : Error: "func" is not specified.
   <!--
   - authServer.setupEnvironment(menu21)
     - [bug] メニューが表示されない

@@ -1,4 +1,4 @@
-// 2026/01/19 14:55:04
+// 2026/01/19 16:21:51
 // スプレッドシートメニュー定義
 function onOpen(e){
   const ui = SpreadsheetApp.getUi();
@@ -1108,7 +1108,7 @@ class authServer {
          * @prop {string} note - 備考
          */
         authAuditLog: {desc: 'authServerの監査ログ',
-          colDef: [
+          cols: [
             {name:'timestamp',type:'datetime',desc:'要求日時',default:'Date.now()',note:'ISO8601拡張形式'},
             {name:'duration',type:'number',desc:'処理時間(ms)'},
             {name:'memberId',type:'string',desc:'メンバ識別子(メール)'},
@@ -1128,7 +1128,7 @@ class authServer {
          * @prop {string} [stack] - エラー発生時のスタックトレース本項目は管理者への通知メール等、シート以外には出力不可
          */
         authErrorLog: {desc: 'authServerのエラーログ',
-          colDef: [
+          cols: [
             {name:'timestamp',type:'datetime',default:'Date.now()'},
             {name:'memberId',type:'string'},
             {name:'deviceId',type:'string'},
@@ -1143,7 +1143,7 @@ class authServer {
          * @prop {string} nonce - クライアント側で採番されたリクエスト識別子UUIDv4
          */
         authRequestLog: {desc: '重複チェック用リクエスト履歴',
-          colDef: [
+          cols: [
             {name:'timestamp',type:'datetime',default:'Date.now()'},
             {name:'nonce',type:'string'},
           ],
@@ -1208,7 +1208,7 @@ class authServer {
          * @prop {string} note='' - 当該メンバに対する備考
          */
         Member: {desc: 'メンバ情報',
-          colDef: [
+          cols: [
             {name:'memberId',type:'string'},
             {name:'name',type:'string'},
             {name:'status',type:'string',default:'TR'},
@@ -1232,7 +1232,7 @@ class authServer {
          * @prop {MemberTrial[]} trial=[] - ログイン試行関連情報。オブジェクトシート上はJSON文字列
          */
         MemberDevice: {desc: 'メンバ端末',
-          colDef: [
+          cols: [
             {name:'deviceId',type:'string'},
             {name:'status',type:'string',default:'UC'},
             {name:'CPkeySign',type:'string'},
@@ -1264,7 +1264,7 @@ class authServer {
          *   加入否認日時＋加入禁止期間
          */
         MemberLog: {desc: 'メンバ履歴',
-          colDef: [
+          cols: [
             {name:'joiningRequest',type:'datetime',default:'Date.now()'},
             {name:'approval',type:'datetime',default:0 },
             {name:'denial',type:'datetime',default:0 },
@@ -1283,7 +1283,7 @@ class authServer {
          *   authServerConfig.func.authorityとの論理積>0なら当該関数実行権限ありと看做す
          */
         MemberProfile: {desc: 'メンバ属性',
-          colDef: [
+          cols: [
             {name:'authority',type:'number'},
           ],
         },
@@ -1296,7 +1296,7 @@ class authServer {
          *   保持上限はauthServerConfig.trial.generationMaxに従い、上限超過時は末尾から削除する。
          */
         MemberTrial: {desc: 'ログイン試行',
-          colDef: [
+          cols: [
             {name:'passcode',type:'string'},
             {name:'created',type:'datetime',default:'Date.now()'},
             {name:'log',type:'array',default:'[]'},
@@ -1309,7 +1309,7 @@ class authServer {
          * @prop {number} timestamp=Date.now() - 判定処理日時
          */
         MemberTrialLog: {desc: '試行履歴',
-          colDef: [
+          cols: [
             {name:'entered',type:'string'},
             {name:'result',type:'boolean'},
             {name:'timestamp',type:'datetime',default:'Date.now()'},
