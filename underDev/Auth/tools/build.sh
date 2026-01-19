@@ -74,10 +74,7 @@ for f in $src/client/*.mjs; do
   sed '/^import /d; s/^export //' "$f" > "$tmp/$bn.js"
 done
 
-# === 2.2 クライアント側configの作成
-#sed '/^import /d; s/^export //' "$src/client/config.mjs" > "$tmp/clientConfig.js"
-
-# === 2.3 index.htmlの作成
+# === 2.2 index.htmlの作成
 # 開発時の更新確認のため、index.htmlに現在日時を挿入
 echo "<p style='text-align:right'>$dt</p>" > $tmp/timestamp.html
 cat $src/client/index.html | awk 1 | $embed $opts > $dep/index.html
@@ -93,16 +90,13 @@ for f in $src/server/*.mjs; do
   sed '/^import /d; s/^export //' "$f" > "$tmp/$bn.js"
 done
 
-# === 3.2 サーバ側configの作成
-#sed '/^import /d; s/^export //' "$src/server/config.mjs" > "$tmp/serverConfig.js"
-
-# === 3.3 Code.gsの作成
+# === 3.2 Code.gsの作成
 echo "// $dt" > $dep/Code.gs
 cat $src/server/Code.js | awk 1 | \
 $embed $opts >> $dep/Code.gs
 
-# === 3.4 jsrsasignのコピー
-#cp $src/server/jsrsasign-all-min.js $dep/jsrsasign.gs
+# === 3.3 jsrsasignのコピー
+cp $src/server/jsrsasign-all-min.js $dep/jsrsasign.gs
 
 # ----------------------------------------------
 # 4. GASに反映(clasp)
