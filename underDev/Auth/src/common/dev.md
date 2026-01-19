@@ -9,9 +9,10 @@
     - [bug] authConfig.typedef step.1.1 : Error: argument "obj" must be object.
     - [bug] authConfig.columndef step.3 : Error: "response" is invalid type.
     - [bug]authConfig.typedef step.1.2 : Error: cols must be array of length 1 or greater.
-    - [bug]authServer.constructor step.1.2 : Error: "func" is not specified.   ◀いまここ
-    - [0103]cryptoServer.constructor step.2
+    - [bug]authServer.constructor step.1.2 : Error: "func" is not specified.
+    - [bug]cryptoServer.constructor step.2   ◀いまここ
       TypeError: Cannot read properties of undefined (reading 'getProperty')
+    - [0104]cryptoServer.generateKeys step.1 : ReferenceError: crypto is not defined
   <!--
   - authServer.setupEnvironment(menu21)
     - [bug] メニューが表示されない

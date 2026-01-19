@@ -1,4 +1,4 @@
-// 2026/01/19 16:46:57
+// 2026/01/19 16:51:11
 // スプレッドシートメニュー定義
 function onOpen(e){
   const ui = SpreadsheetApp.getUi();
@@ -1713,7 +1713,7 @@ class cryptoServer {
       ];
       this.prop = PropertiesService.getScriptProperties();
       this.keyList.forEach(key => {
-        this.keys[key] = v.prop.getProperty(key) || null;
+        this.keys[key] = this.prop.getProperty(key) || null;
       })
 
       dev.end(); // 終了処理

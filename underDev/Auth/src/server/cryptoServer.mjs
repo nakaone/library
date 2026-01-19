@@ -32,7 +32,7 @@ export class cryptoServer {
       ];
       this.prop = PropertiesService.getScriptProperties();
       this.keyList.forEach(key => {
-        this.keys[key] = v.prop.getProperty(key) || null;
+        this.keys[key] = this.prop.getProperty(key) || null;
       })
 
       dev.end(); // 終了処理
