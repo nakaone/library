@@ -108,3 +108,23 @@ if [[ "$1" != "-l" ]]; then
   clasp push --force
   cd $prj/tools
 fi
+
+# ----------------------------------------------
+# 5. NotebookKM用ファイル出力
+# ----------------------------------------------
+
+# 5.1 仕様書関係
+nbSpec="$tmp/nbSpec.txt"
+touch $nbSpec
+echo "=== specification.md: 全体仕様\n" >> $nbSpec
+cat $doc/specification.md >> $nbSpec
+echo "=== specify.mjs: 仕様書作成用データ\n" >> $nbSpec
+cat $prj/tools/specify.mjs >> $nbSpec
+
+# 5.2 ソースコード
+nbSource="$tmp/nbSource.txt"
+touch $nbSource
+echo "=== Code.gs: サーバ側ソース\n" >> $nbSource
+cat $dep/Code.gs >> $nbSource
+echo "=== index.html: クライアント側ソース\n" >> $nbSource
+cat $dep/index.html >> $nbSource
