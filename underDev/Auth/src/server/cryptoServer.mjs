@@ -81,7 +81,7 @@ export class cryptoServer {
       const payloadBytes = new TextEncoder().encode(JSON.stringify(response));
 
       dev.step(2); // サーバ署名用秘密鍵 import
-      const SSkeySign = await crypto.subtle.importKey(
+      const SSkeySign = await globalThis.crypto.subtle.importKey(
         "pkcs8",
         this.pemToArrayBuffer(this.keys.SSkeySign),
         { name: "RSA-PSS", hash: "SHA-256" },
@@ -90,14 +90,14 @@ export class cryptoServer {
       );
 
       dev.step(3); // 署名
-      const signature = await crypto.subtle.sign(
+      const signature = await globalThis.crypto.subtle.sign(
         { name: "RSA-PSS", saltLength: 32 },
         SSkeySign,
         payloadBytes
       );
 
       dev.step(4); // AES鍵生成
-      const aesKey = await crypto.subtle.generateKey(
+      const aesKey = await globalThis.crypto.subtle.generateKey(
         { name: "AES-GCM", length: 256 },
         true,
         ["encrypt"]
@@ -107,14 +107,14 @@ export class cryptoServer {
       const iv = crypto.getRandomValues(new Uint8Array(12));
 
       dev.step(6); // payload暗号化
-      const cipher = await crypto.subtle.encrypt(
+      const cipher = await globalThis.crypto.subtle.encrypt(
         { name: "AES-GCM", iv },
         aesKey,
         payloadBytes
       );
 
       dev.step(7); // クライアント暗号化用公開鍵 import
-      const CPkeyEnc = await crypto.subtle.importKey(
+      const CPkeyEnc = await globalThis.crypto.subtle.importKey(
         "spki",
         this.pemToArrayBuffer(CPkeySign),
         { name: "RSA-OAEP", hash: "SHA-256" },
@@ -123,8 +123,8 @@ export class cryptoServer {
       );
 
       dev.step(8); // AES鍵をRSA-OAEPで暗号化
-      const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
-      const encryptedKey = await crypto.subtle.encrypt(
+      const rawAesKey = await globalThis.crypto.subtle.exportKey("raw", aesKey);
+      const encryptedKey = await globalThis.crypto.subtle.encrypt(
         { name: "RSA-OAEP" },
         CPkeyEnc,
         rawAesKey
@@ -164,7 +164,7 @@ export class cryptoServer {
         const signature = Uint8Array.from(atob(request.signature), c => c.charCodeAt(0));
 
         dev.step(1.3); // 署名検証
-        const ok = await crypto.subtle.verify(
+        const ok = await globalThis.crypto.subtle.verify(
           { name: "RSA-PSS", saltLength: 32 },
           CPkeySign,
           signature,
@@ -183,7 +183,7 @@ export class cryptoServer {
         const signature = Uint8Array.from(atob(request.signature), c => c.charCodeAt(0));
 
         dev.step(2.2); // サーバ秘密鍵（復号用）import
-        const SSkeyEnc = await crypto.subtle.importKey(
+        const SSkeyEnc = await globalThis.crypto.subtle.importKey(
           "pkcs8",
           this.pemToArrayBuffer(this.keys.SSkeyEnc),
           { name: "RSA-OAEP", hash: "SHA-256" },
@@ -192,14 +192,14 @@ export class cryptoServer {
         );
 
         dev.step(2.3); // AES鍵復号
-        const rawKey = await crypto.subtle.decrypt({ name: "RSA-OAEP" }, SSkeyEnc, encryptedKey);
-        const aesKey = await crypto.subtle.importKey("raw", rawKey, { name: "AES-GCM" }, false, ["decrypt"]);
+        const rawKey = await globalThis.crypto.subtle.decrypt({ name: "RSA-OAEP" }, SSkeyEnc, encryptedKey);
+        const aesKey = await globalThis.crypto.subtle.importKey("raw", rawKey, { name: "AES-GCM" }, false, ["decrypt"]);
 
         dev.step(2.4); // payload復号
-        const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, aesKey, cipher);
+        const plain = await globalThis.crypto.subtle.decrypt({ name: "AES-GCM", iv }, aesKey, cipher);
 
         dev.step(2.5); // クライアント署名用公開鍵 import
-        const CPkey = await crypto.subtle.importKey(
+        const CPkey = await globalThis.crypto.subtle.importKey(
           "spki",
           this.pemToArrayBuffer(CPkeySign),
           { name: "RSA-PSS", hash: "SHA-256" },
@@ -208,7 +208,7 @@ export class cryptoServer {
         );
 
         dev.step(2.6); // 署名検証
-        const ok = await crypto.subtle.verify({ name: "RSA-PSS", saltLength: 32 }, CPkey, signature, plain);
+        const ok = await globalThis.crypto.subtle.verify({ name: "RSA-PSS", saltLength: 32 }, CPkey, signature, plain);
 
         if (!ok) throw new Error("Signature verification failed");
 
@@ -230,7 +230,7 @@ export class cryptoServer {
     const dev = new devTools(v);
     try {
       dev.step(1); // 署名用
-      const signKeys = await crypto.subtle.generateKey({
+      const signKeys = await globalThis.crypto.subtle.generateKey({
         name: "RSA-PSS",
         modulusLength: this.cf.RSAbits,
         publicExponent: new Uint8Array([8]),
@@ -238,7 +238,7 @@ export class cryptoServer {
       }, true, ["sign", "verify"]);
 
       dev.step(2); // 暗号化用
-      const encKeys = await crypto.subtle.generateKey({
+      const encKeys = await globalThis.crypto.subtle.generateKey({
         name: "RSA-OAEP",
         modulusLength: this.cf.RSAbits,
         publicExponent: new Uint8Array([8]),
@@ -247,10 +247,10 @@ export class cryptoServer {
 
       dev.step(3); // PEM変換
       v.rv = {
-        SSkeySign: this.arrayBufferToPem(await crypto.subtle.exportKey("pkcs8", signKeys.privateKey), "PRIVATE KEY"),
-        SPkeySign: this.arrayBufferToPem(await crypto.subtle.exportKey("spki", signKeys.publicKey), "PUBLIC KEY"),
-        SSkeyEnc: this.arrayBufferToPem(await crypto.subtle.exportKey("pkcs8", encKeys.privateKey), "PRIVATE KEY"),
-        SPkeyEnc: this.arrayBufferToPem(await crypto.subtle.exportKey("spki", encKeys.publicKey), "PUBLIC KEY"),
+        SSkeySign: this.arrayBufferToPem(await globalThis.crypto.subtle.exportKey("pkcs8", signKeys.privateKey), "PRIVATE KEY"),
+        SPkeySign: this.arrayBufferToPem(await globalThis.crypto.subtle.exportKey("spki", signKeys.publicKey), "PUBLIC KEY"),
+        SSkeyEnc: this.arrayBufferToPem(await globalThis.crypto.subtle.exportKey("pkcs8", encKeys.privateKey), "PRIVATE KEY"),
+        SPkeyEnc: this.arrayBufferToPem(await globalThis.crypto.subtle.exportKey("spki", encKeys.publicKey), "PUBLIC KEY"),
         keyGeneratedDateTime: Date.now()
       };
       dev.end();
@@ -287,7 +287,7 @@ export class cryptoServer {
           v.rv.prop.setProperty(key, v.keys[key]);
         });
       }
-      
+
       dev.end(); // 終了処理
       return v.rv;
     } catch (e) { return dev.error(e); }

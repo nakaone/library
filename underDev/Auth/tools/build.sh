@@ -96,7 +96,7 @@ cat $src/server/Code.js | awk 1 | \
 $embed $opts >> $dep/Code.gs
 
 # === 3.3 jsrsasignのコピー
-cp $src/server/jsrsasign-all-min.js $dep/jsrsasign.gs
+#cp $src/server/jsrsasign-all-min.js $dep/jsrsasign.gs
 
 # ----------------------------------------------
 # 4. GASに反映(clasp)
