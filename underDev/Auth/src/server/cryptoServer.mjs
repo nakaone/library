@@ -1,8 +1,12 @@
 /** cryptoServer: サーバ側の暗号化・署名検証
  * @class
  * @classdesc サーバ側の暗号化・署名検証
+ * @prop {authServerConfig} cf - authServer設定情報
+ * @prop {ScriptProperties} prop - PropertiesService.getScriptProperties()
+ * @prop {authScriptProperties} keys - ScriptPropertiesに保存された鍵ペア情報
+ * @prop {string[]} keyList - ScriptPropertiesに保存された項目名の一覧
  */
-class cryptoServer {
+export class cryptoServer {
   /** constructor
    * @param {authServerConfig} cf - authServer設定値
    */
@@ -26,11 +30,15 @@ class cryptoServer {
       this.keyList.forEach(key => {
         this.keys[key] = this.prop.getProperty(key) || null;
       });
-      dev.end(); 
+
+      dev.end();  // 終了処理
     } catch (e) { return dev.error(e); }
   }
 
-  /** PEM文字列 → ArrayBuffer */
+  /** PEM文字列 → ArrayBuffer
+   * @param {string} pem - PEM形式鍵
+   * @returns {ArrayBuffer}
+   */
   pemToArrayBuffer(pem) {
     const base64 = pem
       .replace(/-----BEGIN [^-]+-----/, "")
@@ -44,7 +52,11 @@ class cryptoServer {
     return bytes.buffer;
   }
 
-  /** ArrayBuffer → PEM文字列 */
+  /** ArrayBuffer → PEM文字列
+   * @param {ArrayBuffer} buffer
+   * @param {"PUBLIC KEY"|"PRIVATE KEY"} type
+   * @returns {string}
+   */
   arrayBufferToPem(buffer, type) {
     const bytes = new Uint8Array(buffer);
     let binary = "";
@@ -56,7 +68,11 @@ class cryptoServer {
     return `-----BEGIN ${type}-----\n${lines}\n-----END ${type}-----`;
   }
 
-  /** encrypt: 処理結果を暗号化＋署名 */
+  /** encrypt: 処理結果を暗号化＋署名
+   * @param {authResponse} response - 処理結果
+   * @param {string} CPkeySign - クライアント側署名用公開鍵
+   * @returns {encryptedResponse}
+   */
   async encrypt(response, CPkeySign) {
     const v = {whois:`${this.constructor.name}.encrypt`, arg:{response,CPkeySign}, rv:null};
     const dev = new devTools(v);
@@ -130,16 +146,23 @@ class cryptoServer {
     } catch (e) { return dev.error(e); }
   }
 
-  /** decrypt: 暗号化された処理要求を復号・署名検証 */
+  /** decrypt: 暗号化された処理要求を復号・署名検証
+   * @param {encryptedRequest} request - 暗号化されたサーバ側処理結果
+   * @param {string} CPkeySign - クライアント側署名用公開鍵
+   * @returns {authRequest}
+   */
   async decrypt(request, CPkeySign) {
     const v = {whois:`${this.constructor.name}.decrypt`, arg:{request,CPkeySign}, rv:null};
     const dev = new devTools(v);
     try {
       if (request.meta.signOnly === true) {
+        // ===== signOnly 判定 =====
         dev.step(1.1); // payload復元
         const payloadBytes = Uint8Array.from(atob(request.payload), c => c.charCodeAt(0));
+
         dev.step(1.2); // signature復元
         const signature = Uint8Array.from(atob(request.signature), c => c.charCodeAt(0));
+
         dev.step(1.3); // 署名検証
         const ok = await crypto.subtle.verify(
           { name: "RSA-PSS", saltLength: 32 },
@@ -148,8 +171,11 @@ class cryptoServer {
           payloadBytes
         );
         if (!ok) throw new Error("Signature verification failed (signOnly)");
+
+        dev.step(1.4); // JSON復元
         v.rv = JSON.parse(new TextDecoder().decode(payloadBytes));
       } else {
+        // ===== 通常（暗号化＋署名） =====
         dev.step(2.1); // Base64復元
         const cipher = Uint8Array.from(atob(request.cipher), c => c.charCodeAt(0));
         const encryptedKey = Uint8Array.from(atob(request.encryptedKey), c => c.charCodeAt(0));
@@ -183,7 +209,10 @@ class cryptoServer {
 
         dev.step(2.6); // 署名検証
         const ok = await crypto.subtle.verify({ name: "RSA-PSS", saltLength: 32 }, CPkey, signature, plain);
+
         if (!ok) throw new Error("Signature verification failed");
+
+        dev.step(2.7); // JSON復元
         v.rv = JSON.parse(new TextDecoder().decode(plain));
       }
       dev.end();
@@ -191,7 +220,11 @@ class cryptoServer {
     } catch (e) { return dev.error(e); }
   }
 
-  /** generateKeys: PEM形式のRSA鍵ペアを生成 */
+  /** generateKeys: PEM形式のRSA鍵ペアを生成
+   * - 生成のみ、ScriptPropertiesやメンバ変数への格納は行わない
+   * @param {void}
+   * @returns {Object} 生成された鍵ペア
+   */
   async generateKeys() {
     const v = {whois:`${this.constructor.name}.generateKeys`, arg:{}, rv:null};
     const dev = new devTools(v);
@@ -225,22 +258,37 @@ class cryptoServer {
     } catch (e) { return dev.error(e); }
   }
 
-  /** initialize: cryptoServerインスタンス作成 */
+  /** initialize: cryptoServerインスタンス作成
+   * - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
+   * - staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
+   * @static
+   * @param {authServerConfig} cf - authServer設定値
+   * @returns {cryptoServer|Error}
+   */
   static async initialize(config) {
     const v = {whois:`cryptoServer.initialize`, arg:{config}, rv:null};
     const dev = new devTools(v);
     try {
-      dev.step(1); 
+      dev.step(1);  // インスタンス生成
+      // オプション既定値を先にメンバ変数に格納するため、constructorを先行
       v.rv = new cryptoServer(config);
+
       dev.step(2); // SPkeySign未生成なら鍵ペアを生成
       if( v.rv.keys.SPkeySign === null ){
+        dev.step(2.1);  // 鍵ペアを生成
         v.keys = await v.rv.generateKeys();
+        if( v.keys instanceof Error ) throw v.keys;
+
+        dev.step(2.2);  // requestLogは初期値(空配列)とする
         v.keys.requestLog = JSON.stringify([]);
+
+        dev.step(2.3);  // ScriptPropertiesに保存
         v.rv.keyList.forEach(key => {
           v.rv.prop.setProperty(key, v.keys[key]);
         });
       }
-      dev.end();
+      
+      dev.end(); // 終了処理
       return v.rv;
     } catch (e) { return dev.error(e); }
   }
