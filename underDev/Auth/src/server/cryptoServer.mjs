@@ -35,39 +35,6 @@ export class cryptoServer {
     } catch (e) { return dev.error(e); }
   }
 
-  /** PEM文字列 → ArrayBuffer
-   * @param {string} pem - PEM形式鍵
-   * @returns {ArrayBuffer}
-   */
-  pemToArrayBuffer(pem) {
-    const base64 = pem
-      .replace(/-----BEGIN [^-]+-----/, "")
-      .replace(/-----END [^-]+-----/, "")
-      .replace(/\s+/g, "");
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    return bytes.buffer;
-  }
-
-  /** ArrayBuffer → PEM文字列
-   * @param {ArrayBuffer} buffer
-   * @param {"PUBLIC KEY"|"PRIVATE KEY"} type
-   * @returns {string}
-   */
-  arrayBufferToPem(buffer, type) {
-    const bytes = new Uint8Array(buffer);
-    let binary = "";
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    const base64 = btoa(binary);
-    const lines = base64.match(/.{1,64}/g).join("\n");
-    return `-----BEGIN ${type}-----\n${lines}\n-----END ${type}-----`;
-  }
-
   /** encrypt: 処理結果を暗号化＋署名
    * @param {authResponse} response - 処理結果
    * @param {string} CPkeySign - クライアント側署名用公開鍵
@@ -77,68 +44,43 @@ export class cryptoServer {
     const v = {whois:`${this.constructor.name}.encrypt`, arg:{response,CPkeySign}, rv:null};
     const dev = new devTools(v);
     try {
-      dev.step(1); // payload UTF-8化
-      const payloadBytes = new TextEncoder().encode(JSON.stringify(response));
 
-      dev.step(2); // サーバ署名用秘密鍵 import
-      const SSkeySign = await globalThis.crypto.subtle.importKey(
-        "pkcs8",
-        this.pemToArrayBuffer(this.keys.SSkeySign),
-        { name: "RSA-PSS", hash: "SHA-256" },
-        false,
-        ["sign"]
-      );
+      const payloadStr = JSON.stringify(response);
 
-      dev.step(3); // 署名
-      const signature = await globalThis.crypto.subtle.sign(
-        { name: "RSA-PSS", saltLength: 32 },
-        SSkeySign,
-        payloadBytes
-      );
+      dev.step(1); // RSA-PSS署名 (サーバ秘密鍵を使用)
+      const sig = new KJUR.crypto.Signature({
+        "alg": "SHA256withRSAandPSS",
+        "sSaltLength": 32
+      });
+      sig.init(this.keys.SSkeySign);
+      sig.updateString(payloadStr);
+      const signature = sig.sign(); // Hex形式
 
-      dev.step(4); // AES鍵生成
-      const aesKey = await globalThis.crypto.subtle.generateKey(
-        { name: "AES-GCM", length: 256 },
-        true,
-        ["encrypt"]
-      );
-
-      dev.step(5); // IV生成
-      const iv = crypto.getRandomValues(new Uint8Array(12));
-
-      dev.step(6); // payload暗号化
-      const cipher = await globalThis.crypto.subtle.encrypt(
-        { name: "AES-GCM", iv },
+      dev.step(2); // AES共通鍵生成と暗号化 (CryptoJSを使用)
+      const aesKey = Array.from(
+        Array(32),
+        () => Math.floor(Math.random() * 16).toString(16)
+      ).join(''); // 256bit相当
+      const iv = CryptoJS.lib.WordArray.random(128/8);
+      const encryptedPayload = CryptoJS.AES.encrypt(
+        payloadStr,
         aesKey,
-        payloadBytes
+        { iv: iv }
       );
 
-      dev.step(7); // クライアント暗号化用公開鍵 import
-      const CPkeyEnc = await globalThis.crypto.subtle.importKey(
-        "spki",
-        this.pemToArrayBuffer(CPkeySign),
-        { name: "RSA-OAEP", hash: "SHA-256" },
-        false,
-        ["encrypt"]
-      );
+      dev.step(3); // AES鍵をRSA-OAEPで暗号化 (クライアント公開鍵を使用)
+      const pubKeyObj = KEYUTIL.getKey(CPkeySign);
+      const encryptedKey = KJUR.crypto.Cipher.encrypt(aesKey, pubKeyObj, "RSAOAEP");
 
-      dev.step(8); // AES鍵をRSA-OAEPで暗号化
-      const rawAesKey = await globalThis.crypto.subtle.exportKey("raw", aesKey);
-      const encryptedKey = await globalThis.crypto.subtle.encrypt(
-        { name: "RSA-OAEP" },
-        CPkeyEnc,
-        rawAesKey
-      );
-
-      dev.step(9); // 戻り値作成
+      dev.step(4); // 戻り値作成
       v.rv = {
-        cipher: btoa(String.fromCharCode(...new Uint8Array(cipher))),
-        encryptedKey: btoa(String.fromCharCode(...new Uint8Array(encryptedKey))),
-        iv: btoa(String.fromCharCode(...iv)),
-        signature: btoa(String.fromCharCode(...new Uint8Array(signature))),
+        cipher: encryptedPayload.toString(),
+        encryptedKey: encryptedKey,
+        iv: iv.toString(),
+        signature: signature,
         meta: {
           rsabits: this.cf.RSAbits,
-          sym: "AES-256-GCM"
+          sym: "AES-256-CBC" // CryptoJS標準に合わせCBCを使用
         }
       };
       dev.end();
@@ -155,6 +97,25 @@ export class cryptoServer {
     const v = {whois:`${this.constructor.name}.decrypt`, arg:{request,CPkeySign}, rv:null};
     const dev = new devTools(v);
     try {
+
+      dev.step(1); // RSA-OAEPでAES鍵を復号 (サーバ秘密鍵を使用)
+      const prvKeyObj = KEYUTIL.getKey(this.keys.SSkeyEnc);
+      const aesKey = KJUR.crypto.Cipher.decrypt(request.encryptedKey, prvKeyObj, "RSAOAEP");
+
+      dev.step(2); // AES-CBCでペイロードを復号
+      const decrypted = CryptoJS.AES.decrypt(request.cipher, aesKey, { iv: CryptoJS.enc.Hex.parse(request.iv) });
+      const plainStr = decrypted.toString(CryptoJS.enc.Utf8);
+
+      dev.step(3); // RSA-PSS署名検証 (クライアント公開鍵を使用)
+      const sig = new KJUR.crypto.Signature({"alg": "SHA256withRSAandPSS", "sSaltLength": 32});
+      sig.init(CPkeySign);
+      sig.updateString(plainStr);
+      const isValid = sig.verify(request.signature);
+
+      if (!isValid) throw new Error("Signature verification failed");
+      v.rv = JSON.parse(plainStr);
+
+      /*
       if (request.meta.signOnly === true) {
         // ===== signOnly 判定 =====
         dev.step(1.1); // payload復元
@@ -215,6 +176,7 @@ export class cryptoServer {
         dev.step(2.7); // JSON復元
         v.rv = JSON.parse(new TextDecoder().decode(plain));
       }
+      */
       dev.end();
       return v.rv;
     } catch (e) { return dev.error(e); }
@@ -230,37 +192,17 @@ export class cryptoServer {
     const dev = new devTools(v);
     try {
 
-      dev.step(1);  // cryptoオブジェクトの存在チェック
-      const cryptoObj = globalThis.crypto || (typeof crypto !== 'undefined' ? crypto : null);
-      if (!cryptoObj || !cryptoObj.subtle) {
-        throw new Error("Web Crypto API (crypto.subtle) is not supported in this environment. Please enable V8 runtime.");
-      }
-      dev.step(9.238, {cf:this.cf.RSAbits, publicExponent: '65537'});
+      dev.step(1); // jsrsasign (KEYUTIL) を使用した鍵生成
+      const keypair = KEYUTIL.generateKeypair("RSA", this.cf.RSAbits);
 
-      dev.step(1); // 署名用
-      const signKeys = await cryptoObj.subtle.generateKey({
-        name: "RSA-PSS",
-        modulusLength: this.cf.RSAbits,
-        publicExponent: new Uint8Array([1]),
-        hash: "SHA-256"
-      }, true, ["sign", "verify"]);
-
-      dev.step(2); // 暗号化用
-      const encKeys = await cryptoObj.subtle.generateKey({
-        name: "RSA-OAEP",
-        modulusLength: this.cf.RSAbits,
-        publicExponent: new Uint8Array([1]),
-        hash: "SHA-256"
-      }, true, ["encrypt", "decrypt"]);
-
-      dev.step(3); // PEM変換
       v.rv = {
-        SSkeySign: this.arrayBufferToPem(await cryptoObj.subtle.exportKey("pkcs8", signKeys.privateKey), "PRIVATE KEY"),
-        SPkeySign: this.arrayBufferToPem(await cryptoObj.subtle.exportKey("spki", signKeys.publicKey), "PUBLIC KEY"),
-        SSkeyEnc: this.arrayBufferToPem(await cryptoObj.subtle.exportKey("pkcs8", encKeys.privateKey), "PRIVATE KEY"),
-        SPkeyEnc: this.arrayBufferToPem(await cryptoObj.subtle.exportKey("spki", encKeys.publicKey), "PUBLIC KEY"),
+        SSkeySign: KEYUTIL.getPEM(keypair.prvKeyObj, "PKCS8PRV"),
+        SPkeySign: KEYUTIL.getPEM(keypair.pubKeyObj),
+        SSkeyEnc: KEYUTIL.getPEM(keypair.prvKeyObj, "PKCS8PRV"),
+        SPkeyEnc: KEYUTIL.getPEM(keypair.pubKeyObj),
         keyGeneratedDateTime: Date.now()
       };
+
       dev.end();
       return v.rv;
     } catch (e) { return dev.error(e); }
