@@ -1,4 +1,4 @@
-// 2026/01/22 11:16:08
+// 2026/01/22 12:10:03
 // スプレッドシートメニュー定義
 function onOpen(e){
   const ui = SpreadsheetApp.getUi();
@@ -13,7 +13,7 @@ function onOpen(e){
 }
 const menu10 = () => asv.listNotYetDecided();
 const menu21 = () => authServer.setupEnvironment(config);
-const menu22 = () => asv.resetSPkey();
+const menu22 = () => authServer.resetSPkey();
 
 // ライブラリ関数定義
 /** devTools: 開発支援関係メソッド集
@@ -1624,9 +1624,36 @@ class authServer {
     } catch (e) { return dev.error(e); }
   }
 
-  /** setupEnvironment: 初回実行時に必要なOAuth権限を一括取得
+  /** resetSPkey: 緊急時、サーバ側鍵ペアを更新
    * - 管理者が Spread メニューから手動実行する
    * @param {void}
+   * @returns {null}
+   */
+  static async resetSPkey() {
+    const v = {whois:`${this.constructor.name}.resetSPkey`, arg: {}, rv: null };
+    const dev = new devTools(v);
+    try {
+
+      dev.step(1); // インスタンスを生成（configはグローバルから参照）
+      v.asv = await authServer.initialize(config);
+      if (v.asv instanceof Error) throw asv;
+
+      dev.step(2); // cryptoServerに生成と保存を委譲
+      v.result = await v.asv.cryptoLib.generateAndSave();
+      if (v.result instanceof Error) throw v.result;
+
+      dev.step(3,`[resetSPkey] 鍵の更新が完了しました。\n生成日時: ${
+        toLocale(new Date(v.result.keyGeneratedDateTime))}`); // 保存結果の確認ログ
+
+      dev.end();
+      return null;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** setupEnvironment: 初回実行時に必要なOAuth権限を一括取得
+   * - 管理者が Spread メニューから手動実行する
+   * @param {Object} config - adminMail設定を含むオブジェクト
    * @returns {null}
    */
   static setupEnvironment(config) {
@@ -1885,6 +1912,34 @@ class cryptoServer {
       return v.rv;
     } catch (e) { return dev.error(e); }
   }
+
+  /** generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する
+   * @returns {Object|Error} 生成・保存された鍵情報
+   */
+  async generateAndSave() {
+    const v = {whois:`${this.constructor.name}.generateAndSave`, arg:{}, rv:null};
+    const dev = new devTools(v);
+    try {
+      dev.step(1); // 鍵生成 (jsrsasignを使用)
+      v.keys = await this.generateKeys();
+      if (v.keys instanceof Error) throw v.keys;
+
+      dev.step(2); // requestLogの初期化
+      v.keys.requestLog = JSON.stringify([]);
+
+      dev.step(3); // 保存処理
+      this.keyList.forEach(key => {
+        if (v.keys[key] !== undefined) {
+          this.prop.setProperty(key, v.keys[key]);
+          this.keys[key] = v.keys[key]; // インスタンス変数も更新
+        }
+      });
+
+      dev.end();
+      return v.keys;
+    } catch (e) { return dev.error(e); }
+  }
+
 
   /** initialize: cryptoServerインスタンス作成
    * - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行

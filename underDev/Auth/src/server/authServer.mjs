@@ -546,9 +546,36 @@ export class authServer {
     } catch (e) { return dev.error(e); }
   }
 
-  /** setupEnvironment: 初回実行時に必要なOAuth権限を一括取得
+  /** resetSPkey: 緊急時、サーバ側鍵ペアを更新
    * - 管理者が Spread メニューから手動実行する
    * @param {void}
+   * @returns {null}
+   */
+  static async resetSPkey() {
+    const v = {whois:`${this.constructor.name}.resetSPkey`, arg: {}, rv: null };
+    const dev = new devTools(v);
+    try {
+
+      dev.step(1); // インスタンスを生成（configはグローバルから参照）
+      v.asv = await authServer.initialize(config);
+      if (v.asv instanceof Error) throw asv;
+
+      dev.step(2); // cryptoServerに生成と保存を委譲
+      v.result = await v.asv.cryptoLib.generateAndSave();
+      if (v.result instanceof Error) throw v.result;
+
+      dev.step(3,`[resetSPkey] 鍵の更新が完了しました。\n生成日時: ${
+        toLocale(new Date(v.result.keyGeneratedDateTime))}`); // 保存結果の確認ログ
+
+      dev.end();
+      return null;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** setupEnvironment: 初回実行時に必要なOAuth権限を一括取得
+   * - 管理者が Spread メニューから手動実行する
+   * @param {Object} config - adminMail設定を含むオブジェクト
    * @returns {null}
    */
   static setupEnvironment(config) {

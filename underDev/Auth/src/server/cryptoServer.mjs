@@ -208,6 +208,34 @@ export class cryptoServer {
     } catch (e) { return dev.error(e); }
   }
 
+  /** generateAndSave: 鍵を生成し、直ちにScriptPropertiesに保存する
+   * @returns {Object|Error} 生成・保存された鍵情報
+   */
+  async generateAndSave() {
+    const v = {whois:`${this.constructor.name}.generateAndSave`, arg:{}, rv:null};
+    const dev = new devTools(v);
+    try {
+      dev.step(1); // 鍵生成 (jsrsasignを使用)
+      v.keys = await this.generateKeys();
+      if (v.keys instanceof Error) throw v.keys;
+
+      dev.step(2); // requestLogの初期化
+      v.keys.requestLog = JSON.stringify([]);
+
+      dev.step(3); // 保存処理
+      this.keyList.forEach(key => {
+        if (v.keys[key] !== undefined) {
+          this.prop.setProperty(key, v.keys[key]);
+          this.keys[key] = v.keys[key]; // インスタンス変数も更新
+        }
+      });
+
+      dev.end();
+      return v.keys;
+    } catch (e) { return dev.error(e); }
+  }
+
+
   /** initialize: cryptoServerインスタンス作成
    * - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
    * - staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
