@@ -1,10 +1,3 @@
-function checkWebCrypto() {
-  console.log("globalThis.crypto: " + typeof globalThis.crypto);
-  console.log("crypto: " + typeof crypto);
-  if (globalThis.crypto) {
-    console.log("subtle: " + typeof globalThis.crypto.subtle);
-  }
-}
 // スプレッドシートメニュー定義
 //::$src/server/onOpen.js::
 

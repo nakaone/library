@@ -34,6 +34,7 @@
     - [bug] this.cf.RSAbitsが参照できない
       - jsrsasign仕様に変更
       - cryptoServerソース修正   ◀いまここ
+    - cryptoServer.initialize: サーバ側鍵ペア生成結果を出力
   <!--
   - authServer.setupEnvironment(menu21)
     - [bug] メニューが表示されない

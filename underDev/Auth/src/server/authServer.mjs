@@ -551,8 +551,8 @@ export class authServer {
    * @param {void}
    * @returns {null}
    */
-  static setupEnvironment() {
-    const v = {whois:`${this.constructor.name}.setupEnvironment`, arg: {}, rv: null };
+  static setupEnvironment(config) {
+    const v = {whois:`${this.constructor.name}.setupEnvironment`, arg: {config}, rv: null };
     const dev = new devTools(v);
     try {
 
@@ -578,9 +578,9 @@ export class authServer {
       // -------------------------------------------------------------
       dev.step(4); // Mail 権限（空メール or テスト通知）
       // -------------------------------------------------------------
-      if (this.cf.adminMail) {
+      if (config.adminMail) {
         MailApp.sendEmail({
-          to: this.cf.adminMail,
+          to: config.adminMail,
           subject: '[authServer] OAuth test',
           body: 'OAuth authorization test: ' + new Date().toISOString(),
           noReply: true

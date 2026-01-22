@@ -10,8 +10,5 @@ function onOpen(e){
     .addToUi();
 }
 const menu10 = () => asv.listNotYetDecided();
-const menu21 = async () => {
-  const asv = await authServer.initialize(config);
-  asv.setupEnvironment();
-};
+const menu21 = () => authServer.setupEnvironment(config);
 const menu22 = () => asv.resetSPkey();

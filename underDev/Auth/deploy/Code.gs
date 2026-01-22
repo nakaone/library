@@ -1,11 +1,4 @@
-// 2026/01/22 10:54:39
-function checkWebCrypto() {
-  console.log("globalThis.crypto: " + typeof globalThis.crypto);
-  console.log("crypto: " + typeof crypto);
-  if (globalThis.crypto) {
-    console.log("subtle: " + typeof globalThis.crypto.subtle);
-  }
-}
+// 2026/01/22 11:16:08
 // スプレッドシートメニュー定義
 function onOpen(e){
   const ui = SpreadsheetApp.getUi();
@@ -19,10 +12,7 @@ function onOpen(e){
     .addToUi();
 }
 const menu10 = () => asv.listNotYetDecided();
-const menu21 = async () => {
-  const asv = await authServer.initialize(config);
-  asv.setupEnvironment();
-};
+const menu21 = () => authServer.setupEnvironment(config);
 const menu22 = () => asv.resetSPkey();
 
 // ライブラリ関数定義
@@ -1639,8 +1629,8 @@ class authServer {
    * @param {void}
    * @returns {null}
    */
-  static setupEnvironment() {
-    const v = {whois:`${this.constructor.name}.setupEnvironment`, arg: {}, rv: null };
+  static setupEnvironment(config) {
+    const v = {whois:`${this.constructor.name}.setupEnvironment`, arg: {config}, rv: null };
     const dev = new devTools(v);
     try {
 
@@ -1666,9 +1656,9 @@ class authServer {
       // -------------------------------------------------------------
       dev.step(4); // Mail 権限（空メール or テスト通知）
       // -------------------------------------------------------------
-      if (this.cf.adminMail) {
+      if (config.adminMail) {
         MailApp.sendEmail({
-          to: this.cf.adminMail,
+          to: config.adminMail,
           subject: '[authServer] OAuth test',
           body: 'OAuth authorization test: ' + new Date().toISOString(),
           noReply: true
