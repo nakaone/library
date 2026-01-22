@@ -1,4 +1,4 @@
-// 2026/01/22 14:52:13
+// 2026/01/22 15:21:06
 // スプレッドシートメニュー定義
 function onOpen(e){
   const ui = SpreadsheetApp.getUi();
