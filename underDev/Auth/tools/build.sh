@@ -96,7 +96,9 @@ cat $src/server/Code.js | awk 1 | \
 $embed $opts >> $dep/Code.gs
 
 # === 3.3 jsrsasignのコピー
-#cp $src/server/jsrsasign-all-min.js $dep/jsrsasign.gs
+echo "const navigator = { appName: 'Netscape' };" > $dep/jsrsasign.gs
+echo "const window = this; // jsrsasignがwindowを要求する場合に備えて" >> $dep/jsrsasign.gs
+cat $src/server/jsrsasign-all-min.js >> $dep/jsrsasign.gs
 
 # ----------------------------------------------
 # 4. GASに反映(clasp)
@@ -123,8 +125,9 @@ cat $prj/tools/specify.mjs >> $nbSpec
 
 # 5.2 ソースコード
 nbSource="$tmp/nbSource.txt"
-touch $nbSource
-echo "=== Code.gs: サーバ側ソース\n" >> $nbSource
+echo "=== Code.gs: サーバ側ソース\n" > $nbSource
 cat $dep/Code.gs >> $nbSource
-echo "=== index.html: クライアント側ソース\n" >> $nbSource
+echo "\n=== jsrsasign.gs: サーバ側RSAライブラリ\n" >> $nbSource
+cat $dep/jsrsasign.gs >> $nbSource
+echo "\n=== index.html: クライアント側ソース\n" >> $nbSource
 cat $dep/index.html >> $nbSource

@@ -229,28 +229,36 @@ export class cryptoServer {
     const v = {whois:`${this.constructor.name}.generateKeys`, arg:{}, rv:null};
     const dev = new devTools(v);
     try {
+
+      dev.step(1);  // cryptoオブジェクトの存在チェック
+      const cryptoObj = globalThis.crypto || (typeof crypto !== 'undefined' ? crypto : null);
+      if (!cryptoObj || !cryptoObj.subtle) {
+        throw new Error("Web Crypto API (crypto.subtle) is not supported in this environment. Please enable V8 runtime.");
+      }
+      dev.step(9.238, {cf:this.cf.RSAbits, publicExponent: '65537'});
+
       dev.step(1); // 署名用
-      const signKeys = await globalThis.crypto.subtle.generateKey({
+      const signKeys = await cryptoObj.subtle.generateKey({
         name: "RSA-PSS",
         modulusLength: this.cf.RSAbits,
-        publicExponent: new Uint8Array([8]),
+        publicExponent: new Uint8Array([1]),
         hash: "SHA-256"
       }, true, ["sign", "verify"]);
 
       dev.step(2); // 暗号化用
-      const encKeys = await globalThis.crypto.subtle.generateKey({
+      const encKeys = await cryptoObj.subtle.generateKey({
         name: "RSA-OAEP",
         modulusLength: this.cf.RSAbits,
-        publicExponent: new Uint8Array([8]),
+        publicExponent: new Uint8Array([1]),
         hash: "SHA-256"
       }, true, ["encrypt", "decrypt"]);
 
       dev.step(3); // PEM変換
       v.rv = {
-        SSkeySign: this.arrayBufferToPem(await globalThis.crypto.subtle.exportKey("pkcs8", signKeys.privateKey), "PRIVATE KEY"),
-        SPkeySign: this.arrayBufferToPem(await globalThis.crypto.subtle.exportKey("spki", signKeys.publicKey), "PUBLIC KEY"),
-        SSkeyEnc: this.arrayBufferToPem(await globalThis.crypto.subtle.exportKey("pkcs8", encKeys.privateKey), "PRIVATE KEY"),
-        SPkeyEnc: this.arrayBufferToPem(await globalThis.crypto.subtle.exportKey("spki", encKeys.publicKey), "PUBLIC KEY"),
+        SSkeySign: this.arrayBufferToPem(await cryptoObj.subtle.exportKey("pkcs8", signKeys.privateKey), "PRIVATE KEY"),
+        SPkeySign: this.arrayBufferToPem(await cryptoObj.subtle.exportKey("spki", signKeys.publicKey), "PUBLIC KEY"),
+        SSkeyEnc: this.arrayBufferToPem(await cryptoObj.subtle.exportKey("pkcs8", encKeys.privateKey), "PRIVATE KEY"),
+        SPkeyEnc: this.arrayBufferToPem(await cryptoObj.subtle.exportKey("spki", encKeys.publicKey), "PUBLIC KEY"),
         keyGeneratedDateTime: Date.now()
       };
       dev.end();

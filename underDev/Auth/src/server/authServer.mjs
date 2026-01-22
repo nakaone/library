@@ -4,7 +4,7 @@ import { mergeDeeply } from "../../../../mergeDeeply/2.0.0/core.mjs";
  * @class
  * @classdesc サーバ側中核クラス
  * @prop {authServerConfig} cf - authServer設定項目
- * @prop {cryptoServer} crypto - 暗号化・署名検証
+ * @prop {cryptoServer} cryptoLib - 暗号化・署名検証
  */
 export class authServer {
 
@@ -472,10 +472,10 @@ export class authServer {
       v.rv = new authServer(config);
 
       // -------------------------------------------------------------
-      dev.step(2);  // 暗号化・復号モジュール生成(v.rv.crypto)
+      dev.step(2);  // 暗号化・復号モジュール生成(v.rv.cryptoLib)
       // -------------------------------------------------------------
-      v.rv.crypto = await cryptoServer.initialize(v.rv.cf);
-      if( v.rv.crypto instanceof Error ) throw v.rv.crypto;
+      v.rv.cryptoLib = await cryptoServer.initialize(v.rv.cf);
+      if( v.rv.cryptoLib instanceof Error ) throw v.rv.cryptoLib;
 
       // -------------------------------------------------------------
       dev.step(3);  // memberListシートの準備(v.rv.member)
@@ -506,7 +506,7 @@ export class authServer {
       dev.step(1.1,arg);  // request存在・最低限チェック
       if( !arg ) throw new Error('invalid request: empty body');
       dev.step(1.2,JSON.parse(arg));  // 処理要求を復号
-      v.request = await this.crypto.decrypt(JSON.parse(arg), this.cf.CPkeySign);
+      v.request = await this.cryptoLib.decrypt(JSON.parse(arg), this.cf.CPkeySign);
       if( v.request instanceof Error ) throw v.request;
       dev.step(1.3,v.request);  // // request.func チェック
       if (!v.request || !v.request.func)
@@ -537,7 +537,7 @@ export class authServer {
       this.authLogger(v.response);
 
       dev.step(6);  // encryptedResponseの作成
-      v.rv = await this.crypto.encrypt(v.response, v.response.CPkeySign);
+      v.rv = await this.cryptoLib.encrypt(v.response, v.response.CPkeySign);
       if( v.rv instanceof Error ) throw v.rv;
 
       dev.end(); // 終了処理

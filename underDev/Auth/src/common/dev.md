@@ -13,7 +13,8 @@
     - [bug]cryptoServer.constructor step.2
       TypeError: Cannot read properties of undefined (reading 'getProperty')
     - [bug]cryptoServer.generateKeys step.1 : ReferenceError: crypto is not defined
-    - ReferenceError: navigator is not defined @ jsrsasign.gs:197   ◀いまここ
+    - ReferenceError: navigator is not defined @ jsrsasign.gs:197
+    - [bug] this.cf.RSAbitsが参照できない   ◀いまここ
   <!--
   - authServer.setupEnvironment(menu21)
     - [bug] メニューが表示されない

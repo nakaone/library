@@ -1,4 +1,11 @@
-// 2026/01/21 13:54:32
+// 2026/01/22 09:31:15
+function checkWebCrypto() {
+  console.log("globalThis.crypto: " + typeof globalThis.crypto);
+  console.log("crypto: " + typeof crypto);
+  if (globalThis.crypto) {
+    console.log("subtle: " + typeof globalThis.crypto.subtle);
+  }
+}
 // スプレッドシートメニュー定義
 function onOpen(e){
   const ui = SpreadsheetApp.getUi();
@@ -1085,7 +1092,7 @@ class authConfig extends Schema {
  * @class
  * @classdesc サーバ側中核クラス
  * @prop {authServerConfig} cf - authServer設定項目
- * @prop {cryptoServer} crypto - 暗号化・署名検証
+ * @prop {cryptoServer} cryptoLib - 暗号化・署名検証
  */
 class authServer {
 
@@ -1553,10 +1560,10 @@ class authServer {
       v.rv = new authServer(config);
 
       // -------------------------------------------------------------
-      dev.step(2);  // 暗号化・復号モジュール生成(v.rv.crypto)
+      dev.step(2);  // 暗号化・復号モジュール生成(v.rv.cryptoLib)
       // -------------------------------------------------------------
-      v.rv.crypto = await cryptoServer.initialize(v.rv.cf);
-      if( v.rv.crypto instanceof Error ) throw v.rv.crypto;
+      v.rv.cryptoLib = await cryptoServer.initialize(v.rv.cf);
+      if( v.rv.cryptoLib instanceof Error ) throw v.rv.cryptoLib;
 
       // -------------------------------------------------------------
       dev.step(3);  // memberListシートの準備(v.rv.member)
@@ -1587,7 +1594,7 @@ class authServer {
       dev.step(1.1,arg);  // request存在・最低限チェック
       if( !arg ) throw new Error('invalid request: empty body');
       dev.step(1.2,JSON.parse(arg));  // 処理要求を復号
-      v.request = await this.crypto.decrypt(JSON.parse(arg), this.cf.CPkeySign);
+      v.request = await this.cryptoLib.decrypt(JSON.parse(arg), this.cf.CPkeySign);
       if( v.request instanceof Error ) throw v.request;
       dev.step(1.3,v.request);  // // request.func チェック
       if (!v.request || !v.request.func)
@@ -1618,7 +1625,7 @@ class authServer {
       this.authLogger(v.response);
 
       dev.step(6);  // encryptedResponseの作成
-      v.rv = await this.crypto.encrypt(v.response, v.response.CPkeySign);
+      v.rv = await this.cryptoLib.encrypt(v.response, v.response.CPkeySign);
       if( v.rv instanceof Error ) throw v.rv;
 
       dev.end(); // 終了処理
@@ -1910,28 +1917,36 @@ class cryptoServer {
     const v = {whois:`${this.constructor.name}.generateKeys`, arg:{}, rv:null};
     const dev = new devTools(v);
     try {
+
+      dev.step(1);  // cryptoオブジェクトの存在チェック
+      const cryptoObj = globalThis.crypto || (typeof crypto !== 'undefined' ? crypto : null);
+      if (!cryptoObj || !cryptoObj.subtle) {
+        throw new Error("Web Crypto API (crypto.subtle) is not supported in this environment. Please enable V8 runtime.");
+      }
+      dev.step(9.238, {cf:this.cf.RSAbits, publicExponent: '65537'});
+
       dev.step(1); // 署名用
-      const signKeys = await globalThis.crypto.subtle.generateKey({
+      const signKeys = await cryptoObj.subtle.generateKey({
         name: "RSA-PSS",
         modulusLength: this.cf.RSAbits,
-        publicExponent: new Uint8Array([8]),
+        publicExponent: new Uint8Array([1]),
         hash: "SHA-256"
       }, true, ["sign", "verify"]);
 
       dev.step(2); // 暗号化用
-      const encKeys = await globalThis.crypto.subtle.generateKey({
+      const encKeys = await cryptoObj.subtle.generateKey({
         name: "RSA-OAEP",
         modulusLength: this.cf.RSAbits,
-        publicExponent: new Uint8Array([8]),
+        publicExponent: new Uint8Array([1]),
         hash: "SHA-256"
       }, true, ["encrypt", "decrypt"]);
 
       dev.step(3); // PEM変換
       v.rv = {
-        SSkeySign: this.arrayBufferToPem(await globalThis.crypto.subtle.exportKey("pkcs8", signKeys.privateKey), "PRIVATE KEY"),
-        SPkeySign: this.arrayBufferToPem(await globalThis.crypto.subtle.exportKey("spki", signKeys.publicKey), "PUBLIC KEY"),
-        SSkeyEnc: this.arrayBufferToPem(await globalThis.crypto.subtle.exportKey("pkcs8", encKeys.privateKey), "PRIVATE KEY"),
-        SPkeyEnc: this.arrayBufferToPem(await globalThis.crypto.subtle.exportKey("spki", encKeys.publicKey), "PUBLIC KEY"),
+        SSkeySign: this.arrayBufferToPem(await cryptoObj.subtle.exportKey("pkcs8", signKeys.privateKey), "PRIVATE KEY"),
+        SPkeySign: this.arrayBufferToPem(await cryptoObj.subtle.exportKey("spki", signKeys.publicKey), "PUBLIC KEY"),
+        SSkeyEnc: this.arrayBufferToPem(await cryptoObj.subtle.exportKey("pkcs8", encKeys.privateKey), "PRIVATE KEY"),
+        SPkeyEnc: this.arrayBufferToPem(await cryptoObj.subtle.exportKey("spki", encKeys.publicKey), "PUBLIC KEY"),
         keyGeneratedDateTime: Date.now()
       };
       dev.end();
