@@ -1,4 +1,4 @@
-// 2026/01/22 15:21:06
+// 2026/01/22 16:15:54
 // スプレッドシートメニュー定義
 function onOpen(e){
   const ui = SpreadsheetApp.getUi();
@@ -748,6 +748,63 @@ class Schema {
     } catch(e) {
       return dev.error(e);
     }
+  }
+
+  /** sanitizeArg: プリミティブ型のみで構成されるよう無毒化
+   * @param {*} value - チェック対象の変数
+   * @param {string} path='$' - エラーメッセージ用にオブジェクト内の階層を保持
+   * @returns
+   */
+  sanitizeArg(value, path = '$') {
+    const v = {whois:this.constructor.name+'.sanitizeArg',arg:{value,path},rv:null};
+    const dev = new devTools(v);
+    try {
+
+      main: {
+        dev.step(1);
+        if( value === null ||
+          typeof value === 'string' ||
+          (typeof value === 'number' && Number.isFinite(value)) ||
+          typeof value === 'boolean'
+        ){
+          v.rv = value;
+          break main;
+        };
+
+        if (Array.isArray(value)) {
+          v.rv = value.map((v, i) => this.sanitizeArg(v, `${path}[${i}]`));
+          break main;
+        }
+
+        if (typeof value === 'object') {
+          // 明示的に禁止したい型
+          if (
+            value instanceof CryptoKey ||
+            value instanceof Date ||
+            value instanceof Error ||
+            value instanceof Map ||
+            value instanceof Set
+          ) {
+            throw new Error(`Unsupported argument type at ${path}`);
+          }
+
+          const obj = {};
+          for (const [k, v] of Object.entries(value)) {
+            if (typeof v === 'function') {
+              throw new Error(`Function not allowed in arg at ${path}.${k}`);
+            }
+            obj[k] = this.sanitizeArg(v, `${path}.${k}`);
+          }
+          v.rv = obj;
+        }
+      }
+      dev.end();
+      return v.rv;
+    } catch(e) {
+      return dev.error(e);
+    }
+
+    throw new Error(`Unsupported value type at ${path}`);
   }
 }
 /** 日時を指定形式の文字列にして返す
