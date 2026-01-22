@@ -18,8 +18,13 @@
       - jsrsasign仕様に変更
       - cryptoServerソース修正
     - cryptoServer.initialize: サーバ側鍵ペア生成結果を出力
-    - menu21見直し   ◀いまここ
+    - menu21見直し
     - authServer.resetSPkey実装
+    - [0105]Member.constructor step.2.5   ◀いまここ
+      TypeError: Cannot read properties of undefined (reading 'func')
+    - [0105]Member.constructor step.2.7
+      Error: unregistered member access
+    - authServer.dumpProperties実装
   <!--
   - authServer.setupEnvironment(menu21)
     - [bug] メニューが表示されない
