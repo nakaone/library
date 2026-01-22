@@ -20,9 +20,9 @@
     - cryptoServer.initialize: サーバ側鍵ペア生成結果を出力
     - menu21見直し
     - authServer.resetSPkey実装
-    - [0105]Member.constructor step.2.5   ◀いまここ
+    - [bug]Member.constructor step.2.5
       TypeError: Cannot read properties of undefined (reading 'func')
-    - [0105]Member.constructor step.2.7
+    - [0105]Member.constructor step.2.7   ◀いまここ
       Error: unregistered member access
     - authServer.dumpProperties実装
   <!--

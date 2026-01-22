@@ -6,7 +6,7 @@ export class Member {
    * @param {authServerConfig} config - authServerの設定値
    * @param {authRequest} request - 処理要求
    */
-  constructor(config,request) {
+  constructor(config,request={func:'::initial::'}) {
     const v = {whois:`Member.constructor`, arg:{request}, rv:null};
     const dev = new devTools(v);
     try {
@@ -91,7 +91,7 @@ export class Member {
         // ---------------------------------------------------------
         dev.step(2.5); // 未登録メンバ
         // ---------------------------------------------------------
-        if ( request && request.func === '::initial::') {
+        if ( request.func === '::initial::') {
           // HTML初回ロード時(SPkey要求)
 
           dev.step(2.6); // 仮登録
