@@ -1,4 +1,4 @@
-// 2026/01/22 10:11:25
+// 2026/01/22 10:54:39
 function checkWebCrypto() {
   console.log("globalThis.crypto: " + typeof globalThis.crypto);
   console.log("crypto: " + typeof crypto);
@@ -1924,6 +1924,19 @@ class cryptoServer {
         v.rv.keyList.forEach(key => {
           v.rv.prop.setProperty(key, v.keys[key]);
         });
+
+        dev.step(2.4);  // 保存結果の確認
+        v.savedResult = {
+          keyGeneratedDateTime: prop.getProperty('keyGeneratedDateTime'),
+          SPkeySign: prop.getProperty('SPkeySign')
+            ? prop.getProperty('SPkeySign').substring(0, 50) + "..."
+            : "FAILED"
+        };
+        if (!v.savedResult.SPkeySign || v.savedResult.SPkeySign === "FAILED") {
+          throw new Error("鍵ペアの保存に失敗しました。");
+        } else {
+          dev.step(2.5,v.savedResult);
+        }
       }
 
       dev.end(); // 終了処理
