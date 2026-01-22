@@ -42,9 +42,12 @@
     - [0105]Member.constructor step.2.7
       Error: unregistered member access
     - authServer.dumpProperties実装
-    - Uncaught SyntaxError   ◀いまここ
+    - Uncaught SyntaxError
       : Failed to execute 'write' on 'Document'
       : Identifier 'config' has already been declared
+    - Webアプリ（GAS）のデプロイ・キャッシュ問題   ◀いまここ
+    - [0002]authClient.initialize step.1
+      ReferenceError: authClientConfig is not defined
   <!--
   - authServer.setupEnvironment(menu21)
     - [bug] メニューが表示されない

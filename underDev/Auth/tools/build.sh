@@ -18,7 +18,7 @@ echo $dt
 
 src="$prj/src"
 # $embedに渡すパラメータを一括指定
-opts="-prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp"
+opts="-GitHub:$GitHub -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp"
 
 # ----------------------------------------------
 # 1. クライアント・サーバ共通
@@ -76,7 +76,7 @@ done
 
 # === 2.2 index.htmlの作成
 # 開発時の更新確認のため、index.htmlに現在日時を挿入
-echo "<p style='text-align:right'>$dt</p>" > $tmp/timestamp.html
+echo "<p style='text-align:right'>build: $dt</p>" > $tmp/timestamp.html
 cat $src/client/index.html | awk 1 | $embed $opts > $dep/index.html
 
 # ----------------------------------------------
@@ -107,7 +107,7 @@ cat $src/server/jsrsasign-all-min.js >> $dep/jsrsasign.gs
 # ./build.sh -l
 if [[ "$1" != "-l" ]]; then
   cd $prj/deploy
-  clasp push --force
+  clasp push #--force
   cd $prj/tools
 fi
 
@@ -125,9 +125,11 @@ cat $prj/tools/specify.mjs >> $nbSpec
 
 # 5.2 ソースコード
 nbSource="$tmp/nbSource.txt"
-echo "=== Code.gs: サーバ側ソース\n" > $nbSource
+echo "===\n=== Code.gs: サーバ側ソース\n===\n" > $nbSource
 cat $dep/Code.gs >> $nbSource
-echo "\n=== jsrsasign.gs: サーバ側RSAライブラリ\n" >> $nbSource
+echo "\n===\n=== jsrsasign.gs: サーバ側RSAライブラリ\n===\n" >> $nbSource
 cat $dep/jsrsasign.gs >> $nbSource
-echo "\n=== index.html: クライアント側ソース\n" >> $nbSource
+echo "\n===\n=== index.html: クライアント側ソース\n===\n" >> $nbSource
 cat $dep/index.html >> $nbSource
+# tools
+cat $prj/tools/nbTools.mjs | awk 1 | $embed $opts > $tmp/nbTools.txt

@@ -12,7 +12,9 @@ export const config = {
   // -------------------------------------------------------------
   // authClient専用設定情報
   // -------------------------------------------------------------
-  api:"AKfycbw-n_isgCLvAEntGEX5Lpn4AUNaqpp3r1W0nVIGXFjNlEdsRB_ue4b9NRmNH_Em5IxT",
+  // 現在開発用(http://script.google.com/macros/s/〜/dev)。
+  // 本番時には"http://script.google.com/macros/s/〜/exec"に書き換えること
+  api:"AKfycbyQQAPxNwxKVbT56gVuaSqwG5TNOAEUsxAl8i_hUcQ",
 
   // -------------------------------------------------------------
   // authServer専用設定情報
