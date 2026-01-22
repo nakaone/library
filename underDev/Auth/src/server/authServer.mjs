@@ -453,6 +453,37 @@ export class authServer {
     }
   }
 
+  /** dumpProperties: ScriptPropertiesの登録状況をコンソールに表示 (開発用)
+   * @returns {null|Error}
+   */
+  static dumpProperties() {
+    const v = { whois: `${this.constructor.name}.dumpProperties`, arg: {}, rv: null };
+    const dev = new devTools(v); // 開発支援ツールを使用 [1]
+    try {
+      dev.step(1); // ScriptPropertiesの全取得 [2], [3]
+      v.props = PropertiesService.getScriptProperties().getProperties();
+      v.dumpData = ["=== Current ScriptProperties"];
+
+      dev.step(2); // データの整形
+      Object.keys(v.props).sort().forEach(key => {
+        v.val = v.props[key];
+        // RSA鍵ペア（SSkeySign, SPkeySign等）は最初の30文字にカット [4]
+        if (typeof v.val === 'string' && (key.includes('keySign') || key.includes('keyEnc'))) {
+          v.val = v.val.substring(0, 50) + "...";
+        }
+        v.dumpData.push(`${key}: "${v.val}"`);
+      });
+
+      dev.step(3); // 整形後のデータをダンプ出力 [5]
+      console.log(v.dumpData.join('\n'));
+
+      dev.end();
+      return null;
+    } catch (e) {
+      return dev.error(e); // エラー発生時の共通ハンドリング [6]
+    }
+  }
+
   /** initialize: authServerインスタンス作成
    * - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
    * - staticではない一般のメンバへの値セットができないため別途constructorを呼び出す

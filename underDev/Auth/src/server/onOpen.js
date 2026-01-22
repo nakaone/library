@@ -12,3 +12,5 @@ function onOpen(e){
 const menu10 = () => asv.listNotYetDecided();
 const menu21 = () => authServer.setupEnvironment(config);
 const menu22 = () => authServer.resetSPkey();
+// 開発用ツール(コンソールで実行、メニュー化対象外)
+const menu91 = () => authServer.dumpProperties();

@@ -1,4 +1,4 @@
-// 2026/01/22 14:25:43
+// 2026/01/22 14:52:13
 // スプレッドシートメニュー定義
 function onOpen(e){
   const ui = SpreadsheetApp.getUi();
@@ -14,6 +14,8 @@ function onOpen(e){
 const menu10 = () => asv.listNotYetDecided();
 const menu21 = () => authServer.setupEnvironment(config);
 const menu22 = () => authServer.resetSPkey();
+// 開発用ツール(コンソールで実行、メニュー化対象外)
+const menu91 = () => authServer.dumpProperties();
 
 // ライブラリ関数定義
 /** devTools: 開発支援関係メソッド集
@@ -1528,6 +1530,37 @@ class authServer {
       status: 'success',
       message: '',
       // メンバ"decrypt"はクライアント側で付加
+    }
+  }
+
+  /** dumpProperties: ScriptPropertiesの登録状況をコンソールに表示 (開発用)
+   * @returns {null|Error}
+   */
+  static dumpProperties() {
+    const v = { whois: `${this.constructor.name}.dumpProperties`, arg: {}, rv: null };
+    const dev = new devTools(v); // 開発支援ツールを使用 [1]
+    try {
+      dev.step(1); // ScriptPropertiesの全取得 [2], [3]
+      v.props = PropertiesService.getScriptProperties().getProperties();
+      v.dumpData = ["=== Current ScriptProperties"];
+
+      dev.step(2); // データの整形
+      Object.keys(v.props).sort().forEach(key => {
+        v.val = v.props[key];
+        // RSA鍵ペア（SSkeySign, SPkeySign等）は最初の30文字にカット [4]
+        if (typeof v.val === 'string' && (key.includes('keySign') || key.includes('keyEnc'))) {
+          v.val = v.val.substring(0, 50) + "...";
+        }
+        v.dumpData.push(`${key}: "${v.val}"`);
+      });
+
+      dev.step(3); // 整形後のデータをダンプ出力 [5]
+      console.log(v.dumpData.join('\n'));
+
+      dev.end();
+      return null;
+    } catch (e) {
+      return dev.error(e); // エラー発生時の共通ハンドリング [6]
     }
   }
 

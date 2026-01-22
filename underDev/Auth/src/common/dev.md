@@ -22,9 +22,9 @@
     - authServer.resetSPkey実装
     - [bug]Member.constructor step.2.5
       TypeError: Cannot read properties of undefined (reading 'func')
-    - [0105]Member.constructor step.2.7   ◀いまここ
+    - [0105]Member.constructor step.2.7
       Error: unregistered member access
-    - authServer.dumpProperties実装
+    - authServer.dumpProperties実装   ◀いまここ
   <!--
   - authServer.setupEnvironment(menu21)
     - [bug] メニューが表示されない
