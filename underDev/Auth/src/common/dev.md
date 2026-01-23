@@ -28,8 +28,8 @@
     - Uncaught SyntaxError
       : Failed to execute 'write' on 'Document'
       : Identifier 'config' has already been declared
-    - Webアプリ（GAS）のデプロイ・キャッシュ問題   ◀いまここ
-    - [0002]authClient.initialize step.1
+    - Webアプリ（GAS）のデプロイ・キャッシュ問題
+    - [0002]authClient.initialize step.1   ◀いまここ
       ReferenceError: authClientConfig is not defined
   <!--
   - authServer.setupEnvironment(menu21)
