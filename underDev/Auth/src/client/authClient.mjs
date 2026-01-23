@@ -40,7 +40,7 @@ export class authClient {
 
   /** constructor
    * @constructor
-   * @param {authConfig} config - authClient/Server共通設定情報
+   * @param {Object} config - authClient/Server共通設定情報
    */
   constructor(config) {
     const v = {whois:`authClient.constructor`, arg:{config}, rv:null};
@@ -78,7 +78,7 @@ export class authClient {
 
     try {
 
-      /** this.cf(authClientConfig): 共通設定情報にauthClient特有項目を追加
+      /** authClientConfig: 共通設定情報にauthClient特有項目を追加
        * @typedef {Object} authClientConfig - authClient特有の設定項目
        * @extends {authConfig}
        * @prop {string} api - サーバ側WebアプリURLのID
@@ -88,7 +88,7 @@ export class authClient {
        * @prop {string} storeName="config" - IndexedDBのストア名
        * @prop {number} dbVersion=1 - IndexedDBのバージョン
        */
-      dev.step(1.1);  // this.cfの作成
+      dev.step(1.1);  // this.cfにauthClientConfigを設定
       this.cf = new authConfig(mergeDeeply(v.schema,config));
 
       dev.step(1.2);  // 必須項目の設定
@@ -384,7 +384,8 @@ export class authClient {
    * - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行
    * - staticではない一般のメンバへの値セットができないため別途constructorを呼び出す
    * @static
-   * @param {authClientConfig} config - authClient設定情報
+   * @param {Object} config - authClient/Server共通＋authClient専用設定情報
+   *   ※共通/専用設定情報は事前に結合しておくこと(ex.mergeDeeply)
    * @returns {authClient|Error}
    */
   static async initialize(config) {
@@ -393,9 +394,8 @@ export class authClient {
     try {
 
       dev.step(1);  // インスタンス生成
-      v.cf = new authClientConfig(config);
       // オプション既定値を先にメンバ変数に格納するため、constructorを先行
-      v.rv = new authClient(v.cv);
+      v.rv = new authClient(config);
 
       dev.step(2);  // DB接続：非同期処理なのでconstructorではなくinitializeで実行
       authClient._IndexedDB = await new Promise((resolve, reject) => {

@@ -45,8 +45,8 @@
     - Uncaught SyntaxError
       : Failed to execute 'write' on 'Document'
       : Identifier 'config' has already been declared
-    - Webアプリ（GAS）のデプロイ・キャッシュ問題   ◀いまここ
-    - [0002]authClient.initialize step.1
+    - Webアプリ（GAS）のデプロイ・キャッシュ問題
+    - [0002]authClient.initialize step.1   ◀いまここ
       ReferenceError: authClientConfig is not defined
   <!--
   - authServer.setupEnvironment(menu21)
@@ -362,3 +362,13 @@ function doPost(e) {
 - clasp + WebApp 開発では **GCP プロジェクト作成は事実上必須**
 - 一度設定すれば以後は意識不要
 - README にこの手順を入れておくと利用者が詰まらない
+
+## デプロイ
+
+1. 「デプロイ > 新しいデプロイ」
+2. 開発中：「デプロイ > デプロイをテスト」
+   - ウェブアプリの開発はこの画面のURLで行う
+   - エンドポイントもこちらのURLを使用する
+3. 本番時：「デプロイ > デプロイを管理」
+   - 鉛筆アイコンから「バージョン：新バージョン」を選択してデプロイ
+   - エンドポイントはデプロイを管理画面のURLに書き換え
