@@ -36,17 +36,18 @@
       - cryptoServerソース修正
     - cryptoServer.initialize: サーバ側鍵ペア生成結果を出力
     - menu21見直し
-    - authServer.resetSPkey実装
+  - authServer.resetSPkey実装
     - [bug]Member.constructor step.2.5
       TypeError: Cannot read properties of undefined (reading 'func')
-    - [0105]Member.constructor step.2.7
+    - [bug]Member.constructor step.2.7
       Error: unregistered member access
-    - authServer.dumpProperties実装
+  - authServer.dumpProperties実装
     - Uncaught SyntaxError
       : Failed to execute 'write' on 'Document'
       : Identifier 'config' has already been declared
     - Webアプリ（GAS）のデプロイ・キャッシュ問題
-    - [0002]authClient.initialize step.1   ◀いまここ
+  - authClientでSPkey取得
+    - [bug]authClient.initialize step.1   ◀いまここ
       ReferenceError: authClientConfig is not defined
   <!--
   - authServer.setupEnvironment(menu21)

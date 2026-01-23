@@ -18,3 +18,32 @@ export async function localFunc(){
 
   } catch (e) { return dev.error(e); }
 }
+
+/**
+ * clearAuthEnvironment: IndexedDBの"Auth"データベースを削除し、環境をリセットする
+ * @returns {Promise<void>}
+ */
+async function clearAuthEnvironment() {
+  return new Promise((resolve, reject) => {
+    const DB_NAME = "Auth";
+    
+    // データベース削除リクエスト
+    const request = indexedDB.deleteDatabase(DB_NAME);
+
+    request.onsuccess = () => {
+      console.log(`[localFunc] IndexedDB '${DB_NAME}' を正常に削除しました。環境をリセットしました。`);
+      resolve();
+    };
+
+    request.onerror = (event) => {
+      console.error(`[localFunc] データベースの削除に失敗しました:`, event);
+      reject(new Error("IndexedDB deletion failed"));
+    };
+
+    request.onblocked = () => {
+      // 他のタブやコネクションが残っている場合に発生
+      console.warn(`[localFunc] 削除がブロックされました。他のタブを閉じてから再試行してください。`);
+      alert("データベースが使用中です。他のタブを閉じてください。");
+    };
+  });
+}

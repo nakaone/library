@@ -9,16 +9,16 @@ source ~/Desktop/GitHub/tools/common.sh
 prj="$lib/underDev/Auth"
 arc="$prj/archives"
 dep="$prj/deploy"
-doc="$prj/doc"
 rm -rf $dep/*.gs $dep/*.html
+doc="$prj/doc"
+src="$prj/src"
 tmp="$prj/tmp"
 rm -rf $tmp/*
 dt=$(date "+%Y/%m/%d %H:%M:%S")
 echo $dt
 
-src="$prj/src"
 # $embedに渡すパラメータを一括指定
-opts="-GitHub:$GitHub -prj:$prj -lib:$lib -src:$src -doc:$doc -tmp:$tmp"
+opts="-GitHub:$GitHub -lib:$lib -prj:$prj -dep:$dep -doc:$doc -src:$src -tmp:$tmp"
 
 # ----------------------------------------------
 # 1. クライアント・サーバ共通
@@ -107,7 +107,7 @@ cat $src/server/jsrsasign-all-min.js >> $dep/jsrsasign.gs
 # ./build.sh -l
 if [[ "$1" != "-l" ]]; then
   cd $prj/deploy
-  clasp push #--force
+  clasp push
   cd $prj/tools
 fi
 

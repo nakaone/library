@@ -30,8 +30,9 @@
       : Identifier 'config' has already been declared
     - Webアプリ（GAS）のデプロイ・キャッシュ問題
   - authClientでSPkey取得
-    - [bug]authClient.initialize step.1   ◀いまここ
+    - [bug]authClient.initialize step.1
       ReferenceError: authClientConfig is not defined
+    - IndexedDBクリアボタン追加(clearAuthEnvironment)   ◀いまここ
   <!--
   - authServer.setupEnvironment(menu21)
     - [bug] メニューが表示されない
