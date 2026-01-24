@@ -3,19 +3,9 @@
 ## 変更履歴
 
 - build0009: SPkey取得
-  - authClientでauthRequest(SPkey要求)作成   ◀いまここ
-    - authRequestの内容が不十分
-      memberId:null, // object
-      deviceId:null, // object
-      memberName:null, // object
-      CPkeySign:null, // object
-      requestTime:1769229395345, // number
-      func:"::initial::", // string
-      arg:null, // object
-      nonce:null, // object
-
-
-
+  - authClientでauthRequest(SPkey要求)作成
+    - [bug] authRequest生成時、設定されていない項目がある
+    - [bug] authClient.fetch: blocked by CORS policy   ◀いまここ
   - authServerで受信、内容確認
   - authServerでauthResponse作成
   - authClientで受信、内容確認、格納
