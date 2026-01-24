@@ -1,4 +1,4 @@
-import { Schema } from "../../../../Schema/2.0.0/core.mjs";
+import { Schema } from "../../../../Schema/2.1.0/core.mjs";
 import { mergeDeeply } from "../../../../mergeDeeply/2.0.0/core.mjs"
 
 /** authConfig: クライアント・サーバ共通設定情報
