@@ -206,7 +206,7 @@ export class authClient {
 
       if( !this.idb.SPkeySign ){  // SPkey未取得
 
-        dev.step(2.1);  // 内発処理「初期情報要求」用のauthRequestを作成
+        dev.step(2.1,this.idb);  // 内発処理「初期情報要求」用のauthRequestを作成
         v.authRequest = this.cf.factory('authRequest',{idb:this.idb,func:'::initial::'});
         dev.step(99.212,v.authRequest);
 
