@@ -190,29 +190,25 @@ export class authClient {
     const dev = new devTools(v,{mode:'dev'});
     try {
 
-      dev.step(1.1,{n:1.1});  // 再帰呼出時の階層チェック
+      dev.step(1.1);  // 再帰呼出時の階層チェック
       if( depth > this.cf.maxDepth )
         throw new Error('maximum recursion depth exceeded');
 
-      dev.step(1.2,{n:1.2}); // funcが関数名として有効かチェック
+      dev.step(1.2); // funcが関数名として有効かチェック
       // なお「::〜::」は内発処理として有効とする
       if( !/^(::[a-zA-Z_$][a-zA-Z0-9_$]*::|[a-zA-Z_$][a-zA-Z0-9_$]*)$/.test(func) ){
         throw new Error('Invalid function');
       }
 
-      dev.step(1.3,{n:1.3});  // サーバ側に渡す引数を無毒化
+      dev.step(1.3);  // サーバ側に渡す引数を無毒化
       arg = this.cf.sanitizeArg(arg);
-      console.log(`l.205 arg=${JSON.stringify(arg,null,2)}`);
+      if( arg instanceof Error ) throw arg;
 
-      console.log(`l.207 SPkey`,this.idb.SPkeySign ?? 'invalid SPkey');
       if( !this.idb.SPkeySign ){  // SPkey未取得
 
-        console.log(`l.210`);
         dev.step(2.1);  // 内発処理「初期情報要求」用のauthRequestを作成
         v.authRequest = this.cf.factory('authRequest',{idb:this.idb,func:'::initial::'});
-        console.log(`l.212 v.authRequest=${JSON.stringify(v.authRequest,null,2)}`);
-        //v.authRequest = this.cf.typeDef.tableDef.authRequest.constructor({idb:this.idb,func:'::initial::'});
-        //v.authRequest = this.authRequest('::initial::');
+        dev.step(99.212,v.authRequest);
 
         dev.step(2.2);  // サーバ側に処理依頼
         v.authResponse = await this.fetch(v.authRequest);

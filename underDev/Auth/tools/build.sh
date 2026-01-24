@@ -6,16 +6,20 @@ source ~/Desktop/GitHub/tools/common.sh
 # ----------------------------------------------
 # 0. 事前準備
 # ----------------------------------------------
+dt=$(date "+%Y/%m/%d %H:%M:%S")
+echo $dt
+
+# 各種フォルダの設定
 prj="$lib/underDev/Auth"
 arc="$prj/archives"
 dep="$prj/deploy"
-rm -rf $dep/*.gs $dep/*.html
 doc="$prj/doc"
 src="$prj/src"
 tmp="$prj/tmp"
+
+# 作業フォルダのクリア
+rm -rf $dep/*
 rm -rf $tmp/*
-dt=$(date "+%Y/%m/%d %H:%M:%S")
-echo $dt
 
 # $embedに渡すパラメータを一括指定
 opts="-GitHub:$GitHub -lib:$lib -prj:$prj -dep:$dep -doc:$doc -src:$src -tmp:$tmp"
@@ -89,6 +93,10 @@ for f in $src/server/*.mjs; do
   # import/export文の削除
   sed '/^import /d; s/^export //' "$f" > "$tmp/$bn.js"
 done
+
+# === 3.2 clasp設定ファイルの準備
+cp $prj/tools/.clasp.json $dep/
+cp $prj/tools/appsscript.json $dep/
 
 # === 3.2 Code.gsの作成
 echo "// $dt" > $dep/Code.gs
