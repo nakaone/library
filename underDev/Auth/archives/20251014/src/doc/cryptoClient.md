@@ -1,1 +1,0 @@
-# 🔐 cryptoClient 関数 仕様書
