@@ -350,24 +350,12 @@ export class authClient {
       dev.step(2);  // [{key, value}]形式の値配列を{key:value}形式に再構成
       v.rv = {};
       if( Array.isArray(v.raw) && v.raw.length > 0 ){
+        v.raw.forEach((k, i) => v.rv[k] = v.raw[i]);
+      }
 
-        dev.step(2.1);  // レコードキーを全て取得
-        v.keys = await this._withStore('readonly', store =>
-          new Promise((resolve, reject) => {
-            const req = store.getAllKeys();
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = e => reject(e.target.error);
-          })
-        );
-
-        dev.step(2.2);  // {key:value}形式に再構成
-        v.keys.forEach((k, i) => v.rv[k] = v.raw[i]);
-
-        dev.step(2.3);  // CryptoKey復元（存在するものだけ）
-        for(const [k,vv] of Object.entries(v.rv)){
-          v.rv[k] = await this._importIfCryptoKey(k, vv);
-          this.idb[k] = v.rv[k];
-        }
+      dev.step(3);  // CryptoKey復元（存在するものだけ）
+      for(const [k,vv] of Object.entries(v.rv)){
+        v.rv[k] = await this._importIfCryptoKey(k, vv);
       }
 
       dev.end(); // 終了処理
@@ -446,7 +434,7 @@ export class authClient {
       }
 
       dev.step(6);  // IndexedDBの内容をメンバ変数に格納
-      Object.keys(v.idb).forEach(x => v.rv[x] = v.idb[x]);
+      Object.keys(v.idb).forEach(x => v.rv.idb[x] = v.idb[x]);
 
       dev.end({IndexedDB:v.rv.idb}); // 終了処理
       return v.rv;

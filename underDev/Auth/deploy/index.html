@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/alasql/4.6.4/alasql.min.js" integrity="sha512-/IeaoBeXScPD3EiZkaYKzjnqRnKJI73FM/18T8P+v2n11hKNCKQmko/n2ccvlDyH3AziR0oPEGShwsZEwO/Jjg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
-<p style='text-align:right'>build: 2026/01/24 13:09:37</p>
+<p style='text-align:right'>build: 2026/01/24 14:17:38</p>
 <p style="text-align: right;">doGet: <?= VERSION ?></p>
 <h1>SPkey要求テスト</h1>
 
@@ -1365,24 +1365,12 @@ class authClient {
       dev.step(2);  // [{key, value}]形式の値配列を{key:value}形式に再構成
       v.rv = {};
       if( Array.isArray(v.raw) && v.raw.length > 0 ){
+        v.raw.forEach((k, i) => v.rv[k] = v.raw[i]);
+      }
 
-        dev.step(2.1);  // レコードキーを全て取得
-        v.keys = await this._withStore('readonly', store =>
-          new Promise((resolve, reject) => {
-            const req = store.getAllKeys();
-            req.onsuccess = () => resolve(req.result);
-            req.onerror = e => reject(e.target.error);
-          })
-        );
-
-        dev.step(2.2);  // {key:value}形式に再構成
-        v.keys.forEach((k, i) => v.rv[k] = v.raw[i]);
-
-        dev.step(2.3);  // CryptoKey復元（存在するものだけ）
-        for(const [k,vv] of Object.entries(v.rv)){
-          v.rv[k] = await this._importIfCryptoKey(k, vv);
-          this.idb[k] = v.rv[k];
-        }
+      dev.step(3);  // CryptoKey復元（存在するものだけ）
+      for(const [k,vv] of Object.entries(v.rv)){
+        v.rv[k] = await this._importIfCryptoKey(k, vv);
       }
 
       dev.end(); // 終了処理
@@ -1404,11 +1392,11 @@ class authClient {
     const dev = new devTools(v);
     try {
 
-      dev.step(1);  // インスタンス生成
+      dev.step(1,'s1');  // インスタンス生成
       // オプション既定値を先にメンバ変数に格納するため、constructorを先行
       v.rv = new authClient(config);
 
-      dev.step(2);  // DB接続：非同期処理なのでconstructorではなくinitializeで実行
+      dev.step(2,'s2');  // DB接続：非同期処理なのでconstructorではなくinitializeで実行
       authClient._IndexedDB = await new Promise((resolve, reject) => {
         if (authClient._IndexedDB) {
           return resolve(authClient._IndexedDB);
@@ -1432,14 +1420,14 @@ class authClient {
         };
       });
 
-      dev.step(3);  // IndexedDBの内容を取得
+      dev.step(3,'s3');  // IndexedDBの内容を取得
       v.idb = await v.rv.getIndexedDB();
       if( v.idb instanceof Error ) throw v.idb;
 
-      dev.step(4);  // 暗号化・署名検証用インスタンス作成
+      dev.step(4,v.idb);  // 暗号化・署名検証用インスタンス作成
       v.rv.crypto = new cryptoClient(v.rv.idb,v.rv.cf.RSAbits);
 
-      dev.step(5);  // IndexedDBが空の場合、既定値(初期値)をIndexedDBに保存
+      dev.step(5,v.rv.crypto);  // IndexedDBが空の場合、既定値(初期値)をIndexedDBに保存
       if( Object.keys(v.idb).length === 0 ){
 
         dev.step(5.1);  // 鍵ペア生成
@@ -1461,7 +1449,7 @@ class authClient {
       }
 
       dev.step(6);  // IndexedDBの内容をメンバ変数に格納
-      Object.keys(v.idb).forEach(x => v.rv[x] = v.idb[x]);
+      Object.keys(v.idb).forEach(x => v.rv.idb[x] = v.idb[x]);
 
       dev.end({IndexedDB:v.rv.idb}); // 終了処理
       return v.rv;
