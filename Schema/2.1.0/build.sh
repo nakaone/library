@@ -6,7 +6,7 @@ source ~/Desktop/GitHub/tools/common.sh
 # ----------------------------------------------
 # 0. 事前準備
 # ----------------------------------------------
-prj="$lib/Schema/2.0.0"
+prj="$lib/Schema/2.1.0"
 
 # ES Module対応版(core.mjs)から埋込用(core.js)を作成
 sed '/^import /d; s/^export //' core.mjs > core.js
