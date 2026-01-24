@@ -41,7 +41,7 @@
  * 1.1.0 2025-09-15 構造の見直し、メンバ名の修正
  * 1.0.0 2025-09-15 初版
  */
-export class Schema {
+class Schema {
   /**
    * @constructor
    * @param {Schema[]} arg=[{}] - 設定情報集。後順位優先。共通設定を先頭に特有設定の追加を想定

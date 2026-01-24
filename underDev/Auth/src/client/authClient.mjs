@@ -334,31 +334,39 @@ export class authClient {
    * @returns {Object<string,any>} this.idbに格納したIndexedDBの内容({キー:値}形式)
    */
   async getIndexedDB() {
-    const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{}, rv:null};
+    const v = {whois:`${this.constructor.name}.getIndexedDB`, arg:{}, rv:{}};
     const dev = new devTools(v);
+
     try {
 
-      dev.step(1);  // IndexedDBに保存された項目を全て配列で取得
-      v.raw = await this._withStore('readonly', store =>
-        new Promise((resolve, reject) => {
-          const req = store.getAll();
-          req.onsuccess = () => resolve(req.result);
-          req.onerror = e => reject(e.target.error);
-        })
-      );
+      dev.step(1); // データ取得開始
+      // _withStore を使用して "Auth" ストアへの読み取り専用アクセスを確保
+      await this._withStore('readonly', (store) => {
+        return new Promise((resolve, reject) => {
+          const request = store.openCursor();
 
-      dev.step(2);  // [{key, value}]形式の値配列を{key:value}形式に再構成
-      v.rv = {};
-      if( Array.isArray(v.raw) && v.raw.length > 0 ){
-        v.raw.forEach((k, i) => v.rv[k] = v.raw[i]);
-      }
+          request.onsuccess = async (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+              // ストア内のキー名（memberId, CPkeySign 等）をプロパティ名として採用 [2]
+              const key = cursor.key;
+              // インポート処理を行い、CryptoKey 等を復元した上でオブジェクトへ格納
+              v.rv[key] = await this._importIfCryptoKey(key, cursor.value);
+              
+              cursor.continue(); // 次のレコードへ移動
+            } else {
+              // 全レコードの走査が完了
+              resolve();
+            }
+          };
 
-      dev.step(3);  // CryptoKey復元（存在するものだけ）
-      for(const [k,vv] of Object.entries(v.rv)){
-        v.rv[k] = await this._importIfCryptoKey(k, vv);
-      }
+          request.onerror = (event) => {
+            reject(event.target.error);
+          };
+        });
+      });
 
-      dev.end(); // 終了処理
+      dev.end(v.rv); // 終了処理
       return v.rv;
 
     } catch (e) { return dev.error(e); }
@@ -409,7 +417,7 @@ export class authClient {
       v.idb = await v.rv.getIndexedDB();
       if( v.idb instanceof Error ) throw v.idb;
 
-      dev.step(4);  // 暗号化・署名検証用インスタンス作成
+      dev.step(4,v.idb);  // 暗号化・署名検証用インスタンス作成
       v.rv.crypto = new cryptoClient(v.rv.idb,v.rv.cf.RSAbits);
 
       dev.step(5);  // IndexedDBが空の場合、既定値(初期値)をIndexedDBに保存
@@ -430,10 +438,11 @@ export class authClient {
         dev.step(5.3);  // IndexedDBに格納
         v.r = await v.rv.setIndexedDB(v.idb);
         if( v.r instanceof Error ) throw v.r;
+        dev.step(99.433,v.r);
 
       }
 
-      dev.step(6);  // IndexedDBの内容をメンバ変数に格納
+      dev.step(6,v.idb);  // IndexedDBの内容をメンバ変数に格納
       Object.keys(v.idb).forEach(x => v.rv.idb[x] = v.idb[x]);
 
       dev.end({IndexedDB:v.rv.idb}); // 終了処理

@@ -39,14 +39,14 @@ export class authConfig extends Schema {
          */
         authRequest: {desc: 'クライアント→サーバ要求',
           cols: [
-            {name:'memberId',type:'string',desc:'メンバの識別子'},
-            {name:'deviceId',type:'string',desc:'デバイスの識別子(UUIDv4)'},
-            {name:'memberName',type:'string',desc:'メンバの氏名',note:'管理者が加入認否判断のため使用'},
-            {name:'CPkeySign',type:'string',desc:'クライアント側署名用公開鍵'},
+            {name:'memberId',type:'string',desc:'メンバの識別子',default:x=>{return x.idb.memberId}},
+            {name:'deviceId',type:'string',desc:'デバイスの識別子(UUIDv4)',default:x=>x.idb.deviceId},
+            {name:'memberName',type:'string',desc:'メンバの氏名',note:'管理者が加入認否判断のため使用',default:x=>x.idb.memberName},
+            {name:'CPkeySign',type:'string',desc:'クライアント側署名用公開鍵',default:x=>x.idb.CPkeySign},
             {name:'requestTime',type:'datetime',desc:'要求日時',default:'Date.now()'},
             {name:'func',type:'string',desc:'サーバ側関数名'},
-            {name:'arg',type:'array',desc:'サーバ側関数に渡す引数の配列',default:'[]'},
-            {name:'nonce',type:'string',desc:'要求の識別子'},
+            {name:'arg',type:'array',desc:'サーバ側関数に渡す引数の配列',default:[]},
+            {name:'nonce',type:'string',desc:'要求の識別子',default:()=>crypto.randomUUID()},
           ],
         },
         /** authResponse: authServerからauthClientへの処理結果(平文)

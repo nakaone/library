@@ -1,4 +1,4 @@
-// 2026/01/24 14:21:31
+// 2026/01/24 17:40:22
 // スプレッドシートメニュー定義
 function onOpen(e){
   const ui = SpreadsheetApp.getUi();
@@ -471,6 +471,7 @@ function mergeDeeply(sub,pri,opt={}){
  * ```
  *
  * @history
+ * 2.1.0 2026-01-24 defaultのデータ型として関数利用を可能に変更
  * 2.0.0 2026-01-13 configの親クラスを念頭に書き換え。factoryメソッド追加
  * 【欠番】2025-12-21 構造簡潔化＋Adapterと役割分担
  * 1.2.0 2025-09-21 AlaSQLの予約語とSpreadDb.schemaの重複排除
@@ -612,7 +613,7 @@ class Schema {
    *   - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function'
    * @property {boolean} [nullable=true] - null を許可するか
    * @property {any} [default=null] - 既定値
-   *   - 関数の場合は toString() 化された文字列
+   *   - データ型が関数の場合、引数はfactoryメソッドに渡されるargと看做す
    *
    * 【datetimeが固定値ではない場合の記述方法】
    * ex. factoryメソッドで生成するオブジェクトに生成日時を設定したい
@@ -675,19 +676,20 @@ class Schema {
       if( !this.isObject(arg) )
         throw new Error(`argument "arg" must be object.`);
 
-      dev.step(2);  // 判定・変換ロジックの定義
+      dev.step(2,arg);  // 判定・変換ロジックの定義
       v.trueValues = [1, '1', -1, '-1', 'true', 'TRUE', true];
       v.falseValues = [0, '0', 'false', 'FALSE', false];
+      v.eval = x => { return typeof x === 'function' ? (x(arg) ?? null) : null };
       v.checkers = {
-        string: x => typeof x === 'string' ? x : null,
+        string: x => typeof x === 'string' ? x : v.eval(x),
         number: x => {
           v.num = Number(x);
-          return v.num !== null && v.num !== '' && !isNaN(v.num) ? v.num : null;
+          return isNaN(v.num) ? v.eval(x) : v.num;
         },
         boolean: x => v.trueValues.includes(x) ? true
-          : (v.falseValues.includes(x) ? false : null),
-        object: x => this.isObject(x) ? x : null,
-        array: x => Array.isArray(x) ? x : null,
+          : (v.falseValues.includes(x) ? false : v.eval(x)),
+        object: x => this.isObject(x) ? x : v.eval(x),
+        array: x => Array.isArray(x) ? x : v.eval(x),
         datetime: x => {  // 日付型
           if( x === null ) return null; // null指定は無効
           v.dt = new Date(x);
@@ -1000,14 +1002,14 @@ class authConfig extends Schema {
          */
         authRequest: {desc: 'クライアント→サーバ要求',
           cols: [
-            {name:'memberId',type:'string',desc:'メンバの識別子'},
-            {name:'deviceId',type:'string',desc:'デバイスの識別子(UUIDv4)'},
-            {name:'memberName',type:'string',desc:'メンバの氏名',note:'管理者が加入認否判断のため使用'},
-            {name:'CPkeySign',type:'string',desc:'クライアント側署名用公開鍵'},
+            {name:'memberId',type:'string',desc:'メンバの識別子',default:x=>{return x.idb.memberId}},
+            {name:'deviceId',type:'string',desc:'デバイスの識別子(UUIDv4)',default:x=>x.idb.deviceId},
+            {name:'memberName',type:'string',desc:'メンバの氏名',note:'管理者が加入認否判断のため使用',default:x=>x.idb.memberName},
+            {name:'CPkeySign',type:'string',desc:'クライアント側署名用公開鍵',default:x=>x.idb.CPkeySign},
             {name:'requestTime',type:'datetime',desc:'要求日時',default:'Date.now()'},
             {name:'func',type:'string',desc:'サーバ側関数名'},
-            {name:'arg',type:'array',desc:'サーバ側関数に渡す引数の配列',default:'[]'},
-            {name:'nonce',type:'string',desc:'要求の識別子'},
+            {name:'arg',type:'array',desc:'サーバ側関数に渡す引数の配列',default:[]},
+            {name:'nonce',type:'string',desc:'要求の識別子',default:()=>crypto.randomUUID()},
           ],
         },
         /** authResponse: authServerからauthClientへの処理結果(平文)
