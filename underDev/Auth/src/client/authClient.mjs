@@ -190,6 +190,94 @@ export class authClient {
     const dev = new devTools(v,{mode:'dev'});
     try {
 
+      // -------------------------------------------------------------
+      dev.step(1);  // 事前処理
+      // -------------------------------------------------------------
+      dev.step(1.1);  // 再帰呼出時の階層チェック
+      if( depth > this.cf.maxDepth )
+        throw new Error('maximum recursion depth exceeded');
+
+      dev.step(1.2); // funcが関数名として有効かチェック
+      // なお「::〜::」は内発処理として有効とする
+      if( !/^(::[a-zA-Z_$][a-zA-Z0-9_$]*::|[a-zA-Z_$][a-zA-Z0-9_$]*)$/.test(func) ){
+        throw new Error('Invalid function');
+      }
+
+      dev.step(1.3);  // サーバ側に渡す引数を無毒化
+      arg = this.cf.sanitizeArg(arg);
+      if( arg instanceof Error ) throw arg;
+
+      // -------------------------------------------------------------
+      dev.step(2);  // authServerに処理要求
+      // -------------------------------------------------------------
+      dev.step(2.1);  // 初回HTMLロード時処理(SPkey取得)
+      if( !this.idb.SPkeySign ){
+        v.r = this.exec('::initial::',[],depth+1);
+        if( v.r instanceof Error ) throw v.r;
+      }
+
+      dev.step(2.2);  // authRequestを作成
+      v.authRequest = this.cf.factory('authRequest', {
+        idb: this.idb,
+        func: func,
+        arg: arg
+      });
+      if( v.authRequest.idb.CPkeySign instanceof CryptoKey ){
+        // 1. 公開鍵を spki フォーマットでエクスポート
+        v.exported = await crypto.subtle.exportKey("spki", v.authRequest.idb.CPkeySign);
+        
+        // 2. ArrayBuffer を Base64 文字列に変換
+        v.base64Key = btoa(String.fromCharCode(...new Uint8Array(v.exported)));
+        
+        // 3. サーバーが期待する PEM 形式の文字列として再代入
+        v.authRequest.idb.CPkeySign = `-----BEGIN PUBLIC KEY-----\n_\n-----END PUBLIC KEY-----`
+        .replace('_',v.base64Key);
+      }
+
+      dev.step(2.3);  // サーバ側に処理依頼
+      v.authResponse = await this.fetch(v.authRequest);
+      if( v.authResponse instanceof Error ) throw v.authResponse;
+
+      // -------------------------------------------------------------
+      dev.step(3);  // authResponseに基づき処理分岐
+      // -------------------------------------------------------------
+      switch( v.authResponse.status ){
+        case 'success': dev.step(3.1);  // サーバ側処理正常終了
+          // authResponseを復号
+          // IndexedDBのSPkey,deviceIdを更新
+          // (ローカル関数への)戻り値作成
+          v.rv = v.authResponse.response;
+          break;
+        case 'duplicate CPkey': dev.step(3.2);  // CPkey重複
+          // CPkeyを再作成(更新)
+          // 更新後のCPkeyで再要求
+          break;
+        case 'CPkey expired': dev.step(3.3);  // CPkey期限切れ
+          await this.crypto.generateKeys();
+          v.rv = await this.exec('::updateCPkey::');
+          if( v.rv instanceof Error ) throw v.rv;
+          break;
+        case 'login required':  dev.step(3.4);  // 要ログイン(未認証)
+          break;
+        case 'retry required':  dev.step(3.5);  // パスコード不一致
+          break;
+        case 'freezing':  dev.step(3.6);  // アカウント凍結中
+          break;
+        default:  dev.step(3.7);  // その他エラー
+          throw v.authResponse.status;
+      }
+
+      dev.end();
+      return this.idb;
+
+    } catch (e) { return dev.error(e); }
+  }
+  /* 2026.01.26 旧版exec
+  async exec(func,arg=[],depth=0) {
+    const v = {whois:`${this.constructor.name}.exec`, arg:{func,arg}, rv:null};
+    const dev = new devTools(v,{mode:'dev'});
+    try {
+
       dev.step(1.1);  // 再帰呼出時の階層チェック
       if( depth > this.cf.maxDepth )
         throw new Error('maximum recursion depth exceeded');
@@ -259,6 +347,7 @@ export class authClient {
 
     } catch (e) { return dev.error(e); }
   }
+  */
 
   /** fetch: サーバ側APIの呼び出し
    * @param {authRequest} request - 処理要求
