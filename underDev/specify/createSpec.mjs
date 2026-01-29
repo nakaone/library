@@ -72,7 +72,7 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
 
-  /** runJSDoc: jsdocコマンドを実行し、対象ファイルのJSDocをJSON形式で取得
+  /** runJSDoc: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
    * @param {string} fn - 対象ファイル名
    * @returns {Object}
    */
@@ -88,44 +88,60 @@ async function createSpec() {
     });
   }
 
+  /** makeMap: 「ファイル名＋行番号」を識別子とするマップを作成 */
+  async function makeMap(list){
+    const v = {whois:`${pv.whois}.makeMap`, arg:{}, rv:{}};
+    const dev = new devTools(v);
+    try {
+
+      dev.step(1);  // 事前処理
+      v.idList = [];  // 登録済IDリスト
+
+      for( v.i=0 ; v.i<1 ; v.i++ ){
+        dev.step(2);  // JSDocを取得
+        v.arr = await runJSDoc(list[v.i]);
+        if( v.arr instanceof Error ) throw v.arr;
+
+        dev.step(3);  // v.mapの作成
+        v.arr.forEach(o => {
+          // 【備忘】
+          // ①"meta.code.id"は存在しない場合があるので使用を断念。
+          // ②'kind:"package"'
+          //   -> プロジェクトのメタ情報（name, version, description など）
+          //   "meta.lineno"を持たないが、仕様書作成に使用しないのでmap登録対象外とする
+          if( o.meta && o.meta.lineno ){
+            v.id = `${list[v.i]}-${o.meta.lineno}`;
+            if( v.idList.includes(v.id) ){
+              // 登録済なら結合
+              o = mergeDeeply(v.rv[v.id],o);
+            } else {
+              v.idList.push(v.id);  // 未登録なら登録済IDリストに追加
+            }
+            v.rv[v.id] = o;
+          }
+        });
+      }
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
   const dev = new devTools(pv);
   try {
 
-    dev.step(1);
-    pv.r = listSource();
-    if( pv.r instanceof Error ) throw pv.r;
-    pv.list = pv.r.list;
-    pv.map = {};  // 「ファイル名＋(ファイル内)行番号」を識別子とするマップ
-    pv.idList = []; // 登録済IDリスト
-
-    // mjsも処理対象とするため、jsdoc動作定義ファイルを作成
+    dev.step(1);  // mjsも処理対象とするため、jsdoc動作定義ファイルを作成
     pv.jsdocJson = 'jsdoc.json';
     writeFileSync(pv.jsdocJson,JSON.stringify({source:{includePattern:".+\\.mjs$"}}));
 
-    for( pv.i=0 ; pv.i<1 ; pv.i++ ){
-      // JSDocを取得
-      pv.arr = await runJSDoc(pv.list[pv.i]);
-      if( pv.arr instanceof Error ) throw pv.arr;
+    dev.step(2);  // 対象ファイルリスト作成
+    pv.r = listSource();
+    if( pv.r instanceof Error ) throw pv.r;
 
-      // pv.mapの作成
-      pv.arr.forEach(o => {
-        // 【備忘】
-        // ①"meta.code.id"は存在しない場合があるので使用を断念。
-        // ②'kind:"package"'
-        //   -> プロジェクトのメタ情報（name, version, description など）
-        //   "meta.lineno"を持たないが、仕様書作成に使用しないのでmap登録対象外とする
-        if( o.meta && o.meta.lineno ){
-          pv.id = `${pv.list[pv.i]}-${o.meta.lineno}`;
-          if( pv.idList.includes(pv.id) ){
-            // 登録済なら結合
-            o = mergeDeeply(pv.map[pv.id],o);
-          } else {
-            pv.idList.push(pv.id);  // 未登録なら登録済IDリストに追加
-          }
-          pv.map[pv.id] = o;
-        }
-      });
-    }
+    dev.step(3);  // 「ファイル名＋(ファイル内)行番号」を識別子とするマップを作成
+    pv.map = await makeMap(pv.r.list);
+    pv.idList = Object.keys(pv.map);
 
     // jsdoc動作定義ファイルを削除
     unlinkSync(pv.jsdocJson);
