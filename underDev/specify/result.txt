@@ -1,0 +1,3932 @@
+12:47:12.201 [0001]createSpec start
+12:47:12.202 [0002]createSpec.listSource start
+12:47:12.203 [0002]createSpec.listSource normal end
+{}
+12:47:12.360 [0001]createSpec normal end
+"[
+    {
+        "comment": "/** authClient: クライアント側中核クラス\n * @class\n * @classdesc クライアント側中核クラス\n * - 初期化の際に非同期処理が必要なため、インスタンス作成は\n *   `new authClient()`ではなく`authClient.initialize()`で行う\n * @prop {authClientConfig} cf - authClient設定情報\n * @prop {Object} idb - IndexedDBと同期、authClient内で共有\n * @prop {cryptoClient} crypto - 暗号化・署名検証\n * \n * @example インスタンス作成のサンプル\n * ```js\n * async function onLoad(){\n *   const v = {whois:`onLoad`, rv:null};\n *   dev.start(v);\n *   try {\n * \n *     dev.step(1);  // authClientインスタンス作成\n *     const auth = await authClient.initialize({\n *       adminMail: 'ena.kaon@gmail.com',\n *       adminName: 'あどみ',\n *       api: 'abcdefghijklmnopqrstuvwxyz',\n *     });\n * \n *     dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット\n *     globalThis.auth = auth;\n *     v.rv = auth;\n * \n *     dev.end(); // 終了処理\n *     return v.rv;\n * \n *   } catch (e) { return dev.error(e); }\n * }\n */",
+        "meta": {
+            "range": [
+                1000,
+                18671
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 37,
+            "columnno": 0,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000010",
+                "name": "exports.authClient",
+                "type": "ClassDeclaration"
+            }
+        },
+        "classdesc": "クライアント側中核クラス\n- 初期化の際に非同期処理が必要なため、インスタンス作成は\n  `new authClient()`ではなく`authClient.initialize()`で行う",
+        "kind": "class",
+        "properties": [
+            {
+                "type": {
+                    "names": [
+                        "authClientConfig"
+                    ]
+                },
+                "description": "authClient設定情報",
+                "name": "cf"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Object"
+                    ]
+                },
+                "description": "IndexedDBと同期、authClient内で共有",
+                "name": "idb"
+            },
+            {
+                "type": {
+                    "names": [
+                        "cryptoClient"
+                    ]
+                },
+                "description": "暗号化・署名検証",
+                "name": "crypto"
+            }
+        ],
+        "examples": [
+            "インスタンス作成のサンプル\n```js\nasync function onLoad(){\n  const v = {whois:`onLoad`, rv:null};\n  dev.start(v);\n  try {\n\n    dev.step(1);  // authClientインスタンス作成\n    const auth = await authClient.initialize({\n      adminMail: 'ena.kaon@gmail.com',\n      adminName: 'あどみ',\n      api: 'abcdefghijklmnopqrstuvwxyz',\n    });\n\n    dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット\n    globalThis.auth = auth;\n    v.rv = auth;\n\n    dev.end(); // 終了処理\n    return v.rv;\n\n  } catch (e) { return dev.error(e); }\n}"
+        ],
+        "name": "authClient",
+        "longname": "authClient",
+        "scope": "global",
+        "undocumented": true
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1007,
+                18671
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 37,
+            "columnno": 7,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000011",
+                "name": "authClient",
+                "type": "ClassDeclaration",
+                "paramnames": [
+                    "config"
+                ]
+            }
+        },
+        "undocumented": true,
+        "name": "authClient",
+        "longname": "authClient",
+        "kind": "class",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1029,
+                1054
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 39,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000014",
+                "name": "_IndexedDB",
+                "type": "ClassProperty"
+            }
+        },
+        "undocumented": true,
+        "name": "_IndexedDB",
+        "longname": "authClient#_IndexedDB",
+        "kind": "member",
+        "memberof": "authClient",
+        "scope": "instance"
+    },
+    {
+        "comment": "/** constructor\n   * @constructor\n   * @param {Object} config - authClient/Server共通設定情報\n   */",
+        "meta": {
+            "range": [
+                1181,
+                3889
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 45,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000016",
+                "name": "exports.authClient",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "config"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "description": "constructor",
+        "kind": "class",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "Object"
+                    ]
+                },
+                "description": "authClient/Server共通設定情報",
+                "name": "config"
+            }
+        ],
+        "name": "authClient",
+        "longname": "authClient#authClient",
+        "memberof": "authClient",
+        "scope": "instance",
+        "undocumented": true
+    },
+    {
+        "comment": "/** authClient: クライアント側中核クラス\n * @class\n * @classdesc クライアント側中核クラス\n * - 初期化の際に非同期処理が必要なため、インスタンス作成は\n *   `new authClient()`ではなく`authClient.initialize()`で行う\n * @prop {authClientConfig} cf - authClient設定情報\n * @prop {Object} idb - IndexedDBと同期、authClient内で共有\n * @prop {cryptoClient} crypto - 暗号化・署名検証\n * \n * @example インスタンス作成のサンプル\n * ```js\n * async function onLoad(){\n *   const v = {whois:`onLoad`, rv:null};\n *   dev.start(v);\n *   try {\n * \n *     dev.step(1);  // authClientインスタンス作成\n *     const auth = await authClient.initialize({\n *       adminMail: 'ena.kaon@gmail.com',\n *       adminName: 'あどみ',\n *       api: 'abcdefghijklmnopqrstuvwxyz',\n *     });\n * \n *     dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット\n *     globalThis.auth = auth;\n *     v.rv = auth;\n * \n *     dev.end(); // 終了処理\n *     return v.rv;\n * \n *   } catch (e) { return dev.error(e); }\n * }\n */",
+        "meta": {
+            "range": [
+                1000,
+                18671
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 37,
+            "columnno": 0,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000010",
+                "name": "exports.authClient",
+                "type": "ClassDeclaration"
+            }
+        },
+        "name": "authClient",
+        "longname": "authClient",
+        "kind": "class",
+        "classdesc": "クライアント側中核クラス\n- 初期化の際に非同期処理が必要なため、インスタンス作成は\n  `new authClient()`ではなく`authClient.initialize()`で行う",
+        "examples": [
+            "インスタンス作成のサンプル\n```js\nasync function onLoad(){\n  const v = {whois:`onLoad`, rv:null};\n  dev.start(v);\n  try {\n\n    dev.step(1);  // authClientインスタンス作成\n    const auth = await authClient.initialize({\n      adminMail: 'ena.kaon@gmail.com',\n      adminName: 'あどみ',\n      api: 'abcdefghijklmnopqrstuvwxyz',\n    });\n\n    dev.step(2);  // authインスタンスをグローバル変数と戻り値(テスト用)にセット\n    globalThis.auth = auth;\n    v.rv = auth;\n\n    dev.end(); // 終了処理\n    return v.rv;\n\n  } catch (e) { return dev.error(e); }\n}"
+        ],
+        "scope": "global",
+        "description": "constructor",
+        "memberof": "authClient",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "Object"
+                    ]
+                },
+                "description": "authClient/Server共通設定情報",
+                "name": "config"
+            }
+        ],
+        "properties": [
+            {
+                "type": {
+                    "names": [
+                        "authClientConfig"
+                    ]
+                },
+                "description": "authClient設定情報",
+                "name": "cf"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Object"
+                    ]
+                },
+                "description": "IndexedDBと同期、authClient内で共有",
+                "name": "idb"
+            },
+            {
+                "type": {
+                    "names": [
+                        "cryptoClient"
+                    ]
+                },
+                "description": "暗号化・署名検証",
+                "name": "crypto"
+            }
+        ]
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1213,
+                1272
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 46,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000022",
+                "name": "v",
+                "type": "ObjectExpression",
+                "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":null}"
+            }
+        },
+        "undocumented": true,
+        "name": "v",
+        "longname": "<anonymous>~v",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1218,
+                1248
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 46,
+            "columnno": 15,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000025",
+                "name": "whois",
+                "type": "TemplateLiteral",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "whois",
+        "longname": "<anonymous>~v.whois",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1250,
+                1262
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 46,
+            "columnno": 47,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000028",
+                "name": "arg",
+                "type": "ObjectExpression",
+                "value": "{\"config\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1255,
+                1261
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 46,
+            "columnno": 52,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000030",
+                "name": "config",
+                "type": "Identifier",
+                "value": "config"
+            }
+        },
+        "undocumented": true,
+        "name": "config",
+        "longname": "<anonymous>~v.arg.config",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1264,
+                1271
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 46,
+            "columnno": 61,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000032",
+                "name": "rv",
+                "type": "Literal",
+                "value": null
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1284,
+                1305
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 47,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000035",
+                "name": "dev",
+                "type": "NewExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "dev",
+        "longname": "<anonymous>~dev",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1575,
+                2354
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 53,
+            "columnno": 4,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000041",
+                "name": "v.schema",
+                "type": "ObjectExpression",
+                "funcscope": "<anonymous>",
+                "value": "{\"types\":\"\"}",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "schema",
+        "longname": "<anonymous>~v.schema",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1594,
+                2348
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 54,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000046",
+                "name": "types",
+                "type": "ObjectExpression",
+                "value": "{}"
+            }
+        },
+        "undocumented": true,
+        "name": "types",
+        "longname": "<anonymous>~v.schema.types",
+        "kind": "member",
+        "memberof": "<anonymous>~v.schema",
+        "scope": "static"
+    },
+    {
+        "comment": "/** authIndexedDB: IndexedDBに保存する内容(=this.idb)\n         * @typedef {Object} authIndexedDB - IndexedDBに保存する内容(=this.idb)\n         * @prop {string} memberId='dummyMemberID' - メンバ識別子(メールアドレス。初期値は固定文字列)\n         * @prop {string} memberName='dummyMemberName' - メンバの氏名(初期値は固定文字列)\n         * @prop {string}　deviceId='dummyDeviceID' - サーバ側で生成(UUIDv4。初期値は固定文字列)\n         * @prop {CryptoKey} CSkeySign - 署名用秘密鍵\n         * @prop {CryptoKey} CPkeySign - 署名用公開鍵\n         * @prop {CryptoKey} CSkeyEnc - 暗号化用秘密鍵\n         * @prop {CryptoKey} CPkeyEnc - 暗号化用公開鍵\n         * @prop {string} keyGeneratedDateTime - 鍵ペア生成日時(UNIX時刻)\n         * @prop {string} SPkeySign=null - サーバ側署名用公開鍵\n         * @prop {string} SPkeyEnc=null - サーバ側暗号化用公開鍵\n         */",
+        "meta": {
+            "filename": "authClient.mjs",
+            "lineno": 55,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {}
+        },
+        "description": "authIndexedDB: IndexedDBに保存する内容(=this.idb)",
+        "kind": "typedef",
+        "name": "authIndexedDB",
+        "type": {
+            "names": [
+                "Object"
+            ]
+        },
+        "properties": [
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "defaultvalue": "'dummyMemberID'",
+                "description": "メンバ識別子(メールアドレス。初期値は固定文字列)",
+                "name": "memberId"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "defaultvalue": "'dummyMemberName'",
+                "description": "メンバの氏名(初期値は固定文字列)",
+                "name": "memberName"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "defaultvalue": "'dummyDeviceID'",
+                "description": "サーバ側で生成(UUIDv4。初期値は固定文字列)",
+                "name": "deviceId"
+            },
+            {
+                "type": {
+                    "names": [
+                        "CryptoKey"
+                    ]
+                },
+                "description": "署名用秘密鍵",
+                "name": "CSkeySign"
+            },
+            {
+                "type": {
+                    "names": [
+                        "CryptoKey"
+                    ]
+                },
+                "description": "署名用公開鍵",
+                "name": "CPkeySign"
+            },
+            {
+                "type": {
+                    "names": [
+                        "CryptoKey"
+                    ]
+                },
+                "description": "暗号化用秘密鍵",
+                "name": "CSkeyEnc"
+            },
+            {
+                "type": {
+                    "names": [
+                        "CryptoKey"
+                    ]
+                },
+                "description": "暗号化用公開鍵",
+                "name": "CPkeyEnc"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "鍵ペア生成日時(UNIX時刻)",
+                "name": "keyGeneratedDateTime"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "defaultvalue": null,
+                "description": "サーバ側署名用公開鍵",
+                "name": "SPkeySign"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "defaultvalue": null,
+                "description": "サーバ側暗号化用公開鍵",
+                "name": "SPkeyEnc"
+            }
+        ],
+        "longname": "authIndexedDB",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                2377,
+                2397
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 71,
+            "columnno": 4,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000049",
+                "name": "v.required",
+                "type": "ArrayExpression",
+                "funcscope": "<anonymous>",
+                "value": "[\"api\"]",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "required",
+        "longname": "<anonymous>~v.required",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                2421,
+                2509
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 73,
+            "columnno": 4,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000056",
+                "name": "v.option",
+                "type": "ObjectExpression",
+                "funcscope": "<anonymous>",
+                "value": "{\"timeout\":300000,\"storeName\":\"config\",\"dbVersion\":1}",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "option",
+        "longname": "<anonymous>~v.option",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                2440,
+                2455
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 74,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000061",
+                "name": "timeout",
+                "type": "Literal",
+                "value": 300000
+            }
+        },
+        "undocumented": true,
+        "name": "timeout",
+        "longname": "<anonymous>~v.option.timeout",
+        "kind": "member",
+        "memberof": "<anonymous>~v.option",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                2463,
+                2482
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 75,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000063",
+                "name": "storeName",
+                "type": "Literal",
+                "value": "config"
+            }
+        },
+        "undocumented": true,
+        "name": "storeName",
+        "longname": "<anonymous>~v.option.storeName",
+        "kind": "member",
+        "memberof": "<anonymous>~v.option",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                2490,
+                2502
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 76,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000065",
+                "name": "dbVersion",
+                "type": "Literal",
+                "value": 1
+            }
+        },
+        "undocumented": true,
+        "name": "dbVersion",
+        "longname": "<anonymous>~v.option.dbVersion",
+        "kind": "member",
+        "memberof": "<anonymous>~v.option",
+        "scope": "static"
+    },
+    {
+        "comment": "/** authClientConfig: 共通設定情報にauthClient特有項目を追加\n       * @typedef {Object} authClientConfig - authClient特有の設定項目\n       * @extends {authConfig}\n       * @prop {string} api - サーバ側WebアプリURLのID\n       *   https://script.google.com/macros/s/(この部分)/exec\n       * @prop {number} timeout=300000 - サーバからの応答待機時間\n       *   これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分\n       * @prop {string} storeName=\"config\" - IndexedDBのストア名\n       * @prop {number} dbVersion=1 - IndexedDBのバージョン\n       */",
+        "meta": {
+            "filename": "authClient.mjs",
+            "lineno": 81,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {}
+        },
+        "description": "authClientConfig: 共通設定情報にauthClient特有項目を追加",
+        "kind": "typedef",
+        "name": "authClientConfig",
+        "type": {
+            "names": [
+                "Object"
+            ]
+        },
+        "augments": [
+            "authConfig"
+        ],
+        "properties": [
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "サーバ側WebアプリURLのID\n  https://script.google.com/macros/s/(この部分)/exec",
+                "name": "api"
+            },
+            {
+                "type": {
+                    "names": [
+                        "number"
+                    ]
+                },
+                "defaultvalue": 300000,
+                "description": "サーバからの応答待機時間\n  これを超えた場合はサーバ側でfatalとなったと解釈する。既定値は5分",
+                "name": "timeout"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "defaultvalue": "\"config\"",
+                "description": "IndexedDBのストア名",
+                "name": "storeName"
+            },
+            {
+                "type": {
+                    "names": [
+                        "number"
+                    ]
+                },
+                "defaultvalue": 1,
+                "description": "IndexedDBのバージョン",
+                "name": "dbVersion"
+            }
+        ],
+        "longname": "authClientConfig",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                3059,
+                3113
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 92,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000076",
+                "name": "this.cf",
+                "type": "NewExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "cf",
+        "longname": "authClient#cf",
+        "kind": "member",
+        "memberof": "authClient",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                3291,
+                3313
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 98,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000119",
+                "name": "this.cf[undefined]",
+                "type": "MemberExpression",
+                "value": "config[undefined]",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "cf[undefined]",
+        "longname": "authClient#cf[undefined]",
+        "kind": "member",
+        "memberof": "authClient",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                3410,
+                3447
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 103,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000149",
+                "name": "this.cf[undefined]",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "cf[undefined]",
+        "longname": "authClient#cf[undefined]",
+        "kind": "member",
+        "memberof": "authClient",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                3513,
+                3583
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 107,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000171",
+                "name": "this.cf.api",
+                "type": "TemplateLiteral",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "api",
+        "longname": "authClient#cf.api",
+        "kind": "member",
+        "memberof": "authClient#cf",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                3768,
+                3781
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 112,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000192",
+                "name": "this.idb",
+                "type": "ObjectExpression",
+                "value": "{}",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "idb",
+        "longname": "authClient#idb",
+        "kind": "member",
+        "memberof": "authClient",
+        "scope": "instance"
+    },
+    {
+        "comment": "/** _exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換\n   * @param {string} key - 鍵名。\"CPkeySign\"等\n   * @param {CryptoKey} value - 鍵の内容\n   * @returns {string}\n   */",
+        "meta": {
+            "range": [
+                4066,
+                4265
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 123,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000210",
+                "name": "authClient#_exportIfCryptoKey",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "key",
+                    "value"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "description": "_exportIfCryptoKey: CryptoKey型のRSA鍵をIndexedDBに保存可能な文字列に変換",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "鍵名。\"CPkeySign\"等",
+                "name": "key"
+            },
+            {
+                "type": {
+                    "names": [
+                        "CryptoKey"
+                    ]
+                },
+                "description": "鍵の内容",
+                "name": "value"
+            }
+        ],
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                }
+            }
+        ],
+        "name": "_exportIfCryptoKey",
+        "longname": "authClient#_exportIfCryptoKey",
+        "kind": "function",
+        "memberof": "authClient",
+        "scope": "instance",
+        "async": true
+    },
+    {
+        "comment": "/** _importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換\n   * @param {string} key - 鍵名。\"CPkeySign\"等\n   * @param {string} value - IndexedDBに保存された鍵の内容\n   * @returns {CryptoKey}\n   */",
+        "meta": {
+            "range": [
+                4453,
+                5196
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 135,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000239",
+                "name": "authClient#_importIfCryptoKey",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "key",
+                    "value"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "description": "_importIfCryptoKey: IndexedDBに保存されたRSA鍵をCryptoKey型に変換",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "鍵名。\"CPkeySign\"等",
+                "name": "key"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "IndexedDBに保存された鍵の内容",
+                "name": "value"
+            }
+        ],
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "CryptoKey"
+                    ]
+                }
+            }
+        ],
+        "name": "_importIfCryptoKey",
+        "longname": "authClient#_importIfCryptoKey",
+        "kind": "function",
+        "memberof": "authClient",
+        "scope": "instance",
+        "async": true
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4628,
+                4642
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 141,
+            "columnno": 26,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000264",
+                "name": "name",
+                "type": "Literal",
+                "value": "RSA-PSS"
+            }
+        },
+        "undocumented": true,
+        "name": "name",
+        "longname": "name",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4644,
+                4658
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 141,
+            "columnno": 42,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000266",
+                "name": "hash",
+                "type": "Literal",
+                "value": "SHA-256"
+            }
+        },
+        "undocumented": true,
+        "name": "hash",
+        "longname": "hash",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4779,
+                4793
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 145,
+            "columnno": 26,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000283",
+                "name": "name",
+                "type": "Literal",
+                "value": "RSA-PSS"
+            }
+        },
+        "undocumented": true,
+        "name": "name",
+        "longname": "name",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4795,
+                4809
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 145,
+            "columnno": 42,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000285",
+                "name": "hash",
+                "type": "Literal",
+                "value": "SHA-256"
+            }
+        },
+        "undocumented": true,
+        "name": "hash",
+        "longname": "hash",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4931,
+                4946
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 149,
+            "columnno": 26,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000302",
+                "name": "name",
+                "type": "Literal",
+                "value": "RSA-OAEP"
+            }
+        },
+        "undocumented": true,
+        "name": "name",
+        "longname": "name",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4948,
+                4962
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 149,
+            "columnno": 43,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000304",
+                "name": "hash",
+                "type": "Literal",
+                "value": "SHA-256"
+            }
+        },
+        "undocumented": true,
+        "name": "hash",
+        "longname": "hash",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5085,
+                5100
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 153,
+            "columnno": 26,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000321",
+                "name": "name",
+                "type": "Literal",
+                "value": "RSA-OAEP"
+            }
+        },
+        "undocumented": true,
+        "name": "name",
+        "longname": "name",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5102,
+                5116
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 153,
+            "columnno": 43,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000323",
+                "name": "hash",
+                "type": "Literal",
+                "value": "SHA-256"
+            }
+        },
+        "undocumented": true,
+        "name": "hash",
+        "longname": "hash",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "/** _withStore: IndexedDB操作共通ラッパ\n   * @param {'readonly'|'readwrite'} mode\n   * param {(store: IDBObjectStore)=>Promise<any>} fn\n   */",
+        "meta": {
+            "range": [
+                5337,
+                5805
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 164,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000331",
+                "name": "authClient#_withStore",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "mode",
+                    "fn"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "description": "_withStore: IndexedDB操作共通ラッパ",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "'readonly'",
+                        "'readwrite'"
+                    ]
+                },
+                "description": "param {(store: IDBObjectStore)=>Promise<any>} fn",
+                "name": "mode"
+            }
+        ],
+        "name": "_withStore",
+        "longname": "authClient#_withStore",
+        "kind": "function",
+        "memberof": "authClient",
+        "scope": "instance",
+        "async": true
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5375,
+                5401
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 165,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000338",
+                "name": "db",
+                "type": "MemberExpression",
+                "value": "authClient._IndexedDB"
+            }
+        },
+        "undocumented": true,
+        "name": "db",
+        "longname": "<anonymous>~db",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5473,
+                5519
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 168,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000351",
+                "name": "tx",
+                "type": "CallExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "tx",
+        "longname": "<anonymous>~tx",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5531,
+                5572
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 169,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000365",
+                "name": "store",
+                "type": "CallExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "store",
+        "longname": "<anonymous>~store",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5585,
+                5605
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 171,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000377",
+                "name": "rv",
+                "type": "AwaitExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~rv",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5659,
+                5690
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 174,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000392",
+                "name": "tx.oncomplete",
+                "type": "ArrowFunctionExpression",
+                "funcscope": "<anonymous>",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "oncomplete",
+        "longname": "<anonymous>~tx.oncomplete",
+        "kind": "function",
+        "memberof": "<anonymous>~tx",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5698,
+                5733
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 175,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000400",
+                "name": "tx.onerror",
+                "type": "ArrowFunctionExpression",
+                "funcscope": "<anonymous>",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "onerror",
+        "longname": "<anonymous>~tx.onerror",
+        "kind": "function",
+        "memberof": "<anonymous>~tx",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5741,
+                5776
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 176,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000411",
+                "name": "tx.onabort",
+                "type": "ArrowFunctionExpression",
+                "funcscope": "<anonymous>",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "onabort",
+        "longname": "<anonymous>~tx.onabort",
+        "kind": "function",
+        "memberof": "<anonymous>~tx",
+        "scope": "static"
+    },
+    {
+        "comment": "/** exec: ローカル関数の処理要求を処理\n   * @param {string} func - サーバ側関数名\n   * @param {any[]} arg=[] - サーバ側関数に渡す引数\n   * @param {number} depth=0 - 再帰呼出時の階層\n   * @returns {any|Error} 処理結果\n   */",
+        "meta": {
+            "range": [
+                5990,
+                9198
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 188,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000423",
+                "name": "authClient#exec",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "func",
+                    "arg",
+                    "depth"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "description": "exec: ローカル関数の処理要求を処理",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "サーバ側関数名",
+                "name": "func"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Array.<any>"
+                    ]
+                },
+                "defaultvalue": "[",
+                "description": "サーバ側関数に渡す引数",
+                "name": "arg"
+            },
+            {
+                "type": {
+                    "names": [
+                        "number"
+                    ]
+                },
+                "defaultvalue": 0,
+                "description": "再帰呼出時の階層",
+                "name": "depth"
+            }
+        ],
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "any",
+                        "Error"
+                    ]
+                },
+                "description": "処理結果"
+            }
+        ],
+        "name": "exec",
+        "longname": "authClient#exec",
+        "kind": "function",
+        "memberof": "authClient",
+        "scope": "instance",
+        "async": true
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6034,
+                6102
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 189,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000435",
+                "name": "v",
+                "type": "ObjectExpression",
+                "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":null}"
+            }
+        },
+        "undocumented": true,
+        "name": "v",
+        "longname": "<anonymous>~v",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6039,
+                6076
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 189,
+            "columnno": 15,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000438",
+                "name": "whois",
+                "type": "TemplateLiteral",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "whois",
+        "longname": "<anonymous>~v.whois",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6078,
+                6092
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 189,
+            "columnno": 54,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000447",
+                "name": "arg",
+                "type": "ObjectExpression",
+                "value": "{\"func\":\"\",\"arg\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6083,
+                6087
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 189,
+            "columnno": 59,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000449",
+                "name": "func",
+                "type": "Identifier",
+                "value": "func"
+            }
+        },
+        "undocumented": true,
+        "name": "func",
+        "longname": "<anonymous>~v.arg.func",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6088,
+                6091
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 189,
+            "columnno": 64,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000451",
+                "name": "arg",
+                "type": "Identifier",
+                "value": "arg"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6094,
+                6101
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 189,
+            "columnno": 70,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000453",
+                "name": "rv",
+                "type": "Literal",
+                "value": null
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6114,
+                6148
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 190,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000456",
+                "name": "dev",
+                "type": "NewExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "dev",
+        "longname": "<anonymous>~dev",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6136,
+                6146
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 190,
+            "columnno": 32,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000462",
+                "name": "mode",
+                "type": "Literal",
+                "value": "dev"
+            }
+        },
+        "undocumented": true,
+        "name": "mode",
+        "longname": "mode",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6727,
+                6757
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 207,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000515",
+                "name": "arg",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~arg",
+        "kind": "member",
+        "memberof": "<anonymous>",
+        "scope": "inner"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7073,
+                7114
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 215,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000551",
+                "name": "v.r",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "r",
+        "longname": "<anonymous>~v.r",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7217,
+                7334
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 220,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000581",
+                "name": "v.authRequest",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "authRequest",
+        "longname": "<anonymous>~v.authRequest",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7274,
+                7287
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 221,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000593",
+                "name": "idb",
+                "type": "MemberExpression",
+                "value": "this.idb"
+            }
+        },
+        "undocumented": true,
+        "name": "idb",
+        "longname": "idb",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7297,
+                7307
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 222,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000597",
+                "name": "func",
+                "type": "Identifier",
+                "value": "func"
+            }
+        },
+        "undocumented": true,
+        "name": "func",
+        "longname": "func",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7317,
+                7325
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 223,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000599",
+                "name": "arg",
+                "type": "Identifier",
+                "value": "arg"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "arg",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7444,
+                7523
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 227,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000613",
+                "name": "v.exported",
+                "type": "AwaitExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "exported",
+        "longname": "<anonymous>~v.exported",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7584,
+                7654
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 230,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000633",
+                "name": "v.base64Key",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "base64Key",
+        "longname": "<anonymous>~v.base64Key",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7714,
+                7835
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 233,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000650",
+                "name": "v.authRequest.idb.CPkeySign",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "authRequest.idb.CPkeySign",
+        "longname": "<anonymous>~v.authRequest.idb.CPkeySign",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7887,
+                7935
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 238,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000674",
+                "name": "v.authResponse",
+                "type": "AwaitExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "authResponse",
+        "longname": "<anonymous>~v.authResponse",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8392,
+                8422
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 249,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000717",
+                "name": "v.rv",
+                "type": "MemberExpression",
+                "funcscope": "<anonymous>",
+                "value": "v.authResponse.response",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8684,
+                8725
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 257,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000753",
+                "name": "v.rv",
+                "type": "AwaitExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "/** fetch: サーバ側APIの呼び出し\n   * @param {authRequest} request - 処理要求\n   * @returns {authResponse|Error} 処理結果\n   */",
+        "meta": {
+            "range": [
+                11902,
+                14012
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 356,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000830",
+                "name": "authClient#fetch",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "request"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "description": "fetch: サーバ側APIの呼び出し",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "authRequest"
+                    ]
+                },
+                "description": "処理要求",
+                "name": "request"
+            }
+        ],
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "authResponse",
+                        "Error"
+                    ]
+                },
+                "description": "処理結果"
+            }
+        ],
+        "name": "fetch",
+        "longname": "authClient#fetch",
+        "kind": "function",
+        "memberof": "authClient",
+        "scope": "instance",
+        "async": true
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                11935,
+                12003
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 357,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000836",
+                "name": "v",
+                "type": "ObjectExpression",
+                "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":null}"
+            }
+        },
+        "undocumented": true,
+        "name": "v",
+        "longname": "<anonymous>~v",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                11940,
+                11978
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 357,
+            "columnno": 15,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000839",
+                "name": "whois",
+                "type": "TemplateLiteral",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "whois",
+        "longname": "<anonymous>~v.whois",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                11980,
+                11993
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 357,
+            "columnno": 55,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000848",
+                "name": "arg",
+                "type": "ObjectExpression",
+                "value": "{\"request\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                11985,
+                11992
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 357,
+            "columnno": 60,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000850",
+                "name": "request",
+                "type": "Identifier",
+                "value": "request"
+            }
+        },
+        "undocumented": true,
+        "name": "request",
+        "longname": "<anonymous>~v.arg.request",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                11995,
+                12002
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 357,
+            "columnno": 70,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000852",
+                "name": "rv",
+                "type": "Literal",
+                "value": null
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                12015,
+                12036
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 358,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000855",
+                "name": "dev",
+                "type": "NewExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "dev",
+        "longname": "<anonymous>~dev",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                12094,
+                12149
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 362,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000869",
+                "name": "v.encryptedRequest",
+                "type": "AwaitExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "encryptedRequest",
+        "longname": "<anonymous>~v.encryptedRequest",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                12297,
+                12655
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 367,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000898",
+                "name": "v.timeoutPromise",
+                "type": "NewExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "timeoutPromise",
+        "longname": "<anonymous>~v.timeoutPromise",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                12359,
+                12379
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 368,
+            "columnno": 14,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000909",
+                "name": "ms",
+                "type": "MemberExpression",
+                "value": "this.cf.timeout"
+            }
+        },
+        "undocumented": true,
+        "name": "ms",
+        "longname": "<anonymous>~ms",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                12412,
+                12544
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 369,
+            "columnno": 14,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000917",
+                "name": "id",
+                "type": "CallExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "id",
+        "longname": "<anonymous>~id",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                12606,
+                12645
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 374,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000934",
+                "name": "v.cleanupTimer",
+                "type": "ArrowFunctionExpression",
+                "funcscope": "<anonymous>",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "cleanupTimer",
+        "longname": "<anonymous>~v.cleanupTimer",
+        "kind": "function",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                12697,
+                12936
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 378,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000949",
+                "name": "v.response",
+                "type": "AwaitExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "response",
+        "longname": "<anonymous>~v.response",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                12755,
+                12769
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 379,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000964",
+                "name": "method",
+                "type": "Literal",
+                "value": "POST"
+            }
+        },
+        "undocumented": true,
+        "name": "method",
+        "longname": "method",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                12779,
+                12876
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 380,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000966",
+                "name": "headers",
+                "type": "ObjectExpression",
+                "value": "{\"undefined\":\"application/x-www-form-urlencoded;charset=UTF-8\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "headers",
+        "longname": "headers",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                12800,
+                12865
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 381,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000968",
+                "name": "\"Content-Type\"",
+                "type": "Literal",
+                "value": "application/x-www-form-urlencoded;charset=UTF-8"
+            }
+        },
+        "undocumented": true,
+        "name": "\"Content-Type\"",
+        "longname": "headers.\"Content-Type\"",
+        "kind": "member",
+        "memberof": "headers",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                12886,
+                12926
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 383,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000970",
+                "name": "body",
+                "type": "CallExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "body",
+        "longname": "body",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                13056,
+                13086
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 388,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100000997",
+                "name": "v.response",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "response",
+        "longname": "<anonymous>~v.response",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                13602,
+                13669
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 405,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001016",
+                "name": "v.response",
+                "type": "AwaitExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "response",
+        "longname": "<anonymous>~v.response",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                13836,
+                13874
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 412,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001055",
+                "name": "v.rv",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "/** getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得\n   * @param {void}\n   * @returns {Object<string,any>} this.idbに格納したIndexedDBの内容({キー:値}形式)\n   */",
+        "meta": {
+            "range": [
+                14162,
+                15272
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 425,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001094",
+                "name": "authClient#getIndexedDB",
+                "type": "MethodDefinition",
+                "paramnames": []
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "description": "getIndexedDB: IndexedDBの全てのキー・値をオブジェクト形式で取得",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "void"
+                    ]
+                },
+                "name": ""
+            }
+        ],
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "Object.<string, any>"
+                    ]
+                },
+                "description": "this.idbに格納したIndexedDBの内容({キー:値}形式)"
+            }
+        ],
+        "name": "getIndexedDB",
+        "longname": "authClient#getIndexedDB",
+        "kind": "function",
+        "memberof": "authClient",
+        "scope": "instance",
+        "async": true
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                14195,
+                14261
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 426,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001099",
+                "name": "v",
+                "type": "ObjectExpression",
+                "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "v",
+        "longname": "<anonymous>~v",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                14200,
+                14245
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 426,
+            "columnno": 15,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001102",
+                "name": "whois",
+                "type": "TemplateLiteral",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "whois",
+        "longname": "<anonymous>~v.whois",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                14247,
+                14253
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 426,
+            "columnno": 62,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001111",
+                "name": "arg",
+                "type": "ObjectExpression",
+                "value": "{}"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                14255,
+                14260
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 426,
+            "columnno": 70,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001113",
+                "name": "rv",
+                "type": "ObjectExpression",
+                "value": "{}"
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                14273,
+                14294
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 427,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001116",
+                "name": "dev",
+                "type": "NewExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "dev",
+        "longname": "<anonymous>~dev",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                14509,
+                14537
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 435,
+            "columnno": 16,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001147",
+                "name": "request",
+                "type": "CallExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "request",
+        "longname": "<anonymous>~request",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                14550,
+                15059
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 437,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001154",
+                "name": "request.onsuccess",
+                "type": "ArrowFunctionExpression",
+                "funcscope": "<anonymous>",
+                "paramnames": [
+                    "event"
+                ]
+            },
+            "vars": {
+                "cursor": "<anonymous>~request.onsuccess~cursor",
+                "key": "<anonymous>~request.onsuccess~key",
+                "v.rv[undefined]": "<anonymous>~v.rv[undefined]"
+            }
+        },
+        "undocumented": true,
+        "name": "onsuccess",
+        "longname": "<anonymous>~request.onsuccess",
+        "kind": "function",
+        "memberof": "<anonymous>~request",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                14607,
+                14635
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 438,
+            "columnno": 18,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001162",
+                "name": "cursor",
+                "type": "MemberExpression",
+                "value": "event.target.result"
+            }
+        },
+        "undocumented": true,
+        "name": "cursor",
+        "longname": "<anonymous>~request.onsuccess~cursor",
+        "kind": "constant",
+        "memberof": "<anonymous>~request.onsuccess",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                14748,
+                14764
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 441,
+            "columnno": 20,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001173",
+                "name": "key",
+                "type": "MemberExpression",
+                "value": "cursor.key"
+            }
+        },
+        "undocumented": true,
+        "name": "key",
+        "longname": "<anonymous>~request.onsuccess~key",
+        "kind": "constant",
+        "memberof": "<anonymous>~request.onsuccess",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                14836,
+                14896
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 443,
+            "columnno": 14,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001179",
+                "name": "v.rv[undefined]",
+                "type": "AwaitExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv[undefined]",
+        "longname": "<anonymous>~v.rv[undefined]",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                15072,
+                15154
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 452,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001204",
+                "name": "request.onerror",
+                "type": "ArrowFunctionExpression",
+                "funcscope": "<anonymous>",
+                "paramnames": [
+                    "event"
+                ]
+            }
+        },
+        "undocumented": true,
+        "name": "onerror",
+        "longname": "<anonymous>~request.onerror",
+        "kind": "function",
+        "memberof": "<anonymous>~request",
+        "scope": "static"
+    },
+    {
+        "comment": "/** initialize: authClientインスタンス作成\n   * - インスタンス作成時に必要な非同期処理をconstructorの代わりに実行\n   * - staticではない一般のメンバへの値セットができないため別途constructorを呼び出す\n   * @static\n   * @param {Object} config - authClient/Server共通＋authClient専用設定情報\n   *   ※共通/専用設定情報は事前に結合しておくこと(ex.mergeDeeply)\n   * @returns {authClient|Error}\n   */",
+        "meta": {
+            "range": [
+                15578,
+                17881
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 472,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001238",
+                "name": "authClient.initialize",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "config"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "description": "initialize: authClientインスタンス作成\n- インスタンス作成時に必要な非同期処理をconstructorの代わりに実行\n- staticではない一般のメンバへの値セットができないため別途constructorを呼び出す",
+        "scope": "static",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "Object"
+                    ]
+                },
+                "description": "authClient/Server共通＋authClient専用設定情報\n  ※共通/専用設定情報は事前に結合しておくこと(ex.mergeDeeply)",
+                "name": "config"
+            }
+        ],
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "authClient",
+                        "Error"
+                    ]
+                }
+            }
+        ],
+        "name": "initialize",
+        "longname": "authClient.initialize",
+        "kind": "function",
+        "memberof": "authClient",
+        "async": true
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                15622,
+                15680
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 473,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001244",
+                "name": "v",
+                "type": "ObjectExpression",
+                "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":null}"
+            }
+        },
+        "undocumented": true,
+        "name": "v",
+        "longname": "<anonymous>~v",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                15627,
+                15656
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 473,
+            "columnno": 15,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001247",
+                "name": "whois",
+                "type": "TemplateLiteral",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "whois",
+        "longname": "<anonymous>~v.whois",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                15658,
+                15670
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 473,
+            "columnno": 46,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001250",
+                "name": "arg",
+                "type": "ObjectExpression",
+                "value": "{\"config\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                15663,
+                15669
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 473,
+            "columnno": 51,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001252",
+                "name": "config",
+                "type": "Identifier",
+                "value": "config"
+            }
+        },
+        "undocumented": true,
+        "name": "config",
+        "longname": "<anonymous>~v.arg.config",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                15672,
+                15679
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 473,
+            "columnno": 60,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001254",
+                "name": "rv",
+                "type": "Literal",
+                "value": null
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                15692,
+                15713
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 474,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001257",
+                "name": "dev",
+                "type": "NewExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "dev",
+        "longname": "<anonymous>~dev",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                15812,
+                15841
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 479,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001271",
+                "name": "v.rv",
+                "type": "NewExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                15915,
+                16702
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 482,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001285",
+                "name": "authClient._IndexedDB",
+                "type": "AwaitExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "_IndexedDB",
+        "longname": "authClient._IndexedDB",
+        "kind": "member",
+        "memberof": "authClient",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                16091,
+                16158
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 487,
+            "columnno": 14,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001308",
+                "name": "openRequest",
+                "type": "CallExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "openRequest",
+        "longname": "<anonymous>~openRequest",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                16169,
+                16278
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 489,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001329",
+                "name": "openRequest.onerror",
+                "type": "ArrowFunctionExpression",
+                "funcscope": "<anonymous>",
+                "paramnames": [
+                    "event"
+                ]
+            }
+        },
+        "undocumented": true,
+        "name": "onerror",
+        "longname": "<anonymous>~openRequest.onerror",
+        "kind": "function",
+        "memberof": "<anonymous>~openRequest",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                16289,
+                16432
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 492,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001349",
+                "name": "openRequest.onsuccess",
+                "type": "ArrowFunctionExpression",
+                "funcscope": "<anonymous>",
+                "paramnames": [
+                    "event"
+                ]
+            },
+            "vars": {
+                "authClient._IndexedDB": "authClient._IndexedDB"
+            }
+        },
+        "undocumented": true,
+        "name": "onsuccess",
+        "longname": "<anonymous>~openRequest.onsuccess",
+        "kind": "function",
+        "memberof": "<anonymous>~openRequest",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                16336,
+                16379
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 493,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001357",
+                "name": "authClient._IndexedDB",
+                "type": "MemberExpression",
+                "value": "event.target.result",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "_IndexedDB",
+        "longname": "authClient._IndexedDB",
+        "kind": "member",
+        "memberof": "authClient",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                16443,
+                16692
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 497,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001373",
+                "name": "openRequest.onupgradeneeded",
+                "type": "ArrowFunctionExpression",
+                "funcscope": "<anonymous>",
+                "paramnames": [
+                    "event"
+                ]
+            },
+            "vars": {
+                "db_upgrade": "<anonymous>~openRequest.onupgradeneeded~db_upgrade"
+            }
+        },
+        "undocumented": true,
+        "name": "onupgradeneeded",
+        "longname": "<anonymous>~openRequest.onupgradeneeded",
+        "kind": "function",
+        "memberof": "<anonymous>~openRequest",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                16502,
+                16534
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 498,
+            "columnno": 16,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001381",
+                "name": "db_upgrade",
+                "type": "MemberExpression",
+                "value": "event.target.result"
+            }
+        },
+        "undocumented": true,
+        "name": "db_upgrade",
+        "longname": "<anonymous>~openRequest.onupgradeneeded~db_upgrade",
+        "kind": "constant",
+        "memberof": "<anonymous>~openRequest.onupgradeneeded",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                16750,
+                16783
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 506,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001423",
+                "name": "v.idb",
+                "type": "AwaitExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "idb",
+        "longname": "<anonymous>~v.idb",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                16887,
+                16943
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 510,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001454",
+                "name": "v.rv.crypto",
+                "type": "NewExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.crypto",
+        "longname": "<anonymous>~v.rv.crypto",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                17093,
+                17134
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 516,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001500",
+                "name": "v.keys",
+                "type": "AwaitExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "keys",
+        "longname": "<anonymous>~v.keys",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                17263,
+                17482
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 520,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001530",
+                "name": "v.idb",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "idb",
+        "longname": "<anonymous>~v.idb",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                17340,
+                17365
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 521,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001542",
+                "name": "memberId",
+                "type": "Literal",
+                "value": "dummyMemberID"
+            }
+        },
+        "undocumented": true,
+        "name": "memberId",
+        "longname": "memberId",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                17377,
+                17406
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 522,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001544",
+                "name": "memberName",
+                "type": "Literal",
+                "value": "dummyMemberName"
+            }
+        },
+        "undocumented": true,
+        "name": "memberName",
+        "longname": "memberName",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                17418,
+                17443
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 523,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001546",
+                "name": "deviceId",
+                "type": "Literal",
+                "value": "dummyDeviceID"
+            }
+        },
+        "undocumented": true,
+        "name": "deviceId",
+        "longname": "deviceId",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                17455,
+                17470
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 524,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001548",
+                "name": "SPkeySign",
+                "type": "Literal",
+                "value": null
+            }
+        },
+        "undocumented": true,
+        "name": "SPkeySign",
+        "longname": "SPkeySign",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                17533,
+                17569
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 528,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001557",
+                "name": "v.r",
+                "type": "AwaitExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "r",
+        "longname": "<anonymous>~v.r",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                17746,
+                17768
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 535,
+            "columnno": 38,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001612",
+                "name": "v.rv.idb[undefined]",
+                "type": "MemberExpression",
+                "funcscope": "<anonymous>",
+                "value": "v.idb[undefined]",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.idb[undefined]",
+        "longname": "<anonymous>.rv.idb[undefined]",
+        "kind": "member",
+        "memberof": "<anonymous>",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                17787,
+                17805
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 537,
+            "columnno": 15,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001631",
+                "name": "IndexedDB",
+                "type": "MemberExpression",
+                "value": "v.rv.idb"
+            }
+        },
+        "undocumented": true,
+        "name": "IndexedDB",
+        "longname": "IndexedDB",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
+        "comment": "/** setIndexedDB: IndexedDBの更新(upsert)\n   * @param {Object<string, string>} arg \n   * @returns {null|Error}\n   */",
+        "meta": {
+            "range": [
+                18001,
+                18669
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 547,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001648",
+                "name": "authClient#setIndexedDB",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "arg"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "description": "setIndexedDB: IndexedDBの更新(upsert)",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "Object.<string, string>"
+                    ]
+                },
+                "name": "arg"
+            }
+        ],
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "null",
+                        "Error"
+                    ]
+                }
+            }
+        ],
+        "name": "setIndexedDB",
+        "longname": "authClient#setIndexedDB",
+        "kind": "function",
+        "memberof": "authClient",
+        "scope": "instance",
+        "async": true
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                18036,
+                18107
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 548,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001654",
+                "name": "v",
+                "type": "ObjectExpression",
+                "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":null}"
+            }
+        },
+        "undocumented": true,
+        "name": "v",
+        "longname": "<anonymous>~v",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                18041,
+                18086
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 548,
+            "columnno": 15,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001657",
+                "name": "whois",
+                "type": "TemplateLiteral",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "whois",
+        "longname": "<anonymous>~v.whois",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                18088,
+                18097
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 548,
+            "columnno": 62,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001666",
+                "name": "arg",
+                "type": "ObjectExpression",
+                "value": "{\"arg\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                18093,
+                18096
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 548,
+            "columnno": 67,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001668",
+                "name": "arg",
+                "type": "Identifier",
+                "value": "arg"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                18099,
+                18106
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 548,
+            "columnno": 73,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001670",
+                "name": "rv",
+                "type": "Literal",
+                "value": null
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                18119,
+                18140
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 549,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001673",
+                "name": "dev",
+                "type": "NewExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "dev",
+        "longname": "<anonymous>~dev",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                18279,
+                18325
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 555,
+            "columnno": 16,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001701",
+                "name": "stored",
+                "type": "AwaitExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "stored",
+        "longname": "<anonymous>~stored",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                18338,
+                18355
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 557,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001711",
+                "name": "this.idb[undefined]",
+                "type": "Identifier",
+                "value": "val",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "idb[undefined]",
+        "longname": "authClient#idb[undefined]",
+        "kind": "member",
+        "memberof": "authClient",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                18427,
+                18453
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 560,
+            "columnno": 18,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001727",
+                "name": "req",
+                "type": "CallExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "req",
+        "longname": "<anonymous>~req",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                18467,
+                18498
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 561,
+            "columnno": 12,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001736",
+                "name": "req.onsuccess",
+                "type": "ArrowFunctionExpression",
+                "funcscope": "<anonymous>",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "onsuccess",
+        "longname": "<anonymous>~req.onsuccess",
+        "kind": "function",
+        "memberof": "<anonymous>~req",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                18512,
+                18553
+            ],
+            "filename": "authClient.mjs",
+            "lineno": 562,
+            "columnno": 12,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client",
+            "code": {
+                "id": "astnode100001744",
+                "name": "req.onerror",
+                "type": "ArrowFunctionExpression",
+                "funcscope": "<anonymous>",
+                "paramnames": [
+                    "e"
+                ]
+            }
+        },
+        "undocumented": true,
+        "name": "onerror",
+        "longname": "<anonymous>~req.onerror",
+        "kind": "function",
+        "memberof": "<anonymous>~req",
+        "scope": "static"
+    },
+    {
+        "kind": "package",
+        "longname": "package:undefined",
+        "files": [
+            "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client/authClient.mjs"
+        ]
+    }
+]
+", // string

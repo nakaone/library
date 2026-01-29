@@ -16,10 +16,12 @@
  */
 import path from 'path';
 import process from 'process';
+import { execFile } from "node:child_process";
+import { writeFileSync, unlinkSync } from 'node:fs';
 import {devTools} from '../../../library/devTools/3.0.0/core.mjs';
 console.log(JSON.stringify(createSpec(),null,2));
 
-function createSpec() {
+async function createSpec() {
   const pv = {whois:`createSpec`, arg:{}, rv:null};
 
   function listSource() {
@@ -68,13 +70,39 @@ function createSpec() {
     } catch (e) { return dev.error(e); }
   }
 
+  function runJSDoc(fn) {
+    return new Promise((resolve,reject) => {
+      execFile('jsdoc',[fn,'--configure',pv.jsdocJson,'-X'],{encoding:'utf8'},(err,stdout,stderr)=>{
+        if(err){
+          reject(new Error(stderr || err.message));
+          return;
+        }
+        resolve(stdout);
+      });
+    });
+  }
+
   const dev = new devTools(pv);
   try {
 
     dev.step(1);
-    pv.rv = listSource();
+    pv.r = listSource();
+    if( pv.r instanceof Error ) throw pv.r;
+    pv.list = pv.r.list;
 
-    dev.end(); // 終了処理
+    // mjsも処理対象とするため、jsdoc動作定義ファイルを作成
+    pv.jsdocJson = 'jsdoc.json';
+    writeFileSync(pv.jsdocJson,JSON.stringify({source:{includePattern:".+\\.mjs$"}}));
+
+    for( pv.i=0 ; pv.i<1 ; pv.i++ ){
+      pv.rv = await runJSDoc(pv.list[pv.i]);
+      //dev.step(99.94,{fn:pv.list[pv.i],rv:pv.rv})
+    }
+
+    // jsdoc動作定義ファイルを削除
+    unlinkSync(pv.jsdocJson);
+
+    dev.end(pv.rv); // 終了処理
     return pv.rv;
 
   } catch (e) { dev.error(e); return e; }

@@ -159,7 +159,7 @@ export class authClient {
 
   /** _withStore: IndexedDB操作共通ラッパ
    * @param {'readonly'|'readwrite'} mode
-   * @param {(store: IDBObjectStore)=>Promise<any>} fn
+   * param {(store: IDBObjectStore)=>Promise<any>} fn
    */
   async _withStore(mode, fn){
     const db = authClient._IndexedDB;
