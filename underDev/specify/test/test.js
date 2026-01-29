@@ -7,11 +7,16 @@
  * - rev.1.0 2026/01/27
  */
 
-/**
+/** globalDef: テスト用定義①
+ * - typedef前の補足説明
+ *   - サブ項目
  * @typedef {Object} globalDef
+ * - typedef後の補足説明
  * @property {typeDef[]|columnDef[]} main=[] - グローバル領域にあるJSDoc
  * @property {Object} class - クラス定義にかかるJSDoc
- * @property {columnDef[]} class.method - 
+ * @property {columnDef[]} [class.method] - 任意項目確認用
+ * 
+ * - 末尾にある補足説明
  */
 
 /** func01: 関数テスト
@@ -74,7 +79,7 @@ class class01 extends Error {
 
   /** method01: メソッドテスト
    * @param {number} arg - method01の引数
-   * @returns {string} method01戻り値
+   * @returns {{qId:number,name:string}} NG: qId,name指定無しのObjectになる
    */
   method01(arg){
     return func01(arg);
