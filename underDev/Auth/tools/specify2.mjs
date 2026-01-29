@@ -1,3 +1,15 @@
+/*
+1. JSDocParser.parseFile の導入:
+    ◦ fs.readFileSync でソースコードを直接読み込み、正規表現 を用いて @prop や @param、さらに Schema クラス特有の types ブロック（authRequest などの定義）を抽出します。
+    ◦ これにより、これまで specDef.js に手動で転記していた作業が不要になります。
+2. ProjectDef の変更:
+    ◦ コンストラクタの引数として「解析済みJSON」ではなく 「ファイルパスの配列」 を受け取ります。
+    ◦ ループ内で JSDocParser.parseFile(filePath) を呼び出し、動的に ClassDef を生成します。
+3. データ型定義の自動抽出:
+    ◦ authConfig.mjs 内の types: { authRequest: { cols: [...] } } などの記述から、自動的に authRequest.md などの独立したドキュメントを生成できるように generatedTypes 配列を処理しています。
+このツールにより、authConfig.mjs の cols を書き換えるだけで、ソースコード・通信仕様・ドキュメントの三者が常に一致 する Single Source of Truth が実現されます。
+*/
+
 import fs from "fs";
 import path from "path";
 

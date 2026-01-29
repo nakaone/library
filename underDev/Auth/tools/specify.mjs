@@ -115,7 +115,8 @@
  *    クラス名・メソッド名はClassName,MethodName(小文字)、セクション名は'XxxDef'->'xxx'
  * @prop {string} [title=''] - Markdown化した時のタイトル行。anchor,link設定済
  * @prop {string} [template=''] - embed展開前のテンプレート。constructorでセット、以降不変
- * @prop {string} [content=''] - 🔢embedを展開後の本文。embed展開終了時にセット * @prop {boolean} [fixed=false] - 🔢インスタンスの値が確定したらtrue
+ * @prop {string} [content=''] - 🔢embedを展開後の本文。embed展開終了時にセット
+ * @prop {boolean} [fixed=false] - 🔢インスタンスの値が確定したらtrue
  *
  * // ゲッター・セッター ※以下はspecify全体の共有変数として定義
  * @prop {string[]} [implement=[]] - 実装環境の一覧。空配列なら全てグローバル。ex.`["cl","sv"]`

@@ -1,0 +1,2980 @@
+[
+    {
+        "comment": "/** Schema: DB・データ型構造定義オブジェクト\n * @class\n * @classdesc DB構造定義オブジェクト\n * \n * @property {string} name - Schemaの論理名\n * @property {string} [version='0.0.0'] - Schemaのバージョン識別子(例:'1.2.0')\n * @property {string} [dbName] - 物理DB名。省略時はnameを流用\n * @property {string} [desc=''] - Schema全体に関する概要説明\n * @property {string} [note=''] - Schema全体に関する備考\n * @property {Object.<string, TypeDef>} types - 論理テーブル名をキーとするテーブル定義\n * @property {string} original - Schemaインスタンス生成時の引数(JSON)。自動生成、設定不可\n * @property {string[]} allowedColumnTypes - 許容するColumnのデータ型のリスト。自動生成、設定不可\n *   - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function'\n * \n * - 各種アプリで使用するテーブル・データ型を宣言\n * - 各種アプリでは本クラスを拡張し、configとすることを想定\n * \n * @example\n * ```\n * {\n *   name: 'camp2025',\n *   types: {\n *     master: {\n *       cols:[\n *         {name:'タイムスタンプ',type:'string'},\n *         {name:'メールアドレス',type:'string'},\n *         // (中略)\n *       ],\n *     },\n *   },\n * },\n * ```\n * \n * @history\n * 2.1.0 2026-01-24 defaultのデータ型として関数利用を可能に変更\n * 2.0.0 2026-01-13 configの親クラスを念頭に書き換え。factoryメソッド追加\n * 【欠番】2025-12-21 構造簡潔化＋Adapterと役割分担\n * 1.2.0 2025-09-21 AlaSQLの予約語とSpreadDb.schemaの重複排除\n *   - SpreadDb.schema.tables -> tableMap\n *   - SpreadDb.schema.tables.cols -> colMap(∵予約語columnsと紛らわしい)\n * 1.1.0 2025-09-15 構造の見直し、メンバ名の修正\n * 1.0.0 2025-09-15 初版\n */",
+        "meta": {
+            "range": [
+                1315,
+                12183
+            ],
+            "filename": "Schema.js",
+            "lineno": 44,
+            "columnno": 0,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000002",
+                "name": "Schema",
+                "type": "ClassDeclaration",
+                "paramnames": [
+                    "arg"
+                ]
+            }
+        },
+        "classdesc": "DB構造定義オブジェクト",
+        "kind": "class",
+        "properties": [
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "Schemaの論理名",
+                "name": "name"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "'0.0.0'",
+                "description": "Schemaのバージョン識別子(例:'1.2.0')",
+                "name": "version"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "description": "物理DB名。省略時はnameを流用",
+                "name": "dbName"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "''",
+                "description": "Schema全体に関する概要説明",
+                "name": "desc"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "''",
+                "description": "Schema全体に関する備考",
+                "name": "note"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Object.<string, TypeDef>"
+                    ]
+                },
+                "description": "論理テーブル名をキーとするテーブル定義",
+                "name": "types"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "Schemaインスタンス生成時の引数(JSON)。自動生成、設定不可",
+                "name": "original"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Array.<string>"
+                    ]
+                },
+                "description": "許容するColumnのデータ型のリスト。自動生成、設定不可\n  - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function'\n\n- 各種アプリで使用するテーブル・データ型を宣言\n- 各種アプリでは本クラスを拡張し、configとすることを想定",
+                "name": "allowedColumnTypes"
+            }
+        ],
+        "examples": [
+            "```\n{\n  name: 'camp2025',\n  types: {\n    master: {\n      cols:[\n        {name:'タイムスタンプ',type:'string'},\n        {name:'メールアドレス',type:'string'},\n        // (中略)\n      ],\n    },\n  },\n},\n```"
+        ],
+        "tags": [
+            {
+                "originalTitle": "history",
+                "title": "history",
+                "text": "2.1.0 2026-01-24 defaultのデータ型として関数利用を可能に変更\n2.0.0 2026-01-13 configの親クラスを念頭に書き換え。factoryメソッド追加\n【欠番】2025-12-21 構造簡潔化＋Adapterと役割分担\n1.2.0 2025-09-21 AlaSQLの予約語とSpreadDb.schemaの重複排除\n  - SpreadDb.schema.tables -> tableMap\n  - SpreadDb.schema.tables.cols -> colMap(∵予約語columnsと紛らわしい)\n1.1.0 2025-09-15 構造の見直し、メンバ名の修正\n1.0.0 2025-09-15 初版",
+                "value": "2.1.0 2026-01-24 defaultのデータ型として関数利用を可能に変更\n2.0.0 2026-01-13 configの親クラスを念頭に書き換え。factoryメソッド追加\n【欠番】2025-12-21 構造簡潔化＋Adapterと役割分担\n1.2.0 2025-09-21 AlaSQLの予約語とSpreadDb.schemaの重複排除\n  - SpreadDb.schema.tables -> tableMap\n  - SpreadDb.schema.tables.cols -> colMap(∵予約語columnsと紛らわしい)\n1.1.0 2025-09-15 構造の見直し、メンバ名の修正\n1.0.0 2025-09-15 初版"
+            }
+        ],
+        "name": "Schema",
+        "longname": "Schema",
+        "scope": "global",
+        "undocumented": true
+    },
+    {
+        "comment": "/**\n   * @constructor\n   * @param {Schema[]} arg=[{}] - 設定情報集。後順位優先。共通設定を先頭に特有設定の追加を想定\n   * @returns {Schema|Error}\n   */",
+        "meta": {
+            "range": [
+                1456,
+                3008
+            ],
+            "filename": "Schema.js",
+            "lineno": 50,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000005",
+                "name": "Schema",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "arg"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "kind": "class",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "Array.<Schema>"
+                    ]
+                },
+                "defaultvalue": "[{}",
+                "description": "設定情報集。後順位優先。共通設定を先頭に特有設定の追加を想定",
+                "name": "arg"
+            }
+        ],
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "Schema",
+                        "Error"
+                    ]
+                }
+            }
+        ],
+        "name": "Schema",
+        "longname": "Schema",
+        "scope": "global",
+        "undocumented": true
+    },
+    {
+        "comment": "/** Schema: DB・データ型構造定義オブジェクト\n * @class\n * @classdesc DB構造定義オブジェクト\n * \n * @property {string} name - Schemaの論理名\n * @property {string} [version='0.0.0'] - Schemaのバージョン識別子(例:'1.2.0')\n * @property {string} [dbName] - 物理DB名。省略時はnameを流用\n * @property {string} [desc=''] - Schema全体に関する概要説明\n * @property {string} [note=''] - Schema全体に関する備考\n * @property {Object.<string, TypeDef>} types - 論理テーブル名をキーとするテーブル定義\n * @property {string} original - Schemaインスタンス生成時の引数(JSON)。自動生成、設定不可\n * @property {string[]} allowedColumnTypes - 許容するColumnのデータ型のリスト。自動生成、設定不可\n *   - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function'\n * \n * - 各種アプリで使用するテーブル・データ型を宣言\n * - 各種アプリでは本クラスを拡張し、configとすることを想定\n * \n * @example\n * ```\n * {\n *   name: 'camp2025',\n *   types: {\n *     master: {\n *       cols:[\n *         {name:'タイムスタンプ',type:'string'},\n *         {name:'メールアドレス',type:'string'},\n *         // (中略)\n *       ],\n *     },\n *   },\n * },\n * ```\n * \n * @history\n * 2.1.0 2026-01-24 defaultのデータ型として関数利用を可能に変更\n * 2.0.0 2026-01-13 configの親クラスを念頭に書き換え。factoryメソッド追加\n * 【欠番】2025-12-21 構造簡潔化＋Adapterと役割分担\n * 1.2.0 2025-09-21 AlaSQLの予約語とSpreadDb.schemaの重複排除\n *   - SpreadDb.schema.tables -> tableMap\n *   - SpreadDb.schema.tables.cols -> colMap(∵予約語columnsと紛らわしい)\n * 1.1.0 2025-09-15 構造の見直し、メンバ名の修正\n * 1.0.0 2025-09-15 初版\n */",
+        "meta": {
+            "range": [
+                1315,
+                12183
+            ],
+            "filename": "Schema.js",
+            "lineno": 44,
+            "columnno": 0,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000002",
+                "name": "Schema",
+                "type": "ClassDeclaration",
+                "paramnames": [
+                    "arg"
+                ]
+            }
+        },
+        "name": "Schema",
+        "longname": "Schema",
+        "kind": "class",
+        "classdesc": "DB構造定義オブジェクト",
+        "examples": [
+            "```\n{\n  name: 'camp2025',\n  types: {\n    master: {\n      cols:[\n        {name:'タイムスタンプ',type:'string'},\n        {name:'メールアドレス',type:'string'},\n        // (中略)\n      ],\n    },\n  },\n},\n```"
+        ],
+        "tags": [
+            {
+                "originalTitle": "history",
+                "title": "history",
+                "text": "2.1.0 2026-01-24 defaultのデータ型として関数利用を可能に変更\n2.0.0 2026-01-13 configの親クラスを念頭に書き換え。factoryメソッド追加\n【欠番】2025-12-21 構造簡潔化＋Adapterと役割分担\n1.2.0 2025-09-21 AlaSQLの予約語とSpreadDb.schemaの重複排除\n  - SpreadDb.schema.tables -> tableMap\n  - SpreadDb.schema.tables.cols -> colMap(∵予約語columnsと紛らわしい)\n1.1.0 2025-09-15 構造の見直し、メンバ名の修正\n1.0.0 2025-09-15 初版",
+                "value": "2.1.0 2026-01-24 defaultのデータ型として関数利用を可能に変更\n2.0.0 2026-01-13 configの親クラスを念頭に書き換え。factoryメソッド追加\n【欠番】2025-12-21 構造簡潔化＋Adapterと役割分担\n1.2.0 2025-09-21 AlaSQLの予約語とSpreadDb.schemaの重複排除\n  - SpreadDb.schema.tables -> tableMap\n  - SpreadDb.schema.tables.cols -> colMap(∵予約語columnsと紛らわしい)\n1.1.0 2025-09-15 構造の見直し、メンバ名の修正\n1.0.0 2025-09-15 初版"
+            }
+        ],
+        "scope": "global",
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "Schema",
+                        "Error"
+                    ]
+                }
+            }
+        ],
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "Array.<Schema>"
+                    ]
+                },
+                "defaultvalue": "[{}",
+                "description": "設定情報集。後順位優先。共通設定を先頭に特有設定の追加を想定",
+                "name": "arg"
+            }
+        ],
+        "properties": [
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "Schemaの論理名",
+                "name": "name"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "'0.0.0'",
+                "description": "Schemaのバージョン識別子(例:'1.2.0')",
+                "name": "version"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "description": "物理DB名。省略時はnameを流用",
+                "name": "dbName"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "''",
+                "description": "Schema全体に関する概要説明",
+                "name": "desc"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "''",
+                "description": "Schema全体に関する備考",
+                "name": "note"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Object.<string, TypeDef>"
+                    ]
+                },
+                "description": "論理テーブル名をキーとするテーブル定義",
+                "name": "types"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "Schemaインスタンス生成時の引数(JSON)。自動生成、設定不可",
+                "name": "original"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Array.<string>"
+                    ]
+                },
+                "description": "許容するColumnのデータ型のリスト。自動生成、設定不可\n  - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function'\n\n- 各種アプリで使用するテーブル・データ型を宣言\n- 各種アプリでは本クラスを拡張し、configとすることを想定",
+                "name": "allowedColumnTypes"
+            }
+        ]
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1489,
+                1539
+            ],
+            "filename": "Schema.js",
+            "lineno": 51,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000014",
+                "name": "v",
+                "type": "ObjectExpression",
+                "value": "{\"whois\":\"Schema.constructor\",\"arg\":\"\",\"rv\":null}"
+            }
+        },
+        "undocumented": true,
+        "name": "v",
+        "longname": "<anonymous>~v",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1494,
+                1520
+            ],
+            "filename": "Schema.js",
+            "lineno": 51,
+            "columnno": 15,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000017",
+                "name": "whois",
+                "type": "Literal",
+                "value": "Schema.constructor"
+            }
+        },
+        "undocumented": true,
+        "name": "whois",
+        "longname": "<anonymous>~v.whois",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1521,
+                1530
+            ],
+            "filename": "Schema.js",
+            "lineno": 51,
+            "columnno": 42,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000019",
+                "name": "arg",
+                "type": "ObjectExpression",
+                "value": "{\"arg\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1526,
+                1529
+            ],
+            "filename": "Schema.js",
+            "lineno": 51,
+            "columnno": 47,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000021",
+                "name": "arg",
+                "type": "Identifier",
+                "value": "arg"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1531,
+                1538
+            ],
+            "filename": "Schema.js",
+            "lineno": 51,
+            "columnno": 52,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000023",
+                "name": "rv",
+                "type": "Literal",
+                "value": null
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1551,
+                1572
+            ],
+            "filename": "Schema.js",
+            "lineno": 52,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000026",
+                "name": "dev",
+                "type": "NewExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "dev",
+        "longname": "<anonymous>~dev",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1665,
+                1676
+            ],
+            "filename": "Schema.js",
+            "lineno": 56,
+            "columnno": 32,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000047",
+                "name": "arg",
+                "type": "ArrayExpression",
+                "funcscope": "<anonymous>",
+                "value": "[\"arg\"]",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~arg",
+        "kind": "member",
+        "memberof": "<anonymous>",
+        "scope": "inner"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1690,
+                1695
+            ],
+            "filename": "Schema.js",
+            "lineno": 58,
+            "columnno": 11,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000052",
+                "name": "v.i",
+                "type": "Literal",
+                "funcscope": "<anonymous>",
+                "value": 0,
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "i",
+        "longname": "<anonymous>~v.i",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1901,
+                1947
+            ],
+            "filename": "Schema.js",
+            "lineno": 65,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000098",
+                "name": "this.name",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "name",
+        "longname": "Schema#name",
+        "kind": "member",
+        "memberof": "Schema",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                1957,
+                2015
+            ],
+            "filename": "Schema.js",
+            "lineno": 66,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000116",
+                "name": "this.version",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "version",
+        "longname": "Schema#version",
+        "kind": "member",
+        "memberof": "Schema",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                2025,
+                2078
+            ],
+            "filename": "Schema.js",
+            "lineno": 67,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000134",
+                "name": "this.dbName",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "dbName",
+        "longname": "Schema#dbName",
+        "kind": "member",
+        "memberof": "Schema",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                2088,
+                2132
+            ],
+            "filename": "Schema.js",
+            "lineno": 68,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000154",
+                "name": "this.desc",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "desc",
+        "longname": "Schema#desc",
+        "kind": "member",
+        "memberof": "Schema",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                2142,
+                2186
+            ],
+            "filename": "Schema.js",
+            "lineno": 69,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000172",
+                "name": "this.note",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "note",
+        "longname": "Schema#note",
+        "kind": "member",
+        "memberof": "Schema",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                2246,
+                2275
+            ],
+            "filename": "Schema.js",
+            "lineno": 71,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000190",
+                "name": "this.types",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "types",
+        "longname": "Schema#types",
+        "kind": "member",
+        "memberof": "Schema",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                2316,
+                2368
+            ],
+            "filename": "Schema.js",
+            "lineno": 73,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000200",
+                "name": "this.original",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "original",
+        "longname": "Schema#original",
+        "kind": "member",
+        "memberof": "Schema",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                2378,
+                2483
+            ],
+            "filename": "Schema.js",
+            "lineno": 74,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000214",
+                "name": "this.allowedColumnTypes",
+                "type": "ArrayExpression",
+                "value": "[\"string\",\"number\",\"boolean\",\"object\",\"array\",\"datetime\",\"function\"]",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "allowedColumnTypes",
+        "longname": "Schema#allowedColumnTypes",
+        "kind": "member",
+        "memberof": "Schema",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                2679,
+                2728
+            ],
+            "filename": "Schema.js",
+            "lineno": 81,
+            "columnno": 12,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000264",
+                "name": "this.types[undefined]",
+                "type": "CallExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "types[undefined]",
+        "longname": "Schema#types[undefined]",
+        "kind": "member",
+        "memberof": "Schema",
+        "scope": "instance"
+    },
+    {
+        "comment": "/** isObject: 引数がオブジェクトであるか判定\n   * @param {any} arg - 判定対象\n   * @returns {boolean} オブジェクトならtrue\n   */",
+        "meta": {
+            "range": [
+                3116,
+                3293
+            ],
+            "filename": "Schema.js",
+            "lineno": 101,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000315",
+                "name": "Schema#isObject",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "arg"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "description": "isObject: 引数がオブジェクトであるか判定",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "any"
+                    ]
+                },
+                "description": "判定対象",
+                "name": "arg"
+            }
+        ],
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "boolean"
+                    ]
+                },
+                "description": "オブジェクトならtrue"
+            }
+        ],
+        "name": "isObject",
+        "longname": "Schema#isObject",
+        "kind": "function",
+        "memberof": "Schema",
+        "scope": "instance"
+    },
+    {
+        "comment": "/** TypeDef: 論理テーブル構造定義\n   * @typedef {Object} TypeDef - 論理テーブル構造定義\n   * @property {string} name - 論理的な識別名（TypeDef のキー）\n   *   - クラス・API・ログで使用。例: 'Member', 'AuthAuditLog'\n   *   - constructorに渡す定義オブジェクトでは省略(メンバ名を引用)\n   * @property {string} [typeName='TypeDef'] - データ型名\n   *   - 同一データ型のテーブル・インスタンスを複数使用する場合、instanceofの代わりに使用\n   * @property {string} [desc=''] - テーブルに関する概要説明\n   * @property {string} [note=''] - テーブルに関する備考\n   * @property {string[]} [primaryKey=[]] - 主キー項目名\n   * @property {string[]} [unique=[]] - 主キー以外の一意制約\n   * @property {ColumnDef[]} cols - 項目定義（順序を考慮するため配列）\n   * @property {string[]} header - 項目名の一覧(引数不可、自動生成)\n   * @property {Object.<string, ColumnDef>} map - 項目名をキーとする項目定義集(引数不可、自動生成)\n   */",
+        "meta": {
+            "filename": "Schema.js",
+            "lineno": 109,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {}
+        },
+        "description": "TypeDef: 論理テーブル構造定義",
+        "kind": "typedef",
+        "name": "TypeDef",
+        "type": {
+            "names": [
+                "Object"
+            ]
+        },
+        "properties": [
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "論理的な識別名（TypeDef のキー）\n  - クラス・API・ログで使用。例: 'Member', 'AuthAuditLog'\n  - constructorに渡す定義オブジェクトでは省略(メンバ名を引用)",
+                "name": "name"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "'TypeDef'",
+                "description": "データ型名\n  - 同一データ型のテーブル・インスタンスを複数使用する場合、instanceofの代わりに使用",
+                "name": "typeName"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "''",
+                "description": "テーブルに関する概要説明",
+                "name": "desc"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "''",
+                "description": "テーブルに関する備考",
+                "name": "note"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Array.<string>"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "[]",
+                "description": "主キー項目名",
+                "name": "primaryKey"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Array.<string>"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "[]",
+                "description": "主キー以外の一意制約",
+                "name": "unique"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Array.<ColumnDef>"
+                    ]
+                },
+                "description": "項目定義（順序を考慮するため配列）",
+                "name": "cols"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Array.<string>"
+                    ]
+                },
+                "description": "項目名の一覧(引数不可、自動生成)",
+                "name": "header"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Object.<string, ColumnDef>"
+                    ]
+                },
+                "description": "項目名をキーとする項目定義集(引数不可、自動生成)",
+                "name": "map"
+            }
+        ],
+        "longname": "TypeDef",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4010,
+                5271
+            ],
+            "filename": "Schema.js",
+            "lineno": 124,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000347",
+                "name": "Schema#typedef",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "name",
+                    "obj"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "undocumented": true,
+        "name": "typedef",
+        "longname": "Schema#typedef",
+        "kind": "function",
+        "memberof": "Schema",
+        "scope": "instance",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4039,
+                4104
+            ],
+            "filename": "Schema.js",
+            "lineno": 125,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000354",
+                "name": "v",
+                "type": "ObjectExpression",
+                "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "v",
+        "longname": "<anonymous>~v",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4044,
+                4082
+            ],
+            "filename": "Schema.js",
+            "lineno": 125,
+            "columnno": 15,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000357",
+                "name": "whois",
+                "type": "BinaryExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "whois",
+        "longname": "<anonymous>~v.whois",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4083,
+                4097
+            ],
+            "filename": "Schema.js",
+            "lineno": 125,
+            "columnno": 54,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000365",
+                "name": "arg",
+                "type": "ObjectExpression",
+                "value": "{\"name\":\"\",\"obj\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4088,
+                4092
+            ],
+            "filename": "Schema.js",
+            "lineno": 125,
+            "columnno": 59,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000367",
+                "name": "name",
+                "type": "Identifier",
+                "value": "name"
+            }
+        },
+        "undocumented": true,
+        "name": "name",
+        "longname": "<anonymous>~v.arg.name",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4093,
+                4096
+            ],
+            "filename": "Schema.js",
+            "lineno": 125,
+            "columnno": 64,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000369",
+                "name": "obj",
+                "type": "Identifier",
+                "value": "obj"
+            }
+        },
+        "undocumented": true,
+        "name": "obj",
+        "longname": "<anonymous>~v.arg.obj",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4098,
+                4103
+            ],
+            "filename": "Schema.js",
+            "lineno": 125,
+            "columnno": 69,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000371",
+                "name": "rv",
+                "type": "ObjectExpression",
+                "value": "{}"
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4116,
+                4137
+            ],
+            "filename": "Schema.js",
+            "lineno": 126,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000374",
+                "name": "dev",
+                "type": "NewExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "dev",
+        "longname": "<anonymous>~dev",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4596,
+                4612
+            ],
+            "filename": "Schema.js",
+            "lineno": 140,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000443",
+                "name": "v.rv.name",
+                "type": "Identifier",
+                "funcscope": "<anonymous>",
+                "value": "name",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.name",
+        "longname": "<anonymous>~v.rv.name",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4620,
+                4645
+            ],
+            "filename": "Schema.js",
+            "lineno": 141,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000451",
+                "name": "v.rv.typeName",
+                "type": "Literal",
+                "funcscope": "<anonymous>",
+                "value": "TypeDef",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.typeName",
+        "longname": "<anonymous>~v.rv.typeName",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4671,
+                4697
+            ],
+            "filename": "Schema.js",
+            "lineno": 142,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000459",
+                "name": "v.rv.desc",
+                "type": "LogicalExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.desc",
+        "longname": "<anonymous>~v.rv.desc",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4705,
+                4731
+            ],
+            "filename": "Schema.js",
+            "lineno": 143,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000471",
+                "name": "v.rv.note",
+                "type": "LogicalExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.note",
+        "longname": "<anonymous>~v.rv.note",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4739,
+                4777
+            ],
+            "filename": "Schema.js",
+            "lineno": 144,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000483",
+                "name": "v.rv.primaryKey",
+                "type": "LogicalExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.primaryKey",
+        "longname": "<anonymous>~v.rv.primaryKey",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4785,
+                4815
+            ],
+            "filename": "Schema.js",
+            "lineno": 145,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000495",
+                "name": "v.rv.unique",
+                "type": "LogicalExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.unique",
+        "longname": "<anonymous>~v.rv.unique",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4823,
+                4837
+            ],
+            "filename": "Schema.js",
+            "lineno": 146,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000507",
+                "name": "v.rv.cols",
+                "type": "ArrayExpression",
+                "funcscope": "<anonymous>",
+                "value": "[]",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.cols",
+        "longname": "<anonymous>~v.rv.cols",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4845,
+                4861
+            ],
+            "filename": "Schema.js",
+            "lineno": 147,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000515",
+                "name": "v.rv.header",
+                "type": "ArrayExpression",
+                "funcscope": "<anonymous>",
+                "value": "[]",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.header",
+        "longname": "<anonymous>~v.rv.header",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4879,
+                4892
+            ],
+            "filename": "Schema.js",
+            "lineno": 148,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000523",
+                "name": "v.rv.map",
+                "type": "ObjectExpression",
+                "funcscope": "<anonymous>",
+                "value": "{}",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.map",
+        "longname": "<anonymous>~v.rv.map",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                4987,
+                5012
+            ],
+            "filename": "Schema.js",
+            "lineno": 152,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000547",
+                "name": "v.col",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "col",
+        "longname": "<anonymous>~v.col",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5142,
+                5170
+            ],
+            "filename": "Schema.js",
+            "lineno": 157,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000593",
+                "name": "v.rv.map[undefined]",
+                "type": "MemberExpression",
+                "funcscope": "<anonymous>",
+                "value": "v.col",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.map[undefined]",
+        "longname": "<anonymous>~v.rv.map[undefined]",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "/** ColumnDef: 項目定義\n   * @typedef {Object} ColumnDef - 項目定義\n   * @property {string} name - 項目名（英数字・システム用）\n   * @property {string} [label] - 表示用ラベル（省略時は name)\n   * @property {string} [desc=''] - 項目に関する概要説明\n   * @property {string} [note=''] - 項目に関する備考・意味説明\n   * @property {string} [type='string'] - 論理データ型\n   *   - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function'\n   * @property {boolean} [nullable=true] - null を許可するか\n   * @property {any} [default=null] - 既定値\n   *   - データ型が関数の場合、引数はfactoryメソッドに渡されるargと看做す\n   * \n   * 【datetimeが固定値ではない場合の記述方法】\n   * ex. factoryメソッドで生成するオブジェクトに生成日時を設定したい\n   *   ColumnDef.default = \"Date.now()\"\n   * ex. 有効期間として1日(24時間)後を設定したい\n   *   ColumnDef.default = \"new Date(Date.now()+24*3600*1000)\"\n   * - 【注意】引数は使用不可\n   * - factoryメソッドではこれを new Function('x',`return ${default}`) として関数化し、実行結果を返す\n   */",
+        "meta": {
+            "filename": "Schema.js",
+            "lineno": 167,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {}
+        },
+        "description": "ColumnDef: 項目定義",
+        "kind": "typedef",
+        "name": "ColumnDef",
+        "type": {
+            "names": [
+                "Object"
+            ]
+        },
+        "properties": [
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "項目名（英数字・システム用）",
+                "name": "name"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "description": "表示用ラベル（省略時は name)",
+                "name": "label"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "''",
+                "description": "項目に関する概要説明",
+                "name": "desc"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "''",
+                "description": "項目に関する備考・意味説明",
+                "name": "note"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "'string'",
+                "description": "論理データ型\n  - 'string' | 'number' | 'boolean' | 'object' | 'array' | 'datetime' | 'function'",
+                "name": "type"
+            },
+            {
+                "type": {
+                    "names": [
+                        "boolean"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": true,
+                "description": "null を許可するか",
+                "name": "nullable"
+            },
+            {
+                "type": {
+                    "names": [
+                        "any"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": null,
+                "description": "既定値\n  - データ型が関数の場合、引数はfactoryメソッドに渡されるargと看做す\n\n【datetimeが固定値ではない場合の記述方法】\nex. factoryメソッドで生成するオブジェクトに生成日時を設定したい\n  ColumnDef.default = \"Date.now()\"\nex. 有効期間として1日(24時間)後を設定したい\n  ColumnDef.default = \"new Date(Date.now()+24*3600*1000)\"\n- 【注意】引数は使用不可\n- factoryメソッドではこれを new Function('x',`return ${default}`) として関数化し、実行結果を返す",
+                "name": "default"
+            }
+        ],
+        "longname": "ColumnDef",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6131,
+                7102
+            ],
+            "filename": "Schema.js",
+            "lineno": 187,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000624",
+                "name": "Schema#columndef",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "obj"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "undocumented": true,
+        "name": "columndef",
+        "longname": "Schema#columndef",
+        "kind": "function",
+        "memberof": "Schema",
+        "scope": "instance",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6157,
+                6219
+            ],
+            "filename": "Schema.js",
+            "lineno": 188,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000630",
+                "name": "v",
+                "type": "ObjectExpression",
+                "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "v",
+        "longname": "<anonymous>~v",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6162,
+                6202
+            ],
+            "filename": "Schema.js",
+            "lineno": 188,
+            "columnno": 15,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000633",
+                "name": "whois",
+                "type": "BinaryExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "whois",
+        "longname": "<anonymous>~v.whois",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6203,
+                6212
+            ],
+            "filename": "Schema.js",
+            "lineno": 188,
+            "columnno": 56,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000641",
+                "name": "arg",
+                "type": "ObjectExpression",
+                "value": "{\"obj\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6208,
+                6211
+            ],
+            "filename": "Schema.js",
+            "lineno": 188,
+            "columnno": 61,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000643",
+                "name": "obj",
+                "type": "Identifier",
+                "value": "obj"
+            }
+        },
+        "undocumented": true,
+        "name": "obj",
+        "longname": "<anonymous>~v.arg.obj",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6213,
+                6218
+            ],
+            "filename": "Schema.js",
+            "lineno": 188,
+            "columnno": 66,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000645",
+                "name": "rv",
+                "type": "ObjectExpression",
+                "value": "{}"
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6231,
+                6252
+            ],
+            "filename": "Schema.js",
+            "lineno": 189,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000648",
+                "name": "dev",
+                "type": "NewExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "dev",
+        "longname": "<anonymous>~dev",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6603,
+                6623
+            ],
+            "filename": "Schema.js",
+            "lineno": 203,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000709",
+                "name": "v.rv.name",
+                "type": "MemberExpression",
+                "funcscope": "<anonymous>",
+                "value": "obj.name",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.name",
+        "longname": "<anonymous>~v.rv.name",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6631,
+                6665
+            ],
+            "filename": "Schema.js",
+            "lineno": 204,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000719",
+                "name": "v.rv.label",
+                "type": "LogicalExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.label",
+        "longname": "<anonymous>~v.rv.label",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6673,
+                6699
+            ],
+            "filename": "Schema.js",
+            "lineno": 205,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000733",
+                "name": "v.rv.desc",
+                "type": "LogicalExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.desc",
+        "longname": "<anonymous>~v.rv.desc",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6707,
+                6733
+            ],
+            "filename": "Schema.js",
+            "lineno": 206,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000745",
+                "name": "v.rv.note",
+                "type": "LogicalExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.note",
+        "longname": "<anonymous>~v.rv.note",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6741,
+                6773
+            ],
+            "filename": "Schema.js",
+            "lineno": 207,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000757",
+                "name": "v.rv.type",
+                "type": "LogicalExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.type",
+        "longname": "<anonymous>~v.rv.type",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6781,
+                6817
+            ],
+            "filename": "Schema.js",
+            "lineno": 208,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000769",
+                "name": "v.rv.nullable",
+                "type": "LogicalExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.nullable",
+        "longname": "<anonymous>~v.rv.nullable",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                6825,
+                6859
+            ],
+            "filename": "Schema.js",
+            "lineno": 209,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000781",
+                "name": "v.rv.default",
+                "type": "LogicalExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv.default",
+        "longname": "<anonymous>~v.rv.default",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "/** factory: 指定TypeDef型のオブジェクトを生成\n   * @param {string} name - データ型名。TypeDef.name\n   * @param {Object.<string, any>} [arg={}] - 各メンバの設定値\n   * @returns {Object} TypeDefで指定したデータ型のオブジェクト\n   */",
+        "meta": {
+            "range": [
+                7297,
+                10606
+            ],
+            "filename": "Schema.js",
+            "lineno": 227,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000838",
+                "name": "Schema#factory",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "name",
+                    "arg"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "description": "factory: 指定TypeDef型のオブジェクトを生成",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "description": "データ型名。TypeDef.name",
+                "name": "name"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Object.<string, any>"
+                    ]
+                },
+                "optional": true,
+                "defaultvalue": "{}",
+                "description": "各メンバの設定値",
+                "name": "arg"
+            }
+        ],
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "Object"
+                    ]
+                },
+                "description": "TypeDefで指定したデータ型のオブジェクト"
+            }
+        ],
+        "name": "factory",
+        "longname": "Schema#factory",
+        "kind": "function",
+        "memberof": "Schema",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7329,
+                7394
+            ],
+            "filename": "Schema.js",
+            "lineno": 228,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000847",
+                "name": "v",
+                "type": "ObjectExpression",
+                "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "v",
+        "longname": "<anonymous>~v",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7334,
+                7372
+            ],
+            "filename": "Schema.js",
+            "lineno": 228,
+            "columnno": 15,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000850",
+                "name": "whois",
+                "type": "BinaryExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "whois",
+        "longname": "<anonymous>~v.whois",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7373,
+                7387
+            ],
+            "filename": "Schema.js",
+            "lineno": 228,
+            "columnno": 54,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000858",
+                "name": "arg",
+                "type": "ObjectExpression",
+                "value": "{\"name\":\"\",\"arg\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7378,
+                7382
+            ],
+            "filename": "Schema.js",
+            "lineno": 228,
+            "columnno": 59,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000860",
+                "name": "name",
+                "type": "Identifier",
+                "value": "name"
+            }
+        },
+        "undocumented": true,
+        "name": "name",
+        "longname": "<anonymous>~v.arg.name",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7383,
+                7386
+            ],
+            "filename": "Schema.js",
+            "lineno": 228,
+            "columnno": 64,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000862",
+                "name": "arg",
+                "type": "Identifier",
+                "value": "arg"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7388,
+                7393
+            ],
+            "filename": "Schema.js",
+            "lineno": 228,
+            "columnno": 69,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000864",
+                "name": "rv",
+                "type": "ObjectExpression",
+                "value": "{}"
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7406,
+                7427
+            ],
+            "filename": "Schema.js",
+            "lineno": 229,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000867",
+                "name": "dev",
+                "type": "NewExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "dev",
+        "longname": "<anonymous>~dev",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7829,
+                7884
+            ],
+            "filename": "Schema.js",
+            "lineno": 241,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000930",
+                "name": "v.trueValues",
+                "type": "ArrayExpression",
+                "funcscope": "<anonymous>",
+                "value": "[1,\"1\",-1,\"-1\",\"true\",\"TRUE\",true]",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "trueValues",
+        "longname": "<anonymous>~v.trueValues",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7892,
+                7941
+            ],
+            "filename": "Schema.js",
+            "lineno": 242,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000944",
+                "name": "v.falseValues",
+                "type": "ArrayExpression",
+                "funcscope": "<anonymous>",
+                "value": "[0,\"0\",\"false\",\"FALSE\",false]",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "falseValues",
+        "longname": "<anonymous>~v.falseValues",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                7949,
+                8023
+            ],
+            "filename": "Schema.js",
+            "lineno": 243,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000955",
+                "name": "v.eval",
+                "type": "ArrowFunctionExpression",
+                "funcscope": "<anonymous>",
+                "paramnames": [
+                    "x"
+                ]
+            }
+        },
+        "undocumented": true,
+        "name": "eval",
+        "longname": "<anonymous>~v.eval",
+        "kind": "function",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8031,
+                9257
+            ],
+            "filename": "Schema.js",
+            "lineno": 244,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000975",
+                "name": "v.checkers",
+                "type": "ObjectExpression",
+                "funcscope": "<anonymous>",
+                "value": "{\"string\":\"\",\"number\":\"\",\"boolean\":\"\",\"object\":\"\",\"array\":\"\",\"datetime\":\"\",\"function\":\"\"}",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "checkers",
+        "longname": "<anonymous>~v.checkers",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8054,
+                8104
+            ],
+            "filename": "Schema.js",
+            "lineno": 245,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000980",
+                "name": "string",
+                "type": "ArrowFunctionExpression"
+            }
+        },
+        "undocumented": true,
+        "name": "string",
+        "longname": "<anonymous>~v.checkers.string",
+        "kind": "function",
+        "memberof": "<anonymous>~v.checkers",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8114,
+                8218
+            ],
+            "filename": "Schema.js",
+            "lineno": 246,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000994",
+                "name": "number",
+                "type": "ArrowFunctionExpression"
+            },
+            "vars": {
+                "v.num": "<anonymous>~v.num"
+            }
+        },
+        "undocumented": true,
+        "name": "number",
+        "longname": "<anonymous>~v.checkers.number",
+        "kind": "function",
+        "memberof": "<anonymous>~v.checkers",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8139,
+                8156
+            ],
+            "filename": "Schema.js",
+            "lineno": 247,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100000999",
+                "name": "v.num",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "num",
+        "longname": "<anonymous>~v.num",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8228,
+                8333
+            ],
+            "filename": "Schema.js",
+            "lineno": 250,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001021",
+                "name": "boolean",
+                "type": "ArrowFunctionExpression"
+            }
+        },
+        "undocumented": true,
+        "name": "boolean",
+        "longname": "<anonymous>~v.checkers.boolean",
+        "kind": "function",
+        "memberof": "<anonymous>~v.checkers",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8343,
+                8388
+            ],
+            "filename": "Schema.js",
+            "lineno": 252,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001047",
+                "name": "object",
+                "type": "ArrowFunctionExpression"
+            }
+        },
+        "undocumented": true,
+        "name": "object",
+        "longname": "<anonymous>~v.checkers.object",
+        "kind": "function",
+        "memberof": "<anonymous>~v.checkers",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8398,
+                8442
+            ],
+            "filename": "Schema.js",
+            "lineno": 253,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001062",
+                "name": "array",
+                "type": "ArrowFunctionExpression"
+            }
+        },
+        "undocumented": true,
+        "name": "array",
+        "longname": "<anonymous>~v.checkers.array",
+        "kind": "function",
+        "memberof": "<anonymous>~v.checkers",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8452,
+                8876
+            ],
+            "filename": "Schema.js",
+            "lineno": 254,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001077",
+                "name": "datetime",
+                "type": "ArrowFunctionExpression"
+            },
+            "vars": {
+                "v.dt": "<anonymous>~v.dt",
+                "v.f": "<anonymous>~v.f"
+            }
+        },
+        "undocumented": true,
+        "name": "datetime",
+        "longname": "<anonymous>~v.checkers.datetime",
+        "kind": "function",
+        "memberof": "<anonymous>~v.checkers",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8540,
+                8558
+            ],
+            "filename": "Schema.js",
+            "lineno": 256,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001088",
+                "name": "v.dt",
+                "type": "NewExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "dt",
+        "longname": "<anonymous>~v.dt",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8671,
+                8707
+            ],
+            "filename": "Schema.js",
+            "lineno": 259,
+            "columnno": 14,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001108",
+                "name": "v.f",
+                "type": "NewExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "f",
+        "longname": "<anonymous>~v.f",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                8886,
+                9249
+            ],
+            "filename": "Schema.js",
+            "lineno": 266,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001132",
+                "name": "function",
+                "type": "ArrowFunctionExpression"
+            },
+            "vars": {
+                "": null,
+                "v.func": "<anonymous>~v.func"
+            }
+        },
+        "undocumented": true,
+        "name": "function",
+        "longname": "<anonymous>~v.checkers.function",
+        "kind": "function",
+        "memberof": "<anonymous>~v.checkers",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                9103,
+                9130
+            ],
+            "filename": "Schema.js",
+            "lineno": 271,
+            "columnno": 14,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001164",
+                "name": "v.func",
+                "type": "NewExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "func",
+        "longname": "<anonymous>~v.func",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                9432,
+                9484
+            ],
+            "filename": "Schema.js",
+            "lineno": 284,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001209",
+                "name": "v.rv[undefined]",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv[undefined]",
+        "longname": "<anonymous>~v.rv[undefined]",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                10102,
+                10123
+            ],
+            "filename": "Schema.js",
+            "lineno": 297,
+            "columnno": 14,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001315",
+                "name": "v.rv[undefined]",
+                "type": "Literal",
+                "funcscope": "<anonymous>",
+                "value": null,
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv[undefined]",
+        "longname": "<anonymous>~v.rv[undefined]",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                10222,
+                10272
+            ],
+            "filename": "Schema.js",
+            "lineno": 301,
+            "columnno": 12,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001332",
+                "name": "v.rv[undefined]",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv[undefined]",
+        "longname": "<anonymous>~v.rv[undefined]",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "/** sanitizeArg: プリミティブ型のみで構成されるよう無毒化\n   * @param {*} value - チェック対象の変数\n   * @param {string} path='$' - エラーメッセージ用にオブジェクト内の階層を保持\n   * @returns\n   */",
+        "meta": {
+            "range": [
+                10760,
+                12181
+            ],
+            "filename": "Schema.js",
+            "lineno": 321,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001398",
+                "name": "Schema#sanitizeArg",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "value",
+                    "path"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "description": "sanitizeArg: プリミティブ型のみで構成されるよう無毒化",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "*"
+                    ]
+                },
+                "description": "チェック対象の変数",
+                "name": "value"
+            },
+            {
+                "type": {
+                    "names": [
+                        "string"
+                    ]
+                },
+                "defaultvalue": "'$'",
+                "description": "エラーメッセージ用にオブジェクト内の階層を保持",
+                "name": "path"
+            }
+        ],
+        "returns": [
+            null
+        ],
+        "name": "sanitizeArg",
+        "longname": "Schema#sanitizeArg",
+        "kind": "function",
+        "memberof": "Schema",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                10803,
+                10876
+            ],
+            "filename": "Schema.js",
+            "lineno": 322,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001407",
+                "name": "v",
+                "type": "ObjectExpression",
+                "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":null}"
+            }
+        },
+        "undocumented": true,
+        "name": "v",
+        "longname": "<anonymous>~v",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                10808,
+                10850
+            ],
+            "filename": "Schema.js",
+            "lineno": 322,
+            "columnno": 15,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001410",
+                "name": "whois",
+                "type": "BinaryExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "whois",
+        "longname": "<anonymous>~v.whois",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                10851,
+                10867
+            ],
+            "filename": "Schema.js",
+            "lineno": 322,
+            "columnno": 58,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001418",
+                "name": "arg",
+                "type": "ObjectExpression",
+                "value": "{\"value\":\"\",\"path\":\"\"}"
+            }
+        },
+        "undocumented": true,
+        "name": "arg",
+        "longname": "<anonymous>~v.arg",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                10856,
+                10861
+            ],
+            "filename": "Schema.js",
+            "lineno": 322,
+            "columnno": 63,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001420",
+                "name": "value",
+                "type": "Identifier",
+                "value": "value"
+            }
+        },
+        "undocumented": true,
+        "name": "value",
+        "longname": "<anonymous>~v.arg.value",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                10862,
+                10866
+            ],
+            "filename": "Schema.js",
+            "lineno": 322,
+            "columnno": 69,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001422",
+                "name": "path",
+                "type": "Identifier",
+                "value": "path"
+            }
+        },
+        "undocumented": true,
+        "name": "path",
+        "longname": "<anonymous>~v.arg.path",
+        "kind": "member",
+        "memberof": "<anonymous>~v.arg",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                10868,
+                10875
+            ],
+            "filename": "Schema.js",
+            "lineno": 322,
+            "columnno": 75,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001424",
+                "name": "rv",
+                "type": "Literal",
+                "value": null
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                10888,
+                10909
+            ],
+            "filename": "Schema.js",
+            "lineno": 323,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001427",
+                "name": "dev",
+                "type": "NewExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "dev",
+        "longname": "<anonymous>~dev",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                11151,
+                11163
+            ],
+            "filename": "Schema.js",
+            "lineno": 333,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001469",
+                "name": "v.rv",
+                "type": "Identifier",
+                "funcscope": "<anonymous>",
+                "value": "value",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                11245,
+                11309
+            ],
+            "filename": "Schema.js",
+            "lineno": 338,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001484",
+                "name": "v.rv",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                11722,
+                11730
+            ],
+            "filename": "Schema.js",
+            "lineno": 354,
+            "columnno": 16,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001542",
+                "name": "obj",
+                "type": "ObjectExpression",
+                "value": "{}"
+            }
+        },
+        "undocumented": true,
+        "name": "obj",
+        "longname": "<anonymous>~obj",
+        "kind": "constant",
+        "memberof": "<anonymous>",
+        "scope": "inner",
+        "params": []
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                11935,
+                11979
+            ],
+            "filename": "Schema.js",
+            "lineno": 359,
+            "columnno": 12,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001571",
+                "name": "obj[undefined]",
+                "type": "CallExpression",
+                "funcscope": "<anonymous>",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "undefined]",
+        "longname": "<anonymous>~obj.undefined]",
+        "kind": "member",
+        "memberof": "<anonymous>~obj",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                12003,
+                12013
+            ],
+            "filename": "Schema.js",
+            "lineno": 361,
+            "columnno": 10,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test",
+            "code": {
+                "id": "astnode100001587",
+                "name": "v.rv",
+                "type": "Identifier",
+                "funcscope": "<anonymous>",
+                "value": "obj",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "rv",
+        "longname": "<anonymous>~v.rv",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "kind": "package",
+        "longname": "package:undefined",
+        "files": [
+            "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/test/Schema.js"
+        ]
+    }
+]
