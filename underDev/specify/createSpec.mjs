@@ -27,20 +27,20 @@ function createSpec() {
     const dev = new devTools(v);
     try {
 
-      // -------------------------------------------------------------
-      dev.step(1); // 引数の存否確認、データ型チェック ＋ ワークの準備
-      // -------------------------------------------------------------
+      dev.step(1);  // 事前処理
+      v.argv = process.argv.slice(2);  // シェルの起動時引数取得
+      v.rv = {
+        iList: [],  // 入力ファイルリスト
+        xList: [],  // 除外ファイルリスト
+        outDir: null, // 出力先フォルダ
+        list: [], // 対象ファイルリスト(入力−除外)
+      }
 
-      v.argv = process.argv.slice(2);
-      console.log(JSON.stringify(v.argv,null,2));
-
-      v.iList = [];
-      v.xList = [];
+      dev.step(2);  // 入力・出力・除外リスト作成
       for( v.i=0, v.mode='i' ; v.i<v.argv.length ; v.i++ ){
-        v.x = v.argv[v.i];
-        console.log(`l.21 v.x=${v.x}, v.mode=${v.mode}`);
+        v.x = path.resolve(v.argv[v.i]);  // 相対->絶対パス
 
-        switch(v.x){
+        switch(v.argv[v.i]){
           case '-o':
             v.mode = 'o'; break;
           case '-x':
@@ -48,14 +48,19 @@ function createSpec() {
           default:
             //console.log(`${v.i}${v.mode}: ${path.resolve(v.x)}`);
             switch( v.mode ){
-              case 'i': v.iList.push(v.x); break;
-              case 'o': v.outDir = path.resolve(v.x); break;
-              case 'x': v.xList.push(v.x); break;
+              case 'i': v.rv.iList.push(v.x); break;
+              case 'o': v.rv.outDir = v.x; break;
+              case 'x': v.rv.xList.push(v.x); break;
             }
         }
       }
 
-      v.rv = v.iList;
+      dev.step(3);  // 対象 = 入力 − 除外
+      for( v.i=0 ; v.i<v.rv.iList.length ; v.i++ ){
+        if( !v.rv.xList.includes(v.rv.iList[v.i]) ){
+          v.rv.list.push(v.rv.iList[v.i]);
+        }
+      }
 
       dev.end(); // 終了処理
       return v.rv;
@@ -68,7 +73,6 @@ function createSpec() {
 
     dev.step(1);
     pv.rv = listSource();
-    dev.step(99.71,pv.rv);
 
     dev.end(); // 終了処理
     return pv.rv;
