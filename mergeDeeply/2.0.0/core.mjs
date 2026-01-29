@@ -53,6 +53,8 @@
  *   - 配列の統合方法を整理、オプションとして指定可能に変更
  * - rev.1.0.0 : 2023/10/21 初版
  */
+import { devTools } from "../../devTools/3.0.0/core.mjs";
+import { isEqual } from "../../isEqual/1.1.0/core.mjs";
 export function mergeDeeply(sub,pri,opt={}){
   const v = {whois:`mergeDeeply`, arg:{sub,pri,opt}, rv:null,
     isObj: arg => arg && String(Object.prototype.toString.call(arg).slice(8,-1)) === 'Object',
