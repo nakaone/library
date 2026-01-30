@@ -17,7 +17,7 @@
 import path from 'path';
 import process from 'process';
 import { execFile } from "node:child_process";
-import { writeFileSync, unlinkSync } from 'node:fs';
+import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import {devTools} from '../../../library/devTools/3.0.0/core.mjs';
 import {mergeDeeply} from '../../../library/mergeDeeply/2.0.0/core.mjs';
 console.log(JSON.stringify(createSpec(),null,2));
@@ -32,17 +32,38 @@ async function createSpec() {
     const dev = new devTools(v);
     try {
 
-      dev.step(1,{list:pv.idList,map:pv.map});  // 事前処理
+      dev.step(1);  // 事前処理
       // name, description, kind, memberof, scope
 
-      v.pickup = ['name', 'description', 'kind', 'memberof', 'scope'];
+      v.rv = {
+        kindList: [], // kind属性に設定されている値のリスト
+        scopeList: [],  // scope 〃
+        sample:[],  // 代表的属性に絞り込み
+      };
+      v.ex = {  // 抽出条件
+        // scope:"global"
+        global: o => {return typeof o.scope !== 'undefined' && o.scope === 'global'},
+        // kind:"function"
+        func: o => {return typeof o.kind !== 'undefined' && o.kind === 'function'},
+      }
       pv.idList.forEach(x => {
+        dev.step(2.1);  // 代表的な属性の設定内容をチェック
         v.o = {};
-        v.pickup.forEach(p => v.o[p] = pv.map[x][p] ?? '');
-        v.rv.push(v.o);
+        ['name','description','kind','memberof','scope'].forEach(p => v.o[p] = pv.map[x][p] ?? '');
+        if( v.ex.func(pv.map[x]) ) v.rv.sample.push(v.o);
+
+        dev.step(2.2);  // v.rv.kindList
+        if( pv.map[x].hasOwnProperty('kind') && !v.rv.kindList.includes(pv.map[x].kind) ){
+          v.rv.kindList.push(pv.map[x].kind);
+        }
+
+        dev.step(2.3);  // v.rv.scopeList
+        if( pv.map[x].hasOwnProperty('scope') && !v.rv.scopeList.includes(pv.map[x].scope) ){
+          v.rv.scopeList.push(pv.map[x].scope);
+        }
       });
 
-      dev.end(v.rv); // 終了処理
+      dev.end(); // 終了処理
       return v.rv;
 
     } catch (e) { return dev.error(e); }
@@ -119,17 +140,17 @@ async function createSpec() {
 
       for( v.i=0 ; v.i<list.length ; v.i++ ){
 
-        dev.step(1.1,list[v.i]);  // JSDocを取得
+        dev.step(1.1);  // JSDocを取得
         v.arr = await runJSDoc(list[v.i]);
         if( v.arr instanceof Error ) throw v.arr;
 
-        dev.step(1.2,v.arr);  // 取得結果のチェック。配列で無い場合はメッセージを出してスキップ
+        dev.step(1.2);  // 取得結果のチェック。配列で無い場合はメッセージを出してスキップ
         if( !Array.isArray(v.arr) ){
-          dev.step(2.99,`not Array: ${JSON.stringify(v.arr)}`);
+          dev.step(1.99,`not Array: ${JSON.stringify(v.arr)}`);
           continue;
         }
 
-        dev.step(3);  // v.mapの作成
+        dev.step(2);  // v.mapの作成
         v.arr.forEach(o => {
           // 【備忘】
           // ①"meta.code.id"は存在しない場合があるので使用を断念。
@@ -137,16 +158,19 @@ async function createSpec() {
           //   -> プロジェクトのメタ情報（name, version, description など）
           //   "meta.lineno"を持たないが、仕様書作成に使用しないのでmap登録対象外とする
           if( typeof o.meta !== 'undefined' && typeof o.meta.lineno === 'number'){
-            dev.step(3.1);
-            v.id = `${list[v.i]}-${o.meta.lineno}`;
+            dev.step(2.1);  // v.mapのキー文字列(ID)の作成
+            //v.id = `${list[v.i]}-${o.meta.lineno}`;
+            v.id = `${o.meta.path ?? ''}/${o.meta.filename ?? ''}-${o.meta.lineno}`;
+
             if( pv.idList.includes(v.id) ){
-              dev.step(3.2);  // 登録済なら結合
+              dev.step(2.2);  // 登録済なら結合
               o = mergeDeeply(pv.map[v.id],o);
             } else {
-              dev.step(3.3);  // 未登録なら登録済IDリストに追加
+              dev.step(2.3);  // 未登録なら登録済IDリストに追加
               pv.idList.push(v.id);
             }
-            dev.step(3.4);
+
+            dev.step(2.4);  // pv.mapへの登録
             pv.map[v.id] = o;
           }
         });
@@ -305,9 +329,31 @@ async function createSpec() {
   const dev = new devTools(pv);
   try {
 
-    dev.step(1);  // mjsも処理対象とするため、jsdoc動作定義ファイルを作成
+    dev.step(1);  // jsdoc動作環境整備
+    // ①設定ファイル(JSON)を作成して"includePattern"を指定しないと
+    //   ".mjs"他を処理できない
+    // ②"includePattern"を指定した場合、"include"も併せて指定しないと
+    //   "There are no input files to process."エラーが発生
+    // ③"include"にカレントディレクトリを指定すると、対象をフルパスで指定しても
+    //   指定外のカレントディレクトリ配下のjs/mjsも対象にされてしまう
+    // ④③を回避するため、以下の措置を行う
+    //   - 設定ファイル(jsdoc.json)を作成、終了時に廃棄
+    //     - includeではダミーディレクトリを指定
+    //     - includepatternではJSDocを記述する全拡張子を対象に指定
+    //   - 空のダミーディレクトリを作成、終了時に廃棄
+
+    dev.step(1.1);  // jsdoc設定ファイルの作成
     pv.jsdocJson = 'jsdoc.json';
-    writeFileSync(pv.jsdocJson,JSON.stringify({source:{include:["."],includePattern:".+\\.mjs$"}}));
+    if( !existsSync(pv.jsdocJson) ){
+      writeFileSync(pv.jsdocJson,JSON.stringify({source:{
+        include:["./dummy"],
+        includePattern: ".+\\.(js|mjs|gs|txt)$" // 対象拡張子を正規表現
+      }}));
+    }
+
+    dev.step(1.2);  // ダミーディレクトリを作成
+    pv.dummyDir = './dummy';
+    if( !existsSync(pv.dummyDir) ) mkdirSync(pv.dummyDir);
 
     dev.step(2);  // 対象ファイルリスト作成
     pv.r = listSource();
@@ -317,6 +363,7 @@ async function createSpec() {
     pv.map = {};
     pv.idList = [];
     await makeMap(pv.r.list);
+    dev.step(3.99,{list:pv.idList,map:pv.map});
 
     dev.step(4);  // 出力対象要素(関数・クラス)を抽出
     pv.rv = listElement();
@@ -331,11 +378,15 @@ async function createSpec() {
     pv.rv = pv.typedef;
     */
     
-    // jsdoc動作定義ファイルを削除
-    unlinkSync(pv.jsdocJson);
-
     dev.end(pv.rv); // 終了処理
     return pv.rv;
 
-  } catch (e) { dev.error(e); return e; }
+  } catch (e) { dev.error(e); return e; } finally {
+    // jsdoc動作定義ファイルを削除
+    if( existsSync(pv.jsdocJson) )
+      unlinkSync(pv.jsdocJson);
+    // ダミーディレクトリを削除
+    //if( existsSync(pv.dummyDir) )
+      //rmSync(dummyDir, { recursive: true, force: true });
+  }
 }
