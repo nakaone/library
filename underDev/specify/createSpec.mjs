@@ -24,6 +24,29 @@ console.log(JSON.stringify(createSpec(),null,2));
 
 async function createSpec() {
   const pv = {whois:`createSpec`, arg:{}, rv:null};
+  const objectizeJSON = arg=>{try{return JSON.parse(arg)}catch{return arg}};
+
+  /** listElement: 出力対象要素(関数・クラス)を抽出 */
+  function listElement() {
+    const v = {whois:`${pv.whois}.listElement`, arg:{}, rv:[]};
+    const dev = new devTools(v);
+    try {
+
+      dev.step(1,{list:pv.idList,map:pv.map});  // 事前処理
+      // name, description, kind, memberof, scope
+
+      v.pickup = ['name', 'description', 'kind', 'memberof', 'scope'];
+      pv.idList.forEach(x => {
+        v.o = {};
+        v.pickup.forEach(p => v.o[p] = pv.map[x][p] ?? '');
+        v.rv.push(v.o);
+      });
+
+      dev.end(v.rv); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
 
   /** listSource: 対象ファイルリスト作成 */
   function listSource() {
@@ -74,7 +97,7 @@ async function createSpec() {
 
   /** runJSDoc: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
    * @param {string} fn - 対象ファイル名
-   * @returns {Object}
+   * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
    */
   function runJSDoc(fn) {
     return new Promise((resolve,reject) => {
@@ -83,8 +106,7 @@ async function createSpec() {
           reject(new Error(stderr || err.message));
           return;
         }
-        const rv = (arg=>{try{return JSON.parse(arg)}catch{return null}})(stdout);
-        resolve(rv);
+        resolve(objectizeJSON(stdout));
       });
     });
   }
@@ -95,36 +117,39 @@ async function createSpec() {
     const dev = new devTools(v);
     try {
 
-      dev.step(1);  // 事前処理
-
       for( v.i=0 ; v.i<list.length ; v.i++ ){
-        dev.step(2,list[v.i]);  // JSDocを取得
+
+        dev.step(1.1,list[v.i]);  // JSDocを取得
         v.arr = await runJSDoc(list[v.i]);
         if( v.arr instanceof Error ) throw v.arr;
 
-        dev.step(3,Array.isArray(v.arr));  // v.mapの作成
-        if( Array.isArray(v.arr) ){
-          v.arr.forEach(o => {
-            // 【備忘】
-            // ①"meta.code.id"は存在しない場合があるので使用を断念。
-            // ②'kind:"package"'
-            //   -> プロジェクトのメタ情報（name, version, description など）
-            //   "meta.lineno"を持たないが、仕様書作成に使用しないのでmap登録対象外とする
-            if( typeof o.meta !== 'undefined' && typeof o.meta.lineno === 'number'){
-              dev.step(3.1);
-              v.id = `${list[v.i]}-${o.meta.lineno}`;
-              if( pv.idList.includes(v.id) ){
-                dev.step(3.2);  // 登録済なら結合
-                o = mergeDeeply(pv.map[v.id],o);
-              } else {
-                dev.step(3.3);  // 未登録なら登録済IDリストに追加
-                pv.idList.push(v.id);
-              }
-              dev.step(3.4);
-              pv.map[v.id] = o;
-            }
-          });
+        dev.step(1.2,v.arr);  // 取得結果のチェック。配列で無い場合はメッセージを出してスキップ
+        if( !Array.isArray(v.arr) ){
+          dev.step(2.99,`not Array: ${JSON.stringify(v.arr)}`);
+          continue;
         }
+
+        dev.step(3);  // v.mapの作成
+        v.arr.forEach(o => {
+          // 【備忘】
+          // ①"meta.code.id"は存在しない場合があるので使用を断念。
+          // ②'kind:"package"'
+          //   -> プロジェクトのメタ情報（name, version, description など）
+          //   "meta.lineno"を持たないが、仕様書作成に使用しないのでmap登録対象外とする
+          if( typeof o.meta !== 'undefined' && typeof o.meta.lineno === 'number'){
+            dev.step(3.1);
+            v.id = `${list[v.i]}-${o.meta.lineno}`;
+            if( pv.idList.includes(v.id) ){
+              dev.step(3.2);  // 登録済なら結合
+              o = mergeDeeply(pv.map[v.id],o);
+            } else {
+              dev.step(3.3);  // 未登録なら登録済IDリストに追加
+              pv.idList.push(v.id);
+            }
+            dev.step(3.4);
+            pv.map[v.id] = o;
+          }
+        });
       }
 
       dev.end(); // 終了処理
@@ -282,28 +307,33 @@ async function createSpec() {
 
     dev.step(1);  // mjsも処理対象とするため、jsdoc動作定義ファイルを作成
     pv.jsdocJson = 'jsdoc.json';
-    writeFileSync(pv.jsdocJson,JSON.stringify({source:{includePattern:".+\\.mjs$"}}));
+    writeFileSync(pv.jsdocJson,JSON.stringify({source:{include:["."],includePattern:".+\\.mjs$"}}));
 
     dev.step(2);  // 対象ファイルリスト作成
     pv.r = listSource();
     if( pv.r instanceof Error ) throw pv.r;
 
-    dev.step(3);  // 「ファイル名＋(ファイル内)行番号」を識別子とするマップを作成
+    dev.step(3,pv.r);  // 「ファイル名＋(ファイル内)行番号」を識別子とするマップを作成
     pv.map = {};
     pv.idList = [];
     await makeMap(pv.r.list);
 
+    dev.step(4);  // 出力対象要素(関数・クラス)を抽出
+    pv.rv = listElement();
+
+    /*
     dev.step(4);  // データ型定義をMarkdown出力用オブジェクトに変換
     pv.typedef = [];
     pv.idList.forEach(x => {
       pv.r = typedef(pv.map[x]);
       if( pv.r !== null ) pv.typedef.push(pv.r);
     });
+    pv.rv = pv.typedef;
+    */
     
     // jsdoc動作定義ファイルを削除
     unlinkSync(pv.jsdocJson);
 
-    pv.rv = pv.typedef;
     dev.end(pv.rv); // 終了処理
     return pv.rv;
 
