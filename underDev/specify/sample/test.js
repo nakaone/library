@@ -12,11 +12,18 @@
  *   - サブ項目
  * @typedef {Object} globalDef
  * - typedef後の補足説明
- * @property {typeDef[]|columnDef[]} main=[] - グローバル領域にあるJSDoc
+ * @property {typeDef[]|columnDef[]} [main=[]] - グローバル領域にあるJSDoc
  * @property {Object} class - クラス定義にかかるJSDoc
  * @property {columnDef[]} [class.method] - 任意項目確認用
  * 
  * - 末尾にある補足説明
+ */
+
+/**
+ * @interface User
+ * @property {string} name
+ * @property {number} age
+ * @property {boolean} isAdmin
  */
 
 /** func01: 関数テスト
@@ -52,17 +59,18 @@ function func01(arg){
 /**
  * @class
  * @classdesc テスト用クラス
- * @extends Error
+ * @extends BaseClass
  * @prop {Object} opt - 起動時オプション
  */
-class class01 extends Error {
+class class01 extends BaseClass {
   /**
    * @typedef {Object} typeDef - JSDocのデータ型定義単位のオブジェクト
    * @property {string} name - データ型の定義名
    * @property {columnDef[]} list - 項目(メンバ)のリスト
    */
 
-  /**
+  /** class01のconstructor
+   * - constructorの説明
    * @constructor
    * @param {bigint} arg - typeはテスト用
    */

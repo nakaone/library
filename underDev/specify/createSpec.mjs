@@ -13,6 +13,9 @@
  *   ../Auth/src/**／*.(js|mjs) ../Auth/src/**／*.md \
  *   -o ../Auth/tmp \
  *   -x ../Auth/src/server/*
+ * 
+ * データ型判定等は以下参照
+ * https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0
  */
 import path from 'path';
 import process from 'process';
@@ -26,44 +29,130 @@ async function createSpec() {
   const pv = {whois:`createSpec`, arg:{}, rv:null};
   const objectizeJSON = arg=>{try{return JSON.parse(arg)}catch{return arg}};
 
-  /** listElement: 出力対象要素(関数・クラス)を抽出 */
-  function listElement() {
-    const v = {whois:`${pv.whois}.listElement`, arg:{}, rv:[]};
+  /** investigate: jsdoc -Xで出力されたオブジェクトの内容を調査
+   * @example
+   * - コンソールの内容をresult.txt等に保存
+   * - "createSpec.investigate normal end"を検索
+   * - result欄の内容確認(以下はサンプル)
+   *   result:  [
+   *     "10: typedef", // string   ※行頭数字はシンボル(関数・クラス・プロパティ)の行番号
+   *     "22: interface", // string
+   *     "34: global function", // string
+   *     "39: inner function(func01~arrow01)", ※括弧内は親関数・クラス
+   *     "40: typedef", // string
+   *     "46: unknown", // string
+   *     "49: typedef", // string
+   *     "55: unknown", // string
+   *     "65: class", // string
+   *     "66: typedef", // string
+   *     "77: constructor(class01)", // string
+   *     "85: unknown", // string
+   *     "92: method(class01#method01)", // string
+   *   ], // Array
+   */
+  function investigate() {
+    const v = {whois:`${pv.whois}.investigate`, arg:{}, rv:[]};
     const dev = new devTools(v);
     try {
 
+      // -------------------------------------------------------------
       dev.step(1);  // 事前処理
-      // name, description, kind, memberof, scope
-
-      v.rv = {
-        kindList: [], // kind属性に設定されている値のリスト
-        scopeList: [],  // scope 〃
-        sample:[],  // 代表的属性に絞り込み
+      // -------------------------------------------------------------
+      dev.step(1.1);  // 戻り値の形式定義
+      v.rv = {  
+        idListLength: pv.idList.length, // 対象JSDoc要素数
+        idList: pv.idList,              // 対象JSDoc要素のIDリスト
+        result: [],                     // 判定結果
+        kindList: [],                   // kind属性に設定されている値のリスト
+        scopeList: [],                  // scope 〃
+        sampleNum: 0,                   // サンプルの件数
+        sample:[],                      // サンプルのダンプ
       };
-      v.ex = {  // 抽出条件
-        // scope:"global"
+
+      dev.step(1.2);  // 抽出条件の定義
+      v.ex = {  
+        // ①scope:"global"
         global: o => {return typeof o.scope !== 'undefined' && o.scope === 'global'},
-        // kind:"function"
+        // ②kind:"typedef"
+        typedef: o => {return typeof o.kind !== 'undefined' && o.kind === 'typedef'},
+        // ③kind:"function"
         func: o => {return typeof o.kind !== 'undefined' && o.kind === 'function'},
+        // ④kind: "class"
+        class: o => {return typeof o.kind !== 'undefined' && o.kind === 'class'},
+        // ⑤meta.code.type:"MethodDefinition"
+        method: o => o.meta?.code?.type === "MethodDefinition",
+        // ⑥判定テストで「unknown」
+        unknown: o => / unknown$/.test(o.result),
       }
+
+      dev.step(1.3);  // サンプルの表示方法指定
+      v.st = {
+        all: o => o,  // 全属性表示
+        major: o => {const rv = {}; // 主要属性のみ抽出
+          ['name','description','kind','memberof','scope']
+          .forEach(x => rv[x] = o[x] ?? '');
+          return rv;
+        },
+      }
+
+      dev.step(1.4);  // 適用条件の指定
+      v.cond = v.ex.unknown; // 適用する抽出条件
+      v.disp = v.st.all;  // サンプルの表示方法
+
+      // -------------------------------------------------------------
+      dev.step(2);  // JSDoc要素毎に検査実施
+      // なおテストに伴いJSDoc要素に"id","result"メンバが追加されるので注意
+      // -------------------------------------------------------------
       pv.idList.forEach(x => {
-        dev.step(2.1);  // 代表的な属性の設定内容をチェック
-        v.o = {};
-        ['name','description','kind','memberof','scope'].forEach(p => v.o[p] = pv.map[x][p] ?? '');
-        if( v.ex.func(pv.map[x]) ) v.rv.sample.push(v.o);
 
-        dev.step(2.2);  // v.rv.kindList
-        if( pv.map[x].hasOwnProperty('kind') && !v.rv.kindList.includes(pv.map[x].kind) ){
-          v.rv.kindList.push(pv.map[x].kind);
-        }
+        dev.step(2.1);  // idを追加
+        v.mObj = Object.assign({id:x},pv.map[x]);
 
-        dev.step(2.3);  // v.rv.scopeList
-        if( pv.map[x].hasOwnProperty('scope') && !v.rv.scopeList.includes(pv.map[x].scope) ){
-          v.rv.scopeList.push(pv.map[x].scope);
+        dev.step(2.2);  // 指定属性の値一覧を作成
+        ['kind','scope'].forEach(p => {
+          if( v.mObj.hasOwnProperty(p) && !v.rv[`${p}List`].includes(v.mObj[p]) ){
+            v.rv[`${p}List`].push(v.mObj[p]);
+          }
+        });
+
+        dev.step(2.3);  // 判定テスト
+        v.mObj.result = v.mObj.meta.lineno + ': ';
+        switch( v.mObj.kind ){
+          case 'typedef':
+            v.mObj.result +=  'typedef';
+            break;
+          case 'interface':
+            v.mObj.result +=  'interface';
+            break;
+          case 'function':
+            switch( v.mObj.scope ){
+              case 'global': v.mObj.result +=  'global function'; break;
+              case 'inner': v.mObj.result +=  `inner function(${v.mObj.longname})`; break;
+              case 'instance': v.mObj.result +=  `method(${v.mObj.longname})`;
+                break;
+              default: v.mObj.result +=  `unknown`;
+            }
+            break;
+          case 'class':
+            switch( v.mObj.meta.code.type ){
+              case 'ClassDeclaration': v.mObj.result +=  'class'; break;
+              case 'MethodDefinition': v.mObj.result +=  `constructor(${v.mObj.longname})`; break;
+              default: v.mObj.result +=  'unknown';
+            }
+            break;
+          default: v.mObj.result +=  `unknown`;
         }
+        v.rv.result.push(v.mObj.result);
+
+        dev.step(2.4);  // 抽出条件に従ってサンプルを追加
+        if( v.cond(v.mObj) ) v.rv.sample.push(v.disp(v.mObj));
+
       });
 
-      dev.end(); // 終了処理
+      dev.step(3);  // 終了処理
+      // サンプル数を戻り値にセット
+      v.rv.sampleNum = v.rv.sample.length;
+      dev.end(v.rv);
       return v.rv;
 
     } catch (e) { return dev.error(e); }
@@ -363,10 +452,10 @@ async function createSpec() {
     pv.map = {};
     pv.idList = [];
     await makeMap(pv.r.list);
-    dev.step(3.99,{list:pv.idList,map:pv.map});
+    //dev.step(3.99,{list:pv.idList,map:pv.map});
 
     dev.step(4);  // 出力対象要素(関数・クラス)を抽出
-    pv.rv = listElement();
+    investigate();
 
     /*
     dev.step(4);  // データ型定義をMarkdown出力用オブジェクトに変換
