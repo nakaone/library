@@ -31,8 +31,10 @@
  * @property {boolean} isAdmin
  * @function
  * @name User#test
+ * @desc オブジェクト内関数の説明
  * @param {string} arg
  * @returns {boolean|Error}
+ * @example オブジェクト内関数の使用例
  */
 
 /** func01: 関数テスト

@@ -46,8 +46,21 @@
  * - 説明文(=Markdownとして出力する説明)
  *   - 「＠name (説明文のタイトル)」＋「＠desc」で開始
  *   - 「＠name」がない説明文は出力されない(廃棄)
- *   - ＠name使用時「／**」以降に続く文字列は廃棄される
+ *   - ＠name使用時「／**」以降に続く文字列は廃棄される(上記の例外)
  *   - ＠desc以降はMarkdownとして扱われ、共通する先頭の空白は削除される
+ * - ＠interface内での＠function定義は可能だが、＠typedef内では不可とする
+ *   ```
+ *   ＠interface User
+ *   ＠property {string} name
+ *   ＠property {number} age
+ *   ＠property {boolean} isAdmin
+ *   ＠function ※ここには記述不可
+ *   ＠name User#test ※ここには記述不可
+ *   ＠desc オブジェクト内関数の説明
+ *   ＠param {string} arg
+ *   ＠returns {boolean|Error}
+ *   ＠example オブジェクト内関数の使用例
+ *   ```
  * 
  * # 参考資料
  * 
@@ -86,12 +99,17 @@ async function createSpec() {
      * @name DocLetの型判定ロジック
      * @desc
      * 
+     * 本メソッドはinvestigateメソッド＋AIとの質疑に基づき作成
+     * 
      * 以下第一レベルが戻り値となる文字列、並列表記はand条件
      * 
      * - typedef
      *   - kind === 'typedef'
      * - interface
      *   - kind === 'interface'
+     * - innerObj(interface内function定義)
+     *   - kind === 'function'
+     *   - scope === 'instance'
      * - class
      *   - kind === 'class'
      *   - meta.code.type === "ClassDeclaration" || "ClassExpression"
@@ -105,7 +123,7 @@ async function createSpec() {
      * - function(グローバル関数) ※アロー関数を含む
      *   - kind === 'function'
      *   - scope === 'global'
-     * - inner(内部関数) ※アロー関数を含む
+     * - innerFunc(関数内関数) ※アロー関数を含む
      *   - kind === 'function'
      *   - scope === 'inner'
      * - description(説明文(＠name))
@@ -113,6 +131,7 @@ async function createSpec() {
      *   - meta.code.nameがundefined(プラグインや拡張を考慮する場合には必要)
      *   - kindがtypedef/interface 以外
      *   - nameが存在
+     * 
      */
 
     try {
@@ -392,6 +411,17 @@ async function createSpec() {
      * 3. データ型一覧("フォルダ名_type")
      * 4. 個別データ型("フォルダ名-データ型名") ※注意：'_'ではなく'-'
      */
+    /**
+     * @name 中間データオブジェクトの形式
+     * {
+     *   パス名: {  ※固有部分のパスについて'/'を'_'に変換したもの
+     *     グローバル関数・クラス名: {
+     *     },
+     *     "readme": {   ※一覧文書(フォルダ毎)
+     *     }
+     *   }
+     * }
+     */
     /** articleObj: 単一記事(タイトル＋本文)のデータ型
      * - `<!--::記事のID::-->`で他記事も埋め込み可とする
      * - アンカーのidは識別子を小文字変換したものとする
@@ -406,14 +436,6 @@ async function createSpec() {
      * @prop {string} [middle] - タイトルの後・記事の前に〃
      * @prop {string} [bottom] - 記事の後に〃
      * @prop {string} content - 記事本文
-     */
-    /**
-     * @name 中間データオブジェクトの形式
-     * {
-     *   パス名: {  固有部分のパスについて'/'を
-     * 
-     *   }
-     * }
      */
     try {
 
