@@ -5,6 +5,24 @@
  * 
  * JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成する。
  * 
+ * - クラス・グローバル関数毎に別ファイル化
+ * - typedef,interfaceはまとめて"readme.md"としてフォルダ毎に作成
+ * - 出力フォルダは入力ファイルのフォルダと同じ構成(パスの共通部分を出力フォルダで置換)
+ *   ```
+ *   /Users/xxx/〜/library/yyy/src/common/z01.js <- class a01,function a02
+ *   /Users/xxx/〜/library/yyy/src/client/z02.js <- class a03
+ *   /Users/xxx/〜/library/yyy/src/server/z03.js <- class a04
+ * 
+ *   出力先フォルダが"../doc"の場合
+ *   ../doc/common/a01.md
+ *   ../doc/common/a02.md ※a01,a02は別ファイル
+ *   ../doc/common/readme.md ※typedef,interface集
+ *   ../doc/client/a03.md
+ *   ../doc/client/readme.md
+ *   ../doc/server/a04.md
+ *   ../doc/server/readme.md
+ *   ```
+ * 
  * # 使用方法
  * 
  * ```
@@ -108,6 +126,8 @@ async function createSpec() {
   }
 
   /** investigate: jsdoc -Xで出力されたオブジェクトの内容を調査
+   * @param {void}
+   * @returns {Object|Error} データ型はstep 1.1参照
    * @example
    * - コンソールの内容をresult.txt等に保存
    * - "createSpec.investigate normal end"を検索
@@ -284,22 +304,6 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
 
-  /** runJSDoc: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
-   * @param {string} fn - 対象ファイル名
-   * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
-   */
-  function runJSDoc(fn) {
-    return new Promise((resolve,reject) => {
-      execFile('jsdoc',[fn,'--configure',pv.jsdocJson,'-X'],{encoding:'utf8'},(err,stdout,stderr)=>{
-        if(err){
-          reject(new Error(stderr || err.message));
-          return;
-        }
-        resolve(objectizeJSON(stdout));
-      });
-    });
-  }
-
   /** makeMap: 「ファイル名＋行番号」を識別子とするマップを作成 */
   async function makeMap(list){
     const v = {whois:`${pv.whois}.makeMap`, arg:{list}, rv:{}};
@@ -348,6 +352,93 @@ async function createSpec() {
       return v.rv;
 
     } catch (e) { return dev.error(e); }
+  }
+
+  /** makeMarkdown: Markdown形式の仕様書を作成
+   * @param 
+   */
+  function makeMarkdown(arg) {
+    const v = {whois:`${pv.whois}.identifyDocletType`, arg:{arg}, rv:[]};
+    const dev = new devTools(v);
+    /**
+     * @name クラス・グローバル関数文書の構成
+     * @desc
+     * 
+     * 1. ヘッダ部("クラス名_top")
+     *    1. タイトル(○○クラス仕様書、等)
+     *    2. ラベル(一行にまとめた説明)
+     *    3. 概要説明(数行程度)
+     * 2. 詳細説明("クラス名_desc")
+     *    - 
+     * 3. 一覧
+     *    1. メンバ一覧("クラス名_prop")
+     *    2. メソッド一覧("クラス名_func")
+     * 4. 個別メソッド("クラス名-メソッド名") ※注意：'_'ではなく'-'
+     *    1. タイトル(クラス名.メソッド名)("クラス名-メソッド名_top")
+     *    2. ラベル(一行にまとめた説明)
+     *    3. 機能概要(数行程度)
+     *    4. 詳細説明
+     *    5. 引数
+     *    6. 戻り値
+     */
+    /**
+     * @name 一覧文書(フォルダ毎)の構成
+     * @desc
+     * 
+     * - 並び順はフォルダ内のデータ型名順(アルファベット順)
+     * 
+     * 1. ヘッダ部("フォルダ名_top")
+     * 2. グローバル関数・クラス一覧("フォルダ名_list")
+     * 3. データ型一覧("フォルダ名_type")
+     * 4. 個別データ型("フォルダ名-データ型名") ※注意：'_'ではなく'-'
+     */
+    /** articleObj: 単一記事(タイトル＋本文)のデータ型
+     * - `<!--::記事のID::-->`で他記事も埋め込み可とする
+     * - アンカーのidは識別子を小文字変換したものとする
+     * 
+     * @interface articleObj
+     * @prop {string} id - 記事の識別子
+     * @prop {string} title - 記事のタイトル
+     * @prop {string} [icon] - アイコンを付ける場合に設定
+     * @prop {boolean} [anchor=false] - アンカーを設定する場合に設定(`<span id="〜">`)
+     * @prop {string} [link] - タイトルにリンクを張る場合の参照先URL
+     * @prop {string} [top] - タイトルの前に挿入する文字列(固定メニュー等)
+     * @prop {string} [middle] - タイトルの後・記事の前に〃
+     * @prop {string} [bottom] - 記事の後に〃
+     * @prop {string} content - 記事本文
+     */
+    /**
+     * @name 中間データオブジェクトの形式
+     * {
+     *   パス名: {  固有部分のパスについて'/'を
+     * 
+     *   }
+     * }
+     */
+    try {
+
+      // -------------------------------------------------------------
+
+      dev.end(v.rv);
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** runJSDoc: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
+   * @param {string} fn - 対象ファイル名
+   * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
+   */
+  function runJSDoc(fn) {
+    return new Promise((resolve,reject) => {
+      execFile('jsdoc',[fn,'--configure',pv.jsdocJson,'-X'],{encoding:'utf8'},(err,stdout,stderr)=>{
+        if(err){
+          reject(new Error(stderr || err.message));
+          return;
+        }
+        resolve(objectizeJSON(stdout));
+      });
+    });
   }
 
   /** trimCommonIndent: 文字列の配列から全要素に共通する先頭の空白を削除
@@ -511,7 +602,7 @@ async function createSpec() {
     //   - 空のダミーディレクトリを作成、終了時に廃棄
 
     dev.step(1.1);  // jsdoc設定ファイルの作成
-    pv.jsdocJson = 'jsdoc.json';
+    pv.jsdocJson = `jsdoc.${Date.now()}.json`;
     if( !existsSync(pv.jsdocJson) ){
       writeFileSync(pv.jsdocJson,JSON.stringify({source:{
         include:["./dummy"],
@@ -554,7 +645,7 @@ async function createSpec() {
     if( existsSync(pv.jsdocJson) )
       unlinkSync(pv.jsdocJson);
     // ダミーディレクトリを削除
-    //if( existsSync(pv.dummyDir) )
-      //rmSync(dummyDir, { recursive: true, force: true });
+    if( existsSync(pv.dummyDir) )
+      rmSync(pv.dummyDir, { recursive: true, force: true });
   }
 }

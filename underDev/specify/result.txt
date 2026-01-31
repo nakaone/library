@@ -1,6 +1,6 @@
-12:21:55.530 [0001]createSpec start
-12:21:55.531 [0002]createSpec.listSource start
-12:21:55.532 [0002]createSpec.listSource normal end
+15:11:07.525 [0001]createSpec start
+15:11:07.526 [0002]createSpec.listSource start
+15:11:07.527 [0002]createSpec.listSource normal end
 == [0001]createSpec step.3 {
   iList:  [
     "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js", // string
@@ -11,79 +11,78 @@
     "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js", // string
   ], // Array
 }
-12:21:55.532 [0003]createSpec.makeMap start
+15:11:07.527 [0003]createSpec.makeMap start
 {}
-12:21:55.664 [0004]mergeDeeply start
-12:21:55.664 [0005]mergeDeeply start
-12:21:55.664 [0006]mergeDeeply start
-12:21:55.665 [0006]mergeDeeply normal end
-12:21:55.665 [0007]mergeDeeply start
-12:21:55.665 [0007]mergeDeeply normal end
-12:21:55.665 [0005]mergeDeeply normal end
-12:21:55.665 [0004]mergeDeeply normal end
-12:21:55.665 [0008]mergeDeeply start
-12:21:55.665 [0009]mergeDeeply start
-12:21:55.665 [0010]mergeDeeply start
-12:21:55.666 [0010]mergeDeeply normal end
-12:21:55.666 [0011]mergeDeeply start
-12:21:55.666 [0011]mergeDeeply normal end
-12:21:55.666 [0009]mergeDeeply normal end
-12:21:55.666 [0008]mergeDeeply normal end
-12:21:55.666 [0012]mergeDeeply start
-12:21:55.666 [0013]mergeDeeply start
-12:21:55.666 [0014]mergeDeeply start
-12:21:55.666 [0014]mergeDeeply normal end
-12:21:55.666 [0015]mergeDeeply start
-12:21:55.666 [0016]mergeDeeply start
-12:21:55.666 [0016]mergeDeeply normal end
-12:21:55.666 [0015]mergeDeeply normal end
-12:21:55.666 [0013]mergeDeeply normal end
-12:21:55.666 [0017]mergeDeeply start
-12:21:55.666 [0017]mergeDeeply normal end
-12:21:55.666 [0018]mergeDeeply start
-12:21:55.667 [0018]mergeDeeply normal end
-12:21:55.667 [0012]mergeDeeply normal end
-12:21:55.667 [0003]createSpec.makeMap normal end
-12:21:55.667 [0019]createSpec.investigate start
-12:21:55.667 [0019]createSpec.investigate normal end
+15:11:07.654 [0004]mergeDeeply start
+15:11:07.654 [0005]mergeDeeply start
+15:11:07.654 [0006]mergeDeeply start
+15:11:07.654 [0006]mergeDeeply normal end
+15:11:07.654 [0007]mergeDeeply start
+15:11:07.654 [0007]mergeDeeply normal end
+15:11:07.654 [0005]mergeDeeply normal end
+15:11:07.655 [0004]mergeDeeply normal end
+15:11:07.655 [0008]mergeDeeply start
+15:11:07.655 [0009]mergeDeeply start
+15:11:07.655 [0010]mergeDeeply start
+15:11:07.655 [0010]mergeDeeply normal end
+15:11:07.655 [0011]mergeDeeply start
+15:11:07.655 [0011]mergeDeeply normal end
+15:11:07.655 [0009]mergeDeeply normal end
+15:11:07.655 [0008]mergeDeeply normal end
+15:11:07.655 [0012]mergeDeeply start
+15:11:07.655 [0013]mergeDeeply start
+15:11:07.655 [0014]mergeDeeply start
+15:11:07.655 [0014]mergeDeeply normal end
+15:11:07.656 [0015]mergeDeeply start
+15:11:07.656 [0016]mergeDeeply start
+15:11:07.656 [0016]mergeDeeply normal end
+15:11:07.656 [0015]mergeDeeply normal end
+15:11:07.656 [0013]mergeDeeply normal end
+15:11:07.656 [0017]mergeDeeply start
+15:11:07.656 [0017]mergeDeeply normal end
+15:11:07.656 [0018]mergeDeeply start
+15:11:07.656 [0018]mergeDeeply normal end
+15:11:07.656 [0012]mergeDeeply normal end
+15:11:07.656 [0003]createSpec.makeMap normal end
+15:11:07.656 [0019]createSpec.investigate start
+15:11:07.657 [0019]createSpec.investigate normal end
 {
   idListLength:14, // number
   idList:  [
     "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-1", // string
     "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-15", // string
     "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-27", // string
-    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-39", // string
-    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-44", // string
-    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-45", // string
-    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-51", // string
-    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-54", // string
-    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-60", // string
-    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-70", // string
-    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-71", // string
-    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-82", // string
-    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-90", // string
-    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-97", // string
+    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-43", // string
+    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-48", // string
+    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-49", // string
+    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-55", // string
+    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-58", // string
+    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-64", // string
+    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-74", // string
+    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-75", // string
+    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-86", // string
+    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-94", // string
+    "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-101", // string
   ], // Array
   result:  [
     "1: unknown", // string
     "15: typedef", // string
-    "27: interface", // string
-    "39: global function", // string
-    "44: inner function(func01~arrow01)", // string
-    "45: typedef", // string
-    "51: unknown", // string
-    "54: typedef", // string
-    "60: unknown", // string
-    "70: class", // string
-    "71: typedef", // string
-    "82: constructor(class01)", // string
-    "90: unknown", // string
-    "97: method(class01#method01)", // string
+    "27: method(User#test)", // string
+    "43: global function", // string
+    "48: inner function(func01~arrow01)", // string
+    "49: typedef", // string
+    "55: unknown", // string
+    "58: typedef", // string
+    "64: unknown", // string
+    "74: class", // string
+    "75: typedef", // string
+    "86: constructor(class01)", // string
+    "94: unknown", // string
+    "101: method(class01#method01)", // string
   ], // Array
   kindList:  [
     "member", // string
     "typedef", // string
-    "interface", // string
     "function", // string
     "constant", // string
     "class", // string
@@ -91,8 +90,8 @@
   scopeList:  [
     "static", // string
     "global", // string
-    "inner", // string
     "instance", // string
+    "inner", // string
   ], // Array
   sampleNum:14, // number
   sample:  [
@@ -217,6 +216,10 @@
  * @property {string} name
  * @property {number} age
  * @property {boolean} isAdmin
+ * @function
+ * @name User#test
+ * @param {string} arg
+ * @returns {boolean|Error}
  */", // string
       meta:      {
         filename:"test.js", // string
@@ -225,8 +228,8 @@
         path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample", // string
         code:        { /* Object, empty */ }, // object
       }
-      kind:"interface", // string
-      name:"User", // string
+      kind:"function", // string
+      name:"test", // string
       properties:      [
         {
           type:          {
@@ -253,12 +256,33 @@
           name:"isAdmin", // string
         }
       ], // Array
-      longname:"User", // string
-      scope:"global", // string
-      result:"27: interface", // string
+      params:      [
+        {
+          type:          {
+            names:            [
+              "string", // string
+            ], // Array
+          }
+          name:"arg", // string
+        }
+      ], // Array
+      returns:      [
+        {
+          type:          {
+            names:            [
+              "boolean", // string
+              "Error", // string
+            ], // Array
+          }
+        }
+      ], // Array
+      memberof:"User", // string
+      longname:"User#test", // string
+      scope:"instance", // string
+      result:"27: method(User#test)", // string
     }
     {
-      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-39", // string
+      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-43", // string
       comment:"/** func01: 関数テスト
  * 関数テスト説明文
  * @param {number} arg - 引数
@@ -266,11 +290,11 @@
  */", // string
       meta:      {
         range:        [
-          690, // number
-          1346, // number
+          773, // number
+          1429, // number
         ], // Array
         filename:"test.js", // string
-        lineno:39, // number
+        lineno:43, // number
         columnno:0, // number
         path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample", // string
         code:        {
@@ -314,21 +338,21 @@
       longname:"func01", // string
       kind:"function", // string
       scope:"global", // string
-      result:"39: global function", // string
+      result:"43: global function", // string
     }
     {
-      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-44", // string
+      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-48", // string
       comment:"/** arrow01: アローテスト
    * @param {string} arg - 引数
    * @returns {string} 戻り値
    */", // string
       meta:      {
         range:        [
-          805, // number
-          1083, // number
+          888, // number
+          1166, // number
         ], // Array
         filename:"test.js", // string
-        lineno:44, // number
+        lineno:48, // number
         columnno:8, // number
         path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample", // string
         code:        {
@@ -367,10 +391,10 @@
       kind:"function", // string
       memberof:"func01", // string
       scope:"inner", // string
-      result:"44: inner function(func01~arrow01)", // string
+      result:"48: inner function(func01~arrow01)", // string
     }
     {
-      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-45", // string
+      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-49", // string
       comment:"/**
      * @typedef {Object} arrowDef - JSDocの関数・メソッド単位のオブジェクト
      * @property {string} name - 関数・メソッド名
@@ -378,7 +402,7 @@
      */", // string
       meta:      {
         filename:"test.js", // string
-        lineno:45, // number
+        lineno:49, // number
         columnno:4, // number
         path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample", // string
         code:        { /* Object, empty */ }, // object
@@ -415,18 +439,18 @@
       ], // Array
       longname:"arrowDef", // string
       scope:"global", // string
-      result:"45: typedef", // string
+      result:"49: typedef", // string
     }
     {
-      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-51", // string
+      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-55", // string
       comment:"/** @type {number} */", // string
       meta:      {
         range:        [
-          1051, // number
-          1063, // number
+          1134, // number
+          1146, // number
         ], // Array
         filename:"test.js", // string
-        lineno:51, // number
+        lineno:55, // number
         columnno:10, // number
         path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample", // string
         code:        {
@@ -447,10 +471,10 @@
       memberof:"func01~arrow01", // string
       scope:"inner", // string
       params:      [ /* Array, length 0 */ ], // object
-      result:"51: unknown", // string
+      result:"55: unknown", // string
     }
     {
-      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-54", // string
+      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-58", // string
       comment:"/**
    * @typedef {Object} funcDef - JSDocの関数・メソッド単位のオブジェクト
    * @property {string} name - 関数・メソッド名
@@ -458,7 +482,7 @@
    */", // string
       meta:      {
         filename:"test.js", // string
-        lineno:54, // number
+        lineno:58, // number
         columnno:2, // number
         path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample", // string
         code:        { /* Object, empty */ }, // object
@@ -495,22 +519,22 @@
       ], // Array
       longname:"funcDef", // string
       scope:"global", // string
-      result:"54: typedef", // string
+      result:"58: typedef", // string
     }
     {
-      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-60", // string
+      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-64", // string
       comment:"", // string
       meta:      {
         range:        [
-          1313, // number
-          1329, // number
-          1302, // number
-          1311, // number
-          1296, // number
-          1330, // number
+          1396, // number
+          1412, // number
+          1385, // number
+          1394, // number
+          1379, // number
+          1413, // number
         ], // Array
         filename:"test.js", // string
-        lineno:60, // number
+        lineno:64, // number
         columnno:8, // number
         path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample", // string
         code:        {
@@ -532,10 +556,10 @@
         ], // Array
       }
       params:      [ /* Array, length 0 */ ], // object
-      result:"60: unknown", // string
+      result:"64: unknown", // string
     }
     {
-      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-70", // string
+      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-74", // string
       comment:"/**
  * @class
  * @classdesc テスト用クラス
@@ -544,11 +568,11 @@
  */", // string
       meta:      {
         range:        [
-          1443, // number
-          2147, // number
+          1526, // number
+          2230, // number
         ], // Array
         filename:"test.js", // string
-        lineno:70, // number
+        lineno:74, // number
         columnno:0, // number
         path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample", // string
         code:        {
@@ -593,10 +617,10 @@
         }
       ], // Array
       undocumented:true, // boolean
-      result:"70: class", // string
+      result:"74: class", // string
     }
     {
-      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-71", // string
+      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-75", // string
       comment:"/**
    * @typedef {Object} typeDef - JSDocのデータ型定義単位のオブジェクト
    * @property {string} name - データ型の定義名
@@ -604,7 +628,7 @@
    */", // string
       meta:      {
         filename:"test.js", // string
-        lineno:71, // number
+        lineno:75, // number
         columnno:2, // number
         path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample", // string
         code:        { /* Object, empty */ }, // object
@@ -639,10 +663,10 @@
       ], // Array
       longname:"typeDef", // string
       scope:"global", // string
-      result:"71: typedef", // string
+      result:"75: typedef", // string
     }
     {
-      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-82", // string
+      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-86", // string
       comment:"/** class01のconstructor
    * - constructorの説明
    * @constructor
@@ -650,11 +674,11 @@
    */", // string
       meta:      {
         range:        [
-          1744, // number
-          1962, // number
+          1827, // number
+          2045, // number
         ], // Array
         filename:"test.js", // string
-        lineno:82, // number
+        lineno:86, // number
         columnno:2, // number
         path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample", // string
         code:        {
@@ -687,18 +711,18 @@
       longname:"class01", // string
       scope:"global", // string
       undocumented:true, // boolean
-      result:"82: constructor(class01)", // string
+      result:"86: constructor(class01)", // string
     }
     {
-      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-90", // string
+      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-94", // string
       comment:"", // string
       meta:      {
         range:        [
-          1943, // number
-          1957, // number
+          2026, // number
+          2040, // number
         ], // Array
         filename:"test.js", // string
-        lineno:90, // number
+        lineno:94, // number
         columnno:4, // number
         path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample", // string
         code:        {
@@ -715,21 +739,21 @@
       kind:"member", // string
       memberof:"class01", // string
       scope:"instance", // string
-      result:"90: unknown", // string
+      result:"94: unknown", // string
     }
     {
-      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-97", // string
+      id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js-101", // string
       comment:"/** method01: メソッドテスト
    * @param {number} arg - method01の引数
    * @returns {{qId:number,name:string}} NG: qId,name指定無しのObjectになる
    */", // string
       meta:      {
         range:        [
-          2103, // number
-          2145, // number
+          2186, // number
+          2228, // number
         ], // Array
         filename:"test.js", // string
-        lineno:97, // number
+        lineno:101, // number
         columnno:2, // number
         path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample", // string
         code:        {
@@ -771,9 +795,9 @@
       kind:"function", // string
       memberof:"class01", // string
       scope:"instance", // string
-      result:"97: method(class01#method01)", // string
+      result:"101: method(class01#method01)", // string
     }
   ], // Array
 }
-12:21:55.668 [0001]createSpec normal end
+15:11:07.657 [0001]createSpec normal end
 null // null

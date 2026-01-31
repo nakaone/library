@@ -29,6 +29,10 @@
  * @property {string} name
  * @property {number} age
  * @property {boolean} isAdmin
+ * @function
+ * @name User#test
+ * @param {string} arg
+ * @returns {boolean|Error}
  */
 
 /** func01: 関数テスト

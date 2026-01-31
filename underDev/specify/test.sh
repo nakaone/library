@@ -2,7 +2,7 @@
 
 # sample
 node createSpec.mjs sample/test.js -o ./ > result.txt 2> error.txt
-jsdoc -X sample/test.js > jsdoc.json
+jsdoc -X sample/test.js > sample.json
 #jsdoc -X sample/test.js > result.txt 2> error.txt
 
 # auth系
