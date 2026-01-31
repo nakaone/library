@@ -1,12 +1,39 @@
 #!/usr/bin/env node
 /**
+ * @name createSpec概要
+ * @desc
+ * 
+ * JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成する。
+ * 
+ * # 使用方法
+ * 
+ * ```
  * node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]
- * - ワイルドカードはクォートすると展開されない("src/*.js"は不展開)
- * - *.js # 任意文字列
- * - ?.js # 1文字
- * - [a-z].js # 文字クラス
- * - **\/*.js # 再帰glob(src/a.js, src/lib/x.js, test/foo.js)
- * - src/**\/*.js~src/**\/*.test.js # 除外glob(左例はtestを除外したjs)
+ * ```
+ * 
+ * - 処理対象は'.js','.mjs','.gs','.txt'
+ * - ワイルドカード関係の注意
+ *   - クォートすると展開されない(src/*.jsはOKだが"src/*.js"は不展開)
+ *   - *.js # 任意文字列
+ *   - ?.js # 1文字
+ *   - [a-z].js # 文字クラス
+ *   - **\/*.js # 再帰glob(src/a.js, src/lib/x.js, test/foo.js)
+ *   - 【不採用】src/**\/*.js~src/**\/*.test.js # 除外glob(左例はtestを除外したjs)
+ * 
+ * # JSDoc記述上の注意
+ * 
+ * - JSDoc開始の「／**」以降に続く文字列は＠descとして扱われる
+ * - コンストラクタには「＠constructor」必須
+ * - 「＠history」を独自タグとして定義
+ * - 説明文(=Markdownとして出力する説明)
+ *   - 「＠name (説明文のタイトル)」＋「＠desc」で開始
+ *   - 「＠name」がない説明文は出力されない(廃棄)
+ *   - ＠name使用時「／**」以降に続く文字列は廃棄される
+ *   - ＠desc以降はMarkdownとして扱われ、共通する先頭の空白は削除される
+ * 
+ * # 参考資料
+ * 
+ * - [データ型判定](https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0)(Google Spread)
  * 
  * @example
  * node createSpec.mjs
@@ -14,8 +41,9 @@
  *   -o ../Auth/tmp \
  *   -x ../Auth/src/server/*
  * 
- * データ型判定等は以下参照
- * https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0
+ * @history
+ * - rev.1.0.0 : 2026/01/31
+ *   specify.mjsを継承し、初版作成
  */
 import path from 'path';
 import process from 'process';
@@ -28,6 +56,56 @@ console.log(JSON.stringify(createSpec(),null,2));
 async function createSpec() {
   const pv = {whois:`createSpec`, arg:{}, rv:null};
   const objectizeJSON = arg=>{try{return JSON.parse(arg)}catch{return arg}};
+
+  /** identifyDoclet: jsdoc -Xで出力されたオブジェクト(DocLet)の型を判定
+   * @param {Object} doclet
+   * @returns {string|Error}
+   */
+  function identifyDocletType(doclet) {
+    const v = {whois:`${pv.whois}.identifyDocletType`, arg:{doclet}, rv:[]};
+    const dev = new devTools(v);
+    /**
+     * @name DocLetの型判定ロジック
+     * @desc
+     * 
+     * 以下第一レベルが戻り値となる文字列、並列表記はand条件
+     * 
+     * - typedef
+     *   - kind === 'typedef'
+     * - interface
+     *   - kind === 'interface'
+     * - class
+     *   - kind === 'class'
+     *   - meta.code.type === "ClassDeclaration" || "ClassExpression"
+     * - constructor
+     *   - kind === 'class'
+     *   - meta?.code?.type === "MethodDefinition"
+     *   - /＠constructor\b/.test(doclet.comment || "")
+     * - method
+     *   - kind === "function"
+     *   - scope === "instance" または "static"
+     * - function(グローバル関数) ※アロー関数を含む
+     *   - kind === 'function'
+     *   - scope === 'global'
+     * - inner(内部関数) ※アロー関数を含む
+     *   - kind === 'function'
+     *   - scope === 'inner'
+     * - description(説明文(＠name))
+     *   - meta.code が空
+     *   - meta.code.nameがundefined(プラグインや拡張を考慮する場合には必要)
+     *   - kindがtypedef/interface 以外
+     *   - nameが存在
+     */
+
+    try {
+
+      // -------------------------------------------------------------
+
+      dev.end(v.rv);
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
 
   /** investigate: jsdoc -Xで出力されたオブジェクトの内容を調査
    * @example
@@ -70,7 +148,8 @@ async function createSpec() {
       };
 
       dev.step(1.2);  // 抽出条件の定義
-      v.ex = {  
+      v.ex = {
+        all: o => true,
         // ①scope:"global"
         global: o => {return typeof o.scope !== 'undefined' && o.scope === 'global'},
         // ②kind:"typedef"
@@ -96,7 +175,7 @@ async function createSpec() {
       }
 
       dev.step(1.4);  // 適用条件の指定
-      v.cond = v.ex.unknown; // 適用する抽出条件
+      v.cond = v.ex.all; // 適用する抽出条件
       v.disp = v.st.all;  // サンプルの表示方法
 
       // -------------------------------------------------------------

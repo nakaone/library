@@ -1,9 +1,14 @@
-/** test: JSDoc.jsonテスト
- * グローバル領域での概要説明
+/** ダミータイトル
+ * @name JSDoc.v001.jsonテスト
+ * @desc グローバル領域での概要説明
+ * - desc 2行目
+ * 
  * @example
  *   `node ./test.js`
+ *   exampleの2行目
  * 
  * @history
+ * - rev.1.1 2026/01/31
  * - rev.1.0 2026/01/27
  */
 
