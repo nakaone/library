@@ -1,16 +1,11 @@
 import path from 'path';
 import process from 'process';
-import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
+import { spawn } from "node:child_process";
+import { readFileSync, writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
 
 console.log(JSON.stringify(createSpec(),null,2));
 
-/**　sourceFile: 入力ファイル(JSソース)情報
- * @interface sourceFile
- * @prop {string} common - フルパスの共通部分
- * @prop {string} outDir - 出力先フォルダ名(フルパス)
- * @prop {Object[]} source - {full:フルパス,unique:固有部分}形式のファイル名
- */
 /** createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
  * @param {void}
  * @returns {void}
@@ -22,15 +17,23 @@ async function createSpec() {
   const pv = {whois:`createSpec`, arg:{}, rv:null};
   const cf = {
     // jsdocコマンド動作環境整備関係。詳細はlistSource step.1参照
-    jsdocJson: `jsdoc.${Date.now()}.json`,  // jsdocコマンド設定ファイル名
+    jsdocJson: `jsdoc.json`,  // jsdocコマンド設定ファイル名
+    //jsdocJson: `jsdoc.${Date.now()}.json`,  // jsdocコマンド設定ファイル名
     dummyDir: './dummy',  // jsdoc用の空フォルダ
     jsdocTarget: ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
   };
-  /** @type {sourceFile} */
-  const sourceFile = {common:'',outDir:'',source:[]};
-  const dev = new devTools(pv);
+  /**　sourceFile: 入力ファイル(JSソース)情報
+   * @interface sourceFile
+   * @prop {string} common - フルパスの共通部分
+   * @prop {string} outDir - 出力先フォルダ名(フルパス)
+   * @prop {number} sourceNum - 対象ファイルの個数
+   * @prop {Object[]} source - {full:フルパス,unique:固有部分}形式のファイル名
+   * @prop {Object[]} doclet - `jsdoc -X`で返されるJSONをオブジェクト化、配列として格納
+   */
+  const sourceFile = {common:'',outDir:'',sourceNum:0,source:[]};
+  const doclet = [];
 
-  /** listSource: 対象ファイルリスト作成
+  /** listSource: 事前準備、対象ファイルリスト作成
    * jsdoc動作環境整備後、シェルの起動時引数から対象となるJSソースファイルのリストを作成。
    * 処理結果はメンバ"sourceFile"に保存。
    * @param {void}
@@ -81,7 +84,7 @@ async function createSpec() {
        * ④'-x'の次からは除外ファイル
        */
 
-      dev.step(2.1);  // 結果を格納する領域を準備
+      dev.step(2.1,existsSync(cf.dummyDir));  // 結果を格納する領域を準備
       v.iList = [],  // 入力ファイルリスト
       v.xList = [],  // 除外ファイルリスト
 
@@ -110,6 +113,7 @@ async function createSpec() {
           sourceFile.source.push({full:v.iList[v.i]});
         }
       }
+      sourceFile.sourceNum = sourceFile.source.length;
 
       dev.step(2.4);  // 共通部分を抽出
       sourceFile.common = sourceFile.source[0].full;
@@ -129,18 +133,94 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
   
+  async function execJsdoc(){
+    const v = {whois:`${pv.whois}.execJsdoc`, arg:{}, rv:null};
+    const dev = new devTools(v);
+    try {
+
+      for( v.i=0 ; v.i<sourceFile.source.length ; v.i++ ){
+
+        dev.step(1);  // jsdocを実行、結果をdocletに格納
+        v.r = await runJsdoc(sourceFile.source[v.i].full);
+        if( typeof v.r === 'string' ) throw new Error(v.r);
+        doclet.push(v.r);
+      }
+
+      dev.end(doclet); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** runJSDoc: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
+   * @param {string} fn - 対象ファイル名
+   * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
+   */
+  async function runJsdoc(fn) {
+    return new Promise((resolve, reject) => {
+      const v = {whois:`${pv.whois}.runJsdoc`, arg:{fn,resolve, reject}, rv:null};
+      const dev = new devTools(v);
+
+      dev.step(1);  // jsdoc -X を子プロセスとして起動
+      v.p = spawn("jsdoc", [fn,'--configure',cf.jsdocJson,'-X'], {
+        stdio: ["ignore", "pipe", "pipe"], // stdin 無視、stdout/stderr を受け取る
+        encoding: "utf8"
+      });
+
+      dev.step(2);  // jsdoc の出力(JSON文字列)を蓄積するバッファ
+      v.output = "";
+      v.errorOutput = "";
+
+      dev.step(3);  // stdout（標準出力）にデータが届くたびに呼ばれる
+      v.p.stdout.on("data", chunk => {
+        v.output += chunk; // JSON の断片をつなげる
+      });
+
+      dev.step(4);  // stderr（標準エラー）も蓄積しておく
+      v.p.stderr.on("data", chunk => {
+        v.errorOutput += chunk;
+      });
+
+      dev.step(5);  // 子プロセスが終了したときに呼ばれる
+      // code === 0 なら正常終了、JSON をパースして resolve
+      v.p.on("close", code => {
+        if (code !== 0) {
+          reject(new Error(`jsdoc exited with code ${code}\n${v.errorOutput}`));
+          return;
+        }
+
+        try {
+          v.json = JSON.parse(v.output);
+          resolve(v.json); // await の戻り値になる
+        } catch (err) {
+          reject(new Error("Failed to parse JSON: " + err.message));
+        } finally {
+          dev.end();
+        }
+      });
+    });
+  }
+
+  // -------------------------------------------------------------
+  // メイン処理
+  // -------------------------------------------------------------
+  const dev = new devTools(pv);
   try {
 
     dev.step(1);  // sourceFileに対象ファイルリスト作成
     pv.r = listSource();
     if( pv.r instanceof Error) throw pv.r;
 
+    dev.step(2);  // 対象ファイルについて順次jsdocを実行
+    pv.r = execJsdoc();
+    if( pv.r instanceof Error) throw pv.r;
+
   } catch (e) { dev.error(e); return e; } finally {
     // jsdoc動作定義ファイルを削除
-    if( existsSync(cf.jsdocJson) )
-      unlinkSync(cf.jsdocJson);
+    //if( existsSync(cf.jsdocJson) )
+      //unlinkSync(cf.jsdocJson);
     // ダミーディレクトリを削除
-    if( existsSync(cf.dummyDir) )
-      rmSync(cf.dummyDir, { recursive: true, force: true });
+    //if( existsSync(cf.dummyDir) )
+      //rmSync(cf.dummyDir, { recursive: true, force: true });
   }
 }
