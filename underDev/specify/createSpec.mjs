@@ -34,6 +34,7 @@ async function createSpec() {
   /** doclet: `jsdoc -X`で配列で返されたオブジェクトに情報を付加
    * @interface DocLet
    * @prop {string} id
+   * @prop {string} unique - 固有パス
    * @prop {Object} origin - 情報付加前のjsdocで吐き出されたdoclet
    */
   /** @type {DocLet[]} */
@@ -201,7 +202,8 @@ async function createSpec() {
       sourceFile.sourceNum = sourceFile.source.length;
 
       dev.step(2.4);  // 共通部分を抽出
-      sourceFile.common = sourceFile.source[0].full;
+      //sourceFile.common = path.dirname(sourceFile.source[0].full);  末尾'/'無し
+      sourceFile.common = sourceFile.source[0].full.replace(/[^/\\]+$/, "");  // 末尾'/'有り
       for( v.i=1 ; v.i<sourceFile.source.length ; v.i++ ){
         while( !sourceFile.source[v.i].full.startsWith(sourceFile.common) ){
           sourceFile.common = sourceFile.common.slice(0,-1);
@@ -224,32 +226,31 @@ async function createSpec() {
     const dev = new devTools(v);
     try {
 
-      dev.step(1);  // jsdocを実行、結果をdocletに格納
+      dev.step(1);  // ファイル単位の処理：jsdocを実行、結果をdocletに格納
       for( v.i=0 ; v.i<sourceFile.source.length ; v.i++ ){
         v.r = await runJsdoc(sourceFile.source[v.i].full);
         if( typeof v.r === 'string' ) throw new Error(v.r);
 
-        v.r.forEach(o => doclet.push({origin:o}));
+        v.r.forEach(o => doclet.push({
+          unique:sourceFile.source[v.i].unique, // 固有パスはファイル単位なのでここで追加
+          origin:o,
+        }));
       }
 
-      dev.step(2);  // docletを順次処理
+      dev.step(2);  // doclet単位の処理
       for( v.i=0 ; v.i<doclet.length ; v.i++ ){
         v.s = doclet[v.i].origin; // source
         v.d = doclet[v.i];  // destination
-        v.d.type = identifyDocletType(v.s);
-        /*
-        dev.step(99.160,{i:v.i,s:v.s,d:v.d});
-        v.d.id = `${
-          v.s.meta.path.slice(sourceFile.common.length)}/${ // 固有パス
-          v.s.meta.filename}:${ // ファイル名
-          v.s.meta.lineno}`;  // 行番号
-        */
 
-        v.rv = {id:v.d.id,origin:v.d.origin.comment};
-        //v.rv = JSON.parse(JSON.stringify(v.d));
-        //delete v.rv.origin;
-        //v.rv.comment = v.d.origin.comment;
-        dev.step(99.247,v.rv);
+        dev.step(2.1);  // docletの型を判定、不明ならスキップ
+        v.d.type = identifyDocletType(v.s);
+        if( v.d.type === 'unknown' )  continue;
+
+        dev.step(2.2);  // idを設定(固有パス＋ファイル名＋行番号)
+        v.d.id = v.d.unique + `:${v.s.meta.lineno}`;
+        
+        delete v.d.origin;
+        dev.step(99.248,{d:v.d,comment:v.s.comment});
       }
 
       dev.end(); // 終了処理
