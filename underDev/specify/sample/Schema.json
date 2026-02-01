@@ -4,7 +4,7 @@
         "meta": {
             "range": [
                 1315,
-                12183
+                12190
             ],
             "filename": "Schema.js",
             "lineno": 44,
@@ -174,7 +174,7 @@
         "meta": {
             "range": [
                 1315,
-                12183
+                12190
             ],
             "filename": "Schema.js",
             "lineno": 44,
@@ -2605,11 +2605,11 @@
         "scope": "static"
     },
     {
-        "comment": "/** sanitizeArg: プリミティブ型のみで構成されるよう無毒化\n   * @param {*} value - チェック対象の変数\n   * @param {string} path='$' - エラーメッセージ用にオブジェクト内の階層を保持\n   * @returns\n   */",
+        "comment": "/** sanitizeArg: プリミティブ型のみで構成されるよう無毒化\n   * @param {*} value - チェック対象の変数\n   * @param {string} path='$' - エラーメッセージ用にオブジェクト内の階層を保持\n   * @returns {void}\n   */",
         "meta": {
             "range": [
-                10760,
-                12181
+                10767,
+                12188
             ],
             "filename": "Schema.js",
             "lineno": 321,
@@ -2651,7 +2651,13 @@
             }
         ],
         "returns": [
-            null
+            {
+                "type": {
+                    "names": [
+                        "void"
+                    ]
+                }
+            }
         ],
         "name": "sanitizeArg",
         "longname": "Schema#sanitizeArg",
@@ -2663,8 +2669,8 @@
         "comment": "",
         "meta": {
             "range": [
-                10803,
-                10876
+                10810,
+                10883
             ],
             "filename": "Schema.js",
             "lineno": 322,
@@ -2689,8 +2695,8 @@
         "comment": "",
         "meta": {
             "range": [
-                10808,
-                10850
+                10815,
+                10857
             ],
             "filename": "Schema.js",
             "lineno": 322,
@@ -2714,8 +2720,8 @@
         "comment": "",
         "meta": {
             "range": [
-                10851,
-                10867
+                10858,
+                10874
             ],
             "filename": "Schema.js",
             "lineno": 322,
@@ -2739,8 +2745,8 @@
         "comment": "",
         "meta": {
             "range": [
-                10856,
-                10861
+                10863,
+                10868
             ],
             "filename": "Schema.js",
             "lineno": 322,
@@ -2764,8 +2770,8 @@
         "comment": "",
         "meta": {
             "range": [
-                10862,
-                10866
+                10869,
+                10873
             ],
             "filename": "Schema.js",
             "lineno": 322,
@@ -2789,8 +2795,8 @@
         "comment": "",
         "meta": {
             "range": [
-                10868,
-                10875
+                10875,
+                10882
             ],
             "filename": "Schema.js",
             "lineno": 322,
@@ -2814,8 +2820,8 @@
         "comment": "",
         "meta": {
             "range": [
-                10888,
-                10909
+                10895,
+                10916
             ],
             "filename": "Schema.js",
             "lineno": 323,
@@ -2840,8 +2846,8 @@
         "comment": "",
         "meta": {
             "range": [
-                11151,
-                11163
+                11158,
+                11170
             ],
             "filename": "Schema.js",
             "lineno": 333,
@@ -2867,8 +2873,8 @@
         "comment": "",
         "meta": {
             "range": [
-                11245,
-                11309
+                11252,
+                11316
             ],
             "filename": "Schema.js",
             "lineno": 338,
@@ -2894,8 +2900,8 @@
         "comment": "",
         "meta": {
             "range": [
-                11722,
-                11730
+                11729,
+                11737
             ],
             "filename": "Schema.js",
             "lineno": 354,
@@ -2920,8 +2926,8 @@
         "comment": "",
         "meta": {
             "range": [
-                11935,
-                11979
+                11942,
+                11986
             ],
             "filename": "Schema.js",
             "lineno": 359,
@@ -2947,8 +2953,8 @@
         "comment": "",
         "meta": {
             "range": [
-                12003,
-                12013
+                12010,
+                12020
             ],
             "filename": "Schema.js",
             "lineno": 361,

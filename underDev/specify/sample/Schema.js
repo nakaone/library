@@ -316,7 +316,7 @@ class Schema {
   /** sanitizeArg: プリミティブ型のみで構成されるよう無毒化
    * @param {*} value - チェック対象の変数
    * @param {string} path='$' - エラーメッセージ用にオブジェクト内の階層を保持
-   * @returns
+   * @returns {void}
    */
   sanitizeArg(value, path = '$') {
     const v = {whois:this.constructor.name+'.sanitizeArg',arg:{value,path},rv:null};
