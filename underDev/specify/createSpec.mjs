@@ -31,7 +31,92 @@ async function createSpec() {
    * @prop {Object[]} doclet - `jsdoc -X`で返されるJSONをオブジェクト化、配列として格納
    */
   const sourceFile = {common:'',outDir:'',sourceNum:0,source:[]};
+  /** doclet: `jsdoc -X`で配列で返されたオブジェクトに情報を付加
+   * @interface DocLet
+   * @prop {string} id
+   * @prop {Object} origin - 情報付加前のjsdocで吐き出されたdoclet
+   */
+  /** @type {DocLet[]} */
   const doclet = [];
+
+  /** identifyDoclet: jsdoc -Xで出力されたオブジェクト(DocLet)の型を判定
+   * @param {Object} doclet
+   * @returns {string|Error}
+   */
+  function identifyDocletType(doclet) {
+    const v = {whois:`${pv.whois}.identifyDocletType`, arg:{doclet}, rv:'unknown'};
+    const dev = new devTools(v);
+    /**
+     * @name DocLetの型判定ロジック
+     * @desc
+     * 
+     * 本メソッドはinvestigateメソッド＋AIとの質疑に基づき作成
+     * 
+     * 以下第一レベルが戻り値となる文字列、並列表記はand条件
+     * 
+     * - typedef
+     *   - kind === 'typedef'
+     * - interface
+     *   - kind === 'interface'
+     * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br>
+     *   なおあくまでinterfaceなので、関数と同時にpropertiesも含む
+     *   - kind === 'function'
+     *   - scope === 'instance'
+     * - class
+     *   - kind === 'class'
+     *   - meta.code.type === "ClassDeclaration" || "ClassExpression"
+     * - constructor
+     *   - kind === 'class'
+     *   - meta?.code?.type === "MethodDefinition"
+     *   - /＠constructor\b/.test(doclet.comment || "")
+     * - method
+     *   - kind === "function"
+     *   - scope === "instance" または "static"
+     * - function(グローバル関数) ※アロー関数を含む
+     *   - kind === 'function'
+     *   - scope === 'global'
+     * - innerFunc(関数内関数) ※アロー関数を含む
+     *   - kind === 'function'
+     *   - scope === 'inner'
+     * - description(説明文(＠name))
+     *   - meta.code が空
+     *   - meta.code.nameがundefined(プラグインや拡張を考慮する場合には必要)
+     *   - kindがtypedef/interface 以外
+     *   - nameが存在
+     * - unknown(上記で判定不能)
+     */
+
+    try {
+
+      switch( doclet.kind ){
+        case 'typedef': case 'interface': v.rv = doclet.kind; break;
+        case 'class':
+          v.rv = ( doclet.meta?.code?.type ?? null ) === null ? 'unknown' : (
+            /^Class(Declaration|Expression)/.test(doclet.meta.code.type) ? 'class' : (
+              doclet.meta.code.type === 'MethodDefinition' ? 'constructor' : 'unknown'
+            )
+          );
+          break;
+        case 'function':
+          switch( doclet.scope ){
+            case 'global': v.rv = 'function'; break;
+            case 'inner': v.rv = 'innerFunc'; break;
+            case 'instance': v.rv = 'objectFunc'; break;
+            case 'instance': case 'static': v.rv = 'method'; break;
+            default: 'unknown';
+          }
+          break;
+        default:
+          v.rv = Object.keys(doclet.meta?.code ?? {}).length === 0
+          && (typeof doclet.meta?.code?.name === 'undefined')
+          && doclet.name ? 'description' : 'unknown';
+      }
+
+      dev.end();
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
 
   /** listSource: 事前準備、対象ファイルリスト作成
    * jsdoc動作環境整備後、シェルの起動時引数から対象となるJSソースファイルのリストを作成。
@@ -133,20 +218,41 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
   
+  /** execJSDoc: 対象ファイルに順次jsdocを実行、結果をdocletに保存 */
   async function execJsdoc(){
     const v = {whois:`${pv.whois}.execJsdoc`, arg:{}, rv:null};
     const dev = new devTools(v);
     try {
 
+      dev.step(1);  // jsdocを実行、結果をdocletに格納
       for( v.i=0 ; v.i<sourceFile.source.length ; v.i++ ){
-
-        dev.step(1);  // jsdocを実行、結果をdocletに格納
         v.r = await runJsdoc(sourceFile.source[v.i].full);
         if( typeof v.r === 'string' ) throw new Error(v.r);
-        doclet.push(v.r);
+
+        v.r.forEach(o => doclet.push({origin:o}));
       }
 
-      dev.end(doclet); // 終了処理
+      dev.step(2);  // docletを順次処理
+      for( v.i=0 ; v.i<doclet.length ; v.i++ ){
+        v.s = doclet[v.i].origin; // source
+        v.d = doclet[v.i];  // destination
+        v.d.type = identifyDocletType(v.s);
+        /*
+        dev.step(99.160,{i:v.i,s:v.s,d:v.d});
+        v.d.id = `${
+          v.s.meta.path.slice(sourceFile.common.length)}/${ // 固有パス
+          v.s.meta.filename}:${ // ファイル名
+          v.s.meta.lineno}`;  // 行番号
+        */
+
+        v.rv = {id:v.d.id,origin:v.d.origin.comment};
+        //v.rv = JSON.parse(JSON.stringify(v.d));
+        //delete v.rv.origin;
+        //v.rv.comment = v.d.origin.comment;
+        dev.step(99.247,v.rv);
+      }
+
+      dev.end(); // 終了処理
       return v.rv;
 
     } catch (e) { return dev.error(e); }
