@@ -61,6 +61,11 @@
  *   ＠returns {boolean|Error}
  *   ＠example オブジェクト内関数の使用例
  *   ```
+ *   なお変数がinterfaceで定義されたデータ型であることは以下のように示す
+ *   ```
+ *   ／** ＠type {User}*／
+ *   const user = {...}
+ *   ```
  * 
  * # 参考資料
  * 
@@ -107,7 +112,8 @@ async function createSpec() {
      *   - kind === 'typedef'
      * - interface
      *   - kind === 'interface'
-     * - innerObj(interface内function定義)
+     * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br>
+     *   なおあくまでinterfaceなので、関数と同時にpropertiesも含む
      *   - kind === 'function'
      *   - scope === 'instance'
      * - class

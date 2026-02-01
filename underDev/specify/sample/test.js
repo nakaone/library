@@ -36,6 +36,13 @@
  * @returns {boolean|Error}
  * @example オブジェクト内関数の使用例
  */
+/** @type {User} */
+const foo = {
+  name: '名前',
+  age: 20,
+  isAdmin: true,
+  test: arg => this.age >= 20,
+};
 
 /** func01: 関数テスト
  * 関数テスト説明文
