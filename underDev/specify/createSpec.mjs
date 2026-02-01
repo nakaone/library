@@ -150,7 +150,7 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
 
-  /** investigate: jsdoc -Xで出力されたオブジェクトの内容を調査
+  /** investigate: 【開発用】jsdoc -Xで出力されたオブジェクトの内容を調査
    * @param {void}
    * @returns {Object|Error} データ型はstep 1.1参照
    * @example
@@ -294,7 +294,8 @@ async function createSpec() {
         iList: [],  // 入力ファイルリスト
         xList: [],  // 除外ファイルリスト
         outDir: null, // 出力先フォルダ
-        list: [], // 対象ファイルリスト(入力−除外)
+        full: [], // 対象ファイルリスト(入力−除外)のフルパス
+        unique: [],
       }
 
       dev.step(2);  // 入力・出力・除外リスト作成
@@ -319,7 +320,7 @@ async function createSpec() {
       dev.step(3);  // 対象 = 入力 − 除外
       for( v.i=0 ; v.i<v.rv.iList.length ; v.i++ ){
         if( !v.rv.xList.includes(v.rv.iList[v.i]) ){
-          v.rv.list.push(v.rv.iList[v.i]);
+          v.rv.full.push(v.rv.iList[v.i]);
         }
       }
 
@@ -646,14 +647,14 @@ async function createSpec() {
     pv.r = listSource();
     if( pv.r instanceof Error ) throw pv.r;
 
-    dev.step(3,pv.r);  // 「ファイル名＋(ファイル内)行番号」を識別子とするマップを作成
+    dev.step(3);  // 「ファイル名＋(ファイル内)行番号」を識別子とするマップを作成
     pv.map = {};
     pv.idList = [];
-    await makeMap(pv.r.list);
-    //dev.step(3.99,{list:pv.idList,map:pv.map});
+    await makeMap(pv.r.full);
+    dev.step(3.99,{list:pv.idList,map:pv.map});
 
     dev.step(4);  // 出力対象要素(関数・クラス)を抽出
-    investigate();
+    //investigate();
 
     /*
     dev.step(4);  // データ型定義をMarkdown出力用オブジェクトに変換

@@ -1,0 +1,290 @@
+[0003]createSpec.makeMap step.1.1
+Error: stdout maxBuffer length exceeded
+{
+  whois:"createSpec.makeMap", // string
+  seq:3, // number
+  arg:  {
+    list:    [
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client/authClient.mjs", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client/cryptoClient.mjs", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client/localFunc.mjs", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client/onLoad.mjs", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common/authConfig.mjs", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common/config.mjs", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common/specDef.js", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/authServer.mjs", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/code.js", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/cryptoServer.mjs", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/jsrsasign-all-min.js", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/Member.mjs", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/onOpen.js", // string
+      "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/serverFunc.js", // string
+    ], // Array
+  }
+  stepNo:"1.1", // string
+  log:"1.1, 1.2, 2, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 1.1, 1.2, 2, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 1.1, 1.2, 2, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 1.1, 1.2, 2, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 1.1, 1.2, 2, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 1.1, 1.2, 2, 2.1, 2.3, 2.4, 2.1, 2.2, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 2.1, 2.3, 2.4, 1.1", // string
+  startTime:"2026-02-01T10:46:07.183+09:00", // string
+  endTime:"2026-02-01T10:46:08.211+09:00", // string
+  elaps:"1028 msec", // string
+  v:  {
+    whois:"createSpec.makeMap", // string
+    arg:    {
+      list:      [
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client/authClient.mjs", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client/cryptoClient.mjs", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client/localFunc.mjs", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/client/onLoad.mjs", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common/authConfig.mjs", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common/config.mjs", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common/specDef.js", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/authServer.mjs", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/code.js", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/cryptoServer.mjs", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/jsrsasign-all-min.js", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/Member.mjs", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/onOpen.js", // string
+        "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/server/serverFunc.js", // string
+      ], // Array
+    }
+    rv:    { /* Object, empty */ }, // object
+    i:6, // number
+    arr:    [
+      {
+        comment:"/** config: アプリケーションの設定情報
+ * - 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする
+ * - 秘匿情報はここで設定せず、アプリ側で追加・修正する
+ */", // string
+        meta:        {
+          range:          [
+            99, // number
+            911, // number
+          ], // Array
+          filename:"config.mjs", // string
+          lineno:5, // number
+          columnno:0, // number
+          path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common", // string
+          code:          {
+            id:"astnode100000002", // string
+            name:"exports.config", // string
+            type:"VariableDeclaration", // string
+          }
+        }
+        description:"config: アプリケーションの設定情報
+- 複数のライブラリを使用可能にするため、第一レベルはアプリ名とする
+- 秘匿情報はここで設定せず、アプリ側で追加・修正する", // string
+        name:"config", // string
+        longname:"config", // string
+        kind:"constant", // string
+        scope:"global", // string
+      }
+      {
+        comment:"", // string
+        meta:        {
+          range:          [
+            112, // number
+            910, // number
+          ], // Array
+          filename:"config.mjs", // string
+          lineno:5, // number
+          columnno:13, // number
+          path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common", // string
+          code:          {
+            id:"astnode100000004", // string
+            name:"config", // string
+            type:"ObjectExpression", // string
+            value:"{"adminMail":"ena.kaon@gmail.com","adminName":"あどみ","api":"AKfycbyQQAPxNwxKVbT56gVuaSqwG5TNOAEUsxAl8i_hUcQ","func":""}", // string
+          }
+        }
+        undocumented:true, // boolean
+        name:"config", // string
+        longname:"config", // string
+        kind:"constant", // string
+        scope:"global", // string
+        params:        [ /* Array, length 0 */ ], // object
+      }
+      {
+        comment:"", // string
+        meta:        {
+          range:          [
+            288, // number
+            318, // number
+          ], // Array
+          filename:"config.mjs", // string
+          lineno:9, // number
+          columnno:2, // number
+          path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common", // string
+          code:          {
+            id:"astnode100000007", // string
+            name:"adminMail", // string
+            type:"Literal", // string
+            value:"ena.kaon@gmail.com", // string
+          }
+        }
+        undocumented:true, // boolean
+        name:"adminMail", // string
+        longname:"config.adminMail", // string
+        kind:"member", // string
+        memberof:"config", // string
+        scope:"static", // string
+      }
+      {
+        comment:"", // string
+        meta:        {
+          range:          [
+            322, // number
+            337, // number
+          ], // Array
+          filename:"config.mjs", // string
+          lineno:10, // number
+          columnno:2, // number
+          path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common", // string
+          code:          {
+            id:"astnode100000009", // string
+            name:"adminName", // string
+            type:"Literal", // string
+            value:"あどみ", // string
+          }
+        }
+        undocumented:true, // boolean
+        name:"adminName", // string
+        longname:"config.adminName", // string
+        kind:"member", // string
+        memberof:"config", // string
+        scope:"static", // string
+      }
+      {
+        comment:"", // string
+        meta:        {
+          range:          [
+            614, // number
+            667, // number
+          ], // Array
+          filename:"config.mjs", // string
+          lineno:17, // number
+          columnno:2, // number
+          path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common", // string
+          code:          {
+            id:"astnode100000011", // string
+            name:"api", // string
+            type:"Literal", // string
+            value:"AKfycbyQQAPxNwxKVbT56gVuaSqwG5TNOAEUsxAl8i_hUcQ", // string
+          }
+        }
+        undocumented:true, // boolean
+        name:"api", // string
+        longname:"config.api", // string
+        kind:"member", // string
+        memberof:"config", // string
+        scope:"static", // string
+      }
+      {
+        comment:"", // string
+        meta:        {
+          range:          [
+            828, // number
+            908, // number
+          ], // Array
+          filename:"config.mjs", // string
+          lineno:22, // number
+          columnno:2, // number
+          path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common", // string
+          code:          {
+            id:"astnode100000013", // string
+            name:"func", // string
+            type:"ObjectExpression", // string
+            value:"{"svFunc":""}", // string
+          }
+        }
+        undocumented:true, // boolean
+        name:"func", // string
+        longname:"config.func", // string
+        kind:"member", // string
+        memberof:"config", // string
+        scope:"static", // string
+      }
+      {
+        comment:"", // string
+        meta:        {
+          range:          [
+            839, // number
+            903, // number
+          ], // Array
+          filename:"config.mjs", // string
+          lineno:23, // number
+          columnno:4, // number
+          path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common", // string
+          code:          {
+            id:"astnode100000015", // string
+            name:"svFunc", // string
+            type:"ObjectExpression", // string
+            value:"{"authority":0,"do":""}", // string
+          }
+        }
+        undocumented:true, // boolean
+        name:"svFunc", // string
+        longname:"config.func.svFunc", // string
+        kind:"member", // string
+        memberof:"config.func", // string
+        scope:"static", // string
+      }
+      {
+        comment:"", // string
+        meta:        {
+          range:          [
+            855, // number
+            867, // number
+          ], // Array
+          filename:"config.mjs", // string
+          lineno:24, // number
+          columnno:6, // number
+          path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common", // string
+          code:          {
+            id:"astnode100000017", // string
+            name:"authority", // string
+            type:"Literal", // string
+            value:0, // number
+          }
+        }
+        undocumented:true, // boolean
+        name:"authority", // string
+        longname:"config.func.svFunc.authority", // string
+        kind:"member", // string
+        memberof:"config.func.svFunc", // string
+        scope:"static", // string
+      }
+      {
+        comment:"", // string
+        meta:        {
+          range:          [
+            875, // number
+            897, // number
+          ], // Array
+          filename:"config.mjs", // string
+          lineno:25, // number
+          columnno:6, // number
+          path:"/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common", // string
+          code:          {
+            id:"astnode100000019", // string
+            name:"do", // string
+            type:"ArrowFunctionExpression", // string
+          }
+        }
+        undocumented:true, // boolean
+        name:"do", // string
+        longname:"config.func.svFunc.do", // string
+        kind:"function", // string
+        memberof:"config.func.svFunc", // string
+        scope:"static", // string
+      }
+      {
+        kind:"package", // string
+        longname:"package:undefined", // string
+        files:        [
+          "/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common/config.mjs", // string
+        ], // Array
+      }
+    ], // Array
+    id:"/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/src/common/config.mjs-25", // string
+  }
+  name:"devToolsError", // string
+}
