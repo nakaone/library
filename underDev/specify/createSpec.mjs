@@ -35,9 +35,13 @@ async function createSpec() {
    * @interface DocLet
    * @prop {string} id
    * @prop {string} unique - 固有パス
+   * @prop {string} label - ラベル(1行で簡潔に記述された概要説明)
+   *   ① `／** `に続く文字列
+   *   ② DocLetが説明文(type='description')の場合、＠nameに続く文字列
+   *   ③ ＠description, ＠classdesc の先頭行
+   *   ④ ①〜③に該当が無い場合、「(ラベル未設定)」
    * @prop {Object} origin - 情報付加前のjsdocで吐き出されたdoclet
    */
-  /** @type {DocLet[]} */
   const doclet = [];
 
   /** identifyDoclet: jsdoc -Xで出力されたオブジェクト(DocLet)の型を判定
@@ -228,30 +232,42 @@ async function createSpec() {
 
       dev.step(1);  // ファイル単位の処理：jsdocを実行、結果をdocletに格納
       for( v.i=0 ; v.i<sourceFile.source.length ; v.i++ ){
+        dev.step(1.1);  // ファイル単位にjsdocを実行
         v.r = await runJsdoc(sourceFile.source[v.i].full);
         if( typeof v.r === 'string' ) throw new Error(v.r);
 
+        dev.step(1.2);  // DocLet単位にばらして保存
         v.r.forEach(o => doclet.push({
           unique:sourceFile.source[v.i].unique, // 固有パスはファイル単位なのでここで追加
           origin:o,
         }));
       }
 
-      dev.step(2);  // doclet単位の処理
+      dev.step(2);  // DocLet単位の処理
       for( v.i=0 ; v.i<doclet.length ; v.i++ ){
         v.s = doclet[v.i].origin; // source
         v.d = doclet[v.i];  // destination
 
         dev.step(2.1);  // docletの型を判定、不明ならスキップ
-        v.d.type = identifyDocletType(v.s);
-        if( v.d.type === 'unknown' )  continue;
+        v.r = identifyDocletType(v.s);
+        if( v.r instanceof Error ) throw v.r;
+        if( v.r === 'unknown' ) continue; else v.d.type = v.r;
 
         dev.step(2.2);  // idを設定(固有パス＋ファイル名＋行番号)
         v.d.id = v.d.unique + `:${v.s.meta.lineno}`;
-        
-        delete v.d.origin;
-        dev.step(99.248,{d:v.d,comment:v.s.comment});
+
+        dev.step(2.3);  // description, classdesc
+        // params
+        // properties, returns
+        // name
+        //dev.step(2.3,{id:v.d.id,type:v.d.type,desc:v.s.description});  // descriptionの行頭空白を削除
+        if( typeof v.s.description !== 'undefined' ){
+          v.d.description = trimCommonIndent(v.s.description);
+          if( v.d.description instanceof Error ) throw v.d.description;
+        }
+
       }
+      //dev.step(99.258,doclet[0]);
 
       dev.end(); // 終了処理
       return v.rv;
@@ -306,6 +322,40 @@ async function createSpec() {
         }
       });
     });
+  }
+
+  /** trimCommonIndent: 文字列を行単位に分割、全行に共通する先頭の空白を削除
+   * 但し先頭行頭に空白が無かった場合、調査対象から除外する
+   * @param {string[]} txt
+   * @returns {string[]}
+   */
+  function trimCommonIndent(txt) {
+    const v = {whois:`${pv.whois}.trimCommonIndent`, arg:{}, rv:[]};
+    const dev = new devTools(v);
+    try {
+
+      dev.step(1,txt);  // 行単位に分割
+      v.lines = txt.split('\n');
+
+      dev.step(2);  // 先頭行頭が空白では無い場合、調査対象から除外
+      if( !/^\s/.test(v.lines[0]) ) v.lines.slice(1);
+
+      dev.step(3);  // 空行を除いた行の先頭空白数を調べる
+      v.indents = v.lines
+        .filter(line => line.trim().length > 0) // 空白行は対象外
+        .map(line => line.match(/^[ \t]*/)[0].length);
+
+      dev.step(4);  // 共通の最小インデント
+      v.minIndent = Math.min(...v.indents);
+
+      dev.step(5);  // 各行から共通インデントを削除
+      v.lines.map(line => line.slice(v.minIndent));
+
+      v.rv = v.lines.join('\n');
+      dev.end(v.rv);
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
   }
 
   // -------------------------------------------------------------
