@@ -29,6 +29,8 @@
  * @property {string} name
  * @property {number} age
  * @property {boolean} isAdmin
+ */
+/**
  * @function
  * @name User#test
  * @desc オブジェクト内関数の説明
@@ -75,7 +77,7 @@ function func01(arg){
 }
 
 /**
- * @class
+ * @class テスト用クラス名
  * @classdesc テスト用クラス
  * @extends BaseClass
  * @prop {Object} opt - 起動時オプション

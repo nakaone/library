@@ -1,8 +1,97 @@
+#!/usr/bin/env node
 import path from 'path';
 import process from 'process';
 import { spawn } from "node:child_process";
 import { readFileSync, writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
+
+/**
+ * @name createSpec概要
+ * @desc
+ * 
+ * JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成する。
+ * 
+ * - クラス・グローバル関数毎に別ファイル化
+ * - typedef,interfaceはまとめて"readme.md"としてフォルダ毎に作成
+ * - 出力フォルダは入力ファイルのフォルダと同じ構成(パスの共通部分を出力フォルダで置換)
+ *   ```
+ *   /Users/xxx/〜/library/yyy/src/common/z01.js <- class a01,function a02
+ *   /Users/xxx/〜/library/yyy/src/client/z02.js <- class a03
+ *   /Users/xxx/〜/library/yyy/src/server/z03.js <- class a04
+ * 
+ *   出力先フォルダが"../doc"の場合
+ *   ../doc/common/a01.md
+ *   ../doc/common/a02.md ※a01,a02は別ファイル
+ *   ../doc/common/readme.md ※typedef,interface集
+ *   ../doc/client/a03.md
+ *   ../doc/client/readme.md
+ *   ../doc/server/a04.md
+ *   ../doc/server/readme.md
+ *   ```
+ * 
+ * # 使用方法
+ * 
+ * ```
+ * node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]
+ * ```
+ * 
+ * - 処理対象は'.js','.mjs','.gs','.txt'
+ * - ワイルドカード関係の注意
+ *   - クォートすると展開されない(src/*.jsはOKだが"src/*.js"は不展開)
+ *   - *.js # 任意文字列
+ *   - ?.js # 1文字
+ *   - [a-z].js # 文字クラス
+ *   - **\/*.js # 再帰glob(src/a.js, src/lib/x.js, test/foo.js)
+ *   - 【不採用】src/**\/*.js~src/**\/*.test.js # 除外glob(左例はtestを除外したjs)
+ * 
+ * # JSDoc記述上の注意
+ * 
+ * - JSDoc開始の「／**」以降に続く文字列は＠descとして扱われる
+ * - コンストラクタには「＠constructor」必須
+ * - 「＠history」を独自タグとして定義
+ * - 説明文(=Markdownとして出力する説明)
+ *   - 「＠name (説明文のタイトル)」＋「＠desc」で開始
+ *   - 「＠name」がない説明文は出力されない(廃棄)
+ *   - ＠name使用時「／**」以降に続く文字列は廃棄される(上記の例外)
+ *   - ＠desc以降はMarkdownとして扱われ、共通する先頭の空白は削除される
+ * - ＠typedefでfunctionの定義は不可
+ * - ＠interfaceではfunction型メンバの定義は可能だが、分離する
+ *   ```
+ *   ／**
+ *     * ＠interface User
+ *     * ＠property {string} name
+ *     * ＠property {number} age
+ *     * ＠property {boolean} isAdmin
+ *     *／
+ *   ／**
+ *     * ＠function ※ここには記述不可
+ *     * ＠name User#test ※ここには記述不可
+ *     * ＠desc オブジェクト内関数の説明
+ *     * ＠param {string} arg
+ *     * ＠returns {boolean|Error}
+ *     * ＠example オブジェクト内関数の使用例
+ *     *／
+ *   ```
+ *   なお変数がinterfaceで定義されたデータ型であることは以下のように示す
+ *   ```
+ *   ／** ＠type {User}*／
+ *   const user = {...}
+ *   ```
+ * 
+ * # 参考資料
+ * 
+ * - [データ型判定](https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0)(Google Spread)
+ * 
+ * @example
+ * node createSpec.mjs
+ *   ../Auth/src/**／*.(js|mjs) ../Auth/src/**／*.md \
+ *   -o ../Auth/tmp \
+ *   -x ../Auth/src/server/*
+ * 
+ * @history
+ * - rev.1.0.0 : 2026/01/31
+ *   specify.mjsを継承し、初版作成
+ */
 
 console.log(JSON.stringify(createSpec(),null,2));
 
@@ -35,11 +124,12 @@ async function createSpec() {
    * @interface DocLet
    * @prop {string} id
    * @prop {string} unique - 固有パス
+   * @prop {string} type - DocLetの種類。identifyDocletTypeの戻り値
    * @prop {string} label - ラベル(1行で簡潔に記述された概要説明)
    *   ① `／** `に続く文字列
-   *   ② DocLetが説明文(type='description')の場合、＠nameに続く文字列
-   *   ③ ＠description, ＠classdesc の先頭行
-   *   ④ ①〜③に該当が無い場合、「(ラベル未設定)」
+   *   ② description, classdesc があれば先頭行
+   *   ③ longname
+   *   ※ 上記に該当が無い場合、「(ラベル未設定)」
    * @prop {Object} origin - 情報付加前のjsdocで吐き出されたdoclet
    */
   const doclet = [];
@@ -93,6 +183,11 @@ async function createSpec() {
 
     try {
 
+      dev.step(1);  // 原文が無い場合は判定不能
+      if( typeof doclet.comment === 'undefined' || doclet.comment.length === 0 )
+        return 'unknown';
+
+      dev.step(2);
       switch( doclet.kind ){
         case 'typedef': case 'interface': v.rv = doclet.kind; break;
         case 'class':
@@ -256,14 +351,27 @@ async function createSpec() {
         dev.step(2.2);  // idを設定(固有パス＋ファイル名＋行番号)
         v.d.id = v.d.unique + `:${v.s.meta.lineno}`;
 
-        dev.step(2.3);  // description, classdesc
+        dev.step(2.3);  // labelを抽出
+        v.m = v.s.comment.split('\n')[0].match(/^\/\*\*\s*(.+)\n/);
+        v.desc = (v.s.description ?? v.s.classdesc ?? v.s.longname ?? '')
+          .split('\n')[0] ?? '(ラベル未設定)';
+        v.d.label = v.m !== null ? v.m[1]
+        : (v.d.type === 'name' || v.d.type === 'class' ? (v.s.longname ?? v.desc) : v.desc);
+
+        // description, classdesc
         // params
         // properties, returns
         // name
+
         //dev.step(2.3,{id:v.d.id,type:v.d.type,desc:v.s.description});  // descriptionの行頭空白を削除
         if( typeof v.s.description !== 'undefined' ){
           v.d.description = trimCommonIndent(v.s.description);
           if( v.d.description instanceof Error ) throw v.d.description;
+        }
+        dev.step(99.284,{m:v.m,unique:v.d.unique,id:v.d.id,type:v.d.type,label:v.d.label,origin:v.s});
+        //dev.step(99.275,{unique:v.d.unique,id:v.d.id,type:v.d.type,label:v.d.label,comment:v.s.comment,desc:v.s.description});
+        if( v.d.type === 'description' ){
+          dev.step(99.278,v.s);
         }
 
       }
