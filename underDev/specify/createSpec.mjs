@@ -122,17 +122,34 @@ async function createSpec() {
   const sourceFile = {common:'',outDir:'',sourceNum:0,source:[]};
   /** doclet: `jsdoc -X`で配列で返されたオブジェクトに情報を付加
    * @interface DocLet
-   * @prop {string} id
    * @prop {string} unique - 固有パス
    * @prop {string} type - DocLetの種類。identifyDocletTypeの戻り値
-   * @prop {string} label - ラベル(1行で簡潔に記述された概要説明)
+   * @prop {string} id - 固有パス＋ファイル名＋行番号
+   * @prop {DocLet[]} [innerFunc=[]] - メソッド・内部関数
+   * @prop {Object} origin - 情報付加前のjsdocで吐き出されたdoclet
+   * // 以下はMarkdown用項目
+   * @prop {string} title
+   * @prop {string} label - 1行で簡潔に記述された概要説明
    *   ① `／** `に続く文字列
    *   ② description, classdesc があれば先頭行
    *   ③ longname
    *   ※ 上記に該当が無い場合、「(ラベル未設定)」
-   * @prop {Object} origin - 情報付加前のjsdocで吐き出されたdoclet
+   * @prop {string} description - 概要・詳細説明
+   * @prop {propRow[]} [properties=[]] - メンバ一覧
+   * @prop {Object[]} [innerList=[]] - メソッド・内部関数一覧。項目：No,関数名,ラベル,アンカー
+   * @prop {propRow[]} [params=[]] - 引数。クラスの場合はconstructorの引数
+   * @prop {propRow[]} [returns=[]] - 戻り値
+   * @prop {string} [process] - 処理手順
    */
   const doclet = [];
+  /** propRow: 属性一覧に表示する項目
+   * @interface propRow
+   * @prop {string} name - 項目名
+   * @prop {string} type - データ型。複数なら' | 'で区切って並記
+   * @prop {string} value - 要否/既定値。「必須」「任意」または既定値
+   * @prop {string} desc - 1行の簡潔な項目説明
+   * @prop {string} note - 備考
+   */
 
   /** execJSDoc: 対象ファイルに順次jsdocを実行、結果をdocletに保存 */
   async function execJsdoc(){
@@ -158,9 +175,10 @@ async function createSpec() {
         v.s = doclet[v.i].origin; // source
         v.d = doclet[v.i];  // destination
 
-        dev.step(2.1);  // docletの型を判定、不明ならスキップ
+        dev.step(2.1);  // typeを設定(docletの型判定)
         v.r = identifyDocletType(v.s);
         if( v.r instanceof Error ) throw v.r;
+        // 型不明なら以降の処理はスキップ
         if( v.r === 'unknown' ) continue; else v.d.type = v.r;
 
         dev.step(2.2);  // idを設定(固有パス＋ファイル名＋行番号)
