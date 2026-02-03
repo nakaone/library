@@ -1,9 +1,4 @@
 #!/usr/bin/env node
-import path from 'path';
-import process from 'process';
-import { spawn } from "node:child_process";
-import { readFileSync, writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
-import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
 
 /**
  * @name createSpec概要
