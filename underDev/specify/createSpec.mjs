@@ -99,8 +99,10 @@ console.log(JSON.stringify(createSpec(),null,2));
  * @param {void}
  * @returns {void}
  * 
+ * @prop {Object} pv - createSpec内の共有変数(public variables。class定義のメンバに相当)
  * @prop {Object} cf - createSpec動作設定情報(config)
  * @prop {sourceFile[]} sourceFile - 入力ファイル情報
+ * @prop {DocLet[]} doclet - DocLet型にしたオブジェクトを保存
  */
 async function createSpec() {
   const pv = {whois:`createSpec`, arg:{}, rv:null};
@@ -152,66 +154,53 @@ async function createSpec() {
    * @prop {PropRow[]} [returns=[]] - 戻り値
    */
   const doclet = [];
-  /** getDocLet: DocLet型のオブジェクトを作成 */
-  const getDocLet = x => {return {
-    unique: x.unique ?? '',
-    type: x.type ?? '',
-    id: x.id ?? '',
-    innerFunc: x.innerFunc ?? [],
-    origin: x.origin ?? {},
-    title: x.title ?? '',
-    label: x.label ?? '',
-    description: x.description ?? '',
-    properties: x.properties ?? [],
-    innerList: x.innerList ?? [],
-    params: x.params ?? [],
-    returns: x.returns ?? [],
-  }};
 
-  /** execJSDoc: 対象ファイルに順次jsdocを実行、結果をdocletに保存 */
-  async function execJsdoc(){
-    const v = {whois:`${pv.whois}.execJsdoc`, arg:{}, rv:null};
+  /** getDocLet: DocLet型のオブジェクトを作成、docletに追加
+   * @param {Object} obj - `jsdoc -X`で配列で返されたオブジェクト
+   * @param {string} unique - objが存在するファイルの固有パス
+   * @returns {null|Error} 正常終了ならnull
+   */
+  function getDocLet(obj,unique){
+    const v = {whois:`${pv.whois}.getDocLet`, arg:{obj,unique}, rv:null};
     const dev = new devTools(v);
     try {
 
-      dev.step(1);  // ファイル単位の処理：jsdocを実行、結果をdocletに格納
-      for( v.i=0 ; v.i<sourceFile.source.length ; v.i++ ){
-        dev.step(1.1);  // ファイル単位にjsdocを実行
-        v.r = await runJsdoc(sourceFile.source[v.i].full);
-        if( typeof v.r === 'string' ) throw new Error(v.r);
+      dev.step(1);  // DocLetの型を判定
+      v.type = identifyDocletType(obj);
+      if( v.type instanceof Error ) throw v.type;
+      if( v.type === 'unknown' ) return v.rv; // 型不明は対象外
 
-        dev.step(1.2);  // DocLet単位にばらして保存
-        v.r.forEach(o => doclet.push(getDocLet({
-          unique:sourceFile.source[v.i].unique, // 固有パスはファイル単位なのでここで追加
-          origin: o,
-        })));
-      }
+      dev.step(2);  // 必須項目の存否チェック
+      if( typeof obj.meta?.lineno === 'undefined' )
+        throw new Error(`no lineno: ${obj.comment}`);
+      if( typeof obj.longname === 'undefined' )
+        throw new Error(`no longname: ${obj.comment}`);
 
-      dev.step(2);  // DocLet単位の処理
-      for( v.i=0 ; v.i<doclet.length ; v.i++ ){
-        v.s = doclet[v.i].origin; // source
-        v.d = doclet[v.i];  // destination
+      dev.step(3);  // labelを抽出
+      // ①JSDoc先頭の「/**」に続く文字列
+      v.m = obj.comment.split('\n')[0].match(/^\/\*\*\s*(.+)\n/);
+      // ②説明文の先頭行
+      v.desc = (obj.description ?? obj.classdesc ?? obj.longname)
+        .split('\n')[0] ?? '(ラベル未設定)';
+      // ① > (nameまたはclassなら)longname > ②
+      v.label = v.m !== null ? v.m[1]
+      : (v.type === 'name' || v.type === 'class' ? (obj.longname ?? v.desc) : v.desc);
 
-        dev.step(2.1);  // typeを設定(docletの型判定)
-        v.r = identifyDocletType(v.s);
-        if( v.r instanceof Error ) throw v.r;
-        // 型不明なら以降の処理はスキップ
-        if( v.r === 'unknown' ) continue; else v.d.type = v.r;
-
-        dev.step(2.2);  // idを設定(固有パス＋ファイル名＋行番号)
-        v.d.id = v.d.unique + `:${v.s.meta.lineno}`;
-
-        dev.step(2.3);  // title
-
-        dev.step(2.4);  // labelを抽出
-        v.m = v.s.comment.split('\n')[0].match(/^\/\*\*\s*(.+)\n/);
-        v.desc = (v.s.description ?? v.s.classdesc ?? v.s.longname ?? '')
-          .split('\n')[0] ?? '(ラベル未設定)';
-        v.d.label = v.m !== null ? v.m[1]
-        : (v.d.type === 'name' || v.d.type === 'class' ? (v.s.longname ?? v.desc) : v.desc);
-
-
-      }
+      dev.step(4);  // DocLet型のオブジェクトをdocletに格納
+      doclet.push({
+        unique: unique,
+        type: v.type,
+        id: unique + ':' + obj.meta.lineno,
+        innerFunc: [],
+        origin: obj,
+        title: obj.longname.replaceAll(/~/g,'#').split('#')[0],
+        label: v.label,
+        description: obj.description ?? obj.classdesc ?? '',
+        properties: (obj.properties ?? []).map(x => getPropRow(x)),
+        innerList: [],
+        params: (obj.params ?? []).map(x => getPropRow(x)),
+        returns: (obj.returns ?? []).map(x => getPropRow(x)),
+      });
 
       dev.end(); // 終了処理
       return v.rv;
@@ -481,7 +470,7 @@ async function createSpec() {
    * jsdoc動作環境整備後、シェルの起動時引数から対象となるJSソースファイルのリストを作成。
    * 処理結果はメンバ"sourceFile"に保存。
    * @param {void}
-   * @returns {void}
+   * @returns {null|Error}
    */
   function listSource() {
     const v = {whois:`${pv.whois}.listSource`, arg:{}, rv:null};
@@ -652,17 +641,17 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
 
-  /** runJSDoc: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
+  /** getFile: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
    * @param {string} fn - 対象ファイル名
    * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
    */
-  async function runJsdoc(fn) {
+  async function getFile(fn) {
     return new Promise((resolve, reject) => {
-      const v = {whois:`${pv.whois}.runJsdoc`, arg:{fn,resolve, reject}, rv:null};
+      const v = {whois:`${pv.whois}.getFile`, arg:{fn,resolve, reject}, rv:null};
       const dev = new devTools(v);
 
       dev.step(1);  // jsdoc -X を子プロセスとして起動
-      v.p = spawn("jsdoc", [fn,'--configure',cf.jsdocJson,'-X'], {
+      v.p = spawn("jsdoc", [fn.full,'--configure',cf.jsdocJson,'-X'], {
         stdio: ["ignore", "pipe", "pipe"], // stdin 無視、stdout/stderr を受け取る
         encoding: "utf8"
       });
@@ -684,14 +673,24 @@ async function createSpec() {
       dev.step(5);  // 子プロセスが終了したときに呼ばれる
       // code === 0 なら正常終了、JSON をパースして resolve
       v.p.on("close", code => {
+
+        dev.step(5.1);  // 異常終了時
         if (code !== 0) {
           reject(new Error(`jsdoc exited with code ${code}\n${v.errorOutput}`));
           return;
         }
 
+        dev.step(5.2);  // JSONをオブジェクト化
         try {
           v.json = JSON.parse(v.output);
-          resolve(v.json); // await の戻り値になる
+
+          dev.step(5.3);  // DocLet単位にばらして保存
+          for( v.i=0 ; v.i<v.json.length ; v.i++ ){
+            v.rv = getDocLet(v.json[v.i],fn.unique);
+            if( v.rv instanceof Error ) reject(v.rv);
+          }
+
+          resolve(v.json); // awaitの戻り値。使用しないが開発時の内容確認のため戻す
         } catch (err) {
           reject(new Error("Failed to parse JSON: " + err.message));
         } finally {
@@ -711,9 +710,14 @@ async function createSpec() {
     pv.r = listSource();
     if( pv.r instanceof Error) throw pv.r;
 
-    dev.step(2);  // 対象ファイルについて順次jsdocを実行
-    pv.r = execJsdoc();
-    if( pv.r instanceof Error) throw pv.r;
+    dev.step(2);  // 対象ファイルについて順次処理
+    for( pv.i=0 ; pv.i<sourceFile.source.length ; pv.i++ ){
+      dev.step(1.1);  // ファイル単位にjsdocを実行、docletを作成
+      pv.r = await getFile(sourceFile.source[pv.i]);
+      if( pv.r instanceof Error) throw pv.r;
+    }
+
+
 
   } catch (e) { dev.error(e); return e; } finally {
     // jsdoc動作定義ファイルを削除
@@ -736,7 +740,7 @@ function trash(){
       for( v.i=0 ; v.i<list.length ; v.i++ ){
 
         dev.step(1.1);  // JSDocを取得
-        v.arr = await runJSDoc(list[v.i]);
+        v.arr = await getFile(list[v.i]);
         if( v.arr instanceof Error ) throw v.arr;
 
         dev.step(1.2);  // 取得結果のチェック。配列で無い場合はメッセージを出してスキップ
