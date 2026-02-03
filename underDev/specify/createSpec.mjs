@@ -154,7 +154,9 @@ async function createSpec() {
   const sourceFile = {common:'',outDir:'',sourceNum:0,source:[]};
   /** DocLet: `jsdoc -X`で配列で返されたオブジェクトに情報を付加
    * @interface DocLet
-   * @prop {string} unique - 固有パス＋ファイル名
+   * @prop {string} unique - 固有パス
+   *   unique = 'client/test.js' -> 'client/' ※最後に'/'が付く
+   *   unique = 'test.js' -> '/' ※直下の場合'/'
    * @prop {string} type - DocLetの種類。identifyDocletTypeの戻り値
    * @prop {string} id - 固有パス＋ファイル名＋行番号
    * @prop {DocLet[]} [innerFunc=[]] - メソッド・内部関数
@@ -179,6 +181,30 @@ async function createSpec() {
    * @prop {Object.<string, DocLet>} global - メンバ名は関数・クラス名
    * @prop {Object.<string, DocLet>} typedef - メンバ名はデータ型定義名
    */
+  const dlMap = {};
+  /** dlMapping: docletからdlMapを作成
+   * @param {void} - 共有変数docletから作成
+   * @returns {null|Error} 処理したDocLetはdlMapに格納
+   */
+  function dlMapping(){
+    const v = {whois:`${pv.whois}.dlMapping`, arg:{}, rv:null};
+    const dev = new devTools(v);
+    try {
+
+      // 固有パスの作成
+      v.path = [];  // 固有パスの一覧
+      v.rv = doclet.map(x => {
+        if(!v.path.includes(x.unique)){
+          v.path.push(x.unique);
+          dlMap[x.unique] = {global:{},typedef:{}};
+        }
+      });
+
+      dev.end(dlMap); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
 
   /** getDocLet: DocLet型のオブジェクトを作成、docletに追加
    * @param {Object} obj - `jsdoc -X`で配列で返されたオブジェクト
@@ -215,7 +241,7 @@ async function createSpec() {
       v.doclet = {
         unique: unique,
         type: v.type,
-        id: unique + ':' + obj.meta.lineno,
+        id: unique + obj.meta.filename + ':' + obj.meta.lineno,
         innerFunc: [],
         title: obj.longname.replaceAll(/~/g,'#').split('#')[0],
         label: v.label,
@@ -614,7 +640,9 @@ async function createSpec() {
       }
 
       dev.step(2.5);  // 固有部分を作成
-      sourceFile.source.map(x => x.unique = x.full.slice(sourceFile.common.length));
+      sourceFile.source.map(x => x.unique = 
+        path.posix.dirname(x.full.slice(sourceFile.common.length))
+        .replace(/\/?$/, '/').replace(/^\.\//,'/'));
 
       dev.end(sourceFile); // 終了処理
       return v.rv;
@@ -765,14 +793,18 @@ async function createSpec() {
     pv.r = listSource();
     if( pv.r instanceof Error) throw pv.r;
 
-    dev.step(2);  // 対象ファイルについて順次処理
+    dev.step(2);  // 対象ファイルについて順次DocLetを抽出、docletに格納
     for( pv.i=0 ; pv.i<sourceFile.source.length ; pv.i++ ){
       dev.step(1.1);  // ファイル単位にjsdocを実行、docletを作成
       pv.r = await getFile(sourceFile.source[pv.i]);
       if( pv.r instanceof Error) throw pv.r;
     }
 
-    dev.end(doclet);
+    dev.step(3);  // docletの各要素を階層化してマッピング
+    pv.r = dlMapping();
+    if( pv.r instanceof Error) throw pv.r;
+
+    dev.end();
     return pv.rv;
 
   } catch (e) { dev.error(e); return e; } finally {
