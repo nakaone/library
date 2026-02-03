@@ -110,6 +110,17 @@ async function createSpec() {
     //jsdocJson: `jsdoc.${Date.now()}.json`,  // jsdocコマンド設定ファイル名
     dummyDir: './dummy',  // jsdoc用の空フォルダ
     jsdocTarget: ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
+    lang: 'ja', // 表記する言語
+    ja: { // 日本語での表記
+      undef: '未定義',
+      optional: '任意',
+      required: '必須',
+    },
+    en: {
+      undef: 'undefined',
+      optional: 'optional',
+      required: 'required',
+    },
   };
   /**　sourceFile: 入力ファイル(JSソース)情報
    * @interface sourceFile
@@ -134,22 +145,28 @@ async function createSpec() {
    *   ② description, classdesc があれば先頭行
    *   ③ longname
    *   ※ 上記に該当が無い場合、「(ラベル未設定)」
-   * @prop {string} description - 概要・詳細説明
-   * @prop {propRow[]} [properties=[]] - メンバ一覧
+   * @prop {string} description - 概要・詳細説明、処理手順
+   * @prop {PropRow[]} [properties=[]] - メンバ一覧
    * @prop {Object[]} [innerList=[]] - メソッド・内部関数一覧。項目：No,関数名,ラベル,アンカー
-   * @prop {propRow[]} [params=[]] - 引数。クラスの場合はconstructorの引数
-   * @prop {propRow[]} [returns=[]] - 戻り値
-   * @prop {string} [process] - 処理手順
+   * @prop {PropRow[]} [params=[]] - 引数。クラスの場合はconstructorの引数
+   * @prop {PropRow[]} [returns=[]] - 戻り値
    */
   const doclet = [];
-  /** propRow: 属性一覧に表示する項目
-   * @interface propRow
-   * @prop {string} name - 項目名
-   * @prop {string} type - データ型。複数なら' | 'で区切って並記
-   * @prop {string} value - 要否/既定値。「必須」「任意」または既定値
-   * @prop {string} desc - 1行の簡潔な項目説明
-   * @prop {string} note - 備考
-   */
+  /** getDocLet: DocLet型のオブジェクトを作成 */
+  const getDocLet = x => {return {
+    unique: x.unique ?? '',
+    type: x.type ?? '',
+    id: x.id ?? '',
+    innerFunc: x.innerFunc ?? [],
+    origin: x.origin ?? {},
+    title: x.title ?? '',
+    label: x.label ?? '',
+    description: x.description ?? '',
+    properties: x.properties ?? [],
+    innerList: x.innerList ?? [],
+    params: x.params ?? [],
+    returns: x.returns ?? [],
+  }};
 
   /** execJSDoc: 対象ファイルに順次jsdocを実行、結果をdocletに保存 */
   async function execJsdoc(){
@@ -164,10 +181,10 @@ async function createSpec() {
         if( typeof v.r === 'string' ) throw new Error(v.r);
 
         dev.step(1.2);  // DocLet単位にばらして保存
-        v.r.forEach(o => doclet.push({
+        v.r.forEach(o => doclet.push(getDocLet({
           unique:sourceFile.source[v.i].unique, // 固有パスはファイル単位なのでここで追加
-          origin:o,
-        }));
+          origin: o,
+        })));
       }
 
       dev.step(2);  // DocLet単位の処理
@@ -184,36 +201,64 @@ async function createSpec() {
         dev.step(2.2);  // idを設定(固有パス＋ファイル名＋行番号)
         v.d.id = v.d.unique + `:${v.s.meta.lineno}`;
 
-        dev.step(2.3);  // labelを抽出
+        dev.step(2.3);  // title
+
+        dev.step(2.4);  // labelを抽出
         v.m = v.s.comment.split('\n')[0].match(/^\/\*\*\s*(.+)\n/);
         v.desc = (v.s.description ?? v.s.classdesc ?? v.s.longname ?? '')
           .split('\n')[0] ?? '(ラベル未設定)';
         v.d.label = v.m !== null ? v.m[1]
         : (v.d.type === 'name' || v.d.type === 'class' ? (v.s.longname ?? v.desc) : v.desc);
 
-        // description, classdesc
-        // params
-        // properties, returns
-        // name
-
-        //dev.step(2.3,{id:v.d.id,type:v.d.type,desc:v.s.description});  // descriptionの行頭空白を削除
-        //if( typeof v.s.description !== 'undefined' ){
-          //v.d.description = trimCommonIndent(v.s.description);
-          //if( v.d.description instanceof Error ) throw v.d.description;
-        //}
-        dev.step(99.284,{m:v.m,unique:v.d.unique,id:v.d.id,type:v.d.type,label:v.d.label,origin:v.s});
-        //dev.step(99.275,{unique:v.d.unique,id:v.d.id,type:v.d.type,label:v.d.label,comment:v.s.comment,desc:v.s.description});
-        if( v.d.type === 'description' ){
-          dev.step(99.278,v.s);
-        }
 
       }
-      //dev.step(99.258,doclet[0]);
 
       dev.end(); // 終了処理
       return v.rv;
 
     } catch (e) { return dev.error(e); }
+  }
+
+  /** jsdocColDef: `jsdoc -X`のJSONにおける項目定義
+   * @typedef {Object} jsdocColDef - properties/params/returns
+   * @prop {Object} type - データ型に関する定義
+   * @prop {string[]} type.names - データ型名
+   *   {typeDef[]|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"]
+   * @prop {string} [description] - 項目に関する説明
+   * @prop {string} name - 項目名
+   * @prop {string} [defaultvalue] - 既定値(ex.'[]')
+   *   NG: `＠prop {string[]} x=[]` <- defaultvalue='[' ※']'が欠ける
+   *   OK: `＠prop {string[]} [x=[]]` <- 既定値指定時は必ず'[]'で囲む
+   * @prop {boolean} [optional] - 任意項目だとtrue
+   */
+  /** PropRow: 属性一覧に表示する項目
+   * @typedef {Object} PropRow
+   * @prop {string} name - 項目名
+   * @prop {string} type - データ型。複数なら' | 'で区切って並記
+   * @prop {string} value - 要否/既定値。「必須」「任意」または既定値
+   * @prop {string} desc - 1行の簡潔な項目説明
+   * @prop {string} note - 備考
+   */
+  /** getPropRow: 属性一覧表示用のオブジェクトを作成
+   * @param {jsdocColDef}
+   * @returns {PropRow|Error}
+   */
+  function getPropRow(arg){
+    // 項目名とデータ型定義は必須
+    if( typeof arg.name === 'undefined' || typeof arg.type?.name === 'undefined' )
+      return new Error(`Field name and data type definition are required`);
+
+    const desc = (arg.description ?? '').split('\n');
+    return {
+      name: arg.name,
+      type: arg.type.names
+        .map(x => x.replace(/^Array\.<\s*(.+?)\s*>$/, '$1[]').trim())
+        .join(' | '),
+      value: typeof arg.defaultvalue !== 'undefined' ? arg.defaultvalue
+        : (arg.optional === true ? cf[cf.lang].optional : cf[cf.lang].required),
+      desc: desc[0],  // descriptionの先頭行
+      note: desc.slice(1).join('\n').trim(),  // 2行目以降。先頭・末尾の空行は削除
+    };
   }
 
   /** identifyDoclet: jsdoc -Xで出力されたオブジェクト(DocLet)の型を判定
