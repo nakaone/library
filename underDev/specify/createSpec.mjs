@@ -133,7 +133,7 @@ async function createSpec() {
    * @prop {Object[]} doclet - `jsdoc -X`で返されるJSONをオブジェクト化、配列として格納
    */
   const sourceFile = {common:'',outDir:'',sourceNum:0,source:[]};
-  /** doclet: `jsdoc -X`で配列で返されたオブジェクトに情報を付加
+  /** DocLet: `jsdoc -X`で配列で返されたオブジェクトに情報を付加
    * @interface DocLet
    * @prop {string} unique - 固有パス
    * @prop {string} type - DocLetの種類。identifyDocletTypeの戻り値
@@ -186,21 +186,35 @@ async function createSpec() {
       v.label = v.m !== null ? v.m[1]
       : (v.type === 'name' || v.type === 'class' ? (obj.longname ?? v.desc) : v.desc);
 
-      dev.step(4);  // DocLet型のオブジェクトをdocletに格納
-      doclet.push({
+      dev.step(4);  // DocLet型のオブジェクトを作成
+      v.doclet = {
         unique: unique,
         type: v.type,
         id: unique + ':' + obj.meta.lineno,
         innerFunc: [],
-        origin: obj,
         title: obj.longname.replaceAll(/~/g,'#').split('#')[0],
         label: v.label,
         description: obj.description ?? obj.classdesc ?? '',
-        properties: (obj.properties ?? []).map(x => getPropRow(x)),
+        properties: [],
         innerList: [],
-        params: (obj.params ?? []).map(x => getPropRow(x)),
-        returns: (obj.returns ?? []).map(x => getPropRow(x)),
+        params: [],
+        returns: [],
+        origin: obj,
+      };
+
+      dev.step(5);  // 属性項目についてPropRow作成
+      ['properties','params','returns'].forEach(x => {
+        if( typeof obj[x] !== 'undefined' && Array.isArray(obj[x]) && obj[x].length > 0 ){
+          for( v.i=0 ; v.i<obj[x].length ; v.i++ ){
+            v.r = getPropRow(obj[x][v.i],x,obj);
+            if( v.r instanceof Error ) throw v.r;
+            v.doclet[x].push(v.r);
+          }
+        }
       });
+
+      dev.step(6);  // docletへの格納
+      doclet.push(v.doclet);
 
       dev.end(); // 終了処理
       return v.rv;
@@ -229,25 +243,40 @@ async function createSpec() {
    * @prop {string} note - 備考
    */
   /** getPropRow: 属性一覧表示用のオブジェクトを作成
-   * @param {jsdocColDef}
+   * @param {jsdocColDef} arg - 項目定義オブジェクト
+   * @param {string} type - 呼出元の属性。'properties','params','returns'
+   * @param {Object} obj - 項目定義オブジェクトを含むDocLet全体。エラー箇所特定用
    * @returns {PropRow|Error}
    */
-  function getPropRow(arg){
-    // 項目名とデータ型定義は必須
-    if( typeof arg.name === 'undefined' || typeof arg.type?.name === 'undefined' )
-      return new Error(`Field name and data type definition are required`);
+  function getPropRow(arg,type,obj){
+    const v = {whois:`${pv.whois}.getPropRow`, arg:{arg,type,obj}, rv:null};
+    const dev = new devTools(v);
+    try {
 
-    const desc = (arg.description ?? '').split('\n');
-    return {
-      name: arg.name,
-      type: arg.type.names
-        .map(x => x.replace(/^Array\.<\s*(.+?)\s*>$/, '$1[]').trim())
-        .join(' | '),
-      value: typeof arg.defaultvalue !== 'undefined' ? arg.defaultvalue
-        : (arg.optional === true ? cf[cf.lang].optional : cf[cf.lang].required),
-      desc: desc[0],  // descriptionの先頭行
-      note: desc.slice(1).join('\n').trim(),  // 2行目以降。先頭・末尾の空行は削除
-    };
+      dev.step(1);  // 必須項目の存否チェック(項目名とデータ型定義)
+      v.msg = JSON.stringify(arg) + `\n${obj.comment}`;
+      if( typeof arg.type?.names === 'undefined' || !Array.isArray(arg.type?.names) )
+        throw new Error(`Type definition are required: ${v.msg}`);
+      // returnsの場合は項目名不要
+      if( type !== 'returns' && typeof arg.name === 'undefined' )
+        throw new Error(`Field name is required: ${v.msg}`);
+
+      const desc = (arg.description ?? '').split('\n');
+      v.rv = {
+        name: arg.name,
+        type: arg.type.names
+          .map(x => x.replace(/^Array\.<\s*(.+?)\s*>$/, '$1[]').trim())
+          .join(' | '),
+        value: typeof arg.defaultvalue !== 'undefined' ? arg.defaultvalue
+          : (arg.optional === true ? cf[cf.lang].optional : cf[cf.lang].required),
+        desc: desc[0],  // descriptionの先頭行
+        note: desc.slice(1).join('\n').trim(),  // 2行目以降。先頭・末尾の空行は削除
+      };
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
   }
 
   /** identifyDoclet: jsdoc -Xで出力されたオブジェクト(DocLet)の型を判定
@@ -717,7 +746,8 @@ async function createSpec() {
       if( pv.r instanceof Error) throw pv.r;
     }
 
-
+    dev.end(doclet);
+    return pv.rv;
 
   } catch (e) { dev.error(e); return e; } finally {
     // jsdoc動作定義ファイルを削除
