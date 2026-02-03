@@ -46,6 +46,8 @@ import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
  * 
  * # JSDoc記述上の注意
  * 
+ * - グローバル関数・クラス・データ型定義の名称は重複不可
+ *   ∵ リンクを張る場合、リンク先を特定できない
  * - JSDoc開始の「／**」以降に続く文字列は＠descとして扱われる
  * - コンストラクタには「＠constructor」必須
  * - 「＠history」を独自タグとして定義
@@ -92,7 +94,21 @@ import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
  * - rev.1.0.0 : 2026/01/31
  *   specify.mjsを継承し、初版作成
  */
-
+/**
+ * @name 開発課題
+ * @desc
+ * - Markdownファイルは'-o'フォルダの下に固有パスを作成、クラス・グローバル関数毎に作成。
+ * - データ型定義は固有パスフォルダ直下に"typedef.md"として作成
+ * - undocumentedチェックを追加
+ * - Objectからの一覧表作成機能
+ * - シンボル(クラス・メソッド・関数)と一致する文字列にはリンクを自動生成
+ * - 「クラス名.メソッド名」にもリンク
+ * - 和文の他、英文のテンプレートも追加
+ * - シンボル内の説明文を当該シンボル内に記載
+ *   現状、記載すべき箇所を特定する事が困難なため、全てグローバル領域になっている。
+ *   案：＠descの後に記載箇所特定文字列を入れる(ex."authLog.constructor")
+ * - 重複シンボルがあればエラーメッセージ
+ */
 console.log(JSON.stringify(createSpec(),null,2));
 
 /** createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
@@ -235,6 +251,7 @@ async function createSpec() {
    * @prop {boolean} [optional] - 任意項目だとtrue
    */
   /** PropRow: 属性一覧に表示する項目
+   * - 戻り値(returns)の場合、項目名・要否/既定値は無効な値となる
    * @typedef {Object} PropRow
    * @prop {string} name - 項目名
    * @prop {string} type - データ型。複数なら' | 'で区切って並記
