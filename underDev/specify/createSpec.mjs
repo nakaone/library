@@ -80,6 +80,12 @@ import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
  *   const user = {...}
  *   ```
  * 
+ * # 用語集
+ * 
+ * - DocLet : JSDoc上「／** 〜 *／」までの部分。通常一つのファイルに複数存在。
+ *   `jsdoc -X`の出力はArray.<Doclet>形式のJSONとなる。
+ * - シンボル : クラス・関数・データ型定義。Markdownの仕様書上、最上位の分類
+ * 
  * # 参考資料
  * 
  * - [データ型判定](https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0)(Google Spread)
@@ -97,12 +103,9 @@ import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
 /**
  * @name 開発課題
  * @desc
- * - Markdownファイルは'-o'フォルダの下に固有パスを作成、クラス・グローバル関数毎に作成。
- * - データ型定義は固有パスフォルダ直下に"typedef.md"として作成
  * - undocumentedチェックを追加
- * - Objectからの一覧表作成機能
- * - シンボル(クラス・メソッド・関数)と一致する文字列にはリンクを自動生成
- * - 「クラス名.メソッド名」にもリンク
+ * - Objectからの一覧表作成機能(ex. properties -> Markdownの表)
+ * - シンボル・メソッドと一致する文字列にはリンクを自動生成
  * - 和文の他、英文のテンプレートも追加
  * - シンボル内の説明文を当該シンボル内に記載
  *   現状、記載すべき箇所を特定する事が困難なため、全てグローバル領域になっている。
@@ -238,7 +241,7 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
 
-  /** jsdocColDef: `jsdoc -X`のJSONにおける項目定義
+  /** jsdocColDef: DocLetの項目定義
    * @typedef {Object} jsdocColDef - properties/params/returns
    * @prop {Object} type - データ型に関する定義
    * @prop {string[]} type.names - データ型名
@@ -296,7 +299,7 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
 
-  /** identifyDoclet: jsdoc -Xで出力されたオブジェクト(DocLet)の型を判定
+  /** identifyDoclet: DocLetの型を判定
    * @param {Object} doclet
    * @returns {string|Error}
    */
