@@ -221,15 +221,12 @@ async function createSpec() {
       dev.step(2);
       for( v.i=0 ; v.i<doclet.length ; v.i++ ){
         v.d = doclet[v.i];
-        dev.step(99.224,v.d);
         switch( v.d.type ){
           case 'objectFunc':  // -> longname区切り記号：'#'
             dev.step(2.1);
             // typedef配下で親を探す
             v.r = getByTildePath(v.d.origin.longname,dlMap[v.d.unique].typedef);
-            dev.step(99.229,v.r);
             // 親が見つからなければエラー
-            dev.step(99.232,{keys:Object.keys(dlMap[v.d.unique].typedef),user:dlMap[v.d.unique].typedef.User});
             if( !v.r.obj ) throw new Error(`no parent: ${JSON.stringify(v.d.origin,null,2)}`);
             // 親定義.propertiesに追加
             v.r.obj.properties.push(v.d);
@@ -258,7 +255,8 @@ async function createSpec() {
         }
       }
 
-      dev.end(omitKeyDeep(dlMap,['origin','properties','params','returns'])); // 終了処理
+      console.log(JSON.stringify(dlMap)); // debug
+      dev.end(); // 終了処理
       return v.rv;
 
     } catch (e) { return dev.error(e); }
