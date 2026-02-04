@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-/**
+/** createSpec概要
  * @name createSpec概要
  * @desc
  * 
@@ -43,6 +43,9 @@
  * 
  * - グローバル関数・クラス・データ型定義の名称は重複不可
  *   ∵ リンクを張る場合、リンク先を特定できない
+ * - 以下はエラーとなる
+ *   - ＠class未定義で＠constructorやメソッドにJSDoc記述
+ *   - グローバル関数未定義で内部関数にJSDoc記述
  * - JSDoc開始の「／**」以降に続く文字列は＠descとして扱われる
  * - コンストラクタには「＠constructor」必須
  * - 「＠history」を独自タグとして定義
@@ -95,7 +98,7 @@
  * - rev.1.0.0 : 2026/01/31
  *   specify.mjsを継承し、初版作成
  */
-/**
+/** 開発課題
  * @name 開発課題
  * @desc
  * - undocumentedチェックを追加
@@ -106,6 +109,8 @@
  *   現状、記載すべき箇所を特定する事が困難なため、全てグローバル領域になっている。
  *   案：＠descの後に記載箇所特定文字列を入れる(ex."authLog.constructor")
  * - 重複シンボルがあればエラーメッセージ
+ * - 文法チェック
+ *   - ＠class の後に余計な文字列があればエラー
  */
 console.log(JSON.stringify(createSpec(),null,2));
 
@@ -149,7 +154,9 @@ async function createSpec() {
   const sourceFile = {common:'',outDir:'',sourceNum:0,source:[]};
   /** DocLet: `jsdoc -X`で配列で返されたオブジェクトに情報を付加
    * @interface DocLet
-   * @prop {string} unique - 固有パス＋ファイル名
+   * @prop {string} unique - 固有パス
+   *   unique = 'client/test.js' -> 'client/' ※最後に'/'が付く
+   *   unique = 'test.js' -> '/' ※直下の場合'/'
    * @prop {string} type - DocLetの種類。identifyDocletTypeの戻り値
    * @prop {string} id - 固有パス＋ファイル名＋行番号
    * @prop {DocLet[]} [innerFunc=[]] - メソッド・内部関数
@@ -174,6 +181,121 @@ async function createSpec() {
    * @prop {Object.<string, DocLet>} global - メンバ名は関数・クラス名
    * @prop {Object.<string, DocLet>} typedef - メンバ名はデータ型定義名
    */
+  const dlMap = {};
+
+  /** dlMapping: docletからdlMapを作成
+   * @param {void} - 共有変数docletから作成
+   * @returns {null|Error} 処理したDocLetはdlMapに格納
+   */
+  function dlMapping(){
+    const v = {whois:`${pv.whois}.dlMapping`, arg:{}, rv:null};
+    const dev = new devTools(v);
+    try {
+
+      for( v.i=0 ; v.i<doclet.length ; v.i++ ){
+        v.d = doclet[v.i];
+
+        dev.step(1);  // 固有パスが存在しない場合、プレースホルダを作成
+        if( typeof dlMap[v.d.unique] === 'undefined' ){
+          dlMap[v.d.unique] = {global:{},typedef:{}};
+        }
+
+        dev.step(1.2);  // 受け皿となるグローバル関数・クラスおよびデータ型定義を先行して作成
+        switch( v.d.type ){
+          case 'typedef':
+          case 'interface':
+            dlMap[v.d.unique].typedef[v.d.title] = v.d;
+            break;
+          case 'class':
+          case 'function':
+            dlMap[v.d.unique].global[v.d.title] = v.d;
+            break;
+        }
+      }
+
+      dev.step(2);
+      for( v.i=0 ; v.i<doclet.length ; v.i++ ){
+        v.d = doclet[v.i];
+        switch( v.d.type ){
+          case 'objectFunc':  // -> longname区切り記号：'#'
+            dev.step(2.1);
+            // typedef配下で親を探す
+            v.r = getByTildePath(v.d.origin.longname,dlMap[v.d.unique].typedef);
+            // 親が見つからなければエラー
+            if( !v.r.obj ) throw new Error(`no parent: ${JSON.stringify(v.d.origin,null,2)}`);
+            // 親定義.propertiesに追加
+            v.r.obj.properties.push(v.d);
+            break;
+          case 'constructor': // -> longname区切り記号：無し、name === クラス名
+            dev.step(2.2);
+            // @constructorに対応する@classの記述がない ⇒ エラー
+            if( typeof dlMap[v.d.unique].global[v.d.origin.name] === 'undefined' ){
+              throw new Error(`There is no @class description corresponding to @constructor`);
+            }
+            dlMap[v.d.unique].global[v.d.origin.name].innerFunc.push(v.d);
+            break;
+          case 'method':  // -> longname区切り記号：'.'
+          case 'innerFunc':  // -> longname区切り記号：'~'
+            dev.step(2.3);
+            // global配下で親を探す
+            v.r = getByTildePath(v.d.origin.longname,dlMap[v.d.unique].global);
+            // 親が見つからなければエラー
+            if( !v.r.obj ) throw new Error(`no parent: ${JSON.stringify(v.d.origin,null,2)}`);
+            // 親定義.innerFuncに追加
+            v.r.obj.innerFunc.push(v.d);
+            break;
+          case 'description':  // -> longname区切り記号：無し
+            dev.step(2.4);
+            break;
+        }
+      }
+
+      dev.end(JSON.stringify(dlMap)); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** getByTildePath:パス文字列からオブジェクトを辿って値を取得
+   * @param {string} path - 例: "func01~func02~arrow01"
+   * @param {object} obj  - 探索対象オブジェクト
+   * @returns {{obj:any, label:string} | null}
+   */
+  function getByTildePath(path, obj) {
+    const v = {whois:`${pv.whois}.getByTildePath`, arg:{}, rv:{obj:null,label:''}};;
+    const dev = new devTools(v);
+    try {
+
+      dev.step(1);  // 引数チェック
+      if ( !path || typeof path !== 'string') return null;
+
+      dev.step(2);  // longnameを分解
+      v.parts = path.replaceAll(/[\~\.]/g,'#').split('#');
+
+      if (v.parts.length < 1){
+        dev.step(3,v.parts);  // 区切り記号無し
+        v.rv.label = path[0];
+      } else {
+        dev.step(4.1);
+        v.rv.label = v.parts.at(-1);  // 最後の要素はlabel
+        v.keys  = v.parts.slice(0, -1); // それ以外がpath
+        dev.step(4.2);
+        let cur = obj;
+        for (const key of v.keys) {
+          if (cur && typeof cur === 'object' && key in cur) {
+            cur = cur[key];
+          } else {
+            return null;
+          }
+        }
+        v.rv.obj = cur;
+      }
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
 
   /** getDocLet: DocLet型のオブジェクトを作成、docletに追加
    * @param {Object} obj - `jsdoc -X`で配列で返されたオブジェクト
@@ -210,7 +332,7 @@ async function createSpec() {
       v.doclet = {
         unique: unique,
         type: v.type,
-        id: unique + ':' + obj.meta.lineno,
+        id: unique + obj.meta.filename + ':' + obj.meta.lineno,
         innerFunc: [],
         title: obj.longname.replaceAll(/~/g,'#').split('#')[0],
         label: v.label,
@@ -240,6 +362,65 @@ async function createSpec() {
       return v.rv;
 
     } catch (e) { return dev.error(e); }
+  }
+
+  /** getFile: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
+   * @param {string} fn - 対象ファイル名
+   * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
+   */
+  async function getFile(fn) {
+    return new Promise((resolve, reject) => {
+      const v = {whois:`${pv.whois}.getFile`, arg:{fn,resolve, reject}, rv:null};
+      const dev = new devTools(v);
+
+      dev.step(1);  // jsdoc -X を子プロセスとして起動
+      v.p = spawn("jsdoc", [fn.full,'--configure',cf.jsdocJson,'-X'], {
+        stdio: ["ignore", "pipe", "pipe"], // stdin 無視、stdout/stderr を受け取る
+        encoding: "utf8"
+      });
+
+      dev.step(2);  // jsdoc の出力(JSON文字列)を蓄積するバッファ
+      v.output = "";
+      v.errorOutput = "";
+
+      dev.step(3);  // stdout（標準出力）にデータが届くたびに呼ばれる
+      v.p.stdout.on("data", chunk => {
+        v.output += chunk; // JSON の断片をつなげる
+      });
+
+      dev.step(4);  // stderr（標準エラー）も蓄積しておく
+      v.p.stderr.on("data", chunk => {
+        v.errorOutput += chunk;
+      });
+
+      dev.step(5);  // 子プロセスが終了したときに呼ばれる
+      // code === 0 なら正常終了、JSON をパースして resolve
+      v.p.on("close", code => {
+
+        dev.step(5.1);  // 異常終了時
+        if (code !== 0) {
+          reject(new Error(`jsdoc exited with code ${code}\n${v.errorOutput}`));
+          return;
+        }
+
+        dev.step(5.2);  // JSONをオブジェクト化
+        try {
+          v.json = JSON.parse(v.output);
+
+          dev.step(5.3);  // DocLet単位にばらして保存
+          for( v.i=0 ; v.i<v.json.length ; v.i++ ){
+            v.rv = getDocLet(v.json[v.i],fn.unique);
+            if( v.rv instanceof Error ) reject(v.rv);
+          }
+
+          resolve(v.json); // awaitの戻り値。使用しないが開発時の内容確認のため戻す
+        } catch (err) {
+          reject(new Error("Failed to parse JSON: " + err.message));
+        } finally {
+          dev.end();
+        }
+      });
+    });
   }
 
   /** jsdocColDef: DocLetの項目定義
@@ -319,10 +500,6 @@ async function createSpec() {
      *   - kind === 'typedef'
      * - interface
      *   - kind === 'interface'
-     * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br>
-     *   なおあくまでinterfaceなので、関数と同時にpropertiesも含む
-     *   - kind === 'function'
-     *   - scope === 'instance'
      * - class
      *   - kind === 'class'
      *   - meta.code.type === "ClassDeclaration" || "ClassExpression"
@@ -332,6 +509,7 @@ async function createSpec() {
      *   - /＠constructor\b/.test(doclet.comment || "")
      * - method
      *   - kind === "function"
+     *   - meta?.code?.type === "MethodDefinition"
      *   - scope === "instance" または "static"
      * - function(グローバル関数) ※アロー関数を含む
      *   - kind === 'function'
@@ -344,6 +522,10 @@ async function createSpec() {
      *   - meta.code.nameがundefined(プラグインや拡張を考慮する場合には必要)
      *   - kindがtypedef/interface 以外
      *   - nameが存在
+     * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br>
+     *   なおあくまでinterfaceなので、関数と同時にpropertiesも含む
+     *   - kind === 'function'
+     *   - scope === 'instance'
      * - unknown(上記で判定不能)
      */
 
@@ -367,8 +549,10 @@ async function createSpec() {
           switch( doclet.scope ){
             case 'global': v.rv = 'function'; break;
             case 'inner': v.rv = 'innerFunc'; break;
-            case 'instance': v.rv = 'objectFunc'; break;
-            case 'instance': case 'static': v.rv = 'method'; break;
+            case 'instance':
+            case 'static': v.rv =
+              doclet.meta?.code?.type === 'MethodDefinition' ? 'method' : 'objectFunc';
+              break;
             default: 'unknown';
           }
           break;
@@ -567,7 +751,7 @@ async function createSpec() {
        * ④'-x'の次からは除外ファイル
        */
 
-      dev.step(2.1,existsSync(cf.dummyDir));  // 結果を格納する領域を準備
+      dev.step(2.1);  // 結果を格納する領域を準備
       v.iList = [],  // 入力ファイルリスト
       v.xList = [],  // 除外ファイルリスト
 
@@ -609,7 +793,9 @@ async function createSpec() {
       }
 
       dev.step(2.5);  // 固有部分を作成
-      sourceFile.source.map(x => x.unique = x.full.slice(sourceFile.common.length));
+      sourceFile.source.map(x => x.unique = 
+        path.posix.dirname(x.full.slice(sourceFile.common.length))
+        .replace(/\/?$/, '/').replace(/^\.\//,'/'));
 
       dev.end(sourceFile); // 終了処理
       return v.rv;
@@ -691,63 +877,32 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
 
-  /** getFile: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
-   * @param {string} fn - 対象ファイル名
-   * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
+  /** omitKeyDeep: 【開発用】指定キーを再帰的に除外した新しいオブジェクトを作成
+   * @param {Object} obj - オブジェクト。dlMap等を想定
+   * @param {string|string[]} keys - 除外するキー名（単数または複数）。"origin"等
+   * @returns {Object}
    */
-  async function getFile(fn) {
-    return new Promise((resolve, reject) => {
-      const v = {whois:`${pv.whois}.getFile`, arg:{fn,resolve, reject}, rv:null};
-      const dev = new devTools(v);
+  function omitKeyDeep(obj, keys) {
+    const keySet = new Set(
+      Array.isArray(keys) ? keys : [keys]
+    );
 
-      dev.step(1);  // jsdoc -X を子プロセスとして起動
-      v.p = spawn("jsdoc", [fn.full,'--configure',cf.jsdocJson,'-X'], {
-        stdio: ["ignore", "pipe", "pipe"], // stdin 無視、stdout/stderr を受け取る
-        encoding: "utf8"
-      });
+    const walk = value => {
+      if (Array.isArray(value)) {
+        return value.map(walk);
+      }
+      if (value === null || typeof value !== 'object') {
+        return value;
+      }
 
-      dev.step(2);  // jsdoc の出力(JSON文字列)を蓄積するバッファ
-      v.output = "";
-      v.errorOutput = "";
+      return Object.fromEntries(
+        Object.entries(value)
+          .filter(([k]) => !keySet.has(k))
+          .map(([k, v]) => [k, walk(v)])
+      );
+    };
 
-      dev.step(3);  // stdout（標準出力）にデータが届くたびに呼ばれる
-      v.p.stdout.on("data", chunk => {
-        v.output += chunk; // JSON の断片をつなげる
-      });
-
-      dev.step(4);  // stderr（標準エラー）も蓄積しておく
-      v.p.stderr.on("data", chunk => {
-        v.errorOutput += chunk;
-      });
-
-      dev.step(5);  // 子プロセスが終了したときに呼ばれる
-      // code === 0 なら正常終了、JSON をパースして resolve
-      v.p.on("close", code => {
-
-        dev.step(5.1);  // 異常終了時
-        if (code !== 0) {
-          reject(new Error(`jsdoc exited with code ${code}\n${v.errorOutput}`));
-          return;
-        }
-
-        dev.step(5.2);  // JSONをオブジェクト化
-        try {
-          v.json = JSON.parse(v.output);
-
-          dev.step(5.3);  // DocLet単位にばらして保存
-          for( v.i=0 ; v.i<v.json.length ; v.i++ ){
-            v.rv = getDocLet(v.json[v.i],fn.unique);
-            if( v.rv instanceof Error ) reject(v.rv);
-          }
-
-          resolve(v.json); // awaitの戻り値。使用しないが開発時の内容確認のため戻す
-        } catch (err) {
-          reject(new Error("Failed to parse JSON: " + err.message));
-        } finally {
-          dev.end();
-        }
-      });
-    });
+    return walk(obj);
   }
 
   // -------------------------------------------------------------
@@ -760,14 +915,18 @@ async function createSpec() {
     pv.r = listSource();
     if( pv.r instanceof Error) throw pv.r;
 
-    dev.step(2);  // 対象ファイルについて順次処理
+    dev.step(2);  // 対象ファイルについて順次DocLetを抽出、docletに格納
     for( pv.i=0 ; pv.i<sourceFile.source.length ; pv.i++ ){
       dev.step(1.1);  // ファイル単位にjsdocを実行、docletを作成
       pv.r = await getFile(sourceFile.source[pv.i]);
       if( pv.r instanceof Error) throw pv.r;
     }
 
-    dev.end(doclet);
+    dev.step(3);  // docletの各要素を階層化してマッピング
+    pv.r = dlMapping();
+    if( pv.r instanceof Error) throw pv.r;
+
+    dev.end();
     return pv.rv;
 
   } catch (e) { dev.error(e); return e; } finally {

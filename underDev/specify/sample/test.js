@@ -77,7 +77,7 @@ function func01(arg){
 }
 
 /**
- * @class テスト用クラス名
+ * @class
  * @classdesc テスト用クラス
  * @extends BaseClass
  * @prop {Object} opt - 起動時オプション
@@ -106,6 +106,7 @@ class class01 extends BaseClass {
   }
 
   /** method01: メソッドテスト
+   * @memberof class01
    * @param {number} arg - method01の引数
    * @returns {{qId:number,name:string}} NG: qId,name指定無しのObjectになる
    */

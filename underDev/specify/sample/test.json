@@ -581,16 +581,26 @@
         "scope": "static"
     },
     {
-        "comment": "/**\n * @class テスト用クラス名\n * @classdesc テスト用クラス\n * @extends BaseClass\n * @prop {Object} opt - 起動時オプション\n */",
+        "comment": "/**\n * @class\n * @classdesc テスト用クラス\n * @extends BaseClass\n * @prop {Object} opt - 起動時オプション\n */",
         "meta": {
+            "range": [
+                1692,
+                2419
+            ],
             "filename": "test.js",
-            "lineno": 79,
+            "lineno": 85,
             "columnno": 0,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
-            "code": {}
+            "code": {
+                "id": "astnode100000052",
+                "name": "class01",
+                "type": "ClassDeclaration",
+                "paramnames": [
+                    "arg"
+                ]
+            }
         },
         "kind": "class",
-        "name": "テスト用クラス名",
         "classdesc": "テスト用クラス",
         "augments": [
             "BaseClass"
@@ -606,34 +616,10 @@
                 "name": "opt"
             }
         ],
-        "longname": "テスト用クラス名",
-        "scope": "global"
-    },
-    {
-        "comment": "",
-        "meta": {
-            "range": [
-                1701,
-                2405
-            ],
-            "filename": "test.js",
-            "lineno": 85,
-            "columnno": 0,
-            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
-            "code": {
-                "id": "astnode100000052",
-                "name": "class01",
-                "type": "ClassDeclaration",
-                "paramnames": [
-                    "arg"
-                ]
-            }
-        },
-        "undocumented": true,
         "name": "class01",
         "longname": "class01",
-        "kind": "class",
-        "scope": "global"
+        "scope": "global",
+        "undocumented": true
     },
     {
         "comment": "/**\n   * @typedef {Object} typeDef - JSDocのデータ型定義単位のオブジェクト\n   * @property {string} name - データ型の定義名\n   * @property {columnDef[]} list - 項目(メンバ)のリスト\n   */",
@@ -679,8 +665,8 @@
         "comment": "/** class01のconstructor\n   * - constructorの説明\n   * @constructor\n   * @param {bigint} arg - typeはテスト用\n   */",
         "meta": {
             "range": [
-                2002,
-                2220
+                1993,
+                2211
             ],
             "filename": "test.js",
             "lineno": 97,
@@ -713,14 +699,67 @@
         ],
         "name": "class01",
         "longname": "class01",
-        "scope": "global"
+        "scope": "global",
+        "undocumented": true
+    },
+    {
+        "comment": "/**\n * @class\n * @classdesc テスト用クラス\n * @extends BaseClass\n * @prop {Object} opt - 起動時オプション\n */",
+        "meta": {
+            "range": [
+                1692,
+                2419
+            ],
+            "filename": "test.js",
+            "lineno": 85,
+            "columnno": 0,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100000052",
+                "name": "class01",
+                "type": "ClassDeclaration",
+                "paramnames": [
+                    "arg"
+                ]
+            }
+        },
+        "name": "class01",
+        "longname": "class01",
+        "kind": "class",
+        "classdesc": "テスト用クラス",
+        "augments": [
+            "BaseClass"
+        ],
+        "scope": "global",
+        "description": "class01のconstructor\n- constructorの説明",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "bigint"
+                    ]
+                },
+                "description": "typeはテスト用",
+                "name": "arg"
+            }
+        ],
+        "properties": [
+            {
+                "type": {
+                    "names": [
+                        "Object"
+                    ]
+                },
+                "description": "起動時オプション",
+                "name": "opt"
+            }
+        ]
     },
     {
         "comment": "",
         "meta": {
             "range": [
-                2201,
-                2215
+                2192,
+                2206
             ],
             "filename": "test.js",
             "lineno": 105,
@@ -742,14 +781,14 @@
         "scope": "instance"
     },
     {
-        "comment": "/** method01: メソッドテスト\n   * @param {number} arg - method01の引数\n   * @returns {{qId:number,name:string}} NG: qId,name指定無しのObjectになる\n   */",
+        "comment": "/** method01: メソッドテスト\n   * @memberof class01\n   * @param {number} arg - method01の引数\n   * @returns {{qId:number,name:string}} NG: qId,name指定無しのObjectになる\n   */",
         "meta": {
             "range": [
-                2361,
-                2403
+                2375,
+                2417
             ],
             "filename": "test.js",
-            "lineno": 112,
+            "lineno": 113,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -765,6 +804,7 @@
             }
         },
         "description": "method01: メソッドテスト",
+        "memberof": "class01",
         "params": [
             {
                 "type": {
@@ -789,7 +829,6 @@
         "name": "method01",
         "longname": "class01#method01",
         "kind": "function",
-        "memberof": "class01",
         "scope": "instance"
     },
     {

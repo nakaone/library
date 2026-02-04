@@ -1,0 +1,152 @@
+12:43:21.408 [0001]createSpec start
+12:43:21.411 [0002]createSpec.listSource start
+12:43:21.411 [0002]createSpec.listSource normal end
+{
+  common:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/", // string
+  outDir:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify", // string
+  sourceNum:1, // number
+  source:  [
+    {
+      full:"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample/test.js", // string
+      unique:"/", // string
+    }
+  ], // Array
+}
+12:43:21.412 [0003]createSpec.getFile start
+{}
+12:43:21.579 [0004]createSpec.getDocLet start
+12:43:21.579 [0005]createSpec.identifyDocletType start
+12:43:21.579 [0005]createSpec.identifyDocletType normal end
+12:43:21.579 [0004]createSpec.getDocLet normal end
+12:43:21.579 [0006]createSpec.getDocLet start
+12:43:21.579 [0007]createSpec.identifyDocletType start
+12:43:21.579 [0007]createSpec.identifyDocletType normal end
+12:43:21.579 [0008]createSpec.getPropRow start
+12:43:21.579 [0008]createSpec.getPropRow normal end
+12:43:21.580 [0009]createSpec.getPropRow start
+12:43:21.580 [0009]createSpec.getPropRow normal end
+12:43:21.580 [0010]createSpec.getPropRow start
+12:43:21.580 [0010]createSpec.getPropRow normal end
+12:43:21.580 [0006]createSpec.getDocLet normal end
+12:43:21.580 [0011]createSpec.getDocLet start
+12:43:21.580 [0012]createSpec.identifyDocletType start
+12:43:21.580 [0012]createSpec.identifyDocletType normal end
+12:43:21.580 [0013]createSpec.getPropRow start
+12:43:21.580 [0013]createSpec.getPropRow normal end
+12:43:21.580 [0014]createSpec.getPropRow start
+12:43:21.580 [0014]createSpec.getPropRow normal end
+12:43:21.580 [0015]createSpec.getPropRow start
+12:43:21.580 [0015]createSpec.getPropRow normal end
+12:43:21.580 [0011]createSpec.getDocLet normal end
+12:43:21.580 [0016]createSpec.getDocLet start
+12:43:21.580 [0017]createSpec.identifyDocletType start
+12:43:21.580 [0017]createSpec.identifyDocletType normal end
+12:43:21.580 [0018]createSpec.getPropRow start
+12:43:21.580 [0018]createSpec.getPropRow normal end
+12:43:21.580 [0019]createSpec.getPropRow start
+12:43:21.580 [0019]createSpec.getPropRow normal end
+12:43:21.580 [0016]createSpec.getDocLet normal end
+12:43:21.580 [0020]createSpec.getDocLet start
+12:43:21.580 [0021]createSpec.identifyDocletType start
+12:43:21.580 [0021]createSpec.identifyDocletType normal end
+12:43:21.580 [0022]createSpec.getDocLet start
+12:43:21.580 [0023]createSpec.identifyDocletType start
+12:43:21.580 [0024]createSpec.getDocLet start
+12:43:21.580 [0025]createSpec.identifyDocletType start
+12:43:21.580 [0026]createSpec.getDocLet start
+12:43:21.580 [0027]createSpec.identifyDocletType start
+12:43:21.580 [0028]createSpec.getDocLet start
+12:43:21.580 [0029]createSpec.identifyDocletType start
+12:43:21.580 [0030]createSpec.getDocLet start
+12:43:21.580 [0031]createSpec.identifyDocletType start
+12:43:21.580 [0031]createSpec.identifyDocletType normal end
+12:43:21.580 [0032]createSpec.getPropRow start
+12:43:21.580 [0032]createSpec.getPropRow normal end
+12:43:21.580 [0033]createSpec.getPropRow start
+12:43:21.580 [0033]createSpec.getPropRow normal end
+12:43:21.580 [0030]createSpec.getDocLet normal end
+12:43:21.580 [0034]createSpec.getDocLet start
+12:43:21.581 [0035]createSpec.identifyDocletType start
+12:43:21.581 [0035]createSpec.identifyDocletType normal end
+12:43:21.581 [0036]createSpec.getPropRow start
+12:43:21.581 [0036]createSpec.getPropRow normal end
+12:43:21.581 [0037]createSpec.getPropRow start
+12:43:21.581 [0037]createSpec.getPropRow normal end
+12:43:21.581 [0034]createSpec.getDocLet normal end
+12:43:21.581 [0038]createSpec.getDocLet start
+12:43:21.581 [0039]createSpec.identifyDocletType start
+12:43:21.581 [0039]createSpec.identifyDocletType normal end
+12:43:21.581 [0040]createSpec.getPropRow start
+12:43:21.581 [0040]createSpec.getPropRow normal end
+12:43:21.581 [0041]createSpec.getPropRow start
+12:43:21.581 [0041]createSpec.getPropRow normal end
+12:43:21.581 [0038]createSpec.getDocLet normal end
+12:43:21.581 [0042]createSpec.getDocLet start
+12:43:21.581 [0043]createSpec.identifyDocletType start
+12:43:21.581 [0043]createSpec.identifyDocletType normal end
+12:43:21.581 [0044]createSpec.getDocLet start
+12:43:21.581 [0045]createSpec.identifyDocletType start
+12:43:21.581 [0045]createSpec.identifyDocletType normal end
+12:43:21.581 [0046]createSpec.getPropRow start
+12:43:21.581 [0046]createSpec.getPropRow normal end
+12:43:21.581 [0047]createSpec.getPropRow start
+12:43:21.581 [0047]createSpec.getPropRow normal end
+12:43:21.581 [0044]createSpec.getDocLet normal end
+12:43:21.581 [0048]createSpec.getDocLet start
+12:43:21.581 [0049]createSpec.identifyDocletType start
+12:43:21.581 [0049]createSpec.identifyDocletType normal end
+12:43:21.581 [0050]createSpec.getDocLet start
+12:43:21.581 [0051]createSpec.identifyDocletType start
+12:43:21.581 [0052]createSpec.getDocLet start
+12:43:21.581 [0053]createSpec.identifyDocletType start
+12:43:21.582 [0054]createSpec.getDocLet start
+12:43:21.582 [0055]createSpec.identifyDocletType start
+12:43:21.582 [0055]createSpec.identifyDocletType normal end
+12:43:21.582 [0056]createSpec.getPropRow start
+12:43:21.582 [0056]createSpec.getPropRow normal end
+12:43:21.582 [0054]createSpec.getDocLet normal end
+12:43:21.582 [0057]createSpec.getDocLet start
+12:43:21.582 [0058]createSpec.identifyDocletType start
+12:43:21.582 [0058]createSpec.identifyDocletType normal end
+12:43:21.582 [0059]createSpec.getPropRow start
+12:43:21.582 [0059]createSpec.getPropRow normal end
+12:43:21.582 [0060]createSpec.getPropRow start
+12:43:21.582 [0060]createSpec.getPropRow normal end
+12:43:21.582 [0057]createSpec.getDocLet normal end
+12:43:21.582 [0061]createSpec.getDocLet start
+12:43:21.582 [0062]createSpec.identifyDocletType start
+12:43:21.582 [0062]createSpec.identifyDocletType normal end
+12:43:21.582 [0063]createSpec.getPropRow start
+12:43:21.582 [0063]createSpec.getPropRow normal end
+12:43:21.582 [0061]createSpec.getDocLet normal end
+12:43:21.582 [0064]createSpec.getDocLet start
+12:43:21.582 [0065]createSpec.identifyDocletType start
+12:43:21.582 [0065]createSpec.identifyDocletType normal end
+12:43:21.582 [0066]createSpec.getPropRow start
+12:43:21.582 [0066]createSpec.getPropRow normal end
+12:43:21.582 [0067]createSpec.getPropRow start
+12:43:21.582 [0067]createSpec.getPropRow normal end
+12:43:21.582 [0064]createSpec.getDocLet normal end
+12:43:21.582 [0068]createSpec.getDocLet start
+12:43:21.582 [0069]createSpec.identifyDocletType start
+12:43:21.582 [0070]createSpec.getDocLet start
+12:43:21.582 [0071]createSpec.identifyDocletType start
+12:43:21.582 [0071]createSpec.identifyDocletType normal end
+12:43:21.582 [0072]createSpec.getPropRow start
+12:43:21.582 [0072]createSpec.getPropRow normal end
+12:43:21.582 [0073]createSpec.getPropRow start
+12:43:21.582 [0073]createSpec.getPropRow normal end
+12:43:21.582 [0070]createSpec.getDocLet normal end
+12:43:21.582 [0074]createSpec.getDocLet start
+12:43:21.582 [0075]createSpec.identifyDocletType start
+12:43:21.582 [0003]createSpec.getFile normal end
+12:43:21.582 [0076]createSpec.dlMapping start
+12:43:21.582 [0077]createSpec.getByTildePath start
+12:43:21.582 [0077]createSpec.getByTildePath normal end
+12:43:21.582 [0078]createSpec.getByTildePath start
+12:43:21.582 [0078]createSpec.getByTildePath normal end
+12:43:21.582 [0079]createSpec.getByTildePath start
+12:43:21.582 [0079]createSpec.getByTildePath normal end
+12:43:21.582 [0076]createSpec.dlMapping normal end
+"{"/":{"global":{"func01":{"unique":"/","type":"function","id":"/test.js:54","innerFunc":[{"unique":"/","type":"innerFunc","id":"/test.js:59","innerFunc":[],"title":"func01","label":"arrow01: アローテスト","description":"arrow01: アローテスト","properties":[],"innerList":[],"params":[{"name":"arg","type":"string","value":"必須","desc":"引数","note":""}],"returns":[{"type":"string","value":"必須","desc":"戻り値","note":""}],"origin":{"comment":"/** arrow01: アローテスト\n   * @param {string} arg - 引数\n   * @returns {string} 戻り値\n   */","meta":{"range":[1054,1332],"filename":"test.js","lineno":59,"columnno":8,"path":"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample","code":{"id":"astnode100000025","name":"arrow01","type":"ArrowFunctionExpression"},"vars":{"rv":"func01~arrow01~rv"}},"description":"arrow01: アローテスト","params":[{"type":{"names":["string"]},"description":"引数","name":"arg"}],"returns":[{"type":{"names":["string"]},"description":"戻り値"}],"name":"arrow01","longname":"func01~arrow01","kind":"function","memberof":"func01","scope":"inner"}}],"title":"func01","label":"func01: 関数テスト","description":"func01: 関数テスト\n関数テスト説明文","properties":[],"innerList":[],"params":[{"name":"arg","type":"number","value":"必須","desc":"引数","note":""}],"returns":[{"type":"object","value":"必須","desc":"戻り値","note":""}],"origin":{"comment":"/** func01: 関数テスト\n * 関数テスト説明文\n * @param {number} arg - 引数\n * @returns {object} 戻り値\n */","meta":{"range":[939,1595],"filename":"test.js","lineno":54,"columnno":0,"path":"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample","code":{"id":"astnode100000020","name":"func01","type":"FunctionDeclaration","paramnames":["arg"]},"vars":{"arrow01":"func01~arrow01","":null,"rv":"func01~rv"}},"description":"func01: 関数テスト\n関数テスト説明文","params":[{"type":{"names":["number"]},"description":"引数","name":"arg"}],"returns":[{"type":{"names":["object"]},"description":"戻り値"}],"name":"func01","longname":"func01","kind":"function","scope":"global"}},"class01":{"unique":"/","type":"class","id":"/test.js:85","innerFunc":[{"unique":"/","type":"constructor","id":"/test.js:97","innerFunc":[],"title":"class01","label":"class01のconstructor","description":"class01のconstructor\n- constructorの説明","properties":[],"innerList":[],"params":[{"name":"arg","type":"bigint","value":"必須","desc":"typeはテスト用","note":""}],"returns":[],"origin":{"comment":"/** class01のconstructor\n   * - constructorの説明\n   * @constructor\n   * @param {bigint} arg - typeはテスト用\n   */","meta":{"range":[1993,2211],"filename":"test.js","lineno":97,"columnno":2,"path":"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample","code":{"id":"astnode100000056","name":"class01","type":"MethodDefinition","paramnames":["arg"]},"vars":{"":null}},"description":"class01のconstructor\n- constructorの説明","kind":"class","params":[{"type":{"names":["bigint"]},"description":"typeはテスト用","name":"arg"}],"name":"class01","longname":"class01","scope":"global","undocumented":true}},{"unique":"/","type":"method","id":"/test.js:113","innerFunc":[],"title":"class01","label":"method01: メソッドテスト","description":"method01: メソッドテスト","properties":[],"innerList":[],"params":[{"name":"arg","type":"number","value":"必須","desc":"method01の引数","note":""}],"returns":[{"type":"Object","value":"必須","desc":"NG: qId,name指定無しのObjectになる","note":""}],"origin":{"comment":"/** method01: メソッドテスト\n   * @memberof class01\n   * @param {number} arg - method01の引数\n   * @returns {{qId:number,name:string}} NG: qId,name指定無しのObjectになる\n   */","meta":{"range":[2375,2417],"filename":"test.js","lineno":113,"columnno":2,"path":"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample","code":{"id":"astnode100000071","name":"class01#method01","type":"MethodDefinition","paramnames":["arg"]},"vars":{"":null}},"description":"method01: メソッドテスト","memberof":"class01","params":[{"type":{"names":["number"]},"description":"method01の引数","name":"arg"}],"returns":[{"type":{"names":["Object"]},"description":"NG: qId,name指定無しのObjectになる"}],"name":"method01","longname":"class01#method01","kind":"function","scope":"instance"}}],"title":"class01","label":"class01","description":"class01のconstructor\n- constructorの説明","properties":[{"name":"opt","type":"Object","value":"必須","desc":"起動時オプション","note":""}],"innerList":[],"params":[{"name":"arg","type":"bigint","value":"必須","desc":"typeはテスト用","note":""}],"returns":[],"origin":{"comment":"/**\n * @class\n * @classdesc テスト用クラス\n * @extends BaseClass\n * @prop {Object} opt - 起動時オプション\n */","meta":{"range":[1692,2419],"filename":"test.js","lineno":85,"columnno":0,"path":"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample","code":{"id":"astnode100000052","name":"class01","type":"ClassDeclaration","paramnames":["arg"]}},"name":"class01","longname":"class01","kind":"class","classdesc":"テスト用クラス","augments":["BaseClass"],"scope":"global","description":"class01のconstructor\n- constructorの説明","params":[{"type":{"names":["bigint"]},"description":"typeはテスト用","name":"arg"}],"properties":[{"type":{"names":["Object"]},"description":"起動時オプション","name":"opt"}]}}},"typedef":{"globalDef":{"unique":"/","type":"typedef","id":"/test.js:15","innerFunc":[],"title":"globalDef","label":"globalDef: テスト用定義①","description":"globalDef: テスト用定義①\n- typedef前の補足説明\n  - サブ項目","properties":[{"name":"main","type":"typeDef[] | columnDef[]","value":"[]","desc":"グローバル領域にあるJSDoc","note":""},{"name":"class","type":"Object","value":"必須","desc":"クラス定義にかかるJSDoc","note":""},{"name":"class.method","type":"columnDef[]","value":"任意","desc":"任意項目確認用","note":"- 末尾にある補足説明"}],"innerList":[],"params":[],"returns":[],"origin":{"comment":"/** globalDef: テスト用定義①\n * - typedef前の補足説明\n *   - サブ項目\n * @typedef {Object} globalDef\n * - typedef後の補足説明\n * @property {typeDef[]|columnDef[]} [main=[]] - グローバル領域にあるJSDoc\n * @property {Object} class - クラス定義にかかるJSDoc\n * @property {columnDef[]} [class.method] - 任意項目確認用\n * \n * - 末尾にある補足説明\n */","meta":{"filename":"test.js","lineno":15,"columnno":0,"path":"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample","code":{}},"description":"globalDef: テスト用定義①\n- typedef前の補足説明\n  - サブ項目","kind":"typedef","name":"globalDef","type":{"names":["Object"]},"properties":[{"type":{"names":["Array.<typeDef>","Array.<columnDef>"]},"optional":true,"defaultvalue":"[]","description":"グローバル領域にあるJSDoc","name":"main"},{"type":{"names":["Object"]},"description":"クラス定義にかかるJSDoc","name":"class"},{"type":{"names":["Array.<columnDef>"]},"optional":true,"description":"任意項目確認用\n\n- 末尾にある補足説明","name":"class.method"}],"longname":"globalDef","scope":"global"}},"User":{"unique":"/","type":"interface","id":"/test.js:27","innerFunc":[],"title":"User","label":"User","description":"","properties":[{"name":"name","type":"string","value":"必須","desc":"","note":""},{"name":"age","type":"number","value":"必須","desc":"","note":""},{"name":"isAdmin","type":"boolean","value":"必須","desc":"","note":""},{"unique":"/","type":"objectFunc","id":"/test.js:33","innerFunc":[],"title":"User","label":"オブジェクト内関数の説明","description":"オブジェクト内関数の説明","properties":[],"innerList":[],"params":[{"name":"arg","type":"string","value":"必須","desc":"","note":""}],"returns":[{"type":"boolean | Error","value":"必須","desc":"","note":""}],"origin":{"comment":"/**\n * @function\n * @name User#test\n * @desc オブジェクト内関数の説明\n * @param {string} arg\n * @returns {boolean|Error}\n * @example オブジェクト内関数の使用例\n */","meta":{"filename":"test.js","lineno":33,"columnno":0,"path":"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample","code":{}},"kind":"function","name":"test","description":"オブジェクト内関数の説明","params":[{"type":{"names":["string"]},"name":"arg"}],"returns":[{"type":{"names":["boolean","Error"]}}],"examples":["オブジェクト内関数の使用例"],"memberof":"User","longname":"User#test","scope":"instance"}}],"innerList":[],"params":[],"returns":[],"origin":{"comment":"/**\n * @interface User\n * @property {string} name\n * @property {number} age\n * @property {boolean} isAdmin\n */","meta":{"filename":"test.js","lineno":27,"columnno":0,"path":"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample","code":{}},"kind":"interface","name":"User","properties":[{"type":{"names":["string"]},"name":"name"},{"type":{"names":["number"]},"name":"age"},{"type":{"names":["boolean"]},"name":"isAdmin"}],"longname":"User","scope":"global"}},"arrowDef":{"unique":"/","type":"typedef","id":"/test.js:60","innerFunc":[],"title":"arrowDef","label":"JSDocの関数・メソッド単位のオブジェクト","description":"JSDocの関数・メソッド単位のオブジェクト","properties":[{"name":"name","type":"string","value":"必須","desc":"関数・メソッド名","note":""},{"name":"list","type":"arrowDef[] | typeDef[] | columnDef[]","value":"必須","desc":"関数・メソッド内のJSDoc","note":""}],"innerList":[],"params":[],"returns":[],"origin":{"comment":"/**\n     * @typedef {Object} arrowDef - JSDocの関数・メソッド単位のオブジェクト\n     * @property {string} name - 関数・メソッド名\n     * @property {arrowDef[]|typeDef[]|columnDef[]} list - 関数・メソッド内のJSDoc\n     */","meta":{"filename":"test.js","lineno":60,"columnno":4,"path":"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample","code":{}},"kind":"typedef","name":"arrowDef","type":{"names":["Object"]},"description":"JSDocの関数・メソッド単位のオブジェクト","properties":[{"type":{"names":["string"]},"description":"関数・メソッド名","name":"name"},{"type":{"names":["Array.<arrowDef>","Array.<typeDef>","Array.<columnDef>"]},"description":"関数・メソッド内のJSDoc","name":"list"}],"longname":"arrowDef","scope":"global"}},"funcDef":{"unique":"/","type":"typedef","id":"/test.js:69","innerFunc":[],"title":"funcDef","label":"JSDocの関数・メソッド単位のオブジェクト","description":"JSDocの関数・メソッド単位のオブジェクト","properties":[{"name":"name","type":"string","value":"必須","desc":"関数・メソッド名","note":""},{"name":"list","type":"funcDef[] | typeDef[] | columnDef[]","value":"必須","desc":"関数・メソッド内のJSDoc","note":""}],"innerList":[],"params":[],"returns":[],"origin":{"comment":"/**\n   * @typedef {Object} funcDef - JSDocの関数・メソッド単位のオブジェクト\n   * @property {string} name - 関数・メソッド名\n   * @property {funcDef[]|typeDef[]|columnDef[]} list - 関数・メソッド内のJSDoc\n   */","meta":{"filename":"test.js","lineno":69,"columnno":2,"path":"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample","code":{}},"kind":"typedef","name":"funcDef","type":{"names":["Object"]},"description":"JSDocの関数・メソッド単位のオブジェクト","properties":[{"type":{"names":["string"]},"description":"関数・メソッド名","name":"name"},{"type":{"names":["Array.<funcDef>","Array.<typeDef>","Array.<columnDef>"]},"description":"関数・メソッド内のJSDoc","name":"list"}],"longname":"funcDef","scope":"global"}},"typeDef":{"unique":"/","type":"typedef","id":"/test.js:86","innerFunc":[],"title":"typeDef","label":"JSDocのデータ型定義単位のオブジェクト","description":"JSDocのデータ型定義単位のオブジェクト","properties":[{"name":"name","type":"string","value":"必須","desc":"データ型の定義名","note":""},{"name":"list","type":"columnDef[]","value":"必須","desc":"項目(メンバ)のリスト","note":""}],"innerList":[],"params":[],"returns":[],"origin":{"comment":"/**\n   * @typedef {Object} typeDef - JSDocのデータ型定義単位のオブジェクト\n   * @property {string} name - データ型の定義名\n   * @property {columnDef[]} list - 項目(メンバ)のリスト\n   */","meta":{"filename":"test.js","lineno":86,"columnno":2,"path":"/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample","code":{}},"kind":"typedef","name":"typeDef","type":{"names":["Object"]},"description":"JSDocのデータ型定義単位のオブジェクト","properties":[{"type":{"names":["string"]},"description":"データ型の定義名","name":"name"},{"type":{"names":["Array.<columnDef>"]},"description":"項目(メンバ)のリスト","name":"list"}],"longname":"typeDef","scope":"global"}}}}}", // string
+12:43:21.582 [0001]createSpec normal end
