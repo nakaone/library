@@ -187,6 +187,7 @@ async function createSpec() {
    * @prop {Object.<string, DocLet>} typedef - メンバ名はデータ型定義名
    */
   const dlMap = {};
+
   /** dlMapping: docletからdlMapを作成
    * @param {void} - 共有変数docletから作成
    * @returns {null|Error} 処理したDocLetはdlMapに格納
@@ -313,6 +314,65 @@ async function createSpec() {
       return v.rv;
 
     } catch (e) { return dev.error(e); }
+  }
+
+  /** getFile: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
+   * @param {string} fn - 対象ファイル名
+   * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
+   */
+  async function getFile(fn) {
+    return new Promise((resolve, reject) => {
+      const v = {whois:`${pv.whois}.getFile`, arg:{fn,resolve, reject}, rv:null};
+      const dev = new devTools(v);
+
+      dev.step(1);  // jsdoc -X を子プロセスとして起動
+      v.p = spawn("jsdoc", [fn.full,'--configure',cf.jsdocJson,'-X'], {
+        stdio: ["ignore", "pipe", "pipe"], // stdin 無視、stdout/stderr を受け取る
+        encoding: "utf8"
+      });
+
+      dev.step(2);  // jsdoc の出力(JSON文字列)を蓄積するバッファ
+      v.output = "";
+      v.errorOutput = "";
+
+      dev.step(3);  // stdout（標準出力）にデータが届くたびに呼ばれる
+      v.p.stdout.on("data", chunk => {
+        v.output += chunk; // JSON の断片をつなげる
+      });
+
+      dev.step(4);  // stderr（標準エラー）も蓄積しておく
+      v.p.stderr.on("data", chunk => {
+        v.errorOutput += chunk;
+      });
+
+      dev.step(5);  // 子プロセスが終了したときに呼ばれる
+      // code === 0 なら正常終了、JSON をパースして resolve
+      v.p.on("close", code => {
+
+        dev.step(5.1);  // 異常終了時
+        if (code !== 0) {
+          reject(new Error(`jsdoc exited with code ${code}\n${v.errorOutput}`));
+          return;
+        }
+
+        dev.step(5.2);  // JSONをオブジェクト化
+        try {
+          v.json = JSON.parse(v.output);
+
+          dev.step(5.3);  // DocLet単位にばらして保存
+          for( v.i=0 ; v.i<v.json.length ; v.i++ ){
+            v.rv = getDocLet(v.json[v.i],fn.unique);
+            if( v.rv instanceof Error ) reject(v.rv);
+          }
+
+          resolve(v.json); // awaitの戻り値。使用しないが開発時の内容確認のため戻す
+        } catch (err) {
+          reject(new Error("Failed to parse JSON: " + err.message));
+        } finally {
+          dev.end();
+        }
+      });
+    });
   }
 
   /** jsdocColDef: DocLetの項目定義
@@ -795,65 +855,6 @@ async function createSpec() {
     };
 
     return walk(obj);
-  }
-
-  /** getFile: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
-   * @param {string} fn - 対象ファイル名
-   * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
-   */
-  async function getFile(fn) {
-    return new Promise((resolve, reject) => {
-      const v = {whois:`${pv.whois}.getFile`, arg:{fn,resolve, reject}, rv:null};
-      const dev = new devTools(v);
-
-      dev.step(1);  // jsdoc -X を子プロセスとして起動
-      v.p = spawn("jsdoc", [fn.full,'--configure',cf.jsdocJson,'-X'], {
-        stdio: ["ignore", "pipe", "pipe"], // stdin 無視、stdout/stderr を受け取る
-        encoding: "utf8"
-      });
-
-      dev.step(2);  // jsdoc の出力(JSON文字列)を蓄積するバッファ
-      v.output = "";
-      v.errorOutput = "";
-
-      dev.step(3);  // stdout（標準出力）にデータが届くたびに呼ばれる
-      v.p.stdout.on("data", chunk => {
-        v.output += chunk; // JSON の断片をつなげる
-      });
-
-      dev.step(4);  // stderr（標準エラー）も蓄積しておく
-      v.p.stderr.on("data", chunk => {
-        v.errorOutput += chunk;
-      });
-
-      dev.step(5);  // 子プロセスが終了したときに呼ばれる
-      // code === 0 なら正常終了、JSON をパースして resolve
-      v.p.on("close", code => {
-
-        dev.step(5.1);  // 異常終了時
-        if (code !== 0) {
-          reject(new Error(`jsdoc exited with code ${code}\n${v.errorOutput}`));
-          return;
-        }
-
-        dev.step(5.2);  // JSONをオブジェクト化
-        try {
-          v.json = JSON.parse(v.output);
-
-          dev.step(5.3);  // DocLet単位にばらして保存
-          for( v.i=0 ; v.i<v.json.length ; v.i++ ){
-            v.rv = getDocLet(v.json[v.i],fn.unique);
-            if( v.rv instanceof Error ) reject(v.rv);
-          }
-
-          resolve(v.json); // awaitの戻り値。使用しないが開発時の内容確認のため戻す
-        } catch (err) {
-          reject(new Error("Failed to parse JSON: " + err.message));
-        } finally {
-          dev.end();
-        }
-      });
-    });
   }
 
   // -------------------------------------------------------------
