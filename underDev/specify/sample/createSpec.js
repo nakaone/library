@@ -143,7 +143,7 @@ async function createSpec() {
       required: 'required',
     },
   };
-  /**　sourceFile: 入力ファイル(JSソース)情報
+  /** sourceFile: 入力ファイル(JSソース)情報
    * @interface sourceFile
    * @prop {string} common - フルパスの共通部分
    * @prop {string} outDir - 出力先フォルダ名(フルパス)
@@ -152,13 +152,28 @@ async function createSpec() {
    * @prop {Object[]} doclet - `jsdoc -X`で返されるJSONをオブジェクト化、配列として格納
    */
   const sourceFile = {common:'',outDir:'',sourceNum:0,source:[]};
+  /** ArticleObj: 単一記事(タイトル＋本文)用データオブジェクト
+   * - `<!--::記事のID::-->`で他記事も埋め込み可とする
+   * - アンカーのidは識別子を小文字変換したものとする
+   * 
+   * @interface ArticleObj
+   * @prop {string} jsdocId - 記事の識別子
+   * @prop {string} title - 記事のタイトル
+   * @prop {string} [icon] - アイコンを付ける場合に設定
+   * @prop {boolean} [anchor=false] - アンカーを設定する場合に設定(`<span id="〜">`)
+   * @prop {string} [link] - タイトルにリンクを張る場合の参照先URL
+   * @prop {string} [top] - タイトルの前に挿入する文字列(固定メニュー等)
+   * @prop {string} [middle] - タイトルの後・記事の前に〃
+   * @prop {string} [bottom] - 記事の後に〃
+   * @prop {string} content - 記事本文
+   */
   /** DocLet: `jsdoc -X`で配列で返されたオブジェクトに情報を付加
    * @interface DocLet
    * @prop {string} unique - 固有パス
    *   unique = 'client/test.js' -> 'client/' ※最後に'/'が付く
    *   unique = 'test.js' -> '/' ※直下の場合'/'
    * @prop {string} type - DocLetの種類。identifyDocletTypeの戻り値
-   * @prop {string} id - 固有パス＋ファイル名＋行番号
+   * @prop {string} jsdocId - 固有パス＋ファイル名＋行番号
    * @prop {DocLet[]} [innerFunc=[]] - メソッド・内部関数
    * @prop {Object} origin - 情報付加前のjsdocで吐き出されたdoclet
    * // 以下はMarkdown用項目
@@ -183,12 +198,12 @@ async function createSpec() {
    */
   const dlMap = {};
 
-  /** dlMapping: docletからdlMapを作成
+  /** mapDocLet: docletからdlMapを作成
    * @param {void} - 共有変数docletから作成
    * @returns {null|Error} 処理したDocLetはdlMapに格納
    */
-  function dlMapping(){
-    const v = {whois:`${pv.whois}.dlMapping`, arg:{}, rv:null};
+  function mapDocLet(){
+    const v = {whois:`${pv.whois}.mapDocLet`, arg:{}, rv:null};
     const dev = new devTools(v);
     try {
 
@@ -250,7 +265,8 @@ async function createSpec() {
         }
       }
 
-      dev.end(JSON.stringify(dlMap)); // 終了処理
+      console.log(JSON.stringify(dlMap)); // debug
+      dev.end(); // 終了処理
       return v.rv;
 
     } catch (e) { return dev.error(e); }
@@ -332,7 +348,7 @@ async function createSpec() {
       v.doclet = {
         unique: unique,
         type: v.type,
-        id: unique + obj.meta.filename + ':' + obj.meta.lineno,
+        jsdocId: unique + obj.meta.filename + ':' + obj.meta.lineno,
         innerFunc: [],
         title: obj.longname.replaceAll(/~/g,'#').split('#')[0],
         label: v.label,
@@ -643,12 +659,12 @@ async function createSpec() {
 
       // -------------------------------------------------------------
       dev.step(2);  // JSDoc要素毎に検査実施
-      // なおテストに伴いJSDoc要素に"id","result"メンバが追加されるので注意
+      // なおテストに伴いJSDoc要素に"jsdocId","result"メンバが追加されるので注意
       // -------------------------------------------------------------
       pv.idList.forEach(x => {
 
         dev.step(2.1);  // idを追加
-        v.mObj = Object.assign({id:x},pv.map[x]);
+        v.mObj = Object.assign({jsdocId:x},pv.map[x]);
 
         dev.step(2.2);  // 指定属性の値一覧を作成
         ['kind','scope'].forEach(p => {
@@ -804,32 +820,11 @@ async function createSpec() {
   }
   
   /** makeMarkdown: Markdown形式の仕様書を作成
-   * @param 
+   * 
    */
   function makeMarkdown(arg) {
     const v = {whois:`${pv.whois}.identifyDocletType`, arg:{arg}, rv:[]};
     const dev = new devTools(v);
-    /**
-     * @name クラス・グローバル関数文書の構成
-     * @desc
-     * 
-     * 1. ヘッダ部("クラス名_top")
-     *    1. タイトル(○○クラス仕様書、等)
-     *    2. ラベル(一行にまとめた説明)
-     *    3. 概要説明(数行程度)
-     * 2. 詳細説明("クラス名_desc")
-     *    - 
-     * 3. 一覧
-     *    1. メンバ一覧("クラス名_prop")
-     *    2. メソッド一覧("クラス名_func")
-     * 4. 個別メソッド("クラス名-メソッド名") ※注意：'_'ではなく'-'
-     *    1. タイトル(クラス名.メソッド名)("クラス名-メソッド名_top")
-     *    2. ラベル(一行にまとめた説明)
-     *    3. 機能概要(数行程度)
-     *    4. 詳細説明
-     *    5. 引数
-     *    6. 戻り値
-     */
     /**
      * @name 一覧文書(フォルダ毎)の構成
      * @desc
@@ -842,30 +837,32 @@ async function createSpec() {
      * 4. 個別データ型("フォルダ名-データ型名") ※注意：'_'ではなく'-'
      */
     /**
-     * @name 中間データオブジェクトの形式
-     * {
-     *   パス名: {  ※固有部分のパスについて'/'を'_'に変換したもの
-     *     グローバル関数・クラス名: {
-     *     },
-     *     "readme": {   ※一覧文書(フォルダ毎)
-     *     }
-     *   }
-     * }
-     */
-    /** articleObj: 単一記事(タイトル＋本文)のデータ型
-     * - `<!--::記事のID::-->`で他記事も埋め込み可とする
-     * - アンカーのidは識別子を小文字変換したものとする
+     * @name クラス・グローバル関数文書の構成
+     * @desc
      * 
-     * @interface articleObj
-     * @prop {string} id - 記事の識別子
-     * @prop {string} title - 記事のタイトル
-     * @prop {string} [icon] - アイコンを付ける場合に設定
-     * @prop {boolean} [anchor=false] - アンカーを設定する場合に設定(`<span id="〜">`)
-     * @prop {string} [link] - タイトルにリンクを張る場合の参照先URL
-     * @prop {string} [top] - タイトルの前に挿入する文字列(固定メニュー等)
-     * @prop {string} [middle] - タイトルの後・記事の前に〃
-     * @prop {string} [bottom] - 記事の後に〃
-     * @prop {string} content - 記事本文
+     * 1. ヘッダ部("クラス名_top")
+     *    - タイトル(○○クラス仕様書、等)
+     *    - ラベル(一行にまとめた説明)
+     *    - 概要説明(数行程度)
+     * 2. メンバ一覧("クラス名_prop")
+     * 3. メソッド一覧("クラス名_func")
+     * 4. 詳細説明("クラス名_desc")
+     * 5. 引数("クラス名_param")
+     * 6. 戻り値("クラス名_return")
+     * 7. 個別メソッド("クラス名-メソッド名") ※注意：'_'ではなく'-'
+     *    - innerFuncを再帰呼出
+     */
+    /**
+     * @name データ型定義文書の構成
+     * @desc
+     * 
+     * 1. ヘッダ部("データ型名_top")
+     *    - タイトル(○○データ型仕様書、等)
+     *    - ラベル(一行にまとめた説明)
+     *    - データ型説明文
+     * 2. メンバ一覧("クラス名_prop")
+     * 3. 個別メソッド("クラス名-メソッド名") ※注意：'_'ではなく'-'
+     *    - interfaceにfunctionのメンバが含まれる場合、表の外に記述
      */
     try {
 
@@ -923,7 +920,7 @@ async function createSpec() {
     }
 
     dev.step(3);  // docletの各要素を階層化してマッピング
-    pv.r = dlMapping();
+    pv.r = mapDocLet();
     if( pv.r instanceof Error) throw pv.r;
 
     dev.end();
@@ -968,19 +965,18 @@ function trash(){
           //   "meta.lineno"を持たないが、仕様書作成に使用しないのでmap登録対象外とする
           if( typeof o.meta !== 'undefined' && typeof o.meta.lineno === 'number'){
             dev.step(2.1);  // v.mapのキー文字列(ID)の作成
-            //v.id = `${list[v.i]}-${o.meta.lineno}`;
-            v.id = `${o.meta.path ?? ''}/${o.meta.filename ?? ''}-${o.meta.lineno}`;
+            v.jsdocId = `${o.meta.path ?? ''}/${o.meta.filename ?? ''}-${o.meta.lineno}`;
 
-            if( pv.idList.includes(v.id) ){
+            if( pv.idList.includes(v.jsdocId) ){
               dev.step(2.2);  // 登録済なら結合
-              o = mergeDeeply(pv.map[v.id],o);
+              o = mergeDeeply(pv.map[v.jsdocId],o);
             } else {
               dev.step(2.3);  // 未登録なら登録済IDリストに追加
-              pv.idList.push(v.id);
+              pv.idList.push(v.jsdocId);
             }
 
             dev.step(2.4);  // pv.mapへの登録
-            pv.map[v.id] = o;
+            pv.map[v.jsdocId] = o;
           }
         });
       }
