@@ -242,7 +242,7 @@ async function createSpec() {
         }
       }
 
-      dev.end(dlMap); // 終了処理
+      dev.end(omitKeyDeep(dlMap,['origin','properties','params','returns'])); // 終了処理
       return v.rv;
 
     } catch (e) { return dev.error(e); }
@@ -767,6 +767,34 @@ async function createSpec() {
       return v.rv;
 
     } catch (e) { return dev.error(e); }
+  }
+
+  /** omitKeyDeep: 【開発用】指定キーを再帰的に除外した新しいオブジェクトを作成
+   * @param {Object} obj - オブジェクト。dlMap等を想定
+   * @param {string|string[]} keys - 除外するキー名（単数または複数）。"origin"等
+   * @returns {Object}
+   */
+  function omitKeyDeep(obj, keys) {
+    const keySet = new Set(
+      Array.isArray(keys) ? keys : [keys]
+    );
+
+    const walk = value => {
+      if (Array.isArray(value)) {
+        return value.map(walk);
+      }
+      if (value === null || typeof value !== 'object') {
+        return value;
+      }
+
+      return Object.fromEntries(
+        Object.entries(value)
+          .filter(([k]) => !keySet.has(k))
+          .map(([k, v]) => [k, walk(v)])
+      );
+    };
+
+    return walk(obj);
   }
 
   /** getFile: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
