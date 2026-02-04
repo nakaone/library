@@ -221,11 +221,21 @@ async function createSpec() {
       dev.step(2);
       for( v.i=0 ; v.i<doclet.length ; v.i++ ){
         v.d = doclet[v.i];
+        dev.step(99.224,v.d);
         switch( v.d.type ){
           case 'objectFunc':  // -> longname区切り記号：'#'
-            // typedef.親定義にメンバとして追加
+            dev.step(2.1);
+            // typedef配下で親を探す
+            v.r = getByTildePath(v.d.origin.longname,dlMap[v.d.unique].typedef);
+            dev.step(99.229,v.r);
+            // 親が見つからなければエラー
+            dev.step(99.232,{keys:Object.keys(dlMap[v.d.unique].typedef),user:dlMap[v.d.unique].typedef.User});
+            if( !v.r.obj ) throw new Error(`no parent: ${JSON.stringify(v.d.origin,null,2)}`);
+            // 親定義.propertiesに追加
+            v.r.obj.properties.push(v.d);
             break;
           case 'constructor': // -> longname区切り記号：無し、name === クラス名
+            dev.step(2.2);
             // @constructorに対応する@classの記述がない ⇒ エラー
             if( typeof dlMap[v.d.unique].global[v.d.origin.name] === 'undefined' ){
               throw new Error(`There is no @class description corresponding to @constructor`);
@@ -234,16 +244,62 @@ async function createSpec() {
             break;
           case 'method':  // -> longname区切り記号：'.'
           case 'innerFunc':  // -> longname区切り記号：'~'
-            // クラス・親関数のメソッドに追加
-            v.longname = v.d.origin.longname.replaceAll(/[\.\~]/g,'#').split('#');
-            // いまここ
+            dev.step(2.3);
+            // global配下で親を探す
+            v.r = getByTildePath(v.d.origin.longname,dlMap[v.d.unique].global);
+            // 親が見つからなければエラー
+            if( !v.r.obj ) throw new Error(`no parent: ${JSON.stringify(v.d.origin,null,2)}`);
+            // 親定義.innerFuncに追加
+            v.r.obj.innerFunc.push(v.d);
             break;
           case 'description':  // -> longname区切り記号：無し
+            dev.step(2.4);
             break;
         }
       }
 
       dev.end(omitKeyDeep(dlMap,['origin','properties','params','returns'])); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** getByTildePath:パス文字列からオブジェクトを辿って値を取得
+   * @param {string} path - 例: "func01~func02~arrow01"
+   * @param {object} obj  - 探索対象オブジェクト
+   * @returns {{obj:any, label:string} | null}
+   */
+  function getByTildePath(path, obj) {
+    const v = {whois:`${pv.whois}.getByTildePath`, arg:{}, rv:{obj:null,label:''}};;
+    const dev = new devTools(v);
+    try {
+
+      dev.step(1);  // 引数チェック
+      if ( !path || typeof path !== 'string') return null;
+
+      dev.step(2);  // longnameを分解
+      v.parts = path.replaceAll(/[\~\.]/g,'#').split('#');
+
+      if (v.parts.length < 1){
+        dev.step(3,v.parts);  // 区切り記号無し
+        v.rv.label = path[0];
+      } else {
+        dev.step(4.1);
+        v.rv.label = v.parts.at(-1);  // 最後の要素はlabel
+        v.keys  = v.parts.slice(0, -1); // それ以外がpath
+        dev.step(4.2);
+        let cur = obj;
+        for (const key of v.keys) {
+          if (cur && typeof cur === 'object' && key in cur) {
+            cur = cur[key];
+          } else {
+            return null;
+          }
+        }
+        v.rv.obj = cur;
+      }
+
+      dev.end(); // 終了処理
       return v.rv;
 
     } catch (e) { return dev.error(e); }
