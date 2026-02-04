@@ -1,3 +1,6 @@
+/**
+ * @class
+ */
 export class Member {
 
   /** constructor: 該当メンバのMemberインスタンス作成

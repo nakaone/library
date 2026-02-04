@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
 import { readFileSync, writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
 
-/**
+/** createSpec概要
  * @name createSpec概要
  * @desc
  * 
@@ -48,6 +48,9 @@ import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
  * 
  * - グローバル関数・クラス・データ型定義の名称は重複不可
  *   ∵ リンクを張る場合、リンク先を特定できない
+ * - 以下はエラーとなる
+ *   - ＠class未定義で＠constructorやメソッドにJSDoc記述
+ *   - グローバル関数未定義で内部関数にJSDoc記述
  * - JSDoc開始の「／**」以降に続く文字列は＠descとして扱われる
  * - コンストラクタには「＠constructor」必須
  * - 「＠history」を独自タグとして定義
@@ -100,7 +103,7 @@ import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
  * - rev.1.0.0 : 2026/01/31
  *   specify.mjsを継承し、初版作成
  */
-/**
+/** 開発課題
  * @name 開発課題
  * @desc
  * - undocumentedチェックを追加
@@ -111,6 +114,8 @@ import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
  *   現状、記載すべき箇所を特定する事が困難なため、全てグローバル領域になっている。
  *   案：＠descの後に記載箇所特定文字列を入れる(ex."authLog.constructor")
  * - 重複シンボルがあればエラーメッセージ
+ * - 文法チェック
+ *   - ＠class の後に余計な文字列があればエラー
  */
 console.log(JSON.stringify(createSpec(),null,2));
 
@@ -191,14 +196,51 @@ async function createSpec() {
     const dev = new devTools(v);
     try {
 
-      // 固有パスの作成
-      v.path = [];  // 固有パスの一覧
-      v.rv = doclet.map(x => {
-        if(!v.path.includes(x.unique)){
-          v.path.push(x.unique);
-          dlMap[x.unique] = {global:{},typedef:{}};
+      for( v.i=0 ; v.i<doclet.length ; v.i++ ){
+        v.d = doclet[v.i];
+
+        dev.step(1);  // 固有パスが存在しない場合、プレースホルダを作成
+        if( typeof dlMap[v.d.unique] === 'undefined' ){
+          dlMap[v.d.unique] = {global:{},typedef:{}};
         }
-      });
+
+        dev.step(1.2);  // 受け皿となるグローバル関数・クラスおよびデータ型定義を先行して作成
+        switch( v.d.type ){
+          case 'typedef':
+          case 'interface':
+            dlMap[v.d.unique].typedef[v.d.title] = v.d;
+            break;
+          case 'class':
+          case 'function':
+            dlMap[v.d.unique].global[v.d.title] = v.d;
+            break;
+        }
+      }
+
+      dev.step(2);
+      for( v.i=0 ; v.i<doclet.length ; v.i++ ){
+        v.d = doclet[v.i];
+        switch( v.d.type ){
+          case 'objectFunc':  // -> longname区切り記号：'#'
+            // typedef.親定義にメンバとして追加
+            break;
+          case 'constructor': // -> longname区切り記号：無し、name === クラス名
+            // @constructorに対応する@classの記述がない ⇒ エラー
+            if( typeof dlMap[v.d.unique].global[v.d.origin.name] === 'undefined' ){
+              throw new Error(`There is no @class description corresponding to @constructor`);
+            }
+            dlMap[v.d.unique].global[v.d.origin.name].innerFunc.push(v.d);
+            break;
+          case 'method':  // -> longname区切り記号：'.'
+          case 'innerFunc':  // -> longname区切り記号：'~'
+            // クラス・親関数のメソッドに追加
+            v.longname = v.d.origin.longname.replaceAll(/[\.\~]/g,'#').split('#');
+            // いまここ
+            break;
+          case 'description':  // -> longname区切り記号：無し
+            break;
+        }
+      }
 
       dev.end(dlMap); // 終了処理
       return v.rv;
@@ -350,10 +392,6 @@ async function createSpec() {
      *   - kind === 'typedef'
      * - interface
      *   - kind === 'interface'
-     * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br>
-     *   なおあくまでinterfaceなので、関数と同時にpropertiesも含む
-     *   - kind === 'function'
-     *   - scope === 'instance'
      * - class
      *   - kind === 'class'
      *   - meta.code.type === "ClassDeclaration" || "ClassExpression"
@@ -363,6 +401,7 @@ async function createSpec() {
      *   - /＠constructor\b/.test(doclet.comment || "")
      * - method
      *   - kind === "function"
+     *   - meta?.code?.type === "MethodDefinition"
      *   - scope === "instance" または "static"
      * - function(グローバル関数) ※アロー関数を含む
      *   - kind === 'function'
@@ -375,6 +414,10 @@ async function createSpec() {
      *   - meta.code.nameがundefined(プラグインや拡張を考慮する場合には必要)
      *   - kindがtypedef/interface 以外
      *   - nameが存在
+     * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br>
+     *   なおあくまでinterfaceなので、関数と同時にpropertiesも含む
+     *   - kind === 'function'
+     *   - scope === 'instance'
      * - unknown(上記で判定不能)
      */
 
@@ -398,8 +441,10 @@ async function createSpec() {
           switch( doclet.scope ){
             case 'global': v.rv = 'function'; break;
             case 'inner': v.rv = 'innerFunc'; break;
-            case 'instance': v.rv = 'objectFunc'; break;
-            case 'instance': case 'static': v.rv = 'method'; break;
+            case 'instance':
+            case 'static': v.rv =
+              doclet.meta?.code?.type === 'MethodDefinition' ? 'method' : 'objectFunc';
+              break;
             default: 'unknown';
           }
           break;
@@ -598,7 +643,7 @@ async function createSpec() {
        * ④'-x'の次からは除外ファイル
        */
 
-      dev.step(2.1,existsSync(cf.dummyDir));  // 結果を格納する領域を準備
+      dev.step(2.1);  // 結果を格納する領域を準備
       v.iList = [],  // 入力ファイルリスト
       v.xList = [],  // 除外ファイルリスト
 
