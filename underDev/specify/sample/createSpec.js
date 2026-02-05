@@ -891,11 +891,18 @@ async function createSpec() {
 
       dev.step(1);  // top: タイトル、ラベル、概要説明
       obj.article.top = new Article({
-        title: obj.title + 'クラス仕様書' // いまここ
+        title: obj.title,
+        anchor: 'top',
+        content: (obj.label ? `${obj.label}\n\n` : '')
+        + (obj.description ? `${obj.description}\n` : ''),
       });
-      dev.step(2);  // list
-      dev.step(3);  // type
-      dev.step(4);  // prop
+
+      // list: グローバル関数・クラス一覧
+      // type: データ型一覧
+      // ※一覧文書用の欄なのでDocLetからの作成は無し
+
+      dev.step(2);  // prop: メンバ一覧
+
       dev.step(5);  // func
       dev.step(6);  // desc
       dev.step(7);  // param
