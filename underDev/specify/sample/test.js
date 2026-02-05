@@ -78,7 +78,8 @@ function func01(arg){
 
 /**
  * @class
- * @classdesc テスト用クラス
+ * @desc テスト用クラス(desc)
+ * @classdesc テスト用クラス(classdesc)
  * @extends BaseClass
  * @prop {Object} opt - 起動時オプション
  */
