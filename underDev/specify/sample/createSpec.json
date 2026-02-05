@@ -45,7 +45,7 @@
         "meta": {
             "range": [
                 3380,
-                29729
+                30914
             ],
             "filename": "createSpec.js",
             "lineno": 126,
@@ -61,6 +61,7 @@
                 "pv": "createSpec~pv",
                 "cf": "createSpec~cf",
                 "sourceFile": "createSpec~sourceFile",
+                "Article": null,
                 "doclet": "createSpec~doclet",
                 "dlMap": "createSpec~dlMap",
                 "mapDocLet": "createSpec~mapDocLet",
@@ -71,11 +72,12 @@
                 "identifyDocletType": "createSpec~identifyDocletType",
                 "investigate": "createSpec~investigate",
                 "listSource": "createSpec~listSource",
-                "makeMarkdown": "createSpec~makeMarkdown",
+                "makeArticle": "createSpec~makeArticle",
                 "omitKeyDeep": "createSpec~omitKeyDeep",
                 "dev": "createSpec~dev",
                 "pv.r": "createSpec~pv.r",
-                "pv.i": "createSpec~pv.i"
+                "pv.i": "createSpec~pv.i",
+                "": null
             }
         },
         "description": "createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成",
@@ -248,7 +250,7 @@
         "meta": {
             "range": [
                 3470,
-                3967
+                3979
             ],
             "filename": "createSpec.js",
             "lineno": 128,
@@ -273,8 +275,8 @@
         "comment": "",
         "meta": {
             "range": [
-                3529,
-                3552
+                3541,
+                3564
             ],
             "filename": "createSpec.js",
             "lineno": 130,
@@ -298,8 +300,8 @@
         "comment": "",
         "meta": {
             "range": [
-                3645,
-                3664
+                3657,
+                3676
             ],
             "filename": "createSpec.js",
             "lineno": 132,
@@ -323,8 +325,8 @@
         "comment": "",
         "meta": {
             "range": [
-                3687,
-                3723
+                3699,
+                3735
             ],
             "filename": "createSpec.js",
             "lineno": 133,
@@ -348,8 +350,8 @@
         "comment": "",
         "meta": {
             "range": [
-                3751,
-                3761
+                3763,
+                3773
             ],
             "filename": "createSpec.js",
             "lineno": 134,
@@ -373,8 +375,8 @@
         "comment": "",
         "meta": {
             "range": [
-                3777,
-                3863
+                3789,
+                3875
             ],
             "filename": "createSpec.js",
             "lineno": 135,
@@ -398,8 +400,8 @@
         "comment": "",
         "meta": {
             "range": [
-                3800,
-                3812
+                3812,
+                3824
             ],
             "filename": "createSpec.js",
             "lineno": 136,
@@ -423,8 +425,8 @@
         "comment": "",
         "meta": {
             "range": [
-                3820,
-                3834
+                3832,
+                3846
             ],
             "filename": "createSpec.js",
             "lineno": 137,
@@ -448,8 +450,8 @@
         "comment": "",
         "meta": {
             "range": [
-                3842,
-                3856
+                3854,
+                3868
             ],
             "filename": "createSpec.js",
             "lineno": 138,
@@ -473,8 +475,8 @@
         "comment": "",
         "meta": {
             "range": [
-                3869,
-                3962
+                3881,
+                3974
             ],
             "filename": "createSpec.js",
             "lineno": 140,
@@ -498,8 +500,8 @@
         "comment": "",
         "meta": {
             "range": [
-                3881,
-                3899
+                3893,
+                3911
             ],
             "filename": "createSpec.js",
             "lineno": 141,
@@ -523,8 +525,8 @@
         "comment": "",
         "meta": {
             "range": [
-                3907,
-                3927
+                3919,
+                3939
             ],
             "filename": "createSpec.js",
             "lineno": 142,
@@ -548,8 +550,8 @@
         "comment": "",
         "meta": {
             "range": [
-                3935,
-                3955
+                3947,
+                3967
             ],
             "filename": "createSpec.js",
             "lineno": 143,
@@ -635,8 +637,8 @@
         "comment": "",
         "meta": {
             "range": [
-                4299,
-                4355
+                4311,
+                4367
             ],
             "filename": "createSpec.js",
             "lineno": 154,
@@ -661,8 +663,8 @@
         "comment": "",
         "meta": {
             "range": [
-                4313,
-                4322
+                4325,
+                4334
             ],
             "filename": "createSpec.js",
             "lineno": 154,
@@ -686,8 +688,8 @@
         "comment": "",
         "meta": {
             "range": [
-                4323,
-                4332
+                4335,
+                4344
             ],
             "filename": "createSpec.js",
             "lineno": 154,
@@ -711,8 +713,8 @@
         "comment": "",
         "meta": {
             "range": [
-                4333,
-                4344
+                4345,
+                4356
             ],
             "filename": "createSpec.js",
             "lineno": 154,
@@ -736,8 +738,8 @@
         "comment": "",
         "meta": {
             "range": [
-                4345,
-                4354
+                4357,
+                4366
             ],
             "filename": "createSpec.js",
             "lineno": 154,
@@ -758,7 +760,7 @@
         "scope": "static"
     },
     {
-        "comment": "/** ArticleObj: 単一記事(タイトル＋本文)用データオブジェクト\n   * - `<!--::記事のID::-->`で他記事も埋め込み可とする\n   * - アンカーのidは識別子を小文字変換したものとする\n   * \n   * @interface ArticleObj\n   * @prop {string} jsdocId - 記事の識別子\n   * @prop {string} title - 記事のタイトル\n   * @prop {string} [icon] - アイコンを付ける場合に設定\n   * @prop {boolean} [anchor=false] - アンカーを設定する場合に設定(`<span id=\"〜\">`)\n   * @prop {string} [link] - タイトルにリンクを張る場合の参照先URL\n   * @prop {string} [top] - タイトルの前に挿入する文字列(固定メニュー等)\n   * @prop {string} [middle] - タイトルの後・記事の前に〃\n   * @prop {string} [bottom] - 記事の後に〃\n   * @prop {string} content - 記事本文\n   */",
+        "comment": "/** Article: 単一記事(タイトル＋本文)用データオブジェクト\n   * - `<!--::記事のID::-->`で他記事も埋め込み可とする\n   * - アンカーのidは識別子を小文字変換したものとする\n   * \n   * @class Article\n   * @prop {string} [title=''] - 記事のタイトル\n   * @prop {string} [icon=''] - アイコンを付ける場合に設定\n   * @prop {boolean} [anchor=false] - アンカーを設定する場合に設定(`<span id=\"〜\">`)\n   * @prop {string} [link=''] - タイトルにリンクを張る場合の参照先URL\n   * @prop {string} [top=''] - タイトルの前に挿入する文字列(固定メニュー等)\n   * @prop {string} [middle=''] - タイトルの後・記事の前に〃\n   * @prop {string} [bottom=''] - 記事の後に〃\n   * @prop {string} [content=''] - 記事本文\n   */",
         "meta": {
             "filename": "createSpec.js",
             "lineno": 155,
@@ -766,9 +768,9 @@
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
         },
-        "description": "ArticleObj: 単一記事(タイトル＋本文)用データオブジェクト\n- `<!--::記事のID::-->`で他記事も埋め込み可とする\n- アンカーのidは識別子を小文字変換したものとする",
-        "kind": "interface",
-        "name": "ArticleObj",
+        "description": "Article: 単一記事(タイトル＋本文)用データオブジェクト\n- `<!--::記事のID::-->`で他記事も埋め込み可とする\n- アンカーのidは識別子を小文字変換したものとする",
+        "kind": "class",
+        "name": "Article",
         "properties": [
             {
                 "type": {
@@ -776,15 +778,8 @@
                         "string"
                     ]
                 },
-                "description": "記事の識別子",
-                "name": "jsdocId"
-            },
-            {
-                "type": {
-                    "names": [
-                        "string"
-                    ]
-                },
+                "optional": true,
+                "defaultvalue": "''",
                 "description": "記事のタイトル",
                 "name": "title"
             },
@@ -795,6 +790,7 @@
                     ]
                 },
                 "optional": true,
+                "defaultvalue": "''",
                 "description": "アイコンを付ける場合に設定",
                 "name": "icon"
             },
@@ -816,6 +812,7 @@
                     ]
                 },
                 "optional": true,
+                "defaultvalue": "''",
                 "description": "タイトルにリンクを張る場合の参照先URL",
                 "name": "link"
             },
@@ -826,6 +823,7 @@
                     ]
                 },
                 "optional": true,
+                "defaultvalue": "''",
                 "description": "タイトルの前に挿入する文字列(固定メニュー等)",
                 "name": "top"
             },
@@ -836,6 +834,7 @@
                     ]
                 },
                 "optional": true,
+                "defaultvalue": "''",
                 "description": "タイトルの後・記事の前に〃",
                 "name": "middle"
             },
@@ -846,6 +845,7 @@
                     ]
                 },
                 "optional": true,
+                "defaultvalue": "''",
                 "description": "記事の後に〃",
                 "name": "bottom"
             },
@@ -855,18 +855,301 @@
                         "string"
                     ]
                 },
+                "optional": true,
+                "defaultvalue": "''",
                 "description": "記事本文",
                 "name": "content"
             }
         ],
-        "longname": "ArticleObj",
+        "longname": "Article",
         "scope": "global"
     },
     {
-        "comment": "/** DocLet: `jsdoc -X`で配列で返されたオブジェクトに情報を付加\n   * @interface DocLet\n   * @prop {string} unique - 固有パス\n   *   unique = 'client/test.js' -> 'client/' ※最後に'/'が付く\n   *   unique = 'test.js' -> '/' ※直下の場合'/'\n   * @prop {string} type - DocLetの種類。identifyDocletTypeの戻り値\n   * @prop {string} jsdocId - 固有パス＋ファイル名＋行番号\n   * @prop {DocLet[]} [innerFunc=[]] - メソッド・内部関数\n   * @prop {Object} origin - 情報付加前のjsdocで吐き出されたdoclet\n   * // 以下はMarkdown用項目\n   * @prop {string} title\n   * @prop {string} label - 1行で簡潔に記述された概要説明\n   *   ① `／** `に続く文字列\n   *   ② description, classdesc があれば先頭行\n   *   ③ longname\n   *   ※ 上記に該当が無い場合、「(ラベル未設定)」\n   * @prop {string} description - 概要・詳細説明、処理手順\n   * @prop {PropRow[]} [properties=[]] - メンバ一覧\n   * @prop {Object[]} [innerList=[]] - メソッド・内部関数一覧。項目：No,関数名,ラベル,アンカー\n   * @prop {PropRow[]} [params=[]] - 引数。クラスの場合はconstructorの引数\n   * @prop {PropRow[]} [returns=[]] - 戻り値\n   */",
+        "comment": "",
+        "meta": {
+            "range": [
+                4907,
+                5337
+            ],
+            "filename": "createSpec.js",
+            "lineno": 169,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100000070",
+                "name": "Article",
+                "type": "ClassDeclaration",
+                "paramnames": [
+                    "arg"
+                ]
+            }
+        },
+        "undocumented": true,
+        "name": "Article",
+        "longname": "Article",
+        "kind": "class",
+        "scope": "global"
+    },
+    {
+        "comment": "/**\n     * @constructor\n     * @param {Object} arg \n     * @returns {Article}\n     */",
+        "meta": {
+            "range": [
+                5017,
+                5333
+            ],
+            "filename": "createSpec.js",
+            "lineno": 175,
+            "columnno": 4,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100000073",
+                "name": "Article",
+                "type": "MethodDefinition",
+                "paramnames": [
+                    "arg"
+                ]
+            },
+            "vars": {
+                "": null
+            }
+        },
+        "kind": "class",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "Object"
+                    ]
+                },
+                "name": "arg"
+            }
+        ],
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "Article"
+                    ]
+                }
+            }
+        ],
+        "name": "Article",
+        "longname": "Article",
+        "scope": "global"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5041,
+                5069
+            ],
+            "filename": "createSpec.js",
+            "lineno": 176,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100000079",
+                "name": "this.title",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "title",
+        "longname": "Article#title",
+        "kind": "member",
+        "memberof": "Article",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5077,
+                5103
+            ],
+            "filename": "createSpec.js",
+            "lineno": 177,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100000089",
+                "name": "this.icon",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "icon",
+        "longname": "Article#icon",
+        "kind": "member",
+        "memberof": "Article",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5111,
+                5144
+            ],
+            "filename": "createSpec.js",
+            "lineno": 178,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100000099",
+                "name": "this.anchor",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "anchor",
+        "longname": "Article#anchor",
+        "kind": "member",
+        "memberof": "Article",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5152,
+                5178
+            ],
+            "filename": "createSpec.js",
+            "lineno": 179,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100000109",
+                "name": "this.link",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "link",
+        "longname": "Article#link",
+        "kind": "member",
+        "memberof": "Article",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5186,
+                5210
+            ],
+            "filename": "createSpec.js",
+            "lineno": 180,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100000119",
+                "name": "this.top",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "top",
+        "longname": "Article#top",
+        "kind": "member",
+        "memberof": "Article",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5218,
+                5248
+            ],
+            "filename": "createSpec.js",
+            "lineno": 181,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100000129",
+                "name": "this.middle",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "middle",
+        "longname": "Article#middle",
+        "kind": "member",
+        "memberof": "Article",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5256,
+                5286
+            ],
+            "filename": "createSpec.js",
+            "lineno": 182,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100000139",
+                "name": "this.bottom",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "bottom",
+        "longname": "Article#bottom",
+        "kind": "member",
+        "memberof": "Article",
+        "scope": "instance"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                5294,
+                5326
+            ],
+            "filename": "createSpec.js",
+            "lineno": 183,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100000149",
+                "name": "this.content",
+                "type": "LogicalExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "content",
+        "longname": "Article#content",
+        "kind": "member",
+        "memberof": "Article",
+        "scope": "instance"
+    },
+    {
+        "comment": "/** DocLet: `jsdoc -X`で配列で返されたオブジェクトに情報を付加\n   * @interface DocLet\n   * @prop {string} unique - 固有パス\n   *   unique = 'client/test.js' -> 'client/' ※最後に'/'が付く\n   *   unique = 'test.js' -> '/' ※直下の場合'/'\n   * @prop {string} type - DocLetの種類。identifyDocletTypeの戻り値\n   * @prop {string} jsdocId - 固有パス＋ファイル名＋行番号\n   * @prop {DocLet[]} [innerFunc=[]] - メソッド・内部関数\n   * @prop {Object} origin - 情報付加前のjsdocで吐き出されたdoclet\n   * // 以下はMarkdown用項目\n   * @prop {Object.<string, Article>} article - 記事名をキーとするマップ\n   *   記事名は「一覧文書/クラス・グローバル関数/データ型定義文書の構成」参照\n   *   top, list, type, prop, func, desc, param, return, -xxx\n   * @prop {string} title\n   * @prop {string} label - 1行で簡潔に記述された概要説明\n   *   ① `／** `に続く文字列\n   *   ② description, classdesc があれば先頭行\n   *   ③ longname\n   *   ※ 上記に該当が無い場合、「(ラベル未設定)」\n   * @prop {string} description - 概要・詳細説明、処理手順\n   * @prop {PropRow[]} [properties=[]] - メンバ一覧\n   * @prop {Object[]} [innerList=[]] - メソッド・内部関数一覧。項目：No,関数名,ラベル,アンカー\n   * @prop {PropRow[]} [params=[]] - 引数。クラスの場合はconstructorの引数\n   * @prop {PropRow[]} [returns=[]] - 戻り値\n   */",
         "meta": {
             "filename": "createSpec.js",
-            "lineno": 170,
+            "lineno": 186,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -921,6 +1204,15 @@
                 },
                 "description": "情報付加前のjsdocで吐き出されたdoclet\n// 以下はMarkdown用項目",
                 "name": "origin"
+            },
+            {
+                "type": {
+                    "names": [
+                        "Object.<string, Article>"
+                    ]
+                },
+                "description": "記事名をキーとするマップ\n  記事名は「一覧文書/クラス・グローバル関数/データ型定義文書の構成」参照\n  top, list, type, prop, func, desc, param, return, -xxx",
+                "name": "article"
             },
             {
                 "type": {
@@ -1000,15 +1292,15 @@
         "comment": "",
         "meta": {
             "range": [
-                5811,
-                5822
+                6401,
+                6412
             ],
             "filename": "createSpec.js",
-            "lineno": 192,
+            "lineno": 211,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000071",
+                "id": "astnode100000159",
                 "name": "doclet",
                 "type": "ArrayExpression",
                 "value": "[]"
@@ -1026,7 +1318,7 @@
         "comment": "/** dlMap: DocLetを構造化してマッピングしたオブジェクト\n   * @typedef {Object.<string, Object>} dlMap - メンバ名は固有パス\n   *   固有パスが無い場合は\"/\"(ルート)とする。\n   * @prop {Object.<string, DocLet>} global - メンバ名は関数・クラス名\n   * @prop {Object.<string, DocLet>} typedef - メンバ名はデータ型定義名\n   */",
         "meta": {
             "filename": "createSpec.js",
-            "lineno": 193,
+            "lineno": 212,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -1066,15 +1358,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6084,
-                6094
+                6674,
+                6684
             ],
             "filename": "createSpec.js",
-            "lineno": 199,
+            "lineno": 218,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000075",
+                "id": "astnode100000163",
                 "name": "dlMap",
                 "type": "ObjectExpression",
                 "value": "{}"
@@ -1092,15 +1384,15 @@
         "comment": "/** mapDocLet: docletからdlMapを作成\n   * @param {void} - 共有変数docletから作成\n   * @returns {null|Error} 処理したDocLetはdlMapに格納\n   */",
         "meta": {
             "range": [
-                6222,
-                8638
+                6812,
+                9228
             ],
             "filename": "createSpec.js",
-            "lineno": 205,
+            "lineno": 224,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000078",
+                "id": "astnode100000166",
                 "name": "mapDocLet",
                 "type": "FunctionDeclaration",
                 "paramnames": []
@@ -1149,15 +1441,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6254,
-                6306
+                6844,
+                6896
             ],
             "filename": "createSpec.js",
-            "lineno": 206,
+            "lineno": 225,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000082",
+                "id": "astnode100000170",
                 "name": "v",
                 "type": "ObjectExpression",
                 "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":null}"
@@ -1175,15 +1467,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6259,
-                6288
+                6849,
+                6878
             ],
             "filename": "createSpec.js",
-            "lineno": 206,
+            "lineno": 225,
             "columnno": 15,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000085",
+                "id": "astnode100000173",
                 "name": "whois",
                 "type": "TemplateLiteral",
                 "value": ""
@@ -1200,15 +1492,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6290,
-                6296
+                6880,
+                6886
             ],
             "filename": "createSpec.js",
-            "lineno": 206,
+            "lineno": 225,
             "columnno": 46,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000092",
+                "id": "astnode100000180",
                 "name": "arg",
                 "type": "ObjectExpression",
                 "value": "{}"
@@ -1225,15 +1517,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6298,
-                6305
+                6888,
+                6895
             ],
             "filename": "createSpec.js",
-            "lineno": 206,
+            "lineno": 225,
             "columnno": 54,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000094",
+                "id": "astnode100000182",
                 "name": "rv",
                 "type": "Literal",
                 "value": null
@@ -1250,15 +1542,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6318,
-                6339
+                6908,
+                6929
             ],
             "filename": "createSpec.js",
-            "lineno": 207,
+            "lineno": 226,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000097",
+                "id": "astnode100000185",
                 "name": "dev",
                 "type": "NewExpression",
                 "value": ""
@@ -1276,15 +1568,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6363,
-                6368
+                6953,
+                6958
             ],
             "filename": "createSpec.js",
-            "lineno": 210,
+            "lineno": 229,
             "columnno": 11,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000105",
+                "id": "astnode100000193",
                 "name": "v.i",
                 "type": "Literal",
                 "funcscope": "createSpec~mapDocLet",
@@ -1303,15 +1595,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6408,
-                6425
+                6998,
+                7015
             ],
             "filename": "createSpec.js",
-            "lineno": 211,
+            "lineno": 230,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000123",
+                "id": "astnode100000211",
                 "name": "v.d",
                 "type": "MemberExpression",
                 "funcscope": "createSpec~mapDocLet",
@@ -1330,15 +1622,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6543,
-                6585
+                7133,
+                7175
             ],
             "filename": "createSpec.js",
-            "lineno": 215,
+            "lineno": 234,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000151",
+                "id": "astnode100000239",
                 "name": "dlMap[undefined]",
                 "type": "ObjectExpression",
                 "value": "{\"global\":\"\",\"typedef\":\"\"}",
@@ -1356,15 +1648,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6564,
-                6573
+                7154,
+                7163
             ],
             "filename": "createSpec.js",
-            "lineno": 215,
+            "lineno": 234,
             "columnno": 31,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000160",
+                "id": "astnode100000248",
                 "name": "global",
                 "type": "ObjectExpression",
                 "value": "{}"
@@ -1381,15 +1673,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6574,
-                6584
+                7164,
+                7174
             ],
             "filename": "createSpec.js",
-            "lineno": 215,
+            "lineno": 234,
             "columnno": 41,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000162",
+                "id": "astnode100000250",
                 "name": "typedef",
                 "type": "ObjectExpression",
                 "value": "{}"
@@ -1406,15 +1698,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6753,
-                6795
+                7343,
+                7385
             ],
             "filename": "createSpec.js",
-            "lineno": 222,
+            "lineno": 241,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000181",
+                "id": "astnode100000269",
                 "name": "dlMap[undefined].typedef[undefined]",
                 "type": "MemberExpression",
                 "value": "v.d",
@@ -1432,15 +1724,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6879,
-                6920
+                7469,
+                7510
             ],
             "filename": "createSpec.js",
-            "lineno": 226,
+            "lineno": 245,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000206",
+                "id": "astnode100000294",
                 "name": "dlMap[undefined].global[undefined]",
                 "type": "MemberExpression",
                 "value": "v.d",
@@ -1458,15 +1750,15 @@
         "comment": "",
         "meta": {
             "range": [
-                6990,
-                6995
+                7580,
+                7585
             ],
             "filename": "createSpec.js",
-            "lineno": 232,
+            "lineno": 251,
             "columnno": 11,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000233",
+                "id": "astnode100000321",
                 "name": "v.i",
                 "type": "Literal",
                 "funcscope": "createSpec~mapDocLet",
@@ -1485,15 +1777,15 @@
         "comment": "",
         "meta": {
             "range": [
-                7035,
-                7052
+                7625,
+                7642
             ],
             "filename": "createSpec.js",
-            "lineno": 233,
+            "lineno": 252,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000251",
+                "id": "astnode100000339",
                 "name": "v.d",
                 "type": "MemberExpression",
                 "funcscope": "createSpec~mapDocLet",
@@ -1512,15 +1804,15 @@
         "comment": "",
         "meta": {
             "range": [
-                7205,
-                7272
+                7795,
+                7862
             ],
             "filename": "createSpec.js",
-            "lineno": 238,
+            "lineno": 257,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000275",
+                "id": "astnode100000363",
                 "name": "v.r",
                 "type": "CallExpression",
                 "funcscope": "createSpec~mapDocLet",
@@ -1539,15 +1831,15 @@
         "comment": "",
         "meta": {
             "range": [
-                8095,
-                8161
+                8685,
+                8751
             ],
             "filename": "createSpec.js",
-            "lineno": 256,
+            "lineno": 275,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000409",
+                "id": "astnode100000497",
                 "name": "v.r",
                 "type": "CallExpression",
                 "funcscope": "createSpec~mapDocLet",
@@ -1566,15 +1858,15 @@
         "comment": "/** getByTildePath:パス文字列からオブジェクトを辿って値を取得\n   * @param {string} path - 例: \"func01~func02~arrow01\"\n   * @param {object} obj  - 探索対象オブジェクト\n   * @returns {{obj:any, label:string} | null}\n   */",
         "meta": {
             "range": [
-                8832,
-                9789
+                9422,
+                10379
             ],
             "filename": "createSpec.js",
-            "lineno": 280,
+            "lineno": 299,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000505",
+                "id": "astnode100000593",
                 "name": "getByTildePath",
                 "type": "FunctionDeclaration",
                 "paramnames": [
@@ -1634,15 +1926,15 @@
         "comment": "",
         "meta": {
             "range": [
-                8879,
-                8951
+                9469,
+                9541
             ],
             "filename": "createSpec.js",
-            "lineno": 281,
+            "lineno": 300,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000511",
+                "id": "astnode100000599",
                 "name": "v",
                 "type": "ObjectExpression",
                 "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":\"\"}"
@@ -1660,15 +1952,15 @@
         "comment": "",
         "meta": {
             "range": [
-                8884,
-                8918
+                9474,
+                9508
             ],
             "filename": "createSpec.js",
-            "lineno": 281,
+            "lineno": 300,
             "columnno": 15,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000514",
+                "id": "astnode100000602",
                 "name": "whois",
                 "type": "TemplateLiteral",
                 "value": ""
@@ -1685,15 +1977,15 @@
         "comment": "",
         "meta": {
             "range": [
-                8920,
-                8926
+                9510,
+                9516
             ],
             "filename": "createSpec.js",
-            "lineno": 281,
+            "lineno": 300,
             "columnno": 51,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000521",
+                "id": "astnode100000609",
                 "name": "arg",
                 "type": "ObjectExpression",
                 "value": "{}"
@@ -1710,15 +2002,15 @@
         "comment": "",
         "meta": {
             "range": [
-                8928,
-                8950
+                9518,
+                9540
             ],
             "filename": "createSpec.js",
-            "lineno": 281,
+            "lineno": 300,
             "columnno": 59,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000523",
+                "id": "astnode100000611",
                 "name": "rv",
                 "type": "ObjectExpression",
                 "value": "{\"obj\":null,\"label\":\"\"}"
@@ -1735,15 +2027,15 @@
         "comment": "",
         "meta": {
             "range": [
-                8932,
-                8940
+                9522,
+                9530
             ],
             "filename": "createSpec.js",
-            "lineno": 281,
+            "lineno": 300,
             "columnno": 63,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000525",
+                "id": "astnode100000613",
                 "name": "obj",
                 "type": "Literal",
                 "value": null
@@ -1760,15 +2052,15 @@
         "comment": "",
         "meta": {
             "range": [
-                8941,
-                8949
+                9531,
+                9539
             ],
             "filename": "createSpec.js",
-            "lineno": 281,
+            "lineno": 300,
             "columnno": 72,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000527",
+                "id": "astnode100000615",
                 "name": "label",
                 "type": "Literal",
                 "value": ""
@@ -1785,15 +2077,15 @@
         "comment": "",
         "meta": {
             "range": [
-                8964,
-                8985
+                9554,
+                9575
             ],
             "filename": "createSpec.js",
-            "lineno": 282,
+            "lineno": 301,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000531",
+                "id": "astnode100000619",
                 "name": "dev",
                 "type": "NewExpression",
                 "value": ""
@@ -1811,15 +2103,15 @@
         "comment": "",
         "meta": {
             "range": [
-                9129,
-                9180
+                9719,
+                9770
             ],
             "filename": "createSpec.js",
-            "lineno": 289,
+            "lineno": 308,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000561",
+                "id": "astnode100000649",
                 "name": "v.parts",
                 "type": "CallExpression",
                 "funcscope": "createSpec~getByTildePath",
@@ -1838,15 +2130,15 @@
         "comment": "",
         "meta": {
             "range": [
-                9263,
-                9283
+                9853,
+                9873
             ],
             "filename": "createSpec.js",
-            "lineno": 293,
+            "lineno": 312,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000594",
+                "id": "astnode100000682",
                 "name": "v.rv.label",
                 "type": "MemberExpression",
                 "funcscope": "createSpec~getByTildePath",
@@ -1865,15 +2157,15 @@
         "comment": "",
         "meta": {
             "range": [
-                9331,
-                9358
+                9921,
+                9948
             ],
             "filename": "createSpec.js",
-            "lineno": 296,
+            "lineno": 315,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000611",
+                "id": "astnode100000699",
                 "name": "v.rv.label",
                 "type": "CallExpression",
                 "funcscope": "createSpec~getByTildePath",
@@ -1892,15 +2184,15 @@
         "comment": "",
         "meta": {
             "range": [
-                9384,
-                9414
+                9974,
+                10004
             ],
             "filename": "createSpec.js",
-            "lineno": 297,
+            "lineno": 316,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000626",
+                "id": "astnode100000714",
                 "name": "v.keys",
                 "type": "CallExpression",
                 "funcscope": "createSpec~getByTildePath",
@@ -1919,15 +2211,15 @@
         "comment": "",
         "meta": {
             "range": [
-                9464,
-                9473
+                10054,
+                10063
             ],
             "filename": "createSpec.js",
-            "lineno": 299,
+            "lineno": 318,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000646",
+                "id": "astnode100000734",
                 "name": "cur",
                 "type": "Identifier",
                 "value": "obj"
@@ -1945,15 +2237,15 @@
         "comment": "",
         "meta": {
             "range": [
-                9494,
-                9497
+                10084,
+                10087
             ],
             "filename": "createSpec.js",
-            "lineno": 300,
+            "lineno": 319,
             "columnno": 19,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000651",
+                "id": "astnode100000739",
                 "name": "key"
             }
         },
@@ -1969,15 +2261,15 @@
         "comment": "",
         "meta": {
             "range": [
-                9585,
-                9599
+                10175,
+                10189
             ],
             "filename": "createSpec.js",
-            "lineno": 302,
+            "lineno": 321,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000670",
+                "id": "astnode100000758",
                 "name": "cur",
                 "type": "MemberExpression",
                 "funcscope": "createSpec~getByTildePath",
@@ -1996,15 +2288,15 @@
         "comment": "",
         "meta": {
             "range": [
-                9675,
-                9689
+                10265,
+                10279
             ],
             "filename": "createSpec.js",
-            "lineno": 307,
+            "lineno": 326,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000679",
+                "id": "astnode100000767",
                 "name": "v.rv.obj",
                 "type": "Identifier",
                 "funcscope": "createSpec~getByTildePath",
@@ -2023,15 +2315,15 @@
         "comment": "/** getDocLet: DocLet型のオブジェクトを作成、docletに追加\n   * @param {Object} obj - `jsdoc -X`で配列で返されたオブジェクト\n   * @param {string} unique - objが存在するファイルの固有パス\n   * @returns {null|Error} 正常終了ならnull\n   */",
         "meta": {
             "range": [
-                9982,
-                12005
+                10572,
+                12616
             ],
             "filename": "createSpec.js",
-            "lineno": 321,
+            "lineno": 340,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000702",
+                "id": "astnode100000790",
                 "name": "getDocLet",
                 "type": "FunctionDeclaration",
                 "paramnames": [
@@ -2092,15 +2384,15 @@
         "comment": "",
         "meta": {
             "range": [
-                10024,
-                10086
+                10614,
+                10676
             ],
             "filename": "createSpec.js",
-            "lineno": 322,
+            "lineno": 341,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000708",
+                "id": "astnode100000796",
                 "name": "v",
                 "type": "ObjectExpression",
                 "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":null}"
@@ -2118,15 +2410,15 @@
         "comment": "",
         "meta": {
             "range": [
-                10029,
-                10058
+                10619,
+                10648
             ],
             "filename": "createSpec.js",
-            "lineno": 322,
+            "lineno": 341,
             "columnno": 15,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000711",
+                "id": "astnode100000799",
                 "name": "whois",
                 "type": "TemplateLiteral",
                 "value": ""
@@ -2143,15 +2435,15 @@
         "comment": "",
         "meta": {
             "range": [
-                10060,
-                10076
+                10650,
+                10666
             ],
             "filename": "createSpec.js",
-            "lineno": 322,
+            "lineno": 341,
             "columnno": 46,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000718",
+                "id": "astnode100000806",
                 "name": "arg",
                 "type": "ObjectExpression",
                 "value": "{\"obj\":\"\",\"unique\":\"\"}"
@@ -2168,15 +2460,15 @@
         "comment": "",
         "meta": {
             "range": [
-                10065,
-                10068
+                10655,
+                10658
             ],
             "filename": "createSpec.js",
-            "lineno": 322,
+            "lineno": 341,
             "columnno": 51,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000720",
+                "id": "astnode100000808",
                 "name": "obj",
                 "type": "Identifier",
                 "value": "obj"
@@ -2193,15 +2485,15 @@
         "comment": "",
         "meta": {
             "range": [
-                10069,
-                10075
+                10659,
+                10665
             ],
             "filename": "createSpec.js",
-            "lineno": 322,
+            "lineno": 341,
             "columnno": 55,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000722",
+                "id": "astnode100000810",
                 "name": "unique",
                 "type": "Identifier",
                 "value": "unique"
@@ -2218,15 +2510,15 @@
         "comment": "",
         "meta": {
             "range": [
-                10078,
-                10085
+                10668,
+                10675
             ],
             "filename": "createSpec.js",
-            "lineno": 322,
+            "lineno": 341,
             "columnno": 64,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000724",
+                "id": "astnode100000812",
                 "name": "rv",
                 "type": "Literal",
                 "value": null
@@ -2243,15 +2535,15 @@
         "comment": "",
         "meta": {
             "range": [
-                10098,
-                10119
+                10688,
+                10709
             ],
             "filename": "createSpec.js",
-            "lineno": 323,
+            "lineno": 342,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000727",
+                "id": "astnode100000815",
                 "name": "dev",
                 "type": "NewExpression",
                 "value": ""
@@ -2269,15 +2561,15 @@
         "comment": "",
         "meta": {
             "range": [
-                10173,
-                10205
+                10763,
+                10795
             ],
             "filename": "createSpec.js",
-            "lineno": 327,
+            "lineno": 346,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000741",
+                "id": "astnode100000829",
                 "name": "v.type",
                 "type": "CallExpression",
                 "funcscope": "createSpec~getDocLet",
@@ -2296,15 +2588,15 @@
         "comment": "",
         "meta": {
             "range": [
-                10629,
-                10687
+                11219,
+                11277
             ],
             "filename": "createSpec.js",
-            "lineno": 339,
+            "lineno": 358,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000811",
+                "id": "astnode100000899",
                 "name": "v.m",
                 "type": "CallExpression",
                 "funcscope": "createSpec~getDocLet",
@@ -2323,15 +2615,15 @@
         "comment": "",
         "meta": {
             "range": [
-                10713,
-                10810
+                11303,
+                11400
             ],
             "filename": "createSpec.js",
-            "lineno": 341,
+            "lineno": 360,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000829",
+                "id": "astnode100000917",
                 "name": "v.desc",
                 "type": "LogicalExpression",
                 "funcscope": "createSpec~getDocLet",
@@ -2350,15 +2642,15 @@
         "comment": "",
         "meta": {
             "range": [
-                10860,
-                10977
+                11450,
+                11567
             ],
             "filename": "createSpec.js",
-            "lineno": 344,
+            "lineno": 363,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000853",
+                "id": "astnode100000941",
                 "name": "v.label",
                 "type": "ConditionalExpression",
                 "funcscope": "createSpec~getDocLet",
@@ -2377,19 +2669,19 @@
         "comment": "",
         "meta": {
             "range": [
-                11027,
-                11443
+                11617,
+                12054
             ],
             "filename": "createSpec.js",
-            "lineno": 348,
+            "lineno": 367,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000897",
+                "id": "astnode100000985",
                 "name": "v.doclet",
                 "type": "ObjectExpression",
                 "funcscope": "createSpec~getDocLet",
-                "value": "{\"unique\":\"\",\"type\":\"\",\"jsdocId\":\"\",\"innerFunc\":\"\",\"title\":\"\",\"label\":\"\",\"description\":\"\",\"properties\":\"\",\"innerList\":\"\",\"params\":\"\",\"returns\":\"\",\"origin\":\"\"}",
+                "value": "{\"unique\":\"\",\"type\":\"\",\"jsdocId\":\"\",\"innerFunc\":\"\",\"article\":\"\",\"title\":\"\",\"label\":\"\",\"description\":\"\",\"properties\":\"\",\"innerList\":\"\",\"params\":\"\",\"returns\":\"\",\"origin\":\"\"}",
                 "paramnames": []
             }
         },
@@ -2404,15 +2696,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11048,
-                11062
+                11638,
+                11652
             ],
             "filename": "createSpec.js",
-            "lineno": 349,
+            "lineno": 368,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000902",
+                "id": "astnode100000990",
                 "name": "unique",
                 "type": "Identifier",
                 "value": "unique"
@@ -2429,15 +2721,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11072,
-                11084
+                11662,
+                11674
             ],
             "filename": "createSpec.js",
-            "lineno": 350,
+            "lineno": 369,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000904",
+                "id": "astnode100000992",
                 "name": "type",
                 "type": "MemberExpression",
                 "value": "v.type"
@@ -2454,15 +2746,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11094,
-                11153
+                11684,
+                11743
             ],
             "filename": "createSpec.js",
-            "lineno": 351,
+            "lineno": 370,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000908",
+                "id": "astnode100000996",
                 "name": "jsdocId",
                 "type": "BinaryExpression",
                 "value": ""
@@ -2479,15 +2771,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11163,
-                11176
+                11753,
+                11766
             ],
             "filename": "createSpec.js",
-            "lineno": 352,
+            "lineno": 371,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000924",
+                "id": "astnode100001012",
                 "name": "innerFunc",
                 "type": "ArrayExpression",
                 "value": "[]"
@@ -2504,15 +2796,40 @@
         "comment": "",
         "meta": {
             "range": [
-                11186,
-                11240
+                11776,
+                11787
             ],
             "filename": "createSpec.js",
-            "lineno": 353,
+            "lineno": 372,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000926",
+                "id": "astnode100001014",
+                "name": "article",
+                "type": "ObjectExpression",
+                "value": "{}"
+            }
+        },
+        "undocumented": true,
+        "name": "article",
+        "longname": "createSpec~getDocLet~v.doclet.article",
+        "kind": "member",
+        "memberof": "createSpec~getDocLet~v.doclet",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                11797,
+                11851
+            ],
+            "filename": "createSpec.js",
+            "lineno": 373,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100001016",
                 "name": "title",
                 "type": "MemberExpression",
                 "value": "[0]"
@@ -2529,15 +2846,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11250,
-                11264
+                11861,
+                11875
             ],
             "filename": "createSpec.js",
-            "lineno": 354,
+            "lineno": 374,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000941",
+                "id": "astnode100001031",
                 "name": "label",
                 "type": "MemberExpression",
                 "value": "v.label"
@@ -2554,15 +2871,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11274,
-                11325
+                11885,
+                11936
             ],
             "filename": "createSpec.js",
-            "lineno": 355,
+            "lineno": 375,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000945",
+                "id": "astnode100001035",
                 "name": "description",
                 "type": "LogicalExpression",
                 "value": ""
@@ -2579,15 +2896,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11335,
-                11349
+                11946,
+                11960
             ],
             "filename": "createSpec.js",
-            "lineno": 356,
+            "lineno": 376,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000955",
+                "id": "astnode100001045",
                 "name": "properties",
                 "type": "ArrayExpression",
                 "value": "[]"
@@ -2604,15 +2921,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11359,
-                11372
+                11970,
+                11983
             ],
             "filename": "createSpec.js",
-            "lineno": 357,
+            "lineno": 377,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000957",
+                "id": "astnode100001047",
                 "name": "innerList",
                 "type": "ArrayExpression",
                 "value": "[]"
@@ -2629,15 +2946,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11382,
-                11392
+                11993,
+                12003
             ],
             "filename": "createSpec.js",
-            "lineno": 358,
+            "lineno": 378,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000959",
+                "id": "astnode100001049",
                 "name": "params",
                 "type": "ArrayExpression",
                 "value": "[]"
@@ -2654,15 +2971,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11402,
-                11413
+                12013,
+                12024
             ],
             "filename": "createSpec.js",
-            "lineno": 359,
+            "lineno": 379,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000961",
+                "id": "astnode100001051",
                 "name": "returns",
                 "type": "ArrayExpression",
                 "value": "[]"
@@ -2679,15 +2996,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11423,
-                11434
+                12034,
+                12045
             ],
             "filename": "createSpec.js",
-            "lineno": 360,
+            "lineno": 380,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100000963",
+                "id": "astnode100001053",
                 "name": "origin",
                 "type": "Identifier",
                 "value": "obj"
@@ -2704,15 +3021,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11648,
-                11653
+                12259,
+                12264
             ],
             "filename": "createSpec.js",
-            "lineno": 366,
+            "lineno": 386,
             "columnno": 15,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001007",
+                "id": "astnode100001097",
                 "name": "v.i",
                 "type": "Literal",
                 "funcscope": "createSpec~getDocLet",
@@ -2731,15 +3048,15 @@
         "comment": "",
         "meta": {
             "range": [
-                11697,
-                11732
+                12308,
+                12343
             ],
             "filename": "createSpec.js",
-            "lineno": 367,
+            "lineno": 387,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001027",
+                "id": "astnode100001117",
                 "name": "v.r",
                 "type": "CallExpression",
                 "funcscope": "createSpec~getDocLet",
@@ -2758,15 +3075,15 @@
         "comment": "/** getFile: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得\n   * @param {string} fn - 対象ファイル名\n   * @returns {object|string} JSON化できない(=エラー)の場合はテキスト\n   */",
         "meta": {
             "range": [
-                12159,
-                13776
+                12770,
+                14387
             ],
             "filename": "createSpec.js",
-            "lineno": 387,
+            "lineno": 407,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001094",
+                "id": "astnode100001184",
                 "name": "getFile",
                 "type": "FunctionDeclaration",
                 "paramnames": [
@@ -2811,15 +3128,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12246,
-                12314
+                12857,
+                12925
             ],
             "filename": "createSpec.js",
-            "lineno": 389,
+            "lineno": 409,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001106",
+                "id": "astnode100001196",
                 "name": "v",
                 "type": "ObjectExpression",
                 "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":null}"
@@ -2837,15 +3154,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12251,
-                12278
+                12862,
+                12889
             ],
             "filename": "createSpec.js",
-            "lineno": 389,
+            "lineno": 409,
             "columnno": 17,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001109",
+                "id": "astnode100001199",
                 "name": "whois",
                 "type": "TemplateLiteral",
                 "value": ""
@@ -2862,15 +3179,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12280,
-                12304
+                12891,
+                12915
             ],
             "filename": "createSpec.js",
-            "lineno": 389,
+            "lineno": 409,
             "columnno": 46,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001116",
+                "id": "astnode100001206",
                 "name": "arg",
                 "type": "ObjectExpression",
                 "value": "{\"fn\":\"\",\"resolve\":\"\",\"reject\":\"\"}"
@@ -2887,15 +3204,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12285,
-                12287
+                12896,
+                12898
             ],
             "filename": "createSpec.js",
-            "lineno": 389,
+            "lineno": 409,
             "columnno": 51,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001118",
+                "id": "astnode100001208",
                 "name": "fn",
                 "type": "Identifier",
                 "value": "fn"
@@ -2912,15 +3229,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12288,
-                12295
+                12899,
+                12906
             ],
             "filename": "createSpec.js",
-            "lineno": 389,
+            "lineno": 409,
             "columnno": 54,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001120",
+                "id": "astnode100001210",
                 "name": "resolve",
                 "type": "Identifier",
                 "value": "resolve"
@@ -2937,15 +3254,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12297,
-                12303
+                12908,
+                12914
             ],
             "filename": "createSpec.js",
-            "lineno": 389,
+            "lineno": 409,
             "columnno": 63,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001122",
+                "id": "astnode100001212",
                 "name": "reject",
                 "type": "Identifier",
                 "value": "reject"
@@ -2962,15 +3279,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12306,
-                12313
+                12917,
+                12924
             ],
             "filename": "createSpec.js",
-            "lineno": 389,
+            "lineno": 409,
             "columnno": 72,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001124",
+                "id": "astnode100001214",
                 "name": "rv",
                 "type": "Literal",
                 "value": null
@@ -2987,15 +3304,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12328,
-                12349
+                12939,
+                12960
             ],
             "filename": "createSpec.js",
-            "lineno": 390,
+            "lineno": 410,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001127",
+                "id": "astnode100001217",
                 "name": "dev",
                 "type": "NewExpression",
                 "value": ""
@@ -3013,15 +3330,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12402,
-                12576
+                13013,
+                13187
             ],
             "filename": "createSpec.js",
-            "lineno": 393,
+            "lineno": 413,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001139",
+                "id": "astnode100001229",
                 "name": "v.p",
                 "type": "CallExpression",
                 "funcscope": "<anonymous>",
@@ -3040,15 +3357,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12476,
-                12509
+                13087,
+                13120
             ],
             "filename": "createSpec.js",
-            "lineno": 394,
+            "lineno": 414,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001156",
+                "id": "astnode100001246",
                 "name": "stdio",
                 "type": "ArrayExpression",
                 "value": "[\"ignore\",\"pipe\",\"pipe\"]"
@@ -3064,15 +3381,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12551,
-                12567
+                13162,
+                13178
             ],
             "filename": "createSpec.js",
-            "lineno": 395,
+            "lineno": 415,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001161",
+                "id": "astnode100001251",
                 "name": "encoding",
                 "type": "Literal",
                 "value": "utf8"
@@ -3088,15 +3405,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12636,
-                12649
+                13247,
+                13260
             ],
             "filename": "createSpec.js",
-            "lineno": 399,
+            "lineno": 419,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001170",
+                "id": "astnode100001260",
                 "name": "v.output",
                 "type": "Literal",
                 "funcscope": "<anonymous>",
@@ -3115,15 +3432,15 @@
         "comment": "",
         "meta": {
             "range": [
-                12657,
-                12675
+                13268,
+                13286
             ],
             "filename": "createSpec.js",
-            "lineno": 400,
+            "lineno": 420,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001176",
+                "id": "astnode100001266",
                 "name": "v.errorOutput",
                 "type": "Literal",
                 "funcscope": "<anonymous>",
@@ -3142,69 +3459,69 @@
         "comment": "",
         "meta": {
             "range": [
-                12775,
-                12792
-            ],
-            "filename": "createSpec.js",
-            "lineno": 404,
-            "columnno": 8,
-            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
-            "code": {
-                "id": "astnode100001201",
-                "name": "v.output",
-                "type": "Identifier",
-                "funcscope": "<anonymous>",
-                "value": "chunk",
-                "paramnames": []
-            }
-        },
-        "undocumented": true,
-        "name": "output",
-        "longname": "<anonymous>~v.output",
-        "kind": "member",
-        "memberof": "<anonymous>~v",
-        "scope": "static"
-    },
-    {
-        "comment": "",
-        "meta": {
-            "range": [
-                12913,
-                12935
-            ],
-            "filename": "createSpec.js",
-            "lineno": 409,
-            "columnno": 8,
-            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
-            "code": {
-                "id": "astnode100001226",
-                "name": "v.errorOutput",
-                "type": "Identifier",
-                "funcscope": "<anonymous>",
-                "value": "chunk",
-                "paramnames": []
-            }
-        },
-        "undocumented": true,
-        "name": "errorOutput",
-        "longname": "<anonymous>~v.errorOutput",
-        "kind": "member",
-        "memberof": "<anonymous>~v",
-        "scope": "static"
-    },
-    {
-        "comment": "",
-        "meta": {
-            "range": [
-                13302,
-                13331
+                13386,
+                13403
             ],
             "filename": "createSpec.js",
             "lineno": 424,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100001291",
+                "name": "v.output",
+                "type": "Identifier",
+                "funcscope": "<anonymous>",
+                "value": "chunk",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "output",
+        "longname": "<anonymous>~v.output",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                13524,
+                13546
+            ],
+            "filename": "createSpec.js",
+            "lineno": 429,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100001316",
+                "name": "v.errorOutput",
+                "type": "Identifier",
+                "funcscope": "<anonymous>",
+                "value": "chunk",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "errorOutput",
+        "longname": "<anonymous>~v.errorOutput",
+        "kind": "member",
+        "memberof": "<anonymous>~v",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                13913,
+                13942
+            ],
+            "filename": "createSpec.js",
+            "lineno": 444,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001282",
+                "id": "astnode100001372",
                 "name": "v.json",
                 "type": "CallExpression",
                 "funcscope": "<anonymous>",
@@ -3223,15 +3540,15 @@
         "comment": "",
         "meta": {
             "range": [
-                13394,
-                13399
+                14005,
+                14010
             ],
             "filename": "createSpec.js",
-            "lineno": 427,
+            "lineno": 447,
             "columnno": 15,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001300",
+                "id": "astnode100001390",
                 "name": "v.i",
                 "type": "Literal",
                 "funcscope": "<anonymous>",
@@ -3250,15 +3567,15 @@
         "comment": "",
         "meta": {
             "range": [
-                13443,
-                13482
+                14054,
+                14093
             ],
             "filename": "createSpec.js",
-            "lineno": 428,
+            "lineno": 448,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001320",
+                "id": "astnode100001410",
                 "name": "v.rv",
                 "type": "CallExpression",
                 "funcscope": "<anonymous>",
@@ -3277,7 +3594,7 @@
         "comment": "/** jsdocColDef: DocLetの項目定義\n   * @typedef {Object} jsdocColDef - properties/params/returns\n   * @prop {Object} type - データ型に関する定義\n   * @prop {string[]} type.names - データ型名\n   *   {typeDef[]|columnDef[]} ⇒ \"names\": [\"Array.<typeDef>\",\"Array.<columnDef>\"]\n   * @prop {string} [description] - 項目に関する説明\n   * @prop {string} name - 項目名\n   * @prop {string} [defaultvalue] - 既定値(ex.'[]')\n   *   NG: `＠prop {string[]} x=[]` <- defaultvalue='[' ※']'が欠ける\n   *   OK: `＠prop {string[]} [x=[]]` <- 既定値指定時は必ず'[]'で囲む\n   * @prop {boolean} [optional] - 任意項目だとtrue\n   */",
         "meta": {
             "filename": "createSpec.js",
-            "lineno": 442,
+            "lineno": 462,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -3356,7 +3673,7 @@
         "comment": "/** PropRow: 属性一覧に表示する項目\n   * - 戻り値(returns)の場合、項目名・要否/既定値は無効な値となる\n   * @typedef {Object} PropRow\n   * @prop {string} name - 項目名\n   * @prop {string} type - データ型。複数なら' | 'で区切って並記\n   * @prop {string} value - 要否/既定値。「必須」「任意」または既定値\n   * @prop {string} desc - 1行の簡潔な項目説明\n   * @prop {string} note - 備考\n   */",
         "meta": {
             "filename": "createSpec.js",
-            "lineno": 454,
+            "lineno": 474,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -3423,15 +3740,15 @@
         "comment": "/** getPropRow: 属性一覧表示用のオブジェクトを作成\n   * @param {jsdocColDef} arg - 項目定義オブジェクト\n   * @param {string} type - 呼出元の属性。'properties','params','returns'\n   * @param {Object} obj - 項目定義オブジェクトを含むDocLet全体。エラー箇所特定用\n   * @returns {PropRow|Error}\n   */",
         "meta": {
             "range": [
-                14877,
-                16031
+                15488,
+                16642
             ],
             "filename": "createSpec.js",
-            "lineno": 469,
+            "lineno": 489,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001371",
+                "id": "astnode100001461",
                 "name": "getPropRow",
                 "type": "FunctionDeclaration",
                 "paramnames": [
@@ -3499,15 +3816,15 @@
         "comment": "",
         "meta": {
             "range": [
-                14922,
-                14987
+                15533,
+                15598
             ],
             "filename": "createSpec.js",
-            "lineno": 470,
+            "lineno": 490,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001378",
+                "id": "astnode100001468",
                 "name": "v",
                 "type": "ObjectExpression",
                 "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":null}"
@@ -3525,15 +3842,15 @@
         "comment": "",
         "meta": {
             "range": [
-                14927,
-                14957
+                15538,
+                15568
             ],
             "filename": "createSpec.js",
-            "lineno": 470,
+            "lineno": 490,
             "columnno": 15,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001381",
+                "id": "astnode100001471",
                 "name": "whois",
                 "type": "TemplateLiteral",
                 "value": ""
@@ -3550,15 +3867,15 @@
         "comment": "",
         "meta": {
             "range": [
-                14959,
-                14977
+                15570,
+                15588
             ],
             "filename": "createSpec.js",
-            "lineno": 470,
+            "lineno": 490,
             "columnno": 47,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001388",
+                "id": "astnode100001478",
                 "name": "arg",
                 "type": "ObjectExpression",
                 "value": "{\"arg\":\"\",\"type\":\"\",\"obj\":\"\"}"
@@ -3575,15 +3892,15 @@
         "comment": "",
         "meta": {
             "range": [
-                14964,
-                14967
+                15575,
+                15578
             ],
             "filename": "createSpec.js",
-            "lineno": 470,
+            "lineno": 490,
             "columnno": 52,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001390",
+                "id": "astnode100001480",
                 "name": "arg",
                 "type": "Identifier",
                 "value": "arg"
@@ -3600,15 +3917,15 @@
         "comment": "",
         "meta": {
             "range": [
-                14968,
-                14972
+                15579,
+                15583
             ],
             "filename": "createSpec.js",
-            "lineno": 470,
+            "lineno": 490,
             "columnno": 56,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001392",
+                "id": "astnode100001482",
                 "name": "type",
                 "type": "Identifier",
                 "value": "type"
@@ -3625,15 +3942,15 @@
         "comment": "",
         "meta": {
             "range": [
-                14973,
-                14976
+                15584,
+                15587
             ],
             "filename": "createSpec.js",
-            "lineno": 470,
+            "lineno": 490,
             "columnno": 61,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001394",
+                "id": "astnode100001484",
                 "name": "obj",
                 "type": "Identifier",
                 "value": "obj"
@@ -3650,15 +3967,15 @@
         "comment": "",
         "meta": {
             "range": [
-                14979,
-                14986
+                15590,
+                15597
             ],
             "filename": "createSpec.js",
-            "lineno": 470,
+            "lineno": 490,
             "columnno": 67,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001396",
+                "id": "astnode100001486",
                 "name": "rv",
                 "type": "Literal",
                 "value": null
@@ -3675,15 +3992,15 @@
         "comment": "",
         "meta": {
             "range": [
-                14999,
-                15020
+                15610,
+                15631
             ],
             "filename": "createSpec.js",
-            "lineno": 471,
+            "lineno": 491,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001399",
+                "id": "astnode100001489",
                 "name": "dev",
                 "type": "NewExpression",
                 "value": ""
@@ -3701,15 +4018,15 @@
         "comment": "",
         "meta": {
             "range": [
-                15086,
-                15134
+                15697,
+                15745
             ],
             "filename": "createSpec.js",
-            "lineno": 475,
+            "lineno": 495,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001413",
+                "id": "astnode100001503",
                 "name": "v.msg",
                 "type": "BinaryExpression",
                 "funcscope": "createSpec~getPropRow",
@@ -3728,15 +4045,15 @@
         "comment": "",
         "meta": {
             "range": [
-                15455,
-                15497
+                16066,
+                16108
             ],
             "filename": "createSpec.js",
-            "lineno": 482,
+            "lineno": 502,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001471",
+                "id": "astnode100001561",
                 "name": "desc",
                 "type": "CallExpression",
                 "value": ""
@@ -3754,15 +4071,15 @@
         "comment": "",
         "meta": {
             "range": [
-                15505,
-                15939
+                16116,
+                16550
             ],
             "filename": "createSpec.js",
-            "lineno": 483,
+            "lineno": 503,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001483",
+                "id": "astnode100001573",
                 "name": "v.rv",
                 "type": "ObjectExpression",
                 "funcscope": "createSpec~getPropRow",
@@ -3781,15 +4098,15 @@
         "comment": "",
         "meta": {
             "range": [
-                15522,
-                15536
+                16133,
+                16147
             ],
             "filename": "createSpec.js",
-            "lineno": 484,
+            "lineno": 504,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001488",
+                "id": "astnode100001578",
                 "name": "name",
                 "type": "MemberExpression",
                 "value": "arg.name"
@@ -3806,15 +4123,15 @@
         "comment": "",
         "meta": {
             "range": [
-                15546,
-                15661
+                16157,
+                16272
             ],
             "filename": "createSpec.js",
-            "lineno": 485,
+            "lineno": 505,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001492",
+                "id": "astnode100001582",
                 "name": "type",
                 "type": "CallExpression",
                 "value": ""
@@ -3831,15 +4148,15 @@
         "comment": "",
         "meta": {
             "range": [
-                15671,
-                15818
+                16282,
+                16429
             ],
             "filename": "createSpec.js",
-            "lineno": 488,
+            "lineno": 508,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001516",
+                "id": "astnode100001606",
                 "name": "value",
                 "type": "ConditionalExpression",
                 "value": ""
@@ -3856,15 +4173,15 @@
         "comment": "",
         "meta": {
             "range": [
-                15828,
-                15841
+                16439,
+                16452
             ],
             "filename": "createSpec.js",
-            "lineno": 490,
+            "lineno": 510,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001547",
+                "id": "astnode100001637",
                 "name": "desc",
                 "type": "MemberExpression",
                 "value": "desc[0]"
@@ -3881,15 +4198,15 @@
         "comment": "",
         "meta": {
             "range": [
-                15871,
-                15908
+                16482,
+                16519
             ],
             "filename": "createSpec.js",
-            "lineno": 491,
+            "lineno": 511,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001551",
+                "id": "astnode100001641",
                 "name": "note",
                 "type": "CallExpression",
                 "value": ""
@@ -3906,15 +4223,15 @@
         "comment": "/** identifyDoclet: DocLetの型を判定\n   * @param {Object} doclet\n   * @returns {string|Error}\n   */",
         "meta": {
             "range": [
-                16132,
-                18799
+                16743,
+                19410
             ],
             "filename": "createSpec.js",
-            "lineno": 504,
+            "lineno": 524,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001580",
+                "id": "astnode100001670",
                 "name": "identifyDocletType",
                 "type": "FunctionDeclaration",
                 "paramnames": [
@@ -3958,15 +4275,15 @@
         "comment": "",
         "meta": {
             "range": [
-                16180,
-                16252
+                16791,
+                16863
             ],
             "filename": "createSpec.js",
-            "lineno": 505,
+            "lineno": 525,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001585",
+                "id": "astnode100001675",
                 "name": "v",
                 "type": "ObjectExpression",
                 "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":\"unknown\"}"
@@ -3984,15 +4301,15 @@
         "comment": "",
         "meta": {
             "range": [
-                16185,
-                16223
+                16796,
+                16834
             ],
             "filename": "createSpec.js",
-            "lineno": 505,
+            "lineno": 525,
             "columnno": 15,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001588",
+                "id": "astnode100001678",
                 "name": "whois",
                 "type": "TemplateLiteral",
                 "value": ""
@@ -4009,15 +4326,15 @@
         "comment": "",
         "meta": {
             "range": [
-                16225,
-                16237
+                16836,
+                16848
             ],
             "filename": "createSpec.js",
-            "lineno": 505,
+            "lineno": 525,
             "columnno": 55,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001595",
+                "id": "astnode100001685",
                 "name": "arg",
                 "type": "ObjectExpression",
                 "value": "{\"doclet\":\"\"}"
@@ -4034,15 +4351,15 @@
         "comment": "",
         "meta": {
             "range": [
-                16230,
-                16236
+                16841,
+                16847
             ],
             "filename": "createSpec.js",
-            "lineno": 505,
+            "lineno": 525,
             "columnno": 60,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001597",
+                "id": "astnode100001687",
                 "name": "doclet",
                 "type": "Identifier",
                 "value": "doclet"
@@ -4059,15 +4376,15 @@
         "comment": "",
         "meta": {
             "range": [
-                16239,
-                16251
+                16850,
+                16862
             ],
             "filename": "createSpec.js",
-            "lineno": 505,
+            "lineno": 525,
             "columnno": 69,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001599",
+                "id": "astnode100001689",
                 "name": "rv",
                 "type": "Literal",
                 "value": "unknown"
@@ -4084,15 +4401,15 @@
         "comment": "",
         "meta": {
             "range": [
-                16264,
-                16285
+                16875,
+                16896
             ],
             "filename": "createSpec.js",
-            "lineno": 506,
+            "lineno": 526,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001602",
+                "id": "astnode100001692",
                 "name": "dev",
                 "type": "NewExpression",
                 "value": ""
@@ -4110,7 +4427,7 @@
         "comment": "/**\n     * @name DocLetの型判定ロジック\n     * @desc\n     * \n     * 本メソッドはinvestigateメソッド＋AIとの質疑に基づき作成\n     * \n     * 以下第一レベルが戻り値となる文字列、並列表記はand条件\n     * \n     * - typedef\n     *   - kind === 'typedef'\n     * - interface\n     *   - kind === 'interface'\n     * - class\n     *   - kind === 'class'\n     *   - meta.code.type === \"ClassDeclaration\" || \"ClassExpression\"\n     * - constructor\n     *   - kind === 'class'\n     *   - meta?.code?.type === \"MethodDefinition\"\n     *   - /＠constructor\\b/.test(doclet.comment || \"\")\n     * - method\n     *   - kind === \"function\"\n     *   - meta?.code?.type === \"MethodDefinition\"\n     *   - scope === \"instance\" または \"static\"\n     * - function(グローバル関数) ※アロー関数を含む\n     *   - kind === 'function'\n     *   - scope === 'global'\n     * - innerFunc(関数内関数) ※アロー関数を含む\n     *   - kind === 'function'\n     *   - scope === 'inner'\n     * - description(説明文(＠name))\n     *   - meta.code が空\n     *   - meta.code.nameがundefined(プラグインや拡張を考慮する場合には必要)\n     *   - kindがtypedef/interface 以外\n     *   - nameが存在\n     * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br>\n     *   なおあくまでinterfaceなので、関数と同時にpropertiesも含む\n     *   - kind === 'function'\n     *   - scope === 'instance'\n     * - unknown(上記で判定不能)\n     */",
         "meta": {
             "filename": "createSpec.js",
-            "lineno": 507,
+            "lineno": 527,
             "columnno": 4,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -4125,15 +4442,15 @@
         "comment": "",
         "meta": {
             "range": [
-                17766,
-                17784
+                18377,
+                18395
             ],
             "filename": "createSpec.js",
-            "lineno": 556,
+            "lineno": 576,
             "columnno": 42,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001647",
+                "id": "astnode100001737",
                 "name": "v.rv",
                 "type": "MemberExpression",
                 "funcscope": "createSpec~identifyDocletType",
@@ -4152,15 +4469,15 @@
         "comment": "",
         "meta": {
             "range": [
-                17825,
-                18092
+                18436,
+                18703
             ],
             "filename": "createSpec.js",
-            "lineno": 558,
+            "lineno": 578,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001658",
+                "id": "astnode100001748",
                 "name": "v.rv",
                 "type": "ConditionalExpression",
                 "funcscope": "createSpec~identifyDocletType",
@@ -4179,15 +4496,15 @@
         "comment": "",
         "meta": {
             "range": [
-                18197,
-                18214
+                18808,
+                18825
             ],
             "filename": "createSpec.js",
-            "lineno": 566,
+            "lineno": 586,
             "columnno": 27,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001704",
+                "id": "astnode100001794",
                 "name": "v.rv",
                 "type": "Literal",
                 "funcscope": "createSpec~identifyDocletType",
@@ -4206,15 +4523,15 @@
         "comment": "",
         "meta": {
             "range": [
-                18249,
-                18267
+                18860,
+                18878
             ],
             "filename": "createSpec.js",
-            "lineno": 567,
+            "lineno": 587,
             "columnno": 26,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001713",
+                "id": "astnode100001803",
                 "name": "v.rv",
                 "type": "Literal",
                 "funcscope": "createSpec~identifyDocletType",
@@ -4233,15 +4550,15 @@
         "comment": "",
         "meta": {
             "range": [
-                18332,
-                18425
+                18943,
+                19036
             ],
             "filename": "createSpec.js",
-            "lineno": 569,
+            "lineno": 589,
             "columnno": 27,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001724",
+                "id": "astnode100001814",
                 "name": "v.rv",
                 "type": "ConditionalExpression",
                 "funcscope": "createSpec~identifyDocletType",
@@ -4260,15 +4577,15 @@
         "comment": "",
         "meta": {
             "range": [
-                18536,
-                18707
+                19147,
+                19318
             ],
             "filename": "createSpec.js",
-            "lineno": 576,
+            "lineno": 596,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001741",
+                "id": "astnode100001831",
                 "name": "v.rv",
                 "type": "ConditionalExpression",
                 "funcscope": "createSpec~identifyDocletType",
@@ -4287,15 +4604,15 @@
         "comment": "/** investigate: 【開発用】jsdoc -Xで出力されたオブジェクトの内容を調査\n   * @param {void}\n   * @returns {Object|Error} データ型はstep 1.1参照\n   * @example\n   * - コンソールの内容をresult.txt等に保存\n   * - \"createSpec.investigate normal end\"を検索\n   * - result欄の内容確認(以下はサンプル)\n   *   result:  [\n   *     \"10: typedef\", // string   ※行頭数字はシンボル(関数・クラス・プロパティ)の行番号\n   *     \"22: interface\", // string\n   *     \"34: global function\", // string\n   *     \"39: inner function(func01~arrow01)\", ※括弧内は親関数・クラス\n   *     \"40: typedef\", // string\n   *     \"46: unknown\", // string\n   *     \"49: typedef\", // string\n   *     \"55: unknown\", // string\n   *     \"65: class\", // string\n   *     \"66: typedef\", // string\n   *     \"77: constructor(class01)\", // string\n   *     \"85: unknown\", // string\n   *     \"92: method(class01#method01)\", // string\n   *   ], // Array\n   */",
         "meta": {
             "range": [
-                19618,
-                23479
+                20229,
+                24090
             ],
             "filename": "createSpec.js",
-            "lineno": 610,
+            "lineno": 630,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001784",
+                "id": "astnode100001874",
                 "name": "investigate",
                 "type": "FunctionDeclaration",
                 "paramnames": []
@@ -4347,15 +4664,15 @@
         "comment": "",
         "meta": {
             "range": [
-                19653,
-                19705
+                20264,
+                20316
             ],
             "filename": "createSpec.js",
-            "lineno": 611,
+            "lineno": 631,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001788",
+                "id": "astnode100001878",
                 "name": "v",
                 "type": "ObjectExpression",
                 "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":\"\"}"
@@ -4373,15 +4690,15 @@
         "comment": "",
         "meta": {
             "range": [
-                19658,
-                19689
+                20269,
+                20300
             ],
             "filename": "createSpec.js",
-            "lineno": 611,
+            "lineno": 631,
             "columnno": 15,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001791",
+                "id": "astnode100001881",
                 "name": "whois",
                 "type": "TemplateLiteral",
                 "value": ""
@@ -4398,15 +4715,15 @@
         "comment": "",
         "meta": {
             "range": [
-                19691,
-                19697
+                20302,
+                20308
             ],
             "filename": "createSpec.js",
-            "lineno": 611,
+            "lineno": 631,
             "columnno": 48,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001798",
+                "id": "astnode100001888",
                 "name": "arg",
                 "type": "ObjectExpression",
                 "value": "{}"
@@ -4423,15 +4740,15 @@
         "comment": "",
         "meta": {
             "range": [
-                19699,
-                19704
+                20310,
+                20315
             ],
             "filename": "createSpec.js",
-            "lineno": 611,
+            "lineno": 631,
             "columnno": 56,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001800",
+                "id": "astnode100001890",
                 "name": "rv",
                 "type": "ArrayExpression",
                 "value": "[]"
@@ -4448,15 +4765,15 @@
         "comment": "",
         "meta": {
             "range": [
-                19717,
-                19738
+                20328,
+                20349
             ],
             "filename": "createSpec.js",
-            "lineno": 612,
+            "lineno": 632,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001803",
+                "id": "astnode100001893",
                 "name": "dev",
                 "type": "NewExpression",
                 "value": ""
@@ -4474,15 +4791,15 @@
         "comment": "",
         "meta": {
             "range": [
-                19961,
-                20357
+                20572,
+                20968
             ],
             "filename": "createSpec.js",
-            "lineno": 619,
+            "lineno": 639,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001823",
+                "id": "astnode100001913",
                 "name": "v.rv",
                 "type": "ObjectExpression",
                 "funcscope": "createSpec~investigate",
@@ -4501,15 +4818,15 @@
         "comment": "",
         "meta": {
             "range": [
-                19980,
-                20010
+                20591,
+                20621
             ],
             "filename": "createSpec.js",
-            "lineno": 620,
+            "lineno": 640,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001828",
+                "id": "astnode100001918",
                 "name": "idListLength",
                 "type": "MemberExpression",
                 "value": "pv.idList.length"
@@ -4526,15 +4843,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20034,
-                20051
+                20645,
+                20662
             ],
             "filename": "createSpec.js",
-            "lineno": 621,
+            "lineno": 641,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001834",
+                "id": "astnode100001924",
                 "name": "idList",
                 "type": "MemberExpression",
                 "value": "pv.idList"
@@ -4551,15 +4868,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20093,
-                20103
+                20704,
+                20714
             ],
             "filename": "createSpec.js",
-            "lineno": 622,
+            "lineno": 642,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001838",
+                "id": "astnode100001928",
                 "name": "result",
                 "type": "ArrayExpression",
                 "value": "[]"
@@ -4576,15 +4893,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20141,
-                20153
+                20752,
+                20764
             ],
             "filename": "createSpec.js",
-            "lineno": 623,
+            "lineno": 643,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001840",
+                "id": "astnode100001930",
                 "name": "kindList",
                 "type": "ArrayExpression",
                 "value": "[]"
@@ -4601,15 +4918,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20204,
-                20217
+                20815,
+                20828
             ],
             "filename": "createSpec.js",
-            "lineno": 624,
+            "lineno": 644,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001842",
+                "id": "astnode100001932",
                 "name": "scopeList",
                 "type": "ArrayExpression",
                 "value": "[]"
@@ -4626,15 +4943,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20255,
-                20267
+                20866,
+                20878
             ],
             "filename": "createSpec.js",
-            "lineno": 625,
+            "lineno": 645,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001844",
+                "id": "astnode100001934",
                 "name": "sampleNum",
                 "type": "Literal",
                 "value": 0
@@ -4651,15 +4968,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20306,
-                20315
+                20917,
+                20926
             ],
             "filename": "createSpec.js",
-            "lineno": 626,
+            "lineno": 646,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001846",
+                "id": "astnode100001936",
                 "name": "sample",
                 "type": "ArrayExpression",
                 "value": "[]"
@@ -4676,15 +4993,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20399,
-                21073
+                21010,
+                21684
             ],
             "filename": "createSpec.js",
-            "lineno": 630,
+            "lineno": 650,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001855",
+                "id": "astnode100001945",
                 "name": "v.ex",
                 "type": "ObjectExpression",
                 "funcscope": "createSpec~investigate",
@@ -4703,15 +5020,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20416,
-                20430
+                21027,
+                21041
             ],
             "filename": "createSpec.js",
-            "lineno": 631,
+            "lineno": 651,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001860",
+                "id": "astnode100001950",
                 "name": "all",
                 "type": "ArrowFunctionExpression"
             }
@@ -4727,15 +5044,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20467,
-                20543
+                21078,
+                21154
             ],
             "filename": "createSpec.js",
-            "lineno": 633,
+            "lineno": 653,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001864",
+                "id": "astnode100001954",
                 "name": "global",
                 "type": "ArrowFunctionExpression"
             }
@@ -4751,15 +5068,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20580,
-                20656
+                21191,
+                21267
             ],
             "filename": "createSpec.js",
-            "lineno": 635,
+            "lineno": 655,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001881",
+                "id": "astnode100001971",
                 "name": "typedef",
                 "type": "ArrowFunctionExpression"
             }
@@ -4775,15 +5092,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20694,
-                20768
+                21305,
+                21379
             ],
             "filename": "createSpec.js",
-            "lineno": 637,
+            "lineno": 657,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001898",
+                "id": "astnode100001988",
                 "name": "func",
                 "type": "ArrowFunctionExpression"
             }
@@ -4799,15 +5116,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20804,
-                20876
+                21415,
+                21487
             ],
             "filename": "createSpec.js",
-            "lineno": 639,
+            "lineno": 659,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001915",
+                "id": "astnode100002005",
                 "name": "class",
                 "type": "ArrowFunctionExpression"
             }
@@ -4823,15 +5140,15 @@
         "comment": "",
         "meta": {
             "range": [
-                20932,
-                20986
+                21543,
+                21597
             ],
             "filename": "createSpec.js",
-            "lineno": 641,
+            "lineno": 661,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001932",
+                "id": "astnode100002022",
                 "name": "method",
                 "type": "ArrowFunctionExpression"
             }
@@ -4847,15 +5164,15 @@
         "comment": "",
         "meta": {
             "range": [
-                21024,
-                21064
+                21635,
+                21675
             ],
             "filename": "createSpec.js",
-            "lineno": 643,
+            "lineno": 663,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001938",
+                "id": "astnode100002028",
                 "name": "unknown",
                 "type": "ArrowFunctionExpression"
             }
@@ -4871,15 +5188,15 @@
         "comment": "",
         "meta": {
             "range": [
-                21118,
-                21349
+                21729,
+                21960
             ],
             "filename": "createSpec.js",
-            "lineno": 647,
+            "lineno": 667,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001955",
+                "id": "astnode100002045",
                 "name": "v.st",
                 "type": "ObjectExpression",
                 "funcscope": "createSpec~investigate",
@@ -4898,15 +5215,15 @@
         "comment": "",
         "meta": {
             "range": [
-                21135,
-                21146
+                21746,
+                21757
             ],
             "filename": "createSpec.js",
-            "lineno": 648,
+            "lineno": 668,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001960",
+                "id": "astnode100002050",
                 "name": "all",
                 "type": "ArrowFunctionExpression"
             }
@@ -4922,15 +5239,15 @@
         "comment": "",
         "meta": {
             "range": [
-                21166,
-                21340
+                21777,
+                21951
             ],
             "filename": "createSpec.js",
-            "lineno": 649,
+            "lineno": 669,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001964",
+                "id": "astnode100002054",
                 "name": "major",
                 "type": "ArrowFunctionExpression"
             },
@@ -4950,15 +5267,15 @@
         "comment": "",
         "meta": {
             "range": [
-                21185,
-                21192
+                21796,
+                21803
             ],
             "filename": "createSpec.js",
-            "lineno": 649,
+            "lineno": 669,
             "columnno": 27,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001969",
+                "id": "astnode100002059",
                 "name": "rv",
                 "type": "ObjectExpression",
                 "value": "{}"
@@ -4976,15 +5293,15 @@
         "comment": "",
         "meta": {
             "range": [
-                21289,
-                21307
+                21900,
+                21918
             ],
             "filename": "createSpec.js",
-            "lineno": 651,
+            "lineno": 671,
             "columnno": 24,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100001984",
+                "id": "astnode100002074",
                 "name": "rv[undefined]",
                 "type": "LogicalExpression",
                 "funcscope": "createSpec~investigate~v.st.major",
@@ -5003,15 +5320,15 @@
         "comment": "",
         "meta": {
             "range": [
-                21390,
-                21407
+                22001,
+                22018
             ],
             "filename": "createSpec.js",
-            "lineno": 657,
+            "lineno": 677,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002002",
+                "id": "astnode100002092",
                 "name": "v.cond",
                 "type": "MemberExpression",
                 "funcscope": "createSpec~investigate",
@@ -5030,15 +5347,15 @@
         "comment": "",
         "meta": {
             "range": [
-                21427,
-                21444
+                22038,
+                22055
             ],
             "filename": "createSpec.js",
-            "lineno": 658,
+            "lineno": 678,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002012",
+                "id": "astnode100002102",
                 "name": "v.disp",
                 "type": "MemberExpression",
                 "funcscope": "createSpec~investigate",
@@ -5057,15 +5374,15 @@
         "comment": "",
         "meta": {
             "range": [
-                21770,
-                21815
+                22381,
+                22426
             ],
             "filename": "createSpec.js",
-            "lineno": 667,
+            "lineno": 687,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002044",
+                "id": "astnode100002134",
                 "name": "v.mObj",
                 "type": "CallExpression",
                 "funcscope": "createSpec~investigate",
@@ -5084,15 +5401,15 @@
         "comment": "",
         "meta": {
             "range": [
-                21794,
-                21803
+                22405,
+                22414
             ],
             "filename": "createSpec.js",
-            "lineno": 667,
+            "lineno": 687,
             "columnno": 32,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002053",
+                "id": "astnode100002143",
                 "name": "jsdocId",
                 "type": "Identifier",
                 "value": "x"
@@ -5108,15 +5425,15 @@
         "comment": "",
         "meta": {
             "range": [
-                22092,
-                22133
+                22703,
+                22744
             ],
             "filename": "createSpec.js",
-            "lineno": 677,
+            "lineno": 697,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002127",
+                "id": "astnode100002217",
                 "name": "v.mObj.result",
                 "type": "BinaryExpression",
                 "funcscope": "createSpec~investigate",
@@ -5135,15 +5452,15 @@
         "comment": "",
         "meta": {
             "range": [
-                22204,
-                22231
+                22815,
+                22842
             ],
             "filename": "createSpec.js",
-            "lineno": 680,
+            "lineno": 700,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002151",
+                "id": "astnode100002241",
                 "name": "v.mObj.result",
                 "type": "Literal",
                 "funcscope": "createSpec~investigate",
@@ -5162,15 +5479,15 @@
         "comment": "",
         "meta": {
             "range": [
-                22292,
-                22321
+                22903,
+                22932
             ],
             "filename": "createSpec.js",
-            "lineno": 683,
+            "lineno": 703,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002162",
+                "id": "astnode100002252",
                 "name": "v.mObj.result",
                 "type": "Literal",
                 "funcscope": "createSpec~investigate",
@@ -5189,15 +5506,15 @@
         "comment": "",
         "meta": {
             "range": [
-                22434,
-                22469
+                23045,
+                23080
             ],
             "filename": "createSpec.js",
-            "lineno": 687,
+            "lineno": 707,
             "columnno": 29,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002181",
+                "id": "astnode100002271",
                 "name": "v.mObj.result",
                 "type": "Literal",
                 "funcscope": "createSpec~investigate",
@@ -5216,15 +5533,15 @@
         "comment": "",
         "meta": {
             "range": [
-                22506,
-                22560
+                23117,
+                23171
             ],
             "filename": "createSpec.js",
-            "lineno": 688,
+            "lineno": 708,
             "columnno": 28,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002192",
+                "id": "astnode100002282",
                 "name": "v.mObj.result",
                 "type": "TemplateLiteral",
                 "funcscope": "createSpec~investigate",
@@ -5243,15 +5560,15 @@
         "comment": "",
         "meta": {
             "range": [
-                22600,
-                22646
+                23211,
+                23257
             ],
             "filename": "createSpec.js",
-            "lineno": 689,
+            "lineno": 709,
             "columnno": 31,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002210",
+                "id": "astnode100002300",
                 "name": "v.mObj.result",
                 "type": "TemplateLiteral",
                 "funcscope": "createSpec~investigate",
@@ -5270,15 +5587,15 @@
         "comment": "",
         "meta": {
             "range": [
-                22694,
-                22721
+                23305,
+                23332
             ],
             "filename": "createSpec.js",
-            "lineno": 691,
+            "lineno": 711,
             "columnno": 23,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002227",
+                "id": "astnode100002317",
                 "name": "v.mObj.result",
                 "type": "TemplateLiteral",
                 "funcscope": "createSpec~investigate",
@@ -5297,15 +5614,15 @@
         "comment": "",
         "meta": {
             "range": [
-                22864,
-                22889
+                23475,
+                23500
             ],
             "filename": "createSpec.js",
-            "lineno": 696,
+            "lineno": 716,
             "columnno": 39,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002251",
+                "id": "astnode100002341",
                 "name": "v.mObj.result",
                 "type": "Literal",
                 "funcscope": "createSpec~investigate",
@@ -5324,15 +5641,15 @@
         "comment": "",
         "meta": {
             "range": [
-                22937,
-                22988
+                23548,
+                23599
             ],
             "filename": "createSpec.js",
-            "lineno": 697,
+            "lineno": 717,
             "columnno": 39,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002262",
+                "id": "astnode100002352",
                 "name": "v.mObj.result",
                 "type": "TemplateLiteral",
                 "funcscope": "createSpec~investigate",
@@ -5351,15 +5668,15 @@
         "comment": "",
         "meta": {
             "range": [
-                23020,
-                23047
+                23631,
+                23658
             ],
             "filename": "createSpec.js",
-            "lineno": 698,
+            "lineno": 718,
             "columnno": 23,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002279",
+                "id": "astnode100002369",
                 "name": "v.mObj.result",
                 "type": "Literal",
                 "funcscope": "createSpec~investigate",
@@ -5378,15 +5695,15 @@
         "comment": "",
         "meta": {
             "range": [
-                23101,
-                23128
+                23712,
+                23739
             ],
             "filename": "createSpec.js",
-            "lineno": 701,
+            "lineno": 721,
             "columnno": 19,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002289",
+                "id": "astnode100002379",
                 "name": "v.mObj.result",
                 "type": "TemplateLiteral",
                 "funcscope": "createSpec~investigate",
@@ -5405,15 +5722,15 @@
         "comment": "",
         "meta": {
             "range": [
-                23357,
-                23392
+                23968,
+                24003
             ],
             "filename": "createSpec.js",
-            "lineno": 712,
+            "lineno": 732,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002348",
+                "id": "astnode100002438",
                 "name": "v.rv.sampleNum",
                 "type": "MemberExpression",
                 "funcscope": "createSpec~investigate",
@@ -5432,15 +5749,15 @@
         "comment": "/** listSource: 事前準備、対象ファイルリスト作成\n   * jsdoc動作環境整備後、シェルの起動時引数から対象となるJSソースファイルのリストを作成。\n   * 処理結果はメンバ\"sourceFile\"に保存。\n   * @param {void}\n   * @returns {null|Error}\n   */",
         "meta": {
             "range": [
-                23652,
-                26768
+                24263,
+                27379
             ],
             "filename": "createSpec.js",
-            "lineno": 725,
+            "lineno": 745,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002380",
+                "id": "astnode100002470",
                 "name": "listSource",
                 "type": "FunctionDeclaration",
                 "paramnames": []
@@ -5491,15 +5808,15 @@
         "comment": "",
         "meta": {
             "range": [
-                23686,
-                23739
+                24297,
+                24350
             ],
             "filename": "createSpec.js",
-            "lineno": 726,
+            "lineno": 746,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002384",
+                "id": "astnode100002474",
                 "name": "v",
                 "type": "ObjectExpression",
                 "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":null}"
@@ -5517,15 +5834,15 @@
         "comment": "",
         "meta": {
             "range": [
-                23691,
-                23721
+                24302,
+                24332
             ],
             "filename": "createSpec.js",
-            "lineno": 726,
+            "lineno": 746,
             "columnno": 15,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002387",
+                "id": "astnode100002477",
                 "name": "whois",
                 "type": "TemplateLiteral",
                 "value": ""
@@ -5542,15 +5859,15 @@
         "comment": "",
         "meta": {
             "range": [
-                23723,
-                23729
+                24334,
+                24340
             ],
             "filename": "createSpec.js",
-            "lineno": 726,
+            "lineno": 746,
             "columnno": 47,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002394",
+                "id": "astnode100002484",
                 "name": "arg",
                 "type": "ObjectExpression",
                 "value": "{}"
@@ -5567,15 +5884,15 @@
         "comment": "",
         "meta": {
             "range": [
-                23731,
-                23738
+                24342,
+                24349
             ],
             "filename": "createSpec.js",
-            "lineno": 726,
+            "lineno": 746,
             "columnno": 55,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002396",
+                "id": "astnode100002486",
                 "name": "rv",
                 "type": "Literal",
                 "value": null
@@ -5592,15 +5909,15 @@
         "comment": "",
         "meta": {
             "range": [
-                23751,
-                23772
+                24362,
+                24383
             ],
             "filename": "createSpec.js",
-            "lineno": 727,
+            "lineno": 747,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002399",
+                "id": "astnode100002489",
                 "name": "dev",
                 "type": "NewExpression",
                 "value": ""
@@ -5618,7 +5935,7 @@
         "comment": "/** step.1 : jsdoc動作環境整備\n       * @name jsdoc動作環境整備\n       * @description\n       * ①設定ファイル(JSON)を作成して\"includePattern\"を指定しないと\n       *   \".mjs\"他を処理できない\n       * ②\"includePattern\"を指定した場合、\"include\"も併せて指定しないと\n       *   \"There are no input files to process.\"エラーが発生\n       * ③\"include\"にカレントディレクトリを指定すると、対象をフルパスで指定しても\n       *   指定外のカレントディレクトリ配下のjs/mjsも対象にされてしまう\n       * ④③を回避するため、以下の措置を行う\n       *   - 設定ファイル(jsdoc.json)を作成、終了時に廃棄\n       *     - includeではダミーディレクトリを指定\n       *     - includepatternではJSDocを記述する全拡張子を対象に指定\n       *   - 空のダミーディレクトリを作成、終了時に廃棄\n       */",
         "meta": {
             "filename": "createSpec.js",
-            "lineno": 730,
+            "lineno": 750,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -5633,15 +5950,15 @@
         "comment": "",
         "meta": {
             "range": [
-                24483,
-                24591
+                25094,
+                25202
             ],
             "filename": "createSpec.js",
-            "lineno": 748,
+            "lineno": 768,
             "columnno": 51,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002431",
+                "id": "astnode100002521",
                 "name": "source",
                 "type": "ObjectExpression",
                 "value": "{\"include\":\"\",\"includePattern\":\"\"}"
@@ -5657,15 +5974,15 @@
         "comment": "",
         "meta": {
             "range": [
-                24502,
-                24523
+                25113,
+                25134
             ],
             "filename": "createSpec.js",
-            "lineno": 749,
+            "lineno": 769,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002433",
+                "id": "astnode100002523",
                 "name": "include",
                 "type": "ArrayExpression",
                 "value": "[\"cf.dummyDir\"]"
@@ -5682,15 +5999,15 @@
         "comment": "",
         "meta": {
             "range": [
-                24535,
-                24565
+                25146,
+                25176
             ],
             "filename": "createSpec.js",
-            "lineno": 750,
+            "lineno": 770,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002438",
+                "id": "astnode100002528",
                 "name": "includePattern",
                 "type": "MemberExpression",
                 "value": "cf.jsdocTarget"
@@ -5707,7 +6024,7 @@
         "comment": "/** step.2 : 入力・出力・除外リスト作成\n       * @name 入力・出力・除外リスト作成\n       * @description\n       * \n       * 起動時パラメータは以下の通り。\n       * `node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]`\n       * シェル側でワイルドカードを展開して配列が渡されるので、以下のように判断する。\n       * ①最初の2つは全体とコマンド名、不要なので削除\n       * ②3番目以降'-o'までは入力ファイル\n       * ③'-o'の次は出力フォルダ名\n       * ④'-x'の次からは除外ファイル\n       */",
         "meta": {
             "filename": "createSpec.js",
-            "lineno": 757,
+            "lineno": 777,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -5722,15 +6039,15 @@
         "comment": "",
         "meta": {
             "range": [
-                25109,
-                25121
+                25720,
+                25732
             ],
             "filename": "createSpec.js",
-            "lineno": 771,
+            "lineno": 791,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002469",
+                "id": "astnode100002559",
                 "name": "v.iList",
                 "type": "ArrayExpression",
                 "funcscope": "createSpec~listSource",
@@ -5749,15 +6066,15 @@
         "comment": "",
         "meta": {
             "range": [
-                25143,
-                25155
+                25754,
+                25766
             ],
             "filename": "createSpec.js",
-            "lineno": 772,
+            "lineno": 792,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002474",
+                "id": "astnode100002564",
                 "name": "v.xList",
                 "type": "ArrayExpression",
                 "funcscope": "createSpec~listSource",
@@ -5776,15 +6093,15 @@
         "comment": "",
         "meta": {
             "range": [
-                25221,
-                25251
+                25832,
+                25862
             ],
             "filename": "createSpec.js",
-            "lineno": 775,
+            "lineno": 795,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002485",
+                "id": "astnode100002575",
                 "name": "v.argv",
                 "type": "CallExpression",
                 "funcscope": "createSpec~listSource",
@@ -5803,15 +6120,15 @@
         "comment": "",
         "meta": {
             "range": [
-                25265,
-                25270
+                25876,
+                25881
             ],
             "filename": "createSpec.js",
-            "lineno": 777,
+            "lineno": 797,
             "columnno": 11,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002498",
+                "id": "astnode100002588",
                 "name": "v.i",
                 "type": "Literal",
                 "funcscope": "createSpec~listSource",
@@ -5830,15 +6147,15 @@
         "comment": "",
         "meta": {
             "range": [
-                25272,
-                25282
+                25883,
+                25893
             ],
             "filename": "createSpec.js",
-            "lineno": 777,
+            "lineno": 797,
             "columnno": 18,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002503",
+                "id": "astnode100002593",
                 "name": "v.mode",
                 "type": "Literal",
                 "funcscope": "createSpec~listSource",
@@ -5857,15 +6174,15 @@
         "comment": "",
         "meta": {
             "range": [
-                25322,
-                25353
+                25933,
+                25964
             ],
             "filename": "createSpec.js",
-            "lineno": 778,
+            "lineno": 798,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002523",
+                "id": "astnode100002613",
                 "name": "v.x",
                 "type": "CallExpression",
                 "funcscope": "createSpec~listSource",
@@ -5884,15 +6201,15 @@
         "comment": "",
         "meta": {
             "range": [
-                25430,
-                25442
+                26041,
+                26053
             ],
             "filename": "createSpec.js",
-            "lineno": 781,
+            "lineno": 801,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002549",
+                "id": "astnode100002639",
                 "name": "v.mode",
                 "type": "Literal",
                 "funcscope": "createSpec~listSource",
@@ -5911,15 +6228,15 @@
         "comment": "",
         "meta": {
             "range": [
-                25484,
-                25496
+                26095,
+                26107
             ],
             "filename": "createSpec.js",
-            "lineno": 783,
+            "lineno": 803,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002558",
+                "id": "astnode100002648",
                 "name": "v.mode",
                 "type": "Literal",
                 "funcscope": "createSpec~listSource",
@@ -5938,15 +6255,15 @@
         "comment": "",
         "meta": {
             "range": [
-                25628,
-                25651
+                26239,
+                26262
             ],
             "filename": "createSpec.js",
-            "lineno": 787,
+            "lineno": 807,
             "columnno": 24,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002585",
+                "id": "astnode100002675",
                 "name": "sourceFile.outDir",
                 "type": "MemberExpression",
                 "value": "v.x",
@@ -5964,15 +6281,15 @@
         "comment": "",
         "meta": {
             "range": [
-                25792,
-                25797
+                26403,
+                26408
             ],
             "filename": "createSpec.js",
-            "lineno": 794,
+            "lineno": 814,
             "columnno": 11,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002613",
+                "id": "astnode100002703",
                 "name": "v.i",
                 "type": "Literal",
                 "funcscope": "createSpec~listSource",
@@ -5991,15 +6308,15 @@
         "comment": "",
         "meta": {
             "range": [
-                25911,
-                25928
+                26522,
+                26539
             ],
             "filename": "createSpec.js",
-            "lineno": 796,
+            "lineno": 816,
             "columnno": 34,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002656",
+                "id": "astnode100002746",
                 "name": "full",
                 "type": "MemberExpression",
                 "value": "v.iList[undefined]"
@@ -6015,15 +6332,15 @@
         "comment": "",
         "meta": {
             "range": [
-                25956,
-                26003
+                26567,
+                26614
             ],
             "filename": "createSpec.js",
-            "lineno": 799,
+            "lineno": 819,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002665",
+                "id": "astnode100002755",
                 "name": "sourceFile.sourceNum",
                 "type": "MemberExpression",
                 "value": "sourceFile.source.length",
@@ -6041,15 +6358,15 @@
         "comment": "",
         "meta": {
             "range": [
-                26123,
-                26192
+                26734,
+                26803
             ],
             "filename": "createSpec.js",
-            "lineno": 803,
+            "lineno": 823,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002681",
+                "id": "astnode100002771",
                 "name": "sourceFile.common",
                 "type": "CallExpression",
                 "value": "",
@@ -6067,15 +6384,15 @@
         "comment": "",
         "meta": {
             "range": [
-                26217,
-                26222
+                26828,
+                26833
             ],
             "filename": "createSpec.js",
-            "lineno": 804,
+            "lineno": 824,
             "columnno": 11,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002698",
+                "id": "astnode100002788",
                 "name": "v.i",
                 "type": "Literal",
                 "funcscope": "createSpec~listSource",
@@ -6094,15 +6411,15 @@
         "comment": "",
         "meta": {
             "range": [
-                26352,
-                26401
+                26963,
+                27012
             ],
             "filename": "createSpec.js",
-            "lineno": 806,
+            "lineno": 826,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002736",
+                "id": "astnode100002826",
                 "name": "sourceFile.common",
                 "type": "CallExpression",
                 "value": "",
@@ -6120,15 +6437,15 @@
         "comment": "",
         "meta": {
             "range": [
-                26536,
-                26665
+                27147,
+                27276
             ],
             "filename": "createSpec.js",
-            "lineno": 812,
+            "lineno": 832,
             "columnno": 33,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002771",
+                "id": "astnode100002861",
                 "name": "x.unique",
                 "type": "CallExpression",
                 "value": "",
@@ -6143,60 +6460,81 @@
         "scope": "static"
     },
     {
-        "comment": "/** makeMarkdown: Markdown形式の仕様書を作成\n   * \n   */",
+        "comment": "/** makeArticle: docletを走査、記事毎にArticleを作成\n   * - 作成したArticleオブジェクトはdoclet.articleに保存\n   * @param {DocLet} obj - (単一の)DocLet型オブジェクト\n   * @returns {null|Error}\n   */",
         "meta": {
             "range": [
-                26824,
-                28061
+                27551,
+                29091
             ],
             "filename": "createSpec.js",
-            "lineno": 825,
+            "lineno": 847,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002819",
-                "name": "makeMarkdown",
+                "id": "astnode100002909",
+                "name": "makeArticle",
                 "type": "FunctionDeclaration",
                 "paramnames": [
-                    "arg"
+                    "obj"
                 ]
             },
             "vars": {
-                "v": "createSpec~makeMarkdown~v",
-                "dev": "createSpec~makeMarkdown~dev"
+                "v": "createSpec~makeArticle~v",
+                "dev": "createSpec~makeArticle~dev",
+                "obj.article.top": "obj.article.top"
             }
         },
-        "description": "makeMarkdown: Markdown形式の仕様書を作成",
-        "name": "makeMarkdown",
-        "longname": "createSpec~makeMarkdown",
+        "description": "makeArticle: docletを走査、記事毎にArticleを作成\n- 作成したArticleオブジェクトはdoclet.articleに保存",
+        "params": [
+            {
+                "type": {
+                    "names": [
+                        "DocLet"
+                    ]
+                },
+                "description": "(単一の)DocLet型オブジェクト",
+                "name": "obj"
+            }
+        ],
+        "returns": [
+            {
+                "type": {
+                    "names": [
+                        "null",
+                        "Error"
+                    ]
+                }
+            }
+        ],
+        "name": "makeArticle",
+        "longname": "createSpec~makeArticle",
         "kind": "function",
         "memberof": "createSpec",
-        "scope": "inner",
-        "params": []
+        "scope": "inner"
     },
     {
         "comment": "",
         "meta": {
             "range": [
-                26863,
-                26925
+                27589,
+                27646
             ],
             "filename": "createSpec.js",
-            "lineno": 826,
+            "lineno": 848,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002824",
+                "id": "astnode100002914",
                 "name": "v",
                 "type": "ObjectExpression",
-                "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":\"\"}"
+                "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":null}"
             }
         },
         "undocumented": true,
         "name": "v",
-        "longname": "createSpec~makeMarkdown~v",
+        "longname": "createSpec~makeArticle~v",
         "kind": "constant",
-        "memberof": "createSpec~makeMarkdown",
+        "memberof": "createSpec~makeArticle",
         "scope": "inner",
         "params": []
     },
@@ -6204,15 +6542,15 @@
         "comment": "",
         "meta": {
             "range": [
-                26868,
-                26906
+                27594,
+                27625
             ],
             "filename": "createSpec.js",
-            "lineno": 826,
+            "lineno": 848,
             "columnno": 15,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002827",
+                "id": "astnode100002917",
                 "name": "whois",
                 "type": "TemplateLiteral",
                 "value": ""
@@ -6220,99 +6558,99 @@
         },
         "undocumented": true,
         "name": "whois",
-        "longname": "createSpec~makeMarkdown~v.whois",
+        "longname": "createSpec~makeArticle~v.whois",
         "kind": "member",
-        "memberof": "createSpec~makeMarkdown~v",
+        "memberof": "createSpec~makeArticle~v",
         "scope": "static"
     },
     {
         "comment": "",
         "meta": {
             "range": [
-                26908,
-                26917
+                27627,
+                27636
             ],
             "filename": "createSpec.js",
-            "lineno": 826,
-            "columnno": 55,
+            "lineno": 848,
+            "columnno": 48,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002834",
+                "id": "astnode100002924",
                 "name": "arg",
                 "type": "ObjectExpression",
-                "value": "{\"arg\":\"\"}"
+                "value": "{\"obj\":\"\"}"
             }
         },
         "undocumented": true,
         "name": "arg",
-        "longname": "createSpec~makeMarkdown~v.arg",
+        "longname": "createSpec~makeArticle~v.arg",
         "kind": "member",
-        "memberof": "createSpec~makeMarkdown~v",
+        "memberof": "createSpec~makeArticle~v",
         "scope": "static"
     },
     {
         "comment": "",
         "meta": {
             "range": [
-                26913,
-                26916
+                27632,
+                27635
             ],
             "filename": "createSpec.js",
-            "lineno": 826,
-            "columnno": 60,
+            "lineno": 848,
+            "columnno": 53,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002836",
-                "name": "arg",
+                "id": "astnode100002926",
+                "name": "obj",
                 "type": "Identifier",
-                "value": "arg"
+                "value": "obj"
             }
         },
         "undocumented": true,
-        "name": "arg",
-        "longname": "createSpec~makeMarkdown~v.arg.arg",
+        "name": "obj",
+        "longname": "createSpec~makeArticle~v.arg.obj",
         "kind": "member",
-        "memberof": "createSpec~makeMarkdown~v.arg",
+        "memberof": "createSpec~makeArticle~v.arg",
         "scope": "static"
     },
     {
         "comment": "",
         "meta": {
             "range": [
-                26919,
-                26924
+                27638,
+                27645
             ],
             "filename": "createSpec.js",
-            "lineno": 826,
-            "columnno": 66,
+            "lineno": 848,
+            "columnno": 59,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002838",
+                "id": "astnode100002928",
                 "name": "rv",
-                "type": "ArrayExpression",
-                "value": "[]"
+                "type": "Literal",
+                "value": null
             }
         },
         "undocumented": true,
         "name": "rv",
-        "longname": "createSpec~makeMarkdown~v.rv",
+        "longname": "createSpec~makeArticle~v.rv",
         "kind": "member",
-        "memberof": "createSpec~makeMarkdown~v",
+        "memberof": "createSpec~makeArticle~v",
         "scope": "static"
     },
     {
         "comment": "",
         "meta": {
             "range": [
-                26937,
-                26958
+                27658,
+                27679
             ],
             "filename": "createSpec.js",
-            "lineno": 827,
+            "lineno": 849,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002841",
+                "id": "astnode100002931",
                 "name": "dev",
                 "type": "NewExpression",
                 "value": ""
@@ -6320,24 +6658,24 @@
         },
         "undocumented": true,
         "name": "dev",
-        "longname": "createSpec~makeMarkdown~dev",
+        "longname": "createSpec~makeArticle~dev",
         "kind": "constant",
-        "memberof": "createSpec~makeMarkdown",
+        "memberof": "createSpec~makeArticle",
         "scope": "inner",
         "params": []
     },
     {
-        "comment": "/**\n     * @name 一覧文書(フォルダ毎)の構成\n     * @desc\n     * \n     * - 並び順はフォルダ内のデータ型名順(アルファベット順)\n     * \n     * 1. ヘッダ部(\"フォルダ名_top\")\n     * 2. グローバル関数・クラス一覧(\"フォルダ名_list\")\n     * 3. データ型一覧(\"フォルダ名_type\")\n     * 4. 個別データ型(\"フォルダ名-データ型名\") ※注意：'_'ではなく'-'\n     */",
+        "comment": "/**\n     * @name 一覧文書の構成\n     * @desc\n     * \n     * - フォルダ毎に作成\n     * - 並び順はフォルダ内のデータ型名順(アルファベット順)\n     * \n     * 1. ヘッダ部(\"フォルダ名_top\")\n     * 2. グローバル関数・クラス一覧(\"フォルダ名_list\")\n     * 3. データ型一覧(\"フォルダ名_type\")\n     * 4. 個別データ型(\"フォルダ名-データ型名\") ※注意：'_'ではなく'-'\n     */",
         "meta": {
             "filename": "createSpec.js",
-            "lineno": 828,
+            "lineno": 850,
             "columnno": 4,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
         },
-        "name": "一覧文書(フォルダ毎)の構成",
-        "description": "- 並び順はフォルダ内のデータ型名順(アルファベット順)\n\n1. ヘッダ部(\"フォルダ名_top\")\n2. グローバル関数・クラス一覧(\"フォルダ名_list\")\n3. データ型一覧(\"フォルダ名_type\")\n4. 個別データ型(\"フォルダ名-データ型名\") ※注意：'_'ではなく'-'",
-        "longname": "一覧文書(フォルダ毎)の構成",
+        "name": "一覧文書の構成",
+        "description": "- フォルダ毎に作成\n- 並び順はフォルダ内のデータ型名順(アルファベット順)\n\n1. ヘッダ部(\"フォルダ名_top\")\n2. グローバル関数・クラス一覧(\"フォルダ名_list\")\n3. データ型一覧(\"フォルダ名_type\")\n4. 個別データ型(\"フォルダ名-データ型名\") ※注意：'_'ではなく'-'",
+        "longname": "一覧文書の構成",
         "kind": "member",
         "scope": "global"
     },
@@ -6345,7 +6683,7 @@
         "comment": "/**\n     * @name クラス・グローバル関数文書の構成\n     * @desc\n     * \n     * 1. ヘッダ部(\"クラス名_top\")\n     *    - タイトル(○○クラス仕様書、等)\n     *    - ラベル(一行にまとめた説明)\n     *    - 概要説明(数行程度)\n     * 2. メンバ一覧(\"クラス名_prop\")\n     * 3. メソッド一覧(\"クラス名_func\")\n     * 4. 詳細説明(\"クラス名_desc\")\n     * 5. 引数(\"クラス名_param\")\n     * 6. 戻り値(\"クラス名_return\")\n     * 7. 個別メソッド(\"クラス名-メソッド名\") ※注意：'_'ではなく'-'\n     *    - innerFuncを再帰呼出\n     */",
         "meta": {
             "filename": "createSpec.js",
-            "lineno": 839,
+            "lineno": 862,
             "columnno": 4,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -6360,7 +6698,7 @@
         "comment": "/**\n     * @name データ型定義文書の構成\n     * @desc\n     * \n     * 1. ヘッダ部(\"データ型名_top\")\n     *    - タイトル(○○データ型仕様書、等)\n     *    - ラベル(一行にまとめた説明)\n     *    - データ型説明文\n     * 2. メンバ一覧(\"クラス名_prop\")\n     * 3. 個別メソッド(\"クラス名-メソッド名\") ※注意：'_'ではなく'-'\n     *    - interfaceにfunctionのメンバが含まれる場合、表の外に記述\n     */",
         "meta": {
             "filename": "createSpec.js",
-            "lineno": 855,
+            "lineno": 878,
             "columnno": 4,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -6372,18 +6710,68 @@
         "scope": "global"
     },
     {
+        "comment": "",
+        "meta": {
+            "range": [
+                28684,
+                28768
+            ],
+            "filename": "createSpec.js",
+            "lineno": 893,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100002945",
+                "name": "obj.article.top",
+                "type": "NewExpression",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "top",
+        "longname": "obj.article.top",
+        "kind": "member",
+        "memberof": "obj.article",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                28724,
+                28751
+            ],
+            "filename": "createSpec.js",
+            "lineno": 894,
+            "columnno": 8,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100002954",
+                "name": "title",
+                "type": "BinaryExpression",
+                "value": ""
+            }
+        },
+        "undocumented": true,
+        "name": "title",
+        "longname": "title",
+        "kind": "member",
+        "scope": "global"
+    },
+    {
         "comment": "/** omitKeyDeep: 【開発用】指定キーを再帰的に除外した新しいオブジェクトを作成\n   * @param {Object} obj - オブジェクト。dlMap等を想定\n   * @param {string|string[]} keys - 除外するキー名（単数または複数）。\"origin\"等\n   * @returns {Object}\n   */",
         "meta": {
             "range": [
-                28252,
-                28743
+                29282,
+                29773
             ],
             "filename": "createSpec.js",
-            "lineno": 882,
+            "lineno": 916,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002867",
+                "id": "astnode100003027",
                 "name": "omitKeyDeep",
                 "type": "FunctionDeclaration",
                 "paramnames": [
@@ -6438,15 +6826,15 @@
         "comment": "",
         "meta": {
             "range": [
-                28296,
-                28361
+                29326,
+                29391
             ],
             "filename": "createSpec.js",
-            "lineno": 883,
+            "lineno": 917,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002873",
+                "id": "astnode100003033",
                 "name": "keySet",
                 "type": "NewExpression",
                 "value": ""
@@ -6464,15 +6852,15 @@
         "comment": "",
         "meta": {
             "range": [
-                28374,
-                28715
+                29404,
+                29745
             ],
             "filename": "createSpec.js",
-            "lineno": 887,
+            "lineno": 921,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002887",
+                "id": "astnode100003047",
                 "name": "walk",
                 "type": "ArrowFunctionExpression"
             },
@@ -6492,15 +6880,15 @@
         "comment": "",
         "meta": {
             "range": [
-                28898,
-                28920
+                29928,
+                29950
             ],
             "filename": "createSpec.js",
-            "lineno": 908,
+            "lineno": 942,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002953",
+                "id": "astnode100003113",
                 "name": "dev",
                 "type": "NewExpression",
                 "value": ""
@@ -6518,15 +6906,15 @@
         "comment": "",
         "meta": {
             "range": [
-                28979,
-                28998
+                30009,
+                30028
             ],
             "filename": "createSpec.js",
-            "lineno": 912,
+            "lineno": 946,
             "columnno": 4,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002967",
+                "id": "astnode100003127",
                 "name": "pv.r",
                 "type": "CallExpression",
                 "funcscope": "createSpec",
@@ -6545,15 +6933,15 @@
         "comment": "",
         "meta": {
             "range": [
-                29106,
-                29112
+                30136,
+                30142
             ],
             "filename": "createSpec.js",
-            "lineno": 916,
+            "lineno": 950,
             "columnno": 9,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100002990",
+                "id": "astnode100003150",
                 "name": "pv.i",
                 "type": "Literal",
                 "funcscope": "createSpec",
@@ -6572,15 +6960,15 @@
         "comment": "",
         "meta": {
             "range": [
-                29214,
-                29259
+                30244,
+                30289
             ],
             "filename": "createSpec.js",
-            "lineno": 918,
+            "lineno": 952,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003016",
+                "id": "astnode100003176",
                 "name": "pv.r",
                 "type": "AwaitExpression",
                 "funcscope": "createSpec",
@@ -6599,15 +6987,42 @@
         "comment": "",
         "meta": {
             "range": [
-                29360,
-                29378
+                30390,
+                30408
             ],
             "filename": "createSpec.js",
-            "lineno": 923,
+            "lineno": 957,
             "columnno": 4,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003047",
+                "id": "astnode100003207",
+                "name": "pv.r",
+                "type": "CallExpression",
+                "funcscope": "createSpec",
+                "value": "",
+                "paramnames": []
+            }
+        },
+        "undocumented": true,
+        "name": "r",
+        "longname": "createSpec~pv.r",
+        "kind": "member",
+        "memberof": "createSpec~pv",
+        "scope": "static"
+    },
+    {
+        "comment": "",
+        "meta": {
+            "range": [
+                30532,
+                30553
+            ],
+            "filename": "createSpec.js",
+            "lineno": 962,
+            "columnno": 6,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {
+                "id": "astnode100003238",
                 "name": "pv.r",
                 "type": "CallExpression",
                 "funcscope": "createSpec",
@@ -6626,15 +7041,15 @@
         "comment": "/** trash: 過去作成したソースで必要なくなったもの。備忘用 */",
         "meta": {
             "range": [
-                29769,
-                32243
+                30954,
+                33428
             ],
             "filename": "createSpec.js",
-            "lineno": 940,
+            "lineno": 980,
             "columnno": 0,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003082",
+                "id": "astnode100003274",
                 "name": "trash",
                 "type": "FunctionDeclaration",
                 "paramnames": []
@@ -6655,15 +7070,15 @@
         "comment": "/** makeMap: 「ファイル名＋行番号」を識別子とするマップを作成 */",
         "meta": {
             "range": [
-                29832,
-                31310
+                31017,
+                32495
             ],
             "filename": "createSpec.js",
-            "lineno": 942,
+            "lineno": 982,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003085",
+                "id": "astnode100003277",
                 "name": "makeMap",
                 "type": "FunctionDeclaration",
                 "paramnames": [
@@ -6691,15 +7106,15 @@
         "comment": "",
         "meta": {
             "range": [
-                29872,
-                29924
+                31057,
+                31109
             ],
             "filename": "createSpec.js",
-            "lineno": 943,
+            "lineno": 983,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003090",
+                "id": "astnode100003282",
                 "name": "v",
                 "type": "ObjectExpression",
                 "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":\"\"}"
@@ -6717,15 +7132,15 @@
         "comment": "",
         "meta": {
             "range": [
-                29877,
-                29904
+                31062,
+                31089
             ],
             "filename": "createSpec.js",
-            "lineno": 943,
+            "lineno": 983,
             "columnno": 15,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003093",
+                "id": "astnode100003285",
                 "name": "whois",
                 "type": "TemplateLiteral",
                 "value": ""
@@ -6742,15 +7157,15 @@
         "comment": "",
         "meta": {
             "range": [
-                29906,
-                29916
+                31091,
+                31101
             ],
             "filename": "createSpec.js",
-            "lineno": 943,
+            "lineno": 983,
             "columnno": 44,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003100",
+                "id": "astnode100003292",
                 "name": "arg",
                 "type": "ObjectExpression",
                 "value": "{\"list\":\"\"}"
@@ -6767,15 +7182,15 @@
         "comment": "",
         "meta": {
             "range": [
-                29911,
-                29915
+                31096,
+                31100
             ],
             "filename": "createSpec.js",
-            "lineno": 943,
+            "lineno": 983,
             "columnno": 49,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003102",
+                "id": "astnode100003294",
                 "name": "list",
                 "type": "Identifier",
                 "value": "list"
@@ -6792,15 +7207,15 @@
         "comment": "",
         "meta": {
             "range": [
-                29918,
-                29923
+                31103,
+                31108
             ],
             "filename": "createSpec.js",
-            "lineno": 943,
+            "lineno": 983,
             "columnno": 56,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003104",
+                "id": "astnode100003296",
                 "name": "rv",
                 "type": "ObjectExpression",
                 "value": "{}"
@@ -6817,15 +7232,15 @@
         "comment": "",
         "meta": {
             "range": [
-                29936,
-                29957
+                31121,
+                31142
             ],
             "filename": "createSpec.js",
-            "lineno": 944,
+            "lineno": 984,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003107",
+                "id": "astnode100003299",
                 "name": "dev",
                 "type": "NewExpression",
                 "value": ""
@@ -6843,15 +7258,15 @@
         "comment": "",
         "meta": {
             "range": [
-                29981,
-                29986
+                31166,
+                31171
             ],
             "filename": "createSpec.js",
-            "lineno": 947,
+            "lineno": 987,
             "columnno": 11,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003115",
+                "id": "astnode100003307",
                 "name": "v.i",
                 "type": "Literal",
                 "funcscope": "trash~makeMap",
@@ -6870,15 +7285,15 @@
         "comment": "",
         "meta": {
             "range": [
-                30061,
-                30093
+                31246,
+                31278
             ],
             "filename": "createSpec.js",
-            "lineno": 950,
+            "lineno": 990,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003139",
+                "id": "astnode100003331",
                 "name": "v.arr",
                 "type": "AwaitExpression",
                 "funcscope": "trash~makeMap",
@@ -6897,15 +7312,15 @@
         "comment": "",
         "meta": {
             "range": [
-                30763,
-                30839
+                31948,
+                32024
             ],
             "filename": "createSpec.js",
-            "lineno": 968,
+            "lineno": 1008,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003234",
+                "id": "astnode100003426",
                 "name": "v.jsdocId",
                 "type": "TemplateLiteral",
                 "funcscope": "trash~makeMap",
@@ -6924,15 +7339,15 @@
         "comment": "",
         "meta": {
             "range": [
-                30946,
-                30982
+                32131,
+                32167
             ],
             "filename": "createSpec.js",
-            "lineno": 972,
+            "lineno": 1012,
             "columnno": 14,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003280",
+                "id": "astnode100003472",
                 "name": "o",
                 "type": "CallExpression",
                 "funcscope": "<anonymous>",
@@ -6951,15 +7366,15 @@
         "comment": "",
         "meta": {
             "range": [
-                31165,
-                31186
+                32350,
+                32371
             ],
             "filename": "createSpec.js",
-            "lineno": 979,
+            "lineno": 1019,
             "columnno": 12,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003316",
+                "id": "astnode100003508",
                 "name": "pv.map[undefined]",
                 "type": "Identifier",
                 "value": "o",
@@ -6977,15 +7392,15 @@
         "comment": "/** trimCommonIndent: 文字列を行単位に分割、全行に共通する先頭の空白を削除\n   * 但し先頭行頭に空白が無かった場合、調査対象から除外する\n   * @param {string[]} txt\n   * @returns {string[]}\n   */",
         "meta": {
             "range": [
-                31456,
-                32241
+                32641,
+                33426
             ],
             "filename": "createSpec.js",
-            "lineno": 995,
+            "lineno": 1035,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003341",
+                "id": "astnode100003533",
                 "name": "trimCommonIndent",
                 "type": "FunctionDeclaration",
                 "paramnames": [
@@ -7032,15 +7447,15 @@
         "comment": "",
         "meta": {
             "range": [
-                31499,
-                31556
+                32684,
+                32741
             ],
             "filename": "createSpec.js",
-            "lineno": 996,
+            "lineno": 1036,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003346",
+                "id": "astnode100003538",
                 "name": "v",
                 "type": "ObjectExpression",
                 "value": "{\"whois\":\"\",\"arg\":\"\",\"rv\":\"\"}"
@@ -7058,15 +7473,15 @@
         "comment": "",
         "meta": {
             "range": [
-                31504,
-                31540
+                32689,
+                32725
             ],
             "filename": "createSpec.js",
-            "lineno": 996,
+            "lineno": 1036,
             "columnno": 15,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003349",
+                "id": "astnode100003541",
                 "name": "whois",
                 "type": "TemplateLiteral",
                 "value": ""
@@ -7083,15 +7498,15 @@
         "comment": "",
         "meta": {
             "range": [
-                31542,
-                31548
+                32727,
+                32733
             ],
             "filename": "createSpec.js",
-            "lineno": 996,
+            "lineno": 1036,
             "columnno": 53,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003356",
+                "id": "astnode100003548",
                 "name": "arg",
                 "type": "ObjectExpression",
                 "value": "{}"
@@ -7108,15 +7523,15 @@
         "comment": "",
         "meta": {
             "range": [
-                31550,
-                31555
+                32735,
+                32740
             ],
             "filename": "createSpec.js",
-            "lineno": 996,
+            "lineno": 1036,
             "columnno": 61,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003358",
+                "id": "astnode100003550",
                 "name": "rv",
                 "type": "ArrayExpression",
                 "value": "[]"
@@ -7133,15 +7548,15 @@
         "comment": "",
         "meta": {
             "range": [
-                31568,
-                31589
+                32753,
+                32774
             ],
             "filename": "createSpec.js",
-            "lineno": 997,
+            "lineno": 1037,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003361",
+                "id": "astnode100003553",
                 "name": "dev",
                 "type": "NewExpression",
                 "value": ""
@@ -7159,15 +7574,15 @@
         "comment": "",
         "meta": {
             "range": [
-                31642,
-                31667
+                32827,
+                32852
             ],
             "filename": "createSpec.js",
-            "lineno": 1001,
+            "lineno": 1041,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003376",
+                "id": "astnode100003568",
                 "name": "v.lines",
                 "type": "CallExpression",
                 "funcscope": "trash~trimCommonIndent",
@@ -7186,15 +7601,15 @@
         "comment": "",
         "meta": {
             "range": [
-                31818,
-                31950
+                33003,
+                33135
             ],
             "filename": "createSpec.js",
-            "lineno": 1007,
+            "lineno": 1047,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003417",
+                "id": "astnode100003609",
                 "name": "v.indents",
                 "type": "CallExpression",
                 "funcscope": "trash~trimCommonIndent",
@@ -7213,15 +7628,15 @@
         "comment": "",
         "meta": {
             "range": [
-                31993,
-                32029
+                33178,
+                33214
             ],
             "filename": "createSpec.js",
-            "lineno": 1012,
+            "lineno": 1052,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003458",
+                "id": "astnode100003650",
                 "name": "v.minIndent",
                 "type": "CallExpression",
                 "funcscope": "trash~trimCommonIndent",
@@ -7240,15 +7655,15 @@
         "comment": "",
         "meta": {
             "range": [
-                32129,
-                32154
+                33314,
+                33339
             ],
             "filename": "createSpec.js",
-            "lineno": 1017,
+            "lineno": 1057,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
-                "id": "astnode100003493",
+                "id": "astnode100003685",
                 "name": "v.rv",
                 "type": "CallExpression",
                 "funcscope": "trash~trimCommonIndent",

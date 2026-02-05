@@ -130,8 +130,8 @@ console.log(JSON.stringify(createSpec(),null,2));
  */
 async function createSpec() {
   const pv = {whois:`createSpec`, arg:{}, rv:null};
-  const cf = {
-    // jsdocコマンド動作環境整備関係。詳細はlistSource step.1参照
+  const cf = {  // jsdocコマンド動作環境整備関係(config)
+    // 詳細はlistSource step.1参照
     jsdocJson: `jsdoc.json`,  // jsdocコマンド設定ファイル名
     //jsdocJson: `jsdoc.${Date.now()}.json`,  // jsdocコマンド設定ファイル名
     dummyDir: './dummy',  // jsdoc用の空フォルダ
@@ -157,21 +157,37 @@ async function createSpec() {
    * @prop {Object[]} doclet - `jsdoc -X`で返されるJSONをオブジェクト化、配列として格納
    */
   const sourceFile = {common:'',outDir:'',sourceNum:0,source:[]};
-  /** ArticleObj: 単一記事(タイトル＋本文)用データオブジェクト
+  /** Article: 単一記事(タイトル＋本文)用データオブジェクト
    * - `<!--::記事のID::-->`で他記事も埋め込み可とする
    * - アンカーのidは識別子を小文字変換したものとする
    * 
-   * @interface ArticleObj
-   * @prop {string} jsdocId - 記事の識別子
-   * @prop {string} title - 記事のタイトル
-   * @prop {string} [icon] - アイコンを付ける場合に設定
+   * @class Article
+   * @prop {string} [title=''] - 記事のタイトル
+   * @prop {string} [icon=''] - アイコンを付ける場合に設定
    * @prop {boolean} [anchor=false] - アンカーを設定する場合に設定(`<span id="〜">`)
-   * @prop {string} [link] - タイトルにリンクを張る場合の参照先URL
-   * @prop {string} [top] - タイトルの前に挿入する文字列(固定メニュー等)
-   * @prop {string} [middle] - タイトルの後・記事の前に〃
-   * @prop {string} [bottom] - 記事の後に〃
-   * @prop {string} content - 記事本文
+   * @prop {string} [link=''] - タイトルにリンクを張る場合の参照先URL
+   * @prop {string} [top=''] - タイトルの前に挿入する文字列(固定メニュー等)
+   * @prop {string} [middle=''] - タイトルの後・記事の前に〃
+   * @prop {string} [bottom=''] - 記事の後に〃
+   * @prop {string} [content=''] - 記事本文
    */
+  class Article {
+    /**
+     * @constructor
+     * @param {Object} arg 
+     * @returns {Article}
+     */
+    constructor(arg){
+      this.title = arg.title ?? '';
+      this.icon = arg.icon ?? '';
+      this.anchor = arg.anchor ?? false;
+      this.link = arg.link ?? '';
+      this.top = arg.top ?? '';
+      this.middle = arg.middle ?? '';
+      this.bottom = arg.bottom ?? '';
+      this.content = arg.content ?? '';
+    }
+  }
   /** DocLet: `jsdoc -X`で配列で返されたオブジェクトに情報を付加
    * @interface DocLet
    * @prop {string} unique - 固有パス
@@ -182,6 +198,9 @@ async function createSpec() {
    * @prop {DocLet[]} [innerFunc=[]] - メソッド・内部関数
    * @prop {Object} origin - 情報付加前のjsdocで吐き出されたdoclet
    * // 以下はMarkdown用項目
+   * @prop {Object.<string, Article>} article - 記事名をキーとするマップ
+   *   記事名は「一覧文書/クラス・グローバル関数/データ型定義文書の構成」参照
+   *   top, list, type, prop, func, desc, param, return, -xxx
    * @prop {string} title
    * @prop {string} label - 1行で簡潔に記述された概要説明
    *   ① `／** `に続く文字列
@@ -355,6 +374,7 @@ async function createSpec() {
         type: v.type,
         jsdocId: unique + obj.meta.filename + ':' + obj.meta.lineno,
         innerFunc: [],
+        article: {},
         title: obj.longname.replaceAll(/~/g,'#').split('#')[0],
         label: v.label,
         description: obj.description ?? obj.classdesc ?? '',
@@ -824,16 +844,19 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
   
-  /** makeMarkdown: Markdown形式の仕様書を作成
-   * 
+  /** makeArticle: docletを走査、記事毎にArticleを作成
+   * - 作成したArticleオブジェクトはdoclet.articleに保存
+   * @param {DocLet} obj - (単一の)DocLet型オブジェクト
+   * @returns {null|Error}
    */
-  function makeMarkdown(arg) {
-    const v = {whois:`${pv.whois}.identifyDocletType`, arg:{arg}, rv:[]};
+  function makeArticle(obj) {
+    const v = {whois:`${pv.whois}.makeArticle`, arg:{obj}, rv:null};
     const dev = new devTools(v);
     /**
-     * @name 一覧文書(フォルダ毎)の構成
+     * @name 一覧文書の構成
      * @desc
      * 
+     * - フォルダ毎に作成
      * - 並び順はフォルダ内のデータ型名順(アルファベット順)
      * 
      * 1. ヘッダ部("フォルダ名_top")
@@ -871,9 +894,20 @@ async function createSpec() {
      */
     try {
 
-      // -------------------------------------------------------------
+      dev.step(1);  // top: タイトル、ラベル、概要説明
+      obj.article.top = new Article({
+        title: obj.title + 'クラス仕様書' // いまここ
+      });
+      dev.step(2);  // list
+      dev.step(3);  // type
+      dev.step(4);  // prop
+      dev.step(5);  // func
+      dev.step(6);  // desc
+      dev.step(7);  // param
+      dev.step(8);  // returns
+      dev.step(9);  // -xxx
 
-      dev.end(v.rv);
+      dev.end(obj.article);
       return v.rv;
 
     } catch (e) { return dev.error(e); }
@@ -927,6 +961,12 @@ async function createSpec() {
     dev.step(3);  // docletの各要素を階層化してマッピング
     pv.r = mapDocLet();
     if( pv.r instanceof Error) throw pv.r;
+
+    dev.step(4);  // docletを走査、記事毎にArticleを作成
+    doclet.forEach(o => {
+      pv.r = makeArticle(o);
+      if( pv.r instanceof Error) throw pv.r;
+    });
 
     dev.end();
     return pv.rv;
