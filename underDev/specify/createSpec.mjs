@@ -175,16 +175,11 @@ class Doclet {
 /** DocletEx: jsdocから出力されるDocletに情報を付加したもの
  * @class
  * @extends Doclet
- * @prop {DocletEx} [parent=null] - 親要素のDoclet
  * @prop {string} unique - ソースファイルの固有パス
  *   固有パス：複数フォルダ対象時、フルパスから共通のパスを除いた部分
  *   unique = 'client/test.js' -> 'client/' ※最後に'/'が付く
  *   unique = 'test.js' -> '/' ※直下の場合'/'
- * @prop {string} docletType - Docletの種類。determineTypeの戻り値
- * @prop {Object.<string, Doclet>} [children={}] - メソッド・内部関数
- * @prop {Object.<string, Article>} md - 記事名をキーとするマップ
- *   記事名は「一覧文書/クラス・グローバル関数/データ型定義文書の構成」参照
- *   top, list, type, prop, func, desc, param, return, -xxx
+ * @prop {string} docletType - Docletの種類。下記「docletTypeの判定ロジック」参照
  * @prop {string} label - 1行で簡潔に記述された概要説明
  *   ① `／** `に続く文字列
  *   ② description, classdesc があれば先頭行
@@ -193,6 +188,12 @@ class Doclet {
  * @prop {PropRow[]} [properties=[]] - メンバ一覧
  * @prop {PropRow[]} [params=[]] - 引数。クラスの場合はconstructorの引数
  * @prop {PropRow[]} [returns=[]] - 戻り値
+ * 
+ * @prop {DocletEx} [parent=null] - 親要素のDoclet
+ * @prop {Object.<string, Doclet>} [children={}] - メソッド・内部関数
+ * @prop {Object.<string, Article>} md - 記事名をキーとするマップ
+ *   記事名は「一覧文書/クラス・グローバル関数/データ型定義文書の構成」参照
+ *   top, list, type, prop, func, desc, param, return, -xxx
  * 
  * -- 以下備忘
  * @prop {string} title
@@ -248,9 +249,22 @@ class DocletEx extends Doclet {
     const dev = new devTools(v);
     try {
 
+      dev.step(1);
       this.unique = unique;
       this.docletType = this.determineType(doclet);
       if( this.determineType instanceof Error) throw this.determineType;
+
+      dev.step(2);  // labelを抽出
+      // ①JSDoc先頭の「/**」に続く文字列
+      v.m = doclet.comment?.split('\n')[0].match(/^\/\*\*\s*(.+)\n/) ?? null;
+      // ②説明文の先頭行
+      v.desc = (doclet.description ?? doclet.classdesc ?? doclet.longname)
+        .split('\n')[0] ?? '(ラベル未設定)';
+      // ③「① > (nameまたはclassなら)longname > ②」で決定
+      this.label = v.m !== null ? v.m[1] : (
+        this.docletType === 'name' || this.docletType === 'class'
+        ? (doclet.longname ?? v.desc) : v.desc
+      );
 
       dev.end();
 
