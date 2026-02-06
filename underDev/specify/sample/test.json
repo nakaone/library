@@ -581,14 +581,14 @@
         "scope": "static"
     },
     {
-        "comment": "/**\n * @class\n * @classdesc テスト用クラス\n * @extends BaseClass\n * @prop {Object} opt - 起動時オプション\n */",
+        "comment": "/**\n * @class\n * @desc テスト用クラス(desc)\n * @classdesc テスト用クラス(classdesc)\n * @extends BaseClass\n * @prop {Object} opt - 起動時オプション\n */",
         "meta": {
             "range": [
-                1692,
-                2419
+                1726,
+                2453
             ],
             "filename": "test.js",
-            "lineno": 85,
+            "lineno": 86,
             "columnno": 0,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -601,7 +601,8 @@
             }
         },
         "kind": "class",
-        "classdesc": "テスト用クラス",
+        "description": "テスト用クラス(desc)",
+        "classdesc": "テスト用クラス(classdesc)",
         "augments": [
             "BaseClass"
         ],
@@ -625,7 +626,7 @@
         "comment": "/**\n   * @typedef {Object} typeDef - JSDocのデータ型定義単位のオブジェクト\n   * @property {string} name - データ型の定義名\n   * @property {columnDef[]} list - 項目(メンバ)のリスト\n   */",
         "meta": {
             "filename": "test.js",
-            "lineno": 86,
+            "lineno": 87,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -665,11 +666,11 @@
         "comment": "/** class01のconstructor\n   * - constructorの説明\n   * @constructor\n   * @param {bigint} arg - typeはテスト用\n   */",
         "meta": {
             "range": [
-                1993,
-                2211
+                2027,
+                2245
             ],
             "filename": "test.js",
-            "lineno": 97,
+            "lineno": 98,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -703,14 +704,14 @@
         "undocumented": true
     },
     {
-        "comment": "/**\n * @class\n * @classdesc テスト用クラス\n * @extends BaseClass\n * @prop {Object} opt - 起動時オプション\n */",
+        "comment": "/**\n * @class\n * @desc テスト用クラス(desc)\n * @classdesc テスト用クラス(classdesc)\n * @extends BaseClass\n * @prop {Object} opt - 起動時オプション\n */",
         "meta": {
             "range": [
-                1692,
-                2419
+                1726,
+                2453
             ],
             "filename": "test.js",
-            "lineno": 85,
+            "lineno": 86,
             "columnno": 0,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -725,12 +726,12 @@
         "name": "class01",
         "longname": "class01",
         "kind": "class",
-        "classdesc": "テスト用クラス",
+        "description": "テスト用クラス(desc)",
+        "classdesc": "テスト用クラス(classdesc)",
         "augments": [
             "BaseClass"
         ],
         "scope": "global",
-        "description": "class01のconstructor\n- constructorの説明",
         "params": [
             {
                 "type": {
@@ -758,11 +759,11 @@
         "comment": "",
         "meta": {
             "range": [
-                2192,
-                2206
+                2226,
+                2240
             ],
             "filename": "test.js",
-            "lineno": 105,
+            "lineno": 106,
             "columnno": 4,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -784,11 +785,11 @@
         "comment": "/** method01: メソッドテスト\n   * @memberof class01\n   * @param {number} arg - method01の引数\n   * @returns {{qId:number,name:string}} NG: qId,name指定無しのObjectになる\n   */",
         "meta": {
             "range": [
-                2375,
-                2417
+                2409,
+                2451
             ],
             "filename": "test.js",
-            "lineno": 113,
+            "lineno": 114,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {

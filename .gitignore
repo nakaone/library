@@ -4,3 +4,5 @@
 *node_modules/
 /underDev/Auth/deploy/
 *.txt
+underDev/specify/auth.result.txt
+underDev/specify/test.result.txt

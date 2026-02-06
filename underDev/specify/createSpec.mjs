@@ -159,32 +159,19 @@ async function createSpec() {
    */
   /** Doclet: `jsdoc -X`で配列で返されるオブジェクト
    * @typedef {Object} Doclet
-   * @prop {string}   comment - ソース上に記載されたDocletの原文
-   * @prop {string}   name - 対象の短い名前(関数名・クラス名・プロパティ名など)
-   * @prop {string}   longname - 完全修飾名
-   *   `module:foo~bar#baz`のように、モジュール・クラス・スコープを含む一意名
-   * @prop {string}   description - 概要説明。タグ以外のcomment内の自由記述部分
-   * @prop {string}   classdesc - ＠classdescタグで指定されたクラス専用の説明文
-   *   description とは別枠で保持される
    * @prop {string[]} augments - ＠augments/＠extendsによる継承元情報
    *   親クラスや継承対象の一覧
-   * @prop {string}   scope - スコープ種別
-   *   global,static,instance,innerなど、メンバの可視性・所属を示す
-   * @prop {string}   memberof - 所属先（親）を示す完全修飾名
-   *   どのクラス・モジュール・名前空間に属するかを示す
-   * @prop {boolean}  undocumented - JSDoc コメントが存在しない要素かどうか
-   *   true の場合、自動抽出されたがコメント未記述
+   * @prop {string}   classdesc - ＠classdescタグで指定されたクラス専用の説明文
+   *   description とは別枠で保持される
+   * @prop {string}   comment - ソース上に記載されたDocletの原文
+   * @prop {string}   description - 概要説明。タグ以外のcomment内の自由記述部分
+   * @prop {string[]} examples - ＠exampleタグの内容。使用例コードを配列で保持
    * @prop {string}   kind - Docletの対象種別
    *   例：function, class, member, typedef, module など
-   * @prop {string[]} examples - ＠exampleタグの内容。使用例コードを配列で保持
-   * @prop {DocletProperty[]} params - ＠paramタグから生成された引数情報の配列
-   * @prop {DocletProperty[]} properties - ＠propertyタグから生成されたメンバ定義情報
-   * @prop {DocletProperty} returns - ＠returns/＠returnタグから生成された戻り値情報
-   *   returnsはparams/propertiesと以下の点で異なる。
-   *   1. 配列ではない(単一要素)
-   *   2. name/optional/defaultvalueは無い
-   *   3. nullable,nullableTypeが付くことがある
-   * 
+   * @prop {string}   longname - 完全修飾名
+   *   `module:foo~bar#baz`のように、モジュール・クラス・スコープを含む一意名
+   * @prop {string}   memberof - 所属先（親）を示す完全修飾名
+   *   どのクラス・モジュール・名前空間に属するかを示す
    * @prop {object}   meta - Docletが生成されたソース位置情報
    * @prop {number[]} meta.range - ソースコード内での文字位置範囲
    *   桁数単位で、2要素ずつ組み合わせた開始・終了インデックス。
@@ -199,12 +186,16 @@ async function createSpec() {
    * @prop {string}   meta.code.value - コード要素のソース表現（代入値や関数本体の文字列表現）
    * @prop {string[]} meta.code.paramnames - 関数・メソッドの引数名一覧
    * @prop {Object.<string, string>} meta.vars - スコープ内で参照される変数名とその値（簡易マップ）
-   * 
-   * @prop {object}   type - ＠type/＠param/＠returns/＠property等から得られた型情報
-   *   プリミティブ・Union・配列・オブジェクトなど
-   * @prop {string[]} type.names - データ型名の配列
-   *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
-   * 
+   * @prop {string}   name - 対象の短い名前(関数名・クラス名・プロパティ名など)
+   * @prop {DocletProperty[]} params - ＠paramタグから生成された引数情報の配列
+   * @prop {DocletProperty[]} properties - ＠propertyタグから生成されたメンバ定義情報
+   * @prop {DocletProperty} returns - ＠returns/＠returnタグから生成された戻り値情報
+   *   returnsはparams/propertiesと以下の点で異なる。
+   *   1. 配列ではない(単一要素)
+   *   2. name/optional/defaultvalueは無い
+   *   3. nullable,nullableTypeが付くことがある
+   * @prop {string}   scope - スコープ種別
+   *   global,static,instance,innerなど、メンバの可視性・所属を示す
    * @prop {Object[]} tags - JSDoc上に記述されたタグのうち、専用フィールドに変換されなかった生タグ情報
    *   独自タグ、JSDocが意味解釈しないタグ、情報落ちしないよう保持された生情報
    * @prop {object}   tags.meta - タグが記述されているソース位置情報
@@ -213,6 +204,16 @@ async function createSpec() {
    * @prop {string}   tags.text - タグ行の生テキスト（タグ名を除いた部分）
    * @prop {string}   tags.value - タグ内容をJSDocが解釈・分解した結果の文字列表現
    *   単純タグではtextと同じになることが多い
+   * @prop {object}   type - ＠type/＠param/＠returns/＠property等から得られた型情報
+   *   プリミティブ・Union・配列・オブジェクトなど
+   * @prop {string[]} type.names - データ型名の配列
+   *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
+   * @prop {boolean}  undocumented - JSDoc コメントが存在しない要素かどうか
+   *   true の場合、自動抽出されたがコメント未記述
+   * @prop {object}   type - ＠type/＠param/＠returns/＠property等から得られた型情報
+   *   プリミティブ・Union・配列・オブジェクトなど
+   * @prop {string[]} type.names - データ型名の配列
+   *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
    * 
    * 
    * # "meta.code.type"の内容
@@ -296,13 +297,14 @@ async function createSpec() {
     //jsdocJson: `jsdoc.${Date.now()}.json`,  // jsdocコマンド設定ファイル名
     dummyDir: './dummy',  // jsdoc用の空フォルダ
     jsdocTarget: ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
-    lang: 'ja', // 表記する言語
-    ja: { // 日本語での表記
+    // 使用する言語
+    lang: Intl.DateTimeFormat().resolvedOptions().lang === 'ja-JP' ? 'ja-JP' : 'default',
+    "ja-JP": { // 日本語での表記
       undef: '未定義',
       optional: '任意',
       required: '必須',
     },
-    en: {
+    "default": {  // それ以外なら英語
       undef: 'undefined',
       optional: 'optional',
       required: 'required',
@@ -1083,7 +1085,7 @@ async function createSpec() {
   const dev = new devTools(pv);
   try {
 
-    dev.step(1);  // sourceFileに対象ファイルリスト作成
+    dev.step(1,cf);  // sourceFileに対象ファイルリスト作成
     pv.r = listSource();
     if( pv.r instanceof Error) throw pv.r;
 
