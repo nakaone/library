@@ -129,6 +129,28 @@ console.log(JSON.stringify(createSpec(),null,2));
  * @prop {Doclet[]} doclet - Doclet型にしたオブジェクトを保存
  */
 async function createSpec() {
+
+  const pv = {whois:`createSpec`, arg:{}, rv:null};
+  const cf = {  // jsdocコマンド動作環境整備関係(config)
+    // 詳細はlistSource step.1参照
+    jsdocJson: `jsdoc.json`,  // jsdocコマンド設定ファイル名
+    //jsdocJson: `jsdoc.${Date.now()}.json`,  // jsdocコマンド設定ファイル名
+    dummyDir: './dummy',  // jsdoc用の空フォルダ
+    jsdocTarget: ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
+    // 使用する言語
+    lang: Intl.DateTimeFormat().resolvedOptions().lang === 'ja-JP' ? 'ja-JP' : 'default',
+    "ja-JP": { // 日本語での表記
+      undef: '未定義',
+      optional: '任意',
+      required: '必須',
+    },
+    "default": {  // それ以外なら英語
+      undef: 'undefined',
+      optional: 'optional',
+      required: 'required',
+    },
+  };
+
   /** sourceFile: 入力ファイル(JSソース)情報
    * @interface sourceFile
    * @prop {string} common - フルパスの共通部分
@@ -137,6 +159,39 @@ async function createSpec() {
    * @prop {Object[]} source - {full:フルパス,unique:固有部分}形式のファイル名
    * @prop {Object[]} doclet - `jsdoc -X`で返されるJSONをオブジェクト化、配列として格納
    */
+  const sourceFile = {common:'',outDir:'',sourceNum:0,source:[]};
+
+  /** Article: 単一記事(タイトル＋本文)用データオブジェクト
+   * - `<!--::記事のID::-->`で他記事も埋め込み可とする
+   * - アンカーのidは識別子を小文字変換したものとする
+   * 
+   * @class Article
+   * @prop {string} [title=''] - 記事のタイトル
+   * @prop {string} [icon=''] - アイコンを付ける場合に設定
+   * @prop {boolean} [anchor=false] - アンカーを設定する場合に設定(`<span id="〜">`)
+   * @prop {string} [link=''] - タイトルにリンクを張る場合の参照先URL
+   * @prop {string} [top=''] - タイトルの前に挿入する文字列(固定メニュー等)
+   * @prop {string} [middle=''] - タイトルの後・記事の前に〃
+   * @prop {string} [bottom=''] - 記事の後に〃
+   * @prop {string} [content=''] - 記事本文
+   */
+  class Article {
+    /**
+     * @constructor
+     * @param {Object} arg 
+     * @returns {Article}
+     */
+    constructor(arg){
+      this.title = arg.title ?? '';
+      this.icon = arg.icon ?? '';
+      this.anchor = arg.anchor ?? false;
+      this.link = arg.link ?? '';
+      this.top = arg.top ?? '';
+      this.middle = arg.middle ?? '';
+      this.bottom = arg.bottom ?? '';
+      this.content = arg.content ?? '';
+    }
+  }
 
   /** DocletProperty: Doclet.properties/params/returnsの要素(メンバ)定義情報
    * @typedef {Object} DocletProperty
@@ -289,60 +344,6 @@ async function createSpec() {
    * @prop {PropRow[]} [params=[]] - 引数。クラスの場合はconstructorの引数
    * @prop {PropRow[]} [returns=[]] - 戻り値
    */
-
-  const pv = {whois:`createSpec`, arg:{}, rv:null};
-  const cf = {  // jsdocコマンド動作環境整備関係(config)
-    // 詳細はlistSource step.1参照
-    jsdocJson: `jsdoc.json`,  // jsdocコマンド設定ファイル名
-    //jsdocJson: `jsdoc.${Date.now()}.json`,  // jsdocコマンド設定ファイル名
-    dummyDir: './dummy',  // jsdoc用の空フォルダ
-    jsdocTarget: ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
-    // 使用する言語
-    lang: Intl.DateTimeFormat().resolvedOptions().lang === 'ja-JP' ? 'ja-JP' : 'default',
-    "ja-JP": { // 日本語での表記
-      undef: '未定義',
-      optional: '任意',
-      required: '必須',
-    },
-    "default": {  // それ以外なら英語
-      undef: 'undefined',
-      optional: 'optional',
-      required: 'required',
-    },
-  };
-  const sourceFile = {common:'',outDir:'',sourceNum:0,source:[]};
-
-  /** Article: 単一記事(タイトル＋本文)用データオブジェクト
-   * - `<!--::記事のID::-->`で他記事も埋め込み可とする
-   * - アンカーのidは識別子を小文字変換したものとする
-   * 
-   * @class Article
-   * @prop {string} [title=''] - 記事のタイトル
-   * @prop {string} [icon=''] - アイコンを付ける場合に設定
-   * @prop {boolean} [anchor=false] - アンカーを設定する場合に設定(`<span id="〜">`)
-   * @prop {string} [link=''] - タイトルにリンクを張る場合の参照先URL
-   * @prop {string} [top=''] - タイトルの前に挿入する文字列(固定メニュー等)
-   * @prop {string} [middle=''] - タイトルの後・記事の前に〃
-   * @prop {string} [bottom=''] - 記事の後に〃
-   * @prop {string} [content=''] - 記事本文
-   */
-  class Article {
-    /**
-     * @constructor
-     * @param {Object} arg 
-     * @returns {Article}
-     */
-    constructor(arg){
-      this.title = arg.title ?? '';
-      this.icon = arg.icon ?? '';
-      this.anchor = arg.anchor ?? false;
-      this.link = arg.link ?? '';
-      this.top = arg.top ?? '';
-      this.middle = arg.middle ?? '';
-      this.bottom = arg.bottom ?? '';
-      this.content = arg.content ?? '';
-    }
-  }
 
   const doclet = [];
   /** dlMap: Docletを構造化してマッピングしたオブジェクト
