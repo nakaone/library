@@ -175,27 +175,30 @@ class Doclet {
 /** DocletEx: jsdocから出力されるDocletに情報を付加したもの
  * @class
  * @extends Doclet
+ * @prop {DocletEx} [parent=null] - 親要素のDoclet
  * @prop {string} unique - ソースファイルの固有パス
  *   固有パス：複数フォルダ対象時、フルパスから共通のパスを除いた部分
  *   unique = 'client/test.js' -> 'client/' ※最後に'/'が付く
  *   unique = 'test.js' -> '/' ※直下の場合'/'
  * @prop {string} docletType - Docletの種類。determineTypeの戻り値
  * @prop {Object.<string, Doclet>} [children={}] - メソッド・内部関数
- * 
  * @prop {Object.<string, Article>} md - 記事名をキーとするマップ
  *   記事名は「一覧文書/クラス・グローバル関数/データ型定義文書の構成」参照
  *   top, list, type, prop, func, desc, param, return, -xxx
- * @prop {string} title
  * @prop {string} label - 1行で簡潔に記述された概要説明
  *   ① `／** `に続く文字列
  *   ② description, classdesc があれば先頭行
  *   ③ longname
  *   ※ 上記に該当が無い場合、「(ラベル未設定)」
- * @prop {string} description - 概要・詳細説明、処理手順
  * @prop {PropRow[]} [properties=[]] - メンバ一覧
- * @prop {Object[]} [innerList=[]] - メソッド・内部関数一覧。項目：No,関数名,ラベル,アンカー
  * @prop {PropRow[]} [params=[]] - 引数。クラスの場合はconstructorの引数
  * @prop {PropRow[]} [returns=[]] - 戻り値
+ * 
+ * -- 以下備忘
+ * @prop {string} title
+ * @prop {string} description - 概要・詳細説明、処理手順
+ * @prop {Object[]} [innerList=[]] - メソッド・内部関数一覧。項目：No,関数名,ラベル,アンカー
+ * -- 備忘ここまで
  * 
  * # docletTypeの判定ロジック
  * 
@@ -241,8 +244,17 @@ class DocletEx extends Doclet {
    */
   constructor(doclet,unique='/'){
     super(doclet);
+    const v = {whois:`DocletEx.constructor`, arg:{doclet,unique}, rv:null};
+    const dev = new devTools(v);
+    try {
 
-    this.unique = unique;
+      this.unique = unique;
+      this.docletType = this.determineType(doclet);
+      if( this.determineType instanceof Error) throw this.determineType;
+
+      dev.end();
+
+    } catch (e) { return dev.error(e); }
   }
 
   /** determineType: Docletの型を判定
@@ -250,7 +262,7 @@ class DocletEx extends Doclet {
    * @returns {string|Error} 「docletTypeの判定ロジック」参照
    */
   determineType(doclet) {
-    const v = {whois:`${pv.whois}.determineType`, arg:{doclet}, rv:'unknown'};
+    const v = {whois:`${this.constructor.name}.determineType`, arg:{doclet}, rv:'unknown'};
     const dev = new devTools(v);
     try {
 
