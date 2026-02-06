@@ -6,3 +6,7 @@
 *.txt
 underDev/specify/auth.result.txt
 underDev/specify/test.result.txt
+underDev/specify/auth.result.txt
+underDev/specify/test.result.txt
+underDev/specify/sample/createSpec.js
+underDev/specify/sample/createSpec.json

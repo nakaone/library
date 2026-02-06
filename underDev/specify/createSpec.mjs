@@ -5,6 +5,299 @@ import { spawn } from "node:child_process";
 import { readFileSync, writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
 
+/** Article: 単一記事(タイトル＋本文)用データオブジェクト
+ * - `<!--::記事のID::-->`で他記事も埋め込み可とする
+ * - アンカーのidは識別子を小文字変換したものとする
+ * 
+ * @class Article
+ * @prop {string} [title=''] - 記事のタイトル
+ * @prop {string} [icon=''] - アイコンを付ける場合に設定
+ * @prop {boolean} [anchor=false] - アンカーを設定する場合に設定(`<span id="〜">`)
+ * @prop {string} [link=''] - タイトルにリンクを張る場合の参照先URL
+ * @prop {string} [top=''] - タイトルの前に挿入する文字列(固定メニュー等)
+ * @prop {string} [middle=''] - タイトルの後・記事の前に〃
+ * @prop {string} [bottom=''] - 記事の後に〃
+ * @prop {string} [content=''] - 記事本文
+ */
+class Article {
+  /**
+   * @constructor
+   * @param {Object} arg 
+   * @returns {Article}
+   */
+  constructor(arg){
+    this.title = arg.title ?? '';
+    this.icon = arg.icon ?? '';
+    this.anchor = arg.anchor ?? false;
+    this.link = arg.link ?? '';
+    this.top = arg.top ?? '';
+    this.middle = arg.middle ?? '';
+    this.bottom = arg.bottom ?? '';
+    this.content = arg.content ?? '';
+  }
+}
+
+/** DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報
+ * @typedef {Object} DocletColDef
+ * @prop {object}   type - データ型情報オブジェクト
+ * @prop {string[]} type.names - データ型名の配列
+ *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
+ *   {typeDef[]|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"]
+ * @prop {string}   longname - 対象要素の完全修飾名（所属関係・スコープを含む一意な識別子）
+ * @prop {string}   scope - 対象要素のスコープ種別
+ *   - global : グローバル
+ *   - static : クラス静的メンバ
+ *   - instance : インスタンスメンバ
+ *   - inner : 内部要素
+ * @prop {string}   memberof
+ * @prop {string}   description - 説明文
+ * @prop {string}   name - プロパティ名。階層化されている場合`parent.child`形式になる
+ * @prop {object}   meta - プロパティ定義が存在するソース位置情報
+ *   param/returnsには出ないがpropertiesには出ることがある
+ * @prop {string}   defaultvalue - 既定値(文字列表現。ex.'[]')
+ * @prop {boolean}  optional - trueの場合は任意項目
+ */
+/** Doclet: `jsdoc -X`で配列で返されるオブジェクト
+ * @typedef {Object} Doclet
+ * @prop {string[]} augments - ＠augments/＠extendsによる継承元情報
+ *   親クラスや継承対象の一覧
+ * @prop {string}   classdesc - ＠classdescタグで指定されたクラス専用の説明文
+ *   description とは別枠で保持される
+ * @prop {string}   comment - ソース上に記載されたDocletの原文
+ * @prop {string}   description - 説明文。タグ以外のcomment内の自由記述部分
+ * @prop {string[]} examples - ＠exampleタグの内容。使用例コードを配列で保持
+ * @prop {string}   kind - Docletの対象種別
+ *   例：function, class, member, typedef, module など
+ * @prop {string}   longname - 完全修飾名
+ *   `module:foo~bar#baz`のように、モジュール・クラス・スコープを含む一意名
+ * @prop {string}   memberof - 所属先（親）を示す完全修飾名
+ *   どのクラス・モジュール・名前空間に属するかを示す
+ * @prop {object}   meta - Docletが生成されたソース位置情報
+ * @prop {number[]} meta.range - ソースコード内での文字位置範囲
+ *   桁数単位で、2要素ずつ組み合わせた開始・終了インデックス。
+ * @prop {string}   meta.filename - 対象が定義されているソースファイル名
+ * @prop {number}   meta.lineno - 対象定義の開始行番号
+ * @prop {number}   meta.columnno - 対象定義の開始列番号
+ * @prop {string}   meta.path - ソースファイルが存在するディレクトリパス
+ * @prop {object}   meta.code - Doclet対象となったコード要素の構造情報
+ * @prop {string}   meta.code.id - コード要素の内部識別子(AST由来、存在しない場合あり)
+ * @prop {string}   meta.code.name - コード要素の名前（関数名・クラス名・変数名など）
+ * @prop {string}   meta.code.type - コード要素の種別
+ * @prop {string}   meta.code.value - コード要素のソース表現（代入値や関数本体の文字列表現）
+ * @prop {string[]} meta.code.paramnames - 関数・メソッドの引数名一覧
+ * @prop {Object.<string, string>} meta.vars - スコープ内で参照される変数名とその値（簡易マップ）
+ * @prop {string}   name - 対象の短い名前(関数名・クラス名・プロパティ名など)
+ * @prop {DocletColDef[]} params - ＠paramタグから生成された引数情報の配列
+ * @prop {DocletColDef[]} properties - ＠propertyタグから生成されたメンバ定義情報
+ * @prop {DocletColDef} returns - ＠returns/＠returnタグから生成された戻り値情報
+ *   returnsはparams/propertiesと以下の点で異なる。
+ *   1. 配列ではない(単一要素)
+ *   2. name/optional/defaultvalueは無い
+ *   3. nullable,nullableTypeが付くことがある
+ * @prop {string}   scope - スコープ種別
+ *   global,static,instance,innerなど、メンバの可視性・所属を示す
+ * @prop {Object[]} tags - JSDoc上に記述されたタグのうち、専用フィールドに変換されなかった生タグ情報
+ *   独自タグ、JSDocが意味解釈しないタグ、情報落ちしないよう保持された生情報
+ * @prop {object}   tags.meta - タグが記述されているソース位置情報
+ * @prop {string}   tags.originalTitle - ソース上に記述されたタグ名（＠を除いた元の表記）
+ * @prop {string}   tags.title - 正規化されたタグ名(＠returns->return,＠History->history)
+ * @prop {string}   tags.text - タグ行の生テキスト（タグ名を除いた部分）
+ * @prop {string}   tags.value - タグ内容をJSDocが解釈・分解した結果の文字列表現
+ *   単純タグではtextと同じになることが多い
+ * @prop {object}   type - ＠type/＠param/＠returns/＠property等から得られた型情報
+ *   プリミティブ・Union・配列・オブジェクトなど
+ * @prop {string[]} type.names - データ型名の配列
+ *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
+ *   {typeDef[]|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"]
+ * @prop {boolean}  undocumented - JSDoc コメントが存在しない要素かどうか
+ *   true の場合、自動抽出されたがコメント未記述
+ * @prop {object}   type - ＠type/＠param/＠returns/＠property等から得られた型情報
+ *   プリミティブ・Union・配列・オブジェクトなど
+ * @prop {string[]} type.names - データ型名の配列
+ *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
+ * 
+ * 
+ * # "meta.code.type"の内容
+ * 
+ * - 関数・メソッド系
+ *   - FunctionDeclaration : `function foo() {}`形式の関数宣言。名前付き・巻き上げ対象
+ *   - FunctionExpression : `const f = function() {}`のような関数式。無名／名前付きどちらもあり得る
+ *   - ArrowFunctionExpression : `() => {}`形式のアロー関数。this を持たない
+ *   - MethodDefinition : クラス内メソッド。`class A { foo() {} }`
+ * - クラス系
+ *   - ClassDeclaration : `class Foo {}`の宣言。トップレベルで定義されたクラス
+ *   - ClassExpression : `const A = class {}`のようなクラス式
+ * - 変数・メンバ系
+ *   - VariableDeclaration : `var/let/const`による宣言全体。実体は VariableDeclarator に分かれる
+ *   - VariableDeclarator : `const a = 10`の`a = 10`部分。JSDoc が member として拾うことが多い
+ *   - Property : オブジェクトリテラルのプロパティ。`{ a: 10 }`
+ *   - MemberExpression : `obj.prop`や`obj['prop']`。直接 Doclet になることは少ない（解析補助）
+ * - オブジェクト・構造系
+ *   - ObjectExpression : `{a:10,b:20}`。＠typedef の元になることがある
+ *   - ArrayExpression : `[1,2,3]`。型推論や ＠type 補助に使用される
+ * - モジュール・エクスポート系（ESM）
+ *   - ImportDeclaration : `import x from 'y'`。Doclet 化されることは稀
+ *   - ExportNamedDeclaration : `export { foo }`,`export const a = 1`
+ *   - ExportDefaultDeclaration : `export default function () {}`,`export default class {}`
+ * - その他　※出現頻度低め
+ *   - AssignmentExpression : `a = 10`。グローバル代入や static メンバ検出に使用
+ *   - Literal : 数値・文字列・真偽値などの即値
+ *   - Identifier : 変数名・関数名そのもの。単体で Doclet になることはない
+ * 
+ * 
+ * # 「完全修飾名」の構造
+ * 
+ * ## 基本構造
+ * 
+ * `[トップレベル] (区切り記号 [子要素])*`
+ * 
+ * 例：
+ * - `User#test`
+ * - `module:auth~Config#timeout`
+ * - `foo.age`
+ * 
+ * ## 主な区切り記号と意味
+ * 
+ * | 記号 | 意味 | 用途 |
+ * | :-- | :-- | :-- |
+ * | . | 名前空間 / 静的・構造的所属 | オブジェクト・typedef |
+ * | # | インスタンスメンバ | クラスの instance |
+ * | ~ | 内部（inner）要素 | クロージャ・内部関数 |
+ * | : | モジュール修飾子 | module 指定 |
+ */
+class Doclet {
+  constructor(doclet){
+    //this = JSON.parse(JSON.stringify(doclet));
+    Object.keys(doclet).forEach(x => this[x] = doclet[x]);
+  }
+}
+
+/** DocletEx: jsdocから出力されるDocletに情報を付加したもの
+ * @class
+ * @extends Doclet
+ * @prop {string} unique - ソースファイルの固有パス
+ *   固有パス：複数フォルダ対象時、フルパスから共通のパスを除いた部分
+ *   unique = 'client/test.js' -> 'client/' ※最後に'/'が付く
+ *   unique = 'test.js' -> '/' ※直下の場合'/'
+ * @prop {string} docletType - Docletの種類。determineTypeの戻り値
+ * @prop {Object.<string, Doclet>} [children={}] - メソッド・内部関数
+ * 
+ * @prop {Object.<string, Article>} md - 記事名をキーとするマップ
+ *   記事名は「一覧文書/クラス・グローバル関数/データ型定義文書の構成」参照
+ *   top, list, type, prop, func, desc, param, return, -xxx
+ * @prop {string} title
+ * @prop {string} label - 1行で簡潔に記述された概要説明
+ *   ① `／** `に続く文字列
+ *   ② description, classdesc があれば先頭行
+ *   ③ longname
+ *   ※ 上記に該当が無い場合、「(ラベル未設定)」
+ * @prop {string} description - 概要・詳細説明、処理手順
+ * @prop {PropRow[]} [properties=[]] - メンバ一覧
+ * @prop {Object[]} [innerList=[]] - メソッド・内部関数一覧。項目：No,関数名,ラベル,アンカー
+ * @prop {PropRow[]} [params=[]] - 引数。クラスの場合はconstructorの引数
+ * @prop {PropRow[]} [returns=[]] - 戻り値
+ * 
+ * # docletTypeの判定ロジック
+ * 
+ * 以下第一レベルがdocletTypeとする文字列
+ * 
+ * - typedef
+ *   kind === 'typedef'
+ * - interface
+ *   kind === 'interface'
+ * - class
+ *   kind === 'class'
+ *   && (meta.code.type === "ClassDeclaration" || "ClassExpression")
+ * - constructor
+ *   kind === 'class'
+ *   && meta?.code?.type === "MethodDefinition"
+ *   && /＠constructor\b/.test(doclet.comment || "")
+ * - method
+ *   kind === "function"
+ *   && meta?.code?.type === "MethodDefinition"
+ *   && scope === "instance" または "static"
+ * - function(グローバル関数) ※アロー関数を含む
+ *   kind === 'function'
+ *   && scope === 'global'
+ * - innerFunc(関数内関数) ※アロー関数を含む
+ *   kind === 'function'
+ *   && scope === 'inner'
+ * - description(説明文(＠name))
+ *   meta.code が空
+ *   && meta.code.nameがundefined(プラグインや拡張を考慮する場合には必要)
+ *   && kindがtypedef/interface 以外
+ *   && nameが存在
+ * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br>
+ *   なおあくまでinterfaceなので、関数と同時にpropertiesも含む
+ *   kind === 'function'
+ *   && scope === 'instance'
+ * - unknown(上記で判定不能)
+ */
+class DocletEx extends Doclet {
+  /**
+   * @constructor
+   * @param {Doclet} doclet 
+   * @param {string} unique 
+   */
+  constructor(doclet,unique='/'){
+    super(doclet);
+
+    this.unique = unique;
+  }
+
+  /** determineType: Docletの型を判定
+   * @param {Object} doclet
+   * @returns {string|Error} 「docletTypeの判定ロジック」参照
+   */
+  determineType(doclet) {
+    const v = {whois:`${pv.whois}.determineType`, arg:{doclet}, rv:'unknown'};
+    const dev = new devTools(v);
+    try {
+
+      dev.step(1);  // 原文が無い場合は判定不能
+      if( typeof doclet.comment === 'undefined' || doclet.comment.length === 0 )
+        return 'unknown';
+
+      dev.step(2);
+      switch( doclet.kind ){
+        case 'typedef': case 'interface': v.rv = doclet.kind; break;
+        case 'class':
+          v.rv = ( doclet.meta?.code?.type ?? null ) === null ? 'unknown' : (
+            /^Class(Declaration|Expression)/.test(doclet.meta.code.type) ? 'class' : (
+              doclet.meta.code.type === 'MethodDefinition' ? 'constructor' : 'unknown'
+            )
+          );
+          break;
+        case 'function':
+          switch( doclet.scope ){
+            case 'global': v.rv = 'function'; break;
+            case 'inner': v.rv = 'innerFunc'; break;
+            case 'instance':
+            case 'static': v.rv =
+              doclet.meta?.code?.type === 'MethodDefinition' ? 'method' : 'objectFunc';
+              break;
+            default: 'unknown';
+          }
+          break;
+        default:
+          v.rv = Object.keys(doclet.meta?.code ?? {}).length === 0
+          && (typeof doclet.meta?.code?.name === 'undefined')
+          && doclet.name ? 'description' : 'unknown';
+      }
+
+      dev.end();
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+  /** determineParent: 対象要素が子要素であるとき親要素を特定
+   * メソッド⇒クラス、内部関数⇒グローバル関数、等
+   * 1. child.memberof === parent.longname
+   * 2. child.rangeが包含されている直近の要素
+   */
+}
+
 /** createSpec概要
  * @name createSpec概要
  * @desc
@@ -113,6 +406,9 @@ import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
  * - シンボル内の説明文を当該シンボル内に記載
  *   現状、記載すべき箇所を特定する事が困難なため、全てグローバル領域になっている。
  *   案：＠descの後に記載箇所特定文字列を入れる(ex."authLog.constructor")
+ *   案：rangeで内包関係を調べる
+ *       (parant.meta.range[0]<=child.meta.range[0]
+ *        && child.meta.range[1] <= parent.meta.range[1])
  * - 重複シンボルがあればエラーメッセージ
  * - 文法チェック
  *   - ＠class の後に余計な文字列があればエラー
@@ -120,7 +416,7 @@ import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
 console.log(JSON.stringify(createSpec(),null,2));
 
 /** createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
- * @param {void}
+ * @param {object} [opt={}] - オプション設定
  * @returns {void}
  * 
  * @prop {Object} pv - createSpec内の共有変数(public variables。class定義のメンバに相当)
@@ -128,17 +424,17 @@ console.log(JSON.stringify(createSpec(),null,2));
  * @prop {sourceFile[]} sourceFile - 入力ファイル情報
  * @prop {Doclet[]} doclet - Doclet型にしたオブジェクトを保存
  */
-async function createSpec() {
+async function createSpec(opt={}) {
 
   const pv = {whois:`createSpec`, arg:{}, rv:null};
   const cf = {  // jsdocコマンド動作環境整備関係(config)
     // 詳細はlistSource step.1参照
-    jsdocJson: `jsdoc.json`,  // jsdocコマンド設定ファイル名
+    jsdocJson: opt.jsdocJson ?? `jsdoc.json`,  // jsdocコマンド設定ファイル名
     //jsdocJson: `jsdoc.${Date.now()}.json`,  // jsdocコマンド設定ファイル名
-    dummyDir: './dummy',  // jsdoc用の空フォルダ
-    jsdocTarget: ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
-    // 使用する言語
-    lang: Intl.DateTimeFormat().resolvedOptions().lang === 'ja-JP' ? 'ja-JP' : 'default',
+    dummyDir: opt.dummyDir ?? './dummy',  // jsdoc用の空フォルダ
+    jsdocTarget: opt.jsdocTarget ?? ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
+    lang: opt.lang ?? // 使用する言語
+      Intl.DateTimeFormat().resolvedOptions().lang === 'ja-JP' ? 'ja-JP' : 'default',
     "ja-JP": { // 日本語での表記
       undef: '未定義',
       optional: '任意',
@@ -150,6 +446,7 @@ async function createSpec() {
       required: 'required',
     },
   };
+  const doclet = [];
 
   /** sourceFile: 入力ファイル(JSソース)情報
    * @interface sourceFile
@@ -161,191 +458,261 @@ async function createSpec() {
    */
   const sourceFile = {common:'',outDir:'',sourceNum:0,source:[]};
 
-  /** Article: 単一記事(タイトル＋本文)用データオブジェクト
-   * - `<!--::記事のID::-->`で他記事も埋め込み可とする
-   * - アンカーのidは識別子を小文字変換したものとする
-   * 
-   * @class Article
-   * @prop {string} [title=''] - 記事のタイトル
-   * @prop {string} [icon=''] - アイコンを付ける場合に設定
-   * @prop {boolean} [anchor=false] - アンカーを設定する場合に設定(`<span id="〜">`)
-   * @prop {string} [link=''] - タイトルにリンクを張る場合の参照先URL
-   * @prop {string} [top=''] - タイトルの前に挿入する文字列(固定メニュー等)
-   * @prop {string} [middle=''] - タイトルの後・記事の前に〃
-   * @prop {string} [bottom=''] - 記事の後に〃
-   * @prop {string} [content=''] - 記事本文
+  /** getFile: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
+   * @param {string} fn - 対象ファイル名
+   * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
    */
-  class Article {
-    /**
-     * @constructor
-     * @param {Object} arg 
-     * @returns {Article}
+  async function getFile(fn) {
+    /** step.1 : jsdoc動作環境整備
+     * @name jsdoc動作環境整備
+     * @description
+     * ①設定ファイル(JSON)を作成して"includePattern"を指定しないと
+     *   ".mjs"他を処理できない
+     * ②"includePattern"を指定した場合、"include"も併せて指定しないと
+     *   "There are no input files to process."エラーが発生
+     * ③"include"にカレントディレクトリを指定すると、対象をフルパスで指定しても
+     *   指定外のカレントディレクトリ配下のjs/mjsも対象にされてしまう
+     * ④③を回避するため、以下の措置を行う
+     *   - 設定ファイル(jsdoc.json)を作成、終了時に廃棄
+     *     - includeではダミーディレクトリを指定
+     *     - includepatternではJSDocを記述する全拡張子を対象に指定
+     *   - 空のダミーディレクトリを作成、終了時に廃棄
      */
-    constructor(arg){
-      this.title = arg.title ?? '';
-      this.icon = arg.icon ?? '';
-      this.anchor = arg.anchor ?? false;
-      this.link = arg.link ?? '';
-      this.top = arg.top ?? '';
-      this.middle = arg.middle ?? '';
-      this.bottom = arg.bottom ?? '';
-      this.content = arg.content ?? '';
+
+    dev.step(1.1);  // jsdoc設定ファイルの作成
+    if( !existsSync(cf.jsdocJson) ){
+      writeFileSync(cf.jsdocJson,JSON.stringify({source:{
+        include:[cf.dummyDir],
+        includePattern: cf.jsdocTarget // 対象ファイル名の正規表現
+      }}));
     }
+
+    dev.step(1.2);  // ダミーディレクトリを作成
+    if( !existsSync(cf.dummyDir) ) mkdirSync(cf.dummyDir);
+
+    return new Promise((resolve, reject) => {
+      const v = {whois:`${pv.whois}.getFile`, arg:{fn,resolve, reject}, rv:null};
+      const dev = new devTools(v);
+
+      dev.step(1);  // jsdoc -X を子プロセスとして起動
+      v.p = spawn("jsdoc", [fn.full,'--configure',cf.jsdocJson,'-X'], {
+        stdio: ["ignore", "pipe", "pipe"], // stdin 無視、stdout/stderr を受け取る
+        encoding: "utf8"
+      });
+
+      dev.step(2);  // jsdoc の出力(JSON文字列)を蓄積するバッファ
+      v.output = "";
+      v.errorOutput = "";
+
+      dev.step(3);  // stdout（標準出力）にデータが届くたびに呼ばれる
+      v.p.stdout.on("data", chunk => {
+        v.output += chunk; // JSON の断片をつなげる
+      });
+
+      dev.step(4);  // stderr（標準エラー）も蓄積しておく
+      v.p.stderr.on("data", chunk => {
+        v.errorOutput += chunk;
+      });
+
+      dev.step(5);  // 子プロセスが終了したときに呼ばれる
+      // code === 0 なら正常終了、JSON をパースして resolve
+      v.p.on("close", code => {
+
+        dev.step(5.1);  // 異常終了時
+        if (code !== 0) {
+          reject(new Error(`jsdoc exited with code ${code}\n${v.errorOutput}`));
+          return;
+        }
+
+        dev.step(5.2);  // JSONをオブジェクト化
+        try {
+          v.json = JSON.parse(v.output);
+
+          dev.step(5.3);  // Doclet単位にばらして保存
+          for( v.i=0 ; v.i<v.json.length ; v.i++ ){
+            v.rv = new DocletEx(v.json[v.i],fn.unique);
+            if( v.rv instanceof Error ) reject(v.rv);
+          }
+
+          resolve(v.json); // awaitの戻り値。使用しないが開発時の内容確認のため戻す
+        } catch (err) {
+          reject(new Error("Failed to parse JSON: " + err.message));
+        } finally {
+          dev.end();
+        }
+      });
+    });
   }
 
-  /** DocletProperty: Doclet.properties/params/returnsの要素(メンバ)定義情報
-   * @typedef {Object} DocletProperty
-   * @prop {object}   type - データ型情報オブジェクト
-   * @prop {string[]} type.names - データ型名の配列
-   *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
-   * @prop {string}   longname - 対象要素の完全修飾名（所属関係・スコープを含む一意な識別子）
-   * @prop {string}   scope - 対象要素のスコープ種別
-   *   - global : グローバル
-   *   - static : クラス静的メンバ
-   *   - instance : インスタンスメンバ
-   *   - inner : 内部要素
-   * @prop {string}   memberof
-   * @prop {string}   description - 説明文
-   * @prop {string}   name - プロパティ名。階層化されている場合`parent.child`形式になる
-   * @prop {object}   meta - プロパティ定義が存在するソース位置情報
-   *   param/returnsには出ないがpropertiesには出ることがある
-   * @prop {string}   defaultvalue - 既定値(文字列表現)
-   * @prop {boolean}  optional - trueの場合は任意項目
+  /** listSource: 事前準備、対象ファイルリスト作成
+   * jsdoc動作環境整備後、シェルの起動時引数から対象となるJSソースファイルのリストを作成。
+   * 処理結果はメンバ"sourceFile"に保存。
+   * @param {void}
+   * @returns {null|Error}
    */
-  /** Doclet: `jsdoc -X`で配列で返されるオブジェクト
-   * @typedef {Object} Doclet
-   * @prop {string[]} augments - ＠augments/＠extendsによる継承元情報
-   *   親クラスや継承対象の一覧
-   * @prop {string}   classdesc - ＠classdescタグで指定されたクラス専用の説明文
-   *   description とは別枠で保持される
-   * @prop {string}   comment - ソース上に記載されたDocletの原文
-   * @prop {string}   description - 概要説明。タグ以外のcomment内の自由記述部分
-   * @prop {string[]} examples - ＠exampleタグの内容。使用例コードを配列で保持
-   * @prop {string}   kind - Docletの対象種別
-   *   例：function, class, member, typedef, module など
-   * @prop {string}   longname - 完全修飾名
-   *   `module:foo~bar#baz`のように、モジュール・クラス・スコープを含む一意名
-   * @prop {string}   memberof - 所属先（親）を示す完全修飾名
-   *   どのクラス・モジュール・名前空間に属するかを示す
-   * @prop {object}   meta - Docletが生成されたソース位置情報
-   * @prop {number[]} meta.range - ソースコード内での文字位置範囲
-   *   桁数単位で、2要素ずつ組み合わせた開始・終了インデックス。
-   * @prop {string}   meta.filename - 対象が定義されているソースファイル名
-   * @prop {number}   meta.lineno - 対象定義の開始行番号
-   * @prop {number}   meta.columnno - 対象定義の開始列番号
-   * @prop {string}   meta.path - ソースファイルが存在するディレクトリパス
-   * @prop {object}   meta.code - Doclet対象となったコード要素の構造情報
-   * @prop {string}   meta.code.id - コード要素の内部識別子(AST由来、存在しない場合あり)
-   * @prop {string}   meta.code.name - コード要素の名前（関数名・クラス名・変数名など）
-   * @prop {string}   meta.code.type - コード要素の種別
-   * @prop {string}   meta.code.value - コード要素のソース表現（代入値や関数本体の文字列表現）
-   * @prop {string[]} meta.code.paramnames - 関数・メソッドの引数名一覧
-   * @prop {Object.<string, string>} meta.vars - スコープ内で参照される変数名とその値（簡易マップ）
-   * @prop {string}   name - 対象の短い名前(関数名・クラス名・プロパティ名など)
-   * @prop {DocletProperty[]} params - ＠paramタグから生成された引数情報の配列
-   * @prop {DocletProperty[]} properties - ＠propertyタグから生成されたメンバ定義情報
-   * @prop {DocletProperty} returns - ＠returns/＠returnタグから生成された戻り値情報
-   *   returnsはparams/propertiesと以下の点で異なる。
-   *   1. 配列ではない(単一要素)
-   *   2. name/optional/defaultvalueは無い
-   *   3. nullable,nullableTypeが付くことがある
-   * @prop {string}   scope - スコープ種別
-   *   global,static,instance,innerなど、メンバの可視性・所属を示す
-   * @prop {Object[]} tags - JSDoc上に記述されたタグのうち、専用フィールドに変換されなかった生タグ情報
-   *   独自タグ、JSDocが意味解釈しないタグ、情報落ちしないよう保持された生情報
-   * @prop {object}   tags.meta - タグが記述されているソース位置情報
-   * @prop {string}   tags.originalTitle - ソース上に記述されたタグ名（＠を除いた元の表記）
-   * @prop {string}   tags.title - 正規化されたタグ名(＠returns->return,＠History->history)
-   * @prop {string}   tags.text - タグ行の生テキスト（タグ名を除いた部分）
-   * @prop {string}   tags.value - タグ内容をJSDocが解釈・分解した結果の文字列表現
-   *   単純タグではtextと同じになることが多い
-   * @prop {object}   type - ＠type/＠param/＠returns/＠property等から得られた型情報
-   *   プリミティブ・Union・配列・オブジェクトなど
-   * @prop {string[]} type.names - データ型名の配列
-   *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
-   * @prop {boolean}  undocumented - JSDoc コメントが存在しない要素かどうか
-   *   true の場合、自動抽出されたがコメント未記述
-   * @prop {object}   type - ＠type/＠param/＠returns/＠property等から得られた型情報
-   *   プリミティブ・Union・配列・オブジェクトなど
-   * @prop {string[]} type.names - データ型名の配列
-   *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
-   * 
-   * 
-   * # "meta.code.type"の内容
-   * 
-   * - 関数・メソッド系
-   *   - FunctionDeclaration : `function foo() {}`形式の関数宣言。名前付き・巻き上げ対象
-   *   - FunctionExpression : `const f = function() {}`のような関数式。無名／名前付きどちらもあり得る
-   *   - ArrowFunctionExpression : `() => {}`形式のアロー関数。this を持たない
-   *   - MethodDefinition : クラス内メソッド。`class A { foo() {} }`
-   * - クラス系
-   *   - ClassDeclaration : `class Foo {}`の宣言。トップレベルで定義されたクラス
-   *   - ClassExpression : `const A = class {}`のようなクラス式
-   * - 変数・メンバ系
-   *   - VariableDeclaration : `var/let/const`による宣言全体。実体は VariableDeclarator に分かれる
-   *   - VariableDeclarator : `const a = 10`の`a = 10`部分。JSDoc が member として拾うことが多い
-   *   - Property : オブジェクトリテラルのプロパティ。`{ a: 10 }`
-   *   - MemberExpression : `obj.prop`や`obj['prop']`。直接 Doclet になることは少ない（解析補助）
-   * - オブジェクト・構造系
-   *   - ObjectExpression : `{a:10,b:20}`。＠typedef の元になることがある
-   *   - ArrayExpression : `[1,2,3]`。型推論や ＠type 補助に使用される
-   * - モジュール・エクスポート系（ESM）
-   *   - ImportDeclaration : `import x from 'y'`。Doclet 化されることは稀
-   *   - ExportNamedDeclaration : `export { foo }`,`export const a = 1`
-   *   - ExportDefaultDeclaration : `export default function () {}`,`export default class {}`
-   * - その他　※出現頻度低め
-   *   - AssignmentExpression : `a = 10`。グローバル代入や static メンバ検出に使用
-   *   - Literal : 数値・文字列・真偽値などの即値
-   *   - Identifier : 変数名・関数名そのもの。単体で Doclet になることはない
-   * 
-   * 
-   * # 「完全修飾名」の構造
-   * 
-   * ## 基本構造
-   * 
-   * `[トップレベル] (区切り記号 [子要素])*`
-   * 
-   * 例：
-   * - `User#test`
-   * - `module:auth~Config#timeout`
-   * - `foo.age`
-   * 
-   * ## 主な区切り記号と意味
-   * 
-	 * | 記号 | 意味 | 用途 |
-	 * | :-- | :-- | :-- |
-	 * | . | 名前空間 / 静的・構造的所属 | オブジェクト・typedef |
-	 * | # | インスタンスメンバ | クラスの instance |
-	 * | ~ | 内部（inner）要素 | クロージャ・内部関数 |
-	 * | : | モジュール修飾子 | module 指定 |   * 
-   */
-  /** DocletEx: jsdocから出力されるDocletに情報を付加したもの
-   * @typedef {object} DocletEx
-   * @prop {string} unique - 固有パス
-   *   unique = 'client/test.js' -> 'client/' ※最後に'/'が付く
-   *   unique = 'test.js' -> '/' ※直下の場合'/'
-   * @prop {string} type - Docletの種類。identifyDocletTypeの戻り値
-   * @prop {string} jsdocId - 固有パス＋ファイル名＋行番号
-   * @prop {Doclet[]} [innerFunc=[]] - メソッド・内部関数
-   * @prop {Object} origin - 情報付加前のjsdocで吐き出されたdoclet
-   * // 以下はMarkdown用項目
-   * @prop {Object.<string, Article>} article - 記事名をキーとするマップ
-   *   記事名は「一覧文書/クラス・グローバル関数/データ型定義文書の構成」参照
-   *   top, list, type, prop, func, desc, param, return, -xxx
-   * @prop {string} title
-   * @prop {string} label - 1行で簡潔に記述された概要説明
-   *   ① `／** `に続く文字列
-   *   ② description, classdesc があれば先頭行
-   *   ③ longname
-   *   ※ 上記に該当が無い場合、「(ラベル未設定)」
-   * @prop {string} description - 概要・詳細説明、処理手順
-   * @prop {PropRow[]} [properties=[]] - メンバ一覧
-   * @prop {Object[]} [innerList=[]] - メソッド・内部関数一覧。項目：No,関数名,ラベル,アンカー
-   * @prop {PropRow[]} [params=[]] - 引数。クラスの場合はconstructorの引数
-   * @prop {PropRow[]} [returns=[]] - 戻り値
-   */
+  function listSource() {
+    const v = {whois:`${pv.whois}.listSource`, arg:{}, rv:null};
+    const dev = new devTools(v);
+    try {
 
-  const doclet = [];
+      /** step.2 : 入力・出力・除外リスト作成
+       * @name 入力・出力・除外リスト作成
+       * @description
+       * 
+       * 起動時パラメータは以下の通り。
+       * `node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]`
+       * シェル側でワイルドカードを展開して配列が渡されるので、以下のように判断する。
+       * ①最初の2つは全体とコマンド名、不要なので削除
+       * ②3番目以降'-o'までは入力ファイル
+       * ③'-o'の次は出力フォルダ名
+       * ④'-x'の次からは除外ファイル
+       */
+
+      dev.step(2.1);  // 結果を格納する領域を準備
+      v.iList = [],  // 入力ファイルリスト
+      v.xList = [],  // 除外ファイルリスト
+
+      dev.step(2.2);  // シェルの起動時引数を取得、順次処理
+      v.argv = process.argv.slice(2);
+
+      for( v.i=0, v.mode='i' ; v.i<v.argv.length ; v.i++ ){
+        v.x = path.resolve(v.argv[v.i]);  // 相対->絶対パス
+        switch(v.argv[v.i]){
+          case '-o':
+            v.mode = 'o'; break;
+          case '-x':
+            v.mode = 'x'; break;
+          default:
+            switch( v.mode ){
+              case 'i': v.iList.push(v.x); break;
+              case 'o': sourceFile.outDir = v.x; break;
+              case 'x': v.xList.push(v.x); break;
+            }
+        }
+      }
+
+      dev.step(2.3);  // 対象 = 入力 − 除外
+      for( v.i=0 ; v.i<v.iList.length ; v.i++ ){
+        if( !v.xList.includes(v.iList[v.i]) ){
+          sourceFile.source.push({full:v.iList[v.i]});
+        }
+      }
+      sourceFile.sourceNum = sourceFile.source.length;
+
+      dev.step(2.4);  // 共通部分を抽出
+      //sourceFile.common = path.dirname(sourceFile.source[0].full);  末尾'/'無し
+      sourceFile.common = sourceFile.source[0].full.replace(/[^/\\]+$/, "");  // 末尾'/'有り
+      for( v.i=1 ; v.i<sourceFile.source.length ; v.i++ ){
+        while( !sourceFile.source[v.i].full.startsWith(sourceFile.common) ){
+          sourceFile.common = sourceFile.common.slice(0,-1);
+          if( sourceFile.common === '' ) break;
+        }
+      }
+
+      dev.step(2.5);  // 固有部分を作成
+      sourceFile.source.map(x => x.unique = 
+        path.posix.dirname(x.full.slice(sourceFile.common.length))
+        .replace(/\/?$/, '/').replace(/^\.\//,'/'));
+
+      dev.end(sourceFile); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+  
+  // -------------------------------------------------------------
+  // メイン処理
+  // -------------------------------------------------------------
+  const dev = new devTools(pv);
+  try {
+
+    dev.step(1,cf);  // sourceFileに対象ファイルリスト作成
+    pv.r = listSource();
+    if( pv.r instanceof Error) throw pv.r;
+    dev.step(99.631,pv.r)
+
+    dev.step(2);  // 対象ファイルについて順次Docletを抽出、docletに格納
+    for( pv.i=0 ; pv.i<sourceFile.source.length ; pv.i++ ){
+      dev.step(1.1);  // ファイル単位にjsdocを実行、docletを作成
+      pv.r = await getFile(sourceFile.source[pv.i]);
+      if( pv.r instanceof Error) throw pv.r;
+      dev.step(99.639,pv.r);
+    }
+
+    /*
+    dev.step(3);  // docletの各要素を階層化してマッピング
+    pv.r = mapDoclet();
+    if( pv.r instanceof Error) throw pv.r;
+
+    dev.step(4);  // docletを走査、記事毎にArticleを作成
+    doclet.forEach(o => {
+      pv.r = makeArticle(o);
+      if( pv.r instanceof Error) throw pv.r;
+    });
+    */
+
+    dev.end();
+    return pv.rv;
+
+  } catch (e) { dev.error(e); return e; } finally {
+    // jsdoc動作定義ファイルを削除
+    //if( existsSync(cf.jsdocJson) )
+      //unlinkSync(cf.jsdocJson);
+    // ダミーディレクトリを削除
+    //if( existsSync(cf.dummyDir) )
+      //rmSync(cf.dummyDir, { recursive: true, force: true });
+  }
+}
+
+/** stock: 使用の可能性が高いソースの一時保存 */
+function stock(){
+  /** PropRow: 属性一覧に表示する項目
+   * - 戻り値(returns)の場合、項目名・要否/既定値は無効な値となる
+   * @typedef {Object} PropRow
+   * @prop {string} name - 項目名
+   * @prop {string} type - データ型。複数なら' | 'で区切って並記
+   * @prop {string} value - 要否/既定値。「必須」「任意」または既定値
+   * @prop {string} desc - 1行の簡潔な項目説明
+   * @prop {string} note - 備考
+   */
+  /** getPropRow: 属性一覧表示用のオブジェクトを作成
+   * @param {jsdocColDef} arg - 項目定義オブジェクト
+   * @param {string} type - 呼出元の属性。'properties','params','returns'
+   * @param {Object} obj - 項目定義オブジェクトを含むDoclet全体。エラー箇所特定用
+   * @returns {PropRow|Error}
+   */
+  function getPropRow(arg,type,obj){
+    const v = {whois:`${pv.whois}.getPropRow`, arg:{arg,type,obj}, rv:null};
+    const dev = new devTools(v);
+    try {
+
+      dev.step(1);  // 必須項目の存否チェック(項目名とデータ型定義)
+      v.msg = JSON.stringify(arg) + `\n${obj.comment}`;
+      if( typeof arg.type?.names === 'undefined' || !Array.isArray(arg.type?.names) )
+        throw new Error(`Type definition are required: ${v.msg}`);
+      // returnsの場合は項目名不要
+      if( type !== 'returns' && typeof arg.name === 'undefined' )
+        throw new Error(`Field name is required: ${v.msg}`);
+
+      const desc = (arg.description ?? '').split('\n');
+      v.rv = {
+        name: arg.name,
+        type: arg.type.names
+          .map(x => x.replace(/^Array\.<\s*(.+?)\s*>$/, '$1[]').trim())
+          .join(' | '),
+        value: typeof arg.defaultvalue !== 'undefined' ? arg.defaultvalue
+          : (arg.optional === true ? cf[cf.lang].optional : cf[cf.lang].required),
+        desc: desc[0],  // descriptionの先頭行
+        note: desc.slice(1).join('\n').trim(),  // 2行目以降。先頭・末尾の空行は削除
+      };
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+
+
   /** dlMap: Docletを構造化してマッピングしたオブジェクト
    * @typedef {Object.<string, Object>} dlMap - メンバ名は固有パス
    *   固有パスが無い場合は"/"(ルート)とする。
@@ -480,7 +847,7 @@ async function createSpec() {
     try {
 
       dev.step(1);  // Docletの型を判定
-      v.type = identifyDocletType(obj);
+      v.type = determineType(obj);
       if( v.type instanceof Error ) throw v.type;
       if( v.type === 'unknown' ) return v.rv; // 型不明は対象外
 
@@ -537,116 +904,128 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
 
-  /** getFile: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
-   * @param {string} fn - 対象ファイル名
-   * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
+  /** makeArticle: docletを走査、記事毎にArticleを作成
+   * - 作成したArticleオブジェクトはdoclet.articleに保存
+   * @param {Doclet} obj - (単一の)Doclet型オブジェクト
+   * @returns {null|Error}
    */
-  async function getFile(fn) {
-    return new Promise((resolve, reject) => {
-      const v = {whois:`${pv.whois}.getFile`, arg:{fn,resolve, reject}, rv:null};
-      const dev = new devTools(v);
+  function makeArticle(obj) {
+    const v = {whois:`${pv.whois}.makeArticle`, arg:{obj}, rv:null};
+    const dev = new devTools(v);
+    /**
+     * @name 一覧文書の構成
+     * @desc
+     * 
+     * - フォルダ毎に作成
+     * - 並び順はフォルダ内のデータ型名順(アルファベット順)
+     * 
+     * 1. ヘッダ部("フォルダ名_top")
+     * 2. グローバル関数・クラス一覧("フォルダ名_list")
+     * 3. データ型一覧("フォルダ名_type")
+     * 4. 個別データ型("フォルダ名-データ型名") ※注意：'_'ではなく'-'
+     */
+    /**
+     * @name クラス・グローバル関数文書の構成
+     * @desc
+     * 
+     * 1. ヘッダ部("クラス名_top")
+     *    - タイトル(○○クラス仕様書、等)
+     *    - ラベル(一行にまとめた説明)
+     *    - 概要説明(数行程度)
+     * 2. メンバ一覧("クラス名_prop")
+     * 3. メソッド一覧("クラス名_func")
+     * 4. 詳細説明("クラス名_desc")
+     * 5. 引数("クラス名_param")
+     * 6. 戻り値("クラス名_return")
+     * 7. 個別メソッド("クラス名-メソッド名") ※注意：'_'ではなく'-'
+     *    - innerFuncを再帰呼出
+     */
+    /**
+     * @name データ型定義文書の構成
+     * @desc
+     * 
+     * 1. ヘッダ部("データ型名_top")
+     *    - タイトル(○○データ型仕様書、等)
+     *    - ラベル(一行にまとめた説明)
+     *    - データ型説明文
+     * 2. メンバ一覧("クラス名_prop")
+     * 3. 個別メソッド("クラス名-メソッド名") ※注意：'_'ではなく'-'
+     *    - interfaceにfunctionのメンバが含まれる場合、表の外に記述
+     */
+    try {
 
-      dev.step(1);  // jsdoc -X を子プロセスとして起動
-      v.p = spawn("jsdoc", [fn.full,'--configure',cf.jsdocJson,'-X'], {
-        stdio: ["ignore", "pipe", "pipe"], // stdin 無視、stdout/stderr を受け取る
-        encoding: "utf8"
+      dev.step(1);  // top: タイトル、ラベル、概要説明
+      obj.article.top = new Article({
+        title: obj.title,
+        anchor: 'top',
+        content: (obj.label ? `${obj.label}\n\n` : '')
+        + (obj.description ? `${obj.description}\n` : ''),
       });
 
-      dev.step(2);  // jsdoc の出力(JSON文字列)を蓄積するバッファ
-      v.output = "";
-      v.errorOutput = "";
+      // list: グローバル関数・クラス一覧
+      // type: データ型一覧
+      // ※一覧文書用の欄なのでDocletからの作成は無し
 
-      dev.step(3);  // stdout（標準出力）にデータが届くたびに呼ばれる
-      v.p.stdout.on("data", chunk => {
-        v.output += chunk; // JSON の断片をつなげる
-      });
+      dev.step(2);  // prop: メンバ一覧
 
-      dev.step(4);  // stderr（標準エラー）も蓄積しておく
-      v.p.stderr.on("data", chunk => {
-        v.errorOutput += chunk;
-      });
+      dev.step(5);  // func
+      dev.step(6);  // desc
+      dev.step(7);  // param
+      dev.step(8);  // returns
+      dev.step(9);  // -xxx
 
-      dev.step(5);  // 子プロセスが終了したときに呼ばれる
-      // code === 0 なら正常終了、JSON をパースして resolve
-      v.p.on("close", code => {
+      dev.end(obj.article);
+      return v.rv;
 
-        dev.step(5.1);  // 異常終了時
-        if (code !== 0) {
-          reject(new Error(`jsdoc exited with code ${code}\n${v.errorOutput}`));
-          return;
-        }
-
-        dev.step(5.2);  // JSONをオブジェクト化
-        try {
-          v.json = JSON.parse(v.output);
-
-          dev.step(5.3);  // Doclet単位にばらして保存
-          for( v.i=0 ; v.i<v.json.length ; v.i++ ){
-            v.rv = getDoclet(v.json[v.i],fn.unique);
-            if( v.rv instanceof Error ) reject(v.rv);
-          }
-
-          resolve(v.json); // awaitの戻り値。使用しないが開発時の内容確認のため戻す
-        } catch (err) {
-          reject(new Error("Failed to parse JSON: " + err.message));
-        } finally {
-          dev.end();
-        }
-      });
-    });
+    } catch (e) { return dev.error(e); }
   }
 
-  /** jsdocColDef: Docletの項目定義
-   * @typedef {Object} jsdocColDef - properties/params/returns
-   * @prop {Object} type - データ型に関する定義
-   * @prop {string[]} type.names - データ型名
-   *   {typeDef[]|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"]
-   * @prop {string} [description] - 項目に関する説明
-   * @prop {string} name - 項目名
-   * @prop {string} [defaultvalue] - 既定値(ex.'[]')
-   *   NG: `＠prop {string[]} x=[]` <- defaultvalue='[' ※']'が欠ける
-   *   OK: `＠prop {string[]} [x=[]]` <- 既定値指定時は必ず'[]'で囲む
-   * @prop {boolean} [optional] - 任意項目だとtrue
-   */
-  /** PropRow: 属性一覧に表示する項目
-   * - 戻り値(returns)の場合、項目名・要否/既定値は無効な値となる
-   * @typedef {Object} PropRow
-   * @prop {string} name - 項目名
-   * @prop {string} type - データ型。複数なら' | 'で区切って並記
-   * @prop {string} value - 要否/既定値。「必須」「任意」または既定値
-   * @prop {string} desc - 1行の簡潔な項目説明
-   * @prop {string} note - 備考
-   */
-  /** getPropRow: 属性一覧表示用のオブジェクトを作成
-   * @param {jsdocColDef} arg - 項目定義オブジェクト
-   * @param {string} type - 呼出元の属性。'properties','params','returns'
-   * @param {Object} obj - 項目定義オブジェクトを含むDoclet全体。エラー箇所特定用
-   * @returns {PropRow|Error}
-   */
-  function getPropRow(arg,type,obj){
-    const v = {whois:`${pv.whois}.getPropRow`, arg:{arg,type,obj}, rv:null};
+}
+
+/** trash: 過去作成したソースで必要なくなったもの。備忘用 */
+function trash(){
+  /** makeMap: 「ファイル名＋行番号」を識別子とするマップを作成 */
+  async function makeMap(list){
+    const v = {whois:`${pv.whois}.makeMap`, arg:{list}, rv:{}};
     const dev = new devTools(v);
     try {
 
-      dev.step(1);  // 必須項目の存否チェック(項目名とデータ型定義)
-      v.msg = JSON.stringify(arg) + `\n${obj.comment}`;
-      if( typeof arg.type?.names === 'undefined' || !Array.isArray(arg.type?.names) )
-        throw new Error(`Type definition are required: ${v.msg}`);
-      // returnsの場合は項目名不要
-      if( type !== 'returns' && typeof arg.name === 'undefined' )
-        throw new Error(`Field name is required: ${v.msg}`);
+      for( v.i=0 ; v.i<list.length ; v.i++ ){
 
-      const desc = (arg.description ?? '').split('\n');
-      v.rv = {
-        name: arg.name,
-        type: arg.type.names
-          .map(x => x.replace(/^Array\.<\s*(.+?)\s*>$/, '$1[]').trim())
-          .join(' | '),
-        value: typeof arg.defaultvalue !== 'undefined' ? arg.defaultvalue
-          : (arg.optional === true ? cf[cf.lang].optional : cf[cf.lang].required),
-        desc: desc[0],  // descriptionの先頭行
-        note: desc.slice(1).join('\n').trim(),  // 2行目以降。先頭・末尾の空行は削除
-      };
+        dev.step(1.1);  // JSDocを取得
+        v.arr = await getFile(list[v.i]);
+        if( v.arr instanceof Error ) throw v.arr;
+
+        dev.step(1.2);  // 取得結果のチェック。配列で無い場合はメッセージを出してスキップ
+        if( !Array.isArray(v.arr) ){
+          dev.step(1.99,`not Array: ${JSON.stringify(v.arr)}`);
+          continue;
+        }
+
+        dev.step(2);  // v.mapの作成
+        v.arr.forEach(o => {
+          // 【備忘】
+          // ①"meta.code.id"は存在しない場合があるので使用を断念。
+          // ②'kind:"package"'
+          //   -> プロジェクトのメタ情報（name, version, description など）
+          //   "meta.lineno"を持たないが、仕様書作成に使用しないのでmap登録対象外とする
+          if( typeof o.meta !== 'undefined' && typeof o.meta.lineno === 'number'){
+            dev.step(2.1);  // v.mapのキー文字列(ID)の作成
+            v.jsdocId = `${o.meta.path ?? ''}/${o.meta.filename ?? ''}-${o.meta.lineno}`;
+
+            if( pv.idList.includes(v.jsdocId) ){
+              dev.step(2.2);  // 登録済なら結合
+              o = mergeDeeply(pv.map[v.jsdocId],o);
+            } else {
+              dev.step(2.3);  // 未登録なら登録済IDリストに追加
+              pv.idList.push(v.jsdocId);
+            }
+
+            dev.step(2.4);  // pv.mapへの登録
+            pv.map[v.jsdocId] = o;
+          }
+        });
+      }
 
       dev.end(); // 終了処理
       return v.rv;
@@ -654,88 +1033,35 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
 
-  /** identifyDoclet: Docletの型を判定
-   * @param {Object} doclet
-   * @returns {string|Error}
+  /** trimCommonIndent: 文字列を行単位に分割、全行に共通する先頭の空白を削除
+   * 但し先頭行頭に空白が無かった場合、調査対象から除外する
+   * @param {string[]} txt
+   * @returns {string[]}
    */
-  function identifyDocletType(doclet) {
-    const v = {whois:`${pv.whois}.identifyDocletType`, arg:{doclet}, rv:'unknown'};
+  function trimCommonIndent(txt) {
+    const v = {whois:`${pv.whois}.trimCommonIndent`, arg:{}, rv:[]};
     const dev = new devTools(v);
-    /**
-     * @name Docletの型判定ロジック
-     * @desc
-     * 
-     * 本メソッドはinvestigateメソッド＋AIとの質疑に基づき作成
-     * 
-     * 以下第一レベルが戻り値となる文字列、並列表記はand条件
-     * 
-     * - typedef
-     *   - kind === 'typedef'
-     * - interface
-     *   - kind === 'interface'
-     * - class
-     *   - kind === 'class'
-     *   - meta.code.type === "ClassDeclaration" || "ClassExpression"
-     * - constructor
-     *   - kind === 'class'
-     *   - meta?.code?.type === "MethodDefinition"
-     *   - /＠constructor\b/.test(doclet.comment || "")
-     * - method
-     *   - kind === "function"
-     *   - meta?.code?.type === "MethodDefinition"
-     *   - scope === "instance" または "static"
-     * - function(グローバル関数) ※アロー関数を含む
-     *   - kind === 'function'
-     *   - scope === 'global'
-     * - innerFunc(関数内関数) ※アロー関数を含む
-     *   - kind === 'function'
-     *   - scope === 'inner'
-     * - description(説明文(＠name))
-     *   - meta.code が空
-     *   - meta.code.nameがundefined(プラグインや拡張を考慮する場合には必要)
-     *   - kindがtypedef/interface 以外
-     *   - nameが存在
-     * - objectFunc(interface内function定義)　※書き方に関しては冒頭の記述例参照<br>
-     *   なおあくまでinterfaceなので、関数と同時にpropertiesも含む
-     *   - kind === 'function'
-     *   - scope === 'instance'
-     * - unknown(上記で判定不能)
-     */
-
     try {
 
-      dev.step(1);  // 原文が無い場合は判定不能
-      if( typeof doclet.comment === 'undefined' || doclet.comment.length === 0 )
-        return 'unknown';
+      dev.step(1,txt);  // 行単位に分割
+      v.lines = txt.split('\n');
 
-      dev.step(2);
-      switch( doclet.kind ){
-        case 'typedef': case 'interface': v.rv = doclet.kind; break;
-        case 'class':
-          v.rv = ( doclet.meta?.code?.type ?? null ) === null ? 'unknown' : (
-            /^Class(Declaration|Expression)/.test(doclet.meta.code.type) ? 'class' : (
-              doclet.meta.code.type === 'MethodDefinition' ? 'constructor' : 'unknown'
-            )
-          );
-          break;
-        case 'function':
-          switch( doclet.scope ){
-            case 'global': v.rv = 'function'; break;
-            case 'inner': v.rv = 'innerFunc'; break;
-            case 'instance':
-            case 'static': v.rv =
-              doclet.meta?.code?.type === 'MethodDefinition' ? 'method' : 'objectFunc';
-              break;
-            default: 'unknown';
-          }
-          break;
-        default:
-          v.rv = Object.keys(doclet.meta?.code ?? {}).length === 0
-          && (typeof doclet.meta?.code?.name === 'undefined')
-          && doclet.name ? 'description' : 'unknown';
-      }
+      dev.step(2);  // 先頭行頭が空白では無い場合、調査対象から除外
+      if( !/^\s/.test(v.lines[0]) ) v.lines.slice(1);
 
-      dev.end();
+      dev.step(3);  // 空行を除いた行の先頭空白数を調べる
+      v.indents = v.lines
+        .filter(line => line.trim().length > 0) // 空白行は対象外
+        .map(line => line.match(/^[ \t]*/)[0].length);
+
+      dev.step(4);  // 共通の最小インデント
+      v.minIndent = Math.min(...v.indents);
+
+      dev.step(5);  // 各行から共通インデントを削除
+      v.lines.map(line => line.slice(v.minIndent));
+
+      v.rv = v.lines.join('\n');
+      dev.end(v.rv);
       return v.rv;
 
     } catch (e) { return dev.error(e); }
@@ -873,185 +1199,6 @@ async function createSpec() {
     } catch (e) { return dev.error(e); }
   }
 
-  /** listSource: 事前準備、対象ファイルリスト作成
-   * jsdoc動作環境整備後、シェルの起動時引数から対象となるJSソースファイルのリストを作成。
-   * 処理結果はメンバ"sourceFile"に保存。
-   * @param {void}
-   * @returns {null|Error}
-   */
-  function listSource() {
-    const v = {whois:`${pv.whois}.listSource`, arg:{}, rv:null};
-    const dev = new devTools(v);
-    try {
-
-      /** step.1 : jsdoc動作環境整備
-       * @name jsdoc動作環境整備
-       * @description
-       * ①設定ファイル(JSON)を作成して"includePattern"を指定しないと
-       *   ".mjs"他を処理できない
-       * ②"includePattern"を指定した場合、"include"も併せて指定しないと
-       *   "There are no input files to process."エラーが発生
-       * ③"include"にカレントディレクトリを指定すると、対象をフルパスで指定しても
-       *   指定外のカレントディレクトリ配下のjs/mjsも対象にされてしまう
-       * ④③を回避するため、以下の措置を行う
-       *   - 設定ファイル(jsdoc.json)を作成、終了時に廃棄
-       *     - includeではダミーディレクトリを指定
-       *     - includepatternではJSDocを記述する全拡張子を対象に指定
-       *   - 空のダミーディレクトリを作成、終了時に廃棄
-       */
-
-      dev.step(1.1);  // jsdoc設定ファイルの作成
-      if( !existsSync(cf.jsdocJson) ){
-        writeFileSync(cf.jsdocJson,JSON.stringify({source:{
-          include:[cf.dummyDir],
-          includePattern: cf.jsdocTarget // 対象ファイル名の正規表現
-        }}));
-      }
-
-      dev.step(1.2);  // ダミーディレクトリを作成
-      if( !existsSync(cf.dummyDir) ) mkdirSync(cf.dummyDir);
-
-      /** step.2 : 入力・出力・除外リスト作成
-       * @name 入力・出力・除外リスト作成
-       * @description
-       * 
-       * 起動時パラメータは以下の通り。
-       * `node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]`
-       * シェル側でワイルドカードを展開して配列が渡されるので、以下のように判断する。
-       * ①最初の2つは全体とコマンド名、不要なので削除
-       * ②3番目以降'-o'までは入力ファイル
-       * ③'-o'の次は出力フォルダ名
-       * ④'-x'の次からは除外ファイル
-       */
-
-      dev.step(2.1);  // 結果を格納する領域を準備
-      v.iList = [],  // 入力ファイルリスト
-      v.xList = [],  // 除外ファイルリスト
-
-      dev.step(2.2);  // シェルの起動時引数を取得、順次処理
-      v.argv = process.argv.slice(2);
-
-      for( v.i=0, v.mode='i' ; v.i<v.argv.length ; v.i++ ){
-        v.x = path.resolve(v.argv[v.i]);  // 相対->絶対パス
-        switch(v.argv[v.i]){
-          case '-o':
-            v.mode = 'o'; break;
-          case '-x':
-            v.mode = 'x'; break;
-          default:
-            switch( v.mode ){
-              case 'i': v.iList.push(v.x); break;
-              case 'o': sourceFile.outDir = v.x; break;
-              case 'x': v.xList.push(v.x); break;
-            }
-        }
-      }
-
-      dev.step(2.3);  // 対象 = 入力 − 除外
-      for( v.i=0 ; v.i<v.iList.length ; v.i++ ){
-        if( !v.xList.includes(v.iList[v.i]) ){
-          sourceFile.source.push({full:v.iList[v.i]});
-        }
-      }
-      sourceFile.sourceNum = sourceFile.source.length;
-
-      dev.step(2.4);  // 共通部分を抽出
-      //sourceFile.common = path.dirname(sourceFile.source[0].full);  末尾'/'無し
-      sourceFile.common = sourceFile.source[0].full.replace(/[^/\\]+$/, "");  // 末尾'/'有り
-      for( v.i=1 ; v.i<sourceFile.source.length ; v.i++ ){
-        while( !sourceFile.source[v.i].full.startsWith(sourceFile.common) ){
-          sourceFile.common = sourceFile.common.slice(0,-1);
-          if( sourceFile.common === '' ) break;
-        }
-      }
-
-      dev.step(2.5);  // 固有部分を作成
-      sourceFile.source.map(x => x.unique = 
-        path.posix.dirname(x.full.slice(sourceFile.common.length))
-        .replace(/\/?$/, '/').replace(/^\.\//,'/'));
-
-      dev.end(sourceFile); // 終了処理
-      return v.rv;
-
-    } catch (e) { return dev.error(e); }
-  }
-  
-  /** makeArticle: docletを走査、記事毎にArticleを作成
-   * - 作成したArticleオブジェクトはdoclet.articleに保存
-   * @param {Doclet} obj - (単一の)Doclet型オブジェクト
-   * @returns {null|Error}
-   */
-  function makeArticle(obj) {
-    const v = {whois:`${pv.whois}.makeArticle`, arg:{obj}, rv:null};
-    const dev = new devTools(v);
-    /**
-     * @name 一覧文書の構成
-     * @desc
-     * 
-     * - フォルダ毎に作成
-     * - 並び順はフォルダ内のデータ型名順(アルファベット順)
-     * 
-     * 1. ヘッダ部("フォルダ名_top")
-     * 2. グローバル関数・クラス一覧("フォルダ名_list")
-     * 3. データ型一覧("フォルダ名_type")
-     * 4. 個別データ型("フォルダ名-データ型名") ※注意：'_'ではなく'-'
-     */
-    /**
-     * @name クラス・グローバル関数文書の構成
-     * @desc
-     * 
-     * 1. ヘッダ部("クラス名_top")
-     *    - タイトル(○○クラス仕様書、等)
-     *    - ラベル(一行にまとめた説明)
-     *    - 概要説明(数行程度)
-     * 2. メンバ一覧("クラス名_prop")
-     * 3. メソッド一覧("クラス名_func")
-     * 4. 詳細説明("クラス名_desc")
-     * 5. 引数("クラス名_param")
-     * 6. 戻り値("クラス名_return")
-     * 7. 個別メソッド("クラス名-メソッド名") ※注意：'_'ではなく'-'
-     *    - innerFuncを再帰呼出
-     */
-    /**
-     * @name データ型定義文書の構成
-     * @desc
-     * 
-     * 1. ヘッダ部("データ型名_top")
-     *    - タイトル(○○データ型仕様書、等)
-     *    - ラベル(一行にまとめた説明)
-     *    - データ型説明文
-     * 2. メンバ一覧("クラス名_prop")
-     * 3. 個別メソッド("クラス名-メソッド名") ※注意：'_'ではなく'-'
-     *    - interfaceにfunctionのメンバが含まれる場合、表の外に記述
-     */
-    try {
-
-      dev.step(1);  // top: タイトル、ラベル、概要説明
-      obj.article.top = new Article({
-        title: obj.title,
-        anchor: 'top',
-        content: (obj.label ? `${obj.label}\n\n` : '')
-        + (obj.description ? `${obj.description}\n` : ''),
-      });
-
-      // list: グローバル関数・クラス一覧
-      // type: データ型一覧
-      // ※一覧文書用の欄なのでDocletからの作成は無し
-
-      dev.step(2);  // prop: メンバ一覧
-
-      dev.step(5);  // func
-      dev.step(6);  // desc
-      dev.step(7);  // param
-      dev.step(8);  // returns
-      dev.step(9);  // -xxx
-
-      dev.end(obj.article);
-      return v.rv;
-
-    } catch (e) { return dev.error(e); }
-  }
-
   /** omitKeyDeep: 【開発用】指定キーを再帰的に除外した新しいオブジェクトを作成
    * @param {Object} obj - オブジェクト。dlMap等を想定
    * @param {string|string[]} keys - 除外するキー名（単数または複数）。"origin"等
@@ -1080,128 +1227,4 @@ async function createSpec() {
     return walk(obj);
   }
 
-  // -------------------------------------------------------------
-  // メイン処理
-  // -------------------------------------------------------------
-  const dev = new devTools(pv);
-  try {
-
-    dev.step(1,cf);  // sourceFileに対象ファイルリスト作成
-    pv.r = listSource();
-    if( pv.r instanceof Error) throw pv.r;
-
-    dev.step(2);  // 対象ファイルについて順次Docletを抽出、docletに格納
-    for( pv.i=0 ; pv.i<sourceFile.source.length ; pv.i++ ){
-      dev.step(1.1);  // ファイル単位にjsdocを実行、docletを作成
-      pv.r = await getFile(sourceFile.source[pv.i]);
-      if( pv.r instanceof Error) throw pv.r;
-    }
-
-    dev.step(3);  // docletの各要素を階層化してマッピング
-    pv.r = mapDoclet();
-    if( pv.r instanceof Error) throw pv.r;
-
-    dev.step(4);  // docletを走査、記事毎にArticleを作成
-    doclet.forEach(o => {
-      pv.r = makeArticle(o);
-      if( pv.r instanceof Error) throw pv.r;
-    });
-
-    dev.end();
-    return pv.rv;
-
-  } catch (e) { dev.error(e); return e; } finally {
-    // jsdoc動作定義ファイルを削除
-    //if( existsSync(cf.jsdocJson) )
-      //unlinkSync(cf.jsdocJson);
-    // ダミーディレクトリを削除
-    //if( existsSync(cf.dummyDir) )
-      //rmSync(cf.dummyDir, { recursive: true, force: true });
-  }
-}
-
-/** trash: 過去作成したソースで必要なくなったもの。備忘用 */
-function trash(){
-  /** makeMap: 「ファイル名＋行番号」を識別子とするマップを作成 */
-  async function makeMap(list){
-    const v = {whois:`${pv.whois}.makeMap`, arg:{list}, rv:{}};
-    const dev = new devTools(v);
-    try {
-
-      for( v.i=0 ; v.i<list.length ; v.i++ ){
-
-        dev.step(1.1);  // JSDocを取得
-        v.arr = await getFile(list[v.i]);
-        if( v.arr instanceof Error ) throw v.arr;
-
-        dev.step(1.2);  // 取得結果のチェック。配列で無い場合はメッセージを出してスキップ
-        if( !Array.isArray(v.arr) ){
-          dev.step(1.99,`not Array: ${JSON.stringify(v.arr)}`);
-          continue;
-        }
-
-        dev.step(2);  // v.mapの作成
-        v.arr.forEach(o => {
-          // 【備忘】
-          // ①"meta.code.id"は存在しない場合があるので使用を断念。
-          // ②'kind:"package"'
-          //   -> プロジェクトのメタ情報（name, version, description など）
-          //   "meta.lineno"を持たないが、仕様書作成に使用しないのでmap登録対象外とする
-          if( typeof o.meta !== 'undefined' && typeof o.meta.lineno === 'number'){
-            dev.step(2.1);  // v.mapのキー文字列(ID)の作成
-            v.jsdocId = `${o.meta.path ?? ''}/${o.meta.filename ?? ''}-${o.meta.lineno}`;
-
-            if( pv.idList.includes(v.jsdocId) ){
-              dev.step(2.2);  // 登録済なら結合
-              o = mergeDeeply(pv.map[v.jsdocId],o);
-            } else {
-              dev.step(2.3);  // 未登録なら登録済IDリストに追加
-              pv.idList.push(v.jsdocId);
-            }
-
-            dev.step(2.4);  // pv.mapへの登録
-            pv.map[v.jsdocId] = o;
-          }
-        });
-      }
-
-      dev.end(); // 終了処理
-      return v.rv;
-
-    } catch (e) { return dev.error(e); }
-  }
-
-  /** trimCommonIndent: 文字列を行単位に分割、全行に共通する先頭の空白を削除
-   * 但し先頭行頭に空白が無かった場合、調査対象から除外する
-   * @param {string[]} txt
-   * @returns {string[]}
-   */
-  function trimCommonIndent(txt) {
-    const v = {whois:`${pv.whois}.trimCommonIndent`, arg:{}, rv:[]};
-    const dev = new devTools(v);
-    try {
-
-      dev.step(1,txt);  // 行単位に分割
-      v.lines = txt.split('\n');
-
-      dev.step(2);  // 先頭行頭が空白では無い場合、調査対象から除外
-      if( !/^\s/.test(v.lines[0]) ) v.lines.slice(1);
-
-      dev.step(3);  // 空行を除いた行の先頭空白数を調べる
-      v.indents = v.lines
-        .filter(line => line.trim().length > 0) // 空白行は対象外
-        .map(line => line.match(/^[ \t]*/)[0].length);
-
-      dev.step(4);  // 共通の最小インデント
-      v.minIndent = Math.min(...v.indents);
-
-      dev.step(5);  // 各行から共通インデントを削除
-      v.lines.map(line => line.slice(v.minIndent));
-
-      v.rv = v.lines.join('\n');
-      dev.end(v.rv);
-      return v.rv;
-
-    } catch (e) { return dev.error(e); }
-  }
 }
