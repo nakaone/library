@@ -446,23 +446,17 @@ async function createSpec(opt={}) {
       required: 'required',
     },
   };
-  const doclet = [];
-
-  /** sourceFile: 入力ファイル(JSソース)情報
-   * @interface sourceFile
-   * @prop {string} common - フルパスの共通部分
-   * @prop {string} outDir - 出力先フォルダ名(フルパス)
-   * @prop {number} sourceNum - 対象ファイルの個数
-   * @prop {Object[]} source - {full:フルパス,unique:固有部分}形式のファイル名
-   * @prop {Object[]} doclet - `jsdoc -X`で返されるJSONをオブジェクト化、配列として格納
-   */
-  const sourceFile = {common:'',outDir:'',sourceNum:0,source:[]};
+  const doc = { // 全体管理
+    source: null, // {SourceFile}
+    doclet: [],   // {DocletEx[]}
+  };
 
   /** getFile: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
    * @param {string} fn - 対象ファイル名
    * @returns {object|string} JSON化できない(=エラー)の場合はテキスト
    */
   async function getFile(fn) {
+
     /** step.1 : jsdoc動作環境整備
      * @name jsdoc動作環境整備
      * @description
@@ -490,6 +484,7 @@ async function createSpec(opt={}) {
     dev.step(1.2);  // ダミーディレクトリを作成
     if( !existsSync(cf.dummyDir) ) mkdirSync(cf.dummyDir);
 
+    // step.2 : jsdocの実行
     return new Promise((resolve, reject) => {
       const v = {whois:`${pv.whois}.getFile`, arg:{fn,resolve, reject}, rv:null};
       const dev = new devTools(v);
@@ -529,12 +524,14 @@ async function createSpec(opt={}) {
           v.json = JSON.parse(v.output);
 
           dev.step(5.3);  // Doclet単位にばらして保存
+          v.rv = [];
           for( v.i=0 ; v.i<v.json.length ; v.i++ ){
-            v.rv = new DocletEx(v.json[v.i],fn.unique);
-            if( v.rv instanceof Error ) reject(v.rv);
+            v.r = new DocletEx(v.json[v.i],fn.unique);
+            if( v.r instanceof Error ) reject(v.r);
+            v.rv.push(v.r);
           }
 
-          resolve(v.json); // awaitの戻り値。使用しないが開発時の内容確認のため戻す
+          resolve(v.rv); // awaitの戻り値
         } catch (err) {
           reject(new Error("Failed to parse JSON: " + err.message));
         } finally {
@@ -544,23 +541,32 @@ async function createSpec(opt={}) {
     });
   }
 
+  /** SourceFile: 入力ファイル(JSソース)情報
+   * @typedef {object} SourceFile
+   * @prop {string} common - フルパスの共通部分
+   * @prop {string} outDir - 出力先フォルダ名(フルパス)
+   * @prop {number} num - 対象ファイルの個数
+   * @prop {Object[]} source - {full:フルパス,unique:固有部分}形式のファイル名
+   * @prop {Object[]} doclet - `jsdoc -X`で返されるJSONをオブジェクト化、配列として格納
+   */
   /** listSource: 事前準備、対象ファイルリスト作成
    * jsdoc動作環境整備後、シェルの起動時引数から対象となるJSソースファイルのリストを作成。
-   * 処理結果はメンバ"sourceFile"に保存。
    * @param {void}
-   * @returns {null|Error}
+   * @returns {SourceFile|Error}
    */
   function listSource() {
-    const v = {whois:`${pv.whois}.listSource`, arg:{}, rv:null};
+    const v = {whois:`${pv.whois}.listSource`, arg:{},
+      rv:{common:'',outDir:'',num:0,list:[]}};
     const dev = new devTools(v);
     try {
 
-      /** step.2 : 入力・出力・除外リスト作成
+      /**
        * @name 入力・出力・除外リスト作成
        * @description
        * 
        * 起動時パラメータは以下の通り。
        * `node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]`
+       * 
        * シェル側でワイルドカードを展開して配列が渡されるので、以下のように判断する。
        * ①最初の2つは全体とコマンド名、不要なので削除
        * ②3番目以降'-o'までは入力ファイル
@@ -568,11 +574,11 @@ async function createSpec(opt={}) {
        * ④'-x'の次からは除外ファイル
        */
 
-      dev.step(2.1);  // 結果を格納する領域を準備
+      dev.step(1);  // 結果を格納する領域を準備
       v.iList = [],  // 入力ファイルリスト
       v.xList = [],  // 除外ファイルリスト
 
-      dev.step(2.2);  // シェルの起動時引数を取得、順次処理
+      dev.step(2);  // シェルの起動時引数を取得、順次処理
       v.argv = process.argv.slice(2);
 
       for( v.i=0, v.mode='i' ; v.i<v.argv.length ; v.i++ ){
@@ -585,36 +591,36 @@ async function createSpec(opt={}) {
           default:
             switch( v.mode ){
               case 'i': v.iList.push(v.x); break;
-              case 'o': sourceFile.outDir = v.x; break;
+              case 'o': v.rv.outDir = v.x; break;
               case 'x': v.xList.push(v.x); break;
             }
         }
       }
 
-      dev.step(2.3);  // 対象 = 入力 − 除外
+      dev.step(3);  // 対象 = 入力 − 除外
       for( v.i=0 ; v.i<v.iList.length ; v.i++ ){
         if( !v.xList.includes(v.iList[v.i]) ){
-          sourceFile.source.push({full:v.iList[v.i]});
+          v.rv.list.push({full:v.iList[v.i]});
         }
       }
-      sourceFile.sourceNum = sourceFile.source.length;
+      v.rv.num = v.rv.list.length;
 
-      dev.step(2.4);  // 共通部分を抽出
-      //sourceFile.common = path.dirname(sourceFile.source[0].full);  末尾'/'無し
-      sourceFile.common = sourceFile.source[0].full.replace(/[^/\\]+$/, "");  // 末尾'/'有り
-      for( v.i=1 ; v.i<sourceFile.source.length ; v.i++ ){
-        while( !sourceFile.source[v.i].full.startsWith(sourceFile.common) ){
-          sourceFile.common = sourceFile.common.slice(0,-1);
-          if( sourceFile.common === '' ) break;
+      dev.step(4);  // 共通部分を抽出
+      //v.rv.common = path.dirname(v.rv.list[0].full);  末尾'/'無し
+      v.rv.common = v.rv.list[0].full.replace(/[^/\\]+$/, "");  // 末尾'/'有り
+      for( v.i=1 ; v.i<v.rv.list.length ; v.i++ ){
+        while( !v.rv.list[v.i].full.startsWith(v.rv.common) ){
+          v.rv.common = v.rv.common.slice(0,-1);
+          if( v.rv.common === '' ) break;
         }
       }
 
-      dev.step(2.5);  // 固有部分を作成
-      sourceFile.source.map(x => x.unique = 
-        path.posix.dirname(x.full.slice(sourceFile.common.length))
+      dev.step(5);  // 固有部分を作成
+      v.rv.list.map(x => x.unique = 
+        path.posix.dirname(x.full.slice(v.rv.common.length))
         .replace(/\/?$/, '/').replace(/^\.\//,'/'));
 
-      dev.end(sourceFile); // 終了処理
+      dev.end(); // 終了処理
       return v.rv;
 
     } catch (e) { return dev.error(e); }
@@ -627,18 +633,18 @@ async function createSpec(opt={}) {
   try {
 
     dev.step(1,cf);  // sourceFileに対象ファイルリスト作成
-    pv.r = listSource();
-    if( pv.r instanceof Error) throw pv.r;
-    dev.step(99.631,pv.r)
+    doc.source = listSource();
+    if( doc.source instanceof Error) throw doc.source;
 
     dev.step(2);  // 対象ファイルについて順次Docletを抽出、docletに格納
-    for( pv.i=0 ; pv.i<sourceFile.source.length ; pv.i++ ){
+    for( pv.i=0 ; pv.i<doc.source.list.length ; pv.i++ ){
       dev.step(1.1);  // ファイル単位にjsdocを実行、docletを作成
-      pv.r = await getFile(sourceFile.source[pv.i]);
+      pv.r = await getFile(doc.source.list[pv.i]);
       if( pv.r instanceof Error) throw pv.r;
-      dev.step(99.639,pv.r);
+      pv.r.forEach(x => doc.doclet.push(x));
     }
 
+    dev.step(99.644,doc);
     /*
     dev.step(3);  // docletの各要素を階層化してマッピング
     pv.r = mapDoclet();
