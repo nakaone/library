@@ -51,8 +51,7 @@ class Article {
 class PropList {
   /** 属性一覧表示用のオブジェクトを作成
    * @constructor
-   * @param {string} type - 処理対象の属性。'properties','params'
-   * @param {Doclet} doclet - 項目定義オブジェクトを含むDoclet全体
+   * @param {DocletColDef} doclet - Docletの項目定義オブジェクト
    * @param {object} [opt={}] - オプション
    * @param {string} [opt.lang=ロケール] - ラベルに使用する言語(ex.'ja-JP')
    * @param {object} [opt.label] - 項目のメンバ名->Markdown作成時のラベル文字列への変換マップ
@@ -66,23 +65,21 @@ class PropList {
    * @param {object} [opt.value] - 項目の値->Markdown作成時の表示への変換マップ
    * @returns {PropList|{}|Error} 処理対象属性が無い場合は{}
    */
-  constructor(type,doclet,opt={}){
-    const v = {whois:`PropList.constructor`, arg:{doclet,type}, rv:{}};
+  constructor(doclet,opt={}){
+    const v = {whois:`PropList.constructor`, arg:{doclet,opt}, rv:{}};
     const dev = new devTools(v);
     try {
 
       dev.step(1.1);  // 項目チェック
-      if( typeof doclet[type] === 'undefined'       // docletに無い
-        || !['properties','params'].includes(type)  // 非対象項目
-        || doclet[type].length === 0                // 要素が無い
+      if( typeof doclet === 'undefined'       // docletに無い
+        || doclet.length === 0                // 要素が無い
       ){
         dev.end();
         return v.rv;  // 空要素(!v.rv instance of PropList)
-      } else if( !Array.isArray(doclet[type]) )     // 対象項目が配列では無い
-        throw new Error(`"${type}" is not an array.`);
+      } else if( !Array.isArray(doclet) )     // 対象項目が配列では無い
+        throw new Error(`not an array.`);
       
       dev.step(1.2);  // 初期値設定
-      this.type = type;
       this.list = [];
       this.opt = {
         lang: opt.lang ?? Intl.DateTimeFormat().resolvedOptions().locale,
@@ -100,7 +97,7 @@ class PropList {
       ),this.opt.value);
 
       dev.step(2);  // this.listの作成
-      doclet[type].forEach(col => {
+      doclet.forEach(col => {
         v.desc = (col.description ?? '').split('\n');
         v.o = {
           name: col.name,
@@ -384,12 +381,12 @@ class DocletEx extends Doclet {
       );
 
       dev.step(4);  // properties
-      v.r = new PropList('properties',doclet);
+      v.r = new PropList(doclet.properties);
       if( v.r instanceof Error ) throw v.r;
       if( v.r instanceof PropList ) this.properties = v.r;
 
       dev.step(5);  // params
-      v.r = new PropList('params',doclet);
+      v.r = new PropList(doclet.params);
       if( v.r instanceof Error ) throw v.r;
       if( v.r !== null ) this.params = v.r;
 
