@@ -115,15 +115,40 @@ class PropList {
         this.list.push(v.o);
       });
 
+      dev.step(99.118,this.makeTable());
+
       dev.end(); // 終了処理
 
     } catch (e) { return dev.error(e); }
 
   }
 
-  /** makeTable: Markdownのテーブル作成 */
-  makeTable(){
+  /** makeTable: Markdownのテーブル作成
+   * @param {number} [indent=0] - テーブルの左余白桁数
+   * @returns {string|Error}
+   */
+  makeTable(indent=0){
+    const v = {whois:`${this.constructor.name}.makeTable`, arg:{}, rv:null};
+    const dev = new devTools(v);
+    try {
+
+      dev.step(1);  // ヘッダ部
+      v.lines = [[],[]];
+      this.opt.order.forEach(x => {
+        v.lines[0].push(this.opt.label[x]);
+        v.lines[1].push(':--');
+      });
+
+      dev.step(2,this.list);  // データ部
+      this.list.forEach(l => v.lines.push(this.opt.order.map(x => l[x])));
+
+      dev.step(3,v.lines);  // テキストに変換
+      v.rv = v.lines.map(l => `${' '.repeat(indent)}| ${l.join(' | ')} |`).join('\n');
+
+      dev.end(v.rv);
+      return v.rv;
     
+    } catch (e) { return dev.error(e); }
   }
 }
 
@@ -278,12 +303,12 @@ class Doclet {
  * @prop {PropList} [properties] - メンバ一覧
  * @prop {PropList} [params] - 引数。クラスの場合はconstructorの引数
  * @prop {ReturnList} [returns=[]] - 戻り値
- * 
- * @prop {DocletEx} [parent=null] - 親要素のDoclet
- * @prop {Object.<string, Doclet>} [children={}] - メソッド・内部関数
  * @prop {Object.<string, Article>} md - 記事名をキーとするマップ
  *   記事名は「一覧文書/クラス・グローバル関数/データ型定義文書の構成」参照
  *   top, list, type, prop, func, desc, param, return, -xxx
+ * 
+ * @prop {DocletEx} [parent=null] - 親要素のDoclet
+ * @prop {Object.<string, Doclet>} [children={}] - メソッド・内部関数
  * 
  * -- 以下備忘
  * @prop {string} title
@@ -339,12 +364,14 @@ class DocletEx extends Doclet {
     const dev = new devTools(v);
     try {
 
-      dev.step(1);
+      dev.step(1);  // unique
       this.unique = unique;
+
+      dev.step(2);  // docletType
       this.docletType = this.determineType(doclet);
       if( this.determineType instanceof Error) throw this.determineType;
 
-      dev.step(2);  // labelを抽出
+      dev.step(3);  // label
       // ①JSDoc先頭の「/**」に続く文字列
       v.m = doclet.comment?.split('\n')[0].match(/^\/\*\*\s*(.+)\n/) ?? null;
       // ②説明文の先頭行
@@ -356,21 +383,21 @@ class DocletEx extends Doclet {
         ? (doclet.longname ?? v.desc) : v.desc
       );
 
-      dev.step(3);  // 属性項目についてPropList作成
+      dev.step(4);  // properties
       v.r = new PropList('properties',doclet);
       if( v.r instanceof Error ) throw v.r;
       if( v.r instanceof PropList ) this.properties = v.r;
-      dev.step(99.361,{
-        comment: doclet.comment,
-        doclet:doclet.properties,
-        typeof:typeof doclet.properties,
-        isArray:Array.isArray(doclet.properties),
-        instanceof: v.r instanceof PropList,
-        result:v.r
-      });
+
+      dev.step(5);  // params
       v.r = new PropList('params',doclet);
       if( v.r instanceof Error ) throw v.r;
       if( v.r !== null ) this.params = v.r;
+
+      dev.step(6);  // returns
+
+      dev.step(7);  // md - メソッドで対応？
+
+      dev.step(8);  // parent, children は全Docletが揃ってから設定
 
       dev.end();
 
