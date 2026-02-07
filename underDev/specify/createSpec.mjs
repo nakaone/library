@@ -38,23 +38,22 @@ class Article {
 }
 
 /** PropList: 属性一覧に表示する項目
- * - 戻り値(returns)の場合、項目名・要否/既定値は無効な値となる
  * @class
- * @prop {string}   type - 'properties' or 'params'
  * @prop {object[]} list - 項目一覧
  * @prop {string}   list.name - 項目名
  * @prop {string}   list.type - データ型。複数なら' | 'で区切って並記
  * @prop {string}   list.value - 要否/既定値。「必須」「任意」または既定値
  * @prop {string}   list.desc - 1行の簡潔な項目説明
  * @prop {string}   list.note - 備考
+ * @prop {Object}   opt - オプション。内容はconstructorのparam参照
  */
 class PropList {
   /** 属性一覧表示用のオブジェクトを作成
    * @constructor
    * @param {DocletColDef} doclet - Docletの項目定義オブジェクト
-   * @param {object} [opt={}] - オプション
+   * @param {Object} [opt={}] - オプション
    * @param {string} [opt.lang=ロケール] - ラベルに使用する言語(ex.'ja-JP')
-   * @param {object} [opt.label] - 項目のメンバ名->Markdown作成時のラベル文字列への変換マップ
+   * @param {Object} [opt.label] - 項目のメンバ名->Markdown作成時のラベル文字列への変換マップ
    *   既定値に統合するので、変更・追加項目のみ指定すれば可。
    *   例：valueを「要否/既定値」から「値」に変更 ⇒ {value:'値'}
    *   　　独自項目'foo'を追加 ⇒ {foo:'ダミー'}
@@ -62,7 +61,7 @@ class PropList {
    *   記載されていない項目はMarkdownで表を作成する際、非表示になる。
    *   既定値を置換するので、変更する場合は全項目を指定する。
    *   例：value,noteは表示不要、独自項目fooを追加 ⇒ ['name','type','desc','foo']
-   * @param {object} [opt.value] - 項目の値->Markdown作成時の表示への変換マップ
+   * @param {Object} [opt.value] - 項目の値->Markdown作成時の表示への変換マップ
    * @returns {PropList|{}|Error} 処理対象属性が無い場合は{}
    */
   constructor(doclet,opt={}){
@@ -103,7 +102,7 @@ class PropList {
           name: col.name,
           type: col.type.names
             .map(x => x.replace(/^Array\.<\s*(.+?)\s*>$/, '$1[]').trim())
-            .join(' | '),
+            .join(' \\| '),
           value: typeof col.defaultvalue !== 'undefined' ? col.defaultvalue
             : (col.optional === true ? this.opt.value.optional : this.opt.value.required),
           desc: v.desc[0],
@@ -151,7 +150,7 @@ class PropList {
 
 /** DocletColDef: Doclet.properties/params/returnsの要素(メンバ)定義情報
  * @typedef {Object} DocletColDef
- * @prop {object}   type - データ型情報オブジェクト
+ * @prop {Object}   type - データ型情報オブジェクト
  * @prop {string[]} type.names - データ型名の配列
  *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
  *   {typeDef[]|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"]
@@ -164,7 +163,7 @@ class PropList {
  * @prop {string}   memberof
  * @prop {string}   description - 説明文
  * @prop {string}   name - プロパティ名。階層化されている場合`parent.child`形式になる
- * @prop {object}   meta - プロパティ定義が存在するソース位置情報
+ * @prop {Object}   meta - プロパティ定義が存在するソース位置情報
  *   param/returnsには出ないがpropertiesには出ることがある
  * @prop {string}   defaultvalue - 既定値(文字列表現。ex.'[]')
  * @prop {boolean}  optional - trueの場合は任意項目
@@ -184,14 +183,14 @@ class PropList {
  *   `module:foo~bar#baz`のように、モジュール・クラス・スコープを含む一意名
  * @prop {string}   memberof - 所属先（親）を示す完全修飾名
  *   どのクラス・モジュール・名前空間に属するかを示す
- * @prop {object}   meta - Docletが生成されたソース位置情報
+ * @prop {Object}   meta - Docletが生成されたソース位置情報
  * @prop {number[]} meta.range - ソースコード内での文字位置範囲
  *   桁数単位で、2要素ずつ組み合わせた開始・終了インデックス。
  * @prop {string}   meta.filename - 対象が定義されているソースファイル名
  * @prop {number}   meta.lineno - 対象定義の開始行番号
  * @prop {number}   meta.columnno - 対象定義の開始列番号
  * @prop {string}   meta.path - ソースファイルが存在するディレクトリパス
- * @prop {object}   meta.code - Doclet対象となったコード要素の構造情報
+ * @prop {Object}   meta.code - Doclet対象となったコード要素の構造情報
  * @prop {string}   meta.code.id - コード要素の内部識別子(AST由来、存在しない場合あり)
  * @prop {string}   meta.code.name - コード要素の名前（関数名・クラス名・変数名など）
  * @prop {string}   meta.code.type - コード要素の種別
@@ -201,29 +200,29 @@ class PropList {
  * @prop {string}   name - 対象の短い名前(関数名・クラス名・プロパティ名など)
  * @prop {DocletColDef[]} params - ＠paramタグから生成された引数情報の配列
  * @prop {DocletColDef[]} properties - ＠propertyタグから生成されたメンバ定義情報
- * @prop {DocletColDef} returns - ＠returns/＠returnタグから生成された戻り値情報
+ * @prop {DocletColDef[]} returns - ＠returns/＠returnタグから生成された戻り値情報
  *   returnsはparams/propertiesと以下の点で異なる。
- *   1. 配列ではない(単一要素)
+ *   1. 配列だが単一
  *   2. name/optional/defaultvalueは無い
  *   3. nullable,nullableTypeが付くことがある
  * @prop {string}   scope - スコープ種別
  *   global,static,instance,innerなど、メンバの可視性・所属を示す
  * @prop {Object[]} tags - JSDoc上に記述されたタグのうち、専用フィールドに変換されなかった生タグ情報
  *   独自タグ、JSDocが意味解釈しないタグ、情報落ちしないよう保持された生情報
- * @prop {object}   tags.meta - タグが記述されているソース位置情報
+ * @prop {Object}   tags.meta - タグが記述されているソース位置情報
  * @prop {string}   tags.originalTitle - ソース上に記述されたタグ名（＠を除いた元の表記）
  * @prop {string}   tags.title - 正規化されたタグ名(＠returns->return,＠History->history)
  * @prop {string}   tags.text - タグ行の生テキスト（タグ名を除いた部分）
  * @prop {string}   tags.value - タグ内容をJSDocが解釈・分解した結果の文字列表現
  *   単純タグではtextと同じになることが多い
- * @prop {object}   type - ＠type/＠param/＠returns/＠property等から得られた型情報
+ * @prop {Object}   type - ＠type/＠param/＠returns/＠property等から得られた型情報
  *   プリミティブ・Union・配列・オブジェクトなど
  * @prop {string[]} type.names - データ型名の配列
  *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
  *   {typeDef[]|columnDef[]} ⇒ "names": ["Array.<typeDef>","Array.<columnDef>"]
  * @prop {boolean}  undocumented - JSDoc コメントが存在しない要素かどうか
  *   true の場合、自動抽出されたがコメント未記述
- * @prop {object}   type - ＠type/＠param/＠returns/＠property等から得られた型情報
+ * @prop {Object}   type - ＠type/＠param/＠returns/＠property等から得られた型情報
  *   プリミティブ・Union・配列・オブジェクトなど
  * @prop {string[]} type.names - データ型名の配列
  *   `{number|string}`等、'|'で区切られたUnion型の場合は複数になる
@@ -388,13 +387,23 @@ class DocletEx extends Doclet {
       dev.step(5);  // params
       v.r = new PropList(doclet.params);
       if( v.r instanceof Error ) throw v.r;
-      if( v.r !== null ) this.params = v.r;
+      if( v.r instanceof PropList ) this.params = v.r;
 
       dev.step(6);  // returns
+      v.r = new PropList(doclet.returns
+        ,{order:['type','desc','note']}
+      );
+      if( v.r instanceof Error ) throw v.r;
+      if( v.r instanceof PropList ){
+        this.returns = v.r;
+        dev.step(99.397,{obj:this.returns,md:this.returns.makeTable()});
+      }
 
+      // いまここ
       dev.step(7);  // md - メソッドで対応？
 
       dev.step(8);  // parent, children は全Docletが揃ってから設定
+      // returns他、typedef/interfaceで定義した型を展開
 
       dev.end();
 
@@ -572,7 +581,7 @@ class DocletEx extends Doclet {
 console.log(JSON.stringify(createSpec(),null,2));
 
 /** createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
- * @param {object} [opt={}] - オプション設定
+ * @param {Object} [opt={}] - オプション設定
  * @returns {void}
  * 
  * @prop {Object} pv - createSpec内の共有変数(public variables。class定義のメンバに相当)
@@ -686,7 +695,7 @@ async function createSpec(opt={}) {
   }
 
   /** SourceFile: 入力ファイル(JSソース)情報
-   * @typedef {object} SourceFile
+   * @typedef {Object} SourceFile
    * @prop {string} common - フルパスの共通部分
    * @prop {string} outDir - 出力先フォルダ名(フルパス)
    * @prop {number} num - 対象ファイルの個数
@@ -903,7 +912,7 @@ function stock(){
 
   /** getByTildePath:パス文字列からオブジェクトを辿って値を取得
    * @param {string} path - 例: "func01~func02~arrow01"
-   * @param {object} obj  - 探索対象オブジェクト
+   * @param {Object} obj  - 探索対象オブジェクト
    * @returns {{obj:any, label:string} | null}
    */
   function getByTildePath(path, obj) {
