@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
 import { readFileSync, writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
 
-/** Article: 単一記事(タイトル＋本文)用データオブジェクト
+/** Article: Markdownの単一記事(タイトル＋本文)用データオブジェクト
  * - `<!--::記事のID::-->`で他記事も埋め込み可とする
  * - アンカーのidは識別子を小文字変換したものとする
  * 
@@ -34,6 +34,96 @@ class Article {
     this.middle = arg.middle ?? '';
     this.bottom = arg.bottom ?? '';
     this.content = arg.content ?? '';
+  }
+}
+
+/** PropList: 属性一覧に表示する項目
+ * - 戻り値(returns)の場合、項目名・要否/既定値は無効な値となる
+ * @class
+ * @prop {string}   type - 'properties' or 'params'
+ * @prop {object[]} list - 項目一覧
+ * @prop {string}   list.name - 項目名
+ * @prop {string}   list.type - データ型。複数なら' | 'で区切って並記
+ * @prop {string}   list.value - 要否/既定値。「必須」「任意」または既定値
+ * @prop {string}   list.desc - 1行の簡潔な項目説明
+ * @prop {string}   list.note - 備考
+ */
+class PropList {
+  /** 属性一覧表示用のオブジェクトを作成
+   * @constructor
+   * @param {string} type - 処理対象の属性。'properties','params'
+   * @param {Doclet} doclet - 項目定義オブジェクトを含むDoclet全体
+   * @param {object} [opt={}] - オプション
+   * @param {string} [opt.lang=ロケール] - ラベルに使用する言語(ex.'ja-JP')
+   * @param {object} [opt.label] - 項目のメンバ名->Markdown作成時のラベル文字列への変換マップ
+   *   既定値に統合するので、変更・追加項目のみ指定すれば可。
+   *   例：valueを「要否/既定値」から「値」に変更 ⇒ {value:'値'}
+   *   　　独自項目'foo'を追加 ⇒ {foo:'ダミー'}
+   * @param {string} [opt.order=['name','type','value','desc','note']] - 項目の並び順
+   *   記載されていない項目はMarkdownで表を作成する際、非表示になる。
+   *   既定値を置換するので、変更する場合は全項目を指定する。
+   *   例：value,noteは表示不要、独自項目fooを追加 ⇒ ['name','type','desc','foo']
+   * @param {object} [opt.value] - 項目の値->Markdown作成時の表示への変換マップ
+   * @returns {PropList|{}|Error} 処理対象属性が無い場合は{}
+   */
+  constructor(type,doclet,opt={}){
+    const v = {whois:`PropList.constructor`, arg:{doclet,type}, rv:{}};
+    const dev = new devTools(v);
+    try {
+
+      dev.step(1.1);  // 項目チェック
+      if( typeof doclet[type] === 'undefined'       // docletに無い
+        || !['properties','params'].includes(type)  // 非対象項目
+        || doclet[type].length === 0                // 要素が無い
+      ){
+        dev.end();
+        return v.rv;  // 空要素(!v.rv instance of PropList)
+      } else if( !Array.isArray(doclet[type]) )     // 対象項目が配列では無い
+        throw new Error(`"${type}" is not an array.`);
+      
+      dev.step(1.2);  // 初期値設定
+      this.type = type;
+      this.list = [];
+      this.opt = {
+        lang: opt.lang ?? Intl.DateTimeFormat().resolvedOptions().locale,
+        label: opt.label ?? {},
+        order: opt.order ?? ['name','type','value','desc','note'],
+        value: opt.value ?? {},
+      };
+      this.opt.label = Object.assign((this.opt.lang === 'ja-JP'
+        ? {name:'項目名',type:'データ型',value:'要否/既定値',desc:'説明',note:'備考'}
+        : {name:'name',type:'type',value:'value',desc:'desc',note:'note'}
+      ),this.opt.label);
+      this.opt.value = Object.assign((this.opt.lang === 'ja-JP'
+        ? {undef:'未定義',optional:'任意',required:'必須'}
+        : {undef:'undefined',optional:'optional',required:'required'}
+      ),this.opt.value);
+
+      dev.step(2);  // this.listの作成
+      doclet[type].forEach(col => {
+        v.desc = (col.description ?? '').split('\n');
+        v.o = {
+          name: col.name,
+          type: col.type.names
+            .map(x => x.replace(/^Array\.<\s*(.+?)\s*>$/, '$1[]').trim())
+            .join(' | '),
+          value: typeof col.defaultvalue !== 'undefined' ? col.defaultvalue
+            : (col.optional === true ? this.opt.value.optional : this.opt.value.required),
+          desc: v.desc[0],
+          note: v.desc.slice(1).join('\n').trim(),  // 2行目以降。先頭・末尾の空行は削除
+        };
+        this.list.push(v.o);
+      });
+
+      dev.end(); // 終了処理
+
+    } catch (e) { return dev.error(e); }
+
+  }
+
+  /** makeTable: Markdownのテーブル作成 */
+  makeTable(){
+    
   }
 }
 
@@ -185,9 +275,9 @@ class Doclet {
  *   ② description, classdesc があれば先頭行
  *   ③ longname
  *   ※ 上記に該当が無い場合、「(ラベル未設定)」
- * @prop {PropRow[]} [properties=[]] - メンバ一覧
- * @prop {PropRow[]} [params=[]] - 引数。クラスの場合はconstructorの引数
- * @prop {PropRow[]} [returns=[]] - 戻り値
+ * @prop {PropList} [properties] - メンバ一覧
+ * @prop {PropList} [params] - 引数。クラスの場合はconstructorの引数
+ * @prop {ReturnList} [returns=[]] - 戻り値
  * 
  * @prop {DocletEx} [parent=null] - 親要素のDoclet
  * @prop {Object.<string, Doclet>} [children={}] - メソッド・内部関数
@@ -265,6 +355,22 @@ class DocletEx extends Doclet {
         this.docletType === 'name' || this.docletType === 'class'
         ? (doclet.longname ?? v.desc) : v.desc
       );
+
+      dev.step(3);  // 属性項目についてPropList作成
+      v.r = new PropList('properties',doclet);
+      if( v.r instanceof Error ) throw v.r;
+      if( v.r instanceof PropList ) this.properties = v.r;
+      dev.step(99.361,{
+        comment: doclet.comment,
+        doclet:doclet.properties,
+        typeof:typeof doclet.properties,
+        isArray:Array.isArray(doclet.properties),
+        instanceof: v.r instanceof PropList,
+        result:v.r
+      });
+      v.r = new PropList('params',doclet);
+      if( v.r instanceof Error ) throw v.r;
+      if( v.r !== null ) this.params = v.r;
 
       dev.end();
 
@@ -459,18 +565,6 @@ async function createSpec(opt={}) {
     //jsdocJson: `jsdoc.${Date.now()}.json`,  // jsdocコマンド設定ファイル名
     dummyDir: opt.dummyDir ?? './dummy',  // jsdoc用の空フォルダ
     jsdocTarget: opt.jsdocTarget ?? ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
-    lang: opt.lang ?? // 使用する言語
-      Intl.DateTimeFormat().resolvedOptions().lang === 'ja-JP' ? 'ja-JP' : 'default',
-    "ja-JP": { // 日本語での表記
-      undef: '未定義',
-      optional: '任意',
-      required: '必須',
-    },
-    "default": {  // それ以外なら英語
-      undef: 'undefined',
-      optional: 'optional',
-      required: 'required',
-    },
   };
   const doc = { // 全体管理
     source: null, // {SourceFile}
@@ -696,54 +790,10 @@ async function createSpec(opt={}) {
   }
 }
 
+
+
 /** stock: 使用の可能性が高いソースの一時保存 */
 function stock(){
-  /** PropRow: 属性一覧に表示する項目
-   * - 戻り値(returns)の場合、項目名・要否/既定値は無効な値となる
-   * @typedef {Object} PropRow
-   * @prop {string} name - 項目名
-   * @prop {string} type - データ型。複数なら' | 'で区切って並記
-   * @prop {string} value - 要否/既定値。「必須」「任意」または既定値
-   * @prop {string} desc - 1行の簡潔な項目説明
-   * @prop {string} note - 備考
-   */
-  /** getPropRow: 属性一覧表示用のオブジェクトを作成
-   * @param {jsdocColDef} arg - 項目定義オブジェクト
-   * @param {string} type - 呼出元の属性。'properties','params','returns'
-   * @param {Object} obj - 項目定義オブジェクトを含むDoclet全体。エラー箇所特定用
-   * @returns {PropRow|Error}
-   */
-  function getPropRow(arg,type,obj){
-    const v = {whois:`${pv.whois}.getPropRow`, arg:{arg,type,obj}, rv:null};
-    const dev = new devTools(v);
-    try {
-
-      dev.step(1);  // 必須項目の存否チェック(項目名とデータ型定義)
-      v.msg = JSON.stringify(arg) + `\n${obj.comment}`;
-      if( typeof arg.type?.names === 'undefined' || !Array.isArray(arg.type?.names) )
-        throw new Error(`Type definition are required: ${v.msg}`);
-      // returnsの場合は項目名不要
-      if( type !== 'returns' && typeof arg.name === 'undefined' )
-        throw new Error(`Field name is required: ${v.msg}`);
-
-      const desc = (arg.description ?? '').split('\n');
-      v.rv = {
-        name: arg.name,
-        type: arg.type.names
-          .map(x => x.replace(/^Array\.<\s*(.+?)\s*>$/, '$1[]').trim())
-          .join(' | '),
-        value: typeof arg.defaultvalue !== 'undefined' ? arg.defaultvalue
-          : (arg.optional === true ? cf[cf.lang].optional : cf[cf.lang].required),
-        desc: desc[0],  // descriptionの先頭行
-        note: desc.slice(1).join('\n').trim(),  // 2行目以降。先頭・末尾の空行は削除
-      };
-
-      dev.end(); // 終了処理
-      return v.rv;
-
-    } catch (e) { return dev.error(e); }
-  }
-
 
   /** dlMap: Docletを構造化してマッピングしたオブジェクト
    * @typedef {Object.<string, Object>} dlMap - メンバ名は固有パス
@@ -889,6 +939,7 @@ function stock(){
       if( typeof obj.longname === 'undefined' )
         throw new Error(`no longname: ${obj.comment}`);
 
+      /*
       dev.step(3);  // labelを抽出
       // ①JSDoc先頭の「/**」に続く文字列
       v.m = obj.comment.split('\n')[0].match(/^\/\*\*\s*(.+)\n/);
@@ -898,6 +949,7 @@ function stock(){
       // ① > (nameまたはclassなら)longname > ②
       v.label = v.m !== null ? v.m[1]
       : (v.type === 'name' || v.type === 'class' ? (obj.longname ?? v.desc) : v.desc);
+      */
 
       dev.step(4);  // Doclet型のオブジェクトを作成
       v.doclet = {
@@ -916,11 +968,11 @@ function stock(){
         origin: obj,
       };
 
-      dev.step(5);  // 属性項目についてPropRow作成
+      dev.step(5);  // 属性項目についてPropList作成
       ['properties','params','returns'].forEach(x => {
         if( typeof obj[x] !== 'undefined' && Array.isArray(obj[x]) && obj[x].length > 0 ){
           for( v.i=0 ; v.i<obj[x].length ; v.i++ ){
-            v.r = getPropRow(obj[x][v.i],x,obj);
+            v.r = getPropList(obj[x][v.i],x,obj);
             if( v.r instanceof Error ) throw v.r;
             v.doclet[x].push(v.r);
           }
