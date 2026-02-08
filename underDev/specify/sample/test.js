@@ -21,6 +21,7 @@
  * @property {Object} class - クラス定義にかかるJSDoc
  * @property {columnDef[]} [class.method] - 任意項目確認用
  * 
+ * @desc
  * - 末尾にある補足説明
  */
 
@@ -66,6 +67,12 @@ function func01(arg){
     const rv = arg+'a';
     return rv;
   }
+  /**
+   * @name 関数内説明文
+   * @memberof func01
+   * @description
+   * 関数内部での説明文。DocletEx.id="/func01"の子要素になっているか確認
+   */
   /**
    * @typedef {Object} funcDef - JSDocの関数・メソッド単位のオブジェクト
    * @property {string} name - 関数・メソッド名

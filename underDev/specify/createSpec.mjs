@@ -304,8 +304,8 @@ class Doclet {
  *   記事名は「一覧文書/クラス・グローバル関数/データ型定義文書の構成」参照
  *   top, list, type, prop, func, desc, param, return, -xxx
  * 
- * @prop {DocletEx} [parent=null] - 親要素のDoclet
- * @prop {Object.<string, Doclet>} [children={}] - メソッド・内部関数
+ * @prop {string} [parent=null] - 親要素のDocletEx.id
+ * @prop {string[]} [children=[]] - 子要素(メソッド・内部関数)のDocletEx.id
  * 
  * -- 以下備忘
  * @prop {string} title
@@ -405,6 +405,9 @@ class DocletEx extends Doclet {
 
       // いまここ
       dev.step(8);  // parent, children は全Docletが揃ってから設定
+      this.parent = null;
+      this.children = [];
+
       // returns他、typedef/interfaceで定義した型を展開
 
       dev.step(9);  // md - メソッドで対応？
@@ -513,6 +516,7 @@ class DocletEx extends Doclet {
  * - 説明文(=Markdownとして出力する説明)
  *   - 「＠name (説明文のタイトル)」＋「＠desc」で開始
  *   - 「＠name」がない説明文は出力されない(廃棄)
+ *   - クラス・関数内部に記述する場合、「＠memberof」を指定
  *   - ＠name使用時「／**」以降に続く文字列は廃棄される(上記の例外)
  *   - ＠desc以降はMarkdownとして扱われ、共通する先頭の空白は削除される
  * - ＠typedefでfunctionの定義は不可
@@ -613,16 +617,34 @@ async function createSpec(opt={}) {
     const dev = new devTools(v);
     try {
 
-      dev.step(1);  //
-      v.map = doc.doclet.reduce((acc,cur) => {
-        acc[cur.unique+(cur.meta?.filename)+'::'+cur.longname] = cur; // いまここ：DocletEx.constructorに移動
-        return acc;
-      }, {});
-      dev.step(99.616,Object.keys(v.map));
-
-
       for( v.i=0 ; v.i<doc.doclet.length ; v.i++ ){
-
+        v.d = doc.doclet[v.i];
+        dev.step(1);  // child.memberof === parent.longname
+        v.pId = typeof v.d.memberof === 'string' ? v.d.unique + v.d.memberof : null;
+        if( v.pId && typeof doc.map[v.pId] !== 'undefined' ){
+          dev.step(2);  // memberofがidと一致する場合
+          v.d.parent = doc.map[v.pId].id;
+          doc.map[v.pId].children.push(v.d.id);
+        } else if( v.d.meta?.range ) {
+          dev.step(3);  // 包摂する直近の要素を親とする
+          v.minSize = Infinity;
+          for( v.t of doc.doclet ){
+            dev.step(4);  // 比較元=比較先またはrangeが無ければスキップ
+            if( v.d === v.t || !v.t.meta?.range ) continue;
+            dev.step(5);  // 比較元の開始・終了位置が比較先の開始・終了位置の範囲内か判定
+            if( v.t.meta.range[0] <= v.d.meta.range[0] && v.d.meta.range[1] <= v.t.meta.range[1] ){
+              dev.step(6);  // 比較先の終了位置−開始位置が最小のものが直近
+              v.size = v.t.meta.range[1] - v.t.meta.range[0];
+              if( v.size < v.minSize ){
+                v.minSize = v.size;
+                v.d.parent = v.t.id; // 比較先を比較元の親要素として設定
+              }
+            }
+          }
+          dev.step(7);  // 親要素のchildrenに比較元を登録
+          if( v.d.parent !== null )
+            doc.map[v.d.parent].children.push(v.d.id);
+        }
       }
 
       dev.end(); // 終了処理
