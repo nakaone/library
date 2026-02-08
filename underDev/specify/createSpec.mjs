@@ -286,6 +286,7 @@ class Doclet {
 /** DocletEx: jsdocから出力されるDocletに情報を付加したもの
  * @class
  * @extends Doclet
+ * @prop {string} id - 固有パス＋longname
  * @prop {string} unique - ソースファイルの固有パス
  *   固有パス：複数フォルダ対象時、フルパスから共通のパスを除いた部分
  *   unique = 'client/test.js' -> 'client/' ※最後に'/'が付く
@@ -360,14 +361,17 @@ class DocletEx extends Doclet {
     const dev = new devTools(v);
     try {
 
-      dev.step(1);  // unique
+      dev.step(1);  // id
+      this.id =unique + doclet.longname;
+
+      dev.step(2);  // unique
       this.unique = unique;
 
-      dev.step(2);  // docletType
+      dev.step(3);  // docletType
       this.docletType = this.determineType(doclet);
       if( this.determineType instanceof Error) throw this.determineType;
 
-      dev.step(3);  // label
+      dev.step(4);  // label
       // ①JSDoc先頭の「/**」に続く文字列
       v.m = doclet.comment?.split('\n')[0].match(/^\/\*\*\s*(.+)\n/) ?? null;
       // ②説明文の先頭行
@@ -379,20 +383,20 @@ class DocletEx extends Doclet {
         ? (doclet.longname ?? v.desc) : v.desc
       );
 
-      dev.step(4);  // properties
+      dev.step(5);  // properties
       v.r = new PropList(doclet.properties);
       if( v.r instanceof Error ) throw v.r;
       if( v.r instanceof PropList ) this.properties = v.r;
 
-      dev.step(5);  // params
+      dev.step(6);  // params
       v.r = new PropList(doclet.params);
       if( v.r instanceof Error ) throw v.r;
       if( v.r instanceof PropList ) this.params = v.r;
 
-      dev.step(6);  // returns
+      dev.step(7);  // returns
       v.r = new PropList(doclet.returns
-        ,{order:['type','desc','note']}
-      );
+        // name, value は不要なのでorderから削除
+        ,{order:['type','desc','note']});
       if( v.r instanceof Error ) throw v.r;
       if( v.r instanceof PropList ){
         this.returns = v.r;
@@ -400,10 +404,10 @@ class DocletEx extends Doclet {
       }
 
       // いまここ
-      dev.step(7);  // md - メソッドで対応？
-
       dev.step(8);  // parent, children は全Docletが揃ってから設定
       // returns他、typedef/interfaceで定義した型を展開
+
+      dev.step(9);  // md - メソッドで対応？
 
       dev.end();
 
@@ -455,12 +459,6 @@ class DocletEx extends Doclet {
 
     } catch (e) { return dev.error(e); }
   }
-
-  /** determineParent: 対象要素が子要素であるとき親要素を特定
-   * メソッド⇒クラス、内部関数⇒グローバル関数、等
-   * 1. child.memberof === parent.longname
-   * 2. child.rangeが包含されている直近の要素
-   */
 }
 
 /** createSpec概要
@@ -602,7 +600,36 @@ async function createSpec(opt={}) {
   const doc = { // 全体管理
     source: null, // {SourceFile}
     doclet: [],   // {DocletEx[]}
+    map: {},      // {Object.<string, DocletEx>} DocletEx.idをキーとするマップ
   };
+
+  /** determineParent: 対象要素が子要素であるとき親要素を特定
+   * メソッド⇒クラス、内部関数⇒グローバル関数、等
+   * 1. child.memberof === parent.longname
+   * 2. child.rangeが包含されている直近の要素
+   */
+  function determineParent(){
+    const v = {whois:`${pv.whois}.determineParent`, arg:{}, rv:null};
+    const dev = new devTools(v);
+    try {
+
+      dev.step(1);  //
+      v.map = doc.doclet.reduce((acc,cur) => {
+        acc[cur.unique+(cur.meta?.filename)+'::'+cur.longname] = cur; // いまここ：DocletEx.constructorに移動
+        return acc;
+      }, {});
+      dev.step(99.616,Object.keys(v.map));
+
+
+      for( v.i=0 ; v.i<doc.doclet.length ; v.i++ ){
+
+      }
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
 
   /** getFile: jsdocコマンドを実行し、対象ファイル(単一)のJSDocをJSON形式で取得
    * @param {string} fn - 対象ファイル名
@@ -794,8 +821,15 @@ async function createSpec(opt={}) {
       dev.step(1.1);  // ファイル単位にjsdocを実行、docletを作成
       pv.r = await getFile(doc.source.list[pv.i]);
       if( pv.r instanceof Error) throw pv.r;
-      pv.r.forEach(x => doc.doclet.push(x));
+      pv.r.forEach(x => {
+        doc.doclet.push(x);
+        doc.map[x.id] = x;
+      });
     }
+
+    dev.step(3);  // 要素間の親子関係を調査(DocletEx.parent/childrenの設定)
+    pv.r = determineParent();
+    if( pv.r instanceof Error) throw pv.r;
 
     dev.step(99.644,doc);
     /*
