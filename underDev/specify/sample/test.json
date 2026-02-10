@@ -27,7 +27,7 @@
         "kind": "member"
     },
     {
-        "comment": "/** globalDef: テスト用定義①\n * - typedef前の補足説明\n *   - サブ項目\n * @typedef {Object} globalDef\n * - typedef後の補足説明\n * @property {typeDef[]|columnDef[]} [main=[]] - グローバル領域にあるJSDoc\n * @property {Object} class - クラス定義にかかるJSDoc\n * @property {columnDef[]} [class.method] - 任意項目確認用\n * \n * - 末尾にある補足説明\n */",
+        "comment": "/** globalDef: テスト用定義①\n * - typedef前の補足説明\n *   - サブ項目\n * @typedef {Object} globalDef\n * - typedef後の補足説明\n * @property {typeDef[]|columnDef[]} [main=[]] - グローバル領域にあるJSDoc\n * @property {Object} class - クラス定義にかかるJSDoc\n * @property {columnDef[]} [class.method] - 任意項目確認用\n * \n * @desc\n * - 末尾にある補足説明\n */",
         "meta": {
             "filename": "test.js",
             "lineno": 15,
@@ -35,7 +35,7 @@
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
         },
-        "description": "globalDef: テスト用定義①\n- typedef前の補足説明\n  - サブ項目",
+        "description": "- 末尾にある補足説明",
         "kind": "typedef",
         "name": "globalDef",
         "type": {
@@ -72,7 +72,7 @@
                     ]
                 },
                 "optional": true,
-                "description": "任意項目確認用\n\n- 末尾にある補足説明",
+                "description": "任意項目確認用",
                 "name": "class.method"
             }
         ],
@@ -83,7 +83,7 @@
         "comment": "/**\n * @interface User\n * @property {string} name\n * @property {number} age\n * @property {boolean} isAdmin\n */",
         "meta": {
             "filename": "test.js",
-            "lineno": 27,
+            "lineno": 28,
             "columnno": 0,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -123,7 +123,7 @@
         "comment": "/**\n * @function\n * @name User#test\n * @desc オブジェクト内関数の説明\n * @param {string} arg\n * @returns {boolean|Error}\n * @example オブジェクト内関数の使用例\n */",
         "meta": {
             "filename": "test.js",
-            "lineno": 33,
+            "lineno": 34,
             "columnno": 0,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -162,11 +162,11 @@
         "comment": "/** @type {User} */",
         "meta": {
             "range": [
-                767,
-                849
+                776,
+                858
             ],
             "filename": "test.js",
-            "lineno": 42,
+            "lineno": 43,
             "columnno": 6,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -191,11 +191,11 @@
         "comment": "",
         "meta": {
             "range": [
-                777,
-                787
+                786,
+                796
             ],
             "filename": "test.js",
-            "lineno": 43,
+            "lineno": 44,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -216,11 +216,11 @@
         "comment": "",
         "meta": {
             "range": [
-                791,
-                798
+                800,
+                807
             ],
             "filename": "test.js",
-            "lineno": 44,
+            "lineno": 45,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -241,11 +241,11 @@
         "comment": "",
         "meta": {
             "range": [
-                802,
-                815
+                811,
+                824
             ],
             "filename": "test.js",
-            "lineno": 45,
+            "lineno": 46,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -266,11 +266,11 @@
         "comment": "",
         "meta": {
             "range": [
-                819,
-                846
+                828,
+                855
             ],
             "filename": "test.js",
-            "lineno": 46,
+            "lineno": 47,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -290,11 +290,11 @@
         "comment": "/** func01: 関数テスト\n * 関数テスト説明文\n * @param {number} arg - 引数\n * @returns {object} 戻り値\n */",
         "meta": {
             "range": [
-                939,
-                1595
+                948,
+                1724
             ],
             "filename": "test.js",
-            "lineno": 54,
+            "lineno": 55,
             "columnno": 0,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -342,11 +342,11 @@
         "comment": "/** arrow01: アローテスト\n   * @param {string} arg - 引数\n   * @returns {string} 戻り値\n   */",
         "meta": {
             "range": [
-                1054,
-                1332
+                1063,
+                1341
             ],
             "filename": "test.js",
-            "lineno": 59,
+            "lineno": 60,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -390,7 +390,7 @@
         "comment": "/**\n     * @typedef {Object} arrowDef - JSDocの関数・メソッド単位のオブジェクト\n     * @property {string} name - 関数・メソッド名\n     * @property {arrowDef[]|typeDef[]|columnDef[]} list - 関数・メソッド内のJSDoc\n     */",
         "meta": {
             "filename": "test.js",
-            "lineno": 60,
+            "lineno": 61,
             "columnno": 4,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -432,11 +432,11 @@
         "comment": "/** @type {number} */",
         "meta": {
             "range": [
-                1300,
-                1312
+                1309,
+                1321
             ],
             "filename": "test.js",
-            "lineno": 66,
+            "lineno": 67,
             "columnno": 10,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -459,10 +459,26 @@
         "params": []
     },
     {
+        "comment": "/**\n   * @name 関数内説明文\n   * @memberof func01\n   * @description 関数内部での説明文\n   * DocletEx.id=\"/func01\"の子要素になっているか確認\n   */",
+        "meta": {
+            "filename": "test.js",
+            "lineno": 70,
+            "columnno": 2,
+            "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
+            "code": {}
+        },
+        "name": "関数内説明文",
+        "memberof": "func01",
+        "description": "関数内部での説明文\nDocletEx.id=\"/func01\"の子要素になっているか確認",
+        "scope": "static",
+        "longname": "func01.関数内説明文",
+        "kind": "member"
+    },
+    {
         "comment": "/**\n   * @typedef {Object} funcDef - JSDocの関数・メソッド単位のオブジェクト\n   * @property {string} name - 関数・メソッド名\n   * @property {funcDef[]|typeDef[]|columnDef[]} list - 関数・メソッド内のJSDoc\n   */",
         "meta": {
             "filename": "test.js",
-            "lineno": 69,
+            "lineno": 76,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -504,11 +520,11 @@
         "comment": "/** @type {boolean} */",
         "meta": {
             "range": [
-                1545,
-                1579
+                1674,
+                1708
             ],
             "filename": "test.js",
-            "lineno": 75,
+            "lineno": 82,
             "columnno": 8,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -534,11 +550,11 @@
         "comment": "",
         "meta": {
             "range": [
-                1551,
-                1560
+                1680,
+                1689
             ],
             "filename": "test.js",
-            "lineno": 75,
+            "lineno": 82,
             "columnno": 14,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -559,11 +575,11 @@
         "comment": "",
         "meta": {
             "range": [
-                1562,
-                1578
+                1691,
+                1707
             ],
             "filename": "test.js",
-            "lineno": 75,
+            "lineno": 82,
             "columnno": 25,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -584,11 +600,11 @@
         "comment": "/**\n * @class\n * @desc テスト用クラス(desc)\n * @classdesc テスト用クラス(classdesc)\n * @extends BaseClass\n * @prop {Object} opt - 起動時オプション\n */",
         "meta": {
             "range": [
-                1726,
-                2453
+                1855,
+                2582
             ],
             "filename": "test.js",
-            "lineno": 86,
+            "lineno": 93,
             "columnno": 0,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -626,7 +642,7 @@
         "comment": "/**\n   * @typedef {Object} typeDef - JSDocのデータ型定義単位のオブジェクト\n   * @property {string} name - データ型の定義名\n   * @property {columnDef[]} list - 項目(メンバ)のリスト\n   */",
         "meta": {
             "filename": "test.js",
-            "lineno": 87,
+            "lineno": 94,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {}
@@ -666,11 +682,11 @@
         "comment": "/** class01のconstructor\n   * - constructorの説明\n   * @constructor\n   * @param {bigint} arg - typeはテスト用\n   */",
         "meta": {
             "range": [
-                2027,
-                2245
+                2156,
+                2374
             ],
             "filename": "test.js",
-            "lineno": 98,
+            "lineno": 105,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -707,11 +723,11 @@
         "comment": "/**\n * @class\n * @desc テスト用クラス(desc)\n * @classdesc テスト用クラス(classdesc)\n * @extends BaseClass\n * @prop {Object} opt - 起動時オプション\n */",
         "meta": {
             "range": [
-                1726,
-                2453
+                1855,
+                2582
             ],
             "filename": "test.js",
-            "lineno": 86,
+            "lineno": 93,
             "columnno": 0,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -759,11 +775,11 @@
         "comment": "",
         "meta": {
             "range": [
-                2226,
-                2240
+                2355,
+                2369
             ],
             "filename": "test.js",
-            "lineno": 106,
+            "lineno": 113,
             "columnno": 4,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
@@ -785,11 +801,11 @@
         "comment": "/** method01: メソッドテスト\n   * @memberof class01\n   * @param {number} arg - method01の引数\n   * @returns {{qId:number,name:string}} NG: qId,name指定無しのObjectになる\n   */",
         "meta": {
             "range": [
-                2409,
-                2451
+                2538,
+                2580
             ],
             "filename": "test.js",
-            "lineno": 114,
+            "lineno": 121,
             "columnno": 2,
             "path": "/Users/ena.kaon/Desktop/GitHub/library/underDev/specify/sample",
             "code": {
