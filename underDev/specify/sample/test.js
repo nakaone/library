@@ -59,6 +59,7 @@ function func01(arg){
    */
   const arrow01 = arg => {
     /**
+     * @memberof func01
      * @typedef {Object} arrowDef - JSDocの関数・メソッド単位のオブジェクト
      * @property {string} name - 関数・メソッド名
      * @property {arrowDef[]|typeDef[]|columnDef[]} list - 関数・メソッド内のJSDoc

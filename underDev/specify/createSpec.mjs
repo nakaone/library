@@ -297,19 +297,10 @@ class Doclet {
  *   ※ 上記に該当が無い場合、「(ラベル未設定)」
  * @prop {PropList} [properties] - メンバ一覧
  * @prop {PropList} [params] - 引数。クラスの場合はconstructorの引数
- * @prop {ReturnList} [returns=[]] - 戻り値
- * @prop {Object.<string, Article>} md - 記事名をキーとするマップ
- *   記事名は「一覧文書/クラス・グローバル関数/データ型定義文書の構成」参照
- *   top, list, type, prop, func, desc, param, return, -xxx
+ * @prop {PropList} [returns=[]] - 戻り値
  * 
  * @prop {string} [parent=null] - 親要素のDocletEx.id
  * @prop {string[]} [children=[]] - 子要素(メソッド・内部関数)のDocletEx.id
- * 
- * -- 以下備忘
- * @prop {string} title
- * @prop {string} description - 概要・詳細説明、処理手順
- * @prop {Object[]} [innerList=[]] - メソッド・内部関数一覧。項目：No,関数名,ラベル,アンカー
- * -- 備忘ここまで
  * 
  * # docletTypeの判定ロジック
  * 
@@ -380,6 +371,11 @@ class DocletEx extends Doclet {
         this.docletType === 'name' || this.docletType === 'class'
         ? (doclet.longname ?? v.desc) : v.desc
       );
+      // 説明文の先頭行をlabelにした場合、説明文から削除
+      if( doclet.description && doclet.description.startsWith(this.label) )
+        doclet.description.slice(this.label.length).trim();
+      if( doclet.classdesc && doclet.classdesc.startsWith(this.label) )
+        doclet.classdesc.slice(this.label.length).trim();
 
       dev.step(5);  // properties
       v.r = new PropList(doclet.properties);
@@ -407,6 +403,16 @@ class DocletEx extends Doclet {
       // returns他、typedef/interfaceで定義した型を展開
 
       dev.step(9);  // md - メソッドで対応？
+      // アンカーの作り方
+      if( this.docletType !== 'unknown' ){
+        dev.step(99.407,{
+          type: this.docletType,
+          parent: this.parent,  // nullはルート？
+          comment: this.comment,
+          name: this.name,
+          longname: this.longname,
+        });
+      }
 
       dev.end();
 
@@ -596,6 +602,19 @@ async function createSpec(opt={}) {
     //jsdocJson: `jsdoc.${Date.now()}.json`,  // jsdocコマンド設定ファイル名
     dummyDir: opt.dummyDir ?? './dummy',  // jsdoc用の空フォルダ
     jsdocTarget: opt.jsdocTarget ?? ".+\\.(js|mjs|gs|txt)$", // jsdocの動作対象となるファイル名
+    // docletType毎のMarkdownのタイトル設定
+    title:{ // '_'をDocletEx.nameで置換
+      typedef: opt.title?.typedef ?? '_データ型定義',
+      interface: opt.title?.interface ?? '_データ型定義',
+      class: opt.title?.class ?? '_クラス仕様書',
+      constructor: opt.title?.constructor ?? 'constructor()',
+      method: opt.title?.method ?? '_()',
+      function: opt.title?.function ?? '_()',
+      innerFunc: opt.title?.innerFunc ?? '_()',
+      objectFunc: opt.title?.objectFunc ?? '_()',
+      description: opt.title?.description ?? '_',
+      unknown: opt.title?.unknown ?? '_',
+    },
   };
   const doc = { // 全体管理
     source: null, // {SourceFile}
@@ -870,12 +889,79 @@ async function createSpec(opt={}) {
      */
     try {
 
-      dev.step(1,{id,level});
+      dev.step(1);  // ヘッダ部
       v.d = doc.map[id];
-      v.rv = ['#'.repeat(level) + ' ' + v.d.name];  // タイトル
+      v.rv = ['#'.repeat(level) + ' 🧩 '
+        + cf.title[v.d.docletType].replace('_',v.d.name)];  // タイトル
+      
+      // ラベル
       if( v.d.label ) v.rv.push(...['',v.d.label]);
 
+      // 説明文
+      v.desc = [];
+      ['description','classdesc'].forEach(x => {
+        if( v.d[x] ) v.desc.push(v.d[x]);
+      if( v.desc.length > 0 )
+        v.rv.push(...['',`${'#'.repeat(level+1)} 🧾 概説`,'',],...v.desc)});
+
+      // メンバ一覧
+      if( v.d.properties instanceof PropList ){
+        v.r = v.d.properties.makeTable();
+        if( v.r instanceof Error ) throw v.r;
+        v.rv.push(...['',`${'#'.repeat(level+1)} 🔢 メンバ一覧`,''],v.r)
+      }
+
+      // 引数
+      if( v.d.params instanceof PropList ){
+        v.r = v.d.params.makeTable();
+        if( v.r instanceof Error ) throw v.r;
+        v.rv.push(...['',`${'#'.repeat(level+1)} 📥 引数`,''],v.r)
+      }
+
+      // 戻り値
+      if( v.d.returns instanceof PropList ){
+        v.r = v.d.returns.makeTable();
+        if( v.r instanceof Error ) throw v.r;
+        v.rv.push(...['',`${'#'.repeat(level+1)} 📤 戻り値`,''],v.r)
+      }
+
+      // メソッド一覧
+      if( v.d.children && v.d.children.length > 0 ){
+        [v.children,v.num] = [[],1];
+        v.d.children.map(id => {
+          v.o = {
+            id: id,
+            no: v.num++,
+            name: doc.map[id].name,
+            anchor: ``,
+            /* いまここ：アンカーの設定方法
+              クラス・グローバル関数は「拡張子」のみ
+                ※クラス・グローバル関数名はファイル名なので割愛
+                ⇒ #prop, #returns, etc
+              メソッド・内部関数はメソッド名＋拡張子
+                ⇒ #constructor_prop
+                孫要素なら子要素名-孫要素名_拡張子
+                子孫要素名が'prop'等、拡張子と一致する場合は先頭に'-'を付ける
+                ⇒ #-prop_prop
+
+              アンカーの作り方：DocletEx.constructor.step.9でテスト
+            */
+            label: doc.map[id].label,
+          }
+        });
+      }
+
+      // 🧩 想定する実装
+      // 🧱 authClient.exec()
+
       /*
+      v.flag = {
+        prop: ['typedef','interface'], // メンバ一覧
+        func: ['',''], // メソッド・内部関数一覧
+        param: [],  // 引数
+        returns: [],  // 戻り値
+      }
+
       switch( this.docletType ){
         // データ型定義
         case 'typedef':
@@ -892,9 +978,9 @@ async function createSpec(opt={}) {
       }
       */
 
-
+      v.rv = v.rv.join('\n');
       dev.end();
-      return v.rv.join('\n');
+      return v.rv;
 
     } catch (e) { return dev.error(e); }
   }
@@ -975,6 +1061,8 @@ async function createSpec(opt={}) {
     dev.step(3);  // 要素間の親子関係を調査(DocletEx.parent/childrenの設定)
     pv.r = determineParent();
     if( pv.r instanceof Error) throw pv.r;
+
+    dev.step(99.994,doc.doclet);
 
     dev.step(4);  // Markdownファイルを作成、出力
     pv.r = output();
