@@ -111,8 +111,6 @@ class PropList {
         this.list.push(v.o);
       });
 
-      dev.step(99.118,this.makeTable());
-
       dev.end(); // 終了処理
 
     } catch (e) { return dev.error(e); }
@@ -135,13 +133,13 @@ class PropList {
         v.lines[1].push(':--');
       });
 
-      dev.step(2,this.list);  // データ部
+      dev.step(2);  // データ部
       this.list.forEach(l => v.lines.push(this.opt.order.map(x => l[x])));
 
-      dev.step(3,v.lines);  // テキストに変換
+      dev.step(3);  // テキストに変換
       v.rv = v.lines.map(l => `${' '.repeat(indent)}| ${l.join(' | ')} |`).join('\n');
 
-      dev.end(v.rv);
+      dev.end();
       return v.rv;
     
     } catch (e) { return dev.error(e); }
@@ -400,11 +398,9 @@ class DocletEx extends Doclet {
       if( v.r instanceof Error ) throw v.r;
       if( v.r instanceof PropList ){
         this.returns = v.r;
-        dev.step(99.397,{obj:this.returns,md:this.returns.makeTable()});
       }
 
-      // いまここ
-      dev.step(8);  // parent, children は全Docletが揃ってから設定
+      dev.step(8);  // parent, childrenの初期値設定。実値は全Doclet作成後に設定
       this.parent = null;
       this.children = [];
 
@@ -462,6 +458,76 @@ class DocletEx extends Doclet {
 
     } catch (e) { return dev.error(e); }
   }
+
+  /** markdown: DocletExのインスタンスからMarkdown文字列を作成
+   * @param {string} [id=this.id] - 対象DocletEx.id
+   * @param {number} [level=1] - 階層の深さ
+   * @returns {string|Error}
+   */
+  markdown(id,level=1) {
+    const v = {whois:`${this.constructor.name}.markdown`, arg:{id,level}, rv:null};
+    const dev = new devTools(v);
+    /**
+     * @name 文書の構成
+     * @memberof markdown
+     * @description
+     * 
+     * # データ型定義
+     * 
+     * 1. ヘッダ部("データ型名_top")
+     *    - タイトル(○○データ型仕様書、等)
+     *    - ラベル(一行にまとめた説明)
+     *    - データ型説明文
+     * 2. メンバ一覧("クラス名_prop")
+     * 3. 個別メソッド("クラス名-メソッド名") ※注意：'_'ではなく'-'
+     *    - interfaceにfunctionのメンバが含まれる場合、表の外に記述
+     * 
+     * # 関数
+     * 
+     * 1. ヘッダ部("クラス名_top")
+     *    - タイトル(○○クラス仕様書、等)
+     *    - ラベル(一行にまとめた説明)
+     *    - 概要説明(数行程度)
+     * 2. メンバ一覧("クラス名_prop")
+     * 3. メソッド一覧("クラス名_func")
+     * 4. 詳細説明("クラス名_desc")
+     * 5. 引数("クラス名_param")
+     * 6. 戻り値("クラス名_return")
+     * 7. 個別メソッド("クラス名-メソッド名") ※注意：'_'ではなく'-'
+     *    - innerFuncを再帰呼出
+     * 
+     * # 説明文
+     * 
+     * 1. ヘッダ部("データ型名_top")
+     *    - タイトル(○○データ型仕様書、等)
+     *    - データ型説明文
+     */
+    try {
+
+      dev.step(1,{id,level});
+      /*
+      switch( this.docletType ){
+        // データ型定義
+        case 'typedef':
+        case 'interface':
+        // 関数
+        case 'class':
+        case 'constructor':
+        case 'method':
+        case 'function':
+        case 'innerFunc':
+        case 'objectFunc':
+        case 'description':
+        case 'unknown':
+      }
+      */
+
+
+      dev.end();
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
 }
 
 /** createSpec概要
@@ -471,7 +537,7 @@ class DocletEx extends Doclet {
  * JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成する。
  * 
  * - クラス・グローバル関数毎に別ファイル化
- * - typedef,interfaceはまとめて"readme.md"としてフォルダ毎に作成
+ * - typedef,interfaceはまとめて"index.md"としてフォルダ毎に作成
  * - 出力フォルダは入力ファイルのフォルダと同じ構成(パスの共通部分を出力フォルダで置換)
  *   ```
  *   /Users/xxx/〜/library/yyy/src/common/z01.js <- class a01,function a02
@@ -481,11 +547,11 @@ class DocletEx extends Doclet {
  *   出力先フォルダが"../doc"の場合
  *   ../doc/common/a01.md
  *   ../doc/common/a02.md ※a01,a02は別ファイル
- *   ../doc/common/readme.md ※typedef,interface集
+ *   ../doc/common/index.md ※typedef,interface集
  *   ../doc/client/a03.md
- *   ../doc/client/readme.md
+ *   ../doc/client/index.md
  *   ../doc/server/a04.md
- *   ../doc/server/readme.md
+ *   ../doc/server/index.md
  *   ```
  * 
  * # 使用方法
@@ -605,6 +671,7 @@ async function createSpec(opt={}) {
     source: null, // {SourceFile}
     doclet: [],   // {DocletEx[]}
     map: {},      // {Object.<string, DocletEx>} DocletEx.idをキーとするマップ
+    unique: [],   // {string[]} 固有パス一覧
   };
 
   /** determineParent: 対象要素が子要素であるとき親要素を特定
@@ -828,6 +895,54 @@ async function createSpec(opt={}) {
     } catch (e) { return dev.error(e); }
   }
   
+  /** outputMarkdown: Markdownファイルを作成、出力
+   * @param {void}
+   * @returns {null|Error}
+   */
+  function outputMarkdown() {
+    const v = {whois:`${pv.whois}.outputMarkdown`, arg:{}, rv:null};
+    const dev = new devTools(v);
+    try {
+
+      /*
+      v.proto = {
+        path: doc.source.outDir,
+        filename: '',
+      }
+      dev.step(1);
+      for( v.i=0,v.doc={children:{}} ; v.i<doc.doclet.length ; v.i++ ){
+        v.d = doc.doclet[v.i];
+        // 固有パスを階層毎に分離
+        v.path = v.d.unique.split('/').filter(x => x);
+        v.o = v.doc;
+        v.path.forEach(x => {
+          // childrenに子階層を作成
+          if( typeof v.o.children[x] === 'undefined' ){
+            v.o.children[x] = {
+              path: x,
+              children: {},
+            };
+            v.o = v.o.children[x];
+          }
+          
+        })
+      }
+      // 固有パス毎にindex.md作成
+      */
+
+      dev.step(2);
+      for( v.i=0 ; v.i<doc.doclet.length ; v.i++ ){
+        v.d = doc.doclet[v.i];
+        v.r = v.d.markdown(v.d.id);
+        if( v.r instanceof Error ) throw v.r;
+      }
+
+      dev.end(); // 終了処理
+      return v.rv;
+
+    } catch (e) { return dev.error(e); }
+  }
+  
   // -------------------------------------------------------------
   // メイン処理
   // -------------------------------------------------------------
@@ -846,6 +961,7 @@ async function createSpec(opt={}) {
       pv.r.forEach(x => {
         doc.doclet.push(x);
         doc.map[x.id] = x;
+        if( !doc.unique.includes(x.unique) ) doc.unique.push(x.unique);
       });
     }
 
@@ -853,7 +969,10 @@ async function createSpec(opt={}) {
     pv.r = determineParent();
     if( pv.r instanceof Error) throw pv.r;
 
-    dev.step(99.644,doc);
+    dev.step(4);  // Markdownファイルを作成、出力
+    pv.r = outputMarkdown();
+    if( pv.r instanceof Error) throw pv.r;
+
     /*
     dev.step(3);  // docletの各要素を階層化してマッピング
     pv.r = mapDoclet();

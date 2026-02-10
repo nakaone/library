@@ -70,8 +70,8 @@ function func01(arg){
   /**
    * @name 関数内説明文
    * @memberof func01
-   * @description
-   * 関数内部での説明文。DocletEx.id="/func01"の子要素になっているか確認
+   * @description 関数内部での説明文
+   * DocletEx.id="/func01"の子要素になっているか確認
    */
   /**
    * @typedef {Object} funcDef - JSDocの関数・メソッド単位のオブジェクト
