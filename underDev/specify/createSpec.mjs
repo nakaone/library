@@ -18,7 +18,6 @@ createSpec();
  * - anchor, linkの設定
  * - 固定メニューの追加(ex.フォルダ間のindex.mdの相互参照)
  * - [bug] 説明文が複数回出力される
- * - ログの出力抑止
  * - jsdoc動作定義ファイル/ダミーディレクトリの削除
  * - undocumentedチェックを追加
  * - シンボル・メソッドと一致する文字列にはリンクを自動生成
@@ -178,6 +177,59 @@ async function createSpec(opt={}) {
     map: {},      // {Object.<string, DocletEx>} DocletEx.idをキーとするマップ
     unique: [],   // {string[]} 固有パス一覧
   };
+  const dev = new devTools(pv,{mode:'pipe'});
+  try {
+
+    dev.step(1);  // 最初の2つは全体とコマンド名、不要なので削除
+    pv.argv = process.argv.slice(2);
+
+    if( pv.argv.length === 0 || /^\-+[h|H]/.test(pv.argv[0]) ){
+
+      dev.step(2);  // 起動時パラメータが無指定の場合、useageを表示して終了
+      console.log(cf.useage);
+
+    } else {
+
+      dev.step(3);  // sourceFileに対象ファイルリスト作成
+      doc.source = listSource(pv.argv);
+      if( doc.source instanceof Error) throw doc.source;
+
+      dev.step(4);  // 対象ファイルについて順次Docletを抽出、docletに格納
+      for( pv.i=0 ; pv.i<doc.source.list.length ; pv.i++ ){
+
+        dev.step(4.1);  // ファイル単位にjsdocを実行、docletを作成
+        pv.r = await getFile(doc.source.list[pv.i]);
+        if( pv.r instanceof Error) throw pv.r;
+
+        dev.step(4.2);  // Doclet型の配列を共通メンバdocに格納
+        pv.r.forEach(x => {
+          doc.doclet.push(x);
+          doc.map[x.id] = x;
+          if( !doc.unique.includes(x.unique) ) doc.unique.push(x.unique);
+        });
+      }
+
+      dev.step(5);  // 要素間の親子関係を調査(DocletEx.parent/childrenの設定)
+      pv.r = determineParent();
+      if( pv.r instanceof Error) throw pv.r;
+
+      dev.step(6);  // Markdownファイルを作成、出力
+      pv.r = output();
+      if( pv.r instanceof Error) throw pv.r;
+
+    }
+
+    dev.end();
+    return pv.rv;
+
+  } catch (e) { dev.error(e); return e; } finally {
+    // jsdoc動作定義ファイルを削除
+    //if( existsSync(cf.jsdocJson) )
+      //unlinkSync(cf.jsdocJson);
+    // ダミーディレクトリを削除
+    //if( existsSync(cf.dummyDir) )
+      //rmSync(cf.dummyDir, { recursive: true, force: true });
+  }
 
   /** determineParent: 対象要素が子要素であるとき親要素を特定
    * メソッド⇒クラス、内部関数⇒グローバル関数、等
@@ -503,43 +555,8 @@ async function createSpec(opt={}) {
         });
       }
 
-      /* アンカーの作り方
-      if( v.d.docletType !== 'unknown' ){
-        dev.step(99.944,{
-          type: v.d.docletType,
-          parent: v.d.parent,  // nullはルート？
-          comment: v.d.comment,
-          name: v.d.name,
-          longname: v.d.longname,
-        });
-      }*/
-
       // 🧩 想定する実装
       // 🧱 authClient.exec()
-
-      /*
-      v.flag = {
-        prop: ['typedef','interface'], // メンバ一覧
-        func: ['',''], // メソッド・内部関数一覧
-        param: [],  // 引数
-        returns: [],  // 戻り値
-      }
-
-      switch( this.docletType ){
-        // データ型定義
-        case 'typedef':
-        case 'interface':
-        // 関数
-        case 'class':
-        case 'constructor':
-        case 'method':
-        case 'function':
-        case 'innerFunc':
-        case 'objectFunc':
-        case 'description':
-        case 'unknown':
-      }
-      */
 
       v.rv = v.rv.join('\n');
       dev.end();
@@ -615,93 +632,10 @@ async function createSpec(opt={}) {
         writeFileSync(`${doc.source.outDir}/${unique}/index.md`,v.md.join('\n'))
       });
 
-      /*
-      v.proto = {
-        path: doc.source.outDir,
-        filename: '',
-      }
-      dev.step(1);
-      for( v.i=0,v.doc={children:{}} ; v.i<doc.doclet.length ; v.i++ ){
-        v.d = doc.doclet[v.i];
-        // 固有パスを階層毎に分離
-        v.path = v.d.unique.split('/').filter(x => x);
-        v.o = v.doc;
-        v.path.forEach(x => {
-          // childrenに子階層を作成
-          if( typeof v.o.children[x] === 'undefined' ){
-            v.o.children[x] = {
-              path: x,
-              children: {},
-            };
-            v.o = v.o.children[x];
-          }
-          
-        })
-      }
-      // 固有パス毎にindex.md作成
-      */
-
       dev.end(); // 終了処理
       return v.rv;
 
     } catch (e) { return dev.error(e); }
-  }
-  
-  // -------------------------------------------------------------
-  // メイン処理
-  // -------------------------------------------------------------
-  const dev = new devTools(pv,{mode:'pipe'});
-  try {
-
-    dev.step(1,cf);  // 最初の2つは全体とコマンド名、不要なので削除
-    pv.argv = process.argv.slice(2);
-
-    if( pv.argv.length === 0 || /^\-+[h|H]/.test(pv.argv[0]) ){
-
-      dev.step(2);  // 起動時パラメータが無指定の場合、useageを表示して終了
-      console.log(cf.useage);
-
-    } else {
-
-      dev.step(3);  // sourceFileに対象ファイルリスト作成
-      doc.source = listSource(pv.argv);
-      if( doc.source instanceof Error) throw doc.source;
-
-      dev.step(4);  // 対象ファイルについて順次Docletを抽出、docletに格納
-      for( pv.i=0 ; pv.i<doc.source.list.length ; pv.i++ ){
-
-        dev.step(4.1);  // ファイル単位にjsdocを実行、docletを作成
-        pv.r = await getFile(doc.source.list[pv.i]);
-        if( pv.r instanceof Error) throw pv.r;
-
-        dev.step(4.2);  // Doclet型の配列を共通メンバdocに格納
-        pv.r.forEach(x => {
-          doc.doclet.push(x);
-          doc.map[x.id] = x;
-          if( !doc.unique.includes(x.unique) ) doc.unique.push(x.unique);
-        });
-      }
-
-      dev.step(5);  // 要素間の親子関係を調査(DocletEx.parent/childrenの設定)
-      pv.r = determineParent();
-      if( pv.r instanceof Error) throw pv.r;
-
-      dev.step(6);  // Markdownファイルを作成、出力
-      pv.r = output();
-      if( pv.r instanceof Error) throw pv.r;
-
-    }
-
-    dev.end();
-    return pv.rv;
-
-  } catch (e) { dev.error(e); return e; } finally {
-    // jsdoc動作定義ファイルを削除
-    //if( existsSync(cf.jsdocJson) )
-      //unlinkSync(cf.jsdocJson);
-    // ダミーディレクトリを削除
-    //if( existsSync(cf.dummyDir) )
-      //rmSync(cf.dummyDir, { recursive: true, force: true });
   }
 }
 
