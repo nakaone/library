@@ -328,8 +328,8 @@ async function createSpec(opt={}) {
    * @param {void}
    * @returns {SourceFile|Error}
    */
-  function listSource() {
-    const v = {whois:`${pv.whois}.listSource`, arg:{},
+  function listSource(argv) {
+    const v = {whois:`${pv.whois}.listSource`, arg:{argv},
       rv:{common:'',outDir:'',num:0,list:[]}};
     const dev = new devTools(v);
     try {
@@ -342,26 +342,20 @@ async function createSpec(opt={}) {
        * `node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]`
        * 
        * シェル側でワイルドカードを展開して配列が渡されるので、以下のように判断する。
-       * ①最初の2つは全体とコマンド名、不要なので削除
+       * ①最初の2つはnodeとコマンド名(createSpec)、不要なので削除
        * ②3番目以降'-o'までは入力ファイル
        * ③'-o'の次は出力フォルダ名
        * ④'-x'の次からは除外ファイル
        */
 
       dev.step(1);  // 結果を格納する領域を準備
-      v.iList = [],  // 入力ファイルリスト
-      v.xList = [],  // 除外ファイルリスト
+      v.iList = [];  // 入力ファイルリスト
+      v.xList = [];  // 除外ファイルリスト
 
-      dev.step(2);  // シェルの起動時引数を取得、順次処理
-      v.argv = process.argv.slice(2);
-      if( v.argv.length === 0 || /^\-+[h|H]/.test(v.argv[0]) ){
-        console.log(cf.useage);
-        throw new Error();
-      }
-
-      for( v.i=0, v.mode='i' ; v.i<v.argv.length ; v.i++ ){
-        v.x = path.resolve(v.argv[v.i]);  // 相対->絶対パス
-        switch(v.argv[v.i]){
+      dev.step(2);  // 引数の解釈
+      for( v.i=0, v.mode='i' ; v.i<argv.length ; v.i++ ){
+        v.x = path.resolve(argv[v.i]);  // 相対->絶対パス
+        switch(argv[v.i]){
           case '-o':
             v.mode = 'o'; break;
           case '-x':
@@ -659,29 +653,45 @@ async function createSpec(opt={}) {
   const dev = new devTools(pv);
   try {
 
-    dev.step(1);  // sourceFileに対象ファイルリスト作成
-    doc.source = listSource();
-    if( doc.source instanceof Error) throw doc.source;
+    dev.step(1);  // 最初の2つは全体とコマンド名、不要なので削除
+    pv.argv = process.argv.slice(2);
+    //dev.step(99.658,{p:process.argv,v:pv.argv});
 
-    dev.step(2);  // 対象ファイルについて順次Docletを抽出、docletに格納
-    for( pv.i=0 ; pv.i<doc.source.list.length ; pv.i++ ){
-      dev.step(1.1);  // ファイル単位にjsdocを実行、docletを作成
-      pv.r = await getFile(doc.source.list[pv.i]);
+    if( pv.argv.length === 0 || /^\-+[h|H]/.test(pv.argv[0]) ){
+
+      dev.step(2);  // 起動時パラメータが無指定の場合、useageを表示して終了
+      console.log(cf.useage);
+
+    } else {
+
+      dev.step(3);  // sourceFileに対象ファイルリスト作成
+      doc.source = listSource(pv.argv);
+      if( doc.source instanceof Error) throw doc.source;
+
+      dev.step(4);  // 対象ファイルについて順次Docletを抽出、docletに格納
+      for( pv.i=0 ; pv.i<doc.source.list.length ; pv.i++ ){
+
+        dev.step(4.1);  // ファイル単位にjsdocを実行、docletを作成
+        pv.r = await getFile(doc.source.list[pv.i]);
+        if( pv.r instanceof Error) throw pv.r;
+
+        dev.step(4.2);  // Doclet型の配列を共通メンバdocに格納
+        pv.r.forEach(x => {
+          doc.doclet.push(x);
+          doc.map[x.id] = x;
+          if( !doc.unique.includes(x.unique) ) doc.unique.push(x.unique);
+        });
+      }
+
+      dev.step(5);  // 要素間の親子関係を調査(DocletEx.parent/childrenの設定)
+      pv.r = determineParent();
       if( pv.r instanceof Error) throw pv.r;
-      pv.r.forEach(x => {
-        doc.doclet.push(x);
-        doc.map[x.id] = x;
-        if( !doc.unique.includes(x.unique) ) doc.unique.push(x.unique);
-      });
+
+      dev.step(6);  // Markdownファイルを作成、出力
+      pv.r = output();
+      if( pv.r instanceof Error) throw pv.r;
+
     }
-
-    dev.step(3);  // 要素間の親子関係を調査(DocletEx.parent/childrenの設定)
-    pv.r = determineParent();
-    if( pv.r instanceof Error) throw pv.r;
-
-    dev.step(4);  // Markdownファイルを作成、出力
-    pv.r = output();
-    if( pv.r instanceof Error) throw pv.r;
 
     dev.end();
     return pv.rv;
