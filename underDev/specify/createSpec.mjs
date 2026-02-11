@@ -5,105 +5,6 @@ import { spawn } from "node:child_process";
 import { readFileSync, writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
 
-/** createSpec概要
- * @name createSpec概要
- * @desc
- * 
- * JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成する。
- * 
- * - クラス・グローバル関数毎に別ファイル化
- * - typedef,interfaceはまとめて"index.md"としてフォルダ毎に作成
- * - 出力フォルダは入力ファイルのフォルダと同じ構成(パスの共通部分を出力フォルダで置換)
- *   ```
- *   /Users/xxx/〜/library/yyy/src/common/z01.js <- class a01,function a02
- *   /Users/xxx/〜/library/yyy/src/client/z02.js <- class a03
- *   /Users/xxx/〜/library/yyy/src/server/z03.js <- class a04
- * 
- *   出力先フォルダが"../doc"の場合
- *   ../doc/common/a01.md
- *   ../doc/common/a02.md ※a01,a02は別ファイル
- *   ../doc/common/index.md ※typedef,interface集
- *   ../doc/client/a03.md
- *   ../doc/client/index.md
- *   ../doc/server/a04.md
- *   ../doc/server/index.md
- *   ```
- * 
- * # 使用方法
- * 
- * ```
- * node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]
- * ```
- * 
- * - 処理対象は'.js','.mjs','.gs','.txt'
- * - ワイルドカード関係の注意
- *   - クォートすると展開されない(src/*.jsはOKだが"src/*.js"は不展開)
- *   - *.js # 任意文字列
- *   - ?.js # 1文字
- *   - [a-z].js # 文字クラス
- *   - **\/*.js # 再帰glob(src/a.js, src/lib/x.js, test/foo.js)
- *   - 【不採用】src/**\/*.js~src/**\/*.test.js # 除外glob(左例はtestを除外したjs)
- * 
- * # JSDoc記述上の注意
- * 
- * - グローバル関数・クラス・データ型定義の名称は重複不可
- *   ∵ リンクを張る場合、リンク先を特定できない
- * - 以下はエラーとなる
- *   - ＠class未定義で＠constructorやメソッドにJSDoc記述
- *   - グローバル関数未定義で内部関数にJSDoc記述
- * - JSDoc開始の「／**」以降に続く文字列は＠descとして扱われる
- * - コンストラクタには「＠constructor」必須
- * - 「＠history」を独自タグとして定義
- * - 説明文(=Markdownとして出力する説明)
- *   - 「＠name (説明文のタイトル)」＋「＠desc」で開始
- *   - 「＠name」がない説明文は出力されない(廃棄)
- *   - クラス・関数内部に記述する場合、「＠memberof」を指定
- *   - ＠name使用時「／**」以降に続く文字列は廃棄される(上記の例外)
- *   - ＠desc以降はMarkdownとして扱われ、共通する先頭の空白は削除される
- * - ＠typedefでfunctionの定義は不可
- * - ＠interfaceではfunction型メンバの定義は可能だが、分離する
- *   ```
- *   ／**
- *     * ＠interface User
- *     * ＠property {string} name
- *     * ＠property {number} age
- *     * ＠property {boolean} isAdmin
- *     *／
- *   ／**
- *     * ＠function ※ここには記述不可
- *     * ＠name User#test ※ここには記述不可
- *     * ＠desc オブジェクト内関数の説明
- *     * ＠param {string} arg
- *     * ＠returns {boolean|Error}
- *     * ＠example オブジェクト内関数の使用例
- *     *／
- *   ```
- *   なお変数がinterfaceで定義されたデータ型であることは以下のように示す
- *   ```
- *   ／** ＠type {User}*／
- *   const user = {...}
- *   ```
- * 
- * # 用語集
- * 
- * - Doclet : JSDoc上「／** 〜 *／」までの部分。通常一つのファイルに複数存在。
- *   `jsdoc -X`の出力はArray.<Doclet>形式のJSONとなる。
- * - シンボル : クラス・関数・データ型定義。Markdownの仕様書上、最上位の分類
- * 
- * # 参考資料
- * 
- * - [データ型判定](https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0)(Google Spread)
- * 
- * @example
- * node createSpec.mjs
- *   ../Auth/src/**／*.(js|mjs) ../Auth/src/**／*.md \
- *   -o ../Auth/tmp \
- *   -x ../Auth/src/server/*
- * 
- * @history
- * - rev.1.0.0 : 2026/01/31
- *   specify.mjsを継承し、初版作成
- */
 /** 開発工程・残課題
  * @name 開発工程・残課題
  * @desc
@@ -121,6 +22,7 @@ import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
  * - 和文の他、英文のテンプレートも追加
  * - 文法チェック
  *   - ＠class の後に余計な文字列があればエラー
+ * - history対応
  */
 
 /** PropList: 属性一覧に表示する項目
@@ -545,6 +447,7 @@ class DocletEx extends Doclet {
 console.log(JSON.stringify(createSpec(),null,2));
 
 /** createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
+ * - 使用方法はcf.useageに記載(オプション無し起動時にコンソール表示)
  * @param {Object} [opt={}] - オプション設定
  * @returns {void}
  * 
@@ -552,6 +455,22 @@ console.log(JSON.stringify(createSpec(),null,2));
  * @prop {Object} cf - createSpec動作設定情報(config)
  * @prop {sourceFile[]} sourceFile - 入力ファイル情報
  * @prop {Doclet[]} doclet - Doclet型にしたオブジェクトを保存
+ * 
+ * @description
+ * 
+ * # 用語集
+ * 
+ * - Doclet : JSDoc上「／** 〜 *／」までの部分。通常一つのファイルに複数存在。
+ *   `jsdoc -X`の出力はArray.<Doclet>形式のJSONとなる。
+ * - シンボル : クラス・関数・データ型定義。Markdownの仕様書上、最上位の分類
+ * 
+ * # 参考資料
+ * 
+ * - [データ型判定](https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0)(Google Spread)
+ * 
+ * @history
+ * - rev.1.0.0 : 2026/01/31
+ *   specify.mjsを継承し、初版作成
  */
 async function createSpec(opt={}) {
 
@@ -575,6 +494,100 @@ async function createSpec(opt={}) {
       description: opt.title?.description ?? '_',
       unknown: opt.title?.unknown ?? '_',
     },
+    useage: `
+      createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
+      
+      useage: \`node createSpec.mjs [入力ファイル...] -o 出力フォルダ [-x 除外パターン ...]\`
+      
+      - 入力側のフォルダに合わせて出力フォルダを作成
+      - 一覧＋データ型定義のindex.md＋クラス・グローバル関数毎のMarkdownを作成
+      - 詳細は後掲「入出力イメージ」の項を参照
+      
+      # 使用上の注意
+      
+      - 処理対象は'.js','.mjs','.gs','.txt'
+      - ワイルドカード関係の注意
+        - クォートすると展開されない(src/*.jsはOKだが"src/*.js"は不展開)
+        - *.js # 任意文字列
+        - ?.js # 1文字
+        - [a-z].js # 文字クラス
+        - **\/*.js # 再帰glob(src/a.js, src/lib/x.js, test/foo.js)
+      
+      # JSDoc記述上の注意
+      
+      - グローバル関数・クラス・データ型定義の名称は重複不可
+        ∵ リンクを張る場合、リンク先を特定できない
+      - 以下はエラーとなる
+        - ＠class未定義で＠constructorやメソッドにJSDoc記述
+        - グローバル関数未定義で内部関数にJSDoc記述
+      - JSDoc開始の「／**」以降に続く文字列は＠descとして扱われる
+      - コンストラクタには「＠constructor」必須
+      - 「＠history」を独自タグとして定義
+      - 説明文(=Markdownとして出力する説明)
+        - 「＠name (説明文のタイトル)」＋「＠desc」で開始
+        - 「＠name」がない説明文は出力されない(廃棄)
+        - クラス・関数内部に記述する場合、「＠memberof」を指定
+        - ＠name使用時「／**」以降に続く文字列は廃棄される(上記の例外)
+        - ＠desc以降はMarkdownとして扱われ、共通する先頭の空白は削除される
+      - ＠typedefでfunctionの定義は不可
+      - ＠interfaceではfunction型メンバの定義は可能だが、分離する
+        \`\`\`
+        ／**
+          * ＠interface User
+          * ＠property {string} name
+          * ＠property {number} age
+          * ＠property {boolean} isAdmin
+          *／
+        ／**
+          * ＠function ※ここには記述不可
+          * ＠name User#test ※ここには記述不可
+          * ＠desc オブジェクト内関数の説明
+          * ＠param {string} arg
+          * ＠returns {boolean|Error}
+          * ＠example オブジェクト内関数の使用例
+          *／
+        \`\`\`
+        なお変数がinterfaceで定義されたデータ型であることは以下のように示す
+        \`\`\`
+        ／** ＠type {User}*／
+        const user = {...}
+        \`\`\`
+      
+      # 入出力イメージ
+      
+      \`\`\`入力側サンプル
+      ├── client
+      │   ├── authClient.mjs
+      │   └── cryptoClient.mjs
+      ├── common
+      │   ├── authConfig.mjs
+      │   └── subtest
+      │       └── createSpec.mjs
+      └── server
+          ├── authServer.mjs
+          ├── cryptoServer.mjs
+          └── Member.mjs
+      \`\`\`
+      
+      \`\`\` 出力側サンプル
+      ├── client
+      │   ├── index.md  <- グローバル関数・クラス一覧＋データ型定義
+      │   ├── authClient.md
+      │   ├── clearAuthEnvironment.md <- authClient.mjs内で宣言されたグローバル関数
+      │   └── cryptoClient.md
+      ├── common
+      │   ├── index.md
+      │   ├── authConfig.md
+      │   └── subtest
+      │       ├── createSpec.md <- クラス毎に別ファイル化
+      │       ├── DocletEx.md
+      │       └── PropList.md
+      └── server
+          ├── authServer.md
+          ├── cryptoServer.md
+          └── Member.md
+      \`\`\`
+    `.replaceAll(/\n      /g,'\n'),
   };
   const doc = { // 全体管理
     source: null, // {SourceFile}
@@ -758,6 +771,10 @@ async function createSpec(opt={}) {
 
       dev.step(2);  // シェルの起動時引数を取得、順次処理
       v.argv = process.argv.slice(2);
+      if( v.argv.length === 0 || /^\-+[h|H]/.test(v.argv[0]) ){
+        console.log(cf.useage);
+        throw new Error();
+      }
 
       for( v.i=0, v.mode='i' ; v.i<v.argv.length ; v.i++ ){
         v.x = path.resolve(v.argv[v.i]);  // 相対->絶対パス
@@ -1059,7 +1076,7 @@ async function createSpec(opt={}) {
   const dev = new devTools(pv);
   try {
 
-    dev.step(1,cf);  // sourceFileに対象ファイルリスト作成
+    dev.step(1);  // sourceFileに対象ファイルリスト作成
     doc.source = listSource();
     if( doc.source instanceof Error) throw doc.source;
 
@@ -1082,18 +1099,6 @@ async function createSpec(opt={}) {
     dev.step(4);  // Markdownファイルを作成、出力
     pv.r = output();
     if( pv.r instanceof Error) throw pv.r;
-
-    /*
-    dev.step(3);  // docletの各要素を階層化してマッピング
-    pv.r = mapDoclet();
-    if( pv.r instanceof Error) throw pv.r;
-
-    dev.step(4);  // docletを走査、記事毎にArticleを作成
-    doclet.forEach(o => {
-      pv.r = makeArticle(o);
-      if( pv.r instanceof Error) throw pv.r;
-    });
-    */
 
     dev.end();
     return pv.rv;

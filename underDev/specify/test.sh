@@ -17,15 +17,22 @@ node createSpec.mjs sample/test.js -o $doc/test > $tmp/test.result.txt 2> $tmp/t
 jsdoc -X createSpec.mjs > $tmp/createSpec.json
 node createSpec.mjs createSpec.mjs -o $doc/createSpec > $tmp/createSpec.result.txt 2> $tmp/createSpec.error.txt
 
+# 3. 引数無しでの起動時
+msg="\n=== no argument"; echo $msg > $tmp/noarg.result.txt; echo $msg > $tmp/noarg.error.txt
+node createSpec.mjs >> $tmp/noarg.result.txt 2>> $tmp/noarg.error.txt
+msg="\n=== arg = --help"; echo $msg >> $tmp/noarg.result.txt; echo $msg >> $tmp/noarg.error.txt
+node createSpec.mjs --help >> $tmp/noarg.result.txt 2>> $tmp/noarg.error.txt
+msg="\n=== arg = -H"; echo $msg >> $tmp/noarg.result.txt; echo $msg >> $tmp/noarg.error.txt
+node createSpec.mjs -H >> $tmp/noarg.result.txt 2>> $tmp/noarg.error.txt
 
 # --- 開発用サンプル
 
 # a. underDev/Auth　※フォルダ以下全JSソースの一括指定
-node createSpec.mjs ../Auth/src/**/*.(js|mjs) -o $doc/Auth > $tmp/auth.result.txt 2> $tmp/auth.error.txt
+#node createSpec.mjs ../Auth/src/**/*.(js|mjs) -o $doc/Auth > $tmp/auth.result.txt 2> $tmp/auth.error.txt
 
 # b. sample/Schema.js
-jsdoc -X sample/Schema.js > $tmp/Schema.json
-node createSpec.mjs sample/Schema.js -o $doc/Schema > $tmp/auth.result.txt 2> $tmp/auth.error.txt
+#jsdoc -X sample/Schema.js > $tmp/Schema.json
+#node createSpec.mjs sample/Schema.js -o $doc/Schema > $tmp/auth.result.txt 2> $tmp/auth.error.txt
 
 # --- 備忘
 

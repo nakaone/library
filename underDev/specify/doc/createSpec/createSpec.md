@@ -1,14 +1,30 @@
 # 🧩 createSpec()
 
-createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
+# 用語集
 
 ## 🧾 概説
 
-createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
+# 用語集
+
+- Doclet : JSDoc上「／** 〜 *／」までの部分。通常一つのファイルに複数存在。
+  `jsdoc -X`の出力はArray.<Doclet>形式のJSONとなる。
+- シンボル : クラス・関数・データ型定義。Markdownの仕様書上、最上位の分類
+
+# 参考資料
+
+- [データ型判定](https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0)(Google Spread)
 
 ## 🧾 概説
 
-createSpec: JavaScriptソース内のJSDocを基に、Markdown形式の仕様書を生成
+# 用語集
+
+- Doclet : JSDoc上「／** 〜 *／」までの部分。通常一つのファイルに複数存在。
+  `jsdoc -X`の出力はArray.<Doclet>形式のJSONとなる。
+- シンボル : クラス・関数・データ型定義。Markdownの仕様書上、最上位の分類
+
+# 参考資料
+
+- [データ型判定](https://docs.google.com/spreadsheets/d/1X_1u2xpCOHV2oeZxSvFVAxUNx2ast1JWLWOIT0sQpuU/edit?gid=0#gid=0)(Google Spread)
 
 ## 🔢 メンバ一覧
 

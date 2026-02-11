@@ -1,3 +1,0 @@
-# 🧩 localFunc
-
-localFunc
