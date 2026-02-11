@@ -2,7 +2,7 @@
 import path from 'path';
 import process from 'process';
 import { spawn } from "node:child_process";
-import { readFileSync, writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
+import { writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.1.0/core.mjs';
 createSpec();
 
