@@ -965,20 +965,20 @@ async function createSpec(opt={}) {
     try {
 
       dev.step(1);  // 出力先フォルダ配下に固有パス毎のフォルダを作成
-      dev.step(99.967,{source:doc.source,unique:doc.unique.sort()});
-      /*
-      doc.source.outDir:"/Users/ena.kaon/Desktop/GitHub/library/underDev/Auth/tmp", // string
-
-      doc.unique = [
-        "client/", // string
-        "common/", // string
-        "common/subtest/", // string
-        "server/", // string
-      ]*/
       doc.unique.sort().forEach(x => {
         v.path = doc.source.outDir + '/' + x;
         if( !existsSync(v.path) ) mkdirSync(v.path);
       })
+
+      dev.step(2);  // グローバル関数・クラスならファイル出力
+      for( v.i=0 ; v.i<doc.doclet.length ; v.i++ ){
+        v.d = doc.doclet[v.i];
+        v.r = markdown(v.d.id);
+        if( v.r instanceof Error ) throw v.r;
+        if( ['function','class'].includes(v.d.docletType) ){
+          writeFileSync(`${doc.source.outDir}/${v.d.unique}/${v.d.name}.md`,v.r);
+        }
+      }
 
 
       /*
@@ -1006,13 +1006,6 @@ async function createSpec(opt={}) {
       }
       // 固有パス毎にindex.md作成
       */
-
-      dev.step(2);
-      for( v.i=0 ; v.i<doc.doclet.length ; v.i++ ){
-        v.d = doc.doclet[v.i];
-        v.r = markdown(v.d.id);
-        if( v.r instanceof Error ) throw v.r;
-      }
 
       dev.end(); // 終了処理
       return v.rv;
