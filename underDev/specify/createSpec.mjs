@@ -5,38 +5,6 @@ import { spawn } from "node:child_process";
 import { readFileSync, writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
 
-/** Article: Markdownの単一記事(タイトル＋本文)用データオブジェクト
- * - `<!--::記事のID::-->`で他記事も埋め込み可とする
- * - アンカーのidは識別子を小文字変換したものとする
- * 
- * @class Article
- * @prop {string} [title=''] - 記事のタイトル
- * @prop {string} [icon=''] - アイコンを付ける場合に設定
- * @prop {boolean} [anchor=false] - アンカーを設定する場合に設定(`<span id="〜">`)
- * @prop {string} [link=''] - タイトルにリンクを張る場合の参照先URL
- * @prop {string} [top=''] - タイトルの前に挿入する文字列(固定メニュー等)
- * @prop {string} [middle=''] - タイトルの後・記事の前に〃
- * @prop {string} [bottom=''] - 記事の後に〃
- * @prop {string} [content=''] - 記事本文
- */
-class Article {
-  /**
-   * @constructor
-   * @param {Object} arg 
-   * @returns {Article}
-   */
-  constructor(arg){
-    this.title = arg.title ?? '';
-    this.icon = arg.icon ?? '';
-    this.anchor = arg.anchor ?? false;
-    this.link = arg.link ?? '';
-    this.top = arg.top ?? '';
-    this.middle = arg.middle ?? '';
-    this.bottom = arg.bottom ?? '';
-    this.content = arg.content ?? '';
-  }
-}
-
 /** PropList: 属性一覧に表示する項目
  * @class
  * @prop {object[]} list - 項目一覧

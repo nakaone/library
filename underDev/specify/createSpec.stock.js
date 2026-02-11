@@ -1,3 +1,35 @@
+/** Article: Markdownの単一記事(タイトル＋本文)用データオブジェクト
+ * - `<!--::記事のID::-->`で他記事も埋め込み可とする
+ * - アンカーのidは識別子を小文字変換したものとする
+ * 
+ * @class Article
+ * @prop {string} [title=''] - 記事のタイトル
+ * @prop {string} [icon=''] - アイコンを付ける場合に設定
+ * @prop {boolean} [anchor=false] - アンカーを設定する場合に設定(`<span id="〜">`)
+ * @prop {string} [link=''] - タイトルにリンクを張る場合の参照先URL
+ * @prop {string} [top=''] - タイトルの前に挿入する文字列(固定メニュー等)
+ * @prop {string} [middle=''] - タイトルの後・記事の前に〃
+ * @prop {string} [bottom=''] - 記事の後に〃
+ * @prop {string} [content=''] - 記事本文
+ */
+class Article {
+  /**
+   * @constructor
+   * @param {Object} arg 
+   * @returns {Article}
+   */
+  constructor(arg){
+    this.title = arg.title ?? '';
+    this.icon = arg.icon ?? '';
+    this.anchor = arg.anchor ?? false;
+    this.link = arg.link ?? '';
+    this.top = arg.top ?? '';
+    this.middle = arg.middle ?? '';
+    this.bottom = arg.bottom ?? '';
+    this.content = arg.content ?? '';
+  }
+}
+
 /** stock: 使用の可能性が高いソースの一時保存 */
 function stock(){
 
