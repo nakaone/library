@@ -3,7 +3,7 @@ import path from 'path';
 import process from 'process';
 import { spawn } from "node:child_process";
 import { readFileSync, writeFileSync, unlinkSync, mkdirSync, rmSync, existsSync } from 'node:fs';
-import { devTools } from '../../../library/devTools/3.0.0/core.mjs';
+import { devTools } from '../../../library/devTools/3.1.0/core.mjs';
 createSpec();
 
 /** 開発工程・残課題
@@ -186,7 +186,7 @@ async function createSpec(opt={}) {
    */
   function determineParent(){
     const v = {whois:`${pv.whois}.determineParent`, arg:{}, rv:null};
-    const dev = new devTools(v);
+    const dev = new devTools(v,{mode:'pipe'});
     try {
 
       for( v.i=0 ; v.i<doc.doclet.length ; v.i++ ){
@@ -261,7 +261,7 @@ async function createSpec(opt={}) {
     // step.2 : jsdocの実行
     return new Promise((resolve, reject) => {
       const v = {whois:`${pv.whois}.getFile`, arg:{fn,resolve, reject}, rv:null};
-      const dev = new devTools(v);
+      const dev = new devTools(v,{mode:'pipe'});
 
       dev.step(1);  // jsdoc -X を子プロセスとして起動
       v.p = spawn("jsdoc", [fn.full,'--configure',cf.jsdocJson,'-X'], {
@@ -331,7 +331,7 @@ async function createSpec(opt={}) {
   function listSource(argv) {
     const v = {whois:`${pv.whois}.listSource`, arg:{argv},
       rv:{common:'',outDir:'',num:0,list:[]}};
-    const dev = new devTools(v);
+    const dev = new devTools(v,{mode:'pipe'});
     try {
 
       /**
@@ -405,7 +405,7 @@ async function createSpec(opt={}) {
    */
   function markdown(id,level=1) {
     const v = {whois:`${pv.whois}.markdown`, arg:{id,level}, rv:null};
-    const dev = new devTools(v);
+    const dev = new devTools(v,{mode:'pipe'});
     /**
      * @name 文書の構成
      * @memberof markdown
@@ -557,7 +557,7 @@ async function createSpec(opt={}) {
    */
   function output() {
     const v = {whois:`${pv.whois}.output`, arg:{}, rv:null};
-    const dev = new devTools(v);
+    const dev = new devTools(v,{mode:'pipe'});
     try {
 
       dev.step(1);  // 出力先フォルダ配下に固有パス毎のフォルダを作成
@@ -650,12 +650,11 @@ async function createSpec(opt={}) {
   // -------------------------------------------------------------
   // メイン処理
   // -------------------------------------------------------------
-  const dev = new devTools(pv);
+  const dev = new devTools(pv,{mode:'pipe'});
   try {
 
-    dev.step(1);  // 最初の2つは全体とコマンド名、不要なので削除
+    dev.step(1,cf);  // 最初の2つは全体とコマンド名、不要なので削除
     pv.argv = process.argv.slice(2);
-    //dev.step(99.658,{p:process.argv,v:pv.argv});
 
     if( pv.argv.length === 0 || /^\-+[h|H]/.test(pv.argv[0]) ){
 
@@ -735,7 +734,7 @@ class PropList {
    */
   constructor(doclet,opt={}){
     const v = {whois:`PropList.constructor`, arg:{doclet,opt}, rv:{}};
-    const dev = new devTools(v);
+    const dev = new devTools(v,{mode:'pipe'});
     try {
 
       dev.step(1.1);  // 項目チェック
@@ -792,7 +791,7 @@ class PropList {
    */
   makeTable(indent=0){
     const v = {whois:`${this.constructor.name}.makeTable`, arg:{}, rv:null};
-    const dev = new devTools(v);
+    const dev = new devTools(v,{mode:'pipe'});
     try {
 
       dev.step(1);  // ヘッダ部
@@ -1016,7 +1015,7 @@ class DocletEx extends Doclet {
   constructor(doclet,unique='/'){
     super(doclet);
     const v = {whois:`DocletEx.constructor`, arg:{doclet,unique}, rv:null};
-    const dev = new devTools(v);
+    const dev = new devTools(v,{mode:'pipe'});
     try {
 
       dev.step(1);  // id
@@ -1084,7 +1083,7 @@ class DocletEx extends Doclet {
    */
   determineType(doclet) {
     const v = {whois:`${this.constructor.name}.determineType`, arg:{doclet}, rv:'unknown'};
-    const dev = new devTools(v);
+    const dev = new devTools(v,{mode:'pipe'});
     try {
 
       dev.step(1);  // 原文が無い場合は判定不能
